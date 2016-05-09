@@ -1,0 +1,125 @@
+ .long
+ .dc.l	codeend - _decomp_start
+_decomp_start::
+ .gpu
+	.org $f03100
+
+S_LE	.ccdef  $14     ; PL
+U_LE	.ccdef  $04     ; CC
+S_GT    .ccdef	$18   	; MI
+U_GT    .ccdef	$08  	; CS
+
+S_LT	.ccdef	$15		; PL+NE
+U_LT	.ccdef	$05		; CC+NE
+
+FP .equr r14
+scratch .equr r10
+scratch2 .equr r11
+RETURNVALUE .equr r29
+RETURNPOINT .equr r28
+MATH_A .equr r27
+MATH_B .equr r26
+MATH_C .equr r25
+MATH_RTS .equr r24
+MATH_SIGN .equr r23
+
+
+;=============================================================================
+;
+; unsigned char *decomp_input;
+; unsigned char *decomp_output;
+	.extern	_decomp_input, _decomp_output
+;=============================================================================
+
+getidbyte       .equr   r4
+idbyte          .equr   r5
+ptr_input       .equr   r6
+ptr_output      .equr   r7
+pos             .equr   r8
+ptr_source      .equr   r9
+len             .equr   r10
+lbl_main        .equr   r11
+const_f			.equr	r12
+
+;   decompress an lzss-compressed lump
+		
+;	Initialize vairables
+
+	movei	#_decomp_input,ptr_input
+	load	(ptr_input),ptr_input
+	movei	#_decomp_output,ptr_output
+	load	(ptr_output),ptr_output
+
+	movei	#W_RL_main, lbl_main
+	moveq	#$f,const_f
+
+; getidbyte = 0
+	moveq	#1, getidbyte
+	
+;	Main decompression loop
+
+	
+	subq	#1,getidbyte
+W_RL_main:
+	jr		EQ,w_loadidbyte	
+	
+; test low bit of idbyte
+W_RL_testidbyte:
+	btst	#0, idbyte		; a harmless delay slot
+	jr		NE, W_RL_uncompress
+	shrq	#1, idbyte		; delay slot
+	
+; copy one character
+	loadb	(ptr_input), r0
+	addq	#1, ptr_input
+	storeb	r0, (ptr_output)
+	addq	#1, ptr_output
+	jump	T, (lbl_main)
+	subq	#1,getidbyte	; delay slot
+
+; load idbyte and reset getidbyte
+w_loadidbyte:
+	loadb	(ptr_input), idbyte
+	addq	#1, ptr_input
+	jr		T,W_RL_testidbyte
+	moveq	#8,getidbyte	; delay slot
+		
+W_RL_uncompress:
+
+; get the position offset
+
+	loadb	(ptr_input), r0
+	addq	#1, ptr_input
+	shlq	#4, r0
+	loadb	(ptr_input), pos
+	shrq	#4, pos
+	or	r0, pos
+
+; add position offset to the output and store in ptr_source
+	addq	#1,pos
+	move	ptr_output, ptr_source
+	sub		pos, ptr_source
+
+; get the length
+
+	loadb	(ptr_input), len
+	and		const_f, len
+	jump	EQ, (RETURNPOINT)		; if byte & 0xf == 0, done	
+	addq	#1, ptr_input
+
+	loadb	(ptr_source), r0
+	
+W_RL_copyloop:
+	addq	#1, ptr_source
+	storeb	r0, (ptr_output)
+	subq	#1, len
+	addqt	#1, ptr_output
+	jr		PL, W_RL_copyloop
+	loadb	(ptr_source), r0	; delay slot
+
+	jump	T, (lbl_main)
+	subq	#1,getidbyte	; delay slot
+
+	.phrase
+	.68000
+codeend:

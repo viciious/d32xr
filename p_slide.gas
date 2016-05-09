@@ -1,0 +1,2843 @@
+ .long
+	.dc.l	codeend-_p_slide_start
+_p_slide_start::
+ .gpu
+	.org $f1b140
+DIVCONTROL		.equ	$f1a11c
+
+S_LE	.ccdef  $14     ; PL
+U_LE	.ccdef  $04     ; CC
+S_GT    .ccdef	$18   	; MI
+U_GT    .ccdef	$08  	; CS
+
+S_LT	.ccdef	$15		; PL+NE
+U_LT	.ccdef	$05		; CC+NE
+
+FP .equr r14
+scratch .equr r10
+scratch2 .equr r11
+RETURNVALUE .equr r29
+RETURNPOINT .equr r28
+MATH_A .equr r27
+MATH_B .equr r26
+MATH_C .equr r25
+MATH_RTS .equr r24
+MATH_SIGN .equr r23
+
+	movei	#codestart,scratch
+	jump	T,(scratch)
+	nop
+
+
+GPU_IMUL:
+ move MATH_A,MATH_SIGN
+ xor MATH_B,MATH_SIGN
+ abs MATH_A
+ abs MATH_B
+ move MATH_A,MATH_C
+ mult MATH_B,MATH_C
+ move MATH_B,scratch2
+ shrq #16,scratch2
+ mult MATH_A,scratch2
+ shlq #16,scratch2
+ add scratch2,MATH_C
+ move MATH_A,scratch2
+ shrq #16,scratch2
+ mult MATH_B,scratch2
+ shlq #16,scratch2
+ add scratch2, MATH_C
+ btst #31,MATH_SIGN
+ jump EQ,(MATH_RTS)
+ nop
+ jump T,(MATH_RTS)
+ neg MATH_C
+	
+_G_FixedMul::
+; ah al
+; bh bl
+;------
+;          bl*al
+;   bl*ah
+;   bh*al
+;ah*bh
+;-----------
+;       xx xx
+	load    (FP),MATH_A
+	load    (FP+1),MATH_B
+	
+	move    MATH_A,MATH_SIGN
+	xor     MATH_B,MATH_SIGN
+	abs     MATH_A
+	abs     MATH_B
+	move    MATH_A,RETURNVALUE
+	mult    MATH_B,RETURNVALUE              ; al*bl
+	shrq    #16,RETURNVALUE
+	move    MATH_B,scratch2
+	shrq    #16,scratch2
+	mult    MATH_A,scratch2                 ; al*bh
+	add     scratch2,RETURNVALUE
+	move    MATH_A,scratch2
+	shrq    #16,scratch2
+	mult    MATH_B,scratch2                 ; bl*ah
+	add     scratch2, RETURNVALUE
+	move    MATH_A,scratch2
+	shrq    #16,scratch2
+	move    MATH_B,scratch
+	shrq    #16,scratch
+	mult    scratch,scratch2                ; bh*ah
+	shlq    #16,scratch2
+	add     scratch2, RETURNVALUE
+	btst    #31,MATH_SIGN
+	jump    EQ,(RETURNPOINT)
+	nop
+	jump    T,(RETURNPOINT)
+	neg     RETURNVALUE
+
+
+;----------------------
+;
+; FixedDiv
+;
+;----------------------
+_G_FixedDiv::
+
+	movei   #DIVCONTROL,scratch                ; divide unit control
+	moveq   #1,scratch2
+	store   scratch2,(scratch)                      ; turn on frac div
+	
+	load    (FP),RETURNVALUE
+	load    (FP+1),MATH_B
+	
+	move    MATH_B,MATH_SIGN
+	xor     RETURNVALUE,MATH_SIGN
+	abs     RETURNVALUE
+	abs     MATH_B
+
+	div    MATH_B,RETURNVALUE
+	or		RETURNVALUE,RETURNVALUE
+		
+	btst    #31,MATH_SIGN
+
+	moveq   #0,scratch2
+	store   scratch2,(scratch)              ; turn off frac div
+
+	jump    EQ,(RETURNPOINT)
+	nop
+	jump    T,(RETURNPOINT)
+	neg     RETURNVALUE
+
+
+codestart:
+; unfuckdsp output -- add loads before external dsp stores
+
+;====================
+_P_SlideMove::
+;3 dag registers  7 register variables
+;localoffset:16  regoffset:16  argoffset:60
+;====================
+ movei #60,scratch
+ sub scratch,FP
+
+ movei #_slidething,r0
+ load (r0),r0
+ movei #72,r1
+ move r0,r2
+ add r1,r2
+ load (r2),r1
+ move r1,r16 ;(dx)
+ movei #76,r1
+ move r0,r2
+ add r1,r2
+ load (r2),r1
+ move r1,r17 ;(dy)
+ movei #_slidex,r1
+ move r0,r2
+ addq #12,r2
+ load (r2),r2
+ load (r1),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r2,(r1)
+ movei #_slidey,r1
+ addq #16,r0
+ load (r0),r0
+ load (r1),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r0,(r1)
+ moveq #0,r0
+ move r0,r21 ;(i)
+
+L72:
+
+ store r16,(FP) ; arg[] ;(dx)
+ or r17,scratch ; scoreboard bug ;(dy)
+ store r17,(FP+1) ; arg[] ;(dy)
+ movei #_P_CompletableFrac,r0
+ store r28,(FP+4) ; push ;(RETURNPOINT)
+ store r21,(FP+5) ; push ;(i)
+ store r20,(FP+6) ; push ;(ry)
+ store r19,(FP+7) ; push ;(rx)
+ store r18,(FP+8) ; push ;(slide)
+ store r17,(FP+9) ; push ;(dy)
+ store r16,(FP+10) ; push ;(dx)
+ movei #L82,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+11) ; delay slot push ;(frac)
+L82:
+ load (FP+5),r21 ; pop ;(i)
+ load (FP+6),r20 ; pop ;(ry)
+ load (FP+7),r19 ; pop ;(rx)
+ load (FP+8),r18 ; pop ;(slide)
+ load (FP+9),r17 ; pop ;(dy)
+ load (FP+10),r16 ; pop ;(dx)
+ load (FP+11),r15 ; pop ;(frac)
+ load (FP+4), RETURNPOINT ; pop
+ move r29,r15 ;(RETURNVALUE)(frac)
+
+ movei #65536,r0
+ cmp r15,r0 ;(frac)
+ movei #L76,scratch
+ jump EQ,(scratch)
+ nop
+
+ movei #4096,r0
+ move r15,r1 ;(frac)
+ sub r0,r1
+ move r1,r15 ;(frac)
+
+L76:
+
+ moveq #0,r0
+ cmp r15,r0 ;(frac)
+ movei #L78,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+
+ moveq #0,r0
+ move r0,r15 ;(frac)
+
+L78:
+
+ store r15,(FP) ; arg[] ;(frac)
+ or r16,scratch ; scoreboard bug ;(dx)
+ store r16,(FP+1) ; arg[] ;(dx)
+ movei #_G_FixedMul,r0
+ store r28,(FP+4) ; push ;(RETURNPOINT)
+ store r21,(FP+5) ; push ;(i)
+ store r20,(FP+6) ; push ;(ry)
+ store r19,(FP+7) ; push ;(rx)
+ store r18,(FP+8) ; push ;(slide)
+ store r17,(FP+9) ; push ;(dy)
+ store r16,(FP+10) ; push ;(dx)
+ movei #L83,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+11) ; delay slot push ;(frac)
+L83:
+ load (FP+5),r21 ; pop ;(i)
+ load (FP+6),r20 ; pop ;(ry)
+ load (FP+7),r19 ; pop ;(rx)
+ load (FP+8),r18 ; pop ;(slide)
+ load (FP+9),r17 ; pop ;(dy)
+ load (FP+10),r16 ; pop ;(dx)
+ load (FP+11),r15 ; pop ;(frac)
+ load (FP+4), RETURNPOINT ; pop
+ move r29,r19 ;(RETURNVALUE)(rx)
+
+ store r15,(FP) ; arg[] ;(frac)
+ or r17,scratch ; scoreboard bug ;(dy)
+ store r17,(FP+1) ; arg[] ;(dy)
+ movei #_G_FixedMul,r0
+ store r28,(FP+4) ; push ;(RETURNPOINT)
+ store r21,(FP+5) ; push ;(i)
+ store r20,(FP+6) ; push ;(ry)
+ store r19,(FP+7) ; push ;(rx)
+ store r18,(FP+8) ; push ;(slide)
+ store r17,(FP+9) ; push ;(dy)
+ store r16,(FP+10) ; push ;(dx)
+ movei #L84,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+11) ; delay slot push ;(frac)
+L84:
+ load (FP+5),r21 ; pop ;(i)
+ load (FP+6),r20 ; pop ;(ry)
+ load (FP+7),r19 ; pop ;(rx)
+ load (FP+8),r18 ; pop ;(slide)
+ load (FP+9),r17 ; pop ;(dy)
+ load (FP+10),r16 ; pop ;(dx)
+ load (FP+11),r15 ; pop ;(frac)
+ load (FP+4), RETURNPOINT ; pop
+ move r29,r20 ;(RETURNVALUE)(ry)
+
+ movei #_slidex,r0
+ load (r0),r1
+ add r19,r1 ;(rx)
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+ movei #_slidey,r0
+ load (r0),r1
+ add r20,r1 ;(ry)
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+ movei #65536,r0
+ cmp r15,r0 ;(frac)
+ movei #L80,scratch
+ jump NE,(scratch)
+ nop
+
+ movei #_slidething,r0
+ load (r0),r0
+ movei #72,r1
+ add r1,r0
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r16,(r0) ;(dx)
+
+ movei #_slidething,r0
+ load (r0),r0
+ movei #76,r1
+ add r1,r0
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r17,(r0) ;(dy)
+
+ movei #_slidething,r0
+ load (r0),r0
+ move r0,r1
+ addq #12,r1
+ load (r1),r1
+ store r1,(FP) ; arg[]
+ addq #16,r0
+ load (r0),r0
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_slidex,r0
+ load (r0),r0
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+2) ; arg[]
+ movei #_slidey,r0
+ load (r0),r0
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+3) ; arg[]
+ movei #_SL_CheckSpecialLines,r0
+ store r28,(FP+4) ; push ;(RETURNPOINT)
+ store r21,(FP+5) ; push ;(i)
+ store r20,(FP+6) ; push ;(ry)
+ store r19,(FP+7) ; push ;(rx)
+ store r18,(FP+8) ; push ;(slide)
+ store r17,(FP+9) ; push ;(dy)
+ store r16,(FP+10) ; push ;(dx)
+ movei #L85,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+11) ; delay slot push ;(frac)
+L85:
+ load (FP+5),r21 ; pop ;(i)
+ load (FP+6),r20 ; pop ;(ry)
+ load (FP+7),r19 ; pop ;(rx)
+ load (FP+8),r18 ; pop ;(slide)
+ load (FP+9),r17 ; pop ;(dy)
+ load (FP+10),r16 ; pop ;(dx)
+ load (FP+11),r15 ; pop ;(frac)
+ load (FP+4), RETURNPOINT ; pop
+
+
+ movei #L71,r0
+ jump T,(r0)
+ nop
+
+L80:
+
+ move r16,r0 ;(dx)
+ sub r19,r0 ;(rx)
+ move r0,r16 ;(dx)
+ move r17,r0 ;(dy)
+ sub r20,r0 ;(ry)
+ move r0,r17 ;(dy)
+ store r16,(FP) ; arg[] ;(dx)
+ movei #_blocknvx,r0
+ load (r0),r0
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_G_FixedMul,r0
+ store r28,(FP+4) ; push ;(RETURNPOINT)
+ store r21,(FP+5) ; push ;(i)
+ store r20,(FP+6) ; push ;(ry)
+ store r19,(FP+7) ; push ;(rx)
+ store r18,(FP+8) ; push ;(slide)
+ store r17,(FP+9) ; push ;(dy)
+ store r16,(FP+10) ; push ;(dx)
+ movei #L86,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+11) ; delay slot push ;(frac)
+L86:
+ load (FP+5),r21 ; pop ;(i)
+ load (FP+6),r20 ; pop ;(ry)
+ load (FP+7),r19 ; pop ;(rx)
+ load (FP+8),r18 ; pop ;(slide)
+ load (FP+9),r17 ; pop ;(dy)
+ load (FP+10),r16 ; pop ;(dx)
+ load (FP+11),r15 ; pop ;(frac)
+ load (FP+4), RETURNPOINT ; pop
+ move r29,r18 ;(RETURNVALUE)(slide)
+
+ store r17,(FP) ; arg[] ;(dy)
+ movei #_blocknvy,r0
+ load (r0),r0
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_G_FixedMul,r0
+ store r28,(FP+4) ; push ;(RETURNPOINT)
+ store r21,(FP+5) ; push ;(i)
+ store r20,(FP+6) ; push ;(ry)
+ store r19,(FP+7) ; push ;(rx)
+ store r18,(FP+8) ; push ;(slide)
+ store r17,(FP+9) ; push ;(dy)
+ store r16,(FP+10) ; push ;(dx)
+ movei #L87,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+11) ; delay slot push ;(frac)
+L87:
+ load (FP+5),r21 ; pop ;(i)
+ load (FP+6),r20 ; pop ;(ry)
+ load (FP+7),r19 ; pop ;(rx)
+ load (FP+8),r18 ; pop ;(slide)
+ load (FP+9),r17 ; pop ;(dy)
+ load (FP+10),r16 ; pop ;(dx)
+ load (FP+11),r15 ; pop ;(frac)
+ load (FP+4), RETURNPOINT ; pop
+ move r18,r0 ;(slide)
+ add r29,r0 ;(RETURNVALUE)
+ move r0,r18 ;(slide)
+ store r18,(FP) ; arg[] ;(slide)
+ movei #_blocknvx,r0
+ load (r0),r0
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_G_FixedMul,r0
+ store r28,(FP+4) ; push ;(RETURNPOINT)
+ store r21,(FP+5) ; push ;(i)
+ store r20,(FP+6) ; push ;(ry)
+ store r19,(FP+7) ; push ;(rx)
+ store r18,(FP+8) ; push ;(slide)
+ store r17,(FP+9) ; push ;(dy)
+ store r16,(FP+10) ; push ;(dx)
+ movei #L88,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+11) ; delay slot push ;(frac)
+L88:
+ load (FP+5),r21 ; pop ;(i)
+ load (FP+6),r20 ; pop ;(ry)
+ load (FP+7),r19 ; pop ;(rx)
+ load (FP+8),r18 ; pop ;(slide)
+ load (FP+9),r17 ; pop ;(dy)
+ load (FP+10),r16 ; pop ;(dx)
+ load (FP+11),r15 ; pop ;(frac)
+ load (FP+4), RETURNPOINT ; pop
+ move r29,r16 ;(RETURNVALUE)(dx)
+
+ store r18,(FP) ; arg[] ;(slide)
+ movei #_blocknvy,r0
+ load (r0),r0
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_G_FixedMul,r0
+ store r28,(FP+4) ; push ;(RETURNPOINT)
+ store r21,(FP+5) ; push ;(i)
+ store r20,(FP+6) ; push ;(ry)
+ store r19,(FP+7) ; push ;(rx)
+ store r18,(FP+8) ; push ;(slide)
+ store r17,(FP+9) ; push ;(dy)
+ store r16,(FP+10) ; push ;(dx)
+ movei #L89,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+11) ; delay slot push ;(frac)
+L89:
+ load (FP+5),r21 ; pop ;(i)
+ load (FP+6),r20 ; pop ;(ry)
+ load (FP+7),r19 ; pop ;(rx)
+ load (FP+8),r18 ; pop ;(slide)
+ load (FP+9),r17 ; pop ;(dy)
+ load (FP+10),r16 ; pop ;(dx)
+ load (FP+11),r15 ; pop ;(frac)
+ load (FP+4), RETURNPOINT ; pop
+ move r29,r17 ;(RETURNVALUE)(dy)
+
+L73:
+
+ move r21,r0 ;(i)
+ addq #1,r0
+ move r0,r21 ;(i)
+
+ moveq #3,r0
+ cmp r21,r0 ;(i)
+ movei #L72,scratch
+ jump S_LT,(scratch)
+ nop
+
+ movei #_slidex,r0
+ movei #_slidething,r1
+ load (r1),r1
+ move r1,r2
+ addq #12,r2
+ load (r2),r2
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r2,(r0)
+ movei #_slidey,r0
+ move r1,r2
+ addq #16,r2
+ load (r2),r2
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r2,(r0)
+ movei #76,r0
+ move r1,r2
+ add r0,r2
+ moveq #0,r0
+ load (r2),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r0,(r2)
+ movei #72,r2
+ add r2,r1
+ load (r1),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r0,(r1)
+
+
+L71:
+ movei #60,scratch
+ jump T,(RETURNPOINT)
+ add scratch,FP ; delay slot
+
+;====================
+_P_CompletableFrac::
+;4 dag registers  8 register variables
+;localoffset:4  regoffset:8  argoffset:60
+;====================
+ movei #60,scratch
+ sub scratch,FP
+
+ movei #_blockfrac,r0
+ movei #65536,r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+ movei #_slidedx,r0
+ load (FP+15),r1 ; local dx
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+ movei #_slidedy,r0
+ load (FP+16),r1 ; local dy
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+ movei #_endbox,r0
+ movei #_slidey,r1
+ load (r1),r1
+ movei #1507328,r2
+ move r1,r3
+ add r2,r3
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r3,(r0)
+ movei #_endbox+4,r0
+ sub r2,r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+
+ movei #_endbox+12,r0
+ movei #_slidex,r1
+ load (r1),r1
+ movei #1507328,r2
+ add r2,r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+
+ movei #_endbox+8,r0
+ movei #_slidex,r1
+ load (r1),r1
+ movei #1507328,r2
+ sub r2,r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+
+ load (FP+15),r0 ; local dx
+ moveq #0,r1
+ cmp r0,r1
+ movei #L94,scratch
+ jump PL,(scratch)
+ nop
+
+ movei #_endbox+12,r0
+ load (r0),r1
+ load (FP+15),r2 ; local dx
+ add r2,r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+
+ movei #L95,r0
+ jump T,(r0)
+ nop
+
+L94:
+
+ movei #_endbox+8,r0
+ load (r0),r1
+ load (FP+15),r2 ; local dx
+ add r2,r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+
+L95:
+
+ load (FP+16),r0 ; local dy
+ moveq #0,r1
+ cmp r0,r1
+ movei #L98,scratch
+ jump PL,(scratch)
+ nop
+
+ movei #_endbox,r0
+ load (r0),r1
+ load (FP+16),r2 ; local dy
+ add r2,r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+
+ movei #L99,r0
+ jump T,(r0)
+ nop
+
+L98:
+
+ movei #_endbox+4,r0
+ load (r0),r1
+ load (FP+16),r2 ; local dy
+ add r2,r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+
+L99:
+
+ movei #_validcount,r0
+ load (r0),r1
+ addq #1,r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+ movei #_endbox+8,r0
+ load (r0),r0
+ movei #_bmaporgx,r1
+ load (r1),r1
+ sub r1,r0
+ moveq #23,r2
+ sha r2,r0
+ move r0,r20 ;(xl)
+ movei #_endbox+12,r0
+ load (r0),r0
+ sub r1,r0
+ sha r2,r0
+ move r0,r18 ;(xh)
+ movei #_endbox+4,r0
+ load (r0),r0
+ movei #_bmaporgy,r1
+ load (r1),r1
+ sub r1,r0
+ sha r2,r0
+ move r0,r19 ;(yl)
+ movei #_endbox,r0
+ load (r0),r0
+ sub r1,r0
+ sha r2,r0
+ move r0,r17 ;(yh)
+ moveq #0,r0
+ cmp r20,r0 ;(xl)
+ movei #L104,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+
+ moveq #0,r0
+ move r0,r20 ;(xl)
+
+L104:
+
+ moveq #0,r0
+ cmp r19,r0 ;(yl)
+ movei #L106,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+
+ moveq #0,r0
+ move r0,r19 ;(yl)
+
+L106:
+
+ movei #_bmapwidth,r0
+ load (r0),r0
+ cmp r18,r0 ;(xh)
+ movei #L108,scratch
+ jump S_LT,(scratch)
+ nop
+
+ movei #_bmapwidth,r0
+ load (r0),r0
+ subq #1,r0
+ move r0,r18 ;(xh)
+
+L108:
+
+ movei #_bmapheight,r0
+ load (r0),r0
+ cmp r17,r0 ;(yh)
+ movei #L110,scratch
+ jump S_LT,(scratch)
+ nop
+
+ movei #_bmapheight,r0
+ load (r0),r0
+ subq #1,r0
+ move r0,r17 ;(yh)
+
+L110:
+
+ move r20,r16 ;(xl)(bx)
+
+ movei #L115,r0
+ jump T,(r0)
+ nop
+
+L112:
+
+ move r19,r15 ;(yl)(by)
+
+ movei #L119,r0
+ jump T,(r0)
+ nop
+
+L116:
+
+ move FP,r0
+ addq #4,r0 ; &offset
+ movei #_bmapwidth,r1
+ load (r1),r1
+ move r15,MATH_A ;(by)
+ movei #L128,MATH_RTS
+ movei #GPU_IMUL,scratch
+ jump T,(scratch)
+ move r1,MATH_B ; delay slot
+L128:
+ move MATH_C,r2
+ move r2,r1
+ add r16,r1 ;(bx)
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+ load (r0),r1
+ movei #-1,r2
+ sha r2,r1
+ movei #_blockmap,r3
+ load (r3),r3
+ add r3,r1
+ loadw (r1),r1
+ movei #$ffff8000,scratch
+ add scratch,r1
+ xor scratch,r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+ load (r0),r0
+ sha r2,r0
+ movei #_blockmaplump,r1
+ load (r1),r1
+ add r1,r0
+ move r0,r22 ;(list)
+
+ movei #L123,r0
+ jump T,(r0)
+ nop
+
+L120:
+
+ movei #76,r0
+ loadw (r22),r1 ;(list)
+ movei #$ffff8000,scratch
+ add scratch,r1
+ xor scratch,r1
+ move r0,MATH_A
+ movei #L129,MATH_RTS
+ movei #GPU_IMUL,scratch
+ jump T,(scratch)
+ move r1,MATH_B ; delay slot
+L129:
+ move MATH_C,r0
+ movei #_lines,r1
+ load (r1),r1
+ add r1,r0
+ move r0,r21 ;(ld)
+ movei #64,r0
+ move r21,r1 ;(ld)
+ add r0,r1
+ load (r1),r0
+ movei #_validcount,r1
+ load (r1),r1
+ cmp r0,r1
+ movei #L124,scratch
+ jump NE,(scratch)
+ nop
+
+ movei #L121,r0
+ jump T,(r0)
+ nop
+
+L124:
+
+ movei #64,r0
+ move r21,r1 ;(ld)
+ add r0,r1
+ movei #_validcount,r0
+ load (r0),r0
+ load (r1),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r0,(r1)
+
+ store r21,(FP) ; arg[] ;(ld)
+ movei #_SL_CheckLine,r0
+ store r28,(FP+2) ; push ;(RETURNPOINT)
+ store r22,(FP+3) ; push ;(list)
+ store r21,(FP+4) ; push ;(ld)
+ store r20,(FP+5) ; push ;(xl)
+ store r19,(FP+6) ; push ;(yl)
+ store r18,(FP+7) ; push ;(xh)
+ store r17,(FP+8) ; push ;(yh)
+ store r16,(FP+9) ; push ;(bx)
+ movei #L130,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+10) ; delay slot push ;(by)
+L130:
+ load (FP+3),r22 ; pop ;(list)
+ load (FP+4),r21 ; pop ;(ld)
+ load (FP+5),r20 ; pop ;(xl)
+ load (FP+6),r19 ; pop ;(yl)
+ load (FP+7),r18 ; pop ;(xh)
+ load (FP+8),r17 ; pop ;(yh)
+ load (FP+9),r16 ; pop ;(bx)
+ load (FP+10),r15 ; pop ;(by)
+ load (FP+2), RETURNPOINT ; pop
+
+L121:
+
+ move r22,r0 ;(list)
+ addq #2,r0
+ move r0,r22 ;(list)
+
+L123:
+
+ loadw (r22),r0 ;(list)
+ movei #$ffff8000,scratch
+ add scratch,r0
+ xor scratch,r0
+ movei #-1,r1
+ cmp r0,r1
+ movei #L120,scratch
+ jump NE,(scratch)
+ nop
+
+L117:
+
+ move r15,r0 ;(by)
+ addq #1,r0
+ move r0,r15 ;(by)
+
+L119:
+
+ cmp r15,r17 ;(by)(yh)
+ movei #L116,scratch
+ jump PL,(scratch)
+ nop
+
+L113:
+
+ move r16,r0 ;(bx)
+ addq #1,r0
+ move r0,r16 ;(bx)
+
+L115:
+
+ cmp r16,r18 ;(bx)(xh)
+ movei #L112,scratch
+ jump PL,(scratch)
+ nop
+
+ movei #_blockfrac,r0
+ load (r0),r0
+ movei #4096,r1
+ cmp r0,r1
+ movei #L126,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+
+ movei #_blockfrac,r0
+ moveq #0,r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+ movei #_specialline,r0
+ moveq #0,r2
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r2,(r0)
+ move r1,RETURNVALUE
+
+ movei #L90,r0
+ jump T,(r0)
+ nop
+
+L126:
+
+ movei #_blockfrac,r0
+ load (r0),r0
+ move r0,RETURNVALUE
+
+L90:
+ movei #60,scratch
+ jump T,(RETURNPOINT)
+ add scratch,FP ; delay slot
+
+;====================
+_SL_PointOnSide::
+;4 dag registers  1 register variables
+;localoffset:8  regoffset:16  argoffset:40
+;====================
+ movei #40,scratch
+ sub scratch,FP
+
+ move FP,r0
+ addq #8,r0 ; &dx
+ load (FP+10),r1 ; local x
+ movei #_p1x,r2
+ load (r2),r2
+ sub r2,r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+ move FP,r1
+ addq #12,r1 ; &dy
+ load (FP+11),r2 ; local y
+ movei #_p1y,r3
+ load (r3),r3
+ sub r3,r2
+ load (r1),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r2,(r1)
+ load (r0),r0
+ store r0,(FP) ; arg[]
+ movei #_nvx,r0
+ load (r0),r0
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_G_FixedMul,r0
+ store r28,(FP+4) ; push ;(RETURNPOINT)
+ movei #L136,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+5) ; delay slot push ;(dist)
+L136:
+ load (FP+5),r15 ; pop ;(dist)
+ load (FP+4), RETURNPOINT ; pop
+ move r29,r15 ;(RETURNVALUE)(dist)
+
+ load (FP+3),r0 ; local dy
+ store r0,(FP) ; arg[]
+ movei #_nvy,r0
+ load (r0),r0
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_G_FixedMul,r0
+ store r28,(FP+4) ; push ;(RETURNPOINT)
+ movei #L137,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+5) ; delay slot push ;(dist)
+L137:
+ load (FP+5),r15 ; pop ;(dist)
+ load (FP+4), RETURNPOINT ; pop
+ move r15,r0 ;(dist)
+ add r29,r0 ;(RETURNVALUE)
+ move r0,r15 ;(dist)
+ movei #65536,r0
+ cmp r15,r0 ;(dist)
+ movei #L132,scratch
+ jump PL,(scratch)
+ nop
+
+ moveq #1,r0
+ move r0,RETURNVALUE
+
+ movei #L131,r0
+ jump T,(r0)
+ nop
+
+L132:
+
+ movei #-65536,r0
+ cmp r15,r0 ;(dist)
+ movei #L134,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+
+ movei #-1,r0
+ move r0,RETURNVALUE
+
+ movei #L131,r0
+ jump T,(r0)
+ nop
+
+L134:
+
+ moveq #0,r0
+ move r0,RETURNVALUE
+
+L131:
+ movei #40,scratch
+ jump T,(RETURNPOINT)
+ add scratch,FP ; delay slot
+
+;====================
+_SL_CrossFrac::
+;2 dag registers  6 register variables
+;localoffset:8  regoffset:12  argoffset:48
+;====================
+ movei #48,scratch
+ sub scratch,FP
+
+ movei #_p3x,r0
+ load (r0),r0
+ movei #_p1x,r1
+ load (r1),r1
+ sub r1,r0
+ move r0,r16 ;(dx)
+ movei #_p3y,r0
+ load (r0),r0
+ movei #_p1y,r1
+ load (r1),r1
+ sub r1,r0
+ move r0,r17 ;(dy)
+ store r16,(FP) ; arg[] ;(dx)
+ movei #_nvx,r0
+ load (r0),r0
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_G_FixedMul,r0
+ store r28,(FP+3) ; push ;(RETURNPOINT)
+ store r20,(FP+4) ; push ;(142)
+ store r19,(FP+5) ; push ;(141)
+ store r18,(FP+6) ; push ;(dist2)
+ store r17,(FP+7) ; push ;(dy)
+ store r16,(FP+8) ; push ;(dx)
+ movei #L147,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+9) ; delay slot push ;(dist1)
+L147:
+ load (FP+4),r20 ; pop ;(142)
+ load (FP+5),r19 ; pop ;(141)
+ load (FP+6),r18 ; pop ;(dist2)
+ load (FP+7),r17 ; pop ;(dy)
+ load (FP+8),r16 ; pop ;(dx)
+ load (FP+9),r15 ; pop ;(dist1)
+ load (FP+3), RETURNPOINT ; pop
+ move r29,r15 ;(RETURNVALUE)(dist1)
+
+ store r17,(FP) ; arg[] ;(dy)
+ movei #_nvy,r0
+ load (r0),r0
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_G_FixedMul,r0
+ store r28,(FP+3) ; push ;(RETURNPOINT)
+ store r20,(FP+4) ; push ;(142)
+ store r19,(FP+5) ; push ;(141)
+ store r18,(FP+6) ; push ;(dist2)
+ store r17,(FP+7) ; push ;(dy)
+ store r16,(FP+8) ; push ;(dx)
+ movei #L148,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+9) ; delay slot push ;(dist1)
+L148:
+ load (FP+4),r20 ; pop ;(142)
+ load (FP+5),r19 ; pop ;(141)
+ load (FP+6),r18 ; pop ;(dist2)
+ load (FP+7),r17 ; pop ;(dy)
+ load (FP+8),r16 ; pop ;(dx)
+ load (FP+9),r15 ; pop ;(dist1)
+ load (FP+3), RETURNPOINT ; pop
+ move r15,r0 ;(dist1)
+ add r29,r0 ;(RETURNVALUE)
+ move r0,r15 ;(dist1)
+ movei #_p4x,r0
+ load (r0),r0
+ movei #_p1x,r1
+ load (r1),r1
+ sub r1,r0
+ move r0,r16 ;(dx)
+ movei #_p4y,r0
+ load (r0),r0
+ movei #_p1y,r1
+ load (r1),r1
+ sub r1,r0
+ move r0,r17 ;(dy)
+ store r16,(FP) ; arg[] ;(dx)
+ movei #_nvx,r0
+ load (r0),r0
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_G_FixedMul,r0
+ store r28,(FP+3) ; push ;(RETURNPOINT)
+ store r20,(FP+4) ; push ;(142)
+ store r19,(FP+5) ; push ;(141)
+ store r18,(FP+6) ; push ;(dist2)
+ store r17,(FP+7) ; push ;(dy)
+ store r16,(FP+8) ; push ;(dx)
+ movei #L149,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+9) ; delay slot push ;(dist1)
+L149:
+ load (FP+4),r20 ; pop ;(142)
+ load (FP+5),r19 ; pop ;(141)
+ load (FP+6),r18 ; pop ;(dist2)
+ load (FP+7),r17 ; pop ;(dy)
+ load (FP+8),r16 ; pop ;(dx)
+ load (FP+9),r15 ; pop ;(dist1)
+ load (FP+3), RETURNPOINT ; pop
+ move r29,r18 ;(RETURNVALUE)(dist2)
+
+ store r17,(FP) ; arg[] ;(dy)
+ movei #_nvy,r0
+ load (r0),r0
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_G_FixedMul,r0
+ store r28,(FP+3) ; push ;(RETURNPOINT)
+ store r20,(FP+4) ; push ;(142)
+ store r19,(FP+5) ; push ;(141)
+ store r18,(FP+6) ; push ;(dist2)
+ store r17,(FP+7) ; push ;(dy)
+ store r16,(FP+8) ; push ;(dx)
+ movei #L150,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+9) ; delay slot push ;(dist1)
+L150:
+ load (FP+4),r20 ; pop ;(142)
+ load (FP+5),r19 ; pop ;(141)
+ load (FP+6),r18 ; pop ;(dist2)
+ load (FP+7),r17 ; pop ;(dy)
+ load (FP+8),r16 ; pop ;(dx)
+ load (FP+9),r15 ; pop ;(dist1)
+ load (FP+3), RETURNPOINT ; pop
+ move r18,r0 ;(dist2)
+ add r29,r0 ;(RETURNVALUE)
+ move r0,r18 ;(dist2)
+ moveq #0,r0
+ cmp r15,r0 ;(dist1)
+ movei #L143,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+ moveq #1,r0
+ move r0,r19 ;(141)
+ movei #L144,r0
+ jump T,(r0)
+ nop
+L143:
+ moveq #0,r0
+ move r0,r19 ;(141)
+L144:
+ moveq #0,r0
+ cmp r18,r0 ;(dist2)
+ movei #L145,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+ moveq #1,r0
+ move r0,r20 ;(142)
+ movei #L146,r0
+ jump T,(r0)
+ nop
+L145:
+ moveq #0,r0
+ move r0,r20 ;(142)
+L146:
+ cmp r19,r20 ;(141)(142)
+ movei #L139,scratch
+ jump NE,(scratch)
+ nop
+
+ movei #65536,r0
+ move r0,RETURNVALUE
+
+ movei #L138,r0
+ jump T,(r0)
+ nop
+
+L139:
+
+ store r15,(FP) ; arg[] ;(dist1)
+ move r15,r0 ;(dist1)
+ sub r18,r0 ;(dist2)
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_G_FixedDiv,r0
+ store r28,(FP+3) ; push ;(RETURNPOINT)
+ store r20,(FP+4) ; push ;(142)
+ store r19,(FP+5) ; push ;(141)
+ store r18,(FP+6) ; push ;(dist2)
+ store r17,(FP+7) ; push ;(dy)
+ store r16,(FP+8) ; push ;(dx)
+ movei #L151,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+9) ; delay slot push ;(dist1)
+L151:
+ load (FP+4),r20 ; pop ;(142)
+ load (FP+5),r19 ; pop ;(141)
+ load (FP+6),r18 ; pop ;(dist2)
+ load (FP+7),r17 ; pop ;(dy)
+ load (FP+8),r16 ; pop ;(dx)
+ load (FP+9),r15 ; pop ;(dist1)
+ load (FP+3), RETURNPOINT ; pop
+ move FP,r0
+ addq #8,r0 ; &frac
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r29,(r0) ;(RETURNVALUE)
+
+ load (FP+2),r0 ; local frac
+ move r0,RETURNVALUE
+
+L138:
+ movei #48,scratch
+ jump T,(RETURNPOINT)
+ add scratch,FP ; delay slot
+
+;====================
+_CheckLineEnds::
+;3 dag registers  8 register variables
+;localoffset:8  regoffset:8  argoffset:56
+;====================
+ movei #56,scratch
+ sub scratch,FP
+
+ movei #_p4y,r0
+ load (r0),r0
+ movei #_p3y,r1
+ load (r1),r1
+ sub r1,r0
+ move r0,r17 ;(snx)
+ movei #_p4x,r0
+ load (r0),r0
+ movei #_p3x,r2
+ load (r2),r2
+ sub r2,r0
+ neg r0
+ move r0,r18 ;(sny)
+ movei #_p1x,r0
+ load (r0),r0
+ sub r2,r0
+ move r0,r15 ;(dx)
+ movei #_p1y,r0
+ load (r0),r0
+ sub r1,r0
+ move r0,r16 ;(dy)
+ store r15,(FP) ; arg[] ;(dx)
+ or r17,scratch ; scoreboard bug ;(snx)
+ store r17,(FP+1) ; arg[] ;(snx)
+ movei #_G_FixedMul,r0
+ store r28,(FP+2) ; push ;(RETURNPOINT)
+ store r22,(FP+3) ; push ;(156)
+ store r21,(FP+4) ; push ;(155)
+ store r20,(FP+5) ; push ;(dist2)
+ store r19,(FP+6) ; push ;(dist1)
+ store r18,(FP+7) ; push ;(sny)
+ store r17,(FP+8) ; push ;(snx)
+ store r16,(FP+9) ; push ;(dy)
+ movei #L161,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+10) ; delay slot push ;(dx)
+L161:
+ load (FP+3),r22 ; pop ;(156)
+ load (FP+4),r21 ; pop ;(155)
+ load (FP+5),r20 ; pop ;(dist2)
+ load (FP+6),r19 ; pop ;(dist1)
+ load (FP+7),r18 ; pop ;(sny)
+ load (FP+8),r17 ; pop ;(snx)
+ load (FP+9),r16 ; pop ;(dy)
+ load (FP+10),r15 ; pop ;(dx)
+ load (FP+2), RETURNPOINT ; pop
+ move r29,r19 ;(RETURNVALUE)(dist1)
+
+ store r16,(FP) ; arg[] ;(dy)
+ or r18,scratch ; scoreboard bug ;(sny)
+ store r18,(FP+1) ; arg[] ;(sny)
+ movei #_G_FixedMul,r0
+ store r28,(FP+2) ; push ;(RETURNPOINT)
+ store r22,(FP+3) ; push ;(156)
+ store r21,(FP+4) ; push ;(155)
+ store r20,(FP+5) ; push ;(dist2)
+ store r19,(FP+6) ; push ;(dist1)
+ store r18,(FP+7) ; push ;(sny)
+ store r17,(FP+8) ; push ;(snx)
+ store r16,(FP+9) ; push ;(dy)
+ movei #L162,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+10) ; delay slot push ;(dx)
+L162:
+ load (FP+3),r22 ; pop ;(156)
+ load (FP+4),r21 ; pop ;(155)
+ load (FP+5),r20 ; pop ;(dist2)
+ load (FP+6),r19 ; pop ;(dist1)
+ load (FP+7),r18 ; pop ;(sny)
+ load (FP+8),r17 ; pop ;(snx)
+ load (FP+9),r16 ; pop ;(dy)
+ load (FP+10),r15 ; pop ;(dx)
+ load (FP+2), RETURNPOINT ; pop
+ move r19,r0 ;(dist1)
+ add r29,r0 ;(RETURNVALUE)
+ move r0,r19 ;(dist1)
+ movei #_p2x,r0
+ load (r0),r0
+ movei #_p3x,r1
+ load (r1),r1
+ sub r1,r0
+ move r0,r15 ;(dx)
+ movei #_p2y,r0
+ load (r0),r0
+ movei #_p3y,r1
+ load (r1),r1
+ sub r1,r0
+ move r0,r16 ;(dy)
+ store r15,(FP) ; arg[] ;(dx)
+ or r17,scratch ; scoreboard bug ;(snx)
+ store r17,(FP+1) ; arg[] ;(snx)
+ movei #_G_FixedMul,r0
+ store r28,(FP+2) ; push ;(RETURNPOINT)
+ store r22,(FP+3) ; push ;(156)
+ store r21,(FP+4) ; push ;(155)
+ store r20,(FP+5) ; push ;(dist2)
+ store r19,(FP+6) ; push ;(dist1)
+ store r18,(FP+7) ; push ;(sny)
+ store r17,(FP+8) ; push ;(snx)
+ store r16,(FP+9) ; push ;(dy)
+ movei #L163,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+10) ; delay slot push ;(dx)
+L163:
+ load (FP+3),r22 ; pop ;(156)
+ load (FP+4),r21 ; pop ;(155)
+ load (FP+5),r20 ; pop ;(dist2)
+ load (FP+6),r19 ; pop ;(dist1)
+ load (FP+7),r18 ; pop ;(sny)
+ load (FP+8),r17 ; pop ;(snx)
+ load (FP+9),r16 ; pop ;(dy)
+ load (FP+10),r15 ; pop ;(dx)
+ load (FP+2), RETURNPOINT ; pop
+ move r29,r20 ;(RETURNVALUE)(dist2)
+
+ store r16,(FP) ; arg[] ;(dy)
+ or r18,scratch ; scoreboard bug ;(sny)
+ store r18,(FP+1) ; arg[] ;(sny)
+ movei #_G_FixedMul,r0
+ store r28,(FP+2) ; push ;(RETURNPOINT)
+ store r22,(FP+3) ; push ;(156)
+ store r21,(FP+4) ; push ;(155)
+ store r20,(FP+5) ; push ;(dist2)
+ store r19,(FP+6) ; push ;(dist1)
+ store r18,(FP+7) ; push ;(sny)
+ store r17,(FP+8) ; push ;(snx)
+ store r16,(FP+9) ; push ;(dy)
+ movei #L164,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+10) ; delay slot push ;(dx)
+L164:
+ load (FP+3),r22 ; pop ;(156)
+ load (FP+4),r21 ; pop ;(155)
+ load (FP+5),r20 ; pop ;(dist2)
+ load (FP+6),r19 ; pop ;(dist1)
+ load (FP+7),r18 ; pop ;(sny)
+ load (FP+8),r17 ; pop ;(snx)
+ load (FP+9),r16 ; pop ;(dy)
+ load (FP+10),r15 ; pop ;(dx)
+ load (FP+2), RETURNPOINT ; pop
+ move r20,r0 ;(dist2)
+ add r29,r0 ;(RETURNVALUE)
+ move r0,r20 ;(dist2)
+ moveq #0,r0
+ cmp r19,r0 ;(dist1)
+ movei #L157,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+ moveq #1,r0
+ move r0,r21 ;(155)
+ movei #L158,r0
+ jump T,(r0)
+ nop
+L157:
+ moveq #0,r0
+ move r0,r21 ;(155)
+L158:
+ moveq #0,r0
+ cmp r20,r0 ;(dist2)
+ movei #L159,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+ moveq #1,r0
+ move r0,r22 ;(156)
+ movei #L160,r0
+ jump T,(r0)
+ nop
+L159:
+ moveq #0,r0
+ move r0,r22 ;(156)
+L160:
+ cmp r21,r22 ;(155)(156)
+ movei #L153,scratch
+ jump NE,(scratch)
+ nop
+
+ moveq #1,r0
+ move r0,RETURNVALUE
+
+ movei #L152,r0
+ jump T,(r0)
+ nop
+
+L153:
+
+ moveq #0,r0
+ move r0,RETURNVALUE
+
+L152:
+ movei #56,scratch
+ jump T,(RETURNPOINT)
+ add scratch,FP ; delay slot
+
+;====================
+_ClipToLine::
+;5 dag registers  3 register variables
+;localoffset:8  regoffset:8  argoffset:44
+;====================
+ movei #44,scratch
+ sub scratch,FP
+
+ movei #_p3x,r0
+ movei #_slidex,r1
+ load (r1),r1
+ moveq #23,r2
+ movei #_nvx,r3
+ load (r3),r3
+ move r2,MATH_A
+ movei #L177,MATH_RTS
+ movei #GPU_IMUL,scratch
+ jump T,(scratch)
+ move r3,MATH_B ; delay slot
+L177:
+ move MATH_C,r4
+ sub r4,r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+ movei #_p3y,r1
+ movei #_slidey,r3
+ load (r3),r3
+ movei #_nvy,r4
+ load (r4),r4
+ move r2,MATH_A
+ movei #L178,MATH_RTS
+ movei #GPU_IMUL,scratch
+ jump T,(scratch)
+ move r4,MATH_B ; delay slot
+L178:
+ move MATH_C,r2
+ sub r2,r3
+ load (r1),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r3,(r1)
+ movei #_p4x,r2
+ load (r0),r0
+ movei #_slidedx,r3
+ load (r3),r3
+ move r0,r4
+ add r3,r4
+ load (r2),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r4,(r2)
+ movei #_p4y,r2
+ load (r1),r1
+ movei #_slidedy,r3
+ load (r3),r3
+ move r1,r4
+ add r3,r4
+ load (r2),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r4,(r2)
+ store r0,(FP) ; arg[]
+ or r1,scratch ; scoreboard bug
+ store r1,(FP+1) ; arg[]
+ movei #_SL_PointOnSide,r0
+ store r28,(FP+2) ; push ;(RETURNPOINT)
+ store r17,(FP+3) ; push ;(side3)
+ store r16,(FP+4) ; push ;(side2)
+ movei #L179,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+5) ; delay slot push ;(frac)
+L179:
+ load (FP+3),r17 ; pop ;(side3)
+ load (FP+4),r16 ; pop ;(side2)
+ load (FP+5),r15 ; pop ;(frac)
+ load (FP+2), RETURNPOINT ; pop
+ move r29,r16 ;(RETURNVALUE)(side2)
+
+ movei #-1,r0
+ cmp r16,r0 ;(side2)
+ movei #L166,scratch
+ jump NE,(scratch)
+ nop
+
+
+ movei #L165,r0
+ jump T,(r0)
+ nop
+
+L166:
+
+ movei #_p4x,r0
+ load (r0),r0
+ store r0,(FP) ; arg[]
+ movei #_p4y,r0
+ load (r0),r0
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_SL_PointOnSide,r0
+ store r28,(FP+2) ; push ;(RETURNPOINT)
+ store r17,(FP+3) ; push ;(side3)
+ store r16,(FP+4) ; push ;(side2)
+ movei #L180,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+5) ; delay slot push ;(frac)
+L180:
+ load (FP+3),r17 ; pop ;(side3)
+ load (FP+4),r16 ; pop ;(side2)
+ load (FP+5),r15 ; pop ;(frac)
+ load (FP+2), RETURNPOINT ; pop
+ move r29,r17 ;(RETURNVALUE)(side3)
+
+ moveq #0,r0
+ cmp r17,r0 ;(side3)
+ movei #L168,scratch
+ jump NE,(scratch)
+ nop
+
+
+ movei #L165,r0
+ jump T,(r0)
+ nop
+
+L168:
+
+ moveq #1,r0
+ cmp r17,r0 ;(side3)
+ movei #L170,scratch
+ jump NE,(scratch)
+ nop
+
+
+ movei #L165,r0
+ jump T,(r0)
+ nop
+
+L170:
+
+ moveq #0,r0
+ cmp r16,r0 ;(side2)
+ movei #L172,scratch
+ jump NE,(scratch)
+ nop
+
+ moveq #0,r0
+ move r0,r15 ;(frac)
+
+ movei #L174,r0
+ jump T,(r0)
+ nop
+
+L172:
+
+ movei #_SL_CrossFrac,r0
+ store r28,(FP+2) ; push ;(RETURNPOINT)
+ store r17,(FP+3) ; push ;(side3)
+ store r16,(FP+4) ; push ;(side2)
+ movei #L181,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+5) ; delay slot push ;(frac)
+L181:
+ load (FP+3),r17 ; pop ;(side3)
+ load (FP+4),r16 ; pop ;(side2)
+ load (FP+5),r15 ; pop ;(frac)
+ load (FP+2), RETURNPOINT ; pop
+ move r29,r15 ;(RETURNVALUE)(frac)
+
+ movei #_blockfrac,r0
+ load (r0),r0
+ cmp r15,r0 ;(frac)
+ movei #L175,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+
+L174:
+
+ movei #_blockfrac,r0
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r15,(r0) ;(frac)
+ movei #_blocknvx,r0
+ movei #_nvy,r1
+ load (r1),r1
+ neg r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+ movei #_blocknvy,r0
+ movei #_nvx,r1
+ load (r1),r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+
+L175:
+
+
+L165:
+ movei #44,scratch
+ jump T,(RETURNPOINT)
+ add scratch,FP ; delay slot
+
+;====================
+_SL_CheckLine::
+;5 dag registers  4 register variables
+;localoffset:8  regoffset:16  argoffset:56
+;====================
+ movei #56,scratch
+ sub scratch,FP
+
+ movei #_endbox+12,r0
+ load (r0),r0
+ load (FP+14),r1 ; local ld
+ movei #44,r2
+ move r1,r3
+ add r2,r3
+ load (r3),r2
+ cmp r0,r2
+ movei #L190,scratch
+ jump S_LT,(scratch)
+ nop
+ movei #_endbox+8,r0
+ load (r0),r0
+ movei #48,r2
+ move r1,r3
+ add r2,r3
+ load (r3),r2
+ cmp r0,r2
+ movei #L190,scratch
+ jump MI,(scratch)
+ nop
+ movei #_endbox,r0
+ load (r0),r0
+ movei #40,r2
+ move r1,r3
+ add r2,r3
+ load (r3),r2
+ cmp r0,r2
+ movei #L190,scratch
+ jump S_LT,(scratch)
+ nop
+ movei #_endbox+4,r0
+ load (r0),r0
+ movei #36,r2
+ add r2,r1
+ load (r1),r1
+ cmp r0,r1
+ movei #L183,scratch
+ jump PL,(scratch)
+ nop
+L190:
+
+
+ movei #L182,r0
+ jump T,(r0)
+ nop
+
+L183:
+
+ load (FP+14),r0 ; local ld
+ movei #60,r1
+ move r0,r2
+ add r1,r2
+ load (r2),r1
+ moveq #0,r2
+ cmp r1,r2
+ movei #L193,scratch
+ jump EQ,(scratch)
+ nop
+ addq #16,r0
+ load (r0),r0
+ moveq #1,r1
+ and r1,r0
+ moveq #0,r1
+ cmp r0,r1
+ movei #L191,scratch
+ jump EQ,(scratch)
+ nop
+L193:
+
+ movei #L194,r0
+ jump T,(r0)
+ nop
+
+L191:
+
+ load (FP+14),r0 ; local ld
+ movei #56,r1
+ move r0,r2
+ add r1,r2
+ load (r2),r1
+ move r1,r15 ;(front)
+ movei #60,r1
+ add r1,r0
+ load (r0),r0
+ move r0,r16 ;(back)
+ load (r15),r0 ;(front)
+ load (r16),r1 ;(back)
+ cmp r0,r1
+ movei #L195,scratch
+ jump PL,(scratch)
+ nop
+
+ load (r15),r0 ;(front)
+ move r0,r17 ;(openbottom)
+
+ movei #L196,r0
+ jump T,(r0)
+ nop
+
+L195:
+
+ load (r16),r0 ;(back)
+ move r0,r17 ;(openbottom)
+
+L196:
+
+ movei #_slidething,r0
+ load (r0),r0
+ addq #20,r0
+ load (r0),r0
+ move r17,r1 ;(openbottom)
+ sub r0,r1
+ movei #1572864,r0
+ cmp r1,r0
+ movei #L197,scratch
+ jump PL,(scratch)
+ nop
+
+ movei #L194,r0
+ jump T,(r0)
+ nop
+
+L197:
+
+ moveq #4,r0
+ move r15,r1 ;(front)
+ add r0,r1
+ load (r1),r1
+ move r16,r2 ;(back)
+ add r0,r2
+ load (r2),r0
+ cmp r1,r0
+ movei #L199,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+
+ move FP,r0
+ addq #8,r0 ; &opentop
+ move r15,r1 ;(front)
+ addq #4,r1
+ load (r1),r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+
+ movei #L200,r0
+ jump T,(r0)
+ nop
+
+L199:
+
+ move FP,r0
+ addq #8,r0 ; &opentop
+ move r16,r1 ;(back)
+ addq #4,r1
+ load (r1),r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+
+L200:
+
+ load (FP+2),r0 ; local opentop
+ sub r17,r0 ;(openbottom)
+ movei #3670016,r1
+ cmp r0,r1
+ movei #L201,scratch
+ jump S_LT,(scratch)
+ nop
+
+
+ movei #L182,r0
+ jump T,(r0)
+ nop
+
+L201:
+
+L194:
+
+ movei #_p1x,r0
+ load (FP+14),r1 ; local ld
+ load (r1),r2
+ load (r2),r2
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r2,(r0)
+ movei #_p1y,r0
+ load (r1),r2
+ moveq #4,r3
+ add r3,r2
+ load (r2),r2
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r2,(r0)
+ movei #_p2x,r0
+ move r1,r2
+ add r3,r2
+ load (r2),r4
+ load (r4),r4
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r4,(r0)
+ movei #_p2y,r0
+ load (r2),r2
+ add r3,r2
+ load (r2),r2
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r2,(r0)
+ movei #_nvx,r0
+ movei #72,r2
+ add r2,r1
+ load (r1),r2
+ movei #-2,r3
+ sha r3,r2
+ movei #_finesine,r4
+ add r4,r2
+ load (r2),r2
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r2,(r0)
+ movei #_nvy,r0
+ load (r1),r1
+ sha r3,r1
+ movei #_finecosine,r2
+ load (r2),r2
+ add r2,r1
+ load (r1),r1
+ neg r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+ movei #_slidex,r0
+ load (r0),r0
+ store r0,(FP) ; arg[]
+ movei #_slidey,r0
+ load (r0),r0
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_SL_PointOnSide,r0
+ store r28,(FP+4) ; push ;(RETURNPOINT)
+ store r18,(FP+5) ; push ;(side1)
+ store r17,(FP+6) ; push ;(openbottom)
+ store r16,(FP+7) ; push ;(back)
+ movei #L209,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+8) ; delay slot push ;(front)
+L209:
+ load (FP+5),r18 ; pop ;(side1)
+ load (FP+6),r17 ; pop ;(openbottom)
+ load (FP+7),r16 ; pop ;(back)
+ load (FP+8),r15 ; pop ;(front)
+ load (FP+4), RETURNPOINT ; pop
+ move r29,r18 ;(RETURNVALUE)(side1)
+
+ moveq #0,r0
+ cmp r18,r0 ;(side1)
+ movei #L203,scratch
+ jump NE,(scratch)
+ nop
+
+
+ movei #L182,r0
+ jump T,(r0)
+ nop
+
+L203:
+
+ movei #-1,r0
+ cmp r18,r0 ;(side1)
+ movei #L205,scratch
+ jump NE,(scratch)
+ nop
+
+ load (FP+14),r0 ; local ld
+ movei #60,r1
+ add r1,r0
+ load (r0),r0
+ moveq #0,r1
+ cmp r0,r1
+ movei #L207,scratch
+ jump NE,(scratch)
+ nop
+
+
+ movei #L182,r0
+ jump T,(r0)
+ nop
+
+L207:
+
+ move FP,r0
+ addq #12,r0 ; &temp
+ movei #_p1x,r1
+ load (r1),r2
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r2,(r0)
+ movei #_p2x,r2
+ load (r2),r3
+ load (r1),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r3,(r1)
+ load (r0),r1
+ load (r2),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r2)
+ movei #_p1y,r1
+ load (r1),r2
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r2,(r0)
+ movei #_p2y,r2
+ load (r2),r3
+ load (r1),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r3,(r1)
+ load (r0),r0
+ load (r2),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r0,(r2)
+ movei #_nvx,r0
+ load (r0),r1
+ neg r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+ movei #_nvy,r0
+ load (r0),r1
+ neg r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+
+L205:
+
+ movei #_ClipToLine,r0
+ store r28,(FP+4) ; push ;(RETURNPOINT)
+ store r18,(FP+5) ; push ;(side1)
+ store r17,(FP+6) ; push ;(openbottom)
+ store r16,(FP+7) ; push ;(back)
+ movei #L210,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+8) ; delay slot push ;(front)
+L210:
+ load (FP+5),r18 ; pop ;(side1)
+ load (FP+6),r17 ; pop ;(openbottom)
+ load (FP+7),r16 ; pop ;(back)
+ load (FP+8),r15 ; pop ;(front)
+ load (FP+4), RETURNPOINT ; pop
+
+
+L182:
+ movei #56,scratch
+ jump T,(RETURNPOINT)
+ add scratch,FP ; delay slot
+
+;====================
+_SL_PointOnSide2::
+;5 dag registers  1 register variables
+;localoffset:8  regoffset:16  argoffset:44
+;====================
+ movei #44,scratch
+ sub scratch,FP
+
+ movei #44,r0
+ add FP,r0 ; &x1
+ load (r0),r1
+ load (FP+13),r2 ; local x2
+ sub r2,r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+ movei #48,r1
+ add FP,r1 ; &y1
+ load (r1),r3
+ load (FP+14),r4 ; local y2
+ sub r4,r3
+ load (r1),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r3,(r1)
+ move FP,r1
+ addq #8,r1 ; &nx
+ load (FP+16),r3 ; local y3
+ sub r4,r3
+ load (r1),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r3,(r1)
+ move FP,r3
+ addq #12,r3 ; &ny
+ load (FP+15),r4 ; local x3
+ sub r4,r2
+ load (r3),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r2,(r3)
+ load (r0),r0
+ store r0,(FP) ; arg[]
+ load (r1),r0
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_G_FixedMul,r0
+ store r28,(FP+4) ; push ;(RETURNPOINT)
+ movei #L214,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+5) ; delay slot push ;(dist)
+L214:
+ load (FP+5),r15 ; pop ;(dist)
+ load (FP+4), RETURNPOINT ; pop
+ move r29,r15 ;(RETURNVALUE)(dist)
+
+ load (FP+12),r0 ; local y1
+ store r0,(FP) ; arg[]
+ load (FP+3),r0 ; local ny
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_G_FixedMul,r0
+ store r28,(FP+4) ; push ;(RETURNPOINT)
+ movei #L215,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+5) ; delay slot push ;(dist)
+L215:
+ load (FP+5),r15 ; pop ;(dist)
+ load (FP+4), RETURNPOINT ; pop
+ move r15,r0 ;(dist)
+ add r29,r0 ;(RETURNVALUE)
+ move r0,r15 ;(dist)
+ moveq #0,r0
+ cmp r15,r0 ;(dist)
+ movei #L212,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+
+ movei #-1,r0
+ move r0,RETURNVALUE
+
+ movei #L211,r0
+ jump T,(r0)
+ nop
+
+L212:
+
+ moveq #1,r0
+ move r0,RETURNVALUE
+
+L211:
+ movei #44,scratch
+ jump T,(RETURNPOINT)
+ add scratch,FP ; delay slot
+
+;====================
+_SL_CheckSpecialLines::
+;5 dag registers  8 register variables
+;localoffset:24  regoffset:56  argoffset:112
+;====================
+ movei #112,scratch
+ sub scratch,FP
+
+ load (FP+28),r0 ; local x1
+ load (FP+30),r1 ; local x2
+ cmp r0,r1
+ movei #L217,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+
+ load (FP+28),r0 ; local x1
+ move r0,r21 ;(xl)
+ load (FP+30),r0 ; local x2
+ move r0,r22 ;(xh)
+
+ movei #L218,r0
+ jump T,(r0)
+ nop
+
+L217:
+
+ load (FP+30),r0 ; local x2
+ move r0,r21 ;(xl)
+ load (FP+28),r0 ; local x1
+ move r0,r22 ;(xh)
+
+L218:
+
+ load (FP+29),r0 ; local y1
+ load (FP+31),r1 ; local y2
+ cmp r0,r1
+ movei #L219,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+
+ move FP,r0
+ addq #24,r0 ; &yl
+ load (FP+29),r1 ; local y1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+ move FP,r0
+ addq #28,r0 ; &yh
+ load (FP+31),r1 ; local y2
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+
+ movei #L220,r0
+ jump T,(r0)
+ nop
+
+L219:
+
+ move FP,r0
+ addq #24,r0 ; &yl
+ load (FP+31),r1 ; local y2
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+ move FP,r0
+ addq #28,r0 ; &yh
+ load (FP+29),r1 ; local y1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+
+L220:
+
+ movei #52,r0
+ add FP,r0 ; &bxl
+ movei #_bmaporgx,r1
+ load (r1),r1
+ move r21,r2 ;(xl)
+ sub r1,r2
+ moveq #23,r3
+ sha r3,r2
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r2,(r0)
+ movei #44,r2
+ add FP,r2 ; &bxh
+ move r22,r4 ;(xh)
+ sub r1,r4
+ move r4,r1
+ sha r3,r1
+ load (r2),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r2)
+ movei #48,r1
+ add FP,r1 ; &byl
+ load (FP+6),r2 ; local yl
+ movei #_bmaporgy,r4
+ load (r4),r4
+ sub r4,r2
+ sha r3,r2
+ load (r1),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r2,(r1)
+ movei #40,r1
+ add FP,r1 ; &byh
+ load (FP+7),r2 ; local yh
+ sub r4,r2
+ sha r3,r2
+ load (r1),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r2,(r1)
+ load (r0),r0
+ moveq #0,r1
+ cmp r0,r1
+ movei #L221,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+
+ movei #52,r0
+ add FP,r0 ; &bxl
+ moveq #0,r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+
+L221:
+
+ load (FP+12),r0 ; local byl
+ moveq #0,r1
+ cmp r0,r1
+ movei #L223,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+
+ movei #48,r0
+ add FP,r0 ; &byl
+ moveq #0,r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+
+L223:
+
+ load (FP+11),r0 ; local bxh
+ movei #_bmapwidth,r1
+ load (r1),r1
+ cmp r0,r1
+ movei #L225,scratch
+ jump S_LT,(scratch)
+ nop
+
+ movei #44,r0
+ add FP,r0 ; &bxh
+ movei #_bmapwidth,r1
+ load (r1),r1
+ subq #1,r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+
+L225:
+
+ load (FP+10),r0 ; local byh
+ movei #_bmapheight,r1
+ load (r1),r1
+ cmp r0,r1
+ movei #L227,scratch
+ jump S_LT,(scratch)
+ nop
+
+ movei #40,r0
+ add FP,r0 ; &byh
+ movei #_bmapheight,r1
+ load (r1),r1
+ subq #1,r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+
+L227:
+
+ movei #_specialline,r0
+ moveq #0,r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+ movei #_validcount,r0
+ load (r0),r1
+ addq #1,r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+ movei #36,r0
+ add FP,r0 ; &bx
+ load (FP+13),r1 ; local bxl
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+
+ movei #L232,r0
+ jump T,(r0)
+ nop
+
+L229:
+
+ move FP,r0
+ addq #32,r0 ; &by
+ load (FP+12),r1 ; local byl
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+
+ movei #L236,r0
+ jump T,(r0)
+ nop
+
+L233:
+
+ movei #_offset,r0
+ load (FP+8),r1 ; local by
+ movei #_bmapwidth,r2
+ load (r2),r2
+ move r1,MATH_A
+ movei #L254,MATH_RTS
+ movei #GPU_IMUL,scratch
+ jump T,(scratch)
+ move r2,MATH_B ; delay slot
+L254:
+ move MATH_C,r1
+ load (FP+9),r2 ; local bx
+ add r2,r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+ load (r0),r1
+ movei #-1,r2
+ sha r2,r1
+ movei #_blockmap,r3
+ load (r3),r3
+ add r3,r1
+ loadw (r1),r1
+ movei #$ffff8000,scratch
+ add scratch,r1
+ xor scratch,r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+ movei #_list,r1
+ load (r0),r0
+ sha r2,r0
+ movei #_blockmaplump,r2
+ load (r2),r2
+ add r2,r0
+ load (r1),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r0,(r1)
+
+ movei #L240,r0
+ jump T,(r0)
+ nop
+
+L237:
+
+ movei #_ld,r0
+ movei #76,r1
+ movei #_list,r2
+ load (r2),r2
+ loadw (r2),r2
+ movei #$ffff8000,scratch
+ add scratch,r2
+ xor scratch,r2
+ move r1,MATH_A
+ movei #L255,MATH_RTS
+ movei #GPU_IMUL,scratch
+ jump T,(scratch)
+ move r2,MATH_B ; delay slot
+L255:
+ move MATH_C,r1
+ movei #_lines,r2
+ load (r2),r2
+ add r2,r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+ load (r0),r0
+ addq #20,r0
+ load (r0),r0
+ moveq #0,r1
+ cmp r0,r1
+ movei #L241,scratch
+ jump NE,(scratch)
+ nop
+
+ movei #L238,r0
+ jump T,(r0)
+ nop
+
+L241:
+
+ movei #_ld,r0
+ load (r0),r0
+ movei #64,r1
+ add r1,r0
+ load (r0),r0
+ movei #_validcount,r1
+ load (r1),r1
+ cmp r0,r1
+ movei #L243,scratch
+ jump NE,(scratch)
+ nop
+
+ movei #L238,r0
+ jump T,(r0)
+ nop
+
+L243:
+
+ movei #_ld,r0
+ load (r0),r0
+ movei #64,r1
+ add r1,r0
+ movei #_validcount,r1
+ load (r1),r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+
+ movei #_ld,r0
+ load (r0),r0
+ movei #44,r1
+ move r0,r2
+ add r1,r2
+ load (r2),r1
+ cmp r22,r1 ;(xh)
+ movei #L249,scratch
+ jump S_LT,(scratch)
+ nop
+ movei #48,r1
+ move r0,r2
+ add r1,r2
+ load (r2),r1
+ cmp r21,r1 ;(xl)
+ movei #L249,scratch
+ jump MI,(scratch)
+ nop
+ load (FP+7),r1 ; local yh
+ movei #40,r2
+ move r0,r3
+ add r2,r3
+ load (r3),r2
+ cmp r1,r2
+ movei #L249,scratch
+ jump S_LT,(scratch)
+ nop
+ load (FP+6),r1 ; local yl
+ movei #36,r2
+ add r2,r0
+ load (r0),r0
+ cmp r1,r0
+ movei #L245,scratch
+ jump PL,(scratch)
+ nop
+L249:
+
+ movei #L238,r0
+ jump T,(r0)
+ nop
+
+L245:
+
+ movei #_ld,r0
+ load (r0),r0
+ load (r0),r1
+ load (r1),r1
+ move r1,r15 ;(x3)
+ load (r0),r1
+ moveq #4,r2
+ add r2,r1
+ load (r1),r1
+ move r1,r16 ;(y3)
+ add r2,r0
+ load (r0),r1
+ load (r1),r1
+ move r1,r17 ;(x4)
+ load (r0),r0
+ add r2,r0
+ load (r0),r0
+ move r0,r18 ;(y4)
+ load (FP+28),r0 ; local x1
+ store r0,(FP) ; arg[]
+ load (FP+29),r0 ; local y1
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ or r15,scratch ; scoreboard bug ;(x3)
+ store r15,(FP+2) ; arg[] ;(x3)
+ or r16,scratch ; scoreboard bug ;(y3)
+ store r16,(FP+3) ; arg[] ;(y3)
+ or r17,scratch ; scoreboard bug ;(x4)
+ store r17,(FP+4) ; arg[] ;(x4)
+ or r18,scratch ; scoreboard bug ;(y4)
+ store r18,(FP+5) ; arg[] ;(y4)
+ movei #_SL_PointOnSide2,r0
+ store r28,(FP+14) ; push ;(RETURNPOINT)
+ store r22,(FP+15) ; push ;(xh)
+ store r21,(FP+16) ; push ;(xl)
+ store r20,(FP+17) ; push ;(side2)
+ store r19,(FP+18) ; push ;(side1)
+ store r18,(FP+19) ; push ;(y4)
+ store r17,(FP+20) ; push ;(x4)
+ store r16,(FP+21) ; push ;(y3)
+ movei #L256,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+22) ; delay slot push ;(x3)
+L256:
+ load (FP+15),r22 ; pop ;(xh)
+ load (FP+16),r21 ; pop ;(xl)
+ load (FP+17),r20 ; pop ;(side2)
+ load (FP+18),r19 ; pop ;(side1)
+ load (FP+19),r18 ; pop ;(y4)
+ load (FP+20),r17 ; pop ;(x4)
+ load (FP+21),r16 ; pop ;(y3)
+ load (FP+22),r15 ; pop ;(x3)
+ load (FP+14), RETURNPOINT ; pop
+ move r29,r19 ;(RETURNVALUE)(side1)
+
+ load (FP+30),r0 ; local x2
+ store r0,(FP) ; arg[]
+ load (FP+31),r0 ; local y2
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ or r15,scratch ; scoreboard bug ;(x3)
+ store r15,(FP+2) ; arg[] ;(x3)
+ or r16,scratch ; scoreboard bug ;(y3)
+ store r16,(FP+3) ; arg[] ;(y3)
+ or r17,scratch ; scoreboard bug ;(x4)
+ store r17,(FP+4) ; arg[] ;(x4)
+ or r18,scratch ; scoreboard bug ;(y4)
+ store r18,(FP+5) ; arg[] ;(y4)
+ movei #_SL_PointOnSide2,r0
+ store r28,(FP+14) ; push ;(RETURNPOINT)
+ store r22,(FP+15) ; push ;(xh)
+ store r21,(FP+16) ; push ;(xl)
+ store r20,(FP+17) ; push ;(side2)
+ store r19,(FP+18) ; push ;(side1)
+ store r18,(FP+19) ; push ;(y4)
+ store r17,(FP+20) ; push ;(x4)
+ store r16,(FP+21) ; push ;(y3)
+ movei #L257,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+22) ; delay slot push ;(x3)
+L257:
+ load (FP+15),r22 ; pop ;(xh)
+ load (FP+16),r21 ; pop ;(xl)
+ load (FP+17),r20 ; pop ;(side2)
+ load (FP+18),r19 ; pop ;(side1)
+ load (FP+19),r18 ; pop ;(y4)
+ load (FP+20),r17 ; pop ;(x4)
+ load (FP+21),r16 ; pop ;(y3)
+ load (FP+22),r15 ; pop ;(x3)
+ load (FP+14), RETURNPOINT ; pop
+ move r29,r20 ;(RETURNVALUE)(side2)
+
+ cmp r19,r20 ;(side1)(side2)
+ movei #L250,scratch
+ jump NE,(scratch)
+ nop
+
+ movei #L238,r0
+ jump T,(r0)
+ nop
+
+L250:
+
+ store r15,(FP) ; arg[] ;(x3)
+ or r16,scratch ; scoreboard bug ;(y3)
+ store r16,(FP+1) ; arg[] ;(y3)
+ load (FP+28),r0 ; local x1
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+2) ; arg[]
+ load (FP+29),r0 ; local y1
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+3) ; arg[]
+ load (FP+30),r0 ; local x2
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+4) ; arg[]
+ load (FP+31),r0 ; local y2
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+5) ; arg[]
+ movei #_SL_PointOnSide2,r0
+ store r28,(FP+14) ; push ;(RETURNPOINT)
+ store r22,(FP+15) ; push ;(xh)
+ store r21,(FP+16) ; push ;(xl)
+ store r20,(FP+17) ; push ;(side2)
+ store r19,(FP+18) ; push ;(side1)
+ store r18,(FP+19) ; push ;(y4)
+ store r17,(FP+20) ; push ;(x4)
+ store r16,(FP+21) ; push ;(y3)
+ movei #L258,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+22) ; delay slot push ;(x3)
+L258:
+ load (FP+15),r22 ; pop ;(xh)
+ load (FP+16),r21 ; pop ;(xl)
+ load (FP+17),r20 ; pop ;(side2)
+ load (FP+18),r19 ; pop ;(side1)
+ load (FP+19),r18 ; pop ;(y4)
+ load (FP+20),r17 ; pop ;(x4)
+ load (FP+21),r16 ; pop ;(y3)
+ load (FP+22),r15 ; pop ;(x3)
+ load (FP+14), RETURNPOINT ; pop
+ move r29,r19 ;(RETURNVALUE)(side1)
+
+ store r17,(FP) ; arg[] ;(x4)
+ or r18,scratch ; scoreboard bug ;(y4)
+ store r18,(FP+1) ; arg[] ;(y4)
+ load (FP+28),r0 ; local x1
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+2) ; arg[]
+ load (FP+29),r0 ; local y1
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+3) ; arg[]
+ load (FP+30),r0 ; local x2
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+4) ; arg[]
+ load (FP+31),r0 ; local y2
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+5) ; arg[]
+ movei #_SL_PointOnSide2,r0
+ store r28,(FP+14) ; push ;(RETURNPOINT)
+ store r22,(FP+15) ; push ;(xh)
+ store r21,(FP+16) ; push ;(xl)
+ store r20,(FP+17) ; push ;(side2)
+ store r19,(FP+18) ; push ;(side1)
+ store r18,(FP+19) ; push ;(y4)
+ store r17,(FP+20) ; push ;(x4)
+ store r16,(FP+21) ; push ;(y3)
+ movei #L259,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+22) ; delay slot push ;(x3)
+L259:
+ load (FP+15),r22 ; pop ;(xh)
+ load (FP+16),r21 ; pop ;(xl)
+ load (FP+17),r20 ; pop ;(side2)
+ load (FP+18),r19 ; pop ;(side1)
+ load (FP+19),r18 ; pop ;(y4)
+ load (FP+20),r17 ; pop ;(x4)
+ load (FP+21),r16 ; pop ;(y3)
+ load (FP+22),r15 ; pop ;(x3)
+ load (FP+14), RETURNPOINT ; pop
+ move r29,r20 ;(RETURNVALUE)(side2)
+
+ cmp r19,r20 ;(side1)(side2)
+ movei #L252,scratch
+ jump NE,(scratch)
+ nop
+
+ movei #L238,r0
+ jump T,(r0)
+ nop
+
+L252:
+
+ movei #_specialline,r0
+ movei #_ld,r1
+ load (r1),r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+
+ movei #L216,r0
+ jump T,(r0)
+ nop
+
+L238:
+
+ movei #_list,r0
+ load (r0),r1
+ addq #2,r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+
+L240:
+
+ movei #_list,r0
+ load (r0),r0
+ loadw (r0),r0
+ movei #$ffff8000,scratch
+ add scratch,r0
+ xor scratch,r0
+ movei #-1,r1
+ cmp r0,r1
+ movei #L237,scratch
+ jump NE,(scratch)
+ nop
+
+L234:
+
+ move FP,r0
+ addq #32,r0 ; &by
+ load (r0),r1
+ addq #1,r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+
+L236:
+
+ load (FP+8),r0 ; local by
+ load (FP+10),r1 ; local byh
+ cmp r0,r1
+ movei #L233,scratch
+ jump PL,(scratch)
+ nop
+
+L230:
+
+ movei #36,r0
+ add FP,r0 ; &bx
+ load (r0),r1
+ addq #1,r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+
+L232:
+
+ load (FP+9),r0 ; local bx
+ load (FP+11),r1 ; local bxh
+ cmp r0,r1
+ movei #L229,scratch
+ jump PL,(scratch)
+ nop
+
+
+L216:
+ movei #112,scratch
+ jump T,(RETURNPOINT)
+ add scratch,FP ; delay slot
+
+;=======================
+
+ .long
+_offset::
+ .dc.l 0
+ .long
+_ld::
+ .dc.l 0
+ .long
+_list::
+ .dc.l 0
+ .long
+_nvy::
+ .dc.l 0
+ .long
+_nvx::
+ .dc.l 0
+ .long
+_p4y::
+ .dc.l 0
+ .long
+_p4x::
+ .dc.l 0
+ .long
+_p3y::
+ .dc.l 0
+ .long
+_p3x::
+ .dc.l 0
+ .long
+_p2y::
+ .dc.l 0
+ .long
+_p2x::
+ .dc.l 0
+ .long
+_p1y::
+ .dc.l 0
+ .long
+_p1x::
+ .dc.l 0
+ .long
+_blocknvy::
+ .dc.l 0
+ .long
+_blocknvx::
+ .dc.l 0
+ .long
+_blockfrac::
+ .dc.l 0
+ .long
+_endbox::
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .long
+_slidedy::
+ .dc.l 0
+ .long
+_slidedx::
+ .dc.l 0
+ .long
+_slidey::
+ .dc.l 0
+ .long
+_slidex::
+ .dc.l 0
+ .extern _slidething
+ .extern _bmaporgy
+ .extern _bmaporgx
+ .extern _bmapheight
+ .extern _bmapwidth
+ .extern _blockmap
+ .extern _blockmaplump
+ .long
+_specialline::
+ .dc.l 0
+ .extern _validcount
+ .extern _lines
+ .extern _finecosine
+ .extern _finesine
+ .extern _G_FixedDiv
+ .extern _G_FixedMul
+
+	.phrase
+	.68000
+codeend:

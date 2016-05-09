@@ -1,0 +1,1186 @@
+ .long
+ .dc.l	codeend - _ref5_start
+_ref5_start::
+ .gpu
+	.org $f03100
+DIVCONTROL		.equ	$f0211c
+
+S_LE	.ccdef  $14     ; PL
+U_LE	.ccdef  $04     ; CC
+S_GT    .ccdef	$18   	; MI
+U_GT    .ccdef	$08  	; CS
+
+S_LT	.ccdef	$15		; PL+NE
+U_LT	.ccdef	$05		; CC+NE
+
+FP .equr r14
+scratch .equr r10
+scratch2 .equr r11
+RETURNVALUE .equr r29
+RETURNPOINT .equr r28
+MATH_A .equr r27
+MATH_B .equr r26
+MATH_C .equr r25
+MATH_RTS .equr r24
+MATH_SIGN .equr r23
+
+	movei	#codestart,scratch
+	jump	T,(scratch)
+	nop
+
+
+GPU_IMUL:
+ move MATH_A,MATH_SIGN
+ xor MATH_B,MATH_SIGN
+ abs MATH_A
+ abs MATH_B
+ move MATH_A,MATH_C
+ mult MATH_B,MATH_C
+ move MATH_B,scratch2
+ shrq #16,scratch2
+ mult MATH_A,scratch2
+ shlq #16,scratch2
+ add scratch2,MATH_C
+ move MATH_A,scratch2
+ shrq #16,scratch2
+ mult MATH_B,scratch2
+ shlq #16,scratch2
+ add scratch2, MATH_C
+ btst #31,MATH_SIGN
+ jump EQ,(MATH_RTS)
+ nop
+ jump T,(MATH_RTS)
+ neg MATH_C
+	
+
+;=============================================================================
+;
+_R_decode:
+;
+;=============================================================================
+
+getidbyte       .equr   r4
+idbyte          .equr   r5
+ptr_input       .equr   r6
+ptr_output      .equr   r7
+pos             .equr   r8
+ptr_source      .equr   r9
+len             .equr   r10
+lbl_main        .equr   r11
+const_f			.equr	r12
+palette			.equr	r13
+
+;void R_decode(unsigned char *input, pixel_t *out)
+;   decompress an lzss-compressed lump
+		
+;	Initialize vairables
+
+	load	(FP),ptr_input
+	load	(FP+1),ptr_output
+
+	movei	#W_RL_main, lbl_main
+	moveq	#$f,const_f
+
+; getidbyte = 0
+	moveq	#1, getidbyte
+	movei	#_vgatojag,palette
+	
+;	Main decompression loop
+
+	
+	subq	#1,getidbyte
+W_RL_main:
+	jr		EQ,w_loadidbyte	
+	
+; test low bit of idbyte
+W_RL_testidbyte:
+	btst	#0, idbyte		; a harmless delay slot
+	jr		NE, W_RL_uncompress
+	shrq	#1, idbyte		; delay slot
+	
+; copy one character
+	loadb	(ptr_input), r0
+	addq	#1, ptr_input
+	shlq	#2,r0
+	add		palette,r0
+	load	(r0),r0			; convert to 16 bit cry
+	storew	r0, (ptr_output)
+	addq	#2, ptr_output
+	jump	T, (lbl_main)
+	subq	#1,getidbyte	; delay slot
+
+; load idbyte and reset getidbyte
+w_loadidbyte:
+	loadb	(ptr_input), idbyte
+	addq	#1, ptr_input
+	jr		T,W_RL_testidbyte
+	moveq	#8,getidbyte	; delay slot
+		
+W_RL_uncompress:
+
+; get the position offset
+
+	loadb	(ptr_input), r0
+	addq	#1, ptr_input
+	shlq	#4, r0
+	loadb	(ptr_input), pos
+	shrq	#4, pos
+	or	r0, pos
+
+; add position offset to the output and store in ptr_source
+	addq	#1,pos
+	move	ptr_output, ptr_source
+	sub		pos, ptr_source
+	sub		pos, ptr_source
+
+; get the length
+
+	loadb	(ptr_input), len
+	addq	#1, ptr_input
+	and		const_f, len
+	jump	EQ, (RETURNPOINT)		; if byte & 0xf == 0, done	
+	loadw	(ptr_source), r0
+	
+W_RL_copyloop:
+	addq	#2, ptr_source
+	storew	r0, (ptr_output)
+	subq	#1, len
+	addqt	#2, ptr_output
+	jr		PL, W_RL_copyloop
+	loadw	(ptr_source), r0	; delay slot
+
+	jump	T, (lbl_main)
+	subq	#1,getidbyte	; delay slot
+
+
+
+codestart:
+
+;====================
+_R_Cache::
+;2 dag registers  2 register variables
+;localoffset:4  regoffset:4  argoffset:24
+;====================
+ subq #24,FP
+
+ movei #_viswalls,r0
+ move r0,r15 ;(wall)
+
+ movei #L55,r0
+ jump T,(r0)
+ nop
+
+L52:
+
+ move r15,r0 ;(wall)
+ addq #24,r0
+ load (r0),r0
+ moveq #4,r1
+ and r1,r0
+ moveq #0,r1
+ cmp r0,r1
+ movei #L56,scratch
+ jump EQ,(scratch)
+ nop
+ movei #40,r0
+ move r15,r1 ;(wall)
+ add r0,r1
+ load (r1),r0
+ addq #16,r0
+ load (r0),r0
+ movei #4096,r1
+ cmp r0,r1
+ movei #L56,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+
+ movei #40,r0
+ move r15,r1 ;(wall)
+ add r0,r1
+ load (r1),r0
+ addq #16,r0
+ load (r0),r1
+ store r1,(FP) ; arg[]
+ movei #_R_LoadPixels,r1
+ store r28,(FP+1) ; push ;(RETURNPOINT)
+ store r16,(FP+2) ; push ;(spr)
+ store r15,(FP+3) ; push ;(wall)
+ movei #L75,RETURNPOINT
+ jump T,(r1)
+ store r0,(FP+4) ; delay slot push
+L75:
+ load (FP+2),r16 ; pop ;(spr)
+ load (FP+3),r15 ; pop ;(wall)
+ load (FP+4),r0 ; pop
+ load (FP+1), RETURNPOINT ; pop
+ move r29,r1 ;(RETURNVALUE)
+ store r1,(r0)
+
+L56:
+
+ move r15,r0 ;(wall)
+ addq #24,r0
+ load (r0),r0
+ moveq #8,r1
+ and r1,r0
+ moveq #0,r1
+ cmp r0,r1
+ movei #L58,scratch
+ jump EQ,(scratch)
+ nop
+ movei #56,r0
+ move r15,r1 ;(wall)
+ add r0,r1
+ load (r1),r0
+ addq #16,r0
+ load (r0),r0
+ movei #4096,r1
+ cmp r0,r1
+ movei #L58,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+
+ movei #56,r0
+ move r15,r1 ;(wall)
+ add r0,r1
+ load (r1),r0
+ addq #16,r0
+ load (r0),r1
+ store r1,(FP) ; arg[]
+ movei #_R_LoadPixels,r1
+ store r28,(FP+1) ; push ;(RETURNPOINT)
+ store r16,(FP+2) ; push ;(spr)
+ store r15,(FP+3) ; push ;(wall)
+ movei #L76,RETURNPOINT
+ jump T,(r1)
+ store r0,(FP+4) ; delay slot push
+L76:
+ load (FP+2),r16 ; pop ;(spr)
+ load (FP+3),r15 ; pop ;(wall)
+ load (FP+4),r0 ; pop
+ load (FP+1), RETURNPOINT ; pop
+ move r29,r1 ;(RETURNVALUE)
+ store r1,(r0)
+
+L58:
+
+ move r15,r0 ;(wall)
+ addq #16,r0
+ load (r0),r0
+ movei #4096,r1
+ cmp r0,r1
+ movei #L60,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+
+ move r15,r0 ;(wall)
+ addq #16,r0
+ load (r0),r1
+ store r1,(FP) ; arg[]
+ movei #_R_LoadPixels,r1
+ store r28,(FP+1) ; push ;(RETURNPOINT)
+ store r16,(FP+2) ; push ;(spr)
+ store r15,(FP+3) ; push ;(wall)
+ movei #L77,RETURNPOINT
+ jump T,(r1)
+ store r0,(FP+4) ; delay slot push
+L77:
+ load (FP+2),r16 ; pop ;(spr)
+ load (FP+3),r15 ; pop ;(wall)
+ load (FP+4),r0 ; pop
+ load (FP+1), RETURNPOINT ; pop
+ move r29,r1 ;(RETURNVALUE)
+ store r1,(r0)
+
+L60:
+
+ move r15,r0 ;(wall)
+ addq #20,r0
+ load (r0),r0
+ movei #-1,r1
+ cmp r0,r1
+ movei #L62,scratch
+ jump NE,(scratch)
+ nop
+
+ movei #_skytexturep,r0
+ load (r0),r0
+ addq #16,r0
+ load (r0),r0
+ movei #4096,r1
+ cmp r0,r1
+ movei #L63,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+
+ movei #_skytexturep,r0
+ load (r0),r0
+ addq #16,r0
+ load (r0),r1
+ store r1,(FP) ; arg[]
+ movei #_R_LoadPixels,r1
+ store r28,(FP+1) ; push ;(RETURNPOINT)
+ store r16,(FP+2) ; push ;(spr)
+ store r15,(FP+3) ; push ;(wall)
+ movei #L78,RETURNPOINT
+ jump T,(r1)
+ store r0,(FP+4) ; delay slot push
+L78:
+ load (FP+2),r16 ; pop ;(spr)
+ load (FP+3),r15 ; pop ;(wall)
+ load (FP+4),r0 ; pop
+ load (FP+1), RETURNPOINT ; pop
+ move r29,r1 ;(RETURNVALUE)
+ store r1,(r0)
+
+ movei #L63,r0
+ jump T,(r0)
+ nop
+
+L62:
+
+ move r15,r0 ;(wall)
+ addq #20,r0
+ load (r0),r0
+ movei #4096,r1
+ cmp r0,r1
+ movei #L66,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+
+ move r15,r0 ;(wall)
+ addq #20,r0
+ load (r0),r1
+ store r1,(FP) ; arg[]
+ movei #_R_LoadPixels,r1
+ store r28,(FP+1) ; push ;(RETURNPOINT)
+ store r16,(FP+2) ; push ;(spr)
+ store r15,(FP+3) ; push ;(wall)
+ movei #L79,RETURNPOINT
+ jump T,(r1)
+ store r0,(FP+4) ; delay slot push
+L79:
+ load (FP+2),r16 ; pop ;(spr)
+ load (FP+3),r15 ; pop ;(wall)
+ load (FP+4),r0 ; pop
+ load (FP+1), RETURNPOINT ; pop
+ move r29,r1 ;(RETURNVALUE)
+ store r1,(r0)
+
+L66:
+
+L63:
+
+L53:
+
+ movei #112,r0
+ move r15,r1 ;(wall)
+ add r0,r1
+ move r1,r15 ;(wall)
+
+L55:
+
+ move r15,r0 ;(wall)
+ movei #_lastwallcmd,r1
+ load (r1),r1
+ cmp r0,r1
+ movei #L52,scratch
+ jump U_LT,(scratch)
+ nop
+
+ movei #_vissprites,r0
+ move r0,r16 ;(spr)
+
+ movei #L71,r0
+ jump T,(r0)
+ nop
+
+L68:
+
+ movei #56,r0
+ move r16,r1 ;(spr)
+ add r0,r1
+ load (r1),r0
+ movei #4096,r1
+ cmp r0,r1
+ movei #L72,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+
+ movei #56,r0
+ move r16,r1 ;(spr)
+ add r0,r1
+ load (r1),r0
+ store r0,(FP) ; arg[]
+ movei #_R_LoadPixels,r0
+ store r28,(FP+1) ; push ;(RETURNPOINT)
+ store r16,(FP+2) ; push ;(spr)
+ store r15,(FP+3) ; push ;(wall)
+ movei #L80,RETURNPOINT
+ jump T,(r0)
+ store r1,(FP+4) ; delay slot push
+L80:
+ load (FP+2),r16 ; pop ;(spr)
+ load (FP+3),r15 ; pop ;(wall)
+ load (FP+4),r1 ; pop
+ load (FP+1), RETURNPOINT ; pop
+ move r29,r0 ;(RETURNVALUE)
+ store r0,(r1)
+
+L72:
+
+L69:
+
+ movei #60,r0
+ move r16,r1 ;(spr)
+ add r0,r1
+ move r1,r16 ;(spr)
+
+L71:
+
+ move r16,r0 ;(spr)
+ movei #_vissprite_p,r1
+ load (r1),r1
+ cmp r0,r1
+ movei #L68,scratch
+ jump U_LT,(scratch)
+ nop
+
+ movei #_phasetime+20,r0
+ movei #_samplecount,r1
+ load (r1),r1
+ store r1,(r0)
+
+ movei #_gpucodestart,r0
+ movei #_ref6_start,r1
+ store r1,(r0)
+
+
+L51:
+ jump T,(RETURNPOINT)
+ addq #24,FP ; delay slot
+
+;====================
+_R_Malloc::
+;3 dag registers  4 register variables
+;localoffset:0  regoffset:4  argoffset:4
+;====================
+ subq #4,FP
+
+ move FP,r0
+ addq #4,r0 ; &size
+ load (r0),r1
+ addq #24,r1
+ store r1,(r0)
+ load (r0),r1
+ addq #7,r1
+ movei #-8,r2
+ and r2,r1
+ store r1,(r0)
+ movei #_refzone,r0
+ load (r0),r0
+ addq #4,r0
+ load (r0),r0
+ move r0,r16 ;(base)
+ move r0,r17 ;(start)
+
+ movei #L83,r0
+ jump T,(r0)
+ nop
+
+L82:
+
+ move r16,r0 ;(base)
+ addq #4,r0
+ load (r0),r0
+ moveq #0,r1
+ cmp r0,r1
+ movei #L85,scratch
+ jump EQ,(scratch)
+ nop
+
+ move r16,r15 ;(base)(rover)
+
+ movei #L86,r0
+ jump T,(r0)
+ nop
+
+L85:
+
+ move r16,r0 ;(base)
+ addq #16,r0
+ load (r0),r0
+ move r0,r15 ;(rover)
+
+L86:
+
+ move r15,r0 ;(rover)
+ moveq #0,r1
+ cmp r0,r1
+ movei #L87,scratch
+ jump NE,(scratch)
+ nop
+
+ movei #L89,r0
+ jump T,(r0)
+ nop
+
+L87:
+
+ move r15,r0 ;(rover)
+ addq #4,r0
+ load (r0),r0
+ moveq #0,r1
+ cmp r0,r1
+ movei #L90,scratch
+ jump EQ,(scratch)
+ nop
+ move r15,r0 ;(rover)
+ addq #12,r0
+ load (r0),r0
+ movei #_framecount,r1
+ load (r1),r1
+ cmp r0,r1
+ movei #L90,scratch
+ jump NE,(scratch)
+ nop
+
+ move r15,r0 ;(rover)
+ addq #16,r0
+ load (r0),r0
+ move r0,r16 ;(base)
+ move r16,r0 ;(base)
+ moveq #0,r1
+ cmp r0,r1
+ movei #L92,scratch
+ jump NE,(scratch)
+ nop
+
+L89:
+
+ movei #_refzone,r0
+ load (r0),r0
+ addq #8,r0
+ move r0,r16 ;(base)
+
+L92:
+
+ move r16,r0 ;(base)
+ move r17,r1 ;(start)
+ cmp r0,r1
+ movei #L83,scratch
+ jump NE,(scratch)
+ nop
+
+ movei #_framecount,r0
+ load (r0),r1
+ addq #1,r1
+ store r1,(r0)
+
+ movei #L83,r0
+ jump T,(r0)
+ nop
+
+L90:
+
+ move r15,r0 ;(rover)
+ addq #4,r0
+ load (r0),r0
+ movei #1024,r1
+ cmp r0,r1
+ movei #L96,scratch
+ jump PL,(scratch)
+ nop
+
+ move r15,r0 ;(rover)
+ addq #4,r0
+ load (r0),r0
+ moveq #0,r1
+ store r1,(r0)
+
+L96:
+
+ move r15,r0 ;(rover)
+ addq #10,r0
+ moveq #0,r1
+ storew r1,(r0)
+
+ move r15,r0 ;(rover)
+ addq #4,r0
+ moveq #0,r1
+ store r1,(r0)
+
+ move r16,r0 ;(base)
+ move r15,r1 ;(rover)
+ cmp r0,r1
+ movei #L98,scratch
+ jump EQ,(scratch)
+ nop
+
+ load (r16),r0 ;(base)
+ load (r15),r1 ;(rover)
+ add r1,r0
+ store r0,(r16) ;(base)
+
+ moveq #16,r0
+ move r16,r1 ;(base)
+ add r0,r1
+ move r15,r2 ;(rover)
+ add r0,r2
+ load (r2),r0
+ store r0,(r1)
+
+ move r15,r0 ;(rover)
+ addq #16,r0
+ load (r0),r0
+ moveq #0,r1
+ cmp r0,r1
+ movei #L100,scratch
+ jump EQ,(scratch)
+ nop
+
+ move r15,r0 ;(rover)
+ addq #16,r0
+ load (r0),r0
+ addq #20,r0
+ store r16,(r0) ;(base)
+
+L100:
+
+L98:
+
+L83:
+
+ move r16,r0 ;(base)
+ addq #4,r0
+ load (r0),r0
+ moveq #0,r1
+ cmp r0,r1
+ movei #L82,scratch
+ jump NE,(scratch)
+ nop
+ load (r16),r0 ;(base)
+ load (FP+1),r1 ; local size
+ cmp r0,r1
+ movei #L82,scratch
+ jump S_LT,(scratch)
+ nop
+
+ move FP,r0 ; &extra
+ load (r16),r1 ;(base)
+ load (FP+1),r2 ; local size
+ sub r2,r1
+ store r1,(r0)
+ load (r0),r0
+ movei #64,r1
+ cmp r0,r1
+ movei #L102,scratch
+ jump PL,(scratch)
+ nop
+
+ load (FP+1),r0 ; local size
+ add r16,r0 ;(base)
+ move r0,r18 ;(new)
+ load (FP),r0 ; local extra
+ store r0,(r18) ;(new)
+
+ move r18,r0 ;(new)
+ addq #4,r0
+ moveq #0,r1
+ store r1,(r0)
+
+ move r18,r0 ;(new)
+ addq #12,r0
+ moveq #0,r1
+ store r1,(r0)
+ move r18,r0 ;(new)
+ addq #8,r0
+ storew r1,(r0)
+
+ move r18,r0 ;(new)
+ addq #20,r0
+ store r16,(r0) ;(base)
+
+ moveq #16,r0
+ move r18,r1 ;(new)
+ add r0,r1
+ move r16,r2 ;(base)
+ add r0,r2
+ load (r2),r0
+ store r0,(r1)
+
+ move r18,r0 ;(new)
+ addq #16,r0
+ load (r0),r0
+ moveq #0,r1
+ cmp r0,r1
+ movei #L104,scratch
+ jump EQ,(scratch)
+ nop
+
+ move r18,r0 ;(new)
+ addq #16,r0
+ load (r0),r0
+ addq #20,r0
+ store r18,(r0) ;(new)
+
+L104:
+
+ move r16,r0 ;(base)
+ addq #16,r0
+ store r18,(r0) ;(new)
+
+ load (FP+1),r0 ; local size
+ store r0,(r16) ;(base)
+
+L102:
+
+ move r16,r0 ;(base)
+ addq #4,r0
+ load (FP+2),r1 ; local user
+ store r1,(r0)
+
+ move r16,r0 ;(base)
+ addq #12,r0
+ movei #_framecount,r1
+ load (r1),r1
+ store r1,(r0)
+
+ move r16,r0 ;(base)
+ addq #10,r0
+ movei #7498,r1
+ storew r1,(r0)
+
+ move r16,r0 ;(base)
+ addq #8,r0
+ movei #101,r1
+ storew r1,(r0)
+
+ movei #_refzone,r0
+ load (r0),r0
+ addq #4,r0
+ move r16,r1 ;(base)
+ addq #16,r1
+ load (r1),r1
+ store r1,(r0)
+
+ movei #_refzone,r0
+ load (r0),r0
+ addq #4,r0
+ load (r0),r0
+ moveq #0,r1
+ cmp r0,r1
+ movei #L106,scratch
+ jump NE,(scratch)
+ nop
+
+ movei #_refzone,r0
+ load (r0),r0
+ move r0,r1
+ addq #4,r1
+ addq #8,r0
+ store r0,(r1)
+
+L106:
+
+ load (FP+2),r0 ; local user
+ move r16,r1 ;(base)
+ addq #24,r1
+ store r1,(r0)
+
+ move r16,r0 ;(base)
+ addq #24,r0
+ move r0,RETURNVALUE
+
+L81:
+ jump T,(RETURNPOINT)
+ addq #4,FP ; delay slot
+ .long
+_vgatojag::
+ .dc.l 1
+ .dc.l 51487
+ .dc.l 55319
+ .dc.l 30795
+ .dc.l 30975
+ .dc.l 30747
+ .dc.l 30739
+ .dc.l 30731
+ .dc.l 30727
+ .dc.l 43831
+ .dc.l 44075
+ .dc.l 48415
+ .dc.l 53015
+ .dc.l 47183
+ .dc.l 47175
+ .dc.l 51263
+ .dc.l 38655
+ .dc.l 38647
+ .dc.l 42995
+ .dc.l 42731
+ .dc.l 42727
+ .dc.l 42719
+ .dc.l 46811
+ .dc.l 46803
+ .dc.l 46795
+ .dc.l 46535
+ .dc.l 46527
+ .dc.l 46523
+ .dc.l 46515
+ .dc.l 50607
+ .dc.l 50599
+ .dc.l 50339
+ .dc.l 50331
+ .dc.l 54423
+ .dc.l 54415
+ .dc.l 54155
+ .dc.l 54147
+ .dc.l 54143
+ .dc.l 53879
+ .dc.l 57971
+ .dc.l 57963
+ .dc.l 57703
+ .dc.l 57695
+ .dc.l 57691
+ .dc.l 57683
+ .dc.l 61519
+ .dc.l 61511
+ .dc.l 61507
+ .dc.l 34815
+ .dc.l 34815
+ .dc.l 39167
+ .dc.l 38911
+ .dc.l 38911
+ .dc.l 43263
+ .dc.l 43007
+ .dc.l 43007
+ .dc.l 47359
+ .dc.l 47351
+ .dc.l 47087
+ .dc.l 47079
+ .dc.l 47071
+ .dc.l 51415
+ .dc.l 51407
+ .dc.l 51147
+ .dc.l 51391
+ .dc.l 51379
+ .dc.l 51371
+ .dc.l 51363
+ .dc.l 51355
+ .dc.l 51343
+ .dc.l 51335
+ .dc.l 51327
+ .dc.l 51319
+ .dc.l 51307
+ .dc.l 51295
+ .dc.l 51539
+ .dc.l 51531
+ .dc.l 51519
+ .dc.l 51763
+ .dc.l 51755
+ .dc.l 30959
+ .dc.l 30951
+ .dc.l 30943
+ .dc.l 30939
+ .dc.l 30931
+ .dc.l 30923
+ .dc.l 30919
+ .dc.l 30911
+ .dc.l 30903
+ .dc.l 30899
+ .dc.l 30891
+ .dc.l 30887
+ .dc.l 30879
+ .dc.l 30871
+ .dc.l 30867
+ .dc.l 30859
+ .dc.l 30851
+ .dc.l 30847
+ .dc.l 30839
+ .dc.l 30831
+ .dc.l 30827
+ .dc.l 30819
+ .dc.l 30811
+ .dc.l 30807
+ .dc.l 30799
+ .dc.l 30791
+ .dc.l 30787
+ .dc.l 30779
+ .dc.l 30775
+ .dc.l 30767
+ .dc.l 30759
+ .dc.l 30755
+ .dc.l 36095
+ .dc.l 36079
+ .dc.l 36063
+ .dc.l 36047
+ .dc.l 36031
+ .dc.l 36015
+ .dc.l 35999
+ .dc.l 35987
+ .dc.l 35971
+ .dc.l 35955
+ .dc.l 35939
+ .dc.l 35923
+ .dc.l 35907
+ .dc.l 40243
+ .dc.l 35875
+ .dc.l 40215
+ .dc.l 39103
+ .dc.l 39095
+ .dc.l 39087
+ .dc.l 39079
+ .dc.l 39071
+ .dc.l 43163
+ .dc.l 43155
+ .dc.l 43147
+ .dc.l 43139
+ .dc.l 43131
+ .dc.l 43127
+ .dc.l 43119
+ .dc.l 43111
+ .dc.l 43103
+ .dc.l 43095
+ .dc.l 47187
+ .dc.l 43167
+ .dc.l 43151
+ .dc.l 43139
+ .dc.l 47479
+ .dc.l 47463
+ .dc.l 47451
+ .dc.l 47183
+ .dc.l 51523
+ .dc.l 39295
+ .dc.l 39283
+ .dc.l 39275
+ .dc.l 35171
+ .dc.l 43607
+ .dc.l 39503
+ .dc.l 39495
+ .dc.l 39487
+ .dc.l 48127
+ .dc.l 52203
+ .dc.l 56279
+ .dc.l 56003
+ .dc.l 60079
+ .dc.l 59547
+ .dc.l 63367
+ .dc.l 63091
+ .dc.l 30975
+ .dc.l 34815
+ .dc.l 38911
+ .dc.l 42751
+ .dc.l 46591
+ .dc.l 50431
+ .dc.l 54271
+ .dc.l 58111
+ .dc.l 61695
+ .dc.l 61679
+ .dc.l 61667
+ .dc.l 61655
+ .dc.l 61643
+ .dc.l 61631
+ .dc.l 61619
+ .dc.l 61607
+ .dc.l 61595
+ .dc.l 61579
+ .dc.l 61567
+ .dc.l 61555
+ .dc.l 61543
+ .dc.l 61531
+ .dc.l 61519
+ .dc.l 61507
+ .dc.l 30719
+ .dc.l 26623
+ .dc.l 22527
+ .dc.l 18175
+ .dc.l 17919
+ .dc.l 13567
+ .dc.l 9215
+ .dc.l 4607
+ .dc.l 255
+ .dc.l 227
+ .dc.l 203
+ .dc.l 179
+ .dc.l 155
+ .dc.l 131
+ .dc.l 107
+ .dc.l 83
+ .dc.l 30975
+ .dc.l 34815
+ .dc.l 39167
+ .dc.l 43263
+ .dc.l 47359
+ .dc.l 51455
+ .dc.l 55295
+ .dc.l 59391
+ .dc.l 59379
+ .dc.l 63467
+ .dc.l 59103
+ .dc.l 63447
+ .dc.l 63179
+ .dc.l 63171
+ .dc.l 63159
+ .dc.l 63151
+ .dc.l 30975
+ .dc.l 35071
+ .dc.l 39423
+ .dc.l 48127
+ .dc.l 52479
+ .dc.l 56831
+ .dc.l 61183
+ .dc.l 65535
+ .dc.l 63143
+ .dc.l 62879
+ .dc.l 62867
+ .dc.l 62599
+ .dc.l 47183
+ .dc.l 51267
+ .dc.l 51255
+ .dc.l 55087
+ .dc.l 83
+ .dc.l 71
+ .dc.l 59
+ .dc.l 47
+ .dc.l 35
+ .dc.l 23
+ .dc.l 11
+ .dc.l 1
+ .dc.l 30975
+ .dc.l 30975
+ .dc.l 29951
+ .dc.l 28927
+ .dc.l 28879
+ .dc.l 32927
+ .dc.l 32879
+ .dc.l 42663
+
+;====================
+_R_LoadPixels::
+;3 dag registers  2 register variables
+;localoffset:8  regoffset:16  argoffset:40
+;====================
+ movei #40,scratch
+ sub scratch,FP
+
+ load (FP+10),r0 ; local lumpnum
+ shlq #2,r0
+ movei #_lumpcache,r1
+ add r1,r0
+ load (r0),r0
+ move r0,r15 ;(rdest)
+ move r15,r0 ;(rdest)
+ moveq #0,r1
+ cmp r0,r1
+ movei #L109,scratch
+ jump EQ,(scratch)
+ nop
+
+ move r15,r0 ;(rdest)
+ move r0,RETURNVALUE
+
+ movei #L108,r0
+ jump T,(r0)
+ nop
+
+L109:
+
+ load (FP+10),r0 ; local lumpnum
+ move r0,r1
+ shlq #4,r1
+ movei #_lumpinfo,r2
+ load (r2),r2
+ add r2,r1
+ move r1,r16 ;(info)
+ move FP,r1
+ addq #8,r1 ; &count
+ move r16,r2 ;(info)
+ addq #4,r2
+ load (r2),r2
+ store r2,(r1)
+ load (r1),r1
+ shlq #1,r1
+ store r1,(FP) ; arg[]
+ shlq #2,r0
+ movei #_lumpcache,r1
+ add r1,r0
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_R_Malloc,r0
+ store r28,(FP+4) ; push ;(RETURNPOINT)
+ store r16,(FP+5) ; push ;(info)
+ movei #L111,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+6) ; delay slot push ;(rdest)
+L111:
+ load (FP+5),r16 ; pop ;(info)
+ load (FP+6),r15 ; pop ;(rdest)
+ load (FP+4), RETURNPOINT ; pop
+ move r29,r0 ;(RETURNVALUE)
+ move r0,r15 ;(rdest)
+ move FP,r0
+ addq #12,r0 ; &rsrc
+ load (r16),r1 ;(info)
+ movei #_wadfileptr,r2
+ load (r2),r2
+ add r2,r1
+ store r1,(r0)
+ load (r0),r0
+ store r0,(FP) ; arg[]
+ or r15,scratch ; scoreboard bug ;(rdest)
+ store r15,(FP+1) ; arg[] ;(rdest)
+ movei #_R_decode,r0
+ store r28,(FP+4) ; push ;(RETURNPOINT)
+ store r16,(FP+5) ; push ;(info)
+ movei #L112,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+6) ; delay slot push ;(rdest)
+L112:
+ load (FP+5),r16 ; pop ;(info)
+ load (FP+6),r15 ; pop ;(rdest)
+ load (FP+4), RETURNPOINT ; pop
+
+ load (FP+10),r0 ; local lumpnum
+ shlq #2,r0
+ movei #_lumpcache,r1
+ add r1,r0
+ load (r0),r0
+ move r0,RETURNVALUE
+
+L108:
+ movei #40,scratch
+ jump T,(RETURNPOINT)
+ add scratch,FP ; delay slot
+
+;=======================
+
+ .extern _R_decode
+ .extern _vissprite_p
+ .extern _vissprites
+ .extern _lastwallcmd
+ .extern _viswalls
+ .extern _skytexturep
+ .extern _phasetime
+ .extern _gpucodestart
+ .extern _samplecount
+ .extern _lumpcache
+ .extern _lumpinfo
+ .extern _wadfileptr
+ .extern _refzone
+ .extern _framecount
+ .extern _ref6_start
+
+	.phrase
+	.68000
+codeend:

@@ -1,0 +1,7 @@
+read ..\jdmwad0 840000
+read ..\jdmwad1 8C0000
+read ..\jdmwad2 940000
+read ..\jdmwad3 9C0000
+read ..\jdmwad4 A40000
+read ..\jdmwad5 AC0000
+read ..\jdmwad6 B40000

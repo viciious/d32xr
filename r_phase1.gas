@@ -1,0 +1,1541 @@
+ .long
+ .dc.l	codeend - _ref1_start
+_ref1_start::
+ .gpu
+	.org $f03100
+DIVCONTROL		.equ	$f0211c
+	
+	
+S_LE	.ccdef  $14     ; PL
+U_LE	.ccdef  $04     ; CC
+S_GT    .ccdef	$18   	; MI
+U_GT    .ccdef	$08  	; CS
+
+S_LT	.ccdef	$15		; PL+NE
+U_LT	.ccdef	$05		; CC+NE
+
+FP .equr r14
+scratch .equr r10
+scratch2 .equr r11
+RETURNVALUE .equr r29
+RETURNPOINT .equr r28
+MATH_A .equr r27
+MATH_B .equr r26
+MATH_C .equr r25
+MATH_RTS .equr r24
+MATH_SIGN .equr r23
+
+alt_swr15		.equr	r4
+alt_viewx		.equr	r5
+alt_viewy		.equr	r6
+alt_viewangle	.equr	r7
+alt_lastwallcmd	.equr	r8
+alt_nodes		.equr	r9
+alt_subsectors	.equr	r10
+alt_segs		.equr	r11
+
+	.extern	_viewx, _viewy, _viewangle
+	.extern	_lastwallcmd
+	.extern	_nodes
+	.extern	_subsectors,_segs
+	
+	.extern _tantoangle
+	.extern	_viewangletox
+	.extern _phasetime
+	.extern _numnodes
+	.extern _gpucodestart
+	.extern _samplecount
+	.extern _ref2_start
+
+;====================
+_R_BSP::
+;2 dag registers  0 register variables
+;localoffset:4  regoffset:4  argoffset:16
+;====================
+ subq #16,FP
+
+;
+; load up some constants
+;
+	movei	#_viewx,r0
+	load	(r0),r0
+	movei	#_viewy,r1
+	load	(r1),r1
+	movei	#_viewangle,r2
+	load	(r2),r2
+	movei	#_lastwallcmd,r3
+	load	(r3),r3
+	movei	#_nodes,r4
+	load	(r4),r4
+	movei	#_subsectors,r5
+	load	(r5),r5
+	movei	#_segs,r6
+	load	(r6),r6
+	moveta	r0,alt_viewx
+	moveta	r1,alt_viewy
+	moveta	r2,alt_viewangle
+	moveta	r3,alt_lastwallcmd
+	moveta	r4,alt_nodes
+	moveta	r5,alt_subsectors
+	moveta	r6,alt_segs
+	
+ movei #_solidsegs,r0
+ movei #-2,r1
+ store r1,(r0)
+ movei #_solidsegs+4,r0
+ movei #-1,r1
+ store r1,(r0)
+
+ movei #_solidsegs+8,r0
+ movei #160,r1
+ store r1,(r0)
+
+ movei #_solidsegs+8+4,r0
+ movei #161,r1
+ store r1,(r0)
+
+ movei #_newend,r0
+ movei #_solidsegs+16,r1
+ store r1,(r0)
+ movei #_numnodes,r0
+ load (r0),r0
+ subq #1,r0
+ store r0,(FP) ; arg[]
+ movei #_R_RenderBSPNode,r0
+ store r28,(FP+1) ; push ;(RETURNPOINT)
+ movei #L60,RETURNPOINT
+ jump T,(r0)
+ nop ; delay slot
+L60:
+ load (FP+1), RETURNPOINT ; pop
+
+; save local var back out
+	movei	#_lastwallcmd,r3
+	movefa	alt_lastwallcmd,r0
+	store	r0,(r3)
+
+
+ movei #_phasetime+4,r0
+ movei #_samplecount,r1
+ load (r1),r1
+ store r1,(r0)
+
+ movei #_gpucodestart,r0
+ movei #_ref2_start,r1
+ store r1,(r0)
+
+
+L53:
+ jump T,(RETURNPOINT)
+ addq #16,FP ; delay slot
+
+
+;=============================================================================
+_R_StoreWallRange::
+; set sw_start,sw_end as parameters
+; only uses R15, but saves and restores it
+; destroys r0, r1, and r2
+;=============================================================================
+
+sw_start	.equr	r8
+sw_end		.equr	r9
+
+sw_rw		.equr	r15
+
+	moveta	r15,alt_swr15
+		
+	movefa	alt_lastwallcmd,r1
+	move	r1,sw_rw
+	movei	#112,r2
+	add		r2,r1
+	moveta	r1,alt_lastwallcmd	; rw = lastwallcmd++
+ 
+	movei 	#_curline,r0
+	load 	(r0),r0
+	store 	r0,(sw_rw) 		; rw->seg = curline
+
+	store	sw_start,(sw_rw+1)	; rw->start = start
+
+	movei	#_lineangle1,r1
+	load	(r1),r1
+
+	store	sw_end,(sw_rw+2)	; rw->end = start
+
+	store	r1,(sw_rw+3)		; rw->angle1 = lineangle1	(delay slot)
+	jump 	T,(RETURNPOINT)
+	movefa	alt_swr15,r15 
+
+
+
+;====================
+_R_ClipSolidWallSegment::
+;3 dag registers  2 register variables
+;localoffset:8  regoffset:8  argoffset:32
+;====================
+
+cs_start	.equr	r14
+cs_next		.equr	r15
+
+cs_first	.equr	r17
+cs_last		.equr	r18
+cs_scratch	.equr	r19
+cs_SWR		.equr	r20
+cs_saved14	.equr	r21
+cs_savedreturn .equr	r22
+
+	move	RETURNPOINT,r22
+	load	(FP),cs_first
+	load	(FP+1),cs_last
+	move	FP,cs_saved14
+	
+	movei	#_R_StoreWallRange,cs_SWR
+
+; find the first range that touches the range (adjacent pixels are touching)
+	move	cs_first,cs_scratch
+	subq	#1,cs_scratch
+	
+	movei	#_solidsegs,cs_start
+findfirst:
+	load	(cs_start+1),r0
+	cmp		r0,cs_scratch
+	jr		S_LT,findfirst
+	addq	#8,cs_start		; delay slot
+
+	subq	#8,cs_start		; back up
+
+; add visible pieces and close up holes
+
+ load (cs_start),r1 ;(start)
+ cmp cs_first,r1
+ movei #L65,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+
+ load (cs_start),r1 ;(start)
+ subq #1,r1
+ cmp cs_last,r1
+ movei #L67,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+
+	move	cs_first,sw_start
+	move	cs_last,sw_end
+	move	PC,RETURNPOINT
+	jump	T,(cs_SWR)
+	addq	#6,RETURNPOINT
+
+ movei #_newend,r0
+ load (r0),r1
+ move r1,cs_next ;(next)
+ addq #8,r1
+ store r1,(r0)
+
+ movei #L70,r0
+ jump T,(r0)
+ nop
+
+L69:
+	move	cs_next,r0
+	subq	#8,r0
+	load	(r0),r0
+	store	r0,(cs_next) ;(next)
+
+ move cs_next,r1 ;(next)
+ subq #4,r1
+ load (r1),r1
+ btst	#0,r1	;scoreboard
+ store r1,(cs_next+1)
+
+ subq #8,cs_next
+
+L70:
+
+ cmp cs_next,cs_start
+ movei #L69,scratch
+ jump NE,(scratch)
+ nop
+
+ store cs_first,(cs_next) ;(next)
+
+ store cs_last,(cs_next+1)
+
+	jump	T,(cs_savedreturn)
+	move	cs_saved14,FP		; delay slot
+
+L67:
+
+	move	cs_first,sw_start
+	load	(cs_start),sw_end
+	subq	#1,sw_end
+	move	PC,RETURNPOINT
+	jump	T,(cs_SWR)
+	addq	#6,RETURNPOINT
+
+ store	cs_first,(cs_start) ;(start)
+
+L65:
+
+ load (cs_start+1),r1
+ cmp cs_last,r1
+ movei #L72,scratch
+ jump MI,(scratch)
+ nop
+
+	jump	T,(cs_savedreturn)
+	move	cs_saved14,FP		; delay slot
+
+L72:
+
+ move cs_start,cs_next ;(start)(next)
+
+ movei #L75,r0
+ jump T,(r0)
+ nop
+
+L74:
+
+	load	(cs_next+1),sw_start
+	addq	#1,sw_start
+	load	(cs_next+2),sw_end
+	subq	#1,sw_end
+	move	PC,RETURNPOINT
+	jump	T,(cs_SWR)
+	addq	#6,RETURNPOINT
+
+ addq #8,cs_next
+ 
+ load (cs_next+1),r1
+ cmp cs_last,r1
+ movei #L77,scratch
+ jump MI,(scratch)
+ nop
+
+ load (cs_next+1),r0
+ btst	#0,r0
+ store r0,(cs_start+1)
+
+ movei #L79,r0
+ jump T,(r0)
+ nop
+
+L77:
+
+L75:
+
+ load (cs_next+2),r1
+ subq #1,r1
+ cmp cs_last,r1
+ movei #L74,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+
+ load (cs_next+1),sw_start
+ addq #1,sw_start
+ move cs_last,sw_end ; local last
+	move	PC,RETURNPOINT
+	jump	T,(cs_SWR)
+	addq	#6,RETURNPOINT
+
+ store cs_last,(cs_start+1)
+
+L79:
+
+	movei	#_newend,r4
+	load	(r4),r3
+
+	cmp		cs_next,cs_start
+	movei	#L83,scratch
+	jump	NE,(scratch)
+	nop
+
+	jump	T,(cs_savedreturn)
+	move	cs_saved14,FP		; delay slot
+
+L82:
+	addq	#8,cs_start			
+	load	(cs_next),r0
+	load	(cs_next+1),r1
+	store	r0,(cs_start)
+	store	r1,(cs_start+1)
+
+L83:
+	cmp		cs_next,r3
+	jr		NE,L82
+	addq	#8,cs_next			; delay slot
+	
+	store	cs_start,(r4)		; newend
+
+	jump	T,(cs_savedreturn)
+	move	cs_saved14,FP		; delay slot
+
+;=============================================================================
+_R_ClipPassWallSegment::
+;2 dag registers  1 register variables
+;localoffset:8  regoffset:8  argoffset:24
+;=============================================================================
+
+cp_start	.equr	r15
+cp_first	.equr	r16
+cp_last		.equr	r17
+cp_scratch	.equr	r18
+cp_SWR		.equr	r19
+
+	load	(FP),cp_first
+	load	(FP+1),cp_last
+	
+	subq	#12,FP
+
+	movei	#_R_StoreWallRange,cp_SWR
+	store	RETURNPOINT,(FP+2)		; only save once
+
+; find the first range that touches the range (adjacent pixels are touching)
+	move	cp_first,cp_scratch
+	subq	#1,cp_scratch
+	
+	movei	#_solidsegs,cp_start
+L90:
+	load	(cp_start+1),r0
+	cmp		r0,cp_scratch
+	jr		S_LT,L90
+	addq	#8,cp_start		; delay slot
+
+	subq	#8,cp_start		; back up
+
+;
+; cut up the seg around solid pieces
+;
+	load	(cp_start),r1 ;(start)
+	cmp		cp_first,r1
+	movei	#L93,scratch
+	jump	EQ,(scratch)
+	nop
+	jump	MI,(scratch)
+	nop
+
+	load (cp_start),r1 ;(start)
+	subq #1,r1
+	cmp cp_last,r1
+	movei #L95,scratch
+	jump EQ,(scratch)
+	nop
+	jump MI,(scratch)
+	nop
+
+	move cp_first,sw_start ; arg[]
+	move cp_last,sw_end ; arg[]
+	movei #L89,RETURNPOINT
+	jump T,(cp_SWR)
+	nop
+
+L95:
+
+	move cp_first,sw_start ; arg[]
+	load (cp_start),sw_end ;(start)
+	subq #1,sw_end
+	move	PC,RETURNPOINT
+	jump	T,(cp_SWR)
+	addq	#6,RETURNPOINT
+
+L93:
+
+	load (cp_start+1),r1
+	cmp cp_last,r1
+	movei #L89,scratch
+	jump PL,(scratch)
+	nop
+
+	movei #L100,scratch
+	jump T,(scratch)
+	nop
+
+
+L99:
+
+	load	(cp_start+1),sw_start
+	addq	#1,sw_start
+	load	(cp_start+2),sw_end
+	subq	#1,sw_end
+	move	PC,RETURNPOINT
+	jump	T,(cp_SWR)
+	addq	#6,RETURNPOINT
+
+
+	addq	#8,cp_start
+	load	(cp_start+1),r1
+	cmp		cp_last,r1
+	movei	#L89,scratch
+	jump	PL,(scratch)
+	nop
+
+L100:
+	load (cp_start+2),r1
+	subq #1,r1
+	cmp cp_last,r1
+	movei #L99,scratch
+	jump EQ,(scratch)
+	nop
+	jump MI,(scratch)
+	nop
+
+	load (cp_start+1),sw_start
+	addq #1,sw_start
+	move cp_last,sw_end
+	movei #L89,RETURNPOINT
+	jump T,(cp_SWR)
+	nop
+
+L89:
+	load	(FP+2), RETURNPOINT ; pop
+	jump	T,(RETURNPOINT)
+	addq	#12,FP ; delay slot
+
+
+
+;=============================================================================
+_R_PointToAngle:
+;
+; pass pt_basex, pt_basey parms, toasts r0-r4
+;=============================================================================
+
+pt_basex	.equr	r12
+pt_basey	.equr	r13
+
+pt_scratch	.equr	r0
+numerator 	.equr	r1
+denominator .equr	r2
+absx		.equr	r3
+absy		.equr	r4
+
+ANG90	.equ	$40000000
+ANG180	.equ	$80000000
+ANG270	.equ	$c0000000
+
+ movefa	alt_viewx,r0
+ sub r0,pt_basex
+ movefa	alt_viewy,r0
+ sub r0,pt_basey
+ move pt_basex,absx
+ move pt_basey,absy
+ abs absx
+ abs absy
+ 
+ move absx,numerator
+ move absy,denominator
+ cmp numerator,denominator
+ jr CC,noflip	; numerator must be >= denominator
+ nop
+ move numerator,r0
+ move denominator,numerator
+ move r0,denominator
+noflip:
+	
+ shlq	#3,numerator
+ shrq	#8,denominator
+ div	denominator,numerator
+ movei	#2048,scratch
+ cmp	scratch,numerator
+ jr		U_GT,inrange
+ nop
+ move	scratch,numerator
+inrange:
+ shlq	#2,numerator
+ movei	#_tantoangle,r0
+ add	r0,numerator
+ load	(numerator),numerator
+
+ movei #xnegative,scratch2
+ btst #31,pt_basex
+ jump NE,(scratch2)
+ nop
+;======= x >= 0
+ btst #31,pt_basey
+ jr NE,xpyn
+ nop
+ cmp absx,absy
+ jr	CC,xpypyg
+ nop
+;xpypxg:
+ jump T,(RETURNPOINT)
+ move numerator,RETURNVALUE ; delay slot
+
+xpypyg:
+ movei #ANG90-1,RETURNVALUE
+ jump T,(RETURNPOINT)
+ sub numerator,RETURNVALUE
+ 
+xpyn:
+ cmp absx,absy
+ jr	CC,xpynyg
+ nop
+
+;xpynxg:
+ move numerator,RETURNVALUE
+ jump T,(RETURNPOINT)
+ neg RETURNVALUE
+ 
+xpynyg:
+ movei #ANG270,RETURNVALUE
+ jump T,(RETURNPOINT)
+ add numerator,RETURNVALUE
+
+;======= x <= 0
+xnegative:
+ btst #31,pt_basey
+ movei #xnyn,scratch2
+ jump NE,(scratch2)
+ nop
+ cmp absx,absy
+ jr	CC,xnypyg
+ nop
+ 
+;xnypxg:
+ movei #ANG180-1,RETURNVALUE
+ jump T,(RETURNPOINT)
+ sub numerator,RETURNVALUE
+	
+xnypyg:
+ movei #ANG90,RETURNVALUE
+ jump T,(RETURNPOINT)
+ add numerator,RETURNVALUE
+
+xnyn:
+ cmp absx,absy
+ jr	CC,xnynyg
+ nop
+
+;xnynxg:
+ movei #ANG180,RETURNVALUE
+ jump T,(RETURNPOINT)
+ add numerator,RETURNVALUE
+
+xnynyg:
+ movei #ANG270-1,RETURNVALUE
+ jump T,(RETURNPOINT)
+ sub numerator,RETURNVALUE
+
+
+;============================================================================
+_R_RenderBSPNode::
+;5 dag registers  2 register variables
+;localoffset:4  regoffset:4  argoffset:36
+;============================================================================
+	
+rb_bsp			.equr	r15
+rb_subsector	.equr	r15
+
+; if the bspnum has bit 15 set, its a subsector
+
+	load	(FP),rb_bsp
+	
+	btst	#15,rb_bsp
+	movei	#decisionnode,r0
+	jump	EQ,(r0)
+	bclr	#15,rb_subsector			; harmless delay slot
+	
+;===========================
+;
+; subsector
+;
+; fp+2:		returnpoint (stomps on previous parameter)
+; fp+1:		stopline
+; fp: 		line	(also used as parameter to R_AddLine)
+;===========================
+			
+	store	RETURNPOINT,(FP)
+	subq	#8,FP
+	moveq	#12,r0
+	mult	r0,rb_subsector
+	movefa	alt_subsectors,r0
+	add 	r0,rb_subsector
+	movei	#_frontsector,r0
+	load	(rb_subsector),r1
+	store	r1,(r0)					; frontsector = subsector->sector
+
+	.extern _lastvissubsector
+	
+	movei	#_lastvissubsector,r0
+	load	(r0),r2
+	store	rb_subsector,(r2)		; *lastvissubsector = sub
+	addq	#4,r2
+	store	r2,(r0)					; lastvissubsector++
+	
+	load	(rb_subsector+2),r1
+	shlq	#5,r1
+	movefa	alt_segs,r2
+	add		r2,r1					
+	store	r1,(FP)					; line = &segs[sub->firstline]
+	
+	load	(rb_subsector+1),r2		; count = sub->numlines
+	shlq	#5,r2
+	add		r1,r2
+	btst	#0,r2					; scoreboard bug
+	store	r2,(FP+1)				; stopline = line+count
+	
+nextline:
+	cmp		r1,r2				; if line == stopline
+	jr		NE,doline
+	load	(FP+2),RETURNPOINT	; harmless delay slot
+
+	
+	jump	T,(RETURNPOINT)
+	addq	#8,FP			; delay slot
+
+doline:
+	movei	#_R_AddLine,r0
+	movei	#subsecreturn,RETURNPOINT
+	jump	T,(r0)
+	nop
+subsecreturn:
+	load	(FP),r1
+	addq	#16,r1
+	addq	#16,r1
+	movei	#nextline,r0
+	store	r1,(FP)				; line++
+	jump	T,(r0)
+	load	(FP+1),r2			; r2 = stopline (delay slot)
+	
+
+
+;===========================
+;
+; decision node
+;
+; fp+2:		returnpoint (stomps on previous parameter)
+; fp+1:		bsp
+; fp: 		parameter
+;===========================
+decisionnode:
+	store	RETURNPOINT,(FP) 		; don't need to save again
+	subq	#8,FP
+;
+; bsp = &nodes[bspnum]
+;
+	movei	#56,r0
+	mult	r0,rb_bsp
+	movefa	alt_nodes,r1
+	add		r1,rb_bsp
+	store	rb_bsp,(FP+1)	; don't need to save again
+	 
+;
+; decide which side to render first
+;
+	movefa	alt_viewy,r0
+	load	(rb_bsp+1),r1
+	sub		r1,r0
+	sharq	#16,r0			; r0 = (viewy-bsp->y)>>16
+	
+	load	(rb_bsp+2),r1
+	sharq	#16,r1			; r1 = bsp->dx>>16
+	
+	imult	r1,r0
+	
+	movefa	alt_viewx,r1
+	load	(rb_bsp),r2
+	sub		r2,r1
+	sharq	#16,r1			; r1 = (viewx-bsp->x)>>16
+	
+	load	(rb_bsp+3),r2
+	sharq	#16,r2			; r2 = bsp->dy>>16
+	
+	imult	r2,r1
+
+	movei	#backside,scratch
+	cmp		r0,r1
+	jump	S_GT,(scratch)
+ 	nop
+	jump	EQ,(scratch)
+ 	nop
+	
+
+;-----------------
+;
+; front side first
+;
+;-----------------
+	movei	#48,r1
+	add		rb_bsp,r1		; &bsp->children[0]
+	load	(r1),r0
+	store	r0,(FP) ; arg[]
+	movei	#_R_RenderBSPNode,r0
+	movei	#frontdrawn,RETURNPOINT
+	jump	T,(r0)
+	nop
+frontdrawn:
+	load	(FP+1),rb_bsp
+
+	movei	#32,r0
+	add		rb_bsp,r0		; &bsp->bbox[1]
+	store	r0,(FP) ; arg[]
+	movei	#_R_CheckBBox,r0
+	movei	#frontcheck,RETURNPOINT
+	jump	T,(r0)
+	nop
+frontcheck:
+	or		RETURNVALUE,RETURNVALUE
+	movei	#exitrbsp,RETURNPOINT
+	jump	EQ,(RETURNPOINT)	; go to exit point
+	nop	
+	
+	load	(FP+1),rb_bsp
+	movei	#52,r1
+	add		rb_bsp,r1		; &bsp->children[1]
+	load	(r1),r0
+	store	r0,(FP) ; arg[]
+	movei	#_R_RenderBSPNode,r0
+	jump	T,(r0)
+	nop
+
+
+;-----------------
+;
+; back side first
+;
+;-----------------
+backside:
+	movei	#52,r1
+	add		rb_bsp,r1		; &bsp->children[1]
+	load	(r1),r0
+	store	r0,(FP) ; arg[]
+	movei	#_R_RenderBSPNode,r0
+	movei	#backdrawn,RETURNPOINT
+	jump	T,(r0)
+	nop
+backdrawn:
+	load	(FP+1),rb_bsp
+
+	addq	#16,rb_bsp		; &bsp->bbox[0]
+	store	rb_bsp,(FP) ; arg[]
+	movei	#_R_CheckBBox,r0
+	movei	#backcheck,RETURNPOINT
+	jump	T,(r0)
+	nop
+backcheck:
+
+	or		RETURNVALUE,RETURNVALUE
+	movei	#exitrbsp,RETURNPOINT
+	jump	EQ,(RETURNPOINT)
+	nop	
+	
+	load	(FP+1),rb_bsp
+	movei	#48,r1
+	add		rb_bsp,r1		; &bsp->children[0]
+	load	(r1),r0
+	store	r0,(FP) ; arg[]
+	movei	#_R_RenderBSPNode,r0
+	jump	T,(r0)
+	nop
+
+;
+; done
+;	
+exitrbsp:
+	load 	(FP+2), RETURNPOINT ; pop
+	jump	T,(RETURNPOINT)
+	addq	#8,FP ; delay slot
+
+
+	
+;==============================================================================
+_R_AddLine::
+;4 dag registers  7 register variables
+;localoffset:8  regoffset:8  argoffset:56
+;
+; fp+4		parm: line
+; fp+3		saved angle1
+; fp+2		saved returnpoint
+; fp+1		arg 2
+; fp		arg 1
+;==============================================================================
+
+CLIPANGLE		.equ	537395200
+DOUBLECLIPANGLE	.equ	1074790400
+
+al_backsector	.equr	r15
+al_angle1		.equr	r16
+al_angle2		.equr	r17
+al_tspan		.equr	r18
+al_x1			.equr	r19
+al_x2			.equr	r20
+al_span			.equr	r21
+
+al_clipangle	.equr	r8
+al_doubleclipangle	.equr	r7
+
+ 
+	subq	#16,FP
+	nop			; scoreboard bug
+	store	RETURNPOINT,(FP+2)		; only save once
+
+	load	(FP+4),r1 ; local line
+	movei	#_curline,r0
+	store	r1,(r0)					; curline = line
+
+;
+; get angle 1
+;
+	load	(r1),r0
+	load	(r0),pt_basex
+	addq	#4,r0
+	load	(r0),pt_basey
+	movei	#_R_PointToAngle,r0
+	move	PC,RETURNPOINT
+	jump	T,(r0)
+	addq	#6,RETURNPOINT
+	move	RETURNVALUE,al_angle1
+
+;
+; get angle2
+;
+	load	(FP+4),r0 ; local line
+	addq	#4,r0
+	load	(r0),r0
+	load	(r0),pt_basex
+	addq	#4,r0
+	load	(r0),pt_basey
+	movei	#_R_PointToAngle,r0
+	move	PC,RETURNPOINT
+	jump	T,(r0)
+	addq	#6,RETURNPOINT
+	move	RETURNVALUE,al_angle2
+
+;
+; clip to view edges
+;
+	move	al_angle1,al_span
+	sub		al_angle2,al_span
+	movei	#addlinereturn,r0
+	jump	MI,(r0)				; if span >= ANG180 return
+	nop
+	
+	movei	#_lineangle1,r0
+	store	al_angle1,(r0)
+
+	movefa	alt_viewangle,r0
+	sub		r0,al_angle1
+	sub 	r0,al_angle2
+
+	movei	#CLIPANGLE,al_clipangle
+	movei	#DOUBLECLIPANGLE,al_doubleclipangle
+	
+	move	al_angle1,al_tspan
+	add		al_clipangle,al_tspan
+	
+	cmp		al_tspan,al_doubleclipangle
+	movei	#L911,scratch
+	jump	CC,(scratch)
+	nop
+
+	sub		al_doubleclipangle,al_tspan
+	cmp		al_tspan,al_span
+	movei	#L913,scratch
+	jump	U_LT,(scratch)
+	nop
+
+	movei	#addlinereturn,r0
+	jump	T,(r0)
+	nop
+
+L913:
+	move	al_clipangle,al_angle1
+ 
+L911:
+
+	move	al_clipangle,al_tspan
+	sub		al_angle2,al_tspan
+	cmp		al_tspan,al_doubleclipangle ;(tspan)
+	movei	#L915,scratch
+	jump	CC,(scratch)
+	nop
+
+	sub		al_doubleclipangle,al_tspan
+	cmp		al_tspan,al_span ;(tspan)(span)
+	movei	#L917,scratch
+	jump	U_LT,(scratch)
+	nop
+
+	movei	#addlinereturn,r0
+	jump	T,(r0)
+	nop
+
+L917:
+
+	move	al_clipangle,al_angle2
+	neg		al_angle2
+
+;
+; the seg is in the view range, but not necessarily visible
+;
+
+L915:
+
+;	angle1 = (angle1+ANG90)>>ANGLETOFINESHIFT;
+;	angle2 = (angle2+ANG90)>>ANGLETOFINESHIFT;
+
+	movei	#1073741824,r0
+	add		r0,al_angle1
+	shrq	#19,al_angle1
+	add		r0,al_angle2
+	shrq	#19,al_angle2
+
+; x1 = viewangletox[angle1];
+; x2 = viewangletox[angle2];
+
+	move	al_angle1,r1 ;(angle1)
+	shlq	#2,r1
+	movei	#_viewangletox,r2
+	add		r2,r1
+	load	(r1),al_x1
+	move 	al_angle2,r1 ;(angle2)
+	shlq	#2,r1
+	add 	r2,r1
+	load	(r1),al_x2
+ 
+; if (x1 == x2) return
+	cmp		al_x1,al_x2 ;(x1)(x2)
+	movei	#addlinereturn,scratch
+	jump	EQ,(scratch)
+	nop
+
+;
+; store parms x1, x2-1 for either ClipPass or ClipSolid
+;
+	subq	#1,al_x2
+	store	al_x1,(FP) ; arg[] ;(x1)
+	store	al_x2,(FP+1) ; arg[]
+
+	movei	#addlinereturn,RETURNPOINT
+
+;
+; decide which clip routine to use
+;
+back_ceiling	.equr	r0
+back_floor		.equr	r1
+back_ceilingpic	.equr	r2
+back_floorpic	.equr	r3
+back_light		.equr	r4
+front_ceiling	.equr	r5
+front_floor		.equr	r6
+front_ceilingpic .equr	r7
+front_floorpic	.equr	r8
+front_light		.equr	r9
+
+ load (FP+4),r0 ; local line
+ addq #28,r0
+ load (r0),al_backsector
+
+ move al_backsector,r0 ;(backsector)
+ moveq #0,r1
+ cmp r0,r1
+ movei #L921,scratch
+ jump NE,(scratch)
+ nop
+
+ movei #callclipsolid,r0
+ jump T,(r0)
+ nop
+
+L921:
+
+ moveq #4,r0
+ move al_backsector,r1 ;(backsector)
+ add r0,r1
+ load (r1),r1
+ movei #_frontsector,r2
+ load (r2),r2
+ load (r2),r3
+ cmp r1,r3
+ movei #L926,scratch
+ jump PL,(scratch)
+ nop
+ load (al_backsector),r1 ;(backsector)
+ add r0,r2
+ load (r2),r0
+ cmp r1,r0
+ movei #L924,scratch
+ jump S_LT,(scratch)
+ nop
+L926:
+
+ movei #callclipsolid,r0
+ jump T,(r0)
+ nop
+
+L924:
+
+ moveq #4,r0
+ move al_backsector,r1 ;(backsector)
+ add r0,r1
+ load (r1),r1
+ movei #_frontsector,r2
+ load (r2),r2
+ move r2,r3
+ add r0,r3
+ load (r3),r0
+ cmp r1,r0
+ movei #L929,scratch
+ jump NE,(scratch)
+ nop
+ load (al_backsector),r0 ;(backsector)
+ load (r2),r1
+ cmp r0,r1
+ movei #L927,scratch
+ jump EQ,(scratch)
+ nop
+L929:
+
+ movei #callclippass,r0
+ jump T,(r0)
+ nop
+
+L927:
+;// reject empty lines used for triggers and special events
+;	if (backsector->ceilingpic == frontsector->ceilingpic
+;	&& backsector->floorpic == frontsector->floorpic
+;	&& backsector->lightlevel == frontsector->lightlevel
+;	&& curline->sidedef->midtexture == 0)
+;		return;	
+
+ moveq #12,r0
+ move al_backsector,r1 ;(backsector)
+ add r0,r1
+ load (r1),r1
+ movei #_frontsector,r2
+ load (r2),r2
+ move r2,r3
+ add r0,r3
+ load (r3),r0
+ cmp r1,r0
+ movei #callclippass,scratch
+ jump NE,(scratch)
+ nop
+ moveq #8,r0
+ move al_backsector,r1 ;(backsector)
+ add r0,r1
+ load (r1),r1
+ move r2,r3
+ add r0,r3
+ load (r3),r0
+ cmp r1,r0
+ movei #callclippass,scratch
+ jump NE,(scratch)
+ nop
+ moveq #16,r0
+ move al_backsector,r1 ;(backsector)
+ add r0,r1
+ load (r1),r1
+ add r0,r2
+ load (r2),r2
+ cmp r1,r2
+ movei #callclippass,scratch
+ jump NE,(scratch)
+ nop
+ movei #_curline,r1
+ load (r1),r1
+ add r0,r1
+ load (r1),r1
+ add r0,r1
+ load (r1),r0
+ moveq #0,r1
+ cmp r0,r1
+ movei #addlinereturn,scratch
+ jump EQ,(scratch)
+ nop
+
+	
+;
+; call clippass
+;
+callclippass:
+	movei	#_R_ClipPassWallSegment,r1
+	jump	T,(r1)
+	nop
+
+;
+; call clipsolid
+;
+callclipsolid:
+	movei	#_R_ClipSolidWallSegment,r1
+	jump	T,(r1)
+	nop
+
+;
+; done
+;
+addlinereturn:
+	load	(FP+2), RETURNPOINT ; pop
+	jump	T,(RETURNPOINT)
+	addq	#16,FP			; delay slot
+
+
+;=============================================================================
+_R_CheckBBox::
+;8 dag registers  8 register variables
+;localoffset:8  regoffset:32  argoffset:100
+; load (FP+9),r22 ; pop ;(sx1)
+; load (FP+10),r21 ; pop ;(span)
+; load (FP+11),r20 ; pop ;(tspan)
+; load (FP+12),r19 ; pop ;(boxpos)
+; load (FP+13),r18 ; pop ;(angle2)
+; load (FP+14),r17 ; pop ;(angle1)
+; load (FP+15),r16 ; pop ;(sx2)
+; load (FP+16),r15 ; pop ;(start)
+; load (FP+8), RETURNPOINT ; pop
+;=============================================================================
+
+cb_start		.equr	r15
+cb_sx2			.equr	r16
+cb_angle1		.equr	r17
+cb_angle2		.equr	r18
+cb_boxpos		.equr	r19
+cb_tspan		.equr	r20
+cb_span			.equr	r21
+cb_sx1			.equr	r22
+
+cb_clipangle	.equr	r7
+cb_doubleclipangle .equr r8
+
+	movei #100,scratch
+	sub scratch,FP
+
+	or	FP,FP			; scoreboard bug
+	store RETURNPOINT,(FP+8) ; push
+
+cb_bspcoord		.equr	r15		; dead by the time start is needed
+cb_boxx			.equr	r4
+cb_boxy			.equr	r5
+
+	load (FP+25),cb_bspcoord
+
+;
+; get boxx
+;
+	movefa	alt_viewx,r0
+
+	load (cb_bspcoord+2),r1		; bspcoord[BOXLEFT]
+	cmp r0,r1
+	jr	S_GT,vxgt
+	nop
+	jr	T,gotboxx
+	moveq	#0,cb_boxx			; delay slot
+	
+vxgt:
+	load (cb_bspcoord+3),r1		; bspcoord[BOXRIGHT]
+	cmp r0,r1
+	jr	S_GT,gotboxx
+	moveq	#2,cb_boxx			; delay slot
+	jr	EQ,gotboxx
+	nop
+	moveq	#1,cb_boxx			; until proven otherwise
+	
+gotboxx:
+
+;
+; get boxy
+;
+	movefa	alt_viewy,r0
+	
+	load (cb_bspcoord),r1		; bspcoord[BOXTOP]
+	cmp	r0,r1
+	jr	S_LT,vygt
+	nop
+	jr	T,gotboxy
+	moveq	#0,cb_boxy			; delay slot
+	
+vygt:
+	load (cb_bspcoord+1),r1		; bspcoord[BOXBOTTOM]
+	cmp r0,r1
+	jr	S_LE,gotboxy
+	moveq	#2,cb_boxy			; delay slot
+	jr	EQ,gotboxy
+	nop
+	
+	moveq	#1,cb_boxy
+gotboxy:
+
+;
+; get boxpos from boxx and boxy
+;
+	move	cb_boxy,cb_boxpos
+	shlq	#2,cb_boxpos
+	add		cb_boxx,cb_boxpos
+
+	cmpq	#5,cb_boxpos			; if (boxpos == 5) return true
+	movei	#L108,scratch
+	jump	EQ,(scratch)
+	moveq	#1,RETURNVALUE			; delay slot
+
+;
+; get corner coordinates
+; FP+4 = x1
+; FP+5 = y1
+; FP+6 = x2
+; FP+7 = y2
+	shlq	#4,cb_boxpos
+	movei	#_checkcoord,r0
+	add		r0,cb_boxpos
+	
+	load	(cb_boxpos),r0
+	addq	#4,cb_boxpos
+	shlq	#2,r0
+	load	(cb_bspcoord+r0),pt_basex		; x1
+
+	load	(cb_boxpos),r0
+	addq	#4,cb_boxpos
+	shlq	#2,r0
+	load	(cb_bspcoord+r0),pt_basey		; y1
+
+	load	(cb_boxpos),r0
+	addq	#4,cb_boxpos
+	shlq	#2,r0
+	load	(cb_bspcoord+r0),r8		; x2
+
+	load	(cb_boxpos),r0
+	shlq	#2,r0
+	load	(cb_bspcoord+r0),r9		; y2
+
+	 
+;
+; get clip angles
+;
+
+;	angle1 = R_PointToAngle (x1, y1) - viewangle;
+
+	movei	#_R_PointToAngle,r0
+	move	PC,RETURNPOINT
+	jump	T,(r0)
+	addq	#6,RETURNPOINT
+	move	RETURNVALUE,cb_angle1
+	movefa	alt_viewangle,r0
+	sub		r0,cb_angle1
+
+;	angle2 = R_PointToAngle (x2, y2) - viewangle;
+
+	move	r8,pt_basex
+	move	r9,pt_basey
+	movei	#_R_PointToAngle,r0
+	move	PC,RETURNPOINT
+	jump	T,(r0)
+	addq	#6,RETURNPOINT
+	movefa	alt_viewangle,r0
+	move	RETURNVALUE,cb_angle2
+	sub		r0,cb_angle2
+ 
+;
+; check clip list for an open space
+;
+
+;
+; clip to view edges
+;
+	
+	move	cb_angle1,cb_span
+	sub		cb_angle2,cb_span
+	movei	#L108,r0
+	jump	MI,(r0)				; if span >= ANG180 return
+	moveq	#1,RETURNVALUE		; open
+
+	moveq	#0,RETURNVALUE		; false until proven otherwise
+	
+	movei	#CLIPANGLE,cb_clipangle
+	movei	#DOUBLECLIPANGLE,cb_doubleclipangle
+	
+	move	cb_angle1,cb_tspan
+	add		cb_clipangle,cb_tspan
+	
+	cmp		cb_tspan,cb_doubleclipangle
+	movei	#L811,scratch
+	jump	CC,(scratch)
+	nop
+
+	sub		cb_doubleclipangle,cb_tspan
+	cmp		cb_tspan,cb_span
+	movei	#L813,scratch
+	jump	U_LT,(scratch)
+	nop
+
+	movei	#L108,r0
+	jump	T,(r0)
+	nop
+
+L813:
+	move	cb_clipangle,cb_angle1
+ 
+L811:
+
+	move	cb_clipangle,cb_tspan
+	sub		cb_angle2,cb_tspan
+	cmp		cb_tspan,cb_doubleclipangle
+	movei	#L815,scratch
+	jump	CC,(scratch)
+	nop
+
+	sub		cb_doubleclipangle,cb_tspan
+	cmp		cb_tspan,cb_span
+	movei	#L817,scratch
+	jump	U_LT,(scratch)
+	nop
+
+	movei	#L108,r0
+	jump	T,(r0)
+	nop
+
+L817:
+
+	move	cb_clipangle,cb_angle2
+	neg		cb_angle2
+
+
+L815:
+
+
+	
+	
+;
+; convert angles to x coordinates
+;
+L128:
+
+ movei #1073741824,r0
+ move cb_angle1,r1 ;(angle1)
+ add r0,r1
+ moveq #19,r2
+ sh r2,r1
+ move r1,cb_angle1 ;(angle1)
+ move cb_angle2,r1 ;(angle2)
+ add r0,r1
+ move r1,r0
+ sh r2,r0
+ move r0,cb_angle2 ;(angle2)
+ movei #-2,r0
+ move cb_angle1,r1 ;(angle1)
+ sh r0,r1
+ movei #_viewangletox,r2
+ add r2,r1
+ load (r1),r1
+ move r1,cb_sx1 ;(sx1)
+ move cb_angle2,r1 ;(angle2)
+ sh r0,r1
+ move r1,r0
+ add r2,r0
+ load (r0),r0
+ move r0,cb_sx2 ;(sx2)
+ cmp cb_sx1,cb_sx2 ;(sx1)(sx2)
+ movei #L132,scratch
+ jump NE,(scratch)
+ nop
+
+ movei #L108,r0
+ jump T,(r0)
+ moveq #0,RETURNVALUE
+
+L132:
+
+ subq #1,cb_sx2
+ 
+;
+; scan solidsegs for an open spot
+;
+	movei #_solidsegs,cb_start
+L134:
+	load	(cb_start+1),r0
+	cmp	r0,cb_sx2 ;(sx2)
+	jr		S_LT,L134
+	addq	#8,cb_start		; delay slot
+
+	subq	#8,cb_start		; back up
+	
+	load	(cb_start),r0 ;(start)
+	cmp		cb_sx1,r0
+	movei	#L137,scratch
+	jump	S_LT,(scratch)
+	nop
+	load	(cb_start+1),r0
+	cmp		cb_sx2,r0
+	jr		MI,L137
+	nop
+
+	jr		T,L108
+	nop
+
+L137:
+
+	moveq #1,RETURNVALUE
+
+L108:
+	load	(FP+8),RETURNPOINT
+	movei #100,scratch
+	jump T,(RETURNPOINT)
+	add scratch,FP ; delay slot
+
+;=======================
+
+ .long
+_newend::		.dc.l 0
+_lineangle1::	.dc.l 0
+_frontsector::	.dc.l 0
+_curline::		.dc.l 0
+
+_checkcoord::
+ .dc.l 3
+ .dc.l 0
+ .dc.l 2
+ .dc.l 1
+ .dc.l 3
+ .dc.l 0
+ .dc.l 2
+ .dc.l 0
+ .dc.l 3
+ .dc.l 1
+ .dc.l 2
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 2
+ .dc.l 0
+ .dc.l 2
+ .dc.l 1
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 3
+ .dc.l 1
+ .dc.l 3
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 2
+ .dc.l 0
+ .dc.l 3
+ .dc.l 1
+ .dc.l 2
+ .dc.l 1
+ .dc.l 3
+ .dc.l 1
+ .dc.l 2
+ .dc.l 1
+ .dc.l 3
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+
+;=======================
+_solidsegs::
+ .dc.l 0		 ; int[12][4]
+ 
+	
+	.phrase
+	.68000
+codeend:

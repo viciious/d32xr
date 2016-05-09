@@ -1,0 +1,1397 @@
+ .long
+ .dc.l	codeend - _ref3_start
+_ref3_start::
+ .gpu
+	.org $f03100
+DIVCONTROL		.equ	$f0211c
+
+S_LE	.ccdef  $14     ; PL
+U_LE	.ccdef  $04     ; CC
+S_GT    .ccdef	$18   	; MI
+U_GT    .ccdef	$08  	; CS
+
+S_LT	.ccdef	$15		; PL+NE
+U_LT	.ccdef	$05		; CC+NE
+
+FP .equr r14
+scratch .equr r10
+scratch2 .equr r11
+RETURNVALUE .equr r29
+RETURNPOINT .equr r28
+MATH_A .equr r27
+MATH_B .equr r26
+MATH_C .equr r25
+MATH_RTS .equr r24
+MATH_SIGN .equr r23
+
+	movei	#codestart,scratch
+	jump	T,(scratch)
+	nop
+
+
+GPU_IMUL:
+ move MATH_A,MATH_SIGN
+ xor MATH_B,MATH_SIGN
+ abs MATH_A
+ abs MATH_B
+ move MATH_A,MATH_C
+ mult MATH_B,MATH_C
+ move MATH_B,scratch2
+ shrq #16,scratch2
+ mult MATH_A,scratch2
+ shlq #16,scratch2
+ add scratch2,MATH_C
+ move MATH_A,scratch2
+ shrq #16,scratch2
+ mult MATH_B,scratch2
+ shlq #16,scratch2
+ add scratch2, MATH_C
+ btst #31,MATH_SIGN
+ jump EQ,(MATH_RTS)
+ nop
+ jump T,(MATH_RTS)
+ neg MATH_C
+	
+; fixed_t       FixedMul (fixed_t a, fixed_t b)
+
+_G_FixedMul::
+; ah al
+; bh bl
+;------
+;          bl*al
+;   bl*ah
+;   bh*al
+;ah*bh
+;-----------
+;       xx xx
+	load    (FP),MATH_A
+	load    (FP+1),MATH_B
+	
+	move    MATH_A,MATH_SIGN
+	xor     MATH_B,MATH_SIGN
+	abs     MATH_A
+	abs     MATH_B
+	move    MATH_A,RETURNVALUE
+	mult    MATH_B,RETURNVALUE              ; al*bl
+	shrq    #16,RETURNVALUE
+	move    MATH_B,scratch2
+	shrq    #16,scratch2
+	mult    MATH_A,scratch2                 ; al*bh
+	add     scratch2,RETURNVALUE
+	move    MATH_A,scratch2
+	shrq    #16,scratch2
+	mult    MATH_B,scratch2                 ; bl*ah
+	add     scratch2, RETURNVALUE
+	move    MATH_A,scratch2
+	shrq    #16,scratch2
+	move    MATH_B,scratch
+	shrq    #16,scratch
+	mult    scratch,scratch2                ; bh*ah
+	shlq    #16,scratch2
+	add     scratch2, RETURNVALUE
+	btst    #31,MATH_SIGN
+	jump    EQ,(RETURNPOINT)
+	nop
+	jump    T,(RETURNPOINT)
+	neg     RETURNVALUE
+
+
+;----------------------
+;
+; FixedDiv
+;
+;----------------------
+_G_FixedDiv:
+
+	movei   #DIVCONTROL,scratch                ; divide unit control
+	moveq   #1,scratch2
+	store   scratch2,(scratch)                      ; turn on frac div
+	
+	load    (FP),RETURNVALUE
+	load    (FP+1),MATH_B
+	
+	move    MATH_B,MATH_SIGN
+	xor     RETURNVALUE,MATH_SIGN
+	abs     RETURNVALUE
+	abs     MATH_B
+
+	div    MATH_B,RETURNVALUE
+	or		RETURNVALUE,RETURNVALUE
+		
+	btst    #31,MATH_SIGN
+
+	moveq   #0,scratch2
+	store   scratch2,(scratch)              ; turn off frac div
+
+	jump    EQ,(RETURNPOINT)
+	nop
+	jump    T,(RETURNPOINT)
+	neg     RETURNVALUE
+
+
+codestart:
+
+;====================
+_R_SpritePrep::
+;2 dag registers  6 register variables
+;localoffset:4  regoffset:4  argoffset:40
+;====================
+ movei #40,scratch
+ sub scratch,FP
+
+ movei #_vissubsectors,r0
+ move r0,r17 ;(ssp)
+
+ movei #L55,r0
+ jump T,(r0)
+ nop
+
+L52:
+
+ load (r17),r0 ;(ssp)
+ move r0,r20 ;(ss)
+ load (r20),r0 ;(ss)
+ move r0,r16 ;(se)
+ movei #76,r0
+ move r16,r1 ;(se)
+ add r0,r1
+ load (r1),r0
+ movei #_validcount,r1
+ load (r1),r1
+ cmp r0,r1
+ movei #L56,scratch
+ jump NE,(scratch)
+ nop
+
+ movei #L53,r0
+ jump T,(r0)
+ nop
+
+L56:
+
+ movei #76,r0
+ move r16,r1 ;(se)
+ add r0,r1
+ movei #_validcount,r0
+ load (r0),r0
+ store r0,(r1)
+
+ movei #80,r0
+ move r16,r1 ;(se)
+ add r0,r1
+ load (r1),r0
+ move r0,r15 ;(thing)
+
+ movei #L61,r0
+ jump T,(r0)
+ nop
+
+L58:
+
+ store r15,(FP) ; arg[] ;(thing)
+ movei #_R_PrepMobj,r0
+ store r28,(FP+1) ; push ;(RETURNPOINT)
+ store r20,(FP+2) ; push ;(ss)
+ store r19,(FP+3) ; push ;(i)
+ store r18,(FP+4) ; push ;(psp)
+ store r17,(FP+5) ; push ;(ssp)
+ store r16,(FP+6) ; push ;(se)
+ movei #L69,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+7) ; delay slot push ;(thing)
+L69:
+ load (FP+2),r20 ; pop ;(ss)
+ load (FP+3),r19 ; pop ;(i)
+ load (FP+4),r18 ; pop ;(psp)
+ load (FP+5),r17 ; pop ;(ssp)
+ load (FP+6),r16 ; pop ;(se)
+ load (FP+7),r15 ; pop ;(thing)
+ load (FP+1), RETURNPOINT ; pop
+
+L59:
+
+ move r15,r0 ;(thing)
+ addq #24,r0
+ load (r0),r0
+ move r0,r15 ;(thing)
+
+L61:
+
+ move r15,r0 ;(thing)
+ moveq #0,r1
+ cmp r0,r1
+ movei #L58,scratch
+ jump NE,(scratch)
+ nop
+
+L53:
+
+ move r17,r0 ;(ssp)
+ addq #4,r0
+ move r0,r17 ;(ssp)
+
+L55:
+
+ move r17,r0 ;(ssp)
+ movei #_lastvissubsector,r1
+ load (r1),r1
+ cmp r0,r1
+ movei #L52,scratch
+ jump U_LT,(scratch)
+ nop
+
+ movei #_lastsprite_p,r0
+ movei #_vissprite_p,r1
+ load (r1),r1
+ store r1,(r0)
+ moveq #0,r0
+ move r0,r19 ;(i)
+ movei #_viewplayer,r0
+ load (r0),r0
+ movei #228,r1
+ add r1,r0
+ move r0,r18 ;(psp)
+
+ movei #L65,r0
+ jump T,(r0)
+ nop
+
+L62:
+
+ load (r18),r0 ;(psp)
+ moveq #0,r1
+ cmp r0,r1
+ movei #L66,scratch
+ jump EQ,(scratch)
+ nop
+
+ store r18,(FP) ; arg[] ;(psp)
+ movei #_R_PrepPSprite,r0
+ store r28,(FP+1) ; push ;(RETURNPOINT)
+ store r20,(FP+2) ; push ;(ss)
+ store r19,(FP+3) ; push ;(i)
+ store r18,(FP+4) ; push ;(psp)
+ store r17,(FP+5) ; push ;(ssp)
+ store r16,(FP+6) ; push ;(se)
+ movei #L70,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+7) ; delay slot push ;(thing)
+L70:
+ load (FP+2),r20 ; pop ;(ss)
+ load (FP+3),r19 ; pop ;(i)
+ load (FP+4),r18 ; pop ;(psp)
+ load (FP+5),r17 ; pop ;(ssp)
+ load (FP+6),r16 ; pop ;(se)
+ load (FP+7),r15 ; pop ;(thing)
+ load (FP+1), RETURNPOINT ; pop
+
+L66:
+
+L63:
+
+ move r19,r0 ;(i)
+ addq #1,r0
+ move r0,r19 ;(i)
+ move r18,r0 ;(psp)
+ addq #16,r0
+ move r0,r18 ;(psp)
+
+L65:
+
+ moveq #2,r0
+ cmp r19,r0 ;(i)
+ movei #L62,scratch
+ jump S_LT,(scratch)
+ nop
+
+ movei #_phasetime+12,r0
+ movei #_samplecount,r1
+ load (r1),r1
+ store r1,(r0)
+
+ movei #_gpucodestart,r0
+ movei #_ref4_start,r1
+ store r1,(r0)
+
+
+L51:
+ movei #40,scratch
+ jump T,(RETURNPOINT)
+ add scratch,FP ; delay slot
+
+;====================
+_SlopeDiv3::
+;2 dag registers  2 register variables
+;localoffset:0  regoffset:0  argoffset:0
+;====================
+
+ load (FP+1),r0 ; local den
+ movei #512,r1
+ cmp r0,r1
+ movei #L72,scratch
+ jump EQ,(scratch)
+ nop
+ jump CS,(scratch)
+ nop
+
+ movei #2048,r0
+ move r0,RETURNVALUE
+
+ movei #L71,r0
+ jump T,(r0)
+ nop
+
+L72:
+
+ load (FP),r0 ; local num
+ shlq #3,r0
+ load (FP+1),r1 ; local den
+ shrq #8,r1
+ div r1,r0
+ move r0,r15 ;(ans)
+ movei #2048,r0
+ cmp r15,r0 ;(ans)
+ movei #L75,scratch
+ jump CS,(scratch)
+ nop
+ move r15,r16 ;(ans)(74)
+ movei #L76,r0
+ jump T,(r0)
+ nop
+L75:
+ movei #2048,r0
+ move r0,r16 ;(74)
+L76:
+ move r16,r0 ;(74)
+ move r0,RETURNVALUE
+
+L71:
+ jump T,(RETURNPOINT)
+ nop ; delay slot
+
+;====================
+_R_PointToAngle3::
+;3 dag registers  2 register variables
+;localoffset:8  regoffset:8  argoffset:32
+;====================
+ subq #32,FP
+
+ load (FP+10),r0 ; local x2
+ load (FP+8),r1 ; local x1
+ sub r1,r0
+ move r0,r15 ;(x)
+ load (FP+11),r0 ; local y2
+ load (FP+9),r1 ; local y1
+ sub r1,r0
+ move r0,r16 ;(y)
+ moveq #0,r0
+ cmp r15,r0 ;(x)
+ movei #L78,scratch
+ jump NE,(scratch)
+ nop
+ cmp r16,r0 ;(y)
+ movei #L78,scratch
+ jump NE,(scratch)
+ nop
+
+ moveq #0,r0
+ move r0,RETURNVALUE
+
+ movei #L77,r0
+ jump T,(r0)
+ nop
+
+L78:
+
+ moveq #0,r0
+ cmp r15,r0 ;(x)
+ movei #L80,scratch
+ jump S_LT,(scratch)
+ nop
+
+ moveq #0,r0
+ cmp r16,r0 ;(y)
+ movei #L82,scratch
+ jump S_LT,(scratch)
+ nop
+
+ cmp r15,r16 ;(x)(y)
+ movei #L84,scratch
+ jump PL,(scratch)
+ nop
+
+ move r16,r0 ;(y)
+ store r0,(FP) ; arg[]
+ move r15,r0 ;(x)
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_SlopeDiv3,r0
+ store r28,(FP+2) ; push ;(RETURNPOINT)
+ store r16,(FP+3) ; push ;(y)
+ movei #L94,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+4) ; delay slot push ;(x)
+L94:
+ load (FP+3),r16 ; pop ;(y)
+ load (FP+4),r15 ; pop ;(x)
+ load (FP+2), RETURNPOINT ; pop
+ move r29,r0 ;(RETURNVALUE)
+ shlq #2,r0
+ movei #_tantoangle,r1
+ add r1,r0
+ load (r0),r0
+ move r0,RETURNVALUE
+
+ movei #L77,r0
+ jump T,(r0)
+ nop
+
+L84:
+
+ move r15,r0 ;(x)
+ store r0,(FP) ; arg[]
+ move r16,r0 ;(y)
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_SlopeDiv3,r0
+ store r28,(FP+2) ; push ;(RETURNPOINT)
+ store r16,(FP+3) ; push ;(y)
+ movei #L95,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+4) ; delay slot push ;(x)
+L95:
+ load (FP+3),r16 ; pop ;(y)
+ load (FP+4),r15 ; pop ;(x)
+ load (FP+2), RETURNPOINT ; pop
+ movei #1073741823,r0
+ move r29,r1 ;(RETURNVALUE)
+ shlq #2,r1
+ movei #_tantoangle,r2
+ add r2,r1
+ load (r1),r1
+ sub r1,r0
+ move r0,RETURNVALUE
+
+ movei #L77,r0
+ jump T,(r0)
+ nop
+
+L82:
+
+ move r16,r0 ;(y)
+ neg r0
+ move r0,r16 ;(y)
+ cmp r15,r16 ;(x)(y)
+ movei #L86,scratch
+ jump PL,(scratch)
+ nop
+
+ move r16,r0 ;(y)
+ store r0,(FP) ; arg[]
+ move r15,r0 ;(x)
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_SlopeDiv3,r0
+ store r28,(FP+2) ; push ;(RETURNPOINT)
+ store r16,(FP+3) ; push ;(y)
+ movei #L96,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+4) ; delay slot push ;(x)
+L96:
+ load (FP+3),r16 ; pop ;(y)
+ load (FP+4),r15 ; pop ;(x)
+ load (FP+2), RETURNPOINT ; pop
+ move r29,r0 ;(RETURNVALUE)
+ shlq #2,r0
+ movei #_tantoangle,r1
+ add r1,r0
+ load (r0),r0
+ neg r0
+ move r0,RETURNVALUE
+
+ movei #L77,r0
+ jump T,(r0)
+ nop
+
+L86:
+
+ move r15,r0 ;(x)
+ store r0,(FP) ; arg[]
+ move r16,r0 ;(y)
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_SlopeDiv3,r0
+ store r28,(FP+2) ; push ;(RETURNPOINT)
+ store r16,(FP+3) ; push ;(y)
+ movei #L97,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+4) ; delay slot push ;(x)
+L97:
+ load (FP+3),r16 ; pop ;(y)
+ load (FP+4),r15 ; pop ;(x)
+ load (FP+2), RETURNPOINT ; pop
+ move r29,r0 ;(RETURNVALUE)
+ shlq #2,r0
+ movei #_tantoangle,r1
+ add r1,r0
+ load (r0),r0
+ movei #-1073741824,r1
+ add r1,r0
+ move r0,RETURNVALUE
+
+ movei #L77,r0
+ jump T,(r0)
+ nop
+
+L80:
+
+ move r15,r0 ;(x)
+ neg r0
+ move r0,r15 ;(x)
+ moveq #0,r0
+ cmp r16,r0 ;(y)
+ movei #L88,scratch
+ jump S_LT,(scratch)
+ nop
+
+ cmp r15,r16 ;(x)(y)
+ movei #L90,scratch
+ jump PL,(scratch)
+ nop
+
+ move r16,r0 ;(y)
+ store r0,(FP) ; arg[]
+ move r15,r0 ;(x)
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_SlopeDiv3,r0
+ store r28,(FP+2) ; push ;(RETURNPOINT)
+ store r16,(FP+3) ; push ;(y)
+ movei #L98,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+4) ; delay slot push ;(x)
+L98:
+ load (FP+3),r16 ; pop ;(y)
+ load (FP+4),r15 ; pop ;(x)
+ load (FP+2), RETURNPOINT ; pop
+ movei #2147483647,r0
+ move r29,r1 ;(RETURNVALUE)
+ shlq #2,r1
+ movei #_tantoangle,r2
+ add r2,r1
+ load (r1),r1
+ sub r1,r0
+ move r0,RETURNVALUE
+
+ movei #L77,r0
+ jump T,(r0)
+ nop
+
+L90:
+
+ move r15,r0 ;(x)
+ store r0,(FP) ; arg[]
+ move r16,r0 ;(y)
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_SlopeDiv3,r0
+ store r28,(FP+2) ; push ;(RETURNPOINT)
+ store r16,(FP+3) ; push ;(y)
+ movei #L99,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+4) ; delay slot push ;(x)
+L99:
+ load (FP+3),r16 ; pop ;(y)
+ load (FP+4),r15 ; pop ;(x)
+ load (FP+2), RETURNPOINT ; pop
+ move r29,r0 ;(RETURNVALUE)
+ shlq #2,r0
+ movei #_tantoangle,r1
+ add r1,r0
+ load (r0),r0
+ movei #1073741824,r1
+ add r1,r0
+ move r0,RETURNVALUE
+
+ movei #L77,r0
+ jump T,(r0)
+ nop
+
+L88:
+
+ move r16,r0 ;(y)
+ neg r0
+ move r0,r16 ;(y)
+ cmp r15,r16 ;(x)(y)
+ movei #L92,scratch
+ jump PL,(scratch)
+ nop
+
+ move r16,r0 ;(y)
+ store r0,(FP) ; arg[]
+ move r15,r0 ;(x)
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_SlopeDiv3,r0
+ store r28,(FP+2) ; push ;(RETURNPOINT)
+ store r16,(FP+3) ; push ;(y)
+ movei #L100,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+4) ; delay slot push ;(x)
+L100:
+ load (FP+3),r16 ; pop ;(y)
+ load (FP+4),r15 ; pop ;(x)
+ load (FP+2), RETURNPOINT ; pop
+ move r29,r0 ;(RETURNVALUE)
+ shlq #2,r0
+ movei #_tantoangle,r1
+ add r1,r0
+ load (r0),r0
+ movei #-2147483648,r1
+ add r1,r0
+ move r0,RETURNVALUE
+
+ movei #L77,r0
+ jump T,(r0)
+ nop
+
+L92:
+
+ move r15,r0 ;(x)
+ store r0,(FP) ; arg[]
+ move r16,r0 ;(y)
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_SlopeDiv3,r0
+ store r28,(FP+2) ; push ;(RETURNPOINT)
+ store r16,(FP+3) ; push ;(y)
+ movei #L101,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+4) ; delay slot push ;(x)
+L101:
+ load (FP+3),r16 ; pop ;(y)
+ load (FP+4),r15 ; pop ;(x)
+ load (FP+2), RETURNPOINT ; pop
+ movei #-1073741825,r0
+ move r29,r1 ;(RETURNVALUE)
+ shlq #2,r1
+ movei #_tantoangle,r2
+ add r2,r1
+ load (r1),r1
+ sub r1,r0
+ move r0,RETURNVALUE
+
+L77:
+ jump T,(RETURNPOINT)
+ addq #32,FP ; delay slot
+
+;====================
+_R_PrepMobj::
+;5 dag registers  8 register variables
+;localoffset:16  regoffset:40  argoffset:96
+;====================
+ movei #96,scratch
+ sub scratch,FP
+
+ load (FP+24),r0 ; local thing
+ move r0,r1
+ addq #12,r1
+ load (r1),r1
+ movei #_viewx,r2
+ load (r2),r2
+ sub r2,r1
+ move r1,r21 ;(trx)
+ addq #16,r0
+ load (r0),r0
+ movei #_viewy,r1
+ load (r1),r1
+ sub r1,r0
+ move r0,r22 ;(try)
+ store r21,(FP) ; arg[] ;(trx)
+ movei #_viewcos,r0
+ load (r0),r0
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_G_FixedMul,r0
+ store r28,(FP+10) ; push ;(RETURNPOINT)
+ store r22,(FP+11) ; push ;(try)
+ store r21,(FP+12) ; push ;(trx)
+ store r20,(FP+13) ; push ;(xscale)
+ store r19,(FP+14) ; push ;(tx)
+ store r18,(FP+15) ; push ;(gyt)
+ store r17,(FP+16) ; push ;(gxt)
+ store r16,(FP+17) ; push ;(tz)
+ movei #L121,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+18) ; delay slot push ;(vis)
+L121:
+ load (FP+11),r22 ; pop ;(try)
+ load (FP+12),r21 ; pop ;(trx)
+ load (FP+13),r20 ; pop ;(xscale)
+ load (FP+14),r19 ; pop ;(tx)
+ load (FP+15),r18 ; pop ;(gyt)
+ load (FP+16),r17 ; pop ;(gxt)
+ load (FP+17),r16 ; pop ;(tz)
+ load (FP+18),r15 ; pop ;(vis)
+ load (FP+10), RETURNPOINT ; pop
+ move r29,r17 ;(RETURNVALUE)(gxt)
+
+ store r22,(FP) ; arg[] ;(try)
+ movei #_viewsin,r0
+ load (r0),r0
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_G_FixedMul,r0
+ store r28,(FP+10) ; push ;(RETURNPOINT)
+ store r22,(FP+11) ; push ;(try)
+ store r21,(FP+12) ; push ;(trx)
+ store r20,(FP+13) ; push ;(xscale)
+ store r19,(FP+14) ; push ;(tx)
+ store r18,(FP+15) ; push ;(gyt)
+ store r17,(FP+16) ; push ;(gxt)
+ store r16,(FP+17) ; push ;(tz)
+ movei #L122,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+18) ; delay slot push ;(vis)
+L122:
+ load (FP+11),r22 ; pop ;(try)
+ load (FP+12),r21 ; pop ;(trx)
+ load (FP+13),r20 ; pop ;(xscale)
+ load (FP+14),r19 ; pop ;(tx)
+ load (FP+15),r18 ; pop ;(gyt)
+ load (FP+16),r17 ; pop ;(gxt)
+ load (FP+17),r16 ; pop ;(tz)
+ load (FP+18),r15 ; pop ;(vis)
+ load (FP+10), RETURNPOINT ; pop
+ move r29,r0 ;(RETURNVALUE)
+ neg r0
+ move r0,r18 ;(gyt)
+ move r17,r0 ;(gxt)
+ sub r18,r0 ;(gyt)
+ move r0,r16 ;(tz)
+ movei #262144,r0
+ cmp r16,r0 ;(tz)
+ movei #L103,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+
+
+ movei #L102,r0
+ jump T,(r0)
+ nop
+
+L103:
+
+ store r21,(FP) ; arg[] ;(trx)
+ movei #_viewsin,r0
+ load (r0),r0
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_G_FixedMul,r0
+ store r28,(FP+10) ; push ;(RETURNPOINT)
+ store r22,(FP+11) ; push ;(try)
+ store r21,(FP+12) ; push ;(trx)
+ store r20,(FP+13) ; push ;(xscale)
+ store r19,(FP+14) ; push ;(tx)
+ store r18,(FP+15) ; push ;(gyt)
+ store r17,(FP+16) ; push ;(gxt)
+ store r16,(FP+17) ; push ;(tz)
+ movei #L123,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+18) ; delay slot push ;(vis)
+L123:
+ load (FP+11),r22 ; pop ;(try)
+ load (FP+12),r21 ; pop ;(trx)
+ load (FP+13),r20 ; pop ;(xscale)
+ load (FP+14),r19 ; pop ;(tx)
+ load (FP+15),r18 ; pop ;(gyt)
+ load (FP+16),r17 ; pop ;(gxt)
+ load (FP+17),r16 ; pop ;(tz)
+ load (FP+18),r15 ; pop ;(vis)
+ load (FP+10), RETURNPOINT ; pop
+ move r29,r0 ;(RETURNVALUE)
+ neg r0
+ move r0,r17 ;(gxt)
+ store r22,(FP) ; arg[] ;(try)
+ movei #_viewcos,r0
+ load (r0),r0
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_G_FixedMul,r0
+ store r28,(FP+10) ; push ;(RETURNPOINT)
+ store r22,(FP+11) ; push ;(try)
+ store r21,(FP+12) ; push ;(trx)
+ store r20,(FP+13) ; push ;(xscale)
+ store r19,(FP+14) ; push ;(tx)
+ store r18,(FP+15) ; push ;(gyt)
+ store r17,(FP+16) ; push ;(gxt)
+ store r16,(FP+17) ; push ;(tz)
+ movei #L124,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+18) ; delay slot push ;(vis)
+L124:
+ load (FP+11),r22 ; pop ;(try)
+ load (FP+12),r21 ; pop ;(trx)
+ load (FP+13),r20 ; pop ;(xscale)
+ load (FP+14),r19 ; pop ;(tx)
+ load (FP+15),r18 ; pop ;(gyt)
+ load (FP+16),r17 ; pop ;(gxt)
+ load (FP+17),r16 ; pop ;(tz)
+ load (FP+18),r15 ; pop ;(vis)
+ load (FP+10), RETURNPOINT ; pop
+ move r29,r18 ;(RETURNVALUE)(gyt)
+
+ move r18,r0 ;(gyt)
+ add r17,r0 ;(gxt)
+ neg r0
+ move r0,r19 ;(tx)
+ move r16,r0 ;(tz)
+ shlq #2,r0
+ cmp r19,r0 ;(tx)
+ movei #L107,scratch
+ jump MI,(scratch)
+ nop
+ neg r0
+ cmp r19,r0 ;(tx)
+ movei #L105,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+L107:
+
+
+ movei #L102,r0
+ jump T,(r0)
+ nop
+
+L105:
+
+ load (FP+24),r0 ; local thing
+ movei #36,r1
+ add r1,r0
+ load (r0),r0
+ movei #91,r1
+ cmp r0,r1
+ movei #L108,scratch
+ jump U_LT,(scratch)
+ nop
+
+
+ movei #L102,r0
+ jump T,(r0)
+ nop
+
+L108:
+
+ move FP,r0
+ addq #28,r0 ; &sprdef
+ load (FP+24),r1 ; local thing
+ movei #36,r2
+ move r1,r3
+ add r2,r3
+ load (r3),r2
+ shlq #3,r2
+ movei #_sprites,r3
+ add r3,r2
+ store r2,(r0)
+ movei #40,r2
+ add r2,r1
+ load (r1),r1
+ movei #32767,r2
+ and r2,r1
+ load (r0),r0
+ load (r0),r0
+ cmp r1,r0
+ movei #L110,scratch
+ jump S_LT,(scratch)
+ nop
+
+
+ movei #L102,r0
+ jump T,(r0)
+ nop
+
+L110:
+
+ move FP,r0
+ addq #24,r0 ; &sprframe
+ movei #44,r1
+ load (FP+24),r2 ; local thing
+ movei #40,r3
+ add r3,r2
+ load (r2),r2
+ movei #32767,r3
+ and r3,r2
+ move r1,MATH_A
+ movei #L125,MATH_RTS
+ movei #GPU_IMUL,scratch
+ jump T,(scratch)
+ move r2,MATH_B ; delay slot
+L125:
+ move MATH_C,r1
+ load (FP+7),r2 ; local sprdef
+ addq #4,r2
+ load (r2),r2
+ add r2,r1
+ store r1,(r0)
+ load (r0),r0
+ load (r0),r0
+ moveq #0,r1
+ cmp r0,r1
+ movei #L112,scratch
+ jump EQ,(scratch)
+ nop
+
+ movei #_viewx,r0
+ load (r0),r0
+ store r0,(FP) ; arg[]
+ movei #_viewy,r0
+ load (r0),r0
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ load (FP+24),r0 ; local thing
+ move r0,r1
+ addq #12,r1
+ load (r1),r1
+ or r1,scratch ; scoreboard bug
+ store r1,(FP+2) ; arg[]
+ addq #16,r0
+ load (r0),r0
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+3) ; arg[]
+ movei #_R_PointToAngle3,r0
+ store r28,(FP+10) ; push ;(RETURNPOINT)
+ store r22,(FP+11) ; push ;(try)
+ store r21,(FP+12) ; push ;(trx)
+ store r20,(FP+13) ; push ;(xscale)
+ store r19,(FP+14) ; push ;(tx)
+ store r18,(FP+15) ; push ;(gyt)
+ store r17,(FP+16) ; push ;(gxt)
+ store r16,(FP+17) ; push ;(tz)
+ movei #L126,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+18) ; delay slot push ;(vis)
+L126:
+ load (FP+11),r22 ; pop ;(try)
+ load (FP+12),r21 ; pop ;(trx)
+ load (FP+13),r20 ; pop ;(xscale)
+ load (FP+14),r19 ; pop ;(tx)
+ load (FP+15),r18 ; pop ;(gyt)
+ load (FP+16),r17 ; pop ;(gxt)
+ load (FP+17),r16 ; pop ;(tz)
+ load (FP+18),r15 ; pop ;(vis)
+ load (FP+10), RETURNPOINT ; pop
+ movei #36,r0
+ add FP,r0 ; &ang
+ store r29,(r0) ;(RETURNVALUE)
+
+ move FP,r0
+ addq #32,r0 ; &rot
+ load (FP+9),r1 ; local ang
+ load (FP+24),r2 ; local thing
+ addq #32,r2
+ load (r2),r2
+ sub r2,r1
+ movei #-1879048192,r2
+ add r2,r1
+ shrq #29,r1
+ store r1,(r0)
+ move FP,r1
+ addq #16,r1 ; &lump
+ load (r0),r0
+ move r0,r2
+ shlq #2,r2
+ load (FP+6),r3 ; local sprframe
+ move r3,r4
+ addq #4,r4
+ add r4,r2
+ load (r2),r2
+ store r2,(r1)
+ move FP,r1
+ addq #20,r1 ; &flip
+ movei #36,r2
+ add r2,r3
+ add r3,r0
+ loadb (r0),r0
+ store r0,(r1)
+
+ movei #L113,r0
+ jump T,(r0)
+ nop
+
+L112:
+
+ move FP,r0
+ addq #16,r0 ; &lump
+ load (FP+6),r1 ; local sprframe
+ move r1,r2
+ addq #4,r2
+ load (r2),r2
+ store r2,(r0)
+ move FP,r0
+ addq #20,r0 ; &flip
+ movei #36,r2
+ add r2,r1
+ loadb (r1),r1
+ store r1,(r0)
+
+L113:
+
+ movei #_vissprite_p,r0
+ load (r0),r0
+ move r0,r15 ;(vis)
+ move r15,r0 ;(vis)
+ movei #_vissprites+7680,r1
+ cmp r0,r1
+ movei #L114,scratch
+ jump NE,(scratch)
+ nop
+
+
+ movei #L102,r0
+ jump T,(r0)
+ nop
+
+L114:
+
+ movei #_vissprite_p,r0
+ movei #60,r1
+ move r15,r2 ;(vis)
+ add r1,r2
+ store r2,(r0)
+ move r15,r0 ;(vis)
+ addq #32,r0
+ load (FP+4),r1 ; local lump
+ store r1,(r0)
+
+ store r19,(r15) ;(tx)(vis)
+
+ movei #40,r0
+ move r15,r1 ;(vis)
+ add r0,r1
+ load (FP+24),r0 ; local thing
+ addq #12,r0
+ load (r0),r0
+ store r0,(r1)
+
+ movei #44,r0
+ move r15,r1 ;(vis)
+ add r0,r1
+ load (FP+24),r0 ; local thing
+ addq #16,r0
+ load (r0),r0
+ store r0,(r1)
+
+ movei #48,r0
+ move r15,r1 ;(vis)
+ add r0,r1
+ load (FP+24),r0 ; local thing
+ addq #20,r0
+ load (r0),r0
+ store r0,(r1)
+
+ movei #5242880,r0
+ store r0,(FP) ; arg[]
+ or r16,scratch ; scoreboard bug ;(tz)
+ store r16,(FP+1) ; arg[] ;(tz)
+ movei #_G_FixedDiv,r0
+ store r28,(FP+10) ; push ;(RETURNPOINT)
+ store r22,(FP+11) ; push ;(try)
+ store r21,(FP+12) ; push ;(trx)
+ store r20,(FP+13) ; push ;(xscale)
+ store r19,(FP+14) ; push ;(tx)
+ store r18,(FP+15) ; push ;(gyt)
+ store r17,(FP+16) ; push ;(gxt)
+ store r16,(FP+17) ; push ;(tz)
+ movei #L127,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+18) ; delay slot push ;(vis)
+L127:
+ load (FP+11),r22 ; pop ;(try)
+ load (FP+12),r21 ; pop ;(trx)
+ load (FP+13),r20 ; pop ;(xscale)
+ load (FP+14),r19 ; pop ;(tx)
+ load (FP+15),r18 ; pop ;(gyt)
+ load (FP+16),r17 ; pop ;(gxt)
+ load (FP+17),r16 ; pop ;(tz)
+ load (FP+18),r15 ; pop ;(vis)
+ load (FP+10), RETURNPOINT ; pop
+ move r29,r20 ;(RETURNVALUE)(xscale)
+
+ move r15,r0 ;(vis)
+ addq #12,r0
+ store r20,(r0) ;(xscale)
+
+ store r20,(FP) ; arg[] ;(xscale)
+ movei #144179,r0
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_G_FixedMul,r0
+ store r28,(FP+10) ; push ;(RETURNPOINT)
+ store r22,(FP+11) ; push ;(try)
+ store r21,(FP+12) ; push ;(trx)
+ store r20,(FP+13) ; push ;(xscale)
+ store r19,(FP+14) ; push ;(tx)
+ store r18,(FP+15) ; push ;(gyt)
+ store r17,(FP+16) ; push ;(gxt)
+ store r16,(FP+17) ; push ;(tz)
+ movei #L128,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+18) ; delay slot push ;(vis)
+L128:
+ load (FP+11),r22 ; pop ;(try)
+ load (FP+12),r21 ; pop ;(trx)
+ load (FP+13),r20 ; pop ;(xscale)
+ load (FP+14),r19 ; pop ;(tx)
+ load (FP+15),r18 ; pop ;(gyt)
+ load (FP+16),r17 ; pop ;(gxt)
+ load (FP+17),r16 ; pop ;(tz)
+ load (FP+18),r15 ; pop ;(vis)
+ load (FP+10), RETURNPOINT ; pop
+ move r15,r0 ;(vis)
+ addq #20,r0
+ store r29,(r0) ;(RETURNVALUE)
+
+ move r15,r0 ;(vis)
+ addq #24,r0
+ movei #-1,r1
+ move r15,r2 ;(vis)
+ addq #20,r2
+ load (r2),r2
+ div r2,r1
+ store r1,(r0)
+
+ load (FP+5),r0 ; local flip
+ moveq #0,r1
+ cmp r0,r1
+ movei #L117,scratch
+ jump EQ,(scratch)
+ nop
+
+ move r15,r0 ;(vis)
+ addq #16,r0
+ movei #-1,r1
+ move r20,r2 ;(xscale)
+ div r2,r1
+ neg r1
+ store r1,(r0)
+
+ movei #L118,r0
+ jump T,(r0)
+ nop
+
+L117:
+
+ move r15,r0 ;(vis)
+ addq #16,r0
+ movei #-1,r1
+ move r20,r2 ;(xscale)
+ div r2,r1
+ store r1,(r0)
+
+L118:
+
+ load (FP+24),r0 ; local thing
+ movei #40,r1
+ add r1,r0
+ load (r0),r0
+ movei #32768,r1
+ and r1,r0
+ moveq #0,r1
+ cmp r0,r1
+ movei #L119,scratch
+ jump EQ,(scratch)
+ nop
+
+ movei #36,r0
+ move r15,r1 ;(vis)
+ add r0,r1
+ movei #255,r0
+ store r0,(r1)
+
+ movei #L120,r0
+ jump T,(r0)
+ nop
+
+L119:
+
+ move FP,r0
+ addq #16,r0 ; &lump
+ load (FP+24),r1 ; local thing
+ movei #52,r2
+ add r2,r1
+ load (r1),r1
+ load (r1),r1
+ addq #16,r1
+ load (r1),r1
+ store r1,(r0)
+ movei #36,r1
+ move r15,r2 ;(vis)
+ add r1,r2
+ load (r0),r0
+ store r0,(r2)
+
+L120:
+
+
+L102:
+ movei #96,scratch
+ jump T,(RETURNPOINT)
+ add scratch,FP ; delay slot
+
+;====================
+_R_PrepPSprite::
+;6 dag registers  1 register variables
+;localoffset:0  regoffset:12  argoffset:12
+;====================
+ subq #12,FP
+
+ move FP,r0
+ addq #4,r0 ; &sprdef
+ load (FP+3),r1 ; local psp
+ load (r1),r2
+ load (r2),r2
+ shlq #3,r2
+ movei #_sprites,r3
+ add r3,r2
+ store r2,(r0)
+ move FP,r2
+ addq #8,r2 ; &sprframe
+ movei #44,r3
+ load (r1),r1
+ moveq #4,r4
+ add r4,r1
+ load (r1),r1
+ movei #32767,r5
+ and r5,r1
+ move r3,MATH_A
+ movei #L135,MATH_RTS
+ movei #GPU_IMUL,scratch
+ jump T,(scratch)
+ move r1,MATH_B ; delay slot
+L135:
+ move MATH_C,r3
+ load (r0),r0
+ add r4,r0
+ load (r0),r0
+ move r3,r1
+ add r0,r1
+ store r1,(r2)
+ move FP,r0 ; &lump
+ load (r2),r1
+ add r4,r1
+ load (r1),r1
+ store r1,(r0)
+ movei #_vissprite_p,r0
+ load (r0),r0
+ move r0,r15 ;(vis)
+ move r15,r0 ;(vis)
+ movei #_vissprites+7680,r1
+ cmp r0,r1
+ movei #L130,scratch
+ jump NE,(scratch)
+ nop
+
+
+ movei #L129,r0
+ jump T,(r0)
+ nop
+
+L130:
+
+ movei #_vissprite_p,r0
+ movei #60,r1
+ move r15,r2 ;(vis)
+ add r1,r2
+ store r2,(r0)
+ move r15,r0 ;(vis)
+ addq #32,r0
+ load (FP),r1 ; local lump
+ store r1,(r0)
+
+ load (FP+3),r0 ; local psp
+ addq #8,r0
+ load (r0),r0
+ sharq #16,r0
+ store r0,(r15) ;(vis)
+
+ move r15,r0 ;(vis)
+ addq #28,r0
+ load (FP+3),r1 ; local psp
+ addq #12,r1
+ load (r1),r1
+ store r1,(r0)
+
+ load (FP+3),r0 ; local psp
+ load (r0),r0
+ addq #4,r0
+ load (r0),r0
+ movei #32768,r1
+ and r1,r0
+ moveq #0,r1
+ cmp r0,r1
+ movei #L133,scratch
+ jump EQ,(scratch)
+ nop
+
+ movei #36,r0
+ move r15,r1 ;(vis)
+ add r0,r1
+ movei #255,r0
+ store r0,(r1)
+
+ movei #L134,r0
+ jump T,(r0)
+ nop
+
+L133:
+
+ movei #36,r0
+ move r15,r1 ;(vis)
+ add r0,r1
+ movei #_viewplayer,r0
+ load (r0),r0
+ load (r0),r0
+ movei #52,r2
+ add r2,r0
+ load (r0),r0
+ load (r0),r0
+ addq #16,r0
+ load (r0),r0
+ store r0,(r1)
+
+L134:
+
+
+L129:
+ jump T,(RETURNPOINT)
+ addq #12,FP ; delay slot
+
+;=======================
+
+ .extern _lastvissubsector
+ .extern _vissubsectors
+ .extern _vissprite_p
+ .extern _lastsprite_p
+ .extern _vissprites
+ .extern _phasetime
+ .extern _validcount
+ .extern _viewplayer
+ .extern _viewsin
+ .extern _viewcos
+ .extern _viewy
+ .extern _viewx
+ .extern _tantoangle
+ .extern _sprites
+ .extern _gpucodestart
+ .extern _samplecount
+ .extern _G_FixedDiv
+ .extern _G_FixedMul
+ .extern _ref4_start
+
+	.phrase
+	.68000
+codeend:

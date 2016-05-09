@@ -1,0 +1,880 @@
+ .long
+ .dc.l	codeend - _ref2_start
+_ref2_start::
+ .gpu
+	.org $f03100
+DIVCONTROL		.equ	$f0211c
+	
+
+S_LE	.ccdef  $14     ; PL
+U_LE	.ccdef  $04     ; CC
+S_GT    .ccdef	$18   	; MI
+U_GT    .ccdef	$08  	; CS
+
+S_LT	.ccdef	$15		; PL+NE
+U_LT	.ccdef	$05		; CC+NE
+
+FP .equr r14
+scratch .equr r10
+scratch2 .equr r11
+RETURNVALUE .equr r29
+RETURNPOINT .equr r28
+MATH_A .equr r27
+MATH_B .equr r26
+MATH_C .equr r25
+MATH_RTS .equr r24
+MATH_SIGN .equr r23
+
+
+;====================
+_R_WallPrep::
+;4 dag registers  8 register variables
+;localoffset:0  regoffset:56  argoffset:56
+;====================
+ movei #56,scratch
+ sub scratch,FP
+
+ movei #_viswalls,r0
+ move r0,r15 ;(segl)
+
+ movei #L55,r0
+ jump T,(r0)
+ nop
+
+L52:
+
+ load (r15),r0 ;(segl)
+ move r0,r22 ;(seg)
+ move FP,r0
+ addq #20,r0 ; &li
+ move r22,r1 ;(seg)
+ addq #20,r1
+ load (r1),r1
+ store r1,(r0)
+ move FP,r1
+ addq #8,r1 ; &si
+ moveq #16,r2
+ move r22,r3 ;(seg)
+ add r2,r3
+ load (r3),r3
+ store r3,(r1)
+ load (r0),r0
+ add r2,r0
+ load (r0),r1
+ movei #256,r2
+ or r2,r1
+ store r1,(r0)
+
+ move r22,r0 ;(seg)
+ addq #24,r0
+ load (r0),r0
+ move r0,r21 ;(front_sector)
+ move FP,r0 ; &f_ceilingpic
+ move r21,r1 ;(front_sector)
+ addq #12,r1
+ load (r1),r1
+ store r1,(r0)
+ move FP,r0
+ addq #16,r0 ; &f_lightlevel
+ moveq #16,r1
+ move r21,r2 ;(front_sector)
+ add r1,r2
+ load (r2),r2
+ store r2,(r0)
+ load (r21),r0 ;(front_sector)
+ movei #_viewz,r2
+ load (r2),r2
+ sub r2,r0
+ move r0,r18 ;(f_floorheight)
+ move r21,r0 ;(front_sector)
+ addq #4,r0
+ load (r0),r0
+ sub r2,r0
+ move r0,r16 ;(f_ceilingheight)
+ move r15,r0 ;(segl)
+ add r1,r0
+ move r21,r1 ;(front_sector)
+ addq #8,r1
+ load (r1),r1
+ shlq #2,r1
+ movei #_flattranslation,r2
+ load (r2),r2
+ add r2,r1
+ load (r1),r1
+ store r1,(r0)
+
+ load (FP),r0 ; local f_ceilingpic
+ movei #-1,r1
+ cmp r0,r1
+ movei #L56,scratch
+ jump NE,(scratch)
+ nop
+
+ move r15,r0 ;(segl)
+ addq #20,r0
+ movei #-1,r1
+ store r1,(r0)
+
+ movei #L57,r0
+ jump T,(r0)
+ nop
+
+L56:
+
+ move r15,r0 ;(segl)
+ addq #20,r0
+ load (FP),r1 ; local f_ceilingpic
+ shlq #2,r1
+ movei #_flattranslation,r2
+ load (r2),r2
+ add r2,r1
+ load (r1),r1
+ store r1,(r0)
+
+L57:
+
+ move r22,r0 ;(seg)
+ addq #28,r0
+ load (r0),r0
+ move r0,r17 ;(back_sector)
+ move r17,r0 ;(back_sector)
+ moveq #0,r1
+ cmp r0,r1
+ movei #L58,scratch
+ jump NE,(scratch)
+ nop
+
+ movei #_emptysector,r0
+ move r0,r17 ;(back_sector)
+
+L58:
+
+ move FP,r0
+ addq #32,r0 ; &b_ceilingpic
+ move r17,r1 ;(back_sector)
+ addq #12,r1
+ load (r1),r1
+ store r1,(r0)
+ movei #36,r0
+ add FP,r0 ; &b_lightlevel
+ move r17,r1 ;(back_sector)
+ addq #16,r1
+ load (r1),r1
+ store r1,(r0)
+ load (r17),r0 ;(back_sector)
+ movei #_viewz,r1
+ load (r1),r1
+ sub r1,r0
+ move r0,r19 ;(b_floorheight)
+ moveq #4,r0
+ move r17,r2 ;(back_sector)
+ add r0,r2
+ load (r2),r2
+ sub r1,r2
+ move r2,r20 ;(b_ceilingheight)
+ move FP,r1
+ addq #28,r1 ; &b_texturemid
+ moveq #0,r2
+ store r2,(r1)
+ move FP,r1
+ addq #12,r1 ; &t_texturemid
+ store r2,(r1)
+ move FP,r1
+ addq #4,r1 ; &actionbits
+ store r2,(r1)
+ movei #40,r1
+ add FP,r1 ; &rw_x
+ move r15,r2 ;(segl)
+ add r0,r2
+ load (r2),r0
+ store r0,(r1)
+ movei #44,r0
+ add FP,r0 ; &rw_stopx
+ move r15,r1 ;(segl)
+ addq #8,r1
+ load (r1),r1
+ addq #1,r1
+ store r1,(r0)
+ load (FP),r0 ; local f_ceilingpic
+ movei #-1,r1
+ cmp r0,r1
+ movei #L61,scratch
+ jump NE,(scratch)
+ nop
+ load (FP+8),r0 ; local b_ceilingpic
+ cmp r0,r1
+ movei #L61,scratch
+ jump NE,(scratch)
+ nop
+ movei #48,r0
+ add FP,r0 ; &60
+ moveq #1,r1
+ store r1,(r0)
+ movei #L62,r0
+ jump T,(r0)
+ nop
+L61:
+ movei #48,r0
+ add FP,r0 ; &60
+ moveq #0,r1
+ store r1,(r0)
+L62:
+ move FP,r0
+ addq #24,r0 ; &skyhack
+ load (FP+12),r1 ; local 60
+ store r1,(r0)
+ moveq #0,r0
+ cmp r18,r0 ;(f_floorheight)
+ movei #L63,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+ moveq #8,r0
+ move r21,r1 ;(front_sector)
+ add r0,r1
+ load (r1),r1
+ move r17,r2 ;(back_sector)
+ add r0,r2
+ load (r2),r0
+ cmp r1,r0
+ movei #L67,scratch
+ jump NE,(scratch)
+ nop
+ cmp r18,r19 ;(f_floorheight)(b_floorheight)
+ movei #L67,scratch
+ jump NE,(scratch)
+ nop
+ load (FP+4),r0 ; local f_lightlevel
+ load (FP+9),r1 ; local b_lightlevel
+ cmp r0,r1
+ movei #L67,scratch
+ jump NE,(scratch)
+ nop
+ cmp r20,r19 ;(b_ceilingheight)(b_floorheight)
+ movei #L63,scratch
+ jump NE,(scratch)
+ nop
+L67:
+
+ movei #64,r0
+ move r15,r1 ;(segl)
+ add r0,r1
+ move r18,r0 ;(f_floorheight)
+ sharq #10,r0
+ store r0,(r1)
+ movei #60,r1
+ move r15,r2 ;(segl)
+ add r1,r2
+ store r0,(r2)
+
+ move FP,r0
+ addq #4,r0 ; &actionbits
+ load (r0),r1
+ movei #33,r2
+ or r2,r1
+ store r1,(r0)
+
+L63:
+
+ load (FP+6),r0 ; local skyhack
+ moveq #0,r1
+ cmp r0,r1
+ movei #L68,scratch
+ jump NE,(scratch)
+ nop
+ cmp r16,r1 ;(f_ceilingheight)
+ movei #L70,scratch
+ jump MI,(scratch)
+ nop
+ load (FP),r0 ; local f_ceilingpic
+ movei #-1,r1
+ cmp r0,r1
+ movei #L68,scratch
+ jump NE,(scratch)
+ nop
+L70:
+ load (FP),r0 ; local f_ceilingpic
+ load (FP+8),r1 ; local b_ceilingpic
+ cmp r0,r1
+ movei #L73,scratch
+ jump NE,(scratch)
+ nop
+ cmp r16,r20 ;(f_ceilingheight)(b_ceilingheight)
+ movei #L73,scratch
+ jump NE,(scratch)
+ nop
+ load (FP+4),r0 ; local f_lightlevel
+ load (FP+9),r1 ; local b_lightlevel
+ cmp r0,r1
+ movei #L73,scratch
+ jump NE,(scratch)
+ nop
+ cmp r20,r19 ;(b_ceilingheight)(b_floorheight)
+ movei #L68,scratch
+ jump NE,(scratch)
+ nop
+L73:
+
+ movei #72,r0
+ move r15,r1 ;(segl)
+ add r0,r1
+ move r16,r0 ;(f_ceilingheight)
+ sharq #10,r0
+ store r0,(r1)
+ movei #68,r1
+ move r15,r2 ;(segl)
+ add r1,r2
+ store r0,(r2)
+
+ load (FP),r0 ; local f_ceilingpic
+ movei #-1,r1
+ cmp r0,r1
+ movei #L74,scratch
+ jump NE,(scratch)
+ nop
+
+ move FP,r0
+ addq #4,r0 ; &actionbits
+ load (r0),r1
+ movei #80,r2
+ or r2,r1
+ store r1,(r0)
+
+ movei #L75,r0
+ jump T,(r0)
+ nop
+
+L74:
+
+ move FP,r0
+ addq #4,r0 ; &actionbits
+ load (r0),r1
+ moveq #18,r2
+ or r2,r1
+ store r1,(r0)
+
+L75:
+
+L68:
+
+ move r15,r0 ;(segl)
+ addq #28,r0
+ move r16,r1 ;(f_ceilingheight)
+ sharq #10,r1
+ store r1,(r0)
+
+ move r17,r0 ;(back_sector)
+ movei #_emptysector,r1
+ cmp r0,r1
+ movei #L76,scratch
+ jump NE,(scratch)
+ nop
+
+ movei #40,r0
+ move r15,r1 ;(segl)
+ add r0,r1
+ load (FP+2),r0 ; local si
+ addq #16,r0
+ load (r0),r0
+ shlq #2,r0
+ movei #_texturetranslation,r2
+ load (r2),r2
+ add r2,r0
+ load (r0),r0
+ shlq #5,r0
+ movei #_textures,r2
+ add r2,r0
+ store r0,(r1)
+
+ load (FP+5),r0 ; local li
+ addq #16,r0
+ load (r0),r0
+ moveq #16,r1
+ and r1,r0
+ moveq #0,r1
+ cmp r0,r1
+ movei #L78,scratch
+ jump EQ,(scratch)
+ nop
+
+ move FP,r0
+ addq #12,r0 ; &t_texturemid
+ movei #40,r1
+ move r15,r2 ;(segl)
+ add r1,r2
+ load (r2),r1
+ addq #12,r1
+ load (r1),r1
+ shlq #16,r1
+ move r18,r2 ;(f_floorheight)
+ add r1,r2
+ store r2,(r0)
+
+ movei #L79,r0
+ jump T,(r0)
+ nop
+
+L78:
+
+ move FP,r0
+ addq #12,r0 ; &t_texturemid
+ store r16,(r0) ;(f_ceilingheight)
+
+L79:
+
+ move FP,r0
+ addq #12,r0 ; &t_texturemid
+ load (r0),r1
+ load (FP+2),r2 ; local si
+ addq #4,r2
+ load (r2),r2
+ add r2,r1
+ store r1,(r0)
+ move r15,r0 ;(segl)
+ addq #32,r0
+ move r18,r1 ;(f_floorheight)
+ sharq #10,r1
+ store r1,(r0)
+
+ move FP,r0
+ addq #4,r0 ; &actionbits
+ load (r0),r1
+ movei #1028,r2
+ or r2,r1
+ store r1,(r0)
+
+ movei #L80,r0
+ jump T,(r0)
+ nop
+
+L76:
+
+ cmp r19,r18 ;(b_floorheight)(f_floorheight)
+ movei #L81,scratch
+ jump PL,(scratch)
+ nop
+
+ movei #56,r0
+ move r15,r1 ;(segl)
+ add r0,r1
+ load (FP+2),r0 ; local si
+ addq #12,r0
+ load (r0),r0
+ shlq #2,r0
+ movei #_texturetranslation,r2
+ load (r2),r2
+ add r2,r0
+ load (r0),r0
+ shlq #5,r0
+ movei #_textures,r2
+ add r2,r0
+ store r0,(r1)
+
+ load (FP+5),r0 ; local li
+ addq #16,r0
+ load (r0),r0
+ moveq #16,r1
+ and r1,r0
+ moveq #0,r1
+ cmp r0,r1
+ movei #L83,scratch
+ jump EQ,(scratch)
+ nop
+
+ move FP,r0
+ addq #28,r0 ; &b_texturemid
+ store r16,(r0) ;(f_ceilingheight)
+
+ movei #L84,r0
+ jump T,(r0)
+ nop
+
+L83:
+
+ move FP,r0
+ addq #28,r0 ; &b_texturemid
+ store r19,(r0) ;(b_floorheight)
+
+L84:
+
+ move FP,r0
+ addq #28,r0 ; &b_texturemid
+ load (r0),r1
+ load (FP+2),r2 ; local si
+ addq #4,r2
+ load (r2),r2
+ add r2,r1
+ store r1,(r0)
+ movei #64,r0
+ move r15,r1 ;(segl)
+ add r0,r1
+ move r19,r0 ;(b_floorheight)
+ sharq #10,r0
+ store r0,(r1)
+ movei #44,r1
+ move r15,r2 ;(segl)
+ add r1,r2
+ store r0,(r2)
+
+ movei #48,r0
+ move r15,r1 ;(segl)
+ add r0,r1
+ move r18,r0 ;(f_floorheight)
+ sharq #10,r0
+ store r0,(r1)
+
+ move FP,r0
+ addq #4,r0 ; &actionbits
+ load (r0),r1
+ movei #40,r2
+ or r2,r1
+ store r1,(r0)
+
+L81:
+
+ cmp r20,r16 ;(b_ceilingheight)(f_ceilingheight)
+ movei #L85,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+ load (FP+6),r0 ; local skyhack
+ moveq #0,r1
+ cmp r0,r1
+ movei #L85,scratch
+ jump NE,(scratch)
+ nop
+
+ movei #40,r0
+ move r15,r1 ;(segl)
+ add r0,r1
+ load (FP+2),r0 ; local si
+ addq #8,r0
+ load (r0),r0
+ shlq #2,r0
+ movei #_texturetranslation,r2
+ load (r2),r2
+ add r2,r0
+ load (r0),r0
+ shlq #5,r0
+ movei #_textures,r2
+ add r2,r0
+ store r0,(r1)
+
+ load (FP+5),r0 ; local li
+ addq #16,r0
+ load (r0),r0
+ moveq #8,r1
+ and r1,r0
+ moveq #0,r1
+ cmp r0,r1
+ movei #L87,scratch
+ jump EQ,(scratch)
+ nop
+
+ move FP,r0
+ addq #12,r0 ; &t_texturemid
+ store r16,(r0) ;(f_ceilingheight)
+
+ movei #L88,r0
+ jump T,(r0)
+ nop
+
+L87:
+
+ move FP,r0
+ addq #12,r0 ; &t_texturemid
+ movei #40,r1
+ move r15,r2 ;(segl)
+ add r1,r2
+ load (r2),r1
+ addq #12,r1
+ load (r1),r1
+ shlq #16,r1
+ move r20,r2 ;(b_ceilingheight)
+ add r1,r2
+ store r2,(r0)
+
+L88:
+
+ move FP,r0
+ addq #12,r0 ; &t_texturemid
+ load (r0),r1
+ load (FP+2),r2 ; local si
+ addq #4,r2
+ load (r2),r2
+ add r2,r1
+ store r1,(r0)
+ movei #72,r0
+ move r15,r1 ;(segl)
+ add r0,r1
+ move r20,r0 ;(b_ceilingheight)
+ sharq #10,r0
+ store r0,(r1)
+ move r15,r1 ;(segl)
+ addq #32,r1
+ store r0,(r1)
+
+ move FP,r0
+ addq #4,r0 ; &actionbits
+ load (r0),r1
+ moveq #20,r2
+ or r2,r1
+ store r1,(r0)
+
+L85:
+
+ cmp r19,r16 ;(b_floorheight)(f_ceilingheight)
+ movei #L91,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+ cmp r20,r18 ;(b_ceilingheight)(f_floorheight)
+ movei #L89,scratch
+ jump MI,(scratch)
+ nop
+L91:
+
+ move FP,r0
+ addq #4,r0 ; &actionbits
+ load (r0),r1
+ movei #1024,r2
+ or r2,r1
+ store r1,(r0)
+
+ movei #L90,r0
+ jump T,(r0)
+ nop
+
+L89:
+
+ movei #52,r0
+ add FP,r0 ; &width
+ load (FP+11),r1 ; local rw_stopx
+ load (FP+10),r2 ; local rw_x
+ sub r2,r1
+ addq #1,r1
+ shrq #1,r1
+ store r1,(r0)
+ moveq #0,r0
+ cmp r19,r0 ;(b_floorheight)
+ movei #L95,scratch
+ jump PL,(scratch)
+ nop
+ cmp r19,r18 ;(b_floorheight)(f_floorheight)
+ movei #L94,scratch
+ jump MI,(scratch)
+ nop
+L95:
+ moveq #0,r0
+ cmp r18,r0 ;(f_floorheight)
+ movei #L92,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+ cmp r18,r19 ;(f_floorheight)(b_floorheight)
+ movei #L92,scratch
+ jump PL,(scratch)
+ nop
+L94:
+
+ move FP,r0
+ addq #4,r0 ; &actionbits
+ load (r0),r1
+ movei #512,r2
+ or r2,r1
+ store r1,(r0)
+ movei #80,r0
+ move r15,r1 ;(segl)
+ add r0,r1
+ movei #_lastopening,r0
+ load (r0),r0
+ load (FP+10),r2 ; local rw_x
+ sub r2,r0
+ store r0,(r1)
+
+ movei #_lastopening,r0
+ load (FP+13),r1 ; local width
+ shlq #1,r1
+ load (r0),r2
+ add r2,r1
+ store r1,(r0)
+
+L92:
+
+ load (FP+6),r0 ; local skyhack
+ moveq #0,r1
+ cmp r0,r1
+ movei #L96,scratch
+ jump EQ,(scratch)
+ nop
+
+ movei #L98,r0
+ jump T,(r0)
+ nop
+
+L96:
+
+ moveq #0,r0
+ cmp r20,r0 ;(b_ceilingheight)
+ movei #L102,scratch
+ jump MI,(scratch)
+ nop
+ cmp r20,r16 ;(b_ceilingheight)(f_ceilingheight)
+ movei #L101,scratch
+ jump S_LT,(scratch)
+ nop
+L102:
+ moveq #0,r0
+ cmp r16,r0 ;(f_ceilingheight)
+ movei #L99,scratch
+ jump PL,(scratch)
+ nop
+ cmp r20,r16 ;(b_ceilingheight)(f_ceilingheight)
+ movei #L99,scratch
+ jump PL,(scratch)
+ nop
+L101:
+
+ move FP,r0
+ addq #4,r0 ; &actionbits
+ load (r0),r1
+ movei #256,r2
+ or r2,r1
+ store r1,(r0)
+ movei #76,r0
+ move r15,r1 ;(segl)
+ add r0,r1
+ movei #_lastopening,r0
+ load (r0),r0
+ load (FP+10),r2 ; local rw_x
+ sub r2,r0
+ store r0,(r1)
+
+ movei #_lastopening,r0
+ load (FP+13),r1 ; local width
+ shlq #1,r1
+ load (r0),r2
+ add r2,r1
+ store r1,(r0)
+
+L99:
+
+L98:
+
+L90:
+
+L80:
+
+ move r15,r0 ;(segl)
+ addq #24,r0
+ load (FP+1),r1 ; local actionbits
+ store r1,(r0)
+
+ movei #36,r0
+ move r15,r1 ;(segl)
+ add r0,r1
+ load (FP+3),r0 ; local t_texturemid
+ store r0,(r1)
+
+ movei #52,r0
+ move r15,r1 ;(segl)
+ add r0,r1
+ load (FP+7),r0 ; local b_texturemid
+ store r0,(r1)
+
+ movei #108,r0
+ move r15,r1 ;(segl)
+ add r0,r1
+ load (FP+4),r0 ; local f_lightlevel
+ store r0,(r1)
+
+ movei #100,r0
+ move r15,r1 ;(segl)
+ add r0,r1
+ load (FP+2),r0 ; local si
+ load (r0),r0
+ move r22,r2 ;(seg)
+ addq #8,r2
+ load (r2),r2
+ add r2,r0
+ store r0,(r1)
+
+L53:
+
+ movei #112,r0
+ move r15,r1 ;(segl)
+ add r0,r1
+ move r1,r15 ;(segl)
+
+L55:
+
+ move r15,r0 ;(segl)
+ movei #_lastwallcmd,r1
+ load (r1),r1
+ cmp r0,r1
+ movei #L52,scratch
+ jump U_LT,(scratch)
+ nop
+
+ movei #_phasetime+8,r0
+ movei #_samplecount,r1
+ load (r1),r1
+ store r1,(r0)
+
+ movei #_gpucodestart,r0
+ movei #_ref3_start,r1
+ store r1,(r0)
+
+
+L51:
+ movei #56,scratch
+ jump T,(RETURNPOINT)
+ add scratch,FP ; delay slot
+ .long
+_emptysector::
+ .dc.l 0
+ .dc.l 0
+ .dc.l -2
+ .dc.l -2
+ .dc.l -2
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+
+;=======================
+
+ .extern _lastopening
+ .extern _lastwallcmd
+ .extern _viswalls
+ .extern _texturetranslation
+ .extern _flattranslation
+ .extern _textures
+ .extern _phasetime
+ .extern _viewz
+ .extern _gpucodestart
+ .extern _samplecount
+ .extern _ref3_start
+
+	.phrase
+	.68000
+codeend:

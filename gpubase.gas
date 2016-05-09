@@ -1,0 +1,169 @@
+_gpubase::
+	.gpu
+	.org    $f03000
+
+RISC_FLAGS    	.equ    $f02100
+DIVCONTROL		.equ	$f0211c
+
+MAIN_STACK    	.equ 	$f04000
+
+LOADPOINT		.equ	$f03100
+
+LE			.ccdef          4               ; CC
+GT          .ccdef          8               ; CS
+
+FP 			.equr r14
+scratch 	.equr r10
+scratch2	.equr r11
+RETURNVALUE .equr r29
+RETURNPOINT .equr r28
+MATH_A 		.equr r27
+MATH_B 		.equr r26
+MATH_C 		.equr r25
+MATH_RTS 	.equr r24
+MATH_SIGN 	.equr r23
+
+R0_VMODE	.equr	r0
+R0_FLAGS	.equr	r1
+R0_INTSTACK	.equr	r2
+R0_MODEBITS	.equr	r3
+
+R0_TEMP1	.equr	r28
+R0_TEMP2	.equr	r29
+R0_TEMP3	.equr	r30
+R0_ISRSTACK	.equr	r31
+
+;==============================================================================
+
+
+;--------------------
+;
+; interrupt vectors
+;
+;--------------------
+	movei   #0,r30				; cpu int
+	jump    T,(r30)
+	nop
+	nop
+	nop
+	nop
+	
+	movei   #0,r30				; dsp int
+	jump    T,(r30)
+	nop
+	nop
+	nop
+	nop
+	
+	movei   #0,r30				; timing generator
+	jump    T,(r30)
+	nop
+	nop
+	nop
+	nop
+		
+;
+; object processor interrupt
+;
+	load    (R0_FLAGS),r29           ; get current flags
+
+	move	R0_VMODE,r30		; VMODE
+	storew	R0_MODEBITS,(r30) 
+	subq	#2,r30				; $f00026, OBF	
+	storew	r28,(r30)			; restart object processor
+
+	bclr    #3,r29              ; clear IMASK
+	bset    #12,r29              ; and interrupt latch
+
+	load    (r31),r28           ; get last instruction address
+	move	R0_INTSTACK,r31		; reset stack
+
+	addq    #2,r28           	; point to next instruction to execute
+	jump    T,(r28)             ; return
+	store   r29,(R0_FLAGS)      ; restore flags
+
+	.long
+_gpucodestart::		.dc.l	0
+_gpufinished::		.dc.l	0
+
+_intstack:			.dc.l	0,0,0,0		; give it some room to be flaky...
+
+	
+;-----------------------------------------------------------------------------
+;
+; init code
+;
+;-----------------------------------------------------------------------------
+
+_gpubase_init::
+	movei   #RISC_FLAGS,R0_FLAGS
+	movei   #_intstack+8,R0_INTSTACK
+	move	R0_INTSTACK,r31
+	movei	#$f00028,R0_VMODE
+	movei	#$c1+(3<<9),R0_MODEBITS		; 320 mode
+	movei   #(1<<7)+(1<<14),r9			; enable OBJ, reg page 1
+	store   r9,(R0_FLAGS)
+
+	nop									; wait for the reg page to flip
+	nop
+	nop
+	nop
+	
+;--------------------
+;
+; wait for a load command
+;
+;--------------------
+nothingwaiting:
+	movei	#_gpufinished,r7
+	moveq	#1,r1
+	store	r1,(r7)				; set _gpufinished as completion signal
+
+waitcmd:
+	movei	#_gpucodestart,r2
+	load	(r2),r1
+	or		r1,r1
+	jr		EQ,nothingwaiting
+	nop
+	
+	movei	#_gpufinished,r7
+	moveq	#0,r0
+	store	r0,(r2)			; gpucodestart = 0
+	store	r0,(r7)			; gpufinished = 0
+	
+	move	r1,r2
+	subq	#4,r2
+	load	(r2),r2			; length is stored just below start address
+
+	shrq	#3,r2			; number of phrases to bopy
+	
+	movei	#LOADPOINT,r0	; destination for code
+	move	r1,r3
+	move	r0,r4
+	addq	#4,r3
+	addq	#4,r4
+loadloop:
+	load	(r1),r5
+	load	(r3),r6
+	store	r5,(r0)
+	addqt	#8,r1
+	addqt	#8,r3
+	store	r6,(r4)
+	subq	#1,r2			; decrement count
+	addqt	#8,r4
+	jr		PL,loadloop
+	addqt	#8,r0
+	nop
+	
+;	
+; call it
+;
+	movei	#LOADPOINT,r0
+	movei	#waitcmd,RETURNPOINT
+	movei   #MAIN_STACK,r14
+ 
+ 	jump	T,(r0)
+	nop
+	
+	.phrase
+	.68000

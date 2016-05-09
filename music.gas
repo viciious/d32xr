@@ -1,0 +1,1287 @@
+ .long
+	.dc.l	codeend-_music_dspcode
+_music_dspcode::
+ .dsp
+	.org $f1b140
+
+S_LE	.ccdef  $14     ; PL
+U_LE	.ccdef  $04     ; CC
+S_GT    .ccdef	$18   	; MI
+U_GT    .ccdef	$08  	; CS
+
+S_LT	.ccdef	$15		; PL+NE
+U_LT	.ccdef	$05		; CC+NE
+
+FP .equr r14
+scratch .equr r10
+scratch2 .equr r11
+RETURNVALUE .equr r29
+RETURNPOINT .equr r28
+MATH_A .equr r27
+MATH_B .equr r26
+MATH_C .equr r25
+MATH_RTS .equr r24
+MATH_SIGN .equr r23
+
+	movei	#codestart,scratch
+	jump	T,(scratch)
+	nop
+
+
+GPU_IMUL:
+ move MATH_A,MATH_SIGN
+ xor MATH_B,MATH_SIGN
+ abs MATH_A
+ abs MATH_B
+ move MATH_A,MATH_C
+ mult MATH_B,MATH_C
+ move MATH_B,scratch2
+ shrq #16,scratch2
+ mult MATH_A,scratch2
+ shlq #16,scratch2
+ add scratch2,MATH_C
+ move MATH_A,scratch2
+ shrq #16,scratch2
+ mult MATH_B,scratch2
+ shlq #16,scratch2
+ add scratch2, MATH_C
+ btst #31,MATH_SIGN
+ jump EQ,(MATH_RTS)
+ nop
+ jump T,(MATH_RTS)
+ neg MATH_C
+	
+;===========================================================================
+;	
+_M_WriteOutSamples:
+;
+;===========================================================================
+
+sw_source	.equr	r16
+sw_samples	.equr	r17
+sw_dest		.equr	r18
+sw_sample	.equr	r19
+sw_combined	.equr	r20
+sw_zero		.equr	r21
+sw_looppoint .equr	r22
+
+	.extern	_musictime
+
+	load	(FP),sw_samples
+	
+	moveq	#0,sw_zero
+	
+	movei	#_musictime,scratch2
+	load	(scratch2),sw_dest
+
+	shlq	#1,sw_dest
+	movei	#$1fff,scratch
+	and		scratch,sw_dest
+	movei	#$1f0000,scratch
+	add		scratch,sw_dest				; sw_dest = externbuffer[sfxtime*2]
+	
+	movei	#_internal_buffer,sw_source
+	movei	#satloop,sw_looppoint
+	
+	load	(sw_source),sw_sample		; delay slotted
+satloop:
+	store	sw_zero,(sw_source)
+	sharq	#8,sw_sample
+	addq	#4,sw_source
+	sat16s	sw_sample
+
+	storew	sw_sample,(sw_dest)
+	addqmod	#2,sw_dest
+		
+	subq	#1,sw_samples
+	jump	NE,(sw_looppoint)
+	load	(sw_source),sw_sample		; delay slot
+	
+	jump	T,(RETURNPOINT)
+	nop
+	
+;===========================================================================
+
+;====================
+_M_PaintSingleChannel::
+;3 dag registers  8 register variables
+;localoffset:0  regoffset:4  argoffset:4
+;====================
+ps_channel	.equr	r15
+ps_samples	.equr	r16
+ps_dest		.equr	r17
+ps_source	.equr	r18
+ps_sourcefrac	.equr	r19
+ps_sourcestep	.equr	r20
+ps_vol			.equr	r21
+ps_data			.equr	r24
+ps_looppoint	.equr	r25
+ps_128			.equr	r26
+ps_ffff			.equr	r27
+
+	load	(FP),ps_channel
+	load	(FP+1),ps_samples
+	movei	#_internal_buffer,ps_dest
+
+	load	(FP+2), scratch ; get new 
+	shlq	#2, scratch
+	add		scratch, ps_dest
+	
+	load	(ps_channel+1),ps_source
+	load	(ps_channel+4),ps_sourcefrac
+	load	(ps_channel+3),ps_sourcestep
+	load	(ps_channel+2),ps_vol
+
+	shrq	#1, ps_vol
+
+	movei	#addloop,ps_looppoint
+	movei	#128,ps_128
+	movei	#$ffff,ps_ffff
+
+	loadb	(ps_source),ps_data		; delay slotted
+addloop:
+	add		ps_sourcestep,ps_sourcefrac
+	move	ps_sourcefrac,scratch
+	sub		ps_128,ps_data
+	shrq	#16,scratch
+	imult	ps_vol,ps_data
+
+	load	(ps_dest),scratch2
+	and		ps_ffff,ps_sourcefrac
+	add		ps_data,scratch2
+	add		scratch,ps_source
+	store	scratch2,(ps_dest)
+	
+	subq	#1,ps_samples
+	addqt	#4,ps_dest
+	jump	NE,(ps_looppoint)	
+	loadb	(ps_source),ps_data		; delay slot
+
+	store	ps_source,(ps_channel+1)
+	jump	T,(RETURNPOINT)
+	store	ps_sourcefrac,(ps_channel+4)	; delay slot
+	
+
+codestart:
+
+;====================
+_M_PaintMusic::
+;6 dag registers  3 register variables
+;localoffset:4  regoffset:4  argoffset:44
+;====================
+ movei #44,scratch
+ sub scratch,FP
+
+ movei #_samplecount,r0
+ load (r0),r0
+ movei #8192,r1
+ add r1,r0
+ move r0,r17 ;(actual_endtime)
+
+ movei #L43,r0
+ jump T,(r0)
+ nop
+
+L42:
+
+ movei #_musictime,r0
+ load (r0),r0
+ movei #_next_eventtime,r1
+ load (r1),r1
+ cmp r0,r1
+ movei #L45,scratch
+ jump NE,(scratch)
+ nop
+
+ movei #_next_eventtime,r0
+ load (r0),r1
+ movei #_music,r2
+ load (r2),r3
+ loadb (r3),r4
+ movei #_samples_per_midiclock,r5
+ load (r5),r5
+ move r4,MATH_A
+ movei #L60,MATH_RTS
+ movei #GPU_IMUL,scratch
+ jump T,(scratch)
+ move r5,MATH_B ; delay slot
+L60:
+ move MATH_C,r4
+ add r4,r1
+ store r1,(r0)
+ move r3,r0
+ addq #1,r0
+ store r0,(r2)
+
+L45:
+
+ movei #_next_eventtime,r0
+ load (r0),r0
+ cmp r17,r0 ;(actual_endtime)
+ movei #L47,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+
+ move r17,r16 ;(actual_endtime)(stop_time)
+
+ movei #L48,r0
+ jump T,(r0)
+ nop
+
+L47:
+
+ movei #_next_eventtime,r0
+ load (r0),r0
+ move r0,r16 ;(stop_time)
+
+L48:
+
+ movei #256,r0
+ move r0,r15 ;(samples)
+
+ movei #L50,r0
+ jump T,(r0)
+ nop
+
+L49:
+
+ movei #_musictime,r0
+ load (r0),r0
+ move r16,r1 ;(stop_time)
+ sub r0,r1
+ cmp r1,r15 ;(samples)
+ movei #L52,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+
+ movei #_musictime,r0
+ load (r0),r0
+ move r16,r1 ;(stop_time)
+ sub r0,r1
+ move r1,r15 ;(samples)
+
+L52:
+
+ store r15,(FP) ; arg[] ;(samples)
+ movei #_M_PaintUnsatSound,r0
+ store r28,(FP+1) ; push ;(RETURNPOINT)
+ store r17,(FP+2) ; push ;(actual_endtime)
+ store r16,(FP+3) ; push ;(stop_time)
+ movei #L61,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+4) ; delay slot push ;(samples)
+L61:
+ load (FP+2),r17 ; pop ;(actual_endtime)
+ load (FP+3),r16 ; pop ;(stop_time)
+ load (FP+4),r15 ; pop ;(samples)
+ load (FP+1), RETURNPOINT ; pop
+
+ store r15,(FP) ; arg[] ;(samples)
+ movei #_M_WriteOutSamples,r0
+ store r28,(FP+1) ; push ;(RETURNPOINT)
+ store r17,(FP+2) ; push ;(actual_endtime)
+ store r16,(FP+3) ; push ;(stop_time)
+ movei #L62,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+4) ; delay slot push ;(samples)
+L62:
+ load (FP+2),r17 ; pop ;(actual_endtime)
+ load (FP+3),r16 ; pop ;(stop_time)
+ load (FP+4),r15 ; pop ;(samples)
+ load (FP+1), RETURNPOINT ; pop
+
+ movei #_musictime,r0
+ load (r0),r1
+ add r15,r1 ;(samples)
+ store r1,(r0)
+
+L50:
+
+ movei #_musictime,r0
+ load (r0),r0
+ cmp r0,r16 ;(stop_time)
+ movei #L49,scratch
+ jump NE,(scratch)
+ nop
+
+ movei #_music,r0
+ load (r0),r0
+ movei #_music_end,r1
+ load (r1),r1
+ cmp r0,r1
+ movei #L54,scratch
+ jump NE,(scratch)
+ nop
+
+ movei #_music,r0
+ movei #_music_start,r1
+ load (r1),r1
+ store r1,(r0)
+ load (r0),r0
+ moveq #0,r1
+ cmp r0,r1
+ movei #L56,scratch
+ jump EQ,(scratch)
+ nop
+
+ movei #_music,r0
+ load (r0),r1
+ addq #1,r1
+ store r1,(r0)
+
+L56:
+
+L54:
+
+ movei #_musictime,r0
+ load (r0),r0
+ movei #_next_eventtime,r1
+ load (r1),r1
+ cmp r0,r1
+ movei #L58,scratch
+ jump NE,(scratch)
+ nop
+ movei #_M_GetEvent,r0
+ store r28,(FP+1) ; push ;(RETURNPOINT)
+ store r17,(FP+2) ; push ;(actual_endtime)
+ store r16,(FP+3) ; push ;(stop_time)
+ movei #L63,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+4) ; delay slot push ;(samples)
+L63:
+ load (FP+2),r17 ; pop ;(actual_endtime)
+ load (FP+3),r16 ; pop ;(stop_time)
+ load (FP+4),r15 ; pop ;(samples)
+ load (FP+1), RETURNPOINT ; pop
+ moveq #0,r0
+ cmp r29,r0 ;(RETURNVALUE)
+ movei #L58,scratch
+ jump EQ,(scratch)
+ nop
+
+ movei #L44,r0
+ jump T,(r0)
+ nop
+
+L58:
+
+L43:
+
+ movei #_musictime,r0
+ load (r0),r0
+ cmp r0,r17 ;(actual_endtime)
+ movei #L42,scratch
+ jump NE,(scratch)
+ nop
+
+L44:
+
+
+L41:
+ movei #44,scratch
+ jump T,(RETURNPOINT)
+ add scratch,FP ; delay slot
+
+;====================
+_M_GetEvent::
+;6 dag registers  2 register variables
+;localoffset:8  regoffset:12  argoffset:48
+;====================
+ movei #48,scratch
+ sub scratch,FP
+
+ movei #_music,r0
+ load (r0),r1
+ loadb (r1),r2
+ move r2,r15 ;(cmd)
+ moveq #28,r2
+ move r15,r3 ;(cmd)
+ moveq #15,r4
+ move r3,r5
+ and r4,r5
+ move r5,r4
+ move r2,MATH_A
+ movei #L83,MATH_RTS
+ movei #GPU_IMUL,scratch
+ jump T,(scratch)
+ move r4,MATH_B ; delay slot
+L83:
+ move MATH_C,r2
+ movei #_music_channels,r4
+ add r4,r2
+ move r2,r16 ;(ch)
+ movei #240,r2
+ and r2,r3
+ move r3,r2
+ move r2,r15 ;(cmd)
+ addq #1,r1
+ store r1,(r0)
+ move r15,r0 ;(cmd)
+ movei #48,r1
+ cmp r0,r1
+ movei #L65,scratch
+ jump NE,(scratch)
+ nop
+
+ movei #_samples_per_midiclock,r0
+ movei #_music,r1
+ load (r1),r2
+ loadb (r2),r3
+ shlq #24,r3
+ store r3,(r0)
+ load (r0),r3
+ move r2,r4
+ addq #1,r4
+ loadb (r4),r4
+ shlq #16,r4
+ add r4,r3
+ store r3,(r0)
+ load (r0),r3
+ move r2,r4
+ addq #2,r4
+ loadb (r4),r4
+ shlq #8,r4
+ add r4,r3
+ store r3,(r0)
+ load (r0),r3
+ move r2,r4
+ addq #3,r4
+ loadb (r4),r4
+ add r4,r3
+ store r3,(r0)
+ move r2,r0
+ addq #4,r0
+ store r0,(r1)
+
+ movei #L66,r0
+ jump T,(r0)
+ nop
+
+L65:
+
+ move r15,r0 ;(cmd)
+ moveq #16,r1
+ cmp r0,r1
+ movei #L67,scratch
+ jump NE,(scratch)
+ nop
+
+ move FP,r0
+ addq #8,r0 ; &instrument
+ movei #_music,r1
+ load (r1),r2
+ loadb (r2),r3
+ store r3,(r0)
+ addq #1,r2
+ store r2,(r1)
+ load (r0),r0
+ shlq #2,r0
+ movei #_instruments,r1
+ add r1,r0
+ load (r0),r0
+ store r0,(r16) ;(ch)
+
+ move r16,r0 ;(ch)
+ addq #8,r0
+ movei #_music,r1
+ load (r1),r1
+ loadb (r1),r1
+ movei #_sfxvolume,r2
+ load (r2),r2
+ move r1,MATH_A
+ movei #L84,MATH_RTS
+ movei #GPU_IMUL,scratch
+ jump T,(scratch)
+ move r2,MATH_B ; delay slot
+L84:
+ move MATH_C,r1
+ store r1,(r0)
+
+ movei #_music,r0
+ load (r0),r1
+ moveq #1,r2
+ add r2,r1
+ store r1,(r0)
+ load (r0),r1
+ add r2,r1
+ store r1,(r0)
+ move r16,r1 ;(ch)
+ addq #12,r1
+ load (r0),r0
+ loadb (r0),r3
+ shlq #16,r3
+ move r0,r4
+ add r2,r4
+ loadb (r4),r2
+ shlq #8,r2
+ add r2,r3
+ addq #2,r0
+ loadb (r0),r0
+ move r3,r2
+ add r0,r2
+ store r2,(r1)
+
+ movei #_music,r0
+ load (r0),r1
+ addq #3,r1
+ store r1,(r0)
+ move r16,r0 ;(ch)
+ addq #4,r0
+ load (r16),r1 ;(ch)
+ addq #28,r1
+ store r1,(r0)
+
+ move r16,r0 ;(ch)
+ addq #16,r0
+ moveq #0,r1
+ store r1,(r0)
+
+ move r16,r0 ;(ch)
+ addq #20,r0
+ moveq #0,r1
+ store r1,(r0)
+
+ store r16,(FP) ; arg[] ;(ch)
+ movei #_musictime,r0
+ load (r0),r0
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_M_CalculateEndTime,r0
+ store r28,(FP+3) ; push ;(RETURNPOINT)
+ store r16,(FP+4) ; push ;(ch)
+ movei #L85,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+5) ; delay slot push ;(cmd)
+L85:
+ load (FP+4),r16 ; pop ;(ch)
+ load (FP+5),r15 ; pop ;(cmd)
+ load (FP+3), RETURNPOINT ; pop
+
+ movei #L68,r0
+ jump T,(r0)
+ nop
+
+L67:
+
+ move r15,r0 ;(cmd)
+ movei #32,r1
+ cmp r0,r1
+ movei #L69,scratch
+ jump NE,(scratch)
+ nop
+
+ move r16,r0 ;(ch)
+ addq #24,r0
+ moveq #0,r1
+ store r1,(r0)
+
+ movei #L70,r0
+ jump T,(r0)
+ nop
+
+L69:
+
+ move r15,r0 ;(cmd)
+ movei #64,r1
+ cmp r0,r1
+ movei #L71,scratch
+ jump NE,(scratch)
+ nop
+
+ move r16,r0 ;(ch)
+ addq #8,r0
+ movei #_music,r1
+ load (r1),r1
+ loadb (r1),r1
+ movei #_sfxvolume,r2
+ load (r2),r2
+ move r1,MATH_A
+ movei #L86,MATH_RTS
+ movei #GPU_IMUL,scratch
+ jump T,(scratch)
+ move r2,MATH_B ; delay slot
+L86:
+ move MATH_C,r1
+ store r1,(r0)
+
+ movei #_music,r0
+ load (r0),r1
+ addq #2,r1
+ store r1,(r0)
+
+ movei #L72,r0
+ jump T,(r0)
+ nop
+
+L71:
+
+ move r15,r0 ;(cmd)
+ movei #80,r1
+ cmp r0,r1
+ movei #L73,scratch
+ jump NE,(scratch)
+ nop
+
+ move r16,r0 ;(ch)
+ addq #12,r0
+ movei #_music,r1
+ load (r1),r1
+ loadb (r1),r2
+ shlq #16,r2
+ move r1,r3
+ addq #1,r3
+ loadb (r3),r3
+ shlq #8,r3
+ add r3,r2
+ addq #2,r1
+ loadb (r1),r1
+ add r1,r2
+ store r2,(r0)
+
+ movei #_music,r0
+ load (r0),r1
+ addq #3,r1
+ store r1,(r0)
+ move r16,r0 ;(ch)
+ addq #24,r0
+ load (r0),r0
+ movei #_musictime,r1
+ load (r1),r1
+ cmp r0,r1
+ movei #L74,scratch
+ jump CC,(scratch)
+ nop
+
+ store r16,(FP) ; arg[] ;(ch)
+ movei #_musictime,r0
+ load (r0),r0
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_M_CalculateEndTime,r0
+ store r28,(FP+3) ; push ;(RETURNPOINT)
+ store r16,(FP+4) ; push ;(ch)
+ movei #L87,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+5) ; delay slot push ;(cmd)
+L87:
+ load (FP+4),r16 ; pop ;(ch)
+ load (FP+5),r15 ; pop ;(cmd)
+ load (FP+3), RETURNPOINT ; pop
+
+ movei #L74,r0
+ jump T,(r0)
+ nop
+
+L73:
+
+ move r15,r0 ;(cmd)
+ moveq #0,r1
+ cmp r0,r1
+ movei #L77,scratch
+ jump NE,(scratch)
+ nop
+
+ movei #L78,r0
+ jump T,(r0)
+ nop
+
+L77:
+
+ moveq #1,r0
+ move r0,RETURNVALUE
+
+ movei #L64,r0
+ jump T,(r0)
+ nop
+
+L78:
+
+L74:
+
+L72:
+
+L70:
+
+L68:
+
+L66:
+
+ movei #_music,r0
+ load (r0),r0
+ movei #_music_end,r1
+ load (r1),r1
+ cmp r0,r1
+ movei #L79,scratch
+ jump NE,(scratch)
+ nop
+
+ movei #_music,r0
+ movei #_music_start,r1
+ load (r1),r1
+ store r1,(r0)
+ load (r0),r0
+ moveq #0,r1
+ cmp r0,r1
+ movei #L81,scratch
+ jump NE,(scratch)
+ nop
+
+ moveq #1,r0
+ move r0,RETURNVALUE
+
+ movei #L64,r0
+ jump T,(r0)
+ nop
+
+L81:
+
+L79:
+
+ moveq #0,r0
+ move r0,RETURNVALUE
+
+L64:
+ movei #48,scratch
+ jump T,(RETURNPOINT)
+ add scratch,FP ; delay slot
+
+;====================
+_M_PaintUnsatSound::
+;5 dag registers  4 register variables
+;localoffset:12  regoffset:12  argoffset:52
+;====================
+ movei #52,scratch
+ sub scratch,FP
+
+ movei #_music_channels,r0
+ move r0,r16 ;(chan)
+ movei #_musictime,r0
+ load (r0),r0
+ load (FP+13),r1 ; local samples
+ add r1,r0
+ move r0,r18 ;(endtime)
+
+ movei #L90,r0
+ jump T,(r0)
+ nop
+
+L89:
+
+ movei #_musictime,r0
+ load (r0),r0
+ move r0,r15 ;(channeltime)
+ move r16,r0 ;(chan)
+ addq #24,r0
+ load (r0),r0
+ move r15,r1 ;(channeltime)
+ cmp r0,r1
+ movei #L93,scratch
+ jump CC,(scratch)
+ nop
+
+ movei #L96,r0
+ jump T,(r0)
+ nop
+
+L95:
+
+ move r16,r0 ;(chan)
+ addq #24,r0
+ load (r0),r0
+ move r18,r1 ;(endtime)
+ cmp r0,r1
+ movei #L98,scratch
+ jump EQ,(scratch)
+ nop
+ jump CS,(scratch)
+ nop
+
+ move r16,r0 ;(chan)
+ addq #24,r0
+ load (r0),r0
+ move r0,r17 ;(stoptime)
+
+ movei #L99,r0
+ jump T,(r0)
+ nop
+
+L98:
+
+ move r18,r17 ;(endtime)(stoptime)
+
+L99:
+
+ store r16,(FP) ; arg[] ;(chan)
+ move r17,r0 ;(stoptime)
+ sub r15,r0 ;(channeltime)
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+1) ; arg[]
+ movei #_musictime,r0
+ load (r0),r0
+ move r15,r1 ;(channeltime)
+ sub r0,r1
+ or r1,scratch ; scoreboard bug
+ store r1,(FP+2) ; arg[]
+ movei #_M_PaintSingleChannel,r0
+ store r28,(FP+3) ; push ;(RETURNPOINT)
+ store r18,(FP+4) ; push ;(endtime)
+ store r17,(FP+5) ; push ;(stoptime)
+ store r16,(FP+6) ; push ;(chan)
+ movei #L104,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+7) ; delay slot push ;(channeltime)
+L104:
+ load (FP+4),r18 ; pop ;(endtime)
+ load (FP+5),r17 ; pop ;(stoptime)
+ load (FP+6),r16 ; pop ;(chan)
+ load (FP+7),r15 ; pop ;(channeltime)
+ load (FP+3), RETURNPOINT ; pop
+
+ move r17,r15 ;(stoptime)(channeltime)
+ move r16,r0 ;(chan)
+ addq #24,r0
+ load (r0),r0
+ move r15,r1 ;(channeltime)
+ cmp r0,r1
+ movei #L100,scratch
+ jump NE,(scratch)
+ nop
+
+ load (r16),r0 ;(chan)
+ addq #12,r0
+ load (r0),r0
+ moveq #2,r1
+ and r1,r0
+ moveq #0,r1
+ cmp r0,r1
+ movei #L102,scratch
+ jump EQ,(scratch)
+ nop
+
+ moveq #4,r0
+ move r16,r1 ;(chan)
+ add r0,r1
+ load (r1),r2
+ load (r16),r3 ;(chan)
+ move r3,r4
+ addq #8,r4
+ load (r4),r4
+ add r0,r3
+ load (r3),r0
+ move r4,r3
+ sub r0,r3
+ move r2,r0
+ sub r3,r0
+ store r0,(r1)
+
+ store r16,(FP) ; arg[] ;(chan)
+ or r15,scratch ; scoreboard bug ;(channeltime)
+ store r15,(FP+1) ; arg[] ;(channeltime)
+ movei #_M_CalculateEndTime,r0
+ store r28,(FP+3) ; push ;(RETURNPOINT)
+ store r18,(FP+4) ; push ;(endtime)
+ store r17,(FP+5) ; push ;(stoptime)
+ store r16,(FP+6) ; push ;(chan)
+ movei #L105,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+7) ; delay slot push ;(channeltime)
+L105:
+ load (FP+4),r18 ; pop ;(endtime)
+ load (FP+5),r17 ; pop ;(stoptime)
+ load (FP+6),r16 ; pop ;(chan)
+ load (FP+7),r15 ; pop ;(channeltime)
+ load (FP+3), RETURNPOINT ; pop
+
+ movei #L103,r0
+ jump T,(r0)
+ nop
+
+L102:
+
+ move r18,r15 ;(endtime)(channeltime)
+
+L103:
+
+L100:
+
+L96:
+
+ cmp r15,r18 ;(channeltime)(endtime)
+ movei #L95,scratch
+ jump NE,(scratch)
+ nop
+
+L93:
+
+ move r16,r0 ;(chan)
+ addq #28,r0
+ move r0,r16 ;(chan)
+
+L90:
+
+ move r16,r0 ;(chan)
+ movei #_music_channels+280,r1
+ cmp r0,r1
+ movei #L89,scratch
+ jump NE,(scratch)
+ nop
+
+
+L88:
+ movei #52,scratch
+ jump T,(RETURNPOINT)
+ add scratch,FP ; delay slot
+
+;====================
+_M_CalculateEndTime::
+;6 dag registers  1 register variables
+;localoffset:0  regoffset:0  argoffset:0
+;====================
+
+ load (FP),r0 ; local channel
+ move r0,r1
+ addq #4,r1
+ load (r1),r1
+ load (r0),r2
+ addq #28,r2
+ sub r2,r1
+ move r1,r15 ;(samples_left)
+ load (r0),r0
+ addq #12,r0
+ load (r0),r0
+ moveq #2,r1
+ and r1,r0
+ moveq #0,r1
+ cmp r0,r1
+ movei #L107,scratch
+ jump EQ,(scratch)
+ nop
+
+ load (FP),r0 ; local channel
+ load (r0),r0
+ addq #8,r0
+ load (r0),r0
+ sub r15,r0 ;(samples_left)
+ shlq #15,r0
+ move r0,r15 ;(samples_left)
+
+ movei #L108,r0
+ jump T,(r0)
+ nop
+
+L107:
+
+ load (FP),r0 ; local channel
+ load (r0),r0
+ load (r0),r0
+ sub r15,r0 ;(samples_left)
+ shlq #15,r0
+ move r0,r15 ;(samples_left)
+
+L108:
+
+ load (FP),r0 ; local channel
+ move r0,r1
+ addq #24,r1
+ load (FP+1),r2 ; local t
+ move r15,r3 ;(samples_left)
+ move r0,r4
+ addq #16,r4
+ load (r4),r4
+ moveq #1,r5
+ sha r5,r4
+ sub r4,r3
+ addq #12,r0
+ load (r0),r0
+ add r5,r0
+ sha r5,r0
+ div r0,r3
+ move r2,r0
+ add r3,r0
+ store r0,(r1)
+
+
+L106:
+ jump T,(RETURNPOINT)
+ nop ; delay slot
+
+;=======================
+
+ .long
+_internal_buffer::
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .dc.l 0
+ .extern _M_WriteOutSamples
+ .extern _samples_per_midiclock
+ .extern _music_end
+ .extern _music_start
+ .extern _music
+ .extern _next_eventtime
+ .extern _musictime
+ .extern _music_channels
+ .extern _instruments
+ .extern _samplecount
+ .extern _sfxvolume
+ .extern _M_PaintSingleChannel
+
+	.phrase
+	.68000
+codeend:

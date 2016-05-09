@@ -1,0 +1,509 @@
+ .long
+	.dc.l	codeend-_sfx_start
+_sfx_start::
+ .dsp
+	.org $f1b140
+
+_internalbuffer	=	$f1b800
+INTERNALQUADS	=	256
+EXTERNALQUADS	=	512
+
+S_LE	.ccdef  $14     ; PL
+U_LE	.ccdef  $04     ; CC
+S_GT    .ccdef	$18   	; MI
+U_GT    .ccdef	$08  	; CS
+
+S_LT	.ccdef	$15		; PL+NE
+U_LT	.ccdef	$05		; CC+NE
+
+FP .equr r14
+scratch .equr r10
+scratch2 .equr r11
+RETURNVALUE .equr r29
+RETURNPOINT .equr r28
+MATH_A .equr r27
+MATH_B .equr r26
+MATH_C .equr r25
+MATH_RTS .equr r24
+MATH_SIGN .equr r23
+
+	movei	#codestart,scratch
+	jump	T,(scratch)
+	nop
+
+	
+;===========================================================================
+;	
+_ClearInternalBuffer:
+;
+;===========================================================================
+
+	movei	#_internalbuffer,r0
+	move	r0,r1
+	move	r1,r2
+	move	r2,r3
+	addq	#4,r1
+	addq	#8,r2
+	addq	#12,r3
+	movei	#INTERNALQUADS,r4
+	moveq	#0,r5
+	
+clearloop:
+	store	r5,(r0)
+	addq	#16,r0
+	store	r5,(r1)
+	addq	#16,r1
+	store	r5,(r2)
+	addq	#16,r2
+	store	r5,(r3)
+	subq	#1,r4
+	addqt	#16,r3
+	jr		NE,clearloop
+	nop
+		
+	jump	T,(RETURNPOINT)
+	nop
+	
+	
+;===========================================================================
+;	
+_S_WriteOutSamples:
+;
+;===========================================================================
+
+sw_source	.equr	r16
+sw_samples	.equr	r17
+sw_dest		.equr	r18
+sw_sample	.equr	r19
+sw_combined	.equr	r20
+sw_zero		.equr	r21
+sw_looppoint .equr	r22
+sw_mask		.equr	r23
+
+	.extern	_sfxsample
+	
+	load	(FP),sw_samples
+	shlq	#2,sw_samples			; in quads
+	
+	moveq	#0,sw_zero
+	movei	#$ffff,sw_mask
+	
+	movei	#_sfxsample,scratch2
+	load	(scratch2),scratch
+	move	scratch,sw_dest
+	
+	add		sw_samples,scratch
+	add		sw_samples,scratch			; 11khz sfx are doubled for 22khz isr
+	store	scratch,(scratch2)			; sfxtime += samples*2
+
+	shlq	#1,sw_dest
+	movei	#$1fff,scratch
+	and		scratch,sw_dest
+	movei	#$1f0000,scratch
+	add		scratch,sw_dest				; sw_dest = externbuffer[sfxtime*2]
+	
+	movei	#_internalbuffer,sw_source
+	movei	#satloop,sw_looppoint
+	
+	load	(sw_source),sw_sample		; delay slotted
+satloop:
+	store	sw_zero,(sw_source)
+	addq	#4,sw_source
+	
+	sharq	#8,sw_sample
+	sat16s	sw_sample
+	and		sw_mask,sw_sample
+	
+; double samples for 22 khz isr
+	move	sw_sample,sw_combined
+	shlq	#16,sw_combined
+	add		sw_sample,sw_combined
+	
+	store	sw_combined,(sw_dest)
+	addqmod	#4,sw_dest
+		
+	subq	#1,sw_samples
+	jump	NE,(sw_looppoint)
+	load	(sw_source),sw_sample		; delay slot
+	
+	jump	T,(RETURNPOINT)
+	nop
+
+
+;============================================================================	
+;PaintChannel (unsigned *samples, int *dest, int count, int volume)
+_PaintChannel:
+;============================================================================	
+
+pc_source		.equr	r0
+pc_channel		.equr	r1
+
+pc_count		.equr	r3
+pc_volume		.equr	r4
+
+pc_const128		.equr	r6
+pc_looppoint_p	.equr	r7
+
+pc_1			.equr	r8
+pc_2			.equr	r9
+pc_3			.equr	r10
+pc_4			.equr	r11
+pc_1a			.equr	r17
+pc_2a			.equr	r18
+pc_3a			.equr	r19
+pc_4a			.equr	r20
+
+pc_samples		.equr	r25
+
+	load	(FP),pc_source
+	load	(FP+1),pc_channel
+	load	(FP+2),pc_count
+	load	(FP+3),pc_volume
+
+	movei	#looppoint,pc_looppoint_p
+	movei	#128,pc_const128
+	
+	load	(pc_source),pc_samples
+	movei	#unpack,pc_1
+	jump	T,(pc_1)
+	addq	#4,pc_source
+	
+looppoint:	
+	sub		pc_const128,pc_1a
+	imult	pc_volume,pc_1a
+	
+	sub		pc_const128,pc_2a
+	imult	pc_volume,pc_2a
+
+	sub		pc_const128,pc_3a
+	imult	pc_volume,pc_3a
+
+	sub		pc_const128,pc_4a
+	imult	pc_volume,pc_4a
+
+	load	(pc_channel),pc_1
+	addq	#4,pc_channel
+	load	(pc_channel),pc_2
+	addq	#4,pc_channel
+	load	(pc_channel),pc_3
+	addq	#4,pc_channel
+	load	(pc_channel),pc_4
+	subq	#12,pc_channel
+
+	add		pc_1a,pc_1
+	add		pc_2a,pc_2
+	add		pc_3a,pc_3
+	add		pc_4a,pc_4
+	
+	store	pc_1,(pc_channel)
+	addq	#4,pc_channel
+	store	pc_2,(pc_channel)
+	addq	#4,pc_channel
+	store	pc_3,(pc_channel)
+	addq	#4,pc_channel
+	store	pc_4,(pc_channel)
+	addq	#4,pc_channel
+	
+; unpack next block of samples
+unpack:
+	move	pc_samples,pc_4a			; start using samples
+	load	(pc_source),pc_samples		; start next sample load
+	addq	#4,pc_source
+	
+	move	pc_4a,pc_1a
+	shrq	#24,pc_1a
+	
+	move	pc_4a,pc_2a
+	shlq	#8,pc_2a
+	shrq	#24,pc_2a
+	
+	move	pc_4a,pc_3a
+	shlq	#16,pc_3a
+	shrq	#24,pc_3a
+	
+	shlq	#24,pc_4a
+	shrq	#24,pc_4a
+
+	subq	#1,pc_count
+	jump	PL,(pc_looppoint_p)
+	nop
+	
+	jump	T,(RETURNPOINT)
+	nop
+	
+codestart:
+; unfuckdsp output -- add loads before external dsp stores
+
+;====================
+_MixSfx::
+;3 dag registers  7 register variables
+;localoffset:16  regoffset:20  argoffset:64
+;====================
+ movei #64,scratch
+ sub scratch,FP
+
+ movei #_ClearInternalBuffer,r0
+ store r28,(FP+5) ; push ;(RETURNPOINT)
+ store r21,(FP+6) ; push ;(count)
+ store r20,(FP+7) ; push ;(stopquad)
+ store r19,(FP+8) ; push ;(startquad)
+ store r18,(FP+9) ; push ;(mixcount)
+ store r17,(FP+10) ; push ;(mixstop)
+ store r16,(FP+11) ; push ;(mixstart)
+ movei #L60,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+12) ; delay slot push ;(channel)
+L60:
+ load (FP+6),r21 ; pop ;(count)
+ load (FP+7),r20 ; pop ;(stopquad)
+ load (FP+8),r19 ; pop ;(startquad)
+ load (FP+9),r18 ; pop ;(mixcount)
+ load (FP+10),r17 ; pop ;(mixstop)
+ load (FP+11),r16 ; pop ;(mixstart)
+ load (FP+12),r15 ; pop ;(channel)
+ load (FP+5), RETURNPOINT ; pop
+
+ move FP,r0
+ addq #16,r0 ; &samplequad
+ movei #_samplecount,r1
+ load (r1),r1
+ sharq #3,r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+ movei #_finalquad,r1
+ load (r1),r2
+ move r2,r19 ;(startquad)
+ load (r0),r0
+ movei #512,r2
+ add r2,r0
+ load (r1),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r0,(r1)
+ load (r1),r0
+ sub r19,r0 ;(startquad)
+ cmp r0,r2
+ movei #L42,scratch
+ jump CC,(scratch)
+ nop
+
+ movei #_finalquad,r0
+ load (r0),r0
+ movei #512,r1
+ sub r1,r0
+ move r0,r19 ;(startquad)
+
+L42:
+
+ movei #_sfxsample,r0
+ move r19,r1 ;(startquad)
+ shlq #3,r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+
+ movei #L45,r0
+ jump T,(r0)
+ nop
+
+L44:
+
+ movei #_finalquad,r0
+ load (r0),r0
+ sub r19,r0 ;(startquad)
+ move r0,r21 ;(count)
+ movei #256,r0
+ cmp r21,r0 ;(count)
+ movei #L47,scratch
+ jump PL,(scratch)
+ nop
+
+ movei #256,r0
+ move r0,r21 ;(count)
+
+L47:
+
+ move r21,r0 ;(count)
+ move r19,r1 ;(startquad)
+ add r0,r1
+ move r1,r20 ;(stopquad)
+ movei #_sfxchannels,r0
+ move r0,r15 ;(channel)
+
+ movei #L52,r0
+ jump T,(r0)
+ nop
+
+L49:
+
+ move r15,r0 ;(channel)
+ addq #4,r0
+ load (r0),r0
+ move r0,r16 ;(mixstart)
+ cmp r16,r19 ;(mixstart)(startquad)
+ movei #L54,scratch
+ jump EQ,(scratch)
+ nop
+ jump CS,(scratch)
+ nop
+
+ move r19,r16 ;(startquad)(mixstart)
+
+L54:
+
+ move r15,r0 ;(channel)
+ addq #8,r0
+ load (r0),r0
+ move r0,r17 ;(mixstop)
+ cmp r17,r20 ;(mixstop)(stopquad)
+ movei #L56,scratch
+ jump CC,(scratch)
+ nop
+
+ move r20,r17 ;(stopquad)(mixstop)
+
+L56:
+
+ move r17,r0 ;(mixstop)
+ sub r16,r0 ;(mixstart)
+ move r0,r18 ;(mixcount)
+ moveq #1,r0
+ cmp r18,r0 ;(mixcount)
+ movei #L58,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+
+ movei #L50,r0
+ jump T,(r0)
+ nop
+
+L58:
+
+ move r15,r0 ;(channel)
+ addq #4,r0
+ load (r0),r0
+ move r16,r1 ;(mixstart)
+ sub r0,r1
+ movei #-2,r0
+ sh r0,r1
+ load (r15),r2 ;(channel)
+ add r2,r1
+ store r1,(FP) ; arg[]
+ move r16,r1 ;(mixstart)
+ sub r19,r1 ;(startquad)
+ shlq #3,r1
+ sh r0,r1
+ movei #_internalbuffer,r0
+ add r0,r1
+ or r1,scratch ; scoreboard bug
+ store r1,(FP+1) ; arg[]
+ or r18,scratch ; scoreboard bug ;(mixcount)
+ store r18,(FP+2) ; arg[] ;(mixcount)
+ move r15,r0 ;(channel)
+ addq #12,r0
+ load (r0),r0
+ or r0,scratch ; scoreboard bug
+ store r0,(FP+3) ; arg[]
+ movei #_PaintChannel,r0
+ store r28,(FP+5) ; push ;(RETURNPOINT)
+ store r21,(FP+6) ; push ;(count)
+ store r20,(FP+7) ; push ;(stopquad)
+ store r19,(FP+8) ; push ;(startquad)
+ store r18,(FP+9) ; push ;(mixcount)
+ store r17,(FP+10) ; push ;(mixstop)
+ store r16,(FP+11) ; push ;(mixstart)
+ movei #L61,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+12) ; delay slot push ;(channel)
+L61:
+ load (FP+6),r21 ; pop ;(count)
+ load (FP+7),r20 ; pop ;(stopquad)
+ load (FP+8),r19 ; pop ;(startquad)
+ load (FP+9),r18 ; pop ;(mixcount)
+ load (FP+10),r17 ; pop ;(mixstop)
+ load (FP+11),r16 ; pop ;(mixstart)
+ load (FP+12),r15 ; pop ;(channel)
+ load (FP+5), RETURNPOINT ; pop
+
+L50:
+
+ move r15,r0 ;(channel)
+ addq #24,r0
+ move r0,r15 ;(channel)
+
+L52:
+
+ move r15,r0 ;(channel)
+ movei #_sfxchannels+96,r1
+ cmp r0,r1
+ movei #L49,scratch
+ jump U_LT,(scratch)
+ nop
+
+ store r21,(FP) ; arg[] ;(count)
+ movei #_S_WriteOutSamples,r0
+ store r28,(FP+5) ; push ;(RETURNPOINT)
+ store r21,(FP+6) ; push ;(count)
+ store r20,(FP+7) ; push ;(stopquad)
+ store r19,(FP+8) ; push ;(startquad)
+ store r18,(FP+9) ; push ;(mixcount)
+ store r17,(FP+10) ; push ;(mixstop)
+ store r16,(FP+11) ; push ;(mixstart)
+ movei #L62,RETURNPOINT
+ jump T,(r0)
+ store r15,(FP+12) ; delay slot push ;(channel)
+L62:
+ load (FP+6),r21 ; pop ;(count)
+ load (FP+7),r20 ; pop ;(stopquad)
+ load (FP+8),r19 ; pop ;(startquad)
+ load (FP+9),r18 ; pop ;(mixcount)
+ load (FP+10),r17 ; pop ;(mixstop)
+ load (FP+11),r16 ; pop ;(mixstart)
+ load (FP+12),r15 ; pop ;(channel)
+ load (FP+5), RETURNPOINT ; pop
+
+ move r20,r19 ;(stopquad)(startquad)
+
+L45:
+
+ movei #_finalquad,r0
+ load (r0),r0
+ cmp r19,r0 ;(startquad)
+ movei #L44,scratch
+ jump U_LT,(scratch)
+ nop
+
+ movei #_soundtics,r0
+ movei #_samplecount,r1
+ load (r1),r1
+ movei #_soundstarttics,r2
+ load (r2),r2
+ sub r2,r1
+ load (r0),r30 ; FUCKING dsp!
+ or r30,r30 ; FUCKING dsp!
+ store r1,(r0)
+
+
+L41:
+ movei #64,scratch
+ jump T,(RETURNPOINT)
+ add scratch,FP ; delay slot
+
+;=======================
+
+ .extern _ClearInternalBuffer
+ .extern _PaintChannel
+ .extern _internalbuffer
+ .extern _samplecount
+ .extern _sfxsample
+ .extern _soundstarttics
+ .extern _soundtics
+ .extern _finalquad
+ .extern _sfxchannels
+ .extern _S_WriteOutSamples
+
+	.phrase
+	.68000
+codeend:

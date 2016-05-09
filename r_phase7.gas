@@ -1,0 +1,942 @@
+ .long
+ .dc.l	codeend - _ref7_start
+_ref7_start::
+ .gpu
+	.org $f03100
+
+DIVCONTROL		.equ	$f0211c
+
+S_LE	.ccdef  $14     ; PL
+U_LE	.ccdef  $04     ; CC
+S_GT    .ccdef	$18   	; MI
+U_GT    .ccdef	$08  	; CS
+
+S_LT	.ccdef	$15		; PL+NE
+U_LT	.ccdef	$05		; CC+NE
+
+FP .equr r14
+scratch .equr r10
+scratch2 .equr r11
+RETURNVALUE .equr r29
+RETURNPOINT .equr r28
+MATH_A .equr r27
+MATH_B .equr r26
+MATH_C .equr r25
+MATH_RTS .equr r24
+MATH_SIGN .equr r23
+
+alt_plane_lightmax	.equr	r4
+alt_plane_lightmin	.equr	r5
+alt_plane_lightcoef	.equr	r6
+alt_plane_lightsub	.equr	r7
+alt_baseyscale		.equr	r8
+alt_basexscale		.equr	r9
+alt_planeheight		.equr	r10
+alt_planesource		.equr	r11
+alt_planeangle		.equr	r12
+alt_planey			.equr	r13
+alt_planex			.equr	r14
+alt_400000			.equr	r15
+
+;===========================================================================
+_R_DrawPlanes::
+;4 dag registers  3 register variables
+;localoffset:4  regoffset:4  argoffset:36
+;===========================================================================
+	movei #36,scratch
+	sub scratch,FP
+
+	nop
+	store	RETURNPOINT,(FP+1)
+	
+;================
+; load constants into alternate register bank
+;================
+	movei	#$400000,r0
+	moveta	r0,alt_400000
+
+	movei	#_viewx,r0
+	load	(r0),r0
+	moveta	r0,alt_planex 
+ 
+	movei	#_viewy,r0
+	load	(r0),r0
+	neg		r0
+	moveta	r0,alt_planey
+  
+	movei	#_viewangle,r0
+	load	(r0),r0
+	moveta	r0,alt_planeangle
+   
+	movei	#1073741824,r1
+	sub		r1,r0
+	shrq	#19,r0
+	move	r0,r17 ;(angle)
+
+ move r17,r1 ;(angle)
+ shlq #2,r1
+ movei #_finecosine,r2
+ load (r2),r2
+ move r1,r3
+ add r2,r3
+ load (r3),r2
+ movei #80,r3
+ move r3,MATH_SIGN
+ move r3,MATH_B
+ xor r2,MATH_SIGN
+ abs MATH_B
+ abs r2
+ div MATH_B,r2
+ btst #31, MATH_SIGN
+ jr EQ,L71
+ nop
+ neg r2
+L71:
+	moveta	r2,alt_basexscale
+ 
+ movei #_finesine,r2
+ add r2,r1
+ load (r1),r1
+ move r3,MATH_SIGN
+ move r3,MATH_B
+ xor r1,MATH_SIGN
+ abs MATH_B
+ abs r1
+ div MATH_B,r1
+ btst #31, MATH_SIGN
+ jr EQ,L72
+ nop
+ neg r1
+L72:
+ neg r1
+	moveta	r1,alt_baseyscale
+
+L53:
+ movei #_junk,r0
+ movei #15737400,r1
+ load (r1),r1
+ store r1,(r0)
+ move r1,r0
+ moveq #1,r1
+ and r1,r0
+ moveq #0,r1
+ cmp r0,r1
+ movei #L53,scratch
+ jump EQ,(scratch)
+ nop
+
+ movei #15737348,r0
+ movei #208928,r1
+ store r1,(r0)
+
+ movei #15737384,r0
+ movei #80416,r1
+ store r1,(r0)
+
+ movei #_visplanes+348,r0
+ move r0,r15 ;(pl)
+
+ movei #L59,r0
+ jump T,(r0)
+ nop
+
+L56:
+
+ move r15,r0 ;(pl)
+ addq #12,r0
+ load (r0),r0
+ move r15,r1 ;(pl)
+ addq #16,r1
+ load (r1),r1
+ cmp r0,r1
+ movei #L61,scratch
+ jump PL,(scratch)
+ nop
+
+ movei #L57,r0
+ jump T,(r0)
+ nop
+
+L61:
+
+L63:
+ movei #_junk,r0
+ movei #15737400,r1
+ load (r1),r1
+ store r1,(r0)
+ move r1,r0
+ moveq #1,r1
+ and r1,r0
+ moveq #0,r1
+ cmp r0,r1
+ movei #L63,scratch
+ jump EQ,(scratch)
+ nop
+
+	load (r15+1),r1	; (pl)
+	movei #$f02200,r0		; plane source
+	store r1,(r0)
+
+	load (r15),r0 ;(pl)
+	abs r0
+	moveta	r0,alt_planeheight
+
+L66:
+
+ move r15,r0 ;(pl)
+ addq #8,r0
+ load (r0),r0
+ move r0,r16 ;(light)
+ movei #255,r1
+ sub r16,r1 ;(light)
+ shlq #1,r1
+ move r16,r2 ;(light)
+ sub r1,r2
+ moveta r2,alt_plane_lightmin
+ moveq #0,r1
+ cmp r2,r1
+ movei #L68,scratch
+ jump EQ,(scratch)
+ nop
+ jump MI,(scratch)
+ nop
+
+ moveq #0,r1
+ moveta	r1,alt_plane_lightmin
+
+L68:
+
+	moveta	r16,alt_plane_lightmax
+	
+	movei	#160,r1
+	movefa	alt_plane_lightmin,r2
+	move	r16,r3 ;(light)
+	sub		r2,r3
+	move	r3,r4
+	imult	r1,r3
+	movei	#640,r2
+ 	div		r2,r3
+	moveta	r3,alt_plane_lightsub
+
+	shlq	#11,r4
+	moveta	r4,alt_plane_lightcoef
+ 
+ move r15,r0 ;(pl)
+ addq #16,r0
+ load (r0),r0
+ shlq #1,r0
+ move r15,r1 ;(pl)
+ addq #26,r1
+ add r1,r0
+ movei #65280,r1
+ storew r1,(r0)
+
+ move r15,r0 ;(pl)
+ addq #12,r0
+ load (r0),r0
+ shlq #1,r0
+ subq #2,r0
+ move r15,r1 ;(pl)
+ addq #24,r1
+ add r1,r0
+ movei #65280,r1
+ storew r1,(r0)
+
+	store	r15,(FP) ; arg[] ;(pl)
+	movei	#_R_PlaneLoop,r0
+	move	PC,RETURNPOINT
+	jump	T,(r0)
+	addq	#6,RETURNPOINT
+	load	(FP),r15
+	
+L57:
+
+ movei #348,r0
+ move r15,r1 ;(pl)
+ add r0,r1
+ move r1,r15 ;(pl)
+
+L59:
+
+ move r15,r0 ;(pl)
+ movei #_lastvisplane,r1
+ load (r1),r1
+ cmp r0,r1
+ movei #L56,scratch
+ jump U_LT,(scratch)
+ nop
+
+ movei #_phasetime+28,r0
+ movei #_samplecount,r1
+ load (r1),r1
+ store r1,(r0)
+
+ movei #_gpucodestart,r0
+ movei #_ref8_start,r1
+ store r1,(r0)
+
+
+L52:
+	load	(FP+1),RETURNPOINT
+	movei	#36,scratch
+	jump	T,(RETURNPOINT)
+	add		scratch,FP ; delay slot
+
+;=======================
+
+ .extern _lastvisplane
+ .extern _visplanes
+ .extern _phasetime
+ .extern _viewangle
+ .extern _viewy
+ .extern _viewx
+ .extern _gpucodestart
+ .extern _samplecount
+ .extern _junk
+ .extern _finecosine
+ .extern _finesine
+ .extern _ref8_start
+	
+
+	.extern	_yslope,_distscale,_xtoviewangle
+	
+;==============================================================================
+_R_PlaneLoop::
+;==============================================================================
+
+pl_L_topstarts	.equr	r0
+pl_L_checkbottomdif .equr r1
+pl_L_topdif		.equr	r2
+pl_L_next		.equr	r3
+pl_L_bottomstarts .equr	r4
+pl_L_xloop		.equr	r5
+pl_L_bottomdif	.equr	r6
+
+pl_spanstart	.equr	r15
+pl_pl			.equr	r15
+
+pl_x			.equr	r16
+pl_stopx		.equr	r17
+pl_t1			.equr	r18
+pl_t2			.equr	r19
+pl_b1			.equr	r20
+pl_b2			.equr	r21
+pl_oldtop		.equr	r22
+pl_oldbottom	.equr	r23
+pl_openptr		.equr	r24
+pl_ff			.equr	r25
+pl_cmdhigh		.equr	r26
+
+pl_stopfp		.equr	r13		; must stay constant across R_MapPlane
+
+;scratch 		.equr r10
+;scratch2 		.equr r11
+;FP 			.equr r14
+;RETURNPOINT 	.equr r28
+
+ load	(FP),pl_pl				; get plane
+
+ move	pl_pl,pl_openptr
+ load	(pl_pl+3),pl_x			; pl_x = pl->minx
+ addq	#6*4,pl_openptr			; pl_openptr = pl->open  
+ load	(pl_pl+4),pl_stopx		; pl_stopx = pl->maxx
+ 
+ cmp	pl_x,pl_stopx			; see if there is any open space
+ jump	U_GT,(RETURNPOINT)		; nothing to map
+ addq	#2,pl_stopx				; pl_stopx = pl->maxx+2 (harmless delay slot)
+ 
+ subq 	#4,FP					; space for returnpoint
+ store	RETURNPOINT,(FP) 		; save returnpoint before pushing cmds
+ move	FP,pl_stopfp			; when command que is back here, stop
+
+ move	pl_x,scratch
+ shlq	#1,scratch
+ add	scratch,pl_openptr		; pl_openptr = &pl->open[x-1]
+ subq	#2,pl_openptr
+ 
+ movei	#_spanstart,pl_spanstart	; allow indexed loads on spanstart[]
+ movei	#$ff,pl_ff
+  
+ movei	#pl_topstarts,pl_L_topstarts
+ movei	#pl_checkbottmdif,pl_L_checkbottomdif
+ movei	#pl_topdif,pl_L_topdif
+ movei	#pl_next,pl_L_next
+ movei	#pl_bottomstarts,pl_L_bottomstarts
+ movei	#pl_xloop,pl_L_xloop
+ movei	#pl_bottomdif,pl_L_bottomdif
+
+;	oldtop = open[x-1];
+;	oldbottom = oldtop&0xff;
+;	oldtop >>= 8;
+ loadw	(pl_openptr),pl_t1
+ addq	#2,pl_openptr
+ move	pl_t1,pl_b1
+ and	pl_ff,pl_b1
+ shrq	#8,pl_t1
+ 
+ loadw	(pl_openptr),pl_t2			; delay sloted
+;----------------------
+;
+pl_xloop:
+;
+;-----------------------
+;		t1 = oldtop;
+;		b1 = oldbottom;
+;		t2 = open[x];
+;		b2 = t2&0xff;
+;		t2 >>= 8;
+;		oldtop = t2;
+;		oldbottom = b2;
+
+ move	pl_t2,pl_b2
+ and	pl_ff,pl_b2
+ shrq	#8,pl_t2
+ move	pl_x,pl_cmdhigh
+ subq	#1,pl_cmdhigh
+ shlq	#16,pl_cmdhigh
+	
+;------------------------
+;
+; top diffs
+;
+;------------------------
+; if (t1 != t2)
+ move	pl_t2,pl_oldtop
+ cmp	pl_t1,pl_oldtop
+ move	pl_b2,pl_oldbottom
+ jump	EQ,(pl_L_checkbottomdif)
+ addq	#2,pl_openptr			; reordered delay slot
+  
+pl_topdif:
+ cmp	pl_t1,pl_t2
+ jump	U_GT,(pl_L_topstarts)
+ nop
+ jump	EQ,(pl_L_topstarts)
+ cmp	pl_t1,pl_b1				; harmless delay slot
+ jump	U_GT,(pl_L_topstarts)
+ 
+;
+; R_MapPlane ( ((x-1)<<16) + (t1<<8) + spanstart[t1]);
+;
+ move	pl_t1,scratch			; harmless delay slot
+ move	pl_t1,scratch2
+ shlq	#8,scratch
+ shlq	#2,scratch2
+ or		pl_cmdhigh,scratch
+ load	(pl_spanstart+scratch2),scratch2
+ subq	#4,FP
+ or		scratch2,scratch
+ addqt	#1,pl_t1					; t1++
+ jump	T,(pl_L_topdif)
+ store	scratch,(FP)				; delay slot
+ 
+;
+; top dif spanstarts
+;
+pl_topstarts:
+ cmp	pl_t2,pl_t1
+ jump	U_GT,(pl_L_checkbottomdif)
+ move	pl_t2,scratch2				; harmless delay slot
+ jump	EQ,(pl_L_checkbottomdif)
+ shlq	#2,scratch2					; harmless delay slot
+ cmp	pl_t2,pl_b2
+ jump	U_GT,(pl_L_checkbottomdif)
+ nop
+
+; spanstart[t2] = x
+ addqt	#1,pl_t2
+ jr		T,pl_topstarts
+ store	pl_x,(pl_spanstart+scratch2)	; delay slot
+ 
+ 
+;------------------------
+;
+; bottom diffs
+; 
+;------------------------
+pl_checkbottmdif:
+; if (b1 != b2)
+ cmp	pl_b1,pl_b2
+ jump	EQ,(pl_L_next)
+ 
+pl_bottomdif:
+ cmp	pl_b1,pl_b2					; harmless delay slot
+ jump	U_LE,(pl_L_bottomstarts)
+ cmp	pl_b1,pl_t1					; harmless delay slot
+ jr		EQ,pl_bottomplane
+ move	pl_b1,scratch				; harmless delay slot
+ jump	U_LE,(pl_L_bottomstarts)
+pl_bottomplane:
+;
+;R_MapPlane ( ((x-1)<<16) + (b1<<8) + spanstart[b1]);
+;
+ shlq	#8,scratch					; harmless delay slot
+ move	pl_b1,scratch2
+ or		pl_cmdhigh,scratch
+ shlq	#2,scratch2
+ load	(pl_spanstart+scratch2),scratch2
+ subq	#4,FP
+ or		scratch2,scratch
+ subqt	#1,pl_b1					; b1--
+ jump	T,(pl_L_bottomdif)
+ store	scratch,(FP)				; delay slot 
+ 
+;
+; bottom dif spanstarts
+;
+pl_bottomstarts:
+ cmp	pl_b2,pl_b1
+ jump	U_LE,(pl_L_next)
+ cmp	pl_b2,pl_t2					; harmless delay slot
+ jr		EQ,pl_bottommark
+ move	pl_b2,scratch2				; harmless delay slot
+ jump	U_LT,(pl_L_next)
+pl_bottommark:
+ shlq	#2,scratch2					; harmless delay slot
+; spanstart[b2] = x
+; b2--
+ subqt	#1,pl_b2
+ jump	T,(pl_L_bottomstarts)
+ store	pl_x,(pl_spanstart+scratch2)	; delay slot
+ 
+
+;------------------------
+;
+; next
+; 
+;------------------------
+pl_next:
+ addq	#1,pl_x
+ move	pl_oldbottom,pl_b1
+ cmp	pl_x,pl_stopx
+ move	pl_oldtop,pl_t1
+ jump	NE,(pl_L_xloop)
+ loadw	(pl_openptr),pl_t2			; delay slot
+
+;------------------------
+;
+; all done calculating, so execute the plane commands
+; 
+;------------------------
+ cmp	FP,pl_stopfp
+ jr		NE,pl_isadraw
+ nop
+
+; nothing to draw
+ load	(FP),RETURNPOINT
+ jump	T,(RETURNPOINT)
+ addq	#4,FP					; delay slot
+ 
+pl_isadraw:
+
+;
+; fall through into R_MapPlane
+;
+
+
+  
+;==============================================================================
+_R_MapPlane::
+; (FP) is the munged up coordinates
+;==============================================================================
+
+mp_ystep	.equr	r0
+mp_axstep	.equr	r1
+mp_aystep	.equr	r2
+mp_count	.equr	r3
+mp_a1pixel	.equr	r4
+mp_FREE		.equr	r5
+mp_remaining .equr	r6
+mp_xremain	.equr	r7
+mp_yremain	.equr	r8
+mp_ffff		.equr	r9
+mp_ffff0000	.equr	r12
+
+;scratch 		.equr r10
+;scratch2 		.equr r11
+;pl_stopfp		.equr	r13		; must stay constant across R_MapPlane
+;FP 			.equr r14
+
+mp_blitter	.equr	r15
+mp_y		.equr	r16
+mp_3fffff	.equr	r17
+mp_x2		.equr	r18
+mp_angle	.equr	r19
+mp_distance	.equr	r20
+mp_length	.equr	r21
+mp_x		.equr	r22
+mp_light	.equr	r23
+mp_xfrac	.equr	r24
+mp_yfrac	.equr	r25
+mp_xstep	.equr	r26
+mp_blitcommand	.equr	r27
+
+;RETURNPOINT 	.equr r28
+
+;
+; set up for multiple R_MapPlanes
+;
+	movei	#$f02200,mp_blitter
+	movei	#$ffff,mp_ffff
+	movei	#$ffff0000,mp_ffff0000
+	movei	#$3fffff,mp_3fffff
+	movei	#1+(1<<11)+(1<<13)+(1<<30)+(12<<21),mp_blitcommand
+	
+
+;	x2 = parm>>16;
+;	y = (parm>>8)&0xff;
+;	x1 = parm&0xff;
+;	x = x1;
+;	count = x2 - x+1;
+mp_entry:
+	load	(FP),mp_x2
+	move	mp_x2,mp_y
+	move	mp_y,mp_x
+	shlq	#24,mp_x
+	shrq	#24,mp_x
+	shrq	#16,mp_x2
+	shlq	#16,mp_y
+	shrq	#24,mp_y
+	move	mp_x2,mp_remaining
+	sub		mp_x,mp_remaining
+	addq	#1,mp_remaining
+
+	or		mp_remaining,mp_remaining
+	movei	#mp_linedone,scratch
+	jump	EQ,(scratch)			; nothing to draw (sholdn't happen)
+	nop
+
+			
+;	distance = (planeheight*yslope[y])>>12;
+
+	movei	#_yslope,scratch
+	add		mp_y,scratch
+	add		mp_y,scratch
+	loadw	(scratch),scratch		; yslope[y]
+	movefa	alt_planeheight,mp_distance
+	mult	scratch,mp_distance
+	shrq	#12,mp_distance
+	
+;	length = (distance*distscale[x1])>>14;
+	move	mp_x,scratch2
+	shlq	#1,scratch2
+	movei	#_distscale,mp_length
+	add		scratch2,mp_length
+	loadw	(mp_length),mp_length
+	mult	mp_distance,mp_length
+	shrq	#14,mp_length
+	
+;	angle = (planeangle + xtoviewangle[x1])>>ANGLETOFINESHIFT;
+
+	movefa	alt_planeangle,scratch
+	shlq	#1,scratch2
+	movei	#_xtoviewangle,mp_angle
+	add		scratch2,mp_angle		; + x1*4
+	load	(mp_angle),mp_angle
+	add		scratch,mp_angle
+	shrq	#19,mp_angle
+	
+	shlq	#2,mp_angle			; used to index int tables
+	movei	#_finesine,scratch
+	add		scratch,mp_angle
+	movei	#8192,scratch
+	load	(mp_angle),scratch2	; finesine[angle]
+	add		scratch,mp_angle
+	load	(mp_angle),mp_xfrac	; finecosine[angle]
+ 
+;	xfrac = planex + (((finecosine[angle]>>1)*length)>>4);
+
+	movefa	alt_planex,scratch
+	sharq	#1,mp_xfrac
+	imult	mp_length,mp_xfrac
+	sharq	#4,mp_xfrac
+	add		scratch,mp_xfrac
+
+;	yfrac = planey - (((finesine[angle]>>1)*length)>>4);
+
+	movefa	alt_planey,mp_yfrac
+	sharq	#1,scratch2
+	imult	mp_length,scratch2
+	sharq	#4,scratch2
+	sub		scratch2,mp_yfrac
+		
+
+ 
+;	xstep = (distance*basexscale)>>4;
+;	if (!xstep)
+;		axstep = 1;
+;	else if (xstep < 0)
+;		axstep = -xstep;
+;	else
+;		axstep = xstep;
+	movefa	alt_basexscale,mp_xstep
+	imult	mp_distance,mp_xstep
+	sharq	#4,mp_xstep
+	jr		NE,mp_xnotzero
+	move	mp_xstep,mp_axstep		; delay slot
+	moveq	#1,mp_axstep		
+	moveq	#1,mp_xstep		
+mp_xnotzero:
+	abs		mp_axstep
+
+;	light = planelight; // - ((planelightscale*distance)>>16);
+;	if (light < 0)
+;		light = 0;
+;	light = -((255-light)<<14); // should be from 0 to -0x800000
+;	light &= 0xffffff;
+	
+	movefa	alt_plane_lightcoef,mp_light
+	div		mp_distance,mp_light
+; do something else while dividing
+
+
+;	ystep = (distance*baseyscale)>>4;	
+;	if (!ystep)
+;		aystep = 1;
+;	else if (ystep < 0)
+;		aystep = -ystep;
+;	else
+;		aystep = ystep;
+	movefa	alt_baseyscale,mp_ystep
+	imult	mp_distance,mp_ystep
+	sharq	#4,mp_ystep
+	jr		NE,mp_ynotzero
+	move	mp_ystep,mp_aystep		; delay slot
+	moveq	#1,mp_aystep		
+	moveq	#1,mp_ystep		
+mp_ynotzero:
+	abs		mp_aystep
+
+; finish light calculations
+	
+	movefa	alt_plane_lightsub,scratch
+	sub		scratch,mp_light
+	
+	movefa	alt_plane_lightmax,scratch
+	cmp		scratch,mp_light
+	jr		S_GT,mp_lightless
+	nop
+	move	scratch,mp_light	
+mp_lightless:
+	movefa	alt_plane_lightmin,scratch
+	cmp		scratch,mp_light
+	jr		S_LT,mp_lightmore
+	nop
+	move	scratch,mp_light	
+mp_lightmore:
+
+	movei	#255,scratch
+	sub		mp_light,scratch
+	shlq	#14,scratch
+	neg		scratch
+	movei	#$ffffff,mp_light
+	and		scratch,mp_light
+	
+
+
+;-----------------
+;
+; setup blitter
+;
+;-----------------
+
+mp_wait1:
+	load	(mp_blitter+14),scratch
+	btst	#0,scratch
+	jr		EQ,mp_wait1
+	nop
+	
+;	*(int *)0xf0221c = (ystep&0xffff0000)+((xstep>>16)&0xffff);	// a1 increment 
+	move	mp_ystep,scratch
+	and		mp_ffff0000,scratch
+	move	mp_xstep,scratch2
+	shrq	#16,scratch2
+	or		scratch2,scratch
+	store	scratch,(mp_blitter+7)
+		
+;	*(int *)0xf02220 = (xstep&0xffff) + (ystep<<16);	// a1 increment frac 	
+	move	mp_xstep,scratch
+	and		mp_ffff,scratch
+	move	mp_ystep,scratch2
+	shlq	#16,scratch2
+	or		scratch2,scratch
+	store	scratch,(mp_blitter+8)
+
+;		*(int *)0xf02218 = (yfrac<<16)+(xfrac&0xffff);	// a1 pixel frac 
+	move	mp_yfrac,scratch
+	shlq	#16,scratch
+	move	mp_xfrac,scratch2
+	and		mp_ffff,scratch2
+	or		scratch2,scratch
+	store	scratch,(mp_blitter+6)
+
+;	*(int *)0xf02230 = (y<<16) + x;		// a2 pixel pointers
+	shlq	#16,mp_y
+	add		mp_x,mp_y
+	store	mp_y,(mp_blitter+12)
+	
+;	*(int *)0xf02270 = light;	// iinc
+	movei	#$f02270,scratch
+	store	mp_light,(scratch)
+			
+;	count = 0;
+	moveq	#0,mp_count
+
+
+mp_stillremaining:
+
+;===============
+;
+; x axis
+;
+;===============
+
+;		xfrac = (xfrac + count*xstep)&0x3fffff;
+;		xpos = xfrac;
+;		if (xstep >= 0)
+;			xpos = 0x400000 - xpos;
+;		xremain = (xpos / axstep);
+	move	mp_axstep,scratch
+	move	mp_axstep,scratch2
+	shrq	#16,scratch2
+	mult	mp_count,scratch
+	mult	mp_count,scratch2
+	shlq	#16,scratch2
+	add		scratch2,scratch
+	or		mp_xstep,mp_xstep
+	jr		PL,mp_addxpos
+	nop
+	sub		scratch,mp_xfrac
+	and		mp_3fffff,mp_xfrac
+	jr		T,mp_xadded
+	move	mp_xfrac,mp_xremain			; delay slot
+
+mp_addxpos:
+	add		scratch,mp_xfrac
+	and		mp_3fffff,mp_xfrac
+	movefa	alt_400000,mp_xremain
+	sub		mp_xfrac,mp_xremain
+mp_xadded:
+	div		mp_axstep,mp_xremain
+	
+
+;===============
+;
+; y axis
+;
+;===============
+
+;		yfrac = (yfrac + count*ystep)&0x3fffff;
+;			yremain = (ypos / aystep) + 1;
+	move	mp_aystep,scratch
+	move	mp_aystep,scratch2
+	shrq	#16,scratch2
+	mult	mp_count,scratch
+	mult	mp_count,scratch2
+	shlq	#16,scratch2
+	add		scratch2,scratch
+	or		mp_ystep,mp_ystep
+	jr		PL,mp_addypos
+	nop
+	sub		scratch,mp_yfrac
+	and		mp_3fffff,mp_yfrac
+	jr		T,mp_yadded
+	move	mp_yfrac,mp_yremain			; delay slot
+
+mp_addypos:
+	add		scratch,mp_yfrac
+	and		mp_3fffff,mp_yfrac
+	movefa	alt_400000,mp_yremain
+	sub		mp_yfrac,mp_yremain
+	
+mp_yadded:
+	div		mp_aystep,mp_yremain
+
+;====================
+; prepare blitter registers
+;====================
+	
+;		*(int *)0xf0220c = (yfrac&0xffff0000)+(xfrac>>16);	// a1 pixel 
+	move	mp_yfrac,mp_a1pixel
+	and		mp_ffff0000,mp_a1pixel
+	move	mp_xfrac,scratch2
+	shrq	#16,scratch2
+	or		scratch2,mp_a1pixel
+
+;=====================
+;		count = remaining;
+;		if (xremain < count)
+;			count = xremain;
+;		if (yremain < count)
+;			count = yremain;
+; ramaining will allways be at least 1
+; xremain and yremain will allways be 0 or greater
+;=====================
+
+	move	mp_remaining,mp_count
+	subq	#1,mp_count
+	cmp		mp_xremain,mp_count
+	jr		U_GT,mp_notxremain
+	nop
+	move	mp_xremain,mp_count	
+mp_notxremain:
+	cmp		mp_yremain,mp_count
+	jr		U_GT,mp_notyremain
+	nop
+	move	mp_yremain,mp_count	
+mp_notyremain:
+	
+	addq	#1,mp_count
+	
+	
+;=====================
+; program blitter
+;=====================
+
+;	while ( ! (*(int *)0xf02238 & 1) )			// wait for blitter to finish
+;	;
+mp_wait2:
+	load	(mp_blitter+14),scratch
+	btst	#0,scratch
+	jr		EQ,mp_wait2
+	move	mp_count,scratch				; harmless delay slot
+	
+	store	mp_a1pixel,(mp_blitter+3)		; source location
+	bset	#16,scratch						; one outer loop
+	store	scratch,(mp_blitter+15)			; count register
+	store	mp_blitcommand,(mp_blitter+14)	; command register
+;===========================
+
+;		remaining -= count;
+	movei	#mp_stillremaining,scratch
+	sub		mp_count,mp_remaining		; delay slot
+	jump	NE,(scratch)
+	nop
+
+;
+; all done with this line, see if there are more to do
+;
+mp_linedone:
+	addq	#4,FP
+	cmp		FP,pl_stopfp
+	movei	#mp_entry,scratch
+	jump	NE,(scratch)
+	load	(FP),RETURNPOINT		; harmless delay slot
+	jump	T,(RETURNPOINT)			; go back to R_DrawPlanes
+	addq	#4,FP					; delay slot
+
+	
+
+;======================
+;
+; scratch data tables
+;
+;======================
+ .long
+_spanstart::	.dc.l 0			; int spanstart[SCREENHEIGHT]
+	
+	
+	.phrase
+	.68000
+codeend:
+
