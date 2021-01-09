@@ -44,6 +44,7 @@ sbflash_t	flashCards[NUMCARDS];	/* INFO FOR FLASHING CARDS & SKULLS */
 
 void ST_Init (void)
 {
+#ifndef MARS
 	int		i,l;
 
 	l = W_GetNumForName ("FACE00");
@@ -57,6 +58,7 @@ void ST_Init (void)
 	l = W_GetNumForName ("MICRO_2");
 	for (i = 0; i < NUMMICROS; i++)
 		micronums[i] = W_CacheLumpNum(l+i, PU_STATIC);
+#endif
 }
 
 /*================================================== */
@@ -67,9 +69,11 @@ void ST_Init (void)
 void ST_InitEveryLevel(void)
 {
 	int		i;
-	
+
+#ifndef MARS	
 	/* force everything to be updated on next ST_Update */
 	D_memset (&stbar, 0x80, sizeof(stbar) );
+#endif
 	facetics = 0;
 
 	/* DRAW FRAG COUNTS INITIALLY */
@@ -167,7 +171,7 @@ void ST_Ticker (void)
 		if (hisFrags.doDraw && hisFrags.active)
 			S_StartSound(NULL,sfx_itemup);
 	}
-	
+
 	/* */
 	/* Did we get gibbed? */
 	/* */
@@ -221,11 +225,11 @@ void ST_Drawer (void)
 	int			i;
 	int			ind;
 	player_t	*p;
-	
+#ifndef MARS	
 	bufferpage = sbartop;		/* draw into status bar overlay */
-	
+#endif
 	p = &players[consoleplayer];
-	
+
 	/* */
 	/* Ammo */
 	/* */
@@ -245,6 +249,9 @@ void ST_Drawer (void)
 		stbar.ammo = i;
 		EraseBlock(0,AMMOY,14*3,16);
 		ST_DrawValue(AMMOX,AMMOY,i);
+#ifdef MARS
+		stbar.ammo = -1;
+#endif
 	}
 	
 	/* */
@@ -258,6 +265,9 @@ void ST_Drawer (void)
 		DrawJagobj(sbobj[sb_percent],HEALTHX,HEALTHY);
 		ST_DrawValue(HEALTHX,HEALTHY,i);
 		stbar.face = -1;	/* update face immediately */
+#ifdef MARS
+		stbar.health = -1;
+#endif
 	}
 
 	/* */
@@ -270,6 +280,9 @@ void ST_Drawer (void)
 		EraseBlock(ARMORX - 14*3 - 4,ARMORY,14*3,(sbobj[0])->height);
 		DrawJagobj(sbobj[sb_percent],ARMORX,ARMORY);
 		ST_DrawValue(ARMORX,ARMORY,i);
+#ifdef MARS
+		stbar.armor = -1;
+#endif
 	}
 
 	/* */
@@ -302,6 +315,9 @@ void ST_Drawer (void)
 				x -= 6;
 			EraseBlock(MAPX - 30,MAPY,30,16);
 			ST_DrawValue(x,MAPY,i);
+#ifdef MARS
+			stbar.currentMap = -1;
+#endif
 		}
 		
 		for (ind = 0; ind < NUMMICROS; ind++)
@@ -314,9 +330,13 @@ void ST_Drawer (void)
 						micronums_x[ind],micronums_y[ind]);
 				else
 					EraseBlock(micronums_x[ind],micronums_y[ind],4,6);
+#ifdef MARS
+				stbar.weaponowned[ind] = -1;
+#endif
 			}
 		}
 	}
+#ifndef MARS
 	/* */
 	/* Or, frag counts! */
 	/* */
@@ -374,7 +394,8 @@ void ST_Drawer (void)
 			EraseBlock(hisFrags.x - hisFrags.w,
 				hisFrags.y,hisFrags.w,hisFrags.h);
 	}
-	
+#endif
+
 	if (flashInitialDraw)
 	{
 		flashInitialDraw = false;
@@ -455,7 +476,7 @@ void ST_Drawer (void)
 void ST_Num (int x, int y, int num)
 {
 	char	str[8];
-	
+
 	NumToStr (num, str);
 	I_Print8 (x,y,str+1);
 }
@@ -488,6 +509,9 @@ void valtostr(char *string,int val)
 /*================================================= */
 void ST_DrawValue(int x,int y,int value)
 {
+#ifdef MARS
+	ST_Num(x, y+7, value);
+#else
 	char	v[4];
 	int		j;
 	int		index;
@@ -500,4 +524,5 @@ void ST_DrawValue(int x,int y,int value)
 		x -= (sbobj[index])->width + 1;
 		DrawJagobj(sbobj[index],x,y);
 	}
+#endif
 }

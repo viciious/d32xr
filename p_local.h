@@ -108,8 +108,8 @@ extern	mobj_t	mobjhead;
 extern	int			activethinkers;	/* debug count */
 extern	int			activemobjs;	/* debug count */
 
-#define ONFLOORZ	MININT
-#define	ONCEILINGZ	MAXINT
+#define ONFLOORZ	D_MININT
+#define	ONCEILINGZ	D_MAXINT
 
 mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
 
@@ -166,6 +166,8 @@ int 	P_BoxOnLineSide (fixed_t *tmbox, line_t *ld);
 extern	fixed_t opentop, openbottom, openrange;
 extern	fixed_t	lowfloor;
 void 	P_LineOpening (line_t *linedef);
+
+fixed_t* P_LineBBox(line_t* ld);
 
 boolean P_BlockLinesIterator (int x, int y, boolean(*func)(line_t*) );
 boolean P_BlockThingsIterator (int x, int y, boolean(*func)(mobj_t*) );

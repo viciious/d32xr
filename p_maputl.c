@@ -17,8 +17,8 @@
 
 fixed_t P_AproxDistance (fixed_t dx, fixed_t dy)
 {
-	dx = abs(dx);
-	dy = abs(dy);
+	dx = D_abs(dx);
+	dy = D_abs(dy);
 	if (dx < dy)
 		return dx+dy-(dx>>1);
 	return dx+dy-(dy>>1);
@@ -38,25 +38,28 @@ int P_PointOnLineSide (fixed_t x, fixed_t y, line_t *line)
 {
 	fixed_t	dx,dy;
 	fixed_t	left, right;
-	
-	if (!line->dx)
+	fixed_t ldx,ldy;
+
+	ldx = line->v2->x - line->v1->x;
+	ldy = line->v2->y - line->v1->y;
+	if (!ldx)
 	{
 		if (x <= line->v1->x)
-			return line->dy > 0;
-		return line->dy < 0;
+			return ldy > 0;
+		return ldy < 0;
 	}
-	if (!line->dy)
+	if (!ldy)
 	{
 		if (y <= line->v1->y)
-			return line->dx < 0;
-		return line->dx > 0;
+			return ldx < 0;
+		return ldx > 0;
 	}
 	
 	dx = (x - line->v1->x);
 	dy = (y - line->v1->y);
 	
-	left = (line->dy>>16) * (dx>>16);
-	right = (dy>>16) * (line->dx>>16);
+	left = (ldy>>16) * (dx>>16);
+	right = (dy>>16) * (ldx>>16);
 	
 	if (right < left)
 		return 0;		/* front side */
@@ -124,8 +127,8 @@ void P_MakeDivline (line_t *li, divline_t *dl)
 {
 	dl->x = li->v1->x;
 	dl->y = li->v1->y;
-	dl->dx = li->dx;
-	dl->dy = li->dy;
+	dl->dx = li->v2->x - li->v1->x;
+	dl->dy = li->v2->y - li->v1->y;
 }
 
 
@@ -152,8 +155,8 @@ void P_LineOpening (line_t *linedef)
 		return;
 	}
 	 
-	front = linedef->frontsector;
-	back = linedef->backsector;
+	front = LD_FRONTSECTOR(linedef);
+	back = LD_BACKSECTOR(linedef);
 	
 	if (front->ceilingheight < back->ceilingheight)
 		opentop = front->ceilingheight;
@@ -171,6 +174,35 @@ void P_LineOpening (line_t *linedef)
 	}
 	
 	openrange = opentop - openbottom;
+}
+
+fixed_t* P_LineBBox(line_t* ld)
+{
+	static fixed_t bbox[4];
+	vertex_t* v1 = ld->v1, * v2 = ld->v2;
+
+	if (v1->x < v2->x)
+	{
+		bbox[BOXLEFT] = v1->x;
+		bbox[BOXRIGHT] = v2->x;
+	}
+	else
+	{
+		bbox[BOXLEFT] = v2->x;
+		bbox[BOXRIGHT] = v1->x;
+	}
+	if (v1->y < v2->y)
+	{
+		bbox[BOXBOTTOM] = v1->y;
+		bbox[BOXTOP] = v2->y;
+	}
+	else
+	{
+		bbox[BOXBOTTOM] = v2->y;
+		bbox[BOXTOP] = v1->y;
+	}
+
+	return bbox;
 }
 
 /*

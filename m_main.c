@@ -10,7 +10,9 @@
 
 typedef enum
 {
+#ifndef MARS
 	gamemode,
+#endif
 	level,
 	difficulty,
 	NUMMENUITEMS
@@ -41,6 +43,7 @@ skill_t	playerskill;
 
 void M_Start (void)
 {	
+#ifndef MARS
 	int i,l;
 	
 /* cache all needed graphics	 */
@@ -62,6 +65,7 @@ void M_Start (void)
 	l = W_GetNumForName ("NUM_0");
 	for (i = 0; i < 10; i++)
 		nums[i] = W_CacheLumpNum (l+i, PU_STATIC);
+#endif
 
 	cursorcount = 0;
 	cursorframe = 0;
@@ -74,7 +78,7 @@ void M_Start (void)
 
 void M_Stop (void)
 {	
-#if 0
+#ifndef MARS
 /* they stay cached by status bar */
 
 	int i;
@@ -126,7 +130,7 @@ int M_Ticker (void)
 		return 1;		/* done with menu */
 	}
 /* animate skull */
-	if (++cursorcount == 4)
+	if (++cursorcount == ticrate)
 	{
 		cursorframe ^= 1;
 		cursorcount = 0;
@@ -160,6 +164,7 @@ int M_Ticker (void)
 
 			switch (cursorpos)
 			{
+#ifndef MARS
 				case	gamemode:
 					if (buttons & JP_RIGHT)
 					{
@@ -174,16 +179,23 @@ int M_Ticker (void)
 							currentplaymode++;
 				}
 					break;
+#endif
 				case	level:
 					if (buttons & JP_RIGHT)
 					{			
 						playermap++;
+#ifdef MARS
+						if (playermap > 15 && playermap < 23) playermap = 23;
+#endif
 						if (playermap == maxlevel+1)
 							playermap--;
 					}	
 					if (buttons & JP_LEFT)
 					{
 						playermap--;
+#ifdef MARS
+						if(playermap > 15 && playermap < 23) playermap = 15;
+#endif
 						if(playermap == 0)
 							playermap++;
 					}
@@ -221,10 +233,62 @@ int M_Ticker (void)
 =================
 */
 
+#ifdef MARS
+void M_Printf (int x, int y, char *str, ...)
+{
+	static char buf[64];
+	va_list ap;
+
+	va_start(ap, str);
+	D_vsnprintf(buf, sizeof(buf), str, ap);
+	va_end(ap);
+
+	I_Print8 (x/8,y/8, buf);
+}
+
+#endif
+
 void M_Drawer (void)
 {
-	int	leveltens, levelones;		
+	int	leveltens, levelones;
+#ifdef MARS
+	const int m_doom_height = 48;
+	const char *difficulties[] = {
+		"I'm too young to die.",
+		"Hey, not too rought.",
+		"Hurt me plenty.",
+		"Ultra-violence.",
+		"Nightmare!"
+	};
 
+	I_ClearFrameBuffer();
+
+/* Draw main menu */
+	M_Printf(160*8-64, 2, "DOOM");
+
+/* draw new skull */
+	M_Printf(CURSORX, CURSORY(cursorpos)+m_doom_height, "*");
+
+/* draw menu items */
+
+/* draw start level information */
+	M_Printf(CURSORX+74 ,CURSORY(0)+m_doom_height+2, "Area"); 
+	leveltens = playermap / 10;
+	levelones = playermap % 10;
+	if (leveltens)	
+	{
+		M_Printf(CURSORX+90,m_doom_height+22,"%c", '0'+leveltens);
+		M_Printf(CURSORX+90+64,m_doom_height+22, "%c", '0'+levelones);
+	}
+	else
+		M_Printf(CURSORX+90,m_doom_height+22,"%c", '0'+levelones);
+
+/* draw difficulty information */
+	M_Printf(CURSORX+74, CURSORY(1)+m_doom_height+2, "Difficulty"); 
+	M_Printf(CURSORX+92,m_doom_height+62, "%s", difficulties[playerskill]);
+
+	I_Update();
+#else
 /* Draw main menu */
 	DrawJagobj (m_doom, 100, 2);
 	
@@ -264,4 +328,5 @@ void M_Drawer (void)
 	DrawJagobj(m_skill[playerskill],92,m_doom->height+102);
 
 	UpdateBuffer ();
+#endif
 }

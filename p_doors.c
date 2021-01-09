@@ -243,8 +243,8 @@ void EV_VerticalDoor (line_t *line, mobj_t *thing)
 	}
 	
 	/* if the sector has an active thinker, use it */
-	sec = sides[ line->sidenum[side^1]] .sector;
-	secnum = sec-sectors;
+	secnum = sides[ line->sidenum[side^1]] .sector;
+	sec = &sectors[secnum];
 	if (sec->specialdata)
 	{
 		door = sec->specialdata;

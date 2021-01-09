@@ -81,7 +81,7 @@ side_t *getSide(int currentSector,int line, int side)
 /* */
 sector_t *getSector(int currentSector,int line,int side)
 {
-	return sides[ (sectors[currentSector].lines[line])->sidenum[side] ].sector;
+	return &sectors[sides[ (sectors[currentSector].lines[line])->sidenum[side] ].sector];
 }
 
 /* */
@@ -100,13 +100,16 @@ int	twoSided(int sector,int line)
 /*================================================================== */
 sector_t *getNextSector(line_t *line,sector_t *sec)
 {
+	sector_t *front;
+
 	if (!(line->flags & ML_TWOSIDED))
 		return NULL;
-		
-	if (line->frontsector == sec)
-		return line->backsector;
 	
-	return line->frontsector;
+	front = LD_FRONTSECTOR(line);
+	if (front == sec)
+		return LD_BACKSECTOR(line);
+
+	return front;
 }
 
 /*================================================================== */
@@ -172,6 +175,7 @@ fixed_t	P_FindNextHighestFloor(sector_t *sec,int currentheight)
 	fixed_t		height = currentheight;
 	fixed_t		heightlist[20];		/* 20 adjoining sectors max! */
 	
+	heightlist[0] = 0;
 	for (i =0,h = 0 ;i < sec->linecount ; i++)
 	{
 		check = sec->lines[i];
@@ -203,7 +207,7 @@ fixed_t	P_FindLowestCeilingSurrounding(sector_t *sec)
 	int			i;
 	line_t		*check;
 	sector_t	*other;
-	fixed_t		height = MAXINT;
+	fixed_t		height = D_MAXINT;
 	
 	for (i=0 ;i < sec->linecount ; i++)
 	{
@@ -740,10 +744,10 @@ int EV_DoDonut(line_t *line)
 		s2 = getNextSector(s1->lines[0],s1);
 		for (i = 0;i < s2->linecount;i++)
 		{
-			if ((!s2->lines[i]->flags & ML_TWOSIDED) ||
-				(s2->lines[i]->backsector == s1))
+			if (!(s2->lines[i]->flags & ML_TWOSIDED) ||
+				(LD_BACKSECTOR(s2->lines[i]) == s1))
 				continue;
-			s3 = s2->lines[i]->backsector;
+			s3 = LD_BACKSECTOR(s2->lines[i]);
 
 			/* */
 			/*	Spawn rising slime */

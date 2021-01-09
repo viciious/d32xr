@@ -31,8 +31,13 @@ typedef struct
 
 /*============================================================================ */
 
+#ifdef MARS
+#define INTERNALQUADS   1
+#define EXTERNALQUADS   1
+#else
 #define	INTERNALQUADS	256			/* 4k / 16 bytes per quad (64 bits) */
 #define	EXTERNALQUADS	512			/* 16k  / 32 bytes per quad (16 bits+music) */
+#endif
 #define	SFXCHANNELS		4
 
 typedef struct

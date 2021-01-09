@@ -68,7 +68,7 @@ void P_StartButton(line_t *line,bwhere_e w,int texture,int time)
 			buttonlist[i].where = w;
 			buttonlist[i].btexture = texture;
 			buttonlist[i].btimer = time;
-			buttonlist[i].soundorg = (mobj_t *)&line->frontsector->soundorg;
+			buttonlist[i].soundorg = (mobj_t *)&(LD_FRONTSECTOR(line))->soundorg;
 			return;
 		}
 		

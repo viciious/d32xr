@@ -9,8 +9,8 @@ int		firstflat, lastflat, numflats;
 int			numtextures;
 texture_t	textures[MAXTEXTURES];
 
-int			*flattranslation;		/* for global animation */
-int			*texturetranslation;	/* for global animation */
+VINT			*flattranslation;		/* for global animation */
+VINT			*texturetranslation;	/* for global animation */
 
 texture_t	*skytexturep;
 
@@ -70,7 +70,7 @@ if (texture->lumpnum == -1)
 /* */
 /* translation table for global animation */
 /* */
-	texturetranslation = Z_Malloc ((numtextures+1)*4, PU_STATIC, 0);
+	texturetranslation = Z_Malloc ((numtextures+1)*sizeof(*texturetranslation), PU_STATIC, 0);
 	for (i=0 ; i<numtextures ; i++)
 		texturetranslation[i] = i;	
 }
@@ -94,7 +94,7 @@ void R_InitFlats (void)
 	numflats = lastflat - firstflat + 1;
 	
 /* translation table for global animation */
-	flattranslation = Z_Malloc ((numflats+1)*4, PU_STATIC, 0);
+	flattranslation = Z_Malloc ((numflats+1)*sizeof(*flattranslation), PU_STATIC, 0);
 	for (i=0 ; i<numflats ; i++)
 		flattranslation[i] = i;
 }

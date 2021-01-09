@@ -7,6 +7,7 @@
 #include "doomdef.h"
 #include "r_local.h"
 
+#ifdef JAGUAR
 // Doom palette to CRY lookup (hardcoded for efficiency on the Jag ASIC?)
 static pixel_t vgatojag[] =
 {
@@ -161,20 +162,27 @@ static void R_decode(byte *input, pixel_t *output)
       } 
       else 
          *output++ = vgatojag[*input++];
-
       idbyte = idbyte >> 1;
    }
 }
 
+#endif
+
 //
 // Load and decode a compressed graphic resource and store it in the lumpcache
 //
+#ifdef MARS
+static inpixel_t *R_LoadPixels(int lumpnum)
+#else
 static pixel_t *R_LoadPixels(int lumpnum)
+#endif
 {
    void       *rdest;
    byte       *rsrc;
    lumpinfo_t *info;
+#ifdef JAGUAR
    int         count;
+#endif
 
    // already cached?
    rdest = lumpcache[lumpnum];
@@ -182,15 +190,20 @@ static pixel_t *R_LoadPixels(int lumpnum)
       return rdest;
 
    info  = &lumpinfo[lumpnum];
+
+#ifdef JAGUAR
    count = BIGLONG(info->size); // CALICO: endianness correction required
 
    // allocate at doubled lump size, as translates from 8-bit paletted to 
    // 16-bit CRY while decompressing
    rdest = R_Malloc(count * 2, &lumpcache[lumpnum]);
    rsrc  = wadfileptr + BIGLONG(info->filepos); // CALICO: ditto
-
    // decompress
    R_decode(rsrc, rdest);
+#else
+   rsrc  = wadfileptr + BIGLONG(info->filepos);
+   rdest = rsrc;
+#endif
 
    lumpcache[lumpnum] = rdest;
 
@@ -222,20 +235,21 @@ void R_Cache(void)
             wall->b_texture->data = R_LoadPixels(wall->b_texture->lumpnum);
       }
 
+      int floorpicnum = wall->floorpicnum;
+      int ceilingpicnum = wall->ceilingpicnum;
+      
       // load floorpic
-      // CALICO: use floorpicnum to avoid type punning
       if(wall->floorpic == NULL)
-         wall->floorpic = R_LoadPixels(firstflat + wall->floorpicnum);
+         wall->floorpic = R_LoadPixels(firstflat + floorpicnum);
 
       // load sky or normal ceilingpic
-      // CALICO: use ceilingpicnum to avoid type punning
-      if(wall->ceilingpicnum == -1) // sky 
+      if(ceilingpicnum == -1) // sky 
       {
          if(skytexturep->data == NULL)
             skytexturep->data = R_LoadPixels(skytexturep->lumpnum);
       }
       else if(wall->ceilingpic == NULL)
-         wall->ceilingpic = R_LoadPixels(firstflat + wall->ceilingpicnum);
+         wall->ceilingpic = R_LoadPixels(firstflat + ceilingpicnum);
 
       ++wall;
    }

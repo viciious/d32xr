@@ -172,7 +172,7 @@ boolean G_CheckSpot (int playernum, mapthing_t *mthing)
 	an = ( ANG45 * (mthing->angle/45) ) >> ANGLETOFINESHIFT; 
  
 /* spawn a teleport fog  */
-	mo = P_SpawnMobj (x+20*finecosine[an], y+20*finesine[an], ss->sector->floorheight 
+	mo = P_SpawnMobj (x+20*finecosine(an), y+20*finesine(an), ss->sector->floorheight 
 	, MT_TFOG); 
 	S_StartSound (mo, sfx_telept);
 	
@@ -323,31 +323,6 @@ D_printf ("G_InitNew\n");
 	
 
 	gametic = 0; 
-
-	if ( skill == sk_nightmare )
-	{ 
-		states[S_SARG_ATK1].tics = 2;
-		states[S_SARG_ATK2].tics = 2;
-		states[S_SARG_ATK3].tics = 2;
-		mobjinfo[MT_SERGEANT].speed = 15; 
-		mobjinfo[MT_SHADOWS].speed = 15; 
-		
-		mobjinfo[MT_BRUISERSHOT].speed = 40*FRACUNIT; 
-		mobjinfo[MT_HEADSHOT].speed = 40*FRACUNIT; 
-		mobjinfo[MT_TROOPSHOT].speed = 40*FRACUNIT; 
-	} 
-	else 
-	{ 
-		states[S_SARG_ATK1].tics = 4;
-		states[S_SARG_ATK2].tics = 4;
-		states[S_SARG_ATK3].tics = 4;
-		mobjinfo[MT_SERGEANT].speed = 10; 
-		mobjinfo[MT_SHADOWS].speed = 10; 
-		
-		mobjinfo[MT_BRUISERSHOT].speed = 30*FRACUNIT; 
-		mobjinfo[MT_HEADSHOT].speed = 20*FRACUNIT; 
-		mobjinfo[MT_TROOPSHOT].speed = 20*FRACUNIT; 
-	}   
 } 
  
 /*============================================================================  */

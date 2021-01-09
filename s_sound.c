@@ -23,7 +23,11 @@ int				sfxsample;			/* the sample about to be output */
 
 /*			 MUSIC VARIABLES */
 
+#ifdef MARS
+sfx_t 		*instruments[1];
+#else
 sfx_t           *instruments[256];	/* pointers to all patches */
+#endif
 
 channel_t       music_channels[10];	/* master music channel list */
 
@@ -38,8 +42,6 @@ int             samples_per_midiclock;	/* multiplier for midi clocks */
 
 int				musictics = 0;
 
-#define abs(x) ((x)<0 ? -(x) : (x))
-
 
 /*
 ==================
@@ -51,6 +53,7 @@ int				musictics = 0;
 
 void S_Init(void)
 {
+#ifndef MARS
 	int		i,l;
 	int	lump, end;
 	int instnum;
@@ -78,7 +81,7 @@ void S_Init(void)
  		instruments[instnum] = (sfx_t *) (wadfileptr + lumpinfo[lump].filepos);
  		lump++;
  	}
- 
+#endif
  	/* hack test */
 
 	music_memory = 0;
@@ -102,7 +105,7 @@ void S_Init(void)
 void S_Clear (void)
 {
 	D_memset (sfxchannels,0,sizeof(sfxchannels));
-	D_memset (soundbuffer,0,0x4000);
+	D_memset (soundbuffer,0,sizeof(soundbuffer));
 }
 
 void S_RestartSounds (void)
@@ -137,8 +140,8 @@ void S_StartSound(mobj_t *origin, int sound_id)
 		vol = 127;
 	else
 	{
-		dx = abs(origin->x - player->mo->x);
-		dy = abs(origin->y - player->mo->y);
+		dx = D_abs(origin->x - player->mo->x);
+		dy = D_abs(origin->y - player->mo->y);
 		dist_approx = dx + dy - ((dx < dy ? dx : dy) >> 1);
 		vol = dist_approx >> 20;
 		if (vol > 127)
@@ -291,7 +294,7 @@ void S_UpdateSounds(void)
 
 void S_StartSong(int music_id, int looping)
 {
-
+#ifndef MARS
 	int lump;
 
 /*	next_eventtime = musictime; */
@@ -302,12 +305,12 @@ void S_StartSong(int music_id, int looping)
 		(unsigned char *) W_CacheLumpNum(lump, PU_STATIC);
 	music_start = looping ? music : 0;
 	music_end = (unsigned char *) music + lumpinfo[lump].size ;
-
+#endif
 }
 
 void S_StopSong(void)
 {
-
+#ifndef MARS
 	int i;
 	int *ptr;
 
@@ -323,6 +326,6 @@ void S_StopSong(void)
 		ptr[6] = 0;
 		ptr += 8;
 	}
-
+#endif
 }
 

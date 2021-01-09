@@ -282,12 +282,12 @@ int EV_DoFloor(line_t *line,floor_e floortype)
 				floor->speed = FLOORSPEED;
 				floor->floordestheight = floor->sector->floorheight +
 						24 * FRACUNIT;
-				sec->floorpic = line->frontsector->floorpic;
-				sec->special = line->frontsector->special;
+				sec->floorpic = LD_FRONTSECTOR(line)->floorpic;
+				sec->special = LD_FRONTSECTOR(line)->special;
 				break;
 			case raiseToTexture:
 				{
-					int	minsize = MAXINT;
+					int	minsize = D_MAXINT;
 					side_t	*side;
 				
 					floor->direction = 1;
@@ -324,7 +324,7 @@ int EV_DoFloor(line_t *line,floor_e floortype)
 				for (i = 0; i < sec->linecount; i++)
 					if ( twoSided(secnum, i) )
 					{
-						if (getSide(secnum,i,0)->sector-sectors == secnum)
+						if (getSide(secnum,i,0)->sector == secnum)
 						{
 							sec = getSector(secnum,i,1);
 							floor->texture = sec->floorpic;
@@ -402,12 +402,12 @@ int EV_BuildStairs(line_t *line)
 				if ( !((sec->lines[i])->flags & ML_TWOSIDED) )
 					continue;
 					
-				tsec = (sec->lines[i])->frontsector;
-				newsecnum = tsec-sectors;
+				newsecnum = sec->lines[i]->frontsectornum;
+				tsec = &sectors[newsecnum];
 				if (secnum != newsecnum)
 					continue;
-				tsec = (sec->lines[i])->backsector;
-				newsecnum = tsec - sectors;
+				newsecnum = sec->lines[i]->backsectornum;
+				tsec = &sectors[newsecnum];
 				if (tsec->floorpic != texture)
 					continue;
 					

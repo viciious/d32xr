@@ -20,10 +20,12 @@ static void *R_CheckPixels(int lumpnum)
    
    if(lumpdata)
    {
+#ifndef MARS
       // touch this graphic resource with the current frame number so that it 
       // will not be immediately purged again during the same frame
       memblock_t *memblock = (memblock_t *)((byte *)lumpdata - sizeof(memblock_t));
       memblock->lockframe = framecount;
+#endif
    }
    else
       cacheneeded = true; // phase 5 will need to be executed to cache graphics
@@ -52,7 +54,7 @@ static fixed_t R_PointToDist(fixed_t x, fixed_t y)
    angle = (tantoangle[FixedDiv(dy, dx)>>DBITS] + ANG90) >> ANGLETOFINESHIFT;
    
    // use as cosine
-   return FixedDiv(dx, finesine[angle]);
+   return FixedDiv(dx, finesine(angle));
 }
 
 //
@@ -67,11 +69,11 @@ static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle)
    visangle += ANG90;
    
    anglea = visangle - viewangle;
-   sinea  = finesine[anglea >> ANGLETOFINESHIFT];
+   sinea  = finesine(anglea >> ANGLETOFINESHIFT);
    angleb = visangle - normalangle;
-   sineb  = finesine[angleb >> ANGLETOFINESHIFT];
+   sineb  = finesine(angleb >> ANGLETOFINESHIFT);
    
-   num = sineb * 22 * 8;
+   num = FixedMul(STRETCH*CENTERX, sineb);
    den = FixedMul(rw_distance, sinea);
 
    return FixedDiv(num, den);
@@ -93,7 +95,7 @@ static void R_SetupCalc(viswall_t *wc)
    if(offsetangle > ANG90)
       offsetangle = ANG90;
 
-   sineval = finesine[offsetangle >> ANGLETOFINESHIFT];
+   sineval = finesine(offsetangle >> ANGLETOFINESHIFT);
    rw_offset = FixedMul(hyp, sineval);
 
    if(normalangle - wc->angle1 < ANG180)
@@ -129,11 +131,14 @@ static void R_FinishWallPrep(viswall_t *wc)
       fw_texture->data = R_CheckPixels(fw_texture->lumpnum);
    }
    
+   int floorpicnum = wc->floorpicnum;
+   int ceilingpicnum = wc->ceilingpicnum;
+
    // get floor texture
-   wc->floorpic = R_CheckPixels(firstflat + wc->floorpicnum); // CALICO: use floorpicnum field here
+   wc->floorpic = R_CheckPixels(firstflat + floorpicnum);
    
    // is there sky at this wall?
-   if(wc->ceilingpicnum == -1) // CALICO: likewise for ceilingpicnum
+   if(ceilingpicnum == -1)
    {
       // cache skytexture if needed
       skytexturep->data = R_CheckPixels(skytexturep->lumpnum);
@@ -141,12 +146,12 @@ static void R_FinishWallPrep(viswall_t *wc)
    else
    {
       // normal ceilingpic
-      wc->ceilingpic = R_CheckPixels(firstflat + wc->ceilingpicnum);
+      wc->ceilingpic = R_CheckPixels(firstflat + ceilingpicnum);
    }
    
    // this is essentially R_StoreWallRange
    // calculate rw_distance for scale calculation
-   normalangle = seg->angle + ANG90;
+   normalangle = ((angle_t)seg->angle<<16) + ANG90;
    offsetangle = normalangle - wc->angle1;
 
    if((int)offsetangle < 0)
@@ -156,8 +161,8 @@ static void R_FinishWallPrep(viswall_t *wc)
       offsetangle = ANG90;
    
    distangle = ANG90 - offsetangle;
-   hyp = R_PointToDist(seg->v1->x, seg->v1->y);
-   sineval = finesine[distangle >> ANGLETOFINESHIFT];
+   hyp = R_PointToDist(vertexes[seg->v1].x, vertexes[seg->v1].y);
+   sineval = finesine(distangle >> ANGLETOFINESHIFT);
    wc->distance = rw_distance = FixedMul(hyp, sineval);
    
    scalefrac = scale2 = wc->scalefrac =
@@ -255,12 +260,12 @@ static void R_FinishPSprite(vissprite_t *vis)
    vis->pixels = R_CheckPixels(lump + 1);
 
    topoffset = (fixed_t)BIGSHORT(vis->patch->topoffset) << FRACBITS;
-   vis->texturemid = 100*FRACUNIT - (vis->texturemid - topoffset);
+   vis->texturemid = BASEYCENTER*FRACUNIT - (vis->texturemid - topoffset);
 
    x1 = vis->x1 - BIGSHORT(vis->patch->leftoffset);
 
    // off the right side
-   if(x1 > 160)
+   if(x1 > SCREENWIDTH)
       return;
 
    x2 = (x1 + BIGSHORT(vis->patch->width)) - 1;
@@ -271,7 +276,7 @@ static void R_FinishPSprite(vissprite_t *vis)
 
    // store information in vissprite
    vis->x1 = x1 < 0 ? 0 : x1;
-   vis->x2 = x2 >= 160 ? 160 - 1 : x2;
+   vis->x2 = x2 >= SCREENWIDTH ? SCREENWIDTH - 1 : x2;
    vis->xscale = FRACUNIT;
    vis->yscale = FRACUNIT;
    vis->yiscale = FRACUNIT;

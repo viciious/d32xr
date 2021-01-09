@@ -24,25 +24,27 @@ void R_WallPrep(void)
    int        rw_x, rw_stopx;
    boolean    skyhack;
    unsigned int actionbits;
+   int        side;
 
    while(segl < lastwallcmd)
    {
-      seg = segl->seg;
-      li  = seg->linedef;
-      si  = seg->sidedef;
+      seg  = segl->seg;
+      li   = seg->linedef;
+      side = seg->side;
+      si   = &sides[li->sidenum[seg->side]];
 
       li->flags |= ML_MAPPED; // mark as seen
 
-      front_sector    = seg->frontsector;
+      front_sector    = &sectors[sides[li->sidenum[side]].sector];
       f_ceilingpic    = front_sector->ceilingpic;
       f_lightlevel    = front_sector->lightlevel;
       f_floorheight   = front_sector->floorheight   - viewz;
       f_ceilingheight = front_sector->ceilingheight - viewz;
 
       segl->floorpicnum   = flattranslation[front_sector->floorpic];
-      segl->ceilingpicnum = (f_ceilingpic == -1) ? -1 : flattranslation[f_ceilingpic];
+      segl->ceilingpicnum = f_ceilingpic == -1 ? -1 : flattranslation[f_ceilingpic];
 
-      back_sector = seg->backsector;
+      back_sector = (li->flags & ML_TWOSIDED) ? &sectors[sides[li->sidenum[side^1]].sector] : 0;
       if(!back_sector)
          back_sector = &emptysector;
       b_ceilingpic    = back_sector->ceilingpic;

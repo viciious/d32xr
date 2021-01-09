@@ -18,7 +18,11 @@ static int *pl_stopfp;
 static int *pl_fp;
 
 static int spanstart[/*SCREENHEIGHT*/256];
+#ifdef MARS
+static inpixel_t *ds_source;
+#else
 static pixel_t *ds_source;
+#endif
 
 //
 // Render the horizontal spans determined by R_PlaneLoop
@@ -47,17 +51,26 @@ static void R_MapPlane(void)
       length   = (distance * distscale[x]) >> 14;
       angle    = (planeangle + xtoviewangle[x]) >> ANGLETOFINESHIFT;
       
-      xfrac = planex + (((finecosine[angle] >> 1) * length) >> 4);
-      yfrac = planey - (((  finesine[angle] >> 1) * length) >> 4);
+      xfrac = planex + (((finecosine(angle) >> 1) * length) >> 4);
+      yfrac = planey - (((  finesine(angle) >> 1) * length) >> 4);
    
       xstep = (distance * basexscale) >> 4;   
-   
-      light = plane_lightcoef / distance;
-
       ystep = (baseyscale * distance) >> 4;
+
+#ifdef MARS
+      light = plane_lightcoef;
+
+      // finish light calculations
+      if(light > plane_lightmax)
+         light = plane_lightmax;
+      if(light < plane_lightmin)
+         light = plane_lightmin;
+#else
+      light = plane_lightcoef / distance;
 
       // finish light calculations
       light -= plane_lightsub;
+
       if(light > plane_lightmax)
          light = plane_lightmax;
       if(light < plane_lightmin)
@@ -65,6 +78,7 @@ static void R_MapPlane(void)
 
       // transform to hardware value
       light = -((255 - light) << 14) & 0xffffff;
+#endif
 
       // CALICO: invoke I_DrawSpan here.
       I_DrawSpan(y, x, x2, light, xfrac, yfrac, xstep, ystep, ds_source);
@@ -252,7 +266,8 @@ static void R_PlaneLoop(visplane_t *pl)
    pl_stopx += 2;
 
    // CALICO: use the temp buffer, as the native stack cannot be pushed/popped here
-   pl_stopfp = (int *)(I_TempBuffer());
+   //pl_stopfp = (int *)(I_TempBuffer());
+   pl_stopfp = (int *)(openings + MAXOPENINGS);
    pl_fp = pl_stopfp;
 
    pl_openptr = &pl->open[pl_x - 1];
@@ -332,8 +347,8 @@ void R_DrawPlanes(void)
    planeangle = viewangle;
    angle = (planeangle - ANG90) >> ANGLETOFINESHIFT;
 
-   basexscale =  (finecosine[angle] / (SCREENWIDTH / 2));
-   baseyscale = -(  finesine[angle] / (SCREENWIDTH / 2));
+   basexscale =  (finecosine(angle) / (SCREENWIDTH / 2));
+   baseyscale = -(  finesine(angle) / (SCREENWIDTH / 2));
 
    // Jag-specific setup
    /*

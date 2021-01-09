@@ -195,7 +195,7 @@ void P_PlayerZMovement (mobj_t *mo)
 
 void P_PlayerMobjThink (mobj_t *mobj)
 {
-	state_t	*st;
+	const state_t	*st;
 	int		state;
 	
 /* */
@@ -218,10 +218,10 @@ void P_PlayerMobjThink (mobj_t *mobj)
 	if (mobj->tics > 0)
 		return;				/* not time to cycle yet */
 		
-	state = mobj->state->nextstate;	
+	state = states[mobj->state].nextstate;	
 	st = &states[state];
 
-	mobj->state = st;
+	mobj->state = state;
 	mobj->tics = st->tics;
 	mobj->sprite = st->sprite;
 	mobj->frame = st->frame;
@@ -308,10 +308,10 @@ void P_BuildMove (player_t *player)
 	if (!mo->momx && !mo->momy
 	&& player->forwardmove== 0 && player->sidemove == 0 )
 	{	/* if in a walking frame, stop moving */
-		if (mo->state == &states[S_PLAY_RUN1] 
-		|| mo->state == &states[S_PLAY_RUN2]
-		|| mo->state == &states[S_PLAY_RUN3]
-		|| mo->state == &states[S_PLAY_RUN4])
+		if (mo->state == S_PLAY_RUN1 
+		|| mo->state == S_PLAY_RUN2
+		|| mo->state == S_PLAY_RUN3
+		|| mo->state == S_PLAY_RUN4)
 			P_SetMobjState (mo, S_PLAY);
 	}
 	
@@ -344,8 +344,8 @@ void P_Thrust (player_t *player, angle_t angle, fixed_t move)
 {
 	angle >>= ANGLETOFINESHIFT;
 	move >>= 16;
-	player->mo->momx += move*finecosine[angle]; 
-	player->mo->momy += move*finesine[angle];
+	player->mo->momx += move*finecosine(angle); 
+	player->mo->momy += move*finesine(angle);
 }
 
 
@@ -391,7 +391,7 @@ void P_CalcHeight (player_t *player)
 	}
 		
 	angle = (FINEANGLES/40*gamevbls)&(FINEANGLES-1);
-	bob = (( player->bob )>>17) * finesine[angle];
+	bob = (( player->bob )>>17) * finesine(angle);
 	
 /* */
 /* move viewheight */
@@ -444,7 +444,7 @@ void P_MovePlayer (player_t *player)
 		P_Thrust (player, player->mo->angle-ANG90, player->sidemove);
 
 	if ( (player->forwardmove || player->sidemove) 
-	&& player->mo->state == &states[S_PLAY] )
+	&& player->mo->state == S_PLAY )
 		P_SetMobjState (player->mo, S_PLAY_RUN1);
 
 }	

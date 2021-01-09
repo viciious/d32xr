@@ -146,8 +146,8 @@ static boolean PA_ShootLine(line_t *li, fixed_t interceptfrac)
    }
 
    // crosses a two-sided line
-   front = li->frontsector;
-   back  = li->backsector;
+   front = LD_FRONTSECTOR(li);
+   back  = LD_BACKSECTOR(li);
 
    if(front->ceilingheight < back->ceilingheight)
       opentop = front->ceilingheight;
@@ -161,7 +161,7 @@ static boolean PA_ShootLine(line_t *li, fixed_t interceptfrac)
 
    dist = FixedMul(attackrange, interceptfrac);
 
-   if(li->frontsector->floorheight != li->backsector->floorheight)
+   if(front->floorheight != back->floorheight)
    {
       slope = FixedDiv(openbottom - shootz, dist);
       if(slope >= aimmidslope && !shootline)
@@ -173,7 +173,7 @@ static boolean PA_ShootLine(line_t *li, fixed_t interceptfrac)
          aimbottomslope = slope;
    }
 
-   if(li->frontsector->ceilingheight != li->backsector->ceilingheight)
+   if(front->ceilingheight != back->ceilingheight)
    {
       slope = FixedDiv(opentop - shootz, dist);
       if(slope <= aimmidslope && !shootline)
@@ -392,8 +392,8 @@ void P_Shoot2(void)
 
    shootdiv.x  = t1->x;
    shootdiv.y  = t1->y;
-   shootx2     = t1->x + (attackrange >> FRACBITS) * finecosine[angle];
-   shooty2     = t1->y + (attackrange >> FRACBITS) * finesine[angle];
+   shootx2     = t1->x + (attackrange >> FRACBITS) * finecosine(angle);
+   shooty2     = t1->y + (attackrange >> FRACBITS) * finesine(angle);
    shootdiv.dx = shootx2 - shootdiv.x;
    shootdiv.dy = shooty2 - shootdiv.y;
    shootz      = t1->z + (t1->height >> 1) + 8*FRACUNIT;

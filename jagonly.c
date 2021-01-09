@@ -150,10 +150,12 @@ soundbuffer[5] = 0xeeee;
 	if (video_height >= 256)	/* pal */
 	{
 		BASEORGY = 48;
+		ticrate = 3;
 	}
 	else
 	{
 		BASEORGY = 24;		/* NTSC */
+		ticrate = 4;
 	}
 
 		branch1 = 0x8003 + (a_vde<<3);
@@ -434,8 +436,8 @@ int I_ReadControls (void)
 	int		stoptic, i, cumulative;
 	
 	stoptic = ticcount;
-	if (stoptic - oldticcount > 4)
-		oldticcount = stoptic - 4;
+	if (stoptic - oldticcount > ticrate)
+		oldticcount = stoptic - ticrate;
 	if (oldticcount >= stoptic)
 		oldticcount = stoptic - 1;
 	cumulative = 0;	
@@ -1029,9 +1031,15 @@ void I_Update (void)
 
 byte	*I_TempBuffer (void)
 {
-	return (byte *)screens[workpage];
+	byte *buf = (byte *)screens[workpage];
+	D_memset(buf, 0, 64*1024);
+	return buf;
 }
 
+byte	*I_WorkBuffer (void)
+{
+	return (byte *)screens[workpage];
+}
 
 /*
 ===============================================================================

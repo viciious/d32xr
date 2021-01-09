@@ -7,7 +7,7 @@
 #define	RAISESPEED		FRACUNIT*18
 
 
-#ifndef MARS	
+#if SCREENWIDTH == 160	
 #define	WEAPONX		FRACUNIT
 #define WEAPONBOTTOM	(128)*FRACUNIT
 #define WEAPONTOP		(32)*FRACUNIT
@@ -54,10 +54,10 @@ na_secnum = sec-sectors;
 	for (i=0 ;i<sec->linecount ; i++)
 	{
 		check = sec->lines[i];
-		back = check->backsector;
+		back = LD_BACKSECTOR(check);
 		if (!back)
 			continue;		/* single sided */
-		front = check->frontsector;
+		front = LD_FRONTSECTOR(check);
 		if (front->floorheight >= back->ceilingheight
 		|| front->ceilingheight <= back->floorheight)
 			continue;		/* closed door */
@@ -112,7 +112,7 @@ void P_NoiseAlert (player_t *player)
 void P_SetPsprite (player_t *player, int position, statenum_t stnum) 
 {
 	pspdef_t	*psp;
-	state_t	*state;
+	const state_t	*state;
 	
 	psp = &player->psprites[position];
 	
@@ -120,11 +120,11 @@ void P_SetPsprite (player_t *player, int position, statenum_t stnum)
 	{
 		if (!stnum)
 		{
-			psp->state = NULL;
+			psp->state = S_NULL;
 			break;		/* object removed itself */
 		}
 		state = &states[stnum];
-		psp->state = state;
+		psp->state = stnum;
 		psp->tics = state->tics;  /* could be 0 */
 
 		/* call action routine */
@@ -134,7 +134,7 @@ void P_SetPsprite (player_t *player, int position, statenum_t stnum)
 			if (!psp->state)
 				break;
 		}
-		stnum = psp->state->nextstate;
+		stnum = states[psp->state].nextstate;
 	} while (!psp->tics);	/* an initial state of 0 could cycle through */
 }
 
@@ -358,7 +358,7 @@ void A_WeaponReady (player_t *player, pspdef_t *psp)
 	statenum_t	new;
 	int			angle;
 	
-	if (player->readyweapon == wp_chainsaw && psp->state == &states[S_SAW])
+	if (player->readyweapon == wp_chainsaw && psp->state == S_SAW)
 		S_StartSound (player->mo, sfx_sawidl);
 
 /* */
@@ -387,9 +387,9 @@ void A_WeaponReady (player_t *player, pspdef_t *psp)
 /* bob the weapon based on movement speed */
 /* */
 	angle = (64*gamevbls)&(FINEANGLES-1);
-	psp->sx = WEAPONX + (player->bob>>16) * finecosine[angle];
+	psp->sx = WEAPONX + (player->bob>>16) * finecosine(angle);
 	angle &= FINEANGLES/2-1;
-	psp->sy = WEAPONTOP + (player->bob>>16) * finesine[angle];
+	psp->sy = WEAPONTOP + (player->bob>>16) * finesine(angle);
 }
 
 
@@ -525,7 +525,7 @@ void A_Punch (player_t *player, pspdef_t *psp)
 		damage *= 10;
 	angle = player->mo->angle;
 	angle += (P_Random()-P_Random())<<18;
-	P_LineAttack (player->mo, angle, MELEERANGE, MAXINT, damage);
+	P_LineAttack (player->mo, angle, MELEERANGE, D_MAXINT, damage);
 /* turn to face target */
 	if (linetarget)
 	{
@@ -552,7 +552,7 @@ void A_Saw (player_t *player, pspdef_t *psp)
 	angle = player->mo->angle;
 	angle += (P_Random()-P_Random())<<18;
 /* use meleerange + 1 se the puff doesn't skip the flash */
-	P_LineAttack (player->mo, angle, MELEERANGE+1, MAXINT, damage);
+	P_LineAttack (player->mo, angle, MELEERANGE+1, D_MAXINT, damage);
 	if (!linetarget)
 	{
 		S_StartSound (player->mo, sfx_sawful);
@@ -646,7 +646,7 @@ void P_GunShot (mobj_t *mo, boolean accurate)
 	angle = mo->angle;
 	if (!accurate)
 		angle += (P_Random()-P_Random())<<18;
-	P_LineAttack (mo, angle, MISSILERANGE, MAXINT, damage);
+	P_LineAttack (mo, angle, MISSILERANGE, D_MAXINT, damage);
 }
 
 /* 
@@ -731,7 +731,7 @@ void A_FireCGun (player_t *player, pspdef_t *psp)
 	player->ammo[weaponinfo[player->readyweapon].ammo]--;
 
 	P_SetPsprite (player,ps_flash,weaponinfo[player->readyweapon].flashstate
-	+ psp->state - &states[S_CHAIN1] );
+	+ psp->state - S_CHAIN1 );
 
 	P_GunShot (player->mo, !player->refire);
 }
@@ -818,7 +818,7 @@ void P_SetupPsprites (player_t *player)
 /* remove all psprites */
 
 	for (i=0 ; i<NUMPSPRITES ; i++)
-		player->psprites[i].state = NULL;
+		player->psprites[i].state = S_NULL;
 		
 /* spawn the gun */
 	player->pendingweapon = player->readyweapon;
@@ -842,24 +842,24 @@ void P_MovePsprites (player_t *player)
 {
 	int			i;
 	pspdef_t	*psp;
-	state_t		*state;
+	statenum_t	state;
 
 	ticremainder[playernum] += vblsinframe;
 	
-	while (ticremainder[playernum] >= 4)
+	while (ticremainder[playernum] >= ticrate)
 	{
-		ticremainder[playernum] -= 4;
+		ticremainder[playernum] -= ticrate;
 			
 		psp = &player->psprites[0];
 		for (i=0 ; i<NUMPSPRITES ; i++, psp++)
-			if ( (state = psp->state) != 0)		/* a null state means not active */
+			if ( (state = psp->state) != S_NULL)		/* a null state means not active */
 			{
 			/* drop tic count and possibly change state */
 				if (psp->tics != -1)	/* a -1 tic count never changes */
 				{
 					psp->tics--;
 					if (!psp->tics)
-						P_SetPsprite (player, i, psp->state->nextstate);
+						P_SetPsprite (player, i, states[state].nextstate);
 				}				
 			}
 	}

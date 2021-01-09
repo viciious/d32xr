@@ -55,7 +55,8 @@ boolean P_CheckMeleeRange (mobj_t *actor)
 boolean P_CheckMissileRange (mobj_t *actor)
 {
 	fixed_t		dist;
-	
+	const mobjinfo_t* ainfo = &mobjinfo[actor->type];
+
 	if (! (actor->flags & MF_SEETARGET) )
 		return false;
 
@@ -69,7 +70,7 @@ boolean P_CheckMissileRange (mobj_t *actor)
 		return false;		/* don't attack yet */
 		
 	dist = P_AproxDistance ( actor->x-actor->target->x, actor->y-actor->target->y) - 64*FRACUNIT;
-	if (!actor->info->meleestate)
+	if (!ainfo->meleestate)
 		dist -= 128*FRACUNIT;		/* no melee attack, so fire more */
 
 	dist >>= 16;
@@ -107,12 +108,12 @@ boolean P_Move (mobj_t *actor)
 	fixed_t	tryx, tryy;
 	boolean		good;
 	line_t		*blkline;
-			
+
 	if (actor->movedir == DI_NODIR)
 		return false;
 		
-	tryx = actor->x + actor->info->speed*xspeed[actor->movedir];
-	tryy = actor->y + actor->info->speed*yspeed[actor->movedir];
+	tryx = actor->x + actor->speed*xspeed[actor->movedir];
+	tryy = actor->y + actor->speed*yspeed[actor->movedir];
 	
 	if (!P_TryMove (actor, tryx, tryy) )
 	{	/* open any specials */
@@ -222,7 +223,7 @@ void P_NewChaseDir (mobj_t *actor)
 	}
 
 /* try other directions */
-	if (P_Random() > 200 ||  abs(deltay)>abs(deltax))
+	if (P_Random() > 200 || D_abs(deltay)> D_abs(deltax))
 	{
 		tdir=d[1];
 		d[1]=d[2];
@@ -367,6 +368,7 @@ void A_Look (mobj_t *actor)
 {
 	/* mobj_t		*targ;
         */
+	const mobjinfo_t* ainfo = &mobjinfo[actor->type];
 	
 /* if current target is visible, start attacking */
 
@@ -383,11 +385,11 @@ void A_Look (mobj_t *actor)
 #endif
 		
 /* go into chase state */
-	if (actor->info->seesound)
+	if (ainfo->seesound)
 	{
 		int		sound;
 		
-		switch (actor->info->seesound)
+		switch (ainfo->seesound)
 		{
 		case sfx_posit1:
 		case sfx_posit2:
@@ -399,13 +401,13 @@ void A_Look (mobj_t *actor)
 			sound = sfx_bgsit1+(P_Random()&1);
 			break;
 		default:
-			sound = actor->info->seesound;
+			sound = ainfo->seesound;
 			break;
 		}
 		S_StartSound (actor, sound);
 	}
 
-	P_SetMobjState (actor, actor->info->seestate);
+	P_SetMobjState (actor, ainfo->seestate);
 }
 
 
@@ -422,6 +424,7 @@ void A_Look (mobj_t *actor)
 void A_Chase (mobj_t *actor)
 {
 	int		delta;
+	const mobjinfo_t* ainfo = &mobjinfo[actor->type];
 	
 	if (actor->reactiontime)
 		actor->reactiontime--;
@@ -449,7 +452,7 @@ void A_Chase (mobj_t *actor)
 	{	/* look for a new target */
 		if (P_LookForPlayers(actor,true))
 			return;		/* got a new target */
-		P_SetMobjState (actor, actor->info->spawnstate);
+		P_SetMobjState (actor, ainfo->spawnstate);
 		return;
 	}
 	
@@ -466,21 +469,21 @@ void A_Chase (mobj_t *actor)
 /* */
 /* check for melee attack */
 /*	 */
-	if (actor->info->meleestate && P_CheckMeleeRange (actor))
+	if (ainfo->meleestate && P_CheckMeleeRange (actor))
 	{
-		if (actor->info->attacksound)
-			S_StartSound (actor, actor->info->attacksound);
-		P_SetMobjState (actor, actor->info->meleestate);
+		if (ainfo->attacksound)
+			S_StartSound (actor, ainfo->attacksound);
+		P_SetMobjState (actor, ainfo->meleestate);
 		return;
 	}
 
 /* */
 /* check for missile attack */
 /* */
-	if ( (gameskill == sk_nightmare || !actor->movecount) && actor->info->missilestate 
+	if ( (gameskill == sk_nightmare || !actor->movecount) && ainfo->missilestate
 	&& P_CheckMissileRange (actor))
 	{
-		P_SetMobjState (actor, actor->info->missilestate);
+		P_SetMobjState (actor, ainfo->missilestate);
 		if (gameskill != sk_nightmare)
 			actor->flags |= MF_JUSTATTACKED;
 		return;
@@ -495,8 +498,8 @@ void A_Chase (mobj_t *actor)
 /* */
 /* make active sound */
 /* */
-	if (actor->info->activesound && P_Random () < 3)
-		S_StartSound (actor, actor->info->activesound);
+	if (ainfo->activesound && P_Random () < 3)
+		S_StartSound (actor, ainfo->activesound);
 }
 
 /*============================================================================= */
@@ -541,7 +544,7 @@ void A_PosAttack (mobj_t *actor)
 	S_StartSound (actor, sfx_pistol);
 	angle += (P_Random()-P_Random())<<20;
 	damage = ((P_Random()&7)+1)*3;
-	P_LineAttack (actor, angle, MISSILERANGE, MAXINT, damage);
+	P_LineAttack (actor, angle, MISSILERANGE, D_MAXINT, damage);
 }
 
 void A_SPosAttack (mobj_t *actor)
@@ -560,7 +563,7 @@ void A_SPosAttack (mobj_t *actor)
 	{
 		angle = bangle + ((P_Random()-P_Random())<<20);
 		damage = ((P_Random()&7)+1)*3;
-		P_LineAttack (actor, angle, MISSILERANGE, MAXINT, damage);
+		P_LineAttack (actor, angle, MISSILERANGE, D_MAXINT, damage);
 	}
 }
 
@@ -571,7 +574,7 @@ void A_SpidRefire (mobj_t *actor)
 	if (P_Random () < 10)
 		return;
 	if (!actor->target || actor->target->health <= 0 || !(actor->flags&MF_SEETARGET) )
-		P_SetMobjState (actor, actor->info->seestate);
+		P_SetMobjState (actor, mobjinfo[actor->type].seestate);
 }
 
 
@@ -686,6 +689,7 @@ void A_SkullAttack (mobj_t *actor)
 	mobj_t			*dest;
 	angle_t			an;
 	int				dist;
+	const mobjinfo_t* ainfo = &mobjinfo[actor->type];
 
 	if (!actor->target)
 		return;
@@ -693,11 +697,11 @@ void A_SkullAttack (mobj_t *actor)
 	dest = actor->target;	
 	actor->flags |= MF_SKULLFLY;
 
-	S_StartSound (actor, actor->info->attacksound);
+	S_StartSound (actor, ainfo->attacksound);
 	A_FaceTarget (actor);
 	an = actor->angle >> ANGLETOFINESHIFT;
-	actor->momx = FixedMul (SKULLSPEED, finecosine[an]);
-	actor->momy = FixedMul (SKULLSPEED, finesine[an]);
+	actor->momx = FixedMul (SKULLSPEED, finecosine(an));
+	actor->momy = FixedMul (SKULLSPEED, finesine(an));
 	dist = P_AproxDistance (dest->x - actor->x, dest->y - actor->y);
 	dist = dist / SKULLSPEED;
 	if (dist < 1)
@@ -709,8 +713,9 @@ void A_SkullAttack (mobj_t *actor)
 void A_Scream (mobj_t *actor)
 {
 	int		sound;
-	
-	switch (actor->info->deathsound)
+	const mobjinfo_t* ainfo = &mobjinfo[actor->type];
+
+	switch (ainfo->deathsound)
 	{
 	case 0:
 		return;
@@ -727,7 +732,7 @@ void A_Scream (mobj_t *actor)
 		break;
 	
 	default:
-		sound = actor->info->deathsound;
+		sound = ainfo->deathsound;
 		break;
 	}
 	S_StartSound (actor, sound);
@@ -740,8 +745,9 @@ void A_XScream (mobj_t *actor)
 
 void A_Pain (mobj_t *actor)
 {
-	if (actor->info->painsound)
-		S_StartSound (actor, actor->info->painsound);	
+	const mobjinfo_t* ainfo = &mobjinfo[actor->type];
+	if (ainfo->painsound)
+		S_StartSound (actor, ainfo->painsound);	
 }
 
 void A_Fall (mobj_t *actor)
@@ -832,11 +838,12 @@ void L_MissileHit (mobj_t *mo)
 {
 	int	damage;
 	mobj_t	*missilething;
-	
+	const mobjinfo_t* moinfo = &mobjinfo[mo->type];
+
 	missilething = (mobj_t *)mo->extradata;
 	if (missilething)
 	{
-		damage = ((P_Random()&7)+1)*mo->info->damage;
+		damage = ((P_Random()&7)+1)* moinfo->damage;
 		P_DamageMobj (missilething, mo, mo->target, damage);
 	}
 	P_ExplodeMissile (mo);
@@ -847,18 +854,19 @@ void L_SkullBash (mobj_t *mo)
 {
 	int	damage;
 	mobj_t	*skullthing;
-	
+	const mobjinfo_t* moinfo = &mobjinfo[mo->type];
+
 	skullthing = (mobj_t *)mo->extradata;
 	
 	if (skullthing)
 	{
-		damage = ((P_Random()&7)+1)*mo->info->damage;
+		damage = ((P_Random()&7)+1)* moinfo->damage;
 		P_DamageMobj (skullthing, mo, mo, damage);
 	}
 	
 	mo->flags &= ~MF_SKULLFLY;
 	mo->momx = mo->momy = mo->momz = 0;
-	P_SetMobjState (mo, mo->info->spawnstate);
+	P_SetMobjState (mo, moinfo->spawnstate);
 }
 
 /*  */

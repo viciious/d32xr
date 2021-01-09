@@ -130,7 +130,7 @@ void P_RespawnSpecials (void)
 
 boolean P_SetMobjState (mobj_t *mobj, statenum_t state)
 {
-	state_t	*st;
+	const state_t	*st;
 	
 	if (state == S_NULL)
 	{
@@ -141,7 +141,7 @@ boolean P_SetMobjState (mobj_t *mobj, statenum_t state)
 	
 	st = &states[state];
 
-	mobj->state = st;
+	mobj->state = state;
 	mobj->tics = st->tics;
 	mobj->sprite = st->sprite;
 	mobj->frame = st->frame;
@@ -164,14 +164,16 @@ boolean P_SetMobjState (mobj_t *mobj, statenum_t state)
 
 void P_ExplodeMissile (mobj_t *mo)
 {
+	const mobjinfo_t* info = &mobjinfo[mo->type];
+
 	mo->momx = mo->momy = mo->momz = 0;
 	P_SetMobjState (mo, mobjinfo[mo->type].deathstate);
 	mo->tics -= P_Random()&1;
 	if (mo->tics < 1)
 		mo->tics = 1;
 	mo->flags &= ~MF_MISSILE;
-	if (mo->info->deathsound)
-		S_StartSound (mo, mo->info->deathsound);
+	if (info->deathsound)
+		S_StartSound (mo, info->deathsound);
 }
 
 
@@ -188,16 +190,15 @@ int zonetics;
 mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 {
 	mobj_t		*mobj;
-	state_t		*st;
-	mobjinfo_t	*info;
+	const state_t		*st;
+	const mobjinfo_t *info = &mobjinfo[type];
 	
 	mobj = Z_Malloc (sizeof(*mobj), PU_LEVEL, NULL);
 
 	D_memset (mobj, 0, sizeof (*mobj));
-	info = &mobjinfo[type];
 	
 	mobj->type = type;
-	mobj->info = info;
+	mobj->speed = info->speed;
 	mobj->x = x;
 	mobj->y = y;
 	mobj->radius = info->radius;
@@ -205,15 +206,68 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 	mobj->flags = info->flags;
 	mobj->health = info->spawnhealth;
 	mobj->reactiontime = info->reactiontime;
-	
+
 /* do not set the state with P_SetMobjState, because action routines can't */
 /* be called yet */
 	st = &states[info->spawnstate];
 
-	mobj->state = st;
+	mobj->state = info->spawnstate;
 	mobj->tics = st->tics;
 	mobj->sprite = st->sprite;
 	mobj->frame = st->frame;
+
+	if (gameskill == sk_nightmare)
+	{
+		switch (info->spawnstate) {
+		case S_SARG_ATK1:
+		case S_SARG_ATK2:
+		case S_SARG_ATK3:
+			mobj->tics = 2;
+			break;
+		default:
+			break;
+		}
+
+		switch (type) {
+		case MT_SERGEANT:
+		case MT_SHADOWS:
+			mobj->speed = 15;
+			break;
+		case MT_BRUISERSHOT:
+		case MT_HEADSHOT:
+		case MT_TROOPSHOT:
+			mobj->speed = 40 * FRACUNIT;
+			break;
+		default:
+			break;
+		}
+	}
+	else
+	{
+		switch (info->spawnstate) {
+		case S_SARG_ATK1:
+		case S_SARG_ATK2:
+		case S_SARG_ATK3:
+			mobj->tics = 4;
+			break;
+		default:
+			break;
+		}
+
+		switch (type) {
+		case MT_SERGEANT:
+		case MT_SHADOWS:
+			mobj->speed = 10;
+			break;
+		case MT_BRUISERSHOT:
+		case MT_HEADSHOT:
+		case MT_TROOPSHOT:
+			mobj->speed = 30 * FRACUNIT;
+			break;
+		default:
+			break;
+		}
+	}
 
 /* set subsector and/or block links */
 	P_SetThingPosition (mobj);
@@ -223,7 +277,7 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 	if (z == ONFLOORZ)
 		mobj->z = mobj->floorz;
 	else if (z == ONCEILINGZ)
-		mobj->z = mobj->ceilingz - mobj->info->height;
+		mobj->z = mobj->ceilingz - info->height;
 	else 
 		mobj->z = z;
 	
@@ -337,7 +391,7 @@ return;	/*DEBUG */
 		/* save spots for respawning in network games */
 		if (mthing->type <= MAXPLAYERS)
 		{
-			playerstarts[mthing->type-1] = *mthing;
+			D_memcpy (&playerstarts[mthing->type-1], mthing, sizeof(*mthing));
 			if (netgame != gt_deathmatch)
 				P_SpawnPlayer (mthing);
 		}
@@ -400,11 +454,13 @@ return;	/*DEBUG */
 	mobj->angle = ANG45 * (mthing->angle/45);
 	if (mthing->options & MTF_AMBUSH)
 		mobj->flags |= MF_AMBUSH;
-		
+
+#ifndef MARS
 	mobj->spawnx = mthing->x;
 	mobj->spawny = mthing->y;
 	mobj->spawntype = mthing->type;
 	mobj->spawnangle = mthing->angle;
+#endif
 }
 
 
@@ -501,20 +557,21 @@ void P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type)
 	angle_t		an;
 	int			dist;
 	int			speed;
-	
+	const mobjinfo_t* thinfo = &mobjinfo[type];
+
 	th = P_SpawnMobj (source->x,source->y, source->z + 4*8*FRACUNIT, type);
-	if (th->info->seesound)
-		S_StartSound (source, th->info->seesound);
+	if (thinfo->seesound)
+		S_StartSound (source, thinfo->seesound);
 	th->target = source;		/* where it came from */
 	an = R_PointToAngle2 (source->x, source->y, dest->x, dest->y);	
 	th->angle = an;
 	an >>= ANGLETOFINESHIFT;
-	speed = th->info->speed >> 16;
-	th->momx = speed * finecosine[an];
-	th->momy = speed * finesine[an];
+	speed = th->speed >> 16;
+	th->momx = speed * finecosine(an);
+	th->momy = speed * finesine(an);
 	
 	dist = P_AproxDistance (dest->x - source->x, dest->y - source->y);
-	dist = dist / th->info->speed;
+	dist = dist / th->speed;
 	if (dist < 1)
 		dist = 1;
 	th->momz = (dest->z - source->z) / dist;
@@ -537,7 +594,8 @@ void P_SpawnPlayerMissile (mobj_t *source, mobjtype_t type)
 	angle_t			an;
 	fixed_t			x,y,z, slope;
 	int				speed;
-			
+	const mobjinfo_t* thinfo = &mobjinfo[type];
+
 /* */
 /* see which target is to be aimed at */
 /* */
@@ -564,15 +622,15 @@ void P_SpawnPlayerMissile (mobj_t *source, mobjtype_t type)
 	z = source->z + 4*8*FRACUNIT;
 	
 	th = P_SpawnMobj (x,y,z, type);
-	if (th->info->seesound)
-		S_StartSound (source, th->info->seesound);
+	if (thinfo->seesound)
+		S_StartSound (source, thinfo->seesound);
 	th->target = source;
 	th->angle = an;
 	
-	speed = th->info->speed >> 16;
+	speed = th->speed >> 16;
 	
-	th->momx = speed * finecosine[an>>ANGLETOFINESHIFT];
-	th->momy = speed * finesine[an>>ANGLETOFINESHIFT];
+	th->momx = speed * finecosine(an>>ANGLETOFINESHIFT);
+	th->momy = speed * finesine(an>>ANGLETOFINESHIFT);
 	th->momz = speed * slope;
 
 	P_CheckMissileSpawn (th);

@@ -99,7 +99,7 @@ typedef enum
   NUMSFX 
 } sfxenum_t; 
  
-extern musicinfo_t S_music[]; 
+extern const musicinfo_t S_music[]; 
 extern sfxinfo_t   S_sfx[]; 
  
 #endif 

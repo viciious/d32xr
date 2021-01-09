@@ -339,11 +339,15 @@ void R_AddLine(seg_t *line)
    angle_t angle1, angle2, span, tspan;
    fixed_t x1, x2;
    sector_t *backsector;
+   vertex_t *v1 = &vertexes[line->v1], *v2 = &vertexes[line->v2];
+   int side;
+   line_t *ldef;
+   side_t *sidedef;
 
    curline = line;
 
-   angle1 = R_PointToAngle(line->v1->x, line->v1->y);
-   angle2 = R_PointToAngle(line->v2->x, line->v2->y);
+   angle1 = R_PointToAngle(v1->x, v1->y);
+   angle2 = R_PointToAngle(v2->x, v2->y);
 
    // clip to view edges
    span = angle1 - angle2;
@@ -386,8 +390,10 @@ void R_AddLine(seg_t *line)
    --x2;
 
    // decide which clip routine to use
-
-   backsector = line->backsector;
+   side = line->side;
+   ldef = line->linedef;
+   backsector = (ldef->flags & ML_TWOSIDED) ? &sectors[sides[ldef->sidenum[side^1]].sector] : 0;
+   sidedef = &sides[ldef->sidenum[side]];
 
    if(!backsector || 
       backsector->ceilingheight <= frontsector->floorheight ||
@@ -402,7 +408,7 @@ void R_AddLine(seg_t *line)
    if(backsector->ceilingpic == frontsector->ceilingpic &&
       backsector->floorpic   == frontsector->floorpic   &&
       backsector->lightlevel == frontsector->lightlevel &&
-      curline->sidedef->midtexture == 0)
+      sidedef->midtexture == 0)
       return;
 
 clippass:
@@ -445,6 +451,7 @@ void R_RenderBSPNode(int bspnum)
    node_t *bsp;
    int     side;
 
+check:
    if(bspnum & NF_SUBSECTOR) // reached a subsector leaf?
    {
       if(bspnum == -1)
@@ -463,8 +470,10 @@ void R_RenderBSPNode(int bspnum)
    R_RenderBSPNode(bsp->children[side]);
 
    // possibly divide back space
-   if(R_CheckBBox(bsp->bbox[side^1]))
-      R_RenderBSPNode(bsp->children[side^1]);
+   if(R_CheckBBox(bsp->bbox[side^1])) {
+      bspnum = bsp->children[side^1];
+      goto check;
+   }
 }
 
 //

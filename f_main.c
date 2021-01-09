@@ -116,7 +116,7 @@ castinfo_t	castorder[] = {
 
 int			castnum;
 int			casttics;
-state_t		*caststate;
+const state_t		*caststate;
 boolean		castdeath;
 int			castframes;
 int			castonmelee;
@@ -275,9 +275,11 @@ void F_Start (void)
 	castonmelee = 0;
 	castattacking = false;
 
+#ifndef MARS
 	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
 
 	DoubleBufferSetup ();
+#endif
 }
 
 void F_Stop (void)

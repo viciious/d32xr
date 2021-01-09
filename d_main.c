@@ -10,7 +10,7 @@ unsigned	BT_SPEED = BT_A;
 int			controltype;		/* determine settings for BT_* */
 
 int			gamevbls;			/* may not really be vbls in multiplayer */
-int			vblsinframe;		/* range from 4 to 8 */
+int			vblsinframe;		/* range from ticrate to ticrate*2 */
 
 int			maxlevel;			/* highest level selectable in menu (1-25) */
 jagobj_t	*backgroundpic;
@@ -22,7 +22,7 @@ int				*demo_p, *demobuffer;
 
 #define WORDMASK	3
 
-int abs (int x)
+int D_abs (int x)
 {
 	if (x<0)
 		return -x;
@@ -160,8 +160,8 @@ void M_ClearRandom (void)
 
 void M_ClearBox (fixed_t *box)
 {
-	box[BOXTOP] = box[BOXRIGHT] = MININT;
-	box[BOXBOTTOM] = box[BOXLEFT] = MAXINT;
+	box[BOXTOP] = box[BOXRIGHT] = D_MININT;
+	box[BOXBOTTOM] = box[BOXLEFT] = D_MAXINT;
 }
 
 void M_AddToBox (fixed_t *box, fixed_t x, fixed_t y)
@@ -231,7 +231,8 @@ unsigned GetDemoCmd (void)
 }
  
 /*=============================================================================  */
- 
+
+int		ticrate = 4;
 int		ticsinframe;	/* how many tics since last drawer */
 int		ticon;
 int		frameon;
@@ -267,7 +268,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 	
 	gameaction = 0;
 	gamevbls = 0;
-	vblsinframe = 4;
+	vblsinframe = ticrate;
 	
 	ticbuttons[0] = ticbuttons[1] = oldticbuttons[0] = oldticbuttons[1] = 0;
 
@@ -283,15 +284,15 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 /* adaptive timing based on previous frame */
 /* */
 		if (demoplayback || demorecording)
-			vblsinframe = 4;
+			vblsinframe = ticrate;
 		else
 		{
 			vblsinframe = lasttics;
-			if (vblsinframe > 8)
-				vblsinframe = 8;
+			if (vblsinframe > ticrate*2)
+				vblsinframe = ticrate*2;
 #if 0
-			else if (vblsinframe < 4)
-				vblsinframe = 4;
+			else if (vblsinframe < ticrate)
+				vblsinframe = ticrate;
 #endif
 		}
 					
@@ -344,9 +345,10 @@ while (!I_RefreshCompleted ())
 ;	/* DEBUG */
 #endif
 
+#ifdef JAGUAR
 		while ( DSPRead(&dspfinished) != 0xdef6 )
 		;
-
+#endif
 	} while (!exit);
 
 
@@ -369,8 +371,10 @@ void DrawSinglePlaque (jagobj_t *pl);
 
 int TIC_Abortable (void)
 {
+#ifdef JAGUAR
 	jagobj_t	*pl;
-	
+#endif
+
 	if	(ticon >= 8*15)
 		return 1;		/* go on to next demo */
 	
@@ -407,22 +411,28 @@ jagobj_t	*titlepic;
 
 void START_Title (void)
 {
+#ifndef MARS
 	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
 	DoubleBufferSetup ();
 	titlepic = W_CacheLumpName ("title",PU_STATIC);
+#endif
 	S_StartSong(mus_intro, 0);
 }
 
 void STOP_Title (void)
 {
+#ifndef MARS
 	Z_Free (titlepic);
+#endif
 	S_StopSong();
 }
 
 void DRAW_Title (void)
 {
+#ifndef MARS
 	DrawJagobj (titlepic, 0, 0);
 	UpdateBuffer ();
+#endif
 }
 
 /*============================================================================= */
@@ -430,18 +440,23 @@ void DRAW_Title (void)
 
 void START_Credits (void)
 {
+#ifndef MARS
 	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
 	DoubleBufferSetup ();
 	titlepic = W_CacheLumpName ("credits",PU_STATIC);
+#endif
 }
 
 void STOP_Credits (void)
 {
+#ifndef MARS
 	Z_Free (titlepic);
+#endif
 }
 
 int TIC_Credits (void)
 {
+#ifndef MARS
 	if	(ticon >= 10*15)
 		return 1;		/* go on to next demo */
 		
@@ -451,13 +466,16 @@ int TIC_Credits (void)
 		return ga_exitdemo;
 	if ( (ticbuttons[0] & BT_C) && !(oldticbuttons[0] & BT_C) )
 		return ga_exitdemo;
+#endif
 	return 0;
 }
 
 void DRAW_Credits (void)
 {
+#ifndef MARS
 	DrawJagobj (titlepic, 0, 0);
 	UpdateBuffer ();
+#endif
 }
 
 /*============================================================================ */
@@ -528,7 +546,11 @@ void testgpu (void);
 
 int			checkit;
 skill_t		startskill = sk_medium;
-int			startmap = 3;
+#ifdef MARS
+int			startmap = 1;
+#else
+inti			startmap = 3;
+#endif
 gametype_t	starttype = gt_single;
 
 void D_DoomMain (void) 
@@ -548,7 +570,9 @@ D_printf ("P_Init\n");
 #ifndef MARS
 D_printf ("S_Init\n");
 	S_Init ();
+#endif
 	ST_Init ();
+#ifndef MARS
 	O_Init ();
 #endif
 
@@ -581,6 +605,9 @@ D_printf ("DM_Main\n");
 	G_RunGame ();
 #endif
 
+#ifdef MARS
+        RunMenu();
+#else
 	while (1)
 	{
 		RunTitle ();
@@ -588,6 +615,6 @@ D_printf ("DM_Main\n");
 		RunCredits ();
 		RunDemo ("DEMO2");
 	}
-
+#endif
 } 
  

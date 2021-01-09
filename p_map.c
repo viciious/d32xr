@@ -110,18 +110,20 @@ boolean P_TryMove (mobj_t *thing, fixed_t x, fixed_t y)
 	
 	if (latchedmovething)
 	{
+		const mobjinfo_t* thinfo = &mobjinfo[thing->type];
+
 		if (thing->flags & MF_MISSILE)
 		{	/* missile bash into a monster */
-			damage = ((P_Random()&7)+1)*thing->info->damage;
+			damage = ((P_Random()&7)+1)* thinfo->damage;
 			P_DamageMobj (latchedmovething, thing, thing->target, damage);
 		}
 		else if (thing->flags & MF_SKULLFLY)
 		{	/* skull bash into a monster */
-			damage = ((P_Random()&7)+1)*thing->info->damage;
+			damage = ((P_Random()&7)+1)* thinfo->damage;
 			P_DamageMobj (latchedmovething, thing, thing, damage);
 			thing->flags &= ~MF_SKULLFLY;
 			thing->momx = thing->momy = thing->momz = 0;
-			P_SetMobjState (thing, thing->info->spawnstate);
+			P_SetMobjState (thing, thinfo->spawnstate);
 		}
 		else	/* pick up  */
 			P_TouchSpecialThing (latchedmovething, thing);
@@ -182,14 +184,15 @@ boolean	PIT_UseLines (line_t *li)
 {
 	divline_t	dl;
 	fixed_t		frac;
-		
+	fixed_t 	*libbox = P_LineBBox(li);
+
 /* */
 /* check bounding box first */
 /* */
-	if (usebbox[BOXRIGHT] <= li->bbox[BOXLEFT]
-	||	usebbox[BOXLEFT] >= li->bbox[BOXRIGHT]
-	||	usebbox[BOXTOP] <= li->bbox[BOXBOTTOM]
-	||	usebbox[BOXBOTTOM] >= li->bbox[BOXTOP] )
+	if (usebbox[BOXRIGHT] <= libbox[BOXLEFT]
+	||	usebbox[BOXLEFT] >= libbox[BOXRIGHT]
+	||	usebbox[BOXTOP] <= libbox[BOXBOTTOM]
+	||	usebbox[BOXBOTTOM] >= libbox[BOXTOP] )
 		return true;
 
 /* */
@@ -237,8 +240,8 @@ void P_UseLines (player_t *player)
 	angle = player->mo->angle >> ANGLETOFINESHIFT;
 	x1 = player->mo->x;
 	y1 = player->mo->y;
-	x2 = x1 + (USERANGE>>FRACBITS)*finecosine[angle];
-	y2 = y1 + (USERANGE>>FRACBITS)*finesine[angle];
+	x2 = x1 + (USERANGE>>FRACBITS)*finecosine(angle);
+	y2 = y1 + (USERANGE>>FRACBITS)*finesine(angle);
 	
 	useline.x = x1;
 	useline.y = y1;
@@ -322,8 +325,8 @@ boolean PIT_RadiusAttack (mobj_t *thing)
 	if (!(thing->flags & MF_SHOOTABLE) )
 		return true;
 		
-	dx = abs(thing->x - bombspot->x);
-	dy = abs(thing->y - bombspot->y);
+	dx = D_abs(thing->x - bombspot->x);
+	dy = D_abs(thing->y - bombspot->y);
 	dist = dx>dy ? dx : dy;
 	dist = (dist - thing->radius) >> FRACBITS;
 	if (dist < 0)
@@ -506,7 +509,7 @@ void P_LineAttack (mobj_t *t1, angle_t angle, fixed_t distance, fixed_t slope, i
 	attackrange = distance;
 	attackangle = angle;
 	
-	if (slope == MAXINT)
+	if (slope == D_MAXINT)
 	{
 		aimtopslope = 100*FRACUNIT/160;	/* can't shoot outside view angles */
 		aimbottomslope = -100*FRACUNIT/160;
@@ -551,15 +554,19 @@ void P_LineAttack (mobj_t *t1, angle_t angle, fixed_t distance, fixed_t slope, i
 /* */
 	if (shootline2)
 	{
+		sector_t *frontsector, *backsector;
+
 		if (shootline2->special)
 			P_ShootSpecialLine (t1, shootline2);
-			
-		if (shootline2->frontsector->ceilingpic == -1)
+
+		frontsector = LD_FRONTSECTOR(shootline2);
+		backsector = LD_BACKSECTOR(shootline2);
+		if (frontsector->ceilingpic == -1)
 		{
-			if (shootz2 > shootline2->frontsector->ceilingheight)
+			if (shootz2 > frontsector->ceilingheight)
 				return;		/* don't shoot the sky! */
-			if	(shootline2->backsector 
-			&& shootline2->backsector->ceilingpic == -1)
+			if	(backsector 
+			&& backsector->ceilingpic == -1)
 				return;		/* it's a sky hack wall */
 		}
 				

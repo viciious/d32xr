@@ -124,9 +124,13 @@ int		cx = 1, cy = 1;
 
 void D_printf (char *str, ...)
 {
-	static char	buf[256];
+	static char buf[256];
+	va_list ap;
 
-	D_vsprintf (buf,str,((int *)&str)+1);
+	va_start(ap, str);
+	D_vsnprintf(buf, sizeof(buf), str, ap);
+	va_end(ap);
+
 	I_Print8 (1,cy, buf);
 	cy ++;
 }

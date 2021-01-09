@@ -41,7 +41,7 @@ typedef enum
 	f_splatsix
 } faces_t;
 
-char mapnames[][30] =
+const char mapnames[][30] =
 {
 	"Hangar",
 	"Plant",
@@ -91,7 +91,7 @@ jagobj_t		*uchar[52];
 /* */
 /* Lame-o print routine */
 /* */
-void print (int x, int y, char *string)
+void print (int x, int y, const char *string)
 {
 	int i,c;
 
@@ -146,6 +146,7 @@ void IN_DrawValue(int x,int y,int value)
 /* */
 void IN_NetgameDrawer(void)
 {	
+#ifndef MARS
 	int		i;
 	
 	if(earlyexit == true)
@@ -203,6 +204,7 @@ void IN_NetgameDrawer(void)
 		DrawJagobj(i_percent, SVALX, SVALY);
 		DrawJagobj(i_percent, SVALX + 80, SVALY);
 	}	
+#endif
 }
 
 /* */
@@ -210,6 +212,7 @@ void IN_NetgameDrawer(void)
 /* */
 void IN_SingleDrawer(void)
 {
+#ifndef MARS
 	int length;
 	
 	if(earlyexit == true)
@@ -249,13 +252,16 @@ void IN_SingleDrawer(void)
 	DrawJagobj(i_percent, IVALX + 60, IVALY - 10);
 	IN_DrawValue(SVALX + 60, SVALY - 10, secretvalue[0]);
 	DrawJagobj(i_percent, SVALX + 60, SVALY - 10);	
-
+#endif
 }
 
 void IN_Start (void)
 {	
+#ifdef MARS
+	int	i;
+#else
 	int	i,l;
-
+#endif
 	earlyexit = false;
 
 	valsdrawn = false;
@@ -281,8 +287,8 @@ void IN_Start (void)
 	}	
 
 /* cache all needed graphics */
+#ifndef MARS
 	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
-
 	i_secret = W_CacheLumpName ("I_SECRET",PU_STATIC);
 	i_percent = W_CacheLumpName ("PERCENT",PU_STATIC);
 	i_level = W_CacheLumpName ("I_LEVEL",PU_STATIC);
@@ -309,8 +315,9 @@ void IN_Start (void)
 	l = W_GetNumForName ("CHAR_065");
 	for (i = 0; i < 52; i++)
 		uchar[i] = W_CacheLumpNum(l+i, PU_STATIC);
-		
+
 	DoubleBufferSetup ();
+#endif
 
 	S_StartSong((gamemap%10)+1, 1);
 }
@@ -350,10 +357,14 @@ int IN_Ticker (void)
 	int		buttons;
 	int		oldbuttons;		
 	int 		i;
-				
+
+#ifdef MARS
+	return 1;
+#endif
+
 	if (ticon < 5)
 		return 0;		/* don't exit immediately */
-		
+	
 	for (i=0 ; i<= (netgame > gt_single) ; i++)
 	{
 		buttons = ticbuttons[i];

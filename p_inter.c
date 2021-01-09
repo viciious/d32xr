@@ -562,7 +562,8 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 {
 	mobjtype_t		item;
 	mobj_t			*mo;
-	
+	const mobjinfo_t* targinfo = &mobjinfo[target->type];
+
 	target->flags &= ~(MF_SHOOTABLE|MF_FLOAT|MF_SKULLFLY);
 	if (target->type != MT_SKULL)
 		target->flags &= ~MF_NOGRAVITY;
@@ -607,11 +608,11 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 			S_StartSound (target, sfx_pldeth);
 	}
 
-	if (target->health < -target->info->spawnhealth 
-	&& target->info->xdeathstate)
-		P_SetMobjState (target, target->info->xdeathstate);
+	if (target->health < -targinfo->spawnhealth
+	&& targinfo->xdeathstate)
+		P_SetMobjState (target, targinfo->xdeathstate);
 	else
-		P_SetMobjState (target, target->info->deathstate);
+		P_SetMobjState (target, targinfo->deathstate);
 	target->tics -= P_Random()&1;
 	if (target->tics < 1)
 		target->tics = 1;
@@ -658,7 +659,8 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 	int			saved;
 	player_t	*player;
 	fixed_t		thrust;
-		
+	const mobjinfo_t* targinfo = &mobjinfo[target->type];
+
 	if ( !(target->flags & MF_SHOOTABLE) )
 		return;						/* shouldn't happen... */
 		
@@ -685,7 +687,7 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 		ang = R_PointToAngle2 ( inflictor->x, inflictor->y
 			,target->x, target->y);
 		
-		thrust = damage*(FRACUNIT>>2)*100/target->info->mass;
+		thrust = damage*(FRACUNIT>>2)*100/targinfo->mass;
 
 		/* make fall forwards sometimes */
 		if ( damage < 40 && damage > target->health && target->z - inflictor->z > 64*FRACUNIT && (P_Random ()&1) )
@@ -696,8 +698,8 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 		
 		an = ang >> ANGLETOFINESHIFT;
 		thrust >>= 16;
-		target->momx += thrust * finecosine[an];
-		target->momy += thrust * finesine[an];
+		target->momx += thrust * finecosine(an);
+		target->momy += thrust * finesine(an);
 	}
 	else
 		ang = target->angle;
@@ -749,10 +751,10 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 		return;
 	}
 
-	if ( (P_Random () < target->info->painchance) && !(target->flags&MF_SKULLFLY) )
+	if ( (P_Random () < targinfo->painchance) && !(target->flags&MF_SKULLFLY) )
 	{
 		target->flags |= MF_JUSTHIT;		/* fight back! */
-		P_SetMobjState (target, target->info->painstate);
+		P_SetMobjState (target, targinfo->painstate);
 	}
 			
 	target->reactiontime = 0;		/* we're awake now...	 */
@@ -764,9 +766,9 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 	{	/* if not intent on another player, chase after this one */
 		target->target = source;
 		target->threshold = BASETHRESHOLD;
-		if (target->state == &states[target->info->spawnstate]
-		&& target->info->seestate != S_NULL)
-			P_SetMobjState (target, target->info->seestate);
+		if (target->state == targinfo->spawnstate
+		&& targinfo->seestate != S_NULL)
+			P_SetMobjState (target, targinfo->seestate);
 	}
 			
 }

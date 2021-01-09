@@ -124,11 +124,12 @@ static boolean PM_BoxCrossLine(line_t *ld)
    fixed_t lx, ly, ldx, ldy;
    fixed_t dx1, dx2, dy1, dy2;
    boolean side1, side2;
+   fixed_t *ldbbox = P_LineBBox(ld);
 
-   if(tmbbox[BOXRIGHT ] <= ld->bbox[BOXLEFT  ] ||
-      tmbbox[BOXLEFT  ] >= ld->bbox[BOXRIGHT ] ||
-      tmbbox[BOXTOP   ] <= ld->bbox[BOXBOTTOM] ||
-      tmbbox[BOXBOTTOM] >= ld->bbox[BOXTOP   ])
+   if(tmbbox[BOXRIGHT ] <= ldbbox[BOXLEFT  ] ||
+      tmbbox[BOXLEFT  ] >= ldbbox[BOXRIGHT ] ||
+      tmbbox[BOXTOP   ] <= ldbbox[BOXBOTTOM] ||
+      tmbbox[BOXBOTTOM] >= ldbbox[BOXTOP   ])
    {
       return false; // bounding boxes don't intersect
    }
@@ -173,7 +174,7 @@ static boolean PIT_CheckLine(line_t *ld)
 
    // The moving thing's destination positoin will cross the given line.
    // If this should not be allowed, return false.
-   if(!ld->backsector)
+   if(ld->sidenum[1] == -1)
       return false; // one-sided line
 
    if(!(tmthing->flags & MF_MISSILE))
@@ -184,8 +185,8 @@ static boolean PIT_CheckLine(line_t *ld)
          return false; // block monsters only
    }
 
-   front = ld->frontsector;
-   back  = ld->backsector;
+   front = LD_FRONTSECTOR(ld);
+   back  = LD_BACKSECTOR(ld);
 
    if(front->ceilingheight == front->floorheight ||
       back->ceilingheight == back->floorheight)

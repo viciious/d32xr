@@ -3,6 +3,8 @@
 #ifndef __R_LOCAL__
 #define __R_LOCAL__
 
+#include "doomdef.h"
+
 /* proper screen size would be 160*100, stretched to 224 is 2.2 scale */
 #define	STRETCH				(22*FRACUNIT/10)
 
@@ -53,65 +55,63 @@ struct line_s;
 
 typedef	struct
 {
-	fixed_t		floorheight, ceilingheight;
 	VINT		floorpic, ceilingpic;	/* if ceilingpic == -1,draw sky */
 	VINT		lightlevel;
 	VINT		special, tag;
 
 	VINT		soundtraversed;		/* 0 = untraversed, 1,2 = sndlines -1 */
+	VINT			validcount;			/* if == validcount, already checked */
+	int		linecount;
+	fixed_t		floorheight, ceilingheight;
 	mobj_t		*soundtarget;		/* thing that made a sound (or null) */
 	
 	VINT		blockbox[4];		/* mapblock bounding box for height changes */
 	degenmobj_t	soundorg;			/* for any sounds played by the sector */
 
-	int			validcount;			/* if == validcount, already checked */
 	mobj_t		*thinglist;			/* list of mobjs in sector */
 	void		*specialdata;		/* thinker_t for reversable actions */
-	VINT		linecount;
 	struct line_s	**lines;			/* [linecount] size */
 } sector_t;
 
 typedef struct
 {
+	VINT		sector;
+	VINT		toptexture, bottomtexture, midtexture;
 	fixed_t		textureoffset;		/* add this to the calculated texture col */
 	fixed_t		rowoffset;			/* add this to the calculated texture top */
-	VINT		toptexture, bottomtexture, midtexture;
-	sector_t	*sector;
 } side_t;
 
 typedef enum {ST_HORIZONTAL, ST_VERTICAL, ST_POSITIVE, ST_NEGATIVE} slopetype_t;
 
 typedef struct line_s
 {
-	vertex_t	*v1, *v2;
-	fixed_t		dx,dy;				/* v2 - v1 for side checking */
+	VINT            slopetype;                      /* to aid move clipping */
+	VINT		validcount;			/* if == validcount, already checked */
 	VINT		flags;
 	VINT		special, tag;
 	VINT		sidenum[2];			/* sidenum[1] will be -1 if one sided */
-	fixed_t		bbox[4];
-	slopetype_t	slopetype;			/* to aid move clipping */
-	sector_t	*frontsector, *backsector;
-	int			validcount;			/* if == validcount, already checked */
-	void		*specialdata;		/* thinker_t for reversable actions */
-	int			fineangle;			/* to get sine / cosine for sliding */
+	VINT		frontsectornum, backsectornum;
+	VINT		fineangle;			/* to get sine / eosine for sliding */
+	vertex_t 	*v1, *v2;
 } line_t;
+
+#define LD_FRONTSECTOR(ld) (&sectors[(ld)->frontsectornum])
+#define LD_BACKSECTOR(ld) ((ld)->sidenum[1] != -1 ? &sectors[(ld)->backsectornum] : NULL)
 
 typedef struct subsector_s
 {
-	sector_t	*sector;
 	VINT		numlines;
 	VINT		firstline;
+	sector_t	*sector;
 } subsector_t;
 
 typedef struct seg_s
 {
-	vertex_t	*v1, *v2;
+	VINT 		side;
+	VINT            v1, v2;
+	VINT 		angle;
 	fixed_t		offset;
-	angle_t		angle;				/* this is not used (keep for padding) */
-	side_t		*sidedef;
 	line_t		*linedef;
-	sector_t	*frontsector;
-	sector_t	*backsector;		/* NULL for one sided lines */
 } seg_t;
 
 
@@ -128,10 +128,16 @@ typedef struct
 	char		name[8];		/* for switch changing, etc */
 	int			width;
 	int			height;
-	pixel_t		*data;			/* cached data to draw from */
 	int			lumpnum;
+#ifdef MARS
+	inpixel_t 	*data;
+#else
+	pixel_t		*data;			/* cached data to draw from */
+#endif
+#ifndef MARS
 	int			usecount;		/* for precaching */
 	int			pad;
+#endif
 } texture_t;
 
 /*
@@ -204,6 +210,8 @@ extern	side_t		*sides;
 
 /*============================================================================= */
 
+int     R_PointOnSide(int x, int y, node_t *node);
+int     SlopeDiv(unsigned int num, unsigned int den);
 void	R_RenderBSPNode (int bspnum);
 void	R_InitData (void);
 void	R_InitSpriteDefs (char **namelist);
@@ -229,6 +237,7 @@ extern	unsigned short	distscale[SCREENWIDTH];		/* 1.15 frac */
 #define	FIXEDTOSCALE		(FRACBITS-SCALEBITS)
 #define	FIXEDTOHEIGHT		(FRACBITS-HEIGHTBITS)
 
+#define OPENMARK 0xff00
 
 extern	fixed_t		viewx, viewy, viewz;
 extern	angle_t		viewangle;
@@ -243,19 +252,26 @@ extern	angle_t		clipangle, doubleclipangle;
 /* The viewangletox[viewangle + FINEANGLES/4] lookup maps the visible view */
 /* angles  to screen X coordinates, flattening the arc to a flat projection  */
 /* plane.  There will be many angles mapped to the same X.  */
-extern	int			viewangletox[FINEANGLES/2];
+extern	const short	viewangletox[FINEANGLES/2];
 
 /* The xtoviewangleangle[] table maps a screen pixel to the lowest viewangle */
 /* that maps back to x ranges from clipangle to -clipangle */
-extern	angle_t		xtoviewangle[SCREENWIDTH+1];
+extern	const angle_t		xtoviewangle[SCREENWIDTH+1];
 
-extern	fixed_t		finetangent[FINEANGLES/2];
+#ifdef MARS
+extern	const fixed_t		finetangent_[FINEANGLES/4];
+fixed_t 			finetangent(angle_t angle);
+#else
+extern	const fixed_t		finetangent[FINEANGLES/2];
+#define finetangent(x)		finetangent_(x)
+#endif
 
-extern	int			validcount;
+extern	VINT			validcount;
 extern	int			framecount;
 
+#ifndef MARS
 extern	int		phasetime[9];
-
+#endif
 
 
 
@@ -269,8 +285,8 @@ extern	texture_t	*skytexturep;
 extern	int			numtextures;
 extern	texture_t	textures[MAXTEXTURES];
 
-extern	int			*flattranslation;		/* for global animation */
-extern	int			*texturetranslation;	/* for global animation */
+extern	VINT			*flattranslation;		/* for global animation */
+extern	VINT			*texturetranslation;	/* for global animation */
 
 extern	int			firstflat, numflats;
 
@@ -297,19 +313,16 @@ extern	int			firstflat, numflats;
 
 typedef struct
 {
+	VINT         floorpicnum;   // floorpic #   - CALICO: avoid type ambiguity w/extra field
+	VINT         ceilingpicnum; // ceilingpic # - CALICO: avoid type ambiguity w/extra field
+
 /* */
 /* filled in by bsp */
 /* */
-	seg_t		*seg;
 	int			start;
 	int			stop;					/* inclusive x coordinates */
 	int			angle1;					/* polar angle to start */
-
-/* */
-/* filled in by late prep */
-/* */
-	pixel_t		*floorpic;
-	pixel_t		*ceilingpic;
+	seg_t* seg;
 
 /* */
 /* filled in by early prep */
@@ -343,7 +356,17 @@ typedef struct
 	unsigned	offset;
 	unsigned	distance;
 	unsigned	seglightlevel;
-	
+
+	/* */
+	/* filled in by late prep */
+	/* */
+#ifdef MARS
+	inpixel_t* floorpic;
+	inpixel_t* ceilingpic;
+#else
+	pixel_t* floorpic;
+	pixel_t* ceilingpic;
+#endif
 } viswall_t;
 
 #define	MAXWALLCMDS		128
@@ -364,14 +387,25 @@ typedef struct vissprite_s
 	patch_t		*patch;
 	int			colormap;		/* -1 = shadow draw */
 	fixed_t		gx,gy,gz,gzt;	/* global coordinates */
+#ifdef MARS
+	inpixel_t 	*pixels;
+#else
 	pixel_t		*pixels;		/* data patch header references */
+#endif
+
+    // CALICO: avoid type punning for patch
+	int      patchnum;
 } vissprite_t;
 
+#ifdef MARS
+#define MAXVISSPRITES	64
+#else
 #define	MAXVISSPRITES	128
+#endif
 extern	vissprite_t	vissprites[MAXVISSPRITES], *lastsprite_p, *vissprite_p;
 
 #define	MAXOPENINGS		SCREENWIDTH*64
-extern	unsigned short	openings[MAXOPENINGS], *lastopening;
+extern	unsigned short	*openings, *lastopening;
 
 #define	MAXVISSSEC		256
 extern	subsector_t		*vissubsectors[MAXVISSSEC], **lastvissubsector;
@@ -380,16 +414,18 @@ extern	subsector_t		*vissubsectors[MAXVISSSEC], **lastvissubsector;
 typedef struct
 {
 	fixed_t		height;
+#ifdef MARS
+	inpixel_t 	*picnum;
+#else
 	pixel_t		*picnum;
+#endif
 	int			lightlevel;
 	int			minx, maxx;
-	int			pad1;						/* leave pads for [minx-1]/[maxx+1] */
-	unsigned short	open[SCREENWIDTH];		/* top<<8 | bottom */
-	int			pad2;
+	unsigned short		*open/*[SCREENWIDTH+2]*/;		/* top<<8 | bottom */ /* leave pads for [minx-1]/[maxx+1] */
 } visplane_t;
 
 #define	MAXVISPLANES	64
-extern	visplane_t		visplanes[MAXVISPLANES], *lastvisplane;
+extern	visplane_t		*visplanes, *lastvisplane;
 
 
 #endif		/* __R_LOCAL__ */

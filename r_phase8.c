@@ -23,8 +23,11 @@ static void R_DrawVisSprite(vissprite_t *vis)
    spryscale >>= 8;
 
    // blitter iinc
+#ifdef MARS
+   light    = vis->colormap;
+#else
    light = -((255 - vis->colormap) << 14) & 0xffffff;
-
+#endif
    stopx    = vis->x2 + 1;
    fracstep = vis->xiscale;
    
@@ -78,11 +81,12 @@ static void R_DrawVisSprite(vissprite_t *vis)
 static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy)
 {
    fixed_t x1, y1, sdx, sdy;
+   vertex_t *v1 = &vertexes[viswall->seg->v1], *v2 = &vertexes[viswall->seg->v2];
 
-   x1  = viswall->seg->v1->x;
-   y1  = viswall->seg->v1->y;
-   sdx = viswall->seg->v2->x;
-   sdy = viswall->seg->v2->y;
+   x1  = v1->x;
+   y1  = v1->y;
+   sdx = v2->x;
+   sdy = v2->y;
 
    sdx -= x1;
    sdy -= y1;

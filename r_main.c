@@ -18,7 +18,7 @@ viswall_t	viswalls[MAXWALLCMDS], *lastwallcmd;
 /* */
 /* planes */
 /* */
-visplane_t	visplanes[MAXVISPLANES], *lastvisplane;
+visplane_t	*visplanes, *lastvisplane;
 
 /* */
 /* sprites */
@@ -28,7 +28,7 @@ vissprite_t	vissprites[MAXVISSPRITES], *lastsprite_p, *vissprite_p;
 /* */
 /* openings / misc refresh memory */
 /* */
-unsigned short	openings[MAXOPENINGS], *lastopening;
+unsigned short	*openings, *lastopening;
 
 
 /*===================================== */
@@ -43,7 +43,7 @@ angle_t		viewangle;
 fixed_t		viewcos, viewsin;
 player_t	*viewplayer;
 
-int			validcount = 1;		/* increment every time a check is made */
+VINT			validcount = 1;		/* increment every time a check is made */
 int			framecount;		/* incremented every frame */
 
 
@@ -62,7 +62,9 @@ int			skytexture;
 /* precalculated math */
 /* */
 angle_t		clipangle,doubleclipangle;
-fixed_t		*finecosine = &finesine[FINEANGLES/4];
+#ifndef MARS
+fixed_t	*finecosine_ = &finesine_[FINEANGLES/4];
+#endif
 
 /*
 ===============================================================================
@@ -146,7 +148,7 @@ angle_t R_PointToAngle2 (fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 ===============================================================================
 */
 
-static int	R_PointOnSide (int x, int y, node_t *node)
+int	R_PointOnSide (int x, int y, node_t *node)
 {
 	fixed_t	dx,dy;
 	fixed_t	left, right;
@@ -284,9 +286,11 @@ void R_DebugScreen (void)
 }
 /*============================================================================= */
 
-int	shadepixel;
+int shadepixel;
+#ifndef MARS
 extern	int	workpage;
 extern	pixel_t	*screens[2];	/* [SCREENWIDTH*SCREENHEIGHT];  */
+#endif
 
 /*
 ==================
@@ -298,16 +302,18 @@ extern	pixel_t	*screens[2];	/* [SCREENWIDTH*SCREENHEIGHT];  */
 
 void R_Setup (void)
 {
+	int 		i;
 	int		damagecount, bonuscount;
 	player_t *player;
 	int		shadex, shadey, shadei;
+	unsigned short  *tempbuf;
 	
 /* */
 /* set up globals for new frame */
 /* */
+#ifndef MARS
 	workingscreen = screens[workpage];
 
-#ifdef JAGUAR	
 	*(pixel_t  **)0xf02224 = workingscreen;	/* a2 base pointer */
 	*(int *)0xf02234 = 0x10000;				/* a2 outer loop add (+1 y) */
 	*(int *)0xf0226c = *(int *)0xf02268 = 0;		/* pattern compare */
@@ -322,8 +328,8 @@ void R_Setup (void)
 	viewz = player->viewz;
 	viewangle = player->mo->angle;
 
-	viewsin = finesine[viewangle>>ANGLETOFINESHIFT];
-	viewcos = finecosine[viewangle>>ANGLETOFINESHIFT];
+	viewsin = finesine(viewangle>>ANGLETOFINESHIFT);
+	viewcos = finecosine(viewangle>>ANGLETOFINESHIFT);
 		
 	extralight = player->extralight << 6;
 	fixedcolormap = player->fixedcolormap;
@@ -384,10 +390,22 @@ void R_Setup (void)
 		
 	shadepixel = ((shadex<<12)&0xf000) + ((shadey<<8)&0xf00) + (shadei&0xff);
 
+	tempbuf = (unsigned short *)I_WorkBuffer();
+	tempbuf = (unsigned short *)(((int)tempbuf+4)&~3);
 
 /* */
 /* plane filling */
 /*	 */
+	visplanes = (void *)tempbuf;
+	tempbuf += sizeof(*visplanes)*MAXVISPLANES;
+
+	tempbuf = (unsigned short *)(((int)tempbuf+2)&~1);
+	tempbuf++; // padding
+	for (i = 0; i < MAXVISPLANES; i++) {
+		visplanes[i].open = tempbuf;
+		tempbuf += SCREENWIDTH+2;
+	}
+
 	lastvisplane = visplanes+1;		/* visplanes[0] is left empty */
 	lastwallcmd = viswalls;			/* no walls added yet */
 	lastvissubsector = vissubsectors;	/* no subsectors visible yet */
@@ -396,9 +414,12 @@ void R_Setup (void)
 /* clear sprites */
 /* */
 	vissprite_p = vissprites;
+	openings = tempbuf;
+	tempbuf += sizeof(*openings)*MAXOPENINGS;
 	lastopening = openings;
-
+#ifndef MARS
 	phasetime[0] = samplecount;
+#endif
 }
 
 
@@ -421,6 +442,7 @@ void R_Update (void);
 ==============
 */
 
+#ifndef MARS
 int		phasetime[9] = {1,2,3,4,5,6,7,8,9};
 
 extern	ref1_start;
@@ -431,7 +453,7 @@ extern	ref5_start;
 extern	ref6_start;
 extern	ref7_start;
 extern	ref8_start;
-
+#endif
 
 extern	boolean	debugscreenactive;
 
@@ -462,7 +484,9 @@ void R_RenderPlayerView (void)
 	R_SegCommands ();
 	R_DrawPlanes ();
 	R_Sprites ();
-	R_Update ();
+#ifndef MARS
+	I_Update();
+#endif
 #else
 
 /* start the gpu running the refresh */

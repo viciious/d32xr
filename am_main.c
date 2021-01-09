@@ -5,6 +5,18 @@
 
 #define	STEPVALUE	0x800000
 
+#ifdef MARS
+
+#define CRY_RED 	176
+#define CRY_BLUE 	199
+#define CRY_GREEN 	121
+#define CRY_BROWN 	73
+#define CRY_YELLOW 	160
+#define CRY_GREY 	96
+#define CRY_AQUA 	250
+
+#else
+
 #define CRY_RED		0xd260
 #define CRY_BLUE	0x3080
 #define CRY_GREEN	0x6f80
@@ -13,7 +25,9 @@
 #define CRY_GREY	0x9826
 #define CRY_AQUA	0x6aa0
 
-int	blink;
+#endif
+
+int	blink = 0;
 int	pause;
 #define MAXSCALES	5
 int	scale;
@@ -53,7 +67,11 @@ int showAllLines;
 /*================================================================= */
 void AM_Start(void)
 {
+#ifdef MARS
+	scale = 2;
+#else
 	scale = 3;
+#endif
 	showAllThings = showAllLines = 0;
 	players[consoleplayer].automapflags &= ~AF_ACTIVE;
 }
@@ -167,6 +185,77 @@ void DrawLine (pixel_t color, int x1, int y1, int x2, int y2)
 	*(int *)0xf02238 = (1<<6)				/* enable clipping */
 					+ (12<<21);				/* copy source */
 #endif
+
+#ifdef MARS
+	int		dx, dy;
+	int		adx, ady;
+	pixel_t		quadcolor;
+	int		xstep, ystep;
+	int		count = 1;
+	int 		x, y;
+	pixel_t 	*fb = (pixel_t *)I_FrameBuffer();
+
+	dx = x2 - x1;
+	adx = dx<0 ? -dx : dx;
+	dy = y2 - y1;
+	ady = dy<0 ? -dy : dy;
+
+	if (!dx)
+	{
+		xstep = 0;
+		ystep = dy > 0 ? 1*FRACUNIT : -1*FRACUNIT;
+		count = ady;			/* count */
+	}
+	else if (!dy)
+	{
+		ystep = 0;
+		xstep = dx > 0 ? 1*FRACUNIT : -1*FRACUNIT;
+		count = adx;			/* count */
+	}
+	else if (adx > ady)
+	{
+		if (dx > 0)
+			xstep = 1*FRACUNIT;
+		else
+			xstep = -1*FRACUNIT;
+		
+		ystep = FixedDiv(dy<<FRACBITS,adx<<FRACBITS);
+		count = adx;			/* count */
+	}
+	else
+	{
+		if (dy > 0)
+			ystep = 1*FRACUNIT;
+		else
+			ystep = -1*FRACUNIT;
+		
+		xstep = FixedDiv(dx<<FRACBITS,ady<<FRACBITS);
+		count = ady;			/* count */
+	}
+
+	quadcolor = color | (color << 8);
+
+	x1 *= FRACUNIT;
+	y1 *= FRACUNIT;
+	x2 *= FRACUNIT;
+	y2 *= FRACUNIT;
+
+	x = x1;
+	y = y1;
+ 	while(count-- > 0)
+	{
+		boolean clipped = false;
+		pixel_t *p = fb + (y>>FRACBITS)*320/2 + (x>>FRACBITS);
+
+		if (x < 0 || x >= 160*FRACUNIT) clipped = true;
+		if (y < 0 || y >= 224*FRACUNIT) clipped = true;
+		x += xstep;
+		y += ystep;
+
+		if (!clipped) *p = quadcolor;
+
+	}
+#endif
 }
 
 
@@ -204,7 +293,8 @@ void AM_Control (player_t *player)
 	oldplayerx = player->automapx;
 	oldplayery = player->automapy;
 	
-	blink = (blink++)&7;	/* BLINK PLAYER'S BOX */
+	blink = blink&7;	/* BLINK PLAYER'S BOX */
+	blink++;
 	pause++;				/* PAUSE BETWEEN SCALINGS */
 
 	step = STEPVALUE;
@@ -347,6 +437,10 @@ void AM_Drawer (void)
 
 #endif
 
+#ifdef MARS
+	I_ClearFrameBuffer();
+#endif
+
 	p = &players[consoleplayer];
 	ox = p->automapx;
 	oy = p->automapy;
@@ -409,12 +503,12 @@ void AM_Drawer (void)
 		if (line->special)
 			color = CRY_BLUE;			/* SPECIAL LINE */
 		else
-		if (line->frontsector->floorheight !=
-			line->backsector->floorheight)
+		if (sectors[line->frontsectornum].floorheight !=
+			sectors[line->backsectornum].floorheight)
 			color = CRY_YELLOW;
 		else
-		if (line->frontsector->ceilingheight !=
-			line->backsector->ceilingheight)
+		if (sectors[line->frontsectornum].ceilingheight !=
+			sectors[line->backsectornum].ceilingheight)
 			color = CRY_BROWN;		
 		
 		DrawLine (color, 80+x1,90-y1,80+x2,90-y2);
@@ -450,18 +544,18 @@ void AM_Drawer (void)
 			y1 = (pl->mo->y - players[consoleplayer].automapy);
 			angle = pl->mo->angle;
 			color = !i ? CRY_GREEN : CRY_YELLOW;
-			c = finecosine[angle >> ANGLETOFINESHIFT];
-			s = finesine[angle >> ANGLETOFINESHIFT];		
+			c = finecosine(angle >> ANGLETOFINESHIFT);
+			s = finesine(angle >> ANGLETOFINESHIFT);		
 			nx1 = FixedMul(c,NOSELENGTH) + x1;
 			ny1 = FixedMul(s,NOSELENGTH) + y1;
 			
-			c = finecosine[((angle - ANG90) - ANG45) >> ANGLETOFINESHIFT];
-			s = finesine[((angle - ANG90) - ANG45) >> ANGLETOFINESHIFT];
+			c = finecosine(((angle - ANG90) - ANG45) >> ANGLETOFINESHIFT);
+			s = finesine(((angle - ANG90) - ANG45) >> ANGLETOFINESHIFT);
 			nx2 = FixedMul(c, NOSELENGTH) + x1;
 			ny2 = FixedMul(s, NOSELENGTH) + y1;
 			
-			c = finecosine[((angle + ANG90) + ANG45) >> ANGLETOFINESHIFT];
-			s = finesine[((angle + ANG90) + ANG45) >> ANGLETOFINESHIFT];
+			c = finecosine(((angle + ANG90) + ANG45) >> ANGLETOFINESHIFT);
+			s = finesine(((angle + ANG90) + ANG45) >> ANGLETOFINESHIFT);
 			nx3 = FixedMul(c, NOSELENGTH) + x1;
 			ny3 = FixedMul(s, NOSELENGTH) + y1;
 			

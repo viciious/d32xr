@@ -155,22 +155,23 @@ static boolean SL_CheckLine(line_t *ld)
    sector_t *front, *back;
    int       side1;
    vertex_t *vtmp;
+   fixed_t  *ldbbox = P_LineBBox(ld);
 
    // check bounding box
-   if(endbox[BOXRIGHT ] < ld->bbox[BOXLEFT  ] ||
-      endbox[BOXLEFT  ] > ld->bbox[BOXRIGHT ] ||
-      endbox[BOXTOP   ] < ld->bbox[BOXBOTTOM] ||
-      endbox[BOXBOTTOM] > ld->bbox[BOXTOP   ])
+   if(endbox[BOXRIGHT ] < ldbbox[BOXLEFT  ] ||
+      endbox[BOXLEFT  ] > ldbbox[BOXRIGHT ] ||
+      endbox[BOXTOP   ] < ldbbox[BOXBOTTOM] ||
+      endbox[BOXBOTTOM] > ldbbox[BOXTOP   ])
    {
       return true;
    }
 
    // see if it can possibly block movement
-   if(!ld->backsector || (ld->flags & ML_BLOCKING))
+   if(ld->sidenum[1] == -1 || (ld->flags & ML_BLOCKING))
       goto findfrac;
 
-   front = ld->frontsector;
-   back  = ld->backsector;
+   front = LD_FRONTSECTOR(ld);
+   back  = LD_BACKSECTOR(ld);
 
    if(front->floorheight > back->floorheight)
       openbottom = front->floorheight;
@@ -192,8 +193,8 @@ static boolean SL_CheckLine(line_t *ld)
 findfrac:
    p1  = ld->v1;
    p2  = ld->v2;
-   nvx = finesine[ld->fineangle];
-   nvy = -finecosine[ld->fineangle];
+   nvx = finesine(ld->fineangle);
+   nvy = -finecosine(ld->fineangle);
    
    side1 = SL_PointOnSide(slidex, slidey);
    switch(side1)
@@ -201,7 +202,7 @@ findfrac:
    case SIDE_ON:
       return true;
    case SIDE_BACK:
-      if(!ld->backsector)
+      if(ld->sidenum[1] == -1)
          return true; // don't clip to backs of one-sided lines
       // reverse coordinates and angle
       vtmp = p1;
@@ -358,6 +359,7 @@ static void SL_CheckSpecialLines(void)
          line_t *ld;
          int offset = by * bmapwidth + bx;
          offset = *(blockmap + offset);
+	 fixed_t *ldbbox;
          
          for(list = blockmaplump + offset; *list != -1; list++)
          {
@@ -369,10 +371,11 @@ static void SL_CheckSpecialLines(void)
             
             ld->validcount = validcount;
 
-            if(xh < ld->bbox[BOXLEFT  ] ||
-               xl > ld->bbox[BOXRIGHT ] ||
-               yh < ld->bbox[BOXBOTTOM] ||
-               yl > ld->bbox[BOXTOP   ])
+	    ldbbox = P_LineBBox(ld);
+            if(xh < ldbbox[BOXLEFT  ] ||
+               xl > ldbbox[BOXRIGHT ] ||
+               yh < ldbbox[BOXBOTTOM] ||
+               yl > ldbbox[BOXTOP   ])
             {
                continue;
             }

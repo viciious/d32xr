@@ -132,6 +132,7 @@ static boolean PS_CrossSubsector(int num)
    vertex_t    *v2;
    fixed_t      frac;
    fixed_t      slope;
+   int          side;
 
    sub = &subsectors[num];
 
@@ -175,8 +176,9 @@ static boolean PS_CrossSubsector(int num)
          return false;
 
       // crosses a two sided line
-      front = seg->frontsector;
-      back = seg->backsector;
+      side = seg->side;
+      front = &sectors[sides[line->sidenum[side]].sector];
+      back = (line->flags & ML_TWOSIDED) ? &sectors[sides[line->sidenum[side^1]].sector] : 0;
 
       // no wall to block sight with?
       if(front->floorheight == back->floorheight && front->ceilingheight == back->ceilingheight)
@@ -231,6 +233,7 @@ static boolean PS_CrossBSPNode(int bspnum)
    node_t *bsp;
    int side;
 
+check:
    if(bspnum & NF_SUBSECTOR)
    {
       if(bspnum == -1)
@@ -255,7 +258,8 @@ static boolean PS_CrossBSPNode(int bspnum)
       return true; // the line doesn't touch the other side
 
    // cross the ending side
-   return PS_CrossBSPNode(bsp->children[side^1]);
+   bspnum = bsp->children[side^1];
+   goto check;
 }
 
 //
@@ -306,10 +310,6 @@ void P_CheckSights2(void)
 
    for(mobj = mobjhead.next; mobj != &mobjhead; mobj = mobj->next)
    {
-      // CALICO: skip removed mobjs
-      if(mobj->latecall == P_RemoveMobjDeferred)
-         continue;
-
       // must be killable
       if(!(mobj->flags & MF_COUNTKILL))
          continue;

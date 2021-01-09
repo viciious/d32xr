@@ -39,9 +39,6 @@ static line_t      *ceilingline;
 static fixed_t      testbbox[4];
 static int          testflags;
 
-// CALICO: current mobj in P_RunMobjBase2
-static mobj_t *currentmobj;
-
 //
 // Check for collision against another mobj in one of the blockmap cells.
 //
@@ -115,12 +112,13 @@ static boolean PB_BoxCrossLine(line_t *ld)
    fixed_t ldx, ldy;
    fixed_t dx1, dy1, dx2, dy2;
    boolean side1, side2;
+   const fixed_t *ldbbox = P_LineBBox(ld);
 
    // entirely outside bounding box of line?
-   if(testbbox[BOXRIGHT ] <= ld->bbox[BOXLEFT  ] ||
-      testbbox[BOXLEFT  ] >= ld->bbox[BOXRIGHT ] ||
-      testbbox[BOXTOP   ] <= ld->bbox[BOXBOTTOM] ||
-      testbbox[BOXBOTTOM] >= ld->bbox[BOXTOP   ])
+   if(testbbox[BOXRIGHT ] <= ldbbox[BOXLEFT  ] ||
+      testbbox[BOXLEFT  ] >= ldbbox[BOXRIGHT ] ||
+      testbbox[BOXTOP   ] <= ldbbox[BOXBOTTOM] ||
+      testbbox[BOXBOTTOM] >= ldbbox[BOXTOP   ])
    {
       return false;
    }
@@ -162,14 +160,14 @@ static boolean PB_CheckLine(line_t *ld)
 
    // The moving thing's destination position will cross the given line.
    // if this should not be allowed, return false.
-   if(!ld->backsector)
+   if(ld->sidenum[1] == -1)
       return false; // one-sided line
 
    if(!(testflags & MF_MISSILE) && (ld->flags & (ML_BLOCKING|ML_BLOCKMONSTERS)))
       return false; // explicitly blocking
 
-   front = ld->frontsector;
-   back  = ld->backsector;
+   front = LD_FRONTSECTOR(ld);
+   back  = LD_BACKSECTOR(ld);
 
    if(front->ceilingheight < back->ceilingheight)
       opentop = front->ceilingheight;
@@ -334,22 +332,20 @@ void P_XYMovement(mobj_t *mo)
          // flying skull?
          if(mo->flags & MF_SKULLFLY)
          {
-            P_SetTarget(&mo->extramobj, hitthing);
-            mo->latecall = L_SkullBash;
+            L_SkullBash(mo);
             return;
          }
 
          // explode a missile?
          if(mo->flags & MF_MISSILE)
          {
-            if(ceilingline && ceilingline->backsector && ceilingline->backsector->ceilingpic == -1)
+            if(ceilingline && ceilingline->sidenum[1] != -1 && LD_BACKSECTOR(ceilingline)->ceilingpic == -1)
             {
-               mo->latecall = P_RemoveMobj;
+               P_RemoveMobj(mo);
                return;
             }
 
-            P_SetTarget(&mo->extramobj, hitthing);
-            mo->latecall = L_MissileHit;
+            L_MissileHit(mo);
             return;
          }
 
@@ -477,60 +473,9 @@ void P_MobjThinker(mobj_t *mobj)
       // you can cycle through multiple states in a tic
       if(!mobj->tics)
       {
-         if(mobj->state)
-            P_SetMobjState(mobj, mobj->state->nextstate);
+         if(mobj->state != S_NULL)
+            P_SetMobjState(mobj, states[mobj->state].nextstate);
       }
-   }
-}
-
-//
-// Assign an mobj to another mobj's target field, maintaining mobj reference
-// counts.
-// haleyjd: CALICO - use mobj reference counting
-//
-void P_SetTarget(mobj_t **mop, mobj_t *targ)
-{
-   if(*mop)
-      (*mop)->references--;
-
-   if((*mop = targ))
-      targ->references++;
-}
-
-//
-// CALICO: Link an mobj to the mobj list.
-//
-void P_LinkMobj(mobj_t *mobj)
-{
-   mobjhead.prev->next = mobj;
-   mobj->next = &mobjhead;
-   mobj->prev = mobjhead.prev;
-   mobjhead.prev = mobj;
-}
-
-//
-// CALICO: Remove an mobj from the mobj list.
-//
-void P_UnlinkMobj(mobj_t *mobj)
-{
-   mobj_t *next = currentmobj->next;
-
-   (next->prev = currentmobj = mobj->prev)->next = next;
-   
-   mobj->next = NULL;
-   mobj->prev = NULL;
-}
-
-//
-// CALICO: Remove an unreferenced mobj when it is safe to do so.
-//
-void P_RemoveMobjDeferred(mobj_t *mobj)
-{
-   if(!mobj->references)
-   {
-      // remove from list and free self
-      P_UnlinkMobj(mobj);
-      Z_Free(mobj);
    }
 }
 
@@ -539,32 +484,14 @@ void P_RemoveMobjDeferred(mobj_t *mobj)
 //
 void P_RunMobjBase2()
 {
-   for(currentmobj = mobjhead.next; currentmobj != &mobjhead; currentmobj = currentmobj->next)
+   mobj_t* mo;
+   mobj_t* next;
+
+   for (mo = mobjhead.next; mo != &mobjhead; mo = next)
    {
-      if(currentmobj->latecall == P_RemoveMobjDeferred)
-         continue; // CALICO: not if about to be removed.
-
-      // clear any latecall from the previous frame
-      currentmobj->latecall = NULL;
-
-      if(!currentmobj->player)
-         P_MobjThinker(currentmobj);
+       next = mo->next;	/* in case mo is removed this time */
+       if (!mo->player)
+           P_MobjThinker(mo);
    }
 }
-
-//
-// Do extra "late" thinking logic for mobjs during a gametic.
-// CALICO: moved logic here from p_tick so that it can use currentmobj.
-//
-void P_RunMobjExtra()
-{
-   // CALICO: if the thing removes itself, currentmobj will be adjusted automatically.
-   for(currentmobj = mobjhead.next; currentmobj != &mobjhead; currentmobj = currentmobj->next)
-   {
-      if(currentmobj->latecall)
-         currentmobj->latecall(currentmobj);
-   }
-}
-
-// EOF
 

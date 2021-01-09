@@ -89,7 +89,8 @@ void P_LoadSegs (int lump)
 	seg_t		*li;
 	line_t	*ldef;
 	int			linedef, side;
-	
+	angle_t angle;
+
 	numsegs = W_LumpLength (lump) / sizeof(mapseg_t);
 	segs = Z_Malloc (numsegs*sizeof(seg_t),PU_LEVEL,0);	
 	D_memset (segs, 0, numsegs*sizeof(seg_t));
@@ -100,24 +101,19 @@ void P_LoadSegs (int lump)
 	li = segs;
 	for (i=0 ; i<numsegs ; i++, li++, ml++)
 	{
-		li->v1 = &vertexes[LITTLESHORT(ml->v1)];
-		li->v2 = &vertexes[LITTLESHORT(ml->v2)];
+		li->v1 = LITTLESHORT(ml->v1);
+		li->v2 = LITTLESHORT(ml->v2);
 					
-		li->angle = (LITTLESHORT(ml->angle))<<16;
+		li->angle = LITTLESHORT(ml->angle);
+		angle = LITTLESHORT(ml->angle)<<16;
 		li->offset = (LITTLESHORT(ml->offset))<<16;
 		linedef = LITTLESHORT(ml->linedef);
 		ldef = &lines[linedef];
 		li->linedef = ldef;
 		side = LITTLESHORT(ml->side);
-		li->sidedef = &sides[ldef->sidenum[side]];
-		li->frontsector = sides[ldef->sidenum[side]].sector;
-		if (ldef-> flags & ML_TWOSIDED)
-			li->backsector = sides[ldef->sidenum[side^1]].sector;
-		else
-			li->backsector = 0;
-			
-		if (ldef->v1 == li->v1)
-			ldef->fineangle = li->angle >> ANGLETOFINESHIFT;
+		li->side = side;
+		if (ldef->v1 == &vertexes[li->v1])
+			ldef->fineangle = angle >> ANGLETOFINESHIFT;
 	}
 }
 
@@ -136,7 +132,7 @@ void P_LoadSubsectors (int lump)
 	int				i;
 	mapsubsector_t	*ms;
 	subsector_t		*ss;
-	
+
 	numsubsectors = W_LumpLength (lump) / sizeof(mapsubsector_t);
 	subsectors = Z_Malloc (numsubsectors*sizeof(subsector_t),PU_LEVEL,0);	
 	data = I_TempBuffer ();
@@ -257,7 +253,7 @@ void P_LoadThings (int lump)
 	data = I_TempBuffer ();
 	W_ReadLump (lump,data);
 	numthings = W_LumpLength (lump) / sizeof(mapthing_t);
-	
+
 	mt = (mapthing_t *)data;
 	for (i=0 ; i<numthings ; i++, mt++)
 	{
@@ -299,55 +295,36 @@ void P_LoadLineDefs (int lump)
 	ld = lines;
 	for (i=0 ; i<numlines ; i++, mld++, ld++)
 	{
+		fixed_t dx,dy;
 		ld->flags = LITTLESHORT(mld->flags);
 		ld->special = LITTLESHORT(mld->special);
 		ld->tag = LITTLESHORT(mld->tag);
 		v1 = ld->v1 = &vertexes[LITTLESHORT(mld->v1)];
 		v2 = ld->v2 = &vertexes[LITTLESHORT(mld->v2)];
-		ld->dx = v2->x - v1->x;
-		ld->dy = v2->y - v1->y;
-		if (!ld->dx)
+		dx = v2->x - v1->x;
+		dy = v2->y - v1->y;
+		if (!dx)
 			ld->slopetype = ST_VERTICAL;
-		else if (!ld->dy)
+		else if (!dy)
 			ld->slopetype = ST_HORIZONTAL;
 		else
 		{
-			if (FixedDiv (ld->dy , ld->dx) > 0)
+			if (FixedDiv (dy , dx) > 0)
 				ld->slopetype = ST_POSITIVE;
 			else
 				ld->slopetype = ST_NEGATIVE;
 		}
-		
-		if (v1->x < v2->x)
-		{
-			ld->bbox[BOXLEFT] = v1->x;
-			ld->bbox[BOXRIGHT] = v2->x;
-		}
-		else
-		{
-			ld->bbox[BOXLEFT] = v2->x;
-			ld->bbox[BOXRIGHT] = v1->x;
-		}
-		if (v1->y < v2->y)
-		{
-			ld->bbox[BOXBOTTOM] = v1->y;
-			ld->bbox[BOXTOP] = v2->y;
-		}
-		else
-		{
-			ld->bbox[BOXBOTTOM] = v2->y;
-			ld->bbox[BOXTOP] = v1->y;
-		}
+
 		ld->sidenum[0] = LITTLESHORT(mld->sidenum[0]);
 		ld->sidenum[1] = LITTLESHORT(mld->sidenum[1]);
 		if (ld->sidenum[0] != -1)
-			ld->frontsector = sides[ld->sidenum[0]].sector;
+			ld->frontsectornum = sides[ld->sidenum[0]].sector;
 		else
-			ld->frontsector = 0;
+			ld->frontsectornum = -1;
 		if (ld->sidenum[1] != -1)
-			ld->backsector = sides[ld->sidenum[1]].sector;
+			ld->backsectornum = sides[ld->sidenum[1]].sector;
 		else
-			ld->backsector = 0;
+			ld->backsectornum = -1;
 	}
 }
 
@@ -366,10 +343,10 @@ void P_LoadSideDefs (int lump)
 	int				i;
 	mapsidedef_t	*msd;
 	side_t			*sd;
-	
+#ifndef MARS
 	for (i=0 ; i<numtextures ; i++)
 		textures[i].usecount = 0;
-		
+#endif	
 	numsides = W_LumpLength (lump) / sizeof(mapsidedef_t);
 	sides = Z_Malloc (numsides*sizeof(side_t),PU_LEVEL,0);	
 	D_memset (sides, 0, numsides*sizeof(side_t));
@@ -385,11 +362,12 @@ void P_LoadSideDefs (int lump)
 		sd->toptexture = R_TextureNumForName(msd->toptexture);
 		sd->bottomtexture = R_TextureNumForName(msd->bottomtexture);
 		sd->midtexture = R_TextureNumForName(msd->midtexture);
-		sd->sector = &sectors[LITTLESHORT(msd->sector)];
-		
+		sd->sector = LITTLESHORT(msd->sector);
+#ifndef MARS		
 		textures[sd->toptexture].usecount++;
 		textures[sd->bottomtexture].usecount++;
 		textures[sd->midtexture].usecount++;
+#endif
 	}
 }
 
@@ -459,8 +437,11 @@ void P_GroupLines (void)
 	ss = subsectors;
 	for (i=0 ; i<numsubsectors ; i++, ss++)
 	{
+		side_t *sidedef;
+
 		seg = &segs[ss->firstline];
-		ss->sector = seg->sidedef->sector;
+		sidedef = &sides[seg->linedef->sidenum[seg->side]];
+		ss->sector = &sectors[sidedef->sector];
 	}
 
 /* count number of lines in each sector */
@@ -468,11 +449,14 @@ void P_GroupLines (void)
 	total = 0;
 	for (i=0 ; i<numlines ; i++, li++)
 	{
+		sector_t *back, *front;
 		total++;
-		li->frontsector->linecount++;
-		if (li->backsector && li->backsector != li->frontsector)
+		front = LD_FRONTSECTOR(li);
+		back = LD_BACKSECTOR(li);
+		front->linecount++;
+		if (back && back != front)
 		{
-			li->backsector->linecount++;
+			back->linecount++;
 			total++;
 		}
 	}
@@ -487,7 +471,7 @@ void P_GroupLines (void)
 		li = lines;
 		for (j=0 ; j<numlines ; j++, li++)
 		{
-			if (li->frontsector == sector || li->backsector == sector)
+			if (LD_FRONTSECTOR(li) == sector || LD_BACKSECTOR(li) == sector)
 			{
 				*linebuffer++ = li;
 				M_AddToBox (bbox, li->v1->x, li->v1->y);
@@ -535,11 +519,15 @@ void P_GroupLines (void)
 
 void P_LoadingPlaque (void)
 {
+#ifndef MARS
 	jagobj_t	*pl;
 
 	pl = W_CacheLumpName ("loading", PU_STATIC);	
 	DrawPlaque (pl);
 	Z_Free (pl);
+#else
+	I_ClearFrameBuffer ();
+#endif
 }	
 
 /*============================================================================= */
@@ -558,7 +546,9 @@ void P_SetupLevel (int map, skill_t skill)
 	int		i;
 	static char	lumpname[16];
 	int		lumpnum;
+#ifndef MARS
 	mobj_t	*mobj;
+#endif
 	extern	int	cy;
 	
 	M_ClearRandom ();
@@ -605,7 +595,7 @@ Z_CheckHeap (refzone);
 	P_LoadSubsectors (lumpnum+ML_SSECTORS);
 	P_LoadNodes (lumpnum+ML_NODES);
 	P_LoadSegs (lumpnum+ML_SEGS);
-	
+
 #ifdef MARS
 	rejectmatrix = (byte *)(wadfileptr+BIGLONG(lumpinfo[lumpnum+ML_REJECT].filepos));
 #else
@@ -616,7 +606,8 @@ Z_CheckHeap (refzone);
 
 	deathmatch_p = deathmatchstarts;
 	P_LoadThings (lumpnum+ML_THINGS);
-	
+
+#ifndef MARS	
 /* */
 /* if deathmatch, randomly spawn the active players */
 /* */
@@ -632,11 +623,13 @@ Z_CheckHeap (refzone);
 				P_RemoveMobj (mobj);
 			}
 	}
-	
+#endif
+
 /* set up world state */
 	P_SpawnSpecials ();
 	ST_InitEveryLevel ();
 	
+/*I_Error("free memory: 0x%x\n", Z_FreeMemory(mainzone)); */
 /*printf ("free memory: 0x%x\n", Z_FreeMemory(mainzone)); */
 
 	cy = 4;

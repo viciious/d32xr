@@ -1,0 +1,2 @@
+extern byte *wadBase;
+

@@ -8,7 +8,11 @@
 
 typedef struct drawtex_s
 {
+#ifdef MARS
+   inpixel_t *data;
+#else
    pixel_t *data;
+#endif
    int      width;
    int      height;
    int      topheight;
@@ -27,7 +31,11 @@ static int floorclipx, ceilingclipx, x, scale, iscale, texturecol, texturelight;
 // Check for a matching visplane in the visplanes array, or set up a new one
 // if no compatible match can be found.
 //
+#ifdef MARS
+static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, inpixel_t *picnum, 
+#else
 static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, pixel_t *picnum, 
+#endif
                                int lightlevel, int start, int stop)
 {
    int i;
@@ -79,7 +87,11 @@ static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, pixel_t *picnu
 static void R_DrawTexture(drawtex_t *tex)
 {
    int top, bottom, colnum, frac;
+#ifdef MARS
+   inpixel_t *src;
+#else
    pixel_t *src;
+#endif
 
    top = CENTERY - ((scale * tex->topheight) / (1 << (HEIGHTBITS + SCALEBITS)));
 
@@ -114,10 +126,7 @@ static void R_DrawTexture(drawtex_t *tex)
    // CALICO: Jaguar-specific GPU blitter input calculation starts here.
    // We invoke a software column drawer instead.
    src = tex->data + colnum * tex->height;
-   if(tex->height & (tex->height - 1)) // height is not a power-of-2?
-      I_DrawColumnNPO2(x, top, bottom, texturelight, frac, iscale, src, tex->height);
-   else
-      I_DrawColumn(x, top, bottom, texturelight, frac, iscale, src, tex->height);
+   I_DrawColumn(x, top, bottom, texturelight, frac, iscale, src, tex->height);
 }
 
 //
@@ -155,12 +164,15 @@ static void R_SegLoop(viswall_t *segl)
       {
          // calculate texture offset
          fixed_t r = FixedMul(segl->distance, 
-                              finetangent[(segl->centerangle + xtoviewangle[x]) >> ANGLETOFINESHIFT]);
+                              finetangent((segl->centerangle + xtoviewangle[x]) >> ANGLETOFINESHIFT));
 
          // other texture drawing info
          texturecol = (segl->offset - r) / FRACUNIT;
          iscale = (1 << (FRACBITS+SCALEBITS)) / scale;
 
+#ifdef MARS
+	 texturelight = lightmax;
+#else
          // calc light level
          texturelight = ((scale * lightcoef) / FRACUNIT) - lightsub;
          if(texturelight < lightmin)
@@ -170,6 +182,7 @@ static void R_SegLoop(viswall_t *segl)
 
          // convert to a hardware value
          texturelight = -((255 - texturelight) << 14) & 0xffffff;
+#endif
 
          //
          // draw textures
@@ -260,8 +273,19 @@ static void R_SegLoop(viswall_t *segl)
          {
             // CALICO: draw sky column
             int colnum = ((viewangle + xtoviewangle[x]) >> ANGLETOSKYSHIFT) & 0xff;
-            pixel_t *data = skytexturep->data + colnum * skytexturep->height;
-            I_DrawColumn(x, top, bottom, 0, (top * 18204) << 2,  FRACUNIT + 7281, data, 128);
+#ifdef MARS
+	    inpixel_t *data;
+#else
+	    pixel_t *data;
+#endif
+	    data = skytexturep->data + colnum * skytexturep->height;
+
+#ifdef MARS
+	    texturelight = 255;
+#else
+	    texturelight = 0;
+#endif
+	    I_DrawColumn(x, top, bottom, texturelight, (top * 18204) << 2,  FRACUNIT + 7281, data, 128);
          }
       }
 
