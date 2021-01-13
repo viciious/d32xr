@@ -1,145 +1,83 @@
+/*
+  CALICO
+
+  String utilites, formatted printing
+
+  The MIT License (MIT)
+
+  Copyright (c) 2016 James Haley
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+*/
+
+#include <stdio.h>
 #include "doomdef.h"
+
+#if defined(_MSC_VER) && (_MSC_VER < 1400) /* not needed for Visual Studio 2008 */
+#define vsnprintf _vsnprintf
+#endif
 
 /* prints number of characters printed. */
 
-int mystrlen(char *string)
+int mystrlen(const char *string)
 {
-  int rc = 0;
-  if (string) while (*(string++)) rc++;
-  else rc = -1;
-  return rc;
+   int rc = 0;
+   
+   if(string) 
+   {
+      while(*(string++)) 
+         rc++;
+   }
+   else 
+      rc = -1;
+   
+   return rc;
 }
 
-int D_vsprintf(char *string, const char *format, int *argptr)
+//
+// CALICO: Replaced with call to C library function to eliminate non-portable
+// argument-passing idiom.
+//
+int D_vsnprintf(char *str, size_t nmax, const char *format, va_list ap)
 {
-  int len, i, div, uselong;
-  int fieldsize;
-  unsigned long num;
-  long snum;
-  char padchar;
-  char *str;
-  char *origstring = string;
+   int result;
 
-  while (*format)
-  {
-    if (*format != '%') *(string++) = *(format++);
-    else
-    {
-      format++;
+   if(nmax < 1)
+   {
+      return 0;
+   }
 
-      /* set field pad character to 0 if necessary */
-      if (*format == '0')
-      {
-        padchar = '0';
-        format++;
-      }
-      else padchar = ' ';
+   // vsnprintf() in Windows (and possibly other OSes) doesn't always
+   // append a trailing \0. We have the responsibility of making this
+   // safe by writing into a buffer that is one byte shorter ourselves.
+   result = vsnprintf(str, nmax, format, ap);
 
-      /* get the fieldwidth if any */
-      fieldsize = 0;
-      while (*format >= '0' && *format <= '9')
-	fieldsize = fieldsize * 10 + *(format++) - '0';
+   // If truncated, change the final char in the buffer to a \0.
+   // In Windows, a negative result indicates a truncated buffer.
+   if(result < 0 || (size_t)result >= nmax)
+   {
+      str[nmax - 1] = '\0';
+      result = (int)(nmax - 1);
+   }
 
-      /* get rid of 'l' if present */
-      if (*format == 'l')
-      {
-        uselong = 1;
-        format++;
-      } else uselong = 0;
-
-      div = 10;
-      if (*format == 'c')
-      {
-	*(string++) = *argptr++;
-	format++;
-      }
-      else if (*format == 's')
-      {
-	str = (char *)*argptr++;
-	len = mystrlen(str);
-	while (fieldsize-- > len) *(string++) = padchar; /* do field pad */
-	while (*str) *(string++) = *(str++); /* copy string */
-	format++;
-      }
-      else
-      {
-        if (*format == 'o') /* octal */
-        {
-          div = 8;
-          if (uselong)
-	    num = *argptr++;
-	  else 
-	    num = *argptr++;
-/*	  printf("o=0%o\n", num); */
-        }
-        else if (*format == 'x' || *format == 'X')  /* hex */
-        {
-          div = 16;
-          if (uselong)
-	    num = *argptr++;
-	  else 
-	    num = *argptr++;
-/*	  printf("x=%x\n", num); */
-	}
-        else if (*format == 'i' || *format == 'd' || *format == 'u') /* decimal */
-        {
-          div = 10;
-          if (uselong)
-	    snum = *argptr++;
-	  else
-	    snum = *argptr++;
-	  if (snum < 0 && *format != 'u') /* handle negative %i or %d */
-	  {
-	    *(string++) = '-';
-	    num = -snum;
-	    if (fieldsize) fieldsize--;
-	  } else num = snum;
-	}
-	else return -1; /* unrecognized format specifier */
-
-	/* print any decimal or hex integer */
-	len = 0;
-	while (num || fieldsize || !len)
-	{
-	  for (i=len ; i ; i--) string[i] = string[i-1]; /* shift right */
-	  if (len && fieldsize && !num) *string = padchar; /* pad out */
-	  else
-	  {
-	    /* put in a hex or decimal digit */
-	    *string = num % div;
-	    *string += *string > 9 ? 'A'-10 : '0';
-/*	    printf("d = %c\n", *string); */
-	    num /= div;
-	  }
-	  len++;
-	  if (fieldsize) fieldsize--;
-	}
-	string += len;
-	format++;
-      }
-    }
-  }
-  *string = 0;
-
-  return origstring - string;
+   return result;
 }
 
+// EOF
 
-/*
-int mysprintf(char *string, char *format, ...)
-{
-  va_list argptr;
-  va_start(argptr, format);
-  return vsprintf(string, format, argptr);
-  va_end(argptr);
-}
-
-main(int c, char **v)
-{
-  char buf[1024];
-  mysprintf(buf, "%s %s %c 0x%x (%d) (0%o)!", "it", "works", '-', 0xdeadbeef,
-    0xdeadbeef, 0xdeadbeef);
-
-  puts(buf);
-}
-*/
