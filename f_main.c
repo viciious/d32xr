@@ -142,7 +142,7 @@ int		text_y;
 jagobj_t	*endobj[NUMENDOBJ];
 #if 0
 /* '*' = newline */
-char	endtextstring[] =
+static const char	endtextstring[] =
 	"you did it! by turning*"
 	"the evil of the horrors*"
 	"of hell in upon itself*"
@@ -156,7 +156,7 @@ char	endtextstring[] =
 #endif
 
 /* '*' = newline */
-char	endtextstring[] =
+static const char	endtextstring[] =
 	"     id software*"
 	"     salutes you!*"
 	"*"
