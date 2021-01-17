@@ -147,7 +147,7 @@ void P_SetPsprite (player_t *player, int position, statenum_t stnum)
 ===============================================================================
 */
 
-weaponinfo_t	weaponinfo[NUMWEAPONS] =
+const weaponinfo_t	weaponinfo[NUMWEAPONS] =
 {
 	{	/* fist */
 /* ammo 		*/	am_noammo,
