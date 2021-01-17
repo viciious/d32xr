@@ -28,6 +28,7 @@ const musicinfo_t S_music[] =
 sfxinfo_t S_sfx[] = 
 { 
   { 0 }, 
+#ifdef JAGUAR
   { "pistol", false, 64, 0, -1, -1, 0 }, 
   { "shotgn", false, 64, 0, -1, -1, 0 }, 
   { "sgcock", false, 64, 0, -1, -1, 0 }, 
@@ -92,5 +93,6 @@ sfxinfo_t S_sfx[] =
   { "hoof", false, 120, 0, -1, -1, 0 }, 
   { "metal", false, 120, 0, -1, -1, 0 },
   { "itmbk", false, 120, 0, -1, -1, 0 }  
+#endif
 }; 
  
