@@ -320,6 +320,27 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 }
 
 
+/*
+================
+=
+= P_PreSpawnMobjs
+=
+================
+*/
+void P_PreSpawnMobjs(int count)
+{
+	mobj_t *mobj;
+
+	if (count <= 0)
+		return;
+
+	mobj = Z_Malloc (sizeof(*mobj)*count, PU_LEVEL, NULL);
+	for (; count > 0; count--) {
+		P_AddMobjToList(mobj, &freemobjhead);
+		mobj++;
+	}
+}
+
 /*============================================================================= */
 
 

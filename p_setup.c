@@ -249,10 +249,12 @@ void P_LoadThings (int lump)
 	int				i;
 	mapthing_t		*mt;
 	int				numthings;
-	
+
 	data = I_TempBuffer ();
 	W_ReadLump (lump,data);
 	numthings = W_LumpLength (lump) / sizeof(mapthing_t);
+
+	P_PreSpawnMobjs(numthings);
 
 	mt = (mapthing_t *)data;
 	for (i=0 ; i<numthings ; i++, mt++)
