@@ -737,9 +737,9 @@ struct seg_s;
 
 void R_RenderPlayerView (void);
 void R_Init (void);
-int	R_FlatNumForName (char *name);
-int	R_TextureNumForName (char *name);
-int	R_CheckTextureNumForName (char *name);
+int	R_FlatNumForName (const char *name);
+int	R_TextureNumForName (const char *name);
+int	R_CheckTextureNumForName (const char *name);
 angle_t R_PointToAngle2 (fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2);
 struct subsector_s *R_PointInSubsector (fixed_t x, fixed_t y);
 

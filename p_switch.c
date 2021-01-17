@@ -6,7 +6,7 @@
 /*	CHANGE THE TEXTURE OF A WALL SWITCH TO ITS OPPOSITE */
 /* */
 /*================================================================== */
-switchlist_t alphSwitchList[] =
+static const switchlist_t alphSwitchList[] =
 {
 	{"SW1BRN1",		"SW2BRN1"},
 	{"SW1GARG",		"SW2GARG"},

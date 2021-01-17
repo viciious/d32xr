@@ -134,7 +134,7 @@ void R_InitData (void)
 #endif
 void strupr (char *s);
 
-int	R_FlatNumForName (char *name)
+int	R_FlatNumForName (const char *name)
 {
 #if 0
 	int		i;
@@ -198,7 +198,7 @@ int	R_FlatNumForName (char *name)
 ================
 */
 
-int	R_CheckTextureNumForName (char *name)
+int	R_CheckTextureNumForName (const char *name)
 {
 	int		i,c;
 	char	temp[8];
@@ -241,7 +241,7 @@ int	R_CheckTextureNumForName (char *name)
 ================
 */
 
-int	R_TextureNumForName (char *name)
+int	R_TextureNumForName (const char *name)
 {
 	int		i;
 	
