@@ -34,6 +34,8 @@ void Mars_FlipFrameBuffers(boolean wait);
 void Mars_Init(void);
 void Mars_Slave(void);
 
+void I_ClearWorkBuffer();
+
 /* 
 ================ 
 = 
@@ -459,6 +461,9 @@ void I_Update (void)
 {
 	int ticcount;
 
+	// clear the visible part of the workbuffer
+	I_ClearWorkBuffer();
+
 	Mars_FlipFrameBuffers(true);
 
 /* */
@@ -472,10 +477,7 @@ void I_Update (void)
 	lasttics = ticcount - lastticcount;
 	lastticcount = ticcount;
 
-	viewportbuffer = (volatile pixel_t *)I_FrameBuffer();
-#if SCREENWIDTH != 160
-	viewportbuffer += (224-SCREENHEIGHT)*320/4+(320-SCREENWIDTH*2)/4;
-#endif
+	viewportbuffer = (volatile pixel_t *)I_ViewportBuffer();
 
 	cy = 1;
 } 

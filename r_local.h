@@ -370,7 +370,7 @@ typedef struct
 } viswall_t;
 
 #define	MAXWALLCMDS		128
-extern	viswall_t	viswalls[MAXWALLCMDS], *lastwallcmd;
+extern	viswall_t	*viswalls, *lastwallcmd;
 
 
 
@@ -402,7 +402,7 @@ typedef struct vissprite_s
 #else
 #define	MAXVISSPRITES	128
 #endif
-extern	vissprite_t	vissprites[MAXVISSPRITES], *lastsprite_p, *vissprite_p;
+extern	vissprite_t	*vissprites, *lastsprite_p, *vissprite_p;
 
 #define	MAXOPENINGS		SCREENWIDTH*64
 extern	unsigned short	*openings, *lastopening;
@@ -413,6 +413,7 @@ extern	subsector_t		*vissubsectors[MAXVISSSEC], **lastvissubsector;
 
 typedef struct
 {
+	VINT			minx, maxx;
 	fixed_t		height;
 #ifdef MARS
 	inpixel_t 	*picnum;
@@ -420,13 +421,11 @@ typedef struct
 	pixel_t		*picnum;
 #endif
 	int			lightlevel;
-	int			minx, maxx;
 	unsigned short		*open/*[SCREENWIDTH+2]*/;		/* top<<8 | bottom */ /* leave pads for [minx-1]/[maxx+1] */
 } visplane_t;
 
 #define	MAXVISPLANES	64
 extern	visplane_t		*visplanes, *lastvisplane;
-
 
 #endif		/* __R_LOCAL__ */
 

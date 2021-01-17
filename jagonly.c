@@ -1036,9 +1036,14 @@ byte	*I_TempBuffer (void)
 	return buf;
 }
 
-byte	*I_WorkBuffer (void)
+pixel_t	*I_FrameBuffer (void)
 {
-	return (byte *)screens[workpage];
+	return screens[!workpage];
+}
+
+pixel_t	*I_WorkBuffer (void)
+{
+	return screens[workpage];
 }
 
 /*

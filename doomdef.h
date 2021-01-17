@@ -641,7 +641,9 @@ byte *I_TempBuffer (void);
 /* temp work buffer which may contain garbage data */
 byte *I_WorkBuffer (void);
 
-byte *I_FrameBuffer (void);
+pixel_t *I_FrameBuffer (void);
+
+pixel_t *I_ViewportBuffer (void);
 
 void I_ClearFrameBuffer (void);
 

@@ -37,6 +37,7 @@ static int		activescreen = 0;
 short		*dc_colormaps;
 
 static volatile pixel_t	*framebuffer = &MARS_FRAMEBUFFER + 0x100;
+static volatile pixel_t *framebufferend = &MARS_FRAMEBUFFER + 0x10000;
 
 /*
 ====================
@@ -47,9 +48,10 @@ static volatile pixel_t	*framebuffer = &MARS_FRAMEBUFFER + 0x100;
 */
 void Mars_ClearFrameBuffer(void)
 {
-	int i;
-	for (i = 0; i < 320 * 240 / 2; i++)
-		framebuffer[i] = 0;
+	int *p = (int *)framebuffer;
+	int *p_end = (int *)(framebuffer + 320*240/2);
+	while (p < p_end)
+		*p++ = 0;
 }
 
 /*
@@ -302,21 +304,20 @@ int	I_GetTime (void)
 */
 byte	*I_TempBuffer (void)
 {
-	int i;
-	int *tempbuf = (int *)I_WorkBuffer();
-	int *p = tempbuf;
+	int *p = (int*)I_WorkBuffer();
+	int *p_end = (int*)framebufferend;
 
 	// clear the buffer so the fact that 32x ignores 0-byte writes goes unnoticed
 	// the buffer cannot be re-used without clearing it again though
-	for (i = 0; i < 52*1024/4; i++)
+	while (p < p_end)
 		*p++ = 0;
 
-	return (byte *)tempbuf;
+	return I_WorkBuffer();
 }
 
 byte 	*I_WorkBuffer (void)
 {
-	return (byte *)(framebuffer + 320 * 224 / 2);
+	return (byte *)(I_ViewportBuffer() + 320 * SCREENHEIGHT / 2);
 }
 
 /*
@@ -326,9 +327,18 @@ byte 	*I_WorkBuffer (void)
 =
 ====================
 */
-byte 	*I_FrameBuffer (void)
+pixel_t	*I_FrameBuffer (void)
 {
-	return (byte *)framebuffer;
+	return (pixel_t *)framebuffer;
+}
+
+pixel_t	*I_ViewportBuffer (void)
+{
+	volatile pixel_t *viewportbuffer = framebuffer;
+#if SCREENWIDTH != 160
+	viewportbuffer += (224-SCREENHEIGHT)*320/4+(320-SCREENWIDTH*2)/4;
+#endif
+	return (pixel_t *)viewportbuffer;
 }
 
 /*
@@ -341,6 +351,14 @@ byte 	*I_FrameBuffer (void)
 void 	I_ClearFrameBuffer (void)
 {
 	Mars_ClearFrameBuffer();
+}
+
+void I_ClearWorkBuffer(void)
+{
+	int *p = (int *)I_WorkBuffer();
+	int *p_end = (int *)framebufferend;
+	while (p < p_end)
+		*p++ = 0;
 }
 
 void DoubleBufferSetup (void)

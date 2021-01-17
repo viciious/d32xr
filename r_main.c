@@ -13,7 +13,7 @@ subsector_t		*vissubsectors[MAXVISSSEC], **lastvissubsector;
 /* */
 /* walls */
 /* */
-viswall_t	viswalls[MAXWALLCMDS], *lastwallcmd;
+viswall_t	*viswalls, *lastwallcmd;
 
 /* */
 /* planes */
@@ -23,13 +23,12 @@ visplane_t	*visplanes, *lastvisplane;
 /* */
 /* sprites */
 /* */
-vissprite_t	vissprites[MAXVISSPRITES], *lastsprite_p, *vissprite_p;
+vissprite_t	*vissprites, *lastsprite_p, *vissprite_p;
 
 /* */
 /* openings / misc refresh memory */
 /* */
 unsigned short	*openings, *lastopening;
-
 
 /*===================================== */
 
@@ -407,15 +406,25 @@ void R_Setup (void)
 	}
 
 	lastvisplane = visplanes+1;		/* visplanes[0] is left empty */
+
+	tempbuf = (unsigned short *)(((int)tempbuf+4)&~3);
+	viswalls = (void *)tempbuf;
+	tempbuf += sizeof(*viswalls)*MAXWALLCMDS/sizeof(*tempbuf);
+
 	lastwallcmd = viswalls;			/* no walls added yet */
 	lastvissubsector = vissubsectors;	/* no subsectors visible yet */
 	
 /*	 */
 /* clear sprites */
 /* */
+	tempbuf = (unsigned short *)(((int)tempbuf+4)&~3);
+	vissprites = (void *)tempbuf;
+	tempbuf += sizeof(*vissprites)*MAXVISSPRITES/sizeof(*tempbuf);
 	vissprite_p = vissprites;
+
 	openings = tempbuf;
-	tempbuf += sizeof(*openings)*MAXOPENINGS;
+	tempbuf += sizeof(*openings)*MAXOPENINGS/sizeof(*tempbuf);
+
 	lastopening = openings;
 #ifndef MARS
 	phasetime[0] = samplecount;
