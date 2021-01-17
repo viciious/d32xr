@@ -16,7 +16,7 @@ static const switchlist_t alphSwitchList[] =
 	{"SW1WOOD",		"SW2WOOD"},
 };
 
-int			switchlist[MAXSWITCHES * 2];
+VINT			switchlist[MAXSWITCHES * 2];
 int			numswitches;
 button_t	buttonlist[MAXBUTTONS];
 
