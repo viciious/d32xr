@@ -14,6 +14,27 @@ int			iquehead, iquetail;
 /*
 ===============
 =
+= P_AddMobjToList
+=
+===============
+*/
+static void P_AddMobjToList (mobj_t *mobj, mobj_t *head)
+{
+	head->prev->next = mobj;
+	mobj->next = head;
+	mobj->prev = head->prev;
+	head->prev = mobj;
+}
+
+static void P_RemoveMobjFromCurrList (mobj_t *mobj)
+{
+	mobj->next->prev = mobj->prev;
+	mobj->prev->next = mobj->next;
+}
+
+/*
+===============
+=
 = P_RemoveMobj
 =
 ===============
@@ -47,9 +68,9 @@ void P_RemoveMobj (mobj_t *mobj)
 	P_UnsetThingPosition (mobj);
 
 /* unlink from mobj list */
-	mobj->next->prev = mobj->prev;
-	mobj->prev->next = mobj->next;
-	Z_Free (mobj);
+	P_RemoveMobjFromCurrList(mobj);
+/* link to free mobj list */
+	P_AddMobjToList(mobj, &freemobjhead);
 }
 
 
@@ -192,8 +213,17 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 	mobj_t		*mobj;
 	const state_t		*st;
 	const mobjinfo_t *info = &mobjinfo[type];
-	
-	mobj = Z_Malloc (sizeof(*mobj), PU_LEVEL, NULL);
+
+/* try to reuse a previous ombj first */	
+	if (freemobjhead.next != &freemobjhead)
+	{
+		mobj = freemobjhead.next;
+		P_RemoveMobjFromCurrList(mobj);
+	}
+	else
+	{
+		mobj = Z_Malloc (sizeof(*mobj), PU_LEVEL, NULL);
+	}
 
 	D_memset (mobj, 0, sizeof (*mobj));
 	
@@ -284,10 +314,7 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 /* */
 /* link into the mobj list */
 /* */
-	mobjhead.prev->next = mobj;
-	mobj->next = &mobjhead;
-	mobj->prev = mobjhead.prev;
-	mobjhead.prev = mobj;
+	P_AddMobjToList(mobj, &mobjhead);
 
 	return mobj;
 }

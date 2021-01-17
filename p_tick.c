@@ -22,6 +22,7 @@ processing
 
 thinker_t	thinkercap;	/* both the head and tail of the thinker list */
 mobj_t		mobjhead;	/* head and tail of mobj list */
+mobj_t		freemobjhead;	/* head and tail of free mobj list */
 int			activethinkers;	/* debug count */
 int			activemobjs;	/* debug count */
 
@@ -37,6 +38,7 @@ void P_InitThinkers (void)
 {
 	thinkercap.prev = thinkercap.next  = &thinkercap;
 	mobjhead.next = mobjhead.prev = &mobjhead;
+	freemobjhead.next = freemobjhead.prev = &freemobjhead;
 }
 
 
