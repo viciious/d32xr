@@ -101,7 +101,7 @@ typedef struct
 	mobjtype_t	type;
 } castinfo_t;
 
-castinfo_t	castorder[] = {
+static castinfo_t castorder[] = {
 {"zombieman", MT_POSSESSED},
 {"shotgun guy", MT_SHOTGUY},
 {"imp", MT_TROOP},
@@ -177,6 +177,7 @@ static const char	endtextstring[] =
 /*=============================================== */
 void F_PrintString(char *string)
 {
+#ifndef MARS
 	int		index;
 	int		val;
 	
@@ -217,6 +218,7 @@ void F_PrintString(char *string)
 		}
 		index++;
 	}
+#endif
 }
 
 /*=============================================== */
@@ -252,9 +254,10 @@ void F_CastPrint(char *string)
 
 void F_Start (void)
 {
+#ifndef MARS
 	int	i;
 	int	l;
-	
+#endif
 	S_StartSong(2, 1);
 
 	status = fin_endtext;		/* END TEXT PRINTS FIRST */
@@ -263,10 +266,11 @@ void F_Start (void)
 	textdelay = TEXTTIME;
 	text_x = STARTX;
 	text_y = STARTY;
+#ifndef MARS
 	l = W_GetNumForName ("CHAR_097");
 	for (i = 0; i < NUMENDOBJ; i++)
 		endobj[i] = W_CacheLumpNum(l+i, PU_STATIC);
-
+#endif
 	castnum = 0;
 	caststate = &states[mobjinfo[castorder[castnum].type].seestate];
 	casttics = caststate->tics;
@@ -284,10 +288,12 @@ void F_Start (void)
 
 void F_Stop (void)
 {
+#ifndef MARS
 	int	i;
 	
 	for (i = 0;i < NUMENDOBJ; i++)
 		Z_Free(endobj[i]);
+#endif
 }
 
 
