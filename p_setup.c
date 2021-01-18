@@ -543,11 +543,8 @@ void P_LoadingPlaque (void)
 =================
 */
 
-void P_SetupLevel (int map, skill_t skill)
+void P_SetupLevel (int lumpnum, skill_t skill)
 {
-	int		i;
-	static char	lumpname[16];
-	int		lumpnum;
 #ifndef MARS
 	mobj_t	*mobj;
 #endif
@@ -557,36 +554,9 @@ void P_SetupLevel (int map, skill_t skill)
 
 	P_LoadingPlaque ();
 	
-D_printf ("P_SetupLevel(%i,%i)\n",map,skill);
-	
-	totalkills = totalitems = totalsecret = 0;
-	for (i=0 ; i<MAXPLAYERS ; i++)
-	{
-		players[i].killcount = players[i].secretcount 
-		= players[i].itemcount = 0;
-	}
-
-Z_CheckHeap (mainzone);		
-#ifndef MARS
-Z_CheckHeap (refzone);
-#endif
-
-	Z_FreeTags (mainzone);
-/*PrintHex (1,1,Z_FreeMemory (mainzone)); */
+D_printf ("P_SetupLevel(%i,%i)\n",lumpnum,skill);
 
 	P_InitThinkers ();
-	
-/* */
-/* look for a regular (development) map first */
-/* */
-	lumpname[0] = 'M';
-	lumpname[1] = 'A';
-	lumpname[2] = 'P';
-	lumpname[3] = '0' + map/10;
-	lumpname[4] = '0' + map%10;
-	lumpname[5] = 0;
-	
-	lumpnum = W_GetNumForName (lumpname);
 	
 /* note: most of this ordering is important	 */
 	P_LoadBlockMap (lumpnum+ML_BLOCKMAP);

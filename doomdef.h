@@ -687,7 +687,7 @@ int G_PlayDemoPtr (int *demo);
 /*PLAY */
 /*----- */
 
-void P_SetupLevel (int map, skill_t skill);
+void P_SetupLevel (int lumpnum, skill_t skill);
 void P_Init (void);
 
 void P_Start (void);

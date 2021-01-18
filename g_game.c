@@ -42,16 +42,46 @@ extern int              skytexture;
 extern texture_t		*skytexturep;
 extern texture_t		textures[];
 
+static int G_LumpNumForMapNum(int map)
+{
+	char		lumpname[8];
+
+	lumpname[0] = 'M';
+	lumpname[1] = 'A';
+	lumpname[2] = 'P';
+	lumpname[3] = '0' + map/10;
+	lumpname[4] = '0' + map%10;
+	lumpname[5] = 0;
+
+	return W_GetNumForName (lumpname);
+}
+
 void G_DoLoadLevel (void) 
 { 
 	int             i; 
-	 
+	int		lumpnum;
+
 	for (i=0 ; i<MAXPLAYERS ; i++) 
 	{ 
 		if (playeringame[i] && players[i].playerstate == PST_DEAD) 
 			players[i].playerstate = PST_REBORN; 
 		players[i].frags = 0;
 	} 
+
+	totalkills = totalitems = totalsecret = 0;
+	for (i=0 ; i<MAXPLAYERS ; i++)
+	{
+		players[i].killcount = players[i].secretcount
+			= players[i].itemcount = 0;
+	}
+
+	Z_CheckHeap (mainzone);
+#ifndef MARS
+	Z_CheckHeap (refzone);
+#endif
+
+        Z_FreeTags (mainzone);
+	/*PrintHex (1,1,Z_FreeMemory (mainzone)); */
 
 /*  */
 /* set the sky map for the episode  */
@@ -63,9 +93,17 @@ void G_DoLoadLevel (void)
 	else
 		skytexture = R_TextureNumForName ("SKY3"); 
 
+/*
+ * get lump number for the next map
+ */
+
+	/* look for a regular (development) map first */
+	/* */
+	lumpnum = G_LumpNumForMapNum(gamemap);
+
  	skytexturep = &textures[skytexture];
 		 
-	P_SetupLevel (gamemap, gameskill);   
+	P_SetupLevel (lumpnum, gameskill);   
 	displayplayer = consoleplayer;		/* view the guy you are playing     */
 	gameaction = ga_nothing; 
 
