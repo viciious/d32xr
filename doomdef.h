@@ -64,7 +64,7 @@ typedef unsigned short inpixel_t;
 #endif
 
 int D_vsnprintf(char *str, size_t nmax, const char *format, va_list ap);
-
+int D_vsprintf(char *str, size_t nmax, const char *format, ...);
 void D_printf (char *str, ...);
 
 /*
@@ -136,9 +136,9 @@ typedef enum
 
 int D_abs(int x);
 void D_memset (void *dest, int val, int count);
-void D_memcpy (void *dest, void *src, int count);
-void D_strncpy (char *dest, char *src, int maxcount);
-int D_strncasecmp (char *s1, char *s2, int len);
+void D_memcpy (void *dest, const void *src, int count);
+void D_strncpy (char *dest, const char *src, int maxcount);
+int D_strncasecmp (const char *s1, const char *s2, int len);
 
 
 /*

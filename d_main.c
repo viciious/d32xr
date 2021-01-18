@@ -68,28 +68,31 @@ void D_memset (void *dest, int val, int count)
 }
 
 
-void D_memcpy (void *dest, void *src, int count)
+void D_memcpy (void *dest, const void *src, int count)
 {
-	byte	*d, *s;
+	byte	*d;
+	const byte *s;
 	
 	d = (byte *)dest;
-	s = (byte *)src;
+	s = (const byte *)src;
 	while (count--)
 		*d++ = *s++;
 }
 
 
-void D_strncpy (char *dest, char *src, int maxcount)
+void D_strncpy (char *dest, const char *src, int maxcount)
 {
-	byte	*p1,*p2;
+	byte	*p1;
+	const byte *p2;
+
 	p1 = (byte *)dest;
-	p2 = (byte *)src;
+	p2 = (const byte *)src;
 	while (maxcount--)
 		if (! (*p1++ = *p2++) )
 			return;
 }
 
-int D_strncasecmp (char *s1, char *s2, int len)
+int D_strncasecmp (const char *s1, const char *s2, int len)
 {
 	while (*s1 && *s2)
 	{
