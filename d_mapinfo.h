@@ -3,7 +3,7 @@
 
   The MIT License (MIT)
 
-  Copyright (c) 2021 Victor Luchits
+  Copyright (c) 2021 Victor Luchits, Derek John Evans, id Software and ZeniMax Media
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -23,35 +23,16 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
 */
+#ifndef D_MAPINFO_H__
+#define D_MAPINFO_H__
 
-#include "doomdef.h"
-
-int D_snprintf(char *buf, size_t nsize, const char *fmt, ...)
+typedef struct
 {
-	int ret;
-	va_list ap;
+	char *sky;
+	int nextmap; // lump num
 
-	buf[0] = '\0';
+	void *data;
+} dmapinfo_t;
 
-	va_start(ap, fmt);
-	ret = D_vsnprintf(buf, nsize, fmt, ap);
-	va_end(ap);
-
-	return ret;
-}
-
-int D_strcasecmp (const char *s1, const char *s2)
-{
-	size_t s1len = mystrlen(s1);
-	size_t s2len = mystrlen(s2);
-	int cmp = D_strncasecmp(s1, s2, s1len < s2len ? s1len : s2len);
-
-	if (cmp != 0)
-		return cmp;
-	if (s1len < s2len)
-		return -1;
-	if (s1len > s2len)
-		return 1;
-	return 0;
-}
+#endif // D_MAPINFO_H__
 

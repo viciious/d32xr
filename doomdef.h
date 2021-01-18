@@ -64,7 +64,7 @@ typedef unsigned short inpixel_t;
 #endif
 
 int D_vsnprintf(char *str, size_t nmax, const char *format, va_list ap);
-int D_vsprintf(char *str, size_t nmax, const char *format, ...);
+int D_snprintf(char *buf, size_t nsize, const char *fmt, ...);
 void D_printf (char *str, ...);
 
 /*
@@ -139,7 +139,8 @@ void D_memset (void *dest, int val, int count);
 void D_memcpy (void *dest, const void *src, int count);
 void D_strncpy (char *dest, const char *src, int maxcount);
 int D_strncasecmp (const char *s1, const char *s2, int len);
-
+int D_strcasecmp (const char *s1, const char *s2);
+int mystrlen(const char *string);
 
 /*
 ===============================================================================
