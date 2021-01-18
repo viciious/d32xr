@@ -2,7 +2,8 @@
  
 #include "doomdef.h" 
 #include "p_local.h" 
- 
+#include "d_mapinfo.h"
+
 void G_PlayerReborn (int player); 
  
 void G_DoReborn (int playernum); 
@@ -56,10 +57,15 @@ static int G_LumpNumForMapNum(int map)
 	return W_GetNumForName (lumpname);
 }
 
+int G_FindMapinfo(int maplump, dmapinfo_t *mi);
+
 void G_DoLoadLevel (void) 
 { 
 	int             i; 
 	int		lumpnum;
+	dmapinfo_t	mi;
+	const char	*skytexture;
+	int		skytexturel;
 
 	for (i=0 ; i<MAXPLAYERS ; i++) 
 	{ 
@@ -87,11 +93,11 @@ void G_DoLoadLevel (void)
 /* set the sky map for the episode  */
 /*  */
 	if (gamemap < 9) 
-		skytexture = R_TextureNumForName ("SKY1"); 
+		skytexture = "SKY1"; 
 	else if (gamemap < 18)
-		skytexture = R_TextureNumForName ("SKY2"); 
+		skytexture = "SKY2"; 
 	else
-		skytexture = R_TextureNumForName ("SKY3"); 
+		skytexture = "SKY3"; 
 
 /*
  * get lump number for the next map
@@ -101,8 +107,19 @@ void G_DoLoadLevel (void)
 	/* */
 	lumpnum = G_LumpNumForMapNum(gamemap);
 
- 	skytexturep = &textures[skytexture];
-		 
+	mi.data = NULL;	
+	if (G_FindMapinfo(lumpnum, &mi) > 0) {
+		if (mi.sky)
+			skytexture = mi.sky;
+	}
+
+	skytexturel = R_TextureNumForName(skytexture);
+ 	skytexturep = &textures[skytexturel];
+
+/* free DMAPINFO now */
+	if (mi.data)
+		Z_Free(mi.data);
+
 	P_SetupLevel (lumpnum, gameskill);   
 	displayplayer = consoleplayer;		/* view the guy you are playing     */
 	gameaction = ga_nothing; 

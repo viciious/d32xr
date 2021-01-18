@@ -462,7 +462,6 @@ extern	int			displayplayer;
 extern	player_t	players[MAXPLAYERS];
 
 extern	int			maxammo[NUMAMMO];
-extern	int			skytexture;
 
 
 extern	skill_t		gameskill;

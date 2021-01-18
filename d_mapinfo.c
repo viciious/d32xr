@@ -28,7 +28,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define TEST
+//#define TEST
 
 #ifdef TEST
 const char *testlump = ""
