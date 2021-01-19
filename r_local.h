@@ -90,15 +90,14 @@ typedef struct line_s
 	VINT		flags;
 	VINT		special, tag;
 	VINT		sidenum[2];			/* sidenum[1] will be -1 if one sided */
-	VINT		frontsectornum, backsectornum;
 	VINT		fineangle;			/* to get sine / eosine for sliding */
 	vertex_t 	*v1, *v2;
 } line_t;
 
-#define LD_FRONTSECTORNUM(ld) ((ld)->frontsectornum)
-#define LD_BACKSECTORNUM(ld) ((ld)->sidenum[1] != -1 ? (ld)->backsectornum : -1)
+#define LD_FRONTSECTORNUM(ld) (sides[(ld)->sidenum[0]].sector)
+#define LD_BACKSECTORNUM(ld) ((ld)->sidenum[1] != -1 ? sides[ld->sidenum[1]].sector : -1)
 #define LD_FRONTSECTOR(ld) (&sectors[LD_FRONTSECTORNUM(ld)])
-#define LD_BACKSECTOR(ld) ((ld)->sidenum[1] != -1 ? &sectors[(ld)->backsectornum] : NULL)
+#define LD_BACKSECTOR(ld) ((ld)->sidenum[1] != -1 ? &sectors[LD_BACKSECTORNUM(ld)] : NULL)
 
 typedef struct subsector_s
 {

@@ -319,14 +319,6 @@ void P_LoadLineDefs (int lump)
 
 		ld->sidenum[0] = LITTLESHORT(mld->sidenum[0]);
 		ld->sidenum[1] = LITTLESHORT(mld->sidenum[1]);
-		if (ld->sidenum[0] != -1)
-			ld->frontsectornum = sides[ld->sidenum[0]].sector;
-		else
-			ld->frontsectornum = -1;
-		if (ld->sidenum[1] != -1)
-			ld->backsectornum = sides[ld->sidenum[1]].sector;
-		else
-			ld->backsectornum = -1;
 	}
 }
 
