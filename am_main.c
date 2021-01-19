@@ -503,12 +503,12 @@ void AM_Drawer (void)
 		if (line->special)
 			color = CRY_BLUE;			/* SPECIAL LINE */
 		else
-		if (sectors[line->frontsectornum].floorheight !=
-			sectors[line->backsectornum].floorheight)
+		if (LD_FRONTSECTOR(line)->floorheight !=
+			LD_BACKSECTOR(line)->floorheight)
 			color = CRY_YELLOW;
 		else
-		if (sectors[line->frontsectornum].ceilingheight !=
-			sectors[line->backsectornum].ceilingheight)
+		if (LD_FRONTSECTOR(line)->ceilingheight !=
+			LD_BACKSECTOR(line)->ceilingheight)
 			color = CRY_BROWN;		
 		
 		DrawLine (color, 80+x1,90-y1,80+x2,90-y2);

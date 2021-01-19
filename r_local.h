@@ -95,7 +95,9 @@ typedef struct line_s
 	vertex_t 	*v1, *v2;
 } line_t;
 
-#define LD_FRONTSECTOR(ld) (&sectors[(ld)->frontsectornum])
+#define LD_FRONTSECTORNUM(ld) ((ld)->frontsectornum)
+#define LD_BACKSECTORNUM(ld) ((ld)->sidenum[1] != -1 ? (ld)->backsectornum : -1)
+#define LD_FRONTSECTOR(ld) (&sectors[LD_FRONTSECTORNUM(ld)])
 #define LD_BACKSECTOR(ld) ((ld)->sidenum[1] != -1 ? &sectors[(ld)->backsectornum] : NULL)
 
 typedef struct subsector_s
