@@ -286,3 +286,19 @@ void	*W_CacheLumpName (char *name, int tag)
 	return W_CacheLumpNum (W_GetNumForName(name), tag);
 }
 
+/*
+====================
+=
+= W_GetNameForNum
+=
+====================
+*/
+
+const char *W_GetNameForNum (int lump)
+{
+	if (lump >= numlumps)
+		I_Error ("W_GetNameForNum: %i >= numlumps",lump);
+	return lumpinfo[lump].name;
+}
+
+

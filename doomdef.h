@@ -467,6 +467,7 @@ extern	int			maxammo[NUMAMMO];
 extern	skill_t		gameskill;
 extern	int			gamemap;
 extern	int			totalkills, totalitems, totalsecret;	/* for intermission */
+extern	int		gamemaplump;
 
 extern 	int 		gametic;
 
@@ -601,6 +602,8 @@ void	W_ReadLump (int lump, void *dest);
 
 void	*W_CacheLumpNum (int lump, int tag);
 void	*W_CacheLumpName (char *name, int tag);
+
+const char *W_GetNameForNum (int lump);
 
 #define W_POINTLUMPNUM(x) (void*)(wadfileptr+BIGLONG(lumpinfo[x].filepos));
 

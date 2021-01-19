@@ -456,7 +456,7 @@ void I_DrawSpan (int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, fi
 = wide pixels
 ==================== 
 */ 
-
+const char *G_GetMapNameForLump(int lump);
 void I_Update (void) 
 {
 	int ticcount;

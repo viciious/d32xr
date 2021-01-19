@@ -29,10 +29,13 @@
 typedef struct
 {
 	char *sky;
-	int nextmap; // lump num
+	int next; // lump num
+	int secretnext;
 
 	void *data;
 } dmapinfo_t;
+
+int G_FindMapinfo(int maplump, dmapinfo_t *mi);
 
 #endif // D_MAPINFO_H__
 

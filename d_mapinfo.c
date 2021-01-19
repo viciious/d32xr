@@ -225,9 +225,11 @@ static char* G_FindMapinfoSection(char* buf, int maplump)
 static void G_AddMapinfoKey(char *key, char *value, dmapinfo_t *mi)
 {
 	if (!D_strcasecmp(key, "next"))
-		mi->nextmap = atoi(value);
+		mi->next = atoi(value);
 	else if (!D_strcasecmp(key, "sky"))
 		mi->sky = value;
+	else if (!D_strcasecmp(key, "secretnext"))
+		mi->secretnext = atoi(value);
 }
 
 int G_FindMapinfo(int maplump, dmapinfo_t *mi)
