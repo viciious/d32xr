@@ -6,6 +6,7 @@
 extern const int COLOR_WHITE;
 
 const boolean	debugscreenstate = false;
+boolean	debugareaactive = false;
 
 extern short* dc_colormaps;
 
@@ -192,6 +193,9 @@ void I_Error (char *error, ...)
 	D_vsnprintf(errormessage, sizeof(errormessage), error, ap);
 	va_end(ap);
 
+	debugareaactive = true;
+
+	I_ClearWorkBuffer ();
 	I_Print8 (0,25,errormessage);
 	I_Update ();
 
@@ -462,7 +466,8 @@ void I_Update (void)
 	int ticcount;
 
 	// clear the visible part of the workbuffer
-	I_ClearWorkBuffer();
+	if (!debugareaactive)
+		I_ClearWorkBuffer();
 
 	Mars_FlipFrameBuffers(true);
 
