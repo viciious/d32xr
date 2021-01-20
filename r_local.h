@@ -279,7 +279,7 @@ extern	int		phasetime[9];
 /* */
 /* R_data.c */
 /* */
-#define	MAXTEXTURES	128
+#define	MAXTEXTURES	200
 
 extern	texture_t	*skytexturep;
 
