@@ -36,4 +36,11 @@ jobs:
           dd if=/dev/zero bs=1K count=2560 of=doom32x.wad && \
           make -f Makefile.mars
       - name: Print sizes
-        run: nm --print-size --size-sort --radix=d Doom32X.elf | egrep -Ei ' (B|D) ' | tail
+        run: nm --print-size --size-sort --radix=d D32XR.elf | egrep -Ei ' (B|D) ' | tail
+      - name: Archive ROM
+        uses: actions/upload-artifact@v2
+        with:
+          name: 32X ROM File
+          path: |
+            D32XR.bin
+
