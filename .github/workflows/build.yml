@@ -1,0 +1,39 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/cache@v1
+        id: devkit-cache
+        with:
+          path: /opt/toolchains
+          key: chilly-willy-devkit
+      - name: Download The devkit archive
+        if: steps.devkit-cache.outputs.cache-hit != 'true'
+        run: | 
+          curl -sL --fail \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/viciious/d32xr/releases/tags/devkit" \
+          | jq -r ".assets | .[] | select(.name | test(\"chillys-sega-devkit-20190504-opt.tar.zst$\")) | .url" \
+          | xargs curl -sL --fail -H "Accept: application/octet-stream" -o "chillys-sega-devkit-20190504-opt.tar.zst"
+      - name: Unpack the devkit archive
+        if: steps.devkit-cache.outputs.cache-hit != 'true'
+        run: |
+          ls -la ./chillys-sega-devkit-20190504-opt.tar.zst && \
+          zstdcat ./chillys-sega-devkit-20190504-opt.tar.zst | sudo tar -C / -xa
+      - uses: actions/checkout@v2
+      - name: make MARS
+        run: |
+          dd if=/dev/zero bs=1K count=2560 of=doom32x.wad && \
+          make -f Makefile.mars
+      - name: Print sizes
+        run: nm --print-size --size-sort --radix=d Doom32X.elf | egrep -Ei ' (B|D) ' | tail
