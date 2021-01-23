@@ -63,8 +63,11 @@ void D_memset (void *dest, int val, int count)
 	
 /* finish up */
 	p = (byte *)lp;
-	while (count--)
+	while (count > 0)
+	{
 		*p++ = val;
+		count--;
+	}
 }
 
 
