@@ -214,42 +214,6 @@ void I_Error (char *error, ...)
 
 #if 1
 
-
-/* 
-================ 
-= 
-= FixedMul  
-=
-= Perform a signed 16.16 by 16.16 mutliply
-================ 
-*/ 
- 
-fixed_t FixedMul (fixed_t a, fixed_t b) 
-{ 
-/* this code is very slow, but exactly simulates the proper assembly */
-/* operation that C doesn't let you represent well */
-	int             sign; 
-	unsigned        a1,a2,b1,b2; 
-    unsigned    	c; 
-	 
-	sign = a^b; 
-	if (a<0) 
-		a = -a; 
-	if (b<0) 
-		b = -b; 
-	a1 = a&0xffff; 
-	a2 = (unsigned)a>>16; 
-	b1 = b&0xffff; 
-	b2 = (unsigned)b>>16; 
-	c = (a1*b1) >> 16; 
-	c += a2*b1; 
-	c += b2*a1; 
-	c += (b2*a2)<<16; 
-	if (sign < 0) 
-		c = -c; 
-    return c; 
-} 
-
 /* 
 ================ 
 = 
