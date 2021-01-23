@@ -430,8 +430,8 @@ void I_Update (void)
 	int ticcount;
 
 	// clear the visible part of the workbuffer
-	if (!debugareaactive)
-		I_ClearWorkBuffer();
+//	if (!debugareaactive)
+//		I_ClearWorkBuffer();
 
 	Mars_FlipFrameBuffers(true);
 
