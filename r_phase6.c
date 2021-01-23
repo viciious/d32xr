@@ -39,6 +39,8 @@ static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, pixel_t *picnu
                                int lightlevel, int start, int stop)
 {
    int i;
+   int* open;
+   const int mark = (OPENMARK << 16) | OPENMARK;
 
    while(check < lastvisplane)
    {
@@ -70,12 +72,11 @@ static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, pixel_t *picnu
    check->minx = start;
    check->maxx = stop;
 
+   open = (int*)check->open;
    for(i = 0; i < SCREENWIDTH/4; i++)
    {
-      check->open[i*4  ] = OPENMARK;
-      check->open[i*4+1] = OPENMARK;
-      check->open[i*4+2] = OPENMARK;
-      check->open[i*4+3] = OPENMARK;
+       *open++ = mark;
+       *open++ = mark;
    }
 
    return check;
