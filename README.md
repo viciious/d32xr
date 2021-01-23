@@ -1,7 +1,11 @@
-# DOOM 32x: Resurrection
+# DOOM 32X: Resurrection
+
+![Build](https://github.com/viciious/d32xr/workflows/Build/badge.svg)
+
+## Description
 
 The goal of the project is to have a code base from which a playable version of DOOM for the Sega 32X platform could be compiled.
-The focus of the project is primarily preservation and education although fixing the original game's idiosyncrasies and improving performance is not completely out of scope.
+It is primarily focused on preservation and education but also on fixing the original game's idiosyncrasies and improving performance.
 
 The project is based on the original Jaguar Doom source code release with a bulk of code taken from the Calico DOOM port.
 I can't thank them enough for taking up the task of translating the original assembler code to C. Without this, the project would have taken me much longer.
