@@ -13,8 +13,8 @@ SHOBJC = $(ROOTDIR)/sh-elf/bin/sh-elf-objcopy
 RM = rm -f
 
 CCFLAGS = -m2 -mb -g -O3 -Wall -c -fomit-frame-pointer -DMARS
-HWCCFLAGS = -m2 -mb -O1 -Wall -c -fomit-frame-pointer
 LINKFLAGS = -T $(ROOTDIR)/ldscripts/mars.ld -Wl,-Map=output.map -nostdlib
+debug: CCFLAGS += -g
 
 INCS = -I. -I$(ROOTDIR)/sh-elf/include -I$(ROOTDIR)/sh-elf/sh-elf/include
 
@@ -24,6 +24,8 @@ OBJS = sh2_crt0.o f_main.o in_main.o am_main.o st_main.o m_main.o o_main.o comnj
 
 
 all: m68k_crt0.bin m68k_crt1.bin D32XR.bin
+
+debug: m68k_crt0.bin m68k_crt1.bin D32XR.bin
 
 D32XR.bin: D32XR.elf
 	$(SHOBJC) -O binary $< temp.bin
