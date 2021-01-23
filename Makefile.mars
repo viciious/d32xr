@@ -15,8 +15,7 @@ RM = rm -f
 CCFLAGS = -m2 -mb -O3 -Wall -c -fomit-frame-pointer -DMARS
 LINKFLAGS = -T $(ROOTDIR)/ldscripts/mars.ld -Wl,-Map=output.map -nostdlib
 
-release: CCFLAGS += -flto
-	LINKFLAGS += -s
+release: LINKFLAGS += -s
 debug: CCFLAGS += -g
 
 INCS = -I. -I$(ROOTDIR)/sh-elf/include -I$(ROOTDIR)/sh-elf/sh-elf/include
