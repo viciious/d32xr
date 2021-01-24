@@ -68,7 +68,7 @@ static char* G_LoadMapinfoLump(void)
 		return NULL;
 
 	len = W_LumpLength(lump);
-	Z_Malloc(len, PU_CACHE, &buf);
+	buf = (char *)I_TempBuffer();
 	W_ReadLump(lump, buf);
 	buf[len] = '\0';
 
@@ -244,7 +244,7 @@ int G_FindMapinfo(int maplump, dmapinfo_t *mi)
 	D_memset(mi, 0, sizeof(*mi));
 
 #ifdef TEST
-	Z_Malloc(strlen(testlump) + 1, PU_CACHE, &buf);
+	buf = I_TempBuffer();
 	D_memcpy(buf, (void*)testlump, strlen(testlump) + 1);
 #else
 	buf = G_LoadMapinfoLump();
@@ -265,7 +265,6 @@ int G_FindMapinfo(int maplump, dmapinfo_t *mi)
 	return 1;
 
 notfound:
-	Z_Free(buf);
 	return 0;
 }
 
