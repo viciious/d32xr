@@ -44,39 +44,6 @@ extern int              skytexture;
 extern texture_t		*skytexturep;
 extern texture_t		textures[];
 
-static int G_LumpNumForMapNum(int map)
-{
-	char		lumpname[8];
-
-	lumpname[0] = 'M';
-	lumpname[1] = 'A';
-	lumpname[2] = 'P';
-	lumpname[3] = '0' + map/10;
-	lumpname[4] = '0' + map%10;
-	lumpname[5] = 0;
-
-	return W_GetNumForName (lumpname);
-}
-
-static int G_MapNumForMapName(const char *map)
-{
-	if (mystrlen(map) != 5)
-		return 0;
-	if (D_strncasecmp(map, "MAP", 3))
-		return 0;
-	if ((map[3] >= '0' && map[3] <= '9') && (map[4] >= '0' && map[4] <= '9'))
-		return (map[3]-'0')*10+(map[4]-'0');
-	return 0;
-}
-
-const char *G_GetMapNameForLump(int lump)
-{
-	static char name[9];
-	D_memcpy(name, W_GetNameForNum(lump), 8);
-	name[8] = '0';
-	return name;
-}
-
 void G_DoLoadLevel (void) 
 { 
 	int             i; 
@@ -507,7 +474,7 @@ void G_RunGame (void)
 	/* run the finale if needed */
 		if (finale)
 			MiniLoop (F_Start, F_Stop, F_Ticker, F_Drawer);
-			
+
 	/* free DMAPINFO now */
 		if (mi.data)
 			Z_Free(mi.data);

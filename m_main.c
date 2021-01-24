@@ -1,7 +1,8 @@
 /* m_main.c -- main menu */
 
 #include "doomdef.h"
-	
+#include "d_mapinfo.h"
+
 #define MOVEWAIT		3
 #define CURSORX		50
 #define STARTY			40
@@ -41,6 +42,9 @@ playmode_t currentplaymode;
 menu_t	cursorpos;
 skill_t	playerskill;
 
+static dmapinfo_t** maplist;
+static int mapcount;
+
 void M_Start (void)
 {	
 #ifndef MARS
@@ -72,16 +76,18 @@ void M_Start (void)
 	cursorpos = 0;
 	playerskill = startskill;
 	playermap = startmap;
+
+	maplist = G_LoadMaplist(&mapcount);
 	
 	DoubleBufferSetup ();
 }
 
 void M_Stop (void)
 {	
+	int i;
+
 #ifndef MARS
 /* they stay cached by status bar */
-
-	int i;
 
 /* free all loaded graphics */
 
@@ -101,6 +107,10 @@ void M_Stop (void)
 	for (i = 0; i < 10; i++)
 		Z_Free(nums[i]);
 #endif
+
+	for (i = 0; i < mapcount; i++)
+		Z_Free(maplist[i]);
+	Z_Free(maplist);
 
 	WriteEEProm ();
 }
@@ -124,7 +134,7 @@ int M_Ticker (void)
 /* exit menu if button press */
 	if ( ticon > 10 &&	(buttons & (JP_A|JP_B|JP_C))   )
 	{
-		startmap =	playermap; /*set map number */
+		startmap = maplist[playermap - 1]->mapnumber; /*set map number */
 		startskill = playerskill;	/* set skill level */
 		starttype = currentplaymode;	/* set play type */
 		return 1;		/* done with menu */
@@ -184,18 +194,12 @@ int M_Ticker (void)
 					if (buttons & JP_RIGHT)
 					{			
 						playermap++;
-#ifdef MARS
-						if (playermap > 15 && playermap < 23) playermap = 23;
-#endif
-						if (playermap == maxlevel+1)
+						if (mapcount == playermap || maplist[playermap-1]->mapnumber == maxlevel+1)
 							playermap--;
 					}	
 					if (buttons & JP_LEFT)
 					{
 						playermap--;
-#ifdef MARS
-						if(playermap > 15 && playermap < 23) playermap = 15;
-#endif
 						if(playermap == 0)
 							playermap++;
 					}
@@ -250,7 +254,8 @@ void M_Printf (int x, int y, char *str, ...)
 
 void M_Drawer (void)
 {
-	int	leveltens, levelones;
+	int mapnumber = maplist[playermap - 1]->mapnumber;
+	int	leveltens = mapnumber / 10, levelones = mapnumber % 10;
 #ifdef MARS
 	const int m_doom_height = 48;
 	const char *difficulties[] = {
@@ -273,15 +278,13 @@ void M_Drawer (void)
 
 /* draw start level information */
 	M_Printf(CURSORX+74 ,CURSORY(0)+m_doom_height+2, "Area"); 
-	leveltens = playermap / 10;
-	levelones = playermap % 10;
 	if (leveltens)	
 	{
 		M_Printf(CURSORX+90,m_doom_height+22,"%c", '0'+leveltens);
-		M_Printf(CURSORX+90+64,m_doom_height+22, "%c", '0'+levelones);
+		M_Printf(CURSORX+90+64,m_doom_height+22, "%c: %s", '0'+levelones, maplist[playermap - 1]->name);
 	}
 	else
-		M_Printf(CURSORX+90,m_doom_height+22,"%c", '0'+levelones);
+		M_Printf(CURSORX+90+64,m_doom_height+22,"%c: %s", '0'+levelones, maplist[playermap - 1]->name);
 
 /* draw difficulty information */
 	M_Printf(CURSORX+74, CURSORY(1)+m_doom_height+2, "Difficulty"); 
@@ -310,8 +313,6 @@ void M_Drawer (void)
 
 /* draw start level information */
 	DrawJagobj(m_level, 74 ,CURSORY(1)+m_doom->height+2); 
-	leveltens = playermap / 10;
-	levelones = playermap % 10;
 	EraseBlock(90,m_doom->height+61,320-90,200-m_doom->height+62);
 	if (leveltens)	
 	{

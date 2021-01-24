@@ -28,14 +28,23 @@
 
 typedef struct
 {
+	VINT baronspecial;
+	char *name;
 	char *sky;
 	int next; // lump num
 	int secretnext;
-
+	int lumpnum;
+	int mapnumber;
+	char lumpname[9];
 	void *data;
 } dmapinfo_t;
 
+int G_LumpNumForMapNum(int map);
+int G_MapNumForMapName(const char* map);
+char* G_GetMapNameForLump(int lump);
+
 int G_FindMapinfo(int maplump, dmapinfo_t *mi);
+dmapinfo_t** G_LoadMaplist(int *pmapcount);
 
 #endif // D_MAPINFO_H__
 
