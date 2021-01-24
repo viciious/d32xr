@@ -306,6 +306,7 @@ void R_Setup (void)
 	player_t *player;
 	int		shadex, shadey, shadei;
 	unsigned short  *tempbuf;
+	int		*wb, *wbp;
 	
 /* */
 /* set up globals for new frame */
@@ -398,6 +399,11 @@ void R_Setup (void)
 	visplanes = (void *)tempbuf;
 	tempbuf += sizeof(*visplanes)*MAXVISPLANES;
 
+	{
+		unsigned short *p = (unsigned short *)I_WorkBuffer();
+		while (p < tempbuf + MAXVISPLANES*(SCREENWIDTH+2)+sizeof(*viswalls)*MAXWALLCMDS/sizeof(*tempbuf)+sizeof(*vissprites)*MAXVISSPRITES/sizeof(*tempbuf)+sizeof(*openings)*MAXOPENINGS/sizeof(*tempbuf)) *p++ = 0;
+	}
+
 	tempbuf = (unsigned short *)(((int)tempbuf+2)&~1);
 	tempbuf++; // padding
 	for (i = 0; i < MAXVISPLANES; i++) {
@@ -422,8 +428,18 @@ void R_Setup (void)
 	tempbuf += sizeof(*vissprites)*MAXVISSPRITES/sizeof(*tempbuf);
 	vissprite_p = vissprites;
 
+	tempbuf = (unsigned short*)(((int)tempbuf + 4) & ~3);
+	wbp = (int*)tempbuf;
 	openings = tempbuf;
 	tempbuf += sizeof(*openings)*MAXOPENINGS/sizeof(*tempbuf);
+	wb = (int*)tempbuf;
+
+#ifdef MARS
+	// clear the openings in workbuffer as they are later written as single bytes,
+	// some of which may be 0 and since the work buffer resides in VRAM, those are
+	// going to be ignored and that will be causing visual glitches
+	while (wbp < wb) *wbp++ = 0;
+#endif
 
 	lastopening = openings;
 #ifndef MARS
