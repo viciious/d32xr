@@ -25,6 +25,8 @@ int             soundbuffer[EXTERNALQUADS*16];
 int		lastticcount = 0;
 int		lasttics = 0;
 
+static int 	debugmode = 0;
+
 extern int 	cy;
 
 void ReadEEProm (void);
@@ -363,6 +365,8 @@ void I_DrawColumnNPO2(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
 
 void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac, fixed_t fracstep, inpixel_t* dc_source, int dc_texheight)
 {
+	if (debugmode == 2)
+		return;
 	if (dc_texheight & (dc_texheight - 1)) // height is not a power-of-2?
 		I_DrawColumnNPO2(dc_x, dc_yl, dc_yh, light, frac, fracstep, dc_source, dc_texheight);
 	else
@@ -391,6 +395,9 @@ void I_DrawSpan (int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, fi
 		I_Error ("R_DrawSpan: %i to %i at %i",ds_x1,ds_x2,ds_y); 
 #endif 
 	 
+	if (debugmode == 2)
+		return;
+
 	xfrac = ds_xfrac; 
 	yfrac = ds_yfrac; 
 	 
@@ -424,13 +431,27 @@ void I_DrawSpan (int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, fi
 = wide pixels
 ==================== 
 */ 
+extern int t_ref_bsp, t_ref_prep, t_ref_segs, t_ref_planes, t_ref_sprites, t_ref_total;
 void I_Update (void) 
 {
 	int ticcount;
-	//char buf[32];
+	char buf[32];
 
-	//D_snprintf(buf, sizeof(buf), "%d %d", cmpr1, cmpr2);
-	//I_Print8(45, 20, buf);
+	if (debugmode != 0)
+	{
+		D_snprintf(buf, sizeof(buf), "bsp: %d", t_ref_bsp);
+		I_Print8(200, 6, buf);
+		D_snprintf(buf, sizeof(buf), "prep: %d", t_ref_prep);
+		I_Print8(200, 7, buf);
+		D_snprintf(buf, sizeof(buf), "segs: %d", t_ref_segs);
+		I_Print8(200, 8, buf);
+		D_snprintf(buf, sizeof(buf), "planes: %d", t_ref_planes);
+		I_Print8(200, 9, buf);
+		D_snprintf(buf, sizeof(buf), "sprites: %d", t_ref_sprites);
+		I_Print8(200, 10, buf);
+		D_snprintf(buf, sizeof(buf), "total: %d", t_ref_total);
+		I_Print8(200, 11, buf);
+	}
 
 	// clear the visible part of the workbuffer
 //	if (!debugareaactive)
@@ -452,4 +473,17 @@ void I_Update (void)
 	viewportbuffer = (volatile pixel_t *)I_ViewportBuffer();
 
 	cy = 1;
-} 
+
+	if ((I_ReadControls() & (BT_A|BT_C)) == (BT_A|BT_C))
+	{
+		static int lastdebugtic = 0;
+		if (ticcount > lastdebugtic + 20)
+		{
+			debugmode = (debugmode + 1) % 3;
+			lastdebugtic = ticcount;
+		}
+	}
+	if (debugmode == 2)
+		I_ClearFrameBuffer();
+}
+

@@ -65,6 +65,8 @@ angle_t		clipangle,doubleclipangle;
 fixed_t	*finecosine_ = &finesine_[FINEANGLES/4];
 #endif
 
+int t_ref_bsp, t_ref_prep, t_ref_segs, t_ref_planes, t_ref_sprites, t_ref_total;
+
 /*
 ===============================================================================
 =
@@ -497,18 +499,37 @@ void R_RenderPlayerView (void)
 	if (debugscreenactive)
 		R_DebugScreen ();
 
+	t_ref_total = I_GetTime();
+
 	R_Setup ();
 
 #ifndef JAGUAR
+	t_ref_bsp = I_GetTime();
 	R_BSP ();
+	t_ref_bsp = I_GetTime() - t_ref_bsp;
+
+	t_ref_prep = I_GetTime();
 	R_WallPrep ();
 	R_SpritePrep ();
 /* the rest of the refresh can be run in parallel with the next game tic */
 	if (R_LatePrep ())
 		R_Cache ();
+	t_ref_prep = I_GetTime() - t_ref_prep;
+
+	t_ref_segs = I_GetTime();
 	R_SegCommands ();
+	t_ref_segs = I_GetTime() - t_ref_segs;
+
+	t_ref_planes = I_GetTime();
 	R_DrawPlanes ();
+	t_ref_planes = I_GetTime() - t_ref_planes;
+
+	t_ref_sprites = I_GetTime();
 	R_Sprites ();
+	t_ref_sprites = I_GetTime() - t_ref_sprites;
+
+	t_ref_total = I_GetTime() - t_ref_total;
+
 #ifndef MARS
 	I_Update();
 #endif
