@@ -339,6 +339,26 @@ static boolean PA_CrossSubsector(int bspnum)
    return true; // passed the subsector ok
 }
 
+/*
+=====================
+=
+= PA_DivlineSide
+=
+=====================
+*/
+static int PA_DivlineSide(fixed_t x, fixed_t y, divline_t *line)
+{
+	fixed_t dx, dy;
+
+	x = (x - line->x) >> FRACBITS;
+	y = (y - line->y) >> FRACBITS;
+
+	dx = x * (line->dy >> FRACBITS);
+	dy = y * (line->dx >> FRACBITS);
+
+	return (dy < dx) ^ 1;
+}
+
 //
 // Walk the BSP tree to follow the trace.
 //
@@ -363,14 +383,14 @@ static boolean PA_CrossBSPNode(int bspnum)
    div.y  = bsp->y;
    div.dx = bsp->dx;
    div.dy = bsp->dy;
-   side = P_PointOnDivlineSide(shootdiv.x, shootdiv.y, &div);
+   side = PA_DivlineSide(shootdiv.x, shootdiv.y, &div);
 
    // cross the starting side
    if(!PA_CrossBSPNode(bsp->children[side]))
       return false;
 
    // the partition plane is crossed here
-   if(side == P_PointOnDivlineSide(shootx2, shooty2, &div))
+   if(side == PA_DivlineSide(shootx2, shooty2, &div))
       return true; // the line doesn't touch the other side
    
    // cross the ending side
