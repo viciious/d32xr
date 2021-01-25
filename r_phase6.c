@@ -27,6 +27,9 @@ static int clipbounds[SCREENWIDTH];
 static int lightmin, lightmax, lightsub, lightcoef;
 static int floorclipx, ceilingclipx, x, scale, iscale, texturecol, texturelight;
 
+#define NUM_VISPLANES_BUCKETS 32
+static visplane_t* visplanes_hash[NUM_VISPLANES_BUCKETS];
+
 //
 // Check for a matching visplane in the visplanes array, or set up a new one
 // if no compatible match can be found.
@@ -41,10 +44,11 @@ static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, pixel_t *picnu
    int i;
    int* open;
    const int mark = (OPENMARK << 16) | OPENMARK;
+   int hash = ((height>>8)+lightlevel) & (NUM_VISPLANES_BUCKETS-1);
 
-   while(check < lastvisplane)
+   for (check = visplanes_hash[hash]; check; )
    {
-      if(height == check->height && // same plane as before?
+       if(height == check->height && // same plane as before?
          picnum == check->picnum &&
          lightlevel == check->lightlevel)
       {
@@ -59,7 +63,7 @@ static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, pixel_t *picnu
             return check; // use the same one as before
          }
       }
-      ++check;
+      check = check->next;
    }
 
    // make a new plane
@@ -78,6 +82,8 @@ static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, pixel_t *picnu
        *open++ = mark;
        *open++ = mark;
    }
+   check->next = visplanes_hash[hash];
+   visplanes_hash[hash] = check;
 
    return check;
 }
@@ -319,6 +325,9 @@ void R_SegCommands(void)
       *clip++ = SCREENHEIGHT;
       *clip++ = SCREENHEIGHT;
    }
+
+   for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
+       visplanes_hash[i] = NULL;
 
    /*
    ; setup blitter

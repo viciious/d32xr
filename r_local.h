@@ -412,7 +412,7 @@ extern	unsigned short	*openings, *lastopening;
 extern	subsector_t		*vissubsectors[MAXVISSSEC], **lastvissubsector;
 
 
-typedef struct
+typedef struct visplane_s
 {
 	VINT			minx, maxx;
 	fixed_t		height;
@@ -423,6 +423,7 @@ typedef struct
 #endif
 	int			lightlevel;
 	unsigned short		*open/*[SCREENWIDTH+2]*/;		/* top<<8 | bottom */ /* leave pads for [minx-1]/[maxx+1] */
+	struct visplane_s *next;
 } visplane_t;
 
 #define	MAXVISPLANES	64

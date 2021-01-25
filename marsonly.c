@@ -424,10 +424,13 @@ void I_DrawSpan (int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, fi
 = wide pixels
 ==================== 
 */ 
-const char *G_GetMapNameForLump(int lump);
 void I_Update (void) 
 {
 	int ticcount;
+	//char buf[32];
+
+	//D_snprintf(buf, sizeof(buf), "%d %d", cmpr1, cmpr2);
+	//I_Print8(45, 20, buf);
 
 	// clear the visible part of the workbuffer
 //	if (!debugareaactive)
