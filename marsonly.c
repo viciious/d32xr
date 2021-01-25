@@ -288,16 +288,17 @@ fixed_t FixedDiv (fixed_t a, fixed_t b)
 ================== 
 */ 
  
-static void I_DrawColumnPO2 (int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac, 
+static void I_DrawColumnPO2 (int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_, 
 	fixed_t fracstep, inpixel_t *dc_source, int dc_texheight)
 { 
 	int			count, heightmask;
 	volatile pixel_t	*dest;
 	inpixel_t 		c;
 	short 			*dc_colormap;
+	unsigned		frac;
 
 	count = dc_yh - dc_yl; 
-	if (count < 0) 
+	if (count <= 0)
 		return; 
 				 
 #ifdef RANGECHECK 
@@ -305,6 +306,7 @@ static void I_DrawColumnPO2 (int dc_x, int dc_yl, int dc_yh, int light, fixed_t 
 		I_Error ("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x); 
 #endif 
  
+	frac = frac_;
 	heightmask = dc_texheight - 1;
 	dest = viewportbuffer + dc_yl*320/2 + dc_x;
 	dc_colormap = dc_colormaps + (((255-light)>>3)&31)*256;
@@ -324,16 +326,17 @@ static void I_DrawColumnPO2 (int dc_x, int dc_yl, int dc_yh, int light, fixed_t 
 // we need to do the "tutti frutti" fix here. Carmack didn't bother fixing
 // this for the NeXT "simulator" build of the game.
 //
-void I_DrawColumnNPO2(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
+void I_DrawColumnNPO2(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight)
 {
 	int			count, heightmask;
 	volatile pixel_t 	*dest;
 	inpixel_t 		c;
 	short 			*dc_colormap;
+	unsigned 		frac;
 
 	count = dc_yh - dc_yl;
-	if (count < 0)
+	if (count <= 0)
 		return;
 
 #ifdef RANGECHECK 
@@ -342,13 +345,14 @@ void I_DrawColumnNPO2(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
 #endif 
 
 	heightmask = dc_texheight << FRACBITS;
-	if (frac < 0)
-		while ((frac += heightmask) < 0);
+	if (frac_ < 0)
+		while ((frac_ += heightmask) < 0);
 	else
 	{
-		while (frac >= heightmask)
-			frac -= heightmask;
+		while (frac_ >= heightmask)
+			frac_ -= heightmask;
 	}
+	frac = frac_;
 
 	dest = viewportbuffer + dc_yl*320/2 + dc_x;
 	dc_colormap = dc_colormaps + (((255-light)>>3)&31)*256;
@@ -383,7 +387,7 @@ void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac, fixed
  
 void I_DrawSpan (int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t *ds_source) 
 { 
-	fixed_t		xfrac, yfrac; 
+	unsigned		xfrac, yfrac;
 	volatile pixel_t	*dest;
 	int			count, spot;
 	inpixel_t 		c;

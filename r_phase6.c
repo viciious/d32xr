@@ -44,7 +44,7 @@ static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, pixel_t *picnu
    int i;
    int* open;
    const int mark = (OPENMARK << 16) | OPENMARK;
-   int hash = ((height>>8)+lightlevel) & (NUM_VISPLANES_BUCKETS-1);
+   int hash = (((unsigned)height>>8)+lightlevel) & (NUM_VISPLANES_BUCKETS-1);
 
    for (check = visplanes_hash[hash]; check; )
    {
