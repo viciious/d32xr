@@ -252,7 +252,7 @@ static void R_MapPlane(void)
 //
 static void R_PlaneLoop(visplane_t *pl)
 {
-   int pl_x, pl_stopx;
+   int pl_x, pl_stopx, pl_fracx;
    unsigned short *pl_openptr;
    unsigned short t1, t2, b1, b2, pl_oldtop, pl_oldbottom;
 
@@ -276,11 +276,12 @@ static void R_PlaneLoop(visplane_t *pl)
    b1 = t1 & 0xff;
    t1 >>= 8;
    t2 = *pl_openptr;
-   
+  
    do
    {
       b2 = t2 & 0xff;
       t2 >>= 8;
+      pl_fracx = (pl_x - 1) << FRACBITS;
 
       pl_oldtop = t2;
       pl_oldbottom = b2;
@@ -292,7 +293,7 @@ static void R_PlaneLoop(visplane_t *pl)
       {
          while(t1 < t2 && t1 <= b1)
          {
-            *pl_fp++ = ((pl_x - 1) << FRACBITS) | (t1 << 8) | spanstart[t1];
+            *pl_fp++ = pl_fracx | (t1 << 8) | spanstart[t1];
             ++t1;
          }
          
@@ -309,7 +310,7 @@ static void R_PlaneLoop(visplane_t *pl)
       {
          while(b1 > b2 && b1 >= t1)
          {
-            *pl_fp++ = ((pl_x - 1) << FRACBITS) | (b1 << 8) | spanstart[b1];
+            *pl_fp++ = pl_fracx | (b1 << 8) | spanstart[b1];
             --b1;
          }
 
