@@ -402,6 +402,65 @@ y = 0xff500000;
 }
 
 
+/*
+=================
+=
+= P_MapThingSpawnsMobj
+=
+= Returns false for things that don't spawn a mobj
+==================
+*/
+boolean P_MapThingSpawnsMobj (mapthing_t* mthing)
+{
+	int			i, bit;
+
+/* count deathmatch start positions */
+	if (mthing->type == 11)
+		return false;
+
+/* check for players specially */
+#if 0
+	if (mthing->type > 4)
+		return false;	/*DEBUG */
+#endif
+
+	if (mthing->type <= 4)
+		return false;
+
+/* check for apropriate skill level */
+	if ((netgame != gt_deathmatch) && (mthing->options & 16))
+		return false;
+
+	if (gameskill == sk_baby)
+		bit = 1;
+	else if (gameskill == sk_nightmare)
+		bit = 4;
+	else
+		bit = 1 << (gameskill - 1);
+	if (!(mthing->options & bit))
+		return false;
+
+#ifdef MARS
+	/* hack player corpses into something else, because player graphics */
+	/* aren't included */
+	if (mthing->type == 10 || mthing->type == 12)	/* player corpse */
+		mthing->type = 18;		/* possessed human corpse */
+#endif
+
+	if (netgame != gt_deathmatch)
+		return true;
+
+/* find which type to spawn */
+	for (i = 0; i < NUMMOBJTYPES; i++)
+	{
+		/* don't spawn keycards and players in deathmatch */
+		if (mthing->type == mobjinfo[i].doomednum)
+			if (mobjinfo[i].flags & (MF_NOTDMATCH | MF_COUNTKILL))
+				return false;
+	}
+
+	return true;
+}
 
 /*
 =================
@@ -414,7 +473,7 @@ y = 0xff500000;
 
 void P_SpawnMapThing (mapthing_t *mthing)
 {
-	int			i, bit;
+	int			i;
 	mobj_t		*mobj;
 	fixed_t		x,y,z;
 		
@@ -446,26 +505,8 @@ return;	/*DEBUG */
 		return;
 	}
 
-/* check for apropriate skill level */
-	if ( (netgame != gt_deathmatch) && (mthing->options & 16) )
+	if (!P_MapThingSpawnsMobj(mthing))
 		return;
-		
-	if (gameskill == sk_baby)
-		bit = 1;
-	else if (gameskill == sk_nightmare)
-		bit = 4;
-	else
-		bit = 1<<(gameskill-1);
-	if (!(mthing->options & bit) )
-		return;
-	
-#ifdef MARS
-/* hack player corpses into something else, because player graphics */
-/* aren't included */
-	if (mthing->type == 10 || mthing->type == 12)	/* player corpse */
-		mthing->type = 18;		/* possessed human corpse */
-#endif
-
 
 /* find which type to spawn */
 	for (i=0 ; i< NUMMOBJTYPES ; i++)
@@ -475,13 +516,6 @@ return;	/*DEBUG */
 	if (i==NUMMOBJTYPES)
 		I_Error ("P_SpawnMapThing: Unknown type %i at (%i, %i)",mthing->type
 		, mthing->x, mthing->y);
-
-
-		
-/* don't spawn keycards and players in deathmatch */
-	if (netgame == gt_deathmatch && mobjinfo[i].flags & (MF_NOTDMATCH|MF_COUNTKILL) )
-		return;
-		
 	
 /* spawn it */
 

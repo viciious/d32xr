@@ -3,6 +3,7 @@
 #include "doomdef.h"
 #include "p_local.h"
 
+boolean P_MapThingSpawnsMobj (mapthing_t* mthing);
 void	P_SpawnMapThing (mapthing_t *mthing);
 
 int			numvertexes;
@@ -249,12 +250,12 @@ void P_LoadThings (int lump)
 	int				i;
 	mapthing_t		*mt;
 	int				numthings;
+	int 			numthingsreal;
 
 	data = I_TempBuffer ();
 	W_ReadLump (lump,data);
 	numthings = W_LumpLength (lump) / sizeof(mapthing_t);
-
-	P_PreSpawnMobjs(numthings);
+	numthingsreal = 0;
 
 	mt = (mapthing_t *)data;
 	for (i=0 ; i<numthings ; i++, mt++)
@@ -264,8 +265,20 @@ void P_LoadThings (int lump)
 		mt->angle = LITTLESHORT(mt->angle);
 		mt->type = LITTLESHORT(mt->type);
 		mt->options = LITTLESHORT(mt->options);
-		P_SpawnMapThing (mt);
 	}
+
+	mt = (mapthing_t *)data;
+	for (i=0 ; i<numthings ; i++, mt++)
+		if (P_MapThingSpawnsMobj(mt))
+			numthingsreal++;
+
+	// preallocate a few mobjs for puffs and projectiles
+	numthingsreal += 15;
+	P_PreSpawnMobjs(numthingsreal);
+
+	mt = (mapthing_t *)data;
+	for (i=0 ; i<numthings ; i++, mt++)
+		P_SpawnMapThing (mt);
 }
 
 
