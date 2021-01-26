@@ -370,7 +370,8 @@ void I_DrawSpan (int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, fi
 = wide pixels
 ==================== 
 */ 
-extern int t_ref_bsp, t_ref_prep, t_ref_segs, t_ref_planes, t_ref_sprites, t_ref_total;
+extern int t_ref_bsp, ref_prep, t_ref_segs, t_ref_planes, t_ref_sprites, t_ref_total;
+
 void I_Update (void) 
 {
 	int ticcount;
@@ -380,16 +381,14 @@ void I_Update (void)
 	{
 		D_snprintf(buf, sizeof(buf), "bsp: %d", t_ref_bsp);
 		I_Print8(200, 6, buf);
-		D_snprintf(buf, sizeof(buf), "prep: %d", t_ref_prep);
-		I_Print8(200, 7, buf);
 		D_snprintf(buf, sizeof(buf), "segs: %d", t_ref_segs);
-		I_Print8(200, 8, buf);
+		I_Print8(200, 7, buf);
 		D_snprintf(buf, sizeof(buf), "planes: %d", t_ref_planes);
-		I_Print8(200, 9, buf);
+		I_Print8(200, 8, buf);
 		D_snprintf(buf, sizeof(buf), "sprites: %d", t_ref_sprites);
-		I_Print8(200, 10, buf);
+		I_Print8(200, 9, buf);
 		D_snprintf(buf, sizeof(buf), "total: %d", t_ref_total);
-		I_Print8(200, 11, buf);
+		I_Print8(200, 10, buf);
 	}
 
 	// clear the visible part of the workbuffer
