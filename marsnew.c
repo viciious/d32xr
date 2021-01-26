@@ -175,29 +175,6 @@ void Mars_Slave(void)
 {
 }
 
-/*
-========================
-=
-= FixedMul by Chilly Willy
-=
-= multiply two 16/16 bit, 2's complement fixed point numbers
-=
-========================
-*/
-
-fixed_t FixedMul(fixed_t a, fixed_t b)
-{
-	fixed_t c;
-	asm("mov %0,r1"::"r"(a):"r1");
-	asm("mov %0,r2"::"r"(b):"r2");
-	asm("dmuls.l r1,r2");
-	asm("sts mach,r1");
-	asm("sts macl,r2");
-	asm("xtrct r1,r2");
-	asm("mov r2,%0":"=g"(c));
-	return c;
-}
-
 /* 
 ================ 
 = 
