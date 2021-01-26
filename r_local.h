@@ -127,8 +127,8 @@ typedef struct
 typedef struct
 {
 	char		name[8];		/* for switch changing, etc */
-	int			width;
-	int			height;
+	VINT			width;
+	VINT			height;
 	int			lumpnum;
 #ifdef MARS
 	inpixel_t 	*data;
