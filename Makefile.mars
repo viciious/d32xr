@@ -53,4 +53,4 @@ m68k_crt1.bin: m68k_crt1.s
 	$(SHAS) --small -o $@ $<
 
 clean:
-	$(RM) *.o *.bin *.elf *.map
+	$(RM) -f *.o *.bin *.elf *.map

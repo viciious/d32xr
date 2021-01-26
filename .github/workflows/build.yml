@@ -31,12 +31,16 @@ jobs:
           ls -la ./chillys-sega-devkit-20190504-opt.tar.zst && \
           zstdcat ./chillys-sega-devkit-20190504-opt.tar.zst | sudo tar -C / -xa
       - uses: actions/checkout@v2
+      - name: make debug MARS
+        run: |
+          dd if=/dev/zero bs=1K count=2324 of=doom32x.wad && \
+          make -f Makefile.mars clean && make -f Makefile.mars debug
+      - name: Print sizes
+        run: nm --print-size --size-sort --radix=d D32XR.elf | egrep -Ei ' (B|D) ' | tail
       - name: make MARS
         run: |
           dd if=/dev/zero bs=1K count=2324 of=doom32x.wad && \
-          make -f Makefile.mars
-      - name: Print sizes
-        run: nm --print-size --size-sort --radix=d D32XR.elf | egrep -Ei ' (B|D) ' | tail
+          make -f Makefile.mars clean && make -f Makefile.mars release
       - name: Archive ROM
         uses: actions/upload-artifact@v2
         with:
