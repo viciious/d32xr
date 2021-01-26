@@ -41,6 +41,9 @@ jobs:
         run: |
           dd if=/dev/zero bs=1K count=2324 of=doom32x.wad && \
           make -f Makefile.mars clean && make -f Makefile.mars release
+      - name: readelf -S
+        run: |
+          /opt/toolchains/sega/sh-elf/bin/sh-elf-readelf -S D32XR.elf
       - name: Archive ROM
         uses: actions/upload-artifact@v2
         with:
