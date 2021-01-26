@@ -166,23 +166,15 @@ static void R_decode(byte *input, pixel_t *output)
    }
 }
 
-#endif
-
 //
 // Load and decode a compressed graphic resource and store it in the lumpcache
 //
-#ifdef MARS
-static inpixel_t *R_LoadPixels(int lumpnum)
-#else
 static pixel_t *R_LoadPixels(int lumpnum)
-#endif
 {
    void       *rdest;
    byte       *rsrc;
    lumpinfo_t *info;
-#ifdef JAGUAR
    int         count;
-#endif
 
    // already cached?
    rdest = lumpcache[lumpnum];
@@ -191,7 +183,6 @@ static pixel_t *R_LoadPixels(int lumpnum)
 
    info  = &lumpinfo[lumpnum];
 
-#ifdef JAGUAR
    count = BIGLONG(info->size); // CALICO: endianness correction required
 
    // allocate at doubled lump size, as translates from 8-bit paletted to 
@@ -200,10 +191,6 @@ static pixel_t *R_LoadPixels(int lumpnum)
    rsrc  = wadfileptr + BIGLONG(info->filepos); // CALICO: ditto
    // decompress
    R_decode(rsrc, rdest);
-#else
-   rsrc  = wadfileptr + BIGLONG(info->filepos);
-   rdest = rsrc;
-#endif
 
    lumpcache[lumpnum] = rdest;
 
@@ -263,6 +250,17 @@ void R_Cache(void)
       ++spr;
    }
 }
+
+#endif
+
+#ifdef MARS
+
+void R_Cache(void)
+{
+
+}
+
+#endif
 
 // EOF
 

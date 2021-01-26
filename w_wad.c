@@ -25,8 +25,9 @@ byte		*wadfileptr;
 
 lumpinfo_t	*lumpinfo;			/* points directly to rom image */
 int			numlumps;
+#ifndef MARS
 void		*lumpcache[MAXLUMPS];
-
+#endif
 
 void strupr (char *s)
 {
@@ -256,9 +257,22 @@ void W_ReadLump (int lump, void *dest)
 
 void	*W_CacheLumpNum (int lump, int tag)
 {
+#ifdef MARS
+	void* cache;
+
 	if ((unsigned)lump >= numlumps)
 		I_Error ("W_CacheLumpNum: %i >= numlumps",lump);
-		
+	if (tag != PU_STATIC)
+		I_Error("W_CacheLumpNum: %i tag != PU_STATIC", lump);
+
+	Z_Malloc(W_LumpLength(lump), tag, &cache);
+	W_ReadLump(lump, cache);
+
+	return cache;
+#else
+	if ((unsigned)lump >= numlumps)
+		I_Error("W_CacheLumpNum: %i >= numlumps", lump);
+
 	if (!lumpcache[lump])
 	{	/* read the lump in */
 /*printf ("cache miss on lump %i\n",lump); */
@@ -270,6 +284,7 @@ void	*W_CacheLumpNum (int lump, int tag)
 /*else printf ("cache hit on lump %i\n",lump); */
 	
 	return lumpcache[lump];
+#endif
 }
 
 

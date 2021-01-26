@@ -16,21 +16,29 @@ angle_t normalangle;
 //
 static void *R_CheckPixels(int lumpnum)
 {
-   void *lumpdata = lumpcache[lumpnum];
+#ifdef MARS
+    lumpinfo_t* info;
+    
+    info = &lumpinfo[lumpnum];
+
+    cacheneeded = false;
+
+    return wadfileptr + BIGLONG(info->filepos);
+#else
+    void *lumpdata = lumpcache[lumpnum];
    
    if(lumpdata)
    {
-#ifndef MARS
       // touch this graphic resource with the current frame number so that it 
       // will not be immediately purged again during the same frame
       memblock_t *memblock = (memblock_t *)((byte *)lumpdata - sizeof(memblock_t));
       memblock->lockframe = framecount;
-#endif
    }
    else
       cacheneeded = true; // phase 5 will need to be executed to cache graphics
    
    return lumpdata;
+#endif
 }
 
 //
