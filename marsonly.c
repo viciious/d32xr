@@ -379,6 +379,8 @@ void I_Update (void)
 
 	if (debugmode != 0)
 	{
+		int zmem = Z_FreeMemory(mainzone);
+
 		D_snprintf(buf, sizeof(buf), "bsp: %d", t_ref_bsp);
 		I_Print8(200, 6, buf);
 		D_snprintf(buf, sizeof(buf), "segs: %d", t_ref_segs);
@@ -389,6 +391,9 @@ void I_Update (void)
 		I_Print8(200, 9, buf);
 		D_snprintf(buf, sizeof(buf), "total: %d", t_ref_total);
 		I_Print8(200, 10, buf);
+		D_snprintf(buf, sizeof(buf), "zfree: %d.%d", zmem/1024, (zmem - (zmem/1024)*1024)/100);
+		I_Print8(200, 11, buf);
+
 	}
 
 	// clear the visible part of the workbuffer
