@@ -400,7 +400,7 @@ void I_Update (void)
 		int line = 5;
 		int zmem = Z_FreeMemory(mainzone);
 
-		D_snprintf(buf, sizeof(buf), "fps:%d", fpscount);
+		D_snprintf(buf, sizeof(buf), "fps  :%d", fpscount);
 		I_Print8(200, line++, buf);
 		D_snprintf(buf, sizeof(buf), "ticks:%d", lasttics);
 		I_Print8(200, line++, buf);
