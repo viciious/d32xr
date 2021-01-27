@@ -178,7 +178,8 @@ static void R_SegLoop(viswall_t *segl)
          iscale = (1 << (FRACBITS+SCALEBITS)) / scale;
 
 #ifdef MARS
-	 texturelight = lightmax;
+         texturelight = lightmax;
+         texturelight = (((255 - texturelight) >> 3) & 31) * 256;
 #else
          // calc light level
          texturelight = ((scale * lightcoef) / FRACUNIT) - lightsub;
@@ -281,18 +282,11 @@ static void R_SegLoop(viswall_t *segl)
             // CALICO: draw sky column
             int colnum = ((viewangle + xtoviewangle[x]) >> ANGLETOSKYSHIFT) & 0xff;
 #ifdef MARS
-	    inpixel_t *data;
+            inpixel_t * data = skytexturep->data + colnum * skytexturep->height;
 #else
-	    pixel_t *data;
+            pixel_t *data = skytexturep->data + colnum * skytexturep->height;
 #endif
-	    data = skytexturep->data + colnum * skytexturep->height;
-
-#ifdef MARS
-	    texturelight = 255;
-#else
-	    texturelight = 0;
-#endif
-	    I_DrawColumn(x, top, bottom, texturelight, (top * 18204) << 2,  FRACUNIT + 7281, data, 128);
+            I_DrawColumn(x, top, bottom, 0, (top * 18204) << 2,  FRACUNIT + 7281, data, 128);
          }
       }
 

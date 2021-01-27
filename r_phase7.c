@@ -65,6 +65,8 @@ static void R_MapPlane(void)
          light = plane_lightmax;
       if(light < plane_lightmin)
          light = plane_lightmin;
+
+      light = (((255 - light) >> 3) & 31) * 256;
 #else
       light = plane_lightcoef / distance;
 

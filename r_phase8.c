@@ -24,7 +24,7 @@ static void R_DrawVisSprite(vissprite_t *vis)
 
    // blitter iinc
 #ifdef MARS
-   light    = vis->colormap;
+   light = (((255 - vis->colormap) >> 3) & 31) * 256;
 #else
    light = -((255 - vis->colormap) << 14) & 0xffffff;
 #endif

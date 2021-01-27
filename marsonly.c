@@ -222,7 +222,6 @@ void I_Error (char *error, ...)
 = 
 ================== 
 */ 
- 
 static void I_DrawColumnPO2 (int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_, 
 	fixed_t fracstep, inpixel_t *dc_source, int dc_texheight)
 { 
@@ -244,7 +243,7 @@ static void I_DrawColumnPO2 (int dc_x, int dc_yl, int dc_yh, int light, fixed_t 
 	frac = frac_;
 	heightmask = dc_texheight - 1;
 	dest = viewportbuffer + dc_yl*320/2 + dc_x;
-	dc_colormap = dc_colormaps + (((255-light)>>3)&31)*256;
+	dc_colormap = dc_colormaps + light;
 
 	do
 	{ 
@@ -252,7 +251,7 @@ static void I_DrawColumnPO2 (int dc_x, int dc_yl, int dc_yh, int light, fixed_t 
 		*dest = dc_colormap[c];
 		dest += 320/2; 
 		frac += fracstep; 
-	} while (count--); 
+	} while (count--);
 } 
 
 
@@ -290,7 +289,7 @@ void I_DrawColumnNPO2(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	frac = frac_;
 
 	dest = viewportbuffer + dc_yl*320/2 + dc_x;
-	dc_colormap = dc_colormaps + (((255-light)>>3)&31)*256;
+	dc_colormap = dc_colormaps + light;
 
 	do
 	{
@@ -319,7 +318,6 @@ void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac, fixed
 = 
 ================ 
 */ 
- 
 void I_DrawSpan (int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t *ds_source) 
 { 
 	unsigned		xfrac, yfrac;
@@ -342,7 +340,7 @@ void I_DrawSpan (int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, fi
 	 
 	dest = viewportbuffer + ds_y*320/2 + ds_x1;
 	count = ds_x2 - ds_x1;
-	dc_colormap = dc_colormaps + (((255-light)>>3)&31)*256;
+	dc_colormap = dc_colormaps + light;
 
 	do 
 	{ 
@@ -351,7 +349,7 @@ void I_DrawSpan (int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, fi
 		*dest++ = dc_colormap[c];
 		xfrac += ds_xstep; 
 		yfrac += ds_ystep; 
-	} while (count--); 
+	} while (count--);
 } 
 
 /*=========================================================================== */
@@ -381,17 +379,17 @@ void I_Update (void)
 	{
 		int zmem = Z_FreeMemory(mainzone);
 
-		D_snprintf(buf, sizeof(buf), "bsp: %d", t_ref_bsp);
+		D_snprintf(buf, sizeof(buf), "bsp  :%d", t_ref_bsp);
 		I_Print8(200, 6, buf);
-		D_snprintf(buf, sizeof(buf), "segs: %d", t_ref_segs);
+		D_snprintf(buf, sizeof(buf), "segs :%d", t_ref_segs);
 		I_Print8(200, 7, buf);
-		D_snprintf(buf, sizeof(buf), "planes: %d", t_ref_planes);
+		D_snprintf(buf, sizeof(buf), "plns :%d", t_ref_planes);
 		I_Print8(200, 8, buf);
-		D_snprintf(buf, sizeof(buf), "sprites: %d", t_ref_sprites);
+		D_snprintf(buf, sizeof(buf), "sprts:%d", t_ref_sprites);
 		I_Print8(200, 9, buf);
-		D_snprintf(buf, sizeof(buf), "total: %d", t_ref_total);
+		D_snprintf(buf, sizeof(buf), "total:%d", t_ref_total);
 		I_Print8(200, 10, buf);
-		D_snprintf(buf, sizeof(buf), "zfree: %d.%d", zmem/1024, (zmem - (zmem/1024)*1024)/100);
+		D_snprintf(buf, sizeof(buf), "zfree:%d.%d", zmem/1024, (zmem - (zmem/1024)*1024)/100);
 		I_Print8(200, 11, buf);
 
 	}
