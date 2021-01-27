@@ -427,7 +427,7 @@ typedef struct visplane_s
 } visplane_t;
 
 #define	MAXVISPLANES	64
-extern	visplane_t		*visplanes, *lastvisplane;
+extern	visplane_t		visplanes[MAXVISPLANES], *lastvisplane;
 
 #endif		/* __R_LOCAL__ */
 

@@ -18,7 +18,7 @@ viswall_t	*viswalls, *lastwallcmd;
 /* */
 /* planes */
 /* */
-visplane_t	*visplanes, *lastvisplane;
+visplane_t	visplanes[MAXVISPLANES], *lastvisplane;
 
 /* */
 /* sprites */
@@ -393,19 +393,10 @@ void R_Setup (void)
 	shadepixel = ((shadex<<12)&0xf000) + ((shadey<<8)&0xf00) + (shadei&0xff);
 
 	tempbuf = (unsigned short *)I_WorkBuffer();
-	tempbuf = (unsigned short *)(((int)tempbuf+4)&~3);
 
 /* */
 /* plane filling */
 /*	 */
-	visplanes = (void *)tempbuf;
-	tempbuf += sizeof(*visplanes)*MAXVISPLANES;
-
-	{
-		unsigned short *p = (unsigned short *)I_WorkBuffer();
-		while (p < tempbuf + MAXVISPLANES*(SCREENWIDTH+2)+sizeof(*viswalls)*MAXWALLCMDS/sizeof(*tempbuf)+sizeof(*vissprites)*MAXVISSPRITES/sizeof(*tempbuf)+sizeof(*openings)*MAXOPENINGS/sizeof(*tempbuf)) *p++ = 0;
-	}
-
 	tempbuf = (unsigned short *)(((int)tempbuf+2)&~1);
 	tempbuf++; // padding
 	for (i = 0; i < MAXVISPLANES; i++) {
