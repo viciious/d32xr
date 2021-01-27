@@ -128,7 +128,8 @@ void M_Stop (void)
 int M_Ticker (void)
 {
 	int		buttons;
-	
+	static char	newframe = 1;
+
 	buttons = ticbuttons[consoleplayer];
 	
 /* exit menu if button press */
@@ -144,8 +145,12 @@ int M_Ticker (void)
 	{
 		cursorframe ^= 1;
 		cursorcount = 0;
+		newframe = 1;
 	}
-			
+
+	if (!newframe)
+		return 0;
+	newframe = 0;
 
 /* check for movement */
 	if (! (buttons & (JP_UP|JP_DOWN|JP_LEFT|JP_RIGHT) ) )
