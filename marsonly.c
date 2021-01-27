@@ -388,25 +388,35 @@ extern int t_ref_bsp, ref_prep, t_ref_segs, t_ref_planes, t_ref_sprites, t_ref_t
 
 void I_Update (void) 
 {
+	int sec;
 	int ticcount;
 	char buf[32];
+	static int fpscount = 0;
+	static int prevsec = 0;
+	static int framecount = 0;
 
 	if (debugmode != 0)
 	{
+		int line = 5;
 		int zmem = Z_FreeMemory(mainzone);
 
-		D_snprintf(buf, sizeof(buf), "bsp  :%d", t_ref_bsp);
-		I_Print8(200, 6, buf);
-		D_snprintf(buf, sizeof(buf), "segs :%d", t_ref_segs);
-		I_Print8(200, 7, buf);
-		D_snprintf(buf, sizeof(buf), "plns :%d", t_ref_planes);
-		I_Print8(200, 8, buf);
-		D_snprintf(buf, sizeof(buf), "sprts:%d", t_ref_sprites);
-		I_Print8(200, 9, buf);
-		D_snprintf(buf, sizeof(buf), "total:%d", t_ref_total);
-		I_Print8(200, 10, buf);
+		D_snprintf(buf, sizeof(buf), "fps:%d", fpscount);
+		I_Print8(200, line++, buf);
+		D_snprintf(buf, sizeof(buf), "ticks:%d", lasttics);
+		I_Print8(200, line++, buf);
 		D_snprintf(buf, sizeof(buf), "zfree:%d.%d", zmem/1024, (zmem - (zmem/1024)*1024)/100);
-		I_Print8(200, 11, buf);
+		I_Print8(200, line++, buf);
+		line++;
+		D_snprintf(buf, sizeof(buf), "bsp  :%d", t_ref_bsp);
+		I_Print8(200, line++, buf);
+		D_snprintf(buf, sizeof(buf), "segs :%d", t_ref_segs);
+		I_Print8(200, line++, buf);
+		D_snprintf(buf, sizeof(buf), "plns :%d", t_ref_planes);
+		I_Print8(200, line++, buf);
+		D_snprintf(buf, sizeof(buf), "sprts:%d", t_ref_sprites);
+		I_Print8(200, line++, buf);
+		D_snprintf(buf, sizeof(buf), "total:%d", t_ref_total);
+		I_Print8(200, line++, buf);
 
 	}
 
@@ -422,10 +432,20 @@ void I_Update (void)
 	do
 	{
 		ticcount = I_GetTime();
-	} while (ticcount-lastticcount < 3);
+	} while (ticcount-lastticcount < 1);
 
 	lasttics = ticcount - lastticcount;
 	lastticcount = ticcount;
+
+	framecount++;
+
+	sec = ticcount / (ticrate == 4 ? 60 : 50); // FIXME: add proper NTSC vs PAL rate detection
+	if (sec != prevsec) {
+		static int prevsecframe;
+		fpscount = (framecount - prevsecframe) / (sec - prevsec);
+		prevsec = sec;
+		prevsecframe = framecount;
+	}
 
 	viewportbuffer = (volatile pixel_t *)I_ViewportBuffer();
 
@@ -440,6 +460,7 @@ void I_Update (void)
 			lastdebugtic = ticcount;
 		}
 	}
+
 	if (debugmode == 2)
 		I_ClearFrameBuffer();
 }
