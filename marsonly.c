@@ -3,7 +3,7 @@
 #include "doomdef.h"
 #include "r_local.h"
 
-#define USE_C_DRAW
+//#define USE_C_DRAW
 
 extern const int COLOR_WHITE;
 
