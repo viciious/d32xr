@@ -393,7 +393,6 @@ void I_Update (void)
 	char buf[32];
 	static int fpscount = 0;
 	static int prevsec = 0;
-	static int framecount = 0;
 
 	if (debugmode != 0)
 	{
@@ -436,8 +435,6 @@ void I_Update (void)
 
 	lasttics = ticcount - lastticcount;
 	lastticcount = ticcount;
-
-	framecount++;
 
 	sec = ticcount / (ticrate == 4 ? 60 : 50); // FIXME: add proper NTSC vs PAL rate detection
 	if (sec != prevsec) {
