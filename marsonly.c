@@ -416,7 +416,8 @@ void I_Update (void)
 		I_Print8(200, line++, buf);
 		D_snprintf(buf, sizeof(buf), "total:%d", t_ref_total);
 		I_Print8(200, line++, buf);
-
+		D_snprintf(buf, sizeof(buf), "viswl:%d", lastwallcmd - viswalls);
+		I_Print8(200, line++, buf);
 	}
 
 	// clear the visible part of the workbuffer
