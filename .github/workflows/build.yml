@@ -44,6 +44,12 @@ jobs:
       - name: readelf -S
         run: |
           /opt/toolchains/sega/sh-elf/bin/sh-elf-readelf -S D32XR.elf
+      - name: .bss plus .data size
+        run: |
+          /opt/toolchains/sega/sh-elf/bin/sh-elf-readelf -S D32XR.elf | \
+          awk '{ if ($9 == "WA") { print 0"x"$7 } }' | \
+          xargs printf "%d\n" | \
+          awk '{s+=$1} END {print s}'
       - name: Archive ROM
         uses: actions/upload-artifact@v2
         with:
