@@ -542,8 +542,9 @@ typedef struct
 } state_t;
 
 extern const state_t	states[NUMSTATES];
-extern const char *sprnames[NUMSPRITES];
-
+#ifndef MARS
+extern const char * const sprnames[NUMSPRITES];
+#endif
 
 
 typedef enum {
