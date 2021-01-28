@@ -311,7 +311,6 @@ void R_Setup (void)
 	player_t *player;
 	int		shadex, shadey, shadei;
 	unsigned short  *tempbuf;
-	int		*wb, *wbp;
 	
 /* */
 /* set up globals for new frame */
@@ -427,17 +426,8 @@ void R_Setup (void)
 	vissprite_p = vissprites;
 
 	tempbuf = (unsigned short*)(((int)tempbuf + 4) & ~3);
-	wbp = (int*)tempbuf;
 	openings = tempbuf;
 	tempbuf += sizeof(*openings)*MAXOPENINGS/sizeof(*tempbuf);
-	wb = (int*)tempbuf;
-
-#ifdef MARS
-	// clear the openings in workbuffer as they are later written as single bytes,
-	// some of which may be 0 and since the work buffer resides in VRAM, those are
-	// going to be ignored and that will be causing visual glitches
-	while (wbp < wb) *wbp++ = 0;
-#endif
 
 	lastopening = openings;
 #ifndef MARS
