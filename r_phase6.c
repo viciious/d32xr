@@ -23,7 +23,7 @@ typedef struct drawtex_s
 static drawtex_t toptex;
 static drawtex_t bottomtex;
 
-static int clipbounds[SCREENWIDTH];
+static int *clipbounds;
 static int lightmin, lightmax, lightsub, lightcoef;
 static int floorclipx, ceilingclipx, x, scale, iscale, texturecol, texturelight;
 
@@ -311,6 +311,7 @@ void R_SegCommands(void)
    viswall_t *segl;
 
    // initialize the clipbounds array
+   clipbounds = (int *)&r_workbuf[0];
    clip = clipbounds;
    for(i = 0; i < SCREENWIDTH / 4; i++)
    {
