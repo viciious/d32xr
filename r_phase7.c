@@ -17,7 +17,7 @@ static fixed_t basexscale, baseyscale;
 static int *pl_stopfp;
 static int *pl_fp;
 
-static int spanstart[/*SCREENHEIGHT*/256];
+static int *spanstart;
 #ifdef MARS
 static inpixel_t *ds_source;
 #else
@@ -352,6 +352,8 @@ void R_DrawPlanes(void)
 
    basexscale =  (finecosine(angle) / (SCREENWIDTH / 2));
    baseyscale = -(  finesine(angle) / (SCREENWIDTH / 2));
+
+   spanstart = (int *)&r_workbuf[0];
 
    // Jag-specific setup
    /*

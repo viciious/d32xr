@@ -409,8 +409,7 @@ extern	vissprite_t	*vissprites, *lastsprite_p, *vissprite_p;
 extern	unsigned short	*openings, *lastopening;
 
 #define	MAXVISSSEC		256
-extern	subsector_t		*vissubsectors[MAXVISSSEC], **lastvissubsector;
-
+extern	subsector_t		**vissubsectors, **lastvissubsector;
 
 typedef struct visplane_s
 {
@@ -428,6 +427,8 @@ typedef struct visplane_s
 
 #define	MAXVISPLANES	64
 extern	visplane_t		visplanes[MAXVISPLANES], *lastvisplane;
+
+extern  intptr_t *r_workbuf;
 
 #endif		/* __R_LOCAL__ */
 

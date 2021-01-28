@@ -112,8 +112,21 @@ void R_InitFlats (void)
 
 void R_InitData (void)
 {
+	size_t workbufsize;
+
 	R_InitTextures ();
 	R_InitFlats ();
+
+	workbufsize = 0;
+	if (MAXVISSSEC > workbufsize)
+		workbufsize = MAXVISSSEC;
+	if (SCREENWIDTH+1 > workbufsize)
+		workbufsize = SCREENWIDTH+1;
+	if (256 > workbufsize)
+		workbufsize = 256;
+	workbufsize *= sizeof(intptr_t);
+
+	Z_Malloc(workbufsize, PU_STATIC, &r_workbuf);
 }
 
 

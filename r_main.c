@@ -8,7 +8,7 @@
 /* */
 /* subsectors */
 /* */
-subsector_t		*vissubsectors[MAXVISSSEC], **lastvissubsector;
+subsector_t		**vissubsectors, **lastvissubsector;
 
 /* */
 /* walls */
@@ -29,6 +29,9 @@ vissprite_t	*vissprites, *lastsprite_p, *vissprite_p;
 /* openings / misc refresh memory */
 /* */
 unsigned short	*openings, *lastopening;
+
+/* holds *vissubsectors[MAXVISSEC], spropening[SCREENWIDTH+1], spanstart[256] */
+intptr_t 	*r_workbuf;
 
 /*===================================== */
 
@@ -411,6 +414,8 @@ void R_Setup (void)
 	tempbuf += sizeof(*viswalls)*MAXWALLCMDS/sizeof(*tempbuf);
 
 	lastwallcmd = viswalls;			/* no walls added yet */
+
+	vissubsectors = (subsector_t **)&r_workbuf[0];
 	lastvissubsector = vissubsectors;	/* no subsectors visible yet */
 	
 /*	 */

@@ -6,7 +6,7 @@
 
 #include "r_local.h"
 
-static int spropening[SCREENWIDTH + 1];
+static int *spropening;
 
 static void R_DrawVisSprite(vissprite_t *vis)
 {
@@ -227,6 +227,8 @@ void R_Sprites(void)
 {
    ptrdiff_t i = 0, count = lastsprite_p - vissprites;
    vissprite_t *best = NULL;
+
+   spropening = (int *)&r_workbuf[0];
 
    // draw mobj sprites
    while(i < count)
