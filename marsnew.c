@@ -160,6 +160,9 @@ int Mars_ToDoomControls(int ctrl)
 	if (ctrl & SEGA_CTRL_Z)
 		newc |= BT_9;
 
+	if (ctrl & SEGA_CTRL_MODE)
+		newc |= BT_STAR;
+
 	return newc;
 }
 

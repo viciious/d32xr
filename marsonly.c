@@ -448,7 +448,7 @@ void I_Update (void)
 
 	cy = 1;
 
-	if ((I_ReadControls() & (BT_A|BT_C)) == (BT_A|BT_C))
+	if ((I_ReadControls() & BT_STAR) == BT_STAR)
 	{
 		static int lastdebugtic = 0;
 		if (ticcount > lastdebugtic + 20)
