@@ -44,8 +44,9 @@ memzone_t *Z_InitZone (byte *base, int size)
 	zone->blocklist.id = ZONEID;
 	zone->blocklist.next = NULL;
 	zone->blocklist.prev = NULL;
+#ifndef MARS
 	zone->blocklist.lockframe = -1;
-
+#endif
 	return zone;
 }
 
@@ -199,8 +200,9 @@ backtostart:
 	}
 	base->tag = tag;
 	base->id = ZONEID;
+#ifndef MARS
 	base->lockframe = -1;
-		
+#endif	
 	mainzone->rover = base->next;	/* next allocation will start looking here */
 	if (!mainzone->rover)
 		mainzone->rover = &mainzone->blocklist;
@@ -322,9 +324,13 @@ void Z_DumpHeap (memzone_t *mainzone)
 	
 	for (block = &mainzone->blocklist ; block ; block = block->next)
 	{
+#ifndef MARS
 		printf ("block:%p    size:%7i    user:%p    tag:%3i    frame:%i\n",
 			block, block->size, block->user, block->tag,block->lockframe);
-		
+#else
+		printf ("block:%p    size:%7i    user:%p    tag:%3i\n",
+			block, block->size, block->user, block->tag);
+#endif	
 		if (!block->next)
 			continue;
 			

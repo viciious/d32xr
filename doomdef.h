@@ -543,7 +543,9 @@ typedef struct memblock_s
 	void    **user;         /* NULL if a free block */
 	short   tag;            /* purgelevel */
 	short   id;             /* should be ZONEID */
+#ifndef MARS
 	int		lockframe;		/* don't purge on the same frame */
+#endif
 	struct memblock_s   *next;
 	struct memblock_s	*prev;
 } memblock_t;
