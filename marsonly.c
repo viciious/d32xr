@@ -386,6 +386,19 @@ void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, fix
 */ 
 extern int t_ref_bsp, ref_prep, t_ref_segs, t_ref_planes, t_ref_sprites, t_ref_total;
 
+/*
+int lline = 0;
+
+static void R_TextureCacheCallbackz(void *ptr, void *userp)
+{
+	char buf[32];
+	texcacheblock_t *cache = ptr;
+	int id = cache->id;
+	D_snprintf(buf, sizeof(buf), "%d %d %dx%d", id, cache->pixelcount, textures[id].width, textures[id].height);
+	I_Print8(200, lline++, buf);
+}
+*/
+
 void I_Update (void) 
 {
 	int sec;
@@ -398,10 +411,12 @@ void I_Update (void)
 	{
 		int i;
 		int line = 5;
+		/*
 		int bestflat = -1;
 		int bestflatpixels = 0;
 		int besttex = -1;
 		int besttexpixels = 0;
+		*/
 		int zmem = Z_FreeMemory(mainzone);
 
 		D_snprintf(buf, sizeof(buf), "fps  :%d", fpscount);
@@ -424,33 +439,14 @@ void I_Update (void)
 		D_snprintf(buf, sizeof(buf), "viswl:%d", lastwallcmd - viswalls);
 		I_Print8(200, line++, buf);
 
-		for (i = 0; i < numflats; i++)
-		{
-			if (flatframecounts[i] != framecount)
-				continue;
-			if (flatpixelcounts[i] > bestflatpixels)
-			{
-				bestflatpixels = flatpixelcounts[i];
-				bestflat = i;
-			}
-		}
+//		if (r_wallscache.bestobj != -1)
+//		{
+//			D_snprintf(buf, sizeof(buf), "%d %d %dx%d", r_wallscache.bestobj, Z_LargestFreeBlock(r_wallscache.zone), textures[r_wallscache.bestobj].width, textures[r_wallscache.bestobj].height);
+//			I_Print8(200, line++, buf);
+//		}
 
-		for (i = 0; i < numtextures; i++)
-		{
-			if (textureframecounts[i] != framecount)
-				continue;
-			if (texturepixelcounts[i] > besttexpixels)
-			{
-				besttexpixels = texturepixelcounts[i];
-				besttex = i;
-			}
-		}
-
-		D_snprintf(buf, sizeof(buf), "%d: %d", bestflat, bestflatpixels);
-		I_Print8(200, line++, buf);
-
-		D_snprintf(buf, sizeof(buf), "%d: %d", besttex, besttexpixels);
-		I_Print8(200, line++, buf);
+//		lline = line;
+//		Z_ForEachBlock(r_texcachezone, &R_TextureCacheCallbackz, NULL);
 	}
 
 	// clear the visible part of the workbuffer

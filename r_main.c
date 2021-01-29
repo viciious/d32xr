@@ -70,6 +70,9 @@ fixed_t	*finecosine_ = &finesine_[FINEANGLES/4];
 
 int t_ref_bsp, t_ref_prep, t_ref_segs, t_ref_planes, t_ref_sprites, t_ref_total;
 
+r_texcache_t r_flatscache, r_wallscache;
+
+
 /*
 ===============================================================================
 =
@@ -225,6 +228,8 @@ struct subsector_s *R_PointInSubsector (fixed_t x, fixed_t y)
 
 void R_Init (void)
 {
+	size_t workbufsize;
+
 D_printf ("R_InitData\n");
 	R_InitData ();
 D_printf ("Done\n");
@@ -234,6 +239,84 @@ D_printf ("Done\n");
 	
 	framecount = 0;
 	viewplayer = &players[0];
+
+	workbufsize = 0;
+	if (MAXVISSSEC > workbufsize)
+		workbufsize = MAXVISSSEC;
+	if (SCREENWIDTH + 1 > workbufsize)
+		workbufsize = SCREENWIDTH + 1;
+	if (256 > workbufsize)
+		workbufsize = 256;
+	workbufsize *= sizeof(intptr_t);
+
+	r_workbuf = Z_Malloc(workbufsize, PU_STATIC, NULL);
+
+	R_InitTexCache(&r_flatscache, numflats);
+
+	R_InitTexCache(&r_wallscache, numtextures);
+}
+
+/*
+==============
+=
+= R_SetupTextureCaches
+=
+==============
+*/
+void R_SetupTextureCaches(void)
+{
+	int i;
+	int numcflats, numcwalls;
+	int zonefree, cachezonesize;
+	void *margin;
+
+	const int zonemargin = 4*1024;
+	const int flatblocksize = sizeof(memblock_t) + sizeof(texcacheblock_t) + 64*64 + 100;
+	const int texblocksize = sizeof(memblock_t) + sizeof(texcacheblock_t) + 64*128 + 100;
+
+	// reset pointers from previous level
+	for (i = 0; i < numtextures; i++)
+		textures[i].data = NULL;
+	for (i = 0; i < numflats; i++)
+		flatpixels[i] = NULL;
+
+	// functioning texture cache requires at least 8kb of ram
+	zonefree = Z_LargestFreeBlock(mainzone);
+	if (zonefree < zonemargin+flatblocksize)
+		return;
+
+	// see how many flats we can store
+	cachezonesize = zonefree - zonemargin; // give the main zone some slack
+
+	numcflats = cachezonesize / flatblocksize;
+	if (numcflats > 4)
+		numcflats = 4;
+
+	numcwalls = (cachezonesize - numcflats*flatblocksize) / texblocksize;
+	if (numcwalls <= 0 && numcflats > 2)
+	{
+		numcflats /= 2;
+		numcwalls = (cachezonesize - numcflats * flatblocksize) / texblocksize;
+	}
+	if (numcwalls < 0)
+		numcwalls = 0;
+
+	if (numcflats + numcwalls == 0)
+	{
+		R_InitTexCacheZone(&r_flatscache, 0);
+		R_InitTexCacheZone(&r_wallscache, 0);
+		return;
+	}
+
+	cachezonesize = numcflats * flatblocksize + texblocksize * numcwalls;
+	
+	margin = Z_Malloc(zonemargin, PU_LEVEL, 0);
+
+	R_InitTexCacheZone(&r_flatscache, numcflats * flatblocksize);
+
+	R_InitTexCacheZone(&r_wallscache, numcwalls * texblocksize);
+
+	Z_Free(margin);
 }
 
 /*============================================================================= */
@@ -433,6 +516,9 @@ void R_Setup (void)
 #ifndef MARS
 	phasetime[0] = samplecount;
 #endif
+
+	R_SetupTexCacheFrame(&r_flatscache);
+	R_SetupTexCacheFrame(&r_wallscache);
 }
 
 
@@ -516,9 +602,7 @@ void R_RenderPlayerView (void)
 
 	t_ref_total = I_GetTime() - t_ref_total;
 
-#ifndef MARS
-	I_Update();
-#endif
+	R_Update();
 #else
 
 /* start the gpu running the refresh */

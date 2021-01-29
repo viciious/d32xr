@@ -621,6 +621,8 @@ extern byte *debugscreen;
 
 	iquehead = iquetail = 0;
 	gamepaused = false;
+
+	R_SetupTextureCaches();
 }
 
 

@@ -216,6 +216,7 @@ int     SlopeDiv(unsigned int num, unsigned int den);
 void	R_RenderBSPNode (int bspnum);
 void	R_InitData (void);
 void	R_InitSpriteDefs (char **namelist);
+void	R_SetupTextureCaches(void);
 
 
 /* to get a global angle from cartesian coordinates, the coordinates are */
@@ -288,14 +289,48 @@ extern	texture_t	textures[MAXTEXTURES];
 
 extern	VINT			*flattranslation;		/* for global animation */
 extern	VINT			*texturetranslation;	/* for global animation */
+extern	void			** flatpixels;
 
 extern	int			firstflat, numflats;
 
-extern	VINT			*textureframecounts;
-extern	unsigned short		*texturepixelcounts;
 
-extern	VINT			*flatframecounts;
-extern	unsigned short		*flatpixelcounts; /* capped at 0xffff */
+/*
+==============================================================================
+
+					TEXTURE CACHING
+
+==============================================================================
+*/
+typedef struct
+{
+	unsigned short* pixcount; /* capped at 0xffff */
+	VINT* framecount;
+
+	int maxobjects;
+	int objectsize;
+
+	int bestobj;
+	int bestcount;
+
+	void* zone;
+} r_texcache_t;
+
+typedef struct
+{
+	VINT id;
+	VINT pixelcount;
+	void** userp;
+} texcacheblock_t;
+
+extern r_texcache_t r_flatscache, r_wallscache;
+
+void R_InitTexCache(r_texcache_t* c, int maxobjects);
+void R_InitTexCacheZone(r_texcache_t* c, int zonesize);
+void R_SetupTexCacheFrame(r_texcache_t* c);
+void R_TestTexCacheCandidate(r_texcache_t* c, int id);
+void R_AddPixelsToTexCache(r_texcache_t* c, int id, int pixels);
+void R_PostTexCacheFrame(r_texcache_t* c);
+void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **userp);
 
 /*
 ==============================================================================
@@ -363,17 +398,6 @@ typedef struct
 	unsigned	offset;
 	unsigned	distance;
 	unsigned	seglightlevel;
-
-	/* */
-	/* filled in by late prep */
-	/* */
-#ifdef MARS
-	inpixel_t* floorpic;
-	inpixel_t* ceilingpic;
-#else
-	pixel_t* floorpic;
-	pixel_t* ceilingpic;
-#endif
 } viswall_t;
 
 #define	MAXWALLCMDS		128

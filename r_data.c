@@ -12,13 +12,9 @@ texture_t	textures[MAXTEXTURES];
 VINT			*flattranslation;		/* for global animation */
 VINT			*texturetranslation;	/* for global animation */
 
+void			**flatpixels;
+
 texture_t	*skytexturep;
-
-VINT                    *textureframecounts;
-unsigned short          *texturepixelcounts; /* capped at 0xffff */
-
-VINT                    *flatframecounts;
-unsigned short          *flatpixelcounts; /* capped at 0xffff */
 
 /*============================================================================ */
 
@@ -81,12 +77,6 @@ if (texture->lumpnum == -1)
 	texturetranslation = Z_Malloc ((numtextures+1)*sizeof(*texturetranslation), PU_STATIC, 0);
 	for (i=0 ; i<numtextures ; i++)
 		texturetranslation[i] = i;	
-
-/* */
-/* pixel counters */
-/* */
-	textureframecounts = Z_Malloc (numtextures*sizeof(*textureframecounts), PU_STATIC, 0);
-	texturepixelcounts = Z_Malloc (numtextures*sizeof(*texturepixelcounts), PU_STATIC, 0);
 }
 
 
@@ -111,13 +101,8 @@ void R_InitFlats (void)
 	for (i=0 ; i<numflats ; i++)
 		flattranslation[i] = i;
 
-/* */
-/* pixel counters */
-/* */
-	flatframecounts = Z_Malloc (numflats*sizeof(*flatframecounts), PU_STATIC, 0);
-	flatpixelcounts = Z_Malloc (numflats*sizeof(*flatpixelcounts), PU_STATIC, 0);
+	flatpixels = Z_Malloc(numflats * sizeof(*flatpixels), PU_STATIC, 0);
 }
-
 
 /*
 ================
@@ -131,21 +116,8 @@ void R_InitFlats (void)
 
 void R_InitData (void)
 {
-	size_t workbufsize;
-
 	R_InitTextures ();
 	R_InitFlats ();
-
-	workbufsize = 0;
-	if (MAXVISSSEC > workbufsize)
-		workbufsize = MAXVISSSEC;
-	if (SCREENWIDTH+1 > workbufsize)
-		workbufsize = SCREENWIDTH+1;
-	if (256 > workbufsize)
-		workbufsize = 256;
-	workbufsize *= sizeof(intptr_t);
-
-	Z_Malloc(workbufsize, PU_STATIC, &r_workbuf);
 }
 
 

@@ -407,7 +407,7 @@ int G_FindMapinfo(int maplump, dmapinfo_t *mi)
 	if (!section)
 		return 0;
 
-	Z_Malloc(sectionlen + 1, PU_CACHE, &zsection);
+	zsection = Z_Malloc(sectionlen + 1, PU_STATIC, NULL);
 	D_memcpy(zsection, section, sectionlen);
 	zsection[sectionlen] = '\0';
 
@@ -453,7 +453,7 @@ dmapinfo_t **G_LoadMaplist(int *pmapcount)
 	if (!mapcount)
 		return NULL;
 
-	Z_Malloc(sizeof(*maplist) * (mapcount + 1), PU_CACHE, &maplist);
+	maplist = Z_Malloc(sizeof(*maplist) * (mapcount + 1), PU_STATIC, NULL);
 	
 	i = 0;
 
@@ -468,7 +468,7 @@ dmapinfo_t **G_LoadMaplist(int *pmapcount)
 		if (!section)
 			break;
 
-		Z_Malloc(sizeof(dmapinfo_t) + sectionlen + 1, PU_CACHE, &mi);
+		mi = Z_Malloc(sizeof(dmapinfo_t) + sectionlen + 1, PU_STATIC, NULL);
 		zsection = (char *)mi + sizeof(dmapinfo_t);
 		D_memcpy(zsection, section, sectionlen);
 		zsection[sectionlen] = '\0';

@@ -21,8 +21,6 @@ static void *R_CheckPixels(int lumpnum)
     
     info = &lumpinfo[lumpnum];
 
-    cacheneeded = false;
-
     return wadfileptr + BIGLONG(info->filepos);
 #else
     void *lumpdata = lumpcache[lumpnum];
@@ -129,22 +127,35 @@ static void R_FinishWallPrep(viswall_t *wc)
    if(fw_actionbits & AC_TOPTEXTURE)
    {
       fw_texture = wc->t_texture;
-      fw_texture->data = R_CheckPixels(fw_texture->lumpnum);
+#ifdef MARS
+      if (fw_texture->data == NULL)
+#endif
+        fw_texture->data = R_CheckPixels(fw_texture->lumpnum);
+      R_TestTexCacheCandidate(&r_wallscache, fw_texture - textures);
    }
    
    // has bottom texture?
    if(fw_actionbits & AC_BOTTOMTEXTURE)
    {
       fw_texture = wc->b_texture;
-      fw_texture->data = R_CheckPixels(fw_texture->lumpnum);
+#ifdef MARS
+      if (fw_texture->data == NULL)
+#endif
+        fw_texture->data = R_CheckPixels(fw_texture->lumpnum);
+      R_TestTexCacheCandidate(&r_wallscache, fw_texture - textures);
    }
    
    int floorpicnum = wc->floorpicnum;
    int ceilingpicnum = wc->ceilingpicnum;
 
+#ifdef MARS
+   if (flatpixels[floorpicnum] == NULL)
+#endif
+     flatpixels[floorpicnum] = R_CheckPixels(firstflat + floorpicnum);
+
    // get floor texture
-   wc->floorpic = R_CheckPixels(firstflat + floorpicnum);
-   
+   R_TestTexCacheCandidate(&r_flatscache, floorpicnum);
+
    // is there sky at this wall?
    if(ceilingpicnum == -1)
    {
@@ -154,7 +165,11 @@ static void R_FinishWallPrep(viswall_t *wc)
    else
    {
       // normal ceilingpic
-      wc->ceilingpic = R_CheckPixels(firstflat + ceilingpicnum);
+#ifdef MARS
+       if (flatpixels[ceilingpicnum] == NULL)
+#endif
+         flatpixels[ceilingpicnum] = R_CheckPixels(firstflat + ceilingpicnum);
+      R_TestTexCacheCandidate(&r_flatscache, ceilingpicnum);
    }
    
    // this is essentially R_StoreWallRange
@@ -313,7 +328,11 @@ boolean R_LatePrep(void)
    // finish player psprites
    for(; spr < vissprite_p; spr++)
       R_FinishPSprite(spr);
-   
+
+#ifdef MARS
+   cacheneeded = true;
+#endif
+ 
    return cacheneeded;
 }
 

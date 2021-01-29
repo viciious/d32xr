@@ -226,8 +226,8 @@ void R_Cache(void)
       int ceilingpicnum = wall->ceilingpicnum;
       
       // load floorpic
-      if(wall->floorpic == NULL)
-         wall->floorpic = R_LoadPixels(firstflat + floorpicnum);
+      if(flatpixels[floorpicnum] == NULL)
+          flatpixels[floorpicnum] = R_LoadPixels(firstflat + floorpicnum);
 
       // load sky or normal ceilingpic
       if(ceilingpicnum == -1) // sky 
@@ -235,8 +235,8 @@ void R_Cache(void)
          if(skytexturep->data == NULL)
             skytexturep->data = R_LoadPixels(skytexturep->lumpnum);
       }
-      else if(wall->ceilingpic == NULL)
-         wall->ceilingpic = R_LoadPixels(firstflat + ceilingpicnum);
+      else if(flatpixels[ceilingpicnum] == NULL)
+          flatpixels[ceilingpicnum] = R_LoadPixels(firstflat + ceilingpicnum);
 
       ++wall;
    }
@@ -257,7 +257,22 @@ void R_Cache(void)
 
 void R_Cache(void)
 {
+    if (r_flatscache.bestobj != -1)
+    {
+        const int flatnum = r_flatscache.bestobj;
+        const int pixels = 64 * 64;
 
+        R_AddToTexCache(&r_flatscache, flatnum, pixels, firstflat + flatnum, (void**)&flatpixels[flatnum]);
+    }
+
+    if (r_wallscache.bestobj != -1)
+    {
+        const int id = r_wallscache.bestobj;
+        texture_t* tex = &textures[id];
+        int pixels = (int)tex->width * tex->height;
+
+        R_AddToTexCache(&r_wallscache, id, pixels, tex->lumpnum, (void **)&tex->data);
+    }
 }
 
 #endif

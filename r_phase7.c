@@ -377,16 +377,10 @@ void R_DrawPlanes(void)
       {
          int light;
 
-         ds_source = pl->picnum;
+         pl_flatnum = pl->flatnum;
+         pl_pixelcount = 0;
 
-	 pl_flatnum = pl->flatnum;
-	 if (flatframecounts[pl_flatnum] != framecount)
-	 {
-           flatframecounts[pl_flatnum] = framecount;
-           flatpixelcounts[pl_flatnum] = 0;
-	 }
-
-	 pl_pixelcount = 0;
+         ds_source = flatpixels[pl_flatnum];
 
          planeheight = D_abs(pl->height);
 
@@ -403,10 +397,7 @@ void R_DrawPlanes(void)
 
          R_PlaneLoop(pl);
 
-	 if (pl_pixelcount + flatframecounts[pl_flatnum] >= 0xffff)
-		 flatpixelcounts[pl_flatnum] = 0xffff;
-	 else
-		 flatpixelcounts[pl_flatnum] += pl_pixelcount;
+         R_AddPixelsToTexCache(&r_flatscache, pl_flatnum, pl_pixelcount);
       }
 
       ++pl;

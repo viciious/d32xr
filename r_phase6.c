@@ -36,11 +36,11 @@ static visplane_t* visplanes_hash[NUM_VISPLANES_BUCKETS];
 // if no compatible match can be found.
 //
 #ifdef MARS
-static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, inpixel_t *picnum, 
+static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, int flatnum,
 #else
-static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, pixel_t *picnum, 
+static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, int flatnum,
 #endif
-                               int lightlevel, int start, int stop, int flatnum)
+                               int lightlevel, int start, int stop)
 {
    int i;
    int* open;
@@ -50,7 +50,7 @@ static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, pixel_t *picnu
    for (check = visplanes_hash[hash]; check; )
    {
        if(height == check->height && // same plane as before?
-         picnum == check->picnum &&
+         flatnum == check->flatnum &&
          lightlevel == check->lightlevel)
       {
          if(check->open[start] == OPENMARK)
@@ -72,11 +72,10 @@ static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, pixel_t *picnu
    ++lastvisplane;
 
    check->height = height;
-   check->picnum = picnum;
+   check->flatnum = flatnum;
    check->lightlevel = lightlevel;
    check->minx = start;
    check->maxx = stop;
-   check->flatnum = flatnum;
 
    open = (int*)check->open;
    for(i = 0; i < SCREENWIDTH/4; i++)
@@ -221,8 +220,8 @@ static void R_SegLoop(viswall_t *segl)
          {
             if(floor->open[x] != OPENMARK)
             {
-               floor = R_FindPlane(floor + 1, segl->floorheight, segl->floorpic, 
-                                   segl->seglightlevel, x, segl->stop, segl->floorpicnum);
+               floor = R_FindPlane(floor + 1, segl->floorheight, segl->floorpicnum,
+                                   segl->seglightlevel, x, segl->stop);
             }
             floor->open[x] = (unsigned short)((top << 8) + bottom);
          }
@@ -243,8 +242,8 @@ static void R_SegLoop(viswall_t *segl)
          {
             if(ceiling->open[x] != OPENMARK)
             {
-               ceiling = R_FindPlane(ceiling + 1, segl->ceilingheight, segl->ceilingpic, 
-                                     segl->seglightlevel, x, segl->stop, segl->ceilingpicnum);
+               ceiling = R_FindPlane(ceiling + 1, segl->ceilingheight, segl->ceilingpicnum,
+                                     segl->seglightlevel, x, segl->stop);
             }
             ceiling->open[x] = (unsigned short)((top << 8) + bottom);
          }
@@ -382,32 +381,12 @@ void R_SegCommands(void)
 
       if(segl->actionbits & AC_TOPTEXTURE)
       {
-         int texnum = segl->t_texture - textures;
-
-	 if (textureframecounts[texnum] != framecount)
-	 {
-		 textureframecounts[texnum] = framecount;
-		 texturepixelcounts[texnum] = 0;
-	 }
-	 if (toptex.pixelcount + textureframecounts[texnum] >= 0xffff)
-		 texturepixelcounts[texnum] = 0xffff;
-	 else
-		 texturepixelcounts[texnum] += toptex.pixelcount;
+         R_AddPixelsToTexCache(&r_wallscache, segl->t_texture - textures, toptex.pixelcount);
       }
 
       if(segl->actionbits & AC_BOTTOMTEXTURE)
       {
-         int texnum = segl->b_texture - textures;
-
-	 if (textureframecounts[texnum] != framecount)
-	 {
-		 textureframecounts[texnum] = framecount;
-		 texturepixelcounts[texnum] = 0;
-	 }
-	 if (bottomtex.pixelcount + textureframecounts[texnum] >= 0xffff)
-		 texturepixelcounts[texnum] = 0xffff;
-	 else
-		 texturepixelcounts[texnum] += bottomtex.pixelcount;
+         R_AddPixelsToTexCache(&r_wallscache, segl->b_texture - textures, bottomtex.pixelcount);
       }
 
       ++segl;

@@ -5,11 +5,19 @@
 */
 
 #include "doomdef.h"
+#include "r_local.h"
 
 void R_Update(void)
 {
+#ifndef MARS
    // CALICO: Invoke I_Update
    I_Update();
+#endif
+
+#ifdef MARS
+   R_PostTexCacheFrame(&r_flatscache);
+   R_PostTexCacheFrame(&r_wallscache);
+#endif
 
    // NB: appears completely Jag-specific; our drawing may end in phase 8.
    /*
