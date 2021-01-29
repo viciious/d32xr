@@ -14,6 +14,11 @@ VINT			*texturetranslation;	/* for global animation */
 
 texture_t	*skytexturep;
 
+VINT                    *textureframecounts;
+unsigned short          *texturepixelcounts; /* capped at 0xffff */
+
+VINT                    *flatframecounts;
+unsigned short          *flatpixelcounts; /* capped at 0xffff */
 
 /*============================================================================ */
 
@@ -45,6 +50,9 @@ void R_InitTextures (void)
 	numtextures = LITTLELONG(*maptex);
 	directory = maptex+1;
 	
+	if (numtextures > MAXTEXTURES)
+		I_Error("numtextures == %d", numtextures);
+
 	for (i=0 ; i<numtextures ; i++, directory++)
 	{
 		offset = LITTLELONG(*directory);
@@ -73,8 +81,13 @@ if (texture->lumpnum == -1)
 	texturetranslation = Z_Malloc ((numtextures+1)*sizeof(*texturetranslation), PU_STATIC, 0);
 	for (i=0 ; i<numtextures ; i++)
 		texturetranslation[i] = i;	
-}
 
+/* */
+/* pixel counters */
+/* */
+	textureframecounts = Z_Malloc (numtextures*sizeof(*textureframecounts), PU_STATIC, 0);
+	texturepixelcounts = Z_Malloc (numtextures*sizeof(*texturepixelcounts), PU_STATIC, 0);
+}
 
 
 /*
@@ -97,6 +110,12 @@ void R_InitFlats (void)
 	flattranslation = Z_Malloc ((numflats+1)*sizeof(*flattranslation), PU_STATIC, 0);
 	for (i=0 ; i<numflats ; i++)
 		flattranslation[i] = i;
+
+/* */
+/* pixel counters */
+/* */
+	flatframecounts = Z_Malloc (numflats*sizeof(*flatframecounts), PU_STATIC, 0);
+	flatpixelcounts = Z_Malloc (numflats*sizeof(*flatpixelcounts), PU_STATIC, 0);
 }
 
 

@@ -291,6 +291,12 @@ extern	VINT			*texturetranslation;	/* for global animation */
 
 extern	int			firstflat, numflats;
 
+extern	VINT			*textureframecounts;
+extern	unsigned short		*texturepixelcounts;
+
+extern	VINT			*flatframecounts;
+extern	unsigned short		*flatpixelcounts; /* capped at 0xffff */
+
 /*
 ==============================================================================
 
@@ -414,6 +420,7 @@ extern	subsector_t		**vissubsectors, **lastvissubsector;
 typedef struct visplane_s
 {
 	VINT			minx, maxx;
+	VINT 		flatnum;
 	fixed_t		height;
 #ifdef MARS
 	inpixel_t 	*picnum;

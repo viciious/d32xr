@@ -396,7 +396,12 @@ void I_Update (void)
 
 	if (debugmode != 0)
 	{
+		int i;
 		int line = 5;
+		int bestflat = -1;
+		int bestflatpixels = 0;
+		int besttex = -1;
+		int besttexpixels = 0;
 		int zmem = Z_FreeMemory(mainzone);
 
 		D_snprintf(buf, sizeof(buf), "fps  :%d", fpscount);
@@ -417,6 +422,34 @@ void I_Update (void)
 		D_snprintf(buf, sizeof(buf), "total:%d", t_ref_total);
 		I_Print8(200, line++, buf);
 		D_snprintf(buf, sizeof(buf), "viswl:%d", lastwallcmd - viswalls);
+		I_Print8(200, line++, buf);
+
+		for (i = 0; i < numflats; i++)
+		{
+			if (flatframecounts[i] != framecount)
+				continue;
+			if (flatpixelcounts[i] > bestflatpixels)
+			{
+				bestflatpixels = flatpixelcounts[i];
+				bestflat = i;
+			}
+		}
+
+		for (i = 0; i < numtextures; i++)
+		{
+			if (textureframecounts[i] != framecount)
+				continue;
+			if (texturepixelcounts[i] > besttexpixels)
+			{
+				besttexpixels = texturepixelcounts[i];
+				besttex = i;
+			}
+		}
+
+		D_snprintf(buf, sizeof(buf), "%d: %d", bestflat, bestflatpixels);
+		I_Print8(200, line++, buf);
+
+		D_snprintf(buf, sizeof(buf), "%d: %d", besttex, besttexpixels);
 		I_Print8(200, line++, buf);
 	}
 

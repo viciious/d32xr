@@ -23,6 +23,7 @@ static inpixel_t *ds_source;
 #else
 static pixel_t *ds_source;
 #endif
+int pl_pixelcount;
 
 //
 // Render the horizontal spans determined by R_PlaneLoop
@@ -84,6 +85,8 @@ static void R_MapPlane(void)
 
       // CALICO: invoke I_DrawSpan here.
       I_DrawSpan(y, x, x2, light, xfrac, yfrac, xstep, ystep, ds_source);
+
+      pl_pixelcount += x2 - x + 1;
 
       // Jag-specific blitter setup (equivalent to R_MakeSpans/R_DrawSpan)
       /*
@@ -343,7 +346,8 @@ void R_DrawPlanes(void)
 {
    angle_t angle;
    visplane_t *pl;
-
+   int pl_flatnum;
+ 
    planex =  viewx;
    planey = -viewy;
 
@@ -375,6 +379,15 @@ void R_DrawPlanes(void)
 
          ds_source = pl->picnum;
 
+	 pl_flatnum = pl->flatnum;
+	 if (flatframecounts[pl_flatnum] != framecount)
+	 {
+           flatframecounts[pl_flatnum] = framecount;
+           flatpixelcounts[pl_flatnum] = 0;
+	 }
+
+	 pl_pixelcount = 0;
+
          planeheight = D_abs(pl->height);
 
          light = pl->lightlevel;
@@ -389,6 +402,11 @@ void R_DrawPlanes(void)
          pl->open[pl->minx - 1] = OPENMARK;
 
          R_PlaneLoop(pl);
+
+	 if (pl_pixelcount + flatframecounts[pl_flatnum] >= 0xffff)
+		 flatpixelcounts[pl_flatnum] = 0xffff;
+	 else
+		 flatpixelcounts[pl_flatnum] += pl_pixelcount;
       }
 
       ++pl;

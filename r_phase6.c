@@ -18,6 +18,7 @@ typedef struct drawtex_s
    int      topheight;
    int      bottomheight;
    int      texturemid;
+   int      pixelcount;
 } drawtex_t;
 
 static drawtex_t toptex;
@@ -39,7 +40,7 @@ static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, inpixel_t *pic
 #else
 static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, pixel_t *picnum, 
 #endif
-                               int lightlevel, int start, int stop)
+                               int lightlevel, int start, int stop, int flatnum)
 {
    int i;
    int* open;
@@ -75,6 +76,7 @@ static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, pixel_t *picnu
    check->lightlevel = lightlevel;
    check->minx = start;
    check->maxx = stop;
+   check->flatnum = flatnum;
 
    open = (int*)check->open;
    for(i = 0; i < SCREENWIDTH/4; i++)
@@ -134,6 +136,9 @@ static void R_DrawTexture(drawtex_t *tex)
    // We invoke a software column drawer instead.
    src = tex->data + colnum * tex->height;
    I_DrawColumn(x, top, bottom, texturelight, frac, iscale, src, tex->height);
+
+   // pixel counter
+   tex->pixelcount += (bottom - top);
 }
 
 //
@@ -217,7 +222,7 @@ static void R_SegLoop(viswall_t *segl)
             if(floor->open[x] != OPENMARK)
             {
                floor = R_FindPlane(floor + 1, segl->floorheight, segl->floorpic, 
-                                   segl->seglightlevel, x, segl->stop);
+                                   segl->seglightlevel, x, segl->stop, segl->floorpicnum);
             }
             floor->open[x] = (unsigned short)((top << 8) + bottom);
          }
@@ -239,7 +244,7 @@ static void R_SegLoop(viswall_t *segl)
             if(ceiling->open[x] != OPENMARK)
             {
                ceiling = R_FindPlane(ceiling + 1, segl->ceilingheight, segl->ceilingpic, 
-                                     segl->seglightlevel, x, segl->stop);
+                                     segl->seglightlevel, x, segl->stop, segl->ceilingpicnum);
             }
             ceiling->open[x] = (unsigned short)((top << 8) + bottom);
          }
@@ -357,6 +362,7 @@ void R_SegCommands(void)
          toptex.width        = tex->width;
          toptex.height       = tex->height;
          toptex.data         = tex->data;
+	 toptex.pixelcount   = 0;
       }
 
       if(segl->actionbits & AC_BOTTOMTEXTURE)
@@ -369,9 +375,40 @@ void R_SegCommands(void)
          bottomtex.width        = tex->width;
          bottomtex.height       = tex->height;
          bottomtex.data         = tex->data;
+	 bottomtex.pixelcount   = 0;
       }
 
       R_SegLoop(segl);
+
+      if(segl->actionbits & AC_TOPTEXTURE)
+      {
+         int texnum = segl->t_texture - textures;
+
+	 if (textureframecounts[texnum] != framecount)
+	 {
+		 textureframecounts[texnum] = framecount;
+		 texturepixelcounts[texnum] = 0;
+	 }
+	 if (toptex.pixelcount + textureframecounts[texnum] >= 0xffff)
+		 texturepixelcounts[texnum] = 0xffff;
+	 else
+		 texturepixelcounts[texnum] += toptex.pixelcount;
+      }
+
+      if(segl->actionbits & AC_BOTTOMTEXTURE)
+      {
+         int texnum = segl->b_texture - textures;
+
+	 if (textureframecounts[texnum] != framecount)
+	 {
+		 textureframecounts[texnum] = framecount;
+		 texturepixelcounts[texnum] = 0;
+	 }
+	 if (bottomtex.pixelcount + textureframecounts[texnum] >= 0xffff)
+		 texturepixelcounts[texnum] = 0xffff;
+	 else
+		 texturepixelcounts[texnum] += bottomtex.pixelcount;
+      }
 
       ++segl;
    }
