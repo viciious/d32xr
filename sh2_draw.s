@@ -1,5 +1,7 @@
 ! Original code by Chilly Willy
 
+.data
+
 ! Draw a vertical column of pixels from a projected wall texture.
 ! Source is the top of the column to scale.
 !
