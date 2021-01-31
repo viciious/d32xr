@@ -180,7 +180,7 @@ static char* G_LoadMapinfoLump(void)
 
 	lump = W_CheckNumForName("DMAPINFO");
 	if (lump < 0) {
-		len = strlen(defaultDMAPINFO);
+		len = mystrlen(defaultDMAPINFO);
 		D_memcpy(buf, defaultDMAPINFO, len);
 	}
 	else {
@@ -296,7 +296,7 @@ static int G_ParseMapinfo(char* buf, kvcall_t kvcall, void *ptr)
 		}
 		else
 		{
-			el = l + strlen(l);
+			el = l + mystrlen(l);
 		}
 		while (*l == ' ' || *l == '\t') l++;
 
