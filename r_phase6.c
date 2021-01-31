@@ -154,6 +154,11 @@ static void R_SegLoop(viswall_t *segl)
    // force R_FindPlane for both planes
    floor = ceiling = visplanes;
 
+#ifdef MARS
+   texturelight = lightmax;
+   texturelight = (((255 - texturelight) >> 3) & 31) * 256;
+#endif
+
    do
    {
       scale = scalefrac / (1 << FIXEDTOSCALE);
@@ -165,8 +170,9 @@ static void R_SegLoop(viswall_t *segl)
       //
       // get ceilingclipx and floorclipx from clipbounds
       //
-      floorclipx   = clipbounds[x] & 0x00ff;
-      ceilingclipx = ((clipbounds[x] & 0xff00) >> 8) - 1;
+      ceilingclipx = clipbounds[x];
+      floorclipx   = ceilingclipx & 0x00ff;
+      ceilingclipx = ((ceilingclipx & 0xff00) >> 8) - 1;
 
       //
       // texture only stuff
@@ -181,10 +187,7 @@ static void R_SegLoop(viswall_t *segl)
          texturecol = (segl->offset - r) / FRACUNIT;
          iscale = (1 << (FRACBITS+SCALEBITS)) / scale;
 
-#ifdef MARS
-         texturelight = lightmax;
-         texturelight = (((255 - texturelight) >> 3) & 31) * 256;
-#else
+#ifndef MARS
          // calc light level
          texturelight = ((scale * lightcoef) / FRACUNIT) - lightsub;
          if(texturelight < lightmin)

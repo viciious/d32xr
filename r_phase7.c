@@ -60,14 +60,6 @@ static void R_MapPlane(void)
 
 #ifdef MARS
       light = plane_lightcoef;
-
-      // finish light calculations
-      if(light > plane_lightmax)
-         light = plane_lightmax;
-      if(light < plane_lightmin)
-         light = plane_lightmin;
-
-      light = (((255 - light) >> 3) & 31) * 256;
 #else
       light = plane_lightcoef / distance;
 
@@ -391,6 +383,15 @@ void R_DrawPlanes(void)
          plane_lightmax  = light;
          plane_lightsub  = ((light - plane_lightmin) * 160) / 640;
          plane_lightcoef = (light - plane_lightmin) << SLOPEBITS;
+
+#ifdef MARS
+         if(plane_lightcoef > plane_lightmax)
+           plane_lightcoef = plane_lightmax;
+         if(plane_lightcoef < plane_lightmin)
+           plane_lightcoef = plane_lightmin;
+
+         plane_lightcoef = (((255 - plane_lightcoef) >> 3) & 31) * 256;
+#endif
 
          pl->open[pl->maxx + 1] = OPENMARK;
          pl->open[pl->minx - 1] = OPENMARK;
