@@ -262,7 +262,7 @@ extern	const angle_t		xtoviewangle[SCREENWIDTH+1];
 
 #ifdef MARS
 extern	const fixed_t		finetangent_[FINEANGLES/4];
-fixed_t 			finetangent(angle_t angle);
+fixed_t finetangent(angle_t angle) __attribute__ ((section (".data"), aligned(16)));
 #else
 extern	const fixed_t		finetangent[FINEANGLES/2];
 #define finetangent(x)		finetangent_(x)

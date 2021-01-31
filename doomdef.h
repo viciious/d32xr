@@ -98,8 +98,9 @@ typedef unsigned angle_t;
 
 extern unsigned short 	finesine_[FINEANGLES/4];
 
-fixed_t finesine(angle_t angle);
-fixed_t finecosine(angle_t angle);
+fixed_t finesine(angle_t angle) __attribute__ ((section (".data"), aligned(16)));
+fixed_t finecosine(angle_t angle) __attribute__ ((section (".data"), aligned(16)));
+
 #else
 
 extern	fixed_t		finesine_[5*FINEANGLES/4];
