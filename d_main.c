@@ -70,12 +70,22 @@ void D_memset (void *dest, int val, int count)
 	}
 }
 
+#ifdef MARS
+void fast_memcpy(void *dest, const void *src, int count);
+#endif
 
 void D_memcpy (void *dest, const void *src, int count)
 {
 	byte	*d;
 	const byte *s;
-	
+
+#ifdef MARS
+	if (((intptr_t)dest & 15) == 0 && ((intptr_t)src & 15) == 0 && (count & 3) == 0) {
+		fast_memcpy(dest, src, count >> 2);
+		return;
+	}
+#endif
+
 	d = (byte *)dest;
 	s = (const byte *)src;
 	while (count--)
