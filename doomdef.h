@@ -557,6 +557,7 @@ typedef struct
 	memblock_t	blocklist;		/* start / end cap for linked list */
 } memzone_t;
 
+typedef void (*memblockcall_t) (void *, void*);
 
 extern int framecount;
 
@@ -566,7 +567,7 @@ extern	memzone_t	*refzone;
 void	Z_Init (void);
 memzone_t *Z_InitZone (byte *base, int size);
 
-void 	*Z_Malloc2 (memzone_t *mainzone, int size, int tag, void *ptr);
+void 	*Z_Malloc2 (memzone_t *mainzone, int size, int tag, void *user);
 void 	Z_Free2 (memzone_t *mainzone,void *ptr);
 
 #define Z_Malloc(x,y,z) Z_Malloc2(mainzone,x,y,z)
@@ -576,6 +577,8 @@ void 	Z_FreeTags (memzone_t *mainzone);
 void	Z_CheckHeap (memzone_t *mainzone);
 void	Z_ChangeTag (void *ptr, int tag);
 int 	Z_FreeMemory (memzone_t *mainzone);
+int 	Z_LargestFreeBlock(memzone_t *mainzone);
+void 	Z_ForEachBlock(memzone_t *mainzone, memblockcall_t cb, void *userp);
 
 /*------- */
 /*WADFILE */

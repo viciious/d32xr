@@ -85,7 +85,7 @@ void Z_Init (void)
 
 void Z_Free2 (memzone_t *mainzone, void *ptr)
 {
-	memblock_t	*block;
+	memblock_t	*block, *adj;
 	
 	block = (memblock_t *) ( (byte *)ptr - sizeof(memblock_t));
 	if (block->id != ZONEID)
@@ -96,6 +96,28 @@ void Z_Free2 (memzone_t *mainzone, void *ptr)
 	block->user = NULL;	/* mark as free */
 	block->tag = 0;
 	block->id = 0;
+
+	// merge with adjacent blocks
+	adj = block->prev;
+	if (adj && !adj->user)
+	{
+		adj->next = block->next;
+		adj->next->prev = adj;
+		adj->size += block->size;
+		if (mainzone->rover == block)
+			mainzone->rover = adj;
+		block = adj;
+	}
+
+	adj = block->next;
+	if (adj && !adj->user)
+	{
+		block->next = adj->next;
+		block->next->prev = block;
+		block->size += adj->size;
+		if (mainzone->rover == adj)
+			mainzone->rover = block;
+	}
 }
 
  
@@ -152,20 +174,6 @@ backtostart:
 			if (base == start)	/* scaned all the way around the list */
 				I_Error ("Z_Malloc: failed on %i",size);
 			continue;
-		}
-		
-	/* */
-	/* free the rover block (adding the size to base) */
-	/*		 */
-		rover->id = 0;
-		rover->user = NULL;		/* mark as free */
-		
-		if (base != rover)
-		{	/* merge with base */
-			base->size += rover->size;
-			base->next = rover->next;
-			if (rover->next)
-				rover->next->prev = base;
 		}
 	}
 	
@@ -309,6 +317,44 @@ int Z_FreeMemory (memzone_t *mainzone)
 /*
 ========================
 =
+= Z_LargestFreeBlock
+=
+========================
+*/
+int Z_LargestFreeBlock(memzone_t *mainzone)
+{
+	memblock_t	*block;
+	int			free;
+	
+	free = 0;
+	for (block = &mainzone->blocklist ; block ; block = block->next)
+		if (!block->user)
+			if (block->size > free) free = block->size;
+	return free;
+}
+
+/*
+========================
+=
+= Z_ForEachBlock
+=
+========================
+*/
+void Z_ForEachBlock(memzone_t *mainzone, memblockcall_t cb, void *p)
+{
+	memblock_t	*block, *next;
+
+	for (block = &mainzone->blocklist ; block ; block = next)
+	{
+		next = block->next;
+		if (block->user)
+			cb((byte *)block + sizeof(memblock_t), p);
+	}
+}
+
+/*
+========================
+=
 = Z_DumpHeap
 =
 ========================
@@ -324,13 +370,8 @@ void Z_DumpHeap (memzone_t *mainzone)
 	
 	for (block = &mainzone->blocklist ; block ; block = block->next)
 	{
-#ifndef MARS
 		printf ("block:%p    size:%7i    user:%p    tag:%3i    frame:%i\n",
 			block, block->size, block->user, block->tag,block->lockframe);
-#else
-		printf ("block:%p    size:%7i    user:%p    tag:%3i\n",
-			block, block->size, block->user, block->tag);
-#endif	
 		if (!block->next)
 			continue;
 			
