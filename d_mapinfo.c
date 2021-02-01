@@ -342,7 +342,7 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 				mi->name = stripquote(p);
 			}
 
-			memcpy(mi->lumpname, G_GetMapNameForLump(mi->lumpnum), 9);
+			D_memcpy(mi->lumpname, G_GetMapNameForLump(mi->lumpnum), 9);
 			mi->mapnumber = G_MapNumForMapName(mi->lumpname);
 
 			if (!mi->name) {
