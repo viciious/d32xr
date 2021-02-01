@@ -25,8 +25,9 @@ static drawtex_t toptex;
 static drawtex_t bottomtex;
 
 static int *clipbounds;
-static int lightmin, lightmax, lightsub, lightcoef;
-static int floorclipx, ceilingclipx, x, scale, iscale, texturecol, texturelight;
+static unsigned lightmin, lightmax, lightsub, lightcoef;
+static int floorclipx, ceilingclipx, x, scale;
+static unsigned texturecol, iscale, texturelight;
 
 #define NUM_VISPLANES_BUCKETS 32
 static visplane_t* visplanes_hash[NUM_VISPLANES_BUCKETS];
@@ -94,19 +95,20 @@ static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, int flatnum,
 //
 static void R_DrawTexture(drawtex_t *tex)
 {
-   int top, bottom, colnum, frac;
+   int top, bottom, frac;
+   unsigned colnum;
 #ifdef MARS
    inpixel_t *src;
 #else
    pixel_t *src;
 #endif
 
-   top = CENTERY - ((scale * tex->topheight) / (1 << (HEIGHTBITS + SCALEBITS)));
+   top = CENTERY - ((scale * tex->topheight) >> (HEIGHTBITS + SCALEBITS));
 
    if(top <= ceilingclipx)
       top = ceilingclipx + 1;
 
-   bottom = CENTERY - 1 - ((scale * tex->bottomheight) / (1 << (HEIGHTBITS + SCALEBITS)));
+   bottom = CENTERY - 1 - ((scale * tex->bottomheight) >> (HEIGHTBITS + SCALEBITS));
 
    if(bottom >= floorclipx)
       bottom = floorclipx - 1;
@@ -145,7 +147,8 @@ static void R_DrawTexture(drawtex_t *tex)
 //
 static void R_SegLoop(viswall_t *segl)
 {
-   int scalefrac, low, high, top, bottom;
+   unsigned scalefrac;
+   int low, high, top, bottom;
    visplane_t *ceiling, *floor;
 
    x = segl->start;
@@ -161,7 +164,7 @@ static void R_SegLoop(viswall_t *segl)
 
    do
    {
-      scale = scalefrac / (1 << FIXEDTOSCALE);
+      scale = scalefrac >> FIXEDTOSCALE;
       scalefrac += segl->scalestep;
 
       if(scale >= 0x7fff)
@@ -184,8 +187,8 @@ static void R_SegLoop(viswall_t *segl)
                               finetangent((segl->centerangle + xtoviewangle[x]) >> ANGLETOFINESHIFT));
 
          // other texture drawing info
-         texturecol = (segl->offset - r) / FRACUNIT;
-         iscale = (1 << (FRACBITS+SCALEBITS)) / scale;
+         texturecol = (segl->offset - r) >> FRACBITS;
+         iscale = (1 << (FRACBITS+SCALEBITS)) / (unsigned)scale;
 
 #ifndef MARS
          // calc light level
@@ -213,7 +216,7 @@ static void R_SegLoop(viswall_t *segl)
       //
       if(segl->actionbits & AC_ADDFLOOR)
       {
-         top = CENTERY - ((scale * segl->floorheight) / (1 << (HEIGHTBITS + SCALEBITS)));
+         top = CENTERY - ((scale * segl->floorheight) >> (HEIGHTBITS + SCALEBITS));
          if(top <= ceilingclipx)
             top = ceilingclipx + 1;
          
@@ -237,7 +240,7 @@ static void R_SegLoop(viswall_t *segl)
       {
          top = ceilingclipx + 1;
 
-         bottom = CENTERY - 1 - ((scale * segl->ceilingheight) / (1 << (HEIGHTBITS + SCALEBITS)));
+         bottom = CENTERY - 1 - ((scale * segl->ceilingheight) >> (HEIGHTBITS + SCALEBITS));
          if(bottom >= floorclipx)
             bottom = floorclipx - 1;
          
@@ -255,13 +258,13 @@ static void R_SegLoop(viswall_t *segl)
       //
       // calc high and low
       //
-      low = CENTERY - ((scale * segl->floornewheight) / (1 << (HEIGHTBITS + SCALEBITS)));
+      low = CENTERY - ((scale * segl->floornewheight) >> (HEIGHTBITS + SCALEBITS));
       if(low < 0)
          low = 0;
       if(low > floorclipx)
          low = floorclipx;
 
-      high = CENTERY - 1 - ((scale * segl->ceilingnewheight) / (1 << (HEIGHTBITS + SCALEBITS)));
+      high = CENTERY - 1 - ((scale * segl->ceilingnewheight) >> (HEIGHTBITS + SCALEBITS));
       if(high > SCREENHEIGHT - 1)
          high = SCREENHEIGHT - 1;
       if(high < ceilingclipx)
@@ -279,7 +282,7 @@ static void R_SegLoop(viswall_t *segl)
       if(segl->actionbits & AC_ADDSKY)
       {
          top = ceilingclipx + 1;
-         bottom = (CENTERY - ((scale * segl->ceilingheight) / (1 << (HEIGHTBITS + SCALEBITS)))) - 1;
+         bottom = (CENTERY - ((scale * segl->ceilingheight) >> (HEIGHTBITS + SCALEBITS))) - 1;
          
          if(bottom >= floorclipx)
             bottom = floorclipx - 1;

@@ -14,10 +14,10 @@ static int     plane_lightmin, plane_lightmax;
 
 static fixed_t basexscale, baseyscale;
 
-static int *pl_stopfp;
-static int *pl_fp;
+static unsigned *pl_stopfp;
+static unsigned *pl_fp;
 
-static int *spanstart;
+static unsigned *spanstart;
 #ifdef MARS
 static inpixel_t *ds_source;
 #else
@@ -249,7 +249,7 @@ static void R_MapPlane(void)
 //
 static void R_PlaneLoop(visplane_t *pl)
 {
-   int pl_x, pl_stopx, pl_fracx;
+   unsigned pl_x, pl_stopx, pl_fracx;
    unsigned short *pl_openptr;
    unsigned short t1, t2, b1, b2, pl_oldtop, pl_oldbottom;
 
@@ -264,7 +264,7 @@ static void R_PlaneLoop(visplane_t *pl)
 
    // CALICO: use the temp buffer, as the native stack cannot be pushed/popped here
    //pl_stopfp = (int *)(I_TempBuffer());
-   pl_stopfp = (int *)(openings + MAXOPENINGS);
+   pl_stopfp = (unsigned *)(openings + MAXOPENINGS);
    pl_fp = pl_stopfp;
 
    pl_openptr = &pl->open[pl_x - 1];
@@ -349,7 +349,7 @@ void R_DrawPlanes(void)
    basexscale =  (finecosine(angle) / (SCREENWIDTH / 2));
    baseyscale = -(  finesine(angle) / (SCREENWIDTH / 2));
 
-   spanstart = (int *)&r_workbuf[0];
+   spanstart = (unsigned *)&r_workbuf[0];
 
    // Jag-specific setup
    /*
