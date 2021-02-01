@@ -29,7 +29,7 @@ static unsigned lightmin, lightmax, lightsub, lightcoef;
 static int floorclipx, ceilingclipx, x, scale;
 static unsigned texturecol, iscale, texturelight;
 
-#define NUM_VISPLANES_BUCKETS 32
+#define NUM_VISPLANES_BUCKETS 64
 static visplane_t* visplanes_hash[NUM_VISPLANES_BUCKETS];
 
 //
@@ -37,20 +37,20 @@ static visplane_t* visplanes_hash[NUM_VISPLANES_BUCKETS];
 // if no compatible match can be found.
 //
 #ifdef MARS
-static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, int flatnum,
+static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, unsigned flatnum,
 #else
-static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, int flatnum,
+static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, unsigned flatnum,
 #endif
-                               int lightlevel, int start, int stop)
+                               unsigned lightlevel, int start, int stop)
 {
    int i;
    int* open;
    const int mark = (OPENMARK << 16) | OPENMARK;
-   int hash = (((unsigned)height>>8)+lightlevel) & (NUM_VISPLANES_BUCKETS-1);
+   int hash = ((((unsigned)height>>8)+lightlevel)^flatnum) & (NUM_VISPLANES_BUCKETS-1);
 
    for (check = visplanes_hash[hash]; check; )
    {
-       if(height == check->height && // same plane as before?
+      if(height == check->height && // same plane as before?
          flatnum == check->flatnum &&
          lightlevel == check->lightlevel)
       {
