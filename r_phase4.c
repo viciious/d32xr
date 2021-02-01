@@ -126,7 +126,7 @@ static void R_FinishWallPrep(viswall_t *wc)
    // has top or middle texture?
    if(fw_actionbits & AC_TOPTEXTURE)
    {
-      fw_texture = wc->t_texture;
+      fw_texture = &textures[wc->t_texturenum];
 #ifdef MARS
       if (fw_texture->data == NULL)
 #endif
@@ -137,7 +137,7 @@ static void R_FinishWallPrep(viswall_t *wc)
    // has bottom texture?
    if(fw_actionbits & AC_BOTTOMTEXTURE)
    {
-      fw_texture = wc->b_texture;
+      fw_texture = &textures[wc->b_texturenum];
 #ifdef MARS
       if (fw_texture->data == NULL)
 #endif

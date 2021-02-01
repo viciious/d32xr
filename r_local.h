@@ -358,6 +358,9 @@ typedef struct
 	VINT         floorpicnum;   // floorpic #   - CALICO: avoid type ambiguity w/extra field
 	VINT         ceilingpicnum; // ceilingpic # - CALICO: avoid type ambiguity w/extra field
 
+	VINT			t_texturenum;
+	VINT			b_texturenum;
+
 /* */
 /* filled in by bsp */
 /* */
@@ -374,12 +377,12 @@ typedef struct
 	int			t_topheight;
 	int			t_bottomheight;
 	int			t_texturemid;
-	texture_t	*t_texture;
+	//texture_t	*t_texture;
 	
 	int			b_topheight;
 	int			b_bottomheight;
 	int			b_texturemid;
-	texture_t	*b_texture;
+	//texture_t	*b_texture;
 	
 	int			floorheight;
 	int			floornewheight;

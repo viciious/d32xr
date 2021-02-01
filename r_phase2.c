@@ -95,11 +95,11 @@ void R_WallPrep(void)
       if(back_sector == &emptysector)
       {
          // single-sided line
-         segl->t_texture = &textures[texturetranslation[si->midtexture]];
+         segl->t_texturenum = texturetranslation[si->midtexture];
 
          // handle unpegging (bottom of texture at bottom, or top of texture at top)
          if(li->flags & ML_DONTPEGBOTTOM)
-            t_texturemid = f_floorheight + (segl->t_texture->height << FRACBITS);
+            t_texturemid = f_floorheight + (textures[segl->t_texturenum].height << FRACBITS);
          else
             t_texturemid = f_ceilingheight;
 
@@ -114,7 +114,7 @@ void R_WallPrep(void)
          // is bottom texture visible?
          if(b_floorheight > f_floorheight)
          {
-            segl->b_texture = &textures[texturetranslation[si->bottomtexture]];
+            segl->b_texturenum = texturetranslation[si->bottomtexture];
             if(li->flags & ML_DONTPEGBOTTOM)
                b_texturemid = f_ceilingheight;
             else
@@ -130,11 +130,11 @@ void R_WallPrep(void)
          // is top texture visible?
          if(b_ceilingheight < f_ceilingheight && !skyhack)
          {
-            segl->t_texture = &textures[texturetranslation[si->toptexture]];
+            segl->t_texturenum = texturetranslation[si->toptexture];
             if(li->flags & ML_DONTPEGTOP)
                t_texturemid = f_ceilingheight;
             else
-               t_texturemid = b_ceilingheight + (segl->t_texture->height << FRACBITS);
+               t_texturemid = b_ceilingheight + (textures[segl->t_texturenum].height << FRACBITS);
 
             t_texturemid += si->rowoffset; // add in sidedef texture offset
 

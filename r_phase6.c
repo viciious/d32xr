@@ -359,7 +359,7 @@ void R_SegCommands(void)
 
       if(segl->actionbits & AC_TOPTEXTURE)
       {
-         texture_t *tex = segl->t_texture;
+         texture_t *tex = &textures[segl->t_texturenum];
 
          toptex.topheight    = segl->t_topheight;
          toptex.bottomheight = segl->t_bottomheight;
@@ -372,7 +372,7 @@ void R_SegCommands(void)
 
       if(segl->actionbits & AC_BOTTOMTEXTURE)
       {
-         texture_t *tex = segl->b_texture;
+         texture_t *tex = &textures[segl->b_texturenum];
 
          bottomtex.topheight    = segl->b_topheight;
          bottomtex.bottomheight = segl->b_bottomheight;
@@ -387,12 +387,12 @@ void R_SegCommands(void)
 
       if(segl->actionbits & AC_TOPTEXTURE)
       {
-         R_AddPixelsToTexCache(&r_wallscache, segl->t_texture - textures, toptex.pixelcount);
+         R_AddPixelsToTexCache(&r_wallscache, segl->t_texturenum, toptex.pixelcount);
       }
 
       if(segl->actionbits & AC_BOTTOMTEXTURE)
       {
-         R_AddPixelsToTexCache(&r_wallscache, segl->b_texture - textures, bottomtex.pixelcount);
+         R_AddPixelsToTexCache(&r_wallscache, segl->b_texturenum, bottomtex.pixelcount);
       }
 
       ++segl;
