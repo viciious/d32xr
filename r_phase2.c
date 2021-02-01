@@ -148,12 +148,6 @@ void R_WallPrep(void)
          else
          {
             int width;
-#ifdef MARS
-	    int i;
-	    // clear the openings in workbuffer as they are later written as single bytes,
-	    // some of which may be 0 and since the work buffer resides in VRAM, those are
-	    // going to be ignored and that will be causing visual glitches
-#endif
 
             // get width of opening
             // note this is halved because openings are treated like bytes 
@@ -163,10 +157,6 @@ void R_WallPrep(void)
             if((b_floorheight > 0 && b_floorheight > f_floorheight) ||
                (f_floorheight < 0 && f_floorheight > b_floorheight))
             {
-#ifdef MARS
-	       for (i = 0; i < width; i++)
-	         lastopening[i] = 0;
-#endif
                actionbits |= AC_BOTTOMSIL; // set bottom mask
                segl->bottomsil = (byte *)lastopening - rw_x;
                lastopening += width;
@@ -177,10 +167,6 @@ void R_WallPrep(void)
                if((b_ceilingheight <= 0 && b_ceilingheight < f_ceilingheight) ||
                   (f_ceilingheight >  0 && b_ceilingheight > f_ceilingheight))
                {
-#ifdef MARS
-	         for (i = 0; i < width; i++)
-	           lastopening[i] = 0;
-#endif
                   actionbits |= AC_TOPSIL; // set top mask
                   segl->topsil = (byte *)lastopening - rw_x;
                   lastopening += width;

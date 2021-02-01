@@ -264,7 +264,7 @@ static void R_PlaneLoop(visplane_t *pl)
 
    // CALICO: use the temp buffer, as the native stack cannot be pushed/popped here
    //pl_stopfp = (int *)(I_TempBuffer());
-   pl_stopfp = (unsigned *)(openings + MAXOPENINGS);
+   pl_stopfp = (unsigned *)(vissprites + MAXVISSPRITES);
    pl_fp = pl_stopfp;
 
    pl_openptr = &pl->open[pl_x - 1];

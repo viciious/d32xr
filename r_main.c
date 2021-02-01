@@ -28,7 +28,7 @@ vissprite_t	*vissprites, *lastsprite_p, *vissprite_p;
 /* */
 /* openings / misc refresh memory */
 /* */
-unsigned short	*openings, *lastopening;
+unsigned short	openings[MAXOPENINGS], *lastopening;
 
 /* holds *vissubsectors[MAXVISSEC], spropening[SCREENWIDTH+1], spanstart[256] */
 intptr_t 	*r_workbuf;
@@ -508,9 +508,9 @@ void R_Setup (void)
 	tempbuf += sizeof(*vissprites)*MAXVISSPRITES/sizeof(*tempbuf);
 	vissprite_p = vissprites;
 
-	tempbuf = (unsigned short*)(((int)tempbuf + 4) & ~3);
-	openings = tempbuf;
-	tempbuf += sizeof(*openings)*MAXOPENINGS/sizeof(*tempbuf);
+	//tempbuf = (unsigned short*)(((int)tempbuf + 4) & ~3);
+	//openings = tempbuf;
+	//tempbuf += sizeof(*openings)*MAXOPENINGS/sizeof(*tempbuf);
 
 	lastopening = openings;
 #ifndef MARS
