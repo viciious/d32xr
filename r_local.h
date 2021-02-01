@@ -319,6 +319,7 @@ typedef struct
 {
 	VINT id;
 	VINT pixelcount;
+	int lumpnum;
 	void** userp;
 } texcacheblock_t;
 
