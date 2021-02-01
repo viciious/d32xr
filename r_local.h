@@ -446,11 +446,6 @@ typedef struct visplane_s
 	VINT			minx, maxx;
 	VINT 		flatnum;
 	fixed_t		height;
-#ifdef MARS
-	inpixel_t 	*picnum;
-#else
-	pixel_t		*picnum;
-#endif
 	int			lightlevel;
 	unsigned short		*open/*[SCREENWIDTH+2]*/;		/* top<<8 | bottom */ /* leave pads for [minx-1]/[maxx+1] */
 	struct visplane_s *next;
