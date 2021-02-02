@@ -68,7 +68,7 @@ angle_t		clipangle,doubleclipangle;
 fixed_t	*finecosine_ = &finesine_[FINEANGLES/4];
 #endif
 
-int t_ref_bsp, t_ref_prep, t_ref_segs, t_ref_planes, t_ref_sprites, t_ref_total;
+int t_ref_bsp, t_ref_prep, t_ref_segs, t_ref_planes, t_ref_sprites, t_ref_total, t_ref_wait;
 
 r_texcache_t r_flatscache, r_wallscache;
 
@@ -509,8 +509,10 @@ void R_RenderPlayerView (void)
 
 /* make sure its done now */
 #if defined(JAGUAR) || defined(MARS)
+	t_ref_wait = I_GetTime();
 	while (!I_RefreshCompleted ())
 	;
+	t_ref_wait = I_GetTime() - t_ref_wait;
 #endif
 
 /* */

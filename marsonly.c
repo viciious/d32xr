@@ -382,7 +382,7 @@ void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, fix
 = wide pixels
 ==================== 
 */ 
-extern int t_ref_bsp, ref_prep, t_ref_segs, t_ref_planes, t_ref_sprites, t_ref_total;
+extern int t_ref_bsp, ref_prep, t_ref_segs, t_ref_planes, t_ref_sprites, t_ref_total, t_ref_wait;
 
 /*
 int lline = 0;
@@ -424,6 +424,8 @@ void I_Update (void)
 		D_snprintf(buf, sizeof(buf), "zfree:%d.%d", zmem/1024, (zmem - (zmem/1024)*1024)/100);
 		I_Print8(200, line++, buf);
 		line++;
+		D_snprintf(buf, sizeof(buf), "wait :%d", t_ref_wait);
+		I_Print8(200, line++, buf);
 		D_snprintf(buf, sizeof(buf), "bsp  :%d", t_ref_bsp);
 		I_Print8(200, line++, buf);
 		D_snprintf(buf, sizeof(buf), "segs :%d", t_ref_segs);
