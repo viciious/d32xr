@@ -228,7 +228,7 @@ void I_DrawSbar (void)
 
 boolean	I_RefreshCompleted (void)
 {
-	return true;
+	return (MARS_VDP_FBCTL & MARS_VDP_FS) == activescreen;
 }
 
 boolean	I_RefreshLatched (void)
@@ -354,6 +354,14 @@ pixel_t	*I_ViewportBuffer (void)
 void 	I_ClearFrameBuffer (void)
 {
 	Mars_ClearFrameBuffer();
+}
+
+extern int 	debugmode;
+
+void I_DebugScreen(void)
+{
+	if (debugmode == 2)
+		Mars_ClearFrameBuffer();
 }
 
 void I_ClearWorkBuffer(void)

@@ -680,6 +680,8 @@ void I_DrawSpan (int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, fi
 
 void I_Print8 (int x, int y, const char *string);
 
+void I_DebugScreen (void);
+
 /*---- */
 /*GAME */
 /*---- */

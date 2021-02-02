@@ -8,7 +8,7 @@
 extern const int COLOR_WHITE;
 
 const boolean	debugscreenstate = false;
-boolean	debugareaactive = false;
+boolean	debugscreenactive = false;
 
 extern short* dc_colormaps;
 
@@ -206,8 +206,6 @@ void I_Error (char *error, ...)
 	va_start(ap, error);
 	D_vsnprintf(errormessage, sizeof(errormessage), error, ap);
 	va_end(ap);
-
-	debugareaactive = true;
 
 	I_ClearWorkBuffer ();
 	I_Print8 (0,25,errormessage);
@@ -409,7 +407,7 @@ void I_Update (void)
 
 	if (debugmode != 0)
 	{
-		int i;
+		//int i;
 		int line = 5;
 		/*
 		int bestflat = -1;
@@ -449,11 +447,7 @@ void I_Update (void)
 //		Z_ForEachBlock(r_texcachezone, &R_TextureCacheCallbackz, NULL);
 	}
 
-	// clear the visible part of the workbuffer
-//	if (!debugareaactive)
-//		I_ClearWorkBuffer();
-
-	Mars_FlipFrameBuffers(true);
+	Mars_FlipFrameBuffers(false);
 
 /* */
 /* wait until on the third tic after last display */
@@ -488,7 +482,6 @@ void I_Update (void)
 		}
 	}
 
-	if (debugmode == 2)
-		I_ClearFrameBuffer();
+	debugscreenactive = debugmode != 0;
 }
 

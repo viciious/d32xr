@@ -1868,6 +1868,55 @@ reconnect:
 	return 0;
 }
 
+/*============================================================================= */
+
+extern int ticsinframe;
+
+extern int checkpostics, shoottics;
+extern int lasttics;
+
+extern	int	playertics, thinkertics, sighttics, basetics, latetics;
+extern	int	tictics;
+
+extern	int		soundtics;
+
+/*
+===================
+=
+= I_DebugScreen
+=
+===================
+*/
+
+void I_DebugScreen(void)
+{
+#ifdef JAGUAR
+
+#if 1
+	PrintNumber(15, 1, vblsinframe);
+
+	PrintNumber(15, 2, phasetime[8] - phasetime[0]);
+	PrintNumber(15, 3, tictics);
+	PrintNumber(15, 4, soundtics);
+#endif
+
+#if 1
+	PrintNumber(15, 6, playertics);
+	PrintNumber(15, 7, thinkertics);
+	PrintNumber(15, 8, sighttics);
+	PrintNumber(15, 9, basetics);
+	PrintNumber(15, 10, latetics);
+#endif
+
+#if 0
+	int	i;
+
+	PrintNumber(15, 1, phasetime[8] - phasetime[0]);
+	for (i = 0; i < 8; i++)
+		PrintNumber(15, 3 + i, phasetime[i + 1] - phasetime[i]);
+#endif
 
 
+#endif
 
+}

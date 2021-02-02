@@ -321,58 +321,6 @@ void R_SetupTextureCaches(void)
 
 /*============================================================================= */
 
-extern int ticsinframe;
-
-extern int checkpostics, shoottics;
-extern int lasttics;
-
-extern	int	playertics, thinkertics, sighttics, basetics, latetics;
-extern	int	tictics;
-
-extern	int		soundtics;
-
-/*
-===================
-=
-= R_DebugScreen
-=
-===================
-*/
-
-void R_DebugScreen (void)
-{
-#ifdef JAGUAR
-
-#if 1
-	PrintNumber (15,1, vblsinframe);
-
-	PrintNumber (15,2, phasetime[8] - phasetime[0]);
-	PrintNumber (15,3, tictics);
-	PrintNumber (15,4, soundtics);
-#endif
-
-#if 1
-	PrintNumber (15,6, playertics);
-	PrintNumber (15,7, thinkertics);
-	PrintNumber (15,8, sighttics);
-	PrintNumber (15,9, basetics);
-	PrintNumber (15,10, latetics);
-#endif
-
-#if 0
-	int	i;
-	
-	PrintNumber (15,1, phasetime[8] - phasetime[0]);
-	for (i=0 ; i < 8 ; i++)
-		PrintNumber (15,3+i,phasetime[i+1]-phasetime[i]);
-#endif
-
-
-#endif
-
-}
-/*============================================================================= */
-
 int shadepixel;
 #ifndef MARS
 extern	int	workpage;
@@ -560,7 +508,7 @@ void R_RenderPlayerView (void)
 {
 
 /* make sure its done now */
-#ifdef JAGUAR
+#if defined(JAGUAR) || defined(MARS)
 	while (!I_RefreshCompleted ())
 	;
 #endif
@@ -569,7 +517,7 @@ void R_RenderPlayerView (void)
 /* initial setup */
 /* */
 	if (debugscreenactive)
-		R_DebugScreen ();
+		I_DebugScreen ();
 
 	t_ref_total = I_GetTime();
 
