@@ -333,7 +333,7 @@ void P_XYMovement(mobj_t *mo)
          if(mo->flags & MF_SKULLFLY)
          {
             mo->extradata = (intptr_t)hitthing;
-            L_SkullBash(mo);
+            mo->latecall = L_SkullBash;
             return;
          }
 
@@ -346,7 +346,7 @@ void P_XYMovement(mobj_t *mo)
                return;
             }
             mo->extradata = (intptr_t)hitthing;
-            L_MissileHit(mo);
+            mo->latecall = L_MissileHit;
             return;
          }
 
