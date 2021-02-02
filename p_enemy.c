@@ -843,6 +843,7 @@ void L_MissileHit (mobj_t *mo)
 	missilething = (mobj_t *)mo->extradata;
 	if (missilething)
 	{
+		mo->extradata = 0;
 		damage = ((P_Random()&7)+1)* moinfo->damage;
 		P_DamageMobj (missilething, mo, mo->target, damage);
 	}
@@ -857,9 +858,9 @@ void L_SkullBash (mobj_t *mo)
 	const mobjinfo_t* moinfo = &mobjinfo[mo->type];
 
 	skullthing = (mobj_t *)mo->extradata;
-	
 	if (skullthing)
 	{
+		mo->extradata = 0;
 		damage = ((P_Random()&7)+1)* moinfo->damage;
 		P_DamageMobj (skullthing, mo, mo, damage);
 	}

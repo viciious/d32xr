@@ -332,6 +332,7 @@ void P_XYMovement(mobj_t *mo)
          // flying skull?
          if(mo->flags & MF_SKULLFLY)
          {
+            mo->extradata = (intptr_t)hitthing;
             L_SkullBash(mo);
             return;
          }
@@ -344,7 +345,7 @@ void P_XYMovement(mobj_t *mo)
                P_RemoveMobj(mo);
                return;
             }
-
+            mo->extradata = (intptr_t)hitthing;
             L_MissileHit(mo);
             return;
          }

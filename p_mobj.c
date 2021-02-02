@@ -67,6 +67,9 @@ void P_RemoveMobj (mobj_t *mobj)
 /* unlink from sector and block lists */
 	P_UnsetThingPosition (mobj);
 
+	mobj->target = NULL;
+	mobj->extradata = 0;
+
 /* unlink from mobj list */
 	P_RemoveMobjFromCurrList(mobj);
 /* link to free mobj list */
