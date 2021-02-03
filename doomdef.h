@@ -657,7 +657,7 @@ pixel_t *I_ViewportBuffer (void);
 
 void I_ClearFrameBuffer (void);
 
-void I_SetPalette (byte *palette);
+void I_SetPalette (const byte *palette);
 
 int I_ReadControls (void);
 

@@ -178,6 +178,44 @@ void Mars_Slave(void)
 {
 }
 
+
+/*
+================
+=
+= Mars_UploadPalette
+=
+================
+*/
+
+void Mars_UploadPalette(const byte *palette)
+{
+	int	i;
+	volatile unsigned short *cram = &MARS_CRAM;
+
+	for (i=0 ; i<256 ; i++) {
+		byte r = *palette++;
+		byte g = *palette++;
+		byte b = *palette++;
+		unsigned short b1 = ((b >> 3) & 0x1f) << 10;
+		unsigned short g1 = ((g >> 3) & 0x1f) << 5;
+		unsigned short r1 = ((r >> 3) & 0x1f) << 0;
+		cram[i] = r1 | g1 | b1;
+	}
+}
+
+/*
+================
+=
+= I_SetPalette
+=
+================
+*/
+
+void I_SetPalette(const byte *palette)
+{
+	Mars_UploadPalette(palette);
+}
+
 /* 
 ================ 
 = 
@@ -189,33 +227,21 @@ void Mars_Slave(void)
  
 void I_Init (void) 
 {	
-	int	i, j;
-	volatile unsigned short *palette = &MARS_CRAM;
-	byte    *doompalette;
-	byte 	*doomcolormap;
+	int	i;
+	const byte	*doompalette;
+	const byte 	*doomcolormap;
 
-	doompalette = I_TempBuffer();
-	W_ReadLump (W_GetNumForName("PLAYPALS"), doompalette);
+	doompalette = W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
+	I_SetPalette(doompalette);
 
-	for (i=0 ; i<256 ; i++) {
-		byte r = *doompalette++;
-		byte g = *doompalette++;
-		byte b = *doompalette++;
-		unsigned short b1 = ((b >> 3) & 0x1f) << 10;
-		unsigned short g1 = ((g >> 3) & 0x1f) << 5;
-		unsigned short r1 = ((r >> 3) & 0x1f) << 0;
-		palette[i] = r1 | g1 | b1;
-	}
-
-	doomcolormap = I_TempBuffer();
-	W_ReadLump (W_GetNumForName("COLORMAPS"), doomcolormap);
+	doomcolormap = W_POINTLUMPNUM(W_GetNumForName("COLORMAPS"));
 	Z_Malloc(64*256, PU_STATIC, &dc_colormaps);
 
-	for(j = 0; j < 32; j++) {
-		byte *sl1 = &doomcolormap[j*512];
-		byte *sl2 = &doomcolormap[j*512+256];
-		byte *dl1 = (byte *)&dc_colormaps[j*256];
-		byte *dl2 = (byte *)&dc_colormaps[j*256+128];
+	for(i = 0; i < 32; i++) {
+		const byte *sl1 = &doomcolormap[i*512];
+		const byte *sl2 = &doomcolormap[i*512+256];
+		byte *dl1 = (byte *)&dc_colormaps[i*256];
+		byte *dl2 = (byte *)&dc_colormaps[i*256+128];
 		D_memcpy(dl1, sl2, 256);
 		D_memcpy(dl2, sl1, 256);
 	}
