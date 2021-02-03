@@ -612,7 +612,7 @@ void	*W_CacheLumpName (char *name, int tag);
 
 const char *W_GetNameForNum (int lump);
 
-#define W_POINTLUMPNUM(x) (void*)(wadfileptr+BIGLONG(lumpinfo[x].filepos));
+#define W_POINTLUMPNUM(x) (void*)(wadfileptr+BIGLONG(lumpinfo[x].filepos))
 
 
 /*---------- */

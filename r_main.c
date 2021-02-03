@@ -340,9 +340,15 @@ void R_Setup (void)
 	int 		i;
 	int		damagecount, bonuscount;
 	player_t *player;
+#ifdef JAGUAR
 	int		shadex, shadey, shadei;
+#endif
 	unsigned short  *tempbuf;
-	
+#ifdef MARS
+	int		palette = 0;
+	static int	curpalette = 0;
+#endif
+
 /* */
 /* set up globals for new frame */
 /* */
@@ -368,15 +374,17 @@ void R_Setup (void)
 		
 	extralight = player->extralight << 6;
 	fixedcolormap = player->fixedcolormap;
-		
-/* */
-/* calc shadepixel */
-/* */
+
 	player = &players[consoleplayer];
 
 	damagecount = player->damagecount;
 	bonuscount = player->bonuscount;
 	
+#ifdef JAGUAR
+
+/* */
+/* calc shadepixel */
+/* */
 	if (damagecount)
 		damagecount += 10;
 	if (bonuscount)
@@ -424,6 +432,41 @@ void R_Setup (void)
 		shadei = -128;
 		
 	shadepixel = ((shadex<<12)&0xf000) + ((shadey<<8)&0xf00) + (shadei&0xff);
+#endif
+
+#ifdef MARS
+	palette = 0;
+
+	i = 0;
+	if (player->powers[pw_strength] > 0)
+		i = 12 - player->powers[pw_strength] / 64;
+	if (i < damagecount)
+		i = damagecount;
+
+	if (i)
+	{
+		palette = (i + 7) / 8;
+		if (palette > 7)
+			palette = 7;
+		palette += 1;
+	}
+	else if (bonuscount)
+	{
+		palette = (bonuscount + 7) / 8;
+		if (palette > 3)
+			palette = 3;
+		palette += 9;
+	}
+	else if (player->powers[pw_ironfeet] > 60
+	|| (player->powers[pw_ironfeet]&4) )
+		palette = 13;
+
+
+	if (palette != curpalette) {
+		curpalette = palette;
+		I_SetPalette(W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"))+palette*768);
+	}
+#endif
 
 	tempbuf = (unsigned short *)I_WorkBuffer();
 
