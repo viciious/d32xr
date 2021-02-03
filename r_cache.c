@@ -172,18 +172,6 @@ void R_PostTexCacheFrame(r_texcache_t* c)
 /*
 ================
 =
-= R_LumpData
-=
-=================
-*/
-static void *R_LumpData(int lumpnum)
-{
-	return wadfileptr + BIGLONG(lumpinfo[lumpnum].filepos);
-}
-
-/*
-================
-=
 = R_EvictFromTexCache
 =
 =================
@@ -195,7 +183,7 @@ static void R_EvictFromTexCache(void* ptr, void* userp)
 
 	if (entry->pixelcount == 0)
 	{
-		*entry->userp = R_LumpData(entry->lumpnum);
+		*entry->userp = W_POINTLUMPNUM(entry->lumpnum);
 		Z_Free2(c->zone, entry);
 	}
 }
@@ -236,7 +224,7 @@ void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **us
 	entry->userp = userp;
 
 	data = (byte*)entry + sizeof(texcacheblock_t);
-	lumpdata = R_LumpData(lumpnum);
+	lumpdata = W_POINTLUMPNUM(lumpnum);
 	D_memcpy(data, lumpdata, pixels);
 	//D_memset(data, id&255, pixels); // DEBUG
 
