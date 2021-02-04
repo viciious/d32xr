@@ -356,17 +356,20 @@ void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **us
 
 typedef struct
 {
-	VINT         floorpicnum;   // floorpic #   - CALICO: avoid type ambiguity w/extra field
-	VINT         ceilingpicnum; // ceilingpic # - CALICO: avoid type ambiguity w/extra field
-
-	VINT			t_texturenum;
-	VINT			b_texturenum;
+	unsigned	scalefrac;
+	unsigned	scale2;
+	int			scalestep;
+	
+	unsigned	centerangle;
+	unsigned	offset;
+	unsigned	distance;
+	unsigned	seglightlevel;
 
 /* */
 /* filled in by bsp */
 /* */
-	int			start;
-	int			stop;					/* inclusive x coordinates */
+	VINT			start;
+	VINT			stop;					/* inclusive x coordinates */
 	int			angle1;					/* polar angle to start */
 	seg_t* seg;
 
@@ -374,7 +377,7 @@ typedef struct
 /* filled in by early prep */
 /* */
 	unsigned	actionbits;
-	
+
 	int			t_topheight;
 	int			t_bottomheight;
 	int			t_texturemid;
@@ -391,18 +394,19 @@ typedef struct
 	int			ceilingheight;
 	int			ceilingnewheight;	
 	
+	VINT			t_texturenum;	
+	VINT			b_texturenum;
+
+	VINT         floorpicnum;   // floorpic #   - CALICO: avoid type ambiguity w/extra field
+	VINT         ceilingpicnum; // ceilingpic # - CALICO: avoid type ambiguity w/extra field
+
 	byte		*topsil;
 	byte		*bottomsil;
-
-	unsigned	scalefrac;
-	unsigned	scale2;
-	int			scalestep;
-	
-	unsigned	centerangle;
-	unsigned	offset;
-	unsigned	distance;
-	unsigned	seglightlevel;
-} viswall_t;
+} viswall_t
+#ifdef MARS
+ __attribute__((aligned(16)))
+#endif
+;
 
 #define	MAXWALLCMDS		128
 extern	viswall_t	*viswalls, *lastwallcmd;

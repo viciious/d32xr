@@ -482,7 +482,7 @@ void R_Setup (void)
 
 	lastvisplane = visplanes+1;		/* visplanes[0] is left empty */
 
-	tempbuf = (unsigned short *)(((int)tempbuf+4)&~3);
+	tempbuf = (unsigned short *)(((int)tempbuf+15)&~15);
 	viswalls = (void *)tempbuf;
 	tempbuf += sizeof(*viswalls)*MAXWALLCMDS/sizeof(*tempbuf);
 
@@ -523,6 +523,9 @@ void R_DrawPlanes (void);
 void R_Sprites (void);
 void R_Update (void);
 
+#ifdef MARS
+void R_SegCommands_Mars(void);
+#endif
 
 /*
 ==============
@@ -582,7 +585,11 @@ void R_RenderPlayerView (void)
 	t_ref_prep = I_GetTime() - t_ref_prep;
 
 	t_ref_segs = I_GetTime();
+#ifdef MARS
+	R_SegCommands_Mars ();
+#else
 	R_SegCommands ();
+#endif
 	t_ref_segs = I_GetTime() - t_ref_segs;
 
 	t_ref_planes = I_GetTime();

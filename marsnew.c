@@ -39,6 +39,8 @@ short		*dc_colormaps;
 static volatile pixel_t	*framebuffer = &MARS_FRAMEBUFFER + 0x100;
 static volatile pixel_t *framebufferend = &MARS_FRAMEBUFFER + 0x10000;
 
+void R_ComputeSeg(void);
+
 /*
 ====================
 =
@@ -119,6 +121,9 @@ void Mars_Init(void)
 	for (i = 0; i < 256; i++)
 		palette[i] = 0;
 	palette[COLOR_WHITE] = 0x7fff;
+
+	MARS_SYS_COMM4 = 0;
+	MARS_SYS_COMM6 = 0;
 }
 
 /*
@@ -176,6 +181,20 @@ int Mars_ToDoomControls(int ctrl)
 
 void Mars_Slave(void)
 {
+	//MARS_SYS_COMM4 = 0;
+	//MARS_SYS_COMM6 = 0;
+
+	while (1)
+	{
+		while (MARS_SYS_COMM4 == 0);
+
+		if (MARS_SYS_COMM4 == 1)
+		{
+			R_ComputeSeg();
+		}
+
+		MARS_SYS_COMM4 = 0;
+	}
 }
 
 
@@ -431,4 +450,3 @@ unsigned I_NetTransfer (unsigned ctrl)
 void I_NetSetup (void)
 {
 }
-
