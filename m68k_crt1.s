@@ -310,15 +310,15 @@ read_mouse:
         bra     main_loop
 
 clear_screen:
-|        moveq   #0,d0
-|        lea     0xC00000,a0
-|        move.w  #0x8F02,4(a0)       /* set INC to 2 */
-|        move.l  #0x60000003,d1      /* VDP write VRAM at 0xE000 (scroll plane B) */
-|        move.l  d1,4(a0)            /* write VRAM at plane B start */
-|        move.w  #64*32-1,d1
-|1:
-|        move.w  d0,(a0)             /* clear name pattern */
-|        dbra    d1,1b
+        moveq   #0,d0
+        lea     0xC00000,a0
+        move.w  #0x8F02,4(a0)       /* set INC to 2 */
+        move.l  #0x60000003,d1      /* VDP write VRAM at 0xE000 (scroll plane B) */
+        move.l  d1,4(a0)            /* write VRAM at plane B start */
+        move.w  #64*32-1,d1
+1:
+        move.w  d0,(a0)             /* clear name pattern */
+        dbra    d1,1b
         move.q  #-1,d0
         move.w  0x12c00,d1
         lea     0x840200,a0             /* frame buffer */
