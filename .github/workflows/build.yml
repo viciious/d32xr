@@ -16,7 +16,7 @@ jobs:
         id: devkit-cache
         with:
           path: /opt/toolchains
-          key: chilly-willy-devkit
+          key: chilly-willy-devkit-3
       - name: Download The devkit archive
         if: steps.devkit-cache.outputs.cache-hit != 'true'
         run: | 
