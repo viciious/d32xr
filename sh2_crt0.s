@@ -293,12 +293,12 @@ scont:
 ! wait for Master SH2 and 68000 to finish init
         mov.l   _slave_sts,r0
         mov.l   _slave_ok,r1
-!1:
-!        mov.l   @r0,r2
-!        nop
-!        nop
-!        cmp/eq  r1,r2
-!        bt      1b
+!!1:
+!       mov.l   @r0,r2
+!       nop
+!       nop
+!       cmp/eq  r1,r2
+!       bt      1b
 
         mov.l   _slave_adapter,r1
         mov     #0x00,r0
