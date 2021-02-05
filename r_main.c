@@ -20,6 +20,9 @@ viswall_t	*viswalls, *lastwallcmd;
 /* */
 visplane_t	visplanes[MAXVISPLANES], *lastvisplane;
 
+#define NUM_VISPLANES_BUCKETS 64
+static visplane_t* visplanes_hash[NUM_VISPLANES_BUCKETS];
+
 /* */
 /* sprites */
 /* */
@@ -482,6 +485,9 @@ void R_Setup (void)
 
 	lastvisplane = visplanes+1;		/* visplanes[0] is left empty */
 
+	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
+		visplanes_hash[i] = NULL;
+
 	tempbuf = (unsigned short *)(((int)tempbuf+15)&~15);
 	viswalls = (void *)tempbuf;
 	tempbuf += sizeof(*viswalls)*MAXWALLCMDS/sizeof(*tempbuf);
@@ -512,6 +518,59 @@ void R_Setup (void)
 	R_SetupTexCacheFrame(&r_wallscache);
 }
 
+//
+// Check for a matching visplane in the visplanes array, or set up a new one
+// if no compatible match can be found.
+//
+visplane_t* R_FindPlane(visplane_t* check, fixed_t height, unsigned flatnum,
+	unsigned lightlevel, int start, int stop)
+{
+	int i;
+	int* open;
+	const int mark = (OPENMARK << 16) | OPENMARK;
+	int hash = ((((unsigned)height >> 8) + lightlevel) ^ flatnum) & (NUM_VISPLANES_BUCKETS - 1);
+
+	for (check = visplanes_hash[hash]; check; )
+	{
+		if (height == check->height && // same plane as before?
+			flatnum == check->flatnum &&
+			lightlevel == check->lightlevel)
+		{
+			if (check->open[start] == OPENMARK)
+			{
+				// found a plane, so adjust bounds and return it
+				if (start < check->minx) // in range of the plane?
+					check->minx = start; // mark the new edge
+				if (stop > check->maxx)
+					check->maxx = stop;  // mark the new edge
+
+				return check; // use the same one as before
+			}
+		}
+		check = check->next;
+	}
+
+	// make a new plane
+	check = lastvisplane;
+	++lastvisplane;
+
+	check->height = height;
+	check->flatnum = flatnum;
+	check->lightlevel = lightlevel;
+	check->minx = start;
+	check->maxx = stop;
+
+	open = (int*)check->open;
+	for (i = 0; i < SCREENWIDTH / 4; i++)
+	{
+		*open++ = mark;
+		*open++ = mark;
+	}
+	check->next = visplanes_hash[hash];
+	visplanes_hash[hash] = check;
+
+	return check;
+}
 
 void R_BSP (void);
 void R_WallPrep (void);
@@ -522,10 +581,6 @@ void R_SegCommands (void);
 void R_DrawPlanes (void);
 void R_Sprites (void);
 void R_Update (void);
-
-#ifdef MARS
-void R_SegCommands_Mars(void);
-#endif
 
 /*
 ==============
@@ -585,11 +640,7 @@ void R_RenderPlayerView (void)
 	t_ref_prep = I_GetTime() - t_ref_prep;
 
 	t_ref_segs = I_GetTime();
-#ifdef MARS
-	R_SegCommands_Mars ();
-#else
 	R_SegCommands ();
-#endif
 	t_ref_segs = I_GetTime() - t_ref_segs;
 
 	t_ref_planes = I_GetTime();

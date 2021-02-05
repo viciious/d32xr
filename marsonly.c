@@ -459,7 +459,7 @@ void I_Update (void)
 	do
 	{
 		ticcount = I_GetTime();
-	} while (ticcount-lastticcount < 1);
+	} while (ticcount-lastticcount < 2);
 
 	lasttics = ticcount - lastticcount;
 	lastticcount = ticcount;

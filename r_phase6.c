@@ -29,66 +29,9 @@ static unsigned lightmin, lightmax, lightsub, lightcoef;
 static int floorclipx, ceilingclipx, x, scale;
 static unsigned texturecol, iscale, texturelight;
 
-#define NUM_VISPLANES_BUCKETS 64
-static visplane_t* visplanes_hash[NUM_VISPLANES_BUCKETS];
-
-//
-// Check for a matching visplane in the visplanes array, or set up a new one
-// if no compatible match can be found.
-//
 #ifdef MARS
-static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, unsigned flatnum,
-#else
-static visplane_t *R_FindPlane(visplane_t *check, fixed_t height, unsigned flatnum,
+void Mars_R_SegCommands(void);
 #endif
-                               unsigned lightlevel, int start, int stop)
-{
-   int i;
-   int* open;
-   const int mark = (OPENMARK << 16) | OPENMARK;
-   int hash = ((((unsigned)height>>8)+lightlevel)^flatnum) & (NUM_VISPLANES_BUCKETS-1);
-
-   for (check = visplanes_hash[hash]; check; )
-   {
-      if(height == check->height && // same plane as before?
-         flatnum == check->flatnum &&
-         lightlevel == check->lightlevel)
-      {
-         if(check->open[start] == OPENMARK)
-         {
-            // found a plane, so adjust bounds and return it
-            if(start < check->minx) // in range of the plane?
-               check->minx = start; // mark the new edge
-            if(stop > check->maxx)
-               check->maxx = stop;  // mark the new edge
-
-            return check; // use the same one as before
-         }
-      }
-      check = check->next;
-   }
-
-   // make a new plane
-   check = lastvisplane;
-   ++lastvisplane;
-
-   check->height = height;
-   check->flatnum = flatnum;
-   check->lightlevel = lightlevel;
-   check->minx = start;
-   check->maxx = stop;
-
-   open = (int*)check->open;
-   for(i = 0; i < SCREENWIDTH/4; i++)
-   {
-       *open++ = mark;
-       *open++ = mark;
-   }
-   check->next = visplanes_hash[hash];
-   visplanes_hash[hash] = check;
-
-   return check;
-}
 
 //
 // Render a wall texture as columns
@@ -320,6 +263,11 @@ void R_SegCommands(void)
    int *clip;
    viswall_t *segl;
 
+#ifdef MARS
+   Mars_R_SegCommands();
+   return;
+#endif
+
    // initialize the clipbounds array
    clipbounds = (int *)&r_workbuf[0];
    clip = clipbounds;
@@ -330,9 +278,6 @@ void R_SegCommands(void)
       *clip++ = SCREENHEIGHT;
       *clip++ = SCREENHEIGHT;
    }
-
-   for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
-       visplanes_hash[i] = NULL;
 
    /*
    ; setup blitter
