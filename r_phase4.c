@@ -14,15 +14,11 @@ angle_t normalangle;
 //
 // Check if texture is loaded; return if so, flag for cache if not
 //
+#ifdef MARS
+#define R_CheckPixels(lumpnum) W_POINTLUMPNUM(lumpnum)
+#else
 static void *R_CheckPixels(int lumpnum)
 {
-#ifdef MARS
-    lumpinfo_t* info;
-    
-    info = &lumpinfo[lumpnum];
-
-    return wadfileptr + BIGLONG(info->filepos);
-#else
     void *lumpdata = lumpcache[lumpnum];
    
    if(lumpdata)
@@ -36,8 +32,8 @@ static void *R_CheckPixels(int lumpnum)
       cacheneeded = true; // phase 5 will need to be executed to cache graphics
    
    return lumpdata;
-#endif
 }
+#endif
 
 //
 // Get distance to point in 3D projection
