@@ -353,8 +353,10 @@ void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **us
 #define	AC_BOTTOMSIL		512
 #define	AC_SOLIDSIL			1024
 
-
 typedef struct
+#ifdef MARS
+__attribute__((aligned(16)))
+#endif
 {
 	unsigned	scalefrac;
 	unsigned	scale2;
@@ -402,16 +404,14 @@ typedef struct
 
 	byte		*topsil;
 	byte		*bottomsil;
-} viswall_t
-#ifdef MARS
- __attribute__((aligned(16)))
-#endif
-;
+} viswall_t;
 
 #define	MAXWALLCMDS		128
-extern	viswall_t	*viswalls, *lastwallcmd;
-
-
+extern	viswall_t	*viswalls, *lastwallcmd
+#ifdef MARS
+__attribute__((aligned(16)))
+#endif
+;
 
 /* A vissprite_t is a thing that will be drawn during a refresh */
 typedef struct vissprite_s

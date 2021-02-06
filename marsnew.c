@@ -145,6 +145,10 @@ void Mars_Slave(void)
 		{
 			Mars_Slave_R_ComputeSeg();
 		}
+		else if (MARS_SYS_COMM4 == 2)
+		{
+			Mars_Slave_R_PrepWalls();
+		}
 
 		MARS_SYS_COMM4 = 0;
 	}

@@ -100,7 +100,7 @@ void Mars_Slave_R_ComputeSeg(void)
     viswall_t* segl = &workseg;
     short* p = workbuf;
 
-    Mars_ClearCacheLines(segl, (sizeof(viswall_t) + 15) / 16);
+    Mars_ClearCacheLines(segl, sizeof(viswall_t) / 16);
 
     scalefrac = segl->scalefrac; // cache the first 8 words of segl: scalefrac, scale2, scalestep, centerangle
     scalestep = segl->scalestep;
