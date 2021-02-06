@@ -319,6 +319,7 @@ void Mars_Slave_R_PrepWalls(void)
 {
     viswall_t* wall;
 
+    Mars_ClearCacheLines(&viswalls, 1);
     Mars_ClearCacheLines(&lastwallcmd, 1);
 
     for (wall = viswalls + 1; wall < lastwallcmd; wall += 2)
