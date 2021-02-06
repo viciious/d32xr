@@ -27,27 +27,19 @@
 
 #include "32x.h"
 #include "doomdef.h"
+#include "mars.h"
 #include "r_local.h"
 #include "wadbase.h"
 
 const int COLOR_WHITE = 0x04;
 
-static int		activescreen = 0;
+int		activescreen = 0;
 
-short		*dc_colormaps;
+short	*dc_colormaps;
 
 static volatile pixel_t	*framebuffer = &MARS_FRAMEBUFFER + 0x100;
 static volatile pixel_t *framebufferend = &MARS_FRAMEBUFFER + 0x10000;
 
-void R_ComputeSeg(void);
-
-/*
-====================
-=
-= Mars_ClearFrameBuffer
-=
-====================
-*/
 void Mars_ClearFrameBuffer(void)
 {
 	int *p = (int *)framebuffer;
@@ -56,39 +48,18 @@ void Mars_ClearFrameBuffer(void)
 		*p++ = 0;
 }
 
-/*
-================
-=
-= Mars_WaitFrameBuffersFlip
-=
-================
-*/
-void Mars_WaitFrameBuffersFlip(void)
+inline void Mars_WaitFrameBuffersFlip(void)
 {
 	while ((MARS_VDP_FBCTL & MARS_VDP_FS) != activescreen);
 }
 
-/*
-================
-=
-= Mars_FlipFrameBuffers
-=
-================
-*/
-void Mars_FlipFrameBuffers(boolean wait)
+inline void Mars_FlipFrameBuffers(boolean wait)
 {
 	activescreen = !activescreen;
 	MARS_VDP_FBCTL = activescreen;
 	if (wait) Mars_WaitFrameBuffersFlip();
 }
 
-/*
-================
-=
-= Mars_Init
-=
-================
-*/
 void Mars_Init(void)
 {
 	int i, j;
@@ -126,13 +97,6 @@ void Mars_Init(void)
 	MARS_SYS_COMM6 = 0;
 }
 
-/*
-====================
-=
-= Mars_ToDoomControls
-=
-====================
-*/
 int Mars_ToDoomControls(int ctrl)
 {
 	int newc = 0;
@@ -171,40 +135,20 @@ int Mars_ToDoomControls(int ctrl)
 	return newc;
 }
 
-/*
-================
-=
-= Mars_Slave
-=
-================
-*/
-
 void Mars_Slave(void)
 {
-	//MARS_SYS_COMM4 = 0;
-	//MARS_SYS_COMM6 = 0;
-
 	while (1)
 	{
 		while (MARS_SYS_COMM4 == 0);
 
 		if (MARS_SYS_COMM4 == 1)
 		{
-			R_ComputeSeg();
+			Mars_Slave_R_ComputeSeg();
 		}
 
 		MARS_SYS_COMM4 = 0;
 	}
 }
-
-
-/*
-================
-=
-= Mars_UploadPalette
-=
-================
-*/
 
 void Mars_UploadPalette(const byte *palette)
 {
@@ -221,14 +165,6 @@ void Mars_UploadPalette(const byte *palette)
 		cram[i] = r1 | g1 | b1;
 	}
 }
-
-/*
-================
-=
-= I_SetPalette
-=
-================
-*/
 
 void I_SetPalette(const byte *palette)
 {
@@ -315,26 +251,12 @@ byte *I_ZoneBase (int *size)
 	return (byte *)zone;
 }
 
-/*
-====================
-=
-= I_ReadControls
-=
-====================
-*/
 int I_ReadControls(void)
 {
 	int ctrl = consoleplayer == 0 ? MARS_SYS_COMM8 : MARS_SYS_COMM10;
 	return Mars_ToDoomControls(ctrl);
 }
 
-/*
-====================
-=
-= I_GetTime
-=
-====================
-*/
 int	I_GetTime (void)
 {
 	return MARS_SYS_COMM12;
@@ -368,13 +290,6 @@ byte 	*I_WorkBuffer (void)
 	return (byte *)(I_ViewportBuffer() + 320 * SCREENHEIGHT / 2);
 }
 
-/*
-====================
-=
-= I_FrameBuffer
-=
-====================
-*/
 pixel_t	*I_FrameBuffer (void)
 {
 	return (pixel_t *)framebuffer;
@@ -389,13 +304,6 @@ pixel_t	*I_ViewportBuffer (void)
 	return (pixel_t *)viewportbuffer;
 }
 
-/*
-====================
-=
-= I_ClearFrameBuffer
-=
-====================
-*/
 void 	I_ClearFrameBuffer (void)
 {
 	Mars_ClearFrameBuffer();
