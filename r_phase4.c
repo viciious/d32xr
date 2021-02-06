@@ -8,8 +8,13 @@
 #include "r_local.h"
 
 static boolean cacheneeded;
-static fixed_t hyp;
-angle_t normalangle;
+
+#ifdef MARS
+static fixed_t R_PointToDist(fixed_t x, fixed_t y) __attribute__((section(".data"), aligned(16)));
+static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, angle_t normalangle) __attribute__((section(".data"), aligned(16)));
+static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle) __attribute__((section(".data"), aligned(16)));
+static void R_FinishWallPrep2(viswall_t* wc) __attribute__((section(".data"), aligned(16)));
+#endif
 
 //
 // Check if texture is loaded; return if so, flag for cache if not
@@ -62,7 +67,7 @@ static fixed_t R_PointToDist(fixed_t x, fixed_t y)
 //
 // Convert angle and distance within view frustum to texture scale factor.
 //
-static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle)
+static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, angle_t normalangle)
 {
    angle_t anglea, angleb;
    fixed_t num, den;
@@ -84,7 +89,7 @@ static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle)
 //
 // Setup texture calculations for lines with upper and lower textures
 //
-static void R_SetupCalc(viswall_t *wc)
+static void R_SetupCalc(viswall_t *wc, fixed_t hyp, angle_t normalangle)
 {
    fixed_t sineval, rw_offset;
    angle_t offsetangle;
@@ -110,14 +115,10 @@ static void R_SetupCalc(viswall_t *wc)
 //
 // Late prep for viswalls
 //
-static void R_FinishWallPrep(viswall_t *wc)
+static void R_FinishWallPrep1(viswall_t *wc)
 {
    unsigned int fw_actionbits = wc->actionbits;
    texture_t   *fw_texture;
-   angle_t      distangle, offsetangle;
-   seg_t       *seg = wc->seg;
-   fixed_t      sineval, rw_distance;
-   fixed_t      scalefrac, scale2;
    
    // has top or middle texture?
    if(fw_actionbits & AC_TOPTEXTURE)
@@ -167,40 +168,49 @@ static void R_FinishWallPrep(viswall_t *wc)
          flatpixels[ceilingpicnum] = R_CheckPixels(firstflat + ceilingpicnum);
       R_TestTexCacheCandidate(&r_flatscache, ceilingpicnum);
    }
-   
-   // this is essentially R_StoreWallRange
-   // calculate rw_distance for scale calculation
-   normalangle = ((angle_t)seg->angle<<16) + ANG90;
-   offsetangle = normalangle - wc->angle1;
+}
 
-   if((int)offsetangle < 0)
-      offsetangle = 0 - offsetangle;
-   
-   if(offsetangle > ANG90)
-      offsetangle = ANG90;
-   
-   distangle = ANG90 - offsetangle;
-   hyp = R_PointToDist(vertexes[seg->v1].x, vertexes[seg->v1].y);
-   sineval = finesine(distangle >> ANGLETOFINESHIFT);
-   wc->distance = rw_distance = FixedMul(hyp, sineval);
-   
-   scalefrac = scale2 = wc->scalefrac =
-      R_ScaleFromGlobalAngle(rw_distance, viewangle + xtoviewangle[wc->start]);
+static void R_FinishWallPrep2(viswall_t* wc)
+{
+    angle_t      distangle, offsetangle, normalangle;
+    seg_t* seg = wc->seg;
+    fixed_t      sineval, rw_distance;
+    fixed_t      scalefrac, scale2;
+    fixed_t      hyp;
 
-   if(wc->stop > wc->start)
-   {
-      scale2 = R_ScaleFromGlobalAngle(rw_distance, viewangle + xtoviewangle[wc->stop]);
-      wc->scalestep = (int)(scale2 - scalefrac) / (int)(wc->stop - wc->start);
-   }
+    // this is essentially R_StoreWallRange
+    // calculate rw_distance for scale calculation
+    normalangle = ((angle_t)seg->angle << 16) + ANG90;
+    offsetangle = normalangle - wc->angle1;
 
-   wc->scale2 = scale2;
+    if ((int)offsetangle < 0)
+        offsetangle = 0 - offsetangle;
 
-   // does line have top or bottom textures?
-   if(wc->actionbits & (AC_TOPTEXTURE|AC_BOTTOMTEXTURE))
-   {
-      wc->actionbits |= AC_CALCTEXTURE; // set to calculate texture info
-      R_SetupCalc(wc);                  // do calc setup
-   }
+    if (offsetangle > ANG90)
+        offsetangle = ANG90;
+
+    distangle = ANG90 - offsetangle;
+    hyp = R_PointToDist(vertexes[seg->v1].x, vertexes[seg->v1].y);
+    sineval = finesine(distangle >> ANGLETOFINESHIFT);
+    wc->distance = rw_distance = FixedMul(hyp, sineval);
+
+    scalefrac = scale2 = wc->scalefrac =
+        R_ScaleFromGlobalAngle(rw_distance, viewangle + xtoviewangle[wc->start], normalangle);
+
+    if (wc->stop > wc->start)
+    {
+        scale2 = R_ScaleFromGlobalAngle(rw_distance, viewangle + xtoviewangle[wc->stop], normalangle);
+        wc->scalestep = (int)(scale2 - scalefrac) / (int)(wc->stop - wc->start);
+    }
+
+    wc->scale2 = scale2;
+
+    // does line have top or bottom textures?
+    if (wc->actionbits & (AC_TOPTEXTURE | AC_BOTTOMTEXTURE))
+    {
+        wc->actionbits |= AC_CALCTEXTURE; // set to calculate texture info
+        R_SetupCalc(wc, hyp, normalangle);// do calc setup
+    }
 }
 
 //
@@ -313,9 +323,19 @@ boolean R_LatePrep(void)
    
    cacheneeded = false;   
    
+#ifndef MARS
    // finish viswalls
-   for(wall = viswalls; wall < lastwallcmd; wall++)
-      R_FinishWallPrep(wall);
+   for (wall = viswalls; wall < lastwallcmd; wall++)
+   {
+       R_FinishWallPrep1(wall);
+       R_FinishWallPrep2(wall);
+   }
+#else
+   for (wall = viswalls; wall < lastwallcmd; wall++)
+       R_FinishWallPrep1(wall);
+   for (wall = viswalls; wall < lastwallcmd; wall++)
+       R_FinishWallPrep2(wall);
+#endif
 
    // finish actor sprites   
    for(spr = vissprites; spr < lastsprite_p; spr++)
