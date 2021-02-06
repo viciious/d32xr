@@ -358,6 +358,9 @@ typedef struct
 __attribute__((aligned(16)))
 #endif
 {
+	unsigned short	actionbits;
+	unsigned short	seglightlevel;
+
 	unsigned	scalefrac;
 	unsigned	scale2;
 	int			scalestep;
@@ -365,7 +368,6 @@ __attribute__((aligned(16)))
 	unsigned	centerangle;
 	unsigned	offset;
 	unsigned	distance;
-	unsigned	seglightlevel;
 
 /* */
 /* filled in by bsp */
@@ -378,8 +380,6 @@ __attribute__((aligned(16)))
 /* */
 /* filled in by early prep */
 /* */
-	unsigned	actionbits;
-
 	int			t_topheight;
 	int			t_bottomheight;
 	int			t_texturemid;
