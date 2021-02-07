@@ -754,7 +754,13 @@ void R_Init (void);
 int	R_FlatNumForName (const char *name);
 int	R_TextureNumForName (const char *name);
 int	R_CheckTextureNumForName (const char *name);
+
+#ifdef MARS
+angle_t R_PointToAngle2 (fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2) __attribute__((section(".data"), aligned(16)));
+#else
 angle_t R_PointToAngle2 (fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2);
+#endif
+
 struct subsector_s *R_PointInSubsector (fixed_t x, fixed_t y);
 
 

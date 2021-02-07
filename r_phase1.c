@@ -21,6 +21,10 @@ seg_t       *curline;
 angle_t      lineangle1;
 sector_t    *frontsector;
 
+#ifdef MARS
+angle_t R_PointToAngle(fixed_t x, fixed_t y) __attribute__((section(".data"), aligned(16)));
+#endif
+
 //
 // To get a global angle from Cartesian coordinates, the coordinates are
 // flipped until they are in the first octant of the coordinate system,
