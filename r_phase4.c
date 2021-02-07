@@ -317,12 +317,11 @@ static void R_FinishPSprite(vissprite_t *vis)
 #ifdef MARS
 void Mars_Slave_R_PrepWalls(void)
 {
-    viswall_t* wall;
+    viswall_t *wall;
+    viswall_t *first = *((viswall_t **)((intptr_t)&viswalls | 0x20000000));
+    viswall_t *last  = *((viswall_t **)((intptr_t)&lastwallcmd | 0x20000000));
 
-    Mars_ClearCacheLines(&viswalls, 1);
-    Mars_ClearCacheLines(&lastwallcmd, 1);
-
-    for (wall = viswalls + 1; wall < lastwallcmd; wall += 2)
+    for (wall = first + 1; wall < last; wall += 2)
     {
         Mars_ClearCacheLines(wall, sizeof(viswall_t) / 16);
         R_FinishWallPrep1(wall);
