@@ -73,7 +73,7 @@ static inline int Mars_R_WordsForActionbits(unsigned actionbits)
         numwords += 1; // top
     if (actionbits & AC_ADDCEILING)
         numwords += 1; // bottom
-    numwords = 2 + 1; // low and high
+    numwords += 2; // low and high
     if (actionbits & AC_ADDSKY)
         numwords += 1; // bottom
     if (numwords & 1)
