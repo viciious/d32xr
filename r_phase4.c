@@ -351,12 +351,12 @@ boolean R_LatePrep(void)
        R_FinishWallPrep1(wall);
        R_FinishWallPrep2(wall);
    }
+   Mars_R_EndPrepWalls();
    for (wall = viswalls + 1; wall < lastwallcmd; wall += 2)
    {
-       R_FinishWallPrep2(wall);
        Mars_ClearCacheLines(wall, sizeof(viswall_t) / 16);
+       R_FinishWallPrep2(wall);
    }
-   Mars_R_EndPrepWalls();
 #else
    for (wall = viswalls; wall < lastwallcmd; wall++)
    {
