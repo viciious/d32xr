@@ -304,7 +304,7 @@ static void Mars_R_SegLoop(viswall_t *segl, int *clipbounds, drawtex_t *toptex, 
             if(floor->open[x] != OPENMARK)
             {
                floor = R_FindPlane(floor + 1, segl->floorheight, segl->floorpicnum,
-                   seglight, x, segl->stop);
+                   seglight, x, stop);
             }
             floor->open[x] = (unsigned short)((top << 8) + bottom);
          }
@@ -326,7 +326,7 @@ static void Mars_R_SegLoop(viswall_t *segl, int *clipbounds, drawtex_t *toptex, 
             if(ceiling->open[x] != OPENMARK)
             {
                ceiling = R_FindPlane(ceiling + 1, segl->ceilingheight, segl->ceilingpicnum,
-                   seglight, x, segl->stop);
+                   seglight, x, stop);
             }
             ceiling->open[x] = (unsigned short)((top << 8) + bottom);
          }
@@ -366,7 +366,6 @@ static void Mars_R_SegLoop(viswall_t *segl, int *clipbounds, drawtex_t *toptex, 
          
          if(top <= bottom)
          {
-            // CALICO: draw sky column
             int colnum = ((viewangle + xtoviewangle[x]) >> ANGLETOSKYSHIFT) & 0xff;
             inpixel_t * data = skytexturep->data + colnum * skytexturep->height;
             I_DrawColumn(x, top, bottom, 0, (top * 18204) << 2,  FRACUNIT + 7281, data, 128);
