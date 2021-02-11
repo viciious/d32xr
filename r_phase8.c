@@ -128,8 +128,8 @@ static void R_ClipVisSprite(vissprite_t *vis)
 
    x1  = vis->x1;
    x2  = vis->x2;
-   gz  = (vis->gz  - viewz) / (1 << 10);
-   gzt = (vis->gzt - viewz) / (1 << 10);
+   gz  = (vis->gz  - vd.viewz) / (1 << 10);
+   gzt = (vis->gzt - vd.viewz) / (1 << 10);
    
    scalefrac = vis->yscale;
    

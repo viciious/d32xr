@@ -241,10 +241,17 @@ extern	unsigned short	distscale[SCREENWIDTH];		/* 1.15 frac */
 
 #define OPENMARK 0xff00
 
-extern	fixed_t		viewx, viewy, viewz;
-extern	angle_t		viewangle;
-extern	fixed_t		viewcos, viewsin;
+typedef struct
+#ifdef MARS
+__attribute__((aligned(16)))
+#endif
+{
+	fixed_t		viewx, viewy, viewz;
+	angle_t		viewangle;
+	fixed_t		viewcos, viewsin;
+} viewdef_t;
 
+extern	viewdef_t	vd;
 extern	player_t	*viewplayer;
 extern	boolean		fixedcolormap;
 extern	int			extralight;

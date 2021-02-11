@@ -33,8 +33,8 @@ angle_t R_PointToAngle(fixed_t x, fixed_t y) __attribute__((section(".data"), al
 //
 angle_t R_PointToAngle(fixed_t x, fixed_t y)
 {
-   x -= viewx;
-   y -= viewy;
+   x -= vd.viewx;
+   y -= vd.viewy;
 
    if(!x && !y)
       return 0;
@@ -118,16 +118,16 @@ boolean R_CheckBBox(fixed_t bspcoord[4])
    int sx1, sx2;
 
    // find the corners of the box that define the edges from current viewpoint
-   if(viewx <= bspcoord[BOXLEFT])
+   if(vd.viewx <= bspcoord[BOXLEFT])
       boxx = 0;
-   else if(viewx < bspcoord[BOXRIGHT])
+   else if(vd.viewx < bspcoord[BOXRIGHT])
       boxx = 1;
    else
       boxx = 2;
 
-   if(viewy >= bspcoord[BOXTOP])
+   if(vd.viewy >= bspcoord[BOXTOP])
       boxy = 0;
-   else if(viewy > bspcoord[BOXBOTTOM])
+   else if(vd.viewy > bspcoord[BOXBOTTOM])
       boxy = 1;
    else
       boxy = 2;
@@ -142,8 +142,8 @@ boolean R_CheckBBox(fixed_t bspcoord[4])
    y2 = bspcoord[checkcoord[boxpos][3]];
 
    // check clip list for an open space
-   angle1 = R_PointToAngle(x1, y1) - viewangle;
-   angle2 = R_PointToAngle(x2, y2) - viewangle;
+   angle1 = R_PointToAngle(x1, y1) - vd.viewangle;
+   angle2 = R_PointToAngle(x2, y2) - vd.viewangle;
 
    span = angle1 - angle2;
 
@@ -360,8 +360,8 @@ void R_AddLine(seg_t *line)
       return;
 
    lineangle1 = angle1;
-   angle1 -= viewangle;
-   angle2 -= viewangle;
+   angle1 -= vd.viewangle;
+   angle2 -= vd.viewangle;
 
    tspan = angle1 + clipangle;
    if(tspan > doubleclipangle)
@@ -468,7 +468,7 @@ check:
    bsp = &nodes[bspnum];
 
    // decide which side the view point is on
-   side = R_PointOnSide(viewx, viewy, bsp);
+   side = R_PointOnSide(vd.viewx, vd.viewy, bsp);
 
    // recursively render front space
    R_RenderBSPNode(bsp->children[side]);

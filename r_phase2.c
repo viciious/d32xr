@@ -38,8 +38,8 @@ void R_WallPrep(void)
       front_sector    = &sectors[sides[li->sidenum[side]].sector];
       f_ceilingpic    = front_sector->ceilingpic;
       f_lightlevel    = front_sector->lightlevel;
-      f_floorheight   = front_sector->floorheight   - viewz;
-      f_ceilingheight = front_sector->ceilingheight - viewz;
+      f_floorheight   = front_sector->floorheight   - vd.viewz;
+      f_ceilingheight = front_sector->ceilingheight - vd.viewz;
 
       segl->floorpicnum   = flattranslation[front_sector->floorpic];
       segl->ceilingpicnum = f_ceilingpic == -1 ? -1 : flattranslation[f_ceilingpic];
@@ -49,8 +49,8 @@ void R_WallPrep(void)
          back_sector = &emptysector;
       b_ceilingpic    = back_sector->ceilingpic;
       b_lightlevel    = back_sector->lightlevel;
-      b_floorheight   = back_sector->floorheight   - viewz;
-      b_ceilingheight = back_sector->ceilingheight - viewz;
+      b_floorheight   = back_sector->floorheight   - vd.viewz;
+      b_ceilingheight = back_sector->ceilingheight - vd.viewz;
 
       t_texturemid = b_texturemid = 0;
       actionbits = 0;

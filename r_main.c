@@ -42,10 +42,10 @@ boolean		phase1completed;
 
 pixel_t		*workingscreen;
 
-
-fixed_t		viewx, viewy, viewz;
-angle_t		viewangle;
-fixed_t		viewcos, viewsin;
+#ifdef MARS
+__attribute__((aligned(16)))
+#endif
+viewdef_t       vd;
 player_t	*viewplayer;
 
 VINT			validcount = 1;		/* increment every time a check is made */
@@ -367,13 +367,13 @@ void R_Setup (void)
 	validcount++;
 		
 	viewplayer = player = &players[displayplayer];
-	viewx = player->mo->x;
-	viewy = player->mo->y;
-	viewz = player->viewz;
-	viewangle = player->mo->angle;
+	vd.viewx = player->mo->x;
+	vd.viewy = player->mo->y;
+	vd.viewz = player->viewz;
+	vd.viewangle = player->mo->angle;
 
-	viewsin = finesine(viewangle>>ANGLETOFINESHIFT);
-	viewcos = finecosine(viewangle>>ANGLETOFINESHIFT);
+	vd.viewsin = finesine(vd.viewangle>>ANGLETOFINESHIFT);
+	vd.viewcos = finecosine(vd.viewangle>>ANGLETOFINESHIFT);
 		
 	extralight = player->extralight << 6;
 	fixedcolormap = player->fixedcolormap;

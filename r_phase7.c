@@ -340,10 +340,10 @@ void R_DrawPlanes(void)
    visplane_t *pl;
    int pl_flatnum;
  
-   planex =  viewx;
-   planey = -viewy;
+   planex =  vd.viewx;
+   planey = -vd.viewy;
 
-   planeangle = viewangle;
+   planeangle = vd.viewangle;
    angle = (planeangle - ANG90) >> ANGLETOFINESHIFT;
 
    basexscale =  (finecosine(angle) / (SCREENWIDTH / 2));

@@ -27,19 +27,19 @@ static void R_PrepMobj(mobj_t *thing)
    vissprite_t *vis;
 
    // transform origin relative to viewpoint
-   tr_x = thing->x - viewx;
-   tr_y = thing->y - viewy;
+   tr_x = thing->x - vd.viewx;
+   tr_y = thing->y - vd.viewy;
 
-   gxt =  FixedMul(tr_x, viewcos);
-   gyt = -FixedMul(tr_y, viewsin);
+   gxt =  FixedMul(tr_x, vd.viewcos);
+   gyt = -FixedMul(tr_y, vd.viewsin);
    tz  = gxt - gyt;
 
    // thing is behind view plane?
    if(tz < MINZ)
       return;
 
-   gxt = -FixedMul(tr_x, viewsin);
-   gyt =  FixedMul(tr_y, viewcos);
+   gxt = -FixedMul(tr_x, vd.viewsin);
+   gyt =  FixedMul(tr_y, vd.viewcos);
    tx  = -(gyt + gxt);
 
    // too far off the side?

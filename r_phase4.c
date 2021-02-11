@@ -49,8 +49,8 @@ static fixed_t R_PointToDist(fixed_t x, fixed_t y)
    int angle;
    fixed_t dx, dy, temp;
    
-   dx = D_abs(x - viewx);
-   dy = D_abs(y - viewy);
+   dx = D_abs(x - vd.viewx);
+   dy = D_abs(y - vd.viewy);
    
    if(dy > dx)
    {
@@ -76,7 +76,7 @@ static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, ang
 
    visangle += ANG90;
    
-   anglea = visangle - viewangle;
+   anglea = visangle - vd.viewangle;
    sinea  = finesine(anglea >> ANGLETOFINESHIFT);
    angleb = visangle - normalangle;
    sineb  = finesine(angleb >> ANGLETOFINESHIFT);
@@ -110,7 +110,7 @@ static void R_SetupCalc(viswall_t *wc, fixed_t hyp, angle_t normalangle)
       rw_offset = -rw_offset;
 
    wc->offset += rw_offset;
-   wc->centerangle = ANG90 + viewangle - normalangle;
+   wc->centerangle = ANG90 + vd.viewangle - normalangle;
 }
 
 //
@@ -141,11 +141,11 @@ static void R_FinishWallPrep1(viswall_t* wc)
     wc->distance = rw_distance = FixedMul(hyp, sineval);
 
     scalefrac = scale2 = wc->scalefrac =
-        R_ScaleFromGlobalAngle(rw_distance, viewangle + xtoviewangle[wc->start], normalangle);
+        R_ScaleFromGlobalAngle(rw_distance, vd.viewangle + xtoviewangle[wc->start], normalangle);
 
     if (wc->stop > wc->start)
     {
-        scale2 = R_ScaleFromGlobalAngle(rw_distance, viewangle + xtoviewangle[wc->stop], normalangle);
+        scale2 = R_ScaleFromGlobalAngle(rw_distance, vd.viewangle + xtoviewangle[wc->stop], normalangle);
         wc->scalestep = (int)(scale2 - scalefrac) / (int)(wc->stop - wc->start);
     }
 
@@ -258,7 +258,7 @@ static void R_FinishSprite(vissprite_t *vis)
 
    // store information in vissprite
    vis->gzt = vis->gz + ((fixed_t)BIGSHORT(vis->patch->topoffset) << FRACBITS);
-   vis->texturemid = vis->gzt - viewz;
+   vis->texturemid = vis->gzt - vd.viewz;
    vis->x1 = x1 < 0 ? 0 : x1;
    vis->x2 = x2 >= SCREENWIDTH ? SCREENWIDTH - 1 : x2;
    
@@ -320,6 +320,8 @@ void Mars_Slave_R_PrepWalls(void)
     viswall_t *wall;
     viswall_t *first = *((viswall_t **)((intptr_t)&viswalls | 0x20000000));
     viswall_t *last  = *((viswall_t **)((intptr_t)&lastwallcmd | 0x20000000));
+
+    Mars_ClearCacheLines(&vd, (sizeof(viewdef_t) + 15) / 16);
 
     for (wall = first + 1; wall < last; wall += 2)
     {

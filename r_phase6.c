@@ -233,7 +233,7 @@ static void R_SegLoop(viswall_t *segl)
          if(top <= bottom)
          {
             // CALICO: draw sky column
-            int colnum = ((viewangle + xtoviewangle[x]) >> ANGLETOSKYSHIFT) & 0xff;
+            int colnum = ((vd.viewangle + xtoviewangle[x]) >> ANGLETOSKYSHIFT) & 0xff;
 #ifdef MARS
             inpixel_t * data = skytexturep->data + colnum * skytexturep->height;
 #else
