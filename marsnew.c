@@ -28,6 +28,7 @@
 #include "32x.h"
 #include "doomdef.h"
 #include "mars.h"
+#include "mars_ringbuf.h"
 #include "r_local.h"
 #include "wadbase.h"
 
@@ -39,6 +40,8 @@ short	*dc_colormaps;
 
 static volatile pixel_t	*framebuffer = &MARS_FRAMEBUFFER + 0x100;
 static volatile pixel_t *framebufferend = &MARS_FRAMEBUFFER + 0x10000;
+
+marsrb_t marsrb;
 
 void Mars_ClearFrameBuffer(void)
 {

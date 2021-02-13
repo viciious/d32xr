@@ -41,14 +41,15 @@ void Mars_UploadPalette(const byte* palette);
 #define Mars_ClearCacheLine(addr) *(volatile int *)((addr) | 0x40000000) = 0
 
 //static inline void Mars_ClearCacheLines(volatile void* paddr, volatile int lines) __attribute__((section(".data"), aligned(16)));
-static inline void Mars_R_BeginComputeSeg(int x) __attribute__((section(".data"), aligned(16)));
-static inline void Mars_R_WaitComputeSeg(int x) __attribute__((section(".data"), aligned(16)));
+static inline void Mars_R_BeginComputeSeg(void) __attribute__((section(".data"), aligned(16)));
 static inline void Mars_R_EndComputeSeg(void) __attribute__((section(".data"), aligned(16)));
 static inline void Mars_R_BeginPrepWalls() __attribute__((section(".data"), aligned(16)));
 static inline void Mars_R_EndPrepWalls(void) __attribute__((section(".data"), aligned(16)));
 
-void Mars_Slave_R_ComputeSeg(void) __attribute__((section(".data"), aligned(16)));
+void Mars_Slave_R_ComputeSeg(void)/* __attribute__((section(".data"), aligned(16)))*/;
 void Mars_Slave_R_PrepWalls(void) __attribute__((section(".data"), aligned(16)));
+
+void Mars_R_SegCommands(void)/* __attribute__((section(".data"), aligned(16)))*/;
 
 //static inline void Mars_ClearCacheLines(volatile void* paddr, volatile int lines)
 //{
@@ -69,17 +70,10 @@ void Mars_Slave_R_PrepWalls(void) __attribute__((section(".data"), aligned(16)))
 		} \
 	} while (0)
 
-static inline void Mars_R_BeginComputeSeg(int x)
+static inline void Mars_R_BeginComputeSeg(void)
 {
 	while (MARS_SYS_COMM4 != 0) {};
-	MARS_SYS_COMM6 = x;
 	MARS_SYS_COMM4 = 1;
-}
-
-// wait for the slave SH-2 to complete calculations for 'x' coordinate
-static inline void Mars_R_WaitComputeSeg(int x)
-{
-	while (MARS_SYS_COMM6 == x);
 }
 
 static inline void Mars_R_EndComputeSeg(void)
@@ -95,11 +89,6 @@ static inline void Mars_R_BeginPrepWalls()
 static inline void Mars_R_EndPrepWalls(void)
 {
 	while (MARS_SYS_COMM4 != 0);
-}
-
-static inline void Mars_Slave_R_ComputeSegUpdate(int x)
-{
-	MARS_SYS_COMM6 = x;
 }
 
 #endif 

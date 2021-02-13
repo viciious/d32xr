@@ -5,6 +5,7 @@
 */
 
 #include "r_local.h"
+#include "mars.h"
 
 typedef struct drawtex_s
 {
@@ -28,10 +29,6 @@ static int *clipbounds;
 static unsigned lightmin, lightmax, lightsub, lightcoef;
 static int floorclipx, ceilingclipx, x, scale;
 static unsigned texturecol, iscale, texturelight;
-
-#ifdef MARS
-void Mars_R_SegCommands(void);
-#endif
 
 //
 // Render a wall texture as columns

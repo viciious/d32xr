@@ -4,8 +4,7 @@
 
 #include "r_local.h"
 #include "mars.h"
-
-#define WORKBUF_SIZE SCREENWIDTH*16 // in words
+#include "mars_ringbuf.h"
 
 typedef struct
 {
@@ -18,8 +17,7 @@ typedef struct
    inpixel_t *data;
 } drawtex_t;
 
-static short workbuf[WORKBUF_SIZE] __attribute__((aligned(16)));
-static viswall_t workseg __attribute__((aligned(16)));
+static viswall_t *workseg __attribute__((aligned(16)));
 
 //
 // Render a wall texture as columns
@@ -97,8 +95,11 @@ void Mars_Slave_R_ComputeSeg(void)
     int b_topheight, b_bottomheight;
     int floorheight, floornewheight;
     int ceilingheight, ceilingnewheight;
-    viswall_t* segl = &workseg;
-    short* p = workbuf;
+    viswall_t* segl;
+    short numwords;
+
+    Mars_ClearCacheLines(&workseg, 1);
+    segl = workseg;
 
     Mars_ClearCacheLines(segl, sizeof(viswall_t) / 16);
 
@@ -121,13 +122,19 @@ void Mars_Slave_R_ComputeSeg(void)
     ceilingheight = segl->ceilingheight;
     ceilingnewheight = segl->ceilingnewheight;
 
+    numwords = Mars_R_WordsForActionbits(actionbits);
+
     do
     {
+        short* p;
+
         scale = scalefrac >> FIXEDTOSCALE;
         scalefrac += scalestep;
 
         if (scale >= 0x7fff)
             scale = 0x7fff; // fix the scale to maximum
+
+        p = Mars_RB_GetWriteBuf(&marsrb, numwords);
 
         //
         // texture only stuff
@@ -203,10 +210,8 @@ void Mars_Slave_R_ComputeSeg(void)
             *p = bottom, p += 1; // bottom
         }
 
-        p = (short*)(((intptr_t)p + 15) & ~15);
-
-        Mars_Slave_R_ComputeSegUpdate(++x);
-    } while (x <= stop);
+        Mars_RB_AdvanceWriter(&marsrb, numwords);
+    } while (++x <= stop);
 }
 
 //
@@ -223,20 +228,18 @@ static void Mars_R_SegLoop(viswall_t *segl, int *clipbounds, drawtex_t *toptex, 
    unsigned actionbits;
    unsigned seglight;
    int floorclipx, ceilingclipx;
-   short* p = workbuf;
-   int numwords, numlines;
+   short numwords;
 
    x = segl->start;
    stop = segl->stop;
    actionbits = segl->actionbits;
    seglight = segl->seglightlevel;
 
-   D_memcpy(&workseg, segl, sizeof(viswall_t));
-
-   Mars_R_BeginComputeSeg(x);
+   workseg = segl;
+   Mars_RB_Reset(&marsrb);
+   Mars_R_BeginComputeSeg();
 
    numwords = Mars_R_WordsForActionbits(actionbits);
-   numlines = (numwords + 7) / 8;
 
    texturelight = seglight;
    texturelight = (((255 - texturelight) >> 3) & 31) * 256;
@@ -246,6 +249,8 @@ static void Mars_R_SegLoop(viswall_t *segl, int *clipbounds, drawtex_t *toptex, 
 
    do
    {
+      short *p;
+
       //
       // get ceilingclipx and floorclipx from clipbounds
       //
@@ -253,9 +258,7 @@ static void Mars_R_SegLoop(viswall_t *segl, int *clipbounds, drawtex_t *toptex, 
       floorclipx   = ceilingclipx & 0x00ff;
       ceilingclipx = ((ceilingclipx & 0xff00) >> 8) - 1;
 
-      Mars_R_WaitComputeSeg(x);
-
-      Mars_ClearCacheLines(p, numlines);
+      p = Mars_RB_GetReadBuf(&marsrb, numwords);
 
       //
       // texture only stuff
@@ -389,7 +392,7 @@ static void Mars_R_SegLoop(viswall_t *segl, int *clipbounds, drawtex_t *toptex, 
          clipbounds[x] = ((ceilingclipx + 1) << 8) + floorclipx;
       }
 
-      p = (short*)(((intptr_t)p + 15) & ~15);
+      Mars_RB_AdvanceReader(&marsrb, numwords);
    }
    while(++x <= stop);
 
