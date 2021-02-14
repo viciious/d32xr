@@ -31,7 +31,7 @@
 
 #ifdef MARS
 
-#define MARS_RINGBUF_MAXLINES    64
+#define MARS_RINGBUF_MAXLINES    32
 #define MARS_RINGBUF_MAXWORDS    (MARS_RINGBUF_MAXLINES*8)
 
 typedef struct
@@ -52,7 +52,7 @@ static inline void Mars_RB_Reset(marsrb_t* wb)
 
 static inline void Mars_RB_WaitWriter(marsrb_t* wb)
 {
-    while(MARS_SYS_COMM2 >= MARS_SYS_COMM6) {}
+    while (MARS_SYS_COMM2 >= MARS_SYS_COMM6) {}
 }
 
 static inline void Mars_RB_WaitReader(marsrb_t* wb, short window)
@@ -73,7 +73,20 @@ static inline void Mars_RB_AdvanceReader(marsrb_t* wb, short wcnt)
 static inline short* Mars_RB_GetReadBuf(marsrb_t* wb, short wcnt)
 {
     short numlines = (wcnt + 7) / 8;
-    short* buf = wb->ringbuf + MARS_SYS_COMM2 % MARS_RINGBUF_MAXWORDS;
+    short* buf;
+    short rp, rpn, rpe;
+
+    // advance position if there's no space near the end
+    rp = MARS_SYS_COMM2 % MARS_RINGBUF_MAXWORDS;
+    rpn = (MARS_SYS_COMM2 + wcnt + 7) & ~7;
+    rpe = rpn % MARS_RINGBUF_MAXWORDS;
+    if (rpe < rp)
+    {
+        MARS_SYS_COMM2 = rpn;
+        rp = rpe;
+    }
+
+    buf = wb->ringbuf + rp;
 
     Mars_RB_WaitWriter(wb);
 
@@ -84,7 +97,20 @@ static inline short* Mars_RB_GetReadBuf(marsrb_t* wb, short wcnt)
 
 static inline short* Mars_RB_GetWriteBuf(marsrb_t* wb, short wcnt)
 {
-    short* buf = wb->ringbuf + MARS_SYS_COMM6 % MARS_RINGBUF_MAXWORDS;
+    short* buf;
+    short wp, wpn, wpe;
+    
+    // advance position if there's no space near the end
+    wp  = MARS_SYS_COMM6 % MARS_RINGBUF_MAXWORDS;
+    wpn = (MARS_SYS_COMM6 + wcnt + 7) & ~7;
+    wpe = wpn % MARS_RINGBUF_MAXWORDS;
+    if (wpe < wp)
+    {
+        MARS_SYS_COMM6 = wpn;
+        wp = wpe;
+    }
+
+    buf = wb->ringbuf + wp;
 
     Mars_RB_WaitReader(wb, MARS_RINGBUF_MAXWORDS / 2);
 
