@@ -251,7 +251,7 @@ byte *I_WadBase (void)
 ==================== 
 */ 
  
-static char zone[0x30000];
+static char zone[0x2D000];
 byte *I_ZoneBase (int *size)
 {
 	*size = sizeof(zone);
