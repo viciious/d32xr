@@ -17,6 +17,8 @@ typedef struct
    inpixel_t *data;
 } drawtex_t;
 
+static void Mars_Slave_R_ComputeSeg(viswall_t* segl) __attribute__((section(".data"), aligned(16)));
+
 //
 // Render a wall texture as columns
 //
