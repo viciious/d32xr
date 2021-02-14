@@ -46,7 +46,7 @@ static inline void Mars_R_EndComputeSeg(void) __attribute__((section(".data"), a
 static inline void Mars_R_BeginPrepWalls() __attribute__((section(".data"), aligned(16)));
 static inline void Mars_R_EndPrepWalls(void) __attribute__((section(".data"), aligned(16)));
 
-void Mars_Slave_R_ComputeSeg(void)/* __attribute__((section(".data"), aligned(16)))*/;
+void Mars_Slave_R_SegCommands(void)/* __attribute__((section(".data"), aligned(16)))*/;
 void Mars_Slave_R_PrepWalls(void) __attribute__((section(".data"), aligned(16)));
 
 void Mars_R_SegCommands(void)/* __attribute__((section(".data"), aligned(16)))*/;

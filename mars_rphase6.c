@@ -17,8 +17,6 @@ typedef struct
    inpixel_t *data;
 } drawtex_t;
 
-static viswall_t *workseg __attribute__((aligned(16)));
-
 //
 // Render a wall texture as columns
 //
@@ -74,13 +72,11 @@ static inline int Mars_R_WordsForActionbits(unsigned actionbits)
     numwords += 2; // low and high
     if (actionbits & AC_ADDSKY)
         numwords += 1; // bottom
-    if (numwords & 1)
-        numwords += 1;
 
     return numwords;
 }
 
-void Mars_Slave_R_ComputeSeg(void)
+static void Mars_Slave_R_ComputeSeg(viswall_t* segl)
 {
     int x, stop, scale;
     unsigned scalefrac, iscale;
@@ -95,13 +91,7 @@ void Mars_Slave_R_ComputeSeg(void)
     int b_topheight, b_bottomheight;
     int floorheight, floornewheight;
     int ceilingheight, ceilingnewheight;
-    viswall_t* segl;
     short numwords;
-
-    Mars_ClearCacheLines(&workseg, 1);
-    segl = workseg;
-
-    Mars_ClearCacheLines(segl, sizeof(viswall_t) / 16);
 
     scalefrac = segl->scalefrac; // cache the first 8 words of segl: scalefrac, scale2, scalestep, centerangle
     scalestep = segl->scalestep;
@@ -214,6 +204,26 @@ void Mars_Slave_R_ComputeSeg(void)
     } while (++x <= stop);
 }
 
+void Mars_Slave_R_SegCommands(void)
+{
+    viswall_t* segl;
+    viswall_t* first = *((viswall_t**)((intptr_t)&viswalls | 0x20000000));
+    viswall_t* last = *((viswall_t**)((intptr_t)&lastwallcmd | 0x20000000));
+
+    first = viswalls;
+    last = lastwallcmd;
+
+    segl = first;
+    while (segl < last)
+    {
+        Mars_ClearCacheLines(segl, sizeof(viswall_t) / 16);
+
+        Mars_Slave_R_ComputeSeg(segl);
+
+        ++segl;
+    }
+}
+
 //
 // Main seg clipping loop
 //
@@ -234,10 +244,6 @@ static void Mars_R_SegLoop(viswall_t *segl, int *clipbounds, drawtex_t *toptex, 
    stop = segl->stop;
    actionbits = segl->actionbits;
    seglight = segl->seglightlevel;
-
-   workseg = segl;
-   Mars_RB_Reset(&marsrb);
-   Mars_R_BeginComputeSeg();
 
    numwords = Mars_R_WordsForActionbits(actionbits);
 
@@ -395,8 +401,6 @@ static void Mars_R_SegLoop(viswall_t *segl, int *clipbounds, drawtex_t *toptex, 
       Mars_RB_AdvanceReader(&marsrb, numwords);
    }
    while(++x <= stop);
-
-   Mars_R_EndComputeSeg();
 }
 
 void Mars_R_SegCommands(void)
@@ -405,6 +409,10 @@ void Mars_R_SegCommands(void)
    int* clipbounds, *clip;
    viswall_t* segl;
    static drawtex_t toptex = { 0 }, bottomtex = { 0 };
+
+   Mars_RB_Reset(&marsrb);
+
+   Mars_R_BeginComputeSeg();
 
    // initialize the clipbounds array
    clipbounds = (int*)&r_workbuf[0];
@@ -460,4 +468,6 @@ void Mars_R_SegCommands(void)
 
       ++segl;
    }
+
+   Mars_R_EndComputeSeg();
 }

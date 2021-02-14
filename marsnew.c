@@ -146,7 +146,7 @@ void Mars_Slave(void)
 
 		if (MARS_SYS_COMM4 == 1)
 		{
-			Mars_Slave_R_ComputeSeg();
+			Mars_Slave_R_SegCommands();
 		}
 		else if (MARS_SYS_COMM4 == 2)
 		{
