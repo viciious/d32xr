@@ -6,23 +6,27 @@
 
 #include "r_local.h"
 
-static fixed_t planeheight;
-static angle_t planeangle;
-static fixed_t planex, planey;
-static int     plane_lightcoef;
+typedef struct
+{
+	fixed_t height;
+	angle_t angle;
+	fixed_t x, y;
+	int     lightcoef;
 #ifndef MARS
-static int     plane_lightmin, plane_lightmax, plane_lightsub;
+	int     lightmin, lightmax, lightsub;
 #endif
+	fixed_t basexscale, baseyscale;
+	int	pixelcount;
 
-static fixed_t basexscale, baseyscale;
-
-static unsigned *spanstart;
 #ifdef MARS
-static inpixel_t *ds_source;
+	inpixel_t *ds_source;
 #else
-static pixel_t *ds_source;
+	pixel_t *ds_source;
 #endif
-static int pl_pixelcount;
+} localplane_t;
+
+static localplane_t lpl;
+static unsigned *spanstart;
 
 //
 // Render the horizontal spans determined by R_PlaneLoop
@@ -39,37 +43,37 @@ static void R_MapPlane(int y, int x, int x2)
    if (!remaining)
        return; // nothing to draw (shouldn't happen)
 
-   distance = (planeheight * yslope[y]) >> 12;
+   distance = (lpl.height * yslope[y]) >> 12;
    length = (distance * distscale[x]) >> 14;
-   angle = (planeangle + xtoviewangle[x]) >> ANGLETOFINESHIFT;
+   angle = (lpl.angle + xtoviewangle[x]) >> ANGLETOFINESHIFT;
 
-   xfrac = planex + (((finecosine(angle) >> 1) * length) >> 4);
-   yfrac = planey - (((finesine(angle) >> 1) * length) >> 4);
+   xfrac = lpl.x + (((finecosine(angle) >> 1) * length) >> 4);
+   yfrac = lpl.y - (((finesine(angle) >> 1) * length) >> 4);
 
-   xstep = (distance * basexscale) >> 4;
-   ystep = (baseyscale * distance) >> 4;
+   xstep = (distance * lpl.basexscale) >> 4;
+   ystep = (lpl.baseyscale * distance) >> 4;
 
 #ifdef MARS
-   light = plane_lightcoef;
+   light = lpl.lightcoef;
 #else
-   light = plane_lightcoef / distance;
+   light = lpl.lightcoef / distance;
 
    // finish light calculations
-   light -= plane_lightsub;
+   light -= lpl.lightsub;
 
-   if (light > plane_lightmax)
-       light = plane_lightmax;
-   if (light < plane_lightmin)
-       light = plane_lightmin;
+   if (light > lpl.lightmax)
+       light = lpl.lightmax;
+   if (light < lpl.lightmin)
+       light = lpl.lightmin;
 
    // transform to hardware value
    light = -((255 - light) << 14) & 0xffffff;
 #endif
 
    // CALICO: invoke I_DrawSpan here.
-   I_DrawSpan(y, x, x2, light, xfrac, yfrac, xstep, ystep, ds_source);
+   I_DrawSpan(y, x, x2, light, xfrac, yfrac, xstep, ystep, lpl.ds_source);
 
-   pl_pixelcount += x2 - x + 1;
+   lpl.pixelcount += x2 - x + 1;
 }
 
 //
@@ -155,16 +159,15 @@ void R_DrawPlanes(void)
 {
    angle_t angle;
    visplane_t *pl;
-   int pl_flatnum;
- 
-   planex =  vd.viewx;
-   planey = -vd.viewy;
 
-   planeangle = vd.viewangle;
-   angle = (planeangle - ANG90) >> ANGLETOFINESHIFT;
+   lpl.x =  vd.viewx;
+   lpl.y = -vd.viewy;
 
-   basexscale =  (finecosine(angle) / (SCREENWIDTH / 2));
-   baseyscale = -(  finesine(angle) / (SCREENWIDTH / 2));
+   lpl.angle = vd.viewangle;
+   angle = (lpl.angle - ANG90) >> ANGLETOFINESHIFT;
+
+   lpl.basexscale =  (finecosine(angle) / (SCREENWIDTH / 2));
+   lpl.baseyscale = -(  finesine(angle) / (SCREENWIDTH / 2));
 
    spanstart = (unsigned *)&r_workbuf[0];
 
@@ -175,29 +178,28 @@ void R_DrawPlanes(void)
       {
          int light;
 
-         pl_flatnum = pl->flatnum;
-         pl_pixelcount = 0;
+         lpl.pixelcount = 0;
 
-         ds_source = flatpixels[pl_flatnum];
+         lpl.ds_source = flatpixels[pl->flatnum];
 
-         planeheight = D_abs(pl->height);
+         lpl.height = D_abs(pl->height);
 
          light = pl->lightlevel;
 
 #ifdef MARS
-         plane_lightcoef = (((255 - light) >> 3) & 31) * 256;
+         lpl.lightcoef = (((255 - light) >> 3) & 31) * 256;
 #else
-         plane_lightmin = light - ((255 - light) << 1);
-         if (plane_lightmin < 0)
-             plane_lightmin = 0;
-         plane_lightmax = light;
-         plane_lightsub = ((light - plane_lightmin) * 160) / 640;
-         plane_lightcoef = (light - plane_lightmin) << SLOPEBITS;
+         lpl.lightmin = light - ((255 - light) << 1);
+         if (lpl.lightmin < 0)
+             lpl.lightmin = 0;
+         lpl.lightmax = light;
+         lpl.lightsub = ((light - lpl.lightmin) * 160) / 640;
+         lpl.lightcoef = (light - lpl.lightmin) << SLOPEBITS;
 
-         if (plane_lightcoef > plane_lightmax)
-             plane_lightcoef = plane_lightmax;
-         if (plane_lightcoef < plane_lightmin)
-             plane_lightcoef = plane_lightmin;
+         if (lpl.lightcoef > lpl.lightmax)
+             lpl.lightcoef = lpl.lightmax;
+         if (lpl.lightcoef < lpl.lightmin)
+             lpl.lightcoef = lpl.lightmin;
 #endif
 
          pl->open[pl->maxx + 1] = OPENMARK;
@@ -205,7 +207,7 @@ void R_DrawPlanes(void)
 
          R_PlaneLoop(pl);
 
-         R_AddPixelsToTexCache(&r_flatscache, pl_flatnum, pl_pixelcount);
+         R_AddPixelsToTexCache(&r_flatscache, pl->flatnum, lpl.pixelcount);
       }
 
       ++pl;
