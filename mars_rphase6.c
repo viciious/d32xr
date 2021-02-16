@@ -54,8 +54,6 @@ static inline void Mars_R_DrawTexture(drawtex_t *tex, int x, int top, int bottom
    tex->pixelcount += (bottom - top);
 }
 
-#if SCREENWIDTH >= 255 || SCREENHEIGHT >= 255
-
 static inline int Mars_R_WordsForActionbits(unsigned actionbits)
 {
     int numwords;
@@ -74,15 +72,8 @@ static inline int Mars_R_WordsForActionbits(unsigned actionbits)
     numwords += 1; // low and high
     if (actionbits & AC_ADDSKY)
         numwords += 1; // bottom
-
     return numwords;
 }
-
-#else
-
-#define Mars_R_WordsForActionbits(x) 8
-
-#endif
 
 static void Mars_Slave_R_ComputeSeg(viswall_t* segl)
 {
@@ -214,7 +205,7 @@ static void Mars_Slave_R_ComputeSeg(viswall_t* segl)
             *p = bottom, p += 1; // bottom
         }
 
-        Mars_RB_AdvanceWriter(&marsrb, numwords);
+        Mars_RB_CommitWrite(&marsrb);
     } while (++x <= stop);
 }
 
@@ -236,6 +227,8 @@ void Mars_Slave_R_SegCommands(void)
 
         ++segl;
     }
+
+    Mars_RB_FinishWrite(&marsrb);
 }
 
 //
@@ -422,7 +415,7 @@ static void Mars_R_SegLoop(viswall_t *segl, int *clipbounds, drawtex_t *toptex, 
          clipbounds[x] = ((ceilingclipx + 1) << 8) + floorclipx;
       }
 
-      Mars_RB_AdvanceReader(&marsrb, numwords);
+      Mars_RB_CommitRead(&marsrb);
    }
    while(++x <= stop);
 }
@@ -434,7 +427,7 @@ void Mars_R_SegCommands(void)
    viswall_t* segl;
    static drawtex_t toptex = { 0 }, bottomtex = { 0 };
 
-   Mars_RB_Reset(&marsrb);
+   Mars_RB_ResetAll(&marsrb);
 
    Mars_R_BeginComputeSeg();
 
@@ -493,5 +486,10 @@ void Mars_R_SegCommands(void)
       ++segl;
    }
 
+   Mars_RB_FinishRead(&marsrb);
+
    Mars_R_EndComputeSeg();
+
+   //Mars_RB_ResetAll(&marsrb);
 }
+

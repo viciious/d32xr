@@ -97,7 +97,10 @@ void Mars_Init(void)
 	palette[COLOR_WHITE] = 0x7fff;
 
 	MARS_SYS_COMM4 = 0;
-	MARS_SYS_COMM6 = 0;
+
+	Mars_RB_ResetWrite(&marsrb);
+
+	Mars_RB_ResetRead(&marsrb);
 }
 
 int Mars_ToDoomControls(int ctrl)

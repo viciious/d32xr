@@ -73,11 +73,13 @@ void Mars_R_SegCommands(void)/* __attribute__((section(".data"), aligned(16)))*/
 static inline void Mars_R_BeginComputeSeg(void)
 {
 	while (MARS_SYS_COMM4 != 0) {};
+
 	MARS_SYS_COMM4 = 1;
 }
 
 static inline void Mars_R_EndComputeSeg(void)
 {
+	while (MARS_SYS_COMM4 != 0);
 }
 
 static inline void Mars_R_BeginPrepWalls()
