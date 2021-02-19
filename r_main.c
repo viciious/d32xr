@@ -13,7 +13,7 @@ subsector_t		**vissubsectors, **lastvissubsector;
 /* */
 /* walls */
 /* */
-viswall_t	*viswalls, *lastwallcmd;
+viswall_t	viswalls[MAXWALLCMDS], *lastwallcmd;
 
 /* */
 /* planes */
@@ -487,10 +487,6 @@ void R_Setup (void)
 
 	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
 		visplanes_hash[i] = NULL;
-
-	tempbuf = (unsigned short *)(((int)tempbuf+15)&~15);
-	viswalls = (void *)tempbuf;
-	tempbuf += sizeof(*viswalls)*MAXWALLCMDS/sizeof(*tempbuf);
 
 	lastwallcmd = viswalls;			/* no walls added yet */
 
