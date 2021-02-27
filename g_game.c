@@ -42,7 +42,7 @@ boolean         demoplayback;
   
 extern int              skytexture; 
 extern texture_t		*skytexturep;
-extern texture_t		textures[];
+extern texture_t		*textures;
 
 void G_DoLoadLevel (void) 
 { 

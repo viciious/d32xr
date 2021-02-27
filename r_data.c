@@ -7,7 +7,7 @@
 int		firstflat, lastflat, numflats;
 
 int			numtextures;
-texture_t	textures[MAXTEXTURES];
+texture_t	*textures;
 
 VINT			*flattranslation;		/* for global animation */
 VINT			*texturetranslation;	/* for global animation */
@@ -49,6 +49,7 @@ void R_InitTextures (void)
 	if (numtextures > MAXTEXTURES)
 		I_Error("numtextures == %d", numtextures);
 
+	textures = Z_Malloc (numtextures * sizeof(*textures), PU_STATIC, 0);
 	for (i=0 ; i<numtextures ; i++, directory++)
 	{
 		offset = LITTLELONG(*directory);

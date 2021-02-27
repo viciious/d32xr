@@ -292,7 +292,7 @@ extern	int		phasetime[9];
 extern	texture_t	*skytexturep;
 
 extern	int			numtextures;
-extern	texture_t	textures[MAXTEXTURES];
+extern	texture_t	*textures;
 
 extern	VINT			*flattranslation;		/* for global animation */
 extern	VINT			*texturetranslation;	/* for global animation */
