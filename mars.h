@@ -41,10 +41,10 @@ void Mars_UploadPalette(const byte* palette);
 #define Mars_ClearCacheLine(addr) *(volatile int *)((addr) | 0x40000000) = 0
 
 //static inline void Mars_ClearCacheLines(volatile void* paddr, volatile int lines) __attribute__((section(".data"), aligned(16)));
-static inline void Mars_R_BeginComputeSeg(void) __attribute__((section(".data"), aligned(16)));
-static inline void Mars_R_EndComputeSeg(void) __attribute__((section(".data"), aligned(16)));
-static inline void Mars_R_BeginPrepWalls() __attribute__((section(".data"), aligned(16)));
-static inline void Mars_R_EndPrepWalls(void) __attribute__((section(".data"), aligned(16)));
+static inline void Mars_R_BeginComputeSeg(void)/* __attribute__((section(".data"), aligned(16)))*/;
+static inline void Mars_R_EndComputeSeg(void)/* __attribute__((section(".data"), aligned(16)))*/;
+static inline void Mars_R_BeginPrepWalls()/* __attribute__((section(".data"), aligned(16)))*/;
+static inline void Mars_R_EndPrepWalls(void)/* __attribute__((section(".data"), aligned(16)))*/;
 
 void Mars_Slave_R_SegCommands(void)/* __attribute__((section(".data"), aligned(16)))*/;
 void Mars_Slave_R_PrepWalls(void)/* __attribute__((section(".data"), aligned(16)))*/;

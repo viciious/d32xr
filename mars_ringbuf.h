@@ -31,7 +31,7 @@
 
 #include "mars.h"
 
-#define MARS_RINGBUF_MAXLINES    32
+#define MARS_RINGBUF_MAXLINES    16
 #define MARS_RINGBUF_MAXWORDS    (MARS_RINGBUF_MAXLINES*8)
 
 typedef struct
@@ -105,8 +105,10 @@ static inline short* Mars_RB_GetReadBuf(marsrb_t* wb, unsigned short wcnt)
     unsigned short rp = MARS_SYS_COMM2 % MARS_RINGBUF_MAXWORDS;
 
     if (wb->readpos > 0) {
-        if (wb->readpos + wcnt <= 8)
+        if (wb->readpos + wcnt <= 8) {
+            wb->readcnt = wcnt;
 	    return wb->ringbuf + rp + wb->readpos;
+	}
 	Mars_RB_FinishRead(wb);
         rp = MARS_SYS_COMM2 % MARS_RINGBUF_MAXWORDS;
     }
@@ -138,8 +140,10 @@ static inline short* Mars_RB_GetWriteBuf(marsrb_t* wb, short wcnt)
     unsigned short wp = MARS_SYS_COMM6 % MARS_RINGBUF_MAXWORDS;
 
     if (wb->writepos > 0) {
-        if (wb->writepos + wcnt <= 8)
+        if (wb->writepos + wcnt <= 8) {
+            wb->writecnt = wcnt;
 	    return wb->ringbuf + wp + wb->writepos;
+        }
         Mars_RB_FinishWrite(wb);
         wp = MARS_SYS_COMM6 % MARS_RINGBUF_MAXWORDS;
     }

@@ -415,21 +415,21 @@ void I_Update (void)
 		int besttex = -1;
 		int besttexpixels = 0;
 		*/
-		int zmem = Z_FreeMemory(mainzone);
+//		int zmem = Z_FreeMemory(mainzone);
 
 		D_snprintf(buf, sizeof(buf), "fps  :%d", fpscount);
 		I_Print8(200, line++, buf);
 		D_snprintf(buf, sizeof(buf), "ticks:%d", lasttics);
 		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "zfree:%d.%d", zmem/1024, (zmem - (zmem/1024)*1024)/100);
-		I_Print8(200, line++, buf);
+//		D_snprintf(buf, sizeof(buf), "zfree:%d.%d", zmem/1024, (zmem - (zmem/1024)*1024)/100);
+//		I_Print8(200, line++, buf);
 		line++;
-		D_snprintf(buf, sizeof(buf), "wait :%d", t_ref_wait);
-		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "bsp  :%d", t_ref_bsp);
-		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "prep :%d", t_ref_prep);
-		I_Print8(200, line++, buf);
+//		D_snprintf(buf, sizeof(buf), "wait :%d", t_ref_wait);
+//		I_Print8(200, line++, buf);
+//		D_snprintf(buf, sizeof(buf), "bsp  :%d", t_ref_bsp);
+//		I_Print8(200, line++, buf);
+//		D_snprintf(buf, sizeof(buf), "prep :%d", t_ref_prep);
+//		I_Print8(200, line++, buf);
 		D_snprintf(buf, sizeof(buf), "segs :%d", t_ref_segs);
 		I_Print8(200, line++, buf);
 		D_snprintf(buf, sizeof(buf), "plns :%d", t_ref_planes);

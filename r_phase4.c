@@ -349,7 +349,7 @@ boolean R_LatePrep(void)
 #endif
 
    // finish viswalls
-#ifdef MARS
+#if 0
    Mars_R_BeginPrepWalls();
    for (wall = viswalls; wall < lastwallcmd; wall += 2)
    {

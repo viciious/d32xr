@@ -69,7 +69,8 @@ static inline int Mars_R_WordsForActionbits(unsigned actionbits)
     }
     if (actionbits & (AC_ADDFLOOR| AC_ADDCEILING))
         numwords += 1; // top and bottom
-    numwords += 1; // low and high
+    if (actionbits & (AC_NEWFLOOR|AC_NEWCEILING|AC_TOPSIL|AC_BOTTOMSIL))
+        numwords += 1; // low and high
     if (actionbits & AC_ADDSKY)
         numwords += 1; // bottom
     return numwords;
@@ -90,7 +91,7 @@ static void Mars_Slave_R_ComputeSeg(viswall_t* segl)
     int b_topheight, b_bottomheight;
     int floorheight, floornewheight;
     int ceilingheight, ceilingnewheight;
-    short numwords;
+    short *p, numwords;
 
     scalefrac = segl->scalefrac; // cache the first 8 words of segl: scalefrac, scale2, scalestep, centerangle
     scalestep = segl->scalestep;
@@ -113,10 +114,14 @@ static void Mars_Slave_R_ComputeSeg(viswall_t* segl)
 
     numwords = Mars_R_WordsForActionbits(actionbits);
 
+    p = Mars_RB_GetWriteBuf(&marsrb, 1);
+    *p = segl - viswalls;
+    Mars_RB_CommitWrite(&marsrb);
+
     do
     {
-        short* p;
-        byte* b;
+        short t;
+        byte* b = (byte *)&t;
 
         scale = scalefrac >> FIXEDTOSCALE;
         scalefrac += scalestep;
@@ -132,6 +137,8 @@ static void Mars_Slave_R_ComputeSeg(viswall_t* segl)
         if (actionbits & AC_CALCTEXTURE)
         {
             // calculate texture offset
+            unsigned short *up;
+
             fixed_t r = FixedMul(distance,
                 finetangent((centerangle + xtoviewangle[x]) >> ANGLETOFINESHIFT));
 
@@ -139,7 +146,9 @@ static void Mars_Slave_R_ComputeSeg(viswall_t* segl)
             texturecol = (offset - r) >> FRACBITS;
             iscale = (1 << (FRACBITS + SCALEBITS)) / (unsigned)scale;
 
-            *(int*)p = iscale , p += 2; // iscale
+            up = (unsigned short*)p, p += 2;
+            up[0] = (iscale>>16) & 0xffff;
+            up[1] = (iscale    ) & 0xffff;
             *p = texturecol, p += 1; // colnum
 
             //
@@ -150,24 +159,25 @@ static void Mars_Slave_R_ComputeSeg(viswall_t* segl)
                 top = CENTERY - ((scale * t_topheight) >> (HEIGHTBITS + SCALEBITS)) + 1;
                 bottom = CENTERY - 1 - ((scale * t_bottomheight) >> (HEIGHTBITS + SCALEBITS)) + 1;
 
-                b = (byte*)p, p += 1;
                 b[0] = top < 0 ? 0 : (top > 255 ? 255 : top); // t_top
                 b[1] = bottom < 0 ? 0 : (bottom > 255 ? 255 : bottom); // t_bottom
+                *p = t, p += 1;
             }
+
             if (actionbits & AC_BOTTOMTEXTURE)
             {
                 top = CENTERY - ((scale * b_topheight) >> (HEIGHTBITS + SCALEBITS)) + 1;
                 bottom = CENTERY - 1 - ((scale * b_bottomheight) >> (HEIGHTBITS + SCALEBITS)) + 1;
 
-                b = (byte*)p, p += 1;
                 b[0] = top < 0 ? 0 : (top > 255 ? 255 : top); // b_top
                 b[1] = bottom < 0 ? 0 : (bottom > 255 ? 255 : bottom); // b_bottom
+                *p = t, p += 1;
             }
         }
 
         if (actionbits & (AC_ADDFLOOR | AC_ADDCEILING))
         {
-            b = (byte*)p, p += 1;
+            t = 0;
 
             //
             // floor
@@ -186,17 +196,22 @@ static void Mars_Slave_R_ComputeSeg(viswall_t* segl)
                 bottom = CENTERY - 1 - ((scale * ceilingheight) >> (HEIGHTBITS + SCALEBITS)) + 1;
                 b[1] = bottom < 0 ? 0 : (bottom > 255 ? 255 : bottom);
             }
+
+            *p = t, p += 1;
         }
 
         //
         // calc high and low
         //
-        low = CENTERY - ((scale * floornewheight) >> (HEIGHTBITS + SCALEBITS)) + 1;
-        high = CENTERY - 1 - ((scale * ceilingnewheight) >> (HEIGHTBITS + SCALEBITS)) + 1;
+        if (actionbits & (AC_NEWFLOOR | AC_NEWCEILING | AC_TOPSIL | AC_BOTTOMSIL))
+        {
+            low = CENTERY - ((scale * floornewheight) >> (HEIGHTBITS + SCALEBITS)) + 1;
+            high = CENTERY - 1 - ((scale * ceilingnewheight) >> (HEIGHTBITS + SCALEBITS)) + 1;
 
-        b = (byte*)p, p += 1;
-        b[0] = low < 0 ? 0 : (low > 255 ? 255 : low);
-        b[1] = high < 0 ? 0 : (high > 255 ? 255 : high);
+            b[0] = low < 0 ? 0 : (low > 255 ? 255 : low);
+            b[1] = high < 0 ? 0 : (high > 255 ? 255 : high);
+            *p = t, p += 1;
+        }
 
         // sky mapping
         if (actionbits & AC_ADDSKY)
@@ -212,14 +227,14 @@ static void Mars_Slave_R_ComputeSeg(viswall_t* segl)
 void Mars_Slave_R_SegCommands(void)
 {
     viswall_t* segl;
-    viswall_t* first = viswalls;
     viswall_t* last = *((viswall_t**)((intptr_t)&lastwallcmd | 0x20000000));
 
-    segl = first;
-    while (segl < last)
+    Mars_RB_ResetWrite(&marsrb);
+
+    for (segl = viswalls; segl < last; segl++)
     {
+        Mars_ClearCacheLines(segl, sizeof(viswall_t) / 16);
         Mars_Slave_R_ComputeSeg(segl);
-        ++segl;
     }
 
     Mars_RB_FinishWrite(&marsrb);
@@ -253,6 +268,7 @@ static void Mars_R_SegLoop(viswall_t *segl, int *clipbounds, drawtex_t *toptex, 
 
    // force R_FindPlane for both planes
    floor = ceiling = visplanes;
+   low = high = 0;
 
    do
    {
@@ -274,12 +290,15 @@ static void Mars_R_SegLoop(viswall_t *segl, int *clipbounds, drawtex_t *toptex, 
       if(actionbits & AC_CALCTEXTURE)
       {
          unsigned iscale2;
+         unsigned short *up;
 
          // other texture drawing info
-         iscale = *(int*)p, p += 2; // iscale
+         up = (unsigned short*)p, p += 2;
+         texturecol = *p, p += 1;
+
+         iscale = (up[0] << 16) | up[1];
          iscale2 = iscale >> 4;
          iscale2 = iscale + (iscale2 >> 1) + (iscale2 >> 2);
-         texturecol = *p, p += 1;
 
          //
          // draw textures
@@ -287,23 +306,27 @@ static void Mars_R_SegLoop(viswall_t *segl, int *clipbounds, drawtex_t *toptex, 
          if (actionbits & AC_TOPTEXTURE)
          {
              b = (byte*)p, p++;
+
              top = (int)b[0] - 1;
              bottom = (int)b[1] - 1;
              if(top <= ceilingclipx)
                  top = ceilingclipx + 1;
              if(bottom >= floorclipx)
                  bottom = floorclipx - 1;
+
              Mars_R_DrawTexture(toptex, x, top, bottom, texturecol, texturelight, iscale, iscale2);
          }
          if (actionbits & AC_BOTTOMTEXTURE)
          {
              b = (byte*)p, p++;
+
              top = (int)b[0] - 1;
              bottom = (int)b[1] - 1;
              if(top <= ceilingclipx)
                  top = ceilingclipx + 1;
              if(bottom >= floorclipx)
                  bottom = floorclipx - 1;
+
              Mars_R_DrawTexture(bottomtex, x, top, bottom, texturecol, texturelight, iscale, iscale2);
          }
       }
@@ -320,7 +343,6 @@ static void Mars_R_SegLoop(viswall_t *segl, int *clipbounds, drawtex_t *toptex, 
               top = (int)b[0] - 1;
               if (top <= ceilingclipx)
                   top = ceilingclipx + 1;
-
               bottom = floorclipx - 1;
 
               if (top <= bottom)
@@ -340,7 +362,6 @@ static void Mars_R_SegLoop(viswall_t *segl, int *clipbounds, drawtex_t *toptex, 
           if (actionbits & AC_ADDCEILING)
           {
               top = ceilingclipx + 1;
-
               bottom = (int)b[1] - 1;
               if (bottom >= floorclipx)
                   bottom = floorclipx - 1;
@@ -360,26 +381,29 @@ static void Mars_R_SegLoop(viswall_t *segl, int *clipbounds, drawtex_t *toptex, 
       //
       // calc high and low
       //
-      b = (byte*)p, p++;
-      low = (int)b[0] - 1;
-      if (low < 0)
-          low = 0;
-      else if(low > floorclipx)
-         low = floorclipx;
+      if (actionbits & (AC_NEWFLOOR|AC_NEWCEILING|AC_TOPSIL|AC_BOTTOMSIL))
+      {
+          b = (byte*)p, p++;
+          low = (int)b[0] - 1;
+          if (low < 0)
+              low = 0;
+          else if(low > floorclipx)
+              low = floorclipx;
 
-      high = (int)b[1] - 1;
-      if (high < ceilingclipx)
-          high = ceilingclipx;
-      else if (high > SCREENHEIGHT - 1)
-          high = SCREENHEIGHT - 1;
+          high = (int)b[1] - 1;
+          if (high < ceilingclipx)
+              high = ceilingclipx;
+          else if (high > SCREENHEIGHT - 1)
+              high = SCREENHEIGHT - 1;
 
-      // bottom sprite clip sil
-      if(actionbits & AC_BOTTOMSIL)
-         segl->bottomsil[x] = low;
+          // bottom sprite clip sil
+          if(actionbits & AC_BOTTOMSIL)
+              segl->bottomsil[x] = low;
 
-      // top sprite clip sil
-      if(actionbits & AC_TOPSIL)
-         segl->topsil[x] = high + 1;
+          // top sprite clip sil
+          if(actionbits & AC_TOPSIL)
+             segl->topsil[x] = high + 1;
+      }
 
       // sky mapping
       if(actionbits & AC_ADDSKY)
@@ -417,8 +441,8 @@ static void Mars_R_SegLoop(viswall_t *segl, int *clipbounds, drawtex_t *toptex, 
 void Mars_R_SegCommands(void)
 {
    int i;
+   int numsegs;
    int* clipbounds, *clip;
-   viswall_t* segl;
    static drawtex_t toptex = { 0 }, bottomtex = { 0 };
 
    Mars_RB_ResetAll(&marsrb);
@@ -436,9 +460,19 @@ void Mars_R_SegCommands(void)
        *clip++ = SCREENHEIGHT;
    }
 
-   segl = viswalls;
-   while(segl < lastwallcmd)
+   numsegs = lastwallcmd - viswalls;
+   for (i = 0; i < numsegs; i++)
    {
+      short *p;
+      short segnum;
+      viswall_t* segl;
+
+      p = Mars_RB_GetReadBuf(&marsrb, 1);
+      segnum = *p;
+      Mars_RB_CommitRead(&marsrb);
+
+      segl = viswalls + segnum;
+
       if(segl->actionbits & AC_TOPTEXTURE)
       {
          texture_t *tex = &textures[segl->t_texturenum];
@@ -476,14 +510,9 @@ void Mars_R_SegCommands(void)
       {
          R_AddPixelsToTexCache(&r_wallscache, segl->b_texturenum, bottomtex.pixelcount);
       }
-
-      ++segl;
    }
 
    Mars_RB_FinishRead(&marsrb);
 
    Mars_R_EndComputeSeg();
-
-   Mars_RB_ResetAll(&marsrb);
 }
-
