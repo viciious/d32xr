@@ -8,6 +8,11 @@
 
 static int *spropening;
 
+#ifdef MARS
+static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy)  __attribute__((section(".data"), aligned(16)));
+static void R_ClipVisSprite(vissprite_t *vis) __attribute__((section(".data"), aligned(16)));
+#endif
+
 static void R_DrawVisSprite(vissprite_t *vis)
 {
    patch_t *patch;

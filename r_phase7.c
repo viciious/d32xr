@@ -28,6 +28,12 @@ typedef struct
 static localplane_t lpl;
 static unsigned *spanstart;
 
+#ifdef MARS
+static void R_MapPlane(int y, int x, int x2) __attribute__((section(".data"), aligned(16)));
+static void R_PlaneLoop(visplane_t *pl) __attribute__((section(".data"), aligned(16)));
+//void R_DrawPlanes(void) __attribute__((section(".data"), aligned(16)));
+#endif
+
 //
 // Render the horizontal spans determined by R_PlaneLoop
 //
