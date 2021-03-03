@@ -18,6 +18,7 @@ typedef struct
 } drawtex_t;
 
 static void Mars_Slave_R_ComputeSeg(viswall_t* segl) __attribute__((section(".data"), aligned(16)));
+static void Mars_R_SegLoop(viswall_t *segl, int *clipbounds, drawtex_t *toptex, drawtex_t *bottomtex) __attribute__((section(".data"), aligned(16)));
 
 //
 // Render a wall texture as columns
