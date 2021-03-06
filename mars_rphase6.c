@@ -102,18 +102,31 @@ static void Mars_Slave_R_ComputeSeg(viswall_t* segl)
     int ceilingheight, ceilingnewheight;
     short *p, numwords;
 
-    scalefrac = segl->scalefrac; // cache the first 8 words of segl: scalefrac, scale2, scalestep, centerangle
-    scalestep = segl->scalestep;
-    centerangle = segl->centerangle;
+    actionbits = segl->actionbits;  // cache the first 8 words of segl: actionbits, light, scalefrac, scale2
+#ifdef GRADIENTLIGHT
+    lightmax = segl->seglightlevel;
+#endif
+    scalefrac = segl->scalefrac;
 
-    offset = segl->offset; // cache the second 8 words of segl: offset, distance, seglightlevel, start, stop
+    scalestep = segl->scalestep; // cache the second 8 words of segl: scalestep, centerangle, offset, distance
+    centerangle = segl->centerangle;
+    offset = segl->offset; 
     distance = segl->distance;
+
     x = segl->start;
     stop = segl->stop;
 
+    t_topheight = segl->t_topheight;
+    t_bottomheight = segl->t_bottomheight;
+    b_topheight = segl->b_topheight;
+    b_bottomheight = segl->b_bottomheight;
+    floorheight = segl->floorheight;
+    floornewheight = segl->floornewheight;
+    ceilingheight = segl->ceilingheight;
+    ceilingnewheight = segl->ceilingnewheight;
+
 #ifdef GRADIENTLIGHT
-    lightmax = segl->seglightlevel;
-    seglight = segl->seglightlevel;
+    seglight = lightmax;
     seglight = seglight - ((255 - seglight) << 1);
     if (seglight < MINLIGHT)
         seglight = MINLIGHT;
@@ -125,21 +138,14 @@ static void Mars_Slave_R_ComputeSeg(viswall_t* segl)
     lightcoef = ((lightmax - lightmin) << FRACBITS) / (800 - 160);
 #endif
 
-    actionbits = segl->actionbits;
-    t_topheight = segl->t_topheight;
-    t_bottomheight = segl->t_bottomheight;
-    b_topheight = segl->b_topheight;
-    b_bottomheight = segl->b_bottomheight;
-    floorheight = segl->floorheight;
-    floornewheight = segl->floornewheight;
-    ceilingheight = segl->ceilingheight;
-    ceilingnewheight = segl->ceilingnewheight;
-
     numwords = Mars_R_WordsForActionbits(actionbits);
 
     p = Mars_RB_GetWriteBuf(&marsrb, 1);
     *p = segl - viswalls;
     Mars_RB_CommitWrite(&marsrb);
+
+    if (numwords == 0)
+        return;
 
     do
     {
@@ -301,9 +307,13 @@ static void Mars_R_SegLoop(viswall_t *segl, int *clipbounds, drawtex_t *toptex, 
    seglight = segl->seglightlevel;
 
    numwords = Mars_R_WordsForActionbits(actionbits);
+   if (numwords == 0)
+       return;
 
+#ifndef GRADIENTLIGHT
    texturelight = seglight;
    texturelight = (((255 - texturelight) >> 3) & 31) * 256;
+#endif
 
    // force R_FindPlane for both planes
    floor = ceiling = visplanes;
