@@ -36,6 +36,18 @@
 #define	LIGHTLEVELS			256		/* number of diminishing */
 #define	INVERSECOLORMAP		255
 
+#ifdef MARS
+#define HWLIGHT(light) ((((255 - (light)) >> 3) & 31) * 256)
+#else
+#define HWLIGHT(light) -((255 - (light)) << 14) & 0xffffff
+#endif
+
+#ifdef MARS
+#define MINLIGHT 30
+#else
+#define MINLIGHT 0
+#endif
+
 /*
 ==============================================================================
 

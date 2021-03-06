@@ -26,6 +26,11 @@
 #endif
 #endif
 
+#ifndef MARS
+#define HIRES
+#define GRADIENTLIGHT
+#endif
+
 typedef unsigned short pixel_t;
 
 #ifdef MARS
@@ -631,7 +636,7 @@ extern	gametype_t	starttype;
 /*--------- */
 /*SYSTEM IO */
 /*--------- */
-#ifndef MARS
+#ifdef HIRES
 #define	SCREENWIDTH		160
 #define	SCREENHEIGHT	180
 #else

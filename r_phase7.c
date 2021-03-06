@@ -11,9 +11,11 @@ typedef struct
 	fixed_t height;
 	angle_t angle;
 	fixed_t x, y;
-	int     lightcoef;
-#ifndef MARS
-	int     lightmin, lightmax, lightsub;
+#ifdef GRADIENTLIGHT
+    unsigned  lightcoef;
+    unsigned  lightmin, lightmax, lightsub;
+#else
+    int     light;
 #endif
 	fixed_t basexscale, baseyscale;
 	int	pixelcount;
@@ -59,21 +61,24 @@ static void R_MapPlane(int y, int x, int x2)
    xstep = (distance * lpl.basexscale) >> 4;
    ystep = (lpl.baseyscale * distance) >> 4;
 
-#ifdef MARS
-   light = lpl.lightcoef;
-#else
+#ifdef GRADIENTLIGHT
    light = lpl.lightcoef / distance;
 
-   // finish light calculations
-   light -= lpl.lightsub;
-
-   if (light > lpl.lightmax)
-       light = lpl.lightmax;
-   if (light < lpl.lightmin)
+   if (light <= lpl.lightsub)
        light = lpl.lightmin;
+   else
+   {
+       light -= lpl.lightsub;
+       if (light < lpl.lightmin)
+           light = lpl.lightmin;
+       else if (light > lpl.lightmax)
+           light = lpl.lightmax;
+   }
 
    // transform to hardware value
-   light = -((255 - light) << 14) & 0xffffff;
+   light = HWLIGHT(light);
+#else
+   light = lpl.light;
 #endif
 
    // CALICO: invoke I_DrawSpan here.
@@ -192,20 +197,18 @@ void R_DrawPlanes(void)
 
          light = pl->lightlevel;
 
-#ifdef MARS
-         lpl.lightcoef = (((255 - light) >> 3) & 31) * 256;
-#else
-         lpl.lightmin = light - ((255 - light) << 1);
-         if (lpl.lightmin < 0)
-             lpl.lightmin = 0;
+#ifdef GRADIENTLIGHT
          lpl.lightmax = light;
-         lpl.lightsub = ((light - lpl.lightmin) * 160) / 640;
-         lpl.lightcoef = (light - lpl.lightmin) << SLOPEBITS;
-
-         if (lpl.lightcoef > lpl.lightmax)
-             lpl.lightcoef = lpl.lightmax;
-         if (lpl.lightcoef < lpl.lightmin)
-             lpl.lightcoef = lpl.lightmin;
+         light = light - ((255 - light) << 1);
+         if (light < MINLIGHT)
+             light = MINLIGHT;
+         if (light > lpl.lightmax)
+             light = lpl.lightmax;
+         lpl.lightmin = (unsigned)light;
+         lpl.lightsub = 160 * (lpl.lightmax - lpl.lightmin) / (800 - 160);
+         lpl.lightcoef = 255 << SLOPEBITS;
+#else
+         lpl.light = HWLIGHT(light);
 #endif
 
          pl->open[pl->maxx + 1] = OPENMARK;

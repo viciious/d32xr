@@ -63,6 +63,9 @@ static inline int Mars_R_WordsForActionbits(unsigned actionbits)
     if (actionbits & AC_CALCTEXTURE)
     {
         numwords = 2 + 1; // iscale + colnum
+#ifdef GRADIENTLIGHT
+        numwords += 1; // light
+#endif
         if (actionbits & AC_TOPTEXTURE)
             numwords += 1; // top and bottom
         if (actionbits & AC_BOTTOMTEXTURE)
@@ -88,6 +91,11 @@ static void Mars_Slave_R_ComputeSeg(viswall_t* segl)
     unsigned distance;
     unsigned centerangle;
     unsigned offset;
+#ifdef GRADIENTLIGHT
+    int seglight;
+    unsigned lightmin, lightmax, lightsub, lightcoef;
+    unsigned texturelight;
+#endif
     int t_topheight, t_bottomheight;
     int b_topheight, b_bottomheight;
     int floorheight, floornewheight;
@@ -102,6 +110,20 @@ static void Mars_Slave_R_ComputeSeg(viswall_t* segl)
     distance = segl->distance;
     x = segl->start;
     stop = segl->stop;
+
+#ifdef GRADIENTLIGHT
+    lightmax = segl->seglightlevel;
+    seglight = segl->seglightlevel;
+    seglight = seglight - ((255 - seglight) << 1);
+    if (seglight < MINLIGHT)
+        seglight = MINLIGHT;
+    if (seglight > lightmax)
+        seglight = lightmax;
+    lightmin = (unsigned)seglight;
+
+    lightsub = 160 * (lightmax - lightmin) / (800 - 160);
+    lightcoef = ((lightmax - lightmin) << FRACBITS) / (800 - 160);
+#endif
 
     actionbits = segl->actionbits;
     t_topheight = segl->t_topheight;
@@ -138,7 +160,7 @@ static void Mars_Slave_R_ComputeSeg(viswall_t* segl)
         if (actionbits & AC_CALCTEXTURE)
         {
             // calculate texture offset
-            unsigned short *up;
+            unsigned short* up;
 
             fixed_t r = FixedMul(distance,
                 finetangent((centerangle + xtoviewangle[x]) >> ANGLETOFINESHIFT));
@@ -148,9 +170,25 @@ static void Mars_Slave_R_ComputeSeg(viswall_t* segl)
             iscale = (1 << (FRACBITS + SCALEBITS)) / (unsigned)scale;
 
             up = (unsigned short*)p, p += 2;
-            up[0] = (iscale>>16) & 0xffff;
-            up[1] = (iscale    ) & 0xffff;
+            up[0] = (iscale >> 16) & 0xffff;
+            up[1] = (iscale) & 0xffff;
             *p = texturecol, p += 1; // colnum
+
+#ifdef GRADIENTLIGHT
+            // calc light level
+            texturelight = ((scale * lightcoef) / FRACUNIT);
+            if (texturelight <= lightsub)
+                texturelight = lightmin;
+            else
+            {
+                texturelight -= lightsub;
+                if (texturelight < lightmin)
+                    texturelight = lightmin;
+                else if (texturelight > lightmax)
+                    texturelight = lightmax;
+            }
+            *p = texturelight, p += 1;
+#endif
 
             //
             // draw textures
@@ -296,6 +334,11 @@ static void Mars_R_SegLoop(viswall_t *segl, int *clipbounds, drawtex_t *toptex, 
          // other texture drawing info
          up = (unsigned short*)p, p += 2;
          texturecol = *p, p += 1;
+
+#ifdef GRADIENTLIGHT
+         texturelight = *p, p += 1;
+         texturelight = (((255 - texturelight) >> 3) & 31) * 256;
+#endif
 
          iscale = (up[0] << 16) | up[1];
          iscale2 = iscale >> 4;

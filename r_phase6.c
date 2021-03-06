@@ -97,7 +97,7 @@ static void R_SegLoop(viswall_t *segl)
    // force R_FindPlane for both planes
    floor = ceiling = visplanes;
 
-#ifdef MARS
+#ifndef GRADIENTLIGHT
    texturelight = lightmax;
    texturelight = (((255 - texturelight) >> 3) & 31) * 256;
 #endif
@@ -130,7 +130,7 @@ static void R_SegLoop(viswall_t *segl)
          texturecol = (segl->offset - r) >> FRACBITS;
          iscale = (1 << (FRACBITS+SCALEBITS)) / (unsigned)scale;
 
-#ifndef MARS
+#ifdef GRADIENTLIGHT
          // calc light level
          texturelight = ((scale * lightcoef) / FRACUNIT) - lightsub;
          if(texturelight < lightmin)
@@ -290,6 +290,7 @@ void R_SegCommands(void)
    segl = viswalls;
    while(segl < lastwallcmd)
    {
+#ifdef GRADIENTLIGHT
       lightmin = segl->seglightlevel - (255 - segl->seglightlevel) * 2;
       if(lightmin < 0)
          lightmin = 0;
@@ -298,6 +299,9 @@ void R_SegCommands(void)
       
       lightsub  = 160 * (lightmax - lightmin) / (800 - 160);
       lightcoef = ((lightmax - lightmin) << FRACBITS) / (800 - 160);
+#else
+      lightmax = segl->seglightlevel;
+#endif
 
       if(segl->actionbits & AC_TOPTEXTURE)
       {

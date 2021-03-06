@@ -28,11 +28,7 @@ static void R_DrawVisSprite(vissprite_t *vis)
    spryscale >>= 8;
 
    // blitter iinc
-#ifdef MARS
-   light = (((255 - vis->colormap) >> 3) & 31) * 256;
-#else
-   light = -((255 - vis->colormap) << 14) & 0xffffff;
-#endif
+   light = HWLIGHT(vis->colormap);
    stopx    = vis->x2 + 1;
    fracstep = vis->xiscale;
    
