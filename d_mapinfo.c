@@ -426,6 +426,13 @@ error:
 	return 0;
 }
 
+static int G_MapInfoSortCmp(const void * pmi1, const void *pmi2)
+{
+	dmapinfo_t* mi1 = *((dmapinfo_t **)pmi1);
+	dmapinfo_t* mi2 = *((dmapinfo_t **)pmi2);
+	return mi1->mapnumber - mi2->mapnumber;
+}
+
 dmapinfo_t **G_LoadMaplist(int *pmapcount)
 {
 	const char* buf;
@@ -487,6 +494,8 @@ dmapinfo_t **G_LoadMaplist(int *pmapcount)
 	}
 	maplist[i] = NULL;
 	*pmapcount = i;
+
+	qsort(maplist, i, sizeof(dmapinfo_t*), &G_MapInfoSortCmp);
 
 	return maplist;
 }
