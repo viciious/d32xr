@@ -79,6 +79,8 @@ void Mars_Slave_R_OpenPlanes(void);
 
 void Mars_R_SegCommands(void)/* __attribute__((section(".data"), aligned(16)))*/;
 
+void Mars_Slave_M_AnimateFire(void);
+
 static inline void Mars_R_BeginComputeSeg(void)
 {
 	while (MARS_SYS_COMM4 != 0) {};

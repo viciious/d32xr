@@ -37,8 +37,9 @@
 const int COLOR_WHITE = 0x04;
 
 int		activescreen = 0;
-
 short	*dc_colormaps;
+
+extern int 	debugmode;
 
 static volatile pixel_t	*framebuffer = &MARS_FRAMEBUFFER + 0x100;
 static volatile pixel_t *framebufferend = &MARS_FRAMEBUFFER + 0x10000;
@@ -56,7 +57,7 @@ void I_DrawSpanA(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, fi
 void Mars_ClearFrameBuffer(void)
 {
 	int *p = (int *)framebuffer;
-	int *p_end = (int *)(framebuffer + 320*224);
+	int *p_end = (int *)(framebuffer + 320*224 / 2);
 	while (p < p_end)
 		*p++ = 0;
 }
@@ -89,8 +90,8 @@ void Mars_Init(void)
 
 	for (i = 0; i < 2; i++)
 	{
-		/* initialize the lines section of the framebuffer */
-		for (j = 0; j < 256; j++)
+		// initialize the lines section of the framebuffer
+		for (j = 0; j < 224; j++)
 			lines[j] = j * 320 / 2 + 0x100;
 
 		Mars_ClearFrameBuffer();
@@ -151,34 +152,37 @@ void Mars_Slave(void)
 {
 	while (1)
 	{
-		while (MARS_SYS_COMM4 == 0);
+		int cmd;
+		while ((cmd = MARS_SYS_COMM4) == 0);
 
-		if (MARS_SYS_COMM4 == 1)
-		{
+		switch (cmd) {
+		case 1:
 			Mars_Slave_R_SegCommands();
-		}
-		else if (MARS_SYS_COMM4 == 2)
-		{
+			break;
+		case 2:
 			Mars_Slave_R_PrepWalls();
-		}
-		else if (MARS_SYS_COMM4 == 3)
-		{
+			break;
+		case 3:
 			Mars_ClearCache();
-		}
-		else if (MARS_SYS_COMM4 == 4)
-		{
+			break;
+		case 4:
 			Mars_Slave_R_DrawPlanes();
-		}
-		else if (MARS_SYS_COMM4 == 5)
-		{
+			break;
+		case 5:
 			Mars_Slave_R_DrawSprites();
-		}
-		else if (MARS_SYS_COMM4 == 6)
-		{
+			break;
+		case 6:
 			Mars_Slave_R_OpenPlanes();
-		}
-		else if (MARS_SYS_COMM4 == 7)
-		{
+			break;
+		case 7:
+			break;
+		case 8:
+			Mars_Slave_M_AnimateFire();
+			break;
+		case 9:
+			break;
+		default:
+			break;
 		}
 
 		MARS_SYS_COMM4 = 0;
@@ -237,7 +241,6 @@ void I_Init (void)
 	}
 }
 
-
 void I_DrawSbar (void)
 {
 }
@@ -251,7 +254,6 @@ boolean	I_RefreshLatched (void)
 {
 	return true;
 }
-
 
 
 /* 
@@ -279,7 +281,7 @@ byte *I_WadBase (void)
 ==================== 
 */ 
  
-static char zone[0x30000] __attribute__ ((section (".data"), aligned(16)));
+static char zone[0x30000] ATTR_DATA_CACHE_ALIGN;
 byte *I_ZoneBase (int *size)
 {
 	*size = sizeof(zone);
@@ -349,8 +351,6 @@ void I_DoubleClearFrameBuffer(void)
 	Mars_FlipFrameBuffers(true);
 	Mars_ClearFrameBuffer();
 }
-
-extern int 	debugmode;
 
 void I_DebugScreen(void)
 {

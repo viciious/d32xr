@@ -79,6 +79,8 @@ void M_Start (void)
 	maplist = G_LoadMaplist(&mapcount);
 	
 	DoubleBufferSetup ();
+
+	I_InitMenuFire();
 }
 
 void M_Stop (void)
@@ -110,6 +112,8 @@ void M_Stop (void)
 	for (i = 0; i < mapcount; i++)
 		Z_Free(maplist[i]);
 	Z_Free(maplist);
+
+	I_StopMenuFire();
 
 	WriteEEProm ();
 }
@@ -270,7 +274,7 @@ void M_Drawer (void)
 		"Nightmare!"
 	};
 
-	I_ClearFrameBuffer();
+	I_DrawMenuFire();
 
 /* Draw main menu */
 	M_Printf(160*8-64, 2, "DOOM");
