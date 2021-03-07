@@ -338,15 +338,38 @@ extern mobj_t emptymobj;
 void G_InitNew (skill_t skill, int map, gametype_t gametype) 
 { 
 	int             i; 
-	
+	dmapinfo_t		**maplist;
+	int				mapcount;
+
 D_printf ("G_InitNew\n");
 
 	M_ClearRandom (); 
 
-/* these may be reset by I_NetSetup */
-	gamemap = map; 
-	gamemaplump = G_LumpNumForMapNum(gamemap);
-	gameskill = skill; 
+	/* these may be reset by I_NetSetup */
+	gamemap = map;
+	gamemaplump = -1;
+	gameskill = skill;
+
+/* find the map by its number */
+	maplist = G_LoadMaplist(&mapcount);
+	for (i = 0; i < mapcount; i++)
+	{
+		if (maplist[i]->mapnumber > map)
+			break;
+		if (maplist[i]->mapnumber == map)
+		{
+			gamemaplump = maplist[i]->lumpnum;
+			break;
+		}
+	}
+
+	if (gamemaplump < 0)
+		gamemaplump = G_LumpNumForMapNum(gamemap);
+
+	for (i = 0; i < mapcount; i++)
+		Z_Free(maplist[i]);
+	Z_Free(maplist);
+
  	netgame = gametype;
 	I_DrawSbar ();			/* draw frag boxes if multiplayer */
 
