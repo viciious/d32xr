@@ -300,21 +300,26 @@ static int G_ParseMapinfo(char* buf, kvcall_t kvcall, void *ptr)
 		}
 		while (*l == ' ' || *l == '\t') l++;
 
-		if (linecount > 0) { // skip the first line
-			e = strchr(l, '=');
-			if (e && e + 1 != el) {
-				char* val = e + 1;
+		if (*l != '\0' && *l != '}' && *l != '{') {
+			if (linecount > 0) { // skip the first line
+				char* val = NULL;
 
-				while (*val == ' ' || *val == '\t') val++;
+				e = strchr(l, '=');
+				if (e && e + 1 != el) {
+					val = e + 1;
 
-				while (*(e-1) == ' ' || *(e-1) == '\t') e--;
-				*e = '\0';
-				
-				kvcall(l, stripquote(val), ptr);
+					while (*val == ' ' || *val == '\t') val++;
+					while (*(e - 1) == ' ' || *(e - 1) == '\t') e--;
+					*e = '\0';
+
+					val = stripquote(val);
+				}
+
+				kvcall(l, val, ptr);
 			}
-		}
-		else {
-			kvcall(l, NULL, ptr);
+			else {
+				kvcall(l, NULL, ptr);
+			}
 		}
 
 		if (!p)
@@ -349,6 +354,11 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 				mi->name = mi->lumpname;
 			}
 		}
+		else if (!D_strcasecmp(key, "baronspecial"))
+		{
+			mi->baronspecial = true;
+		}
+
 		return;
 	}
 
