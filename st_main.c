@@ -305,7 +305,7 @@ void ST_Drawer (void)
 	/* */
 	if (netgame != gt_deathmatch)
 	{
-		i = gamemap;
+		i = gamemapinfo.mapnumber;
 		if (stbar.currentMap != i)
 		{
 			int	x = MAPX;

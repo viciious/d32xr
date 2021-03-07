@@ -1,7 +1,6 @@
 /* m_main.c -- main menu */
 
 #include "doomdef.h"
-#include "d_mapinfo.h"
 
 #define MOVEWAIT		3
 #define CURSORX		50

@@ -24,7 +24,6 @@
   SOFTWARE.
 */
 #include "doomdef.h"
-#include "d_mapinfo.h"
 #include <string.h>
 #include <stdlib.h>
 

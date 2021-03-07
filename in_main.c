@@ -319,7 +319,7 @@ void IN_Start (void)
 	DoubleBufferSetup ();
 #endif
 
-	S_StartSong((gamemap%10)+1, 1);
+	S_StartSong((gamemapinfo.mapnumber%10)+1, 1);
 }
 
 void IN_Stop (void)

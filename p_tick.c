@@ -253,7 +253,7 @@ void P_CheckCheats (void)
 	
 	if (warpmap>0 && warpmap < 27)
 	{
-		gamemap = warpmap;
+		gamemaplump = G_LumpNumForMapNum(warpmap);
 		gameaction = ga_warped;
 	}
 }

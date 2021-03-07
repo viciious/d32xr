@@ -449,6 +449,7 @@ void G_RunGame (void);
 
 /*================================== */
 
+#include "d_mapinfo.h"
 
 extern	gameaction_t	gameaction;
 
@@ -472,9 +473,9 @@ extern	int			maxammo[NUMAMMO];
 
 
 extern	skill_t		gameskill;
-extern	int			gamemap;
 extern	int			totalkills, totalitems, totalsecret;	/* for intermission */
-extern	int		gamemaplump;
+extern	int			gamemaplump;
+extern	dmapinfo_t	gamemapinfo;
 
 extern 	int 		gametic;
 

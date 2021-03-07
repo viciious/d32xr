@@ -2,7 +2,6 @@
  
 #include "doomdef.h" 
 #include "p_local.h" 
-#include "d_mapinfo.h"
 
 void G_PlayerReborn (int player); 
  
@@ -13,9 +12,8 @@ void G_DoLoadLevel (void);
  
 gameaction_t    gameaction; 
 skill_t         gameskill; 
-int             gamemap; 
-int				nextmap;				/* the map to go to after the stats */
 int				gamemaplump;
+dmapinfo_t		gamemapinfo;
 
 gametype_t		netgame;
 
@@ -47,11 +45,8 @@ extern texture_t		*textures;
 void G_DoLoadLevel (void) 
 { 
 	int             i; 
-	dmapinfo_t	mi;
-	const char	*skytexture;
 	int		skytexturel;
-	int 		mapnum;
-	const char 	*mapname;
+	int 		gamemap;
 
 	for (i=0 ; i<MAXPLAYERS ; i++) 
 	{ 
@@ -74,39 +69,71 @@ void G_DoLoadLevel (void)
 
         Z_FreeTags (mainzone);
 	/*PrintHex (1,1,Z_FreeMemory (mainzone)); */
-
-	/* if the map is MAPxy format, use the xy for map number */
-	mapname = G_GetMapNameForLump(gamemaplump);
-	mapnum = G_MapNumForMapName(mapname);
-	if (mapnum != 0)
-		gamemap = mapnum;
-
-/*  */
-/* set the sky map for the episode  */
-/*  */
-	if (gamemap < 9) 
-		skytexture = "SKY1"; 
-	else if (gamemap < 18)
-		skytexture = "SKY2"; 
-	else
-		skytexture = "SKY3"; 
-
 /*
  * get lump number for the next map
  */
 
-	mi.data = NULL;	
-	if (G_FindMapinfo(gamemaplump, &mi) > 0) {
-		if (mi.sky)
-			skytexture = mi.sky;
+ /* free DMAPINFO now */
+	if (gamemapinfo.data)
+		Z_Free(gamemapinfo.data);
+	gamemapinfo.data = NULL;
+
+	if (G_FindMapinfo(gamemaplump, &gamemapinfo) == 0) {
+		int nextmap;
+		const char *mapname;
+
+		mapname = G_GetMapNameForLump(gamemaplump);
+		gamemap = G_MapNumForMapName(mapname);
+		if (gamemap == 0)
+			gamemap = gamemapinfo.mapnumber + 1;
+
+		gamemapinfo.sky = NULL;
+		gamemapinfo.mapnumber = gamemap;
+		gamemapinfo.lumpnum = gamemaplump;
+		gamemapinfo.baronspecial = (gamemap == 8);
+		gamemapinfo.secretnext = G_LumpNumForMapNum(24);
+
+		/* decide which level to go to next */
+#ifdef MARS
+		switch (gamemap)
+		{
+			case 15: nextmap = 23; break;
+			case 23: nextmap = 0; break;
+			case 24: nextmap = 4; break;
+			default: nextmap = gamemap + 1; break;
+		}
+#else
+		switch (gamemap)
+		{
+			case 23: nextmap = 0; break;
+			case 24: nextmap = 4; break;
+			default: nextmap = mapnumber + 1; break;
+		}
+#endif
+		if (nextmap)
+			gamemapinfo.next = G_LumpNumForMapNum(nextmap);
+		else
+			gamemapinfo.next = 0;
 	}
 
-	skytexturel = R_TextureNumForName(skytexture);
- 	skytexturep = &textures[skytexturel];
+	/* DMAPINFO can override the map number */
+	gamemap = gamemapinfo.mapnumber;
 
-/* free DMAPINFO now */
-	if (mi.data)
-		Z_Free(mi.data);
+	/*  */
+	/* set the sky map for the episode  */
+	/*  */
+	if (gamemapinfo.sky == NULL)
+	{
+		if (gamemap < 9)
+			gamemapinfo.sky = "SKY1";
+		else if (gamemap < 18)
+			gamemapinfo.sky = "SKY2";
+		else
+			gamemapinfo.sky = "SKY3";
+	}
+
+	skytexturel = R_TextureNumForName(gamemapinfo.sky);
+ 	skytexturep = &textures[skytexturel];
 
 	P_SetupLevel (gamemaplump, gameskill);   
 	displayplayer = consoleplayer;		/* view the guy you are playing     */
@@ -345,8 +372,11 @@ D_printf ("G_InitNew\n");
 
 	M_ClearRandom (); 
 
+	if (gamemapinfo.data)
+		Z_Free(gamemapinfo.data);
+	D_memset(&gamemapinfo, 0, sizeof(gamemapinfo));
+
 	/* these may be reset by I_NetSetup */
-	gamemap = map;
 	gamemaplump = -1;
 	gameskill = skill;
 
@@ -364,7 +394,7 @@ D_printf ("G_InitNew\n");
 	}
 
 	if (gamemaplump < 0)
-		gamemaplump = G_LumpNumForMapNum(gamemap);
+		gamemaplump = G_LumpNumForMapNum(map);
 
 	for (i = 0; i < mapcount; i++)
 		Z_Free(maplist[i]);
@@ -406,12 +436,15 @@ D_printf ("G_InitNew\n");
 void G_RunGame (void)
 {
 	int		i;
-	int 		nextmapl;
-	boolean		finale;
-	dmapinfo_t 	mi;
 
 	while (1)
 	{
+		int 		nextmapl;
+		boolean		finale;
+#ifdef JAGUAR
+		int			nextmap;
+#endif
+
 	/* load a level */
 		G_DoLoadLevel ();   
 	
@@ -430,59 +463,18 @@ void G_RunGame (void)
 		if (gameaction == ga_warped)
 			continue;			/* skip intermission */
 		
-		nextmapl = -1;
-
-		mi.data = NULL;	
-		if (G_FindMapinfo(gamemaplump, &mi) > 0) {
-			nextmapl = mi.next;
-			if (gameaction == ga_secretexit && mi.secretnext)
-				nextmapl = mi.secretnext;
-		}
-
-
-		finale = false;
-		if (nextmapl == 0)
-		{
-			finale = true;
-		}
-		else if (nextmapl > 0)
-		{
-			nextmap = gamemap+1;
-		}
+		if (gameaction == ga_secretexit && gamemapinfo.secretnext)
+			nextmapl = gamemapinfo.secretnext;
 		else
-		{
-	/* decide which level to go to next */
-#ifdef MARS
-			if (gameaction == ga_secretexit)
-				nextmap = 24;
-			else
-			{
-				switch (gamemap)
-				{
-				case 15: nextmap = 23; break;
-				case 24: nextmap = 4; break;
-				default: nextmap = gamemap+1; break;
-				}
-			}
-#else
-			if (gameaction == ga_secretexit)
-				 nextmap = 24;
-			else
-			{
-				switch (gamemap)
-				{
-				case 24: nextmap = 4; break;
-				case 23: nextmap = 23; break;	/* don't add secret level to eeprom */
-				default: nextmap = gamemap+1; break;
-				}
-			}
-#endif
-			finale = gamemap == 23;
-			if (!finale)
-				nextmapl = G_LumpNumForMapNum(nextmap);
-		}
+			nextmapl = gamemapinfo.next;
+		finale = nextmapl == 0;
 
 #ifdef JAGUAR
+		if (finale)
+			nextmap = gamemapinfo.mapnumber; /* don't add secret level to eeprom */
+		else
+			nextmap = G_LumpNumForMapNum(nextmapl);
+
 		if (nextmap > maxlevel)
 		{	/* allow higher menu selection now */
 			void WriteEEProm (void);
@@ -498,11 +490,6 @@ void G_RunGame (void)
 		if (finale)
 			MiniLoop (F_Start, F_Stop, F_Ticker, F_Drawer);
 
-	/* free DMAPINFO now */
-		if (mi.data)
-			Z_Free(mi.data);
-
-		gamemap = nextmap;
 		gamemaplump = nextmapl;
 	}
 }
