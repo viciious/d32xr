@@ -567,11 +567,7 @@ void testgpu (void);
 
 int			checkit;
 skill_t		startskill = sk_medium;
-#ifdef MARS
 int			startmap = 1;
-#else
-inti			startmap = 3;
-#endif
 gametype_t	starttype = gt_single;
 
 void D_DoomMain (void) 

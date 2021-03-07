@@ -147,7 +147,7 @@ int G_LumpNumForMapNum(int map)
 	lumpname[4] = '0' + map % 10;
 	lumpname[5] = 0;
 
-	return W_GetNumForName(lumpname);
+	return W_CheckNumForName(lumpname);
 }
 
 int G_MapNumForMapName(const char* map)

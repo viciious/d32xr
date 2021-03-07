@@ -365,8 +365,6 @@ extern mobj_t emptymobj;
 void G_InitNew (skill_t skill, int map, gametype_t gametype) 
 { 
 	int             i; 
-	dmapinfo_t		**maplist;
-	int				mapcount;
 
 D_printf ("G_InitNew\n");
 
@@ -377,28 +375,33 @@ D_printf ("G_InitNew\n");
 	D_memset(&gamemapinfo, 0, sizeof(gamemapinfo));
 
 	/* these may be reset by I_NetSetup */
-	gamemaplump = -1;
+	gamemaplump = G_LumpNumForMapNum(map);
 	gameskill = skill;
-
-/* find the map by its number */
-	maplist = G_LoadMaplist(&mapcount);
-	for (i = 0; i < mapcount; i++)
+	if (gamemaplump < 0)
 	{
-		if (maplist[i]->mapnumber > map)
-			break;
-		if (maplist[i]->mapnumber == map)
+		dmapinfo_t** maplist;
+		int				mapcount;
+
+		/* find the map by its number */
+		maplist = G_LoadMaplist(&mapcount);
+		for (i = 0; i < mapcount; i++)
 		{
-			gamemaplump = maplist[i]->lumpnum;
-			break;
+			if (maplist[i]->mapnumber > map)
+				break;
+			if (maplist[i]->mapnumber == map)
+			{
+				gamemaplump = maplist[i]->lumpnum;
+				break;
+			}
 		}
+
+		for (i = 0; i < mapcount; i++)
+			Z_Free(maplist[i]);
+		Z_Free(maplist);
 	}
 
 	if (gamemaplump < 0)
-		gamemaplump = G_LumpNumForMapNum(map);
-
-	for (i = 0; i < mapcount; i++)
-		Z_Free(maplist[i]);
-	Z_Free(maplist);
+		I_Error("Lump MAP%02d not found!", map);
 
  	netgame = gametype;
 	I_DrawSbar ();			/* draw frag boxes if multiplayer */
