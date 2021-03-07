@@ -12,7 +12,7 @@ SHAS = $(ROOTDIR)/sh-elf/bin/sh-elf-as
 SHOBJC = $(ROOTDIR)/sh-elf/bin/sh-elf-objcopy
 RM = rm -f
 
-CCFLAGS = -m2 -mb -O3 -Wall -c -fomit-frame-pointer -DMARS -g -std=c99
+CCFLAGS = -m2 -mb -O3 -Wall -c -fomit-frame-pointer -DMARS -g -std=gnu99
 LINKFLAGS = -T $(ROOTDIR)/ldscripts/mars.ld -Wl,-Map=output.map -nostdlib
 
 release: LINKFLAGS += -g
