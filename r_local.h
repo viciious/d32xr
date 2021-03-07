@@ -42,11 +42,7 @@
 #define HWLIGHT(light) -((255 - (light)) << 14) & 0xffffff
 #endif
 
-#ifdef MARS
-#define MINLIGHT 30
-#else
 #define MINLIGHT 0
-#endif
 
 /*
 ==============================================================================
