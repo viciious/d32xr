@@ -92,7 +92,6 @@ static void Mars_Slave_R_ComputeSeg(viswall_t* segl)
     unsigned centerangle;
     unsigned offset;
 #ifdef GRADIENTLIGHT
-    int seglight;
     unsigned lightmin, lightmax, lightsub, lightcoef;
     unsigned texturelight;
 #endif
@@ -126,8 +125,13 @@ static void Mars_Slave_R_ComputeSeg(viswall_t* segl)
     ceilingnewheight = segl->ceilingnewheight;
 
 #ifdef GRADIENTLIGHT
-    seglight = lightmax;
+#ifdef MARS
+    unsigned seglight = lightmax;
+    seglight = seglight - (seglight >> 2) - (seglight >> 4);
+#else
+    int seglight = lightmax;
     seglight = seglight - ((255 - seglight) << 1);
+#endif
     if (seglight < MINLIGHT)
         seglight = MINLIGHT;
     if (seglight > lightmax)

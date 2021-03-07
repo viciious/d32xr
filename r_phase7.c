@@ -187,19 +187,21 @@ void R_DrawPlanes(void)
    {
       if(pl->minx <= pl->maxx)
       {
-         int light;
-
          lpl.pixelcount = 0;
 
          lpl.ds_source = flatpixels[pl->flatnum];
 
          lpl.height = D_abs(pl->height);
 
-         light = pl->lightlevel;
-
 #ifdef GRADIENTLIGHT
-         lpl.lightmax = light;
+         lpl.lightmax = pl->lightlevel;
+#ifdef MARS
+         unsigned light = pl->lightlevel;
+         light = light - (light >> 2) - (light >> 4);
+#else
+         int light = pl->lightlevel;
          light = light - ((255 - light) << 1);
+#endif
          if (light < MINLIGHT)
              light = MINLIGHT;
          if (light > lpl.lightmax)
@@ -208,7 +210,8 @@ void R_DrawPlanes(void)
          lpl.lightsub = 160 * (lpl.lightmax - lpl.lightmin) / (800 - 160);
          lpl.lightcoef = 255 << SLOPEBITS;
 #else
-         lpl.light = HWLIGHT(light);
+         lpl.light = pl->lightlevel;
+         lpl.light = HWLIGHT(lpl.light);
 #endif
 
          pl->open[pl->maxx + 1] = OPENMARK;
