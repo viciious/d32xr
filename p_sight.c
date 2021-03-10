@@ -233,33 +233,25 @@ static boolean PS_CrossBSPNode(int bspnum)
    node_t *bsp;
    int side;
 
-check:
-   if(bspnum & NF_SUBSECTOR)
+   while (!(bspnum & NF_SUBSECTOR))
    {
-      if(bspnum == -1)
-         return PS_CrossSubsector(0);
-      else
-         return PS_CrossSubsector(bspnum & ~NF_SUBSECTOR);
+       bsp = &nodes[bspnum];
+
+       // decide which side the start point is on
+       side = P_DivlineSide(strace.x, strace.y, (divline_t*)bsp);
+       if (side == 2)
+           side = 0;
+
+       // the partition plane is crossed here
+       if (side == P_DivlineSide(t2x, t2y, (divline_t*)bsp))
+           bspnum = bsp->children[side]; // the line doesn't touch the other side
+       else if (!PS_CrossBSPNode(bsp->children[side]))
+           return false; // cross the starting side
+       else
+           bspnum = bsp->children[side ^ 1]; // cross the ending side
    }
 
-   bsp = &nodes[bspnum];
-
-   // decide which side the start point is on
-   side = P_DivlineSide(strace.x, strace.y, (divline_t *)bsp);
-   if(side == 2)
-      side = 0;
-
-   // cross the starting side
-   if(!PS_CrossBSPNode(bsp->children[side]))
-      return false;
-
-   // the partition plane is crossed here
-   if(side == P_DivlineSide(t2x, t2y, (divline_t *)bsp))
-      return true; // the line doesn't touch the other side
-
-   // cross the ending side
-   bspnum = bsp->children[side^1];
-   goto check;
+   return PS_CrossSubsector(bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR);
 }
 
 //
