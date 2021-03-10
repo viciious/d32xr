@@ -14,6 +14,7 @@ typedef struct cliprange_s
 } cliprange_t;
 
 #define MAXSEGS 32
+#define MAXBSPDEPTH 128
 
 cliprange_t *newend;
 cliprange_t  solidsegs[MAXSEGS];
@@ -427,7 +428,7 @@ clipsolid:
 // Determine floor/ceiling planes, add sprites of things in sector,
 // draw one or more segments.
 //
-void R_Subsector(int num)
+static inline void R_Subsector(int num)
 {
    subsector_t *sub = &subsectors[num];
    seg_t       *line, *stopline;
@@ -452,32 +453,37 @@ void R_Subsector(int num)
 //
 void R_RenderBSPNode(int bspnum)
 {
-   node_t *bsp;
-   int     side;
+    node_t* bsp;
+    int     side;
+    int     stack[MAXBSPDEPTH];
+    int     stack_size = 0;
 
-check:
-   if(bspnum & NF_SUBSECTOR) // reached a subsector leaf?
-   {
-      if(bspnum == -1)
-         R_Subsector(0);
-      else
-         R_Subsector(bspnum & ~NF_SUBSECTOR);
-      return;
-   }
+    // reached a subsector leaf?
+    while (true)
+    {
+        if (bspnum & NF_SUBSECTOR)
+        {
+            R_Subsector(bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR);
+            if (stack_size > 0)
+            {
+                bspnum = stack[--stack_size];
+                continue;
+            }
+            break;
+        }
 
-   bsp = &nodes[bspnum];
+        bsp = &nodes[bspnum];
 
-   // decide which side the view point is on
-   side = R_PointOnSide(vd.viewx, vd.viewy, bsp);
+        // decide which side the view point is on
+        side = R_PointOnSide(vd.viewx, vd.viewy, bsp);
 
-   // recursively render front space
-   R_RenderBSPNode(bsp->children[side]);
+        // possibly divide back space
+        if (R_CheckBBox(bsp->bbox[side ^ 1]))
+            stack[stack_size++] = bsp->children[side ^ 1];
 
-   // possibly divide back space
-   if(R_CheckBBox(bsp->bbox[side^1])) {
-      bspnum = bsp->children[side^1];
-      goto check;
-   }
+        // recursively render front space
+        bspnum = bsp->children[side];
+    }
 }
 
 //
