@@ -25,9 +25,6 @@
 #ifndef __32X_H__
 #define __32X_H__
 
-/* Create a 5:5:5 RGB color */
-#define COLOR(r,g,b)    (((r)&0x1F)|((g)&0x1F)<<5|((b)&0x1F)<<10)
-
 #define MARS_CRAM           (*(volatile unsigned short *)0x20004200)
 #define MARS_FRAMEBUFFER    (*(volatile unsigned short *)0x24000000)
 #define MARS_OVERWRITE_IMG  (*(volatile unsigned short *)0x24020000)

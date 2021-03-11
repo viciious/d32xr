@@ -38,18 +38,13 @@ void Mars_Init(void);
 int Mars_ToDoomControls(int ctrl);
 void Mars_Slave(void);
 void Mars_UploadPalette(const byte* palette);
+
 #define Mars_ClearCacheLine(addr) *(volatile int *)((addr) | 0x40000000) = 0
-
-//static inline void Mars_ClearCacheLines(volatile void* paddr, volatile int lines) __attribute__((section(".data"), aligned(16)));
-static inline void Mars_R_BeginComputeSeg(void)/* __attribute__((section(".data"), aligned(16)))*/;
-static inline void Mars_R_EndComputeSeg(void)/* __attribute__((section(".data"), aligned(16)))*/;
-static inline void Mars_R_BeginPrepWalls()/* __attribute__((section(".data"), aligned(16)))*/;
-static inline void Mars_R_EndPrepWalls(void)/* __attribute__((section(".data"), aligned(16)))*/;
-
-void Mars_Slave_R_SegCommands(void)/* __attribute__((section(".data"), aligned(16)))*/;
-void Mars_Slave_R_PrepWalls(void)/* __attribute__((section(".data"), aligned(16)))*/;
-
-void Mars_R_SegCommands(void)/* __attribute__((section(".data"), aligned(16)))*/;
+#define Mars_ClearCache() \
+	do { \
+		CacheControl(0); /* disable cache */ \
+		CacheControl(SH2_CCTL_CP | SH2_CCTL_CE); /* purge and re-enable */ \
+	} while (0)
 
 //static inline void Mars_ClearCacheLines(volatile void* paddr, volatile int lines)
 //{
@@ -69,6 +64,16 @@ void Mars_R_SegCommands(void)/* __attribute__((section(".data"), aligned(16)))*/
 			addr += 16; \
 		} \
 	} while (0)
+
+static inline void Mars_R_BeginComputeSeg(void)/* __attribute__((section(".data"), aligned(16)))*/;
+static inline void Mars_R_EndComputeSeg(void)/* __attribute__((section(".data"), aligned(16)))*/;
+static inline void Mars_R_BeginPrepWalls()/* __attribute__((section(".data"), aligned(16)))*/;
+static inline void Mars_R_EndPrepWalls(void)/* __attribute__((section(".data"), aligned(16)))*/;
+
+void Mars_Slave_R_SegCommands(void)/* __attribute__((section(".data"), aligned(16)))*/;
+void Mars_Slave_R_PrepWalls(void)/* __attribute__((section(".data"), aligned(16)))*/;
+
+void Mars_R_SegCommands(void)/* __attribute__((section(".data"), aligned(16)))*/;
 
 static inline void Mars_R_BeginComputeSeg(void)
 {
@@ -90,6 +95,13 @@ static inline void Mars_R_BeginPrepWalls(void)
 
 static inline void Mars_R_EndPrepWalls(void)
 {
+	while (MARS_SYS_COMM4 != 0);
+}
+
+static inline void Mars_CommSlaveClearCache(void)
+{
+	while (MARS_SYS_COMM4 != 0) {};
+	MARS_SYS_COMM4 = 3;
 	while (MARS_SYS_COMM4 != 0);
 }
 

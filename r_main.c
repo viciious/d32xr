@@ -2,6 +2,9 @@
 
 #include "doomdef.h"
 #include "r_local.h"
+#ifdef MARS
+#include "mars.h"
+#endif
 
 /*===================================== */
 
@@ -512,6 +515,10 @@ void R_Setup (void)
 
 	R_SetupTexCacheFrame(&r_flatscache);
 	R_SetupTexCacheFrame(&r_wallscache);
+
+#ifdef MARS
+	Mars_CommSlaveClearCache();
+#endif
 }
 
 //

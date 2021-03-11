@@ -276,15 +276,11 @@ static void Mars_Slave_R_ComputeSeg(viswall_t* segl)
 void Mars_Slave_R_SegCommands(void)
 {
     viswall_t* segl;
-    viswall_t* last = *((viswall_t**)((intptr_t)&lastwallcmd | 0x20000000));
 
     Mars_RB_ResetWrite(&marsrb);
 
-    for (segl = viswalls; segl < last; segl++)
-    {
-        Mars_ClearCacheLines(segl, sizeof(viswall_t) / 16);
+    for (segl = viswalls; segl < lastwallcmd; segl++)
         Mars_Slave_R_ComputeSeg(segl);
-    }
 
     Mars_RB_FinishWrite(&marsrb);
 }

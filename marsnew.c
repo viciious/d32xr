@@ -155,6 +155,10 @@ void Mars_Slave(void)
 		{
 			Mars_Slave_R_PrepWalls();
 		}
+		else if (MARS_SYS_COMM4 == 3)
+		{
+			Mars_ClearCache();
+		}
 
 		MARS_SYS_COMM4 = 0;
 	}

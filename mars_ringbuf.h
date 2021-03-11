@@ -164,7 +164,8 @@ static inline short* Mars_RB_GetWriteBuf(marsrb_t* wb, short wcnt)
 
     Mars_RB_WaitReader(wb, MARS_RINGBUF_MAXWORDS / 2);
 
-    return buf;
+    // return pointer in cache-through area
+    return (short *)((intptr_t)buf | 0x20000000);
 }
 
 #endif
