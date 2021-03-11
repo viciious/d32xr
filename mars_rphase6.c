@@ -17,8 +17,8 @@ typedef struct
    inpixel_t *data;
 } drawtex_t;
 
-static void Mars_Slave_R_ComputeSeg(viswall_t* segl) __attribute__((section(".data"), aligned(16)));
-static void Mars_R_SegLoop(viswall_t *segl, int *clipbounds, drawtex_t *toptex, drawtex_t *bottomtex) __attribute__((section(".data"), aligned(16)));
+static void Mars_Slave_R_ComputeSeg(viswall_t* segl, int * clipbounds) __attribute__((section(".data"), aligned(16)));
+static void Mars_R_SegLoop(viswall_t *segl, drawtex_t *toptex, drawtex_t *bottomtex) __attribute__((section(".data"), aligned(16)));
 
 //
 // Render a wall texture as columns
@@ -71,16 +71,12 @@ static inline int Mars_R_WordsForActionbits(unsigned actionbits)
         if (actionbits & AC_BOTTOMTEXTURE)
             numwords += 1; // top and bottom
     }
-    if (actionbits & (AC_ADDFLOOR| AC_ADDCEILING))
-        numwords += 1; // top and bottom
-    if (actionbits & (AC_NEWFLOOR|AC_NEWCEILING|AC_TOPSIL|AC_BOTTOMSIL))
-        numwords += 1; // low and high
     if (actionbits & AC_ADDSKY)
-        numwords += 1; // bottom
+        numwords += 1; // top and bottom
     return numwords;
 }
 
-static void Mars_Slave_R_ComputeSeg(viswall_t* segl)
+static void Mars_Slave_R_ComputeSeg(viswall_t* segl, int *clipbounds)
 {
     int x, stop, scale;
     unsigned scalefrac, iscale;
@@ -91,6 +87,7 @@ static void Mars_Slave_R_ComputeSeg(viswall_t* segl)
     unsigned distance;
     unsigned centerangle;
     unsigned offset;
+    unsigned seglight;
 #ifdef GRADIENTLIGHT
     unsigned lightmin, lightmax, lightsub, lightcoef;
     unsigned texturelight;
@@ -100,10 +97,13 @@ static void Mars_Slave_R_ComputeSeg(viswall_t* segl)
     int floorheight, floornewheight;
     int ceilingheight, ceilingnewheight;
     short *p, numwords;
+    int floorclipx, ceilingclipx;
+    visplane_t* ceiling, * floor;
 
     actionbits = segl->actionbits;  // cache the first 8 words of segl: actionbits, light, scalefrac, scale2
+    seglight = segl->seglightlevel;
 #ifdef GRADIENTLIGHT
-    lightmax = segl->seglightlevel;
+    lightmax = seglight;
 #endif
     scalefrac = segl->scalefrac;
 
@@ -126,7 +126,6 @@ static void Mars_Slave_R_ComputeSeg(viswall_t* segl)
 
 #ifdef GRADIENTLIGHT
 #ifdef MARS
-    unsigned seglight = lightmax;
     seglight = seglight - (seglight >> 2) - (seglight >> 4);
 #else
     int seglight = lightmax;
@@ -148,13 +147,22 @@ static void Mars_Slave_R_ComputeSeg(viswall_t* segl)
     *p = segl - viswalls;
     Mars_RB_CommitWrite(&marsrb);
 
-    if (numwords == 0)
-        return;
+    // force R_FindPlane for both planes
+    floor = ceiling = visplanes;
+    low = high = 0;
+    p = NULL;
 
     do
     {
         short t;
         byte* b = (byte *)&t;
+
+        //
+        // get ceilingclipx and floorclipx from clipbounds
+        //
+        ceilingclipx = clipbounds[x];
+        floorclipx = ceilingclipx & 0x00ff;
+        ceilingclipx = (int)((ceilingclipx & 0xff00) >> 8) - 1;
 
         scale = scalefrac >> FIXEDTOSCALE;
         scalefrac += scalestep;
@@ -162,7 +170,8 @@ static void Mars_Slave_R_ComputeSeg(viswall_t* segl)
         if (scale >= 0x7fff)
             scale = 0x7fff; // fix the scale to maximum
 
-        p = Mars_RB_GetWriteBuf(&marsrb, numwords);
+        if (numwords > 0)
+            p = Mars_RB_GetWriteBuf(&marsrb, numwords);
 
         //
         // texture only stuff
@@ -197,7 +206,8 @@ static void Mars_Slave_R_ComputeSeg(viswall_t* segl)
                 else if (texturelight > lightmax)
                     texturelight = lightmax;
             }
-            *p = texturelight, p += 1;
+
+            *p = HWLIGHT(texturelight), p += 1;
 #endif
 
             //
@@ -205,48 +215,79 @@ static void Mars_Slave_R_ComputeSeg(viswall_t* segl)
             //
             if (actionbits & AC_TOPTEXTURE)
             {
-                top = CENTERY - ((scale * t_topheight) >> (HEIGHTBITS + SCALEBITS)) + 1;
-                bottom = CENTERY - 1 - ((scale * t_bottomheight) >> (HEIGHTBITS + SCALEBITS)) + 1;
+                top = CENTERY - ((scale * t_topheight) >> (HEIGHTBITS + SCALEBITS));
+                bottom = CENTERY - 1 - ((scale * t_bottomheight) >> (HEIGHTBITS + SCALEBITS));
 
-                b[0] = top < 0 ? 0 : (top > 255 ? 255 : top); // t_top
-                b[1] = bottom < 0 ? 0 : (bottom > 255 ? 255 : bottom); // t_bottom
+                if (top <= ceilingclipx)
+                    top = ceilingclipx + 1;
+                if (bottom >= floorclipx)
+                    bottom = floorclipx - 1;
+                top += 1;
+                bottom += 1;
+
+                b[0] = top <= 0 ? 0 : (top >= 255 ? 255 : top); // t_top
+                b[1] = bottom <= 0 ? 0 : (bottom >= 255 ? 255 : bottom); // t_bottom
                 *p = t, p += 1;
             }
 
             if (actionbits & AC_BOTTOMTEXTURE)
             {
-                top = CENTERY - ((scale * b_topheight) >> (HEIGHTBITS + SCALEBITS)) + 1;
-                bottom = CENTERY - 1 - ((scale * b_bottomheight) >> (HEIGHTBITS + SCALEBITS)) + 1;
+                top = CENTERY - ((scale * b_topheight) >> (HEIGHTBITS + SCALEBITS));
+                bottom = CENTERY - 1 - ((scale * b_bottomheight) >> (HEIGHTBITS + SCALEBITS));
 
-                b[0] = top < 0 ? 0 : (top > 255 ? 255 : top); // b_top
-                b[1] = bottom < 0 ? 0 : (bottom > 255 ? 255 : bottom); // b_bottom
+                if (top <= ceilingclipx)
+                    top = ceilingclipx + 1;
+                if (bottom >= floorclipx)
+                    bottom = floorclipx - 1;
+                top += 1;
+                bottom += 1;
+
+                b[0] = top <= 0 ? 0 : (top >= 255 ? 255 : top); // b_top
+                b[1] = bottom <= 0 ? 0 : (bottom >= 255 ? 255 : bottom); // b_bottom
                 *p = t, p += 1;
             }
         }
 
-        if (actionbits & (AC_ADDFLOOR | AC_ADDCEILING))
+        //
+        // floor
+        //
+        if (actionbits & AC_ADDFLOOR)
         {
-            t = 0;
+            top = CENTERY - ((scale * floorheight) >> (HEIGHTBITS + SCALEBITS));
+            if (top <= ceilingclipx)
+                top = ceilingclipx + 1;
+            bottom = floorclipx - 1;
 
-            //
-            // floor
-            //
-            if (actionbits & AC_ADDFLOOR)
+            if (top <= bottom)
             {
-                top = CENTERY - ((scale * floorheight) >> (HEIGHTBITS + SCALEBITS)) + 1;
-                b[0] = top < 0 ? 0 : (top > 255 ? 255 : top);
+                if (floor->open[x] != OPENMARK)
+                {
+                    floor = R_FindPlane(floor + 1, segl->floorheight, segl->floorpicnum,
+                        seglight, x, stop);
+                }
+                floor->open[x] = (unsigned short)((top << 8) + bottom);
             }
+        }
 
-            //
-            // ceiling
-            //
-            if (actionbits & AC_ADDCEILING)
+        //
+        // ceiling
+        //
+        if (actionbits & AC_ADDCEILING)
+        {
+            top = ceilingclipx + 1;
+            bottom = CENTERY - 1 - ((scale * ceilingheight) >> (HEIGHTBITS + SCALEBITS));
+            if (bottom >= floorclipx)
+                bottom = floorclipx - 1;
+
+            if (top <= bottom)
             {
-                bottom = CENTERY - 1 - ((scale * ceilingheight) >> (HEIGHTBITS + SCALEBITS)) + 1;
-                b[1] = bottom < 0 ? 0 : (bottom > 255 ? 255 : bottom);
+                if (ceiling->open[x] != OPENMARK)
+                {
+                    ceiling = R_FindPlane(ceiling + 1, segl->ceilingheight, segl->ceilingpicnum,
+                        seglight, x, stop);
+                }
+                ceiling->open[x] = (unsigned short)((top << 8) + bottom);
             }
-
-            *p = t, p += 1;
         }
 
         //
@@ -254,33 +295,82 @@ static void Mars_Slave_R_ComputeSeg(viswall_t* segl)
         //
         if (actionbits & (AC_NEWFLOOR | AC_NEWCEILING | AC_TOPSIL | AC_BOTTOMSIL))
         {
-            low = CENTERY - ((scale * floornewheight) >> (HEIGHTBITS + SCALEBITS)) + 1;
-            high = CENTERY - 1 - ((scale * ceilingnewheight) >> (HEIGHTBITS + SCALEBITS)) + 1;
+            low = CENTERY - ((scale * floornewheight) >> (HEIGHTBITS + SCALEBITS));
+            if (low < 0)
+                low = 0;
+            else if (low > floorclipx)
+                low = floorclipx;
 
-            b[0] = low < 0 ? 0 : (low > 255 ? 255 : low);
-            b[1] = high < 0 ? 0 : (high > 255 ? 255 : high);
-            *p = t, p += 1;
+            high = CENTERY - 1 - ((scale * ceilingnewheight) >> (HEIGHTBITS + SCALEBITS));
+            if (high < ceilingclipx)
+                high = ceilingclipx;
+            else if (high > SCREENHEIGHT - 1)
+                high = SCREENHEIGHT - 1;
+
+            // bottom sprite clip sil
+            if (actionbits & AC_BOTTOMSIL)
+                segl->bottomsil[x] = low;
+
+            // top sprite clip sil
+            if (actionbits & AC_TOPSIL)
+                segl->topsil[x] = high + 1;
         }
 
         // sky mapping
         if (actionbits & AC_ADDSKY)
         {
-            bottom = (CENTERY - ((scale * ceilingheight) >> (HEIGHTBITS + SCALEBITS))) + 1;
-            *p = bottom, p += 1; // bottom
+            top = ceilingclipx + 1;
+            bottom = (CENTERY - ((scale * ceilingheight) >> (HEIGHTBITS + SCALEBITS))) - 1;
+            if (bottom >= floorclipx)
+                bottom = floorclipx - 1;
+
+            top += 1;
+            bottom += 1;
+
+            b[0] = top <= 0 ? 0 : (top >= 255 ? 255 : top); // top
+            b[1] = bottom <= 0 ? 0 : (bottom >= 255 ? 255 : bottom); // bottom
+            *p = t, p += 1;
         }
 
-        Mars_RB_CommitWrite(&marsrb);
+        if (actionbits & (AC_NEWFLOOR | AC_NEWCEILING))
+        {
+            // rewrite clipbounds
+            if (actionbits & AC_NEWFLOOR)
+                floorclipx = low;
+            if (actionbits & AC_NEWCEILING)
+                ceilingclipx = high;
+
+            clipbounds[x] = ((ceilingclipx + 1) << 8) + floorclipx;
+        }
+
+        if (numwords > 0)
+            Mars_RB_CommitWrite(&marsrb);
     } while (++x <= stop);
 }
 
 void Mars_Slave_R_SegCommands(void)
 {
+    int i;
     viswall_t* segl;
+    int * clipbounds, *clip;
+
+    Mars_ClearCache();
+
+    // initialize the clipbounds array
+    clipbounds = (int*)&r_workbuf[0];
+    clip = clipbounds;
+    for (i = 0; i < SCREENWIDTH / 4; i++)
+    {
+        *clip++ = SCREENHEIGHT;
+        *clip++ = SCREENHEIGHT;
+        *clip++ = SCREENHEIGHT;
+        *clip++ = SCREENHEIGHT;
+    }
 
     Mars_RB_ResetWrite(&marsrb);
 
     for (segl = viswalls; segl < lastwallcmd; segl++)
-        Mars_Slave_R_ComputeSeg(segl);
+        Mars_Slave_R_ComputeSeg(segl, clipbounds);
 
     Mars_RB_FinishWrite(&marsrb);
 }
@@ -288,23 +378,21 @@ void Mars_Slave_R_SegCommands(void)
 //
 // Main seg clipping loop
 //
-static void Mars_R_SegLoop(viswall_t *segl, int *clipbounds, drawtex_t *toptex, drawtex_t *bottomtex)
+static void Mars_R_SegLoop(viswall_t *segl, drawtex_t *toptex, drawtex_t *bottomtex)
 {
    int x, stop;
-   int low, high, top, bottom;
-   visplane_t *ceiling, *floor;
+   int top, bottom;
    unsigned iscale;
    unsigned texturecol;
    unsigned texturelight;
    unsigned actionbits;
    unsigned seglight;
-   int floorclipx, ceilingclipx;
    short numwords;
 
-   x = segl->start;
-   stop = segl->stop;
    actionbits = segl->actionbits;
    seglight = segl->seglightlevel;
+   x = segl->start;
+   stop = segl->stop;
 
    numwords = Mars_R_WordsForActionbits(actionbits);
    if (numwords == 0)
@@ -312,24 +400,13 @@ static void Mars_R_SegLoop(viswall_t *segl, int *clipbounds, drawtex_t *toptex, 
 
 #ifndef GRADIENTLIGHT
    texturelight = seglight;
-   texturelight = (((255 - texturelight) >> 3) & 31) * 256;
+   texturelight = HWLIGHT(texturelight);
 #endif
-
-   // force R_FindPlane for both planes
-   floor = ceiling = visplanes;
-   low = high = 0;
 
    do
    {
       short *p;
       byte* b;
-
-      //
-      // get ceilingclipx and floorclipx from clipbounds
-      //
-      ceilingclipx = clipbounds[x];
-      floorclipx   = ceilingclipx & 0x00ff;
-      ceilingclipx = ((ceilingclipx & 0xff00) >> 8) - 1;
 
       p = Mars_RB_GetReadBuf(&marsrb, numwords);
 
@@ -347,7 +424,6 @@ static void Mars_R_SegLoop(viswall_t *segl, int *clipbounds, drawtex_t *toptex, 
 
 #ifdef GRADIENTLIGHT
          texturelight = *p, p += 1;
-         texturelight = (((255 - texturelight) >> 3) & 31) * 256;
 #endif
 
          iscale = (up[0] << 16) | up[1];
@@ -361,12 +437,10 @@ static void Mars_R_SegLoop(viswall_t *segl, int *clipbounds, drawtex_t *toptex, 
          {
              b = (byte*)p, p++;
 
-             top = (int)b[0] - 1;
-             bottom = (int)b[1] - 1;
-             if(top <= ceilingclipx)
-                 top = ceilingclipx + 1;
-             if(bottom >= floorclipx)
-                 bottom = floorclipx - 1;
+             top = (int)b[0];
+             bottom = (int)b[1];
+             top -= 1;
+             bottom -= 1;
 
              Mars_R_DrawTexture(toptex, x, top, bottom, texturecol, texturelight, iscale, iscale2);
          }
@@ -374,117 +448,30 @@ static void Mars_R_SegLoop(viswall_t *segl, int *clipbounds, drawtex_t *toptex, 
          {
              b = (byte*)p, p++;
 
-             top = (int)b[0] - 1;
-             bottom = (int)b[1] - 1;
-             if(top <= ceilingclipx)
-                 top = ceilingclipx + 1;
-             if(bottom >= floorclipx)
-                 bottom = floorclipx - 1;
+             top = (int)b[0];
+             bottom = (int)b[1];
+             top -= 1;
+             bottom -= 1;
 
              Mars_R_DrawTexture(bottomtex, x, top, bottom, texturecol, texturelight, iscale, iscale2);
          }
       }
 
-      //
-      // floor
-      //
-      if (actionbits & (AC_ADDFLOOR | AC_ADDCEILING))
-      {
-          b = (byte*)p, p += 1;
-
-          if (actionbits & AC_ADDFLOOR)
-          {
-              top = (int)b[0] - 1;
-              if (top <= ceilingclipx)
-                  top = ceilingclipx + 1;
-              bottom = floorclipx - 1;
-
-              if (top <= bottom)
-              {
-                  if (floor->open[x] != OPENMARK)
-                  {
-                      floor = R_FindPlane(floor + 1, segl->floorheight, segl->floorpicnum,
-                          seglight, x, stop);
-                  }
-                  floor->open[x] = (unsigned short)((top << 8) + bottom);
-              }
-          }
-
-          //
-          // ceiling
-          //
-          if (actionbits & AC_ADDCEILING)
-          {
-              top = ceilingclipx + 1;
-              bottom = (int)b[1] - 1;
-              if (bottom >= floorclipx)
-                  bottom = floorclipx - 1;
-
-              if (top <= bottom)
-              {
-                  if (ceiling->open[x] != OPENMARK)
-                  {
-                      ceiling = R_FindPlane(ceiling + 1, segl->ceilingheight, segl->ceilingpicnum,
-                          seglight, x, stop);
-                  }
-                  ceiling->open[x] = (unsigned short)((top << 8) + bottom);
-              }
-          }
-      }
-
-      //
-      // calc high and low
-      //
-      if (actionbits & (AC_NEWFLOOR|AC_NEWCEILING|AC_TOPSIL|AC_BOTTOMSIL))
-      {
-          b = (byte*)p, p++;
-          low = (int)b[0] - 1;
-          if (low < 0)
-              low = 0;
-          else if(low > floorclipx)
-              low = floorclipx;
-
-          high = (int)b[1] - 1;
-          if (high < ceilingclipx)
-              high = ceilingclipx;
-          else if (high > SCREENHEIGHT - 1)
-              high = SCREENHEIGHT - 1;
-
-          // bottom sprite clip sil
-          if(actionbits & AC_BOTTOMSIL)
-              segl->bottomsil[x] = low;
-
-          // top sprite clip sil
-          if(actionbits & AC_TOPSIL)
-             segl->topsil[x] = high + 1;
-      }
-
       // sky mapping
       if(actionbits & AC_ADDSKY)
       {
-         top = ceilingclipx + 1;
-         bottom = *p++;
-         
-         if(bottom >= floorclipx)
-            bottom = floorclipx - 1;
-         
+         b = (byte*)p, p++;
+         top = (int)b[0];
+         bottom = (int)b[1];
+         top -= 1;
+         bottom -= 1;
+
          if(top <= bottom)
          {
             int colnum = ((vd.viewangle + xtoviewangle[x]) >> ANGLETOSKYSHIFT) & 0xff;
             inpixel_t * data = skytexturep->data + colnum * skytexturep->height;
             I_DrawColumn(x, top, bottom, 0, (top * 18204) << 2,  FRACUNIT + 7281, data, 128);
          }
-      }
-
-      if(actionbits & (AC_NEWFLOOR|AC_NEWCEILING))
-      {
-         // rewrite clipbounds
-         if(actionbits & AC_NEWFLOOR)
-            floorclipx = low;
-         if(actionbits & AC_NEWCEILING)
-            ceilingclipx = high;
-
-         clipbounds[x] = ((ceilingclipx + 1) << 8) + floorclipx;
       }
 
       Mars_RB_CommitRead(&marsrb);
@@ -496,23 +483,11 @@ void Mars_R_SegCommands(void)
 {
    int i;
    int numsegs;
-   int* clipbounds, *clip;
    static drawtex_t toptex = { 0 }, bottomtex = { 0 };
 
    Mars_RB_ResetAll(&marsrb);
 
    Mars_R_BeginComputeSeg();
-
-   // initialize the clipbounds array
-   clipbounds = (int*)&r_workbuf[0];
-   clip = clipbounds;
-   for (i = 0; i < SCREENWIDTH / 4; i++)
-   {
-       *clip++ = SCREENHEIGHT;
-       *clip++ = SCREENHEIGHT;
-       *clip++ = SCREENHEIGHT;
-       *clip++ = SCREENHEIGHT;
-   }
 
    numsegs = lastwallcmd - viswalls;
    for (i = 0; i < numsegs; i++)
@@ -553,7 +528,7 @@ void Mars_R_SegCommands(void)
          bottomtex.pixelcount   = 0;
       }
 
-      Mars_R_SegLoop(segl, clipbounds, &toptex, &bottomtex);
+      Mars_R_SegLoop(segl, &toptex, &bottomtex);
 
       if(segl->actionbits & AC_TOPTEXTURE)
       {
@@ -567,6 +542,8 @@ void Mars_R_SegCommands(void)
    }
 
    Mars_RB_FinishRead(&marsrb);
+
+   Mars_ClearCache();
 
    Mars_R_EndComputeSeg();
 }
