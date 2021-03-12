@@ -437,7 +437,7 @@ typedef struct vissprite_s
 	fixed_t		texturemid;
 	patch_t		*patch;
 	int			colormap;		/* -1 = shadow draw */
-	fixed_t		gx,gy,gz,gzt;	/* global coordinates */
+	fixed_t		gx,gy,gz;	/* global coordinates */
 #ifdef MARS
 	inpixel_t 	*pixels;
 #else

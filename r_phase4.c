@@ -222,6 +222,7 @@ static void R_FinishSprite(vissprite_t *vis)
    int      lump;
    byte    *patch;
    fixed_t  tx, xscale;
+   fixed_t  gzt;
    int      x1, x2;
 
    // get column headers
@@ -257,8 +258,8 @@ static void R_FinishSprite(vissprite_t *vis)
    }
 
    // store information in vissprite
-   vis->gzt = vis->gz + ((fixed_t)BIGSHORT(vis->patch->topoffset) << FRACBITS);
-   vis->texturemid = vis->gzt - vd.viewz;
+   gzt = vis->gz + ((fixed_t)BIGSHORT(vis->patch->topoffset) << FRACBITS);
+   vis->texturemid = gzt - vd.viewz;
    vis->x1 = x1 < 0 ? 0 : x1;
    vis->x2 = x2 >= SCREENWIDTH ? SCREENWIDTH - 1 : x2;
    

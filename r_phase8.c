@@ -113,8 +113,6 @@ static void R_ClipVisSprite(vissprite_t *vis)
    int     x;          // r15
    int     x1;         // FP+5
    int     x2;         // r22
-   fixed_t gz;         // FP+8
-   int     gzt;        // FP+9
    int     scalefrac;  // FP+3
    int     r1;         // FP+7
    int     r2;         // r18
@@ -129,18 +127,10 @@ static void R_ClipVisSprite(vissprite_t *vis)
 
    x1  = vis->x1;
    x2  = vis->x2;
-   gz  = (vis->gz  - vd.viewz) / (1 << 10);
-   gzt = (vis->gzt - vd.viewz) / (1 << 10);
-   
-   scalefrac = vis->yscale;
-   
-   x = vis->x1;
+   scalefrac = vis->yscale;  
 
-   while(x <= x2)
-   {
+   for(x = vis->x1; x <= x2; x++)
       spropening[x] = SCREENHEIGHT;
-      ++x;
-   }
    
    ds = lastwallcmd;
    do
@@ -167,12 +157,8 @@ static void R_ClipVisSprite(vissprite_t *vis)
 
       if(silhouette == AC_SOLIDSIL)
       {
-         x = r1;
-         while(x <= r2)
-         {
+         for (x = r1;  x <= r2; x++)
             spropening[x] = (SCREENHEIGHT << 8);
-            ++x;
-         }
          continue;
       }
 
@@ -181,30 +167,25 @@ static void R_ClipVisSprite(vissprite_t *vis)
 
       if(silhouette == AC_BOTTOMSIL)
       {
-         x = r1;
-         while(x <= r2)
+         for(x = r1; x <= r2; x++)
          {
             opening = spropening[x];
             if((opening & 0xff) == SCREENHEIGHT)
                spropening[x] = (opening & OPENMARK) + bottomsil[x];
-            ++x;
          }
       }
       else if(silhouette == AC_TOPSIL)
       {
-         x = r1;
-         while(x <= r2)
+         for(x = r1; x <= r2; x++)
          {
             opening = spropening[x];
             if(!(opening & OPENMARK))
                spropening[x] = (topsil[x] << 8) + (opening & 0xff);
-            ++x;
          }
       }
       else if(silhouette == (AC_TOPSIL | AC_BOTTOMSIL))
       {
-         x = r1;
-         while(x <= r2)
+         for(x = r1; x <= r2; x++)
          {
             top    = spropening[x];
             bottom = top & 0xff;
@@ -214,7 +195,6 @@ static void R_ClipVisSprite(vissprite_t *vis)
             if(top == 0)
                top = topsil[x];
             spropening[x] = (top << 8) + bottom;
-            ++x;
          }
       }
    }
@@ -228,7 +208,7 @@ void R_Sprites(void)
 {
    ptrdiff_t i = 0, count = lastsprite_p - vissprites;
    vissprite_t *best = NULL;
-
+ 
    spropening = (int *)&r_workbuf[0];
 
    // draw mobj sprites

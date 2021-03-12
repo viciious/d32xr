@@ -26,7 +26,11 @@ static drawtex_t toptex;
 static drawtex_t bottomtex;
 
 static int *clipbounds;
+#ifdef GRADIENTLIGHT
 static unsigned lightmin, lightmax, lightsub, lightcoef;
+#else
+static unsigned lightmax;
+#endif
 static int floorclipx, ceilingclipx, x, scale;
 static unsigned texturecol, iscale, texturelight;
 
