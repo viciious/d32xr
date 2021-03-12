@@ -159,6 +159,10 @@ void Mars_Slave(void)
 		{
 			Mars_ClearCache();
 		}
+		else if (MARS_SYS_COMM4 == 4)
+		{
+			Mars_Slave_R_DrawPlanes();
+		}
 
 		MARS_SYS_COMM4 = 0;
 	}
