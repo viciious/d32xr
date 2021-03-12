@@ -2,6 +2,7 @@
 
 #include "doomdef.h"
 #include "r_local.h"
+#include "32x.h"
 
 //#define USE_C_DRAW
 
@@ -430,15 +431,13 @@ void I_Update (void)
 //		I_Print8(200, line++, buf);
 //		D_snprintf(buf, sizeof(buf), "prep :%d", t_ref_prep);
 //		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "segs :%d", t_ref_segs);
+		D_snprintf(buf, sizeof(buf), "segs :%d %02d", t_ref_segs, lastwallcmd - viswalls);
 		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "plns :%d", t_ref_planes);
+		D_snprintf(buf, sizeof(buf), "plns :%d %02d", t_ref_planes, lastvisplane - visplanes - 1);
 		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "sprts:%d", t_ref_sprites);
+		D_snprintf(buf, sizeof(buf), "sprts:%d %02d", t_ref_sprites, lastsprite_p - vissprites);
 		I_Print8(200, line++, buf);
 		D_snprintf(buf, sizeof(buf), "total:%d", t_ref_total);
-		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "viswl:%d", lastwallcmd - viswalls);
 		I_Print8(200, line++, buf);
 
 //		if (r_wallscache.bestobj != -1)
