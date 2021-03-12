@@ -338,19 +338,18 @@ boolean R_LatePrep(void)
 #endif
 
    // finish viswalls
-#if 0
+#ifdef MARS
    Mars_R_BeginPrepWalls();
+
    for (wall = viswalls; wall < lastwallcmd; wall += 2)
-   {
        R_FinishWallPrep1(wall);
-       R_FinishWallPrep2(wall);
-   }
+
    Mars_R_EndPrepWalls();
-   for (wall = viswalls + 1; wall < lastwallcmd; wall += 2)
-   {
-       Mars_ClearCacheLines(wall, sizeof(viswall_t) / 16);
+
+   Mars_ClearCache();
+
+   for (wall = viswalls; wall < lastwallcmd; wall++)
        R_FinishWallPrep2(wall);
-   }
 #else
    for (wall = viswalls; wall < lastwallcmd; wall++)
    {
