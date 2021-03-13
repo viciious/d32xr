@@ -163,6 +163,10 @@ void Mars_Slave(void)
 		{
 			Mars_Slave_R_DrawPlanes();
 		}
+		else if (MARS_SYS_COMM4 == 5)
+		{
+			Mars_Slave_R_DrawSprites();
+		}
 
 		MARS_SYS_COMM4 = 0;
 	}

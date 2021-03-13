@@ -73,6 +73,7 @@ static inline void Mars_R_EndPrepWalls(void)/* __attribute__((section(".data"), 
 void Mars_Slave_R_SegCommands(void)/* __attribute__((section(".data"), aligned(16)))*/;
 void Mars_Slave_R_PrepWalls(void)/* __attribute__((section(".data"), aligned(16)))*/;
 void Mars_Slave_R_DrawPlanes(void)/* __attribute__((section(".data"), aligned(16)))*/;
+void Mars_Slave_R_DrawSprites(void)/* __attribute__((section(".data"), aligned(16)))*/;
 
 void Mars_R_SegCommands(void)/* __attribute__((section(".data"), aligned(16)))*/;
 
@@ -106,6 +107,17 @@ static inline void Mars_R_BeginDrawPlanes(void)
 }
 
 static inline void Mars_R_EndDrawPlanes(void)
+{
+	while (MARS_SYS_COMM4 != 0);
+}
+
+static inline void Mars_R_BeginDrawSprites(void)
+{
+	while (MARS_SYS_COMM4 != 0) {};
+	MARS_SYS_COMM4 = 5;
+}
+
+static inline void Mars_R_EndDrawSprites(void)
 {
 	while (MARS_SYS_COMM4 != 0);
 }

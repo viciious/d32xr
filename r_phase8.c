@@ -5,16 +5,37 @@
 */
 
 #include "r_local.h"
+#ifdef MARS
+#include "mars.h"
+#endif
 #include <stdlib.h>
 
-static int *spropening;
+static int sortedcount;
+static unsigned *sortedsprites;
 
 #ifdef MARS
 static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy)  __attribute__((section(".data"), aligned(16)));
-static void R_ClipVisSprite(vissprite_t *vis) __attribute__((section(".data"), aligned(16)));
+//static void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening) __attribute__((section(".data"), aligned(16)));
 #endif
 
-static void R_DrawVisSprite(vissprite_t *vis)
+#ifdef MARS
+static void Mars_R_ResetNextSprite(void)
+{
+    MARS_SYS_COMM6 = 0;
+}
+
+static void Mars_R_WaitNextSprite(int l)
+{
+    while (MARS_SYS_COMM6 != l) {}
+}
+
+static void Mars_R_AdvanceNextSprite(void)
+{
+    MARS_SYS_COMM6 = MARS_SYS_COMM6 + 1;
+}
+#endif
+
+static void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening)
 {
    patch_t *patch;
    fixed_t  iscale, xfrac, spryscale, sprtop, fracstep;
@@ -109,7 +130,7 @@ static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy)
 //
 // Clip a sprite to the openings created by walls
 //
-static void R_ClipVisSprite(vissprite_t *vis)
+static void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening)
 {
    int     x;          // r15
    int     x1;         // FP+5
@@ -123,7 +144,6 @@ static void R_ClipVisSprite(vissprite_t *vis)
    int     opening;    // r16
    int     top;        // r19
    int     bottom;     // r20
-   
    viswall_t *ds;      // r17
 
    x1  = vis->x1;
@@ -202,6 +222,40 @@ static void R_ClipVisSprite(vissprite_t *vis)
    while(ds != viswalls);
 }
 
+static void R_DrawSpritesStride(int start, int stride)
+{
+    int i;
+    unsigned short spropening[SCREENWIDTH];
+
+    for (i = start; i < sortedcount; i += stride)
+    {
+        vissprite_t* ds;
+
+        ds = vissprites + (sortedsprites[i] & 0xff);
+
+        R_ClipVisSprite(ds, spropening);
+
+#ifdef MARS
+        Mars_R_WaitNextSprite(i);
+#endif
+
+        R_DrawVisSprite(ds, spropening);
+
+#ifdef MARS
+        Mars_R_AdvanceNextSprite();
+#endif
+    }
+}
+
+#ifdef MARS
+void Mars_Slave_R_DrawSprites(void)
+{
+    Mars_ClearCache();
+
+    R_DrawSpritesStride(1, 2);
+}
+#endif
+
 static int sortsprCmp(const void* p1, const void* p2)
 {
     unsigned v1 = *(const unsigned*)p1;
@@ -209,17 +263,40 @@ static int sortsprCmp(const void* p1, const void* p2)
     return v1 < v2 ? -1 : v2 < v1 ? 1 : 0;
 }
 
+static void R_DrawPSprites(void)
+{
+    int i;
+    unsigned short *spropening = (unsigned short *)&r_workbuf[0];
+
+    // draw psprites
+    while (lastsprite_p < vissprite_p)
+    {
+        ptrdiff_t stopx = lastsprite_p->x2 + 1;
+        i = lastsprite_p->x1;
+
+        // clear out the clipping array across the range of the psprite
+        while (i < stopx)
+        {
+            spropening[i] = SCREENHEIGHT;
+            ++i;
+        }
+
+        R_DrawVisSprite(lastsprite_p, spropening);
+
+        ++lastsprite_p;
+    }
+}
+
 //
 // Render all sprites
 //
 void R_Sprites(void)
 {
-   int i = 0, count, sortcount;
-   unsigned sortsprites[MAXVISSPRITES];
+   int i = 0, count;
 
-   spropening = (int*)&r_workbuf[0];
+   sortedcount = 0;
+   sortedsprites = (unsigned *)&r_workbuf[0];
 
-   sortcount = 0;
    count = lastsprite_p - vissprites;
 
    // draw mobj sprites
@@ -228,36 +305,25 @@ void R_Sprites(void)
        vissprite_t* ds = vissprites + i;
        if (ds->patch == NULL)
            continue;
-       sortsprites[sortcount] = ((unsigned)ds->xscale << 8) + i;
-       sortcount++;
+       sortedsprites[sortedcount] = ((unsigned)ds->xscale << 8) + i;
+       sortedcount++;
    }
 
-   qsort(sortsprites, sortcount, sizeof(*sortsprites), &sortsprCmp);
+   qsort(sortedsprites, sortedcount, sizeof(*sortedsprites), &sortsprCmp);
 
-   for (i = 0; i < sortcount; i++)
-   {
-       vissprite_t* ds = vissprites + (sortsprites[i] & 0xff);
-       R_ClipVisSprite(ds);
-       R_DrawVisSprite(ds);
-   }
+#ifdef MARS
+   Mars_R_ResetNextSprite();
 
-   // draw psprites
-   while(lastsprite_p < vissprite_p)
-   {
-      ptrdiff_t stopx = lastsprite_p->x2 + 1;
-      i = lastsprite_p->x1;
-      
-      // clear out the clipping array across the range of the psprite
-      while(i < stopx)
-      {
-         spropening[i] = SCREENHEIGHT;
-         ++i;
-      }
+   Mars_R_BeginDrawSprites();
 
-      R_DrawVisSprite(lastsprite_p);
-      
-      ++lastsprite_p;
-   }
+   R_DrawSpritesStride(0, 2);
+
+   Mars_R_EndDrawSprites();
+#else
+   R_DrawSpritesStride(0, 1);
+#endif
+
+   R_DrawPSprites();
 }
 
 // EOF
