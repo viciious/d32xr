@@ -5,6 +5,7 @@
 */
 
 #include "r_local.h"
+#include <stdlib.h>
 
 static int *spropening;
 
@@ -201,41 +202,43 @@ static void R_ClipVisSprite(vissprite_t *vis)
    while(ds != viswalls);
 }
 
+static int sortsprCmp(const void* p1, const void* p2)
+{
+    unsigned v1 = *(const unsigned*)p1;
+    unsigned v2 = *(const unsigned*)p2;
+    return v1 < v2 ? -1 : v2 < v1 ? 1 : 0;
+}
+
 //
 // Render all sprites
 //
 void R_Sprites(void)
 {
-   ptrdiff_t i = 0, count = lastsprite_p - vissprites;
-   vissprite_t *best = NULL;
- 
-   spropening = (int *)&r_workbuf[0];
+   int i = 0, count, sortcount;
+   unsigned sortsprites[MAXVISSPRITES];
+
+   spropening = (int*)&r_workbuf[0];
+
+   sortcount = 0;
+   count = lastsprite_p - vissprites;
 
    // draw mobj sprites
-   while(i < count)
+   for (i = 0; i < count; i++)
    {
-      fixed_t bestscale = D_MAXINT;
-      vissprite_t *ds = vissprites;
+       vissprite_t* ds = vissprites + i;
+       if (ds->patch == NULL)
+           continue;
+       sortsprites[sortcount] = ((unsigned)ds->xscale << 8) + i;
+       sortcount++;
+   }
 
-      while(ds != lastsprite_p)
-      {
-         if(ds->xscale < bestscale)
-         {
-            bestscale = ds->xscale;
-            best = ds;
-         }
-         ++ds;
-      }
+   qsort(sortsprites, sortcount, sizeof(*sortsprites), &sortsprCmp);
 
-      if(best->patch != NULL)
-      {
-         R_ClipVisSprite(best);
-         R_DrawVisSprite(best);
-      }
-
-      best->xscale = D_MAXINT;
-
-      ++i;
+   for (i = 0; i < sortcount; i++)
+   {
+       vissprite_t* ds = vissprites + (sortsprites[i] & 0xff);
+       R_ClipVisSprite(ds);
+       R_DrawVisSprite(ds);
    }
 
    // draw psprites
