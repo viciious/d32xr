@@ -6,6 +6,9 @@
 
 #include "doomdef.h"
 #include "r_local.h"
+#ifdef MARS
+#include "mars.h"
+#endif
 
 #ifdef JAGUAR
 // Doom palette to CRY lookup (hardcoded for efficiency on the Jag ASIC?)
@@ -274,7 +277,9 @@ void R_Cache(void)
         R_AddToTexCache(&r_wallscache, id, pixels, tex->lumpnum, (void **)&tex->data);
     }
 
+#ifdef MARS
     Mars_CommSlaveClearCache();
+#endif
 }
 
 #endif

@@ -18,23 +18,6 @@ static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy)  __attribute
 //static void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening) __attribute__((section(".data"), aligned(16)));
 #endif
 
-#ifdef MARS
-static void Mars_R_ResetNextSprite(void)
-{
-    MARS_SYS_COMM6 = 0;
-}
-
-static void Mars_R_WaitNextSprite(int l)
-{
-    while (MARS_SYS_COMM6 != l) {}
-}
-
-static void Mars_R_AdvanceNextSprite(void)
-{
-    MARS_SYS_COMM6 = MARS_SYS_COMM6 + 1;
-}
-#endif
-
 static void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening)
 {
    patch_t *patch;

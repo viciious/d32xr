@@ -482,7 +482,11 @@ void R_Setup (void)
 	tempbuf = (unsigned short *)(((int)tempbuf+2)&~1);
 	tempbuf++; // padding
 	for (i = 0; i < MAXVISPLANES; i++) {
+#ifdef MARS
+		visplanes[i].open = *((unsigned short **)((intptr_t)&tempbuf | 0x20000000));
+#else
 		visplanes[i].open = tempbuf;
+#endif
 		tempbuf += SCREENWIDTH+2;
 	}
 
@@ -517,6 +521,7 @@ void R_Setup (void)
 	R_SetupTexCacheFrame(&r_wallscache);
 
 #ifdef MARS
+	Mars_ClearCache();
 	Mars_CommSlaveClearCache();
 #endif
 }
@@ -525,16 +530,23 @@ void R_Setup (void)
 // Check for a matching visplane in the visplanes array, or set up a new one
 // if no compatible match can be found.
 //
-visplane_t* R_FindPlane(visplane_t* check, fixed_t height, unsigned flatnum,
-	unsigned lightlevel, int start, int stop)
+int R_PlaneHash(fixed_t height, unsigned flatnum, unsigned lightlevel) {
+	return ((((unsigned)height >> 8) + lightlevel) ^ flatnum) & (NUM_VISPLANES_BUCKETS - 1);
+}
+
+visplane_t* R_FindPlane(visplane_t* ignore, int hash, fixed_t height, 
+	unsigned flatnum, unsigned lightlevel, int start, int stop)
 {
 	int i;
-	int* open;
-	const int mark = (OPENMARK << 16) | OPENMARK;
-	int hash = ((((unsigned)height >> 8) + lightlevel) ^ flatnum) & (NUM_VISPLANES_BUCKETS - 1);
+	unsigned short *open;
+	visplane_t *check, *tail;
 
-	for (check = visplanes_hash[hash]; check; )
+	tail = visplanes_hash[hash];
+	for (check = tail; check; check = check->next)
 	{
+		if (check == ignore)
+			continue;
+
 		if (height == check->height && // same plane as before?
 			flatnum == check->flatnum &&
 			lightlevel == check->lightlevel)
@@ -546,12 +558,13 @@ visplane_t* R_FindPlane(visplane_t* check, fixed_t height, unsigned flatnum,
 					check->minx = start; // mark the new edge
 				if (stop > check->maxx)
 					check->maxx = stop;  // mark the new edge
-
 				return check; // use the same one as before
 			}
 		}
-		check = check->next;
 	}
+
+	if (lastvisplane == visplanes + MAXVISPLANES)
+		return visplanes;
 
 	// make a new plane
 	check = lastvisplane;
@@ -563,13 +576,16 @@ visplane_t* R_FindPlane(visplane_t* check, fixed_t height, unsigned flatnum,
 	check->minx = start;
 	check->maxx = stop;
 
-	open = (int*)check->open;
+	open = check->open;
 	for (i = 0; i < SCREENWIDTH / 4; i++)
 	{
-		*open++ = mark;
-		*open++ = mark;
+		*open++ = OPENMARK;
+		*open++ = OPENMARK;
+		*open++ = OPENMARK;
+		*open++ = OPENMARK;
 	}
-	check->next = visplanes_hash[hash];
+
+	check->next = tail;
 	visplanes_hash[hash] = check;
 
 	return check;

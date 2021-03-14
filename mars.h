@@ -74,6 +74,7 @@ void Mars_Slave_R_SegCommands(void)/* __attribute__((section(".data"), aligned(1
 void Mars_Slave_R_PrepWalls(void)/* __attribute__((section(".data"), aligned(16)))*/;
 void Mars_Slave_R_DrawPlanes(void)/* __attribute__((section(".data"), aligned(16)))*/;
 void Mars_Slave_R_DrawSprites(void)/* __attribute__((section(".data"), aligned(16)))*/;
+void Mars_Slave_R_SegCommands2(void)/* __attribute__((section(".data"), aligned(16)))*/;
 
 void Mars_R_SegCommands(void)/* __attribute__((section(".data"), aligned(16)))*/;
 
@@ -127,6 +128,22 @@ static inline void Mars_CommSlaveClearCache(void)
 	while (MARS_SYS_COMM4 != 0) {};
 	MARS_SYS_COMM4 = 3;
 	while (MARS_SYS_COMM4 != 0);
+}
+
+// r_phase8
+static inline void Mars_R_ResetNextSprite(void)
+{
+	MARS_SYS_COMM6 = 0;
+}
+
+static inline void Mars_R_WaitNextSprite(int l)
+{
+	while (MARS_SYS_COMM6 != l) {}
+}
+
+static inline void Mars_R_AdvanceNextSprite(void)
+{
+	MARS_SYS_COMM6 = MARS_SYS_COMM6 + 1;
 }
 
 #endif 

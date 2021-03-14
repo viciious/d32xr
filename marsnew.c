@@ -41,8 +41,6 @@ short	*dc_colormaps;
 static volatile pixel_t	*framebuffer = &MARS_FRAMEBUFFER + 0x100;
 static volatile pixel_t *framebufferend = &MARS_FRAMEBUFFER + 0x10000;
 
-marsrb_t marsrb;
-
 void Mars_ClearFrameBuffer(void)
 {
 	int *p = (int *)framebuffer;
@@ -97,10 +95,6 @@ void Mars_Init(void)
 	palette[COLOR_WHITE] = 0x7fff;
 
 	MARS_SYS_COMM4 = 0;
-
-	Mars_RB_ResetWrite(&marsrb);
-
-	Mars_RB_ResetRead(&marsrb);
 }
 
 int Mars_ToDoomControls(int ctrl)

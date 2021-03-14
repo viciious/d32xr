@@ -427,8 +427,8 @@ void I_Update (void)
 		line++;
 //		D_snprintf(buf, sizeof(buf), "wait :%d", t_ref_wait);
 //		I_Print8(200, line++, buf);
-//		D_snprintf(buf, sizeof(buf), "bsp  :%d", t_ref_bsp);
-//		I_Print8(200, line++, buf);
+		D_snprintf(buf, sizeof(buf), "bsp  :%d", t_ref_bsp);
+		I_Print8(200, line++, buf);
 //		D_snprintf(buf, sizeof(buf), "prep :%d", t_ref_prep);
 //		I_Print8(200, line++, buf);
 		D_snprintf(buf, sizeof(buf), "segs :%d %02d", t_ref_segs, lastwallcmd - viswalls);
