@@ -205,27 +205,41 @@ static void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening)
    while(ds != viswalls);
 }
 
-static void R_DrawSpritesStride(int start, int stride)
+static void R_DrawSpritesStride(int start)
 {
     int i;
     unsigned short spropening[SCREENWIDTH];
+#ifdef MARS
+    const int stride = 2;
+#else
+    const int stride = 1;
+    start = 0;
+#endif
 
     for (i = start; i < sortedcount; i += stride)
     {
-        vissprite_t* ds;
+        vissprite_t* ds, *ds2;
+        boolean overlap = false;
 
         ds = vissprites + (sortedsprites[i] & 0xff);
+#ifdef MARS
+        ds2 = i+1 < sortedcount ? vissprites + (sortedsprites[i+1] & 0xff) : NULL;
+#endif
 
         R_ClipVisSprite(ds, spropening);
 
 #ifdef MARS
         Mars_R_WaitNextSprite(i);
+        overlap = (ds2 != NULL) && !(ds2->x1 > ds->x2 || ds2->x2 < ds->x1);
+        if (!overlap)
+            Mars_R_AdvanceNextSprite();
 #endif
 
         R_DrawVisSprite(ds, spropening);
 
 #ifdef MARS
-        Mars_R_AdvanceNextSprite();
+        if (overlap)
+            Mars_R_AdvanceNextSprite();
 #endif
     }
 }
@@ -235,7 +249,7 @@ void Mars_Slave_R_DrawSprites(void)
 {
     Mars_ClearCache();
 
-    R_DrawSpritesStride(1, 2);
+    R_DrawSpritesStride(1);
 }
 #endif
 
@@ -299,11 +313,11 @@ void R_Sprites(void)
 
    Mars_R_BeginDrawSprites();
 
-   R_DrawSpritesStride(0, 2);
+   R_DrawSpritesStride(0);
 
    Mars_R_EndDrawSprites();
 #else
-   R_DrawSpritesStride(0, 1);
+   R_DrawSpritesStride(0);
 #endif
 
    R_DrawPSprites();
