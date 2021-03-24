@@ -16,7 +16,7 @@ subsector_t		**vissubsectors, **lastvissubsector;
 /* */
 /* walls */
 /* */
-viswall_t	viswalls[MAXWALLCMDS], *lastwallcmd;
+viswall_t	*viswalls/*[MAXWALLCMDS]*/, *lastwallcmd;
 
 /* */
 /* planes */
@@ -479,7 +479,7 @@ void R_Setup (void)
 /* */
 /* plane filling */
 /*	 */
-	tempbuf = (unsigned short *)(((int)tempbuf+2)&~1);
+	tempbuf = (unsigned short *)(((intptr_t)tempbuf+2)&~1);
 	tempbuf++; // padding
 	for (i = 0; i < MAXVISPLANES; i++) {
 #ifdef MARS
@@ -495,6 +495,10 @@ void R_Setup (void)
 	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
 		visplanes_hash[i] = NULL;
 
+	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 15) & ~15);
+	viswalls = (viswall_t*)tempbuf;
+	tempbuf += sizeof(*viswalls)*MAXWALLCMDS/sizeof(*tempbuf);
+
 	lastwallcmd = viswalls;			/* no walls added yet */
 
 	vissubsectors = (subsector_t **)&r_workbuf[0];
@@ -503,12 +507,12 @@ void R_Setup (void)
 /*	 */
 /* clear sprites */
 /* */
-	tempbuf = (unsigned short *)(((int)tempbuf+4)&~3);
+	tempbuf = (unsigned short *)(((intptr_t)tempbuf+4)&~3);
 	vissprites = (void *)tempbuf;
 	tempbuf += sizeof(*vissprites)*MAXVISSPRITES/sizeof(*tempbuf);
 	vissprite_p = vissprites;
 
-	//tempbuf = (unsigned short*)(((int)tempbuf + 4) & ~3);
+	//tempbuf = (unsigned short*)(((intptr_t)tempbuf + 4) & ~3);
 	//openings = tempbuf;
 	//tempbuf += sizeof(*openings)*MAXOPENINGS/sizeof(*tempbuf);
 

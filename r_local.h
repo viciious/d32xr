@@ -422,7 +422,7 @@ __attribute__((aligned(16)))
 } viswall_t;
 
 #define	MAXWALLCMDS		128
-extern	viswall_t viswalls[MAXWALLCMDS] __attribute__((aligned(16)));
+extern	viswall_t *viswalls/*[MAXWALLCMDS] __attribute__((aligned(16)))*/;
 extern	viswall_t *lastwallcmd;
 
 /* A vissprite_t is a thing that will be drawn during a refresh */
