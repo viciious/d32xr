@@ -16,7 +16,7 @@ typedef struct cliprange_s
 #define MAXSEGS 32
 
 cliprange_t *newend;
-cliprange_t  solidsegs[MAXSEGS];
+cliprange_t  *solidsegs;
 seg_t       *curline;
 angle_t      lineangle1;
 sector_t    *frontsector;
@@ -486,6 +486,10 @@ check:
 //
 void R_BSP(void)
 {
+   cliprange_t stack_solidsegs[MAXSEGS];
+
+   solidsegs = stack_solidsegs;
+
    solidsegs[0].first = -2;
    solidsegs[0].last  = -1;
    solidsegs[1].first = SCREENWIDTH;
