@@ -13,7 +13,13 @@ I can't thank them enough for taking up the task of translating the original ass
 To compile the rom you're going to need several things:
 - Chilly Willy's Sega Devkit
 - Dump the IWAD file "doom32x.wad" from your Doom32x cartridge. Dump from address 0xBB000 to the end of the ROM.
-- Run 'make -f Makefile.mars'
+- Run `make -f Makefile.mars`
+
+Alternatively, you can download the ROM of the engine from the Github Actions page and patch it to run the original .wad file:
+
+```bash
+dd if=doom32x.wad seek=6093 bs=16 conv=notrunc of=D32XR.bin
+```
 
 ## "Calico DOOM" Credits
 * Programming and Reverse Engineering : James Haley
