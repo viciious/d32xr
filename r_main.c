@@ -74,10 +74,20 @@ angle_t		clipangle,doubleclipangle;
 fixed_t	*finecosine_ = &finesine_[FINEANGLES/4];
 #endif
 
+unsigned short* yslope/*[SCREENHEIGHT]*/ = NULL;              /* 6.10 frac */
+unsigned short* distscale/*[SCREENWIDTH]*/ = NULL;            /* 1.15 frac */
+
+unsigned char* viewangletox/*[FINEANGLES/2]*/ = NULL;
+
+angle_t* xtoviewangle/*[SCREENWIDTH+1]*/ = NULL;
+
+/* */
+/* performance counters */
+/* */
 int t_ref_bsp, t_ref_prep, t_ref_segs, t_ref_planes, t_ref_sprites, t_ref_total, t_ref_wait;
 
-r_texcache_t r_flatscache, r_wallscache;
 
+r_texcache_t r_flatscache, r_wallscache;
 
 /*
 ===============================================================================
@@ -239,6 +249,8 @@ void R_Init (void)
 D_printf ("R_InitData\n");
 	R_InitData ();
 D_printf ("Done\n");
+
+R_InitMathTables();
 
 	clipangle = xtoviewangle[0];
 	doubleclipangle = clipangle*2;

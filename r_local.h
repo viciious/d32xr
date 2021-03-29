@@ -223,6 +223,7 @@ int     R_PointOnSide(int x, int y, node_t *node);
 int     SlopeDiv(unsigned int num, unsigned int den);
 void	R_RenderBSPNode (int bspnum);
 void	R_InitData (void);
+void	R_InitMathTables(void);
 void	R_InitSpriteDefs (char **namelist);
 void	R_SetupTextureCaches(void);
 
@@ -238,8 +239,8 @@ void	R_SetupTextureCaches(void);
 
 extern	int	tantoangle[SLOPERANGE+1];
 
-extern	unsigned short	yslope[SCREENHEIGHT];		/* 6.10 frac */
-extern	unsigned short	distscale[SCREENWIDTH];		/* 1.15 frac */
+extern	unsigned short	*yslope/*[SCREENHEIGHT]*/;		/* 6.10 frac */
+extern	unsigned short	*distscale/*[SCREENWIDTH]*/;		/* 1.15 frac */
 
 #define	HEIGHTBITS			6
 #define	SCALEBITS			9
@@ -269,11 +270,11 @@ extern	angle_t		clipangle, doubleclipangle;
 /* The viewangletox[viewangle + FINEANGLES/4] lookup maps the visible view */
 /* angles  to screen X coordinates, flattening the arc to a flat projection  */
 /* plane.  There will be many angles mapped to the same X.  */
-extern	const unsigned char	viewangletox[FINEANGLES/2];
+extern	unsigned char	*viewangletox/*[FINEANGLES/2]*/;
 
 /* The xtoviewangleangle[] table maps a screen pixel to the lowest viewangle */
 /* that maps back to x ranges from clipangle to -clipangle */
-extern	const angle_t		xtoviewangle[SCREENWIDTH+1];
+extern	angle_t		*xtoviewangle/*[SCREENWIDTH+1]*/;
 
 #ifdef MARS
 extern	const fixed_t		finetangent_[FINEANGLES/4];

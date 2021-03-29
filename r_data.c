@@ -258,3 +258,106 @@ int	R_TextureNumForName (const char *name)
 }
 
 
+/*
+================
+=
+= R_InitMathTables
+=
+= Create all the math tables for the current screen size
+================
+*/
+void R_InitMathTables(void)
+{
+	int i;
+	fixed_t focallength;
+	short* tempviewangletox;
+
+	if (viewangletox)
+		Z_Free(viewangletox);
+	if (xtoviewangle)
+		Z_Free(xtoviewangle);
+	if (yslope)
+		Z_Free(yslope);
+	if (distscale)
+		Z_Free(distscale);
+
+	tempviewangletox = (short *)I_WorkBuffer();
+	viewangletox = Z_Malloc(sizeof(*viewangletox) * FINEANGLES / 2, PU_STATIC, 0);
+	xtoviewangle = Z_Malloc(sizeof(*xtoviewangle) * (SCREENWIDTH+1), PU_STATIC, 0);
+
+	// Use tangent table to generate viewangletox:
+	//  viewangletox will give the next greatest x
+	//  after the view angle.
+	//
+	// Calc focallength
+	//  so FIELDOFVIEW angles covers SCREENWIDTH.
+
+	focallength = FixedDiv(CENTERXFRAC, finetangent(FINEANGLES / 4 + FIELDOFVIEW / 2));
+	for (i = 0; i < FINEANGLES / 2; i++)
+	{
+		fixed_t t;
+
+		if (finetangent(i) > FRACUNIT * 2) {
+			t = -1;
+		}
+		else if (finetangent(i) < -FRACUNIT * 2) {
+			t = SCREENWIDTH + 1;
+		}
+		else {
+			t = FixedMul(finetangent(i), focallength);
+			t = (CENTERXFRAC - t + FRACUNIT - 1) >> FRACBITS;
+			if (t < -1) {
+				t = -1;
+			}
+			else if (t > SCREENWIDTH + 1) {
+				t = SCREENWIDTH + 1;
+			}
+		}
+		tempviewangletox[i] = t;
+	}
+
+	// Scan viewangletox[] to generate xtoviewangle[]:
+	//  xtoviewangle will give the smallest view angle
+	//  that maps to x.
+	for (i = 0; i <= SCREENWIDTH; i++)
+	{
+		int x;
+		for (x = 0; tempviewangletox[x] > i; x++);
+		xtoviewangle[i] = (x << (ANGLETOFINESHIFT)) - ANG90;
+	}
+
+	// Take out the fencepost cases from viewangletox.
+	for (i = 0; i < FINEANGLES / 2; i++)
+	{
+		if (tempviewangletox[i] == -1) {
+			tempviewangletox[i] = 0;
+		}
+		else if (tempviewangletox[i] == SCREENWIDTH + 1) {
+			tempviewangletox[i] = SCREENWIDTH;
+		}
+		viewangletox[i] = tempviewangletox[i];
+	}
+
+	// Make the yslope table for floor and ceiling textures
+	yslope = Z_Malloc(sizeof(*yslope) * SCREENHEIGHT, PU_STATIC, 0);
+	for (i = 0; i < SCREENHEIGHT; i++)
+	{
+		fixed_t y = ((i - SCREENHEIGHT / 2) << FRACBITS) + FRACUNIT / 2;
+		y = D_abs(y);
+		y = FixedDiv(SCREENWIDTH / 2 * STRETCH, y);
+		y >>= 6;
+		if (y > 0xFFFF) {
+			y = 0xFFFF;
+		}
+		yslope[i] = y;
+	}
+
+	// Create the distance scale table for floor and ceiling textures
+	distscale = Z_Malloc(sizeof(*distscale) * SCREENWIDTH, PU_STATIC, 0);
+	for (i = 0; i < SCREENWIDTH; i++)
+	{
+		fixed_t cosang = finecosine(xtoviewangle[i] >> ANGLETOFINESHIFT);
+		cosang = D_abs(cosang);
+		distscale[i] = FixedDiv(FRACUNIT, cosang)>>1;
+	}
+}
