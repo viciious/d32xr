@@ -140,10 +140,9 @@ extern "C" {
 #endif
 
 /* global functions in sh2_crt0.s */
-extern void fast_memcpy(void *dst, void *src, int len);
+extern int SetSH2SR(int level);
+extern void fast_memcpy(void* dst, void* src, int len);
 extern void CacheControl(int mode);
-extern void CacheClearLine(void* ptr);
-extern void ScreenStretch(int src, int width, int height, int interp);
 
 #ifdef __cplusplus
 }
