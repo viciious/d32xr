@@ -691,7 +691,7 @@ void R_RenderPlayerView (void)
 {
 
 /* make sure its done now */
-#if defined(JAGUAR) || defined(MARS)
+#if defined(JAGUAR)
 	t_ref_wait = I_GetTime();
 	while (!I_RefreshCompleted ())
 	;
@@ -737,9 +737,9 @@ void R_RenderPlayerView (void)
 	R_Sprites ();
 	t_ref_sprites = I_GetTime() - t_ref_sprites;
 
-	t_ref_total = I_GetTime() - t_ref_total;
-
 	R_Update();
+
+	t_ref_total = I_GetTime() - t_ref_total;
 #else
 
 /* start the gpu running the refresh */

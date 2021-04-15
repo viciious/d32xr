@@ -279,7 +279,7 @@ int P_Ticker (void)
 	int		ticstart;
 	player_t	*pl;
 	
-	ticstart = samplecount;
+	ticstart = I_GetTime();
 	
 	while (!I_RefreshLatched () )
 	;		/* wait for refresh to latch all needed data before */
@@ -348,7 +348,7 @@ int P_Ticker (void)
 	
 	ST_Ticker ();			/* update status bar */
 		
-	tictics = samplecount - ticstart;
+	tictics = I_GetTime() - ticstart;
 	
 	return gameaction;		/* may have been set to ga_died, ga_completed, */
 							/* or ga_secretexit */

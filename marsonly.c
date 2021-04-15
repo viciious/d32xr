@@ -29,6 +29,7 @@ int		lasttics = 0;
 int 	debugmode = 0;
 
 extern int 	cy;
+extern int tictics;
 
 void ReadEEProm (void);
 
@@ -383,19 +384,6 @@ void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, fix
 */ 
 extern int t_ref_bsp, t_ref_prep, t_ref_segs, t_ref_planes, t_ref_sprites, t_ref_total, t_ref_wait;
 
-/*
-int lline = 0;
-
-static void R_TextureCacheCallbackz(void *ptr, void *userp)
-{
-	char buf[32];
-	texcacheblock_t *cache = ptr;
-	int id = cache->id;
-	D_snprintf(buf, sizeof(buf), "%d %d %dx%d", id, cache->pixelcount, textures[id].width, textures[id].height);
-	I_Print8(200, lline++, buf);
-}
-*/
-
 void I_Update (void) 
 {
 	int sec;
@@ -406,46 +394,23 @@ void I_Update (void)
 
 	if (debugmode != 0)
 	{
-		//int i;
 		int line = 5;
-		/*
-		int bestflat = -1;
-		int bestflatpixels = 0;
-		int besttex = -1;
-		int besttexpixels = 0;
-		*/
-//		int zmem = Z_FreeMemory(mainzone);
 
 		D_snprintf(buf, sizeof(buf), "fps  :%d", fpscount);
 		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "ticks:%d", lasttics);
+		D_snprintf(buf, sizeof(buf), "ticks:%d/%d/%d", tictics, t_ref_total, lasttics);
 		I_Print8(200, line++, buf);
-//		D_snprintf(buf, sizeof(buf), "zfree:%d.%d", zmem/1024, (zmem - (zmem/1024)*1024)/100);
-//		I_Print8(200, line++, buf);
+
 		line++;
-//		D_snprintf(buf, sizeof(buf), "wait :%d", t_ref_wait);
-//		I_Print8(200, line++, buf);
+
 		D_snprintf(buf, sizeof(buf), "bsp  :%d", t_ref_bsp);
 		I_Print8(200, line++, buf);
-//		D_snprintf(buf, sizeof(buf), "prep :%d", t_ref_prep);
-//		I_Print8(200, line++, buf);
 		D_snprintf(buf, sizeof(buf), "segs :%d %02d", t_ref_segs, lastwallcmd - viswalls);
 		I_Print8(200, line++, buf);
 		D_snprintf(buf, sizeof(buf), "plns :%d %02d", t_ref_planes, lastvisplane - visplanes - 1);
 		I_Print8(200, line++, buf);
 		D_snprintf(buf, sizeof(buf), "sprts:%d %02d", t_ref_sprites, lastsprite_p - vissprites);
 		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "total:%d", t_ref_total);
-		I_Print8(200, line++, buf);
-
-//		if (r_wallscache.bestobj != -1)
-//		{
-//			D_snprintf(buf, sizeof(buf), "%d %d %dx%d", r_wallscache.bestobj, Z_LargestFreeBlock(r_wallscache.zone), textures[r_wallscache.bestobj].width, textures[r_wallscache.bestobj].height);
-//			I_Print8(200, line++, buf);
-//		}
-
-//		lline = line;
-//		Z_ForEachBlock(r_texcachezone, &R_TextureCacheCallbackz, NULL);
 	}
 
 	Mars_FlipFrameBuffers(false);
