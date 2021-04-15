@@ -464,8 +464,9 @@ extern	subsector_t		**vissubsectors, **lastvissubsector;
 
 typedef struct visplane_s
 {
-	VINT			minx, maxx;
+	VINT		minx, maxx;
 	VINT 		flatnum;
+	VINT		runopen;
 	fixed_t		height;
 	int			lightlevel;
 	unsigned short		*open/*[SCREENWIDTH+2]*/;		/* top<<8 | bottom */ /* leave pads for [minx-1]/[maxx+1] */

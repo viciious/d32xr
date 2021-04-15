@@ -505,6 +505,7 @@ void R_Setup (void)
 #else
 		visplanes[i].open = tempbuf;
 #endif
+		visplanes[i].runopen = true;
 		tempbuf += SCREENWIDTH+2;
 	}
 
@@ -544,7 +545,10 @@ void R_Setup (void)
 
 #ifdef MARS
 	Mars_ClearCache();
+
 	Mars_CommSlaveClearCache();
+
+	Mars_R_BeginOpenPlanes();
 #endif
 }
 
@@ -556,11 +560,22 @@ int R_PlaneHash(fixed_t height, unsigned flatnum, unsigned lightlevel) {
 	return ((((unsigned)height >> 8) + lightlevel) ^ flatnum) & (NUM_VISPLANES_BUCKETS - 1);
 }
 
+void R_OpenPlane(visplane_t* pl)
+{
+	int i;
+	unsigned short* open = pl->open;
+	for (i = 0; i < SCREENWIDTH / 4; i++)
+	{
+		*open++ = OPENMARK;
+		*open++ = OPENMARK;
+		*open++ = OPENMARK;
+		*open++ = OPENMARK;
+	}
+}
+
 visplane_t* R_FindPlane(visplane_t* ignore, int hash, fixed_t height, 
 	unsigned flatnum, unsigned lightlevel, int start, int stop)
 {
-	int i;
-	unsigned short *open;
 	visplane_t *check, *tail;
 
 	tail = visplanes_hash[hash];
@@ -598,13 +613,10 @@ visplane_t* R_FindPlane(visplane_t* ignore, int hash, fixed_t height,
 	check->minx = start;
 	check->maxx = stop;
 
-	open = check->open;
-	for (i = 0; i < SCREENWIDTH / 4; i++)
+	if (check->runopen)
 	{
-		*open++ = OPENMARK;
-		*open++ = OPENMARK;
-		*open++ = OPENMARK;
-		*open++ = OPENMARK;
+		R_OpenPlane(check);
+		check->runopen = false;
 	}
 
 	check->next = tail;
@@ -612,6 +624,35 @@ visplane_t* R_FindPlane(visplane_t* ignore, int hash, fixed_t height,
 
 	return check;
 }
+
+#ifdef MARS
+void Mars_Slave_R_OpenPlanes(void)
+{
+	int i;
+	visplane_t* pl;
+
+	pl = &visplanes[0];
+	if (pl->runopen) {
+		unsigned short* open = pl->open;
+		for (i = 0; i < SCREENWIDTH / 4; i++)
+			*open++ = 0, *open++ = 0, *open++ = 0, *open++ = 0;
+		pl->runopen = false;
+	}
+
+	for (i = 1; i < MAXVISPLANES/4; i++)
+	{
+		pl = &visplanes[i];
+		if (MARS_SYS_COMM4 != 6)
+			break;
+
+		if (pl->runopen)
+		{
+			R_OpenPlane(pl);
+			pl->runopen = false;
+		}
+	}
+}
+#endif
 
 void R_BSP (void);
 void R_WallPrep (void);
@@ -679,6 +720,10 @@ void R_RenderPlayerView (void)
 	if (R_LatePrep ())
 		R_Cache ();
 	t_ref_prep = I_GetTime() - t_ref_prep;
+
+#ifdef MARS
+	Mars_R_StopOpenPlanes();
+#endif
 
 	t_ref_segs = I_GetTime();
 	R_SegCommands ();

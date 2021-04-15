@@ -161,6 +161,13 @@ void Mars_Slave(void)
 		{
 			Mars_Slave_R_DrawSprites();
 		}
+		else if (MARS_SYS_COMM4 == 6)
+		{
+			Mars_Slave_R_OpenPlanes();
+		}
+		else if (MARS_SYS_COMM4 == 7)
+		{
+		}
 
 		MARS_SYS_COMM4 = 0;
 	}
