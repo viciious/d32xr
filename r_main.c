@@ -46,6 +46,10 @@ boolean		phase1completed;
 pixel_t		*workingscreen;
 
 #ifdef MARS
+volatile pixel_t* viewportbuffer;
+#endif
+
+#ifdef MARS
 __attribute__((aligned(16)))
 #endif
 viewdef_t       vd;
@@ -453,6 +457,8 @@ void R_Setup (void)
 #endif
 
 #ifdef MARS
+	viewportbuffer = (volatile pixel_t*)I_ViewportBuffer();
+
 	palette = 0;
 
 	i = 0;

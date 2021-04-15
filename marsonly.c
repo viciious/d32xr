@@ -21,8 +21,6 @@ int             joystick1;
 
 int             samplecount;
 
-volatile pixel_t* viewportbuffer;
-
 int             soundbuffer[EXTERNALQUADS*16];
 
 int		lastticcount = 0;
@@ -470,8 +468,6 @@ void I_Update (void)
 		prevsec = sec;
 		prevsecframe = framecount;
 	}
-
-	viewportbuffer = (volatile pixel_t *)I_ViewportBuffer();
 
 	cy = 1;
 
