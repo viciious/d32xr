@@ -396,7 +396,8 @@ void R_SegCommandsMask(int mask)
 #ifdef GRADIENTLIGHT
 #ifdef MARS
         unsigned seglight = segl->seglightlevel;
-        seglight = seglight - (seglight >> 2) - (seglight >> 4);
+        if (seglight <= 160)
+            seglight = seglight - (seglight >> 1);
 #else
         int seglight = segl->seglightlevel - (255 - segl->seglightlevel) * 2;
         if (seglight < 0)

@@ -220,7 +220,8 @@ static void R_DrawPlanesMasked(int mask)
         lpl.lightmax = pl->lightlevel;
 #ifdef MARS
         unsigned light = pl->lightlevel;
-        light = light - (light >> 2) - (light >> 4);
+        if (light <= 160)
+            light = light - (light >> 1);
 #else
         int light = pl->lightlevel;
         light = light - ((255 - light) << 1);
