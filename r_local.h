@@ -8,11 +8,12 @@
 /* proper screen size would be 160*100, stretched to 224 is 2.2 scale */
 #define	STRETCH				(22*FRACUNIT/10)
 
-#define	CENTERX				(SCREENWIDTH/2)
-#define	CENTERY				(SCREENHEIGHT/2)
-#define	CENTERXFRAC			(SCREENWIDTH/2*FRACUNIT)
-#define	CENTERYFRAC			(SCREENHEIGHT/2*FRACUNIT)
-#define	PROJECTION			CENTERXFRAC
+extern int screenWidth, screenHeight;
+extern int centerX, centerY;
+extern fixed_t centerXFrac, centerYFrac;
+extern fixed_t stretchX;
+
+#define	PROJECTION			centerXFrac
 
 #define	PSPRITEXSCALE		FRACUNIT	
 #define	PSPRITEYSCALE		FRACUNIT
@@ -23,8 +24,7 @@
 
 #define	BASEYCENTER			100
 
-#define	CENTERY				(SCREENHEIGHT/2)
-#define	WINDOWHEIGHT		(SCREENHEIGHT-SBARHEIGHT)
+#define	WINDOWHEIGHT		(screenHeight-SBARHEIGHT)
 
 #define	MINZ				(FRACUNIT*4)
 
@@ -223,6 +223,7 @@ int     R_PointOnSide(int x, int y, node_t *node);
 int     SlopeDiv(unsigned int num, unsigned int den);
 void	R_RenderBSPNode (int bspnum);
 void	R_InitData (void);
+void	R_SetScreenSize(int size);
 void	R_InitMathTables(void);
 void	R_InitSpriteDefs (char **namelist);
 void	R_SetupTextureCaches(void);

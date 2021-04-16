@@ -159,7 +159,7 @@ void I_Print8(int x, int y, const char* string)
 	if (y > 224 / 8)
 		return;
 
-	dest = (byte *)(I_FrameBuffer() + 320) + (y * 16) * 320/2 + x;
+	dest = (byte *)(I_FrameBuffer() + 320) + (y * 8) * 320 + x;
 
 	while ((c = *string++) && x < 320-8)
 	{
@@ -332,7 +332,7 @@ static void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xf
 void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac, fixed_t fracstep, inpixel_t* dc_source, int dc_texheight)
 {
 #ifdef RANGECHECK 
-	if ((unsigned)dc_x >= SCREENWIDTH || dc_yl < 0 || dc_yh >= SCREENHEIGHT)
+	if ((unsigned)dc_x >= screenWidth || dc_yl < 0 || dc_yh >= screenHeight)
 		I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
 #endif
 
@@ -355,8 +355,8 @@ void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac, fixed
 void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source)
 {
 #ifdef RANGECHECK 
-	if (ds_x2 < ds_x1 || ds_x1<0 || ds_x2 >= SCREENWIDTH
-		|| (unsigned)ds_y>SCREENHEIGHT)
+	if (ds_x2 < ds_x1 || ds_x1<0 || ds_x2 >= screenWidth
+		|| (unsigned)ds_y>screenHeight)
 		I_Error("R_DrawSpan: %i to %i at %i", ds_x1, ds_x2, ds_y);
 #endif 
 

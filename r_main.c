@@ -6,6 +6,11 @@
 #include "mars.h"
 #endif
 
+int screenWidth, screenHeight;
+int centerX, centerY;
+fixed_t centerXFrac, centerYFrac;
+fixed_t stretchX;
+
 /*===================================== */
 
 /* */
@@ -237,6 +242,52 @@ struct subsector_s *R_PointInSubsector (fixed_t x, fixed_t y)
 
 /*============================================================================= */
 
+const int screenSizes[][2] = {
+	{128, 144},
+	{128, 160},
+	{160, 180},
+	{160, 200},
+};
+
+/*
+================
+=
+= R_SetScreenSize
+=
+================
+*/
+void R_SetScreenSize(int size)
+{
+	int i;
+	int width, height;
+	fixed_t stretch;
+	const int numSizes = sizeof(screenSizes) / sizeof(screenSizes[0]);
+
+	while (!I_RefreshCompleted())
+		;
+
+	size %= numSizes;
+
+	width = screenSizes[size][0];
+	height = screenSizes[size][1];
+
+	screenWidth = width;
+	screenHeight = height;
+
+	centerX = screenWidth / 2;
+	centerY = screenHeight / 2;
+
+	centerXFrac = centerX * FRACUNIT;
+	centerYFrac = centerY * FRACUNIT;
+
+	stretch = STRETCH;
+	stretchX = stretch * centerX;
+
+	R_InitMathTables();
+
+	clipangle = xtoviewangle[0];
+	doubleclipangle = clipangle * 2;
+}
 
 /*
 ==============
@@ -254,11 +305,8 @@ D_printf ("R_InitData\n");
 	R_InitData ();
 D_printf ("Done\n");
 
-R_InitMathTables();
+	R_SetScreenSize(0);
 
-	clipangle = xtoviewangle[0];
-	doubleclipangle = clipangle*2;
-	
 	framecount = 0;
 	viewplayer = &players[0];
 
@@ -506,7 +554,7 @@ void R_Setup (void)
 		visplanes[i].open = tempbuf;
 #endif
 		visplanes[i].runopen = true;
-		tempbuf += SCREENWIDTH+2;
+		tempbuf += screenWidth+2;
 	}
 
 	lastvisplane = visplanes+1;		/* visplanes[0] is left empty */
@@ -564,7 +612,7 @@ void R_OpenPlane(visplane_t* pl)
 {
 	int i;
 	unsigned short* open = pl->open;
-	for (i = 0; i < SCREENWIDTH / 4; i++)
+	for (i = 0; i < screenWidth / 4; i++)
 	{
 		*open++ = OPENMARK;
 		*open++ = OPENMARK;
@@ -634,7 +682,7 @@ void Mars_Slave_R_OpenPlanes(void)
 	pl = &visplanes[0];
 	if (pl->runopen) {
 		unsigned short* open = pl->open;
-		for (i = 0; i < SCREENWIDTH / 4; i++)
+		for (i = 0; i < screenWidth / 4; i++)
 			*open++ = 0, *open++ = 0, *open++ = 0, *open++ = 0;
 		pl->runopen = false;
 	}

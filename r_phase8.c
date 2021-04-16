@@ -29,7 +29,7 @@ static void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening)
    xfrac     = vis->startfrac;
    spryscale = vis->yscale;
 
-   sprtop = CENTERYFRAC - FixedMul(vis->texturemid, spryscale);
+   sprtop = centerYFrac - FixedMul(vis->texturemid, spryscale);
    spryscale >>= 8;
 
    // blitter iinc
@@ -134,7 +134,7 @@ static void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening)
    scalefrac = vis->yscale;  
 
    for(x = vis->x1; x <= x2; x++)
-      spropening[x] = SCREENHEIGHT;
+      spropening[x] = screenHeight;
    
    ds = lastwallcmd;
    do
@@ -162,7 +162,7 @@ static void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening)
       if(silhouette == AC_SOLIDSIL)
       {
          for (x = r1;  x <= r2; x++)
-            spropening[x] = (SCREENHEIGHT << 8);
+            spropening[x] = OPENMARK;
          continue;
       }
 
@@ -174,7 +174,7 @@ static void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening)
          for(x = r1; x <= r2; x++)
          {
             opening = spropening[x];
-            if((opening & 0xff) == SCREENHEIGHT)
+            if((opening & 0xff) == screenHeight)
                spropening[x] = (opening & OPENMARK) + bottomsil[x];
          }
       }
@@ -194,7 +194,7 @@ static void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening)
             top    = spropening[x];
             bottom = top & 0xff;
             top >>= 8;
-            if(bottom == SCREENHEIGHT)
+            if(bottom == screenHeight)
                bottom = bottomsil[x];
             if(top == 0)
                top = topsil[x];
@@ -274,7 +274,7 @@ static void R_DrawPSprites(void)
         // clear out the clipping array across the range of the psprite
         while (i < stopx)
         {
-            spropening[i] = SCREENHEIGHT;
+            spropening[i] = screenHeight;
             ++i;
         }
 

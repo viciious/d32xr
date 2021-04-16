@@ -257,7 +257,6 @@ int	R_TextureNumForName (const char *name)
 	return i;
 }
 
-
 /*
 ================
 =
@@ -283,16 +282,16 @@ void R_InitMathTables(void)
 
 	tempviewangletox = (short *)I_WorkBuffer();
 	viewangletox = Z_Malloc(sizeof(*viewangletox) * FINEANGLES / 2, PU_STATIC, 0);
-	xtoviewangle = Z_Malloc(sizeof(*xtoviewangle) * (SCREENWIDTH+1), PU_STATIC, 0);
+	xtoviewangle = Z_Malloc(sizeof(*xtoviewangle) * (screenWidth+1), PU_STATIC, 0);
 
 	// Use tangent table to generate viewangletox:
 	//  viewangletox will give the next greatest x
 	//  after the view angle.
 	//
 	// Calc focallength
-	//  so FIELDOFVIEW angles covers SCREENWIDTH.
+	//  so FIELDOFVIEW angles covers screenWidth.
 
-	focallength = FixedDiv(CENTERXFRAC, finetangent(FINEANGLES / 4 + FIELDOFVIEW / 2));
+	focallength = FixedDiv(centerXFrac, finetangent(FINEANGLES / 4 + FIELDOFVIEW / 2));
 	for (i = 0; i < FINEANGLES / 2; i++)
 	{
 		fixed_t t;
@@ -301,16 +300,16 @@ void R_InitMathTables(void)
 			t = -1;
 		}
 		else if (finetangent(i) < -FRACUNIT * 2) {
-			t = SCREENWIDTH + 1;
+			t = screenWidth + 1;
 		}
 		else {
 			t = FixedMul(finetangent(i), focallength);
-			t = (CENTERXFRAC - t + FRACUNIT - 1) >> FRACBITS;
+			t = (centerXFrac - t + FRACUNIT - 1) >> FRACBITS;
 			if (t < -1) {
 				t = -1;
 			}
-			else if (t > SCREENWIDTH + 1) {
-				t = SCREENWIDTH + 1;
+			else if (t > screenWidth + 1) {
+				t = screenWidth + 1;
 			}
 		}
 		tempviewangletox[i] = t;
@@ -319,7 +318,7 @@ void R_InitMathTables(void)
 	// Scan viewangletox[] to generate xtoviewangle[]:
 	//  xtoviewangle will give the smallest view angle
 	//  that maps to x.
-	for (i = 0; i <= SCREENWIDTH; i++)
+	for (i = 0; i <= screenWidth; i++)
 	{
 		int x;
 		for (x = 0; tempviewangletox[x] > i; x++);
@@ -332,19 +331,19 @@ void R_InitMathTables(void)
 		if (tempviewangletox[i] == -1) {
 			tempviewangletox[i] = 0;
 		}
-		else if (tempviewangletox[i] == SCREENWIDTH + 1) {
-			tempviewangletox[i] = SCREENWIDTH;
+		else if (tempviewangletox[i] == screenWidth + 1) {
+			tempviewangletox[i] = screenWidth;
 		}
 		viewangletox[i] = tempviewangletox[i];
 	}
 
 	// Make the yslope table for floor and ceiling textures
-	yslope = Z_Malloc(sizeof(*yslope) * SCREENHEIGHT, PU_STATIC, 0);
-	for (i = 0; i < SCREENHEIGHT; i++)
+	yslope = Z_Malloc(sizeof(*yslope) * screenHeight, PU_STATIC, 0);
+	for (i = 0; i < screenHeight; i++)
 	{
-		fixed_t y = ((i - SCREENHEIGHT / 2) << FRACBITS) + FRACUNIT / 2;
+		fixed_t y = ((i - screenHeight / 2) << FRACBITS) + FRACUNIT / 2;
 		y = D_abs(y);
-		y = FixedDiv(SCREENWIDTH / 2 * STRETCH, y);
+		y = FixedDiv(screenWidth / 2 * STRETCH, y);
 		y >>= 6;
 		if (y > 0xFFFF) {
 			y = 0xFFFF;
@@ -353,8 +352,8 @@ void R_InitMathTables(void)
 	}
 
 	// Create the distance scale table for floor and ceiling textures
-	distscale = Z_Malloc(sizeof(*distscale) * SCREENWIDTH, PU_STATIC, 0);
-	for (i = 0; i < SCREENWIDTH; i++)
+	distscale = Z_Malloc(sizeof(*distscale) * screenWidth, PU_STATIC, 0);
+	for (i = 0; i < screenWidth; i++)
 	{
 		fixed_t cosang = finecosine(xtoviewangle[i] >> ANGLETOFINESHIFT);
 		cosang = D_abs(cosang);

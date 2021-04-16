@@ -44,7 +44,7 @@ static volatile pixel_t *framebufferend = &MARS_FRAMEBUFFER + 0x10000;
 void Mars_ClearFrameBuffer(void)
 {
 	int *p = (int *)framebuffer;
-	int *p_end = (int *)(framebuffer + 320*240/2);
+	int *p_end = (int *)(framebuffer + 320*224);
 	while (p < p_end)
 		*p++ = 0;
 }
@@ -310,7 +310,7 @@ byte	*I_TempBuffer (void)
 
 byte 	*I_WorkBuffer (void)
 {
-	return (byte *)(I_ViewportBuffer() + 320 * SCREENHEIGHT / 2);
+	return (byte *)(I_ViewportBuffer() + 320 * screenHeight / 2);
 }
 
 pixel_t	*I_FrameBuffer (void)
@@ -321,14 +321,20 @@ pixel_t	*I_FrameBuffer (void)
 pixel_t	*I_ViewportBuffer (void)
 {
 	volatile pixel_t *viewportbuffer = framebuffer;
-#if SCREENWIDTH != 160
-	viewportbuffer += (224-SCREENHEIGHT)*320/4+(320-SCREENWIDTH*2)/4;
-#endif
+	if (screenWidth < 160)
+		viewportbuffer += (224-screenHeight)*320/4+(320-screenWidth*2)/4;
 	return (pixel_t *)viewportbuffer;
 }
 
-void 	I_ClearFrameBuffer (void)
+void I_ClearFrameBuffer (void)
 {
+	Mars_ClearFrameBuffer();
+}
+
+void I_DoubleClearFrameBuffer(void)
+{
+	Mars_ClearFrameBuffer();
+	Mars_FlipFrameBuffers(true);
 	Mars_ClearFrameBuffer();
 }
 

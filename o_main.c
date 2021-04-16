@@ -64,6 +64,8 @@ slider_t slider[2];
 int		cursorframe, cursorcount;
 int		movecount;
 
+int		o_screensize;
+
 jagobj_t		*uchar[52];
 
 jagobj_t		*o_cursor1, *o_cursor2;
@@ -156,6 +158,7 @@ void O_Init (void)
 	menuitem[1].y = 110;
 	menuitem[1].hasslider = false;
 
+	o_screensize = 0;
 }
 
 /*
@@ -193,6 +196,13 @@ void O_Control (player_t *player)
 	if (playernum != consoleplayer)
 		return;
 		
+#ifdef MARS
+	if (buttons & JP_A) {
+		o_screensize++;
+		R_SetScreenSize(o_screensize);
+	}
+#endif
+
 /* animate skull */
 	if (++cursorcount == 4)
 	{

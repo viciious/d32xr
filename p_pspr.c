@@ -6,16 +6,9 @@
 #define	LOWERSPEED		FRACUNIT*18
 #define	RAISESPEED		FRACUNIT*18
 
-
-#if SCREENWIDTH == 160	
-#define	WEAPONX		FRACUNIT
-#define WEAPONBOTTOM	(128)*FRACUNIT
-#define WEAPONTOP		(32)*FRACUNIT
-#else
-#define	WEAPONX		(-15*FRACUNIT)
-#define WEAPONBOTTOM	(128-18)*FRACUNIT
-#define WEAPONTOP		(32-18)*FRACUNIT
-#endif
+#define	WEAPONX		(15*(screenWidth-160)/32)*FRACUNIT
+#define WEAPONBOTTOM	(128+18*(screenWidth-160)/32)*FRACUNIT
+#define WEAPONTOP		(32+18*(screenWidth-160)/32)*FRACUNIT
 
 
 #define	BFGCELLS		40			/* plasma cells for a bfg attack */
@@ -387,9 +380,9 @@ void A_WeaponReady (player_t *player, pspdef_t *psp)
 /* bob the weapon based on movement speed */
 /* */
 	angle = (64*gamevbls)&(FINEANGLES-1);
-	psp->sx = WEAPONX + (player->bob>>16) * finecosine(angle);
+	psp->sx = WEAPONX + (player->bob>>FRACBITS) * finecosine(angle);
 	angle &= FINEANGLES/2-1;
-	psp->sy = WEAPONTOP + (player->bob>>16) * finesine(angle);
+	psp->sy = WEAPONTOP + (player->bob>>FRACBITS) * finesine(angle);
 }
 
 

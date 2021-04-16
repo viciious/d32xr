@@ -6,6 +6,7 @@ int	tictics;
 
 boolean		gamepaused;
 jagobj_t	*pausepic;
+static int	clearscreen = 0;
 
 /*
 ===============================================================================
@@ -404,6 +405,7 @@ void DrawPlaque (jagobj_t *pl)
 		}
 	}
 #endif
+	clearscreen = 2;
 }
 
 /* 
@@ -450,12 +452,11 @@ void DrawSinglePlaque (jagobj_t *pl)
  
 void P_Drawer (void) 
 { 	
-	static int	refreshdrawn;
 #ifndef MARS
 	if (players[consoleplayer].automapflags & AF_OPTIONSACTIVE)
 	{
 		O_Drawer ();
-		refreshdrawn = 0;
+		clearscreen = 2;
 	}
 	else if (gamepaused && refreshdrawn)
 		DrawPlaque (pausepic);
@@ -464,7 +465,7 @@ void P_Drawer (void)
 		ST_Drawer ();
 		AM_Drawer ();
 		I_Update ();
-		refreshdrawn = 1;
+		clearscreen = 0;
 	}
 	else
 #else
@@ -473,27 +474,29 @@ void P_Drawer (void)
 		ST_Drawer ();
 		AM_Drawer ();
 		I_Update();
-		refreshdrawn = 0;
+		clearscreen = 2;
 	}
 	else
 #endif
 	{
 #ifdef MARS
-		if (refreshdrawn <= 0 && refreshdrawn > -2) {
+		if (clearscreen > 0) {
 			I_ClearFrameBuffer();
-			refreshdrawn--;
-		} else {
-			refreshdrawn = 1;
+			clearscreen--;
 		}
 		R_RenderPlayerView (); 
 		ST_Drawer ();
+		if (players[consoleplayer].automapflags & AF_OPTIONSACTIVE)
+		{
+			clearscreen = 2;
+		}
 		I_Update ();
 #else
 #ifdef JAGUAR
 		ST_Drawer ();
 #endif
 		R_RenderPlayerView (); 
-		refreshdrawn = 1;
+		clearscreen = 0;
 #endif
 	/* assume part of the refresh is now running parallel with main code */
 	}
@@ -514,8 +517,7 @@ void P_Start (void)
 	M_ClearRandom ();
 
 #ifdef MARS
-	I_ClearFrameBuffer ();
-	I_ClearFrameBuffer ();
+	clearscreen = 2;
 #endif
 }
 

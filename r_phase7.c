@@ -194,8 +194,8 @@ static void R_DrawPlanesMasked(int mask)
     lpl.angle = vd.viewangle;
     angle = (lpl.angle - ANG90) >> ANGLETOFINESHIFT;
 
-    lpl.basexscale = (finecosine(angle) / (SCREENWIDTH / 2));
-    lpl.baseyscale = -(finesine(angle) / (SCREENWIDTH / 2));
+    lpl.basexscale = (finecosine(angle) / centerX);
+    lpl.baseyscale = -(finesine(angle) / centerX);
 
 #ifdef MARS
     last = *((visplane_t**)((intptr_t)&lastvisplane | 0x20000000));

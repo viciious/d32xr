@@ -58,19 +58,19 @@ static void R_DrawTexture(int x, segdraw_t *sdr, drawtex_t* tex)
 {
    int top, bottom, frac;
    int colnum;
-   unsigned iscale;
+   int iscale;
 #ifdef MARS
    inpixel_t *src;
 #else
    pixel_t *src;
 #endif
 
-   top = CENTERY - ((sdr->scale * tex->topheight) >> (HEIGHTBITS + SCALEBITS));
+   top = centerY - ((sdr->scale * tex->topheight) >> (HEIGHTBITS + SCALEBITS));
 
    if(top <= sdr->ceilingclipx)
       top = sdr->ceilingclipx + 1;
 
-   bottom = CENTERY - 1 - ((sdr->scale * tex->bottomheight) >> (HEIGHTBITS + SCALEBITS));
+   bottom = centerY - 1 - ((sdr->scale * tex->bottomheight) >> (HEIGHTBITS + SCALEBITS));
 
    if(bottom >= sdr->floorclipx)
       bottom = sdr->floorclipx - 1;
@@ -79,13 +79,13 @@ static void R_DrawTexture(int x, segdraw_t *sdr, drawtex_t* tex)
    if(top > bottom)
       return;
 
+   colnum = sdr->colnum;
    iscale = sdr->iscale;
-   frac = tex->texturemid - (CENTERY - top) * iscale;
-
+   frac = tex->texturemid - (centerY - top) * iscale;
+ 
    // DEBUG: fixes green pixels in MAP01...
    frac += (iscale + (iscale >> 5) + (iscale >> 6));
 
-   colnum = sdr->colnum;
    while(frac < 0)
    {
       colnum--;
@@ -250,7 +250,7 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
           //
           if (actionbits & AC_ADDFLOOR)
           {
-              top = CENTERY - ((scale * floorheight) >> (HEIGHTBITS + SCALEBITS));
+              top = centerY - ((scale * floorheight) >> (HEIGHTBITS + SCALEBITS));
               if (top <= ceilingclipx)
                   top = ceilingclipx + 1;
               bottom = floorclipx - 1;
@@ -273,7 +273,7 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
           if (actionbits & AC_ADDCEILING)
           {
               top = ceilingclipx + 1;
-              bottom = CENTERY - 1 - ((scale * ceilingheight) >> (HEIGHTBITS + SCALEBITS));
+              bottom = centerY - 1 - ((scale * ceilingheight) >> (HEIGHTBITS + SCALEBITS));
               if (bottom >= floorclipx)
                   bottom = floorclipx - 1;
 
@@ -293,15 +293,15 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
       //
       // calc high and low
       //
-      low = CENTERY - ((scale * segl->floornewheight) >> (HEIGHTBITS + SCALEBITS));
+      low = centerY - ((scale * segl->floornewheight) >> (HEIGHTBITS + SCALEBITS));
       if(low < 0)
          low = 0;
       if(low > floorclipx)
          low = floorclipx;
 
-      high = CENTERY - 1 - ((scale * segl->ceilingnewheight) >> (HEIGHTBITS + SCALEBITS));
-      if(high > SCREENHEIGHT - 1)
-         high = SCREENHEIGHT - 1;
+      high = centerY - 1 - ((scale * segl->ceilingnewheight) >> (HEIGHTBITS + SCALEBITS));
+      if(high > screenHeight - 1)
+         high = screenHeight - 1;
       if(high < ceilingclipx)
          high = ceilingclipx;
 
@@ -322,7 +322,7 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
           if (actionbits & AC_ADDSKY)
           {
               top = ceilingclipx + 1;
-              bottom = (CENTERY - ((scale * ceilingheight) >> (HEIGHTBITS + SCALEBITS))) - 1;
+              bottom = (centerY - ((scale * ceilingheight) >> (HEIGHTBITS + SCALEBITS))) - 1;
 
               if (bottom >= floorclipx)
                   bottom = floorclipx - 1;
@@ -362,25 +362,13 @@ void R_SegCommandsMask(int mask)
     drawtex_t* toptex, * bottomtex;
 
     // initialize the clipbounds array
-#ifdef MARS1
-    unsigned short clipbounds[SCREENWIDTH/2];
-    clip = clipbounds;
-    for (i = 0; i < SCREENWIDTH / 8; i++)
-    {
-        *clip++ = SCREENHEIGHT;
-        *clip++ = SCREENHEIGHT;
-        *clip++ = SCREENHEIGHT;
-        *clip++ = SCREENHEIGHT;
-    }
-#else
     unsigned short clipbounds[SCREENWIDTH];
     clip = clipbounds;
-    for (i = 0; i < SCREENWIDTH / 4; i++)
+    for (i = 0; i < screenWidth / 4; i++)
     {
-        *clip++ = SCREENHEIGHT, *clip++ = SCREENHEIGHT;
-        *clip++ = SCREENHEIGHT, *clip++ = SCREENHEIGHT;
+        *clip++ = screenHeight, *clip++ = screenHeight;
+        *clip++ = screenHeight, *clip++ = screenHeight;
     }
-#endif
 
     toptex = &lseg.toptex;
     bottomtex = &lseg.bottomtex;

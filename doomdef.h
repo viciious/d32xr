@@ -637,13 +637,8 @@ extern	gametype_t	starttype;
 /*--------- */
 /*SYSTEM IO */
 /*--------- */
-#ifdef HIRES
 #define	SCREENWIDTH		160
-#define	SCREENHEIGHT	180
-#else
-#define	SCREENWIDTH		128
-#define	SCREENHEIGHT	144
-#endif
+#define	SCREENHEIGHT	200
 
 void I_Init (void);
 byte *I_WadBase (void);
@@ -662,6 +657,7 @@ pixel_t *I_FrameBuffer (void);
 pixel_t *I_ViewportBuffer (void);
 
 void I_ClearFrameBuffer (void);
+void I_DoubleClearFrameBuffer(void);
 
 void I_SetPalette (const byte *palette);
 
