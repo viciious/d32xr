@@ -145,6 +145,9 @@ static void R_PlaneLoop(localplane_t *lpl, const int mask)
             if ((t1 & 1) == mask)
 #endif
                 R_MapPlane(lpl, t1, x, x2);
+#ifdef MARS
+            if (mask == 0)
+#endif
             lpl->pixelcount += x2 - x + 1;
             ++t1;
          }
@@ -164,10 +167,13 @@ static void R_PlaneLoop(localplane_t *lpl, const int mask)
          {
             x = spanstart[b1];
 #ifdef MARS
-            if ((t1 & 1) == mask)
+            if ((b1 & 1) == mask)
 #endif
                 R_MapPlane(lpl, b1, x, x2);
-            lpl->pixelcount += x2 - x + 1;
+#ifdef MARS
+            if (mask == 0)
+#endif
+                lpl->pixelcount += x2 - x + 1;
             --b1;
          }
 
