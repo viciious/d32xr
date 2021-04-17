@@ -28,8 +28,8 @@ viswall_t	*viswalls/*[MAXWALLCMDS]*/, *lastwallcmd;
 /* */
 visplane_t	visplanes[MAXVISPLANES], *lastvisplane;
 
-#define NUM_VISPLANES_BUCKETS 64
-static visplane_t* visplanes_hash[NUM_VISPLANES_BUCKETS];
+#define NUM_VISPLANES_BUCKETS 256
+static visplane_t** visplanes_hash;
 
 /* */
 /* sprites */
@@ -258,7 +258,6 @@ const int screenSizes[][2] = {
 */
 void R_SetScreenSize(int size)
 {
-	int i;
 	int width, height;
 	fixed_t stretch;
 	const int numSizes = sizeof(screenSizes) / sizeof(screenSizes[0]);
@@ -558,6 +557,10 @@ void R_Setup (void)
 	}
 
 	lastvisplane = visplanes+1;		/* visplanes[0] is left empty */
+
+	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 4) & ~4);
+	visplanes_hash = (visplane_t**)tempbuf;
+	tempbuf += sizeof(visplane_t *) * NUM_VISPLANES_BUCKETS;
 
 	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
 		visplanes_hash[i] = NULL;
