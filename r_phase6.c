@@ -47,8 +47,10 @@ typedef struct
 } segdraw_t;
 
 #ifdef MARS
-static void R_DrawTexture(int x, segdraw_t* sdr, drawtex_t* tex) __attribute__((section(".data"), aligned(16)));
-static void R_SegLoop(seglocal_t* lseg, int cpu0) __attribute__((section(".data"), aligned(16)));
+//static void R_DrawTexture(int x, segdraw_t* sdr, drawtex_t* tex) __attribute__((section(".data"), aligned(16)));
+
+static void R_SegLoop(seglocal_t* lseg, const int cpu) __attribute__((always_inline));
+static void R_SegCommandsMask(const int mask) __attribute__((always_inline));
 #endif
 
 //
@@ -110,65 +112,54 @@ static void R_DrawTexture(int x, segdraw_t *sdr, drawtex_t* tex)
 //
 static void R_SegLoop(seglocal_t* lseg, const int cpu)
 {
-   unsigned i, x, stop;
-   unsigned pixcount;
-   fixed_t scale;
-   unsigned scalefrac;
-   unsigned scalestep;
-   unsigned texturelight;
-   int low, high, top, bottom;
+   unsigned i;
    visplane_t *ceiling, *floor;
-   segdraw_t sdr;
-   int floorclipx, ceilingclipx;
-   int floorplhash, ceilingplhash;
-   fixed_t floorheight, ceilingheight;
-   unsigned floorpicnum, ceilingpicnum;
-   unsigned lightlevel;
-   unsigned actionbits;
-   unsigned	centerangle;
-   unsigned	offset;
-   unsigned	distance;
-   viswall_t* segl;
-   unsigned short* clipbounds;
+   unsigned short* ceilopen, * flooropen;
 
-   segl = lseg->segl;
-   clipbounds = lseg->clipbounds;
+   viswall_t* segl = lseg->segl;
+   unsigned short *clipbounds = lseg->clipbounds;
 
-   actionbits = segl->actionbits;
-   lightlevel = segl->seglightlevel;
+   const unsigned actionbits = segl->actionbits;
+   const unsigned lightlevel = segl->seglightlevel;
 
-   scalefrac = segl->scalefrac;
-   scalestep = segl->scalestep;
+   unsigned scalefrac = segl->scalefrac;
+   unsigned scalestep = segl->scalestep;
 
-   centerangle = segl->centerangle;
-   offset = segl->offset;
-   distance = segl->distance;
+   const unsigned centerangle = segl->centerangle;
+   const unsigned offset = segl->offset;
+   const unsigned distance = segl->distance;
 
-   x = segl->start;
-   stop = segl->stop;
+   int x = segl->start;
+   const int stop = segl->stop;
 #ifdef MARS
    unsigned draw = 0;
 #else
    const unsigned draw = 1;
 #endif
-   pixcount = stop - x + 1;
+   const unsigned pixcount = stop - x + 1;
 
-   floorheight = segl->floorheight;
-   ceilingheight = segl->ceilingheight;
+   const fixed_t floorheight = segl->floorheight;
+   const fixed_t floornewheight = segl->floornewheight;
 
-   floorpicnum = segl->floorpicnum;
-   ceilingpicnum = segl->ceilingpicnum;
+   const int ceilingheight = segl->ceilingheight;
+   const int ceilingnewheight = segl->ceilingnewheight;
+
+   const int floorpicnum = segl->floorpicnum;
+   const int ceilingpicnum = segl->ceilingpicnum;
 
    // force R_FindPlane for both planes
    floor = ceiling = visplanes;
+   flooropen = ceilopen = visplanes[0].open;
 
 #ifndef GRADIENTLIGHT
-   texturelight = lseg->lightmax;
-   texturelight = HWLIGHT(texturelight);
+   const unsigned texturelight = HWLIGHT(lseg->lightmax);
 #endif
    
-   floorplhash = 0;
-   ceilingplhash = 0;
+   const int centerY0 = centerY;
+   const int centerY1 = centerY - 1;
+
+   int floorplhash = 0;
+   int ceilingplhash = 0;
 
    if (actionbits & AC_ADDFLOOR)
        floorplhash = R_PlaneHash(floorheight, floorpicnum, lightlevel);
@@ -177,6 +168,10 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
 
    for (i = 0; i < pixcount; i++, x++)
    {
+      fixed_t scale;
+      int floorclipx, ceilingclipx;
+      int low, high, top, bottom;
+
       scale = scalefrac >> FIXEDTOSCALE;
       scalefrac += scalestep;
 #ifdef MARS
@@ -194,54 +189,19 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
       ceilingclipx = ((ceilingclipx & 0xff00) >> 8) - 1;
 
       //
-      // texture only stuff
+      // calc high and low
       //
-      if (draw)
-      {
-          if (actionbits & AC_CALCTEXTURE)
-          {
-              // calculate texture offset
-              fixed_t r = FixedMul(distance,
-                  finetangent((centerangle + xtoviewangle[x]) >> ANGLETOFINESHIFT));
+      low = centerY0 - ((scale * floornewheight) >> (HEIGHTBITS + SCALEBITS));
+      if (low < 0)
+          low = 0;
+      else if (low > floorclipx)
+          low = floorclipx;
 
-              // other texture drawing info
-              sdr.colnum = (offset - r) >> FRACBITS;
-              sdr.iscale = (1 << (FRACBITS + SCALEBITS)) / (unsigned)scale;
-
-#ifdef GRADIENTLIGHT
-              // calc light level
-              texturelight = ((scale * lseg->lightcoef) / FRACUNIT);
-              if (texturelight <= lseg->lightsub)
-              {
-                  texturelight = lseg->lightmin;
-              }
-              else
-              {
-                  texturelight -= lseg->lightsub;
-                  if (texturelight < lseg->lightmin)
-                      texturelight = lseg->lightmin;
-                  if (texturelight > lseg->lightmax)
-                      texturelight = lseg->lightmax;
-              }
-
-              // convert to a hardware value
-              texturelight = HWLIGHT(texturelight);
-#endif
-
-              sdr.light = texturelight;
-              sdr.scale = scale;
-              sdr.floorclipx = floorclipx;
-              sdr.ceilingclipx = ceilingclipx;
-
-              //
-              // draw textures
-              //
-              if (actionbits & AC_TOPTEXTURE)
-                  R_DrawTexture(x, &sdr, &lseg->toptex);
-              if (actionbits & AC_BOTTOMTEXTURE)
-                  R_DrawTexture(x, &sdr, &lseg->bottomtex);
-          }
-      }
+      high = centerY1 - ((scale * ceilingnewheight) >> (HEIGHTBITS + SCALEBITS));
+      if (high > screenHeight - 1)
+          high = screenHeight - 1;
+      else if (high < ceilingclipx)
+          high = ceilingclipx;
 
       if (cpu == 0)
       {
@@ -250,21 +210,21 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
           //
           if (actionbits & AC_ADDFLOOR)
           {
-              top = centerY - ((scale * floorheight) >> (HEIGHTBITS + SCALEBITS));
+              top = centerY0 - ((scale * floorheight) >> (HEIGHTBITS + SCALEBITS));
               if (top <= ceilingclipx)
                   top = ceilingclipx + 1;
               bottom = floorclipx - 1;
 
               if (top <= bottom)
               {
-                  if (floor->open[x] != OPENMARK)
+                  if (flooropen[x] != OPENMARK)
                   {
                       floor = R_FindPlane(floor, floorplhash, floorheight, floorpicnum,
                           lightlevel, x, stop);
+                      flooropen = floor->open;
                   }
-                  floor->open[x] = (unsigned short)((top << 8) + bottom);
+                  flooropen[x] = (unsigned short)((top << 8) + bottom);
               }
-
           }
 
           //
@@ -273,40 +233,22 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
           if (actionbits & AC_ADDCEILING)
           {
               top = ceilingclipx + 1;
-              bottom = centerY - 1 - ((scale * ceilingheight) >> (HEIGHTBITS + SCALEBITS));
+              bottom = centerY1 - ((scale * ceilingheight) >> (HEIGHTBITS + SCALEBITS));
               if (bottom >= floorclipx)
                   bottom = floorclipx - 1;
 
               if (top <= bottom)
               {
-                  if (ceiling->open[x] != OPENMARK)
+                  if (ceilopen[x] != OPENMARK)
                   {
                       ceiling = R_FindPlane(ceiling, ceilingplhash, ceilingheight, ceilingpicnum,
                           lightlevel, x, stop);
+                      ceilopen = ceiling->open;
                   }
-                  ceiling->open[x] = (unsigned short)((top << 8) + bottom);
+                  ceilopen[x] = (unsigned short)((top << 8) + bottom);
               }
-
           }
-      }
 
-      //
-      // calc high and low
-      //
-      low = centerY - ((scale * segl->floornewheight) >> (HEIGHTBITS + SCALEBITS));
-      if(low < 0)
-         low = 0;
-      if(low > floorclipx)
-         low = floorclipx;
-
-      high = centerY - 1 - ((scale * segl->ceilingnewheight) >> (HEIGHTBITS + SCALEBITS));
-      if(high > screenHeight - 1)
-         high = screenHeight - 1;
-      if(high < ceilingclipx)
-         high = ceilingclipx;
-
-      if (cpu == 0)
-      {
           // bottom sprite clip sil
           if (actionbits & AC_BOTTOMSIL)
               segl->bottomsil[x] = low;
@@ -316,44 +258,96 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
               segl->topsil[x] = high + 1;
       }
 
-      // sky mapping
-      if (draw)
-      {
-          if (actionbits & AC_ADDSKY)
-          {
-              top = ceilingclipx + 1;
-              bottom = (centerY - ((scale * ceilingheight) >> (HEIGHTBITS + SCALEBITS))) - 1;
-
-              if (bottom >= floorclipx)
-                  bottom = floorclipx - 1;
-
-              if (top <= bottom)
-              {
-                  // CALICO: draw sky column
-                  int colnum = ((vd.viewangle + xtoviewangle[x]) >> ANGLETOSKYSHIFT) & 0xff;
-#ifdef MARS
-                  inpixel_t* data = skytexturep->data + colnum * skytexturep->height;
-#else
-                  pixel_t* data = skytexturep->data + colnum * skytexturep->height;
-#endif
-                  I_DrawColumn(x, top, bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, 128);
-              }
-          }
-      }
-
       if(actionbits & (AC_NEWFLOOR|AC_NEWCEILING))
       {
+          int newfloorclipx = floorclipx;
+          int newceilingclipx = ceilingclipx;
+
          // rewrite clipbounds
          if(actionbits & AC_NEWFLOOR)
-            floorclipx = low;
+            newfloorclipx = low;
          if(actionbits & AC_NEWCEILING)
-            ceilingclipx = high;
-         clipbounds[x] = ((ceilingclipx + 1) << 8) + floorclipx;
+            newceilingclipx = high;
+         clipbounds[x] = ((newceilingclipx + 1) << 8) + newfloorclipx;
+      }
+
+      //
+      // texture only stuff
+      //
+      if (!draw)
+          continue;
+
+      if (actionbits & AC_CALCTEXTURE)
+      {
+          segdraw_t sdr;
+
+          // calculate texture offset
+          fixed_t r = FixedMul(distance,
+              finetangent((centerangle + xtoviewangle[x]) >> ANGLETOFINESHIFT));
+
+          // other texture drawing info
+          sdr.colnum = (offset - r) >> FRACBITS;
+          sdr.iscale = (1 << (FRACBITS + SCALEBITS)) / (unsigned)scale;
+
+#ifdef GRADIENTLIGHT
+          // calc light level
+          unsigned texturelight = ((scale * lseg->lightcoef) / FRACUNIT);
+          if (texturelight <= lseg->lightsub)
+          {
+              texturelight = lseg->lightmin;
+          }
+          else
+          {
+              texturelight -= lseg->lightsub;
+              if (texturelight < lseg->lightmin)
+                  texturelight = lseg->lightmin;
+              if (texturelight > lseg->lightmax)
+                  texturelight = lseg->lightmax;
+          }
+
+          // convert to a hardware value
+          texturelight = HWLIGHT(texturelight);
+#endif
+
+          sdr.light = texturelight;
+          sdr.scale = scale;
+          sdr.floorclipx = floorclipx;
+          sdr.ceilingclipx = ceilingclipx;
+
+          //
+          // draw textures
+          //
+          if (actionbits & AC_TOPTEXTURE)
+              R_DrawTexture(x, &sdr, &lseg->toptex);
+          if (actionbits & AC_BOTTOMTEXTURE)
+              R_DrawTexture(x, &sdr, &lseg->bottomtex);
+      }
+
+      // sky mapping
+      if (actionbits & AC_ADDSKY)
+      {
+          top = ceilingclipx + 1;
+          bottom = (centerY - ((scale * ceilingheight) >> (HEIGHTBITS + SCALEBITS))) - 1;
+
+          if (bottom >= floorclipx)
+              bottom = floorclipx - 1;
+
+          if (top <= bottom)
+          {
+              // CALICO: draw sky column
+              int colnum = ((vd.viewangle + xtoviewangle[x]) >> ANGLETOSKYSHIFT) & 0xff;
+#ifdef MARS
+              inpixel_t* data = skytexturep->data + colnum * skytexturep->height;
+#else
+              pixel_t* data = skytexturep->data + colnum * skytexturep->height;
+#endif
+              I_DrawColumn(x, top, bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, 128);
+          }
       }
    }
 }
 
-void R_SegCommandsMask(int mask)
+static void R_SegCommandsMask(const int mask)
 {
     int i;
     unsigned short *clip;
