@@ -33,8 +33,14 @@ typedef struct
 
 #ifdef MARS
 static void R_MapPlane(localplane_t* lpl, int y, int x, int x2) __attribute__((section(".data"), aligned(16)));
-static void R_PlaneLoop(localplane_t* lpl, const int mask) __attribute__((section(".data"), aligned(16)));
+//static void R_PlaneLoop(localplane_t* lpl, const int mask) __attribute__((section(".data"), aligned(16)));
 //static void R_DrawPlanesMasked(int mask) __attribute__((section(".data"), aligned(16)));
+
+static void R_PlaneLoop(localplane_t* lpl, const int mask) __attribute__((always_inline));
+static void R_DrawPlanesMasked(const int mask) __attribute__((always_inline));
+
+//void Mars_Slave_R_DrawPlanes(void) __attribute__((section(".data"), aligned(16)));
+//void R_DrawPlanes(void) __attribute__((section(".data"), aligned(16)));
 #endif
 
 //
@@ -45,7 +51,7 @@ static void R_MapPlane(localplane_t *lpl, int y, int x, int x2)
    int remaining;
    fixed_t distance, length, xfrac, yfrac, xstep, ystep;
    angle_t angle;
-   int light;
+   unsigned light;
 
    remaining = x2 - x + 1;
 
@@ -181,7 +187,7 @@ static void R_PlaneLoop(localplane_t *lpl, const int mask)
    while(pl_x != pl_stopx);
 }
 
-static void R_DrawPlanesMasked(int mask)
+static void R_DrawPlanesMasked(const int mask)
 {
     angle_t angle;
     localplane_t lpl;

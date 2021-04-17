@@ -58,22 +58,25 @@ static void R_SegCommandsMask(const int mask) __attribute__((always_inline));
 //
 static void R_DrawTexture(int x, segdraw_t *sdr, drawtex_t* tex)
 {
-   int top, bottom, frac;
+   int top, bottom;
+   fixed_t scale, frac;
    int colnum;
-   int iscale;
+   unsigned iscale;
 #ifdef MARS
    inpixel_t *src;
 #else
    pixel_t *src;
 #endif
 
-   top = centerY - ((sdr->scale * tex->topheight) >> (HEIGHTBITS + SCALEBITS));
+   scale = sdr->scale;
+   colnum = sdr->colnum;
+   iscale = sdr->iscale;
 
+   top = centerY - ((sdr->scale * tex->topheight) >> (HEIGHTBITS + SCALEBITS));
    if(top <= sdr->ceilingclipx)
       top = sdr->ceilingclipx + 1;
 
    bottom = centerY - 1 - ((sdr->scale * tex->bottomheight) >> (HEIGHTBITS + SCALEBITS));
-
    if(bottom >= sdr->floorclipx)
       bottom = sdr->floorclipx - 1;
 
@@ -81,8 +84,6 @@ static void R_DrawTexture(int x, segdraw_t *sdr, drawtex_t* tex)
    if(top > bottom)
       return;
 
-   colnum = sdr->colnum;
-   iscale = sdr->iscale;
    frac = tex->texturemid - (centerY - top) * iscale;
  
    // DEBUG: fixes green pixels in MAP01...

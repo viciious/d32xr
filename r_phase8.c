@@ -205,7 +205,7 @@ static void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening)
    while(ds != viswalls);
 }
 
-static void R_DrawSpritesStride(int start)
+static void R_DrawSpritesStride(const int start)
 {
     int i;
     unsigned short spropening[SCREENWIDTH];
