@@ -72,11 +72,11 @@ static void R_DrawTexture(int x, segdraw_t *sdr, drawtex_t* tex)
    colnum = sdr->colnum;
    iscale = sdr->iscale;
 
-   top = centerY - ((sdr->scale * tex->topheight) >> (HEIGHTBITS + SCALEBITS));
+   top = centerY - ((scale * tex->topheight) >> (HEIGHTBITS + SCALEBITS));
    if(top <= sdr->ceilingclipx)
       top = sdr->ceilingclipx + 1;
 
-   bottom = centerY - 1 - ((sdr->scale * tex->bottomheight) >> (HEIGHTBITS + SCALEBITS));
+   bottom = centerY - 1 - ((scale * tex->bottomheight) >> (HEIGHTBITS + SCALEBITS));
    if(bottom >= sdr->floorclipx)
       bottom = sdr->floorclipx - 1;
 
@@ -119,6 +119,10 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
 
    viswall_t* segl = lseg->segl;
    unsigned short *clipbounds = lseg->clipbounds;
+
+   // for future reference: the top hoggers are
+   // (AC_TOPTEXTURE | AC_ADDFLOOR | AC_NEWFLOOR)
+   // (AC_TOPTEXTURE | AC_ADDCEILING | AC_NEWCEILING | AC_SOLIDSIL)
 
    const unsigned actionbits = segl->actionbits;
    const unsigned lightlevel = segl->seglightlevel;
