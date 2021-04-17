@@ -28,7 +28,7 @@ viswall_t	*viswalls/*[MAXWALLCMDS]*/, *lastwallcmd;
 /* */
 visplane_t	visplanes[MAXVISPLANES], *lastvisplane;
 
-#define NUM_VISPLANES_BUCKETS 256
+#define NUM_VISPLANES_BUCKETS 128
 static visplane_t** visplanes_hash;
 
 /* */
@@ -390,8 +390,8 @@ void R_SetupTextureCaches(void)
 
 /*============================================================================= */
 
-int shadepixel;
 #ifndef MARS
+int shadepixel;
 extern	int	workpage;
 extern	pixel_t	*screens[2];	/* [SCREENWIDTH*SCREENHEIGHT];  */
 #endif
