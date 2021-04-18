@@ -9,7 +9,7 @@ LDSCRIPTSDIR = $(ROOTDIR)/ldscripts
 LIBPATH = -L$(ROOTDIR)/sh-elf/lib -L$(ROOTDIR)/sh-elf/lib/gcc/sh-elf/4.6.2 -L$(ROOTDIR)/sh-elf/sh-elf/lib
 INCPATH = -I. -I$(ROOTDIR)/sh-elf/include -I$(ROOTDIR)/sh-elf/sh-elf/include
 
-CCFLAGS = -m2 -mb -O2 -Wall -c -fomit-frame-pointer -std=gnu99
+CCFLAGS = -m2 -mb -O2 -Wall -c -fomit-frame-pointer -std=gnu99 -funroll-loops
 CCFLAGS += -D__32X__ -DMARS
 LDFLAGS = -T $(LDSCRIPTSDIR)/mars.ld -Wl,-Map=output.map -nostdlib
 ASFLAGS = --big
