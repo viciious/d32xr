@@ -4,8 +4,6 @@
 #include "r_local.h"
 #include "32x.h"
 
-//#define USE_C_DRAW
-
 extern const int COLOR_WHITE;
 
 const boolean	debugscreenstate = false;
@@ -40,16 +38,6 @@ void Mars_Init(void);
 void Mars_Slave(void);
 
 void I_ClearWorkBuffer();
-
-#ifdef USE_C_DRAW
-#define I_DrawColumnPO2A I_DrawColumnPO2C
-#define I_DrawColumnNPO2A I_DrawColumnNPO2C
-#define I_DrawSpanA I_DrawSpanC
-#else
-void I_DrawColumnPO2A(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_, fixed_t fracstep, inpixel_t* dc_source, int dc_texheight);
-void I_DrawColumnNPO2A(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_, fixed_t fracstep, inpixel_t* dc_source, int dc_texheight);
-void I_DrawSpanA(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source);
-#endif
 
 /* 
 ================ 
@@ -214,157 +202,6 @@ void I_Error (char *error, ...)
 	while (1)
 	;
 } 
-
-/*
-==============================================================================
-
-						TEXTURE MAPPING CODE
-
-==============================================================================
-*/
-
-#ifdef USE_C_DRAW
-
-static void I_DrawColumnPO2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_, 
-	fixed_t fracstep, inpixel_t *dc_source, int dc_texheight)
-{ 
-	int			count, heightmask;
-	volatile pixel_t	*dest;
-	inpixel_t 		c;
-	short 			*dc_colormap;
-	unsigned		frac;
-
-	count = dc_yh - dc_yl; 
-	if (count <= 0)
-		return; 
-
-	frac = frac_;
-	heightmask = dc_texheight - 1;
-	dest = viewportbuffer + dc_yl*320/2 + dc_x;
-	dc_colormap = dc_colormaps + light;
-
-	do
-	{ 
-		c = dc_source[(frac>>FRACBITS)&heightmask];
-		*dest = dc_colormap[c];
-		dest += 320/2; 
-		frac += fracstep; 
-	} while (count--);
-} 
-
-//
-// CALICO: the Jag blitter could wrap around textures of arbitrary height, so
-// we need to do the "tutti frutti" fix here. Carmack didn't bother fixing
-// this for the NeXT "simulator" build of the game.
-//
-static void I_DrawColumnNPO2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight)
-{
-	int			count, heightmask;
-	volatile pixel_t 	*dest;
-	inpixel_t 		c;
-	short 			*dc_colormap;
-	unsigned 		frac;
-
-	count = dc_yh - dc_yl;
-	if (count <= 0)
-		return;
-
-	heightmask = dc_texheight << FRACBITS;
-	if (frac_ < 0)
-		while ((frac_ += heightmask) < 0);
-	else
-	{
-		while (frac_ >= heightmask)
-			frac_ -= heightmask;
-	}
-	frac = frac_;
-
-	dest = viewportbuffer + dc_yl*320/2 + dc_x;
-	dc_colormap = dc_colormaps + light;
-
-	do
-	{
-		c = dc_source[frac >> FRACBITS];
-		*dest = dc_colormap[c];
-		dest += 320/2;
-		if ((frac += fracstep) >= heightmask)
-			frac -= heightmask;
-	} while (count--);
-}
-
-static void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t *ds_source) 
-{
-	unsigned		xfrac, yfrac;
-	volatile pixel_t	*dest;
-	int			count, spot;
-	inpixel_t 		c;
-	short 			*dc_colormap;
-
-	xfrac = ds_xfrac; 
-	yfrac = ds_yfrac; 
-	 
-	dest = viewportbuffer + ds_y*320/2 + ds_x1;
-	count = ds_x2 - ds_x1;
-	dc_colormap = dc_colormaps + light;
-
-	do 
-	{ 
-		spot = ((yfrac>>(16-6))&(63*64)) + ((xfrac>>16)&63); 
-		c = ds_source[spot];
-		*dest++ = dc_colormap[c];
-		xfrac += ds_xstep; 
-		yfrac += ds_ystep; 
-	} while (count--);
-}
-
-#endif
-
-/*
-==================
-=
-= I_DrawColumn
-=
-= Source is the top of the column to scale
-=
-==================
-*/
-void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac, fixed_t fracstep, inpixel_t* dc_source, int dc_texheight)
-{
-#ifdef RANGECHECK 
-	if ((unsigned)dc_x >= screenWidth || dc_yl < 0 || dc_yh >= screenHeight)
-		I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
-#endif
-
-	if (debugmode == 2)
-		return;
-
-	if (dc_texheight & (dc_texheight - 1)) // height is not a power-of-2?
-		I_DrawColumnNPO2A(dc_x, dc_yl, dc_yh, light, frac, fracstep, dc_source, dc_texheight);
-	else
-		I_DrawColumnPO2A(dc_x, dc_yl, dc_yh, light, frac, fracstep, dc_source, dc_texheight);
-}
-
-/*
-================
-=
-= I_DrawSpan
-=
-================
-*/
-void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source)
-{
-#ifdef RANGECHECK 
-	if (ds_x2 < ds_x1 || ds_x1<0 || ds_x2 >= screenWidth
-		|| (unsigned)ds_y>screenHeight)
-		I_Error("R_DrawSpan: %i to %i at %i", ds_x1, ds_x2, ds_y);
-#endif 
-
-	if (debugmode == 2)
-		return;
-
-	I_DrawSpanA(ds_y, ds_x1, ds_x2, light, ds_xfrac, ds_yfrac, ds_xstep, ds_ystep, ds_source);
-}
 
 /*=========================================================================== */
 
