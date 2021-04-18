@@ -615,7 +615,7 @@ int R_PlaneHash(fixed_t height, unsigned flatnum, unsigned lightlevel) {
 	return ((((unsigned)height >> 8) + lightlevel) ^ flatnum) & (NUM_VISPLANES_BUCKETS - 1);
 }
 
-void R_OpenPlane(visplane_t* pl)
+void R_MarkOpenPlane(visplane_t* pl)
 {
 	int i;
 	unsigned short* open = pl->open;
@@ -670,7 +670,7 @@ visplane_t* R_FindPlane(visplane_t* ignore, int hash, fixed_t height,
 
 	if (check->runopen)
 	{
-		R_OpenPlane(check);
+		R_MarkOpenPlane(check);
 		check->runopen = false;
 	}
 
@@ -702,7 +702,7 @@ void Mars_Slave_R_OpenPlanes(void)
 
 		if (pl->runopen)
 		{
-			R_OpenPlane(pl);
+			R_MarkOpenPlane(pl);
 			pl->runopen = false;
 		}
 	}
