@@ -475,7 +475,7 @@ typedef struct visplane_s
 } visplane_t;
 
 #define	MAXVISPLANES	64
-extern	visplane_t		visplanes[MAXVISPLANES], *lastvisplane;
+extern	visplane_t		*visplanes/*[MAXVISPLANES]*/, *lastvisplane;
 
 int R_PlaneHash(fixed_t height, unsigned flatnum, unsigned lightlevel);
 visplane_t *R_FindPlane(visplane_t *ignore, int hash, fixed_t height, unsigned flatnum,

@@ -26,7 +26,7 @@ viswall_t	*viswalls/*[MAXWALLCMDS]*/, *lastwallcmd;
 /* */
 /* planes */
 /* */
-visplane_t	visplanes[MAXVISPLANES], *lastvisplane;
+visplane_t	*visplanes/*[MAXVISPLANES]*/, *lastvisplane;
 
 #define NUM_VISPLANES_BUCKETS 128
 static visplane_t** visplanes_hash;
@@ -540,6 +540,10 @@ void R_Setup (void)
 #endif
 
 	tempbuf = (unsigned short *)I_WorkBuffer();
+
+	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 4) & ~4);
+	visplanes = (void*)tempbuf;
+	tempbuf += sizeof(*visplanes) * MAXVISPLANES;
 
 /* */
 /* plane filling */
