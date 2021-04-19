@@ -7,19 +7,19 @@
 #include "doomdef.h"
 #include "r_local.h"
 
-typedef struct cliprange_s
+typedef struct
 {
-   int first;
-   int last;
+   fixed_t first;
+   fixed_t last;
 } cliprange_t;
 
 #define MAXSEGS 32
 
-cliprange_t *newend;
-cliprange_t  *solidsegs;
-seg_t       *curline;
-angle_t      lineangle1;
-sector_t    *frontsector;
+static cliprange_t *newend;
+static cliprange_t  *solidsegs;
+static seg_t       *curline;
+static angle_t      lineangle1;
+static sector_t    *frontsector;
 
 #ifdef MARS
 angle_t R_PointToAngle(fixed_t x, fixed_t y) __attribute__((section(".data"), aligned(16)));
@@ -283,7 +283,8 @@ void R_ClipSolidWallSegment(fixed_t first, fixed_t last)
 
          while(next != start)
          {
-            *next = *(next - 1);
+            next->first = (next - 1)->first;
+            next->last = (next - 1)->last;
             --next;
          }
 
@@ -329,8 +330,12 @@ crunch:
    if(next == start) // post just extended past the bottom of one post
       return;
 
-   while(next++ != newend)
-      *++start = *next;
+   while (next++ != newend)
+   {
+       (start + 1)->first = next->first;
+       (start + 1)->last = next->last;
+       start++;
+   }
 
    newend = start + 1;
 }
