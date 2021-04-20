@@ -15,7 +15,11 @@ static unsigned *sortedsprites;
 
 #ifdef MARS
 static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy)  __attribute__((section(".data"), aligned(16)));
-//static void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening) __attribute__((section(".data"), aligned(16)));
+static void R_DrawVisSprite(vissprite_t* vis, unsigned short* spropening) __attribute__((section(".data"), aligned(16)));
+static void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening) __attribute__((section(".data"), aligned(16)));
+static void R_DrawSpritesStride(const int start) __attribute__((section(".data"), aligned(16)));
+void Mars_Slave_R_DrawSprites(void) __attribute__((section(".data"), aligned(16)));
+void R_Sprites(void) __attribute__((section(".data"), aligned(16)));
 #endif
 
 static void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening)
