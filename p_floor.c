@@ -1,6 +1,9 @@
 #include "doomdef.h"
 #include "p_local.h"
 
+//e6y
+#define STAIRS_UNINITIALIZED_CRUSH_FIELD_VALUE 10
+
 /*================================================================== */
 /*================================================================== */
 /* */
@@ -386,6 +389,12 @@ int EV_BuildStairs(line_t *line)
 		floor->sector = sec;
 		floor->speed = FLOORSPEED/2;
 		floor->floordestheight = height;
+        // Initialize
+        floor->type = lowerFloor;
+        // e6y
+        // Uninitialized crush field will not be equal to 0 or 1 (true)
+        // with high probability. So, initialize it with any other value
+	    floor->crush = STAIRS_UNINITIALIZED_CRUSH_FIELD_VALUE;
 		
 		texture = sec->floorpic;
 
@@ -425,6 +434,12 @@ int EV_BuildStairs(line_t *line)
 				floor->sector = sec;
 				floor->speed = FLOORSPEED/2;
 				floor->floordestheight = height;
+                // Initialize
+                floor->type = lowerFloor;
+	            // e6y
+                // Uninitialized crush field will not be equal to 0 or 1 (true)
+                // with high probability. So, initialize it with any other value
+	            floor->crush = STAIRS_UNINITIALIZED_CRUSH_FIELD_VALUE;
 				ok = 1;
 				break;
 			}
