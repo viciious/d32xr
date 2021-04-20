@@ -10,7 +10,7 @@ LIBPATH = -L$(ROOTDIR)/sh-elf/lib -L$(ROOTDIR)/sh-elf/lib/gcc/sh-elf/4.6.2 -L$(R
 INCPATH = -I. -I$(ROOTDIR)/sh-elf/include -I$(ROOTDIR)/sh-elf/sh-elf/include
 
 CCFLAGS = -m2 -mb -O2 -Wall -c -std=gnu99
-CCFLAGS += -fomit-frame-pointer -funroll-loops -ffast-math -funsafe-loop-optimizations
+CCFLAGS += -fomit-frame-pointer -funroll-loops -ffast-math -funsafe-loop-optimizations -fno-align-loops -fno-align-functions -fno-align-jumps
 CCFLAGS += -D__32X__ -DMARS
 LDFLAGS = -T $(LDSCRIPTSDIR)/mars.ld -Wl,-Map=output.map -nostdlib
 ASFLAGS = --big
