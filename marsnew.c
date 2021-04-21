@@ -279,7 +279,7 @@ byte *I_WadBase (void)
 ==================== 
 */ 
  
-static char zone[0x2D000] __attribute__ ((section (".data"), aligned(16)));
+static char zone[0x30000] __attribute__ ((section (".data"), aligned(16)));
 byte *I_ZoneBase (int *size)
 {
 	*size = sizeof(zone);
