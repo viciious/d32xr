@@ -126,6 +126,24 @@ int D_strncasecmp (const char *s1, const char *s2, int len)
 	return *s1 - *s2;
 }
 
+// insertion sort
+void D_isort(int* a, int len)
+{
+	int i, j;
+	for (i = 1; i < len; i++)
+	{
+		for (j = i; j > 0; j--)
+		{
+			if (a[j - 1] <= a[j])
+				break;
+			int t = a[j - 1];
+			a[j - 1] = a[j];
+			a[j] = t;
+		}
+	}
+}
+
+
 
 /*
 ===============

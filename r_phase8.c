@@ -11,7 +11,7 @@
 #include <stdlib.h>
 
 static int sortedcount;
-static unsigned *sortedsprites;
+static int *sortedsprites;
 
 #ifdef MARS
 static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy)  __attribute__((section(".data"), aligned(16)));
@@ -179,7 +179,7 @@ static void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening)
          {
             opening = spropening[x];
             if((opening & 0xff) == screenHeight)
-               spropening[x] = (opening & OPENMARK) + bottomsil[x];
+               spropening[x] = (opening & OPENMARK) | bottomsil[x];
          }
       }
       else if(silhouette == AC_TOPSIL)
@@ -188,7 +188,7 @@ static void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening)
          {
             opening = spropening[x];
             if(!(opening & OPENMARK))
-               spropening[x] = (topsil[x] << 8) + (opening & 0xff);
+               spropening[x] = (topsil[x] << 8) | (opening & 0xff);
          }
       }
       else if(silhouette == (AC_TOPSIL | AC_BOTTOMSIL))
@@ -202,7 +202,7 @@ static void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening)
                bottom = bottomsil[x];
             if(top == 0)
                top = topsil[x];
-            spropening[x] = (top << 8) + bottom;
+            spropening[x] = (top << 8) | bottom;
          }
       }
    }
@@ -225,7 +225,7 @@ static void R_DrawSpritesStride(const int start)
         vissprite_t* ds, *ds2;
         boolean overlap = false;
 
-        ds = vissprites + (sortedsprites[i] & 0xff);
+        ds = vissprites + (sortedsprites[i] & 0x7f);
 #ifdef MARS
         ds2 = i+1 < sortedcount ? vissprites + (sortedsprites[i+1] & 0xff) : NULL;
 #endif
@@ -256,13 +256,6 @@ void Mars_Slave_R_DrawSprites(void)
     R_DrawSpritesStride(1);
 }
 #endif
-
-static int sortsprCmp(const void* p1, const void* p2)
-{
-    unsigned v1 = *(const unsigned*)p1;
-    unsigned v2 = *(const unsigned*)p2;
-    return v1 < v2 ? -1 : v2 < v1 ? 1 : 0;
-}
 
 static void R_DrawPSprites(void)
 {
@@ -296,7 +289,7 @@ void R_Sprites(void)
    int i = 0, count;
 
    sortedcount = 0;
-   sortedsprites = (unsigned *)&r_workbuf[0];
+   sortedsprites = (int *)&r_workbuf[0];
 
    count = lastsprite_p - vissprites;
 
@@ -306,11 +299,11 @@ void R_Sprites(void)
        vissprite_t* ds = vissprites + i;
        if (ds->patch == NULL)
            continue;
-       sortedsprites[sortedcount] = ((unsigned)ds->xscale << 8) + i;
+       sortedsprites[sortedcount] = ((unsigned)ds->xscale << 7) + i;
        sortedcount++;
    }
 
-   qsort(sortedsprites, sortedcount, sizeof(*sortedsprites), &sortsprCmp);
+   D_isort(sortedsprites, sortedcount);
 
 #ifdef MARS
    Mars_R_ResetNextSprite();

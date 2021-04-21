@@ -73,6 +73,12 @@ int D_vsnprintf(char *str, size_t nmax, const char *format, va_list ap);
 int D_snprintf(char *buf, size_t nsize, const char *fmt, ...);
 void D_printf (char *str, ...);
 
+void D_isort(int* a, int len)
+#ifdef MARS
+__attribute__((section(".data"), aligned(16)))
+#endif
+;
+
 /*
 ===============================================================================
 
