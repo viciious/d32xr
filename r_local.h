@@ -238,7 +238,11 @@ void	R_SetupTextureCaches(void);
 #define	SLOPEBITS	11
 #define	DBITS		(FRACBITS-SLOPEBITS)
 
-extern	int	tantoangle[SLOPERANGE+1];
+#ifdef MARS
+extern	angle_t	* const tantoangle;
+#else
+extern	const angle_t tantoangle[SLOPERANGE+1];
+#endif
 
 extern	unsigned short	*yslope/*[SCREENHEIGHT]*/;		/* 6.10 frac */
 extern	unsigned short	*distscale/*[SCREENWIDTH]*/;		/* 1.15 frac */
@@ -278,12 +282,12 @@ extern	unsigned char	*viewangletox/*[FINEANGLES/2]*/;
 extern	angle_t		*xtoviewangle/*[SCREENWIDTH+1]*/;
 
 #ifdef MARS
-extern	const fixed_t		finetangent_[FINEANGLES/4];
-fixed_t finetangent(angle_t angle) __attribute__ ((section (".data"), aligned(16)));
+extern	const fixed_t* const  finetangent_;
 #else
-extern	const fixed_t		finetangent[FINEANGLES/2];
-#define finetangent(x)		finetangent_(x)
+extern	const fixed_t finetangent_[FINEANGLES/2];
 #endif
+
+#define finetangent(x)		finetangent_[x]
 
 extern	VINT			validcount;
 extern	int			framecount;

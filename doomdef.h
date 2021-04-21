@@ -106,21 +106,15 @@ typedef unsigned angle_t;
 #define	ANGLETOFINESHIFT	19	/* 0x100000000 to 0x2000 */
 
 #ifdef MARS
-
-extern unsigned short 	finesine_[FINEANGLES/4];
-
-fixed_t finesine(angle_t angle) __attribute__ ((section (".data"), aligned(16)));
-fixed_t finecosine(angle_t angle) __attribute__ ((section (".data"), aligned(16)));
-
+extern	const fixed_t * const finesine_;
 #else
+extern	const fixed_t finesine_[5 * FINEANGLES / 4];
+#endif
 
-extern	fixed_t		finesine_[5*FINEANGLES/4];
-extern	fixed_t		*finecosine_;
+extern	const fixed_t * const finecosine_;
 
 #define finesine(x) finesine_[x]
 #define finecosine(x) finecosine_[x]
-
-#endif
 
 typedef enum
 {

@@ -79,9 +79,6 @@ int			skytexture;
 /* precalculated math */
 /* */
 angle_t		clipangle,doubleclipangle;
-#ifndef MARS
-fixed_t	*finecosine_ = &finesine_[FINEANGLES/4];
-#endif
 
 unsigned short* yslope/*[SCREENHEIGHT]*/ = NULL;              /* 6.10 frac */
 unsigned short* distscale/*[SCREENWIDTH]*/ = NULL;            /* 1.15 frac */
@@ -106,8 +103,6 @@ r_texcache_t r_flatscache, r_wallscache;
 ===============================================================================
 */
 
-
-extern	int	tantoangle[SLOPERANGE+1];
 
 int SlopeDiv (unsigned num, unsigned den)
 {
