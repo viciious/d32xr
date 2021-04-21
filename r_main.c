@@ -39,7 +39,7 @@ vissprite_t	*vissprites, *lastsprite_p, *vissprite_p;
 /* */
 /* openings / misc refresh memory */
 /* */
-unsigned short	openings[MAXOPENINGS], *lastopening;
+unsigned short	*openings/*[MAXOPENINGS]*/, *lastopening;
 
 /* holds *vissubsectors[MAXVISSEC], spropening[SCREENWIDTH+1], spanstart[256] */
 intptr_t 	*r_workbuf;
@@ -319,6 +319,8 @@ D_printf ("Done\n");
 	workbufsize *= sizeof(intptr_t);
 
 	r_workbuf = Z_Malloc(workbufsize, PU_STATIC, NULL);
+
+	openings = Z_Malloc(sizeof(*openings) * MAXOPENINGS, PU_STATIC, NULL);
 
 	R_InitTexCache(&r_flatscache, numflats);
 

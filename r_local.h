@@ -458,7 +458,7 @@ typedef struct vissprite_s
 extern	vissprite_t	*vissprites, *lastsprite_p, *vissprite_p;
 
 #define	MAXOPENINGS		SCREENWIDTH*8
-extern	unsigned short	openings[MAXOPENINGS], *lastopening;
+extern	unsigned short	*openings/*[MAXOPENINGS]*/, *lastopening;
 
 #define	MAXVISSSEC		256
 extern	subsector_t		**vissubsectors, **lastvissubsector;
