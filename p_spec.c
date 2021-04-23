@@ -18,13 +18,15 @@ animdef_t		animdefs[] =
 	{-1}
 };
 
-anim_t	anims[MAXANIMS], *lastanim;
+anim_t	*anims, *lastanim;
 
 
 void P_InitPicAnims (void)
 {
 	int		i;
 	
+	anims = Z_Malloc(sizeof(*anims)*MAXANIMS, PU_STATIC, 0);
+
 /* */
 /*	Init animation */
 /* */
