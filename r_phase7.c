@@ -31,14 +31,12 @@ typedef struct
 #endif
 } localplane_t;
 
-#ifdef MARS
-static void R_MapPlane(localplane_t* lpl, int y, int x, int x2) __attribute__((section(".data"), aligned(16)));
+static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)ATTR_DATA_CACHE_ALIGN;
 static void R_PlaneLoop(localplane_t* lpl, const int mask) __attribute__((always_inline));
 static void R_DrawPlanesMasked(const int mask) __attribute__((always_inline));
 
-void Mars_Slave_R_DrawPlanes(void) __attribute__((section(".data"), aligned(16)));
-void R_DrawPlanes(void) __attribute__((section(".data"), aligned(16)));
-#endif
+void Mars_Slave_R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
+void R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
 
 //
 // Render the horizontal spans determined by R_PlaneLoop
@@ -260,6 +258,8 @@ static void R_DrawPlanesMasked(const int mask)
 // Render all visplanes
 //
 #ifdef MARS
+void Mars_Slave_R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
+
 void Mars_Slave_R_DrawPlanes(void)
 {
     R_DrawPlanesMasked(1);

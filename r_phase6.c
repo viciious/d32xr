@@ -46,15 +46,12 @@ typedef struct
     unsigned light;
 } segdraw_t;
 
-#ifdef MARS
-static void R_DrawTexture(int x, segdraw_t* sdr, drawtex_t* tex) __attribute__((section(".data"), aligned(16)));
+static void R_DrawTexture(int x, segdraw_t* sdr, drawtex_t* tex) ATTR_DATA_CACHE_ALIGN;
 static void R_SegLoop(seglocal_t* lseg, const int cpu) __attribute__((always_inline));
 static void R_SegCommandsMask(const int mask) __attribute__((always_inline));
 
-void Mars_Slave_R_SegCommands(void) __attribute__((section(".data"), aligned(16)));
-void R_SegCommands(void) __attribute__((section(".data"), aligned(16)));
-
-#endif
+void Mars_Slave_R_SegCommands(void) ATTR_DATA_CACHE_ALIGN;
+void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN;
 
 //
 // Render a wall texture as columns

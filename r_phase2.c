@@ -9,9 +9,7 @@
 
 static sector_t emptysector = { 0, 0, -2, -2, -2 };
 
-#ifdef MARS
-void R_WallPrep(void) __attribute__((section(".data"), aligned(16)));
-#endif
+void R_WallPrep(void) ATTR_DATA_CACHE_ALIGN;
 
 void R_WallPrep(void)
 {

@@ -39,11 +39,9 @@ static line_t      *ceilingline;
 static fixed_t      testbbox[4];
 static int          testflags;
 
-void P_XYMovement(mobj_t* mo)
-#ifdef MARS
-__attribute__((section(".data"), aligned(16)));
-#endif
-;
+void P_MobjThinker(mobj_t* mobj) ATTR_DATA_CACHE_ALIGN;
+void P_XYMovement(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
+void P_RunMobjBase2(void) ATTR_DATA_CACHE_ALIGN;
 
 //
 // Check for collision against another mobj in one of the blockmap cells.
@@ -489,7 +487,7 @@ void P_MobjThinker(mobj_t *mobj)
 //
 // Do the main thinking logic for mobjs during a gametic.
 //
-void P_RunMobjBase2()
+void P_RunMobjBase2(void)
 {
    mobj_t* mo;
    mobj_t* next;

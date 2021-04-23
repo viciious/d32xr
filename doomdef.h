@@ -47,6 +47,12 @@ typedef unsigned short inpixel_t;
 #define	VINT	int
 #endif
 
+#ifdef MARS
+#define ATTR_DATA_CACHE_ALIGN __attribute__((section(".data"), aligned(16)))
+#else
+#define ATTR_DATA_CACHE_ALIGN
+#endif
+
 /*============================================================================= */
 
 /* all external data is defined here */

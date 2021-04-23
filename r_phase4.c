@@ -8,14 +8,14 @@
 #include "r_local.h"
 #include "mars.h"
 
-static boolean cacheneeded;
-
-#ifdef MARS
-static fixed_t R_PointToDist(fixed_t x, fixed_t y) __attribute__((section(".data"), aligned(16)));
-static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, angle_t normalangle) __attribute__((section(".data"), aligned(16)));
-static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle) __attribute__((section(".data"), aligned(16)));
-static void R_FinishWallPrep2(viswall_t* wc) __attribute__((section(".data"), aligned(16)));
-#endif
+static fixed_t R_PointToDist(fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
+static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, angle_t normalangle) ATTR_DATA_CACHE_ALIGN;
+static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle) ATTR_DATA_CACHE_ALIGN;
+static void R_FinishWallPrep1(viswall_t* wc) ATTR_DATA_CACHE_ALIGN;
+static void R_FinishWallPrep2(viswall_t* wc) ATTR_DATA_CACHE_ALIGN;
+static void R_FinishSprite(vissprite_t* vis) ATTR_DATA_CACHE_ALIGN;
+static void R_FinishPSprite(vissprite_t* vis) ATTR_DATA_CACHE_ALIGN;
+boolean R_LatePrep(void) ATTR_DATA_CACHE_ALIGN;
 
 //
 // Check if texture is loaded; return if so, flag for cache if not
@@ -23,6 +23,8 @@ static void R_FinishWallPrep2(viswall_t* wc) __attribute__((section(".data"), al
 #ifdef MARS
 #define R_CheckPixels(lumpnum) W_POINTLUMPNUM(lumpnum)
 #else
+static boolean cacheneeded;
+
 static void *R_CheckPixels(int lumpnum)
 {
     void *lumpdata = lumpcache[lumpnum];
@@ -316,6 +318,8 @@ static void R_FinishPSprite(vissprite_t *vis)
 }
 
 #ifdef MARS
+void Mars_Slave_R_PrepWalls(void) ATTR_DATA_CACHE_ALIGN;
+
 void Mars_Slave_R_PrepWalls(void)
 {
     viswall_t *wall;
@@ -332,9 +336,7 @@ boolean R_LatePrep(void)
    viswall_t   *wall;
    vissprite_t *spr;
    
-#ifdef MARS
-   cacheneeded = true;
-#else
+#ifndef MARS
    cacheneeded = false;
 #endif
 
@@ -367,7 +369,11 @@ boolean R_LatePrep(void)
    for(; spr < vissprite_p; spr++)
       R_FinishPSprite(spr);
  
+#ifdef MARS
+   return true;
+#else
    return cacheneeded;
+#endif
 }
 
 // EOF

@@ -13,14 +13,12 @@
 static int sortedcount;
 static int *sortedsprites;
 
-#ifdef MARS
-static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy)  __attribute__((section(".data"), aligned(16)));
-static void R_DrawVisSprite(vissprite_t* vis, unsigned short* spropening) __attribute__((section(".data"), aligned(16)));
-static void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening) __attribute__((section(".data"), aligned(16)));
-static void R_DrawSpritesStride(const int start) __attribute__((section(".data"), aligned(16)));
-void Mars_Slave_R_DrawSprites(void) __attribute__((section(".data"), aligned(16)));
-void R_Sprites(void) __attribute__((section(".data"), aligned(16)));
-#endif
+static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy)  ATTR_DATA_CACHE_ALIGN;
+static void R_DrawVisSprite(vissprite_t* vis, unsigned short* spropening) ATTR_DATA_CACHE_ALIGN;
+static void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening) ATTR_DATA_CACHE_ALIGN;
+static void R_DrawSpritesStride(const int start) ATTR_DATA_CACHE_ALIGN;
+void Mars_Slave_R_DrawSprites(void) ATTR_DATA_CACHE_ALIGN;
+void R_Sprites(void) ATTR_DATA_CACHE_ALIGN;
 
 static void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening)
 {
@@ -249,6 +247,8 @@ static void R_DrawSpritesStride(const int start)
 }
 
 #ifdef MARS
+void Mars_Slave_R_DrawSprites(void) ATTR_DATA_CACHE_ALIGN;
+
 void Mars_Slave_R_DrawSprites(void)
 {
     Mars_ClearCache();

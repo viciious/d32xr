@@ -7,11 +7,9 @@
 #include "doomdef.h"
 #include "r_local.h"
 
-#ifdef MARS
-static void R_PrepMobj(mobj_t* thing) __attribute__((section(".data"), aligned(16)));
-static void R_PrepPSprite(pspdef_t* psp) __attribute__((section(".data"), aligned(16)));
-void R_SpritePrep(void) __attribute__((section(".data"), aligned(16)));
-#endif
+static void R_PrepMobj(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
+static void R_PrepPSprite(pspdef_t* psp) ATTR_DATA_CACHE_ALIGN;
+void R_SpritePrep(void) ATTR_DATA_CACHE_ALIGN;
 
 //
 // Project vissprite for potentially visible actor
