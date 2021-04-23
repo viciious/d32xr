@@ -9,6 +9,10 @@
 
 static sector_t emptysector = { 0, 0, -2, -2, -2 };
 
+#ifdef MARS
+void R_WallPrep(void) __attribute__((section(".data"), aligned(16)));
+#endif
+
 void R_WallPrep(void)
 {
    viswall_t *segl = viswalls;
