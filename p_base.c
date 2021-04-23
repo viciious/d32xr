@@ -39,6 +39,12 @@ static line_t      *ceilingline;
 static fixed_t      testbbox[4];
 static int          testflags;
 
+void P_XYMovement(mobj_t* mo)
+#ifdef MARS
+__attribute__((section(".data"), aligned(16)));
+#endif
+;
+
 //
 // Check for collision against another mobj in one of the blockmap cells.
 //
