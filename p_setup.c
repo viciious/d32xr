@@ -642,6 +642,9 @@ void P_Init (void)
 	buttonlist = Z_Malloc(sizeof(*buttonlist) * MAXBUTTONS, PU_STATIC, 0);
 	linespeciallist = Z_Malloc(sizeof(*linespeciallist) * MAXLINEANIMS, PU_STATIC, 0);
 
+	activeplats = Z_Malloc(sizeof(*activeplats) * MAXPLATS, PU_STATIC, 0);
+	activeceilings = Z_Malloc(sizeof(*activeceilings) * MAXCEILINGS, PU_STATIC, 0);
+
 	P_InitSwitchList ();
 	P_InitPicAnims ();
 #ifndef MARS

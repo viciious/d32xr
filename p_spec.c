@@ -10,7 +10,7 @@
 ===================
 */
 
-animdef_t		animdefs[] =
+animdef_t	animdefs[] =
 {
 	{false,	"NUKAGE3",	"NUKAGE1",	4},
 	{false,	"FWATER4",	"FWATER1",	4},
