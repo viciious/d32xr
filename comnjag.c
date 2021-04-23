@@ -124,7 +124,7 @@ int		cx = 1, cy = 1;
 
 void D_printf (char *str, ...)
 {
-	static char buf[256];
+	char buf[256];
 	va_list ap;
 
 	va_start(ap, str);
