@@ -23,7 +23,12 @@ static sector_t    *frontsector;
 
 #ifdef MARS
 angle_t R_PointToAngle(fixed_t x, fixed_t y) __attribute__((section(".data"), aligned(16)));
-void R_AddLine(seg_t* line) __attribute__((section(".data"), aligned(16)));
+static void R_AddLine(seg_t* line) __attribute__((section(".data"), aligned(16)));
+static void R_ClipWallSegment(fixed_t first, fixed_t last, boolean solid) __attribute__((section(".data"), aligned(16)));
+static boolean R_CheckBBox(fixed_t bspcoord[4]) __attribute__((section(".data"), aligned(16)));
+static void R_Subsector(int num) __attribute__((section(".data"), aligned(16)));
+static inline void R_StoreWallRange(int start, int stop)  __attribute__((always_inline));
+static void R_RenderBSPNode(int bspnum) __attribute__((section(".data"), aligned(16)));
 #endif
 
 //
@@ -104,7 +109,7 @@ static int checkcoord[12][4] =
 // Checks BSP node/subtree bounding box. Returns true if some part of the bbox
 // might be visible.
 //
-boolean R_CheckBBox(fixed_t bspcoord[4])
+static boolean R_CheckBBox(fixed_t bspcoord[4])
 {
    int boxx;
    int boxy;
@@ -202,7 +207,7 @@ boolean R_CheckBBox(fixed_t bspcoord[4])
 //
 // Store information about the clipped seg range into the viswall array.
 //
-void R_StoreWallRange(int start, int stop)
+static inline void R_StoreWallRange(int start, int stop)
 {
    viswall_t *rw;
 
@@ -218,133 +223,101 @@ void R_StoreWallRange(int start, int stop)
 // Clips the given range of columns, but does not include it in the clip list.
 // Does handle windows, e.g., linedefs with upper and lower textures.
 //
-void R_ClipPassWallSegment(fixed_t first, fixed_t last)
+static void R_ClipWallSegment(fixed_t first, fixed_t last, boolean solid)
 {
-   fixed_t      scratch;
-   cliprange_t *start;
+    fixed_t      scratch;
+    cliprange_t* start, * next;
 
-   // find the first range that touches the range (adjacent pixels are touching)
-   scratch = first - 1;
-   start   = solidsegs;
-   while(start->last < scratch)
-      ++start;
+    // find the first range that touches the range (adjacent pixels are touching)
+    scratch = first - 1;
+    start = solidsegs;
+    while (start->last < scratch)
+        ++start;
 
-   // cut up the seg around solid pieces
-   if(first < start->first)
-   {
-      if(last < start->first - 1)
-      {
-         // post is entirely visible (above start)
-         R_StoreWallRange(first, last);
-         return;
-      }
+    // add visible pieces and close up holes
+    if (first < start->first)
+    {
+        if (last < start->first - 1)
+        {
+            // post is entirely visible (above start)
+            R_StoreWallRange(first, last);
 
-      // there is a fragment above *start
-      R_StoreWallRange(first, start->first - 1);
-   }
+            if (solid)
+            {
+                next = newend;
+                ++newend;
 
-   // bottom contained in start?
-   if(last <= start->last)
-      return;
+                while (next != start)
+                {
+                    next->first = (next - 1)->first;
+                    next->last = (next - 1)->last;
+                    --next;
+                }
 
-   while(last >= (start+1)->first - 1)
-   {
-      // there is a fragment between two posts.
-      R_StoreWallRange(start->last + 1, (start+1)->first - 1);
-      ++start;
+                next->first = first;
+                next->last = last;
+            }
 
-      if(last <= start->last)
-         return;
-   }
+            return;
+        }
 
-   // there is a fragment after *next
-   R_StoreWallRange(start->last + 1, last);
-}
+        // there is a fragment above *start
+        R_StoreWallRange(first, start->first - 1);
 
-void R_ClipSolidWallSegment(fixed_t first, fixed_t last)
-{
-   fixed_t      scratch;
-   cliprange_t *start, *next;
+        // now adjust the clip size
+        if (solid)
+        {
+            start->first = first;
+        }
+    }
 
-   // find the first range that touches the range (adjacent pixels are touching)
-   scratch = first - 1;
-   start   = solidsegs;
-   while(start->last < scratch)
-      ++start;
+    // bottom contained in start?
+    if (last <= start->last)
+        return;
 
-   // add visible pieces and close up holes
-   if(first < start->first)
-   {
-      if(last < start->first - 1)
-      {
-         // post is entirely visible (above start)
-         R_StoreWallRange(first, last);
-         next = newend;
-         ++newend;
+    next = start;
+    while (last >= (next + 1)->first - 1)
+    {
+        // there is a fragment between two posts
+        R_StoreWallRange(next->last + 1, (next + 1)->first - 1);
+        ++next;
 
-         while(next != start)
-         {
-            next->first = (next - 1)->first;
-            next->last = (next - 1)->last;
-            --next;
-         }
+        if (last <= next->last)
+        {
+            // bottom is contained in next
+            last = next->last;
+            goto crunch;
+        }
+    }
 
-         next->first = first;
-         next->last  = last;
-         return;
-      }
-
-      // there is a fragment above *start
-      R_StoreWallRange(first, start->first - 1);
-
-      // now adjust the clip size
-      start->first = first;
-   }
-
-   // bottom contained in start?
-   if(last <= start->last)
-      return;
-
-   next = start;
-   while(last >= (next + 1)->first - 1)
-   {
-      // there is a fragment between two posts
-      R_StoreWallRange(next->last + 1, (next + 1)->first - 1);
-      ++next;
-      
-      if(last <= next->last)
-      {
-         // bottom is contained in next, adjust the clip size
-         start->last = next->last;
-         goto crunch;
-      }
-   }
-
-   // there is a fragment after *next
-   R_StoreWallRange(next->last + 1, last);
-   // adjust the clip size
-   start->last = last;
-
-   // remove start+1 to next from the clip list, because start now covers
-   // their area
+    // there is a fragment after *next
+    R_StoreWallRange(next->last + 1, last);
 crunch:
-   if(next == start) // post just extended past the bottom of one post
-      return;
+    if (solid)
+    {
+        // adjust the clip size
+        start->last = last;
 
-   while (next++ != newend)
-   {
-       (start + 1)->first = next->first;
-       (start + 1)->last = next->last;
-       start++;
-   }
+        // remove start+1 to next from the clip list, because start now covers
+        // their area
+        if (next == start) // post just extended past the bottom of one post
+            return;
 
-   newend = start + 1;
+        while (next++ != newend)
+        {
+            (start + 1)->first = next->first;
+            (start + 1)->last = next->last;
+            start++;
+        }
+
+        newend = start + 1;
+    }
 }
 
 //
 // Clips the given segment and adds any visible pieces to the line list.
 //
-void R_AddLine(seg_t *line)
+static void R_AddLine(seg_t *line)
 {
    angle_t angle1, angle2, span, tspan;
    fixed_t x1, x2;
@@ -422,18 +395,18 @@ void R_AddLine(seg_t *line)
       return;
 
 clippass:
-   R_ClipPassWallSegment(x1, x2);
+   R_ClipWallSegment(x1, x2, false);
    return;
 
 clipsolid:
-   R_ClipSolidWallSegment(x1, x2);
+   R_ClipWallSegment(x1, x2, true);
 }
 
 //
 // Determine floor/ceiling planes, add sprites of things in sector,
 // draw one or more segments.
 //
-void R_Subsector(int num)
+static void R_Subsector(int num)
 {
    subsector_t *sub = &subsectors[num];
    seg_t       *line, *stopline;
@@ -456,7 +429,7 @@ void R_Subsector(int num)
 // Recursively descend through the BSP, classifying nodes according to the
 // player's point of view, and render subsectors in view.
 //
-void R_RenderBSPNode(int bspnum)
+static void R_RenderBSPNode(int bspnum)
 {
    node_t *bsp;
    int     side;
