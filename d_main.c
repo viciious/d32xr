@@ -396,7 +396,8 @@ while (!I_RefreshCompleted ())
 	stop ();
 	S_Clear ();
 	
-	players[0].mo = players[1].mo = &emptymobj;	/* for net consistancy checks */
+	if (players)
+		players[0].mo = players[1].mo = &emptymobj;	/* for net consistancy checks */
 	
 	return exit;
 } 

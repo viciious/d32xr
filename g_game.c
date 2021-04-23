@@ -17,8 +17,8 @@ dmapinfo_t		gamemapinfo;
 
 gametype_t		netgame;
 
-boolean         playeringame[MAXPLAYERS]; 
-player_t        players[MAXPLAYERS]; 
+boolean         playeringame[MAXPLAYERS];
+player_t        *players/*[MAXPLAYERS]*/ = NULL;
  
 int             consoleplayer;          /* player taking events and displaying  */
 int             displayplayer;          /* view being displayed  */
@@ -369,6 +369,9 @@ void G_InitNew (skill_t skill, int map, gametype_t gametype)
 D_printf ("G_InitNew\n");
 
 	M_ClearRandom (); 
+
+	if (!players)
+		players = Z_Malloc(sizeof(*players) * MAXPLAYERS, PU_STATIC, 0);
 
 	if (gamemapinfo.data)
 		Z_Free(gamemapinfo.data);

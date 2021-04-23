@@ -467,7 +467,7 @@ extern	gametype_t	netgame;
 extern	boolean		playeringame[MAXPLAYERS];
 extern	int			consoleplayer;		/* player taking events and displaying */
 extern	int			displayplayer;
-extern	player_t	players[MAXPLAYERS];
+extern	player_t	*players/*[MAXPLAYERS]*/;
 
 extern	int			maxammo[NUMAMMO];
 
