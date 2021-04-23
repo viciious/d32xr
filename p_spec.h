@@ -41,7 +41,7 @@ extern	anim_t	*anims, *lastanim;
 /* */
 #define	MAXLINEANIMS		64
 extern	int		numlinespecials;
-extern	line_t	*linespeciallist[MAXLINEANIMS];
+extern	line_t	**linespeciallist/*[MAXLINEANIMS]*/;
 
 
 /*	Define values for map objects */

@@ -803,8 +803,8 @@ int EV_DoDonut(line_t *line)
 ===============================================================================
 */
 
-int		numlinespecials;
-line_t	*linespeciallist[MAXLINEANIMS];
+int		numlinespecials = 0;
+line_t	**linespeciallist = NULL;
 
 void P_SpawnSpecials (void)
 {

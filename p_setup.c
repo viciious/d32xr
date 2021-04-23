@@ -638,6 +638,7 @@ void P_Init (void)
 {
 	switchlist = Z_Malloc(sizeof(*switchlist)* MAXSWITCHES * 2, PU_STATIC, 0);
 	buttonlist = Z_Malloc(sizeof(*buttonlist) * MAXBUTTONS, PU_STATIC, 0);
+	linespeciallist = Z_Malloc(sizeof(*linespeciallist) * MAXLINEANIMS, PU_STATIC, 0);
 
 	P_InitSwitchList ();
 	P_InitPicAnims ();
