@@ -35,6 +35,15 @@ static fixed_t topslope, bottomslope; // slopes to top and bottom of target
 static divline_t strace;  // from t1 to t2
 static fixed_t t2x, t2y;
 
+#ifdef MARS
+int P_DivlineSide(fixed_t x, fixed_t y, divline_t* node) __attribute__((section(".data"), aligned(16)));
+fixed_t P_InterceptVector2(divline_t* v2, divline_t* v1) __attribute__((section(".data"), aligned(16)));
+static boolean PS_CrossSubsector(int num) __attribute__((section(".data"), aligned(16)));
+static boolean PS_CrossBSPNode(int bspnum) __attribute__((section(".data"), aligned(16)));
+boolean PS_CheckSight(mobj_t* t1, mobj_t* t2) __attribute__((section(".data"), aligned(16)));
+void P_CheckSights2(void) __attribute__((section(".data"), aligned(16)));
+#endif
+
 //
 // Returns side 0 (front), 1 (back), or 2 (on).
 //
