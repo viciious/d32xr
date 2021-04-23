@@ -42,6 +42,13 @@ void R_InitTexCache(r_texcache_t* c, int maxobjects)
 #ifdef MARS
 	c->maxobjects = maxobjects;
 
+	if (!maxobjects)
+	{
+		c->framecount = NULL;
+		c->pixcount = NULL;
+		return;
+	}
+
 	c->framecount = Z_Malloc(maxobjects * sizeof(*c->framecount), PU_STATIC, 0);
 	c->pixcount = Z_Malloc(maxobjects * sizeof(*c->pixcount), PU_STATIC, 0);
 
@@ -148,6 +155,9 @@ static void R_UpdateCachedPixelcount(void* ptr, void* userp)
 	texcacheblock_t* entry = ptr;
 	int id = entry->id;
 
+	if (!c->zone)
+		return;
+
 	if (c->framecount[id] == framecount)
 		entry->pixelcount = c->pixcount[id];
 	else
@@ -166,6 +176,9 @@ static void R_UpdateCachedPixelcount(void* ptr, void* userp)
 */
 void R_PostTexCacheFrame(r_texcache_t* c)
 {
+	if (!c->zone)
+		return;
+
 	Z_ForEachBlock(c->zone, &R_UpdateCachedPixelcount, c);
 }
 
