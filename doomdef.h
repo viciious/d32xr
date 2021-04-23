@@ -607,14 +607,14 @@ extern	void		*lumpcache[MAXLUMPS];
 
 void	W_Init (void);
 
-int		W_CheckNumForName (char *name);
-int		W_GetNumForName (char *name);
+int		W_CheckNumForName (const char *name);
+int		W_GetNumForName (const char *name);
 
 int		W_LumpLength (int lump);
 void	W_ReadLump (int lump, void *dest);
 
 void	*W_CacheLumpNum (int lump, int tag);
-void	*W_CacheLumpName (char *name, int tag);
+void	*W_CacheLumpName (const char *name, int tag);
 
 const char *W_GetNameForNum (int lump);
 
