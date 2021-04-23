@@ -167,7 +167,8 @@ typedef struct
 #define	MAXBUTTONS	16		/* 4 players, 4 buttons each at once, max. */
 #define BUTTONTIME	15		/* 1 second */
 
-extern	button_t	buttonlist[MAXBUTTONS];	
+extern	VINT		*switchlist/*[MAXSWITCHES * 2]*/;
+extern	button_t* buttonlist/*[MAXBUTTONS]*/;
 
 void	P_ChangeSwitchTexture(line_t *line,int useAgain);
 void 	P_InitSwitchList(void);
