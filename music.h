@@ -11,7 +11,7 @@ extern	sfx_t			*instruments[];
 extern	int				pitch_bend[];
 extern	int				pitch_bend_bits;
 
-extern	channel_t		music_channels[10];
+extern	channel_t		music_channels[];
 
 extern	int				samplecount;
 extern	int				musictime;

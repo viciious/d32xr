@@ -23,13 +23,10 @@ int				sfxsample;			/* the sample about to be output */
 
 /*			 MUSIC VARIABLES */
 
-#ifdef MARS
-sfx_t 		*instruments[1];
-#else
-sfx_t           *instruments[256];	/* pointers to all patches */
-#endif
-
+#ifndef MARS
+sfx_t 		*instruments[256];
 channel_t       music_channels[10];	/* master music channel list */
+#endif
 
 int             musictime;			/* internal music time, follows samplecount */
 int             next_eventtime;		/* when next event will occur */
@@ -81,12 +78,12 @@ void S_Init(void)
  		instruments[instnum] = (sfx_t *) (wadfileptr + lumpinfo[lump].filepos);
  		lump++;
  	}
-#endif
  	/* hack test */
 
+	D_memset(music_channels, 0, sizeof(music_channels));
+#endif
 	music_memory = 0;
 	music = 0;
-	D_memset(music_channels, 0, sizeof(music_channels));
 	musictime = 0;
 	next_eventtime = 0;
 /*	S_StartSong(1,1); */
