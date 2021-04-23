@@ -28,10 +28,10 @@ spclface_e	spclFaceType;
 
 jagobj_t	*sbar;
 byte		*sbartop;
-jagobj_t	*faces[NUMFACES];
-jagobj_t	*sbobj[NUMSBOBJ];
+jagobj_t	**faces/*[NUMFACES]*/;
+jagobj_t	**sbobj/*[NUMSBOBJ]*/;
 
-sbflash_t	flashCards[NUMCARDS];	/* INFO FOR FLASHING CARDS & SKULLS */
+sbflash_t	*flashCards/*[NUMCARDS]*/ = NULL;	/* INFO FOR FLASHING CARDS & SKULLS */
 
 /*
 ====================
@@ -44,6 +44,10 @@ sbflash_t	flashCards[NUMCARDS];	/* INFO FOR FLASHING CARDS & SKULLS */
 
 void ST_Init (void)
 {
+	flashCards = Z_Malloc(sizeof(*flashCards) * NUMCARDS, PU_STATIC, 0);
+	faces = Z_Malloc(sizeof(*faces) * NUMFACES, PU_STATIC, 0);
+	sbobj = Z_Malloc(sizeof(*sbobj) * NUMSBOBJ, PU_STATIC, 0);
+
 #ifndef MARS
 	int		i,l;
 
