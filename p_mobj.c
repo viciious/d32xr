@@ -6,10 +6,12 @@
 
 void G_PlayerReborn (int player);
 
+#ifndef MARS
 #define		ITEMQUESIZE	32
 mapthing_t	itemrespawnque[ITEMQUESIZE];
 int			itemrespawntime[ITEMQUESIZE];
 int			iquehead, iquetail;
+#endif
 
 /*
 ===============

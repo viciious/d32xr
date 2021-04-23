@@ -619,7 +619,9 @@ extern byte *debugscreen;
 }
 #endif
 
+#ifndef MARS
 	iquehead = iquetail = 0;
+#endif
 	gamepaused = false;
 
 	R_SetupTextureCaches();
