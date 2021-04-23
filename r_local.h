@@ -221,7 +221,6 @@ extern	side_t		*sides;
 
 int     R_PointOnSide(int x, int y, node_t *node);
 int     SlopeDiv(unsigned int num, unsigned int den);
-void	R_RenderBSPNode (int bspnum);
 void	R_InitData (void);
 void	R_SetScreenSize(int size);
 void	R_InitMathTables(void);

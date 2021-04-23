@@ -23,6 +23,7 @@ static sector_t    *frontsector;
 
 #ifdef MARS
 angle_t R_PointToAngle(fixed_t x, fixed_t y) __attribute__((section(".data"), aligned(16)));
+void R_AddLine(seg_t* line) __attribute__((section(".data"), aligned(16)));
 #endif
 
 //
