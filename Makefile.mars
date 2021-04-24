@@ -76,7 +76,7 @@ OBJS = \
 	r_phase7.o \
 	r_phase8.o \
 	r_phase9.o \
-	s_sound.o \
+	marssound.o \
 	sounds.o \
 	sprinfo.o \
 	tables.o \
@@ -90,7 +90,8 @@ OBJS = \
 	sh2_fixed.o \
 	sh2_draw.o \
 	r_cache.o \
-	m_fire.o
+	m_fire.o \
+	soundbase.o
 
 release: m68k.bin $(TARGET).bin
 

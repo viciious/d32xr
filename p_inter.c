@@ -547,6 +547,8 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 		player->itemcount++;
 	P_RemoveMobj (special);
 	player->bonuscount += BONUSADD;
+	if (player == &players[consoleplayer])
+		toucher = NULL;
 	S_StartSound (toucher, sound);
 }
 

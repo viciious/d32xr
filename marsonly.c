@@ -11,13 +11,6 @@ boolean	debugscreenactive = false;
 
 extern short* dc_colormaps;
 
-pixel_t	*screens[2];	/* [SCREENWIDTH*SCREENHEIGHT];  */
-int		*screenshade;	/* pixels for screen shifting */
-
-int             samplecount;
-
-int             soundbuffer[EXTERNALQUADS*16];
-
 int		lastticcount = 0;
 int		lasttics = 0;
 

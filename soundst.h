@@ -14,13 +14,14 @@ typedef struct
 
 typedef struct sfxinfo_s
 {
-	char	*name;		/* up to 6-character name */
-	boolean singularity;	/* Sfx singularity (only one at a time) */
-	int		priority;		/* Sfx priority */
-	struct sfxinfo_s *link;	/* referenced sound if a link */
-	int		pitch;		/* pitch if a link */
-	int		volume;		/* volume if a link */
-	sfx_t	*md_data;	/* machine-dependent sound data */
+	char singularity;	/* Sfx singularity (only one at a time) */
+	unsigned char priority;		/* Sfx priority */
+#ifndef MARS
+	int	pitch;		/* pitch if a link */
+	int	volume;		/* volume if a link */
+	struct sfxinfo_s* link;	/* referenced sound if a link */
+#endif
+	sfx_t* md_data;	/* machine-dependent sound data */
 } sfxinfo_t;
 
 typedef struct
@@ -31,21 +32,27 @@ typedef struct
 
 /*============================================================================ */
 
-#ifdef MARS
-#define INTERNALQUADS   1
-#define EXTERNALQUADS   1
-#else
 #define	INTERNALQUADS	256			/* 4k / 16 bytes per quad (64 bits) */
 #define	EXTERNALQUADS	512			/* 16k  / 32 bytes per quad (16 bits+music) */
-#endif
 #define	SFXCHANNELS		4
 
 typedef struct
 {
-	unsigned	*source;			/* work in groups of 4 8 bit samples */
+#ifdef MARS
+	uint8_t		*data;
+	int			position;
+	int			increment;
+	int			length;
+	int			loop_length;
+	uint8_t		volume;
+	uint8_t		pan;
+#else
+	unsigned* source;			/* work in groups of 4 8 bit samples */
 	int			startquad;
 	int			stopquad;
 	int			volume;				/* range from 0-32k */
+#endif
+
 	sfxinfo_t	*sfx;
 	mobj_t		*origin;
 } sfxchannel_t;
@@ -75,4 +82,3 @@ void S_Init(void);
 void S_Clear (void);
 void S_StartSound(mobj_t *origin, int sound_id);
 void S_UpdateSounds(void);
-

@@ -46,15 +46,6 @@ void Mars_UploadPalette(const byte* palette);
 		CacheControl(SH2_CCTL_CP | SH2_CCTL_CE); /* purge and re-enable */ \
 	} while (0)
 
-//static inline void Mars_ClearCacheLines(volatile void* paddr, volatile int lines)
-//{
-//	volatile intptr_t addr = (volatile intptr_t)paddr;
-//	while (lines--) {
-//		Mars_ClearCacheLine(addr);
-//		addr += 16;
-//	}
-//}
-
 #define Mars_ClearCacheLines(paddr,nl) \
 	do { \
 		intptr_t addr = (intptr_t)paddr; \
@@ -65,21 +56,15 @@ void Mars_UploadPalette(const byte* palette);
 		} \
 	} while (0)
 
-static inline void Mars_R_BeginComputeSeg(void)/* __attribute__((section(".data"), aligned(16)))*/;
-static inline void Mars_R_EndComputeSeg(void)/* __attribute__((section(".data"), aligned(16)))*/;
-static inline void Mars_R_BeginPrepWalls()/* __attribute__((section(".data"), aligned(16)))*/;
-static inline void Mars_R_EndPrepWalls(void)/* __attribute__((section(".data"), aligned(16)))*/;
-
-void Mars_Slave_R_SegCommands(void)/* __attribute__((section(".data"), aligned(16)))*/;
-void Mars_Slave_R_PrepWalls(void)/* __attribute__((section(".data"), aligned(16)))*/;
-void Mars_Slave_R_DrawPlanes(void)/* __attribute__((section(".data"), aligned(16)))*/;
-void Mars_Slave_R_DrawSprites(void)/* __attribute__((section(".data"), aligned(16)))*/;
-void Mars_Slave_R_SegCommands2(void)/* __attribute__((section(".data"), aligned(16)))*/;
-void Mars_Slave_R_OpenPlanes(void);
-
-void Mars_R_SegCommands(void)/* __attribute__((section(".data"), aligned(16)))*/;
+void Mars_Slave_R_SegCommands(void) ATTR_DATA_CACHE_ALIGN;
+void Mars_Slave_R_PrepWalls(void) ATTR_DATA_CACHE_ALIGN;
+void Mars_Slave_R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
+void Mars_Slave_R_DrawSprites(void) ATTR_DATA_CACHE_ALIGN;
+void Mars_Slave_R_OpenPlanes(void) ATTR_DATA_CACHE_ALIGN;
 
 void Mars_Slave_M_AnimateFire(void);
+void Mars_Slave_InitSoundDMA(void);
+void Mars_Slave_ReadSoundCmds(void) ATTR_DATA_CACHE_ALIGN;
 
 static inline void Mars_R_BeginComputeSeg(void)
 {
@@ -163,6 +148,13 @@ static inline void Mars_R_StopOpenPlanes(void)
 
 	MARS_SYS_COMM4 = 7;
 	while (MARS_SYS_COMM4 != 0) {}
+}
+
+static inline void Mars_InitSoundDMA(void)
+{
+	while (MARS_SYS_COMM4 != 0) {};
+	MARS_SYS_COMM4 = 10;
+	while (MARS_SYS_COMM4 != 0) {};
 }
 
 #endif 

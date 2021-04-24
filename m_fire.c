@@ -140,6 +140,8 @@ void Mars_Slave_M_AnimateFire(void)
 			}
 		}
 
+		Mars_Slave_ReadSoundCmds();
+
 		// Stop fire
 		if (I_GetTime() - start > 350)
 		{
@@ -161,6 +163,8 @@ void Mars_Slave_M_AnimateFire(void)
 
 		do
 		{
+			Mars_Slave_ReadSoundCmds();
+
 			ticcount = I_GetTime();
 			if (MARS_SYS_COMM4 != 8) break;
 		} while (ticcount - lastticcount < 2);

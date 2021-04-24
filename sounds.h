@@ -101,6 +101,7 @@ typedef enum
  
 extern const musicinfo_t S_music[]; 
 extern sfxinfo_t   S_sfx[]; 
- 
+extern const char* S_sfxnames[];
+
 #endif 
  

@@ -371,7 +371,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		
 		if ((demorecording || demoplayback) && (buttons & BT_PAUSE) )
 			exit = ga_completed;
-			
+
 		if (gameaction == ga_warped)
 		{
 			exit = ga_warped;	/* hack for NeXT level reloading and net error */
@@ -612,10 +612,9 @@ D_printf ("R_Init\n");
 	R_Init (); 
 D_printf ("P_Init\n");
 	P_Init (); 
-#ifndef MARS
 D_printf ("S_Init\n");
 	S_Init ();
-#endif
+D_printf("ST_Init\n");
 	ST_Init ();
 #ifndef MARS
 	O_Init ();

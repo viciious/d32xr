@@ -316,6 +316,7 @@ slave_vbr:
         .long   slave_hbi       /* H Blank interupt (Level 10 & 11 */
         .long   slave_vbi       /* V Blank interupt (Level 12 & 13) */
         .long   slave_rst       /* Reset Button (Level 14 & 15) */
+        .long   slave_dma1      /* DMA1 TE INT */
 
 !-----------------------------------------------------------------------
 ! The Master SH2 starts here
@@ -812,6 +813,154 @@ svri_slave_stk:
         .long   0x06040000              /* Cold Start SP */
 svri_slave_vres:
         .long   slave_reset
+
+!-----------------------------------------------------------------------
+! Slave DMA 1 TE INT handler
+!-----------------------------------------------------------------------
+
+slave_dma1:
+        ! save registers
+        sts.l   pr,@-r15
+        mov.l   r0,@-r15
+        mov.l   r1,@-r15
+        mov.l   r2,@-r15
+        mov.l   r3,@-r15
+        mov.l   r4,@-r15
+        mov.l   r5,@-r15
+        mov.l   r6,@-r15
+        mov.l   r7,@-r15
+
+        mov.l   sd1_handler,r0
+        jsr     @r0
+        nop
+
+        ! restore registers
+        mov.l   @r15+,r7
+        mov.l   @r15+,r6
+        mov.l   @r15+,r5
+        mov.l   @r15+,r4
+        mov.l   @r15+,r3
+        mov.l   @r15+,r2
+        mov.l   @r15+,r1
+        mov.l   @r15+,r0
+        lds.l   @r15+,pr
+        rte
+        nop
+
+        .align  2
+sd1_handler:
+        .long   _slave_dma1_handler
+
+! void S_PaintChannel(void *channel, int16_t *buffer, int32_t cnt, int32_t scale);
+! On entry: r4 = channel pointer
+!           r5 = buffer pointer
+!           r6 = count (number of stereo 16-bit samples)
+!           r7 = scale (global volume - possibly fading, 0 - 64)
+        .align  4
+        .global _S_PaintChannel
+_S_PaintChannel:
+        mov.l   r8,@-r15
+        mov.l   r9,@-r15
+        mov.l   r10,@-r15
+        mov.l   r11,@-r15
+        mov.l   r12,@-r15
+        mov.l   r13,@-r15
+        mov.l   r14,@-r15
+
+        mov.l   @r4,r8          /* data pointer */
+        mov.l   @(4,r4),r9      /* position */
+        mov.l   @(8,r4),r10     /* increment */
+        mov.l   @(12,r4),r11    /* length */
+        mov.l   @(16,r4),r12    /* loop_length */
+        mov.w   @(20,r4),r0     /* volume:pan */
+
+        /* calculate left/right volumes from volume, pan, and scale */
+        mov     r0,r13
+        shlr8   r13
+        extu.b  r13,r13         /* ch_vol */
+        mov     r13,r14
+        extu.b  r0,r0           /* pan */
+
+        /* LINEAR_CROSSFADE */
+        mov     #0xFF,r1
+        extu.b  r1,r1
+        sub     r0,r1           /* 255 - pan */
+        mulu.w  r0,r14
+        sts     macl,r0         /* pan * ch_vol */
+        mul.l   r0,r7
+        sts     macl,r14        /* pan * ch_vol * scale */
+        shlr8   r14
+!       shlr2   r14
+        shlr2   r14             /* right volume = pan * ch_vol * scale / 64 / 64 */
+
+        mulu.w  r1,r13
+        sts     macl,r0         /* (255 - pan) * ch_vol */
+        mul.l   r0,r7
+        sts     macl,r13        /* (255 - pan) * ch_vol * scale */
+        shlr8   r13
+!       shlr2   r13
+        shlr2   r13             /* left volume = (255 - pan) * ch_vol * scale / 64 / 64 */
+
+        /* mix r6 stereo samples */
+mix_loop:
+        /* process one sample */
+        mov     r9,r0
+        shlr8   r0
+        shll2   r0
+        shlr8   r0
+        mov.b   @(r0,r8),r0
+        extu.b  r0,r3
+        add     #-128,r3
+        /* scale sample for left output */
+        muls.w  r3,r13
+        mov.w   @r5,r1
+        sts     macl,r0
+        shlr8   r0
+        exts.w  r0,r0
+        add     r0,r1
+        mov.w   r1,@r5
+        add     #2,r5
+        /* scale sample for right output */
+        muls.w  r3,r14
+        mov.w   @r5,r1
+        sts     macl,r0
+        shlr8   r0
+        exts.w  r0,r0
+        add     r0,r1
+        mov.w   r1,@r5
+        add     #2,r5
+
+        /* advance position and check for loop */
+        add     r10,r9                  /* position += increment */
+mix_chk:
+        cmp/hs  r11,r9
+        bt      mix_wrap                /* position >= length */
+mix_next:
+        /* next sample */
+        dt      r6
+        bf      mix_loop
+        bra     mix_exit
+        mov.l   r9,@(4,r4)              /* update position field */
+
+mix_wrap:
+        /* check if loop sample */
+        mov     r12,r0
+        cmp/eq  #0,r0
+        bf/s    mix_chk                 /* loop sample */
+        sub     r12,r9                  /* position -= loop_length */
+        /* sample done playing */
+        mov.l   r12,@r4                 /* clear data pointer field */
+
+mix_exit:
+        mov.l   @r15+,r14
+        mov.l   @r15+,r13
+        mov.l   @r15+,r12
+        mov.l   @r15+,r11
+        mov.l   @r15+,r10
+        mov.l   @r15+,r9
+        mov.l   @r15+,r8
+        rts
+        nop
 
 !-----------------------------------------------------------------------
 ! Fast memcpy function - copies longs, runs from sdram for speed

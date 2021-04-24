@@ -59,7 +59,7 @@ void S_Init(void)
 	
 	for (i=1 ; i < NUMSFX ; i++)
 	{
-		l = W_CheckNumForName(S_sfx[i].name);
+		l = W_CheckNumForName(S_sfxnames[i]);
 		if (l != -1)
 			S_sfx[i].md_data = W_POINTLUMPNUM(l);
 	}	
@@ -203,9 +203,6 @@ gotchannel:
 	
 #endif
 }
-
-
-
 
 
 /*
