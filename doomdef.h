@@ -181,6 +181,10 @@ struct player_s;
 
 typedef struct mobj_s
 {
+	struct	mobj_s* prev, * next;
+	latecall_t		latecall;			/* set in p_base if more work needed */
+	fixed_t			x, y, z;
+
 	VINT			health;
 	VINT			movedir;		/* 0-7 */
 	VINT			movecount;		/* when 0, select a new dir */
@@ -195,12 +199,9 @@ typedef struct mobj_s
 	VINT			frame;				/* might be ord with FF_FULLBRIGHT */
 
 	unsigned short		type;
-	struct	mobj_s	*prev, *next;
 
-	latecall_t		latecall;			/* set in p_base if more work needed */
 	
 /* info for drawing */
-	fixed_t			x,y,z;
 	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
 	angle_t			angle;
 
