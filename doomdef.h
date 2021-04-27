@@ -812,6 +812,8 @@ extern	volatile int		ticcount, joybuttons;
 
 #define	JP_OPTION	0x200
 #define	JP_C		0x2000
+#define JP_PWEAPN   0x4000 // CALICO: previous weapon input
+#define JP_NWEAPN   0x8000 // CALICO: next weapon input
 #define	JP_STAR		0x10000
 #define	JP_7		0x20000
 #define	JP_4		0x40000
@@ -846,6 +848,8 @@ extern	volatile int		ticcount, joybuttons;
 #define	BT_8			JP_8
 #define	BT_9			JP_9
 #define	BT_0			JP_0
+#define	BT_PWEAPN		JP_PWEAPN
+#define	BT_NWEAPN		JP_NWEAPN
 
 extern	unsigned	BT_ATTACK;
 extern	unsigned	BT_USE;

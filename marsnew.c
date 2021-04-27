@@ -139,6 +139,10 @@ int Mars_ToDoomControls(int ctrl)
 		newc |= BT_B;
 	if (ctrl & SEGA_CTRL_C)
 		newc |= BT_C;
+	if (ctrl & SEGA_CTRL_X)
+		newc |= BT_PWEAPN;
+	if (ctrl & SEGA_CTRL_Y)
+		newc |= BT_NWEAPN;
 	if (ctrl & SEGA_CTRL_Z)
 		newc |= BT_9;
 

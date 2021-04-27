@@ -270,19 +270,19 @@ boolean P_CheckAmmo (player_t *player)
 	/* out of ammo, pick a weapon to change to */
 	do
 	{
-		if (player->weaponowned[wp_plasma] && player->ammo[am_cell])
+		if (P_CanFireWeapon(player, wp_plasma))
 			player->pendingweapon = wp_plasma;
-		else if (player->weaponowned[wp_chaingun] && player->ammo[am_clip])
+		else if (P_CanFireWeapon(player, wp_chaingun))
 			player->pendingweapon = wp_chaingun;
-		else if (player->weaponowned[wp_shotgun] && player->ammo[am_shell])
+		else if (P_CanFireWeapon(player, wp_shotgun))
 			player->pendingweapon = wp_shotgun;
-		else if (player->ammo[am_clip])
+		else if (P_CanFireWeapon(player, wp_pistol))
 			player->pendingweapon = wp_pistol;
-		else if (player->weaponowned[wp_chainsaw])
+		else if (P_CanFireWeapon(player, wp_chainsaw))
 			player->pendingweapon = wp_chainsaw;
-		else if (player->weaponowned[wp_missile] && player->ammo[am_misl])
+		else if (P_CanFireWeapon(player, wp_missile))
 			player->pendingweapon = wp_missile;
-		else if (player->weaponowned[wp_bfg] && player->ammo[am_cell]>40)
+		else if (P_CanFireWeapon(player, wp_bfg))
 			player->pendingweapon = wp_bfg;
 		else
 			player->pendingweapon = wp_fist;

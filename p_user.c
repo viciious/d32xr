@@ -496,7 +496,25 @@ void P_DeathThink (player_t *player)
 		player->playerstate = PST_REBORN;
 }
 
+//
+// CALICO: Returns false if:
+// * player does not own the weapon in question -or-
+// * the weapon uses ammo and does not have sufficient ammo
+// Returns true otherwise.
+//
+boolean P_CanFireWeapon(player_t* player, int weaponnum)
+{
+	if (!player->weaponowned[weaponnum])
+		return false;
 
+	if (weaponnum == wp_chainsaw)
+		return true;
+	if (weaponinfo[weaponnum].ammo == am_noammo)
+		return true;
+
+	int neededAmmo = (weaponnum == wp_bfg) ? 40 : 1;
+	return player->ammo[weaponinfo[weaponnum].ammo] >= neededAmmo;
+}
 
 /*
 =================
@@ -556,7 +574,7 @@ ticphase = 22;
 ticphase = 23;
 	if (player->pendingweapon == wp_nochange)
 	{
-		if ( buttons & JP_1 )
+		if ( buttons & BT_1 )
 		{
 			if (player->weaponowned[wp_chainsaw] &&
 			!(player->readyweapon == wp_chainsaw && player->powers[pw_strength]))
@@ -564,18 +582,41 @@ ticphase = 23;
 			else
 				player->pendingweapon = wp_fist;
 		}
-		if ( buttons & JP_2 )
+		if ( buttons & BT_2 )
 			player->pendingweapon = wp_pistol;
-		if ( (buttons & JP_3) && player->weaponowned[wp_shotgun] )
+		if ( (buttons & BT_3) && player->weaponowned[wp_shotgun] )
 			player->pendingweapon = wp_shotgun;
-		if ( (buttons & JP_4) && player->weaponowned[wp_chaingun] )
+		if ( (buttons & BT_4) && player->weaponowned[wp_chaingun] )
 			player->pendingweapon = wp_chaingun;
-		if ( (buttons & JP_5) && player->weaponowned[wp_missile] )
+		if ( (buttons & BT_5) && player->weaponowned[wp_missile] )
 			player->pendingweapon = wp_missile;
-		if ( (buttons & JP_6) && player->weaponowned[wp_plasma] )
+		if ( (buttons & BT_6) && player->weaponowned[wp_plasma] )
 			player->pendingweapon = wp_plasma;
-		if ( (buttons & JP_7) && player->weaponowned[wp_bfg] )
+		if ( (buttons & BT_7) && player->weaponowned[wp_bfg] )
 			player->pendingweapon = wp_bfg;
+
+		// CALICO: added support for explicit next weapon and previous weapon actions
+		if (buttons & BT_PWEAPN)
+		{
+			int wp = player->readyweapon;
+			do
+			{
+				if (--wp < 0)
+					wp = NUMWEAPONS - 1;
+			} while (wp != player->readyweapon && !P_CanFireWeapon(player, wp));
+			player->pendingweapon = wp;
+		}
+		else if (buttons & BT_NWEAPN)
+		{
+			int wp = player->readyweapon;
+			do
+			{
+				if (++wp == NUMWEAPONS)
+					wp = 0;
+			} while (wp != player->readyweapon && !P_CanFireWeapon(player, wp));
+			player->pendingweapon = wp;
+		}
+
 		if (player->pendingweapon == player->readyweapon)
 			player->pendingweapon = wp_nochange;
 	}
