@@ -498,17 +498,35 @@ void P_DeathThink (player_t *player)
 
 //
 // CALICO: Returns false if:
-// * player does not own the weapon in question -or-
+// * player doesn't own the weapon in question -or-
+// * the weapon is the fist and the player also has the chainsaw,
+// * unless the player also has the berserk pack.
+// Returns true otherwise.
+//
+boolean P_CanSelecteWeapon(player_t* player, int weaponnum)
+{
+	if (!player->weaponowned[weaponnum])
+		return false;
+
+	if (weaponnum == wp_fist
+		&& player->weaponowned[wp_chainsaw]
+		&& !player->powers[pw_strength])
+		return false;
+
+	return true;
+}
+
+//
+// CALICO: Returns false if:
+// * player can not select the weapon in question -or-
 // * the weapon uses ammo and does not have sufficient ammo
 // Returns true otherwise.
 //
 boolean P_CanFireWeapon(player_t* player, int weaponnum)
 {
-	if (!player->weaponowned[weaponnum])
+	if (!P_CanSelecteWeapon(player, weaponnum))
 		return false;
 
-	if (weaponnum == wp_chainsaw)
-		return true;
 	if (weaponinfo[weaponnum].ammo == am_noammo)
 		return true;
 

@@ -92,6 +92,7 @@ void P_DropWeapon (player_t *player);
 ===============================================================================
 */
 
+boolean P_CanSelecteWeapon(player_t* player, int weaponnum);
 boolean P_CanFireWeapon(player_t* player, int weaponnum);
 void	P_PlayerThink (player_t *player);
 
