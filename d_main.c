@@ -22,13 +22,6 @@ int				*demo_p, *demobuffer;
 
 #define WORDMASK	3
 
-int D_abs (int x)
-{
-	if (x<0)
-		return -x;
-	return x;
-}
-
 /*
 ====================
 =
@@ -80,8 +73,24 @@ void D_memcpy (void *dest, const void *src, int count)
 	const byte *s;
 
 #ifdef MARS
-	if (((intptr_t)dest & 15) == 0 && ((intptr_t)src & 15) == 0 && (count & 3) == 0) {
-		fast_memcpy(dest, src, count >> 2);
+	if ( (((intptr_t)dest & 15) == ((intptr_t)src & 15)) && (count > 16)) {
+		unsigned i;
+		unsigned rem = 16 - ((intptr_t)dest & 15), wordbytes;
+
+		d = (byte*)dest;
+		s = (const byte*)src;
+		for (i = 0; i < rem; i++)
+			*d++ = *s++;
+
+		wordbytes = (unsigned)(count - rem) >> 2;
+		fast_memcpy(d, s, wordbytes);
+
+		wordbytes <<= 2;
+		d += wordbytes;
+		s += wordbytes;
+
+		for (i = rem + wordbytes; i < (unsigned)count; i++)
+			*d++ = *s++;
 		return;
 	}
 #endif
