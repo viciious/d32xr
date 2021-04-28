@@ -79,11 +79,7 @@ int D_vsnprintf(char *str, size_t nmax, const char *format, va_list ap);
 int D_snprintf(char *buf, size_t nsize, const char *fmt, ...);
 void D_printf (char *str, ...);
 
-void D_isort(int* a, int len)
-#ifdef MARS
-__attribute__((section(".data"), aligned(16)))
-#endif
-;
+void D_isort(int* a, int len) ATTR_DATA_CACHE_ALIGN;
 
 /*
 ===============================================================================
@@ -147,9 +143,15 @@ typedef enum
 /* library replacements */
 /* */
 
-int D_abs(int x);
-void D_memset (void *dest, int val, int count);
-void D_memcpy (void *dest, const void *src, int count);
+ATTR_DATA_CACHE_ALIGN static inline int D_abs(int x)
+{
+	if (x < 0)
+		return -x;
+	return x;
+}
+
+void D_memset (void *dest, int val, int count) ATTR_DATA_CACHE_ALIGN;
+void D_memcpy (void *dest, const void *src, int count) ATTR_DATA_CACHE_ALIGN;
 void D_strncpy (char *dest, const char *src, int maxcount);
 int D_strncasecmp (const char *s1, const char *s2, int len);
 int D_strcasecmp (const char *s1, const char *s2);
@@ -763,13 +765,7 @@ void R_Init (void);
 int	R_FlatNumForName (const char *name);
 int	R_TextureNumForName (const char *name);
 int	R_CheckTextureNumForName (const char *name);
-
-#ifdef MARS
-angle_t R_PointToAngle2 (fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2) __attribute__((section(".data"), aligned(16)));
-#else
-angle_t R_PointToAngle2 (fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2);
-#endif
-
+angle_t R_PointToAngle2 (fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2) ATTR_DATA_CACHE_ALIGN;
 struct subsector_s *R_PointInSubsector (fixed_t x, fixed_t y);
 
 
