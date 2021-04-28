@@ -570,7 +570,7 @@ master_rst:
 mvri_mars_adapter:
         .long   0x20004000
 mvri_master_stk:
-        .long   0x0603FF00              /* Cold Start SP */
+        .long   0x0603FC00              /* Cold Start SP */
 mvri_master_vres:
         .long   master_reset
 
