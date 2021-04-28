@@ -233,7 +233,7 @@ void I_Init (void)
 	I_SetPalette(doompalette);
 
 	doomcolormap = W_POINTLUMPNUM(W_GetNumForName("COLORMAPS"));
-	Z_Malloc(64*256, PU_STATIC, &dc_colormaps);
+	dc_colormaps = Z_Malloc(64*256, PU_STATIC, 0);
 
 	for(i = 0; i < 32; i++) {
 		const byte *sl1 = &doomcolormap[i*512];
