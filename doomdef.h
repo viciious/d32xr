@@ -150,7 +150,7 @@ ATTR_DATA_CACHE_ALIGN static inline int D_abs(int x)
 	return x;
 }
 
-void D_memset (void *dest, int val, int count) ATTR_DATA_CACHE_ALIGN;
+void D_memset (void *dest, int val, int count);
 void D_memcpy (void *dest, const void *src, int count) ATTR_DATA_CACHE_ALIGN;
 void D_strncpy (char *dest, const char *src, int maxcount);
 int D_strncasecmp (const char *s1, const char *s2, int len);
