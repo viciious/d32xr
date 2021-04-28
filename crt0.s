@@ -27,7 +27,7 @@
 
 ! Standard MegaDrive ROM header at 0x100
 
-        .ascii  "DOOM 32XR       "
+        .ascii  "SEGA DOOM 32XR  "
         .ascii  "                "
         .ascii  "DOOM 32XR       "
         .ascii  "                "
