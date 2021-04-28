@@ -337,8 +337,8 @@ void R_SetupTextureCaches(void)
 	void *margin;
 
 	const int zonemargin = 4*1024;
-	const int flatblocksize = sizeof(memblock_t) + sizeof(texcacheblock_t) + 64*64 + 100;
-	const int texblocksize = sizeof(memblock_t) + sizeof(texcacheblock_t) + 64*128 + 100;
+	const int flatblocksize = sizeof(memblock_t) + sizeof(texcacheblock_t) + 64*64 + 128;
+	const int texblocksize = sizeof(memblock_t) + sizeof(texcacheblock_t) + 64*128 + 128;
 
 	// reset pointers from previous level
 	for (i = 0; i < numtextures; i++)

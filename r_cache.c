@@ -219,14 +219,14 @@ void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **us
 	if (id < 0)
 		return;
 
-	size = pixels + sizeof(texcacheblock_t);
-	if (Z_LargestFreeBlock(c->zone) < size + 64)
+	size = pixels + sizeof(texcacheblock_t) + 64;
+	if (Z_LargestFreeBlock(c->zone) < size + 96)
 	{
 		// free unused entries when under pressure
 		Z_ForEachBlock(c->zone, &R_EvictFromTexCache, c);
 
 		// try allocating again
-		if (Z_LargestFreeBlock(c->zone) < size + 64)
+		if (Z_LargestFreeBlock(c->zone) < size + 96)
 			return;
 	}
 
@@ -236,8 +236,13 @@ void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **us
 	entry->lumpnum = lumpnum;
 	entry->userp = userp;
 
-	data = (byte*)entry + sizeof(texcacheblock_t);
 	lumpdata = W_POINTLUMPNUM(lumpnum);
+
+	// align to the same cache line remainder
+	data = (byte*)entry + sizeof(texcacheblock_t);
+	data = (void *)(((intptr_t)data + 15) & ~15);
+	data = (void *)((intptr_t)data + ((intptr_t)lumpdata & 15));
+
 	D_memcpy(data, lumpdata, pixels);
 	//D_memset(data, id&255, pixels); // DEBUG
 
