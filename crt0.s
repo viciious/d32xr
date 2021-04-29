@@ -27,15 +27,15 @@
 
 ! Standard MegaDrive ROM header at 0x100
 
-        .ascii  "SEGA DOOM 32XR  "
+        .ascii  "SEGA 32X        "
         .ascii  "                "
-        .ascii  "DOOM 32XR       "
-        .ascii  "                "
-        .ascii  "                "
-        .ascii  "DOOM 32XR       "
+        .ascii  "DOOM            "
         .ascii  "                "
         .ascii  "                "
-        .ascii  "BLD 20210404-0"
+        .ascii  "DOOM            "
+        .ascii  "                "
+        .ascii  "                "
+        .ascii  "GM 20210501-00"
         .word   0x0000
         .ascii  "J6              "
         .long   0x00000000,0x003FFFFF   /* ROM start, end */
