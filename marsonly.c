@@ -14,9 +14,6 @@ extern short* dc_colormaps;
 pixel_t	*screens[2];	/* [SCREENWIDTH*SCREENHEIGHT];  */
 int		*screenshade;	/* pixels for screen shifting */
 
-int             joypad[32]; 
-int             joystick1; 
-
 int             samplecount;
 
 int             soundbuffer[EXTERNALQUADS*16];
