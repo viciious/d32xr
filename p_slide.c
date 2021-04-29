@@ -53,6 +53,17 @@ enum
    SIDE_FRONT
 };
 
+static int SL_PointOnSide(fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
+static fixed_t SL_CrossFrac(void) ATTR_DATA_CACHE_ALIGN;
+static void SL_ClipToLine(void) ATTR_DATA_CACHE_ALIGN;
+static boolean SL_CheckLine(line_t* ld) ATTR_DATA_CACHE_ALIGN;
+fixed_t P_CompletableFrac(fixed_t dx, fixed_t dy) ATTR_DATA_CACHE_ALIGN;
+static int SL_PointOnSide2(fixed_t x1, fixed_t y1,
+    fixed_t x2, fixed_t y2,
+    fixed_t x3, fixed_t y3) ATTR_DATA_CACHE_ALIGN;
+static void SL_CheckSpecialLines(void) ATTR_DATA_CACHE_ALIGN;
+void P_SlideMove(void) ATTR_DATA_CACHE_ALIGN;
+
 //
 // Simple point-on-line-side check.
 //
