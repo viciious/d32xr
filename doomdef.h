@@ -656,17 +656,16 @@ byte *I_ZoneBase (int *size);
 /* return a pointer to a 64k or so temp work buffer for level setup uses */
 /*(non-displayed frame buffer) */
 /* Vic: changed this to always return buffer memset to 0 */
-byte *I_TempBuffer (void);
+byte *I_TempBuffer (void) ATTR_DATA_CACHE_ALIGN;
 
 /* temp work buffer which may contain garbage data */
-byte *I_WorkBuffer (void);
+byte *I_WorkBuffer (void) ATTR_DATA_CACHE_ALIGN;
 
-pixel_t *I_FrameBuffer (void);
+pixel_t *I_FrameBuffer (void) ATTR_DATA_CACHE_ALIGN;
 
-pixel_t *I_ViewportBuffer (void);
+pixel_t *I_ViewportBuffer (void) ATTR_DATA_CACHE_ALIGN;
 
-void I_ClearFrameBuffer (void);
-void I_DoubleClearFrameBuffer(void);
+void I_ClearFrameBuffer (void) ATTR_DATA_CACHE_ALIGN;
 
 void I_SetPalette (const byte *palette);
 
@@ -677,17 +676,19 @@ unsigned I_NetTransfer (unsigned buttons);
 
 
 
-boolean	I_RefreshCompleted (void);
+boolean	I_RefreshCompleted (void) ATTR_DATA_CACHE_ALIGN;
 boolean	I_RefreshLatched (void);
-int	I_GetTime (void);
+int	I_GetTime (void) ATTR_DATA_CACHE_ALIGN;
 
 void I_Update (void);
 
 void I_Error (char *error, ...);
 
-void I_DrawColumn (int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale, fixed_t dc_texturemid, inpixel_t *dc_source, int dc_texheight);
+void I_DrawColumn (int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale, 
+	fixed_t dc_texturemid, inpixel_t *dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
 
-void I_DrawSpan (int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t *ds_source) ;
+void I_DrawSpan (int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, 
+	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t *ds_source) ATTR_DATA_CACHE_ALIGN;
 
 void I_Print8 (int x, int y, const char *string);
 
@@ -760,7 +761,7 @@ void ST_InitEveryLevel(void);
 /*------- */
 struct seg_s;
 
-void R_RenderPlayerView (void);
+void R_RenderPlayerView (void) ATTR_DATA_CACHE_ALIGN;
 void R_Init (void);
 int	R_FlatNumForName (const char *name);
 int	R_TextureNumForName (const char *name);

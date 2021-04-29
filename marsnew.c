@@ -285,7 +285,7 @@ byte *I_WadBase (void)
 ==================== 
 */ 
  
-static char zone[0x30000] ATTR_DATA_CACHE_ALIGN;
+static char zone[0x30000] __attribute__((aligned(16)));
 byte *I_ZoneBase (int *size)
 {
 	*size = sizeof(zone);
@@ -349,13 +349,6 @@ void I_ClearFrameBuffer (void)
 	Mars_ClearFrameBuffer();
 }
 
-void I_DoubleClearFrameBuffer(void)
-{
-	Mars_ClearFrameBuffer();
-	Mars_FlipFrameBuffers(true);
-	Mars_ClearFrameBuffer();
-}
-
 void I_DebugScreen(void)
 {
 	if (debugmode == 2)
@@ -379,6 +372,13 @@ void I_ClearWorkBuffer(void)
 */
 
 #ifdef USE_C_DRAW
+
+static void I_DrawColumnPO2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
+static void I_DrawColumnNPO2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
+static void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
+	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source) ATTR_DATA_CACHE_ALIGN;
 
 static void I_DrawColumnPO2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight)
@@ -478,7 +478,8 @@ static void I_DrawColumnNPO2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t
 #undef DO_PIXEL
 }
 
-static void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source)
+static void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, 
+	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source)
 {
 	unsigned xfrac, yfrac;
 	volatile pixel_t* dest;
