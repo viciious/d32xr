@@ -456,6 +456,10 @@ master_vbi:
         nop
 
         ! handle V IRQ
+        mov.l   vblank_count_ptr,r1
+        mov.l   @r1,r0
+        add     #1,r0
+        mov.l   r0,@r1
 
         mov.l   @r15+,r1
         mov.l   @r15+,r0
@@ -465,6 +469,8 @@ master_vbi:
         .align  2
 mvi_mars_adapter:
         .long   0x20004000
+vblank_count_ptr:
+        .long   _vblank_count
 
 !-----------------------------------------------------------------------
 ! Master H Blank IRQ handler

@@ -39,6 +39,8 @@ const int COLOR_WHITE = 0x04;
 int		activescreen = 0;
 short	*dc_colormaps;
 
+int		vblank_count = 0;
+
 extern int 	debugmode;
 
 static volatile pixel_t	*framebuffer = &MARS_FRAMEBUFFER + 0x100;
@@ -106,6 +108,8 @@ void Mars_Init(void)
 	for (i = 0; i < 256; i++)
 		palette[i] = 0;
 	palette[COLOR_WHITE] = 0x7fff;
+
+	MARS_SYS_INTMSK |= 1 << 3; // enable vblank interrupts
 
 	MARS_SYS_COMM4 = 0;
 }
@@ -300,7 +304,7 @@ int I_ReadControls(void)
 
 int	I_GetTime (void)
 {
-	return MARS_SYS_COMM12;
+	return vblank_count;
 }
 
 /*

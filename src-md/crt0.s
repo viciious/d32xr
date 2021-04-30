@@ -124,7 +124,6 @@ init_hardware:
         beq.b   3f                  /* no mouse */
         move.w  #0xF001,0xA1512A    /* mouse in port 2 */
 3:
-        move.l  #0,0xA1512C         /* clear the vblank count */
 
 | allow the 68k to access the FM chip
         move.w  #0x0100,0xA11100    /* Z80 assert bus request */
@@ -389,10 +388,6 @@ vert_blank:
         bsr.b   get_pad
         move.w  d2,0xA1512A         /* controller 2 current value */
 1:
-        move.l  0xA1512C,d0
-        addq.l  #1,d0
-        move.l  d0,0xA1512C         /* increment the vblank count */
-
         tst.w   gen_lvl2
         beq.b   2f
         lea     0xA12000,a0
