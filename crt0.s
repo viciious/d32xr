@@ -255,6 +255,7 @@ master_vbr:
         .long   master_hbi      /* H Blank interupt */
         .long   master_vbi      /* V Blank interupt */
         .long   master_rst      /* Reset Button */
+        .long   master_frt      /* FRT overflow */
 
 !-----------------------------------------------------------------------
 ! Slave Vector Base Table
@@ -439,6 +440,39 @@ master_lvl2_3:
 master_lvl4_5:
         rte
         nop
+
+!-----------------------------------------------------------------------
+! Master FRT Overflow IRQ handler
+!-----------------------------------------------------------------------
+
+master_frt:
+        mov.l   r0,@-r15
+        mov.l   r1,@-r15
+
+        mov.l   sh2_frt_ftcsr,r1
+        mov.b	@r1,r0
+        tst     #2,r0
+        bt      9f
+        /* overflow */
+        mov     #0,r0
+        mov.w   r0,@r1  /* clear OVF IRQ */
+
+        mov.l   frt_ovf_count_ptr,r1
+        mov.l   @r1,r0
+        add     #1,r0
+        mov.l   r0,@r1
+9:
+        mov.l   @r15+,r1
+        mov.l   @r15+,r0
+        rte
+        nop
+
+        .align  2
+sh2_frt_ftcsr:
+        .long   0xFFFFFE11
+
+frt_ovf_count_ptr:
+        .long   _frt_ovf_count
 
 !-----------------------------------------------------------------------
 ! Master V Blank IRQ handler

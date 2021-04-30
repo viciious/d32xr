@@ -678,6 +678,7 @@ unsigned I_NetTransfer (unsigned buttons);
 boolean	I_RefreshCompleted (void) ATTR_DATA_CACHE_ALIGN;
 boolean	I_RefreshLatched (void);
 int	I_GetTime (void) ATTR_DATA_CACHE_ALIGN;
+int     I_GetFRTCounter (void) ATTR_DATA_CACHE_ALIGN;
 
 void I_Update (void);
 

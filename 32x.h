@@ -116,7 +116,15 @@
 
 #define SH2_DMA_DMAOR       (*(volatile unsigned long *)0xFFFFFFB0)
 
+#define SH2_INT_ICR         (*(volatile unsigned short *)0xFFFFFEE0)
 #define SH2_INT_IPRA        (*(volatile unsigned short *)0xFFFFFEE2)
+#define SH2_INT_IPRB        (*(volatile unsigned short *)0xFFFFFE60)
+#define SH2_INT_VCRA        (*(volatile unsigned short *)0xFFFFFE62)
+#define SH2_INT_VCRB        (*(volatile unsigned short *)0xFFFFFE64)
+#define SH2_INT_VCRC        (*(volatile unsigned short *)0xFFFFFE66)
+#define SH2_INT_VCRD        (*(volatile unsigned short *)0xFFFFFE68)
+#define SH2_INT_VCRWDT      (*(volatile unsigned short *)0xFFFFFEE4)
+#define SH2_INT_VCRDIV      (*(volatile unsigned long *)0xFFFFFF0C)
 
 #define SEGA_CTRL_UP        0x0001
 #define SEGA_CTRL_DOWN      0x0002

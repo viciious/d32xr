@@ -28,6 +28,7 @@ void Mars_Init(void);
 void Mars_Slave(void);
 
 void I_ClearWorkBuffer();
+int I_FRTCounter2Msec(int c);
 
 /* 
 ================ 

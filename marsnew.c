@@ -39,7 +39,12 @@ const int COLOR_WHITE = 0x04;
 int		activescreen = 0;
 short	*dc_colormaps;
 
-int		vblank_count = 0;
+unsigned	vblank_count = 0;
+unsigned	frt_ovf_count = 0;
+static float frt_counter2msec = 0;
+
+const int NTSC_CLOCK_SPEED = 23011360; // HZ
+const int PAL_CLOCK_SPEED  = 22801467; // HZ
 
 extern int 	debugmode;
 
@@ -81,10 +86,26 @@ void Mars_Init(void)
 	int i, j;
 	volatile unsigned short *lines = &MARS_FRAMEBUFFER;
 	volatile unsigned short *palette;
+	boolean NTSC;
 
 	while ((MARS_SYS_INTMSK & MARS_SH2_ACCESS_VDP) == 0);
 
 	MARS_VDP_DISPMODE = MARS_224_LINES | MARS_VDP_MODE_256;
+	NTSC = (MARS_VDP_DISPMODE & MARS_NTSC_FORMAT) != 0;
+
+	/* init hires timer system */
+	SH2_FRT_TCR = 2;									/* TCR set to count at SYSCLK/128 */
+	SH2_FRT_FRCH = 0;
+	SH2_FRT_FRCL = 0;
+	SH2_INT_IPRB = (SH2_INT_IPRB & 0xF0FF) | 0x0E00; 	/* set FRT INT to priority 14 */
+	SH2_INT_VCRD = 72 << 8; 							/* set exception vector for FRT overflow */
+	SH2_FRT_FTCSR = 0;									/* clear any int status */
+	SH2_FRT_TIER = 3;									/* enable overflow interrupt */
+
+	MARS_SYS_COMM4 = 0;
+
+	// change 128.0f to something else if SH2_FRT_TCR is changed!
+	frt_counter2msec = 128.0f * 1000.0f / (NTSC ? NTSC_CLOCK_SPEED : PAL_CLOCK_SPEED);
 
 	activescreen = MARS_VDP_FBCTL;
 
@@ -101,15 +122,13 @@ void Mars_Init(void)
 		Mars_FlipFrameBuffers(true);
 	}
 
-	ticrate = (MARS_VDP_DISPMODE & MARS_NTSC_FORMAT) ? 4 : 3;
+	ticrate = NTSC ? 4 : 3;
 
 	/* set a two color palette */
 	palette = &MARS_CRAM;
 	for (i = 0; i < 256; i++)
 		palette[i] = 0;
 	palette[COLOR_WHITE] = 0x7fff;
-
-	MARS_SYS_COMM4 = 0;
 }
 
 int Mars_ToDoomControls(int ctrl)
@@ -310,6 +329,17 @@ int I_ReadControls(void)
 int	I_GetTime (void)
 {
 	return *(int *)((intptr_t)&vblank_count | 0x20000000);
+}
+
+int I_GetFRTCounter(void)
+{
+	unsigned cnt = (SH2_FRT_FRCH << 8) | SH2_FRT_FRCL;
+	return (int)((frt_ovf_count << 16) | cnt);
+}
+
+int I_FRTCounter2Msec(int c)
+{
+	return (int)((float)c * frt_counter2msec);
 }
 
 /*
