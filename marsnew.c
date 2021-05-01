@@ -83,6 +83,7 @@ void Mars_Init(void)
 	volatile unsigned short *palette;
 
 	while ((MARS_SYS_INTMSK & MARS_SH2_ACCESS_VDP) == 0);
+	MARS_SYS_INTMSK |= 1 << 3; // enable vblank interrupts
 
 	MARS_VDP_DISPMODE = MARS_224_LINES | MARS_VDP_MODE_256;
 
@@ -108,8 +109,6 @@ void Mars_Init(void)
 	for (i = 0; i < 256; i++)
 		palette[i] = 0;
 	palette[COLOR_WHITE] = 0x7fff;
-
-	MARS_SYS_INTMSK |= 1 << 3; // enable vblank interrupts
 
 	MARS_SYS_COMM4 = 0;
 }
@@ -304,7 +303,7 @@ int I_ReadControls(void)
 
 int	I_GetTime (void)
 {
-	return vblank_count;
+	return *(int *)((intptr_t)&vblank_count | 0x20000000);
 }
 
 /*

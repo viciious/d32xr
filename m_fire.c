@@ -167,6 +167,8 @@ void Mars_Slave_M_AnimateFire(void)
 
 		lastticcount = ticcount;
 	}
+
+	Mars_ClearCache();
 }
 
 /* 
@@ -236,6 +238,8 @@ void I_StopMenuFire(void)
 	Z_Free(m_fire->firePix);
 	Z_Free(m_fire->firePal);
 	Z_Free(m_fire);
+
+	Mars_ClearCache();
 }
 
 /*
