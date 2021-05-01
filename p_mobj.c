@@ -397,7 +397,6 @@ y = 0xff500000;
 	p->damagecount = 0;
 	p->bonuscount = 0;
 	p->extralight = 0;
-	p->fixedcolormap = 0;
 	p->viewheight = VIEWHEIGHT;
 	P_SetupPsprites (p);		/* setup gun psprite	 */
 	

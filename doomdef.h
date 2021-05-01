@@ -412,7 +412,6 @@ typedef struct player_s
 	int			damagecount, bonuscount;/* for screen flashing */
 	mobj_t		*attacker;				/* who did damage (NULL for floors) */
 	int			extralight;				/* so gun flashes light up areas */
-	int			fixedcolormap;			/* can be set to REDCOLORMAP, etc */
 	int			colormap;				/* 0-3 for which color to draw player */
 	pspdef_t	psprites[NUMPSPRITES];	/* view sprites (gun, etc) */
 	boolean		didsecret;				/* true if secret level has been done */

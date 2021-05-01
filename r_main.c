@@ -63,10 +63,6 @@ player_t	*viewplayer;
 VINT			validcount = 1;		/* increment every time a check is made */
 int			framecount;		/* incremented every frame */
 
-
-int			fixedcolormap;
-
-int			lightlevel;			/* fixed light level */
 int			extralight;			/* bumped light from gun blasts */
 
 /* */
@@ -438,8 +434,6 @@ void R_Setup (void)
 	vd.viewsin = finesine(vd.viewangle>>ANGLETOFINESHIFT);
 	vd.viewcos = finecosine(vd.viewangle>>ANGLETOFINESHIFT);
 		
-	fixedcolormap = player->fixedcolormap;
-
 	player = &players[consoleplayer];
 
 	damagecount = player->damagecount;
