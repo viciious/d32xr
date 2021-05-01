@@ -789,8 +789,10 @@ void M_AddToBox (fixed_t *box, fixed_t x, fixed_t y);
 /* */
 /*============================================================================ */
 
+#ifndef MARS
 extern	pixel_t	*workingscreen;
 extern	int		junk, spincount;
+#endif
 
 #ifdef JAGUAR
 extern	volatile int		ticcount, joybuttons;

@@ -157,7 +157,7 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
    flooropen = ceilopen = visplanes[0].open;
 
 #ifndef GRADIENTLIGHT
-   const unsigned texturelight = HWLIGHT(lseg->lightmax);
+   const unsigned texturelight = lseg->lightmax;
 #endif
    
    const int centerY0 = centerY;
@@ -379,11 +379,18 @@ static void R_SegCommandsMask(const int mask)
             continue;
 
         lseg.segl = segl;
+        lseg.lightmax = segl->seglightlevel + extralight;
+#ifdef MARS
+        if (lseg.lightmax > 255)
+            lseg.lightmax = 255;
+#endif
 
 #ifdef GRADIENTLIGHT
 #ifdef MARS
-        unsigned seglight = segl->seglightlevel;
-        if (seglight <= 160)
+        unsigned seglight = segl->seglightlevel + extralight;
+        if (seglight > 255)
+            seglight = 255;
+        else if (seglight <= 160)
             seglight = seglight - (seglight >> 1);
 #else
         int seglight = segl->seglightlevel - (255 - segl->seglightlevel) * 2;
@@ -392,11 +399,12 @@ static void R_SegCommandsMask(const int mask)
 #endif
 
         lseg.lightmin = seglight;
-        lseg.lightmax = segl->seglightlevel;
         lseg.lightsub = 160 * (lseg.lightmax - lseg.lightmin) / (800 - 160);
         lseg.lightcoef = ((lseg.lightmax - lseg.lightmin) << FRACBITS) / (800 - 160);
-#else
-        lseg.lightmax = segl->seglightlevel;
+#endif
+
+#ifndef GRADIENTLIGHT
+        lseg.lightmax = HWLIGHT(lseg.lightmax);
 #endif
 
         if (segl->actionbits & AC_TOPTEXTURE)

@@ -46,15 +46,15 @@ intptr_t 	*r_workbuf;
 
 /*===================================== */
 
+#ifndef MARS
 boolean		phase1completed;
 
 pixel_t		*workingscreen;
-
-#ifdef MARS
-volatile pixel_t* viewportbuffer;
 #endif
 
 #ifdef MARS
+volatile pixel_t* viewportbuffer;
+
 __attribute__((aligned(16)))
 #endif
 viewdef_t       vd;
@@ -64,7 +64,7 @@ VINT			validcount = 1;		/* increment every time a check is made */
 int			framecount;		/* incremented every frame */
 
 
-boolean		fixedcolormap;
+int			fixedcolormap;
 
 int			lightlevel;			/* fixed light level */
 int			extralight;			/* bumped light from gun blasts */
@@ -438,7 +438,6 @@ void R_Setup (void)
 	vd.viewsin = finesine(vd.viewangle>>ANGLETOFINESHIFT);
 	vd.viewcos = finecosine(vd.viewangle>>ANGLETOFINESHIFT);
 		
-	extralight = player->extralight << 6;
 	fixedcolormap = player->fixedcolormap;
 
 	player = &players[consoleplayer];
@@ -447,6 +446,7 @@ void R_Setup (void)
 	bonuscount = player->bonuscount;
 	
 #ifdef JAGUAR
+	extralight = player->extralight << 6;
 
 /* */
 /* calc shadepixel */
@@ -501,6 +501,7 @@ void R_Setup (void)
 #endif
 
 #ifdef MARS
+	extralight = player->extralight << 3;
 	viewportbuffer = (volatile pixel_t*)I_ViewportBuffer();
 
 	palette = 0;

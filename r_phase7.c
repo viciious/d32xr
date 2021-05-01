@@ -19,7 +19,7 @@ typedef struct
     unsigned  lightcoef;
     unsigned  lightmin, lightmax, lightsub;
 #else
-    int     light;
+    int     lightmax;
 #endif
     fixed_t basexscale, baseyscale;
     int	pixelcount;
@@ -80,7 +80,7 @@ static void R_MapPlane(localplane_t *lpl, int y, int x, int x2)
    // transform to hardware value
    light = HWLIGHT(light);
 #else
-   light = lpl->light;
+   light = lpl->lightmax;
 #endif
 
    I_DrawSpan(y, x, x2, light, xfrac, yfrac, xstep, ystep, lpl->ds_source);
@@ -222,15 +222,17 @@ static void R_DrawPlanesMasked(const int mask)
         lpl.pixelcount = 0;
         lpl.ds_source = flatpixels[pl->flatnum];
         lpl.height = D_abs(pl->height);
+        lpl.lightmax = pl->lightlevel + extralight;
+        if (lpl.lightmax > 255)
+            lpl.lightmax = 255;
 
 #ifdef GRADIENTLIGHT
-        lpl.lightmax = pl->lightlevel;
 #ifdef MARS
-        unsigned light = pl->lightlevel;
+        unsigned light = lpl.lightmax;
         if (light <= 160)
             light = light - (light >> 1);
 #else
-        int light = pl->lightlevel;
+        int light = lpl.lightmax;
         light = light - ((255 - light) << 1);
 #endif
         if (light < MINLIGHT)
@@ -240,9 +242,10 @@ static void R_DrawPlanesMasked(const int mask)
         lpl.lightmin = (unsigned)light;
         lpl.lightsub = 160 * (lpl.lightmax - lpl.lightmin) / (800 - 160);
         lpl.lightcoef = 255 << SLOPEBITS;
-#else
-        lpl.light = pl->lightlevel;
-        lpl.light = HWLIGHT(lpl.light);
+#endif
+
+#ifndef GRADIENTLIGHT
+        lpl.lightmax = HWLIGHT(lpl.lightmax);
 #endif
 
         R_PlaneLoop(&lpl, mask);

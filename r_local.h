@@ -266,7 +266,7 @@ __attribute__((aligned(16)))
 
 extern	viewdef_t	vd;
 extern	player_t	*viewplayer;
-extern	boolean		fixedcolormap;
+extern	int			fixedcolormap;
 extern	int			extralight;
 
 extern	angle_t		clipangle, doubleclipangle;
