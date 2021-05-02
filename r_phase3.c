@@ -20,12 +20,10 @@ static void R_PrepMobj(mobj_t *thing)
    fixed_t gxt, gyt;
    fixed_t tx, tz;
    fixed_t xscale;
-#ifndef MARS
    spritedef_t   *sprdef;
    spriteframe_t *sprframe;
    angle_t      ang;
    unsigned int rot;
-#endif
    boolean      flip;
    int          lump;
    vissprite_t *vis;
@@ -54,10 +52,6 @@ static void R_PrepMobj(mobj_t *thing)
    if(thing->sprite < 0 || thing->sprite >= NUMSPRITES)
       return;
 
-#ifdef MARS
-   lump = spritelump[thing->sprite] + (thing->frame & FF_FRAMEMASK)*2;
-   flip = false;
-#else
    sprdef = &sprites[thing->sprite];
 
    // check frame for validity
@@ -69,7 +63,7 @@ static void R_PrepMobj(mobj_t *thing)
    if(sprframe->rotate)
    {
       // select proper rotation depending on player's view point
-      ang  = R_PointToAngle2(viewx, viewy, thing->x, thing->y);
+      ang  = R_PointToAngle2(vd.viewx, vd.viewy, thing->x, thing->y);
       rot  = (ang - thing->angle + (unsigned int)(ANG45 / 2)*9) >> 29;
       lump = sprframe->lump[rot];
       flip = (boolean)(sprframe->flip[rot]);
@@ -80,7 +74,6 @@ static void R_PrepMobj(mobj_t *thing)
       lump = sprframe->lump[0];
       flip = (boolean)(sprframe->flip[0]);
    }
-#endif
 
    // get a new vissprite
    if(vissprite_p == vissprites + MAXVISSPRITES)
@@ -112,21 +105,15 @@ static void R_PrepMobj(mobj_t *thing)
 //
 static void R_PrepPSprite(pspdef_t *psp)
 {
-#ifndef MARS
    spritedef_t   *sprdef;
    spriteframe_t *sprframe;
-#endif
    int            lump;
    vissprite_t   *vis;
    const state_t* state = &states[psp->state];
 
-#ifdef MARS
-   lump = spritelump[state->sprite] + (state->frame & FF_FRAMEMASK)*2;
-#else
    sprdef = &sprites[state->sprite];
    sprframe = &sprdef->spriteframes[state->frame & FF_FRAMEMASK];
    lump     = sprframe->lump[0];
-#endif
 
    if(vissprite_p == vissprites + MAXVISSPRITES)
       return; // out of vissprites

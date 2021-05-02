@@ -198,8 +198,6 @@ s_sound.o : s_sound.c
 	$(C2OBJ)
 sounds.o : sounds.c
 	$(C2OBJ)
-sprinfo.o : sprinfo.c
-	$(C2OBJ)
 tables.o : tables.c
 	$(C2OBJ)
 w_wad.o : w_wad.c

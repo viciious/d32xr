@@ -78,7 +78,6 @@ OBJS = \
 	r_phase9.o \
 	marssound.o \
 	sounds.o \
-	sprinfo.o \
 	tables.o \
 	w_wad.o \
 	z_zone.o \

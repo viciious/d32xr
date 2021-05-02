@@ -165,28 +165,20 @@ typedef struct
 /* is used to save space. Some sprites will only have one picture used */
 /* for all views.   */
 
-#ifdef MARS
-
-extern const int spritelump[NUMSPRITES];	/* no rotations, so just add frame num... */
-
-#else
-
 typedef struct
 {
 	boolean		rotate;		/* if false use 0 for any position */
-	int			lump[8];	/* lump to use for view angles 0-7 */
+	short		lump[8];	/* lump to use for view angles 0-7 */
 	byte		flip[8];	/* flip (1 = flip) to use for view angles 0-7 */
 } spriteframe_t;
 
 typedef struct
 {
-	int				numframes;
+	short			numframes;
 	spriteframe_t	*spriteframes;
 } spritedef_t;
 
 extern	spritedef_t		sprites[NUMSPRITES];
-
-#endif
 
 /*
 ===============================================================================
@@ -224,7 +216,7 @@ int     SlopeDiv(unsigned int num, unsigned int den);
 void	R_InitData (void);
 void	R_SetScreenSize(int size);
 void	R_InitMathTables(void);
-void	R_InitSpriteDefs (char **namelist);
+void	R_InitSpriteDefs (const char **namelist);
 void	R_SetupTextureCaches(void);
 
 
