@@ -194,6 +194,7 @@
 
         .incbin "src-md/m68k.bin"  /* all 68000 code & data, compiled to 0x880800/0xFF0000 */
 
+		.incbin "src-md/vgm_files.bin" /* VGM music relative to 0x000000 */
 
         .data
 

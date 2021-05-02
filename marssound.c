@@ -1,6 +1,7 @@
 #include "doomdef.h"
 #include "mars.h"
 #include "mars_ringbuf.h"
+#include "sounds.h"
 
 #define MAX_SAMPLES		735
 
@@ -53,6 +54,9 @@ static marsrb_t	soundcmds;
 
 static int		sndinit = 0;
 
+extern short	use_cd;
+extern short	cd_ok;
+
 void S_PaintChannel(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
 static void S_Update(int16_t* buffer) ATTR_DATA_CACHE_ALIGN;
 static void S_Spatialize(mobj_t* origin, int* pvol, int* psep) ATTR_DATA_CACHE_ALIGN;
@@ -87,7 +91,8 @@ void S_Init(void)
 
 	Mars_InitSoundDMA();
 
-	S_StartSong(1,1);
+	/* play intro music once */
+	S_StartSong(mus_intro,0);
 }
 
 
@@ -236,10 +241,17 @@ void S_UpdateSounds(void)
 
 void S_StartSong(int music_id, int looping)
 {
+	S_StopSong();
+	while (MARS_SYS_COMM0) ;
+	MARS_SYS_COMM2 = music_id | (looping ? 0x8000:0x0000);
+	MARS_SYS_COMM0 = 0x0300; /* start music */
+	MARS_SYS_COMM14 = 9;
 }
 
 void S_StopSong(void)
 {
+	while (MARS_SYS_COMM0) ;
+	MARS_SYS_COMM0 = 0x0400; /* stop music */
 }
 
 static void S_Update(int16_t* buffer)
