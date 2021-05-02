@@ -201,6 +201,8 @@ void Mars_UploadPalette(const byte *palette)
 	int	i;
 	volatile unsigned short *cram = &MARS_CRAM;
 
+	while ((MARS_SYS_INTMSK & MARS_SH2_ACCESS_VDP) == 0);
+
 	for (i=0 ; i<256 ; i++) {
 		byte r = *palette++;
 		byte g = *palette++;
