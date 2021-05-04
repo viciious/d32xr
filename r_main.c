@@ -311,8 +311,6 @@ D_printf ("Done\n");
 
 	r_workbuf = Z_Malloc(workbufsize, PU_STATIC, NULL);
 
-	openings = Z_Malloc(sizeof(*openings) * MAXOPENINGS, PU_STATIC, NULL);
-
 	R_InitTexCache(&r_flatscache, numflats);
 
 	R_InitTexCache(&r_wallscache, numtextures);
@@ -719,6 +717,8 @@ void R_Update (void);
 ==============
 */
 
+extern	boolean	debugscreenactive;
+
 #ifndef MARS
 int		phasetime[9] = {1,2,3,4,5,6,7,8,9};
 
@@ -730,47 +730,107 @@ extern	ref5_start;
 extern	ref6_start;
 extern	ref7_start;
 extern	ref8_start;
-#endif
 
-extern	boolean	debugscreenactive;
-
-void R_RenderPlayerView (void)
+void R_RenderPlayerView(void)
 {
-
-/* make sure its done now */
+	/* make sure its done now */
 #if defined(JAGUAR)
 	t_ref_wait = I_GetTime();
-	while (!I_RefreshCompleted ())
-	;
+	while (!I_RefreshCompleted())
+		;
 	t_ref_wait = I_GetTime() - t_ref_wait;
 #endif
 
-/* */
-/* initial setup */
-/* */
+	/* */
+	/* initial setup */
+	/* */
 	if (debugscreenactive)
-		I_DebugScreen ();
+		I_DebugScreen();
 
 	t_ref_total = I_GetTime();
 
-	R_Setup ();
+	R_Setup();
 
 #ifndef JAGUAR
 	t_ref_bsp = I_GetTime();
-	R_BSP ();
+	R_BSP();
 	t_ref_bsp = I_GetTime() - t_ref_bsp;
 
 	t_ref_prep = I_GetTime();
-	R_WallPrep ();
-	R_SpritePrep ();
-/* the rest of the refresh can be run in parallel with the next game tic */
-	if (R_LatePrep ())
-		R_Cache ();
+	R_WallPrep();
+	R_SpritePrep();
+	/* the rest of the refresh can be run in parallel with the next game tic */
+	if (R_LatePrep())
+		R_Cache();
 	t_ref_prep = I_GetTime() - t_ref_prep;
 
-#ifdef MARS
-	Mars_R_StopOpenPlanes();
+	t_ref_segs = I_GetTime();
+	R_SegCommands();
+	t_ref_segs = I_GetTime() - t_ref_segs;
+
+	t_ref_planes = I_GetTime();
+	R_DrawPlanes();
+	t_ref_planes = I_GetTime() - t_ref_planes;
+
+	t_ref_sprites = I_GetTime();
+	R_Sprites();
+	t_ref_sprites = I_GetTime() - t_ref_sprites;
+
+	R_Update();
+
+	t_ref_total = I_GetTime() - t_ref_total;
+#else
+
+	/* start the gpu running the refresh */
+	phasetime[1] = 0;
+	phasetime[2] = 0;
+	phasetime[3] = 0;
+	phasetime[4] = 0;
+	phasetime[5] = 0;
+	phasetime[6] = 0;
+	phasetime[7] = 0;
+	phasetime[8] = 0;
+	gpufinished = zero;
+	gpucodestart = (int)&ref1_start;
+
 #endif
+}
+
+#else
+
+void R_RenderPhases1To5(void)
+{
+	/* */
+	/* initial setup */
+	/* */
+	if (debugscreenactive)
+		I_DebugScreen();
+
+	t_ref_total = I_GetTime();
+
+	R_Setup();
+
+	t_ref_bsp = I_GetTime();
+	R_BSP();
+	t_ref_bsp = I_GetTime() - t_ref_bsp;
+
+	t_ref_prep = I_GetTime();
+	R_WallPrep();
+	R_SpritePrep();
+	/* the rest of the refresh can be run in parallel with the next game tic */
+	if (R_LatePrep())
+		R_Cache();
+	t_ref_prep = I_GetTime() - t_ref_prep;
+
+	Mars_R_StopOpenPlanes();
+}
+
+void R_RenderPhases6To9(void)
+{
+	unsigned short openings_[MAXOPENINGS];
+
+	openings = openings_;
+	lastopening = openings;
 
 	t_ref_segs = I_GetTime();
 	R_SegCommands ();
@@ -787,26 +847,12 @@ void R_RenderPlayerView (void)
 	R_Update();
 
 	t_ref_total = I_GetTime() - t_ref_total;
-#else
-
-/* start the gpu running the refresh */
-	phasetime[1] = 0;	
-	phasetime[2] = 0;	
-	phasetime[3] = 0;	
-	phasetime[4] = 0;	
-	phasetime[5] = 0;	
-	phasetime[6] = 0;	
-	phasetime[7] = 0;	
-	phasetime[8] = 0;	
-	gpufinished = zero;
-	gpucodestart = (int)&ref1_start;
-
-#if 0
-	while (!I_RefreshCompleted () )
-	;		/* wait for refresh to latch all needed data before */
-			/* running the next tick */
-#endif
-
-#endif
 }
 
+void R_RenderPlayerView(void)
+{
+	R_RenderPhases1To5();
+	R_RenderPhases6To9();
+}
+
+#endif

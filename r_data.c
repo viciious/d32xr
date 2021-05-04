@@ -140,7 +140,6 @@ void R_InitData (void)
 #else
 #define HIBIT (1<<31)
 #endif
-void strupr (char *s);
 
 int	R_FlatNumForName (const char *name)
 {
