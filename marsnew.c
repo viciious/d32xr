@@ -83,7 +83,6 @@ void Mars_Init(void)
 	volatile unsigned short *palette;
 
 	while ((MARS_SYS_INTMSK & MARS_SH2_ACCESS_VDP) == 0);
-	MARS_SYS_INTMSK |= 1 << 3; // enable vblank interrupts
 
 	MARS_VDP_DISPMODE = MARS_224_LINES | MARS_VDP_MODE_256;
 

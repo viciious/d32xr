@@ -369,7 +369,7 @@ master_start:
         mov     #0x80,r0
         mov.l   _master_adapter,r1
         mov.b   r0,@r1                  /* set FM */
-        mov     #0x00,r0
+        mov     #0x08,r0
         mov.b   r0,@(1,r1)              /* set int enables */
         mov     #0x20,r0
         ldc     r0,sr                   /* allow ints */
