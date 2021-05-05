@@ -130,7 +130,7 @@ init_hardware:
         move.w  #0x0100,0xA11200    /* Z80 deassert reset */
 
 | look for music data
-        move.w	#0,0xA15104			/* set cart bank select */
+        move.w  #0,0xA15104            /* set cart bank select */
 
 | wait on Mars side
         move.b  #0,0xA15107             /* clear RV - allow SH2 to access ROM */
@@ -211,80 +211,80 @@ main_loop:
         move.w  0xA15120,d0         /* get COMM0 */
         bne     handle_req
 
-        tst.w	fm_idx
-        beq.b	main_loop			/* VGM not playing */
-		tst.w	fm_smpl
-		bne.b	1f					/* waiting, check timer overflow */
+        tst.w   fm_idx
+        beq.b   main_loop            /* VGM not playing */
+        tst.w   fm_smpl
+        bne.b   1f                    /* waiting, check timer overflow */
 0:
-		/* process more VGM commands */
-		bsr		fm_play
-		tst.w	fm_idx
-		beq.b	main_loop			/* no longer playing */
-		tst.w	fm_smpl
-		beq.b	0b					/* no delay */
-		bra.b	2f					/* new delay, set Timer A */
+        /* process more VGM commands */
+        bsr     fm_play
+        tst.w   fm_idx
+        beq.b   main_loop            /* no longer playing */
+        tst.w   fm_smpl
+        beq.b   0b                    /* no delay */
+        bra.b   2f                    /* new delay, set Timer A */
 1:
-		moveq	#1,d0				/* Timer A overflow flag */
-		and.b	0xA04000,d0			/* & YM2612 status */
-		beq.b	main_loop			/* still waiting on Timer A */
-		/* overflow */
-		move.w	fm_tick,d0
-		sub.w	fm_ttt,d0
-		bne.b	3f					/* longer delay, set Timer A */
-		clr.w	fm_smpl				/* delay done, process commands */
-		clr.w	fm_tick
-		clr.w	fm_ttt
-		bra.b	0b
+        moveq   #1,d0                /* Timer A overflow flag */
+        and.b   0xA04000,d0            /* & YM2612 status */
+        beq.b   main_loop            /* still waiting on Timer A */
+        /* overflow */
+        move.w  fm_tick,d0
+        sub.w   fm_ttt,d0
+        bne.b   3f                    /* longer delay, set Timer A */
+        clr.w   fm_smpl                /* delay done, process commands */
+        clr.w   fm_tick
+        clr.w   fm_ttt
+        bra.b   0b
 2:
-		/* set Timer A for delay */
-		moveq	#0,d0
-		move.w	fm_smpl,d0
-		lsr.w	#2,d0
-		add.w	fm_smpl,d0			/* ticks ~= 1.25 * # samples */
-		bcc.b	3f
-		ori.w	#0xFFFF,d0			/* saturate ticks to word */
+        /* set Timer A for delay */
+        moveq   #0,d0
+        move.w   fm_smpl,d0
+        lsr.w   #2,d0
+        add.w   fm_smpl,d0            /* ticks ~= 1.25 * # samples */
+        bcc.b   3f
+        ori.w   #0xFFFF,d0            /* saturate ticks to word */
 3:
-		move.w	d0,fm_tick
-		cmpi.w	#1024,d0			/* max ticks for Timer A */
-		bls.b	4f
-		move.w	#1024,d0
+        move.w  d0,fm_tick
+        cmpi.w  #1024,d0            /* max ticks for Timer A */
+        bls.b   4f
+        move.w  #1024,d0
 4:
-		move.w	d0,fm_ttt
-		move.w	#1024,d1
-		sub.w	d0,d1				/* Timer A count value */
-		move.w	d1,d0
-		andi.w	#3,d1
-		lsr.w	#2,d0
-		move.b	#0x27,0xA04000
-		nop
-		nop
-		nop
-		move.b	#0x15,0xA04001		/* reset Timer A flag, stop Timer A */
-		nop
-		nop
-		nop
-		move.b	#0x24,0xA04000
-		nop
-		nop
-		nop
-		move.b	d0,0xA04001			/* set Timer A msbs */
-		nop
-		nop
-		nop
-		move.b	#0x25,0xA04000
-		nop
-		nop
-		nop
-		move.b	d1,0xA04001			/* set Timer A lsbs */
-		nop
-		nop
-		nop
-		move.b	#0x27,0xA04000
-		nop
-		nop
-		nop
-		move.b	#0x15,0xA04001		/* enable Timer A, start Timer A */
-        bra		main_loop
+        move.w  d0,fm_ttt
+        move.w  #1024,d1
+        sub.w   d0,d1                /* Timer A count value */
+        move.w  d1,d0
+        andi.w  #3,d1
+        lsr.w   #2,d0
+        move.b  #0x27,0xA04000
+        nop
+        nop
+        nop
+        move.b  #0x15,0xA04001        /* reset Timer A flag, stop Timer A */
+        nop
+        nop
+        nop
+        move.b  #0x24,0xA04000
+        nop
+        nop
+        nop
+        move.b  d0,0xA04001            /* set Timer A msbs */
+        nop
+        nop
+        nop
+        move.b  #0x25,0xA04000
+        nop
+        nop
+        nop
+        move.b  d1,0xA04001            /* set Timer A lsbs */
+        nop
+        nop
+        nop
+        move.b  #0x27,0xA04000
+        nop
+        nop
+        nop
+        move.b  #0x15,0xA04001        /* enable Timer A, start Timer A */
+        bra     main_loop
 
 | process request from Master SH2
 handle_req:
@@ -300,7 +300,7 @@ handle_req:
         bls     read_mouse
 | unknown command
         move.w  #0,0xA15120         /* done */
-        bra	main_loop
+        bra     main_loop
 
 read_sram:
         move.w  #0x2700,sr          /* disable ints */
@@ -345,31 +345,36 @@ set_rom_bank:
         rts
 
 start_music:
-        tst.w	use_cd
-        bne	start_cd
+        tst.w   use_cd
+        bne     start_cd
         
         /* start VGM */
-        move.w  0xA15122,d0			/* COMM2 = index | repeat flag */
-        move.w	#0x8000,d1
-        and.w	d0,d1				/* repeat flag */
-        eor.w	d1,d0				/* clear flag from index */
-        move.w	d1,fm_rep			/* repeat flag */
-        move.w	d0,fm_idx			/* index 1 to N */
-        move.w	#0,0xA15104			/* set cart bank select */
+        move.w  0xA15122,d0            /* COMM2 = index | repeat flag */
+        move.w  #0x8000,d1
+        and.w   d0,d1                /* repeat flag */
+        eor.w   d1,d0                /* clear flag from index */
+        move.w  d1,fm_rep            /* repeat flag */
+        move.w  d0,fm_idx            /* index 1 to N */
+        move.w  #0,0xA15104            /* set cart bank select */
         move.l  #0,a0
-        move.l	0xA1512C,d0
+        move.l  0xA1512C,d0            /* fetch VGM offset */
         beq.b   9f
-        move.l	d0,fm_ptr
+        move.l  d0,a0
+        bsr     set_rom_bank
+        move.l  a1,fm_ptr
+
+        jsr     vgm_setup
+
         clr.w   fm_smpl
         clr.w   fm_tick
-        bsr     fm_init				/* initial YM2612 */
-        bsr     fm_setup			/* initial VGM player */
+        bsr     fm_init                /* initial YM2612 */
+        bsr     fm_setup            /* initial VGM player */
 
         move.w  #0,0xA15120         /* done */
-        bra	main_loop
+        bra     main_loop
 9:
-        clr.l	fm_ptr
-        clr.w	fm_idx				/* not playing VGM */
+        clr.l   fm_ptr
+        clr.w   fm_idx                /* not playing VGM */
 
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -413,19 +418,19 @@ start_cd:
         bra     main_loop
 
 stop_music:
-		tst.w	use_cd
-		bne.b	stop_cd
+        tst.w    use_cd
+        bne.b    stop_cd
 
         /* stop VGM */
         clr.w   fm_idx          /* stop music */
-		clr.w	fm_rep
-		clr.w	fm_smpl
-		clr.w	fm_tick
+        clr.w   fm_rep
+        clr.w   fm_smpl
+        clr.w   fm_tick
         clr.l   fm_ptr
-		bsr		fm_init
+        bsr     fm_init
 
         move.w  #0,0xA15120         /* done */
-		bra		main_loop
+        bra     main_loop
 
 stop_cd:
         tst.w   cd_ok
@@ -569,7 +574,7 @@ get_mky:
         move.w  sr,d2
         move.w  #0x2700,sr      /* disable ints */
 
-        move.b	#0x60,6(a0)     /* set direction bits */
+        move.b  #0x60,6(a0)     /* set direction bits */
         nop
         nop
         move.b  #0x60,(a0)      /* first phase of mouse packet */
@@ -719,9 +724,9 @@ vblank:
 gen_lvl2:
         dc.w    0
 
-		.global	use_cd
+        .global    use_cd
 use_cd:
-		dc.w	0
+        dc.w    0
 
         .global cd_ok
 cd_ok:

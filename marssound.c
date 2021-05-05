@@ -109,6 +109,9 @@ void S_Init(void)
 		}
 	}
 
+	if (num_music == 0)
+		num_music = 1; // so that num % num_music works
+
 	sfxvolume = 32;
 	musicvolume = 32;
 	oldsfxvolume = 32;
@@ -267,9 +270,6 @@ void S_UpdateSounds(void)
 
 void S_StartSong(int music_id, int looping)
 {
-	if (num_music == 0)
-		return;
-
 	S_StopSong();
 
 	while (MARS_SYS_COMM0) ;

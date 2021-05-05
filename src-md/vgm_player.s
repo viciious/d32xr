@@ -1,20 +1,16 @@
 | SEGA 32X VGM Player
 | by Chilly Willy
 |
-| uses cart bank area at 0x900000-0x9FFFFF for bank switching
-| this assumes vgms will be in the first 4MB of rom and won't
-| conflict with the SEGA mapper usage
-
-		.macro	set_vgm_pg
-        move.w  d7,0xA15104     /* set cart bank for vgm */
-        .endm
+| uses two work ram buffers to hold decompressed vgm commands
+| and pcm data
+        .equ    buf_size,0x1000    /* must match BUF_SIZE in main.c */
 
         .macro  fetch_vgm reg
         cmpa.l  a3,a6           /* check for wrap around */
         bcs.b   9f
-        suba.l  a2,a6           /* wrap page */
-        addq.w  #1,d7           /* next page */
-        set_vgm_pg
+        suba.l  a2,a6           /* wrap */
+        subi.l  #buf_size,vgm_chk
+        jsr     bump_vgm
 9:
         move.b  (a6)+,\reg
         .endm
@@ -22,13 +18,12 @@
         .macro  fetch_pcm reg
         cmpa.l  a3,a5           /* check for wrap around */
         bcs.b   9f
-        suba.l  a2,a5           /* wrap page */
-        addq.w  #1,d6           /* next page */
+        suba.l  a2,a5           /* wrap */
+        subi.l  #buf_size,pcm_chk
+        jsr     bump_pcm
 9:
-        move.w  d6,0xA15104     /* set cart bank for pcm */
         move.b  (a5)+,\reg
         .endm
-
 
         .data
 
@@ -79,22 +74,15 @@ fm_init:
 
         .global fm_setup
 fm_setup:
-        move.l  fm_ptr,d0
-        beq		stop			/* no vgm pointer */
-        move.l  #0x0FFFFF,d1
-        and.l   d0,d1           /* offset into cart bank */
-        addi.l  #0x900000,d1    /* vgm data ptr */
-        move.l  d1,fm_cur
+        tst.l   fm_ptr
+        beq     stop            /* no vgm pointer */
 
-        swap    d0
-        lsr.w   #4,d0           /* rom page */
-        move.w  d0,fm_bnk
-
-        lea     0x100000,a2     /* wrap length for bank */
-        lea     0xA00000,a3     /* bank limit */
-        movea.l d1,a6           /* current vgm ptr */
-        move.w  d0,d7           /* vgm bank */
-		set_vgm_pg
+        movea.l vgm_ptr,a6      /* decompress buffer */
+        move.l  a6,vgm_chk
+        addi.l  #256,vgm_chk    /* vgm_setup read this for us */
+        move.l  a6,fm_cur       /* current vgm ptr */
+        lea     buf_size,a2     /* wrap length for buffer */
+        lea     0(a6,a2.l),a3   /* buffer limit */
 
         lea     0x1C(a6),a6     /* loop offset */
         fetch_vgm d0
@@ -104,7 +92,7 @@ fm_setup:
         move.b  d3,-(sp)
         move.w  (sp)+,d3        /* shift left 8 */
         move.b  d2,d3
-        swap d3
+        swap    d3
         move.b  d1,-(sp)
         move.w  (sp)+,d3        /* shift left 8 */
         move.b  d0,d3
@@ -115,11 +103,9 @@ fm_setup:
 0:
         moveq   #0x40,d3
 1:
-        add.l   fm_ptr,d3
-        move.l  d3,fm_loop      /* loop address */
+        move.l  d3,fm_loop      /* loop offset */
 
         movea.l fm_cur,a6
-        move.w  fm_bnk,d7
         lea     8(a6),a6        /* version */
         fetch_vgm d0
         fetch_vgm d1
@@ -128,15 +114,14 @@ fm_setup:
         move.b  d3,-(sp)
         move.w  (sp)+,d3        /* shift left 8 */
         move.b  d2,d3
-        swap d3
+        swap    d3
         move.b  d1,-(sp)
         move.w  (sp)+,d3        /* shift left 8 */
         move.b  d0,d3
         cmpi.l  #0x150,d3       /* >= v1.50? */
-        bcs.b   2f              /* no, default to song start of offset 0x40 */
+        bcs     2f              /* no, default to song start of offset 0x40 */
 
         movea.l fm_cur,a6
-        move.w  fm_bnk,d7
         lea     0x34(a6),a6     /* VGM data offset */
         fetch_vgm d0
         fetch_vgm d1
@@ -145,7 +130,7 @@ fm_setup:
         move.b  d3,-(sp)
         move.w  (sp)+,d3        /* shift left 8 */
         move.b  d2,d3
-        swap d3
+        swap    d3
         move.b  d1,-(sp)
         move.w  (sp)+,d3        /* shift left 8 */
         move.b  d0,d3
@@ -164,13 +149,20 @@ fm_setup:
 
         .global fm_play
 fm_play:
-        lea     0x100000,a2     /* wrap length for bank */
-        lea     0xA00000,a3     /* bank limit */
+        lea     buf_size,a2     /* wrap length for buffer */
+        movea.l vgm_ptr,a3
+        adda.l  a2,a3           /* buffer limit */
         movea.l fm_cur,a6       /* vgm ptr */
-        move.w  fm_bnk,d7       /* vgm bank */
 
+        move.l  vgm_chk,d0
+        sub.l   a6,d0
+        cmpi.l  #256,d0
+        bgt.b   0f
+        jsr     bump_vgm
+0:
         moveq   #0,d0
         fetch_vgm d0            /* Read one byte from the VGM data */
+
         add.w   d0,d0
         move.w  cmd_table(pc,d0.w),d1
         jmp     cmd_table(pc,d1.w)      /* dispatch command */
@@ -451,38 +443,32 @@ cmd_table:
 
 reserved_0:
         move.l  a6,fm_cur       /* update vgm ptr */
-        move.w  d7,fm_bnk       /* update vgm bank */
         rts                     /* command has no args */
 
 reserved_1:
         addq.l  #1,a6
         move.l  a6,fm_cur       /* update vgm ptr */
-        move.w  d7,fm_bnk       /* update vgm bank */
         rts                     /* command has one arg */
 
 reserved_2:
         addq.l  #2,a6
         move.l  a6,fm_cur       /* update vgm ptr */
-        move.w  d7,fm_bnk       /* update vgm bank */
         rts                     /* command has two args */
 
 reserved_3:
         addq.l  #3,a6
         move.l  a6,fm_cur       /* update vgm ptr */
-        move.w  d7,fm_bnk       /* update vgm bank */
         rts                     /* command has three args */
 
 reserved_4:
         addq.l  #4,a6
         move.l  a6,fm_cur       /* update vgm ptr */
-        move.w  d7,fm_bnk       /* update vgm bank */
         rts                     /* command has four args */
 
 write_psg:
         fetch_vgm d0
         move.b  d0,0xC00011
         move.l  a6,fm_cur       /* update vgm ptr */
-        move.w  d7,fm_bnk       /* update vgm bank */
         rts
 
 write_fm0:
@@ -491,7 +477,6 @@ write_fm0:
         fetch_vgm d0
         move.b  d0,0xA04001
         move.l  a6,fm_cur       /* update vgm ptr */
-        move.w  d7,fm_bnk       /* update vgm bank */
         rts
 
 write_fm1:
@@ -500,115 +485,96 @@ write_fm1:
         fetch_vgm d0
         move.b  d0,0xA04003
         move.l  a6,fm_cur       /* update vgm ptr */
-        move.w  d7,fm_bnk       /* update vgm bank */
         rts
 
 wait_1:
         move.w  #1,fm_smpl      /* set vgm wait count */
         move.l  a6,fm_cur       /* update vgm ptr */
-        move.w  d7,fm_bnk       /* update vgm bank */
         rts
 
 wait_2:
         move.w  #2,fm_smpl      /* set vgm wait count */
         move.l  a6,fm_cur       /* update vgm ptr */
-        move.w  d7,fm_bnk       /* update vgm bank */
         rts
 
 wait_3:
         move.w  #3,fm_smpl      /* set vgm wait count */
         move.l  a6,fm_cur       /* update vgm ptr */
-        move.w  d7,fm_bnk       /* update vgm bank */
         rts
 
 wait_4:
         move.w  #4,fm_smpl      /* set vgm wait count */
         move.l  a6,fm_cur       /* update vgm ptr */
-        move.w  d7,fm_bnk       /* update vgm bank */
         rts
 
 wait_5:
         move.w  #5,fm_smpl      /* set vgm wait count */
         move.l  a6,fm_cur       /* update vgm ptr */
-        move.w  d7,fm_bnk       /* update vgm bank */
         rts
 
 wait_6:
         move.w  #6,fm_smpl      /* set vgm wait count */
         move.l  a6,fm_cur       /* update vgm ptr */
-        move.w  d7,fm_bnk       /* update vgm bank */
         rts
 
 wait_7:
         move.w  #7,fm_smpl      /* set vgm wait count */
         move.l  a6,fm_cur       /* update vgm ptr */
-        move.w  d7,fm_bnk       /* update vgm bank */
         rts
 
 wait_8:
         move.w  #8,fm_smpl      /* set vgm wait count */
         move.l  a6,fm_cur       /* update vgm ptr */
-        move.w  d7,fm_bnk       /* update vgm bank */
         rts
 
 wait_9:
         move.w  #9,fm_smpl      /* set vgm wait count */
         move.l  a6,fm_cur       /* update vgm ptr */
-        move.w  d7,fm_bnk       /* update vgm bank */
         rts
 
 wait_10:
         move.w  #10,fm_smpl     /* set vgm wait count */
         move.l  a6,fm_cur       /* update vgm ptr */
-        move.w  d7,fm_bnk       /* update vgm bank */
         rts
 
 wait_11:
         move.w  #11,fm_smpl     /* set vgm wait count */
         move.l  a6,fm_cur       /* update vgm ptr */
-        move.w  d7,fm_bnk       /* update vgm bank */
         rts
 
 wait_12:
         move.w  #12,fm_smpl     /* set vgm wait count */
         move.l  a6,fm_cur       /* update vgm ptr */
-        move.w  d7,fm_bnk       /* update vgm bank */
         rts
 
 wait_13:
         move.w  #13,fm_smpl     /* set vgm wait count */
         move.l  a6,fm_cur       /* update vgm ptr */
-        move.w  d7,fm_bnk       /* update vgm bank */
         rts
 
 wait_14:
         move.w  #14,fm_smpl     /* set vgm wait count */
         move.l  a6,fm_cur       /* update vgm ptr */
-        move.w  d7,fm_bnk       /* update vgm bank */
         rts
 
 wait_15:
         move.w  #15,fm_smpl     /* set vgm wait count */
         move.l  a6,fm_cur       /* update vgm ptr */
-        move.w  d7,fm_bnk       /* update vgm bank */
         rts
 
 wait_16:
         move.w  #16,fm_smpl     /* set vgm wait count */
         move.l  a6,fm_cur       /* update vgm ptr */
-        move.w  d7,fm_bnk       /* update vgm bank */
         rts
 
 wait_735:
         move.w  #735,fm_smpl    /* set vgm wait count */
         move.l  a6,fm_cur       /* update vgm ptr */
-        move.w  d7,fm_bnk       /* update vgm bank */
         rts
 
 wait_882:
         move.w  #882,fm_smpl    /* set vgm wait count */
         move.l  a6,fm_cur       /* update vgm ptr */
-        move.w  d7,fm_bnk       /* update vgm bank */
         rts
 
 wait_nnnn:
@@ -619,185 +585,135 @@ wait_nnnn:
         move.b  d0,d1
         move.w  d1,fm_smpl      /* set vgm wait count */
         move.l  a6,fm_cur       /* update vgm ptr */
-        move.w  d7,fm_bnk       /* update vgm bank */
         rts
 
 write_pcm_wait_0:
         movea.l pcm_cur,a5      /* pcm ptr */
-        move.w  pcm_bnk,d6      /* pcm bank */
         move.b  #0x2A,0xA04000
         fetch_pcm d0
         move.b  d0,0xA04001
-        set_vgm_pg
         move.l  a5,pcm_cur      /* update pcm ptr */
-        move.w  d6,pcm_bnk      /* update pcm bank */
         move.l  a6,fm_cur       /* update vgm ptr */
-        move.w  d7,fm_bnk       /* update vgm bank */
         rts
 
 write_pcm_wait_1:
         movea.l pcm_cur,a5      /* pcm ptr */
-        move.w  pcm_bnk,d6      /* pcm bank */
         move.b  #0x2A,0xA04000
         fetch_pcm d0
         move.b  d0,0xA04001
-        set_vgm_pg
         move.l  a5,pcm_cur      /* update pcm ptr */
-        move.w  d6,pcm_bnk      /* update pcm bank */
         bra     wait_1
 
 write_pcm_wait_2:
         movea.l pcm_cur,a5      /* pcm ptr */
-        move.w  pcm_bnk,d6      /* pcm bank */
         move.b  #0x2A,0xA04000
         fetch_pcm d0
         move.b  d0,0xA04001
-        set_vgm_pg
         move.l  a5,pcm_cur      /* update pcm ptr */
-        move.w  d6,pcm_bnk      /* update pcm bank */
         bra     wait_2
 
 write_pcm_wait_3:
         movea.l pcm_cur,a5      /* pcm ptr */
-        move.w  pcm_bnk,d6      /* pcm bank */
         move.b  #0x2A,0xA04000
         fetch_pcm d0
         move.b  d0,0xA04001
-        set_vgm_pg
         move.l  a5,pcm_cur      /* update pcm ptr */
-        move.w  d6,pcm_bnk      /* update pcm bank */
         bra     wait_3
 
 write_pcm_wait_4:
         movea.l pcm_cur,a5      /* pcm ptr */
-        move.w  pcm_bnk,d6      /* pcm bank */
         move.b  #0x2A,0xA04000
         fetch_pcm d0
         move.b  d0,0xA04001
-        set_vgm_pg
         move.l  a5,pcm_cur      /* update pcm ptr */
-        move.w  d6,pcm_bnk      /* update pcm bank */
         bra     wait_4
 
 write_pcm_wait_5:
         movea.l pcm_cur,a5      /* pcm ptr */
-        move.w  pcm_bnk,d6      /* pcm bank */
         move.b  #0x2A,0xA04000
         fetch_pcm d0
         move.b  d0,0xA04001
-        set_vgm_pg
         move.l  a5,pcm_cur      /* update pcm ptr */
-        move.w  d6,pcm_bnk      /* update pcm bank */
         bra     wait_5
 
 write_pcm_wait_6:
         movea.l pcm_cur,a5      /* pcm ptr */
-        move.w  pcm_bnk,d6      /* pcm bank */
         move.b  #0x2A,0xA04000
         fetch_pcm d0
         move.b  d0,0xA04001
-        set_vgm_pg
         move.l  a5,pcm_cur      /* update pcm ptr */
-        move.w  d6,pcm_bnk      /* update pcm bank */
         bra     wait_6
 
 write_pcm_wait_7:
         movea.l pcm_cur,a5      /* pcm ptr */
-        move.w  pcm_bnk,d6      /* pcm bank */
         move.b  #0x2A,0xA04000
         fetch_pcm d0
         move.b  d0,0xA04001
-        set_vgm_pg
         move.l  a5,pcm_cur      /* update pcm ptr */
-        move.w  d6,pcm_bnk      /* update pcm bank */
         bra     wait_7
 
 write_pcm_wait_8:
         movea.l pcm_cur,a5      /* pcm ptr */
-        move.w  pcm_bnk,d6      /* pcm bank */
         move.b  #0x2A,0xA04000
         fetch_pcm d0
         move.b  d0,0xA04001
-        set_vgm_pg
         move.l  a5,pcm_cur      /* update pcm ptr */
-        move.w  d6,pcm_bnk      /* update pcm bank */
         bra     wait_8
 
 write_pcm_wait_9:
         movea.l pcm_cur,a5      /* pcm ptr */
-        move.w  pcm_bnk,d6      /* pcm bank */
         move.b  #0x2A,0xA04000
         fetch_pcm d0
         move.b  d0,0xA04001
-        set_vgm_pg
         move.l  a5,pcm_cur      /* update pcm ptr */
-        move.w  d6,pcm_bnk      /* update pcm bank */
         bra     wait_9
 
 write_pcm_wait_10:
         movea.l pcm_cur,a5      /* pcm ptr */
-        move.w  pcm_bnk,d6      /* pcm bank */
         move.b  #0x2A,0xA04000
         fetch_pcm d0
         move.b  d0,0xA04001
-        set_vgm_pg
         move.l  a5,pcm_cur      /* update pcm ptr */
-        move.w  d6,pcm_bnk      /* update pcm bank */
         bra     wait_10
 
 write_pcm_wait_11:
         movea.l pcm_cur,a5      /* pcm ptr */
-        move.w  pcm_bnk,d6      /* pcm bank */
         move.b  #0x2A,0xA04000
         fetch_pcm d0
         move.b  d0,0xA04001
-        set_vgm_pg
         move.l  a5,pcm_cur      /* update pcm ptr */
-        move.w  d6,pcm_bnk      /* update pcm bank */
         bra     wait_11
 
 write_pcm_wait_12:
         movea.l pcm_cur,a5      /* pcm ptr */
-        move.w  pcm_bnk,d6      /* pcm bank */
         move.b  #0x2A,0xA04000
         fetch_pcm d0
         move.b  d0,0xA04001
-        set_vgm_pg
         move.l  a5,pcm_cur      /* update pcm ptr */
-        move.w  d6,pcm_bnk      /* update pcm bank */
         bra     wait_12
 
 write_pcm_wait_13:
         movea.l pcm_cur,a5      /* pcm ptr */
-        move.w  pcm_bnk,d6      /* pcm bank */
         move.b  #0x2A,0xA04000
         fetch_pcm d0
         move.b  d0,0xA04001
-        set_vgm_pg
         move.l  a5,pcm_cur      /* update pcm ptr */
-        move.w  d6,pcm_bnk      /* update pcm bank */
         bra     wait_13
 
 write_pcm_wait_14:
         movea.l pcm_cur,a5      /* pcm ptr */
-        move.w  pcm_bnk,d6      /* pcm bank */
         move.b  #0x2A,0xA04000
         fetch_pcm d0
         move.b  d0,0xA04001
-        set_vgm_pg
         move.l  a5,pcm_cur      /* update pcm ptr */
-        move.w  d6,pcm_bnk      /* update pcm bank */
         bra     wait_14
 
 write_pcm_wait_15:
         movea.l pcm_cur,a5      /* pcm ptr */
-        move.w  pcm_bnk,d6      /* pcm bank */
         move.b  #0x2A,0xA04000
         fetch_pcm d0
         move.b  d0,0xA04001
-        set_vgm_pg
         move.l  a5,pcm_cur      /* update pcm ptr */
-        move.w  d6,pcm_bnk      /* update pcm bank */
         bra     wait_15
 
 seek_pcm:
@@ -808,23 +724,14 @@ seek_pcm:
         move.b  d3,-(sp)
         move.w  (sp)+,d3        /* shift left 8 */
         move.b  d2,d3
-        swap d3
+        swap    d3
         move.b  d1,-(sp)
         move.w  (sp)+,d3        /* shift left 8 */
         move.b  d0,d3
         add.l   pcm_ptr,d3      /* new pcm ptr */
-
-        move.l  #0x0FFFFF,d1
-        and.l   d3,d1           /* offset into cart bank */
-        addi.l  #0x900000,d1    /* pcm data ptr */
-        move.l  d1,pcm_cur
-
-        swap    d3
-        lsr.w   #4,d3           /* rom page */
-        move.w  d3,pcm_bnk
+        move.l  d3,pcm_cur
 
         move.l  a6,fm_cur       /* update vgm ptr */
-        move.w  d7,fm_bnk       /* update vgm bank */
         rts
 
 data_block:
@@ -840,25 +747,18 @@ data_block:
         move.b  d3,-(sp)
         move.w  (sp)+,d3        /* shift left 8 */
         move.b  d2,d3
-        swap d3
+        swap    d3
         move.b  d1,-(sp)
         move.w  (sp)+,d3        /* shift left 8 */
         move.b  d0,d3           /* size of data block */
 
-        moveq   #3,d1           /* max # pages - 1 */
-        and.w   d7,d1
-        lsl.w   #4,d1
-        swap    d1
-        move.l  a6,d2
-        andi.l  #0x0FFFFF,d2
-        or.l    d2,d1           /* current vgm real address */
+        move.l  a6,d1           /* current vgm real address */
 
         tst.b   d4
         bne.b   0f              /* not pcm */
-		/* data block of pcm */
-        move.l  d1,pcm_ptr
-        move.l  a6,pcm_cur      /* curr pcm ptr = curr vgm ptr */
-        move.w  d7,pcm_bnk      /* pcm bank = vgm bank */
+        /* data block of pcm */
+        move.l  d1,pcm_base
+        move.l  pcm_ptr,pcm_cur /* curr pcm ptr = pcm buffer */
         move.b  #0x2B,0xA04000
         nop
         nop
@@ -874,29 +774,19 @@ data_block:
         move.b  #0x80,0xA04001  /* silence */
 0:
         add.l   d1,d3           /* new vgm ptr, skip over data block */
-        move.l  #0x0FFFFF,d1
-        and.l   d3,d1           /* offset into cart bank */
-        addi.l  #0x900000,d1    /* vgm data ptr */
         move.l  d1,fm_cur
-
-        swap    d3
-        lsr.w   #4,d3           /* rom page */
-        move.w  d3,fm_bnk
         rts
 
 end_data:
         tst.w   fm_rep
         beq.b   stop            /* no repeat, stop music */
 
-        move.l  fm_loop,d0
-        move.l  #0x0FFFFF,d1
-        and.l   d0,d1           /* offset into cart bank */
-        addi.l  #0x900000,d1    /* vgm data ptr */
-        move.l  d1,fm_cur
+        move.l  vgm_ptr,vgm_chk
+        jsr     vgm_setup       /* restart at start of compressed data and fill buffer */
 
-        swap    d0
-        lsr.w   #4,d0           /* rom page */
-        move.w  d0,fm_bnk
+        move.l  fm_loop,d0      /* offset from data start to song start */
+        add.l   vgm_ptr,d0
+        move.l  d0,fm_cur
 
         move.b  #0x2B,0xA04000
         nop
@@ -911,9 +801,9 @@ end_data:
         nop
         nop
         move.b  #0x80,0xA04001  /* silence */
-		nop
-		nop
-		nop
+        nop
+        nop
+        nop
         move.b  #0x2B,0xA04000
         nop
         nop
@@ -922,12 +812,23 @@ end_data:
         rts
 stop:
         clr.w   fm_idx          /* stop music */
-		clr.w	fm_rep
-		clr.w	fm_smpl
-		clr.w	fm_tick
-		clr.w	fm_ttt
+        clr.w   fm_rep
+        clr.w   fm_smpl
+        clr.w   fm_tick
+        clr.w   fm_ttt
         clr.l   fm_ptr
         bra     fm_init
+
+
+bump_vgm:
+        movem.l d0-d4/a2-a3/a6,-(sp)
+        jsr     vgm_read
+        addi.l  #256,vgm_chk
+        movem.l (sp)+,d0-d4/a2-a3/a6
+        rts
+
+bump_pcm:
+        rts
 
 
 FMReset:
@@ -978,37 +879,46 @@ FMReset:
 
         .align  4
 
-		.global	fm_ptr
+        .global    fm_ptr
 fm_ptr:
-		dc.l	0
-		.global	fm_loop
+        dc.l    0
+        .global    fm_cnt
+fm_cnt:
+        dc.l    0
+        .global    fm_loop
 fm_loop:
         dc.l    0
 fm_cur:
         dc.l    0
+pcm_base:
+        dc.l    0
 pcm_cur:
         dc.l    0
+vgm_chk:
+        dc.l    0
+pcm_chk:
+        dc.l    0
+        .global    pcm_ptr
 pcm_ptr:
         dc.l    0
-fm_bnk:
-        dc.w    0
-pcm_bnk:
-        dc.w    0
-		.global	fm_rep
+        .global    vgm_ptr
+vgm_ptr:
+        dc.l    0
+        .global    fm_rep
 fm_rep:
-        dc.w	0
-		.global	fm_idx
+        dc.w    0
+        .global    fm_idx
 fm_idx:
-		dc.w	0
-		.global	fm_smpl
+        dc.w    0
+        .global    fm_smpl
 fm_smpl:
-		dc.w	0
-		.global	fm_tick
+        dc.w    0
+        .global    fm_tick
 fm_tick:
-		dc.w	0
-		.global	fm_ttt
+        dc.w    0
+        .global    fm_ttt
 fm_ttt:
-		dc.w	0
+        dc.w    0
 
 
         .align  2
