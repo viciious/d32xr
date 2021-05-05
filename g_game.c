@@ -139,7 +139,7 @@ void G_DoLoadLevel (void)
 	displayplayer = consoleplayer;		/* view the guy you are playing     */
 	gameaction = ga_nothing; 
 
-    S_StartSong((gamemapinfo.mapnumber%NUMMUSIC), 1);
+    S_StartSong(((gamemapinfo.mapnumber-1)%num_music+1), 1);
 
 	Z_CheckHeap (mainzone);  		/* DEBUG */
 } 

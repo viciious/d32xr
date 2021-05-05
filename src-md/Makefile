@@ -12,7 +12,6 @@ INCPATH = -I$. -I$(ROOTDIR)/m68k-elf/include -I$(ROOTDIR)/m68k-elf/m68k-elf/incl
 CCFLAGS = -m68000 -Wall -O1 -c -fomit-frame-pointer
 ASFLAGS = -m68000 --register-prefix-optional
 LINKFLAGS = -T $(LDSCRIPTSDIR)/mars-md.ld -Wl,-Map=output.map -nostdlib
-FILELINKFLAGS = -T $(LDSCRIPTSDIR)/md.ld -Wl,-Map=fileoutput.map -nostdlib
 
 PREFIX = $(ROOTDIR)/m68k-elf/bin/m68k-elf-
 CC = $(PREFIX)gcc
@@ -27,13 +26,7 @@ TARGET = m68k
 LIBS = $(LIBPATH) -lc -lgcc -lnosys
 OBJS = crt0.o main.o kos.o cd.o vgm_player.o
 
-all: vgm_files.bin $(TARGET).bin
-
-vgm_files.bin: vgm_files.elf
-	$(OBJC) -O binary $< vgm_files.bin
-
-vgm_files.elf: vgm_files.o
-	$(CC) $(FILELINKFLAGS) vgm_files.o -o vgm_files.elf
+all: $(TARGET).bin
 
 $(TARGET).bin: $(TARGET).elf
 	$(OBJC) -O binary $< $(TARGET).bin

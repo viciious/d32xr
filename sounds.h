@@ -7,24 +7,6 @@
  *  Identifiers for all music in game. 
  */ 
  
-typedef enum 
-{ 
-  mus_None, 
-  mus_e1m1,
-  mus_e1m2,
-  mus_e1m4,
-  mus_e1m6,
-  mus_e2m1,
-  mus_e2m2,
-  mus_e2m3,
-  mus_e2m6,
-  mus_e2m8,
-  mus_e3m2,
-  mus_intro,
-  NUMMUSIC 
-} musicenum_t; 
- 
- 
 /* 
  *  Identifiers for all sfx in game. 
  */ 
@@ -99,7 +81,11 @@ typedef enum
   NUMSFX 
 } sfxenum_t; 
  
-extern const musicinfo_t S_music[]; 
+extern musicinfo_t *S_music; 
+extern int mus_intro;
+extern const int mus_none;
+extern int num_music;
+
 extern sfxinfo_t   S_sfx[]; 
 extern const char* S_sfxnames[];
 

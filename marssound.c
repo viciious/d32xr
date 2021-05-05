@@ -72,15 +72,41 @@ void slave_dma1_handler(void) ATTR_DATA_CACHE_ALIGN;
 
 void S_Init(void)
 {
-	int		i;
+	int		i, l;
 
+	/* init sound effects */
 	for (i=1 ; i < NUMSFX ; i++)
 	{
-		int l = W_CheckNumForName(S_sfxnames[i]);
+		l = W_CheckNumForName(S_sfxnames[i]);
 		if (l != -1)
 			S_sfx[i].md_data = W_POINTLUMPNUM(l);
 		else
 			S_sfx[i].md_data = NULL;
+	}
+
+	/* init music */
+	num_music = 0;
+	mus_intro = 0;
+	l = W_CheckNumForName("VGM_STRT");
+	if (l != -1)
+	{
+		int e, n;
+
+		e = W_GetNumForName("VGM_END");
+		n = e - ++l;
+
+		S_music = Z_Malloc(sizeof(*S_music) * n, PU_STATIC, 0);
+		for (i = 0; i < n; i++) {
+			S_music[i].name = (char *)W_GetNameForNum(l);
+			S_music[i].md_data = W_POINTLUMPNUM(l);
+
+			if (!D_strncasecmp(S_music[i].name, "mus_ntro", 8)) {
+				mus_intro = i + 1;
+				num_music = i;
+			}
+
+			l++;
+		}
 	}
 
 	sfxvolume = 32;
@@ -241,11 +267,20 @@ void S_UpdateSounds(void)
 
 void S_StartSong(int music_id, int looping)
 {
+	if (num_music == 0)
+		return;
+
 	S_StopSong();
+
 	while (MARS_SYS_COMM0) ;
+
+	if (music_id == mus_none) {
+		return;
+	}
+
 	MARS_SYS_COMM2 = music_id | (looping ? 0x8000:0x0000);
+	*(volatile intptr_t *)&MARS_SYS_COMM12 = (intptr_t)S_music[music_id - 1].md_data;
 	MARS_SYS_COMM0 = 0x0300; /* start music */
-	MARS_SYS_COMM14 = 9;
 }
 
 void S_StopSong(void)

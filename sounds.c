@@ -4,23 +4,12 @@
  *  Information about all the music 
  */ 
  
-const musicinfo_t S_music[] = 
-{ 
-  { 0 }, 
-  { "m_e1m1", 0 },
-  { "m_e1m2", 0 },
-  { "m_e1m4", 0 },
-  { "m_e1m6", 0 },
-  { "m_e2m1", 0 },
-  { "m_e2m2", 0 },
-  { "m_e2m3", 0 },
-  { "m_e2m6", 0 },
-  { "m_e2m8", 0 },
-  { "m_e3m2", 0 },
-  { "m_intro", 0 }
-}; 
- 
- 
+musicinfo_t		*S_music; 
+int				num_music = 0;
+
+const int		mus_none = 0;
+int				mus_intro = 0;
+
 /* 
  *  Information about all the sfx 
  */ 

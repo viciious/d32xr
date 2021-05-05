@@ -131,22 +131,6 @@ init_hardware:
 
 | look for music data
         move.w	#0,0xA15104			/* set cart bank select */
-		lea		0x900000,a0
-0:
-		cmpi.w	#0x4EF9,(a0)
-		bne.b	1f
-		cmpi.w	#0x5555,2(a0)
-		bne.b	1f
-		cmpi.w	#0xAAAA,4(a0)
-		bne.b	1f
-		cmpi.w	#0x4EF9,6(a0)
-		beq.b	2f
-1:
-		addq.l	#2,a0
-		bra		0b
-2:
-		lea		8(a0),a0
-		move.l	a0,vgm_table
 
 | wait on Mars side
         move.b  #0,0xA15107             /* clear RV - allow SH2 to access ROM */
@@ -316,7 +300,7 @@ handle_req:
         bls     read_mouse
 | unknown command
         move.w  #0,0xA15120         /* done */
-        bra		main_loop
+        bra	main_loop
 
 read_sram:
         move.w  #0x2700,sr          /* disable ints */
@@ -361,9 +345,9 @@ set_rom_bank:
         rts
 
 start_music:
-		tst.w	use_cd
-		bne		start_cd
-
+        tst.w	use_cd
+        bne	start_cd
+        
         /* start VGM */
         move.w  0xA15122,d0			/* COMM2 = index | repeat flag */
         move.w	#0x8000,d1
@@ -371,29 +355,24 @@ start_music:
         eor.w	d1,d0				/* clear flag from index */
         move.w	d1,fm_rep			/* repeat flag */
         move.w	d0,fm_idx			/* index 1 to N */
-        subq.w	#1,d0
-        add.w	d0,d0
-        add.w	d0,d0				/* offset into VGM table */
         move.w	#0,0xA15104			/* set cart bank select */
-        movea.l	vgm_table,a0
-        move.l	0(a0,d0.w),d0		/* fetch VGM offset */
-        beq.b	9f					/* no VGM */
-		add.l	a0,d0
-		subi.l	#0x900000,d0		/* offset in cart */
+        move.l  #0,a0
+        move.l	0xA1512C,d0
+        beq.b   9f
         move.l	d0,fm_ptr
-        clr.w	fm_smpl
-        clr.w	fm_tick
-		bsr		fm_init				/* initial YM2612 */
-        bsr		fm_setup			/* initial VGM player */
+        clr.w   fm_smpl
+        clr.w   fm_tick
+        bsr     fm_init				/* initial YM2612 */
+        bsr     fm_setup			/* initial VGM player */
 
         move.w  #0,0xA15120         /* done */
-		bra		main_loop
+        bra	main_loop
 9:
-		clr.l	fm_ptr
-		clr.w	fm_idx				/* not playing VGM */
+        clr.l	fm_ptr
+        clr.w	fm_idx				/* not playing VGM */
 
         move.w  #0,0xA15120         /* done */
-		bra		main_loop
+        bra     main_loop
 
 start_cd:
         tst.w   cd_ok
@@ -747,10 +726,5 @@ use_cd:
         .global cd_ok
 cd_ok:
         dc.w    0
-
-        .align  4
-
-vgm_table:
-		dc.l	0
 
         .align  4
