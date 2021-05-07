@@ -3,7 +3,7 @@
 #include "doomdef.h"
 
 #define MOVEWAIT		3
-#define CURSORX		50
+#define CURSORX		40
 #define STARTY			40
 #define CURSORY(y)	(STARTY*(y))
 #define	NUMLCHARS 64	
@@ -26,12 +26,15 @@ typedef enum
 	NUMMODES
 } playmode_t;
 
-jagobj_t	*m_doom,*m_skull1,*m_skull2,*m_gamemode,*m_level,
-			*m_difficulty,*m_single,*m_coop,*m_deathmatch;
-			
-jagobj_t *nums[10];
-jagobj_t	*m_skill[5];
-jagobj_t *m_playmode[NUMMODES];
+jagobj_t* m_doom;
+#ifndef MARS
+jagobj_t *m_single,*m_coop,*m_deathmatch,*m_gamemode;
+jagobj_t* m_playmode[NUMMODES];
+#endif
+
+short m_skull1lump, m_skull2lump, m_levellump, m_difficultylump;
+short m_skilllump;
+short numslump;
 
 int		cursorframe, cursorcount;
 int		movecount;
@@ -41,34 +44,47 @@ playmode_t currentplaymode;
 menu_t	cursorpos;
 skill_t	playerskill;
 
-static dmapinfo_t** maplist;
+static int *mapnumbers;
 static int mapcount;
 
 void M_Start (void)
 {	
+	int i;
 #ifndef MARS
-	int i,l;
-	
-/* cache all needed graphics	 */
-	m_doom = W_CacheLumpName ("M_DOOM",PU_STATIC);
-	m_skull1 = W_CacheLumpName ("M_SKULL1",PU_STATIC);
-	m_skull2 = W_CacheLumpName ("M_SKULL2",PU_STATIC);
-	m_gamemode = W_CacheLumpName ("M_GAMMOD",PU_STATIC);
-	m_level = W_CacheLumpName ("M_LEVEL",PU_STATIC);
-	m_difficulty =W_CacheLumpName ("M_DIFF",PU_STATIC);
+	int j;
+#endif
+	dmapinfo_t** maplist;
 
+	maplist = G_LoadMaplist(&mapcount);
+	mapnumbers = Z_Malloc(sizeof(*mapnumbers) * mapcount, PU_STATIC, 0);
+	for (i = 0; i < mapcount; i++)
+		mapnumbers[i] = maplist[i]->mapnumber;
+
+	for (i = 0; i < mapcount; i++)
+		Z_Free(maplist[i]);
+
+	Z_Free(maplist);
+
+/* cache all needed graphics	 */
+	m_doom = W_CacheLumpName("M_DOOM",PU_STATIC);
+	m_skull1lump = W_GetNumForName("M_SKULL1");
+	m_skull2lump = W_GetNumForName("M_SKULL2");
+	m_levellump = W_GetNumForName("M_LEVEL");
+	m_difficultylump = W_GetNumForName("M_DIFF");
+
+#ifndef MARS
+	m_gamemode = W_CacheLumpName ("M_GAMMOD",PU_STATIC);
+#endif
+
+#ifndef MARS
 	l = W_GetNumForName ("M_SINGLE");
 	for (i = 0; i < NUMMODES; i++)
 		m_playmode[i] = W_CacheLumpNum (l+i, PU_STATIC);
-
-	l = W_GetNumForName ("SKILL0");
-	for (i = 0; i < 5; i++)
-		m_skill[i] = W_CacheLumpNum (l+i, PU_STATIC);
-
-	l = W_GetNumForName ("NUM_0");
-	for (i = 0; i < 10; i++)
-		nums[i] = W_CacheLumpNum (l+i, PU_STATIC);
 #endif
+
+	m_skilllump = W_GetNumForName("SKILL0");
+
+	numslump = W_GetNumForName ("NUM_0");
 
 	cursorcount = 0;
 	cursorframe = 0;
@@ -76,44 +92,30 @@ void M_Start (void)
 	playerskill = startskill;
 	playermap = startmap;
 
-	maplist = G_LoadMaplist(&mapcount);
-	
-	DoubleBufferSetup ();
-
-	I_InitMenuFire();
+	DoubleBufferSetup();
 }
 
 void M_Stop (void)
 {	
-	int i;
-
 #ifndef MARS
+	int i;
+#endif
+
 /* they stay cached by status bar */
 
 /* free all loaded graphics */
 
 	Z_Free (m_doom);
-	Z_Free (m_skull1);
-	Z_Free (m_skull2);
+#ifndef MARS
 	Z_Free (m_gamemode);
-	Z_Free (m_level);
-	Z_Free (m_difficulty);
-
-	for (i = 0; i < NUMMODES; i++)
-		Z_Free(m_playmode[i]);
-
-	for (i = 0; i < 5; i++)
-		Z_Free(m_skill[i]);
-
-	for (i = 0; i < 10; i++)
-		Z_Free(nums[i]);
 #endif
 
-	for (i = 0; i < mapcount; i++)
-		Z_Free(maplist[i]);
-	Z_Free(maplist);
+#ifndef MARS
+	for (i = 0; i < NUMMODES; i++)
+		Z_Free(m_playmode[i]);
+#endif
 
-	I_StopMenuFire();
+	Z_Free(mapnumbers);
 
 	WriteEEProm ();
 }
@@ -133,16 +135,17 @@ int M_Ticker (void)
 	int		buttons;
 	static char	newframe = 1;
 
-	buttons = ticbuttons[consoleplayer];
+	buttons = I_ReadControls();
 	
 /* exit menu if button press */
 	if ( ticon > 10 &&	(buttons & (JP_A|JP_B|JP_C))   )
 	{
-		startmap = maplist[playermap - 1]->mapnumber; /*set map number */
+		startmap = mapnumbers[playermap - 1]; /*set map number */
 		startskill = playerskill;	/* set skill level */
 		starttype = currentplaymode;	/* set play type */
 		return 1;		/* done with menu */
 	}
+
 /* animate skull */
 	if (++cursorcount == ticrate)
 	{
@@ -202,7 +205,7 @@ int M_Ticker (void)
 					if (buttons & JP_RIGHT)
 					{			
 						playermap++;
-						if (mapcount == playermap || maplist[playermap-1]->mapnumber == maxlevel+1)
+						if (mapcount == playermap || mapnumbers[playermap-1] == maxlevel+1)
 							playermap--;
 					}	
 					if (buttons & JP_LEFT)
@@ -245,97 +248,59 @@ int M_Ticker (void)
 =================
 */
 
-#ifdef MARS
-void M_Printf (int x, int y, char *str, ...)
-{
-	static char buf[64];
-	va_list ap;
-
-	va_start(ap, str);
-	D_vsnprintf(buf, sizeof(buf), str, ap);
-	va_end(ap);
-
-	I_Print8 (x/8,y/8, buf);
-}
-
-#endif
-
 void M_Drawer (void)
 {
-	int mapnumber = maplist[playermap - 1]->mapnumber;
+	int mapnumber = mapnumbers[playermap - 1];
 	int	leveltens = mapnumber / 10, levelones = mapnumber % 10;
-#ifdef MARS
-	const int m_doom_height = 48;
-	const char *difficulties[] = {
-		"I'm too young to die.",
-		"Hey, not too rought.",
-		"Hurt me plenty.",
-		"Ultra-violence.",
-		"Nightmare!"
-	};
-
-	I_DrawMenuFire();
 
 /* Draw main menu */
-	M_Printf(160*8-64, 2, "DOOM");
+	int m_doom_height = m_doom->height;
 
-/* draw new skull */
-	M_Printf(CURSORX, CURSORY(cursorpos)+m_doom_height, "*");
-
-/* draw menu items */
-
-/* draw start level information */
-	M_Printf(CURSORX+74 ,CURSORY(0)+m_doom_height+2, "Area"); 
-	if (leveltens)	
-	{
-		M_Printf(CURSORX+90,m_doom_height+22,"%c", '0'+leveltens);
-		M_Printf(CURSORX+90+64,m_doom_height+22, "%c: %s", '0'+levelones, maplist[playermap - 1]->name);
-	}
-	else
-		M_Printf(CURSORX+90+64,m_doom_height+22,"%c: %s", '0'+levelones, maplist[playermap - 1]->name);
-
-/* draw difficulty information */
-	M_Printf(CURSORX+74, CURSORY(1)+m_doom_height+2, "Difficulty"); 
-	M_Printf(CURSORX+92,m_doom_height+62, "%s", difficulties[playerskill]);
-
-	I_Update();
-#else
-/* Draw main menu */
-	DrawJagobj (m_doom, 100, 2);
+	DrawJagobj(m_doom, 100, 2);
 	
 /* erase old skulls */
-	EraseBlock (CURSORX, 0,m_skull1->width,240);
+#ifndef MARS
+	EraseBlock (CURSORX, m_doom_height,m_skull1->width, CURSORY(NUMMENUITEMS)- CURSORY(0));
+#endif
 
 /* draw new skull */
 	if (cursorframe)
-		DrawJagobj (m_skull2, CURSORX, CURSORY(cursorpos)+m_doom->height);
+		DrawJagobjLump(m_skull2lump, CURSORX, CURSORY(cursorpos)+m_doom_height, NULL, NULL);
 	else
-		DrawJagobj (m_skull1, CURSORX, CURSORY(cursorpos)+m_doom->height);
+		DrawJagobjLump(m_skull1lump, CURSORX, CURSORY(cursorpos)+m_doom_height, NULL, NULL);
 
 /* draw menu items */
 
+#ifndef MARS
 /* draw game mode information */
-	DrawJagobj(m_gamemode, 74, m_doom->height+2); 
-	EraseBlock(90,m_doom->height+22,320-90,240-m_doom->height+22);
-	DrawJagobj(m_playmode[currentplaymode],90,m_doom->height+22);
+	DrawJagobj(m_gamemode, 64, m_doom_height+2); 
+	EraseBlock(80,m_doom_height+22,320- 80,200-m_doom_height+22);
+	DrawJagobj(m_playmode[currentplaymode], 80,m_doom_height+22);
+#endif
 
 /* draw start level information */
-	DrawJagobj(m_level, 74 ,CURSORY(1)+m_doom->height+2); 
-	EraseBlock(90,m_doom->height+61,320-90,200-m_doom->height+62);
+	DrawJagobjLump(m_levellump, 64,CURSORY(NUMMENUITEMS - 2)+m_doom_height+2, NULL, NULL);
+#ifndef MARS
+	EraseBlock(80, m_doom_height + CURSORY(NUMMENUITEMS - 2) + 20 + 2, 320, nums[0]->height);
+#endif
+
 	if (leveltens)	
 	{
-		DrawJagobj(nums[leveltens],
-		90,m_doom->height+62);
-		DrawJagobj(nums[levelones],104,m_doom->height+62);
+		DrawJagobjLump(numslump+leveltens,
+			80,m_doom_height+CURSORY(NUMMENUITEMS - 2)+20+2, NULL, NULL);
+		DrawJagobjLump(numslump+levelones,94,m_doom_height+ CURSORY(NUMMENUITEMS - 2) + 20 + 2, NULL, NULL);
 	}
 	else
-		DrawJagobj(nums[levelones],90,m_doom->height+62);
+		DrawJagobjLump(numslump+levelones, 80,m_doom_height+ CURSORY(NUMMENUITEMS - 2) + 20 + 2, NULL, NULL);
 
 /* draw difficulty information */
-	DrawJagobj(m_difficulty, CURSORX+24, CURSORY(2)+m_doom->height+2); 
-	EraseBlock(92,m_doom->height+102,320-92,240-m_doom->height+102);
-	DrawJagobj(m_skill[playerskill],92,m_doom->height+102);
+	DrawJagobjLump(m_difficultylump, CURSORX+24, CURSORY(NUMMENUITEMS - 1) +m_doom_height+2, NULL, NULL);
+#ifndef MARS
+	EraseBlock(82, m_doom_height + CURSORY(NUMMENUITEMS - 1) + 20 + 2, 320 - 72, m_skill[playerskill]->height+10);
+#endif
+	DrawJagobjLump(m_skilllump + playerskill, 82,m_doom_height+ CURSORY(NUMMENUITEMS - 1) + 20 + 2, NULL, NULL);
 
+#ifndef MARS
 	UpdateBuffer ();
 #endif
 }

@@ -934,7 +934,7 @@ extern	int		vblsinframe;		/* range from 4 to 8 */
 
 void I_InitMenuFire(void) ATTR_OPTIMIZE_SIZE;
 void I_StopMenuFire(void);
-void I_DrawMenuFire(void) ATTR_OPTIMIZE_EXTREME;
+int I_DrawMenuFire(void) ATTR_OPTIMIZE_EXTREME;
 void I_DrawSbar(void);
 void S_StartSong(int music_id, int looping);
 void S_StopSong(void);

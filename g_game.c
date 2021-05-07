@@ -504,7 +504,7 @@ int G_PlayDemoPtr (int *demo)
 {
 	int		exit;
 	int		skill, map;
-	
+
 	demobuffer = demo;
 	
 	skill = *demo++;

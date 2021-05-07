@@ -354,11 +354,13 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		ticbuttons[consoleplayer] = buttons;
 		if (demoplayback)
 		{
+#ifndef MARS
 			if (buttons & (BT_A|BT_B|BT_C) )
 			{
 				exit = ga_exitdemo;
 				break;
 			}
+#endif
 			ticbuttons[consoleplayer] = buttons = GetDemoCmd ();
 		}
 
@@ -424,9 +426,14 @@ int TIC_Abortable (void)
 	jagobj_t	*pl;
 #endif
 
-	if	(ticon >= 8*15)
+#ifdef MARS
+	if (ticon >= 16 * 15)
 		return 1;		/* go on to next demo */
-	
+#else
+	if (ticon >= 8 * 15)
+		return 1;		/* go on to next demo */
+#endif
+
 #ifdef JAGUAR	
 	if (ticbuttons[0] == (BT_OPTION|BT_STAR|BT_HASH) )
 	{	/* reset eeprom memory */
@@ -457,55 +464,70 @@ int TIC_Abortable (void)
 /*============================================================================= */
 
 jagobj_t	*titlepic;
+void DrawJagobj2(jagobj_t* jo, int x, int y, int src_x, int src_y, int src_w, int src_h);
 
 void START_Title (void)
 {
+	I_InitMenuFire();
+
 #ifndef MARS
 	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
-	DoubleBufferSetup ();
-	titlepic = W_CacheLumpName ("title",PU_STATIC);
 #endif
+	DoubleBufferSetup();
+	titlepic = W_CacheLumpName("title", PU_STATIC);
+
+#ifdef MARS
+	DrawJagobj2(titlepic, 0, 0, 0, 0, 0, -16);
+	UpdateBuffer();
+
+	DrawJagobj2(titlepic, 0, 0, 0, 0, 0, -16);
+	UpdateBuffer();
+#endif
+
 	S_StartSong(mus_intro, 0);
 }
 
 void STOP_Title (void)
 {
-#ifndef MARS
 	Z_Free (titlepic);
-#endif
+	I_StopMenuFire();
 	S_StopSong();
 }
 
 void DRAW_Title (void)
 {
-#ifndef MARS
-	DrawJagobj (titlepic, 0, 0);
-	UpdateBuffer ();
+#ifdef MARS
+	int fire_height;
+
+	while (!I_RefreshCompleted())
+		;
+
+	fire_height = I_DrawMenuFire();
+
+	DrawJagobj2(titlepic, 0, 200 - fire_height, 0, 200 - fire_height, 0, -16);
 #endif
+
+	UpdateBuffer();
 }
 
 /*============================================================================= */
 
-
-void START_Credits (void)
-{
 #ifndef MARS
+
+static void START_Credits (void)
+{
 	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
 	DoubleBufferSetup ();
 	titlepic = W_CacheLumpName ("credits",PU_STATIC);
-#endif
 }
 
 void STOP_Credits (void)
 {
-#ifndef MARS
 	Z_Free (titlepic);
-#endif
 }
 
-int TIC_Credits (void)
+static int TIC_Credits (void)
 {
-#ifndef MARS
 	if	(ticon >= 10*15)
 		return 1;		/* go on to next demo */
 		
@@ -515,17 +537,16 @@ int TIC_Credits (void)
 		return ga_exitdemo;
 	if ( (ticbuttons[0] & BT_C) && !(oldticbuttons[0] & BT_C) )
 		return ga_exitdemo;
-#endif
 	return 0;
 }
 
-void DRAW_Credits (void)
+static void DRAW_Credits (void)
 {
-#ifndef MARS
 	DrawJagobj (titlepic, 0, 0);
 	UpdateBuffer ();
-#endif
 }
+
+#endif
 
 /*============================================================================ */
 
@@ -540,6 +561,7 @@ void RunTitle (void)
 		RunMenu ();
 }
 
+#ifndef MARS
 void RunCredits (void)
 {
 	int		exit;
@@ -548,8 +570,9 @@ void RunCredits (void)
 	if (exit == ga_exitdemo)
 		RunMenu ();
 }
+#endif
 
-void RunDemo (char *demoname)
+int  RunDemo (char *demoname)
 {
 	int	*demo;
 	int	exit;
@@ -557,22 +580,39 @@ void RunDemo (char *demoname)
 	demo = W_CacheLumpName (demoname, PU_STATIC);
 	exit = G_PlayDemoPtr (demo);
 	Z_Free (demo);
+#ifndef MARS
 	if (exit == ga_exitdemo)
 		RunMenu ();
+#endif
+	return exit;
 }
 
 
 void RunMenu (void)
 {
+#ifdef MARS
+	M_Start();
+
+	while (1) {
+		if (RunDemo("DEMO1") == ga_exitdemo)
+			break;
+		if (RunDemo("DEMO2") == ga_exitdemo)
+			break;
+	}
+
+	M_Stop();
+#else
 reselect:
-	MiniLoop (M_Start, M_Stop, M_Ticker, M_Drawer);
+	MiniLoop(M_Start, M_Stop, M_Ticker, M_Drawer);
+
 	if (starttype != gt_single)
 	{
 		I_NetSetup ();
 		if (starttype == gt_single)
 			goto reselect;		/* aborted net startup */
 	}
-	
+#endif
+
 	G_InitNew (startskill, startmap, starttype);
 	G_RunGame ();
 }
@@ -616,9 +656,7 @@ D_printf ("S_Init\n");
 	S_Init ();
 D_printf("ST_Init\n");
 	ST_Init ();
-#ifndef MARS
 	O_Init ();
-#endif
 
 /*========================================================================== */
 
@@ -649,16 +687,16 @@ D_printf ("DM_Main\n");
 	G_RunGame ();
 #endif
 
-#ifdef MARS
-        RunMenu();
-#else
 	while (1)
 	{
 		RunTitle ();
-		RunDemo ("DEMO1");
+#ifdef MARS
+		RunMenu();
+#else
+		RunDemo("DEMO1");
 		RunCredits ();
-		RunDemo ("DEMO2");
-	}
+		RunDemo("DEMO2");
 #endif
+	}
 } 
  

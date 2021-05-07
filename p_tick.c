@@ -6,7 +6,7 @@ int	tictics;
 
 boolean		gamepaused;
 jagobj_t	*pausepic;
-static int	clearscreen = 0;
+int			clearscreen = 0;
 
 /*
 ===============================================================================
@@ -286,8 +286,14 @@ int P_Ticker (void)
 	int		ticstart;
 	player_t	*pl;
 	
-	ticstart = frtc;
+	if (demoplayback)
+	{
+		if (M_Ticker())
+			return ga_exitdemo;
+	}
 
+	ticstart = frtc;
+	
 	while (!I_RefreshLatched () )
 	;		/* wait for refresh to latch all needed data before */
 			/* running the next tick */
@@ -410,8 +416,16 @@ void DrawPlaque (jagobj_t *pl)
 			sdest += 160;
 		}
 	}
-#endif
+#else
+	//DoubleBufferSetup();
+
+	//DrawJagobj(pl, 160 - pl->width / 2, 100);
+
+	//I_Update();
+	//Mars_FlipFrameBuffers(true);
+
 	clearscreen = 2;
+#endif
 }
 
 /* 
@@ -421,10 +435,9 @@ void DrawPlaque (jagobj_t *pl)
 = 
 ============= 
 */ 
- 
+#ifndef MARS
 void DrawSinglePlaque (jagobj_t *pl)
 {
-#ifndef MARS
 	int			x,y,w;
 	byte		*bdest, *source;
 	
@@ -442,8 +455,8 @@ void DrawSinglePlaque (jagobj_t *pl)
 			bdest[x] = *source++;
 		bdest += 320;
 	}
-#endif
 }
+#endif
 
 
 /* 
@@ -462,7 +475,6 @@ void P_Drawer (void)
 	if (players[consoleplayer].automapflags & AF_OPTIONSACTIVE)
 	{
 		O_Drawer ();
-		clearscreen = 2;
 	}
 	else if (gamepaused && refreshdrawn)
 		DrawPlaque (pausepic);
@@ -486,16 +498,33 @@ void P_Drawer (void)
 #endif
 	{
 #ifdef MARS
+		static boolean o_wasactive = false;
+
+		if (!(players[consoleplayer].automapflags & AF_OPTIONSACTIVE))
+		{
+			if (o_wasactive)
+				clearscreen = 2;
+			o_wasactive = false;
+		}
+
 		if (clearscreen > 0) {
 			DrawTiledBackground();
 			clearscreen--;
 		}
-		R_RenderPlayerView (); 
-		ST_Drawer ();
+
+		R_RenderPlayerView();
+
+		ST_Drawer();
+
+		if (demoplayback)
+			M_Drawer();
+
 		if (players[consoleplayer].automapflags & AF_OPTIONSACTIVE)
 		{
-			clearscreen = 2;
+			O_Drawer();
+			o_wasactive = true;
 		}
+
 		I_Update ();
 #else
 #ifdef JAGUAR
@@ -522,9 +551,7 @@ void P_Start (void)
 	ticremainder[0] = ticremainder[1] = 0;
 	M_ClearRandom ();
 
-#ifdef MARS
 	clearscreen = 2;
-#endif
 }
 
 void P_Stop (void)

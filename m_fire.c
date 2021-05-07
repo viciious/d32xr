@@ -141,7 +141,7 @@ void Mars_Slave_M_AnimateFire(void)
 		}
 
 		// Stop fire
-		if (I_GetTime() - start > 350)
+		if (I_GetTime() - start > 250)
 		{
 			for (y = FIRE_HEIGHT - 1; y > FIRE_HEIGHT - 8; y--) {
 				if (MARS_SYS_COMM4 != 8) break;
@@ -249,7 +249,7 @@ void I_StopMenuFire(void)
 =
 ================
 */
-void I_DrawMenuFire(void)
+int I_DrawMenuFire(void)
 {
 	int x, y;
 	pixel_t *p = (pixel_t*)I_FrameBuffer();
@@ -258,8 +258,8 @@ void I_DrawMenuFire(void)
 	unsigned char* firePal = m_fire->firePal;
 
 	// clear the upper part
-	while (p < dest)
-		*p++ = 0;
+	//while (p < dest)
+	//	*p++ = 0;
 
 	// draw the fire at the bottom
 	char* row = (char*)((intptr_t)firePix | 0x20000000);
@@ -276,4 +276,6 @@ void I_DrawMenuFire(void)
 
 		dest += (320 / 2 - FIRE_WIDTH);
 	}
+
+	return FIRE_HEIGHT;
 }

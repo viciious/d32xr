@@ -540,8 +540,6 @@ void P_LoadingPlaque (void)
 	pl = W_CacheLumpName ("loading", PU_STATIC);	
 	DrawPlaque (pl);
 	Z_Free (pl);
-#else
-	I_ClearFrameBuffer ();
 #endif
 }	
 
