@@ -804,21 +804,19 @@ void R_RenderPlayerView(void)
 
 #else
 
-void R_RenderPhases1To5(void)
+void R_RenderPhase1(void)
 {
-	/* */
-	/* initial setup */
-	/* */
-	if (debugscreenactive)
-		I_DebugScreen();
-
-	t_ref_total = I_GetTime();
-
-	R_Setup();
-
 	t_ref_bsp = I_GetTime();
 	R_BSP();
 	t_ref_bsp = I_GetTime() - t_ref_bsp;
+}
+
+void R_RenderPhases2To9(void)
+{
+	unsigned short openings_[MAXOPENINGS];
+
+	openings = openings_;
+	lastopening = openings;
 
 	t_ref_prep = I_GetTime();
 	R_WallPrep();
@@ -829,14 +827,6 @@ void R_RenderPhases1To5(void)
 	t_ref_prep = I_GetTime() - t_ref_prep;
 
 	Mars_R_StopOpenPlanes();
-}
-
-void R_RenderPhases6To9(void)
-{
-	unsigned short openings_[MAXOPENINGS];
-
-	openings = openings_;
-	lastopening = openings;
 
 	t_ref_segs = I_GetTime();
 	R_SegCommands ();
@@ -849,16 +839,27 @@ void R_RenderPhases6To9(void)
 	t_ref_sprites = I_GetTime();
 	R_Sprites ();
 	t_ref_sprites = I_GetTime() - t_ref_sprites;
-
-	R_Update();
-
-	t_ref_total = I_GetTime() - t_ref_total;
 }
 
 void R_RenderPlayerView(void)
 {
-	R_RenderPhases1To5();
-	R_RenderPhases6To9();
+	/* */
+	/* initial setup */
+	/* */
+	if (debugscreenactive)
+		I_DebugScreen();
+
+	t_ref_total = I_GetTime();
+
+	R_Setup();
+
+	R_RenderPhase1();
+
+	R_RenderPhases2To9();
+
+	R_Update();
+
+	t_ref_total = I_GetTime() - t_ref_total;
 }
 
 #endif
