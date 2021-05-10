@@ -7,7 +7,7 @@ endif
 LDSCRIPTSDIR = $(ROOTDIR)/ldscripts
 
 LIBPATH = -L$(ROOTDIR)/m68k-elf/lib -L$(ROOTDIR)/m68k-elf/lib/gcc/m68k-elf/4.6.2 -L$(ROOTDIR)/m68k-elf/m68k-elf/lib
-INCPATH = -I$. -I$(ROOTDIR)/m68k-elf/include -I$(ROOTDIR)/m68k-elf/m68k-elf/include
+INCPATH = -I$. -I$(ROOTDIR)/m68k-elf/include -I$(ROOTDIR)/m68k-elf/m68k-elf/include -I../liblzss
 
 CCFLAGS = -m68000 -Wall -O1 -c -fomit-frame-pointer
 ASFLAGS = -m68000 --register-prefix-optional
@@ -35,6 +35,9 @@ $(TARGET).elf: $(OBJS)
 	$(CC) $(LINKFLAGS) $(OBJS) $(LIBS) -o $(TARGET).elf
 
 %.o: %.c
+	$(CC) $(CCFLAGS) $(INCPATH) $< -o $@
+
+%.o: ../liblzss/%.c
 	$(CC) $(CCFLAGS) $(INCPATH) $< -o $@
 
 %.o: %.s
