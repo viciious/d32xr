@@ -1,0 +1,9231 @@
+[
+    {
+        "name": "S_START",
+        "virtual": true
+    },
+    {
+        "filename": "pol5a0",
+        "name": "POL5A0",
+        "size": 560
+    },
+    {
+        "filename": ".pol5a0",
+        "name": ".",
+        "size": 444
+    },
+    {
+        "filename": "canda0",
+        "name": "CANDA0",
+        "size": 168
+    },
+    {
+        "filename": ".canda0",
+        "name": ".",
+        "size": 124
+    },
+    {
+        "filename": "cbraa0",
+        "name": "CBRAA0",
+        "size": 472
+    },
+    {
+        "filename": ".cbraa0",
+        "name": ".",
+        "size": 804
+    },
+    {
+        "filename": "shota0",
+        "name": "SHOTA0",
+        "size": 644
+    },
+    {
+        "filename": ".shota0",
+        "name": ".",
+        "size": 456
+    },
+    {
+        "filename": "mguna0",
+        "name": "MGUNA0",
+        "size": 556
+    },
+    {
+        "filename": ".mguna0",
+        "name": ".",
+        "size": 736
+    },
+    {
+        "filename": "launa0",
+        "name": "LAUNA0",
+        "size": 636
+    },
+    {
+        "filename": ".launa0",
+        "name": ".",
+        "size": 680
+    },
+    {
+        "filename": "csawa0",
+        "name": "CSAWA0",
+        "size": 684
+    },
+    {
+        "filename": ".csawa0",
+        "name": ".",
+        "size": 1056
+    },
+    {
+        "filename": "clipa0",
+        "name": "CLIPA0",
+        "size": 100
+    },
+    {
+        "filename": ".clipa0",
+        "name": ".",
+        "size": 116
+    },
+    {
+        "filename": "shela0",
+        "name": "SHELA0",
+        "size": 148
+    },
+    {
+        "filename": ".shela0",
+        "name": ".",
+        "size": 108
+    },
+    {
+        "filename": "rocka0",
+        "name": "ROCKA0",
+        "size": 128
+    },
+    {
+        "filename": ".rocka0",
+        "name": ".",
+        "size": 272
+    },
+    {
+        "filename": "stima0",
+        "name": "STIMA0",
+        "size": 148
+    },
+    {
+        "filename": ".stima0",
+        "name": ".",
+        "size": 232
+    },
+    {
+        "filename": "media0",
+        "name": "MEDIA0",
+        "size": 288
+    },
+    {
+        "filename": ".media0",
+        "name": ".",
+        "size": 576
+    },
+    {
+        "filename": "arm1a0",
+        "name": "ARM1A0",
+        "size": 320
+    },
+    {
+        "filename": ".arm1a0",
+        "name": ".",
+        "size": 428
+    },
+    {
+        "filename": "arm1b0",
+        "name": "ARM1B0",
+        "size": 320
+    },
+    {
+        "filename": ".arm1b0",
+        "name": ".",
+        "size": 428
+    },
+    {
+        "filename": "arm2a0",
+        "name": "ARM2A0",
+        "size": 320
+    },
+    {
+        "filename": ".arm2a0",
+        "name": ".",
+        "size": 428
+    },
+    {
+        "filename": "arm2b0",
+        "name": "ARM2B0",
+        "size": 320
+    },
+    {
+        "filename": ".arm2b0",
+        "name": ".",
+        "size": 428
+    },
+    {
+        "filename": "bar1a0",
+        "name": "BAR1A0",
+        "size": 240
+    },
+    {
+        "filename": ".bar1a0",
+        "name": ".",
+        "size": 776
+    },
+    {
+        "filename": "bar1b0",
+        "name": "BAR1B0",
+        "size": 240
+    },
+    {
+        "filename": ".bar1b0",
+        "name": ".",
+        "size": 776
+    },
+    {
+        "filename": "colua0",
+        "name": "COLUA0",
+        "size": 264
+    },
+    {
+        "filename": ".colua0",
+        "name": ".",
+        "size": 648
+    },
+    {
+        "filename": "bpaka0",
+        "name": "BPAKA0",
+        "size": 228
+    },
+    {
+        "filename": ".bpaka0",
+        "name": ".",
+        "size": 632
+    },
+    {
+        "filename": "broka0",
+        "name": "BROKA0",
+        "size": 548
+    },
+    {
+        "filename": ".broka0",
+        "name": ".",
+        "size": 1232
+    },
+    {
+        "filename": "ammoa0",
+        "name": "AMMOA0",
+        "size": 288
+    },
+    {
+        "filename": ".ammoa0",
+        "name": ".",
+        "size": 500
+    },
+    {
+        "filename": "sboxa0",
+        "name": "SBOXA0",
+        "size": 328
+    },
+    {
+        "filename": ".sboxa0",
+        "name": ".",
+        "size": 432
+    },
+    {
+        "filename": "eleca0",
+        "name": "ELECA0",
+        "size": 480
+    },
+    {
+        "filename": ".eleca0",
+        "name": ".",
+        "size": 3952
+    },
+    {
+        "filename": "bkeya0",
+        "name": "BKEYA0",
+        "size": 148
+    },
+    {
+        "filename": ".bkeya0",
+        "name": ".",
+        "size": 228
+    },
+    {
+        "filename": "bkeyb0",
+        "name": "BKEYB0",
+        "size": 148
+    },
+    {
+        "filename": ".bkeyb0",
+        "name": ".",
+        "size": 228
+    },
+    {
+        "filename": "ykeya0",
+        "name": "YKEYA0",
+        "size": 148
+    },
+    {
+        "filename": ".ykeya0",
+        "name": ".",
+        "size": 228
+    },
+    {
+        "filename": "ykeyb0",
+        "name": "YKEYB0",
+        "size": 148
+    },
+    {
+        "filename": ".ykeyb0",
+        "name": ".",
+        "size": 228
+    },
+    {
+        "filename": "rkeya0",
+        "name": "RKEYA0",
+        "size": 148
+    },
+    {
+        "filename": ".rkeya0",
+        "name": ".",
+        "size": 228
+    },
+    {
+        "filename": "rkeyb0",
+        "name": "RKEYB0",
+        "size": 148
+    },
+    {
+        "filename": ".rkeyb0",
+        "name": ".",
+        "size": 228
+    },
+    {
+        "filename": "suita0",
+        "name": "SUITA0",
+        "size": 276
+    },
+    {
+        "filename": ".suita0",
+        "name": ".",
+        "size": 920
+    },
+    {
+        "filename": "pvisa0",
+        "name": "PVISA0",
+        "size": 288
+    },
+    {
+        "filename": ".pvisa0",
+        "name": ".",
+        "size": 400
+    },
+    {
+        "filename": "pvisb0",
+        "name": "PVISB0",
+        "size": 288
+    },
+    {
+        "filename": ".pvisb0",
+        "name": ".",
+        "size": 400
+    },
+    {
+        "filename": "bexpa0",
+        "name": "BEXPA0",
+        "size": 240
+    },
+    {
+        "filename": ".bexpa0",
+        "name": ".",
+        "size": 776
+    },
+    {
+        "filename": "bexpb0",
+        "name": "BEXPB0",
+        "size": 240
+    },
+    {
+        "filename": ".bexpb0",
+        "name": ".",
+        "size": 756
+    },
+    {
+        "filename": "bexpc0",
+        "name": "BEXPC0",
+        "size": 444
+    },
+    {
+        "filename": ".bexpc0",
+        "name": ".",
+        "size": 1280
+    },
+    {
+        "filename": "bexpd0",
+        "name": "BEXPD0",
+        "size": 664
+    },
+    {
+        "filename": ".bexpd0",
+        "name": ".",
+        "size": 2248
+    },
+    {
+        "filename": "bexpe0",
+        "name": "BEXPE0",
+        "size": 1164
+    },
+    {
+        "filename": ".bexpe0",
+        "name": ".",
+        "size": 2716
+    },
+    {
+        "filename": "pmapa0",
+        "name": "PMAPA0",
+        "size": 288
+    },
+    {
+        "filename": ".pmapa0",
+        "name": ".",
+        "size": 800
+    },
+    {
+        "filename": "pmapb0",
+        "name": "PMAPB0",
+        "size": 288
+    },
+    {
+        "filename": ".pmapb0",
+        "name": ".",
+        "size": 800
+    },
+    {
+        "filename": "pmapc0",
+        "name": "PMAPC0",
+        "size": 288
+    },
+    {
+        "filename": ".pmapc0",
+        "name": ".",
+        "size": 800
+    },
+    {
+        "filename": "pmapd0",
+        "name": "PMAPD0",
+        "size": 288
+    },
+    {
+        "filename": ".pmapd0",
+        "name": ".",
+        "size": 800
+    },
+    {
+        "filename": "pinsa0",
+        "name": "PINSA0",
+        "size": 260
+    },
+    {
+        "filename": ".pinsa0",
+        "name": ".",
+        "size": 540
+    },
+    {
+        "filename": "pinsb0",
+        "name": "PINSB0",
+        "size": 260
+    },
+    {
+        "filename": ".pinsb0",
+        "name": ".",
+        "size": 540
+    },
+    {
+        "filename": "pinsc0",
+        "name": "PINSC0",
+        "size": 260
+    },
+    {
+        "filename": ".pinsc0",
+        "name": ".",
+        "size": 540
+    },
+    {
+        "filename": "pinsd0",
+        "name": "PINSD0",
+        "size": 260
+    },
+    {
+        "filename": ".pinsd0",
+        "name": ".",
+        "size": 540
+    },
+    {
+        "filename": "bon1a0",
+        "name": "BON1A0",
+        "size": 148
+    },
+    {
+        "filename": ".bon1a0",
+        "name": ".",
+        "size": 188
+    },
+    {
+        "filename": "bon1b0",
+        "name": "BON1B0",
+        "size": 148
+    },
+    {
+        "filename": ".bon1b0",
+        "name": ".",
+        "size": 188
+    },
+    {
+        "filename": "bon1c0",
+        "name": "BON1C0",
+        "size": 148
+    },
+    {
+        "filename": ".bon1c0",
+        "name": ".",
+        "size": 188
+    },
+    {
+        "filename": "bon1d0",
+        "name": "BON1D0",
+        "size": 148
+    },
+    {
+        "filename": ".bon1d0",
+        "name": ".",
+        "size": 188
+    },
+    {
+        "filename": "soula0",
+        "name": "SOULA0",
+        "size": 260
+    },
+    {
+        "filename": ".soula0",
+        "name": ".",
+        "size": 540
+    },
+    {
+        "filename": "soulb0",
+        "name": "SOULB0",
+        "size": 260
+    },
+    {
+        "filename": ".soulb0",
+        "name": ".",
+        "size": 540
+    },
+    {
+        "filename": "soulc0",
+        "name": "SOULC0",
+        "size": 260
+    },
+    {
+        "filename": ".soulc0",
+        "name": ".",
+        "size": 540
+    },
+    {
+        "filename": "sould0",
+        "name": "SOULD0",
+        "size": 260
+    },
+    {
+        "filename": ".sould0",
+        "name": ".",
+        "size": 540
+    },
+    {
+        "filename": "bon2a0",
+        "name": "BON2A0",
+        "size": 168
+    },
+    {
+        "filename": ".bon2a0",
+        "name": ".",
+        "size": 236
+    },
+    {
+        "filename": "bon2b0",
+        "name": "BON2B0",
+        "size": 168
+    },
+    {
+        "filename": ".bon2b0",
+        "name": ".",
+        "size": 236
+    },
+    {
+        "filename": "bon2c0",
+        "name": "BON2C0",
+        "size": 168
+    },
+    {
+        "filename": ".bon2c0",
+        "name": ".",
+        "size": 236
+    },
+    {
+        "filename": "bon2d0",
+        "name": "BON2D0",
+        "size": 168
+    },
+    {
+        "filename": ".bon2d0",
+        "name": ".",
+        "size": 236
+    },
+    {
+        "filename": "pol1a0",
+        "name": "POL1A0",
+        "size": 540
+    },
+    {
+        "filename": ".pol1a0",
+        "name": ".",
+        "size": 1152
+    },
+    {
+        "filename": "pol2a0",
+        "name": "POL2A0",
+        "size": 544
+    },
+    {
+        "filename": ".pol2a0",
+        "name": ".",
+        "size": 792
+    },
+    {
+        "filename": "pol4a0",
+        "name": "POL4A0",
+        "size": 448
+    },
+    {
+        "filename": ".pol4a0",
+        "name": ".",
+        "size": 500
+    },
+    {
+        "filename": "col2a0",
+        "name": "COL2A0",
+        "size": 400
+    },
+    {
+        "filename": ".col2a0",
+        "name": ".",
+        "size": 1188
+    },
+    {
+        "filename": "col4a0",
+        "name": "COL4A0",
+        "size": 400
+    },
+    {
+        "filename": ".col4a0",
+        "name": ".",
+        "size": 1188
+    },
+    {
+        "filename": "fskua0",
+        "name": "FSKUA0",
+        "size": 344
+    },
+    {
+        "filename": ".fskua0",
+        "name": ".",
+        "size": 732
+    },
+    {
+        "filename": "fskub0",
+        "name": "FSKUB0",
+        "size": 344
+    },
+    {
+        "filename": ".fskub0",
+        "name": ".",
+        "size": 732
+    },
+    {
+        "filename": "fskuc0",
+        "name": "FSKUC0",
+        "size": 344
+    },
+    {
+        "filename": ".fskuc0",
+        "name": ".",
+        "size": 732
+    },
+    {
+        "filename": "tre1a0",
+        "name": "TRE1A0",
+        "size": 692
+    },
+    {
+        "filename": ".tre1a0",
+        "name": ".",
+        "size": 1584
+    },
+    {
+        "filename": "smita0",
+        "name": "SMITA0",
+        "size": 560
+    },
+    {
+        "filename": ".smita0",
+        "name": ".",
+        "size": 1016
+    },
+    {
+        "filename": "smt2a0",
+        "name": "SMT2A0",
+        "size": 300
+    },
+    {
+        "filename": ".smt2a0",
+        "name": ".",
+        "size": 708
+    },
+    {
+        "filename": "bskua0",
+        "name": "BSKUA0",
+        "size": 140
+    },
+    {
+        "filename": ".bskua0",
+        "name": ".",
+        "size": 208
+    },
+    {
+        "filename": "bskub0",
+        "name": "BSKUB0",
+        "size": 140
+    },
+    {
+        "filename": ".bskub0",
+        "name": ".",
+        "size": 208
+    },
+    {
+        "filename": "rskua0",
+        "name": "RSKUA0",
+        "size": 140
+    },
+    {
+        "filename": ".rskua0",
+        "name": ".",
+        "size": 208
+    },
+    {
+        "filename": "rskub0",
+        "name": "RSKUB0",
+        "size": 140
+    },
+    {
+        "filename": ".rskub0",
+        "name": ".",
+        "size": 208
+    },
+    {
+        "filename": "yskua0",
+        "name": "YSKUA0",
+        "size": 140
+    },
+    {
+        "filename": ".yskua0",
+        "name": ".",
+        "size": 208
+    },
+    {
+        "filename": "yskub0",
+        "name": "YSKUB0",
+        "size": 140
+    },
+    {
+        "filename": ".yskub0",
+        "name": ".",
+        "size": 208
+    },
+    {
+        "filename": "plasa0",
+        "name": "PLASA0",
+        "size": 588
+    },
+    {
+        "filename": ".plasa0",
+        "name": ".",
+        "size": 656
+    },
+    {
+        "filename": "bfuga0",
+        "name": "BFUGA0",
+        "size": 720
+    },
+    {
+        "filename": ".bfuga0",
+        "name": ".",
+        "size": 1184
+    },
+    {
+        "filename": "cella0",
+        "name": "CELLA0",
+        "size": 180
+    },
+    {
+        "filename": ".cella0",
+        "name": ".",
+        "size": 232
+    },
+    {
+        "filename": "pstra0",
+        "name": "PSTRA0",
+        "size": 288
+    },
+    {
+        "filename": ".pstra0",
+        "name": ".",
+        "size": 576
+    },
+    {
+        "filename": "celpa0",
+        "name": "CELPA0",
+        "size": 328
+    },
+    {
+        "filename": ".celpa0",
+        "name": ".",
+        "size": 716
+    },
+    {
+        "filename": "gor5a0",
+        "name": "GOR5A0",
+        "size": 152
+    },
+    {
+        "filename": ".gor5a0",
+        "name": ".",
+        "size": 460
+    },
+    {
+        "filename": "smrta0",
+        "name": "SMRTA0",
+        "size": 272
+    },
+    {
+        "filename": ".smrta0",
+        "name": ".",
+        "size": 552
+    },
+    {
+        "filename": "smrtb0",
+        "name": "SMRTB0",
+        "size": 232
+    },
+    {
+        "filename": ".smrtb0",
+        "name": ".",
+        "size": 508
+    },
+    {
+        "filename": "smrtc0",
+        "name": "SMRTC0",
+        "size": 228
+    },
+    {
+        "filename": ".smrtc0",
+        "name": ".",
+        "size": 488
+    },
+    {
+        "filename": "smrtd0",
+        "name": "SMRTD0",
+        "size": 260
+    },
+    {
+        "filename": ".smrtd0",
+        "name": ".",
+        "size": 520
+    },
+    {
+        "filename": "smbta0",
+        "name": "SMBTA0",
+        "size": 272
+    },
+    {
+        "filename": ".smbta0",
+        "name": ".",
+        "size": 552
+    },
+    {
+        "filename": "smbtb0",
+        "name": "SMBTB0",
+        "size": 232
+    },
+    {
+        "filename": ".smbtb0",
+        "name": ".",
+        "size": 508
+    },
+    {
+        "filename": "smbtc0",
+        "name": "SMBTC0",
+        "size": 228
+    },
+    {
+        "filename": ".smbtc0",
+        "name": ".",
+        "size": 488
+    },
+    {
+        "filename": "smbtd0",
+        "name": "SMBTD0",
+        "size": 260
+    },
+    {
+        "filename": ".smbtd0",
+        "name": ".",
+        "size": 520
+    },
+    {
+        "filename": "smgta0",
+        "name": "SMGTA0",
+        "size": 272
+    },
+    {
+        "filename": ".smgta0",
+        "name": ".",
+        "size": 548
+    },
+    {
+        "filename": "smgtb0",
+        "name": "SMGTB0",
+        "size": 232
+    },
+    {
+        "filename": ".smgtb0",
+        "name": ".",
+        "size": 508
+    },
+    {
+        "filename": "smgtc0",
+        "name": "SMGTC0",
+        "size": 228
+    },
+    {
+        "filename": ".smgtc0",
+        "name": ".",
+        "size": 488
+    },
+    {
+        "filename": "smgtd0",
+        "name": "SMGTD0",
+        "size": 260
+    },
+    {
+        "filename": ".smgtd0",
+        "name": ".",
+        "size": 520
+    },
+    {
+        "filename": "pinva0",
+        "name": "PINVA0",
+        "size": 260
+    },
+    {
+        "filename": ".pinva0",
+        "name": ".",
+        "size": 540
+    },
+    {
+        "filename": "pinvb0",
+        "name": "PINVB0",
+        "size": 260
+    },
+    {
+        "filename": ".pinvb0",
+        "name": ".",
+        "size": 540
+    },
+    {
+        "filename": "pinvc0",
+        "name": "PINVC0",
+        "size": 260
+    },
+    {
+        "filename": ".pinvc0",
+        "name": ".",
+        "size": 540
+    },
+    {
+        "filename": "pinvd0",
+        "name": "PINVD0",
+        "size": 260
+    },
+    {
+        "filename": ".pinvd0",
+        "name": ".",
+        "size": 540
+    },
+    {
+        "filename": "fcana0",
+        "name": "FCANA0",
+        "size": 468
+    },
+    {
+        "filename": ".fcana0",
+        "name": ".",
+        "size": 1128
+    },
+    {
+        "filename": "fcanb0",
+        "name": "FCANB0",
+        "size": 440
+    },
+    {
+        "filename": ".fcanb0",
+        "name": ".",
+        "size": 1172
+    },
+    {
+        "filename": "fcanc0",
+        "name": "FCANC0",
+        "size": 452
+    },
+    {
+        "filename": ".fcanc0",
+        "name": ".",
+        "size": 1172
+    },
+    {
+        "filename": "ifoga0",
+        "name": "IFOGA0",
+        "size": 580
+    },
+    {
+        "filename": ".ifoga0",
+        "name": ".",
+        "size": 1020
+    },
+    {
+        "filename": "ifogb0",
+        "name": "IFOGB0",
+        "size": 500
+    },
+    {
+        "filename": ".ifogb0",
+        "name": ".",
+        "size": 728
+    },
+    {
+        "filename": "ifogc0",
+        "name": "IFOGC0",
+        "size": 212
+    },
+    {
+        "filename": ".ifogc0",
+        "name": ".",
+        "size": 248
+    },
+    {
+        "filename": "ifogd0",
+        "name": "IFOGD0",
+        "size": 100
+    },
+    {
+        "filename": ".ifogd0",
+        "name": ".",
+        "size": 72
+    },
+    {
+        "filename": "ifoge0",
+        "name": "IFOGE0",
+        "size": 40
+    },
+    {
+        "filename": ".ifoge0",
+        "name": ".",
+        "size": 16
+    },
+    {
+        "filename": "punga0",
+        "name": "PUNGA0",
+        "size": 580
+    },
+    {
+        "filename": ".punga0",
+        "name": ".",
+        "size": 1148
+    },
+    {
+        "filename": "pungb0",
+        "name": "PUNGB0",
+        "size": 408
+    },
+    {
+        "filename": ".pungb0",
+        "name": ".",
+        "size": 1016
+    },
+    {
+        "filename": "pungc0",
+        "name": "PUNGC0",
+        "size": 560
+    },
+    {
+        "filename": ".pungc0",
+        "name": ".",
+        "size": 1696
+    },
+    {
+        "filename": "pungd0",
+        "name": "PUNGD0",
+        "size": 752
+    },
+    {
+        "filename": ".pungd0",
+        "name": ".",
+        "size": 2836
+    },
+    {
+        "filename": "pisga0",
+        "name": "PISGA0",
+        "size": 308
+    },
+    {
+        "filename": ".pisga0",
+        "name": ".",
+        "size": 1108
+    },
+    {
+        "filename": "pisgb0",
+        "name": "PISGB0",
+        "size": 420
+    },
+    {
+        "filename": ".pisgb0",
+        "name": ".",
+        "size": 1600
+    },
+    {
+        "filename": "pisgc0",
+        "name": "PISGC0",
+        "size": 356
+    },
+    {
+        "filename": ".pisgc0",
+        "name": ".",
+        "size": 1596
+    },
+    {
+        "filename": "pisgd0",
+        "name": "PISGD0",
+        "size": 328
+    },
+    {
+        "filename": ".pisgd0",
+        "name": ".",
+        "size": 1588
+    },
+    {
+        "filename": "pisge0",
+        "name": "PISGE0",
+        "size": 412
+    },
+    {
+        "filename": ".pisge0",
+        "name": ".",
+        "size": 2164
+    },
+    {
+        "filename": "pisfa0",
+        "name": "PISFA0",
+        "size": 244
+    },
+    {
+        "filename": ".pisfa0",
+        "name": ".",
+        "size": 548
+    },
+    {
+        "filename": "shtga0",
+        "name": "SHTGA0",
+        "size": 644
+    },
+    {
+        "filename": ".shtga0",
+        "name": ".",
+        "size": 3172
+    },
+    {
+        "filename": "shtgb0",
+        "name": "SHTGB0",
+        "size": 832
+    },
+    {
+        "filename": ".shtgb0",
+        "name": ".",
+        "size": 6048
+    },
+    {
+        "filename": "shtgc0",
+        "name": "SHTGC0",
+        "size": 640
+    },
+    {
+        "filename": ".shtgc0",
+        "name": ".",
+        "size": 6240
+    },
+    {
+        "filename": "shtgd0",
+        "name": "SHTGD0",
+        "size": 728
+    },
+    {
+        "filename": ".shtgd0",
+        "name": ".",
+        "size": 6584
+    },
+    {
+        "filename": "shtfa0",
+        "name": "SHTFA0",
+        "size": 248
+    },
+    {
+        "filename": ".shtfa0",
+        "name": ".",
+        "size": 412
+    },
+    {
+        "filename": "shtfb0",
+        "name": "SHTFB0",
+        "size": 308
+    },
+    {
+        "filename": ".shtfb0",
+        "name": ".",
+        "size": 628
+    },
+    {
+        "filename": "misga0",
+        "name": "MISGA0",
+        "size": 464
+    },
+    {
+        "filename": ".misga0",
+        "name": ".",
+        "size": 2676
+    },
+    {
+        "filename": "misgb0",
+        "name": "MISGB0",
+        "size": 572
+    },
+    {
+        "filename": ".misgb0",
+        "name": ".",
+        "size": 2908
+    },
+    {
+        "filename": "misfa0",
+        "name": "MISFA0",
+        "size": 280
+    },
+    {
+        "filename": ".misfa0",
+        "name": ".",
+        "size": 632
+    },
+    {
+        "filename": "misfb0",
+        "name": "MISFB0",
+        "size": 388
+    },
+    {
+        "filename": ".misfb0",
+        "name": ".",
+        "size": 1348
+    },
+    {
+        "filename": "misfc0",
+        "name": "MISFC0",
+        "size": 748
+    },
+    {
+        "filename": ".misfc0",
+        "name": ".",
+        "size": 1924
+    },
+    {
+        "filename": "misfd0",
+        "name": "MISFD0",
+        "size": 1240
+    },
+    {
+        "filename": ".misfd0",
+        "name": ".",
+        "size": 1548
+    },
+    {
+        "filename": "plsga0",
+        "name": "PLSGA0",
+        "size": 428
+    },
+    {
+        "filename": ".plsga0",
+        "name": ".",
+        "size": 1932
+    },
+    {
+        "filename": "plsgb0",
+        "name": "PLSGB0",
+        "size": 556
+    },
+    {
+        "filename": ".plsgb0",
+        "name": ".",
+        "size": 4432
+    },
+    {
+        "filename": "plsfa0",
+        "name": "PLSFA0",
+        "size": 508
+    },
+    {
+        "filename": ".plsfa0",
+        "name": ".",
+        "size": 2132
+    },
+    {
+        "filename": "plsfb0",
+        "name": "PLSFB0",
+        "size": 564
+    },
+    {
+        "filename": ".plsfb0",
+        "name": ".",
+        "size": 2316
+    },
+    {
+        "filename": "sawga0",
+        "name": "SAWGA0",
+        "size": 844
+    },
+    {
+        "filename": ".sawga0",
+        "name": ".",
+        "size": 2784
+    },
+    {
+        "filename": "sawgb0",
+        "name": "SAWGB0",
+        "size": 844
+    },
+    {
+        "filename": ".sawgb0",
+        "name": ".",
+        "size": 2784
+    },
+    {
+        "filename": "sawgc0",
+        "name": "SAWGC0",
+        "size": 936
+    },
+    {
+        "filename": ".sawgc0",
+        "name": ".",
+        "size": 3312
+    },
+    {
+        "filename": "sawgd0",
+        "name": "SAWGD0",
+        "size": 932
+    },
+    {
+        "filename": ".sawgd0",
+        "name": ".",
+        "size": 3368
+    },
+    {
+        "filename": "chgga0",
+        "name": "CHGGA0",
+        "size": 584
+    },
+    {
+        "filename": ".chgga0",
+        "name": ".",
+        "size": 3680
+    },
+    {
+        "filename": "chggb0",
+        "name": "CHGGB0",
+        "size": 580
+    },
+    {
+        "filename": ".chggb0",
+        "name": ".",
+        "size": 3696
+    },
+    {
+        "filename": "chgfa0",
+        "name": "CHGFA0",
+        "size": 444
+    },
+    {
+        "filename": ".chgfa0",
+        "name": ".",
+        "size": 1028
+    },
+    {
+        "filename": "chgfb0",
+        "name": "CHGFB0",
+        "size": 448
+    },
+    {
+        "filename": ".chgfb0",
+        "name": ".",
+        "size": 848
+    },
+    {
+        "filename": "bfgga0",
+        "name": "BFGGA0",
+        "size": 860
+    },
+    {
+        "filename": ".bfgga0",
+        "name": ".",
+        "size": 5172
+    },
+    {
+        "filename": "bfggb0",
+        "name": "BFGGB0",
+        "size": 860
+    },
+    {
+        "filename": ".bfggb0",
+        "name": ".",
+        "size": 5176
+    },
+    {
+        "filename": "bfggc0",
+        "name": "BFGGC0",
+        "size": 788
+    },
+    {
+        "filename": ".bfggc0",
+        "name": ".",
+        "size": 4988
+    },
+    {
+        "filename": "bfgfa0",
+        "name": "BFGFA0",
+        "size": 500
+    },
+    {
+        "filename": ".bfgfa0",
+        "name": ".",
+        "size": 972
+    },
+    {
+        "filename": "bfgfb0",
+        "name": "BFGFB0",
+        "size": 804
+    },
+    {
+        "filename": ".bfgfb0",
+        "name": ".",
+        "size": 2004
+    },
+    {
+        "filename": "plssa0",
+        "name": "PLSSA0",
+        "size": 160
+    },
+    {
+        "filename": ".plssa0",
+        "name": ".",
+        "size": 132
+    },
+    {
+        "filename": "plssb0",
+        "name": "PLSSB0",
+        "size": 164
+    },
+    {
+        "filename": ".plssb0",
+        "name": ".",
+        "size": 144
+    },
+    {
+        "filename": "plsea0",
+        "name": "PLSEA0",
+        "size": 240
+    },
+    {
+        "filename": ".plsea0",
+        "name": ".",
+        "size": 460
+    },
+    {
+        "filename": "plseb0",
+        "name": "PLSEB0",
+        "size": 576
+    },
+    {
+        "filename": ".plseb0",
+        "name": ".",
+        "size": 972
+    },
+    {
+        "filename": "plsec0",
+        "name": "PLSEC0",
+        "size": 528
+    },
+    {
+        "filename": ".plsec0",
+        "name": ".",
+        "size": 836
+    },
+    {
+        "filename": "plsed0",
+        "name": "PLSED0",
+        "size": 424
+    },
+    {
+        "filename": ".plsed0",
+        "name": ".",
+        "size": 576
+    },
+    {
+        "filename": "plsee0",
+        "name": "PLSEE0",
+        "size": 80
+    },
+    {
+        "filename": ".plsee0",
+        "name": ".",
+        "size": 52
+    },
+    {
+        "filename": "bfs1a0",
+        "name": "BFS1A0",
+        "size": 460
+    },
+    {
+        "filename": ".bfs1a0",
+        "name": ".",
+        "size": 1656
+    },
+    {
+        "filename": "bfs1b0",
+        "name": "BFS1B0",
+        "size": 464
+    },
+    {
+        "filename": ".bfs1b0",
+        "name": ".",
+        "size": 1656
+    },
+    {
+        "filename": "bfe1a0",
+        "name": "BFE1A0",
+        "size": 740
+    },
+    {
+        "filename": ".bfe1a0",
+        "name": ".",
+        "size": 2516
+    },
+    {
+        "filename": "bfe1b0",
+        "name": "BFE1B0",
+        "size": 1004
+    },
+    {
+        "filename": ".bfe1b0",
+        "name": ".",
+        "size": 4320
+    },
+    {
+        "filename": "bfe1c0",
+        "name": "BFE1C0",
+        "size": 1728
+    },
+    {
+        "filename": ".bfe1c0",
+        "name": ".",
+        "size": 8124
+    },
+    {
+        "filename": "bfe1d0",
+        "name": "BFE1D0",
+        "size": 1392
+    },
+    {
+        "filename": ".bfe1d0",
+        "name": ".",
+        "size": 2132
+    },
+    {
+        "filename": "bfe1e0",
+        "name": "BFE1E0",
+        "size": 1340
+    },
+    {
+        "filename": ".bfe1e0",
+        "name": ".",
+        "size": 744
+    },
+    {
+        "filename": "bfe1f0",
+        "name": "BFE1F0",
+        "size": 1028
+    },
+    {
+        "filename": ".bfe1f0",
+        "name": ".",
+        "size": 308
+    },
+    {
+        "filename": "bfe2a0",
+        "name": "BFE2A0",
+        "size": 740
+    },
+    {
+        "filename": ".bfe2a0",
+        "name": ".",
+        "size": 2516
+    },
+    {
+        "filename": "bfe2b0",
+        "name": "BFE2B0",
+        "size": 680
+    },
+    {
+        "filename": ".bfe2b0",
+        "name": ".",
+        "size": 1272
+    },
+    {
+        "filename": "bfe2c0",
+        "name": "BFE2C0",
+        "size": 548
+    },
+    {
+        "filename": ".bfe2c0",
+        "name": ".",
+        "size": 780
+    },
+    {
+        "filename": "bfe2d0",
+        "name": "BFE2D0",
+        "size": 140
+    },
+    {
+        "filename": ".bfe2d0",
+        "name": ".",
+        "size": 88
+    },
+    {
+        "filename": "misla1",
+        "name": "MISLA1",
+        "size": 160
+    },
+    {
+        "filename": ".misla1",
+        "name": ".",
+        "size": 148
+    },
+    {
+        "filename": "misla8a2",
+        "name": "MISLA8A2",
+        "size": 328
+    },
+    {
+        "filename": ".misla8a2",
+        "name": ".",
+        "size": 368
+    },
+    {
+        "filename": "misla7a3",
+        "name": "MISLA7A3",
+        "size": 500
+    },
+    {
+        "filename": ".misla7a3",
+        "name": ".",
+        "size": 540
+    },
+    {
+        "filename": "misla6a4",
+        "name": "MISLA6A4",
+        "size": 268
+    },
+    {
+        "filename": ".misla6a4",
+        "name": ".",
+        "size": 296
+    },
+    {
+        "filename": "misla5",
+        "name": "MISLA5",
+        "size": 160
+    },
+    {
+        "filename": ".misla5",
+        "name": ".",
+        "size": 148
+    },
+    {
+        "filename": "mislb0",
+        "name": "MISLB0",
+        "size": 740
+    },
+    {
+        "filename": ".mislb0",
+        "name": ".",
+        "size": 3268
+    },
+    {
+        "filename": "mislc0",
+        "name": "MISLC0",
+        "size": 1832
+    },
+    {
+        "filename": ".mislc0",
+        "name": ".",
+        "size": 4880
+    },
+    {
+        "filename": "misld0",
+        "name": "MISLD0",
+        "size": 2720
+    },
+    {
+        "filename": ".misld0",
+        "name": ".",
+        "size": 2692
+    },
+    {
+        "filename": "bal1a0",
+        "name": "BAL1A0",
+        "size": 160
+    },
+    {
+        "filename": ".bal1a0",
+        "name": ".",
+        "size": 208
+    },
+    {
+        "filename": "bal1b0",
+        "name": "BAL1B0",
+        "size": 160
+    },
+    {
+        "filename": ".bal1b0",
+        "name": ".",
+        "size": 208
+    },
+    {
+        "filename": "bal1c0",
+        "name": "BAL1C0",
+        "size": 520
+    },
+    {
+        "filename": ".bal1c0",
+        "name": ".",
+        "size": 964
+    },
+    {
+        "filename": "bal1d0",
+        "name": "BAL1D0",
+        "size": 544
+    },
+    {
+        "filename": ".bal1d0",
+        "name": ".",
+        "size": 1252
+    },
+    {
+        "filename": "bal1e0",
+        "name": "BAL1E0",
+        "size": 1144
+    },
+    {
+        "filename": ".bal1e0",
+        "name": ".",
+        "size": 1388
+    },
+    {
+        "filename": "puffa0",
+        "name": "PUFFA0",
+        "size": 60
+    },
+    {
+        "filename": ".puffa0",
+        "name": ".",
+        "size": 32
+    },
+    {
+        "filename": "puffb0",
+        "name": "PUFFB0",
+        "size": 100
+    },
+    {
+        "filename": ".puffb0",
+        "name": ".",
+        "size": 72
+    },
+    {
+        "filename": "puffc0",
+        "name": "PUFFC0",
+        "size": 200
+    },
+    {
+        "filename": ".puffc0",
+        "name": ".",
+        "size": 128
+    },
+    {
+        "filename": "puffd0",
+        "name": "PUFFD0",
+        "size": 304
+    },
+    {
+        "filename": ".puffd0",
+        "name": ".",
+        "size": 192
+    },
+    {
+        "filename": "bluda0",
+        "name": "BLUDA0",
+        "size": 68
+    },
+    {
+        "filename": ".bluda0",
+        "name": ".",
+        "size": 28
+    },
+    {
+        "filename": "bludb0",
+        "name": "BLUDB0",
+        "size": 112
+    },
+    {
+        "filename": ".bludb0",
+        "name": ".",
+        "size": 56
+    },
+    {
+        "filename": "bludc0",
+        "name": "BLUDC0",
+        "size": 156
+    },
+    {
+        "filename": ".bludc0",
+        "name": ".",
+        "size": 108
+    },
+    {
+        "filename": "bal2a0",
+        "name": "BAL2A0",
+        "size": 176
+    },
+    {
+        "filename": ".bal2a0",
+        "name": ".",
+        "size": 216
+    },
+    {
+        "filename": "bal2b0",
+        "name": "BAL2B0",
+        "size": 164
+    },
+    {
+        "filename": ".bal2b0",
+        "name": ".",
+        "size": 200
+    },
+    {
+        "filename": "bal2c0",
+        "name": "BAL2C0",
+        "size": 544
+    },
+    {
+        "filename": ".bal2c0",
+        "name": ".",
+        "size": 1520
+    },
+    {
+        "filename": "bal2d0",
+        "name": "BAL2D0",
+        "size": 984
+    },
+    {
+        "filename": ".bal2d0",
+        "name": ".",
+        "size": 1764
+    },
+    {
+        "filename": "bal2e0",
+        "name": "BAL2E0",
+        "size": 1596
+    },
+    {
+        "filename": ".bal2e0",
+        "name": ".",
+        "size": 1320
+    },
+    {
+        "filename": "bal3a0",
+        "name": "BAL3A0",
+        "size": 240
+    },
+    {
+        "filename": ".bal3a0",
+        "name": ".",
+        "size": 460
+    },
+    {
+        "filename": "bal3b0",
+        "name": "BAL3B0",
+        "size": 240
+    },
+    {
+        "filename": ".bal3b0",
+        "name": ".",
+        "size": 460
+    },
+    {
+        "filename": "bal3c0",
+        "name": "BAL3C0",
+        "size": 820
+    },
+    {
+        "filename": ".bal3c0",
+        "name": ".",
+        "size": 1340
+    },
+    {
+        "filename": "bal3d0",
+        "name": "BAL3D0",
+        "size": 812
+    },
+    {
+        "filename": ".bal3d0",
+        "name": ".",
+        "size": 1748
+    },
+    {
+        "filename": "bal3e0",
+        "name": "BAL3E0",
+        "size": 1404
+    },
+    {
+        "filename": ".bal3e0",
+        "name": ".",
+        "size": 1016
+    },
+    {
+        "filename": "bal4a0",
+        "name": "BAL4A0",
+        "size": 240
+    },
+    {
+        "filename": ".bal4a0",
+        "name": ".",
+        "size": 460
+    },
+    {
+        "filename": "bal4b0",
+        "name": "BAL4B0",
+        "size": 240
+    },
+    {
+        "filename": ".bal4b0",
+        "name": ".",
+        "size": 460
+    },
+    {
+        "filename": "bal4c0",
+        "name": "BAL4C0",
+        "size": 820
+    },
+    {
+        "filename": ".bal4c0",
+        "name": ".",
+        "size": 1340
+    },
+    {
+        "filename": "bal4d0",
+        "name": "BAL4D0",
+        "size": 984
+    },
+    {
+        "filename": ".bal4d0",
+        "name": ".",
+        "size": 1764
+    },
+    {
+        "filename": "bal4e0",
+        "name": "BAL4E0",
+        "size": 1596
+    },
+    {
+        "filename": ".bal4e0",
+        "name": ".",
+        "size": 1320
+    },
+    {
+        "filename": "bal5a0",
+        "name": "BAL5A0",
+        "size": 180
+    },
+    {
+        "filename": ".bal5a0",
+        "name": ".",
+        "size": 260
+    },
+    {
+        "filename": "bal5b0",
+        "name": "BAL5B0",
+        "size": 188
+    },
+    {
+        "filename": ".bal5b0",
+        "name": ".",
+        "size": 268
+    },
+    {
+        "filename": "bal6a0",
+        "name": "BAL6A0",
+        "size": 180
+    },
+    {
+        "filename": ".bal6a0",
+        "name": ".",
+        "size": 260
+    },
+    {
+        "filename": "bal6b0",
+        "name": "BAL6B0",
+        "size": 188
+    },
+    {
+        "filename": ".bal6b0",
+        "name": ".",
+        "size": 268
+    },
+    {
+        "filename": "tfoga0",
+        "name": "TFOGA0",
+        "size": 516
+    },
+    {
+        "filename": ".tfoga0",
+        "name": ".",
+        "size": 1844
+    },
+    {
+        "filename": "tfogb0",
+        "name": "TFOGB0",
+        "size": 676
+    },
+    {
+        "filename": ".tfogb0",
+        "name": ".",
+        "size": 1272
+    },
+    {
+        "filename": "tfogc0",
+        "name": "TFOGC0",
+        "size": 580
+    },
+    {
+        "filename": ".tfogc0",
+        "name": ".",
+        "size": 1020
+    },
+    {
+        "filename": "tfogd0",
+        "name": "TFOGD0",
+        "size": 464
+    },
+    {
+        "filename": ".tfogd0",
+        "name": ".",
+        "size": 724
+    },
+    {
+        "filename": "tfoge0",
+        "name": "TFOGE0",
+        "size": 216
+    },
+    {
+        "filename": ".tfoge0",
+        "name": ".",
+        "size": 248
+    },
+    {
+        "filename": "tfogf0",
+        "name": "TFOGF0",
+        "size": 100
+    },
+    {
+        "filename": ".tfogf0",
+        "name": ".",
+        "size": 80
+    },
+    {
+        "filename": "tfogg0",
+        "name": "TFOGG0",
+        "size": 40
+    },
+    {
+        "filename": ".tfogg0",
+        "name": ".",
+        "size": 16
+    },
+    {
+        "filename": "tfogh0",
+        "name": "TFOGH0",
+        "size": 80
+    },
+    {
+        "filename": ".tfogh0",
+        "name": ".",
+        "size": 32
+    },
+    {
+        "filename": "tfogi0",
+        "name": "TFOGI0",
+        "size": 140
+    },
+    {
+        "filename": ".tfogi0",
+        "name": ".",
+        "size": 76
+    },
+    {
+        "filename": "tfogj0",
+        "name": "TFOGJ0",
+        "size": 180
+    },
+    {
+        "filename": ".tfogj0",
+        "name": ".",
+        "size": 136
+    },
+    {
+        "filename": "playa1",
+        "name": "PLAYA1",
+        "size": 448
+    },
+    {
+        "filename": ".playa1",
+        "name": ".",
+        "size": 1112
+    },
+    {
+        "filename": "playa2a8",
+        "name": "PLAYA2A8",
+        "size": 424
+    },
+    {
+        "filename": ".playa2a8",
+        "name": ".",
+        "size": 1048
+    },
+    {
+        "filename": "playa3a7",
+        "name": "PLAYA3A7",
+        "size": 528
+    },
+    {
+        "filename": ".playa3a7",
+        "name": ".",
+        "size": 1072
+    },
+    {
+        "filename": "playa4a6",
+        "name": "PLAYA4A6",
+        "size": 516
+    },
+    {
+        "filename": ".playa4a6",
+        "name": ".",
+        "size": 1036
+    },
+    {
+        "filename": "playa5",
+        "name": "PLAYA5",
+        "size": 384
+    },
+    {
+        "filename": ".playa5",
+        "name": ".",
+        "size": 952
+    },
+    {
+        "filename": "playb1",
+        "name": "PLAYB1",
+        "size": 440
+    },
+    {
+        "filename": ".playb1",
+        "name": ".",
+        "size": 1156
+    },
+    {
+        "filename": "playb2b8",
+        "name": "PLAYB2B8",
+        "size": 420
+    },
+    {
+        "filename": ".playb2b8",
+        "name": ".",
+        "size": 1004
+    },
+    {
+        "filename": "playb3b7",
+        "name": "PLAYB3B7",
+        "size": 460
+    },
+    {
+        "filename": ".playb3b7",
+        "name": ".",
+        "size": 996
+    },
+    {
+        "filename": "playb4b6",
+        "name": "PLAYB4B6",
+        "size": 476
+    },
+    {
+        "filename": ".playb4b6",
+        "name": ".",
+        "size": 1064
+    },
+    {
+        "filename": "playb5",
+        "name": "PLAYB5",
+        "size": 396
+    },
+    {
+        "filename": ".playb5",
+        "name": ".",
+        "size": 1040
+    },
+    {
+        "filename": "playc1",
+        "name": "PLAYC1",
+        "size": 432
+    },
+    {
+        "filename": ".playc1",
+        "name": ".",
+        "size": 1136
+    },
+    {
+        "filename": "playc2c8",
+        "name": "PLAYC2C8",
+        "size": 464
+    },
+    {
+        "filename": ".playc2c8",
+        "name": ".",
+        "size": 1128
+    },
+    {
+        "filename": "playc3c7",
+        "name": "PLAYC3C7",
+        "size": 472
+    },
+    {
+        "filename": ".playc3c7",
+        "name": ".",
+        "size": 988
+    },
+    {
+        "filename": "playc4c6",
+        "name": "PLAYC4C6",
+        "size": 476
+    },
+    {
+        "filename": ".playc4c6",
+        "name": ".",
+        "size": 1028
+    },
+    {
+        "filename": "playc5",
+        "name": "PLAYC5",
+        "size": 388
+    },
+    {
+        "filename": ".playc5",
+        "name": ".",
+        "size": 1076
+    },
+    {
+        "filename": "playd1",
+        "name": "PLAYD1",
+        "size": 428
+    },
+    {
+        "filename": ".playd1",
+        "name": ".",
+        "size": 1140
+    },
+    {
+        "filename": "playd2d8",
+        "name": "PLAYD2D8",
+        "size": 416
+    },
+    {
+        "filename": ".playd2d8",
+        "name": ".",
+        "size": 1120
+    },
+    {
+        "filename": "playd3d7",
+        "name": "PLAYD3D7",
+        "size": 404
+    },
+    {
+        "filename": ".playd3d7",
+        "name": ".",
+        "size": 952
+    },
+    {
+        "filename": "playd4d6",
+        "name": "PLAYD4D6",
+        "size": 456
+    },
+    {
+        "filename": ".playd4d6",
+        "name": ".",
+        "size": 988
+    },
+    {
+        "filename": "playd5",
+        "name": "PLAYD5",
+        "size": 408
+    },
+    {
+        "filename": ".playd5",
+        "name": ".",
+        "size": 1072
+    },
+    {
+        "filename": "playe1",
+        "name": "PLAYE1",
+        "size": 340
+    },
+    {
+        "filename": ".playe1",
+        "name": ".",
+        "size": 1048
+    },
+    {
+        "filename": "playe2e8",
+        "name": "PLAYE2E8",
+        "size": 544
+    },
+    {
+        "filename": ".playe2e8",
+        "name": ".",
+        "size": 1008
+    },
+    {
+        "filename": "playe3e7",
+        "name": "PLAYE3E7",
+        "size": 648
+    },
+    {
+        "filename": ".playe3e7",
+        "name": ".",
+        "size": 1168
+    },
+    {
+        "filename": "playe4e6",
+        "name": "PLAYE4E6",
+        "size": 448
+    },
+    {
+        "filename": ".playe4e6",
+        "name": ".",
+        "size": 1116
+    },
+    {
+        "filename": "playe5",
+        "name": "PLAYE5",
+        "size": 332
+    },
+    {
+        "filename": ".playe5",
+        "name": ".",
+        "size": 948
+    },
+    {
+        "filename": "playf1",
+        "name": "PLAYF1",
+        "size": 336
+    },
+    {
+        "filename": ".playf1",
+        "name": ".",
+        "size": 1056
+    },
+    {
+        "filename": "playf2f8",
+        "name": "PLAYF2F8",
+        "size": 568
+    },
+    {
+        "filename": ".playf2f8",
+        "name": ".",
+        "size": 1032
+    },
+    {
+        "filename": "playf3f7",
+        "name": "PLAYF3F7",
+        "size": 640
+    },
+    {
+        "filename": ".playf3f7",
+        "name": ".",
+        "size": 1220
+    },
+    {
+        "filename": "playf4f6",
+        "name": "PLAYF4F6",
+        "size": 480
+    },
+    {
+        "filename": ".playf4f6",
+        "name": ".",
+        "size": 1172
+    },
+    {
+        "filename": "playf5",
+        "name": "PLAYF5",
+        "size": 304
+    },
+    {
+        "filename": ".playf5",
+        "name": ".",
+        "size": 916
+    },
+    {
+        "filename": "playg1",
+        "name": "PLAYG1",
+        "size": 460
+    },
+    {
+        "filename": ".playg1",
+        "name": ".",
+        "size": 1184
+    },
+    {
+        "filename": "playg2g8",
+        "name": "PLAYG2G8",
+        "size": 448
+    },
+    {
+        "filename": ".playg2g8",
+        "name": ".",
+        "size": 1016
+    },
+    {
+        "filename": "playg3g7",
+        "name": "PLAYG3G7",
+        "size": 560
+    },
+    {
+        "filename": ".playg3g7",
+        "name": ".",
+        "size": 1112
+    },
+    {
+        "filename": "playg4g6",
+        "name": "PLAYG4G6",
+        "size": 528
+    },
+    {
+        "filename": ".playg4g6",
+        "name": ".",
+        "size": 1144
+    },
+    {
+        "filename": "playg5",
+        "name": "PLAYG5",
+        "size": 408
+    },
+    {
+        "filename": ".playg5",
+        "name": ".",
+        "size": 1120
+    },
+    {
+        "filename": "playh0",
+        "name": "PLAYH0",
+        "size": 564
+    },
+    {
+        "filename": ".playh0",
+        "name": ".",
+        "size": 1260
+    },
+    {
+        "filename": "playi0",
+        "name": "PLAYI0",
+        "size": 424
+    },
+    {
+        "filename": ".playi0",
+        "name": ".",
+        "size": 1144
+    },
+    {
+        "filename": "playj0",
+        "name": "PLAYJ0",
+        "size": 424
+    },
+    {
+        "filename": ".playj0",
+        "name": ".",
+        "size": 1244
+    },
+    {
+        "filename": "playk0",
+        "name": "PLAYK0",
+        "size": 468
+    },
+    {
+        "filename": ".playk0",
+        "name": ".",
+        "size": 1092
+    },
+    {
+        "filename": "playl0",
+        "name": "PLAYL0",
+        "size": 524
+    },
+    {
+        "filename": ".playl0",
+        "name": ".",
+        "size": 680
+    },
+    {
+        "filename": "playm0",
+        "name": "PLAYM0",
+        "size": 524
+    },
+    {
+        "filename": ".playm0",
+        "name": ".",
+        "size": 684
+    },
+    {
+        "filename": "playn0",
+        "name": "PLAYN0",
+        "size": 528
+    },
+    {
+        "filename": ".playn0",
+        "name": ".",
+        "size": 688
+    },
+    {
+        "filename": "playo0",
+        "name": "PLAYO0",
+        "size": 580
+    },
+    {
+        "filename": ".playo0",
+        "name": ".",
+        "size": 1300
+    },
+    {
+        "filename": "playp0",
+        "name": "PLAYP0",
+        "size": 988
+    },
+    {
+        "filename": ".playp0",
+        "name": ".",
+        "size": 1720
+    },
+    {
+        "filename": "playq0",
+        "name": "PLAYQ0",
+        "size": 1104
+    },
+    {
+        "filename": ".playq0",
+        "name": ".",
+        "size": 1780
+    },
+    {
+        "filename": "playr0",
+        "name": "PLAYR0",
+        "size": 1100
+    },
+    {
+        "filename": ".playr0",
+        "name": ".",
+        "size": 1644
+    },
+    {
+        "filename": "plays0",
+        "name": "PLAYS0",
+        "size": 940
+    },
+    {
+        "filename": ".plays0",
+        "name": ".",
+        "size": 1384
+    },
+    {
+        "filename": "playt0",
+        "name": "PLAYT0",
+        "size": 856
+    },
+    {
+        "filename": ".playt0",
+        "name": ".",
+        "size": 1204
+    },
+    {
+        "filename": "playu0",
+        "name": "PLAYU0",
+        "size": 764
+    },
+    {
+        "filename": ".playu0",
+        "name": ".",
+        "size": 1104
+    },
+    {
+        "filename": "playv0",
+        "name": "PLAYV0",
+        "size": 648
+    },
+    {
+        "filename": ".playv0",
+        "name": ".",
+        "size": 944
+    },
+    {
+        "filename": "playw0",
+        "name": "PLAYW0",
+        "size": 628
+    },
+    {
+        "filename": ".playw0",
+        "name": ".",
+        "size": 936
+    },
+    {
+        "filename": "sarga1",
+        "name": "SARGA1",
+        "size": 508
+    },
+    {
+        "filename": ".sarga1",
+        "name": ".",
+        "size": 1664
+    },
+    {
+        "filename": "sarga2a8",
+        "name": "SARGA2A8",
+        "size": 704
+    },
+    {
+        "filename": ".sarga2a8",
+        "name": ".",
+        "size": 1912
+    },
+    {
+        "filename": "sarga3a7",
+        "name": "SARGA3A7",
+        "size": 728
+    },
+    {
+        "filename": ".sarga3a7",
+        "name": ".",
+        "size": 1900
+    },
+    {
+        "filename": "sarga4a6",
+        "name": "SARGA4A6",
+        "size": 676
+    },
+    {
+        "filename": ".sarga4a6",
+        "name": ".",
+        "size": 1704
+    },
+    {
+        "filename": "sarga5",
+        "name": "SARGA5",
+        "size": 440
+    },
+    {
+        "filename": ".sarga5",
+        "name": ".",
+        "size": 1348
+    },
+    {
+        "filename": "sargb1",
+        "name": "SARGB1",
+        "size": 552
+    },
+    {
+        "filename": ".sargb1",
+        "name": ".",
+        "size": 1712
+    },
+    {
+        "filename": "sargb2b8",
+        "name": "SARGB2B8",
+        "size": 568
+    },
+    {
+        "filename": ".sargb2b8",
+        "name": ".",
+        "size": 1652
+    },
+    {
+        "filename": "sargb3b7",
+        "name": "SARGB3B7",
+        "size": 692
+    },
+    {
+        "filename": ".sargb3b7",
+        "name": ".",
+        "size": 1700
+    },
+    {
+        "filename": "sargb4b6",
+        "name": "SARGB4B6",
+        "size": 640
+    },
+    {
+        "filename": ".sargb4b6",
+        "name": ".",
+        "size": 1628
+    },
+    {
+        "filename": "sargb5",
+        "name": "SARGB5",
+        "size": 496
+    },
+    {
+        "filename": ".sargb5",
+        "name": ".",
+        "size": 1520
+    },
+    {
+        "filename": "sargc1",
+        "name": "SARGC1",
+        "size": 508
+    },
+    {
+        "filename": ".sargc1",
+        "name": ".",
+        "size": 1660
+    },
+    {
+        "filename": "sargc2c8",
+        "name": "SARGC2C8",
+        "size": 696
+    },
+    {
+        "filename": ".sargc2c8",
+        "name": ".",
+        "size": 1704
+    },
+    {
+        "filename": "sargc3c7",
+        "name": "SARGC3C7",
+        "size": 728
+    },
+    {
+        "filename": ".sargc3c7",
+        "name": ".",
+        "size": 1800
+    },
+    {
+        "filename": "sargc4c6",
+        "name": "SARGC4C6",
+        "size": 628
+    },
+    {
+        "filename": ".sargc4c6",
+        "name": ".",
+        "size": 1568
+    },
+    {
+        "filename": "sargc5",
+        "name": "SARGC5",
+        "size": 440
+    },
+    {
+        "filename": ".sargc5",
+        "name": ".",
+        "size": 1348
+    },
+    {
+        "filename": "sargd1",
+        "name": "SARGD1",
+        "size": 552
+    },
+    {
+        "filename": ".sargd1",
+        "name": ".",
+        "size": 1712
+    },
+    {
+        "filename": "sargd2d8",
+        "name": "SARGD2D8",
+        "size": 660
+    },
+    {
+        "filename": ".sargd2d8",
+        "name": ".",
+        "size": 1704
+    },
+    {
+        "filename": "sargd3d7",
+        "name": "SARGD3D7",
+        "size": 696
+    },
+    {
+        "filename": ".sargd3d7",
+        "name": ".",
+        "size": 1708
+    },
+    {
+        "filename": "sargd4d6",
+        "name": "SARGD4D6",
+        "size": 552
+    },
+    {
+        "filename": ".sargd4d6",
+        "name": ".",
+        "size": 1460
+    },
+    {
+        "filename": "sargd5",
+        "name": "SARGD5",
+        "size": 496
+    },
+    {
+        "filename": ".sargd5",
+        "name": ".",
+        "size": 1520
+    },
+    {
+        "filename": "sarge1",
+        "name": "SARGE1",
+        "size": 588
+    },
+    {
+        "filename": ".sarge1",
+        "name": ".",
+        "size": 1760
+    },
+    {
+        "filename": "sarge2",
+        "name": "SARGE2",
+        "size": 556
+    },
+    {
+        "filename": ".sarge2",
+        "name": ".",
+        "size": 1540
+    },
+    {
+        "filename": "sarge3",
+        "name": "SARGE3",
+        "size": 700
+    },
+    {
+        "filename": ".sarge3",
+        "name": ".",
+        "size": 1760
+    },
+    {
+        "filename": "sarge4",
+        "name": "SARGE4",
+        "size": 688
+    },
+    {
+        "filename": ".sarge4",
+        "name": ".",
+        "size": 1572
+    },
+    {
+        "filename": "sarge5",
+        "name": "SARGE5",
+        "size": 564
+    },
+    {
+        "filename": ".sarge5",
+        "name": ".",
+        "size": 1476
+    },
+    {
+        "filename": "sarge6",
+        "name": "SARGE6",
+        "size": 568
+    },
+    {
+        "filename": ".sarge6",
+        "name": ".",
+        "size": 1432
+    },
+    {
+        "filename": "sarge7",
+        "name": "SARGE7",
+        "size": 732
+    },
+    {
+        "filename": ".sarge7",
+        "name": ".",
+        "size": 1852
+    },
+    {
+        "filename": "sarge8",
+        "name": "SARGE8",
+        "size": 656
+    },
+    {
+        "filename": ".sarge8",
+        "name": ".",
+        "size": 1780
+    },
+    {
+        "filename": "sargf1",
+        "name": "SARGF1",
+        "size": 592
+    },
+    {
+        "filename": ".sargf1",
+        "name": ".",
+        "size": 1760
+    },
+    {
+        "filename": "sargf2",
+        "name": "SARGF2",
+        "size": 580
+    },
+    {
+        "filename": ".sargf2",
+        "name": ".",
+        "size": 1732
+    },
+    {
+        "filename": "sargf3",
+        "name": "SARGF3",
+        "size": 772
+    },
+    {
+        "filename": ".sargf3",
+        "name": ".",
+        "size": 2036
+    },
+    {
+        "filename": "sargf4",
+        "name": "SARGF4",
+        "size": 704
+    },
+    {
+        "filename": ".sargf4",
+        "name": ".",
+        "size": 1676
+    },
+    {
+        "filename": "sargf5",
+        "name": "SARGF5",
+        "size": 608
+    },
+    {
+        "filename": ".sargf5",
+        "name": ".",
+        "size": 1584
+    },
+    {
+        "filename": "sargf6",
+        "name": "SARGF6",
+        "size": 596
+    },
+    {
+        "filename": ".sargf6",
+        "name": ".",
+        "size": 1560
+    },
+    {
+        "filename": "sargf7",
+        "name": "SARGF7",
+        "size": 780
+    },
+    {
+        "filename": ".sargf7",
+        "name": ".",
+        "size": 2140
+    },
+    {
+        "filename": "sargf8",
+        "name": "SARGF8",
+        "size": 676
+    },
+    {
+        "filename": ".sargf8",
+        "name": ".",
+        "size": 2004
+    },
+    {
+        "filename": "sargg1",
+        "name": "SARGG1",
+        "size": 592
+    },
+    {
+        "filename": ".sargg1",
+        "name": ".",
+        "size": 1784
+    },
+    {
+        "filename": "sargg2",
+        "name": "SARGG2",
+        "size": 600
+    },
+    {
+        "filename": ".sargg2",
+        "name": ".",
+        "size": 1604
+    },
+    {
+        "filename": "sargg3",
+        "name": "SARGG3",
+        "size": 792
+    },
+    {
+        "filename": ".sargg3",
+        "name": ".",
+        "size": 1896
+    },
+    {
+        "filename": "sargg4",
+        "name": "SARGG4",
+        "size": 712
+    },
+    {
+        "filename": ".sargg4",
+        "name": ".",
+        "size": 1616
+    },
+    {
+        "filename": "sargg5",
+        "name": "SARGG5",
+        "size": 620
+    },
+    {
+        "filename": ".sargg5",
+        "name": ".",
+        "size": 1640
+    },
+    {
+        "filename": "sargg6",
+        "name": "SARGG6",
+        "size": 612
+    },
+    {
+        "filename": ".sargg6",
+        "name": ".",
+        "size": 1516
+    },
+    {
+        "filename": "sargg7",
+        "name": "SARGG7",
+        "size": 812
+    },
+    {
+        "filename": ".sargg7",
+        "name": ".",
+        "size": 1984
+    },
+    {
+        "filename": "sargg8",
+        "name": "SARGG8",
+        "size": 696
+    },
+    {
+        "filename": ".sargg8",
+        "name": ".",
+        "size": 1824
+    },
+    {
+        "filename": "sargh1",
+        "name": "SARGH1",
+        "size": 520
+    },
+    {
+        "filename": ".sargh1",
+        "name": ".",
+        "size": 1748
+    },
+    {
+        "filename": "sargh2",
+        "name": "SARGH2",
+        "size": 568
+    },
+    {
+        "filename": ".sargh2",
+        "name": ".",
+        "size": 1584
+    },
+    {
+        "filename": "sargh3",
+        "name": "SARGH3",
+        "size": 676
+    },
+    {
+        "filename": ".sargh3",
+        "name": ".",
+        "size": 1712
+    },
+    {
+        "filename": "sargh4",
+        "name": "SARGH4",
+        "size": 660
+    },
+    {
+        "filename": ".sargh4",
+        "name": ".",
+        "size": 1564
+    },
+    {
+        "filename": "sargh5",
+        "name": "SARGH5",
+        "size": 460
+    },
+    {
+        "filename": ".sargh5",
+        "name": ".",
+        "size": 1256
+    },
+    {
+        "filename": "sargh6",
+        "name": "SARGH6",
+        "size": 504
+    },
+    {
+        "filename": ".sargh6",
+        "name": ".",
+        "size": 1352
+    },
+    {
+        "filename": "sargh7",
+        "name": "SARGH7",
+        "size": 712
+    },
+    {
+        "filename": ".sargh7",
+        "name": ".",
+        "size": 1684
+    },
+    {
+        "filename": "sargh8",
+        "name": "SARGH8",
+        "size": 652
+    },
+    {
+        "filename": ".sargh8",
+        "name": ".",
+        "size": 1672
+    },
+    {
+        "filename": "sargi0",
+        "name": "SARGI0",
+        "size": 668
+    },
+    {
+        "filename": ".sargi0",
+        "name": ".",
+        "size": 1896
+    },
+    {
+        "filename": "sargj0",
+        "name": "SARGJ0",
+        "size": 776
+    },
+    {
+        "filename": ".sargj0",
+        "name": ".",
+        "size": 1736
+    },
+    {
+        "filename": "sargk0",
+        "name": "SARGK0",
+        "size": 740
+    },
+    {
+        "filename": ".sargk0",
+        "name": ".",
+        "size": 1424
+    },
+    {
+        "filename": "sargl0",
+        "name": "SARGL0",
+        "size": 848
+    },
+    {
+        "filename": ".sargl0",
+        "name": ".",
+        "size": 1356
+    },
+    {
+        "filename": "sargm0",
+        "name": "SARGM0",
+        "size": 844
+    },
+    {
+        "filename": ".sargm0",
+        "name": ".",
+        "size": 1284
+    },
+    {
+        "filename": "sargn0",
+        "name": "SARGN0",
+        "size": 736
+    },
+    {
+        "filename": ".sargn0",
+        "name": ".",
+        "size": 1228
+    },
+    {
+        "filename": "trooa1",
+        "name": "TROOA1",
+        "size": 528
+    },
+    {
+        "filename": ".trooa1",
+        "name": ".",
+        "size": 1284
+    },
+    {
+        "filename": "trooa2a8",
+        "name": "TROOA2A8",
+        "size": 552
+    },
+    {
+        "filename": ".trooa2a8",
+        "name": ".",
+        "size": 1204
+    },
+    {
+        "filename": "trooa3a7",
+        "name": "TROOA3A7",
+        "size": 476
+    },
+    {
+        "filename": ".trooa3a7",
+        "name": ".",
+        "size": 832
+    },
+    {
+        "filename": "trooa4a6",
+        "name": "TROOA4A6",
+        "size": 372
+    },
+    {
+        "filename": ".trooa4a6",
+        "name": ".",
+        "size": 796
+    },
+    {
+        "filename": "trooa5",
+        "name": "TROOA5",
+        "size": 424
+    },
+    {
+        "filename": ".trooa5",
+        "name": ".",
+        "size": 924
+    },
+    {
+        "filename": "troob1",
+        "name": "TROOB1",
+        "size": 504
+    },
+    {
+        "filename": ".troob1",
+        "name": ".",
+        "size": 1268
+    },
+    {
+        "filename": "troob2b8",
+        "name": "TROOB2B8",
+        "size": 472
+    },
+    {
+        "filename": ".troob2b8",
+        "name": ".",
+        "size": 1104
+    },
+    {
+        "filename": "troob3b7",
+        "name": "TROOB3B7",
+        "size": 556
+    },
+    {
+        "filename": ".troob3b7",
+        "name": ".",
+        "size": 948
+    },
+    {
+        "filename": "troob4b6",
+        "name": "TROOB4B6",
+        "size": 444
+    },
+    {
+        "filename": ".troob4b6",
+        "name": ".",
+        "size": 940
+    },
+    {
+        "filename": "troob5",
+        "name": "TROOB5",
+        "size": 392
+    },
+    {
+        "filename": ".troob5",
+        "name": ".",
+        "size": 888
+    },
+    {
+        "filename": "trooc1",
+        "name": "TROOC1",
+        "size": 516
+    },
+    {
+        "filename": ".trooc1",
+        "name": ".",
+        "size": 1272
+    },
+    {
+        "filename": "trooc2c8",
+        "name": "TROOC2C8",
+        "size": 528
+    },
+    {
+        "filename": ".trooc2c8",
+        "name": ".",
+        "size": 1180
+    },
+    {
+        "filename": "trooc3c7",
+        "name": "TROOC3C7",
+        "size": 472
+    },
+    {
+        "filename": ".trooc3c7",
+        "name": ".",
+        "size": 848
+    },
+    {
+        "filename": "trooc4c6",
+        "name": "TROOC4C6",
+        "size": 388
+    },
+    {
+        "filename": ".trooc4c6",
+        "name": ".",
+        "size": 808
+    },
+    {
+        "filename": "trooc5",
+        "name": "TROOC5",
+        "size": 424
+    },
+    {
+        "filename": ".trooc5",
+        "name": ".",
+        "size": 924
+    },
+    {
+        "filename": "trood1",
+        "name": "TROOD1",
+        "size": 508
+    },
+    {
+        "filename": ".trood1",
+        "name": ".",
+        "size": 1200
+    },
+    {
+        "filename": "trood2d8",
+        "name": "TROOD2D8",
+        "size": 616
+    },
+    {
+        "filename": ".trood2d8",
+        "name": ".",
+        "size": 1252
+    },
+    {
+        "filename": "trood3d7",
+        "name": "TROOD3D7",
+        "size": 588
+    },
+    {
+        "filename": ".trood3d7",
+        "name": ".",
+        "size": 944
+    },
+    {
+        "filename": "trood4d6",
+        "name": "TROOD4D6",
+        "size": 380
+    },
+    {
+        "filename": ".trood4d6",
+        "name": ".",
+        "size": 756
+    },
+    {
+        "filename": "trood5",
+        "name": "TROOD5",
+        "size": 388
+    },
+    {
+        "filename": ".trood5",
+        "name": ".",
+        "size": 884
+    },
+    {
+        "filename": "trooe1",
+        "name": "TROOE1",
+        "size": 624
+    },
+    {
+        "filename": ".trooe1",
+        "name": ".",
+        "size": 1268
+    },
+    {
+        "filename": "trooe2e8",
+        "name": "TROOE2E8",
+        "size": 448
+    },
+    {
+        "filename": ".trooe2e8",
+        "name": ".",
+        "size": 968
+    },
+    {
+        "filename": "trooe3e7",
+        "name": "TROOE3E7",
+        "size": 536
+    },
+    {
+        "filename": ".trooe3e7",
+        "name": ".",
+        "size": 936
+    },
+    {
+        "filename": "trooe4e6",
+        "name": "TROOE4E6",
+        "size": 468
+    },
+    {
+        "filename": ".trooe4e6",
+        "name": ".",
+        "size": 944
+    },
+    {
+        "filename": "trooe5",
+        "name": "TROOE5",
+        "size": 424
+    },
+    {
+        "filename": ".trooe5",
+        "name": ".",
+        "size": 884
+    },
+    {
+        "filename": "troof1",
+        "name": "TROOF1",
+        "size": 564
+    },
+    {
+        "filename": ".troof1",
+        "name": ".",
+        "size": 1212
+    },
+    {
+        "filename": "troof2f8",
+        "name": "TROOF2F8",
+        "size": 556
+    },
+    {
+        "filename": ".troof2f8",
+        "name": ".",
+        "size": 1104
+    },
+    {
+        "filename": "troof3f7",
+        "name": "TROOF3F7",
+        "size": 612
+    },
+    {
+        "filename": ".troof3f7",
+        "name": ".",
+        "size": 988
+    },
+    {
+        "filename": "troof4f6",
+        "name": "TROOF4F6",
+        "size": 468
+    },
+    {
+        "filename": ".troof4f6",
+        "name": ".",
+        "size": 872
+    },
+    {
+        "filename": "troof5",
+        "name": "TROOF5",
+        "size": 412
+    },
+    {
+        "filename": ".troof5",
+        "name": ".",
+        "size": 892
+    },
+    {
+        "filename": "troog1",
+        "name": "TROOG1",
+        "size": 420
+    },
+    {
+        "filename": ".troog1",
+        "name": ".",
+        "size": 1048
+    },
+    {
+        "filename": "troog2g8",
+        "name": "TROOG2G8",
+        "size": 656
+    },
+    {
+        "filename": ".troog2g8",
+        "name": ".",
+        "size": 1204
+    },
+    {
+        "filename": "troog3g7",
+        "name": "TROOG3G7",
+        "size": 760
+    },
+    {
+        "filename": ".troog3g7",
+        "name": ".",
+        "size": 1200
+    },
+    {
+        "filename": "troog4g6",
+        "name": "TROOG4G6",
+        "size": 608
+    },
+    {
+        "filename": ".troog4g6",
+        "name": ".",
+        "size": 980
+    },
+    {
+        "filename": "troog5",
+        "name": "TROOG5",
+        "size": 364
+    },
+    {
+        "filename": ".troog5",
+        "name": ".",
+        "size": 864
+    },
+    {
+        "filename": "trooh1",
+        "name": "TROOH1",
+        "size": 532
+    },
+    {
+        "filename": ".trooh1",
+        "name": ".",
+        "size": 1100
+    },
+    {
+        "filename": "trooh2h8",
+        "name": "TROOH2H8",
+        "size": 392
+    },
+    {
+        "filename": ".trooh2h8",
+        "name": ".",
+        "size": 884
+    },
+    {
+        "filename": "trooh3h7",
+        "name": "TROOH3H7",
+        "size": 460
+    },
+    {
+        "filename": ".trooh3h7",
+        "name": ".",
+        "size": 1024
+    },
+    {
+        "filename": "trooh4h6",
+        "name": "TROOH4H6",
+        "size": 416
+    },
+    {
+        "filename": ".trooh4h6",
+        "name": ".",
+        "size": 1056
+    },
+    {
+        "filename": "trooh5",
+        "name": "TROOH5",
+        "size": 472
+    },
+    {
+        "filename": ".trooh5",
+        "name": ".",
+        "size": 1088
+    },
+    {
+        "filename": "trooi0",
+        "name": "TROOI0",
+        "size": 540
+    },
+    {
+        "filename": ".trooi0",
+        "name": ".",
+        "size": 1232
+    },
+    {
+        "filename": "trooj0",
+        "name": "TROOJ0",
+        "size": 568
+    },
+    {
+        "filename": ".trooj0",
+        "name": ".",
+        "size": 1132
+    },
+    {
+        "filename": "trook0",
+        "name": "TROOK0",
+        "size": 520
+    },
+    {
+        "filename": ".trook0",
+        "name": ".",
+        "size": 956
+    },
+    {
+        "filename": "trool0",
+        "name": "TROOL0",
+        "size": 580
+    },
+    {
+        "filename": ".trool0",
+        "name": ".",
+        "size": 900
+    },
+    {
+        "filename": "troom0",
+        "name": "TROOM0",
+        "size": 604
+    },
+    {
+        "filename": ".troom0",
+        "name": ".",
+        "size": 808
+    },
+    {
+        "filename": "troon0",
+        "name": "TROON0",
+        "size": 840
+    },
+    {
+        "filename": ".troon0",
+        "name": ".",
+        "size": 1696
+    },
+    {
+        "filename": "trooo0",
+        "name": "TROOO0",
+        "size": 996
+    },
+    {
+        "filename": ".trooo0",
+        "name": ".",
+        "size": 1948
+    },
+    {
+        "filename": "troop0",
+        "name": "TROOP0",
+        "size": 1352
+    },
+    {
+        "filename": ".troop0",
+        "name": ".",
+        "size": 2064
+    },
+    {
+        "filename": "trooq0",
+        "name": "TROOQ0",
+        "size": 1280
+    },
+    {
+        "filename": ".trooq0",
+        "name": ".",
+        "size": 1820
+    },
+    {
+        "filename": "troor0",
+        "name": "TROOR0",
+        "size": 920
+    },
+    {
+        "filename": ".troor0",
+        "name": ".",
+        "size": 1432
+    },
+    {
+        "filename": "troos0",
+        "name": "TROOS0",
+        "size": 824
+    },
+    {
+        "filename": ".troos0",
+        "name": ".",
+        "size": 1296
+    },
+    {
+        "filename": "troot0",
+        "name": "TROOT0",
+        "size": 672
+    },
+    {
+        "filename": ".troot0",
+        "name": ".",
+        "size": 1004
+    },
+    {
+        "filename": "troou0",
+        "name": "TROOU0",
+        "size": 584
+    },
+    {
+        "filename": ".troou0",
+        "name": ".",
+        "size": 832
+    },
+    {
+        "filename": "possa1",
+        "name": "POSSA1",
+        "size": 440
+    },
+    {
+        "filename": ".possa1",
+        "name": ".",
+        "size": 1088
+    },
+    {
+        "filename": "possa2a8",
+        "name": "POSSA2A8",
+        "size": 432
+    },
+    {
+        "filename": ".possa2a8",
+        "name": ".",
+        "size": 1024
+    },
+    {
+        "filename": "possa3a7",
+        "name": "POSSA3A7",
+        "size": 532
+    },
+    {
+        "filename": ".possa3a7",
+        "name": ".",
+        "size": 1052
+    },
+    {
+        "filename": "possa4a6",
+        "name": "POSSA4A6",
+        "size": 516
+    },
+    {
+        "filename": ".possa4a6",
+        "name": ".",
+        "size": 1004
+    },
+    {
+        "filename": "possa5",
+        "name": "POSSA5",
+        "size": 388
+    },
+    {
+        "filename": ".possa5",
+        "name": ".",
+        "size": 952
+    },
+    {
+        "filename": "possb1",
+        "name": "POSSB1",
+        "size": 432
+    },
+    {
+        "filename": ".possb1",
+        "name": ".",
+        "size": 1124
+    },
+    {
+        "filename": "possb2b8",
+        "name": "POSSB2B8",
+        "size": 416
+    },
+    {
+        "filename": ".possb2b8",
+        "name": ".",
+        "size": 980
+    },
+    {
+        "filename": "possb3b7",
+        "name": "POSSB3B7",
+        "size": 460
+    },
+    {
+        "filename": ".possb3b7",
+        "name": ".",
+        "size": 980
+    },
+    {
+        "filename": "possb4b6",
+        "name": "POSSB4B6",
+        "size": 460
+    },
+    {
+        "filename": ".possb4b6",
+        "name": ".",
+        "size": 1044
+    },
+    {
+        "filename": "possb5",
+        "name": "POSSB5",
+        "size": 396
+    },
+    {
+        "filename": ".possb5",
+        "name": ".",
+        "size": 1028
+    },
+    {
+        "filename": "possc1",
+        "name": "POSSC1",
+        "size": 424
+    },
+    {
+        "filename": ".possc1",
+        "name": ".",
+        "size": 1112
+    },
+    {
+        "filename": "possc2c8",
+        "name": "POSSC2C8",
+        "size": 460
+    },
+    {
+        "filename": ".possc2c8",
+        "name": ".",
+        "size": 1108
+    },
+    {
+        "filename": "possc3c7",
+        "name": "POSSC3C7",
+        "size": 476
+    },
+    {
+        "filename": ".possc3c7",
+        "name": ".",
+        "size": 988
+    },
+    {
+        "filename": "possc4c6",
+        "name": "POSSC4C6",
+        "size": 476
+    },
+    {
+        "filename": ".possc4c6",
+        "name": ".",
+        "size": 1012
+    },
+    {
+        "filename": "possc5",
+        "name": "POSSC5",
+        "size": 388
+    },
+    {
+        "filename": ".possc5",
+        "name": ".",
+        "size": 1072
+    },
+    {
+        "filename": "possd1",
+        "name": "POSSD1",
+        "size": 424
+    },
+    {
+        "filename": ".possd1",
+        "name": ".",
+        "size": 1132
+    },
+    {
+        "filename": "possd2d8",
+        "name": "POSSD2D8",
+        "size": 424
+    },
+    {
+        "filename": ".possd2d8",
+        "name": ".",
+        "size": 1088
+    },
+    {
+        "filename": "possd3d7",
+        "name": "POSSD3D7",
+        "size": 404
+    },
+    {
+        "filename": ".possd3d7",
+        "name": ".",
+        "size": 936
+    },
+    {
+        "filename": "possd4d6",
+        "name": "POSSD4D6",
+        "size": 468
+    },
+    {
+        "filename": ".possd4d6",
+        "name": ".",
+        "size": 972
+    },
+    {
+        "filename": "possd5",
+        "name": "POSSD5",
+        "size": 400
+    },
+    {
+        "filename": ".possd5",
+        "name": ".",
+        "size": 1036
+    },
+    {
+        "filename": "posse1",
+        "name": "POSSE1",
+        "size": 336
+    },
+    {
+        "filename": ".posse1",
+        "name": ".",
+        "size": 1024
+    },
+    {
+        "filename": "posse2e8",
+        "name": "POSSE2E8",
+        "size": 544
+    },
+    {
+        "filename": ".posse2e8",
+        "name": ".",
+        "size": 992
+    },
+    {
+        "filename": "posse3e7",
+        "name": "POSSE3E7",
+        "size": 648
+    },
+    {
+        "filename": ".posse3e7",
+        "name": ".",
+        "size": 1156
+    },
+    {
+        "filename": "posse4e6",
+        "name": "POSSE4E6",
+        "size": 464
+    },
+    {
+        "filename": ".posse4e6",
+        "name": ".",
+        "size": 1108
+    },
+    {
+        "filename": "posse5",
+        "name": "POSSE5",
+        "size": 332
+    },
+    {
+        "filename": ".posse5",
+        "name": ".",
+        "size": 936
+    },
+    {
+        "filename": "possf1",
+        "name": "POSSF1",
+        "size": 336
+    },
+    {
+        "filename": ".possf1",
+        "name": ".",
+        "size": 1020
+    },
+    {
+        "filename": "possf2f8",
+        "name": "POSSF2F8",
+        "size": 568
+    },
+    {
+        "filename": ".possf2f8",
+        "name": ".",
+        "size": 1040
+    },
+    {
+        "filename": "possf3f7",
+        "name": "POSSF3F7",
+        "size": 640
+    },
+    {
+        "filename": ".possf3f7",
+        "name": ".",
+        "size": 1216
+    },
+    {
+        "filename": "possf4f6",
+        "name": "POSSF4F6",
+        "size": 492
+    },
+    {
+        "filename": ".possf4f6",
+        "name": ".",
+        "size": 1144
+    },
+    {
+        "filename": "possf5",
+        "name": "POSSF5",
+        "size": 312
+    },
+    {
+        "filename": ".possf5",
+        "name": ".",
+        "size": 904
+    },
+    {
+        "filename": "possg1",
+        "name": "POSSG1",
+        "size": 472
+    },
+    {
+        "filename": ".possg1",
+        "name": ".",
+        "size": 1164
+    },
+    {
+        "filename": "possg2g8",
+        "name": "POSSG2G8",
+        "size": 444
+    },
+    {
+        "filename": ".possg2g8",
+        "name": ".",
+        "size": 992
+    },
+    {
+        "filename": "possg3g7",
+        "name": "POSSG3G7",
+        "size": 548
+    },
+    {
+        "filename": ".possg3g7",
+        "name": ".",
+        "size": 1060
+    },
+    {
+        "filename": "possg4g6",
+        "name": "POSSG4G6",
+        "size": 520
+    },
+    {
+        "filename": ".possg4g6",
+        "name": ".",
+        "size": 1124
+    },
+    {
+        "filename": "possg5",
+        "name": "POSSG5",
+        "size": 416
+    },
+    {
+        "filename": ".possg5",
+        "name": ".",
+        "size": 1104
+    },
+    {
+        "filename": "possh0",
+        "name": "POSSH0",
+        "size": 548
+    },
+    {
+        "filename": ".possh0",
+        "name": ".",
+        "size": 1252
+    },
+    {
+        "filename": "possi0",
+        "name": "POSSI0",
+        "size": 436
+    },
+    {
+        "filename": ".possi0",
+        "name": ".",
+        "size": 984
+    },
+    {
+        "filename": "possj0",
+        "name": "POSSJ0",
+        "size": 544
+    },
+    {
+        "filename": ".possj0",
+        "name": ".",
+        "size": 864
+    },
+    {
+        "filename": "possk0",
+        "name": "POSSK0",
+        "size": 568
+    },
+    {
+        "filename": ".possk0",
+        "name": ".",
+        "size": 744
+    },
+    {
+        "filename": "possl0",
+        "name": "POSSL0",
+        "size": 516
+    },
+    {
+        "filename": ".possl0",
+        "name": ".",
+        "size": 632
+    },
+    {
+        "filename": "possm0",
+        "name": "POSSM0",
+        "size": 656
+    },
+    {
+        "filename": ".possm0",
+        "name": ".",
+        "size": 1412
+    },
+    {
+        "filename": "possn0",
+        "name": "POSSN0",
+        "size": 1076
+    },
+    {
+        "filename": ".possn0",
+        "name": ".",
+        "size": 1784
+    },
+    {
+        "filename": "posso0",
+        "name": "POSSO0",
+        "size": 1192
+    },
+    {
+        "filename": ".posso0",
+        "name": ".",
+        "size": 1828
+    },
+    {
+        "filename": "possp0",
+        "name": "POSSP0",
+        "size": 1164
+    },
+    {
+        "filename": ".possp0",
+        "name": ".",
+        "size": 1676
+    },
+    {
+        "filename": "possq0",
+        "name": "POSSQ0",
+        "size": 972
+    },
+    {
+        "filename": ".possq0",
+        "name": ".",
+        "size": 1392
+    },
+    {
+        "filename": "possr0",
+        "name": "POSSR0",
+        "size": 892
+    },
+    {
+        "filename": ".possr0",
+        "name": ".",
+        "size": 1212
+    },
+    {
+        "filename": "posss0",
+        "name": "POSSS0",
+        "size": 808
+    },
+    {
+        "filename": ".posss0",
+        "name": ".",
+        "size": 1120
+    },
+    {
+        "filename": "posst0",
+        "name": "POSST0",
+        "size": 728
+    },
+    {
+        "filename": ".posst0",
+        "name": ".",
+        "size": 984
+    },
+    {
+        "filename": "possu0",
+        "name": "POSSU0",
+        "size": 660
+    },
+    {
+        "filename": ".possu0",
+        "name": ".",
+        "size": 904
+    },
+    {
+        "filename": "sposa1",
+        "name": "SPOSA1",
+        "size": 392
+    },
+    {
+        "filename": ".sposa1",
+        "name": ".",
+        "size": 1044
+    },
+    {
+        "filename": "sposa2a8",
+        "name": "SPOSA2A8",
+        "size": 384
+    },
+    {
+        "filename": ".sposa2a8",
+        "name": ".",
+        "size": 964
+    },
+    {
+        "filename": "sposa3a7",
+        "name": "SPOSA3A7",
+        "size": 496
+    },
+    {
+        "filename": ".sposa3a7",
+        "name": ".",
+        "size": 988
+    },
+    {
+        "filename": "sposa4a6",
+        "name": "SPOSA4A6",
+        "size": 508
+    },
+    {
+        "filename": ".sposa4a6",
+        "name": ".",
+        "size": 972
+    },
+    {
+        "filename": "sposa5",
+        "name": "SPOSA5",
+        "size": 376
+    },
+    {
+        "filename": ".sposa5",
+        "name": ".",
+        "size": 952
+    },
+    {
+        "filename": "sposb1",
+        "name": "SPOSB1",
+        "size": 412
+    },
+    {
+        "filename": ".sposb1",
+        "name": ".",
+        "size": 1108
+    },
+    {
+        "filename": "sposb2b8",
+        "name": "SPOSB2B8",
+        "size": 324
+    },
+    {
+        "filename": ".sposb2b8",
+        "name": ".",
+        "size": 884
+    },
+    {
+        "filename": "sposb3b7",
+        "name": "SPOSB3B7",
+        "size": 400
+    },
+    {
+        "filename": ".sposb3b7",
+        "name": ".",
+        "size": 868
+    },
+    {
+        "filename": "sposb4b6",
+        "name": "SPOSB4B6",
+        "size": 456
+    },
+    {
+        "filename": ".sposb4b6",
+        "name": ".",
+        "size": 1000
+    },
+    {
+        "filename": "sposb5",
+        "name": "SPOSB5",
+        "size": 384
+    },
+    {
+        "filename": ".sposb5",
+        "name": ".",
+        "size": 1036
+    },
+    {
+        "filename": "sposc1",
+        "name": "SPOSC1",
+        "size": 364
+    },
+    {
+        "filename": ".sposc1",
+        "name": ".",
+        "size": 1088
+    },
+    {
+        "filename": "sposc2c8",
+        "name": "SPOSC2C8",
+        "size": 360
+    },
+    {
+        "filename": ".sposc2c8",
+        "name": ".",
+        "size": 988
+    },
+    {
+        "filename": "sposc3c7",
+        "name": "SPOSC3C7",
+        "size": 468
+    },
+    {
+        "filename": ".sposc3c7",
+        "name": ".",
+        "size": 940
+    },
+    {
+        "filename": "sposc4c6",
+        "name": "SPOSC4C6",
+        "size": 452
+    },
+    {
+        "filename": ".sposc4c6",
+        "name": ".",
+        "size": 956
+    },
+    {
+        "filename": "sposc5",
+        "name": "SPOSC5",
+        "size": 388
+    },
+    {
+        "filename": ".sposc5",
+        "name": ".",
+        "size": 1068
+    },
+    {
+        "filename": "sposd1",
+        "name": "SPOSD1",
+        "size": 368
+    },
+    {
+        "filename": ".sposd1",
+        "name": ".",
+        "size": 1108
+    },
+    {
+        "filename": "sposd2d8",
+        "name": "SPOSD2D8",
+        "size": 348
+    },
+    {
+        "filename": ".sposd2d8",
+        "name": ".",
+        "size": 1004
+    },
+    {
+        "filename": "sposd3d7",
+        "name": "SPOSD3D7",
+        "size": 372
+    },
+    {
+        "filename": ".sposd3d7",
+        "name": ".",
+        "size": 880
+    },
+    {
+        "filename": "sposd4d6",
+        "name": "SPOSD4D6",
+        "size": 432
+    },
+    {
+        "filename": ".sposd4d6",
+        "name": ".",
+        "size": 932
+    },
+    {
+        "filename": "sposd5",
+        "name": "SPOSD5",
+        "size": 392
+    },
+    {
+        "filename": ".sposd5",
+        "name": ".",
+        "size": 1056
+    },
+    {
+        "filename": "spose1",
+        "name": "SPOSE1",
+        "size": 336
+    },
+    {
+        "filename": ".spose1",
+        "name": ".",
+        "size": 1016
+    },
+    {
+        "filename": "spose2e8",
+        "name": "SPOSE2E8",
+        "size": 476
+    },
+    {
+        "filename": ".spose2e8",
+        "name": ".",
+        "size": 892
+    },
+    {
+        "filename": "spose3e7",
+        "name": "SPOSE3E7",
+        "size": 548
+    },
+    {
+        "filename": ".spose3e7",
+        "name": ".",
+        "size": 1064
+    },
+    {
+        "filename": "spose4e6",
+        "name": "SPOSE4E6",
+        "size": 412
+    },
+    {
+        "filename": ".spose4e6",
+        "name": ".",
+        "size": 1084
+    },
+    {
+        "filename": "spose5",
+        "name": "SPOSE5",
+        "size": 332
+    },
+    {
+        "filename": ".spose5",
+        "name": ".",
+        "size": 936
+    },
+    {
+        "filename": "sposf1",
+        "name": "SPOSF1",
+        "size": 332
+    },
+    {
+        "filename": ".sposf1",
+        "name": ".",
+        "size": 1008
+    },
+    {
+        "filename": "sposf2f8",
+        "name": "SPOSF2F8",
+        "size": 520
+    },
+    {
+        "filename": ".sposf2f8",
+        "name": ".",
+        "size": 948
+    },
+    {
+        "filename": "sposf3f7",
+        "name": "SPOSF3F7",
+        "size": 600
+    },
+    {
+        "filename": ".sposf3f7",
+        "name": ".",
+        "size": 1152
+    },
+    {
+        "filename": "sposf4f6",
+        "name": "SPOSF4F6",
+        "size": 484
+    },
+    {
+        "filename": ".sposf4f6",
+        "name": ".",
+        "size": 1148
+    },
+    {
+        "filename": "sposf5",
+        "name": "SPOSF5",
+        "size": 312
+    },
+    {
+        "filename": ".sposf5",
+        "name": ".",
+        "size": 908
+    },
+    {
+        "filename": "sposg1",
+        "name": "SPOSG1",
+        "size": 380
+    },
+    {
+        "filename": ".sposg1",
+        "name": ".",
+        "size": 1104
+    },
+    {
+        "filename": "sposg2g8",
+        "name": "SPOSG2G8",
+        "size": 400
+    },
+    {
+        "filename": ".sposg2g8",
+        "name": ".",
+        "size": 916
+    },
+    {
+        "filename": "sposg3g7",
+        "name": "SPOSG3G7",
+        "size": 544
+    },
+    {
+        "filename": ".sposg3g7",
+        "name": ".",
+        "size": 1036
+    },
+    {
+        "filename": "sposg4g6",
+        "name": "SPOSG4G6",
+        "size": 520
+    },
+    {
+        "filename": ".sposg4g6",
+        "name": ".",
+        "size": 1124
+    },
+    {
+        "filename": "sposg5",
+        "name": "SPOSG5",
+        "size": 396
+    },
+    {
+        "filename": ".sposg5",
+        "name": ".",
+        "size": 1068
+    },
+    {
+        "filename": "sposh0",
+        "name": "SPOSH0",
+        "size": 484
+    },
+    {
+        "filename": ".sposh0",
+        "name": ".",
+        "size": 1184
+    },
+    {
+        "filename": "sposi0",
+        "name": "SPOSI0",
+        "size": 468
+    },
+    {
+        "filename": ".sposi0",
+        "name": ".",
+        "size": 1012
+    },
+    {
+        "filename": "sposj0",
+        "name": "SPOSJ0",
+        "size": 552
+    },
+    {
+        "filename": ".sposj0",
+        "name": ".",
+        "size": 880
+    },
+    {
+        "filename": "sposk0",
+        "name": "SPOSK0",
+        "size": 572
+    },
+    {
+        "filename": ".sposk0",
+        "name": ".",
+        "size": 760
+    },
+    {
+        "filename": "sposl0",
+        "name": "SPOSL0",
+        "size": 536
+    },
+    {
+        "filename": ".sposl0",
+        "name": ".",
+        "size": 680
+    },
+    {
+        "filename": "sposm0",
+        "name": "SPOSM0",
+        "size": 620
+    },
+    {
+        "filename": ".sposm0",
+        "name": ".",
+        "size": 1340
+    },
+    {
+        "filename": "sposn0",
+        "name": "SPOSN0",
+        "size": 1064
+    },
+    {
+        "filename": ".sposn0",
+        "name": ".",
+        "size": 1756
+    },
+    {
+        "filename": "sposo0",
+        "name": "SPOSO0",
+        "size": 1192
+    },
+    {
+        "filename": ".sposo0",
+        "name": ".",
+        "size": 1828
+    },
+    {
+        "filename": "sposp0",
+        "name": "SPOSP0",
+        "size": 1164
+    },
+    {
+        "filename": ".sposp0",
+        "name": ".",
+        "size": 1676
+    },
+    {
+        "filename": "sposq0",
+        "name": "SPOSQ0",
+        "size": 972
+    },
+    {
+        "filename": ".sposq0",
+        "name": ".",
+        "size": 1392
+    },
+    {
+        "filename": "sposr0",
+        "name": "SPOSR0",
+        "size": 892
+    },
+    {
+        "filename": ".sposr0",
+        "name": ".",
+        "size": 1212
+    },
+    {
+        "filename": "sposs0",
+        "name": "SPOSS0",
+        "size": 808
+    },
+    {
+        "filename": ".sposs0",
+        "name": ".",
+        "size": 1120
+    },
+    {
+        "filename": "spost0",
+        "name": "SPOST0",
+        "size": 728
+    },
+    {
+        "filename": ".spost0",
+        "name": ".",
+        "size": 984
+    },
+    {
+        "filename": "sposu0",
+        "name": "SPOSU0",
+        "size": 660
+    },
+    {
+        "filename": ".sposu0",
+        "name": ".",
+        "size": 904
+    },
+    {
+        "filename": "bossa1",
+        "name": "BOSSA1",
+        "size": 520
+    },
+    {
+        "filename": ".bossa1",
+        "name": ".",
+        "size": 1944
+    },
+    {
+        "filename": "bossa2a8",
+        "name": "BOSSA2A8",
+        "size": 564
+    },
+    {
+        "filename": ".bossa2a8",
+        "name": ".",
+        "size": 1812
+    },
+    {
+        "filename": "bossa3a7",
+        "name": "BOSSA3A7",
+        "size": 712
+    },
+    {
+        "filename": ".bossa3a7",
+        "name": ".",
+        "size": 1992
+    },
+    {
+        "filename": "bossa4a6",
+        "name": "BOSSA4A6",
+        "size": 592
+    },
+    {
+        "filename": ".bossa4a6",
+        "name": ".",
+        "size": 1796
+    },
+    {
+        "filename": "bossa5",
+        "name": "BOSSA5",
+        "size": 520
+    },
+    {
+        "filename": ".bossa5",
+        "name": ".",
+        "size": 1804
+    },
+    {
+        "filename": "bossb1",
+        "name": "BOSSB1",
+        "size": 700
+    },
+    {
+        "filename": ".bossb1",
+        "name": ".",
+        "size": 2340
+    },
+    {
+        "filename": "bossb2b8",
+        "name": "BOSSB2B8",
+        "size": 568
+    },
+    {
+        "filename": ".bossb2b8",
+        "name": ".",
+        "size": 2044
+    },
+    {
+        "filename": "bossb3b7",
+        "name": "BOSSB3B7",
+        "size": 564
+    },
+    {
+        "filename": ".bossb3b7",
+        "name": ".",
+        "size": 1624
+    },
+    {
+        "filename": "bossb4b6",
+        "name": "BOSSB4B6",
+        "size": 564
+    },
+    {
+        "filename": ".bossb4b6",
+        "name": ".",
+        "size": 1784
+    },
+    {
+        "filename": "bossb5",
+        "name": "BOSSB5",
+        "size": 640
+    },
+    {
+        "filename": ".bossb5",
+        "name": ".",
+        "size": 2116
+    },
+    {
+        "filename": "bossc1",
+        "name": "BOSSC1",
+        "size": 520
+    },
+    {
+        "filename": ".bossc1",
+        "name": ".",
+        "size": 1944
+    },
+    {
+        "filename": "bossc2c8",
+        "name": "BOSSC2C8",
+        "size": 684
+    },
+    {
+        "filename": ".bossc2c8",
+        "name": ".",
+        "size": 2028
+    },
+    {
+        "filename": "bossc3c7",
+        "name": "BOSSC3C7",
+        "size": 688
+    },
+    {
+        "filename": ".bossc3c7",
+        "name": ".",
+        "size": 1952
+    },
+    {
+        "filename": "bossc4c6",
+        "name": "BOSSC4C6",
+        "size": 528
+    },
+    {
+        "filename": ".bossc4c6",
+        "name": ".",
+        "size": 1676
+    },
+    {
+        "filename": "bossc5",
+        "name": "BOSSC5",
+        "size": 520
+    },
+    {
+        "filename": ".bossc5",
+        "name": ".",
+        "size": 1804
+    },
+    {
+        "filename": "bossd1",
+        "name": "BOSSD1",
+        "size": 692
+    },
+    {
+        "filename": ".bossd1",
+        "name": ".",
+        "size": 2344
+    },
+    {
+        "filename": "bossd2d8",
+        "name": "BOSSD2D8",
+        "size": 604
+    },
+    {
+        "filename": ".bossd2d8",
+        "name": ".",
+        "size": 1976
+    },
+    {
+        "filename": "bossd3d7",
+        "name": "BOSSD3D7",
+        "size": 556
+    },
+    {
+        "filename": ".bossd3d7",
+        "name": ".",
+        "size": 1652
+    },
+    {
+        "filename": "bossd4d6",
+        "name": "BOSSD4D6",
+        "size": 508
+    },
+    {
+        "filename": ".bossd4d6",
+        "name": ".",
+        "size": 1888
+    },
+    {
+        "filename": "bossd5",
+        "name": "BOSSD5",
+        "size": 636
+    },
+    {
+        "filename": ".bossd5",
+        "name": ".",
+        "size": 2116
+    },
+    {
+        "filename": "bosse1",
+        "name": "BOSSE1",
+        "size": 844
+    },
+    {
+        "filename": ".bosse1",
+        "name": ".",
+        "size": 2236
+    },
+    {
+        "filename": "bosse2",
+        "name": "BOSSE2",
+        "size": 492
+    },
+    {
+        "filename": ".bosse2",
+        "name": ".",
+        "size": 1720
+    },
+    {
+        "filename": "bosse3",
+        "name": "BOSSE3",
+        "size": 740
+    },
+    {
+        "filename": ".bosse3",
+        "name": ".",
+        "size": 2020
+    },
+    {
+        "filename": "bosse4",
+        "name": "BOSSE4",
+        "size": 832
+    },
+    {
+        "filename": ".bosse4",
+        "name": ".",
+        "size": 2192
+    },
+    {
+        "filename": "bosse5",
+        "name": "BOSSE5",
+        "size": 760
+    },
+    {
+        "filename": ".bosse5",
+        "name": ".",
+        "size": 2028
+    },
+    {
+        "filename": "bosse6",
+        "name": "BOSSE6",
+        "size": 564
+    },
+    {
+        "filename": ".bosse6",
+        "name": ".",
+        "size": 1740
+    },
+    {
+        "filename": "bosse7",
+        "name": "BOSSE7",
+        "size": 604
+    },
+    {
+        "filename": ".bosse7",
+        "name": ".",
+        "size": 1988
+    },
+    {
+        "filename": "bosse8",
+        "name": "BOSSE8",
+        "size": 840
+    },
+    {
+        "filename": ".bosse8",
+        "name": ".",
+        "size": 2436
+    },
+    {
+        "filename": "bossf1",
+        "name": "BOSSF1",
+        "size": 924
+    },
+    {
+        "filename": ".bossf1",
+        "name": ".",
+        "size": 2464
+    },
+    {
+        "filename": "bossf2",
+        "name": "BOSSF2",
+        "size": 808
+    },
+    {
+        "filename": ".bossf2",
+        "name": ".",
+        "size": 2076
+    },
+    {
+        "filename": "bossf3",
+        "name": "BOSSF3",
+        "size": 692
+    },
+    {
+        "filename": ".bossf3",
+        "name": ".",
+        "size": 1864
+    },
+    {
+        "filename": "bossf4",
+        "name": "BOSSF4",
+        "size": 760
+    },
+    {
+        "filename": ".bossf4",
+        "name": ".",
+        "size": 2044
+    },
+    {
+        "filename": "bossf5",
+        "name": "BOSSF5",
+        "size": 776
+    },
+    {
+        "filename": ".bossf5",
+        "name": ".",
+        "size": 2032
+    },
+    {
+        "filename": "bossf6",
+        "name": "BOSSF6",
+        "size": 720
+    },
+    {
+        "filename": ".bossf6",
+        "name": ".",
+        "size": 1980
+    },
+    {
+        "filename": "bossf7",
+        "name": "BOSSF7",
+        "size": 584
+    },
+    {
+        "filename": ".bossf7",
+        "name": ".",
+        "size": 1728
+    },
+    {
+        "filename": "bossf8",
+        "name": "BOSSF8",
+        "size": 764
+    },
+    {
+        "filename": ".bossf8",
+        "name": ".",
+        "size": 2096
+    },
+    {
+        "filename": "bossg1",
+        "name": "BOSSG1",
+        "size": 708
+    },
+    {
+        "filename": ".bossg1",
+        "name": ".",
+        "size": 1940
+    },
+    {
+        "filename": "bossg2",
+        "name": "BOSSG2",
+        "size": 808
+    },
+    {
+        "filename": ".bossg2",
+        "name": ".",
+        "size": 2192
+    },
+    {
+        "filename": "bossg3",
+        "name": "BOSSG3",
+        "size": 668
+    },
+    {
+        "filename": ".bossg3",
+        "name": ".",
+        "size": 1876
+    },
+    {
+        "filename": "bossg4",
+        "name": "BOSSG4",
+        "size": 696
+    },
+    {
+        "filename": ".bossg4",
+        "name": ".",
+        "size": 1768
+    },
+    {
+        "filename": "bossg5",
+        "name": "BOSSG5",
+        "size": 748
+    },
+    {
+        "filename": ".bossg5",
+        "name": ".",
+        "size": 1716
+    },
+    {
+        "filename": "bossg6",
+        "name": "BOSSG6",
+        "size": 672
+    },
+    {
+        "filename": ".bossg6",
+        "name": ".",
+        "size": 1888
+    },
+    {
+        "filename": "bossg7",
+        "name": "BOSSG7",
+        "size": 624
+    },
+    {
+        "filename": ".bossg7",
+        "name": ".",
+        "size": 1792
+    },
+    {
+        "filename": "bossg8",
+        "name": "BOSSG8",
+        "size": 740
+    },
+    {
+        "filename": ".bossg8",
+        "name": ".",
+        "size": 1868
+    },
+    {
+        "filename": "bossh1",
+        "name": "BOSSH1",
+        "size": 700
+    },
+    {
+        "filename": ".bossh1",
+        "name": ".",
+        "size": 2240
+    },
+    {
+        "filename": "bossh2",
+        "name": "BOSSH2",
+        "size": 660
+    },
+    {
+        "filename": ".bossh2",
+        "name": ".",
+        "size": 1940
+    },
+    {
+        "filename": "bossh3",
+        "name": "BOSSH3",
+        "size": 696
+    },
+    {
+        "filename": ".bossh3",
+        "name": ".",
+        "size": 2060
+    },
+    {
+        "filename": "bossh4",
+        "name": "BOSSH4",
+        "size": 656
+    },
+    {
+        "filename": ".bossh4",
+        "name": ".",
+        "size": 1896
+    },
+    {
+        "filename": "bossh5",
+        "name": "BOSSH5",
+        "size": 628
+    },
+    {
+        "filename": ".bossh5",
+        "name": ".",
+        "size": 1964
+    },
+    {
+        "filename": "bossh6",
+        "name": "BOSSH6",
+        "size": 536
+    },
+    {
+        "filename": ".bossh6",
+        "name": ".",
+        "size": 1848
+    },
+    {
+        "filename": "bossh7",
+        "name": "BOSSH7",
+        "size": 608
+    },
+    {
+        "filename": ".bossh7",
+        "name": ".",
+        "size": 1876
+    },
+    {
+        "filename": "bossh8",
+        "name": "BOSSH8",
+        "size": 624
+    },
+    {
+        "filename": ".bossh8",
+        "name": ".",
+        "size": 2032
+    },
+    {
+        "filename": "bossi0",
+        "name": "BOSSI0",
+        "size": 692
+    },
+    {
+        "filename": ".bossi0",
+        "name": ".",
+        "size": 2248
+    },
+    {
+        "filename": "bossj0",
+        "name": "BOSSJ0",
+        "size": 808
+    },
+    {
+        "filename": ".bossj0",
+        "name": ".",
+        "size": 2060
+    },
+    {
+        "filename": "bossk0",
+        "name": "BOSSK0",
+        "size": 840
+    },
+    {
+        "filename": ".bossk0",
+        "name": ".",
+        "size": 1968
+    },
+    {
+        "filename": "bossl0",
+        "name": "BOSSL0",
+        "size": 708
+    },
+    {
+        "filename": ".bossl0",
+        "name": ".",
+        "size": 1556
+    },
+    {
+        "filename": "bossm0",
+        "name": "BOSSM0",
+        "size": 644
+    },
+    {
+        "filename": ".bossm0",
+        "name": ".",
+        "size": 1312
+    },
+    {
+        "filename": "bossn0",
+        "name": "BOSSN0",
+        "size": 628
+    },
+    {
+        "filename": ".bossn0",
+        "name": ".",
+        "size": 1344
+    },
+    {
+        "filename": "bosso0",
+        "name": "BOSSO0",
+        "size": 628
+    },
+    {
+        "filename": ".bosso0",
+        "name": ".",
+        "size": 1344
+    },
+    {
+        "filename": "bal7a1a5",
+        "name": "BAL7A1A5",
+        "size": 208
+    },
+    {
+        "filename": ".bal7a1a5",
+        "name": ".",
+        "size": 280
+    },
+    {
+        "filename": "bal7a2a8",
+        "name": "BAL7A2A8",
+        "size": 364
+    },
+    {
+        "filename": ".bal7a2a8",
+        "name": ".",
+        "size": 324
+    },
+    {
+        "filename": "bal7a3a7",
+        "name": "BAL7A3A7",
+        "size": 512
+    },
+    {
+        "filename": ".bal7a3a7",
+        "name": ".",
+        "size": 392
+    },
+    {
+        "filename": "bal7a4a6",
+        "name": "BAL7A4A6",
+        "size": 360
+    },
+    {
+        "filename": ".bal7a4a6",
+        "name": ".",
+        "size": 256
+    },
+    {
+        "filename": "bal7b1b5",
+        "name": "BAL7B1B5",
+        "size": 216
+    },
+    {
+        "filename": ".bal7b1b5",
+        "name": ".",
+        "size": 308
+    },
+    {
+        "filename": "bal7b2b8",
+        "name": "BAL7B2B8",
+        "size": 360
+    },
+    {
+        "filename": ".bal7b2b8",
+        "name": ".",
+        "size": 316
+    },
+    {
+        "filename": "bal7b3b7",
+        "name": "BAL7B3B7",
+        "size": 536
+    },
+    {
+        "filename": ".bal7b3b7",
+        "name": ".",
+        "size": 400
+    },
+    {
+        "filename": "bal7b4b6",
+        "name": "BAL7B4B6",
+        "size": 364
+    },
+    {
+        "filename": ".bal7b4b6",
+        "name": ".",
+        "size": 268
+    },
+    {
+        "filename": "bal7c0",
+        "name": "BAL7C0",
+        "size": 484
+    },
+    {
+        "filename": ".bal7c0",
+        "name": ".",
+        "size": 708
+    },
+    {
+        "filename": "bal7d0",
+        "name": "BAL7D0",
+        "size": 580
+    },
+    {
+        "filename": ".bal7d0",
+        "name": ".",
+        "size": 932
+    },
+    {
+        "filename": "bal7e0",
+        "name": "BAL7E0",
+        "size": 1068
+    },
+    {
+        "filename": ".bal7e0",
+        "name": ".",
+        "size": 1152
+    },
+    {
+        "filename": "skula1",
+        "name": "SKULA1",
+        "size": 516
+    },
+    {
+        "filename": ".skula1",
+        "name": ".",
+        "size": 1024
+    },
+    {
+        "filename": "skula8a2",
+        "name": "SKULA8A2",
+        "size": 392
+    },
+    {
+        "filename": ".skula8a2",
+        "name": ".",
+        "size": 1060
+    },
+    {
+        "filename": "skula7a3",
+        "name": "SKULA7A3",
+        "size": 408
+    },
+    {
+        "filename": ".skula7a3",
+        "name": ".",
+        "size": 872
+    },
+    {
+        "filename": "skula6a4",
+        "name": "SKULA6A4",
+        "size": 472
+    },
+    {
+        "filename": ".skula6a4",
+        "name": ".",
+        "size": 916
+    },
+    {
+        "filename": "skula5",
+        "name": "SKULA5",
+        "size": 520
+    },
+    {
+        "filename": ".skula5",
+        "name": ".",
+        "size": 944
+    },
+    {
+        "filename": "skulb1",
+        "name": "SKULB1",
+        "size": 484
+    },
+    {
+        "filename": ".skulb1",
+        "name": ".",
+        "size": 1032
+    },
+    {
+        "filename": "skulb8b2",
+        "name": "SKULB8B2",
+        "size": 396
+    },
+    {
+        "filename": ".skulb8b2",
+        "name": ".",
+        "size": 1080
+    },
+    {
+        "filename": "skulb7b3",
+        "name": "SKULB7B3",
+        "size": 428
+    },
+    {
+        "filename": ".skulb7b3",
+        "name": ".",
+        "size": 908
+    },
+    {
+        "filename": "skulb6b4",
+        "name": "SKULB6B4",
+        "size": 440
+    },
+    {
+        "filename": ".skulb6b4",
+        "name": ".",
+        "size": 900
+    },
+    {
+        "filename": "skulb5",
+        "name": "SKULB5",
+        "size": 508
+    },
+    {
+        "filename": ".skulb5",
+        "name": ".",
+        "size": 956
+    },
+    {
+        "filename": "skulc1",
+        "name": "SKULC1",
+        "size": 476
+    },
+    {
+        "filename": ".skulc1",
+        "name": ".",
+        "size": 1032
+    },
+    {
+        "filename": "skulc8c2",
+        "name": "SKULC8C2",
+        "size": 616
+    },
+    {
+        "filename": ".skulc8c2",
+        "name": ".",
+        "size": 1136
+    },
+    {
+        "filename": "skulc7c3",
+        "name": "SKULC7C3",
+        "size": 716
+    },
+    {
+        "filename": ".skulc7c3",
+        "name": ".",
+        "size": 1184
+    },
+    {
+        "filename": "skulc6c4",
+        "name": "SKULC6C4",
+        "size": 576
+    },
+    {
+        "filename": ".skulc6c4",
+        "name": ".",
+        "size": 948
+    },
+    {
+        "filename": "skulc5",
+        "name": "SKULC5",
+        "size": 452
+    },
+    {
+        "filename": ".skulc5",
+        "name": ".",
+        "size": 688
+    },
+    {
+        "filename": "skuld1",
+        "name": "SKULD1",
+        "size": 476
+    },
+    {
+        "filename": ".skuld1",
+        "name": ".",
+        "size": 1024
+    },
+    {
+        "filename": "skuld8d2",
+        "name": "SKULD8D2",
+        "size": 564
+    },
+    {
+        "filename": ".skuld8d2",
+        "name": ".",
+        "size": 1140
+    },
+    {
+        "filename": "skuld7d3",
+        "name": "SKULD7D3",
+        "size": 712
+    },
+    {
+        "filename": ".skuld7d3",
+        "name": ".",
+        "size": 1196
+    },
+    {
+        "filename": "skuld6d4",
+        "name": "SKULD6D4",
+        "size": 512
+    },
+    {
+        "filename": ".skuld6d4",
+        "name": ".",
+        "size": 948
+    },
+    {
+        "filename": "skuld5",
+        "name": "SKULD5",
+        "size": 452
+    },
+    {
+        "filename": ".skuld5",
+        "name": ".",
+        "size": 668
+    },
+    {
+        "filename": "skule1",
+        "name": "SKULE1",
+        "size": 432
+    },
+    {
+        "filename": ".skule1",
+        "name": ".",
+        "size": 932
+    },
+    {
+        "filename": "skule8e2",
+        "name": "SKULE8E2",
+        "size": 428
+    },
+    {
+        "filename": ".skule8e2",
+        "name": ".",
+        "size": 1068
+    },
+    {
+        "filename": "skule7e3",
+        "name": "SKULE7E3",
+        "size": 428
+    },
+    {
+        "filename": ".skule7e3",
+        "name": ".",
+        "size": 1068
+    },
+    {
+        "filename": "skule6e4",
+        "name": "SKULE6E4",
+        "size": 384
+    },
+    {
+        "filename": ".skule6e4",
+        "name": ".",
+        "size": 876
+    },
+    {
+        "filename": "skule5",
+        "name": "SKULE5",
+        "size": 436
+    },
+    {
+        "filename": ".skule5",
+        "name": ".",
+        "size": 856
+    },
+    {
+        "filename": "skulf0",
+        "name": "SKULF0",
+        "size": 432
+    },
+    {
+        "filename": ".skulf0",
+        "name": ".",
+        "size": 932
+    },
+    {
+        "filename": "skulg0",
+        "name": "SKULG0",
+        "size": 424
+    },
+    {
+        "filename": ".skulg0",
+        "name": ".",
+        "size": 1064
+    },
+    {
+        "filename": "skulh0",
+        "name": "SKULH0",
+        "size": 556
+    },
+    {
+        "filename": ".skulh0",
+        "name": ".",
+        "size": 1604
+    },
+    {
+        "filename": "skuli0",
+        "name": "SKULI0",
+        "size": 688
+    },
+    {
+        "filename": ".skuli0",
+        "name": ".",
+        "size": 3060
+    },
+    {
+        "filename": "skulj0",
+        "name": "SKULJ0",
+        "size": 1832
+    },
+    {
+        "filename": ".skulj0",
+        "name": ".",
+        "size": 4880
+    },
+    {
+        "filename": "skulk0",
+        "name": "SKULK0",
+        "size": 2780
+    },
+    {
+        "filename": ".skulk0",
+        "name": ".",
+        "size": 2740
+    },
+    {
+        "filename": "heada1",
+        "name": "HEADA1",
+        "size": 848
+    },
+    {
+        "filename": ".heada1",
+        "name": ".",
+        "size": 3332
+    },
+    {
+        "filename": "heada2a8",
+        "name": "HEADA2A8",
+        "size": 732
+    },
+    {
+        "filename": ".heada2a8",
+        "name": ".",
+        "size": 3100
+    },
+    {
+        "filename": "heada3a7",
+        "name": "HEADA3A7",
+        "size": 700
+    },
+    {
+        "filename": ".heada3a7",
+        "name": ".",
+        "size": 3216
+    },
+    {
+        "filename": "heada4a6",
+        "name": "HEADA4A6",
+        "size": 704
+    },
+    {
+        "filename": ".heada4a6",
+        "name": ".",
+        "size": 3204
+    },
+    {
+        "filename": "heada5",
+        "name": "HEADA5",
+        "size": 848
+    },
+    {
+        "filename": ".heada5",
+        "name": ".",
+        "size": 3188
+    },
+    {
+        "filename": "headb1",
+        "name": "HEADB1",
+        "size": 840
+    },
+    {
+        "filename": ".headb1",
+        "name": ".",
+        "size": 3228
+    },
+    {
+        "filename": "headc1",
+        "name": "HEADC1",
+        "size": 788
+    },
+    {
+        "filename": ".headc1",
+        "name": ".",
+        "size": 3320
+    },
+    {
+        "filename": "headd1",
+        "name": "HEADD1",
+        "size": 752
+    },
+    {
+        "filename": ".headd1",
+        "name": ".",
+        "size": 3412
+    },
+    {
+        "filename": "headb2b8",
+        "name": "HEADB2B8",
+        "size": 736
+    },
+    {
+        "filename": ".headb2b8",
+        "name": ".",
+        "size": 3120
+    },
+    {
+        "filename": "headc2c8",
+        "name": "HEADC2C8",
+        "size": 724
+    },
+    {
+        "filename": ".headc2c8",
+        "name": ".",
+        "size": 3184
+    },
+    {
+        "filename": "headd2d8",
+        "name": "HEADD2D8",
+        "size": 736
+    },
+    {
+        "filename": ".headd2d8",
+        "name": ".",
+        "size": 3284
+    },
+    {
+        "filename": "headb3b7",
+        "name": "HEADB3B7",
+        "size": 748
+    },
+    {
+        "filename": ".headb3b7",
+        "name": ".",
+        "size": 3212
+    },
+    {
+        "filename": "headc3c7",
+        "name": "HEADC3C7",
+        "size": 756
+    },
+    {
+        "filename": ".headc3c7",
+        "name": ".",
+        "size": 3280
+    },
+    {
+        "filename": "headd3d7",
+        "name": "HEADD3D7",
+        "size": 744
+    },
+    {
+        "filename": ".headd3d7",
+        "name": ".",
+        "size": 3368
+    },
+    {
+        "filename": "headb4b6",
+        "name": "HEADB4B6",
+        "size": 708
+    },
+    {
+        "filename": ".headb4b6",
+        "name": ".",
+        "size": 3204
+    },
+    {
+        "filename": "headc4c6",
+        "name": "HEADC4C6",
+        "size": 716
+    },
+    {
+        "filename": ".headc4c6",
+        "name": ".",
+        "size": 3296
+    },
+    {
+        "filename": "headd4d6",
+        "name": "HEADD4D6",
+        "size": 724
+    },
+    {
+        "filename": ".headd4d6",
+        "name": ".",
+        "size": 3420
+    },
+    {
+        "filename": "headb5",
+        "name": "HEADB5",
+        "size": 852
+    },
+    {
+        "filename": ".headb5",
+        "name": ".",
+        "size": 3200
+    },
+    {
+        "filename": "headc5",
+        "name": "HEADC5",
+        "size": 852
+    },
+    {
+        "filename": ".headc5",
+        "name": ".",
+        "size": 3332
+    },
+    {
+        "filename": "headd5",
+        "name": "HEADD5",
+        "size": 852
+    },
+    {
+        "filename": ".headd5",
+        "name": ".",
+        "size": 3552
+    },
+    {
+        "filename": "heade1",
+        "name": "HEADE1",
+        "size": 780
+    },
+    {
+        "filename": ".heade1",
+        "name": ".",
+        "size": 3376
+    },
+    {
+        "filename": "headf1",
+        "name": "HEADF1",
+        "size": 776
+    },
+    {
+        "filename": ".headf1",
+        "name": ".",
+        "size": 3372
+    },
+    {
+        "filename": "headg0",
+        "name": "HEADG0",
+        "size": 776
+    },
+    {
+        "filename": ".headg0",
+        "name": ".",
+        "size": 3372
+    },
+    {
+        "filename": "heade2e8",
+        "name": "HEADE2E8",
+        "size": 732
+    },
+    {
+        "filename": ".heade2e8",
+        "name": ".",
+        "size": 3116
+    },
+    {
+        "filename": "headf2f8",
+        "name": "HEADF2F8",
+        "size": 740
+    },
+    {
+        "filename": ".headf2f8",
+        "name": ".",
+        "size": 3120
+    },
+    {
+        "filename": "heade3e7",
+        "name": "HEADE3E7",
+        "size": 696
+    },
+    {
+        "filename": ".heade3e7",
+        "name": ".",
+        "size": 3196
+    },
+    {
+        "filename": "headf3f7",
+        "name": "HEADF3F7",
+        "size": 688
+    },
+    {
+        "filename": ".headf3f7",
+        "name": ".",
+        "size": 3168
+    },
+    {
+        "filename": "heade4e6",
+        "name": "HEADE4E6",
+        "size": 696
+    },
+    {
+        "filename": ".heade4e6",
+        "name": ".",
+        "size": 3116
+    },
+    {
+        "filename": "headf4f6",
+        "name": "HEADF4F6",
+        "size": 696
+    },
+    {
+        "filename": ".headf4f6",
+        "name": ".",
+        "size": 3116
+    },
+    {
+        "filename": "heade5",
+        "name": "HEADE5",
+        "size": 840
+    },
+    {
+        "filename": ".heade5",
+        "name": ".",
+        "size": 3184
+    },
+    {
+        "filename": "headf5",
+        "name": "HEADF5",
+        "size": 840
+    },
+    {
+        "filename": ".headf5",
+        "name": ".",
+        "size": 3184
+    },
+    {
+        "filename": "headh0",
+        "name": "HEADH0",
+        "size": 768
+    },
+    {
+        "filename": ".headh0",
+        "name": ".",
+        "size": 3372
+    },
+    {
+        "filename": "headi0",
+        "name": "HEADI0",
+        "size": 780
+    },
+    {
+        "filename": ".headi0",
+        "name": ".",
+        "size": 3376
+    },
+    {
+        "filename": "headj0",
+        "name": "HEADJ0",
+        "size": 872
+    },
+    {
+        "filename": ".headj0",
+        "name": ".",
+        "size": 3496
+    },
+    {
+        "filename": "headk0",
+        "name": "HEADK0",
+        "size": 992
+    },
+    {
+        "filename": ".headk0",
+        "name": ".",
+        "size": 3408
+    },
+    {
+        "filename": "headl0",
+        "name": "HEADL0",
+        "size": 800
+    },
+    {
+        "filename": ".headl0",
+        "name": ".",
+        "size": 2508
+    },
+    {
+        "name": "S_END",
+        "virtual": true
+    },
+    {
+        "compressed": true,
+        "compressed_size": 22686,
+        "filename": "title",
+        "name": "TITLE",
+        "size": 64016
+    },
+    {
+        "compressed": true,
+        "compressed_size": 4400,
+        "filename": "stbar",
+        "name": "STBAR",
+        "size": 12816
+    },
+    {
+        "compressed": true,
+        "compressed_size": 55,
+        "filename": "minus",
+        "name": "MINUS",
+        "size": 144
+    },
+    {
+        "compressed": true,
+        "compressed_size": 155,
+        "filename": "num_0",
+        "name": "NUM_0",
+        "size": 240
+    },
+    {
+        "compressed": true,
+        "compressed_size": 97,
+        "filename": "num_1",
+        "name": "NUM_1",
+        "size": 192
+    },
+    {
+        "compressed": true,
+        "compressed_size": 156,
+        "filename": "num_2",
+        "name": "NUM_2",
+        "size": 240
+    },
+    {
+        "compressed": true,
+        "compressed_size": 127,
+        "filename": "num_3",
+        "name": "NUM_3",
+        "size": 240
+    },
+    {
+        "compressed": true,
+        "compressed_size": 127,
+        "filename": "num_4",
+        "name": "NUM_4",
+        "size": 240
+    },
+    {
+        "compressed": true,
+        "compressed_size": 151,
+        "filename": "num_5",
+        "name": "NUM_5",
+        "size": 240
+    },
+    {
+        "compressed": true,
+        "compressed_size": 151,
+        "filename": "num_6",
+        "name": "NUM_6",
+        "size": 240
+    },
+    {
+        "compressed": true,
+        "compressed_size": 101,
+        "filename": "num_7",
+        "name": "NUM_7",
+        "size": 240
+    },
+    {
+        "compressed": true,
+        "compressed_size": 159,
+        "filename": "num_8",
+        "name": "NUM_8",
+        "size": 240
+    },
+    {
+        "compressed": true,
+        "compressed_size": 150,
+        "filename": "num_9",
+        "name": "NUM_9",
+        "size": 240
+    },
+    {
+        "compressed": true,
+        "compressed_size": 124,
+        "filename": "percent",
+        "name": "PERCENT",
+        "size": 240
+    },
+    {
+        "compressed": true,
+        "compressed_size": 105,
+        "filename": "ckey_b",
+        "name": "CKEY_B",
+        "size": 192
+    },
+    {
+        "compressed": true,
+        "compressed_size": 94,
+        "filename": "ckey_y",
+        "name": "CKEY_Y",
+        "size": 192
+    },
+    {
+        "compressed": true,
+        "compressed_size": 94,
+        "filename": "ckey_r",
+        "name": "CKEY_R",
+        "size": 192
+    },
+    {
+        "compressed": true,
+        "compressed_size": 109,
+        "filename": "skey_b",
+        "name": "SKEY_B",
+        "size": 128
+    },
+    {
+        "compressed": true,
+        "compressed_size": 94,
+        "filename": "skey_y",
+        "name": "SKEY_Y",
+        "size": 128
+    },
+    {
+        "compressed": true,
+        "compressed_size": 108,
+        "filename": "skey_r",
+        "name": "SKEY_R",
+        "size": 128
+    },
+    {
+        "compressed": true,
+        "compressed_size": 34,
+        "filename": "micro_2",
+        "name": "MICRO_2",
+        "size": 40
+    },
+    {
+        "compressed": true,
+        "compressed_size": 36,
+        "filename": "micro_3",
+        "name": "MICRO_3",
+        "size": 40
+    },
+    {
+        "compressed": true,
+        "compressed_size": 32,
+        "filename": "micro_4",
+        "name": "MICRO_4",
+        "size": 40
+    },
+    {
+        "compressed": true,
+        "compressed_size": 34,
+        "filename": "micro_5",
+        "name": "MICRO_5",
+        "size": 40
+    },
+    {
+        "compressed": true,
+        "compressed_size": 32,
+        "filename": "micro_6",
+        "name": "MICRO_6",
+        "size": 40
+    },
+    {
+        "compressed": true,
+        "compressed_size": 35,
+        "filename": "micro_7",
+        "name": "MICRO_7",
+        "size": 40
+    },
+    {
+        "compressed": true,
+        "compressed_size": 163,
+        "filename": "char_065",
+        "name": "CHAR_065",
+        "size": 272
+    },
+    {
+        "compressed": true,
+        "compressed_size": 174,
+        "filename": "char_066",
+        "name": "CHAR_066",
+        "size": 272
+    },
+    {
+        "compressed": true,
+        "compressed_size": 161,
+        "filename": "char_067",
+        "name": "CHAR_067",
+        "size": 272
+    },
+    {
+        "compressed": true,
+        "compressed_size": 169,
+        "filename": "char_068",
+        "name": "CHAR_068",
+        "size": 272
+    },
+    {
+        "compressed": true,
+        "compressed_size": 129,
+        "filename": "char_069",
+        "name": "CHAR_069",
+        "size": 272
+    },
+    {
+        "compressed": true,
+        "compressed_size": 120,
+        "filename": "char_070",
+        "name": "CHAR_070",
+        "size": 272
+    },
+    {
+        "compressed": true,
+        "compressed_size": 176,
+        "filename": "char_071",
+        "name": "CHAR_071",
+        "size": 272
+    },
+    {
+        "compressed": true,
+        "compressed_size": 162,
+        "filename": "char_072",
+        "name": "CHAR_072",
+        "size": 272
+    },
+    {
+        "compressed": true,
+        "compressed_size": 79,
+        "filename": "char_073",
+        "name": "CHAR_073",
+        "size": 144
+    },
+    {
+        "compressed": true,
+        "compressed_size": 130,
+        "filename": "char_074",
+        "name": "CHAR_074",
+        "size": 272
+    },
+    {
+        "compressed": true,
+        "compressed_size": 158,
+        "filename": "char_075",
+        "name": "CHAR_075",
+        "size": 272
+    },
+    {
+        "compressed": true,
+        "compressed_size": 113,
+        "filename": "char_076",
+        "name": "CHAR_076",
+        "size": 272
+    },
+    {
+        "compressed": true,
+        "compressed_size": 188,
+        "filename": "char_077",
+        "name": "CHAR_077",
+        "size": 272
+    },
+    {
+        "compressed": true,
+        "compressed_size": 188,
+        "filename": "char_078",
+        "name": "CHAR_078",
+        "size": 272
+    },
+    {
+        "compressed": true,
+        "compressed_size": 172,
+        "filename": "char_079",
+        "name": "CHAR_079",
+        "size": 272
+    },
+    {
+        "compressed": true,
+        "compressed_size": 136,
+        "filename": "char_080",
+        "name": "CHAR_080",
+        "size": 272
+    },
+    {
+        "compressed": true,
+        "compressed_size": 171,
+        "filename": "char_081",
+        "name": "CHAR_081",
+        "size": 272
+    },
+    {
+        "compressed": true,
+        "compressed_size": 173,
+        "filename": "char_082",
+        "name": "CHAR_082",
+        "size": 272
+    },
+    {
+        "compressed": true,
+        "compressed_size": 170,
+        "filename": "char_083",
+        "name": "CHAR_083",
+        "size": 272
+    },
+    {
+        "compressed": true,
+        "compressed_size": 109,
+        "filename": "char_084",
+        "name": "CHAR_084",
+        "size": 272
+    },
+    {
+        "compressed": true,
+        "compressed_size": 155,
+        "filename": "char_085",
+        "name": "CHAR_085",
+        "size": 272
+    },
+    {
+        "compressed": true,
+        "compressed_size": 153,
+        "filename": "char_086",
+        "name": "CHAR_086",
+        "size": 272
+    },
+    {
+        "compressed": true,
+        "compressed_size": 173,
+        "filename": "char_087",
+        "name": "CHAR_087",
+        "size": 272
+    },
+    {
+        "compressed": true,
+        "compressed_size": 170,
+        "filename": "char_088",
+        "name": "CHAR_088",
+        "size": 272
+    },
+    {
+        "compressed": true,
+        "compressed_size": 140,
+        "filename": "char_089",
+        "name": "CHAR_089",
+        "size": 272
+    },
+    {
+        "compressed": true,
+        "compressed_size": 145,
+        "filename": "char_090",
+        "name": "CHAR_090",
+        "size": 272
+    },
+    {
+        "compressed": true,
+        "compressed_size": 141,
+        "filename": "char_097",
+        "name": "CHAR_097",
+        "size": 196
+    },
+    {
+        "compressed": true,
+        "compressed_size": 137,
+        "filename": "char_099",
+        "name": "CHAR_099",
+        "size": 196
+    },
+    {
+        "compressed": true,
+        "compressed_size": 110,
+        "filename": "char_100",
+        "name": "CHAR_100",
+        "size": 184
+    },
+    {
+        "compressed": true,
+        "compressed_size": 132,
+        "filename": "char_101",
+        "name": "CHAR_101",
+        "size": 196
+    },
+    {
+        "compressed": true,
+        "compressed_size": 124,
+        "filename": "char_102",
+        "name": "CHAR_102",
+        "size": 184
+    },
+    {
+        "compressed": true,
+        "compressed_size": 106,
+        "filename": "char_103",
+        "name": "CHAR_103",
+        "size": 160
+    },
+    {
+        "compressed": true,
+        "compressed_size": 129,
+        "filename": "char_104",
+        "name": "CHAR_104",
+        "size": 196
+    },
+    {
+        "compressed": true,
+        "compressed_size": 126,
+        "filename": "char_105",
+        "name": "CHAR_105",
+        "size": 196
+    },
+    {
+        "compressed": true,
+        "compressed_size": 69,
+        "filename": "char_106",
+        "name": "CHAR_106",
+        "size": 88
+    },
+    {
+        "compressed": true,
+        "compressed_size": 100,
+        "filename": "char_107",
+        "name": "CHAR_107",
+        "size": 172
+    },
+    {
+        "compressed": true,
+        "compressed_size": 145,
+        "filename": "char_108",
+        "name": "CHAR_108",
+        "size": 208
+    },
+    {
+        "compressed": true,
+        "compressed_size": 86,
+        "filename": "char_109",
+        "name": "CHAR_109",
+        "size": 136
+    },
+    {
+        "compressed": true,
+        "compressed_size": 172,
+        "filename": "char_110",
+        "name": "CHAR_110",
+        "size": 208
+    },
+    {
+        "compressed": true,
+        "compressed_size": 156,
+        "filename": "char_111",
+        "name": "CHAR_111",
+        "size": 208
+    },
+    {
+        "compressed": true,
+        "compressed_size": 139,
+        "filename": "char_112",
+        "name": "CHAR_112",
+        "size": 196
+    },
+    {
+        "compressed": true,
+        "compressed_size": 114,
+        "filename": "char_113",
+        "name": "CHAR_113",
+        "size": 184
+    },
+    {
+        "compressed": true,
+        "compressed_size": 146,
+        "filename": "char_114",
+        "name": "CHAR_114",
+        "size": 228
+    },
+    {
+        "compressed": true,
+        "compressed_size": 128,
+        "filename": "char_115",
+        "name": "CHAR_115",
+        "size": 196
+    },
+    {
+        "compressed": true,
+        "compressed_size": 130,
+        "filename": "char_116",
+        "name": "CHAR_116",
+        "size": 196
+    },
+    {
+        "compressed": true,
+        "compressed_size": 87,
+        "filename": "char_117",
+        "name": "CHAR_117",
+        "size": 160
+    },
+    {
+        "compressed": true,
+        "compressed_size": 133,
+        "filename": "char_118",
+        "name": "CHAR_118",
+        "size": 196
+    },
+    {
+        "compressed": true,
+        "compressed_size": 134,
+        "filename": "char_119",
+        "name": "CHAR_119",
+        "size": 208
+    },
+    {
+        "compressed": true,
+        "compressed_size": 156,
+        "filename": "char_120",
+        "name": "CHAR_120",
+        "size": 208
+    },
+    {
+        "compressed": true,
+        "compressed_size": 144,
+        "filename": "char_121",
+        "name": "CHAR_121",
+        "size": 208
+    },
+    {
+        "compressed": true,
+        "compressed_size": 121,
+        "filename": "char_122",
+        "name": "CHAR_122",
+        "size": 208
+    },
+    {
+        "compressed": true,
+        "compressed_size": 137,
+        "filename": "char_123",
+        "name": "CHAR_123",
+        "size": 208
+    },
+    {
+        "compressed": true,
+        "compressed_size": 41,
+        "filename": "char_124",
+        "name": "CHAR_124",
+        "size": 88
+    },
+    {
+        "compressed": true,
+        "compressed_size": 42,
+        "filename": "char_125",
+        "name": "CHAR_125",
+        "size": 88
+    },
+    {
+        "compressed": true,
+        "compressed_size": 521,
+        "filename": "m_level",
+        "name": "M_LEVEL",
+        "size": 1296
+    },
+    {
+        "compressed": true,
+        "compressed_size": 790,
+        "filename": "m_diff",
+        "name": "M_DIFF",
+        "size": 2064
+    },
+    {
+        "compressed": true,
+        "compressed_size": 432,
+        "filename": "i_kills",
+        "name": "I_KILLS",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 520,
+        "filename": "i_items",
+        "name": "I_ITEMS",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 674,
+        "filename": "i_secret",
+        "name": "I_SECRET",
+        "size": 1680
+    },
+    {
+        "compressed": true,
+        "compressed_size": 450,
+        "filename": "i_level",
+        "name": "I_LEVEL",
+        "size": 1168
+    },
+    {
+        "compressed": true,
+        "compressed_size": 728,
+        "filename": "i_finish",
+        "name": "I_FINISH",
+        "size": 1680
+    },
+    {
+        "compressed": true,
+        "compressed_size": 563,
+        "filename": "i_frags",
+        "name": "I_FRAGS",
+        "size": 1296
+    },
+    {
+        "compressed": true,
+        "compressed_size": 343,
+        "filename": "o_strack",
+        "name": "O_STRACK",
+        "size": 1808
+    },
+    {
+        "compressed": true,
+        "compressed_size": 53,
+        "filename": "o_slider",
+        "name": "O_SLIDER",
+        "size": 144
+    },
+    {
+        "compressed": true,
+        "compressed_size": 811,
+        "filename": "skill0",
+        "name": "SKILL0",
+        "size": 1936
+    },
+    {
+        "compressed": true,
+        "compressed_size": 970,
+        "filename": "skill1",
+        "name": "SKILL1",
+        "size": 3088
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1129,
+        "filename": "skill2",
+        "name": "SKILL2",
+        "size": 2960
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1220,
+        "filename": "skill3",
+        "name": "SKILL3",
+        "size": 3216
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1374,
+        "filename": "skill4",
+        "name": "SKILL4",
+        "size": 3088
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1031,
+        "filename": "defaults",
+        "name": "DEFAULTS",
+        "size": 2392
+    },
+    {
+        "compressed": true,
+        "compressed_size": 554,
+        "filename": "paused",
+        "name": "PAUSED",
+        "size": 1168
+    },
+    {
+        "compressed": true,
+        "compressed_size": 653,
+        "filename": "loading",
+        "name": "LOADING",
+        "size": 1360
+    },
+    {
+        "compressed": true,
+        "compressed_size": 636,
+        "filename": "face00",
+        "name": "FACE00",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 643,
+        "filename": "face01",
+        "name": "FACE01",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 643,
+        "filename": "face02",
+        "name": "FACE02",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 691,
+        "filename": "face03",
+        "name": "FACE03",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 684,
+        "filename": "face04",
+        "name": "FACE04",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 673,
+        "filename": "face05",
+        "name": "FACE05",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 628,
+        "filename": "face06",
+        "name": "FACE06",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 619,
+        "filename": "face07",
+        "name": "FACE07",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 646,
+        "filename": "face08",
+        "name": "FACE08",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 654,
+        "filename": "face09",
+        "name": "FACE09",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 653,
+        "filename": "face10",
+        "name": "FACE10",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 691,
+        "filename": "face11",
+        "name": "FACE11",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 693,
+        "filename": "face12",
+        "name": "FACE12",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 676,
+        "filename": "face13",
+        "name": "FACE13",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 660,
+        "filename": "face14",
+        "name": "FACE14",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 661,
+        "filename": "face15",
+        "name": "FACE15",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 679,
+        "filename": "face16",
+        "name": "FACE16",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 645,
+        "filename": "face17",
+        "name": "FACE17",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 655,
+        "filename": "face18",
+        "name": "FACE18",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 657,
+        "filename": "face19",
+        "name": "FACE19",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 653,
+        "filename": "face20",
+        "name": "FACE20",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 678,
+        "filename": "face21",
+        "name": "FACE21",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 658,
+        "filename": "face22",
+        "name": "FACE22",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 657,
+        "filename": "face23",
+        "name": "FACE23",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 682,
+        "filename": "face24",
+        "name": "FACE24",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 690,
+        "filename": "face25",
+        "name": "FACE25",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 680,
+        "filename": "face26",
+        "name": "FACE26",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 664,
+        "filename": "face27",
+        "name": "FACE27",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 663,
+        "filename": "face28",
+        "name": "FACE28",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 687,
+        "filename": "face29",
+        "name": "FACE29",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 665,
+        "filename": "face30",
+        "name": "FACE30",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 668,
+        "filename": "face31",
+        "name": "FACE31",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 700,
+        "filename": "face32",
+        "name": "FACE32",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 704,
+        "filename": "face33",
+        "name": "FACE33",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 694,
+        "filename": "face34",
+        "name": "FACE34",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 673,
+        "filename": "face35",
+        "name": "FACE35",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 666,
+        "filename": "face36",
+        "name": "FACE36",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 709,
+        "filename": "face37",
+        "name": "FACE37",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 674,
+        "filename": "face38",
+        "name": "FACE38",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 683,
+        "filename": "face39",
+        "name": "FACE39",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 636,
+        "filename": "face40",
+        "name": "FACE40",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 665,
+        "filename": "face41",
+        "name": "FACE41",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 689,
+        "filename": "stsplat0",
+        "name": "STSPLAT0",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 895,
+        "filename": "stsplat1",
+        "name": "STSPLAT1",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 822,
+        "filename": "stsplat2",
+        "name": "STSPLAT2",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 703,
+        "filename": "stsplat3",
+        "name": "STSPLAT3",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 619,
+        "filename": "stsplat4",
+        "name": "STSPLAT4",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 618,
+        "filename": "stsplat5",
+        "name": "STSPLAT5",
+        "size": 1040
+    },
+    {
+        "compressed": true,
+        "compressed_size": 4105,
+        "filename": "m_doom",
+        "name": "M_DOOM",
+        "size": 8208
+    },
+    {
+        "compressed": true,
+        "compressed_size": 350,
+        "filename": "m_skull1",
+        "name": "M_SKULL1",
+        "size": 592
+    },
+    {
+        "compressed": true,
+        "compressed_size": 353,
+        "filename": "m_skull2",
+        "name": "M_SKULL2",
+        "size": 592
+    },
+    {
+        "name": "DS_START",
+        "virtual": true
+    },
+    {
+        "filename": "barexp",
+        "name": "BAREXP",
+        "size": 18620
+    },
+    {
+        "filename": "bfg",
+        "name": "BFG",
+        "size": 18279
+    },
+    {
+        "filename": "bgact",
+        "name": "BGACT",
+        "size": 10052
+    },
+    {
+        "filename": "bgdth1",
+        "name": "BGDTH1",
+        "size": 7149
+    },
+    {
+        "filename": "bgdth2",
+        "name": "BGDTH2",
+        "size": 9339
+    },
+    {
+        "filename": "bgsit1",
+        "name": "BGSIT1",
+        "size": 13654
+    },
+    {
+        "filename": "bgsit2",
+        "name": "BGSIT2",
+        "size": 16103
+    },
+    {
+        "filename": "brsdth",
+        "name": "BRSDTH",
+        "size": 11063
+    },
+    {
+        "filename": "brssit",
+        "name": "BRSSIT",
+        "size": 13790
+    },
+    {
+        "filename": "cacdth",
+        "name": "CACDTH",
+        "size": 10362
+    },
+    {
+        "filename": "cacsit",
+        "name": "CACSIT",
+        "size": 17219
+    },
+    {
+        "filename": "claw",
+        "name": "CLAW",
+        "size": 6432
+    },
+    {
+        "filename": "dmact",
+        "name": "DMACT",
+        "size": 11877
+    },
+    {
+        "filename": "dmpain",
+        "name": "DMPAIN",
+        "size": 9539
+    },
+    {
+        "filename": "dorcls",
+        "name": "DORCLS",
+        "size": 13910
+    },
+    {
+        "filename": "doropn",
+        "name": "DOROPN",
+        "size": 13844
+    },
+    {
+        "filename": "firsht",
+        "name": "FIRSHT",
+        "size": 14768
+    },
+    {
+        "filename": "firxpl",
+        "name": "FIRXPL",
+        "size": 11721
+    },
+    {
+        "filename": "itemup",
+        "name": "ITEMUP",
+        "size": 2291
+    },
+    {
+        "filename": "itmbk",
+        "name": "ITMBK",
+        "size": 11203
+    },
+    {
+        "filename": "noway",
+        "name": "NOWAY",
+        "size": 3938
+    },
+    {
+        "filename": "oof",
+        "name": "OOF",
+        "size": 3938
+    },
+    {
+        "filename": "pistol",
+        "name": "PISTOL",
+        "size": 5689
+    },
+    {
+        "filename": "plasma",
+        "name": "PLASMA",
+        "size": 5722
+    },
+    {
+        "filename": "pldeth",
+        "name": "PLDETH",
+        "size": 11040
+    },
+    {
+        "filename": "plpain",
+        "name": "PLPAIN",
+        "size": 15180
+    },
+    {
+        "filename": "podth1",
+        "name": "PODTH1",
+        "size": 12991
+    },
+    {
+        "filename": "podth2",
+        "name": "PODTH2",
+        "size": 9362
+    },
+    {
+        "filename": "popain",
+        "name": "POPAIN",
+        "size": 8663
+    },
+    {
+        "filename": "posact",
+        "name": "POSACT",
+        "size": 10802
+    },
+    {
+        "filename": "posit1",
+        "name": "POSIT1",
+        "size": 5362
+    },
+    {
+        "filename": "posit2",
+        "name": "POSIT2",
+        "size": 11306
+    },
+    {
+        "filename": "pstart",
+        "name": "PSTART",
+        "size": 8256
+    },
+    {
+        "filename": "pstop",
+        "name": "PSTOP",
+        "size": 6686
+    },
+    {
+        "filename": "punch",
+        "name": "PUNCH",
+        "size": 2524
+    },
+    {
+        "filename": "rlaunc",
+        "name": "RLAUNC",
+        "size": 15511
+    },
+    {
+        "filename": "rxplod",
+        "name": "RXPLOD",
+        "size": 14503
+    },
+    {
+        "filename": "sawful",
+        "name": "SAWFUL",
+        "size": 18124
+    },
+    {
+        "filename": "sawhit",
+        "name": "SAWHIT",
+        "size": 8038
+    },
+    {
+        "filename": "sawidl",
+        "name": "SAWIDL",
+        "size": 7559
+    },
+    {
+        "filename": "sawup",
+        "name": "SAWUP",
+        "size": 16317
+    },
+    {
+        "filename": "sgcock",
+        "name": "SGCOCK",
+        "size": 5926
+    },
+    {
+        "filename": "sgtatk",
+        "name": "SGTATK",
+        "size": 9378
+    },
+    {
+        "filename": "sgtdth",
+        "name": "SGTDTH",
+        "size": 12279
+    },
+    {
+        "filename": "sgtsit",
+        "name": "SGTSIT",
+        "size": 11192
+    },
+    {
+        "filename": "shotgn",
+        "name": "SHOTGN",
+        "size": 9473
+    },
+    {
+        "filename": "sklatk",
+        "name": "SKLATK",
+        "size": 8830
+    },
+    {
+        "filename": "skldth",
+        "name": "SKLDTH",
+        "size": 3938
+    },
+    {
+        "filename": "slop",
+        "name": "SLOP",
+        "size": 11146
+    },
+    {
+        "filename": "stnmov",
+        "name": "STNMOV",
+        "size": 2987
+    },
+    {
+        "filename": "swtchn",
+        "name": "SWTCHN",
+        "size": 6283
+    },
+    {
+        "filename": "swtchx",
+        "name": "SWTCHX",
+        "size": 5431
+    },
+    {
+        "filename": "telept",
+        "name": "TELEPT",
+        "size": 15512
+    },
+    {
+        "filename": "wpnup",
+        "name": "WPNUP",
+        "size": 5903
+    },
+    {
+        "name": "DS_END",
+        "virtual": true
+    },
+    {
+        "name": "T_START",
+        "virtual": true
+    },
+    {
+        "filename": "bigdoor2",
+        "name": "BIGDOOR2",
+        "size": 16704
+    },
+    {
+        "filename": "bigdoor6",
+        "name": "BIGDOOR6",
+        "size": 7488
+    },
+    {
+        "filename": "brnpois",
+        "name": "BRNPOIS",
+        "size": 8512
+    },
+    {
+        "filename": "browngrn",
+        "name": "BROWNGRN",
+        "size": 8512
+    },
+    {
+        "filename": "brown1",
+        "name": "BROWN1",
+        "size": 8512
+    },
+    {
+        "filename": "compspan",
+        "name": "COMPSPAN",
+        "size": 4416
+    },
+    {
+        "filename": "comptall",
+        "name": "COMPTALL",
+        "size": 16704
+    },
+    {
+        "filename": "crate1",
+        "name": "CRATE1",
+        "size": 8512
+    },
+    {
+        "filename": "cratelit",
+        "name": "CRATELIT",
+        "size": 8512
+    },
+    {
+        "filename": "cratiny",
+        "name": "CRATINY",
+        "size": 1344
+    },
+    {
+        "filename": "door1",
+        "name": "DOOR1",
+        "size": 4928
+    },
+    {
+        "filename": "door3",
+        "name": "DOOR3",
+        "size": 4928
+    },
+    {
+        "filename": "doorblu",
+        "name": "DOORBLU",
+        "size": 1344
+    },
+    {
+        "filename": "doorred",
+        "name": "DOORRED",
+        "size": 1344
+    },
+    {
+        "filename": "doorstop",
+        "name": "DOORSTOP",
+        "size": 1344
+    },
+    {
+        "filename": "doortrak",
+        "name": "DOORTRAK",
+        "size": 1344
+    },
+    {
+        "filename": "dooryel",
+        "name": "DOORYEL",
+        "size": 1344
+    },
+    {
+        "filename": "exitdoor",
+        "name": "EXITDOOR",
+        "size": 9536
+    },
+    {
+        "filename": "exitsign",
+        "name": "EXITSIGN",
+        "size": 1344
+    },
+    {
+        "filename": "gray5",
+        "name": "GRAY5",
+        "size": 8512
+    },
+    {
+        "filename": "gstsatyr",
+        "name": "GSTSATYR",
+        "size": 8512
+    },
+    {
+        "filename": "lite5",
+        "name": "LITE5",
+        "size": 2368
+    },
+    {
+        "filename": "marbfac3",
+        "name": "MARBFAC3",
+        "size": 16704
+    },
+    {
+        "filename": "metal",
+        "name": "METAL",
+        "size": 8512
+    },
+    {
+        "filename": "metal1",
+        "name": "METAL1",
+        "size": 8512
+    },
+    {
+        "filename": "nuke24",
+        "name": "NUKE24",
+        "size": 1856
+    },
+    {
+        "filename": "pipe2",
+        "name": "PIPE2",
+        "size": 8512
+    },
+    {
+        "filename": "plat1",
+        "name": "PLAT1",
+        "size": 16704
+    },
+    {
+        "filename": "shawn2",
+        "name": "SHAWN2",
+        "size": 8512
+    },
+    {
+        "filename": "skinedge",
+        "name": "SKINEDGE",
+        "size": 8512
+    },
+    {
+        "filename": "sky1",
+        "name": "SKY1",
+        "size": 33088
+    },
+    {
+        "filename": "sky2",
+        "name": "SKY2",
+        "size": 33088
+    },
+    {
+        "filename": "sky3",
+        "name": "SKY3",
+        "size": 33088
+    },
+    {
+        "filename": "sladwall",
+        "name": "SLADWALL",
+        "size": 8512
+    },
+    {
+        "filename": "sp_dude4",
+        "name": "SP_DUDE4",
+        "size": 8512
+    },
+    {
+        "filename": "sp_hot1",
+        "name": "SP_HOT1",
+        "size": 8512
+    },
+    {
+        "filename": "step6",
+        "name": "STEP6",
+        "size": 832
+    },
+    {
+        "filename": "support2",
+        "name": "SUPPORT2",
+        "size": 8512
+    },
+    {
+        "filename": "support3",
+        "name": "SUPPORT3",
+        "size": 8512
+    },
+    {
+        "filename": "sw1brn1",
+        "name": "SW1BRN1",
+        "size": 8512
+    },
+    {
+        "filename": "sw1garg",
+        "name": "SW1GARG",
+        "size": 8512
+    },
+    {
+        "filename": "sw1gston",
+        "name": "SW1GSTON",
+        "size": 8512
+    },
+    {
+        "filename": "sw1hot",
+        "name": "SW1HOT",
+        "size": 8512
+    },
+    {
+        "filename": "sw1wood",
+        "name": "SW1WOOD",
+        "size": 8512
+    },
+    {
+        "filename": "sw2brn1",
+        "name": "SW2BRN1",
+        "size": 8512
+    },
+    {
+        "filename": "sw2garg",
+        "name": "SW2GARG",
+        "size": 8512
+    },
+    {
+        "filename": "sw2gston",
+        "name": "SW2GSTON",
+        "size": 8512
+    },
+    {
+        "filename": "sw2hot",
+        "name": "SW2HOT",
+        "size": 8512
+    },
+    {
+        "filename": "sw2wood",
+        "name": "SW2WOOD",
+        "size": 8512
+    },
+    {
+        "filename": "brick01",
+        "name": "BRICK01",
+        "size": 8512
+    },
+    {
+        "filename": "brick02",
+        "name": "BRICK02",
+        "size": 8512
+    },
+    {
+        "filename": "brick03",
+        "name": "BRICK03",
+        "size": 8512
+    },
+    {
+        "filename": "dface01",
+        "name": "DFACE01",
+        "size": 16704
+    },
+    {
+        "filename": "marble01",
+        "name": "MARBLE01",
+        "size": 8512
+    },
+    {
+        "filename": "marble02",
+        "name": "MARBLE02",
+        "size": 8512
+    },
+    {
+        "filename": "marble03",
+        "name": "MARBLE03",
+        "size": 8512
+    },
+    {
+        "filename": "marble04",
+        "name": "MARBLE04",
+        "size": 8512
+    },
+    {
+        "filename": "wood01",
+        "name": "WOOD01",
+        "size": 8512
+    },
+    {
+        "filename": "ash01",
+        "name": "ASH01",
+        "size": 8512
+    },
+    {
+        "filename": "cement01",
+        "name": "CEMENT01",
+        "size": 8512
+    },
+    {
+        "filename": "cblue01",
+        "name": "CBLUE01",
+        "size": 8512
+    },
+    {
+        "filename": "tech01",
+        "name": "TECH01",
+        "size": 8512
+    },
+    {
+        "filename": "tech02",
+        "name": "TECH02",
+        "size": 8512
+    },
+    {
+        "filename": "tech03",
+        "name": "TECH03",
+        "size": 8512
+    },
+    {
+        "filename": "tech04",
+        "name": "TECH04",
+        "size": 8512
+    },
+    {
+        "filename": "skin01",
+        "name": "SKIN01",
+        "size": 8512
+    },
+    {
+        "filename": "skin02",
+        "name": "SKIN02",
+        "size": 8512
+    },
+    {
+        "filename": "skin03",
+        "name": "SKIN03",
+        "size": 8512
+    },
+    {
+        "filename": "skulls01",
+        "name": "SKULLS01",
+        "size": 8512
+    },
+    {
+        "filename": "stwar01",
+        "name": "STWAR01",
+        "size": 4416
+    },
+    {
+        "filename": "stwar02",
+        "name": "STWAR02",
+        "size": 4416
+    },
+    {
+        "filename": "comtal02",
+        "name": "COMTAL02",
+        "size": 8512
+    },
+    {
+        "filename": "sw1star",
+        "name": "SW1STAR",
+        "size": 4416
+    },
+    {
+        "filename": "sw2star",
+        "name": "SW2STAR",
+        "size": 4416
+    },
+    {
+        "name": "T_END",
+        "virtual": true
+    },
+    {
+        "name": "F_START",
+        "virtual": true
+    },
+    {
+        "filename": "flat14",
+        "name": "FLAT14",
+        "size": 4096
+    },
+    {
+        "filename": "flat23",
+        "name": "FLAT23",
+        "size": 4096
+    },
+    {
+        "filename": "flat5_2",
+        "name": "FLAT5_2",
+        "size": 4096
+    },
+    {
+        "filename": "flat5_4",
+        "name": "FLAT5_4",
+        "size": 4096
+    },
+    {
+        "filename": "nukage1",
+        "name": "NUKAGE1",
+        "size": 4096
+    },
+    {
+        "filename": "nukage2",
+        "name": "NUKAGE2",
+        "size": 4096
+    },
+    {
+        "filename": "nukage3",
+        "name": "NUKAGE3",
+        "size": 4096
+    },
+    {
+        "filename": "floor0_1",
+        "name": "FLOOR0_1",
+        "size": 4096
+    },
+    {
+        "filename": "floor0_3",
+        "name": "FLOOR0_3",
+        "size": 4096
+    },
+    {
+        "filename": "floor0_6",
+        "name": "FLOOR0_6",
+        "size": 4096
+    },
+    {
+        "filename": "floor3_3",
+        "name": "FLOOR3_3",
+        "size": 4096
+    },
+    {
+        "filename": "floor4_6",
+        "name": "FLOOR4_6",
+        "size": 4096
+    },
+    {
+        "filename": "floor4_8",
+        "name": "FLOOR4_8",
+        "size": 4096
+    },
+    {
+        "filename": "floor5_4",
+        "name": "FLOOR5_4",
+        "size": 4096
+    },
+    {
+        "filename": "step1",
+        "name": "STEP1",
+        "size": 4096
+    },
+    {
+        "filename": "step2",
+        "name": "STEP2",
+        "size": 4096
+    },
+    {
+        "filename": "floor6_1",
+        "name": "FLOOR6_1",
+        "size": 4096
+    },
+    {
+        "filename": "floor6_2",
+        "name": "FLOOR6_2",
+        "size": 4096
+    },
+    {
+        "filename": "tlite6_4",
+        "name": "TLITE6_4",
+        "size": 4096
+    },
+    {
+        "filename": "tlite6_6",
+        "name": "TLITE6_6",
+        "size": 4096
+    },
+    {
+        "filename": "floor7_1",
+        "name": "FLOOR7_1",
+        "size": 4096
+    },
+    {
+        "filename": "floor7_2",
+        "name": "FLOOR7_2",
+        "size": 4096
+    },
+    {
+        "filename": "mflr8_1",
+        "name": "MFLR8_1",
+        "size": 4096
+    },
+    {
+        "filename": "mflr8_4",
+        "name": "MFLR8_4",
+        "size": 4096
+    },
+    {
+        "filename": "ceil3_2",
+        "name": "CEIL3_2",
+        "size": 4096
+    },
+    {
+        "filename": "ceil3_4",
+        "name": "CEIL3_4",
+        "size": 4096
+    },
+    {
+        "filename": "ceil5_1",
+        "name": "CEIL5_1",
+        "size": 4096
+    },
+    {
+        "filename": "cratop1",
+        "name": "CRATOP1",
+        "size": 4096
+    },
+    {
+        "filename": "cratop2",
+        "name": "CRATOP2",
+        "size": 4096
+    },
+    {
+        "filename": "flat4",
+        "name": "FLAT4",
+        "size": 4096
+    },
+    {
+        "filename": "flat8",
+        "name": "FLAT8",
+        "size": 4096
+    },
+    {
+        "filename": "gate3",
+        "name": "GATE3",
+        "size": 4096
+    },
+    {
+        "filename": "gate4",
+        "name": "GATE4",
+        "size": 4096
+    },
+    {
+        "filename": "fwater1",
+        "name": "FWATER1",
+        "size": 4096
+    },
+    {
+        "filename": "fwater2",
+        "name": "FWATER2",
+        "size": 4096
+    },
+    {
+        "filename": "fwater3",
+        "name": "FWATER3",
+        "size": 4096
+    },
+    {
+        "filename": "fwater4",
+        "name": "FWATER4",
+        "size": 4096
+    },
+    {
+        "filename": "lava1",
+        "name": "LAVA1",
+        "size": 4096
+    },
+    {
+        "filename": "lava2",
+        "name": "LAVA2",
+        "size": 4096
+    },
+    {
+        "filename": "lava3",
+        "name": "LAVA3",
+        "size": 4096
+    },
+    {
+        "filename": "lava4",
+        "name": "LAVA4",
+        "size": 4096
+    },
+    {
+        "filename": "grass",
+        "name": "GRASS",
+        "size": 4096
+    },
+    {
+        "filename": "rocks",
+        "name": "ROCKS",
+        "size": 4096
+    },
+    {
+        "name": "F_END",
+        "virtual": true
+    },
+    {
+        "filename": "texture1",
+        "name": "TEXTURE1",
+        "size": 2668
+    },
+    {
+        "filename": "colormap",
+        "name": "COLORMAP",
+        "size": 16384
+    },
+    {
+        "filename": "playpals",
+        "name": "PLAYPALS",
+        "size": 11520
+    },
+    {
+        "compressed": true,
+        "compressed_size": 540,
+        "filename": "demo1",
+        "name": "DEMO1",
+        "size": 3004
+    },
+    {
+        "compressed": true,
+        "compressed_size": 661,
+        "filename": "demo2",
+        "name": "DEMO2",
+        "size": 3944
+    },
+    {
+        "name": "MAP01",
+        "virtual": true
+    },
+    {
+        "compressed": true,
+        "compressed_size": 660,
+        "filename": "things",
+        "name": "THINGS",
+        "size": 910
+    },
+    {
+        "compressed": true,
+        "compressed_size": 3740,
+        "filename": "linedefs",
+        "name": "LINEDEFS",
+        "size": 6034
+    },
+    {
+        "compressed": true,
+        "compressed_size": 2983,
+        "filename": "sidedefs",
+        "name": "SIDEDEFS",
+        "size": 17400
+    },
+    {
+        "filename": "vertexes",
+        "name": "VERTEXES",
+        "size": 3192
+    },
+    {
+        "compressed": true,
+        "compressed_size": 5217,
+        "filename": "segs",
+        "name": "SEGS",
+        "size": 7620
+    },
+    {
+        "compressed": true,
+        "compressed_size": 688,
+        "filename": "ssectors",
+        "name": "SSECTORS",
+        "size": 816
+    },
+    {
+        "filename": "nodes",
+        "name": "NODES",
+        "size": 11368
+    },
+    {
+        "compressed": true,
+        "compressed_size": 604,
+        "filename": "sectors",
+        "name": "SECTORS",
+        "size": 2132
+    },
+    {
+        "filename": "reject",
+        "name": "REJECT",
+        "size": 841
+    },
+    {
+        "filename": "blockmap",
+        "name": "BLOCKMAP",
+        "size": 6812
+    },
+    {
+        "name": "MAP02",
+        "virtual": true
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1414,
+        "filename": "things_001",
+        "name": "THINGS",
+        "size": 2110
+    },
+    {
+        "compressed": true,
+        "compressed_size": 8293,
+        "filename": "linedefs_001",
+        "name": "LINEDEFS",
+        "size": 13272
+    },
+    {
+        "compressed": true,
+        "compressed_size": 6382,
+        "filename": "sidedefs_001",
+        "name": "SIDEDEFS",
+        "size": 36540
+    },
+    {
+        "filename": "vertexes_001",
+        "name": "VERTEXES",
+        "size": 6736
+    },
+    {
+        "compressed": true,
+        "compressed_size": 10988,
+        "filename": "segs_001",
+        "name": "SEGS",
+        "size": 15984
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1343,
+        "filename": "ssectors_001",
+        "name": "SSECTORS",
+        "size": 1588
+    },
+    {
+        "filename": "nodes_001",
+        "name": "NODES",
+        "size": 22176
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1216,
+        "filename": "sectors_001",
+        "name": "SECTORS",
+        "size": 4966
+    },
+    {
+        "filename": "reject_001",
+        "name": "REJECT",
+        "size": 4561
+    },
+    {
+        "filename": "blockmap_001",
+        "name": "BLOCKMAP",
+        "size": 11624
+    },
+    {
+        "name": "MAP03",
+        "virtual": true
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1830,
+        "filename": "things_002",
+        "name": "THINGS",
+        "size": 2820
+    },
+    {
+        "compressed": true,
+        "compressed_size": 7698,
+        "filename": "linedefs_002",
+        "name": "LINEDEFS",
+        "size": 12362
+    },
+    {
+        "compressed": true,
+        "compressed_size": 5721,
+        "filename": "sidedefs_002",
+        "name": "SIDEDEFS",
+        "size": 33900
+    },
+    {
+        "filename": "vertexes_002",
+        "name": "VERTEXES",
+        "size": 6432
+    },
+    {
+        "compressed": true,
+        "compressed_size": 10356,
+        "filename": "segs_002",
+        "name": "SEGS",
+        "size": 14772
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1267,
+        "filename": "ssectors_002",
+        "name": "SSECTORS",
+        "size": 1508
+    },
+    {
+        "filename": "nodes_002",
+        "name": "NODES",
+        "size": 21056
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1012,
+        "filename": "sectors_002",
+        "name": "SECTORS",
+        "size": 4082
+    },
+    {
+        "filename": "reject_002",
+        "name": "REJECT",
+        "size": 3082
+    },
+    {
+        "filename": "blockmap_002",
+        "name": "BLOCKMAP",
+        "size": 8490
+    },
+    {
+        "name": "MAP04",
+        "virtual": true
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1413,
+        "filename": "things_003",
+        "name": "THINGS",
+        "size": 2120
+    },
+    {
+        "compressed": true,
+        "compressed_size": 6791,
+        "filename": "linedefs_003",
+        "name": "LINEDEFS",
+        "size": 10878
+    },
+    {
+        "compressed": true,
+        "compressed_size": 4970,
+        "filename": "sidedefs_003",
+        "name": "SIDEDEFS",
+        "size": 29430
+    },
+    {
+        "filename": "vertexes_003",
+        "name": "VERTEXES",
+        "size": 5848
+    },
+    {
+        "compressed": true,
+        "compressed_size": 9055,
+        "filename": "segs_003",
+        "name": "SEGS",
+        "size": 13056
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1097,
+        "filename": "ssectors_003",
+        "name": "SSECTORS",
+        "size": 1296
+    },
+    {
+        "filename": "nodes_003",
+        "name": "NODES",
+        "size": 18088
+    },
+    {
+        "compressed": true,
+        "compressed_size": 821,
+        "filename": "sectors_003",
+        "name": "SECTORS",
+        "size": 3120
+    },
+    {
+        "filename": "reject_003",
+        "name": "REJECT",
+        "size": 1800
+    },
+    {
+        "filename": "blockmap_003",
+        "name": "BLOCKMAP",
+        "size": 7060
+    },
+    {
+        "name": "MAP05",
+        "virtual": true
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1711,
+        "filename": "things_004",
+        "name": "THINGS",
+        "size": 2640
+    },
+    {
+        "compressed": true,
+        "compressed_size": 6108,
+        "filename": "linedefs_004",
+        "name": "LINEDEFS",
+        "size": 9884
+    },
+    {
+        "compressed": true,
+        "compressed_size": 4589,
+        "filename": "sidedefs_004",
+        "name": "SIDEDEFS",
+        "size": 27060
+    },
+    {
+        "filename": "vertexes_004",
+        "name": "VERTEXES",
+        "size": 5208
+    },
+    {
+        "compressed": true,
+        "compressed_size": 8300,
+        "filename": "segs_004",
+        "name": "SEGS",
+        "size": 11892
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1095,
+        "filename": "ssectors_004",
+        "name": "SSECTORS",
+        "size": 1308
+    },
+    {
+        "filename": "nodes_004",
+        "name": "NODES",
+        "size": 18256
+    },
+    {
+        "compressed": true,
+        "compressed_size": 848,
+        "filename": "sectors_004",
+        "name": "SECTORS",
+        "size": 3120
+    },
+    {
+        "filename": "reject_004",
+        "name": "REJECT",
+        "size": 1800
+    },
+    {
+        "filename": "blockmap_004",
+        "name": "BLOCKMAP",
+        "size": 7732
+    },
+    {
+        "name": "MAP06",
+        "virtual": true
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1908,
+        "filename": "things_005",
+        "name": "THINGS",
+        "size": 2890
+    },
+    {
+        "compressed": true,
+        "compressed_size": 8397,
+        "filename": "linedefs_005",
+        "name": "LINEDEFS",
+        "size": 13650
+    },
+    {
+        "compressed": true,
+        "compressed_size": 6073,
+        "filename": "sidedefs_005",
+        "name": "SIDEDEFS",
+        "size": 36720
+    },
+    {
+        "filename": "vertexes_005",
+        "name": "VERTEXES",
+        "size": 7032
+    },
+    {
+        "compressed": true,
+        "compressed_size": 11046,
+        "filename": "segs_005",
+        "name": "SEGS",
+        "size": 15888
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1412,
+        "filename": "ssectors_005",
+        "name": "SSECTORS",
+        "size": 1684
+    },
+    {
+        "filename": "nodes_005",
+        "name": "NODES",
+        "size": 23520
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1031,
+        "filename": "sectors_005",
+        "name": "SECTORS",
+        "size": 4472
+    },
+    {
+        "filename": "reject_005",
+        "name": "REJECT",
+        "size": 3698
+    },
+    {
+        "filename": "blockmap_005",
+        "name": "BLOCKMAP",
+        "size": 12816
+    },
+    {
+        "name": "MAP07",
+        "virtual": true
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1790,
+        "filename": "things_006",
+        "name": "THINGS",
+        "size": 2800
+    },
+    {
+        "compressed": true,
+        "compressed_size": 7263,
+        "filename": "linedefs_006",
+        "name": "LINEDEFS",
+        "size": 11788
+    },
+    {
+        "compressed": true,
+        "compressed_size": 5433,
+        "filename": "sidedefs_006",
+        "name": "SIDEDEFS",
+        "size": 31860
+    },
+    {
+        "filename": "vertexes_006",
+        "name": "VERTEXES",
+        "size": 6336
+    },
+    {
+        "compressed": true,
+        "compressed_size": 9940,
+        "filename": "segs_006",
+        "name": "SEGS",
+        "size": 14196
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1295,
+        "filename": "ssectors_006",
+        "name": "SSECTORS",
+        "size": 1544
+    },
+    {
+        "filename": "nodes_006",
+        "name": "NODES",
+        "size": 21560
+    },
+    {
+        "compressed": true,
+        "compressed_size": 919,
+        "filename": "sectors_006",
+        "name": "SECTORS",
+        "size": 3666
+    },
+    {
+        "filename": "reject_006",
+        "name": "REJECT",
+        "size": 2486
+    },
+    {
+        "filename": "blockmap_006",
+        "name": "BLOCKMAP",
+        "size": 8558
+    },
+    {
+        "name": "MAP08",
+        "virtual": true
+    },
+    {
+        "compressed": true,
+        "compressed_size": 704,
+        "filename": "things_007",
+        "name": "THINGS",
+        "size": 1190
+    },
+    {
+        "compressed": true,
+        "compressed_size": 3263,
+        "filename": "linedefs_007",
+        "name": "LINEDEFS",
+        "size": 5222
+    },
+    {
+        "compressed": true,
+        "compressed_size": 2617,
+        "filename": "sidedefs_007",
+        "name": "SIDEDEFS",
+        "size": 15870
+    },
+    {
+        "filename": "vertexes_007",
+        "name": "VERTEXES",
+        "size": 2576
+    },
+    {
+        "compressed": true,
+        "compressed_size": 4479,
+        "filename": "segs_007",
+        "name": "SEGS",
+        "size": 6708
+    },
+    {
+        "compressed": true,
+        "compressed_size": 524,
+        "filename": "ssectors_007",
+        "name": "SSECTORS",
+        "size": 612
+    },
+    {
+        "filename": "nodes_007",
+        "name": "NODES",
+        "size": 8512
+    },
+    {
+        "compressed": true,
+        "compressed_size": 567,
+        "filename": "sectors_007",
+        "name": "SECTORS",
+        "size": 2132
+    },
+    {
+        "filename": "reject_007",
+        "name": "REJECT",
+        "size": 841
+    },
+    {
+        "filename": "blockmap_007",
+        "name": "BLOCKMAP",
+        "size": 7818
+    },
+    {
+        "name": "MAP09",
+        "virtual": true
+    },
+    {
+        "compressed": true,
+        "compressed_size": 816,
+        "filename": "things_008",
+        "name": "THINGS",
+        "size": 1150
+    },
+    {
+        "compressed": true,
+        "compressed_size": 3280,
+        "filename": "linedefs_008",
+        "name": "LINEDEFS",
+        "size": 5236
+    },
+    {
+        "compressed": true,
+        "compressed_size": 2551,
+        "filename": "sidedefs_008",
+        "name": "SIDEDEFS",
+        "size": 14910
+    },
+    {
+        "filename": "vertexes_008",
+        "name": "VERTEXES",
+        "size": 2664
+    },
+    {
+        "compressed": true,
+        "compressed_size": 4373,
+        "filename": "segs_008",
+        "name": "SEGS",
+        "size": 6480
+    },
+    {
+        "compressed": true,
+        "compressed_size": 547,
+        "filename": "ssectors_008",
+        "name": "SSECTORS",
+        "size": 644
+    },
+    {
+        "filename": "nodes_008",
+        "name": "NODES",
+        "size": 8960
+    },
+    {
+        "compressed": true,
+        "compressed_size": 659,
+        "filename": "sectors_008",
+        "name": "SECTORS",
+        "size": 2288
+    },
+    {
+        "filename": "reject_008",
+        "name": "REJECT",
+        "size": 968
+    },
+    {
+        "filename": "blockmap_008",
+        "name": "BLOCKMAP",
+        "size": 3628
+    },
+    {
+        "name": "MAP10",
+        "virtual": true
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1077,
+        "filename": "things_009",
+        "name": "THINGS",
+        "size": 1530
+    },
+    {
+        "compressed": true,
+        "compressed_size": 7198,
+        "filename": "linedefs_009",
+        "name": "LINEDEFS",
+        "size": 11522
+    },
+    {
+        "compressed": true,
+        "compressed_size": 5363,
+        "filename": "sidedefs_009",
+        "name": "SIDEDEFS",
+        "size": 31530
+    },
+    {
+        "filename": "vertexes_009",
+        "name": "VERTEXES",
+        "size": 6160
+    },
+    {
+        "compressed": true,
+        "compressed_size": 9346,
+        "filename": "segs_009",
+        "name": "SEGS",
+        "size": 13632
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1213,
+        "filename": "ssectors_009",
+        "name": "SSECTORS",
+        "size": 1448
+    },
+    {
+        "filename": "nodes_009",
+        "name": "NODES",
+        "size": 20216
+    },
+    {
+        "compressed": true,
+        "compressed_size": 839,
+        "filename": "sectors_009",
+        "name": "SECTORS",
+        "size": 3354
+    },
+    {
+        "filename": "reject_009",
+        "name": "REJECT",
+        "size": 2081
+    },
+    {
+        "filename": "blockmap_009",
+        "name": "BLOCKMAP",
+        "size": 9566
+    },
+    {
+        "name": "MAP11",
+        "virtual": true
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1288,
+        "filename": "things_010",
+        "name": "THINGS",
+        "size": 1790
+    },
+    {
+        "compressed": true,
+        "compressed_size": 6265,
+        "filename": "linedefs_010",
+        "name": "LINEDEFS",
+        "size": 10178
+    },
+    {
+        "compressed": true,
+        "compressed_size": 4524,
+        "filename": "sidedefs_010",
+        "name": "SIDEDEFS",
+        "size": 25980
+    },
+    {
+        "filename": "vertexes_010",
+        "name": "VERTEXES",
+        "size": 5424
+    },
+    {
+        "compressed": true,
+        "compressed_size": 7743,
+        "filename": "segs_010",
+        "name": "SEGS",
+        "size": 11208
+    },
+    {
+        "compressed": true,
+        "compressed_size": 949,
+        "filename": "ssectors_010",
+        "name": "SSECTORS",
+        "size": 1120
+    },
+    {
+        "filename": "nodes_010",
+        "name": "NODES",
+        "size": 15624
+    },
+    {
+        "compressed": true,
+        "compressed_size": 700,
+        "filename": "sectors_010",
+        "name": "SECTORS",
+        "size": 2652
+    },
+    {
+        "filename": "reject_010",
+        "name": "REJECT",
+        "size": 1301
+    },
+    {
+        "filename": "blockmap_010",
+        "name": "BLOCKMAP",
+        "size": 6124
+    },
+    {
+        "name": "MAP12",
+        "virtual": true
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1409,
+        "filename": "things_011",
+        "name": "THINGS",
+        "size": 2120
+    },
+    {
+        "compressed": true,
+        "compressed_size": 8747,
+        "filename": "linedefs_011",
+        "name": "LINEDEFS",
+        "size": 13860
+    },
+    {
+        "compressed": true,
+        "compressed_size": 6543,
+        "filename": "sidedefs_011",
+        "name": "SIDEDEFS",
+        "size": 37710
+    },
+    {
+        "filename": "vertexes_011",
+        "name": "VERTEXES",
+        "size": 7392
+    },
+    {
+        "compressed": true,
+        "compressed_size": 11589,
+        "filename": "segs_011",
+        "name": "SEGS",
+        "size": 16560
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1409,
+        "filename": "ssectors_011",
+        "name": "SSECTORS",
+        "size": 1680
+    },
+    {
+        "filename": "nodes_011",
+        "name": "NODES",
+        "size": 23464
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1184,
+        "filename": "sectors_011",
+        "name": "SECTORS",
+        "size": 4498
+    },
+    {
+        "filename": "reject_011",
+        "name": "REJECT",
+        "size": 3742
+    },
+    {
+        "filename": "blockmap_011",
+        "name": "BLOCKMAP",
+        "size": 9752
+    },
+    {
+        "name": "MAP13",
+        "virtual": true
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1402,
+        "filename": "things_012",
+        "name": "THINGS",
+        "size": 2150
+    },
+    {
+        "compressed": true,
+        "compressed_size": 6099,
+        "filename": "linedefs_012",
+        "name": "LINEDEFS",
+        "size": 9758
+    },
+    {
+        "compressed": true,
+        "compressed_size": 4554,
+        "filename": "sidedefs_012",
+        "name": "SIDEDEFS",
+        "size": 25710
+    },
+    {
+        "filename": "vertexes_012",
+        "name": "VERTEXES",
+        "size": 5016
+    },
+    {
+        "compressed": true,
+        "compressed_size": 7682,
+        "filename": "segs_012",
+        "name": "SEGS",
+        "size": 11148
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1011,
+        "filename": "ssectors_012",
+        "name": "SSECTORS",
+        "size": 1200
+    },
+    {
+        "filename": "nodes_012",
+        "name": "NODES",
+        "size": 16744
+    },
+    {
+        "compressed": true,
+        "compressed_size": 879,
+        "filename": "sectors_012",
+        "name": "SECTORS",
+        "size": 3328
+    },
+    {
+        "filename": "reject_012",
+        "name": "REJECT",
+        "size": 2048
+    },
+    {
+        "filename": "blockmap_012",
+        "name": "BLOCKMAP",
+        "size": 8116
+    },
+    {
+        "name": "MAP14",
+        "virtual": true
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1290,
+        "filename": "things_013",
+        "name": "THINGS",
+        "size": 1970
+    },
+    {
+        "compressed": true,
+        "compressed_size": 6460,
+        "filename": "linedefs_013",
+        "name": "LINEDEFS",
+        "size": 10514
+    },
+    {
+        "compressed": true,
+        "compressed_size": 4461,
+        "filename": "sidedefs_013",
+        "name": "SIDEDEFS",
+        "size": 26640
+    },
+    {
+        "filename": "vertexes_013",
+        "name": "VERTEXES",
+        "size": 5616
+    },
+    {
+        "compressed": true,
+        "compressed_size": 7993,
+        "filename": "segs_013",
+        "name": "SEGS",
+        "size": 11508
+    },
+    {
+        "compressed": true,
+        "compressed_size": 953,
+        "filename": "ssectors_013",
+        "name": "SSECTORS",
+        "size": 1124
+    },
+    {
+        "filename": "nodes_013",
+        "name": "NODES",
+        "size": 15680
+    },
+    {
+        "compressed": true,
+        "compressed_size": 707,
+        "filename": "sectors_013",
+        "name": "SECTORS",
+        "size": 2886
+    },
+    {
+        "filename": "reject_013",
+        "name": "REJECT",
+        "size": 1541
+    },
+    {
+        "filename": "blockmap_013",
+        "name": "BLOCKMAP",
+        "size": 7468
+    },
+    {
+        "name": "MAP15",
+        "virtual": true
+    },
+    {
+        "compressed": true,
+        "compressed_size": 776,
+        "filename": "things_014",
+        "name": "THINGS",
+        "size": 1120
+    },
+    {
+        "compressed": true,
+        "compressed_size": 6608,
+        "filename": "linedefs_014",
+        "name": "LINEDEFS",
+        "size": 10640
+    },
+    {
+        "compressed": true,
+        "compressed_size": 4617,
+        "filename": "sidedefs_014",
+        "name": "SIDEDEFS",
+        "size": 28200
+    },
+    {
+        "filename": "vertexes_014",
+        "name": "VERTEXES",
+        "size": 5576
+    },
+    {
+        "compressed": true,
+        "compressed_size": 8314,
+        "filename": "segs_014",
+        "name": "SEGS",
+        "size": 12108
+    },
+    {
+        "compressed": true,
+        "compressed_size": 922,
+        "filename": "ssectors_014",
+        "name": "SSECTORS",
+        "size": 1084
+    },
+    {
+        "filename": "nodes_014",
+        "name": "NODES",
+        "size": 15120
+    },
+    {
+        "compressed": true,
+        "compressed_size": 826,
+        "filename": "sectors_014",
+        "name": "SECTORS",
+        "size": 3354
+    },
+    {
+        "filename": "reject_014",
+        "name": "REJECT",
+        "size": 2081
+    },
+    {
+        "filename": "blockmap_014",
+        "name": "BLOCKMAP",
+        "size": 5480
+    },
+    {
+        "name": "MAP23",
+        "virtual": true
+    },
+    {
+        "compressed": true,
+        "compressed_size": 371,
+        "filename": "things_015",
+        "name": "THINGS",
+        "size": 550
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1359,
+        "filename": "linedefs_015",
+        "name": "LINEDEFS",
+        "size": 2170
+    },
+    {
+        "compressed": true,
+        "compressed_size": 899,
+        "filename": "sidedefs_015",
+        "name": "SIDEDEFS",
+        "size": 5070
+    },
+    {
+        "filename": "vertexes_015",
+        "name": "VERTEXES",
+        "size": 1128
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1462,
+        "filename": "segs_015",
+        "name": "SEGS",
+        "size": 2028
+    },
+    {
+        "compressed": true,
+        "compressed_size": 200,
+        "filename": "ssectors_015",
+        "name": "SSECTORS",
+        "size": 232
+    },
+    {
+        "filename": "nodes_015",
+        "name": "NODES",
+        "size": 3192
+    },
+    {
+        "compressed": true,
+        "compressed_size": 101,
+        "filename": "sectors_015",
+        "name": "SECTORS",
+        "size": 390
+    },
+    {
+        "filename": "reject_015",
+        "name": "REJECT",
+        "size": 29
+    },
+    {
+        "filename": "blockmap_015",
+        "name": "BLOCKMAP",
+        "size": 3582
+    },
+    {
+        "name": "MAP24",
+        "virtual": true
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1319,
+        "filename": "things_016",
+        "name": "THINGS",
+        "size": 2170
+    },
+    {
+        "compressed": true,
+        "compressed_size": 5746,
+        "filename": "linedefs_016",
+        "name": "LINEDEFS",
+        "size": 9156
+    },
+    {
+        "compressed": true,
+        "compressed_size": 4359,
+        "filename": "sidedefs_016",
+        "name": "SIDEDEFS",
+        "size": 27060
+    },
+    {
+        "filename": "vertexes_016",
+        "name": "VERTEXES",
+        "size": 4640
+    },
+    {
+        "compressed": true,
+        "compressed_size": 7932,
+        "filename": "segs_016",
+        "name": "SEGS",
+        "size": 11724
+    },
+    {
+        "compressed": true,
+        "compressed_size": 970,
+        "filename": "ssectors_016",
+        "name": "SSECTORS",
+        "size": 1152
+    },
+    {
+        "filename": "nodes_016",
+        "name": "NODES",
+        "size": 16072
+    },
+    {
+        "compressed": true,
+        "compressed_size": 830,
+        "filename": "sectors_016",
+        "name": "SECTORS",
+        "size": 3770
+    },
+    {
+        "filename": "reject_016",
+        "name": "REJECT",
+        "size": 2629
+    },
+    {
+        "filename": "blockmap_016",
+        "name": "BLOCKMAP",
+        "size": 6926
+    },
+    {
+        "name": "VGM_STRT",
+        "virtual": true
+    },
+    {
+        "name": "MUS_E1M1",
+        "filename": "VGM/E1M1.vgm",
+        "size": 23685
+    },
+    {
+        "name": "MUS_E1M2",
+        "filename": "VGM/E1M2.vgm",
+        "size": 17972
+    },
+    {
+        "name": "MUS_E1M3",
+        "filename": "VGM/E1M3.vgm",
+        "size": 24084
+    },
+    {
+        "name": "MUS_E1M4",
+        "filename": "VGM/E1M4.vgm",
+        "size": 25791
+    },
+    {
+        "name": "MUS_E1M5",
+        "filename": "VGM/E1M5.vgm",
+        "size": 6570
+    },
+    {
+        "name": "MUS_E1M6",
+        "filename": "VGM/E1M6.vgm",
+        "size": 10667
+    },
+    {
+        "name": "MUS_E1M7",
+        "filename": "VGM/E1M7.vgm",
+        "size": 14151
+    },
+    {
+        "name": "MUS_E1M8",
+        "filename": "VGM/E1M8.vgm",
+        "size": 106920
+    },
+    {
+        "name": "MUS_E1M9",
+        "filename": "VGM/E1M9.vgm",
+        "size": 22284
+    },
+    {
+        "name": "MUS_NTRO",
+        "filename": "VGM/Intro.vgm",
+        "size": 3091
+    },
+    {
+        "name": "VGM_END",
+        "virtual": true
+    }
+]
