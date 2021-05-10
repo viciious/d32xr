@@ -343,7 +343,7 @@ void R_SetupTextureCaches(void)
 	// functioning texture cache requires at least 8kb of ram
 	zonefree = Z_LargestFreeBlock(mainzone);
 	if (zonefree < zonemargin+flatblocksize)
-		return;
+		goto nocache;
 
 	// see how many flats we can store
 	cachezonesize = zonefree - zonemargin; // give the main zone some slack
@@ -363,6 +363,7 @@ void R_SetupTextureCaches(void)
 
 	if (numcflats + numcwalls == 0)
 	{
+nocache:
 		R_InitTexCacheZone(&r_flatscache, 0);
 		R_InitTexCacheZone(&r_wallscache, 0);
 		return;
@@ -739,6 +740,11 @@ void R_RenderPlayerView(void)
 	while (!I_RefreshCompleted())
 		;
 	t_ref_wait = I_GetTime() - t_ref_wait;
+#endif
+
+#ifdef MARS
+	while (!I_RefreshCompleted())
+		;
 #endif
 
 	/* */
