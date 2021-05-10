@@ -112,9 +112,9 @@ void S_Init(void)
 	if (num_music == 0)
 		num_music = 1; // so that num % num_music works
 
-	sfxvolume = 32;
-	musicvolume = 32;
-	oldsfxvolume = 32;
+	sfxvolume = 64;
+	musicvolume = 64;
+	oldsfxvolume = 64;
 
 	Mars_RB_ResetAll(&soundcmds);
 
