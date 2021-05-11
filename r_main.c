@@ -494,7 +494,7 @@ void R_Setup (void)
 #endif
 
 #ifdef MARS
-	extralight = player->extralight << 3;
+	//extralight = player->extralight << 3;
 	viewportbuffer = (volatile pixel_t*)I_ViewportBuffer();
 
 	palette = 0;
