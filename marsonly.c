@@ -210,10 +210,11 @@ void I_Error (char *error, ...)
 = wide pixels
 ==================== 
 */ 
-extern int t_ref_bsp, t_ref_prep, t_ref_segs, t_ref_planes, t_ref_sprites, t_ref_total, t_ref_wait;
+extern int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sprites[4], t_ref_total;
 
 void I_Update (void) 
 {
+	int i;
 	int sec;
 	int ticcount;
 	char buf[32];
@@ -223,6 +224,22 @@ void I_Update (void)
 	if (debugmode != 0)
 	{
 		int line = 5;
+		unsigned t_ref_bsp_avg = 0;
+		unsigned t_ref_segs_avg = 0;
+		unsigned t_ref_planes_avg = 0;
+		unsigned t_ref_sprites_avg = 0;
+
+		for (i = 0; i < 4; i++)
+		{
+			t_ref_bsp_avg += t_ref_bsp[i];
+			t_ref_segs_avg += t_ref_segs[i];
+			t_ref_planes_avg += t_ref_planes[i];
+			t_ref_sprites_avg += t_ref_sprites[i];
+		}
+		t_ref_bsp_avg >>= 2;
+		t_ref_segs_avg >>= 2;
+		t_ref_planes_avg >>= 2;
+		t_ref_sprites_avg >>= 2;
 
 		D_snprintf(buf, sizeof(buf), "fps:%2d", fpscount);
 		I_Print8(200, line++, buf);
@@ -231,13 +248,13 @@ void I_Update (void)
 
 		line++;
 
-		D_snprintf(buf, sizeof(buf), "b:%2d", I_FRTCounter2Msec(t_ref_bsp));
+		D_snprintf(buf, sizeof(buf), "b:%2d", I_FRTCounter2Msec(t_ref_bsp_avg));
 		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "w:%2d %2d", I_FRTCounter2Msec(t_ref_segs), lastwallcmd - viswalls);
+		D_snprintf(buf, sizeof(buf), "w:%2d %2d", I_FRTCounter2Msec(t_ref_segs_avg), lastwallcmd - viswalls);
 		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "p:%2d %2d", I_FRTCounter2Msec(t_ref_planes), lastvisplane - visplanes - 1);
+		D_snprintf(buf, sizeof(buf), "p:%2d %2d", I_FRTCounter2Msec(t_ref_planes_avg), lastvisplane - visplanes - 1);
 		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "s:%2d %2d", I_FRTCounter2Msec(t_ref_sprites), lastsprite_p - vissprites);
+		D_snprintf(buf, sizeof(buf), "s:%2d %2d", I_FRTCounter2Msec(t_ref_sprites_avg), lastsprite_p - vissprites);
 		I_Print8(200, line++, buf);
 	}
 

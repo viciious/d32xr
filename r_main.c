@@ -86,7 +86,8 @@ angle_t* xtoviewangle/*[SCREENWIDTH+1]*/ = NULL;
 /* */
 /* performance counters */
 /* */
-int t_ref_bsp, t_ref_prep, t_ref_segs, t_ref_planes, t_ref_sprites, t_ref_total, t_ref_wait;
+int t_ref_cnt = 0;
+int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sprites[4], t_ref_total;
 
 
 r_texcache_t r_flatscache, r_wallscache;
@@ -736,13 +737,6 @@ void R_RenderPlayerView(void)
 {
 	/* make sure its done now */
 #if defined(JAGUAR)
-	t_ref_wait = I_GetTime();
-	while (!I_RefreshCompleted())
-		;
-	t_ref_wait = I_GetTime() - t_ref_wait;
-#endif
-
-#ifdef MARS
 	while (!I_RefreshCompleted())
 		;
 #endif
@@ -753,38 +747,24 @@ void R_RenderPlayerView(void)
 	if (debugscreenactive)
 		I_DebugScreen();
 
-	t_ref_total = I_GetTime();
-
 	R_Setup();
 
 #ifndef JAGUAR
-	t_ref_bsp = I_GetTime();
 	R_BSP();
-	t_ref_bsp = I_GetTime() - t_ref_bsp;
 
-	t_ref_prep = I_GetTime();
 	R_WallPrep();
 	R_SpritePrep();
 	/* the rest of the refresh can be run in parallel with the next game tic */
 	if (R_LatePrep())
 		R_Cache();
-	t_ref_prep = I_GetTime() - t_ref_prep;
 
-	t_ref_segs = I_GetTime();
 	R_SegCommands();
-	t_ref_segs = I_GetTime() - t_ref_segs;
 
-	t_ref_planes = I_GetTime();
 	R_DrawPlanes();
-	t_ref_planes = I_GetTime() - t_ref_planes;
 
-	t_ref_sprites = I_GetTime();
 	R_Sprites();
-	t_ref_sprites = I_GetTime() - t_ref_sprites;
 
 	R_Update();
-
-	t_ref_total = I_GetTime() - t_ref_total;
 #else
 
 	/* start the gpu running the refresh */
@@ -806,9 +786,9 @@ void R_RenderPlayerView(void)
 
 void R_RenderPhase1(void)
 {
-	t_ref_bsp = I_GetFRTCounter();
+	t_ref_bsp[t_ref_cnt] = I_GetFRTCounter();
 	R_BSP();
-	t_ref_bsp = I_GetFRTCounter() - t_ref_bsp;
+	t_ref_bsp[t_ref_cnt] = I_GetFRTCounter() - t_ref_bsp[t_ref_cnt];
 }
 
 void R_RenderPhases2To9(void)
@@ -818,31 +798,38 @@ void R_RenderPhases2To9(void)
 	openings = openings_;
 	lastopening = openings;
 
-	t_ref_prep = I_GetFRTCounter();
+	t_ref_prep[t_ref_cnt] = I_GetFRTCounter();
 	R_WallPrep();
 	R_SpritePrep();
 	/* the rest of the refresh can be run in parallel with the next game tic */
 	if (R_LatePrep())
 		R_Cache();
-	t_ref_prep = I_GetFRTCounter() - t_ref_prep;
+	t_ref_prep[t_ref_cnt] = I_GetFRTCounter() - t_ref_prep[t_ref_cnt];
 
 	Mars_R_StopOpenPlanes();
 
-	t_ref_segs = I_GetFRTCounter();
+	t_ref_segs[t_ref_cnt] = I_GetFRTCounter();
 	R_SegCommands ();
-	t_ref_segs = I_GetFRTCounter() - t_ref_segs;
+	t_ref_segs[t_ref_cnt] = I_GetFRTCounter() - t_ref_segs[t_ref_cnt];
 
-	t_ref_planes = I_GetFRTCounter();
+	t_ref_planes[t_ref_cnt] = I_GetFRTCounter();
 	R_DrawPlanes ();
-	t_ref_planes = I_GetFRTCounter() - t_ref_planes;
+	t_ref_planes[t_ref_cnt] = I_GetFRTCounter() - t_ref_planes[t_ref_cnt];
 
-	t_ref_sprites = I_GetFRTCounter();
+	t_ref_sprites[t_ref_cnt] = I_GetFRTCounter();
 	R_Sprites ();
-	t_ref_sprites = I_GetFRTCounter() - t_ref_sprites;
+	t_ref_sprites[t_ref_cnt] = I_GetFRTCounter() - t_ref_sprites[t_ref_cnt];
 }
 
 void R_RenderPlayerView(void)
 {
+#ifdef MARS
+	while (!I_RefreshCompleted())
+		;
+#endif
+
+	t_ref_cnt = (t_ref_cnt + 1) & 3;
+
 	/* */
 	/* initial setup */
 	/* */
