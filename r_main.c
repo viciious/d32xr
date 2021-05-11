@@ -806,9 +806,9 @@ void R_RenderPlayerView(void)
 
 void R_RenderPhase1(void)
 {
-	t_ref_bsp = I_GetTime();
+	t_ref_bsp = I_GetFRTCounter();
 	R_BSP();
-	t_ref_bsp = I_GetTime() - t_ref_bsp;
+	t_ref_bsp = I_GetFRTCounter() - t_ref_bsp;
 }
 
 void R_RenderPhases2To9(void)
@@ -818,27 +818,27 @@ void R_RenderPhases2To9(void)
 	openings = openings_;
 	lastopening = openings;
 
-	t_ref_prep = I_GetTime();
+	t_ref_prep = I_GetFRTCounter();
 	R_WallPrep();
 	R_SpritePrep();
 	/* the rest of the refresh can be run in parallel with the next game tic */
 	if (R_LatePrep())
 		R_Cache();
-	t_ref_prep = I_GetTime() - t_ref_prep;
+	t_ref_prep = I_GetFRTCounter() - t_ref_prep;
 
 	Mars_R_StopOpenPlanes();
 
-	t_ref_segs = I_GetTime();
+	t_ref_segs = I_GetFRTCounter();
 	R_SegCommands ();
-	t_ref_segs = I_GetTime() - t_ref_segs;
+	t_ref_segs = I_GetFRTCounter() - t_ref_segs;
 
-	t_ref_planes = I_GetTime();
+	t_ref_planes = I_GetFRTCounter();
 	R_DrawPlanes ();
-	t_ref_planes = I_GetTime() - t_ref_planes;
+	t_ref_planes = I_GetFRTCounter() - t_ref_planes;
 
-	t_ref_sprites = I_GetTime();
+	t_ref_sprites = I_GetFRTCounter();
 	R_Sprites ();
-	t_ref_sprites = I_GetTime() - t_ref_sprites;
+	t_ref_sprites = I_GetFRTCounter() - t_ref_sprites;
 }
 
 void R_RenderPlayerView(void)

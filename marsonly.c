@@ -231,13 +231,13 @@ void I_Update (void)
 
 		line++;
 
-		D_snprintf(buf, sizeof(buf), "bsp:%2d", t_ref_bsp);
+		D_snprintf(buf, sizeof(buf), "b:%2d", I_FRTCounter2Msec(t_ref_bsp));
 		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "seg:%2d %2d", t_ref_segs, lastwallcmd - viswalls);
+		D_snprintf(buf, sizeof(buf), "w:%2d %2d", I_FRTCounter2Msec(t_ref_segs), lastwallcmd - viswalls);
 		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "pln:%2d %2d", t_ref_planes, lastvisplane - visplanes - 1);
+		D_snprintf(buf, sizeof(buf), "p:%2d %2d", I_FRTCounter2Msec(t_ref_planes), lastvisplane - visplanes - 1);
 		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "spr:%2d %2d", t_ref_sprites, lastsprite_p - vissprites);
+		D_snprintf(buf, sizeof(buf), "s:%2d %2d", I_FRTCounter2Msec(t_ref_sprites), lastsprite_p - vissprites);
 		I_Print8(200, line++, buf);
 	}
 
