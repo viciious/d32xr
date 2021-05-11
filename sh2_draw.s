@@ -43,12 +43,12 @@ do_col_loop:
         swap.w  r2,r0
         and     r4,r0           /* (frac >> 16) & heightmask */
         mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
+        add     r3,r2           /* frac += fracstep */
         and     #255,r0
         add     r0,r0
         mov.w   @(r0,r7),r0     /* dpix = dc_colormap[pix] */
-        add     r3,r2           /* frac += fracstep */
-        mov.w   r0,@r8          /* *fb = dpix */
         dt      r6              /* count-- */
+        mov.w   r0,@r8          /* *fb = dpix */
         bf/s    do_col_loop
         add     r1,r8           /* fb += SCREENWIDTH */
 
@@ -115,12 +115,12 @@ do_cnp_loop:
         mov     r2,r0
         shlr16  r0              /* frac >> 16 */
         mov.b   @(r0,r5),r0     /* pix = dc_source[frac >> 16] */
+        add     r3,r2           /* frac += fracstep */
         and     #255,r0
         add     r0,r0
         mov.w   @(r0,r7),r0     /* dpix = dc_colormap[pix] */
-        add     r3,r2           /* frac += fracstep */
-        mov.w   r0,@r8          /* *fb = dpix */
         cmp/ge  r4,r2
+        mov.w   r0,@r8          /* *fb = dpix */
         bf      1f
         /* if (frac >= heightmask) */
         sub     r4,r2           /* frac -= heightmask */
@@ -180,13 +180,13 @@ do_span_loop:
         shlr2   r0              /* ((yfrac >> 16) & 63) << 6 */
         or      r1,r0           /* spot = (((yfrac >> 16) & 63) << 6) | ((xfrac >> 16) & 63) */
         mov.b   @(r0,r9),r0     /* pix = ds_source[spot] */
+        add     r3,r2           /* xfrac += xstep */
         and     #255,r0
         add     r0,r0
         mov.w   @(r0,r7),r0     /* dpix = ds_colormap[pix] */
-        add     r3,r2           /* xfrac += xstep */
-        mov.w   r0,@r8          /* *fb = dpix */
         add     r5,r4           /* yfrac += ystep */
         dt      r6              /* count-- */
+        mov.w   r0,@r8          /* *fb = dpix */
         bf/s    do_span_loop
         add     #2,r8           /* fb++ */
 
