@@ -87,6 +87,8 @@ void S_Init(void)
 	/* init music */
 	num_music = 0;
 	mus_intro = 0;
+	S_music = NULL;
+
 	l = W_CheckNumForName("VGM_STRT");
 	if (l != -1)
 	{
@@ -272,11 +274,14 @@ void S_StartSong(int music_id, int looping)
 {
 	S_StopSong();
 
-	while (MARS_SYS_COMM0) ;
-
 	if (music_id == mus_none) {
 		return;
 	}
+	if (!S_music) {
+		return;
+	}
+
+	while (MARS_SYS_COMM0);
 
 	MARS_SYS_COMM2 = music_id | (looping ? 0x8000:0x0000);
 	*(volatile intptr_t *)&MARS_SYS_COMM12 = (intptr_t)S_music[music_id - 1].md_data;
