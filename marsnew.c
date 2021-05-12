@@ -347,7 +347,7 @@ int I_FRTCounter2Msec(int c)
 =
 = I_TempBuffer
 =
-= return a pointer to a 52k or so temp work buffer for level setup uses
+= return a pointer to a 64k or so temp work buffer for level setup uses
 = (non-displayed frame buffer)
 =
 ====================
@@ -367,7 +367,7 @@ byte	*I_TempBuffer (void)
 
 byte 	*I_WorkBuffer (void)
 {
-	return (byte *)(I_ViewportBuffer() + 320 * screenHeight / 2);
+	return (byte *)(I_ViewportBuffer() + 320 / 2 * 224);
 }
 
 pixel_t	*I_FrameBuffer (void)
