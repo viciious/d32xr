@@ -490,7 +490,9 @@ void R_Setup (void)
 	if (i < damagecount)
 		i = damagecount;
 
-	if (i)
+	if (gamepaused)
+		palette = 14;
+	else if (i)
 	{
 		palette = (i + 7) / 8;
 		if (palette > 7)
