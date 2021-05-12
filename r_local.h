@@ -490,7 +490,5 @@ __attribute__((section(".data"), aligned(16)))
 #endif
 ;
 
-extern  intptr_t *r_workbuf;
-
 #endif		/* __R_LOCAL__ */
 

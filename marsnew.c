@@ -187,7 +187,6 @@ void Mars_Slave(void)
 			Mars_Slave_R_SegCommands();
 			break;
 		case 2:
-			Mars_Slave_R_PrepWalls();
 			break;
 		case 3:
 			Mars_ClearCache();

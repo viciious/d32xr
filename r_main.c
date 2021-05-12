@@ -41,9 +41,6 @@ vissprite_t	*vissprites, *lastsprite_p, *vissprite_p;
 /* */
 unsigned short	*openings/*[MAXOPENINGS]*/, *lastopening;
 
-/* holds *vissubsectors[MAXVISSEC], spropening[SCREENWIDTH+1], spanstart[256] */
-intptr_t 	*r_workbuf;
-
 /*===================================== */
 
 #ifndef MARS
@@ -290,8 +287,6 @@ void R_SetScreenSize(int size)
 
 void R_Init (void)
 {
-	size_t workbufsize;
-
 D_printf ("R_InitData\n");
 	R_InitData ();
 D_printf ("Done\n");
@@ -300,17 +295,6 @@ D_printf ("Done\n");
 
 	framecount = 0;
 	viewplayer = &players[0];
-
-	workbufsize = 0;
-	if (MAXVISSSEC > workbufsize)
-		workbufsize = MAXVISSSEC;
-	if (SCREENWIDTH + 1 > workbufsize)
-		workbufsize = SCREENWIDTH + 1;
-	if (256 > workbufsize)
-		workbufsize = 256;
-	workbufsize *= sizeof(intptr_t);
-
-	r_workbuf = Z_Malloc(workbufsize, PU_STATIC, NULL);
 
 	R_InitTexCache(&r_flatscache, numflats);
 
@@ -347,7 +331,7 @@ void R_SetupTextureCaches(void)
 		goto nocache;
 
 	// see how many flats we can store
-	cachezonesize = zonefree - zonemargin; // give the main zone some slack
+	cachezonesize = zonefree - zonemargin - 32; // give the main zone some slack
 
 	numcflats = cachezonesize / flatblocksize;
 	if (numcflats > 4)
@@ -552,8 +536,6 @@ void R_Setup (void)
 		tempbuf += screenWidth+2;
 	}
 
-	lastvisplane = visplanes+1;		/* visplanes[0] is left empty */
-
 	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 4) & ~4);
 	visplanes_hash = (visplane_t**)tempbuf;
 	tempbuf += sizeof(visplane_t *) * NUM_VISPLANES_BUCKETS;
@@ -565,11 +547,10 @@ void R_Setup (void)
 	viswalls = (viswall_t*)tempbuf;
 	tempbuf += sizeof(*viswalls)*MAXWALLCMDS/sizeof(*tempbuf);
 
-	lastwallcmd = viswalls;			/* no walls added yet */
+	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 4) & ~4);
+	vissubsectors = (void*)tempbuf;
+	tempbuf += sizeof(*vissubsectors) * MAXVISSSEC;
 
-	vissubsectors = (subsector_t **)&r_workbuf[0];
-	lastvissubsector = vissubsectors;	/* no subsectors visible yet */
-	
 /*	 */
 /* clear sprites */
 /* */
@@ -578,11 +559,11 @@ void R_Setup (void)
 	tempbuf += sizeof(*vissprites)*MAXVISSPRITES/sizeof(*tempbuf);
 	vissprite_p = vissprites;
 
-	//tempbuf = (unsigned short*)(((intptr_t)tempbuf + 4) & ~3);
-	//openings = tempbuf;
-	//tempbuf += sizeof(*openings)*MAXOPENINGS/sizeof(*tempbuf);
-
+	lastvisplane = visplanes + 1;		/* visplanes[0] is left empty */
+	lastwallcmd = viswalls;			/* no walls added yet */
 	lastopening = openings;
+	lastvissubsector = vissubsectors;	/* no subsectors visible yet */
+
 #ifndef MARS
 	phasetime[0] = samplecount;
 #endif
@@ -591,8 +572,6 @@ void R_Setup (void)
 	R_SetupTexCacheFrame(&r_wallscache);
 
 #ifdef MARS
-	Mars_ClearCache();
-
 	Mars_CommSlaveClearCache();
 
 	Mars_R_BeginOpenPlanes();

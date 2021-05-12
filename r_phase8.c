@@ -260,7 +260,7 @@ void Mars_Slave_R_DrawSprites(void)
 static void R_DrawPSprites(void)
 {
     int i;
-    unsigned short *spropening = (unsigned short *)&r_workbuf[0];
+    unsigned short spropening[SCREENWIDTH];
 
     // draw psprites
     while (lastsprite_p < vissprite_p)
@@ -287,9 +287,10 @@ static void R_DrawPSprites(void)
 void R_Sprites(void)
 {
    int i = 0, count;
+   int sortarr[MAXVISSPRITES * 2];
 
    sortedcount = 0;
-   sortedsprites = (int *)&r_workbuf[0];
+   sortedsprites = sortarr;
 
    count = lastsprite_p - vissprites;
 

@@ -57,7 +57,6 @@ void Mars_UploadPalette(const byte* palette);
 	} while (0)
 
 void Mars_Slave_R_SegCommands(void) ATTR_DATA_CACHE_ALIGN;
-void Mars_Slave_R_PrepWalls(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_Slave_R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_Slave_R_DrawSprites(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_Slave_R_OpenPlanes(void) ATTR_DATA_CACHE_ALIGN;
@@ -74,17 +73,6 @@ static inline void Mars_R_BeginComputeSeg(void)
 }
 
 static inline void Mars_R_EndComputeSeg(void)
-{
-	while (MARS_SYS_COMM4 != 0);
-}
-
-static inline void Mars_R_BeginPrepWalls(void)
-{
-	while (MARS_SYS_COMM4 != 0) {};
-	MARS_SYS_COMM4 = 2;
-}
-
-static inline void Mars_R_EndPrepWalls(void)
 {
 	while (MARS_SYS_COMM4 != 0);
 }

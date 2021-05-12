@@ -317,17 +317,6 @@ static void R_FinishPSprite(vissprite_t *vis)
    vis->startfrac = 0;
 }
 
-#ifdef MARS
-void Mars_Slave_R_PrepWalls(void) ATTR_DATA_CACHE_ALIGN;
-
-void Mars_Slave_R_PrepWalls(void)
-{
-    viswall_t *wall;
-    for (wall = viswalls + 1; wall < lastwallcmd; wall += 2)
-        R_FinishWallPrep1(wall);
-}
-#endif
-
 //
 // Start late prep rendering stage
 //
@@ -340,26 +329,11 @@ boolean R_LatePrep(void)
    cacheneeded = false;
 #endif
 
-   // finish viswalls
-#ifdef MARS
-   Mars_R_BeginPrepWalls();
-
-   for (wall = viswalls; wall < lastwallcmd; wall += 2)
-       R_FinishWallPrep1(wall);
-
-   Mars_R_EndPrepWalls();
-
-   Mars_ClearCache();
-
-   for (wall = viswalls; wall < lastwallcmd; wall++)
-       R_FinishWallPrep2(wall);
-#else
    for (wall = viswalls; wall < lastwallcmd; wall++)
    {
        R_FinishWallPrep1(wall);
        R_FinishWallPrep2(wall);
    }
-#endif
 
    // finish actor sprites   
    for(spr = vissprites; spr < lastsprite_p; spr++)
