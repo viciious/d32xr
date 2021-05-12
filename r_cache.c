@@ -27,6 +27,8 @@
 #include "doomdef.h"
 #include "r_local.h"
 
+#define R_CheckPixels(lumpnum) (void *)((intptr_t)(W_POINTLUMPNUM(lumpnum)) | 0x20000000)
+
 /*
 ================
 =
@@ -196,7 +198,7 @@ static void R_EvictFromTexCache(void* ptr, void* userp)
 
 	if (entry->pixelcount == 0)
 	{
-		*entry->userp = W_POINTLUMPNUM(entry->lumpnum);
+		*entry->userp = R_CheckPixels(entry->lumpnum);
 		Z_Free2(c->zone, entry);
 	}
 }
@@ -236,7 +238,7 @@ void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **us
 	entry->lumpnum = lumpnum;
 	entry->userp = userp;
 
-	lumpdata = W_POINTLUMPNUM(lumpnum);
+	lumpdata = R_CheckPixels(lumpnum);
 
 	// align to the same cache line remainder
 	data = (byte*)entry + sizeof(texcacheblock_t);
