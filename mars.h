@@ -63,7 +63,6 @@ void Mars_Slave_R_OpenPlanes(void) ATTR_DATA_CACHE_ALIGN;
 
 void Mars_Slave_M_AnimateFire(void);
 void Mars_Slave_InitSoundDMA(void);
-void Mars_Slave_ReadSoundCmds(void) ATTR_DATA_CACHE_ALIGN;
 
 static inline void Mars_R_BeginComputeSeg(void)
 {

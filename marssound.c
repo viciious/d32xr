@@ -60,7 +60,9 @@ extern short	cd_ok;
 void S_PaintChannel(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
 static void S_Update(int16_t* buffer) ATTR_DATA_CACHE_ALIGN;
 static void S_Spatialize(mobj_t* origin, int* pvol, int* psep) ATTR_DATA_CACHE_ALIGN;
+static void S_StartSoundReal(mobj_t* origin, unsigned sound_id) ATTR_DATA_CACHE_ALIGN;
 void slave_dma1_handler(void) ATTR_DATA_CACHE_ALIGN;
+static void Mars_Slave_ReadSoundCmds(void) ATTR_DATA_CACHE_ALIGN;
 
 /*
 ==================
@@ -351,6 +353,8 @@ void slave_dma1_handler(void)
 	SH2_DMA_CHCR1 = 0x18E5; // dest fixed, src incr, size long, ext req, dack mem to dev, dack hi, dack edge, dreq rising edge, cycle-steal, dual addr, intr enabled, clear TE, dma enabled
 
 	idx ^= 1; // flip audio buffer
+
+	Mars_Slave_ReadSoundCmds();
 
 	S_Update(snd_buffer[idx]);
 }

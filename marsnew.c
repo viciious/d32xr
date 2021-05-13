@@ -178,9 +178,7 @@ void Mars_Slave(void)
 	while (1)
 	{
 		int cmd;
-		while ((cmd = MARS_SYS_COMM4) == 0) {
-			Mars_Slave_ReadSoundCmds();
-		}
+		while ((cmd = MARS_SYS_COMM4) == 0);
 
 		switch (cmd) {
 		case 1:
