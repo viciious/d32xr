@@ -221,7 +221,12 @@ void I_Update (void)
 	static int fpscount = 0;
 	static int prevsec = 0;
 
-	if (debugmode != 0)
+	if (debugmode == 1)
+	{
+		D_snprintf(buf, sizeof(buf), "fps:%2d", fpscount);
+		I_Print8(200, 5, buf);
+	}
+	else if (debugmode > 1)
 	{
 		int line = 5;
 		unsigned t_ref_bsp_avg = 0;
@@ -286,7 +291,7 @@ void I_Update (void)
 		static int lastdebugtic = 0;
 		if (ticcount > lastdebugtic + 20)
 		{
-			debugmode = (debugmode + 1) % 3;
+			debugmode = (debugmode + 1) % 4;
 			lastdebugtic = ticcount;
 		}
 	}

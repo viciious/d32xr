@@ -389,7 +389,7 @@ void I_ClearFrameBuffer (void)
 
 void I_DebugScreen(void)
 {
-	if (debugmode == 2)
+	if (debugmode == 3)
 		Mars_ClearFrameBuffer();
 }
 
@@ -572,7 +572,7 @@ void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac, fixed
 		I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
 #endif
 
-	if (debugmode == 2)
+	if (debugmode == 3)
 		return;
 
 	if (dc_texheight & (dc_texheight - 1)) // height is not a power-of-2?
@@ -596,7 +596,7 @@ void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, fix
 		I_Error("R_DrawSpan: %i to %i at %i", ds_x1, ds_x2, ds_y);
 #endif 
 
-	if (debugmode == 2)
+	if (debugmode == 3)
 		return;
 
 	I_DrawSpanA(ds_y, ds_x1, ds_x2, light, ds_xfrac, ds_yfrac, ds_xstep, ds_ystep, ds_source);
