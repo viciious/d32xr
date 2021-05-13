@@ -87,7 +87,7 @@ extern const int mus_none;
 extern int num_music;
 
 extern sfxinfo_t   S_sfx[]; 
-extern const char* S_sfxnames[];
+extern const char* const S_sfxnames[];
 
 #endif 
  

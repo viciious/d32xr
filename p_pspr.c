@@ -13,6 +13,8 @@
 
 #define	BFGCELLS		40			/* plasma cells for a bfg attack */
 
+void P_RecursiveSound(sector_t* sec, int soundblocks) ATTR_DATA_CACHE_ALIGN;
+
 /*
 =================
 =

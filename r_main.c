@@ -86,8 +86,14 @@ angle_t* xtoviewangle/*[SCREENWIDTH+1]*/ = NULL;
 int t_ref_cnt = 0;
 int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sprites[4], t_ref_total;
 
-
 r_texcache_t r_flatscache, r_wallscache;
+
+int	R_PointOnSide(int x, int y, node_t* node) ATTR_DATA_CACHE_ALIGN;
+void R_Setup(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+#ifdef MARS
+static void R_RenderPhase1(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE __attribute__((noinline));
+static void R_RenderPhases2To9(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE __attribute__((noinline));
+#endif
 
 /*
 ===============================================================================
@@ -331,7 +337,7 @@ void R_SetupTextureCaches(void)
 		goto nocache;
 
 	// see how many flats we can store
-	cachezonesize = zonefree - zonemargin - 32; // give the main zone some slack
+	cachezonesize = zonefree - zonemargin - 128; // give the main zone some slack
 
 	numcflats = cachezonesize / flatblocksize;
 	if (numcflats > 4)
@@ -765,14 +771,14 @@ void R_RenderPlayerView(void)
 
 #else
 
-void R_RenderPhase1(void)
+static void R_RenderPhase1(void)
 {
 	t_ref_bsp[t_ref_cnt] = I_GetFRTCounter();
 	R_BSP();
 	t_ref_bsp[t_ref_cnt] = I_GetFRTCounter() - t_ref_bsp[t_ref_cnt];
 }
 
-void R_RenderPhases2To9(void)
+static void R_RenderPhases2To9(void)
 {
 	unsigned short openings_[MAXOPENINGS];
 

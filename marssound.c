@@ -50,17 +50,19 @@ int				oldsfxvolume;	/* to detect transition to sound off */
 
 int             samplecount = 0;
 
-static marsrb_t	soundcmds;
+static marsrb_t	soundcmds = { 0 };
 
 static int		sndinit = 0;
 
 extern short	use_cd;
 extern short	cd_ok;
 
-void S_PaintChannel(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
-static void S_Update(int16_t* buffer) ATTR_DATA_CACHE_ALIGN;
-static void S_Spatialize(mobj_t* origin, int* pvol, int* psep) ATTR_DATA_CACHE_ALIGN;
-void slave_dma1_handler(void) ATTR_DATA_CACHE_ALIGN;
+void S_StartSound(mobj_t* origin, int sound_id) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void S_StartSoundReal(mobj_t* origin, unsigned sound_id) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void S_PaintChannel(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static void S_Update(int16_t* buffer) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static void S_Spatialize(mobj_t* origin, int* pvol, int* psep) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void slave_dma1_handler(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 /*
 ==================
@@ -99,10 +101,10 @@ void S_Init(void)
 
 		S_music = Z_Malloc(sizeof(*S_music) * n, PU_STATIC, 0);
 		for (i = 0; i < n; i++) {
-			S_music[i].name = (char *)W_GetNameForNum(l);
+			const char* name = W_GetNameForNum(l);
 			S_music[i].md_data = W_POINTLUMPNUM(l);
 
-			if (!D_strncasecmp(S_music[i].name, "mus_ntro", 8)) {
+			if (!D_strncasecmp(name, "mus_ntro", 8)) {
 				mus_intro = i + 1;
 				num_music = i;
 			}
@@ -300,8 +302,18 @@ static void S_Update(int16_t* buffer)
 	int16_t* b;
 
 	b = buffer;
-	for (i = 0; i < MAX_SAMPLES * 2; i++)
-		*b++ = 0;
+	for (i = 0; i < MAX_SAMPLES / 4; i++)
+	{
+		*b++ = 0; *b++ = 0;
+		*b++ = 0; *b++ = 0;
+		*b++ = 0; *b++ = 0;
+		*b++ = 0; *b++ = 0;
+	}
+
+	for (i *= 4; i < MAX_SAMPLES; i++)
+	{
+		*b++ = 0; *b++ = 0;
+	}
 
 	for (i = 0; i < SFXCHANNELS; i++)
 	{
@@ -355,7 +367,7 @@ void slave_dma1_handler(void)
 	S_Update(snd_buffer[idx]);
 }
 
-static void S_StartSoundReal(mobj_t* origin, unsigned sound_id)
+void S_StartSoundReal(mobj_t* origin, unsigned sound_id)
 {
 	sfxchannel_t* channel, * newchannel;
 	int i;
@@ -497,8 +509,6 @@ void Mars_Slave_InitSoundDMA(void)
 		sample++;
 	}
 
-	sndinit = 1;
-
 	SetSH2SR(2);
 
 	// fill first buffer
@@ -506,4 +516,6 @@ void Mars_Slave_InitSoundDMA(void)
 
 	// start DMA
 	slave_dma1_handler();
+
+	sndinit = 1;
 }

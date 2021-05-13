@@ -49,8 +49,12 @@ typedef unsigned short inpixel_t;
 
 #ifdef MARS
 #define ATTR_DATA_CACHE_ALIGN __attribute__((section(".data"), aligned(16)))
+#define ATTR_OPTIMIZE_SIZE __attribute__((optimize("Os")))
+#define ATTR_OPTIMIZE_EXTREME __attribute__((optimize("O3", "no-align-loops", "no-align-functions", "no-align-jumps", "no-align-labels")))
 #else
 #define ATTR_DATA_CACHE_ALIGN
+#define ATTR_OPTIMIZE_SIZE
+#define ATTR_OPTIMIZE_EXTREME
 #endif
 
 /*============================================================================= */
@@ -664,7 +668,7 @@ pixel_t *I_FrameBuffer (void) ATTR_DATA_CACHE_ALIGN;
 
 pixel_t *I_ViewportBuffer (void) ATTR_DATA_CACHE_ALIGN;
 
-void I_ClearFrameBuffer (void) ATTR_DATA_CACHE_ALIGN;
+void I_ClearFrameBuffer (void);
 
 void I_SetPalette (const byte *palette);
 
@@ -767,7 +771,7 @@ int	R_FlatNumForName (const char *name);
 int	R_TextureNumForName (const char *name);
 int	R_CheckTextureNumForName (const char *name);
 angle_t R_PointToAngle2 (fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2) ATTR_DATA_CACHE_ALIGN;
-struct subsector_s *R_PointInSubsector (fixed_t x, fixed_t y);
+struct subsector_s *R_PointInSubsector (fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
 
 
 /*---- */

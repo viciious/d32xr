@@ -31,7 +31,7 @@ typedef struct
 #endif
 } localplane_t;
 
-static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)ATTR_DATA_CACHE_ALIGN;
+static void R_MapPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
 static void R_PlaneLoop(localplane_t* lpl, const int mask) __attribute__((always_inline));
 static void R_DrawPlanesMasked(const int mask) __attribute__((always_inline));
 

@@ -39,17 +39,17 @@ static line_t      *ceilingline;
 static fixed_t      testbbox[4];
 static int          testflags;
 
-static boolean PB_CheckThing(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
-static boolean PB_BoxCrossLine(line_t* ld) ATTR_DATA_CACHE_ALIGN;
-static boolean PB_CheckLine(line_t* ld) ATTR_DATA_CACHE_ALIGN;
-static boolean PB_CrossCheck(line_t* ld) ATTR_DATA_CACHE_ALIGN;
-static boolean PB_CheckPosition(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
-static boolean PB_TryMove(mobj_t* mo, fixed_t tryx, fixed_t tryy) ATTR_DATA_CACHE_ALIGN;
-static void P_FloatChange(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
-void P_ZMovement(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
-void P_MobjThinker(mobj_t* mobj) ATTR_DATA_CACHE_ALIGN;
-void P_XYMovement(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
-void P_RunMobjBase2(void) ATTR_DATA_CACHE_ALIGN;
+static boolean PB_CheckThing(mobj_t* thing) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static boolean PB_BoxCrossLine(line_t* ld) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static boolean PB_CheckLine(line_t* ld) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static boolean PB_CrossCheck(line_t* ld) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static boolean PB_CheckPosition(mobj_t* mo) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static boolean PB_TryMove(mobj_t* mo, fixed_t tryx, fixed_t tryy) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static void P_FloatChange(mobj_t* mo) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void P_ZMovement(mobj_t* mo) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void P_MobjThinker(mobj_t* mobj) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void P_XYMovement(mobj_t* mo) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void P_RunMobjBase2(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 //
 // Check for collision against another mobj in one of the blockmap cells.

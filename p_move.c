@@ -48,12 +48,12 @@ static fixed_t tmdropoffz; // lowest point contacted
 
 static subsector_t *newsubsec; // destination subsector
 
-boolean PIT_CheckThing(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
-static boolean PM_BoxCrossLine(line_t* ld) ATTR_DATA_CACHE_ALIGN;
-static boolean PIT_CheckLine(line_t* ld) ATTR_DATA_CACHE_ALIGN;
-static boolean PM_CrossCheck(line_t* ld) ATTR_DATA_CACHE_ALIGN;
-static void PM_CheckPosition(void) ATTR_DATA_CACHE_ALIGN;
-void P_TryMove2(void) ATTR_DATA_CACHE_ALIGN;
+boolean PIT_CheckThing(mobj_t* thing) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static boolean PM_BoxCrossLine(line_t* ld) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static boolean PIT_CheckLine(line_t* ld) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static boolean PM_CrossCheck(line_t* ld) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static void PM_CheckPosition(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void P_TryMove2(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 //
 // Check a single mobj in one of the contacted blockmap cells.

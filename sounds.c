@@ -13,7 +13,7 @@ int				mus_intro = 0;
 /* 
  *  Information about all the sfx 
  */ 
-const char *S_sfxnames[] =
+const char * const S_sfxnames[] =
 {
   0,
   "pistol",

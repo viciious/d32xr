@@ -26,7 +26,6 @@ typedef struct sfxinfo_s
 
 typedef struct
 {
-  char *name;		/* up to 6-character name */
   void *md_data;	/* machine-dependent music data */
 } musicinfo_t;
 
