@@ -28,6 +28,7 @@ static boolean R_CheckBBox(fixed_t bspcoord[4]) ATTR_DATA_CACHE_ALIGN;
 static void R_Subsector(int num) ATTR_DATA_CACHE_ALIGN;
 static inline void R_StoreWallRange(int start, int stop)  __attribute__((always_inline));
 static void R_RenderBSPNode(int bspnum) ATTR_DATA_CACHE_ALIGN;
+void R_BSP(void) ATTR_DATA_CACHE_ALIGN;
 
 //
 // To get a global angle from Cartesian coordinates, the coordinates are

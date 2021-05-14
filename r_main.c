@@ -89,6 +89,8 @@ int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sprites[4
 r_texcache_t r_flatscache, r_wallscache;
 
 void R_Setup(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void R_Cache(void) ATTR_DATA_CACHE_ALIGN;
+
 #ifdef MARS
 static void R_RenderPhase1(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE __attribute__((noinline));
 static void R_RenderPhases2To9(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE __attribute__((noinline));
