@@ -147,13 +147,22 @@ static inline short* Mars_RB_GetReadBuf(marsrb_t* wb, unsigned wcnt)
     return buf;
 }
 
-static inline short* Mars_RB_GetWriteBuf(marsrb_t* wb, unsigned wcnt)
+static inline short* Mars_RB_GetWriteBuf(marsrb_t* wb, unsigned wcnt, boolean wait)
 {
     unsigned wrover = MARS_UNCACHED_WROVER;
     unsigned wp = wrover % MARS_RINGBUF_MAXWORDS;
     unsigned window = wcnt;
 
     if (wcnt > MARS_RINGBUF_MAXWORDS)
+        return NULL;
+
+    if (window < MARS_RINGBUF_MAXWORDS / 2)
+        window = MARS_RINGBUF_MAXWORDS / 2;
+    else if (window > MARS_RINGBUF_MAXWORDS)
+        window = MARS_RINGBUF_MAXWORDS;
+    window = MARS_RINGBUF_MAXWORDS - window;
+
+    if (!wait && Mars_RB_Len(wb) > window)
         return NULL;
 
     if (wb->writepos > 0) {
@@ -179,12 +188,7 @@ static inline short* Mars_RB_GetWriteBuf(marsrb_t* wb, unsigned wcnt)
     buf = wb->ringbuf + wp;
     wb->writecnt = wcnt;
 
-    if (window < MARS_RINGBUF_MAXWORDS / 2)
-        window = MARS_RINGBUF_MAXWORDS / 2;
-    else if (window > MARS_RINGBUF_MAXWORDS)
-        window = MARS_RINGBUF_MAXWORDS;
-
-    Mars_RB_WaitReader(wb, MARS_RINGBUF_MAXWORDS-window);
+    Mars_RB_WaitReader(wb, window);
 
     // return pointer in cache-through area
     return (short*)((intptr_t)buf | 0x20000000);

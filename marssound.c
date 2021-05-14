@@ -139,7 +139,7 @@ void S_Init(void)
 
 void S_Clear (void)
 {
-	uint16_t *p = (uint16_t*)Mars_RB_GetWriteBuf(&soundcmds, 8);
+	uint16_t *p = (uint16_t*)Mars_RB_GetWriteBuf(&soundcmds, 8, false);
 	if (!p)
 		return;
 	*p++ = SNDCMD_CLEAR;
@@ -252,7 +252,7 @@ void S_StartSound(mobj_t *origin, int sound_id)
 	if (!vol)
 		return; /* too far away */
 
-	uint16_t* p = (uint16_t*)Mars_RB_GetWriteBuf(&soundcmds, 8);
+	uint16_t* p = (uint16_t*)Mars_RB_GetWriteBuf(&soundcmds, 8, false);
 	if (!p)
 		return;
 	*p++ = SNDCMD_STARTSND;
@@ -363,6 +363,8 @@ void slave_dma1_handler(void)
 	SH2_DMA_CHCR1 = 0x18E5; // dest fixed, src incr, size long, ext req, dack mem to dev, dack hi, dack edge, dreq rising edge, cycle-steal, dual addr, intr enabled, clear TE, dma enabled
 
 	idx ^= 1; // flip audio buffer
+
+	Mars_Slave_ReadSoundCmds();
 
 	S_Update(snd_buffer[idx]);
 }
