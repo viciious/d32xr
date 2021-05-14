@@ -739,7 +739,7 @@ int F_Ticker (void);
 void F_Drawer (void);
 
 void AM_Control (player_t *player);
-void AM_Drawer (void);
+void AM_Drawer (void) ATTR_OPTIMIZE_SIZE;
 void AM_Start (void);
 
 /*----- */
@@ -756,7 +756,7 @@ void O_Drawer (void);
 
 void ST_Init (void);
 void ST_Ticker (void);
-void ST_Drawer (void);
+void ST_Drawer (void) ATTR_OPTIMIZE_SIZE;
 void ST_InitEveryLevel(void);
 
 
