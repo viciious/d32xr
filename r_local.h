@@ -211,8 +211,8 @@ extern	side_t		*sides;
 
 /*============================================================================= */
 
-int     R_PointOnSide(int x, int y, node_t *node);
-int     SlopeDiv(unsigned int num, unsigned int den);
+int     R_PointOnSide(int x, int y, node_t *node) ATTR_DATA_CACHE_ALIGN;
+int     SlopeDiv(unsigned int num, unsigned int den) ATTR_DATA_CACHE_ALIGN;
 void	R_InitData (void);
 void	R_SetScreenSize(int size);
 void	R_InitMathTables(void);
