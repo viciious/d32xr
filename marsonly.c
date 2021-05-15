@@ -248,11 +248,13 @@ void I_Update (void)
 
 		D_snprintf(buf, sizeof(buf), "fps:%2d", fpscount);
 		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "tic:%d/%d/%d", tictics, t_ref_total, lasttics);
+		D_snprintf(buf, sizeof(buf), "tic:%d/%d", t_ref_total, lasttics);
 		I_Print8(200, line++, buf);
 
 		line++;
 
+		D_snprintf(buf, sizeof(buf), "g:%2d", I_FRTCounter2Msec(tictics));
+		I_Print8(200, line++, buf);
 		D_snprintf(buf, sizeof(buf), "b:%2d", I_FRTCounter2Msec(t_ref_bsp_avg));
 		I_Print8(200, line++, buf);
 		D_snprintf(buf, sizeof(buf), "w:%2d %2d", I_FRTCounter2Msec(t_ref_segs_avg), lastwallcmd - viswalls);

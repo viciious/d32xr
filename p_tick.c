@@ -274,14 +274,20 @@ void G_DoReborn (int playernum);
 
 int		ticphase;
 
+#ifdef MARS
+#define frtc I_GetFRTCounter()
+#else
+#define frtc samplecount
+#endif
+
 int P_Ticker (void)
 {
 	int		start;
 	int		ticstart;
 	player_t	*pl;
 	
-	ticstart = I_GetTime();
-	
+	ticstart = frtc;
+
 	while (!I_RefreshLatched () )
 	;		/* wait for refresh to latch all needed data before */
 			/* running the next tick */
@@ -315,7 +321,7 @@ int P_Ticker (void)
 /* */
 /* run player actions */
 /* */
-	start = samplecount;
+	start = frtc;
 	for (playernum=0,pl=players ; playernum<MAXPLAYERS ; playernum++,pl++)
 		if (playeringame[playernum])
 		{
@@ -324,24 +330,24 @@ int P_Ticker (void)
 			AM_Control (pl);
 			P_PlayerThink (pl);
 		}
-	playertics = samplecount - start;
+	playertics = frtc - start;
 	
 	
-	start = samplecount;
+	start = frtc;
 	P_RunThinkers ();
-	thinkertics = samplecount - start;
+	thinkertics = frtc - start;
 		
-	start = samplecount;
+	start = frtc;
 	P_CheckSights ();	
-	sighttics = samplecount - start;
+	sighttics = frtc - start;
 
-	start = samplecount;
+	start = frtc;
 	P_RunMobjBase ();
-	basetics = samplecount - start;
+	basetics = frtc - start;
 
-	start = samplecount;
+	start = frtc;
 	P_RunMobjLate ();
-	latetics = samplecount - start;
+	latetics = frtc - start;
 
 	P_UpdateSpecials ();
 
@@ -349,8 +355,8 @@ int P_Ticker (void)
 	
 	ST_Ticker ();			/* update status bar */
 		
-	tictics = I_GetTime() - ticstart;
-	
+	tictics = frtc - ticstart;
+
 	return gameaction;		/* may have been set to ga_died, ga_completed, */
 							/* or ga_secretexit */
 }
