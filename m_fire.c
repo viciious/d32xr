@@ -81,8 +81,6 @@ const unsigned char fireRGBs[] =
 
 static m_fire_t *m_fire;
 
-void I_DrawMenuFire(void) ATTR_OPTIMIZE_EXTREME;
-
 static inline void M_SpreadFire(char* fire, int src)
 {
 	char newval = 0;

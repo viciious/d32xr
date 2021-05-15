@@ -215,9 +215,7 @@ int     R_PointOnSide(int x, int y, node_t *node) ATTR_DATA_CACHE_ALIGN;
 int     SlopeDiv(unsigned int num, unsigned int den) ATTR_DATA_CACHE_ALIGN;
 void	R_InitData (void);
 void	R_SetScreenSize(int size);
-void	R_InitMathTables(void);
-void	R_InitSpriteDefs (const char **namelist);
-void	R_SetupTextureCaches(void);
+void	R_SetupTextureCaches(void) ATTR_OPTIMIZE_SIZE;
 
 
 /* to get a global angle from cartesian coordinates, the coordinates are */
@@ -304,6 +302,12 @@ extern	void			** flatpixels;
 
 extern	int			firstflat, numflats;
 
+void R_InitTextures(void) ATTR_OPTIMIZE_SIZE;
+void R_InitFlats(void) ATTR_OPTIMIZE_SIZE;
+int	R_FlatNumForName(const char* name) ATTR_OPTIMIZE_SIZE;
+int	R_CheckTextureNumForName(const char* name) ATTR_OPTIMIZE_SIZE;
+void	R_InitMathTables(void) ATTR_OPTIMIZE_SIZE;
+void	R_InitSpriteDefs(const char** namelist) ATTR_OPTIMIZE_SIZE;
 
 /*
 ==============================================================================
@@ -339,8 +343,8 @@ extern r_texcache_t r_flatscache, r_wallscache;
 void R_InitTexCache(r_texcache_t* c, int maxobjects);
 void R_InitTexCacheZone(r_texcache_t* c, int zonesize);
 void R_SetupTexCacheFrame(r_texcache_t* c);
-void R_TestTexCacheCandidate(r_texcache_t* c, int id);
-void R_AddPixelsToTexCache(r_texcache_t* c, int id, int pixels);
+void R_TestTexCacheCandidate(r_texcache_t* c, int id) ATTR_DATA_CACHE_ALIGN;
+void R_AddPixelsToTexCache(r_texcache_t* c, int id, int pixels) ATTR_DATA_CACHE_ALIGN;
 void R_PostTexCacheFrame(r_texcache_t* c);
 void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **userp);
 
@@ -472,22 +476,16 @@ typedef struct visplane_s
 extern	visplane_t		*visplanes/*[MAXVISPLANES]*/, *lastvisplane;
 
 int R_PlaneHash(fixed_t height, unsigned flatnum, unsigned lightlevel)
-#ifdef MARS
-__attribute__((section(".data"), aligned(16)))
-#endif
+ATTR_DATA_CACHE_ALIGN
 ;
 
 void R_MarkOpenPlane(visplane_t* pl)
-#ifdef MARS
-__attribute__((section(".data"), aligned(16)))
-#endif
+ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE
 ;
 
 visplane_t *R_FindPlane(visplane_t *ignore, int hash, fixed_t height, unsigned flatnum,
                                unsigned lightlevel, int start, int stop)
-#ifdef MARS
-__attribute__((section(".data"), aligned(16)))
-#endif
+ATTR_DATA_CACHE_ALIGN
 ;
 
 #endif		/* __R_LOCAL__ */

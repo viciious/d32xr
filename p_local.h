@@ -135,6 +135,9 @@ void L_CrossSpecial (mobj_t *mo);
 
 void P_ExplodeMissile (mobj_t *mo);
 
+boolean P_MapThingSpawnsMobj(mapthing_t* mthing) ATTR_OPTIMIZE_SIZE;
+void	P_SpawnMapThing(mapthing_t* mthing) ATTR_OPTIMIZE_SIZE;
+
 /*
 ===============================================================================
 

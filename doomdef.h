@@ -684,7 +684,7 @@ boolean	I_RefreshLatched (void);
 int	I_GetTime (void) ATTR_DATA_CACHE_ALIGN;
 int     I_GetFRTCounter (void) ATTR_DATA_CACHE_ALIGN;
 
-void I_Update (void);
+void I_Update (void) ATTR_DATA_CACHE_ALIGN;
 
 void I_Error (char *error, ...);
 
@@ -932,9 +932,9 @@ extern	int		maxlevel;			/* highest level selectable in menu (1-25) */
 extern	int		gamevbls;			/* may not really be vbls in multiplayer */
 extern	int		vblsinframe;		/* range from 4 to 8 */
 
-void I_InitMenuFire(void);
+void I_InitMenuFire(void) ATTR_OPTIMIZE_SIZE;
 void I_StopMenuFire(void);
-void I_DrawMenuFire(void);
+void I_DrawMenuFire(void) ATTR_OPTIMIZE_EXTREME;
 void I_DrawSbar(void);
 void S_StartSong(int music_id, int looping);
 void S_StopSong(void);

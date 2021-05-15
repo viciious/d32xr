@@ -1,4 +1,5 @@
 /* am_main.c -- automap */
+/* am_main.c -- automap */
 
 #include "doomdef.h"
 #include "p_local.h"
@@ -59,6 +60,8 @@ char cheatstrings[][11] =	/* order should mirror cheat_e */
 char currentcheat[11]="0000000000";
 int	showAllThings;		/* CHEAT VARS */
 int showAllLines;
+
+void DrawLine(pixel_t color, int x1, int y1, int x2, int y2) ATTR_OPTIMIZE_SIZE;
 
 /*================================================================= */
 /* */

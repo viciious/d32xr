@@ -30,7 +30,7 @@ texture_t	*skytexturep;
 ==================
 */
 
-	int			*maptex;
+int			*maptex;
 
 void R_InitTextures (void)
 {

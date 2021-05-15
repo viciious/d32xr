@@ -3,9 +3,6 @@
 #include "doomdef.h"
 #include "p_local.h"
 
-boolean P_MapThingSpawnsMobj (mapthing_t* mthing);
-void	P_SpawnMapThing (mapthing_t *mthing);
-
 int			numvertexes;
 vertex_t	*vertexes;
 
@@ -37,6 +34,17 @@ byte		*rejectmatrix;			/* for fast sight rejection */
 
 mapthing_t	deathmatchstarts[10], *deathmatch_p;
 mapthing_t	playerstarts[MAXPLAYERS];
+
+void P_LoadVertexes(int lump) ATTR_OPTIMIZE_SIZE;
+void P_LoadSegs(int lump) ATTR_OPTIMIZE_SIZE;
+void P_LoadSubsectors(int lump) ATTR_OPTIMIZE_SIZE;
+void P_LoadSectors(int lump) ATTR_OPTIMIZE_SIZE;
+void P_LoadNodes(int lump) ATTR_OPTIMIZE_SIZE;
+void P_LoadThings(int lump) ATTR_OPTIMIZE_SIZE;
+void P_LoadLineDefs(int lump) ATTR_OPTIMIZE_SIZE;
+void P_LoadSideDefs(int lump) ATTR_OPTIMIZE_SIZE;
+void P_LoadBlockMap(int lump) ATTR_OPTIMIZE_SIZE;
+void P_GroupLines(void) ATTR_OPTIMIZE_SIZE;
 
 /*
 =================
