@@ -59,7 +59,7 @@ int lzss_read(lzss_state_t* lzss, uint16_t chunk)
     crunch:
         if (idbyte & 1)
         {
-            uint16_t limit;
+            uint16_t j, limit;
             uint16_t pos;
 
             /* decompress */
@@ -75,9 +75,9 @@ int lzss_read(lzss_state_t* lzss, uint16_t chunk)
             }
 
         runcopy:
-            limit = len;
+            limit = len - i;
             if (limit > left) limit = left;
-            while (i < limit) {
+            for (j = 0; j < limit; j++) {
                 output[outpos & LZSS_BUF_MASK] = output[source & LZSS_BUF_MASK];
                 outpos++;
                 source++;
