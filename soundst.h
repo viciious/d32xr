@@ -83,7 +83,7 @@ extern	int		samplecount;		/* 22khz sample counter in DSP memory */
 
 /*============================================================================ */
 
-void S_Init(void);
+void S_Init(void) ATTR_OPTIMIZE_SIZE;
 void S_Clear (void);
 void S_StartSound(mobj_t *origin, int sound_id);
 void S_UpdateSounds(void);

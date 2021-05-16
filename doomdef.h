@@ -619,16 +619,16 @@ extern	void		*lumpcache[MAXLUMPS];
 
 void	W_Init (void);
 
-int		W_CheckNumForName (const char *name);
-int		W_GetNumForName (const char *name);
+int		W_CheckNumForName (const char *name) ATTR_OPTIMIZE_SIZE;
+int		W_GetNumForName (const char *name) ATTR_OPTIMIZE_SIZE;
 
 int		W_LumpLength (int lump);
 void	W_ReadLump (int lump, void *dest);
 
-void	*W_CacheLumpNum (int lump, int tag);
-void	*W_CacheLumpName (const char *name, int tag);
+void	*W_CacheLumpNum (int lump, int tag) ATTR_OPTIMIZE_SIZE;
+void	*W_CacheLumpName (const char *name, int tag) ATTR_OPTIMIZE_SIZE;
 
-const char *W_GetNameForNum (int lump);
+const char *W_GetNameForNum (int lump) ATTR_OPTIMIZE_SIZE;
 
 #define W_POINTLUMPNUM(x) (void*)(wadfileptr+BIGLONG(lumpinfo[x].filepos))
 
@@ -686,7 +686,7 @@ int     I_GetFRTCounter (void) ATTR_DATA_CACHE_ALIGN;
 
 void I_Update (void) ATTR_DATA_CACHE_ALIGN;
 
-void I_Error (char *error, ...);
+void I_Error (char *error, ...) ATTR_OPTIMIZE_SIZE;
 
 void I_DrawColumn (int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale, 
 	fixed_t dc_texturemid, inpixel_t *dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
@@ -703,7 +703,7 @@ void I_DebugScreen (void);
 /*---- */
 
 void G_DeathMatchSpawnPlayer (int playernum);
-void G_InitNew (skill_t skill, int map, gametype_t gametype);
+void G_InitNew (skill_t skill, int map, gametype_t gametype) ATTR_OPTIMIZE_SIZE;
 void G_ExitLevel (void);
 void G_SecretExitLevel (void);
 void G_WorldDone (void);
@@ -715,47 +715,47 @@ int G_PlayDemoPtr (int *demo);
 /*PLAY */
 /*----- */
 
-void P_SetupLevel (int lumpnum, skill_t skill);
-void P_Init (void);
+void P_SetupLevel (int lumpnum, skill_t skill) ATTR_OPTIMIZE_SIZE;
+void P_Init (void) ATTR_OPTIMIZE_SIZE;
 
-void P_Start (void);
-void P_Stop (void);
+void P_Start (void) ATTR_OPTIMIZE_SIZE;
+void P_Stop (void) ATTR_OPTIMIZE_SIZE;
 int P_Ticker (void);
 void P_Drawer (void);
 
-void IN_Start (void);
-void IN_Stop (void);
-int IN_Ticker (void);
-void IN_Drawer (void);
+void IN_Start (void) ATTR_OPTIMIZE_SIZE;
+void IN_Stop (void) ATTR_OPTIMIZE_SIZE;
+int IN_Ticker (void) ATTR_OPTIMIZE_SIZE;
+void IN_Drawer (void) ATTR_OPTIMIZE_SIZE;
 
-void M_Start (void);
-void M_Stop (void);
-int M_Ticker (void);
-void M_Drawer (void);
+void M_Start (void) ATTR_OPTIMIZE_SIZE;
+void M_Stop (void) ATTR_OPTIMIZE_SIZE;
+int M_Ticker (void) ATTR_OPTIMIZE_SIZE;
+void M_Drawer (void) ATTR_OPTIMIZE_SIZE;
 
-void F_Start (void);
-void F_Stop (void);
-int F_Ticker (void);
-void F_Drawer (void);
+void F_Start (void) ATTR_OPTIMIZE_SIZE;
+void F_Stop (void) ATTR_OPTIMIZE_SIZE;
+int F_Ticker (void) ATTR_OPTIMIZE_SIZE;
+void F_Drawer (void) ATTR_OPTIMIZE_SIZE;
 
 void AM_Control (player_t *player);
 void AM_Drawer (void) ATTR_OPTIMIZE_SIZE;
-void AM_Start (void);
+void AM_Start (void) ATTR_OPTIMIZE_SIZE;
 
 /*----- */
 /*OPTIONS */
 /*----- */
 
-void O_Init (void);
-void O_Control (player_t *player);
-void O_Drawer (void);
+void O_Init (void) ATTR_OPTIMIZE_SIZE;
+void O_Control (player_t *player) ATTR_OPTIMIZE_SIZE;
+void O_Drawer (void) ATTR_OPTIMIZE_SIZE;
 
 /*----- */
 /*STATUS */
 /*----- */
 
-void ST_Init (void);
-void ST_Ticker (void);
+void ST_Init (void) ATTR_OPTIMIZE_SIZE;
+void ST_Ticker (void) ATTR_OPTIMIZE_SIZE;
 void ST_Drawer (void) ATTR_OPTIMIZE_SIZE;
 void ST_InitEveryLevel(void);
 
