@@ -538,7 +538,6 @@ typedef struct
 	 long			tics;
 	 void			(*action) ();
 	 statenum_t		nextstate;
-	 long			misc1, misc2;
 } state_t;
 
 extern const state_t	states[NUMSTATES];
