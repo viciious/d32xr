@@ -6708,13 +6708,6 @@
     },
     {
         "compressed": true,
-        "compressed_size": 563,
-        "filename": "i_frags",
-        "name": "I_FRAGS",
-        "size": 1296
-    },
-    {
-        "compressed": true,
         "compressed_size": 343,
         "filename": "o_strack",
         "name": "O_STRACK",
@@ -6761,27 +6754,6 @@
         "filename": "skill4",
         "name": "SKILL4",
         "size": 3088
-    },
-    {
-        "compressed": true,
-        "compressed_size": 1031,
-        "filename": "defaults",
-        "name": "DEFAULTS",
-        "size": 2392
-    },
-    {
-        "compressed": true,
-        "compressed_size": 554,
-        "filename": "paused",
-        "name": "PAUSED",
-        "size": 1168
-    },
-    {
-        "compressed": true,
-        "compressed_size": 653,
-        "filename": "loading",
-        "name": "LOADING",
-        "size": 1360
     },
     {
         "compressed": true,
