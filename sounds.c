@@ -83,7 +83,7 @@ const char * const S_sfxnames[] =
 };
 
 #ifdef MARS
-#define SOUND(sing,pri) { sing, pri, NULL }
+#define SOUND(sing,pri) { sing, pri, -1 }
 #else
 #define SOUND(sing,pri) { sing, pri, -1, -1, NULL, NULL }
 #endif

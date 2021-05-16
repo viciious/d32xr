@@ -16,17 +16,23 @@ typedef struct sfxinfo_s
 {
 	char singularity;	/* Sfx singularity (only one at a time) */
 	unsigned char priority;		/* Sfx priority */
-#ifndef MARS
+#ifdef MARS
+	short lump;
+#else
 	int	pitch;		/* pitch if a link */
 	int	volume;		/* volume if a link */
 	struct sfxinfo_s* link;	/* referenced sound if a link */
-#endif
 	sfx_t* md_data;	/* machine-dependent sound data */
+#endif
 } sfxinfo_t;
 
 typedef struct
 {
+#ifdef MARS
+	short lump;
+#else
   void *md_data;	/* machine-dependent music data */
+#endif
 } musicinfo_t;
 
 /*============================================================================ */

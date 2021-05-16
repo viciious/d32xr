@@ -79,11 +79,7 @@ void S_Init(void)
 	/* init sound effects */
 	for (i=1 ; i < NUMSFX ; i++)
 	{
-		l = W_CheckNumForName(S_sfxnames[i]);
-		if (l != -1)
-			S_sfx[i].md_data = W_POINTLUMPNUM(l);
-		else
-			S_sfx[i].md_data = NULL;
+		S_sfx[i].lump = W_CheckNumForName(S_sfxnames[i]);
 	}
 
 	/* init music */
@@ -102,7 +98,7 @@ void S_Init(void)
 		S_music = Z_Malloc(sizeof(*S_music) * n, PU_STATIC, 0);
 		for (i = 0; i < n; i++) {
 			const char* name = W_GetNameForNum(l);
-			S_music[i].md_data = W_POINTLUMPNUM(l);
+			S_music[i].lump = l;
 
 			if (!D_strncasecmp(name, "mus_ntro", 8)) {
 				mus_intro = i + 1;
@@ -242,7 +238,7 @@ void S_StartSound(mobj_t *origin, int sound_id)
 		return;
 
 	sfx = &S_sfx[sound_id];
-	if (!sfx->md_data)
+	if (sfx->lump < 0)
 		return;
 
 	/* */
@@ -276,17 +272,17 @@ void S_StartSong(int music_id, int looping)
 {
 	S_StopSong();
 
-	if (music_id == mus_none) {
+	if (music_id == mus_none)
 		return;
-	}
-	if (!S_music) {
+	if (!S_music)
 		return;
-	}
+	if (S_music[music_id - 1].lump < 0)
+		return;
 
 	while (MARS_SYS_COMM0);
 
 	MARS_SYS_COMM2 = music_id | (looping ? 0x8000:0x0000);
-	*(volatile intptr_t *)&MARS_SYS_COMM12 = (intptr_t)S_music[music_id - 1].md_data;
+	*(volatile intptr_t *)&MARS_SYS_COMM12 = (intptr_t)W_POINTLUMPNUM(S_music[music_id - 1].lump);
 	MARS_SYS_COMM0 = 0x0300; /* start music */
 }
 
@@ -375,10 +371,12 @@ void S_StartSoundReal(mobj_t* origin, unsigned sound_id)
 	int i;
 	int length, loop_length;
 	sfxinfo_t* sfx;
+	sfx_t* md_data;
 
 	newchannel = NULL;
 	sfx = &S_sfx[sound_id];
-	length = sfx->md_data->samples;
+	md_data = W_POINTLUMPNUM(sfx->lump);
+	length = md_data->samples;
 	loop_length = 0;
 
 	if (length < 4)
@@ -432,7 +430,7 @@ gotchannel:
 	newchannel->increment = (11025 << 14) / SAMPLE_RATE;
 	newchannel->length = length << 14;
 	newchannel->loop_length = loop_length << 14;
-	newchannel->data = &sfx->md_data->data[0];
+	newchannel->data = &md_data->data[0];
 
 	// volume and panning will be updated later in S_Spatialize
 	newchannel->volume = 64;
