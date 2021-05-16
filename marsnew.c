@@ -39,9 +39,9 @@ const int COLOR_WHITE = 0x04;
 int		activescreen = 0;
 short	*dc_colormaps;
 
-unsigned	vblank_count = 0;
-unsigned	frt_ovf_count = 0;
-static float frt_counter2msec = 0;
+unsigned vblank_count = 0;
+unsigned frt_ovf_count = 0;
+unsigned frtc2msec_frac = 0;
 
 const int NTSC_CLOCK_SPEED = 23011360; // HZ
 const int PAL_CLOCK_SPEED  = 22801467; // HZ
@@ -105,7 +105,7 @@ void Mars_Init(void)
 	MARS_SYS_COMM4 = 0;
 
 	// change 128.0f to something else if SH2_FRT_TCR is changed!
-	frt_counter2msec = 128.0f * 1000.0f / (NTSC ? NTSC_CLOCK_SPEED : PAL_CLOCK_SPEED);
+	frtc2msec_frac = 128.0f * 1000.0f / (NTSC ? NTSC_CLOCK_SPEED : PAL_CLOCK_SPEED) * 65536.f;
 
 	activescreen = MARS_VDP_FBCTL;
 
@@ -336,7 +336,7 @@ int I_GetFRTCounter(void)
 
 int I_FRTCounter2Msec(int c)
 {
-	return (int)((float)c * frt_counter2msec);
+	return FixedMul((unsigned)c << FRACBITS, frtc2msec_frac)>>FRACBITS;
 }
 
 /*
