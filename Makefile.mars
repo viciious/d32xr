@@ -115,4 +115,4 @@ $(TARGET).elf: $(OBJS)
 
 clean:
 	make clean -C src-md
-	$(RM) music/*.o *.o *.bin *.elf output.map
+	$(RM) *.o *.bin *.elf output.map
