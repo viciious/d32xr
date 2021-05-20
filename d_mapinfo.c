@@ -28,107 +28,107 @@
 #include <stdlib.h>
 
 const char* defaultDMAPINFO = ""
-"map \"776\" \"Hangar\"\n"
+"map \"MAP01\" \"Hangar\"\n"
 "{\n"
 "    sky = \"sky1\"\n"
-"    next = \"787\"\n"
+"    next = \"MAP02\"\n"
 "    mapnumber = 1\n"
 "}\n"
-"map \"787\" \"Plant\"\n"
+"map \"MAP02\" \"Plant\"\n"
 "{\n"
 "    sky = \"sky1\"\n"
-"    next = \"798\"\n"
+"    next = \"MAP03\"\n"
 "    mapnumber = 2\n"
 "}\n"
-"map \"798\" \"Toxin Refinery\"\n"
+"map \"MAP03\" \"Toxin Refinery\"\n"
 "{\n"
 "    sky = \"sky1\"\n"
-"    next = \"809\"\n"
-"    secretnext = \"952\"\n"
+"    next = \"MAP04\"\n"
+"    secretnext = \"MAP23\"\n"
 "    mapnumber = 3\n"
 "}\n"
-"map \"809\" \"Command Control\"\n"
+"map \"MAP04\" \"Command Control\"\n"
 "{\n"
 "    sky = \"sky1\"\n"
-"    next = \"820\"\n"
+"    next = \"MAP05\"\n"
 "    mapnumber = 4\n"
 "}\n"
-"map \"820\" \"Phobos Lab\"\n"
+"map \"MAP05\" \"Phobos Lab\"\n"
 "{\n"
 "    sky = \"sky1\"\n"
-"    next = \"831\"\n"
+"    next = \"MAP06\"\n"
 "    mapnumber = 5\n"
 "}\n"
-"map \"831\" \"Central Processing\"\n"
+"map \"MAP06\" \"Central Processing\"\n"
 "{\n"
 "    sky = \"sky1\"\n"
-"    next = \"842\"\n"
+"    next = \"MAP07\"\n"
 "    mapnumber = 6\n"
 "}\n"
-"map \"842\" \"Computer Station\"\n"
+"map \"MAP07\" \"Computer Station\"\n"
 "{\n"
 "    sky = \"sky1\"\n"
-"    next = \"853\"\n"
+"    next = \"MAP08\"\n"
 "    mapnumber = 7\n"
 "}\n"
-"map \"853\" \"Phobos Anomaly\"\n"
+"map \"MAP08\" \"Phobos Anomaly\"\n"
 "{\n"
 "    sky = \"sky1\"\n"
-"    next = \"864\"\n"
+"    next = \"MAP09\"\n"
 "    mapnumber = 8\n"
 "    BaronSpecial\n"
 "}\n"
-"map \"864\" \"Deimos Anomaly\"\n"
+"map \"MAP09\" \"Deimos Anomaly\"\n"
 "{\n"
 "    sky = \"sky2\"\n"
-"    next = \"875\"\n"
+"    next = \"MAP10\"\n"
 "    mapnumber = 9\n"
 "}\n"
-"map \"875\" \"Containment Area\"\n"
+"map \"MAP10\" \"Containment Area\"\n"
 "{\n"
 "    sky = \"sky2\"\n"
-"    next = \"886\"\n"
+"    next = \"MAP11\"\n"
 "    mapnumber = 10\n"
 "}\n"
-"map \"886\" \"Refinery\"\n"
+"map \"MAP11\" \"Refinery\"\n"
 "{\n"
 "    sky = \"sky2\"\n"
-"    next = \"897\"\n"
+"    next = \"MAP12\"\n"
 "    mapnumber = 11\n"
 "}\n"
-"map \"897\" \"Deimos Lab\"\n"
+"map \"MAP12\" \"Deimos Lab\"\n"
 "{\n"
 "    sky = \"sky2\"\n"
-"    next = \"908\"\n"
+"    next = \"MAP13\"\n"
 "    mapnumber = 12\n"
 "}\n"
-"map \"908\" \"Command Center\"\n"
+"map \"MAP13\" \"Command Center\"\n"
 "{\n"
 "    sky = \"sky2\"\n"
-"    next = \"919\"\n"
+"    next = \"MAP14\"\n"
 "    mapnumber = 13\n"
 "}\n"
-"map \"919\" \"Halls of the Damned\"\n"
+"map \"MAP14\" \"Halls of the Damned\"\n"
 "{\n"
 "    sky = \"sky2\"\n"
-"    next = \"930\"\n"
+"    next = \"MAP15\"\n"
 "    mapnumber = 14\n"
 "}\n"
-"map \"930\" \"Spawning Vats\"\n"
+"map \"MAP15\" \"Spawning Vats\"\n"
 "{\n"
 "    sky = \"sky2\"\n"
-"    next = \"941\"\n"
+"    next = \"MAP23\"\n"
 "    mapnumber = 15\n"
 "}\n"
-"map \"941\" \"Dis\"\n"
+"map \"MAP23\" \"Dis\"\n"
 "{\n"
 "    sky = \"sky3\"\n"
 "    mapnumber = 23\n"
 "}\n"
-"map \"952\" \"Military Base\"\n"
+"map \"MAP24\" \"Military Base\"\n"
 "{\n"
 "    sky = \"sky3\"\n"
-"    next = \"809\"\n"
+"    next = \"MAP04\"\n"
 "    mapnumber = 24\n"
 "}\n"
 "\n"
@@ -337,11 +337,19 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 		char* p;
 
 		if (!D_strncasecmp(key, "map ", 4)) {
+			char* pp = NULL;
+
 			p = skipspaces(strchr(key, ' '));
+			if (p)
+			{
+				pp = strchr(p + 1, ' ');
+				if (pp) *pp = '\0';
+				pp = skipspaces(pp + 1);
+			}
 
-			mi->lumpnum = atoi(stripquote(p));
+			mi->lumpnum = W_GetNumForName(stripquote(p));
 
-			p = skipspaces(strchr(p, ' '));
+			p = pp;
 			if (p) {
 				mi->name = stripquote(p);
 			}
@@ -362,22 +370,28 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 	}
 
 	if (!D_strcasecmp(key, "next"))
-		mi->next = atoi(value);
+		mi->next = W_GetNumForName(value);
 	else if (!D_strcasecmp(key, "sky"))
 		mi->sky = value;
 	else if (!D_strcasecmp(key, "secretnext"))
-		mi->secretnext = atoi(value);
+		mi->secretnext = W_GetNumForName(value);
 	else if (!D_strcasecmp(key, "mapnumber"))
 		mi->mapnumber = atoi(value);
 }
 
-static const char* G_FindMapinfoSection(const char* buf, int maplump, size_t *psectionlen)
+static const char* G_FindMapinfoSection(const char* buf, const char *lumpname, size_t *psectionlen)
 {
+	int i;
 	char name[16];
 	const char* section, *ptr;
 	size_t namelen, sectionlen;
+	char lumpname8[9]; // null-terminated
 
-	namelen = D_snprintf(name, sizeof(name), "map \"%d\"", maplump);
+	for (i = 0; i < 8 && lumpname[i] != '\0'; i++)
+		lumpname8[i] = lumpname[i];
+	lumpname8[i] = '\0';
+
+	namelen = D_snprintf(name, sizeof(name), "map \"%s\"", lumpname8);
 	*psectionlen = 0;
 
 	section = NULL;
@@ -412,7 +426,7 @@ int G_FindMapinfo(int maplump, dmapinfo_t *mi)
 	if (!buf)
 		return 0;
 
-	section = G_FindMapinfoSection(buf, maplump, &sectionlen);
+	section = G_FindMapinfoSection(buf, G_GetMapNameForLump(maplump), &sectionlen);
 	if (!section)
 		return 0;
 
