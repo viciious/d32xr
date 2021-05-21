@@ -36,7 +36,7 @@ void Mars_FlipFrameBuffers(boolean wait);
 void Mars_WaitFrameBuffersFlip(void);
 void Mars_Init(void);
 int Mars_ToDoomControls(int ctrl);
-void Mars_Slave(void);
+void Mars_Slave(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_UploadPalette(const byte* palette);
 
 #define Mars_ClearCacheLine(addr) *(volatile int *)((addr) | 0x40000000) = 0

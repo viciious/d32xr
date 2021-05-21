@@ -446,50 +446,6 @@ void DrawSinglePlaque (jagobj_t *pl)
 }
 
 
-/*
-=============
-=
-= DrawTiledBackground
-=
-=============
-*/
-static void DrawTiledBackground(void)
-{
-	int			y, yt;
-	const int	w = 64, h = 64;
-	const int	hw = w / 2;
-	const int xtiles = (320 + w - 1) / w;
-	const int ytiles = (200 + h - 1) / h;
-	pixel_t		*bdest;
-	const pixel_t* bsrc;
-
-	bsrc = (const pixel_t *)W_POINTLUMPNUM(W_GetNumForName("ROCKS"));
-	bdest = I_FrameBuffer();
-
-	y = 0;
-	for (yt = 0; yt < ytiles; yt++)
-	{
-		int y1;
-		const pixel_t* source = bsrc;
-
-		for (y1 = 0; y1 < 64; y1++)
-		{
-			int xt;
-
-			for (xt = 0; xt < xtiles; xt++) {
-				int x;
-				for (x = 0; x < hw; x++)
-					*bdest++ = source[x];
-			}
-
-			y++;
-			source += hw;
-			if (y == 224)
-				return;
-		}
-	}
-}
-
 /* 
 ============= 
 = 

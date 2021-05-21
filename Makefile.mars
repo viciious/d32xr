@@ -83,6 +83,7 @@ OBJS = \
 	z_zone.o \
 	marsonly.o \
 	marsnew.o \
+	marsdraw.o \
 	wadbase.o \
 	comnnew.o \
 	d_mapinfo.o \
