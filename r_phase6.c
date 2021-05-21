@@ -356,7 +356,7 @@ static void R_SegCommandsMask(const int mask)
 {
     int i;
     unsigned short *clip;
-    viswall_t* segl;
+    viswall_t* segl, *first, *last;
     seglocal_t lseg;
     drawtex_t* toptex, * bottomtex;
 
@@ -373,7 +373,10 @@ static void R_SegCommandsMask(const int mask)
     bottomtex = &lseg.bottomtex;
     lseg.clipbounds = clipbounds;
 
-    for (segl = viswalls; segl < lastwallcmd; segl++)
+    first = viswalls;
+    last = *(viswall_t **)((intptr_t)&lastwallcmd | 0x20000000);
+
+    for (segl = first; segl < last; segl++)
     {
         if (segl->start > segl->stop)
             continue;
