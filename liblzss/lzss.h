@@ -34,7 +34,7 @@ typedef struct
     uint8_t buf[LZSS_BUF_SIZE];
 } lzss_state_t;
 
-void lzss_setup(lzss_state_t* lzss, uint8_t* base) __attribute__((section(".data"), aligned(16)));
-int lzss_read(lzss_state_t* lzss, uint16_t chunk) __attribute__((section(".data"), aligned(16)));
+void lzss_setup(lzss_state_t* lzss, uint8_t* base);
+int lzss_read(lzss_state_t* lzss, uint16_t chunk);
 
 #endif // _LZSS_H_
