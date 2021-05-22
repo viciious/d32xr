@@ -117,7 +117,7 @@ void Mars_Init(void)
 		Mars_FlipFrameBuffers(true);
 	}
 
-	ticrate = NTSC ? 4 : 3;
+	ticrate = 4;
 
 	/* set a two color palette */
 	palette = &MARS_CRAM;

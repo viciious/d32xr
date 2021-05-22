@@ -332,7 +332,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 /* adaptive timing based on previous frame */
 /* */
 		if (demoplayback || demorecording)
-			vblsinframe = ticrate;
+			vblsinframe = 4;
 		else
 		{
 			vblsinframe = lasttics;
