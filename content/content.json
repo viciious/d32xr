@@ -8007,15 +8007,11 @@
         "size": 11520
     },
     {
-        "compressed": true,
-        "compressed_size": 540,
         "filename": "demo1",
         "name": "DEMO1",
         "size": 3004
     },
     {
-        "compressed": true,
-        "compressed_size": 661,
         "filename": "demo2",
         "name": "DEMO2",
         "size": 3944
@@ -9195,6 +9191,11 @@
         "name": "MUS_NTRO",
         "filename": "VGM/Intro.vgm",
         "size": 3091
+    },
+    {
+        "name": "MUS_NTER",
+        "filename": "VGM/Inter.vgm",
+        "size": 32191
     },
     {
         "name": "VGM_END",
