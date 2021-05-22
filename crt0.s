@@ -862,12 +862,16 @@ slave_dma1:
         mov.l   r5,@-r15
         mov.l   r6,@-r15
         mov.l   r7,@-r15
+        sts.l   mach,@-r15
+        sts.l   macl,@-r15
 
         mov.l   sd1_handler,r0
         jsr     @r0
         nop
 
         ! restore registers
+        lds.l   @r15+,macl
+        lds.l   @r15+,mach
         mov.l   @r15+,r7
         mov.l   @r15+,r6
         mov.l   @r15+,r5
