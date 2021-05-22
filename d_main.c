@@ -656,7 +656,10 @@ D_printf ("S_Init\n");
 	S_Init ();
 D_printf("ST_Init\n");
 	ST_Init ();
+D_printf("O_Init\n");
 	O_Init ();
+D_printf("G_Init\n");
+	G_Init();
 
 /*========================================================================== */
 

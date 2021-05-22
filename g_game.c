@@ -351,6 +351,11 @@ void G_SecretExitLevel (void)
   
 /*============================================================================  */
  
+void G_Init(void)
+{
+	players = Z_Malloc(sizeof(*players) * MAXPLAYERS, PU_STATIC, 0);
+}
+
 /* 
 ==================== 
 = 
@@ -368,9 +373,6 @@ void G_InitNew (skill_t skill, int map, gametype_t gametype)
 D_printf ("G_InitNew\n");
 
 	M_ClearRandom (); 
-
-	if (!players)
-		players = Z_Malloc(sizeof(*players) * MAXPLAYERS, PU_STATIC, 0);
 
 	if (gamemapinfo.data)
 		Z_Free(gamemapinfo.data);

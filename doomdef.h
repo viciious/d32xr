@@ -703,6 +703,7 @@ void I_DebugScreen (void);
 /*---- */
 
 void G_DeathMatchSpawnPlayer (int playernum);
+void G_Init(void);
 void G_InitNew (skill_t skill, int map, gametype_t gametype) ATTR_OPTIMIZE_SIZE;
 void G_ExitLevel (void);
 void G_SecretExitLevel (void);
