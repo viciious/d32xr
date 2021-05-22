@@ -220,6 +220,7 @@ void I_Update (void)
 	char buf[32];
 	static int fpscount = 0;
 	static int prevsec = 0;
+	static int framenum = 0;
 	boolean NTSC = (MARS_VDP_DISPMODE & MARS_NTSC_FORMAT) != 0;
 	const int ticwait = (demoplayback ? 3 : 2); // demos were recorded at 15-20fps
 	const int refreshHZ = (NTSC ? 60 : 50);
@@ -292,10 +293,11 @@ void I_Update (void)
 	sec = ticcount / refreshHZ; // FIXME: add proper NTSC vs PAL rate detection
 	if (sec != prevsec) {
 		static int prevsecframe;
-		fpscount = (framecount - prevsecframe) / (sec - prevsec);
+		fpscount = (framenum - prevsecframe) / (sec - prevsec);
 		prevsec = sec;
-		prevsecframe = framecount;
+		prevsecframe = framenum;
 	}
+	framenum++;
 
 	cy = 1;
 }
