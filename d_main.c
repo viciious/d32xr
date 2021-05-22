@@ -576,10 +576,10 @@ int  RunDemo (char *demoname)
 {
 	int	*demo;
 	int	exit;
-		
-	demo = W_CacheLumpName (demoname, PU_STATIC);
+
+	demo = W_POINTLUMPNUM(W_GetNumForName(demoname));
 	exit = G_PlayDemoPtr (demo);
-	Z_Free (demo);
+
 #ifndef MARS
 	if (exit == ga_exitdemo)
 		RunMenu ();
