@@ -221,14 +221,14 @@ void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **us
 	if (id < 0)
 		return;
 
-	size = pixels + sizeof(texcacheblock_t) + 64;
-	if (Z_LargestFreeBlock(c->zone) < size + 96)
+	size = pixels + sizeof(texcacheblock_t) + 32;
+	if (Z_LargestFreeBlock(c->zone) < size + 32)
 	{
 		// free unused entries when under pressure
 		Z_ForEachBlock(c->zone, &R_EvictFromTexCache, c);
 
 		// try allocating again
-		if (Z_LargestFreeBlock(c->zone) < size + 96)
+		if (Z_LargestFreeBlock(c->zone) < size + 32)
 			return;
 	}
 

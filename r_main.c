@@ -323,8 +323,8 @@ void R_SetupTextureCaches(void)
 	void *margin;
 
 	const int zonemargin = 4*1024;
-	const int flatblocksize = sizeof(memblock_t) + sizeof(texcacheblock_t) + 64*64 + 128;
-	const int texblocksize = sizeof(memblock_t) + sizeof(texcacheblock_t) + 64*128 + 128;
+	const int flatblocksize = sizeof(memblock_t) + sizeof(texcacheblock_t) + 64*64 + 32;
+	const int texblocksize = sizeof(memblock_t) + sizeof(texcacheblock_t) + 64*128 + 32;
 
 	// reset pointers from previous level
 	for (i = 0; i < numtextures; i++)
@@ -338,7 +338,7 @@ void R_SetupTextureCaches(void)
 		goto nocache;
 
 	// see how many flats we can store
-	cachezonesize = zonefree - zonemargin - 128; // give the main zone some slack
+	cachezonesize = zonefree - zonemargin - 32; // give the main zone some slack
 
 	numcflats = cachezonesize / flatblocksize;
 	if (numcflats > 4)
