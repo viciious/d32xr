@@ -380,34 +380,29 @@ R_InstallSpriteLump(const char* spritename, char letter, spriteframe_t* frame,
 	if (rotation == 0)
 	{
 		// the lump should be used for all rotations
-		if (frame->rotate == false)
+		if (frame->rotate == 1)
 			I_Error("R_InitSprites: Sprite %s frame %c has "
 				"multip rot=0 lump", spritename, letter);
 
-		if (frame->rotate == true)
+		if (frame->rotate == 2)
 			I_Error("R_InitSprites: Sprite %s frame %c has rotations "
 				"and a rot=0 lump", spritename, letter);
 
-		frame->rotate = false;
+		frame->rotate = 1;
 		for (r = 0; r < 8; r++)
 		{
 			frame->lump[r] = lump;
-			frame->flip[r] = (byte)flipped;
+			frame->flip[r] = (byte)(flipped + 1);
 		}
 		return;
 	}
 
 	// the lump is only used for one rotation
-	if (frame->rotate == false)
-		I_Error("Sprite %s frame %c has rotations "
-			"and a rot=0 lump", spritename, letter);
-
-	// the lump is only used for one rotation
-	if (frame->rotate == false)
+	if (frame->rotate == 1)
 		I_Error("R_InitSprites: Sprite %s frame %c has rotations "
 			"and a rot=0 lump", spritename, letter);
 
-	frame->rotate = true;
+	frame->rotate = 2;
 
 	// make 0 based
 	rotation--;
@@ -417,7 +412,7 @@ R_InstallSpriteLump(const char* spritename, char letter, spriteframe_t* frame,
 			spritename, letter, '1' + rotation);
 
 	frame->lump[rotation] = lump;
-	frame->flip[rotation] = (byte)flipped;
+	frame->flip[rotation] = (byte)(flipped + 1);
 }
 
 
@@ -447,8 +442,10 @@ void R_InitSpriteDefs(const char** namelist)
 	int		start;
 	int		end;
 	int		numsprites = NUMSPRITES;
-	spriteframe_t	sprtemp[29];
+	spriteframe_t	*sprtemp, *sprfinal;
 	int		maxframe;
+	byte	*tempbuf;
+	int		totalframes;
 
 	start = W_CheckNumForName("S_START");
 	if (start < 0)
@@ -468,11 +465,14 @@ void R_InitSpriteDefs(const char** namelist)
 	// scan all the lump names for each of the names,
 	//  noting the highest frame letter.
 	maxframe = 29;
+	totalframes = 0;
+	tempbuf = I_WorkBuffer();
+	sprtemp = (void*)tempbuf;
 	for (i = 0; i < numsprites; i++)
 	{
 		const char* spritename = namelist[i];
 
-		D_memset(sprtemp, -1, sizeof(sprtemp[0]) * maxframe);
+		D_memset(sprtemp, -1, sizeof(spriteframe_t) * 29);
 		maxframe = -1;
 
 		// scan the lumps,
@@ -520,12 +520,11 @@ void R_InitSpriteDefs(const char** namelist)
 			switch ((int)sprtemp[frame].rotate)
 			{
 			case -1:
-				sprtemp[frame].rotate = 0;
-				I_Error("%s", spritename);
-			case 0:
+				sprtemp[frame].rotate = 1;
+			case 1:
 				// only the first rotation is needed
 				break;
-			case 1:
+			case 2:
 				// must have all 8 frames
 				for (rotation = 0; rotation < 8; rotation++)
 					if (sprtemp[frame].lump[rotation] == -1)
@@ -538,8 +537,30 @@ void R_InitSpriteDefs(const char** namelist)
 
 		// allocate space for the frames present and copy sprtemp to it
 		sprites[i].numframes = maxframe;
-		sprites[i].spriteframes =
-			Z_Malloc(maxframe * sizeof(spriteframe_t), PU_STATIC, NULL);
-		D_memcpy(sprites[i].spriteframes, sprtemp, maxframe * sizeof(spriteframe_t));
+
+		sprtemp += maxframe;
+		totalframes += maxframe;
+	}
+
+	sprfinal = Z_Malloc(totalframes * sizeof(spriteframe_t), PU_STATIC, NULL);
+	D_memcpy(sprfinal, tempbuf, totalframes * sizeof(spriteframe_t));
+
+	for (i = 0; i < numsprites; i++)
+	{
+		int f;
+		int numframes;
+
+		numframes = sprites[i].numframes;
+		sprites[i].spriteframes = sprfinal;
+
+		for (f = 0; f < maxframe; f++)
+		{
+			int r;
+			sprfinal[f].rotate -= 1;
+			for (r = 0; r < 8; r++)
+				sprfinal[f].flip[r] -= 1;
+		}
+
+		sprfinal += numframes;
 	}
 }
