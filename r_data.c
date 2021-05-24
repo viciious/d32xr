@@ -44,7 +44,8 @@ void R_InitTextures (void)
 /* */
 /* load the map texture definitions from textures.lmp */
 /* */
-	maptex = W_CacheLumpName ("TEXTURE1", PU_STATIC);
+	maptex = (void *)I_TempBuffer();
+	W_ReadLump(W_GetNumForName("TEXTURE1"), maptex);
 	numtextures = LITTLELONG(*maptex);
 	directory = maptex+1;
 	
@@ -71,8 +72,6 @@ void R_InitTextures (void)
 if (texture->lumpnum == -1)
 	texture->lumpnum = 0;
 	}
-
-	Z_Free (maptex);
 	
 /* */
 /* translation table for global animation */
