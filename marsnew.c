@@ -351,19 +351,20 @@ int I_FRTCounter2Msec(int c)
 */
 byte	*I_TempBuffer (void)
 {
-	int *p = (int*)I_WorkBuffer();
-	int *p_end = (int*)framebufferend;
+	byte *w = I_WorkBuffer();
+	int *p, *p_end = (int*)framebufferend;
 
 	// clear the buffer so the fact that 32x ignores 0-byte writes goes unnoticed
 	// the buffer cannot be re-used without clearing it again though
-	while (p < p_end)
-		*p++ = 0;
+	for (p = (int*)w; p < p_end; p++)
+		*p = 0;
 
-	return I_WorkBuffer();
+	return w;
 }
 
 byte 	*I_WorkBuffer (void)
 {
+	while (!I_RefreshCompleted());
 	return (byte *)(I_ViewportBuffer() + 320 / 2 * 224);
 }
 
