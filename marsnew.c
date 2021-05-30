@@ -401,23 +401,17 @@ void DoubleBufferSetup (void)
 {
 	int i;
 
-	for (i = 0; i < 2; i++) {
-		while (!I_RefreshCompleted())
-			;
-
-		I_ClearFrameBuffer();
-
-		UpdateBuffer();
-	}
-
 	while (!I_RefreshCompleted())
 		;
+
+	for (i = 0; i < 2; i++) {
+		I_ClearFrameBuffer();
+		Mars_FlipFrameBuffers(true);
+	}
 }
 
 void UpdateBuffer (void) {
-	I_Update();
-	while (!I_RefreshCompleted())
-		;
+	Mars_FlipFrameBuffers(true);
 }
 
 void ReadEEProm (void)
