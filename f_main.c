@@ -14,7 +14,6 @@
 
 void BufferedDrawSprite (int sprite, int frame, int rotation)
 {
-#ifndef MARS
 	spritedef_t	*sprdef;
 	spriteframe_t	*sprframe;
 	patch_t		*patch;
@@ -35,8 +34,16 @@ void BufferedDrawSprite (int sprite, int frame, int rotation)
 		,sprite,frame);
 	sprframe = &sprdef->spriteframes[ frame & FF_FRAMEMASK];
 
-	lump = sprframe->lump[rotation];
-	flip = (boolean)sprframe->flip[rotation];
+	if (sprframe->rotate)
+	{
+		lump = sprframe->lump[rotation];
+		flip = (boolean)sprframe->flip[rotation];
+	}
+	else
+	{
+		lump = sprframe->lump[0];
+		flip = (boolean)sprframe->flip[0];
+	}
 
 	patch = (patch_t *)W_POINTLUMPNUM(lump);
 	pixels = Z_Malloc (lumpinfo[lump+1].size, PU_STATIC, NULL);
@@ -72,7 +79,7 @@ void BufferedDrawSprite (int sprite, int frame, int rotation)
 		for ( ; column->topdelta != 0xff ; column++) 
 		{
 	/* calculate unclipped screen coordinates for post */
-			dest = bufferpage + (short)(sprtop+column->topdelta)*(short)640+(sprleft + x)*2;
+			dest = (byte *)I_FrameBuffer() + (short)(sprtop+column->topdelta)*(short)640+(sprleft + x)*2;
 			count = column->length;
 			src = pixels + column->dataofs;
 			while (count--)
@@ -86,8 +93,7 @@ void BufferedDrawSprite (int sprite, int frame, int rotation)
 		}
 	}
 	
-	Z_Free (pixels);	
-#endif
+	Z_Free (pixels);
 }
 
 
@@ -99,7 +105,7 @@ typedef struct
 	mobjtype_t	type;
 } castinfo_t;
 
-static castinfo_t castorder[] = {
+static const castinfo_t castorder[] = {
 {"zombieman", MT_POSSESSED},
 {"shotgun guy", MT_SHOTGUY},
 {"imp", MT_TROOP},
@@ -173,12 +179,11 @@ static const char	endtextstring[] =
 /* Print a string in big font - LOWERCASE INPUT ONLY! */
 /* */
 /*=============================================== */
-void F_PrintString(char *string)
+void F_PrintString1(const char *string)
 {
-#ifndef MARS
 	int		index;
 	int		val;
-	
+
 	index = 0;
 	while(1)
 	{
@@ -216,7 +221,24 @@ void F_PrintString(char *string)
 		}
 		index++;
 	}
+}
+
+// Prints to both framebuffers, if needed.
+void F_PrintString2(const char* string)
+{
+#ifdef MARS
+	int		btext_x, btext_y;
+
+	btext_x = text_x;
+	btext_y = text_y;
+	F_PrintString1(string);
+
+	UpdateBuffer();
+
+	text_x = btext_x;
+	text_y = btext_y;
 #endif
+	F_PrintString1(string);
 }
 
 /*=============================================== */
@@ -239,7 +261,7 @@ void F_CastPrint(char *string)
 
 	text_x = 160 - (width >> 1);
 	text_y = 20;
-	F_PrintString(string);
+	F_PrintString1(string);
 }
 
 /*
@@ -252,11 +274,11 @@ void F_CastPrint(char *string)
 
 void F_Start (void)
 {
-#ifndef MARS
 	int	i;
 	int	l;
-#endif
+#ifndef MARS
 	S_StartSong(2, 1);
+#endif
 
 	status = fin_endtext;		/* END TEXT PRINTS FIRST */
 	textprint = false;
@@ -264,11 +286,11 @@ void F_Start (void)
 	textdelay = TEXTTIME;
 	text_x = STARTX;
 	text_y = STARTY;
-#ifndef MARS
+
 	l = W_GetNumForName ("CHAR_097");
 	for (i = 0; i < NUMENDOBJ; i++)
 		endobj[i] = W_CacheLumpNum(l+i, PU_STATIC);
-#endif
+
 	castnum = 0;
 	caststate = &states[mobjinfo[castorder[castnum].type].seestate];
 	casttics = caststate->tics;
@@ -277,21 +299,22 @@ void F_Start (void)
 	castonmelee = 0;
 	castattacking = false;
 
-#ifndef MARS
+#ifdef MARS
+	DrawTiledBackground();
+	UpdateBuffer();
+	DrawTiledBackground();
+#else
 	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
-
 	DoubleBufferSetup ();
 #endif
 }
 
 void F_Stop (void)
 {
-#ifndef MARS
 	int	i;
 	
 	for (i = 0;i < NUMENDOBJ; i++)
 		Z_Free(endobj[i]);
-#endif
 }
 
 
@@ -467,7 +490,6 @@ stopattack:
 
 void F_Drawer (void)
 {
-		
 	switch(status)
 	{
 		case fin_endtext:
@@ -479,20 +501,29 @@ void F_Drawer (void)
 				str[0] = endtextstring[textindex];
 				if (!str[0])
 					return;
-				F_PrintString(str);
+				F_PrintString2(str);
 				textdelay = TEXTTIME;
 				textindex++;
 			}
 			break;
 			
 		case fin_charcast:
-			EraseBlock (0,0,320,200);
+#ifdef MARS
+			DrawTiledBackground();
+#else
+			EraseBlock(0, 0, 320, 200);
+#endif
 			F_CastPrint (castorder[castnum].name);
 				
 			BufferedDrawSprite (caststate->sprite,
 					caststate->frame&FF_FRAMEMASK,0);
 			break;
 	}
+
+#ifdef MARS
+	I_Update();
+#else
 	UpdateBuffer ();
+#endif
 }
 
