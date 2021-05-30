@@ -48,7 +48,8 @@ const int PAL_CLOCK_SPEED  = 22801467; // HZ
 
 extern int 	debugmode;
 
-static volatile pixel_t	*framebuffer = &MARS_FRAMEBUFFER + 0x100;
+// framebuffer start is after line table AND a single blank line
+static volatile pixel_t* framebuffer = &MARS_FRAMEBUFFER + 0x100 + 160;
 static volatile pixel_t *framebufferend = &MARS_FRAMEBUFFER + 0x10000;
 
 #ifdef USE_C_DRAW
@@ -116,6 +117,12 @@ void Mars_Init(void)
 		// initialize the lines section of the framebuffer
 		for (j = 0; j < 224; j++)
 			lines[j] = j * 320 / 2 + 0x100;
+		// set the rest of the line table to a blank line
+		for (j = 224; j < 256; j++)
+			lines[j] = 0x100;
+		// make sure blank line is clear
+		for (j = 256; j < (256 + 160); j++)
+			lines[j] = 0;
 
 		Mars_ClearFrameBuffer();
 
@@ -365,7 +372,7 @@ byte	*I_TempBuffer (void)
 byte 	*I_WorkBuffer (void)
 {
 	while (!I_RefreshCompleted());
-	return (byte *)(I_ViewportBuffer() + 320 / 2 * 224);
+	return (byte *)(framebuffer + 320 / 2 * 224);
 }
 
 pixel_t	*I_FrameBuffer (void)
