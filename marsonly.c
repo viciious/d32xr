@@ -220,6 +220,15 @@ void I_Update (void)
 	char buf[32];
 	static int fpscount = 0;
 	static int prevsec = 0;
+	const int ticwait = (demoplayback ? 3 : 2); // demos were recorded at 15-20fps
+
+	if ((ticbuttons[consoleplayer] & BT_STAR) && !(oldticbuttons[consoleplayer] & BT_STAR))
+	{
+		extern int clearscreen;
+		debugmode = (debugmode + 1) % 4;
+		clearscreen = 2;
+	}
+	debugscreenactive = debugmode != 0;
 
 	if (debugmode == 1)
 	{
@@ -273,7 +282,7 @@ void I_Update (void)
 	do
 	{
 		ticcount = I_GetTime();
-	} while (ticcount-lastticcount < 2);
+	} while (ticcount-lastticcount < ticwait);
 
 	lasttics = ticcount - lastticcount;
 	lastticcount = ticcount;
@@ -287,17 +296,80 @@ void I_Update (void)
 	}
 
 	cy = 1;
-
-	if ((I_ReadControls() & BT_STAR) == BT_STAR)
-	{
-		static int lastdebugtic = 0;
-		if (ticcount > lastdebugtic + 20)
-		{
-			debugmode = (debugmode + 1) % 4;
-			lastdebugtic = ticcount;
-		}
-	}
-
-	debugscreenactive = debugmode != 0;
 }
 
+void EraseBlock(int x, int y, int width, int height)
+{
+}
+
+void DrawJagobj2(jagobj_t* jo, int x, int y, int src_x, int src_y, int src_w, int src_h)
+{
+	int		srcx, srcy;
+	int		width, height;
+	int		rowsize;
+
+	rowsize = BIGSHORT(jo->width);
+	width = BIGSHORT(jo->width);
+	height = BIGSHORT(jo->height);
+
+	if (src_w > 0)
+		width = src_w;
+	else if (src_w < 0)
+		width += src_w;
+
+	if (src_h > 0)
+		height = src_h;
+	else if (src_h < 0)
+		height += src_h;
+
+	srcx = 0;
+	srcy = 0;
+
+	if (x < 0)
+	{
+		width += x;
+		srcx = -x;
+		x = 0;
+	}
+	srcx += src_x;
+	width -= src_x;
+
+	if (y < 0)
+	{
+		srcy = -y;
+		height += y;
+		y = 0;
+	}
+
+	srcy += src_y;
+	height -= src_y;
+
+	if (x + width > 320)
+		width = 320 - x;
+	if (y + height > 200)
+		height = 200 - y;
+
+	if (width < 1 || height < 1)
+		return;
+	{
+		byte* dest;
+		byte* source;
+
+		source = jo->data + srcx + srcy * rowsize;
+
+		dest = (byte*)I_FrameBuffer() + y * 320 + x;
+		for (; height; height--)
+		{
+			int i;
+			for (i = 0; i < width; i++)
+				dest[i] = source[i];
+			source += rowsize;
+			dest += 320;
+		}
+	}
+}
+
+void DrawJagobj(jagobj_t* jo, int x, int y)
+{
+	DrawJagobj2(jo, x, y, 0, 0, 0, 0);
+}

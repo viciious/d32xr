@@ -1098,7 +1098,6 @@ void DoubleBufferSetup (void)
 
 void EraseBlock (int x, int y, int width, int height)
 {
-
 	if (x<0)
 	{
 		width += x;

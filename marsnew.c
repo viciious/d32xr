@@ -31,10 +31,20 @@
 #include "mars_ringbuf.h"
 #include "r_local.h"
 #include "wadbase.h"
+#include "lzss.h"
 
 //#define USE_C_DRAW
 
+typedef struct
+{
+	int length;
+	byte* dest;
+	byte* source;
+} drawjagbj_t;
+
 const int COLOR_WHITE = 0x04;
+
+static drawjagbj_t djo;
 
 int		activescreen = 0;
 short	*dc_colormaps;
@@ -215,6 +225,15 @@ void Mars_Slave(void)
 		case 10:
 			Mars_Slave_InitSoundDMA();
 			break;
+		case 11:
+		{
+			int i;
+			drawjagbj_t* jo = (void *)((intptr_t)&djo | 0x20000000);
+			byte *source = (void*)((intptr_t)jo->source | 0x20000000);
+			byte* dest = jo->dest;
+			for (i = jo->length; i > 0; i--)
+				*dest++ = *source++;
+		}
 		default:
 			break;
 		}
@@ -612,17 +631,25 @@ void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, fix
 
 void DoubleBufferSetup (void)
 {
-}
+	int i;
 
-void EraseBlock (int x, int y, int width, int height)
-{
-}
+	for (i = 0; i < 2; i++) {
+		while (!I_RefreshCompleted())
+			;
 
-void DrawJagobj (jagobj_t *jo, int x, int y)
-{
+		I_ClearFrameBuffer();
+
+		UpdateBuffer();
+	}
+
+	while (!I_RefreshCompleted())
+		;
 }
 
 void UpdateBuffer (void) {
+	I_Update();
+	while (!I_RefreshCompleted())
+		;
 }
 
 void ReadEEProm (void)
@@ -642,4 +669,75 @@ unsigned I_NetTransfer (unsigned ctrl)
 
 void I_NetSetup (void)
 {
+}
+
+void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh)
+{
+	lzss_state_t gfx_lzss;
+	byte* lump;
+	jagobj_t* jo;
+	int width, height;
+
+	if (lumpnum < 0)
+		return;
+
+	lump = W_POINTLUMPNUM(lumpnum);
+	if (!(lumpinfo[lumpnum].name[0] & 0x80))
+	{
+		// uncompressed
+		DrawJagobj((void*)lump, x, y);
+		return;
+	}
+
+	lzss_setup(&gfx_lzss, (void*)((intptr_t)lump | 0x20000000));
+	if (lzss_read(&gfx_lzss, 16) != 16)
+		return;
+
+	jo = (jagobj_t*)gfx_lzss.buf;
+	width = BIGSHORT(jo->width);
+	height = BIGSHORT(jo->height);
+
+	if (ow) *ow = width;
+	if (oh) *oh = height;
+
+	if (x + width > 320)
+		width = 320 - x;
+	if (y + height > 200)
+		height = 200 - y;
+
+	if (width < 1 || height < 1)
+		return;
+	{
+		byte* dest;
+		byte* source;
+		unsigned p;
+
+		source = gfx_lzss.buf;
+		p = 16;
+
+		dest = (byte*)I_FrameBuffer() + y * 320 + x;
+		for (; height; height--)
+		{
+			int i;
+
+			lzss_read(&gfx_lzss, width);
+
+			i = 0;
+			if (p + width > LZSS_BUF_SIZE) {
+				int rem = LZSS_BUF_SIZE - p;
+				for (; i < rem; i++)
+					dest[i] = source[p++];
+				p = 0;
+			}
+
+			while (MARS_SYS_COMM4);
+			djo.length = width - i;
+			djo.dest = dest + i;
+			djo.source = source + p;
+			MARS_SYS_COMM4 = 11;
+
+			p += width - i;
+			dest += 320;
+		}
+	}
 }

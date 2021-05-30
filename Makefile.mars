@@ -7,7 +7,7 @@ endif
 LDSCRIPTSDIR = $(ROOTDIR)/ldscripts
 
 LIBPATH = -L$(ROOTDIR)/sh-elf/lib -L$(ROOTDIR)/sh-elf/lib/gcc/sh-elf/4.6.2 -L$(ROOTDIR)/sh-elf/sh-elf/lib
-INCPATH = -I. -I$(ROOTDIR)/sh-elf/include -I$(ROOTDIR)/sh-elf/sh-elf/include
+INCPATH = -I. -I$(ROOTDIR)/sh-elf/include -I$(ROOTDIR)/sh-elf/sh-elf/include -I./liblzss
 
 CCFLAGS = -m2 -mb -O2 -Wall -c -std=gnu99
 CCFLAGS += -fomit-frame-pointer -ffast-math -funroll-loops -fno-align-loops -fno-align-functions -fno-align-jumps -fno-align-labels
@@ -89,7 +89,8 @@ OBJS = \
 	sh2_fixed.o \
 	sh2_draw.o \
 	r_cache.o \
-	m_fire.o
+	m_fire.o \
+	lzss.o
 
 release: m68k.bin $(TARGET).bin
 
@@ -108,6 +109,9 @@ $(TARGET).elf: $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o $(TARGET).elf
 
 %.o: %.c
+	$(CC) $(CCFLAGS) $(INCPATH) $< -o $@
+
+%.o: liblzss/%.c
 	$(CC) $(CCFLAGS) $(INCPATH) $< -o $@
 
 %.o: %.s
