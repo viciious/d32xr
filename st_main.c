@@ -4,7 +4,7 @@
 #include "st_main.h"
 
 stbar_t	stbar;
-jagobj_t *micronums[NUMMICROS];
+short	micronums;
 int		micronums_x[NUMMICROS] = {249,261,272,249,261,272};
 int		micronums_y[NUMMICROS] = {15,15,15,25,25,25};
 
@@ -26,12 +26,12 @@ int		spclfaceSprite[NUMSPCLFACES] =
 boolean doSpclFace;
 spclface_e	spclFaceType;
 
-jagobj_t	*sbar;
+short		sbar;
 byte		*sbartop;
-jagobj_t	**faces/*[NUMFACES]*/;
-jagobj_t	**sbobj/*[NUMSBOBJ]*/;
+short		faces;
+short		sbobj;
 
-sbflash_t	*flashCards/*[NUMCARDS]*/ = NULL;	/* INFO FOR FLASHING CARDS & SKULLS */
+sbflash_t	*flashCards = NULL;	/* INFO FOR FLASHING CARDS & SKULLS */
 
 /*
 ====================
@@ -45,24 +45,12 @@ sbflash_t	*flashCards/*[NUMCARDS]*/ = NULL;	/* INFO FOR FLASHING CARDS & SKULLS 
 void ST_Init (void)
 {
 	flashCards = Z_Malloc(sizeof(*flashCards) * NUMCARDS, PU_STATIC, 0);
-	faces = Z_Malloc(sizeof(*faces) * NUMFACES, PU_STATIC, 0);
-	sbobj = Z_Malloc(sizeof(*sbobj) * NUMSBOBJ, PU_STATIC, 0);
 
-#ifndef MARS
-	int		i,l;
+	faces = W_GetNumForName("FACE00");
 
-	l = W_GetNumForName ("FACE00");
-	for (i=0 ; i<NUMFACES ; i++)
-		faces[i] = W_CacheLumpNum (l+i, PU_STATIC);
-		
-	l = W_GetNumForName ("MINUS");
-	for (i = 0; i < NUMSBOBJ; i++)
-		sbobj[i] = W_CacheLumpNum(l+i, PU_STATIC);
+	sbobj = W_GetNumForName("MINUS");
 
-	l = W_GetNumForName ("MICRO_2");
-	for (i = 0; i < NUMMICROS; i++)
-		micronums[i] = W_CacheLumpNum(l+i, PU_STATIC);
-#endif
+	micronums = W_GetNumForName("MICRO_2");
 }
 
 /*================================================== */
@@ -227,9 +215,9 @@ void ST_Ticker (void)
 void ST_Drawer (void)
 {
 	int			i;
-	int			ind;
 	player_t	*p;
 #ifndef MARS	
+	int			ind;
 	bufferpage = sbartop;		/* draw into status bar overlay */
 #endif
 	p = &players[consoleplayer];
@@ -251,7 +239,9 @@ void ST_Drawer (void)
 	if (stbar.ammo != i)
 	{
 		stbar.ammo = i;
+#ifndef MARS
 		EraseBlock(0,AMMOY,14*3,16);
+#endif
 		ST_DrawValue(AMMOX,AMMOY,i);
 #ifdef MARS
 		stbar.ammo = -1;
@@ -265,8 +255,10 @@ void ST_Drawer (void)
 	if (stbar.health != i)
 	{
 		stbar.health = i;
+#ifndef MARS
 		EraseBlock(HEALTHX - 14*3 - 4,HEALTHY,14*3,(sbobj[0])->height);
 		DrawJagobj(sbobj[sb_percent],HEALTHX,HEALTHY);
+#endif
 		ST_DrawValue(HEALTHX,HEALTHY,i);
 		stbar.face = -1;	/* update face immediately */
 #ifdef MARS
@@ -281,14 +273,17 @@ void ST_Drawer (void)
 	if (stbar.armor != i)
 	{
 		stbar.armor = i;
+#ifndef MARS
 		EraseBlock(ARMORX - 14*3 - 4,ARMORY,14*3,(sbobj[0])->height);
 		DrawJagobj(sbobj[sb_percent],ARMORX,ARMORY);
+#endif
 		ST_DrawValue(ARMORX,ARMORY,i);
 #ifdef MARS
 		stbar.armor = -1;
 #endif
 	}
 
+#ifndef MARS
 	/* */
 	/* Cards & skulls */
 	/* */
@@ -330,7 +325,7 @@ void ST_Drawer (void)
 			{
 				stbar.weaponowned[ind] = p->weaponowned[ind+1];
 				if (stbar.weaponowned[ind])
-					DrawJagobj(micronums[ind],
+					DrawJagobjLump(micronums + ind,
 						micronums_x[ind],micronums_y[ind]);
 				else
 					EraseBlock(micronums_x[ind],micronums_y[ind],4,6);
@@ -340,7 +335,6 @@ void ST_Drawer (void)
 			}
 		}
 	}
-#ifndef MARS
 	/* */
 	/* Or, frag counts! */
 	/* */
@@ -398,7 +392,6 @@ void ST_Drawer (void)
 			EraseBlock(hisFrags.x - hisFrags.w,
 				hisFrags.y,hisFrags.w,hisFrags.h);
 	}
-#endif
 
 	if (flashInitialDraw)
 	{
@@ -430,7 +423,7 @@ void ST_Drawer (void)
 	/* */
 	if (gibdraw && !--gibdelay)
 	{
-		DrawJagobj(faces[FIRSTSPLAT + gibframe++],FACEX,FACEY);
+		DrawJagobjLump(faces + FIRSTSPLAT + gibframe++,FACEX,FACEY,NULL,NULL);
 		gibdelay = GIBTIME;
 		if (gibframe > 6)
 			gibdraw = false;
@@ -447,10 +440,10 @@ void ST_Drawer (void)
 	/* face change */
 	/* */
 	if (stbar.godmode)
-		DrawJagobj(faces[GODFACE],FACEX,FACEY);
+		DrawJagobjLump(faces+GODFACE,FACEX,FACEY, NULL, NULL);
 	else
 	if (!stbar.health)
-		DrawJagobj(faces[DEADFACE],FACEX,FACEY);
+		DrawJagobjLump(faces+DEADFACE,FACEX,FACEY, NULL, NULL);
 	else
 	if (doSpclFace)
 	{
@@ -458,7 +451,7 @@ void ST_Drawer (void)
 		base = base > 4 ? 4 : base;
 		base = 4 - base;
 		base *= 8;
-		DrawJagobj(faces[base + spclfaceSprite[spclFaceType]],FACEX,FACEY);
+		DrawJagobjLump(faces + base + spclfaceSprite[spclFaceType],FACEX,FACEY,NULL,NULL);
 	}
 	else
 	if ((stbar.face != newface) && !gibdraw)
@@ -468,8 +461,9 @@ void ST_Drawer (void)
 		base = 4 - base;
 		base *= 8;
 		stbar.face = newface;
-		DrawJagobj (faces[base + newface], FACEX, FACEY);
+		DrawJagobj(faces + base + newface, FACEX, FACEY, NULL, NULL);
 	}
+#endif
 }
 
 /*================================================= */
@@ -524,9 +518,11 @@ void ST_DrawValue(int x,int y,int value)
 	j = mystrlen(v) - 1;
 	while(j >= 0)
 	{
+		int w;
 		index = sb_0 + (v[j--] - '0');
-		x -= (sbobj[index])->width + 1;
-		DrawJagobj(sbobj[index],x,y);
+		DrawJagobjLump(sbob + index, 320, 200, &w, NULL);
+		x -= w + 1;
+		DrawJagobjLump(sbob + index, x, y, NULL, NULL);
 	}
 #endif
 }
