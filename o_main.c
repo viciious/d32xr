@@ -37,7 +37,10 @@ typedef enum
 typedef enum
 {
 	soundvol,
+	screensize,
+#ifndef MARS
 	controls,
+#endif
 	NUMMENUITEMS
 } menupos_t;
 
@@ -51,7 +54,7 @@ typedef struct
 	char 		name[20];
 } menuitem_t;
 
-menuitem_t menuitem[3];
+menuitem_t menuitem[NUMMENUITEMS];
  
 typedef struct
 {
@@ -65,11 +68,12 @@ int		cursorframe, cursorcount;
 int		movecount;
 
 int		o_screensize;
+extern int clearscreen;
 
-jagobj_t		*uchar[52];
+short	uchar;
 
-jagobj_t		*o_cursor1, *o_cursor2;
-jagobj_t		*o_slider, *o_slidertrack;
+short	o_cursor1, o_cursor2;
+short	o_slider, o_slidertrack;
 
 char buttona[NUMCONTROLOPTIONS][8] =
 		{"Speed","Speed","Fire","Fire","Use","Use"};
@@ -77,6 +81,8 @@ char buttonb[NUMCONTROLOPTIONS][8] =
 		{"Fire","Use ","Speed","Use","Speed","Fire"};
 char buttonc[NUMCONTROLOPTIONS][8] =
 		{"Use","Fire","Use","Speed","Fire","Speed"};
+
+void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh);
 
 unsigned configuration[NUMCONTROLOPTIONS][3] =
 {
@@ -103,13 +109,15 @@ void O_SetButtonsFromControltype (void)
 /* */
 void O_DrawControl(void)
 {
-	EraseBlock(menuitem[controls].x + 40, menuitem[controls].y + 20, 90, 80);
+#ifndef MARS
+	//EraseBlock(menuitem[controls].x + 40, menuitem[controls].y + 20, 90, 80);
 	print(menuitem[controls].x + 40, menuitem[controls].y + 20, buttona[controltype]);
 	print(menuitem[controls].x + 40, menuitem[controls].y + 40, buttonb[controltype]);
 	print(menuitem[controls].x + 40, menuitem[controls].y + 60, buttonc[controltype]);
 /*	IN_DrawValue(30, 20, controltype); */
 	
 	O_SetButtonsFromControltype ();
+#endif
 }
 
 /*
@@ -122,43 +130,48 @@ void O_DrawControl(void)
 
 void O_Init (void)
 {
-	int 	i, l;
-
 /* the eeprom has set controltype, so set buttons from that */
 	O_SetButtonsFromControltype ();
 
 /* cache all needed graphics */
-	o_cursor1 = W_CacheLumpName ("M_SKULL1",PU_STATIC);
-	o_cursor2 = W_CacheLumpName ("M_SKULL2",PU_STATIC);
-	o_slider = W_CacheLumpName ("O_SLIDER", PU_STATIC);
-	o_slidertrack = W_CacheLumpName ("O_STRACK", PU_STATIC);
+	o_cursor1 = W_GetNumForName("M_SKULL1");
+	o_cursor2 = W_GetNumForName("M_SKULL2");
+	o_slider = W_GetNumForName("O_SLIDER");
+	o_slidertrack = W_GetNumForName("O_STRACK");
 
-	l = W_GetNumForName ("CHAR_065");
-	for (i = 0; i < 52; i++)
-		uchar[i] = W_CacheLumpNum(l+i, PU_STATIC);
+	uchar = W_GetNumForName ("CHAR_065");
 
 /*	initialize variables */
 
 	cursorcount = 0;
 	cursorframe = 0;
 	cursorpos = 0;	
-	
-/*    strcpy(menuitem[0].name, "  Volume"); */
-    D_strncpy(menuitem[0].name, "  Volume", 8); /* Fixed CEF */
+	o_screensize = 0;
+
+/*    strcpy(menuitem[0].name, "Volume"); */
+    D_strncpy(menuitem[0].name, "Volume", 6);
 	menuitem[0].x = 95;
-	menuitem[0].y = 50;
+	menuitem[0].y = 46;
 	menuitem[0].hasslider = true;
 
- 	slider[0].maxval = 16;
-	slider[0].curval = 16*sfxvolume/255;
+ 	slider[0].maxval = 4;
+	slider[0].curval = 4*sfxvolume/64;
 
-/*    strcpy(menuitem[1].name, "Controls"); */
-    D_strncpy(menuitem[1].name, "Controls", 8); /* Fixed CEF */
+	D_strncpy(menuitem[1].name, "Screen size", 11);
 	menuitem[1].x = 95;
-	menuitem[1].y = 110;
-	menuitem[1].hasslider = false;
+	menuitem[1].y = 80;
+	menuitem[1].hasslider = true;
 
-	o_screensize = 0;
+	slider[1].maxval = 3;
+	slider[1].curval = 0;
+
+#ifndef MARS
+/*    strcpy(menuitem[2].name, "Controls"); */
+    D_strncpy(menuitem[2].name, "Controls", 8); /* Fixed CEF */
+	menuitem[2].x = 95;
+	menuitem[2].y = 100;
+	menuitem[2].hasslider = false;
+#endif
 }
 
 /*
@@ -173,6 +186,7 @@ void O_Init (void)
 void O_Control (player_t *player)
 {
 	int		buttons, oldbuttons;
+	char	newframe = false;
 	
 	buttons = ticbuttons[playernum];
 	oldbuttons = oldticbuttons[playernum];
@@ -181,34 +195,32 @@ void O_Control (player_t *player)
 	{
 		cursorpos = 0;	
 		player->automapflags ^= AF_OPTIONSACTIVE;
+#ifndef MARS
 		if (player->automapflags & AF_OPTIONSACTIVE)
 			DoubleBufferSetup ();
 		else
 			WriteEEProm ();		/* save new settings */
+#endif
 	}
 	if ( !(player->automapflags & AF_OPTIONSACTIVE) )
 		return;
-
 
 /* clear buttons so game player isn't moving aroung */
 	ticbuttons[playernum] &= BT_OPTION;	/* leave option status alone */
 
 	if (playernum != consoleplayer)
 		return;
-		
-#ifdef MARS
-	if (buttons & JP_A) {
-		o_screensize++;
-		R_SetScreenSize(o_screensize);
-	}
-#endif
 
 /* animate skull */
-	if (++cursorcount == 4)
+	if (++cursorcount == ticrate)
 	{
 		cursorframe ^= 1;
 		cursorcount = 0;
+		newframe = true;
 	}
+
+	if (!newframe)
+		return;
 
 /* check for movement */
 	if (! (buttons & (JP_UP|JP_DOWN|JP_LEFT|JP_RIGHT) ) )
@@ -222,10 +234,19 @@ void O_Control (player_t *player)
 					slider[cursorpos].curval++;
 					if (slider[cursorpos].curval > slider[cursorpos].maxval)
 						slider[cursorpos].curval = slider[cursorpos].maxval;
-					if (cursorpos == 0)
+					switch (cursorpos)
 					{
-						sfxvolume = 255*slider[0].curval / slider[0].maxval;
+					case 0:
+						sfxvolume = 64*slider[0].curval / slider[0].maxval;
 						S_StartSound (NULL, sfx_pistol);
+						break;
+					case 1:
+						o_screensize = slider[cursorpos].curval;
+						R_SetScreenSize(o_screensize);
+						clearscreen = 2;
+						break;
+					default:
+						break;
 					}
 				}
 			}
@@ -236,10 +257,19 @@ void O_Control (player_t *player)
 					slider[cursorpos].curval--;
 					if (slider[cursorpos].curval < 0)
 						slider[cursorpos].curval = 0;
-					if (cursorpos == 0)
+					switch (cursorpos)
 					{
-						sfxvolume = 255*slider[0].curval / slider[0].maxval;
+					case 0:
+						sfxvolume = 64*slider[0].curval / slider[0].maxval;
 						S_StartSound (NULL, sfx_pistol);
+						break;
+					case 1:
+						o_screensize = slider[cursorpos].curval;
+						R_SetScreenSize(o_screensize);
+						clearscreen = 2;
+						break;
+					default:
+						break;
 					}
 				}
 			}
@@ -261,6 +291,7 @@ void O_Control (player_t *player)
 				if (cursorpos == -1)
 					cursorpos = NUMMENUITEMS-1;
 			}
+#ifndef MARS
 			if (buttons & JP_RIGHT)
 			{
 				if (cursorpos == controls)
@@ -279,6 +310,7 @@ void O_Control (player_t *player)
 						controltype = 0; 
 				}
 			}
+#endif
 		}
 	}
 }
@@ -287,13 +319,13 @@ void O_Drawer (void)
 {
 	int		i;
 	int		offset;
-	
+
 /* Erase old and Draw new cursor frame */
-	EraseBlock(56, 40, o_cursor1->width, 200);
+	//EraseBlock(56, 40, o_cursor1->width, 200);
 	if(cursorframe)
-		DrawJagobj(o_cursor1, 60, menuitem[cursorpos].y - 2);
+		DrawJagobjLump(o_cursor1, 60, menuitem[cursorpos].y - 2, NULL, NULL);
 	else
-		DrawJagobj(o_cursor2, 60, menuitem[cursorpos].y - 2);
+		DrawJagobjLump(o_cursor2, 60, menuitem[cursorpos].y - 2, NULL, NULL);
 
 /* Draw menu */
 
@@ -305,21 +337,22 @@ void O_Drawer (void)
 
 		if(menuitem[i].hasslider == true)
 		{
-			DrawJagobj(o_slidertrack , menuitem[i].x + 2, menuitem[i].y + 20);
+			DrawJagobjLump(o_slidertrack , menuitem[i].x + 2, menuitem[i].y + 20, NULL, NULL);
 			offset = (slider[i].curval * SLIDEWIDTH) / slider[i].maxval;
-			DrawJagobj(o_slider, menuitem[i].x + 7 + offset, menuitem[i].y + 20);
+			DrawJagobjLump(o_slider, menuitem[i].x + 7 + offset, menuitem[i].y + 20, NULL, NULL);
 /*			ST_Num(menuitem[i].x + o_slider->width + 10,	 */
 /*			menuitem[i].y + 20,slider[i].curval);  */
 		}			 
 	}	
 	
 /* Draw control info */
-
+#ifndef MARS
 	print(menuitem[controls].x + 10, menuitem[controls].y + 20, "A");
 	print(menuitem[controls].x + 10, menuitem[controls].y + 40, "B");
 	print(menuitem[controls].x + 10, menuitem[controls].y + 60, "C");
 
 	O_DrawControl();
+#endif
 
 /* debug stuff */
 #if 0
@@ -333,6 +366,8 @@ void O_Drawer (void)
 #endif
 /* end of debug stuff */
 
-	UpdateBuffer ();
+#ifndef MARS
+	UpdateBuffer();
+#endif
 }
 
