@@ -907,15 +907,15 @@ extern int gpufinished;
 
 extern		volatile int	dspcodestart, dspcodeend, dspfinished;
 
-int DSPFunction (void *start);
 void ReloadWad (void);
 
 #ifndef MARS
-extern short *palette8;
-#endif
-extern int zero, ZERO, zero2;
+int DSPFunction(void* start);
 
-int DSPRead (void volatile *adr);
+extern short *palette8;
+extern int zero, ZERO, zero2;
+#endif
+int DSPRead(void volatile* adr);
 
 extern	boolean		gamepaused;
 extern	jagobj_t	*pausepic;
@@ -934,6 +934,8 @@ extern	int		maxlevel;			/* highest level selectable in menu (1-25) */
 
 extern	int		gamevbls;			/* may not really be vbls in multiplayer */
 extern	int		vblsinframe;		/* range from 4 to 8 */
+
+extern	boolean	spr_rotations;
 
 void I_InitMenuFire(void) ATTR_OPTIMIZE_SIZE;
 void I_StopMenuFire(void);

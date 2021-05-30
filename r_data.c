@@ -4,6 +4,8 @@
 #include "r_local.h"
 #include "p_local.h"
 
+boolean	spr_rotations;
+
 int		firstflat, lastflat, numflats;
 
 int			numtextures;
@@ -446,6 +448,8 @@ void R_InitSpriteDefs(const char** namelist)
 	byte	*tempbuf;
 	int		totalframes;
 
+	spr_rotations = false;
+
 	start = W_CheckNumForName("S_START");
 	if (start < 0)
 	{
@@ -530,6 +534,7 @@ void R_InitSpriteDefs(const char** namelist)
 						I_Error("Sprite %s frame %c "
 							"is missing rotations",
 							spritename, frame + 'A');
+				spr_rotations = true;
 				break;
 			}
 		}
