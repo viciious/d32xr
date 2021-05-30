@@ -85,6 +85,7 @@ void S_Init(void)
 	/* init music */
 	num_music = 0;
 	mus_intro = 0;
+	mus_inter = 0;
 	S_music = NULL;
 
 	l = W_CheckNumForName("VGM_STRT");
@@ -103,6 +104,9 @@ void S_Init(void)
 			if (!D_strncasecmp(name, "mus_ntro", 8)) {
 				mus_intro = i + 1;
 				num_music = i;
+			}
+			 else if (!D_strncasecmp(name, "mus_nter", 8)) {
+				mus_inter = i + 1;
 			}
 
 			l++;

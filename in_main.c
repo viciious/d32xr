@@ -41,36 +41,6 @@ typedef enum
 	f_splatsix
 } faces_t;
 
-const char mapnames[][30] =
-{
-	"Hangar",
-	"Plant",
-	"Toxin Refinery",
-	"Command Control",
-	"Phobos Lab",
-	"Central Processing",
-	"Computer Station",
-	"Phobos Anomaly",
-	"Deimos Anomaly",
-	"Containment Area",
-	"Refinery",
-	"Deimos Lab",
-	"Command Center",
-	"Halls of the Damned",
-	"Spawning Vats",
-	"Tower of Babel",
-	"Hell Keep",
-	"Pandemonium",
-	"House of Pain",
-	"Unholy Cathedral",
-	"Mt. Erebus",
-	"Limbo",
-	"Dis",
-	"Military Base"
-/*	"Fortress of Mystery", */
-/*	"Warrens" */
-};
-
 pstats_t		pstats[MAXPLAYERS];
 faces_t		facenum;
 
@@ -81,12 +51,14 @@ boolean		negativefrag[MAXPLAYERS];
 int			killvalue[2], itemvalue[2], secretvalue[2], fragvalue[2];
 int			myticcount, myoldticcount;
 
-jagobj_t		*i_secret, *i_percent, *i_level, *i_kills,
-				*i_items, *i_finish, *i_frags, *i_par, *i_time;
+short		i_secret, i_percent, i_level, i_kills,
+				i_items, i_finish, i_frags, i_par, i_time;
 
-jagobj_t		*snums[10];
-jagobj_t		*infaces[10];
-jagobj_t		*uchar[52];
+short		snums;
+short		infaces[10];
+short		uchar;
+
+static dmapinfo_t	nextmapinfo;
 
 /* */
 /* Lame-o print routine */
@@ -94,6 +66,7 @@ jagobj_t		*uchar[52];
 void print (int x, int y, const char *string)
 {
 	int i,c;
+	int w;
 
 	for (i = 0; i < mystrlen(string); i++)
 	{
@@ -101,18 +74,18 @@ void print (int x, int y, const char *string)
 	
 		if (c >= 'A' && c <= 'Z')
 		{
-			DrawJagobj(uchar[c-'A'],x,y);
-			x+= uchar[c-'A']->width;
+			DrawJagobjLump(uchar + c-'A',x,y, &w, NULL);
+			x+= w;
 		}
 		else if (c >= 'a' && c <= 'z')
 		{
-			DrawJagobj(uchar[c-'a' + 26],x,y+4);
-			x+= uchar[c-'a' + 26]->width;
+			DrawJagobjLump(uchar + c-'a' + 26,x,y+4, &w, NULL);
+			x+= w;
 		}
 		else if (c >= '0' && c <= '9')
 		{
-			DrawJagobj(snums[c-48],x,y);
-			x+= snums[c-48]->width + 1;
+			DrawJagobjLump(snums+c-48,x,y, &w, NULL);
+			x+= w + 1;
 		}
 		else
 		{
@@ -135,9 +108,13 @@ void IN_DrawValue(int x,int y,int value)
 	j = mystrlen(v) - 1;
 	while(j >= 0)
 	{
+		int w;
+
 		index = (v[j--] - '0');
-		x -= snums[index]->width+2;
-		DrawJagobj(snums[index], x, y);
+		DrawJagobjLump(snums + index, 320, 200, &w, NULL);
+
+		x -= w+2;
+		DrawJagobjLump(snums + index, x, y, NULL, NULL);
 	}
 }
 
@@ -174,11 +151,11 @@ void IN_NetgameDrawer(void)
 			print (28, 50, "Player");
 			print (KVALX - 18, 50, "1");
 			print (KVALX + 66, 50, "2");
-			DrawJagobj(i_kills, 57, 80);				
+			DrawJagobjLump(i_kills, 57, 80, NULL, NULL);
 	 
-			DrawJagobj(i_items, 51, 110);				
+			DrawJagobjLump(i_items, 51, 110, NULL, NULL);
 	 	
-			DrawJagobj(i_secret, 13, 140);		
+			DrawJagobjLump(i_secret, 13, 140, NULL, NULL);
 		}
 	}			
 	
@@ -197,12 +174,12 @@ void IN_NetgameDrawer(void)
 		IN_DrawValue(IVALX + 80, IVALY, itemvalue[!consoleplayer]);
 		IN_DrawValue(SVALX, SVALY, secretvalue[consoleplayer]);
 		IN_DrawValue(SVALX + 80, SVALY, secretvalue[!consoleplayer]);
-		DrawJagobj(i_percent, KVALX, KVALY);
-		DrawJagobj(i_percent, KVALX + 80, KVALY);
-		DrawJagobj(i_percent, IVALX, IVALY);
-		DrawJagobj(i_percent, IVALX + 80, IVALY);
-		DrawJagobj(i_percent, SVALX, SVALY);
-		DrawJagobj(i_percent, SVALX + 80, SVALY);
+		DrawJagobjLump(i_percent, KVALX, KVALY, NULL, NULL);
+		DrawJagobjLump(i_percent, KVALX + 80, KVALY, NULL, NULL);
+		DrawJagobjLump(i_percent, IVALX, IVALY, NULL, NULL);
+		DrawJagobjLump(i_percent, IVALX + 80, IVALY, NULL, NULL);
+		DrawJagobjLump(i_percent, SVALX, SVALY, NULL, NULL);
+		DrawJagobjLump(i_percent, SVALX + 80, SVALY, NULL, NULL);
 	}	
 #endif
 }
@@ -212,7 +189,6 @@ void IN_NetgameDrawer(void)
 /* */
 void IN_SingleDrawer(void)
 {
-#ifndef MARS
 	int length;
 	
 	if(earlyexit == true)
@@ -224,35 +200,36 @@ void IN_SingleDrawer(void)
 		
 	EraseBlock(71 + (mystrlen("Secrets") * 15), 70, 55, 80);
 
+#ifndef MARS
 	if (statsdrawn == false)
+#endif
 	{
-		length = mystrlen(mapnames[gamemap - 1]);
-		print( (320 - (length * 14)) >> 1 , 10, mapnames[gamemap - 1]);
+		length = mystrlen(gamemapinfo.name);
+		print( (320 - (length * 14)) >> 1 , 10, gamemapinfo.name);
 		length = mystrlen("Finished");
 		print( (320 - (length * 14)) >> 1, 34, "Finished");
-	
-		if (nextmap != 23)
+
+		if (nextmapinfo.name != NULL)
 		{
 			length = mystrlen("Entering");
 			print( (320 - (length * 14)) >> 1, 162, "Entering");	
-			length = mystrlen(mapnames[nextmap - 1]);
-			print( (320 - (length*14)) >> 1, 182, mapnames[nextmap - 1]);
+			length = mystrlen(nextmapinfo.name);
+			print( (320 - (length*14)) >> 1, 182, nextmapinfo.name);
 		}
-				
-		DrawJagobj(i_kills, 71, 70);				
 
-		DrawJagobj(i_items, 65, 100);				
+		DrawJagobjLump(i_kills, 71, 70, NULL, NULL);
 
-		DrawJagobj(i_secret, 27, 130);		
+		DrawJagobjLump(i_items, 65, 100, NULL, NULL);
+
+		DrawJagobjLump(i_secret, 27, 130, NULL, NULL);
 	}
 	
 	IN_DrawValue(KVALX + 60, KVALY - 10, killvalue[0]);
-	DrawJagobj(i_percent, KVALX + 60, KVALY - 10);
+	DrawJagobjLump(i_percent, KVALX + 60, KVALY - 10, NULL, NULL);
 	IN_DrawValue(IVALX + 60, IVALY - 10, itemvalue[0]);		
-	DrawJagobj(i_percent, IVALX + 60, IVALY - 10);
+	DrawJagobjLump(i_percent, IVALX + 60, IVALY - 10, NULL, NULL);
 	IN_DrawValue(SVALX + 60, SVALY - 10, secretvalue[0]);
-	DrawJagobj(i_percent, SVALX + 60, SVALY - 10);	
-#endif
+	DrawJagobjLump(i_percent, SVALX + 60, SVALY - 10, NULL, NULL);
 }
 
 void IN_Start (void)
@@ -265,6 +242,10 @@ void IN_Start (void)
 	earlyexit = false;
 
 	valsdrawn = false;
+
+	D_memset(&nextmapinfo, 0, sizeof(nextmapinfo));
+	if (gamemapinfo.next != 0)
+		G_FindMapinfo(gamemapinfo.next, &nextmapinfo);
 
 	for (i = 0; i < MAXPLAYERS; i++) 
 	{
@@ -289,37 +270,34 @@ void IN_Start (void)
 /* cache all needed graphics */
 #ifndef MARS
 	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
-	i_secret = W_CacheLumpName ("I_SECRET",PU_STATIC);
-	i_percent = W_CacheLumpName ("PERCENT",PU_STATIC);
-	i_level = W_CacheLumpName ("I_LEVEL",PU_STATIC);
-	i_kills = W_CacheLumpName ("I_KILLS",PU_STATIC);
-	i_items = W_CacheLumpName ("I_ITEMS",PU_STATIC);
-	i_finish = W_CacheLumpName ("I_FINISH",PU_STATIC);
-	i_frags = W_CacheLumpName ("I_FRAGS",PU_STATIC);
-	infaces[0] = W_CacheLumpName ("FACE00",PU_STATIC);
-	infaces[1]	= W_CacheLumpName ("FACE01",PU_STATIC);
-	infaces[2] = W_CacheLumpName ("FACE02",PU_STATIC);
-	infaces[3] = W_CacheLumpName ("FACE05",PU_STATIC);
-	infaces[4] = W_CacheLumpName ("STSPLAT0",PU_STATIC);
-	infaces[5] = W_CacheLumpName ("STSPLAT1",PU_STATIC);
-	infaces[6] = W_CacheLumpName ("STSPLAT2",PU_STATIC);
-	infaces[7] = W_CacheLumpName ("STSPLAT3",PU_STATIC);
-	infaces[8] = W_CacheLumpName ("STSPLAT4",PU_STATIC);
-	infaces[9] = W_CacheLumpName ("STSPLAT5",PU_STATIC);
-
+#endif
+	i_secret = W_GetNumForName ("I_SECRET");
+	i_percent = W_GetNumForName("PERCENT");
+	i_level = W_GetNumForName("I_LEVEL");
+	i_kills = W_GetNumForName("I_KILLS");
+	i_items = W_GetNumForName("I_ITEMS");
+	i_finish = W_GetNumForName("I_FINISH");
+#ifndef MARS
+	i_frags = W_GetNumForName("I_FRAGS");
+#endif
+	infaces[0] = W_GetNumForName("FACE00");
+	infaces[1]	= W_GetNumForName("FACE01");
+	infaces[2] = W_GetNumForName("FACE02");
+	infaces[3] = W_GetNumForName("FACE05");
+	infaces[4] = W_GetNumForName("STSPLAT0");
+	infaces[5] = W_GetNumForName("STSPLAT1");
+	infaces[6] = W_GetNumForName("STSPLAT2");
+	infaces[7] = W_GetNumForName("STSPLAT3");
+	infaces[8] = W_GetNumForName("STSPLAT4");
+	infaces[9] = W_GetNumForName("STSPLAT5");
 	
-	l = W_GetNumForName ("NUM_0");
-	for (i = 0; i < 10; i++)
-		snums[i] = W_CacheLumpNum(l+i, PU_STATIC);
+	snums = W_GetNumForName("NUM_0");
 
-	l = W_GetNumForName ("CHAR_065");
-	for (i = 0; i < 52; i++)
-		uchar[i] = W_CacheLumpNum(l+i, PU_STATIC);
+	uchar = W_GetNumForName("CHAR_065");
 
 	DoubleBufferSetup ();
-#endif
 
-	S_StartSong(((gamemapinfo.mapnumber-1)% num_music)+1, 1);
+	S_StartSong(mus_inter, 1);
 }
 
 void IN_Stop (void)
@@ -345,6 +323,10 @@ void IN_Stop (void)
 		Z_Free(infaces[i]);
 #endif
 
+	if (nextmapinfo.data)
+		Z_Free(nextmapinfo.data);
+	D_memset(&nextmapinfo, 0, sizeof(nextmapinfo));
+
 	statsdrawn = false;
 	valsdrawn = false;
 
@@ -357,10 +339,6 @@ int IN_Ticker (void)
 	int		buttons;
 	int		oldbuttons;		
 	int 		i;
-
-#ifdef MARS
-	return 1;
-#endif
 
 	if (ticon < 5)
 		return 0;		/* don't exit immediately */
@@ -419,6 +397,12 @@ int IN_Ticker (void)
 
 void IN_Drawer (void)
 {	
+#ifdef MARS
+	while (!I_RefreshCompleted())
+		;
+	DrawTiledBackground();
+#endif
+
 	if (netgame != gt_single)
 		IN_NetgameDrawer();	
 	else

@@ -83,6 +83,7 @@ typedef enum
  
 extern musicinfo_t *S_music; 
 extern int mus_intro;
+extern int mus_inter;
 extern const int mus_none;
 extern int num_music;
 

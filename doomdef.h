@@ -891,6 +891,7 @@ typedef struct
 void DoubleBufferSetup (void);
 void EraseBlock (int x, int y, int width, int height);
 void DrawJagobj (jagobj_t *jo, int x, int y);
+void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh);
 void UpdateBuffer (void);
 
 extern	byte	*bufferpage;		/* draw here */
@@ -927,6 +928,7 @@ void WriteEEProm (void);
 void O_SetButtonsFromControltype (void);
 void PrintHex (int x, int y, unsigned num);
 void DrawPlaque (jagobj_t *pl);
+void DrawTiledBackground(void);
 extern	int		maxlevel;			/* highest level selectable in menu (1-25) */
 
 extern	int		gamevbls;			/* may not really be vbls in multiplayer */

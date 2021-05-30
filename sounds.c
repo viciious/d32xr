@@ -9,6 +9,7 @@ int				num_music = 0;
 
 const int		mus_none = 0;
 int				mus_intro = 0;
+int				mus_inter = 0;
 
 /* 
  *  Information about all the sfx 
