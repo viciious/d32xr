@@ -31,7 +31,7 @@ typedef struct
     uint8_t *base;
 
     // the output ring buffer
-    uint8_t buf[LZSS_BUF_SIZE];
+    __attribute__((aligned(4))) uint8_t buf[LZSS_BUF_SIZE];
 } lzss_state_t;
 
 void lzss_setup(lzss_state_t* lzss, uint8_t* base);
