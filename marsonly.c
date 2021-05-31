@@ -358,13 +358,32 @@ void DrawJagobj2(jagobj_t* jo, int x, int y, int src_x, int src_y, int src_w, in
 	{
 		byte* dest;
 		byte* source;
+		unsigned i;
 
 		source = jo->data + srcx + srcy * rowsize;
+
+		if ((x & 1) == 0 && (width & 1) == 0)
+		{
+			unsigned hw = (unsigned)width >> 1;
+			unsigned hx = (unsigned)x >> 1;
+			unsigned hr = (unsigned)rowsize >> 1;
+
+			pixel_t *dest2 = I_OverwriteBuffer() + y * 160 + hx;
+			pixel_t *source2 = (pixel_t*)source;
+
+			for (; height; height--)
+			{
+				for (i = 0; i < hw; i++)
+					dest2[i] = source2[i];
+				source2 += hr;
+				dest2 += 160;
+			}
+			return;
+		}
 
 		dest = (byte*)I_FrameBuffer() + y * 320 + x;
 		for (; height; height--)
 		{
-			int i;
 			for (i = 0; i < width; i++)
 				dest[i] = source[i];
 			source += rowsize;
