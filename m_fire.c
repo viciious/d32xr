@@ -96,10 +96,6 @@ static inline void M_SpreadFire(char* fire, int src)
 	}
 
 	dst -= FIRE_WIDTH;
-	if (dst < 0)
-		dst = 0;
-	else if (dst >= FIRE_WIDTH * FIRE_HEIGHT)
-		dst = FIRE_WIDTH * FIRE_HEIGHT - 1;
 	firePix[dst] = newval;
 }
 
@@ -190,7 +186,8 @@ void I_InitMenuFire(void)
 	m_fire->firePalCols = sizeof(fireRGBs) / 3;
 	m_fire->firePal = Z_Malloc(sizeof(*m_fire->firePal) * m_fire->firePalCols, PU_STATIC, NULL);
 
-	m_fire->firePix = Z_Malloc(sizeof(*m_fire->firePix) * FIRE_WIDTH * FIRE_HEIGHT, PU_STATIC, NULL);
+	m_fire->firePix = Z_Malloc(sizeof(*m_fire->firePix) * FIRE_WIDTH * (FIRE_HEIGHT + 1), PU_STATIC, NULL);
+	m_fire->firePix += FIRE_WIDTH;
 	D_memset(m_fire->firePix, 0, sizeof(*m_fire->firePix) * FIRE_WIDTH * FIRE_HEIGHT);
 
 	char* dest = m_fire->firePix + FIRE_WIDTH * (FIRE_HEIGHT - 1);
@@ -235,7 +232,7 @@ void I_StopMenuFire(void)
 	MARS_SYS_COMM4 = 9;
 	while (MARS_SYS_COMM4 != 0) {}
 
-	Z_Free(m_fire->firePix);
+	Z_Free(m_fire->firePix - FIRE_WIDTH);
 	Z_Free(m_fire->firePal);
 	Z_Free(m_fire);
 
@@ -266,11 +263,10 @@ int I_DrawMenuFire(void)
 	for (y = 0; y < FIRE_HEIGHT; y++) {
 		for (x = 0; x < FIRE_WIDTH; x++) {
 			int p = *row++;
-			if (p > 0) {
-				p = firePal[p], p = p | (p << 8);
-			} else {
-				p = 0;
-			}
+
+			p = firePal[p];
+			p = p | (p << 8);
+
 			*dest++ = p;
 		}
 
