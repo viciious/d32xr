@@ -665,6 +665,7 @@ byte *I_TempBuffer (void) ATTR_DATA_CACHE_ALIGN;
 byte *I_WorkBuffer (void) ATTR_DATA_CACHE_ALIGN;
 
 pixel_t *I_FrameBuffer (void) ATTR_DATA_CACHE_ALIGN;
+pixel_t* I_OverwriteBuffer(void) ATTR_DATA_CACHE_ALIGN;
 
 pixel_t *I_ViewportBuffer (void) ATTR_DATA_CACHE_ALIGN;
 

@@ -505,9 +505,11 @@ void DRAW_Title (void)
 	fire_height = I_DrawMenuFire();
 
 	DrawJagobj2(titlepic, 0, 200 - fire_height, 0, 200 - fire_height, 0, -16);
-#endif
 
+	I_Update();
+#else
 	UpdateBuffer();
+#endif
 }
 
 /*============================================================================= */

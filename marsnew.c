@@ -70,10 +70,24 @@ inline void Mars_FlipFrameBuffers(boolean wait)
 	if (wait) Mars_WaitFrameBuffersFlip();
 }
 
+void Mars_InitLineTable(volatile unsigned short* lines)
+{
+	int j;
+
+	// initialize the lines section of the framebuffer
+	for (j = 0; j < 224; j++)
+		lines[j] = j * 320 / 2 + 0x100;
+	// set the rest of the line table to a blank line
+	for (j = 224; j < 256; j++)
+		lines[j] = 0x100;
+	// make sure blank line is clear
+	for (j = 256; j < (256 + 160); j++)
+		lines[j] = 0;
+}
+
 void Mars_Init(void)
 {
-	int i, j;
-	volatile unsigned short *lines = &MARS_FRAMEBUFFER;
+	int i;
 	volatile unsigned short *palette;
 	boolean NTSC;
 
@@ -102,15 +116,7 @@ void Mars_Init(void)
 
 	for (i = 0; i < 2; i++)
 	{
-		// initialize the lines section of the framebuffer
-		for (j = 0; j < 224; j++)
-			lines[j] = j * 320 / 2 + 0x100;
-		// set the rest of the line table to a blank line
-		for (j = 224; j < 256; j++)
-			lines[j] = 0x100;
-		// make sure blank line is clear
-		for (j = 256; j < (256 + 160); j++)
-			lines[j] = 0;
+		Mars_InitLineTable(&MARS_FRAMEBUFFER);
 
 		Mars_ClearFrameBuffer();
 
@@ -366,6 +372,11 @@ byte 	*I_WorkBuffer (void)
 pixel_t	*I_FrameBuffer (void)
 {
 	return (pixel_t *)framebuffer;
+}
+
+pixel_t* I_OverwriteBuffer(void)
+{
+	return (pixel_t*)&MARS_OVERWRITE_IMG + 0x100 + 160;
 }
 
 pixel_t	*I_ViewportBuffer (void)

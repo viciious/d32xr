@@ -1041,6 +1041,11 @@ pixel_t	*I_FrameBuffer (void)
 	return screens[!workpage];
 }
 
+pixel_t* I_OverwriteBuffer(void)
+{
+	return NULL;
+}
+
 pixel_t	*I_WorkBuffer (void)
 {
 	return screens[workpage];
