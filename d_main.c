@@ -427,7 +427,7 @@ int TIC_Abortable (void)
 #endif
 
 #ifdef MARS
-	if (ticon >= 16 * 15)
+	if (ticon >= 36 * 15)
 		return 1;		/* go on to next demo */
 #else
 	if (ticon >= 8 * 15)
@@ -505,11 +505,9 @@ void DRAW_Title (void)
 	fire_height = I_DrawMenuFire();
 
 	DrawJagobj2(titlepic, 0, 200 - fire_height, 0, 200 - fire_height, 0, -16);
-
-	I_Update();
-#else
-	UpdateBuffer();
 #endif
+
+	UpdateBuffer();
 }
 
 /*============================================================================= */
@@ -578,8 +576,13 @@ int  RunDemo (char *demoname)
 {
 	int	*demo;
 	int	exit;
+	int lump;
 
-	demo = W_POINTLUMPNUM(W_GetNumForName(demoname));
+	lump = W_GetNumForName(demoname);
+	if (lump == -1)
+		return ga_exitdemo;
+
+	demo = W_POINTLUMPNUM(lump);
 	exit = G_PlayDemoPtr (demo);
 
 #ifndef MARS

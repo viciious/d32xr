@@ -81,7 +81,10 @@ const unsigned char fireRGBs[] =
 
 static m_fire_t *m_fire;
 
-static inline void M_SpreadFire(char* fire, int src)
+static inline void M_SpreadFire(int src) ATTR_OPTIMIZE_EXTREME;
+static inline void M_StopFire(void) ATTR_OPTIMIZE_EXTREME;
+
+static inline void M_SpreadFire(int src)
 {
 	char newval = 0;
 	char* firePix = m_fire->firePix;
@@ -99,69 +102,83 @@ static inline void M_SpreadFire(char* fire, int src)
 	firePix[dst] = newval;
 }
 
+static inline void M_StopFire(void)
+{
+	int x, y;
+	char* firePix = m_fire->firePix;
+
+	for (y = FIRE_HEIGHT - 1; y > FIRE_HEIGHT - 8; y--) {
+		short* row = (short *)&firePix[y * FIRE_WIDTH];
+
+		for (x = 0; x < FIRE_WIDTH; x += 2) {
+			union {
+				short s;
+				char b[2];
+			} bs;
+
+			bs.s = *row;
+
+			if (bs.s > 0)
+			{
+				int c;
+
+				c = bs.b[0] - (M_Random() & 3);
+				bs.b[0] = c <= 0 ? 0 : c;
+
+				c = bs.b[1] - (M_Random() & 3);
+				bs.b[1] = c <= 0 ? 0 : c;
+
+				*row = bs.s;
+			}
+
+			row++;
+		}
+	}
+}
+
 void Mars_Slave_M_AnimateFire(void)
 {
 	int start;
-	int lastticcount;
-	char* firePix;
 
 	Mars_ClearCache();
 
-	firePix = m_fire->firePix;
 	start = I_GetTime();
-	lastticcount = start;
 	while (MARS_SYS_COMM4 == 8)
 	{
 		int x, y;
-		int ticcount;
 
-		for (x = 0; x < FIRE_WIDTH; x++) {
-			int from = x + FIRE_WIDTH;
+		for (x = 0; x < FIRE_WIDTH; x += 4) {
+			int from0 = x + FIRE_WIDTH;
+			int from1 = x + FIRE_WIDTH + 1;
+			int from2 = x + FIRE_WIDTH + 2;
+			int from3 = x + FIRE_WIDTH + 3;
 
 			// y = 1
-			M_SpreadFire(firePix, from);
-			from += FIRE_WIDTH;
+			M_SpreadFire(from0);
+			from0 += FIRE_WIDTH;
+			M_SpreadFire(from1);
+			from1 += FIRE_WIDTH;
+			M_SpreadFire(from2);
+			from2 += FIRE_WIDTH;
+			M_SpreadFire(from3);
+			from3 += FIRE_WIDTH;
 
-			// y = 2
-			M_SpreadFire(firePix, from);
-			from += FIRE_WIDTH;
-
-			// y = 3
-			M_SpreadFire(firePix, from);
-			from += FIRE_WIDTH;
-
-			for (y = 4; y < FIRE_HEIGHT; y++) {
-				M_SpreadFire(firePix, from);
-				from += FIRE_WIDTH;
+			for (y = 2; y < FIRE_HEIGHT; y++) {
+				M_SpreadFire(from0);
+				from0 += FIRE_WIDTH;
+				M_SpreadFire(from1);
+				from1 += FIRE_WIDTH;
+				M_SpreadFire(from2);
+				from2 += FIRE_WIDTH;
+				M_SpreadFire(from3);
+				from3 += FIRE_WIDTH;
 			}
 		}
 
-		// Stop fire
-		if (I_GetTime() - start > 250)
+		if (I_GetTime() - start > 400)
 		{
-			for (y = FIRE_HEIGHT - 1; y > FIRE_HEIGHT - 8; y--) {
-				if (MARS_SYS_COMM4 != 8) break;
-
-				char* row = &firePix[y * FIRE_WIDTH];
-				for (x = 0; x < FIRE_WIDTH; x ++) {
-					int c = *row;
-					if (c > 0)
-					{
-						c -= (M_Random() & 3);
-						*row = c <= 0 ? 0 : c;
-					}
-					row++;
-				}
-			}
+			M_StopFire();
 		}
-
-		do
-		{
-			ticcount = I_GetTime();
-			if (MARS_SYS_COMM4 != 8) break;
-		} while (ticcount - lastticcount < 2);
-
-		lastticcount = ticcount;
 	}
 
 	Mars_ClearCache();
@@ -249,14 +266,9 @@ void I_StopMenuFire(void)
 int I_DrawMenuFire(void)
 {
 	int x, y;
-	pixel_t *p = (pixel_t*)I_FrameBuffer();
-	pixel_t *dest = p + 320 / 2 * (224 - FIRE_HEIGHT);
+	pixel_t *dest = I_FrameBuffer() + 320 / 2 * (224 - FIRE_HEIGHT);
 	char* firePix = m_fire->firePix;
 	unsigned char* firePal = m_fire->firePal;
-
-	// clear the upper part
-	//while (p < dest)
-	//	*p++ = 0;
 
 	// draw the fire at the bottom
 	char* row = (char*)((intptr_t)firePix | 0x20000000);
