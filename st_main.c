@@ -46,11 +46,11 @@ void ST_Init (void)
 {
 	flashCards = Z_Malloc(sizeof(*flashCards) * NUMCARDS, PU_STATIC, 0);
 
-	faces = W_GetNumForName("FACE00");
+	faces = W_CheckNumForName("FACE00");
 
-	sbobj = W_GetNumForName("MINUS");
+	sbobj = W_CheckNumForName("MINUS");
 
-	micronums = W_GetNumForName("MICRO_2");
+	micronums = W_CheckNumForName("MICRO_2");
 }
 
 /*================================================== */

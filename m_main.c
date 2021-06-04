@@ -72,11 +72,12 @@ void M_Start (void)
 		mapnumbers[i] = tempmapnums[i];
 
 /* cache all needed graphics	 */
-	m_doom = W_CacheLumpName("M_DOOM",PU_STATIC);
-	m_skull1lump = W_GetNumForName("M_SKULL1");
-	m_skull2lump = W_GetNumForName("M_SKULL2");
-	m_levellump = W_GetNumForName("M_LEVEL");
-	m_difficultylump = W_GetNumForName("M_DIFF");
+	i = W_CheckNumForName("M_DOOM");
+	m_doom = i != -1 ? W_CacheLumpNum(i,PU_STATIC) : NULL;
+	m_skull1lump = W_CheckNumForName("M_SKULL1");
+	m_skull2lump = W_CheckNumForName("M_SKULL2");
+	m_levellump = W_CheckNumForName("M_LEVEL");
+	m_difficultylump = W_CheckNumForName("M_DIFF");
 
 #ifndef MARS
 	m_gamemode = W_CacheLumpName ("M_GAMMOD",PU_STATIC);
@@ -88,9 +89,9 @@ void M_Start (void)
 		m_playmode[i] = W_CacheLumpNum (l+i, PU_STATIC);
 #endif
 
-	m_skilllump = W_GetNumForName("SKILL0");
+	m_skilllump = W_CheckNumForName("SKILL0");
 
-	numslump = W_GetNumForName ("NUM_0");
+	numslump = W_CheckNumForName("NUM_0");
 
 	cursorcount = 0;
 	cursorframe = 0;
@@ -111,7 +112,8 @@ void M_Stop (void)
 
 /* free all loaded graphics */
 
-	Z_Free (m_doom);
+	if (m_doom != NULL)
+		Z_Free (m_doom);
 #ifndef MARS
 	Z_Free (m_gamemode);
 #endif
@@ -143,7 +145,10 @@ int M_Ticker (void)
 
 	buttons = I_ReadControls();
 	
-/* exit menu if button press */
+	if (!m_doom)
+		return 1;
+
+	/* exit menu if button press */
 	if ( ticon > 10 &&	(buttons & (JP_A|JP_B|JP_C))   )
 	{
 		startmap = mapnumbers[playermap - 1]; /*set map number */
@@ -260,6 +265,8 @@ void M_Drawer (void)
 	int	leveltens = mapnumber / 10, levelones = mapnumber % 10;
 
 /* Draw main menu */
+	if (!m_doom)
+		return;
 	int m_doom_height = m_doom->height;
 
 	DrawJagobj(m_doom, 100, 2);

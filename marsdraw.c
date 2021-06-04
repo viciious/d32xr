@@ -313,8 +313,16 @@ void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh)
 				p = 0;
 			}
 
-			for (; i < width; i++)
-				dest[i] = source[p++];
+			if ((i & 1) == 0 && (width & 1) == 0 && (p & 1) == 0)
+			{
+				for (; i < width; i++)
+					dest[i] = source[p++];
+			}
+			else
+			{
+				for (; i < width; i++)
+					dest[i] = source[p++];
+			}
 
 			dest += 320;
 		}

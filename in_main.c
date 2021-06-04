@@ -271,29 +271,29 @@ void IN_Start (void)
 #ifndef MARS
 	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
 #endif
-	i_secret = W_GetNumForName ("I_SECRET");
-	i_percent = W_GetNumForName("PERCENT");
-	i_level = W_GetNumForName("I_LEVEL");
-	i_kills = W_GetNumForName("I_KILLS");
-	i_items = W_GetNumForName("I_ITEMS");
-	i_finish = W_GetNumForName("I_FINISH");
+	i_secret = W_CheckNumForName ("I_SECRET");
+	i_percent = W_CheckNumForName("PERCENT");
+	i_level = W_CheckNumForName("I_LEVEL");
+	i_kills = W_CheckNumForName("I_KILLS");
+	i_items = W_CheckNumForName("I_ITEMS");
+	i_finish = W_CheckNumForName("I_FINISH");
 #ifndef MARS
-	i_frags = W_GetNumForName("I_FRAGS");
+	i_frags = W_CheckNumForName("I_FRAGS");
 #endif
-	infaces[0] = W_GetNumForName("FACE00");
-	infaces[1]	= W_GetNumForName("FACE01");
-	infaces[2] = W_GetNumForName("FACE02");
-	infaces[3] = W_GetNumForName("FACE05");
-	infaces[4] = W_GetNumForName("STSPLAT0");
-	infaces[5] = W_GetNumForName("STSPLAT1");
-	infaces[6] = W_GetNumForName("STSPLAT2");
-	infaces[7] = W_GetNumForName("STSPLAT3");
-	infaces[8] = W_GetNumForName("STSPLAT4");
-	infaces[9] = W_GetNumForName("STSPLAT5");
+	infaces[0] = W_CheckNumForName("FACE00");
+	infaces[1]	= W_CheckNumForName("FACE01");
+	infaces[2] = W_CheckNumForName("FACE02");
+	infaces[3] = W_CheckNumForName("FACE05");
+	infaces[4] = W_CheckNumForName("STSPLAT0");
+	infaces[5] = W_CheckNumForName("STSPLAT1");
+	infaces[6] = W_CheckNumForName("STSPLAT2");
+	infaces[7] = W_CheckNumForName("STSPLAT3");
+	infaces[8] = W_CheckNumForName("STSPLAT4");
+	infaces[9] = W_CheckNumForName("STSPLAT5");
 	
-	snums = W_GetNumForName("NUM_0");
+	snums = W_CheckNumForName("NUM_0");
 
-	uchar = W_GetNumForName("CHAR_065");
+	uchar = W_CheckNumForName("CHAR_065");
 
 	DoubleBufferSetup ();
 
@@ -302,27 +302,6 @@ void IN_Start (void)
 
 void IN_Stop (void)
 {	
-#if 0
-	int	i;
-
-	Z_Free(i_secret);
-	Z_Free(i_percent);
-	Z_Free(i_level);
-	Z_Free(i_kills);
-	Z_Free(i_items);
-	Z_Free(i_finish);
-	Z_Free(i_frags);
-			
-	for (i = 0; i < 10; i++)
-		Z_Free(snums[i]);
-
-	for (i = 0; i < 52; i++)
-		Z_Free(uchar[i]);
-
-	for (i = 4; i < 10; i++)
-		Z_Free(infaces[i]);
-#endif
-
 	if (nextmapinfo.data)
 		Z_Free(nextmapinfo.data);
 	D_memset(&nextmapinfo, 0, sizeof(nextmapinfo));
@@ -340,6 +319,8 @@ int IN_Ticker (void)
 	int		oldbuttons;		
 	int 		i;
 
+	if (i_secret < 0)
+		return 1;
 	if (ticon < 5)
 		return 0;		/* don't exit immediately */
 	
@@ -402,6 +383,9 @@ void IN_Drawer (void)
 		;
 	DrawTiledBackground();
 #endif
+
+	if (i_secret < 0)
+		return;
 
 	if (netgame != gt_single)
 		IN_NetgameDrawer();	

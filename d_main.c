@@ -466,22 +466,29 @@ int TIC_Abortable (void)
 jagobj_t	*titlepic;
 void DrawJagobj2(jagobj_t* jo, int x, int y, int src_x, int src_y, int src_w, int src_h);
 
-void START_Title (void)
+void START_Title(void)
 {
+	int l;
+
 	I_InitMenuFire();
 
 #ifndef MARS
 	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
 #endif
 	DoubleBufferSetup();
-	titlepic = W_CacheLumpName("title", PU_STATIC);
+
+	l = W_CheckNumForName("title");
+	titlepic = l != -1 ? W_CacheLumpNum(l, PU_STATIC) : NULL;
 
 #ifdef MARS
-	DrawJagobj2(titlepic, 0, 0, 0, 0, 0, -16);
-	UpdateBuffer();
+	if (titlepic != NULL)
+	{
+		DrawJagobj2(titlepic, 0, 0, 0, 0, 0, -16);
+		UpdateBuffer();
 
-	DrawJagobj2(titlepic, 0, 0, 0, 0, 0, -16);
-	UpdateBuffer();
+		DrawJagobj2(titlepic, 0, 0, 0, 0, 0, -16);
+		UpdateBuffer();
+	}
 #endif
 
 	S_StartSong(mus_intro, 0);
@@ -489,7 +496,8 @@ void START_Title (void)
 
 void STOP_Title (void)
 {
-	Z_Free (titlepic);
+	if (titlepic != NULL)
+		Z_Free (titlepic);
 	I_StopMenuFire();
 	S_StopSong();
 }
@@ -504,7 +512,8 @@ void DRAW_Title (void)
 
 	fire_height = I_DrawMenuFire();
 
-	DrawJagobj2(titlepic, 0, 200 - fire_height, 0, 200 - fire_height, 0, -16);
+	if (titlepic != NULL)
+		DrawJagobj2(titlepic, 0, 200 - fire_height, 0, 200 - fire_height, 0, -16);
 #endif
 
 	UpdateBuffer();
@@ -578,7 +587,7 @@ int  RunDemo (char *demoname)
 	int	exit;
 	int lump;
 
-	lump = W_GetNumForName(demoname);
+	lump = W_CheckNumForName(demoname);
 	if (lump == -1)
 		return ga_exitdemo;
 

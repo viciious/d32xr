@@ -134,12 +134,12 @@ void O_Init (void)
 	O_SetButtonsFromControltype ();
 
 /* cache all needed graphics */
-	o_cursor1 = W_GetNumForName("M_SKULL1");
-	o_cursor2 = W_GetNumForName("M_SKULL2");
-	o_slider = W_GetNumForName("O_SLIDER");
-	o_slidertrack = W_GetNumForName("O_STRACK");
+	o_cursor1 = W_CheckNumForName("M_SKULL1");
+	o_cursor2 = W_CheckNumForName("M_SKULL2");
+	o_slider = W_CheckNumForName("O_SLIDER");
+	o_slidertrack = W_CheckNumForName("O_STRACK");
 
-	uchar = W_GetNumForName ("CHAR_065");
+	uchar = W_CheckNumForName("CHAR_065");
 
 /*	initialize variables */
 
@@ -319,6 +319,9 @@ void O_Drawer (void)
 {
 	int		i;
 	int		offset;
+
+	if (o_cursor1 < 0)
+		return;
 
 /* Erase old and Draw new cursor frame */
 	//EraseBlock(56, 40, o_cursor1->width, 200);
