@@ -89,7 +89,7 @@ void print (int x, int y, const char *string)
 		}
 		else
 		{
-			x = (x + (w + 7)) & ~1;
+			x = (x + 7) & ~1;
 			continue;
 		}
 	}
