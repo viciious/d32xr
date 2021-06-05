@@ -74,22 +74,22 @@ void print (int x, int y, const char *string)
 	
 		if (c >= 'A' && c <= 'Z')
 		{
-			DrawJagobjLump(uchar + c-'A',x,y, &w, NULL);
-			x+= w;
+			DrawJagobjLump(uchar + c - 'A', x, y, &w, NULL);
+			x = (x + (w + 1)) & ~1;
 		}
 		else if (c >= 'a' && c <= 'z')
 		{
-			DrawJagobjLump(uchar + c-'a' + 26,x,y+4, &w, NULL);
-			x+= w;
+			DrawJagobjLump(uchar + c - 'a' + 26, x, y + 4, &w, NULL);
+			x = (x + (w + 1)) & ~1;
 		}
 		else if (c >= '0' && c <= '9')
 		{
-			DrawJagobjLump(snums+c-48,x,y, &w, NULL);
-			x+= w + 1;
+			DrawJagobjLump(snums + c - 48, x, y, &w, NULL);
+			x = (x + (w + 2)) & ~1;
 		}
 		else
 		{
-			x+=6;
+			x = (x + (w + 7)) & ~1;
 			continue;
 		}
 	}

@@ -150,7 +150,7 @@ void O_Init (void)
 
 /*    strcpy(menuitem[0].name, "Volume"); */
     D_strncpy(menuitem[0].name, "Volume", 6);
-	menuitem[0].x = 95;
+	menuitem[0].x = 94;
 	menuitem[0].y = 46;
 	menuitem[0].hasslider = true;
 
@@ -158,7 +158,7 @@ void O_Init (void)
 	slider[0].curval = 4*sfxvolume/64;
 
 	D_strncpy(menuitem[1].name, "Screen size", 11);
-	menuitem[1].x = 95;
+	menuitem[1].x = 94;
 	menuitem[1].y = 80;
 	menuitem[1].hasslider = true;
 
@@ -168,7 +168,7 @@ void O_Init (void)
 #ifndef MARS
 /*    strcpy(menuitem[2].name, "Controls"); */
     D_strncpy(menuitem[2].name, "Controls", 8); /* Fixed CEF */
-	menuitem[2].x = 95;
+	menuitem[2].x = 94;
 	menuitem[2].y = 100;
 	menuitem[2].hasslider = false;
 #endif
