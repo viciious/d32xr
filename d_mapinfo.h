@@ -35,6 +35,7 @@ typedef struct
 	int secretnext;
 	int lumpnum;
 	int mapnumber;
+	int music;
 	char lumpname[9];
 	void *data;
 } dmapinfo_t;

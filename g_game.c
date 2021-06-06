@@ -47,6 +47,7 @@ void G_DoLoadLevel (void)
 	int             i; 
 	int		skytexturel;
 	int 		gamemap;
+	int			music;
 
 	for (i=0 ; i<MAXPLAYERS ; i++) 
 	{ 
@@ -139,7 +140,10 @@ void G_DoLoadLevel (void)
 	displayplayer = consoleplayer;		/* view the guy you are playing     */
 	gameaction = ga_nothing; 
 
-    S_StartSong(((gamemapinfo.mapnumber-1)%num_music+1), 1);
+	music = S_SongForLump(gamemapinfo.music);
+	if (!music)
+		music = (gamemapinfo.mapnumber - 1) % num_music + 1;
+	S_StartSong(music, 1);
 
 	Z_CheckHeap (mainzone);  		/* DEBUG */
 } 

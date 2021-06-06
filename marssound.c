@@ -272,6 +272,24 @@ void S_UpdateSounds(void)
 {
 }
 
+int S_SongForLump(int lump)
+{
+	int i;
+
+	if (lump <= 0)
+		return mus_none;
+
+	if (!S_music)
+		return mus_none;
+
+	for (i = 0; i < num_music; i++) {
+		if (S_music[i].lump == lump)
+			return i + 1;
+	}
+
+	return mus_none;
+}
+
 void S_StartSong(int music_id, int looping)
 {
 	S_StopSong();

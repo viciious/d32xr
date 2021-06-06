@@ -943,6 +943,7 @@ void I_StopMenuFire(void);
 int I_DrawMenuFire(void) ATTR_OPTIMIZE_EXTREME;
 void I_DrawSbar(void);
 void S_StartSong(int music_id, int looping);
+int S_SongForLump(int lump);
 void S_StopSong(void);
 void S_RestartSounds (void);
 

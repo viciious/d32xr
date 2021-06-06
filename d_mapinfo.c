@@ -377,6 +377,8 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 		mi->secretnext = W_GetNumForName(value);
 	else if (!D_strcasecmp(key, "mapnumber"))
 		mi->mapnumber = atoi(value);
+	else if (!D_strcasecmp(key, "music"))
+		mi->music = W_CheckNumForName(value);
 }
 
 static const char* G_FindMapinfoSection(const char* buf, const char *lumpname, size_t *psectionlen)
