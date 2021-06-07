@@ -22,8 +22,8 @@ processing
 */
 
 thinker_t	thinkercap;	/* both the head and tail of the thinker list */
-mobj_t		mobjhead;	/* head and tail of mobj list */
-mobj_t		freemobjhead;	/* head and tail of free mobj list */
+degenmobj_t		mobjhead;	/* head and tail of mobj list */
+degenmobj_t		freemobjhead;	/* head and tail of free mobj list */
 int			activethinkers;	/* debug count */
 int			activemobjs;	/* debug count */
 
@@ -38,8 +38,8 @@ int			activemobjs;	/* debug count */
 void P_InitThinkers (void)
 {
 	thinkercap.prev = thinkercap.next  = &thinkercap;
-	mobjhead.next = mobjhead.prev = &mobjhead;
-	freemobjhead.next = freemobjhead.prev = &freemobjhead;
+	mobjhead.next = mobjhead.prev = (void *)&mobjhead;
+	freemobjhead.next = freemobjhead.prev = (void *)&freemobjhead;
 }
 
 
@@ -176,7 +176,7 @@ void	P_RunMobjLate (void)
 	mobj_t	*mo;
 	mobj_t	*next;
 	
-	for (mo=mobjhead.next ; mo != &mobjhead ; mo=next)
+	for (mo=mobjhead.next ; mo != (void *)&mobjhead ; mo=next)
 	{
 		next = mo->next;	/* in case mo is removed this time */
 		if (mo->latecall)

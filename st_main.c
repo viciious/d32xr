@@ -21,8 +21,10 @@ boolean	gibdraw;
 int		gibframe;
 int		gibdelay;
 
-int		spclfaceSprite[NUMSPCLFACES] = 
+#ifndef MARS
+int		spclfaceSprite[NUMSPCLFACES] =
 		{0,sbf_facelft,sbf_facergt,sbf_ouch,sbf_gotgat,sbf_mowdown};
+#endif
 boolean doSpclFace;
 spclface_e	spclFaceType;
 
@@ -314,9 +316,7 @@ void ST_Drawer (void)
 				x -= 6;
 			EraseBlock(MAPX - 30,MAPY,30,16);
 			ST_DrawValue(x,MAPY,i);
-#ifdef MARS
 			stbar.currentMap = -1;
-#endif
 		}
 		
 		for (ind = 0; ind < NUMMICROS; ind++)
@@ -329,9 +329,7 @@ void ST_Drawer (void)
 						micronums_x[ind],micronums_y[ind]);
 				else
 					EraseBlock(micronums_x[ind],micronums_y[ind],4,6);
-#ifdef MARS
 				stbar.weaponowned[ind] = -1;
-#endif
 			}
 		}
 	}

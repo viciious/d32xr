@@ -793,7 +793,7 @@ void A_BossDeath (mobj_t *mo)
 /*	 */
 
 /* FIXME */
-	for (mo2=mobjhead.next ; mo2 != &mobjhead ; mo2=mo2->next)
+	for (mo2=mobjhead.next ; mo2 != (void *)&mobjhead ; mo2=mo2->next)
 	{
 		if (mo2 != mo && mo2->type == mo->type && mo2->health > 0)
 			return;		/* other boss not dead */

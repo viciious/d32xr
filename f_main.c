@@ -143,7 +143,7 @@ int		text_x;
 int		text_y;
 #define SPACEWIDTH	8
 #define NUMENDOBJ	28
-jagobj_t	*endobj[NUMENDOBJ];
+jagobj_t	**endobj;
 #if 0
 /* '*' = newline */
 static const char	endtextstring[] =
@@ -287,6 +287,8 @@ void F_Start (void)
 	text_x = STARTX;
 	text_y = STARTY;
 
+	endobj = Z_Malloc(sizeof(*endobj) * NUMENDOBJ, PU_STATIC, NULL);
+
 	l = W_GetNumForName ("CHAR_097");
 	for (i = 0; i < NUMENDOBJ; i++)
 		endobj[i] = W_CacheLumpNum(l+i, PU_STATIC);
@@ -315,6 +317,7 @@ void F_Stop (void)
 	
 	for (i = 0;i < NUMENDOBJ; i++)
 		Z_Free(endobj[i]);
+	Z_Free(endobj);
 }
 
 

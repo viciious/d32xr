@@ -500,7 +500,7 @@ void P_RunMobjBase2(void)
    mobj_t* mo;
    mobj_t* next;
 
-   for (mo = mobjhead.next; mo != &mobjhead; mo = next)
+   for (mo = mobjhead.next; mo != (void *)&mobjhead; mo = next)
    {
        next = mo->next;	/* in case mo is removed this time */
        if (!mo->player)

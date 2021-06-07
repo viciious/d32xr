@@ -25,7 +25,6 @@ int             displayplayer;          /* view being displayed  */
 int             gametic; 
 int             totalkills, totalitems, totalsecret;    /* for intermission  */
  
-char            demoname[32]; 
 boolean         demorecording; 
 boolean         demoplayback; 
    

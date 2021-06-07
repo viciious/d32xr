@@ -75,7 +75,7 @@ void P_RemoveMobj (mobj_t *mobj)
 /* unlink from mobj list */
 	P_RemoveMobjFromCurrList(mobj);
 /* link to free mobj list */
-	P_AddMobjToList(mobj, &freemobjhead);
+	P_AddMobjToList(mobj, (void*)&freemobjhead);
 }
 
 
@@ -220,7 +220,7 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 	const mobjinfo_t *info = &mobjinfo[type];
 
 /* try to reuse a previous ombj first */	
-	if (freemobjhead.next != &freemobjhead)
+	if (freemobjhead.next != (void *)&freemobjhead)
 	{
 		mobj = freemobjhead.next;
 		P_RemoveMobjFromCurrList(mobj);
@@ -319,7 +319,7 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 /* */
 /* link into the mobj list */
 /* */
-	P_AddMobjToList(mobj, &mobjhead);
+	P_AddMobjToList(mobj, (void *)&mobjhead);
 
 	return mobj;
 }
@@ -341,7 +341,7 @@ void P_PreSpawnMobjs(int count)
 
 	mobj = Z_Malloc (sizeof(*mobj)*count, PU_LEVEL, NULL);
 	for (; count > 0; count--) {
-		P_AddMobjToList(mobj, &freemobjhead);
+		P_AddMobjToList(mobj, (void *)&freemobjhead);
 		mobj++;
 	}
 }

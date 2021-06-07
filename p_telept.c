@@ -18,7 +18,7 @@ void P_Telefrag (mobj_t *thing, fixed_t x, fixed_t y)
 	int		size;
 	mobj_t	*m;
 	
-	for (m=mobjhead.next ; m != &mobjhead ; m=m->next)
+	for (m=mobjhead.next ; m != (void *)&mobjhead ; m=m->next)
 	{
 		if (!(m->flags & MF_SHOOTABLE) )
 			continue;		/* not shootable */
@@ -63,7 +63,7 @@ int	EV_Teleport( line_t *line,mobj_t *thing )
 	for (i = 0; i < numsectors; i++)
 		if (sectors[ i ].tag == tag )
 		{
-			for (m=mobjhead.next ; m != &mobjhead ; m=m->next)
+			for (m=mobjhead.next ; m != (void *)&mobjhead ; m=m->next)
 			{
 				if (m->type != MT_TELEPORTMAN )
 					continue;		/* not a teleportman */

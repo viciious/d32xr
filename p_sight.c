@@ -307,7 +307,7 @@ void P_CheckSights2(void)
 {
    mobj_t *mobj;
 
-   for(mobj = mobjhead.next; mobj != &mobjhead; mobj = mobj->next)
+   for(mobj = mobjhead.next; mobj != (void *)&mobjhead; mobj = mobj->next)
    {
       // must be killable
       if(!(mobj->flags & MF_COUNTKILL))

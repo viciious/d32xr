@@ -105,8 +105,8 @@ void	P_PlayerThink (player_t *player);
 ===============================================================================
 */
 
-extern	mobj_t	mobjhead;
-extern	mobj_t	freemobjhead;
+extern	degenmobj_t	mobjhead;
+extern	degenmobj_t	freemobjhead;
 
 extern	int			activethinkers;	/* debug count */
 extern	int			activemobjs;	/* debug count */

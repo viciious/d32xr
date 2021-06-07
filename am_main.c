@@ -51,7 +51,7 @@ typedef enum
 	ch_maxcheats
 } cheat_e;
 
-char cheatstrings[][11] =	/* order should mirror cheat_e */
+const char cheatstrings[][11] =	/* order should mirror cheat_e */
 {
 	"8002545465",		/* allmap cheat */
 	"8005778788"		/* show things cheat */
@@ -585,7 +585,7 @@ void AM_Drawer (void)
 		mobj_t	*mo;
 		mobj_t	*next;
 		
-		for (mo = mobjhead.next; mo != &mobjhead; mo=next)
+		for (mo = mobjhead.next; mo != (void *)&mobjhead; mo=next)
 		{
 			next = mo->next;
 			if (mo == p->mo)
