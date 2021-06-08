@@ -143,7 +143,7 @@ int M_Ticker (void)
 	int		buttons;
 	static char	newframe = 1;
 
-	buttons = I_ReadControls();
+	buttons = I_ReadControls(NULL);
 	
 	if (!m_doom)
 		return 1;

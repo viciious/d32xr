@@ -249,6 +249,18 @@ void I_SetPalette(const byte *palette)
 ================ 
 */ 
  
+static int Mars_PollMouse(int port)
+{
+	unsigned int mouse1, mouse2;
+	while (MARS_SYS_COMM0); // wait until 68000 has responded to any earlier requests
+	MARS_SYS_COMM0 = 0x0500 | port; // tells 68000 to read mouse
+	while (MARS_SYS_COMM0 == (0x0500 | port)); // wait for mouse value
+	mouse1 = MARS_SYS_COMM0;
+	mouse2 = MARS_SYS_COMM2;
+	MARS_SYS_COMM0 = 0; // tells 68000 we got the mouse value
+	return (int)((mouse1 << 16) | mouse2);
+}
+
 void I_Init (void) 
 {	
 	int	i;
@@ -269,6 +281,8 @@ void I_Init (void)
 		D_memcpy(dl1, sl2, 256);
 		D_memcpy(dl2, sl1, 256);
 	}
+
+	MousePresent = ((Mars_PollMouse(0) == -1) && (Mars_PollMouse(1) == -1)) ? 0 : 1;
 }
 
 void I_DrawSbar (void)
@@ -318,9 +332,46 @@ byte *I_ZoneBase (int *size)
 	return (byte *)zone;
 }
 
-int I_ReadControls(void)
+int I_ReadControls(int *mouse)
 {
 	int ctrl = consoleplayer == 0 ? MARS_SYS_COMM8 : MARS_SYS_COMM10;
+	if (mouse)
+	{
+		static int oldval = 0;
+		int val = Mars_PollMouse(consoleplayer == 0 ? 1 : 0);
+		if (val == -2)
+		{
+			// timeout - return old buttons and no deltas
+			val = oldval & 0x00FF0000;
+			*mouse = val;
+			if (val & 0x00010000)
+				ctrl |= SEGA_CTRL_B; // L -> B
+			if (val & 0x00020000)
+				ctrl |= SEGA_CTRL_C; // R -> C
+			if (val & 0x00040000)
+				ctrl |= SEGA_CTRL_Y; // M -> Y
+		}
+		else if (val == -1)
+		{
+			// no mouse
+			MousePresent = 0;
+			*mouse = 0;
+		}
+		else
+		{
+			// (YO XO YS XS S  M  R  L  X7 X6 X5 X4 X3 X2 X1 X0 Y7 Y6 Y5 Y4 Y3 Y2 Y1 Y0)
+			*mouse = val;
+			oldval = val;
+			if (val & 0x00010000)
+				ctrl |= SEGA_CTRL_B; // L -> B
+			if (val & 0x00020000)
+				ctrl |= SEGA_CTRL_C; // R -> C
+			if (val & 0x00040000)
+				ctrl |= SEGA_CTRL_Y; // M -> Y
+			if (val & 0x00080000)
+				ctrl |= SEGA_CTRL_START; // S -> S
+		}
+	}
 	return Mars_ToDoomControls(ctrl);
 }
 

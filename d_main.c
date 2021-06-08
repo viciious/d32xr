@@ -286,6 +286,9 @@ int		ticon;
 int		frameon;
 int		ticbuttons[MAXPLAYERS];
 int		oldticbuttons[MAXPLAYERS];
+int		ticmouse[MAXPLAYERS];
+int		oldticmouse[MAXPLAYERS];
+int		MousePresent;
 
 extern	int	lasttics;
 
@@ -304,6 +307,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 {
 	int		exit;
 	int		buttons;
+	int		mouse;
 		
 /* */
 /* setup (cache graphics, etc) */
@@ -319,6 +323,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 	vblsinframe = ticrate;
 	
 	ticbuttons[0] = ticbuttons[1] = oldticbuttons[0] = oldticbuttons[1] = 0;
+	ticmouse[0] = ticmouse[1] = oldticmouse[0] = oldticmouse[1] = 0;
 
 	do
 	{
@@ -349,9 +354,13 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 /* */
 		oldticbuttons[0] = ticbuttons[0];
 		oldticbuttons[1] = ticbuttons[1];
+		oldticmouse[0] = ticmouse[0];
+		oldticmouse[1] = ticmouse[1];
 
-		buttons = I_ReadControls ();
+		buttons = I_ReadControls((MousePresent && !demoplayback) ? &mouse : NULL);
 		ticbuttons[consoleplayer] = buttons;
+		ticmouse[consoleplayer] = mouse;
+
 		if (demoplayback)
 		{
 #ifndef MARS

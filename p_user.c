@@ -240,14 +240,75 @@ void P_PlayerMobjThink (mobj_t *mobj)
  
 void P_BuildMove (player_t *player) 
 { 
-	boolean     strafe; 
-	int         speed; 
-	int			buttons, oldbuttons; 
-	mobj_t		*mo;	 
+	boolean     strafe;
+	int         speed;
+	int			buttons, oldbuttons;
+	mobj_t		*mo;
 	 
 	buttons = ticbuttons[playernum];
 	oldbuttons = oldticbuttons[playernum];
+
+	if (MousePresent && !demoplayback)
+	{
+		int	mouse = ticmouse[playernum];
+		int	oldmouse = oldticmouse[playernum];
+		int	mx, my;
+
+		mx = ((unsigned)mouse >> 8) & 0xFF;
+		// check overflow
+		if (mouse & 0x00400000)
+			mx = (mouse & 0x00100000) ? -256 : 256;
+		else if (mouse & 0x00100000)
+			mx |= 0xFFFFFF00;
+
+		my = mouse & 0xFF;
+		// check overflow
+		if (mouse & 0x00800000)
+			my = (mouse & 0x00200000) ? -256 : 256;
+		else if (mouse & 0x00200000)
+			my |= 0xFFFFFF00;
+
+		if ((mouse & 0x00020000) && (oldmouse & 0x00020000))
+		{
+			// holding RMB - mouse dodge mode
+			player->sidemove = mx * 0x1000;
+			player->forwardmove = my * 0x1000;
+			player->angleturn = 0;
+		}
+		else
+		{
+			// normal mouse mode - mouse turns, dpad moves forward/back/sideways
+			player->angleturn = -mx * 0x200000;
+
+			speed = (buttons & BT_SPEED) > 0;
 	
+			/* use two stage accelerative turning on the joypad  */
+			if ( (buttons & BT_LEFT) && (oldbuttons & BT_LEFT) )
+				player->turnheld++; 
+			else
+			if ( (buttons & BT_RIGHT) && (oldbuttons & BT_RIGHT) )
+				player->turnheld++; 
+			else 
+				player->turnheld = 0; 
+			if (player->turnheld >= SLOWTURNTICS)
+				player->turnheld = SLOWTURNTICS-1;
+ 
+			player->forwardmove = player->sidemove = 0;
+	
+			if (buttons & BT_RIGHT) 
+				player->sidemove = sidemove[speed]; 
+			if (buttons & BT_LEFT) 
+				player->sidemove = -sidemove[speed]; 
+ 
+			if (buttons & BT_UP) 
+				player->forwardmove = forwardmove[speed]; 
+			if (buttons & BT_DOWN) 
+				player->forwardmove = -forwardmove[speed];  		 
+		}
+	}
+	else
+	{
+
 	strafe = (buttons & BT_STRAFE) > 0; 
 	speed = (buttons & BT_SPEED) > 0;
 	
@@ -299,6 +360,7 @@ void P_BuildMove (player_t *player)
 	if (buttons & BT_DOWN) 
 		player->forwardmove = -forwardmove[speed];  		 
 
+	}
 
 /* */
 /* if slowed down to a stop, change to a standing frame */

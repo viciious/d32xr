@@ -453,6 +453,9 @@ extern	int		ticon;
 extern	int		frameon;
 extern	int		ticbuttons[MAXPLAYERS];
 extern	int		oldticbuttons[MAXPLAYERS];
+extern	int		ticmouse[MAXPLAYERS];
+extern	int		oldticmouse[MAXPLAYERS];
+extern	int		MousePresent;
 
 int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		,  int (*ticker)(void), void (*drawer)(void) );
@@ -675,7 +678,7 @@ void I_ClearFrameBuffer (void);
 
 void I_SetPalette (const byte *palette);
 
-int I_ReadControls (void);
+int I_ReadControls (int *mouse);
 
 void I_NetSetup (void);
 unsigned I_NetTransfer (unsigned buttons);
