@@ -191,16 +191,16 @@ typedef struct mobj_s
 	latecall_t		latecall;			/* set in p_base if more work needed */
 	fixed_t			x, y, z;
 
-	VINT			health;
-	VINT			movedir;		/* 0-7 */
-	VINT			movecount;		/* when 0, select a new dir */
-	VINT			tics;				/* state tic counter	 */
-	VINT 			state;
-	VINT			reactiontime;	/* if non 0, don't attack yet */
+	char			movedir;		/* 0-7 */
+	char			movecount;		/* when 0, select a new dir */
+	unsigned char		reactiontime;	/* if non 0, don't attack yet */
 									/* used by player to freeze a bit after */
 									/* teleporting */
-	VINT			threshold;		/* if >0, the target will be chased */
+	unsigned char		threshold;		/* if >0, the target will be chased */
 									/* no matter what (even if shot) */
+	VINT			health;
+	VINT			tics;				/* state tic counter	 */
+	VINT 			state;
 	VINT			sprite;				/* used to find patch_t and flip value */
 	VINT			frame;				/* might be ord with FF_FULLBRIGHT */
 
@@ -225,7 +225,9 @@ typedef struct mobj_s
 	struct player_s	*player;		/* only valid if type == MT_PLAYER */
 	int				extradata;		/* for latecall functions */
 #ifndef MARS
-	short			spawnx, spawny, spawntype,spawnangle;	/* for deathmatch respawning */
+	fixed_t			spawnx, spawny;	/* for deathmatch respawning */
+	angle_t			spawnangle;
+	unsigned short		spawntype;
 #endif
 } mobj_t;
 
