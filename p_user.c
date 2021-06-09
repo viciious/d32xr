@@ -248,27 +248,12 @@ void P_BuildMove (player_t *player)
 	buttons = ticbuttons[playernum];
 	oldbuttons = oldticbuttons[playernum];
 
-	if (MousePresent && !demoplayback)
+	if (mousepresent && !demoplayback)
 	{
-		int	mouse = ticmouse[playernum];
-		int	oldmouse = oldticmouse[playernum];
-		int	mx, my;
+		int mx = ticmousex[playernum];
+		int my = ticmousey[playernum];
 
-		mx = ((unsigned)mouse >> 8) & 0xFF;
-		// check overflow
-		if (mouse & 0x00400000)
-			mx = (mouse & 0x00100000) ? -256 : 256;
-		else if (mouse & 0x00100000)
-			mx |= 0xFFFFFF00;
-
-		my = mouse & 0xFF;
-		// check overflow
-		if (mouse & 0x00800000)
-			my = (mouse & 0x00200000) ? -256 : 256;
-		else if (mouse & 0x00200000)
-			my |= 0xFFFFFF00;
-
-		if ((mouse & 0x00020000) && (oldmouse & 0x00020000))
+		if ((buttons & BT_RMBTN) && (oldbuttons & BT_RMBTN))
 		{
 			// holding RMB - mouse dodge mode
 			player->sidemove = mx * 0x1000;
@@ -308,58 +293,55 @@ void P_BuildMove (player_t *player)
 	}
 	else
 	{
+		strafe = (buttons & BT_STRAFE) > 0;
+		speed = (buttons & BT_SPEED) > 0;
 
-	strafe = (buttons & BT_STRAFE) > 0; 
-	speed = (buttons & BT_SPEED) > 0;
-	
-/*  */
-/* use two stage accelerative turning on the joypad  */
-/*  */
-	if ( (buttons & BT_LEFT) && (oldbuttons & BT_LEFT) )
-		player->turnheld++; 
-	else
-	if ( (buttons & BT_RIGHT) && (oldbuttons & BT_RIGHT) )
-		player->turnheld++; 
-	else 
-		player->turnheld = 0; 
-	if (player->turnheld >= SLOWTURNTICS)
-		player->turnheld = SLOWTURNTICS-1;
- 
-	player->forwardmove = player->sidemove = player->angleturn = 0;
-	
-	if (strafe) 
-	{ 
-		if (buttons & BT_RIGHT) 
-			player->sidemove = sidemove[speed]; 
-		if (buttons & BT_LEFT) 
-			player->sidemove = -sidemove[speed]; 
-	} 
-	else 
-	{ 
-		if (speed && !(buttons&(BT_UP|BT_DOWN)) )
+		/*  */
+		/* use two stage accelerative turning on the joypad  */
+		/*  */
+		if ((buttons & BT_LEFT) && (oldbuttons & BT_LEFT))
+			player->turnheld++;
+		else
+			if ((buttons & BT_RIGHT) && (oldbuttons & BT_RIGHT))
+				player->turnheld++;
+			else
+				player->turnheld = 0;
+		if (player->turnheld >= SLOWTURNTICS)
+			player->turnheld = SLOWTURNTICS - 1;
+
+		player->forwardmove = player->sidemove = player->angleturn = 0;
+
+		if (strafe)
 		{
-			if (buttons & BT_RIGHT) 
-				player->angleturn = -((fastangleturn[player->turnheld]
-				*vblsinframe)<<15); 
-			if (buttons & BT_LEFT) 
-				player->angleturn = (fastangleturn[player->turnheld]
-				*vblsinframe)<<15; 
+			if (buttons & BT_RIGHT)
+				player->sidemove = sidemove[speed];
+			if (buttons & BT_LEFT)
+				player->sidemove = -sidemove[speed];
 		}
 		else
 		{
-			if (buttons & BT_RIGHT) 
-				player->angleturn = -angleturn[player->turnheld]<<17; 
-			if (buttons & BT_LEFT) 
-				player->angleturn = angleturn[player->turnheld]<<17; 
+			if (speed && !(buttons & (BT_UP | BT_DOWN)))
+			{
+				if (buttons & BT_RIGHT)
+					player->angleturn = -((fastangleturn[player->turnheld]
+						* vblsinframe) << 15);
+				if (buttons & BT_LEFT)
+					player->angleturn = (fastangleturn[player->turnheld]
+						* vblsinframe) << 15;
+			}
+			else
+			{
+				if (buttons & BT_RIGHT)
+					player->angleturn = -angleturn[player->turnheld] << 17;
+				if (buttons & BT_LEFT)
+					player->angleturn = angleturn[player->turnheld] << 17;
+			}
 		}
 
-	} 
- 
-	if (buttons & BT_UP) 
-		player->forwardmove = forwardmove[speed]; 
-	if (buttons & BT_DOWN) 
-		player->forwardmove = -forwardmove[speed];  		 
-
+		if (buttons & BT_UP)
+			player->forwardmove = forwardmove[speed];
+		if (buttons & BT_DOWN)
+			player->forwardmove = -forwardmove[speed];
 	}
 
 /* */

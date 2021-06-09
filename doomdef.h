@@ -453,9 +453,8 @@ extern	int		ticon;
 extern	int		frameon;
 extern	int		ticbuttons[MAXPLAYERS];
 extern	int		oldticbuttons[MAXPLAYERS];
-extern	int		ticmouse[MAXPLAYERS];
-extern	int		oldticmouse[MAXPLAYERS];
-extern	int		MousePresent;
+extern	int		ticmousex[MAXPLAYERS], ticmousey[MAXPLAYERS];
+extern	boolean		mousepresent;
 
 int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		,  int (*ticker)(void), void (*drawer)(void) );
@@ -678,7 +677,8 @@ void I_ClearFrameBuffer (void);
 
 void I_SetPalette (const byte *palette);
 
-int I_ReadControls (int *mouse);
+int I_ReadControls(void);
+int I_ReadMouse(int *pmx, int *pmy);
 
 void I_NetSetup (void);
 unsigned I_NetTransfer (unsigned buttons);
@@ -860,6 +860,16 @@ extern	volatile int		ticcount, joybuttons;
 #define	BT_0			JP_0
 #define	BT_PWEAPN		JP_PWEAPN
 #define	BT_NWEAPN		JP_NWEAPN
+
+#ifndef JAGUAR
+#define	BT_LMBTN		0x100
+#define	BT_RMBTN		0x1000
+#define	BT_MMBTN		0x1000000
+#else
+#define	BT_LMBTN		0
+#define	BT_RMBTN		0
+#define	BT_MMBTN		0
+#endif
 
 extern	unsigned	BT_ATTACK;
 extern	unsigned	BT_USE;

@@ -41,6 +41,9 @@ unsigned vblank_count = 0;
 unsigned frt_ovf_count = 0;
 unsigned frtc2msec_frac = 0;
 
+static volatile unsigned short *gamepadport;
+static char mouseport;
+
 const int NTSC_CLOCK_SPEED = 23011360; // HZ
 const int PAL_CLOCK_SPEED  = 22801467; // HZ
 
@@ -130,6 +133,25 @@ void Mars_Init(void)
 	for (i = 0; i < 256; i++)
 		palette[i] = 0;
 	palette[COLOR_WHITE] = 0x7fff;
+
+	/* detect input devices */
+	mouseport = -1;
+	mousepresent = false;
+	gamepadport = &MARS_SYS_COMM8;
+
+	/* values set by the m68k on startup */
+	if (MARS_SYS_COMM10 == 0xF001)
+	{
+		mouseport = 1;
+		mousepresent = true;
+		gamepadport = &MARS_SYS_COMM8;
+	}
+	else if (MARS_SYS_COMM8 == 0xF001)
+	{
+		mouseport = 0;
+		mousepresent = true;
+		gamepadport = &MARS_SYS_COMM10;
+	}
 }
 
 int Mars_ToDoomControls(int ctrl)
@@ -235,20 +257,6 @@ void Mars_UploadPalette(const byte *palette)
 	}
 }
 
-void I_SetPalette(const byte *palette)
-{
-	Mars_UploadPalette(palette);
-}
-
-/* 
-================ 
-= 
-= I_Init  
-=
-= Called after all other subsystems have been started
-================ 
-*/ 
- 
 static int Mars_PollMouse(int port)
 {
 	unsigned int mouse1, mouse2;
@@ -260,6 +268,66 @@ static int Mars_PollMouse(int port)
 	MARS_SYS_COMM0 = 0; // tells 68000 we got the mouse value
 	return (int)((mouse1 << 16) | mouse2);
 }
+
+static int Mars_MouseToDoomControls(int mouse)
+{
+	int ctrl = 0;
+	if (mouse & 0x00010000)
+	{
+		ctrl |= BT_ATTACK; // L -> B
+		ctrl |= BT_LMBTN;
+	}
+	if (mouse & 0x00020000)
+	{
+		ctrl |= BT_USE; // R -> C
+		ctrl |= BT_RMBTN;
+	}
+	if (mouse & 0x00040000)
+	{
+		ctrl |= BT_NWEAPN; // M -> Y
+		ctrl |= BT_MMBTN;
+	}
+	if (mouse & 0x00080000)
+	{
+		ctrl |= BT_OPTION; // S -> S
+	}
+	return ctrl;
+}
+
+static int Mars_ParseMousePacket(int mouse, int* pmx, int* pmy)
+{
+	int mx, my;
+
+	// (YO XO YS XS S  M  R  L  X7 X6 X5 X4 X3 X2 X1 X0 Y7 Y6 Y5 Y4 Y3 Y2 Y1 Y0)
+
+	mx = ((unsigned)mouse >> 8) & 0xFF;
+	// check overflow
+	if (mouse & 0x00400000)
+		mx = (mouse & 0x00100000) ? -256 : 256;
+	else if (mouse & 0x00100000)
+		mx |= 0xFFFFFF00;
+
+	my = mouse & 0xFF;
+	// check overflow
+	if (mouse & 0x00800000)
+		my = (mouse & 0x00200000) ? -256 : 256;
+	else if (mouse & 0x00200000)
+		my |= 0xFFFFFF00;
+
+	*pmx = mx;
+	*pmy = my;
+
+	return Mars_MouseToDoomControls(mouse);
+}
+
+/* 
+================ 
+= 
+= I_Init  
+=
+= Called after all other subsystems have been started
+================ 
+*/ 
 
 void I_Init (void) 
 {	
@@ -281,8 +349,11 @@ void I_Init (void)
 		D_memcpy(dl1, sl2, 256);
 		D_memcpy(dl2, sl1, 256);
 	}
+}
 
-	MousePresent = ((Mars_PollMouse(0) == -1) && (Mars_PollMouse(1) == -1)) ? 0 : 1;
+void I_SetPalette(const byte* palette)
+{
+	Mars_UploadPalette(palette);
 }
 
 void I_DrawSbar (void)
@@ -332,47 +403,36 @@ byte *I_ZoneBase (int *size)
 	return (byte *)zone;
 }
 
-int I_ReadControls(int *mouse)
+int I_ReadControls(void)
 {
-	int ctrl = consoleplayer == 0 ? MARS_SYS_COMM8 : MARS_SYS_COMM10;
-	if (mouse)
+	return Mars_ToDoomControls(*gamepadport);
+}
+
+int I_ReadMouse(int* pmx, int *pmy)
+{
+	int val, mx, my;
+	static int oldval = 0;
+
+	*pmx = *pmy = 0;
+	if (!mousepresent)
+		return 0;
+
+	val = Mars_PollMouse(mouseport);
+	switch (val)
 	{
-		static int oldval = 0;
-		int val = Mars_PollMouse(consoleplayer == 0 ? 1 : 0);
-		if (val == -2)
-		{
-			// timeout - return old buttons and no deltas
-			val = oldval & 0x00FF0000;
-			*mouse = val;
-			if (val & 0x00010000)
-				ctrl |= SEGA_CTRL_B; // L -> B
-			if (val & 0x00020000)
-				ctrl |= SEGA_CTRL_C; // R -> C
-			if (val & 0x00040000)
-				ctrl |= SEGA_CTRL_Y; // M -> Y
-		}
-		else if (val == -1)
-		{
-			// no mouse
-			MousePresent = 0;
-			*mouse = 0;
-		}
-		else
-		{
-			// (YO XO YS XS S  M  R  L  X7 X6 X5 X4 X3 X2 X1 X0 Y7 Y6 Y5 Y4 Y3 Y2 Y1 Y0)
-			*mouse = val;
-			oldval = val;
-			if (val & 0x00010000)
-				ctrl |= SEGA_CTRL_B; // L -> B
-			if (val & 0x00020000)
-				ctrl |= SEGA_CTRL_C; // R -> C
-			if (val & 0x00040000)
-				ctrl |= SEGA_CTRL_Y; // M -> Y
-			if (val & 0x00080000)
-				ctrl |= SEGA_CTRL_START; // S -> S
-		}
+	case -2:
+		// timeout - return old buttons and no deltas
+		val = oldval & 0x00F70000;
+		return Mars_ParseMousePacket(val, &mx, &my);
+	case -1:
+		// no mouse
+		mousepresent = false;
+		oldval = 0;
+		return 0;
+	default:
+		oldval = val;
+		return Mars_ParseMousePacket(val, pmx, pmy);
 	}
-	return Mars_ToDoomControls(ctrl);
 }
 
 int	I_GetTime (void)
