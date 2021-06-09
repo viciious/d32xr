@@ -36,7 +36,7 @@ jobs:
           dd if=/dev/zero bs=1K count=2324 of=doom32x.wad && \
           make -f Makefile.mars clean && make -f Makefile.mars debug
       - name: Print sizes
-        run: nm --print-size --size-sort --radix=d D32XR.elf | egrep -Ei ' (B|D) ' | tail -n 20
+        run: nm --print-size --size-sort --radix=d D32XR.elf | egrep -Ei ' (B|D) ' | tail -n 50
       - name: make MARS
         run: |
           dd if=/dev/zero bs=1K count=2324 of=doom32x.wad && \
