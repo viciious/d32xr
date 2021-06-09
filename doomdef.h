@@ -685,7 +685,7 @@ boolean	I_RefreshLatched (void);
 int	I_GetTime (void) ATTR_DATA_CACHE_ALIGN;
 int     I_GetFRTCounter (void) ATTR_DATA_CACHE_ALIGN;
 
-void I_Update (void) ATTR_DATA_CACHE_ALIGN;
+void I_Update (void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 void I_Error (char *error, ...) ATTR_OPTIMIZE_SIZE;
 
