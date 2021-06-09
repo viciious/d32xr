@@ -117,7 +117,7 @@ extern	int			activemobjs;	/* debug count */
 mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
 
 void 	P_RemoveMobj (mobj_t *th);
-boolean	P_SetMobjState (mobj_t *mobj, statenum_t state);
+boolean	P_SetMobjState (mobj_t *mobj, statenum_t state) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void 	P_MobjThinker (mobj_t *mobj);
 void 	P_PreSpawnMobjs(int count);
 

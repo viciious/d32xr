@@ -15,7 +15,9 @@ Most monsters are spawned unaware of all players, but some can be made preaware
 ===============================================================================
 */
 
-
+boolean P_LookForPlayers (mobj_t *actor, boolean allaround)  ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void A_Look (mobj_t *actor) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void A_Chase (mobj_t *actor)  ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 /*
 ================
