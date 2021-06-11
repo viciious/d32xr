@@ -636,6 +636,8 @@ ticphase = 22;
 ticphase = 23;
 	if (player->pendingweapon == wp_nochange)
 	{
+		int oldbuttons = oldticbuttons[playernum];
+
 		if ( buttons & BT_1 )
 		{
 			if (player->weaponowned[wp_chainsaw] &&
@@ -656,6 +658,15 @@ ticphase = 23;
 			player->pendingweapon = wp_plasma;
 		if ( (buttons & BT_7) && player->weaponowned[wp_bfg] )
 			player->pendingweapon = wp_bfg;
+
+		if ((buttons & BT_RMBTN) && (oldbuttons & BT_RMBTN))
+		{
+			// holding the RMB - swap the next and previous weapon actions
+			if (buttons & BT_NWEAPN)
+			{
+				buttons = (buttons ^ BT_NWEAPN) | BT_PWEAPN;
+			}
+		}
 
 		// CALICO: added support for explicit next weapon and previous weapon actions
 		if (buttons & BT_PWEAPN)
