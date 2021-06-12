@@ -276,9 +276,8 @@ void F_Start (void)
 {
 	int	i;
 	int	l;
-#ifndef MARS
-	S_StartSong(2, 1);
-#endif
+
+	S_StartSong(mus_finale, 1);
 
 	status = fin_endtext;		/* END TEXT PRINTS FIRST */
 	textprint = false;
@@ -354,7 +353,10 @@ int F_Ticker (void)
 		textprint == true)
 		{
 			status = fin_charcast;
-/*			S_StartSound (NULL, mobjinfo[castorder[castnum].type].seesound); */
+#ifndef JAGUAR
+			if (mobjinfo[castorder[castnum].type].seesound)
+				S_StartSound (NULL, mobjinfo[castorder[castnum].type].seesound); 
+#endif
 		}
 		return 0;
 	}
@@ -366,6 +368,10 @@ int F_Ticker (void)
 		|| ((buttons & BT_C) && !(oldbuttons & BT_C) ) )
 		{
 		/* go into death frame */
+#ifndef JAGUAR
+			if (mobjinfo[castorder[castnum].type].deathsound)
+				S_StartSound(NULL, mobjinfo[castorder[castnum].type].deathsound);
+#endif
 			castdeath = true;
 			caststate = &states[mobjinfo[castorder[castnum].type].deathstate];
 			casttics = caststate->tics;
@@ -387,8 +393,10 @@ int F_Ticker (void)
 		castdeath = false;
 		if (castorder[castnum].name == NULL)
 			castnum = 0;
-/*		if (mobjinfo[castorder[castnum].type].seesound) */
-/*			S_StartSound (NULL, mobjinfo[castorder[castnum].type].seesound); */
+#ifndef JAGUAR
+		if (mobjinfo[castorder[castnum].type].seesound)
+			S_StartSound (NULL, mobjinfo[castorder[castnum].type].seesound);
+#endif
 		caststate = &states[mobjinfo[castorder[castnum].type].seestate];
 		castframes = 0;
 	}
