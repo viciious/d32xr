@@ -489,8 +489,9 @@ void P_Drawer (void)
 #else
 	if (players[consoleplayer].automapflags & AF_ACTIVE)
 	{
-		ST_Drawer ();
-		AM_Drawer ();
+		R_RenderPlayerView();
+		ST_Drawer();
+		AM_Drawer();
 		I_Update();
 		clearscreen = 2;
 	}

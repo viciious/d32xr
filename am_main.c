@@ -192,11 +192,11 @@ void DrawLine (pixel_t color, int x1, int y1, int x2, int y2)
 #ifdef MARS
 	int		dx, dy;
 	int		adx, ady;
-	pixel_t		quadcolor;
+	byte		quadcolor;
 	int		xstep, ystep;
 	int		count = 1;
 	int 		x, y;
-	pixel_t 	*fb = (pixel_t *)I_FrameBuffer();
+	byte 	*fb = (byte*)I_FrameBuffer();
 
 	dx = x2 - x1;
 	adx = dx<0 ? -dx : dx;
@@ -236,7 +236,7 @@ void DrawLine (pixel_t color, int x1, int y1, int x2, int y2)
 		count = ady;			/* count */
 	}
 
-	quadcolor = color | (color << 8);
+	quadcolor = color;
 
 	x1 *= FRACUNIT;
 	y1 *= FRACUNIT;
@@ -248,15 +248,14 @@ void DrawLine (pixel_t color, int x1, int y1, int x2, int y2)
  	while(count-- > 0)
 	{
 		boolean clipped = false;
-		pixel_t *p = fb + (y>>FRACBITS)*320/2 + (x>>FRACBITS);
+		byte *p = fb + (y>>FRACBITS)*320 + (x>>FRACBITS);
 
-		if (x < 0 || x >= 160*FRACUNIT) clipped = true;
+		if (x < 0 || x >= 320*FRACUNIT) clipped = true;
 		if (y < 0 || y >= 224*FRACUNIT) clipped = true;
 		x += xstep;
 		y += ystep;
 
 		if (!clipped) *p = quadcolor;
-
 	}
 #endif
 }
@@ -322,7 +321,7 @@ void AM_Control (player_t *player)
 		oldticbuttons[playernum] &= ~BT_C;
 		return;
 	}
-		
+
 	if (buttons & BT_RIGHT)
 	{
 		if (buttons & BT_B)
@@ -477,13 +476,17 @@ void AM_Drawer (void)
 		outcode |= (y1 < -90) ;
 		outcode2 = (y2 > 90) << 1;
 		outcode2 |= (y2 < -90) ;
+#ifndef MARS
 		if (outcode & outcode2) continue;
+#endif
 		outcode = (x1 > 80) << 1;
 		outcode |= (x1 < -80) ;
 		outcode2 = (x2 > 80) << 1;
 		outcode2 |= (x2 < -80) ;
+#ifndef MARS
 		if (outcode & outcode2) continue;
-				
+#endif
+
 		/* */
 		/* Figure out color */
 		/* */
