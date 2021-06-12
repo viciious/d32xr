@@ -6,7 +6,6 @@
 
 extern const int COLOR_WHITE;
 
-const boolean	debugscreenstate = false;
 boolean	debugscreenactive = false;
 
 extern short* dc_colormaps;
@@ -21,8 +20,6 @@ extern int tictics;
 
 void ReadEEProm (void);
 
-void Mars_ClearFrameBuffer(void);
-void Mars_WaitFrameBuffersFlip(void);
 void Mars_FlipFrameBuffers(boolean wait);
 void Mars_Init(void);
 void Mars_Slave(void);
@@ -42,10 +39,6 @@ int main(void)
 {
 /* clear screen */
 	Mars_Init();
-
-/* init vars  */
-
-	I_Update();
 
 /* */
 /* load defaults */
