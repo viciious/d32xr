@@ -105,8 +105,11 @@ void S_Init(void)
 				mus_intro = i + 1;
 				num_music = i;
 			}
-			 else if (!D_strncasecmp(name, "mus_nter", 8)) {
+			else if (!D_strncasecmp(name, "mus_nter", 8)) {
 				mus_inter = i + 1;
+			}
+			else if (!D_strncasecmp(name, "mus_bunn", 8)) {
+				mus_finale = i + 1;
 			}
 
 			l++;
