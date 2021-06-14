@@ -27,7 +27,7 @@
 #include "doomdef.h"
 #include "r_local.h"
 
-#define R_CheckPixels(lumpnum) (void *)((intptr_t)(W_POINTLUMPNUM(lumpnum)) | 0x20000000)
+#define R_CheckPixels(lumpnum) (void *)((intptr_t)(W_POINTLUMPNUM(lumpnum)))
 
 /*
 ================

@@ -21,7 +21,7 @@ boolean R_LatePrep(void) ATTR_DATA_CACHE_ALIGN;
 // Check if texture is loaded; return if so, flag for cache if not
 //
 #ifdef MARS
-#define R_CheckPixels(lumpnum) (void *)((intptr_t)(W_POINTLUMPNUM(lumpnum)) | 0x20000000)
+#define R_CheckPixels(lumpnum) (void *)((intptr_t)(W_POINTLUMPNUM(lumpnum)))
 #else
 static boolean cacheneeded;
 
