@@ -388,7 +388,7 @@ y = 0xff500000;
 	
 	mobj->angle = ANG45 * (mthing->angle/45);
 
-	mobj->player = p;
+	mobj->player = p - players + 1;
 	mobj->health = p->health;
 	p->mo = mobj;
 	p->playerstate = PST_LIVE;	

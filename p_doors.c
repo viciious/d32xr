@@ -175,8 +175,8 @@ void EV_VerticalDoor (line_t *line, mobj_t *thing)
 /* */
 /*	Check for locks */
 /* */
-	player = thing->player;
-		
+	player = thing->player ? &players[thing->player - 1] : NULL;
+
 	switch(line->special)
 	{
 		case 26:		/* Blue Card Lock */

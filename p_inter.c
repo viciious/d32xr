@@ -261,7 +261,7 @@ int P_TouchSpecialThing2 (mobj_t *special, mobj_t *toucher)
 {
 	player_t *player;
 	
-	player = toucher->player;
+	player = toucher->player ? &players[toucher->player-1] : NULL;
 
 	switch (special->sprite)
 	{
@@ -400,7 +400,7 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 		return;			/* out of reach */
 	
 	sound = sfx_itemup;	
-	player = toucher->player;
+	player = toucher->player ? &players[toucher->player - 1] : NULL;
 	if (toucher->health <= 0)
 		return;						/* can happen with a sliding player corpse */
 	switch (special->sprite)
@@ -576,20 +576,21 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 	{	/* a frag of one sort or another */
 		if (!source || !source->player || source->player == target->player)
 		{	/* killed self somehow */
-			target->player->frags--;
-			if (target->player->frags < 0)
-				target->player->frags = 0;
+			player_t* player = &players[target->player - 1];
+			player->frags--;
+			if (player->frags < 0)
+				player->frags = 0;
 		}
 		else 
 		{	/* killed by other player */
-			source->player->frags++;
+			players[target->player - 1].frags++;
 		}
 		
 		/* else just killed by a monster */
 	}
 	else if (source && source->player && (target->flags & MF_COUNTKILL) )
 	{	/* a deliberate kill by a player */
-		source->player->killcount++;		/* count for intermission */
+		players[source->player - 1].killcount++;		/* count for intermission */
 	}
 	else if (!netgame && (target->flags & MF_COUNTKILL) )
 		players[0].killcount++;			/* count all monster deaths, even */
@@ -597,12 +598,13 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 	
 	if (target->player)
 	{
+		player_t* player = &players[target->player - 1];
 		target->flags &= ~MF_SOLID;
-		target->player->playerstate = PST_DEAD;
-		P_DropWeapon (target->player);
+		player->playerstate = PST_DEAD;
+		P_DropWeapon (player);
 		if (target->health < -50)
 		{
-			if (target->player == &players[consoleplayer])
+			if (player == &players[consoleplayer])
 				stbar.gotgibbed = true;
 			S_StartSound (target, sfx_slop);
 		}
@@ -674,7 +676,7 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 		target->momx = target->momy = target->momz = 0;
 	}
 	
-	player = target->player;
+	player = target->player ? &players[target->player - 1] : NULL;
 	if (player && gameskill == sk_baby)
 		damage >>= 1;				/* take half damage in trainer mode */
 	
@@ -684,7 +686,7 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 /* kick away unless using the chainsaw */
 /* */
 	if (inflictor && (!source || !source->player 
-	|| source->player->readyweapon != wp_chainsaw))
+		|| players[source->player - 1].readyweapon != wp_chainsaw))
 	{
 		ang = R_PointToAngle2 ( inflictor->x, inflictor->y
 			,target->x, target->y);

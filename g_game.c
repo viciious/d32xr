@@ -306,7 +306,7 @@ void G_DoReborn (int playernum)
 /*	 */
 /* respawn this player while the other players keep going */
 /* */
-	players[playernum].mo->player = NULL;   /* dissasociate the corpse  */
+	players[playernum].mo->player = 0;   /* dissasociate the corpse  */
 		
 	/* spawn at random spot if in death match  */
 	if (netgame == gt_deathmatch) 

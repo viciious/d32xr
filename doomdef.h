@@ -198,15 +198,17 @@ typedef struct mobj_s
 									/* teleporting */
 	unsigned char		threshold;		/* if >0, the target will be chased */
 									/* no matter what (even if shot) */
+	unsigned char		sprite;				/* used to find patch_t and flip value */
+	unsigned char		player;		/* only valid if type == MT_PLAYER */
+
 	VINT			health;
 	VINT			tics;				/* state tic counter	 */
 	VINT 			state;
-	VINT			sprite;				/* used to find patch_t and flip value */
 	VINT			frame;				/* might be ord with FF_FULLBRIGHT */
 
 	unsigned short		type;
 
-	
+
 /* info for drawing */
 	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
 	angle_t			angle;
@@ -219,11 +221,10 @@ typedef struct mobj_s
 	fixed_t			momx, momy, momz;	/* momentums */
 	
 	unsigned 		speed;			/* mobjinfo[mobj->type].speed */
-	int				flags;
+	int			flags;
 	struct mobj_s	*target;		/* thing being chased/attacked (or NULL) */
 									/* also the originator for missiles */
-	struct player_s	*player;		/* only valid if type == MT_PLAYER */
-	int				extradata;		/* for latecall functions */
+	intptr_t		extradata;		/* for latecall functions */
 #ifndef MARS
 	fixed_t			spawnx, spawny;	/* for deathmatch respawning */
 	angle_t			spawnangle;

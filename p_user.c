@@ -137,13 +137,15 @@ void P_PlayerXYMovement (mobj_t *mo)
 
 void P_PlayerZMovement (mobj_t *mo)
 {	
+	player_t* player = &players[mo->player - 1];
+
 /* */
 /* check for smooth step up */
 /* */
 	if (mo->z < mo->floorz)
 	{
-		mo->player->viewheight -= mo->floorz-mo->z;
-		mo->player->deltaviewheight = (VIEWHEIGHT - mo->player->viewheight)>>2;
+		player->viewheight -= mo->floorz-mo->z;
+		player->deltaviewheight = (VIEWHEIGHT - player->viewheight)>>2;
 	}
 
 /* */
@@ -160,7 +162,7 @@ void P_PlayerZMovement (mobj_t *mo)
 		{
 			if (mo->momz < -GRAVITY*4)	/* squat down */
 			{
-				mo->player->deltaviewheight = mo->momz>>3;
+				player->deltaviewheight = mo->momz>>3;
 				S_StartSound (mo, sfx_oof);
 			}
 			mo->momz = 0;
