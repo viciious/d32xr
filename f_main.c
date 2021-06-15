@@ -35,14 +35,15 @@ void BufferedDrawSprite (int sprite, int frame, int rotation)
 	sprframe = &sprdef->spriteframes[ frame & FF_FRAMEMASK];
 
 	if (sprframe->rotate)
-	{
 		lump = sprframe->lump[rotation];
-		flip = (boolean)sprframe->flip[rotation];
-	}
 	else
-	{
 		lump = sprframe->lump[0];
-		flip = (boolean)sprframe->flip[0];
+
+	flip = false;
+	if (lump < 0)
+	{
+		lump = -lump;
+		flip = true;
 	}
 
 	patch = (patch_t *)W_POINTLUMPNUM(lump);

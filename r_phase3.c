@@ -66,14 +66,20 @@ static void R_PrepMobj(mobj_t *thing)
       ang  = R_PointToAngle2(vd.viewx, vd.viewy, thing->x, thing->y);
       rot  = (ang - thing->angle + (unsigned int)(ANG45 / 2)*9) >> 29;
       lump = sprframe->lump[rot];
-      flip = (boolean)(sprframe->flip[rot]);
    }
    else
    {
       // sprite has a single view for all rotations
       lump = sprframe->lump[0];
-      flip = (boolean)(sprframe->flip[0]);
    }
+
+   flip = false;
+   if (lump < 0)
+   {
+      lump = -lump;
+      flip = true;
+   }
+
 
    // get a new vissprite
    if(vissprite_p == vissprites + MAXVISSPRITES)

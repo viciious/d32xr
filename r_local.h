@@ -169,7 +169,6 @@ typedef struct
 {
 	boolean		rotate;		/* if false use 0 for any position */
 	short		lump[8];	/* lump to use for view angles 0-7 */
-	byte		flip[8];	/* flip (1 = flip) to use for view angles 0-7 */
 } spriteframe_t;
 
 typedef struct

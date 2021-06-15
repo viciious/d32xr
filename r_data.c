@@ -392,8 +392,7 @@ R_InstallSpriteLump(const char* spritename, char letter, spriteframe_t* frame,
 		frame->rotate = 1;
 		for (r = 0; r < 8; r++)
 		{
-			frame->lump[r] = lump;
-			frame->flip[r] = (byte)(flipped + 1);
+			frame->lump[r] = lump * (flipped ? -1 : 1);
 		}
 		return;
 	}
@@ -412,8 +411,7 @@ R_InstallSpriteLump(const char* spritename, char letter, spriteframe_t* frame,
 			"has two lumps mapped to it",
 			spritename, letter, '1' + rotation);
 
-	frame->lump[rotation] = lump;
-	frame->flip[rotation] = (byte)(flipped + 1);
+	frame->lump[rotation] = lump * (flipped ? -1 : 1);
 }
 
 
@@ -558,12 +556,7 @@ void R_InitSpriteDefs(const char** namelist)
 		sprites[i].spriteframes = sprfinal;
 
 		for (f = 0; f < maxframe; f++)
-		{
-			int r;
 			sprfinal[f].rotate -= 1;
-			for (r = 0; r < 8; r++)
-				sprfinal[f].flip[r] -= 1;
-		}
 
 		sprfinal += numframes;
 	}
