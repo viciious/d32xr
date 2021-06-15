@@ -35,6 +35,9 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_
 static void R_PlaneLoop(localplane_t* lpl, const int mask) __attribute__((always_inline));
 static void R_DrawPlanesMasked(const int mask) __attribute__((always_inline));
 
+static unsigned short numplanes;
+static short *sortedplanes;
+
 void Mars_Slave_R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
 void R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
 
@@ -190,9 +193,9 @@ static void R_PlaneLoop(localplane_t *lpl, const int mask)
 
 static void R_DrawPlanesMasked(const int mask)
 {
+    unsigned i;
     angle_t angle;
     localplane_t lpl;
-    int i, numplanes;
     visplane_t* last;
 
     lpl.x = vd.viewx;
@@ -210,10 +213,9 @@ static void R_DrawPlanesMasked(const int mask)
     last = lastvisplane;
 #endif
 
-    numplanes = last - visplanes - 1;
     for (i = 0; i < numplanes; i++)
     {
-        visplane_t* pl = visplanes + 1 + i;
+        visplane_t* pl = visplanes + sortedplanes[(i<<1) + 1];
 
         if (pl->minx > pl->maxx)
             continue;
@@ -274,7 +276,9 @@ void Mars_Slave_R_DrawPlanes(void)
 //
 void R_DrawPlanes(void)
 {
+    int i, j;
     visplane_t* pl;
+    short sortbuf[MAXVISPLANES * 2] __attribute__((aligned(4)));
 
     for (pl = visplanes + 1; pl < lastvisplane; pl++)
     {
@@ -284,6 +288,22 @@ void R_DrawPlanes(void)
         pl->open[pl->maxx + 1] = OPENMARK;
         pl->open[pl->minx - 1] = OPENMARK;
     }
+
+    j = 0;
+    numplanes = 0;
+    for (pl = visplanes + 1; pl < lastvisplane; pl++)
+    {
+        if (pl->minx <= pl->maxx)
+        {
+            sortbuf[j + 0] = pl->flatnum;
+            sortbuf[j + 1] = pl - visplanes;
+            j += 2;
+            numplanes++;
+        }
+    }
+
+    D_isort((int*)sortbuf, numplanes);
+    sortedplanes = (short *)((intptr_t)sortbuf | 0x20000000);
 
 #ifdef MARS
     Mars_R_BeginDrawPlanes();
