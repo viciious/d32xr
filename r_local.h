@@ -68,8 +68,9 @@ typedef	struct
 	VINT		special, tag;
 
 	VINT		soundtraversed;		/* 0 = untraversed, 1,2 = sndlines -1 */
-	VINT			validcount;			/* if == validcount, already checked */
-	int		linecount;
+	VINT		validcount;			/* if == validcount, already checked */
+	VINT		linecount;
+
 	fixed_t		floorheight, ceilingheight;
 	mobj_t		*soundtarget;		/* thing that made a sound (or null) */
 	
