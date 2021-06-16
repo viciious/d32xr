@@ -144,11 +144,16 @@
 #define SEGA_CTRL_SIX       0x1000
 #define SEGA_CTRL_NONE      0xF000
 
+#define SEGA_CTRL_LMB		0x00010000
+#define SEGA_CTRL_RMB		0x00020000
+#define SEGA_CTRL_MMB		0x00040000
+#define SEGA_CTRL_STARTMB	0x00040000
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* global functions in sh2_crt0.s */
+/* global functions in crt0.s */
 extern int SetSH2SR(int level);
 extern void fast_memcpy(void* dst, void* src, int len);
 extern void CacheControl(int mode);

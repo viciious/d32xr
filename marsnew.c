@@ -96,22 +96,22 @@ static int Mars_ConvGamepadButtons(int ctrl)
 static int Mars_ConvMouseButtons(int mouse)
 {
 	int ctrl = 0;
-	if (mouse & 0x00010000)
+	if (mouse & SEGA_CTRL_LMB)
 	{
 		ctrl |= BT_ATTACK; // L -> B
 		ctrl |= BT_LMBTN;
 	}
-	if (mouse & 0x00020000)
+	if (mouse & SEGA_CTRL_RMB)
 	{
 		ctrl |= BT_USE; // R -> C
 		ctrl |= BT_RMBTN;
 	}
-	if (mouse & 0x00040000)
+	if (mouse & SEGA_CTRL_MMB)
 	{
 		ctrl |= BT_NWEAPN; // M -> Y
 		ctrl |= BT_MMBTN;
 	}
-	if (mouse & 0x00080000)
+	if (mouse & SEGA_CTRL_STARTMB)
 	{
 		ctrl |= BT_OPTION; // S -> S
 	}
