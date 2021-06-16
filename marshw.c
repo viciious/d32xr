@@ -34,6 +34,7 @@ char mars_mouseport;
 volatile unsigned mars_vblank_count = 0;
 volatile unsigned mars_frt_ovf_count = 0;
 unsigned mars_frtc2msec_frac = 0;
+const uint8_t* mars_newpalette = NULL;
 
 const int NTSC_CLOCK_SPEED = 23011360; // HZ
 const int PAL_CLOCK_SPEED = 22801467; // HZ
@@ -193,5 +194,15 @@ void Mars_Init(void)
 	{
 		mars_mouseport = 0;
 		mars_gamepadport = &MARS_SYS_COMM10;
+	}
+}
+
+void master_vbi_handler(void)
+{
+	mars_vblank_count++;
+	if (mars_newpalette)
+	{
+		Mars_UploadPalette(mars_newpalette);
+		mars_newpalette = NULL;
 	}
 }

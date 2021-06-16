@@ -479,8 +479,18 @@ mars_frt_ovf_count_ptr:
 !-----------------------------------------------------------------------
 
 master_vbi:
+        ! save registers
+        sts.l   pr,@-r15
         mov.l   r0,@-r15
         mov.l   r1,@-r15
+        mov.l   r2,@-r15
+        mov.l   r3,@-r15
+        mov.l   r4,@-r15
+        mov.l   r5,@-r15
+        mov.l   r6,@-r15
+        mov.l   r7,@-r15
+        sts.l   mach,@-r15
+        sts.l   macl,@-r15
 
         mov.l   mvi_mars_adapter,r1
         mov.w   r0,@(0x16,r1)           /* clear V IRQ */
@@ -489,22 +499,30 @@ master_vbi:
         nop
         nop
 
-        ! handle V IRQ
-        mov.l   mars_vblank_count_ptr,r1
-        mov.l   @r1,r0
-        add     #1,r0
-        mov.l   r0,@r1
+        mov.l   mvbi_handler_ptr,r0
+        jsr     @r0
+        nop
 
+        ! restore registers
+        lds.l   @r15+,macl
+        lds.l   @r15+,mach
+        mov.l   @r15+,r7
+        mov.l   @r15+,r6
+        mov.l   @r15+,r5
+        mov.l   @r15+,r4
+        mov.l   @r15+,r3
+        mov.l   @r15+,r2
         mov.l   @r15+,r1
         mov.l   @r15+,r0
+        lds.l   @r15+,pr
         rte
         nop
 
         .align  2
 mvi_mars_adapter:
         .long   0x20004000
-mars_vblank_count_ptr:
-        .long   _mars_vblank_count
+mvbi_handler_ptr:
+        .long   _master_vbi_handler
 
 !-----------------------------------------------------------------------
 ! Master H Blank IRQ handler

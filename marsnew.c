@@ -35,6 +35,7 @@
 const int COLOR_WHITE = 0x04;
 
 short	*dc_colormaps;
+const byte	*new_palette = NULL;
 
 boolean	debugscreenactive = false;
 
@@ -198,7 +199,7 @@ void I_Init (void)
 
 void I_SetPalette(const byte* palette)
 {
-	Mars_UploadPalette(palette);
+	mars_newpalette = palette;
 }
 
 void I_DrawSbar (void)

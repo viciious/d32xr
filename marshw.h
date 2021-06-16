@@ -30,6 +30,7 @@
 #ifdef MARS
 
 #include <stdint.h>
+#include <stddef.h>
 #include "32x.h"
 
 void Mars_FlipFrameBuffers(char wait) __attribute__((noinline));
@@ -44,6 +45,7 @@ extern volatile unsigned short* mars_gamepadport;
 extern char mars_mouseport;
 extern volatile unsigned mars_vblank_count;
 extern unsigned mars_frtc2msec_frac;
+extern const uint8_t* mars_newpalette;
 
 #define Mars_GetTicCount() (*(volatile int *)((intptr_t)&mars_vblank_count | 0x20000000))
 int Mars_GetFRTCounter(void);
