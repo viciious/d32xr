@@ -2,30 +2,14 @@
 
 #include "doomdef.h"
 #include "r_local.h"
-#include "32x.h"
+#include "mars.h"
 
 extern const int COLOR_WHITE;
 
-boolean	debugscreenactive = false;
-
-extern short* dc_colormaps;
-
-int		lastticcount = 0;
-int		lasttics = 0;
-
-int 	debugmode = 0;
-
-extern int 	cy;
-extern int tictics;
-
 void ReadEEProm (void);
 
-void Mars_FlipFrameBuffers(boolean wait);
 void Mars_Init(void);
-void Mars_Slave(void);
-
-void I_ClearWorkBuffer();
-int I_FRTCounter2Msec(int c);
+void Mars_Slave(void) ATTR_DATA_CACHE_ALIGN;
 
 /* 
 ================ 
@@ -37,8 +21,22 @@ int I_FRTCounter2Msec(int c);
  
 int main(void)
 {
+	int i;
+	volatile unsigned short* palette;
+
 /* clear screen */
 	Mars_Init();
+
+	/* set a two color palette */
+	Mars_FlipFrameBuffers(false);
+	palette = &MARS_CRAM;
+	for (i = 0; i < 256; i++)
+		palette[i] = 0;
+	palette[COLOR_WHITE] = 0x7fff;
+	Mars_WaitFrameBuffersFlip();
+
+	ticrate = 4;
+	mousepresent = mars_mouseport >= 0;
 
 /* */
 /* load defaults */
@@ -179,7 +177,7 @@ void I_Error (char *error, ...)
 	D_vsnprintf(errormessage, sizeof(errormessage), error, ap);
 	va_end(ap);
 
-	I_ClearWorkBuffer ();
+	I_ClearFrameBuffer();
 	I_Print8 (0,25,errormessage);
 	I_Update ();
 
@@ -188,112 +186,6 @@ void I_Error (char *error, ...)
 } 
 
 /*=========================================================================== */
-
-/* 
-==================== 
-= 
-= I_Update 
-=
-= Display the current framebuffer
-= If < 1/15th second has passed since the last display, busy wait.
-= 15 fps is the maximum frame rate, and any faster displays will
-= only look ragged.
-=
-= When displaying the automap, use full resolution, otherwise use
-= wide pixels
-==================== 
-*/ 
-extern int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sprites[4], t_ref_total;
-
-void I_Update (void) 
-{
-	int i;
-	int sec;
-	int ticcount;
-	char buf[32];
-	static int fpscount = 0;
-	static int prevsec = 0;
-	static int framenum = 0;
-	boolean NTSC = (MARS_VDP_DISPMODE & MARS_NTSC_FORMAT) != 0;
-	const int ticwait = (demoplayback ? 3 : 2); // demos were recorded at 15-20fps
-	const int refreshHZ = (NTSC ? 60 : 50);
-
-	if ((ticbuttons[consoleplayer] & BT_STAR) && !(oldticbuttons[consoleplayer] & BT_STAR))
-	{
-		extern int clearscreen;
-		debugmode = (debugmode + 1) % 4;
-		clearscreen = 2;
-	}
-	debugscreenactive = debugmode != 0;
-
-	if (debugmode == 1)
-	{
-		D_snprintf(buf, sizeof(buf), "fps:%2d", fpscount);
-		I_Print8(200, 5, buf);
-	}
-	else if (debugmode > 1)
-	{
-		int line = 5;
-		unsigned t_ref_bsp_avg = 0;
-		unsigned t_ref_segs_avg = 0;
-		unsigned t_ref_planes_avg = 0;
-		unsigned t_ref_sprites_avg = 0;
-
-		for (i = 0; i < 4; i++)
-		{
-			t_ref_bsp_avg += t_ref_bsp[i];
-			t_ref_segs_avg += t_ref_segs[i];
-			t_ref_planes_avg += t_ref_planes[i];
-			t_ref_sprites_avg += t_ref_sprites[i];
-		}
-		t_ref_bsp_avg >>= 2;
-		t_ref_segs_avg >>= 2;
-		t_ref_planes_avg >>= 2;
-		t_ref_sprites_avg >>= 2;
-
-		D_snprintf(buf, sizeof(buf), "fps:%2d", fpscount);
-		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "tic:%d/%d", t_ref_total, lasttics);
-		I_Print8(200, line++, buf);
-
-		line++;
-
-		D_snprintf(buf, sizeof(buf), "g:%2d", I_FRTCounter2Msec(tictics));
-		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "b:%2d", I_FRTCounter2Msec(t_ref_bsp_avg));
-		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "w:%2d %2d", I_FRTCounter2Msec(t_ref_segs_avg), lastwallcmd - viswalls);
-		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "p:%2d %2d", I_FRTCounter2Msec(t_ref_planes_avg), lastvisplane - visplanes - 1);
-		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "s:%2d %2d", I_FRTCounter2Msec(t_ref_sprites_avg), lastsprite_p - vissprites);
-		I_Print8(200, line++, buf);
-	}
-
-	Mars_FlipFrameBuffers(false);
-
-/* */
-/* wait until on the third tic after last display */
-/* */
-	do
-	{
-		ticcount = I_GetTime();
-	} while (ticcount-lastticcount < ticwait);
-
-	lasttics = ticcount - lastticcount;
-	lastticcount = ticcount;
-
-	sec = ticcount / refreshHZ; // FIXME: add proper NTSC vs PAL rate detection
-	if (sec != prevsec) {
-		static int prevsecframe;
-		fpscount = (framenum - prevsecframe) / (sec - prevsec);
-		prevsec = sec;
-		prevsecframe = framenum;
-	}
-	framenum++;
-
-	cy = 1;
-}
 
 void EraseBlock(int x, int y, int width, int height)
 {

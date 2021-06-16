@@ -29,32 +29,9 @@
 
 #ifdef MARS
 
-#include "32x.h"
+#include "marshw.h"
 
-void Mars_ClearFrameBuffer(void);
-void Mars_FlipFrameBuffers(boolean wait);
-void Mars_WaitFrameBuffersFlip(void);
-void Mars_Init(void);
-int Mars_ToDoomControls(int ctrl);
-void Mars_Slave(void) ATTR_DATA_CACHE_ALIGN;
-void Mars_UploadPalette(const byte* palette);
-
-#define Mars_ClearCacheLine(addr) *(volatile int *)((addr) | 0x40000000) = 0
-#define Mars_ClearCache() \
-	do { \
-		CacheControl(0); /* disable cache */ \
-		CacheControl(SH2_CCTL_CP | SH2_CCTL_CE); /* purge and re-enable */ \
-	} while (0)
-
-#define Mars_ClearCacheLines(paddr,nl) \
-	do { \
-		intptr_t addr = (intptr_t)paddr; \
-		int l; \
-		for (l = 0; l < nl; l++) { \
-			Mars_ClearCacheLine(addr); \
-			addr += 16; \
-		} \
-	} while (0)
+void Mars_Slave(void);
 
 void Mars_Slave_R_SegCommands(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void Mars_Slave_R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;

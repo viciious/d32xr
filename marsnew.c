@@ -34,127 +34,23 @@
 
 const int COLOR_WHITE = 0x04;
 
-int		activescreen = 0;
 short	*dc_colormaps;
 
-unsigned vblank_count = 0;
-unsigned frt_ovf_count = 0;
-unsigned frtc2msec_frac = 0;
+boolean	debugscreenactive = false;
 
-static volatile unsigned short *gamepadport;
-static char mouseport;
+int		lastticcount = 0;
+int		lasttics = 0;
 
-const int NTSC_CLOCK_SPEED = 23011360; // HZ
-const int PAL_CLOCK_SPEED  = 22801467; // HZ
+int 	debugmode = 0;
 
-extern int 	debugmode;
+extern int 	cy;
+extern int tictics;
 
 // framebuffer start is after line table AND a single blank line
 static volatile pixel_t* framebuffer = &MARS_FRAMEBUFFER + 0x100 + 160;
 static volatile pixel_t *framebufferend = &MARS_FRAMEBUFFER + 0x10000;
 
-void Mars_ClearFrameBuffer(void)
-{
-	int *p = (int *)framebuffer;
-	int *p_end = (int *)(framebuffer + 320*224 / 2);
-	while (p < p_end)
-		*p++ = 0;
-}
-
-inline void Mars_WaitFrameBuffersFlip(void)
-{
-	while ((MARS_VDP_FBCTL & MARS_VDP_FS) != activescreen);
-}
-
-inline void Mars_FlipFrameBuffers(boolean wait)
-{
-	activescreen = !activescreen;
-	MARS_VDP_FBCTL = activescreen;
-	if (wait) Mars_WaitFrameBuffersFlip();
-}
-
-void Mars_InitLineTable(volatile unsigned short* lines)
-{
-	int j;
-
-	// initialize the lines section of the framebuffer
-	for (j = 0; j < 224; j++)
-		lines[j] = j * 320 / 2 + 0x100;
-	// set the rest of the line table to a blank line
-	for (j = 224; j < 256; j++)
-		lines[j] = 0x100;
-	// make sure blank line is clear
-	for (j = 256; j < (256 + 160); j++)
-		lines[j] = 0;
-}
-
-void Mars_Init(void)
-{
-	int i;
-	volatile unsigned short *palette;
-	boolean NTSC;
-
-	while ((MARS_SYS_INTMSK & MARS_SH2_ACCESS_VDP) == 0);
-
-	MARS_VDP_DISPMODE = MARS_224_LINES | MARS_VDP_MODE_256;
-	NTSC = (MARS_VDP_DISPMODE & MARS_NTSC_FORMAT) != 0;
-
-	/* init hires timer system */
-	SH2_FRT_TCR = 2;									/* TCR set to count at SYSCLK/128 */
-	SH2_FRT_FRCH = 0;
-	SH2_FRT_FRCL = 0;
-	SH2_INT_IPRB = (SH2_INT_IPRB & 0xF0FF) | 0x0E00; 	/* set FRT INT to priority 14 */
-	SH2_INT_VCRD = 72 << 8; 							/* set exception vector for FRT overflow */
-	SH2_FRT_FTCSR = 0;									/* clear any int status */
-	SH2_FRT_TIER = 3;									/* enable overflow interrupt */
-
-	MARS_SYS_COMM4 = 0;
-
-	// change 128.0f to something else if SH2_FRT_TCR is changed!
-	frtc2msec_frac = 128.0f * 1000.0f / (NTSC ? NTSC_CLOCK_SPEED : PAL_CLOCK_SPEED) * 65536.f;
-
-	activescreen = MARS_VDP_FBCTL;
-
-	Mars_FlipFrameBuffers(true);
-
-	for (i = 0; i < 2; i++)
-	{
-		Mars_InitLineTable(&MARS_FRAMEBUFFER);
-
-		Mars_ClearFrameBuffer();
-
-		Mars_FlipFrameBuffers(true);
-	}
-
-	ticrate = 4;
-
-	/* set a two color palette */
-	palette = &MARS_CRAM;
-	for (i = 0; i < 256; i++)
-		palette[i] = 0;
-	palette[COLOR_WHITE] = 0x7fff;
-
-	/* detect input devices */
-	mouseport = -1;
-	mousepresent = false;
-	gamepadport = &MARS_SYS_COMM8;
-
-	/* values set by the m68k on startup */
-	if (MARS_SYS_COMM10 == 0xF001)
-	{
-		mouseport = 1;
-		mousepresent = true;
-		gamepadport = &MARS_SYS_COMM8;
-	}
-	else if (MARS_SYS_COMM8 == 0xF001)
-	{
-		mouseport = 0;
-		mousepresent = true;
-		gamepadport = &MARS_SYS_COMM10;
-	}
-}
-
-int Mars_ToDoomControls(int ctrl)
+static int Mars_ConvGamepadButtons(int ctrl)
 {
 	int newc = 0;
 
@@ -194,6 +90,31 @@ int Mars_ToDoomControls(int ctrl)
 		newc |= BT_STAR;
 
 	return newc;
+}
+
+static int Mars_ConvMouseButtons(int mouse)
+{
+	int ctrl = 0;
+	if (mouse & 0x00010000)
+	{
+		ctrl |= BT_ATTACK; // L -> B
+		ctrl |= BT_LMBTN;
+	}
+	if (mouse & 0x00020000)
+	{
+		ctrl |= BT_USE; // R -> C
+		ctrl |= BT_RMBTN;
+	}
+	if (mouse & 0x00040000)
+	{
+		ctrl |= BT_NWEAPN; // M -> Y
+		ctrl |= BT_MMBTN;
+	}
+	if (mouse & 0x00080000)
+	{
+		ctrl |= BT_OPTION; // S -> S
+	}
+	return ctrl;
 }
 
 void Mars_Slave(void)
@@ -239,85 +160,9 @@ void Mars_Slave(void)
 	}
 }
 
-void Mars_UploadPalette(const byte *palette)
+int Mars_FRTCounter2Msec(int c)
 {
-	int	i;
-	volatile unsigned short *cram = &MARS_CRAM;
-
-	while ((MARS_SYS_INTMSK & MARS_SH2_ACCESS_VDP) == 0);
-
-	for (i=0 ; i<256 ; i++) {
-		byte r = *palette++;
-		byte g = *palette++;
-		byte b = *palette++;
-		unsigned short b1 = ((b >> 3) & 0x1f) << 10;
-		unsigned short g1 = ((g >> 3) & 0x1f) << 5;
-		unsigned short r1 = ((r >> 3) & 0x1f) << 0;
-		cram[i] = r1 | g1 | b1;
-	}
-}
-
-static int Mars_PollMouse(int port)
-{
-	unsigned int mouse1, mouse2;
-	while (MARS_SYS_COMM0); // wait until 68000 has responded to any earlier requests
-	MARS_SYS_COMM0 = 0x0500 | port; // tells 68000 to read mouse
-	while (MARS_SYS_COMM0 == (0x0500 | port)); // wait for mouse value
-	mouse1 = MARS_SYS_COMM0;
-	mouse2 = MARS_SYS_COMM2;
-	MARS_SYS_COMM0 = 0; // tells 68000 we got the mouse value
-	return (int)((mouse1 << 16) | mouse2);
-}
-
-static int Mars_MouseToDoomControls(int mouse)
-{
-	int ctrl = 0;
-	if (mouse & 0x00010000)
-	{
-		ctrl |= BT_ATTACK; // L -> B
-		ctrl |= BT_LMBTN;
-	}
-	if (mouse & 0x00020000)
-	{
-		ctrl |= BT_USE; // R -> C
-		ctrl |= BT_RMBTN;
-	}
-	if (mouse & 0x00040000)
-	{
-		ctrl |= BT_NWEAPN; // M -> Y
-		ctrl |= BT_MMBTN;
-	}
-	if (mouse & 0x00080000)
-	{
-		ctrl |= BT_OPTION; // S -> S
-	}
-	return ctrl;
-}
-
-static int Mars_ParseMousePacket(int mouse, int* pmx, int* pmy)
-{
-	int mx, my;
-
-	// (YO XO YS XS S  M  R  L  X7 X6 X5 X4 X3 X2 X1 X0 Y7 Y6 Y5 Y4 Y3 Y2 Y1 Y0)
-
-	mx = ((unsigned)mouse >> 8) & 0xFF;
-	// check overflow
-	if (mouse & 0x00400000)
-		mx = (mouse & 0x00100000) ? -256 : 256;
-	else if (mouse & 0x00100000)
-		mx |= 0xFFFFFF00;
-
-	my = mouse & 0xFF;
-	// check overflow
-	if (mouse & 0x00800000)
-		my = (mouse & 0x00200000) ? -256 : 256;
-	else if (mouse & 0x00200000)
-		my |= 0xFFFFFF00;
-
-	*pmx = mx;
-	*pmy = my;
-
-	return Mars_MouseToDoomControls(mouse);
+	return FixedMul((unsigned)c << FRACBITS, mars_frtc2msec_frac) >> FRACBITS;
 }
 
 /* 
@@ -362,7 +207,7 @@ void I_DrawSbar (void)
 
 boolean	I_RefreshCompleted (void)
 {
-	return (MARS_VDP_FBCTL & MARS_VDP_FS) == activescreen;
+	return Mars_FramebuffersFlipped();
 }
 
 boolean	I_RefreshLatched (void)
@@ -405,7 +250,7 @@ byte *I_ZoneBase (int *size)
 
 int I_ReadControls(void)
 {
-	return Mars_ToDoomControls(*gamepadport);
+	return Mars_ConvGamepadButtons(*mars_gamepadport);
 }
 
 int I_ReadMouse(int* pmx, int *pmy)
@@ -417,13 +262,13 @@ int I_ReadMouse(int* pmx, int *pmy)
 	if (!mousepresent)
 		return 0;
 
-	val = Mars_PollMouse(mouseport);
+	val = Mars_PollMouse(mars_mouseport);
 	switch (val)
 	{
 	case -2:
 		// timeout - return old buttons and no deltas
 		val = oldval & 0x00F70000;
-		return Mars_ParseMousePacket(val, &mx, &my);
+		break;
 	case -1:
 		// no mouse
 		mousepresent = false;
@@ -431,24 +276,21 @@ int I_ReadMouse(int* pmx, int *pmy)
 		return 0;
 	default:
 		oldval = val;
-		return Mars_ParseMousePacket(val, pmx, pmy);
+		break;
 	}
+
+	val = Mars_ParseMousePacket(val, &mx, &my);
+	return Mars_ConvMouseButtons(val);
 }
 
 int	I_GetTime (void)
 {
-	return *(int *)((intptr_t)&vblank_count | 0x20000000);
+	return Mars_GetTicCount();
 }
 
 int I_GetFRTCounter(void)
 {
-	unsigned cnt = (SH2_FRT_FRCH << 8) | SH2_FRT_FRCL;
-	return (int)((frt_ovf_count << 16) | cnt);
-}
-
-int I_FRTCounter2Msec(int c)
-{
-	return FixedMul((unsigned)c << FRACBITS, frtc2msec_frac)>>FRACBITS;
+	return Mars_GetFRTCounter();
 }
 
 /*
@@ -477,7 +319,7 @@ byte	*I_TempBuffer (void)
 byte 	*I_WorkBuffer (void)
 {
 	while (!I_RefreshCompleted());
-	return (byte *)(framebuffer + 320 / 2 * 224);
+	return (byte *)(framebuffer + 320 / 2 * 223);
 }
 
 pixel_t	*I_FrameBuffer (void)
@@ -500,13 +342,16 @@ pixel_t	*I_ViewportBuffer (void)
 
 void I_ClearFrameBuffer (void)
 {
-	Mars_ClearFrameBuffer();
+	int* p = (int*)framebuffer;
+	int* p_end = (int*)(framebuffer + 320 * 223 / 2);
+	while (p < p_end)
+		*p++ = 0;
 }
 
 void I_DebugScreen(void)
 {
 	if (debugmode == 3)
-		Mars_ClearFrameBuffer();
+		I_ClearFrameBuffer();
 }
 
 void I_ClearWorkBuffer(void)
@@ -518,6 +363,112 @@ void I_ClearWorkBuffer(void)
 }
 
 /*=========================================================================== */
+
+/*
+====================
+=
+= I_Update
+=
+= Display the current framebuffer
+= If < 1/15th second has passed since the last display, busy wait.
+= 15 fps is the maximum frame rate, and any faster displays will
+= only look ragged.
+=
+= When displaying the automap, use full resolution, otherwise use
+= wide pixels
+====================
+*/
+extern int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sprites[4], t_ref_total;
+
+void I_Update(void)
+{
+	int i;
+	int sec;
+	int ticcount;
+	char buf[32];
+	static int fpscount = 0;
+	static int prevsec = 0;
+	static int framenum = 0;
+	boolean NTSC = (MARS_VDP_DISPMODE & MARS_NTSC_FORMAT) != 0;
+	const int ticwait = (demoplayback ? 3 : 2); // demos were recorded at 15-20fps
+	const int refreshHZ = (NTSC ? 60 : 50);
+
+	if ((ticbuttons[consoleplayer] & BT_STAR) && !(oldticbuttons[consoleplayer] & BT_STAR))
+	{
+		extern int clearscreen;
+		debugmode = (debugmode + 1) % 4;
+		clearscreen = 2;
+	}
+	debugscreenactive = debugmode != 0;
+
+	if (debugmode == 1)
+	{
+		D_snprintf(buf, sizeof(buf), "fps:%2d", fpscount);
+		I_Print8(200, 5, buf);
+	}
+	else if (debugmode > 1)
+	{
+		int line = 5;
+		unsigned t_ref_bsp_avg = 0;
+		unsigned t_ref_segs_avg = 0;
+		unsigned t_ref_planes_avg = 0;
+		unsigned t_ref_sprites_avg = 0;
+
+		for (i = 0; i < 4; i++)
+		{
+			t_ref_bsp_avg += t_ref_bsp[i];
+			t_ref_segs_avg += t_ref_segs[i];
+			t_ref_planes_avg += t_ref_planes[i];
+			t_ref_sprites_avg += t_ref_sprites[i];
+		}
+		t_ref_bsp_avg >>= 2;
+		t_ref_segs_avg >>= 2;
+		t_ref_planes_avg >>= 2;
+		t_ref_sprites_avg >>= 2;
+
+		D_snprintf(buf, sizeof(buf), "fps:%2d", fpscount);
+		I_Print8(200, line++, buf);
+		D_snprintf(buf, sizeof(buf), "tic:%d/%d", t_ref_total, lasttics);
+		I_Print8(200, line++, buf);
+
+		line++;
+
+		D_snprintf(buf, sizeof(buf), "g:%2d", Mars_FRTCounter2Msec(tictics));
+		I_Print8(200, line++, buf);
+		D_snprintf(buf, sizeof(buf), "b:%2d", Mars_FRTCounter2Msec(t_ref_bsp_avg));
+		I_Print8(200, line++, buf);
+		D_snprintf(buf, sizeof(buf), "w:%2d %2d", Mars_FRTCounter2Msec(t_ref_segs_avg), lastwallcmd - viswalls);
+		I_Print8(200, line++, buf);
+		D_snprintf(buf, sizeof(buf), "p:%2d %2d", Mars_FRTCounter2Msec(t_ref_planes_avg), lastvisplane - visplanes - 1);
+		I_Print8(200, line++, buf);
+		D_snprintf(buf, sizeof(buf), "s:%2d %2d", Mars_FRTCounter2Msec(t_ref_sprites_avg), lastsprite_p - vissprites);
+		I_Print8(200, line++, buf);
+	}
+
+	Mars_FlipFrameBuffers(false);
+
+	/* */
+	/* wait until on the third tic after last display */
+	/* */
+	do
+	{
+		ticcount = I_GetTime();
+	} while (ticcount - lastticcount < ticwait);
+
+	lasttics = ticcount - lastticcount;
+	lastticcount = ticcount;
+
+	sec = ticcount / refreshHZ; // FIXME: add proper NTSC vs PAL rate detection
+	if (sec != prevsec) {
+		static int prevsecframe;
+		fpscount = (framenum - prevsecframe) / (sec - prevsec);
+		prevsec = sec;
+		prevsecframe = framenum;
+	}
+	framenum++;
+
+	cy = 1;
+}
 
 void DoubleBufferSetup (void)
 {

@@ -457,7 +457,7 @@ master_frt:
         mov     #0,r0
         mov.w   r0,@r1  /* clear OVF IRQ */
 
-        mov.l   frt_ovf_count_ptr,r1
+        mov.l   mars_frt_ovf_count_ptr,r1
         mov.l   @r1,r0
         add     #1,r0
         mov.l   r0,@r1
@@ -471,8 +471,8 @@ master_frt:
 sh2_frt_ftcsr:
         .long   0xFFFFFE11
 
-frt_ovf_count_ptr:
-        .long   _frt_ovf_count
+mars_frt_ovf_count_ptr:
+        .long   _mars_frt_ovf_count
 
 !-----------------------------------------------------------------------
 ! Master V Blank IRQ handler
@@ -490,7 +490,7 @@ master_vbi:
         nop
 
         ! handle V IRQ
-        mov.l   vblank_count_ptr,r1
+        mov.l   mars_vblank_count_ptr,r1
         mov.l   @r1,r0
         add     #1,r0
         mov.l   r0,@r1
@@ -503,8 +503,8 @@ master_vbi:
         .align  2
 mvi_mars_adapter:
         .long   0x20004000
-vblank_count_ptr:
-        .long   _vblank_count
+mars_vblank_count_ptr:
+        .long   _mars_vblank_count
 
 !-----------------------------------------------------------------------
 ! Master H Blank IRQ handler
