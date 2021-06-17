@@ -46,12 +46,12 @@ typedef struct
     unsigned light;
 } segdraw_t;
 
-static void R_DrawTexture(int x, segdraw_t* sdr, drawtex_t* tex) ATTR_DATA_CACHE_ALIGN;
+static void R_DrawTexture(int x, segdraw_t* sdr, drawtex_t* tex) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static void R_SegLoop(seglocal_t* lseg, const int cpu) __attribute__((always_inline));
-static void R_SegCommandsMask(const int mask) __attribute__((always_inline));
+static void R_SegCommands2(const int mask) __attribute__((always_inline));
 
-void Mars_Slave_R_SegCommands(void) ATTR_DATA_CACHE_ALIGN;
-void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN;
+void Mars_Slave_R_SegCommands(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 //
 // Render a wall texture as columns
@@ -113,7 +113,6 @@ static void R_DrawTexture(int x, segdraw_t *sdr, drawtex_t* tex)
 //
 static void R_SegLoop(seglocal_t* lseg, const int cpu)
 {
-   unsigned i;
    visplane_t *ceiling, *floor;
    unsigned short* ceilopen, * flooropen;
 
@@ -134,14 +133,13 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
    const unsigned offset = segl->offset;
    const unsigned distance = segl->distance;
 
-   int x = segl->start;
+   int x;
    const int stop = segl->stop;
 #ifdef MARS
    unsigned draw = 0;
 #else
    const unsigned draw = 1;
 #endif
-   const unsigned pixcount = stop - x + 1;
 
    const fixed_t floorheight = segl->floorheight;
    const fixed_t floornewheight = segl->floornewheight;
@@ -171,7 +169,7 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
    if (actionbits & AC_ADDCEILING)
        ceilingplhash = R_PlaneHash(ceilingheight, ceilingpicnum, lightlevel);
 
-   for (i = 0; i < pixcount; i++, x++)
+   for (x = segl->start; x <= stop; x++)
    {
       fixed_t scale;
       int floorclipx, ceilingclipx;
@@ -180,7 +178,7 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
       scale = scalefrac >> FIXEDTOSCALE;
       scalefrac += scalestep;
 #ifdef MARS
-      draw = cpu ? (x & 3) != 0 : (x & 3) == 0;
+      draw = cpu ? (x & 1) != 0 : (x & 1) == 0;
 #endif
 
       if(scale >= 0x7fff)
@@ -352,7 +350,7 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
    }
 }
 
-static void R_SegCommandsMask(const int mask)
+static void R_SegCommands2(const int cpu)
 {
     int i;
     unsigned short *clip;
@@ -433,9 +431,9 @@ static void R_SegCommandsMask(const int mask)
             bottomtex->pixelcount = 0;
         }
 
-        R_SegLoop(&lseg, mask);
+        R_SegLoop(&lseg, cpu);
 
-        if (mask == 0)
+        if (cpu == 0)
         {
             if (segl->actionbits & AC_TOPTEXTURE)
             {
@@ -454,14 +452,14 @@ static void R_SegCommandsMask(const int mask)
 
 void Mars_Slave_R_SegCommands(void)
 {
-    R_SegCommandsMask(1);
+    R_SegCommands2(1);
 }
 
 void R_SegCommands(void)
 {
     Mars_R_BeginComputeSeg();
 
-    R_SegCommandsMask(0);
+    R_SegCommands2(0);
 
     Mars_R_EndComputeSeg();
 }
@@ -470,7 +468,7 @@ void R_SegCommands(void)
 
 void R_SegCommands(void)
 {
-    R_SegCommandsMask(0);
+    R_SegCommands2(0);
 }
 
 #endif

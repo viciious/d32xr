@@ -36,8 +36,8 @@ static short* sortedplanes;
 
 static void R_MapPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
 static void R_PlaneLoop(localplane_t* lpl, const int mask) __attribute__((always_inline));
-static void R_DrawPlanesMasked(const int mask) __attribute__((always_inline));
-void R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
+static void R_DrawPlanes2(const int mask) __attribute__((always_inline));
+void R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 //
 // Render the horizontal spans determined by R_PlaneLoop
@@ -185,7 +185,7 @@ static void R_PlaneLoop(localplane_t *lpl, const int mask)
    while(pl_x != pl_stopx);
 }
 
-static void R_DrawPlanesMasked(const int mask)
+static void R_DrawPlanes2(const int mask)
 {
     unsigned i;
     angle_t angle;
@@ -252,7 +252,7 @@ static void R_DrawPlanesMasked(const int mask)
 #ifdef MARS
 void Mars_Slave_R_DrawPlanes(void)
 {
-    R_DrawPlanesMasked(1);
+    R_DrawPlanes2(1);
 }
 #endif
 
@@ -293,12 +293,12 @@ void R_DrawPlanes(void)
 #ifdef MARS
     Mars_R_BeginDrawPlanes();
 
-    R_DrawPlanesMasked(0);
+    R_DrawPlanes2(0);
 
     Mars_R_EndDrawPlanes();
 
 #else
-    R_DrawPlanesMasked(0);
+    R_DrawPlanes2(0);
 #endif
 }
 
