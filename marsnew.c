@@ -258,7 +258,7 @@ int I_ReadControls(void)
 
 int I_ReadMouse(int* pmx, int *pmy)
 {
-	int val, mx, my;
+	int val;
 	static int oldval = 0;
 
 	*pmx = *pmy = 0;
@@ -282,7 +282,7 @@ int I_ReadMouse(int* pmx, int *pmy)
 		break;
 	}
 
-	val = Mars_ParseMousePacket(val, &mx, &my);
+	val = Mars_ParseMousePacket(val, pmx, pmy);
 	return Mars_ConvMouseButtons(val);
 }
 
