@@ -41,8 +41,10 @@ void Mars_UploadPalette(const uint8_t* palette);
 int Mars_PollMouse(int port);
 int Mars_ParseMousePacket(int mouse, int* pmx, int* pmy);
 
-extern volatile unsigned short* mars_gamepadport;
+extern volatile unsigned short* mars_gamepadport, * mars_gamepadport2;
 extern char mars_mouseport;
+extern volatile unsigned mars_controls, mars_controls2;
+
 extern volatile unsigned mars_vblank_count;
 extern unsigned mars_frtc2msec_frac;
 extern const uint8_t* mars_newpalette;

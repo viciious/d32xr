@@ -28,8 +28,10 @@
 
 static int mars_activescreen = 0;
 
-volatile unsigned short* mars_gamepadport;
+volatile unsigned short* mars_gamepadport, * mars_gamepadport2;
 char mars_mouseport;
+
+volatile unsigned mars_controls, mars_controls2;
 
 volatile unsigned mars_vblank_count = 0;
 volatile unsigned mars_frt_ovf_count = 0;
@@ -183,18 +185,24 @@ void Mars_Init(void)
 	/* detect input devices */
 	mars_mouseport = -1;
 	mars_gamepadport = &MARS_SYS_COMM8;
+	mars_gamepadport2 = &MARS_SYS_COMM10;
 
 	/* values set by the m68k on startup */
 	if (MARS_SYS_COMM10 == 0xF001)
 	{
 		mars_mouseport = 1;
 		mars_gamepadport = &MARS_SYS_COMM8;
+		mars_gamepadport2 = NULL;
 	}
 	else if (MARS_SYS_COMM8 == 0xF001)
 	{
 		mars_mouseport = 0;
 		mars_gamepadport = &MARS_SYS_COMM10;
+		mars_gamepadport2 = NULL;
 	}
+
+	mars_controls = 0;
+	mars_controls2 = 0;
 }
 
 void master_vbi_handler(void)
@@ -205,4 +213,8 @@ void master_vbi_handler(void)
 		Mars_UploadPalette(mars_newpalette);
 		mars_newpalette = NULL;
 	}
+
+	mars_controls |= *mars_gamepadport;
+	if (mars_gamepadport2)
+		mars_controls2 |= *mars_gamepadport2;
 }

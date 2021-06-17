@@ -251,7 +251,9 @@ byte *I_ZoneBase (int *size)
 
 int I_ReadControls(void)
 {
-	return Mars_ConvGamepadButtons(*mars_gamepadport);
+	unsigned ctrls = mars_controls;
+	mars_controls = 0;
+	return Mars_ConvGamepadButtons(ctrls);
 }
 
 int I_ReadMouse(int* pmx, int *pmy)
