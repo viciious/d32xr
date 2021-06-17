@@ -579,12 +579,6 @@ void R_Setup (void)
 
 	R_SetupTexCacheFrame(&r_flatscache);
 	R_SetupTexCacheFrame(&r_wallscache);
-
-#ifdef MARS
-	Mars_CommSlaveClearCache();
-
-	Mars_R_BeginOpenPlanes();
-#endif
 }
 
 //
@@ -774,6 +768,8 @@ void R_RenderPlayerView(void)
 
 static void R_RenderPhase1(void)
 {
+	Mars_R_BeginOpenPlanes();
+
 	t_ref_bsp[t_ref_cnt] = I_GetFRTCounter();
 	R_BSP();
 	t_ref_bsp[t_ref_cnt] = I_GetFRTCounter() - t_ref_bsp[t_ref_cnt];
@@ -795,6 +791,8 @@ static void R_RenderPhases2To9(void)
 	t_ref_prep[t_ref_cnt] = I_GetFRTCounter() - t_ref_prep[t_ref_cnt];
 
 	Mars_R_StopOpenPlanes();
+
+	Mars_CommSlaveClearCache();
 
 	t_ref_segs[t_ref_cnt] = I_GetFRTCounter();
 	R_SegCommands ();

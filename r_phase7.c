@@ -31,14 +31,12 @@ typedef struct
 #endif
 } localplane_t;
 
+static unsigned short numplanes;
+static short* sortedplanes;
+
 static void R_MapPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
 static void R_PlaneLoop(localplane_t* lpl, const int mask) __attribute__((always_inline));
 static void R_DrawPlanesMasked(const int mask) __attribute__((always_inline));
-
-static unsigned short numplanes;
-static short *sortedplanes;
-
-void Mars_Slave_R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
 void R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
 
 //
@@ -99,10 +97,6 @@ static void R_PlaneLoop(localplane_t *lpl, const int mask)
    unsigned short t1, t2, b1, b2, pl_oldtop, pl_oldbottom;
    unsigned short spanstart[SCREENHEIGHT];
    visplane_t* pl = lpl->pl;
-
-#ifdef MARS
-   pl = (visplane_t *)((intptr_t)pl | 0x20000000);
-#endif
 
    pl_x       = pl->minx;
    pl_stopx   = pl->maxx;
@@ -196,7 +190,6 @@ static void R_DrawPlanesMasked(const int mask)
     unsigned i;
     angle_t angle;
     localplane_t lpl;
-    visplane_t* last;
 
     lpl.x = vd.viewx;
     lpl.y = -vd.viewy;
@@ -206,12 +199,6 @@ static void R_DrawPlanesMasked(const int mask)
 
     lpl.basexscale = (finecosine(angle) / centerX);
     lpl.baseyscale = -(finesine(angle) / centerX);
-
-#ifdef MARS
-    last = *((visplane_t**)((intptr_t)&lastvisplane | 0x20000000));
-#else
-    last = lastvisplane;
-#endif
 
     for (i = 0; i < numplanes; i++)
     {
@@ -263,8 +250,6 @@ static void R_DrawPlanesMasked(const int mask)
 // Render all visplanes
 //
 #ifdef MARS
-void Mars_Slave_R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
-
 void Mars_Slave_R_DrawPlanes(void)
 {
     R_DrawPlanesMasked(1);
@@ -276,7 +261,7 @@ void Mars_Slave_R_DrawPlanes(void)
 //
 void R_DrawPlanes(void)
 {
-    int i, j;
+    int j;
     visplane_t* pl;
     short sortbuf[MAXVISPLANES * 2] __attribute__((aligned(4)));
 
