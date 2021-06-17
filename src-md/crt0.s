@@ -114,6 +114,8 @@ init_hardware:
         cmpi.l  #-1,d0
         beq.b   1f                  /* no mouse */
         move.w  #0xF001,0xA15128    /* mouse in port 1 */
+        tst.b   ser_enable          /* Serial networking in use? */
+        bne.s   3f                  /* skip controller port 2 reading */
 1:
         lea     2(a0),a0
 2:
@@ -298,6 +300,12 @@ handle_req:
         bls     stop_music
         cmpi.w  #0x05FF,d0
         bls     read_mouse
+        cmpi.w  #0x06FF,d0
+        bls     init_serial
+        cmpi.w  #0x07FF,d0
+        bls     read_serial
+        cmpi.w  #0x08FF,d0
+        bls     write_serial
 | unknown command
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -491,6 +499,25 @@ read_mouse:
         bne.b   4b                  /* wait for SH2 to read mouse value */
         bra     main_loop
 
+init_serial:
+        st.b    ser_enable          /* set ser_enable flag */
+        move.b  #0x10,0xA1000B      /* All pins inputs except TL (Pin 6) */
+        move.b  #0x30,0xA10019      /* 4800 Baud 8-N-1 */
+        move.w  #0,0xA15120         /* Done, clear COMM0 */
+        bra     main_loop           /* Return */
+
+read_serial:
+        move.w  ser_status,0xA15122 /* Copy status byte and serial_rx in one move to COMM2 */
+        move.w  #0xFFFF,ser_status  /* Show ser_status and serial_rx as "empty" */ 
+        move.w  #0,0xA15120         /* Signal to 32X via COMM0, byte is available to use now */
+        bra     main_loop           /* Return */
+
+write_serial:
+        btst    #0,0xA10019         /* Ok to transmit? */
+        bne.s   write_serial        /* wait until ok to transmit */
+        move.b  0xA15122,0xA10015   /* Send byte in COMM2 */
+        move.w  #0,0xA15120         /* Done, clear COMM0 */
+        bra     main_loop           /* Return */
 
 vert_blank:
         move.l  d1,-(sp)
@@ -504,6 +531,8 @@ vert_blank:
         lea     0xA10003,a0
         bsr.b   get_pad
         move.w  d2,0xA15128         /* controller 1 current value */
+        tst.b   ser_enable          /* ser_enable flag set? */
+        bne.s   2f                  /* Skip joypad port 2 reading and gen_lvl2 */
 0:
         move.w  0xA1512A,d0
         andi.w  #0xF000,d0
@@ -514,12 +543,23 @@ vert_blank:
         move.w  d2,0xA1512A         /* controller 2 current value */
 1:
         tst.w   gen_lvl2
-        beq.b   2f
+        beq.b   4f
         lea     0xA12000,a0
         move.w  (a0),d0
         ori.w   #0x0100,d0
         move.w  d0,(a0)
+        bra.s   4f                  /* skip over serial receive code */
 2:
+        tst.b   ser_status          /* Has the byte been read by the 32X yet? (Dont overwrite buffered byte!) */
+        beq.s   4f                  /* if ser_status is clear, then byte is still available to read. Skip the serial read */
+        btst    #1,0xA10019         /* Otherwise check bit 1 on serial control register of joypad port 2 */
+        beq.s   3f                  /* No byte available, branch off */        
+        clr.b   ser_status          /* Clear serial status (Show byte available) */
+        move.b  0xA10017,ser_rx     /* Get byte */
+        bra.s   4f                  /* Skip line below and just exit */
+3:
+        move.w  #0xFFFF,ser_status  /* Set serial status and serial_rx as 0xFFFF (No byte available) */
+4:
         move.l  (sp)+,d2
         move.l  (sp)+,d1
         movea.l (sp)+,a0
@@ -717,19 +757,22 @@ mky_err:
 
         .align  4
 
-vblank:
-        dc.l    0
+vblank:         dc.l    0
 
         .global gen_lvl2
-gen_lvl2:
+gen_lvl2:       
         dc.w    0
 
         .global    use_cd
-use_cd:
+use_cd:         
         dc.w    0
 
         .global cd_ok
-cd_ok:
+cd_ok:          
         dc.w    0
+
+ser_status:     dc.b    0
+ser_rx:         dc.b    0
+ser_enable:     dc.b    0
 
         .align  4
