@@ -515,7 +515,7 @@ read_serial:
 write_serial:
         btst    #0,0xA10019         /* Ok to transmit? */
         bne.s   write_serial        /* wait until ok to transmit */
-        move.b  0xA15122,0xA10015   /* Send byte in COMM2 */
+        move.b  0xA15123,0xA10015   /* Send byte in COMM2 */
         move.w  #0,0xA15120         /* Done, clear COMM0 */
         bra     main_loop           /* Return */
 

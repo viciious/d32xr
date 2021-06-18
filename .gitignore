@@ -1,0 +1,6 @@
+/src-md/*
+/wadcode
+/wadcode/*
+/tools/*
+doom32x.wad
+compile.sh

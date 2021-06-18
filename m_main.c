@@ -10,9 +10,7 @@
 
 typedef enum
 {
-#ifndef MARS
 	gamemode,
-#endif
 	level,
 	difficulty,
 	NUMMENUITEMS
@@ -196,7 +194,6 @@ int M_Ticker (void)
 
 			switch (cursorpos)
 			{
-#ifndef MARS
 				case	gamemode:
 					if (buttons & JP_RIGHT)
 					{
@@ -209,9 +206,9 @@ int M_Ticker (void)
 						currentplaymode--;
 						if (currentplaymode == -1)
 							currentplaymode++;
-				}
+					}
 					break;
-#endif
+
 				case	level:
 					if (buttons & JP_RIGHT)
 					{			
@@ -226,6 +223,7 @@ int M_Ticker (void)
 							playermap++;
 					}
 					break;
+
 				case	difficulty:
 					if (buttons & JP_RIGHT)
 					{
@@ -240,6 +238,7 @@ int M_Ticker (void)
 							playerskill++;
 					}
 					break;
+
 				default:
 					break;
 			}
@@ -283,6 +282,13 @@ void M_Drawer (void)
 		DrawJagobjLump(m_skull1lump, CURSORX, CURSORY(cursorpos)+m_doom_height, NULL, NULL);
 
 /* draw menu items */
+
+#ifdef MARS
+	print(64 , m_doom_height+2, "Game Mode");
+	if (currentplaymode == 0) { print(80 , m_doom_height+22, "Single"); }
+	if (currentplaymode == 1) { print(80 , m_doom_height+22, "Co-op"); }
+	if (currentplaymode == 2) { print(80 , m_doom_height+22, "Deathmatch"); }
+#endif
 
 #ifndef MARS
 /* draw game mode information */

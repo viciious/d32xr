@@ -500,11 +500,171 @@ void WriteEEProm (void)
 	maxlevel = 24;
 }
 
-unsigned I_NetTransfer (unsigned ctrl)
+/* 
+-------------------------------------------------------------------------------
+-- SERIAL NETWORKING                                                         --
+-------------------------------------------------------------------------------
+*/
+
+int GetSerialChar (void)
 {
-	return 0;
+	unsigned	status, byte;
+
+	MARS_SYS_COMM0 = 0x0700;			// Issue command to receive a byte
+	while (MARS_SYS_COMM0 != 0);		// Wait for command to complete
+
+	status = (MARS_SYS_COMM2 >> 8) & 0xff;
+	byte = (MARS_SYS_COMM2) & 0xff;
+
+	if (status == 0xff) 
+	{ 
+		return -1;  /* No byte available */
+	} 
+	else 
+	{ 
+		return byte; /* Return byte */
+	}
 }
+
+/* ------------------------------------------------------------------------ */
+
+int WaitGetSerialChar (void)
+{
+	int		status;
+	int		vblstop;
+	int     ticcount;
+
+	ticcount = I_GetTime();
+	vblstop = ticcount + 120;
+	
+	do
+	{
+		if (ticcount >= vblstop) { return -1; }		/* timeout */
+		status = GetSerialChar();
+	} while (status == -1);
+	
+	return status;
+}
+
+/* ------------------------------------------------------------------------ */
+
+void PutSerialChar (int data)
+{
+	MARS_SYS_COMM2 = data;              // Set COMM2 as data to send
+	MARS_SYS_COMM0 = 0x0800;			// Issue transmit command
+	while (MARS_SYS_COMM0 != 0);		// Wait for command to complete
+}
+
+/* ------------------------------------------------------------------------ */
+
+void wait (int tics)
+{
+	int		start;
+	int     junk;
+
+	start = I_GetTime();
+
+	do
+	{
+		junk = I_GetTime();
+	} while (junk < start + tics);
+}
+
+/* ------------------------------------------------------------------------ */
+
+void Player0Setup (void)
+{
+	int		val;
+	int		idbyte;
+	int		sendcount;
+	
+	sendcount = 0;
+	consoleplayer = 0;
+	idbyte = startmap + 24*startskill + 128*(starttype==2);
+	
+	do
+	{ 	/* wait until we see a 0x22 from other side */
+		//if (buttons == SEGA_CTRL_START) { starttype = gt_single; return; } /* abort */
+		wait (1);
+		val = GetSerialChar ();
+		PrintHex(20,5,val);
+		if (val == 0x22) { return; } /* ready to go! */
+		PutSerialChar (idbyte);
+		PrintHex (20,6, idbyte);
+		sendcount++;
+		PrintHex (20,7, sendcount);
+	} while (1);
+}
+
+/* ------------------------------------------------------------------------ */
+
+void Player1Setup (void)
+{	
+	int	val, oldval;
+	oldval = 999;
+
+	do
+	{   /* wait for two identical id bytes, then start game */
+		//if (ctrl == SEGA_CTRL_START) { starttype = gt_single; return; } /* abort */
+		val = GetSerialChar();
+		if (val == -1) { continue; }
+		PrintHex (5,10,oldval);
+		PrintHex (15,10,val);
+		if (val == oldval) { break; }
+		oldval = val;
+	} while (1);
+	
+	if (val > 128) { starttype = 2; val -= 128; } else { starttype = 1; }
+	
+	startskill = val/24;
+	val %= 24;
+	startmap = val;
+	
+	consoleplayer = 1;	 /* we are player 1.  send an acknowledge byte */
+
+	PutSerialChar(0x22);
+	PutSerialChar(0x22);
+}
+
+/* ------------------------------------------------------------------------ */
 
 void I_NetSetup (void)
 {
+	int	listen1, listen2;
+
+	MARS_SYS_COMM0 = 0x0600;			// Initialize joypad port 2 as Serial at 4800 Baud 8-N-1
+	while (MARS_SYS_COMM0 != 0);		// Wait for command to complete
+
+	I_Print8 (64,24,"Attempting to connect..."); 
+//	I_Print8 (80,26,"Press start to abort");
+	I_Update ();
+
+	MARS_SYS_COMM0 = 0x0500;			// Issue stop music command
+	while (MARS_SYS_COMM0 != 0);		// Wait for command to complete
+
+	GetSerialChar();
+	GetSerialChar();
+	wait (1);
+	GetSerialChar();
+	GetSerialChar();
+
+	wait (4);
+	
+	listen1 = GetSerialChar(); /* if a character is allready waiting, we are player 1 */
+	listen2 = GetSerialChar();
+		
+	if (listen1 == -1 && listen2 == -1) { Player0Setup(); } else { Player1Setup(); }
+
+	wait (5);
+	
+	GetSerialChar();  /* flush out the receive que */
+	GetSerialChar();
+	GetSerialChar();
+}
+
+/* ------------------------------------------------------------------------ */
+
+unsigned I_NetTransfer (unsigned ctrl)
+{
+	return 0;
 }

@@ -620,6 +620,7 @@ int  RunDemo (char *demoname)
 void RunMenu (void)
 {
 #ifdef MARS
+reselect:
 	M_Start();
 
 	while (1) {
@@ -627,6 +628,13 @@ void RunMenu (void)
 			break;
 		if (RunDemo("DEMO2") == ga_exitdemo)
 			break;
+	}
+
+	if (starttype != gt_single)
+	{
+		I_NetSetup ();
+		if (starttype == gt_single)
+			goto reselect;		/* aborted net startup */
 	}
 
 	M_Stop();
