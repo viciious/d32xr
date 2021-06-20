@@ -477,8 +477,7 @@ void DoubleBufferSetup (void)
 {
 	int i;
 
-	while (!I_RefreshCompleted())
-		;
+	while (!I_RefreshCompleted());
 
 	for (i = 0; i < 2; i++) {
 		I_ClearFrameBuffer();
@@ -500,45 +499,35 @@ void WriteEEProm (void)
 	maxlevel = 24;
 }
 
-/* 
--------------------------------------------------------------------------------
--- SERIAL NETWORKING                                                         --
--------------------------------------------------------------------------------
-*/
+/* =========================================================================== */
+/* SERIAL NETWORKING                                                           */
+/* =========================================================================== */
 
 int GetSerialChar (void)
 {
-	unsigned	status, byte;
+	unsigned 	status, byte;
 
-	MARS_SYS_COMM0 = 0x0700;			// Issue command to receive a byte
+	MARS_SYS_COMM0 = 0x0700;			  // Issue command to M68K to attempt to receive a byte.
 	while (MARS_SYS_COMM0 != 0);		// Wait for command to complete
 
 	status = (MARS_SYS_COMM2 >> 8) & 0xff;
 	byte = (MARS_SYS_COMM2) & 0xff;
 
-	if (status == 0xff) 
-	{ 
-		return -1;  /* No byte available */
-	} 
-	else 
-	{ 
-		return byte; /* Return byte */
-	}
+	if (status == 0xff) { return -1; } else { return byte; }
 }
 
-/* ------------------------------------------------------------------------ */
+/* =========================================================================== */
 
 int WaitGetSerialChar (void)
 {
 	int		status;
 	int		vblstop;
-	int     ticcount;
+	int   ticcount;
 
-	ticcount = I_GetTime();
-	vblstop = ticcount + 120;
-	
+	vblstop = I_GetTime(); + 120;  // Timeout value for waiting for a response from other console	
 	do
 	{
+		ticcount = I_GetTime();
 		if (ticcount >= vblstop) { return -1; }		/* timeout */
 		status = GetSerialChar();
 	} while (status == -1);
@@ -546,70 +535,60 @@ int WaitGetSerialChar (void)
 	return status;
 }
 
-/* ------------------------------------------------------------------------ */
+/* =========================================================================== */
 
 void PutSerialChar (int data)
 {
-	MARS_SYS_COMM2 = data;              // Set COMM2 as data to send
-	MARS_SYS_COMM0 = 0x0800;			// Issue transmit command
+	MARS_SYS_COMM2 = data;          // Set COMM2 as data to send
+	MARS_SYS_COMM0 = 0x0800;	  		// Issue transmit command
 	while (MARS_SYS_COMM0 != 0);		// Wait for command to complete
 }
 
-/* ------------------------------------------------------------------------ */
+/* =========================================================================== */
 
 void wait (int tics)
 {
 	int		start;
-	int     junk;
+	int   junk;
 
 	start = I_GetTime();
-
-	do
-	{
-		junk = I_GetTime();
-	} while (junk < start + tics);
+	do { junk = I_GetTime(); } while (junk < start + tics);
 }
 
-/* ------------------------------------------------------------------------ */
+/* =========================================================================== */
 
 void Player0Setup (void)
 {
 	int		val;
 	int		idbyte;
-	int		sendcount;
 	
-	sendcount = 0;
 	consoleplayer = 0;
 	idbyte = startmap + 24*startskill + 128*(starttype==2);
 	
 	do
-	{ 	/* wait until we see a 0x22 from other side */
+	{ /* wait until we see a 0x22 byte from other side */
 		//if (buttons == SEGA_CTRL_START) { starttype = gt_single; return; } /* abort */
 		wait (1);
 		val = GetSerialChar ();
-		PrintHex(20,5,val);
 		if (val == 0x22) { return; } /* ready to go! */
 		PutSerialChar (idbyte);
-		PrintHex (20,6, idbyte);
-		sendcount++;
-		PrintHex (20,7, sendcount);
 	} while (1);
 }
 
-/* ------------------------------------------------------------------------ */
+/* =========================================================================== */
 
 void Player1Setup (void)
 {	
 	int	val, oldval;
+
 	oldval = 999;
+	consoleplayer = 1;	 /* we are player 1 */
 
 	do
-	{   /* wait for two identical id bytes, then start game */
+	{  /* wait for two identical id bytes, then start game */
 		//if (ctrl == SEGA_CTRL_START) { starttype = gt_single; return; } /* abort */
 		val = GetSerialChar();
 		if (val == -1) { continue; }
-		PrintHex (5,10,oldval);
-		PrintHex (15,10,val);
 		if (val == oldval) { break; }
 		oldval = val;
 	} while (1);
@@ -619,14 +598,12 @@ void Player1Setup (void)
 	startskill = val/24;
 	val %= 24;
 	startmap = val;
-	
-	consoleplayer = 1;	 /* we are player 1.  send an acknowledge byte */
 
-	PutSerialChar(0x22);
+	PutSerialChar(0x22);   /* send an acknowledge byte */
 	PutSerialChar(0x22);
 }
 
-/* ------------------------------------------------------------------------ */
+/* =========================================================================== */
 
 void I_NetSetup (void)
 {
@@ -636,11 +613,8 @@ void I_NetSetup (void)
 	while (MARS_SYS_COMM0 != 0);		// Wait for command to complete
 
 	I_Print8 (64,24,"Attempting to connect..."); 
-//	I_Print8 (80,26,"Press start to abort");
+//I_Print8 (80,26,"Press start to abort");
 	I_Update ();
-
-	MARS_SYS_COMM0 = 0x0500;			// Issue stop music command
-	while (MARS_SYS_COMM0 != 0);		// Wait for command to complete
 
 	GetSerialChar();
 	GetSerialChar();
@@ -660,11 +634,80 @@ void I_NetSetup (void)
 	GetSerialChar();  /* flush out the receive que */
 	GetSerialChar();
 	GetSerialChar();
+	GetSerialChar();
 }
 
-/* ------------------------------------------------------------------------ */
+/* =========================================================================== */
+
+void G_PlayerReborn (int player);
 
 unsigned I_NetTransfer (unsigned ctrl)
 {
+	int		i;
+	int		val;
+
+	byte	inbytes[4];
+	byte	outbytes[4];
+	byte	consistancy;
+
+	outbytes[0] = ctrl>>8;
+	outbytes[1] = ctrl;
+	consistancy = players[0].mo->x ^ players[0].mo->y ^ players[1].mo->x ^ players[1].mo->y;
+	consistancy = (consistancy>>8) ^ consistancy ^ (consistancy>>16);
+	outbytes[2] = consistancy;
+	outbytes[3] = vblsinframe;
+
+	if (consoleplayer) /* player 1 waits before sending */
+	{
+		for (i=0 ; i<=3 ; i++)
+		{
+			val = WaitGetSerialChar();
+			if (val == -1) { goto reconnect; }			
+			inbytes[i] = val;
+			PutSerialChar(outbytes[i]);
+		}
+		vblsinframe = inbytes[3];		/* take gamevbls from other player */
+	}
+	else /* player 0 sends first */
+	{
+		for (i=0; i<=3; i++)
+		{
+			PutSerialChar(outbytes[i]);
+			val = WaitGetSerialChar();
+			if (val == -1) { goto reconnect; }
+			inbytes[i] = val;
+		}
+	}
+	
+/* */
+/* check for consistancy error */
+/* */
+	if (inbytes[2] != outbytes[2])
+	{
+		I_Print8 (108,23,"Network Error"); 
+		I_Update ();
+		GetSerialChar();  /* flush out the receive buffer */
+		GetSerialChar();
+		GetSerialChar();
+		GetSerialChar();
+		wait(200);
+		goto reconnect;
+	}
+		
+	val = (inbytes[0]<<8) + inbytes[1];
+
+	return val;
+	
+/* */
+/* reconnect */
+/* */
+reconnect:
+	if (consoleplayer) { wait(15); }	/* let player 0 wait again */
+	I_NetSetup();
+	G_PlayerReborn(0);
+	G_PlayerReborn(1);
+	gameaction = ga_warped;
+	ticbuttons[0] = ticbuttons[1] = oldticbuttons[0] = oldticbuttons[1] = 0;
 	return 0;
 }
+

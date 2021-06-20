@@ -15,7 +15,7 @@ int			vblsinframe;		/* range from ticrate to ticrate*2 */
 int			maxlevel;			/* highest level selectable in menu (1-25) */
 jagobj_t	*backgroundpic;
 
-int				*demo_p, *demobuffer;
+int			*demo_p, *demobuffer;
 
 /*============================================================================ */
 
@@ -400,8 +400,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 /* */
 /* sync up with the refresh */
 /* */
-		while (!I_RefreshCompleted ())
-		;
+		while (!I_RefreshCompleted());
 		S_UpdateSounds ();
 		drawer ();
 

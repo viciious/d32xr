@@ -143,8 +143,8 @@ init_hardware:
         cmp.l   #0x535F4F4B,0xA15124    /* S_OK */
         bne.b   1b                      /* wait for slave ok */
 
-        move.l  #vert_blank,vblank  /* set vertical blank interrupt handler */
-        move.w  #0x2000,sr          /* enable interrupts */
+        move.l  #vert_blank,vblank      /* set vertical blank interrupt handler */
+        move.w  #0x2000,sr              /* enable interrupts */
         rts
 
 
@@ -430,7 +430,7 @@ stop_music:
         bne.b    stop_cd
 
         /* stop VGM */
-        clr.w   fm_idx          /* stop music */
+        clr.w   fm_idx              /* stop music */
         clr.w   fm_rep
         clr.w   fm_smpl
         clr.w   fm_tick
@@ -475,6 +475,8 @@ read_mouse:
         bne.b   0b                  /* wait for SH2 to read mouse value */
         bra     main_loop
 1:
+        tst.b   ser_enable          /* Serial networking enabled? */
+        bne.s   3f                  /* Dont read controller port 2 (in-use) */
         move.w  0xA1512A,d0
         andi.w  #0xF001,d0
         cmpi.w  #0xF001,d0
@@ -507,8 +509,8 @@ init_serial:
         bra     main_loop           /* Return */
 
 read_serial:
-        move.w  ser_status,0xA15122 /* Copy status byte and serial_rx in one move to COMM2 */
-        move.w  #0xFFFF,ser_status  /* Show ser_status and serial_rx as "empty" */ 
+        move.w  ser_status,0xA15122 /* Copy status byte and ser_rx in one move to COMM2 */
+        move.w  #0xFFFF,ser_status  /* Show ser_status and ser_rx as "empty" */ 
         move.w  #0,0xA15120         /* Signal to 32X via COMM0, byte is available to use now */
         bra     main_loop           /* Return */
 
@@ -524,7 +526,7 @@ vert_blank:
         move.l  d2,-(sp)
 
         /* read controllers */
-        move.w  0xA15128,d0
+        move.w  0xA15128,d0         /* Controller 1 */
         andi.w  #0xF000,d0
         cmpi.w  #0xF000,d0
         beq.b   0f                  /* no pad in port 1 (or mouse) */
@@ -534,7 +536,7 @@ vert_blank:
         tst.b   ser_enable          /* ser_enable flag set? */
         bne.s   2f                  /* Skip joypad port 2 reading and gen_lvl2 */
 0:
-        move.w  0xA1512A,d0
+        move.w  0xA1512A,d0         /* Controller 2 */
         andi.w  #0xF000,d0
         cmpi.w  #0xF000,d0
         beq.b   1f                  /* no pad in port 2 (or mouse) */
