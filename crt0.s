@@ -255,6 +255,7 @@ master_vbr:
         .long   master_hbi      /* H Blank interupt */
         .long   master_vbi      /* V Blank interupt */
         .long   master_rst      /* Reset Button */
+        .long   master_dma1     /* DMA1 TE INT */
         .long   master_frt      /* FRT overflow */
 
 !-----------------------------------------------------------------------
@@ -631,6 +632,47 @@ mvri_master_stk:
         .long   0x0603FC00              /* Cold Start SP */
 mvri_master_vres:
         .long   master_reset
+
+!-----------------------------------------------------------------------
+! Master DMA 1 TE INT handler
+!-----------------------------------------------------------------------
+
+master_dma1:
+        ! save registers
+        sts.l   pr,@-r15
+        mov.l   r0,@-r15
+        mov.l   r1,@-r15
+        mov.l   r2,@-r15
+        mov.l   r3,@-r15
+        mov.l   r4,@-r15
+        mov.l   r5,@-r15
+        mov.l   r6,@-r15
+        mov.l   r7,@-r15
+        sts.l   mach,@-r15
+        sts.l   macl,@-r15
+
+        mov.l   md1_handler,r0
+        jsr     @r0
+        nop
+
+        ! restore registers
+        lds.l   @r15+,macl
+        lds.l   @r15+,mach
+        mov.l   @r15+,r7
+        mov.l   @r15+,r6
+        mov.l   @r15+,r5
+        mov.l   @r15+,r4
+        mov.l   @r15+,r3
+        mov.l   @r15+,r2
+        mov.l   @r15+,r1
+        mov.l   @r15+,r0
+        lds.l   @r15+,pr
+        rte
+        nop
+
+        .align  2
+md1_handler:
+        .long   _master_dma1_handler
 
 !-----------------------------------------------------------------------
 ! The Slave SH2 starts here

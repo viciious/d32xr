@@ -6,8 +6,8 @@
 #include "mars.h"
 #endif
 
-int screenWidth, screenHeight;
-int centerX, centerY;
+short screenWidth, screenHeight;
+short centerX, centerY;
 fixed_t centerXFrac, centerYFrac;
 fixed_t stretchX;
 
@@ -40,6 +40,10 @@ vissprite_t	*vissprites, *lastsprite_p, *vissprite_p;
 /* openings / misc refresh memory */
 /* */
 unsigned short	*openings/*[MAXOPENINGS]*/, *lastopening;
+
+char runopenplanes = false;
+short curopenplane = 0;
+unsigned short	openmarks[SCREENWIDTH];
 
 /*===================================== */
 
@@ -85,6 +89,8 @@ angle_t* xtoviewangle/*[SCREENWIDTH+1]*/ = NULL;
 /* */
 int t_ref_cnt = 0;
 int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sprites[4], t_ref_total;
+
+int ccc;
 
 r_texcache_t r_flatscache, r_wallscache;
 
@@ -238,7 +244,7 @@ struct subsector_s *R_PointInSubsector (fixed_t x, fixed_t y)
 
 /*============================================================================= */
 
-const int screenSizes[][2] = {
+static const short screenSizes[][2] = {
 	{128, 144},
 	{128, 160},
 	{160, 180},
@@ -254,7 +260,7 @@ const int screenSizes[][2] = {
 */
 void R_SetScreenSize(int size)
 {
-	int width, height;
+	short width, height;
 	fixed_t stretch;
 	const int numSizes = sizeof(screenSizes) / sizeof(screenSizes[0]);
 
@@ -294,6 +300,10 @@ void R_SetScreenSize(int size)
 
 void R_Init (void)
 {
+	int i;
+	visplane_t* pl;
+	unsigned short* open;
+
 D_printf ("R_InitData\n");
 	R_InitData ();
 D_printf ("Done\n");
@@ -302,6 +312,19 @@ D_printf ("Done\n");
 
 	framecount = 0;
 	viewplayer = &players[0];
+
+	/* init openmarks array for DMA*/
+	runopenplanes = false;
+	curopenplane = 0;
+	for (i = 0; i < SCREENWIDTH; i++)
+		openmarks[i] = OPENMARK;
+
+	/* the dummy visplane is always "closed" */
+	pl = &visplanes[0];
+	open = pl->open;
+	for (i = 0; i < screenWidth / 4; i++)
+		*open++ = 0, * open++ = 0, * open++ = 0, * open++ = 0;
+	pl->runopen = false;
 
 	R_InitTexCache(&r_flatscache, numflats);
 
@@ -654,35 +677,6 @@ visplane_t* R_FindPlane(visplane_t* ignore, int hash, fixed_t height,
 	return check;
 }
 
-#ifdef MARS
-void Mars_Slave_R_OpenPlanes(void)
-{
-	int i;
-	visplane_t* pl;
-
-	pl = &visplanes[0];
-	if (pl->runopen) {
-		unsigned short* open = pl->open;
-		for (i = 0; i < screenWidth / 4; i++)
-			*open++ = 0, *open++ = 0, *open++ = 0, *open++ = 0;
-		pl->runopen = false;
-	}
-
-	for (i = 1; i < MAXVISPLANES/4; i++)
-	{
-		pl = &visplanes[i];
-		if (MARS_SYS_COMM4 != 6)
-			break;
-
-		if (pl->runopen)
-		{
-			R_MarkOpenPlane(pl);
-			pl->runopen = false;
-		}
-	}
-}
-#endif
-
 void R_BSP (void);
 void R_WallPrep (void);
 void R_SpritePrep (void);
@@ -766,9 +760,37 @@ void R_RenderPlayerView(void)
 
 #else
 
+void master_dma1_handler(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+
+void master_dma1_handler(void)
+{
+	SH2_DMA_CHCR1; // read TE
+	SH2_DMA_CHCR1 = 0; // clear TE
+
+	ccc++;
+	visplanes[curopenplane].runopen = false;
+	curopenplane++;
+
+	if (!runopenplanes || curopenplane == MAXVISPLANES) {
+		curopenplane = 0;
+		return;
+	}
+
+	// start DMA
+	SH2_DMA_SAR1 = (intptr_t)openmarks;
+	SH2_DMA_DAR1 = (intptr_t)visplanes[curopenplane].open;
+	SH2_DMA_TCR1 = (((SCREENWIDTH * 2) >> 4) << 2); // xfer count (4 * # of 16 byte units)
+	SH2_DMA_CHCR1 = 0x4EE5; // dest incr, src fixed, size 16B, auto req, cycle-steal, dual addr, intr enabled, clear TE, dma enabled
+}
+
 static void R_RenderPhase1(void)
 {
-	Mars_R_BeginOpenPlanes();
+	//Mars_R_BeginOpenPlanes();
+	runopenplanes = true;
+	curopenplane = 0;
+	ccc = 0;
+
+	master_dma1_handler();
 
 	t_ref_bsp[t_ref_cnt] = I_GetFRTCounter();
 	R_BSP();
@@ -790,7 +812,8 @@ static void R_RenderPhases2To9(void)
 		R_Cache();
 	t_ref_prep[t_ref_cnt] = I_GetFRTCounter() - t_ref_prep[t_ref_cnt];
 
-	Mars_R_StopOpenPlanes();
+	runopenplanes = false;
+	while (curopenplane != 0);
 
 	Mars_CommSlaveClearCache();
 

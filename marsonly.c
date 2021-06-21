@@ -14,20 +14,18 @@ void Mars_Slave(void) ATTR_DATA_CACHE_ALIGN;
 /* 
 ================ 
 = 
-= Mars_main  
+= Mars_Main 
 = 
 ================ 
 */ 
  
-int main(void)
+void Mars_Main(void)
 {
 	int i;
 	volatile unsigned short* palette;
 
 /* clear screen */
-	Mars_Init();
-
-	/* set a two color palette */
+/* set a two color palette */
 	Mars_FlipFrameBuffers(false);
 	palette = &MARS_CRAM;
 	for (i = 0; i < 256; i++)
@@ -47,13 +45,6 @@ int main(void)
 /* start doom */
 /* */
 	D_DoomMain ();
-
-	return 0;
-}
-
-void slave()
-{
-	Mars_Slave();
 }
 
 /*

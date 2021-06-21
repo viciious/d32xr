@@ -41,6 +41,9 @@ const uint8_t* mars_newpalette = NULL;
 const int NTSC_CLOCK_SPEED = 23011360; // HZ
 const int PAL_CLOCK_SPEED = 22801467; // HZ
 
+void Mars_Main(void);
+void Mars_Slave(void);
+
 void Mars_WaitFrameBuffersFlip(void)
 {
 	while ((MARS_VDP_FBCTL & MARS_VDP_FS) != mars_activescreen);
@@ -154,9 +157,27 @@ void Mars_Init(void)
 	SH2_FRT_FRCH = 0;
 	SH2_FRT_FRCL = 0;
 	SH2_INT_IPRB = (SH2_INT_IPRB & 0xF0FF) | 0x0E00; 	/* set FRT INT to priority 14 */
-	SH2_INT_VCRD = 72 << 8; 							/* set exception vector for FRT overflow */
+	SH2_INT_VCRD = 73 << 8; 							/* set exception vector for FRT overflow */
 	SH2_FRT_FTCSR = 0;									/* clear any int status */
 	SH2_FRT_TIER = 3;									/* enable overflow interrupt */
+
+	// init DMA
+	SH2_DMA_SAR0 = 0;
+	SH2_DMA_DAR0 = 0;
+	SH2_DMA_TCR0 = 0;
+	SH2_DMA_CHCR0 = 0;
+	SH2_DMA_DRCR0 = 0;
+	SH2_DMA_SAR1 = 0;
+	SH2_DMA_DAR1 = 0;
+	SH2_DMA_TCR1 = 0;
+	SH2_DMA_CHCR1 = 0;
+	SH2_DMA_DRCR1 = 0;
+	SH2_DMA_DMAOR = 1; // enable DMA
+
+	SH2_DMA_VCR1 = 72; // set exception vector for DMA channel 1
+	SH2_INT_IPRA = (SH2_INT_IPRA & 0xF0FF) | 0x0F00; // set DMA INT to priority 15
+
+	SetSH2SR(2); // allow ints
 
 	MARS_SYS_COMM4 = 0;
 
@@ -217,4 +238,20 @@ void master_vbi_handler(void)
 	mars_controls |= *mars_gamepadport;
 	if (mars_gamepadport2)
 		mars_controls2 |= *mars_gamepadport2;
+}
+
+int main(void)
+{
+	Mars_Init();
+
+	Mars_Main();
+
+	return 0;
+}
+
+int slave()
+{
+	Mars_Slave();
+
+	return 0;
 }

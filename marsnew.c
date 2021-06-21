@@ -141,7 +141,6 @@ void Mars_Slave(void)
 			Mars_Slave_R_DrawSprites();
 			break;
 		case 6:
-			Mars_Slave_R_OpenPlanes();
 			break;
 		case 7:
 			break;
@@ -395,6 +394,7 @@ void I_Update(void)
 	boolean NTSC = (MARS_VDP_DISPMODE & MARS_NTSC_FORMAT) != 0;
 	const int ticwait = (demoplayback ? 3 : 2); // demos were recorded at 15-20fps
 	const int refreshHZ = (NTSC ? 60 : 50);
+	extern int ccc;
 
 	if ((ticbuttons[consoleplayer] & BT_STAR) && !(oldticbuttons[consoleplayer] & BT_STAR))
 	{
@@ -429,7 +429,7 @@ void I_Update(void)
 		t_ref_planes_avg >>= 2;
 		t_ref_sprites_avg >>= 2;
 
-		D_snprintf(buf, sizeof(buf), "fps:%2d", fpscount);
+		D_snprintf(buf, sizeof(buf), "fps:%2d %d", fpscount, ccc);
 		I_Print8(200, line++, buf);
 		D_snprintf(buf, sizeof(buf), "tic:%d/%d", t_ref_total, lasttics);
 		I_Print8(200, line++, buf);
