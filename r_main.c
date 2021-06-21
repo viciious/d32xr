@@ -43,7 +43,7 @@ unsigned short	*openings/*[MAXOPENINGS]*/, *lastopening;
 
 volatile char runopenplanes = false;
 volatile short curopenplane = 0;
-unsigned short	openmarks[SCREENWIDTH];
+unsigned short openmarks[SCREENWIDTH] __attribute__((aligned(16)));
 
 /*===================================== */
 
@@ -549,26 +549,26 @@ void R_Setup (void)
 
 	tempbuf = (unsigned short *)I_WorkBuffer();
 
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 4) & ~4);
+	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
 	visplanes = (void*)tempbuf;
 	tempbuf += sizeof(*visplanes) * MAXVISPLANES;
 
 /* */
 /* plane filling */
 /*	 */
-	tempbuf = (unsigned short *)(((intptr_t)tempbuf+2)&~1);
+	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 1) & ~1);
 	tempbuf++; // padding
+
 	for (i = 0; i < MAXVISPLANES; i++) {
-#ifdef MARS
-		visplanes[i].open = *((unsigned short **)((intptr_t)&tempbuf | 0x20000000));
-#else
+		tempbuf = (unsigned short*)(((intptr_t)tempbuf + 15) & ~15);
+
 		visplanes[i].open = tempbuf;
-#endif
 		visplanes[i].runopen = true;
+
 		tempbuf += screenWidth+2;
 	}
 
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 4) & ~4);
+	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
 	visplanes_hash = (visplane_t**)tempbuf;
 	tempbuf += sizeof(visplane_t *) * NUM_VISPLANES_BUCKETS;
 
@@ -579,14 +579,14 @@ void R_Setup (void)
 	viswalls = (viswall_t*)tempbuf;
 	tempbuf += sizeof(*viswalls)*MAXWALLCMDS/sizeof(*tempbuf);
 
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 4) & ~4);
+	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
 	vissubsectors = (void*)tempbuf;
 	tempbuf += sizeof(*vissubsectors) * MAXVISSSEC;
 
 /*	 */
 /* clear sprites */
 /* */
-	tempbuf = (unsigned short *)(((intptr_t)tempbuf+4)&~3);
+	tempbuf = (unsigned short *)(((intptr_t)tempbuf+3)&~3);
 	vissprites = (void *)tempbuf;
 	tempbuf += sizeof(*vissprites)*MAXVISSPRITES/sizeof(*tempbuf);
 	vissprite_p = vissprites;
@@ -771,7 +771,7 @@ void master_dma1_handler(void)
 	visplanes[curopenplane].runopen = false;
 	curopenplane++;
 
-	if (!runopenplanes || curopenplane == MAXVISPLANES) {
+	if (!runopenplanes || curopenplane == MAXVISPLANES/2) {
 		curopenplane = 0;
 		return;
 	}
@@ -779,7 +779,7 @@ void master_dma1_handler(void)
 	// start DMA
 	SH2_DMA_SAR1 = (intptr_t)openmarks;
 	SH2_DMA_DAR1 = (intptr_t)visplanes[curopenplane].open;
-	SH2_DMA_TCR1 = (((SCREENWIDTH * 2) >> 4) << 2); // xfer count (4 * # of 16 byte units)
+	SH2_DMA_TCR1 = (((screenWidth * 2) >> 4) << 2); // xfer count (4 * # of 16 byte units)
 	SH2_DMA_CHCR1 = 0x4EE5; // dest incr, src fixed, size 16B, auto req, cycle-steal, dual addr, intr enabled, clear TE, dma enabled
 }
 
