@@ -41,8 +41,8 @@ vissprite_t	*vissprites, *lastsprite_p, *vissprite_p;
 /* */
 unsigned short	*openings/*[MAXOPENINGS]*/, *lastopening;
 
-char runopenplanes = false;
-short curopenplane = 0;
+volatile char runopenplanes = false;
+volatile short curopenplane = 0;
 unsigned short	openmarks[SCREENWIDTH];
 
 /*===================================== */
@@ -785,7 +785,6 @@ void master_dma1_handler(void)
 
 static void R_RenderPhase1(void)
 {
-	//Mars_R_BeginOpenPlanes();
 	runopenplanes = true;
 	curopenplane = 0;
 	ccc = 0;
@@ -795,6 +794,8 @@ static void R_RenderPhase1(void)
 	t_ref_bsp[t_ref_cnt] = I_GetFRTCounter();
 	R_BSP();
 	t_ref_bsp[t_ref_cnt] = I_GetFRTCounter() - t_ref_bsp[t_ref_cnt];
+
+	Mars_CommSlaveClearCache();
 }
 
 static void R_RenderPhases2To9(void)
@@ -814,8 +815,6 @@ static void R_RenderPhases2To9(void)
 
 	runopenplanes = false;
 	while (curopenplane != 0);
-
-	Mars_CommSlaveClearCache();
 
 	t_ref_segs[t_ref_cnt] = I_GetFRTCounter();
 	R_SegCommands ();

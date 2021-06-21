@@ -317,6 +317,29 @@ static void R_FinishPSprite(vissprite_t *vis)
    vis->startfrac = 0;
 }
 
+#ifdef MARS
+void Mars_Slave_R_LatePrep(void)
+{
+    viswall_t* wall, *lastwall;
+    vissprite_t* spr, * lastsprite, * lastvissprite;
+
+    lastwall = *(viswall_t**)((intptr_t)&lastwallcmd | 0x20000000);
+    lastsprite = *(vissprite_t**)((intptr_t)&lastsprite_p | 0x20000000);
+    lastvissprite = *(vissprite_t**)((intptr_t)&vissprite_p | 0x20000000);
+
+    for (wall = viswalls + 1; wall < lastwall; wall += 2)
+        R_FinishWallPrep1(wall);
+
+    // finish actor sprites
+    for (spr = vissprites + 1; spr < lastsprite; spr += 2)
+        R_FinishSprite(spr);
+
+    // finish player psprites
+    for (; spr < lastvissprite; spr += 2)
+        R_FinishPSprite(spr);
+}
+#endif
+
 //
 // Start late prep rendering stage
 //
@@ -329,6 +352,26 @@ boolean R_LatePrep(void)
    cacheneeded = false;
 #endif
 
+   // finish viswalls
+#ifdef MARS
+   Mars_R_BeginLatePrep();
+
+   for (wall = viswalls; wall < lastwallcmd; wall += 2)
+       R_FinishWallPrep1(wall);
+
+   // finish actor sprites
+   for (spr = vissprites; spr < lastsprite_p; spr+=2)
+       R_FinishSprite(spr);
+
+   // finish player psprites
+   for (; spr < vissprite_p; spr+=2)
+       R_FinishPSprite(spr);
+
+   for (wall = viswalls; wall < lastwallcmd; wall++)
+       R_FinishWallPrep2(wall);
+
+   Mars_R_EndWallPrep();
+#else
    for (wall = viswalls; wall < lastwallcmd; wall++)
    {
        R_FinishWallPrep1(wall);
@@ -342,7 +385,8 @@ boolean R_LatePrep(void)
    // finish player psprites
    for(; spr < vissprite_p; spr++)
       R_FinishPSprite(spr);
- 
+#endif
+
 #ifdef MARS
    return true;
 #else

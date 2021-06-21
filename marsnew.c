@@ -130,6 +130,7 @@ void Mars_Slave(void)
 			Mars_Slave_R_SegCommands();
 			break;
 		case 2:
+			Mars_Slave_R_LatePrep();
 			break;
 		case 3:
 			Mars_ClearCache();
@@ -151,6 +152,9 @@ void Mars_Slave(void)
 			break;
 		case 10:
 			Mars_Slave_InitSoundDMA();
+			break;
+		case 11:
+			Mars_Slave_R_WallPrep();
 			break;
 		default:
 			break;
@@ -413,6 +417,7 @@ void I_Update(void)
 	{
 		int line = 5;
 		unsigned t_ref_bsp_avg = 0;
+		unsigned t_ref_prep_avg = 0;
 		unsigned t_ref_segs_avg = 0;
 		unsigned t_ref_planes_avg = 0;
 		unsigned t_ref_sprites_avg = 0;
@@ -420,11 +425,13 @@ void I_Update(void)
 		for (i = 0; i < 4; i++)
 		{
 			t_ref_bsp_avg += t_ref_bsp[i];
+			t_ref_prep_avg += t_ref_prep[i];
 			t_ref_segs_avg += t_ref_segs[i];
 			t_ref_planes_avg += t_ref_planes[i];
 			t_ref_sprites_avg += t_ref_sprites[i];
 		}
 		t_ref_bsp_avg >>= 2;
+		t_ref_prep_avg >>= 2;
 		t_ref_segs_avg >>= 2;
 		t_ref_planes_avg >>= 2;
 		t_ref_sprites_avg >>= 2;
@@ -436,15 +443,17 @@ void I_Update(void)
 
 		line++;
 
-		D_snprintf(buf, sizeof(buf), "g:%2d", Mars_FRTCounter2Msec(tictics));
+		D_snprintf(buf, sizeof(buf), "gm:%2d", Mars_FRTCounter2Msec(tictics));
 		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "b:%2d", Mars_FRTCounter2Msec(t_ref_bsp_avg));
+		D_snprintf(buf, sizeof(buf), "bp:%2d", Mars_FRTCounter2Msec(t_ref_bsp_avg));
 		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "w:%2d %2d", Mars_FRTCounter2Msec(t_ref_segs_avg), lastwallcmd - viswalls);
+		D_snprintf(buf, sizeof(buf), "pr:%2d", Mars_FRTCounter2Msec(t_ref_prep_avg));
 		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "p:%2d %2d", Mars_FRTCounter2Msec(t_ref_planes_avg), lastvisplane - visplanes - 1);
+		D_snprintf(buf, sizeof(buf), "wl:%2d %2d", Mars_FRTCounter2Msec(t_ref_segs_avg), lastwallcmd - viswalls);
 		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "s:%2d %2d", Mars_FRTCounter2Msec(t_ref_sprites_avg), lastsprite_p - vissprites);
+		D_snprintf(buf, sizeof(buf), "pl:%2d %2d", Mars_FRTCounter2Msec(t_ref_planes_avg), lastvisplane - visplanes - 1);
+		I_Print8(200, line++, buf);
+		D_snprintf(buf, sizeof(buf), "sp:%2d %2d", Mars_FRTCounter2Msec(t_ref_sprites_avg), lastsprite_p - vissprites);
 		I_Print8(200, line++, buf);
 	}
 

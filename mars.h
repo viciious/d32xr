@@ -34,6 +34,8 @@
 void Mars_Slave(void);
 
 void Mars_Slave_R_SegCommands(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void Mars_Slave_R_WallPrep(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void Mars_Slave_R_LatePrep(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void Mars_Slave_R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void Mars_Slave_R_DrawSprites(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
@@ -49,6 +51,28 @@ static inline void Mars_R_BeginComputeSeg(void)
 }
 
 static inline void Mars_R_EndComputeSeg(void)
+{
+	while (MARS_SYS_COMM4 != 0);
+}
+
+static inline void Mars_R_BeginLatePrep(void)
+{
+	while (MARS_SYS_COMM4 != 0) {};
+	MARS_SYS_COMM4 = 2;
+}
+
+static inline void Mars_R_EndLatePrep(void)
+{
+	while (MARS_SYS_COMM4 != 0);
+}
+
+static inline void Mars_R_BeginWallPrep(void)
+{
+	while (MARS_SYS_COMM4 != 0) {};
+	MARS_SYS_COMM4 = 11;
+}
+
+static inline void Mars_R_EndWallPrep(void)
 {
 	while (MARS_SYS_COMM4 != 0);
 }

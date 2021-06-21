@@ -6,14 +6,18 @@
 
 #include "doomdef.h"
 #include "r_local.h"
+#include "mars.h"
 
 static sector_t emptysector = { 0, 0, -2, -2, -2 };
 
+static void R_WallPrepStride(const int start, const int stride) ATTR_DATA_CACHE_ALIGN;
+static void R_FinishWallPrep(void) ATTR_DATA_CACHE_ALIGN;
 void R_WallPrep(void) ATTR_DATA_CACHE_ALIGN;
 
-void R_WallPrep(void)
+static void R_WallPrepStride(const int start, const int stride)
 {
-   viswall_t *segl = viswalls;
+   viswall_t *segl;
+   viswall_t *lastwall = lastwallcmd;
    seg_t     *seg;
    line_t    *li;
    side_t    *si;
@@ -23,19 +27,16 @@ void R_WallPrep(void)
    int        f_lightlevel, b_lightlevel;
    int        f_ceilingpic, b_ceilingpic;
    int        b_texturemid, t_texturemid;
-   int        rw_x, rw_stopx;
    boolean    skyhack;
    unsigned int actionbits;
    int        side;
 
-   while(segl < lastwallcmd)
+   for(segl = viswalls + start; segl < lastwall; segl += stride)
    {
       seg  = segl->seg;
       li   = seg->linedef;
       side = seg->side;
       si   = &sides[li->sidenum[seg->side]];
-
-      li->flags |= ML_MAPPED; // mark as seen
 
       front_sector    = &sectors[sides[li->sidenum[side]].sector];
       f_ceilingpic    = front_sector->ceilingpic;
@@ -56,10 +57,6 @@ void R_WallPrep(void)
 
       t_texturemid = b_texturemid = 0;
       actionbits = 0;
-
-      // NB: this code is missing in 3DO (function uses parameters instead)
-      rw_x     = segl->start;
-      rw_stopx = segl->stop + 1;
 
       // deal with sky ceilings (also missing in 3DO)
       if(f_ceilingpic == -1 && b_ceilingpic == -1)
@@ -149,19 +146,10 @@ void R_WallPrep(void)
             actionbits |= AC_SOLIDSIL;
          else
          {
-            int width;
-
-            // get width of opening
-            // note this is halved because openings are treated like bytes 
-            // everywhere despite using short storage
-            width = (rw_stopx - rw_x + 1) / 2; 
-
             if((b_floorheight > 0 && b_floorheight > f_floorheight) ||
                (f_floorheight < 0 && f_floorheight > b_floorheight))
             {
                actionbits |= AC_BOTTOMSIL; // set bottom mask
-               segl->bottomsil = (byte *)lastopening - rw_x;
-               lastopening += width;
             }
 
             if(!skyhack)
@@ -170,8 +158,6 @@ void R_WallPrep(void)
                   (f_ceilingheight >  0 && b_ceilingheight > f_ceilingheight))
                {
                   actionbits |= AC_TOPSIL; // set top mask
-                  segl->topsil = (byte *)lastopening - rw_x;
-                  lastopening += width;
                }
             }
          }
@@ -183,9 +169,74 @@ void R_WallPrep(void)
       segl->b_texturemid  = b_texturemid;
       segl->seglightlevel = f_lightlevel;
       segl->offset        = si->textureoffset + seg->offset;
-       
-      ++segl; // next viswall
    }
+}
+
+#ifdef MARS
+
+void Mars_Slave_R_WallPrep(void)
+{
+    R_WallPrepStride(1, 2);
+}
+
+#endif
+
+static void R_FinishWallPrep(void)
+{
+    viswall_t* segl;
+
+    for (segl = viswalls; segl < lastwallcmd; segl++)
+    {
+        int rw_x, rw_stopx;
+        unsigned width;
+        unsigned actionbits;
+        line_t* li;
+
+        li = segl->seg->linedef;
+        li->flags |= ML_MAPPED; // mark as seen
+
+        actionbits = segl->actionbits;
+        if (!(actionbits & (AC_BOTTOMSIL | AC_TOPSIL)))
+            continue;
+
+        // NB: this code is missing in 3DO (function uses parameters instead)
+        rw_x = segl->start;
+        rw_stopx = segl->stop + 1;
+        if (rw_stopx < rw_x)
+            continue;
+
+        // get width of opening
+        // note this is halved because openings are treated like bytes 
+        // everywhere despite using short storage
+        width = (rw_stopx - rw_x + 1) >> 1;
+
+        if (actionbits & AC_BOTTOMSIL)
+        {
+            segl->bottomsil = (byte*)lastopening - rw_x;
+            lastopening += width;
+        }
+
+        if (actionbits & AC_TOPSIL)
+        {
+            segl->topsil = (byte*)lastopening - rw_x;
+            lastopening += width;
+        }
+    }
+}
+
+void R_WallPrep(void)
+{
+#ifdef MARS
+    Mars_R_BeginWallPrep();
+
+    R_WallPrepStride(0, 2);
+
+    Mars_R_EndWallPrep();
+#else
+    R_WallPrepStride(0, 1);
+#endif
+
+    R_FinishWallPrep();
 }
 
 // EOF
