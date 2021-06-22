@@ -8,8 +8,8 @@
 /* proper screen size would be 160*100, stretched to 224 is 2.2 scale */
 #define	STRETCH				(22*FRACUNIT/10)
 
-extern int screenWidth, screenHeight;
-extern int centerX, centerY;
+extern short screenWidth, screenHeight;
+extern short centerX, centerY;
 extern fixed_t centerXFrac, centerYFrac;
 extern fixed_t stretchX;
 

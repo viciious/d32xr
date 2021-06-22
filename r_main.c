@@ -6,8 +6,8 @@
 #include "mars.h"
 #endif
 
-int screenWidth, screenHeight;
-int centerX, centerY;
+short screenWidth, screenHeight;
+short centerX, centerY;
 fixed_t centerXFrac, centerYFrac;
 fixed_t stretchX;
 
