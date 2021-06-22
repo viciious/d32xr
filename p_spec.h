@@ -203,8 +203,8 @@ typedef struct
 	fixed_t		speed;
 	fixed_t		low;
 	fixed_t		high;
-	int			wait;
-	int			count;
+	VINT		wait;
+	VINT		count;
 	plat_e		status;
 	plat_e		oldstatus;
 	boolean		crush;
@@ -248,8 +248,8 @@ typedef struct
 	sector_t	*sector;
 	fixed_t		topheight;
 	fixed_t		speed;
-	int			direction;		/* 1 = up, 0 = waiting at top, -1 = down */
-	int			topwait;		/* tics to wait at the top */
+	VINT		direction;		/* 1 = up, 0 = waiting at top, -1 = down */
+	VINT		topwait;		/* tics to wait at the top */
 								/* (keep in case a door going down is reset) */
 	int			topcountdown;	/* when it reaches 0, start going down */
 } vldoor_t;
@@ -287,9 +287,9 @@ typedef struct
 	fixed_t		bottomheight, topheight;
 	fixed_t		speed;
 	boolean		crush;
-	int			direction;		/* 1 = up, 0 = waiting, -1 = down */
+	VINT		direction;		/* 1 = up, 0 = waiting, -1 = down */
+	VINT		olddirection;
 	int			tag;			/* ID */
-	int			olddirection;
 } ceiling_t;
 
 #define	CEILSPEED		FRACUNIT*2
@@ -333,9 +333,9 @@ typedef struct
 	floor_e		type;
 	boolean		crush;
 	sector_t	*sector;
-	int			direction;
 	int			newspecial;
-	short		texture;
+	VINT		direction;
+	VINT		texture;
 	fixed_t		floordestheight;
 	fixed_t		speed;
 } floormove_t;
