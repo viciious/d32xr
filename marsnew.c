@@ -342,6 +342,9 @@ void Mars_Secondary(void)
 		case MARS_SECCMD_AM_DRAW:
 			Mars_Sec_AM_Drawer();
 			break;
+		case MARS_SECCMD_P_SIGHT_CHECKS:
+			Mars_Sec_P_CheckSights();
+			break;
 		default:
 			break;
 		}

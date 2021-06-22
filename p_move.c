@@ -280,7 +280,7 @@ static void PM_CheckPosition(void)
    tmfloorz   = tmdropoffz = newsubsec->sector->floorheight;
    tmceilingz = newsubsec->sector->ceilingheight;
 
-   ++validcount;
+   validcount[0]++;
 
    blockline = NULL;
    numspechit = 0;
@@ -392,7 +392,6 @@ void P_TryMove2(void)
 {
    trymove2 = false;
    floatok  = false;
-
    oldx = tmthing->x;
    oldy = tmthing->y;
 

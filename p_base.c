@@ -30,6 +30,7 @@
 
 #include "doomdef.h"
 #include "p_local.h"
+#include "mars.h"
 
 static mobj_t      *checkthing, *hitthing;
 static fixed_t      testx, testy;
@@ -243,7 +244,7 @@ static boolean PB_CheckPosition(mobj_t *mo)
    testfloorz   = testdropoffz = testsubsec->sector->floorheight;
    testceilingz = testsubsec->sector->ceilingheight;
 
-   ++validcount;
+   validcount[0]++;
 
    ceilingline = NULL;
    hitthing    = NULL;
@@ -522,6 +523,12 @@ void P_RunMobjBase2(void)
 
     for (mo = mobjhead.next; mo != (void*)&mobjhead; mo = next)
     {
+#ifdef MARS
+        // clear cache for mobj flags following the sight check as 
+        // the other CPU might have modified the MF_SEETARGET state
+        if (mo->tics == 1)
+            Mars_ClearCacheLine(&mo->flags);
+#endif
         next = mo->next;	/* in case mo is removed this time */
         if (!mo->player)
             P_MobjThinker(mo);

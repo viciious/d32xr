@@ -364,10 +364,12 @@ boolean P_BlockLinesIterator (int x, int y, boolean(*func)(line_t*) )
 
 	for ( list = blockmaplump+offset ; *list != -1 ; list++)
 	{
+		int l = *list;
 		ld = &lines[*list];
-		if (ld->validcount == validcount)
+
+		if (lines_validcount[l] == validcount[0])
 			continue;		/* line has already been checked */
-		ld->validcount = validcount;
+		lines_validcount[l] = validcount[0];
 		
 		if ( !func(ld) )
 			return false;

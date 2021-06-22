@@ -248,7 +248,7 @@ fixed_t P_CompletableFrac(fixed_t dx, fixed_t dy)
    else
       endbox[BOXBOTTOM] += dy;
 
-   ++validcount;
+   validcount[0]++;
 
    // check lines
    xl = endbox[BOXLEFT  ] - bmaporgx;
@@ -374,7 +374,7 @@ static void SL_CheckSpecialLines(void)
       byh = bmapheight - 1;
 
    numspechit = 0;
-   ++validcount;
+   ++validcount[0];
 
    for(bx = bxl; bx <= bxh; bx++)
    {
@@ -391,10 +391,10 @@ static void SL_CheckSpecialLines(void)
             ld = &lines[*list];
             if(!ld->special)
                continue;
-            if(ld->validcount == validcount)
+            if(lines_validcount[*list] == validcount[0])
                continue; // already checked
             
-            ld->validcount = validcount;
+            lines_validcount[*list] = validcount[0];
 
 	         ldbbox = P_LineBBox(ld);
             if(xh < ldbbox[BOXLEFT  ] ||

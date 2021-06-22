@@ -113,11 +113,10 @@ typedef enum {ST_HORIZONTAL, ST_VERTICAL, ST_POSITIVE, ST_NEGATIVE} slopetype_t;
 
 typedef struct line_s
 {
-	VINT		validcount;			/* if == validcount, already checked */
+	VINT        slopetype;                      /* to aid move clipping */
 	VINT		flags;
 	VINT		sidenum[2];			/* sidenum[1] will be -1 if one sided */
 	vertex_t 	*v1, *v2;
-	VINT		slopetype;                      /* to aid move clipping */
 	VINT		special, tag;
 	VINT		fineangle;			/* to get sine / eosine for sliding */
 } line_t;
@@ -359,7 +358,7 @@ extern	const fixed_t		finetangent_[FINEANGLES/2];
 #define finetangent(x)		finetangent_[x]
 #endif
 
-extern	VINT			validcount;
+extern	VINT			validcount[2];
 extern	VINT			framecount;
 
 #ifndef MARS

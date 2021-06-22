@@ -400,9 +400,9 @@ static void R_Subsector(int num)
    
    if (frontsector->thinglist)
    {
-      if(frontsector->validcount != validcount) // not already processed?
+      if(frontsector->validcount != validcount[0]) // not already processed?
       {
-         frontsector->validcount = validcount;  // mark it as processed
+         frontsector->validcount = validcount[0];  // mark it as processed
          if (lastvissector < vissectors + MAXVISSSEC)
          {
            *lastvissector++ = frontsector;

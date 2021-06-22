@@ -337,9 +337,9 @@ static boolean PA_CrossSubsector(int bspnum)
    {
       line = &lines[seg->linedef];
 
-      if(line->validcount == validcount)
+      if(lines_validcount[line-lines] == validcount[0])
          continue; // already checked other side
-      line->validcount = validcount;
+      lines_validcount[line - lines] = validcount[0];
 
       frac = PA_SightCrossLine(line);
       if(frac < 0 || frac > FRACUNIT)
