@@ -71,14 +71,14 @@ typedef struct intercept_s
 
 static intercept_t old_intercept;
 
-static fixed_t PA_SightCrossLine(line_t* line) ATTR_DATA_CACHE_ALIGN;
-static boolean PA_ShootLine(line_t* li, fixed_t interceptfrac) ATTR_DATA_CACHE_ALIGN;
-static boolean PA_ShootThing(mobj_t* th, fixed_t interceptfrac) ATTR_DATA_CACHE_ALIGN;
-static boolean PA_DoIntercept(intercept_t* in) ATTR_DATA_CACHE_ALIGN;
-static boolean PA_CrossSubsector(int bspnum) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static int PA_DivlineSide(fixed_t x, fixed_t y, divline_t* line) ATTR_DATA_CACHE_ALIGN;
-static boolean PA_CrossBSPNode(int bspnum) ATTR_DATA_CACHE_ALIGN;
-void P_Shoot2(void) ATTR_DATA_CACHE_ALIGN;
+static fixed_t PA_SightCrossLine(line_t* line) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static boolean PA_ShootLine(line_t* li, fixed_t interceptfrac) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static boolean PA_ShootThing(mobj_t* th, fixed_t interceptfrac) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static boolean PA_DoIntercept(intercept_t* in) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static boolean PA_CrossSubsector(int bspnum) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE ATTR_OPTIMIZE_SIZE;
+static int PA_DivlineSide(fixed_t x, fixed_t y, divline_t* line) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static boolean PA_CrossBSPNode(int bspnum) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void P_Shoot2(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 //
 // First checks the endpoints of the line to make sure that they cross the
