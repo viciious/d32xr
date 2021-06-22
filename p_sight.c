@@ -29,16 +29,19 @@
 #include "doomdef.h"
 #include "p_local.h"
 
-static fixed_t sightzstart;           // eye z of looker
-static fixed_t topslope, bottomslope; // slopes to top and bottom of target
+typedef struct
+{
+    fixed_t sightzstart;           // eye z of looker
+    fixed_t topslope, bottomslope; // slopes to top and bottom of target
 
-static divline_t strace;  // from t1 to t2
-static fixed_t t2x, t2y;
+    divline_t strace;  // from t1 to t2
+    fixed_t t2x, t2y;
+} sightWork_t;
 
 int P_DivlineSide(fixed_t x, fixed_t y, divline_t* node) ATTR_DATA_CACHE_ALIGN;
 fixed_t P_InterceptVector2(divline_t* v2, divline_t* v1) ATTR_DATA_CACHE_ALIGN;
-static boolean PS_CrossSubsector(int num) ATTR_DATA_CACHE_ALIGN;
-static boolean PS_CrossBSPNode(int bspnum) ATTR_DATA_CACHE_ALIGN;
+static boolean PS_CrossSubsector(sightWork_t* sw, int num) ATTR_DATA_CACHE_ALIGN;
+static boolean PS_CrossBSPNode(sightWork_t* sw, int bspnum) ATTR_DATA_CACHE_ALIGN;
 boolean PS_CheckSight(mobj_t* t1, mobj_t* t2) ATTR_DATA_CACHE_ALIGN;
 void P_CheckSights2(void) ATTR_DATA_CACHE_ALIGN;
 
@@ -122,7 +125,7 @@ fixed_t P_InterceptVector2(divline_t *v2, divline_t *v1)
 =================
 */
 
-static boolean PS_CrossSubsector(int num)
+static boolean PS_CrossSubsector(sightWork_t *sw, int num)
 {
    seg_t       *seg;
    line_t      *line;
@@ -140,6 +143,9 @@ static boolean PS_CrossSubsector(int num)
    fixed_t      frac;
    fixed_t      slope;
    int          side;
+   divline_t    *strace = &sw->strace;
+   fixed_t      t2x = sw->t2x, t2y = sw->t2y;
+   fixed_t      sightzstart = sw->sightzstart;
 
    sub = &subsectors[num];
 
@@ -159,8 +165,8 @@ static boolean PS_CrossSubsector(int num)
 
       v1 = line->v1;
       v2 = line->v2;
-      s1 = P_DivlineSide(v1->x, v1->y, &strace);
-      s2 = P_DivlineSide(v2->x, v2->y, &strace);
+      s1 = P_DivlineSide(v1->x, v1->y, strace);
+      s2 = P_DivlineSide(v2->x, v2->y, strace);
 
       // line isn't crossed?
       if (s1 == s2)
@@ -170,7 +176,7 @@ static boolean PS_CrossSubsector(int num)
       divl.y = v1->y;
       divl.dx = v2->x - v1->x;
       divl.dy = v2->y - v1->y;
-      s1 = P_DivlineSide (strace.x, strace.y, &divl);
+      s1 = P_DivlineSide (strace->x, strace->y, &divl);
       s2 = P_DivlineSide (t2x, t2y, &divl);
 
       // line isn't crossed?
@@ -208,23 +214,23 @@ static boolean PS_CrossSubsector(int num)
       if(openbottom >= opentop)
          return false; // stop
 
-      frac = P_InterceptVector2(&strace, &divl);
+      frac = P_InterceptVector2(strace, &divl);
 
       if(front->floorheight != back->floorheight)
       {
          slope = FixedDiv(openbottom - sightzstart , frac);
-         if(slope > bottomslope)
-            bottomslope = slope;
+         if(slope > sw->bottomslope)
+             sw->bottomslope = slope;
       }
 
       if(front->ceilingheight != back->ceilingheight)
       {
          slope = FixedDiv (opentop - sightzstart , frac);
-         if(slope < topslope)
-            topslope = slope;
+         if(slope < sw->topslope)
+             sw->topslope = slope;
       }
 
-      if(topslope <= bottomslope)
+      if(sw->topslope <= sw->bottomslope)
          return false;    // stop
    }
 
@@ -235,30 +241,31 @@ static boolean PS_CrossSubsector(int num)
 //
 // Returns true if strace crosses the given node successfuly
 //
-static boolean PS_CrossBSPNode(int bspnum)
+static boolean PS_CrossBSPNode(sightWork_t* sw, int bspnum)
 {
    node_t *bsp;
    int side;
+   divline_t* strace = &sw->strace;
 
    while (!(bspnum & NF_SUBSECTOR))
    {
        bsp = &nodes[bspnum];
 
        // decide which side the start point is on
-       side = P_DivlineSide(strace.x, strace.y, (divline_t*)bsp);
+       side = P_DivlineSide(strace->x, strace->y, (divline_t*)bsp);
        if (side == 2)
            side = 0;
 
        // the partition plane is crossed here
-       if (side == P_DivlineSide(t2x, t2y, (divline_t*)bsp))
+       if (side == P_DivlineSide(sw->t2x, sw->t2y, (divline_t*)bsp))
            bspnum = bsp->children[side]; // the line doesn't touch the other side
-       else if (!PS_CrossBSPNode(bsp->children[side]))
+       else if (!PS_CrossBSPNode(sw, bsp->children[side]))
            return false; // cross the starting side
        else
            bspnum = bsp->children[side ^ 1]; // cross the ending side
    }
 
-   return PS_CrossSubsector(bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR);
+   return PS_CrossSubsector(sw, bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR);
 }
 
 //
@@ -268,6 +275,7 @@ boolean PS_CheckSight(mobj_t *t1, mobj_t *t2)
 {
    int s1, s2;
    int pnum, bytenum, bitnum;
+   sightWork_t sw;
 
    // First check for trivial rejection
    s1 = (int)(t1->subsector->sector - sectors);
@@ -284,19 +292,19 @@ boolean PS_CheckSight(mobj_t *t1, mobj_t *t2)
    // look from eyes of t1 to any part of t2
    ++validcount;
 
-   sightzstart = t1->z + t1->height - (t1->height >> 2);
-   topslope    = (t2->z + t2->height) - sightzstart;
-   bottomslope = (t2->z) - sightzstart;
+   sw.sightzstart = t1->z + t1->height - (t1->height >> 2);
+   sw.topslope    = (t2->z + t2->height) - sw.sightzstart;
+   sw.bottomslope = (t2->z) - sw.sightzstart;
 
    // make sure it never lies exactly on a vertex coordinate
-   strace.x = (t1->x & ~0x1ffff) | 0x10000;
-   strace.y = (t1->y & ~0x1ffff) | 0x10000;
-   t2x = (t2->x & ~0x1ffff) | 0x10000;
-   t2y = (t2->y & ~0x1ffff) | 0x10000;
-   strace.dx = t2x - strace.x;
-   strace.dy = t2y - strace.y;
+   sw.strace.x = (t1->x & ~0x1ffff) | 0x10000;
+   sw.strace.y = (t1->y & ~0x1ffff) | 0x10000;
+   sw.t2x = (t2->x & ~0x1ffff) | 0x10000;
+   sw.t2y = (t2->y & ~0x1ffff) | 0x10000;
+   sw.strace.dx = sw.t2x - sw.strace.x;
+   sw.strace.dy = sw.t2y - sw.strace.y;
 
-   return PS_CrossBSPNode(numnodes-1);
+   return PS_CrossBSPNode(&sw, numnodes-1);
 }
 
 //
