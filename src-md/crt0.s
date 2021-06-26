@@ -509,8 +509,15 @@ init_serial:
         bra     main_loop           /* Return */
 
 read_serial:
+        btst    #1,0xA10019         /* Otherwise check bit 1 on serial control register of joypad port 2 */
+        beq.s   1f                  /* No byte available, branch off */        
+        clr.b   ser_status          /* Clear serial status (Show byte available) */
+        move.b  0xA10017,ser_rx     /* Get byte */
+        bra.s   2f                  /* Skip line below and just exit */
+1:
+        move.w  #0xFFFF,ser_status  /* Set serial status and serial_rx as 0xFFFF (No byte available) */
+2:
         move.w  ser_status,0xA15122 /* Copy status byte and ser_rx in one move to COMM2 */
-        move.w  #0xFFFF,ser_status  /* Show ser_status and ser_rx as "empty" */ 
         move.w  #0,0xA15120         /* Signal to 32X via COMM0, byte is available to use now */
         bra     main_loop           /* Return */
 
@@ -531,7 +538,7 @@ vert_blank:
         cmpi.w  #0xF000,d0
         beq.b   0f                  /* no pad in port 1 (or mouse) */
         lea     0xA10003,a0
-        bsr.b   get_pad
+        bsr.w   get_pad
         move.w  d2,0xA15128         /* controller 1 current value */
         tst.b   ser_enable          /* ser_enable flag set? */
         bne.s   2f                  /* Skip joypad port 2 reading and gen_lvl2 */
@@ -545,23 +552,12 @@ vert_blank:
         move.w  d2,0xA1512A         /* controller 2 current value */
 1:
         tst.w   gen_lvl2
-        beq.b   4f
+        beq.b   2f
         lea     0xA12000,a0
         move.w  (a0),d0
         ori.w   #0x0100,d0
         move.w  d0,(a0)
-        bra.s   4f                  /* skip over serial receive code */
 2:
-        tst.b   ser_status          /* Has the byte been read by the 32X yet? (Dont overwrite buffered byte!) */
-        beq.s   4f                  /* if ser_status is clear, then byte is still available to read. Skip the serial read */
-        btst    #1,0xA10019         /* Otherwise check bit 1 on serial control register of joypad port 2 */
-        beq.s   3f                  /* No byte available, branch off */        
-        clr.b   ser_status          /* Clear serial status (Show byte available) */
-        move.b  0xA10017,ser_rx     /* Get byte */
-        bra.s   4f                  /* Skip line below and just exit */
-3:
-        move.w  #0xFFFF,ser_status  /* Set serial status and serial_rx as 0xFFFF (No byte available) */
-4:
         move.l  (sp)+,d2
         move.l  (sp)+,d1
         movea.l (sp)+,a0

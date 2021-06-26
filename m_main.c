@@ -36,7 +36,7 @@ short numslump;
 
 int		cursorframe, cursorcount;
 int		movecount;
-int 		playermap;
+int		playermap;
 
 playmode_t currentplaymode;
 menu_t	cursorpos;
@@ -282,7 +282,6 @@ void M_Drawer (void)
 		DrawJagobjLump(m_skull1lump, CURSORX, CURSORY(cursorpos)+m_doom_height, NULL, NULL);
 
 /* draw menu items */
-
 #ifdef MARS
 	print(64 , m_doom_height+2, "Game Mode");
 	if (currentplaymode == 0) { print(80 , m_doom_height+22, "Single"); }

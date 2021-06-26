@@ -241,6 +241,7 @@ void O_Control (player_t *player)
 						S_StartSound (NULL, sfx_pistol);
 						break;
 					case 1:
+						if(netgame) { break; }
 						o_screensize = slider[cursorpos].curval;
 						R_SetScreenSize(o_screensize);
 						clearscreen = 2;
@@ -264,6 +265,7 @@ void O_Control (player_t *player)
 						S_StartSound (NULL, sfx_pistol);
 						break;
 					case 1:
+						if(netgame) { break; }
 						o_screensize = slider[cursorpos].curval;
 						R_SetScreenSize(o_screensize);
 						clearscreen = 2;

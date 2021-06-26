@@ -631,7 +631,7 @@ reselect:
 
 	if (starttype != gt_single)
 	{
-		I_NetSetup ();
+		I_NetSetup();
 		if (starttype == gt_single)
 			goto reselect;		/* aborted net startup */
 	}

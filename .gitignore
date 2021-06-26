@@ -3,6 +3,3 @@
 /tools/*
 doom32x.wad
 compile.sh
-/src-md/32x.h
-/src-md/m68k_crt0.s
-/src-md/m68k_ctr1.s

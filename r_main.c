@@ -258,8 +258,7 @@ void R_SetScreenSize(int size)
 	fixed_t stretch;
 	const int numSizes = sizeof(screenSizes) / sizeof(screenSizes[0]);
 
-	while (!I_RefreshCompleted())
-		;
+	while (!I_RefreshCompleted());
 
 	size %= numSizes;
 

@@ -42,7 +42,8 @@ boolean	debugscreenactive = false;
 int		lastticcount = 0;
 int		lasttics = 0;
 
-int 	debugmode = 0;
+int 	debugmode = 1;
+
 
 extern int 	cy;
 extern int tictics;
@@ -503,6 +504,8 @@ void WriteEEProm (void)
 /* SERIAL NETWORKING                                                           */
 /* =========================================================================== */
 
+#define PACKET_SIZE 6            // size of packet in bytes
+
 int GetSerialChar (void)
 {
 	unsigned 	status, byte;
@@ -524,7 +527,7 @@ int WaitGetSerialChar (void)
 	int		vblstop;
 	int   ticcount;
 
-	vblstop = I_GetTime(); + 120;  // Timeout value for waiting for a response from other console	
+	vblstop = (I_GetTime()) + 180;  // Timeout value for waiting for a response from other console	
 	do
 	{
 		ticcount = I_GetTime();
@@ -561,13 +564,15 @@ void Player0Setup (void)
 {
 	int		val;
 	int		idbyte;
+	int   buttons;
 	
 	consoleplayer = 0;
 	idbyte = startmap + 24*startskill + 128*(starttype==2);
 	
 	do
 	{ /* wait until we see a 0x22 byte from other side */
-		//if (buttons == SEGA_CTRL_START) { starttype = gt_single; return; } /* abort */
+		buttons = I_ReadControls();
+	  if (buttons & JP_OPTION) { starttype = gt_single; return; } /* abort */
 		wait (1);
 		val = GetSerialChar ();
 		if (val == 0x22) { return; } /* ready to go! */
@@ -580,13 +585,15 @@ void Player0Setup (void)
 void Player1Setup (void)
 {	
 	int	val, oldval;
+	int   buttons;
 
 	oldval = 999;
 	consoleplayer = 1;	 /* we are player 1 */
 
 	do
-	{  /* wait for two identical id bytes, then start game */
-		//if (ctrl == SEGA_CTRL_START) { starttype = gt_single; return; } /* abort */
+	{ /* wait for two identical id bytes, then start game */
+		buttons = I_ReadControls();
+	  if (buttons & JP_OPTION) { starttype = gt_single; return; } /* abort */
 		val = GetSerialChar();
 		if (val == -1) { continue; }
 		if (val == oldval) { break; }
@@ -609,11 +616,11 @@ void I_NetSetup (void)
 {
 	int	listen1, listen2;
 
-	MARS_SYS_COMM0 = 0x0600;			// Initialize joypad port 2 as Serial at 4800 Baud 8-N-1
+	MARS_SYS_COMM0 = 0x0600;			  // Tell M68K to Initialize joypad port 2 in serial mode at 4800 Baud 8-N-1
 	while (MARS_SYS_COMM0 != 0);		// Wait for command to complete
 
 	I_Print8 (64,24,"Attempting to connect..."); 
-//I_Print8 (80,26,"Press start to abort");
+  I_Print8 (80,26,"Press start to abort");
 	I_Update ();
 
 	GetSerialChar();
@@ -631,9 +638,7 @@ void I_NetSetup (void)
 
 	wait (5);
 	
-	GetSerialChar();  /* flush out the receive que */
-	GetSerialChar();
-	GetSerialChar();
+	GetSerialChar();  /* flush out serial receive */
 	GetSerialChar();
 }
 
@@ -641,68 +646,58 @@ void I_NetSetup (void)
 
 void G_PlayerReborn (int player);
 
-unsigned I_NetTransfer (unsigned ctrl)
+unsigned I_NetTransfer (unsigned buttons)
 {
-	int		i;
-	int		val;
-
-	byte	inbytes[4];
-	byte	outbytes[4];
+	int		i, val;
+	byte	inbytes[PACKET_SIZE];
+	byte	outbytes[PACKET_SIZE];
 	byte	consistancy;
 
-	outbytes[0] = ctrl>>8;
-	outbytes[1] = ctrl;
-	consistancy = players[0].mo->x ^ players[0].mo->y ^ players[1].mo->x ^ players[1].mo->y;
+	consistancy = players[0].mo->x ^ players[0].mo->y ^ players[0].mo->z ^ players[1].mo->x ^ players[1].mo->y ^ players[1].mo->z;
 	consistancy = (consistancy>>8) ^ consistancy ^ (consistancy>>16);
-	outbytes[2] = consistancy;
-	outbytes[3] = vblsinframe;
+
+	outbytes[0] = buttons>>24;
+	outbytes[1] = buttons>>16;
+	outbytes[2] = buttons>>8;
+	outbytes[3] = buttons;
+	outbytes[4] = consistancy;
+	outbytes[5] = vblsinframe;
 
 	if (consoleplayer) /* player 1 waits before sending */
 	{
-		for (i=0 ; i<=3 ; i++)
+		for (i=0 ; i<=PACKET_SIZE-1 ; i++)
 		{
-			val = WaitGetSerialChar();
-			if (val == -1) { goto reconnect; }			
+			val = WaitGetSerialChar (); if (val == -1) { goto reconnect; }
 			inbytes[i] = val;
-			PutSerialChar(outbytes[i]);
+			PutSerialChar (outbytes[i]);
 		}
-		vblsinframe = inbytes[3];		/* take gamevbls from other player */
+		vblsinframe = inbytes[5];		/* take gamevbls from other player */
 	}
 	else /* player 0 sends first */
 	{
-		for (i=0; i<=3; i++)
+		for (i=0 ; i<=PACKET_SIZE-1 ; i++)
 		{
-			PutSerialChar(outbytes[i]);
-			val = WaitGetSerialChar();
-			if (val == -1) { goto reconnect; }
+			PutSerialChar (outbytes[i]);
+			val = WaitGetSerialChar (); if (val == -1) { goto reconnect; }
 			inbytes[i] = val;
 		}
 	}
 	
-/* */
-/* check for consistancy error */
-/* */
-	if (inbytes[2] != outbytes[2])
+	if (inbytes[4] != outbytes[4]) /* check for consistancy error */
 	{
 		I_Print8 (108,23,"Network Error"); 
 		I_Update ();
-		GetSerialChar();  /* flush out the receive buffer */
-		GetSerialChar();
-		GetSerialChar();
+		GetSerialChar();  /* flush out serial receive */
 		GetSerialChar();
 		wait(200);
 		goto reconnect;
 	}
-		
-	val = (inbytes[0]<<8) + inbytes[1];
 
+	val = (inbytes[0]<<24) + (inbytes[1]<<16) + (inbytes[2]<<8) + inbytes[3];
 	return val;
 	
-/* */
-/* reconnect */
-/* */
 reconnect:
-	if (consoleplayer) { wait(15); }	/* let player 0 wait again */
+	if (consoleplayer) { wait(15); }	/* Player 0 waits before proceeding */
 	I_NetSetup();
 	G_PlayerReborn(0);
 	G_PlayerReborn(1);
@@ -710,4 +705,3 @@ reconnect:
 	ticbuttons[0] = ticbuttons[1] = oldticbuttons[0] = oldticbuttons[1] = 0;
 	return 0;
 }
-
