@@ -865,11 +865,11 @@ extern	volatile int		ticcount, joybuttons;
 
 #else
 
-// hardware-agnostic game button actions
-// transmitted over network
-// should fit in a single word
 enum
 {
+	// hardware-agnostic game button actions
+	// transmitted over network
+	// should fit into a single word
 	BT_RIGHT		= 0x1,
 	BT_LEFT			= 0x2,
 	BT_UP			= 0x4,
@@ -887,15 +887,15 @@ enum
 	BT_PWEAPN		= 0x800,
 	BT_NWEAPN		= 0x1000,
 
-	BT_AUTOMAP		= 0x2000,
-
-	// hardware keys
+	// hardware keys, which are never transmitted
+	// to the other peer over network
 	BT_A			= 0x10000,
 	BT_B			= 0x20000,
 	BT_C			= 0x40000,
 	BT_START		= 0x80000,
 	BT_PAUSE		= 0x100000,
 	BT_OPTION		= 0x200000,
+	BT_AUTOMAP		= 0x400000,
 };
 
 #endif
