@@ -64,31 +64,22 @@ static int Mars_ConvGamepadButtons(int ctrl)
 	if (ctrl & SEGA_CTRL_DOWN)
 		newc |= BT_DOWN;
 
-	switch (ctrl & (SEGA_CTRL_START | SEGA_CTRL_A)) {
-	case SEGA_CTRL_START | SEGA_CTRL_A:
-		newc |= BT_9;
-		break;
-	case SEGA_CTRL_START:
-		newc |= BT_OPTION;
-		break;
-	case SEGA_CTRL_A:
-		newc |= BT_A;
-		break;
-	}
+	if (ctrl & SEGA_CTRL_START)
+		newc |= BT_START;
 
+	if (ctrl & SEGA_CTRL_A)
+		newc |= BT_A | configuration[controltype][0];
 	if (ctrl & SEGA_CTRL_B)
-		newc |= BT_B;
+		newc |= BT_B | configuration[controltype][1];
 	if (ctrl & SEGA_CTRL_C)
-		newc |= BT_C;
+		newc |= BT_C | configuration[controltype][2] | BT_STRAFE;
+
 	if (ctrl & SEGA_CTRL_X)
 		newc |= BT_PWEAPN;
 	if (ctrl & SEGA_CTRL_Y)
 		newc |= BT_NWEAPN;
 	if (ctrl & SEGA_CTRL_Z)
-		newc |= BT_9;
-
-	if (ctrl & SEGA_CTRL_MODE)
-		newc |= BT_STAR;
+		newc |= BT_AUTOMAP;
 
 	return newc;
 }
@@ -113,7 +104,7 @@ static int Mars_ConvMouseButtons(int mouse)
 	}
 	if (mouse & SEGA_CTRL_STARTMB)
 	{
-		ctrl |= BT_OPTION; // S -> S
+		ctrl |= BT_START; // S -> S
 	}
 	return ctrl;
 }
@@ -396,7 +387,7 @@ void I_Update(void)
 	const int ticwait = (demoplayback ? 3 : 2); // demos were recorded at 15-20fps
 	const int refreshHZ = (NTSC ? 60 : 50);
 
-	if ((ticbuttons[consoleplayer] & BT_STAR) && !(oldticbuttons[consoleplayer] & BT_STAR))
+	if ((*mars_gamepadport & SEGA_CTRL_MODE) && !(*mars_gamepadport & SEGA_CTRL_MODE))
 	{
 		extern int clearscreen;
 		debugmode = (debugmode + 1) % 4;

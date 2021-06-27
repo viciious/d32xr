@@ -10,29 +10,9 @@
 
 extern 	int	cx, cy;
 extern	int		sfxvolume;		/* range from 0 to 255 */
-extern	int		controltype;				/* 0 to 5 */
 
 extern void print (int x, int y, char *string);
 extern void IN_DrawValue(int x,int y,int value);
-
-/* action buttons can be set to BT_A, BT_B, or BT_C */
-/* strafe and use should be set to the same thing */
-
-extern	unsigned	BT_ATTACK;
-extern	unsigned	BT_USE;
-extern	unsigned	BT_STRAFE;
-extern	unsigned	BT_SPEED;
-
-typedef enum
-{
-	SFU,
-	SUF,
-	FSU,
-	FUS,
-	USF,
-	UFS,
-	NUMCONTROLOPTIONS
-}	control_t;
 
 typedef enum
 {
@@ -84,26 +64,6 @@ char buttonc[NUMCONTROLOPTIONS][8] =
 
 void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh);
 
-unsigned configuration[NUMCONTROLOPTIONS][3] =
-{
-	{BT_A, BT_B, BT_C},
-	{BT_A, BT_C, BT_B},
-	{BT_B, BT_A, BT_C},
-	{BT_C, BT_A, BT_B},
-	{BT_B, BT_C, BT_A},
-	{BT_C, BT_B, BT_A} 
-};
-
-
-void O_SetButtonsFromControltype (void)
-{
-	BT_SPEED = configuration[controltype][0];
-	BT_ATTACK =	configuration[controltype][1];
-	BT_USE = configuration[controltype][2];	
-	BT_STRAFE = configuration[controltype][2];	
-}
-
-
 /* */
 /* Draw control value */
 /* */
@@ -115,8 +75,6 @@ void O_DrawControl(void)
 	print(menuitem[controls].x + 40, menuitem[controls].y + 40, buttonb[controltype]);
 	print(menuitem[controls].x + 40, menuitem[controls].y + 60, buttonc[controltype]);
 /*	IN_DrawValue(30, 20, controltype); */
-	
-	O_SetButtonsFromControltype ();
 #endif
 }
 
@@ -130,9 +88,6 @@ void O_DrawControl(void)
 
 void O_Init (void)
 {
-/* the eeprom has set controltype, so set buttons from that */
-	O_SetButtonsFromControltype ();
-
 /* cache all needed graphics */
 	o_cursor1 = W_CheckNumForName("M_SKULL1");
 	o_cursor2 = W_CheckNumForName("M_SKULL2");
@@ -223,11 +178,11 @@ void O_Control (player_t *player)
 		return;
 
 /* check for movement */
-	if (! (buttons & (JP_UP|JP_DOWN|JP_LEFT|JP_RIGHT) ) )
+	if (! (buttons & (BT_UP| BT_DOWN| BT_LEFT| BT_RIGHT) ) )
 		movecount = 0;		/* move immediately on next press */
 	else
 	{
-			if (buttons & JP_RIGHT)
+			if (buttons & BT_RIGHT)
 			{
 				if (menuitem[cursorpos].hasslider)
 				{
@@ -250,7 +205,7 @@ void O_Control (player_t *player)
 					}
 				}
 			}
-			if (buttons & JP_LEFT)
+			if (buttons & BT_LEFT)
 			{
 				if (menuitem[cursorpos].hasslider)
 				{
@@ -278,21 +233,21 @@ void O_Control (player_t *player)
 			movecount = 0;		/* repeat move */
 		if (++movecount == 1)
 		{
-			if (buttons & JP_DOWN)
+			if (buttons & BT_DOWN)
 			{
 				cursorpos++;
 				if (cursorpos == NUMMENUITEMS)
 					cursorpos = 0;
 			}
 		
-			if (buttons & JP_UP)
+			if (buttons & BT_UP)
 			{
 				cursorpos--;
 				if (cursorpos == -1)
 					cursorpos = NUMMENUITEMS-1;
 			}
 #ifndef MARS
-			if (buttons & JP_RIGHT)
+			if (buttons & BT_RIGHT)
 			{
 				if (cursorpos == controls)
 				{
@@ -301,7 +256,7 @@ void O_Control (player_t *player)
 						controltype = (NUMCONTROLOPTIONS - 1); 
 				}			
 			}
-			if (buttons & JP_LEFT)
+			if (buttons & BT_LEFT)
 			{
 				if (cursorpos == controls)
 				{

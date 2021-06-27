@@ -86,6 +86,7 @@ void AM_Start(void)
 /*================================================================= */
 cheat_e AM_CheckCheat(int buttons,int oldbuttons)
 {
+#ifdef JAGUAR
 	int	codes[9] = {BT_1,BT_2,BT_3,BT_4,BT_5,BT_6,BT_7,BT_8,BT_9};
 	char	chars[9] = "123456789";
 	char	c;
@@ -113,6 +114,7 @@ cheat_e AM_CheckCheat(int buttons,int oldbuttons)
 	for (i = 0; i < ch_maxcheats; i++)
 		if (!D_strncasecmp(currentcheat,cheatstrings[i],10))
 			return i;
+#endif
 
 	return -1;
 }
@@ -279,8 +281,12 @@ void AM_Control (player_t *player)
 	
 	buttons = ticbuttons[playernum];
 	oldbuttons = oldticbuttons[playernum];
-	
-	if ( (buttons & BT_9) && !(oldbuttons & BT_9) )
+
+	if ( ( (buttons & BT_AUTOMAP) && !(oldbuttons & BT_AUTOMAP) )
+#ifdef MARS
+		|| ( (buttons & BT_START) && (oldbuttons & BT_START) && (buttons & BT_A) && !(oldbuttons & BT_A) )
+#endif
+		)
 	{
 		player->automapflags ^= AF_ACTIVE;
 		player->automapx = player->mo->x;
@@ -288,7 +294,7 @@ void AM_Control (player_t *player)
 		blockx = 80;
 		blocky = 90;
 	}
-		
+
 	if ( !(player->automapflags & AF_ACTIVE) )
 		return;
 

@@ -1,11 +1,6 @@
 /* D_main.c  */
  
 #include "doomdef.h" 
- 
-unsigned	BT_ATTACK = BT_B;
-unsigned	BT_USE = BT_C;
-unsigned	BT_STRAFE =	BT_C;
-unsigned	BT_SPEED = BT_A;
 
 int			controltype;		/* determine settings for BT_* */
 
@@ -16,6 +11,16 @@ int			maxlevel;			/* highest level selectable in menu (1-25) */
 jagobj_t	*backgroundpic;
 
 int				*demo_p, *demobuffer;
+
+unsigned configuration[NUMCONTROLOPTIONS][3] =
+{
+	{BT_SPEED, BT_ATTACK, BT_USE},
+	{BT_SPEED, BT_USE, BT_ATTACK},
+	{BT_ATTACK, BT_SPEED, BT_USE},
+	{BT_USE, BT_SPEED, BT_ATTACK},
+	{BT_ATTACK, BT_USE, BT_SPEED},
+	{BT_USE, BT_ATTACK, BT_SPEED}
+};
 
 /*============================================================================ */
 
@@ -229,53 +234,44 @@ void M_AddToBox (fixed_t *box, fixed_t x, fixed_t y)
  
 unsigned LocalToNet (unsigned cmd)
 {
-	int		a,b,c;
-
-	a = cmd & BT_SPEED;
-	b = cmd & BT_ATTACK;
-	c = cmd & BT_USE;
-	
-	cmd &= ~(JP_A|JP_B|JP_C);
-	
-	if (a)
-		cmd |= BT_A;
-	if (b)
-		cmd |= BT_B;
-	if (c)
-		cmd |= BT_C;
-		
-	return cmd;
+	return cmd & 0xffff;
 }
 
 unsigned NetToLocal (unsigned cmd)
 {
-	int		a,b,c;
-
-	a = cmd & JP_A;
-	b = cmd & JP_B;
-	c = cmd & JP_C;
-	
-	cmd &= ~(JP_A|JP_B|JP_C);
-	
-	if (a)
-		cmd |= BT_SPEED;
-	if (b)
-		cmd |= BT_ATTACK;
-	if (c)
-		cmd |= BT_USE;
-		
 	return cmd;
 }
 
-
-
 unsigned GetDemoCmd (void)
 {
-	unsigned	cmd;
-	
+	unsigned	cmd, newcmd;
+	const unsigned		jp_a = 0x20000000;
+	const unsigned		jp_b = 0x2000000;
+	const unsigned		jp_c = 0x2000;
+	const unsigned		jp_up = 0x100000;
+	const unsigned		jp_down = 0x200000;
+	const unsigned		jp_left = 0x400000;
+	const unsigned		jp_right = 0x800000;
+
 	cmd = *demo_p++;
-	
-	return NetToLocal (cmd);
+	newcmd = 0;
+
+	if (cmd & jp_a)
+		newcmd |= BT_SPEED;
+	if (cmd & jp_b)
+		newcmd |= BT_ATTACK;
+	if (cmd & jp_c)
+		newcmd |= BT_USE | BT_STRAFE;
+	if (cmd & jp_up)
+		newcmd |= BT_UP;
+	if (cmd & jp_down)
+		newcmd |= BT_DOWN;
+	if (cmd & jp_left)
+		newcmd |= BT_LEFT;
+	if (cmd & jp_right)
+		newcmd |= BT_RIGHT;
+
+	return newcmd;
 }
  
 /*=============================================================================  */
@@ -472,6 +468,9 @@ int TIC_Abortable (void)
 		return ga_exitdemo;
 	if ( (ticbuttons[0] & BT_C) && !(oldticbuttons[0] & BT_C) )
 		return ga_exitdemo;
+	if ( (ticbuttons[0] & BT_START) && !(oldticbuttons[0] & BT_START) )
+		return ga_exitdemo;
+
 	return 0;
 }
 

@@ -810,7 +810,6 @@ extern	int		junk, spincount;
 extern	volatile int		ticcount, joybuttons;
 
 #define BLITWAIT while ( ! ((junk=*(int *)0xf02238) & 1) )	;
-#endif
 
 #define	JP_NUM		1
 #define	JP_9		2
@@ -838,10 +837,6 @@ extern	volatile int		ticcount, joybuttons;
 #define	JP_PAUSE	0x10000000
 #define	JP_A		0x20000000
 
-#define	BT_RIGHT		JP_RIGHT
-#define	BT_LEFT			JP_LEFT
-#define	BT_UP			JP_UP
-#define	BT_DOWN			JP_DOWN
 #define	BT_A			JP_A
 #define	BT_B			JP_B
 #define	BT_C			JP_C
@@ -862,20 +857,64 @@ extern	volatile int		ticcount, joybuttons;
 #define	BT_PWEAPN		JP_PWEAPN
 #define	BT_NWEAPN		JP_NWEAPN
 
-#ifndef JAGUAR
-#define	BT_LMBTN		0x100
-#define	BT_RMBTN		0x1000
-#define	BT_MMBTN		0x1000000
-#else
 #define	BT_LMBTN		0
 #define	BT_RMBTN		0
 #define	BT_MMBTN		0
+
+#define BT_AUTOMAP		BT_9
+
+#else
+
+// hardware-agnostic game button actions
+// transmitted over network
+// should fit in a single word
+enum
+{
+	BT_RIGHT		= 0x1,
+	BT_LEFT			= 0x2,
+	BT_UP			= 0x4,
+	BT_DOWN			= 0x8,
+
+	BT_ATTACK		= 0x10,
+	BT_USE			= 0x20,
+	BT_STRAFE		= 0x40,
+	BT_SPEED		= 0x80,
+
+	BT_LMBTN		= 0x100,
+	BT_RMBTN		= 0x200,
+	BT_MMBTN		= 0x400,
+
+	BT_PWEAPN		= 0x800,
+	BT_NWEAPN		= 0x1000,
+
+	BT_AUTOMAP		= 0x2000,
+
+	// hardware keys
+	BT_A			= 0x10000,
+	BT_B			= 0x20000,
+	BT_C			= 0x40000,
+	BT_START		= 0x80000,
+	BT_PAUSE		= 0x100000,
+	BT_OPTION		= 0x200000,
+};
+
 #endif
 
-extern	unsigned	BT_ATTACK;
-extern	unsigned	BT_USE;
-extern	unsigned	BT_STRAFE;
-extern	unsigned	BT_SPEED;
+typedef enum
+{
+	SFU,
+	SUF,
+	FSU,
+	FUS,
+	USF,
+	UFS,
+	NUMCONTROLOPTIONS
+} control_t;
+
+/* action buttons can be set to BT_A, BT_B, or BT_C */
+/* strafe and use should be set to the same thing */
+extern unsigned configuration[NUMCONTROLOPTIONS][3];
+extern	int		controltype;				/* 0 to 5 */
 
 extern	int		sfxvolume, musicvolume;		/* range from 0 to 255 */
 
