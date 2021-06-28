@@ -40,7 +40,7 @@ typedef struct
 {
     int x;
     int floorclipx, ceilingclipx;
-    fixed_t scale;
+    fixed_t scale2;
     unsigned iscale;
     unsigned colnum;
     unsigned light;
@@ -59,7 +59,7 @@ void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static void R_DrawTexture(int x, segdraw_t *sdr, drawtex_t* tex)
 {
    int top, bottom;
-   fixed_t scale, frac;
+   fixed_t scale2, frac;
    int colnum;
    unsigned iscale;
 #ifdef MARS
@@ -68,15 +68,15 @@ static void R_DrawTexture(int x, segdraw_t *sdr, drawtex_t* tex)
    pixel_t *src;
 #endif
 
-   scale = sdr->scale;
+   scale2 = sdr->scale2;
    colnum = sdr->colnum;
    iscale = sdr->iscale;
 
-   top = centerY - ((scale * tex->topheight) >> (HEIGHTBITS + SCALEBITS));
+   top = centerY - FixedMul(scale2, tex->topheight);
    if(top <= sdr->ceilingclipx)
       top = sdr->ceilingclipx + 1;
 
-   bottom = centerY - 1 - ((scale * tex->bottomheight) >> (HEIGHTBITS + SCALEBITS));
+   bottom = centerY - 1 - FixedMul(scale2, tex->bottomheight);
    if(bottom >= sdr->floorclipx)
       bottom = sdr->floorclipx - 1;
 
@@ -174,6 +174,7 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
       fixed_t scale;
       int floorclipx, ceilingclipx;
       int low, high, top, bottom;
+      unsigned scale2;
 
       scale = scalefrac >> FIXEDTOSCALE;
       scalefrac += scalestep;
@@ -183,24 +184,25 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
 
       if(scale >= 0x7fff)
          scale = 0x7fff; // fix the scale to maximum
+      scale2 = scale << (FRACBITS - (HEIGHTBITS + SCALEBITS));
 
       //
       // get ceilingclipx and floorclipx from clipbounds
       //
       ceilingclipx = clipbounds[x];
       floorclipx   = ceilingclipx & 0x00ff;
-      ceilingclipx = ((ceilingclipx & 0xff00) >> 8) - 1;
+      ceilingclipx = (((unsigned)ceilingclipx & 0xff00) >> 8) - 1;
 
       //
       // calc high and low
       //
-      low = centerY0 - ((scale * floornewheight) >> (HEIGHTBITS + SCALEBITS));
+      low = centerY0 - FixedMul(scale2, floornewheight);
       if (low < 0)
           low = 0;
       else if (low > floorclipx)
           low = floorclipx;
 
-      high = centerY1 - ((scale * ceilingnewheight) >> (HEIGHTBITS + SCALEBITS));
+      high = centerY1 - FixedMul(scale2, ceilingnewheight);
       if (high > screenHeight - 1)
           high = screenHeight - 1;
       else if (high < ceilingclipx)
@@ -213,7 +215,7 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
           //
           if (actionbits & AC_ADDFLOOR)
           {
-              top = centerY0 - ((scale * floorheight) >> (HEIGHTBITS + SCALEBITS));
+              top = centerY0 - FixedMul(scale2, floorheight);
               if (top <= ceilingclipx)
                   top = ceilingclipx + 1;
               bottom = floorclipx - 1;
@@ -236,7 +238,7 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
           if (actionbits & AC_ADDCEILING)
           {
               top = ceilingclipx + 1;
-              bottom = centerY1 - ((scale * ceilingheight) >> (HEIGHTBITS + SCALEBITS));
+              bottom = centerY1 - FixedMul(scale2, ceilingheight);
               if (bottom >= floorclipx)
                   bottom = floorclipx - 1;
 
@@ -271,7 +273,7 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
             newfloorclipx = low;
          if(actionbits & AC_NEWCEILING)
             newceilingclipx = high;
-         clipbounds[x] = ((newceilingclipx + 1) << 8) + newfloorclipx;
+         clipbounds[x] = ((unsigned)(newceilingclipx + 1) << 8) + newfloorclipx;
       }
 
       //
@@ -290,7 +292,7 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
 
           // other texture drawing info
           sdr.colnum = (offset - r) >> FRACBITS;
-          sdr.iscale = (1 << (FRACBITS + SCALEBITS)) / (unsigned)scale;
+          sdr.iscale = IDiv(1 << (FRACBITS + SCALEBITS), scale);
 
 #ifdef GRADIENTLIGHT
           // calc light level
@@ -313,7 +315,7 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
 #endif
 
           sdr.light = texturelight;
-          sdr.scale = scale;
+          sdr.scale2 = scale2;
           sdr.floorclipx = floorclipx;
           sdr.ceilingclipx = ceilingclipx;
 
@@ -330,7 +332,7 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
       if (actionbits & AC_ADDSKY)
       {
           top = ceilingclipx + 1;
-          bottom = (centerY - ((scale * ceilingheight) >> (HEIGHTBITS + SCALEBITS))) - 1;
+          bottom = (centerY - FixedMul(scale2, ceilingheight)) - 1;
 
           if (bottom >= floorclipx)
               bottom = floorclipx - 1;

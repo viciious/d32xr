@@ -54,8 +54,8 @@ static void R_MapPlane(localplane_t *lpl, int y, int x, int x2)
    if (!remaining)
        return; // nothing to draw (shouldn't happen)
 
-   distance = (lpl->height * yslope[y]) >> 12;
-   length = (distance * distscale[x]) >> 14;
+   distance = (unsigned)(lpl->height * yslope[y]) >> 12;
+   length = (unsigned)(distance * distscale[x]) >> 14;
    angle = (lpl->angle + xtoviewangle[x]) >> ANGLETOFINESHIFT;
 
    xfrac = lpl->x + (((finecosine(angle) >> 1) * length) >> 4);
