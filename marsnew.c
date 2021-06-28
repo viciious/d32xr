@@ -78,6 +78,9 @@ static int Mars_ConvGamepadButtons(int ctrl)
 	if (ctrl & SEGA_CTRL_Z)
 		newc |= BT_AUTOMAP;
 
+	if (ctrl & SEGA_CTRL_MODE)
+		newc |= BT_DEBUG;
+
 	return newc;
 }
 
@@ -303,6 +306,7 @@ int I_ReadControls(void)
 	ctrl = 0;
 	ctrl |= Mars_HandleStartHeld(&val, SEGA_CTRL_START);
 	ctrl |= Mars_ConvGamepadButtons(val);
+	ctrl |= Mars_ConvGamepadButtons(val);
 	return ctrl;
 }
 
@@ -451,14 +455,14 @@ void I_Update(void)
 	const int ticwait = (demoplayback ? 3 : 2); // demos were recorded at 15-20fps
 	const int refreshHZ = (NTSC ? 60 : 50);
 
-	if ((*mars_gamepadport & SEGA_CTRL_MODE) && !(*mars_gamepadport & SEGA_CTRL_MODE))
+	debugscreenactive = debugmode != 0;
+
+	if ((ticbuttons[consoleplayer] & BT_DEBUG) && !(oldticbuttons[consoleplayer] & BT_DEBUG))
 	{
 		extern int clearscreen;
 		debugmode = (debugmode + 1) % 4;
 		clearscreen = 2;
 	}
-	debugscreenactive = debugmode != 0;
-
 	if (debugmode == 1)
 	{
 		D_snprintf(buf, sizeof(buf), "fps:%2d", fpscount);

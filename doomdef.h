@@ -896,6 +896,7 @@ enum
 	BT_PAUSE		= 0x100000,
 	BT_OPTION		= 0x200000,
 	BT_AUTOMAP		= 0x400000,
+	BT_DEBUG		= 0x800000,
 };
 
 #endif
