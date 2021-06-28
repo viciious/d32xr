@@ -3,3 +3,4 @@
 /tools/*
 doom32x.wad
 compile.sh
+clean_all.sh

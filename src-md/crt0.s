@@ -503,29 +503,30 @@ read_mouse:
 
 init_serial:
         st.b    ser_enable          /* set ser_enable flag */
-        move.b  #0x10,0xA1000B      /* All pins inputs except TL (Pin 6) */
+        move.b  #0x17,0xA1000B      /* All pins inputs except TL (Pin 6) */
         move.b  #0x30,0xA10019      /* 4800 Baud 8-N-1 */
+        bset    #2,0xA10005         /* FLUSH RLINK ADAPTER RECEIVE BUFFER */
+        bclr    #2,0xA10005         /* FOR GOOD MEASURE */
         move.w  #0,0xA15120         /* Done, clear COMM0 */
         bra     main_loop           /* Return */
 
 read_serial:
-        btst    #1,0xA10019         /* Otherwise check bit 1 on serial control register of joypad port 2 */
+        btst    #1,0xA10019         /* check bit 1 on serial control register of joypad port 2 */
         beq.s   1f                  /* No byte available, branch off */        
-        clr.b   ser_status          /* Clear serial status (Show byte available) */
-        move.b  0xA10017,ser_rx     /* Get byte */
-        bra.s   2f                  /* Skip line below and just exit */
+        move.b  #0,0xA15122         /* Clear serial status byte in COMM2 */
+        move.b  0xA10017,0xA15123   /* Store received byte in COMM2 */
+        bra.s   2f
 1:
-        move.w  #0xFFFF,ser_status  /* Set serial status and serial_rx as 0xFFFF (No byte available) */
+        move.w  #0xFFFF,0xA15122    /* Set "serial status" and "serial byte" as 0xFFFF (No byte available) */
 2:
-        move.w  ser_status,0xA15122 /* Copy status byte and ser_rx in one move to COMM2 */
-        move.w  #0,0xA15120         /* Signal to 32X via COMM0, byte is available to use now */
+        move.w  #0,0xA15120         /* Signal to 32X via COMM0, we are done */
         bra     main_loop           /* Return */
 
 write_serial:
         btst    #0,0xA10019         /* Ok to transmit? */
         bne.s   write_serial        /* wait until ok to transmit */
-        move.b  0xA15123,0xA10015   /* Send byte in COMM2 */
-        move.w  #0,0xA15120         /* Done, clear COMM0 */
+        move.b  0xA15123,0xA10015   /* Send byte thats sitting in COMM2 */
+        move.w  #0,0xA15120         /* Tell 32X we are done via COMM0 */
         bra     main_loop           /* Return */
 
 vert_blank:
@@ -769,8 +770,6 @@ use_cd:
 cd_ok:          
         dc.w    0
 
-ser_status:     dc.b    0
-ser_rx:         dc.b    0
 ser_enable:     dc.b    0
 
         .align  4

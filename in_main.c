@@ -402,4 +402,3 @@ void IN_Drawer (void)
 	UpdateBuffer ();
 } 
 
-
