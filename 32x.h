@@ -126,6 +126,10 @@
 #define SH2_INT_VCRWDT      (*(volatile unsigned short *)0xFFFFFEE4)
 #define SH2_INT_VCRDIV      (*(volatile unsigned long *)0xFFFFFF0C)
 
+#define SH2_DIVU_DVSR       (*(volatile long *)0xFFFFFF00)
+#define SH2_DIVU_DVDNT      (*(volatile long *)0xFFFFFF04)
+#define SH2_DIVU_DVDCR      (*(volatile long *)0xFFFFFF08)
+
 #define SEGA_CTRL_UP        0x0001
 #define SEGA_CTRL_DOWN      0x0002
 #define SEGA_CTRL_LEFT      0x0004
