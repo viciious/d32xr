@@ -46,7 +46,7 @@ typedef struct
     unsigned light;
 } segdraw_t;
 
-static void R_DrawTexture(int x, segdraw_t* sdr, drawtex_t* tex) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static void R_DrawTexture(int x, segdraw_t* sdr, drawtex_t* tex) __attribute__((always_inline));
 static void R_SegLoop(seglocal_t* lseg, const int cpu) __attribute__((always_inline));
 static void R_SegCommands2(const int mask) __attribute__((always_inline));
 
