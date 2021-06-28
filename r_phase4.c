@@ -148,7 +148,7 @@ static void R_FinishWallPrep1(viswall_t* wc)
     if (wc->stop > wc->start)
     {
         scale2 = R_ScaleFromGlobalAngle(rw_distance, vd.viewangle + xtoviewangle[wc->stop], normalangle);
-        wc->scalestep = (int)(scale2 - scalefrac) / (int)(wc->stop - wc->start);
+        wc->scalestep = IDiv(scale2 - scalefrac, wc->stop - wc->start);
     }
 
     wc->scale2 = scale2;

@@ -247,15 +247,16 @@ static boolean PA_ShootThing(mobj_t *th, fixed_t interceptfrac)
 //
 // Process an intercept
 //
+#define COPY_INTERCEPT(dst,src) do { (dst)->d.line = (src)->d.line, (dst)->frac = (src)->frac, (dst)->isaline = (src)->isaline; } while(0)
 static boolean PA_DoIntercept(intercept_t *in)
 {
    intercept_t temp;
 
    if(old_intercept.frac < in->frac)
    {
-      temp = old_intercept;
-      old_intercept = *in;
-      *in = temp;
+      COPY_INTERCEPT(&temp, &old_intercept);
+      COPY_INTERCEPT(&old_intercept, in);
+      COPY_INTERCEPT(in, &temp);
    }
 
    if(in->frac == 0 || in->frac >= FRACUNIT)

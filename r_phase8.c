@@ -126,8 +126,8 @@ static void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening)
    byte   *topsil;     // FP+6
    byte   *bottomsil;  // r21
    int     opening;    // r16
-   int     top;        // r19
-   int     bottom;     // r20
+   unsigned short top;        // r19
+   unsigned short bottom;     // r20
    viswall_t *ds;      // r17
 
    x1  = vis->x1;

@@ -274,7 +274,7 @@ static boolean PS_CrossBSPNode(sightWork_t* sw, int bspnum)
 static boolean PS_CheckSight(mobj_t *t1, mobj_t *t2)
 {
    int s1, s2;
-   int pnum, bytenum, bitnum;
+   unsigned pnum, bytenum, bitnum;
    sightWork_t sw;
 
    // First check for trivial rejection
