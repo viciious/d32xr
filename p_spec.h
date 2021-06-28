@@ -41,7 +41,7 @@ extern	anim_t	*anims, *lastanim;
 /* */
 #define	MAXLINEANIMS		64
 extern	int		numlinespecials;
-extern	line_t	**linespeciallist/*[MAXLINEANIMS]*/;
+extern	line_t	*linespeciallist[MAXLINEANIMS];
 
 
 /*	Define values for map objects */
@@ -157,18 +157,18 @@ typedef enum
 typedef struct
 {
 	line_t		*line;
+	mobj_t* soundorg;
+	VINT		btexture;
+	VINT		btimer;
 	bwhere_e	where;
-	int			btexture;
-	int			btimer;
-	mobj_t		*soundorg;
 } button_t;
 
 #define	MAXSWITCHES	50		/* max # of wall switches in a level */
 #define	MAXBUTTONS	16		/* 4 players, 4 buttons each at once, max. */
 #define BUTTONTIME	15		/* 1 second */
 
-extern	VINT		*switchlist/*[MAXSWITCHES * 2]*/;
-extern	button_t* buttonlist/*[MAXBUTTONS]*/;
+extern	VINT		switchlist[MAXSWITCHES * 2];
+extern	button_t buttonlist[MAXBUTTONS];
 
 void	P_ChangeSwitchTexture(line_t *line,int useAgain);
 void 	P_InitSwitchList(void) ATTR_OPTIMIZE_SIZE;
@@ -203,8 +203,8 @@ typedef struct
 	fixed_t		speed;
 	fixed_t		low;
 	fixed_t		high;
-	int			wait;
-	int			count;
+	VINT		wait;
+	VINT		count;
 	plat_e		status;
 	plat_e		oldstatus;
 	boolean		crush;
@@ -216,7 +216,7 @@ typedef struct
 #define	PLATSPEED	(FRACUNIT*2)
 #define	MAXPLATS	30
 
-extern	plat_t	**activeplats/*[MAXPLATS]*/;
+extern	plat_t	*activeplats[MAXPLATS];
 
 void	T_PlatRaise(plat_t	*plat);
 int		EV_DoPlat(line_t *line,plattype_e type,int amount) ATTR_OPTIMIZE_SIZE;
@@ -248,8 +248,8 @@ typedef struct
 	sector_t	*sector;
 	fixed_t		topheight;
 	fixed_t		speed;
-	int			direction;		/* 1 = up, 0 = waiting at top, -1 = down */
-	int			topwait;		/* tics to wait at the top */
+	VINT		direction;		/* 1 = up, 0 = waiting at top, -1 = down */
+	VINT		topwait;		/* tics to wait at the top */
 								/* (keep in case a door going down is reset) */
 	int			topcountdown;	/* when it reaches 0, start going down */
 } vldoor_t;
@@ -287,15 +287,15 @@ typedef struct
 	fixed_t		bottomheight, topheight;
 	fixed_t		speed;
 	boolean		crush;
-	int			direction;		/* 1 = up, 0 = waiting, -1 = down */
+	VINT		direction;		/* 1 = up, 0 = waiting, -1 = down */
+	VINT		olddirection;
 	int			tag;			/* ID */
-	int			olddirection;
 } ceiling_t;
 
 #define	CEILSPEED		FRACUNIT*2
 #define MAXCEILINGS		30
 
-extern	ceiling_t	**activeceilings/*[MAXCEILINGS]*/;
+extern	ceiling_t	*activeceilings[MAXCEILINGS];
 
 int		EV_DoCeiling (line_t *line, ceiling_e  type);
 void	T_MoveCeiling (ceiling_t *ceiling);
@@ -333,9 +333,9 @@ typedef struct
 	floor_e		type;
 	boolean		crush;
 	sector_t	*sector;
-	int			direction;
 	int			newspecial;
-	short		texture;
+	VINT		direction;
+	VINT		texture;
 	fixed_t		floordestheight;
 	fixed_t		speed;
 } floormove_t;

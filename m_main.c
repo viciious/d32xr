@@ -147,7 +147,7 @@ int M_Ticker (void)
 		return 1;
 
 	/* exit menu if button press */
-	if ( ticon > 10 &&	(buttons & (JP_A|JP_B|JP_C))   )
+	if ( ticon > 10 &&	(buttons & (BT_A|BT_B|BT_C))   )
 	{
 		startmap = mapnumbers[playermap - 1]; /*set map number */
 		startskill = playerskill;	/* set skill level */
@@ -168,7 +168,7 @@ int M_Ticker (void)
 	newframe = 0;
 
 /* check for movement */
-	if (! (buttons & (JP_UP|JP_DOWN|JP_LEFT|JP_RIGHT) ) )
+	if (! (buttons & (BT_UP|BT_DOWN|BT_LEFT|BT_RIGHT) ) )
 		movecount = 0;		/* move immediately on next press */
 	else
 	{
@@ -178,14 +178,14 @@ int M_Ticker (void)
 			movecount = 0;		/* slower everything else */
 		if (++movecount == 1)
 		{
-			if (buttons & JP_DOWN)
+			if (buttons & BT_DOWN)
 			{
 				cursorpos++;
 				if (cursorpos == NUMMENUITEMS)
 					cursorpos = 0;
 			}
 		
-			if (buttons & JP_UP)
+			if (buttons & BT_UP)
 			{
 				cursorpos--;
 				if (cursorpos == -1)
@@ -195,13 +195,13 @@ int M_Ticker (void)
 			switch (cursorpos)
 			{
 				case	gamemode:
-					if (buttons & JP_RIGHT)
+					if (buttons & BT_RIGHT)
 					{
 						currentplaymode++;
 						if (currentplaymode == NUMMODES)
 							currentplaymode--;
 					}
-					if (buttons & JP_LEFT)
+					if (buttons & BT_LEFT)
 					{
 						currentplaymode--;
 						if (currentplaymode == -1)
@@ -210,13 +210,13 @@ int M_Ticker (void)
 					break;
 
 				case	level:
-					if (buttons & JP_RIGHT)
+					if (buttons & BT_RIGHT)
 					{			
 						playermap++;
 						if (mapcount == playermap || mapnumbers[playermap-1] == maxlevel+1)
 							playermap--;
 					}	
-					if (buttons & JP_LEFT)
+					if (buttons & BT_LEFT)
 					{
 						playermap--;
 						if(playermap == 0)
@@ -225,13 +225,13 @@ int M_Ticker (void)
 					break;
 
 				case	difficulty:
-					if (buttons & JP_RIGHT)
+					if (buttons & BT_RIGHT)
 					{
 						playerskill++;
 						if (playerskill > sk_nightmare)
 							playerskill--;
 					}
-					if (buttons & JP_LEFT)
+					if (buttons & BT_LEFT)
 					{
 						playerskill--;
 						if (playerskill == -1)

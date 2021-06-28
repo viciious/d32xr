@@ -113,6 +113,8 @@ $(TARGET).bin: $(TARGET).elf
 $(TARGET).elf: $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o $(TARGET).elf
 
+crt0.o: | m68k.bin
+
 marshw.o: marshw.c
 	$(CC) $(MARSHWCFLAGS) $(INCPATH) $< -o $@
 

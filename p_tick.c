@@ -198,6 +198,7 @@ void	P_RunMobjLate (void)
  
 void P_CheckCheats (void)
 {
+#ifdef JAGUAR
 	int		buttons, oldbuttons;
 	int 	warpmap;
 	int		i;
@@ -257,6 +258,7 @@ void P_CheckCheats (void)
 		gamemaplump = G_LumpNumForMapNum(warpmap);
 		gameaction = ga_warped;
 	}
+#endif
 }
   
 

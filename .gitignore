@@ -1,6 +1,17 @@
+<<<<<<< HEAD
 /wadcode
 /wadcode/*
 /tools/*
 doom32x.wad
 compile.sh
 clean_all.sh
+=======
+*.32x
+*.bin
+*.elf
+*.map
+*.o
+*.wad
+*.zip
+
+>>>>>>> e672cbd23989c8a034e39b84a31d6b69b44dbf3a

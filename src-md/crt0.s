@@ -503,10 +503,8 @@ read_mouse:
 
 init_serial:
         st.b    ser_enable          /* set ser_enable flag */
-        move.b  #0x17,0xA1000B      /* All pins inputs except TL (Pin 6) */
+        move.b  #0x10,0xA1000B      /* All pins inputs except TL (Pin 6) */
         move.b  #0x30,0xA10019      /* 4800 Baud 8-N-1 */
-        bset    #2,0xA10005         /* FLUSH RLINK ADAPTER RECEIVE BUFFER */
-        bclr    #2,0xA10005         /* FOR GOOD MEASURE */
         move.w  #0,0xA15120         /* Done, clear COMM0 */
         bra     main_loop           /* Return */
 
