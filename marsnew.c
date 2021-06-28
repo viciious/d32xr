@@ -88,6 +88,7 @@ static int Mars_HandleStartHeld(unsigned *ctrl)
 	boolean start = 0;
 	static boolean prev_start = false;
 	static int repeat = 0;
+	static const int hold_tics = 6;
 
 	start = (*ctrl & (SEGA_CTRL_START | SEGA_CTRL_STARTMB)) != 0;
 	if (start ^ prev_start) {
@@ -98,7 +99,7 @@ static int Mars_HandleStartHeld(unsigned *ctrl)
 		if (prev_start) {
 			prev_start = false;
 			// key pressed and released, treat as pause
-			if (prev_repeat < 6)
+			if (prev_repeat < hold_tics)
 				return BT_PAUSE;
 			// key held and released, treat as nothing
 			return 0;
@@ -112,7 +113,8 @@ static int Mars_HandleStartHeld(unsigned *ctrl)
 	}
 
 	repeat++;
-	if (repeat < 6) {
+	if (repeat < hold_tics) {
+		*ctrl = *ctrl & ~(SEGA_CTRL_A | SEGA_CTRL_B | SEGA_CTRL_C);
 		return 0;
 	}
 
