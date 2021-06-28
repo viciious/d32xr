@@ -6,8 +6,8 @@
 #include "mars.h"
 #endif
 
-short screenWidth, screenHeight;
-short centerX, centerY;
+unsigned short screenWidth, screenHeight;
+unsigned short centerX, centerY;
 fixed_t centerXFrac, centerYFrac;
 fixed_t stretchX;
 
@@ -526,7 +526,7 @@ void R_Setup (void)
 
 	tempbuf = (unsigned short *)I_WorkBuffer();
 
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 4) & ~4);
+	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 4) & ~3);
 	visplanes = (void*)tempbuf;
 	tempbuf += sizeof(*visplanes) * MAXVISPLANES;
 
@@ -545,18 +545,18 @@ void R_Setup (void)
 		tempbuf += screenWidth+2;
 	}
 
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 4) & ~4);
+	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 4) & ~3);
 	visplanes_hash = (visplane_t**)tempbuf;
 	tempbuf += sizeof(visplane_t *) * NUM_VISPLANES_BUCKETS;
 
 	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
 		visplanes_hash[i] = NULL;
 
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 15) & ~15);
+	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 16) & ~15);
 	viswalls = (viswall_t*)tempbuf;
 	tempbuf += sizeof(*viswalls)*MAXWALLCMDS/sizeof(*tempbuf);
 
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 4) & ~4);
+	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 4) & ~3);
 	vissubsectors = (void*)tempbuf;
 	tempbuf += sizeof(*vissubsectors) * MAXVISSSEC;
 

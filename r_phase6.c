@@ -353,14 +353,13 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
 static void R_SegCommands2(const int cpu)
 {
     int i;
-    unsigned short *clip;
     viswall_t* segl;
     seglocal_t lseg;
     drawtex_t* toptex, * bottomtex;
 
     // initialize the clipbounds array
     unsigned short clipbounds[SCREENWIDTH];
-    clip = clipbounds;
+    unsigned short *clip = clipbounds;
     for (i = 0; i < screenWidth / 4; i++)
     {
         *clip++ = screenHeight, *clip++ = screenHeight;
