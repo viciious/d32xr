@@ -286,13 +286,17 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
       {
           segdraw_t sdr;
 
+#ifdef MARS
+          SH2_DIVU_DVSR = scale;
+          SH2_DIVU_DVDNT = 1 << (FRACBITS + SCALEBITS); // start 32 by 32 divide
+#endif
+
           // calculate texture offset
           fixed_t r = FixedMul(distance,
               finetangent((centerangle + xtoviewangle[x]) >> ANGLETOFINESHIFT));
 
           // other texture drawing info
           sdr.colnum = (offset - r) >> FRACBITS;
-          sdr.iscale = IDiv(1 << (FRACBITS + SCALEBITS), scale);
 
 #ifdef GRADIENTLIGHT
           // calc light level
@@ -318,6 +322,11 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
           sdr.scale2 = scale2;
           sdr.floorclipx = floorclipx;
           sdr.ceilingclipx = ceilingclipx;
+#ifdef MARS
+          sdr.iscale = SH2_DIVU_DVDNT;
+#else
+          sdr.iscale = (1 << (FRACBITS + SCALEBITS)) / scale;
+#endif
 
           //
           // draw textures
