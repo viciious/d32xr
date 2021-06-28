@@ -114,6 +114,7 @@ static int Mars_HandleStartHeld(unsigned *ctrl)
 
 	repeat++;
 	if (repeat < hold_tics) {
+		// suppress action buttons
 		*ctrl = *ctrl & ~(SEGA_CTRL_A | SEGA_CTRL_B | SEGA_CTRL_C);
 		return 0;
 	}
