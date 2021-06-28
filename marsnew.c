@@ -88,7 +88,7 @@ static int Mars_HandleStartHeld(unsigned *ctrl, const unsigned ctrl_start)
 	boolean start = 0;
 	static boolean prev_start = false;
 	static int repeat = 0;
-	static const int hold_tics = 6;
+	static const int held_tics = 6;
 
 	start = (*ctrl & ctrl_start) != 0;
 	if (start ^ prev_start) {
@@ -99,7 +99,7 @@ static int Mars_HandleStartHeld(unsigned *ctrl, const unsigned ctrl_start)
 		if (prev_start) {
 			prev_start = false;
 			// quick key press and release
-			if (prev_repeat < hold_tics)
+			if (prev_repeat < held_tics)
 				return BT_OPTION;
 
 			// key held for a while and then released
@@ -114,7 +114,7 @@ static int Mars_HandleStartHeld(unsigned *ctrl, const unsigned ctrl_start)
 	}
 
 	repeat++;
-	if (repeat < hold_tics) {
+	if (repeat < held_tics) {
 		// suppress action buttons
 		*ctrl = *ctrl & ~(SEGA_CTRL_A | SEGA_CTRL_B | SEGA_CTRL_C);
 		return 0;
@@ -156,7 +156,7 @@ static int Mars_ConvMouseButtons(int mouse)
 	}
 	if (mouse & SEGA_CTRL_STARTMB)
 	{
-		ctrl |= BT_OPTION;
+		//ctrl |= BT_OPTION;
 	}
 	return ctrl;
 }
