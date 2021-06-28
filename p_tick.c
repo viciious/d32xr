@@ -198,12 +198,11 @@ void	P_RunMobjLate (void)
  
 void P_CheckCheats (void)
 {
-	int		i;
+#ifdef JAGUAR
 	int		buttons, oldbuttons;
-#ifdef JAGAUAR
 	int 	warpmap;
+	int		i;
 	player_t	*p;
-#endif
 
 	for (i=0 ; i<MAXPLAYERS ; i++)
 	{
@@ -215,17 +214,16 @@ void P_CheckCheats (void)
 		if ( (buttons & BT_PAUSE) && !(oldbuttons&BT_PAUSE) )
 			gamepaused ^= 1;
 	}
-	
+
 	if (netgame)
 		return;
-		
+
 	buttons = ticbuttons[0];
 	oldbuttons = oldticbuttons[0];
 
 	if ( (oldbuttons&BT_PAUSE) || !(buttons & BT_PAUSE ) )
 		return;
 
-#ifdef JAGUAR
 	if (buttons&JP_NUM)
 	{	/* free stuff */
 		p=&players[0];

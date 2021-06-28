@@ -98,10 +98,11 @@ static int Mars_HandleStartHeld(unsigned *ctrl)
 		// start button state changed
 		if (prev_start) {
 			prev_start = false;
-			// key pressed and released, treat as pause
+			// quick key press and release
 			if (prev_repeat < hold_tics)
-				return BT_PAUSE;
-			// key held and released, treat as nothing
+				return BT_OPTION;
+
+			// key held for a while and then released
 			return 0;
 		}
 
@@ -121,11 +122,11 @@ static int Mars_HandleStartHeld(unsigned *ctrl)
 
 	if (*ctrl & SEGA_CTRL_A) {
 		*ctrl = *ctrl & ~SEGA_CTRL_A;
-		morebuttons |= BT_NWEAPN;
+		morebuttons |= BT_PWEAPN;
 	}
 	else if (*ctrl & SEGA_CTRL_B) {
 		*ctrl = *ctrl & ~SEGA_CTRL_B;
-		morebuttons |= BT_OPTION;
+		morebuttons |= BT_NWEAPN;
 	}
 	if (*ctrl & SEGA_CTRL_C) {
 		*ctrl = *ctrl & ~SEGA_CTRL_C;
