@@ -64,9 +64,6 @@ static int Mars_ConvGamepadButtons(int ctrl)
 	if (ctrl & SEGA_CTRL_DOWN)
 		newc |= BT_DOWN;
 
-	if (ctrl & SEGA_CTRL_START)
-		newc |= BT_START;
-
 	if (ctrl & SEGA_CTRL_A)
 		newc |= BT_A | configuration[controltype][0];
 	if (ctrl & SEGA_CTRL_B)
@@ -82,6 +79,57 @@ static int Mars_ConvGamepadButtons(int ctrl)
 		newc |= BT_AUTOMAP;
 
 	return newc;
+}
+
+// mostly exists to handle the 3-button controller situation
+static int Mars_HandleStartHeld(unsigned *ctrl)
+{
+	int morebuttons = 0;
+	boolean start = 0;
+	static boolean prev_start = false;
+	static int repeat = 0;
+
+	start = (*ctrl & (SEGA_CTRL_START | SEGA_CTRL_STARTMB)) != 0;
+	if (start ^ prev_start) {
+		int prev_repeat = repeat;
+		repeat = 0;
+
+		// start button state changed
+		if (prev_start) {
+			prev_start = false;
+			// key pressed and released, treat as pause
+			if (prev_repeat < 6)
+				return BT_PAUSE;
+			// key held and released, treat as nothing
+			return 0;
+		}
+
+		prev_start = true;
+	}
+
+	if (!start) {
+		return 0;
+	}
+
+	repeat++;
+	if (repeat < 6) {
+		return 0;
+	}
+
+	if (*ctrl & SEGA_CTRL_A) {
+		*ctrl = *ctrl & ~SEGA_CTRL_A;
+		morebuttons |= BT_NWEAPN;
+	}
+	else if (*ctrl & SEGA_CTRL_B) {
+		*ctrl = *ctrl & ~SEGA_CTRL_B;
+		morebuttons |= BT_OPTION;
+	}
+	if (*ctrl & SEGA_CTRL_C) {
+		*ctrl = *ctrl & ~SEGA_CTRL_C;
+		morebuttons |= BT_AUTOMAP;
+	}
+
+	return morebuttons;
 }
 
 static int Mars_ConvMouseButtons(int mouse)
@@ -101,10 +149,6 @@ static int Mars_ConvMouseButtons(int mouse)
 	{
 		ctrl |= BT_NWEAPN; // M -> Y
 		ctrl |= BT_MMBTN;
-	}
-	if (mouse & SEGA_CTRL_STARTMB)
-	{
-		ctrl |= BT_START; // S -> S
 	}
 	return ctrl;
 }
@@ -242,39 +286,49 @@ byte *I_ZoneBase (int *size)
 
 int I_ReadControls(void)
 {
-	unsigned ctrls = mars_controls;
+	int ctrl;
+	unsigned val;
+
+	val = mars_controls;
 	mars_controls = 0;
-	return Mars_ConvGamepadButtons(ctrls);
+
+	ctrl = Mars_HandleStartHeld(&val);
+	ctrl |= Mars_ConvGamepadButtons(val);
+	return ctrl;
 }
 
 int I_ReadMouse(int* pmx, int *pmy)
 {
-	int val;
-	static int oldval = 0;
+	int mval, ctrl;
+	static int oldmval = 0;
+	unsigned val;
 
 	*pmx = *pmy = 0;
 	if (!mousepresent)
 		return 0;
 
-	val = Mars_PollMouse(mars_mouseport);
-	switch (val)
+	mval = Mars_PollMouse(mars_mouseport);
+	switch (mval)
 	{
 	case -2:
 		// timeout - return old buttons and no deltas
-		val = oldval & 0x00F70000;
+		mval = oldmval & 0x00F70000;
 		break;
 	case -1:
 		// no mouse
 		mousepresent = false;
-		oldval = 0;
+		oldmval = 0;
 		return 0;
 	default:
-		oldval = val;
+		oldmval = mval;
 		break;
 	}
 
-	val = Mars_ParseMousePacket(val, pmx, pmy);
-	return Mars_ConvMouseButtons(val);
+	val = Mars_ParseMousePacket(mval, pmx, pmy);
+
+	ctrl = Mars_HandleStartHeld(&val);
+	ctrl |= Mars_ConvMouseButtons(val);
+	return ctrl;
 }
 
 int	I_GetTime (void)

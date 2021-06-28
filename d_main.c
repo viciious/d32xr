@@ -468,7 +468,7 @@ int TIC_Abortable (void)
 		return ga_exitdemo;
 	if ( (ticbuttons[0] & BT_C) && !(oldticbuttons[0] & BT_C) )
 		return ga_exitdemo;
-	if ( (ticbuttons[0] & BT_START) && !(oldticbuttons[0] & BT_START) )
+	if ( (ticbuttons[0] & BT_OPTION) && !(oldticbuttons[0] & BT_OPTION) )
 		return ga_exitdemo;
 
 	return 0;
