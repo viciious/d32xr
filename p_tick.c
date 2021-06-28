@@ -203,7 +203,7 @@ void P_CheckCheats (void)
 	int 	warpmap;
 	int		i;
 	player_t	*p;
-	
+
 	for (i=0 ; i<MAXPLAYERS ; i++)
 	{
 		if (!playeringame[i])
@@ -214,17 +214,16 @@ void P_CheckCheats (void)
 		if ( (buttons & BT_PAUSE) && !(oldbuttons&BT_PAUSE) )
 			gamepaused ^= 1;
 	}
-	
+
 	if (netgame)
 		return;
-		
+
 	buttons = ticbuttons[0];
 	oldbuttons = oldticbuttons[0];
 
-	if ( (oldbuttons&JP_PAUSE) || !(buttons & JP_PAUSE ) )
+	if ( (oldbuttons&BT_PAUSE) || !(buttons & BT_PAUSE ) )
 		return;
 
-		
 	if (buttons&JP_NUM)
 	{	/* free stuff */
 		p=&players[0];

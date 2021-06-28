@@ -148,6 +148,7 @@ void O_Control (player_t *player)
 	
 	if ( (buttons & BT_OPTION) && !(oldbuttons & BT_OPTION) )
 	{
+		gamepaused ^= 1;
 		cursorpos = 0;	
 		player->automapflags ^= AF_OPTIONSACTIVE;
 #ifndef MARS

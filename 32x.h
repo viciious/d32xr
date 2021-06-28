@@ -147,7 +147,7 @@
 #define SEGA_CTRL_LMB		0x00010000
 #define SEGA_CTRL_RMB		0x00020000
 #define SEGA_CTRL_MMB		0x00040000
-#define SEGA_CTRL_STARTMB	0x00040000
+#define SEGA_CTRL_STARTMB	0x00080000
 
 #ifdef __cplusplus
 extern "C" {

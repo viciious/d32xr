@@ -65,9 +65,6 @@ static int Mars_ConvGamepadButtons(int ctrl)
 	if (ctrl & SEGA_CTRL_DOWN)
 		newc |= BT_DOWN;
 
-	if (ctrl & SEGA_CTRL_START)
-		newc |= BT_START;
-
 	if (ctrl & SEGA_CTRL_A)
 		newc |= BT_A | configuration[controltype][0];
 	if (ctrl & SEGA_CTRL_B)
@@ -82,7 +79,65 @@ static int Mars_ConvGamepadButtons(int ctrl)
 	if (ctrl & SEGA_CTRL_Z)
 		newc |= BT_AUTOMAP;
 
+	if (ctrl & SEGA_CTRL_MODE)
+		newc |= BT_DEBUG;
+
 	return newc;
+}
+
+// mostly exists to handle the 3-button controller situation
+static int Mars_HandleStartHeld(unsigned *ctrl, const unsigned ctrl_start)
+{
+	int morebuttons = 0;
+	boolean start = 0;
+	static boolean prev_start = false;
+	static int repeat = 0;
+	static const int held_tics = 6;
+
+	start = (*ctrl & ctrl_start) != 0;
+	if (start ^ prev_start) {
+		int prev_repeat = repeat;
+		repeat = 0;
+
+		// start button state changed
+		if (prev_start) {
+			prev_start = false;
+			// quick key press and release
+			if (prev_repeat < held_tics)
+				return BT_OPTION;
+
+			// key held for a while and then released
+			return 0;
+		}
+
+		prev_start = true;
+	}
+
+	if (!start) {
+		return 0;
+	}
+
+	repeat++;
+	if (repeat < held_tics) {
+		// suppress action buttons
+		*ctrl = *ctrl & ~(SEGA_CTRL_A | SEGA_CTRL_B | SEGA_CTRL_C);
+		return 0;
+	}
+
+	if (*ctrl & SEGA_CTRL_A) {
+		*ctrl = *ctrl & ~SEGA_CTRL_A;
+		morebuttons |= BT_PWEAPN;
+	}
+	else if (*ctrl & SEGA_CTRL_B) {
+		*ctrl = *ctrl & ~SEGA_CTRL_B;
+		morebuttons |= BT_NWEAPN;
+	}
+	if (*ctrl & SEGA_CTRL_C) {
+		*ctrl = *ctrl & ~SEGA_CTRL_C;
+		morebuttons |= BT_AUTOMAP;
+	}
+
+	return morebuttons;
 }
 
 static int Mars_ConvMouseButtons(int mouse)
@@ -105,7 +160,7 @@ static int Mars_ConvMouseButtons(int mouse)
 	}
 	if (mouse & SEGA_CTRL_STARTMB)
 	{
-		ctrl |= BT_START; // S -> S
+		//ctrl |= BT_OPTION;
 	}
 	return ctrl;
 }
@@ -243,39 +298,52 @@ byte *I_ZoneBase (int *size)
 
 int I_ReadControls(void)
 {
-	unsigned ctrls = mars_controls;
+	int ctrl;
+	unsigned val;
+
+	val = mars_controls;
 	mars_controls = 0;
-	return Mars_ConvGamepadButtons(ctrls);
+
+	ctrl = 0;
+	ctrl |= Mars_HandleStartHeld(&val, SEGA_CTRL_START);
+	ctrl |= Mars_ConvGamepadButtons(val);
+	ctrl |= Mars_ConvGamepadButtons(val);
+	return ctrl;
 }
 
 int I_ReadMouse(int* pmx, int *pmy)
 {
-	int val;
-	static int oldval = 0;
+	int mval, ctrl;
+	static int oldmval = 0;
+	unsigned val;
 
 	*pmx = *pmy = 0;
 	if (!mousepresent)
 		return 0;
 
-	val = Mars_PollMouse(mars_mouseport);
-	switch (val)
+	mval = Mars_PollMouse(mars_mouseport);
+	switch (mval)
 	{
 	case -2:
 		// timeout - return old buttons and no deltas
-		val = oldval & 0x00F70000;
+		mval = oldmval & 0x00F70000;
 		break;
 	case -1:
 		// no mouse
 		mousepresent = false;
-		oldval = 0;
+		oldmval = 0;
 		return 0;
 	default:
-		oldval = val;
+		oldmval = mval;
 		break;
 	}
 
-	val = Mars_ParseMousePacket(val, pmx, pmy);
-	return Mars_ConvMouseButtons(val);
+	val = Mars_ParseMousePacket(mval, pmx, pmy);
+
+	ctrl = 0;
+	//ctrl |= Mars_HandleStartHeld(&val, SEGA_CTRL_STARTMB);
+	ctrl |= Mars_ConvMouseButtons(val);
+	return ctrl;
 }
 
 int	I_GetTime (void)
@@ -388,14 +456,14 @@ void I_Update(void)
 	const int ticwait = (demoplayback ? 3 : 2); // demos were recorded at 15-20fps
 	const int refreshHZ = (NTSC ? 60 : 50);
 
-	if ((*mars_gamepadport & SEGA_CTRL_MODE) && !(*mars_gamepadport & SEGA_CTRL_MODE))
+	debugscreenactive = debugmode != 0;
+
+	if ((ticbuttons[consoleplayer] & BT_DEBUG) && !(oldticbuttons[consoleplayer] & BT_DEBUG))
 	{
 		extern int clearscreen;
 		debugmode = (debugmode + 1) % 4;
 		clearscreen = 2;
 	}
-	debugscreenactive = debugmode != 0;
-
 	if (debugmode == 1)
 	{
 		D_snprintf(buf, sizeof(buf), "fps:%2d", fpscount);

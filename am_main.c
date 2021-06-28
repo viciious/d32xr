@@ -282,11 +282,7 @@ void AM_Control (player_t *player)
 	buttons = ticbuttons[playernum];
 	oldbuttons = oldticbuttons[playernum];
 
-	if ( ( (buttons & BT_AUTOMAP) && !(oldbuttons & BT_AUTOMAP) )
-#ifdef MARS
-		|| ( (buttons & BT_START) && (oldbuttons & BT_START) && (buttons & BT_A) && !(oldbuttons & BT_A) )
-#endif
-		)
+	if ( (buttons & BT_AUTOMAP) && !(oldbuttons & BT_AUTOMAP) )
 	{
 		player->automapflags ^= AF_ACTIVE;
 		player->automapx = player->mo->x;
