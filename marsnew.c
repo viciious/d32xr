@@ -82,7 +82,7 @@ static int Mars_ConvGamepadButtons(int ctrl)
 }
 
 // mostly exists to handle the 3-button controller situation
-static int Mars_HandleStartHeld(unsigned *ctrl)
+static int Mars_HandleStartHeld(unsigned *ctrl, const unsigned ctrl_start)
 {
 	int morebuttons = 0;
 	boolean start = 0;
@@ -90,7 +90,7 @@ static int Mars_HandleStartHeld(unsigned *ctrl)
 	static int repeat = 0;
 	static const int hold_tics = 6;
 
-	start = (*ctrl & (SEGA_CTRL_START | SEGA_CTRL_STARTMB)) != 0;
+	start = (*ctrl & ctrl_start) != 0;
 	if (start ^ prev_start) {
 		int prev_repeat = repeat;
 		repeat = 0;
@@ -153,6 +153,10 @@ static int Mars_ConvMouseButtons(int mouse)
 	{
 		ctrl |= BT_NWEAPN; // M -> Y
 		ctrl |= BT_MMBTN;
+	}
+	if (mouse & SEGA_CTRL_STARTMB)
+	{
+		ctrl |= BT_OPTION;
 	}
 	return ctrl;
 }
@@ -296,7 +300,8 @@ int I_ReadControls(void)
 	val = mars_controls;
 	mars_controls = 0;
 
-	ctrl = Mars_HandleStartHeld(&val);
+	ctrl = 0;
+	ctrl |= Mars_HandleStartHeld(&val, SEGA_CTRL_START);
 	ctrl |= Mars_ConvGamepadButtons(val);
 	return ctrl;
 }
@@ -330,7 +335,8 @@ int I_ReadMouse(int* pmx, int *pmy)
 
 	val = Mars_ParseMousePacket(mval, pmx, pmy);
 
-	ctrl = Mars_HandleStartHeld(&val);
+	ctrl = 0;
+	//ctrl |= Mars_HandleStartHeld(&val, SEGA_CTRL_STARTMB);
 	ctrl |= Mars_ConvMouseButtons(val);
 	return ctrl;
 }
