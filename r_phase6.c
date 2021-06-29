@@ -381,6 +381,12 @@ static void R_SegCommands2(const int cpu)
     bottomtex = &lseg.bottomtex;
     lseg.clipbounds = clipbounds;
 
+    // workaround annoying compilation warnings
+    toptex->height = 0;
+    toptex->pixelcount = 0;
+    bottomtex->height = 0;
+    bottomtex->pixelcount = 0;
+
     for (segl = viswalls; segl < lastwallcmd; segl++)
     {
         if (segl->start > segl->stop)
