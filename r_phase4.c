@@ -83,8 +83,8 @@ static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, ang
    angleb = visangle - normalangle;
    sineb  = finesine(angleb >> ANGLETOFINESHIFT);
    
-   num = FixedMul(stretchX, sineb);
-   den = FixedMul(rw_distance, sinea);
+   FixedMul2(num, stretchX, sineb);
+   FixedMul2(den, rw_distance, sinea);
 
    return FixedDiv(num, den);
 }
@@ -106,7 +106,7 @@ static void R_SetupCalc(viswall_t *wc, fixed_t hyp, angle_t normalangle)
       offsetangle = ANG90;
 
    sineval = finesine(offsetangle >> ANGLETOFINESHIFT);
-   rw_offset = FixedMul(hyp, sineval);
+   FixedMul2(rw_offset, hyp, sineval);
 
    if(normalangle - wc->angle1 < ANG180)
       rw_offset = -rw_offset;
@@ -140,7 +140,8 @@ static void R_FinishWallPrep1(viswall_t* wc)
     distangle = ANG90 - offsetangle;
     hyp = R_PointToDist(vertexes[seg->v1].x, vertexes[seg->v1].y);
     sineval = finesine(distangle >> ANGLETOFINESHIFT);
-    wc->distance = rw_distance = FixedMul(hyp, sineval);
+    FixedMul2(rw_distance, hyp, sineval);
+    wc->distance = rw_distance;
 
     scalefrac = scale2 = wc->scalefrac =
         R_ScaleFromGlobalAngle(rw_distance, vd.viewangle + xtoviewangle[wc->start], normalangle);
@@ -240,7 +241,8 @@ static void R_FinishSprite(vissprite_t *vis)
 
    // calculate edges of the shape
    tx -= ((fixed_t)BIGSHORT(vis->patch->leftoffset)) << FRACBITS;
-   x1  = (centerXFrac + FixedMul(tx, xscale)) / FRACUNIT;
+   FixedMul2(x1, tx, xscale);
+   x1  = (centerXFrac + x1) / FRACUNIT;
 
    // off the right side?
    if(x1 > screenWidth)
@@ -250,7 +252,8 @@ static void R_FinishSprite(vissprite_t *vis)
    }
 
    tx += ((fixed_t)BIGSHORT(vis->patch->width) << FRACBITS);
-   x2  = ((centerXFrac + FixedMul(tx, xscale)) / FRACUNIT) - 1;
+   FixedMul2(x2, tx, xscale);
+   x2  = ((centerXFrac + x2) / FRACUNIT) - 1;
 
    // off the left side
    if(x2 < 0)
