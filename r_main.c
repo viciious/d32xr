@@ -338,7 +338,7 @@ void R_SetupTextureCaches(void)
 		goto nocache;
 
 	// see how many flats we can store
-	cachezonesize = zonefree - zonemargin - 32; // give the main zone some slack
+	cachezonesize = zonefree - zonemargin - 128; // give the main zone some slack
 
 	numcflats = cachezonesize / flatblocksize;
 	if (numcflats > 4)
@@ -360,8 +360,6 @@ nocache:
 		R_InitTexCacheZone(&r_wallscache, 0);
 		return;
 	}
-
-	cachezonesize = numcflats * flatblocksize + texblocksize * numcwalls;
 	
 	margin = Z_Malloc(zonemargin, PU_LEVEL, 0);
 
