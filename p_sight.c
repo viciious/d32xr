@@ -103,15 +103,20 @@ fixed_t P_InterceptVector2(divline_t *v2, divline_t *v1)
 {
    fixed_t frac;
    fixed_t num;
-   fixed_t den;
+   fixed_t den, temp;
 
-   den = FixedMul(v1->dy>>8,v2->dx) - FixedMul(v1->dx>>8,v2->dy);
+   FixedMul2(den, v1->dy>>8,v2->dx);
+   FixedMul2(temp, v1->dx >> 8, v2->dy);
 
+   den = den - temp;
    if(den == 0)
       return 0;
 
-   num  = FixedMul((v1->x - v2->x)>>8 ,v1->dy) + FixedMul((v2->y - v1->y)>>8 , v1->dx);
-   frac = FixedDiv (num , den);
+   FixedMul2(temp, (v2->y - v1->y) >> 8, v1->dx);
+   FixedMul2(num, (v1->x - v2->x) >> 8, v1->dy);
+
+   num  = num + temp;
+   frac = FixedDiv(num, den);
 
    return frac;
 }
@@ -281,8 +286,21 @@ static boolean PS_CheckSight(mobj_t *t1, mobj_t *t2)
    s1 = (int)(t1->subsector->sector - sectors);
    s2 = (int)(t2->subsector->sector - sectors);
    pnum = s1*numsectors + s2;
-   bytenum = pnum>>3;
-   bitnum = 1 << (pnum&7);
+   bytenum = pnum >> 3;
+
+   bitnum = 1;
+   switch (pnum & 7)
+   {
+   case 7: do { bitnum <<= 1;
+   case 6:      bitnum <<= 1;
+   case 5:      bitnum <<= 1;
+   case 4:      bitnum <<= 1;
+   case 3:      bitnum <<= 1;
+   case 2:      bitnum <<= 1;
+   case 1:      bitnum <<= 1;
+   case 0:      break;
+   } while (0);
+   }
 
    if(rejectmatrix[bytenum] & bitnum) 
    {
