@@ -208,7 +208,6 @@ typedef struct mobj_s
 
 	unsigned short		type;
 
-
 /* info for drawing */
 	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
 	angle_t			angle;
@@ -225,11 +224,9 @@ typedef struct mobj_s
 	struct mobj_s	*target;		/* thing being chased/attacked (or NULL) */
 									/* also the originator for missiles */
 	intptr_t		extradata;		/* for latecall functions */
-#ifndef MARS
-	fixed_t			spawnx, spawny;	/* for deathmatch respawning */
-	angle_t			spawnangle;
-	unsigned short		spawntype;
-#endif
+	unsigned short	spawnx, spawny;
+	unsigned short	spawnangle;
+	unsigned short	spawntype;
 } mobj_t;
 
 /* each sector has a degenmobj_t in it's center for sound origin purposes */

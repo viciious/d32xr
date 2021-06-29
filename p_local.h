@@ -247,9 +247,7 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 
 #include "p_spec.h"
 
-#ifndef MARS
 extern	int			iquehead, iquetail;
-#endif
 
 extern	int playernum;
 

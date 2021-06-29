@@ -6,12 +6,10 @@
 
 void G_PlayerReborn (int player);
 
-#ifndef MARS
 #define		ITEMQUESIZE	32
 mapthing_t	itemrespawnque[ITEMQUESIZE];
 int			itemrespawntime[ITEMQUESIZE];
 int			iquehead, iquetail;
-#endif
 
 /*
 ===============
@@ -44,7 +42,6 @@ static void P_RemoveMobjFromCurrList (mobj_t *mobj)
 
 void P_RemoveMobj (mobj_t *mobj)
 {
-#ifndef MARS
 	int		spot;
 	
 /* add to the respawnque for altdeath mode */
@@ -63,8 +60,6 @@ void P_RemoveMobj (mobj_t *mobj)
 		itemrespawntime[spot] = ticon;
 		iquehead++;
 	}
-
-#endif
 
 /* unlink from sector and block lists */
 	P_UnsetThingPosition (mobj);
@@ -89,7 +84,6 @@ void P_RemoveMobj (mobj_t *mobj)
 
 void P_RespawnSpecials (void)
 {
-#ifndef MARS
 	fixed_t         x,y,z; 
 	subsector_t 	*ss; 
 	mobj_t			*mo;
@@ -141,7 +135,6 @@ void P_RespawnSpecials (void)
 	
 /* pull it from the que */
 	iquetail++;
-#endif
 }
 	
 
@@ -542,12 +535,10 @@ return;	/*DEBUG */
 	if (mthing->options & MTF_AMBUSH)
 		mobj->flags |= MF_AMBUSH;
 
-#ifndef MARS
 	mobj->spawnx = mthing->x;
 	mobj->spawny = mthing->y;
 	mobj->spawntype = mthing->type;
 	mobj->spawnangle = mthing->angle;
-#endif
 }
 
 
