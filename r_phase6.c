@@ -287,8 +287,8 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
           segdraw_t sdr;
 
 #ifdef MARS
-          SH2_DIVU_DVSR = scale;
-          SH2_DIVU_DVDNT = 1 << (FRACBITS + SCALEBITS); // start 32 by 32 divide
+          SH2_DIVU_DVSR = scale; // set 32-bit divisor
+          SH2_DIVU_DVDNT = 1 << (FRACBITS + SCALEBITS); // set 32-bit dividend, start divide
 #endif
 
           // calculate texture offset
@@ -323,7 +323,7 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
           sdr.floorclipx = floorclipx;
           sdr.ceilingclipx = ceilingclipx;
 #ifdef MARS
-          sdr.iscale = SH2_DIVU_DVDNT;
+          sdr.iscale = SH2_DIVU_DVDNT; // return 32-bit quotient
 #else
           sdr.iscale = (1 << (FRACBITS + SCALEBITS)) / scale;
 #endif
