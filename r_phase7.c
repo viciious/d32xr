@@ -34,7 +34,7 @@ typedef struct
 static unsigned short numplanes;
 static short* sortedplanes;
 
-static void R_MapPlane(localplane_t* lpl, int y, int x, int x2) __attribute__((always_inline));
+static void R_MapPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static void R_PlaneLoop(localplane_t* lpl, const int mask) __attribute__((always_inline));
 static void R_DrawPlanes2(const int mask) __attribute__((always_inline));
 void R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
