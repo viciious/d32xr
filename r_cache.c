@@ -196,7 +196,7 @@ static void R_EvictFromTexCache(void* ptr, void* userp)
 	texcacheblock_t* entry = ptr;
 	r_texcache_t *c = userp;
 
-	if (entry->pixelcount < c->reqcount)
+	if (entry->pixelcount == c->reqcount_eq || entry->pixelcount < c->reqcount_lt)
 	{
 		*entry->userp = R_CheckPixels(entry->lumpnum);
 		Z_Free2(c->zone, entry);
@@ -221,17 +221,25 @@ void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **us
 	if (id < 0)
 		return;
 
-	c->reqcount = c->pixcount[id];
-
-	size = pixels + sizeof(texcacheblock_t) + 32;
-	if (Z_LargestFreeBlock(c->zone) < size + 32)
+	size = pixels + sizeof(texcacheblock_t) + 16;
+	if (Z_LargestFreeBlock(c->zone) < size + 16)
 	{
-		// free unused entries when under pressure
+		// free unused entries
+		c->reqcount_eq = 0;
+		c->reqcount_lt = -1;
 		Z_ForEachBlock(c->zone, &R_EvictFromTexCache, c);
 
 		// try allocating again
-		if (Z_LargestFreeBlock(c->zone) < size + 32)
-			return;
+		if (Z_LargestFreeBlock(c->zone) < size + 16)
+		{
+			// free important entries of less than or equal importance
+			c->reqcount_eq = -1;
+			c->reqcount_lt = c->pixcount[id];
+			Z_ForEachBlock(c->zone, &R_EvictFromTexCache, c);
+
+			if (Z_LargestFreeBlock(c->zone) < size + 16)
+				return;
+		}
 	}
 
 	entry = Z_Malloc2(c->zone, size, PU_LEVEL, NULL);
