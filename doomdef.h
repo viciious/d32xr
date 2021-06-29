@@ -711,11 +711,33 @@ void I_Update (void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 void I_Error (char *error, ...) ATTR_OPTIMIZE_SIZE;
 
-void I_DrawColumn (int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale, 
-	fixed_t dc_texturemid, inpixel_t *dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
+#ifdef MARS
+//#define USE_C_DRAW
 
-void I_DrawSpan (int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, 
-	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t *ds_source) ATTR_DATA_CACHE_ALIGN;
+#ifdef USE_C_DRAW
+
+#define I_DrawColumn I_DrawColumnC
+#define I_DrawColumnNPo2 I_DrawColumnNPo2C
+#define I_DrawSpan I_DrawSpanC
+
+#else
+
+#define I_DrawColumn I_DrawColumnA
+#define I_DrawColumnNPo2 I_DrawColumnNPo2A
+#define I_DrawSpan I_DrawSpanA
+
+#endif
+
+#endif
+
+void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
+	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
+
+void I_DrawColumnNPo2(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
+	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
+
+void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
+	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source);
 
 void I_Print8 (int x, int y, const char *string);
 

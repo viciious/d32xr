@@ -9,9 +9,16 @@
 !                  fixed_t fracstep, inpixel_t *dc_source, int dc_texheight)
 
         .align  4
-        .global _I_DrawColumnPO2A
-_I_DrawColumnPO2A:
-        add	#1,r6
+        .global _I_DrawColumnA
+_I_DrawColumnA:
+	mov.l	draw_debug, r0
+	mov.l	@r0, r0
+	cmp/eq	#3, r0
+	bf/s	0f
+	add	#1,r6
+	rts
+
+0:
         cmp/gt  r6,r5
         bf/s    1f
         sub     r5,r6           /* count = dc_yh - dc_yl */
@@ -62,9 +69,16 @@ do_col_loop:
 !                      fixed_t fracstep, inpixel_t *dc_source, int dc_texheight)
 
         .align  4
-        .global _I_DrawColumnNPO2A
-_I_DrawColumnNPO2A:
+        .global _I_DrawColumnNPo2A
+_I_DrawColumnNPo2A:
+	mov.l	draw_debug, r0
+	mov.l	@r0, r0
+	cmp/eq	#3, r0
+	bf/s	0f
 	add	#1,r6
+	rts
+
+0:
         cmp/gt  r6,r5
         bf/s    1f
         sub     r5,r6           /* count = dc_yh - dc_yl */
@@ -141,7 +155,14 @@ do_cnp_loop:
         .align  4
         .global _I_DrawSpanA
 _I_DrawSpanA:
-        add     #1,r6
+	mov.l	draw_debug, r0
+	mov.l	@r0, r0
+	cmp/eq	#3, r0
+	bf/s	0f
+	add	#1,r6
+	rts
+
+0:
         cmp/gt  r6,r5
         bf/s    1f
         sub     r5,r6           /* count = ds_x2 - ds_x1 */
@@ -195,6 +216,8 @@ do_span_loop:
         mov.l   @r15+,r8
 
         .align  2
+draw_debug:
+	.long	_debugmode
 draw_fb:
         .long   _viewportbuffer
 draw_cmap:

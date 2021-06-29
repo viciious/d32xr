@@ -20,11 +20,13 @@ typedef struct drawtex_s
    int      bottomheight;
    int      texturemid;
    int      pixelcount;
+   void     (*drawcol)(int, int, int, int, fixed_t, fixed_t, inpixel_t*, int);
 } drawtex_t;
 
 typedef struct
 {
     viswall_t* segl;
+
     drawtex_t toptex;
     drawtex_t bottomtex;
 
@@ -104,7 +106,7 @@ static void R_DrawTexture(int x, segdraw_t *sdr, drawtex_t* tex)
    // CALICO: Jaguar-specific GPU blitter input calculation starts here.
    // We invoke a software column drawer instead.
    src = tex->data + colnum * tex->height;
-   I_DrawColumn(x, top, bottom, sdr->light, frac, iscale, src, tex->height);
+   tex->drawcol(x, top, bottom, sdr->light, frac, iscale, src, tex->height);
 
    // pixel counter
    tex->pixelcount += (bottom - top);
@@ -440,6 +442,7 @@ static void R_SegCommands2(const int cpu)
             toptex->height = tex->height;
             toptex->data = tex->data;
             toptex->pixelcount = 0;
+            toptex->drawcol = (tex->height & (tex->height - 1)) ? I_DrawColumnNPo2 : I_DrawColumn;
         }
 
         if (segl->actionbits & AC_BOTTOMTEXTURE)
@@ -453,6 +456,7 @@ static void R_SegCommands2(const int cpu)
             bottomtex->height = tex->height;
             bottomtex->data = tex->data;
             bottomtex->pixelcount = 0;
+            bottomtex->drawcol = (tex->height & (tex->height - 1)) ? I_DrawColumnNPo2 : I_DrawColumn;
         }
 
         R_SegLoop(&lseg, cpu);
