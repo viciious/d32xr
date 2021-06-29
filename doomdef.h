@@ -147,7 +147,7 @@ typedef enum
 /* library replacements */
 /* */
 
-ATTR_DATA_CACHE_ALIGN static inline int D_abs(int x)
+static inline int D_abs(int x)
 {
 	if (x < 0)
 		return -x;
@@ -155,7 +155,7 @@ ATTR_DATA_CACHE_ALIGN static inline int D_abs(int x)
 }
 
 void D_memset (void *dest, int val, int count);
-void D_memcpy (void *dest, const void *src, int count) ATTR_DATA_CACHE_ALIGN;
+void D_memcpy (void *dest, const void *src, int count);
 void D_strncpy (char *dest, const char *src, int maxcount);
 int D_strncasecmp (const char *s1, const char *s2, int len);
 int D_strcasecmp (const char *s1, const char *s2);
