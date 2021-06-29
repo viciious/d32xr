@@ -72,11 +72,13 @@ static void R_DrawTexture(int x, segdraw_t *sdr, drawtex_t* tex)
    colnum = sdr->colnum;
    iscale = sdr->iscale;
 
-   top = centerY - FixedMul(scale2, tex->topheight);
+   FixedMul2(top, scale2, tex->topheight);
+   top = centerY - top;
    if(top <= sdr->ceilingclipx)
       top = sdr->ceilingclipx + 1;
 
-   bottom = centerY - 1 - FixedMul(scale2, tex->bottomheight);
+   FixedMul2(bottom, scale2, tex->bottomheight);
+   bottom = centerY - 1 - bottom;
    if(bottom >= sdr->floorclipx)
       bottom = sdr->floorclipx - 1;
 
@@ -184,7 +186,7 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
 
       if(scale >= 0x7fff)
          scale = 0x7fff; // fix the scale to maximum
-      scale2 = scale << (FRACBITS - (HEIGHTBITS + SCALEBITS));
+      scale2 = (unsigned)scale << (FRACBITS - (HEIGHTBITS + SCALEBITS));
 
       //
       // get ceilingclipx and floorclipx from clipbounds
@@ -196,13 +198,15 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
       //
       // calc high and low
       //
-      low = centerY0 - FixedMul(scale2, floornewheight);
+      FixedMul2(low, scale2, floornewheight);
+      low = centerY0 - low;
       if (low < 0)
           low = 0;
       else if (low > floorclipx)
           low = floorclipx;
 
-      high = centerY1 - FixedMul(scale2, ceilingnewheight);
+      FixedMul2(high, scale2, ceilingnewheight);
+      high = centerY1 - high;
       if (high > screenHeight - 1)
           high = screenHeight - 1;
       else if (high < ceilingclipx)
@@ -215,7 +219,8 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
           //
           if (actionbits & AC_ADDFLOOR)
           {
-              top = centerY0 - FixedMul(scale2, floorheight);
+              FixedMul2(top, scale2, floorheight);
+              top = centerY0 - top;
               if (top <= ceilingclipx)
                   top = ceilingclipx + 1;
               bottom = floorclipx - 1;
@@ -238,7 +243,8 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
           if (actionbits & AC_ADDCEILING)
           {
               top = ceilingclipx + 1;
-              bottom = centerY1 - FixedMul(scale2, ceilingheight);
+              FixedMul2(bottom, scale2, ceilingheight);
+              bottom = centerY1 - bottom;
               if (bottom >= floorclipx)
                   bottom = floorclipx - 1;
 
@@ -292,7 +298,8 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
 #endif
 
           // calculate texture offset
-          fixed_t r = FixedMul(distance,
+          fixed_t r;
+          FixedMul2(r, distance,
               finetangent((centerangle + xtoviewangle[x]) >> ANGLETOFINESHIFT));
 
           // other texture drawing info
@@ -341,7 +348,8 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
       if (actionbits & AC_ADDSKY)
       {
           top = ceilingclipx + 1;
-          bottom = (centerY - FixedMul(scale2, ceilingheight)) - 1;
+          FixedMul2(bottom, scale2, ceilingheight);
+          bottom = (centerY - bottom) - 1;
 
           if (bottom >= floorclipx)
               bottom = floorclipx - 1;
