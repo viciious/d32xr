@@ -458,7 +458,8 @@ extern	int		ticmousex[MAXPLAYERS], ticmousey[MAXPLAYERS];
 extern	boolean		mousepresent;
 
 int MiniLoop ( void (*start)(void),  void (*stop)(void)
-		,  int (*ticker)(void), void (*drawer)(void) );
+		,  int (*ticker)(void), void (*drawer)(void) )
+	ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 int	G_Ticker (void);
 void G_Drawer (void);
