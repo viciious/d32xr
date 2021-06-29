@@ -123,7 +123,7 @@ void O_Init (void)
 	menuitem[2].hasslider = true;
 
 	slider[2].maxval = MAXDETAILMODES;
-	slider[2].curval = 0;
+	slider[2].curval = detailmode + 1;
 
 #ifndef MARS
 /*    strcpy(menuitem[2].name, "Controls"); */

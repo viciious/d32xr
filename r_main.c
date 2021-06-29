@@ -304,22 +304,12 @@ void R_SetViewportSize(int size)
 
 	R_InitMathTables();
 
+	// refresh func pointers
+	R_SetDetailMode(detailmode);
+
 	clipangle = xtoviewangle[0];
 	doubleclipangle = clipangle * 2;
 	clearscreen = 2;
-
-	if (viewportWidth <= 160)
-	{
-		drawcol = I_DrawColumnLow;
-		drawcolnpo2 = I_DrawColumnNPo2Low;
-		drawspan = I_DrawSpanLow;
-	}
-	else
-	{
-		drawcol = I_DrawColumn;
-		drawcolnpo2 = I_DrawColumnNPo2;
-		drawspan = I_DrawSpan;
-	}
 
 #ifdef MARS
 	Mars_CommSlaveClearCache();
@@ -334,6 +324,19 @@ void R_SetDetailMode(int mode)
 		return;
 
 	detailmode = mode;
+	if (viewportWidth <= 160)
+	{
+		drawcol = I_DrawColumnLow;
+		drawcolnpo2 = I_DrawColumnNPo2Low;
+		drawspan = detailmode == detmode_potato ? I_DrawSpanPotatoLow : I_DrawSpanLow;
+	}
+	else
+	{
+		drawcol = I_DrawColumn;
+		drawcolnpo2 = I_DrawColumnNPo2;
+		drawspan = I_DrawSpan;
+		drawspan = detailmode == detmode_potato ? I_DrawSpanPotato : I_DrawSpan;
+	}
 }
 
 /*

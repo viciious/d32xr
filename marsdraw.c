@@ -38,9 +38,9 @@
 ==============================================================================
 */
 
-#ifdef USE_C_DRAW
-
 extern short* dc_colormaps;
+
+#ifdef USE_C_DRAW
 
 void I_DrawColumnCLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
@@ -374,6 +374,113 @@ void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 
 
 #endif
+
+/*
+================
+=
+= I_DrawSpanPotatoLow
+=
+================
+*/
+void I_DrawSpanPotatoLow(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
+	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source)
+{
+	pixel_t* dest, pix;
+	unsigned count, n;
+	short* dc_colormap;
+
+	if (ds_x2 < ds_x1)
+		return;
+	if (debugmode == 3)
+		return;
+
+	count = ds_x2 - ds_x1 + 1;
+
+	dest = I_ViewportBuffer() + ds_y * 320 / 2 + ds_x1;
+	dc_colormap = dc_colormaps + light;
+	pix = dc_colormap[ds_source[513]];
+
+#define DO_PIXEL() do { *dest++ = pix; } while(0)
+
+	n = (count + 7) >> 3;
+	switch (count & 7)
+	{
+	case 0: do { DO_PIXEL();
+	case 7:      DO_PIXEL();
+	case 6:      DO_PIXEL();
+	case 5:      DO_PIXEL();
+	case 4:      DO_PIXEL();
+	case 3:      DO_PIXEL();
+	case 2:      DO_PIXEL();
+	case 1:      DO_PIXEL();
+	} while (--n > 0);
+	}
+
+#undef DO_PIXEL
+}
+
+/*
+================
+=
+= I_DrawSpanPotato
+=
+================
+*/
+void I_DrawSpanPotato(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
+	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source)
+{
+	byte *udest, upix;
+	unsigned count, scount, n;
+	short* dc_colormap;
+
+	if (ds_x2 < ds_x1)
+		return;
+	if (debugmode == 3)
+		return;
+
+	count = ds_x2 - ds_x1 + 1;
+
+	udest = (byte *)I_ViewportBuffer() + ds_y * 320 + ds_x1;
+	dc_colormap = dc_colormaps + light;
+	upix = dc_colormap[ds_source[513]] & 0xff;
+
+	if (ds_x1 & 1) {
+		*udest++ = upix;
+		count--;
+	}
+
+	scount = count >> 1;
+	if (scount > 0)
+	{
+		pixel_t spix = (upix << 8) | upix;
+		pixel_t *sdest = (pixel_t*)udest;
+
+#define DO_PIXEL() do { *sdest++ = spix; } while(0)
+
+		n = (scount + 7) >> 3;
+		switch (scount & 7)
+		{
+		case 0: do { DO_PIXEL();
+		case 7:      DO_PIXEL();
+		case 6:      DO_PIXEL();
+		case 5:      DO_PIXEL();
+		case 4:      DO_PIXEL();
+		case 3:      DO_PIXEL();
+		case 2:      DO_PIXEL();
+		case 1:      DO_PIXEL();
+		} while (--n > 0);
+		}
+
+#undef DO_PIXEL
+
+		udest = (byte*)sdest;
+	}
+
+	if (count & 1) {
+		*udest = upix;
+	}
+}
+
 
 /*
 =============
