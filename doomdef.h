@@ -511,7 +511,20 @@ extern	mapthing_t	playerstarts[MAXPLAYERS];
 fixed_t	FixedMul (fixed_t a, fixed_t b);
 fixed_t	FixedDiv (fixed_t a, fixed_t b);
 #ifdef MARS
+#define FixedMul2(c,a,b) \
+       __asm volatile ( \
+            "dmuls.l %1, %2\n\t" \
+            "sts mach, r1\n\t" \
+            "sts macl, r0\n\t" \
+            "xtrct r1, r0\n\t" \
+            "mov r0, %0\n\t" \
+            : "=r" (c) \
+            : "r" (a), "r" (b) \
+            : "r0", "r1")
 fixed_t IDiv (fixed_t a, fixed_t b);
+#else
+#define FixedMul2(c,a,b) (c = FixedMul(a,b))
+#define IDiv(a,b) ((a) / (b))
 #endif
 
 #define	ACC_FIXEDMUL	4
