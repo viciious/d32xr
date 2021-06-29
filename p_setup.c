@@ -70,7 +70,6 @@ void P_LoadVertexes (int lump)
 	data = I_TempBuffer ();	
 	W_ReadLump (lump,data);
 	
-	
 	ml = (mapvertex_t *)data;
 	li = vertexes;
 	for (i=0 ; i<numvertexes ; i++, li++, ml++)
@@ -243,7 +242,6 @@ void P_LoadNodes (int lump)
 }
 
 
-
 /*
 =================
 =
@@ -288,7 +286,6 @@ void P_LoadThings (int lump)
 	for (i=0 ; i<numthings ; i++, mt++)
 		P_SpawnMapThing (mt);
 }
-
 
 
 /*
@@ -387,7 +384,6 @@ void P_LoadSideDefs (int lump)
 }
 
 
-
 /*
 =================
 =
@@ -423,8 +419,6 @@ void P_LoadBlockMap (int lump)
 	blocklinks = Z_Malloc (count,PU_LEVEL, 0);
 	D_memset (blocklinks, 0, count);
 }
-
-
 
 
 /*
@@ -536,7 +530,6 @@ void P_LoadingPlaque (void)
 {
 #ifndef MARS
 	jagobj_t	*pl;
-
 	pl = W_CacheLumpName ("loading", PU_STATIC);	
 	DrawPlaque (pl);
 	Z_Free (pl);
@@ -556,16 +549,15 @@ void P_LoadingPlaque (void)
 
 void P_SetupLevel (int lumpnum, skill_t skill)
 {
-#ifndef MARS
 	mobj_t	*mobj;
-#endif
+
 	extern	int	cy;
 	
 	M_ClearRandom ();
 
 	P_LoadingPlaque ();
 	
-D_printf ("P_SetupLevel(%i,%i)\n",lumpnum,skill);
+    D_printf ("P_SetupLevel(%i,%i)\n",lumpnum,skill);
 
 	P_InitThinkers ();
 	
@@ -590,23 +582,20 @@ D_printf ("P_SetupLevel(%i,%i)\n",lumpnum,skill);
 	deathmatch_p = deathmatchstarts;
 	P_LoadThings (lumpnum+ML_THINGS);
 
-#ifndef MARS	
 /* */
 /* if deathmatch, randomly spawn the active players */
 /* */
 	if (netgame == gt_deathmatch)
 	{
-		for (i=0 ; i<MAXPLAYERS ; i++)
+		for (int i=0 ; i<MAXPLAYERS; i++)
 			if (playeringame[i])
-			{	/* must give a player spot before deathmatchspawn */
-				mobj = P_SpawnMobj (deathmatchstarts[0].x<<16
-				,deathmatchstarts[0].y<<16,0, MT_PLAYER);
+			{	/* must give a player spot before deathmatch spawn */
+				mobj = P_SpawnMobj (deathmatchstarts[0].x<<16,deathmatchstarts[0].y<<16,0, MT_PLAYER);
 				players[i].mo = mobj;
-				G_DeathMatchSpawnPlayer (i);
+				G_DeathMatchSpawnPlayer(i);
 				P_RemoveMobj (mobj);
 			}
 	}
-#endif
 
 /* set up world state */
 	P_SpawnSpecials ();
@@ -619,15 +608,15 @@ D_printf ("P_SetupLevel(%i,%i)\n",lumpnum,skill);
 
 #ifdef JAGUAR
 {
-extern byte *debugscreen;
+	extern byte *debugscreen;
 	D_memset (debugscreen,0,32*224);
-	
 }
 #endif
 
 #ifndef MARS
 	iquehead = iquetail = 0;
 #endif
+
 	gamepaused = false;
 
 	R_SetupTextureCaches();

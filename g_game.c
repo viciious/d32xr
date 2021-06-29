@@ -46,9 +46,9 @@ void G_DoLoadLevel (void)
 	int             i; 
 	int		skytexturel;
 	int 		gamemap;
-	int			music;
+	int		music;
 
-	for (i=0 ; i<MAXPLAYERS ; i++) 
+	for (i=0 ; i<MAXPLAYERS; i++) 
 	{ 
 		if (playeringame[i] && players[i].playerstate == PST_DEAD) 
 			players[i].playerstate = PST_REBORN; 
@@ -56,6 +56,7 @@ void G_DoLoadLevel (void)
 	} 
 
 	totalkills = totalitems = totalsecret = 0;
+
 	for (i=0 ; i<MAXPLAYERS ; i++)
 	{
 		players[i].killcount = players[i].secretcount
@@ -136,7 +137,7 @@ void G_DoLoadLevel (void)
  	skytexturep = &textures[skytexturel];
 
 	P_SetupLevel (gamemaplump, gameskill);   
-	displayplayer = consoleplayer;		/* view the guy you are playing     */
+	displayplayer = consoleplayer;		/* view the guy you are playing */
 	gameaction = ga_nothing; 
 
 	music = S_SongForLump(gamemapinfo.music);
@@ -194,9 +195,8 @@ void G_PlayerFinishLevel (int player)
 void G_PlayerReborn (int player) 
 { 
 	player_t        *p; 
-	int                     i; 
-	int             frags; 
-	 
+	int              i; 
+	int              frags; 
 	
 	p = &players[player]; 
 	frags = p->frags;
@@ -303,7 +303,7 @@ void G_DoReborn (int playernum)
 		return;
 	}
 
-/*	 */
+/* */
 /* respawn this player while the other players keep going */
 /* */
 	players[playernum].mo->player = 0;   /* dissasociate the corpse  */
@@ -452,7 +452,7 @@ void G_RunGame (void)
 		int 		nextmapl;
 		boolean		finale;
 #ifdef JAGUAR
-		int			nextmap;
+		int		nextmap;
 #endif
 
 	/* load a level */
@@ -462,7 +462,6 @@ void G_RunGame (void)
 		MiniLoop (P_Start, P_Stop, P_Ticker, P_Drawer);
 	
 	/* take away cards and stuff */
-			
 		for (i=0 ; i<MAXPLAYERS ; i++) 
 			if (playeringame[i]) 
 				G_PlayerFinishLevel (i);	 
@@ -492,7 +491,6 @@ void G_RunGame (void)
 			WriteEEProm ();
 		}
 #endif
-
 	/* run a stats intermission */
 		MiniLoop (IN_Start, IN_Stop, IN_Ticker, IN_Drawer);
 	

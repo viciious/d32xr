@@ -41,7 +41,7 @@ typedef enum
 	f_splatsix
 } faces_t;
 
-pstats_t		pstats[MAXPLAYERS];
+pstats_t	pstats[MAXPLAYERS];
 faces_t		facenum;
 
 boolean		earlyexit;
@@ -51,8 +51,7 @@ boolean		negativefrag[MAXPLAYERS];
 int			killvalue[2], itemvalue[2], secretvalue[2], fragvalue[2];
 int			myticcount, myoldticcount;
 
-short		i_secret, i_percent, i_level, i_kills,
-				i_items, i_finish, i_frags, i_par, i_time;
+short		i_secret, i_percent, i_level, i_kills, i_items, i_finish, i_frags, i_par, i_time;
 
 short		snums;
 short		infaces[10];
@@ -123,7 +122,6 @@ void IN_DrawValue(int x,int y,int value)
 /* */
 void IN_NetgameDrawer(void)
 {	
-#ifndef MARS
 	int		i;
 	
 	if(earlyexit == true)
@@ -132,12 +130,12 @@ void IN_NetgameDrawer(void)
 			killvalue[i] = pstats[i].killpercent;
 			itemvalue[i] = pstats[i].itempercent;
 			secretvalue[i] = pstats[i].secretpercent;
-			fragvalue[i] = 
-				players[i].frags;
+			fragvalue[i] = players[i].frags;
 		}
-		
-			
+
+#ifndef MARS
 	if (statsdrawn == false)
+#endif
 	{
 		if (netgame == gt_deathmatch)
 		{
@@ -146,15 +144,13 @@ void IN_NetgameDrawer(void)
 			IN_DrawValue(FVALX, FVALY, fragvalue[consoleplayer]);
 			IN_DrawValue(FVALX, FVALY + 40, fragvalue[!consoleplayer]);
 		}
-		else
+		else // Co-op
 		{
 			print (28, 50, "Player");
 			print (KVALX - 18, 50, "1");
 			print (KVALX + 66, 50, "2");
 			DrawJagobjLump(i_kills, 57, 80, NULL, NULL);
-	 
 			DrawJagobjLump(i_items, 51, 110, NULL, NULL);
-	 	
 			DrawJagobjLump(i_secret, 13, 140, NULL, NULL);
 		}
 	}			
@@ -181,7 +177,6 @@ void IN_NetgameDrawer(void)
 		DrawJagobjLump(i_percent, SVALX, SVALY, NULL, NULL);
 		DrawJagobjLump(i_percent, SVALX + 80, SVALY, NULL, NULL);
 	}	
-#endif
 }
 
 /* */
@@ -240,7 +235,6 @@ void IN_Start (void)
 	int	i,l;
 #endif
 	earlyexit = false;
-
 	valsdrawn = false;
 
 	D_memset(&nextmapinfo, 0, sizeof(nextmapinfo));
@@ -249,7 +243,7 @@ void IN_Start (void)
 	else if (gamemapinfo.next)
 		G_FindMapinfo(gamemapinfo.next, &nextmapinfo);
 
-	for (i = 0; i < MAXPLAYERS; i++) 
+	for (i=0; i < MAXPLAYERS; i++) 
 	{
 		killvalue[i] = itemvalue[i] = secretvalue[i] = fragvalue[i] = 0;
 		if (totalkills)
@@ -264,7 +258,6 @@ void IN_Start (void)
 			pstats[i].secretpercent = (players[i].secretcount * 100) / totalsecret;
 		else
 			pstats[i].secretpercent = 100;
-			
 		if(netgame)
 			pstats[i].fragcount = players[i].frags;
 	}	
@@ -283,7 +276,7 @@ void IN_Start (void)
 	i_frags = W_CheckNumForName("I_FRAGS");
 #endif
 	infaces[0] = W_CheckNumForName("FACE00");
-	infaces[1]	= W_CheckNumForName("FACE01");
+	infaces[1] = W_CheckNumForName("FACE01");
 	infaces[2] = W_CheckNumForName("FACE02");
 	infaces[3] = W_CheckNumForName("FACE05");
 	infaces[4] = W_CheckNumForName("STSPLAT0");
@@ -319,18 +312,18 @@ int IN_Ticker (void)
 {
 	int		buttons;
 	int		oldbuttons;		
-	int 		i;
+	int 	i;
 
 	if (i_secret < 0)
 		return 1;
 	if (ticon < 5)
 		return 0;		/* don't exit immediately */
 	
-	for (i=0 ; i<= (netgame > gt_single) ; i++)
+	for (i=0 ; i<= (netgame > gt_single); i++)
 	{
 		buttons = ticbuttons[i];
 		oldbuttons = oldticbuttons[i];
-		
+
 	/* exit menu if button press */
 		if ( (buttons & BT_A) && !(oldbuttons & BT_A) )
 		{
@@ -381,8 +374,7 @@ int IN_Ticker (void)
 void IN_Drawer (void)
 {	
 #ifdef MARS
-	while (!I_RefreshCompleted())
-		;
+	while (!I_RefreshCompleted());
 	DrawTiledBackground();
 #endif
 

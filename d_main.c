@@ -576,7 +576,7 @@ void RunMenu (void);
 void RunTitle (void)
 {
 	int		exit;
-	
+
 	exit = MiniLoop (START_Title, STOP_Title, TIC_Abortable, DRAW_Title);
 	if (exit == ga_exitdemo)
 		RunMenu ();
