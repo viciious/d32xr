@@ -196,7 +196,7 @@ static void R_EvictFromTexCache(void* ptr, void* userp)
 	texcacheblock_t* entry = ptr;
 	r_texcache_t *c = userp;
 
-	if (entry->pixelcount == 0)
+	if (entry->pixelcount < c->reqcount)
 	{
 		*entry->userp = R_CheckPixels(entry->lumpnum);
 		Z_Free2(c->zone, entry);
@@ -220,6 +220,8 @@ void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **us
 		return;
 	if (id < 0)
 		return;
+
+	c->reqcount = c->pixcount[id];
 
 	size = pixels + sizeof(texcacheblock_t) + 32;
 	if (Z_LargestFreeBlock(c->zone) < size + 32)
