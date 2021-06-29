@@ -115,8 +115,8 @@ int P_PointOnDivlineSide (fixed_t x, fixed_t y, divline_t *line)
 		return 0;
 	}
 	
-	left = FixedMul ( line->dy>>8, dx>>8 );
-	right = FixedMul ( dy>>8 , line->dx>>8 );
+	FixedMul2(left, line->dy>>8, dx>>8);
+	FixedMul2(right, dy>>8, line->dx>>8);
 	
 	if (right < left)
 		return 0;		/* front side */
