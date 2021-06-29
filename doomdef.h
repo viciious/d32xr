@@ -521,7 +521,7 @@ fixed_t	FixedDiv (fixed_t a, fixed_t b);
             "mov r0, %0\n\t" \
             : "=r" (c) \
             : "r" (a), "r" (b) \
-            : "r0", "r1")
+            : "r0", "r1", "mach", "macl")
 fixed_t IDiv (fixed_t a, fixed_t b);
 #else
 #define FixedMul2(c,a,b) (c = FixedMul(a,b))
