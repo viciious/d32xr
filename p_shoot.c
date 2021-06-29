@@ -168,7 +168,7 @@ static boolean PA_ShootLine(line_t *li, fixed_t interceptfrac)
    else
       openbottom = back->floorheight;
 
-   dist = FixedMul(attackrange, interceptfrac);
+   FixedMul2(dist, attackrange, interceptfrac);
 
    if(front->floorheight != back->floorheight)
    {
@@ -205,7 +205,7 @@ static boolean PA_ShootLine(line_t *li, fixed_t interceptfrac)
 //
 static boolean PA_ShootThing(mobj_t *th, fixed_t interceptfrac)
 {
-   fixed_t frac, dist;
+   fixed_t frac, dist, tmp;
    fixed_t thingaimtopslope, thingaimbottomslope;
 
    if(th == shooter)
@@ -215,7 +215,7 @@ static boolean PA_ShootThing(mobj_t *th, fixed_t interceptfrac)
       return true; // corpse or something
 
    // check angles to see if the thing can be aimed at
-   dist = FixedMul(attackrange, interceptfrac);
+   FixedMul2(dist, attackrange, interceptfrac);
    
    thingaimtopslope = FixedDiv(th->z + th->height - shootz, dist);
    if(thingaimtopslope < aimbottomslope)
@@ -237,9 +237,14 @@ static boolean PA_ShootThing(mobj_t *th, fixed_t interceptfrac)
 
    // position a bit closer
    frac   = interceptfrac - FixedDiv(10*FRACUNIT, attackrange);
-   shootx = shootdiv.x + FixedMul(shootdiv.dx, frac);
-   shooty = shootdiv.y + FixedMul(shootdiv.dy, frac);
-   shootz = shootz + FixedMul(shootslope, FixedMul(frac, attackrange));
+   FixedMul2(shootx, shootdiv.dx, frac);
+   FixedMul2(shooty, shootdiv.dy, frac);
+   FixedMul2(tmp, frac, attackrange);
+   FixedMul2(tmp, shootslope, tmp);
+
+   shootx = shootdiv.x + shootx;
+   shooty = shootdiv.y + shooty;
+   shootz = shootz + tmp;
 
    return false; // don't go any further
 }
@@ -414,6 +419,7 @@ void P_Shoot2(void)
 {
    mobj_t  *t1;
    angle_t  angle;
+   fixed_t  tmp;
 
    t1        = shooter;
    shootline = NULL;
@@ -465,10 +471,14 @@ void P_Shoot2(void)
 
    // position a bit closer
    firstlinefrac -= FixedDiv(4*FRACUNIT, attackrange);
+   FixedMul2(shootx, shootdiv.dx, firstlinefrac);
+   FixedMul2(shooty, shootdiv.dy, firstlinefrac);
+   FixedMul2(tmp, firstlinefrac, attackrange);
+   FixedMul2(tmp, aimmidslope, tmp);
 
-   shootx  = shootdiv.x + FixedMul(shootdiv.dx, firstlinefrac);
-   shooty  = shootdiv.y + FixedMul(shootdiv.dy, firstlinefrac);
-   shootz += FixedMul(aimmidslope, FixedMul(firstlinefrac, attackrange));
+   shootx  = shootdiv.x + shootx;
+   shooty  = shootdiv.y + shooty;
+   shootz += tmp;
 }
 
 // EOF
