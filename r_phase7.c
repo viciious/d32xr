@@ -39,6 +39,10 @@ static void R_PlaneLoop(localplane_t* lpl, const int mask) __attribute__((always
 static void R_DrawPlanes2(const int mask) __attribute__((always_inline));
 void R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
+void I_DrawPotatoSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
+    fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source)
+    ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+
 //
 // Render the horizontal spans determined by R_PlaneLoop
 //
@@ -84,7 +88,7 @@ static void R_MapPlane(localplane_t *lpl, int y, int x, int x2)
    light = lpl->lightmax;
 #endif
 
-   I_DrawSpan(y, x, x2, light, xfrac, yfrac, xstep, ystep, lpl->ds_source);
+   I_DrawPotatoSpan(y, x, x2, light, xfrac, yfrac, xstep, ystep, lpl->ds_source);
 }
 
 //
