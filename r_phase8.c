@@ -31,7 +31,7 @@ static void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening)
    spryscale = vis->yscale;
 
    sprtop = centerYFrac - FixedMul(vis->texturemid, spryscale);
-   spryscale >>= 8;
+   spryscale = (unsigned)spryscale >> 8;
 
    // blitter iinc
    light = HWLIGHT(vis->colormap);
