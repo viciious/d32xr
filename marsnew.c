@@ -440,7 +440,7 @@ void I_ClearWorkBuffer(void)
 = wide pixels
 ====================
 */
-extern int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sprites[4], t_ref_total;
+extern int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sprites[4], t_ref_total[4];
 
 void I_Update(void)
 {
@@ -475,6 +475,7 @@ void I_Update(void)
 		unsigned t_ref_segs_avg = 0;
 		unsigned t_ref_planes_avg = 0;
 		unsigned t_ref_sprites_avg = 0;
+		unsigned t_ref_total_avg = 0;
 
 		for (i = 0; i < 4; i++)
 		{
@@ -482,15 +483,17 @@ void I_Update(void)
 			t_ref_segs_avg += t_ref_segs[i];
 			t_ref_planes_avg += t_ref_planes[i];
 			t_ref_sprites_avg += t_ref_sprites[i];
+			t_ref_total_avg += t_ref_total[i];
 		}
 		t_ref_bsp_avg >>= 2;
 		t_ref_segs_avg >>= 2;
 		t_ref_planes_avg >>= 2;
 		t_ref_sprites_avg >>= 2;
+		t_ref_total_avg >>= 2;
 
 		D_snprintf(buf, sizeof(buf), "fps:%2d", fpscount);
 		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "tic:%d/%d", t_ref_total, lasttics);
+		D_snprintf(buf, sizeof(buf), "tcs:%d", lasttics);
 		I_Print8(200, line++, buf);
 
 		line++;
@@ -504,6 +507,8 @@ void I_Update(void)
 		D_snprintf(buf, sizeof(buf), "p:%2d %2d", Mars_FRTCounter2Msec(t_ref_planes_avg), lastvisplane - visplanes - 1);
 		I_Print8(200, line++, buf);
 		D_snprintf(buf, sizeof(buf), "s:%2d %2d", Mars_FRTCounter2Msec(t_ref_sprites_avg), lastsprite_p - vissprites);
+		I_Print8(200, line++, buf);
+		D_snprintf(buf, sizeof(buf), "t:%2d", Mars_FRTCounter2Msec(t_ref_total_avg));
 		I_Print8(200, line++, buf);
 	}
 

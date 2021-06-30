@@ -84,7 +84,7 @@ angle_t* xtoviewangle/*[SCREENWIDTH+1]*/ = NULL;
 /* performance counters */
 /* */
 int t_ref_cnt = 0;
-int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sprites[4], t_ref_total;
+int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sprites[4], t_ref_total[4];
 
 r_texcache_t r_flatscache, r_wallscache;
 
@@ -820,7 +820,7 @@ void R_RenderPlayerView(void)
 	if (debugscreenactive)
 		I_DebugScreen();
 
-	t_ref_total = I_GetTime();
+	t_ref_total[t_ref_cnt] = I_GetFRTCounter();
 
 	R_Setup();
 
@@ -830,7 +830,7 @@ void R_RenderPlayerView(void)
 
 	R_Update();
 
-	t_ref_total = I_GetTime() - t_ref_total;
+	t_ref_total[t_ref_cnt] = I_GetFRTCounter() - t_ref_total[t_ref_cnt];
 }
 
 #endif
