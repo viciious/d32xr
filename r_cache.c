@@ -221,7 +221,7 @@ void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **us
 	if (id < 0)
 		return;
 
-	size = pixels + sizeof(texcacheblock_t) + 16;
+	size = pixels + sizeof(texcacheblock_t) + 32;
 	if (Z_LargestFreeBlock(c->zone) < size + 16)
 	{
 		// free unused entries
