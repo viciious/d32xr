@@ -18,7 +18,7 @@ dmapinfo_t		gamemapinfo;
 gametype_t		netgame;
 
 boolean         playeringame[MAXPLAYERS];
-player_t        *players/*[MAXPLAYERS]*/ = NULL;
+player_t        players[MAXPLAYERS];
  
 int             consoleplayer;          /* player taking events and displaying  */
 int             displayplayer;          /* view being displayed  */
@@ -356,7 +356,6 @@ void G_SecretExitLevel (void)
  
 void G_Init(void)
 {
-	players = Z_Malloc(sizeof(*players) * MAXPLAYERS, PU_STATIC, 0);
 }
 
 /* 
