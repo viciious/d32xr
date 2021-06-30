@@ -43,7 +43,7 @@ typedef struct
     int x;
     int floorclipx, ceilingclipx;
     fixed_t scale2;
-    unsigned iscale;
+    volatile unsigned iscale;
     unsigned colnum;
     unsigned light;
 } segdraw_t;
@@ -182,12 +182,15 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
 
       scale = scalefrac >> FIXEDTOSCALE;
       scalefrac += scalestep;
+
+      if (scale >= 0x7fff)
+          scale = 0x7fff; // fix the scale to maximum
+
 #ifdef MARS
+      SH2_DIVU_DVSR = scale; // set 32-bit divisor
       draw = cpu ? (x & 1) != 0 : (x & 1) == 0;
 #endif
 
-      if(scale >= 0x7fff)
-         scale = 0x7fff; // fix the scale to maximum
       scale2 = (unsigned)scale << (FRACBITS - (HEIGHTBITS + SCALEBITS));
 
       //
@@ -231,8 +234,8 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
               {
                   if (flooropen[x] != OPENMARK)
                   {
-                      floor = R_FindPlane(floor, floorplhash, floorheight, floorpicnum,
-                          lightlevel, x, stop);
+                      floor = R_FindPlane(floor, floorplhash, 
+                          floorheight, floorpicnum, lightlevel, x, stop);
                       flooropen = floor->open;
                   }
                   flooropen[x] = (unsigned short)((top << 8) + bottom);
@@ -254,8 +257,8 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
               {
                   if (ceilopen[x] != OPENMARK)
                   {
-                      ceiling = R_FindPlane(ceiling, ceilingplhash, ceilingheight, ceilingpicnum,
-                          lightlevel, x, stop);
+                      ceiling = R_FindPlane(ceiling, ceilingplhash, 
+                          ceilingheight, ceilingpicnum, lightlevel, x, stop);
                       ceilopen = ceiling->open;
                   }
                   ceilopen[x] = (unsigned short)((top << 8) + bottom);
@@ -293,16 +296,15 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
       if (actionbits & AC_CALCTEXTURE)
       {
           segdraw_t sdr;
+          fixed_t r;
 
 #ifdef MARS
-          SH2_DIVU_DVSR = scale; // set 32-bit divisor
           SH2_DIVU_DVDNT = 1 << (FRACBITS + SCALEBITS); // set 32-bit dividend, start divide
 #endif
 
           // calculate texture offset
-          fixed_t r;
-          FixedMul2(r, distance,
-              finetangent((centerangle + xtoviewangle[x]) >> ANGLETOFINESHIFT));
+          r = finetangent((centerangle + xtoviewangle[x]) >> ANGLETOFINESHIFT);
+          FixedMul2(r, distance, r);
 
           // other texture drawing info
           sdr.colnum = (offset - r) >> FRACBITS;
@@ -332,7 +334,7 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
           sdr.floorclipx = floorclipx;
           sdr.ceilingclipx = ceilingclipx;
 #ifdef MARS
-          sdr.iscale = SH2_DIVU_DVDNT; // return 32-bit quotient
+          sdr.iscale = SH2_DIVU_DVDNT; // get 32-bit quotient
 #else
           sdr.iscale = (1 << (FRACBITS + SCALEBITS)) / scale;
 #endif
