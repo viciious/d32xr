@@ -8,11 +8,9 @@
 #include "r_local.h"
 #include "mars.h"
 
-static fixed_t R_PointToDist(fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
-static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, angle_t normalangle) ATTR_DATA_CACHE_ALIGN;
-static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle) ATTR_DATA_CACHE_ALIGN;
-static void R_FinishWallPrep1(viswall_t* wc) ATTR_DATA_CACHE_ALIGN;
-static void R_FinishWallPrep2(viswall_t* wc) ATTR_DATA_CACHE_ALIGN;
+static byte* lastopening;
+
+static void R_FinishWall(viswall_t* wc) ATTR_DATA_CACHE_ALIGN;
 static void R_FinishSprite(vissprite_t* vis) ATTR_DATA_CACHE_ALIGN;
 static void R_FinishPSprite(vissprite_t* vis) ATTR_DATA_CACHE_ALIGN;
 boolean R_LatePrep(void) ATTR_DATA_CACHE_ALIGN;
@@ -44,128 +42,27 @@ static void *R_CheckPixels(int lumpnum)
 #endif
 
 //
-// Get distance to point in 3D projection
-//
-static fixed_t R_PointToDist(fixed_t x, fixed_t y)
-{
-   int angle;
-   fixed_t dx, dy, temp;
-   
-   dx = D_abs(x - vd.viewx);
-   dy = D_abs(y - vd.viewy);
-   
-   if(dy > dx)
-   {
-      temp = dx;
-      dx = dy;
-      dy = temp;
-   }
-   
-   angle = (tantoangle[FixedDiv(dy, dx)>>DBITS] + ANG90) >> ANGLETOFINESHIFT;
-   
-   // use as cosine
-   return FixedDiv(dx, finesine(angle));
-}
-
-//
-// Convert angle and distance within view frustum to texture scale factor.
-//
-static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, angle_t normalangle)
-{
-   angle_t anglea, angleb;
-   fixed_t num, den;
-   int     sinea, sineb;
-
-   visangle += ANG90;
-   
-   anglea = visangle - vd.viewangle;
-   sinea  = finesine(anglea >> ANGLETOFINESHIFT);
-   angleb = visangle - normalangle;
-   sineb  = finesine(angleb >> ANGLETOFINESHIFT);
-   
-   FixedMul2(num, stretchX, sineb);
-   FixedMul2(den, rw_distance, sinea);
-
-   return FixedDiv(num, den);
-}
-
-//
-// Setup texture calculations for lines with upper and lower textures
-//
-static void R_SetupCalc(viswall_t *wc, fixed_t hyp, angle_t normalangle)
-{
-   fixed_t sineval, rw_offset;
-   angle_t offsetangle;
-
-   offsetangle = normalangle - wc->angle1;
-
-   if(offsetangle > ANG180)
-      offsetangle = 0 - offsetangle;
-
-   if(offsetangle > ANG90)
-      offsetangle = ANG90;
-
-   sineval = finesine(offsetangle >> ANGLETOFINESHIFT);
-   FixedMul2(rw_offset, hyp, sineval);
-
-   if(normalangle - wc->angle1 < ANG180)
-      rw_offset = -rw_offset;
-
-   wc->offset += rw_offset;
-   wc->centerangle = ANG90 + vd.viewangle - normalangle;
-}
-
-//
 // Late prep for viswalls
 //
-static void R_FinishWallPrep1(viswall_t* wc)
-{
-    angle_t      distangle, offsetangle, normalangle;
-    seg_t* seg = wc->seg;
-    fixed_t      sineval, rw_distance;
-    fixed_t      scalefrac, scale2;
-    fixed_t      hyp;
-
-    // this is essentially R_StoreWallRange
-    // calculate rw_distance for scale calculation
-    normalangle = ((angle_t)seg->angle << 16) + ANG90;
-    offsetangle = normalangle - wc->angle1;
-
-    if ((int)offsetangle < 0)
-        offsetangle = 0 - offsetangle;
-
-    if (offsetangle > ANG90)
-        offsetangle = ANG90;
-
-    distangle = ANG90 - offsetangle;
-    hyp = R_PointToDist(vertexes[seg->v1].x, vertexes[seg->v1].y);
-    sineval = finesine(distangle >> ANGLETOFINESHIFT);
-    FixedMul2(rw_distance, hyp, sineval);
-    wc->distance = rw_distance;
-
-    scalefrac = scale2 = wc->scalefrac =
-        R_ScaleFromGlobalAngle(rw_distance, vd.viewangle + xtoviewangle[wc->start], normalangle);
-
-    if (wc->stop > wc->start)
-    {
-        scale2 = R_ScaleFromGlobalAngle(rw_distance, vd.viewangle + xtoviewangle[wc->stop], normalangle);
-        wc->scalestep = IDiv(scale2 - scalefrac, wc->stop - wc->start);
-    }
-
-    wc->scale2 = scale2;
-
-    // does line have top or bottom textures?
-    if (wc->actionbits & (AC_TOPTEXTURE | AC_BOTTOMTEXTURE))
-    {
-        wc->actionbits |= AC_CALCTEXTURE; // set to calculate texture info
-        R_SetupCalc(wc, hyp, normalangle);// do calc setup
-    }
-}
-
-static void R_FinishWallPrep2(viswall_t* wc)
+static void R_FinishWall(viswall_t* wc)
 {
     unsigned int fw_actionbits = wc->actionbits;
+    int rw_x = wc->start;
+    int rw_stopx = wc->stop + 1;
+    int width = rw_stopx - rw_x + 1;
     texture_t* fw_texture;
+
+    if (fw_actionbits & AC_BOTTOMSIL)
+    {
+        wc->bottomsil = (byte*)lastopening - rw_x;
+        lastopening += width;
+    }
+
+    if (fw_actionbits & AC_TOPSIL)
+    {
+        wc->topsil = (byte*)lastopening - rw_x;
+        lastopening += width;
+    }
 
     // has top or middle texture?
     if (fw_actionbits & AC_TOPTEXTURE)
@@ -332,11 +229,10 @@ boolean R_LatePrep(void)
    cacheneeded = false;
 #endif
 
+   lastopening = (byte *)openings;
+
    for (wall = viswalls; wall < lastwallcmd; wall++)
-   {
-       R_FinishWallPrep1(wall);
-       R_FinishWallPrep2(wall);
-   }
+       R_FinishWall(wall);
 
    // finish actor sprites   
    for(spr = vissprites; spr < lastsprite_p; spr++)

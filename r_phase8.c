@@ -247,12 +247,8 @@ static void R_DrawSpritesStride(const int start)
 }
 
 #ifdef MARS
-void Mars_Slave_R_DrawSprites(void) ATTR_DATA_CACHE_ALIGN;
-
 void Mars_Slave_R_DrawSprites(void)
 {
-    Mars_ClearCache();
-
     R_DrawSpritesStride(1);
 }
 #endif
