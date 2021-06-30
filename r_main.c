@@ -197,8 +197,8 @@ int	R_PointOnSide (int x, int y, node_t *node)
 	dx = (x - node->x);
 	dy = (y - node->y);
 	
-	left = (node->dy>>16) * (dx>>16);
-	right = (dy>>16) * (node->dx>>16);
+	left = (node->dy>>FRACBITS) * (dx>>FRACBITS);
+	right = (dy>>FRACBITS) * (node->dx>>FRACBITS);
 	
 	if (right < left)
 		return 0;		/* front side */
