@@ -32,16 +32,18 @@ static void R_PrepMobj(mobj_t *thing)
    tr_x = thing->x - vd.viewx;
    tr_y = thing->y - vd.viewy;
 
-   gxt =  FixedMul(tr_x, vd.viewcos);
-   gyt = -FixedMul(tr_y, vd.viewsin);
+   FixedMul2(gxt, tr_x, vd.viewcos);
+   FixedMul2(gyt, tr_y, vd.viewsin);
+   gyt = -gyt;
    tz  = gxt - gyt;
 
    // thing is behind view plane?
    if(tz < MINZ)
       return;
 
-   gxt = -FixedMul(tr_x, vd.viewsin);
-   gyt =  FixedMul(tr_y, vd.viewcos);
+   FixedMul2(gxt, tr_x, vd.viewsin);
+   gxt = -gxt;
+   FixedMul2(gyt, tr_y, vd.viewcos);
    tx  = -(gyt + gxt);
 
    // too far off the side?
@@ -92,7 +94,7 @@ static void R_PrepMobj(mobj_t *thing)
    vis->gy       = thing->y;
    vis->gz       = thing->z;
    vis->xscale   = xscale = FixedDiv(PROJECTION, tz);
-   vis->yscale   = FixedMul(xscale, STRETCH);
+   FixedMul2(vis->yscale, xscale, STRETCH);
    vis->yiscale  = FixedDiv(FRACUNIT, vis->yscale); // CALICO_FIXME: -1 in GAS... test w/o.
 
    if(flip)

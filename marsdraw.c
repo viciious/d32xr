@@ -30,20 +30,6 @@
 #include "r_local.h"
 #include "lzss.h"
 
-//#define USE_C_DRAW
-
-extern int 	debugmode;
-
-#ifdef USE_C_DRAW
-#define I_DrawColumnPO2A I_DrawColumnPO2C
-#define I_DrawColumnNPO2A I_DrawColumnNPO2C
-#define I_DrawSpanA I_DrawSpanC
-#else
-void I_DrawColumnPO2A(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_, fixed_t fracstep, inpixel_t* dc_source, int dc_texheight);
-void I_DrawColumnNPO2A(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_, fixed_t fracstep, inpixel_t* dc_source, int dc_texheight);
-void I_DrawSpanA(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source);
-#endif
-
 /*
 ==============================================================================
 
@@ -54,14 +40,26 @@ void I_DrawSpanA(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, fi
 
 #ifdef USE_C_DRAW
 
-static void I_DrawColumnPO2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
+extern short* dc_colormaps;
+
+void I_DrawColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
-static void I_DrawColumnNPO2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
+void I_DrawColumnNPo2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
-static void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
+void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source) ATTR_DATA_CACHE_ALIGN;
 
-static void I_DrawColumnPO2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
+/*
+==================
+=
+= I_DrawColumn
+=
+= Source is the top of the column to scale
+=
+==================
+*/
+
+void I_DrawColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight)
 {
 	unsigned	heightmask;
@@ -69,6 +67,11 @@ static void I_DrawColumnPO2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t 
 	short* dc_colormap;
 	unsigned	frac;
 	unsigned    count, n;
+
+#ifdef RANGECHECK
+	if ((unsigned)dc_x >= screenWidth || dc_yl < 0 || dc_yh >= screenHeight)
+		I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
+#endif
 
 	if (dc_yl > dc_yh)
 		return;
@@ -108,7 +111,7 @@ static void I_DrawColumnPO2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t 
 // we need to do the "tutti frutti" fix here. Carmack didn't bother fixing
 // this for the NeXT "simulator" build of the game.
 //
-static void I_DrawColumnNPO2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
+void I_DrawColumnNPo2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight)
 {
 	unsigned	heightmask;
@@ -116,6 +119,11 @@ static void I_DrawColumnNPO2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t
 	short* dc_colormap;
 	unsigned    count, n;
 	unsigned 	frac;
+
+#ifdef RANGECHECK
+	if ((unsigned)dc_x >= screenWidth || dc_yl < 0 || dc_yh >= screenHeight)
+		I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
+#endif
 
 	if (dc_yl > dc_yh)
 		return;
@@ -159,7 +167,15 @@ static void I_DrawColumnNPO2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t
 #undef DO_PIXEL
 }
 
-static void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, 
+/*
+================
+=
+= I_DrawSpan
+=
+================
+*/
+
+void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, 
 	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source)
 {
 	unsigned xfrac, yfrac;
@@ -167,6 +183,12 @@ static void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xf
 	int		spot;
 	unsigned count, n;
 	short* dc_colormap;
+
+#ifdef RANGECHECK
+	if (ds_x2 < ds_x1 || ds_x1<0 || ds_x2 >= screenWidth
+		|| (unsigned)ds_y>screenHeight)
+		I_Error("R_DrawSpan: %i to %i at %i", ds_x1, ds_x2, ds_y);
+#endif 
 
 	count = ds_x2 - ds_x1 + 1;
 	xfrac = ds_xfrac, yfrac = ds_yfrac;
@@ -198,53 +220,6 @@ static void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xf
 }
 
 #endif
-
-/*
-==================
-=
-= I_DrawColumn
-=
-= Source is the top of the column to scale
-=
-==================
-*/
-void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac, fixed_t fracstep, inpixel_t* dc_source, int dc_texheight)
-{
-#ifdef RANGECHECK 
-	if ((unsigned)dc_x >= screenWidth || dc_yl < 0 || dc_yh >= screenHeight)
-		I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
-#endif
-
-	if (debugmode == 3)
-		return;
-
-	if (dc_texheight & (dc_texheight - 1)) // height is not a power-of-2?
-		I_DrawColumnNPO2A(dc_x, dc_yl, dc_yh, light, frac, fracstep, dc_source, dc_texheight);
-	else
-		I_DrawColumnPO2A(dc_x, dc_yl, dc_yh, light, frac, fracstep, dc_source, dc_texheight);
-}
-
-/*
-================
-=
-= I_DrawSpan
-=
-================
-*/
-void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source)
-{
-#ifdef RANGECHECK 
-	if (ds_x2 < ds_x1 || ds_x1<0 || ds_x2 >= screenWidth
-		|| (unsigned)ds_y>screenHeight)
-		I_Error("R_DrawSpan: %i to %i at %i", ds_x1, ds_x2, ds_y);
-#endif 
-
-	if (debugmode == 3)
-		return;
-
-	I_DrawSpanA(ds_y, ds_x1, ds_x2, light, ds_xfrac, ds_yfrac, ds_xstep, ds_ystep, ds_source);
-}
-
 
 /*
 =============

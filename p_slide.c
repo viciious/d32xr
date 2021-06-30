@@ -74,7 +74,9 @@ static int SL_PointOnSide(fixed_t x, fixed_t y)
    dx = x - p1->x;
    dy = y - p1->y;
 
-   dist = FixedMul(dx, nvx) + FixedMul(dy, nvy);
+   FixedMul2(dx, dx, nvx);
+   FixedMul2(dy, dy, nvy);
+   dist = dx + dy;
 
    if(dist > FRACUNIT)
       return SIDE_FRONT;
@@ -94,11 +96,15 @@ static fixed_t SL_CrossFrac(void)
    // project move start and end points onto line normal
    dx    = p3x - p1->x;
    dy    = p3y - p1->y;
-   dist1 = FixedMul(dx, nvx) + FixedMul(dy, nvy);
+   FixedMul2(dx, dx, nvx);
+   FixedMul2(dy, dy, nvy);
+   dist1 = dx + dy;
 
    dx    = p4x - p1->x;
    dy    = p4y - p1->y;
-   dist2 = FixedMul(dx, nvx) + FixedMul(dy, nvy);
+   FixedMul2(dx, dx, nvx);
+   FixedMul2(dy, dy, nvy);
+   dist2 = dx + dy;
 
    if((dist1 < 0) == (dist2 < 0))
       return FRACUNIT; // doesn't cross the line
@@ -306,7 +312,9 @@ static int SL_PointOnSide2(fixed_t x1, fixed_t y1,
    nx = (y3 - y2);
    ny = (x2 - x3);
 
-   dist = FixedMul(x1, nx) + FixedMul(y1, ny);
+   FixedMul2(nx, x1, nx);
+   FixedMul2(ny, y1, ny);
+   dist = nx + ny;
 
    return ((dist < 0) ? SIDE_BACK : SIDE_FRONT);
 }
@@ -438,8 +446,8 @@ void P_SlideMove(void)
       if(frac < 0)
          frac = 0;
 
-      rx = FixedMul(frac, dx);
-      ry = FixedMul(frac, dy);
+      FixedMul2(rx, frac, dx);
+      FixedMul2(ry, frac, dy);
 
       slidex += rx;
       slidey += ry;
@@ -456,10 +464,12 @@ void P_SlideMove(void)
       // project the remaining move along the line that blocked movement
       dx -= rx;
       dy -= ry;
-      slide = FixedMul(dx, blocknvx) + FixedMul(dy, blocknvy);
+      FixedMul2(dx, dx, blocknvx);
+      FixedMul2(dy, dy, blocknvy);
+      slide = dx + dy;
 
-      dx = FixedMul(slide, blocknvx);
-      dy = FixedMul(slide, blocknvy);
+      FixedMul2(dx, slide, blocknvx);
+      FixedMul2(dy, slide, blocknvy);
    }
 
    // some hideous situation has happened that won't let the player slide

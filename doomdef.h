@@ -147,7 +147,7 @@ typedef enum
 /* library replacements */
 /* */
 
-ATTR_DATA_CACHE_ALIGN static inline int D_abs(int x)
+static inline int D_abs(int x)
 {
 	if (x < 0)
 		return -x;
@@ -155,7 +155,7 @@ ATTR_DATA_CACHE_ALIGN static inline int D_abs(int x)
 }
 
 void D_memset (void *dest, int val, int count);
-void D_memcpy (void *dest, const void *src, int count) ATTR_DATA_CACHE_ALIGN;
+void D_memcpy (void *dest, const void *src, int count);
 void D_strncpy (char *dest, const char *src, int maxcount);
 int D_strncasecmp (const char *s1, const char *s2, int len);
 int D_strcasecmp (const char *s1, const char *s2);
@@ -208,7 +208,6 @@ typedef struct mobj_s
 
 	unsigned short		type;
 
-
 /* info for drawing */
 	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
 	angle_t			angle;
@@ -225,11 +224,9 @@ typedef struct mobj_s
 	struct mobj_s	*target;		/* thing being chased/attacked (or NULL) */
 									/* also the originator for missiles */
 	intptr_t		extradata;		/* for latecall functions */
-#ifndef MARS
-	fixed_t			spawnx, spawny;	/* for deathmatch respawning */
-	angle_t			spawnangle;
-	unsigned short		spawntype;
-#endif
+	unsigned short	spawnx, spawny;
+	unsigned short	spawnangle;
+	unsigned short	spawntype;
 } mobj_t;
 
 /* each sector has a degenmobj_t in it's center for sound origin purposes */
@@ -458,7 +455,8 @@ extern	int		ticmousex[MAXPLAYERS], ticmousey[MAXPLAYERS];
 extern	boolean		mousepresent;
 
 int MiniLoop ( void (*start)(void),  void (*stop)(void)
-		,  int (*ticker)(void), void (*drawer)(void) );
+		,  int (*ticker)(void), void (*drawer)(void) )
+	ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 int	G_Ticker (void);
 void G_Drawer (void);
@@ -511,7 +509,20 @@ extern	mapthing_t	playerstarts[MAXPLAYERS];
 fixed_t	FixedMul (fixed_t a, fixed_t b);
 fixed_t	FixedDiv (fixed_t a, fixed_t b);
 #ifdef MARS
+#define FixedMul2(c,a,b) \
+       __asm volatile ( \
+            "dmuls.l %1, %2\n\t" \
+            "sts mach, r1\n\t" \
+            "sts macl, r0\n\t" \
+            "xtrct r1, r0\n\t" \
+            "mov r0, %0\n\t" \
+            : "=r" (c) \
+            : "r" (a), "r" (b) \
+            : "r0", "r1", "mach", "macl")
 fixed_t IDiv (fixed_t a, fixed_t b);
+#else
+#define FixedMul2(c,a,b) (c = FixedMul(a,b))
+#define IDiv(a,b) ((a) / (b))
 #endif
 
 #define	ACC_FIXEDMUL	4
@@ -698,11 +709,33 @@ void I_Update (void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 void I_Error (char *error, ...) ATTR_OPTIMIZE_SIZE;
 
-void I_DrawColumn (int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale, 
-	fixed_t dc_texturemid, inpixel_t *dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
+#ifdef MARS
+//#define USE_C_DRAW
 
-void I_DrawSpan (int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac, 
-	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t *ds_source) ATTR_DATA_CACHE_ALIGN;
+#ifdef USE_C_DRAW
+
+#define I_DrawColumn I_DrawColumnC
+#define I_DrawColumnNPo2 I_DrawColumnNPo2C
+#define I_DrawSpan I_DrawSpanC
+
+#else
+
+#define I_DrawColumn I_DrawColumnA
+#define I_DrawColumnNPo2 I_DrawColumnNPo2A
+#define I_DrawSpan I_DrawSpanA
+
+#endif
+
+#endif
+
+void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
+	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
+
+void I_DrawColumnNPo2(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
+	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
+
+void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
+	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source);
 
 void I_Print8 (int x, int y, const char *string);
 

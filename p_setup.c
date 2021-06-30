@@ -613,10 +613,8 @@ void P_SetupLevel (int lumpnum, skill_t skill)
 }
 #endif
 
-#ifndef MARS
-	iquehead = iquetail = 0;
-#endif
 
+	iquehead = iquetail = 0;
 	gamepaused = false;
 
 	R_SetupTextureCaches();
