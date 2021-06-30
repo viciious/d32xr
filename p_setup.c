@@ -580,7 +580,8 @@ D_printf ("P_SetupLevel(%i,%i)\n",lumpnum,skill);
 	P_LoadSegs (lumpnum+ML_SEGS);
 
 #ifdef MARS
-	rejectmatrix = (byte *)(wadfileptr+BIGLONG(lumpinfo[lumpnum+ML_REJECT].filepos));
+	rejectmatrix = Z_Malloc(W_LumpLength(lumpnum + ML_REJECT), PU_LEVEL, NULL);
+	W_ReadLump(lumpnum + ML_REJECT, rejectmatrix);
 #else
 	rejectmatrix = W_CacheLumpNum (lumpnum+ML_REJECT,PU_LEVEL);
 #endif
