@@ -524,14 +524,14 @@ void R_Setup (void)
 
 	tempbuf = (unsigned short *)I_WorkBuffer();
 
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 4) & ~3);
+	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
 	visplanes = (void*)tempbuf;
 	tempbuf += sizeof(*visplanes) * MAXVISPLANES;
 
 /* */
 /* plane filling */
 /*	 */
-	tempbuf = (unsigned short *)(((intptr_t)tempbuf+2)&~1);
+	tempbuf = (unsigned short *)(((intptr_t)tempbuf+1)&~1);
 	tempbuf++; // padding
 	for (i = 0; i < MAXVISPLANES; i++) {
 #ifdef MARS
@@ -543,25 +543,25 @@ void R_Setup (void)
 		tempbuf += screenWidth+2;
 	}
 
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 4) & ~3);
+	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
 	visplanes_hash = (visplane_t**)tempbuf;
 	tempbuf += sizeof(visplane_t *) * NUM_VISPLANES_BUCKETS;
 
 	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
 		visplanes_hash[i] = NULL;
 
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 16) & ~15);
+	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 15) & ~15);
 	viswalls = (viswall_t*)tempbuf;
 	tempbuf += sizeof(*viswalls)*MAXWALLCMDS/sizeof(*tempbuf);
 
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 4) & ~3);
+	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
 	vissubsectors = (void*)tempbuf;
 	tempbuf += sizeof(*vissubsectors) * MAXVISSSEC;
 
 /*	 */
 /* clear sprites */
 /* */
-	tempbuf = (unsigned short *)(((intptr_t)tempbuf+4)&~3);
+	tempbuf = (unsigned short *)(((intptr_t)tempbuf+3)&~3);
 	vissprites = (void *)tempbuf;
 	tempbuf += sizeof(*vissprites)*MAXVISSPRITES/sizeof(*tempbuf);
 	vissprite_p = vissprites;
