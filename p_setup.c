@@ -2,6 +2,7 @@
 
 #include "doomdef.h"
 #include "p_local.h"
+#include "mars.h"
 
 int			numvertexes;
 vertex_t	*vertexes;
@@ -630,6 +631,10 @@ extern byte *debugscreen;
 	gamepaused = false;
 
 	R_SetupTextureCaches();
+
+#ifdef MARS
+	Mars_CommSlaveClearCache();
+#endif
 }
 
 

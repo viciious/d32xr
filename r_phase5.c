@@ -276,10 +276,6 @@ void R_Cache(void)
 
         R_AddToTexCache(&r_wallscache, id, pixels, tex->lumpnum, (void **)&tex->data);
     }
-
-#ifdef MARS
-    Mars_CommSlaveClearCache();
-#endif
 }
 
 #endif

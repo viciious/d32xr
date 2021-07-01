@@ -294,20 +294,18 @@ static void R_WallEarlyPrep2(viswall_t* wc)
 
 void Mars_Slave_R_WallPrep(void)
 {
-    int i;
-    viswall_t* segl, * first;
+    viswall_t* segl;
     volatile viswall_t* volatile* plast;
+    volatile viswall_t* volatile* pfirst;
     visplane_t* pl;
-    int planenum;
+    int planenum = 1;
 
-    Mars_ClearCache();
+    Mars_ClearCacheLines(&vd, (sizeof(vd)+15)/16);
 
-    planenum = 1;
+    pfirst = (volatile viswall_t* volatile *)((intptr_t)&viswalls | 0x20000000);
+    plast = (volatile viswall_t* volatile*)((intptr_t)&lastwallcmd | 0x20000000);
 
-    first = *(viswall_t**)((intptr_t)&viswalls | 0x20000000);
-    plast = (volatile viswall_t**)((intptr_t)&lastwallcmd | 0x20000000);
-
-    for (segl = first; ; )
+    for (segl = (viswall_t*)*pfirst; ; )
     {
         /* check if master CPU has submitted any new walls cmds */
         if (segl == (viswall_t*)*plast)
