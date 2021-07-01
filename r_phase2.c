@@ -300,7 +300,7 @@ void Mars_Slave_R_WallPrep(void)
     visplane_t* pl;
     int planenum = 1;
 
-    Mars_ClearCacheLines(&vd, (sizeof(vd)+15)/16);
+    Mars_ClearCache();
 
     pfirst = (volatile viswall_t* volatile *)((intptr_t)&viswalls | 0x20000000);
     plast = (volatile viswall_t* volatile*)((intptr_t)&lastwallcmd | 0x20000000);
