@@ -5,12 +5,10 @@
 
 #include "doomdef.h"
 
-/* proper screen size would be 160*100, stretched to 224 is 2.2 scale */
-#define	STRETCH				(22*FRACUNIT/10)
-
 extern unsigned short screenWidth, screenHeight;
 extern unsigned short centerX, centerY;
 extern fixed_t centerXFrac, centerYFrac;
+extern fixed_t stretch;
 extern fixed_t stretchX;
 
 #define	PROJECTION			centerXFrac

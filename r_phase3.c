@@ -94,7 +94,7 @@ static void R_PrepMobj(mobj_t *thing)
    vis->gy       = thing->y;
    vis->gz       = thing->z;
    vis->xscale   = xscale = FixedDiv(PROJECTION, tz);
-   FixedMul2(vis->yscale, xscale, STRETCH);
+   FixedMul2(vis->yscale, xscale, stretch);
    vis->yiscale  = FixedDiv(FRACUNIT, vis->yscale); // CALICO_FIXME: -1 in GAS... test w/o.
 
    if(flip)

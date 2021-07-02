@@ -9,6 +9,7 @@
 unsigned short screenWidth, screenHeight;
 unsigned short centerX, centerY;
 fixed_t centerXFrac, centerYFrac;
+fixed_t stretch;
 fixed_t stretchX;
 
 /*===================================== */
@@ -242,7 +243,6 @@ const int screenSizes[][2] = {
 	{128, 144},
 	{128, 160},
 	{160, 180},
-	{160, 200},
 };
 
 /*
@@ -255,7 +255,6 @@ const int screenSizes[][2] = {
 void R_SetScreenSize(int size)
 {
 	int width, height;
-	fixed_t stretch;
 	const int numSizes = sizeof(screenSizes) / sizeof(screenSizes[0]);
 
 	while (!I_RefreshCompleted())
@@ -275,7 +274,8 @@ void R_SetScreenSize(int size)
 	centerXFrac = centerX * FRACUNIT;
 	centerYFrac = centerY * FRACUNIT;
 
-	stretch = STRETCH;
+	/* proper screen size would be 160*100, stretched to 224 is 2.2 scale */
+	stretch = (fixed_t)((160.0f / width) * ((float)height / 180.0f) * 2.2f * FRACUNIT);
 	stretchX = stretch * centerX;
 
 	R_InitMathTables();

@@ -271,7 +271,8 @@ int	R_TextureNumForName (const char *name)
 void R_InitMathTables(void)
 {
 	int i;
-	fixed_t focallength;
+	fixed_t focalLength;
+	fixed_t stretchWidth;
 	short* tempviewangletox;
 
 	if (viewangletox)
@@ -286,6 +287,8 @@ void R_InitMathTables(void)
 	tempviewangletox = (short *)I_WorkBuffer();
 	viewangletox = Z_Malloc(sizeof(*viewangletox) * FINEANGLES / 2, PU_STATIC, 0);
 	xtoviewangle = Z_Malloc(sizeof(*xtoviewangle) * (screenWidth+1), PU_STATIC, 0);
+	yslope = Z_Malloc(sizeof(*yslope) * screenHeight, PU_STATIC, 0);
+	distscale = Z_Malloc(sizeof(*distscale) * screenWidth, PU_STATIC, 0);
 
 	// Use tangent table to generate viewangletox:
 	//  viewangletox will give the next greatest x
@@ -294,7 +297,7 @@ void R_InitMathTables(void)
 	// Calc focallength
 	//  so FIELDOFVIEW angles covers screenWidth.
 
-	focallength = FixedDiv(centerXFrac, finetangent(FINEANGLES / 4 + FIELDOFVIEW / 2));
+	focalLength = FixedDiv(centerXFrac, finetangent(FINEANGLES / 4 + FIELDOFVIEW / 2));
 	for (i = 0; i < FINEANGLES / 2; i++)
 	{
 		fixed_t t;
@@ -306,7 +309,7 @@ void R_InitMathTables(void)
 			t = screenWidth + 1;
 		}
 		else {
-			t = FixedMul(finetangent(i), focallength);
+			t = FixedMul(finetangent(i), focalLength);
 			t = (centerXFrac - t + FRACUNIT - 1) >> FRACBITS;
 			if (t < -1) {
 				t = -1;
@@ -341,12 +344,12 @@ void R_InitMathTables(void)
 	}
 
 	// Make the yslope table for floor and ceiling textures
-	yslope = Z_Malloc(sizeof(*yslope) * screenHeight, PU_STATIC, 0);
+	stretchWidth = screenWidth / 2 * stretch;
 	for (i = 0; i < screenHeight; i++)
 	{
 		fixed_t y = ((i - screenHeight / 2) << FRACBITS) + FRACUNIT / 2;
 		y = D_abs(y);
-		y = FixedDiv(screenWidth / 2 * STRETCH, y);
+		y = FixedDiv(stretchWidth, y);
 		y >>= 6;
 		if (y > 0xFFFF) {
 			y = 0xFFFF;
@@ -355,7 +358,6 @@ void R_InitMathTables(void)
 	}
 
 	// Create the distance scale table for floor and ceiling textures
-	distscale = Z_Malloc(sizeof(*distscale) * screenWidth, PU_STATIC, 0);
 	for (i = 0; i < screenWidth; i++)
 	{
 		fixed_t cosang = finecosine(xtoviewangle[i] >> ANGLETOFINESHIFT);
