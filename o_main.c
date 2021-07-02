@@ -117,7 +117,7 @@ void O_Init (void)
 	menuitem[1].y = 80;
 	menuitem[1].hasslider = true;
 
-	slider[1].maxval = 3;
+	slider[1].maxval = 2;
 	slider[1].curval = 0;
 
 #ifndef MARS
