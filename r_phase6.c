@@ -309,7 +309,7 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
 
 #ifdef GRADIENTLIGHT
           // calc light level
-          unsigned texturelight = ((scale * lseg->lightcoef) / FRACUNIT);
+          unsigned texturelight = ((scale2 * lseg->lightcoef) / FRACUNIT);
           if (texturelight <= lseg->lightsub)
           {
               texturelight = lseg->lightmin;

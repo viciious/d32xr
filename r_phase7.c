@@ -9,6 +9,8 @@
 #include "mars.h"
 #endif
 
+#define LIGHTCOEF (0x7ffff << SLOPEBITS)
+
 typedef struct
 {
     visplane_t* pl;
@@ -16,7 +18,6 @@ typedef struct
     angle_t angle;
     fixed_t x, y;
 #ifdef GRADIENTLIGHT
-    unsigned  lightcoef;
     unsigned  lightmin, lightmax, lightsub;
 #else
     int     lightmax;
@@ -45,9 +46,10 @@ void R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
 static void R_MapPlane(localplane_t *lpl, int y, int x, int x2)
 {
    int remaining;
-   fixed_t distance, length, xfrac, yfrac, xstep, ystep;
+   volatile fixed_t distance;
+   fixed_t length, xfrac, yfrac, xstep, ystep;
    angle_t angle;
-   unsigned light;
+   volatile unsigned light;
 
    remaining = x2 - x + 1;
 
@@ -55,6 +57,13 @@ static void R_MapPlane(localplane_t *lpl, int y, int x, int x2)
        return; // nothing to draw (shouldn't happen)
 
    FixedMul2(distance, lpl->height, yslope[y]);
+
+#if defined(MARS) && defined(GRADIENTLIGHT)
+   SH2_DIVU_DVSR = distance;   // set 32-bit divisor
+   SH2_DIVU_DVDNT = LIGHTCOEF; // set high bits of the 64-bit dividend, start divide
+#endif
+
+
    FixedMul2(length, distance, distscale[x]);
    angle = (lpl->angle + xtoviewangle[x]) >> ANGLETOFINESHIFT;
 
@@ -67,7 +76,11 @@ static void R_MapPlane(localplane_t *lpl, int y, int x, int x2)
    FixedMul2(ystep, lpl->baseyscale, distance);
 
 #ifdef GRADIENTLIGHT
-   light = lpl->lightcoef / distance;
+#ifdef MARS
+   light = SH2_DIVU_DVDNT;
+#else
+   light = LIGHTCOEF / distance;
+#endif
 
    if (light <= lpl->lightsub)
        light = lpl->lightmin;
@@ -232,7 +245,6 @@ static void R_DrawPlanes2(const int mask)
             light = lpl.lightmax;
         lpl.lightmin = (unsigned)light;
         lpl.lightsub = 160 * (lpl.lightmax - lpl.lightmin) / (800 - 160);
-        lpl.lightcoef = 255 << SLOPEBITS;
 #endif
 
 #ifndef GRADIENTLIGHT
