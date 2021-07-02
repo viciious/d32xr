@@ -181,14 +181,14 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
       unsigned scale2;
 
       scale = scalefrac;
-      scalefrac += scalestep;
-
 #ifdef MARS
-      SH2_DIVU_DVSR = scale; // set 32-bit divisor
+      SH2_DIVU_DVSR = scalefrac; // set 32-bit divisor
+#endif
+      scale2 = (unsigned)scalefrac >> HEIGHTBITS;
+      scalefrac += scalestep;
+#ifdef MARS
       draw = cpu ? (x & 1) != 0 : (x & 1) == 0;
 #endif
-
-      scale2 = (unsigned)scale >> HEIGHTBITS;
 
       //
       // get ceilingclipx and floorclipx from clipbounds
