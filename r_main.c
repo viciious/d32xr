@@ -271,6 +271,7 @@ void R_SetScreenSize(int size)
 	weaponScale = 24 * FRACUNIT;
 
 #ifdef MARS
+	if (0)
 	if ((MARS_VDP_DISPMODE & MARS_NTSC_FORMAT) == 0)
 	{
 		/* correct aspect ratio on PAL */
