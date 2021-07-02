@@ -10,6 +10,7 @@ extern unsigned short centerX, centerY;
 extern fixed_t centerXFrac, centerYFrac;
 extern fixed_t stretch;
 extern fixed_t stretchX;
+extern fixed_t weaponScale;
 
 #define	PROJECTION			centerXFrac
 

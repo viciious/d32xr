@@ -7,8 +7,8 @@
 #define	RAISESPEED		FRACUNIT*18
 
 #define	WEAPONX		(15*(screenWidth-160)/32)*FRACUNIT
-#define WEAPONBOTTOM	(128+18*(screenWidth-160)/32)*FRACUNIT
-#define WEAPONTOP		(32+18*(screenWidth-160)/32)*FRACUNIT
+#define WEAPONBOTTOM	((weaponScale*screenWidth)/320)
+#define WEAPONTOP		((weaponScale*screenHeight)/160)
 
 
 #define	BFGCELLS		40			/* plasma cells for a bfg attack */

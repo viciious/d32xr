@@ -11,6 +11,7 @@ unsigned short centerX, centerY;
 fixed_t centerXFrac, centerYFrac;
 fixed_t stretch;
 fixed_t stretchX;
+fixed_t weaponScale;
 
 /*===================================== */
 
@@ -267,6 +268,16 @@ void R_SetScreenSize(int size)
 
 	screenWidth = width;
 	screenHeight = height;
+	weaponScale = 24 * FRACUNIT;
+
+#ifdef MARS
+	if ((MARS_VDP_DISPMODE & MARS_NTSC_FORMAT) == 0)
+	{
+		/* correct aspect ratio on PAL */
+		screenHeight = (height * 576) / 480;
+		weaponScale = 32 * FRACUNIT;
+}
+#endif
 
 	centerX = screenWidth / 2;
 	centerY = screenHeight / 2;
