@@ -277,7 +277,7 @@ void R_SetScreenSize(int size)
 		/* correct aspect ratio on PAL */
 		screenHeight = (height * 576) / 480;
 		weaponScale = 32 * FRACUNIT;
-}
+	}
 #endif
 
 	centerX = screenWidth / 2;
