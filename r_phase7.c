@@ -54,15 +54,17 @@ static void R_MapPlane(localplane_t *lpl, int y, int x, int x2)
    if (!remaining)
        return; // nothing to draw (shouldn't happen)
 
-   distance = (unsigned)(lpl->height * yslope[y]) >> 12;
-   length = (unsigned)(distance * distscale[x]) >> 14;
+   FixedMul2(distance, lpl->height, yslope[y]);
+   FixedMul2(length, distance, distscale[x]);
    angle = (lpl->angle + xtoviewangle[x]) >> ANGLETOFINESHIFT;
 
-   xfrac = lpl->x + (((finecosine(angle) >> 1) * length) >> 4);
-   yfrac = lpl->y - (((finesine(angle) >> 1) * length) >> 4);
+   FixedMul2(xfrac, (finecosine(angle)), length);
+   xfrac = lpl->x + xfrac;
+   FixedMul2(yfrac, (finesine(angle)), length);
+   yfrac = lpl->y - yfrac;
 
-   xstep = (distance * lpl->basexscale) >> 4;
-   ystep = (lpl->baseyscale * distance) >> 4;
+   FixedMul2(xstep, distance, lpl->basexscale);
+   FixedMul2(ystep, lpl->baseyscale, distance);
 
 #ifdef GRADIENTLIGHT
    light = lpl->lightcoef / distance;
@@ -197,8 +199,8 @@ static void R_DrawPlanes2(const int mask)
     lpl.angle = vd.viewangle;
     angle = (lpl.angle - ANG90) >> ANGLETOFINESHIFT;
 
-    lpl.basexscale = (finecosine(angle) / centerX);
-    lpl.baseyscale = -(finesine(angle) / centerX);
+    lpl.basexscale = FixedDiv(finecosine(angle), centerXFrac);
+    lpl.baseyscale = -FixedDiv(finesine(angle), centerXFrac);
 
     for (i = 0; i < numplanes; i++)
     {
@@ -210,7 +212,7 @@ static void R_DrawPlanes2(const int mask)
         lpl.pl = pl;
         lpl.pixelcount = 0;
         lpl.ds_source = flatpixels[pl->flatnum];
-        lpl.height = D_abs(pl->height);
+        lpl.height = (unsigned)D_abs(pl->height) << FIXEDTOHEIGHT;
         lpl.lightmax = pl->lightlevel + extralight;
         if (lpl.lightmax > 255)
             lpl.lightmax = 255;

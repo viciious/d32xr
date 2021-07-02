@@ -74,8 +74,8 @@ int			skytexture;
 /* */
 angle_t		clipangle,doubleclipangle;
 
-unsigned short* yslope/*[SCREENHEIGHT]*/ = NULL;              /* 6.10 frac */
-unsigned short* distscale/*[SCREENWIDTH]*/ = NULL;            /* 1.15 frac */
+fixed_t *yslope/*[SCREENHEIGHT]*/ = NULL;
+fixed_t* distscale/*[SCREENWIDTH]*/ = NULL;
 
 unsigned char* viewangletox/*[FINEANGLES/2]*/ = NULL;
 

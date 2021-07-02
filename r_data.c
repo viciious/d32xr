@@ -350,10 +350,6 @@ void R_InitMathTables(void)
 		fixed_t y = ((i - screenHeight / 2) << FRACBITS) + FRACUNIT / 2;
 		y = D_abs(y);
 		y = FixedDiv(stretchWidth, y);
-		y >>= 6;
-		if (y > 0xFFFF) {
-			y = 0xFFFF;
-		}
 		yslope[i] = y;
 	}
 
@@ -362,7 +358,7 @@ void R_InitMathTables(void)
 	{
 		fixed_t cosang = finecosine(xtoviewangle[i] >> ANGLETOFINESHIFT);
 		cosang = D_abs(cosang);
-		distscale[i] = FixedDiv(FRACUNIT, cosang)>>1;
+		distscale[i] = FixedDiv(FRACUNIT, cosang);
 	}
 }
 

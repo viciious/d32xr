@@ -180,18 +180,15 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
       int low, high, top, bottom;
       unsigned scale2;
 
-      scale = scalefrac >> FIXEDTOSCALE;
+      scale = scalefrac;
       scalefrac += scalestep;
-
-      if (scale >= 0x7fff)
-          scale = 0x7fff; // fix the scale to maximum
 
 #ifdef MARS
       SH2_DIVU_DVSR = scale; // set 32-bit divisor
       draw = cpu ? (x & 1) != 0 : (x & 1) == 0;
 #endif
 
-      scale2 = (unsigned)scale << (FRACBITS - (HEIGHTBITS + SCALEBITS));
+      scale2 = (unsigned)scale >> HEIGHTBITS;
 
       //
       // get ceilingclipx and floorclipx from clipbounds
@@ -299,7 +296,8 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
           fixed_t r;
 
 #ifdef MARS
-          SH2_DIVU_DVDNT = 1 << (FRACBITS + SCALEBITS); // set 32-bit dividend, start divide
+          SH2_DIVU_DVDNTH = 0;           // set high bits of the 64-bit dividend
+          SH2_DIVU_DVDNTL = 0xffffffffu; // set low  bits of the 64-bit dividend, start divide
 #endif
 
           // calculate texture offset
@@ -336,7 +334,7 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
 #ifdef MARS
           sdr.iscale = SH2_DIVU_DVDNT; // get 32-bit quotient
 #else
-          sdr.iscale = (1 << (FRACBITS + SCALEBITS)) / scale;
+          sdr.iscale = 0xffffffffu / scale;
 #endif
 
           //

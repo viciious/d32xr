@@ -231,13 +231,10 @@ extern	angle_t	* const tantoangle;
 extern	const angle_t tantoangle[SLOPERANGE+1];
 #endif
 
-extern	unsigned short	*yslope/*[SCREENHEIGHT]*/;		/* 6.10 frac */
-extern	unsigned short	*distscale/*[SCREENWIDTH]*/;		/* 1.15 frac */
+extern	fixed_t *yslope/*[SCREENHEIGHT]*/;
+extern	fixed_t *distscale/*[SCREENWIDTH]*/;
 
 #define	HEIGHTBITS			6
-#define	SCALEBITS			9
-	
-#define	FIXEDTOSCALE		(FRACBITS-SCALEBITS)
 #define	FIXEDTOHEIGHT		(FRACBITS-HEIGHTBITS)
 
 #define OPENMARK 0xff00
