@@ -63,7 +63,6 @@ static void R_MapPlane(localplane_t *lpl, int y, int x, int x2)
    SH2_DIVU_DVDNT = LIGHTCOEF; // set high bits of the 64-bit dividend, start divide
 #endif
 
-
    FixedMul2(length, distance, distscale[x]);
    angle = (lpl->angle + xtoviewangle[x]) >> ANGLETOFINESHIFT;
 

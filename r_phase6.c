@@ -434,19 +434,13 @@ static void R_SegCommands2(const int cpu)
         if (segl->actionbits & AC_TOPTEXTURE)
         {
             texture_t* tex = &textures[segl->t_texturenum];
-#ifdef MARS
-
-            inpixel_t* data = (inpixel_t*)*((volatile inpixel_t* volatile*)((intptr_t)&tex->data | 0x20000000));
-#else
-            pixel_t* data = tex->data;
-#endif
 
             toptex->topheight = segl->t_topheight;
             toptex->bottomheight = segl->t_bottomheight;
             toptex->texturemid = segl->t_texturemid;
             toptex->width = tex->width;
             toptex->height = tex->height;
-            toptex->data = data;
+            toptex->data = tex->data;
             toptex->pixelcount = 0;
             toptex->drawcol = (tex->height & (tex->height - 1)) ? I_DrawColumnNPo2 : I_DrawColumn;
         }
@@ -454,19 +448,13 @@ static void R_SegCommands2(const int cpu)
         if (segl->actionbits & AC_BOTTOMTEXTURE)
         {
             texture_t* tex = &textures[segl->b_texturenum];
-#ifdef MARS
-           
-            inpixel_t* data = (inpixel_t*)*((volatile inpixel_t* volatile*)((intptr_t)&tex->data | 0x20000000));
-#else
-            pixel_t* data = tex->data;
-#endif
 
             bottomtex->topheight = segl->b_topheight;
             bottomtex->bottomheight = segl->b_bottomheight;
             bottomtex->texturemid = segl->b_texturemid;
             bottomtex->width = tex->width;
             bottomtex->height = tex->height;
-            bottomtex->data = data;
+            bottomtex->data = tex->data;
             bottomtex->pixelcount = 0;
             bottomtex->drawcol = (tex->height & (tex->height - 1)) ? I_DrawColumnNPo2 : I_DrawColumn;
         }
@@ -492,6 +480,8 @@ static void R_SegCommands2(const int cpu)
 
 void Mars_Slave_R_SegCommands(void)
 {
+    Mars_ClearCache();
+
     R_SegCommands2(1);
 }
 
