@@ -91,7 +91,7 @@ static int Mars_HandleStartHeld(unsigned *ctrl, const unsigned ctrl_start)
 	boolean start = 0;
 	static boolean prev_start = false;
 	static int repeat = 0;
-	static const int held_tics = 6;
+	static const int held_tics = 8;
 
 	start = (*ctrl & ctrl_start) != 0;
 	if (start ^ prev_start) {
