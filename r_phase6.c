@@ -43,7 +43,9 @@ typedef struct
     int x;
     int floorclipx, ceilingclipx;
     fixed_t scale2;
-    volatile unsigned iscale;
+#ifndef MARS
+    unsigned iscale;
+#endif
     unsigned colnum;
     unsigned light;
 } segdraw_t;
@@ -71,8 +73,6 @@ static void R_DrawTexture(int x, segdraw_t *sdr, drawtex_t* tex)
 #endif
 
    scale2 = sdr->scale2;
-   colnum = sdr->colnum;
-   iscale = sdr->iscale;
 
    FixedMul2(top, scale2, tex->topheight);
    top = centerY - top;
@@ -87,6 +87,13 @@ static void R_DrawTexture(int x, segdraw_t *sdr, drawtex_t* tex)
    // column has no length?
    if(top > bottom)
       return;
+
+   colnum = sdr->colnum;
+#ifdef MARS
+   iscale = SH2_DIVU_DVDNTL; // get 32-bit quotient
+#else
+   iscale = sdr->iscale;
+#endif
 
    frac = tex->texturemid - (centerY - top) * iscale;
  
@@ -182,7 +189,6 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
 
       scale = scalefrac;
 #ifdef MARS
-      SH2_DIVU_DVSR = scalefrac; // set 32-bit divisor
 #endif
       scale2 = (unsigned)scalefrac >> HEIGHTBITS;
       scalefrac += scalestep;
@@ -296,6 +302,7 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
           fixed_t r;
 
 #ifdef MARS
+          SH2_DIVU_DVSR = scale;         // set 32-bit divisor
           SH2_DIVU_DVDNTH = 0;           // set high bits of the 64-bit dividend
           SH2_DIVU_DVDNTL = 0xffffffffu; // set low  bits of the 64-bit dividend, start divide
 #endif
@@ -331,9 +338,7 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
           sdr.scale2 = scale2;
           sdr.floorclipx = floorclipx;
           sdr.ceilingclipx = ceilingclipx;
-#ifdef MARS
-          sdr.iscale = SH2_DIVU_DVDNT; // get 32-bit quotient
-#else
+#ifndef MARS
           sdr.iscale = 0xffffffffu / scale;
 #endif
 
