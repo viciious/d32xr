@@ -425,6 +425,19 @@ typedef struct player_s
 	int			turnheld;				/* for accelerative turning */
 } player_t;
 
+// stuff player keeps between respawns in single player
+typedef struct
+{
+	int			health;
+	int			armorpoints, armortype;
+	boolean		backpack;
+	boolean		weaponowned[NUMWEAPONS];
+	int			ammo[NUMAMMO];
+	int			maxammo[NUMAMMO];
+	int			cheats;
+	weapontype_t weapon;
+} playerresp_t;
+
 #define CF_NOCLIP		1
 #define	CF_GODMODE		2
 
@@ -483,6 +496,7 @@ extern	boolean		playeringame[MAXPLAYERS];
 extern	int			consoleplayer;		/* player taking events and displaying */
 extern	int			displayplayer;
 extern	player_t	players[MAXPLAYERS];
+extern	playerresp_t	playersresp[MAXPLAYERS];
 
 extern	int			maxammo[NUMAMMO];
 

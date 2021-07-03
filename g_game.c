@@ -19,7 +19,8 @@ gametype_t		netgame;
 
 boolean         playeringame[MAXPLAYERS];
 player_t        players[MAXPLAYERS];
- 
+playerresp_t	playersresp[MAXPLAYERS];
+
 int             consoleplayer;          /* player taking events and displaying  */
 int             displayplayer;          /* view being displayed  */
 int             gametic; 
@@ -169,8 +170,10 @@ also see P_SpawnPlayer in P_Mobj
  
 void G_PlayerFinishLevel (int player) 
 { 
+	int i;
 	player_t        *p; 
-	 
+	playerresp_t	*resp = &playersresp[player];
+
 	p = &players[player]; 
 	 
 	D_memset (p->powers, 0, sizeof (p->powers)); 
@@ -179,6 +182,27 @@ void G_PlayerFinishLevel (int player)
 	p->extralight = 0;                      /* cancel gun flashes  */
 	p->damagecount = 0;                     /* no palette changes  */
 	p->bonuscount = 0; 
+
+	if (netgame == gt_deathmatch)
+		return;
+	if (gameaction == ga_died)
+		return;
+
+	for (i = 0; i < NUMAMMO; i++)
+	{
+		resp->ammo[i] = p->ammo[i];
+		resp->maxammo[i] = p->maxammo[i];
+	}
+	for (i = 0; i < NUMWEAPONS; i++)
+	{
+		resp->weaponowned[i] = p->weaponowned[i];
+	}
+	resp->health = p->health;
+	resp->weapon = p->readyweapon;
+	resp->armorpoints = p->armorpoints;
+	resp->armortype = p->armortype;
+	resp->backpack = p->backpack;
+	resp->cheats = p->cheats;
 } 
  
 /* 
@@ -196,22 +220,29 @@ void G_PlayerReborn (int player)
 	player_t        *p; 
 	int                     i; 
 	int             frags; 
-	 
+	playerresp_t* resp = &playersresp[player];
 	
 	p = &players[player]; 
 	frags = p->frags;
 	D_memset (p, 0, sizeof(*p)); 
 	p->frags = frags;	
 	p->usedown = p->attackdown = true;		/* don't do anything immediately */
-	p->playerstate = PST_LIVE;       
-	p->health = MAXHEALTH; 
-	p->readyweapon = p->pendingweapon = wp_pistol; 
-	p->weaponowned[wp_fist] = true; 
-	p->weaponowned[wp_pistol] = true; 
-	p->ammo[am_clip] = 50; 
-	 
-	for (i=0 ; i<NUMAMMO ; i++) 
-		p->maxammo[i] = maxammo[i]; 
+	p->playerstate = PST_LIVE;
+	for (i = 0; i < NUMAMMO; i++)
+	{
+		p->ammo[i] = resp->ammo[i];
+		p->maxammo[i] = resp->maxammo[i];
+	}
+	for (i = 0; i < NUMWEAPONS; i++)
+	{
+		p->weaponowned[i] = resp->weaponowned[i];
+	}
+	p->health = resp->health;
+	p->readyweapon = p->pendingweapon = resp->weapon;
+	p->armorpoints = resp->armorpoints;
+	p->armortype = resp->armortype;
+	p->backpack = resp->backpack;
+	p->cheats = resp->cheats;
 } 
  
  
@@ -418,6 +449,22 @@ D_printf ("G_InitNew\n");
 
 	players[0].mo = players[1].mo = &emptymobj;	/* for net consistancy checks */
  	
+	D_memset(playersresp, 0, sizeof(playersresp));
+	for (i = 0; i < MAXPLAYERS; i++)
+	{
+		int j;
+		playerresp_t* resp;
+
+		resp = &playersresp[i];
+		resp->weapon = wp_pistol;
+		resp->health = MAXHEALTH;
+		resp->ammo[am_clip] = 50;
+		resp->weaponowned[wp_fist] = true;
+		resp->weaponowned[wp_pistol] = true;
+		for (j = 0; j < NUMAMMO; j++)
+			resp->maxammo[j] = maxammo[j];
+	}
+
 	playeringame[0] = true;	
 	if (netgame != gt_single)
 		playeringame[1] = true;	
