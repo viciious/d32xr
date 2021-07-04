@@ -322,7 +322,7 @@ typedef struct
 
 	int bestobj;
 	int bestcount;
-	int reqcount_eq, reqcount_lt;
+	int reqcount_le;
 
 	void* zone;
 } r_texcache_t;
@@ -331,7 +331,8 @@ typedef struct
 {
 	VINT id;
 	VINT pixelcount;
-	int lumpnum;
+	VINT lumpnum;
+	VINT lifecount;
 	void** userp;
 } texcacheblock_t;
 

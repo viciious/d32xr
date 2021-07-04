@@ -27,6 +27,8 @@
 #include "doomdef.h"
 #include "r_local.h"
 
+#define LIFECOUNT_FRAMES 15
+
 #define R_CheckPixels(lumpnum) (void *)((intptr_t)(W_POINTLUMPNUM(lumpnum)))
 
 /*
@@ -196,10 +198,17 @@ static void R_EvictFromTexCache(void* ptr, void* userp)
 	texcacheblock_t* entry = ptr;
 	r_texcache_t *c = userp;
 
-	if (entry->pixelcount == c->reqcount_eq || entry->pixelcount < c->reqcount_lt)
+	if (entry->pixelcount <= c->reqcount_le)
 	{
-		*entry->userp = R_CheckPixels(entry->lumpnum);
-		Z_Free2(c->zone, entry);
+		if (--entry->lifecount == 0)
+		{
+			*entry->userp = R_CheckPixels(entry->lumpnum);
+			Z_Free2(c->zone, entry);
+		}
+	}
+	else
+	{
+		entry->lifecount = LIFECOUNT_FRAMES;
 	}
 }
 
@@ -224,22 +233,12 @@ void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **us
 	size = pixels + sizeof(texcacheblock_t) + 32;
 	if (Z_LargestFreeBlock(c->zone) < size + 16)
 	{
-		// free unused entries
-		c->reqcount_eq = 0;
-		c->reqcount_lt = -1;
+		// free important entries of less than or equal importance
+		c->reqcount_le = c->pixcount[id];
 		Z_ForEachBlock(c->zone, &R_EvictFromTexCache, c);
 
-		// try allocating again
 		if (Z_LargestFreeBlock(c->zone) < size + 16)
-		{
-			// free important entries of less than or equal importance
-			c->reqcount_eq = -1;
-			c->reqcount_lt = c->pixcount[id];
-			Z_ForEachBlock(c->zone, &R_EvictFromTexCache, c);
-
-			if (Z_LargestFreeBlock(c->zone) < size + 16)
-				return;
-		}
+			return;
 	}
 
 	entry = Z_Malloc2(c->zone, size, PU_LEVEL, NULL);
@@ -247,6 +246,7 @@ void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **us
 	entry->pixelcount = c->pixcount[id];
 	entry->lumpnum = lumpnum;
 	entry->userp = userp;
+	entry->lifecount = LIFECOUNT_FRAMES;
 
 	lumpdata = R_CheckPixels(lumpnum);
 
