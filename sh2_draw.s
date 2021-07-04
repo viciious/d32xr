@@ -173,6 +173,7 @@ _I_DrawSpanA:
 1:
         mov.l   r8,@-r15
         mov.l   r9,@-r15
+        mov.l   r10,@-r15
         mov.l   draw_cmap,r0
         mov.l   @r0,r0
         add     r7,r7
@@ -185,32 +186,37 @@ _I_DrawSpanA:
         add     r4,r8
         shlr2   r4
         add     r4,r8           /* fb += (ds_y*256 + ds_y*64) */
-        mov.l   @(8,r15),r2     /* xfrac */
-        mov.l   @(12,r15),r4    /* yfrac */
-        mov.l   @(16,r15),r3    /* xstep */
-        mov.l   @(20,r15),r5    /* ystep */
-        mov.l   @(24,r15),r9    /* ds_source */
+        add     #-2,r8
+        mov.l   @(12,r15),r2     /* xfrac */
+        mov.l   @(16,r15),r4    /* yfrac */
+        mov.l   @(20,r15),r3    /* xstep */
+        mov.l   @(24,r15),r5    /* ystep */
+        mov.l   @(28,r15),r9    /* ds_source */
+        mov.l   draw_flat_mask,r10
+        swap.w  r2,r1
+        swap.w  r4,r0
+        and     r10,r1          /* (xfrac >> 16) & 63 */
 
 do_span_loop:
-        swap.w  r2,r0
-        and     #63,r0          /* (xfrac >> 16) & 63 */
-        mov     r0,r1
-        swap.w  r4,r0
-        and     #63,r0          /* (yfrac >> 16) & 63 */
+        and     r10,r0          /* (yfrac >> 16) & 63 */
         shll8   r0
         shlr2   r0              /* ((yfrac >> 16) & 63) << 6 */
         or      r1,r0           /* spot = (((yfrac >> 16) & 63) << 6) | ((xfrac >> 16) & 63) */
         mov.b   @(r0,r9),r0     /* pix = ds_source[spot] */
         add     r3,r2           /* xfrac += xstep */
+        swap.w  r2,r1
+        and     r10,r1          /* (xfrac >> 16) & 63 */
         and     #255,r0
         add     r0,r0
         mov.w   @(r0,r7),r0     /* dpix = ds_colormap[pix] */
+        add     #2,r8           /* fb++ */
         add     r5,r4           /* yfrac += ystep */
         dt      r6              /* count-- */
         mov.w   r0,@r8          /* *fb = dpix */
         bf/s    do_span_loop
-        add     #2,r8           /* fb++ */
+        swap.w  r4,r0
 
+        mov.l   @r15+,r10
         mov.l   @r15+,r9
         rts
         mov.l   @r15+,r8
@@ -225,3 +231,5 @@ draw_cmap:
 /*      .long   colormap|0x20000000   */
 draw_width:
         .long   320
+draw_flat_mask:
+        .long   63
