@@ -353,8 +353,8 @@ void R_SetupTextureCaches(void)
 	cachezonesize = zonefree - zonemargin - 128; // give the main zone some slack
 
 	numcflats = cachezonesize / flatblocksize;
-	if (numcflats > 4)
-		numcflats = 4;
+	if (numcflats > 5)
+		numcflats = 5;
 
 	numcwalls = (cachezonesize - numcflats*flatblocksize) / texblocksize;
 	if (numcwalls <= 0 && numcflats > 2)
