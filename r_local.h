@@ -458,7 +458,7 @@ typedef struct vissprite_s
 } vissprite_t;
 
 #ifdef MARS
-#define MAXVISSPRITES	50
+#define MAXVISSPRITES	64
 #else
 #define	MAXVISSPRITES	128
 #endif
