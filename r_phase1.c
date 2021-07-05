@@ -210,12 +210,12 @@ static inline void R_StoreWallRange(int start, int stop)
 {
    viswall_t *rw;
 
-   rw = lastwallcmd;
+   rw = lastwallcmd++;
+
    rw->seg    = curline;
    rw->start  = start;
    rw->stop   = stop;
    rw->angle1 = lineangle1;
-   ++lastwallcmd;
 }
 
 //

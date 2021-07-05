@@ -187,7 +187,7 @@ void Mars_Slave(void)
 			Mars_Slave_R_DrawSprites();
 			break;
 		case 6:
-			Mars_Slave_R_WallPrep();
+			Mars_Slave_R_OpenPlanes();
 			break;
 		case 7:
 			break;

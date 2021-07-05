@@ -6,19 +6,14 @@
 
 #include "doomdef.h"
 #include "r_local.h"
-#include "mars.h"
 
 static sector_t emptysector = { 0, 0, -2, -2, -2 };
 
-static void R_WallEarlyPrep(viswall_t* segl) ATTR_DATA_CACHE_ALIGN;
-static fixed_t R_PointToDist(fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
-static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, angle_t normalangle) ATTR_DATA_CACHE_ALIGN;
-static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle) ATTR_DATA_CACHE_ALIGN;
-static void R_WallEarlyPrep2(viswall_t* wc) ATTR_DATA_CACHE_ALIGN;
 void R_WallPrep(void) ATTR_DATA_CACHE_ALIGN;
 
-static void R_WallEarlyPrep(viswall_t* segl)
+void R_WallPrep(void)
 {
+   viswall_t *segl = viswalls;
    seg_t     *seg;
    line_t    *li;
    side_t    *si;
@@ -28,10 +23,12 @@ static void R_WallEarlyPrep(viswall_t* segl)
    int        f_lightlevel, b_lightlevel;
    int        f_ceilingpic, b_ceilingpic;
    int        b_texturemid, t_texturemid;
+   int        rw_x, rw_stopx;
    boolean    skyhack;
    unsigned int actionbits;
    int        side;
 
+   while(segl < lastwallcmd)
    {
       seg  = segl->seg;
       li   = seg->linedef;
@@ -59,6 +56,10 @@ static void R_WallEarlyPrep(viswall_t* segl)
 
       t_texturemid = b_texturemid = 0;
       actionbits = 0;
+
+      // NB: this code is missing in 3DO (function uses parameters instead)
+      rw_x     = segl->start;
+      rw_stopx = segl->stop + 1;
 
       // deal with sky ceilings (also missing in 3DO)
       if(f_ceilingpic == -1 && b_ceilingpic == -1)
@@ -148,10 +149,19 @@ static void R_WallEarlyPrep(viswall_t* segl)
             actionbits |= AC_SOLIDSIL;
          else
          {
+            int width;
+
+            // get width of opening
+            // note this is halved because openings are treated like bytes 
+            // everywhere despite using short storage
+            width = (rw_stopx - rw_x + 1) / 2; 
+
             if((b_floorheight > 0 && b_floorheight > f_floorheight) ||
                (f_floorheight < 0 && f_floorheight > b_floorheight))
             {
                actionbits |= AC_BOTTOMSIL; // set bottom mask
+               segl->bottomsil = (byte *)lastopening - rw_x;
+               lastopening += width;
             }
 
             if(!skyhack)
@@ -160,6 +170,8 @@ static void R_WallEarlyPrep(viswall_t* segl)
                   (f_ceilingheight >  0 && b_ceilingheight > f_ceilingheight))
                {
                   actionbits |= AC_TOPSIL; // set top mask
+                  segl->topsil = (byte *)lastopening - rw_x;
+                  lastopening += width;
                }
             }
          }
@@ -171,188 +183,7 @@ static void R_WallEarlyPrep(viswall_t* segl)
       segl->b_texturemid  = b_texturemid;
       segl->seglightlevel = f_lightlevel;
       segl->offset        = si->textureoffset + seg->offset;
+       
+      ++segl; // next viswall
    }
 }
-
-//
-// Get distance to point in 3D projection
-//
-static fixed_t R_PointToDist(fixed_t x, fixed_t y)
-{
-    int angle;
-    fixed_t dx, dy, temp;
-
-    dx = D_abs(x - vd.viewx);
-    dy = D_abs(y - vd.viewy);
-
-    if (dy > dx)
-    {
-        temp = dx;
-        dx = dy;
-        dy = temp;
-    }
-
-    angle = (tantoangle[FixedDiv(dy, dx) >> DBITS] + ANG90) >> ANGLETOFINESHIFT;
-
-    // use as cosine
-    return FixedDiv(dx, finesine(angle));
-}
-
-//
-// Convert angle and distance within view frustum to texture scale factor.
-//
-static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, angle_t normalangle)
-{
-    angle_t anglea, angleb;
-    fixed_t num, den;
-    int     sinea, sineb;
-
-    visangle += ANG90;
-
-    anglea = visangle - vd.viewangle;
-    sinea = finesine(anglea >> ANGLETOFINESHIFT);
-    angleb = visangle - normalangle;
-    sineb = finesine(angleb >> ANGLETOFINESHIFT);
-
-    FixedMul2(num, stretchX, sineb);
-    FixedMul2(den, rw_distance, sinea);
-
-    return FixedDiv(num, den);
-}
-
-//
-// Setup texture calculations for lines with upper and lower textures
-//
-static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle)
-{
-    fixed_t sineval, rw_offset;
-    angle_t offsetangle;
-
-    offsetangle = normalangle - wc->angle1;
-
-    if (offsetangle > ANG180)
-        offsetangle = 0 - offsetangle;
-
-    if (offsetangle > ANG90)
-        offsetangle = ANG90;
-
-    sineval = finesine(offsetangle >> ANGLETOFINESHIFT);
-    FixedMul2(rw_offset, hyp, sineval);
-
-    if (normalangle - wc->angle1 < ANG180)
-        rw_offset = -rw_offset;
-
-    wc->offset += rw_offset;
-    wc->centerangle = ANG90 + vd.viewangle - normalangle;
-}
-
-static void R_WallEarlyPrep2(viswall_t* wc)
-{
-    angle_t      distangle, offsetangle, normalangle;
-    seg_t* seg = wc->seg;
-    fixed_t      sineval, rw_distance;
-    fixed_t      scalefrac, scale2;
-    fixed_t      hyp;
-
-    // this is essentially R_StoreWallRange
-    // calculate rw_distance for scale calculation
-    normalangle = ((angle_t)seg->angle << 16) + ANG90;
-    offsetangle = normalangle - wc->angle1;
-
-    if ((int)offsetangle < 0)
-        offsetangle = 0 - offsetangle;
-
-    if (offsetangle > ANG90)
-        offsetangle = ANG90;
-
-    distangle = ANG90 - offsetangle;
-    hyp = R_PointToDist(vertexes[seg->v1].x, vertexes[seg->v1].y);
-    sineval = finesine(distangle >> ANGLETOFINESHIFT);
-    FixedMul2(rw_distance, hyp, sineval);
-    wc->distance = rw_distance;
-
-    scalefrac = scale2 = wc->scalefrac =
-        R_ScaleFromGlobalAngle(rw_distance, vd.viewangle + xtoviewangle[wc->start], normalangle);
-
-    if (wc->stop > wc->start)
-    {
-        scale2 = R_ScaleFromGlobalAngle(rw_distance, vd.viewangle + xtoviewangle[wc->stop], normalangle);
-        wc->scalestep = IDiv(scale2 - scalefrac, wc->stop - wc->start);
-    }
-
-    wc->scale2 = scale2;
-
-    // does line have top or bottom textures?
-    if (wc->actionbits & (AC_TOPTEXTURE | AC_BOTTOMTEXTURE))
-    {
-        wc->actionbits |= AC_CALCTEXTURE; // set to calculate texture info
-        R_SetupCalc(wc, hyp, normalangle);// do calc setup
-    }
-}
-
-#ifdef MARS
-
-void Mars_Slave_R_WallPrep(void)
-{
-    viswall_t* segl;
-    volatile viswall_t* volatile* plast;
-    volatile viswall_t* volatile* pfirst;
-    visplane_t* pl;
-    int planenum = 1;
-
-    Mars_ClearCache();
-
-    pfirst = (volatile viswall_t* volatile *)((intptr_t)&viswalls | 0x20000000);
-    plast = (volatile viswall_t* volatile*)((intptr_t)&lastwallcmd | 0x20000000);
-
-    for (segl = (viswall_t*)*pfirst; ; )
-    {
-        /* check if master CPU has submitted any new walls cmds */
-        if (segl == (viswall_t*)*plast)
-        {
-            /* no, check the master has finished exec'ing R_BSP() */
-            if (MARS_SYS_COMM6 == 0)
-                break; /* expect no new wall cmds, exit */
-
-            /* nothing to do yet, don't waste cycles on a busy loop */
-            /* run R_MarkOpenPlane on the next visplane */
-            if (planenum < MAXVISPLANES / 4)
-            {
-                pl = &visplanes[planenum++];
-                if (pl->runopen)
-                {
-                    R_MarkOpenPlane(pl);
-                    pl->runopen = false;
-                }
-            }
-            continue;
-        }
-
-        R_WallEarlyPrep(segl);
-
-        R_WallEarlyPrep2(segl);
-
-        ++segl; // next viswall
-    }
-}
-
-#else
-
-void R_WallPrep(void)
-{
-    viswall_t* segl;
-
-    for (segl = viswalls; segl != lastwallcmd; )
-    {
-        R_WallEarlyPrep(segl);
-
-        R_WallEarlyPrep2(segl);
-
-        ++segl; // next viswall
-    }
-}
-
-#endif
-
-// EOF
-

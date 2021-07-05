@@ -578,9 +578,9 @@ void R_Setup (void)
 	tempbuf += sizeof(*vissprites)*MAXVISSPRITES/sizeof(*tempbuf);
 	vissprite_p = vissprites;
 
-	visplanes[0].runopen = false;
 	lastvisplane = visplanes + 1;		/* visplanes[0] is left empty */
 	lastwallcmd = viswalls;			/* no walls added yet */
+	lastopening = openings;
 	lastvissubsector = vissubsectors;	/* no subsectors visible yet */
 
 #ifndef MARS
@@ -663,6 +663,35 @@ visplane_t* R_FindPlane(visplane_t* ignore, int hash, fixed_t height,
 
 	return check;
 }
+
+#ifdef MARS
+void Mars_Slave_R_OpenPlanes(void)
+{
+	int i;
+	visplane_t* pl;
+
+	pl = &visplanes[0];
+	if (pl->runopen) {
+		unsigned short* open = pl->open;
+		for (i = 0; i < screenWidth / 4; i++)
+			*open++ = 0, *open++ = 0, *open++ = 0, *open++ = 0;
+		pl->runopen = false;
+	}
+
+	for (i = 1; i < MAXVISPLANES/4; i++)
+	{
+		pl = &visplanes[i];
+		if (MARS_SYS_COMM4 != 6)
+			break;
+
+		if (pl->runopen)
+		{
+			R_MarkOpenPlane(pl);
+			pl->runopen = false;
+		}
+	}
+}
+#endif
 
 void R_BSP (void);
 void R_WallPrep (void);
@@ -749,13 +778,11 @@ void R_RenderPlayerView(void)
 
 static void R_RenderPhase1(void)
 {
-	Mars_R_BeginWallPrep();
+	Mars_R_BeginOpenPlanes();
 
 	t_ref_bsp[t_ref_cnt] = I_GetFRTCounter();
 	R_BSP();
 	t_ref_bsp[t_ref_cnt] = I_GetFRTCounter() - t_ref_bsp[t_ref_cnt];
-
-	Mars_R_StopBSP();
 }
 
 static void R_RenderPhases2To9(void)
@@ -763,14 +790,19 @@ static void R_RenderPhases2To9(void)
 	unsigned short openings_[MAXOPENINGS];
 
 	openings = openings_;
+	lastopening = openings;
 
 	t_ref_prep[t_ref_cnt] = I_GetFRTCounter();
+	R_WallPrep();
 	R_SpritePrep();
-	Mars_R_EndWallPrep();
 	/* the rest of the refresh can be run in parallel with the next game tic */
 	if (R_LatePrep())
 		R_Cache();
 	t_ref_prep[t_ref_cnt] = I_GetFRTCounter() - t_ref_prep[t_ref_cnt];
+
+	Mars_R_StopOpenPlanes();
+
+	Mars_CommSlaveClearCache();
 
 	t_ref_segs[t_ref_cnt] = I_GetFRTCounter();
 	R_SegCommands ();
