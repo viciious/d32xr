@@ -692,15 +692,15 @@ byte *I_ZoneBase (int *size);
 /* return a pointer to a 64k or so temp work buffer for level setup uses */
 /*(non-displayed frame buffer) */
 /* Vic: changed this to always return buffer memset to 0 */
-byte *I_TempBuffer (void) ATTR_DATA_CACHE_ALIGN;
+byte *I_TempBuffer (void);
 
 /* temp work buffer which may contain garbage data */
-byte *I_WorkBuffer (void) ATTR_DATA_CACHE_ALIGN;
+byte *I_WorkBuffer (void);
 
-pixel_t *I_FrameBuffer (void) ATTR_DATA_CACHE_ALIGN;
-pixel_t* I_OverwriteBuffer(void) ATTR_DATA_CACHE_ALIGN;
+pixel_t *I_FrameBuffer (void);
+pixel_t* I_OverwriteBuffer(void);
 
-pixel_t *I_ViewportBuffer (void) ATTR_DATA_CACHE_ALIGN;
+pixel_t *I_ViewportBuffer (void);
 
 void I_ClearFrameBuffer (void);
 
@@ -714,12 +714,12 @@ unsigned I_NetTransfer (unsigned buttons);
 
 
 
-boolean	I_RefreshCompleted (void) ATTR_DATA_CACHE_ALIGN;
+boolean	I_RefreshCompleted (void);
 boolean	I_RefreshLatched (void);
-int	I_GetTime (void) ATTR_DATA_CACHE_ALIGN;
-int     I_GetFRTCounter (void) ATTR_DATA_CACHE_ALIGN;
+int	I_GetTime (void);
+int     I_GetFRTCounter (void);
 
-void I_Update (void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void I_Update (void) ATTR_OPTIMIZE_SIZE;
 
 void I_Error (char *error, ...) ATTR_OPTIMIZE_SIZE;
 
@@ -823,7 +823,7 @@ void ST_InitEveryLevel(void);
 /*------- */
 struct seg_s;
 
-void R_RenderPlayerView (void) ATTR_DATA_CACHE_ALIGN;
+void R_RenderPlayerView (void);
 void R_Init (void);
 int	R_FlatNumForName (const char *name);
 int	R_TextureNumForName (const char *name);

@@ -367,7 +367,7 @@ int I_GetFRTCounter(void)
 */
 byte	*I_TempBuffer (void)
 {
-	byte *w = I_WorkBuffer();
+	byte *w = (byte *)framebuffer;
 	int *p, *p_end = (int*)framebufferend;
 
 	// clear the buffer so the fact that 32x ignores 0-byte writes goes unnoticed

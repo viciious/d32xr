@@ -18,30 +18,31 @@ fixed_t weaponScale;
 /* */
 /* subsectors */
 /* */
-subsector_t		**vissubsectors, **lastvissubsector;
+subsector_t		*vissubsectors[MAXVISSSEC], **lastvissubsector;
 
 /* */
 /* walls */
 /* */
 viswall_t	*viswalls/*[MAXWALLCMDS]*/, *lastwallcmd;
+bspviswall_t bspviswalls[MAXWALLCMDS], *lastbspwallcmd;
 
 /* */
 /* planes */
 /* */
 visplane_t	*visplanes/*[MAXVISPLANES]*/, *lastvisplane;
 
-#define NUM_VISPLANES_BUCKETS 128
-static visplane_t** visplanes_hash;
+#define NUM_VISPLANES_BUCKETS 64
+static visplane_t* visplanes_hash[NUM_VISPLANES_BUCKETS];
 
 /* */
 /* sprites */
 /* */
-vissprite_t	*vissprites, *lastsprite_p, *vissprite_p;
+vissprite_t	vissprites[MAXVISSPRITES], *lastsprite_p, *vissprite_p;
 
 /* */
 /* openings / misc refresh memory */
 /* */
-unsigned short	*openings/*[MAXOPENINGS]*/, *lastopening;
+unsigned short	openings[MAXOPENINGS], *lastopening;
 
 /*===================================== */
 
@@ -90,12 +91,12 @@ int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sprites[4
 
 r_texcache_t r_flatscache, r_wallscache;
 
-void R_Setup(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-void R_Cache(void) ATTR_DATA_CACHE_ALIGN;
+void R_Setup(void) ATTR_OPTIMIZE_SIZE;
+void R_Cache(void) ATTR_OPTIMIZE_SIZE;
 
 #ifdef MARS
-static void R_RenderPhase1(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE __attribute__((noinline));
-static void R_RenderPhases2To9(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE __attribute__((noinline));
+static void R_RenderPhase1(void) ATTR_OPTIMIZE_SIZE __attribute__((noinline));
+static void R_RenderPhases2To9(void) ATTR_OPTIMIZE_SIZE __attribute__((noinline));
 #endif
 
 /*
@@ -555,31 +556,16 @@ void R_Setup (void)
 		tempbuf += screenWidth+2;
 	}
 
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
-	visplanes_hash = (visplane_t**)tempbuf;
-	tempbuf += sizeof(visplane_t *) * NUM_VISPLANES_BUCKETS;
-
 	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
 		visplanes_hash[i] = NULL;
-
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 15) & ~15);
-	viswalls = (viswall_t*)tempbuf;
-	tempbuf += sizeof(*viswalls)*MAXWALLCMDS/sizeof(*tempbuf);
-
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
-	vissubsectors = (void*)tempbuf;
-	tempbuf += sizeof(*vissubsectors) * MAXVISSSEC;
 
 /*	 */
 /* clear sprites */
 /* */
-	tempbuf = (unsigned short *)(((intptr_t)tempbuf+3)&~3);
-	vissprites = (void *)tempbuf;
-	tempbuf += sizeof(*vissprites)*MAXVISSPRITES/sizeof(*tempbuf);
 	vissprite_p = vissprites;
 
 	lastvisplane = visplanes + 1;		/* visplanes[0] is left empty */
-	lastwallcmd = viswalls;			/* no walls added yet */
+	lastbspwallcmd = bspviswalls;
 	lastopening = openings;
 	lastvissubsector = vissubsectors;	/* no subsectors visible yet */
 
@@ -787,10 +773,10 @@ static void R_RenderPhase1(void)
 
 static void R_RenderPhases2To9(void)
 {
-	unsigned short openings_[MAXOPENINGS];
+	viswall_t viswalls_[MAXWALLCMDS];
 
-	openings = openings_;
-	lastopening = openings;
+	viswalls = viswalls_;
+	lastwallcmd = viswalls;
 
 	t_ref_prep[t_ref_cnt] = I_GetFRTCounter();
 	R_WallPrep();

@@ -7,12 +7,12 @@
 #define	RAISESPEED		FRACUNIT*18
 
 #define	WEAPONX			(15 * (screenWidth - 160) / 32) * FRACUNIT
-#define WEAPONBOTTOM	(128 + 18 * (screenWidth - 160) / 32) * FRACUNIT
-#define WEAPONTOP		(32 + 18 * (screenWidth - 160) / 32) * FRACUNIT
+#define WEAPONBOTTOM	(128) * FRACUNIT
+#define WEAPONTOP		(32) * FRACUNIT
 
 #define	BFGCELLS		40			/* plasma cells for a bfg attack */
 
-void P_RecursiveSound(sector_t* sec, int soundblocks) ATTR_DATA_CACHE_ALIGN;
+void P_RecursiveSound(sector_t* sec, int soundblocks) ATTR_OPTIMIZE_SIZE;
 
 /*
 =================

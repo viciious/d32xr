@@ -13,7 +13,7 @@ void R_WallPrep(void) ATTR_DATA_CACHE_ALIGN;
 
 void R_WallPrep(void)
 {
-   viswall_t *segl = viswalls;
+   bspviswall_t *bspsegl = bspviswalls;
    seg_t     *seg;
    line_t    *li;
    side_t    *si;
@@ -28,8 +28,16 @@ void R_WallPrep(void)
    unsigned int actionbits;
    int        side;
 
-   while(segl < lastwallcmd)
+   while(bspsegl < lastbspwallcmd)
    {
+      viswall_t* segl;
+
+      segl = lastwallcmd;
+      segl->seg = bspsegl->seg;
+      segl->start = bspsegl->start;
+      segl->stop = bspsegl->stop;
+      segl->angle1 = bspsegl->angle1;
+
       seg  = segl->seg;
       li   = seg->linedef;
       side = seg->side;
@@ -184,6 +192,7 @@ void R_WallPrep(void)
       segl->seglightlevel = f_lightlevel;
       segl->offset        = si->textureoffset + seg->offset;
        
-      ++segl; // next viswall
+      ++bspsegl; // next viswall
+      ++lastwallcmd;
    }
 }

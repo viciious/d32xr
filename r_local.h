@@ -341,8 +341,8 @@ extern r_texcache_t r_flatscache, r_wallscache;
 void R_InitTexCache(r_texcache_t* c, int maxobjects);
 void R_InitTexCacheZone(r_texcache_t* c, int zonesize);
 void R_SetupTexCacheFrame(r_texcache_t* c);
-void R_TestTexCacheCandidate(r_texcache_t* c, int id) ATTR_DATA_CACHE_ALIGN;
-void R_AddPixelsToTexCache(r_texcache_t* c, int id, int pixels) ATTR_DATA_CACHE_ALIGN;
+void R_TestTexCacheCandidate(r_texcache_t* c, int id);
+void R_AddPixelsToTexCache(r_texcache_t* c, int id, int pixels);
 void R_PostTexCacheFrame(r_texcache_t* c);
 void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **userp);
 
@@ -367,9 +367,17 @@ void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **us
 #define	AC_SOLIDSIL			1024
 
 typedef struct
-#ifdef MARS
-__attribute__((aligned(16)))
-#endif
+{
+	/* */
+	/* filled in by bsp */
+	/* */
+	VINT	start;
+	VINT	stop;					/* inclusive x coordinates */
+	int		angle1;					/* polar angle to start */
+	seg_t	*seg;
+} bspviswall_t;
+
+typedef struct
 {
 	unsigned short	actionbits;
 	unsigned short	seglightlevel;
@@ -419,9 +427,12 @@ __attribute__((aligned(16)))
 	byte		*bottomsil;
 } viswall_t;
 
-#define	MAXWALLCMDS		128
+#define	MAXWALLCMDS		100
 extern	viswall_t *viswalls/*[MAXWALLCMDS] __attribute__((aligned(16)))*/;
 extern	viswall_t *lastwallcmd;
+
+extern bspviswall_t bspviswalls[MAXWALLCMDS];
+extern bspviswall_t* lastbspwallcmd;
 
 /* A vissprite_t is a thing that will be drawn during a refresh */
 typedef struct vissprite_s
@@ -447,17 +458,17 @@ typedef struct vissprite_s
 } vissprite_t;
 
 #ifdef MARS
-#define MAXVISSPRITES	64
+#define MAXVISSPRITES	50
 #else
 #define	MAXVISSPRITES	128
 #endif
-extern	vissprite_t	*vissprites, *lastsprite_p, *vissprite_p;
+extern	vissprite_t	vissprites[MAXVISSPRITES], *lastsprite_p, *vissprite_p;
 
 #define	MAXOPENINGS		SCREENWIDTH*8
-extern	unsigned short	*openings/*[MAXOPENINGS]*/, *lastopening;
+extern	unsigned short	openings[MAXOPENINGS], *lastopening;
 
 #define	MAXVISSSEC		256
-extern	subsector_t		**vissubsectors, **lastvissubsector;
+extern	subsector_t		*vissubsectors[MAXVISSSEC], **lastvissubsector;
 
 typedef struct visplane_s
 {
@@ -470,7 +481,7 @@ typedef struct visplane_s
 	struct visplane_s *next;
 } visplane_t;
 
-#define	MAXVISPLANES	64
+#define	MAXVISPLANES	48
 extern	visplane_t		*visplanes/*[MAXVISPLANES]*/, *lastvisplane;
 
 int R_PlaneHash(fixed_t height, unsigned flatnum, unsigned lightlevel)
@@ -478,7 +489,7 @@ ATTR_DATA_CACHE_ALIGN
 ;
 
 void R_MarkOpenPlane(visplane_t* pl)
-ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE
+ATTR_OPTIMIZE_SIZE
 ;
 
 visplane_t *R_FindPlane(visplane_t *ignore, int hash, fixed_t height, unsigned flatnum,

@@ -28,7 +28,7 @@ static boolean R_CheckBBox(fixed_t bspcoord[4]) ATTR_DATA_CACHE_ALIGN;
 static void R_Subsector(int num) ATTR_DATA_CACHE_ALIGN;
 static inline void R_StoreWallRange(int start, int stop)  __attribute__((always_inline));
 static void R_RenderBSPNode(int bspnum) ATTR_DATA_CACHE_ALIGN;
-void R_BSP(void) ATTR_DATA_CACHE_ALIGN;
+void R_BSP(void) ATTR_OPTIMIZE_SIZE;
 
 //
 // To get a global angle from Cartesian coordinates, the coordinates are
@@ -204,18 +204,19 @@ static boolean R_CheckBBox(fixed_t bspcoord[4])
 }
 
 //
-// Store information about the clipped seg range into the viswall array.
+// Store information about the clipped seg range into the bspviswall array.
 //
 static inline void R_StoreWallRange(int start, int stop)
 {
-   viswall_t *rw;
+   bspviswall_t *rw;
 
-   rw = lastwallcmd++;
+   rw = lastbspwallcmd;
 
    rw->seg    = curline;
    rw->start  = start;
    rw->stop   = stop;
    rw->angle1 = lineangle1;
+   ++lastbspwallcmd;
 }
 
 //

@@ -57,7 +57,7 @@ static int		sndinit = 0;
 extern short	use_cd;
 extern short	cd_ok;
 
-void S_StartSound(mobj_t* origin, int sound_id) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void S_StartSound(mobj_t* origin, int sound_id) ATTR_OPTIMIZE_SIZE;
 void S_StartSoundReal(mobj_t* origin, unsigned sound_id) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void S_PaintChannel(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static void S_Update(int16_t* buffer) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
