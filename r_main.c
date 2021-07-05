@@ -37,6 +37,9 @@ static visplane_t* visplanes_hash[NUM_VISPLANES_BUCKETS];
 /* */
 /* sprites */
 /* */
+#ifdef MARS
+__attribute__((aligned(16)))
+#endif
 vissprite_t	vissprites[MAXVISSPRITES], *lastsprite_p, *vissprite_p;
 
 /* */
@@ -773,7 +776,7 @@ static void R_RenderPhase1(void)
 
 static void R_RenderPhases2To9(void)
 {
-	viswall_t viswalls_[MAXWALLCMDS];
+	viswall_t viswalls_[MAXWALLCMDS] __attribute__((aligned(16)));
 
 	viswalls = viswalls_;
 	lastwallcmd = viswalls;
@@ -787,8 +790,6 @@ static void R_RenderPhases2To9(void)
 	t_ref_prep[t_ref_cnt] = I_GetFRTCounter() - t_ref_prep[t_ref_cnt];
 
 	Mars_R_StopOpenPlanes();
-
-	Mars_CommSlaveClearCache();
 
 	t_ref_segs[t_ref_cnt] = I_GetFRTCounter();
 	R_SegCommands ();

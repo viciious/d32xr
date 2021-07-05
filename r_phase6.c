@@ -440,6 +440,11 @@ static void R_SegCommands2(const int cpu)
         {
             texture_t* tex = &textures[segl->t_texturenum];
 
+#ifdef MARS
+            if (cpu == 1)
+                Mars_ClearCacheLines((intptr_t)&tex->data & ~15, 1);
+#endif
+
             toptex->topheight = segl->t_topheight;
             toptex->bottomheight = segl->t_bottomheight;
             toptex->texturemid = segl->t_texturemid;
@@ -453,6 +458,11 @@ static void R_SegCommands2(const int cpu)
         if (segl->actionbits & AC_BOTTOMTEXTURE)
         {
             texture_t* tex = &textures[segl->b_texturenum];
+
+#ifdef MARS
+            if (cpu == 1)
+                Mars_ClearCacheLines((intptr_t)&tex->data & ~15, 1);
+#endif
 
             bottomtex->topheight = segl->b_topheight;
             bottomtex->bottomheight = segl->b_bottomheight;
@@ -485,7 +495,9 @@ static void R_SegCommands2(const int cpu)
 
 void Mars_Slave_R_SegCommands(void)
 {
-    Mars_ClearCache();
+    Mars_ClearCacheLines((intptr_t)&viswalls & ~15, 1);
+    Mars_ClearCacheLines((intptr_t)&lastwallcmd & ~15, 1);
+    Mars_ClearCacheLines((intptr_t)viswalls & ~15, ((lastwallcmd - viswalls) * sizeof(viswall_t) + 15) / 16);
 
     R_SegCommands2(1);
 }

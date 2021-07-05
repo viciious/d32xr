@@ -251,7 +251,13 @@ void Mars_Slave_R_DrawSprites(void) ATTR_DATA_CACHE_ALIGN;
 
 void Mars_Slave_R_DrawSprites(void)
 {
-    Mars_ClearCache();
+    Mars_ClearCacheLines((intptr_t)&sortedcount & ~15, 1);
+    Mars_ClearCacheLines((intptr_t)&sortedsprites & ~15, 1);
+    Mars_ClearCacheLines((intptr_t)sortedsprites & ~15, (sortedcount * sizeof(*sortedsprites) + 15) / 16);
+
+    Mars_ClearCacheLines((intptr_t)&vissprites & ~15, 1);
+    Mars_ClearCacheLines((intptr_t)&vissprite_p & ~15, 1);
+    Mars_ClearCacheLines((intptr_t)vissprites & ~15, ((vissprite_p - vissprites) * sizeof(vissprite_t) + 15) / 16);
 
     R_DrawSpritesStride(1);
 }
