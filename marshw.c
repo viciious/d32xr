@@ -73,12 +73,13 @@ void Mars_InitLineTable(volatile unsigned short* lines)
 		lines[j] = 0;
 }
 
-void Mars_UploadPalette(const uint8_t* palette)
+char Mars_UploadPalette(const uint8_t* palette)
 {
 	int	i;
 	volatile unsigned short* cram = &MARS_CRAM;
 
-	while ((MARS_SYS_INTMSK & MARS_SH2_ACCESS_VDP) == 0);
+	if ((MARS_SYS_INTMSK & MARS_SH2_ACCESS_VDP) == 0)
+		return 0;
 
 	for (i = 0; i < 256; i++) {
 		uint8_t r = *palette++;
@@ -89,6 +90,8 @@ void Mars_UploadPalette(const uint8_t* palette)
 		unsigned short r1 = ((r >> 3) & 0x1f) << 0;
 		cram[i] = r1 | g1 | b1;
 	}
+
+	return 1;
 }
 
 int Mars_PollMouse(int port)
@@ -210,8 +213,8 @@ void master_vbi_handler(void)
 	mars_vblank_count++;
 	if (mars_newpalette)
 	{
-		Mars_UploadPalette(mars_newpalette);
-		mars_newpalette = NULL;
+		if (Mars_UploadPalette(mars_newpalette))
+			mars_newpalette = NULL;
 	}
 
 	mars_controls |= *mars_gamepadport;

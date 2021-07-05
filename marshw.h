@@ -37,7 +37,7 @@ void Mars_FlipFrameBuffers(char wait) __attribute__((noinline));
 void Mars_WaitFrameBuffersFlip(void) __attribute__((noinline));
 char Mars_FramebuffersFlipped(void) __attribute__((noinline));
 void Mars_Init(void);
-void Mars_UploadPalette(const uint8_t* palette);
+char Mars_UploadPalette(const uint8_t* palette);
 int Mars_PollMouse(int port);
 int Mars_ParseMousePacket(int mouse, int* pmx, int* pmy);
 
