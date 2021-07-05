@@ -431,8 +431,8 @@ typedef struct
 extern	viswall_t *viswalls/*[MAXWALLCMDS] __attribute__((aligned(16)))*/;
 extern	viswall_t *lastwallcmd;
 
-extern bspviswall_t bspviswalls[MAXWALLCMDS];
-extern bspviswall_t* lastbspwallcmd;
+extern bspviswall_t *bspviswalls/*[MAXWALLCMDS]*/;
+extern bspviswall_t *lastbspwallcmd;
 
 /* A vissprite_t is a thing that will be drawn during a refresh */
 typedef struct vissprite_s
