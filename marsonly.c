@@ -124,17 +124,19 @@ void I_Print8(int x, int y, const char* string)
 {
 	int c;
 	const byte* source;
-	volatile byte *dest;
+	pixel_t *dest;
+	extern short* dc_colormaps;
+	short* dc_colormap = &dc_colormaps[0];
 
 	if (y > 224 / 8)
 		return;
 
-	dest = (byte *)(I_FrameBuffer() + 320) + (y * 8) * 320 + x;
+	dest = (I_FrameBuffer() + 320) + (y * 8) * 320 + x;
 
 	while ((c = *string++) && x < 320-8)
 	{
 		int i, b;
-		volatile byte * d;
+		pixel_t * d;
 
 		if (c < 32 || c >= 128)
 			continue;
@@ -148,7 +150,7 @@ void I_Print8(int x, int y, const char* string)
 			for (b = 0; b < 8; b++)
 			{
 				if (s & (1 << (7 - b)))
-					*(d + b) = COLOR_WHITE;
+					*(d + b) = dc_colormap[COLOR_WHITE];
 
 			}
 			d += 320;
@@ -192,6 +194,8 @@ void DrawJagobj2(jagobj_t* jo, int x, int y, int src_x, int src_y, int src_w, in
 	int		srcx, srcy;
 	int		width, height;
 	int		rowsize;
+	extern short* dc_colormaps;
+	const short* colormap = &dc_colormaps[0];
 
 	if (debugmode == 3)
 		return;
@@ -241,36 +245,18 @@ void DrawJagobj2(jagobj_t* jo, int x, int y, int src_x, int src_y, int src_w, in
 		return;
 
 	{
-		byte* dest;
+		pixel_t * dest;
 		byte* source;
 		unsigned i;
+		const short* colormap = &dc_colormaps[0];
 
 		source = jo->data + srcx + srcy * rowsize;
 
-		if ((x & 1) == 0 && (width & 1) == 0)
-		{
-			unsigned hw = (unsigned)width >> 1;
-			unsigned hx = (unsigned)x >> 1;
-			unsigned hr = (unsigned)rowsize >> 1;
-
-			pixel_t *dest2 = I_OverwriteBuffer() + y * 160 + hx;
-			pixel_t *source2 = (pixel_t*)source;
-
-			for (; height; height--)
-			{
-				for (i = 0; i < hw; i++)
-					dest2[i] = source2[i];
-				source2 += hr;
-				dest2 += 160;
-			}
-			return;
-		}
-
-		dest = (byte*)I_FrameBuffer() + y * 320 + x;
+		dest = (pixel_t*)I_OverwriteBuffer() + y * 320 + x;
 		for (; height; height--)
 		{
 			for (i = 0; i < width; i++)
-				dest[i] = source[i];
+				dest[i] = colormap[source[i]];
 			source += rowsize;
 			dest += 320;
 		}

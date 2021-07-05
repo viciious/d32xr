@@ -38,7 +38,9 @@ _I_DrawColumnA:
         add     r4,r8           /* fb += dc_x*2 */
         shll8   r5
         add     r5,r8
+        add     r5,r8
         shlr2   r5
+        add     r5,r8
         add     r5,r8           /* fb += (dc_yl*256 + dc_yl*64) */
         mov.l   @(4,r15),r2     /* frac */
         mov.l   @(8,r15),r3     /* fracstep */
@@ -98,7 +100,9 @@ _I_DrawColumnNPo2A:
         add     r4,r8           /* fb += dc_x*2 */
         shll8   r5
         add     r5,r8
+        add     r5,r8
         shlr2   r5
+        add     r5,r8
         add     r5,r8           /* fb += (dc_yl*256 + dc_yl*64) */
         mov.l   @(4,r15),r2     /* frac */
         mov.l   @(8,r15),r3     /* fracstep */
@@ -184,7 +188,9 @@ _I_DrawSpanA:
         add     r5,r8           /* fb += ds_x1*2 */
         shll8   r4
         add     r4,r8
+        add     r4,r8
         shlr2   r4
+        add     r4,r8
         add     r4,r8           /* fb += (ds_y*256 + ds_y*64) */
         add     #-2,r8
         mov.l   @(12,r15),r2     /* xfrac */
@@ -230,6 +236,6 @@ draw_cmap:
         .long   _dc_colormaps		/* cached */
 /*      .long   colormap|0x20000000   */
 draw_width:
-        .long   320
+        .long   640
 draw_flat_mask:
         .long   63

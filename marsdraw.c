@@ -30,6 +30,8 @@
 #include "r_local.h"
 #include "lzss.h"
 
+extern short* dc_colormaps;
+
 /*
 ==============================================================================
 
@@ -40,7 +42,7 @@
 
 #ifdef USE_C_DRAW
 
-extern short* dc_colormaps;
+extern int debugmode;
 
 void I_DrawColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
@@ -68,6 +70,9 @@ void I_DrawColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	unsigned	frac;
 	unsigned    count, n;
 
+	if (debugmode == 3)
+		return;
+
 #ifdef RANGECHECK
 	if ((unsigned)dc_x >= viewportWidth || dc_yl < 0 || dc_yh >= viewportHeight)
 		I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
@@ -78,12 +83,12 @@ void I_DrawColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 
 	frac = frac_;
 	heightmask = dc_texheight - 1;
-	dest = I_ViewportBuffer() + dc_yl * 320 / 2 + dc_x;
+	dest = I_ViewportBuffer() + dc_yl * 320 + dc_x;
 	dc_colormap = dc_colormaps + light;
 
 #define DO_PIXEL() do { \
 		*dest = dc_colormap[dc_source[(frac >> FRACBITS) & heightmask]]; \
-		dest += 320/2; \
+		dest += 320; \
 		frac += fracstep; \
 	} while (0)
 
@@ -120,6 +125,9 @@ void I_DrawColumnNPo2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	unsigned    count, n;
 	unsigned 	frac;
 
+	if (debugmode == 3)
+		return;
+
 #ifdef RANGECHECK
 	if ((unsigned)dc_x >= viewportWidth || dc_yl < 0 || dc_yh >= viewportHeight)
 		I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
@@ -138,7 +146,7 @@ void I_DrawColumnNPo2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	}
 	frac = frac_;
 
-	dest = I_ViewportBuffer() + dc_yl * 320 / 2 + dc_x;
+	dest = I_ViewportBuffer() + dc_yl * 320 + dc_x;
 	dc_colormap = dc_colormaps + light;
 
 	count = dc_yh - dc_yl + 1;
@@ -146,7 +154,7 @@ void I_DrawColumnNPo2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 
 #define DO_PIXEL() do { \
 		*dest = dc_colormap[dc_source[frac >> FRACBITS]]; \
-		dest += 320/2; \
+		dest += 320; \
 		if ((frac += fracstep) >= heightmask) \
 			frac -= heightmask; \
 	} while (0)
@@ -184,6 +192,9 @@ void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	unsigned count, n;
 	short* dc_colormap;
 
+	if (debugmode == 3)
+		return;
+
 #ifdef RANGECHECK
 	if (ds_x2 < ds_x1 || ds_x1<0 || ds_x2 >= viewportWidth
 		|| (unsigned)ds_y>viewportHeight)
@@ -193,7 +204,7 @@ void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	count = ds_x2 - ds_x1 + 1;
 	xfrac = ds_xfrac, yfrac = ds_yfrac;
 
-	dest = I_ViewportBuffer() + ds_y * 320 / 2 + ds_x1;
+	dest = I_ViewportBuffer() + ds_y * 320 + ds_x1;
 	dc_colormap = dc_colormaps + light;
 
 #define DO_PIXEL() do { \
@@ -235,6 +246,7 @@ void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh)
 	byte* lump;
 	jagobj_t* jo;
 	int width, height;
+	const short* colormap = &dc_colormaps[0];
 
 	if (debugmode == 3)
 		return;
@@ -268,19 +280,17 @@ void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh)
 	if (width < 1 || height < 1)
 		return;
 	{
-		byte* dest;
+		pixel_t * dest;
 		byte* source;
-		byte* fb;
 		pixel_t* ob;
 		unsigned p;
 
 		source = gfx_lzss.buf;
 		p = 16;
 
-		fb = (byte*)I_FrameBuffer();
 		ob = I_OverwriteBuffer();
 
-		dest = fb + y * 320 + x;
+		dest = ob + y * 320 + x;
 		for (; height; height--)
 		{
 			int i;
@@ -291,23 +301,24 @@ void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh)
 			if (p + width > LZSS_BUF_SIZE) {
 				int rem = LZSS_BUF_SIZE - p;
 				for (; i < rem; i++)
-					dest[i] = source[p++];
+					dest[i] = colormap[source[p++]];
 				p = 0;
 			}
 
-			if ((i & 1) == 0 && (width & 1) == 0 && (p & 1) == 0 && (x & 1) == 0)
+			if (0)
+			//if ((i & 1) == 0 && (width & 1) == 0 && (p & 1) == 0 && (x & 1) == 0)
 			{
 				int j = i;
 				pixel_t* dest2 = ob + ((dest - fb + i) >> 1);
 				pixel_t* source2 = (pixel_t*)&source[p];
 				for (; i < width; i += 2)
-					*dest2++ = *source2++;
+					*dest2++ = colormap[*source2++];
 				p += width - j;
 			}
 			else
 			{
 				for (; i < width; i++)
-					dest[i] = source[p++];
+					dest[i] = colormap[source[p++]];
 			}
 
 			dest += 320;
@@ -326,23 +337,23 @@ void DrawTiledBackground(void)
 {
 	int			y, yt;
 	const int	w = 64, h = 64;
-	const int	hw = w / 2;
 	const int xtiles = (320 + w - 1) / w;
 	const int ytiles = (200 + h - 1) / h;
 	pixel_t* bdest;
-	const pixel_t* bsrc;
+	const inpixel_t* bsrc;
+	const short* colormap = &dc_colormaps[0];
 
 	if (debugmode == 3)
 		return;
 
-	bsrc = (const pixel_t*)W_POINTLUMPNUM(W_GetNumForName("ROCKS"));
+	bsrc = (const inpixel_t*)W_POINTLUMPNUM(W_GetNumForName("ROCKS"));
 	bdest = I_FrameBuffer();
 
 	y = 0;
 	for (yt = 0; yt < ytiles; yt++)
 	{
 		int y1;
-		const pixel_t* source = bsrc;
+		const inpixel_t* source = bsrc;
 
 		for (y1 = 0; y1 < 64; y1++)
 		{
@@ -350,13 +361,13 @@ void DrawTiledBackground(void)
 
 			for (xt = 0; xt < xtiles; xt++) {
 				int x;
-				for (x = 0; x < hw; x++)
-					*bdest++ = source[x];
+				for (x = 0; x < w; x++)
+					*bdest++ = colormap[source[x]];
 			}
 
 			y++;
-			source += hw;
-			if (y == 224)
+			source += w;
+			if (y == 200)
 				return;
 		}
 	}

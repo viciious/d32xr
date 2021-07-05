@@ -241,8 +241,8 @@ int Mars_FRTCounter2Msec(int c)
 */ 
 
 void I_Init (void) 
-{	
-	int	i;
+{
+	int	i, j, k;
 	const byte	*doompalette;
 	const byte 	*doomcolormap;
 
@@ -253,12 +253,37 @@ void I_Init (void)
 	dc_colormaps = Z_Malloc(64*256, PU_STATIC, 0);
 
 	for(i = 0; i < 32; i++) {
+		byte* dl[2];
 		const byte *sl1 = &doomcolormap[i*512];
 		const byte *sl2 = &doomcolormap[i*512+256];
-		byte *dl1 = (byte *)&dc_colormaps[i*256];
-		byte *dl2 = (byte *)&dc_colormaps[i*256+128];
-		D_memcpy(dl1, sl2, 256);
-		D_memcpy(dl2, sl1, 256);
+		dl[0] = (byte *)&dc_colormaps[i*256];
+		dl[1] = (byte *)&dc_colormaps[i*256+128];
+		D_memcpy(dl[0], sl2, 256);
+		D_memcpy(dl[1], sl1, 256);
+
+		for (k = 0; k < 2; k++)
+		{
+			byte* d = dl[k];
+			short* cmap = (short*)d;
+			const byte* palette = doompalette;
+
+			for (j = 0; j < 128; j++) {
+				unsigned p = d[j * 2] * 3;
+				unsigned r = palette[p + 0];
+				unsigned g = palette[p + 1];
+				unsigned b = palette[p + 2];
+				if (p != 0) {
+					if (r < 8) r = 8;
+					if (g < 8) g = 8;
+					if (b < 8) b = 8;
+				}
+				unsigned short b1 = ((b >> 3) & 0x1f) << 10;
+				unsigned short g1 = ((g >> 3) & 0x1f) << 5;
+				unsigned short r1 = ((r >> 3) & 0x1f) << 0;
+				unsigned rgb15 = r1 | g1 | b1;
+				cmap[j] = rgb15;
+			}
+		}
 	}
 
 	stbar = (jagobj_t*)W_POINTLUMPNUM(W_GetNumForName("STBAR"));
@@ -398,7 +423,7 @@ byte	*I_TempBuffer (void)
 byte 	*I_WorkBuffer (void)
 {
 	while (!I_RefreshCompleted());
-	return (byte *)(framebuffer + 320 / 2 * (224+1)); // +1 for the blank line
+	return (byte *)(framebuffer + 320 * screenHeight);
 }
 
 pixel_t	*I_FrameBuffer (void)
@@ -421,14 +446,17 @@ int I_ViewportYPos(void)
 pixel_t	*I_ViewportBuffer (void)
 {
 	volatile pixel_t *viewportbuffer = framebuffer;
-	viewportbuffer += I_ViewportYPos() * 320 / 2 + (320 - viewportWidth * 2) / 4;
+	if (viewportWidth < 160)
+		viewportbuffer += I_ViewportYPos() * 320 / 2 + (320 - viewportWidth * 2) / 4;
+	else
+		viewportbuffer += (320 - viewportWidth) / 2;
 	return (pixel_t *)viewportbuffer;
 }
 
 void I_ClearFrameBuffer (void)
 {
 	int* p = (int*)framebuffer;
-	int* p_end = (int*)(framebuffer + 320 / 2 * (224+1));
+	int* p_end = (int*)(framebuffer + 320 * 200);
 	while (p < p_end)
 		*p++ = 0;
 }

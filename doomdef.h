@@ -682,7 +682,7 @@ extern	gametype_t	starttype;
 /*--------- */
 /*SYSTEM IO */
 /*--------- */
-#define	SCREENWIDTH		160
+#define	SCREENWIDTH		254
 #define	SCREENHEIGHT	224
 
 void I_Init (void);

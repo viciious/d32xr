@@ -63,11 +63,13 @@ void Mars_InitLineTable(volatile unsigned short* lines)
 	int j;
 	int blank;
 
-	// initialize the lines section of the framebuffer
-	for (j = 0; j < 224; j++)
-		lines[j] = j * 320 / 2 + 0x100;
+	lines[0] = 0x100;
 
-	blank = j * 320 / 2;
+	// initialize the lines section of the framebuffer
+	for (j = 0; j < 200; j++)
+		lines[j] = j * 320 + 0x100;
+
+	blank = j * 320;
 
 	// set the rest of the line table to a blank line
 	for ( ; j < 256; j++)
@@ -83,7 +85,7 @@ char Mars_UploadPalette(const uint8_t* palette)
 	int	i;
 	volatile unsigned short* cram = &MARS_CRAM;
 
-	if ((MARS_SYS_INTMSK & MARS_SH2_ACCESS_VDP) == 0)
+//	if ((MARS_SYS_INTMSK & MARS_SH2_ACCESS_VDP) == 0)
 		return 0;
 
 	for (i = 0; i < 256; i++) {
@@ -154,7 +156,7 @@ void Mars_Init(void)
 
 	while ((MARS_SYS_INTMSK & MARS_SH2_ACCESS_VDP) == 0);
 
-	MARS_VDP_DISPMODE = MARS_224_LINES | MARS_VDP_MODE_256;
+	MARS_VDP_DISPMODE = MARS_224_LINES | MARS_VDP_MODE_32K;
 	NTSC = (MARS_VDP_DISPMODE & MARS_NTSC_FORMAT) != 0;
 
 	/* init hires timer system */

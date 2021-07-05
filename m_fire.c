@@ -279,21 +279,20 @@ void I_StopMenuFire(void)
 int I_DrawMenuFire(void)
 {
 	int x, y;
-	pixel_t *dest = I_FrameBuffer() + 320 / 2 * (224 - FIRE_HEIGHT);
+	pixel_t *dest = I_FrameBuffer() + 320 * (200 - FIRE_HEIGHT);
 	char* firePix = m_fire->firePix;
 	unsigned char* firePal = m_fire->firePal;
+	extern short* dc_colormaps;
+	const short* colormap = &dc_colormaps[0];
 
 	// draw the fire at the bottom
 	char* row = (char*)((intptr_t)firePix | 0x20000000);
 	for (y = 0; y < FIRE_HEIGHT; y++) {
-		for (x = 0; x < FIRE_WIDTH; x += 2) {
-			int p1 = *row++;
-			int p2 = *row++;
-			int p;
+		for (x = 0; x < FIRE_WIDTH; x++) {
+			int p = *row++;
 
-			p1 = firePal[p1];
-			p2 = firePal[p2];
-			p = (p1 << 8) | p2;
+			p = firePal[p];
+			p = colormap[p];
 
 			*dest++ = p;
 		}
