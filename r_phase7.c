@@ -199,7 +199,7 @@ static void R_PlaneLoop(localplane_t *lpl, const int mask)
    while(pl_x != pl_stopx);
 }
 
-static void R_DrawPlanes2(const int mask)
+static void R_DrawPlanes2(const int cpu)
 {
     unsigned i;
     angle_t angle;
@@ -221,6 +221,11 @@ static void R_DrawPlanes2(const int mask)
         if (pl->minx > pl->maxx)
             continue;
  
+#ifdef MARS
+        if (cpu == 1)
+            Mars_ClearCacheLines((intptr_t)&flatpixels[pl->flatnum] & ~15, 1);
+#endif
+
         lpl.pl = pl;
         lpl.pixelcount = 0;
         lpl.ds_source = flatpixels[pl->flatnum];
@@ -250,9 +255,9 @@ static void R_DrawPlanes2(const int mask)
         lpl.lightmax = HWLIGHT(lpl.lightmax);
 #endif
 
-        R_PlaneLoop(&lpl, mask);
+        R_PlaneLoop(&lpl, cpu);
 
-        if (mask == 0)
+        if (cpu == 0)
         {
             R_AddPixelsToTexCache(&r_flatscache, pl->flatnum, lpl.pixelcount);
         }
@@ -265,6 +270,15 @@ static void R_DrawPlanes2(const int mask)
 #ifdef MARS
 void Mars_Slave_R_DrawPlanes(void)
 {
+    Mars_ClearCacheLines((intptr_t)&numplanes & ~15, 1);
+    Mars_ClearCacheLines((intptr_t)&visplanes & ~15, 1);
+
+    // commented out because visplanes are in VRAM anyway
+    //Mars_ClearCacheLines((intptr_t)visplanes, (numplanes * sizeof(visplane_t) + 15) / 16);
+
+    Mars_ClearCacheLines((intptr_t)&sortedplanes & ~15, 1);
+    Mars_ClearCacheLines((intptr_t)sortedplanes & ~15, (numplanes * sizeof(*sortedplanes) + 15) / 16);
+
     R_DrawPlanes2(1);
 }
 #endif
@@ -301,7 +315,7 @@ void R_DrawPlanes(void)
     }
 
     D_isort((int*)sortbuf, numplanes);
-    sortedplanes = (short *)((intptr_t)sortbuf | 0x20000000);
+    sortedplanes = (short*)sortbuf;
 
 #ifdef MARS
     Mars_R_BeginDrawPlanes();
