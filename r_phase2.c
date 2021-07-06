@@ -9,7 +9,7 @@
 
 static sector_t emptysector = { 0, 0, -2, -2, -2 };
 
-void R_WallPrep(void) ATTR_DATA_CACHE_ALIGN;
+void R_WallPrep(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 void R_WallPrep(void)
 {
