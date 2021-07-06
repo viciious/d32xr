@@ -21,7 +21,7 @@ static seg_t       *curline;
 static angle_t      lineangle1;
 static sector_t    *frontsector;
 
-angle_t R_PointToAngle(fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
+angle_t R_PointToAngle(fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static void R_AddLine(seg_t* line) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static void R_ClipWallSegment(fixed_t first, fixed_t last, boolean solid) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static boolean R_CheckBBox(fixed_t bspcoord[4]) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
