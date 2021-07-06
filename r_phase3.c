@@ -8,8 +8,8 @@
 #include "r_local.h"
 
 static void R_PrepMobj(mobj_t* thing) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static void R_PrepPSprite(pspdef_t* psp) ATTR_DATA_CACHE_ALIGN;
-void R_SpritePrep(void) ATTR_DATA_CACHE_ALIGN;
+static void R_PrepPSprite(pspdef_t* psp) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void R_SpritePrep(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 //
 // Project vissprite for potentially visible actor
