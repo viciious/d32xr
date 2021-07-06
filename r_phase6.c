@@ -55,7 +55,7 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu) __attribute__((always_inl
 static void R_SegCommands2(const int mask) __attribute__((always_inline));
 
 void Mars_Slave_R_SegCommands(void) ATTR_DATA_CACHE_ALIGN;
-void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN;
+void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 //
 // Render a wall texture as columns
