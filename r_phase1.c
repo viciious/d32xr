@@ -25,10 +25,10 @@ angle_t R_PointToAngle(fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
 static void R_AddLine(seg_t* line) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static void R_ClipWallSegment(fixed_t first, fixed_t last, boolean solid) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static boolean R_CheckBBox(fixed_t bspcoord[4]) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static void R_Subsector(int num) ATTR_DATA_CACHE_ALIGN;
+static void R_Subsector(int num) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static inline void R_StoreWallRange(int start, int stop)  __attribute__((always_inline));
-static void R_RenderBSPNode(int bspnum) ATTR_DATA_CACHE_ALIGN;
-void R_BSP(void) ATTR_OPTIMIZE_SIZE;
+static void R_RenderBSPNode(int bspnum) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void R_BSP(void) ATTR_OPTIMIZE_SIZE ATTR_OPTIMIZE_SIZE;
 
 //
 // To get a global angle from Cartesian coordinates, the coordinates are
