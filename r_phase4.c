@@ -11,11 +11,11 @@
 static fixed_t R_PointToDist(fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
 static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, angle_t normalangle) ATTR_DATA_CACHE_ALIGN;
 static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle) ATTR_DATA_CACHE_ALIGN;
-static void R_FinishWallPrep1(viswall_t* wc) ATTR_DATA_CACHE_ALIGN;
-static void R_FinishWallPrep2(viswall_t* wc) ATTR_DATA_CACHE_ALIGN;
-static void R_FinishSprite(vissprite_t* vis) ATTR_DATA_CACHE_ALIGN;
-static void R_FinishPSprite(vissprite_t* vis) ATTR_DATA_CACHE_ALIGN;
-boolean R_LatePrep(void) ATTR_DATA_CACHE_ALIGN;
+static void R_FinishWallPrep1(viswall_t* wc) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static void R_FinishWallPrep2(viswall_t* wc) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static void R_FinishSprite(vissprite_t* vis) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static void R_FinishPSprite(vissprite_t* vis) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+boolean R_LatePrep(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 //
 // Check if texture is loaded; return if so, flag for cache if not
