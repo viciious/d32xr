@@ -162,32 +162,6 @@ void	P_RunMobjBase (void)
 
 /*============================================================================= */
 
-/* 
-=================== 
-= 
-= P_RunMobjLate  
-=
-= Run stuff that doesn't happen every tick
-=================== 
-*/ 
-
-void	P_RunMobjLate (void)
-{
-	mobj_t	*mo;
-	mobj_t	*next;
-	
-	for (mo=mobjhead.next ; mo != (void *)&mobjhead ; mo=next)
-	{
-		next = mo->next;	/* in case mo is removed this time */
-		if (mo->latecall)
-		{
-			mo->latecall(mo);
-		}
-	}
-}
-
-/*============================================================================= */
-
 /*
 ==============
 =

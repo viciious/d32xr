@@ -94,10 +94,10 @@ static fixed_t PA_SightCrossLine(line_t *line)
    fixed_t p1x, p1y, p2x, p2y, p3x, p3y, p4x, p4y, dx, dy, ndx, ndy;
 
    // p1, p2 are endpoints
-   p1x = line->v1->x / FRACUNIT;
-   p1y = line->v1->y / FRACUNIT;
-   p2x = line->v2->x / FRACUNIT;
-   p2y = line->v2->y / FRACUNIT;
+   p1x = line->v1->x >> FRACBITS;
+   p1y = line->v1->y >> FRACBITS;
+   p2x = line->v2->x >> FRACBITS;
+   p2y = line->v2->y >> FRACBITS;
 
    // p3, p4 are sight endpoints
    p3x = ssx1;
@@ -436,10 +436,10 @@ void P_Shoot2(void)
 
    shootdivpositive = (shootdiv.dx ^ shootdiv.dy) > 0;
 
-   ssx1 = shootdiv.x / FRACUNIT;
-   ssy1 = shootdiv.y / FRACUNIT;
-   ssx2 = shootx2    / FRACUNIT;
-   ssy2 = shooty2    / FRACUNIT;
+   ssx1 = shootdiv.x >> FRACBITS;
+   ssy1 = shootdiv.y >> FRACBITS;
+   ssx2 = shootx2    >> FRACBITS;
+   ssy2 = shooty2    >> FRACBITS;
 
    aimmidslope = (aimtopslope + aimbottomslope) / 2;
 

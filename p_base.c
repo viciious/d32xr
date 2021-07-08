@@ -49,7 +49,6 @@ static void P_FloatChange(mobj_t* mo) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void P_ZMovement(mobj_t* mo) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void P_MobjThinker(mobj_t* mobj) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void P_XYMovement(mobj_t* mo) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-void P_RunMobjBase2(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 //
 // Check for collision against another mobj in one of the blockmap cells.
@@ -479,16 +478,15 @@ void P_MobjThinker(mobj_t *mobj)
       return;
 
    // cycle through states
-   if(mobj->tics != -1)
+   if (mobj->tics != -1)
    {
-      mobj->tics--;
+       mobj->tics--;
 
-      // you can cycle through multiple states in a tic
-      if(!mobj->tics)
-      {
-         if(mobj->state != S_NULL)
-            P_SetMobjState(mobj, states[mobj->state].nextstate);
-      }
+       // you can cycle through multiple states in a tic
+       if (!mobj->tics)
+       {
+           P_SetMobjState(mobj, states[mobj->state].nextstate);
+       }
    }
 }
 
@@ -497,14 +495,40 @@ void P_MobjThinker(mobj_t *mobj)
 //
 void P_RunMobjBase2(void)
 {
-   mobj_t* mo;
-   mobj_t* next;
+    mobj_t* mo;
+    mobj_t* next;
 
-   for (mo = mobjhead.next; mo != (void *)&mobjhead; mo = next)
-   {
-       next = mo->next;	/* in case mo is removed this time */
-       if (!mo->player)
-           P_MobjThinker(mo);
-   }
+    for (mo = mobjhead.next; mo != (void*)&mobjhead; mo = next)
+    {
+        next = mo->next;	/* in case mo is removed this time */
+        if (!mo->player) {
+            // clear any latecall from the previous frame
+            mo->latecall = NULL;
+            P_MobjThinker(mo);
+        }
+    }
 }
 
+/*
+===================
+=
+= P_RunMobjLate
+=
+= Run stuff that doesn't happen every tick
+===================
+*/
+
+void P_RunMobjLate(void)
+{
+    mobj_t* mo;
+    mobj_t* next;
+
+    for (mo = mobjhead.next; mo != (void*)&mobjhead; mo = next)
+    {
+        next = mo->next;	/* in case mo is removed this time */
+        if (mo->latecall)
+        {
+            mo->latecall(mo);
+        }
+    }
+}

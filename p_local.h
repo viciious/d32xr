@@ -131,8 +131,8 @@ void 	P_SpawnBlood (fixed_t x, fixed_t y, fixed_t z, int damage);
 void	P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type);
 void	P_SpawnPlayerMissile (mobj_t *source, mobjtype_t type);
 
-void	P_RunMobjBase2 (void);
-void	P_RunMobjExtra (void);
+void	P_RunMobjBase2 (void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void	P_RunMobjLate(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 void L_SkullBash (mobj_t *mo);
 void L_MissileHit (mobj_t *mo);
