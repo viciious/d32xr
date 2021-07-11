@@ -242,7 +242,7 @@ int Mars_FRTCounter2Msec(int c)
 
 void I_Init (void) 
 {
-	int	i, j, k;
+	int	i, j;
 	const byte	*doompalette;
 	const byte 	*doomcolormap;
 
@@ -261,28 +261,26 @@ void I_Init (void)
 		D_memcpy(dl[0], sl2, 256);
 		D_memcpy(dl[1], sl1, 256);
 
-		for (k = 0; k < 2; k++)
-		{
-			byte* d = dl[k];
-			short* cmap = (short*)d;
+		byte* d = dl[0];
+		short* cmap = (short*)d;
+
+		for (j = 0; j < 256; j++) {
 			const byte* palette = doompalette;
 
-			for (j = 0; j < 128; j++) {
-				unsigned p = d[j * 2] * 3;
-				unsigned r = palette[p + 0];
-				unsigned g = palette[p + 1];
-				unsigned b = palette[p + 2];
-				if (p != 0) {
-					if (r < 8) r = 8;
-					if (g < 8) g = 8;
-					if (b < 8) b = 8;
-				}
-				unsigned short b1 = ((b >> 3) & 0x1f) << 10;
-				unsigned short g1 = ((g >> 3) & 0x1f) << 5;
-				unsigned short r1 = ((r >> 3) & 0x1f) << 0;
-				unsigned rgb15 = r1 | g1 | b1;
-				cmap[j] = rgb15;
+			unsigned p = d[j * 2] * 3;
+			unsigned r = palette[p + 0];
+			unsigned g = palette[p + 1];
+			unsigned b = palette[p + 2];
+			if (j != 0) {
+				if (r < 8) r = 8;
+				if (g < 8) g = 8;
+				if (b < 8) b = 8;
 			}
+			unsigned short b1 = ((b >> 3) & 0x1f) << 10;
+			unsigned short g1 = ((g >> 3) & 0x1f) << 5;
+			unsigned short r1 = ((r >> 3) & 0x1f) << 0;
+			unsigned rgb15 = r1 | g1 | b1;
+			cmap[j] = rgb15;
 		}
 	}
 
