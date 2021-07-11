@@ -366,7 +366,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		if (demoplayback)
 		{
 #ifndef MARS
-			if (buttons & (BT_A|BT_B|BT_C) )
+			if (buttons & (BT_ATTACK|BT_SPEED|BT_USE) )
 			{
 				exit = ga_exitdemo;
 				break;
@@ -461,11 +461,11 @@ int TIC_Abortable (void)
 	}
 #endif
 
-	if ( (ticbuttons[0] & BT_A) && !(oldticbuttons[0] & BT_A) )
+	if ( (ticbuttons[0] & BT_ATTACK) && !(oldticbuttons[0] & BT_ATTACK) )
 		return ga_exitdemo;
-	if ( (ticbuttons[0] & BT_B) && !(oldticbuttons[0] & BT_B) )
+	if ( (ticbuttons[0] & BT_SPEED) && !(oldticbuttons[0] & BT_SPEED) )
 		return ga_exitdemo;
-	if ( (ticbuttons[0] & BT_C) && !(oldticbuttons[0] & BT_C) )
+	if ( (ticbuttons[0] & BT_USE) && !(oldticbuttons[0] & BT_USE) )
 		return ga_exitdemo;
 	if ( (ticbuttons[0] & BT_OPTION) && !(oldticbuttons[0] & BT_OPTION) )
 		return ga_exitdemo;
@@ -553,11 +553,11 @@ static int TIC_Credits (void)
 	if	(ticon >= 10*15)
 		return 1;		/* go on to next demo */
 		
-	if ( (ticbuttons[0] & BT_A) && !(oldticbuttons[0] & BT_A) )
+	if ( (ticbuttons[0] & BT_ATTACK) && !(oldticbuttons[0] & BT_ATTACK) )
 		return ga_exitdemo;
-	if ( (ticbuttons[0] & BT_B) && !(oldticbuttons[0] & BT_B) )
+	if ( (ticbuttons[0] & BT_SPEED) && !(oldticbuttons[0] & BT_SPEED) )
 		return ga_exitdemo;
-	if ( (ticbuttons[0] & BT_C) && !(oldticbuttons[0] & BT_C) )
+	if ( (ticbuttons[0] & BT_USE) && !(oldticbuttons[0] & BT_USE) )
 		return ga_exitdemo;
 	return 0;
 }
