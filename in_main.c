@@ -332,17 +332,17 @@ int IN_Ticker (void)
 		oldbuttons = oldticbuttons[i];
 		
 	/* exit menu if button press */
-		if ( (buttons & BT_A) && !(oldbuttons & BT_A) )
+		if ( (buttons & BT_ATTACK) && !(oldbuttons & BT_ATTACK) )
 		{
 			earlyexit = true;
 			return 1;		/* done with intermission */
 		}
-		if ( (buttons & BT_B) && !(oldbuttons & BT_B) )
+		if ( (buttons & BT_SPEED) && !(oldbuttons & BT_SPEED) )
 		{
 			earlyexit = true;
 			return 1;		/* done with intermission */
 		}
-		if ( (buttons & BT_C) && !(oldbuttons & BT_C) )
+		if ( (buttons & BT_USE) && !(oldbuttons & BT_USE) )
 		{
 			earlyexit = true;
 			return 1;		/* done with intermission */

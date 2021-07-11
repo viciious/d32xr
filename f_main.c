@@ -348,9 +348,9 @@ int F_Ticker (void)
 		if (textindex == (3*15)/TEXTTIME)
 			textprint = true;
 			
-		if (( ((buttons & BT_A) && !(oldbuttons & BT_A) )
-		|| ((buttons & BT_B) && !(oldbuttons & BT_B) )
-		|| ((buttons & BT_C) && !(oldbuttons & BT_C) ) ) &&
+		if (( ((buttons & BT_ATTACK) && !(oldbuttons & BT_ATTACK) )
+		|| ((buttons & BT_SPEED) && !(oldbuttons & BT_SPEED) )
+		|| ((buttons & BT_USE) && !(oldbuttons & BT_USE) ) ) &&
 		textprint == true)
 		{
 			status = fin_charcast;
@@ -364,9 +364,9 @@ int F_Ticker (void)
 	
 	if (!castdeath)
 	{
-		if ( ((buttons & BT_A) && !(oldbuttons & BT_A) )
-		|| ((buttons & BT_B) && !(oldbuttons & BT_B) )
-		|| ((buttons & BT_C) && !(oldbuttons & BT_C) ) )
+		if ( ((buttons & BT_ATTACK) && !(oldbuttons & BT_ATTACK) )
+		|| ((buttons & BT_SPEED) && !(oldbuttons & BT_SPEED) )
+		|| ((buttons & BT_USE) && !(oldbuttons & BT_USE) ) )
 		{
 		/* go into death frame */
 #ifndef JAGUAR
