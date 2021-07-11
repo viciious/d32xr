@@ -178,7 +178,7 @@ void I_Error (char *error, ...)
 	va_end(ap);
 
 	I_ClearFrameBuffer();
-	I_Print8 (0,25,errormessage);
+	I_Print8 (0,20,errormessage);
 	I_Update ();
 
 	while (1)
