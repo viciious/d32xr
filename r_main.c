@@ -18,7 +18,7 @@ fixed_t weaponScale;
 /* */
 /* subsectors */
 /* */
-subsector_t		*vissubsectors[MAXVISSSEC], **lastvissubsector;
+subsector_t		**vissubsectors/*[MAXVISSSEC]*/, ** lastvissubsector;
 
 /* */
 /* walls */
@@ -566,6 +566,10 @@ void R_Setup (void)
 	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
 	visplanes_hash = (visplane_t**)tempbuf;
 	tempbuf += sizeof(visplane_t*) * NUM_VISPLANES_BUCKETS;
+
+	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
+	vissubsectors = (void*)tempbuf;
+	tempbuf += sizeof(*vissubsectors) * MAXVISSSEC / sizeof(*tempbuf);
 
 	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
 		visplanes_hash[i] = NULL;
