@@ -209,7 +209,7 @@ void Mars_Slave(void)
 
 int Mars_FRTCounter2Msec(int c)
 {
-	return FixedMul((unsigned)c << FRACBITS, mars_frtc2msec_frac) >> FRACBITS;
+	return (c * mars_frtc2msec_frac) >> FRACBITS;
 }
 
 /* 
