@@ -33,7 +33,7 @@
 
 void Mars_Slave(void);
 
-void Mars_Slave_R_SegCommands(void) ATTR_DATA_CACHE_ALIGN;
+void Mars_Slave_R_SegCommands(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void Mars_Slave_R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void Mars_Slave_R_DrawSprites(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void Mars_Slave_R_OpenPlanes(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
