@@ -35,8 +35,6 @@ jobs:
         run: |
           dd if=/dev/zero bs=1K count=2324 of=doom32x.wad && \
           make -f Makefile.mars clean && make -f Makefile.mars -j debug
-      - name: Print sizes
-        run: nm --print-size --size-sort --radix=d D32XR.elf | egrep -Ei ' (B|D) ' | tail -n 50
       - name: make MARS
         run: |
           dd if=/dev/zero bs=1K count=2324 of=doom32x.wad && \
@@ -44,6 +42,8 @@ jobs:
       - name: readelf -S
         run: |
           /opt/toolchains/sega/sh-elf/bin/sh-elf-readelf -S D32XR.elf
+      - name: Print sizes
+        run: nm --print-size --size-sort --radix=d D32XR.elf | egrep -Ei ' (B|D) ' | tail -n 50
       - name: .bss plus .data size
         run: |
           /opt/toolchains/sega/sh-elf/bin/sh-elf-readelf -S D32XR.elf | \
