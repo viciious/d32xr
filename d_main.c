@@ -351,14 +351,16 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		oldticbuttons[1] = ticbuttons[1];
 
 		buttons = I_ReadControls();
+		buttons |= I_ReadMouse(&mx, &my);
 		if (demoplayback)
 		{
-			ticmousex[consoleplayer] = ticmousey[consoleplayer] = 0;
+			ticmousex[consoleplayer] = 0;
+			ticmousey[consoleplayer] = 0;
 		}
 		else
 		{
-			buttons |= I_ReadMouse(&mx, &my);
-			ticmousex[consoleplayer] = mx, ticmousey[consoleplayer] = my;
+			ticmousex[consoleplayer] = mx;
+			ticmousey[consoleplayer] = my;
 		}
 
 		ticbuttons[consoleplayer] = buttons;
