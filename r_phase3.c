@@ -88,7 +88,7 @@ static void R_PrepMobj(mobj_t *thing)
       return; // too many visible sprites already
    vis = vissprite_p++;
 
-   vis->patchnum = lump; // CALICO: store to patchnum, not patch (number vs pointer)
+   vis->patch    = (void *)lump;
    vis->x1       = tx;
    vis->gx       = thing->x;
    vis->gy       = thing->y;
@@ -127,7 +127,7 @@ static void R_PrepPSprite(pspdef_t *psp)
       return; // out of vissprites
    vis = vissprite_p++;
 
-   vis->patchnum = lump; // CALICO: use patchnum here, not patch pointer
+   vis->patch = (void *)lump;
    vis->x1 = psp->sx / FRACUNIT;
    vis->texturemid = psp->sy;
 

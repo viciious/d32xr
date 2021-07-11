@@ -229,7 +229,7 @@ static void R_FinishSprite(vissprite_t *vis)
    int      x1, x2;
 
    // get column headers
-   lump  = vis->patchnum;                                // CALICO: use patchnum to avoid type punning
+   lump  = (int)vis->patch;
    patch = wadfileptr + BIGLONG(lumpinfo[lump].filepos); // CALICO: requires endianness correction
    vis->patch = (patch_t *)patch;
   
@@ -288,7 +288,7 @@ static void R_FinishPSprite(vissprite_t *vis)
    byte    *patch;
 
    // get column headers
-   lump  = vis->patchnum;                                // CALICO: use patchnum to avoid type punning
+   lump  = (int)vis->patch;
    patch = wadfileptr + BIGLONG(lumpinfo[lump].filepos); // CALICO: requires endianness correction throughout
    vis->patch = (patch_t *)patch;
 

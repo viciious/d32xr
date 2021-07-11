@@ -452,9 +452,6 @@ typedef struct vissprite_s
 #else
 	pixel_t		*pixels;		/* data patch header references */
 #endif
-
-    // CALICO: avoid type punning for patch
-	int      patchnum;
 } vissprite_t;
 
 #ifdef MARS
