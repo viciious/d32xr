@@ -510,7 +510,15 @@ void P_Drawer (void)
 		}
 
 		if (clearscreen > 0) {
-			DrawTiledBackground();
+			if (screenWidth == 160)
+				I_ClearFrameBuffer();
+			else
+				DrawTiledBackground();
+
+			I_DrawSbar();
+
+			ST_ForceDraw();
+
 			clearscreen--;
 		}
 

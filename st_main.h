@@ -21,6 +21,8 @@
 
 #define FACEX		144
 #define FACEY		5
+#define FACEW		32
+#define FACEH		32
 
 #define ARMORX		226
 #define ARMORY		HEALTHY
@@ -106,6 +108,7 @@ typedef struct
 	spclface_e	specialFace;	/* Which type of special face to make */
 	boolean	gotgibbed;			/* Got gibbed */
 	boolean tryopen[NUMCARDS];	/* Tried to open a card or skull door */
+	boolean forcedraw;
 } stbar_t;
 
 extern	stbar_t	stbar;

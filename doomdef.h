@@ -701,6 +701,7 @@ pixel_t *I_FrameBuffer (void);
 pixel_t* I_OverwriteBuffer(void);
 
 pixel_t *I_ViewportBuffer (void);
+int I_ViewportYPos(void);
 
 void I_ClearFrameBuffer (void);
 
@@ -815,6 +816,7 @@ void O_Drawer (void) ATTR_OPTIMIZE_SIZE;
 void ST_Init (void) ATTR_OPTIMIZE_SIZE;
 void ST_Ticker (void) ATTR_OPTIMIZE_SIZE;
 void ST_Drawer (void) ATTR_OPTIMIZE_SIZE;
+void ST_ForceDraw(void) ATTR_OPTIMIZE_SIZE;
 void ST_InitEveryLevel(void);
 
 

@@ -187,10 +187,6 @@ void I_Error (char *error, ...)
 
 /*=========================================================================== */
 
-void EraseBlock(int x, int y, int width, int height)
-{
-}
-
 void DrawJagobj2(jagobj_t* jo, int x, int y, int src_x, int src_y, int src_w, int src_h)
 {
 	int		srcx, srcy;
@@ -235,11 +231,12 @@ void DrawJagobj2(jagobj_t* jo, int x, int y, int src_x, int src_y, int src_w, in
 
 	if (x + width > 320)
 		width = 320 - x;
-	if (y + height > 200)
-		height = 200 - y;
+	if (y + height > 223)
+		height = 223 - y;
 
 	if (width < 1 || height < 1)
 		return;
+
 	{
 		byte* dest;
 		byte* source;

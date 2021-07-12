@@ -48,8 +48,10 @@ extern int 	cy;
 extern int tictics;
 
 // framebuffer start is after line table AND a single blank line
-static volatile pixel_t* framebuffer = &MARS_FRAMEBUFFER + 0x100 + 160;
+static volatile pixel_t* framebuffer = &MARS_FRAMEBUFFER + 0x100;
 static volatile pixel_t *framebufferend = &MARS_FRAMEBUFFER + 0x10000;
+
+static jagobj_t* stbar;
 
 static int Mars_ConvGamepadButtons(int ctrl)
 {
@@ -166,6 +168,24 @@ static int Mars_ConvMouseButtons(int mouse)
 
 void Mars_Slave(void)
 {
+	// init DMA
+	SH2_DMA_SAR0 = 0;
+	SH2_DMA_DAR0 = 0;
+	SH2_DMA_TCR0 = 0;
+	SH2_DMA_CHCR0 = 0;
+	SH2_DMA_DRCR0 = 0;
+	SH2_DMA_SAR1 = 0;
+	SH2_DMA_DAR1 = 0;
+	SH2_DMA_TCR1 = 0;
+	SH2_DMA_CHCR1 = 0;
+	SH2_DMA_DRCR1 = 0;
+	SH2_DMA_DMAOR = 1; // enable DMA
+
+	SH2_DMA_VCR1 = 72; // set exception vector for DMA channel 1
+	SH2_INT_IPRA = (SH2_INT_IPRA & 0xF0FF) | 0x0F00; // set DMA INT to priority 15
+
+	SetSH2SR(2); // allow ints
+
 	while (1)
 	{
 		int cmd;
@@ -241,15 +261,13 @@ void I_Init (void)
 		D_memcpy(dl1, sl2, 256);
 		D_memcpy(dl2, sl1, 256);
 	}
+
+	stbar = (jagobj_t*)W_POINTLUMPNUM(W_GetNumForName("STBAR"));
 }
 
 void I_SetPalette(const byte* palette)
 {
 	mars_newpalette = palette;
-}
-
-void I_DrawSbar (void)
-{
 }
 
 boolean	I_RefreshCompleted (void)
@@ -381,7 +399,7 @@ byte	*I_TempBuffer (void)
 byte 	*I_WorkBuffer (void)
 {
 	while (!I_RefreshCompleted());
-	return (byte *)(framebuffer + 320 / 2 * 223);
+	return (byte *)(framebuffer + 320 / 2 * (224+1)); // +1 for the blank line
 }
 
 pixel_t	*I_FrameBuffer (void)
@@ -391,21 +409,27 @@ pixel_t	*I_FrameBuffer (void)
 
 pixel_t* I_OverwriteBuffer(void)
 {
-	return (pixel_t*)&MARS_OVERWRITE_IMG + 0x100 + 160;
+	return (pixel_t*)&MARS_OVERWRITE_IMG + 0x100;
+}
+
+int I_ViewportYPos(void)
+{
+	if (screenWidth < 160)
+		return (224 - BIGSHORT(stbar->height) - screenHeight) / 2;
+	return (224 - BIGSHORT(stbar->height) - screenHeight);
 }
 
 pixel_t	*I_ViewportBuffer (void)
 {
 	volatile pixel_t *viewportbuffer = framebuffer;
-	if (screenWidth < 160)
-		viewportbuffer += (224-screenHeight)*320/4+(320-screenWidth*2)/4;
+	viewportbuffer += I_ViewportYPos() * 320 / 2 + (320 - screenWidth * 2) / 4;
 	return (pixel_t *)viewportbuffer;
 }
 
 void I_ClearFrameBuffer (void)
 {
 	int* p = (int*)framebuffer;
-	int* p_end = (int*)(framebuffer + 320 * 223 / 2);
+	int* p_end = (int*)(framebuffer + 320 * 224 / 2);
 	while (p < p_end)
 		*p++ = 0;
 }
@@ -571,4 +595,23 @@ unsigned I_NetTransfer (unsigned ctrl)
 
 void I_NetSetup (void)
 {
+}
+
+void I_DrawSbar(void)
+{
+	const pixel_t* source = (pixel_t*)stbar->data;
+	int width = BIGSHORT(stbar->width);
+	int height = BIGSHORT(stbar->height);
+	int halfwidth = (unsigned)width >> 1;
+	pixel_t* dest;
+
+	dest = (pixel_t*)I_FrameBuffer() + (224 - height) * 320 / 2;
+	for (; height; height--)
+	{
+		int i;
+		for (i = 0; i < halfwidth; i++)
+			dest[i] = source[i];
+		source += halfwidth;
+		dest += 320 / 2;
+	}
 }

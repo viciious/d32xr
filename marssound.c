@@ -62,7 +62,6 @@ void S_StartSoundReal(mobj_t* origin, unsigned sound_id) ATTR_DATA_CACHE_ALIGN A
 void S_PaintChannel(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static void S_Update(int16_t* buffer) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static void S_Spatialize(mobj_t* origin, int* pvol, int* psep) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-void slave_dma1_handler(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 /*
 ==================
@@ -364,9 +363,14 @@ static void S_Update(int16_t* buffer)
 
 	// convert buffer from s16 pcm samples to u16 pwm samples
 	b = buffer;
-	for (i = 0; i < MAX_SAMPLES * 2; i++)
+	for (i = 0; i < MAX_SAMPLES; i++)
 	{
-		int16_t s = *b + SAMPLE_CENTER;
+		int16_t s;
+
+		s = *b + SAMPLE_CENTER;
+		*b++ = (s < 0) ? SAMPLE_MIN : (s > SAMPLE_MAX) ? SAMPLE_MAX : s;
+
+		s = *b + SAMPLE_CENTER;
 		*b++ = (s < 0) ? SAMPLE_MIN : (s > SAMPLE_MAX) ? SAMPLE_MAX : s;
 	}
 }
@@ -496,20 +500,11 @@ void Mars_Slave_InitSoundDMA(void)
 	Mars_RB_ResetRead(&soundcmds);
 
 	// init DMA
-	SH2_DMA_SAR0 = 0;
-	SH2_DMA_DAR0 = 0;
-	SH2_DMA_TCR0 = 0;
-	SH2_DMA_CHCR0 = 0;
-	SH2_DMA_DRCR0 = 0;
 	SH2_DMA_SAR1 = 0;
 	SH2_DMA_DAR1 = 0x20004038; // storing a word here will the MONO channel
 	SH2_DMA_TCR1 = 0;
 	SH2_DMA_CHCR1 = 0;
 	SH2_DMA_DRCR1 = 0;
-	SH2_DMA_DMAOR = 1; // enable DMA
-
-	SH2_DMA_VCR1 = 72; // set exception vector for DMA channel 1
-	SH2_INT_IPRA = (SH2_INT_IPRA & 0xF0FF) | 0x0F00; // set DMA INT to priority 15
 
 	// init the sound hardware
 	MARS_PWM_MONO = 1;
@@ -533,8 +528,6 @@ void Mars_Slave_InitSoundDMA(void)
 		}
 		sample++;
 	}
-
-	SetSH2SR(2);
 
 	// fill first buffer
 	S_Update(snd_buffer[0]);

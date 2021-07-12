@@ -61,15 +61,20 @@ char Mars_FramebuffersFlipped(void)
 void Mars_InitLineTable(volatile unsigned short* lines)
 {
 	int j;
+	int blank;
 
 	// initialize the lines section of the framebuffer
 	for (j = 0; j < 224; j++)
 		lines[j] = j * 320 / 2 + 0x100;
+
+	blank = j * 320 / 2;
+
 	// set the rest of the line table to a blank line
-	for (j = 224; j < 256; j++)
-		lines[j] = 0x100;
+	for ( ; j < 256; j++)
+		lines[j] = blank + 0x100;
+
 	// make sure blank line is clear
-	for (j = 256; j < (256 + 160); j++)
+	for (j = blank; j < (blank + 160); j++)
 		lines[j] = 0;
 }
 

@@ -3,15 +3,40 @@
 #include "doomdef.h"
 #include "st_main.h"
 
+typedef struct {
+	short id;
+	short ind;
+	short value;
+} stbarcmd_t;
+
+typedef enum
+{
+	stc_drawammo,
+	stc_drawhealth,
+	stc_drawarmor,
+	stc_drawcard,
+	stc_drawmap,
+	stc_drawmicro,
+	stc_drawyourfrags,
+	stc_drawhisfrags,
+	stc_flashinitial,
+	stc_drawflashcard,
+	stc_drawgibhead,
+	stc_drawhead,
+
+	STC_NUMCMDTYPES
+} stbarcmdtype_t;
+
 stbar_t	stbar;
-short	micronums;
-int		micronums_x[NUMMICROS] = {249,261,272,249,261,272};
-int		micronums_y[NUMMICROS] = {15,15,15,25,25,25};
+short   stbar_y;
+jagobj_t* micronums[NUMMICROS];
+short	micronums_x[NUMMICROS] = {249,261,272,249,261,272};
+short	micronums_y[NUMMICROS] = {15,15,15,25,25,25};
 
 int		facetics;
 int		newface;
-int		card_x[NUMCARDS] = {KEYX,KEYX,KEYX,KEYX+3, KEYX+3, KEYX+3};
-int		card_y[NUMCARDS] = {BLUKEYY,YELKEYY,REDKEYY,BLUKEYY,YELKEYY,REDKEYY};
+short	card_x[NUMCARDS] = {KEYX,KEYX,KEYX,KEYX+3, KEYX+3, KEYX+3};
+short		card_y[NUMCARDS] = {BLUKEYY,YELKEYY,REDKEYY,BLUKEYY,YELKEYY,REDKEYY};
 
 boolean flashInitialDraw;		/* INITIALLY DRAW FRAG AMOUNTS (flag) */
 sbflash_t	yourFrags;			/* INFO FOR YOUR FRAG FLASHING */
@@ -21,19 +46,31 @@ boolean	gibdraw;
 int		gibframe;
 int		gibdelay;
 
-#ifndef MARS
-int		spclfaceSprite[NUMSPCLFACES] =
+short	spclfaceSprite[NUMSPCLFACES] =
 		{0,sbf_facelft,sbf_facergt,sbf_ouch,sbf_gotgat,sbf_mowdown};
-#endif
 boolean doSpclFace;
 spclface_e	spclFaceType;
 
-short		sbar;
+jagobj_t	*sbar;
+#ifndef MARS
 byte		*sbartop;
+#endif
 short		faces;
 jagobj_t	*sbobj[NUMSBOBJ];
 
 sbflash_t	*flashCards = NULL;	/* INFO FOR FLASHING CARDS & SKULLS */
+
+short stbarframe;
+short numstbarcmds;
+stbarcmd_t stbarcmds[STC_NUMCMDTYPES+NUMMICROS+NUMCARDS*2];
+
+extern unsigned short screenHeight;
+
+#ifndef MARS
+#define ST_EraseBlock EraseBlock
+#endif
+
+void ST_EraseBlock(int x, int y, int width, int height);
 
 /*
 ====================
@@ -50,13 +87,27 @@ void ST_Init (void)
 
 	flashCards = Z_Malloc(sizeof(*flashCards) * NUMCARDS, PU_STATIC, 0);
 
+	sbar = (jagobj_t*)W_POINTLUMPNUM(W_GetNumForName("STBAR"));
+
 	faces = W_CheckNumForName("FACE00");
+
+	stbarframe = 0;
+	numstbarcmds = 0;
 
 	l = W_GetNumForName("MINUS");
 	for (i = 0; i < NUMSBOBJ; i++)
 		sbobj[i] = W_CacheLumpNum(l + i, PU_STATIC);
 
-	micronums = W_CheckNumForName("MICRO_2");
+	l = W_GetNumForName("MICRO_2");
+	for (i = 0; i < NUMMICROS; i++)
+		micronums[i] = W_CacheLumpNum(l + i, PU_STATIC);
+}
+
+void ST_ForceDraw(void)
+{
+	stbarframe = 0;
+	stbar.forcedraw = true;
+	ST_Ticker();
 }
 
 /*================================================== */
@@ -68,11 +119,12 @@ void ST_InitEveryLevel(void)
 {
 	int		i;
 
-#ifndef MARS	
 	/* force everything to be updated on next ST_Update */
-	D_memset (&stbar, 0x80, sizeof(stbar) );
-#endif
+	stbar.forcedraw = true;
 	facetics = 0;
+
+	stbarframe = 0;
+	numstbarcmds = 0;
 
 	/* DRAW FRAG COUNTS INITIALLY */
 	if (netgame == gt_deathmatch)
@@ -108,7 +160,6 @@ void ST_InitEveryLevel(void)
 	}
 }
 
-
 /*
 ====================
 =
@@ -119,11 +170,26 @@ void ST_InitEveryLevel(void)
 
 void ST_Ticker (void)
 {
-	int		ind;
-	
+	int			i;
+	player_t* p;
+	int			ind;
+	short		drawface;
+	stbarcmd_t* cmd;
+
+#ifdef MARS
+	// double-buffered renderer on MARS
+	if ((stbarframe++ & 1) == 1)
+		return;
+#endif
+
+	numstbarcmds = 0;
+
+	p = &players[consoleplayer];
+
 	/* */
 	/* Animate face */
 	/* */
+	--facetics;
 	if (--facetics <= 0)
 	{
 		facetics = M_Random ()&15;
@@ -147,7 +213,8 @@ void ST_Ticker (void)
 	/* */
 	/* Flash YOUR FRAGS amount */
 	/* */
-	if (yourFrags.active && !--yourFrags.delay)
+	--yourFrags.delay;
+	if (yourFrags.active && --yourFrags.delay <= 0)
 	{
 		yourFrags.delay = FLASHDELAY;
 		yourFrags.doDraw ^= 1;
@@ -160,7 +227,8 @@ void ST_Ticker (void)
 	/* */
 	/* Flash HIS FRAGS amount */
 	/* */
-	if (hisFrags.active && !--hisFrags.delay)
+	--hisFrags.delay;
+	if (hisFrags.active && --hisFrags.delay <= 0)
 	{
 		hisFrags.delay = FLASHDELAY;
 		hisFrags.doDraw ^= 1;
@@ -197,7 +265,8 @@ void ST_Ticker (void)
 		}
 		
 		/* MIGHT AS WELL DO TICKING IN THE SAME LOOP! */
-		if (flashCards[ind].active && !--flashCards[ind].delay)
+		--flashCards[ind].delay;
+		if (flashCards[ind].active && --flashCards[ind].delay <= 0)
 		{
 			flashCards[ind].delay = FLASHDELAY;
 			flashCards[ind].doDraw ^= 1;
@@ -207,26 +276,6 @@ void ST_Ticker (void)
 				S_StartSound(NULL,sfx_itemup);
 		}
 	}
-}
-
-
-/*
-====================
-=
-= ST_Drawer
-=
-====================
-*/
-
-void ST_Drawer (void)
-{
-	int			i;
-	player_t	*p;
-#ifndef MARS	
-	int			ind;
-	bufferpage = sbartop;		/* draw into status bar overlay */
-#endif
-	p = &players[consoleplayer];
 
 	/* */
 	/* Ammo */
@@ -242,66 +291,54 @@ void ST_Drawer (void)
 			i = p->ammo[i];
 	}
 	
-	if (stbar.ammo != i)
+	if (stbar.ammo != i || stbar.forcedraw)
 	{
 		stbar.ammo = i;
-#ifndef MARS
-		EraseBlock(0,AMMOY,14*3,16);
-#endif
-		ST_DrawValue(AMMOX,AMMOY,i);
-#ifdef MARS
-		stbar.ammo = -1;
-#endif
+		cmd = &stbarcmds[numstbarcmds++];
+		cmd->id = stc_drawammo;
+		cmd->value = i;
 	}
 	
 	/* */
 	/* Health */
 	/* */
 	i = p->health;
-	if (stbar.health != i)
+	if (stbar.health != i || stbar.forcedraw)
 	{
 		stbar.health = i;
-#ifndef MARS
-		EraseBlock(HEALTHX - 14*3 - 4,HEALTHY,14*3,(sbobj[0])->height);
-		DrawJagobj(sbobj[sb_percent],HEALTHX,HEALTHY);
-#endif
-		ST_DrawValue(HEALTHX,HEALTHY,i);
+		cmd = &stbarcmds[numstbarcmds++];
+		cmd->id = stc_drawhealth;
+		cmd->value = i;
+
 		stbar.face = -1;	/* update face immediately */
-#ifdef MARS
-		stbar.health = -1;
-#endif
 	}
 
 	/* */
 	/* Armor */
 	/* */
 	i = p->armorpoints;
-	if (stbar.armor != i)
+	if (stbar.armor != i || stbar.forcedraw)
 	{
 		stbar.armor = i;
-#ifndef MARS
-		EraseBlock(ARMORX - 14*3 - 4,ARMORY,14*3,(sbobj[0])->height);
-		DrawJagobj(sbobj[sb_percent],ARMORX,ARMORY);
-#endif
-		ST_DrawValue(ARMORX,ARMORY,i);
-#ifdef MARS
-		stbar.armor = -1;
-#endif
+		cmd = &stbarcmds[numstbarcmds++];
+		cmd->id = stc_drawarmor;
+		cmd->value = i;
 	}
 
-#ifndef MARS
 	/* */
 	/* Cards & skulls */
 	/* */
 	for (ind = 0; ind < NUMCARDS; ind++)
 	{
 		i = p->cards[ind];
-		if (stbar.cards[ind] != i)
+		if (stbar.cards[ind] != i || stbar.forcedraw)
 		{
+			cmd = &stbarcmds[numstbarcmds++];
+			cmd->id = stc_drawcard;
+			cmd->ind = ind;
+			cmd->value = i;
+
 			stbar.cards[ind] = i;
-			EraseBlock(KEYX,card_y[ind],KEYW,KEYH);
-			if (stbar.cards[ind])
-				DrawJagobj(sbobj[sb_card_b + ind],card_x[ind],card_y[ind]);
 		}
 	}
 	
@@ -311,29 +348,25 @@ void ST_Drawer (void)
 	if (netgame != gt_deathmatch)
 	{
 		i = gamemapinfo.mapnumber;
-		if (stbar.currentMap != i)
+		if (stbar.currentMap != i || stbar.forcedraw)
 		{
-			int	x = MAPX;
+			cmd = &stbarcmds[numstbarcmds++];
+			cmd->id = stc_drawmap;
+			cmd->value = i;
+
 			stbar.currentMap = i;
-			/* CENTER THE LEVEL # IF < 10 */
-			if (stbar.currentMap < 10)
-				x -= 6;
-			EraseBlock(MAPX - 30,MAPY,30,16);
-			ST_DrawValue(x,MAPY,i);
-			stbar.currentMap = -1;
 		}
 		
 		for (ind = 0; ind < NUMMICROS; ind++)
 		{
-			if (p->weaponowned[ind+1] != stbar.weaponowned[ind])
+			if (p->weaponowned[ind+1] != stbar.weaponowned[ind] || stbar.forcedraw)
 			{
+				cmd = &stbarcmds[numstbarcmds++];
+				cmd->id = stc_drawmicro;
+				cmd->ind = ind;
+				cmd->value = p->weaponowned[ind + 1];
+
 				stbar.weaponowned[ind] = p->weaponowned[ind+1];
-				if (stbar.weaponowned[ind])
-					DrawJagobjLump(micronums + ind,
-						micronums_x[ind],micronums_y[ind]);
-				else
-					EraseBlock(micronums_x[ind],micronums_y[ind],4,6);
-				stbar.weaponowned[ind] = -1;
 			}
 		}
 	}
@@ -348,7 +381,7 @@ void ST_Drawer (void)
 		yours = players[consoleplayer].frags;
 		his = players[!consoleplayer].frags;
 		
-		if (yours != stbar.yourFrags)
+		if (yours != stbar.yourFrags || stbar.forcedraw)
 		{
 			stbar.yourFrags = yours;
 			
@@ -359,7 +392,7 @@ void ST_Drawer (void)
 			yourFrags.doDraw = false;
 		}
 		
-		if (his != stbar.hisFrags)
+		if (his != stbar.hisFrags || stbar.forcedraw)
 		{
 			stbar.hisFrags = his;
 			
@@ -376,56 +409,62 @@ void ST_Drawer (void)
 	/* */
 	if (yourFrags.active)
 	{
-		if (yourFrags.doDraw)
-			ST_DrawValue(yourFrags.x,yourFrags.y,stbar.yourFrags);
-		else
-			EraseBlock(yourFrags.x - yourFrags.w,
-				yourFrags.y,yourFrags.w,yourFrags.h);
+		cmd = &stbarcmds[numstbarcmds++];
+		cmd->id = stc_drawyourfrags;
+		cmd->ind = yourFrags.doDraw;
+		cmd->value = stbar.yourFrags;
 	}
-	
+
 	/* */
 	/* Draw HIS FRAGS if it's time */
 	/* */
 	if (hisFrags.active)
 	{
-		if (hisFrags.doDraw)
-			ST_DrawValue(hisFrags.x,hisFrags.y,stbar.hisFrags);
-		else
-			EraseBlock(hisFrags.x - hisFrags.w,
-				hisFrags.y,hisFrags.w,hisFrags.h);
+		cmd = &stbarcmds[numstbarcmds++];
+		cmd->id = stc_drawhisfrags;
+		cmd->ind = hisFrags.doDraw;
+		cmd->value = stbar.hisFrags;
 	}
 
 	if (flashInitialDraw)
 	{
+		cmd = &stbarcmds[numstbarcmds++];
+		cmd->id = stc_flashinitial;
 		flashInitialDraw = false;
-		EraseBlock(yourFrags.x - yourFrags.w,yourFrags.y,
-			yourFrags.w,yourFrags.h);
-		EraseBlock(hisFrags.x - hisFrags.w,hisFrags.y,
-			hisFrags.w,hisFrags.h);
-		ST_DrawValue(yourFrags.x,yourFrags.y,stbar.yourFrags);
-		ST_DrawValue(hisFrags.x,hisFrags.y,stbar.hisFrags);
 	}
-	
+
 	/* */
 	/* Flash CARDS or SKULLS if no key for door */
 	/* */
 	for (ind = 0; ind < NUMCARDS; ind++)
 		if (flashCards[ind].active)
 		{
-			if (flashCards[ind].doDraw)
-				DrawJagobj(sbobj[sb_card_b + ind],
-					flashCards[ind].x,flashCards[ind].y);
-			else
-				EraseBlock(flashCards[ind].x,flashCards[ind].y,
-					flashCards[ind].w,flashCards[ind].h);
+			cmd = &stbarcmds[numstbarcmds++];
+			cmd->id = stc_drawcard;
+			cmd->ind = ind;
+			cmd->value = flashCards[ind].doDraw;
 		}
-	
+
 	/* */
 	/* Draw gibbed head */
 	/* */
-	if (gibdraw && !--gibdelay)
+	--gibdelay;
+	if (gibdraw && --gibdelay <= 0)
 	{
-		DrawJagobjLump(faces + FIRSTSPLAT + gibframe++,FACEX,FACEY,NULL,NULL);
+		// CALICO: the original code performs out-of-bounds accesses on the faces
+		// array here, up to an unknown upper bound. This will crash the code
+		// when run on PC without bounds-checking added.
+		// NB: This is also all bugged anyway, to such a degree that it never shows up.
+		// Burger Becky (I assume, or maybe Dave Taylor?) fixed the code that is in
+		// the 3DO version so that it appears properly.
+		int gibframetodraw = FIRSTSPLAT + gibframe++;
+		if (gibframetodraw < NUMFACES)
+		{
+			cmd = &stbarcmds[numstbarcmds++];
+			cmd->id = stc_drawgibhead;
+			cmd->value = FIRSTSPLAT + gibframetodraw;
+		}
+
 		gibdelay = GIBTIME;
 		if (gibframe > 6)
 			gibdraw = false;
@@ -441,11 +480,12 @@ void ST_Drawer (void)
 	/* */
 	/* face change */
 	/* */
+	drawface = -1;
 	if (stbar.godmode)
-		DrawJagobjLump(faces+GODFACE,FACEX,FACEY, NULL, NULL);
+		drawface = GODFACE;
 	else
 	if (!stbar.health)
-		DrawJagobjLump(faces+DEADFACE,FACEX,FACEY, NULL, NULL);
+		drawface = DEADFACE;
 	else
 	if (doSpclFace)
 	{
@@ -453,19 +493,124 @@ void ST_Drawer (void)
 		base = base > 4 ? 4 : base;
 		base = 4 - base;
 		base *= 8;
-		DrawJagobjLump(faces + base + spclfaceSprite[spclFaceType],FACEX,FACEY,NULL,NULL);
+		drawface =  base + spclfaceSprite[spclFaceType];
 	}
 	else
-	if ((stbar.face != newface) && !gibdraw)
+	if ((stbar.face != newface || stbar.forcedraw) && !gibdraw)
 	{
 		int	base = stbar.health/20;
 		base = base > 4 ? 4 : base;
 		base = 4 - base;
 		base *= 8;
 		stbar.face = newface;
-		DrawJagobj(faces + base + newface, FACEX, FACEY, NULL, NULL);
+		drawface = base + newface;
 	}
+
+	if (drawface != -1) {
+		cmd = &stbarcmds[numstbarcmds++];
+		cmd->id = stc_drawhead;
+		cmd->value = drawface;
+	}
+
+	stbar.forcedraw = false;
+}
+
+/*
+====================
+=
+= ST_Drawer
+=
+====================
+*/
+
+void ST_Drawer (void)
+{
+	int i;
+	int x, ind;
+
+#ifdef MARS
+	stbar_y = 224 - BIGSHORT(sbar->height);
+#else
+	stbar_y = 0;
+	bufferpage = sbartop;		/* draw into status bar overlay */
 #endif
+
+	for (i = 0; i < numstbarcmds; i++) {
+		stbarcmd_t* cmd = &stbarcmds[i];
+
+		switch (cmd->id) {
+		case stc_drawammo:
+			// CALICO: Fixed EraseBlock call to have proper x coord and width
+			ST_EraseBlock(AMMOX - 14 * 3 - 4, AMMOY, 14 * 3 + 4, 16);
+			ST_DrawValue(AMMOX, AMMOY, cmd->value);
+			break;
+		case stc_drawhealth:
+			// CALICO: Fixed EraseBlock call to have proper width
+			ST_EraseBlock(HEALTHX - 14 * 3 - 4, HEALTHY, 14 * 3 + 4, BIGSHORT(sbobj[0]->height));
+			DrawJagobj(sbobj[sb_percent], HEALTHX, stbar_y + HEALTHY);
+			ST_DrawValue(HEALTHX, HEALTHY, cmd->value);
+			break;
+		case stc_drawarmor:
+			// CALICO: Fixed EraseBlock call to have proper width
+			ST_EraseBlock(ARMORX - 14 * 3 - 4, ARMORY, 14 * 3 + 4, BIGSHORT(sbobj[0]->height));
+			DrawJagobj(sbobj[sb_percent], ARMORX, stbar_y + ARMORY);
+			ST_DrawValue(ARMORX, ARMORY, cmd->value);
+			break;
+		case stc_drawcard:
+			ind = cmd->ind;
+			ST_EraseBlock(KEYX, card_y[ind], KEYW, KEYH);
+			if (cmd->value)
+				DrawJagobj(sbobj[sb_card_b + ind], card_x[ind], stbar_y + card_y[ind]);
+			break;
+		case stc_drawmap:
+			x = MAPX;
+			/* CENTER THE LEVEL # IF < 10 */
+			if (cmd->value < 10)
+				x -= 6;
+			ST_EraseBlock(MAPX - 30, MAPY, 30, 16);
+			ST_DrawValue(x, MAPY, cmd->value);
+			break;
+		case stc_drawmicro:
+			ind = cmd->ind;
+			if (cmd->value)
+				DrawJagobj(micronums[ind],
+					micronums_x[ind], stbar_y + micronums_y[ind]);
+			else
+				ST_EraseBlock(micronums_x[ind], micronums_y[ind], 4, 6);
+			break;
+		case stc_drawyourfrags:
+			if (cmd->value)
+				ST_DrawValue(yourFrags.x, yourFrags.y, cmd->value);
+			else
+				ST_EraseBlock(yourFrags.x - yourFrags.w,
+					yourFrags.y, yourFrags.w, yourFrags.h);
+			break;
+		case stc_drawhisfrags:
+			if (cmd->value)
+				ST_DrawValue(hisFrags.x, hisFrags.y, cmd->value);
+			else
+				ST_EraseBlock(hisFrags.x - hisFrags.w,
+					hisFrags.y, hisFrags.w, hisFrags.h);
+			break;
+		case stc_flashinitial:
+#ifndef MARS
+			ST_EraseBlock(yourFrags.x - yourFrags.w, yourFrags.y,
+				yourFrags.w, yourFrags.h);
+			ST_EraseBlock(hisFrags.x - hisFrags.w, hisFrags.y,
+				hisFrags.w, hisFrags.h);
+			ST_DrawValue(yourFrags.x, yourFrags.y, stbar.yourFrags);
+			ST_DrawValue(hisFrags.x, hisFrags.y, stbar.hisFrags);
+#endif
+			break;
+		case stc_drawgibhead:
+			DrawJagobjLump(faces + cmd->value, FACEX, FACEY, NULL, NULL);
+			break;
+		case stc_drawhead:
+			ST_EraseBlock(FACEX, FACEY, FACEW, FACEH);
+			DrawJagobjLump(faces + cmd->value, FACEX, stbar_y + FACEY, NULL, NULL);
+			break;
+		}
+	}
 }
 
 /*================================================= */
@@ -509,22 +654,65 @@ void valtostr(char *string,int val)
 /*================================================= */
 void ST_DrawValue(int x,int y,int value)
 {
-#ifdef MARS
-	ST_Num(x, y+7, value);
-#else
 	char	v[4];
 	int		j;
 	int		index;
 	
+	y += stbar_y;
 	valtostr(v,value);
 	j = mystrlen(v) - 1;
 	while(j >= 0)
 	{
 		int w;
 		index = sb_0 + (v[j--] - '0');
-		DrawJagobjLump(sbobj[index], 320, 200, &w, NULL);
+		w = sbobj[index]->width;
 		x -= w + 1;
-		DrawJagobjLump(sbobj[index], x, y, NULL, NULL);
+		DrawJagobj(sbobj[index], x, y);
 	}
-#endif
 }
+
+#ifdef MARS
+
+void ST_EraseBlock(int x, int y, int width, int height)
+{
+	int i, j;
+	int rowsize;
+	short * source, * dest;
+
+	if (x & 1)
+		x -= 1;
+	if (width & 1)
+		width += 1;
+
+	if (x < 0)
+		x = 0;
+	if (y < 0)
+		y = 0;
+
+	if (x + width > BIGSHORT(sbar->width))
+		width = BIGSHORT(sbar->width) - x;
+	if (y + height > BIGSHORT(sbar->height))
+		height = BIGSHORT(sbar->height) - y;
+	rowsize = BIGSHORT(sbar->width) / 2;
+
+	source = (short *)sbar->data + y * rowsize + (unsigned)x/2;
+
+	y += 224 - BIGSHORT(sbar->height);
+	if (y > 224)
+		height = 224 - y;
+	if (height <= 0)
+		return;
+
+	dest = (short*)I_FrameBuffer() + y * 320/2 + (unsigned)x/2;
+
+	width = (unsigned)width >> 1;
+	for (j = 0; j < height; j++)
+	{
+		for (i = 0; i < width; i++)
+			dest[i] = source[i];
+		source += rowsize;
+		dest += 320/2;
+	}
+}
+
+#endif

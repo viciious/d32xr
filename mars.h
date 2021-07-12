@@ -42,6 +42,8 @@ void Mars_Slave_M_AnimateFire(void) ATTR_OPTIMIZE_EXTREME;
 void Mars_Slave_InitSoundDMA(void) ATTR_OPTIMIZE_SIZE;
 void Mars_Slave_ReadSoundCmds(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
+void slave_dma1_handler(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+
 static inline void Mars_R_BeginComputeSeg(void)
 {
 	while (MARS_SYS_COMM4 != 0) {};
