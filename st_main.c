@@ -31,7 +31,7 @@ spclface_e	spclFaceType;
 short		sbar;
 byte		*sbartop;
 short		faces;
-short		sbobj;
+jagobj_t	*sbobj[NUMSBOBJ];
 
 sbflash_t	*flashCards = NULL;	/* INFO FOR FLASHING CARDS & SKULLS */
 
@@ -46,11 +46,15 @@ sbflash_t	*flashCards = NULL;	/* INFO FOR FLASHING CARDS & SKULLS */
 
 void ST_Init (void)
 {
+	int i, l;
+
 	flashCards = Z_Malloc(sizeof(*flashCards) * NUMCARDS, PU_STATIC, 0);
 
 	faces = W_CheckNumForName("FACE00");
 
-	sbobj = W_CheckNumForName("MINUS");
+	l = W_GetNumForName("MINUS");
+	for (i = 0; i < NUMSBOBJ; i++)
+		sbobj[i] = W_CacheLumpNum(l + i, PU_STATIC);
 
 	micronums = W_CheckNumForName("MICRO_2");
 }
@@ -518,9 +522,9 @@ void ST_DrawValue(int x,int y,int value)
 	{
 		int w;
 		index = sb_0 + (v[j--] - '0');
-		DrawJagobjLump(sbob + index, 320, 200, &w, NULL);
+		DrawJagobjLump(sbobj[index], 320, 200, &w, NULL);
 		x -= w + 1;
-		DrawJagobjLump(sbob + index, x, y, NULL, NULL);
+		DrawJagobjLump(sbobj[index], x, y, NULL, NULL);
 	}
 #endif
 }
