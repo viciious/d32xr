@@ -5,7 +5,7 @@
 
 stbar_t	stbar;
 short   stbar_y;
-jagobj_t* micronums[NUMMICROS];
+short micronums;
 short	micronums_x[NUMMICROS] = {249,261,272,249,261,272};
 short	micronums_y[NUMMICROS] = {15,15,15,25,25,25};
 
@@ -68,8 +68,7 @@ void ST_Init (void)
 		sbobj[i] = W_CacheLumpNum(l + i, PU_STATIC);
 
 	l = W_GetNumForName("MICRO_2");
-	for (i = 0; i < NUMMICROS; i++)
-		micronums[i] = W_CacheLumpNum(l + i, PU_STATIC);
+	micronums = l;
 }
 
 void ST_ForceDraw(void)
@@ -542,8 +541,8 @@ void ST_Drawer (void)
 		case stc_drawmicro:
 			ind = cmd->ind;
 			if (cmd->value)
-				DrawJagobj(micronums[ind],
-					micronums_x[ind], stbar_y + micronums_y[ind]);
+				DrawJagobjLump(micronums+ind,
+					micronums_x[ind], stbar_y + micronums_y[ind], NULL, NULL);
 			else
 				ST_EraseBlock(micronums_x[ind], micronums_y[ind], 4, 6);
 			break;
