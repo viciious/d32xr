@@ -429,7 +429,7 @@ pixel_t	*I_ViewportBuffer (void)
 void I_ClearFrameBuffer (void)
 {
 	int* p = (int*)framebuffer;
-	int* p_end = (int*)(framebuffer + 320 * 224 / 2);
+	int* p_end = (int*)(framebuffer + 320 / 2 * (224+1));
 	while (p < p_end)
 		*p++ = 0;
 }
