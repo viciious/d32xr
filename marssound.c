@@ -48,6 +48,7 @@ int 			sfxvolume;	/* range 0 - 64 */
 int 			musicvolume;	/* range 0 - 64 */
 int				oldsfxvolume;	/* to detect transition to sound off */
 
+int				curmusic;
 int             samplecount = 0;
 
 static marsrb_t	soundcmds = { 0 };
@@ -83,8 +84,9 @@ void S_Init(void)
 
 	/* init music */
 	num_music = 0;
-	mus_intro = 0;
-	mus_inter = 0;
+	mus_intro = mus_none;
+	mus_inter = mus_none;
+	curmusic = mus_none;
 	S_music = NULL;
 
 	l = W_CheckNumForName("VGM_STRT");
@@ -294,15 +296,21 @@ int S_SongForLump(int lump)
 
 void S_StartSong(int music_id, int looping)
 {
-	S_StopSong();
-
 	if (music_id == mus_none)
+	{
+		S_StopSong();
 		return;
+	}
+
+	if (music_id == curmusic)
+		return;
+
 	if (!S_music)
 		return;
 	if (S_music[music_id - 1].lump < 0)
 		return;
 
+	curmusic = music_id;
 	while (MARS_SYS_COMM0);
 
 	MARS_SYS_COMM2 = music_id | (looping ? 0x8000:0x0000);
