@@ -3,30 +3,6 @@
 #include "doomdef.h"
 #include "st_main.h"
 
-typedef struct {
-	short id;
-	short ind;
-	short value;
-} stbarcmd_t;
-
-typedef enum
-{
-	stc_drawammo,
-	stc_drawhealth,
-	stc_drawarmor,
-	stc_drawcard,
-	stc_drawmap,
-	stc_drawmicro,
-	stc_drawyourfrags,
-	stc_drawhisfrags,
-	stc_flashinitial,
-	stc_drawflashcard,
-	stc_drawgibhead,
-	stc_drawhead,
-
-	STC_NUMCMDTYPES
-} stbarcmdtype_t;
-
 stbar_t	stbar;
 short   stbar_y;
 jagobj_t* micronums[NUMMICROS];
@@ -36,7 +12,7 @@ short	micronums_y[NUMMICROS] = {15,15,15,25,25,25};
 int		facetics;
 int		newface;
 short	card_x[NUMCARDS] = {KEYX,KEYX,KEYX,KEYX+3, KEYX+3, KEYX+3};
-short		card_y[NUMCARDS] = {BLUKEYY,YELKEYY,REDKEYY,BLUKEYY,YELKEYY,REDKEYY};
+short	card_y[NUMCARDS] = {BLUKEYY,YELKEYY,REDKEYY,BLUKEYY,YELKEYY,REDKEYY};
 
 boolean flashInitialDraw;		/* INITIALLY DRAW FRAG AMOUNTS (flag) */
 sbflash_t	yourFrags;			/* INFO FOR YOUR FRAG FLASHING */
@@ -58,13 +34,11 @@ byte		*sbartop;
 short		faces;
 jagobj_t	*sbobj[NUMSBOBJ];
 
-sbflash_t	*flashCards = NULL;	/* INFO FOR FLASHING CARDS & SKULLS */
+sbflash_t	flashCards[NUMCARDS];	/* INFO FOR FLASHING CARDS & SKULLS */
 
 short stbarframe;
 short numstbarcmds;
 stbarcmd_t stbarcmds[STC_NUMCMDTYPES+NUMMICROS+NUMCARDS*2];
-
-extern unsigned short screenHeight;
 
 #ifndef MARS
 #define ST_EraseBlock EraseBlock
@@ -85,14 +59,9 @@ void ST_Init (void)
 {
 	int i, l;
 
-	flashCards = Z_Malloc(sizeof(*flashCards) * NUMCARDS, PU_STATIC, 0);
-
 	sbar = (jagobj_t*)W_POINTLUMPNUM(W_GetNumForName("STBAR"));
 
 	faces = W_CheckNumForName("FACE00");
-
-	stbarframe = 0;
-	numstbarcmds = 0;
 
 	l = W_GetNumForName("MINUS");
 	for (i = 0; i < NUMSBOBJ; i++)

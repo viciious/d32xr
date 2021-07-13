@@ -92,6 +92,30 @@ typedef struct
 	int		h;
 } sbflash_t;
 
+typedef struct {
+	short id;
+	short ind;
+	short value;
+} stbarcmd_t;
+
+typedef enum
+{
+	stc_drawammo,
+	stc_drawhealth,
+	stc_drawarmor,
+	stc_drawcard,
+	stc_drawmap,
+	stc_drawmicro,
+	stc_drawyourfrags,
+	stc_drawhisfrags,
+	stc_flashinitial,
+	stc_drawflashcard,
+	stc_drawgibhead,
+	stc_drawhead,
+
+	STC_NUMCMDTYPES
+} stbarcmdtype_t;
+
 typedef struct
 {
 	int		ammo, health, armor;
