@@ -495,6 +495,7 @@ void ST_Drawer (void)
 {
 	int i;
 	int x, ind;
+	boolean have_cards[NUMCARDS];
 
 #ifdef MARS
 	stbar_y = 224 - BIGSHORT(sbar->height);
@@ -502,6 +503,8 @@ void ST_Drawer (void)
 	stbar_y = 0;
 	bufferpage = sbartop;		/* draw into status bar overlay */
 #endif
+
+	D_memset(have_cards, 0, sizeof(have_cards));
 
 	for (i = 0; i < numstbarcmds; i++) {
 		stbarcmd_t* cmd = &stbarcmds[i];
@@ -527,8 +530,7 @@ void ST_Drawer (void)
 		case stc_drawcard:
 			ind = cmd->ind;
 			ST_EraseBlock(KEYX, card_y[ind], KEYW, KEYH);
-			if (cmd->value)
-				DrawJagobj(sbobj[sb_card_b + ind], card_x[ind], stbar_y + card_y[ind]);
+			have_cards[ind] = cmd->value;
 			break;
 		case stc_drawmap:
 			x = MAPX;
@@ -578,6 +580,14 @@ void ST_Drawer (void)
 			DrawJagobjLump(faces + cmd->value, FACEX, stbar_y + FACEY, NULL, NULL);
 			break;
 		}
+	}
+
+	// indicators for keys can erase one other via ST_EraseBlock
+	// so draw indicators for keys in posession separately
+	for (i = 0; i < NUMCARDS; i++) {
+		ind = i;
+		if (have_cards[ind])
+			DrawJagobj(sbobj[sb_card_b + ind], card_x[ind], stbar_y + card_y[ind]);
 	}
 }
 
