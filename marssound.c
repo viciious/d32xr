@@ -321,6 +321,7 @@ void S_StartSong(int music_id, int looping)
 void S_StopSong(void)
 {
 	while (MARS_SYS_COMM0) ;
+	curmusic = mus_none;
 	MARS_SYS_COMM0 = 0x0400; /* stop music */
 }
 
