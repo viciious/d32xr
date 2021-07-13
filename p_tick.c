@@ -6,7 +6,7 @@ int	tictics;
 
 boolean		gamepaused;
 jagobj_t	*pausepic;
-int			clearscreen = 0;
+char		clearscreen = 0;
 
 /*
 ===============================================================================
@@ -517,7 +517,10 @@ void P_Drawer (void)
 
 			I_DrawSbar();
 
-			ST_ForceDraw();
+			if (clearscreen == 2)
+			{
+				ST_ForceDraw();
+			}
 
 			clearscreen--;
 		}
