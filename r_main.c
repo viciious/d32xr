@@ -45,7 +45,7 @@ vissprite_t	vissprites[MAXVISSPRITES], *lastsprite_p, *vissprite_p;
 /* */
 /* openings / misc refresh memory */
 /* */
-unsigned short	openings[MAXOPENINGS], *lastopening;
+unsigned short	*openings/*[MAXOPENINGS]*/, * lastopening;
 
 /*===================================== */
 
@@ -581,7 +581,6 @@ void R_Setup (void)
 
 	lastvisplane = visplanes + 1;		/* visplanes[0] is left empty */
 	lastbspwallcmd = bspviswalls;
-	lastopening = openings;
 	lastvissubsector = vissubsectors;	/* no subsectors visible yet */
 
 #ifndef MARS
@@ -757,7 +756,11 @@ static void R_RenderPhase1(void)
 
 static void R_RenderPhases2To9(void)
 {
+	unsigned short openings_[MAXOPENINGS];
 	viswall_t viswalls_[MAXWALLCMDS] __attribute__((aligned(16)));
+
+	openings = openings_;
+	lastopening = openings;
 
 	viswalls = viswalls_;
 	lastwallcmd = viswalls;
