@@ -6,7 +6,7 @@
 #define	LOWERSPEED		FRACUNIT*18
 #define	RAISESPEED		FRACUNIT*18
 
-#define	WEAPONX			(15 * (screenWidth - 160) / 32) * FRACUNIT
+#define	WEAPONX			(15 * (viewportWidth - 160) / 32) * FRACUNIT
 #define WEAPONBOTTOM	(128) * FRACUNIT
 #define WEAPONTOP		(32) * FRACUNIT
 

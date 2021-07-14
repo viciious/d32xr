@@ -286,16 +286,16 @@ void R_InitMathTables(void)
 
 	tempviewangletox = (short *)I_WorkBuffer();
 	viewangletox = Z_Malloc(sizeof(*viewangletox) * FINEANGLES / 2, PU_STATIC, 0);
-	xtoviewangle = Z_Malloc(sizeof(*xtoviewangle) * (screenWidth+1), PU_STATIC, 0);
-	yslope = Z_Malloc(sizeof(*yslope) * screenHeight, PU_STATIC, 0);
-	distscale = Z_Malloc(sizeof(*distscale) * screenWidth, PU_STATIC, 0);
+	xtoviewangle = Z_Malloc(sizeof(*xtoviewangle) * (viewportWidth+1), PU_STATIC, 0);
+	yslope = Z_Malloc(sizeof(*yslope) * viewportHeight, PU_STATIC, 0);
+	distscale = Z_Malloc(sizeof(*distscale) * viewportWidth, PU_STATIC, 0);
 
 	// Use tangent table to generate viewangletox:
 	//  viewangletox will give the next greatest x
 	//  after the view angle.
 	//
 	// Calc focallength
-	//  so FIELDOFVIEW angles covers screenWidth.
+	//  so FIELDOFVIEW angles covers viewportWidth.
 
 	focalLength = FixedDiv(centerXFrac, finetangent(FINEANGLES / 4 + FIELDOFVIEW / 2));
 	for (i = 0; i < FINEANGLES / 2; i++)
@@ -306,7 +306,7 @@ void R_InitMathTables(void)
 			t = -1;
 		}
 		else if (finetangent(i) < -FRACUNIT * 2) {
-			t = screenWidth + 1;
+			t = viewportWidth + 1;
 		}
 		else {
 			t = FixedMul(finetangent(i), focalLength);
@@ -314,8 +314,8 @@ void R_InitMathTables(void)
 			if (t < -1) {
 				t = -1;
 			}
-			else if (t > screenWidth + 1) {
-				t = screenWidth + 1;
+			else if (t > viewportWidth + 1) {
+				t = viewportWidth + 1;
 			}
 		}
 		tempviewangletox[i] = t;
@@ -324,7 +324,7 @@ void R_InitMathTables(void)
 	// Scan viewangletox[] to generate xtoviewangle[]:
 	//  xtoviewangle will give the smallest view angle
 	//  that maps to x.
-	for (i = 0; i <= screenWidth; i++)
+	for (i = 0; i <= viewportWidth; i++)
 	{
 		int x;
 		for (x = 0; tempviewangletox[x] > i; x++);
@@ -337,24 +337,24 @@ void R_InitMathTables(void)
 		if (tempviewangletox[i] == -1) {
 			tempviewangletox[i] = 0;
 		}
-		else if (tempviewangletox[i] == screenWidth + 1) {
-			tempviewangletox[i] = screenWidth;
+		else if (tempviewangletox[i] == viewportWidth + 1) {
+			tempviewangletox[i] = viewportWidth;
 		}
 		viewangletox[i] = tempviewangletox[i];
 	}
 
 	// Make the yslope table for floor and ceiling textures
-	stretchWidth = screenWidth / 2 * stretch;
-	for (i = 0; i < screenHeight; i++)
+	stretchWidth = viewportWidth / 2 * stretch;
+	for (i = 0; i < viewportHeight; i++)
 	{
-		fixed_t y = ((i - screenHeight / 2) << FRACBITS) + FRACUNIT / 2;
+		fixed_t y = ((i - viewportHeight / 2) << FRACBITS) + FRACUNIT / 2;
 		y = D_abs(y);
 		y = FixedDiv(stretchWidth, y);
 		yslope[i] = y;
 	}
 
 	// Create the distance scale table for floor and ceiling textures
-	for (i = 0; i < screenWidth; i++)
+	for (i = 0; i < viewportWidth; i++)
 	{
 		fixed_t cosang = finecosine(xtoviewangle[i] >> ANGLETOFINESHIFT);
 		cosang = D_abs(cosang);

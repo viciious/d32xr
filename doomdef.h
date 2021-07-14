@@ -481,7 +481,7 @@ void G_RunGame (void);
 
 extern	gameaction_t	gameaction;
 
-#define	SBARHEIGHT	32			/* status bar height at bottom of screen */
+#define	SBARHEIGHT	40			/* status bar height at bottom of screen */
 
 typedef enum
 {

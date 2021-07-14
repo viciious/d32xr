@@ -69,7 +69,7 @@ void I_DrawColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	unsigned    count, n;
 
 #ifdef RANGECHECK
-	if ((unsigned)dc_x >= screenWidth || dc_yl < 0 || dc_yh >= screenHeight)
+	if ((unsigned)dc_x >= viewportWidth || dc_yl < 0 || dc_yh >= viewportHeight)
 		I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
 #endif
 
@@ -121,7 +121,7 @@ void I_DrawColumnNPo2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	unsigned 	frac;
 
 #ifdef RANGECHECK
-	if ((unsigned)dc_x >= screenWidth || dc_yl < 0 || dc_yh >= screenHeight)
+	if ((unsigned)dc_x >= viewportWidth || dc_yl < 0 || dc_yh >= viewportHeight)
 		I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
 #endif
 
@@ -185,8 +185,8 @@ void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	short* dc_colormap;
 
 #ifdef RANGECHECK
-	if (ds_x2 < ds_x1 || ds_x1<0 || ds_x2 >= screenWidth
-		|| (unsigned)ds_y>screenHeight)
+	if (ds_x2 < ds_x1 || ds_x1<0 || ds_x2 >= viewportWidth
+		|| (unsigned)ds_y>viewportHeight)
 		I_Error("R_DrawSpan: %i to %i at %i", ds_x1, ds_x2, ds_y);
 #endif 
 

@@ -6,7 +6,7 @@
 #include "mars.h"
 #endif
 
-unsigned short screenWidth, screenHeight;
+unsigned short viewportWidth, viewportHeight;
 unsigned short centerX, centerY;
 fixed_t centerXFrac, centerYFrac;
 fixed_t stretch;
@@ -79,12 +79,12 @@ int			skytexture;
 /* */
 angle_t		clipangle,doubleclipangle;
 
-fixed_t *yslope/*[SCREENHEIGHT]*/ = NULL;
-fixed_t* distscale/*[SCREENWIDTH]*/ = NULL;
+fixed_t *yslope/*[viewportHeight]*/ = NULL;
+fixed_t* distscale/*[viewportWidth]*/ = NULL;
 
 unsigned char* viewangletox/*[FINEANGLES/2]*/ = NULL;
 
-angle_t* xtoviewangle/*[SCREENWIDTH+1]*/ = NULL;
+angle_t* xtoviewangle/*[viewportWidth+1]*/ = NULL;
 
 /* */
 /* performance counters */
@@ -244,34 +244,34 @@ struct subsector_s *R_PointInSubsector (fixed_t x, fixed_t y)
 
 /*============================================================================= */
 
-const int screenSizes[][2] = {
+const int viewports[][2] = {
 	{128, 144},
 	{128, 160},
 	{160, 180},
 };
+const int numViewports = sizeof(viewports) / sizeof(viewports[0]);
 
 /*
 ================
 =
-= R_SetScreenSize
+= R_SetViewportSize
 =
 ================
 */
-void R_SetScreenSize(int size)
+void R_SetViewportSize(int size)
 {
 	int width, height;
-	const int numSizes = sizeof(screenSizes) / sizeof(screenSizes[0]);
 
 	while (!I_RefreshCompleted())
 		;
 
-	size %= numSizes;
+	size %= numViewports;
 
-	width = screenSizes[size][0];
-	height = screenSizes[size][1];
+	width = viewports[size][0];
+	height = viewports[size][1];
 
-	screenWidth = width;
-	screenHeight = height;
+	viewportWidth = width;
+	viewportHeight = height;
 	weaponScale = 24 * FRACUNIT;
 
 #ifdef MARS
@@ -279,13 +279,13 @@ void R_SetScreenSize(int size)
 	if ((MARS_VDP_DISPMODE & MARS_NTSC_FORMAT) == 0)
 	{
 		/* correct aspect ratio on PAL */
-		screenHeight = (height * 576) / 480;
+		viewportHeight = (height * 576) / 480;
 		weaponScale = 32 * FRACUNIT;
 	}
 #endif
 
-	centerX = screenWidth / 2;
-	centerY = screenHeight / 2;
+	centerX = viewportWidth / 2;
+	centerY = viewportHeight / 2;
 
 	centerXFrac = centerX * FRACUNIT;
 	centerYFrac = centerY * FRACUNIT;
@@ -298,6 +298,7 @@ void R_SetScreenSize(int size)
 
 	clipangle = xtoviewangle[0];
 	doubleclipangle = clipangle * 2;
+	clearscreen = 2;
 }
 
 /*
@@ -314,7 +315,7 @@ D_printf ("R_InitData\n");
 	R_InitData ();
 D_printf ("Done\n");
 
-	R_SetScreenSize(0);
+	R_SetViewportSize(0);
 
 	framecount = 0;
 	viewplayer = &players[0];
@@ -391,7 +392,7 @@ nocache:
 #ifndef MARS
 int shadepixel;
 extern	int	workpage;
-extern	pixel_t	*screens[2];	/* [SCREENWIDTH*SCREENHEIGHT];  */
+extern	pixel_t	*screens[2];	/* [viewportWidth*viewportHeight];  */
 #endif
 
 /*
@@ -560,7 +561,7 @@ void R_Setup (void)
 		visplanes[i].open = tempbuf;
 #endif
 		visplanes[i].runopen = true;
-		tempbuf += screenWidth+2;
+		tempbuf += viewportWidth+2;
 	}
 
 	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
@@ -603,7 +604,7 @@ void R_MarkOpenPlane(visplane_t* pl)
 {
 	int i;
 	unsigned short* open = pl->open;
-	for (i = 0; i < screenWidth / 4; i++)
+	for (i = 0; i < viewportWidth / 4; i++)
 	{
 		*open++ = OPENMARK;
 		*open++ = OPENMARK;

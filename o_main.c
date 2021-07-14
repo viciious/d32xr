@@ -116,7 +116,7 @@ void O_Init (void)
 	menuitem[1].y = 80;
 	menuitem[1].hasslider = true;
 
-	slider[1].maxval = 2;
+	slider[1].maxval = numViewports;
 	slider[1].curval = 0;
 
 #ifndef MARS
@@ -197,8 +197,7 @@ void O_Control (player_t *player)
 						break;
 					case 1:
 						o_screensize = slider[cursorpos].curval;
-						R_SetScreenSize(o_screensize);
-						clearscreen = 2;
+						R_SetViewportSize(o_screensize);
 						break;
 					default:
 						break;
@@ -220,8 +219,7 @@ void O_Control (player_t *player)
 						break;
 					case 1:
 						o_screensize = slider[cursorpos].curval;
-						R_SetScreenSize(o_screensize);
-						clearscreen = 2;
+						R_SetViewportSize(o_screensize);
 						break;
 					default:
 						break;

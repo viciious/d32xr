@@ -5,7 +5,7 @@
 
 #include "doomdef.h"
 
-extern unsigned short screenWidth, screenHeight;
+extern unsigned short viewportWidth, viewportHeight;
 extern unsigned short centerX, centerY;
 extern fixed_t centerXFrac, centerYFrac;
 extern fixed_t stretch;
@@ -23,7 +23,7 @@ extern fixed_t weaponScale;
 
 #define	BASEYCENTER			100
 
-#define	WINDOWHEIGHT		(screenHeight-SBARHEIGHT)
+#define	WINDOWHEIGHT		(viewportHeight-SBARHEIGHT)
 
 #define	MINZ				(FRACUNIT*4)
 
@@ -210,10 +210,12 @@ extern	side_t		*sides;
 
 /*============================================================================= */
 
+extern const int numViewports;
+
 int     R_PointOnSide(int x, int y, node_t *node) ATTR_DATA_CACHE_ALIGN;
 int     SlopeDiv(unsigned int num, unsigned int den) ATTR_DATA_CACHE_ALIGN;
 void	R_InitData (void);
-void	R_SetScreenSize(int size);
+void	R_SetViewportSize(int size);
 void	R_SetupTextureCaches(void) ATTR_OPTIMIZE_SIZE;
 
 

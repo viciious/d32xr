@@ -510,7 +510,7 @@ void P_Drawer (void)
 		}
 
 		if (clearscreen > 0) {
-			if (screenWidth == 160)
+			if (viewportWidth == 160)
 				I_ClearFrameBuffer();
 			else
 				DrawTiledBackground();

@@ -213,8 +213,8 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
 
       FixedMul2(high, scale2, ceilingnewheight);
       high = centerY1 - high;
-      if (high > screenHeight - 1)
-          high = screenHeight - 1;
+      if (high > viewportHeight - 1)
+          high = viewportHeight - 1;
       else if (high < ceilingclipx)
           high = ceilingclipx;
 
@@ -382,12 +382,12 @@ static void R_SegCommands2(const int cpu)
     drawtex_t* toptex, * bottomtex;
 
     // initialize the clipbounds array
-    unsigned short clipbounds[SCREENWIDTH];
+    unsigned short clipbounds[viewportWidth];
     unsigned short *clip = clipbounds;
-    for (i = 0; i < screenWidth / 4; i++)
+    for (i = 0; i < viewportWidth / 4; i++)
     {
-        *clip++ = screenHeight, *clip++ = screenHeight;
-        *clip++ = screenHeight, *clip++ = screenHeight;
+        *clip++ = viewportHeight, *clip++ = viewportHeight;
+        *clip++ = viewportHeight, *clip++ = viewportHeight;
     }
 
     toptex = &lseg.toptex;

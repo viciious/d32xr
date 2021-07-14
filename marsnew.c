@@ -413,15 +413,15 @@ pixel_t* I_OverwriteBuffer(void)
 
 int I_ViewportYPos(void)
 {
-	if (screenWidth < 160)
-		return (224 - BIGSHORT(stbar->height) - screenHeight) / 2;
-	return (224 - BIGSHORT(stbar->height) - screenHeight);
+	if (viewportWidth < 160)
+		return (224 - BIGSHORT(stbar->height) - viewportHeight) / 2;
+	return (224 - BIGSHORT(stbar->height) - viewportHeight);
 }
 
 pixel_t	*I_ViewportBuffer (void)
 {
 	volatile pixel_t *viewportbuffer = framebuffer;
-	viewportbuffer += I_ViewportYPos() * 320 / 2 + (320 - screenWidth * 2) / 4;
+	viewportbuffer += I_ViewportYPos() * 320 / 2 + (320 - viewportWidth * 2) / 4;
 	return (pixel_t *)viewportbuffer;
 }
 

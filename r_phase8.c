@@ -136,7 +136,7 @@ static void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening)
    scalefrac = vis->yscale;  
 
    for(x = vis->x1; x <= x2; x++)
-      spropening[x] = screenHeight;
+      spropening[x] = viewportHeight;
    
    ds = lastwallcmd;
    do
@@ -176,7 +176,7 @@ static void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening)
          for(x = r1; x <= r2; x++)
          {
             opening = spropening[x];
-            if((opening & 0xff) == screenHeight)
+            if((opening & 0xff) == viewportHeight)
                spropening[x] = (opening & OPENMARK) | bottomsil[x];
          }
       }
@@ -196,7 +196,7 @@ static void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening)
             top    = spropening[x];
             bottom = top & 0xff;
             top >>= 8;
-            if(bottom == screenHeight)
+            if(bottom == viewportHeight)
                bottom = bottomsil[x];
             if(top == 0)
                top = topsil[x];
@@ -277,7 +277,7 @@ static void R_DrawPSprites(void)
         // clear out the clipping array across the range of the psprite
         while (i < stopx)
         {
-            spropening[i] = screenHeight;
+            spropening[i] = viewportHeight;
             ++i;
         }
 

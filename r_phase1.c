@@ -471,8 +471,8 @@ void R_BSP(void)
 
    solidsegs[0].first = -2;
    solidsegs[0].last  = -1;
-   solidsegs[1].first = screenWidth;
-   solidsegs[1].last  = screenWidth+1;
+   solidsegs[1].first = viewportWidth;
+   solidsegs[1].last  = viewportWidth+1;
    newend = &solidsegs[2];
 
    R_RenderBSPNode(numnodes - 1);

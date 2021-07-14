@@ -245,7 +245,7 @@ static void R_FinishSprite(vissprite_t *vis)
    x1  = (centerXFrac + x1) / FRACUNIT;
 
    // off the right side?
-   if(x1 > screenWidth)
+   if(x1 > viewportWidth)
    {
       vis->patch = NULL;
       return;
@@ -266,7 +266,7 @@ static void R_FinishSprite(vissprite_t *vis)
    gzt = vis->gz + ((fixed_t)BIGSHORT(vis->patch->topoffset) << FRACBITS);
    vis->texturemid = gzt - vd.viewz;
    vis->x1 = x1 < 0 ? 0 : x1;
-   vis->x2 = x2 >= screenWidth ? screenWidth - 1 : x2;
+   vis->x2 = x2 >= viewportWidth ? viewportWidth - 1 : x2;
    
    if(vis->xiscale < 0)
       vis->startfrac = ((fixed_t)BIGSHORT(vis->patch->width) << FRACBITS) - 1;
@@ -301,7 +301,7 @@ static void R_FinishPSprite(vissprite_t *vis)
    x1 = vis->x1 - BIGSHORT(vis->patch->leftoffset);
 
    // off the right side
-   if(x1 > screenWidth)
+   if(x1 > viewportWidth)
       return;
 
    x2 = (x1 + BIGSHORT(vis->patch->width)) - 1;
@@ -312,7 +312,7 @@ static void R_FinishPSprite(vissprite_t *vis)
 
    // store information in vissprite
    vis->x1 = x1 < 0 ? 0 : x1;
-   vis->x2 = x2 >= screenWidth ? screenWidth - 1 : x2;
+   vis->x2 = x2 >= viewportWidth ? viewportWidth - 1 : x2;
    vis->xscale = FRACUNIT;
    vis->yscale = FRACUNIT;
    vis->yiscale = FRACUNIT;
