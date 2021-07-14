@@ -242,7 +242,7 @@ int Mars_FRTCounter2Msec(int c)
 
 void I_Init (void) 
 {	
-	int	i;
+	int	i, j;
 	const byte	*doompalette;
 	const byte 	*doomcolormap;
 
@@ -259,6 +259,13 @@ void I_Init (void)
 		byte *dl2 = (byte *)&dc_colormaps[i*256+128];
 		D_memcpy(dl1, sl2, 256);
 		D_memcpy(dl2, sl1, 256);
+
+		for (j = 0; j < 512; j+=2) {
+			if (dl1[j] == 0)
+				dl1[j] = 247;
+			if (dl1[j+1] == 0)
+				dl1[j+1] = 247;
+		}
 	}
 
 	stbar = (jagobj_t*)W_POINTLUMPNUM(W_GetNumForName("STBAR"));
@@ -415,13 +422,18 @@ int I_ViewportYPos(void)
 {
 	if (viewportWidth < 160)
 		return (224 - BIGSHORT(stbar->height) - viewportHeight) / 2;
-	return (224 - BIGSHORT(stbar->height) - viewportHeight);
+	if (viewportWidth == 160)
+		return (224 - BIGSHORT(stbar->height) - viewportHeight);
+	return (224 - BIGSHORT(stbar->height) - viewportHeight) / 2;
 }
 
 pixel_t	*I_ViewportBuffer (void)
 {
 	volatile pixel_t *viewportbuffer = framebuffer;
-	viewportbuffer += I_ViewportYPos() * 320 / 2 + (320 - viewportWidth * 2) / 4;
+	if (viewportWidth <= 160)
+		viewportbuffer += I_ViewportYPos() * 320 / 2 + (320 - viewportWidth * 2) / 4;
+	else
+		viewportbuffer += I_ViewportYPos() * 320 / 2 + (320 - viewportWidth) / 4;
 	return (pixel_t *)viewportbuffer;
 }
 

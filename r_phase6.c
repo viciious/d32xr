@@ -12,15 +12,15 @@ typedef struct drawtex_s
 #ifdef MARS
    inpixel_t *data;
 #else
-   pixel_t *data;
+   pixel_t   *data;
 #endif
-   int      width;
-   int      height;
-   int      topheight;
-   int      bottomheight;
-   int      texturemid;
-   int      pixelcount;
-   void     (*drawcol)(int, int, int, int, fixed_t, fixed_t, inpixel_t*, int);
+   int       width;
+   int       height;
+   int       topheight;
+   int       bottomheight;
+   int       texturemid;
+   int       pixelcount;
+   drawcol_t drawcol;
 } drawtex_t;
 
 typedef struct
@@ -368,7 +368,7 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
 #else
               pixel_t* data = skytexturep->data + colnum * skytexturep->height;
 #endif
-              I_DrawColumn(x, top, bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, 128);
+              drawcol(x, top, bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, 128);
           }
       }
    }
@@ -450,7 +450,7 @@ static void R_SegCommands2(const int cpu)
             toptex->height = tex->height;
             toptex->data = tex->data;
             toptex->pixelcount = 0;
-            toptex->drawcol = (tex->height & (tex->height - 1)) ? I_DrawColumnNPo2 : I_DrawColumn;
+            toptex->drawcol = (tex->height & (tex->height - 1)) ? drawcolnpo2 : drawcol;
         }
 
         if (segl->actionbits & AC_BOTTOMTEXTURE)
@@ -469,7 +469,7 @@ static void R_SegCommands2(const int cpu)
             bottomtex->height = tex->height;
             bottomtex->data = tex->data;
             bottomtex->pixelcount = 0;
-            bottomtex->drawcol = (tex->height & (tex->height - 1)) ? I_DrawColumnNPo2 : I_DrawColumn;
+            bottomtex->drawcol = (tex->height & (tex->height - 1)) ? drawcolnpo2 : drawcol;
         }
 
         R_SegLoop(&lseg, cpu);

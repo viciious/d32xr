@@ -13,6 +13,10 @@ fixed_t stretch;
 fixed_t stretchX;
 fixed_t weaponScale;
 
+drawcol_t drawcol;
+drawcol_t drawcolnpo2;
+drawspan_t drawspan;
+
 /*===================================== */
 
 /* */
@@ -248,6 +252,7 @@ const int viewports[][2] = {
 	{128, 144},
 	{128, 160},
 	{160, 180},
+	{252, 168},
 };
 const int numViewports = sizeof(viewports) / sizeof(viewports[0]);
 
@@ -299,6 +304,23 @@ void R_SetViewportSize(int size)
 	clipangle = xtoviewangle[0];
 	doubleclipangle = clipangle * 2;
 	clearscreen = 2;
+
+	if (viewportWidth <= 160)
+	{
+		drawcol = I_DrawColumnLow;
+		drawcolnpo2 = I_DrawColumnNPo2Low;
+		drawspan = I_DrawSpanLow;
+	}
+	else
+	{
+		drawcol = I_DrawColumn;
+		drawcolnpo2 = I_DrawColumnNPo2;
+		drawspan = I_DrawSpan;
+	}
+
+#ifdef MARS
+	Mars_CommSlaveClearCache();
+#endif
 }
 
 /*

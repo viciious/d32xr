@@ -682,8 +682,8 @@ extern	gametype_t	starttype;
 /*--------- */
 /*SYSTEM IO */
 /*--------- */
-#define	SCREENWIDTH		160
-#define	SCREENHEIGHT	224
+#define	SCREENWIDTH		252
+#define	SCREENHEIGHT	180
 
 void I_Init (void);
 byte *I_WadBase (void);
@@ -729,11 +729,19 @@ void I_Error (char *error, ...) ATTR_OPTIMIZE_SIZE;
 
 #ifdef USE_C_DRAW
 
+#define I_DrawColumnLow I_DrawColumnCLow
+#define I_DrawColumnNPo2Low I_DrawColumnNPo2CLow
+#define I_DrawSpanLow I_DrawSpanCLow
+
 #define I_DrawColumn I_DrawColumnC
 #define I_DrawColumnNPo2 I_DrawColumnNPo2C
 #define I_DrawSpan I_DrawSpanC
 
 #else
+
+#define I_DrawColumnLow I_DrawColumnALow
+#define I_DrawColumnNPo2Low I_DrawColumnNPo2ALow
+#define I_DrawSpanLow I_DrawSpanALow
 
 #define I_DrawColumn I_DrawColumnA
 #define I_DrawColumnNPo2 I_DrawColumnNPo2A
@@ -743,6 +751,15 @@ void I_Error (char *error, ...) ATTR_OPTIMIZE_SIZE;
 
 #endif
 
+void I_DrawColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
+	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
+
+void I_DrawColumnNPo2Low(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
+	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
+
+void I_DrawSpanLow(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
+	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source);
+
 void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
 	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
 
@@ -751,6 +768,13 @@ void I_DrawColumnNPo2(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_isca
 
 void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source);
+
+typedef void (*drawcol_t)(int, int, int, int, fixed_t, fixed_t, inpixel_t*, int);
+typedef void (*drawspan_t)(int, int, int, int, fixed_t, fixed_t, fixed_t, fixed_t, inpixel_t*);
+
+extern drawcol_t drawcol;
+extern drawcol_t drawcolnpo2;
+extern drawspan_t drawspan;
 
 void I_Print8 (int x, int y, const char *string);
 

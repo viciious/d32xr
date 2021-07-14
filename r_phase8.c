@@ -24,11 +24,13 @@ static void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening)
    patch_t *patch;
    fixed_t  iscale, xfrac, spryscale, sprtop, fracstep;
    int light, x, stopx;
+   drawcol_t drawcol;
 
    patch     = vis->patch;
    iscale    = vis->yiscale;
    xfrac     = vis->startfrac;
    spryscale = vis->yscale;
+   drawcol   = vis->drawcol;
 
    FixedMul2(sprtop, vis->texturemid, spryscale);
    sprtop = centerYFrac - sprtop;
@@ -78,7 +80,7 @@ static void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening)
             continue;
 
          // CALICO: invoke column drawer
-         I_DrawColumn(x, top, bottom, light, frac, iscale, vis->pixels + BIGSHORT(column->dataofs), 128);
+         drawcol(x, top, bottom, light, frac, iscale, vis->pixels + BIGSHORT(column->dataofs), 128);
       }
    }
 }

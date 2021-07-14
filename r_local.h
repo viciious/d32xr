@@ -454,6 +454,7 @@ typedef struct vissprite_s
 #else
 	pixel_t		*pixels;		/* data patch header references */
 #endif
+	drawcol_t   drawcol;
 } vissprite_t;
 
 #ifdef MARS

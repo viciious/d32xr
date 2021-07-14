@@ -275,6 +275,7 @@ static void R_FinishSprite(vissprite_t *vis)
 
    if(x1 < 0)
       vis->startfrac += vis->xiscale * (vis->x1 - x1);
+   vis->drawcol = drawcol;
 }
 
 //
@@ -318,6 +319,7 @@ static void R_FinishPSprite(vissprite_t *vis)
    vis->yiscale = FRACUNIT;
    vis->xiscale = FRACUNIT;
    vis->startfrac = 0;
+   vis->drawcol = drawcol;
 }
 
 //
