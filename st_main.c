@@ -40,6 +40,8 @@ short stbarframe;
 short numstbarcmds;
 stbarcmd_t stbarcmds[STC_NUMCMDTYPES+NUMMICROS+NUMCARDS*2];
 
+extern unsigned short screenHeight;
+
 #ifndef MARS
 #define ST_EraseBlock EraseBlock
 #endif
@@ -508,7 +510,7 @@ void ST_Drawer (void)
 	boolean have_cards[NUMCARDS];
 
 #ifdef MARS
-	stbar_y = 224 - BIGSHORT(sbar->height);
+	stbar_y = I_ViewportYPos() + screenHeight;
 #else
 	stbar_y = 0;
 	bufferpage = sbartop;		/* draw into status bar overlay */
@@ -663,7 +665,10 @@ void ST_EraseBlock(int x, int y, int width, int height)
 {
 	int i, j;
 	int rowsize;
-	short * source, * dest;
+	inpixel_t *source;
+	pixel_t *dest;
+	extern short* dc_colormaps;
+	const short* colormap = &dc_colormaps[0];
 
 	if (debugmode == 3)
 		return;
@@ -682,25 +687,24 @@ void ST_EraseBlock(int x, int y, int width, int height)
 		width = BIGSHORT(sbar->width) - x;
 	if (y + height > BIGSHORT(sbar->height))
 		height = BIGSHORT(sbar->height) - y;
-	rowsize = BIGSHORT(sbar->width) / 2;
+	rowsize = BIGSHORT(sbar->width);
 
-	source = (short *)sbar->data + y * rowsize + (unsigned)x/2;
+	source = (inpixel_t *)sbar->data + y * rowsize + x;
 
-	y += 224 - BIGSHORT(sbar->height);
-	if (y > 224)
-		height = 224 - y;
+	y += stbar_y;
+	if (y > 200)
+		height = 200 - y;
 	if (height <= 0)
 		return;
 
-	dest = (short*)I_FrameBuffer() + y * 320/2 + (unsigned)x/2;
+	dest = (pixel_t *)I_FrameBuffer() + y * 320 + x;
 
-	width = (unsigned)width >> 1;
 	for (j = 0; j < height; j++)
 	{
 		for (i = 0; i < width; i++)
-			dest[i] = source[i];
+			dest[i] = colormap[source[i]];
 		source += rowsize;
-		dest += 320/2;
+		dest += 320;
 	}
 }
 

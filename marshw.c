@@ -184,7 +184,7 @@ void Mars_Init(void)
 		Mars_InitLineTable(&MARS_FRAMEBUFFER);
 
 		p = (int*)(&MARS_FRAMEBUFFER + 0x100);
-		p_end = (int*)p + 320 / 4 * 224;
+		p_end = (int*)p + 320 / 4 * 200;
 		do {
 			*p = 0;
 		} while (++p < p_end);

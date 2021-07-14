@@ -274,8 +274,8 @@ void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh)
 
 	if (x + width > 320)
 		width = 320 - x;
-	if (y + height > 224)
-		height = 224 - y;
+	if (y + height > 200)
+		height = 200 - y;
 
 	if (width < 1 || height < 1)
 		return;
@@ -309,7 +309,7 @@ void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh)
 			//if ((i & 1) == 0 && (width & 1) == 0 && (p & 1) == 0 && (x & 1) == 0)
 			{
 				int j = i;
-				pixel_t* dest2 = ob + ((dest - fb + i) >> 1);
+				pixel_t* dest2 = ob + ((dest - ob + i) >> 1);
 				pixel_t* source2 = (pixel_t*)&source[p];
 				for (; i < width; i += 2)
 					*dest2++ = colormap[*source2++];

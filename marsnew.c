@@ -437,8 +437,8 @@ pixel_t* I_OverwriteBuffer(void)
 int I_ViewportYPos(void)
 {
 	if (viewportWidth < 160)
-		return (224 - BIGSHORT(stbar->height) - viewportHeight) / 2;
-	return (224 - BIGSHORT(stbar->height) - viewportHeight);
+		return (200 - BIGSHORT(stbar->height) - viewportHeight) / 2;
+	return 0;
 }
 
 pixel_t	*I_ViewportBuffer (void)
@@ -454,7 +454,7 @@ pixel_t	*I_ViewportBuffer (void)
 void I_ClearFrameBuffer (void)
 {
 	int* p = (int*)framebuffer;
-	int* p_end = (int*)(framebuffer + 320 * 200);
+	int* p_end = (int*)(framebuffer + 320 * (200+1));
 	while (p < p_end)
 		*p++ = 0;
 }
@@ -624,19 +624,19 @@ void I_NetSetup (void)
 
 void I_DrawSbar(void)
 {
-	const pixel_t* source = (pixel_t*)stbar->data;
+	const inpixel_t* source = (inpixel_t*)stbar->data;
 	int width = BIGSHORT(stbar->width);
 	int height = BIGSHORT(stbar->height);
-	int halfwidth = (unsigned)width >> 1;
 	pixel_t* dest;
+	const short* colormap = &dc_colormaps[0];
 
-	dest = (pixel_t*)I_FrameBuffer() + (224 - height) * 320 / 2;
+	dest = (pixel_t*)I_FrameBuffer() + (I_ViewportYPos() + screenHeight) * 320;
 	for (; height; height--)
 	{
 		int i;
-		for (i = 0; i < halfwidth; i++)
-			dest[i] = source[i];
-		source += halfwidth;
-		dest += 320 / 2;
+		for (i = 0; i < width; i++)
+			dest[i] = colormap[source[i]];
+		source += width;
+		dest += 320;
 	}
 }
