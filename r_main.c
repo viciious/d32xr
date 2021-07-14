@@ -665,35 +665,6 @@ visplane_t* R_FindPlane(visplane_t* ignore, int hash, fixed_t height,
 	return check;
 }
 
-#ifdef MARS
-void Mars_Slave_R_OpenPlanes(void)
-{
-	int i;
-	visplane_t* pl;
-
-	pl = &visplanes[0];
-	if (pl->runopen) {
-		unsigned short* open = pl->open;
-		for (i = 0; i < screenWidth / 4; i++)
-			*open++ = 0, *open++ = 0, *open++ = 0, *open++ = 0;
-		pl->runopen = false;
-	}
-
-	for (i = 1; i < MAXVISPLANES/4; i++)
-	{
-		pl = &visplanes[i];
-		if (MARS_SYS_COMM4 != 6)
-			break;
-
-		if (pl->runopen)
-		{
-			R_MarkOpenPlane(pl);
-			pl->runopen = false;
-		}
-	}
-}
-#endif
-
 void R_BSP (void);
 void R_WallPrep (void);
 void R_SpritePrep (void);
@@ -779,8 +750,6 @@ void R_RenderPlayerView(void)
 
 static void R_RenderPhase1(void)
 {
-	Mars_R_BeginOpenPlanes();
-
 	t_ref_bsp[t_ref_cnt] = I_GetFRTCounter();
 	R_BSP();
 	t_ref_bsp[t_ref_cnt] = I_GetFRTCounter() - t_ref_bsp[t_ref_cnt];
@@ -800,8 +769,6 @@ static void R_RenderPhases2To9(void)
 	if (R_LatePrep())
 		R_Cache();
 	t_ref_prep[t_ref_cnt] = I_GetFRTCounter() - t_ref_prep[t_ref_cnt];
-
-	Mars_R_StopOpenPlanes();
 
 	t_ref_segs[t_ref_cnt] = I_GetFRTCounter();
 	R_SegCommands ();

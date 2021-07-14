@@ -36,7 +36,6 @@ void Mars_Slave(void);
 void Mars_Slave_R_SegCommands(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void Mars_Slave_R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void Mars_Slave_R_DrawSprites(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-void Mars_Slave_R_OpenPlanes(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 void Mars_Slave_M_AnimateFire(void) ATTR_OPTIMIZE_EXTREME;
 void Mars_Slave_InitSoundDMA(void) ATTR_OPTIMIZE_SIZE;
@@ -99,22 +98,6 @@ static inline void Mars_R_WaitNextSprite(int l)
 static inline void Mars_R_AdvanceNextSprite(void)
 {
 	MARS_SYS_COMM6 = MARS_SYS_COMM6 + 1;
-}
-
-static inline void Mars_R_BeginOpenPlanes(void)
-{
-	while (MARS_SYS_COMM4 != 0) {};
-	MARS_SYS_COMM4 = 6;
-}
-
-static inline void Mars_R_StopOpenPlanes(void)
-{
-	if (MARS_SYS_COMM4 != 6) {
-		return;
-	}
-
-	MARS_SYS_COMM4 = 7;
-	while (MARS_SYS_COMM4 != 0) {}
 }
 
 static inline void Mars_InitSoundDMA(void)
