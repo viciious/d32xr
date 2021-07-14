@@ -657,6 +657,9 @@ void ST_EraseBlock(int x, int y, int width, int height)
 	int rowsize;
 	short * source, * dest;
 
+	if (debugmode == 3)
+		return;
+
 	if (x & 1)
 		x -= 1;
 	if (width & 1)

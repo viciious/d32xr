@@ -1004,6 +1004,7 @@ void DrawJagobj (jagobj_t *jo, int x, int y);
 void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh);
 void UpdateBuffer (void);
 
+#ifndef MARS
 extern	byte	*bufferpage;		/* draw here */
 extern	byte	*displaypage;		/* copied to here when finished */
 
@@ -1018,7 +1019,6 @@ extern		volatile int	dspcodestart, dspcodeend, dspfinished;
 
 void ReloadWad (void);
 
-#ifndef MARS
 int DSPFunction(void* start);
 
 extern short *palette8;
@@ -1029,8 +1029,10 @@ int DSPRead(void volatile* adr);
 extern	boolean		gamepaused;
 extern	jagobj_t	*pausepic;
 
+#ifndef MARS
 extern	pixel_t	*screens[2];
 extern	int		workpage;
+#endif
 
 extern	int	controltype;
 
@@ -1045,6 +1047,8 @@ extern	int		gamevbls;			/* may not really be vbls in multiplayer */
 extern	int		vblsinframe;		/* range from 4 to 8 */
 
 extern	boolean	spr_rotations;
+extern int debugmode;
+extern char clearscreen;
 
 void I_InitMenuFire(void) ATTR_OPTIMIZE_SIZE;
 void I_StopMenuFire(void);

@@ -193,6 +193,9 @@ void DrawJagobj2(jagobj_t* jo, int x, int y, int src_x, int src_y, int src_w, in
 	int		width, height;
 	int		rowsize;
 
+	if (debugmode == 3)
+		return;
+
 	rowsize = BIGSHORT(jo->width);
 	width = BIGSHORT(jo->width);
 	height = BIGSHORT(jo->height);

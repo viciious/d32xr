@@ -483,10 +483,10 @@ void I_Update(void)
 
 	if ((ticbuttons[consoleplayer] & BT_DEBUG) && !(oldticbuttons[consoleplayer] & BT_DEBUG))
 	{
-		extern int clearscreen;
 		debugmode = (debugmode + 1) % 4;
 		clearscreen = 2;
 	}
+
 	if (debugmode == 1)
 	{
 		D_snprintf(buf, sizeof(buf), "fps:%2d", fpscount);

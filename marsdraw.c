@@ -236,6 +236,8 @@ void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh)
 	jagobj_t* jo;
 	int width, height;
 
+	if (debugmode == 3)
+		return;
 	if (lumpnum < 0)
 		return;
 
@@ -329,6 +331,9 @@ void DrawTiledBackground(void)
 	const int ytiles = (200 + h - 1) / h;
 	pixel_t* bdest;
 	const pixel_t* bsrc;
+
+	if (debugmode == 3)
+		return;
 
 	bsrc = (const pixel_t*)W_POINTLUMPNUM(W_GetNumForName("ROCKS"));
 	bdest = I_FrameBuffer();

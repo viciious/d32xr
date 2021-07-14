@@ -48,7 +48,6 @@ int		cursorframe, cursorcount;
 int		movecount;
 
 int		o_screensize;
-extern int clearscreen;
 
 short	uchar;
 
