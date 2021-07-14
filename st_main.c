@@ -136,7 +136,7 @@ void ST_InitEveryLevel(void)
 ====================
 */
 
-void ST_Ticker (void)
+void ST_Ticker(void)
 {
 	int			i;
 	player_t* p;
@@ -147,7 +147,20 @@ void ST_Ticker (void)
 #ifdef MARS
 	// double-buffered renderer on MARS
 	if ((stbarframe++ & 1) == 1)
+	{
+		--facetics;
+		--yourFrags.delay;
+		--hisFrags.delay;
+		for (ind = 0; ind < NUMCARDS; ind++)
+		{
+			if (!flashCards[ind].active)
+				continue;
+			--flashCards[ind].delay;
+		}
+		if (gibdraw)
+			--gibdelay;
 		return;
+	}
 #endif
 
 	numstbarcmds = 0;
@@ -157,7 +170,6 @@ void ST_Ticker (void)
 	/* */
 	/* Animate face */
 	/* */
-	--facetics;
 	if (--facetics <= 0)
 	{
 		facetics = M_Random ()&15;
@@ -181,7 +193,6 @@ void ST_Ticker (void)
 	/* */
 	/* Flash YOUR FRAGS amount */
 	/* */
-	--yourFrags.delay;
 	if (yourFrags.active && --yourFrags.delay <= 0)
 	{
 		yourFrags.delay = FLASHDELAY;
@@ -195,7 +206,6 @@ void ST_Ticker (void)
 	/* */
 	/* Flash HIS FRAGS amount */
 	/* */
-	--hisFrags.delay;
 	if (hisFrags.active && --hisFrags.delay <= 0)
 	{
 		hisFrags.delay = FLASHDELAY;
@@ -233,8 +243,9 @@ void ST_Ticker (void)
 		}
 		
 		/* MIGHT AS WELL DO TICKING IN THE SAME LOOP! */
-		--flashCards[ind].delay;
-		if (flashCards[ind].active && --flashCards[ind].delay <= 0)
+		if (!flashCards[ind].active)
+			continue;
+		if (--flashCards[ind].delay <= 0)
 		{
 			flashCards[ind].delay = FLASHDELAY;
 			flashCards[ind].doDraw ^= 1;
@@ -416,7 +427,6 @@ void ST_Ticker (void)
 	/* */
 	/* Draw gibbed head */
 	/* */
-	--gibdelay;
 	if (gibdraw && --gibdelay <= 0)
 	{
 		// CALICO: the original code performs out-of-bounds accesses on the faces
@@ -573,8 +583,6 @@ void ST_Drawer (void)
 #endif
 			break;
 		case stc_drawgibhead:
-			DrawJagobjLump(faces + cmd->value, FACEX, FACEY, NULL, NULL);
-			break;
 		case stc_drawhead:
 			ST_EraseBlock(FACEX, FACEY, FACEW, FACEH);
 			DrawJagobjLump(faces + cmd->value, FACEX, stbar_y + FACEY, NULL, NULL);
