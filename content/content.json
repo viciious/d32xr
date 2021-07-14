@@ -6105,8 +6105,6 @@
         "size": 64016
     },
     {
-        "compressed": true,
-        "compressed_size": 4400,
         "filename": "stbar",
         "name": "STBAR",
         "size": 12816
@@ -9153,14 +9151,34 @@
         "size": 17972
     },
     {
+        "name": "MUS_E1M3",
+        "filename": "VGM/E1M3.vgm",
+        "size": 24084
+    },
+    {
         "name": "MUS_E1M4",
         "filename": "VGM/E1M4.vgm",
         "size": 25791
     },
     {
+        "name": "MUS_E1M5",
+        "filename": "VGM/E1M5.vgm",
+        "size": 6750
+    },
+    {
         "name": "MUS_E1M6",
         "filename": "VGM/E1M6.vgm",
         "size": 10667
+    },
+    {
+        "name": "MUS_E1M7",
+        "filename": "VGM/E1M7.vgm",
+        "size": 14151
+    },
+    {
+        "name": "MUS_E1M9",
+        "filename": "VGM/E1M9.vgm",
+        "size": 22284
     },
     {
         "name": "MUS_E2M1",
@@ -9173,19 +9191,34 @@
         "size": 11329
     },
     {
+        "name": "MUS_E2M4",
+        "filename": "VGM/E2M4.vgm",
+        "size": 4491
+    },
+    {
         "name": "MUS_E2M6",
         "filename": "VGM/E2M6.vgm",
         "size": 16100
     },
     {
+        "name": "MUS_E2M7",
+        "filename": "VGM/E2M7.vgm",
+        "size": 22194
+    },
+    {
         "name": "MUS_E2M8",
-        "filename": "VGM/E2M6.vgm",
+        "filename": "VGM/E2M8.vgm",
         "size": 18228
     },
     {
         "name": "MUS_E3M2",
         "filename": "VGM/E3M2.vgm",
         "size": 25261
+    },
+    {
+        "name": "MUS_E3M8",
+        "filename": "VGM/E3M8.vgm",
+        "size": 8727
     },
     {
         "name": "MUS_NTRO",
@@ -9198,9 +9231,9 @@
         "size": 32191
     },
     {
-        "name": "MUS_END",
-        "filename": "VGM/End.vgm",
-        "size": 49474
+        "name": "MUS_BUNN",
+        "filename": "VGM/Bunny.vgm",
+        "size": 14147
     },
     {
         "name": "VGM_END",
