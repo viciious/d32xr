@@ -245,9 +245,10 @@ struct subsector_s *R_PointInSubsector (fixed_t x, fixed_t y)
 /*============================================================================= */
 
 const int viewports[][2] = {
-	{128, 144},
-	{128, 160},
-	{160, 180},
+	//{128, 144},
+	//{128, 160},
+	//{160, 180},
+	{252, 168},
 };
 const int numViewports = sizeof(viewports) / sizeof(viewports[0]);
 

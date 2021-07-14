@@ -35,7 +35,7 @@ _I_DrawColumnA:
         mov.l   draw_fb,r8
         mov.l   @r8,r8          /* frame buffer start */
         add     r4,r8
-        add     r4,r8           /* fb += dc_x*2 */
+        #add     r4,r8           /* fb += dc_x*2 */
         shll8   r5
         add     r5,r8
         shlr2   r5
@@ -55,7 +55,7 @@ do_col_loop:
         add     r0,r0
         mov.w   @(r0,r7),r0     /* dpix = dc_colormap[pix] */
         dt      r6              /* count-- */
-        mov.w   r0,@r8          /* *fb = dpix */
+        mov.b   r0,@r8          /* *fb = dpix */
         bf/s    do_col_loop
         add     r1,r8           /* fb += SCREENWIDTH */
 
@@ -95,7 +95,7 @@ _I_DrawColumnNPo2A:
         mov.l   draw_fb,r8
         mov.l   @r8,r8          /* frame buffer start */
         add     r4,r8
-        add     r4,r8           /* fb += dc_x*2 */
+        #add     r4,r8           /* fb += dc_x*2 */
         shll8   r5
         add     r5,r8
         shlr2   r5
@@ -134,7 +134,7 @@ do_cnp_loop:
         add     r0,r0
         mov.w   @(r0,r7),r0     /* dpix = dc_colormap[pix] */
         cmp/ge  r4,r2
-        mov.w   r0,@r8          /* *fb = dpix */
+        mov.b   r0,@r8          /* *fb = dpix */
         bf      1f
         /* if (frac >= heightmask) */
         sub     r4,r2           /* frac -= heightmask */
@@ -181,12 +181,11 @@ _I_DrawSpanA:
         mov.l   draw_fb,r8
         mov.l   @r8,r8          /* frame buffer start */
         add     r5,r8
-        add     r5,r8           /* fb += ds_x1*2 */
         shll8   r4
         add     r4,r8
         shlr2   r4
         add     r4,r8           /* fb += (ds_y*256 + ds_y*64) */
-        add     #-2,r8
+        add     #-1,r8
         mov.l   @(12,r15),r2     /* xfrac */
         mov.l   @(16,r15),r4    /* yfrac */
         mov.l   @(20,r15),r3    /* xstep */
@@ -209,10 +208,10 @@ do_span_loop:
         and     #255,r0
         add     r0,r0
         mov.w   @(r0,r7),r0     /* dpix = ds_colormap[pix] */
-        add     #2,r8           /* fb++ */
+        add     #1,r8           /* fb++ */
         add     r5,r4           /* yfrac += ystep */
         dt      r6              /* count-- */
-        mov.w   r0,@r8          /* *fb = dpix */
+        mov.b   r0,@r8          /* *fb = dpix */
         bf/s    do_span_loop
         swap.w  r4,r0
 

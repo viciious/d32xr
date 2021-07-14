@@ -87,7 +87,7 @@ void BufferedDrawSprite (int sprite, int frame, int rotation)
 			{
 				pix = *src++;
 				if (!pix)
-					pix = 8;
+					pix = 247;
 				dest[0] = dest[1] = dest[320] = dest[321] = pix;
 				dest += 640;
 			}
