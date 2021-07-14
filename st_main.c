@@ -40,7 +40,7 @@ short stbarframe;
 short numstbarcmds;
 stbarcmd_t stbarcmds[STC_NUMCMDTYPES+NUMMICROS+NUMCARDS*2];
 
-extern unsigned short screenHeight;
+extern unsigned short viewportHeight;
 
 #ifndef MARS
 #define ST_EraseBlock EraseBlock
@@ -147,6 +147,9 @@ void ST_Ticker(void)
 	stbarcmd_t* cmd;
 
 #ifdef MARS
+	stbarframe = 0;
+	stbar.forcedraw = true;
+
 	// double-buffered renderer on MARS
 	if ((stbarframe++ & 1) == 1)
 	{
@@ -510,7 +513,7 @@ void ST_Drawer (void)
 	boolean have_cards[NUMCARDS];
 
 #ifdef MARS
-	stbar_y = I_ViewportYPos() + screenHeight;
+	stbar_y = I_ViewportYPos() + viewportHeight - BIGSHORT(sbar->height);
 #else
 	stbar_y = 0;
 	bufferpage = sbartop;		/* draw into status bar overlay */
@@ -670,6 +673,7 @@ void ST_EraseBlock(int x, int y, int width, int height)
 	extern short* dc_colormaps;
 	const short* colormap = &dc_colormaps[0];
 
+	return;
 	if (debugmode == 3)
 		return;
 

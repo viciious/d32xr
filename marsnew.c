@@ -421,7 +421,7 @@ byte	*I_TempBuffer (void)
 byte 	*I_WorkBuffer (void)
 {
 	while (!I_RefreshCompleted());
-	return (byte *)(framebuffer + 320 * screenHeight);
+	return (byte *)(framebuffer + 320 * viewportHeight);
 }
 
 pixel_t	*I_FrameBuffer (void)
@@ -630,7 +630,9 @@ void I_DrawSbar(void)
 	pixel_t* dest;
 	const short* colormap = &dc_colormaps[0];
 
-	dest = (pixel_t*)I_FrameBuffer() + (I_ViewportYPos() + screenHeight) * 320;
+	return;
+
+	dest = (pixel_t*)I_FrameBuffer() + (I_ViewportYPos() + viewportHeight) * 320;
 	for (; height; height--)
 	{
 		int i;
