@@ -26,11 +26,6 @@
 #endif
 #endif
 
-#ifndef MARS
-#define HIRES
-#define GRADIENTLIGHT
-#endif
-
 typedef unsigned short pixel_t;
 
 #ifdef MARS
