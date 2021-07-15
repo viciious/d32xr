@@ -30,7 +30,6 @@ subsector_t		*vissubsectors[MAXVISSSEC], ** lastvissubsector;
 /* walls */
 /* */
 viswall_t	*viswalls/*[MAXWALLCMDS]*/, *lastwallcmd;
-bspviswall_t *bspviswalls/*[MAXWALLCMDS]*/, * lastbspwallcmd;
 
 /* */
 /* planes */
@@ -581,9 +580,9 @@ void R_Setup (void)
 
 	tempbuf = (unsigned short *)I_WorkBuffer();
 
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
-	bspviswalls = (void*)tempbuf;
-	tempbuf += sizeof(*bspviswalls) * MAXWALLCMDS / sizeof(*tempbuf);
+	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 15) & ~15);
+	viswalls = (void*)tempbuf;
+	tempbuf += sizeof(*viswalls) * MAXWALLCMDS / sizeof(*tempbuf);
 
 /* */
 /* plane filling */
@@ -609,7 +608,7 @@ void R_Setup (void)
 	vissprite_p = vissprites;
 
 	lastvisplane = visplanes + 1;		/* visplanes[0] is left empty */
-	lastbspwallcmd = bspviswalls;
+	lastwallcmd = viswalls;
 	lastvissubsector = vissubsectors;	/* no subsectors visible yet */
 
 #ifndef MARS
@@ -786,13 +785,9 @@ static void R_RenderPhase1(void)
 static void R_RenderPhases2To9(void)
 {
 	unsigned short openings_[MAXOPENINGS];
-	viswall_t viswalls_[MAXWALLCMDS] __attribute__((aligned(16)));
 
 	openings = openings_;
 	lastopening = openings;
-
-	viswalls = viswalls_;
-	lastwallcmd = viswalls;
 
 	t_ref_prep[t_ref_cnt] = I_GetFRTCounter();
 	R_WallPrep();

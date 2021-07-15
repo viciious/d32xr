@@ -204,21 +204,21 @@ static boolean R_CheckBBox(fixed_t bspcoord[4])
 }
 
 //
-// Store information about the clipped seg range into the bspviswall array.
+// Store information about the clipped seg range into the viswall array.
 //
 static inline void R_StoreWallRange(int start, int stop)
 {
-   bspviswall_t *rw;
+   viswall_t *rw;
 
-   if (lastbspwallcmd == bspviswalls + MAXWALLCMDS)
+   if (lastwallcmd == viswalls + MAXWALLCMDS)
        return;
 
-   rw = lastbspwallcmd;
+   rw = lastwallcmd;
    rw->seg    = curline;
    rw->start  = start;
    rw->stop   = stop;
    rw->angle1 = lineangle1;
-   ++lastbspwallcmd;
+   ++lastwallcmd;
 }
 
 //
