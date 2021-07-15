@@ -607,8 +607,9 @@ void R_Setup (void)
 /* */
 	vissprite_p = vissprites;
 
+	visplanes[0].runopen = false;
 	lastvisplane = visplanes + 1;		/* visplanes[0] is left empty */
-	lastwallcmd = viswalls;
+	lastwallcmd = viswalls;			/* no walls added yet */
 	lastvissubsector = vissubsectors;	/* no subsectors visible yet */
 
 #ifndef MARS
@@ -777,6 +778,8 @@ void R_RenderPlayerView(void)
 
 static void R_RenderPhase1(void)
 {
+	Mars_R_BeginWallPrep();
+
 	t_ref_bsp[t_ref_cnt] = I_GetFRTCounter();
 	R_BSP();
 	t_ref_bsp[t_ref_cnt] = I_GetFRTCounter() - t_ref_bsp[t_ref_cnt];
@@ -787,12 +790,10 @@ static void R_RenderPhases2To9(void)
 	unsigned short openings_[MAXOPENINGS];
 
 	openings = openings_;
-	lastopening = openings;
 
 	t_ref_prep[t_ref_cnt] = I_GetFRTCounter();
-	R_WallPrep();
 	R_SpritePrep();
-	/* the rest of the refresh can be run in parallel with the next game tic */
+	Mars_R_EndWallPrep();
 	if (R_LatePrep())
 		R_Cache();
 	t_ref_prep[t_ref_cnt] = I_GetFRTCounter() - t_ref_prep[t_ref_cnt];

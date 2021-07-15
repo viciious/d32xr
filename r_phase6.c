@@ -501,11 +501,9 @@ static void R_SegCommands2(const int cpu)
 
 void Mars_Slave_R_SegCommands(void)
 {
-    Mars_ClearCache();
-
-    Mars_ClearCacheLines((intptr_t)&viswalls & ~15, 1);
-    Mars_ClearCacheLines((intptr_t)&lastwallcmd & ~15, 1);
-    Mars_ClearCacheLines((intptr_t)viswalls & ~15, ((lastwallcmd - viswalls) * sizeof(viswall_t) + 15) / 16);
+    //Mars_ClearCacheLines((intptr_t)&viswalls & ~15, 1);
+    //Mars_ClearCacheLines((intptr_t)&lastwallcmd & ~15, 1);
+    //Mars_ClearCacheLines((intptr_t)viswalls & ~15, ((lastwallcmd - viswalls) * sizeof(viswall_t) + 15) / 16);
 
     R_SegCommands2(1);
 }
