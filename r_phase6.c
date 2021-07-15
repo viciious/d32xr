@@ -30,7 +30,7 @@ typedef struct
     drawtex_t toptex;
     drawtex_t bottomtex;
 
-    unsigned short * clipbounds;
+    unsigned short *clipbounds;
     unsigned lightmin, lightmax, lightsub, lightcoef;
 } seglocal_t;
 
@@ -160,7 +160,8 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
    flooropen = ceilopen = visplanes[0].open;
 
    unsigned texturelight = lseg->lightmax;
-   
+   boolean gradientlight = lseg->lightmin != lseg->lightmax;
+
    const int centerY0 = centerY;
    const int centerY1 = centerY - 1;
 
@@ -306,10 +307,10 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
           // other texture drawing info
           sdr.colnum = (offset - r) >> FRACBITS;
 
-          if (detailmode == detmode_high)
+          if (gradientlight)
           {
               // calc light level
-              texturelight = ((scale2 * lseg->lightcoef) / FRACUNIT);
+              texturelight = scale2 * lseg->lightcoef;
               if (texturelight <= lseg->lightsub)
               {
                   texturelight = lseg->lightmin;
@@ -317,6 +318,7 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
               else
               {
                   texturelight -= lseg->lightsub;
+                  texturelight /= FRACUNIT;
                   if (texturelight < lseg->lightmin)
                       texturelight = lseg->lightmin;
                   if (texturelight > lseg->lightmax)
@@ -411,6 +413,7 @@ static void R_SegCommands2(const int cpu)
         if (lseg.lightmax > 255)
             lseg.lightmax = 255;
 #endif
+        lseg.lightmin = lseg.lightmax;
 
         if (detailmode == detmode_high)
         {
@@ -425,14 +428,18 @@ static void R_SegCommands2(const int cpu)
             if (seglight < 0)
                 seglight = 0;
 #endif
-
             lseg.lightmin = seglight;
-            lseg.lightsub = 160 * (lseg.lightmax - lseg.lightmin) / (800 - 160);
+        }
+
+        if (lseg.lightmin != lseg.lightmax)
+        {
             lseg.lightcoef = ((lseg.lightmax - lseg.lightmin) << FRACBITS) / (800 - 160);
+            lseg.lightsub = 160 * lseg.lightcoef;
         }
         else
         {
-            lseg.lightmax = HWLIGHT(lseg.lightmax);
+            lseg.lightmin = HWLIGHT(lseg.lightmax);
+            lseg.lightmax = lseg.lightmin;
         }
 
         if (segl->actionbits & AC_TOPTEXTURE)
