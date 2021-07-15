@@ -43,6 +43,15 @@ extern fixed_t weaponScale;
 
 #define MINLIGHT 0
 
+typedef enum
+{
+	detmode_potato = -1,
+	detmode_medium,
+	detmode_high
+} detailmode_t;
+
+extern detailmode_t detailmode;
+
 /*
 ==============================================================================
 

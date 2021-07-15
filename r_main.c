@@ -13,6 +13,8 @@ fixed_t stretch;
 fixed_t stretchX;
 fixed_t weaponScale;
 
+detailmode_t detailmode;
+
 drawcol_t drawcol;
 drawcol_t drawcolnpo2;
 drawspan_t drawspan;
@@ -342,6 +344,7 @@ D_printf ("Done\n");
 
 	framecount = 0;
 	viewplayer = &players[0];
+	detailmode = detmode_medium;
 
 	R_InitTexCache(&r_flatscache, numflats);
 

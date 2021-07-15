@@ -17,11 +17,7 @@ typedef struct
     fixed_t height;
     angle_t angle;
     fixed_t x, y;
-#ifdef GRADIENTLIGHT
     unsigned  lightmin, lightmax, lightsub;
-#else
-    int     lightmax;
-#endif
     fixed_t basexscale, baseyscale;
     int	pixelcount;
 
@@ -43,60 +39,66 @@ void R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 //
 // Render the horizontal spans determined by R_PlaneLoop
 //
-static void R_MapPlane(localplane_t *lpl, int y, int x, int x2)
+static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
 {
-   int remaining;
-   volatile fixed_t distance;
-   fixed_t length, xfrac, yfrac, xstep, ystep;
-   angle_t angle;
-   volatile unsigned light;
+    int remaining;
+    volatile fixed_t distance;
+    fixed_t length, xfrac, yfrac, xstep, ystep;
+    angle_t angle;
+    volatile unsigned light;
 
-   remaining = x2 - x + 1;
+    remaining = x2 - x + 1;
 
-   if (!remaining)
-       return; // nothing to draw (shouldn't happen)
+    if (!remaining)
+        return; // nothing to draw (shouldn't happen)
 
-   FixedMul2(distance, lpl->height, yslope[y]);
+    FixedMul2(distance, lpl->height, yslope[y]);
 
-#if defined(MARS) && defined(GRADIENTLIGHT)
-   SH2_DIVU_DVSR = distance;   // set 32-bit divisor
-   SH2_DIVU_DVDNT = LIGHTCOEF; // set high bits of the 64-bit dividend, start divide
+    if (detailmode == detmode_high)
+    {
+#if defined(MARS)
+        SH2_DIVU_DVSR = distance;   // set 32-bit divisor
+        SH2_DIVU_DVDNT = LIGHTCOEF; // set high bits of the 64-bit dividend, start divide
 #endif
+    }
 
-   FixedMul2(length, distance, distscale[x]);
-   angle = (lpl->angle + xtoviewangle[x]) >> ANGLETOFINESHIFT;
+    FixedMul2(length, distance, distscale[x]);
+    angle = (lpl->angle + xtoviewangle[x]) >> ANGLETOFINESHIFT;
 
-   FixedMul2(xfrac, (finecosine(angle)), length);
-   xfrac = lpl->x + xfrac;
-   FixedMul2(yfrac, (finesine(angle)), length);
-   yfrac = lpl->y - yfrac;
+    FixedMul2(xfrac, (finecosine(angle)), length);
+    xfrac = lpl->x + xfrac;
+    FixedMul2(yfrac, (finesine(angle)), length);
+    yfrac = lpl->y - yfrac;
 
-   FixedMul2(xstep, distance, lpl->basexscale);
-   FixedMul2(ystep, lpl->baseyscale, distance);
+    FixedMul2(xstep, distance, lpl->basexscale);
+    FixedMul2(ystep, lpl->baseyscale, distance);
 
-#ifdef GRADIENTLIGHT
+    if (detailmode == detmode_high)
+    {
 #ifdef MARS
-   light = SH2_DIVU_DVDNT;
+        light = SH2_DIVU_DVDNT;
 #else
-   light = LIGHTCOEF / distance;
+        light = LIGHTCOEF / distance;
 #endif
 
-   if (light <= lpl->lightsub)
-       light = lpl->lightmin;
-   else
-   {
-       light -= lpl->lightsub;
-       if (light < lpl->lightmin)
-           light = lpl->lightmin;
-       else if (light > lpl->lightmax)
-           light = lpl->lightmax;
-   }
+        if (light <= lpl->lightsub)
+            light = lpl->lightmin;
+        else
+        {
+            light -= lpl->lightsub;
+            if (light < lpl->lightmin)
+                light = lpl->lightmin;
+            else if (light > lpl->lightmax)
+                light = lpl->lightmax;
+        }
 
-   // transform to hardware value
-   light = HWLIGHT(light);
-#else
-   light = lpl->lightmax;
-#endif
+        // transform to hardware value
+        light = HWLIGHT(light);
+    }
+    else
+    {
+        light = lpl->lightmax;
+    }
 
    drawspan(y, x, x2, light, xfrac, yfrac, xstep, ystep, lpl->ds_source);
 }
@@ -234,26 +236,27 @@ static void R_DrawPlanes2(const int cpu)
         if (lpl.lightmax > 255)
             lpl.lightmax = 255;
 
-#ifdef GRADIENTLIGHT
+        if (detailmode == detmode_high)
+        {
 #ifdef MARS
-        unsigned light = lpl.lightmax;
-        if (light <= 160)
-            light = light - (light >> 1);
+            unsigned light = lpl.lightmax;
+            if (light <= 160)
+                light = light - (light >> 1);
 #else
-        int light = lpl.lightmax;
-        light = light - ((255 - light) << 1);
+            int light = lpl.lightmax;
+            light = light - ((255 - light) << 1);
 #endif
-        if (light < MINLIGHT)
-            light = MINLIGHT;
-        if (light > lpl.lightmax)
-            light = lpl.lightmax;
-        lpl.lightmin = (unsigned)light;
-        lpl.lightsub = 160 * (lpl.lightmax - lpl.lightmin) / (800 - 160);
-#endif
-
-#ifndef GRADIENTLIGHT
-        lpl.lightmax = HWLIGHT(lpl.lightmax);
-#endif
+            if (light < MINLIGHT)
+                light = MINLIGHT;
+            if (light > lpl.lightmax)
+                light = lpl.lightmax;
+            lpl.lightmin = (unsigned)light;
+            lpl.lightsub = 160 * (lpl.lightmax - lpl.lightmin) / (800 - 160);
+        }
+        else
+        {
+            lpl.lightmax = HWLIGHT(lpl.lightmax);
+        }
 
         R_PlaneLoop(&lpl, cpu);
 

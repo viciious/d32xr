@@ -31,11 +31,7 @@ typedef struct
     drawtex_t bottomtex;
 
     unsigned short * clipbounds;
-#ifdef GRADIENTLIGHT
     unsigned lightmin, lightmax, lightsub, lightcoef;
-#else
-    unsigned lightmax;
-#endif
 } seglocal_t;
 
 typedef struct
@@ -163,9 +159,7 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
    floor = ceiling = visplanes;
    flooropen = ceilopen = visplanes[0].open;
 
-#ifndef GRADIENTLIGHT
-   const unsigned texturelight = lseg->lightmax;
-#endif
+   unsigned texturelight = lseg->lightmax;
    
    const int centerY0 = centerY;
    const int centerY1 = centerY - 1;
@@ -312,25 +306,26 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
           // other texture drawing info
           sdr.colnum = (offset - r) >> FRACBITS;
 
-#ifdef GRADIENTLIGHT
-          // calc light level
-          unsigned texturelight = ((scale2 * lseg->lightcoef) / FRACUNIT);
-          if (texturelight <= lseg->lightsub)
+          if (detailmode == detmode_high)
           {
-              texturelight = lseg->lightmin;
-          }
-          else
-          {
-              texturelight -= lseg->lightsub;
-              if (texturelight < lseg->lightmin)
+              // calc light level
+              texturelight = ((scale2 * lseg->lightcoef) / FRACUNIT);
+              if (texturelight <= lseg->lightsub)
+              {
                   texturelight = lseg->lightmin;
-              if (texturelight > lseg->lightmax)
-                  texturelight = lseg->lightmax;
-          }
+              }
+              else
+              {
+                  texturelight -= lseg->lightsub;
+                  if (texturelight < lseg->lightmin)
+                      texturelight = lseg->lightmin;
+                  if (texturelight > lseg->lightmax)
+                      texturelight = lseg->lightmax;
+              }
 
-          // convert to a hardware value
-          texturelight = HWLIGHT(texturelight);
-#endif
+              // convert to a hardware value
+              texturelight = HWLIGHT(texturelight);
+          }
 
           sdr.light = texturelight;
           sdr.scale2 = scale2;
@@ -394,6 +389,11 @@ static void R_SegCommands2(const int cpu)
     bottomtex = &lseg.bottomtex;
     lseg.clipbounds = clipbounds;
 
+    lseg.lightmin = 0;
+    lseg.lightmax = 0;
+    lseg.lightcoef = 0;
+    lseg.lightsub = 0;
+
     // workaround annoying compilation warnings
     toptex->height = 0;
     toptex->pixelcount = 0;
@@ -412,27 +412,28 @@ static void R_SegCommands2(const int cpu)
             lseg.lightmax = 255;
 #endif
 
-#ifdef GRADIENTLIGHT
+        if (detailmode == detmode_high)
+        {
 #ifdef MARS
-        unsigned seglight = segl->seglightlevel + extralight;
-        if (seglight > 255)
-            seglight = 255;
-        else if (seglight <= 160)
-            seglight = seglight - (seglight >> 1);
+            unsigned seglight = segl->seglightlevel + extralight;
+            if (seglight > 255)
+                seglight = 255;
+            else if (seglight <= 160)
+                seglight = seglight - (seglight >> 1);
 #else
-        int seglight = segl->seglightlevel - (255 - segl->seglightlevel) * 2;
-        if (seglight < 0)
-            seglight = 0;
+            int seglight = segl->seglightlevel - (255 - segl->seglightlevel) * 2;
+            if (seglight < 0)
+                seglight = 0;
 #endif
 
-        lseg.lightmin = seglight;
-        lseg.lightsub = 160 * (lseg.lightmax - lseg.lightmin) / (800 - 160);
-        lseg.lightcoef = ((lseg.lightmax - lseg.lightmin) << FRACBITS) / (800 - 160);
-#endif
-
-#ifndef GRADIENTLIGHT
-        lseg.lightmax = HWLIGHT(lseg.lightmax);
-#endif
+            lseg.lightmin = seglight;
+            lseg.lightsub = 160 * (lseg.lightmax - lseg.lightmin) / (800 - 160);
+            lseg.lightcoef = ((lseg.lightmax - lseg.lightmin) << FRACBITS) / (800 - 160);
+        }
+        else
+        {
+            lseg.lightmax = HWLIGHT(lseg.lightmax);
+        }
 
         if (segl->actionbits & AC_TOPTEXTURE)
         {
