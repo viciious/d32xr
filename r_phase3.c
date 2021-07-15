@@ -132,7 +132,7 @@ static void R_PrepPSprite(pspdef_t *psp)
    vis->texturemid = psp->sy;
 
    vis->x1 += ((viewportWidth > 160 ? (viewportWidth - 320 + 1) / 2 : (viewportWidth - 160 + 1)) / 2);
-   vis->texturemid = (vis->texturemid / FRACUNIT - (180 - viewportHeight) / 2) * FRACUNIT;
+   vis->texturemid = (vis->texturemid / FRACUNIT - (180 - (viewportHeight < 144 ? 144 : viewportHeight)) / 2) * FRACUNIT;
 
    if(state->frame & FF_FULLBRIGHT)
       vis->colormap = 255;
