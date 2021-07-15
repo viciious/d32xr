@@ -32,7 +32,8 @@
 #include "r_local.h"
 #include "wadbase.h"
 
-const int COLOR_WHITE = 0x04;
+int COLOR_WHITE = 0x04;
+int COLOR_BLACK = 0xF7;
 
 short	*dc_colormaps;
 const byte	*new_palette = NULL;
@@ -249,6 +250,22 @@ void I_Init (void)
 	doompalette = W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
 	I_SetPalette(doompalette);
 
+	for (i = 1; i < 256; i++)
+	{
+		unsigned r = doompalette[i * 3 + 0];
+		unsigned g = doompalette[i * 3 + 1];
+		unsigned b = doompalette[i * 3 + 2];
+		if (r != g || r != b) {
+			continue;
+		}
+		if (r == 0) {
+			COLOR_BLACK = i;
+		}
+		if (r == 255) {
+			COLOR_WHITE = i;
+		}
+	}
+
 	doomcolormap = W_POINTLUMPNUM(W_GetNumForName("COLORMAPS"));
 	dc_colormaps = Z_Malloc(64*256, PU_STATIC, 0);
 
@@ -262,9 +279,9 @@ void I_Init (void)
 
 		for (j = 0; j < 512; j+=2) {
 			if (dl1[j] == 0)
-				dl1[j] = 247;
+				dl1[j] = COLOR_BLACK;
 			if (dl1[j+1] == 0)
-				dl1[j+1] = 247;
+				dl1[j+1] = COLOR_BLACK;
 		}
 	}
 
