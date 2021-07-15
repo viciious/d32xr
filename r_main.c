@@ -44,7 +44,7 @@ static visplane_t **visplanes_hash;
 #ifdef MARS
 __attribute__((aligned(16)))
 #endif
-vissprite_t	vissprites[MAXVISSPRITES], *lastsprite_p, *vissprite_p;
+vissprite_t	*vissprites/*[MAXVISSPRITES]*/, * lastsprite_p, * vissprite_p;
 
 /* */
 /* openings / misc refresh memory */
@@ -594,6 +594,10 @@ void R_Setup (void)
 	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
 	vissubsectors = (void*)tempbuf;
 	tempbuf += sizeof(*vissubsectors) * MAXVISSSEC / sizeof(*tempbuf);
+
+	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 15) & ~15);
+	vissprites = (void*)tempbuf;
+	tempbuf += sizeof(*vissubsectors) * MAXVISSPRITES / sizeof(*tempbuf);
 
 	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
 		visplanes_hash[i] = NULL;
