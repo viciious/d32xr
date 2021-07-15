@@ -252,8 +252,8 @@ const int viewports[][2] = {
 	{128, 144},
 	{128, 160},
 	{160, 180},
-	{216, 144},
-	{252, 168},
+	{224, 128},
+	{252, 144},
 };
 const int numViewports = sizeof(viewports) / sizeof(viewports[0]);
 
