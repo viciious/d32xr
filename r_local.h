@@ -47,7 +47,9 @@ typedef enum
 {
 	detmode_potato = -1,
 	detmode_medium,
-	detmode_high
+	detmode_high,
+
+	MAXDETAILMODES
 } detailmode_t;
 
 extern detailmode_t detailmode;
@@ -225,6 +227,7 @@ int     R_PointOnSide(int x, int y, node_t *node) ATTR_DATA_CACHE_ALIGN;
 int     SlopeDiv(unsigned int num, unsigned int den) ATTR_DATA_CACHE_ALIGN;
 void	R_InitData (void);
 void	R_SetViewportSize(int size);
+void	R_SetDetailMode(int mode);
 void	R_SetupTextureCaches(void) ATTR_OPTIMIZE_SIZE;
 
 

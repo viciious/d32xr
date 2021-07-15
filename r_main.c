@@ -326,6 +326,16 @@ void R_SetViewportSize(int size)
 #endif
 }
 
+void R_SetDetailMode(int mode)
+{
+	if (mode < detmode_potato)
+		return;
+	if (mode >= MAXDETAILMODES)
+		return;
+
+	detailmode = mode;
+}
+
 /*
 ==============
 =
@@ -344,7 +354,8 @@ D_printf ("Done\n");
 
 	framecount = 0;
 	viewplayer = &players[0];
-	detailmode = detmode_medium;
+
+	R_SetDetailMode(detmode_medium);
 
 	R_InitTexCache(&r_flatscache, numflats);
 

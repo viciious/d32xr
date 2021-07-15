@@ -16,10 +16,11 @@ extern void IN_DrawValue(int x,int y,int value);
 
 typedef enum
 {
-	soundvol,
-	screensize,
+	mi_soundvol,
+	mi_screensize,
+	mi_detailmode,
 #ifndef MARS
-	controls,
+	mi_controls,
 #endif
 	NUMMENUITEMS
 } menupos_t;
@@ -42,12 +43,10 @@ typedef struct
 	int	maxval;
 } slider_t;
 
-slider_t slider[2];
+slider_t slider[3];
 
 int		cursorframe, cursorcount;
 int		movecount;
-
-int		o_screensize;
 
 short	uchar;
 
@@ -100,7 +99,6 @@ void O_Init (void)
 	cursorcount = 0;
 	cursorframe = 0;
 	cursorpos = 0;	
-	o_screensize = 0;
 
 /*    strcpy(menuitem[0].name, "Volume"); */
     D_strncpy(menuitem[0].name, "Volume", 6);
@@ -118,6 +116,14 @@ void O_Init (void)
 
 	slider[1].maxval = numViewports - 1;
 	slider[1].curval = 0;
+
+	D_strncpy(menuitem[2].name, "Level of detail", 15);
+	menuitem[2].x = 94;
+	menuitem[2].y = 114;
+	menuitem[2].hasslider = true;
+
+	slider[2].maxval = MAXDETAILMODES;
+	slider[2].curval = 0;
 
 #ifndef MARS
 /*    strcpy(menuitem[2].name, "Controls"); */
@@ -196,8 +202,10 @@ void O_Control (player_t *player)
 						S_StartSound (NULL, sfx_pistol);
 						break;
 					case 1:
-						o_screensize = slider[cursorpos].curval;
-						R_SetViewportSize(o_screensize);
+						R_SetViewportSize(slider[cursorpos].curval);
+						break;
+					case 2:
+						R_SetDetailMode(slider[cursorpos].curval - 1);
 						break;
 					default:
 						break;
@@ -218,8 +226,10 @@ void O_Control (player_t *player)
 						S_StartSound (NULL, sfx_pistol);
 						break;
 					case 1:
-						o_screensize = slider[cursorpos].curval;
-						R_SetViewportSize(o_screensize);
+						R_SetViewportSize(slider[cursorpos].curval);
+						break;
+					case 2:
+						R_SetDetailMode(slider[cursorpos].curval - 1);
 						break;
 					default:
 						break;
