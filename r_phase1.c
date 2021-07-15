@@ -210,8 +210,10 @@ static inline void R_StoreWallRange(int start, int stop)
 {
    bspviswall_t *rw;
 
-   rw = lastbspwallcmd;
+   if (lastbspwallcmd == bspviswalls + MAXWALLCMDS)
+       return;
 
+   rw = lastbspwallcmd;
    rw->seg    = curline;
    rw->start  = start;
    rw->stop   = stop;
