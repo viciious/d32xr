@@ -6,9 +6,9 @@
 #define	LOWERSPEED		FRACUNIT*18
 #define	RAISESPEED		FRACUNIT*18
 
-#define	WEAPONX			(15  * (viewportWidth > 160 ? (viewportWidth - 320) : (viewportWidth - 160)) / 32) * FRACUNIT
-#define WEAPONBOTTOM	(128 - (180 - viewportHeight) / 2) * FRACUNIT
-#define WEAPONTOP		(32  - (180 - viewportHeight) / 2) * FRACUNIT
+#define	WEAPONX			FRACUNIT
+#define WEAPONBOTTOM	128 * FRACUNIT
+#define WEAPONTOP		32 * FRACUNIT
 
 #define	BFGCELLS		40			/* plasma cells for a bfg attack */
 
