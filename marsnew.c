@@ -244,12 +244,16 @@ int Mars_FRTCounter2Msec(int c)
 void I_Init (void) 
 {	
 	int	i, j;
+	unsigned minr;
 	const byte	*doompalette;
 	const byte 	*doomcolormap;
 
 	doompalette = W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
 	I_SetPalette(doompalette);
 
+	// look up palette indices for black and white colors
+	// if the black color isn't present, use the darkest one
+	minr = 255;
 	for (i = 1; i < 256; i++)
 	{
 		unsigned r = doompalette[i * 3 + 0];
@@ -258,7 +262,8 @@ void I_Init (void)
 		if (r != g || r != b) {
 			continue;
 		}
-		if (r == 0) {
+		if (r <= minr) {
+			minr = r;
 			COLOR_BLACK = i;
 		}
 		if (r == 255) {
