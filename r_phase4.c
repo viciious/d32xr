@@ -299,13 +299,16 @@ static void R_FinishPSprite(vissprite_t *vis)
    topoffset = (fixed_t)BIGSHORT(vis->patch->topoffset) << FRACBITS;
    vis->texturemid = BASEYCENTER*FRACUNIT - (vis->texturemid - topoffset);
 
-   x1 = vis->x1 - BIGSHORT(vis->patch->leftoffset);
+   x1 = vis->x1;
+   if (viewportWidth > 160)
+       x1 >>= 1;
+   x1 -= BIGSHORT(vis->patch->leftoffset);
 
    // off the right side
    if(x1 > viewportWidth)
       return;
 
-   x2 = (x1 + BIGSHORT(vis->patch->width)) - 1;
+   x2 = x1 + BIGSHORT(vis->patch->width) - 1;
 
    // off the left side
    if(x2 < 0)
@@ -319,7 +322,7 @@ static void R_FinishPSprite(vissprite_t *vis)
    vis->yiscale = FRACUNIT;
    vis->xiscale = FRACUNIT;
    vis->startfrac = 0;
-   vis->drawcol = drawcol;
+   vis->drawcol = I_DrawColumnLow;
 }
 
 //
