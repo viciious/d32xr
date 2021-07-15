@@ -462,13 +462,13 @@ typedef struct vissprite_s
 #else
 #define	MAXVISSPRITES	128
 #endif
-extern	vissprite_t	*vissprites/*[MAXVISSPRITES]*/, * lastsprite_p, * vissprite_p;
+extern	vissprite_t	vissprites[MAXVISSPRITES], *lastsprite_p, *vissprite_p;
 
 #define	MAXOPENINGS		SCREENWIDTH*8
 extern	unsigned short	*openings/*[MAXOPENINGS]*/, * lastopening;
 
 #define	MAXVISSSEC		256
-extern	subsector_t		**vissubsectors/*[MAXVISSSEC]*/, ** lastvissubsector;
+extern	subsector_t		*vissubsectors[MAXVISSSEC], ** lastvissubsector;
 
 typedef struct visplane_s
 {
@@ -482,7 +482,7 @@ typedef struct visplane_s
 } visplane_t;
 
 #define	MAXVISPLANES	48
-extern	visplane_t		*visplanes/*[MAXVISPLANES]*/, *lastvisplane;
+extern	visplane_t		visplanes[MAXVISPLANES], *lastvisplane;
 
 int R_PlaneHash(fixed_t height, unsigned flatnum, unsigned lightlevel)
 ATTR_DATA_CACHE_ALIGN

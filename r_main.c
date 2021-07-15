@@ -22,7 +22,7 @@ drawspan_t drawspan;
 /* */
 /* subsectors */
 /* */
-subsector_t		**vissubsectors/*[MAXVISSSEC]*/, ** lastvissubsector;
+subsector_t		*vissubsectors[MAXVISSSEC], ** lastvissubsector;
 
 /* */
 /* walls */
@@ -33,10 +33,10 @@ bspviswall_t *bspviswalls/*[MAXWALLCMDS]*/, * lastbspwallcmd;
 /* */
 /* planes */
 /* */
-visplane_t	*visplanes/*[MAXVISPLANES]*/, *lastvisplane;
+visplane_t	visplanes[MAXVISPLANES], *lastvisplane;
 
 #define NUM_VISPLANES_BUCKETS 64
-static visplane_t **visplanes_hash;
+static visplane_t *visplanes_hash[NUM_VISPLANES_BUCKETS];
 
 /* */
 /* sprites */
@@ -44,7 +44,7 @@ static visplane_t **visplanes_hash;
 #ifdef MARS
 __attribute__((aligned(16)))
 #endif
-vissprite_t	*vissprites/*[MAXVISSPRITES]*/, * lastsprite_p, * vissprite_p;
+vissprite_t	vissprites[MAXVISSPRITES], *lastsprite_p, *vissprite_p;
 
 /* */
 /* openings / misc refresh memory */
@@ -568,10 +568,6 @@ void R_Setup (void)
 	bspviswalls = (void*)tempbuf;
 	tempbuf += sizeof(*bspviswalls) * MAXWALLCMDS / sizeof(*tempbuf);
 
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
-	visplanes = (void*)tempbuf;
-	tempbuf += sizeof(*visplanes) * MAXVISPLANES / sizeof(*tempbuf);
-
 /* */
 /* plane filling */
 /*	 */
@@ -586,18 +582,6 @@ void R_Setup (void)
 		visplanes[i].runopen = true;
 		tempbuf += viewportWidth+2;
 	}
-
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
-	visplanes_hash = (visplane_t**)tempbuf;
-	tempbuf += sizeof(visplane_t*) * NUM_VISPLANES_BUCKETS;
-
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
-	vissubsectors = (void*)tempbuf;
-	tempbuf += sizeof(*vissubsectors) * MAXVISSSEC / sizeof(*tempbuf);
-
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 15) & ~15);
-	vissprites = (void*)tempbuf;
-	tempbuf += sizeof(*vissubsectors) * MAXVISSPRITES / sizeof(*tempbuf);
 
 	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
 		visplanes_hash[i] = NULL;

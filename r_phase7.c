@@ -272,9 +272,7 @@ void Mars_Slave_R_DrawPlanes(void)
 {
     Mars_ClearCacheLines((intptr_t)&numplanes & ~15, 1);
     Mars_ClearCacheLines((intptr_t)&visplanes & ~15, 1);
-
-    // commented out because visplanes are in VRAM anyway
-    //Mars_ClearCacheLines((intptr_t)visplanes, (numplanes * sizeof(visplane_t) + 15) / 16);
+    Mars_ClearCacheLines((intptr_t)visplanes, (numplanes * sizeof(visplane_t) + 15) / 16);
 
     Mars_ClearCacheLines((intptr_t)&sortedplanes & ~15, 1);
     Mars_ClearCacheLines((intptr_t)sortedplanes & ~15, (numplanes * sizeof(*sortedplanes) + 15) / 16);
