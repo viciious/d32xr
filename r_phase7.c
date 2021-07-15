@@ -42,10 +42,11 @@ void R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
 {
     int remaining;
-    volatile fixed_t distance;
+    fixed_t distance;
     fixed_t length, xfrac, yfrac, xstep, ystep;
     angle_t angle;
-    volatile unsigned light;
+    unsigned light;
+    boolean gradientlight = lpl->lightmin != lpl->lightmax;
 
     remaining = x2 - x + 1;
 
@@ -54,7 +55,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
 
     FixedMul2(distance, lpl->height, yslope[y]);
 
-    if (detailmode == detmode_high)
+    if (gradientlight)
     {
 #if defined(MARS)
         SH2_DIVU_DVSR = distance;   // set 32-bit divisor
@@ -73,7 +74,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     FixedMul2(xstep, distance, lpl->basexscale);
     FixedMul2(ystep, lpl->baseyscale, distance);
 
-    if (detailmode == detmode_high)
+    if (gradientlight)
     {
 #ifdef MARS
         light = SH2_DIVU_DVDNT;
@@ -218,11 +219,11 @@ static void R_DrawPlanes2(const int cpu)
 
     for (i = 0; i < numplanes; i++)
     {
-        visplane_t* pl = visplanes + sortedplanes[(i<<1) + 1];
+        visplane_t* pl = visplanes + sortedplanes[(i << 1) + 1];
 
         if (pl->minx > pl->maxx)
             continue;
- 
+
 #ifdef MARS
         if (cpu == 1)
             Mars_ClearCacheLines((intptr_t)&flatpixels[pl->flatnum] & ~15, 1);
@@ -232,9 +233,11 @@ static void R_DrawPlanes2(const int cpu)
         lpl.pixelcount = 0;
         lpl.ds_source = flatpixels[pl->flatnum];
         lpl.height = (unsigned)D_abs(pl->height) << FIXEDTOHEIGHT;
+
         lpl.lightmax = pl->lightlevel + extralight;
         if (lpl.lightmax > 255)
             lpl.lightmax = 255;
+        lpl.lightmin = lpl.lightmax;
 
         if (detailmode == detmode_high)
         {
@@ -251,11 +254,16 @@ static void R_DrawPlanes2(const int cpu)
             if (light > lpl.lightmax)
                 light = lpl.lightmax;
             lpl.lightmin = (unsigned)light;
+        }
+
+        if (lpl.lightmin != lpl.lightmax)
+        {
             lpl.lightsub = 160 * (lpl.lightmax - lpl.lightmin) / (800 - 160);
         }
         else
         {
-            lpl.lightmax = HWLIGHT(lpl.lightmax);
+            lpl.lightmin = HWLIGHT(lpl.lightmax);
+            lpl.lightmax = lpl.lightmin;
         }
 
         R_PlaneLoop(&lpl, cpu);
