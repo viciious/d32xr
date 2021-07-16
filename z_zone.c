@@ -356,6 +356,27 @@ void Z_ForEachBlock(memzone_t *mainzone, memblockcall_t cb, void *p)
 /*
 ========================
 =
+= Z_FreeBlocks
+=
+========================
+*/
+int Z_FreeBlocks(memzone_t* mainzone)
+{
+	int total = 0;
+	memblock_t* block, * next;
+
+	for (block = &mainzone->blocklist; block; block = next)
+	{
+		next = block->next;
+		if (!block->user)
+			total += block->size;
+	}
+	return total;
+}
+
+/*
+========================
+=
 = Z_DumpHeap
 =
 ========================

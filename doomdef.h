@@ -626,6 +626,7 @@ void	Z_ChangeTag (void *ptr, int tag);
 int 	Z_FreeMemory (memzone_t *mainzone);
 int 	Z_LargestFreeBlock(memzone_t *mainzone);
 void 	Z_ForEachBlock(memzone_t *mainzone, memblockcall_t cb, void *userp);
+int		Z_FreeBlocks(memzone_t* mainzone);
 
 /*------- */
 /*WADFILE */

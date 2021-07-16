@@ -337,7 +337,9 @@ typedef struct
 	int bestobj;
 	int bestcount;
 	int reqcount_le;
+	int reqfreed;
 
+	int zonesize;
 	void* zone;
 } r_texcache_t;
 

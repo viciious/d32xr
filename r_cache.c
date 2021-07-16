@@ -47,11 +47,7 @@ void R_InitTexCache(r_texcache_t* c, int maxobjects)
 	c->maxobjects = maxobjects;
 
 	if (!maxobjects)
-	{
-		c->framecount = NULL;
-		c->pixcount = NULL;
 		return;
-	}
 
 	c->framecount = Z_Malloc(maxobjects * sizeof(*c->framecount), PU_STATIC, 0);
 	c->pixcount = Z_Malloc(maxobjects * sizeof(*c->pixcount), PU_STATIC, 0);
@@ -77,7 +73,7 @@ void R_InitTexCacheZone(r_texcache_t* c, int zonesize)
 	}
 
 	c->zone = Z_Malloc(zonesize, PU_LEVEL, 0);
-
+	c->zonesize = zonesize;
 	Z_InitZone(c->zone, zonesize);
 }
 
@@ -182,7 +178,6 @@ void R_PostTexCacheFrame(r_texcache_t* c)
 {
 	if (!c->zone)
 		return;
-
 	Z_ForEachBlock(c->zone, &R_UpdateCachedPixelcount, c);
 }
 
@@ -202,6 +197,7 @@ static void R_EvictFromTexCache(void* ptr, void* userp)
 	{
 		if (--entry->lifecount == 0)
 		{
+			c->reqfreed++;
 			*entry->userp = R_CheckPixels(entry->lumpnum);
 			Z_Free2(c->zone, entry);
 		}
@@ -222,6 +218,7 @@ static void R_EvictFromTexCache(void* ptr, void* userp)
 void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **userp)
 {
 	int size;
+	const int pad = 16;
 	void* data, * lumpdata;
 	texcacheblock_t* entry;
 
@@ -231,14 +228,27 @@ void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **us
 		return;
 
 	size = pixels + sizeof(texcacheblock_t) + 32;
-	if (Z_LargestFreeBlock(c->zone) < size + 16)
+	if (c->zonesize < size + pad)
+		return;
+
+	if (Z_LargestFreeBlock(c->zone) < size + pad)
 	{
 		// free important entries of less than or equal importance
+		c->reqfreed = 0;
 		c->reqcount_le = c->pixcount[id];
 		Z_ForEachBlock(c->zone, &R_EvictFromTexCache, c);
 
-		if (Z_LargestFreeBlock(c->zone) < size + 16)
+		// check if there were textures that got freed
+		if (c->reqfreed == 0)
 			return;
+
+		if (Z_LargestFreeBlock(c->zone) < size + pad)
+		{
+			// check for fragmentation
+			if (Z_FreeBlocks(c->zone) > size + pad)
+				R_ClearTexCache(c);
+			return;
+		}
 	}
 
 	entry = Z_Malloc2(c->zone, size, PU_LEVEL, NULL);
@@ -276,8 +286,8 @@ static void R_ForceEvictFromTexCache(void* ptr, void* userp)
 	texcacheblock_t* entry = ptr;
 	r_texcache_t* c = userp;
 
-	Z_Free2(c->zone, entry);
 	*entry->userp = R_CheckPixels(entry->lumpnum);
+	Z_Free2(c->zone, entry);
 }
 
 /*
