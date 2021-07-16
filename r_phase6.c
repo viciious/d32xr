@@ -181,8 +181,6 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
       unsigned scale2;
 
       scale = scalefrac;
-#ifdef MARS
-#endif
       scale2 = (unsigned)scalefrac >> HEIGHTBITS;
       scalefrac += scalestep;
 #ifdef MARS
