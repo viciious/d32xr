@@ -256,7 +256,40 @@ void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **us
 	data = (void *)((intptr_t)data + ((intptr_t)lumpdata & 15));
 
 	D_memcpy(data, lumpdata, pixels);
-	//D_memset(data, id&255, pixels); // DEBUG
+	if (debugmode == 4)
+	{
+		D_memset(data, id & 255, pixels); // DEBUG
+	}
 
 	*userp = data;
+}
+
+/*
+================
+=
+= R_ForceEvictFromTexCache
+=
+=================
+*/
+static void R_ForceEvictFromTexCache(void* ptr, void* userp)
+{
+	texcacheblock_t* entry = ptr;
+	r_texcache_t* c = userp;
+
+	Z_Free2(c->zone, entry);
+	*entry->userp = R_CheckPixels(entry->lumpnum);
+}
+
+/*
+================
+=
+= R_ClearTexCache
+=
+=================
+*/
+void R_ClearTexCache(r_texcache_t* c)
+{
+	if (!c || !c->zone)
+		return;
+	Z_ForEachBlock(c->zone, &R_ForceEvictFromTexCache, c);
 }

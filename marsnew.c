@@ -517,7 +517,12 @@ void I_Update(void)
 
 	if ((ticbuttons[consoleplayer] & BT_DEBUG) && !(oldticbuttons[consoleplayer] & BT_DEBUG))
 	{
-		debugmode = (debugmode + 1) % 4;
+		debugmode = (debugmode + 1) % 5;
+		if (debugmode == 4)
+		{
+			R_ClearTexCache(&r_flatscache);
+			R_ClearTexCache(&r_wallscache);
+		}
 		clearscreen = 2;
 	}
 
