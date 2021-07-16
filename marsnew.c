@@ -517,8 +517,9 @@ void I_Update(void)
 
 	if ((ticbuttons[consoleplayer] & BT_DEBUG) && !(oldticbuttons[consoleplayer] & BT_DEBUG))
 	{
+		int prevdebugmode = debugmode;
 		debugmode = (debugmode + 1) % 5;
-		if (debugmode == 4)
+		if (prevdebugmode == 4 || debugmode == 4)
 		{
 			R_ClearTexCache(&r_flatscache);
 			R_ClearTexCache(&r_wallscache);
