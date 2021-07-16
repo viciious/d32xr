@@ -31,9 +31,9 @@ typedef struct
 static unsigned short numplanes;
 static short* sortedplanes;
 
-static void R_MapPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
-static void R_PlaneLoop(localplane_t* lpl, const int mask) __attribute__((always_inline));
-static void R_DrawPlanes2(const int mask) __attribute__((always_inline));
+static void R_MapPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void R_PlaneLoop(localplane_t* lpl, const int mask) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void R_DrawPlanes2(const int cpu) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 //
@@ -107,7 +107,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
 //
 // Determine the horizontal spans of a single visplane
 //
-static void R_PlaneLoop(localplane_t *lpl, const int mask)
+void R_PlaneLoop(localplane_t *lpl, const int mask)
 {
    unsigned pl_x, pl_stopx;
    unsigned short *pl_openptr;
@@ -202,7 +202,7 @@ static void R_PlaneLoop(localplane_t *lpl, const int mask)
    while(pl_x != pl_stopx);
 }
 
-static void R_DrawPlanes2(const int cpu)
+void R_DrawPlanes2(const int cpu)
 {
     unsigned i;
     angle_t angle;

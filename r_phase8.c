@@ -13,13 +13,13 @@
 static int sortedcount;
 static int *sortedsprites;
 
-static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy) __attribute__((always_inline));
-static void R_DrawVisSprite(vissprite_t* vis, unsigned short* spropening) __attribute__((always_inline));
-static void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening) __attribute__((always_inline));
+static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy) ATTR_DATA_CACHE_ALIGN;
+void R_DrawVisSprite(vissprite_t* vis, unsigned short* spropening) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;;
 static void R_DrawSpritesStride(const int start) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void R_Sprites(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
-static void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening)
+void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening)
 {
    patch_t *patch;
    fixed_t  iscale, xfrac, spryscale, sprtop, fracstep;
@@ -117,7 +117,7 @@ static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy)
 //
 // Clip a sprite to the openings created by walls
 //
-static void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening)
+void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening)
 {
    int     x;          // r15
    int     x1;         // FP+5

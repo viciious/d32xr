@@ -46,9 +46,11 @@ typedef struct
     unsigned light;
 } segdraw_t;
 
-static void R_DrawTexture(int x, segdraw_t* sdr, drawtex_t* tex) __attribute__((always_inline));
-static void R_SegLoop(seglocal_t* lseg, const int cpu) __attribute__((always_inline));
-static void R_SegCommands2(const int mask) __attribute__((always_inline));
+static void R_DrawTexture(int x, segdraw_t* sdr, drawtex_t* tex) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static void R_SegLoop(seglocal_t* lseg, const int cpu, boolean gradientlight) __attribute__((always_inline));
+void R_SegLoopFlat(seglocal_t* lseg, const int cpu) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void R_SegLoopGradient(seglocal_t* lseg, const int cpu) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static void R_SegCommands2(const int mask) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 //
@@ -116,7 +118,7 @@ static void R_DrawTexture(int x, segdraw_t *sdr, drawtex_t* tex)
 //
 // Main seg clipping loop
 //
-static void R_SegLoop(seglocal_t* lseg, const int cpu)
+static void R_SegLoop(seglocal_t* lseg, const int cpu, boolean gradientlight)
 {
    visplane_t *ceiling, *floor;
    unsigned short* ceilopen, * flooropen;
@@ -160,7 +162,6 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
    flooropen = ceilopen = visplanes[0].open;
 
    unsigned texturelight = lseg->lightmax;
-   boolean gradientlight = lseg->lightmin != lseg->lightmax;
 
    const int centerY0 = centerY;
    const int centerY1 = centerY - 1;
@@ -369,6 +370,16 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu)
    }
 }
 
+void R_SegLoopFlat(seglocal_t* lseg, const int cpu)
+{
+    R_SegLoop(lseg, cpu, false);
+}
+
+void R_SegLoopGradient(seglocal_t* lseg, const int cpu)
+{
+    R_SegLoop(lseg, cpu, true);
+}
+
 static void R_SegCommands2(const int cpu)
 {
     int i;
@@ -429,17 +440,6 @@ static void R_SegCommands2(const int cpu)
             lseg.lightmin = seglight;
         }
 
-        if (lseg.lightmin != lseg.lightmax)
-        {
-            lseg.lightcoef = ((lseg.lightmax - lseg.lightmin) << FRACBITS) / (800 - 160);
-            lseg.lightsub = 160 * lseg.lightcoef;
-        }
-        else
-        {
-            lseg.lightmin = HWLIGHT(lseg.lightmax);
-            lseg.lightmax = lseg.lightmin;
-        }
-
         if (segl->actionbits & AC_TOPTEXTURE)
         {
             texture_t* tex = &textures[segl->t_texturenum];
@@ -478,7 +478,18 @@ static void R_SegCommands2(const int cpu)
             bottomtex->drawcol = (tex->height & (tex->height - 1)) ? drawcolnpo2 : drawcol;
         }
 
-        R_SegLoop(&lseg, cpu);
+        if (lseg.lightmin != lseg.lightmax)
+        {
+            lseg.lightcoef = ((lseg.lightmax - lseg.lightmin) << FRACBITS) / (800 - 160);
+            lseg.lightsub = 160 * lseg.lightcoef;
+            R_SegLoopGradient(&lseg, cpu);
+        }
+        else
+        {
+            lseg.lightmin = HWLIGHT(lseg.lightmax);
+            lseg.lightmax = lseg.lightmin;
+            R_SegLoopFlat(&lseg, cpu);
+        }
 
         if (cpu == 0)
         {
