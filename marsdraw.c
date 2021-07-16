@@ -132,6 +132,8 @@ void I_DrawColumnNPo2CLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t fra
 		I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
 #endif
 
+	if (debugmode == 3)
+		return;
 	if (dc_yl > dc_yh)
 		return;
 
@@ -195,6 +197,8 @@ void I_DrawSpanCLow(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 		|| (unsigned)ds_y>viewportHeight)
 		I_Error("R_DrawSpan: %i to %i at %i", ds_x1, ds_x2, ds_y);
 #endif 
+	if (debugmode == 3)
+		return;
 
 	count = ds_x2 - ds_x1 + 1;
 	xfrac = ds_xfrac, yfrac = ds_yfrac;
@@ -239,6 +243,8 @@ void I_DrawColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 		I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
 #endif
 
+	if (debugmode == 3)
+		return;
 	if (dc_yl > dc_yh)
 		return;
 
@@ -286,6 +292,8 @@ void I_DrawColumnNPo2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 		I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
 #endif
 
+	if (debugmode == 3)
+		return;
 	if (dc_yl > dc_yh)
 		return;
 
@@ -342,6 +350,8 @@ void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 		|| (unsigned)ds_y>viewportHeight)
 		I_Error("R_DrawSpan: %i to %i at %i", ds_x1, ds_x2, ds_y);
 #endif 
+	if (debugmode == 3)
+		return;
 
 	count = ds_x2 - ds_x1 + 1;
 	xfrac = ds_xfrac, yfrac = ds_yfrac;
@@ -389,9 +399,15 @@ void I_DrawSpanPotatoLow(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_x
 	unsigned count, n;
 	short* dc_colormap;
 
-	if (ds_x2 < ds_x1)
-		return;
+#ifdef RANGECHECK
+	if (ds_x2 < ds_x1 || ds_x1<0 || ds_x2 >= viewportWidth
+		|| (unsigned)ds_y>viewportHeight)
+		I_Error("R_DrawSpan: %i to %i at %i", ds_x1, ds_x2, ds_y);
+#endif
+
 	if (debugmode == 3)
+		return;
+	if (ds_x2 < ds_x1)
 		return;
 
 	count = ds_x2 - ds_x1 + 1;
@@ -432,6 +448,12 @@ void I_DrawSpanPotato(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfra
 	byte *udest, upix;
 	unsigned count, scount, n;
 	short* dc_colormap;
+
+#ifdef RANGECHECK
+	if (ds_x2 < ds_x1 || ds_x1<0 || ds_x2 >= viewportWidth
+		|| (unsigned)ds_y>viewportHeight)
+		I_Error("R_DrawSpan: %i to %i at %i", ds_x1, ds_x2, ds_y);
+#endif
 
 	if (ds_x2 < ds_x1)
 		return;
