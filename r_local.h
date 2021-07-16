@@ -246,8 +246,8 @@ extern	angle_t	* const tantoangle;
 extern	const angle_t tantoangle[SLOPERANGE+1];
 #endif
 
-extern	fixed_t *yslope/*[SCREENHEIGHT]*/;
-extern	fixed_t *distscale/*[SCREENWIDTH]*/;
+extern	fixed_t yslope[SCREENHEIGHT];
+extern	fixed_t distscale[SCREENWIDTH];
 
 #define	HEIGHTBITS			6
 #define	FIXEDTOHEIGHT		(FRACBITS-HEIGHTBITS)
@@ -273,11 +273,11 @@ extern	angle_t		clipangle, doubleclipangle;
 /* The viewangletox[viewangle + FINEANGLES/4] lookup maps the visible view */
 /* angles  to screen X coordinates, flattening the arc to a flat projection  */
 /* plane.  There will be many angles mapped to the same X.  */
-extern	unsigned char	*viewangletox/*[FINEANGLES/2]*/;
+extern	unsigned char	viewangletox[FINEANGLES/2];
 
 /* The xtoviewangleangle[] table maps a screen pixel to the lowest viewangle */
 /* that maps back to x ranges from clipangle to -clipangle */
-extern	angle_t		*xtoviewangle/*[SCREENWIDTH+1]*/;
+extern	angle_t		xtoviewangle[SCREENWIDTH+1];
 
 #ifdef MARS
 extern	const fixed_t* const  finetangent_;

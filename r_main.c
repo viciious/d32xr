@@ -81,12 +81,12 @@ int			skytexture;
 /* */
 angle_t		clipangle,doubleclipangle;
 
-fixed_t *yslope/*[viewportHeight]*/ = NULL;
-fixed_t* distscale/*[viewportWidth]*/ = NULL;
+fixed_t yslope[SCREENHEIGHT];
+fixed_t distscale[SCREENWIDTH];
 
-unsigned char* viewangletox/*[FINEANGLES/2]*/ = NULL;
+unsigned char viewangletox[FINEANGLES/2];
 
-angle_t* xtoviewangle/*[viewportWidth+1]*/ = NULL;
+angle_t xtoviewangle[SCREENWIDTH+1];
 
 /* */
 /* performance counters */
