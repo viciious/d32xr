@@ -460,7 +460,7 @@ typedef struct vissprite_s
 #else
 #define	MAXVISSPRITES	128
 #endif
-extern	vissprite_t	vissprites[MAXVISSPRITES], *lastsprite_p, *vissprite_p;
+extern	vissprite_t	*vissprites/*[MAXVISSPRITES]*/, * lastsprite_p, * vissprite_p;
 
 #define	MAXOPENINGS		SCREENWIDTH*8
 extern	unsigned short	*openings/*[MAXOPENINGS]*/;

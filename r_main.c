@@ -42,10 +42,7 @@ static visplane_t *visplanes_hash[NUM_VISPLANES_BUCKETS];
 /* */
 /* sprites */
 /* */
-#ifdef MARS
-__attribute__((aligned(16)))
-#endif
-vissprite_t	vissprites[MAXVISSPRITES], *lastsprite_p, *vissprite_p;
+vissprite_t	*vissprites/*[MAXVISSPRITES]*/, * lastsprite_p, * vissprite_p;
 
 /* */
 /* openings / misc refresh memory */
@@ -602,11 +599,6 @@ void R_Setup (void)
 	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
 		visplanes_hash[i] = NULL;
 
-/*	 */
-/* clear sprites */
-/* */
-	vissprite_p = vissprites;
-
 	visplanes[0].runopen = false;
 	lastvisplane = visplanes + 1;		/* visplanes[0] is left empty */
 	lastwallcmd = viswalls;			/* no walls added yet */
@@ -788,8 +780,15 @@ static void R_RenderPhase1(void)
 static void R_RenderPhases2To9(void)
 {
 	unsigned short openings_[MAXOPENINGS];
+	vissprite_t vissprites_[MAXVISSPRITES];
 
+	vissprites = vissprites_;
 	openings = openings_;
+
+	/*	 */
+	/* clear sprites */
+	/* */
+	vissprite_p = vissprites;
 
 	t_ref_prep[t_ref_cnt] = I_GetFRTCounter();
 	R_SpritePrep();
