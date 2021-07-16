@@ -275,20 +275,15 @@ void R_InitMathTables(void)
 	fixed_t stretchWidth;
 	short* tempviewangletox;
 
-	if (viewangletox)
-		Z_Free(viewangletox);
-	if (xtoviewangle)
-		Z_Free(xtoviewangle);
-	if (yslope)
-		Z_Free(yslope);
-	if (distscale)
-		Z_Free(distscale);
-
 	tempviewangletox = (short *)I_WorkBuffer();
-	viewangletox = Z_Malloc(sizeof(*viewangletox) * FINEANGLES / 2, PU_STATIC, 0);
-	xtoviewangle = Z_Malloc(sizeof(*xtoviewangle) * (viewportWidth+1), PU_STATIC, 0);
-	yslope = Z_Malloc(sizeof(*yslope) * viewportHeight, PU_STATIC, 0);
-	distscale = Z_Malloc(sizeof(*distscale) * viewportWidth, PU_STATIC, 0);
+	if (!viewangletox)
+		viewangletox = Z_Malloc(sizeof(*viewangletox) * FINEANGLES / 2, PU_STATIC, 0);
+	if (!xtoviewangle)
+		xtoviewangle = Z_Malloc(sizeof(*xtoviewangle) * (SCREENWIDTH+1), PU_STATIC, 0);
+	if (!yslope)
+		yslope = Z_Malloc(sizeof(*yslope) * SCREENHEIGHT, PU_STATIC, 0);
+	if (!distscale)
+		distscale = Z_Malloc(sizeof(*distscale) * SCREENWIDTH, PU_STATIC, 0);
 
 	// Use tangent table to generate viewangletox:
 	//  viewangletox will give the next greatest x
