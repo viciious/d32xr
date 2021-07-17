@@ -268,7 +268,7 @@ void P_CheckCheats (void)
 		return;
 
 	buttons = ticrealbuttons;
-	if ((buttons & (BT_DEBUG | BT_A | BT_C | BT_UP)) == (BT_DEBUG | BT_A | BT_C | BT_UP))
+	if ((buttons & (BT_A | BT_B | BT_C | BT_UP)) == (BT_A | BT_B | BT_C | BT_UP))
 	{	/* free stuff */
 		p = &players[0];
 		for (i = 0; i < NUMCARDS; i++)
@@ -279,7 +279,7 @@ void P_CheckCheats (void)
 		for (i = 0; i < NUMAMMO; i++) p->ammo[i] = p->maxammo[i] = 500;
 	}
 
-	if ((buttons & (BT_DEBUG | BT_X | BT_Z | BT_UP)) == (BT_DEBUG | BT_X | BT_Z | BT_UP))
+	if ((buttons & (BT_X | BT_Y | BT_Z | BT_UP)) == (BT_X | BT_Y | BT_Z | BT_UP))
 	{	/* godmode */
 		players[0].cheats ^= CF_GODMODE;
 	}
