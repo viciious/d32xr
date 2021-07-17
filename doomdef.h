@@ -460,6 +460,7 @@ extern	int		frameon;
 extern	int		ticbuttons[MAXPLAYERS];
 extern	int		oldticbuttons[MAXPLAYERS];
 extern	int		ticmousex[MAXPLAYERS], ticmousey[MAXPLAYERS];
+extern	int		ticrealbuttons, oldticrealbuttons; /* buttons for the console player before reading the demo file */
 extern	boolean		mousepresent;
 
 int MiniLoop ( void (*start)(void),  void (*stop)(void)

@@ -143,13 +143,13 @@ int M_Ticker (void)
 	int		buttons;
 	char	newframe = 0;
 
-	buttons = I_ReadControls();
+	buttons = ticrealbuttons;
 	
 	if (!m_doom)
 		return 1;
 
 	/* exit menu if button press */
-	if ( ticon > 10 &&	(buttons & (BT_ATTACK|BT_SPEED|BT_USE))   )
+	if ( ticon > 10 &&	(buttons & (BT_C|BT_RMBTN|BT_START))   )
 	{
 		startmap = mapnumbers[playermap - 1]; /*set map number */
 		startskill = playerskill;	/* set skill level */

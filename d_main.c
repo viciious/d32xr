@@ -17,8 +17,8 @@ unsigned configuration[NUMCONTROLOPTIONS][3] =
 	{BT_SPEED, BT_ATTACK, BT_USE},
 	{BT_SPEED, BT_USE, BT_ATTACK},
 	{BT_ATTACK, BT_SPEED, BT_USE},
-	{BT_USE, BT_SPEED, BT_ATTACK},
 	{BT_ATTACK, BT_USE, BT_SPEED},
+	{BT_USE, BT_SPEED, BT_ATTACK},
 	{BT_USE, BT_ATTACK, BT_SPEED}
 };
 
@@ -283,6 +283,7 @@ int		frameon;
 int		ticbuttons[MAXPLAYERS];
 int		oldticbuttons[MAXPLAYERS];
 int		ticmousex[MAXPLAYERS], ticmousey[MAXPLAYERS];
+int		ticrealbuttons, oldticrealbuttons;
 boolean	mousepresent;
 
 extern	int	lasttics;
@@ -349,6 +350,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 /* */
 		oldticbuttons[0] = ticbuttons[0];
 		oldticbuttons[1] = ticbuttons[1];
+		oldticrealbuttons = ticrealbuttons;
 
 		buttons = I_ReadControls();
 		buttons |= I_ReadMouse(&mx, &my);
@@ -364,6 +366,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		}
 
 		ticbuttons[consoleplayer] = buttons;
+		ticrealbuttons = buttons;
 
 		if (demoplayback)
 		{
@@ -379,7 +382,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 
 		if (netgame)	/* may also change vblsinframe */
 			ticbuttons[!consoleplayer]
-			= NetToLocal( I_NetTransfer ( LocalToNet (ticbuttons[consoleplayer]) ) );
+				= NetToLocal(I_NetTransfer(LocalToNet(ticbuttons[consoleplayer])));
 
 		if (demorecording)
 			*demo_p++ = buttons;
@@ -471,6 +474,8 @@ int TIC_Abortable (void)
 		return ga_exitdemo;
 	if ( (ticbuttons[0] & BT_OPTION) && !(oldticbuttons[0] & BT_OPTION) )
 		return ga_exitdemo;
+	if ( (ticbuttons[0] & BT_START) && !(oldticbuttons[0] & BT_START) )
+		return ga_exitdemo;
 
 	return 0;
 }
@@ -561,6 +566,9 @@ static int TIC_Credits (void)
 		return ga_exitdemo;
 	if ( (ticbuttons[0] & BT_USE) && !(oldticbuttons[0] & BT_USE) )
 		return ga_exitdemo;
+	if ( (ticbuttons[0] & BT_START) && !(oldticbuttons[0] & BT_START) )
+		return ga_exitdemo;
+
 	return 0;
 }
 

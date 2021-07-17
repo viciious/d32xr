@@ -106,7 +106,7 @@ static int Mars_HandleStartHeld(unsigned *ctrl, const unsigned ctrl_start)
 			prev_start = false;
 			// quick key press and release
 			if (prev_repeat < held_tics)
-				return BT_OPTION;
+				return BT_START;
 
 			// key held for a while and then released
 			return 0;
@@ -162,7 +162,7 @@ static int Mars_ConvMouseButtons(int mouse)
 	}
 	if (mouse & SEGA_CTRL_STARTMB)
 	{
-		//ctrl |= BT_OPTION;
+		//ctrl |= BT_START;
 	}
 	return ctrl;
 }
@@ -515,17 +515,18 @@ void I_Update(void)
 
 	debugscreenactive = debugmode != 0;
 
-	if ((ticbuttons[consoleplayer] & BT_DEBUG) && !(oldticbuttons[consoleplayer] & BT_DEBUG))
-	{
-		int prevdebugmode = debugmode;
-		debugmode = (debugmode + 1) % 5;
-		if (prevdebugmode == 4 || debugmode == 4)
+	if (players[consoleplayer].automapflags & AF_OPTIONSACTIVE)
+		if ((ticrealbuttons & BT_DEBUG) && !(oldticrealbuttons & BT_DEBUG))
 		{
-			R_ClearTexCache(&r_flatscache);
-			R_ClearTexCache(&r_wallscache);
+			int prevdebugmode = debugmode;
+			debugmode = (debugmode + 1) % 5;
+			if (prevdebugmode == 4 || debugmode == 4)
+			{
+				R_ClearTexCache(&r_flatscache);
+				R_ClearTexCache(&r_wallscache);
+			}
+			clearscreen = 2;
 		}
-		clearscreen = 2;
-	}
 
 	if (debugmode == 1)
 	{
