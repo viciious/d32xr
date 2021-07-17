@@ -106,6 +106,8 @@ static void R_PrepMobj(mobj_t *thing)
       vis->colormap = 255;
    else
       vis->colormap = thing->subsector->sector->lightlevel;
+
+   vis->drawcol = (thing->flags & MF_SHADOW) ? drawfuzzycol : drawcol;
 }
 
 //
@@ -138,6 +140,7 @@ static void R_PrepPSprite(pspdef_t *psp)
       vis->colormap = 255;
    else
       vis->colormap = viewplayer->mo->subsector->sector->lightlevel;
+   vis->drawcol = I_DrawColumnLow;
 }
 
 //

@@ -274,6 +274,7 @@ void R_InitMathTables(void)
 	fixed_t focalLength;
 	fixed_t stretchWidth;
 	short* tempviewangletox;
+	int fuzzunit;
 
 	tempviewangletox = (short *)I_WorkBuffer();
 
@@ -346,6 +347,12 @@ void R_InitMathTables(void)
 		fixed_t cosang = finecosine(xtoviewangle[i] >> ANGLETOFINESHIFT);
 		cosang = D_abs(cosang);
 		distscale[i] = FixedDiv(FRACUNIT, cosang);
+	}
+
+	fuzzunit = viewportWidth > 160 ? 320 : 160;
+	for (i = 0; i < FUZZTABLE; i++)
+	{
+		fuzzoffset[i] = fuzzoffset[i] < 0 ? -fuzzunit : fuzzunit;
 	}
 }
 

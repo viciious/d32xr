@@ -43,18 +43,22 @@ extern short* dc_colormaps;
 #ifdef USE_C_DRAW
 
 void I_DrawColumnCLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int *fuzzpos) ATTR_DATA_CACHE_ALIGN;
 void I_DrawColumnNPo2CLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int *fuzzpos) ATTR_DATA_CACHE_ALIGN;
 void I_DrawSpanCLow(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
-	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source) ATTR_DATA_CACHE_ALIGN;
+	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int *fuzzpos) ATTR_DATA_CACHE_ALIGN;
+void I_DrawFuzzColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* pfuzzpos) ATTR_DATA_CACHE_ALIGN;
 
 void I_DrawColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int *fuzzpos) ATTR_DATA_CACHE_ALIGN;
 void I_DrawColumnNPo2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int *fuzzpos) ATTR_DATA_CACHE_ALIGN;
 void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
-	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source) ATTR_DATA_CACHE_ALIGN;
+	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int *fuzzpos) ATTR_DATA_CACHE_ALIGN;
+void I_DrawFuzzColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* pfuzzpos) ATTR_DATA_CACHE_ALIGN;
 
 /*
 ==================
@@ -384,6 +388,122 @@ void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 
 
 #endif
+
+//
+// Spectre/Invisibility.
+//
+
+void I_DrawFuzzColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* pfuzzpos)
+{
+	pixel_t* dest;
+	short* dc_colormap;
+	unsigned	frac;
+	unsigned    count, n;
+	int	fuzzpos = *pfuzzpos;
+
+	if (!dc_yl)
+		dc_yl = 1;
+	if (dc_yh == viewportHeight - 1)
+		dc_yh = viewportHeight - 2;
+
+#ifdef RANGECHECK
+	if ((unsigned)dc_x >= viewportWidth || dc_yl < 0 || dc_yh >= viewportHeight)
+		I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
+#endif
+
+	if (dc_yl > dc_yh)
+		return;
+
+	frac = frac_;
+	dest = I_ViewportBuffer() + dc_yl * 320 / 2 + dc_x;
+	dc_colormap = dc_colormaps + 6 * 256;
+
+#define DO_PIXEL() do { \
+		*dest = dc_colormap[dest[fuzzoffset[fuzzpos]] & 0xff]; \
+		/* Clamp table lookup index. */ \
+		if (++fuzzpos == FUZZTABLE) fuzzpos = 0; \
+		dest += 320/2; \
+		frac += fracstep; \
+	} while (0)
+
+	count = dc_yh - dc_yl + 1;
+	n = (count + 7) >> 3;
+
+	switch (count & 7)
+	{
+	case 0: do { DO_PIXEL();
+	case 7:      DO_PIXEL();
+	case 6:      DO_PIXEL();
+	case 5:      DO_PIXEL();
+	case 4:      DO_PIXEL();
+	case 3:      DO_PIXEL();
+	case 2:      DO_PIXEL();
+	case 1:      DO_PIXEL();
+	} while (--n > 0);
+	}
+
+#undef DO_PIXEL
+
+	*pfuzzpos = fuzzpos;
+}
+
+void I_DrawFuzzColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* pfuzzpos)
+{
+	byte * dest;
+	short* dc_colormap;
+	unsigned	frac;
+	unsigned    count, n;
+	int	fuzzpos = *pfuzzpos;
+
+	if (!dc_yl)
+		dc_yl = 1;
+	if (dc_yh == viewportHeight - 1)
+		dc_yh = viewportHeight - 2;
+
+#ifdef RANGECHECK
+	if ((unsigned)dc_x >= viewportWidth || dc_yl < 0 || dc_yh >= viewportHeight)
+		I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
+#endif
+
+	if (debugmode == 3)
+		return;
+	if (dc_yl > dc_yh)
+		return;
+
+	frac = frac_;
+	dest = (byte *)I_ViewportBuffer() + dc_yl * 320 + dc_x;
+	dc_colormap = dc_colormaps + 6 * 256;
+
+#define DO_PIXEL() do { \
+		*dest = dc_colormap[dest[fuzzoffset[fuzzpos]]] & 0xff; \
+		/* Clamp table lookup index. */ \
+		if (++fuzzpos == FUZZTABLE) fuzzpos = 0; \
+		dest += 320; \
+		frac += fracstep; \
+	} while (0)
+
+	count = dc_yh - dc_yl + 1;
+	n = (count + 7) >> 3;
+
+	switch (count & 7)
+	{
+	case 0: do { DO_PIXEL();
+	case 7:      DO_PIXEL();
+	case 6:      DO_PIXEL();
+	case 5:      DO_PIXEL();
+	case 4:      DO_PIXEL();
+	case 3:      DO_PIXEL();
+	case 2:      DO_PIXEL();
+	case 1:      DO_PIXEL();
+	} while (--n > 0);
+	}
+
+#undef DO_PIXEL
+
+	*pfuzzpos = fuzzpos;
+}
 
 /*
 ================

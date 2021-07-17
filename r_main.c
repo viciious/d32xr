@@ -16,8 +16,20 @@ fixed_t weaponScale;
 detailmode_t detailmode;
 
 drawcol_t drawcol;
+drawcol_t drawfuzzycol;
 drawcol_t drawcolnpo2;
 drawspan_t drawspan;
+
+short fuzzoffset[FUZZTABLE] =
+{
+	1,-1,1,-1,1,1,-1,
+	1,1,-1,1,1,1,-1,
+	1,1,1,-1,-1,-1,-1,
+	1,-1,-1,1,1,1,1,-1,
+	1,-1,1,1,-1,-1,1,
+	1,-1,-1,-1,-1,1,1,
+	1,1,-1,1,1,-1,1
+};
 
 /*===================================== */
 
@@ -324,12 +336,14 @@ void R_SetDetailMode(int mode)
 	{
 		drawcol = I_DrawColumnLow;
 		drawcolnpo2 = I_DrawColumnNPo2Low;
+		drawfuzzycol = I_DrawFuzzColumnLow;
 		drawspan = detailmode == detmode_potato ? I_DrawSpanPotatoLow : I_DrawSpanLow;
 	}
 	else
 	{
 		drawcol = I_DrawColumn;
 		drawcolnpo2 = I_DrawColumnNPo2;
+		drawfuzzycol = I_DrawFuzzColumn;
 		drawspan = I_DrawSpan;
 		drawspan = detailmode == detmode_potato ? I_DrawSpanPotato : I_DrawSpan;
 	}

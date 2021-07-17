@@ -12,14 +12,15 @@
 
 static int sortedcount;
 static int *sortedsprites;
+static int fuzzpos[2];
 
 static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy) ATTR_DATA_CACHE_ALIGN;
-void R_DrawVisSprite(vissprite_t* vis, unsigned short* spropening) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void R_DrawVisSprite(vissprite_t* vis, unsigned short* spropening, int *fuzzpos) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;;
-static void R_DrawSpritesStride(const int start) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static void R_DrawSpritesStride(const int start, int* fuzzpos) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void R_Sprites(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
-void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening)
+void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos)
 {
    patch_t *patch;
    fixed_t  iscale, xfrac, spryscale, sprtop, fracstep;
@@ -80,7 +81,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening)
             continue;
 
          // CALICO: invoke column drawer
-         drawcol(x, top, bottom, light, frac, iscale, vis->pixels + BIGSHORT(column->dataofs), 128);
+         drawcol(x, top, bottom, light, frac, iscale, vis->pixels + BIGSHORT(column->dataofs), 128, fuzzpos);
       }
    }
 }
@@ -209,7 +210,7 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening)
    while(ds != viswalls);
 }
 
-static void R_DrawSpritesStride(const int start)
+static void R_DrawSpritesStride(const int start, int *fuzzpos)
 {
     int i;
     unsigned short spropening[SCREENWIDTH];
@@ -239,7 +240,7 @@ static void R_DrawSpritesStride(const int start)
             Mars_R_AdvanceNextSprite();
 #endif
 
-        R_DrawVisSprite(ds, spropening);
+        R_DrawVisSprite(ds, spropening, fuzzpos);
 
 #ifdef MARS
         if (overlap)
@@ -259,7 +260,9 @@ void Mars_Slave_R_DrawSprites(void)
     Mars_ClearCacheLines((intptr_t)&vissprite_p & ~15, 1);
     Mars_ClearCacheLines((intptr_t)vissprites & ~15, ((vissprite_p - vissprites) * sizeof(vissprite_t) + 15) / 16);
 
-    R_DrawSpritesStride(1);
+    Mars_ClearCacheLines((intptr_t)&fuzzpos[1] & ~15, 1);
+
+    R_DrawSpritesStride(1, &fuzzpos[1]);
 }
 #endif
 
@@ -281,7 +284,7 @@ static void R_DrawPSprites(void)
             ++i;
         }
 
-        R_DrawVisSprite(lastsprite_p, spropening);
+        R_DrawVisSprite(lastsprite_p, spropening, &fuzzpos[0]);
 
         ++lastsprite_p;
     }
@@ -317,11 +320,11 @@ void R_Sprites(void)
 
    Mars_R_BeginDrawSprites();
 
-   R_DrawSpritesStride(0);
+   R_DrawSpritesStride(0, &fuzzpos[0]);
 
    Mars_R_EndDrawSprites();
 #else
-   R_DrawSpritesStride(0);
+   R_DrawSpritesStride(0, &fuzzpos[0]);
 #endif
 
    R_DrawPSprites();

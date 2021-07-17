@@ -230,6 +230,16 @@ void	R_SetViewportSize(int size);
 void	R_SetDetailMode(int mode);
 void	R_SetupTextureCaches(void) ATTR_OPTIMIZE_SIZE;
 
+typedef void (*drawcol_t)(int, int, int, int, fixed_t, fixed_t, inpixel_t*, int, int *);
+typedef void (*drawspan_t)(int, int, int, int, fixed_t, fixed_t, fixed_t, fixed_t, inpixel_t*);
+
+extern drawcol_t drawcol;
+extern drawcol_t drawfuzzycol;
+extern drawcol_t drawcolnpo2;
+extern drawspan_t drawspan;
+
+#define FUZZTABLE		50 
+extern short fuzzoffset[FUZZTABLE];
 
 /* to get a global angle from cartesian coordinates, the coordinates are */
 /* flipped until they are in the first octant of the coordinate system, then */
