@@ -260,6 +260,9 @@ void P_CheckCheats (void)
 #elif defined(MARS)
 	int i;
 	int buttons;
+	int oldbuttons;
+	const int stuff_combo = BT_A | BT_B | BT_C | BT_UP;
+	const int godmode_combo = BT_X | BT_Y | BT_Z | BT_UP;
 	player_t* p;
 
 	if (netgame)
@@ -268,7 +271,10 @@ void P_CheckCheats (void)
 		return;
 
 	buttons = ticrealbuttons;
-	if ((buttons & (BT_A | BT_B | BT_C | BT_UP)) == (BT_A | BT_B | BT_C | BT_UP))
+	oldbuttons = oldticrealbuttons;
+
+	if ((buttons & stuff_combo) == stuff_combo 
+		&& (oldbuttons & stuff_combo) != stuff_combo)
 	{	/* free stuff */
 		p = &players[0];
 		for (i = 0; i < NUMCARDS; i++)
@@ -279,7 +285,8 @@ void P_CheckCheats (void)
 		for (i = 0; i < NUMAMMO; i++) p->ammo[i] = p->maxammo[i] = 500;
 	}
 
-	if ((buttons & (BT_X | BT_Y | BT_Z | BT_UP)) == (BT_X | BT_Y | BT_Z | BT_UP))
+	if ((buttons & godmode_combo) == godmode_combo 
+		&& (oldbuttons & godmode_combo) != godmode_combo)
 	{	/* godmode */
 		players[0].cheats ^= CF_GODMODE;
 	}
