@@ -381,8 +381,6 @@ int IN_Ticker (void)
 void IN_Drawer (void)
 {	
 #ifdef MARS
-	while (!I_RefreshCompleted())
-		;
 	DrawTiledBackground();
 #endif
 
@@ -399,7 +397,6 @@ void IN_Drawer (void)
 	if(valsdrawn == false)
 		valsdrawn = true;
 
-	UpdateBuffer ();
-} 
-
+	UpdateBuffer();
+}
 

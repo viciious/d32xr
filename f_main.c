@@ -3,6 +3,8 @@
 #include "doomdef.h"
 #include "r_local.h"
 
+extern int COLOR_BLACK;
+
 /*
 ==================
 =
@@ -87,7 +89,7 @@ void BufferedDrawSprite (int sprite, int frame, int rotation)
 			{
 				pix = *src++;
 				if (!pix)
-					pix = 247;
+					pix = COLOR_BLACK;
 				dest[0] = dest[1] = dest[320] = dest[321] = pix;
 				dest += 640;
 			}

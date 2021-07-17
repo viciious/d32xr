@@ -126,6 +126,7 @@ typedef struct
 	int		yourFrags;
 	int		hisFrags;
 	int		currentMap;
+	short	drawface;
 	boolean	weaponowned[NUMMICROS];
 	
 	/* Messaging */

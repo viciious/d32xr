@@ -462,6 +462,9 @@ void R_Setup (void)
 	*(pixel_t  **)0xf02224 = workingscreen;	/* a2 base pointer */
 	*(int *)0xf02234 = 0x10000;				/* a2 outer loop add (+1 y) */
 	*(int *)0xf0226c = *(int *)0xf02268 = 0;		/* pattern compare */
+#else
+	if (debugmode == 3)
+		I_ClearFrameBuffer();
 #endif
 
 	framecount++;	
@@ -800,6 +803,7 @@ static void R_RenderPhases2To9(void)
 
 	vissprites = vissprites_;
 	openings = openings_;
+	lastopening = openings;
 
 	/*	 */
 	/* clear sprites */
@@ -835,12 +839,6 @@ void R_RenderPlayerView(void)
 
 	t_ref_cnt = (t_ref_cnt + 1) & 3;
 
-	/* */
-	/* initial setup */
-	/* */
-	if (debugscreenactive)
-		I_DebugScreen();
-
 	t_ref_total[t_ref_cnt] = I_GetFRTCounter();
 
 	R_Setup();
@@ -852,6 +850,9 @@ void R_RenderPlayerView(void)
 	R_Update();
 
 	t_ref_total[t_ref_cnt] = I_GetFRTCounter() - t_ref_total[t_ref_cnt];
+
+	if (debugscreenactive)
+		I_DebugScreen();
 }
 
 #endif

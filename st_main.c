@@ -89,6 +89,7 @@ void ST_InitEveryLevel(void)
 
 	/* force everything to be updated on next ST_Update */
 	stbar.forcedraw = true;
+	stbar.drawface = -1;
 	facetics = 0;
 
 	stbarframe = 0;
@@ -484,10 +485,16 @@ void ST_Ticker(void)
 		drawface = base + newface;
 	}
 
-	if (drawface != -1) {
+	if (drawface != -1)
+		if (drawface != stbar.drawface) {
+			stbar.drawface = drawface;
+			stbar.forcedraw = true;
+		}
+
+	 if (stbar.forcedraw) {
 		cmd = &stbarcmds[numstbarcmds++];
 		cmd->id = stc_drawhead;
-		cmd->value = drawface;
+		cmd->value = stbar.drawface;
 	}
 
 	stbar.forcedraw = false;

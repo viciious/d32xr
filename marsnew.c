@@ -42,6 +42,7 @@ boolean	debugscreenactive = false;
 
 int		lastticcount = 0;
 int		lasttics = 0;
+static int fpscount = 0;
 
 int 	debugmode = 0;
 
@@ -53,6 +54,8 @@ static volatile pixel_t* framebuffer = &MARS_FRAMEBUFFER + 0x100;
 static volatile pixel_t *framebufferend = &MARS_FRAMEBUFFER + 0x10000;
 
 static jagobj_t* stbar;
+
+extern int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sprites[4], t_ref_total[4];
 
 static int Mars_ConvGamepadButtons(int ctrl)
 {
@@ -470,63 +473,8 @@ void I_ClearFrameBuffer (void)
 
 void I_DebugScreen(void)
 {
-	if (debugmode == 3)
-		I_ClearFrameBuffer();
-}
-
-void I_ClearWorkBuffer(void)
-{
-	int *p = (int *)I_WorkBuffer();
-	int *p_end = (int *)framebufferend;
-	while (p < p_end)
-		*p++ = 0;
-}
-
-/*=========================================================================== */
-
-/*
-====================
-=
-= I_Update
-=
-= Display the current framebuffer
-= If < 1/15th second has passed since the last display, busy wait.
-= 15 fps is the maximum frame rate, and any faster displays will
-= only look ragged.
-=
-= When displaying the automap, use full resolution, otherwise use
-= wide pixels
-====================
-*/
-extern int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sprites[4], t_ref_total[4];
-
-void I_Update(void)
-{
 	int i;
-	int sec;
-	int ticcount;
 	char buf[32];
-	static int fpscount = 0;
-	static int prevsec = 0;
-	static int framenum = 0;
-	boolean NTSC = (MARS_VDP_DISPMODE & MARS_NTSC_FORMAT) != 0;
-	const int ticwait = (demoplayback ? 3 : 2); // demos were recorded at 15-20fps
-	const int refreshHZ = (NTSC ? 60 : 50);
-
-	debugscreenactive = debugmode != 0;
-
-	if (players[consoleplayer].automapflags & AF_OPTIONSACTIVE)
-		if ((ticrealbuttons & BT_DEBUG) && !(oldticrealbuttons & BT_DEBUG))
-		{
-			int prevdebugmode = debugmode;
-			debugmode = (debugmode + 1) % 5;
-			if (prevdebugmode == 4 || debugmode == 4)
-			{
-				R_ClearTexCache(&r_flatscache);
-				R_ClearTexCache(&r_wallscache);
-			}
-			clearscreen = 2;
-		}
 
 	if (debugmode == 1)
 	{
@@ -576,6 +524,54 @@ void I_Update(void)
 		D_snprintf(buf, sizeof(buf), "t:%2d", Mars_FRTCounter2Msec(t_ref_total_avg));
 		I_Print8(200, line++, buf);
 	}
+}
+
+void I_ClearWorkBuffer(void)
+{
+	int *p = (int *)I_WorkBuffer();
+	int *p_end = (int *)framebufferend;
+	while (p < p_end)
+		*p++ = 0;
+}
+
+/*=========================================================================== */
+
+/*
+====================
+=
+= I_Update
+=
+= Display the current framebuffer
+= If < 1/15th second has passed since the last display, busy wait.
+= 15 fps is the maximum frame rate, and any faster displays will
+= only look ragged.
+=
+= When displaying the automap, use full resolution, otherwise use
+= wide pixels
+====================
+*/
+void I_Update(void)
+{
+	int sec;
+	int ticcount;
+	static int prevsec = 0;
+	static int framenum = 0;
+	boolean NTSC = (MARS_VDP_DISPMODE & MARS_NTSC_FORMAT) != 0;
+	const int ticwait = (demoplayback ? 3 : 2); // demos were recorded at 15-20fps
+	const int refreshHZ = (NTSC ? 60 : 50);
+
+	if (players[consoleplayer].automapflags & AF_OPTIONSACTIVE)
+		if ((ticrealbuttons & BT_DEBUG) && !(oldticrealbuttons & BT_DEBUG))
+		{
+			int prevdebugmode = debugmode;
+			debugmode = (debugmode + 1) % 5;
+			if (prevdebugmode == 4 || debugmode == 4)
+			{
+				R_ClearTexCache(&r_flatscache);
+				R_ClearTexCache(&r_wallscache);
+			}
+			clearscreen = 2;
+		}
 
 	Mars_FlipFrameBuffers(false);
 
@@ -598,6 +594,7 @@ void I_Update(void)
 		prevsecframe = framenum;
 	}
 	framenum++;
+	debugscreenactive = debugmode != 0;
 
 	cy = 1;
 }
