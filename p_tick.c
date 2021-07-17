@@ -257,6 +257,32 @@ void P_CheckCheats (void)
 		gamemaplump = G_LumpNumForMapNum(warpmap);
 		gameaction = ga_warped;
 	}
+#elif defined(MARS)
+	int i;
+	int buttons;
+	player_t* p;
+
+	if (netgame)
+		return;
+	if (!gamepaused)
+		return;
+
+	buttons = ticrealbuttons;
+	if ((buttons & (BT_DEBUG | BT_A | BT_C | BT_UP)) == (BT_DEBUG | BT_A | BT_C | BT_UP))
+	{	/* free stuff */
+		p = &players[0];
+		for (i = 0; i < NUMCARDS; i++)
+			p->cards[i] = true;
+		p->armorpoints = 200;
+		p->armortype = 2;
+		for (i = 0; i < NUMWEAPONS; i++) p->weaponowned[i] = true;
+		for (i = 0; i < NUMAMMO; i++) p->ammo[i] = p->maxammo[i] = 500;
+	}
+
+	if ((buttons & (BT_DEBUG | BT_X | BT_Z | BT_UP)) == (BT_DEBUG | BT_X | BT_Z | BT_UP))
+	{	/* godmode */
+		players[0].cheats ^= CF_GODMODE;
+	}
 #endif
 }
   

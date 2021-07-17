@@ -978,6 +978,9 @@ enum
 	BT_OPTION		= 0x200000,
 	BT_AUTOMAP		= 0x400000,
 	BT_DEBUG		= 0x800000,
+	BT_X			= 0x1000000,
+	BT_Y			= 0x2000000,
+	BT_Z			= 0x4000000,
 };
 
 #endif

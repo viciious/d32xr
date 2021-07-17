@@ -75,11 +75,11 @@ static int Mars_ConvGamepadButtons(int ctrl)
 		newc |= BT_C | configuration[controltype][2] | BT_STRAFE;
 
 	if (ctrl & SEGA_CTRL_X)
-		newc |= BT_PWEAPN;
+		newc |= BT_X | BT_PWEAPN;
 	if (ctrl & SEGA_CTRL_Y)
-		newc |= BT_NWEAPN;
+		newc |= BT_Y | BT_NWEAPN;
 	if (ctrl & SEGA_CTRL_Z)
-		newc |= BT_AUTOMAP;
+		newc |= BT_Z | BT_AUTOMAP;
 
 	if (ctrl & SEGA_CTRL_MODE)
 		newc |= BT_DEBUG;
