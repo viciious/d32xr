@@ -347,6 +347,11 @@ void R_InitMathTables(void)
 		cosang = D_abs(cosang);
 		distscale[i] = FixedDiv(FRACUNIT, cosang);
 	}
+
+	for (i = 0; i < FUZZTABLE; i++)
+	{
+		fuzzoffset[i] = fuzzoffset[i] < 0 ? -320 : 320;
+	}
 }
 
 

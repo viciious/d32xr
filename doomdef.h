@@ -774,12 +774,11 @@ void I_DrawSpanPotatoLow(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_x
 	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source)
 	ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
-typedef void (*drawcol_t)(int, int, int, int, fixed_t, fixed_t, inpixel_t*, int);
-typedef void (*drawspan_t)(int, int, int, int, fixed_t, fixed_t, fixed_t, fixed_t, inpixel_t*);
+void I_DrawFuzzColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight);
 
-extern drawcol_t drawcol;
-extern drawcol_t drawcolnpo2;
-extern drawspan_t drawspan;
+void I_DrawFuzzColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight);
 
 void I_Print8 (int x, int y, const char *string);
 
