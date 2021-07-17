@@ -570,7 +570,7 @@ void I_Update(void)
 		I_Print8(200, line++, buf);
 		D_snprintf(buf, sizeof(buf), "p:%2d %2d", Mars_FRTCounter2Msec(t_ref_planes_avg), lastvisplane - visplanes - 1);
 		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "s:%2d %2d", Mars_FRTCounter2Msec(t_ref_sprites_avg), lastsprite_p - vissprites);
+		D_snprintf(buf, sizeof(buf), "s:%2d %2d", Mars_FRTCounter2Msec(t_ref_sprites_avg), vissprite_p - vissprites);
 		I_Print8(200, line++, buf);
 		D_snprintf(buf, sizeof(buf), "t:%2d", Mars_FRTCounter2Msec(t_ref_total_avg));
 		I_Print8(200, line++, buf);
