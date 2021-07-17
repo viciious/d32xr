@@ -51,8 +51,8 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening)
       // a post record has four bytes: topdelta length pixelofs*2
       for(; column->topdelta != 0xff; column++)
       {
-         int top    = ((column->topdelta * spryscale) << 8) + sprtop;
-         int bottom = ((column->length   * spryscale) << 8) + top;
+         unsigned top    = ((column->topdelta * spryscale) << 8) + sprtop;
+         unsigned bottom = ((column->length   * spryscale) << 8) + top;
          int count;
          fixed_t frac;
 
