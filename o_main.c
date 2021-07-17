@@ -4,7 +4,12 @@
 #include "p_local.h"
 #include "st_main.h"
 
+#ifdef MARS
+#define MOVEWAIT	3
+#else
 #define MOVEWAIT	5
+#endif
+
 #define ITEMSPACE	40
 #define SLIDEWIDTH 90
 
@@ -68,10 +73,10 @@ void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh);
 void O_DrawControl(void)
 {
 #ifndef MARS
-	//EraseBlock(menuitem[controls].x + 40, menuitem[controls].y + 20, 90, 80);
-	print(menuitem[controls].x + 40, menuitem[controls].y + 20, buttona[controltype]);
-	print(menuitem[controls].x + 40, menuitem[controls].y + 40, buttonb[controltype]);
-	print(menuitem[controls].x + 40, menuitem[controls].y + 60, buttonc[controltype]);
+	//EraseBlock(menuitem[mi_controls].x + 40, menuitem[mi_controls].y + 20, 90, 80);
+	print(menuitem[mi_controls].x + 40, menuitem[mi_controls].y + 20, buttona[controltype]);
+	print(menuitem[mi_controls].x + 40, menuitem[mi_controls].y + 40, buttonb[controltype]);
+	print(menuitem[mi_controls].x + 40, menuitem[mi_controls].y + 60, buttonc[controltype]);
 /*	IN_DrawValue(30, 20, controltype); */
 #endif
 }
@@ -101,36 +106,36 @@ void O_Init (void)
 	cursorpos = 0;	
 
 /*    strcpy(menuitem[0].name, "Volume"); */
-    D_strncpy(menuitem[0].name, "Volume", 6);
-	menuitem[0].x = 94;
-	menuitem[0].y = 46;
-	menuitem[0].hasslider = true;
+    D_strncpy(menuitem[mi_soundvol].name, "Volume", 6);
+	menuitem[mi_soundvol].x = 94;
+	menuitem[mi_soundvol].y = 46;
+	menuitem[mi_soundvol].hasslider = true;
 
- 	slider[0].maxval = 4;
-	slider[0].curval = 4*sfxvolume/64;
+ 	slider[mi_soundvol].maxval = 4;
+	slider[mi_soundvol].curval = 4*sfxvolume/64;
 
-	D_strncpy(menuitem[1].name, "Screen size", 11);
-	menuitem[1].x = 94;
-	menuitem[1].y = 80;
-	menuitem[1].hasslider = true;
+	D_strncpy(menuitem[mi_screensize].name, "Screen size", 11);
+	menuitem[mi_screensize].x = 94;
+	menuitem[mi_screensize].y = 80;
+	menuitem[mi_screensize].hasslider = true;
 
-	slider[1].maxval = numViewports - 1;
-	slider[1].curval = 0;
+	slider[mi_screensize].maxval = numViewports - 1;
+	slider[mi_screensize].curval = 0;
 
-	D_strncpy(menuitem[2].name, "Level of detail", 15);
-	menuitem[2].x = 94;
-	menuitem[2].y = 114;
-	menuitem[2].hasslider = true;
+	D_strncpy(menuitem[mi_detailmode].name, "Level of detail", 15);
+	menuitem[mi_detailmode].x = 94;
+	menuitem[mi_detailmode].y = 114;
+	menuitem[mi_detailmode].hasslider = true;
 
-	slider[2].maxval = MAXDETAILMODES;
-	slider[2].curval = detailmode + 1;
+	slider[mi_detailmode].maxval = MAXDETAILMODES;
+	slider[mi_detailmode].curval = detailmode + 1;
 
 #ifndef MARS
-/*    strcpy(menuitem[2].name, "Controls"); */
-    D_strncpy(menuitem[2].name, "Controls", 8); /* Fixed CEF */
-	menuitem[2].x = 94;
-	menuitem[2].y = 100;
-	menuitem[2].hasslider = false;
+/*    strcpy(menuitem[mi_controls].name, "Controls"); */
+    D_strncpy(menuitem[mi_controls].name, "Controls", 8); /* Fixed CEF */
+	menuitem[mi_controls].x = 94;
+	menuitem[mi_controls].y = 100;
+	menuitem[mi_controls].hasslider = false;
 #endif
 }
 
@@ -197,14 +202,14 @@ void O_Control (player_t *player)
 						slider[cursorpos].curval = slider[cursorpos].maxval;
 					switch (cursorpos)
 					{
-					case 0:
+					case mi_soundvol:
 						sfxvolume = 64*slider[0].curval / slider[0].maxval;
 						S_StartSound (NULL, sfx_pistol);
 						break;
-					case 1:
+					case mi_screensize:
 						R_SetViewportSize(slider[cursorpos].curval);
 						break;
-					case 2:
+					case mi_detailmode:
 						R_SetDetailMode(slider[cursorpos].curval - 1);
 						break;
 					default:
@@ -221,14 +226,14 @@ void O_Control (player_t *player)
 						slider[cursorpos].curval = 0;
 					switch (cursorpos)
 					{
-					case 0:
+					case mi_soundvol:
 						sfxvolume = 64*slider[0].curval / slider[0].maxval;
 						S_StartSound (NULL, sfx_pistol);
 						break;
-					case 1:
+					case mi_screensize:
 						R_SetViewportSize(slider[cursorpos].curval);
 						break;
-					case 2:
+					case mi_detailmode:
 						R_SetDetailMode(slider[cursorpos].curval - 1);
 						break;
 					default:
@@ -239,6 +244,7 @@ void O_Control (player_t *player)
 
 		if (movecount == MOVEWAIT)
 			movecount = 0;		/* repeat move */
+
 		if (++movecount == 1)
 		{
 			if (buttons & BT_DOWN)

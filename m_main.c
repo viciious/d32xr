@@ -141,7 +141,7 @@ void M_Stop (void)
 int M_Ticker (void)
 {
 	int		buttons;
-	static char	newframe = 1;
+	char	newframe = 0;
 
 	buttons = I_ReadControls();
 	
@@ -174,9 +174,7 @@ int M_Ticker (void)
 		movecount = 0;		/* move immediately on next press */
 	else
 	{
-		if (cursorpos ==level && movecount == 3)
-			movecount = 0;		/* fast level select */
-		if (movecount == 6)
+		if (movecount == MOVEWAIT)
 			movecount = 0;		/* slower everything else */
 		if (++movecount == 1)
 		{
