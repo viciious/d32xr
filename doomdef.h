@@ -726,9 +726,9 @@ void I_Error (char *error, ...) ATTR_OPTIMIZE_SIZE;
 
 #ifdef USE_C_DRAW
 
-#define I_DrawColumnLow I_DrawColumnCLow
-#define I_DrawColumnNPo2Low I_DrawColumnNPo2CLow
-#define I_DrawSpanLow I_DrawSpanCLow
+#define I_DrawColumnLow I_DrawColumnLowC
+#define I_DrawColumnNPo2Low I_DrawColumnNPo2LowC
+#define I_DrawSpanLow I_DrawSpanLowC
 
 #define I_DrawColumn I_DrawColumnC
 #define I_DrawColumnNPo2 I_DrawColumnNPo2C
@@ -736,9 +736,9 @@ void I_Error (char *error, ...) ATTR_OPTIMIZE_SIZE;
 
 #else
 
-#define I_DrawColumnLow I_DrawColumnALow
-#define I_DrawColumnNPo2Low I_DrawColumnNPo2ALow
-#define I_DrawSpanLow I_DrawSpanALow
+#define I_DrawColumnLow I_DrawColumnLowA
+#define I_DrawColumnNPo2Low I_DrawColumnNPo2LowA
+#define I_DrawSpanLow I_DrawSpanLowA
 
 #define I_DrawColumn I_DrawColumnA
 #define I_DrawColumnNPo2 I_DrawColumnNPo2A

@@ -10,8 +10,8 @@
 !                  fixed_t fracstep, inpixel_t *dc_source, int dc_texheight)
 
         .align  4
-        .global _I_DrawColumnALow
-_I_DrawColumnALow:
+        .global _I_DrawColumnLowA
+_I_DrawColumnLowA:
 	mov.l	draw_debug, r0
 	mov.l	@r0, r0
 	cmp/eq	#3, r0
@@ -71,8 +71,8 @@ do_col_loop_low:
 !                      fixed_t fracstep, inpixel_t *dc_source, int dc_texheight)
 
         .align  4
-        .global _I_DrawColumnNPo2ALow
-_I_DrawColumnNPo2ALow:
+        .global _I_DrawColumnNPo2LowA
+_I_DrawColumnNPo2LowA:
 	mov.l	draw_debug, r0
 	mov.l	@r0, r0
 	cmp/eq	#3, r0
@@ -156,8 +156,8 @@ do_cnp_loop_low:
 !                inpixel_t *ds_source)
 
         .align  4
-        .global _I_DrawSpanALow
-_I_DrawSpanALow:
+        .global _I_DrawSpanLowA
+_I_DrawSpanLowA:
 	mov.l	draw_debug, r0
 	mov.l	@r0, r0
 	cmp/eq	#3, r0
