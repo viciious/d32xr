@@ -413,10 +413,10 @@ void I_DrawFuzzColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac
 
 	frac = frac_;
 	dest = I_ViewportBuffer() + dc_yl * 320 / 2 + dc_x;
-	dc_colormap = dc_colormaps + light;
+	dc_colormap = dc_colormaps + 6 * 256;
 
 #define DO_PIXEL() do { \
-		*dest = dc_colormap[dest[fuzzoffset[fuzzpos]>>1] & 0xff]; \
+		*dest = dc_colormap[dest[fuzzoffset[fuzzpos]] & 0xff]; \
 		/* Clamp table lookup index. */ \
 		if (++fuzzpos == FUZZTABLE) fuzzpos = 0; \
 		dest += 320/2; \
@@ -470,7 +470,7 @@ void I_DrawFuzzColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 
 	frac = frac_;
 	dest = (byte *)I_ViewportBuffer() + dc_yl * 320 + dc_x;
-	dc_colormap = dc_colormaps + light;
+	dc_colormap = dc_colormaps + 6 * 256;
 
 #define DO_PIXEL() do { \
 		*dest = dc_colormap[dest[fuzzoffset[fuzzpos]]] & 0xff; \
