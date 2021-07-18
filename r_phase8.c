@@ -260,6 +260,8 @@ void Mars_Slave_R_DrawSprites(void)
     Mars_ClearCacheLines((intptr_t)&vissprite_p & ~15, 1);
     Mars_ClearCacheLines((intptr_t)vissprites & ~15, ((vissprite_p - vissprites) * sizeof(vissprite_t) + 15) / 16);
 
+    Mars_ClearCacheLines((intptr_t)&fuzzpos[1] & ~15, 1);
+
     R_DrawSpritesStride(1, &fuzzpos[1]);
 }
 #endif
