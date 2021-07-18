@@ -230,7 +230,7 @@ void	R_SetViewportSize(int size);
 void	R_SetDetailMode(int mode);
 void	R_SetupTextureCaches(void) ATTR_OPTIMIZE_SIZE;
 
-typedef void (*drawcol_t)(int, int, int, int, fixed_t, fixed_t, inpixel_t*, int);
+typedef void (*drawcol_t)(int, int, int, int, fixed_t, fixed_t, inpixel_t*, int, int *);
 typedef void (*drawspan_t)(int, int, int, int, fixed_t, fixed_t, fixed_t, fixed_t, inpixel_t*);
 
 extern drawcol_t drawcol;

@@ -43,18 +43,18 @@ extern short* dc_colormaps;
 #ifdef USE_C_DRAW
 
 void I_DrawColumnCLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int *fuzzpos) ATTR_DATA_CACHE_ALIGN;
 void I_DrawColumnNPo2CLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int *fuzzpos) ATTR_DATA_CACHE_ALIGN;
 void I_DrawSpanCLow(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
-	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source) ATTR_DATA_CACHE_ALIGN;
+	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int *fuzzpos) ATTR_DATA_CACHE_ALIGN;
 
 void I_DrawColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int *fuzzpos) ATTR_DATA_CACHE_ALIGN;
 void I_DrawColumnNPo2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int *fuzzpos) ATTR_DATA_CACHE_ALIGN;
 void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
-	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source) ATTR_DATA_CACHE_ALIGN;
+	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int *fuzzpos) ATTR_DATA_CACHE_ALIGN;
 
 /*
 ==================
@@ -390,13 +390,13 @@ void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 //
 
 void I_DrawFuzzColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight)
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* pfuzzpos)
 {
 	pixel_t* dest;
 	short* dc_colormap;
 	unsigned	frac;
 	unsigned    count, n;
-	int	fuzzpos = 0;
+	int	fuzzpos = *pfuzzpos;
 
 	if (!dc_yl)
 		dc_yl = 1;
@@ -440,16 +440,18 @@ void I_DrawFuzzColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac
 	}
 
 #undef DO_PIXEL
+
+	*pfuzzpos = fuzzpos;
 }
 
 void I_DrawFuzzColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight)
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* pfuzzpos)
 {
 	byte * dest;
 	short* dc_colormap;
 	unsigned	frac;
 	unsigned    count, n;
-	int	fuzzpos = 0;
+	int	fuzzpos = *pfuzzpos;
 
 	if (!dc_yl)
 		dc_yl = 1;
@@ -495,6 +497,8 @@ void I_DrawFuzzColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	}
 
 #undef DO_PIXEL
+
+	*pfuzzpos = fuzzpos;
 }
 
 /*

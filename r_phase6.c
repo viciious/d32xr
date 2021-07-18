@@ -109,7 +109,7 @@ static void R_DrawTexture(int x, segdraw_t *sdr, drawtex_t* tex)
    // CALICO: Jaguar-specific GPU blitter input calculation starts here.
    // We invoke a software column drawer instead.
    src = tex->data + colnum * tex->height;
-   tex->drawcol(x, top, bottom, sdr->light, frac, iscale, src, tex->height);
+   tex->drawcol(x, top, bottom, sdr->light, frac, iscale, src, tex->height, NULL);
 
    // pixel counter
    tex->pixelcount += (bottom - top);
@@ -364,7 +364,7 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu, boolean gradientlight)
 #else
               pixel_t* data = skytexturep->data + colnum * skytexturep->height;
 #endif
-              drawcol(x, top, bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, 128);
+              drawcol(x, top, bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, 128, NULL);
           }
       }
    }
