@@ -249,7 +249,7 @@ void O_Control (player_t *player)
 	if (!newframe)
 		return;
 
-	if (buttons & (BT_B|BT_C|BT_RMBTN))
+	if (buttons & (BT_A|BT_LMBTN))
 	{
 		int itemno = menuscr->firstitem + cursorpos;
 		if (menuitem[itemno].screen != ms_none)
@@ -261,7 +261,7 @@ void O_Control (player_t *player)
 		}
 	}
 
-	if (buttons & (BT_A|BT_LMBTN))
+	if (buttons & (BT_C|BT_RMBTN))
 	{
 		if (screenpos != ms_main)
 		{

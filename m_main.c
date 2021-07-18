@@ -149,7 +149,7 @@ int M_Ticker (void)
 		return 1;
 
 	/* exit menu if button press */
-	if ( ticon > 10 &&	(buttons & (BT_C|BT_RMBTN|BT_START))   )
+	if ( ticon > 10 &&	(buttons & (BT_A|BT_LMBTN|BT_START))   )
 	{
 		startmap = mapnumbers[playermap - 1]; /*set map number */
 		startskill = playerskill;	/* set skill level */
