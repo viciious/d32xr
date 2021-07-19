@@ -64,10 +64,16 @@ int lzss_read(lzss_state_t* lzss, uint16_t chunk)
 			uint32_t outpos_masked, source_masked;
 
 			/* decompress */
+#if LZSS_BUF_SIZE <= 0x1000
 			pos = *input++ << LENSHIFT;
 			pos = pos | (*input >> LENSHIFT);
-			source = outpos - pos - 1;
 			len = (*input++ & 0xf) + 1;
+#else
+			pos = *input++ << 8;
+			pos = pos | (*input++);
+			len = (*input++ & 0xff) + 1;
+#endif
+			source = outpos - pos - 1;
 
 			if (len == 1) {
 				/* end of stream */

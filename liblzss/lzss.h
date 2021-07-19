@@ -6,7 +6,9 @@
  * The buffer cannot be smaller than 0x1000 since that is the look-back size
  * for lzss.
  */
+#ifndef LZSS_BUF_SIZE
 #define LZSS_BUF_SIZE   0x1000
+#endif
 #define LZSS_BUF_MASK   (LZSS_BUF_SIZE-1)
 
 typedef struct
