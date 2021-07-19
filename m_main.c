@@ -2,7 +2,7 @@
 
 #include "doomdef.h"
 
-#define MOVEWAIT		3
+#define MOVEWAIT		2
 #define CURSORX		40
 #define STARTY			40
 #define CURSORY(y)	(STARTY*(y))
@@ -174,8 +174,17 @@ int M_Ticker (void)
 		movecount = 0;		/* move immediately on next press */
 	else
 	{
-		if (movecount == MOVEWAIT)
-			movecount = 0;		/* slower everything else */
+		if (cursorpos == level)
+		{
+			if (movecount == 1)
+				movecount = 0;		/* faster level selection */
+		}
+		else
+		{
+			if (movecount == MOVEWAIT)
+				movecount = 0;		/* slower everything else */
+		}
+
 		if (++movecount == 1)
 		{
 			if (buttons & BT_DOWN)

@@ -5,7 +5,7 @@
 #include "st_main.h"
 
 #ifdef MARS
-#define MOVEWAIT	3
+#define MOVEWAIT	2
 #else
 #define MOVEWAIT	5
 #endif
