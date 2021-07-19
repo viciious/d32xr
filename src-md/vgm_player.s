@@ -3,7 +3,7 @@
 |
 | uses two work ram buffers to hold decompressed vgm commands
 | and pcm data
-        .equ    buf_size,0x1000    /* must match BUF_SIZE in main.c */
+        .equ    buf_size,0x4000    /* must match LZSS_BUF_SIZE */
 
         .macro  fetch_vgm reg
         cmpa.l  a3,a6           /* check for wrap around */
