@@ -468,11 +468,7 @@ typedef struct vissprite_s
 	drawcol_t   drawcol;
 } vissprite_t;
 
-#ifdef MARS
-#define MAXVISSPRITES	64
-#else
 #define	MAXVISSPRITES	128
-#endif
 extern	vissprite_t	*vissprites/*[MAXVISSPRITES]*/, * lastsprite_p, * vissprite_p;
 
 #define	MAXOPENINGS		SCREENWIDTH*8
