@@ -7693,11 +7693,6 @@
         "size": 8512
     },
     {
-        "filename": "cblue01",
-        "name": "CBLUE01",
-        "size": 8512
-    },
-    {
         "filename": "tech01",
         "name": "TECH01",
         "size": 8512
@@ -9143,97 +9138,97 @@
     {
         "name": "MUS_E1M1",
         "filename": "VGM/E1M1.vgm",
-        "size": 23685
+        "size": 13066
     },
     {
         "name": "MUS_E1M2",
         "filename": "VGM/E1M2.vgm",
-        "size": 17972
+        "size": 8466
     },
     {
         "name": "MUS_E1M3",
         "filename": "VGM/E1M3.vgm",
-        "size": 24084
+        "size": 5060
     },
     {
         "name": "MUS_E1M4",
         "filename": "VGM/E1M4.vgm",
-        "size": 25791
+        "size": 9744
     },
     {
         "name": "MUS_E1M5",
         "filename": "VGM/E1M5.vgm",
-        "size": 6750
+        "size": 2834
     },
     {
         "name": "MUS_E1M6",
         "filename": "VGM/E1M6.vgm",
-        "size": 10667
+        "size": 4524
     },
     {
         "name": "MUS_E1M7",
         "filename": "VGM/E1M7.vgm",
-        "size": 14151
+        "size": 7443
     },
     {
         "name": "MUS_E1M9",
         "filename": "VGM/E1M9.vgm",
-        "size": 22284
+        "size": 8363
     },
     {
         "name": "MUS_E2M1",
         "filename": "VGM/E2M1.vgm",
-        "size": 23297
+        "size": 13945
     },
     {
         "name": "MUS_E2M2",
         "filename": "VGM/E2M2.vgm",
-        "size": 11329
+        "size": 6602
     },
     {
         "name": "MUS_E2M4",
         "filename": "VGM/E2M4.vgm",
-        "size": 4491
+        "size": 2448
     },
     {
         "name": "MUS_E2M6",
         "filename": "VGM/E2M6.vgm",
-        "size": 16100
+        "size": 4833
     },
     {
         "name": "MUS_E2M7",
         "filename": "VGM/E2M7.vgm",
-        "size": 22194
+        "size": 15911
     },
     {
         "name": "MUS_E2M8",
         "filename": "VGM/E2M8.vgm",
-        "size": 18228
+        "size": 5725
     },
     {
         "name": "MUS_E3M2",
         "filename": "VGM/E3M2.vgm",
-        "size": 25261
+        "size": 17421
     },
     {
         "name": "MUS_E3M8",
         "filename": "VGM/E3M8.vgm",
-        "size": 8727
+        "size": 8443
     },
     {
         "name": "MUS_NTRO",
         "filename": "VGM/Intro.vgm",
-        "size": 3091
+        "size": 1717
     },
     {
         "name": "MUS_NTER",
         "filename": "VGM/Inter.vgm",
-        "size": 32191
+        "size": 12613
     },
     {
         "name": "MUS_BUNN",
         "filename": "VGM/Bunny.vgm",
-        "size": 14147
+        "size": 12852
     },
     {
         "name": "VGM_END",
