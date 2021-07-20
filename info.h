@@ -533,11 +533,11 @@ NUMSTATES
 
 typedef struct
 {
-	 spritenum_t	sprite;
-	 long			frame;
-	 long			tics;
-	 void			(*action) ();
-	 statenum_t		nextstate;
+	 uint16_t	sprite;
+	 uint16_t	frame;
+	 int16_t	tics;
+	 void		(*action) ();
+	 uint16_t	nextstate;
 } state_t;
 
 extern const state_t	states[NUMSTATES];
