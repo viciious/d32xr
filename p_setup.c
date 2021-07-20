@@ -197,6 +197,11 @@ void P_LoadSectors (int lump)
 		ss->special = LITTLESHORT(ms->special);
 		ss->tag = LITTLESHORT(ms->tag);
 		ss->thinglist = NULL;
+
+		if (ss->lightlevel < 0)
+			ss->lightlevel = 0;
+		if (ss->lightlevel > 255)
+			ss->lightlevel = 255;
 	}
 }
 
