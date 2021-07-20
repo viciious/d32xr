@@ -107,15 +107,41 @@ typedef unsigned angle_t;
 #define	ANGLETOFINESHIFT	19	/* 0x100000000 to 0x2000 */
 
 #ifdef MARS
-extern	const fixed_t * const finesine_;
-#else
-extern	const fixed_t finesine_[5 * FINEANGLES / 4];
-#endif
 
-extern	const fixed_t * const finecosine_;
+extern const unsigned short 	*finesine_;
+
+static inline fixed_t finesine(angle_t angle) {
+	unsigned quad;
+
+	angle &= FINEMASK;
+	quad = angle / (FINEANGLES / 4);
+
+	switch (quad)
+	{
+	case 0:
+		return finesine_[angle];
+	case 1:
+		return finesine_[FINEANGLES / 2 - angle - 1];
+	case 2:
+		return -finesine_[angle - FINEANGLES / 2];
+	default:
+		return -finesine_[4 * FINEANGLES / 4 - angle - 1];
+	}
+}
+
+static inline fixed_t finecosine(angle_t angle) {
+	return finesine(angle + FINEANGLES / 4);
+}
+
+#else
+
+extern	const fixed_t		finesine_[5*FINEANGLES/4];
+extern	const fixed_t		*finecosine_;
 
 #define finesine(x) finesine_[x]
 #define finecosine(x) finecosine_[x]
+
+#endif
 
 typedef enum
 {

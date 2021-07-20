@@ -92,6 +92,9 @@ int			skytexture;
 /* precalculated math */
 /* */
 angle_t		clipangle,doubleclipangle;
+#ifndef MARS
+fixed_t	*finecosine_ = &finesine_[FINEANGLES/4];
+#endif
 
 fixed_t yslope[SCREENHEIGHT];
 fixed_t distscale[SCREENWIDTH];
