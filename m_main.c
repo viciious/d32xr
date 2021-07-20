@@ -32,7 +32,7 @@ jagobj_t *m_single,*m_coop,*m_deathmatch,*m_gamemode;
 jagobj_t* m_playmode[NUMMODES];
 #endif
 
-short m_skull1lump, m_skull2lump, m_levellump, m_difficultylump;
+short m_skull1lump, m_skull2lump;
 short m_skilllump;
 short numslump;
 
@@ -46,6 +46,8 @@ skill_t	playerskill;
 
 static int *mapnumbers;
 static int mapcount;
+
+extern void print(int x, int y, const char* string);
 
 void M_Start (void)
 {	
@@ -76,8 +78,6 @@ void M_Start (void)
 	m_doom = i != -1 ? W_CacheLumpNum(i,PU_STATIC) : NULL;
 	m_skull1lump = W_CheckNumForName("M_SKULL1");
 	m_skull2lump = W_CheckNumForName("M_SKULL2");
-	m_levellump = W_CheckNumForName("M_LEVEL");
-	m_difficultylump = W_CheckNumForName("M_DIFF");
 
 #ifndef MARS
 	m_gamemode = W_CacheLumpName ("M_GAMMOD",PU_STATIC);
@@ -299,7 +299,7 @@ void M_Drawer (void)
 #endif
 
 /* draw start level information */
-	DrawJagobjLump(m_levellump, 64,CURSORY(NUMMENUITEMS - 2)+m_doom_height+2, NULL, NULL);
+	print(64, CURSORY(NUMMENUITEMS - 2) + m_doom_height + 2, "Area");
 #ifndef MARS
 	EraseBlock(80, m_doom_height + CURSORY(NUMMENUITEMS - 2) + 20 + 2, 320, nums[0]->height);
 #endif
@@ -314,7 +314,7 @@ void M_Drawer (void)
 		DrawJagobjLump(numslump+levelones, 80,m_doom_height+ CURSORY(NUMMENUITEMS - 2) + 20 + 2, NULL, NULL);
 
 /* draw difficulty information */
-	DrawJagobjLump(m_difficultylump, CURSORX+24, CURSORY(NUMMENUITEMS - 1) +m_doom_height+2, NULL, NULL);
+	print(CURSORX + 24, CURSORY(NUMMENUITEMS - 1) + m_doom_height + 2, "Difficulty");
 #ifndef MARS
 	EraseBlock(82, m_doom_height + CURSORY(NUMMENUITEMS - 1) + 20 + 2, 320 - 72, m_skill[playerskill]->height+10);
 #endif
