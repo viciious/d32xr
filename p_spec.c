@@ -744,10 +744,10 @@ int EV_DoDonut(line_t *line)
 		s2 = getNextSector(s1->lines[0],s1);
 		for (i = 0;i < s2->linecount;i++)
 		{
-			if (!(s2->lines[i]->flags & ML_TWOSIDED) ||
-				(LD_BACKSECTOR(s2->lines[i]) == s1))
-				continue;
 			s3 = LD_BACKSECTOR(s2->lines[i]);
+			if (!(s2->lines[i]->flags & ML_TWOSIDED) ||
+				(s3 == s1))
+				continue;
 
 			/* */
 			/*	Spawn rising slime */

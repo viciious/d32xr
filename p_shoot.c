@@ -155,8 +155,8 @@ static boolean PA_ShootLine(line_t *li, fixed_t interceptfrac)
    }
 
    // crosses a two-sided line
-   front = LD_FRONTSECTOR(li);
-   back  = LD_BACKSECTOR(li);
+   front = &sectors[LD_FRONTSECTORNUM(li)];
+   back  = &sectors[LD_BACKSECTORNUM(li)];
 
    if(front->ceilingheight < back->ceilingheight)
       opentop = front->ceilingheight;

@@ -511,11 +511,13 @@ void AM_Drawer (void)
 		if (line->special)
 			color = CRY_BLUE;			/* SPECIAL LINE */
 		else
-		if (LD_FRONTSECTOR(line)->floorheight !=
+		if (LD_BACKSECTOR(line) != NULL &&
+			LD_FRONTSECTOR(line)->floorheight !=
 			LD_BACKSECTOR(line)->floorheight)
 			color = CRY_YELLOW;
 		else
-		if (LD_FRONTSECTOR(line)->ceilingheight !=
+		if (LD_BACKSECTOR(line) != NULL &&
+			LD_FRONTSECTOR(line)->ceilingheight !=
 			LD_BACKSECTOR(line)->ceilingheight)
 			color = CRY_BROWN;		
 		
