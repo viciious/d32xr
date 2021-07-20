@@ -451,13 +451,6 @@ error:
 	return 0;
 }
 
-static int G_MapInfoSortCmp(const void * pmi1, const void *pmi2)
-{
-	dmapinfo_t* mi1 = *((dmapinfo_t **)pmi1);
-	dmapinfo_t* mi2 = *((dmapinfo_t **)pmi2);
-	return mi1->mapnumber - mi2->mapnumber;
-}
-
 dmapinfo_t **G_LoadMaplist(int *pmapcount)
 {
 	const char* buf;
@@ -518,9 +511,22 @@ dmapinfo_t **G_LoadMaplist(int *pmapcount)
 		i++;
 	}
 	maplist[i] = NULL;
+	mapcount = i;
 	*pmapcount = i;
 
-	qsort(maplist, i, sizeof(dmapinfo_t*), &G_MapInfoSortCmp);
+	// sort by mapnumber (insertion sort)
+	for (i = 1; i < mapcount; i++)
+	{
+		int j;
+		for (j = i; j > 0; j--)
+		{
+			if (maplist[j - 1]->mapnumber <= maplist[j]->mapnumber)
+				break;
+			dmapinfo_t *t = maplist[j - 1];
+			maplist[j - 1] = maplist[j];
+			maplist[j] = t;
+		}
+	}
 
 	return maplist;
 }
