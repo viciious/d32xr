@@ -251,9 +251,9 @@ extern short fuzzoffset[FUZZTABLE];
 #define	DBITS		(FRACBITS-SLOPEBITS)
 
 #ifdef MARS
-extern	angle_t	* const tantoangle;
+extern angle_t* const tantoangle;
 #else
-extern	const angle_t tantoangle[SLOPERANGE+1];
+extern const angle_t tantoangle[SLOPERANGE + 1];
 #endif
 
 extern	fixed_t yslope[SCREENHEIGHT];
@@ -290,12 +290,12 @@ extern	unsigned char	viewangletox[FINEANGLES/2];
 extern	angle_t		xtoviewangle[SCREENWIDTH+1];
 
 #ifdef MARS
-extern	const fixed_t* const  finetangent_;
+extern	const fixed_t		finetangent_[FINEANGLES/4];
+fixed_t finetangent(angle_t angle) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_EXTREME;
 #else
-extern	const fixed_t finetangent_[FINEANGLES/2];
+extern	const fixed_t		finetangent_[FINEANGLES/2];
+#define finetangent(x)		finetangent_(x)
 #endif
-
-#define finetangent(x)		finetangent_[x]
 
 extern	VINT			validcount;
 extern	int			framecount;
