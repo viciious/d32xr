@@ -18,7 +18,7 @@ ASFLAGS = --big
 MARSHWCFLAGS := $(CCFLAGS)
 MARSHWCFLAGS += -O1
 
-release: CCFLAGS += -O2
+release: CCFLAGS += -Os
 debug: CCFLAGS += -g
 
 PREFIX = $(ROOTDIR)/sh-elf/bin/sh-elf-
