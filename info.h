@@ -536,8 +536,8 @@ typedef struct
 	 uint16_t	sprite;
 	 uint16_t	frame;
 	 int16_t	tics;
-	 void		(*action) ();
 	 uint16_t	nextstate;
+	 void		(*action) ();
 } state_t;
 
 extern const state_t	states[NUMSTATES];
@@ -630,12 +630,12 @@ MT_MISC54,
 NUMMOBJTYPES} mobjtype_t;
 
 typedef struct {
-	int		doomednum;
+	int16_t		doomednum;
 	uint16_t	spawnstate;
 	int16_t		spawnhealth;
 	uint16_t	seestate;
 	uint16_t	seesound;
-	int		reactiontime;
+	uint16_t	reactiontime;
 	uint16_t	attacksound;
 	uint16_t	painstate;
 	uint16_t	painchance;
