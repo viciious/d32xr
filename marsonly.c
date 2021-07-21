@@ -167,11 +167,10 @@ void I_Print8(int x, int y, const char* string)
 ================
 */
 
-static char errormessage[80];
-
 void I_Error (char *error, ...) 
 {
 	va_list ap;
+	char errormessage[80];
 
 	va_start(ap, error);
 	D_vsnprintf(errormessage, sizeof(errormessage), error, ap);
