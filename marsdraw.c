@@ -515,7 +515,7 @@ void I_DrawSpanPotatoLow(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_x
 	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source)
 {
 	pixel_t* dest, pix;
-	unsigned count, n;
+	unsigned count;
 	short* dc_colormap;
 
 #ifdef RANGECHECK
@@ -535,23 +535,9 @@ void I_DrawSpanPotatoLow(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_x
 	dc_colormap = dc_colormaps + light;
 	pix = dc_colormap[ds_source[513]];
 
-#define DO_PIXEL() do { *dest++ = pix; } while(0)
-
-	n = (count + 7) >> 3;
-	switch (count & 7)
-	{
-	case 0: do { DO_PIXEL();
-	case 7:      DO_PIXEL();
-	case 6:      DO_PIXEL();
-	case 5:      DO_PIXEL();
-	case 4:      DO_PIXEL();
-	case 3:      DO_PIXEL();
-	case 2:      DO_PIXEL();
-	case 1:      DO_PIXEL();
-	} while (--n > 0);
-	}
-
-#undef DO_PIXEL
+	do {
+		*dest++ = pix;
+	} while (--count > 0);
 }
 
 /*
@@ -565,7 +551,7 @@ void I_DrawSpanPotato(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfra
 	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source)
 {
 	byte *udest, upix;
-	unsigned count, scount, n;
+	unsigned count, scount;
 	short* dc_colormap;
 
 #ifdef RANGECHECK
@@ -596,23 +582,9 @@ void I_DrawSpanPotato(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfra
 		pixel_t spix = (upix << 8) | upix;
 		pixel_t *sdest = (pixel_t*)udest;
 
-#define DO_PIXEL() do { *sdest++ = spix; } while(0)
-
-		n = (scount + 7) >> 3;
-		switch (scount & 7)
-		{
-		case 0: do { DO_PIXEL();
-		case 7:      DO_PIXEL();
-		case 6:      DO_PIXEL();
-		case 5:      DO_PIXEL();
-		case 4:      DO_PIXEL();
-		case 3:      DO_PIXEL();
-		case 2:      DO_PIXEL();
-		case 1:      DO_PIXEL();
-		} while (--n > 0);
-		}
-
-#undef DO_PIXEL
+		do {
+			*sdest++ = spix;
+		} while (--scount > 0);
 
 		udest = (byte*)sdest;
 	}
