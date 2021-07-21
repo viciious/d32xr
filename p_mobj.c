@@ -6,9 +6,8 @@
 
 void G_PlayerReborn (int player);
 
-#define		ITEMQUESIZE	32
-mapthing_t	itemrespawnque[ITEMQUESIZE];
-int			itemrespawntime[ITEMQUESIZE];
+mapthing_t	*itemrespawnque;
+int			*itemrespawntime;
 int			iquehead, iquetail;
 
 /*
@@ -478,7 +477,7 @@ void P_SpawnMapThing (mapthing_t *mthing)
 /* count deathmatch start positions */
 	if (mthing->type == 11)
 	{
-		if (deathmatch_p < &deathmatchstarts[10])
+		if (deathmatch_p < deathmatchstarts + MAXDMSTARTS)
 			D_memcpy (deathmatch_p, mthing, sizeof(*mthing));
 		deathmatch_p++;
 		return;

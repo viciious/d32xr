@@ -33,7 +33,7 @@ mobj_t		**blocklinks;			/* for thing chains */
 
 byte		*rejectmatrix;			/* for fast sight rejection */
 
-mapthing_t	deathmatchstarts[10], *deathmatch_p;
+mapthing_t	*deathmatchstarts, *deathmatch_p;
 mapthing_t	playerstarts[MAXPLAYERS];
 
 void P_LoadVertexes(int lump) ATTR_OPTIMIZE_SIZE;
@@ -592,6 +592,19 @@ D_printf ("P_SetupLevel(%i,%i)\n",lumpnum,skill);
 #endif
 
 	P_GroupLines ();
+
+	if (netgame == gt_deathmatch)
+	{
+		itemrespawnque = Z_Malloc(sizeof(*itemrespawnque) * ITEMQUESIZE, PU_LEVEL, 0);
+		itemrespawntime = Z_Malloc(sizeof(*itemrespawntime) * ITEMQUESIZE, PU_LEVEL, 0);
+		deathmatchstarts = Z_Malloc(sizeof(*deathmatchstarts) * MAXDMSTARTS, PU_LEVEL, 0);
+	}
+	else
+	{
+		itemrespawnque = NULL;
+		itemrespawntime = NULL;
+		deathmatchstarts = NULL;
+	}
 
 	deathmatch_p = deathmatchstarts;
 	P_LoadThings (lumpnum+ML_THINGS);

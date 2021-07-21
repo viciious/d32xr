@@ -114,6 +114,10 @@ extern	int			activemobjs;	/* debug count */
 #define ONFLOORZ	D_MININT
 #define	ONCEILINGZ	D_MAXINT
 
+#define		ITEMQUESIZE	32
+extern	mapthing_t	*itemrespawnque;
+extern	int			*itemrespawntime;
+
 mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
 
 void 	P_RemoveMobj (mobj_t *th);

@@ -530,7 +530,8 @@ extern	dmapinfo_t	gamemapinfo;
 
 extern 	int 		gametic;
 
-extern	mapthing_t	deathmatchstarts[10], *deathmatch_p;
+#define MAXDMSTARTS		10
+extern	mapthing_t	*deathmatchstarts, *deathmatch_p;
 extern	mapthing_t	playerstarts[MAXPLAYERS];
 
 /*
