@@ -31,11 +31,11 @@ typedef struct
 	VINT baronspecial;
 	char *name;
 	char *sky;
-	int next; // lump num
-	int secretnext;
-	int lumpnum;
-	int mapnumber;
-	int music;
+	VINT next;
+	VINT secretnext;
+	VINT lumpnum;
+	VINT mapnumber;
+	VINT music;
 	char lumpname[9];
 	void *data;
 } dmapinfo_t;
@@ -43,9 +43,10 @@ typedef struct
 int G_LumpNumForMapNum(int map);
 int G_MapNumForMapName(const char* map);
 char* G_GetMapNameForLump(int lump);
+int G_MapNumForLumpNum(int lump);
 
-int G_FindMapinfo(int maplump, dmapinfo_t *mi);
-dmapinfo_t** G_LoadMaplist(int *pmapcount);
+int G_FindMapinfo(VINT maplump, dmapinfo_t *mi);
+dmapinfo_t** G_LoadMaplist(VINT*pmapcount);
 
 #endif // D_MAPINFO_H__
 

@@ -750,4 +750,48 @@ ticphase = 26;
 		player->bonuscount--;
 }
 
+void P_RestoreResp(player_t* p)
+{
+	int i;
+	int pnum = players - p;
+	playerresp_t* resp = &playersresp[pnum];
 
+	for (i = 0; i < NUMAMMO; i++)
+	{
+		p->ammo[i] = resp->ammo[i];
+		p->maxammo[i] = resp->maxammo[i];
+	}
+	for (i = 0; i < NUMWEAPONS; i++)
+	{
+		p->weaponowned[i] = resp->weaponowned[i];
+	}
+	p->health = resp->health;
+	p->readyweapon = p->pendingweapon = resp->weapon;
+	p->armorpoints = resp->armorpoints;
+	p->armortype = resp->armortype;
+	p->backpack = resp->backpack;
+	p->cheats = resp->cheats;
+}
+
+void P_UpdateResp(player_t* p)
+{
+	int i;
+	int pnum = players - p;
+	playerresp_t* resp = &playersresp[pnum];
+
+	for (i = 0; i < NUMAMMO; i++)
+	{
+		resp->ammo[i] = p->ammo[i];
+		resp->maxammo[i] = p->maxammo[i];
+	}
+	for (i = 0; i < NUMWEAPONS; i++)
+	{
+		resp->weaponowned[i] = p->weaponowned[i];
+	}
+	resp->health = p->health;
+	resp->weapon = p->readyweapon;
+	resp->armorpoints = p->armorpoints;
+	resp->armortype = p->armortype;
+	resp->backpack = p->backpack;
+	resp->cheats = p->cheats;
+}

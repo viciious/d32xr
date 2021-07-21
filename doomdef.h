@@ -160,7 +160,8 @@ typedef enum
 	ga_completed,
 	ga_secretexit,
 	ga_warped,
-	ga_exitdemo
+	ga_exitdemo,
+	ga_startnew
 } gameaction_t;
 
 
@@ -495,6 +496,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 int	G_Ticker (void);
 void G_Drawer (void);
 void G_RunGame (void);
+void G_LoadGame(int saveslot);
 
 /*================================== */
 
@@ -701,6 +703,7 @@ extern	int		*demo_p, *demobuffer;
 extern	skill_t		startskill;
 extern	int			startmap;
 extern	gametype_t	starttype;
+extern	int			startsave;
 
 /*--------- */
 /*SYSTEM IO */
@@ -727,6 +730,7 @@ pixel_t *I_ViewportBuffer (void);
 int I_ViewportYPos(void);
 
 void I_ClearFrameBuffer (void);
+void I_ClearWorkBuffer(void);
 
 void I_SetPalette (const byte *palette);
 
@@ -842,6 +846,7 @@ int IN_Ticker (void) ATTR_OPTIMIZE_SIZE;
 void IN_Drawer (void) ATTR_OPTIMIZE_SIZE;
 
 void M_Start (void) ATTR_OPTIMIZE_SIZE;
+void M_Start2(boolean startup) ATTR_OPTIMIZE_SIZE;
 void M_Stop (void) ATTR_OPTIMIZE_SIZE;
 int M_Ticker (void) ATTR_OPTIMIZE_SIZE;
 void M_Drawer (void) ATTR_OPTIMIZE_SIZE;
@@ -1094,6 +1099,11 @@ extern	int		workpage;
 extern	int	controltype;
 
 void WriteEEProm (void);
+void SaveGame(int slotnum);
+void ReadGame(int slotnum);
+void QuickSave(int nextmap);
+int SaveCount(void);
+boolean GetSaveInfo(int slotnumber, VINT* mapnum, VINT* skill);
 void O_SetButtonsFromControltype (void);
 void PrintHex (int x, int y, unsigned num);
 void DrawPlaque (jagobj_t *pl);

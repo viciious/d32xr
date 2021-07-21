@@ -10,10 +10,10 @@
 #define MOVEWAIT	5
 #endif
 
+#define CURSORX		50
 #define ITEMSPACE	40
 #define SLIDEWIDTH 90
 
-extern 	int	cx, cy;
 extern	int		sfxvolume;		/* range from 0 to 255 */
 
 extern void print (int x, int y, const char *string);
@@ -21,6 +21,7 @@ extern void IN_DrawValue(int x,int y,int value);
 
 typedef enum
 {
+	mi_game, 
 	mi_audio,
 	mi_video,
 	mi_controls,
@@ -43,7 +44,7 @@ typedef struct
 	char	maxval;
 } slider_t;
 
-slider_t slider[3];
+static slider_t slider[3];
 
 typedef struct
 {
@@ -54,21 +55,21 @@ typedef struct
 	uint8_t screen;
 } menuitem_t;
 
-menuitem_t menuitem[NUMMENUITEMS];
+static menuitem_t menuitem[NUMMENUITEMS];
 
-VINT	cursorframe, cursorcount;
-VINT	movecount;
+static VINT	cursorframe, cursorcount;
+static VINT	movecount;
 
-VINT	uchar;
+static VINT	uchar;
 
-VINT	o_cursor1, o_cursor2;
-VINT	o_slider, o_slidertrack;
+static VINT	o_cursor1, o_cursor2;
+static VINT	o_slider, o_slidertrack;
 
-const char buttona[NUMCONTROLOPTIONS][8] =
+static const char buttona[NUMCONTROLOPTIONS][8] =
 		{"Speed","Speed","Fire","Fire","Use","Use"};
-const char buttonb[NUMCONTROLOPTIONS][8] =
+static const char buttonb[NUMCONTROLOPTIONS][8] =
 		{"Fire","Use ","Speed","Use","Speed","Fire"};
-const char buttonc[NUMCONTROLOPTIONS][8] =
+static const char buttonc[NUMCONTROLOPTIONS][8] =
 		{"Use","Fire","Use","Speed","Fire","Speed"};
 
 typedef struct
@@ -82,15 +83,16 @@ typedef enum
 {
 	ms_none,
 	ms_main,
-	ms_video,
+	ms_game,
 	ms_audio,
+	ms_video,
 	ms_controls,
 
 	NUMMENUSCREENS
 } screenpos_t;
 
-menuscreen_t menuscreen[NUMMENUSCREENS];
-screenpos_t  screenpos;
+static menuscreen_t menuscreen[NUMMENUSCREENS];
+static screenpos_t  screenpos;
 
 /* */
 /* Draw control value */
@@ -129,57 +131,63 @@ void O_Init (void)
 	cursorpos = 0;
 	screenpos = ms_main;
 
+	D_strncpy(menuitem[mi_game].name, "Game", 4);
+	menuitem[mi_game].x = 74;
+	menuitem[mi_game].y = 36;
+	menuitem[mi_game].slider = NULL;
+	menuitem[mi_game].screen = ms_game;
+
 	D_strncpy(menuitem[mi_audio].name, "Audio", 6);
-	menuitem[mi_audio].x = 94;
-	menuitem[mi_audio].y = 46;
+	menuitem[mi_audio].x = 74;
+	menuitem[mi_audio].y = 66;
 	menuitem[mi_audio].slider = NULL;
 	menuitem[mi_audio].screen = ms_audio;
 
 	D_strncpy(menuitem[mi_video].name, "Video", 6);
-	menuitem[mi_video].x = 94;
-	menuitem[mi_video].y = 76;
+	menuitem[mi_video].x = 74;
+	menuitem[mi_video].y = 96;
 	menuitem[mi_video].slider = NULL;
 	menuitem[mi_video].screen = ms_video;
 
 	D_strncpy(menuitem[mi_controls].name, "Controls", 8);
-	menuitem[mi_controls].x = 94;
-	menuitem[mi_controls].y = 106;
+	menuitem[mi_controls].x = 74;
+	menuitem[mi_controls].y = 126;
 	menuitem[mi_controls].slider = NULL;
 	menuitem[mi_controls].screen = ms_controls;
 
 
     D_strncpy(menuitem[mi_soundvol].name, "Volume", 6);
-	menuitem[mi_soundvol].x = 94;
-	menuitem[mi_soundvol].y = 46;
+	menuitem[mi_soundvol].x = 74;
+	menuitem[mi_soundvol].y = 36;
 	menuitem[mi_soundvol].slider = &slider[0];
  	slider[0].maxval = 4;
 	slider[0].curval = 4*sfxvolume/64;
 
 
 	D_strncpy(menuitem[mi_screensize].name, "Screen size", 11);
-	menuitem[mi_screensize].x = 94;
-	menuitem[mi_screensize].y = 46;
+	menuitem[mi_screensize].x = 74;
+	menuitem[mi_screensize].y = 36;
 	menuitem[mi_screensize].slider = &slider[1];
 	slider[1].maxval = numViewports - 1;
-	slider[1].curval = 0;
+	slider[1].curval = viewportNum;
 
 	D_strncpy(menuitem[mi_detailmode].name, "Level of detail", 15);
-	menuitem[mi_detailmode].x = 94;
-	menuitem[mi_detailmode].y = 86;
+	menuitem[mi_detailmode].x = 74;
+	menuitem[mi_detailmode].y = 76;
 	menuitem[mi_detailmode].slider = &slider[2];
 	slider[2].maxval = MAXDETAILMODES;
 	slider[2].curval = detailmode + 1;
 
 
 	D_strncpy(menuitem[mi_controltype].name, "Gamepad", 7);
-	menuitem[mi_controltype].x = 94;
-	menuitem[mi_controltype].y = 46;
+	menuitem[mi_controltype].x = 74;
+	menuitem[mi_controltype].y = 36;
 	menuitem[mi_controltype].slider = NULL;
 
 
 	D_strncpy(menuscreen[ms_main].name, "Options", 7);
-	menuscreen[ms_main].firstitem = mi_audio;
-	menuscreen[ms_main].numitems = mi_controls - mi_audio + 1;
+	menuscreen[ms_main].firstitem = mi_game;
+	menuscreen[ms_main].numitems = mi_controls - mi_game + 1;
 
 	D_strncpy(menuscreen[ms_audio].name, "Audio", 6);
 	menuscreen[ms_audio].firstitem = mi_soundvol;
@@ -218,18 +226,26 @@ void O_Control (player_t *player)
 #endif
 		)
 	{
+exit:
+		if (screenpos == ms_game)
+		{
+			M_Stop();
+		}
 		gamepaused ^= 1;
+		movecount = 0;
 		cursorpos = 0;	
 		screenpos = ms_main;
 		player->automapflags ^= AF_OPTIONSACTIVE;
-#ifndef MARS
 		if (player->automapflags & AF_OPTIONSACTIVE)
-			DoubleBufferSetup ();
+#ifdef MARS
+			;
+#else
+			DoubleBufferSetup();
+#endif
 		else
 			WriteEEProm ();		/* save new settings */
-#endif
 	}
-	if ( !(player->automapflags & AF_OPTIONSACTIVE) )
+	if (!(player->automapflags & AF_OPTIONSACTIVE))
 		return;
 
 /* clear buttons so game player isn't moving aroung */
@@ -237,6 +253,32 @@ void O_Control (player_t *player)
 
 	if (playernum != consoleplayer)
 		return;
+
+	if (screenpos == ms_game)
+	{
+		int mtick = M_Ticker();
+		if (mtick == ga_nothing)
+			return;
+
+		M_Stop();
+
+		movecount = 0;
+		cursorpos = 0;
+		screenpos = ms_main;
+		clearscreen = 2;
+
+		switch (mtick)
+		{
+		case ga_completed:
+			return;
+		case ga_startnew:
+			starttype = gt_single;
+			gameaction = ga_startnew;
+		case ga_died:
+			goto exit;
+		}
+		return;
+	}
 
 /* animate skull */
 	if (++cursorcount == ticrate)
@@ -254,9 +296,15 @@ void O_Control (player_t *player)
 		int itemno = menuscr->firstitem + cursorpos;
 		if (menuitem[itemno].screen != ms_none)
 		{
+			movecount = 0;
 			cursorpos = 0;
 			screenpos = menuitem[itemno].screen;
 			clearscreen = 2;
+
+			if (screenpos == ms_game)
+			{
+				M_Start2(false);
+			}
 			return;
 		}
 	}
@@ -276,6 +324,7 @@ void O_Control (player_t *player)
 					break;
 				}
 			}
+			movecount = 0;
 			screenpos = ms_main;
 			clearscreen = 2;
 			return;
@@ -374,13 +423,18 @@ void O_Drawer (void)
 
 	if (o_cursor1 < 0)
 		return;
+	if (screenpos == ms_game)
+	{
+		M_Drawer();
+		return;
+	}
 
 /* Erase old and Draw new cursor frame */
 	//EraseBlock(56, 40, o_cursor1->width, 200);
 	if(cursorframe)
-		DrawJagobjLump(o_cursor1, 60, items[cursorpos].y - 2, NULL, NULL);
+		DrawJagobjLump(o_cursor1, CURSORX, items[cursorpos].y - 2, NULL, NULL);
 	else
-		DrawJagobjLump(o_cursor2, 60, items[cursorpos].y - 2, NULL, NULL);
+		DrawJagobjLump(o_cursor2, CURSORX, items[cursorpos].y - 2, NULL, NULL);
 
 /* Draw menu */
 
@@ -399,7 +453,7 @@ void O_Drawer (void)
 			DrawJagobjLump(o_slider, items[i].x + 7 + offset, items[i].y + 20, NULL, NULL);
 /*			ST_Num(menuitem[i].x + o_slider->width + 10,	 */
 /*			menuitem[i].y + 20,slider[i].curval);  */
-		}			 
+		}
 	}
 	
 /* Draw control info */
@@ -410,18 +464,6 @@ void O_Drawer (void)
 		print(items[0].x + 10, items[0].y + 60, "C");
 		O_DrawControl();
 	}
-
-/* debug stuff */
-#if 0
-	cx = 30;
-	cy = 40;
-	D_printf("Speed = %d", BT_SPEED);
-	cy = 60;
-	D_printf("Use/Strafe = %d", BT_SPEED);
-	cy = 80;
-	D_printf("Fire = %d", BT_SPEED);
-#endif
-/* end of debug stuff */
 
 #ifndef MARS
 	UpdateBuffer();

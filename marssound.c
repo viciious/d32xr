@@ -46,8 +46,8 @@ static uint8_t	snd_init = 0, snd_stopmix = 0;
 
 sfxchannel_t	sfxchannels[SFXCHANNELS];
 
-int 			sfxvolume;	/* range 0 - 64 */
-int 			musicvolume;	/* range 0 - 64 */
+int 			sfxvolume = 64;	/* range 0 - 64 */
+int 			musicvolume = 64;	/* range 0 - 64 */
 
 int				curmusic;
 int             samplecount = 0;
@@ -119,9 +119,6 @@ void S_Init(void)
 
 	if (num_music == 0)
 		num_music = 1; // so that num % num_music works
-
-	sfxvolume = 64;
-	musicvolume = 64;
 
 	Mars_RB_ResetAll(&soundcmds);
 

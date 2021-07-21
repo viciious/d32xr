@@ -28,7 +28,6 @@
 #include "32x.h"
 #include "doomdef.h"
 #include "mars.h"
-#include "mars_ringbuf.h"
 #include "r_local.h"
 #include "wadbase.h"
 
@@ -620,16 +619,6 @@ void DoubleBufferSetup (void)
 
 void UpdateBuffer (void) {
 	Mars_FlipFrameBuffers(true);
-}
-
-void ReadEEProm (void)
-{
-	maxlevel = 24;
-}
-
-void WriteEEProm (void)
-{
-	maxlevel = 24;
 }
 
 unsigned I_NetTransfer (unsigned ctrl)

@@ -13,7 +13,7 @@ fixed_t stretch;
 fixed_t stretchX;
 fixed_t weaponScale;
 
-detailmode_t detailmode;
+detailmode_t detailmode = detmode_medium;
 
 drawcol_t drawcol;
 drawcol_t drawfuzzycol;
@@ -268,7 +268,9 @@ const int viewports[][2] = {
 	{224, 128},
 	{252, 144},
 };
-const int numViewports = sizeof(viewports) / sizeof(viewports[0]);
+
+VINT viewportNum = 0;
+const VINT numViewports = sizeof(viewports) / sizeof(viewports[0]);
 
 /*
 ================
@@ -277,18 +279,19 @@ const int numViewports = sizeof(viewports) / sizeof(viewports[0]);
 =
 ================
 */
-void R_SetViewportSize(int size)
+void R_SetViewportSize(int num)
 {
 	int width, height;
 
 	while (!I_RefreshCompleted())
 		;
 
-	size %= numViewports;
+	num %= numViewports;
 
-	width = viewports[size][0];
-	height = viewports[size][1];
+	width = viewports[num][0];
+	height = viewports[num][1];
 
+	viewportNum = num;
 	viewportWidth = width;
 	viewportHeight = height;
 	weaponScale = 24 * FRACUNIT;
@@ -366,12 +369,12 @@ D_printf ("R_InitData\n");
 	R_InitData ();
 D_printf ("Done\n");
 
-	R_SetViewportSize(0);
+	R_SetViewportSize(viewportNum);
 
 	framecount = 0;
 	viewplayer = &players[0];
 
-	R_SetDetailMode(detmode_medium);
+	R_SetDetailMode(detailmode);
 
 	R_InitTexCache(&r_flatscache, numflats);
 

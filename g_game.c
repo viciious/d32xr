@@ -170,9 +170,7 @@ also see P_SpawnPlayer in P_Mobj
  
 void G_PlayerFinishLevel (int player) 
 { 
-	int i;
 	player_t        *p; 
-	playerresp_t	*resp = &playersresp[player];
 
 	p = &players[player]; 
 	 
@@ -188,21 +186,7 @@ void G_PlayerFinishLevel (int player)
 	if (gameaction == ga_died)
 		return;
 
-	for (i = 0; i < NUMAMMO; i++)
-	{
-		resp->ammo[i] = p->ammo[i];
-		resp->maxammo[i] = p->maxammo[i];
-	}
-	for (i = 0; i < NUMWEAPONS; i++)
-	{
-		resp->weaponowned[i] = p->weaponowned[i];
-	}
-	resp->health = p->health;
-	resp->weapon = p->readyweapon;
-	resp->armorpoints = p->armorpoints;
-	resp->armortype = p->armortype;
-	resp->backpack = p->backpack;
-	resp->cheats = p->cheats;
+	P_UpdateResp(p);
 } 
  
 /* 
@@ -214,35 +198,19 @@ void G_PlayerFinishLevel (int player)
 = almost everything is cleared and initialized 
 ==================== 
 */ 
- 
 void G_PlayerReborn (int player) 
 { 
 	player_t        *p; 
-	int                     i; 
 	int             frags; 
-	playerresp_t* resp = &playersresp[player];
 	
 	p = &players[player]; 
 	frags = p->frags;
 	D_memset (p, 0, sizeof(*p)); 
-	p->frags = frags;	
+	p->frags = frags;
 	p->usedown = p->attackdown = true;		/* don't do anything immediately */
 	p->playerstate = PST_LIVE;
-	for (i = 0; i < NUMAMMO; i++)
-	{
-		p->ammo[i] = resp->ammo[i];
-		p->maxammo[i] = resp->maxammo[i];
-	}
-	for (i = 0; i < NUMWEAPONS; i++)
-	{
-		p->weaponowned[i] = resp->weaponowned[i];
-	}
-	p->health = resp->health;
-	p->readyweapon = p->pendingweapon = resp->weapon;
-	p->armorpoints = resp->armorpoints;
-	p->armortype = resp->armortype;
-	p->backpack = resp->backpack;
-	p->cheats = resp->cheats;
+
+	P_RestoreResp(p);
 } 
  
  
@@ -384,9 +352,31 @@ void G_SecretExitLevel (void)
 } 
   
 /*============================================================================  */
- 
+
+static void G_InitPlayerResp(void)
+{
+	int i;
+
+	D_memset(playersresp, 0, sizeof(playersresp));
+	for (i = 0; i < MAXPLAYERS; i++)
+	{
+		int j;
+		playerresp_t* resp;
+
+		resp = &playersresp[i];
+		resp->weapon = wp_pistol;
+		resp->health = MAXHEALTH;
+		resp->ammo[am_clip] = 50;
+		resp->weaponowned[wp_fist] = true;
+		resp->weaponowned[wp_pistol] = true;
+		for (j = 0; j < NUMAMMO; j++)
+			resp->maxammo[j] = maxammo[j];
+	}
+}
+
 void G_Init(void)
 {
+	G_InitPlayerResp();
 }
 
 /* 
@@ -403,7 +393,7 @@ void G_InitNew (skill_t skill, int map, gametype_t gametype)
 { 
 	int             i; 
 
-D_printf ("G_InitNew\n");
+//D_printf ("G_InitNew\n");
 
 	M_ClearRandom (); 
 
@@ -417,7 +407,7 @@ D_printf ("G_InitNew\n");
 	if (gamemaplump < 0)
 	{
 		dmapinfo_t** maplist;
-		int				mapcount;
+		VINT		mapcount;
 
 		/* find the map by its number */
 		maplist = G_LoadMaplist(&mapcount);
@@ -448,22 +438,8 @@ D_printf ("G_InitNew\n");
 		players[i].playerstate = PST_REBORN; 
 
 	players[0].mo = players[1].mo = &emptymobj;	/* for net consistancy checks */
- 	
-	D_memset(playersresp, 0, sizeof(playersresp));
-	for (i = 0; i < MAXPLAYERS; i++)
-	{
-		int j;
-		playerresp_t* resp;
 
-		resp = &playersresp[i];
-		resp->weapon = wp_pistol;
-		resp->health = MAXHEALTH;
-		resp->ammo[am_clip] = 50;
-		resp->weaponowned[wp_fist] = true;
-		resp->weaponowned[wp_pistol] = true;
-		for (j = 0; j < NUMAMMO; j++)
-			resp->maxammo[j] = maxammo[j];
-	}
+	G_InitPlayerResp();
 
 	playeringame[0] = true;	
 	if (netgame != gt_single)
@@ -473,11 +449,23 @@ D_printf ("G_InitNew\n");
 
 	demorecording = false;
 	demoplayback = false;
-	
 
 	gametic = 0; 
 } 
- 
+
+void G_LoadGame(int saveslot)
+{
+	playerresp_t backup[MAXPLAYERS];
+
+	ReadGame(saveslot);
+
+	D_memcpy(backup, playersresp, sizeof(playersresp));
+
+	G_InitNew(startskill, startmap, starttype);
+
+	D_memcpy(playersresp, backup, sizeof(playersresp));
+}
+
 /*============================================================================  */
  
 /*
@@ -501,24 +489,33 @@ void G_RunGame (void)
 		int			nextmap;
 #endif
 
-	/* load a level */
-		G_DoLoadLevel ();   
-	
-	/* run a level until death or completion */
-		MiniLoop (P_Start, P_Stop, P_Ticker, P_Drawer);
-	
-	/* take away cards and stuff */
-			
-		for (i=0 ; i<MAXPLAYERS ; i++) 
-			if (playeringame[i]) 
-				G_PlayerFinishLevel (i);	 
+		/* load a level */
+		G_DoLoadLevel();
+
+		/* run a level until death or completion */
+		MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
+
+		if (gameaction == ga_startnew)
+		{
+			if (startsave != -1)
+				G_LoadGame(startsave);
+			else
+				G_InitNew(startskill, startmap, starttype);
+			continue;
+		}
+
+		/* take away cards and stuff */
+
+		for (i = 0; i < MAXPLAYERS; i++)
+			if (playeringame[i])
+				G_PlayerFinishLevel(i);
 
 		if (gameaction == ga_died)
 			continue;			/* died, so restart the level */
-	
+
 		if (gameaction == ga_warped)
 			continue;			/* skip intermission */
-		
+
 		if (gameaction == ga_secretexit && gamemapinfo.secretnext)
 			nextmapl = gamemapinfo.secretnext;
 		else
@@ -533,9 +530,18 @@ void G_RunGame (void)
 
 		if (nextmap > maxlevel)
 		{	/* allow higher menu selection now */
-			void WriteEEProm (void);
+			void WriteEEProm(void);
 			maxlevel = nextmap;
-			WriteEEProm ();
+			WriteEEProm();
+		}
+#endif
+
+#ifdef MARS
+		if (!finale)
+		{
+			/* quick save */
+			int nextmap = G_MapNumForLumpNum(nextmapl);
+			QuickSave(nextmap);
 		}
 #endif
 

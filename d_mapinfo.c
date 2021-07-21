@@ -169,13 +169,26 @@ char* G_GetMapNameForLump(int lump)
 	return name;
 }
 
+int G_MapNumForLumpNum(int lump)
+{
+	dmapinfo_t mapinfo;
+	const char* mapname;
+
+	if (G_FindMapinfo(lump, &mapinfo) != 0) {
+		return mapinfo.mapnumber;
+	}
+
+	mapname = G_GetMapNameForLump(lump);
+	return G_MapNumForMapName(mapname);
+}
+
 static char* G_LoadMapinfoLump(void)
 {
 	int len;
 	int lump;
 	char *buf;
 
-	buf = (char*)I_TempBuffer();
+	buf = (char*)I_WorkBuffer();
 
 	lump = W_CheckNumForName("DMAPINFO");
 	if (lump < 0) {
@@ -411,7 +424,7 @@ static const char* G_FindMapinfoSection(const char* buf, const char *lumpname, s
 	return NULL;
 }
 
-int G_FindMapinfo(int maplump, dmapinfo_t *mi)
+int G_FindMapinfo(VINT maplump, dmapinfo_t *mi)
 {
 	const char* section;
 	const char* buf;
@@ -451,7 +464,7 @@ error:
 	return 0;
 }
 
-dmapinfo_t **G_LoadMaplist(int *pmapcount)
+dmapinfo_t **G_LoadMaplist(VINT *pmapcount)
 {
 	const char* buf;
 	size_t sectionlen = 0;
@@ -465,7 +478,7 @@ dmapinfo_t **G_LoadMaplist(int *pmapcount)
 
 	mapcount = 0;
 	*pmapcount = 0;
-	
+
 	section = NULL;
 	sectionlen = 0;
 	for (ptr = buf; ; ptr = section + sectionlen + 1) {
@@ -479,7 +492,7 @@ dmapinfo_t **G_LoadMaplist(int *pmapcount)
 		return NULL;
 
 	maplist = Z_Malloc(sizeof(*maplist) * (mapcount + 1), PU_STATIC, NULL);
-	
+
 	i = 0;
 
 	section = NULL;
@@ -511,6 +524,7 @@ dmapinfo_t **G_LoadMaplist(int *pmapcount)
 		i++;
 	}
 	maplist[i] = NULL;
+
 	mapcount = i;
 	*pmapcount = i;
 

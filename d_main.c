@@ -2,7 +2,7 @@
  
 #include "doomdef.h" 
 
-int			controltype;		/* determine settings for BT_* */
+int			controltype = 0;		/* determine settings for BT_* */
 
 int			gamevbls;			/* may not really be vbls in multiplayer */
 int			vblsinframe;		/* range from ticrate to ticrate*2 */
@@ -650,7 +650,11 @@ reselect:
 	}
 #endif
 
-	G_InitNew (startskill, startmap, starttype);
+	if (startsave != -1)
+		G_LoadGame(startsave);
+	else
+		G_InitNew(startskill, startmap, starttype);
+
 	G_RunGame ();
 }
 
@@ -666,14 +670,10 @@ reselect:
 ============= 
 */ 
  
-void DM_main (void);
- 
-void testgpu (void);
-
-int			checkit;
 skill_t		startskill = sk_medium;
 int			startmap = 1;
 gametype_t	starttype = gt_single;
+int			startsave = -1;
 
 void D_DoomMain (void) 
 {    

@@ -51,12 +51,12 @@ boolean		negativefrag[MAXPLAYERS];
 int			killvalue[2], itemvalue[2], secretvalue[2], fragvalue[2];
 int			myticcount, myoldticcount;
 
-short		i_secret, i_percent, i_level, i_kills,
+VINT		i_secret, i_percent, i_level, i_kills,
 				i_items, i_finish, i_frags, i_par, i_time;
 
-short		snums;
-short		infaces[10];
-short		uchar;
+VINT		snums;
+VINT		infaces[10];
+VINT		uchar;
 
 static dmapinfo_t	nextmapinfo;
 
