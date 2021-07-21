@@ -330,8 +330,8 @@ typedef enum
 typedef struct
 {
 	thinker_t	thinker;
-	floor_e		type;
-	boolean		crush;
+	VINT		type;
+	VINT		crush;
 	sector_t	*sector;
 	int			newspecial;
 	VINT		direction;
