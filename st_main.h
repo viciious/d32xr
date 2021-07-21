@@ -118,22 +118,22 @@ typedef enum
 
 typedef struct
 {
-	int		ammo, health, armor;
-	int		godmode;
-	int		face;
-	boolean	cards[NUMCARDS];
+	VINT	ammo, health, armor;
+	VINT	godmode;
+	VINT	face;
+	char	cards[NUMCARDS];
 	
-	int		yourFrags;
-	int		hisFrags;
-	int		currentMap;
-	short	drawface;
-	boolean	weaponowned[NUMMICROS];
+	VINT	yourFrags;
+	VINT	hisFrags;
+	VINT	currentMap;
+	VINT	drawface;
+	char	weaponowned[NUMMICROS];
 	
 	/* Messaging */
-	spclface_e	specialFace;	/* Which type of special face to make */
-	boolean	gotgibbed;			/* Got gibbed */
-	boolean tryopen[NUMCARDS];	/* Tried to open a card or skull door */
-	boolean forcedraw;
+	char	specialFace;	/* Which type of special face to make */
+	char	gotgibbed;			/* Got gibbed */
+	char	tryopen[NUMCARDS];	/* Tried to open a card or skull door */
+	char	forcedraw;
 } stbar_t;
 
 extern	stbar_t	stbar;
