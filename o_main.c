@@ -50,7 +50,7 @@ typedef struct
 	VINT	x;
 	VINT	y;
 	slider_t *slider;
-	char 	name[20];
+	char 	name[16];
 	uint8_t screen;
 } menuitem_t;
 
