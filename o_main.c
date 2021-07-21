@@ -39,30 +39,30 @@ menupos_t	cursorpos;
 
 typedef struct
 {
-	int	curval;
-	int	maxval;
+	char	curval;
+	char	maxval;
 } slider_t;
 
 slider_t slider[3];
 
 typedef struct
 {
-	int		x;
-	int		y;
+	VINT	x;
+	VINT	y;
 	slider_t *slider;
-	uint8_t screen;
 	char 	name[20];
+	uint8_t screen;
 } menuitem_t;
 
 menuitem_t menuitem[NUMMENUITEMS];
 
-int		cursorframe, cursorcount;
-int		movecount;
+VINT	cursorframe, cursorcount;
+VINT	movecount;
 
-short	uchar;
+VINT	uchar;
 
-short	o_cursor1, o_cursor2;
-short	o_slider, o_slidertrack;
+VINT	o_cursor1, o_cursor2;
+VINT	o_slider, o_slidertrack;
 
 const char buttona[NUMCONTROLOPTIONS][8] =
 		{"Speed","Speed","Fire","Fire","Use","Use"};
@@ -73,9 +73,9 @@ const char buttonc[NUMCONTROLOPTIONS][8] =
 
 typedef struct
 {
-	int firstitem;
-	int numitems;
-	char name[20];
+	VINT firstitem;
+	VINT numitems;
+	char name[10];
 } menuscreen_t;
 
 typedef enum
