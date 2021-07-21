@@ -413,28 +413,27 @@ typedef struct player_s
 	fixed_t		deltaviewheight;		/* squat speed */
 	fixed_t		bob;					/* bounded/scaled total momentum */
 	
-	int			health;					/* only used between levels, mo->health */
+	VINT		health;					/* only used between levels, mo->health */
 										/* is used during levels	 */
-	int			armorpoints, armortype;	/* armor type is 0-2 */
+	VINT		armorpoints, armortype;	/* armor type is 0-2 */
 	
-	int			powers[NUMPOWERS];		/* invinc and invis are tic counters	 */
-	boolean		cards[NUMCARDS];
-	boolean		backpack;
-	int			frags;					/* kills of other player */
-	int			fragpad;	/* don't mess up offsets for asm code... */
-	weapontype_t	readyweapon;
-	weapontype_t	pendingweapon;		/* wp_nochange if not changing */
-	boolean		weaponowned[NUMWEAPONS];
-	int			ammo[NUMAMMO];
-	int			maxammo[NUMAMMO];	
-	int			attackdown, usedown;	/* true if button down last tic */
-	int			cheats;					/* bit flags */
+	VINT		powers[NUMPOWERS];		/* invinc and invis are tic counters	 */
+	char		cards[NUMCARDS];
+	char		backpack;
+	VINT		frags;					/* kills of other player */
+	VINT		readyweapon;
+	VINT		pendingweapon;		/* wp_nochange if not changing */
+	char		weaponowned[NUMWEAPONS];
+	VINT		ammo[NUMAMMO];
+	VINT		maxammo[NUMAMMO];
+	VINT		attackdown, usedown;	/* true if button down last tic */
+	VINT		cheats;					/* bit flags */
 	
 	int			refire;					/* refired shots are less accurate */
 	
-	int			killcount, itemcount, secretcount;		/* for intermission */
+	VINT		killcount, itemcount, secretcount;		/* for intermission */
 	char		*message;				/* hint messages */
-	int			damagecount, bonuscount;/* for screen flashing */
+	VINT		damagecount, bonuscount;/* for screen flashing */
 	mobj_t		*attacker;				/* who did damage (NULL for floors) */
 	int			extralight;				/* so gun flashes light up areas */
 	int			colormap;				/* 0-3 for which color to draw player */
@@ -449,14 +448,14 @@ typedef struct player_s
 // stuff player keeps between respawns in single player
 typedef struct
 {
-	int			health;
-	int			armorpoints, armortype;
-	boolean		backpack;
-	boolean		weaponowned[NUMWEAPONS];
-	int			ammo[NUMAMMO];
-	int			maxammo[NUMAMMO];
-	int			cheats;
-	weapontype_t weapon;
+	VINT		health;
+	VINT		armorpoints, armortype;
+	VINT		ammo[NUMAMMO];
+	VINT		maxammo[NUMAMMO];
+	VINT		cheats;
+	VINT		weapon;
+	char		weaponowned[NUMWEAPONS];
+	char		backpack;
 } playerresp_t;
 
 #define CF_NOCLIP		1
