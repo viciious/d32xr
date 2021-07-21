@@ -82,14 +82,14 @@ typedef enum
 
 typedef struct
 {
-	boolean	active;
-	boolean	doDraw;
-	int		delay;
-	int		times;
-	int		x;
-	int		y;
-	int		w;
-	int		h;
+	char	active;
+	char	doDraw;
+	short	delay;
+	short	times;
+	short	x;
+	short	y;
+	short	w;
+	short	h;
 } sbflash_t;
 
 typedef struct {
