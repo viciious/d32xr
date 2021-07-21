@@ -14,10 +14,10 @@
 typedef struct
 {
 	boolean	istexture;
-	int		picnum;
-	int		basepic;
-	int		numpics;
-	int		current;
+	VINT	picnum;
+	VINT	basepic;
+	VINT	numpics;
+	VINT	current;
 } anim_t;
 
 /* */
@@ -93,10 +93,10 @@ typedef struct
 	thinker_t	thinker;
 	sector_t	*sector;
 	int			count;
-	int			maxlight;
-	int			minlight;
-	int			maxtime;
-	int			mintime;
+	VINT		maxlight;
+	VINT		minlight;
+	VINT		maxtime;
+	VINT		mintime;
 } lightflash_t;
 
 typedef struct
@@ -104,18 +104,18 @@ typedef struct
 	thinker_t	thinker;
 	sector_t	*sector;
 	int			count;
-	int			minlight;
-	int			maxlight;
-	int			darktime;
-	int			brighttime;
+	VINT		minlight;
+	VINT		maxlight;
+	VINT		darktime;
+	VINT		brighttime;
 } strobe_t;
 
 typedef struct
 {
 	thinker_t	thinker;
 	sector_t	*sector;
-	int			minlight;
-	int			maxlight;
+	VINT		minlight;
+	VINT		maxlight;
 	int			direction;
 } glow_t;
 
@@ -205,11 +205,11 @@ typedef struct
 	fixed_t		high;
 	VINT		wait;
 	VINT		count;
-	plat_e		status;
-	plat_e		oldstatus;
-	boolean		crush;
-	int			tag;
-	plattype_e	type;
+	char		status;
+	char		oldstatus;
+	VINT		crush;
+	VINT		tag;
+	VINT		type;
 } plat_t;
 
 #define	PLATWAIT	3			/* seconds */
@@ -244,14 +244,14 @@ typedef enum
 typedef struct
 {
 	thinker_t	thinker;
-	vldoor_e	type;
 	sector_t	*sector;
 	fixed_t		topheight;
 	fixed_t		speed;
 	VINT		direction;		/* 1 = up, 0 = waiting at top, -1 = down */
 	VINT		topwait;		/* tics to wait at the top */
 								/* (keep in case a door going down is reset) */
-	int			topcountdown;	/* when it reaches 0, start going down */
+	VINT		type;
+	VINT		topcountdown;	/* when it reaches 0, start going down */
 } vldoor_t;
 	
 #define	VDOORSPEED	FRACUNIT*6
@@ -286,10 +286,10 @@ typedef struct
 	sector_t	*sector;
 	fixed_t		bottomheight, topheight;
 	fixed_t		speed;
-	boolean		crush;
+	VINT		crush;
 	VINT		direction;		/* 1 = up, 0 = waiting, -1 = down */
 	VINT		olddirection;
-	int			tag;			/* ID */
+	VINT		tag;			/* ID */
 } ceiling_t;
 
 #define	CEILSPEED		FRACUNIT*2
