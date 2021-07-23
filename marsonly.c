@@ -8,9 +8,6 @@ extern const int COLOR_WHITE;
 
 void ReadEEProm (void);
 
-void Mars_Init(void);
-void Mars_Slave(void) ATTR_DATA_CACHE_ALIGN;
-
 /* 
 ================ 
 = 
