@@ -41,6 +41,8 @@ const uint8_t* mars_newpalette = NULL;
 const int NTSC_CLOCK_SPEED = 23011360; // HZ
 const int PAL_CLOCK_SPEED = 22801467; // HZ
 
+void master_vbi_handler(void) __attribute__((section(".data"), aligned(16)));
+
 void Mars_WaitFrameBuffersFlip(void)
 {
 	while ((MARS_VDP_FBCTL & MARS_VDP_FS) != mars_activescreen);
