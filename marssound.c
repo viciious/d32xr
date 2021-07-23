@@ -40,20 +40,20 @@ enum
 	SNDCMD_ENDFRAME,
 };
 
+static uint8_t snd_bufidx = 0;
 int16_t __attribute__((aligned(16))) snd_buffer[2][MAX_SAMPLES * 2];
+static uint8_t	snd_init = 0;
 
 sfxchannel_t	sfxchannels[SFXCHANNELS];
 
 int 			sfxvolume;	/* range 0 - 64 */
 int 			musicvolume;	/* range 0 - 64 */
-int				oldsfxvolume;	/* to detect transition to sound off */
 
 int				curmusic;
 int             samplecount = 0;
 
 static marsrb_t	soundcmds = { 0 };
 
-static int		sndinit = 0;
 
 extern short	use_cd;
 extern short	cd_ok;
@@ -122,7 +122,6 @@ void S_Init(void)
 
 	sfxvolume = 64;
 	musicvolume = 64;
-	oldsfxvolume = 64;
 
 	Mars_RB_ResetAll(&soundcmds);
 
@@ -386,21 +385,22 @@ static void S_Update(int16_t* buffer)
 
 void slave_dma1_handler(void)
 {
-	static uint8_t idx = 0;
-
 	SH2_DMA_CHCR1; // read TE
 	SH2_DMA_CHCR1 = 0; // clear TE
 
+	if (!snd_init)
+		return;
+
 	// start DMA on buffer and fill the other one
-	SH2_DMA_SAR1 = ((intptr_t)snd_buffer[idx]) | 0x20000000;
+	SH2_DMA_SAR1 = ((intptr_t)snd_buffer[snd_bufidx]) | 0x20000000;
 	SH2_DMA_TCR1 = MAX_SAMPLES; // number longs
 	SH2_DMA_CHCR1 = 0x18E5; // dest fixed, src incr, size long, ext req, dack mem to dev, dack hi, dack edge, dreq rising edge, cycle-steal, dual addr, intr enabled, clear TE, dma enabled
 
-	idx ^= 1; // flip audio buffer
+	snd_bufidx ^= 1; // flip audio buffer
 
 	Mars_Slave_ReadSoundCmds();
 
-	S_Update(snd_buffer[idx]);
+	S_Update(snd_buffer[snd_bufidx]);
 }
 
 void S_StartSoundReal(mobj_t* origin, unsigned sound_id)
@@ -479,7 +479,7 @@ void Mars_Slave_ReadSoundCmds(void)
 {
 	int i;
 
-	if (!sndinit)
+	if (!snd_init)
 		return;
 
 	while (Mars_RB_Len(&soundcmds) >= 8) {
@@ -538,11 +538,26 @@ void Mars_Slave_InitSoundDMA(void)
 		sample++;
 	}
 
+	snd_bufidx = 0;
+
+	Mars_Slave_StartSoundDMA();
+}
+
+void Mars_Slave_StopSoundDMA(void)
+{
+	SH2_DMA_CHCR1; // read TE
+	SH2_DMA_CHCR1 = 0; // clear TE
+
+	snd_init = 0;
+}
+
+void Mars_Slave_StartSoundDMA(void)
+{
+	snd_init = 1;
+
 	// fill first buffer
-	S_Update(snd_buffer[0]);
+	S_Update(snd_buffer[snd_bufidx]);
 
 	// start DMA
 	slave_dma1_handler();
-
-	sndinit = 1;
 }

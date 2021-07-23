@@ -223,6 +223,12 @@ void Mars_Slave(void)
 		case 10:
 			Mars_Slave_InitSoundDMA();
 			break;
+		case 11:
+			Mars_Slave_StopSoundDMA();
+			break;
+		case 12:
+			Mars_Slave_StartSoundDMA();
+			break;
 		default:
 			break;
 		}
