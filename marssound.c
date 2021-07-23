@@ -42,7 +42,7 @@ enum
 
 static uint8_t snd_bufidx = 0;
 int16_t __attribute__((aligned(16))) snd_buffer[2][MAX_SAMPLES * 2];
-static uint8_t	snd_init = 0;
+static uint8_t	snd_init = 0, snd_stopmix = 0;
 
 sfxchannel_t	sfxchannels[SFXCHANNELS];
 
@@ -388,15 +388,15 @@ void slave_dma1_handler(void)
 	SH2_DMA_CHCR1; // read TE
 	SH2_DMA_CHCR1 = 0; // clear TE
 
-	if (!snd_init)
-		return;
-
 	// start DMA on buffer and fill the other one
 	SH2_DMA_SAR1 = ((intptr_t)snd_buffer[snd_bufidx]) | 0x20000000;
 	SH2_DMA_TCR1 = MAX_SAMPLES; // number longs
 	SH2_DMA_CHCR1 = 0x18E5; // dest fixed, src incr, size long, ext req, dack mem to dev, dack hi, dack edge, dreq rising edge, cycle-steal, dual addr, intr enabled, clear TE, dma enabled
 
 	snd_bufidx ^= 1; // flip audio buffer
+
+	if (snd_stopmix)
+		return;
 
 	Mars_Slave_ReadSoundCmds();
 
@@ -539,21 +539,23 @@ void Mars_Slave_InitSoundDMA(void)
 	}
 
 	snd_bufidx = 0;
+	snd_init = 1;
+	snd_stopmix = 0;
 
-	Mars_Slave_StartSoundDMA();
+	Mars_Slave_StartSoundMixer();
 }
 
-void Mars_Slave_StopSoundDMA(void)
+void Mars_Slave_StopSoundMixer(void)
 {
 	SH2_DMA_CHCR1; // read TE
 	SH2_DMA_CHCR1 = 0; // clear TE
 
-	snd_init = 0;
+	snd_stopmix = 1;
 }
 
-void Mars_Slave_StartSoundDMA(void)
+void Mars_Slave_StartSoundMixer(void)
 {
-	snd_init = 1;
+	snd_stopmix = 0;
 
 	// fill first buffer
 	S_Update(snd_buffer[snd_bufidx]);

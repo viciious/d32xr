@@ -40,8 +40,8 @@ void Mars_Slave_R_DrawSprites(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 void Mars_Slave_M_AnimateFire(void) ATTR_OPTIMIZE_EXTREME;
 void Mars_Slave_InitSoundDMA(void) ATTR_OPTIMIZE_SIZE;
-void Mars_Slave_StopSoundDMA(void) ATTR_OPTIMIZE_SIZE;
-void Mars_Slave_StartSoundDMA(void) ATTR_OPTIMIZE_SIZE;
+void Mars_Slave_StopSoundMixer(void) ATTR_OPTIMIZE_SIZE;
+void Mars_Slave_StartSoundMixer(void) ATTR_OPTIMIZE_SIZE;
 void Mars_Slave_ReadSoundCmds(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 void slave_dma1_handler(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
@@ -123,14 +123,14 @@ static inline void Mars_InitSoundDMA(void)
 	while (MARS_SYS_COMM4 != 0) {};
 }
 
-static inline void Mars_StopSoundDMA(void)
+static inline void Mars_StopSoundMixer(void)
 {
 	while (MARS_SYS_COMM4 != 0) {};
 	MARS_SYS_COMM4 = 11;
 	while (MARS_SYS_COMM4 != 0) {};
 }
 
-static inline void Mars_StartSoundDMA(void)
+static inline void Mars_StartSoundMixer(void)
 {
 	while (MARS_SYS_COMM4 != 0) {};
 	MARS_SYS_COMM4 = 12;
