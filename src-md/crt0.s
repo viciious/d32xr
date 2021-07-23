@@ -307,6 +307,7 @@ read_sram:
         moveq   #0,d1
         moveq   #0,d0
         move.w  0xA15122,d0         /* COMM2 holds offset */
+        add.l   d0,d0
         lea     0x200000,a0
         move.b  #1,0xA15107         /* set RV */
         move.b  #3,0xA130F1         /* SRAM enabled, write protected */
@@ -322,6 +323,7 @@ write_sram:
         move.w  #0x2700,sr          /* disable ints */
         moveq   #0,d1
         move.w  0xA15122,d1         /* COMM2 holds offset */
+        add.l   d1,d1
         lea     0x200000,a0
         move.b  #1,0xA15107         /* set RV */
         move.b  #1,0xA130F1         /* SRAM enabled, write enabled */

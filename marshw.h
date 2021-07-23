@@ -71,4 +71,18 @@ int Mars_GetFRTCounter(void);
 
 #endif 
 
+
+// If you intend to use the two functions below, beware
+// that they communicate with the 68000, which in turn
+// sets the RV bit to 1. The consequence is that your
+// program mustn't attempt reading from ROM, while these
+// functions are executing. That includes DMA, code and
+// interrupt handlers on both CPUs.
+
+void Mars_ReadSRAM(uint8_t * buffer, int offset, int len)
+	__attribute__((section(".data"), aligned(16)));
+
+void Mars_WriteSRAM(const uint8_t * buffer, int offset, int len)
+	__attribute__((section(".data"), aligned(16)));
+
 #endif // _MARSHW_H

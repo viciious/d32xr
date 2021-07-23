@@ -41,12 +41,13 @@
         .long   0x00000000,0x003FFFFF   /* ROM start, end */
         .long   0x00FF0000,0x00FFFFFF   /* RAM start, end */
 
-!        .ascii  "RA"                    /* External RAM */
-!        .byte   0xF8                    /* don't clear + odd bytes */
-!        .byte   0x20                    /* SRAM */
-!        .long   0x00200001,0x0020FFFF   /* SRAM start, end */
+! 2KB of save ram on odd byte lane
+        .ascii  "RA"                    /* External RAM */
+        .byte   0xF8                    /* don't clear + odd bytes */
+        .byte   0x20                    /* SRAM */
+        .long   0x00200001,0x00200FFF   /* SRAM start, end */
 
-        .ascii  "            "          /* no SRAM */
+!       .ascii  "            "          /* no SRAM */
 
         .ascii  "    "
         .ascii  "                "

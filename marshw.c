@@ -228,3 +228,28 @@ void master_vbi_handler(void)
 	if (mars_gamepadport2)
 		mars_controls2 |= *mars_gamepadport2;
 }
+
+void Mars_ReadSRAM(uint8_t * buffer, int offset, int len)
+{
+	uint8_t *ptr = buffer;
+
+	while (MARS_SYS_COMM0);
+	while (len-- > 0) {
+		MARS_SYS_COMM2 = offset++;
+		MARS_SYS_COMM0 = 0x0100;    /* Read SRAM */
+		while (MARS_SYS_COMM0);
+		*ptr++ = MARS_SYS_COMM2 & 0x00FF;
+	}
+}
+
+void Mars_WriteSRAM(const uint8_t* buffer, int offset, int len)
+{
+	const uint8_t *ptr = buffer;
+
+	while (MARS_SYS_COMM0);
+	while (len-- > 0) {
+		MARS_SYS_COMM2 = offset++;
+		MARS_SYS_COMM0 = 0x0200 | *ptr++;    /* Write SRAM */
+		while (MARS_SYS_COMM0);
+	}
+}
