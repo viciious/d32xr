@@ -15,11 +15,21 @@ To compile the rom you're going to need several things:
 - Dump the IWAD file "doom32x.wad" from your Doom32x cartridge. Dump from address 0xBB000 to the end of the ROM.
 - Run `make -f Makefile.mars`
 
-Alternatively, you can download the ROM of the engine from the Github Actions page and patch it to run the original .wad file:
-
-```bash
-dd if=doom32x.wad seek=6093 bs=16 conv=notrunc of=D32XR.bin
-```
+## Features
+- VGM music playback support
+- Support for monster rotations and in-fighting
+- Partially invisible spectres as in the origina game
+- Uses both SH-2 CPUs for threaded rendering to improve performance
+- Support for larger levels: runs MAP20 from the 24 Level Expansion ROM hack
+- Stereo sound panning
+- Support for multiple screen resolutions: from 128x144 (double width) and up to 252x144 (native)
+- Save checkpoints and global options to SRAM
+- Distance lighting effect as in the original game
+- "Potato" mode that renders floors and ceilings in solid color
+- New title screen reminiscent of PSX and Saturn versions
+- Sega Mouse support
+- Statusbar assets are no longer limited to 16 colors
+- DMAPINFO lump support for naming and sequencing levels
 
 ## "Calico DOOM" Credits
 * Programming and Reverse Engineering : James Haley
@@ -28,9 +38,16 @@ dd if=doom32x.wad seek=6093 bs=16 conv=notrunc of=D32XR.bin
 
 ## "DOOM 32x: Resurrection" Credits
 * Programming : Victor Luchits
+* Programming : Chilly Willy
+* Testing : Matt B (Matteusbeus)
+* VGM music: Spoony Bard
 
 ## Links
 https://github.com/team-eternity/calico-doom
+
+https://www.youtube.com/MatteusBeusRetroDev
+
+https://www.patreon.com/SpoonyBard
 
 ## License
 All original code, as well as code derived from the 3DO source code, is
