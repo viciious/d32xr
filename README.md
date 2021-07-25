@@ -31,16 +31,16 @@ To compile the rom you're going to need several things:
 - Statusbar assets are no longer limited to 16 colors
 - DMAPINFO lump support for naming and sequencing levels
 
-## "Calico DOOM" Credits
-* Programming and Reverse Engineering : James Haley
-* Additional Code By : Samuel Villarreal, Rebecca Heineman
-* Original Jaguar DOOM Source: John Carmack, id Software
-
 ## "DOOM 32x: Resurrection" Credits
 * Programming : Victor Luchits
 * Programming : Chilly Willy
 * Testing : Matt B (Matteusbeus)
 * VGM music: Spoony Bard
+
+## "Calico DOOM" Credits
+* Programming and Reverse Engineering : James Haley
+* Additional Code By : Samuel Villarreal, Rebecca Heineman
+* Original Jaguar DOOM Source: John Carmack, id Software
 
 ## Links
 https://github.com/team-eternity/calico-doom
