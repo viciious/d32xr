@@ -571,7 +571,7 @@ void M_Drawer (void)
 				if (leveltens)
 				{
 					DrawJagobjLump(numslump + leveltens,
-						item->x + 10, item->y + 40 + 2, NULL, NULL);
+						item->x + 10, item->y + 60 + 2, NULL, NULL);
 					DrawJagobjLump(numslump + levelones, item->x + 24, item->y + 60 + 2, NULL, NULL);
 				}
 				else
