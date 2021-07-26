@@ -53,6 +53,7 @@ static volatile pixel_t* framebuffer = &MARS_FRAMEBUFFER + 0x100;
 static volatile pixel_t *framebufferend = &MARS_FRAMEBUFFER + 0x10000;
 
 static jagobj_t* stbar;
+static VINT stbar_height;
 
 extern int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sprites[4], t_ref_total[4];
 
@@ -299,7 +300,17 @@ void I_Init (void)
 		}
 	}
 
-	stbar = (jagobj_t*)W_POINTLUMPNUM(W_GetNumForName("STBAR"));
+	i = W_CheckNumForName("STBAR");
+	if (i != -1)
+	{
+		stbar = (jagobj_t*)W_POINTLUMPNUM(i);
+		stbar_height = BIGSHORT(stbar->height);
+	}
+	else
+	{
+		stbar = NULL;
+		stbar_height = 0;
+	}
 }
 
 void I_SetPalette(const byte* palette)
@@ -452,10 +463,10 @@ pixel_t* I_OverwriteBuffer(void)
 int I_ViewportYPos(void)
 {
 	if (viewportWidth < 160)
-		return (224 - BIGSHORT(stbar->height) - viewportHeight) / 2;
+		return (224 - stbar_height - viewportHeight) / 2;
 	if (viewportWidth == 160)
-		return (224 - BIGSHORT(stbar->height) - viewportHeight);
-	return (224 - BIGSHORT(stbar->height) - viewportHeight) / 2;
+		return (224 - stbar_height - viewportHeight);
+	return (224 - stbar_height - viewportHeight) / 2;
 }
 
 pixel_t	*I_ViewportBuffer (void)
@@ -632,6 +643,9 @@ void I_NetSetup (void)
 
 void I_DrawSbar(void)
 {
+	if (!stbar)
+		return;
+
 	const pixel_t* source = (pixel_t*)stbar->data;
 	int width = BIGSHORT(stbar->width);
 	int height = BIGSHORT(stbar->height);

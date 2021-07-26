@@ -28,6 +28,7 @@ boolean doSpclFace;
 spclface_e	spclFaceType;
 
 jagobj_t	*sbar;
+VINT		sbar_height;
 #ifndef MARS
 byte		*sbartop;
 #endif
@@ -59,15 +60,32 @@ void ST_Init (void)
 {
 	int i, l;
 
-	sbar = (jagobj_t*)W_POINTLUMPNUM(W_GetNumForName("STBAR"));
+	l = W_CheckNumForName("STBAR");
+	if (l != -1)
+	{
+		sbar = (jagobj_t*)W_POINTLUMPNUM(l);
+		sbar_height = BIGSHORT(sbar->height);
+	}
+	else
+	{
+		sbar = NULL;
+		sbar_height = 0;
+	}
 
 	faces = W_CheckNumForName("FACE00");
 
-	l = W_GetNumForName("MINUS");
-	for (i = 0; i < NUMSBOBJ; i++)
-		sbobj[i] = W_CacheLumpNum(l + i, PU_STATIC);
+	l = W_CheckNumForName("MINUS");
+	if (l != -1)
+	{
+		for (i = 0; i < NUMSBOBJ; i++)
+			sbobj[i] = W_CacheLumpNum(l + i, PU_STATIC);
+	}
+	else
+	{
+		D_memset(sbobj, 0, sizeof(sbobj[0]) * NUMSBOBJ);
+	}
 
-	l = W_GetNumForName("MICRO_2");
+	l = W_CheckNumForName("MICRO_2");
 	micronums = l;
 }
 
@@ -514,8 +532,11 @@ void ST_Drawer (void)
 	int x, ind;
 	boolean have_cards[NUMCARDS];
 
+	if (!sbar || !sbobj[0])
+		return;
+
 #ifdef MARS
-	stbar_y = 224 - BIGSHORT(sbar->height);
+	stbar_y = 224 - sbar_height;
 #else
 	stbar_y = 0;
 	bufferpage = sbartop;		/* draw into status bar overlay */
@@ -558,12 +579,15 @@ void ST_Drawer (void)
 			ST_DrawValue(x, MAPY, cmd->value);
 			break;
 		case stc_drawmicro:
-			ind = cmd->ind;
-			if (cmd->value)
-				DrawJagobjLump(micronums+ind,
-					micronums_x[ind], stbar_y + micronums_y[ind], NULL, NULL);
-			else
-				ST_EraseBlock(micronums_x[ind], micronums_y[ind], 4, 6);
+			if (micronums != -1)
+			{
+				ind = cmd->ind;
+				if (cmd->value)
+					DrawJagobjLump(micronums + ind,
+						micronums_x[ind], stbar_y + micronums_y[ind], NULL, NULL);
+				else
+					ST_EraseBlock(micronums_x[ind], micronums_y[ind], 4, 6);
+			}
 			break;
 		case stc_drawyourfrags:
 			if (cmd->value)
@@ -650,7 +674,7 @@ void ST_DrawValue(int x,int y,int value)
 	char	v[4];
 	int		j;
 	int		index;
-	
+
 	y += stbar_y;
 	valtostr(v,value);
 	j = mystrlen(v) - 1;
