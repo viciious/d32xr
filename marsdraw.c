@@ -708,6 +708,11 @@ void DrawTiledBackground(void)
 
 	if (debugmode == 3)
 		return;
+	if (gameinfo.borderFlat <= 0)
+	{
+		I_ClearFrameBuffer();
+		return;
+	}
 
 	bsrc = (const pixel_t*)W_POINTLUMPNUM(gameinfo.borderFlat);
 	bdest = I_FrameBuffer();

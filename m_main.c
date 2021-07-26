@@ -104,17 +104,24 @@ void M_Start2 (boolean startup_)
 	// copy mapnumbers to a temp buffer, then free, then allocate again
 	// to avoid zone memory fragmentation
 	maplist = G_LoadMaplist(&mapcount);
-	tempmapnums = (VINT*)I_WorkBuffer();
-	for (i = 0; i < mapcount; i++)
-		tempmapnums[i] = maplist[i]->mapNumber;
+	if (maplist)
+	{
+		tempmapnums = (VINT*)I_WorkBuffer();
+		for (i = 0; i < mapcount; i++)
+			tempmapnums[i] = maplist[i]->mapNumber;
 
-	for (i = 0; i < mapcount; i++)
-		Z_Free(maplist[i]);
-	Z_Free(maplist);
+		for (i = 0; i < mapcount; i++)
+			Z_Free(maplist[i]);
+		Z_Free(maplist);
 
-	mapnumbers = Z_Malloc(sizeof(*mapnumbers) * mapcount, PU_STATIC, 0);
-	for (i = 0; i < mapcount; i++)
-		mapnumbers[i] = tempmapnums[i];
+		mapnumbers = Z_Malloc(sizeof(*mapnumbers) * mapcount, PU_STATIC, 0);
+		for (i = 0; i < mapcount; i++)
+			mapnumbers[i] = tempmapnums[i];
+	}
+	else
+	{
+		mapnumbers = NULL;
+	}
 
 /* cache all needed graphics	 */
 	startup = startup_;
@@ -277,6 +284,9 @@ int M_Ticker (void)
 	int		buttons;
 	char	newframe = 0;
 	mainscreen_t* menuscr = &mainscreen[screenpos];
+
+	if (!mapnumbers)
+		return ga_startnew;
 
 	buttons = ticrealbuttons;
 

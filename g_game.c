@@ -379,7 +379,12 @@ void G_Init(void)
 {
 	G_InitPlayerResp();
 
-	G_FindGameinfo(&gameinfo);
+	if (G_FindGameinfo(&gameinfo))
+		return;
+
+	gameinfo.borderFlat = W_CheckNumForName("ROCKS");
+	gameinfo.titlePage = W_CheckNumForName("title");
+	gameinfo.titleTime = 540;
 }
 
 /* 
@@ -425,9 +430,12 @@ void G_InitNew (skill_t skill, int map, gametype_t gametype)
 			}
 		}
 
-		for (i = 0; i < mapcount; i++)
-			Z_Free(maplist[i]);
-		Z_Free(maplist);
+		if (maplist)
+		{
+			for (i = 0; i < mapcount; i++)
+				Z_Free(maplist[i]);
+			Z_Free(maplist);
+		}
 	}
 
 	if (gamemaplump < 0)
