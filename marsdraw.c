@@ -709,7 +709,7 @@ void DrawTiledBackground(void)
 	if (debugmode == 3)
 		return;
 
-	bsrc = (const pixel_t*)W_POINTLUMPNUM(W_GetNumForName("ROCKS"));
+	bsrc = (const pixel_t*)W_POINTLUMPNUM(gameinfo.borderFlat);
 	bdest = I_FrameBuffer();
 
 	y = 0;

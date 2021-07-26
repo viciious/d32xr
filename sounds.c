@@ -5,12 +5,8 @@
  */ 
  
 musicinfo_t		*S_music; 
-int				num_music = 0;
-
-const int		mus_none = 0;
-int				mus_intro = 0;
-int				mus_inter = 0;
-int				mus_finale = 0;
+VINT			num_music = 0;
+const VINT		mus_none = 0;
 
 /* 
  *  Information about all the sfx 

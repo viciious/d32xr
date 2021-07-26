@@ -441,13 +441,8 @@ int TIC_Abortable (void)
 	jagobj_t	*pl;
 #endif
 
-#ifdef MARS
-	if (ticon >= 36 * 15)
+	if (ticon >= gameinfo.titleTime)
 		return 1;		/* go on to next demo */
-#else
-	if (ticon >= 8 * 15)
-		return 1;		/* go on to next demo */
-#endif
 
 #ifdef JAGUAR	
 	if (ticbuttons[0] == (BT_OPTION|BT_STAR|BT_HASH) )
@@ -497,7 +492,7 @@ void START_Title(void)
 #endif
 	DoubleBufferSetup();
 
-	l = W_CheckNumForName("title");
+	l = gameinfo.titlePage;
 	titlepic = l != -1 ? W_CacheLumpNum(l, PU_STATIC) : NULL;
 
 #ifdef MARS
@@ -511,7 +506,7 @@ void START_Title(void)
 	}
 #endif
 
-	S_StartSong(mus_intro, 0);
+	S_StartSong(gameinfo.titleMus, 0);
 }
 
 void STOP_Title (void)

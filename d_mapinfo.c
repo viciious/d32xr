@@ -28,6 +28,15 @@
 #include <stdlib.h>
 
 const char* defaultDMAPINFO = ""
+"gameinfo\n"
+"{\n"
+"    titleMus = \"MUS_NTRO\"\n"
+"    intermissionMus = \"MUS_NTER\"\n"
+"    endMus = \"MUS_BUNN\"\n"
+"    borderFlat = \"ROCKS\"\n"
+"    titleTime = 540\n"
+"    titlePage = \"title\"\n"
+"}\n"
 "map \"MAP01\" \"Hangar\"\n"
 "{\n"
 "    sky = \"sky1\"\n"
@@ -391,7 +400,7 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 	else if (!D_strcasecmp(key, "mapnumber"))
 		mi->mapNumber = atoi(value);
 	else if (!D_strcasecmp(key, "music"))
-		mi->music = W_CheckNumForName(value);
+		mi->musicLump = W_CheckNumForName(value);
 }
 
 static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
@@ -403,26 +412,19 @@ static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
 	else if (!D_strcasecmp(key, "titlePage"))
 		gi->titlePage = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "titleMus"))
-		gi->titlePage = W_CheckNumForName(value);
+		gi->titleMus = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "intermissionMus"))
 		gi->intermissionMus = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "endMus"))
 		gi->endMus = W_CheckNumForName(value);
 }
 
-static const char* G_FindMapinfoSection(const char* buf, const char *lumpname, size_t *psectionlen)
+static const char* G_FindMapinfoSection(const char* buf, const char *name, size_t *psectionlen)
 {
-	int i;
-	char name[16];
 	const char* section, *ptr;
 	size_t namelen, sectionlen;
-	char lumpname8[9]; // null-terminated
 
-	for (i = 0; i < 8 && lumpname[i] != '\0'; i++)
-		lumpname8[i] = lumpname[i];
-	lumpname8[i] = '\0';
-
-	namelen = D_snprintf(name, sizeof(name), "map \"%s\"", lumpname8);
+	namelen = mystrlen(name);
 	*psectionlen = 0;
 
 	section = NULL;
@@ -440,13 +442,13 @@ static const char* G_FindMapinfoSection(const char* buf, const char *lumpname, s
 	return NULL;
 }
 
-static char *G_MapinfoSectionCStr(const char* buf, const char *sectionName)
+static char *G_MapinfoSectionCStr(const char* buf, const char *name)
 {
 	char* newstr;
 	const char* section;
 	size_t sectionlen;
 
-	section = G_FindMapinfoSection(buf, sectionName, &sectionlen);
+	section = G_FindMapinfoSection(buf, name, &sectionlen);
 	if (!section)
 		return NULL;
 
@@ -459,8 +461,12 @@ static char *G_MapinfoSectionCStr(const char* buf, const char *sectionName)
 
 int G_FindMapinfo(VINT maplump, dmapinfo_t *mi)
 {
+	int i;
 	const char* buf;
 	int linecount;
+	const char* lumpname;
+	char lumpname8[9]; // null-terminated
+	char name[16];
 
 	if (maplump < 0)
 		return -1;
@@ -469,8 +475,14 @@ int G_FindMapinfo(VINT maplump, dmapinfo_t *mi)
 	if (!buf)
 		return 0;
 
+	lumpname = G_GetMapNameForLump(maplump);
+	for (i = 0; i < 8 && lumpname[i] != '\0'; i++)
+		lumpname8[i] = lumpname[i];
+	lumpname8[i] = '\0';
+	D_snprintf(name, sizeof(name), "map \"%s\"", lumpname8);
+
 	D_memset(mi, 0, sizeof(*mi));
-	mi->data = G_MapinfoSectionCStr(buf, G_GetMapNameForLump(maplump));
+	mi->data = G_MapinfoSectionCStr(buf, name);
 	if (!mi->data)
 		return 0;
 
@@ -504,6 +516,10 @@ int G_FindGameinfo(dgameinfo_t* gi)
 	linecount = G_ParseMapinfo(gi->data, (kvcall_t)&G_AddGameinfoKey, gi);
 	if (linecount < 2)
 		goto error;
+
+	gi->titleMus = gi->titleMus > 0 ? S_SongForLump(gi->titleMus) : 0;
+	gi->intermissionMus = gi->intermissionMus > 0 ? S_SongForLump(gi->intermissionMus) : 0;
+	gi->endMus = gi->endMus > 0 ? S_SongForLump(gi->endMus) : 0;
 
 	return 1;
 
@@ -564,7 +580,7 @@ dmapinfo_t **G_LoadMaplist(VINT *pmapcount)
 		mi->data = (byte *)mi;
 
 		linecount = G_ParseMapinfo(zsection, (kvcall_t)&G_AddMapinfoKey, mi);
-		if (linecount < 2)
+		if (linecount < 2 || mi->mapNumber <= 0)
 		{
 			Z_Free(mi);
 			continue;

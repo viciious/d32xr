@@ -82,11 +82,8 @@ typedef enum
 } sfxenum_t; 
  
 extern musicinfo_t *S_music; 
-extern int mus_intro;
-extern int mus_inter;
-extern int mus_finale;
-extern const int mus_none;
-extern int num_music;
+extern const VINT mus_none;
+extern VINT num_music;
 
 extern sfxinfo_t   S_sfx[]; 
 extern const char* const S_sfxnames[];

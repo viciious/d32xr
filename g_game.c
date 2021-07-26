@@ -14,6 +14,7 @@ gameaction_t    gameaction;
 skill_t         gameskill; 
 int				gamemaplump;
 dmapinfo_t		gamemapinfo;
+dgameinfo_t		gameinfo;
 
 gametype_t		netgame;
 
@@ -140,9 +141,9 @@ void G_DoLoadLevel (void)
 	displayplayer = consoleplayer;		/* view the guy you are playing     */
 	gameaction = ga_nothing; 
 
-	music = S_SongForLump(gamemapinfo.music);
+	music = S_SongForLump(gamemapinfo.musicLump);
 	if (!music)
-		music = (gamemapinfo.mapNumber - 1) % num_music + 1;
+		music = S_SongForMapnum(gamemapinfo.mapNumber);
 	S_StartSong(music, 1);
 
 	Z_CheckHeap (mainzone);  		/* DEBUG */
@@ -377,6 +378,8 @@ static void G_InitPlayerResp(void)
 void G_Init(void)
 {
 	G_InitPlayerResp();
+
+	G_FindGameinfo(&gameinfo);
 }
 
 /* 

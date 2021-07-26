@@ -528,6 +528,7 @@ extern	skill_t		gameskill;
 extern	int			totalkills, totalitems, totalsecret;	/* for intermission */
 extern	int			gamemaplump;
 extern	dmapinfo_t	gamemapinfo;
+extern	dgameinfo_t	gameinfo;
 
 extern 	int 		gametic;
 
@@ -1123,6 +1124,7 @@ int I_DrawMenuFire(void) ATTR_OPTIMIZE_EXTREME;
 void I_DrawSbar(void);
 void S_StartSong(int music_id, int looping);
 int S_SongForLump(int lump);
+int S_SongForMapnum(int mapnum);
 void S_StopSong(void);
 void S_RestartSounds (void);
 

@@ -44,6 +44,8 @@ static uint8_t snd_bufidx = 0;
 int16_t __attribute__((aligned(16))) snd_buffer[2][MAX_SAMPLES * 2];
 static uint8_t	snd_init = 0, snd_stopmix = 0;
 
+static VINT		vgm_start;
+
 sfxchannel_t	sfxchannels[SFXCHANNELS];
 
 int 			sfxvolume = 64;	/* range 0 - 64 */
@@ -84,48 +86,15 @@ void S_Init(void)
 
 	/* init music */
 	num_music = 0;
-	mus_intro = mus_none;
-	mus_inter = mus_none;
 	curmusic = mus_none;
-	S_music = NULL;
 
-	l = W_CheckNumForName("VGM_STRT");
+	vgm_start = l = W_CheckNumForName("VGM_STRT");
 	if (l != -1)
-	{
-		int e, n;
-
-		e = W_GetNumForName("VGM_END");
-		n = e - ++l;
-
-		S_music = Z_Malloc(sizeof(*S_music) * n, PU_STATIC, 0);
-		for (i = 0; i < n; i++) {
-			const char* name = W_GetNameForNum(l);
-			S_music[i].lump = l;
-
-			if (!D_strncasecmp(name, "mus_ntro", 8)) {
-				mus_intro = i + 1;
-				num_music = i;
-			}
-			else if (!D_strncasecmp(name, "mus_nter", 8)) {
-				mus_inter = i + 1;
-			}
-			else if (!D_strncasecmp(name, "mus_bunn", 8)) {
-				mus_finale = i + 1;
-			}
-
-			l++;
-		}
-	}
-
-	if (num_music == 0)
-		num_music = 1; // so that num % num_music works
+		num_music = W_GetNumForName("VGM_END") - l - 1;
 
 	Mars_RB_ResetAll(&soundcmds);
 
 	Mars_InitSoundDMA();
-
-	/* play intro music once */
-	S_StartSong(mus_intro,0);
 }
 
 
@@ -274,24 +243,42 @@ void S_UpdateSounds(void)
 
 int S_SongForLump(int lump)
 {
-	int i;
-
 	if (lump <= 0)
 		return mus_none;
-
-	if (!S_music)
+	if (lump <= vgm_start || lump > vgm_start + num_music)
 		return mus_none;
 
+	return lump - vgm_start;
+}
+
+int S_SongForMapnum(int mapnum)
+{
+	int i;
+	int mus;
+
+	mus = mus_none;
 	for (i = 0; i < num_music; i++) {
-		if (S_music[i].lump == lump)
-			return i + 1;
+		mus = ((mapnum - 1 + i) % num_music) + 1;
+		if (mus == gameinfo.titleMus)
+			continue;
+		if (mus == gameinfo.intermissionMus)
+			continue;
+		if (mus == gameinfo.endMus)
+			continue;
+		break;
 	}
 
-	return mus_none;
+	if (i == num_music)
+		return mus_none;
+
+	return mus;
 }
 
 void S_StartSong(int music_id, int looping)
 {
+	if (num_music == 0)
+		return;
+
 	if (music_id == mus_none)
 	{
 		S_StopSong();
@@ -301,16 +288,14 @@ void S_StartSong(int music_id, int looping)
 	if (music_id == curmusic)
 		return;
 
-	if (!S_music)
-		return;
-	if (S_music[music_id - 1].lump < 0)
+	if (music_id >= num_music)
 		return;
 
 	curmusic = music_id;
 	while (MARS_SYS_COMM0);
 
 	MARS_SYS_COMM2 = music_id | (looping ? 0x8000:0x0000);
-	*(volatile intptr_t *)&MARS_SYS_COMM12 = (intptr_t)W_POINTLUMPNUM(S_music[music_id - 1].lump);
+	*(volatile intptr_t *)&MARS_SYS_COMM12 = (intptr_t)W_POINTLUMPNUM(vgm_start + music_id);
 	MARS_SYS_COMM0 = 0x0300; /* start music */
 }
 

@@ -35,7 +35,7 @@ typedef struct
 	VINT secretNext;
 	VINT lumpNum;
 	VINT mapNumber;
-	VINT music;
+	VINT musicLump;
 	char lumpName[9];
 	void *data;
 } dmapinfo_t;
@@ -57,6 +57,7 @@ char* G_GetMapNameForLump(int lump);
 int G_MapNumForLumpNum(int lump);
 
 int G_FindMapinfo(VINT maplump, dmapinfo_t *mi);
+int G_FindGameinfo(dgameinfo_t* gi);
 dmapinfo_t** G_LoadMaplist(VINT*pmapcount);
 
 #endif // D_MAPINFO_H__
