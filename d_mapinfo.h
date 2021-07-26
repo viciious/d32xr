@@ -40,6 +40,17 @@ typedef struct
 	void *data;
 } dmapinfo_t;
 
+typedef struct
+{
+	VINT borderFlat;
+	VINT titleTime;
+	VINT titlePage;
+	VINT titleMus;
+	VINT intermissionMus;
+	VINT endMus;
+	void* data;
+} dgameinfo_t;
+
 int G_LumpNumForMapNum(int map);
 int G_MapNumForMapName(const char* map);
 char* G_GetMapNameForLump(int lump);
