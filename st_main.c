@@ -345,7 +345,7 @@ void ST_Ticker(void)
 	/* */
 	if (netgame != gt_deathmatch)
 	{
-		i = gamemapinfo.mapnumber;
+		i = gamemapinfo.mapNumber;
 		if (stbar.currentMap != i || stbar.forcedraw)
 		{
 			cmd = &stbarcmds[numstbarcmds++];

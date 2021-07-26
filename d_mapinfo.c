@@ -175,7 +175,7 @@ int G_MapNumForLumpNum(int lump)
 	const char* mapname;
 
 	if (G_FindMapinfo(lump, &mapinfo) != 0) {
-		return mapinfo.mapnumber;
+		return mapinfo.mapNumber;
 	}
 
 	mapname = G_GetMapNameForLump(lump);
@@ -360,23 +360,23 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 				pp = skipspaces(pp + 1);
 			}
 
-			mi->lumpnum = W_GetNumForName(stripquote(p));
+			mi->lumpNum = W_GetNumForName(stripquote(p));
 
 			p = pp;
 			if (p) {
 				mi->name = stripquote(p);
 			}
 
-			D_memcpy(mi->lumpname, G_GetMapNameForLump(mi->lumpnum), 9);
-			mi->mapnumber = G_MapNumForMapName(mi->lumpname);
+			D_memcpy(mi->lumpName, G_GetMapNameForLump(mi->lumpNum), 9);
+			mi->mapNumber = G_MapNumForMapName(mi->lumpName);
 
 			if (!mi->name) {
-				mi->name = mi->lumpname;
+				mi->name = mi->lumpName;
 			}
 		}
 		else if (!D_strcasecmp(key, "baronspecial"))
 		{
-			mi->baronspecial = true;
+			mi->baronSpecial = true;
 		}
 
 		return;
@@ -387,9 +387,9 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 	else if (!D_strcasecmp(key, "sky"))
 		mi->sky = value;
 	else if (!D_strcasecmp(key, "secretnext"))
-		mi->secretnext = W_GetNumForName(value);
+		mi->secretNext = W_GetNumForName(value);
 	else if (!D_strcasecmp(key, "mapnumber"))
-		mi->mapnumber = atoi(value);
+		mi->mapNumber = atoi(value);
 	else if (!D_strcasecmp(key, "music"))
 		mi->music = W_CheckNumForName(value);
 }
@@ -534,7 +534,7 @@ dmapinfo_t **G_LoadMaplist(VINT *pmapcount)
 		int j;
 		for (j = i; j > 0; j--)
 		{
-			if (maplist[j - 1]->mapnumber <= maplist[j]->mapnumber)
+			if (maplist[j - 1]->mapNumber <= maplist[j]->mapNumber)
 				break;
 			dmapinfo_t *t = maplist[j - 1];
 			maplist[j - 1] = maplist[j];

@@ -106,7 +106,7 @@ void M_Start2 (boolean startup_)
 	maplist = G_LoadMaplist(&mapcount);
 	tempmapnums = (VINT*)I_WorkBuffer();
 	for (i = 0; i < mapcount; i++)
-		tempmapnums[i] = maplist[i]->mapnumber;
+		tempmapnums[i] = maplist[i]->mapNumber;
 
 	for (i = 0; i < mapcount; i++)
 		Z_Free(maplist[i]);

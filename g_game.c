@@ -86,13 +86,13 @@ void G_DoLoadLevel (void)
 		mapname = G_GetMapNameForLump(gamemaplump);
 		gamemap = G_MapNumForMapName(mapname);
 		if (gamemap == 0)
-			gamemap = gamemapinfo.mapnumber + 1;
+			gamemap = gamemapinfo.mapNumber + 1;
 
 		gamemapinfo.sky = NULL;
-		gamemapinfo.mapnumber = gamemap;
-		gamemapinfo.lumpnum = gamemaplump;
-		gamemapinfo.baronspecial = (gamemap == 8);
-		gamemapinfo.secretnext = G_LumpNumForMapNum(24);
+		gamemapinfo.mapNumber = gamemap;
+		gamemapinfo.lumpNum = gamemaplump;
+		gamemapinfo.baronSpecial = (gamemap == 8);
+		gamemapinfo.secretNext = G_LumpNumForMapNum(24);
 
 		/* decide which level to go to next */
 #ifdef MARS
@@ -118,7 +118,7 @@ void G_DoLoadLevel (void)
 	}
 
 	/* DMAPINFO can override the map number */
-	gamemap = gamemapinfo.mapnumber;
+	gamemap = gamemapinfo.mapNumber;
 
 	/*  */
 	/* set the sky map for the episode  */
@@ -142,7 +142,7 @@ void G_DoLoadLevel (void)
 
 	music = S_SongForLump(gamemapinfo.music);
 	if (!music)
-		music = (gamemapinfo.mapnumber - 1) % num_music + 1;
+		music = (gamemapinfo.mapNumber - 1) % num_music + 1;
 	S_StartSong(music, 1);
 
 	Z_CheckHeap (mainzone);  		/* DEBUG */
@@ -413,11 +413,11 @@ void G_InitNew (skill_t skill, int map, gametype_t gametype)
 		maplist = G_LoadMaplist(&mapcount);
 		for (i = 0; i < mapcount; i++)
 		{
-			if (maplist[i]->mapnumber > map)
+			if (maplist[i]->mapNumber > map)
 				break;
-			if (maplist[i]->mapnumber == map)
+			if (maplist[i]->mapNumber == map)
 			{
-				gamemaplump = maplist[i]->lumpnum;
+				gamemaplump = maplist[i]->lumpNum;
 				break;
 			}
 		}
@@ -516,8 +516,8 @@ void G_RunGame (void)
 		if (gameaction == ga_warped)
 			continue;			/* skip intermission */
 
-		if (gameaction == ga_secretexit && gamemapinfo.secretnext)
-			nextmapl = gamemapinfo.secretnext;
+		if (gameaction == ga_secretexit && gamemapinfo.secretNext)
+			nextmapl = gamemapinfo.secretNext;
 		else
 			nextmapl = gamemapinfo.next;
 		finale = nextmapl == 0;

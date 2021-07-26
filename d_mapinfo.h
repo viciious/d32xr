@@ -28,15 +28,15 @@
 
 typedef struct
 {
-	VINT baronspecial;
+	VINT baronSpecial;
 	char *name;
 	char *sky;
 	VINT next;
-	VINT secretnext;
-	VINT lumpnum;
-	VINT mapnumber;
+	VINT secretNext;
+	VINT lumpNum;
+	VINT mapNumber;
 	VINT music;
-	char lumpname[9];
+	char lumpName[9];
 	void *data;
 } dmapinfo_t;
 

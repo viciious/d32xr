@@ -109,7 +109,7 @@ static void SaveGameExt(int slotnumber, int mapnum)
 
 void SaveGame(int slotnumber)
 {
-	SaveGameExt(slotnumber, gamemapinfo.mapnumber);
+	SaveGameExt(slotnumber, gamemapinfo.mapNumber);
 }
 
 void QuickSave(int nextmap)

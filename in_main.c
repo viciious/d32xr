@@ -244,8 +244,8 @@ void IN_Start (void)
 	valsdrawn = false;
 
 	D_memset(&nextmapinfo, 0, sizeof(nextmapinfo));
-	if (gameaction == ga_secretexit && gamemapinfo.secretnext)
-		G_FindMapinfo(gamemapinfo.secretnext, &nextmapinfo);
+	if (gameaction == ga_secretexit && gamemapinfo.secretNext)
+		G_FindMapinfo(gamemapinfo.secretNext, &nextmapinfo);
 	else if (gamemapinfo.next)
 		G_FindMapinfo(gamemapinfo.next, &nextmapinfo);
 

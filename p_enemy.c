@@ -792,7 +792,7 @@ void A_BossDeath (mobj_t *mo)
 	mobj_t		*mo2;
 	line_t		junk;
 		
-	if (!gamemapinfo.baronspecial)
+	if (!gamemapinfo.baronSpecial)
 		return;			/* bruisers apear on other levels */
 		
 /* */
