@@ -259,3 +259,14 @@ void Mars_WriteSRAM(const uint8_t* buffer, int offset, int len)
 		while (MARS_SYS_COMM0);
 	}
 }
+
+void Mars_UseCD(int usecd)
+{
+	if (!mars_cd_ok)
+		return;
+
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM2 = usecd & 1;
+	MARS_SYS_COMM0 = 0x0700;
+	while (MARS_SYS_COMM0);
+}

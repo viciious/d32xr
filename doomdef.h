@@ -865,9 +865,13 @@ void AM_Start (void) ATTR_OPTIMIZE_SIZE;
 /*OPTIONS */
 /*----- */
 
+extern	VINT	o_musictype;
+
 void O_Init (void) ATTR_OPTIMIZE_SIZE;
 void O_Control (player_t *player) ATTR_OPTIMIZE_SIZE;
 void O_Drawer (void) ATTR_OPTIMIZE_SIZE;
+void O_SetButtonsFromControltype(void);
+
 
 /*----- */
 /*STATUS */
@@ -1103,7 +1107,7 @@ void ReadGame(int slotnum);
 void QuickSave(int nextmap);
 int SaveCount(void);
 boolean GetSaveInfo(int slotnumber, VINT* mapnum, VINT* skill);
-void O_SetButtonsFromControltype (void);
+
 void PrintHex (int x, int y, unsigned num);
 void DrawPlaque (jagobj_t *pl);
 void DrawTiledBackground(void);

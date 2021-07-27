@@ -62,6 +62,13 @@ typedef struct
 	mobj_t		*origin;
 } sfxchannel_t;
 
+enum
+{
+	mustype_none,
+	mustype_fm,
+	mustype_cd,
+};
+
 extern	sfxchannel_t	sfxchannels[SFXCHANNELS];
 
 extern	int		finalquad;			/* the last quad mixed by update. */
@@ -81,9 +88,14 @@ extern	int		soundbuffer[EXTERNALQUADS*16];
 
 extern	int		samplecount;		/* 22khz sample counter in DSP memory */
 
+extern	VINT	musictype;
+
 /*============================================================================ */
 
 void S_Init(void) ATTR_OPTIMIZE_SIZE;
 void S_Clear (void);
 void S_StartSound(mobj_t *origin, int sound_id);
 void S_UpdateSounds(void);
+boolean S_CDAvailable(void);
+void S_SetMusicType(int t);
+

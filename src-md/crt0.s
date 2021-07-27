@@ -300,6 +300,8 @@ handle_req:
         bls     read_mouse
         cmpi.w  #0x06FF,d0
         bls     read_cdstate
+        cmpi.w  #0x07FF,d0
+        bls     set_usecd
 | unknown command
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -497,6 +499,14 @@ read_mouse:
 
 read_cdstate:
         move.w  cd_ok,0xA15122      /* COMM2 holds return byte */
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+set_usecd:
+        tst.w   cd_ok
+        beq.b   1f
+        move.w  0xA15122,use_cd     /* COMM2 holds the new value */
+1:
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 

@@ -51,7 +51,9 @@ sfxchannel_t	sfxchannels[SFXCHANNELS];
 VINT 			sfxvolume = 64;	/* range 0 - 64 */
 VINT 			musicvolume = 64;	/* range 0 - 64 */
 
-static VINT		curmusic;
+VINT			musictype = mustype_fm;
+
+static VINT		curmusic, muslooping = 0;
 int             samplecount = 0;
 
 static marsrb_t	soundcmds = { 0 };
@@ -83,6 +85,7 @@ void S_Init(void)
 	/* init music */
 	num_music = 0;
 	curmusic = mus_none;
+	muslooping = 0;
 
 	vgm_start = l = W_CheckNumForName("VGM_STRT");
 	if (l != -1)
@@ -91,6 +94,8 @@ void S_Init(void)
 	Mars_RB_ResetAll(&soundcmds);
 
 	Mars_InitSoundDMA();
+
+	S_SetMusicType(musictype);
 }
 
 
@@ -237,6 +242,38 @@ void S_UpdateSounds(void)
 {
 }
 
+void S_SetMusicType(int t)
+{
+	int savemus;
+
+	if (t < mustype_none || t > mustype_cd)
+		return;
+	if (musictype == t)
+		return;
+	if (t == mustype_cd && !S_CDAvailable())
+		return;
+
+	// restart the current track
+	savemus = curmusic;
+
+	if (musictype != mustype_none)
+		S_StopSong();
+
+	if (musictype == mustype_fm)
+		Mars_UseCD(0);
+	else if (t == mustype_cd)
+		Mars_UseCD(1);
+
+	curmusic = mus_none;
+	musictype = t;
+	S_StartSong(savemus, muslooping);
+}
+
+boolean S_CDAvailable(void)
+{
+	return mars_cd_ok != 0;
+}
+
 int S_SongForLump(int lump)
 {
 	if (lump <= 0)
@@ -281,13 +318,18 @@ void S_StartSong(int music_id, int looping)
 		return;
 	}
 
-	if (music_id == curmusic)
-		return;
-
 	if (music_id >= num_music)
 		return;
 
+	if (music_id == curmusic)
+		return;
+
 	curmusic = music_id;
+	muslooping = looping;
+
+	if (musictype == mustype_none)
+		return;
+
 	while (MARS_SYS_COMM0);
 
 	MARS_SYS_COMM2 = music_id | (looping ? 0x8000:0x0000);

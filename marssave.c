@@ -52,6 +52,7 @@ typedef struct __attribute((packed))
 	int8_t viewport;
 	int8_t sfxvolume;
 	int8_t musicvolume;
+	int8_t musictype;
 } saveopts_t;
 
 static char saveslotguard[SRAM_SLOTSIZE - sizeof(savegame_t)] __attribute__((unused));
@@ -203,12 +204,15 @@ static void ReadOptions(void)
 		so.controltype = 0;
 	if (so.detailmode >= MAXDETAILMODES)
 		so.detailmode = detmode_medium;
+	if (so.musictype < mustype_none || so.musictype > mustype_cd)
+		so.musictype = mustype_fm;
 	
 	sfxvolume = so.sfxvolume;
 	musicvolume = so.musicvolume;
 	controltype = so.controltype;
 	detailmode = so.detailmode;
 	viewportNum = so.viewport;
+	musictype = so.musictype;
 }
 
 void ClearEEProm(void)
@@ -231,6 +235,7 @@ void ReadEEProm(void)
 	musicvolume = 64;
 	detailmode = detmode_medium;
 	viewportNum = 0;
+	musictype = mustype_fm;
 
 	ReadOptions();
 }

@@ -27,6 +27,7 @@ typedef enum
 	mi_controls,
 
 	mi_soundvol,
+	mi_music,
 
 	mi_screensize,
 	mi_detailmode,
@@ -64,6 +65,8 @@ static VINT	uchar;
 
 static VINT	o_cursor1, o_cursor2;
 static VINT	o_slider, o_slidertrack;
+
+VINT	o_musictype;
 
 static const char buttona[NUMCONTROLOPTIONS][8] =
 		{"Speed","Speed","Fire","Fire","Use","Use"};
@@ -122,6 +125,8 @@ void O_Init (void)
 	o_slider = W_CheckNumForName("O_SLIDER");
 	o_slidertrack = W_CheckNumForName("O_STRACK");
 
+	o_musictype = musictype;
+
 	uchar = W_CheckNumForName("CHAR_065");
 
 /*	initialize variables */
@@ -130,6 +135,9 @@ void O_Init (void)
 	cursorframe = 0;
 	cursorpos = 0;
 	screenpos = ms_main;
+
+	D_memset(menuitem, 0, sizeof(menuitem));
+	D_memset(slider, 0, sizeof(slider));
 
 	D_strncpy(menuitem[mi_game].name, "Game", 4);
 	menuitem[mi_game].x = 74;
@@ -163,6 +171,11 @@ void O_Init (void)
  	slider[0].maxval = 4;
 	slider[0].curval = 4*sfxvolume/64;
 
+	D_strncpy(menuitem[mi_music].name, "Music", 5);
+	menuitem[mi_music].x = 74;
+	menuitem[mi_music].y = 76;
+	menuitem[mi_music].slider = NULL;
+
 
 	D_strncpy(menuitem[mi_screensize].name, "Screen size", 11);
 	menuitem[mi_screensize].x = 74;
@@ -191,7 +204,7 @@ void O_Init (void)
 
 	D_strncpy(menuscreen[ms_audio].name, "Audio", 6);
 	menuscreen[ms_audio].firstitem = mi_soundvol;
-	menuscreen[ms_audio].numitems = mi_soundvol - mi_soundvol + 1;
+	menuscreen[ms_audio].numitems = mi_music - mi_soundvol + 1;
 
 	D_strncpy(menuscreen[ms_video].name, "Video", 6);
 	menuscreen[ms_video].firstitem = mi_screensize;
@@ -409,6 +422,35 @@ exit:
 					}
 				}
 			}
+
+			if (screenpos == ms_audio)
+			{
+				if (buttons & BT_RIGHT)
+				{
+					switch (itemno) {
+					case mi_music:
+						o_musictype++;
+						if (o_musictype > mustype_cd)
+							o_musictype--;
+						if (!S_CDAvailable() && o_musictype > mustype_fm)
+							o_musictype--;
+						S_SetMusicType(o_musictype);
+						break;
+					}
+				}
+
+				if (buttons & BT_LEFT)
+				{
+					switch (itemno) {
+					case mi_music:
+						o_musictype--;
+						if (o_musictype < mustype_none)
+							o_musictype++;
+						S_SetMusicType(o_musictype);
+						break;
+					}
+				}
+			}
 		}
 	}
 }
@@ -463,6 +505,21 @@ void O_Drawer (void)
 		print(items[0].x + 10, items[0].y + 40, "B");
 		print(items[0].x + 10, items[0].y + 60, "C");
 		O_DrawControl();
+	}
+
+	if (screenpos == ms_audio)
+	{
+		switch (o_musictype) {
+		case mustype_none:
+			print(menuitem[mi_music].x, menuitem[mi_music].y + 20, "off");
+			break;
+		case mustype_fm:
+			print(menuitem[mi_music].x, menuitem[mi_music].y + 20, "fm synth");
+			break;
+		case mustype_cd:
+			print(menuitem[mi_music].x, menuitem[mi_music].y + 20, "cd");
+			break;
+		}
 	}
 
 #ifndef MARS
