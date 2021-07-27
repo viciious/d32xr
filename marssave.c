@@ -175,6 +175,7 @@ static void SaveOptions(void)
 	so.viewport = viewportNum;
 	so.sfxvolume = sfxvolume;
 	so.musicvolume = musicvolume;
+	so.musictype = musictype;
 
 	Mars_StopSoundMixer();
 
