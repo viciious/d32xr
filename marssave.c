@@ -206,6 +206,8 @@ static void ReadOptions(void)
 		so.detailmode = detmode_medium;
 	if (so.musictype < mustype_none || so.musictype > mustype_cd)
 		so.musictype = mustype_fm;
+	if (so.musictype == mustype_cd && !mars_cd_ok)
+		so.musictype = mustype_fm;
 	
 	sfxvolume = so.sfxvolume;
 	musicvolume = so.musicvolume;
