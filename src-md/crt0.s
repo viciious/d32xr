@@ -298,6 +298,8 @@ handle_req:
         bls     stop_music
         cmpi.w  #0x05FF,d0
         bls     read_mouse
+        cmpi.w  #0x06FF,d0
+        bls     read_cdstate
 | unknown command
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -351,15 +353,15 @@ start_music:
         bne     start_cd
         
         /* start VGM */
-        move.w  0xA15122,d0            /* COMM2 = index | repeat flag */
+        move.w  0xA15122,d0          /* COMM2 = index | repeat flag */
         move.w  #0x8000,d1
         and.w   d0,d1                /* repeat flag */
         eor.w   d1,d0                /* clear flag from index */
         move.w  d1,fm_rep            /* repeat flag */
         move.w  d0,fm_idx            /* index 1 to N */
-        move.w  #0,0xA15104            /* set cart bank select */
+        move.w  #0,0xA15104          /* set cart bank select */
         move.l  #0,a0
-        move.l  0xA1512C,d0            /* fetch VGM offset */
+        move.l  0xA1512C,d0          /* fetch VGM offset */
         beq.b   9f
         move.l  d0,a0
         bsr     set_rom_bank
@@ -369,14 +371,14 @@ start_music:
 
         clr.w   fm_smpl
         clr.w   fm_tick
-        bsr     fm_init                /* initial YM2612 */
+        bsr     fm_init             /* initial YM2612 */
         bsr     fm_setup            /* initial VGM player */
 
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 9:
         clr.l   fm_ptr
-        clr.w   fm_idx                /* not playing VGM */
+        clr.w   fm_idx              /* not playing VGM */
 
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -493,6 +495,10 @@ read_mouse:
         bne.b   4b                  /* wait for SH2 to read mouse value */
         bra     main_loop
 
+read_cdstate:
+        move.w  cd_ok,0xA15122      /* COMM2 holds return byte */
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
 
 vert_blank:
         move.l  d1,-(sp)

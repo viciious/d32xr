@@ -38,6 +38,8 @@ volatile unsigned mars_frt_ovf_count = 0;
 unsigned mars_frtc2msec_frac = 0;
 const uint8_t* mars_newpalette = NULL;
 
+uint16_t mars_cd_ok = 0;
+
 const int NTSC_CLOCK_SPEED = 23011360; // HZ
 const int PAL_CLOCK_SPEED = 22801467; // HZ
 
@@ -213,6 +215,10 @@ void Mars_Init(void)
 
 	mars_controls = 0;
 	mars_controls2 = 0;
+
+	MARS_SYS_COMM0 = 0x0600;
+	while (MARS_SYS_COMM0);
+	mars_cd_ok = MARS_SYS_COMM2;
 }
 
 void master_vbi_handler(void)
