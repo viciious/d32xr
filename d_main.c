@@ -2,7 +2,7 @@
  
 #include "doomdef.h" 
 
-int			controltype = 0;		/* determine settings for BT_* */
+VINT		controltype = 0;		/* determine settings for BT_* */
 
 int			gamevbls;			/* may not really be vbls in multiplayer */
 int			vblsinframe;		/* range from ticrate to ticrate*2 */

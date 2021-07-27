@@ -1030,9 +1030,9 @@ typedef enum
 /* action buttons can be set to BT_A, BT_B, or BT_C */
 /* strafe and use should be set to the same thing */
 extern unsigned configuration[NUMCONTROLOPTIONS][3];
-extern	int		controltype;				/* 0 to 5 */
+extern	VINT	controltype;				/* 0 to 5 */
 
-extern	int		sfxvolume, musicvolume;		/* range from 0 to 255 */
+extern	VINT	sfxvolume, musicvolume;		/* range from 0 to 255 */
 
 /* */
 /* comnjag.c */
@@ -1096,8 +1096,6 @@ extern	jagobj_t	*pausepic;
 extern	pixel_t	*screens[2];
 extern	int		workpage;
 #endif
-
-extern	int	controltype;
 
 void WriteEEProm (void);
 void SaveGame(int slotnum);

@@ -66,9 +66,9 @@ extern	sfxchannel_t	sfxchannels[SFXCHANNELS];
 
 extern	int		finalquad;			/* the last quad mixed by update. */
 									
-extern	int		sfxvolume;			/* range 0 - 255 */
-extern	int 	musicvolume;		/* range 0 - 255 */
-extern	int		oldsfxvolume;		/* to detect transition to sound off */
+extern	VINT	sfxvolume;			/* range 0 - 255 */
+extern	VINT 	musicvolume;		/* range 0 - 255 */
+extern	VINT	oldsfxvolume;		/* to detect transition to sound off */
 
 extern	int		soundtics;			/* time spent mixing sounds */
 extern	int		soundstarttics;		/* time S_Update started */

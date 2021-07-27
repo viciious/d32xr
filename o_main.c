@@ -14,7 +14,7 @@
 #define ITEMSPACE	40
 #define SLIDEWIDTH 90
 
-extern	int		sfxvolume;		/* range from 0 to 255 */
+extern	VINT		sfxvolume;		/* range from 0 to 255 */
 
 extern void print (int x, int y, const char *string);
 extern void IN_DrawValue(int x,int y,int value);

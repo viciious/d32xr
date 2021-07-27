@@ -48,17 +48,13 @@ static VINT		vgm_start;
 
 sfxchannel_t	sfxchannels[SFXCHANNELS];
 
-int 			sfxvolume = 64;	/* range 0 - 64 */
-int 			musicvolume = 64;	/* range 0 - 64 */
+VINT 			sfxvolume = 64;	/* range 0 - 64 */
+VINT 			musicvolume = 64;	/* range 0 - 64 */
 
-int				curmusic;
+static VINT		curmusic;
 int             samplecount = 0;
 
 static marsrb_t	soundcmds = { 0 };
-
-
-extern short	use_cd;
-extern short	cd_ok;
 
 void S_StartSound(mobj_t* origin, int sound_id) ATTR_OPTIMIZE_SIZE;
 void S_StartSoundReal(mobj_t* origin, unsigned sound_id) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
