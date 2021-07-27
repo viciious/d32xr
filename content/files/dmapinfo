@@ -1,0 +1,154 @@
+gameinfo
+{
+    titleMus = "MUS_NTRO"
+    intermissionMus = "MUS_NTER"
+    endMus = "MUS_BUNN"
+    borderFlat = "ROCKS"
+    titleTime = 540
+    titlePage = "title"
+}
+map "MAP01" "Hangar"
+{
+    sky = "sky1"
+    next = "MAP02"
+    mapnumber = 1
+}
+map "MAP02" "Plant"
+{
+    sky = "sky1"
+    next = "MAP03"
+    mapnumber = 2"
+}
+map "MAP03" "Toxin Refinery"
+{
+    sky = "sky1"
+    next = "MAP04"
+    secretnext = "MAP24"
+    mapnumber = 3
+}
+map "MAP04" "Command Control"
+{
+    sky = "sky1"
+    next = "MAP05"
+    mapnumber = 4
+}
+map "MAP05" "Phobos Lab"
+{
+    sky = "sky1"
+    next = "MAP06"
+    mapnumber = 5
+}
+map "MAP06" "Central Processing"
+{
+    sky = "sky1"
+    next = "MAP07"
+    mapnumber = 6
+}
+map "MAP07" "Computer Station"
+{
+    sky = "sky1"
+    next = "MAP08"
+    mapnumber = 7
+}
+map "MAP08" "Phobos Anomaly"
+{
+    sky = "sky1"
+    next = "MAP09"
+    mapnumber = 8"
+    BaronSpecial
+}
+map "MAP09" "Deimos Anomaly"
+{
+    sky = "sky2"
+    next = "MAP10"
+    mapnumber = 9"
+}
+map "MAP10" "Containment Area"
+{
+    sky = "sky2"
+    next = "MAP11"
+    mapnumber = 10
+}
+map "MAP11" "Refinery"
+{
+    sky = "sky2"
+    next = "MAP12"
+    mapnumber = 11
+}
+map "MAP12" "Deimos Lab"
+{
+    sky = "sky2"
+    next = "MAP13"
+    mapnumber = 12
+}
+map "MAP13" "Command Center"
+{
+    sky = "sky2"
+    next = "MAP14"
+    mapnumber = 13
+}"
+map "MAP14" "Halls of the Damned"
+{
+    sky = "sky2"
+    next = "MAP15"
+    mapnumber = 14
+}
+map "MAP15" "Spawning Vats"
+{
+    sky = "sky2"
+    next = "MAP23"
+    mapnumber = 15
+}
+map "MAP16" "Tower of Babel"
+{
+    sky = "sky3"
+    next = "MAP17"
+    mapnumber = 16
+}
+map "MAP17" "Hell Keep"
+{
+    sky = "sky3"
+    next = "MAP18"
+    mapnumber = 17
+}
+map "MAP18" "Pandemonium"
+{
+    sky = "sky3"
+    next = "MAP19"
+    mapnumber = 18
+}
+map "MAP19" "House of Pain"
+{
+    sky = "sky3"
+    next = "MAP20"
+    mapnumber = 19
+}
+map "MAP20" "Unholy Cathedral"
+{
+    sky = "sky3"
+    next = "MAP21"
+    mapnumber = 20
+}
+map "MAP21" "Mt Erebus"
+{
+    sky = "sky3"
+    next = "MAP22"
+    mapnumber = 21
+}
+map "MAP22" "Limbo"
+{
+    sky = "sky3"
+    next = "MAP23"
+    mapnumber = 22
+}
+map "MAP23" "Dis"
+{
+    sky = "sky3"
+    mapnumber = 23
+}
+map "MAP24" "Military Base"
+{
+    sky = "sky1"
+    next = "MAP04"
+    mapnumber = 24
+}
