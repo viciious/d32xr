@@ -195,6 +195,7 @@ static int G_ParseMapinfo(char* buf, kvcall_t kvcall, void *ptr)
 
 		if (p)
 		{
+			if (*(p - 1) == '\r') --p;
 			*p = '\0';
 			el = p;
 		}
