@@ -120,7 +120,24 @@ void M_Start2 (boolean startup_)
 	}
 	else
 	{
-		mapnumbers = NULL;
+		int i, mapcount;
+		char lumpname[9];
+
+		mapcount = 0;
+		tempmapnums = (VINT*)I_WorkBuffer();
+		for (i = 1; i < 25; i++) {
+			D_snprintf(lumpname, sizeof(lumpname), "MAP%02d", i);
+			if (W_CheckNumForName(lumpname) < 0)
+				continue;
+			tempmapnums[mapcount++] = i;
+		}
+
+		if (mapcount > 0)
+		{
+			mapnumbers = Z_Malloc(sizeof(*mapnumbers) * mapcount, PU_STATIC, 0);
+			for (i = 0; i < mapcount; i++)
+				mapnumbers[i] = tempmapnums[i];
+		}
 	}
 
 /* cache all needed graphics	 */
