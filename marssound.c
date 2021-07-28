@@ -75,6 +75,7 @@ static void S_Spatialize(mobj_t* origin, int* pvol, int* psep) ATTR_DATA_CACHE_A
 void S_Init(void)
 {
 	int		i, l;
+	int		initmusictype;
 
 	/* init sound effects */
 	for (i=1 ; i < NUMSFX ; i++)
@@ -95,7 +96,14 @@ void S_Init(void)
 
 	Mars_InitSoundDMA();
 
-	S_SetMusicType(musictype);
+	// FIXME: this is ugly, get rid of global variables!
+
+	// musictype is now set to value from SRAM.
+	// force proper initialization by resetting it to 'none',
+	// so that S_SetMusicType won't ignore the new value
+	initmusictype = musictype;
+	musictype = mustype_none;
+	S_SetMusicType(initmusictype);
 }
 
 
@@ -242,15 +250,15 @@ void S_UpdateSounds(void)
 {
 }
 
-void S_SetMusicType(int t)
+void S_SetMusicType(int newtype)
 {
 	int savemus;
 
-	if (t < mustype_none || t > mustype_cd)
+	if (newtype < mustype_none || newtype > mustype_cd)
 		return;
-	if (musictype == t)
+	if (musictype == newtype)
 		return;
-	if (t == mustype_cd && !S_CDAvailable())
+	if (newtype == mustype_cd && !S_CDAvailable())
 		return;
 
 	// restart the current track
@@ -259,13 +267,13 @@ void S_SetMusicType(int t)
 	if (musictype != mustype_none)
 		S_StopSong();
 
-	if (t == mustype_fm)
+	if (newtype == mustype_fm)
 		Mars_UseCD(0);
-	else if (t == mustype_cd)
+	else if (newtype == mustype_cd)
 		Mars_UseCD(1);
 
 	curmusic = mus_none;
-	musictype = t;
+	musictype = newtype;
 	S_StartSong(savemus, muslooping);
 }
 
