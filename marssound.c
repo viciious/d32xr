@@ -295,24 +295,28 @@ int S_SongForLump(int lump)
 int S_SongForMapnum(int mapnum)
 {
 	int i;
-	int mus;
+	VINT songs[100];
+	VINT numsongs;
 
-	mus = mus_none;
+	numsongs = 0;
 	for (i = 0; i < num_music; i++) {
-		mus = ((mapnum - 1 + i) % num_music) + 1;
+		VINT mus = i + 1;
+
 		if (mus == gameinfo.titleMus)
 			continue;
 		if (mus == gameinfo.intermissionMus)
 			continue;
 		if (mus == gameinfo.endMus)
 			continue;
-		break;
+
+		songs[numsongs++] = mus;
+		if (numsongs == sizeof(songs) / sizeof(songs[0]))
+			break;
 	}
 
-	if (i == num_music)
+	if (numsongs == 0)
 		return mus_none;
-
-	return mus;
+	return songs[(mapnum - 1) % numsongs];
 }
 
 void S_StartSong(int music_id, int looping)

@@ -183,7 +183,7 @@ void Mars_Slave_M_AnimateFire(void)
 
 		if (I_GetTime() - start > 360)
 		{
-			M_StopFire();
+			//M_StopFire();
 		}
 	}
 
