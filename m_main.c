@@ -598,11 +598,11 @@ void M_Drawer (void)
 				if (leveltens)
 				{
 					DrawJagobjLump(numslump + leveltens,
-						item->x + 10, item->y + 60 + 2, NULL, NULL);
-					DrawJagobjLump(numslump + levelones, item->x + 24, item->y + 60 + 2, NULL, NULL);
+						item->x + 80, item->y + 40 + 3, NULL, NULL);
+					DrawJagobjLump(numslump + levelones, item->x + 94, item->y + 40 + 3, NULL, NULL);
 				}
 				else
-					DrawJagobjLump(numslump + levelones, item->x + 10, item->y + 60 + 2, NULL, NULL);
+					DrawJagobjLump(numslump + levelones, item->x + 80, item->y + 40 + 3, NULL, NULL);
 			}
 			else
 			{
@@ -611,8 +611,8 @@ void M_Drawer (void)
 			if (saveslotskill != -1)
 			{
 				/* draw difficulty information */
-				print(item->x + 10, item->y + 80 + 2, "Difficulty");
-				DrawJagobjLump(m_skilllump + saveslotskill, item->x + 10, item->y + 100 + 2, NULL, NULL);
+				print(item->x + 10, item->y + 60 + 2, "Difficulty");
+				DrawJagobjLump(m_skilllump + saveslotskill, item->x + 10, item->y + 80 + 2, NULL, NULL);
 			}
 		}
 		else
