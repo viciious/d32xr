@@ -70,22 +70,39 @@ static int Mars_ConvGamepadButtons(int ctrl)
 	if (ctrl & SEGA_CTRL_DOWN)
 		newc |= BT_DOWN;
 
-	if (ctrl & SEGA_CTRL_A)
-		newc |= BT_A | configuration[controltype][0];
-	if (ctrl & SEGA_CTRL_B)
-		newc |= BT_B | configuration[controltype][1];
-	if (ctrl & SEGA_CTRL_C)
-		newc |= BT_C | configuration[controltype][2] | BT_STRAFE;
-
-	if (ctrl & SEGA_CTRL_X)
-		newc |= BT_X | BT_PWEAPN;
-	if (ctrl & SEGA_CTRL_Y)
-		newc |= BT_Y | BT_NWEAPN;
-	if (ctrl & SEGA_CTRL_Z)
-		newc |= BT_Z | BT_AUTOMAP;
-
 	if (ctrl & SEGA_CTRL_MODE)
-		newc |= BT_DEBUG;
+	{
+		newc |= BT_MODE;
+		if (ctrl & SEGA_CTRL_A)
+			newc |= BT_A;
+		if (ctrl & SEGA_CTRL_B)
+			newc |= BT_B;
+		if (ctrl & SEGA_CTRL_C)
+			newc |= BT_C;
+
+		if (ctrl & SEGA_CTRL_X)
+			newc |= BT_X;
+		if (ctrl & SEGA_CTRL_Y)
+			newc |= BT_Y;
+		if (ctrl & SEGA_CTRL_Z)
+			newc |= BT_Z;
+	}
+	else
+	{
+		if (ctrl & SEGA_CTRL_A)
+			newc |= BT_A | configuration[controltype][0];
+		if (ctrl & SEGA_CTRL_B)
+			newc |= BT_B | configuration[controltype][1];
+		if (ctrl & SEGA_CTRL_C)
+			newc |= BT_C | configuration[controltype][2] | BT_STRAFE;
+
+		if (ctrl & SEGA_CTRL_X)
+			newc |= BT_X | BT_PWEAPN;
+		if (ctrl & SEGA_CTRL_Y)
+			newc |= BT_Y | BT_NWEAPN;
+		if (ctrl & SEGA_CTRL_Z)
+			newc |= BT_Z | BT_AUTOMAP;
+	}
 
 	return newc;
 }
@@ -577,7 +594,7 @@ void I_Update(void)
 	const int refreshHZ = (NTSC ? 60 : 50);
 
 	if (players[consoleplayer].automapflags & AF_OPTIONSACTIVE)
-		if ((ticrealbuttons & BT_DEBUG) && !(oldticrealbuttons & BT_DEBUG))
+		if ((ticrealbuttons & BT_MODE) && !(oldticrealbuttons & BT_MODE))
 		{
 			int prevdebugmode = debugmode;
 			debugmode = (debugmode + 1) % 5;

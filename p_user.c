@@ -661,6 +661,19 @@ ticphase = 23;
 			player->pendingweapon = wp_plasma;
 		if ( (buttons & BT_7) && player->weaponowned[wp_bfg] )
 			player->pendingweapon = wp_bfg;
+#else if defined(MARS)
+		if ((buttons & (BT_MODE | BT_A)) == (BT_MODE | BT_A))
+			player->pendingweapon = wp_pistol;
+		if ((buttons & (BT_MODE | BT_B)) == (BT_MODE | BT_B) && player->weaponowned[wp_shotgun])
+			player->pendingweapon = wp_shotgun;
+		if ((buttons & (BT_MODE | BT_C)) == (BT_MODE | BT_C) && player->weaponowned[wp_chaingun])
+			player->pendingweapon = wp_chaingun;
+		if ((buttons & (BT_MODE | BT_X)) == (BT_MODE | BT_X) && player->weaponowned[wp_missile])
+			player->pendingweapon = wp_missile;
+		if ((buttons & (BT_MODE | BT_Y)) == (BT_MODE | BT_Y) && player->weaponowned[wp_plasma])
+			player->pendingweapon = wp_plasma;
+		if ((buttons & (BT_MODE | BT_Z)) == (BT_MODE | BT_Z) && player->weaponowned[wp_bfg])
+			player->pendingweapon = wp_bfg;
 #endif
 
 		if ((buttons & BT_RMBTN) && (oldbuttons & BT_RMBTN))
