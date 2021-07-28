@@ -410,10 +410,14 @@ start_cd:
         move.b  0xA1200F,d1
         bne.b   0b                  /* wait until Sub-CPU is ready to receive command */
 
-        move.b  d0,0xA12012         /* repeat flag */
-        move.w  0xA15122,d0
-        addq.w  #1,d0
-        move.w  d0,0xA12010         /* track no. */
+        move.w  0xA15122,d0         /* COMM2 = index | repeat flag */
+        move.w  #0x8000,d1
+        and.w   d0,d1               /* repeat flag */
+        eor.w   d1,d0               /* clear flag from index */
+        rol.w   #1,d1               /* play with repeat or play once */
+
+        move.b  d1,0xA12012         /* repeat flag */
+        move.w  d0,0xA12010         /* track no. 1 to N */
         move.b  #'P,0xA1200E        /* set main comm port to PlayTrack command */
 1:
         move.b  0xA1200F,d0

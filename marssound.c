@@ -259,7 +259,7 @@ void S_SetMusicType(int t)
 	if (musictype != mustype_none)
 		S_StopSong();
 
-	if (musictype == mustype_fm)
+	if (t == mustype_fm)
 		Mars_UseCD(0);
 	else if (t == mustype_cd)
 		Mars_UseCD(1);
