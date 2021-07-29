@@ -506,7 +506,7 @@ void START_Title(void)
 	}
 #endif
 
-	S_StartSong(gameinfo.titleMus, 0);
+	S_StartSong(gameinfo.titleMus, 0, cdtrack_title);
 }
 
 void STOP_Title (void)

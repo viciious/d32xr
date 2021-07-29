@@ -299,7 +299,7 @@ void IN_Start (void)
 
 	DoubleBufferSetup ();
 
-	S_StartSong(gameinfo.intermissionMus, 1);
+	S_StartSong(gameinfo.intermissionMus, 1, cdtrack_intermission);
 }
 
 void IN_Stop (void)

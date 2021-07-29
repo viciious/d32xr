@@ -280,7 +280,7 @@ void F_Start (void)
 	int	i;
 	int	l;
 
-	S_StartSong(gameinfo.titleMus, 1);
+	S_StartSong(gameinfo.victoryMus, 1, cdtrack_victory);
 
 	status = fin_endtext;		/* END TEXT PRINTS FIRST */
 	textprint = false;

@@ -144,7 +144,7 @@ void G_DoLoadLevel (void)
 	music = S_SongForLump(gamemapinfo.musicLump);
 	if (!music)
 		music = S_SongForMapnum(gamemapinfo.mapNumber);
-	S_StartSong(music, 1);
+	S_StartSong(music, 1, gamemap);
 
 	Z_CheckHeap (mainzone);  		/* DEBUG */
 } 

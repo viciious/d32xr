@@ -299,8 +299,8 @@ static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
 		gi->titleMus = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "intermissionMus"))
 		gi->intermissionMus = W_CheckNumForName(value);
-	else if (!D_strcasecmp(key, "endMus"))
-		gi->endMus = W_CheckNumForName(value);
+	else if (!D_strcasecmp(key, "victoryMus"))
+		gi->victoryMus = W_CheckNumForName(value);
 }
 
 static const char* G_FindMapinfoSection(const char* buf, const char *name, size_t *psectionlen)
@@ -403,7 +403,7 @@ int G_FindGameinfo(dgameinfo_t* gi)
 
 	gi->titleMus = gi->titleMus > 0 ? S_SongForLump(gi->titleMus) : 0;
 	gi->intermissionMus = gi->intermissionMus > 0 ? S_SongForLump(gi->intermissionMus) : 0;
-	gi->endMus = gi->endMus > 0 ? S_SongForLump(gi->endMus) : 0;
+	gi->victoryMus = gi->victoryMus > 0 ? S_SongForLump(gi->victoryMus) : 0;
 
 	return 1;
 
