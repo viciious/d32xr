@@ -49,6 +49,7 @@ extern volatile unsigned mars_vblank_count;
 extern unsigned mars_frtc2msec_frac;
 extern const uint8_t* mars_newpalette;
 extern uint16_t mars_cd_ok;
+extern uint16_t mars_num_cd_tracks;
 
 void Mars_UseCD(int usecd);
 

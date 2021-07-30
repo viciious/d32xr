@@ -9,10 +9,11 @@
 enum
 {
 	cdtrack_none = -100,
+	cdtrack_lastmap = -3,
 	cdtrack_victory = -2,
 	cdtrack_intermission = -1,
 	cdtrack_title = 0,
- };
+};
 
 /* 
  *  Identifiers for all sfx in game. 

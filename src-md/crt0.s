@@ -387,7 +387,7 @@ start_music:
 
 start_cd:
         tst.w   cd_ok
-        beq.b   2f                  /* couldn't init cd */
+        beq     2f                  /* couldn't init cd */
         tst.b   cd_ok
         bne.b   0f                  /* disc found - try to play track */
         /* check for CD */
@@ -406,18 +406,25 @@ start_cd:
         cmpi.w  #0x1000,d0
         bhs.b   2f                  /* open, busy, or no disc */
         move.b  #1,cd_ok            /* we have a disc - try to play track */
+
+        move.w  0xA12022,d0         /* first and last track */
+        moveq   #0,d1
+        move.b  d0,d1
+        move.w  d1,last_track
+        lsr.w   #8,d0
+        move.w  d0,first_track
+        sub.w   d0,d1
+        addq.w  #1,d1
+        move.w  d1,number_tracks
 0:
         move.b  0xA1200F,d1
         bne.b   0b                  /* wait until Sub-CPU is ready to receive command */
 
-        move.w  0xA15122,d0         /* COMM2 = index | repeat flag */
-        move.w  #0x8000,d1
-        and.w   d0,d1               /* repeat flag */
-        eor.w   d1,d0               /* clear flag from index */
-        rol.w   #1,d1               /* play with repeat or play once */
+        move.w  0xA1512C,d0         /* COMM12 = cdtrack */
+        move.w  0xA15122,d1         /* COMM2 = looping */
 
         move.b  d1,0xA12012         /* repeat flag */
-        move.w  d0,0xA12010         /* track no. 1 to N */
+        move.w  d0,0xA12010         /* track number */
         move.b  #'P,0xA1200E        /* set main comm port to PlayTrack command */
 1:
         move.b  0xA1200F,d0
@@ -502,7 +509,39 @@ read_mouse:
         bra     main_loop
 
 read_cdstate:
-        move.w  cd_ok,0xA15122      /* COMM2 holds return byte */
+        tst.w   cd_ok
+        beq     0f                  /* couldn't init cd */
+        tst.b   cd_ok
+        bne.b   0f                  /* disc found - return state */
+        /* check for disc */
+10:
+        move.b  0xA1200F,d1
+        bne.b   10b                 /* wait until Sub-CPU is ready to receive command */
+        move.b  #'D,0xA1200E        /* set main comm port to GetDiskInfo command */
+11:
+        move.b  0xA1200F,d0
+        beq.b   11b                 /* wait for acknowledge byte in sub comm port */
+        move.b  #0x00,0xA1200E      /* acknowledge receipt of command result */
+
+        cmpi.b  #'D,d0
+        bne.b   0f                  /* couldn't get disk info */
+        move.w  0xA12020,d0         /* BIOS status */
+        cmpi.w  #0x1000,d0
+        bhs.b   0f                  /* open, busy, or no disc */
+        move.b  #1,cd_ok            /* we have a disc - get state info */
+
+        move.w  0xA12022,d0         /* first and last track */
+        moveq   #0,d1
+        move.b  d0,d1
+        move.w  d1,last_track
+        lsr.w   #8,d0
+        move.w  d0,first_track
+        sub.w   d0,d1
+        addq.w  #1,d1
+        move.w  d1,number_tracks
+0:
+        move.w  cd_ok,0xA15122
+        move.w  number_tracks,0xA1512C
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
@@ -752,6 +791,13 @@ use_cd:
 
         .global cd_ok
 cd_ok:
+        dc.w    0
+
+first_track:
+        dc.w    0
+last_track:
+        dc.w    0
+number_tracks:
         dc.w    0
 
         .align  4

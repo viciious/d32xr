@@ -39,6 +39,7 @@ unsigned mars_frtc2msec_frac = 0;
 const uint8_t* mars_newpalette = NULL;
 
 uint16_t mars_cd_ok = 0;
+uint16_t mars_num_cd_tracks = 0;
 
 const int NTSC_CLOCK_SPEED = 23011360; // HZ
 const int PAL_CLOCK_SPEED = 22801467; // HZ
@@ -219,6 +220,7 @@ void Mars_Init(void)
 	MARS_SYS_COMM0 = 0x0600;
 	while (MARS_SYS_COMM0);
 	mars_cd_ok = MARS_SYS_COMM2;
+	mars_num_cd_tracks = MARS_SYS_COMM12;
 }
 
 void master_vbi_handler(void)

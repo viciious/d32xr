@@ -331,6 +331,29 @@ void S_StartSong(int music_id, int looping, int cdtrack)
 			S_StopSong();
 			return;
 		}
+
+		if (cdtrack == curcdtrack)
+			return;
+		if (mars_num_cd_tracks == 0)
+			return;
+
+		if (cdtrack < 0)
+		{
+			cdtrack += mars_num_cd_tracks + 1;
+			if (cdtrack <= 0)
+				return;
+		}
+		else if (cdtrack == cdtrack_title)
+		{
+			cdtrack = 1;
+		}
+		else
+		{
+			int num_map_tracks = mars_num_cd_tracks + cdtrack_lastmap;
+			if (num_map_tracks <= 0)
+				return;
+			cdtrack = (cdtrack - 1) % num_map_tracks + 2;
+		}
 	}
 	else if (musictype == mustype_fm)
 	{
