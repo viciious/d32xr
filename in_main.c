@@ -58,7 +58,7 @@ VINT		snums;
 VINT		infaces[10];
 VINT		uchar;
 
-static dmapinfo_t	nextmapinfo;
+static dmapinfo_t	*nextmapinfo;
 
 /* */
 /* Lame-o print routine */
@@ -204,17 +204,20 @@ void IN_SingleDrawer(void)
 	if (statsdrawn == false)
 #endif
 	{
-		length = mystrlen(gamemapinfo.name);
-		print( (320 - (length * 14)) >> 1 , 10, gamemapinfo.name);
-		length = mystrlen("Finished");
-		print( (320 - (length * 14)) >> 1, 34, "Finished");
+		if (gamemapinfo.name != NULL)
+		{
+			length = mystrlen(gamemapinfo.name);
+			print((320 - (length * 14)) >> 1, 10, gamemapinfo.name);
+			length = mystrlen("Finished");
+			print((320 - (length * 14)) >> 1, 34, "Finished");
+		}
 
-		if (nextmapinfo.name != NULL)
+		if (nextmapinfo && nextmapinfo->name != NULL)
 		{
 			length = mystrlen("Entering");
 			print( (320 - (length * 14)) >> 1, 162, "Entering");	
-			length = mystrlen(nextmapinfo.name);
-			print( (320 - (length*14)) >> 1, 182, nextmapinfo.name);
+			length = mystrlen(nextmapinfo->name);
+			print( (320 - (length*14)) >> 1, 182, nextmapinfo->name);
 		}
 
 		DrawJagobjLump(i_kills, 71, 70, NULL, NULL);
@@ -243,11 +246,13 @@ void IN_Start (void)
 
 	valsdrawn = false;
 
-	D_memset(&nextmapinfo, 0, sizeof(nextmapinfo));
+	nextmapinfo = Z_Malloc(sizeof(*nextmapinfo), PU_STATIC, 0);
+	D_memset(nextmapinfo, 0, sizeof(*nextmapinfo));
+
 	if (gameaction == ga_secretexit && gamemapinfo.secretNext)
-		G_FindMapinfo(gamemapinfo.secretNext, &nextmapinfo);
+		G_FindMapinfo(gamemapinfo.secretNext, nextmapinfo);
 	else if (gamemapinfo.next)
-		G_FindMapinfo(gamemapinfo.next, &nextmapinfo);
+		G_FindMapinfo(gamemapinfo.next, nextmapinfo);
 
 	for (i = 0; i < MAXPLAYERS; i++) 
 	{
@@ -304,9 +309,13 @@ void IN_Start (void)
 
 void IN_Stop (void)
 {	
-	if (nextmapinfo.data)
-		Z_Free(nextmapinfo.data);
-	D_memset(&nextmapinfo, 0, sizeof(nextmapinfo));
+	if (nextmapinfo)
+	{
+		if (nextmapinfo->data)
+			Z_Free(nextmapinfo->data);
+		Z_Free(nextmapinfo);
+	}
+	nextmapinfo = NULL;
 
 	statsdrawn = false;
 	valsdrawn = false;
