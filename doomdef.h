@@ -1092,8 +1092,12 @@ int DSPFunction(void* start);
 
 extern short *palette8;
 extern int zero, ZERO, zero2;
-#endif
 int DSPRead(void volatile* adr);
+#else
+
+#define DSPRead(adr) (intptr_t)(*(adr))
+
+#endif
 
 extern	boolean		gamepaused;
 extern	jagobj_t	*pausepic;

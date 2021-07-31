@@ -5,8 +5,6 @@
 
 
 
-int DSPRead (void volatile *adr);
-
 fixed_t P_InterceptVector(divline_t* v2, divline_t* v1) ATTR_DATA_CACHE_ALIGN;
 boolean	PIT_UseLines(line_t* li) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void P_UseLines(player_t* player) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
@@ -456,7 +454,7 @@ int DSPFunction (void *start)
 	return samplecount-samp;
 }
 
-#else
+#elif !defined(MARS)
 int DSPRead (void volatile *adr)
 {
 	return *(int *)adr;
