@@ -215,7 +215,7 @@ typedef struct mobj_s
 	latecall_t		latecall;			/* set in p_base if more work needed */
 	fixed_t			x, y, z;
 
-	char			movedir;		/* 0-7 */
+	unsigned char	movedir;		/* 0-7 */
 	char			movecount;		/* when 0, select a new dir */
 	unsigned char		reactiontime;	/* if non 0, don't attack yet */
 									/* used by player to freeze a bit after */
