@@ -138,7 +138,6 @@ typedef struct
 
 extern	stbar_t	stbar;
 extern void valtostr(char *string,int val) ATTR_OPTIMIZE_SIZE;
-extern int mystrlen(const char *string);
 void ST_DrawValue(int x,int y,int value) ATTR_OPTIMIZE_SIZE;
 void ST_Num (int x, int y, int num) ATTR_OPTIMIZE_SIZE;
 void ST_InitEveryLevel(void);

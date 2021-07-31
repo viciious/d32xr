@@ -182,6 +182,8 @@ void D_strncpy (char *dest, const char *src, int maxcount);
 int D_strncasecmp (const char *s1, const char *s2, int len);
 int D_strcasecmp (const char *s1, const char *s2);
 int mystrlen(const char *string);
+int D_atoi(const char* str);
+char* D_strchr(const char* str, char chr);
 
 /*
 ===============================================================================

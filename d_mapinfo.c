@@ -112,7 +112,7 @@ static const char* G_FindNextMapinfoSection(const char *buf, size_t *len)
 		if (state < 0)
 			break;
 
-		p = strchr(l, '\n');
+		p = D_strchr(l, '\n');
 		while (*l == ' ' || *l == '\t') l++;
 		bracket = l[0] == '{' || l[0] == '}';
 
@@ -191,7 +191,7 @@ static int G_ParseMapinfo(char* buf, kvcall_t kvcall, void *ptr)
 
 	while (l) {
 		char *p, *e, *el;
-		p = strchr(l, '\n');
+		p = D_strchr(l, '\n');
 
 		if (p)
 		{
@@ -209,7 +209,7 @@ static int G_ParseMapinfo(char* buf, kvcall_t kvcall, void *ptr)
 			if (linecount > 0) { // skip the first line
 				char* val = NULL;
 
-				e = strchr(l, '=');
+				e = D_strchr(l, '=');
 				if (e && e + 1 != el) {
 					val = e + 1;
 
@@ -245,10 +245,10 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 		if (!D_strncasecmp(key, "map ", 4)) {
 			char* pp = NULL;
 
-			p = skipspaces(strchr(key, ' '));
+			p = skipspaces(D_strchr(key, ' '));
 			if (p)
 			{
-				pp = strchr(p + 1, ' ');
+				pp = D_strchr(p + 1, ' ');
 				if (pp) *pp = '\0';
 				pp = skipspaces(pp + 1);
 			}
@@ -282,7 +282,7 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 	else if (!D_strcasecmp(key, "secretnext"))
 		mi->secretNext = W_GetNumForName(value);
 	else if (!D_strcasecmp(key, "mapnumber"))
-		mi->mapNumber = atoi(value);
+		mi->mapNumber = D_atoi(value);
 	else if (!D_strcasecmp(key, "music"))
 		mi->musicLump = W_CheckNumForName(value);
 }
@@ -292,7 +292,7 @@ static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
 	if (!D_strcasecmp(key, "borderFlat"))
 		gi->borderFlat = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "titleTime"))
-		gi->titleTime = atoi(value);
+		gi->titleTime = D_atoi(value);
 	else if (!D_strcasecmp(key, "titlePage"))
 		gi->titlePage = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "titleMus"))

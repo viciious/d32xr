@@ -55,3 +55,31 @@ int D_strcasecmp (const char *s1, const char *s2)
 	return 0;
 }
 
+int D_atoi(const char* str)
+{
+	int i;
+
+	if (!str) return 0;
+
+	i = 0;
+	while (*str && (*str >= '0' && *str <= '9')) {
+		i = i * 10 + (*str - '0');
+		str++;
+	}
+	return i;
+}
+
+char* D_strchr(const char* str, char chr)
+{
+	const char* p;
+
+	if (!str) return NULL;
+
+	for (p = str; *p != '\0'; p++) {
+		if (*p == chr)
+			return (char*)p;
+	}
+
+	return NULL;
+}
+
