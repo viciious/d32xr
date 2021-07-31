@@ -313,7 +313,8 @@ void R_SetViewportSize(int num)
 	centerYFrac = centerY * FRACUNIT;
 
 	/* proper screen size would be 160*100, stretched to 224 is 2.2 scale */
-	stretch = (fixed_t)((160.0f / width) * ((float)height / 180.0f) * 2.2f * FRACUNIT);
+	//stretch = (fixed_t)((160.0f / width) * ((float)height / 180.0f) * 2.2f * FRACUNIT);
+	stretch = ((FRACUNIT * 16 * height) / 180 * 22) / width;
 	stretchX = stretch * centerX;
 
 	R_InitMathTables();
