@@ -12,6 +12,7 @@ int			numtextures;
 texture_t	*textures;
 
 spritedef_t sprites[NUMSPRITES];
+spriteframe_t* spriteframes;
 
 VINT			*flattranslation;		/* for global animation */
 VINT			*texturetranslation;	/* for global animation */
@@ -440,7 +441,6 @@ void R_InitSpriteDefs(const char** namelist)
 	int		end;
 	int		numsprites = NUMSPRITES;
 	tempspriteframe_t* sprtemp;
-	spriteframe_t *sprfinal;
 	int		maxframe;
 	byte	*tempbuf;
 	int		totalframes;
@@ -543,24 +543,25 @@ void R_InitSpriteDefs(const char** namelist)
 		totalframes += maxframe;
 	}
 
-	sprfinal = Z_Malloc(totalframes * sizeof(spriteframe_t), PU_STATIC, NULL);
+	spriteframes = Z_Malloc(totalframes * sizeof(spriteframe_t), PU_STATIC, NULL);
 	sprtemp = (void*)tempbuf;
 
 	for (i = 0; i < totalframes; i++)
 	{
-		D_memcpy(sprfinal[i].lump, sprtemp[i].lump, sizeof(sprtemp[i].lump));
+		D_memcpy(spriteframes[i].lump, sprtemp[i].lump, sizeof(sprtemp[i].lump));
 		if (!sprtemp[i].rotate)
 			for (rotation = 1; rotation < 8; rotation++)
-				sprfinal[i].lump[rotation] = -1;
+				spriteframes[i].lump[rotation] = -1;
 	}
 
+	l = 0;
 	for (i = 0; i < numsprites; i++)
 	{
 		int numframes;
 
 		numframes = sprites[i].numframes;
-		sprites[i].spriteframes = sprfinal;
+		sprites[i].firstframe = l;
 
-		sprfinal += numframes;
+		l += numframes;
 	}
 }

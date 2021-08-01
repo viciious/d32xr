@@ -60,7 +60,7 @@ static void R_PrepMobj(mobj_t *thing)
    if ((thing->frame & FF_FRAMEMASK) >= sprdef->numframes)
        return;
 
-   sprframe = &sprdef->spriteframes[thing->frame & FF_FRAMEMASK];
+   sprframe = &spriteframes[sprdef->firstframe + (thing->frame & FF_FRAMEMASK)];
 
    if(sprframe->lump[1] != -1)
    {
@@ -122,7 +122,7 @@ static void R_PrepPSprite(pspdef_t *psp)
    const state_t* state = &states[psp->state];
 
    sprdef = &sprites[state->sprite];
-   sprframe = &sprdef->spriteframes[state->frame & FF_FRAMEMASK];
+   sprframe = &spriteframes[sprdef->firstframe + (state->frame & FF_FRAMEMASK)];
    lump     = sprframe->lump[0];
 
    if(vissprite_p == vissprites + MAXVISSPRITES)

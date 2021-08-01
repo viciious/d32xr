@@ -34,7 +34,7 @@ void BufferedDrawSprite (int sprite, int frame, int rotation)
 	if ( (frame&FF_FRAMEMASK) >= sprdef->numframes )
 		I_Error ("BufferedDrawSprite: invalid sprite frame %i : %i "
 		,sprite,frame);
-	sprframe = &sprdef->spriteframes[ frame & FF_FRAMEMASK];
+	sprframe = &spriteframes[sprdef->firstframe + (frame & FF_FRAMEMASK)];
 
 	if (sprframe->lump[rotation] != -1)
 		lump = sprframe->lump[rotation];
