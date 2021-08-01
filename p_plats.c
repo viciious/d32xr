@@ -8,7 +8,7 @@
 #include "doomdef.h"
 #include "p_local.h"
 
-plat_t	**activeplats/*[MAXPLATS]*/ = NULL;
+plat_t	*activeplats[MAXPLATS];
 
 /*================================================================== */
 /* */
