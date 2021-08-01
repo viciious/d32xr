@@ -54,6 +54,9 @@ extern uint16_t mars_num_cd_tracks;
 void Mars_UpdateCD(void);
 void Mars_UseCD(int usecd);
 
+void Mars_PlayTrack(char usecd, int playtrack, void* vgmptr, char looping);
+void Mars_StopTrack(void);
+
 #define Mars_GetTicCount() (*(volatile int *)((intptr_t)&mars_vblank_count | 0x20000000))
 int Mars_GetFRTCounter(void);
 

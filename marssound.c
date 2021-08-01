@@ -269,11 +269,6 @@ void S_SetMusicType(int newtype)
 	if (musictype != mustype_none)
 		S_StopSong();
 
-	if (newtype == mustype_fm)
-		Mars_UseCD(0);
-	else if (newtype == mustype_cd)
-		Mars_UseCD(1);
-
 	curmusic = mus_none;
 	musictype = newtype;
 	curcdtrack = cdtrack_none;
@@ -371,28 +366,17 @@ void S_StartSong(int music_id, int looping, int cdtrack)
 	if (musictype == mustype_none)
 		return;
 
-	while (MARS_SYS_COMM0);
-
 	if (musictype == mustype_cd)
-	{
-		MARS_SYS_COMM2 = looping;
-		MARS_SYS_COMM12 = playtrack;
-		MARS_SYS_COMM0 = 0x0300; /* start music */
-	}
+		Mars_PlayTrack(1, playtrack, NULL, looping);
 	else
-	{
-		MARS_SYS_COMM2 = playtrack | (looping ? 0x8000 : 0x0000);
-		*(volatile intptr_t*)&MARS_SYS_COMM12 = (intptr_t)W_POINTLUMPNUM(vgm_start + playtrack);
-		MARS_SYS_COMM0 = 0x0300; /* start music */
-	}
+		Mars_PlayTrack(0, playtrack, W_POINTLUMPNUM(vgm_start + playtrack), looping);
 }
 
 void S_StopSong(void)
 {
-	while (MARS_SYS_COMM0) ;
+	Mars_StopTrack();
 	curmusic = mus_none;
 	curcdtrack = cdtrack_none;
-	MARS_SYS_COMM0 = 0x0400; /* stop music */
 }
 
 static void S_Update(int16_t* buffer)
