@@ -360,12 +360,18 @@ void R_InitMathTables(void)
 // variables used to look up
 //  and range check thing_t sprites patches
 
+typedef struct
+{
+	short		rotate;		/* if false use 0 for any position */
+	short		lump[8];	/* lump to use for view angles 0-7 */
+} tempspriteframe_t;
+
 //
 // R_InstallSpriteLump
 // Local function for R_InitSprites.
 //
 void
-R_InstallSpriteLump(const char* spritename, char letter, spriteframe_t* frame,
+R_InstallSpriteLump(const char* spritename, char letter, tempspriteframe_t* frame,
 	int lump, int rotation, boolean flipped)
 {
 	int r;
@@ -373,28 +379,28 @@ R_InstallSpriteLump(const char* spritename, char letter, spriteframe_t* frame,
 	if (rotation == 0)
 	{
 		// the lump should be used for all rotations
-		if (frame->rotate == 1)
+		if (frame->rotate == 0)
 			I_Error("R_InitSprites: Sprite %s frame %c has "
 				"multip rot=0 lump", spritename, letter);
 
-		if (frame->rotate == 2)
+		if (frame->rotate == 1)
 			I_Error("R_InitSprites: Sprite %s frame %c has rotations "
 				"and a rot=0 lump", spritename, letter);
 
-		frame->rotate = 1;
+		frame->rotate = 0;
 		for (r = 0; r < 8; r++)
 		{
-			frame->lump[r] = lump * (flipped ? -1 : 1);
+			frame->lump[r] = flipped ? (lump + 1) * -1 : lump;
 		}
 		return;
 	}
 
 	// the lump is only used for one rotation
-	if (frame->rotate == 1)
+	if (frame->rotate == 0)
 		I_Error("R_InitSprites: Sprite %s frame %c has rotations "
 			"and a rot=0 lump", spritename, letter);
 
-	frame->rotate = 2;
+	frame->rotate = 1;
 
 	// make 0 based
 	rotation--;
@@ -403,7 +409,7 @@ R_InstallSpriteLump(const char* spritename, char letter, spriteframe_t* frame,
 			"has two lumps mapped to it",
 			spritename, letter, '1' + rotation);
 
-	frame->lump[rotation] = lump * (flipped ? -1 : 1);
+	frame->lump[rotation] = flipped ? (lump + 1) * -1 : lump;
 }
 
 
@@ -433,7 +439,8 @@ void R_InitSpriteDefs(const char** namelist)
 	int		start;
 	int		end;
 	int		numsprites = NUMSPRITES;
-	spriteframe_t	*sprtemp, *sprfinal;
+	tempspriteframe_t* sprtemp;
+	spriteframe_t *sprfinal;
 	int		maxframe;
 	byte	*tempbuf;
 	int		totalframes;
@@ -465,7 +472,7 @@ void R_InitSpriteDefs(const char** namelist)
 	{
 		const char* spritename = namelist[i];
 
-		D_memset(sprtemp, -1, sizeof(spriteframe_t) * 29);
+		D_memset(sprtemp, -1, sizeof(tempspriteframe_t) * 29);
 		maxframe = -1;
 
 		// scan the lumps,
@@ -513,11 +520,11 @@ void R_InitSpriteDefs(const char** namelist)
 			switch ((int)sprtemp[frame].rotate)
 			{
 			case -1:
-				sprtemp[frame].rotate = 1;
-			case 1:
+				sprtemp[frame].rotate = 0;
+			case 0:
 				// only the first rotation is needed
 				break;
-			case 2:
+			case 1:
 				// must have all 8 frames
 				for (rotation = 0; rotation < 8; rotation++)
 					if (sprtemp[frame].lump[rotation] == -1)
@@ -537,18 +544,19 @@ void R_InitSpriteDefs(const char** namelist)
 	}
 
 	sprfinal = Z_Malloc(totalframes * sizeof(spriteframe_t), PU_STATIC, NULL);
-	D_memcpy(sprfinal, tempbuf, totalframes * sizeof(spriteframe_t));
+	sprtemp = (void*)tempbuf;
+
+	for (i = 0; i < totalframes; i++)
+	{
+		D_memcpy(sprfinal[i].lump, sprtemp[i].lump, sizeof(sprtemp[i].lump));
+	}
 
 	for (i = 0; i < numsprites; i++)
 	{
-		int f;
 		int numframes;
 
 		numframes = sprites[i].numframes;
 		sprites[i].spriteframes = sprfinal;
-
-		for (f = 0; f < maxframe; f++)
-			sprfinal[f].rotate -= 1;
 
 		sprfinal += numframes;
 	}

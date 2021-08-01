@@ -62,7 +62,7 @@ static void R_PrepMobj(mobj_t *thing)
 
    sprframe = &sprdef->spriteframes[thing->frame & FF_FRAMEMASK];
 
-   if(sprframe->rotate)
+   if(sprframe->lump[1] != -1)
    {
       // select proper rotation depending on player's view point
       ang  = R_PointToAngle2(vd.viewx, vd.viewy, thing->x, thing->y);
@@ -78,7 +78,7 @@ static void R_PrepMobj(mobj_t *thing)
    flip = false;
    if (lump < 0)
    {
-      lump = -lump;
+      lump = -(lump + 1);
       flip = true;
    }
 

@@ -36,7 +36,7 @@ void BufferedDrawSprite (int sprite, int frame, int rotation)
 		,sprite,frame);
 	sprframe = &sprdef->spriteframes[ frame & FF_FRAMEMASK];
 
-	if (sprframe->rotate)
+	if (sprframe->lump[rotation] != -1)
 		lump = sprframe->lump[rotation];
 	else
 		lump = sprframe->lump[0];
@@ -44,7 +44,7 @@ void BufferedDrawSprite (int sprite, int frame, int rotation)
 	flip = false;
 	if (lump < 0)
 	{
-		lump = -lump;
+		lump = -(lump + 1);
 		flip = true;
 	}
 
