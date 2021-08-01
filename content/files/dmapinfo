@@ -2,7 +2,7 @@ gameinfo
 {
     titleMus = "MUS_NTRO"
     intermissionMus = "MUS_NTER"
-    endMus = "MUS_BUNN"
+    victoryMus = "MUS_BUNN"
     borderFlat = "ROCKS"
     titleTime = 540
     titlePage = "title"
