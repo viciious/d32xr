@@ -549,6 +549,9 @@ void R_InitSpriteDefs(const char** namelist)
 	for (i = 0; i < totalframes; i++)
 	{
 		D_memcpy(sprfinal[i].lump, sprtemp[i].lump, sizeof(sprtemp[i].lump));
+		if (!sprtemp[i].rotate)
+			for (rotation = 1; rotation < 8; rotation++)
+				sprfinal[i].lump[rotation] = -1;
 	}
 
 	for (i = 0; i < numsprites; i++)
