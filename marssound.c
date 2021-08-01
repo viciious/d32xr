@@ -328,33 +328,23 @@ void S_StartSong(int music_id, int looping, int cdtrack)
 
 	if (musictype == mustype_cd)
 	{
-		if (music_id == cdtrack_none)
+		if (cdtrack == cdtrack_none)
 		{
 			S_StopSong();
 			return;
 		}
 
-		if (cdtrack == curcdtrack)
-			return;
-		if (mars_num_cd_tracks == 0)
-			return;
+		/* recheck cd and get number of tracks */
+		Mars_UpdateCD();
 
-		if (cdtrack < 0)
+		int num_map_tracks = mars_num_cd_tracks + cdtrack_lastmap;
+		if ((mars_cd_ok & 0x0100) && (num_map_tracks > 0))
 		{
-			playtrack = cdtrack + mars_num_cd_tracks + 1;
-			if (playtrack <= 0)
-				return;
-		}
-		else if (cdtrack == cdtrack_title)
-		{
-			playtrack = 1;
-		}
-		else
-		{
-			int num_map_tracks = mars_num_cd_tracks + cdtrack_lastmap;
-			if (num_map_tracks <= 0)
-				return;
-			playtrack = (cdtrack - 1) % num_map_tracks + 2;
+			/* there is a disc with at least enough tracks */
+			if (cdtrack <= cdtrack_title)
+				playtrack = cdtrack + mars_num_cd_tracks;
+			else
+				playtrack = cdtrack % num_map_tracks;
 		}
 	}
 	else if (musictype == mustype_fm)
@@ -392,7 +382,7 @@ void S_StartSong(int music_id, int looping, int cdtrack)
 	else
 	{
 		MARS_SYS_COMM2 = playtrack | (looping ? 0x8000 : 0x0000);
-		*(volatile intptr_t*)&MARS_SYS_COMM12 = (intptr_t)W_POINTLUMPNUM(vgm_start + music_id);
+		*(volatile intptr_t*)&MARS_SYS_COMM12 = (intptr_t)W_POINTLUMPNUM(vgm_start + playtrack);
 		MARS_SYS_COMM0 = 0x0300; /* start music */
 	}
 }

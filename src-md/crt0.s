@@ -390,6 +390,7 @@ start_cd:
         beq     2f                  /* couldn't init cd */
         tst.b   cd_ok
         bne.b   0f                  /* disc found - try to play track */
+        clr.w   number_tracks
         /* check for CD */
 10:
         move.b  0xA1200F,d1
@@ -513,6 +514,7 @@ read_cdstate:
         beq     0f                  /* couldn't init cd */
         tst.b   cd_ok
         bne.b   0f                  /* disc found - return state */
+        clr.w	number_tracks
         /* check for disc */
 10:
         move.b  0xA1200F,d1

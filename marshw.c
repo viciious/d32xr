@@ -217,10 +217,14 @@ void Mars_Init(void)
 	mars_controls = 0;
 	mars_controls2 = 0;
 
-	MARS_SYS_COMM0 = 0x0600;
-	while (MARS_SYS_COMM0);
-	mars_cd_ok = MARS_SYS_COMM2;
-	mars_num_cd_tracks = MARS_SYS_COMM12;
+	Mars_UpdateCD();
+
+	if (mars_cd_ok)
+	{
+		/* give the CD two seconds to init */
+		i = mars_vblank_count + 120;
+		while (i > mars_vblank_count) ;
+	}
 }
 
 void master_vbi_handler(void)
@@ -260,6 +264,16 @@ void Mars_WriteSRAM(const uint8_t* buffer, int offset, int len)
 		MARS_SYS_COMM0 = 0x0200 | *ptr++;    /* Write SRAM */
 		while (MARS_SYS_COMM0);
 	}
+}
+
+void Mars_UpdateCD(void)
+{
+	while (MARS_SYS_COMM0);
+
+	MARS_SYS_COMM0 = 0x0600;
+	while (MARS_SYS_COMM0);
+	mars_cd_ok = MARS_SYS_COMM2;
+	mars_num_cd_tracks = MARS_SYS_COMM12;
 }
 
 void Mars_UseCD(int usecd)
