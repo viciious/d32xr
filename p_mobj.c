@@ -65,6 +65,7 @@ void P_RemoveMobj (mobj_t *mobj)
 
 	mobj->target = NULL;
 	mobj->extradata = 0;
+	mobj->latecall = (latecall_t)-1;	/* make sure it doesn't come back to life... */
 
 /* unlink from mobj list */
 	P_RemoveMobjFromCurrList(mobj);
@@ -148,27 +149,32 @@ void P_RespawnSpecials (void)
 
 boolean P_SetMobjState (mobj_t *mobj, statenum_t state)
 {
-	const state_t	*st;
-	
-	if (state == S_NULL)
-	{
-		mobj->state = S_NULL;
-		P_RemoveMobj (mobj);
-		return false;
-	}
-	
-	st = &states[state];
+	uint16_t changes = 0xffff;
 
-	mobj->state = state;
-	mobj->tics = st->tics;
-	mobj->sprite = st->sprite;
-	mobj->frame = st->frame;
+	do {
+		const state_t* st;
 
-	if (st->action)		/* call action functions when the state is set */
-		st->action (mobj);	
+		if (state == S_NULL)
+		{
+			mobj->state = S_NULL;
+			P_RemoveMobj(mobj);
+			return false;
+		}
 
-	mobj->latecall = NULL;	/* make sure it doesn't come back to life... */
-	
+		st = &states[state];
+		mobj->state = state;
+		mobj->tics = st->tics;
+		mobj->sprite = st->sprite;
+		mobj->frame = st->frame;
+
+		if (st->action)		/* call action functions when the state is set */
+			st->action(mobj);
+
+		mobj->latecall = NULL;	/* make sure it doesn't come back to life... */
+
+		state = st->nextstate;
+	} while (!mobj->tics && --changes > 0);
+
 	return true;
 }
 

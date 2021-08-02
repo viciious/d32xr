@@ -353,7 +353,7 @@ void P_XYMovement(mobj_t *mo)
          {
             if(ceilingline && ceilingline->sidenum[1] != -1 && LD_BACKSECTOR(ceilingline)->ceilingpic == -1)
             {
-               P_RemoveMobj(mo);
+               mo->latecall = P_RemoveMobj;
                return;
             }
             mo->extradata = (intptr_t)hitthing;
@@ -484,9 +484,7 @@ void P_MobjThinker(mobj_t *mobj)
 
        // you can cycle through multiple states in a tic
        if (!mobj->tics)
-       {
            P_SetMobjState(mobj, states[mobj->state].nextstate);
-       }
    }
 }
 
@@ -501,11 +499,8 @@ void P_RunMobjBase2(void)
     for (mo = mobjhead.next; mo != (void*)&mobjhead; mo = next)
     {
         next = mo->next;	/* in case mo is removed this time */
-        if (!mo->player) {
-            // clear any latecall from the previous frame
-            mo->latecall = NULL;
+        if (!mo->player)
             P_MobjThinker(mo);
-        }
     }
 }
 
@@ -527,8 +522,7 @@ void P_RunMobjLate(void)
     {
         next = mo->next;	/* in case mo is removed this time */
         if (mo->latecall)
-        {
             mo->latecall(mo);
-        }
+        mo->latecall = NULL;
     }
 }
