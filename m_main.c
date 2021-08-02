@@ -404,16 +404,8 @@ int M_Ticker (void)
 	{
 		int itemno = menuscr->firstitem + cursorpos;
 
-		if (itemno == mi_level)
-		{
-			if (movecount == 1)
-				movecount = 0;		/* faster level selection */
-		}
-		else
-		{
-			if (movecount == MOVEWAIT)
-				movecount = 0;		/* slower everything else */
-		}
+		if (movecount == MOVEWAIT)
+			movecount = 0;		/* slower everything else */
 
 		if (++movecount == 1)
 		{
