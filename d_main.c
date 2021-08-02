@@ -7,6 +7,8 @@ VINT		controltype = 0;		/* determine settings for BT_* */
 int			gamevbls;			/* may not really be vbls in multiplayer */
 int			vblsinframe;		/* range from ticrate to ticrate*2 */
 
+int			ticsperframe = MINTICSPERFRAME;
+
 int			maxlevel;			/* highest level selectable in menu (1-25) */
 jagobj_t	*backgroundpic;
 

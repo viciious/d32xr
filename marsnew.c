@@ -590,8 +590,12 @@ void I_Update(void)
 	static int prevsec = 0;
 	static int framenum = 0;
 	boolean NTSC = (MARS_VDP_DISPMODE & MARS_NTSC_FORMAT) != 0;
-	const int ticwait = (demoplayback ? 3 : 2); // demos were recorded at 15-20fps
 	const int refreshHZ = (NTSC ? 60 : 50);
+
+	if (ticsperframe < MINTICSPERFRAME)
+		ticsperframe = MINTICSPERFRAME;
+	else if (ticsperframe > MAXTICSPERFRAME)
+		ticsperframe = MAXTICSPERFRAME;
 
 	if (players[consoleplayer].automapflags & AF_OPTIONSACTIVE)
 		if ((ticrealbuttons & BT_MODE) && !(oldticrealbuttons & BT_MODE))
@@ -611,6 +615,7 @@ void I_Update(void)
 	/* */
 	/* wait until on the third tic after last display */
 	/* */
+	const int ticwait = (demoplayback ? 3 : ticsperframe); // demos were recorded at 15-20fps
 	do
 	{
 		ticcount = I_GetTime();

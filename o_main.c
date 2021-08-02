@@ -31,6 +31,7 @@ typedef enum
 
 	mi_screensize,
 	mi_detailmode,
+	mi_framerate,
 
 	mi_controltype,
 
@@ -45,7 +46,7 @@ typedef struct
 	char	maxval;
 } slider_t;
 
-static slider_t slider[3];
+static slider_t slider[4];
 
 typedef struct
 {
@@ -191,6 +192,13 @@ void O_Init (void)
 	slider[2].maxval = MAXDETAILMODES;
 	slider[2].curval = detailmode + 1;
 
+	D_strncpy(menuitem[mi_framerate].name, "Framerate", 15);
+	menuitem[mi_framerate].x = 74;
+	menuitem[mi_framerate].y = 116;
+	menuitem[mi_framerate].slider = &slider[3];
+	slider[3].maxval = MAXTICSPERFRAME - MINTICSPERFRAME;
+	slider[3].curval = MAXTICSPERFRAME - ticsperframe;
+
 
 	D_strncpy(menuitem[mi_controltype].name, "Gamepad", 7);
 	menuitem[mi_controltype].x = 74;
@@ -208,7 +216,7 @@ void O_Init (void)
 
 	D_strncpy(menuscreen[ms_video].name, "Video", 6);
 	menuscreen[ms_video].firstitem = mi_screensize;
-	menuscreen[ms_video].numitems = mi_detailmode - mi_screensize + 1;
+	menuscreen[ms_video].numitems = mi_framerate - mi_screensize + 1;
 
 	D_strncpy(menuscreen[ms_controls].name, "Controls", 8);
 	menuscreen[ms_controls].firstitem = mi_controltype;
@@ -357,14 +365,14 @@ exit:
 			if (buttons & BT_RIGHT)
 			{
 				slider->curval++;
-					if (slider->curval > slider->maxval)
-						slider->curval = slider->maxval;
+				if (slider->curval > slider->maxval)
+					slider->curval = slider->maxval;
 			}
 			if (buttons & BT_LEFT)
 			{
 				slider->curval--;
-					if (slider->curval < 0)
-						slider->curval = 0;
+				if (slider->curval < 0)
+					slider->curval = 0;
 			}
 
 			switch (itemno)
@@ -378,6 +386,9 @@ exit:
 				break;
 			case mi_detailmode:
 				R_SetDetailMode(slider->curval - 1);
+				break;
+			case mi_framerate:
+				ticsperframe = MAXTICSPERFRAME - slider->curval;
 				break;
 			default:
 				break;
