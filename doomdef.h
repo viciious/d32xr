@@ -638,7 +638,7 @@ typedef struct
 
 typedef void (*memblockcall_t) (void *, void*);
 
-extern int framecount;
+extern VINT framecount;
 
 extern	memzone_t	*mainzone;
 extern	memzone_t	*refzone;

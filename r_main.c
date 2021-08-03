@@ -78,15 +78,9 @@ viewdef_t       vd;
 player_t	*viewplayer;
 
 VINT			validcount = 1;		/* increment every time a check is made */
-int			framecount;		/* incremented every frame */
+VINT			framecount;		/* incremented every frame */
 
 int			extralight;			/* bumped light from gun blasts */
-
-/* */
-/* sky mapping */
-/* */
-int			skytexture;
-
 
 /* */
 /* precalculated math */
