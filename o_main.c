@@ -165,7 +165,7 @@ void O_Init (void)
 	menuitem[mi_controls].screen = ms_controls;
 
 
-    D_strncpy(menuitem[mi_soundvol].name, "Volume", 6);
+	D_strncpy(menuitem[mi_soundvol].name, "Sfx volume", 10);
 	menuitem[mi_soundvol].x = 74;
 	menuitem[mi_soundvol].y = 36;
 	menuitem[mi_soundvol].slider = &slider[0];
