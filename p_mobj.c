@@ -69,10 +69,17 @@ void P_RemoveMobj (mobj_t *mobj)
 
 /* unlink from mobj list */
 	P_RemoveMobjFromCurrList(mobj);
-/* link to free mobj list */
-	P_AddMobjToList(mobj, (void*)&freemobjhead);
+/* link to limbo mobj list */
+	P_AddMobjToList(mobj, (void*)&limbomobjhead);
 }
 
+void P_FreeMobj(mobj_t* mobj)
+{
+/* unlink from mobj list */
+	P_RemoveMobjFromCurrList(mobj);
+/* link to limbo mobj list */
+	P_AddMobjToList(mobj, (void*)&freemobjhead);
+}
 
 /*
 ===============

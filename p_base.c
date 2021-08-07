@@ -525,4 +525,11 @@ void P_RunMobjLate(void)
             mo->latecall(mo);
         mo->latecall = NULL;
     }
+
+    /* move entities, removed this frame, from limbo to free list */
+    for (mo = limbomobjhead.next; mo != (void*)&limbomobjhead; mo = next)
+    {
+        next = mo->next;
+        P_FreeMobj(mo);
+    }
 }

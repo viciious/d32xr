@@ -24,8 +24,10 @@ processing
 thinker_t	thinkercap;	/* both the head and tail of the thinker list */
 degenmobj_t		mobjhead;	/* head and tail of mobj list */
 degenmobj_t		freemobjhead;	/* head and tail of free mobj list */
-int			activethinkers;	/* debug count */
-int			activemobjs;	/* debug count */
+degenmobj_t		limbomobjhead;
+
+//int			activethinkers;	/* debug count */
+//int			activemobjs;	/* debug count */
 
 /*
 ===============
@@ -40,6 +42,7 @@ void P_InitThinkers (void)
 	thinkercap.prev = thinkercap.next  = &thinkercap;
 	mobjhead.next = mobjhead.prev = (void *)&mobjhead;
 	freemobjhead.next = freemobjhead.prev = (void *)&freemobjhead;
+	limbomobjhead.next = limbomobjhead.prev = (void*)&limbomobjhead;
 }
 
 
@@ -90,7 +93,7 @@ void P_RunThinkers (void)
 {
 	thinker_t	*currentthinker;
 	
-	activethinkers = 0;
+	//activethinkers = 0;
 	
 	currentthinker = thinkercap.next;
 	while (currentthinker != &thinkercap)
@@ -107,7 +110,7 @@ void P_RunThinkers (void)
 			{
 				currentthinker->function (currentthinker);
 			}
-			activethinkers++;
+			//activethinkers++;
 		}
 		currentthinker = currentthinker->next;
 	}
