@@ -7835,7 +7835,7 @@
     },
     {
         "compressed": true,
-        "compressed_size": 2983,
+        "compressed_size": 2906,
         "filename": "sidedefs",
         "name": "SIDEDEFS",
         "size": 17400
@@ -7843,26 +7843,26 @@
     {
         "filename": "vertexes",
         "name": "VERTEXES",
-        "size": 3192
+        "size": 3240
     },
     {
         "compressed": true,
-        "compressed_size": 5217,
+        "compressed_size": 5476,
         "filename": "segs",
         "name": "SEGS",
-        "size": 7620
+        "size": 7992
     },
     {
         "compressed": true,
-        "compressed_size": 688,
+        "compressed_size": 733,
         "filename": "ssectors",
         "name": "SSECTORS",
-        "size": 816
+        "size": 868
     },
     {
         "filename": "nodes",
         "name": "NODES",
-        "size": 11368
+        "size": 12096
     },
     {
         "compressed": true,
@@ -7879,7 +7879,7 @@
     {
         "filename": "blockmap",
         "name": "BLOCKMAP",
-        "size": 6812
+        "size": 4556
     },
     {
         "name": "MAP02",
@@ -7887,21 +7887,21 @@
     },
     {
         "compressed": true,
-        "compressed_size": 1414,
+        "compressed_size": 1410,
         "filename": "things_001",
         "name": "THINGS",
-        "size": 2110
+        "size": 2100
     },
     {
         "compressed": true,
-        "compressed_size": 8293,
+        "compressed_size": 8294,
         "filename": "linedefs_001",
         "name": "LINEDEFS",
         "size": 13272
     },
     {
         "compressed": true,
-        "compressed_size": 6382,
+        "compressed_size": 6240,
         "filename": "sidedefs_001",
         "name": "SIDEDEFS",
         "size": 36540
@@ -7909,26 +7909,26 @@
     {
         "filename": "vertexes_001",
         "name": "VERTEXES",
-        "size": 6736
+        "size": 7064
     },
     {
         "compressed": true,
-        "compressed_size": 10988,
+        "compressed_size": 11727,
         "filename": "segs_001",
         "name": "SEGS",
-        "size": 15984
+        "size": 16992
     },
     {
         "compressed": true,
-        "compressed_size": 1343,
+        "compressed_size": 1481,
         "filename": "ssectors_001",
         "name": "SSECTORS",
-        "size": 1588
+        "size": 1764
     },
     {
         "filename": "nodes_001",
         "name": "NODES",
-        "size": 22176
+        "size": 24640
     },
     {
         "compressed": true,
@@ -7945,7 +7945,7 @@
     {
         "filename": "blockmap_001",
         "name": "BLOCKMAP",
-        "size": 11624
+        "size": 8192
     },
     {
         "name": "MAP03",
@@ -7967,7 +7967,7 @@
     },
     {
         "compressed": true,
-        "compressed_size": 5721,
+        "compressed_size": 5639,
         "filename": "sidedefs_002",
         "name": "SIDEDEFS",
         "size": 33900
@@ -7975,30 +7975,30 @@
     {
         "filename": "vertexes_002",
         "name": "VERTEXES",
-        "size": 6432
+        "size": 6704
     },
     {
         "compressed": true,
-        "compressed_size": 10356,
+        "compressed_size": 10816,
         "filename": "segs_002",
         "name": "SEGS",
-        "size": 14772
+        "size": 15528
     },
     {
         "compressed": true,
-        "compressed_size": 1267,
+        "compressed_size": 1395,
         "filename": "ssectors_002",
         "name": "SSECTORS",
-        "size": 1508
+        "size": 1664
     },
     {
         "filename": "nodes_002",
         "name": "NODES",
-        "size": 21056
+        "size": 23240
     },
     {
         "compressed": true,
-        "compressed_size": 1012,
+        "compressed_size": 1010,
         "filename": "sectors_002",
         "name": "SECTORS",
         "size": 4082
@@ -8011,7 +8011,7 @@
     {
         "filename": "blockmap_002",
         "name": "BLOCKMAP",
-        "size": 8490
+        "size": 6772
     },
     {
         "name": "MAP04",
@@ -8019,10 +8019,10 @@
     },
     {
         "compressed": true,
-        "compressed_size": 1413,
+        "compressed_size": 1401,
         "filename": "things_003",
         "name": "THINGS",
-        "size": 2120
+        "size": 2100
     },
     {
         "compressed": true,
@@ -8033,7 +8033,7 @@
     },
     {
         "compressed": true,
-        "compressed_size": 4970,
+        "compressed_size": 4879,
         "filename": "sidedefs_003",
         "name": "SIDEDEFS",
         "size": 29430
@@ -8041,26 +8041,26 @@
     {
         "filename": "vertexes_003",
         "name": "VERTEXES",
-        "size": 5848
+        "size": 5960
     },
     {
         "compressed": true,
-        "compressed_size": 9055,
+        "compressed_size": 9389,
         "filename": "segs_003",
         "name": "SEGS",
-        "size": 13056
+        "size": 13596
     },
     {
         "compressed": true,
-        "compressed_size": 1097,
+        "compressed_size": 1219,
         "filename": "ssectors_003",
         "name": "SSECTORS",
-        "size": 1296
+        "size": 1448
     },
     {
         "filename": "nodes_003",
         "name": "NODES",
-        "size": 18088
+        "size": 20216
     },
     {
         "compressed": true,
@@ -8077,7 +8077,7 @@
     {
         "filename": "blockmap_003",
         "name": "BLOCKMAP",
-        "size": 7060
+        "size": 5960
     },
     {
         "name": "MAP05",
@@ -8099,7 +8099,7 @@
     },
     {
         "compressed": true,
-        "compressed_size": 4589,
+        "compressed_size": 4482,
         "filename": "sidedefs_004",
         "name": "SIDEDEFS",
         "size": 27060
@@ -8107,30 +8107,30 @@
     {
         "filename": "vertexes_004",
         "name": "VERTEXES",
-        "size": 5208
+        "size": 5304
     },
     {
         "compressed": true,
-        "compressed_size": 8300,
+        "compressed_size": 8514,
         "filename": "segs_004",
         "name": "SEGS",
-        "size": 11892
+        "size": 12252
     },
     {
         "compressed": true,
-        "compressed_size": 1095,
+        "compressed_size": 1122,
         "filename": "ssectors_004",
         "name": "SSECTORS",
-        "size": 1308
+        "size": 1348
     },
     {
         "filename": "nodes_004",
         "name": "NODES",
-        "size": 18256
+        "size": 18816
     },
     {
         "compressed": true,
-        "compressed_size": 848,
+        "compressed_size": 851,
         "filename": "sectors_004",
         "name": "SECTORS",
         "size": 3120
@@ -8143,7 +8143,7 @@
     {
         "filename": "blockmap_004",
         "name": "BLOCKMAP",
-        "size": 7732
+        "size": 5774
     },
     {
         "name": "MAP06",
@@ -8158,14 +8158,14 @@
     },
     {
         "compressed": true,
-        "compressed_size": 8397,
+        "compressed_size": 8400,
         "filename": "linedefs_005",
         "name": "LINEDEFS",
         "size": 13650
     },
     {
         "compressed": true,
-        "compressed_size": 6073,
+        "compressed_size": 5981,
         "filename": "sidedefs_005",
         "name": "SIDEDEFS",
         "size": 36720
@@ -8173,30 +8173,30 @@
     {
         "filename": "vertexes_005",
         "name": "VERTEXES",
-        "size": 7032
+        "size": 7176
     },
     {
         "compressed": true,
-        "compressed_size": 11046,
+        "compressed_size": 11452,
         "filename": "segs_005",
         "name": "SEGS",
-        "size": 15888
+        "size": 16512
     },
     {
         "compressed": true,
-        "compressed_size": 1412,
+        "compressed_size": 1481,
         "filename": "ssectors_005",
         "name": "SSECTORS",
-        "size": 1684
+        "size": 1760
     },
     {
         "filename": "nodes_005",
         "name": "NODES",
-        "size": 23520
+        "size": 24584
     },
     {
         "compressed": true,
-        "compressed_size": 1031,
+        "compressed_size": 1032,
         "filename": "sectors_005",
         "name": "SECTORS",
         "size": 4472
@@ -8209,7 +8209,7 @@
     {
         "filename": "blockmap_005",
         "name": "BLOCKMAP",
-        "size": 12816
+        "size": 8908
     },
     {
         "name": "MAP07",
@@ -8217,10 +8217,10 @@
     },
     {
         "compressed": true,
-        "compressed_size": 1790,
+        "compressed_size": 1785,
         "filename": "things_006",
         "name": "THINGS",
-        "size": 2800
+        "size": 2760
     },
     {
         "compressed": true,
@@ -8231,7 +8231,7 @@
     },
     {
         "compressed": true,
-        "compressed_size": 5433,
+        "compressed_size": 5323,
         "filename": "sidedefs_006",
         "name": "SIDEDEFS",
         "size": 31860
@@ -8239,43 +8239,43 @@
     {
         "filename": "vertexes_006",
         "name": "VERTEXES",
-        "size": 6336
+        "size": 6512
     },
     {
         "compressed": true,
-        "compressed_size": 9940,
+        "compressed_size": 10396,
         "filename": "segs_006",
         "name": "SEGS",
-        "size": 14196
+        "size": 14844
     },
     {
         "compressed": true,
-        "compressed_size": 1295,
+        "compressed_size": 1415,
         "filename": "ssectors_006",
         "name": "SSECTORS",
-        "size": 1544
+        "size": 1684
     },
     {
         "filename": "nodes_006",
         "name": "NODES",
-        "size": 21560
+        "size": 23520
     },
     {
         "compressed": true,
-        "compressed_size": 919,
+        "compressed_size": 911,
         "filename": "sectors_006",
         "name": "SECTORS",
-        "size": 3666
+        "size": 3640
     },
     {
         "filename": "reject_006",
         "name": "REJECT",
-        "size": 2486
+        "size": 2450
     },
     {
         "filename": "blockmap_006",
         "name": "BLOCKMAP",
-        "size": 8558
+        "size": 6794
     },
     {
         "name": "MAP08",
@@ -8297,7 +8297,7 @@
     },
     {
         "compressed": true,
-        "compressed_size": 2617,
+        "compressed_size": 2575,
         "filename": "sidedefs_007",
         "name": "SIDEDEFS",
         "size": 15870
@@ -8305,26 +8305,26 @@
     {
         "filename": "vertexes_007",
         "name": "VERTEXES",
-        "size": 2576
+        "size": 2744
     },
     {
         "compressed": true,
-        "compressed_size": 4479,
+        "compressed_size": 4738,
         "filename": "segs_007",
         "name": "SEGS",
-        "size": 6708
+        "size": 7116
     },
     {
         "compressed": true,
-        "compressed_size": 524,
+        "compressed_size": 568,
         "filename": "ssectors_007",
         "name": "SSECTORS",
-        "size": 612
+        "size": 668
     },
     {
         "filename": "nodes_007",
         "name": "NODES",
-        "size": 8512
+        "size": 9296
     },
     {
         "compressed": true,
@@ -8341,7 +8341,7 @@
     {
         "filename": "blockmap_007",
         "name": "BLOCKMAP",
-        "size": 7818
+        "size": 4138
     },
     {
         "name": "MAP09",
@@ -8363,7 +8363,7 @@
     },
     {
         "compressed": true,
-        "compressed_size": 2551,
+        "compressed_size": 2502,
         "filename": "sidedefs_008",
         "name": "SIDEDEFS",
         "size": 14910
@@ -8371,26 +8371,26 @@
     {
         "filename": "vertexes_008",
         "name": "VERTEXES",
-        "size": 2664
+        "size": 2712
     },
     {
         "compressed": true,
-        "compressed_size": 4373,
+        "compressed_size": 4519,
         "filename": "segs_008",
         "name": "SEGS",
-        "size": 6480
+        "size": 6696
     },
     {
         "compressed": true,
-        "compressed_size": 547,
+        "compressed_size": 588,
         "filename": "ssectors_008",
         "name": "SSECTORS",
-        "size": 644
+        "size": 696
     },
     {
         "filename": "nodes_008",
         "name": "NODES",
-        "size": 8960
+        "size": 9688
     },
     {
         "compressed": true,
@@ -8407,7 +8407,7 @@
     {
         "filename": "blockmap_008",
         "name": "BLOCKMAP",
-        "size": 3628
+        "size": 3086
     },
     {
         "name": "MAP10",
@@ -8415,65 +8415,65 @@
     },
     {
         "compressed": true,
-        "compressed_size": 1077,
+        "compressed_size": 989,
         "filename": "things_009",
         "name": "THINGS",
-        "size": 1530
+        "size": 1370
     },
     {
         "compressed": true,
-        "compressed_size": 7198,
+        "compressed_size": 6901,
         "filename": "linedefs_009",
         "name": "LINEDEFS",
-        "size": 11522
+        "size": 11088
     },
     {
         "compressed": true,
-        "compressed_size": 5363,
+        "compressed_size": 5033,
         "filename": "sidedefs_009",
         "name": "SIDEDEFS",
-        "size": 31530
+        "size": 30270
     },
     {
         "filename": "vertexes_009",
         "name": "VERTEXES",
-        "size": 6160
+        "size": 6056
     },
     {
         "compressed": true,
-        "compressed_size": 9346,
+        "compressed_size": 9216,
         "filename": "segs_009",
         "name": "SEGS",
-        "size": 13632
+        "size": 13464
     },
     {
         "compressed": true,
-        "compressed_size": 1213,
+        "compressed_size": 1225,
         "filename": "ssectors_009",
         "name": "SSECTORS",
-        "size": 1448
+        "size": 1460
     },
     {
         "filename": "nodes_009",
         "name": "NODES",
-        "size": 20216
+        "size": 20384
     },
     {
         "compressed": true,
-        "compressed_size": 839,
+        "compressed_size": 798,
         "filename": "sectors_009",
         "name": "SECTORS",
-        "size": 3354
+        "size": 3146
     },
     {
         "filename": "reject_009",
         "name": "REJECT",
-        "size": 2081
+        "size": 1831
     },
     {
         "filename": "blockmap_009",
         "name": "BLOCKMAP",
-        "size": 9566
+        "size": 6702
     },
     {
         "name": "MAP11",
@@ -8495,7 +8495,7 @@
     },
     {
         "compressed": true,
-        "compressed_size": 4524,
+        "compressed_size": 4433,
         "filename": "sidedefs_010",
         "name": "SIDEDEFS",
         "size": 25980
@@ -8503,26 +8503,26 @@
     {
         "filename": "vertexes_010",
         "name": "VERTEXES",
-        "size": 5424
+        "size": 5504
     },
     {
         "compressed": true,
-        "compressed_size": 7743,
+        "compressed_size": 7863,
         "filename": "segs_010",
         "name": "SEGS",
-        "size": 11208
+        "size": 11400
     },
     {
         "compressed": true,
-        "compressed_size": 949,
+        "compressed_size": 959,
         "filename": "ssectors_010",
         "name": "SSECTORS",
-        "size": 1120
+        "size": 1128
     },
     {
         "filename": "nodes_010",
         "name": "NODES",
-        "size": 15624
+        "size": 15736
     },
     {
         "compressed": true,
@@ -8539,7 +8539,7 @@
     {
         "filename": "blockmap_010",
         "name": "BLOCKMAP",
-        "size": 6124
+        "size": 5216
     },
     {
         "name": "MAP12",
@@ -8561,7 +8561,7 @@
     },
     {
         "compressed": true,
-        "compressed_size": 6543,
+        "compressed_size": 6390,
         "filename": "sidedefs_011",
         "name": "SIDEDEFS",
         "size": 37710
@@ -8569,26 +8569,26 @@
     {
         "filename": "vertexes_011",
         "name": "VERTEXES",
-        "size": 7392
+        "size": 7424
     },
     {
         "compressed": true,
-        "compressed_size": 11589,
+        "compressed_size": 11690,
         "filename": "segs_011",
         "name": "SEGS",
-        "size": 16560
+        "size": 16800
     },
     {
         "compressed": true,
-        "compressed_size": 1409,
+        "compressed_size": 1449,
         "filename": "ssectors_011",
         "name": "SSECTORS",
-        "size": 1680
+        "size": 1716
     },
     {
         "filename": "nodes_011",
         "name": "NODES",
-        "size": 23464
+        "size": 23968
     },
     {
         "compressed": true,
@@ -8605,7 +8605,7 @@
     {
         "filename": "blockmap_011",
         "name": "BLOCKMAP",
-        "size": 9752
+        "size": 8484
     },
     {
         "name": "MAP13",
@@ -8613,10 +8613,10 @@
     },
     {
         "compressed": true,
-        "compressed_size": 1402,
+        "compressed_size": 1420,
         "filename": "things_012",
         "name": "THINGS",
-        "size": 2150
+        "size": 2180
     },
     {
         "compressed": true,
@@ -8627,7 +8627,7 @@
     },
     {
         "compressed": true,
-        "compressed_size": 4554,
+        "compressed_size": 4443,
         "filename": "sidedefs_012",
         "name": "SIDEDEFS",
         "size": 25710
@@ -8635,43 +8635,43 @@
     {
         "filename": "vertexes_012",
         "name": "VERTEXES",
-        "size": 5016
+        "size": 5248
     },
     {
         "compressed": true,
-        "compressed_size": 7682,
+        "compressed_size": 7984,
         "filename": "segs_012",
         "name": "SEGS",
-        "size": 11148
+        "size": 11568
     },
     {
         "compressed": true,
-        "compressed_size": 1011,
+        "compressed_size": 1070,
         "filename": "ssectors_012",
         "name": "SSECTORS",
-        "size": 1200
+        "size": 1272
     },
     {
         "filename": "nodes_012",
         "name": "NODES",
-        "size": 16744
+        "size": 17752
     },
     {
         "compressed": true,
-        "compressed_size": 879,
+        "compressed_size": 871,
         "filename": "sectors_012",
         "name": "SECTORS",
-        "size": 3328
+        "size": 3302
     },
     {
         "filename": "reject_012",
         "name": "REJECT",
-        "size": 2048
+        "size": 2017
     },
     {
         "filename": "blockmap_012",
         "name": "BLOCKMAP",
-        "size": 8116
+        "size": 5932
     },
     {
         "name": "MAP14",
@@ -8679,7 +8679,7 @@
     },
     {
         "compressed": true,
-        "compressed_size": 1290,
+        "compressed_size": 1288,
         "filename": "things_013",
         "name": "THINGS",
         "size": 1970
@@ -8693,7 +8693,7 @@
     },
     {
         "compressed": true,
-        "compressed_size": 4461,
+        "compressed_size": 4347,
         "filename": "sidedefs_013",
         "name": "SIDEDEFS",
         "size": 26640
@@ -8701,30 +8701,30 @@
     {
         "filename": "vertexes_013",
         "name": "VERTEXES",
-        "size": 5616
+        "size": 5648
     },
     {
         "compressed": true,
-        "compressed_size": 7993,
+        "compressed_size": 8124,
         "filename": "segs_013",
         "name": "SEGS",
-        "size": 11508
+        "size": 11652
     },
     {
         "compressed": true,
-        "compressed_size": 953,
+        "compressed_size": 966,
         "filename": "ssectors_013",
         "name": "SSECTORS",
-        "size": 1124
+        "size": 1140
     },
     {
         "filename": "nodes_013",
         "name": "NODES",
-        "size": 15680
+        "size": 15904
     },
     {
         "compressed": true,
-        "compressed_size": 707,
+        "compressed_size": 705,
         "filename": "sectors_013",
         "name": "SECTORS",
         "size": 2886
@@ -8737,7 +8737,7 @@
     {
         "filename": "blockmap_013",
         "name": "BLOCKMAP",
-        "size": 7468
+        "size": 5738
     },
     {
         "name": "MAP15",
@@ -8745,48 +8745,48 @@
     },
     {
         "compressed": true,
-        "compressed_size": 776,
+        "compressed_size": 794,
         "filename": "things_014",
         "name": "THINGS",
-        "size": 1120
+        "size": 1160
     },
     {
         "compressed": true,
-        "compressed_size": 6608,
+        "compressed_size": 6587,
         "filename": "linedefs_014",
         "name": "LINEDEFS",
-        "size": 10640
+        "size": 10654
     },
     {
         "compressed": true,
-        "compressed_size": 4617,
+        "compressed_size": 4558,
         "filename": "sidedefs_014",
         "name": "SIDEDEFS",
-        "size": 28200
+        "size": 28230
     },
     {
         "filename": "vertexes_014",
         "name": "VERTEXES",
-        "size": 5576
+        "size": 5656
     },
     {
         "compressed": true,
-        "compressed_size": 8314,
+        "compressed_size": 8605,
         "filename": "segs_014",
         "name": "SEGS",
-        "size": 12108
+        "size": 12468
     },
     {
         "compressed": true,
-        "compressed_size": 922,
+        "compressed_size": 924,
         "filename": "ssectors_014",
         "name": "SSECTORS",
-        "size": 1084
+        "size": 1088
     },
     {
         "filename": "nodes_014",
         "name": "NODES",
-        "size": 15120
+        "size": 15176
     },
     {
         "compressed": true,
@@ -8803,535 +8803,7 @@
     {
         "filename": "blockmap_014",
         "name": "BLOCKMAP",
-        "size": 5480
-    },
-    {
-        "name": "MAP23",
-        "virtual": true
-    },
-    {
-        "compressed": true,
-        "compressed_size": 371,
-        "filename": "things_015",
-        "name": "THINGS",
-        "size": 550
-    },
-    {
-        "compressed": true,
-        "compressed_size": 1359,
-        "filename": "linedefs_015",
-        "name": "LINEDEFS",
-        "size": 2170
-    },
-    {
-        "compressed": true,
-        "compressed_size": 899,
-        "filename": "sidedefs_015",
-        "name": "SIDEDEFS",
-        "size": 5070
-    },
-    {
-        "filename": "vertexes_015",
-        "name": "VERTEXES",
-        "size": 1128
-    },
-    {
-        "compressed": true,
-        "compressed_size": 1462,
-        "filename": "segs_015",
-        "name": "SEGS",
-        "size": 2028
-    },
-    {
-        "compressed": true,
-        "compressed_size": 200,
-        "filename": "ssectors_015",
-        "name": "SSECTORS",
-        "size": 232
-    },
-    {
-        "filename": "nodes_015",
-        "name": "NODES",
-        "size": 3192
-    },
-    {
-        "compressed": true,
-        "compressed_size": 101,
-        "filename": "sectors_015",
-        "name": "SECTORS",
-        "size": 390
-    },
-    {
-        "filename": "reject_015",
-        "name": "REJECT",
-        "size": 29
-    },
-    {
-        "filename": "blockmap_015",
-        "name": "BLOCKMAP",
-        "size": 3582
-    },
-    {
-        "name": "MAP24",
-        "virtual": true
-    },
-    {
-        "compressed": true,
-        "compressed_size": 1319,
-        "filename": "things_016",
-        "name": "THINGS",
-        "size": 2170
-    },
-    {
-        "compressed": true,
-        "compressed_size": 5746,
-        "filename": "linedefs_016",
-        "name": "LINEDEFS",
-        "size": 9156
-    },
-    {
-        "compressed": true,
-        "compressed_size": 4359,
-        "filename": "sidedefs_016",
-        "name": "SIDEDEFS",
-        "size": 27060
-    },
-    {
-        "filename": "vertexes_016",
-        "name": "VERTEXES",
-        "size": 4640
-    },
-    {
-        "compressed": true,
-        "compressed_size": 7932,
-        "filename": "segs_016",
-        "name": "SEGS",
-        "size": 11724
-    },
-    {
-        "compressed": true,
-        "compressed_size": 970,
-        "filename": "ssectors_016",
-        "name": "SSECTORS",
-        "size": 1152
-    },
-    {
-        "filename": "nodes_016",
-        "name": "NODES",
-        "size": 16072
-    },
-    {
-        "compressed": true,
-        "compressed_size": 830,
-        "filename": "sectors_016",
-        "name": "SECTORS",
-        "size": 3770
-    },
-    {
-        "filename": "reject_016",
-        "name": "REJECT",
-        "size": 2629
-    },
-    {
-        "filename": "blockmap_016",
-        "name": "BLOCKMAP",
-        "size": 6926
-    },
-    {
-        "name": "MAP17",
-        "virtual": true
-    },
-    {
-        "compressed": true,
-        "compressed_size": 704,
-        "filename": "things_017",
-        "name": "THINGS",
-        "size": 1110
-    },
-    {
-        "compressed": true,
-        "compressed_size": 4206,
-        "filename": "linedefs_017",
-        "name": "LINEDEFS",
-        "size": 6860
-    },
-    {
-        "compressed": true,
-        "compressed_size": 3089,
-        "filename": "sidedefs_017",
-        "name": "SIDEDEFS",
-        "size": 19440
-    },
-    {
-        "filename": "vertexes_017",
-        "name": "VERTEXES",
-        "size": 3240
-    },
-    {
-        "compressed": true,
-        "compressed_size": 5294,
-        "filename": "segs_017",
-        "name": "SEGS",
-        "size": 8076
-    },
-    {
-        "compressed": true,
-        "compressed_size": 584,
-        "filename": "ssectors_017",
-        "name": "SSECTORS",
-        "size": 684
-    },
-    {
-        "filename": "nodes_017",
-        "name": "NODES",
-        "size": 9520
-    },
-    {
-        "compressed": true,
-        "compressed_size": 619,
-        "filename": "sectors_017",
-        "name": "SECTORS",
-        "size": 2756
-    },
-    {
-        "filename": "reject_017",
-        "name": "REJECT",
-        "size": 1405
-    },
-    {
-        "filename": "blockmap_017",
-        "name": "BLOCKMAP",
-        "size": 3682
-    },
-    {
-        "name": "MAP18",
-        "virtual": true
-    },
-    {
-        "compressed": true,
-        "compressed_size": 1129,
-        "filename": "things_018",
-        "name": "THINGS",
-        "size": 1650
-    },
-    {
-        "compressed": true,
-        "compressed_size": 5154,
-        "filename": "linedefs_018",
-        "name": "LINEDEFS",
-        "size": 8288
-    },
-    {
-        "compressed": true,
-        "compressed_size": 3882,
-        "filename": "sidedefs_018",
-        "name": "SIDEDEFS",
-        "size": 23100
-    },
-    {
-        "filename": "vertexes_018",
-        "name": "VERTEXES",
-        "size": 4096
-    },
-    {
-        "compressed": true,
-        "compressed_size": 6651,
-        "filename": "segs_018",
-        "name": "SEGS",
-        "size": 9804
-    },
-    {
-        "compressed": true,
-        "compressed_size": 781,
-        "filename": "ssectors_018",
-        "name": "SSECTORS",
-        "size": 920
-    },
-    {
-        "filename": "nodes_018",
-        "name": "NODES",
-        "size": 12824
-    },
-    {
-        "compressed": true,
-        "compressed_size": 789,
-        "filename": "sectors_018",
-        "name": "SECTORS",
-        "size": 3120
-    },
-    {
-        "filename": "reject_018",
-        "name": "REJECT",
-        "size": 1800
-    },
-    {
-        "filename": "blockmap_018",
-        "name": "BLOCKMAP",
-        "size": 5776
-    },
-    {
-        "name": "MAP19",
-        "virtual": true
-    },
-    {
-        "compressed": true,
-        "compressed_size": 1808,
-        "filename": "things_019",
-        "name": "THINGS",
-        "size": 2920
-    },
-    {
-        "compressed": true,
-        "compressed_size": 5253,
-        "filename": "linedefs_019",
-        "name": "LINEDEFS",
-        "size": 8442
-    },
-    {
-        "compressed": true,
-        "compressed_size": 3881,
-        "filename": "sidedefs_019",
-        "name": "SIDEDEFS",
-        "size": 23310
-    },
-    {
-        "filename": "vertexes_019",
-        "name": "VERTEXES",
         "size": 4560
-    },
-    {
-        "compressed": true,
-        "compressed_size": 7041,
-        "filename": "segs_019",
-        "name": "SEGS",
-        "size": 10308
-    },
-    {
-        "compressed": true,
-        "compressed_size": 849,
-        "filename": "ssectors_019",
-        "name": "SSECTORS",
-        "size": 1000
-    },
-    {
-        "filename": "nodes_019",
-        "name": "NODES",
-        "size": 13944
-    },
-    {
-        "compressed": true,
-        "compressed_size": 667,
-        "filename": "sectors_019",
-        "name": "SECTORS",
-        "size": 2730
-    },
-    {
-        "filename": "reject_019",
-        "name": "REJECT",
-        "size": 1379
-    },
-    {
-        "filename": "blockmap_019",
-        "name": "BLOCKMAP",
-        "size": 6902
-    },
-    {
-        "name": "MAP20",
-        "virtual": true
-    },
-    {
-        "compressed": true,
-        "compressed_size": 1771,
-        "filename": "things_020",
-        "name": "THINGS",
-        "size": 2930
-    },
-    {
-        "compressed": true,
-        "compressed_size": 9957,
-        "filename": "linedefs_020",
-        "name": "LINEDEFS",
-        "size": 15876
-    },
-    {
-        "compressed": true,
-        "compressed_size": 7308,
-        "filename": "sidedefs_020",
-        "name": "SIDEDEFS",
-        "size": 43890
-    },
-    {
-        "filename": "vertexes_020",
-        "name": "VERTEXES",
-        "size": 7680
-    },
-    {
-        "compressed": true,
-        "compressed_size": 12519,
-        "filename": "segs_020",
-        "name": "SEGS",
-        "size": 18348
-    },
-    {
-        "compressed": true,
-        "compressed_size": 1574,
-        "filename": "ssectors_020",
-        "name": "SSECTORS",
-        "size": 1868
-    },
-    {
-        "filename": "nodes_020",
-        "name": "NODES",
-        "size": 26096
-    },
-    {
-        "compressed": true,
-        "compressed_size": 1237,
-        "filename": "sectors_020",
-        "name": "SECTORS",
-        "size": 5928
-    },
-    {
-        "filename": "reject_020",
-        "name": "REJECT",
-        "size": 6498
-    },
-    {
-        "filename": "blockmap_020",
-        "name": "BLOCKMAP",
-        "size": 12424
-    },
-    {
-        "name": "MAP21",
-        "virtual": true
-    },
-    {
-        "compressed": true,
-        "compressed_size": 1587,
-        "filename": "things_021",
-        "name": "THINGS",
-        "size": 2290
-    },
-    {
-        "compressed": true,
-        "compressed_size": 5205,
-        "filename": "linedefs_021",
-        "name": "LINEDEFS",
-        "size": 8344
-    },
-    {
-        "compressed": true,
-        "compressed_size": 4015,
-        "filename": "sidedefs_021",
-        "name": "SIDEDEFS",
-        "size": 24300
-    },
-    {
-        "filename": "vertexes_021",
-        "name": "VERTEXES",
-        "size": 4736
-    },
-    {
-        "compressed": true,
-        "compressed_size": 7861,
-        "filename": "segs_021",
-        "name": "SEGS",
-        "size": 11268
-    },
-    {
-        "compressed": true,
-        "compressed_size": 1117,
-        "filename": "ssectors_021",
-        "name": "SSECTORS",
-        "size": 1328
-    },
-    {
-        "filename": "nodes_021",
-        "name": "NODES",
-        "size": 18536
-    },
-    {
-        "compressed": true,
-        "compressed_size": 729,
-        "filename": "sectors_021",
-        "name": "SECTORS",
-        "size": 2886
-    },
-    {
-        "filename": "reject_021",
-        "name": "REJECT",
-        "size": 1541
-    },
-    {
-        "filename": "blockmap_021",
-        "name": "BLOCKMAP",
-        "size": 11280
-    },
-    {
-        "name": "MAP22",
-        "virtual": true
-    },
-    {
-        "compressed": true,
-        "compressed_size": 1022,
-        "filename": "things_022",
-        "name": "THINGS",
-        "size": 1510
-    },
-    {
-        "compressed": true,
-        "compressed_size": 7984,
-        "filename": "linedefs_022",
-        "name": "LINEDEFS",
-        "size": 12712
-    },
-    {
-        "compressed": true,
-        "compressed_size": 5610,
-        "filename": "sidedefs_022",
-        "name": "SIDEDEFS",
-        "size": 34380
-    },
-    {
-        "filename": "vertexes_022",
-        "name": "VERTEXES",
-        "size": 6624
-    },
-    {
-        "compressed": true,
-        "compressed_size": 10274,
-        "filename": "segs_022",
-        "name": "SEGS",
-        "size": 14808
-    },
-    {
-        "compressed": true,
-        "compressed_size": 1429,
-        "filename": "ssectors_022",
-        "name": "SSECTORS",
-        "size": 1712
-    },
-    {
-        "filename": "nodes_022",
-        "name": "NODES",
-        "size": 23912
-    },
-    {
-        "compressed": true,
-        "compressed_size": 884,
-        "filename": "sectors_022",
-        "name": "SECTORS",
-        "size": 4056
-    },
-    {
-        "filename": "reject_022",
-        "name": "REJECT",
-        "size": 3042
-    },
-    {
-        "filename": "blockmap_022",
-        "name": "BLOCKMAP",
-        "size": 9446
     },
     {
         "name": "MAP16",
@@ -9340,64 +8812,592 @@
     {
         "compressed": true,
         "compressed_size": 457,
-        "filename": "things_023",
+        "filename": "things_015",
         "name": "THINGS",
         "size": 760
     },
     {
         "compressed": true,
         "compressed_size": 2184,
-        "filename": "linedefs_023",
+        "filename": "linedefs_015",
         "name": "LINEDEFS",
         "size": 3584
     },
     {
         "compressed": true,
-        "compressed_size": 1523,
-        "filename": "sidedefs_023",
+        "compressed_size": 1519,
+        "filename": "sidedefs_015",
         "name": "SIDEDEFS",
         "size": 9600
     },
     {
-        "filename": "vertexes_023",
+        "filename": "vertexes_015",
         "name": "VERTEXES",
-        "size": 1744
+        "size": 1736
     },
     {
         "compressed": true,
-        "compressed_size": 2676,
-        "filename": "segs_023",
+        "compressed_size": 2684,
+        "filename": "segs_015",
         "name": "SEGS",
-        "size": 3960
+        "size": 4008
     },
     {
         "compressed": true,
-        "compressed_size": 276,
-        "filename": "ssectors_023",
+        "compressed_size": 271,
+        "filename": "ssectors_015",
         "name": "SSECTORS",
-        "size": 320
+        "size": 308
     },
     {
-        "filename": "nodes_023",
+        "filename": "nodes_015",
         "name": "NODES",
-        "size": 4424
+        "size": 4256
     },
     {
         "compressed": true,
         "compressed_size": 256,
-        "filename": "sectors_023",
+        "filename": "sectors_015",
         "name": "SECTORS",
         "size": 1092
     },
     {
-        "filename": "reject_023",
+        "filename": "reject_015",
         "name": "REJECT",
         "size": 221
     },
     {
+        "filename": "blockmap_015",
+        "name": "BLOCKMAP",
+        "size": 1502
+    },
+    {
+        "name": "MAP17",
+        "virtual": true
+    },
+    {
+        "compressed": true,
+        "compressed_size": 704,
+        "filename": "things_016",
+        "name": "THINGS",
+        "size": 1110
+    },
+    {
+        "compressed": true,
+        "compressed_size": 4206,
+        "filename": "linedefs_016",
+        "name": "LINEDEFS",
+        "size": 6860
+    },
+    {
+        "compressed": true,
+        "compressed_size": 3067,
+        "filename": "sidedefs_016",
+        "name": "SIDEDEFS",
+        "size": 19440
+    },
+    {
+        "filename": "vertexes_016",
+        "name": "VERTEXES",
+        "size": 3264
+    },
+    {
+        "compressed": true,
+        "compressed_size": 5446,
+        "filename": "segs_016",
+        "name": "SEGS",
+        "size": 8232
+    },
+    {
+        "compressed": true,
+        "compressed_size": 587,
+        "filename": "ssectors_016",
+        "name": "SSECTORS",
+        "size": 692
+    },
+    {
+        "filename": "nodes_016",
+        "name": "NODES",
+        "size": 9632
+    },
+    {
+        "compressed": true,
+        "compressed_size": 619,
+        "filename": "sectors_016",
+        "name": "SECTORS",
+        "size": 2756
+    },
+    {
+        "filename": "reject_016",
+        "name": "REJECT",
+        "size": 1405
+    },
+    {
+        "filename": "blockmap_016",
+        "name": "BLOCKMAP",
+        "size": 3178
+    },
+    {
+        "name": "MAP18",
+        "virtual": true
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1119,
+        "filename": "things_017",
+        "name": "THINGS",
+        "size": 1640
+    },
+    {
+        "compressed": true,
+        "compressed_size": 5154,
+        "filename": "linedefs_017",
+        "name": "LINEDEFS",
+        "size": 8288
+    },
+    {
+        "compressed": true,
+        "compressed_size": 3827,
+        "filename": "sidedefs_017",
+        "name": "SIDEDEFS",
+        "size": 23100
+    },
+    {
+        "filename": "vertexes_017",
+        "name": "VERTEXES",
+        "size": 4144
+    },
+    {
+        "compressed": true,
+        "compressed_size": 6769,
+        "filename": "segs_017",
+        "name": "SEGS",
+        "size": 10008
+    },
+    {
+        "compressed": true,
+        "compressed_size": 822,
+        "filename": "ssectors_017",
+        "name": "SSECTORS",
+        "size": 976
+    },
+    {
+        "filename": "nodes_017",
+        "name": "NODES",
+        "size": 13608
+    },
+    {
+        "compressed": true,
+        "compressed_size": 789,
+        "filename": "sectors_017",
+        "name": "SECTORS",
+        "size": 3120
+    },
+    {
+        "filename": "reject_017",
+        "name": "REJECT",
+        "size": 1800
+    },
+    {
+        "filename": "blockmap_017",
+        "name": "BLOCKMAP",
+        "size": 4416
+    },
+    {
+        "name": "MAP19",
+        "virtual": true
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1807,
+        "filename": "things_018",
+        "name": "THINGS",
+        "size": 2920
+    },
+    {
+        "compressed": true,
+        "compressed_size": 5253,
+        "filename": "linedefs_018",
+        "name": "LINEDEFS",
+        "size": 8442
+    },
+    {
+        "compressed": true,
+        "compressed_size": 3816,
+        "filename": "sidedefs_018",
+        "name": "SIDEDEFS",
+        "size": 23310
+    },
+    {
+        "filename": "vertexes_018",
+        "name": "VERTEXES",
+        "size": 4696
+    },
+    {
+        "compressed": true,
+        "compressed_size": 7410,
+        "filename": "segs_018",
+        "name": "SEGS",
+        "size": 10800
+    },
+    {
+        "compressed": true,
+        "compressed_size": 918,
+        "filename": "ssectors_018",
+        "name": "SSECTORS",
+        "size": 1088
+    },
+    {
+        "filename": "nodes_018",
+        "name": "NODES",
+        "size": 15176
+    },
+    {
+        "compressed": true,
+        "compressed_size": 667,
+        "filename": "sectors_018",
+        "name": "SECTORS",
+        "size": 2730
+    },
+    {
+        "filename": "reject_018",
+        "name": "REJECT",
+        "size": 1379
+    },
+    {
+        "filename": "blockmap_018",
+        "name": "BLOCKMAP",
+        "size": 4924
+    },
+    {
+        "name": "MAP20",
+        "virtual": true
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1768,
+        "filename": "things_019",
+        "name": "THINGS",
+        "size": 2930
+    },
+    {
+        "compressed": true,
+        "compressed_size": 9957,
+        "filename": "linedefs_019",
+        "name": "LINEDEFS",
+        "size": 15876
+    },
+    {
+        "compressed": true,
+        "compressed_size": 7199,
+        "filename": "sidedefs_019",
+        "name": "SIDEDEFS",
+        "size": 43890
+    },
+    {
+        "filename": "vertexes_019",
+        "name": "VERTEXES",
+        "size": 7896
+    },
+    {
+        "compressed": true,
+        "compressed_size": 12833,
+        "filename": "segs_019",
+        "name": "SEGS",
+        "size": 18816
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1596,
+        "filename": "ssectors_019",
+        "name": "SSECTORS",
+        "size": 1900
+    },
+    {
+        "filename": "nodes_019",
+        "name": "NODES",
+        "size": 26544
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1237,
+        "filename": "sectors_019",
+        "name": "SECTORS",
+        "size": 5928
+    },
+    {
+        "filename": "reject_019",
+        "name": "REJECT",
+        "size": 6498
+    },
+    {
+        "filename": "blockmap_019",
+        "name": "BLOCKMAP",
+        "size": 8438
+    },
+    {
+        "name": "MAP21",
+        "virtual": true
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1584,
+        "filename": "things_020",
+        "name": "THINGS",
+        "size": 2280
+    },
+    {
+        "compressed": true,
+        "compressed_size": 5205,
+        "filename": "linedefs_020",
+        "name": "LINEDEFS",
+        "size": 8344
+    },
+    {
+        "compressed": true,
+        "compressed_size": 3961,
+        "filename": "sidedefs_020",
+        "name": "SIDEDEFS",
+        "size": 24300
+    },
+    {
+        "filename": "vertexes_020",
+        "name": "VERTEXES",
+        "size": 4968
+    },
+    {
+        "compressed": true,
+        "compressed_size": 8327,
+        "filename": "segs_020",
+        "name": "SEGS",
+        "size": 12024
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1201,
+        "filename": "ssectors_020",
+        "name": "SSECTORS",
+        "size": 1432
+    },
+    {
+        "filename": "nodes_020",
+        "name": "NODES",
+        "size": 19992
+    },
+    {
+        "compressed": true,
+        "compressed_size": 729,
+        "filename": "sectors_020",
+        "name": "SECTORS",
+        "size": 2886
+    },
+    {
+        "filename": "reject_020",
+        "name": "REJECT",
+        "size": 1541
+    },
+    {
+        "filename": "blockmap_020",
+        "name": "BLOCKMAP",
+        "size": 6868
+    },
+    {
+        "name": "MAP22",
+        "virtual": true
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1008,
+        "filename": "things_021",
+        "name": "THINGS",
+        "size": 1490
+    },
+    {
+        "compressed": true,
+        "compressed_size": 7984,
+        "filename": "linedefs_021",
+        "name": "LINEDEFS",
+        "size": 12712
+    },
+    {
+        "compressed": true,
+        "compressed_size": 5549,
+        "filename": "sidedefs_021",
+        "name": "SIDEDEFS",
+        "size": 34380
+    },
+    {
+        "filename": "vertexes_021",
+        "name": "VERTEXES",
+        "size": 6872
+    },
+    {
+        "compressed": true,
+        "compressed_size": 10818,
+        "filename": "segs_021",
+        "name": "SEGS",
+        "size": 15504
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1488,
+        "filename": "ssectors_021",
+        "name": "SSECTORS",
+        "size": 1780
+    },
+    {
+        "filename": "nodes_021",
+        "name": "NODES",
+        "size": 24864
+    },
+    {
+        "compressed": true,
+        "compressed_size": 884,
+        "filename": "sectors_021",
+        "name": "SECTORS",
+        "size": 4056
+    },
+    {
+        "filename": "reject_021",
+        "name": "REJECT",
+        "size": 3042
+    },
+    {
+        "filename": "blockmap_021",
+        "name": "BLOCKMAP",
+        "size": 7710
+    },
+    {
+        "name": "MAP23",
+        "virtual": true
+    },
+    {
+        "compressed": true,
+        "compressed_size": 369,
+        "filename": "things_022",
+        "name": "THINGS",
+        "size": 550
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1359,
+        "filename": "linedefs_022",
+        "name": "LINEDEFS",
+        "size": 2170
+    },
+    {
+        "compressed": true,
+        "compressed_size": 878,
+        "filename": "sidedefs_022",
+        "name": "SIDEDEFS",
+        "size": 5070
+    },
+    {
+        "filename": "vertexes_022",
+        "name": "VERTEXES",
+        "size": 1128
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1458,
+        "filename": "segs_022",
+        "name": "SEGS",
+        "size": 2028
+    },
+    {
+        "compressed": true,
+        "compressed_size": 200,
+        "filename": "ssectors_022",
+        "name": "SSECTORS",
+        "size": 232
+    },
+    {
+        "filename": "nodes_022",
+        "name": "NODES",
+        "size": 3192
+    },
+    {
+        "compressed": true,
+        "compressed_size": 101,
+        "filename": "sectors_022",
+        "name": "SECTORS",
+        "size": 390
+    },
+    {
+        "filename": "reject_022",
+        "name": "REJECT",
+        "size": 29
+    },
+    {
+        "filename": "blockmap_022",
+        "name": "BLOCKMAP",
+        "size": 2144
+    },
+    {
+        "name": "MAP24",
+        "virtual": true
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1299,
+        "filename": "things_023",
+        "name": "THINGS",
+        "size": 2080
+    },
+    {
+        "compressed": true,
+        "compressed_size": 5746,
+        "filename": "linedefs_023",
+        "name": "LINEDEFS",
+        "size": 9156
+    },
+    {
+        "compressed": true,
+        "compressed_size": 4315,
+        "filename": "sidedefs_023",
+        "name": "SIDEDEFS",
+        "size": 27060
+    },
+    {
+        "filename": "vertexes_023",
+        "name": "VERTEXES",
+        "size": 4784
+    },
+    {
+        "compressed": true,
+        "compressed_size": 8317,
+        "filename": "segs_023",
+        "name": "SEGS",
+        "size": 12324
+    },
+    {
+        "compressed": true,
+        "compressed_size": 1017,
+        "filename": "ssectors_023",
+        "name": "SSECTORS",
+        "size": 1208
+    },
+    {
+        "filename": "nodes_023",
+        "name": "NODES",
+        "size": 16856
+    },
+    {
+        "compressed": true,
+        "compressed_size": 830,
+        "filename": "sectors_023",
+        "name": "SECTORS",
+        "size": 3770
+    },
+    {
+        "filename": "reject_023",
+        "name": "REJECT",
+        "size": 2629
+    },
+    {
         "filename": "blockmap_023",
         "name": "BLOCKMAP",
-        "size": 1826
+        "size": 5308
     },
     {
         "name": "VGM_STRT",
@@ -9501,5 +9501,10 @@
     {
         "name": "VGM_END",
         "virtual": true
+    },
+    {
+        "name": "DMAPINFO",
+        "filename": "dmapinfo",
+        "size": 2800
     }
 ]
