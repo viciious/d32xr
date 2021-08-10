@@ -248,14 +248,14 @@ master_vbr:
         .long   master_err      /* TRAPA #61 */
         .long   master_err      /* TRAPA #62 */
         .long   master_err      /* TRAPA #63 */
-        .long   master_lvl1     /* Level 1 IRQ */
-        .long   master_lvl2_3   /* Level 2 & 3 IRQ's */
-        .long   master_lvl4_5   /* Level 4 & 5 IRQ's */
-        .long   master_pwm      /* PWM interupt */
-        .long   master_cmd      /* Command interupt */
-        .long   master_hbi      /* H Blank interupt */
-        .long   master_vbi      /* V Blank interupt */
-        .long   master_rst      /* Reset Button */
+        .long   master_irq      /* Level 1 IRQ */
+        .long   master_irq      /* Level 2 & 3 IRQ's */
+        .long   master_irq      /* Level 4 & 5 IRQ's */
+        .long   master_irq      /* PWM interupt */
+        .long   master_irq      /* Command interupt */
+        .long   master_irq      /* H Blank interupt */
+        .long   master_irq      /* V Blank interupt */
+        .long   master_irq      /* Reset Button */
         .long   master_frt      /* FRT overflow */
 
 !-----------------------------------------------------------------------
@@ -309,14 +309,14 @@ slave_vbr:
         .long   slave_err       /* TRAPA #61 */
         .long   slave_err       /* TRAPA #62 */
         .long   slave_err       /* TRAPA #63 */
-        .long   slave_lvl1      /* Level 1 IRQ */
-        .long   slave_lvl2_3    /* Level 2 & 3 IRQ's */
-        .long   slave_lvl4_5    /* Level 4 & 5 IRQ's */
-        .long   slave_pwm       /* PWM interupt (Level 6 & 7) */
-        .long   slave_cmd       /* Command interupt (Level 8 & 9) */
-        .long   slave_hbi       /* H Blank interupt (Level 10 & 11 */
-        .long   slave_vbi       /* V Blank interupt (Level 12 & 13) */
-        .long   slave_rst       /* Reset Button (Level 14 & 15) */
+        .long   slave_irq       /* Level 1 IRQ */
+        .long   slave_irq       /* Level 2 & 3 IRQ's */
+        .long   slave_irq       /* Level 4 & 5 IRQ's */
+        .long   slave_irq       /* PWM interupt (Level 6 & 7) */
+        .long   slave_irq       /* Command interupt (Level 8 & 9) */
+        .long   slave_irq       /* H Blank interupt (Level 10 & 11 */
+        .long   slave_irq       /* V Blank interupt (Level 12 & 13) */
+        .long   slave_irq       /* Reset Button (Level 14 & 15) */
         .long   slave_dma1      /* DMA1 TE INT */
 
 !-----------------------------------------------------------------------
@@ -404,41 +404,9 @@ _bss_dst:
 _bss_end:
         .long   __bss_end
 
-!-----------------------------------------------------------------------
-! Each section of code below has its own data table so that the code
-! can be extended without worrying about the offsets becoming too big.
-! This results in duplicate entries, but not so many that we care. :)
-!-----------------------------------------------------------------------
-
-!-----------------------------------------------------------------------
 ! Master exception handler
-!-----------------------------------------------------------------------
 
 master_err:
-        rte
-        nop
-
-!-----------------------------------------------------------------------
-! Master Level 1 IRQ handler
-!-----------------------------------------------------------------------
-
-master_lvl1:
-        rte
-        nop
-
-!-----------------------------------------------------------------------
-! Master Level 2/3 IRQ handler
-!-----------------------------------------------------------------------
-
-master_lvl2_3:
-        rte
-        nop
-
-!-----------------------------------------------------------------------
-! Master Level 4/5 IRQ handler
-!-----------------------------------------------------------------------
-
-master_lvl4_5:
         rte
         nop
 
@@ -475,14 +443,32 @@ sh2_frt_ftcsr:
 mars_frt_ovf_count_ptr:
         .long   _mars_frt_ovf_count
 
-!-----------------------------------------------------------------------
-! Master V Blank IRQ handler
-!-----------------------------------------------------------------------
+! Master IRQ handler
 
-master_vbi:
+master_irq:
+        mov.l   r0,@-r15
+
+        stc     sr,r0       /* SR holds IRQ level in I3-I0 */
+        shlr2   r0
+        and     #0x38,r0
+        cmp/eq  #0x28,r0
+        bt      master_h_irq
+        cmp/eq  #0x18,r0
+        bt      master_pwm_irq
+        cmp/eq  #0x30,r0
+        bt      master_v_irq
+        cmp/eq  #0x20,r0
+        bt      master_cmd_irq
+        cmp/eq  #0x38,r0
+        bt      master_vres_irq
+
+        mov.l   @r15+,r0
+        rte
+        nop
+
+master_v_irq:
         ! save registers
         sts.l   pr,@-r15
-        mov.l   r0,@-r15
         mov.l   r1,@-r15
         mov.l   r2,@-r15
         mov.l   r3,@-r15
@@ -500,6 +486,8 @@ master_vbi:
         nop
         nop
 
+        ! handle V IRQ
+
         mov.l   mvbi_handler_ptr,r0
         jsr     @r0
         nop
@@ -514,8 +502,8 @@ master_vbi:
         mov.l   @r15+,r3
         mov.l   @r15+,r2
         mov.l   @r15+,r1
-        mov.l   @r15+,r0
         lds.l   @r15+,pr
+        mov.l   @r15+,r0
         rte
         nop
 
@@ -529,8 +517,7 @@ mvbi_handler_ptr:
 ! Master H Blank IRQ handler
 !-----------------------------------------------------------------------
 
-master_hbi:
-        mov.l   r0,@-r15
+master_h_irq:
         mov.l   r1,@-r15
 
         mov.l   mhi_mars_adapter,r1
@@ -555,8 +542,7 @@ mhi_mars_adapter:
 ! Master Command IRQ handler
 !-----------------------------------------------------------------------
 
-master_cmd:
-        mov.l   r0,@-r15
+master_cmd_irq:
         mov.l   r1,@-r15
 
         mov.l   mci_mars_adapter,r1
@@ -581,8 +567,7 @@ mci_mars_adapter:
 ! Master PWM IRQ handler
 !-----------------------------------------------------------------------
 
-master_pwm:
-        mov.l   r0,@-r15
+master_pwm_irq:
         mov.l   r1,@-r15
 
         mov.l   mpi_mars_adapter,r1
@@ -607,7 +592,7 @@ mpi_mars_adapter:
 ! Master RESET IRQ handler
 !-----------------------------------------------------------------------
 
-master_rst:
+master_vres_irq:
         mov.l   mvri_mars_adapter,r1
         mov.w   r0,@(0x14,r1)           /* clear VRES IRQ */
         nop
@@ -708,27 +693,24 @@ slave_err:
         rte
         nop
 
-!-----------------------------------------------------------------------
-! Slave Level 1 IRQ handler
-!-----------------------------------------------------------------------
+slave_irq:
+        mov.l   r0,@-r15
 
-slave_lvl1:
-        rte
-        nop
+        stc     sr,r0       /* SR holds IRQ level I3-I0 */
+        shlr2   r0
+        and     #0x38,r0
+        cmp/eq  #0x28,r0
+        bt      slave_h_irq
+        cmp/eq  #0x18,r0
+        bt      slave_pwm_irq
+        cmp/eq  #0x30,r0
+        bt      slave_v_irq
+        cmp/eq  #0x20,r0
+        bt      slave_cmd_irq
+        cmp/eq  #0x38,r0
+        bt      slave_vres_irq
 
-!-----------------------------------------------------------------------
-! Slave Level 2/3 IRQ handler
-!-----------------------------------------------------------------------
-
-slave_lvl2_3:
-        rte
-        nop
-
-!-----------------------------------------------------------------------
-! Slave Level 4/5 IRQ handler
-!-----------------------------------------------------------------------
-
-slave_lvl4_5:
+        mov.l   @r15+,r0
         rte
         nop
 
@@ -736,8 +718,7 @@ slave_lvl4_5:
 ! Slave V Blank IRQ handler
 !-----------------------------------------------------------------------
 
-slave_vbi:
-        mov.l   r0,@-r15
+slave_v_irq:
         mov.l   r1,@-r15
 
         mov.l   svi_mars_adapter,r1
@@ -762,8 +743,7 @@ svi_mars_adapter:
 ! Slave H Blank IRQ handler
 !-----------------------------------------------------------------------
 
-slave_hbi:
-        mov.l   r0,@-r15
+slave_h_irq:
         mov.l   r1,@-r15
 
         mov.l   shi_mars_adapter,r1
@@ -788,8 +768,7 @@ shi_mars_adapter:
 ! Slave Command IRQ handler
 !-----------------------------------------------------------------------
 
-slave_cmd:
-        mov.l   r0,@-r15
+slave_cmd_irq:
         mov.l   r1,@-r15
 
         mov.l   sci_mars_adapter,r1
@@ -814,8 +793,7 @@ sci_mars_adapter:
 ! Slave PWM IRQ handler
 !-----------------------------------------------------------------------
 
-slave_pwm:
-        mov.l   r0,@-r15
+slave_pwm_irq:
         mov.l   r1,@-r15
 
         mov.l   spi_mars_adapter,r1
@@ -840,7 +818,7 @@ spi_mars_adapter:
 ! Slave RESET IRQ handler
 !-----------------------------------------------------------------------
 
-slave_rst:
+slave_vres_irq:
         mov.l   svri_mars_adapter,r1
         mov.w   r0,@(0x14,r1)           /* clear VRES IRQ */
         nop
