@@ -61,5 +61,5 @@ jobs:
         with:
           name: 32X ROM File
           path: |
-            D32XR.bin
+            D32XR.32x
 

@@ -98,16 +98,16 @@ OBJS = \
 	m_fire.o \
 	lzss.o
 
-release: m68k.bin $(TARGET).bin
+release: m68k.bin $(TARGET).32x
 
-debug: m68k.bin $(TARGET).bin
+debug: m68k.bin $(TARGET).32x
 
 all: release
 
 m68k.bin:
 	make -C src-md
 
-$(TARGET).bin: $(TARGET).elf
+$(TARGET).32x: $(TARGET).elf
 	$(OBJC) -O binary $< temp.bin
 	$(DD) if=temp.bin of=$@ bs=128K conv=sync
 
@@ -130,4 +130,4 @@ marshw.o: marshw.c
 
 clean:
 	make clean -C src-md
-	$(RM) *.o *.bin *.elf output.map
+	$(RM) *.o mr8k.bin $(TARGET).32x $(TARGET).elf output.map
