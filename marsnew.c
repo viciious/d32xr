@@ -585,9 +585,8 @@ void I_ClearWorkBuffer(void)
 */
 void I_Update(void)
 {
-	int sec;
 	int ticcount;
-	static int prevsec = 0;
+	static int prevsecticcount = 0;
 	static int framenum = 0;
 	boolean NTSC = (MARS_VDP_DISPMODE & MARS_NTSC_FORMAT) != 0;
 	const int refreshHZ = (NTSC ? 60 : 50);
@@ -624,11 +623,10 @@ void I_Update(void)
 	lasttics = ticcount - lastticcount;
 	lastticcount = ticcount;
 
-	sec = ticcount / refreshHZ; // FIXME: add proper NTSC vs PAL rate detection
-	if (sec != prevsec) {
+	if (ticcount > prevsecticcount + refreshHZ) {
 		static int prevsecframe;
-		fpscount = (framenum - prevsecframe) / (sec - prevsec);
-		prevsec = sec;
+		fpscount = (framenum - prevsecframe) * refreshHZ / (ticcount - prevsecticcount);
+		prevsecticcount = ticcount;
 		prevsecframe = framenum;
 	}
 	framenum++;
