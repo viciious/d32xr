@@ -161,7 +161,7 @@ void Mars_Init(void)
 
 	MARS_VDP_DISPMODE = MARS_224_LINES | MARS_VDP_MODE_256;
 	NTSC = (MARS_VDP_DISPMODE & MARS_NTSC_FORMAT) != 0;
-
+#if 0
 	/* init hires timer system */
 	SH2_FRT_TCR = 2;									/* TCR set to count at SYSCLK/128 */
 	SH2_FRT_FRCH = 0;
@@ -170,7 +170,7 @@ void Mars_Init(void)
 	SH2_INT_VCRD = 72 << 8; 							/* set exception vector for FRT overflow */
 	SH2_FRT_FTCSR = 0;									/* clear any int status */
 	SH2_FRT_TIER = 3;									/* enable overflow interrupt */
-
+#endif
 	MARS_SYS_COMM4 = 0;
 
 	// change 128.0f to something else if SH2_FRT_TCR is changed!

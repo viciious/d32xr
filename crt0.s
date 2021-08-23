@@ -256,7 +256,7 @@ master_vbr:
         .long   master_irq      /* H Blank interupt */
         .long   master_irq      /* V Blank interupt */
         .long   master_irq      /* Reset Button */
-        .long   master_frt      /* FRT overflow */
+        #.long   master_frt      /* FRT overflow */
 
 !-----------------------------------------------------------------------
 ! Slave Vector Base Table
@@ -337,6 +337,32 @@ master_start:
         mov.w   r0,@-r1                 /* VRES INT clear */
         mov.w   r0,@r1
 
+        mov.l   _sh2_frt_frtctl,r1      /* Set Free Run Timer */
+        mov     #0x00,r0
+        mov.b   r0,@(0x00,r1)           /* TIER */
+        mov     #0xe2,r0
+        mov.b   r0,@(0x07,r1)           /* TOCR */
+        mov     #0x00,r0
+        mov.b   r0,@(0x04,r1)           /* OCR_H */
+        mov     #0x01,r0
+        mov.b   r0,@(0x05,r1)           /* OCR_L */
+        mov     #0,r0
+        mov.b   r0,@(0x06,r1)           /* TCR */
+        mov     #1,r0
+        mov.b   r0,@(0x01,r1)           /* TCSR */
+        mov     #0x00,r0
+        mov.b   r0,@(0x03,r1)           /* FRC_L */
+        mov.b   r0,@(0x02,r1)           /* FRC_H */
+
+        mov     #0xf2,r0                /* reset setup */
+        mov.b   r0,@(0x07,r1)           /* TOCR */
+        mov     #0x00,r0
+        mov.b   r0,@(0x04,r1)           /* OCR_H */
+        mov     #0x01,r0
+        mov.b   r0,@(0x05,r1)           /* OCR_L */
+        mov     #0xe2,r0
+        mov.b   r0,@(0x07,r1)           /* TOCR */
+
         mov.l   _master_stk,r15
         ! purge cache and turn it off
         mov.l   _master_cctl,r0
@@ -372,7 +398,7 @@ master_start:
         mov.b   r0,@r1                  /* set FM */
         mov     #0x08,r0
         mov.b   r0,@(1,r1)              /* set int enables */
-        mov     #0x20,r0
+        mov     #0x10,r0
         ldc     r0,sr                   /* allow ints */
 
         ! purge cache, turn it on, and run main()
@@ -390,6 +416,8 @@ _master_stk:
         .long   0x0603FC00              /* Cold Start SP */
 _master_sts:
         .long   0x20004020
+_sh2_frt_frtctl:
+        .long   0xfffffe10
 _master_ok:
         .ascii  "M_OK"
 _master_adapter:
@@ -419,7 +447,7 @@ master_frt:
         mov.l   r1,@-r15
 
         mov.l   sh2_frt_ftcsr,r1
-        mov.b	@r1,r0
+        mov.b   @r1,r0
         tst     #2,r0
         bt      9f
         /* overflow */
@@ -479,6 +507,16 @@ master_v_irq:
         sts.l   mach,@-r15
         sts.l   macl,@-r15
 
+        mov     #0x0F,r0
+        shll2   r0
+        shll2   r0
+        ldc     r0,sr                   /* disallow ints */
+
+        mov.l   mvi_sh2_frtctl,r1
+        mov.b   @(0x07,r1),r0
+        xor     #0x02,r0                /* toggle FRT bit as required */
+        mov.b   r0,@(0x07,r1)
+
         mov.l   mvi_mars_adapter,r1
         mov.w   r0,@(0x16,r1)           /* clear V IRQ */
         nop
@@ -512,6 +550,8 @@ mvi_mars_adapter:
         .long   0x20004000
 mvbi_handler_ptr:
         .long   _master_vbi_handler
+mvi_sh2_frtctl:
+        .long   0xfffffe10
 
 !-----------------------------------------------------------------------
 ! Master H Blank IRQ handler
@@ -519,6 +559,16 @@ mvbi_handler_ptr:
 
 master_h_irq:
         mov.l   r1,@-r15
+
+        mov     #0x0F,r0
+        shll2   r0
+        shll2   r0
+        ldc     r0,sr                   /* disallow ints */
+
+        mov.l   mhi_sh2_frtctl,r1
+        mov.b   @(0x07,r1),r0
+        xor     #0x02,r0                /* toggle FRT bit as required */
+        mov.b   r0,@(0x07,r1)
 
         mov.l   mhi_mars_adapter,r1
         mov.w   r0,@(0x18,r1)           /* clear H IRQ */
@@ -537,6 +587,8 @@ master_h_irq:
         .align  2
 mhi_mars_adapter:
         .long   0x20004000
+mhi_sh2_frtctl:
+        .long   0xfffffe10
 
 !-----------------------------------------------------------------------
 ! Master Command IRQ handler
@@ -544,6 +596,16 @@ mhi_mars_adapter:
 
 master_cmd_irq:
         mov.l   r1,@-r15
+
+        mov     #0x0F,r0
+        shll2   r0
+        shll2   r0
+        ldc     r0,sr                   /* disallow ints */
+
+        mov.l   mci_sh2_frtctl,r1
+        mov.b   @(0x07,r1),r0
+        xor     #0x02,r0                /* toggle FRT bit as required */
+        mov.b   r0,@(0x07,r1)
 
         mov.l   mci_mars_adapter,r1
         mov.w   r0,@(0x1A,r1)           /* clear CMD IRQ */
@@ -562,6 +624,10 @@ master_cmd_irq:
         .align  2
 mci_mars_adapter:
         .long   0x20004000
+mci_handler_ptr:
+        .long   _master_vbi_handler
+mci_sh2_frtctl:
+        .long   0xfffffe10
 
 !-----------------------------------------------------------------------
 ! Master PWM IRQ handler
@@ -569,6 +635,16 @@ mci_mars_adapter:
 
 master_pwm_irq:
         mov.l   r1,@-r15
+
+        mov     #0x0F,r0
+        shll2   r0
+        shll2   r0
+        ldc     r0,sr                   /* disallow ints */
+
+        mov.l   mpi_sh2_frtctl,r1
+        mov.b   @(0x07,r1),r0
+        xor     #0x02,r0                /* toggle FRT bit as required */
+        mov.b   r0,@(0x07,r1)
 
         mov.l   mpi_mars_adapter,r1
         mov.w   r0,@(0x1C,r1)           /* clear PWM IRQ */
@@ -587,6 +663,8 @@ master_pwm_irq:
         .align  2
 mpi_mars_adapter:
         .long   0x20004000
+mpi_sh2_frtctl:
+        .long   0xfffffe10
 
 !-----------------------------------------------------------------------
 ! Master RESET IRQ handler
@@ -599,6 +677,11 @@ master_vres_irq:
         nop
         nop
         nop
+
+        mov.l   mvri_sh2_frtctl,r1
+        mov.b   @(0x07,r1),r0
+        xor     #0x02,r0                /* toggle FRT bit as required */
+        mov.b   r0,@(0x07,r1)
 
         mov     #0x0F,r0
         shll2   r0
@@ -613,6 +696,8 @@ master_vres_irq:
         .align  2
 mvri_mars_adapter:
         .long   0x20004000
+mvri_sh2_frtctl:
+        .long   0xfffffe10
 mvri_master_stk:
         .long   0x0603FC00              /* Cold Start SP */
 mvri_master_vres:
