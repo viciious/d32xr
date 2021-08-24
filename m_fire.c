@@ -142,7 +142,7 @@ static inline void M_StopFire(void)
 	}
 }
 
-void Mars_Slave_M_AnimateFire(void)
+void Mars_Sec_M_AnimateFire(void)
 {
 	int start;
 

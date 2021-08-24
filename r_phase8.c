@@ -250,7 +250,7 @@ static void R_DrawSpritesStride(const int start, int *fuzzpos)
 }
 
 #ifdef MARS
-void Mars_Slave_R_DrawSprites(void)
+void Mars_Sec_R_DrawSprites(void)
 {
     Mars_ClearCacheLines((intptr_t)&sortedcount & ~15, 1);
     Mars_ClearCacheLines((intptr_t)&sortedsprites & ~15, 1);

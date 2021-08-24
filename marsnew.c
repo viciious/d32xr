@@ -187,7 +187,7 @@ static int Mars_ConvMouseButtons(int mouse)
 	return ctrl;
 }
 
-void Mars_Slave(void)
+void Mars_Secondary(void)
 {
 	// init DMA
 	SH2_DMA_SAR0 = 0;
@@ -214,7 +214,7 @@ void Mars_Slave(void)
 
 		switch (cmd) {
 		case 1:
-			Mars_Slave_R_SegCommands();
+			Mars_Sec_R_SegCommands();
 			break;
 		case 2:
 			break;
@@ -222,29 +222,29 @@ void Mars_Slave(void)
 			Mars_ClearCache();
 			break;
 		case 4:
-			Mars_Slave_R_DrawPlanes();
+			Mars_Sec_R_DrawPlanes();
 			break;
 		case 5:
-			Mars_Slave_R_DrawSprites();
+			Mars_Sec_R_DrawSprites();
 			break;
 		case 6:
-			Mars_Slave_R_WallPrep();
+			Mars_Sec_R_WallPrep();
 			break;
 		case 7:
 			break;
 		case 8:
-			Mars_Slave_M_AnimateFire();
+			Mars_Sec_M_AnimateFire();
 			break;
 		case 9:
 			break;
 		case 10:
-			Mars_Slave_InitSoundDMA();
+			Mars_Sec_InitSoundDMA();
 			break;
 		case 11:
-			Mars_Slave_StopSoundMixer();
+			Mars_Sec_StopSoundMixer();
 			break;
 		case 12:
-			Mars_Slave_StartSoundMixer();
+			Mars_Sec_StartSoundMixer();
 			break;
 		default:
 			break;

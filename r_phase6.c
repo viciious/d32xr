@@ -508,7 +508,7 @@ static void R_SegCommands2(const int cpu)
 
 #ifdef MARS
 
-void Mars_Slave_R_SegCommands(void)
+void Mars_Sec_R_SegCommands(void)
 {
     //Mars_ClearCacheLines((intptr_t)&viswalls & ~15, 1);
     //Mars_ClearCacheLines((intptr_t)&lastwallcmd & ~15, 1);

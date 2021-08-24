@@ -438,7 +438,7 @@ static void S_Update(int16_t* buffer)
 	}
 }
 
-void slave_dma1_handler(void)
+void sec_dma1_handler(void)
 {
 	SH2_DMA_CHCR1; // read TE
 	SH2_DMA_CHCR1 = 0; // clear TE
@@ -453,7 +453,7 @@ void slave_dma1_handler(void)
 	if (snd_stopmix)
 		return;
 
-	Mars_Slave_ReadSoundCmds();
+	Mars_Sec_ReadSoundCmds();
 
 	S_Update(snd_buffer[snd_bufidx]);
 }
@@ -530,7 +530,7 @@ gotchannel:
 	newchannel->pan = 128;
 }
 
-void Mars_Slave_ReadSoundCmds(void)
+void Mars_Sec_ReadSoundCmds(void)
 {
 	int i;
 
@@ -555,7 +555,7 @@ void Mars_Slave_ReadSoundCmds(void)
 	}
 }
 
-void Mars_Slave_InitSoundDMA(void)
+void Mars_Sec_InitSoundDMA(void)
 {
 	uint16_t sample, ix;
 
@@ -597,10 +597,10 @@ void Mars_Slave_InitSoundDMA(void)
 	snd_init = 1;
 	snd_stopmix = 0;
 
-	Mars_Slave_StartSoundMixer();
+	Mars_Sec_StartSoundMixer();
 }
 
-void Mars_Slave_StopSoundMixer(void)
+void Mars_Sec_StopSoundMixer(void)
 {
 	SH2_DMA_CHCR1; // read TE
 	SH2_DMA_CHCR1 = 0; // clear TE
@@ -608,7 +608,7 @@ void Mars_Slave_StopSoundMixer(void)
 	snd_stopmix = 1;
 }
 
-void Mars_Slave_StartSoundMixer(void)
+void Mars_Sec_StartSoundMixer(void)
 {
 	snd_stopmix = 0;
 
@@ -616,5 +616,5 @@ void Mars_Slave_StartSoundMixer(void)
 	S_Update(snd_buffer[snd_bufidx]);
 
 	// start DMA
-	slave_dma1_handler();
+	sec_dma1_handler();
 }

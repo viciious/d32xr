@@ -48,9 +48,9 @@ int main(void)
 	return 0;
 }
 
-void slave()
+void secondary()
 {
-	Mars_Slave();
+	Mars_Secondary();
 }
 
 /*

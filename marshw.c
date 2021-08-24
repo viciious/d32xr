@@ -44,7 +44,7 @@ uint16_t mars_num_cd_tracks = 0;
 const int NTSC_CLOCK_SPEED = 23011360; // HZ
 const int PAL_CLOCK_SPEED = 22801467; // HZ
 
-void master_vbi_handler(void) __attribute__((section(".data"), aligned(16)));
+void pri_vbi_handler(void) __attribute__((section(".data"), aligned(16)));
 
 void Mars_WaitFrameBuffersFlip(void)
 {
@@ -227,7 +227,7 @@ void Mars_Init(void)
 	}
 }
 
-void master_vbi_handler(void)
+void pri_vbi_handler(void)
 {
 	mars_vblank_count++;
 	if (mars_newpalette)

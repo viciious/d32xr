@@ -294,7 +294,7 @@ static void R_WallEarlyPrep2(viswall_t* wc)
 
 #ifdef MARS
 
-void Mars_Slave_R_WallPrep(void)
+void Mars_Sec_R_WallPrep(void)
 {
     viswall_t* segl;
     volatile viswall_t* volatile* plast;

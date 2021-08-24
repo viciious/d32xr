@@ -279,7 +279,7 @@ void R_DrawPlanes2(const int cpu)
 // Render all visplanes
 //
 #ifdef MARS
-void Mars_Slave_R_DrawPlanes(void)
+void Mars_Sec_R_DrawPlanes(void)
 {
     Mars_ClearCacheLines((intptr_t)&numplanes & ~15, 1);
     Mars_ClearCacheLines((intptr_t)&visplanes & ~15, 1);
