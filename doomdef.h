@@ -621,7 +621,6 @@ typedef struct memblock_s
 	int		size;           /* including the header and possibly tiny fragments */
 	void    **user;         /* NULL if a free block */
 	short   tag;            /* purgelevel */
-	short   id;             /* should be ZONEID */
 #ifndef MARS
 	int		lockframe;		/* don't purge on the same frame */
 #endif

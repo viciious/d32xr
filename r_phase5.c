@@ -83,7 +83,6 @@ backtostart:
       //
       // free the rover block (adding the size to base)
       //
-      rover->id   = 0;
       rover->user = NULL; // mark as free
 
       if(base != rover)
@@ -118,7 +117,6 @@ backtostart:
 
    base->user = user; // mark as an in use block
    base->lockframe = framecount; // mark as in use for this frame
-   base->id = ZONEID;
    base->tag = PU_CACHE;
 
    refzone->rover = base->next; // next allocation will start looking here

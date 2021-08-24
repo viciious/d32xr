@@ -41,7 +41,6 @@ memzone_t *Z_InitZone (byte *base, int size)
 	zone->blocklist.size = size - 8;
 	zone->blocklist.user = NULL;
 	zone->blocklist.tag = 0;
-	zone->blocklist.id = ZONEID;
 	zone->blocklist.next = NULL;
 	zone->blocklist.prev = NULL;
 #ifndef MARS
@@ -88,14 +87,11 @@ void Z_Free2 (memzone_t *mainzone, void *ptr)
 	memblock_t	*block, *adj;
 	
 	block = (memblock_t *) ( (byte *)ptr - sizeof(memblock_t));
-	if (block->id != ZONEID)
-		I_Error ("Z_Free: freed a pointer without ZONEID");
 		
 	if (block->user > (void **)0x100)	/* smaller values are not pointers */
 		*block->user = 0;		/* clear the user's mark */
 	block->user = NULL;	/* mark as free */
 	block->tag = 0;
-	block->id = 0;
 
 	// merge with adjacent blocks
 	adj = block->prev;
@@ -208,7 +204,6 @@ backtostart:
 		base->user = (void *)2;		/* mark as in use, but unowned	 */
 	}
 	base->tag = tag;
-	base->id = ZONEID;
 #ifndef MARS
 	base->lockframe = -1;
 #endif	
@@ -287,8 +282,6 @@ void Z_ChangeTag (void *ptr, int tag)
 	memblock_t	*block;
 	
 	block = (memblock_t *) ( (byte *)ptr - sizeof(memblock_t));
-	if (block->id != ZONEID)
-		I_Error ("Z_ChangeTag: freed a pointer without ZONEID");
 	if (tag >= PU_PURGELEVEL && (int)block->user < 0x100)
 		I_Error ("Z_ChangeTag: an owner is required for purgable blocks");
 	block->tag = tag;
