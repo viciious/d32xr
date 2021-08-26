@@ -252,14 +252,14 @@ pri_vbr:
         .long   pri_err         /* TRAPA #61 */
         .long   pri_err         /* TRAPA #62 */
         .long   pri_err         /* TRAPA #63 */
-        .long   pri_irq         /* Level 1 IRQ */
-        .long   pri_irq         /* Level 2 & 3 IRQ's */
-        .long   pri_irq         /* Level 4 & 5 IRQ's */
-        .long   pri_irq         /* PWM interupt */
-        .long   pri_irq         /* Command interupt */
-        .long   pri_irq         /* H Blank interupt */
-        .long   pri_irq         /* V Blank interupt */
-        .long   pri_irq         /* Reset Button */
+        .long   pri_irq         /* FRT interrupt (Level 1) */
+        .long   pri_irq         /* WDT interrupt (Level 2 & 3) */
+        .long   pri_irq         /* DMA interrupt (Level 4 & 5) */
+        .long   pri_irq         /* PWM interupt (Level 6 & 7) */
+        .long   pri_irq         /* Command interupt (Level 8 & 9) */
+        .long   pri_irq         /* H Blank interupt (Level 10 & 11) */
+        .long   pri_irq         /* V Blank interupt (Level 12 & 13) */
+        .long   pri_irq         /* Reset Button (Level 14 & 15) */
 
 !-----------------------------------------------------------------------
 ! Secondary Vector Base Table
@@ -312,15 +312,14 @@ sec_vbr:
         .long   sec_err         /* TRAPA #61 */
         .long   sec_err         /* TRAPA #62 */
         .long   sec_err         /* TRAPA #63 */
-        .long   sec_irq         /* Level 1 IRQ */
-        .long   sec_irq         /* Level 2 & 3 IRQ's */
-        .long   sec_irq         /* Level 4 & 5 IRQ's */
+        .long   sec_irq         /* FRT interrupt (Level 1) */
+        .long   sec_irq         /* WDT interrupt (Level 2 & 3) */
+        .long   sec_irq         /* DMA interrupt (Level 4 & 5) */
         .long   sec_irq         /* PWM interupt (Level 6 & 7) */
         .long   sec_irq         /* Command interupt (Level 8 & 9) */
         .long   sec_irq         /* H Blank interupt (Level 10 & 11 */
         .long   sec_irq         /* V Blank interupt (Level 12 & 13) */
         .long   sec_irq         /* Reset Button (Level 14 & 15) */
-        .long   sec_dma1        /* DMA1 TE INT */
 
 !-----------------------------------------------------------------------
 ! The Primary SH2 starts here
@@ -392,9 +391,8 @@ pri_start:
         mov.l   _pri_adapter,r1
         mov.b   r0,@r1                  /* set FM */
         mov     #0x08,r0                /* vbi enabled */
-
         mov.b   r0,@(1,r1)              /* set int enables */
-        mov     #0x20,r0
+        mov     #0x10,r0
         ldc     r0,sr                   /* allow ints */
 
         ! purge cache, turn it on, and run main()
@@ -481,12 +479,12 @@ p_int_off:
 
         .align  4
 _p_int_jtable:
-        .long   pri_no_irq              /* level 0 */
-        .long   pri_no_irq              /* level 1 */
-        .long   pri_no_irq              /* level 2 */
-        .long   pri_no_irq              /* level 3 */
-        .long   pri_no_irq              /* level 4 */
-        .long   pri_no_irq              /* level 5 */
+        .long   pri_no_irq              /* level 0 (ILL) */
+        .long   pri_no_irq              /* level 1 (FRT) */
+        .long   pri_wdt_irq             /* level 2 (WDT) */
+        .long   pri_wdt_irq             /* level 3 (WDT) */
+        .long   pri_dma_irq             /* level 4 (DMA) */
+        .long   pri_dma_irq             /* level 5 (DMA) */
         .long   pri_pwm_irq             /* level 6 (PWM) */
         .long   pri_pwm_irq             /* level 7 (PWM) */
         .long   pri_cmd_irq             /* level 8 (CMD) */
@@ -642,6 +640,63 @@ ppi_sh2_frtctl:
         .long   0xfffffe10
 
 !-----------------------------------------------------------------------
+! Primary DMA IRQ handler
+!-----------------------------------------------------------------------
+
+pri_dma_irq:
+        ! bump ints if necessary
+        mov.l   pdi_sh2_frtctl,r1
+        mov     #0xE2,r0                /* TOCR = select OCRA, output 1 on compare match */
+        mov.b   r0,@(0x07,r1)           /* write TOCR */
+        mov.b   @(0x07,r1),r0           /* read TOCR */
+
+        ! handle DMA IRQ
+
+        rts
+        nop
+
+        .align  2
+pdi_sh2_frtctl:
+        .long   0xfffffe10
+
+!-----------------------------------------------------------------------
+! Primary WDT IRQ handler
+!-----------------------------------------------------------------------
+
+pri_wdt_irq:
+        ! bump ints if necessary
+        mov.l   pwi_sh2_frtctl,r1
+        mov     #0xE2,r0                /* TOCR = select OCRA, output 1 on compare match */
+        mov.b   r0,@(0x07,r1)           /* write TOCR */
+        mov.b   @(0x07,r1),r0           /* read TOCR */
+
+        mov.l   pwi_sh2_wdtctl,r1
+        mov.b   @r1,r0                  /* read WTCSR */
+        tst     #0x80,r0                /* check OVF */
+        bt      1f                      /* no overflow */
+        mov.w   pwi_clr_ovf,r0
+        mov.w   r0,@r1                  /* clear OVF */
+
+        ! handle WDT overflow
+        mov.l   pwi_ovf_count,r1
+        mov.l   @r1,r0
+        add     #1,r0
+        mov.l   r0,@r1
+1:
+        rts
+        nop
+
+        .align  2
+pwi_sh2_frtctl:
+        .long   0xfffffe10
+pwi_sh2_wdtctl:
+        .long   0xfffffe80
+pwi_ovf_count:
+        .long   _mars_pwdt_ovf_count
+pwi_clr_ovf:
+        .word   0xa53e                  /* A5 = sel WTCSR, 3E = clr OVF, IT mode, timer enabled, clksel = Fs/4096 */
+
+!-----------------------------------------------------------------------
 ! Primary RESET IRQ handler
 !-----------------------------------------------------------------------
 
@@ -717,7 +772,6 @@ sec_start:
         mov.l   _sec_adapter,r1
         mov     #0x00,r0
         mov.b   r0,@(1,r1)              /* set int enables (different from primary despite same address!) */
-
         mov     #0x0F,r0
         shll2   r0
         shll2   r0
@@ -802,12 +856,12 @@ s_int_off:
 
         .align  4
 _s_int_jtable:
-        .long   sec_no_irq              /* level 0 */
-        .long   sec_no_irq              /* level 1 */
-        .long   sec_no_irq              /* level 2 */
-        .long   sec_no_irq              /* level 3 */
-        .long   sec_no_irq              /* level 4 */
-        .long   sec_no_irq              /* level 5 */
+        .long   sec_no_irq              /* level 0 (ILL) */
+        .long   sec_no_irq              /* level 1 (FRT) */
+        .long   sec_wdt_irq             /* level 2 (WDT) */
+        .long   sec_wdt_irq             /* level 3 (WDT) */
+        .long   sec_dma_irq             /* level 4 (DMA) */
+        .long   sec_dma_irq             /* level 5 (DMA) */
         .long   sec_pwm_irq             /* level 6 (PWM) */
         .long   sec_pwm_irq             /* level 7 (PWM) */
         .long   sec_cmd_irq             /* level 8 (CMD) */
@@ -944,6 +998,87 @@ spi_sh2_frtctl:
         .long   0xfffffe10
 
 !-----------------------------------------------------------------------
+! Secondary DMA IRQ handler
+!-----------------------------------------------------------------------
+
+sec_dma_irq:
+        ! bump ints if necessary
+        mov.l   sdi_sh2_frtctl,r1
+        mov     #0xE2,r0                /* TOCR = select OCRA, output 1 on compare match */
+        mov.b   r0,@(0x07,r1)           /* write TOCR */
+        mov.b   @(0x07,r1),r0           /* read TOCR */
+
+        ! handle DMA IRQ
+        sts.l   pr,@-r15
+        mov.l   r3,@-r15
+        mov.l   r4,@-r15
+        mov.l   r5,@-r15
+        mov.l   r6,@-r15
+        mov.l   r7,@-r15
+        sts.l   mach,@-r15
+        sts.l   macl,@-r15
+
+        mov.l   sdi_dma_handler,r0
+        jsr     @r0
+        nop
+
+        ! restore registers
+        lds.l   @r15+,macl
+        lds.l   @r15+,mach
+        mov.l   @r15+,r7
+        mov.l   @r15+,r6
+        mov.l   @r15+,r5
+        mov.l   @r15+,r4
+        mov.l   @r15+,r3
+        lds.l   @r15+,pr
+
+        rts
+        nop
+
+        .align  2
+sdi_sh2_frtctl:
+        .long   0xfffffe10
+sdi_dma_handler:
+        .long   _sec_dma1_handler
+
+!-----------------------------------------------------------------------
+! Secondary WDT IRQ handler
+!-----------------------------------------------------------------------
+
+sec_wdt_irq:
+        ! bump ints if necessary
+        mov.l   swi_sh2_frtctl,r1
+        mov     #0xE2,r0                /* TOCR = select OCRA, output 1 on compare match */
+        mov.b   r0,@(0x07,r1)           /* write TOCR */
+        mov.b   @(0x07,r1),r0           /* read TOCR */
+
+        mov.l   swi_sh2_wdtctl,r1
+        mov.b   @r1,r0                  /* read WTCSR */
+        tst     #0x80,r0                /* check OVF */
+        bt      1f                      /* no overflow */
+        mov.w   swi_clr_ovf,r0
+        mov.w   r0,@r1                  /* clear OVF */
+
+        ! handle WDT overflow
+        mov.l   swi_ovf_count,r1
+        mov.l   @r1,r0
+        add     #1,r0
+        mov.l   r0,@r1
+1:
+        rts
+        nop
+
+        .align  2
+swi_sh2_frtctl:
+        .long   0xfffffe10
+swi_sh2_wdtctl:
+        .long   0xfffffe80
+swi_ovf_count:
+        .long   _mars_swdt_ovf_count
+swi_clr_ovf:
+        .word   0xa53e                  /* A5 = sel WTCSR, 3E = clr OVF, IT mode, timer enabled, clksel = Fs/4096 */
+
+!-----------------------------------------------------------------------
 ! Secondary RESET IRQ handler
 !-----------------------------------------------------------------------
 
@@ -969,50 +1104,11 @@ svri_sec_stk:
 svri_sec_vres:
         .long   sec_reset
 
-!-----------------------------------------------------------------------
-! Secondary DMA 1 TE INT handler
-!-----------------------------------------------------------------------
-
-sec_dma1:
-        ! save registers
-        sts.l   pr,@-r15
-        mov.l   r0,@-r15
-        mov.l   r1,@-r15
-        mov.l   r2,@-r15
-        mov.l   r3,@-r15
-        mov.l   r4,@-r15
-        mov.l   r5,@-r15
-        mov.l   r6,@-r15
-        mov.l   r7,@-r15
-        sts.l   mach,@-r15
-        sts.l   macl,@-r15
-
-        mov.l   sd1_handler,r0
-        jsr     @r0
-        nop
-
-        ! restore registers
-        lds.l   @r15+,macl
-        lds.l   @r15+,mach
-        mov.l   @r15+,r7
-        mov.l   @r15+,r6
-        mov.l   @r15+,r5
-        mov.l   @r15+,r4
-        mov.l   @r15+,r3
-        mov.l   @r15+,r2
-        mov.l   @r15+,r1
-        mov.l   @r15+,r0
-        lds.l   @r15+,pr
-        rte
-        nop
-
-        .align  2
-sd1_handler:
-        .long   _sec_dma1_handler
-
 
 !-----------------------------------------------------------------------
-! Support functions
+!-----------------------------------------------------------------------
+! Support Functions
+!-----------------------------------------------------------------------
 !-----------------------------------------------------------------------
 
 ! void S_PaintChannel(void *channel, int16_t *buffer, int32_t cnt, int32_t scale);

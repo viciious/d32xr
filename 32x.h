@@ -100,6 +100,13 @@
 #define SH2_FRT_ICRH        (*(volatile unsigned char *)0xFFFFFE18)
 #define SH2_FRT_ICRL        (*(volatile unsigned char *)0xFFFFFE19)
 
+#define SH2_WDT_RTCSR       (*(volatile unsigned char *)0xFFFFFE80)
+#define SH2_WDT_RTCNT       (*(volatile unsigned char *)0xFFFFFE81)
+#define SH2_WDT_RRSTCSR     (*(volatile unsigned char *)0xFFFFFE83)
+#define SH2_WDT_WTCSR_TCNT  (*(volatile unsigned short *)0xFFFFFE80)
+#define SH2_WDT_WRWOVF_RST  (*(volatile unsigned short *)0xFFFFFE82)
+#define SH2_WDT_VCR         (*(volatile unsigned short *)0xFFFFFEE4)
+
 #define SH2_DMA_SAR0        (*(volatile unsigned long *)0xFFFFFF80)
 #define SH2_DMA_DAR0        (*(volatile unsigned long *)0xFFFFFF84)
 #define SH2_DMA_TCR0        (*(volatile unsigned long *)0xFFFFFF88)
@@ -149,10 +156,10 @@
 #define SEGA_CTRL_SIX       0x1000
 #define SEGA_CTRL_NONE      0xF000
 
-#define SEGA_CTRL_LMB		0x00010000
-#define SEGA_CTRL_RMB		0x00020000
-#define SEGA_CTRL_MMB		0x00040000
-#define SEGA_CTRL_STARTMB	0x00080000
+#define SEGA_CTRL_LMB       0x00010000
+#define SEGA_CTRL_RMB       0x00020000
+#define SEGA_CTRL_MMB       0x00040000
+#define SEGA_CTRL_STARTMB   0x00080000
 
 #ifdef __cplusplus
 extern "C" {

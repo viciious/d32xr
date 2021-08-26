@@ -34,7 +34,8 @@ char mars_mouseport;
 volatile unsigned mars_controls, mars_controls2;
 
 volatile unsigned mars_vblank_count = 0;
-volatile unsigned mars_frt_ovf_count = 0;
+volatile unsigned mars_pwdt_ovf_count = 0;
+volatile unsigned mars_swdt_ovf_count = 0;
 unsigned mars_frtc2msec_frac = 0;
 const uint8_t* mars_newpalette = NULL;
 
@@ -147,9 +148,8 @@ int Mars_ParseMousePacket(int mouse, int* pmx, int* pmy)
 
 int Mars_GetFRTCounter(void)
 {
-	unsigned cnt = (SH2_FRT_FRCH << 8);
-	cnt |= SH2_FRT_FRCL;
-	return (int)((mars_frt_ovf_count << 16) | cnt);
+	unsigned int cnt = SH2_WDT_RTCNT;
+	return (int)((mars_pwdt_ovf_count << 8) | cnt);
 }
 
 void Mars_Init(void)
@@ -161,20 +161,17 @@ void Mars_Init(void)
 
 	MARS_VDP_DISPMODE = MARS_224_LINES | MARS_VDP_MODE_256;
 	NTSC = (MARS_VDP_DISPMODE & MARS_NTSC_FORMAT) != 0;
-#if 0
-	/* init hires timer system */
-	SH2_FRT_TCR = 2;									/* TCR set to count at SYSCLK/128 */
-	SH2_FRT_FRCH = 0;
-	SH2_FRT_FRCL = 0;
-	SH2_INT_IPRB = (SH2_INT_IPRB & 0xF0FF) | 0x0E00; 	/* set FRT INT to priority 14 */
-	SH2_INT_VCRD = 72 << 8; 							/* set exception vector for FRT overflow */
-	SH2_FRT_FTCSR = 0;									/* clear any int status */
-	SH2_FRT_TIER = 3;									/* enable overflow interrupt */
-#endif
-	MARS_SYS_COMM4 = 0;
 
-	// change 128.0f to something else if SH2_FRT_TCR is changed!
-	mars_frtc2msec_frac = 128.0f * 1000.0f / (NTSC ? NTSC_CLOCK_SPEED : PAL_CLOCK_SPEED) * 65536.f;
+	SH2_WDT_WTCSR_TCNT = 0xA518; /* WDT TCSR = clr OVF, IT mode, timer off, clksel = Fs/2 */
+
+	/* init hires timer system */
+	SH2_WDT_VCR = (65<<8) | (SH2_WDT_VCR & 0x00FF); // set exception vector for WDT
+	SH2_INT_IPRA = (SH2_INT_IPRA & 0xFF0F) | 0x0020; // set WDT INT to priority 2
+
+	// change 4096.0f to something else if WDT TCSR is changed!
+	mars_frtc2msec_frac = 4096.0f * 1000.0f / (NTSC ? NTSC_CLOCK_SPEED : PAL_CLOCK_SPEED) * 65536.0f;
+
+	MARS_SYS_COMM4 = 0;
 
 	mars_activescreen = MARS_VDP_FBCTL;
 
@@ -221,8 +218,8 @@ void Mars_Init(void)
 
 	if (mars_cd_ok)
 	{
-		/* give the CD two seconds to init */
-		i = mars_vblank_count + 120;
+		/* give the CD three seconds to init */
+		i = mars_vblank_count + 180;
 		while (i > mars_vblank_count) ;
 	}
 }

@@ -200,12 +200,12 @@ void Mars_Secondary(void)
 	SH2_DMA_TCR1 = 0;
 	SH2_DMA_CHCR1 = 0;
 	SH2_DMA_DRCR1 = 0;
-	SH2_DMA_DMAOR = 1; // enable DMA
+	SH2_DMA_DMAOR = 1; 	// enable DMA
 
-	SH2_DMA_VCR1 = 72; // set exception vector for DMA channel 1
-	SH2_INT_IPRA = (SH2_INT_IPRA & 0xF0FF) | 0x0F00; // set DMA INT to priority 15
+	SH2_DMA_VCR1 = 66; 	// set exception vector for DMA channel 1
+	SH2_INT_IPRA = (SH2_INT_IPRA & 0xF0FF) | 0x0400; // set DMA INT to priority 4
 
-	SetSH2SR(2); // allow ints
+	SetSH2SR(1); 		// allow ints
 
 	while (1)
 	{
@@ -600,12 +600,25 @@ void I_Update(void)
 		if ((ticrealbuttons & BT_MODE) && !(oldticrealbuttons & BT_MODE))
 		{
 			int prevdebugmode = debugmode;
+
 			debugmode = (debugmode + 1) % 5;
+
 			if (prevdebugmode == 4 || debugmode == 4)
 			{
 				R_ClearTexCache(&r_flatscache);
 				R_ClearTexCache(&r_wallscache);
 			}
+
+			if (prevdebugmode == 0)
+			{
+				SH2_WDT_WTCSR_TCNT = 0x5A00; /* WDT TCNT = 0 */
+				SH2_WDT_WTCSR_TCNT = 0xA53E; /* WDT TCSR = clr OVF, IT mode, timer on, clksel = Fs/4096 */
+			}
+			else if (!debugmode)
+			{
+				SH2_WDT_WTCSR_TCNT = 0xA518; /* WDT TCSR = clr OVF, IT mode, timer off, clksel = Fs/2 */
+			}
+
 			clearscreen = 2;
 		}
 
