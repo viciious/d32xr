@@ -126,7 +126,7 @@ map "MAP17" "Hell Keep"
     sky = "sky3"
     next = "MAP18"
     mapnumber = 17
-    music = "MUS_E1M9"
+    music = "MUS_E3M2"
 }
 map "MAP18" "Pandemonium"
 {
