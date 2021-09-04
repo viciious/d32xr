@@ -51,6 +51,8 @@ extern const uint8_t* mars_newpalette;
 extern uint16_t mars_cd_ok;
 extern uint16_t mars_num_cd_tracks;
 
+extern uint16_t mars_refresh_hz;
+
 void Mars_UpdateCD(void);
 void Mars_UseCD(int usecd);
 
@@ -79,6 +81,7 @@ int Mars_GetFRTCounter(void);
 
 #endif 
 
+#define Mars_RefreshHZ() (mars_refresh_hz)
 
 // If you intend to use the two functions below, beware
 // that they communicate with the 68000, which in turn

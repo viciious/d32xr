@@ -441,10 +441,11 @@ void P_ZMovement(mobj_t *mo)
    else if(!(mo->flags & MF_NOGRAVITY))
    {
       // apply gravity
+      fixed_t gravity = (GRAVITY * vblsinframe[0]) / TICVBLS;
       if(!mo->momz)
-         mo->momz = -GRAVITY*2;
+         mo->momz = -gravity;
       else
-         mo->momz -= GRAVITY;
+         mo->momz -= gravity/2;
    }
 
    if(mo->z + mo->height > mo->ceilingz)

@@ -5,7 +5,7 @@
 VINT		controltype = 0;		/* determine settings for BT_* */
 
 int			gamevbls;			/* may not really be vbls in multiplayer */
-int			vblsinframe;		/* range from ticrate to ticrate*2 */
+int			vblsinframe[MAXPLAYERS];		/* range from ticrate to ticrate*2 */
 
 int			ticsperframe = MINTICSPERFRAME;
 
@@ -316,37 +316,47 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 	ticon = 0;
 	frameon = 0;
 	
+	gametic = 0;
+	prevgametic = 0;
+
 	gameaction = 0;
 	gamevbls = 0;
-	vblsinframe = ticrate;
-	
+	vblsinframe[0] = vblsinframe[1] = 0;
+	lasttics = 0;
+
 	ticbuttons[0] = ticbuttons[1] = oldticbuttons[0] = oldticbuttons[1] = 0;
 	ticmousex[0] = ticmousex[1] = ticmousey[0] = ticmousey[1] = 0;
 
+	if (demoplayback)
+	{
+		vblsinframe[0] = vblsinframe[1] = TICVBLS;
+		lasttics = TICVBLS;
+	}
+
 	do
 	{
-/* */
-/* run the tic immediately */
-/* */
-		gamevbls += vblsinframe;
-		exit = ticker ();
+		if (demoplayback)
+		{
+			gametic++;
+			exit = ticker();
+		}
 
 /* */
 /* adaptive timing based on previous frame */
 /* */
 		if (demoplayback || demorecording)
-			vblsinframe = 4;
+			vblsinframe[consoleplayer] = TICVBLS;
 		else
 		{
-			vblsinframe = lasttics;
-			if (vblsinframe > ticrate*2)
-				vblsinframe = ticrate*2;
+			vblsinframe[consoleplayer] = lasttics;
+			if (vblsinframe[consoleplayer] > TICVBLS*2)
+				vblsinframe[consoleplayer] = TICVBLS*2;
 #if 0
-			else if (vblsinframe < ticrate)
-				vblsinframe = ticrate;
+			else if (vblsinframe[consoleplayer] < TICVBLS)
+				vblsinframe[consoleplayer] = TICVBLS;
 #endif
 		}
-					
+
 /* */
 /* get buttons for next tic */
 /* */
@@ -386,6 +396,8 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 			ticbuttons[!consoleplayer]
 				= NetToLocal(I_NetTransfer(LocalToNet(ticbuttons[consoleplayer])));
 
+		gamevbls += vblsinframe[0];
+
 		if (demorecording)
 			*demo_p++ = buttons;
 		
@@ -400,13 +412,25 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 
 		ticon++;
 
-/* */
-/* sync up with the refresh */
-/* */
-		while (!I_RefreshCompleted ())
-		;
-		S_UpdateSounds ();
-		drawer ();
+		if (!demoplayback)
+		{
+			if (gamevbls / TICVBLS > gametic)
+				gametic++;
+			exit = ticker();
+		}
+
+		if (gametic > prevgametic)
+			S_UpdateSounds();
+
+		/* */
+		/* sync up with the refresh */
+		/* */
+		while (!I_RefreshCompleted())
+			;
+
+		drawer();
+
+		prevgametic = gametic;
 
 #if 0
 while (!I_RefreshCompleted ())

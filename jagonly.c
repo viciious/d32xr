@@ -1802,7 +1802,7 @@ unsigned I_NetTransfer (unsigned buttons)
 	consistancy = (consistancy>>8) ^ consistancy ^ (consistancy>>16);
 	
 	outbytes[4] = consistancy;
-	outbytes[5] = vblsinframe;
+	outbytes[5] = vblsinframe[consoleplayer];
 	
 	if (consoleplayer)
 	{
@@ -1816,7 +1816,7 @@ unsigned I_NetTransfer (unsigned buttons)
 			inbytes[i] = val;
 			PutSerialChar (outbytes[i]);
 		}
-		vblsinframe = inbytes[5];		/* take gamevbls from other player */
+		vblsinframe[0] = inbytes[5];		/* take gamevbls from other player */
 	}
 	else
 	{

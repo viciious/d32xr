@@ -302,7 +302,7 @@ exit:
 	}
 
 /* animate skull */
-	if (++cursorcount == ticrate)
+	if (++cursorcount == TICVBLS)
 	{
 		cursorframe ^= 1;
 		cursorcount = 0;

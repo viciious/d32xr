@@ -838,11 +838,11 @@ void P_MovePsprites (player_t *player)
 	pspdef_t	*psp;
 	statenum_t	state;
 
-	ticremainder[playernum] += vblsinframe;
+	ticremainder[playernum] += vblsinframe[playernum];
 	
-	while (ticremainder[playernum] >= ticrate)
+	while (ticremainder[playernum] >= TICVBLS)
 	{
-		ticremainder[playernum] -= ticrate;
+		ticremainder[playernum] -= TICVBLS;
 			
 		psp = &player->psprites[0];
 		for (i=0 ; i<NUMPSPRITES ; i++, psp++)

@@ -89,8 +89,11 @@ void D_isort(int* a, int len) ATTR_OPTIMIZE_SIZE;
 */
 
 #define MAXPLAYERS	2
-#define TICRATE		15			/* number of tics / second */
 
+#define TICRATE		15				/* number of tics / second */
+#define TICVBLS		(60/TICRATE)	/* vblanks per tic */
+									/* change this to 'ticrate' if you want */
+									/* to use a different rate on PAL */
 
 #define	FRACBITS		16
 #define	FRACUNIT		(1<<FRACBITS)
@@ -533,6 +536,7 @@ extern	dmapinfo_t	gamemapinfo;
 extern	dgameinfo_t	gameinfo;
 
 extern 	int 		gametic;
+extern 	int 		prevgametic;
 
 #define MAXDMSTARTS		10
 extern	mapthing_t	*deathmatchstarts, *deathmatch_p;
@@ -1121,7 +1125,7 @@ void DrawTiledBackground(void);
 extern	int		maxlevel;			/* highest level selectable in menu (1-25) */
 
 extern	int		gamevbls;			/* may not really be vbls in multiplayer */
-extern	int		vblsinframe;		/* range from 4 to 8 */
+extern	int		vblsinframe[MAXPLAYERS];		/* range from 4 to 8 */
 
 #define MINTICSPERFRAME		2
 #define MAXTICSPERFRAME		4

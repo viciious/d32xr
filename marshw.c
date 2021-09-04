@@ -42,6 +42,8 @@ const uint8_t* mars_newpalette = NULL;
 uint16_t mars_cd_ok = 0;
 uint16_t mars_num_cd_tracks = 0;
 
+uint16_t mars_refresh_hz = 0;
+
 const int NTSC_CLOCK_SPEED = 23011360; // HZ
 const int PAL_CLOCK_SPEED = 22801467; // HZ
 
@@ -170,6 +172,7 @@ void Mars_Init(void)
 
 	// change 4096.0f to something else if WDT TCSR is changed!
 	mars_frtc2msec_frac = 4096.0f * 1000.0f / (NTSC ? NTSC_CLOCK_SPEED : PAL_CLOCK_SPEED) * 65536.0f;
+	mars_refresh_hz = NTSC ? 60 : 50;
 
 	MARS_SYS_COMM4 = 0;
 

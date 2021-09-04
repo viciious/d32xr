@@ -308,7 +308,7 @@ int M_Ticker (void)
 	buttons = ticrealbuttons;
 
 /* animate skull */
-	if (++cursorcount == ticrate)
+	if (++cursorcount == TICVBLS)
 	{
 		cursorframe ^= 1;
 		cursorcount = 0;

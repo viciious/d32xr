@@ -5,7 +5,7 @@
 #include "st_main.h"
 
 
-fixed_t 		forwardmove[2] = {0x38000, 0x60000}; 
+fixed_t 		forwardmove[2] = {0x40000, 0x60000}; 
 fixed_t 		sidemove[2] = {0x38000, 0x58000}; 
 
 #define SLOWTURNTICS    10
@@ -13,7 +13,10 @@ fixed_t			angleturn[] =
 	{300,300,500,500,600,700,800,900,900,1000};
 fixed_t			fastangleturn[] =
 	{800,800,900,1000,1000,1200,1200,1300,1300,1400};
-	
+
+#define	STOPSPEED		FRACUNIT / 16
+#define	FRICTION		0xd240
+#define MAXBOB			16 * FRACUNIT		/* 16 pixels of bob */
 
 /*============================================================================= */
 
@@ -30,8 +33,8 @@ void P_PlayerMove (mobj_t *mo)
 	line_t		*latchedline;
 	fixed_t		latchedx, latchedy;
 		
-	momx = vblsinframe*(mo->momx>>2);
-	momy = vblsinframe*(mo->momy>>2);
+	momx = vblsinframe[playernum]*(mo->momx>>2);
+	momy = vblsinframe[playernum]*(mo->momy>>2);
 	
 	slidething = mo;
 	
@@ -96,9 +99,6 @@ dospecial:
 =================== 
 */ 
 
-#define	STOPSPEED		0x1000
-#define	FRICTION		0xd240
-
 void P_PlayerXYMovement (mobj_t *mo) 
 { 	
 	P_PlayerMove (mo);
@@ -160,7 +160,7 @@ void P_PlayerZMovement (mobj_t *mo)
 	{	/* hit the floor */
 		if (mo->momz < 0)
 		{
-			if (mo->momz < -GRAVITY*4)	/* squat down */
+			if (mo->momz < -GRAVITY*2)	/* squat down */
 			{
 				player->deltaviewheight = mo->momz>>3;
 				S_StartSound (mo, sfx_oof);
@@ -171,10 +171,11 @@ void P_PlayerZMovement (mobj_t *mo)
 	}
 	else
 	{
+		fixed_t gravity = (GRAVITY * vblsinframe[0]) / TICVBLS;
 		if (mo->momz == 0)
-			mo->momz = -GRAVITY*2;
+			mo->momz = -gravity;
 		else
-			mo->momz -= GRAVITY;
+			mo->momz -= gravity/2;
 	}
 	
 	if (mo->z + mo->height > mo->ceilingz)
@@ -246,9 +247,11 @@ void P_BuildMove (player_t *player)
 	int         speed;
 	int			buttons, oldbuttons;
 	mobj_t		*mo;
-	 
+	int			vbls;
+
 	buttons = ticbuttons[playernum];
 	oldbuttons = oldticbuttons[playernum];
+	vbls = vblsinframe[playernum];
 
 	if (mousepresent && !demoplayback)
 	{
@@ -258,14 +261,14 @@ void P_BuildMove (player_t *player)
 		if ((buttons & BT_RMBTN) && (oldbuttons & BT_RMBTN))
 		{
 			// holding RMB - mouse dodge mode
-			player->sidemove = mx * 0x1000;
-			player->forwardmove = my * 0x1000;
+			player->sidemove = (mx * 0x1000 * vbls) / TICVBLS;
+			player->forwardmove = (my * 0x1000 * vbls) / TICVBLS;
 			player->angleturn = 0;
 		}
 		else
 		{
 			// normal mouse mode - mouse turns, dpad moves forward/back/sideways
-			player->angleturn = -mx * 0x200000;
+			player->angleturn = (-mx * 0x200000 * vbls) / TICVBLS;
 
 			speed = (buttons & BT_SPEED) > 0;
 	
@@ -283,14 +286,14 @@ void P_BuildMove (player_t *player)
 			player->forwardmove = player->sidemove = 0;
 	
 			if (buttons & BT_RIGHT) 
-				player->sidemove = sidemove[speed]; 
+				player->sidemove = (sidemove[speed] * vbls) / TICVBLS;
 			if (buttons & BT_LEFT) 
-				player->sidemove = -sidemove[speed]; 
+				player->sidemove = (-sidemove[speed] * vbls) / TICVBLS;
  
 			if (buttons & BT_UP) 
-				player->forwardmove = forwardmove[speed]; 
+				player->forwardmove = (forwardmove[speed] * vbls) / TICVBLS;
 			if (buttons & BT_DOWN) 
-				player->forwardmove = -forwardmove[speed];  		 
+				player->forwardmove = (-forwardmove[speed] * vbls) / TICVBLS;
 		}
 	}
 	else
@@ -316,34 +319,32 @@ void P_BuildMove (player_t *player)
 		if (strafe)
 		{
 			if (buttons & BT_RIGHT)
-				player->sidemove = sidemove[speed];
+				player->sidemove = (sidemove[speed] * vbls) / TICVBLS;
 			if (buttons & BT_LEFT)
-				player->sidemove = -sidemove[speed];
+				player->sidemove = (-sidemove[speed] * vbls) / TICVBLS;
 		}
 		else
 		{
 			if (speed && !(buttons & (BT_UP | BT_DOWN)))
 			{
 				if (buttons & BT_RIGHT)
-					player->angleturn = -((fastangleturn[player->turnheld]
-						* vblsinframe) << 15);
+					player->angleturn = ((-fastangleturn[player->turnheld] * vbls) / TICVBLS) << 17;
 				if (buttons & BT_LEFT)
-					player->angleturn = (fastangleturn[player->turnheld]
-						* vblsinframe) << 15;
+					player->angleturn = ((fastangleturn[player->turnheld] * vbls) / TICVBLS) << 17;
 			}
 			else
 			{
 				if (buttons & BT_RIGHT)
-					player->angleturn = -angleturn[player->turnheld] << 17;
+					player->angleturn = ((-angleturn[player->turnheld] * vbls) / TICVBLS) << 17;
 				if (buttons & BT_LEFT)
-					player->angleturn = angleturn[player->turnheld] << 17;
+					player->angleturn = ((angleturn[player->turnheld] * vbls) / TICVBLS) << 17;
 			}
 		}
 
 		if (buttons & BT_UP)
-			player->forwardmove = forwardmove[speed];
+			player->forwardmove = (forwardmove[speed] * vbls) / TICVBLS;
 		if (buttons & BT_DOWN)
-			player->forwardmove = -forwardmove[speed];
+			player->forwardmove = (-forwardmove[speed] * vbls) / TICVBLS;
 	}
 
 /* */
@@ -372,8 +373,6 @@ void P_BuildMove (player_t *player)
 ===============================================================================
 */
 
-#define MAXBOB			0x100000		/* 16 pixels of bob */
-
 boolean		onground;
 
 /* 
@@ -389,9 +388,9 @@ boolean		onground;
 void P_Thrust (player_t *player, angle_t angle, fixed_t move) 
 {
 	angle >>= ANGLETOFINESHIFT;
-	move >>= 16;
-	player->mo->momx += move*finecosine(angle); 
-	player->mo->momy += move*finesine(angle);
+	move >>= 8;
+	player->mo->momx += move*(finecosine(angle)>>8);
+	player->mo->momy += move*(finesine(angle)>>8);
 }
 
 
@@ -411,17 +410,24 @@ void P_CalcHeight (player_t *player)
 	int			angle;
 	fixed_t		bob;
 	fixed_t		val;
-	
+	fixed_t		movx, movy;
 
 /* */
 /* regular movement bobbing (needs to be calculated for gun swing even */
 /* if not on ground) */
 /* OPTIMIZE: tablify angle  */
-	val = player->mo->momx>>8;
-	player->bob = val*val;
-	val = player->mo->momy>>8;
-	player->bob += val*val;
+	movx = player->mo->momx;
+	movy = player->mo->momy;
 
+	if (vblsinframe[playernum] <= 2)
+	{
+		movx = FixedDiv(movx, FRICTION);
+		movy = FixedDiv(movy, FRICTION);
+	}
+	movx >>= 8;
+	movy >>= 8;
+
+	player->bob += movx*movx + movy*movy;
 	player->bob >>= 4;
 	if (player->bob>MAXBOB)
 	{
@@ -595,6 +601,7 @@ void P_PlayerThink (player_t *player)
 	int		buttons;
 	
 	buttons = ticbuttons[playernum];
+	forwardmove[0] = demoplayback ? 0x38000 : 0x40000;
 
 ticphase = 20;
 	P_PlayerMobjThink (player->mo);
@@ -608,7 +615,7 @@ ticphase = 21;
 	if (player->mo->flags & MF_JUSTATTACKED)
 	{
 		player->angleturn = 0;
-		player->forwardmove = 0xc800;
+		player->forwardmove = 25 * FRACUNIT / 32;
 		player->sidemove = 0;
 		player->mo->flags &= ~MF_JUSTATTACKED;
 	}

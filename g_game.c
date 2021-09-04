@@ -24,7 +24,8 @@ playerresp_t	playersresp[MAXPLAYERS];
 
 int             consoleplayer;          /* player taking events and displaying  */
 int             displayplayer;          /* view being displayed  */
-int             gametic; 
+int             gametic;
+int             prevgametic;
 int             totalkills, totalitems, totalsecret;    /* for intermission  */
  
 boolean         demorecording; 

@@ -24,6 +24,8 @@ int main(void)
 /* clear screen */
 	Mars_Init();
 
+	Mars_CommSlaveClearCache();
+
 	/* set a two color palette */
 	Mars_FlipFrameBuffers(false);
 	palette = &MARS_CRAM;
@@ -32,7 +34,7 @@ int main(void)
 	palette[COLOR_WHITE] = 0x7fff;
 	Mars_WaitFrameBuffersFlip();
 
-	ticrate = 4;
+	ticrate = Mars_RefreshHZ() / TICRATE;
 	mousepresent = mars_mouseport >= 0;
 
 /* */

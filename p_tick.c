@@ -303,8 +303,7 @@ int P_Ticker (void)
 			return ga_exitdemo;
 	}
 
-	ticstart = frtc;
-	
+
 	while (!I_RefreshLatched () )
 	;		/* wait for refresh to latch all needed data before */
 			/* running the next tick */
@@ -315,9 +314,7 @@ int P_Ticker (void)
 #endif
 
 	gameaction = ga_nothing;
-	
-	gametic++; 		 
- 
+
 /* */
 /* check for pause and cheats */
 /* */
@@ -331,48 +328,51 @@ int P_Ticker (void)
 		if (playeringame[playernum])
 			O_Control (pl);
 
-
+	/* */
+	/* run player actions */
+	/* */
 	if (gamepaused)
 		return 0;
 
-/* */
-/* run player actions */
-/* */
 	start = frtc;
-	for (playernum=0,pl=players ; playernum<MAXPLAYERS ; playernum++,pl++)
+	for (playernum = 0, pl = players; playernum < MAXPLAYERS; playernum++, pl++)
 		if (playeringame[playernum])
 		{
-			if (pl->playerstate == PST_REBORN) 
-				G_DoReborn (playernum); 
-			AM_Control (pl);
-			P_PlayerThink (pl);
+			if (pl->playerstate == PST_REBORN)
+				G_DoReborn(playernum);
+			AM_Control(pl);
+			P_PlayerThink(pl);
 		}
 	playertics = frtc - start;
-	
-	
-	start = frtc;
-	P_RunThinkers ();
-	thinkertics = frtc - start;
-		
-	start = frtc;
-	P_CheckSights ();	
-	sighttics = frtc - start;
 
-	start = frtc;
-	P_RunMobjBase ();
-	basetics = frtc - start;
+	if (gametic != prevgametic)
+	{
+		ticstart = frtc;
 
-	start = frtc;
-	P_RunMobjLate ();
-	latetics = frtc - start;
+		start = frtc;
+		P_RunThinkers();
+		thinkertics = frtc - start;
 
-	P_UpdateSpecials ();
+		start = frtc;
+		P_CheckSights();
+		sighttics = frtc - start;
 
-	P_RespawnSpecials ();
-	
-	ST_Ticker ();			/* update status bar */
-		
-	tictics = frtc - ticstart;
+		start = frtc;
+		P_RunMobjBase();
+		basetics = frtc - start;
+
+		start = frtc;
+		P_RunMobjLate();
+		latetics = frtc - start;
+
+		P_UpdateSpecials();
+
+		P_RespawnSpecials();
+
+		ST_Ticker();			/* update status bar */
+
+		tictics = frtc - ticstart;
+	}
 
 	return gameaction;		/* may have been set to ga_died, ga_completed, */
 							/* or ga_secretexit */
