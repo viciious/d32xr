@@ -110,7 +110,7 @@ map "MAP14" "Halls of the Damned"
 map "MAP15" "Spawning Vats"
 {
     sky = "sky2"
-    next = "MAP23"
+    next = "MAP16"
     mapnumber = 15
     music = "MUS_E2M7"
 }
