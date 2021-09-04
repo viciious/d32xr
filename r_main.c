@@ -582,6 +582,9 @@ void R_Setup (void)
 			palette = 3;
 		palette += 9;
 	}
+	else if (player->powers[pw_invulnerability] > 60 
+		|| (player->powers[pw_invulnerability] & 4))
+		palette = 12;
 	else if (player->powers[pw_ironfeet] > 60
 	|| (player->powers[pw_ironfeet]&4) )
 		palette = 13;
