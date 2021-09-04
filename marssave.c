@@ -164,6 +164,11 @@ int SaveCount(void)
 	return i;
 }
 
+int MaxSaveCount(void)
+{
+	return optslotnumber;
+}
+
 static void SaveOptions(void)
 {
 	saveopts_t so;

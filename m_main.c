@@ -473,7 +473,7 @@ int M_Ticker (void)
 					if (buttons & BT_RIGHT)
 					{
 						saveslot++;
-						if (saveslot >= savecount + (screenpos == ms_save))
+						if (saveslot >= savecount + (screenpos == ms_save) || saveslot >= MaxSaveCount())
 							saveslot--;
 					}
 					if (buttons & BT_LEFT)
