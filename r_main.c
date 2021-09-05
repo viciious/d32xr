@@ -70,6 +70,8 @@ pixel_t		*workingscreen;
 #endif
 
 #ifdef MARS
+static int16_t	curpalette = -1;
+
 volatile pixel_t* viewportbuffer;
 
 __attribute__((aligned(16)))
@@ -438,6 +440,14 @@ nocache:
 	Z_Free(margin);
 }
 
+void R_SetupLevel(void)
+{
+	R_SetupTextureCaches();
+#ifdef MARS
+	curpalette = -1;
+#endif
+}
+
 /*============================================================================= */
 
 #ifndef MARS
@@ -465,7 +475,6 @@ void R_Setup (void)
 	unsigned short  *tempbuf;
 #ifdef MARS
 	int		palette = 0;
-	static int	curpalette = 0;
 #endif
 
 /* */
@@ -588,7 +597,6 @@ void R_Setup (void)
 	else if (player->powers[pw_ironfeet] > 60
 	|| (player->powers[pw_ironfeet]&4) )
 		palette = 13;
-
 
 	if (palette != curpalette) {
 		curpalette = palette;

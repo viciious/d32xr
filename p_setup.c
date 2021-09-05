@@ -647,7 +647,7 @@ extern byte *debugscreen;
 	iquehead = iquetail = 0;
 	gamepaused = false;
 
-	R_SetupTextureCaches();
+	R_SetupLevel();
 
 #ifdef MARS
 	Mars_CommSlaveClearCache();

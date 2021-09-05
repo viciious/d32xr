@@ -304,6 +304,8 @@ void IN_Start (void)
 
 	DoubleBufferSetup ();
 
+	I_SetPalette(W_POINTLUMPNUM(W_GetNumForName("PLAYPALS")));
+
 	S_StartSong(gameinfo.intermissionMus, 1, cdtrack_intermission);
 }
 

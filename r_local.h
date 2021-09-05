@@ -231,6 +231,7 @@ int     SlopeDiv(unsigned int num, unsigned int den) ATTR_DATA_CACHE_ALIGN;
 void	R_InitData (void);
 void	R_SetViewportSize(int num);
 void	R_SetDetailMode(int mode);
+void	R_SetupLevel(void);
 void	R_SetupTextureCaches(void) ATTR_OPTIMIZE_SIZE;
 
 typedef void (*drawcol_t)(int, int, int, int, fixed_t, fixed_t, inpixel_t*, int, int *);

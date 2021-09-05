@@ -311,6 +311,8 @@ void F_Start (void)
 	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
 	DoubleBufferSetup ();
 #endif
+
+	I_SetPalette(W_POINTLUMPNUM(W_GetNumForName("PLAYPALS")));
 }
 
 void F_Stop (void)
