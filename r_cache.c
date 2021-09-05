@@ -227,7 +227,7 @@ void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **us
 	if (id < 0)
 		return;
 
-	size = pixels + sizeof(texcacheblock_t) + 32;
+	size = pixels + sizeof(texcacheblock_t) + 16;
 	if (c->zonesize < size + pad)
 		return;
 
