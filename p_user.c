@@ -409,7 +409,6 @@ void P_CalcHeight (player_t *player)
 {
 	int			angle;
 	fixed_t		bob;
-	fixed_t		val;
 	fixed_t		movx, movy;
 
 /* */
