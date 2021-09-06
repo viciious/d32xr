@@ -34,7 +34,7 @@ To compile the rom you're going to need several things:
 ## "DOOM 32x: Resurrection" Credits
 * Programming : Victor Luchits
 * Programming : Chilly Willy
-* Testing : Matt B (Matteusbeus)
+* Testing : Matt B (Matteusbeus), TrekkiesUnite118
 * VGM music: Spoony Bard
 
 ## "Calico DOOM" Credits
