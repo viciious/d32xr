@@ -143,6 +143,7 @@ fm_setup:
         moveq   #0x40,d3
 3:
         add.l   d3,fm_cur       /* start of song data */
+        move.b  #0x15,fm_csm
         rts
 
 
@@ -475,7 +476,15 @@ write_psg:
 write_fm0:
         fetch_vgm d0
         move.b  d0,0xA04000
+        cmpi.b  #0x27,d0
+        seq     d1
         fetch_vgm d0
+        tst.b   d1
+        beq.b   0f                /* not setting timer command/status reg */
+        andi.b  #0x40,d0        /* we need the CSM Mode bit */
+        ori.b   #0x15,d0
+        move.b  d0,fm_csm        /* save for timer updates */
+0:
         move.b  d0,0xA04001
         move.l  a6,fm_cur       /* update vgm ptr */
         rts
@@ -921,6 +930,8 @@ fm_tick:
         .global    fm_ttt
 fm_ttt:
         dc.w    0
-
+        .global    fm_csm
+fm_csm:
+        dc.b    0
 
         .align  2

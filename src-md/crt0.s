@@ -245,21 +245,22 @@ main_loop:
         ori.w   #0xFFFF,d0            /* saturate ticks to word */
 3:
         move.w  d0,fm_tick
-        cmpi.w  #1024,d0            /* max ticks for Timer A */
+        cmpi.w  #1024,d0              /* max ticks for Timer A */
         bls.b   4f
         move.w  #1024,d0
 4:
         move.w  d0,fm_ttt
         move.w  #1024,d1
-        sub.w   d0,d1                /* Timer A count value */
+        sub.w   d0,d1                   /* Timer A count value */
         move.w  d1,d0
         andi.w  #3,d1
         lsr.w   #2,d0
+        move.b  fm_csm,d2               /* timer control + CSM Mode */
         move.b  #0x27,0xA04000
         nop
         nop
         nop
-        move.b  #0x15,0xA04001        /* reset Timer A flag, stop Timer A */
+        move.b  d2,0xA04001             /* reset Timer A flag */
         nop
         nop
         nop
@@ -267,7 +268,7 @@ main_loop:
         nop
         nop
         nop
-        move.b  d0,0xA04001            /* set Timer A msbs */
+        move.b  d0,0xA04001             /* set Timer A msbs */
         nop
         nop
         nop
@@ -275,7 +276,7 @@ main_loop:
         nop
         nop
         nop
-        move.b  d1,0xA04001            /* set Timer A lsbs */
+        move.b  d1,0xA04001             /* set Timer A lsbs */
         nop
         nop
         nop
@@ -283,7 +284,7 @@ main_loop:
         nop
         nop
         nop
-        move.b  #0x15,0xA04001        /* enable Timer A, start Timer A */
+        move.b  d2,0xA04001             /* enable Timer A, start Timer A */
         bra     main_loop
 
 | process request from Master SH2
