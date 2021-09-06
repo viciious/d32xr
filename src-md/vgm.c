@@ -2,7 +2,7 @@
 #include <string.h>
 #include "lzss.h"
 
-#define VGM_READAHEAD 0x100
+#define VGM_READAHEAD 0x200
 
 static lzss_state_t vgm_lzss = { 0 };
 extern void* fm_ptr, * pcm_ptr, * vgm_ptr;

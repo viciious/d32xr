@@ -4,6 +4,7 @@
 | uses two work ram buffers to hold decompressed vgm commands
 | and pcm data
         .equ    buf_size,0x8000    /* must match LZSS_BUF_SIZE */
+        .equ    vgm_ahead,0x200    /* must match VGM_READAHEAD */
 
         .macro  fetch_vgm reg
         cmpa.l  a3,a6           /* check for wrap around */
@@ -79,7 +80,7 @@ fm_setup:
 
         movea.l vgm_ptr,a6      /* decompress buffer */
         move.l  a6,vgm_chk
-        addi.l  #256,vgm_chk    /* vgm_setup read this for us */
+        addi.l  #vgm_ahead,vgm_chk    /* vgm_setup read this for us */
         move.l  a6,fm_cur       /* current vgm ptr */
         lea     buf_size,a2     /* wrap length for buffer */
         lea     0(a6,a2.l),a3   /* buffer limit */
@@ -156,7 +157,7 @@ fm_play:
 
         move.l  vgm_chk,d0
         sub.l   a6,d0
-        cmpi.l  #256,d0
+        cmpi.l  #vgm_ahead,d0
         bgt.b   0f
         jsr     bump_vgm
 0:
@@ -783,6 +784,7 @@ end_data:
 
         move.l  vgm_ptr,vgm_chk
         jsr     vgm_setup       /* restart at start of compressed data and fill buffer */
+        addi.l  #vgm_ahead,vgm_chk  /* vgm_setup read this for us */
 
         move.l  fm_loop,d0      /* offset from data start to song start */
         add.l   vgm_ptr,d0
@@ -823,7 +825,7 @@ stop:
 bump_vgm:
         movem.l d0-d4/a2-a3/a6,-(sp)
         jsr     vgm_read
-        addi.l  #256,vgm_chk
+        addi.l  #vgm_ahead,vgm_chk
         movem.l (sp)+,d0-d4/a2-a3/a6
         rts
 
