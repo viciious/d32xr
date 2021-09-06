@@ -290,6 +290,8 @@ void Mars_PlayTrack(char usecd, int playtrack, void *vgmptr, char looping)
 {
 	Mars_UseCD(usecd);
 
+	while (MARS_SYS_COMM0);
+
 	if (usecd)
 	{
 		MARS_SYS_COMM2 = looping;
