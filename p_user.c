@@ -600,7 +600,6 @@ void P_PlayerThink (player_t *player)
 	int		buttons;
 	
 	buttons = ticbuttons[playernum];
-	forwardmove[0] = demoplayback ? 0x38000 : 0x40000;
 
 ticphase = 20;
 	P_PlayerMobjThink (player->mo);

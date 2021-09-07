@@ -244,37 +244,6 @@ unsigned NetToLocal (unsigned cmd)
 	return cmd;
 }
 
-unsigned GetDemoCmd (void)
-{
-	unsigned	cmd, newcmd;
-	const unsigned		jp_a = 0x20000000;
-	const unsigned		jp_b = 0x2000000;
-	const unsigned		jp_c = 0x2000;
-	const unsigned		jp_up = 0x100000;
-	const unsigned		jp_down = 0x200000;
-	const unsigned		jp_left = 0x400000;
-	const unsigned		jp_right = 0x800000;
-
-	cmd = *demo_p++;
-	newcmd = 0;
-
-	if (cmd & jp_a)
-		newcmd |= BT_SPEED;
-	if (cmd & jp_b)
-		newcmd |= BT_ATTACK;
-	if (cmd & jp_c)
-		newcmd |= BT_USE | BT_STRAFE;
-	if (cmd & jp_up)
-		newcmd |= BT_UP;
-	if (cmd & jp_down)
-		newcmd |= BT_DOWN;
-	if (cmd & jp_left)
-		newcmd |= BT_LEFT;
-	if (cmd & jp_right)
-		newcmd |= BT_RIGHT;
-
-	return newcmd;
-}
  
 /*=============================================================================  */
 
@@ -327,20 +296,8 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 	ticbuttons[0] = ticbuttons[1] = oldticbuttons[0] = oldticbuttons[1] = 0;
 	ticmousex[0] = ticmousex[1] = ticmousey[0] = ticmousey[1] = 0;
 
-	if (demoplayback)
-	{
-		vblsinframe[0] = vblsinframe[1] = TICVBLS;
-		lasttics = TICVBLS;
-	}
-
 	do
 	{
-		if (demoplayback)
-		{
-			gametic++;
-			exit = ticker();
-		}
-
 /* */
 /* adaptive timing based on previous frame */
 /* */
@@ -389,7 +346,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 				break;
 			}
 #endif
-			ticbuttons[consoleplayer] = buttons = GetDemoCmd ();
+			ticbuttons[consoleplayer] = buttons = *demo_p++;
 		}
 
 		if (netgame)	/* may also change vblsinframe */
@@ -411,13 +368,9 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		}
 
 		ticon++;
-
-		if (!demoplayback)
-		{
-			if (gamevbls / TICVBLS > gametic)
-				gametic++;
-			exit = ticker();
-		}
+		if (gamevbls / TICVBLS > gametic)
+			gametic++;
+		exit = ticker();
 
 		if (gametic > prevgametic)
 			S_UpdateSounds();

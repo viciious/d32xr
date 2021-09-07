@@ -610,7 +610,11 @@ void G_RecordDemo (void)
 	demorecording = true; 
 	MiniLoop (P_Start, P_Stop, P_Ticker, P_Drawer);
 	demorecording = false;
-	
+
+#ifdef MARS
+	I_Error("%d %p", demo_p - demobuffer, demobuffer);
+#endif
+
 	D_printf ("w %x,%x",demobuffer,demo_p);
 	
 	while (1)

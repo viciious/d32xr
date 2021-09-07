@@ -627,7 +627,7 @@ void I_Update(void)
 	/* */
 	/* wait until on the third tic after last display */
 	/* */
-	const int ticwait = (demoplayback ? 3 : ticsperframe); // demos were recorded at 15-20fps
+	const int ticwait = (demoplayback || demorecording ? 4 : ticsperframe); // demos were recorded at 15-20fps
 	do
 	{
 		ticcount = I_GetTime();
