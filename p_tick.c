@@ -428,13 +428,6 @@ void DrawPlaque (jagobj_t *pl)
 		}
 	}
 #else
-	//DoubleBufferSetup();
-
-	//DrawJagobj(pl, 160 - pl->width / 2, 100);
-
-	//I_Update();
-	//Mars_FlipFrameBuffers(true);
-
 	clearscreen = 2;
 #endif
 }
