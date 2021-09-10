@@ -388,13 +388,12 @@ D_printf ("Done\n");
 void R_SetupTextureCaches(void)
 {
 	int i;
-	int numcflats, numcwalls;
-	int zonefree, cachezonesize;
+	int numcflats;
+	int zonefree;
+	int cachezonesize, texzonesize, flatzonesize;
 	void *margin;
-
-	const int zonemargin = 4*1024;
+	const int zonemargin = 8*1024;
 	const int flatblocksize = sizeof(memblock_t) + sizeof(texcacheblock_t) + 64*64 + 32;
-	const int texblocksize = sizeof(memblock_t) + sizeof(texcacheblock_t) + 64*128 + 32;
 
 	// reset pointers from previous level
 	for (i = 0; i < numtextures; i++)
@@ -414,16 +413,18 @@ void R_SetupTextureCaches(void)
 	if (numcflats > 5)
 		numcflats = 5;
 
-	numcwalls = (cachezonesize - numcflats*flatblocksize) / texblocksize;
-	if (numcwalls <= 0 && numcflats > 2)
+	flatzonesize = numcflats * flatblocksize;
+	if (cachezonesize - flatzonesize <= flatblocksize*2 && numcflats > 2)
 	{
 		numcflats /= 2;
-		numcwalls = (cachezonesize - numcflats * flatblocksize) / texblocksize;
+		flatzonesize = numcflats * flatblocksize;
 	}
-	if (numcwalls < 0)
-		numcwalls = 0;
 
-	if (numcflats + numcwalls == 0)
+	texzonesize = cachezonesize - flatzonesize;
+	if (texzonesize < 0)
+		texzonesize = 0;
+
+	if (flatzonesize + texzonesize == 0)
 	{
 nocache:
 		R_InitTexCacheZone(&r_flatscache, 0);
@@ -433,9 +434,9 @@ nocache:
 	
 	margin = Z_Malloc(zonemargin, PU_LEVEL, 0);
 
-	R_InitTexCacheZone(&r_flatscache, numcflats * flatblocksize);
+	R_InitTexCacheZone(&r_flatscache, flatzonesize);
 
-	R_InitTexCacheZone(&r_wallscache, numcwalls * texblocksize);
+	R_InitTexCacheZone(&r_wallscache, texzonesize);
 
 	Z_Free(margin);
 }
