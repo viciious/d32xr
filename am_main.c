@@ -51,6 +51,7 @@ typedef enum
 	ch_maxcheats
 } cheat_e;
 
+#ifndef MARS
 const char cheatstrings[][11] =	/* order should mirror cheat_e */
 {
 	"8002545465",		/* allmap cheat */
@@ -58,6 +59,7 @@ const char cheatstrings[][11] =	/* order should mirror cheat_e */
 };
 
 char currentcheat[11]="0000000000";
+#endif
 int	showAllThings;		/* CHEAT VARS */
 int showAllLines;
 
