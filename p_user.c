@@ -163,7 +163,8 @@ void P_PlayerZMovement (mobj_t *mo)
 			if (mo->momz < -GRAVITY*2)	/* squat down */
 			{
 				player->deltaviewheight = mo->momz>>3;
-				S_StartSound (mo, sfx_oof);
+				if (player->playerstate != PST_DEAD)
+					S_StartSound (mo, sfx_oof);
 			}
 			mo->momz = 0;
 		}
