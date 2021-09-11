@@ -1041,6 +1041,7 @@ typedef enum
 /* strafe and use should be set to the same thing */
 extern unsigned configuration[NUMCONTROLOPTIONS][3];
 extern	VINT	controltype;				/* 0 to 5 */
+extern	VINT	alwaysrun;
 
 extern	VINT	sfxvolume, musicvolume;		/* range from 0 to 255 */
 

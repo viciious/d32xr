@@ -271,7 +271,7 @@ void P_BuildMove (player_t *player)
 			// normal mouse mode - mouse turns, dpad moves forward/back/sideways
 			player->angleturn = (-mx * 0x200000 * vbls) / TICVBLS;
 
-			speed = (buttons & BT_SPEED) > 0;
+			speed = ((buttons & BT_SPEED) > 0) ^ alwaysrun;
 	
 			/* use two stage accelerative turning on the joypad  */
 			if ( (buttons & BT_LEFT) && (oldbuttons & BT_LEFT) )
@@ -300,7 +300,7 @@ void P_BuildMove (player_t *player)
 	else
 	{
 		strafe = (buttons & BT_STRAFE) > 0;
-		speed = (buttons & BT_SPEED) > 0;
+		speed = ((buttons & BT_SPEED) > 0) ^ alwaysrun;
 
 		/*  */
 		/* use two stage accelerative turning on the joypad  */

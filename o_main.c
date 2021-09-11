@@ -14,8 +14,6 @@
 #define ITEMSPACE	40
 #define SLIDEWIDTH 90
 
-extern	VINT		sfxvolume;		/* range from 0 to 255 */
-
 extern void print (int x, int y, const char *string);
 extern void IN_DrawValue(int x,int y,int value);
 
@@ -34,6 +32,7 @@ typedef enum
 	mi_framerate,
 
 	mi_controltype,
+	mi_alwaysrun,
 
 	NUMMENUITEMS
 } menupos_t;
@@ -46,7 +45,7 @@ typedef struct
 	char	maxval;
 } slider_t;
 
-static slider_t slider[4];
+static slider_t slider[5];
 
 typedef struct
 {
@@ -205,6 +204,13 @@ void O_Init (void)
 	menuitem[mi_controltype].y = 36;
 	menuitem[mi_controltype].slider = NULL;
 
+	D_strncpy(menuitem[mi_alwaysrun].name, "Always run", 10);
+	menuitem[mi_alwaysrun].x = 74;
+	menuitem[mi_alwaysrun].y = 116;
+	menuitem[mi_alwaysrun].slider = &slider[4];
+	slider[4].maxval = 1;
+	slider[4].curval = alwaysrun;
+
 
 	D_strncpy(menuscreen[ms_main].name, "Options", 7);
 	menuscreen[ms_main].firstitem = mi_game;
@@ -220,7 +226,7 @@ void O_Init (void)
 
 	D_strncpy(menuscreen[ms_controls].name, "Controls", 8);
 	menuscreen[ms_controls].firstitem = mi_controltype;
-	menuscreen[ms_controls].numitems = 1;
+	menuscreen[ms_controls].numitems = 2;
 }
 
 /*
@@ -390,6 +396,9 @@ exit:
 			case mi_framerate:
 				ticsperframe = MAXTICSPERFRAME - slider->curval;
 				break;
+			case mi_alwaysrun:
+				alwaysrun = slider->curval;
+				break;
 			default:
 				break;
 			}
@@ -418,18 +427,22 @@ exit:
 			{
 				if (buttons & BT_RIGHT)
 				{
-					{
+					switch (itemno) {
+					case mi_controltype:
 						controltype++;
 						if (controltype == NUMCONTROLOPTIONS)
 							controltype = (NUMCONTROLOPTIONS - 1);
+						break;
 					}
 				}
 				if (buttons & BT_LEFT)
 				{
-					{
+					switch (itemno) {
+					case mi_controltype:
 						controltype--;
 						if (controltype == -1)
 							controltype = 0;
+						break;
 					}
 				}
 			}
