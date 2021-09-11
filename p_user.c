@@ -249,10 +249,12 @@ void P_BuildMove (player_t *player)
 	int			buttons, oldbuttons;
 	mobj_t		*mo;
 	int			vbls;
+	int			alwrun;
 
 	buttons = ticbuttons[playernum];
 	oldbuttons = oldticbuttons[playernum];
 	vbls = vblsinframe[playernum];
+	alwrun = demoplayback || demorecording ? 0 : alwaysrun;
 
 	if (mousepresent && !demoplayback)
 	{
@@ -271,7 +273,7 @@ void P_BuildMove (player_t *player)
 			// normal mouse mode - mouse turns, dpad moves forward/back/sideways
 			player->angleturn = (-mx * 0x200000 * vbls) / TICVBLS;
 
-			speed = ((buttons & BT_SPEED) > 0) ^ alwaysrun;
+			speed = ((buttons & BT_SPEED) > 0) ^ alwrun;
 	
 			/* use two stage accelerative turning on the joypad  */
 			if ( (buttons & BT_LEFT) && (oldbuttons & BT_LEFT) )
@@ -300,7 +302,7 @@ void P_BuildMove (player_t *player)
 	else
 	{
 		strafe = (buttons & BT_STRAFE) > 0;
-		speed = ((buttons & BT_SPEED) > 0) ^ alwaysrun;
+		speed = ((buttons & BT_SPEED) > 0) ^ alwrun;
 
 		/*  */
 		/* use two stage accelerative turning on the joypad  */
