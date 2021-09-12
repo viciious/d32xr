@@ -430,7 +430,7 @@ static void R_SegCommands2(const int cpu)
             unsigned seglight = segl->seglightlevel + extralight;
             if (seglight > 255)
                 seglight = 255;
-            else if (seglight <= 160)
+            else if (seglight <= 160 + extralight)
                 seglight = seglight - (seglight >> 1);
 #else
             int seglight = segl->seglightlevel - (255 - segl->seglightlevel) * 2;

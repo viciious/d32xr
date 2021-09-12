@@ -243,7 +243,7 @@ void R_DrawPlanes2(const int cpu)
         {
 #ifdef MARS
             unsigned light = lpl.lightmax;
-            if (light <= 160)
+            if (light <= 160 + extralight)
                 light = light - (light >> 1);
 #else
             int light = lpl.lightmax;
