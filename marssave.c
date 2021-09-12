@@ -218,10 +218,10 @@ static void ReadOptions(void)
 		so.musictype = mustype_fm;
 	if (so.musictype == mustype_cd && !mars_cd_ok)
 		so.musictype = mustype_fm;
-	if (so.ticsperframe < MINTICSPERFRAME)
+	if (so.ticsperframe < MINTICSPERFRAME || so.ticsperframe > MAXTICSPERFRAME)
 		so.ticsperframe = MINTICSPERFRAME;
-	else if (so.ticsperframe > MAXTICSPERFRAME)
-		so.ticsperframe = MAXTICSPERFRAME;
+	if (so.alwaysrun < 0 || so.alwaysrun > 1)
+		so.alwaysrun = 0;
 
 	sfxvolume = so.sfxvolume;
 	musicvolume = so.musicvolume;
