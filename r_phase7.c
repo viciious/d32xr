@@ -29,7 +29,6 @@ typedef struct
 } localplane_t;
 
 static unsigned short numplanes;
-static short* sortedplanes;
 
 static void R_MapPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void R_PlaneLoop(localplane_t* lpl, const int mask) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
@@ -204,9 +203,9 @@ void R_PlaneLoop(localplane_t *lpl, const int mask)
 
 void R_DrawPlanes2(const int cpu)
 {
-    unsigned i;
     angle_t angle;
     localplane_t lpl;
+    visplane_t* pl;
 
     lpl.x = vd.viewx;
     lpl.y = -vd.viewy;
@@ -217,10 +216,8 @@ void R_DrawPlanes2(const int cpu)
     lpl.basexscale = FixedDiv(finecosine(angle), centerXFrac);
     lpl.baseyscale = -FixedDiv(finesine(angle), centerXFrac);
 
-    for (i = 0; i < numplanes; i++)
+    for (pl = visplanes + 1; pl < lastvisplane; pl++)
     {
-        visplane_t* pl = visplanes + sortedplanes[(i << 1) + 1];
-
         if (pl->minx > pl->maxx)
             continue;
 
@@ -281,12 +278,13 @@ void R_DrawPlanes2(const int cpu)
 #ifdef MARS
 void Mars_Sec_R_DrawPlanes(void)
 {
-    Mars_ClearCacheLines((intptr_t)&numplanes & ~15, 1);
-    Mars_ClearCacheLines((intptr_t)&visplanes & ~15, 1);
-    Mars_ClearCacheLines((intptr_t)visplanes, (numplanes * sizeof(visplane_t) + 15) / 16);
+    int numplanes;
 
-    Mars_ClearCacheLines((intptr_t)&sortedplanes & ~15, 1);
-    Mars_ClearCacheLines((intptr_t)sortedplanes & ~15, (numplanes * sizeof(*sortedplanes) + 15) / 16);
+    Mars_ClearCacheLines((intptr_t)&lastvisplane & ~15, 1);
+    Mars_ClearCacheLines((intptr_t)&visplanes & ~15, 1);
+
+    numplanes = lastvisplane - visplanes - 1;
+    Mars_ClearCacheLines((intptr_t)(visplanes + 1), (numplanes * sizeof(visplane_t) + 15) / 16);
 
     R_DrawPlanes2(1);
 }
@@ -297,9 +295,7 @@ void Mars_Sec_R_DrawPlanes(void)
 //
 void R_DrawPlanes(void)
 {
-    int j;
     visplane_t* pl;
-    short sortbuf[MAXVISPLANES * 2] __attribute__((aligned(4)));
 
     for (pl = visplanes + 1; pl < lastvisplane; pl++)
     {
@@ -309,22 +305,6 @@ void R_DrawPlanes(void)
         pl->open[pl->maxx + 1] = OPENMARK;
         pl->open[pl->minx - 1] = OPENMARK;
     }
-
-    j = 0;
-    numplanes = 0;
-    for (pl = visplanes + 1; pl < lastvisplane; pl++)
-    {
-        if (pl->minx <= pl->maxx)
-        {
-            sortbuf[j + 0] = pl->flatnum;
-            sortbuf[j + 1] = pl - visplanes;
-            j += 2;
-            numplanes++;
-        }
-    }
-
-    D_isort((int*)sortbuf, numplanes);
-    sortedplanes = (short*)sortbuf;
 
 #ifdef MARS
     Mars_R_BeginDrawPlanes();
