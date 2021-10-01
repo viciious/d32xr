@@ -47,9 +47,7 @@ typedef struct
 } segdraw_t;
 
 static void R_DrawTexture(int x, segdraw_t* sdr, drawtex_t* tex) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static void R_SegLoop(seglocal_t* lseg, const int cpu, boolean gradientlight) __attribute__((always_inline));
-void R_SegLoopFlat(seglocal_t* lseg, const int cpu) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-void R_SegLoopGradient(seglocal_t* lseg, const int cpu) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static void R_SegLoop(seglocal_t* lseg, const int cpu) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static void R_SegCommands2(const int mask) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
@@ -118,10 +116,12 @@ static void R_DrawTexture(int x, segdraw_t *sdr, drawtex_t* tex)
 //
 // Main seg clipping loop
 //
-static void R_SegLoop(seglocal_t* lseg, const int cpu, boolean gradientlight)
+static void R_SegLoop(seglocal_t* lseg, const int cpu)
 {
    visplane_t *ceiling, *floor;
    unsigned short* ceilopen, * flooropen;
+
+   boolean gradientlight = lseg->lightmin != lseg->lightmax;
 
    viswall_t* segl = lseg->segl;
    unsigned short *clipbounds = lseg->clipbounds;
@@ -370,16 +370,6 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu, boolean gradientlight)
    }
 }
 
-void R_SegLoopFlat(seglocal_t* lseg, const int cpu)
-{
-    R_SegLoop(lseg, cpu, false);
-}
-
-void R_SegLoopGradient(seglocal_t* lseg, const int cpu)
-{
-    R_SegLoop(lseg, cpu, true);
-}
-
 static void R_SegCommands2(const int cpu)
 {
     int i;
@@ -482,14 +472,13 @@ static void R_SegCommands2(const int cpu)
         {
             lseg.lightcoef = ((lseg.lightmax - lseg.lightmin) << FRACBITS) / (800 - 160);
             lseg.lightsub = 160 * lseg.lightcoef;
-            R_SegLoopGradient(&lseg, cpu);
         }
         else
         {
             lseg.lightmin = HWLIGHT(lseg.lightmax);
             lseg.lightmax = lseg.lightmin;
-            R_SegLoopFlat(&lseg, cpu);
         }
+        R_SegLoop(&lseg, cpu);
 
         if (cpu == 0)
         {
