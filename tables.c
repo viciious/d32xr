@@ -2602,6 +2602,30 @@ fixed_t finetangent(angle_t angle) {
 	return finetangent_[angle];
 }
 
+
+fixed_t finesine(angle_t angle) {
+	unsigned quad;
+
+	angle &= FINEMASK;
+	quad = angle / (FINEANGLES / 4);
+
+	switch (quad)
+	{
+	case 0:
+		return finesine_[angle];
+	case 1:
+		return finesine_[FINEANGLES / 2 - angle - 1];
+	case 2:
+		return -finesine_[angle - FINEANGLES / 2];
+	default:
+		return -finesine_[4 * FINEANGLES / 4 - angle - 1];
+	}
+}
+
+fixed_t finecosine(angle_t angle) {
+	return finesine(angle + FINEANGLES / 4);
+}
+
 #else
 
 const angle_t* const tantoangle = tantoangle_;

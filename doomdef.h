@@ -111,30 +111,8 @@ typedef unsigned angle_t;
 
 #ifdef MARS
 
-extern const unsigned short 	*finesine_;
-
-static inline fixed_t finesine(angle_t angle) {
-	unsigned quad;
-
-	angle &= FINEMASK;
-	quad = angle / (FINEANGLES / 4);
-
-	switch (quad)
-	{
-	case 0:
-		return finesine_[angle];
-	case 1:
-		return finesine_[FINEANGLES / 2 - angle - 1];
-	case 2:
-		return -finesine_[angle - FINEANGLES / 2];
-	default:
-		return -finesine_[4 * FINEANGLES / 4 - angle - 1];
-	}
-}
-
-static inline fixed_t finecosine(angle_t angle) {
-	return finesine(angle + FINEANGLES / 4);
-}
+fixed_t finesine(angle_t angle) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;;
+fixed_t finecosine(angle_t angle) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 #else
 
