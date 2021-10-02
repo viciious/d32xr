@@ -379,11 +379,12 @@ static void R_SegCommands2(const int cpu)
 
     // initialize the clipbounds array
     unsigned short clipbounds[SCREENWIDTH];
-    unsigned short *clip = clipbounds;
+    unsigned *clip = (unsigned *)clipbounds;
+    unsigned clipval = (unsigned)viewportHeight << 16 | viewportHeight;
     for (i = 0; i < viewportWidth / 4; i++)
     {
-        *clip++ = viewportHeight, *clip++ = viewportHeight;
-        *clip++ = viewportHeight, *clip++ = viewportHeight;
+        *clip++ = clipval;
+        *clip++ = clipval;
     }
 
     toptex = &lseg.toptex;
