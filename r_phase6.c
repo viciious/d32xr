@@ -378,7 +378,7 @@ static void R_SegCommands2(const int cpu)
     drawtex_t* toptex, * bottomtex;
 
     // initialize the clipbounds array
-    unsigned short clipbounds[viewportWidth];
+    unsigned short clipbounds[SCREENWIDTH];
     unsigned short *clip = clipbounds;
     for (i = 0; i < viewportWidth / 4; i++)
     {
