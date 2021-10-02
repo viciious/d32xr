@@ -65,7 +65,9 @@ void G_DoLoadLevel (void)
 			= players[i].itemcount = 0;
 	}
 
+#if 0
 	Z_CheckHeap (mainzone);
+#endif
 #ifndef MARS
 	Z_CheckHeap (refzone);
 #endif
@@ -146,8 +148,9 @@ void G_DoLoadLevel (void)
 	if (!music)
 		music = S_SongForMapnum(gamemapinfo.mapNumber);
 	S_StartSong(music, 1, gamemap);
-
+#if 0
 	Z_CheckHeap (mainzone);  		/* DEBUG */
+#endif
 } 
  
  
