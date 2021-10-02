@@ -7808,12 +7808,16 @@
     {
         "filename": "demo1",
         "name": "DEMO1",
-        "size": 3200
+        "size": 3200,
+        "compressed": true,
+        "compressed_size": 562
     },
     {
         "filename": "demo2",
         "name": "DEMO2",
-        "size": 3732
+        "size": 3732,
+        "compressed": true,
+        "compressed_size": 597
     },
     {
         "name": "MAP01",
