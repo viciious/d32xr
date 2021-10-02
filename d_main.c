@@ -589,8 +589,9 @@ int  RunDemo (char *demoname)
 	if (lump == -1)
 		return ga_exitdemo;
 
-	demo = W_POINTLUMPNUM(lump);
+	demo = W_CacheLumpNum(lump, PU_STATIC);
 	exit = G_PlayDemoPtr (demo);
+	Z_Free(demo);
 
 #ifndef MARS
 	if (exit == ga_exitdemo)
