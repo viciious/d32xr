@@ -62,7 +62,7 @@ map "MAP08" "Phobos Anomaly"
     sky = "sky1"
     next = "MAP09"
     mapnumber = 8"
-    music = "MUS_E2M6"
+    music = "MUS_E2M9"
     BaronSpecial
 }
 map "MAP09" "Deimos Anomaly"
@@ -99,7 +99,7 @@ map "MAP13" "Command Center"
     next = "MAP14"
     mapnumber = 13
     music = "MUS_E1M7"
-}"
+}
 map "MAP14" "Halls of the Damned"
 {
     sky = "sky2"
