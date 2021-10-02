@@ -589,6 +589,13 @@ int  RunDemo (char *demoname)
 	if (lump == -1)
 		return ga_exitdemo;
 
+	// avoid zone memory fragmentation which is due to happen
+	// if the demo lump cache is tucked after the level zone.
+	// this will cause shrinking of the zone area available
+	// for the level data after each demo playback and eventual
+	// Z_Malloc failure
+	Z_FreeTags(mainzone);
+
 	demo = W_CacheLumpNum(lump, PU_STATIC);
 	exit = G_PlayDemoPtr (demo);
 	Z_Free(demo);
