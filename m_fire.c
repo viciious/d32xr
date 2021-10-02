@@ -284,14 +284,16 @@ int I_DrawMenuFire(void)
 	unsigned char* firePal = m_fire->firePal;
 
 	// draw the fire at the bottom
-	char* row = (char*)((intptr_t)firePix | 0x20000000);
+	Mars_ClearCache();
+
+	unsigned* row = (unsigned*)((intptr_t)firePix);
 	for (y = 0; y < FIRE_HEIGHT; y++) {
 		for (x = 0; x < FIRE_WIDTH; x += 4) {
-			unsigned p1 = row[0];
-			unsigned p2 = row[1];
-			unsigned p3 = row[2];
-			unsigned p4 = row[3];
-			unsigned p;
+			unsigned p = *row;
+			unsigned p1 = p & 255; p >>= 8;
+			unsigned p2 = p & 255; p >>= 8;
+			unsigned p3 = p & 255; p >>= 8;
+			unsigned p4 = p & 255; p >>= 8;
 
 			p1 = firePal[p1];
 			p2 = firePal[p2];
@@ -300,7 +302,7 @@ int I_DrawMenuFire(void)
 			p = (p4 << 24) | (p3 << 16) | (p2 << 8) | p1;
 
 			*dest++ = p;
-			row += 4;
+			row++;
 		}
 	}
 
