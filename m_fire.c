@@ -183,7 +183,7 @@ void Mars_Sec_M_AnimateFire(void)
 
 		if (I_GetTime() - start > 360)
 		{
-			//M_StopFire();
+			M_StopFire();
 		}
 	}
 
@@ -279,23 +279,28 @@ void I_StopMenuFire(void)
 int I_DrawMenuFire(void)
 {
 	int x, y;
-	pixel_t *dest = I_FrameBuffer() + 320 / 2 * (224 - FIRE_HEIGHT);
+	unsigned *dest = (unsigned *)(I_FrameBuffer() + 320 / 2 * (224 - FIRE_HEIGHT));
 	char* firePix = m_fire->firePix;
 	unsigned char* firePal = m_fire->firePal;
 
 	// draw the fire at the bottom
 	char* row = (char*)((intptr_t)firePix | 0x20000000);
 	for (y = 0; y < FIRE_HEIGHT; y++) {
-		for (x = 0; x < FIRE_WIDTH; x += 2) {
-			int p1 = *row++;
-			int p2 = *row++;
-			int p;
+		for (x = 0; x < FIRE_WIDTH; x += 4) {
+			unsigned p1 = row[0];
+			unsigned p2 = row[1];
+			unsigned p3 = row[2];
+			unsigned p4 = row[3];
+			unsigned p;
 
 			p1 = firePal[p1];
 			p2 = firePal[p2];
-			p = (p1 << 8) | p2;
+			p3 = firePal[p3];
+			p4 = firePal[p4];
+			p = (p4 << 24) | (p3 << 16) | (p2 << 8) | p1;
 
 			*dest++ = p;
+			row += 4;
 		}
 	}
 
