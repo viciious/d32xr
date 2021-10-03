@@ -43,6 +43,8 @@ To compile the rom you're going to need several things:
 * Original Jaguar DOOM Source: John Carmack, id Software
 
 ## Links
+https://www.doomworld.com/forum/topic/119202-32x-resurrection/
+
 https://github.com/team-eternity/calico-doom
 
 https://www.youtube.com/MatteusBeusRetroDev
