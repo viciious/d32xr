@@ -62,7 +62,7 @@ map "MAP08" "Phobos Anomaly"
     sky = "sky1"
     next = "MAP09"
     mapnumber = 8"
-    music = "MUS_E1M8"
+    music = "MUS_E2M6"
     BaronSpecial
 }
 map "MAP09" "Deimos Anomaly"
