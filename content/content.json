@@ -5925,6 +5925,13 @@
         "size": 64016
     },
     {
+        "compressed": true,
+        "compressed_size": 9098,
+        "filename": "credits",
+        "name": "CREDITS",
+        "size": 64016
+    },
+    {
         "filename": "stbar",
         "name": "STBAR",
         "size": 12816
@@ -9478,6 +9485,11 @@
         "size": 5326
     },
     {
+        "name": "MUS_E2M9",
+        "filename": "VGM/E2M9.vgm",
+        "size": 5867
+    },
+    {
         "name": "MUS_E3M2",
         "filename": "VGM/E3M2.vgm",
         "size": 14539
@@ -9509,6 +9521,6 @@
     {
         "name": "DMAPINFO",
         "filename": "dmapinfo",
-        "size": 2800
+        "size": 2849
     }
 ]
