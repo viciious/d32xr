@@ -293,8 +293,12 @@ static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
 		gi->borderFlat = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "titleTime"))
 		gi->titleTime = D_atoi(value);
+	else if (!D_strcasecmp(key, "creditsTime"))
+		gi->creditsTime = D_atoi(value);
 	else if (!D_strcasecmp(key, "titlePage"))
 		gi->titlePage = W_CheckNumForName(value);
+	else if (!D_strcasecmp(key, "creditsPage"))
+		gi->creditsPage = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "titleMus"))
 		gi->titleMus = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "intermissionMus"))

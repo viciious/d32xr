@@ -516,23 +516,24 @@ void DRAW_Title (void)
 
 /*============================================================================= */
 
-#ifndef MARS
-
 static void START_Credits (void)
 {
+#ifndef MARS
 	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
+#endif
+	titlepic = W_CacheLumpNum(gameinfo.creditsPage, PU_STATIC);
 	DoubleBufferSetup ();
-	titlepic = W_CacheLumpName ("credits",PU_STATIC);
 }
 
 void STOP_Credits (void)
 {
-	Z_Free (titlepic);
+	if (titlepic != NULL)
+		Z_Free (titlepic);
 }
 
 static int TIC_Credits (void)
 {
-	if	(ticon >= 10*15)
+	if (ticon >= gameinfo.creditsTime)
 		return 1;		/* go on to next demo */
 		
 	if ( (ticbuttons[0] & BT_ATTACK) && !(oldticbuttons[0] & BT_ATTACK) )
@@ -553,11 +554,10 @@ static void DRAW_Credits (void)
 	UpdateBuffer ();
 }
 
-#endif
-
 /*============================================================================ */
 
 void RunMenu (void);
+void RunCredits(void);
 
 void RunTitle (void)
 {
@@ -566,18 +566,26 @@ void RunTitle (void)
 	exit = MiniLoop (START_Title, STOP_Title, TIC_Abortable, DRAW_Title);
 	if (exit == ga_exitdemo)
 		RunMenu ();
+#ifdef MARS
+	else
+		RunCredits();
+#endif
 }
 
-#ifndef MARS
 void RunCredits (void)
 {
+	int		l;
 	int		exit;
 	
-	exit = MiniLoop (START_Credits, STOP_Credits, TIC_Credits, DRAW_Credits);
+	l = gameinfo.creditsPage;
+	if (l > 0)
+		exit = MiniLoop(START_Credits, STOP_Credits, TIC_Credits, DRAW_Credits);
+	else
+		exit = ga_exitdemo;
+
 	if (exit == ga_exitdemo)
 		RunMenu ();
 }
-#endif
 
 int  RunDemo (char *demoname)
 {

@@ -6,6 +6,8 @@ gameinfo
     borderFlat = "ROCKS"
     titleTime = 540
     titlePage = "title"
+    creditsTime = 460
+    creditsPage = "credits"
 }
 map "MAP01" "Hangar"
 {

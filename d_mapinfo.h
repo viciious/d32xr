@@ -48,6 +48,8 @@ typedef struct
 	VINT titleMus;
 	VINT intermissionMus;
 	VINT victoryMus;
+	VINT creditsPage;
+	VINT creditsTime;
 	void* data;
 } dgameinfo_t;
 
