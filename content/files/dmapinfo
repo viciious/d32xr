@@ -62,7 +62,7 @@ map "MAP08" "Phobos Anomaly"
     sky = "sky1"
     next = "MAP09"
     mapnumber = 8"
-    music = "MUS_E2M9"
+    music = "MUS_E1M8"
     BaronSpecial
 }
 map "MAP09" "Deimos Anomaly"
@@ -126,7 +126,7 @@ map "MAP17" "Hell Keep"
     sky = "sky3"
     next = "MAP18"
     mapnumber = 17
-    music = "MUS_E3M2"
+    music = "MUS_E2M9"
 }
 map "MAP18" "Pandemonium"
 {
@@ -140,7 +140,7 @@ map "MAP19" "House of Pain"
     sky = "sky3"
     next = "MAP20"
     mapnumber = 19
-    music = "MUS_E1M5"
+    music = "MUS_E3M2"
 }
 map "MAP20" "Unholy Cathedral"
 {
