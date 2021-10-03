@@ -27,7 +27,7 @@ typedef enum
 	mi_soundvol,
 	mi_music,
 
-	mi_screensize,
+	mi_resolution,
 	mi_detailmode,
 	mi_framerate,
 
@@ -177,10 +177,10 @@ void O_Init (void)
 	menuitem[mi_music].slider = NULL;
 
 
-	D_strncpy(menuitem[mi_screensize].name, "Screen size", 11);
-	menuitem[mi_screensize].x = 74;
-	menuitem[mi_screensize].y = 36;
-	menuitem[mi_screensize].slider = &slider[1];
+	D_strncpy(menuitem[mi_resolution].name, "Resolution", 10);
+	menuitem[mi_resolution].x = 74;
+	menuitem[mi_resolution].y = 36;
+	menuitem[mi_resolution].slider = &slider[1];
 	slider[1].maxval = numViewports - 1;
 	slider[1].curval = viewportNum;
 
@@ -221,8 +221,8 @@ void O_Init (void)
 	menuscreen[ms_audio].numitems = mi_music - mi_soundvol + 1;
 
 	D_strncpy(menuscreen[ms_video].name, "Video", 6);
-	menuscreen[ms_video].firstitem = mi_screensize;
-	menuscreen[ms_video].numitems = mi_framerate - mi_screensize + 1;
+	menuscreen[ms_video].firstitem = mi_resolution;
+	menuscreen[ms_video].numitems = mi_framerate - mi_resolution + 1;
 
 	D_strncpy(menuscreen[ms_controls].name, "Controls", 8);
 	menuscreen[ms_controls].firstitem = mi_controltype;
@@ -387,7 +387,7 @@ exit:
 				sfxvolume = 64* slider->curval / slider->maxval;
 				S_StartSound (NULL, sfx_pistol);
 				break;
-			case mi_screensize:
+			case mi_resolution:
 				R_SetViewportSize(slider->curval);
 				break;
 			case mi_detailmode:
@@ -544,6 +544,13 @@ void O_Drawer (void)
 			print(menuitem[mi_music].x, menuitem[mi_music].y + 20, "cd");
 			break;
 		}
+	}
+
+	if (screenpos == ms_video)
+	{
+		char tmp[32];
+		D_snprintf(tmp, sizeof(tmp), "%dx%d", viewportWidth, viewportHeight);
+		I_Print8(menuitem[mi_resolution].x + 114, (unsigned)menuitem[mi_resolution].y/8 + 3, tmp);
 	}
 
 #ifndef MARS
