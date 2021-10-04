@@ -96,4 +96,33 @@ void Mars_ReadSRAM(uint8_t * buffer, int offset, int len)
 void Mars_WriteSRAM(const uint8_t * buffer, int offset, int len)
 	__attribute__((section(".data"), aligned(16)));
 
+
+// MD video debug functions
+void Mars_SetMDCrsr(int x, int y);
+void Mars_GetMDCrsr(int *x, int *y);
+void Mars_SetMDColor(int fc, int bc);
+void Mars_GetMDColor(int *fc, int *bc);
+void Mars_SetMDPal(int cpsel);
+void Mars_MDPutChar(char chr);
+void Mars_ClearNTA(void);
+void Mars_MDPutString(char *str);
+
+void Mars_DebugStart(void);
+void Mars_DebugQueue(int id, int val);
+void Mars_DebugEnd(void);
+
+enum {
+	DEBUG_FPSCOUNT,
+	DEBUG_LASTTICS,
+	DEBUG_GAMETICS,
+	DEBUG_BSPMSEC,
+	DEBUG_SEGSMSEC,
+	DEBUG_SEGSCOUNT,
+	DEBUG_PLANESMSEC,
+	DEBUG_PLANESCOUNT,
+	DEBUG_SPRITESMSEC,
+	DEBUG_SPRITESCOUNT,
+	DEBUG_REFMSEC,
+};
+
 #endif // _MARSHW_H

@@ -73,6 +73,7 @@ _start:
 
 init_hardware:
         lea     0xC00004,a0
+        lea		0xC00000,a1
         move.w  #0x8104,(a0)            /* display off, vblank disabled */
         move.w  (a0),d0                 /* read VDP Status reg */
 
@@ -83,54 +84,92 @@ init_hardware:
         move.b  #0x40,0xA10005
 
 | init MD VDP
-        move.w  #0x8004,(a0) /* reg. 0 - Disable HBL INT */
-        move.w  #0x8174,(a0) /* reg. 1 - Enable display, VBL INT, DMA + 28 VCell size */
-        move.w  #0x8230,(a0) /* reg. 2 - Plane A =$30*$400=$C000 */
-        move.w  #0x832C,(a0) /* reg. 3 - Window  =$2C*$400=$B000 */
-        move.w  #0x8407,(a0) /* reg. 4 - Plane B =$7*$2000=$E000 */
-        move.w  #0x855E,(a0) /* reg. 5 - sprite table begins at $BC00=$5E*$200 */
-        move.w  #0x8600,(a0) /* reg. 6 - not used */
-        move.w  #0x8700,(a0) /* reg. 7 - Background Color number*/
-        move.w  #0x8800,(a0) /* reg. 8 - not used */
-        move.w  #0x8900,(a0) /* reg. 9 - not used */
-        move.w  #0x8A01,(a0) /* reg 10 - HInterrupt timing */
-        move.w  #0x8B00,(a0) /* reg 11 - $0000abcd a=extr.int b=vscr cd=hscr */
-        move.w  #0x8C81,(a0) /* reg 12 - hcell mode + shadow/highight + interlaced mode (40 cell, no shadow, no interlace)*/
-        move.w  #0x8D2E,(a0) /* reg 13 - HScroll Table = $B800 */
-        move.w  #0x8E00,(a0) /* reg 14 - not used */
-        move.w  #0x8F02,(a0) /* reg 15 - auto increment data */
-        move.w  #0x9011,(a0) /* reg 16 - scrl screen v&h size (64x64) */
-        move.w  #0x9100,(a0) /* reg 17 - window hpos */
-        move.w  #0x92FF,(a0) /* reg 18 - window vpos */
+        move.w  #0x8004,(a0) /* reg 0 = /IE1 (no HBL INT), /M3 (enable read H/V cnt) */
+        move.w  #0x8114,(a0) /* reg 1 = /DISP (display off), /IE0 (no VBL INT), M1 (DMA enabled), /M2 (V28 mode) */
+        move.w  #0x8230,(a0) /* reg 2 = Name Tbl A = 0xC000 */
+        move.w  #0x832C,(a0) /* reg 3 = Name Tbl W = 0xB000 */
+        move.w  #0x8407,(a0) /* reg 4 = Name Tbl B = 0xE000 */
+        move.w  #0x8554,(a0) /* reg 5 = Sprite Attr Tbl = 0xA800 */
+        move.w  #0x8600,(a0) /* reg 6 = always 0 */
+        move.w  #0x8700,(a0) /* reg 7 = BG color */
+        move.w  #0x8800,(a0) /* reg 8 = always 0 */
+        move.w  #0x8900,(a0) /* reg 9 = always 0 */
+        move.w  #0x8A00,(a0) /* reg 10 = HINT = 0 */
+        move.w  #0x8B00,(a0) /* reg 11 = /IE2 (no EXT INT), full scroll */
+        move.w  #0x8C81,(a0) /* reg 12 = H40 mode, no lace, no shadow/hilite */
+        move.w  #0x8D2B,(a0) /* reg 13 = HScroll Tbl = 0xAC00 */
+        move.w  #0x8E00,(a0) /* reg 14 = always 0 */
+        move.w  #0x8F01,(a0) /* reg 15 = data INC = 1 */
+        move.w  #0x9001,(a0) /* reg 16 = Scroll Size = 64x32 */
+        move.w  #0x9100,(a0) /* reg 17 = W Pos H = left */
+        move.w  #0x9200,(a0) /* reg 18 = W Pos V = top */
 
-        move.w  #0,0xA15128         /* controller 1 */
-        move.w  #0,0xA1512A         /* controller 2 */
+| clear VRAM
+        move.w  #0x8F02,(a0)            /* set INC to 2 */
+        move.l  #0x40000000,(a0)        /* write VRAM address 0 */
+        moveq	#0,d0
+        move.w  #0x7FFF,d1              /* 32K - 1 words */
+0:
+        move.w  d0,(a1)                 /* clear VRAM */
+        dbra    d1,0b
+
+| The VDP state at this point is: Display disabled, ints disabled, Name Tbl A at 0xC000,
+| Name Tbl B at 0xE000, Name Tbl W at 0xB000, Sprite Attr Tbl at 0xA800, HScroll Tbl at 0xAC00,
+| H40 V28 mode, and Scroll size is 64x32.
+
+| Clear CRAM
+        move.l  #0x81048F01,(a0)        /* set reg 1 and reg 15 */
+        move.l  #0xC0000000,(a0)        /* write CRAM address 0 */
+        moveq   #31,d3
+1:
+        move.l  d0,(a1)
+        dbra    d3,1b
+
+| Clear VSRAM
+        move.l  0x40000010,(a0)         /* write VSRAM address 0 */
+        moveq   #19,d4
+2:
+        move.l  d0,(a1)
+        dbra    d4,2b
+
+        jsr     load_font
+
+| set the default palette for text
+        move.l  #0xC0000000,(a0)        /* write CRAM address 0 */
+        move.l  #0x00000CCC,(a1)        /* entry 0 (black) and 1 (lt gray) */
+        move.l  #0xC0200000,(a0)        /* write CRAM address 32 */
+        move.l  #0x000000A0,(a1)        /* entry 16 (black) and 17 (green) */
+        move.l  #0xC0400000,(a0)        /* write CRAM address 64 */
+        move.l  #0x0000000A,(a1)        /* entry 32 (black) and 33 (red) */
+
+| init controllers
+        move.w  #0,0xA15128             /* controller 1 */
+        move.w  #0,0xA1512A             /* controller 2 */
 | look for mouse
         lea     0xA10003,a0
 0:
         jsr     get_mky
         cmpi.l  #-2,d0
-        beq.b   0b                  /* timeout */
+        beq.b   0b                      /* timeout */
         cmpi.l  #-1,d0
-        beq.b   1f                  /* no mouse */
-        move.w  #0xF001,0xA15128    /* mouse in port 1 */
+        beq.b   1f                      /* no mouse */
+        move.w  #0xF001,0xA15128        /* mouse in port 1 */
 1:
         lea     2(a0),a0
 2:
         jsr     get_mky
         cmpi.l  #-2,d0
-        beq.b   2b                  /* timeout */
+        beq.b   2b                      /* timeout */
         cmpi.l  #-1,d0
-        beq.b   3f                  /* no mouse */
-        move.w  #0xF001,0xA1512A    /* mouse in port 2 */
+        beq.b   3f                      /* no mouse */
+        move.w  #0xF001,0xA1512A        /* mouse in port 2 */
 3:
 
 | allow the 68k to access the FM chip
-        move.w  #0x0100,0xA11100    /* Z80 assert bus request */
-        move.w  #0x0100,0xA11200    /* Z80 deassert reset */
+        move.w  #0x0100,0xA11100        /* Z80 assert bus request */
+        move.w  #0x0100,0xA11200        /* Z80 deassert reset */
 
-| look for music data
-        move.w  #0,0xA15104            /* set cart bank select */
+        move.w  #0,0xA15104             /* set cart bank select */
 
 | wait on Mars side
         move.b  #0,0xA15107             /* clear RV - allow SH2 to access ROM */
@@ -141,8 +180,9 @@ init_hardware:
         cmp.l   #0x535F4F4B,0xA15124    /* S_OK */
         bne.b   1b                      /* wait for slave ok */
 
-        move.l  #vert_blank,vblank  /* set vertical blank interrupt handler */
-        move.w  #0x2000,sr          /* enable interrupts */
+        move.l  #vert_blank,vblank      /* set vertical blank interrupt handler */
+        move.w  #0x8174,0xC00004        /* display on, vblank enabled */
+        move.w  #0x2000,sr              /* enable interrupts */
         rts
 
 
@@ -209,83 +249,9 @@ do_main:
 
 main_loop:
         move.w  0xA15120,d0         /* get COMM0 */
-        bne     handle_req
-
-        tst.w   fm_idx
-        beq.b   main_loop            /* VGM not playing */
-        tst.w   fm_smpl
-        bne.b   1f                    /* waiting, check timer overflow */
-0:
-        /* process more VGM commands */
-        bsr     fm_play
-        tst.w   fm_idx
-        beq.b   main_loop            /* no longer playing */
-        tst.w   fm_smpl
-        beq.b   0b                    /* no delay */
-        bra.b   2f                    /* new delay, set Timer A */
-1:
-        moveq   #1,d0                /* Timer A overflow flag */
-        and.b   0xA04000,d0            /* & YM2612 status */
-        beq.b   main_loop            /* still waiting on Timer A */
-        /* overflow */
-        move.w  fm_tick,d0
-        sub.w   fm_ttt,d0
-        bne.b   3f                    /* longer delay, set Timer A */
-        clr.w   fm_smpl                /* delay done, process commands */
-        clr.w   fm_tick
-        clr.w   fm_ttt
-        bra.b   0b
-2:
-        /* set Timer A for delay */
-        moveq   #0,d0
-        move.w   fm_smpl,d0
-        lsr.w   #2,d0
-        add.w   fm_smpl,d0            /* ticks ~= 1.25 * # samples */
-        bcc.b   3f
-        ori.w   #0xFFFF,d0            /* saturate ticks to word */
-3:
-        move.w  d0,fm_tick
-        cmpi.w  #1024,d0              /* max ticks for Timer A */
-        bls.b   4f
-        move.w  #1024,d0
-4:
-        move.w  d0,fm_ttt
-        move.w  #1024,d1
-        sub.w   d0,d1                   /* Timer A count value */
-        move.w  d1,d0
-        andi.w  #3,d1
-        lsr.w   #2,d0
-        move.b  fm_csm,d2               /* timer control + CSM Mode */
-        move.b  #0x27,0xA04000
-        nop
-        nop
-        nop
-        move.b  d2,0xA04001             /* reset Timer A flag */
-        nop
-        nop
-        nop
-        move.b  #0x24,0xA04000
-        nop
-        nop
-        nop
-        move.b  d0,0xA04001             /* set Timer A msbs */
-        nop
-        nop
-        nop
-        move.b  #0x25,0xA04000
-        nop
-        nop
-        nop
-        move.b  d1,0xA04001             /* set Timer A lsbs */
-        nop
-        nop
-        nop
-        move.b  #0x27,0xA04000
-        nop
-        nop
-        nop
-        move.b  d2,0xA04001             /* enable Timer A, start Timer A */
-        bra     main_loop
+        bne.b   handle_req
+        bsr		bump_fm
+        bra.b   main_loop
 
 | process request from Master SH2
 handle_req:
@@ -303,6 +269,27 @@ handle_req:
         bls     read_cdstate
         cmpi.w  #0x07FF,d0
         bls     set_usecd
+        cmpi.w  #0x08FF,d0
+        bls     set_crsr
+        cmpi.w  #0x09FF,d0
+        bls     get_crsr
+        cmpi.w  #0x0AFF,d0
+        bls     set_color
+        cmpi.w  #0x0BFF,d0
+        bls     get_color
+        cmpi.w  #0x0CFF,d0
+        bls     set_dbpal
+        cmpi.w  #0x0DFF,d0
+        bls     put_chr
+        cmpi.w  #0x0EFF,d0
+        bls     clear_a
+        cmpi.w  #0x0FFF,d0
+        bls     dbug_start
+        cmpi.w  #0x10FF,d0
+        bls     dbug_queue
+        cmpi.w  #0x11FF,d0
+        bls     dbug_end
+
 | unknown command
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -510,12 +497,13 @@ read_mouse:
         bne.b   4b                  /* wait for SH2 to read mouse value */
         bra     main_loop
 
+
 read_cdstate:
         tst.w   cd_ok
         beq     0f                  /* couldn't init cd */
         tst.b   cd_ok
         bne.b   0f                  /* disc found - return state */
-        clr.w	number_tracks
+        clr.w   number_tracks
         /* check for disc */
 10:
         move.b  0xA1200F,d1
@@ -555,6 +543,271 @@ set_usecd:
 1:
         move.w  #0,0xA15120         /* done */
         bra     main_loop
+
+
+| video debug functions
+
+set_crsr:
+        move.w  0xA1512C,crsr_x
+        move.w  0xA1512E,crsr_y
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+get_crsr:
+        move.w  crsr_x,0xA1512C
+        move.w  crsr_y,0xA1512E
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+set_color:
+        move.w  0xA1512C,d0
+        move.w  d0,d1
+        swap    d1
+        move.w  d0,d1
+        move.l  d1,fg_color
+        move.w  0xA1512E,d0
+        move.w  d0,d1
+        swap    d1
+        move.w  d0,d1
+        move.l  d1,bg_color
+        bsr     reload_font
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+get_color:
+        move.w  fg_color,d0
+        andi.w  #0x000F,d0
+        move.w  d0,0xA1512C
+        move.w  bg_color,d0
+        andi.w  #0x000F,d0
+        move.w  d0,0xA1512E
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+set_dbpal:
+        andi.w  #0x0003,d0
+        moveq	#13,d1
+        lsl.w   d1,d0
+        move.w  d0,dbug_color       /* palette select = N * 0x2000 */
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+put_chr:
+        andi.w  #0x00FF,d0          /* character */
+        subi.b  #0x20,d0            /* font starts at space */
+        or.w    dbug_color,d0       /* OR with color palette */
+        lea     0xC00000,a0
+        move.w  #0x8F02,4(a0)       /* set INC to 2 */
+        moveq   #0,d1
+        move.w  crsr_y,d1           /* y coord */
+        lsl.w   #6,d1
+        or.w    crsr_x,d1           /* cursor y<<6 | x */
+        add.w   d1,d1               /* pattern names are words */
+        swap    d1
+        ori.l   #0x40000003,d1      /* OR cursor with VDP write VRAM at 0xC000 (scroll plane A) */
+        move.l  d1,4(a0)            /* write VRAM at location of cursor in plane A */
+        move.w  d0,(a0)             /* set pattern name for character */
+        addq.w  #1,crsr_x           /* increment x cursor coord */
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+clear_a:
+        moveq   #0,d0
+        lea     0xC00000,a0
+        move.w  #0x8F02,4(a0)       /* set INC to 2 */
+        move.l  #0x40000003,d1      /* VDP write VRAM at 0xC000 (scroll plane A) */
+        move.l  d1,4(a0)            /* write VRAM at plane A start */
+        move.w  #64*32-1,d1
+0:
+        move.w  d0,(a0)             /* clear name pattern */
+        dbra    d1,0b
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+dbug_start:
+        clr.w   dbq_ix              /* no entries in queue */
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+dbug_queue:
+        move.w  dbq_ix,d1
+        cmpi.w  #64,d1
+        beq.b   0f                  /* queue full, ignore */
+        lea     dbq_id,a1
+        move.b  d0,0(a1,d1.w)       /* queue id */
+        add.w   d1,d1
+        add.w   d1,d1
+        lea     dbq_val,a1
+        move.l  0xA1512C,0(a1,d1.w) /* queue value */
+        addq.w  #1,dbq_ix
+0:
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+dbug_end:
+        move.w  #0,0xA15120         /* release SH2 now */
+
+| process queue
+        moveq   #0,d2
+        move.w  dbq_ix,d3
+        beq     main_loop           /* nothing to do */
+        subq.w  #1,d3               /* for dbra */
+        lea     dbq_id,a2
+        lea     dbq_val,a3
+        lea     dbug_list,a4
+        lea     dbug_tmp,a5
+0:
+        moveq   #0,d4
+        move.b  0(a2,d2.w),d4       /* id */
+        move.w  d2,d0
+        add.w   d0,d0
+        add.w   d0,d0
+        move.l  0(a3,d0.w),d0      /* value */
+        add.w   d4,d4
+        add.w   d4,d4
+        movea.l 0(a4,d4.w),a0       /* debug list entry for id */
+        move.w  (a0)+,crsr_x
+        move.w  (a0)+,crsr_y
+        movea.l (a0),a0             /* address of format string */
+
+        move.l  d0,-(sp)            /* push the value */
+        move.l  a0,-(sp)            /* push the format string pointer */
+        move.l  a5,-(sp)            /* push the output buffer pointer */
+        jsr     xvprintf            /* print to output buffer */
+        lea     12(sp),sp           /* clear the stack */
+
+| convert dbug_tmp to name patterns
+        moveq   #0,d1
+        move.w  crsr_y,d1           /* y coord */
+        lsl.w   #6,d1
+        or.w    crsr_x,d1           /* cursor y<<6 | x */
+        add.w   d1,d1               /* pattern names are words */
+        swap    d1
+        ori.l   #0x40000003,d1      /* OR cursor with VDP write VRAM at 0xC000 (scroll plane A) */
+        lea     0xC00000,a1
+        move.l  d1,4(a1)            /* write VRAM at location of cursor in plane A */
+        moveq   #0,d0
+        movea.l a5,a0
+1:
+        move.b  (a0)+,d0
+        beq.b   2f                  /* end of string */
+        subi.b  #0x20,d0            /* font starts at space */
+        or.w    dbug_color,d0       /* OR with color palette */
+        move.w  d0,(a1)
+        bra.b   1b
+2:
+        bsr     bump_fm
+        addq.w  #1,d2
+        dbra    d3,0b
+        bra     main_loop
+
+
+| load font tile data
+
+reload_font:
+        lea     0xC00004,a0         /* VDP cmd/sts reg */
+        lea     0xC00000,a1         /* VDP data reg */
+load_font:
+        move.w  #0x8F02,(a0)        /* INC = 2 */
+        move.l  #0x40000000,(a0)    /* write VRAM address 0 */
+        lea     font_data,a2
+        move.w  #0x6B*8-1,d2
+0:
+        move.l  (a2)+,d0            /* font fg mask */
+        move.l  d0,d1
+        not.l   d1                  /* font bg mask */
+        and.l   fg_color,d0         /* set font fg color */
+        and.l   bg_color,d1         /* set font bg color */
+        or.l    d1,d0
+        move.l  d0,(a1)             /* set tile line */
+        dbra    d2,0b
+        rts
+
+
+| Bump the FM player to keep the music going
+
+bump_fm:
+        movem.l	d2-d7/a2-a6,-(sp)
+        tst.w   fm_idx
+        beq     bump_exit           /* VGM not playing */
+        tst.w   fm_smpl
+        bne.b   1f                  /* waiting, check timer overflow */
+0:
+        /* process more VGM commands */
+        bsr     fm_play
+        tst.w   fm_idx
+        beq     bump_exit           /* no longer playing */
+        tst.w   fm_smpl
+        beq.b   0b                  /* no delay */
+        bra.b   2f                  /* new delay, set Timer A */
+1:
+        moveq   #1,d0               /* Timer A overflow flag */
+        and.b   0xA04000,d0         /* & YM2612 status */
+        beq     bump_exit           /* still waiting on Timer A */
+        /* overflow */
+        move.w  fm_tick,d0
+        sub.w   fm_ttt,d0
+        bne.b   3f                  /* longer delay, set Timer A */
+        clr.w   fm_smpl             /* delay done, process commands */
+        clr.w   fm_tick
+        clr.w   fm_ttt
+        bra.b   0b
+2:
+        /* set Timer A for delay */
+        moveq   #0,d0
+        move.w   fm_smpl,d0
+        lsr.w   #2,d0
+        add.w   fm_smpl,d0          /* ticks ~= 1.25 * # samples */
+        bcc.b   3f
+        ori.w   #0xFFFF,d0          /* saturate ticks to word */
+3:
+        move.w  d0,fm_tick
+        cmpi.w  #1024,d0            /* max ticks for Timer A */
+        bls.b   4f
+        move.w  #1024,d0
+4:
+        move.w  d0,fm_ttt
+        move.w  #1024,d1
+        sub.w   d0,d1               /* Timer A count value */
+        move.w  d1,d0
+        andi.w  #3,d1
+        lsr.w   #2,d0
+        move.b  fm_csm,d2           /* timer control + CSM Mode */
+        move.b  #0x27,0xA04000
+        nop
+        nop
+        nop
+        move.b  d2,0xA04001         /* reset Timer A flag */
+        nop
+        nop
+        nop
+        move.b  #0x24,0xA04000
+        nop
+        nop
+        nop
+        move.b  d0,0xA04001         /* set Timer A msbs */
+        nop
+        nop
+        nop
+        move.b  #0x25,0xA04000
+        nop
+        nop
+        nop
+        move.b  d1,0xA04001         /* set Timer A lsbs */
+        nop
+        nop
+        nop
+        move.b  #0x27,0xA04000
+        nop
+        nop
+        nop
+        move.b  d2,0xA04001         /* enable Timer A, start Timer A */
+bump_exit:
+        movem.l	(sp)+,d2-d7/a2-a6
+        rts
+
+
+| Vertical Blank handler
 
 vert_blank:
         move.l  d1,-(sp)
@@ -802,5 +1055,114 @@ last_track:
         dc.w    0
 number_tracks:
         dc.w    0
+
+        .align  4
+
+fg_color:
+        dc.l    0x11111111      /* default to color 1 for fg color */
+bg_color:
+        dc.l    0x00000000      /* default to color 0 for bg color */
+crsr_x:
+        dc.w    0
+crsr_y:
+        dc.w    0
+dbug_color:
+        dc.w    0
+
+
+dbq_ix:
+        dc.w    0
+
+        .align  4
+dbug_tmp:
+        .space  64
+dbq_id:
+        .space  64
+dbq_val:
+        .space  64*4
+
+        .text
+        .align  4
+
+dbug_list:
+        dc.l    dbug_fpscount
+        dc.l    dbug_lastticks
+        dc.l    dbug_gameticks
+        dc.l    dbug_bspmsec
+        dc.l    dbug_segsmsec
+        dc.l    dbug_segscount
+        dc.l    dbug_planesmsec
+        dc.l    dbug_planescount
+        dc.l    dbug_spritesmsec
+        dc.l    dbug_spritescount
+        dc.l    dbug_refmsec
+
+dbug_fpscount:
+        dc.w    28,3
+        dc.l    fpscount
+dbug_lastticks:
+        dc.w    28,4
+        dc.l    lastticks
+dbug_gameticks:
+        dc.w    28,6
+        dc.l    gameticks
+dbug_bspmsec:
+        dc.w    28,7
+        dc.l    bspmsec
+dbug_segsmsec:
+        dc.w    28,8
+        dc.l    segsmsec
+dbug_segscount:
+        dc.w    33,8
+        dc.l    segscount
+dbug_planesmsec:
+        dc.w    28,9
+        dc.l    planesmsec
+dbug_planescount:
+        dc.w    33,9
+        dc.l    planescount
+dbug_spritesmsec:
+        dc.w    28,10
+        dc.l    spritesmsec
+dbug_spritescount:
+        dc.w    33,10
+        dc.l    spritescount
+dbug_refmsec:
+        dc.w    28,11
+        dc.l    refmsec
+
+fpscount:
+        .asciz  "fps:%2d"
+        .align  2
+lastticks:
+        .asciz  "tcs:%2d"
+        .align  2
+gameticks:
+        .asciz  "g:%2d"
+        .align  2
+bspmsec:
+        .asciz  "b:%2d"
+        .align  2
+segsmsec:
+        .asciz  "s:%2d"
+        .align  2
+segscount:
+        .asciz  "%2d"
+        .align  2
+planesmsec:
+        .asciz  "p:%2d"
+        .align  2
+planescount:
+        .asciz  "%2d"
+        .align  2
+spritesmsec:
+        .asciz  "s:%2d"
+        .align  2
+spritescount:
+        .asciz  "%2d"
+        .align  2
+refmsec:
+        .asciz  "t:%2d"
+        .align  2
 
         .align  4

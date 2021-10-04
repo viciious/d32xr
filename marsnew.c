@@ -38,6 +38,7 @@ short	*dc_colormaps;
 const byte	*new_palette = NULL;
 
 boolean	debugscreenactive = false;
+boolean	debugscreenupdate = false;
 
 int		lastticcount = 0;
 int		lasttics = 0;
@@ -507,16 +508,18 @@ void I_ClearFrameBuffer (void)
 void I_DebugScreen(void)
 {
 	int i;
-	char buf[32];
+
+	if (!debugscreenupdate)
+		return;
 
 	if (debugmode == 1)
 	{
-		D_snprintf(buf, sizeof(buf), "fps:%2d", fpscount);
-		I_Print8(200, 5, buf);
+		Mars_DebugStart();
+		Mars_DebugQueue(DEBUG_FPSCOUNT, fpscount);
+		Mars_DebugEnd();
 	}
 	else if (debugmode > 1)
 	{
-		int line = 5;
 		unsigned t_ref_bsp_avg = 0;
 		unsigned t_ref_segs_avg = 0;
 		unsigned t_ref_planes_avg = 0;
@@ -537,26 +540,29 @@ void I_DebugScreen(void)
 		t_ref_sprites_avg >>= 2;
 		t_ref_total_avg >>= 2;
 
-		D_snprintf(buf, sizeof(buf), "fps:%2d", fpscount);
-		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "tcs:%d", lasttics);
-		I_Print8(200, line++, buf);
+		Mars_DebugStart();
 
-		line++;
+		Mars_DebugQueue(DEBUG_FPSCOUNT, fpscount);
+		Mars_DebugQueue(DEBUG_LASTTICS, lasttics);
+		Mars_DebugQueue(DEBUG_GAMETICS, Mars_FRTCounter2Msec(tictics));
 
-		D_snprintf(buf, sizeof(buf), "g:%2d", Mars_FRTCounter2Msec(tictics));
-		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "b:%2d", Mars_FRTCounter2Msec(t_ref_bsp_avg));
-		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "w:%2d %2d", Mars_FRTCounter2Msec(t_ref_segs_avg), lastwallcmd - viswalls);
-		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "p:%2d %2d", Mars_FRTCounter2Msec(t_ref_planes_avg), lastvisplane - visplanes - 1);
-		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "s:%2d %2d", Mars_FRTCounter2Msec(t_ref_sprites_avg), vissprite_p - vissprites);
-		I_Print8(200, line++, buf);
-		D_snprintf(buf, sizeof(buf), "t:%2d", Mars_FRTCounter2Msec(t_ref_total_avg));
-		I_Print8(200, line++, buf);
+		Mars_DebugQueue(DEBUG_BSPMSEC, Mars_FRTCounter2Msec(t_ref_bsp_avg));
+
+		Mars_DebugQueue(DEBUG_SEGSMSEC, Mars_FRTCounter2Msec(t_ref_segs_avg));
+		Mars_DebugQueue(DEBUG_SEGSCOUNT, lastwallcmd - viswalls);
+
+		Mars_DebugQueue(DEBUG_PLANESMSEC, Mars_FRTCounter2Msec(t_ref_planes_avg));
+		Mars_DebugQueue(DEBUG_PLANESCOUNT, lastvisplane - visplanes - 1);
+
+		Mars_DebugQueue(DEBUG_SPRITESMSEC, Mars_FRTCounter2Msec(t_ref_sprites_avg));
+		Mars_DebugQueue(DEBUG_SPRITESCOUNT, vissprite_p - vissprites);
+
+		Mars_DebugQueue(DEBUG_REFMSEC, Mars_FRTCounter2Msec(t_ref_total_avg));
+
+		Mars_DebugEnd();
 	}
+
+	debugscreenupdate = false;
 }
 
 void I_ClearWorkBuffer(void)
@@ -602,6 +608,7 @@ void I_Update(void)
 			int prevdebugmode = debugmode;
 
 			debugmode = (debugmode + 1) % 5;
+			debugscreenupdate = true;
 
 			if (prevdebugmode == 4 || debugmode == 4)
 			{
@@ -616,6 +623,7 @@ void I_Update(void)
 			}
 			else if (!debugmode)
 			{
+				Mars_ClearNTA();
 				SH2_WDT_WTCSR_TCNT = 0xA518; /* WDT TCSR = clr OVF, IT mode, timer off, clksel = Fs/2 */
 			}
 
@@ -635,10 +643,12 @@ void I_Update(void)
 
 	lasttics = ticcount - lastticcount;
 	lastticcount = ticcount;
+	if (lasttics > 99) lasttics = 99;
 
 	if (ticcount > prevsecticcount + refreshHZ) {
 		static int prevsecframe;
 		fpscount = (framenum - prevsecframe) * refreshHZ / (ticcount - prevsecticcount);
+		debugscreenupdate = true;
 		prevsecticcount = ticcount;
 		prevsecframe = framenum;
 	}

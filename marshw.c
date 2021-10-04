@@ -311,3 +311,85 @@ void Mars_StopTrack(void)
 	while (MARS_SYS_COMM0);
 	MARS_SYS_COMM0 = 0x0400; /* stop music */
 }
+
+
+// MD video debug functions
+
+void Mars_SetMDCrsr(int x, int y)
+{
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM12 = x;
+	MARS_SYS_COMM14 = y;
+	MARS_SYS_COMM0 = 0x0800;			/* set current md cursor */
+}
+
+void Mars_GetMDCrsr(int *x, int *y)
+{
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM0 = 0x0900;			/* get current md cursor */
+	while (MARS_SYS_COMM0);
+	*x = (int)MARS_SYS_COMM12;
+	*y = (int)MARS_SYS_COMM14;
+}
+
+void Mars_SetMDColor(int fc, int bc)
+{
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM12 = fc | (fc << 4) | (fc << 8) | (fc << 12);
+	MARS_SYS_COMM14 = bc | (bc << 4) | (bc << 8) | (bc << 12);
+	MARS_SYS_COMM0 = 0x0A00;			/* set font fg and bg colors */
+}
+
+void Mars_GetMDColor(int *fc, int *bc)
+{
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM0 = 0x0B00;			/* get font fg and bg colors */
+	while (MARS_SYS_COMM0);
+	*fc = (int)MARS_SYS_COMM12;
+	*bc = (int)MARS_SYS_COMM14;
+}
+
+void Mars_SetMDPal(int cpsel)
+{
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM0 = 0x0C00 | cpsel;	/* set palette select */
+}
+
+void Mars_MDPutChar(char chr)
+{
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM0 = 0x0D00 | chr;		/* put char at current cursor pos */
+}
+
+void Mars_ClearNTA(void)
+{
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM0 = 0x0E00;			/* clear name table a */
+}
+
+void Mars_MDPutString(char *str)
+{
+	while (*str)
+		Mars_MDPutChar(*str++);
+}
+
+
+void Mars_DebugStart(void)
+{
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM0 = 0x0F00;			/* start debug queue */
+}
+
+void Mars_DebugQueue(int id, int val)
+{
+	while (MARS_SYS_COMM0);
+	*(volatile intptr_t *)&MARS_SYS_COMM12 = val;
+	MARS_SYS_COMM0 = 0x1000 | id;		/* queue debug entry */
+}
+
+void Mars_DebugEnd(void)
+{
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM0 = 0x1100;			/* end debug queue and display */
+}
+
