@@ -36,8 +36,6 @@ enum
 	SNDCMD_NONE,
 	SNDCMD_CLEAR,
 	SNDCMD_STARTSND,
-	SNDCMD_BEGINFRAME,
-	SNDCMD_ENDFRAME,
 };
 
 static uint8_t snd_bufidx = 0;
