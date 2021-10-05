@@ -142,7 +142,6 @@ static void S_Spatialize(mobj_t* origin, int *pvol, int *psep)
 	int	vol, sep;
 
 	player = &players[consoleplayer];
-	player = (void*)((intptr_t)player | 0x20000000);
 
 	if (!origin || origin == player->mo)
 	{
@@ -154,9 +153,6 @@ static void S_Spatialize(mobj_t* origin, int *pvol, int *psep)
 		angle_t angle;
 		mobj_t* listener = player->mo;
 
-		origin = (void*)((intptr_t)origin | 0x20000000);
-		listener = (void*)((intptr_t)listener | 0x20000000);
-
 		dx = D_abs(origin->x - listener->x);
 		dy = D_abs(origin->y - listener->y);
 		dist_approx = dx + dy - ((dx < dy ? dx : dy) >> 1);
@@ -167,6 +163,10 @@ static void S_Spatialize(mobj_t* origin, int *pvol, int *psep)
 		}
 		else
 		{
+			SH2_DIVU_DVSR = S_ATTENUATOR;  // set 32-bit divisor
+			SH2_DIVU_DVDNTH = 0;           // set high bits of the 64-bit dividend
+			SH2_DIVU_DVDNTL = (sfxvolume * (S_CLIPPING_DIST - dist_approx)) >> FRACBITS; // set low  bits of the 64-bit dividend, start divide
+
 			// angle of source to listener
 			angle = R_PointToAngle2(listener->x, listener->y,
 				origin->x, origin->y);
@@ -187,8 +187,7 @@ static void S_Spatialize(mobj_t* origin, int *pvol, int *psep)
 				vol = sfxvolume;
 			else
 			{
-				vol = (sfxvolume * ((S_CLIPPING_DIST - dist_approx) >> FRACBITS))
-					/ S_ATTENUATOR;
+				vol = SH2_DIVU_DVDNTL; // get 32-bit quotient;
 				if (vol < 0)
 					vol = 0;
 				else if (vol > sfxvolume)
@@ -381,19 +380,22 @@ static void S_Update(int16_t* buffer)
 {
 	int i;
 	int16_t* b;
+	player_t* player;
+	const size_t 
+		xoff = offsetof(mobj_t, x) & ~15, 
+		yoff = offsetof(mobj_t, y) & ~15;
 
-	b = buffer;
-	for (i = 0; i < MAX_SAMPLES / 4; i++)
-	{
-		*b++ = 0; *b++ = 0;
-		*b++ = 0; *b++ = 0;
-		*b++ = 0; *b++ = 0;
-		*b++ = 0; *b++ = 0;
-	}
+	player = &players[consoleplayer];
 
-	for (i *= 4; i < MAX_SAMPLES; i++)
+	Mars_ClearCacheLines((intptr_t)player, (sizeof(player_t) + 15) / 16);
+	Mars_ClearCacheLines((intptr_t)player->mo, (sizeof(mobj_t) + 15) / 16);
+
 	{
-		*b++ = 0; *b++ = 0;
+		int32_t *b2 = (int32_t *)buffer;
+		for (i = 0; i < MAX_SAMPLES / 4; i++)
+			*b2++ = 0, *b2++ = 0, *b2++ = 0, *b2++ = 0;
+		for (i *= 4; i < MAX_SAMPLES; i++)
+			*b2++ = 0;
 	}
 
 	for (i = 0; i < SFXCHANNELS; i++)
@@ -403,6 +405,9 @@ static void S_Update(int16_t* buffer)
 
 		if (!ch->data)
 			continue;
+
+		Mars_ClearCacheLines((intptr_t)ch->origin + xoff, 1);
+		Mars_ClearCacheLines((intptr_t)ch->origin + yoff, 1);
 
 		/* */
 		/* spatialize */
