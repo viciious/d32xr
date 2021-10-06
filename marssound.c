@@ -407,8 +407,11 @@ static void S_Update(int16_t* buffer)
 		if (!ch->data)
 			continue;
 
-		Mars_ClearCacheLines((intptr_t)ch->origin + xoff, 1);
-		Mars_ClearCacheLines((intptr_t)ch->origin + yoff, 1);
+		if (ch->origin)
+		{
+			Mars_ClearCacheLines((intptr_t)ch->origin + xoff, 1);
+			Mars_ClearCacheLines((intptr_t)ch->origin + yoff, 1);
+		}
 
 		/* */
 		/* spatialize */

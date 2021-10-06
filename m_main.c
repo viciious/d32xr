@@ -179,7 +179,7 @@ void M_Start2 (boolean startup_)
 	cursorcount = 0;
 	cursorframe = 0;
 	cursorpos = 0;
-	screenpos = ms_main;
+	screenpos = startup ? ms_main : ms_none;
 	playerskill = startskill;
 	playermap = 1;
 
@@ -300,7 +300,14 @@ int M_Ticker (void)
 {
 	int		buttons;
 	char	newframe = 0;
-	mainscreen_t* menuscr = &mainscreen[screenpos];
+	mainscreen_t* menuscr;
+
+	if (screenpos == ms_none)
+	{
+		screenpos = ms_main;
+		S_StartSound(NULL, sfx_pistol);
+	}
+	menuscr = &mainscreen[screenpos];
 
 	if (!mapnumbers)
 		return ga_startnew;
@@ -364,6 +371,7 @@ int M_Ticker (void)
 			screenpos = mainitem[itemno].screen;
 			clearscreen = 2;
 			saveslot = screenpos == ms_save;
+			S_StartSound(NULL, sfx_pistol);
 			return ga_nothing;
 		}
 	}
@@ -386,6 +394,7 @@ int M_Ticker (void)
 			movecount = 0;
 			screenpos = ms_main;
 			clearscreen = 2;
+			S_StartSound(NULL, sfx_swtchn);
 			return 0;
 		}
 		else
@@ -402,6 +411,7 @@ int M_Ticker (void)
 		movecount = 0;		/* move immediately on next press */
 	else
 	{
+		int sound = sfx_None;
 		int itemno = menuscr->firstitem + cursorpos;
 
 		if (movecount == MOVEWAIT)
@@ -414,6 +424,7 @@ int M_Ticker (void)
 				cursorpos++;
 				if (cursorpos == menuscr->numitems)
 					cursorpos = 0;
+				sound = sfx_pstop;
 			}
 		
 			if (buttons & BT_UP)
@@ -421,6 +432,7 @@ int M_Ticker (void)
 				cursorpos--;
 				if (cursorpos == -1)
 					cursorpos = menuscr->numitems-1;
+				sound = sfx_pstop;
 			}
 
 			switch (itemno)
@@ -432,13 +444,17 @@ int M_Ticker (void)
 						currentplaymode++;
 						if (currentplaymode == NUMMODES)
 							currentplaymode--;
+						else
+							sound = sfx_stnmov;
 					}
 					if (buttons & BT_LEFT)
 					{
 						currentplaymode--;
 						if (currentplaymode == -1)
 							currentplaymode++;
-				}
+						else
+							sound = sfx_stnmov;
+					}
 					break;
 #endif
 				case mi_level:
@@ -447,12 +463,16 @@ int M_Ticker (void)
 						playermap++;
 						if (mapcount == playermap || mapnumbers[playermap-1] == maxlevel+1)
 							playermap--;
-					}	
+						else
+							sound = sfx_stnmov;
+					}
 					if (buttons & BT_LEFT)
 					{
 						playermap--;
 						if(playermap == 0)
 							playermap++;
+						else
+							sound = sfx_stnmov;
 					}
 					break;
 				case mi_difficulty:
@@ -461,12 +481,16 @@ int M_Ticker (void)
 						playerskill++;
 						if (playerskill > sk_nightmare)
 							playerskill--;
+						else
+							sound = sfx_stnmov;
 					}
 					if (buttons & BT_LEFT)
 					{
 						playerskill--;
 						if (playerskill == -1)
 							playerskill++;
+						else
+							sound = sfx_stnmov;
 					}
 					break;
 				case mi_savelist:
@@ -475,18 +499,25 @@ int M_Ticker (void)
 						saveslot++;
 						if (saveslot >= savecount + (screenpos == ms_save) || saveslot >= MaxSaveCount())
 							saveslot--;
+						else
+							sound = sfx_stnmov;
 					}
 					if (buttons & BT_LEFT)
 					{
 						saveslot--;
 						if (saveslot == -1 + (screenpos == ms_save))
 							saveslot++;
+						else
+							sound = sfx_stnmov;
 					}
 					break;
 				default:
 					break;
 			}
 		}
+
+		if (sound != sfx_None)
+			S_StartSound(NULL, sound);
 	}
 
 	return ga_nothing;

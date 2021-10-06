@@ -134,7 +134,7 @@ void O_Init (void)
 	cursorcount = 0;
 	cursorframe = 0;
 	cursorpos = 0;
-	screenpos = ms_main;
+	screenpos = ms_none;
 
 	D_memset(menuitem, 0, sizeof(menuitem));
 	D_memset(slider, 0, sizeof(slider));
@@ -242,7 +242,13 @@ void O_Control (player_t *player)
 {
 	int		buttons, oldbuttons;
 	char	newframe = false;
-	menuscreen_t* menuscr = &menuscreen[screenpos];
+	menuscreen_t* menuscr;
+
+	if (screenpos == ms_none)
+	{
+		screenpos = ms_main;
+	}
+	menuscr = &menuscreen[screenpos];
 
 	buttons = ticbuttons[playernum];
 	oldbuttons = oldticbuttons[playernum];
@@ -271,6 +277,7 @@ exit:
 #endif
 		else
 			WriteEEProm ();		/* save new settings */
+		S_StartSound(NULL, sfx_swtchn);
 	}
 	if (!(player->automapflags & AF_OPTIONSACTIVE))
 		return;
@@ -297,6 +304,7 @@ exit:
 		switch (mtick)
 		{
 		case ga_completed:
+			S_StartSound(NULL, sfx_swtchn);
 			return;
 		case ga_startnew:
 			starttype = gt_single;
@@ -329,9 +337,9 @@ exit:
 			clearscreen = 2;
 
 			if (screenpos == ms_game)
-			{
 				M_Start2(false);
-			}
+			else
+				S_StartSound(NULL, sfx_pistol);
 			return;
 		}
 	}
@@ -354,6 +362,7 @@ exit:
 			movecount = 0;
 			screenpos = ms_main;
 			clearscreen = 2;
+			S_StartSound(NULL, sfx_swtchn);
 			return;
 		}
 	}
@@ -363,6 +372,7 @@ exit:
 		movecount = 0;		/* move immediately on next press */
 	else
 	{
+		int sound = sfx_None;
 		int itemno = menuscr->firstitem + cursorpos;
 		slider_t*slider = menuitem[itemno].slider;
 
@@ -373,19 +383,37 @@ exit:
 				slider->curval++;
 				if (slider->curval > slider->maxval)
 					slider->curval = slider->maxval;
+				else
+				{
+					switch (itemno)
+					{
+					case mi_soundvol:
+						sfxvolume = 64 * slider->curval / slider->maxval;
+						break;
+					}
+					sound = sfx_stnmov;
+				}
 			}
 			if (buttons & BT_LEFT)
 			{
 				slider->curval--;
 				if (slider->curval < 0)
 					slider->curval = 0;
+				else
+				{
+					switch (itemno)
+					{
+					case mi_soundvol:
+						sfxvolume = 64 * slider->curval / slider->maxval;
+						break;
+					}
+					sound = sfx_stnmov;
+				}
 			}
 
 			switch (itemno)
 			{
 			case mi_soundvol:
-				sfxvolume = 64* slider->curval / slider->maxval;
-				S_StartSound (NULL, sfx_pistol);
 				break;
 			case mi_resolution:
 				R_SetViewportSize(slider->curval);
@@ -414,6 +442,7 @@ exit:
 				cursorpos++;
 				if (cursorpos == menuscr->numitems)
 					cursorpos = 0;
+				sound = sfx_pistol;
 			}
 		
 			if (buttons & BT_UP)
@@ -421,6 +450,7 @@ exit:
 				cursorpos--;
 				if (cursorpos == -1)
 					cursorpos = menuscr->numitems-1;
+				sound = sfx_pistol;
 			}
 
 			if (screenpos == ms_controls)
@@ -432,6 +462,8 @@ exit:
 						controltype++;
 						if (controltype == NUMCONTROLOPTIONS)
 							controltype = (NUMCONTROLOPTIONS - 1);
+						else
+							sound = sfx_stnmov;
 						break;
 					}
 				}
@@ -442,6 +474,8 @@ exit:
 						controltype--;
 						if (controltype == -1)
 							controltype = 0;
+						else
+							sound = sfx_stnmov;
 						break;
 					}
 				}
@@ -459,6 +493,7 @@ exit:
 						if (!S_CDAvailable() && o_musictype > mustype_fm)
 							o_musictype--;
 						S_SetMusicType(o_musictype);
+						sound = sfx_stnmov;
 						break;
 					}
 				}
@@ -471,11 +506,15 @@ exit:
 						if (o_musictype < mustype_none)
 							o_musictype++;
 						S_SetMusicType(o_musictype);
+						sound = sfx_stnmov;
 						break;
 					}
 				}
 			}
 		}
+
+		if (sound != sfx_noway)
+			S_StartSound(NULL, sound);
 	}
 }
 
