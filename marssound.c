@@ -57,7 +57,7 @@ int             samplecount = 0;
 static marsrb_t	soundcmds = { 0 };
 
 void S_StartSound(mobj_t* origin, int sound_id) ATTR_OPTIMIZE_SIZE;
-void S_StartSoundReal(mobj_t* origin, unsigned sound_id) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void S_StartSoundReal(mobj_t* origin, unsigned sound_id, int vol) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void S_PaintChannel(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static void S_Update(int16_t* buffer) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static void S_Spatialize(mobj_t* origin, int* pvol, int* psep) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
@@ -234,6 +234,7 @@ void S_StartSound(mobj_t *origin, int sound_id)
 	*p++ = SNDCMD_STARTSND;
 	*p++ = sound_id;
 	*(int*)p = (intptr_t)origin, p += 2;
+	*p++ = vol;
 	Mars_RB_CommitWrite(&soundcmds);
 }
 
@@ -461,7 +462,7 @@ void sec_dma1_handler(void)
 	S_Update(snd_buffer[snd_bufidx]);
 }
 
-void S_StartSoundReal(mobj_t* origin, unsigned sound_id)
+void S_StartSoundReal(mobj_t* origin, unsigned sound_id, int vol)
 {
 	sfxchannel_t* channel, * newchannel;
 	int i;
@@ -485,12 +486,17 @@ void S_StartSoundReal(mobj_t* origin, unsigned sound_id)
 		{
 			if (channel->position == 0)
 			{
+				if (channel->volume < vol)
+				{
+					newchannel = channel;
+					goto gotchannel;	/* overlay this	*/
+				}
 				return;		/* exact sound allready started */
 			}
 
 			if (sfx->singularity)
 			{
-				newchannel = channel;	/* overlay this	 */
+				newchannel = channel;	/* overlay this	*/
 				goto gotchannel;
 			}
 		}
@@ -529,7 +535,7 @@ gotchannel:
 	newchannel->data = &md_data->data[0];
 
 	// volume and panning will be updated later in S_Spatialize
-	newchannel->volume = 64;
+	newchannel->volume = vol;
 	newchannel->pan = 128;
 }
 
@@ -550,7 +556,7 @@ void Mars_Sec_ReadSoundCmds(void)
 				sfxchannels[i].data = NULL;
 			break;
 		case SNDCMD_STARTSND:
-			S_StartSoundReal((void*)(*(intptr_t*)&p[2]), p[1]);
+			S_StartSoundReal((void*)(*(intptr_t*)&p[2]), p[1], p[3]);
 			break;
 		}
 
