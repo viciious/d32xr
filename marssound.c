@@ -25,7 +25,7 @@
 
 // The range over which sound attenuates
 
-#define S_ATTENUATOR ((S_CLIPPING_DIST - S_CLOSE_DIST) >> FRACBITS)
+#define S_ATTENUATOR (S_CLIPPING_DIST - S_CLOSE_DIST)
 
 // Stereo separation
 
@@ -165,7 +165,7 @@ static void S_Spatialize(mobj_t* origin, int *pvol, int *psep)
 		{
 			SH2_DIVU_DVSR = S_ATTENUATOR;  // set 32-bit divisor
 			SH2_DIVU_DVDNTH = 0;           // set high bits of the 64-bit dividend
-			SH2_DIVU_DVDNTL = (sfxvolume * (S_CLIPPING_DIST - dist_approx)) >> FRACBITS; // set low  bits of the 64-bit dividend, start divide
+			SH2_DIVU_DVDNTL = sfxvolume * (S_CLIPPING_DIST - dist_approx); // set low  bits of the 64-bit dividend, start divide
 
 			// angle of source to listener
 			angle = R_PointToAngle2(listener->x, listener->y,
@@ -187,7 +187,7 @@ static void S_Spatialize(mobj_t* origin, int *pvol, int *psep)
 				vol = sfxvolume;
 			else
 			{
-				vol = SH2_DIVU_DVDNTL; // get 32-bit quotient;
+				vol = SH2_DIVU_DVDNTL; // get 32-bit quotient
 				if (vol < 0)
 					vol = 0;
 				else if (vol > sfxvolume)
