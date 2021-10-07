@@ -28,6 +28,8 @@ typedef struct
 #endif
 } localplane_t;
 
+static unsigned short numplanes;
+
 static void R_MapPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void R_PlaneLoop(localplane_t* lpl, const int mask) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void R_DrawPlanes2(const int cpu) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
