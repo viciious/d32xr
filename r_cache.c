@@ -218,6 +218,7 @@ static void R_EvictFromTexCache(void* ptr, void* userp)
 void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **userp)
 {
 	int size;
+	int trynum;
 	const int pad = 16;
 	void* data, * lumpdata;
 	texcacheblock_t* entry;
@@ -251,7 +252,18 @@ void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **us
 		}
 	}
 
-	entry = Z_Malloc2(c->zone, size, PU_LEVEL, NULL);
+	trynum = 0;
+retry:
+	entry = Z_Malloc2(c->zone, size, PU_LEVEL, NULL, false);
+	if (!entry)
+	{
+		if (trynum != 0)
+			return;
+		R_ClearTexCache(c);
+		trynum++;
+		goto retry;
+	}
+
 	entry->id = id;
 	entry->pixelcount = c->pixcount[id];
 	entry->lumpnum = lumpnum;

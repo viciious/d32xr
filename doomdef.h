@@ -628,10 +628,10 @@ extern	memzone_t	*refzone;
 void	Z_Init (void);
 memzone_t *Z_InitZone (byte *base, int size);
 
-void 	*Z_Malloc2 (memzone_t *mainzone, int size, int tag, void *user);
+void 	*Z_Malloc2 (memzone_t *mainzone, int size, int tag, void *user, boolean err);
 void 	Z_Free2 (memzone_t *mainzone,void *ptr);
 
-#define Z_Malloc(x,y,z) Z_Malloc2(mainzone,x,y,z)
+#define Z_Malloc(x,y,z) Z_Malloc2(mainzone,x,y,z,true)
 #define Z_Free(x) Z_Free2(mainzone,x)
 
 void 	Z_FreeTags (memzone_t *mainzone);

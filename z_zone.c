@@ -133,7 +133,7 @@ void Z_Free2 (memzone_t *mainzone, void *ptr)
 
 #define MINFRAGMENT	64
 
-void *Z_Malloc2 (memzone_t *mainzone, int size, int tag, void *user)
+void *Z_Malloc2 (memzone_t *mainzone, int size, int tag, void *user, boolean err)
 {
 	int		extra;
 	memblock_t	*start, *rover, *new, *base;
@@ -173,7 +173,11 @@ backtostart:
 			}
 			
 			if (base == start)	/* scaned all the way around the list */
-				I_Error ("Z_Malloc: failed on %i",size);
+			{
+				if (err)
+					I_Error("Z_Malloc: failed on %i", size);
+				return NULL;
+			}
 			continue;
 		}
 	}
