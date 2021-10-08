@@ -13,7 +13,7 @@
 // when to clip out sounds
 // Does not fit the large outdoor areas.
 
-#define S_CLIPPING_DIST (1200 * FRACUNIT)
+#define S_CLIPPING_DIST (1224 * FRACUNIT)
 
 // Distance tp origin when sounds should be maxed out.
 // This should relate to movement clipping resolution
@@ -163,10 +163,6 @@ static void S_Spatialize(mobj_t* origin, int *pvol, int *psep)
 		}
 		else
 		{
-			SH2_DIVU_DVSR = S_ATTENUATOR;  // set 32-bit divisor
-			SH2_DIVU_DVDNTH = 0;           // set high bits of the 64-bit dividend
-			SH2_DIVU_DVDNTL = sfxvolume * (S_CLIPPING_DIST - dist_approx); // set low  bits of the 64-bit dividend, start divide
-
 			// angle of source to listener
 			angle = R_PointToAngle2(listener->x, listener->y,
 				origin->x, origin->y);
@@ -177,7 +173,10 @@ static void S_Spatialize(mobj_t* origin, int *pvol, int *psep)
 				angle = angle + (0xffffffff - listener->angle);
 			angle >>= ANGLETOFINESHIFT;
 
-			sep = 128 - (FixedMul(S_STEREO_SWING, finesine(angle)) >> FRACBITS);
+			FixedMul2(sep, S_STEREO_SWING, finesine(angle));
+			sep >>= FRACBITS;
+
+			sep = 128 - sep;
 			if (sep < 0)
 				sep = 0;
 			else if (sep > 255)
@@ -185,12 +184,13 @@ static void S_Spatialize(mobj_t* origin, int *pvol, int *psep)
 
 			if (dist_approx < S_CLOSE_DIST)
 				vol = sfxvolume;
+			else if (dist_approx >= S_CLIPPING_DIST)
+				vol = 0;
 			else
 			{
-				vol = SH2_DIVU_DVDNTL; // get 32-bit quotient
-				if (vol < 0)
-					vol = 0;
-				else if (vol > sfxvolume)
+				vol = sfxvolume * (S_CLIPPING_DIST - dist_approx);
+				vol = (unsigned)vol / S_ATTENUATOR;
+				if (vol > sfxvolume)
 					vol = sfxvolume;
 			}
 		}
