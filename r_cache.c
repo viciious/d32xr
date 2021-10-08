@@ -227,7 +227,7 @@ void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **us
 	if (id < 0)
 		return;
 
-	size = pixels + sizeof(texcacheblock_t) + 16;
+	size = pixels + ((sizeof(texcacheblock_t)+15)&~15) + 16;
 	if (c->zonesize < size + pad)
 		return;
 
@@ -260,9 +260,9 @@ void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **us
 
 	lumpdata = R_CheckPixels(lumpnum);
 
-	// align to the same cache line remainder
-	data = (byte*)entry + sizeof(texcacheblock_t);
-	data = (void *)(((intptr_t)data + 15) & ~15);
+	// align pointers so that the 4 least significant bits match
+	data = (byte*)entry + ((sizeof(texcacheblock_t) + 15) & ~15);
+	data = (void*)(((intptr_t)data + 15) & ~15);
 	data = (void *)((intptr_t)data + ((intptr_t)lumpdata & 15));
 
 	D_memcpy(data, lumpdata, pixels);
