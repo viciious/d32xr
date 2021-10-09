@@ -108,7 +108,7 @@ void R_PlaneLoop(localplane_t *lpl, const int mask)
 {
    unsigned pl_x, pl_stopx;
    unsigned short *pl_openptr;
-   unsigned short t1, t2, b1, b2, pl_oldtop, pl_oldbottom;
+   unsigned t1, t2, b1, b2, pl_oldtop, pl_oldbottom;
    unsigned short spanstart[SCREENHEIGHT];
    visplane_t* pl = lpl->pl;
 
