@@ -106,13 +106,18 @@ static inline void Mars_R_AdvanceNextSprite(void)
 static inline void Mars_R_BeginWallPrep(void)
 {
 	while (MARS_SYS_COMM4 != 0);
-	MARS_SYS_COMM6 = 1;
+	MARS_SYS_COMM6 = 0;
 	MARS_SYS_COMM4 = 6;
 }
 
-static inline void Mars_R_EndWallPrep(void)
+static inline void Mars_R_BeginWallNext(void)
 {
-	MARS_SYS_COMM6 = 0;
+	MARS_SYS_COMM6++;
+}
+
+static inline void Mars_R_EndWallPrep(int maxsegs)
+{
+	MARS_SYS_COMM6 = maxsegs;
 	while (MARS_SYS_COMM4 != 0);
 }
 

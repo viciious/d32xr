@@ -6,6 +6,9 @@
 
 #include "doomdef.h"
 #include "r_local.h"
+#ifdef MARS
+#include "mars.h"
+#endif
 
 typedef struct
 {
@@ -219,6 +222,10 @@ static inline void R_StoreWallRange(int start, int stop)
    rw->stop   = stop;
    rw->angle1 = lineangle1;
    ++lastwallcmd;
+
+#ifdef MARS
+   Mars_R_BeginWallNext();
+#endif
 }
 
 //

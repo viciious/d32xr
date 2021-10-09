@@ -849,7 +849,7 @@ static void R_RenderPhases2To9(void)
 
 	t_ref_prep[t_ref_cnt] = I_GetFRTCounter();
 	R_SpritePrep();
-	Mars_R_EndWallPrep();
+	Mars_R_EndWallPrep(MAXVISSSEC);
 	if (R_LatePrep())
 		R_Cache();
 	t_ref_prep[t_ref_cnt] = I_GetFRTCounter() - t_ref_prep[t_ref_cnt];

@@ -296,7 +296,9 @@ static void R_WallEarlyPrep2(viswall_t* wc)
 
 void Mars_Sec_R_WallPrep(void)
 {
+    int numsegs;
     viswall_t* segl;
+    viswall_t *first, *verylast;
     volatile viswall_t* volatile* plast;
     volatile viswall_t* volatile* pfirst;
 
@@ -304,27 +306,41 @@ void Mars_Sec_R_WallPrep(void)
     pfirst = (volatile viswall_t* volatile *)((intptr_t)&viswalls | 0x20000000);
     plast = (volatile viswall_t* volatile*)((intptr_t)&lastwallcmd | 0x20000000);
 
-    for (segl = (viswall_t*)*pfirst; ; )
+    first = (viswall_t*)*pfirst;
+    verylast = NULL;
+    numsegs = 0;
+
+    for (segl = first; segl != verylast; )
     {
-        // check if master CPU finished exec'ing R_BSP()
-        if (MARS_SYS_COMM6 == 0)
+        viswall_t* last;
+        while (1)
         {
-            viswall_t* last = (viswall_t*)*plast;
-            if (segl == last)
-                break;
-        }
-        else
-        {
-            viswall_t* last = (viswall_t*)*plast;
-            if (segl == last)
+            int nextsegs = MARS_SYS_COMM6;
+            if (numsegs == nextsegs)
                 continue;
+
+            // check if master CPU finished exec'ing R_BSP()
+            if (nextsegs == MAXVISSSEC)
+            {
+                verylast = (viswall_t*)*plast;
+                last = verylast;
+            }
+            else
+            {
+                last = first + nextsegs;
+            }
+            numsegs = nextsegs;
+            break;
         }
 
-        R_WallEarlyPrep(segl);
+        while (segl < last)
+        {
+            R_WallEarlyPrep(segl);
 
-        R_WallEarlyPrep2(segl);
+            R_WallEarlyPrep2(segl);
 
-        ++segl; // next viswall
+            ++segl; // next viswall
+        }
     }
 }
 
