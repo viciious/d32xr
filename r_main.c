@@ -631,11 +631,7 @@ void R_Setup (void)
 	tempbuf = (unsigned short *)(((intptr_t)tempbuf+1)&~1);
 	tempbuf++; // padding
 	for (i = 0; i < MAXVISPLANES; i++) {
-#ifdef MARS
-		visplanes[i].open = *((unsigned short **)((intptr_t)&tempbuf | 0x20000000));
-#else
 		visplanes[i].open = tempbuf;
-#endif
 		visplanes[i].runopen = true;
 		tempbuf += viewportWidth+2;
 	}

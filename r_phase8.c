@@ -228,7 +228,7 @@ static void R_DrawSpritesStride(const int start, int *fuzzpos)
 
         ds = vissprites + (sortedsprites[i] & 0x7f);
 #ifdef MARS
-        ds2 = i+1 < sortedcount ? vissprites + (sortedsprites[i+1] & 0xff) : NULL;
+        ds2 = i+1 < sortedcount ? vissprites + (sortedsprites[i+1] & 0x7f) : NULL;
 #endif
 
         R_ClipVisSprite(ds, spropening);
@@ -296,6 +296,9 @@ static void R_DrawPSprites(void)
 void R_Sprites(void)
 {
    int i = 0, count;
+#ifdef MARS
+   __attribute__((aligned(16)))
+#endif
    int sortarr[MAXVISSPRITES * 2];
 
    sortedcount = 0;
