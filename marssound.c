@@ -137,13 +137,10 @@ void S_RestartSounds (void)
 static void S_Spatialize(mobj_t* origin, int *pvol, int *psep)
 {
 	int dist_approx;
-	player_t* player;
 	int dx, dy;
 	int	vol, sep;
 
-	player = &players[consoleplayer];
-
-	if (!origin || origin == player->mo)
+	if (!origin)
 	{
 		vol = sfxvolume;
 		sep = 128;
@@ -151,7 +148,8 @@ static void S_Spatialize(mobj_t* origin, int *pvol, int *psep)
 	else
 	{
 		angle_t angle;
-		mobj_t* listener = player->mo;
+		player_t* player = &players[consoleplayer];
+		mobj_t *listener = player->mo;
 
 		dx = D_abs(origin->x - listener->x);
 		dy = D_abs(origin->y - listener->y);
@@ -212,6 +210,7 @@ void S_StartSound(mobj_t *origin, int sound_id)
 {
 	int vol, sep;
 	sfxinfo_t *sfx;
+	player_t* player = &players[consoleplayer];
 
 	/* Get sound effect data pointer */
 	if (sound_id <= 0 || sound_id >= NUMSFX)
@@ -221,12 +220,19 @@ void S_StartSound(mobj_t *origin, int sound_id)
 	if (sfx->lump < 0)
 		return;
 
+	if (origin == player->mo)
+		origin = NULL;
+
 	/* */
 	/* spatialize */
 	/* */
 	S_Spatialize(origin, &vol, &sep);
 	if (!vol)
 		return; /* too far away */
+
+	// HACK: boost volume for item pickups
+	if (sound_id == sfx_itemup)
+		vol <<= 1;
 
 	uint16_t* p = (uint16_t*)Mars_RB_GetWriteBuf(&soundcmds, 8, false);
 	if (!p)
@@ -385,7 +391,6 @@ static void S_Update(int16_t* buffer)
 	const size_t 
 		xoff = offsetof(mobj_t, x) & ~15, 
 		yoff = offsetof(mobj_t, y) & ~15;
-	const sfxinfo_t* itemup = &S_sfx[sfx_itemup];
 
 	player = &players[consoleplayer];
 
@@ -403,37 +408,32 @@ static void S_Update(int16_t* buffer)
 	for (i = 0; i < SFXCHANNELS; i++)
 	{
 		sfxchannel_t* ch = &sfxchannels[i];
-		int vol, sep;
 
 		if (!ch->data)
 			continue;
 
 		if (ch->origin)
 		{
+			int vol, sep;
+
 			Mars_ClearCacheLines((intptr_t)ch->origin + xoff, 1);
 			Mars_ClearCacheLines((intptr_t)ch->origin + yoff, 1);
+
+			/* */
+			/* spatialize */
+			/* */
+			S_Spatialize(ch->origin, &vol, &sep);
+
+			if (!vol)
+			{
+				// inaudible
+				ch->data = NULL;
+				continue;
+			}
+
+			ch->volume = vol;
+			ch->pan = sep;
 		}
-
-		/* */
-		/* spatialize */
-		/* */
-		S_Spatialize(ch->origin, &vol, &sep);
-
-		if (!vol)
-		{
-			// inaudible
-			ch->data = NULL;
-			continue;
-		}
-
-		// HACK: boost volume for item pickups
-		if (ch->sfx == itemup)
-		{
-			vol <<= 1;
-		}
-
-		ch->volume = vol;
-		ch->pan = sep;
 
 		S_PaintChannel(ch, buffer, MAX_SAMPLES, 64);
 	}
@@ -566,7 +566,7 @@ void Mars_Sec_ReadSoundCmds(void)
 				sfxchannels[i].data = NULL;
 			break;
 		case SNDCMD_STARTSND:
-			S_StartSoundReal((void*)(*(intptr_t*)&p[2]), p[1], p[3]);
+			S_StartSoundReal((void*)(*(intptr_t*)&p[2]), p[1], p[4]);
 			break;
 		}
 
