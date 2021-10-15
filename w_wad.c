@@ -259,14 +259,17 @@ void	*W_CacheLumpNum (int lump, int tag)
 {
 #ifdef MARS
 	void* cache;
+	int len;
 
 	if ((unsigned)lump >= numlumps)
 		I_Error ("W_CacheLumpNum: %i >= numlumps",lump);
 	if (tag != PU_STATIC)
 		I_Error("W_CacheLumpNum: %i tag != PU_STATIC", lump);
 
-	Z_Malloc(W_LumpLength(lump), tag, &cache);
+	len = W_LumpLength(lump);
+	Z_Malloc(len+1, tag, &cache);
 	W_ReadLump(lump, cache);
+	((char *)cache)[len] = '\0';
 
 	return cache;
 #else
@@ -276,8 +279,10 @@ void	*W_CacheLumpNum (int lump, int tag)
 	if (!lumpcache[lump])
 	{	/* read the lump in */
 /*printf ("cache miss on lump %i\n",lump); */
-		Z_Malloc (W_LumpLength (lump), tag, &lumpcache[lump]);
+		len = W_LumpLength(lump);
+		Z_Malloc (len+1, tag, &lumpcache[lump]);
 		W_ReadLump (lump, lumpcache[lump]);
+		((char*)lumpcache[lump])[len] = '\0';
 	}
 	else
 		Z_ChangeTag (lumpcache[lump],tag);
