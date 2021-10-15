@@ -385,6 +385,7 @@ static void S_Update(int16_t* buffer)
 	const size_t 
 		xoff = offsetof(mobj_t, x) & ~15, 
 		yoff = offsetof(mobj_t, y) & ~15;
+	const sfxinfo_t* itemup = &S_sfx[sfx_itemup];
 
 	player = &players[consoleplayer];
 
@@ -423,6 +424,12 @@ static void S_Update(int16_t* buffer)
 			// inaudible
 			ch->data = NULL;
 			continue;
+		}
+
+		// HACK: boost volume for item pickups
+		if (ch->sfx == itemup)
+		{
+			vol <<= 1;
 		}
 
 		ch->volume = vol;
