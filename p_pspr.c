@@ -717,11 +717,11 @@ void A_CockSgun (player_t *player, pspdef_t *psp)
  
 void A_FireCGun (player_t *player, pspdef_t *psp) 
 {
-	S_StartSound (player->mo, sfx_pistol);
-
 	if (!player->ammo[weaponinfo[player->readyweapon].ammo])
 		return;
-		
+
+	S_StartSound(player->mo, sfx_pistol);
+
 	player->ammo[weaponinfo[player->readyweapon].ammo]--;
 
 	P_SetPsprite (player,ps_flash,weaponinfo[player->readyweapon].flashstate
