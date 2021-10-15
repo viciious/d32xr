@@ -516,19 +516,32 @@ void DRAW_Title (void)
 
 /*============================================================================= */
 
+#ifdef MARS
+static char* credits;
+static short creditspage;
+#endif
+
 static void START_Credits (void)
 {
-#ifndef MARS
+#ifdef MARS
+	titlepic = NULL;
+	creditspage = 1;
+	credits = W_CacheLumpNum(gameinfo.creditsPage, PU_STATIC);
+#else
 	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
+	DoubleBufferSetup();
+	titlepic = W_CacheLumpName("credits", PU_STATIC);
 #endif
-	titlepic = W_CacheLumpNum(gameinfo.creditsPage, PU_STATIC);
-	DoubleBufferSetup ();
 }
 
 void STOP_Credits (void)
 {
-	if (titlepic != NULL)
-		Z_Free (titlepic);
+#ifdef MARS
+	if (credits)
+		Z_Free(credits);
+#endif
+	if (titlepic)
+		Z_Free(titlepic);
 }
 
 static int TIC_Credits (void)
@@ -548,10 +561,108 @@ static int TIC_Credits (void)
 	return 0;
 }
 
-static void DRAW_Credits (void)
+static void DRAW_RightString(int x, int y, const char* str)
 {
-	DrawJagobj (titlepic, 0, 0);
-	UpdateBuffer ();
+	int len = mystrlen(str);
+	I_Print8(x - len * 8, y, str);
+}
+
+static void DRAW_CenterString(int y, const char* str)
+{
+	int len = mystrlen(str);
+	I_Print8((320 - len * 8) / 2, y, str);
+}
+
+static void DRAW_LineCmds(char *lines)
+{
+	int y;
+	static const char* dots = "...";
+	int dots_len = mystrlen(dots);
+	int x_right = (320 - dots_len*8) / 2 - 2;
+	int x_left = (320 + dots_len*8) / 2;
+	char* p = lines;
+
+	y = 0;
+	while (1) {
+		char *end = D_strchr(p, '\n');
+		char* str = p, *nextl;
+		char cmd = str[0];
+		char inc = str[1];
+		char bak = 0;
+
+		if (!cmd || !inc)
+			break;
+
+		str += 3;
+		if (end)
+		{
+			nextl = end + 1;
+			if (*(end - 1) == '\r')
+				--end;
+			bak = *end;
+			*end = '\0';
+		}
+		else
+		{
+			nextl = NULL;
+		}
+
+		switch (cmd) {
+		case 'c':
+			DRAW_CenterString(y, str);
+			break;
+		case 'r':
+			DRAW_RightString(x_right, y, str);
+			break;
+		case 'l':
+			I_Print8(x_left, y, str);
+			break;
+		}
+
+		if (inc == 'i')
+		{
+			y++;
+		}
+
+		if (nextl)
+			*end = bak;
+		else
+			break;
+		p = nextl;
+	}
+}
+
+static void DRAW_Credits(void)
+{
+#ifdef MARS
+	I_ClearFrameBuffer();
+
+	if (ticon * 2 >= gameinfo.creditsTime)
+	{
+		if (creditspage != 2)
+		{
+			char name[9];
+
+			D_memcpy(name, W_GetNameForNum(gameinfo.creditsPage), 8);
+			name[7]++;
+			name[8] = '\0';
+
+			int l = W_CheckNumForName(name);
+			if (l >= 0)
+			{
+				Z_Free(credits);
+				credits = W_CacheLumpNum(l, PU_STATIC);
+			}
+			creditspage = 2;
+		}
+	}
+
+	DRAW_LineCmds(credits);
+#else
+	DrawJagobj(titlepic, 0, 0);
+#endif
+
+	UpdateBuffer();
 }
 
 /*============================================================================ */
