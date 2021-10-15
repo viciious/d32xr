@@ -238,11 +238,16 @@ boolean G_CheckSpot (int playernum, mapthing_t *mthing)
 	x = mthing->x << FRACBITS; 
 	y = mthing->y << FRACBITS; 
 	 
-	if (!P_CheckPosition (players[playernum].mo, x, y) ) 
+	// killough 4/2/98: fix bug where P_CheckPosition() uses a non-solid
+	// corpse to detect collisions with other players in DM starts
+	players[playernum].mo->flags |= MF_SOLID;
+	an = P_CheckPosition(players[playernum].mo, x, y);
+	players[playernum].mo->flags &= ~MF_SOLID;
+	if (!an ) 
 		return false; 
  
 	ss = R_PointInSubsector (x,y); 
-	an = ( ANG45 * (mthing->angle/45) ) >> ANGLETOFINESHIFT; 
+	an = ( ANG45 * ((unsigned)mthing->angle/45) ) >> ANGLETOFINESHIFT; 
  
 /* spawn a teleport fog  */
 	mo = P_SpawnMobj (x+20*finecosine(an), y+20*finesine(an), ss->sector->floorheight 
