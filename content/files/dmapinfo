@@ -7,7 +7,7 @@ gameinfo
     titleTime = 540
     titlePage = "title"
     creditsTime = 460
-    creditsPage = "credits"
+    creditsPage = "credits1"
 }
 map "MAP01" "Hangar"
 {

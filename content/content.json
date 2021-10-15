@@ -4157,11 +4157,6 @@
         "name": "TITLE"
     },
     {
-        "compressed": true,
-        "filename": "credits",
-        "name": "CREDITS"
-    },
-    {
         "filename": "stbar",
         "name": "STBAR"
     },
@@ -6887,5 +6882,13 @@
     {
         "filename": "dmapinfo",
         "name": "DMAPINFO"
+    },
+    {
+        "filename": "dcredits1",
+        "name": "CREDITS1"
+    },
+    {
+        "filename": "dcredits2",
+        "name": "CREDITS2"
     }
 ]
