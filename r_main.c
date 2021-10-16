@@ -850,6 +850,9 @@ static void R_RenderPhases2To9(void)
 		R_Cache();
 	t_ref_prep[t_ref_cnt] = I_GetFRTCounter() - t_ref_prep[t_ref_cnt];
 
+	if (players[consoleplayer].automapflags & AF_ACTIVE)
+		return;
+
 	t_ref_segs[t_ref_cnt] = I_GetFRTCounter();
 	R_SegCommands ();
 	t_ref_segs[t_ref_cnt] = I_GetFRTCounter() - t_ref_segs[t_ref_cnt];
