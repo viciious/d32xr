@@ -388,7 +388,7 @@ void AM_Control (player_t *player)
 	}
 	
 	ticbuttons[playernum] &= ~(BT_B | BT_LEFT | BT_RIGHT |
-		BT_UP | BT_DOWN);
+		BT_UP | BT_DOWN | BT_ATTACK);
 }
 
 /*
