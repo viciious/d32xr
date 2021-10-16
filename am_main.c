@@ -40,8 +40,10 @@ int	scaley[MAXSCALES] = {17,18,19,20,21};
 fixed_t	oldplayerx;
 fixed_t oldplayery;
 
+#ifndef MARS
 int	blockx;
 int	blocky;
+#endif
 
 /* CHEATING STUFF */
 typedef enum
@@ -73,7 +75,7 @@ void DrawLine(pixel_t color, int x1, int y1, int x2, int y2) ATTR_OPTIMIZE_SIZE;
 void AM_Start(void)
 {
 #ifdef MARS
-	scale = 2;
+	scale = 1;
 #else
 	scale = 3;
 #endif
@@ -289,8 +291,10 @@ void AM_Control (player_t *player)
 		player->automapflags ^= AF_ACTIVE;
 		player->automapx = player->mo->x;
 		player->automapy = player->mo->y;
+#ifndef MARS
 		blockx = 80;
 		blocky = 90;
+#endif
 	}
 
 	if ( !(player->automapflags & AF_ACTIVE) )
@@ -321,8 +325,11 @@ void AM_Control (player_t *player)
 
 	if (buttons & BT_C)		/* IF 'C' IS HELD DOWN, MOVE AROUND */
 	{
-		ticbuttons[playernum] &= ~BT_C;
-		oldticbuttons[playernum] &= ~BT_C;
+		player->automapx = player->mo->x;
+		player->automapy = player->mo->y;
+
+		ticbuttons[playernum] &= ~(BT_C | configuration[controltype][2] | BT_STRAFE);
+		oldticbuttons[playernum] &= ~(BT_C | configuration[controltype][2] | BT_STRAFE);
 		return;
 	}
 
@@ -388,7 +395,7 @@ void AM_Control (player_t *player)
 	}
 	
 	ticbuttons[playernum] &= ~(BT_B | BT_LEFT | BT_RIGHT |
-		BT_UP | BT_DOWN | BT_ATTACK);
+		BT_UP | BT_DOWN | configuration[controltype][1]);
 }
 
 /*
