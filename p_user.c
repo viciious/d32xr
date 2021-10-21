@@ -328,7 +328,7 @@ void P_BuildMove (player_t *player)
 		}
 		else
 		{
-			if (speed && !(buttons & (BT_UP | BT_DOWN)))
+			if (speed && !(buttons & (BT_UP | BT_DOWN)) && !alwrun)
 			{
 				if (buttons & BT_RIGHT)
 					player->angleturn = ((-fastangleturn[player->turnheld] * vbls) / TICVBLS) << 17;
