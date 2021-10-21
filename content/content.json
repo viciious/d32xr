@@ -6860,6 +6860,10 @@
         "name": "MUS_E3M2"
     },
     {
+        "filename": "VGM/E3M3.vgm",
+        "name": "MUS_E3M3"
+    },
+    {
         "filename": "VGM/E3M8.vgm",
         "name": "MUS_E3M8"
     },
