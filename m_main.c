@@ -86,6 +86,8 @@ static VINT saveslotskill;
 static VINT *mapnumbers;
 static VINT mapcount;
 
+static char *mapname;
+
 static boolean startup;
 
 extern VINT	uchar;
@@ -281,6 +283,11 @@ void M_Stop (void)
 	if (mapnumbers != NULL)
 		Z_Free(mapnumbers);
 
+	if (mapname != NULL)
+		Z_Free(mapname);
+
+	mapname = NULL;
+
 #ifndef MARS
 	WriteEEProm ();
 #endif
@@ -301,6 +308,7 @@ int M_Ticker (void)
 	int		buttons;
 	char	newframe = 0;
 	mainscreen_t* menuscr;
+	int		oldplayermap;
 
 	if (screenpos == ms_none)
 	{
@@ -407,6 +415,7 @@ int M_Ticker (void)
 	}
 
 /* check for movement */
+	oldplayermap = playermap;
 	if (! (buttons & (BT_UP|BT_DOWN|BT_LEFT|BT_RIGHT) ) )
 		movecount = 0;		/* move immediately on next press */
 	else
@@ -520,9 +529,48 @@ int M_Ticker (void)
 			S_StartSound(NULL, sound);
 	}
 
+	if (playermap != oldplayermap)
+	{
+		/* a long map name can spill into the screen border */
+		clearscreen = 2;
+	}
+
 	return ga_nothing;
 }
 
+
+/*
+=================
+=
+= M_MapName
+=
+=================
+*/
+
+static char* M_MapName(VINT mapnum)
+{
+	int curmapnum = 0;
+	dmapinfo_t mi;
+	char buf[64];
+
+	if (mapname)
+		curmapnum = *(VINT*)mapname;
+	if (curmapnum == mapnum)
+		return mapname + sizeof(VINT);
+
+	if (mapname)
+		Z_Free(mapname);
+
+	G_FindMapinfo(G_LumpNumForMapNum(mapnum), &mi);
+	D_snprintf(buf, sizeof(buf), "%s", mi.name);
+	buf[sizeof(buf) - 1] = '\0';
+	Z_Free(mi.data);
+
+	mapname = Z_Malloc(mystrlen(buf) + 1 + sizeof(VINT), PU_STATIC, 0);
+	*(VINT*)mapname = mapnum;
+	D_memcpy(mapname + sizeof(VINT), buf, mystrlen(buf) + 1);
+	return mapname + sizeof(VINT);
+}
 
 /*
 =================
@@ -568,6 +616,8 @@ void M_Drawer (void)
 	if (screenpos == ms_new)
 	{
 		mainitem_t* item;
+		const char* mapname = M_MapName(mapnumber);
+		int mapnamelen = mystrlen(mapname);
 
 		item = &mainitem[mi_level];
 #ifndef MARS
@@ -583,11 +633,13 @@ void M_Drawer (void)
 		if (leveltens)
 		{
 			DrawJagobjLump(numslump + leveltens,
-				item->x + 10, item->y + 20 + 2, NULL, NULL);
-			DrawJagobjLump(numslump + levelones, item->x + 24, item->y + 20 + 2, NULL, NULL);
+				item->x + 80, item->y + 2, NULL, NULL);
+			DrawJagobjLump(numslump + levelones, item->x + 94, item->y + 2, NULL, NULL);
 		}
 		else
-			DrawJagobjLump(numslump + levelones, item->x + 10, item->y + 20 + 2, NULL, NULL);
+			DrawJagobjLump(numslump + levelones, item->x + 80, item->y + 2, NULL, NULL);
+
+		print((320 - (mapnamelen * 14)) >> 1, item->y + 20 + 2, mapname);
 
 		item = &mainitem[mi_difficulty];
 #ifndef MARS
@@ -612,12 +664,15 @@ void M_Drawer (void)
 				DrawJagobjLump(numslump + saveslot % 10, item->x + 70, item->y + 20 + 1, NULL, NULL);
 			}
 
-
 			if (saveslotmap != -1)
 			{
+				const char* mapname = M_MapName(saveslotmap);
+				int mapnamelen = mystrlen(mapname);
+
 				leveltens = saveslotmap / 10, levelones = saveslotmap % 10;
 
 				print(item->x + 10, item->y + 40 + 2, "Area");
+
 				if (leveltens)
 				{
 					DrawJagobjLump(numslump + leveltens,
@@ -626,6 +681,8 @@ void M_Drawer (void)
 				}
 				else
 					DrawJagobjLump(numslump + levelones, item->x + 80, item->y + 40 + 3, NULL, NULL);
+
+				print((320 - (mapnamelen * 14)) >> 1, item->y + 60 + 3, mapname);
 			}
 			else
 			{
@@ -634,8 +691,8 @@ void M_Drawer (void)
 			if (saveslotskill != -1)
 			{
 				/* draw difficulty information */
-				print(item->x + 10, item->y + 60 + 2, "Difficulty");
-				DrawJagobjLump(m_skilllump + saveslotskill, item->x + 10, item->y + 80 + 2, NULL, NULL);
+				print(item->x + 10, item->y + 80 + 2, "Difficulty");
+				DrawJagobjLump(m_skilllump + saveslotskill, item->x + 10, item->y + 100 + 2, NULL, NULL);
 			}
 		}
 		else
