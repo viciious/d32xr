@@ -755,20 +755,23 @@ ticphase = 26;
 /* */
 /* counters */
 /* */
-	if (player->powers[pw_strength])
-		player->powers[pw_strength]++;	/* strength counts up to diminish fade */
-		
-	if (player->powers[pw_invulnerability])
-		player->powers[pw_invulnerability]--;
-		
-	if (player->powers[pw_ironfeet])
-		player->powers[pw_ironfeet]--;
-		
-	if (player->damagecount)
-		player->damagecount--;
-		
-	if (player->bonuscount)
-		player->bonuscount--;
+	if (gametic != prevgametic)
+	{
+		if (player->powers[pw_strength])
+			player->powers[pw_strength]++;	/* strength counts up to diminish fade */
+
+		if (player->powers[pw_invulnerability])
+			player->powers[pw_invulnerability]--;
+
+		if (player->powers[pw_ironfeet])
+			player->powers[pw_ironfeet]--;
+
+		if (player->damagecount)
+			player->damagecount--;
+
+		if (player->bonuscount)
+			player->bonuscount--;
+	}
 }
 
 void P_RestoreResp(player_t* p)
