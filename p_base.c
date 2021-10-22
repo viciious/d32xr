@@ -429,6 +429,12 @@ void P_ZMovement(mobj_t *mo)
    // clip movement
    if(mo->z <= mo->floorz)
    {
+      if (mo->flags & MF_SKULLFLY)
+      {
+          // the skull slammed into something
+          mo->momz = -mo->momz;
+      }
+
       if(mo->momz < 0)
          mo->momz = 0;
       mo->z = mo->floorz; // hit the floor
@@ -453,6 +459,13 @@ void P_ZMovement(mobj_t *mo)
       if(mo->momz > 0)
          mo->momz = 0;
       mo->z = mo->ceilingz - mo->height; // hit the ceiling
+
+      if (mo->flags & MF_SKULLFLY)
+      {
+          // the skull slammed into something
+          mo->momz = -mo->momz;
+      }
+
       if(mo->flags & MF_MISSILE)
          mo->latecall = P_ExplodeMissile;
    }
