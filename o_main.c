@@ -33,6 +33,7 @@ typedef enum
 
 	mi_controltype,
 	mi_alwaysrun,
+	mi_strafebtns,
 
 	NUMMENUITEMS
 } menupos_t;
@@ -45,7 +46,7 @@ typedef struct
 	char	maxval;
 } slider_t;
 
-static slider_t slider[5];
+static slider_t slider[4];
 
 typedef struct
 {
@@ -207,9 +208,10 @@ void O_Init (void)
 	D_strncpy(menuitem[mi_alwaysrun].name, "Always run", 10);
 	menuitem[mi_alwaysrun].x = 74;
 	menuitem[mi_alwaysrun].y = 116;
-	menuitem[mi_alwaysrun].slider = &slider[4];
-	slider[4].maxval = 1;
-	slider[4].curval = alwaysrun;
+
+	D_strncpy(menuitem[mi_strafebtns].name, "LR Strafe", 10);
+	menuitem[mi_strafebtns].x = 74;
+	menuitem[mi_strafebtns].y = 136;
 
 
 	D_strncpy(menuscreen[ms_main].name, "Options", 7);
@@ -226,7 +228,7 @@ void O_Init (void)
 
 	D_strncpy(menuscreen[ms_controls].name, "Controls", 8);
 	menuscreen[ms_controls].firstitem = mi_controltype;
-	menuscreen[ms_controls].numitems = 2;
+	menuscreen[ms_controls].numitems = mi_strafebtns - mi_controltype + 1;
 }
 
 /*
@@ -425,7 +427,9 @@ exit:
 				ticsperframe = MAXTICSPERFRAME - slider->curval;
 				break;
 			case mi_alwaysrun:
-				alwaysrun = slider->curval;
+				break;
+			case mi_strafebtns:
+				strafebtns = slider->curval;
 				break;
 			default:
 				break;
@@ -465,6 +469,15 @@ exit:
 						else
 							sound = sfx_stnmov;
 						break;
+					case mi_alwaysrun:
+						alwaysrun++;
+						if (alwaysrun > 1) alwaysrun = 1;
+						break;
+					case mi_strafebtns:
+						strafebtns++;
+						if (strafebtns > 2) strafebtns = 1;
+						break;
+
 					}
 				}
 				if (buttons & BT_LEFT)
@@ -476,6 +489,14 @@ exit:
 							controltype = 0;
 						else
 							sound = sfx_stnmov;
+						break;
+					case mi_alwaysrun:
+						alwaysrun--;
+						if (alwaysrun < 0) alwaysrun = 0;
+						break;
+					case mi_strafebtns:
+						strafebtns--;
+						if (strafebtns < 0) strafebtns = 0;
 						break;
 					}
 				}
@@ -567,7 +588,11 @@ void O_Drawer (void)
 		print(items[0].x + 10, items[0].y + 20, "A");
 		print(items[0].x + 10, items[0].y + 40, "B");
 		print(items[0].x + 10, items[0].y + 60, "C");
+
 		O_DrawControl();
+
+		print(menuitem[mi_alwaysrun].x + 160, menuitem[mi_alwaysrun].y, alwaysrun ? "ON" : "OFF");
+		print(menuitem[mi_strafebtns].x + 160, menuitem[mi_strafebtns].y, strafebtns == 1 ? "YZ" : (strafebtns == 2 ? "ZC" : "OFF"));
 	}
 
 	if (screenpos == ms_audio)

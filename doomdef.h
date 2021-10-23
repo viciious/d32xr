@@ -987,6 +987,9 @@ enum
 	BT_PWEAPN		= 0x800,
 	BT_NWEAPN		= 0x1000,
 
+	BT_STRAFELEFT	= 0x2000,
+	BT_STRAFERIGHT	= 0x4000,
+
 	// hardware keys, which are never transmitted
 	// to the other peer over network
 	BT_A			= 0x10000,
@@ -1019,6 +1022,7 @@ typedef enum
 /* strafe and use should be set to the same thing */
 extern unsigned configuration[NUMCONTROLOPTIONS][3];
 extern	VINT	controltype;				/* 0 to 5 */
+extern	VINT	strafebtns;
 extern	VINT	alwaysrun;
 
 extern	VINT	sfxvolume, musicvolume;		/* range from 0 to 255 */
@@ -1111,7 +1115,7 @@ extern	int		vblsinframe[MAXPLAYERS];		/* range from 4 to 8 */
 extern	int		ticsperframe;		/* 2 - 4 */
 
 extern	boolean	spr_rotations;
-extern int debugmode;
+extern VINT debugmode;
 extern char clearscreen;
 
 void I_InitMenuFire(void) ATTR_OPTIMIZE_SIZE;

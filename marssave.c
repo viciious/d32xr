@@ -55,6 +55,7 @@ typedef struct __attribute((packed))
 	int8_t musictype;
 	int8_t ticsperframe;
 	int8_t alwaysrun;
+	int8_t strafebtns;
 } saveopts_t;
 
 static char saveslotguard[SRAM_SLOTSIZE - sizeof(savegame_t)] __attribute__((unused));
@@ -185,6 +186,7 @@ static void SaveOptions(void)
 	so.musictype = musictype;
 	so.ticsperframe = ticsperframe;
 	so.alwaysrun = alwaysrun;
+	so.strafebtns = strafebtns;
 
 	Mars_StopSoundMixer();
 
@@ -222,6 +224,8 @@ static void ReadOptions(void)
 		so.ticsperframe = MINTICSPERFRAME;
 	if (so.alwaysrun < 0 || so.alwaysrun > 1)
 		so.alwaysrun = 0;
+	if (so.strafebtns < 0 || so.strafebtns > 2)
+		so.strafebtns = 0;
 
 	sfxvolume = so.sfxvolume;
 	musicvolume = so.musicvolume;
@@ -231,6 +235,7 @@ static void ReadOptions(void)
 	musictype = so.musictype;
 	ticsperframe = so.ticsperframe;
 	alwaysrun = so.alwaysrun;
+	strafebtns = so.strafebtns;
 }
 
 void ClearEEProm(void)
@@ -255,6 +260,7 @@ void ReadEEProm(void)
 	viewportNum = 0;
 	musictype = mustype_fm;
 	alwaysrun = 0;
+	strafebtns = 0;
 
 	ReadOptions();
 }
