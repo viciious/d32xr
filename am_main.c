@@ -328,8 +328,8 @@ void AM_Control (player_t *player)
 		player->automapx = player->mo->x;
 		player->automapy = player->mo->y;
 
-		ticbuttons[playernum] &= ~(BT_C | configuration[controltype][2] | BT_STRAFE);
-		oldticbuttons[playernum] &= ~(BT_C | configuration[controltype][2] | BT_STRAFE);
+		ticbuttons[playernum] &= ~(BT_C | configuration[controltype][2] | BT_STRAFE | BT_STRAFELEFT | BT_STRAFERIGHT);
+		oldticbuttons[playernum] &= ~(BT_C | configuration[controltype][2] | BT_STRAFE | BT_STRAFELEFT | BT_STRAFERIGHT);
 		return;
 	}
 
