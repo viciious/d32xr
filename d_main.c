@@ -529,9 +529,9 @@ static void START_Credits (void)
 	credits = W_CacheLumpNum(gameinfo.creditsPage, PU_STATIC);
 #else
 	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
-	DoubleBufferSetup();
 	titlepic = W_CacheLumpName("credits", PU_STATIC);
 #endif
+	DoubleBufferSetup();
 }
 
 void STOP_Credits (void)
@@ -557,6 +557,28 @@ static int TIC_Credits (void)
 		return ga_exitdemo;
 	if ( (ticbuttons[0] & BT_START) && !(oldticbuttons[0] & BT_START) )
 		return ga_exitdemo;
+
+	if (ticon * 2 >= gameinfo.creditsTime)
+	{
+		if (creditspage != 2)
+		{
+			char name[9];
+
+			D_memcpy(name, W_GetNameForNum(gameinfo.creditsPage), 8);
+			name[7]+= creditspage;
+			name[8] = '\0';
+
+			int l = W_CheckNumForName(name);
+			if (l >= 0)
+			{
+				Z_Free(credits);
+				credits = W_CacheLumpNum(l, PU_STATIC);
+			}
+			creditspage = 2;
+
+			DoubleBufferSetup();
+		}
+	}
 
 	return 0;
 }
@@ -635,28 +657,6 @@ static void DRAW_LineCmds(char *lines)
 static void DRAW_Credits(void)
 {
 #ifdef MARS
-	I_ClearFrameBuffer();
-
-	if (ticon * 2 >= gameinfo.creditsTime)
-	{
-		if (creditspage != 2)
-		{
-			char name[9];
-
-			D_memcpy(name, W_GetNameForNum(gameinfo.creditsPage), 8);
-			name[7]++;
-			name[8] = '\0';
-
-			int l = W_CheckNumForName(name);
-			if (l >= 0)
-			{
-				Z_Free(credits);
-				credits = W_CacheLumpNum(l, PU_STATIC);
-			}
-			creditspage = 2;
-		}
-	}
-
 	DRAW_LineCmds(credits);
 #else
 	DrawJagobj(titlepic, 0, 0);
@@ -831,7 +831,7 @@ D_printf ("DM_Main\n");
 
 	while (1)
 	{
-		RunTitle ();
+		RunTitle();
 #ifdef MARS
 		RunMenu();
 #else
