@@ -239,7 +239,6 @@ void O_Init (void)
 void O_Control (player_t *player)
 {
 	int		buttons, oldbuttons;
-	char	newframe = false;
 	menuscreen_t* menuscr;
 
 	if (cursorframe == -1)

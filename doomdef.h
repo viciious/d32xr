@@ -1115,7 +1115,7 @@ extern	int		vblsinframe[MAXPLAYERS];		/* range from 4 to 8 */
 extern	int		ticsperframe;		/* 2 - 4 */
 
 extern	boolean	spr_rotations;
-extern VINT debugmode;
+extern int debugmode;
 extern char clearscreen;
 
 void I_InitMenuFire(void) ATTR_OPTIMIZE_SIZE;

@@ -44,7 +44,7 @@ int		lastticcount = 0;
 int		lasttics = 0;
 static int fpscount = 0;
 
-VINT 	debugmode = 0;
+int 	debugmode = 0;
 VINT	strafebtns = 0;
 
 extern int 	cy;
