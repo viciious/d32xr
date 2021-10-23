@@ -167,7 +167,7 @@ extern "C" {
 
 /* global functions in crt0.s */
 extern int SetSH2SR(int level);
-extern void fast_memcpy(void* dst, void* src, int len);
+extern void fast_memcpy(void* dst, const void* src, int len);
 extern void CacheControl(int mode);
 
 #ifdef __cplusplus
