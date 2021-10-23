@@ -4,12 +4,7 @@
 #include "p_local.h"
 #include "st_main.h"
 
-#ifdef MARS
-#define MOVEWAIT	2
-#else
-#define MOVEWAIT	5
-#endif
-
+#define MOVEWAIT		TICVBLS*8
 #define CURSORX		50
 #define ITEMSPACE	40
 #define SLIDEWIDTH 90
@@ -59,7 +54,8 @@ typedef struct
 
 static menuitem_t menuitem[NUMMENUITEMS];
 
-static VINT	cursorframe, cursorcount;
+static VINT	cursorframe;
+static VINT cursordelay;
 static VINT	movecount;
 
 static VINT	uchar;
@@ -132,8 +128,8 @@ void O_Init (void)
 
 /*	initialize variables */
 
-	cursorcount = 0;
-	cursorframe = 0;
+	cursorframe = -1;
+	cursordelay = MOVEWAIT;
 	cursorpos = 0;
 	screenpos = ms_none;
 
@@ -246,6 +242,11 @@ void O_Control (player_t *player)
 	char	newframe = false;
 	menuscreen_t* menuscr;
 
+	if (cursorframe == -1)
+	{
+		cursorframe = 0;
+		cursordelay = MOVEWAIT;
+	}
 	if (screenpos == ms_none)
 	{
 		screenpos = ms_main;
@@ -318,15 +319,22 @@ exit:
 	}
 
 /* animate skull */
-	if (++cursorcount == TICVBLS)
+	if (gametic != prevgametic && (gametic&3) == 0)
 	{
 		cursorframe ^= 1;
-		cursorcount = 0;
-		newframe = true;
 	}
 
-	if (!newframe)
+	cursordelay -= vblsinframe[0];
+	if (cursordelay > 0)
 		return;
+
+	cursordelay = MOVEWAIT;
+	buttons = ticrealbuttons;
+	if (buttons == 0)
+	{
+		cursordelay = 0;
+		return;
+	}
 
 	if (buttons & (BT_A|BT_LMBTN))
 	{
@@ -436,8 +444,7 @@ exit:
 			}
 		}
 
-		if (movecount == MOVEWAIT)
-			movecount = 0;		/* repeat move */
+		movecount = 0;		/* repeat move */
 
 		if (++movecount == 1)
 		{

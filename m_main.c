@@ -2,7 +2,7 @@
 
 #include "doomdef.h"
 
-#define MOVEWAIT		2
+#define MOVEWAIT		TICVBLS*8
 #define CURSORX		50
 #define STARTY			40
 #define CURSORY(y)	(STARTY*(y))
@@ -68,7 +68,8 @@ static VINT m_skull1lump, m_skull2lump;
 static VINT m_skilllump;
 static VINT numslump;
 
-static VINT	cursorframe, cursorcount;
+static VINT	cursorframe;
+static VINT cursordelay;
 static VINT	movecount;
 static VINT	playermap;
 
@@ -178,9 +179,10 @@ void M_Start2 (boolean startup_)
 
 	uchar = W_CheckNumForName("CHAR_065");
 
-	cursorcount = 0;
-	cursorframe = 0;
+	cursorframe = -1;
 	cursorpos = 0;
+	cursordelay = MOVEWAIT;
+
 	screenpos = startup ? ms_main : ms_none;
 	playerskill = startskill;
 	playermap = 1;
@@ -306,10 +308,14 @@ void M_Stop (void)
 int M_Ticker (void)
 {
 	int		buttons;
-	char	newframe = 0;
 	mainscreen_t* menuscr;
 	int		oldplayermap;
 
+	if (cursorframe == -1)
+	{
+		cursorframe = 0;
+		cursordelay = MOVEWAIT;
+	}
 	if (screenpos == ms_none)
 	{
 		screenpos = ms_main;
@@ -320,14 +326,10 @@ int M_Ticker (void)
 	if (!mapnumbers)
 		return ga_startnew;
 
-	buttons = ticrealbuttons;
-
 /* animate skull */
-	if (++cursorcount == TICVBLS)
+	if (gametic != prevgametic && (gametic&3) == 0)
 	{
 		cursorframe ^= 1;
-		cursorcount = 0;
-		newframe = 1;
 	}
 
 	if (prevsaveslot != saveslot) {
@@ -337,12 +339,20 @@ int M_Ticker (void)
 		GetSaveInfo(saveslot, &saveslotmap, &saveslotskill);
 	}
 
-	if (!newframe)
+	cursordelay -= vblsinframe[0];
+	if (cursordelay > 0)
 		return ga_nothing;
-	newframe = 0;
+
+	cursordelay = MOVEWAIT;
+	buttons = ticrealbuttons;
+	if (buttons == 0)
+	{
+		cursordelay = 0;
+		return ga_nothing;
+	}
 
 	/* exit menu if button press */
-	if (ticon > 10 && (buttons & (BT_A | BT_LMBTN | BT_START)))
+	if (buttons & (BT_A | BT_LMBTN | BT_START))
 	{
 		if (screenpos == ms_new)
 		{
@@ -423,8 +433,7 @@ int M_Ticker (void)
 		int sound = sfx_None;
 		int itemno = menuscr->firstitem + cursorpos;
 
-		if (movecount == MOVEWAIT)
-			movecount = 0;		/* slower everything else */
+		movecount = 0;		/* repeat move */
 
 		if (++movecount == 1)
 		{
