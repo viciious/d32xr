@@ -442,7 +442,7 @@ int M_Ticker (void)
 				cursorpos++;
 				if (cursorpos == menuscr->numitems)
 					cursorpos = 0;
-				sound = sfx_pstop;
+				sound = sfx_pistol;
 			}
 		
 			if (buttons & BT_UP)
@@ -450,7 +450,7 @@ int M_Ticker (void)
 				cursorpos--;
 				if (cursorpos == -1)
 					cursorpos = menuscr->numitems-1;
-				sound = sfx_pstop;
+				sound = sfx_pistol;
 			}
 
 			switch (itemno)
