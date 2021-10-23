@@ -470,7 +470,7 @@ int M_Ticker (void)
 					if (buttons & BT_RIGHT)
 					{			
 						playermap++;
-						if (mapcount == playermap || mapnumbers[playermap-1] == maxlevel+1)
+						if (playermap == mapcount + 1)
 							playermap--;
 						else
 							sound = sfx_stnmov;
