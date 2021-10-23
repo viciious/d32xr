@@ -24,7 +24,6 @@ typedef enum
 
 	mi_resolution,
 	mi_detailmode,
-	mi_framerate,
 
 	mi_controltype,
 	mi_alwaysrun,
@@ -41,7 +40,7 @@ typedef struct
 	char	maxval;
 } slider_t;
 
-static slider_t slider[4];
+static slider_t slider[3];
 
 typedef struct
 {
@@ -188,13 +187,6 @@ void O_Init (void)
 	slider[2].maxval = MAXDETAILMODES;
 	slider[2].curval = detailmode + 1;
 
-	D_strncpy(menuitem[mi_framerate].name, "Framerate", 15);
-	menuitem[mi_framerate].x = 74;
-	menuitem[mi_framerate].y = 116;
-	menuitem[mi_framerate].slider = &slider[3];
-	slider[3].maxval = MAXTICSPERFRAME - MINTICSPERFRAME;
-	slider[3].curval = MAXTICSPERFRAME - ticsperframe;
-
 
 	D_strncpy(menuitem[mi_controltype].name, "Gamepad", 7);
 	menuitem[mi_controltype].x = 74;
@@ -220,7 +212,7 @@ void O_Init (void)
 
 	D_strncpy(menuscreen[ms_video].name, "Video", 6);
 	menuscreen[ms_video].firstitem = mi_resolution;
-	menuscreen[ms_video].numitems = mi_framerate - mi_resolution + 1;
+	menuscreen[ms_video].numitems = mi_detailmode - mi_resolution + 1;
 
 	D_strncpy(menuscreen[ms_controls].name, "Controls", 8);
 	menuscreen[ms_controls].firstitem = mi_controltype;
@@ -429,9 +421,6 @@ exit:
 				break;
 			case mi_detailmode:
 				R_SetDetailMode(slider->curval - 1);
-				break;
-			case mi_framerate:
-				ticsperframe = MAXTICSPERFRAME - slider->curval;
 				break;
 			case mi_alwaysrun:
 				break;

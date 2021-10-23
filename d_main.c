@@ -8,7 +8,7 @@ VINT		alwaysrun = 0;
 int			gamevbls;			/* may not really be vbls in multiplayer */
 int			vblsinframe[MAXPLAYERS];		/* range from ticrate to ticrate*2 */
 
-int			ticsperframe = MINTICSPERFRAME;
+VINT		ticsperframe = MINTICSPERFRAME;
 
 int			maxlevel;			/* highest level selectable in menu (1-25) */
 jagobj_t	*backgroundpic;

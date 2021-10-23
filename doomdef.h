@@ -1112,7 +1112,7 @@ extern	int		vblsinframe[MAXPLAYERS];		/* range from 4 to 8 */
 
 #define MINTICSPERFRAME		2
 #define MAXTICSPERFRAME		4
-extern	int		ticsperframe;		/* 2 - 4 */
+extern	VINT	ticsperframe;		/* 2 - 4 */
 
 extern	boolean	spr_rotations;
 extern int debugmode;

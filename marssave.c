@@ -220,8 +220,6 @@ static void ReadOptions(void)
 		so.musictype = mustype_fm;
 	if (so.musictype == mustype_cd && !mars_cd_ok)
 		so.musictype = mustype_fm;
-	if (so.ticsperframe < MINTICSPERFRAME || so.ticsperframe > MAXTICSPERFRAME)
-		so.ticsperframe = MINTICSPERFRAME;
 	if (so.alwaysrun < 0 || so.alwaysrun > 1)
 		so.alwaysrun = 0;
 	if (so.strafebtns < 0 || so.strafebtns > 2)
@@ -233,7 +231,7 @@ static void ReadOptions(void)
 	detailmode = so.detailmode;
 	viewportNum = so.viewport;
 	musictype = so.musictype;
-	ticsperframe = so.ticsperframe;
+	ticsperframe = MINTICSPERFRAME;
 	alwaysrun = so.alwaysrun;
 	strafebtns = so.strafebtns;
 }
@@ -261,6 +259,7 @@ void ReadEEProm(void)
 	musictype = mustype_fm;
 	alwaysrun = 0;
 	strafebtns = 0;
+	ticsperframe = MINTICSPERFRAME;
 
 	ReadOptions();
 }
