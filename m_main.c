@@ -643,11 +643,11 @@ void M_Drawer (void)
 		if (leveltens)
 		{
 			DrawJagobjLump(numslump + leveltens,
-				item->x + 80, item->y + 2, NULL, NULL);
-			DrawJagobjLump(numslump + levelones, item->x + 94, item->y + 2, NULL, NULL);
+				item->x + 70, item->y + 2, NULL, NULL);
+			DrawJagobjLump(numslump + levelones, item->x + 84, item->y + 2, NULL, NULL);
 		}
 		else
-			DrawJagobjLump(numslump + levelones, item->x + 80, item->y + 2, NULL, NULL);
+			DrawJagobjLump(numslump + levelones, item->x + 70, item->y + 2, NULL, NULL);
 
 		print((320 - (mapnamelen * 14)) >> 1, item->y + 20 + 2, mapname);
 
