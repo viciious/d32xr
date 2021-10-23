@@ -139,8 +139,9 @@ static void S_Spatialize(mobj_t* origin, int *pvol, int *psep)
 	int dist_approx;
 	int dx, dy;
 	int	vol, sep;
+	player_t* player = &players[consoleplayer];
 
-	if (!origin)
+	if (!origin || origin == player->mo)
 	{
 		vol = sfxvolume;
 		sep = 128;
@@ -148,7 +149,6 @@ static void S_Spatialize(mobj_t* origin, int *pvol, int *psep)
 	else
 	{
 		angle_t angle;
-		player_t* player = &players[consoleplayer];
 		mobj_t *listener = player->mo;
 
 		dx = D_abs(origin->x - listener->x);
@@ -210,7 +210,6 @@ void S_StartSound(mobj_t *origin, int sound_id)
 {
 	int vol, sep;
 	sfxinfo_t *sfx;
-	player_t* player = &players[consoleplayer];
 
 	/* Get sound effect data pointer */
 	if (sound_id <= 0 || sound_id >= NUMSFX)
@@ -219,9 +218,6 @@ void S_StartSound(mobj_t *origin, int sound_id)
 	sfx = &S_sfx[sound_id];
 	if (sfx->lump < 0)
 		return;
-
-	if (origin == player->mo)
-		origin = NULL;
 
 	/* */
 	/* spatialize */
