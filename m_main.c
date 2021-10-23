@@ -2,7 +2,7 @@
 
 #include "doomdef.h"
 
-#define MOVEWAIT		TICVBLS*8
+#define MOVEWAIT		TICVBLS*6
 #define CURSORX		50
 #define STARTY			40
 #define CURSORY(y)	(STARTY*(y))
@@ -314,7 +314,7 @@ int M_Ticker (void)
 	if (cursorframe == -1)
 	{
 		cursorframe = 0;
-		cursordelay = MOVEWAIT;
+		cursordelay = MOVEWAIT*2;
 	}
 	if (screenpos == ms_none)
 	{
@@ -542,6 +542,7 @@ int M_Ticker (void)
 	{
 		/* a long map name can spill into the screen border */
 		clearscreen = 2;
+		oldplayermap = playermap;
 	}
 
 	return ga_nothing;

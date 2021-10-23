@@ -4,7 +4,7 @@
 #include "p_local.h"
 #include "st_main.h"
 
-#define MOVEWAIT		TICVBLS*8
+#define MOVEWAIT		TICVBLS*6
 #define CURSORX		50
 #define ITEMSPACE	40
 #define SLIDEWIDTH 90
@@ -245,7 +245,7 @@ void O_Control (player_t *player)
 	if (cursorframe == -1)
 	{
 		cursorframe = 0;
-		cursordelay = MOVEWAIT;
+		cursordelay = MOVEWAIT*2;
 	}
 	if (screenpos == ms_none)
 	{
