@@ -480,7 +480,7 @@ int M_Ticker (void)
 					{			
 						playermap++;
 						if (playermap == mapcount + 1)
-							playermap--;
+							playermap = 1;
 						else
 							sound = sfx_stnmov;
 					}
@@ -488,7 +488,7 @@ int M_Ticker (void)
 					{
 						playermap--;
 						if(playermap == 0)
-							playermap++;
+							playermap = mapcount;
 						else
 							sound = sfx_stnmov;
 					}
