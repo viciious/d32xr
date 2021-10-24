@@ -278,14 +278,14 @@ void P_BuildMove (player_t *player)
 			player->forwardmove = player->sidemove = 0;
 	
 			if (buttons & BT_RIGHT) 
-				player->sidemove = (sidemove[speed] * vbls) / TICVBLS;
+				player->sidemove += (sidemove[speed] * vbls) / TICVBLS;
 			if (buttons & BT_LEFT) 
-				player->sidemove = (-sidemove[speed] * vbls) / TICVBLS;
+				player->sidemove += (-sidemove[speed] * vbls) / TICVBLS;
  
 			if (buttons & BT_UP) 
-				player->forwardmove = (forwardmove[speed] * vbls) / TICVBLS;
+				player->forwardmove += (forwardmove[speed] * vbls) / TICVBLS;
 			if (buttons & BT_DOWN) 
-				player->forwardmove = (-forwardmove[speed] * vbls) / TICVBLS;
+				player->forwardmove += (-forwardmove[speed] * vbls) / TICVBLS;
 		}
 	}
 	else
@@ -310,9 +310,9 @@ void P_BuildMove (player_t *player)
 		if (strafebtns)
 		{
 			if (buttons & BT_STRAFERIGHT)
-				player->sidemove = (sidemove[speed] * vbls) / TICVBLS;
+				player->sidemove += (sidemove[speed] * vbls) / TICVBLS;
 			if (buttons & BT_STRAFELEFT)
-				player->sidemove = (-sidemove[speed] * vbls) / TICVBLS;
+				player->sidemove += (-sidemove[speed] * vbls) / TICVBLS;
 			goto turn;
 		}
 		else
@@ -322,9 +322,9 @@ void P_BuildMove (player_t *player)
 			if (strafe)
 			{
 				if (buttons & BT_RIGHT)
-					player->sidemove = (sidemove[speed] * vbls) / TICVBLS;
+					player->sidemove += (sidemove[speed] * vbls) / TICVBLS;
 				if (buttons & BT_LEFT)
-					player->sidemove = (-sidemove[speed] * vbls) / TICVBLS;
+					player->sidemove += (-sidemove[speed] * vbls) / TICVBLS;
 			}
 			else
 			{
@@ -347,9 +347,9 @@ turn:
 		}
 
 		if (buttons & BT_UP)
-			player->forwardmove = (forwardmove[speed] * vbls) / TICVBLS;
+			player->forwardmove += (forwardmove[speed] * vbls) / TICVBLS;
 		if (buttons & BT_DOWN)
-			player->forwardmove = (-forwardmove[speed] * vbls) / TICVBLS;
+			player->forwardmove += (-forwardmove[speed] * vbls) / TICVBLS;
 	}
 
 /* */
