@@ -28,23 +28,25 @@
 
 #endif
 
-int	blink = 0;
-int	pause;
+static	VINT	blink = 0;
+static	VINT	pause;
 #define MAXSCALES	5
-int	scale;
-int	scalex[MAXSCALES] = {18,19,20,21,22};
-int	scaley[MAXSCALES] = {17,18,19,20,21};
+static	VINT	scale;
+static	VINT	scalex[MAXSCALES] = {18,19,20,21,22};
+static	VINT	scaley[MAXSCALES] = {17,18,19,20,21};
+static	VINT	amcurmap = -1;
 #define NOSELENGTH	0x200000		/* PLAYER'S TRIANGLE */
 #define MOBJLENGTH	0x100000
 		
-fixed_t	oldplayerx;
-fixed_t oldplayery;
+static	fixed_t	oldplayerx;
+static	fixed_t oldplayery;
 
 #ifndef MARS
 int	blockx;
 int	blocky;
 #endif
 
+#ifdef JAGUAR
 /* CHEATING STUFF */
 typedef enum
 {
@@ -53,7 +55,6 @@ typedef enum
 	ch_maxcheats
 } cheat_e;
 
-#ifndef MARS
 const char cheatstrings[][11] =	/* order should mirror cheat_e */
 {
 	"8002545465",		/* allmap cheat */
@@ -61,9 +62,12 @@ const char cheatstrings[][11] =	/* order should mirror cheat_e */
 };
 
 char currentcheat[11]="0000000000";
-#endif
 int	showAllThings;		/* CHEAT VARS */
 int showAllLines;
+#else
+#define showAllThings 0
+#define showAllLines 0
+#endif
 
 void DrawLine(pixel_t color, int x1, int y1, int x2, int y2) ATTR_OPTIMIZE_SIZE;
 
@@ -74,12 +78,19 @@ void DrawLine(pixel_t color, int x1, int y1, int x2, int y2) ATTR_OPTIMIZE_SIZE;
 /*================================================================= */
 void AM_Start(void)
 {
+	if (amcurmap != gamemapinfo.mapNumber)
+	{
 #ifdef MARS
-	scale = 1;
+		scale = 1;
 #else
-	scale = 3;
+		scale = 3;
 #endif
+		amcurmap = gamemapinfo.mapNumber;
+	}
+
+#ifdef JAGUAR
 	showAllThings = showAllLines = 0;
+#endif
 	players[consoleplayer].automapflags &= ~AF_ACTIVE;
 }
 
@@ -88,9 +99,9 @@ void AM_Start(void)
 /* Check for cheat codes for automap fun stuff! */
 /* */
 /*================================================================= */
+#ifdef JAGUAR
 cheat_e AM_CheckCheat(int buttons,int oldbuttons)
 {
-#ifdef JAGUAR
 	int	codes[9] = {BT_1,BT_2,BT_3,BT_4,BT_5,BT_6,BT_7,BT_8,BT_9};
 	char	chars[9] = "123456789";
 	char	c;
@@ -118,10 +129,10 @@ cheat_e AM_CheckCheat(int buttons,int oldbuttons)
 	for (i = 0; i < ch_maxcheats; i++)
 		if (!D_strncasecmp(currentcheat,cheatstrings[i],10))
 			return i;
-#endif
 
 	return -1;
 }
+#endif
 
 void DrawLine (pixel_t color, int x1, int y1, int x2, int y2)
 {
@@ -281,8 +292,10 @@ void DrawLine (pixel_t color, int x1, int y1, int x2, int y2)
 void AM_Control (player_t *player)
 {
 	int		buttons, oldbuttons, step;
+#ifdef JAGUAR
 	cheat_e	cheatcode;
-	
+#endif
+
 	buttons = ticbuttons[playernum];
 	oldbuttons = oldticbuttons[playernum];
 
@@ -310,7 +323,8 @@ void AM_Control (player_t *player)
 	step = STEPVALUE;
 	if (buttons & BT_A)
 		step *= 2;
-	
+
+#ifdef JAGUAR
 	cheatcode = AM_CheckCheat(buttons,oldbuttons);
 	switch(cheatcode)
 	{
@@ -322,6 +336,7 @@ void AM_Control (player_t *player)
 		default:
 			break;
 	}
+#endif
 
 	if (buttons & BT_C)		/* IF 'C' IS HELD DOWN, MOVE AROUND */
 	{
