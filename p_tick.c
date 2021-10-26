@@ -496,6 +496,8 @@ void P_Drawer (void)
 		R_RenderPlayerView();
 		ST_Drawer();
 		AM_Drawer();
+		if (players[consoleplayer].automapflags & AF_OPTIONSACTIVE)
+			O_Drawer();
 		I_Update();
 		clearscreen = 2;
 	}
