@@ -250,9 +250,9 @@ void IN_Start (void)
 	D_memset(nextmapinfo, 0, sizeof(*nextmapinfo));
 
 	if (gameaction == ga_secretexit && gamemapinfo.secretNext)
-		G_FindMapinfo(gamemapinfo.secretNext, nextmapinfo);
+		G_FindMapinfo(gamemapinfo.secretNext, nextmapinfo, NULL);
 	else if (gamemapinfo.next)
-		G_FindMapinfo(gamemapinfo.next, nextmapinfo);
+		G_FindMapinfo(gamemapinfo.next, nextmapinfo, NULL);
 
 	for (i = 0; i < MAXPLAYERS; i++) 
 	{

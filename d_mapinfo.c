@@ -66,8 +66,9 @@ int G_MapNumForLumpNum(int lump)
 {
 	dmapinfo_t mapinfo;
 	const char* mapname;
+	char buf[512];
 
-	if (G_FindMapinfo(lump, &mapinfo) != 0) {
+	if (G_FindMapinfo(lump, &mapinfo, buf) != 0) {
 		return mapinfo.mapNumber;
 	}
 
@@ -330,7 +331,7 @@ static const char* G_FindMapinfoSection(const char* buf, const char *name, size_
 	return NULL;
 }
 
-static char *G_MapinfoSectionCStr(const char* buf, const char *name)
+static char *G_MapinfoSectionCStr(const char* buf, const char *name, char *outmem)
 {
 	char* newstr;
 	const char* section;
@@ -340,14 +341,17 @@ static char *G_MapinfoSectionCStr(const char* buf, const char *name)
 	if (!section)
 		return NULL;
 
-	newstr = Z_Malloc(sectionlen + 1, PU_STATIC, NULL);
+	if (outmem)
+		newstr = outmem;
+	else
+		newstr = Z_Malloc(sectionlen + 1, PU_STATIC, NULL);
 	D_memcpy(newstr, section, sectionlen);
 	newstr[sectionlen] = '\0';
 
 	return newstr;
 }
 
-int G_FindMapinfo(VINT maplump, dmapinfo_t *mi)
+int G_FindMapinfo(VINT maplump, dmapinfo_t *mi, char *outmem)
 {
 	int i;
 	const char* buf;
@@ -370,7 +374,7 @@ int G_FindMapinfo(VINT maplump, dmapinfo_t *mi)
 	D_snprintf(name, sizeof(name), "map \"%s\"", lumpname8);
 
 	D_memset(mi, 0, sizeof(*mi));
-	mi->data = G_MapinfoSectionCStr(buf, name);
+	mi->data = G_MapinfoSectionCStr(buf, name, outmem);
 	if (!mi->data)
 		return 0;
 
@@ -397,7 +401,7 @@ int G_FindGameinfo(dgameinfo_t* gi)
 		return 0;
 
 	D_memset(gi, 0, sizeof(*gi));
-	gi->data = G_MapinfoSectionCStr(buf, "gameinfo");
+	gi->data = G_MapinfoSectionCStr(buf, "gameinfo", NULL);
 	if (!gi->data)
 		return 0;
 
@@ -465,6 +469,7 @@ dmapinfo_t **G_LoadMaplist(VINT *pmapcount)
 		D_memcpy(zsection, section, sectionlen);
 		zsection[sectionlen] = '\0';
 
+		memset(mi, 0, sizeof(*mi));
 		mi->data = (byte *)mi;
 
 		linecount = G_ParseMapinfo(zsection, (kvcall_t)&G_AddMapinfoKey, mi);
@@ -480,7 +485,7 @@ dmapinfo_t **G_LoadMaplist(VINT *pmapcount)
 	maplist[i] = NULL;
 
 	mapcount = i;
-	*pmapcount = i;
+	*pmapcount = mapcount;
 
 	// sort by mapnumber (insertion sort)
 	for (i = 1; i < mapcount; i++)

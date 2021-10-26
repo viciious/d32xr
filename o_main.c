@@ -236,7 +236,7 @@ void O_Control (player_t *player)
 	if (cursorframe == -1)
 	{
 		cursorframe = 0;
-		cursordelay = MOVEWAIT*2;
+		cursordelay = MOVEWAIT+MOVEWAIT/2;
 	}
 	if (screenpos == ms_none)
 	{

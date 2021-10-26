@@ -81,7 +81,7 @@ void G_DoLoadLevel (void)
 		Z_Free(gamemapinfo.data);
 	gamemapinfo.data = NULL;
 
-	if (G_FindMapinfo(gamemaplump, &gamemapinfo) == 0) {
+	if (G_FindMapinfo(gamemaplump, &gamemapinfo, NULL) == 0) {
 		int nextmap;
 		const char *mapname;
 

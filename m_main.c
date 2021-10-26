@@ -87,8 +87,6 @@ static VINT saveslotskill;
 static VINT *mapnumbers;
 static VINT mapcount;
 
-static char *mapname;
-
 static boolean startup;
 
 extern VINT	uchar;
@@ -285,11 +283,6 @@ void M_Stop (void)
 	if (mapnumbers != NULL)
 		Z_Free(mapnumbers);
 
-	if (mapname != NULL)
-		Z_Free(mapname);
-
-	mapname = NULL;
-
 #ifndef MARS
 	WriteEEProm ();
 #endif
@@ -314,7 +307,7 @@ int M_Ticker (void)
 	if (cursorframe == -1)
 	{
 		cursorframe = 0;
-		cursordelay = MOVEWAIT*2;
+		cursordelay = MOVEWAIT+MOVEWAIT/2;
 	}
 	if (screenpos == ms_none)
 	{
@@ -557,29 +550,16 @@ int M_Ticker (void)
 =================
 */
 
-static char* M_MapName(VINT mapnum)
+static char* M_MapName(VINT mapnum, char *mapname, size_t mapnamesize)
 {
-	int curmapnum = 0;
 	dmapinfo_t mi;
-	char buf[64];
+	char buf[512];
 
-	if (mapname)
-		curmapnum = *(VINT*)mapname;
-	if (curmapnum == mapnum)
-		return mapname + sizeof(VINT);
+	G_FindMapinfo(G_LumpNumForMapNum(mapnum), &mi, buf);
+	D_snprintf(mapname, mapnamesize, "%s", mi.name);
+	mapname[mapnamesize - 1] = '\0';
 
-	if (mapname)
-		Z_Free(mapname);
-
-	G_FindMapinfo(G_LumpNumForMapNum(mapnum), &mi);
-	D_snprintf(buf, sizeof(buf), "%s", mi.name);
-	buf[sizeof(buf) - 1] = '\0';
-	Z_Free(mi.data);
-
-	mapname = Z_Malloc(mystrlen(buf) + 1 + sizeof(VINT), PU_STATIC, 0);
-	*(VINT*)mapname = mapnum;
-	D_memcpy(mapname + sizeof(VINT), buf, mystrlen(buf) + 1);
-	return mapname + sizeof(VINT);
+	return mapname;
 }
 
 /*
@@ -626,8 +606,11 @@ void M_Drawer (void)
 	if (screenpos == ms_new)
 	{
 		mainitem_t* item;
-		const char* mapname = M_MapName(mapnumber);
-		int mapnamelen = mystrlen(mapname);
+		char mapname[64];
+		int mapnamelen;
+
+		M_MapName(mapnumber, mapname, sizeof(mapname));
+		mapnamelen = mystrlen(mapname);
 
 		item = &mainitem[mi_level];
 #ifndef MARS
@@ -676,8 +659,11 @@ void M_Drawer (void)
 
 			if (saveslotmap != -1)
 			{
-				const char* mapname = M_MapName(saveslotmap);
-				int mapnamelen = mystrlen(mapname);
+				char mapname[64];
+				int mapnamelen;
+
+				M_MapName(saveslotmap, mapname, sizeof(mapname));
+				mapnamelen = mystrlen(mapname);
 
 				leveltens = saveslotmap / 10, levelones = saveslotmap % 10;
 
