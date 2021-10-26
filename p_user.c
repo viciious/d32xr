@@ -672,6 +672,8 @@ ticphase = 23;
 		if ( (buttons & BT_7) && player->weaponowned[wp_bfg] )
 			player->pendingweapon = wp_bfg;
 #elif defined(MARS)
+		if ((buttons & (BT_MODE | BT_START)) == (BT_MODE | BT_START))
+			player->pendingweapon = wp_fist;
 		if ((buttons & (BT_MODE | BT_A)) == (BT_MODE | BT_A))
 			player->pendingweapon = wp_pistol;
 		if ((buttons & (BT_MODE | BT_B)) == (BT_MODE | BT_B) && player->weaponowned[wp_shotgun])

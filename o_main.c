@@ -249,7 +249,7 @@ void O_Control (player_t *player)
 	
 	if ( ( (buttons & BT_OPTION) && !(oldbuttons & BT_OPTION) )
 #ifdef MARS
-		|| ( (buttons & BT_START) && !(oldbuttons & BT_START) ) 
+		|| ( (buttons & BT_START) && !(oldbuttons & BT_START) && !(buttons & BT_MODE) )
 #endif
 		)
 	{
