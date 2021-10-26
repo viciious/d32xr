@@ -99,6 +99,16 @@ void D_isort(int* a, int len) ATTR_OPTIMIZE_SIZE;
 #define	FRACUNIT		(1<<FRACBITS)
 typedef int fixed_t;
 
+#ifdef MARS
+#define THINKERS_30HZ
+#endif
+
+#ifdef THINKERS_30HZ
+#define THINKERS_TICS 1
+#else
+#define THINKERS_TICS 2
+#endif
+
 #define	ANG45	0x20000000
 #define	ANG90	0x40000000
 #define	ANG180	0x80000000

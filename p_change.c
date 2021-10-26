@@ -102,7 +102,7 @@ boolean PIT_ChangeSector (mobj_t *thing)
 	nofit = true;
 	if (crushchange && !(gametic&3) )
 	{
-		P_DamageMobj(thing,NULL,NULL,10);
+		P_DamageMobj(thing,NULL,NULL,5*THINKERS_TICS);
 		/* spray blood in a random direction */
 		mo = P_SpawnMobj (thing->x, thing->y, thing->z + thing->height/2, MT_BLOOD);
 		mo->momx = (P_Random() - P_Random ())<<12;

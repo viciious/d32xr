@@ -119,10 +119,10 @@ typedef struct
 	int			direction;
 } glow_t;
 
-#define GLOWSPEED		16
-#define	STROBEBRIGHT	3
-#define	FASTDARK		8
-#define	SLOWDARK		15
+#define GLOWSPEED		32/THINKERS_TICS
+#define	STROBEBRIGHT	6/THINKERS_TICS
+#define	FASTDARK		16/THINKERS_TICS
+#define	SLOWDARK		30/THINKERS_TICS
 
 void	T_LightFlash (lightflash_t *flash);
 void	P_SpawnLightFlash (sector_t *sector);
@@ -212,8 +212,8 @@ typedef struct
 	VINT		type;
 } plat_t;
 
-#define	PLATWAIT	3			/* seconds */
-#define	PLATSPEED	(FRACUNIT*2)
+#define	PLATWAIT	3*2/THINKERS_TICS			/* seconds */
+#define	PLATSPEED	(FRACUNIT*THINKERS_TICS)
 #define	MAXPLATS	30
 
 extern	plat_t	*activeplats[MAXPLATS];
@@ -254,8 +254,8 @@ typedef struct
 	VINT		topcountdown;	/* when it reaches 0, start going down */
 } vldoor_t;
 	
-#define	VDOORSPEED	FRACUNIT*6
-#define	VDOORWAIT		70
+#define	VDOORSPEED	FRACUNIT*3*THINKERS_TICS
+#define	VDOORWAIT		140/THINKERS_TICS
 
 void	EV_VerticalDoor (line_t *line, mobj_t *thing) ATTR_OPTIMIZE_SIZE;
 int		EV_DoDoor (line_t *line, vldoor_e  type) ATTR_OPTIMIZE_SIZE;
@@ -292,7 +292,7 @@ typedef struct
 	VINT		tag;			/* ID */
 } ceiling_t;
 
-#define	CEILSPEED		FRACUNIT*2
+#define	CEILSPEED		FRACUNIT*THINKERS_TICS
 #define MAXCEILINGS		30
 
 extern	ceiling_t	*activeceilings[MAXCEILINGS];
@@ -340,7 +340,7 @@ typedef struct
 	fixed_t		speed;
 } floormove_t;
 
-#define	FLOORSPEED	FRACUNIT*3
+#define	FLOORSPEED	((FRACUNIT+(FRACUNIT>>1))*THINKERS_TICS)
 
 typedef enum
 {
