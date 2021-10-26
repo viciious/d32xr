@@ -432,18 +432,22 @@ int M_Ticker (void)
 		{
 			if (buttons & BT_DOWN)
 			{
+				int oldpos = cursorpos;
 				cursorpos++;
 				if (cursorpos == menuscr->numitems)
 					cursorpos = 0;
-				sound = sfx_pistol;
+				if (cursorpos != oldpos)
+					sound = sfx_pistol;
 			}
 		
 			if (buttons & BT_UP)
 			{
+				int oldpos = cursorpos;
 				cursorpos--;
 				if (cursorpos == -1)
 					cursorpos = menuscr->numitems-1;
-				sound = sfx_pistol;
+				if (cursorpos != oldpos)
+					sound = sfx_pistol;
 			}
 
 			switch (itemno)
@@ -474,16 +478,14 @@ int M_Ticker (void)
 						playermap++;
 						if (playermap == mapcount + 1)
 							playermap = 1;
-						else
-							sound = sfx_stnmov;
+						sound = sfx_stnmov;
 					}
 					if (buttons & BT_LEFT)
 					{
 						playermap--;
 						if(playermap == 0)
 							playermap = mapcount;
-						else
-							sound = sfx_stnmov;
+						sound = sfx_stnmov;
 					}
 					break;
 				case mi_difficulty:

@@ -438,18 +438,22 @@ exit:
 		{
 			if (buttons & BT_DOWN)
 			{
+				int oldpos = cursorpos;
 				cursorpos++;
 				if (cursorpos == menuscr->numitems)
 					cursorpos = 0;
-				sound = sfx_pistol;
+				if (cursorpos != oldpos)
+					sound = sfx_pistol;
 			}
 		
 			if (buttons & BT_UP)
 			{
+				int oldpos = cursorpos;
 				cursorpos--;
 				if (cursorpos == -1)
 					cursorpos = menuscr->numitems-1;
-				sound = sfx_pistol;
+				if (cursorpos != oldpos)
+					sound = sfx_pistol;
 			}
 
 			if (screenpos == ms_controls)
