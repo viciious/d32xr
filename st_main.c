@@ -133,6 +133,8 @@ void ST_InitEveryLevel(void)
 	
 	stbar.gotgibbed = false;
 	gibdraw = false;	/* DON'T DRAW GIBBED HEAD SEQUENCE */
+	gibframe = 0;
+	gibdelay = GIBTIME;
 	doSpclFace = false;
 	stbar.specialFace = f_none;
 	
@@ -446,7 +448,7 @@ void ST_Ticker(void)
 	/* */
 	/* Draw gibbed head */
 	/* */
-	if (gibdraw && --gibdelay <= 0)
+	if (gibdraw)
 	{
 		// CALICO: the original code performs out-of-bounds accesses on the faces
 		// array here, up to an unknown upper bound. This will crash the code
@@ -454,17 +456,23 @@ void ST_Ticker(void)
 		// NB: This is also all bugged anyway, to such a degree that it never shows up.
 		// Burger Becky (I assume, or maybe Dave Taylor?) fixed the code that is in
 		// the 3DO version so that it appears properly.
-		int gibframetodraw = FIRSTSPLAT + gibframe++;
-		if (gibframetodraw < NUMFACES)
+		int gibframetodraw = gibframe;
+		if (gibdelay-- <= 0)
 		{
-			cmd = &stbarcmds[numstbarcmds++];
-			cmd->id = stc_drawgibhead;
-			cmd->value = FIRSTSPLAT + gibframetodraw;
+			gibframe++;
+			gibdelay = GIBTIME;
 		}
 
-		gibdelay = GIBTIME;
 		if (gibframe > 6)
+		{
 			gibdraw = false;
+			stbar.forcedraw = true;
+			return;
+		}
+
+		cmd = &stbarcmds[numstbarcmds++];
+		cmd->id = stc_drawgibhead;
+		cmd->value = FIRSTSPLAT + gibframetodraw < NUMFACES ? FIRSTSPLAT + gibframetodraw : NUMFACES - 1;
 	}
 		
 	/*                    */
@@ -481,6 +489,9 @@ void ST_Ticker(void)
 	if (stbar.godmode)
 		drawface = GODFACE;
 	else
+	if (gibframe > 6)
+		stbar.drawface = -1;
+	else 
 	if (!stbar.health)
 		drawface = DEADFACE;
 	else
@@ -490,7 +501,7 @@ void ST_Ticker(void)
 		base = base > 4 ? 4 : base;
 		base = 4 - base;
 		base *= 8;
-		drawface =  base + spclfaceSprite[spclFaceType];
+		drawface = base + spclfaceSprite[spclFaceType];
 	}
 	else
 	if ((stbar.face != newface || stbar.forcedraw) && !gibdraw)
@@ -509,7 +520,7 @@ void ST_Ticker(void)
 			stbar.forcedraw = true;
 		}
 
-	 if (stbar.forcedraw) {
+	if (stbar.forcedraw) {
 		cmd = &stbarcmds[numstbarcmds++];
 		cmd->id = stc_drawhead;
 		cmd->value = stbar.drawface;
@@ -616,7 +627,8 @@ void ST_Drawer (void)
 		case stc_drawgibhead:
 		case stc_drawhead:
 			ST_EraseBlock(FACEX, FACEY, FACEW, FACEH);
-			DrawJagobjLump(faces + cmd->value, FACEX, stbar_y + FACEY, NULL, NULL);
+			if (cmd->value != -1)
+				DrawJagobjLump(faces + cmd->value, FACEX, stbar_y + FACEY, NULL, NULL);
 			break;
 		}
 	}

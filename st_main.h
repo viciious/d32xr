@@ -3,7 +3,7 @@
 /* all the stats are drawn onto when they change */
 /* coordinates are status bar relative (0 is first line of sbar) */
 
-#define	FLASHDELAY	4		/* # of tics delay (1/30 sec) */
+#define	FLASHDELAY	2		/* # of tics delay (1/30 sec) */
 #define FLASHTIMES	6		/* # of times to flash new frag amount (EVEN!) */
 
 #define AMMOX		52
@@ -62,7 +62,7 @@ typedef enum
 #define	GODFACE		40
 #define DEADFACE 	41
 #define FIRSTSPLAT	42
-#define GIBTIME		4
+#define GIBTIME		2
 #define NUMSPLATS	6
 #define	NUMMICROS	6		/* amount of micro-sized #'s (weapon armed) */
 
