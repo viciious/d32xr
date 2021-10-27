@@ -384,7 +384,9 @@ int F_Ticker (void)
 			castattacking = false;
 		}
 	}
-	
+
+	if (ticon & 1)
+		return 0;
 
 /* */
 /* advance state */
@@ -407,12 +409,12 @@ int F_Ticker (void)
 	}
 	else
 	{	/* just advance to next state in animation */
-		if (caststate == &states[S_PLAY_ATK1])
+		if (caststate == &states[S_PLAY_ATK2])
 			goto stopattack;	/* Oh, gross hack! */
 		st = caststate->nextstate;
 		caststate = &states[st];
 		castframes++;
-#if 0
+#if 1
 /*============================================== */
 /* sound hacks.... */
 {
@@ -420,37 +422,37 @@ int F_Ticker (void)
 	
 		switch (st)
 		{
-		case S_PLAY_ATK1: sfx = sfx_dshtgn; break;
+		case S_PLAY_ATK2: sfx = sfx_shotgn; break;
 		case S_POSS_ATK2: sfx = sfx_pistol; break;
 		case S_SPOS_ATK2: sfx = sfx_shotgn; break;
-		case S_VILE_ATK2: sfx = sfx_vilatk; break;
-		case S_SKEL_FIST2: sfx = sfx_skeswg; break;
-		case S_SKEL_FIST4: sfx = sfx_skepch; break;
-		case S_SKEL_MISS2: sfx = sfx_skeatk; break;
-		case S_FATT_ATK8:
-		case S_FATT_ATK5:
-		case S_FATT_ATK2: sfx = sfx_firsht; break;
-		case S_CPOS_ATK2:
-		case S_CPOS_ATK3:
-		case S_CPOS_ATK4: sfx = sfx_shotgn; break;
+		//case S_VILE_ATK2: sfx = sfx_vilatk; break;
+		//case S_SKEL_FIST2: sfx = sfx_skeswg; break;
+		//case S_SKEL_FIST4: sfx = sfx_skepch; break;
+		//case S_SKEL_MISS2: sfx = sfx_skeatk; break;
+		//case S_FATT_ATK8:
+		//case S_FATT_ATK5:
+		//case S_FATT_ATK2: sfx = sfx_firsht; break;
+		//case S_CPOS_ATK2:
+		//case S_CPOS_ATK3:
+		//case S_CPOS_ATK4: sfx = sfx_shotgn; break;
 		case S_TROO_ATK3: sfx = sfx_claw; break;
 		case S_SARG_ATK2: sfx = sfx_sgtatk; break;
 		case S_BOSS_ATK2: 
-		case S_BOS2_ATK2:
+		//case S_BOS2_ATK2:
 		case S_HEAD_ATK2: sfx = sfx_firsht; break;
 		case S_SKULL_ATK2: sfx = sfx_sklatk; break;
-		case S_SPID_ATK2:
-		case S_SPID_ATK3: sfx = sfx_shotgn; break;
-		case S_BSPI_ATK2: sfx = sfx_plasma; break;
-		case S_CYBER_ATK2:
-		case S_CYBER_ATK4:
-		case S_CYBER_ATK6: sfx = sfx_rlaunc; break;
-		case S_PAIN_ATK3: sfx = sfx_sklatk; break;
+		//case S_SPID_ATK2:
+		//case S_SPID_ATK3: sfx = sfx_shotgn; break;
+		//case S_BSPI_ATK2: sfx = sfx_plasma; break;
+		//case S_CYBER_ATK2:
+		//case S_CYBER_ATK4:
+		//case S_CYBER_ATK6: sfx = sfx_rlaunc; break;
+		//case S_PAIN_ATK3: sfx = sfx_sklatk; break;
 		default: sfx = 0; break;
 		}
 		
-/*		if (sfx) */
-/*			S_StartSound (NULL, sfx); */
+		if (sfx)
+			S_StartSound (NULL, sfx);
 }
 #endif
 /*============================================== */
