@@ -71,7 +71,7 @@ static VINT numslump;
 static VINT	cursorframe;
 static VINT cursordelay;
 static VINT	movecount;
-static VINT	playermap;
+static VINT	playermap = 1;
 
 static playmode_t currentplaymode;
 static menu_t	cursorpos;
@@ -183,7 +183,8 @@ void M_Start2 (boolean startup_)
 
 	screenpos = startup ? ms_main : ms_none;
 	playerskill = startskill;
-	playermap = 1;
+	if (startup)
+		playermap = 1;
 
 	saveslot = 0;
 	savecount = SaveCount();
