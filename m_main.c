@@ -73,7 +73,7 @@ static VINT cursordelay;
 static VINT	movecount;
 static VINT	playermap = 1;
 
-static playmode_t currentplaymode;
+static playmode_t currentplaymode = single;
 static menu_t	cursorpos;
 static screen_t  screenpos;
 static skill_t	playerskill;
@@ -431,24 +431,21 @@ int M_Ticker (void)
 
 		if (++movecount == 1)
 		{
+			int oldplayerskill = playerskill;
+			int oldsaveslot = saveslot;
+			int oldcursorpos = cursorpos;
+			int oldplayermode = currentplaymode;
+
 			if (buttons & BT_DOWN)
 			{
-				int oldpos = cursorpos;
-				cursorpos++;
-				if (cursorpos == menuscr->numitems)
+				if (++cursorpos == menuscr->numitems)
 					cursorpos = 0;
-				if (cursorpos != oldpos)
-					sound = sfx_pistol;
 			}
 		
 			if (buttons & BT_UP)
 			{
-				int oldpos = cursorpos;
-				cursorpos--;
-				if (cursorpos == -1)
+				if (--cursorpos == -1)
 					cursorpos = menuscr->numitems-1;
-				if (cursorpos != oldpos)
-					sound = sfx_pistol;
 			}
 
 			switch (itemno)
@@ -457,54 +454,38 @@ int M_Ticker (void)
 				case mi_gamemode:
 					if (buttons & BT_RIGHT)
 					{
-						currentplaymode++;
-						if (currentplaymode == NUMMODES)
+						if (++currentplaymode == NUMMODES)
 							currentplaymode--;
-						else
-							sound = sfx_stnmov;
 					}
 					if (buttons & BT_LEFT)
 					{
-						currentplaymode--;
-						if (currentplaymode == -1)
+						if (--currentplaymode == -1)
 							currentplaymode++;
-						else
-							sound = sfx_stnmov;
 					}
 					break;
 #endif
 				case mi_level:
 					if (buttons & BT_RIGHT)
 					{			
-						playermap++;
-						if (playermap == mapcount + 1)
+						if (++playermap == mapcount + 1)
 							playermap = 1;
-						sound = sfx_stnmov;
 					}
 					if (buttons & BT_LEFT)
 					{
-						playermap--;
-						if(playermap == 0)
+						if(--playermap == 0)
 							playermap = mapcount;
-						sound = sfx_stnmov;
 					}
 					break;
 				case mi_difficulty:
 					if (buttons & BT_RIGHT)
 					{
-						playerskill++;
-						if (playerskill > sk_nightmare)
+						if (++playerskill > sk_nightmare)
 							playerskill--;
-						else
-							sound = sfx_stnmov;
 					}
 					if (buttons & BT_LEFT)
 					{
-						playerskill--;
-						if (playerskill == -1)
+						if (--playerskill == -1)
 							playerskill++;
-						else
-							sound = sfx_stnmov;
 					}
 					break;
 				case mi_savelist:
@@ -513,21 +494,25 @@ int M_Ticker (void)
 						saveslot++;
 						if (saveslot >= savecount + (screenpos == ms_save) || saveslot >= MaxSaveCount())
 							saveslot--;
-						else
-							sound = sfx_stnmov;
 					}
 					if (buttons & BT_LEFT)
 					{
 						saveslot--;
 						if (saveslot == -1 + (screenpos == ms_save))
 							saveslot++;
-						else
-							sound = sfx_stnmov;
 					}
 					break;
 				default:
 					break;
 			}
+
+			if (cursorpos != oldcursorpos)
+				sound = sfx_pistol;
+			else if (oldplayerskill != playerskill ||
+				oldsaveslot != saveslot ||
+				oldplayermap != playermap ||
+				oldplayermode != currentplaymode)
+				sound = sfx_stnmov;
 		}
 
 		if (sound != sfx_None)

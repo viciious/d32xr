@@ -458,23 +458,24 @@ exit:
 
 			if (screenpos == ms_controls)
 			{
+				int oldcontroltype = controltype;
+				int oldalwaysrun = alwaysrun;
+				int oldstrafebtns = strafebtns;
+
 				if (buttons & BT_RIGHT)
 				{
 					switch (itemno) {
 					case mi_controltype:
-						controltype++;
-						if (controltype == NUMCONTROLOPTIONS)
+						if (++controltype == NUMCONTROLOPTIONS)
 							controltype = (NUMCONTROLOPTIONS - 1);
-						else
-							sound = sfx_stnmov;
 						break;
 					case mi_alwaysrun:
-						alwaysrun++;
-						if (alwaysrun > 1) alwaysrun = 1;
+						if (++alwaysrun > 1)
+							alwaysrun = 1;
 						break;
 					case mi_strafebtns:
-						strafebtns++;
-						if (strafebtns > 2) strafebtns = 1;
+						if (++strafebtns > 2)
+							strafebtns = 2;
 						break;
 
 					}
@@ -483,37 +484,38 @@ exit:
 				{
 					switch (itemno) {
 					case mi_controltype:
-						controltype--;
-						if (controltype == -1)
+						if (--controltype == -1)
 							controltype = 0;
-						else
-							sound = sfx_stnmov;
 						break;
 					case mi_alwaysrun:
-						alwaysrun--;
-						if (alwaysrun < 0) alwaysrun = 0;
+						if (--alwaysrun < 0)
+							alwaysrun = 0;
 						break;
 					case mi_strafebtns:
-						strafebtns--;
-						if (strafebtns < 0) strafebtns = 0;
+						if (--strafebtns < 0)
+							strafebtns = 0;
 						break;
 					}
 				}
+
+				if (oldcontroltype != controltype ||
+					oldalwaysrun != alwaysrun ||
+					oldstrafebtns != strafebtns)
+					sound = sfx_stnmov;
 			}
 
 			if (screenpos == ms_audio)
 			{
+				int oldmusictype = o_musictype;
+
 				if (buttons & BT_RIGHT)
 				{
 					switch (itemno) {
 					case mi_music:
-						o_musictype++;
-						if (o_musictype > mustype_cd)
-							o_musictype--;
-						if (!S_CDAvailable() && o_musictype > mustype_fm)
-							o_musictype--;
-						S_SetMusicType(o_musictype);
-						sound = sfx_stnmov;
+						if (++o_musictype > mustype_cd)
+							o_musictype = mustype_cd;
+						if (!S_CDAvailable() && o_musictype == mustype_cd)
+							o_musictype = mustype_fm;
 						break;
 					}
 				}
@@ -522,13 +524,16 @@ exit:
 				{
 					switch (itemno) {
 					case mi_music:
-						o_musictype--;
-						if (o_musictype < mustype_none)
-							o_musictype++;
-						S_SetMusicType(o_musictype);
-						sound = sfx_stnmov;
+						if (--o_musictype < mustype_none)
+							o_musictype = mustype_none;
 						break;
 					}
+				}
+
+				if (oldmusictype != o_musictype)
+				{
+					S_SetMusicType(o_musictype);
+					sound = sfx_stnmov;
 				}
 			}
 		}
