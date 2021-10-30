@@ -222,7 +222,7 @@ static void ReadOptions(void)
 		so.musictype = mustype_fm;
 	if (so.alwaysrun < 0 || so.alwaysrun > 1)
 		so.alwaysrun = 0;
-	if (so.strafebtns < 0 || so.strafebtns > 2)
+	if (so.strafebtns < 0 || so.strafebtns > 3)
 		so.strafebtns = 0;
 
 	sfxvolume = so.sfxvolume;

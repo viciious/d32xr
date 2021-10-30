@@ -414,18 +414,11 @@ exit:
 
 			switch (itemno)
 			{
-			case mi_soundvol:
-				break;
 			case mi_resolution:
 				R_SetViewportSize(slider->curval);
 				break;
 			case mi_detailmode:
 				R_SetDetailMode(slider->curval - 1);
-				break;
-			case mi_alwaysrun:
-				break;
-			case mi_strafebtns:
-				strafebtns = slider->curval;
 				break;
 			default:
 				break;
@@ -474,8 +467,8 @@ exit:
 							alwaysrun = 1;
 						break;
 					case mi_strafebtns:
-						if (++strafebtns > 2)
-							strafebtns = 2;
+						if (++strafebtns > 3)
+							strafebtns = 3;
 						break;
 
 					}
@@ -589,6 +582,20 @@ void O_Drawer (void)
 /* Draw control info */
 	if (screenpos == ms_controls)
 	{
+		const char* strabtnstr = "OFF";
+
+		switch (strafebtns) {
+		case 1:
+			strabtnstr = "YZ";
+			break;
+		case 2:
+			strabtnstr = "ZC";
+			break;
+		case 3:
+			strabtnstr = "XZ";
+			break;
+		}
+
 		print(items[0].x + 10, items[0].y + 20, "A");
 		print(items[0].x + 10, items[0].y + 40, "B");
 		print(items[0].x + 10, items[0].y + 60, "C");
@@ -596,7 +603,7 @@ void O_Drawer (void)
 		O_DrawControl();
 
 		print(menuitem[mi_alwaysrun].x + 160, menuitem[mi_alwaysrun].y, alwaysrun ? "ON" : "OFF");
-		print(menuitem[mi_strafebtns].x + 160, menuitem[mi_strafebtns].y, strafebtns == 1 ? "YZ" : (strafebtns == 2 ? "ZC" : "OFF"));
+		print(menuitem[mi_strafebtns].x + 160, menuitem[mi_strafebtns].y, strabtnstr);
 	}
 
 	if (screenpos == ms_audio)
