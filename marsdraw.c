@@ -745,3 +745,116 @@ void DrawTiledBackground(void)
 void EraseBlock(int x, int y, int width, int height)
 {
 }
+
+void DrawJagobj2(jagobj_t* jo, int x, int y, 
+	int src_x, int src_y, int src_w, int src_h, pixel_t *fb)
+{
+	int		srcx, srcy;
+	int		width, height;
+	int		rowsize;
+
+	if (debugmode == 3)
+		return;
+
+	rowsize = BIGSHORT(jo->width);
+	width = BIGSHORT(jo->width);
+	height = BIGSHORT(jo->height);
+
+	if (src_w > 0)
+		width = src_w;
+	else if (src_w < 0)
+		width += src_w;
+
+	if (src_h > 0)
+		height = src_h;
+	else if (src_h < 0)
+		height += src_h;
+
+	srcx = 0;
+	srcy = 0;
+
+	if (x < 0)
+	{
+		width += x;
+		srcx = -x;
+		x = 0;
+	}
+	srcx += src_x;
+	width -= src_x;
+
+	if (y < 0)
+	{
+		srcy = -y;
+		height += y;
+		y = 0;
+	}
+
+	srcy += src_y;
+	height -= src_y;
+
+	if (x + width > 320)
+		width = 320 - x;
+	if (y + height > 223)
+		height = 223 - y;
+
+	if (width < 1 || height < 1)
+		return;
+
+	{
+		byte* dest;
+		byte* source;
+
+		source = jo->data + srcx + srcy * rowsize;
+
+		if ((x & 1) == 0 && (width & 1) == 0)
+		{
+			unsigned hw = (unsigned)width >> 1;
+			unsigned hx = (unsigned)x >> 1;
+			unsigned hr = (unsigned)rowsize >> 1;
+
+			pixel_t* dest2 = fb + y * 160 + hx;
+			pixel_t* source2 = (pixel_t*)source;
+
+			for (; height; height--)
+			{
+				int n = (hw + 3) >> 2;
+
+				switch (hw & 3)
+				{
+				case 0: do { *dest2++ = *source2++;
+				case 3:      *dest2++ = *source2++;
+				case 2:      *dest2++ = *source2++;
+				case 1:      *dest2++ = *source2++;
+				} while (--n > 0);
+				}
+
+				source2 += hr - hw;
+				dest2 += 160 - hw;
+			}
+			return;
+		}
+
+		dest = (byte*)fb + y * 320 + x;
+		for (; height; height--)
+		{
+			int n = (width + 3) >> 2;
+
+			switch (width & 3)
+			{
+			case 0: do { *dest++ = *source++;
+			case 3:      *dest++ = *source++;
+			case 2:      *dest++ = *source++;
+			case 1:      *dest++ = *source++;
+			} while (--n > 0);
+			}
+
+			source += rowsize - width;
+			dest += 320 - width;
+		}
+	}
+}
+
+void DrawJagobj(jagobj_t* jo, int x, int y)
+{
+	DrawJagobj2(jo, x, y, 0, 0, 0, 0, I_OverwriteBuffer());
+}
