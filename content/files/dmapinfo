@@ -4,9 +4,9 @@ gameinfo
     intermissionMus = "MUS_NTER"
     victoryMus = "MUS_BUNN"
     borderFlat = "ROCKS"
-    titleTime = 540
+    titleTime = 1000
     titlePage = "title"
-    creditsTime = 460
+    creditsTime = 450
     creditsPage = "credits1"
 }
 map "MAP01" "Hangar"
