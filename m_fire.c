@@ -35,16 +35,19 @@ typedef struct {
 	char* firePix;
 	unsigned char *rndtable;
 	int rndindex;
+	jagobj_t* titlepic;
 } m_fire_t;
 
-#define FIRE_WIDTH 320
-#define FIRE_HEIGHT 80
+#define FIRE_WIDTH		320
+#define FIRE_HEIGHT		72
+
+#define FIRE_STOP_TICON 470
 
 const unsigned char fireRGBs[] =
 {
 		0x00, 0x00, 0x00,
 		0x1F, 0x07, 0x07,
-		0x2F, 0x0F, 0x07,
+		//0x2F, 0x0F, 0x07,
 		0x47, 0x0F, 0x07,
 		0x57, 0x17, 0x07,
 		//0x67, 0x1F, 0x07,
@@ -75,7 +78,7 @@ const unsigned char fireRGBs[] =
 		0xB7, 0xAF, 0x2F,
 		//0xB7, 0xB7, 0x2F,
 		0xB7, 0xB7, 0x37,
-		0xCF, 0xCF, 0x6F,
+		//0xCF, 0xCF, 0x6F,
 		0xDF, 0xDF, 0x9F,
 		0xEF, 0xEF, 0xC7,
 		0xFF, 0xFF, 0xFF
@@ -181,7 +184,7 @@ void Mars_Sec_M_AnimateFire(void)
 			}
 		}
 
-		if (I_GetTime() - start > 360)
+		if (I_GetTime() - start > FIRE_STOP_TICON)
 		{
 			M_StopFire();
 		}
@@ -197,7 +200,7 @@ void Mars_Sec_M_AnimateFire(void)
 =
 ================ 
 */ 
-void I_InitMenuFire(void)
+void I_InitMenuFire(jagobj_t *titlepic)
 {
 	int i, j;
 	const byte* doompalette;
@@ -215,6 +218,8 @@ void I_InitMenuFire(void)
 
 	m_fire->rndindex = 0;
 	m_fire->rndtable = Z_Malloc(sizeof(*m_fire->rndtable) * 256, PU_STATIC, NULL);
+
+	m_fire->titlepic = titlepic;
 
 	char* dest = m_fire->firePix + FIRE_WIDTH * (FIRE_HEIGHT - 1);
 	for (j = 0; j < FIRE_WIDTH; j++)
@@ -246,6 +251,21 @@ void I_InitMenuFire(void)
 	for (i = 0; i < 256; i++)
 		m_fire->rndtable[i] = M_Random() & 3;
 
+	if (titlepic != NULL)
+	{
+		for (i = 0; i < 2; i++)
+		{
+			short* lines = (short *)&MARS_FRAMEBUFFER;
+
+			DrawJagobj2(titlepic, 0, 0, 0, 0, 0, 200 - FIRE_HEIGHT, I_FrameBuffer());
+
+			for (j = 0; j < 200 - FIRE_HEIGHT; j++)
+				lines[j] = 0 * 320 / 2 + 0x100;
+
+			UpdateBuffer();
+		}
+	}
+
 	MARS_SYS_COMM4 = 8;
 }
 
@@ -276,17 +296,60 @@ void I_StopMenuFire(void)
 =
 ================
 */
-int I_DrawMenuFire(void)
+void I_DrawMenuFire(void)
 {
 	int x, y;
-	unsigned *dest = (unsigned *)(I_FrameBuffer() + 320 / 2 * (224 - FIRE_HEIGHT));
+	unsigned *dest = (unsigned *)(I_OverwriteBuffer() + 320 / 2 * (224 - FIRE_HEIGHT));
 	char* firePix = m_fire->firePix;
+	jagobj_t* titlepic = m_fire->titlepic;
 	unsigned char* firePal = m_fire->firePal;
+	unsigned* row;
+	const int pic_startpos = -20;
+	const int pic_cutoff = 16;
+	const int fh = FIRE_HEIGHT;
+	const int solid_fire_height = 24;
+
+	// scroll the title pic from bottom to top
+
+	// unroll the hidden part as the picture moves
+	int pos = (ticon + pic_startpos) / 2;
+	if (pos >= fh && pos <= 202)
+	{
+		int j;
+		int limit = pos > 200 ? 0 : 200 - pos;
+		short* lines = (short *)&MARS_FRAMEBUFFER;
+		for (j = limit; j < 200 - fh; j++)
+			lines[j] = (j - limit) * 320 / 2 + 0x100;
+	}
+
+	if (titlepic != NULL)
+	{
+		// clear the framebuffer underneath the fire where the title pic is 
+		// no longer draw and thus can no longer as serve as the background
+		if (ticon >= FIRE_STOP_TICON)
+		{
+			row = (unsigned*)(I_FrameBuffer() + 320 / 2 * (200 - pic_cutoff));
+			for (y = 200 - pic_cutoff; y <= 224 - solid_fire_height; y++)
+			{
+				for (x = 0; x < 320 / 4; x += 4)
+					*row++ = 0, *row++ = 0, *row++ = 0, *row++ = 0;
+			}
+		}
+
+		// draw the clipped title pic
+		// avoid drawing the part that's hidden by the fire animation at
+		// the bottom of the screen. the upper part must mesh together
+		// with the part that is being unfolded using the line table
+		int y = 200 - (pos < fh ? pos : fh);
+		int src_y = pos > fh ? ((pos >= 200 ? 200 : pos) - fh) : 0;
+		if (pos >= solid_fire_height)
+			DrawJagobj2(titlepic, 0, y, 0, src_y, 0, (pos >= 200 ? 0 : pos) - pic_cutoff, I_FrameBuffer());
+	}
 
 	// draw the fire at the bottom
 	Mars_ClearCache();
 
-	unsigned* row = (unsigned*)((intptr_t)firePix);
+	row = (unsigned*)((intptr_t)firePix);
 	for (y = 0; y < FIRE_HEIGHT; y++) {
 		for (x = 0; x < FIRE_WIDTH; x += 4) {
 			unsigned p = *row;
@@ -304,7 +367,11 @@ int I_DrawMenuFire(void)
 			*dest++ = p;
 			row++;
 		}
-	}
 
-	return FIRE_HEIGHT;
+		if (y == FIRE_HEIGHT - solid_fire_height)
+		{
+			size_t offs = dest - (unsigned*)I_OverwriteBuffer();
+			dest = (unsigned*)I_FrameBuffer() + offs;
+		}
+	}
 }

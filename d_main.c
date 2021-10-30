@@ -459,31 +459,21 @@ int TIC_Abortable (void)
 /*============================================================================= */
 
 jagobj_t	*titlepic;
-void DrawJagobj2(jagobj_t* jo, int x, int y, int src_x, int src_y, int src_w, int src_h);
 
 void START_Title(void)
 {
 	int l;
 
-	I_InitMenuFire();
-
 #ifndef MARS
 	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
-#endif
 	DoubleBufferSetup();
+#endif
 
 	l = gameinfo.titlePage;
 	titlepic = l != -1 ? W_CacheLumpNum(l, PU_STATIC) : NULL;
 
 #ifdef MARS
-	if (titlepic != NULL)
-	{
-		DrawJagobj2(titlepic, 0, 0, 0, 0, 0, -16);
-		UpdateBuffer();
-
-		DrawJagobj2(titlepic, 0, 0, 0, 0, 0, -16);
-		UpdateBuffer();
-	}
+	I_InitMenuFire(titlepic);
 #endif
 
 	S_StartSong(gameinfo.titleMus, 0, cdtrack_title);
@@ -493,24 +483,17 @@ void STOP_Title (void)
 {
 	if (titlepic != NULL)
 		Z_Free (titlepic);
+#ifdef MARS
 	I_StopMenuFire();
+#endif
 	S_StopSong();
 }
 
 void DRAW_Title (void)
 {
 #ifdef MARS
-	int fire_height;
-
-	while (!I_RefreshCompleted())
-		;
-
-	fire_height = I_DrawMenuFire();
-
-	if (titlepic != NULL)
-		DrawJagobj2(titlepic, 0, 200 - fire_height, 0, 200 - fire_height, 0, -16);
+	I_DrawMenuFire();
 #endif
-
 	UpdateBuffer();
 }
 
