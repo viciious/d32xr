@@ -66,10 +66,11 @@ char Mars_FramebuffersFlipped(void)
 	return (MARS_VDP_FBCTL & MARS_VDP_FS) == mars_activescreen;
 }
 
-void Mars_InitLineTable(volatile unsigned short* lines)
+void Mars_InitLineTable(void)
 {
 	int j;
 	int blank;
+	volatile unsigned short* lines = &MARS_FRAMEBUFFER;
 
 	// initialize the lines section of the framebuffer
 	for (j = 0; j < 224; j++)
@@ -184,7 +185,7 @@ void Mars_Init(void)
 	{
 		volatile int* p, * p_end;
 
-		Mars_InitLineTable(&MARS_FRAMEBUFFER);
+		Mars_InitLineTable();
 
 		p = (int*)(&MARS_FRAMEBUFFER + 0x100);
 		p_end = (int*)p + 320 / 4 * 224;

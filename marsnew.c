@@ -616,6 +616,11 @@ void I_ClearWorkBuffer(void)
 		*p++ = 0;
 }
 
+void I_ResetLineTable(void)
+{
+	Mars_InitLineTable();
+}
+
 /*=========================================================================== */
 
 /*
