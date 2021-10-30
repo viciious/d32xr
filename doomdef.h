@@ -726,6 +726,7 @@ int I_ViewportYPos(void);
 
 void I_ClearFrameBuffer (void);
 void I_ClearWorkBuffer(void);
+void I_ResetLineTable(void);
 
 void I_SetPalette (const byte *palette);
 
@@ -1068,6 +1069,8 @@ void DoubleBufferSetup (void);
 void EraseBlock (int x, int y, int width, int height);
 void DrawJagobj (jagobj_t *jo, int x, int y);
 void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh);
+void DrawJagobj2(jagobj_t* jo, int x, int y, 
+	int src_x, int src_y, int src_w, int src_h, pixel_t* fb);
 void UpdateBuffer (void);
 
 #ifndef MARS
@@ -1128,9 +1131,9 @@ extern	boolean	spr_rotations;
 extern int debugmode;
 extern char clearscreen;
 
-void I_InitMenuFire(void) ATTR_OPTIMIZE_SIZE;
+void I_InitMenuFire(jagobj_t* titlepic);
 void I_StopMenuFire(void);
-int I_DrawMenuFire(void) ATTR_OPTIMIZE_EXTREME;
+void I_DrawMenuFire(void);
 void I_DrawSbar(void);
 void S_StartSong(int music_id, int looping, int cdtrack);
 int S_SongForLump(int lump);
