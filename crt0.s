@@ -27,7 +27,7 @@
 
 ! Standard MegaDrive ROM header at 0x100
 
-        .ascii  "SEGA 32X        "
+        .ascii  "SEGA GENESIS    "
         .ascii  "                "
         .ascii  "DOOM 32X Resurre"
         .ascii  "ction           "
@@ -35,7 +35,7 @@
         .ascii  "DOOM 32X Resurre"
         .ascii  "ction           "
         .ascii  "                "
-        .ascii  "GM 20211026-00"
+        .ascii  "GM 20211031-00"
         .word   0x0000
         .ascii  "J6              "
         .long   0x00000000,0x003FFFFF   /* ROM start, end */
