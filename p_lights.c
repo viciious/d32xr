@@ -19,6 +19,8 @@
 /*================================================================== */
 void T_LightFlash (lightflash_t *flash)
 {
+	if (gametic == prevgametic)
+		return;
 	if (--flash->count)
 		return;
 	
@@ -76,6 +78,8 @@ void P_SpawnLightFlash (sector_t *sector)
 /*================================================================== */
 void T_StrobeFlash (strobe_t *flash)
 {
+	if (gametic == prevgametic)
+		return;
 	if (--flash->count)
 		return;
 	
@@ -220,6 +224,8 @@ void EV_LightTurnOn(line_t *line, int bright)
 /*================================================================== */
 void T_Glow(glow_t *g)
 {
+	if (gametic == prevgametic)
+		return;
 	switch(g->direction)
 	{
 		case -1:		/* DOWN */

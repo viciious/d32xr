@@ -119,10 +119,10 @@ typedef struct
 	int			direction;
 } glow_t;
 
-#define GLOWSPEED		32/THINKERS_TICS
-#define	STROBEBRIGHT	6/THINKERS_TICS
-#define	FASTDARK		16/THINKERS_TICS
-#define	SLOWDARK		30/THINKERS_TICS
+#define GLOWSPEED		16
+#define	STROBEBRIGHT	3
+#define	FASTDARK		8
+#define	SLOWDARK		15
 
 void	T_LightFlash (lightflash_t *flash);
 void	P_SpawnLightFlash (sector_t *sector);
