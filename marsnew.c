@@ -173,7 +173,7 @@ static int Mars_HandleStartHeld(unsigned *ctrl, const unsigned ctrl_start)
 	boolean start = 0;
 	static boolean prev_start = false;
 	static int repeat = 0;
-	static const int held_tics = 8;
+	static const int held_tics = 16;
 
 	start = (*ctrl & ctrl_start) != 0;
 	if (start ^ prev_start) {
@@ -199,9 +199,9 @@ static int Mars_HandleStartHeld(unsigned *ctrl, const unsigned ctrl_start)
 	}
 
 	repeat++;
-	if (repeat < held_tics) {
+	if (repeat < 2) {
 		// suppress action buttons
-		*ctrl = *ctrl & ~(SEGA_CTRL_A | SEGA_CTRL_B | SEGA_CTRL_C);
+		//*ctrl = *ctrl & ~(SEGA_CTRL_A | SEGA_CTRL_B | SEGA_CTRL_C);
 		return 0;
 	}
 
@@ -216,6 +216,11 @@ static int Mars_HandleStartHeld(unsigned *ctrl, const unsigned ctrl_start)
 	if (*ctrl & SEGA_CTRL_C) {
 		*ctrl = *ctrl & ~SEGA_CTRL_C;
 		morebuttons |= BT_AUTOMAP;
+	}
+
+	if (morebuttons)
+	{
+		repeat = held_tics;
 	}
 
 	return morebuttons;
