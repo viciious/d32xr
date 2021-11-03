@@ -301,7 +301,7 @@ void M_Stop (void)
 
 int M_Ticker (void)
 {
-	int		buttons;
+	int		buttons, oldbuttons;
 	mainscreen_t* menuscr;
 	int		oldplayermap;
 
@@ -333,47 +333,10 @@ int M_Ticker (void)
 		GetSaveInfo(saveslot, &saveslotmap, &saveslotskill);
 	}
 
-	cursordelay -= vblsinframe[0];
-	if (cursordelay > 0)
-		return ga_nothing;
-
-	cursordelay = MOVEWAIT;
 	buttons = ticrealbuttons;
-	if (buttons == 0)
-	{
-		cursordelay = 0;
-		return ga_nothing;
-	}
+	oldbuttons = oldticrealbuttons;
 
-	/* exit menu if button press */
-	if (buttons & (BT_A | BT_LMBTN | BT_START))
-	{
-		if (screenpos == ms_new)
-		{
-			startsave = -1;
-			startmap = mapnumbers[playermap - 1]; /*set map number */
-			startskill = playerskill;	/* set skill level */
-			starttype = currentplaymode;	/* set play type */
-			return ga_startnew;		/* done with menu */
-		}
-
-		if (screenpos == ms_load)
-		{
-			if (savecount > 0)
-			{
-				startsave = saveslot;
-				return ga_startnew;
-			}
-		}
-
-		if (screenpos == ms_save)
-		{
-			SaveGame(saveslot);
-			return ga_died;
-		}
-	}
-
-	if (buttons & (BT_A | BT_LMBTN))
+	if ((buttons & (BT_A | BT_LMBTN)) && !(oldbuttons & (BT_A | BT_LMBTN)))
 	{
 		int itemno = menuscr->firstitem + cursorpos;
 		if (mainitem[itemno].screen != ms_none)
@@ -388,7 +351,7 @@ int M_Ticker (void)
 		}
 	}
 
-	if (buttons & (BT_C | BT_RMBTN))
+	if ((buttons & (BT_C | BT_RMBTN)) && !(oldbuttons & (BT_C | BT_RMBTN)))
 	{
 		if (screenpos != ms_main)
 		{
@@ -417,6 +380,46 @@ int M_Ticker (void)
 			}
 		}
 	}
+
+	/* exit menu if button press */
+	if ((buttons & (BT_A | BT_LMBTN | BT_START)) && !(oldbuttons & (BT_A | BT_LMBTN | BT_START)))
+	{
+		if (screenpos == ms_new)
+		{
+			startsave = -1;
+			startmap = mapnumbers[playermap - 1]; /*set map number */
+			startskill = playerskill;	/* set skill level */
+			starttype = currentplaymode;	/* set play type */
+			return ga_startnew;		/* done with menu */
+		}
+
+		if (screenpos == ms_load)
+		{
+			if (savecount > 0)
+			{
+				startsave = saveslot;
+				return ga_startnew;
+			}
+		}
+
+		if (screenpos == ms_save)
+		{
+			SaveGame(saveslot);
+			return ga_died;
+		}
+	}
+
+	if (buttons == 0)
+	{
+		cursordelay = 0;
+		return ga_nothing;
+	}
+
+	cursordelay -= vblsinframe[0];
+	if (cursordelay > 0)
+		return ga_nothing;
+
+	cursordelay = MOVEWAIT;
 
 /* check for movement */
 	oldplayermap = playermap;

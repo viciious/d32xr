@@ -315,19 +315,10 @@ exit:
 		cursorframe ^= 1;
 	}
 
-	cursordelay -= vblsinframe[0];
-	if (cursordelay > 0)
-		return;
-
-	cursordelay = MOVEWAIT;
 	buttons = ticrealbuttons;
-	if (buttons == 0)
-	{
-		cursordelay = 0;
-		return;
-	}
+	oldbuttons = oldticrealbuttons;
 
-	if (buttons & (BT_A|BT_LMBTN))
+	if (buttons & (BT_A | BT_LMBTN) && !(oldbuttons & (BT_A | BT_LMBTN)))
 	{
 		int itemno = menuscr->firstitem + cursorpos;
 		if (menuitem[itemno].screen != ms_none)
@@ -345,7 +336,7 @@ exit:
 		}
 	}
 
-	if (buttons & (BT_C|BT_RMBTN))
+	if (buttons & (BT_C | BT_RMBTN) && !(oldbuttons & (BT_C | BT_RMBTN)))
 	{
 		if (screenpos != ms_main)
 		{
@@ -367,6 +358,18 @@ exit:
 			return;
 		}
 	}
+
+	if (buttons == 0)
+	{
+		cursordelay = 0;
+		return;
+	}
+
+	cursordelay -= vblsinframe[0];
+	if (cursordelay > 0)
+		return;
+
+	cursordelay = MOVEWAIT;
 
 /* check for movement */
 	if (! (buttons & (BT_UP| BT_DOWN| BT_LEFT| BT_RIGHT) ) )
@@ -602,8 +605,8 @@ void O_Drawer (void)
 
 		O_DrawControl();
 
-		print(menuitem[mi_alwaysrun].x + 160, menuitem[mi_alwaysrun].y, alwaysrun ? "ON" : "OFF");
-		print(menuitem[mi_strafebtns].x + 160, menuitem[mi_strafebtns].y, strabtnstr);
+		print(menuitem[mi_alwaysrun].x + 150, menuitem[mi_alwaysrun].y, alwaysrun ? "ON" : "OFF");
+		print(menuitem[mi_strafebtns].x + 150, menuitem[mi_strafebtns].y, strabtnstr);
 	}
 
 	if (screenpos == ms_audio)
