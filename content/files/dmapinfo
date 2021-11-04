@@ -3,7 +3,7 @@ gameinfo
     titleMus = "MUS_NTRO"
     intermissionMus = "MUS_NTER"
     victoryMus = "MUS_BUNN"
-    borderFlat = "ROCKS"
+    borderFlat = "FLOOR7_2"
     titleTime = 1000
     titlePage = "title"
     creditsTime = 450
