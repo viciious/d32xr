@@ -37,6 +37,7 @@ void Mars_FlipFrameBuffers(char wait) __attribute__((noinline));
 void Mars_WaitFrameBuffersFlip(void) __attribute__((noinline));
 char Mars_FramebuffersFlipped(void) __attribute__((noinline));
 void Mars_Init(void);
+void Mars_InitVideo(int lines);
 void Mars_InitLineTable(void);
 char Mars_UploadPalette(const uint8_t* palette);
 int Mars_PollMouse(int port);
@@ -51,6 +52,7 @@ extern unsigned mars_frtc2msec_frac;
 extern const uint8_t* mars_newpalette;
 extern uint16_t mars_cd_ok;
 extern uint16_t mars_num_cd_tracks;
+extern uint16_t mars_framebuffer_height;
 
 extern uint16_t mars_refresh_hz;
 
@@ -81,6 +83,8 @@ int Mars_GetFRTCounter(void);
 	} while (0)
 
 #endif 
+
+#define Mars_IsPAL() ((MARS_VDP_DISPMODE & MARS_NTSC_FORMAT) == 0)
 
 #define Mars_RefreshHZ() (mars_refresh_hz)
 

@@ -42,6 +42,9 @@ int main(void)
 /* */
 	ReadEEProm();
 
+	if (Mars_IsPAL() && palstretch)
+		Mars_InitVideo(240);
+
 /* */
 /* start doom */
 /* */
@@ -125,7 +128,7 @@ void I_Print8(int x, int y, const char* string)
 	const byte* source;
 	volatile byte *dest;
 
-	if (y > 224 / 8)
+	if (y > mars_framebuffer_height / 8)
 		return;
 
 	dest = (byte *)(I_FrameBuffer() + 320) + (y * 8) * 320 + x;

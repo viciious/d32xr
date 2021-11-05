@@ -512,7 +512,7 @@ int I_GetFRTCounter(void)
 =
 ====================
 */
-byte	*I_TempBuffer (void)
+byte *I_TempBuffer (void)
 {
 	byte *w = (byte *)framebuffer;
 	int *p, *p_end = (int*)framebufferend;
@@ -525,15 +525,23 @@ byte	*I_TempBuffer (void)
 	return w;
 }
 
-byte 	*I_WorkBuffer (void)
+byte *I_WorkBuffer (void)
 {
 	while (!I_RefreshCompleted());
-	return (byte *)(framebuffer + 320 / 2 * (224+1)); // +1 for the blank line
+	return (byte *)(framebuffer + 320 / 2 * (I_FrameBufferHeight() +1)); // +1 for the blank line
 }
 
 pixel_t	*I_FrameBuffer (void)
 {
 	return (pixel_t *)framebuffer;
+}
+
+int I_FrameBufferHeight(void) {
+	return mars_framebuffer_height;
+}
+
+int I_IsPAL(void) {
+	return Mars_IsPAL();
 }
 
 pixel_t* I_OverwriteBuffer(void)
@@ -543,11 +551,13 @@ pixel_t* I_OverwriteBuffer(void)
 
 int I_ViewportYPos(void)
 {
+	const int fbh = I_FrameBufferHeight();
+
 	if (viewportWidth < 160)
-		return (224 - stbar_height - viewportHeight) / 2;
+		return (fbh - stbar_height - viewportHeight) / 2;
 	if (viewportWidth == 160)
-		return (224 - stbar_height - viewportHeight);
-	return (224 - stbar_height - viewportHeight) / 2;
+		return (fbh - stbar_height - viewportHeight);
+	return (fbh - stbar_height - viewportHeight) / 2;
 }
 
 pixel_t	*I_ViewportBuffer (void)
@@ -563,7 +573,7 @@ pixel_t	*I_ViewportBuffer (void)
 void I_ClearFrameBuffer (void)
 {
 	int* p = (int*)framebuffer;
-	int* p_end = (int*)(framebuffer + 320 / 2 * (224+1));
+	int* p_end = (int*)(framebuffer + 320 / 2 * (I_FrameBufferHeight()+1));
 	while (p < p_end)
 		*p++ = 0;
 }
@@ -763,7 +773,7 @@ void I_DrawSbar(void)
 	int halfwidth = (unsigned)width >> 1;
 	pixel_t* dest;
 
-	dest = (pixel_t*)I_FrameBuffer() + (224 - height) * 320 / 2;
+	dest = (pixel_t*)I_FrameBuffer() + (I_FrameBufferHeight() - height) * 320 / 2;
 	for (; height; height--)
 	{
 		int i;

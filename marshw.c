@@ -39,6 +39,8 @@ volatile unsigned mars_swdt_ovf_count = 0;
 unsigned mars_frtc2msec_frac = 0;
 const uint8_t* mars_newpalette = NULL;
 
+uint16_t mars_framebuffer_height = 224;
+
 uint16_t mars_cd_ok = 0;
 uint16_t mars_num_cd_tracks = 0;
 
@@ -73,7 +75,7 @@ void Mars_InitLineTable(void)
 	volatile unsigned short* lines = &MARS_FRAMEBUFFER;
 
 	// initialize the lines section of the framebuffer
-	for (j = 0; j < 224; j++)
+	for (j = 0; j < mars_framebuffer_height; j++)
 		lines[j] = j * 320 / 2 + 0x100;
 
 	blank = j * 320 / 2;
@@ -155,28 +157,22 @@ int Mars_GetFRTCounter(void)
 	return (int)((mars_pwdt_ovf_count << 8) | cnt);
 }
 
-void Mars_Init(void)
+void Mars_InitVideo(int lines)
 {
 	int i;
 	char NTSC;
+	int mars_lines = lines == 240 ? MARS_240_LINES : MARS_224_LINES;
 
 	while ((MARS_SYS_INTMSK & MARS_SH2_ACCESS_VDP) == 0);
 
-	MARS_VDP_DISPMODE = MARS_224_LINES | MARS_VDP_MODE_256;
+	MARS_VDP_DISPMODE = mars_lines | MARS_VDP_MODE_256;
 	NTSC = (MARS_VDP_DISPMODE & MARS_NTSC_FORMAT) != 0;
-
-	SH2_WDT_WTCSR_TCNT = 0xA518; /* WDT TCSR = clr OVF, IT mode, timer off, clksel = Fs/2 */
-
-	/* init hires timer system */
-	SH2_WDT_VCR = (65<<8) | (SH2_WDT_VCR & 0x00FF); // set exception vector for WDT
-	SH2_INT_IPRA = (SH2_INT_IPRA & 0xFF0F) | 0x0020; // set WDT INT to priority 2
 
 	// change 4096.0f to something else if WDT TCSR is changed!
 	mars_frtc2msec_frac = 4096.0f * 1000.0f / (NTSC ? NTSC_CLOCK_SPEED : PAL_CLOCK_SPEED) * 65536.0f;
+
 	mars_refresh_hz = NTSC ? 60 : 50;
-
-	MARS_SYS_COMM4 = 0;
-
+	mars_framebuffer_height = lines == 240 ? 240 : 224;
 	mars_activescreen = MARS_VDP_FBCTL;
 
 	Mars_FlipFrameBuffers(1);
@@ -188,13 +184,28 @@ void Mars_Init(void)
 		Mars_InitLineTable();
 
 		p = (int*)(&MARS_FRAMEBUFFER + 0x100);
-		p_end = (int*)p + 320 / 4 * 224;
+		p_end = (int*)p + 320 / 4 * mars_framebuffer_height;
 		do {
 			*p = 0;
 		} while (++p < p_end);
 
 		Mars_FlipFrameBuffers(1);
 	}
+}
+
+void Mars_Init(void)
+{
+	int i;
+
+	Mars_InitVideo(224);
+
+	SH2_WDT_WTCSR_TCNT = 0xA518; /* WDT TCSR = clr OVF, IT mode, timer off, clksel = Fs/2 */
+
+	/* init hires timer system */
+	SH2_WDT_VCR = (65<<8) | (SH2_WDT_VCR & 0x00FF); // set exception vector for WDT
+	SH2_INT_IPRA = (SH2_INT_IPRA & 0xFF0F) | 0x0020; // set WDT INT to priority 2
+
+	MARS_SYS_COMM4 = 0;
 
 	/* detect input devices */
 	mars_mouseport = -1;

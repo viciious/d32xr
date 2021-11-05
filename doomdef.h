@@ -704,7 +704,7 @@ extern	int			startsave;
 /*SYSTEM IO */
 /*--------- */
 #define	SCREENWIDTH		252
-#define	SCREENHEIGHT	180
+#define	SCREENHEIGHT	200
 
 void I_Init (void);
 byte *I_WadBase (void);
@@ -723,6 +723,8 @@ pixel_t* I_OverwriteBuffer(void);
 
 pixel_t *I_ViewportBuffer (void);
 int I_ViewportYPos(void);
+int I_FrameBufferHeight(void);
+int I_IsPAL(void);
 
 void I_ClearFrameBuffer (void);
 void I_ClearWorkBuffer(void);

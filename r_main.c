@@ -4,6 +4,7 @@
 #include "r_local.h"
 #ifdef MARS
 #include "mars.h"
+#include "marshw.h"
 #endif
 
 unsigned short viewportWidth, viewportHeight;
@@ -11,9 +12,10 @@ unsigned short centerX, centerY;
 fixed_t centerXFrac, centerYFrac;
 fixed_t stretch;
 fixed_t stretchX;
-fixed_t weaponScale;
 
 detailmode_t detailmode = detmode_medium;
+
+VINT palstretch = 0;
 
 drawcol_t drawcol;
 drawcol_t drawfuzzycol;
@@ -287,20 +289,19 @@ void R_SetViewportSize(int num)
 	width = viewports[num][0];
 	height = viewports[num][1];
 
+	if (I_IsPAL() && palstretch)
+	{
+		/* different aspect ratio on PAL */
+		height = (height * /*576*/534) / 480;
+		height &= ~3;
+		if (height > 200) {
+			height = 200;
+		}
+	}
+
 	viewportNum = num;
 	viewportWidth = width;
 	viewportHeight = height;
-	weaponScale = 24 * FRACUNIT;
-
-#ifdef MARS
-	if (0)
-	if ((MARS_VDP_DISPMODE & MARS_NTSC_FORMAT) == 0)
-	{
-		/* correct aspect ratio on PAL */
-		viewportHeight = (height * 576) / 480;
-		weaponScale = 32 * FRACUNIT;
-	}
-#endif
 
 	centerX = viewportWidth / 2;
 	centerY = viewportHeight / 2;

@@ -36,6 +36,8 @@ typedef struct {
 	unsigned char *rndtable;
 	int rndindex;
 	jagobj_t* titlepic;
+	int solid_fire_height;
+	int bottom_pos;
 } m_fire_t;
 
 #define FIRE_WIDTH		320
@@ -221,6 +223,9 @@ void I_InitMenuFire(jagobj_t *titlepic)
 
 	m_fire->titlepic = titlepic;
 
+	m_fire->solid_fire_height = 24;
+	m_fire->bottom_pos = /*I_FrameBufferHeight()*/224 - m_fire->solid_fire_height;
+
 	char* dest = m_fire->firePix + FIRE_WIDTH * (FIRE_HEIGHT - 1);
 	for (j = 0; j < FIRE_WIDTH; j++)
 		*dest++ = m_fire->firePalCols - 1;
@@ -257,9 +262,9 @@ void I_InitMenuFire(jagobj_t *titlepic)
 		{
 			short* lines = (short *)&MARS_FRAMEBUFFER;
 
-			DrawJagobj2(titlepic, 0, 0, 0, 0, 0, 200 - FIRE_HEIGHT, I_FrameBuffer());
+			DrawJagobj2(titlepic, 0, 0, 0, 0, 0, m_fire->bottom_pos - FIRE_HEIGHT, I_FrameBuffer());
 
-			for (j = 0; j < 200 - FIRE_HEIGHT; j++)
+			for (j = 0; j < m_fire->bottom_pos - FIRE_HEIGHT; j++)
 				lines[j] = 0 * 320 / 2 + 0x100;
 
 			UpdateBuffer();
@@ -299,7 +304,6 @@ void I_StopMenuFire(void)
 void I_DrawMenuFire(void)
 {
 	int x, y;
-	unsigned *dest = (unsigned *)(I_OverwriteBuffer() + 320 / 2 * (224 - FIRE_HEIGHT));
 	char* firePix = m_fire->firePix;
 	jagobj_t* titlepic = m_fire->titlepic;
 	unsigned char* firePal = m_fire->firePal;
@@ -307,18 +311,20 @@ void I_DrawMenuFire(void)
 	const int pic_startpos = -20;
 	const int pic_cutoff = 16;
 	const int fh = FIRE_HEIGHT;
-	const int solid_fire_height = 24;
+	const int solid_fire_height = m_fire->solid_fire_height;
+	const int bottom_pos = m_fire->bottom_pos;
+	unsigned* dest = (unsigned*)(I_OverwriteBuffer() + 320 / 2 * (bottom_pos + solid_fire_height - FIRE_HEIGHT));
 
 	// scroll the title pic from bottom to top
 
 	// unroll the hidden part as the picture moves
 	int pos = (ticon + pic_startpos) / 2;
-	if (pos >= fh && pos <= 202)
+	if (pos >= fh && pos <= bottom_pos+2)
 	{
 		int j;
-		int limit = pos > 200 ? 0 : 200 - pos;
+		int limit = pos > bottom_pos ? 0 : bottom_pos - pos;
 		short* lines = (short *)&MARS_FRAMEBUFFER;
-		for (j = limit; j < 200 - fh; j++)
+		for (j = limit; j < bottom_pos - fh; j++)
 			lines[j] = (j - limit) * 320 / 2 + 0x100;
 	}
 
@@ -329,7 +335,7 @@ void I_DrawMenuFire(void)
 		if (ticon >= FIRE_STOP_TICON)
 		{
 			row = (unsigned*)(I_FrameBuffer() + 320 / 2 * (200 - pic_cutoff));
-			for (y = 200 - pic_cutoff; y <= 224 - solid_fire_height; y++)
+			for (y = 200 - pic_cutoff; y <= bottom_pos; y++)
 			{
 				for (x = 0; x < 320 / 4; x += 4)
 					*row++ = 0, *row++ = 0, *row++ = 0, *row++ = 0;
@@ -340,8 +346,8 @@ void I_DrawMenuFire(void)
 		// avoid drawing the part that's hidden by the fire animation at
 		// the bottom of the screen. the upper part must mesh together
 		// with the part that is being unfolded using the line table
-		int y = 200 - (pos < fh ? pos : fh);
-		int src_y = pos > fh ? ((pos >= 200 ? 200 : pos) - fh) : 0;
+		int y = bottom_pos - (pos < fh ? pos : fh);
+		int src_y = pos > fh ? ((pos >= bottom_pos ? bottom_pos : pos) - fh) : 0;
 		if (pos >= solid_fire_height)
 			DrawJagobj2(titlepic, 0, y, 0, src_y, 0, (pos >= 200 ? 0 : pos) - pic_cutoff, I_FrameBuffer());
 	}

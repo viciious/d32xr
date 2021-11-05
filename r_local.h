@@ -54,6 +54,7 @@ typedef enum
 
 extern detailmode_t detailmode;
 extern VINT viewportnum;
+extern VINT palstretch;
 
 /*
 ==============================================================================

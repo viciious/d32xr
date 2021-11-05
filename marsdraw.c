@@ -636,8 +636,8 @@ void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh)
 
 	if (x + width > 320)
 		width = 320 - x;
-	if (y + height > 224)
-		height = 224 - y;
+	if (y + height > mars_framebuffer_height)
+		height = mars_framebuffer_height - y;
 
 	if (width < 1 || height < 1)
 		return;
@@ -735,7 +735,7 @@ void DrawTiledBackground(void)
 
 			y++;
 			source += hw;
-			if (y == 224)
+			if (y == mars_framebuffer_height)
 				return;
 		}
 	}
@@ -794,8 +794,8 @@ void DrawJagobj2(jagobj_t* jo, int x, int y,
 
 	if (x + width > 320)
 		width = 320 - x;
-	if (y + height > 223)
-		height = 223 - y;
+	if (y + height > mars_framebuffer_height-1)
+		height = mars_framebuffer_height-1 - y;
 
 	if (width < 1 || height < 1)
 		return;

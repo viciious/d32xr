@@ -547,7 +547,7 @@ void ST_Drawer (void)
 		return;
 
 #ifdef MARS
-	stbar_y = 224 - sbar_height;
+	stbar_y = I_FrameBufferHeight() - sbar_height;
 #else
 	stbar_y = 0;
 	bufferpage = sbartop;		/* draw into status bar overlay */
@@ -729,9 +729,9 @@ void ST_EraseBlock(int x, int y, int width, int height)
 
 	source = (short *)sbar->data + y * rowsize + (unsigned)x/2;
 
-	y += 224 - BIGSHORT(sbar->height);
-	if (y > 224)
-		height = 224 - y;
+	y += I_FrameBufferHeight() - BIGSHORT(sbar->height);
+	if (y > I_FrameBufferHeight())
+		height = I_FrameBufferHeight() - y;
 	if (height <= 0)
 		return;
 
