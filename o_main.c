@@ -398,56 +398,50 @@ exit:
 
 		if (slider && (buttons & (BT_RIGHT|BT_LEFT)))
 		{
+			boolean sliderchange = false;
+
 			if (buttons & BT_RIGHT)
 			{
-				slider->curval++;
-				if (slider->curval > slider->maxval)
+				if (++slider->curval > slider->maxval)
 					slider->curval = slider->maxval;
 				else
-				{
-					switch (itemno)
-					{
-					case mi_soundvol:
-						sfxvolume = 64 * slider->curval / slider->maxval;
-						break;
-					}
-					sound = sfx_stnmov;
-				}
+					sliderchange = true;
 			}
 			if (buttons & BT_LEFT)
 			{
-				slider->curval--;
-				if (slider->curval < 0)
+				if (--slider->curval < 0)
 					slider->curval = 0;
 				else
-				{
-					switch (itemno)
-					{
-					case mi_soundvol:
-						sfxvolume = 64 * slider->curval / slider->maxval;
-						break;
-					}
-					sound = sfx_stnmov;
-				}
+					sliderchange = true;
 			}
 
-			switch (itemno)
+			if (sliderchange)
 			{
-			case mi_resolution:
-				R_SetViewportSize(slider->curval);
-				break;
-			case mi_detailmode:
-				R_SetDetailMode(slider->curval - 1);
-				break;
-			case mi_palstretch:
+				switch (itemno)
+				{
+				case mi_soundvol:
+					sfxvolume = 64 * slider->curval / slider->maxval;
+					break;
+				case mi_resolution:
+					R_SetViewportSize(slider->curval);
+					break;
+				case mi_detailmode:
+					R_SetDetailMode(slider->curval - 1);
+					break;
+				case mi_palstretch:
 #ifdef MARS
-				palstretch = slider->curval;
-				Mars_InitVideo(palstretch ? 240 : 224);
-				R_SetViewportSize(viewportNum);
+					palstretch = slider->curval;
+					while (!I_RefreshCompleted()) {}
+					Mars_InitVideo(palstretch ? 240 : 224);
+					R_SetViewportSize(viewportNum);
 #endif
-				break;
-			default:
-				break;
+					break;
+				default:
+					break;
+
+				}
+
+				sound = sfx_stnmov;
 			}
 		}
 
