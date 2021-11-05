@@ -212,7 +212,9 @@ void DrawLine (pixel_t color, int x1, int y1, int x2, int y2)
 	byte		quadcolor;
 	int		xstep, ystep;
 	int		count = 1;
-	int 		x, y;
+	int 	x, y;
+	int		zwidth = 320 * FRACUNIT;
+	int		zheight = I_FrameBufferHeight() * FRACUNIT;
 	byte 	*fb = (byte*)I_FrameBuffer();
 
 	dx = x2 - x1;
@@ -267,8 +269,8 @@ void DrawLine (pixel_t color, int x1, int y1, int x2, int y2)
 		boolean clipped = false;
 		byte *p = fb + (y>>FRACBITS)*320 + (x>>FRACBITS);
 
-		if (x < 0 || x >= 320*FRACUNIT) clipped = true;
-		if (y < 0 || y >= 224*FRACUNIT) clipped = true;
+		if (x < 0 || x >= zwidth) clipped = true;
+		if (y < 0 || y >= zheight) clipped = true;
 		x += xstep;
 		y += ystep;
 
