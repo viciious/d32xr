@@ -421,6 +421,8 @@ int TIC_Abortable (void)
 	jagobj_t	*pl;
 #endif
 
+	if (ticon < TICVBLS)
+		return 0;
 	if (ticon >= gameinfo.titleTime)
 		return 1;		/* go on to next demo */
 
