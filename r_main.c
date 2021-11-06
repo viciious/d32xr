@@ -403,9 +403,9 @@ void R_SetupTextureCaches(void)
 		numcflats = 5;
 
 	flatzonesize = numcflats * flatblocksize;
-	if (cachezonesize - flatzonesize <= flatblocksize*2 && numcflats > 2)
+	while (numcflats > 2 && cachezonesize < flatzonesize*2)
 	{
-		numcflats /= 2;
+		numcflats--;
 		flatzonesize = numcflats * flatblocksize;
 	}
 
