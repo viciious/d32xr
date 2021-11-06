@@ -265,7 +265,7 @@ void R_DrawPlanes2(const int cpu)
 
         if (cpu == 0)
         {
-            R_AddPixelsToTexCache(&r_flatscache, pl->flatnum, lpl.pixelcount);
+            R_AddPixelsToTexCache(&r_texcache, numtextures+pl->flatnum, lpl.pixelcount);
         }
     }
 }

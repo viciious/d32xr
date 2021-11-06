@@ -105,7 +105,7 @@ angle_t xtoviewangle[SCREENWIDTH+1];
 int t_ref_cnt = 0;
 int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sprites[4], t_ref_total[4];
 
-r_texcache_t r_flatscache, r_wallscache;
+r_texcache_t r_texcache;
 
 void R_Setup(void) ATTR_OPTIMIZE_SIZE;
 void R_Cache(void) ATTR_OPTIMIZE_SIZE;
@@ -362,9 +362,7 @@ D_printf ("Done\n");
 
 	R_SetDetailMode(detailmode);
 
-	R_InitTexCache(&r_flatscache, numflats);
-
-	R_InitTexCache(&r_wallscache, numtextures);
+	R_InitTexCache(&r_texcache, numflats+numtextures);
 }
 
 /*
@@ -377,9 +375,8 @@ D_printf ("Done\n");
 void R_SetupTextureCaches(void)
 {
 	int i;
-	int numcflats;
 	int zonefree;
-	int cachezonesize, texzonesize, flatzonesize;
+	int cachezonesize;
 	void *margin;
 	const int zonemargin = 8*1024;
 	const int flatblocksize = sizeof(memblock_t) + ((sizeof(texcacheblock_t) + 15) & ~15) + 64*64 + 32;
@@ -395,39 +392,19 @@ void R_SetupTextureCaches(void)
 	if (zonefree < zonemargin+flatblocksize)
 		goto nocache;
 
-	// see how many flats we can store
 	cachezonesize = zonefree - zonemargin - 128; // give the main zone some slack
-
-	numcflats = cachezonesize / flatblocksize;
-	if (numcflats > 5)
-		numcflats = 5;
-
-	flatzonesize = numcflats * flatblocksize;
-	while (numcflats > 2 && cachezonesize < flatzonesize*2)
-	{
-		numcflats--;
-		flatzonesize = numcflats * flatblocksize;
-	}
-
-	texzonesize = cachezonesize - flatzonesize;
-	if (texzonesize < 0)
-		texzonesize = 0;
-
-	if (flatzonesize + texzonesize == 0)
-	{
-nocache:
-		R_InitTexCacheZone(&r_flatscache, 0);
-		R_InitTexCacheZone(&r_wallscache, 0);
-		return;
-	}
+	if (cachezonesize < flatblocksize)
+		goto nocache;
 	
 	margin = Z_Malloc(zonemargin, PU_LEVEL, 0);
 
-	R_InitTexCacheZone(&r_flatscache, flatzonesize);
-
-	R_InitTexCacheZone(&r_wallscache, texzonesize);
+	R_InitTexCacheZone(&r_texcache, cachezonesize);
 
 	Z_Free(margin);
+	return;
+
+nocache:
+	R_InitTexCacheZone(&r_texcache, 0);
 }
 
 void R_SetupLevel(void)
@@ -649,8 +626,7 @@ void R_Setup (void)
 	phasetime[0] = samplecount;
 #endif
 
-	R_SetupTexCacheFrame(&r_flatscache);
-	R_SetupTexCacheFrame(&r_wallscache);
+	R_SetupTexCacheFrame(&r_texcache);
 }
 
 //

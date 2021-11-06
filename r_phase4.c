@@ -72,7 +72,7 @@ static void R_FinishWall(viswall_t* wc)
         if (fw_texture->data == NULL)
 #endif
             fw_texture->data = R_CheckPixels(fw_texture->lumpnum);
-        R_TestTexCacheCandidate(&r_wallscache, fw_texture - textures);
+        R_TestTexCacheCandidate(&r_texcache, fw_texture - textures);
     }
 
     // has bottom texture?
@@ -83,7 +83,7 @@ static void R_FinishWall(viswall_t* wc)
         if (fw_texture->data == NULL)
 #endif
             fw_texture->data = R_CheckPixels(fw_texture->lumpnum);
-        R_TestTexCacheCandidate(&r_wallscache, fw_texture - textures);
+        R_TestTexCacheCandidate(&r_texcache, fw_texture - textures);
     }
 
     int floorpicnum = wc->floorpicnum;
@@ -95,7 +95,7 @@ static void R_FinishWall(viswall_t* wc)
         flatpixels[floorpicnum] = R_CheckPixels(firstflat + floorpicnum);
 
     // get floor texture
-    R_TestTexCacheCandidate(&r_flatscache, floorpicnum);
+    R_TestTexCacheCandidate(&r_texcache, numtextures + floorpicnum);
 
     // is there sky at this wall?
     if (ceilingpicnum == -1)
@@ -110,7 +110,7 @@ static void R_FinishWall(viswall_t* wc)
         if (flatpixels[ceilingpicnum] == NULL)
 #endif
             flatpixels[ceilingpicnum] = R_CheckPixels(firstflat + ceilingpicnum);
-        R_TestTexCacheCandidate(&r_flatscache, ceilingpicnum);
+        R_TestTexCacheCandidate(&r_texcache, numtextures + ceilingpicnum);
     }
 }
 

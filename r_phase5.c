@@ -260,21 +260,27 @@ void R_Cache(void)
 
 void R_Cache(void)
 {
-    if (r_flatscache.bestobj != -1)
-    {
-        const int flatnum = r_flatscache.bestobj;
-        const int pixels = 64 * 64;
+    const int id = r_texcache.bestobj;
 
-        R_AddToTexCache(&r_flatscache, flatnum, pixels, firstflat + flatnum, (void**)&flatpixels[flatnum]);
+    if (id == -1)
+        return;
+    if (r_texcache.bestcount < 128)
+    {
+        /* ignore extremely small fragments */
+        return;
     }
 
-    if (r_wallscache.bestobj != -1)
+    if (id < numtextures)
     {
-        const int id = r_wallscache.bestobj;
         texture_t* tex = &textures[id];
         int pixels = (int)tex->width * tex->height;
-
-        R_AddToTexCache(&r_wallscache, id, pixels, tex->lumpnum, (void **)&tex->data);
+        R_AddToTexCache(&r_texcache, id, pixels, tex->lumpnum, (void**)&tex->data);
+    }
+    else
+    {
+        int flatnum = id - numtextures;
+        int pixels = 64 * 64;
+        R_AddToTexCache(&r_texcache, id, pixels, firstflat + flatnum, (void**)&flatpixels[flatnum]);
     }
 }
 

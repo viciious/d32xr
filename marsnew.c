@@ -690,8 +690,7 @@ void I_Update(void)
 
 			if (prevdebugmode == 4 || debugmode == 4)
 			{
-				R_ClearTexCache(&r_flatscache);
-				R_ClearTexCache(&r_wallscache);
+				R_ClearTexCache(&r_texcache);
 			}
 
 			if (prevdebugmode == 0)

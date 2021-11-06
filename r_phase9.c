@@ -15,8 +15,7 @@ void R_Update(void)
 #endif
 
 #ifdef MARS
-   R_PostTexCacheFrame(&r_flatscache);
-   R_PostTexCacheFrame(&r_wallscache);
+   R_PostTexCacheFrame(&r_texcache);
 #endif
 
    // NB: appears completely Jag-specific; our drawing may end in phase 8.

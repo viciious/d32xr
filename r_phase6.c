@@ -496,12 +496,12 @@ static void R_SegCommands2(const int cpu)
         {
             if (segl->actionbits & AC_TOPTEXTURE)
             {
-                R_AddPixelsToTexCache(&r_wallscache, segl->t_texturenum, toptex->pixelcount);
+                R_AddPixelsToTexCache(&r_texcache, segl->t_texturenum, toptex->pixelcount);
             }
 
             if (segl->actionbits & AC_BOTTOMTEXTURE)
             {
-                R_AddPixelsToTexCache(&r_wallscache, segl->b_texturenum, bottomtex->pixelcount);
+                R_AddPixelsToTexCache(&r_texcache, segl->b_texturenum, bottomtex->pixelcount);
             }
         }
     }

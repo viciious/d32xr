@@ -367,7 +367,7 @@ typedef struct
 	void** userp;
 } texcacheblock_t;
 
-extern r_texcache_t r_flatscache, r_wallscache;
+extern r_texcache_t r_texcache;
 
 void R_InitTexCache(r_texcache_t* c, int maxobjects);
 void R_InitTexCacheZone(r_texcache_t* c, int zonesize);
