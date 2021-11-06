@@ -380,8 +380,8 @@ void P_LoadSideDefs (int lump)
 	sd = sides;
 	for (i=0 ; i<numsides ; i++, msd++, sd++)
 	{
-		sd->textureoffset = LITTLESHORT(msd->textureoffset)<<FRACBITS;
-		sd->rowoffset = LITTLESHORT(msd->rowoffset)<<FRACBITS;
+		sd->textureoffset = LITTLESHORT(msd->textureoffset);
+		sd->rowoffset = LITTLESHORT(msd->rowoffset);
 		sd->toptexture = R_TextureNumForName(msd->toptexture);
 		sd->bottomtexture = R_TextureNumForName(msd->bottomtexture);
 		sd->midtexture = R_TextureNumForName(msd->midtexture);

@@ -679,7 +679,7 @@ void P_UpdateSpecials (void)
 		switch(line->special)
 		{
 			case 48:	/* EFFECT FIRSTCOL SCROLL + */
-				sides[line->sidenum[0]].textureoffset += FRACUNIT;
+				sides[line->sidenum[0]].textureoffset += 1;
 				break;
 		}
 	}

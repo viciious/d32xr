@@ -98,8 +98,8 @@ typedef struct
 {
 	VINT		sector;
 	VINT		toptexture, bottomtexture, midtexture;
-	fixed_t		textureoffset;		/* add this to the calculated texture col */
-	fixed_t		rowoffset;			/* add this to the calculated texture top */
+	VINT		textureoffset;		/* add this to the calculated texture col */
+	VINT		rowoffset;			/* add this to the calculated texture top */
 } side_t;
 
 typedef enum {ST_HORIZONTAL, ST_VERTICAL, ST_POSITIVE, ST_NEGATIVE} slopetype_t;

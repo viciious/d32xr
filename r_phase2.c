@@ -104,7 +104,7 @@ static void R_WallEarlyPrep(viswall_t* segl)
          else
             t_texturemid = f_ceilingheight;
 
-         t_texturemid += si->rowoffset;                               // add in sidedef texture offset
+         t_texturemid += si->rowoffset<<FRACBITS;                               // add in sidedef texture offset
          segl->t_bottomheight = f_floorheight / (1 << FIXEDTOHEIGHT); // set bottom height
          actionbits |= (AC_SOLIDSIL|AC_TOPTEXTURE);                   // solid line; draw middle texture only
       }
@@ -121,7 +121,7 @@ static void R_WallEarlyPrep(viswall_t* segl)
             else
                b_texturemid = b_floorheight;
 
-            b_texturemid += si->rowoffset; // add in sidedef texture offset
+            b_texturemid += si->rowoffset<<FRACBITS; // add in sidedef texture offset
 
             segl->b_topheight = segl->floornewheight = b_floorheight / (1 << FIXEDTOHEIGHT);
             segl->b_bottomheight = f_floorheight / (1 << FIXEDTOHEIGHT);
@@ -137,7 +137,7 @@ static void R_WallEarlyPrep(viswall_t* segl)
             else
                t_texturemid = b_ceilingheight + (textures[segl->t_texturenum].height << FRACBITS);
 
-            t_texturemid += si->rowoffset; // add in sidedef texture offset
+            t_texturemid += si->rowoffset<<FRACBITS; // add in sidedef texture offset
 
             segl->t_bottomheight = segl->ceilingnewheight = b_ceilingheight / (1 << FIXEDTOHEIGHT);
             actionbits |= (AC_NEWCEILING|AC_TOPTEXTURE); // draw top texture and ceiling
@@ -170,7 +170,7 @@ static void R_WallEarlyPrep(viswall_t* segl)
       segl->t_texturemid  = t_texturemid;
       segl->b_texturemid  = b_texturemid;
       segl->seglightlevel = f_lightlevel;
-      segl->offset        = si->textureoffset + ((fixed_t)seg->offset << 16);
+      segl->offset        = ((fixed_t)si->textureoffset + seg->offset) << 16;
        
       ++segl;  // next viswall
    }
