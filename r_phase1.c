@@ -383,7 +383,7 @@ static void R_AddLine(seg_t *line)
 
    // decide which clip routine to use
    side = line->side;
-   ldef = line->linedef;
+   ldef = &lines[line->linedef];
    backsector = (ldef->flags & ML_TWOSIDED) ? &sectors[sides[ldef->sidenum[side^1]].sector] : 0;
    sidedef = &sides[ldef->sidenum[side]];
 

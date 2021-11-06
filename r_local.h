@@ -132,8 +132,8 @@ typedef struct seg_s
 	VINT 		side;
 	VINT            v1, v2;
 	VINT 		angle;
-	fixed_t		offset;
-	line_t		*linedef;
+	VINT		offset;
+	VINT		linedef;
 } seg_t;
 
 

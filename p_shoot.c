@@ -332,7 +332,7 @@ static boolean PA_CrossSubsector(int bspnum)
 
    for(; count; seg++, count--)
    {
-      line = seg->linedef;
+      line = &lines[seg->linedef];
 
       if(line->validcount == validcount)
          continue; // already checked other side

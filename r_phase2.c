@@ -34,7 +34,7 @@ static void R_WallEarlyPrep(viswall_t* segl)
 
    {
       seg  = segl->seg;
-      li   = seg->linedef;
+      li   = &lines[seg->linedef];
       side = seg->side;
       si   = &sides[li->sidenum[seg->side]];
 
@@ -170,7 +170,7 @@ static void R_WallEarlyPrep(viswall_t* segl)
       segl->t_texturemid  = t_texturemid;
       segl->b_texturemid  = b_texturemid;
       segl->seglightlevel = f_lightlevel;
-      segl->offset        = si->textureoffset + seg->offset;
+      segl->offset        = si->textureoffset + ((fixed_t)seg->offset << 16);
        
       ++segl;  // next viswall
    }
