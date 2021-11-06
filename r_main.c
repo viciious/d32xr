@@ -15,8 +15,6 @@ fixed_t stretchX;
 
 detailmode_t detailmode = detmode_medium;
 
-VINT palstretch = 0;
-
 drawcol_t drawcol;
 drawcol_t drawfuzzycol;
 drawcol_t drawcolnpo2;
@@ -288,16 +286,6 @@ void R_SetViewportSize(int num)
 
 	width = viewports[num][0];
 	height = viewports[num][1];
-
-	if (I_IsPAL() && palstretch)
-	{
-		/* different aspect ratio on PAL */
-		height = (height * /*576*/534) / 480;
-		height &= ~3;
-		if (height > 200) {
-			height = 200;
-		}
-	}
 
 	viewportNum = num;
 	viewportWidth = width;

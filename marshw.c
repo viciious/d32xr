@@ -39,6 +39,7 @@ volatile unsigned mars_swdt_ovf_count = 0;
 unsigned mars_frtc2msec_frac = 0;
 const uint8_t* mars_newpalette = NULL;
 
+int16_t mars_requested_lines = 224;
 uint16_t mars_framebuffer_height = 224;
 
 uint16_t mars_cd_ok = 0;
@@ -72,16 +73,27 @@ void Mars_InitLineTable(void)
 {
 	int j;
 	int blank;
+	int offset = 0; // 224p or 240p
 	volatile unsigned short* lines = &MARS_FRAMEBUFFER;
 
 	// initialize the lines section of the framebuffer
+
+	if (mars_requested_lines == -240)
+	{
+		// letterboxed 240p
+		offset = (240 - 224) / 2;
+	}
+
 	for (j = 0; j < mars_framebuffer_height; j++)
-		lines[j] = j * 320 / 2 + 0x100;
+		lines[offset+j] = j * 320 / 2 + 0x100;
 
 	blank = j * 320 / 2;
 
 	// set the rest of the line table to a blank line
-	for ( ; j < 256; j++)
+	for (; j < 256; j++)
+		lines[offset+j] = blank + 0x100;
+
+	for (j = 0; j < offset; j++)
 		lines[j] = blank + 0x100;
 
 	// make sure blank line is clear
@@ -161,7 +173,7 @@ void Mars_InitVideo(int lines)
 {
 	int i;
 	char NTSC;
-	int mars_lines = lines == 240 ? MARS_240_LINES : MARS_224_LINES;
+	int mars_lines = lines == 240 || lines == -240 ? MARS_240_LINES : MARS_224_LINES;
 
 	while ((MARS_SYS_INTMSK & MARS_SH2_ACCESS_VDP) == 0);
 
@@ -172,6 +184,7 @@ void Mars_InitVideo(int lines)
 	mars_frtc2msec_frac = 4096.0f * 1000.0f / (NTSC ? NTSC_CLOCK_SPEED : PAL_CLOCK_SPEED) * 65536.0f;
 
 	mars_refresh_hz = NTSC ? 60 : 50;
+	mars_requested_lines = lines;
 	mars_framebuffer_height = lines == 240 ? 240 : 224;
 	mars_activescreen = MARS_VDP_FBCTL;
 
@@ -237,6 +250,14 @@ void Mars_Init(void)
 		i = mars_vblank_count + 180;
 		while (i > mars_vblank_count) ;
 	}
+}
+
+short* Mars_FrameBufferLines(void)
+{
+	short* lines = (short*)&MARS_FRAMEBUFFER;
+	if (mars_requested_lines == -240)
+		lines += (240 - 224) / 2;
+	return lines;
 }
 
 void pri_vbi_handler(void)

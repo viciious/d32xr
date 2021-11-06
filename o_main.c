@@ -27,7 +27,6 @@ typedef enum
 
 	mi_resolution,
 	mi_detailmode,
-	mi_palstretch,
 
 	mi_controltype,
 	mi_alwaysrun,
@@ -44,7 +43,7 @@ typedef struct
 	char	maxval;
 } slider_t;
 
-static slider_t slider[4];
+static slider_t slider[3];
 
 typedef struct
 {
@@ -191,13 +190,6 @@ void O_Init (void)
 	slider[2].maxval = MAXDETAILMODES;
 	slider[2].curval = detailmode + 1;
 
-	D_strncpy(menuitem[mi_palstretch].name, "Use PAL Aspect", 14);
-	menuitem[mi_palstretch].x = 74;
-	menuitem[mi_palstretch].y = 116;
-	menuitem[mi_palstretch].slider = &slider[3];
-	slider[3].maxval = 1;
-	slider[3].curval = palstretch;
-
 
 	D_strncpy(menuitem[mi_controltype].name, "Gamepad", 7);
 	menuitem[mi_controltype].x = 74;
@@ -223,11 +215,6 @@ void O_Init (void)
 
 	D_strncpy(menuscreen[ms_video].name, "Video", 6);
 	menuscreen[ms_video].firstitem = mi_resolution;
-#ifdef MARS
-	if (I_IsPAL())
-		menuscreen[ms_video].numitems = mi_palstretch - mi_resolution + 1;
-	else
-#endif
 	menuscreen[ms_video].numitems = mi_detailmode - mi_resolution + 1;
 
 	D_strncpy(menuscreen[ms_controls].name, "Controls", 8);
@@ -427,14 +414,6 @@ exit:
 					break;
 				case mi_detailmode:
 					R_SetDetailMode(slider->curval - 1);
-					break;
-				case mi_palstretch:
-#ifdef MARS
-					palstretch = slider->curval;
-					while (!I_RefreshCompleted()) {}
-					Mars_InitVideo(palstretch ? 240 : 224);
-					R_SetViewportSize(viewportNum);
-#endif
 					break;
 				default:
 					break;

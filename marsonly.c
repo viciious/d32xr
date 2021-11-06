@@ -42,8 +42,9 @@ int main(void)
 /* */
 	ReadEEProm();
 
-	if (Mars_IsPAL() && palstretch)
-		Mars_InitVideo(240);
+	/* use letter-boxed 240p mode */
+	if (Mars_IsPAL())
+		Mars_InitVideo(-240);
 
 /* */
 /* start doom */

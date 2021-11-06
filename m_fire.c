@@ -260,7 +260,7 @@ void I_InitMenuFire(jagobj_t *titlepic)
 	{
 		for (i = 0; i < 2; i++)
 		{
-			short* lines = (short *)&MARS_FRAMEBUFFER;
+			short* lines = Mars_FrameBufferLines();
 
 			DrawJagobj2(titlepic, 0, 0, 0, 0, 0, m_fire->bottom_pos - FIRE_HEIGHT, I_FrameBuffer());
 
@@ -323,7 +323,7 @@ void I_DrawMenuFire(void)
 	{
 		int j;
 		int limit = pos > bottom_pos ? 0 : bottom_pos - pos;
-		short* lines = (short *)&MARS_FRAMEBUFFER;
+		short* lines = Mars_FrameBufferLines();
 		for (j = limit; j < bottom_pos - fh; j++)
 			lines[j] = (j - limit) * 320 / 2 + 0x100;
 	}
