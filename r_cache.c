@@ -27,7 +27,7 @@
 #include "doomdef.h"
 #include "r_local.h"
 
-#define LIFECOUNT_FRAMES 15
+#define LIFECOUNT_FRAMES 30
 
 #define R_CheckPixels(lumpnum) (void *)((intptr_t)(W_POINTLUMPNUM(lumpnum)))
 
