@@ -116,7 +116,7 @@ void P_LoadSegs (int lump)
 					
 		li->angle = LITTLESHORT(ml->angle);
 		angle = LITTLESHORT(ml->angle)<<16;
-		li->offset = (LITTLESHORT(ml->offset))<<16;
+		li->offset = LITTLESHORT(ml->offset);
 		linedef = LITTLESHORT(ml->linedef);
 
 		li->linedef = linedef;
