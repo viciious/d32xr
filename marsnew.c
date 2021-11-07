@@ -67,96 +67,89 @@ static int Mars_ConvGamepadButtons(int ctrl)
 		newc |= BT_UP;
 	if (ctrl & SEGA_CTRL_DOWN)
 		newc |= BT_DOWN;
+	if (ctrl & SEGA_CTRL_LEFT)
+		newc |= BT_LEFT;
+	if (ctrl & SEGA_CTRL_RIGHT)
+		newc |= BT_RIGHT;
+	if (ctrl & SEGA_CTRL_A)
+		newc |= BT_A;
+	if (ctrl & SEGA_CTRL_B)
+		newc |= BT_B;
+	if (ctrl & SEGA_CTRL_C)
+		newc |= BT_C;
+	if (ctrl & SEGA_CTRL_X)
+		newc |= BT_X;
+	if (ctrl & SEGA_CTRL_Y)
+		newc |= BT_Y;
+	if (ctrl & SEGA_CTRL_Z)
+		newc |= BT_Z;
 
 	if (ctrl & SEGA_CTRL_MODE)
 	{
 		newc |= BT_MODE;
-		if (ctrl & SEGA_CTRL_A)
-			newc |= BT_A;
-		if (ctrl & SEGA_CTRL_B)
-			newc |= BT_B;
-		if (ctrl & SEGA_CTRL_C)
-			newc |= BT_C;
-
-		if (ctrl & SEGA_CTRL_X)
-			newc |= BT_X;
-		if (ctrl & SEGA_CTRL_Y)
-			newc |= BT_Y;
-		if (ctrl & SEGA_CTRL_Z)
-			newc |= BT_Z;
 	}
 	else
 	{
 		if (strafebtns)
 		{
-			if (ctrl & SEGA_CTRL_LEFT)
-				newc |= BT_LEFT;
-			if (ctrl & SEGA_CTRL_RIGHT)
-				newc |= BT_RIGHT;
-
 			if (ctrl & SEGA_CTRL_A)
-				newc |= BT_A | configuration[controltype][0];
+				newc |= configuration[controltype][0];
 			if (ctrl & SEGA_CTRL_B)
-				newc |= BT_B | configuration[controltype][1];
+				newc |= configuration[controltype][1];
 
 			switch (strafebtns)
 			{
 			default:
 			case 1:
 				if (ctrl & SEGA_CTRL_C)
-					newc |= BT_C | configuration[controltype][2];
+					newc |= configuration[controltype][2];
 
 				if (ctrl & SEGA_CTRL_X)
-					newc |= BT_X | BT_NWEAPN;
+					newc |= BT_NWEAPN;
 				if (ctrl & SEGA_CTRL_Y)
-					newc |= BT_Y | BT_STRAFELEFT;
+					newc |= BT_STRAFELEFT;
 				if (ctrl & SEGA_CTRL_Z)
-					newc |= BT_Z | BT_STRAFERIGHT;
+					newc |= BT_STRAFERIGHT;
 				break;
 			case 2:
 				if (ctrl & SEGA_CTRL_C)
-					newc |= BT_C | BT_STRAFERIGHT;
+					newc |= BT_STRAFERIGHT;
 
 				if (ctrl & SEGA_CTRL_X)
-					newc |= BT_X | BT_NWEAPN;
+					newc |= BT_NWEAPN;
 				if (ctrl & SEGA_CTRL_Y)
-					newc |= BT_C | configuration[controltype][2];
+					newc |= configuration[controltype][2];
 				if (ctrl & SEGA_CTRL_Z)
-					newc |= BT_Z | BT_STRAFELEFT;
+					newc |= BT_STRAFELEFT;
 				break;
 			case 3:
 				if (ctrl & SEGA_CTRL_C)
-					newc |= BT_C | configuration[controltype][2];
+					newc |= configuration[controltype][2];
 
 				if (ctrl & SEGA_CTRL_X)
-					newc |= BT_X | BT_STRAFELEFT;
+					newc |= BT_STRAFELEFT;
 				if (ctrl & SEGA_CTRL_Y)
-					newc |= BT_X | BT_NWEAPN;
+					newc |= BT_NWEAPN;
 				if (ctrl & SEGA_CTRL_Z)
-					newc |= BT_Z | BT_STRAFERIGHT;
+					newc |= BT_STRAFERIGHT;
 				break;
 			}
 		}
 		else
 		{
-			if (ctrl & SEGA_CTRL_LEFT)
-				newc |= BT_LEFT;
-			if (ctrl & SEGA_CTRL_RIGHT)
-				newc |= BT_RIGHT;
-
 			if (ctrl & SEGA_CTRL_A)
-				newc |= BT_A | configuration[controltype][0];
+				newc |= configuration[controltype][0];
 			if (ctrl & SEGA_CTRL_B)
-				newc |= BT_B | configuration[controltype][1];
+				newc |= configuration[controltype][1];
 			if (ctrl & SEGA_CTRL_C)
-				newc |= BT_C | configuration[controltype][2];
+				newc |= configuration[controltype][2];
 
 			if (ctrl & SEGA_CTRL_X)
-				newc |= BT_X | BT_PWEAPN;
+				newc |= BT_PWEAPN;
 			if (ctrl & SEGA_CTRL_Y)
-				newc |= BT_Y | BT_NWEAPN;
+				newc |= BT_NWEAPN;
 			if (ctrl & SEGA_CTRL_Z)
-				newc |= BT_Z | BT_AUTOMAP;
+				newc |= BT_AUTOMAP;
 
 			if (newc & BT_USE)
 				newc |= BT_STRAFE;
