@@ -246,8 +246,8 @@ void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **us
 		if (Z_LargestFreeBlock(c->zone) < size + pad)
 		{
 			// check for fragmentation
-			if (Z_FreeBlocks(c->zone) > size + pad)
-				R_ClearTexCache(c);
+			//if (Z_FreeBlocks(c->zone) > size + pad)
+			//	R_ClearTexCache(c);
 			return;
 		}
 	}
