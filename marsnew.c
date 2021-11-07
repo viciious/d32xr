@@ -446,7 +446,6 @@ int I_ReadControls(void)
 	ctrl = 0;
 	ctrl |= Mars_HandleStartHeld(&val, SEGA_CTRL_START);
 	ctrl |= Mars_ConvGamepadButtons(val);
-	ctrl |= Mars_ConvGamepadButtons(val);
 	return ctrl;
 }
 
