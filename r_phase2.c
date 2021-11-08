@@ -279,7 +279,12 @@ static void R_WallEarlyPrep2(viswall_t* wc)
     if (wc->stop > wc->start)
     {
         scale2 = R_ScaleFromGlobalAngle(rw_distance, vd.viewangle + xtoviewangle[wc->stop], normalangle);
+#ifdef MARS
+        SH2_DIVU_DVSR = wc->stop - wc->start;  // set 32-bit divisor
+        SH2_DIVU_DVDNT = scale2 - scalefrac;   // set 32-bit dividend, start divide
+#else
         wc->scalestep = IDiv(scale2 - scalefrac, wc->stop - wc->start);
+#endif
     }
 
     wc->scale2 = scale2;
@@ -290,6 +295,13 @@ static void R_WallEarlyPrep2(viswall_t* wc)
         wc->actionbits |= AC_CALCTEXTURE; // set to calculate texture info
         R_SetupCalc(wc, hyp, normalangle);// do calc setup
     }
+
+#ifdef MARS
+    if (wc->stop > wc->start)
+    {
+        wc->scalestep = SH2_DIVU_DVDNT; // get 32-bit quotient
+    }
+#endif
 }
 
 #ifdef MARS
