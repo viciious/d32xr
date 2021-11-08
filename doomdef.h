@@ -545,13 +545,12 @@ fixed_t	FixedDiv (fixed_t a, fixed_t b);
 #define FixedMul2(c,a,b) \
        __asm volatile ( \
             "dmuls.l %1, %2\n\t" \
-            "sts mach, r1\n\t" \
-            "sts macl, r0\n\t" \
-            "xtrct r1, r0\n\t" \
-            "mov r0, %0\n\t" \
+            "sts mach, r0\n\t" \
+            "sts macl, %0\n\t" \
+            "xtrct r0, %0\n\t" \
             : "=r" (c) \
             : "r" (a), "r" (b) \
-            : "r0", "r1", "mach", "macl")
+            : "r0", "mach", "macl")
 fixed_t IDiv (fixed_t a, fixed_t b);
 #else
 #define FixedMul2(c,a,b) (c = FixedMul(a,b))
