@@ -27,26 +27,14 @@ typedef struct
 {
     viswall_t* segl;
 
-    drawtex_t toptex;
-    drawtex_t bottomtex;
+    drawtex_t tex[2];
 
     unsigned short *clipbounds;
     unsigned lightmin, lightmax, lightsub, lightcoef;
+    unsigned actionbits;
 } seglocal_t;
 
-typedef struct
-{
-    int x;
-    int floorclipx, ceilingclipx;
-    fixed_t scale2;
-#ifndef MARS
-    unsigned iscale;
-#endif
-    unsigned colnum;
-    unsigned light;
-} segdraw_t;
-
-static void R_DrawTexture(int x, segdraw_t* sdr, drawtex_t* tex) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static void R_DrawTextures(int x, int floorclipx, int ceilingclipx, fixed_t scale2, int colnum, unsigned light, seglocal_t* lsegl) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static void R_SegLoop(seglocal_t* lseg, const int cpu, boolean gradientlight) __attribute__((always_inline));
 void R_SegLoopFlat(seglocal_t* lseg, const int cpu) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void R_SegLoopGradient(seglocal_t* lseg, const int cpu) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
@@ -56,63 +44,66 @@ void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 //
 // Render a wall texture as columns
 //
-static void R_DrawTexture(int x, segdraw_t *sdr, drawtex_t* tex)
+static void R_DrawTextures(int x, int floorclipx, int ceilingclipx, fixed_t scale2, int colnum, unsigned light, seglocal_t* lsegl)
 {
-   int top, bottom;
-   fixed_t scale2, frac;
-   int colnum;
-   unsigned iscale;
+   unsigned actionbits = lsegl->actionbits;
+   drawtex_t *tex = lsegl->tex, *last;
+
+   last = tex + 1;
+   if ((actionbits & (AC_TOPTEXTURE | AC_BOTTOMTEXTURE)) == AC_TOPTEXTURE)
+       last = tex;
+   if ((actionbits & (AC_TOPTEXTURE|AC_BOTTOMTEXTURE)) == AC_BOTTOMTEXTURE)
+       tex++;
+
+   do {
+       int top, bottom;
+
+       FixedMul2(top, scale2, tex->topheight);
+       top = centerY - top;
+       if (top < ceilingclipx)
+           top = ceilingclipx;
+
+       FixedMul2(bottom, scale2, tex->bottomheight);
+       bottom = centerY - 1 - bottom;
+       if (bottom >= floorclipx)
+           bottom = floorclipx - 1;
+
 #ifdef MARS
-   inpixel_t *src;
-#else
-   pixel_t *src;
+       unsigned iscale = SH2_DIVU_DVDNTL; // get 32-bit quotient
 #endif
 
-   scale2 = sdr->scale2;
-
-   FixedMul2(top, scale2, tex->topheight);
-   top = centerY - top;
-   if(top <= sdr->ceilingclipx)
-      top = sdr->ceilingclipx + 1;
-
-   FixedMul2(bottom, scale2, tex->bottomheight);
-   bottom = centerY - 1 - bottom;
-   if(bottom >= sdr->floorclipx)
-      bottom = sdr->floorclipx - 1;
-
-   // column has no length?
-   if(top > bottom)
-      return;
-
-   colnum = sdr->colnum;
+       // column has no length?
+       if (top <= bottom)
+       {
+           fixed_t frac = tex->texturemid - (centerY - top) * iscale;
 #ifdef MARS
-   iscale = SH2_DIVU_DVDNTL; // get 32-bit quotient
+           inpixel_t* src;
 #else
-   iscale = sdr->iscale;
+           pixel_t* src;
 #endif
 
-   frac = tex->texturemid - (centerY - top) * iscale;
- 
-   // DEBUG: fixes green pixels in MAP01...
-   frac += (iscale + (iscale >> 5) + (iscale >> 6));
+           // DEBUG: fixes green pixels in MAP01...
+           frac += (iscale + (iscale >> 5) + (iscale >> 6));
 
-   while(frac < 0)
-   {
-      colnum--;
-      frac += tex->height << FRACBITS;
-   }
+           while (frac < 0)
+           {
+               colnum--;
+               frac += tex->height << FRACBITS;
+           }
 
-   // CALICO: comment says this, but the code does otherwise...
-   // colnum = colnum - tex->width * (colnum / tex->width)
-   colnum &= (tex->width - 1);
+           // CALICO: comment says this, but the code does otherwise...
+           // colnum = colnum - tex->width * (colnum / tex->width)
+           colnum &= (tex->width - 1);
 
-   // CALICO: Jaguar-specific GPU blitter input calculation starts here.
-   // We invoke a software column drawer instead.
-   src = tex->data + colnum * tex->height;
-   tex->drawcol(x, top, bottom, sdr->light, frac, iscale, src, tex->height, NULL);
+           // CALICO: Jaguar-specific GPU blitter input calculation starts here.
+           // We invoke a software column drawer instead.
+           src = tex->data + colnum * tex->height;
+           tex->drawcol(x, top, bottom, light, frac, iscale, src, tex->height, NULL);
 
-   // pixel counter
-   tex->pixelcount += (bottom - top);
+           // pixel counter
+           tex->pixelcount += (bottom - top);
+       }
+   } while (++tex <= last);
 }
 
 //
@@ -163,9 +154,6 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu, boolean gradientlight)
 
    unsigned texturelight = lseg->lightmax;
 
-   const int centerY0 = centerY;
-   const int centerY1 = centerY - 1;
-
    int floorplhash = 0;
    int ceilingplhash = 0;
 
@@ -193,22 +181,22 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu, boolean gradientlight)
       //
       ceilingclipx = clipbounds[x];
       floorclipx   = ceilingclipx & 0x00ff;
-      ceilingclipx = (((unsigned)ceilingclipx & 0xff00) >> 8) - 1;
+      ceilingclipx = (((unsigned)ceilingclipx & 0xff00) >> 8);
 
       //
       // calc high and low
       //
       FixedMul2(low, scale2, floornewheight);
-      low = centerY0 - low;
+      low = centerY - low;
       if (low < 0)
           low = 0;
       else if (low > floorclipx)
           low = floorclipx;
 
       FixedMul2(high, scale2, ceilingnewheight);
-      high = centerY1 - high;
-      if (high > viewportHeight - 1)
-          high = viewportHeight - 1;
+      high = centerY - high;
+      if (high > viewportHeight)
+          high = viewportHeight;
       else if (high < ceilingclipx)
           high = ceilingclipx;
 
@@ -220,9 +208,9 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu, boolean gradientlight)
           if (actionbits & AC_ADDFLOOR)
           {
               FixedMul2(top, scale2, floorheight);
-              top = centerY0 - top;
-              if (top <= ceilingclipx)
-                  top = ceilingclipx + 1;
+              top = centerY - top;
+              if (top < ceilingclipx)
+                  top = ceilingclipx;
               bottom = floorclipx - 1;
 
               if (top <= bottom)
@@ -242,9 +230,9 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu, boolean gradientlight)
           //
           if (actionbits & AC_ADDCEILING)
           {
-              top = ceilingclipx + 1;
+              top = ceilingclipx;
               FixedMul2(bottom, scale2, ceilingheight);
-              bottom = centerY1 - bottom;
+              bottom = centerY - 1 - bottom;
               if (bottom >= floorclipx)
                   bottom = floorclipx - 1;
 
@@ -266,7 +254,7 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu, boolean gradientlight)
 
           // top sprite clip sil
           if (actionbits & AC_TOPSIL)
-              segl->topsil[x] = high + 1;
+              segl->topsil[x] = high;
       }
 
       if(actionbits & (AC_NEWFLOOR|AC_NEWCEILING))
@@ -279,7 +267,7 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu, boolean gradientlight)
             newfloorclipx = low;
          if(actionbits & AC_NEWCEILING)
             newceilingclipx = high;
-         clipbounds[x] = ((unsigned)(newceilingclipx + 1) << 8) + newfloorclipx;
+         clipbounds[x] = ((unsigned)(newceilingclipx) << 8) + newfloorclipx;
       }
 
       //
@@ -290,13 +278,15 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu, boolean gradientlight)
 
       if (actionbits & AC_CALCTEXTURE)
       {
-          segdraw_t sdr;
+          unsigned colnum;
           fixed_t r;
 
 #ifdef MARS
           SH2_DIVU_DVSR = scale;         // set 32-bit divisor
           SH2_DIVU_DVDNTH = 0;           // set high bits of the 64-bit dividend
           SH2_DIVU_DVDNTL = 0xffffffffu; // set low  bits of the 64-bit dividend, start divide
+#else
+          unsigned iscale = 0xffffffffu / scale;
 #endif
 
           // calculate texture offset
@@ -304,7 +294,7 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu, boolean gradientlight)
           FixedMul2(r, distance, r);
 
           // other texture drawing info
-          sdr.colnum = (offset - r) >> FRACBITS;
+          colnum = (offset - r) >> FRACBITS;
 
           if (gradientlight)
           {
@@ -328,27 +318,16 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu, boolean gradientlight)
               texturelight = HWLIGHT(texturelight);
           }
 
-          sdr.light = texturelight;
-          sdr.scale2 = scale2;
-          sdr.floorclipx = floorclipx;
-          sdr.ceilingclipx = ceilingclipx;
-#ifndef MARS
-          sdr.iscale = 0xffffffffu / scale;
-#endif
-
           //
           // draw textures
           //
-          if (actionbits & AC_TOPTEXTURE)
-              R_DrawTexture(x, &sdr, &lseg->toptex);
-          if (actionbits & AC_BOTTOMTEXTURE)
-              R_DrawTexture(x, &sdr, &lseg->bottomtex);
+          R_DrawTextures(x, floorclipx, ceilingclipx, scale2, colnum, texturelight, lseg);
       }
 
       // sky mapping
       if (actionbits & AC_ADDSKY)
       {
-          top = ceilingclipx + 1;
+          top = ceilingclipx;
           FixedMul2(bottom, scale2, ceilingheight);
           bottom = (centerY - bottom) - 1;
 
@@ -397,8 +376,8 @@ static void R_SegCommands2(const int cpu)
         *clip++ = clipval;
     }
 
-    toptex = &lseg.toptex;
-    bottomtex = &lseg.bottomtex;
+    toptex = &lseg.tex[0];
+    bottomtex = &lseg.tex[1];
     lseg.clipbounds = clipbounds;
 
     lseg.lightmin = 0;
@@ -440,6 +419,7 @@ static void R_SegCommands2(const int cpu)
 #endif
             lseg.lightmin = seglight;
         }
+        lseg.actionbits = segl->actionbits;
 
         if (segl->actionbits & AC_TOPTEXTURE)
         {
