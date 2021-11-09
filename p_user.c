@@ -211,6 +211,9 @@ void P_PlayerMobjThink (mobj_t *mobj)
 	if ( (mobj->z != mobj->floorz) || mobj->momz)
 		P_PlayerZMovement (mobj);
 	
+	if (gametic == prevgametic)
+		return;
+
 /* */
 /* cycle through states, calling action functions at transitions */
 /* */
