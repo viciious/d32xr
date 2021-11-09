@@ -781,7 +781,7 @@ ticphase = 26;
 void P_RestoreResp(player_t* p)
 {
 	int i;
-	int pnum = players - p;
+	int pnum = p - players;
 	playerresp_t* resp = &playersresp[pnum];
 
 	for (i = 0; i < NUMAMMO; i++)
@@ -804,7 +804,7 @@ void P_RestoreResp(player_t* p)
 void P_UpdateResp(player_t* p)
 {
 	int i;
-	int pnum = players - p;
+	int pnum = p - players;
 	playerresp_t* resp = &playersresp[pnum];
 
 	for (i = 0; i < NUMAMMO; i++)
