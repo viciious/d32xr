@@ -127,9 +127,9 @@ void I_Print8(int x, int y, const char* string)
 {
 	int c;
 	const byte* source;
-	volatile byte *dest;
+	byte *dest;
 
-	if (y > mars_framebuffer_height / 8)
+	if (y > 224 / 8)
 		return;
 
 	dest = (byte *)(I_FrameBuffer() + 320) + (y * 8) * 320 + x;
@@ -137,10 +137,14 @@ void I_Print8(int x, int y, const char* string)
 	while ((c = *string++) && x < 320-8)
 	{
 		int i, b;
-		volatile byte * d;
+		byte * d;
 
 		if (c < 32 || c >= 128)
+		{
+			dest += 8;
+			++x;
 			continue;
+		}
 
 		source = font8 + ((c - 32) << 3);
 

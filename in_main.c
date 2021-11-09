@@ -123,9 +123,9 @@ void IN_DrawValue(int x,int y,int value)
 /* */
 void IN_NetgameDrawer(void)
 {	
-#ifndef MARS
 	int		i;
-	
+	int length;
+
 	if(earlyexit == true)
 		for (i = 0; i < MAXPLAYERS; i++)
 		{
@@ -135,16 +135,37 @@ void IN_NetgameDrawer(void)
 			fragvalue[i] = 
 				players[i].frags;
 		}
-		
-			
+
+#ifndef MARS
 	if (statsdrawn == false)
+#endif
 	{
+		if (gamemapinfo.name != NULL)
+		{
+			length = mystrlen(gamemapinfo.name);
+			print((320 - (length * 14)) >> 1, 10, gamemapinfo.name);
+		}
+
+		if (nextmapinfo && nextmapinfo->name != NULL)
+		{
+			length = mystrlen("Entering");
+			print((320 - (length * 14)) >> 1, 162, "Entering");
+			length = mystrlen(nextmapinfo->name);
+			print((320 - (length * 14)) >> 1, 182, nextmapinfo->name);
+		}
+
 		if (netgame == gt_deathmatch)
 		{
-			print(30 , FVALY, "Your Frags");
-			print(54 , FVALY + 40, "His Frags");
-			IN_DrawValue(FVALX, FVALY, fragvalue[consoleplayer]);
-			IN_DrawValue(FVALX, FVALY + 40, fragvalue[!consoleplayer]);
+			if (splitscreen)
+			{
+				print(30, FVALY, "Player 1 Frags");
+				print(30, FVALY + 40, "Player 2 Frags");
+			}
+			else
+			{
+				print(30, FVALY, "Your Frags");
+				print(54, FVALY + 40, "His Frags");
+			}
 		}
 		else
 		{
@@ -161,9 +182,18 @@ void IN_NetgameDrawer(void)
 	
 	if (netgame == gt_deathmatch)
 	{
-		EraseBlock(30 + (mystrlen("Your Frags") * 15), FVALY,  80, 80);
-		IN_DrawValue(FVALX, FVALY, fragvalue[consoleplayer]);
-		IN_DrawValue(FVALX, FVALY + 40, fragvalue[!consoleplayer]);
+		if (splitscreen)
+		{
+			EraseBlock(30 + (mystrlen("Player 1 Frags") * 15), FVALY, 80, 80);
+			IN_DrawValue(FVALX + 40, FVALY, fragvalue[0]);
+			IN_DrawValue(FVALX + 40, FVALY + 40, fragvalue[1]);
+		}
+		else
+		{
+			EraseBlock(30 + (mystrlen("Your Frags") * 15), FVALY, 80, 80);
+			IN_DrawValue(FVALX, FVALY, fragvalue[consoleplayer]);
+			IN_DrawValue(FVALX, FVALY + 40, fragvalue[!consoleplayer]);
+		}
 	}
 	else
 	{
@@ -180,8 +210,7 @@ void IN_NetgameDrawer(void)
 		DrawJagobjLump(i_percent, IVALX + 80, IVALY, NULL, NULL);
 		DrawJagobjLump(i_percent, SVALX, SVALY, NULL, NULL);
 		DrawJagobjLump(i_percent, SVALX + 80, SVALY, NULL, NULL);
-	}	
-#endif
+	}
 }
 
 /* */

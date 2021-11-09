@@ -830,7 +830,7 @@ void P_SetupPsprites (player_t *player)
 ================== 
 */ 
  
-VINT		ticremainder[2];
+VINT		ticremainder[MAXPLAYERS];
 
 void P_MovePsprites (player_t *player) 
 {

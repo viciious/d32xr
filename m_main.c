@@ -13,9 +13,7 @@ typedef enum
 	mi_newgame,
 	mi_loadgame,
 	mi_savegame,
-#ifndef MARS
 	mi_gamemode,
-#endif
 	mi_level,
 	mi_difficulty,
 	mi_savelist,
@@ -58,11 +56,8 @@ typedef enum
 static mainitem_t mainitem[NUMMAINITEMS];
 static mainscreen_t mainscreen[NUMMAINSCREENS];
 
+static const char* playmodes[NUMMODES] = { "Single", "Coop", "Deathmatch" };
 jagobj_t* m_doom;
-#ifndef MARS
-jagobj_t *m_single,*m_coop,*m_deathmatch,*m_gamemode;
-jagobj_t* m_playmode[NUMMODES];
-#endif
 
 static VINT m_skull1lump, m_skull2lump;
 static VINT m_skilllump;
@@ -73,7 +68,7 @@ static VINT cursordelay;
 static VINT	movecount;
 static VINT	playermap = 1;
 
-static VINT currentplaymode = single;
+static VINT currentplaymode = gt_single;
 static VINT	cursorpos;
 static VINT screenpos;
 static VINT playerskill;
@@ -98,7 +93,6 @@ void M_Start2 (boolean startup_)
 #ifndef MARS
 	int j;
 #endif
-	int y_offset;
 	dmapinfo_t** maplist;
 	VINT* tempmapnums;
 
@@ -153,23 +147,8 @@ void M_Start2 (boolean startup_)
 		m_doom = NULL;
 	}
 
-	if (m_doom != NULL)
-		y_offset = m_doom->height;
-	else
-		y_offset = 36;
-
 	m_skull1lump = W_CheckNumForName("M_SKULL1");
 	m_skull2lump = W_CheckNumForName("M_SKULL2");
-
-#ifndef MARS
-	m_gamemode = W_CacheLumpName ("M_GAMMOD",PU_STATIC);
-#endif
-
-#ifndef MARS
-	l = W_GetNumForName ("M_SINGLE");
-	for (i = 0; i < NUMMODES; i++)
-		m_playmode[i] = W_CacheLumpNum (l+i, PU_STATIC);
-#endif
 
 	m_skilllump = W_CheckNumForName("SKILL0");
 
@@ -193,11 +172,7 @@ void M_Start2 (boolean startup_)
 	D_memset(mainscreen, 0, sizeof(mainscreen));
 	D_memset(mainitem, 0, sizeof(mainitem));
 
-#ifndef MARS
 	mainscreen[ms_new].firstitem = mi_gamemode;
-#else
-	mainscreen[ms_new].firstitem = mi_level;
-#endif
 	mainscreen[ms_new].numitems = mi_difficulty - mainscreen[ms_new].firstitem + 1;
 
 	mainscreen[ms_load].firstitem = mi_savelist;
@@ -216,39 +191,37 @@ void M_Start2 (boolean startup_)
 
 	D_strncpy(mainitem[mi_newgame].name, "New Game", 8);
 	mainitem[mi_newgame].x = CURSORX + 24;
-	mainitem[mi_newgame].y = y_offset+CURSORY(0);
+	mainitem[mi_newgame].y = CURSORY(0);
 	mainitem[mi_newgame].screen = ms_new;
 
 	D_strncpy(mainitem[mi_loadgame].name, "Load Game", 9);
 	mainitem[mi_loadgame].x = CURSORX + 24;
-	mainitem[mi_loadgame].y = y_offset + CURSORY(1);
+	mainitem[mi_loadgame].y = CURSORY(1);
 	mainitem[mi_loadgame].screen = ms_load;
 
 	if (!startup)
 	{
 		D_strncpy(mainitem[mi_savegame].name, "Save Game", 9);
 		mainitem[mi_savegame].x = CURSORX + 24;
-		mainitem[mi_savegame].y = y_offset + CURSORY(2);
+		mainitem[mi_savegame].y = CURSORY(2);
 		mainitem[mi_savegame].screen = ms_save;
 	}
 
-#ifndef MARS
-	D_strncpy(mainitem[mi_gamemode].name, "Mode", 4);
+	D_strncpy(mainitem[mi_gamemode].name, "Game Mode", 9);
 	mainitem[mi_gamemode].x = CURSORX + 24;
-	mainitem[mi_gamemode].y = y_offset + CURSORY(0);
-#endif
+	mainitem[mi_gamemode].y = CURSORY(0);
 
 	D_strncpy(mainitem[mi_level].name, "Area", 4);
 	mainitem[mi_level].x = CURSORX + 24;
-	mainitem[mi_level].y = y_offset + CURSORY(mainscreen[ms_new].numitems - 2);
+	mainitem[mi_level].y = CURSORY(mainscreen[ms_new].numitems - 2);
 
 	D_strncpy(mainitem[mi_difficulty].name, "Difficulty", 10);
 	mainitem[mi_difficulty].x = CURSORX + 24;
-	mainitem[mi_difficulty].y = y_offset + CURSORY(mainscreen[ms_new].numitems - 1);
+	mainitem[mi_difficulty].y = CURSORY(mainscreen[ms_new].numitems - 1);
 
 	D_strncpy(mainitem[mi_savelist].name, "Checkpoints", 11);
 	mainitem[mi_savelist].x = CURSORX + 24;
-	mainitem[mi_savelist].y = y_offset + CURSORY(0);
+	mainitem[mi_savelist].y = CURSORY(0);
 
 #ifndef MARS
 	DoubleBufferSetup();
@@ -272,15 +245,7 @@ void M_Stop (void)
 
 	if (m_doom != NULL)
 		Z_Free (m_doom);
-#ifndef MARS
-	Z_Free (m_gamemode);
-#endif
 
-#ifndef MARS
-	for (i = 0; i < NUMMODES; i++)
-		Z_Free(m_playmode[i]);
-#endif
-	
 	if (mapnumbers != NULL)
 		Z_Free(mapnumbers);
 
@@ -390,6 +355,7 @@ int M_Ticker (void)
 			startmap = mapnumbers[playermap - 1]; /*set map number */
 			startskill = playerskill;	/* set skill level */
 			starttype = currentplaymode;	/* set play type */
+			splitscreen = (starttype != gt_single);
 			return ga_startnew;		/* done with menu */
 		}
 
@@ -453,7 +419,6 @@ int M_Ticker (void)
 
 			switch (itemno)
 			{
-#ifndef MARS
 				case mi_gamemode:
 					if (buttons & BT_RIGHT)
 					{
@@ -466,7 +431,6 @@ int M_Ticker (void)
 							currentplaymode++;
 					}
 					break;
-#endif
 				case mi_level:
 					if (buttons & BT_RIGHT)
 					{			
@@ -568,11 +532,13 @@ void M_Drawer (void)
 	int	leveltens = mapnumber / 10, levelones = mapnumber % 10;
 	mainscreen_t* menuscr = &mainscreen[screenpos];
 	mainitem_t* items = &mainitem[menuscr->firstitem];
+	int y, y_offset = 36;
 
 /* Draw main menu */
-	if (m_doom)
+	if (m_doom && screenpos == ms_main)
 	{
 		DrawJagobj(m_doom, 100, 2);
+		y_offset = m_doom->height;
 	}
 
 /* erase old skulls */
@@ -582,14 +548,14 @@ void M_Drawer (void)
 
 /* draw new skull */
 	if (cursorframe)
-		DrawJagobjLump(m_skull2lump, CURSORX, items[cursorpos].y - 2, NULL, NULL);
+		DrawJagobjLump(m_skull2lump, CURSORX, y_offset+items[cursorpos].y - 2, NULL, NULL);
 	else
-		DrawJagobjLump(m_skull1lump, CURSORX, items[cursorpos].y - 2, NULL, NULL);
+		DrawJagobjLump(m_skull1lump, CURSORX, y_offset+items[cursorpos].y - 2, NULL, NULL);
 
 /* draw menu items */
 	for (i = 0; i < menuscr->numitems; i++)
 	{
-		int y = items[i].y;
+		int y = y_offset + items[i].y;
 		print(items[i].x, y, items[i].name);
 	}
 
@@ -603,13 +569,14 @@ void M_Drawer (void)
 		M_MapName(mapnumber, mapname, sizeof(mapname));
 		mapnamelen = mystrlen(mapname);
 
-		item = &mainitem[mi_level];
-#ifndef MARS
+		item = &mainitem[mi_gamemode];
+		y = y_offset + item->y;
+
 		/* draw game mode information */
-		DrawJagobj(m_gamemode, 64, m_doom_height + 2);
-		EraseBlock(80, m_doom_height + 22, 320 - 80, 200 - m_doom_height + 22);
-		DrawJagobj(m_playmode[currentplaymode], 80, m_doom_height + 22);
-#endif
+		print(item->x + 10, y + 20 + 2, playmodes[currentplaymode]);
+
+		item = &mainitem[mi_level];
+		y = y_offset + item->y;
 
 #ifndef MARS
 		EraseBlock(80, m_doom_height + CURSORY(NUMMAINITEMS - 2) + 20 + 2, 320, nums[0]->height);
@@ -617,35 +584,38 @@ void M_Drawer (void)
 		if (leveltens)
 		{
 			DrawJagobjLump(numslump + leveltens,
-				item->x + 70, item->y + 2, NULL, NULL);
-			DrawJagobjLump(numslump + levelones, item->x + 84, item->y + 2, NULL, NULL);
+				item->x + 70, y + 2, NULL, NULL);
+			DrawJagobjLump(numslump + levelones, item->x + 84, y + 2, NULL, NULL);
 		}
 		else
-			DrawJagobjLump(numslump + levelones, item->x + 70, item->y + 2, NULL, NULL);
+			DrawJagobjLump(numslump + levelones, item->x + 70, y + 2, NULL, NULL);
 
-		print((320 - (mapnamelen * 14)) >> 1, item->y + 20 + 2, mapname);
+		print((320 - (mapnamelen * 14)) >> 1, y + 20 + 2, mapname);
 
 		item = &mainitem[mi_difficulty];
+		y = y_offset + item->y;
+
 #ifndef MARS
 		EraseBlock(82, m_doom_height + CURSORY(NUMMAINITEMS - 1) + 20 + 2, 320 - 72, m_skill[playerskill]->height + 10);
 #endif
 		/* draw difficulty information */
-		DrawJagobjLump(m_skilllump + playerskill, item->x + 10, item->y + 20 + 2, NULL, NULL);
+		DrawJagobjLump(m_skilllump + playerskill, item->x + 10, y + 20 + 2, NULL, NULL);
 	}
 	else if (screenpos == ms_load || screenpos == ms_save)
 	{
 		mainitem_t* item;
 		
 		item = &mainitem[mi_savelist];
+		y = y_offset + item->y;
 
 		if (savecount > 0)
 		{
 			if (saveslot == 0)
-				print(item->x + 10, item->y + 20 + 2, "Last autosave.");
+				print(item->x + 10, y + 20 + 2, "Last autosave.");
 			else
 			{
-				print(item->x + 10, item->y + 20, "Slot ");
-				DrawJagobjLump(numslump + saveslot % 10, item->x + 70, item->y + 20 + 1, NULL, NULL);
+				print(item->x + 10, y + 20, "Slot ");
+				DrawJagobjLump(numslump + saveslot % 10, item->x + 70, y + 20 + 1, NULL, NULL);
 			}
 
 			if (saveslotmap != -1)
@@ -658,35 +628,35 @@ void M_Drawer (void)
 
 				leveltens = saveslotmap / 10, levelones = saveslotmap % 10;
 
-				print(item->x + 10, item->y + 40 + 2, "Area");
+				print(item->x + 10, y + 40 + 2, "Area");
 
 				if (leveltens)
 				{
 					DrawJagobjLump(numslump + leveltens,
-						item->x + 80, item->y + 40 + 3, NULL, NULL);
-					DrawJagobjLump(numslump + levelones, item->x + 94, item->y + 40 + 3, NULL, NULL);
+						item->x + 80, y + 40 + 3, NULL, NULL);
+					DrawJagobjLump(numslump + levelones, item->x + 94, y + 40 + 3, NULL, NULL);
 				}
 				else
-					DrawJagobjLump(numslump + levelones, item->x + 80, item->y + 40 + 3, NULL, NULL);
+					DrawJagobjLump(numslump + levelones, item->x + 80, y + 40 + 3, NULL, NULL);
 
-				print((320 - (mapnamelen * 14)) >> 1, item->y + 60 + 3, mapname);
+				print((320 - (mapnamelen * 14)) >> 1, y + 60 + 3, mapname);
 			}
 			else
 			{
-				print(item->x + 10, item->y + 40 + 2, "Empty");
+				print(item->x + 10, y + 40 + 2, "Empty");
 			}
 			if (saveslotskill != -1)
 			{
 				/* draw difficulty information */
-				print(item->x + 10, item->y + 80 + 2, "Difficulty");
-				DrawJagobjLump(m_skilllump + saveslotskill, item->x + 10, item->y + 100 + 2, NULL, NULL);
+				print(item->x + 10, y + 80 + 2, "Difficulty");
+				DrawJagobjLump(m_skilllump + saveslotskill, item->x + 10, y + 100 + 2, NULL, NULL);
 			}
 		}
 		else
 		{
-			print(CURSORX, item->y + 30 + 2, "Reach your first");
-			print(CURSORX, item->y + 50 + 2, "checkpoint after");
-			print(CURSORX, item->y + 70 + 2, "the first area.");
+			print(CURSORX, y + 30 + 2, "Reach your first");
+			print(CURSORX, y + 50 + 2, "checkpoint after");
+			print(CURSORX, y + 70 + 2, "the first area.");
 		}
 	}
 

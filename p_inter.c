@@ -136,11 +136,11 @@ boolean P_GiveWeapon (player_t *player, weapontype_t weapon, boolean dropped)
 		gaveweapon = false;
 	else
 	{
+		int pnum = player - players;
 		gaveweapon = true;
 		player->weaponowned[weapon] = true;
 		player->pendingweapon = weapon;
-		if (player == &players[consoleplayer])
-			stbar.specialFace = f_gotgat;
+		stbar[pnum].specialFace = f_gotgat;
 	}
 	
 	return gaveweapon || gaveammo;
@@ -547,7 +547,7 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 		player->itemcount++;
 	P_RemoveMobj (special);
 	player->bonuscount += BONUSADD;
-	if (player == &players[consoleplayer])
+	if (player == &players[consoleplayer] || splitscreen)
 		toucher = NULL;
 	S_StartSound (toucher, sound);
 }
@@ -604,8 +604,7 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 		P_DropWeapon (player);
 		if (target->health < -50)
 		{
-			if (player == &players[consoleplayer])
-				stbar.gotgibbed = true;
+			stbar[target->player - 1].gotgibbed = true;
 			S_StartSound (target, sfx_slop);
 		}
 		else
@@ -661,6 +660,7 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 {
 	unsigned	ang, an;
 	int			saved;
+	int			pnum = 0;
 	player_t	*player;
 	fixed_t		thrust;
 	const mobjinfo_t* targinfo = &mobjinfo[target->type];
@@ -677,11 +677,13 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 	}
 	
 	player = target->player ? &players[target->player - 1] : NULL;
+	if (player)
+		pnum = player - players;
 	if (player && gameskill == sk_baby)
 		damage >>= 1;				/* take half damage in trainer mode */
 	
-	if (player && (damage > 30) && player == &players[consoleplayer])
-		stbar.specialFace = f_hurtbad;
+	if (player && damage > 30)
+		stbar[pnum].specialFace = f_hurtbad;
 /* */
 /* kick away unless using the chainsaw */
 /* */
@@ -715,13 +717,12 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 	{
 		if ( (player->cheats&CF_GODMODE)||player->powers[pw_invulnerability] )
 			return;
-		if (player == &players[consoleplayer])
 		{
 			ang -= target->angle;
 			if (ang > 0x30000000 && ang <0x80000000)
-				stbar.specialFace = f_faceright;
+				stbar[pnum].specialFace = f_faceright;
 			else if (ang >0x80000000 && ang < 0xd0000000)
-				stbar.specialFace = f_faceleft;
+				stbar[pnum].specialFace = f_faceleft;
 		}
 		if (player->armortype)
 		{

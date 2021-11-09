@@ -140,8 +140,9 @@ static void S_Spatialize(mobj_t* origin, int *pvol, int *psep)
 	int dx, dy;
 	int	vol, sep;
 	player_t* player = &players[consoleplayer];
+	player_t* otherplayer = &players[consoleplayer^1];
 
-	if (!origin || origin == player->mo)
+	if (!origin || origin == player->mo || (splitscreen && origin == otherplayer->mo))
 	{
 		vol = sfxvolume;
 		sep = 128;

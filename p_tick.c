@@ -324,9 +324,9 @@ int P_Ticker (void)
 /* do option screen processing */
 /* */
 
-	for (playernum=0,pl=players ; playernum<MAXPLAYERS ; playernum++,pl++)
+	for (playernum = 0, pl = players; playernum < MAXPLAYERS; playernum++, pl++)
 		if (playeringame[playernum])
-			O_Control (pl);
+			O_Control(pl);
 
 	/* */
 	/* run player actions */
@@ -504,7 +504,12 @@ void P_Drawer (void)
 #else
 	if (automapactive)
 	{
-		R_RenderPlayerView();
+		/* view the guy you are playing */
+		R_RenderPlayerView(consoleplayer);
+		/* view the other guy in split screen mode */
+		if (splitscreen)
+			R_RenderPlayerView(consoleplayer ^ 1);
+
 		ST_Drawer();
 		AM_Drawer();
 		if (optionsactive)
@@ -526,7 +531,7 @@ void P_Drawer (void)
 		}
 
 		if (clearscreen > 0) {
-			if (viewportWidth == 160)
+			if (viewportWidth == 160 && lowResMode)
 				I_ClearFrameBuffer();
 			else
 				DrawTiledBackground();
@@ -543,7 +548,11 @@ void P_Drawer (void)
 			clearscreen--;
 		}
 
-		R_RenderPlayerView();
+		/* view the guy you are playing */
+		R_RenderPlayerView(consoleplayer);
+		/* view the other guy in split screen mode */
+		if (splitscreen)
+			R_RenderPlayerView(consoleplayer^1);
 
 		ST_Drawer();
 
@@ -562,7 +571,7 @@ void P_Drawer (void)
 #ifdef JAGUAR
 		ST_Drawer ();
 #endif
-		R_RenderPlayerView (); 
+		R_RenderPlayerView (consoleplayer);
 		clearscreen = 0;
 #endif
 	/* assume part of the refresh is now running parallel with main code */
@@ -570,7 +579,7 @@ void P_Drawer (void)
 } 
  
  
-extern	 VINT		ticremainder[2];
+extern	 VINT		ticremainder[MAXPLAYERS];
 
 void P_Start (void)
 {

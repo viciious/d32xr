@@ -702,7 +702,7 @@ void DrawTiledBackground(void)
 	const int	w = 64, h = 64;
 	const int	hw = w / 2;
 	const int xtiles = (320 + w - 1) / w;
-	const int ytiles = (200 + h - 1) / h;
+	const int ytiles = (224 + h - 1) / h;
 	pixel_t* bdest;
 	const pixel_t* bsrc;
 

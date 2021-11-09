@@ -7,6 +7,7 @@
 
 extern unsigned short viewportWidth, viewportHeight;
 extern unsigned short centerX, centerY;
+extern boolean lowResMode;
 extern fixed_t centerXFrac, centerYFrac;
 extern fixed_t stretch;
 extern fixed_t stretchX;
@@ -277,13 +278,19 @@ __attribute__((aligned(16)))
 	fixed_t		viewx, viewy, viewz;
 	angle_t		viewangle;
 	fixed_t		viewcos, viewsin;
+	player_t	*viewplayer;
+	VINT		lightlevel;
+	VINT		extralight;
+	VINT		displayplayer;
 } viewdef_t;
 
 extern	viewdef_t	vd;
-extern	player_t	*viewplayer;
-extern	int			extralight;
-
 extern	angle_t		clipangle, doubleclipangle;
+
+#ifdef MARS
+__attribute__((aligned(16)))
+#endif
+extern pixel_t* viewportbuffer;
 
 /* The viewangletox[viewangle + FINEANGLES/4] lookup maps the visible view */
 /* angles  to screen X coordinates, flattening the arc to a flat projection  */

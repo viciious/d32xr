@@ -46,6 +46,13 @@ void Mars_Sec_ReadSoundCmds(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 void secondary_dma1_handler(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
+static inline void Mars_Sec_R_Setup(void)
+{
+	while (MARS_SYS_COMM4 != 0) {};
+	MARS_SYS_COMM4 = 9;
+	while (MARS_SYS_COMM4 != 0);
+}
+
 static inline void Mars_R_BeginComputeSeg(void)
 {
 	while (MARS_SYS_COMM4 != 0) {};
@@ -103,6 +110,7 @@ static inline void Mars_R_AdvanceNextSprite(void)
 	MARS_SYS_COMM6 = MARS_SYS_COMM6 + 1;
 }
 
+// r_phase2
 static inline void Mars_R_BeginWallPrep(void)
 {
 	while (MARS_SYS_COMM4 != 0);

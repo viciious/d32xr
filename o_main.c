@@ -304,7 +304,6 @@ exit:
 			S_StartSound(NULL, sfx_swtchn);
 			return;
 		case ga_startnew:
-			starttype = gt_single;
 			gameaction = ga_startnew;
 		case ga_died:
 			goto exit;

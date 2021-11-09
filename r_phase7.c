@@ -204,6 +204,7 @@ void R_DrawPlanes2(const int cpu)
     angle_t angle;
     localplane_t lpl;
     visplane_t* pl;
+    int extralight;
 
     lpl.x = vd.viewx;
     lpl.y = -vd.viewy;
@@ -213,6 +214,8 @@ void R_DrawPlanes2(const int cpu)
 
     lpl.basexscale = FixedDiv(finecosine(angle), centerXFrac);
     lpl.baseyscale = -FixedDiv(finesine(angle), centerXFrac);
+
+    extralight = vd.extralight;
 
     for (pl = visplanes + 1; pl < lastvisplane; pl++)
     {

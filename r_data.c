@@ -350,7 +350,7 @@ void R_InitMathTables(void)
 		distscale[i] = FixedDiv(FRACUNIT, cosang);
 	}
 
-	fuzzunit = viewportWidth > 160 ? 320 : 160;
+	fuzzunit = lowResMode ? 160 : 320;
 	for (i = 0; i < FUZZTABLE; i++)
 	{
 		fuzzoffset[i] = fuzzoffset[i] < 0 ? -fuzzunit : fuzzunit;

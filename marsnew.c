@@ -31,6 +31,11 @@
 #include "r_local.h"
 #include "wadbase.h"
 
+typedef struct {
+	VINT repeat;
+	boolean prev_state;
+} btnstate_t;
+
 int COLOR_WHITE = 0x04;
 int COLOR_BLACK = 0xF7;
 
@@ -55,7 +60,7 @@ static volatile pixel_t* framebuffer = &MARS_FRAMEBUFFER + 0x100;
 static volatile pixel_t *framebufferend = &MARS_FRAMEBUFFER + 0x10000;
 
 static jagobj_t* stbar;
-static VINT stbar_height;
+VINT stbar_height;
 
 extern int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sprites[4], t_ref_total[4];
 
@@ -160,22 +165,20 @@ static int Mars_ConvGamepadButtons(int ctrl)
 }
 
 // mostly exists to handle the 3-button controller situation
-static int Mars_HandleStartHeld(unsigned *ctrl, const unsigned ctrl_start)
+static int Mars_HandleStartHeld(unsigned *ctrl, const unsigned ctrl_start, btnstate_t *startbtn)
 {
 	int morebuttons = 0;
 	boolean start = 0;
-	static boolean prev_start = false;
-	static int repeat = 0;
 	static const int held_tics = 16;
 
 	start = (*ctrl & ctrl_start) != 0;
-	if (start ^ prev_start) {
-		int prev_repeat = repeat;
-		repeat = 0;
+	if (start ^ startbtn->prev_state) {
+		int prev_repeat = startbtn->repeat;
+		startbtn->repeat = 0;
 
 		// start button state changed
-		if (prev_start) {
-			prev_start = false;
+		if (startbtn->prev_state) {
+			startbtn->prev_state = false;
 			// quick key press and release
 			if (prev_repeat < held_tics)
 				return BT_START;
@@ -184,15 +187,15 @@ static int Mars_HandleStartHeld(unsigned *ctrl, const unsigned ctrl_start)
 			return 0;
 		}
 
-		prev_start = true;
+		startbtn->prev_state = true;
 	}
 
 	if (!start) {
 		return 0;
 	}
 
-	repeat++;
-	if (repeat < 2) {
+	startbtn->repeat++;
+	if (startbtn->repeat < 2) {
 		// suppress action buttons
 		//*ctrl = *ctrl & ~(SEGA_CTRL_A | SEGA_CTRL_B | SEGA_CTRL_C);
 		return 0;
@@ -213,7 +216,7 @@ static int Mars_HandleStartHeld(unsigned *ctrl, const unsigned ctrl_start)
 
 	if (morebuttons)
 	{
-		repeat = held_tics;
+		startbtn->repeat = held_tics;
 	}
 
 	return morebuttons;
@@ -293,6 +296,8 @@ void Mars_Secondary(void)
 			Mars_Sec_M_AnimateFire();
 			break;
 		case 9:
+			Mars_ClearCacheLines((intptr_t)&vd & ~15, (sizeof(vd) + 15) / 16);
+			Mars_ClearCacheLines((intptr_t)&viewportbuffer & ~15, 1);
 			break;
 		case 10:
 			Mars_Sec_InitSoundDMA();
@@ -435,18 +440,30 @@ byte *I_ZoneBase (int *size)
 	return (byte *)zone;
 }
 
-int I_ReadControls(void)
+static int I_ReadControls_(volatile unsigned *c, btnstate_t* startbtn)
 {
 	int ctrl;
 	unsigned val;
 
-	val = mars_controls;
-	mars_controls = 0;
+	val = *c;
+	*c = 0;
 
 	ctrl = 0;
-	ctrl |= Mars_HandleStartHeld(&val, SEGA_CTRL_START);
+	ctrl |= Mars_HandleStartHeld(&val, SEGA_CTRL_START, startbtn);
 	ctrl |= Mars_ConvGamepadButtons(val);
 	return ctrl;
+}
+
+int I_ReadControls(void)
+{
+	static btnstate_t startbtn = { 0 };
+	return I_ReadControls_(&mars_controls, &startbtn);
+}
+
+int I_ReadControls2(void)
+{
+	static btnstate_t startbtn2 = { 0 };
+	return I_ReadControls_(&mars_controls2, &startbtn2);
 }
 
 int I_ReadMouse(int* pmx, int *pmy)
@@ -545,21 +562,35 @@ int I_ViewportYPos(void)
 {
 	const int fbh = I_FrameBufferHeight();
 
+	if (splitscreen)
+		return (fbh - viewportHeight) / 2;
+
 	if (viewportWidth < 160)
 		return (fbh - stbar_height - viewportHeight) / 2;
-	if (viewportWidth == 160)
+	if (viewportWidth == 160 && lowResMode)
 		return (fbh - stbar_height - viewportHeight);
 	return (fbh - stbar_height - viewportHeight) / 2;
 }
 
 pixel_t	*I_ViewportBuffer (void)
 {
-	volatile pixel_t *viewportbuffer = framebuffer;
-	if (viewportWidth <= 160)
-		viewportbuffer += I_ViewportYPos() * 320 / 2 + (320 - viewportWidth * 2) / 4;
+	int x = 0;
+	pixel_t *vb = (pixel_t * )framebuffer;
+	
+	if (splitscreen)
+	{
+		x = vd.displayplayer ? 160 : 0;
+	}
 	else
-		viewportbuffer += I_ViewportYPos() * 320 / 2 + (320 - viewportWidth) / 4;
-	return (pixel_t *)viewportbuffer;
+	{
+		if (viewportWidth <= 160)
+			x = (320 - viewportWidth * 2) / 2;
+		else
+			x = (320 - viewportWidth) / 2;
+	}
+
+	vb += I_ViewportYPos() * 320 / 2 + x / 2;
+	return (pixel_t *)vb;
 }
 
 void I_ClearFrameBuffer (void)
@@ -755,22 +786,33 @@ void I_NetSetup (void)
 
 void I_DrawSbar(void)
 {
+	int i, p;
+	int y[MAXPLAYERS];
+
 	if (!stbar)
 		return;
 
-	const pixel_t* source = (pixel_t*)stbar->data;
 	int width = BIGSHORT(stbar->width);
 	int height = BIGSHORT(stbar->height);
 	int halfwidth = (unsigned)width >> 1;
-	pixel_t* dest;
 
-	dest = (pixel_t*)I_FrameBuffer() + (I_FrameBufferHeight() - height) * 320 / 2;
-	for (; height; height--)
-	{
-		int i;
-		for (i = 0; i < halfwidth; i++)
-			dest[i] = source[i];
-		source += halfwidth;
-		dest += 320 / 2;
+	y[0] = I_FrameBufferHeight() - height;
+	y[1] = 0;
+
+	p = 1;
+	p += splitscreen ? 1 : 0;
+	for (i = 0; i < p; i++) {
+		int h;
+		const pixel_t* source = (pixel_t*)stbar->data;
+		pixel_t* dest = (pixel_t*)I_FrameBuffer() + y[i] * 320 / 2;
+
+		for (h = height; h; h--)
+		{
+			int i;
+			for (i = 0; i < halfwidth; i++)
+				dest[i] = source[i];
+			source += halfwidth;
+			dest += 320 / 2;
+		}
 	}
 }

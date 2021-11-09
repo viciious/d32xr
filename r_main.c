@@ -72,7 +72,8 @@ pixel_t		*workingscreen;
 #ifdef MARS
 static int16_t	curpalette = -1;
 
-volatile pixel_t* viewportbuffer;
+__attribute__((aligned(16)))
+pixel_t* viewportbuffer;
 
 __attribute__((aligned(16)))
 #endif
@@ -107,7 +108,7 @@ int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sprites[4
 
 r_texcache_t r_texcache;
 
-void R_Setup(void) ATTR_OPTIMIZE_SIZE;
+void R_Setup(int displayplayer) ATTR_OPTIMIZE_SIZE;
 void R_Cache(void) ATTR_OPTIMIZE_SIZE;
 
 #ifdef MARS
@@ -257,15 +258,16 @@ struct subsector_s *R_PointInSubsector (fixed_t x, fixed_t y)
 
 /*============================================================================= */
 
-const int viewports[][2] = {
-	{128, 144},
-	{128, 160},
-	{160, 180},
-	{224, 128},
-	{252, 144},
+const int viewports[][2][3] = {
+	{ { 128, 144, true  }, {  80, 100, true  } },
+	{ { 128, 160, true  }, {  80, 128, true  } },
+	{ { 160, 180, true  }, {  80, 144, true  } },
+	{ { 224, 128, false }, { 160, 100, false } },
+	{ { 252, 144, false }, { 160, 128, false } },
 };
 
-VINT viewportNum = 0;
+VINT viewportNum;
+boolean lowResMode;
 const VINT numViewports = sizeof(viewports) / sizeof(viewports[0]);
 
 /*
@@ -284,8 +286,9 @@ void R_SetViewportSize(int num)
 
 	num %= numViewports;
 
-	width = viewports[num][0];
-	height = viewports[num][1];
+	width = viewports[num][splitscreen][0];
+	height = viewports[num][splitscreen][1];
+	lowResMode = viewports[num][splitscreen][2];
 
 	viewportNum = num;
 	viewportWidth = width;
@@ -324,7 +327,7 @@ void R_SetDetailMode(int mode)
 		return;
 
 	detailmode = mode;
-	if (viewportWidth <= 160)
+	if (lowResMode)
 	{
 		drawcol = I_DrawColumnLow;
 		drawcolnpo2 = I_DrawColumnNPo2Low;
@@ -410,6 +413,8 @@ nocache:
 void R_SetupLevel(void)
 {
 	R_SetupTextureCaches();
+
+	R_SetViewportSize(viewportNum);
 #ifdef MARS
 	curpalette = -1;
 #endif
@@ -431,7 +436,7 @@ extern	pixel_t	*screens[2];	/* [viewportWidth*viewportHeight];  */
 ==================
 */
 
-void R_Setup (void)
+void R_Setup (int displayplayer)
 {
 	int 		i;
 	int		damagecount, bonuscount;
@@ -461,7 +466,9 @@ void R_Setup (void)
 	framecount++;	
 	validcount++;
 		
-	viewplayer = player = &players[displayplayer];
+	player = &players[displayplayer];
+
+	vd.viewplayer = player;
 	vd.viewx = player->mo->x;
 	vd.viewy = player->mo->y;
 	vd.viewz = player->viewz;
@@ -469,14 +476,15 @@ void R_Setup (void)
 
 	vd.viewsin = finesine(vd.viewangle>>ANGLETOFINESHIFT);
 	vd.viewcos = finecosine(vd.viewangle>>ANGLETOFINESHIFT);
-		
-	player = &players[consoleplayer];
+
+	vd.displayplayer = displayplayer;
+	vd.lightlevel = player->mo->subsector->sector->lightlevel;
 
 	damagecount = player->damagecount;
 	bonuscount = player->bonuscount;
 	
 #ifdef JAGUAR
-	extralight = player->extralight << 6;
+	vd.extralight = player->extralight << 6;
 
 /* */
 /* calc shadepixel */
@@ -533,16 +541,16 @@ void R_Setup (void)
 #ifdef MARS
 	if (detailmode == detmode_high)
 	{
-		extralight = player->extralight << 4;
-		if (extralight > 255)
-			extralight = 255;
+		vd.extralight = player->extralight << 4;
+		if (vd.extralight > 255)
+			vd.extralight = 255;
 	}
 	else
 	{
-		extralight = 0;
+		vd.extralight = 0;
 	}
 
-	viewportbuffer = (volatile pixel_t*)I_ViewportBuffer();
+	viewportbuffer = (pixel_t*)I_ViewportBuffer();
 
 	palette = 0;
 
@@ -554,27 +562,30 @@ void R_Setup (void)
 
 	if (gamepaused)
 		palette = 14;
-	else if (i)
+	else if (!splitscreen)
 	{
-		palette = (i + 7) / 8;
-		if (palette > 7)
-			palette = 7;
-		palette += 1;
+		if (i)
+		{
+			palette = (i + 7) / 8;
+			if (palette > 7)
+				palette = 7;
+			palette += 1;
+		}
+		else if (bonuscount)
+		{
+			palette = (bonuscount + 7) / 8;
+			if (palette > 3)
+				palette = 3;
+			palette += 9;
+		}
+		else if (player->powers[pw_invulnerability] > 60
+			|| (player->powers[pw_invulnerability] & 4))
+			palette = 12;
+		else if (player->powers[pw_ironfeet] > 60
+			|| (player->powers[pw_ironfeet] & 4))
+			palette = 13;
 	}
-	else if (bonuscount)
-	{
-		palette = (bonuscount + 7) / 8;
-		if (palette > 3)
-			palette = 3;
-		palette += 9;
-	}
-	else if (player->powers[pw_invulnerability] > 60 
-		|| (player->powers[pw_invulnerability] & 4))
-		palette = 12;
-	else if (player->powers[pw_ironfeet] > 60
-	|| (player->powers[pw_ironfeet]&4) )
-		palette = 13;
-
+	
 	if (palette != curpalette) {
 		curpalette = palette;
 		I_SetPalette(W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"))+palette*768);
@@ -627,6 +638,10 @@ void R_Setup (void)
 #endif
 
 	R_SetupTexCacheFrame(&r_texcache);
+
+#ifdef MARS
+	Mars_Sec_R_Setup();
+#endif
 }
 
 //
@@ -734,7 +749,7 @@ extern	ref6_start;
 extern	ref7_start;
 extern	ref8_start;
 
-void R_RenderPlayerView(void)
+void R_RenderPlayerView(int displayplayer)
 {
 	/* make sure its done now */
 #if defined(JAGUAR)
@@ -748,7 +763,7 @@ void R_RenderPlayerView(void)
 	if (debugscreenactive)
 		I_DebugScreen();
 
-	R_Setup();
+	R_Setup(displayplayer);
 
 #ifndef JAGUAR
 	R_BSP();
@@ -831,7 +846,7 @@ static void R_RenderPhases2To9(void)
 	t_ref_sprites[t_ref_cnt] = I_GetFRTCounter() - t_ref_sprites[t_ref_cnt];
 }
 
-void R_RenderPlayerView(void)
+void R_RenderPlayerView(int displayplayer)
 {
 #ifdef MARS
 	while (!I_RefreshCompleted())
@@ -842,7 +857,7 @@ void R_RenderPlayerView(void)
 
 	t_ref_total[t_ref_cnt] = I_GetFRTCounter();
 
-	R_Setup();
+	R_Setup(displayplayer);
 
 	R_RenderPhase1();
 

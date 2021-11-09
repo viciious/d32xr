@@ -2,6 +2,7 @@
  
 #include "doomdef.h" 
 
+boolean		splitscreen = false;
 VINT		controltype = 0;		/* determine settings for BT_* */
 VINT		alwaysrun = 0;
 
@@ -355,7 +356,12 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 			ticbuttons[consoleplayer] = buttons = *demo_p++;
 		}
 
-		if (netgame)	/* may also change vblsinframe */
+		if (splitscreen && !demoplayback)
+		{
+			vblsinframe[consoleplayer ^ 1] = vblsinframe[consoleplayer];
+			ticbuttons[consoleplayer ^ 1] = I_ReadControls2();
+		}
+		else if (netgame)	/* may also change vblsinframe */
 			ticbuttons[!consoleplayer]
 				= NetToLocal(I_NetTransfer(LocalToNet(ticbuttons[consoleplayer])));
 
@@ -387,7 +393,8 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		while (!I_RefreshCompleted())
 			;
 
-		drawer();
+		if (!exit)
+			drawer();
 
 		prevgametic = gametic;
 

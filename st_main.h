@@ -30,11 +30,11 @@
 #define MAPX		316
 #define MAPY		HEALTHY
 
-#define HISFRAGX	MAPX
-#define HISFRAGY	HEALTHY
+#define YOURFRAGX	(MAPX - 28)
+#define YOURFRAGY	8
 
-#define YOURFRAGX	278
-#define YOURFRAGY	HEALTHY
+#define HISFRAGX	(MAPX - 28)
+#define HISFRAGY	(HEALTHY+12)
 
 typedef enum
 {
@@ -122,13 +122,32 @@ typedef struct
 	VINT	godmode;
 	VINT	face;
 	char	cards[NUMCARDS];
-	
-	VINT	yourFrags;
-	VINT	hisFrags;
+
+	sbflash_t	flashCards[NUMCARDS];	/* INFO FOR FLASHING CARDS & SKULLS */
+
+	VINT	yourFragsCount;
+	VINT	hisFragsCount;
 	VINT	currentMap;
 	VINT	drawface;
 	char	weaponowned[NUMMICROS];
-	
+
+	VINT	facetics;
+	VINT	newface;
+
+	VINT	gibframe;
+	VINT	gibdelay;
+	boolean	gibdraw;
+
+	boolean doSpclFace;
+	spclface_e	spclFaceType;
+
+	short numstbarcmds;
+	stbarcmd_t stbarcmds[STC_NUMCMDTYPES + NUMMICROS + NUMCARDS * 2];
+
+	sbflash_t	yourFrags;			/* INFO FOR YOUR FRAG FLASHING */
+	sbflash_t	hisFrags;
+	boolean flashInitialDraw;		/* INITIALLY DRAW FRAG AMOUNTS (flag) */
+
 	/* Messaging */
 	char	specialFace;	/* Which type of special face to make */
 	char	gotgibbed;			/* Got gibbed */
@@ -136,7 +155,7 @@ typedef struct
 	char	forcedraw;
 } stbar_t;
 
-extern	stbar_t	stbar;
+extern	stbar_t	stbar[MAXPLAYERS];
 extern void valtostr(char *string,int val) ATTR_OPTIMIZE_SIZE;
 void ST_DrawValue(int x,int y,int value) ATTR_OPTIMIZE_SIZE;
 void ST_Num (int x, int y, int num) ATTR_OPTIMIZE_SIZE;

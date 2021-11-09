@@ -510,7 +510,6 @@ extern	gametype_t	netgame;
 
 extern	boolean		playeringame[MAXPLAYERS];
 extern	int			consoleplayer;		/* player taking events and displaying */
-extern	int			displayplayer;
 extern	player_t	players[MAXPLAYERS];
 extern	playerresp_t	playersresp[MAXPLAYERS];
 
@@ -732,6 +731,7 @@ void I_ResetLineTable(void);
 void I_SetPalette (const byte *palette);
 
 int I_ReadControls(void);
+int I_ReadControls2(void);
 int I_ReadMouse(int *pmx, int *pmy);
 
 void I_NetSetup (void);
@@ -885,7 +885,7 @@ void ST_InitEveryLevel(void);
 /*------- */
 struct seg_s;
 
-void R_RenderPlayerView (void);
+void R_RenderPlayerView (int displayplayer);
 void R_Init (void);
 int	R_FlatNumForName (const char *name);
 int	R_TextureNumForName (const char *name);
@@ -1037,6 +1037,7 @@ extern unsigned configuration[NUMCONTROLOPTIONS][3];
 extern	VINT	controltype;				/* 0 to 5 */
 extern	VINT	strafebtns;
 extern	VINT	alwaysrun;
+extern	boolean	splitscreen;
 
 extern	VINT	sfxvolume, musicvolume;		/* range from 0 to 255 */
 

@@ -365,6 +365,7 @@ static void R_SegCommands2(const int cpu)
     viswall_t* segl;
     seglocal_t lseg;
     drawtex_t* toptex, * bottomtex;
+    int extralight;
 
     // initialize the clipbounds array
     unsigned short clipbounds[SCREENWIDTH];
@@ -376,6 +377,7 @@ static void R_SegCommands2(const int cpu)
         *clip++ = clipval;
     }
 
+    extralight = vd.extralight;
     toptex = &lseg.tex[0];
     bottomtex = &lseg.tex[1];
     lseg.clipbounds = clipbounds;

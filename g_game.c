@@ -22,8 +22,7 @@ boolean         playeringame[MAXPLAYERS];
 player_t        players[MAXPLAYERS];
 playerresp_t	playersresp[MAXPLAYERS];
 
-int             consoleplayer;          /* player taking events and displaying  */
-int             displayplayer;          /* view being displayed  */
+int             consoleplayer = 0;          /* player taking events and displaying  */
 int             gametic;
 int             prevgametic;
 int             totalkills, totalitems, totalsecret;    /* for intermission  */
@@ -53,7 +52,7 @@ void G_DoLoadLevel (void)
 
 	for (i=0 ; i<MAXPLAYERS ; i++) 
 	{ 
-		if (playeringame[i] && players[i].playerstate == PST_DEAD) 
+		if (playeringame[i]/* && players[i].playerstate == PST_DEAD*/)
 			players[i].playerstate = PST_REBORN; 
 		players[i].frags = 0;
 	} 
@@ -138,8 +137,7 @@ void G_DoLoadLevel (void)
 	skytexturel = R_TextureNumForName(gamemapinfo.sky);
  	skytexturep = &textures[skytexturel];
 
-	P_SetupLevel (gamemaplump, gameskill);   
-	displayplayer = consoleplayer;		/* view the guy you are playing     */
+	P_SetupLevel (gamemaplump, gameskill);
 	gameaction = ga_nothing; 
 
 	music = S_SongForLump(gamemapinfo.musicLump);
@@ -186,6 +184,9 @@ void G_PlayerFinishLevel (int player)
 	if (netgame == gt_deathmatch)
 		return;
 	if (gameaction == ga_died)
+		return;
+
+	if (p->health <= 0)
 		return;
 
 	P_UpdateResp(p);

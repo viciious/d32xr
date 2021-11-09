@@ -313,8 +313,7 @@ void Mars_Sec_R_WallPrep(void)
     viswall_t *first, *verylast;
     volatile viswall_t* volatile* plast;
     volatile viswall_t* volatile* pfirst;
-
-    Mars_ClearCacheLines((intptr_t)&vd & ~15, (sizeof(vd) + 15) / 16);
+  
     pfirst = (volatile viswall_t* volatile *)((intptr_t)&viswalls | 0x20000000);
     plast = (volatile viswall_t* volatile*)((intptr_t)&lastwallcmd | 0x20000000);
 

@@ -166,6 +166,7 @@ int EV_DoDoor (line_t *line, vldoor_e  type)
 void EV_VerticalDoor (line_t *line, mobj_t *thing)
 {
 	player_t		*player;
+	int				pnum = 0;
 	int				secnum;
 	sector_t		*sec;
 	vldoor_t		*door;
@@ -176,6 +177,7 @@ void EV_VerticalDoor (line_t *line, mobj_t *thing)
 /*	Check for locks */
 /* */
 	player = thing->player ? &players[thing->player - 1] : NULL;
+	pnum = player ? player - players : 0;
 
 	switch(line->special)
 	{
@@ -184,8 +186,7 @@ void EV_VerticalDoor (line_t *line, mobj_t *thing)
 			if ( player && !player->cards[it_bluecard] && !player->cards[it_blueskull])
 			{
 				S_StartSound(thing,sfx_oof);
-				if (player == &players[consoleplayer])
-					stbar.tryopen[it_bluecard] = true;
+				stbar[pnum].tryopen[it_bluecard] = true;
 				return;
 			}
 			break;
@@ -194,8 +195,7 @@ void EV_VerticalDoor (line_t *line, mobj_t *thing)
 			if ( player && !player->cards[it_bluecard] && !player->cards[it_blueskull])
 			{
 				S_StartSound(thing,sfx_oof);
-				if (player == &players[consoleplayer])
-					stbar.tryopen[it_blueskull] = true;
+				stbar[pnum].tryopen[it_blueskull] = true;
 				return;
 			}
 			break;
@@ -204,8 +204,7 @@ void EV_VerticalDoor (line_t *line, mobj_t *thing)
 			if ( player && !player->cards[it_yellowcard] && !player->cards[it_yellowskull])
 			{
 				S_StartSound(thing,sfx_oof);
-				if (player == &players[consoleplayer])
-					stbar.tryopen[it_yellowcard] = true;
+				stbar[pnum].tryopen[it_yellowcard] = true;
 				return;
 			}
 			break;
@@ -214,8 +213,7 @@ void EV_VerticalDoor (line_t *line, mobj_t *thing)
 			if ( player && !player->cards[it_yellowcard] && !player->cards[it_yellowskull])
 			{
 				S_StartSound(thing,sfx_oof);
-				if (player == &players[consoleplayer])
-					stbar.tryopen[it_yellowskull] = true;
+				stbar[pnum].tryopen[it_yellowskull] = true;
 				return;
 			}
 			break;
@@ -224,8 +222,7 @@ void EV_VerticalDoor (line_t *line, mobj_t *thing)
 			if ( player && !player->cards[it_redcard] && !player->cards[it_redskull])
 			{
 				S_StartSound(thing,sfx_oof);
-				if (player == &players[consoleplayer])
-					stbar.tryopen[it_redcard] = true;
+				stbar[pnum].tryopen[it_redcard] = true;
 				return;
 			}
 			break;
@@ -234,8 +231,7 @@ void EV_VerticalDoor (line_t *line, mobj_t *thing)
 			if ( player && !player->cards[it_redcard] && !player->cards[it_redskull])
 			{
 				S_StartSound(thing,sfx_oof);
-				if (player == &players[consoleplayer])
-					stbar.tryopen[it_redskull] = true;
+				stbar[pnum].tryopen[it_redskull] = true;
 				return;
 			}
 			break;

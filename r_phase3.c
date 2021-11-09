@@ -133,13 +133,13 @@ static void R_PrepPSprite(pspdef_t *psp)
    vis->x1 = psp->sx / FRACUNIT;
    vis->texturemid = psp->sy;
 
-   vis->x1 += ((viewportWidth > 160 ? (viewportWidth - 320) / 2 : (viewportWidth - 160)) / 2);
+   vis->x1 += ((!lowResMode ? (viewportWidth - 320) / 2 : (viewportWidth - 160)) / 2);
    vis->texturemid = (vis->texturemid / FRACUNIT - (180 - (viewportHeight < 144 ? 144 : viewportHeight)) / 2) * FRACUNIT;
 
    if(state->frame & FF_FULLBRIGHT)
       vis->colormap = 255;
    else
-      vis->colormap = viewplayer->mo->subsector->sector->lightlevel;
+      vis->colormap = vd.lightlevel;
    vis->drawcol = I_DrawColumnLow;
 }
 
@@ -175,7 +175,7 @@ void R_SpritePrep(void)
    lastsprite_p = vissprite_p;
 
    // draw player weapon sprites
-   for(i = 0, psp = viewplayer->psprites; i < NUMPSPRITES; i++, psp++)
+   for(i = 0, psp = vd.viewplayer->psprites; i < NUMPSPRITES; i++, psp++)
    {
       if(psp->state)
          R_PrepPSprite(psp);
