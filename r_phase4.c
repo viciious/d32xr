@@ -171,7 +171,7 @@ static void R_FinishSprite(vissprite_t *vis)
       vis->startfrac = 0;
 
    if(x1 < 0)
-      vis->startfrac += vis->xiscale * (vis->x1 - x1);
+      vis->startfrac += vis->xiscale * -x1;
 }
 
 //
@@ -215,6 +215,8 @@ static void R_FinishPSprite(vissprite_t *vis)
    vis->yiscale = FRACUNIT;
    vis->xiscale = FRACUNIT;
    vis->startfrac = 0;
+   if (x1 < 0)
+    vis->startfrac = FRACUNIT * -x1;
 }
 
 //
