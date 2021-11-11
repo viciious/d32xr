@@ -12,7 +12,7 @@ INCPATH = -I. -I$(ROOTDIR)/sh-elf/include -I$(ROOTDIR)/sh-elf/sh-elf/include -I.
 CCFLAGS = -m2 -mb -Wall -c -std=c11 -g -flto
 CCFLAGS += -fomit-frame-pointer -ffast-math -funroll-loops -fno-align-loops -fno-align-functions -fno-align-jumps -fno-align-labels -ffunction-sections -fdata-sections
 CCFLAGS += -D__32X__ -DMARS
-LDFLAGS = -T $(LDSCRIPTSDIR)/mars.ld -Wl,-Map=output.map -nostdlib -Wl,--gc-sections --specs=nosys.specs -flto
+LDFLAGS = -T mars.ld -Wl,-Map=output.map -nostdlib -Wl,--gc-sections --specs=nosys.specs -flto
 ASFLAGS = --big
 
 MARSHWCFLAGS := $(CCFLAGS)
