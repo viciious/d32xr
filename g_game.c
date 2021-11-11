@@ -231,10 +231,8 @@ void P_SpawnPlayer (mapthing_t *mthing);
 boolean G_CheckSpot (int playernum, mapthing_t *mthing) 
 { 
 	fixed_t         x,y; 
-	subsector_t *ss; 
-	int                     an; 
-	mobj_t		*mo;
-	
+	int                     an;
+
 	x = mthing->x << FRACBITS; 
 	y = mthing->y << FRACBITS; 
 	 
@@ -245,14 +243,6 @@ boolean G_CheckSpot (int playernum, mapthing_t *mthing)
 	players[playernum].mo->flags &= ~MF_SOLID;
 	if (!an ) 
 		return false; 
- 
-	ss = R_PointInSubsector (x,y); 
-	an = ( ANG45 * ((unsigned)mthing->angle/45) ) >> ANGLETOFINESHIFT; 
- 
-/* spawn a teleport fog  */
-	mo = P_SpawnMobj (x+20*finecosine(an), y+20*finesine(an), ss->sector->floorheight 
-	, MT_TFOG); 
-	S_StartSound (mo, sfx_telept);
 	
 	return true; 
 } 

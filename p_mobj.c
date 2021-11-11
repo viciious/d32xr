@@ -370,6 +370,8 @@ void P_SpawnPlayer (mapthing_t *mthing)
 	fixed_t		x,y,z;
 	mobj_t		*mobj;
 	int	i;
+	subsector_t* ss;
+	int                     an;
 
 	if (!playeringame[mthing->type-1])
 		return;						/* not playing */
@@ -408,6 +410,17 @@ y = 0xff500000;
 	if (netgame == gt_deathmatch)
 		for (i=0 ; i<NUMCARDS ; i++)
 			p->cards[i] = true;		/* give all cards in death match mode			 */
+
+	if (!netgame)
+		return;
+
+	ss = R_PointInSubsector(x, y);
+	an = (ANG45 * ((unsigned)mthing->angle / 45)) >> ANGLETOFINESHIFT;
+
+	/* spawn a teleport fog  */
+	mobj = P_SpawnMobj(x + 20 * finecosine(an), y + 20 * finesine(an), ss->sector->floorheight
+		, MT_TFOG);
+	S_StartSound(mobj, sfx_telept);
 }
 
 
