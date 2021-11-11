@@ -130,67 +130,109 @@ void S_RestartSounds (void)
 /*
 ==================
 =
+= S_SpatializeAt
+=
+==================
+*/
+static void S_SpatializeAt(mobj_t* origin, mobj_t* listener, int* pvol, int* psep)
+{
+	int dist_approx;
+	int dx, dy;
+	angle_t angle;
+	int	vol, sep;
+
+	dx = D_abs(origin->x - listener->x);
+	dy = D_abs(origin->y - listener->y);
+	dist_approx = dx + dy - ((dx < dy ? dx : dy) >> 1);
+	if (dist_approx > S_CLIPPING_DIST)
+	{
+		vol = 0;
+		sep = 128;
+	}
+	else
+	{
+		// angle of source to listener
+		angle = R_PointToAngle2(listener->x, listener->y,
+			origin->x, origin->y);
+
+		if (angle > listener->angle)
+			angle = angle - listener->angle;
+		else
+			angle = angle + (0xffffffff - listener->angle);
+		angle >>= ANGLETOFINESHIFT;
+
+		FixedMul2(sep, S_STEREO_SWING, finesine(angle));
+		sep >>= FRACBITS;
+
+		sep = 128 - sep;
+		if (sep < 0)
+			sep = 0;
+		else if (sep > 255)
+			sep = 255;
+
+		if (dist_approx < S_CLOSE_DIST)
+			vol = sfxvolume;
+		else if (dist_approx >= S_CLIPPING_DIST)
+			vol = 0;
+		else
+		{
+			vol = sfxvolume * (S_CLIPPING_DIST - dist_approx);
+			vol = (unsigned)vol / S_ATTENUATOR;
+			if (vol > sfxvolume)
+				vol = sfxvolume;
+		}
+	}
+
+	*pvol = vol;
+	*psep = sep;
+}
+
+/*
+==================
+=
 = S_Spatialize
 =
 ==================
 */
 static void S_Spatialize(mobj_t* origin, int *pvol, int *psep)
 {
-	int dist_approx;
-	int dx, dy;
 	int	vol, sep;
 	player_t* player = &players[consoleplayer];
-	player_t* otherplayer = &players[consoleplayer^1];
+	player_t* player2 = &players[consoleplayer^1];
 
-	if (!origin || origin == player->mo || (splitscreen && origin == otherplayer->mo))
+	vol = sfxvolume;
+	sep = 128;
+
+	if (splitscreen && origin == player->mo)
 	{
-		vol = sfxvolume;
-		sep = 128;
+		sep = 0;
 	}
-	else
+	else if (splitscreen && origin == player2->mo)
 	{
-		angle_t angle;
-		mobj_t *listener = player->mo;
+		sep = 255;
+	}
+	else if (origin && origin != player->mo)
+	{
+		S_SpatializeAt(origin, player->mo, &vol, &sep);
 
-		dx = D_abs(origin->x - listener->x);
-		dy = D_abs(origin->y - listener->y);
-		dist_approx = dx + dy - ((dx < dy ? dx : dy) >> 1);
-		if (dist_approx > S_CLIPPING_DIST)
+		if (splitscreen && player2->mo)
 		{
-			vol = 0;
-			sep = 128;
-		}
-		else
-		{
-			// angle of source to listener
-			angle = R_PointToAngle2(listener->x, listener->y,
-				origin->x, origin->y);
+			int vol2, sep2;
 
-			if (angle > listener->angle)
-				angle = angle - listener->angle;
-			else
-				angle = angle + (0xffffffff - listener->angle);
-			angle >>= ANGLETOFINESHIFT;
+			S_SpatializeAt(origin, player2->mo, &vol2, &sep2);
 
-			FixedMul2(sep, S_STEREO_SWING, finesine(angle));
-			sep >>= FRACBITS;
-
-			sep = 128 - sep;
-			if (sep < 0)
-				sep = 0;
-			else if (sep > 255)
-				sep = 255;
-
-			if (dist_approx < S_CLOSE_DIST)
-				vol = sfxvolume;
-			else if (dist_approx >= S_CLIPPING_DIST)
-				vol = 0;
-			else
+			if (vol2 == vol)
 			{
-				vol = sfxvolume * (S_CLIPPING_DIST - dist_approx);
-				vol = (unsigned)vol / S_ATTENUATOR;
-				if (vol > sfxvolume)
-					vol = sfxvolume;
+				sep = 128;
+			}
+			else if (vol2 > vol)
+			{
+				sep = 255 - vol;
+				vol = vol2;
+			}
+			else if (vol2 > 0)
+			{
+				sep = vol2;
 			}
 		}
 	}
@@ -384,15 +426,17 @@ static void S_Update(int16_t* buffer)
 {
 	int i;
 	int16_t* b;
-	player_t* player;
 	const size_t 
 		xoff = offsetof(mobj_t, x) & ~15, 
 		yoff = offsetof(mobj_t, y) & ~15;
 
-	player = &players[consoleplayer];
-
-	Mars_ClearCacheLines((intptr_t)player, (sizeof(player_t) + 15) / 16);
-	Mars_ClearCacheLines((intptr_t)player->mo, (sizeof(mobj_t) + 15) / 16);
+	for (i = 0; i < MAXPLAYERS; i++)
+	{
+		player_t* player = &players[i];
+		Mars_ClearCacheLines((intptr_t)player, (sizeof(player_t) + 15) / 16);
+		if (player->mo)
+			Mars_ClearCacheLines((intptr_t)player->mo, (sizeof(mobj_t) + 15) / 16);
+	}
 
 	{
 		int32_t *b2 = (int32_t *)buffer;
