@@ -179,12 +179,7 @@ void M_Start2 (boolean startup_)
 	mainscreen[ms_load].numitems = 1;
 
 	mainscreen[ms_main].firstitem = mi_newgame;
-	mainscreen[ms_main].numitems = mi_savegame - mi_newgame + 1;
-	if (startup)
-	{
-		// hide the 'save game' menu option
-		mainscreen[ms_main].numitems--;
-	}
+	mainscreen[ms_main].numitems = 1;
 
 	mainscreen[ms_save].firstitem = mi_savelist;
 	mainscreen[ms_save].numitems = 1;
@@ -198,13 +193,16 @@ void M_Start2 (boolean startup_)
 	mainitem[mi_loadgame].x = CURSORX + 24;
 	mainitem[mi_loadgame].y = CURSORY(1);
 	mainitem[mi_loadgame].screen = ms_load;
+	mainscreen[ms_main].numitems++;
 
-	if (!startup)
+	if (!startup && netgame != gt_deathmatch)
 	{
 		D_strncpy(mainitem[mi_savegame].name, "Save Game", 9);
 		mainitem[mi_savegame].x = CURSORX + 24;
 		mainitem[mi_savegame].y = CURSORY(2);
 		mainitem[mi_savegame].screen = ms_save;
+		mainscreen[ms_main].numitems++;
+
 	}
 
 	D_strncpy(mainitem[mi_gamemode].name, "Game Mode", 9);
