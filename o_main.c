@@ -8,8 +8,10 @@
 #endif
 
 #define MOVEWAIT		TICVBLS*6
+#define STARTY		44
 #define CURSORX		50
-#define ITEMSPACE	40
+#define ITEMSPACE	20
+#define CURSORY(y)	(STARTY+ITEMSPACE*(y))
 #define SLIDEWIDTH 90
 
 extern void print (int x, int y, const char *string);
@@ -140,52 +142,52 @@ void O_Init (void)
 
 	D_strncpy(menuitem[mi_game].name, "Game", 4);
 	menuitem[mi_game].x = 74;
-	menuitem[mi_game].y = 36;
+	menuitem[mi_game].y = STARTY;
 	menuitem[mi_game].slider = NULL;
 	menuitem[mi_game].screen = ms_game;
 
 	D_strncpy(menuitem[mi_audio].name, "Audio", 6);
 	menuitem[mi_audio].x = 74;
-	menuitem[mi_audio].y = 66;
+	menuitem[mi_audio].y = STARTY+ITEMSPACE;
 	menuitem[mi_audio].slider = NULL;
 	menuitem[mi_audio].screen = ms_audio;
 
 	D_strncpy(menuitem[mi_video].name, "Video", 6);
 	menuitem[mi_video].x = 74;
-	menuitem[mi_video].y = 96;
+	menuitem[mi_video].y = STARTY+ITEMSPACE*2;
 	menuitem[mi_video].slider = NULL;
 	menuitem[mi_video].screen = ms_video;
 
 	D_strncpy(menuitem[mi_controls].name, "Controls", 8);
 	menuitem[mi_controls].x = 74;
-	menuitem[mi_controls].y = 126;
+	menuitem[mi_controls].y = STARTY+ITEMSPACE*3;
 	menuitem[mi_controls].slider = NULL;
 	menuitem[mi_controls].screen = ms_controls;
 
 
 	D_strncpy(menuitem[mi_soundvol].name, "Sfx volume", 10);
 	menuitem[mi_soundvol].x = 74;
-	menuitem[mi_soundvol].y = 36;
+	menuitem[mi_soundvol].y = STARTY;
 	menuitem[mi_soundvol].slider = &slider[0];
  	slider[0].maxval = 4;
 	slider[0].curval = 4*sfxvolume/64;
 
 	D_strncpy(menuitem[mi_music].name, "Music", 5);
 	menuitem[mi_music].x = 74;
-	menuitem[mi_music].y = 76;
+	menuitem[mi_music].y = STARTY+ITEMSPACE*2;
 	menuitem[mi_music].slider = NULL;
 
 
 	D_strncpy(menuitem[mi_resolution].name, "Resolution", 10);
 	menuitem[mi_resolution].x = 74;
-	menuitem[mi_resolution].y = 36;
+	menuitem[mi_resolution].y = STARTY;
 	menuitem[mi_resolution].slider = &slider[1];
 	slider[1].maxval = numViewports - 1;
 	slider[1].curval = viewportNum;
 
 	D_strncpy(menuitem[mi_detailmode].name, "Level of detail", 15);
 	menuitem[mi_detailmode].x = 74;
-	menuitem[mi_detailmode].y = 76;
+	menuitem[mi_detailmode].y = STARTY+ITEMSPACE*2;
 	menuitem[mi_detailmode].slider = &slider[2];
 	slider[2].maxval = MAXDETAILMODES;
 	slider[2].curval = detailmode + 1;
@@ -193,16 +195,16 @@ void O_Init (void)
 
 	D_strncpy(menuitem[mi_controltype].name, "Gamepad", 7);
 	menuitem[mi_controltype].x = 74;
-	menuitem[mi_controltype].y = 36;
+	menuitem[mi_controltype].y = STARTY;
 	menuitem[mi_controltype].slider = NULL;
 
 	D_strncpy(menuitem[mi_alwaysrun].name, "Always run", 10);
 	menuitem[mi_alwaysrun].x = 74;
-	menuitem[mi_alwaysrun].y = 116;
+	menuitem[mi_alwaysrun].y = STARTY+ITEMSPACE*4;
 
 	D_strncpy(menuitem[mi_strafebtns].name, "LR Strafe", 10);
 	menuitem[mi_strafebtns].x = 74;
-	menuitem[mi_strafebtns].y = 136;
+	menuitem[mi_strafebtns].y = STARTY+ITEMSPACE*5;
 
 
 	D_strncpy(menuscreen[ms_main].name, "Options", 7);
@@ -235,6 +237,7 @@ void O_Control (player_t *player)
 {
 	int		buttons, oldbuttons;
 	menuscreen_t* menuscr;
+	boolean newcursor = false;
 
 	if (cursorframe == -1)
 	{
@@ -381,6 +384,7 @@ exit:
 		int sound = sfx_None;
 		int itemno = menuscr->firstitem + cursorpos;
 		slider_t*slider = menuitem[itemno].slider;
+		int oldcursorpos = cursorpos;
 
 		if (slider && (buttons & (BT_RIGHT|BT_LEFT)))
 		{
@@ -429,22 +433,14 @@ exit:
 		{
 			if (buttons & BT_DOWN)
 			{
-				int oldpos = cursorpos;
-				cursorpos++;
-				if (cursorpos == menuscr->numitems)
+				if (++cursorpos == menuscr->numitems)
 					cursorpos = 0;
-				if (cursorpos != oldpos)
-					sound = sfx_pistol;
 			}
 		
 			if (buttons & BT_UP)
 			{
-				int oldpos = cursorpos;
-				cursorpos--;
-				if (cursorpos == -1)
+				if (--cursorpos == -1)
 					cursorpos = menuscr->numitems-1;
-				if (cursorpos != oldpos)
-					sound = sfx_pistol;
 			}
 
 			if (screenpos == ms_controls)
@@ -527,11 +523,18 @@ exit:
 					sound = sfx_stnmov;
 				}
 			}
+
+			newcursor = cursorpos != oldcursorpos;
+			if (newcursor)
+				sound = sfx_pistol;
 		}
 
 		if (sound != sfx_noway)
 			S_StartSound(NULL, sound);
 	}
+
+	if (newcursor)
+		clearscreen = 2;
 }
 
 void O_Drawer (void)
@@ -569,9 +572,9 @@ void O_Drawer (void)
 
 		if(items[i].slider)
 		{
-			DrawJagobjLump(o_slidertrack, items[i].x + 2, items[i].y + 20, NULL, NULL);
+			DrawJagobjLump(o_slidertrack, items[i].x + 2, items[i].y + ITEMSPACE, NULL, NULL);
 			offset = (items[i].slider->curval * SLIDEWIDTH) / items[i].slider->maxval;
-			DrawJagobjLump(o_slider, items[i].x + 7 + offset, items[i].y + 20, NULL, NULL);
+			DrawJagobjLump(o_slider, items[i].x + 7 + offset, items[i].y + ITEMSPACE, NULL, NULL);
 /*			ST_Num(menuitem[i].x + o_slider->width + 10,	 */
 /*			menuitem[i].y + 20,slider[i].curval);  */
 		}
@@ -594,9 +597,9 @@ void O_Drawer (void)
 			break;
 		}
 
-		print(items[0].x + 10, items[0].y + 20, "A");
-		print(items[0].x + 10, items[0].y + 40, "B");
-		print(items[0].x + 10, items[0].y + 60, "C");
+		print(items[0].x + 10, items[0].y + ITEMSPACE, "A");
+		print(items[0].x + 10, items[0].y + ITEMSPACE*2, "B");
+		print(items[0].x + 10, items[0].y + ITEMSPACE*3, "C");
 
 		O_DrawControl();
 
@@ -608,13 +611,13 @@ void O_Drawer (void)
 	{
 		switch (o_musictype) {
 		case mustype_none:
-			print(menuitem[mi_music].x, menuitem[mi_music].y + 20, "off");
+			print(menuitem[mi_music].x + 85, menuitem[mi_music].y, "off");
 			break;
 		case mustype_fm:
-			print(menuitem[mi_music].x, menuitem[mi_music].y + 20, "fm synth");
+			print(menuitem[mi_music].x + 85, menuitem[mi_music].y, "fm synth");
 			break;
 		case mustype_cd:
-			print(menuitem[mi_music].x, menuitem[mi_music].y + 20, "cd");
+			print(menuitem[mi_music].x + 85, menuitem[mi_music].y, "cd");
 			break;
 		}
 	}

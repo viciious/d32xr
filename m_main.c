@@ -4,8 +4,9 @@
 
 #define MOVEWAIT		TICVBLS*6
 #define CURSORX		50
-#define STARTY			40
-#define CURSORY(y)	(STARTY*(y))
+#define STARTY			44
+#define ITEMSPACE	20
+#define CURSORY(y)	(STARTY+ITEMSPACE*(y))
 #define	NUMLCHARS 64	
 
 typedef enum
@@ -78,6 +79,7 @@ static VINT savecount;
 static VINT prevsaveslot;
 static VINT saveslotmap;
 static VINT saveslotskill;
+static VINT saveslotmode;
 
 static VINT *mapnumbers;
 static VINT mapcount;
@@ -211,11 +213,11 @@ void M_Start2 (boolean startup_)
 
 	D_strncpy(mainitem[mi_level].name, "Area", 4);
 	mainitem[mi_level].x = CURSORX + 24;
-	mainitem[mi_level].y = CURSORY(mainscreen[ms_new].numitems - 2);
+	mainitem[mi_level].y = CURSORY((mainscreen[ms_new].numitems - 2)*2);
 
 	D_strncpy(mainitem[mi_difficulty].name, "Difficulty", 10);
 	mainitem[mi_difficulty].x = CURSORX + 24;
-	mainitem[mi_difficulty].y = CURSORY(mainscreen[ms_new].numitems - 1);
+	mainitem[mi_difficulty].y = CURSORY((mainscreen[ms_new].numitems - 1)*2);
 
 	D_strncpy(mainitem[mi_savelist].name, "Checkpoints", 11);
 	mainitem[mi_savelist].x = CURSORX + 24;
@@ -267,6 +269,8 @@ int M_Ticker (void)
 	int		buttons, oldbuttons;
 	mainscreen_t* menuscr;
 	int		oldplayermap;
+	boolean newcursor = false;
+	int sound = sfx_None;
 
 	if (cursorframe == -1)
 	{
@@ -293,7 +297,8 @@ int M_Ticker (void)
 		prevsaveslot = saveslot;
 		saveslotmap = -1;
 		saveslotskill = -1;
-		GetSaveInfo(saveslot, &saveslotmap, &saveslotskill);
+		saveslotmode = gt_single;
+		GetSaveInfo(saveslot, &saveslotmap, &saveslotskill, &saveslotmode);
 	}
 
 	buttons = ticrealbuttons;
@@ -391,7 +396,6 @@ int M_Ticker (void)
 		movecount = 0;		/* move immediately on next press */
 	else
 	{
-		int sound = sfx_None;
 		int itemno = menuscr->firstitem + cursorpos;
 
 		movecount = 0;		/* repeat move */
@@ -471,7 +475,9 @@ int M_Ticker (void)
 					break;
 			}
 
-			if (cursorpos != oldcursorpos)
+			newcursor = cursorpos != oldcursorpos;
+
+			if (newcursor)
 				sound = sfx_pistol;
 			else if (oldplayerskill != playerskill ||
 				oldsaveslot != saveslot ||
@@ -479,14 +485,14 @@ int M_Ticker (void)
 				oldplayermode != currentplaymode)
 				sound = sfx_stnmov;
 		}
-
-		if (sound != sfx_None)
-			S_StartSound(NULL, sound);
 	}
 
-	if (playermap != oldplayermap)
+	if (sound != sfx_None)
+		S_StartSound(NULL, sound);
+
+	if (newcursor || sound != sfx_None)
 	{
-		/* a long map name can spill into the screen border */
+		/* long menu item names can spill onto the screen border */
 		clearscreen = 2;
 		oldplayermap = playermap;
 	}
@@ -530,13 +536,13 @@ void M_Drawer (void)
 	int	leveltens = mapnumber / 10, levelones = mapnumber % 10;
 	mainscreen_t* menuscr = &mainscreen[screenpos];
 	mainitem_t* items = &mainitem[menuscr->firstitem];
-	int y, y_offset = 36;
+	int y, y_offset = 0;
 
 /* Draw main menu */
 	if (m_doom && screenpos == ms_main)
 	{
 		DrawJagobj(m_doom, 100, 2);
-		y_offset = m_doom->height;
+		y_offset = m_doom->height - STARTY;
 	}
 
 /* erase old skulls */
@@ -571,13 +577,21 @@ void M_Drawer (void)
 		y = y_offset + item->y;
 
 		/* draw game mode information */
-		print(item->x + 10, y + 20 + 2, playmodes[currentplaymode]);
+		if (currentplaymode == (int)gt_single)
+		{
+			print(item->x + 10, y + ITEMSPACE + 2, playmodes[currentplaymode]);
+		}
+		else
+		{
+			print(item->x + 10, y + ITEMSPACE + 2, "Split ");
+			print(item->x + 74, y + ITEMSPACE + 2, playmodes[currentplaymode]);
+		}
 
 		item = &mainitem[mi_level];
 		y = y_offset + item->y;
 
 #ifndef MARS
-		EraseBlock(80, m_doom_height + CURSORY(NUMMAINITEMS - 2) + 20 + 2, 320, nums[0]->height);
+		EraseBlock(80, m_doom_height + CURSORY(NUMMAINITEMS - 2) + ITEMSPACE + 2, 320, nums[0]->height);
 #endif
 		if (leveltens)
 		{
@@ -588,16 +602,16 @@ void M_Drawer (void)
 		else
 			DrawJagobjLump(numslump + levelones, item->x + 70, y + 2, NULL, NULL);
 
-		print((320 - (mapnamelen * 14)) >> 1, y + 20 + 2, mapname);
+		print((320 - (mapnamelen * 14)) >> 1, y + ITEMSPACE + 2, mapname);
 
 		item = &mainitem[mi_difficulty];
 		y = y_offset + item->y;
 
 #ifndef MARS
-		EraseBlock(82, m_doom_height + CURSORY(NUMMAINITEMS - 1) + 20 + 2, 320 - 72, m_skill[playerskill]->height + 10);
+		EraseBlock(82, m_doom_height + CURSORY(NUMMAINITEMS - 1) + ITEMSPACE + 2, 320 - 72, m_skill[playerskill]->height + 10);
 #endif
 		/* draw difficulty information */
-		DrawJagobjLump(m_skilllump + playerskill, item->x + 10, y + 20 + 2, NULL, NULL);
+		DrawJagobjLump(m_skilllump + playerskill, item->x + 10, y + ITEMSPACE + 2, NULL, NULL);
 	}
 	else if (screenpos == ms_load || screenpos == ms_save)
 	{
@@ -613,7 +627,7 @@ void M_Drawer (void)
 			else
 			{
 				print(item->x + 10, y + 20, "Slot ");
-				DrawJagobjLump(numslump + saveslot % 10, item->x + 70, y + 20 + 1, NULL, NULL);
+				DrawJagobjLump(numslump + saveslot % 10, item->x + 70, y + ITEMSPACE + 1, NULL, NULL);
 			}
 
 			if (saveslotmap != -1)
@@ -632,29 +646,29 @@ void M_Drawer (void)
 				{
 					DrawJagobjLump(numslump + leveltens,
 						item->x + 80, y + 40 + 3, NULL, NULL);
-					DrawJagobjLump(numslump + levelones, item->x + 94, y + 40 + 3, NULL, NULL);
+					DrawJagobjLump(numslump + levelones, item->x + 94, y + ITEMSPACE*2 + 3, NULL, NULL);
 				}
 				else
-					DrawJagobjLump(numslump + levelones, item->x + 80, y + 40 + 3, NULL, NULL);
+					DrawJagobjLump(numslump + levelones, item->x + 80, y + ITEMSPACE*2 + 3, NULL, NULL);
 
-				print((320 - (mapnamelen * 14)) >> 1, y + 60 + 3, mapname);
+				print((320 - (mapnamelen * 14)) >> 1, y + ITEMSPACE*3 + 3, mapname);
 			}
 			else
 			{
-				print(item->x + 10, y + 40 + 2, "Empty");
+				print(item->x + 10, y + ITEMSPACE*2 + 2, "Empty");
 			}
 			if (saveslotskill != -1)
 			{
 				/* draw difficulty information */
-				print(item->x + 10, y + 80 + 2, "Difficulty");
-				DrawJagobjLump(m_skilllump + saveslotskill, item->x + 10, y + 100 + 2, NULL, NULL);
+				print(item->x + 10, y + ITEMSPACE*4 + 2, playmodes[saveslotmode]);
+				DrawJagobjLump(m_skilllump + saveslotskill, item->x + 10, y + ITEMSPACE*5 + 2, NULL, NULL);
 			}
 		}
 		else
 		{
-			print(CURSORX, y + 30 + 2, "Reach your first");
-			print(CURSORX, y + 50 + 2, "checkpoint after");
-			print(CURSORX, y + 70 + 2, "the first area.");
+			print(CURSORX, y + ITEMSPACE+10 + 2, "Reach your first");
+			print(CURSORX, y + ITEMSPACE*2+10 + 2, "checkpoint after");
+			print(CURSORX, y + ITEMSPACE*3+10 + 2, "the first area.");
 		}
 	}
 
