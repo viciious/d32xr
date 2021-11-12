@@ -1116,7 +1116,7 @@ void ReadGame(int slotnum);
 void QuickSave(int nextmap);
 int SaveCount(void);
 int MaxSaveCount(void);
-boolean GetSaveInfo(int slotnumber, VINT* mapnum, VINT* skill);
+boolean GetSaveInfo(int slotnumber, VINT* mapnum, VINT* skill, VINT *mode);
 
 void PrintHex (int x, int y, unsigned num);
 void DrawPlaque (jagobj_t *pl);

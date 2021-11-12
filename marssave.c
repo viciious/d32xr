@@ -88,6 +88,7 @@ void ReadGame(int slotnumber)
 	startskill = sg.skill;
 	starttype = sg.netgame;
 	startmap = sg.mapnumber;
+	starttype = sg.netgame;
 	D_memcpy(playersresp, sg.resp, sizeof(playersresp));
 }
 
@@ -122,7 +123,7 @@ void QuickSave(int nextmap)
 	SaveGameExt(0, nextmap);
 }
 
-boolean GetSaveInfo(int slotnumber, VINT* mapnum, VINT* skill)
+boolean GetSaveInfo(int slotnumber, VINT* mapnum, VINT* skill, VINT *mode)
 {
 	savegame_t sg;
 	const int offset = slotnumber * SRAM_SLOTSIZE;
@@ -140,9 +141,12 @@ boolean GetSaveInfo(int slotnumber, VINT* mapnum, VINT* skill)
 
 	if (sg.version != SRAM_VERSION)
 		return false;
+	if (sg.netgame >= gt_deathmatch)
+		sg.netgame = gt_single;
 
 	*mapnum = sg.mapnumber;
 	*skill = sg.skill;
+	*mode = sg.netgame;
 	return true;
 }
 
