@@ -55,6 +55,7 @@
 #define MARS_PWM_LEFT       (*(volatile unsigned short *)0x20004034)
 #define MARS_PWM_RIGHT      (*(volatile unsigned short *)0x20004036)
 #define MARS_PWM_MONO       (*(volatile unsigned short *)0x20004038)
+#define MARS_PWM_STEREO     MARS_PWM_LEFT
 
 #define MARS_VDP_DISPMODE   (*(volatile unsigned short *)0x20004100)
 #define MARS_VDP_FILLEN     (*(volatile unsigned short *)0x20004104)

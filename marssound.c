@@ -580,7 +580,7 @@ void Mars_Sec_InitSoundDMA(void)
 
 	// init DMA
 	SH2_DMA_SAR1 = 0;
-	SH2_DMA_DAR1 = 0x20004038; // storing a word here will the MONO channel
+	SH2_DMA_DAR1 = (uint32_t)&MARS_PWM_STEREO; // storing a word here will set the left and right channels
 	SH2_DMA_TCR1 = 0;
 	SH2_DMA_CHCR1 = 0;
 	SH2_DMA_DRCR1 = 0;
