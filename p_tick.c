@@ -483,14 +483,17 @@ void DrawSinglePlaque (jagobj_t *pl)
  
 void P_Drawer (void) 
 { 	
+	boolean automapactive = (players[consoleplayer].automapflags & AF_ACTIVE) != 0;
+	boolean optionsactive = (players[consoleplayer].automapflags & AF_OPTIONSACTIVE) != 0;
+
 #ifndef MARS
-	if (players[consoleplayer].automapflags & AF_OPTIONSACTIVE)
+	if (optionsactive)
 	{
 		O_Drawer ();
 	}
 	else if (gamepaused && refreshdrawn)
 		DrawPlaque (pausepic);
-	else if (players[consoleplayer].automapflags & AF_ACTIVE)
+	else if (automapactive)
 	{
 		ST_Drawer ();
 		AM_Drawer ();
@@ -499,12 +502,12 @@ void P_Drawer (void)
 	}
 	else
 #else
-	if (players[consoleplayer].automapflags & AF_ACTIVE)
+	if (automapactive)
 	{
 		R_RenderPlayerView();
 		ST_Drawer();
 		AM_Drawer();
-		if (players[consoleplayer].automapflags & AF_OPTIONSACTIVE)
+		if (optionsactive)
 			O_Drawer();
 		I_Update();
 		clearscreen = 2;
@@ -515,16 +518,14 @@ void P_Drawer (void)
 #ifdef MARS
 		static boolean o_wasactive = false;
 
-		if (!(players[consoleplayer].automapflags & AF_OPTIONSACTIVE))
-		{
-			if (o_wasactive)
-				clearscreen = 2;
-			o_wasactive = false;
-		}
+		if (!optionsactive && o_wasactive)
+			clearscreen = 2;
 
 		if (clearscreen > 0) {
 			I_ResetLineTable();
+		}
 
+		if (clearscreen > 0 || optionsactive) {
 			if (viewportWidth == 160)
 				I_ClearFrameBuffer();
 			else
@@ -532,11 +533,13 @@ void P_Drawer (void)
 
 			I_DrawSbar();
 
-			if (clearscreen == 2)
+			if (clearscreen == 2 || optionsactive)
 			{
 				ST_ForceDraw();
 			}
+		}
 
+		if (clearscreen > 0) {
 			clearscreen--;
 		}
 
@@ -547,11 +550,12 @@ void P_Drawer (void)
 		if (demoplayback)
 			M_Drawer();
 
-		if (players[consoleplayer].automapflags & AF_OPTIONSACTIVE)
+		if (optionsactive)
 		{
 			O_Drawer();
-			o_wasactive = true;
 		}
+
+		o_wasactive = optionsactive;
 
 		I_Update ();
 #else
