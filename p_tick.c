@@ -525,7 +525,7 @@ void P_Drawer (void)
 			I_ResetLineTable();
 		}
 
-		if (clearscreen > 0 || optionsactive) {
+		if (clearscreen > 0) {
 			if (viewportWidth == 160)
 				I_ClearFrameBuffer();
 			else
