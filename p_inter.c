@@ -583,7 +583,7 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 		}
 		else 
 		{	/* killed by other player */
-			players[target->player - 1].frags++;
+			players[source->player - 1].frags++;
 		}
 		
 		/* else just killed by a monster */
