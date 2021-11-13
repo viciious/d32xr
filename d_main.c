@@ -213,6 +213,11 @@ void M_ClearRandom (void)
 	rndindex = prndindex = 0;
 }
 
+void P_RandomSeed(int seed)
+{
+	prndindex = seed & 0xff;
+}
+
 
 void M_ClearBox (fixed_t *box)
 {

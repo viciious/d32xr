@@ -900,6 +900,7 @@ struct subsector_s *R_PointInSubsector (fixed_t x, fixed_t y) ATTR_DATA_CACHE_AL
 int M_Random (void) ATTR_DATA_CACHE_ALIGN;
 int P_Random (void) ATTR_DATA_CACHE_ALIGN;
 void M_ClearRandom (void);
+void P_RandomSeed(int seed);
 void M_ClearBox (fixed_t *box);
 void M_AddToBox (fixed_t *box, fixed_t x, fixed_t y);
 
