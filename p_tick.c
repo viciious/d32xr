@@ -592,6 +592,10 @@ void P_Start (void)
 	ticremainder[0] = ticremainder[1] = 0;
 	M_ClearRandom ();
 
+	if (!demoplayback && !demorecording)
+		if (!netgame || splitscreen)
+			P_RandomSeed(I_GetTime());
+
 	clearscreen = 2;
 }
 
