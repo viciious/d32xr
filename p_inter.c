@@ -205,8 +205,22 @@ boolean P_GiveArmor (player_t *player, int armortype)
 
 void P_GiveCard (player_t *player, card_t card)
 {
+	boolean allowkeysounds;
+	mobj_t* toucher = player->mo;
+
 	if (player->cards[card])
-		return;		
+		return;
+
+	/* allow keycard pickup sounds in single and splitscreen coop modes */
+	allowkeysounds = !netgame || (netgame == gt_coop && splitscreen);
+
+	if (player == &players[consoleplayer] ||
+		(splitscreen && player == &players[consoleplayer ^ 1]))
+		toucher = NULL;
+
+	if (allowkeysounds)
+		S_StartSound(toucher, sfx_itemup);
+
 	player->bonuscount = BONUSADD;
 	player->cards[card] = 1;
 }
@@ -279,52 +293,6 @@ int P_TouchSpecialThing2 (mobj_t *special, mobj_t *toucher)
 			return -1;
 		player->message = "You got the MegaArmor!";
 		break;
-
-/* */
-/* cards */
-/* leave cards for everyone */
-	case SPR_BKEY:
-		if (!player->cards[it_bluecard])
-			player->message = "You pick up a blue keycard.";
-		P_GiveCard (player, it_bluecard);
-		if (!netgame)
-			break;
-		return -1;
-	case SPR_YKEY:
-		if (!player->cards[it_yellowcard])
-			player->message = "You pick up a yellow keycard.";
-		P_GiveCard (player, it_yellowcard);
-		if (!netgame)
-			break;
-		return -1;
-	case SPR_RKEY:
-		if (!player->cards[it_redcard])
-			player->message = "You pick up a red keycard.";
-		P_GiveCard (player, it_redcard);
-		if (!netgame)
-			break;
-		return -1;
-	case SPR_BSKU:
-		if (!player->cards[it_blueskull])
-			player->message = "You pick up a blue skull key.";
-		P_GiveCard (player, it_blueskull);
-		if (!netgame)
-			break;
-		return -1;
-	case SPR_YSKU:
-		if (!player->cards[it_yellowskull])
-			player->message = "You pick up a yellow skull key.";
-		P_GiveCard (player, it_yellowskull);
-		if (!netgame)
-			break;
-		return -1;
-	case SPR_RSKU:
-		if (!player->cards[it_redskull])
-			player->message = "You pick up a red skull key.";
-		P_GiveCard (player, it_redskull);
-		if (!netgame)
-			break;
-		return -1;
 
 /* */
 /* heals */
@@ -536,7 +504,59 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 		player->message = "You got the shotgun!";
 		sound = sfx_wpnup;	
 		break;
-		
+
+	/* */
+	/* cards */
+	/* leave cards for everyone */
+	case SPR_BKEY:
+		if (!player->cards[it_bluecard])
+			player->message = "You pick up a blue keycard.";
+		P_GiveCard(player, it_bluecard);
+		sound = sfx_None;
+		if (netgame)
+			return;
+		break;
+	case SPR_YKEY:
+		if (!player->cards[it_yellowcard])
+			player->message = "You pick up a yellow keycard.";
+		P_GiveCard(player, it_yellowcard);
+		sound = sfx_None;
+		if (netgame)
+			return;
+		break;
+	case SPR_RKEY:
+		if (!player->cards[it_redcard])
+			player->message = "You pick up a red keycard.";
+		P_GiveCard(player, it_redcard);
+		sound = sfx_None;
+		if (netgame)
+			return;
+		break;
+	case SPR_BSKU:
+		if (!player->cards[it_blueskull])
+			player->message = "You pick up a blue skull key.";
+		P_GiveCard(player, it_blueskull);
+		sound = sfx_None;
+		if (netgame)
+			return;
+		break;
+	case SPR_YSKU:
+		if (!player->cards[it_yellowskull])
+			player->message = "You pick up a yellow skull key.";
+		P_GiveCard(player, it_yellowskull);
+		sound = sfx_None;
+		if (netgame)
+			return;
+		break;
+	case SPR_RSKU:
+		if (!player->cards[it_redskull])
+			player->message = "You pick up a red skull key.";
+		P_GiveCard(player, it_redskull);
+		sound = sfx_None;
+		if (netgame)
+			return;
+		break;
+
 	default:
 		sound = P_TouchSpecialThing2 (special, toucher);
 		if (sound == -1)
@@ -547,7 +567,11 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 		player->itemcount++;
 	P_RemoveMobj (special);
 	player->bonuscount += BONUSADD;
-	if (player == &players[consoleplayer] || splitscreen)
+
+	if (sound <= sfx_None)
+		return;
+
+	if (player == &players[consoleplayer] || (splitscreen && player == &players[consoleplayer^1]))
 		toucher = NULL;
 	S_StartSound (toucher, sound);
 }
