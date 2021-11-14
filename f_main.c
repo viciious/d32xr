@@ -346,7 +346,10 @@ int F_Ticker (void)
 /* */
 	buttons = ticbuttons[consoleplayer];
 	oldbuttons = oldticbuttons[consoleplayer];
-	
+
+	if (ticon > 10 && (buttons & BT_START) && !(oldbuttons & BT_START))
+		return 1;
+
 	if (status == fin_endtext)
 	{
 		if (textindex == (3*15)/TEXTTIME)
@@ -493,7 +496,7 @@ stopattack:
 	if (casttics == -1)
 		casttics = 15;
 		
-	return 0;		/* finale never exits */
+	return 0;
 }
 
 

@@ -477,8 +477,15 @@ jagobj_t	*titlepic;
 void START_Title(void)
 {
 	int l;
+#ifdef MARS
+	int		i;
 
-#ifndef MARS
+	for (i = 0; i < 2; i++)
+	{
+		I_ClearFrameBuffer();
+		I_Update();
+	}
+#else
 	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
 	DoubleBufferSetup();
 #endif
@@ -663,18 +670,20 @@ static void DRAW_Credits(void)
 }
 
 /*============================================================================ */
-
 void RunMenu (void);
 void RunCredits(void);
 
 void RunTitle (void)
 {
 	int		exit;
-	
+
 	exit = MiniLoop (START_Title, STOP_Title, TIC_Abortable, DRAW_Title);
+#ifdef MARS
+	if (exit != ga_exitdemo)
+		RunMenu();
+#else
 	if (exit == ga_exitdemo)
 		RunMenu ();
-#ifdef MARS
 	else
 		RunCredits();
 #endif
@@ -826,16 +835,20 @@ D_printf ("DM_Main\n");
 	G_RunGame ();
 #endif
 
+#ifdef MARS
 	while (1)
 	{
 		RunTitle();
-#ifdef MARS
 		RunMenu();
+	}
 #else
+	while (1)
+	{
+		RunTitle();
 		RunDemo("DEMO1");
 		RunCredits ();
 		RunDemo("DEMO2");
-#endif
 	}
-} 
+#endif
+}
  

@@ -484,7 +484,6 @@ void G_LoadGame(int saveslot)
 = The game should allready have been initialized or laoded
 =================
 */
-
 void G_RunGame (void)
 {
 	int		i;
@@ -558,7 +557,10 @@ void G_RunGame (void)
 	
 	/* run the finale if needed */
 		if (finale)
-			MiniLoop (F_Start, F_Stop, F_Ticker, F_Drawer);
+		{
+			MiniLoop(F_Start, F_Stop, F_Ticker, F_Drawer);
+			break;
+		}
 
 		gamemaplump = nextmapl;
 	}
