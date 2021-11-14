@@ -380,7 +380,7 @@ void A_WeaponReady (player_t *player, pspdef_t *psp)
 /* */
 /* bob the weapon based on movement speed */
 /* */
-	angle = (64*gamevbls)&(FINEANGLES-1);
+	angle = (128*ticon)&(FINEANGLES-1);
 	psp->sx = WEAPONX + (player->bob>>FRACBITS) * finecosine(angle);
 	angle &= FINEANGLES/2-1;
 	psp->sy = WEAPONTOP + (player->bob>>FRACBITS) * finesine(angle);
