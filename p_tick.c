@@ -570,7 +570,7 @@ void P_Drawer (void)
 } 
  
  
-extern	 int		ticremainder[2];
+extern	 VINT		ticremainder[2];
 
 void P_Start (void)
 {

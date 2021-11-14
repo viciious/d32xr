@@ -319,8 +319,8 @@ typedef enum
 
 typedef struct
 {
-	statenum_t	state;		/* a S_NULL state means not active */
-	int		tics;
+	VINT	state;		/* a S_NULL state means not active */
+	VINT	tics;
 	fixed_t	sx, sy;
 } pspdef_t;
 
