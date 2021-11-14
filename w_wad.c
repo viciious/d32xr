@@ -213,6 +213,8 @@ int	W_GetNumForName (const char *name)
 
 int W_LumpLength (int lump)
 {
+	if (lump < 0)
+		I_Error("W_LumpLength: %i < 0", lump);
 	if (lump >= numlumps)
 		I_Error ("W_LumpLength: %i >= numlumps",lump);
 	return BIGLONG(lumpinfo[lump].size);
@@ -233,6 +235,8 @@ void W_ReadLump (int lump, void *dest)
 {
 	lumpinfo_t	*l;
 	
+	if (lump < 0)
+		I_Error("W_ReadLump: %i < 0", lump);
 	if (lump >= numlumps)
 		I_Error ("W_ReadLump: %i >= numlumps",lump);
 	l = lumpinfo+lump;
@@ -261,6 +265,8 @@ void	*W_CacheLumpNum (int lump, int tag)
 	void* cache;
 	int len;
 
+	if (lump < 0)
+		I_Error("W_CacheLumpNum: %i < 0", lump);
 	if (lump >= numlumps)
 		I_Error ("W_CacheLumpNum: %i >= numlumps",lump);
 	if (tag != PU_STATIC)
@@ -273,6 +279,8 @@ void	*W_CacheLumpNum (int lump, int tag)
 
 	return cache;
 #else
+	if (lump < 0)
+		I_Error("W_CacheLumpNum: %i < 0", lump);
 	if (lump >= numlumps)
 		I_Error("W_CacheLumpNum: %i >= numlumps", lump);
 
