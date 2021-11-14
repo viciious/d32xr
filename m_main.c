@@ -73,10 +73,10 @@ static VINT cursordelay;
 static VINT	movecount;
 static VINT	playermap = 1;
 
-static playmode_t currentplaymode = single;
-static menu_t	cursorpos;
-static screen_t  screenpos;
-static skill_t	playerskill;
+static VINT currentplaymode = single;
+static VINT	cursorpos;
+static VINT screenpos;
+static VINT playerskill;
 
 static VINT saveslot;
 static VINT savecount;

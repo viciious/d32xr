@@ -35,7 +35,7 @@ typedef enum
 	NUMMENUITEMS
 } menupos_t;
 
-menupos_t	cursorpos;
+VINT cursorpos;
 
 typedef struct
 {
@@ -94,7 +94,7 @@ typedef enum
 } screenpos_t;
 
 static menuscreen_t menuscreen[NUMMENUSCREENS];
-static screenpos_t  screenpos;
+static VINT screenpos;
 
 /* */
 /* Draw control value */
