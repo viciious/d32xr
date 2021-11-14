@@ -13,7 +13,7 @@
 /* */
 typedef struct
 {
-	boolean	istexture;
+	char	istexture;
 	VINT	picnum;
 	VINT	basepic;
 	VINT	numpics;
@@ -25,10 +25,9 @@ typedef struct
 /* */
 typedef struct
 {
-	boolean	istexture;		/* if false, it's a flat */
+	char	istexture;		/* if false, it's a flat */
 	char	endname[9];
 	char	startname[9];
-	int		speed;
 } animdef_t;
 
 #define	MAXANIMS		32

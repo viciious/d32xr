@@ -12,9 +12,9 @@
 
 static const animdef_t	animdefs[] =
 {
-	{false,	"NUKAGE3",	"NUKAGE1",	4},
-	{false,	"FWATER4",	"FWATER1",	4},
-	{false,	"LAVA4",	"LAVA1",	4},
+	{false,	"NUKAGE3",	"NUKAGE1"},
+	{false,	"FWATER4",	"FWATER1"},
+	{false,	"LAVA4",	"LAVA1"},
 	{-1}
 };
 
