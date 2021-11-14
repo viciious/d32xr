@@ -14,8 +14,8 @@ typedef enum
 	mi_newgame,
 	mi_loadgame,
 	mi_savegame,
-	mi_gamemode,
 	mi_level,
+	mi_gamemode,
 	mi_difficulty,
 	mi_savelist,
 	NUMMAINITEMS
@@ -174,7 +174,7 @@ void M_Start2 (boolean startup_)
 	D_memset(mainscreen, 0, sizeof(mainscreen));
 	D_memset(mainitem, 0, sizeof(mainitem));
 
-	mainscreen[ms_new].firstitem = mi_gamemode;
+	mainscreen[ms_new].firstitem = mi_level;
 	mainscreen[ms_new].numitems = mi_difficulty - mainscreen[ms_new].firstitem + 1;
 
 	mainscreen[ms_load].firstitem = mi_savelist;
@@ -207,13 +207,13 @@ void M_Start2 (boolean startup_)
 
 	}
 
-	D_strncpy(mainitem[mi_gamemode].name, "Game Mode", 9);
-	mainitem[mi_gamemode].x = CURSORX + 24;
-	mainitem[mi_gamemode].y = CURSORY(0);
-
 	D_strncpy(mainitem[mi_level].name, "Area", 4);
 	mainitem[mi_level].x = CURSORX + 24;
-	mainitem[mi_level].y = CURSORY((mainscreen[ms_new].numitems - 2)*2);
+	mainitem[mi_level].y = CURSORY(0);
+
+	D_strncpy(mainitem[mi_gamemode].name, "Game Mode", 9);
+	mainitem[mi_gamemode].x = CURSORX + 24;
+	mainitem[mi_gamemode].y = CURSORY((mainscreen[ms_new].numitems - 2) * 2);
 
 	D_strncpy(mainitem[mi_difficulty].name, "Difficulty", 10);
 	mainitem[mi_difficulty].x = CURSORX + 24;
