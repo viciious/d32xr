@@ -68,11 +68,11 @@ static inline void Mars_RB_ResetAll(marsrb_t* wb)
     Mars_RB_ResetRead(wb);
 }
 
-static inline int Mars_RB_Len(marsrb_t* wb)
+static inline unsigned Mars_RB_Len(marsrb_t* wb)
 {
     int len = (int)MARS_UNCACHED_WROVER - (int)MARS_UNCACHED_RROVER;
     if (len <= 0) return 0;
-    return len;
+    return (unsigned)len;
 }
 
 static inline void Mars_RB_FinishRead(marsrb_t* wb)
