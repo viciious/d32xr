@@ -51,7 +51,7 @@ static void R_PrepMobj(mobj_t *thing)
       return;
 
    // check sprite for validity
-   if(thing->sprite < 0 || thing->sprite >= NUMSPRITES)
+   if(/*thing->sprite < 0 || */thing->sprite >= NUMSPRITES)
       return;
 
    sprdef = &sprites[thing->sprite];

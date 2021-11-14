@@ -29,7 +29,7 @@ typedef struct
 } localplane_t;
 
 static void R_MapPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-void R_PlaneLoop(localplane_t* lpl, const int mask) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void R_PlaneLoop(localplane_t* lpl, const unsigned mask) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void R_DrawPlanes2(const int cpu) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
@@ -104,7 +104,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
 //
 // Determine the horizontal spans of a single visplane
 //
-void R_PlaneLoop(localplane_t *lpl, const int mask)
+void R_PlaneLoop(localplane_t *lpl, const unsigned mask)
 {
    unsigned pl_x, pl_stopx;
    unsigned short *pl_openptr;
@@ -237,7 +237,7 @@ void R_DrawPlanes2(const int cpu)
         if (detailmode == detmode_high)
         {
 #ifdef MARS
-            unsigned light = lpl.lightmax;
+            int light = lpl.lightmax;
             if (light <= 160 + extralight)
                 light = light - (light >> 1);
 #else
@@ -246,8 +246,6 @@ void R_DrawPlanes2(const int cpu)
 #endif
             if (light < MINLIGHT)
                 light = MINLIGHT;
-            if (light > lpl.lightmax)
-                light = lpl.lightmax;
             lpl.lightmin = (unsigned)light;
         }
 

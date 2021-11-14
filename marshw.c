@@ -208,8 +208,6 @@ void Mars_InitVideo(int lines)
 
 void Mars_Init(void)
 {
-	int i;
-
 	Mars_InitVideo(224);
 
 	SH2_WDT_WTCSR_TCNT = 0xA518; /* WDT TCSR = clr OVF, IT mode, timer off, clksel = Fs/2 */
@@ -247,8 +245,8 @@ void Mars_Init(void)
 	if (mars_cd_ok)
 	{
 		/* give the CD three seconds to init */
-		i = mars_vblank_count + 180;
-		while (i > mars_vblank_count) ;
+		unsigned wait = mars_vblank_count + 180;
+		while (mars_vblank_count <= wait) ;
 	}
 }
 

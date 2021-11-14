@@ -651,7 +651,7 @@ void R_MarkOpenPlane(visplane_t* pl)
 }
 
 visplane_t* R_FindPlane(visplane_t* ignore, int hash, fixed_t height, 
-	unsigned flatnum, unsigned lightlevel, int start, int stop)
+	int flatnum, int lightlevel, int start, int stop)
 {
 	visplane_t *check, *tail;
 

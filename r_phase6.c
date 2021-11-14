@@ -407,7 +407,7 @@ static void R_SegCommands2(const int cpu)
         if (detailmode == detmode_high)
         {
 #ifdef MARS
-            unsigned seglight = segl->seglightlevel + extralight;
+            int seglight = segl->seglightlevel + extralight;
             if (seglight > 255)
                 seglight = 255;
             else if (seglight <= 160 + extralight)

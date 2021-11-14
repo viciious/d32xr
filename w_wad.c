@@ -261,7 +261,7 @@ void	*W_CacheLumpNum (int lump, int tag)
 	void* cache;
 	int len;
 
-	if ((unsigned)lump >= numlumps)
+	if (lump >= numlumps)
 		I_Error ("W_CacheLumpNum: %i >= numlumps",lump);
 	if (tag != PU_STATIC)
 		I_Error("W_CacheLumpNum: %i tag != PU_STATIC", lump);
@@ -273,7 +273,7 @@ void	*W_CacheLumpNum (int lump, int tag)
 
 	return cache;
 #else
-	if ((unsigned)lump >= numlumps)
+	if (lump >= numlumps)
 		I_Error("W_CacheLumpNum: %i >= numlumps", lump);
 
 	if (!lumpcache[lump])
