@@ -57,10 +57,15 @@ void P_InitSwitchList(void)
 /*	Start a button counting down till it turns off. */
 /* */
 /*================================================================== */
-void P_StartButton(line_t *line,bwhere_e w,int texture,int time)
+void P_StartButton(line_t *line,bwhere_e w,int texture,int time,mobj_t *soundord)
 {
 	int		i;
-	
+
+	// see if the button is already pressed
+	for (i = 0; i < MAXBUTTONS; i++)
+		if (buttonlist[i].btimer && buttonlist[i].line == line)
+			return;
+
 	for (i = 0;i < MAXBUTTONS;i++)
 		if (!buttonlist[i].btimer)
 		{
@@ -68,10 +73,10 @@ void P_StartButton(line_t *line,bwhere_e w,int texture,int time)
 			buttonlist[i].where = w;
 			buttonlist[i].btexture = texture;
 			buttonlist[i].btimer = time;
-			buttonlist[i].soundorg = (mobj_t *)&(LD_FRONTSECTOR(line))->soundorg;
+			buttonlist[i].soundorg = soundord;
 			return;
 		}
-		
+
 	I_Error("P_StartButton: no button slots left!");
 }
 
@@ -88,7 +93,8 @@ void P_ChangeSwitchTexture(line_t *line,int useAgain)
 	int	texBot;
 	int	i;
 	int	sound;
-	
+	mobj_t *soundorg = (mobj_t*)&(LD_FRONTSECTOR(line))->soundorg;
+
 	if (!useAgain)
 		line->special = 0;
 
@@ -103,28 +109,28 @@ void P_ChangeSwitchTexture(line_t *line,int useAgain)
 	for (i = 0;i < numswitches*2;i++)
 		if (switchlist[i] == texTop)
 		{
-			S_StartSound(buttonlist->soundorg,sound);
+			S_StartSound(soundorg,sound);
 			sides[line->sidenum[0]].toptexture = switchlist[i^1];
 			if (useAgain)
-				P_StartButton(line,top,switchlist[i],BUTTONTIME);
+				P_StartButton(line,top,switchlist[i],BUTTONTIME,soundorg);
 			return;
 		}
 		else
 		if (switchlist[i] == texMid)
 		{
-			S_StartSound(buttonlist->soundorg,sound);
+			S_StartSound(soundorg,sound);
 			sides[line->sidenum[0]].midtexture = switchlist[i^1];
 			if (useAgain)
-				P_StartButton(line, middle,switchlist[i],BUTTONTIME);
+				P_StartButton(line, middle,switchlist[i],BUTTONTIME,soundorg);
 			return;
 		}
 		else
 		if (switchlist[i] == texBot)
 		{
-			S_StartSound(buttonlist->soundorg,sound);
+			S_StartSound(soundorg,sound);
 			sides[line->sidenum[0]].bottomtexture = switchlist[i^1];
 			if (useAgain)
-				P_StartButton(line, bottom,switchlist[i],BUTTONTIME);
+				P_StartButton(line, bottom,switchlist[i],BUTTONTIME,soundorg);
 			return;
 		}
 }
