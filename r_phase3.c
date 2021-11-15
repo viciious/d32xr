@@ -120,6 +120,7 @@ static void R_PrepPSprite(pspdef_t *psp)
    int            lump;
    vissprite_t   *vis;
    const state_t* state = &states[psp->state];
+   const int psprY = (viewportWidth < 128 ? 144 : 180) - viewportHeight;
 
    sprdef = &sprites[state->sprite];
    sprframe = &spriteframes[sprdef->firstframe + (state->frame & FF_FRAMEMASK)];
@@ -134,7 +135,7 @@ static void R_PrepPSprite(pspdef_t *psp)
    vis->texturemid = psp->sy;
 
    vis->x1 += ((!lowResMode ? (viewportWidth - 320) / 2 : (viewportWidth - 160)) / 2);
-   vis->texturemid = (vis->texturemid / FRACUNIT - (180 - (viewportHeight < 144 ? 144 : viewportHeight)) / 2) * FRACUNIT;
+   vis->texturemid = (vis->texturemid / FRACUNIT - psprY / 2) * FRACUNIT;
 
    if(state->frame & FF_FULLBRIGHT)
       vis->colormap = 255;

@@ -416,6 +416,7 @@ void P_Thrust (player_t *player, angle_t angle, fixed_t move)
 void P_CalcHeight (player_t *player) 
 {
 	int			angle;
+	int			maxbob;
 	fixed_t		bob;
 	fixed_t		movx, movy;
 
@@ -436,9 +437,17 @@ void P_CalcHeight (player_t *player)
 
 	player->bob += movx*movx + movy*movy;
 	player->bob >>= 4;
-	if (player->bob>MAXBOB)
+
+	maxbob = MAXBOB;
+	if (viewportWidth < 128)
 	{
-		player->bob = MAXBOB;
+		maxbob >>= 1;
+		player->bob >>= 1;
+	}
+
+	if (player->bob>maxbob)
+	{
+		player->bob = maxbob;
 	}
 
 	if (!onground)
