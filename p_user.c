@@ -781,6 +781,22 @@ ticphase = 26;
 	}
 }
 
+void R_ResetResp(player_t* p)
+{
+	int j;
+	int pnum = p - players;
+	playerresp_t* resp = &playersresp[pnum];
+
+	D_memset(resp, 0, sizeof(playerresp_t));
+	resp->weapon = wp_pistol;
+	resp->health = MAXHEALTH;
+	resp->ammo[am_clip] = 50;
+	resp->weaponowned[wp_fist] = true;
+	resp->weaponowned[wp_pistol] = true;
+	for (j = 0; j < NUMAMMO; j++)
+		resp->maxammo[j] = maxammo[j];
+}
+
 void P_RestoreResp(player_t* p)
 {
 	int i;

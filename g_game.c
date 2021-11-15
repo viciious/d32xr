@@ -354,22 +354,8 @@ void G_SecretExitLevel (void)
 static void G_InitPlayerResp(void)
 {
 	int i;
-
-	D_memset(playersresp, 0, sizeof(playersresp));
 	for (i = 0; i < MAXPLAYERS; i++)
-	{
-		int j;
-		playerresp_t* resp;
-
-		resp = &playersresp[i];
-		resp->weapon = wp_pistol;
-		resp->health = MAXHEALTH;
-		resp->ammo[am_clip] = 50;
-		resp->weaponowned[wp_fist] = true;
-		resp->weaponowned[wp_pistol] = true;
-		for (j = 0; j < NUMAMMO; j++)
-			resp->maxammo[j] = maxammo[j];
-	}
+		R_ResetResp(&players[i]);
 }
 
 void G_Init(void)

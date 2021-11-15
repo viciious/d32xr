@@ -97,6 +97,7 @@ boolean P_CanFireWeapon(player_t* player, int weaponnum);
 void	P_PlayerThink (player_t *player);
 void	P_RestoreResp(player_t* p);
 void	P_UpdateResp(player_t* p);
+void	R_ResetResp(player_t* p);
 
 /*
 ===============================================================================

@@ -633,6 +633,8 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 		}
 		else
 			S_StartSound (target, sfx_pldeth);
+		if (netgame == gt_coop)
+			R_ResetResp(player);
 	}
 
 	if (target->health < -targinfo->spawnhealth
