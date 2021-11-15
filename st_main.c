@@ -297,6 +297,9 @@ static void ST_Ticker_(stbar_t* sb)
 	i = p->health;
 	if (sb->health != i || sb->forcedraw)
 	{
+		if (i > sb->health)
+			sb->gibframe = 0;
+
 		sb->health = i;
 		cmd = &sb->stbarcmds[sb->numstbarcmds++];
 		cmd->id = stc_drawhealth;
