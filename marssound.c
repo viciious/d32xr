@@ -203,37 +203,25 @@ static void S_Spatialize(mobj_t* origin, int *pvol, int *psep)
 	vol = sfxvolume;
 	sep = 128;
 
-	if (splitscreen && origin == player->mo)
+	if (origin)
 	{
-		sep = 0;
-	}
-	else if (splitscreen && origin == player2->mo)
-	{
-		sep = 255;
-	}
-	else if (origin && origin != player->mo)
-	{
-		S_SpatializeAt(origin, player->mo, &vol, &sep);
+		if (origin != player->mo)
+			S_SpatializeAt(origin, player->mo, &vol, &sep);
 
 		if (splitscreen && player2->mo)
 		{
 			int vol2, sep2;
 
-			S_SpatializeAt(origin, player2->mo, &vol2, &sep2);
+			vol2 = sfxvolume;
+			sep2 = 255;
 
-			if (vol2 == vol)
-			{
-				sep = 128;
-			}
-			else if (vol2 > vol)
-			{
-				sep = 255 - vol;
-				vol = vol2;
-			}
-			else if (vol2 > 0)
-			{
-				sep = vol2;
-			}
+			if (origin != player2->mo)
+				S_SpatializeAt(origin, player2->mo, &vol2, &sep2);
+
+			sep = 128 + (vol2 - vol) * 2;
+			vol = vol2 > vol ? vol2 : vol;
+			if (sep < 0) sep = 0;
+			else if (sep > 255) sep = 255;
 		}
 	}
 
