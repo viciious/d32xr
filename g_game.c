@@ -205,16 +205,25 @@ void G_PlayerReborn (int player)
 { 
 	player_t        *p; 
 	int             frags; 
-	
+	int             killcount;
+	int             itemcount;
+	int             secretcount;
+
 	p = &players[player]; 
 	frags = p->frags;
+	killcount = p->killcount;
+	itemcount = p->itemcount;
+	secretcount = p->secretcount;
 	D_memset (p, 0, sizeof(*p)); 
 	p->frags = frags;
+	p->killcount = killcount;
+	p->itemcount = itemcount;
+	p->secretcount = secretcount;
 	p->usedown = p->attackdown = true;		/* don't do anything immediately */
 	p->playerstate = PST_LIVE;
 
 	P_RestoreResp(p);
-} 
+}
  
  
 /* 
