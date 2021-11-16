@@ -11,7 +11,7 @@ extern boolean lowResMode;
 extern fixed_t centerXFrac, centerYFrac;
 extern fixed_t stretch;
 extern fixed_t stretchX;
-extern fixed_t weaponScale;
+extern VINT weaponYpos;
 
 #define	PROJECTION			centerXFrac
 

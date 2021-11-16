@@ -439,7 +439,7 @@ void P_CalcHeight (player_t *player)
 	player->bob >>= 4;
 
 	maxbob = MAXBOB;
-	if (viewportWidth < 128)
+	if (weaponYpos < -20)
 	{
 		maxbob >>= 1;
 		player->bob >>= 1;

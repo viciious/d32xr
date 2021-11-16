@@ -12,6 +12,7 @@ unsigned short centerX, centerY;
 fixed_t centerXFrac, centerYFrac;
 fixed_t stretch;
 fixed_t stretchX;
+VINT weaponYpos;
 
 detailmode_t detailmode = detmode_medium;
 
@@ -304,6 +305,12 @@ void R_SetViewportSize(int num)
 	//stretch = (fixed_t)((160.0f / width) * ((float)height / 180.0f) * 2.2f * FRACUNIT);
 	stretch = ((FRACUNIT * 16 * height) / 180 * 22) / width;
 	stretchX = stretch * centerX;
+
+	weaponYpos = 180;
+	if (viewportWidth < 128 || (viewportWidth <= 160 && !lowResMode)) {
+		weaponYpos = 144;
+	}
+	weaponYpos = (viewportHeight - weaponYpos) / 2;
 
 	R_InitMathTables();
 
