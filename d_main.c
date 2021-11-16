@@ -679,14 +679,11 @@ void RunTitle (void)
 
 	exit = MiniLoop (START_Title, STOP_Title, TIC_Abortable, DRAW_Title);
 #ifdef MARS
-	if (exit != ga_exitdemo)
-		RunMenu();
-#else
 	if (exit == ga_exitdemo)
 		RunMenu ();
 	else
-		RunCredits();
 #endif
+		RunCredits();
 }
 
 void RunCredits (void)
