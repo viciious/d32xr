@@ -109,7 +109,7 @@ void G_DoLoadLevel (void)
 		{
 			case 23: nextmap = 0; break;
 			case 24: nextmap = 4; break;
-			default: nextmap = mapnumber + 1; break;
+			default: nextmap = gamemap + 1; break;
 		}
 #endif
 		if (nextmap)
