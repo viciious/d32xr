@@ -15,12 +15,13 @@ static int *sortedsprites;
 static int fuzzpos[2];
 
 static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy) ATTR_DATA_CACHE_ALIGN;
-void R_DrawVisSprite(vissprite_t* vis, unsigned short* spropening, int *fuzzpos) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void R_DrawVisSprite(vissprite_t* vis, unsigned short* spropening, int *fuzzpos, int half) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;;
 static void R_DrawSpritesStride(const int start, int* fuzzpos) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static void R_DrawPSprites(unsigned cpu) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void R_Sprites(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
-void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos)
+void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos, int half)
 {
    patch_t *patch;
    fixed_t  iscale, xfrac, spryscale, sprtop, fracstep;
@@ -39,10 +40,25 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos)
 
    // blitter iinc
    light = HWLIGHT(vis->colormap);
+   x        = vis->x1;
    stopx    = vis->x2 + 1;
    fracstep = vis->xiscale;
+
+   if (half)
+   {
+      int mid = x + ((stopx - x)>>1);
+      if (half == 1)
+      {
+         stopx = mid;
+      }
+      else
+      {
+         xfrac += (mid - x) * fracstep;
+         x = mid;
+      }
+   }
    
-   for(x = vis->x1; x < stopx; x++, xfrac += fracstep)
+   for(; x < stopx; x++, xfrac += fracstep)
    {
       column_t *column = (column_t *)((byte *)patch + BIGSHORT(patch->columnofs[xfrac>>FRACBITS]));
       int topclip      = spropening[x] >> 8;
@@ -218,7 +234,6 @@ static void R_DrawSpritesStride(const int start, int *fuzzpos)
     const int stride = 2;
 #else
     const int stride = 1;
-    start = 0;
 #endif
 
     for (i = start; i < sortedcount; i += stride)
@@ -240,7 +255,7 @@ static void R_DrawSpritesStride(const int start, int *fuzzpos)
             Mars_R_AdvanceNextSprite();
 #endif
 
-        R_DrawVisSprite(ds, spropening, fuzzpos);
+        R_DrawVisSprite(ds, spropening, fuzzpos, 0);
 
 #ifdef MARS
         if (overlap)
@@ -252,30 +267,46 @@ static void R_DrawSpritesStride(const int start, int *fuzzpos)
 #ifdef MARS
 void Mars_Sec_R_DrawSprites(void)
 {
-    Mars_ClearCacheLines((intptr_t)&sortedcount & ~15, 1);
-    Mars_ClearCacheLines((intptr_t)&sortedsprites & ~15, 1);
-    Mars_ClearCacheLines((intptr_t)sortedsprites & ~15, (sortedcount * sizeof(*sortedsprites) + 15) / 16);
+   Mars_ClearCacheLines((intptr_t)&sortedcount & ~15, 1);
+   Mars_ClearCacheLines((intptr_t)&sortedsprites & ~15, 1);
+   Mars_ClearCacheLines((intptr_t)sortedsprites & ~15, (sortedcount * sizeof(*sortedsprites) + 15) / 16);
 
-    Mars_ClearCacheLines((intptr_t)&vissprites & ~15, 1);
-    Mars_ClearCacheLines((intptr_t)&vissprite_p & ~15, 1);
-    Mars_ClearCacheLines((intptr_t)vissprites & ~15, ((vissprite_p - vissprites) * sizeof(vissprite_t) + 15) / 16);
+   Mars_ClearCacheLines((intptr_t)&vissprites & ~15, 1);
+   Mars_ClearCacheLines((intptr_t)&vissprite_p & ~15, 1);
+   Mars_ClearCacheLines((intptr_t)&lastsprite_p & ~15, 1);
+   Mars_ClearCacheLines((intptr_t)vissprites & ~15, ((vissprite_p - vissprites) * sizeof(vissprite_t) + 15) / 16);
 
-    Mars_ClearCacheLines((intptr_t)&fuzzpos[1] & ~15, 1);
+   Mars_ClearCacheLines((intptr_t)&fuzzpos[1] & ~15, 1);
 
-    R_DrawSpritesStride(1, &fuzzpos[1]);
+   R_DrawSpritesStride(1, &fuzzpos[1]);
+
+   R_DrawPSprites(1);
 }
 #endif
 
-static void R_DrawPSprites(void)
+static void R_DrawPSprites(unsigned cpu)
 {
-    int i;
+    unsigned i;
     unsigned short spropening[SCREENWIDTH];
+    vissprite_t *vis = lastsprite_p;
 
     // draw psprites
-    while (lastsprite_p < vissprite_p)
+    while (vis < vissprite_p)
     {
-        ptrdiff_t stopx = lastsprite_p->x2 + 1;
-        i = lastsprite_p->x1;
+        unsigned  stopx = vis->x2 + 1;
+        i = vis->x1;
+
+#ifdef MARS
+        unsigned mid = i + ((stopx - i)>>1);
+        if (cpu)
+        {
+           i = mid;
+        }
+        else
+        {
+           stopx = mid;
+        }
+#endif
 
         // clear out the clipping array across the range of the psprite
         while (i < stopx)
@@ -284,9 +315,9 @@ static void R_DrawPSprites(void)
             ++i;
         }
 
-        R_DrawVisSprite(lastsprite_p, spropening, &fuzzpos[0]);
+        R_DrawVisSprite(vis, spropening, &fuzzpos[cpu], cpu+1);
 
-        ++lastsprite_p;
+        ++vis;
     }
 }
 
@@ -325,12 +356,16 @@ void R_Sprites(void)
 
    R_DrawSpritesStride(0, &fuzzpos[0]);
 
+   R_DrawPSprites(0);
+
    Mars_R_EndDrawSprites();
 #else
    R_DrawSpritesStride(0, &fuzzpos[0]);
+
+   R_DrawPSprites(0);
 #endif
 
-   R_DrawPSprites();
+   lastsprite_p = vissprite_p;
 }
 
 // EOF
