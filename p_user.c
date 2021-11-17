@@ -685,7 +685,12 @@ ticphase = 23;
 			player->pendingweapon = wp_bfg;
 #elif defined(MARS)
 		if ((buttons & (BT_MODE | BT_START)) == (BT_MODE | BT_START))
-			player->pendingweapon = wp_fist;
+		{
+			if (P_CanSelecteWeapon(player, wp_fist))
+				player->pendingweapon = wp_fist;
+			else/* if (player->weaponowned[wp_chainsaw])*/
+				player->pendingweapon = wp_chainsaw;
+		}
 		if ((buttons & (BT_MODE | BT_A)) == (BT_MODE | BT_A))
 			player->pendingweapon = wp_pistol;
 		if ((buttons & (BT_MODE | BT_B)) == (BT_MODE | BT_B) && player->weaponowned[wp_shotgun])
