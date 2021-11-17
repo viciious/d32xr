@@ -37,6 +37,7 @@ void Mars_Sec_R_WallPrep(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void Mars_Sec_R_SegCommands(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void Mars_Sec_R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void Mars_Sec_R_DrawSprites(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void Mars_Sec_R_DrawPSprites(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 void Mars_Sec_M_AnimateFire(void) ATTR_OPTIMIZE_EXTREME;
 void Mars_Sec_InitSoundDMA(void) ATTR_OPTIMIZE_SIZE;
@@ -83,6 +84,17 @@ static inline void Mars_R_BeginDrawSprites(void)
 }
 
 static inline void Mars_R_EndDrawSprites(void)
+{
+	while (MARS_SYS_COMM4 != 0);
+}
+
+static inline void Mars_R_BeginDrawPSprites(void)
+{
+	while (MARS_SYS_COMM4 != 0) {};
+	MARS_SYS_COMM4 = 7;
+}
+
+static inline void Mars_R_EndDrawPSprites(void)
 {
 	while (MARS_SYS_COMM4 != 0);
 }

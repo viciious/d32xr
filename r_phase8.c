@@ -264,26 +264,6 @@ static void R_DrawSpritesStride(const int start, int *fuzzpos)
     }
 }
 
-#ifdef MARS
-void Mars_Sec_R_DrawSprites(void)
-{
-   Mars_ClearCacheLines((intptr_t)&sortedcount & ~15, 1);
-   Mars_ClearCacheLines((intptr_t)&sortedsprites & ~15, 1);
-   Mars_ClearCacheLines((intptr_t)sortedsprites & ~15, (sortedcount * sizeof(*sortedsprites) + 15) / 16);
-
-   Mars_ClearCacheLines((intptr_t)&vissprites & ~15, 1);
-   Mars_ClearCacheLines((intptr_t)&vissprite_p & ~15, 1);
-   Mars_ClearCacheLines((intptr_t)&lastsprite_p & ~15, 1);
-   Mars_ClearCacheLines((intptr_t)vissprites & ~15, ((vissprite_p - vissprites) * sizeof(vissprite_t) + 15) / 16);
-
-   Mars_ClearCacheLines((intptr_t)&fuzzpos[1] & ~15, 1);
-
-   R_DrawSpritesStride(1, &fuzzpos[1]);
-
-   R_DrawPSprites(1);
-}
-#endif
-
 static void R_DrawPSprites(unsigned cpu)
 {
     unsigned i;
@@ -321,6 +301,31 @@ static void R_DrawPSprites(unsigned cpu)
     }
 }
 
+#ifdef MARS
+void Mars_Sec_R_DrawSprites(void)
+{
+    Mars_ClearCacheLines((intptr_t)&sortedcount & ~15, 1);
+    Mars_ClearCacheLines((intptr_t)&sortedsprites & ~15, 1);
+    Mars_ClearCacheLines((intptr_t)sortedsprites & ~15, (sortedcount * sizeof(*sortedsprites) + 15) / 16);
+
+    Mars_ClearCacheLines((intptr_t)&vissprites & ~15, 1);
+    Mars_ClearCacheLines((intptr_t)vissprites & ~15, ((lastsprite_p - vissprites) * sizeof(vissprite_t) + 15) / 16);
+
+    Mars_ClearCacheLines((intptr_t)&fuzzpos[1] & ~15, 1);
+
+    R_DrawSpritesStride(1, &fuzzpos[1]);
+}
+
+void Mars_Sec_R_DrawPSprites(void)
+{
+    Mars_ClearCacheLines((intptr_t)&vissprite_p & ~15, 1);
+    Mars_ClearCacheLines((intptr_t)&lastsprite_p & ~15, 1);
+    Mars_ClearCacheLines((intptr_t)lastsprite_p & ~15, ((vissprite_p - lastsprite_p) * sizeof(vissprite_t) + 15) / 16);
+
+    R_DrawPSprites(1);
+}
+#endif
+
 //
 // Render all sprites
 //
@@ -353,12 +358,12 @@ void R_Sprites(void)
    Mars_R_ResetNextSprite();
 
    Mars_R_BeginDrawSprites();
-
    R_DrawSpritesStride(0, &fuzzpos[0]);
-
-   R_DrawPSprites(0);
-
    Mars_R_EndDrawSprites();
+
+   Mars_R_BeginDrawPSprites();
+   R_DrawPSprites(0);
+   Mars_R_EndDrawPSprites();
 #else
    R_DrawSpritesStride(0, &fuzzpos[0]);
 
