@@ -495,7 +495,8 @@ typedef struct visplane_s
 	VINT 		flatnum;
 	VINT		runopen;
 	fixed_t		height;
-	int			lightlevel;
+	VINT		lightlevel;
+	VINT		pixelcount;
 	unsigned short		*open/*[SCREENWIDTH+2]*/;		/* top<<8 | bottom */ /* leave pads for [minx-1]/[maxx+1] */
 	struct visplane_s *next;
 } visplane_t;

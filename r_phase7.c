@@ -29,9 +29,16 @@ typedef struct
 } localplane_t;
 
 static void R_MapPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-void R_PlaneLoop(localplane_t* lpl, const unsigned mask) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void R_PlaneLoop(localplane_t* lpl) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void R_DrawPlanes2(const int cpu) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+
+static char pl_lock = 0;
+#ifdef MARS
+#define pl_next MARS_SYS_COMM6
+#else
+static int pl_next = 0;
+#endif
 
 //
 // Render the horizontal spans determined by R_PlaneLoop
@@ -99,12 +106,13 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     }
 
     drawspan(y, x, x2, light, xfrac, yfrac, xstep, ystep, lpl->ds_source);
+    lpl->pixelcount += x2 - x + 1;
 }
 
 //
 // Determine the horizontal spans of a single visplane
 //
-void R_PlaneLoop(localplane_t *lpl, const unsigned mask)
+void R_PlaneLoop(localplane_t *lpl)
 {
    unsigned pl_x, pl_stopx;
    unsigned short *pl_openptr;
@@ -147,14 +155,7 @@ void R_PlaneLoop(localplane_t *lpl, const unsigned mask)
          while(t1 < t2 && t1 <= b1)
          {
             x = spanstart[t1];
-#ifdef MARS
-            if ((t1 & 1) == mask)
-#endif
-                R_MapPlane(lpl, t1, x, x2);
-#ifdef MARS
-            if (mask == 0)
-#endif
-            lpl->pixelcount += x2 - x + 1;
+            R_MapPlane(lpl, t1, x, x2);
             ++t1;
          }
 
@@ -172,14 +173,7 @@ void R_PlaneLoop(localplane_t *lpl, const unsigned mask)
          while(b1 > b2 && b1 >= t1)
          {
             x = spanstart[b1];
-#ifdef MARS
-            if ((b1 & 1) == mask)
-#endif
-                R_MapPlane(lpl, b1, x, x2);
-#ifdef MARS
-            if (mask == 0)
-#endif
-                lpl->pixelcount += x2 - x + 1;
+            R_MapPlane(lpl, b1, x, x2);
             --b1;
          }
 
@@ -197,6 +191,33 @@ void R_PlaneLoop(localplane_t *lpl, const unsigned mask)
       t2 = *pl_openptr;
    }
    while(pl_x != pl_stopx);
+}
+
+static visplane_t *R_GetNextPlane(void)
+{
+    int p;
+    visplane_t *pl;
+
+#ifdef MARS
+    volatile int res;
+    do {
+        __asm volatile ( \
+            "tas.b %1\n\t" \
+            "movt %0\n\t" \
+            : "=r" (res) \
+            : "m" (pl_lock) \
+            : "r0");
+    } while (res == 0);
+#endif
+
+    p = pl_next;
+    pl_next = p + 1;
+    pl_lock = 0;
+
+    pl = visplanes + p;
+    if (pl >= lastvisplane)
+        return NULL;
+    return pl;
 }
 
 void R_DrawPlanes2(const int cpu)
@@ -217,7 +238,7 @@ void R_DrawPlanes2(const int cpu)
 
     extralight = vd.extralight;
 
-    for (pl = visplanes + 1; pl < lastvisplane; pl++)
+    while ((pl = R_GetNextPlane()) != NULL)
     {
         if (pl->minx > pl->maxx)
             continue;
@@ -262,12 +283,9 @@ void R_DrawPlanes2(const int cpu)
             lpl.lightmax = lpl.lightmin;
         }
 
-        R_PlaneLoop(&lpl, cpu);
+        R_PlaneLoop(&lpl);
 
-        if (cpu == 0)
-        {
-            R_AddPixelsToTexCache(&r_texcache, numtextures+pl->flatnum, lpl.pixelcount);
-        }
+        pl->pixelcount = lpl.pixelcount;
     }
 }
 
@@ -296,6 +314,9 @@ void R_DrawPlanes(void)
 {
     visplane_t* pl;
 
+    pl_next = 1;
+    pl_lock = 0;
+
     for (pl = visplanes + 1; pl < lastvisplane; pl++)
     {
         // see if there is any open space
@@ -303,6 +324,7 @@ void R_DrawPlanes(void)
             continue; // nothing to map
         pl->open[pl->maxx + 1] = OPENMARK;
         pl->open[pl->minx - 1] = OPENMARK;
+        pl->pixelcount = 0;
     }
 
 #ifdef MARS
@@ -314,6 +336,15 @@ void R_DrawPlanes(void)
 
 #else
     R_DrawPlanes2(0);
+#endif
+
+#ifdef MARS
+    for (pl = visplanes + 1; pl < lastvisplane; pl++)
+    {
+        if (pl->minx > pl->maxx)
+            continue;
+       R_AddPixelsToTexCache(&r_texcache, numtextures+pl->flatnum, *((volatile VINT *)((uintptr_t)&pl->pixelcount | 0x20000000)));
+    }
 #endif
 }
 
