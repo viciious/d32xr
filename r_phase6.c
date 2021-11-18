@@ -35,9 +35,7 @@ typedef struct
 } seglocal_t;
 
 static void R_DrawTextures(int x, int floorclipx, int ceilingclipx, fixed_t scale2, int colnum, unsigned light, seglocal_t* lsegl) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static void R_SegLoop(seglocal_t* lseg, const int cpu, boolean gradientlight) __attribute__((always_inline));
-void R_SegLoopFlat(seglocal_t* lseg, const int cpu) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-void R_SegLoopGradient(seglocal_t* lseg, const int cpu) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static void R_SegLoop(seglocal_t* lseg, const int cpu, boolean gradientlight) ATTR_OPTIMIZE_SIZE;
 static void R_SegCommands2(const int mask) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
@@ -157,12 +155,29 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu, boolean gradientlight)
    int floorplhash = 0;
    int ceilingplhash = 0;
 
-   if (actionbits & AC_ADDFLOOR)
-       floorplhash = R_PlaneHash(floorheight, floorpicnum, lightlevel);
-   if (actionbits & AC_ADDCEILING)
-       ceilingplhash = R_PlaneHash(ceilingheight, ceilingpicnum, lightlevel);
+   int midView = viewportWidth/2;
 
-   for (x = segl->start; x <= stop; x++)
+   x = segl->start;
+   if (cpu)
+   {
+       if (midView > stop)
+           return;
+       if (x < midView)
+       {
+           scalefrac += (midView - x) * scalestep;
+           x = midView;
+       }
+       draw = true;
+   }
+   else
+   {
+       if (actionbits & AC_ADDFLOOR)
+           floorplhash = R_PlaneHash(floorheight, floorpicnum, lightlevel);
+       if (actionbits & AC_ADDCEILING)
+           ceilingplhash = R_PlaneHash(ceilingheight, ceilingpicnum, lightlevel);
+   }
+
+   for (; x <= stop; x++)
    {
       fixed_t scale;
       int floorclipx, ceilingclipx;
@@ -172,9 +187,6 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu, boolean gradientlight)
       scale = scalefrac;
       scale2 = (unsigned)scalefrac >> HEIGHTBITS;
       scalefrac += scalestep;
-#ifdef MARS
-      draw = cpu ? (x & 1) != 0 : (x & 1) == 0;
-#endif
 
       //
       // get ceilingclipx and floorclipx from clipbounds
@@ -255,6 +267,10 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu, boolean gradientlight)
           // top sprite clip sil
           if (actionbits & AC_TOPSIL)
               segl->topsil[x] = high;
+
+#ifdef MARS
+          draw = x < midView;
+#endif
       }
 
       if(actionbits & (AC_NEWFLOOR|AC_NEWCEILING))
@@ -347,16 +363,6 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu, boolean gradientlight)
           }
       }
    }
-}
-
-void R_SegLoopFlat(seglocal_t* lseg, const int cpu)
-{
-    R_SegLoop(lseg, cpu, false);
-}
-
-void R_SegLoopGradient(seglocal_t* lseg, const int cpu)
-{
-    R_SegLoop(lseg, cpu, true);
 }
 
 static void R_SegCommands2(const int cpu)
@@ -465,13 +471,13 @@ static void R_SegCommands2(const int cpu)
         {
             lseg.lightcoef = ((lseg.lightmax - lseg.lightmin) << FRACBITS) / (800 - 160);
             lseg.lightsub = 160 * lseg.lightcoef;
-            R_SegLoopGradient(&lseg, cpu);
+            R_SegLoop(&lseg, cpu, true);
         }
         else
         {
             lseg.lightmin = HWLIGHT(lseg.lightmax);
             lseg.lightmax = lseg.lightmin;
-            R_SegLoopFlat(&lseg, cpu);
+            R_SegLoop(&lseg, cpu, false);
         }
 
         if (cpu == 0)
