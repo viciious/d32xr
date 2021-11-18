@@ -29,7 +29,7 @@ static void R_AddLine(seg_t* line) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static void R_ClipWallSegment(fixed_t first, fixed_t last, boolean solid) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static boolean R_CheckBBox(fixed_t bspcoord[4]) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static void R_Subsector(int num) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static inline void R_StoreWallRange(int start, int stop)  __attribute__((always_inline));
+static void R_StoreWallRange(int start, int stop) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static void R_RenderBSPNode(int bspnum) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void R_BSP(void) ATTR_OPTIMIZE_SIZE ATTR_OPTIMIZE_SIZE;
 
@@ -209,7 +209,7 @@ static boolean R_CheckBBox(fixed_t bspcoord[4])
 //
 // Store information about the clipped seg range into the viswall array.
 //
-static inline void R_StoreWallRange(int start, int stop)
+static void R_StoreWallRange(int start, int stop)
 {
    viswall_t *rw;
 
