@@ -42,7 +42,7 @@ void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 //
 // Render a wall texture as columns
 //
-static void R_DrawTextures(int x, int floorclipx, int ceilingclipx, fixed_t scale2, int colnum, unsigned light, seglocal_t* lsegl)
+static void R_DrawTextures(int x, int floorclipx, int ceilingclipx, fixed_t scale2, int colnum_, unsigned light, seglocal_t* lsegl)
 {
    unsigned actionbits = lsegl->actionbits;
    drawtex_t *tex = lsegl->tex, *last;
@@ -79,6 +79,7 @@ static void R_DrawTextures(int x, int floorclipx, int ceilingclipx, fixed_t scal
 #else
            pixel_t* src;
 #endif
+           int colnum = colnum_;
 
            // DEBUG: fixes green pixels in MAP01...
            frac += (iscale + (iscale >> 5) + (iscale >> 6));
