@@ -193,26 +193,35 @@ void R_PlaneLoop(localplane_t *lpl)
    while(pl_x != pl_stopx);
 }
 
-static visplane_t *R_GetNextPlane(void)
+static void R_LockPln(void)
 {
-    int p;
-    visplane_t *pl;
-
-#ifdef MARS
     volatile int res;
     do {
-        __asm volatile ( \
-            "tas.b %1\n\t" \
+        __asm volatile (\
+        "tas.b %1\n\t" \
             "movt %0\n\t" \
             : "=r" (res) \
             : "m" (pl_lock) \
             : "r0");
     } while (res == 0);
-#endif
+}
+
+static void R_UnlockPln(void)
+{
+    pl_lock = 0;
+}
+
+static visplane_t *R_GetNextPlane(void)
+{
+    int p;
+    visplane_t *pl;
+
+    R_LockPln();
 
     p = pl_next;
     pl_next = p + 1;
-    pl_lock = 0;
+
+    R_UnlockPln();
 
     pl = visplanes + p;
     if (pl >= lastvisplane)
@@ -289,20 +298,28 @@ void R_DrawPlanes2(const int cpu)
     }
 }
 
-//
-// Render all visplanes
-//
 #ifdef MARS
-void Mars_Sec_R_DrawPlanes(void)
+void Mars_R_PrepPlanes(void)
 {
-    int numplanes;
-
     Mars_ClearCacheLines((intptr_t)&lastvisplane & ~15, 1);
     Mars_ClearCacheLines((intptr_t)&visplanes & ~15, 1);
 
-    numplanes = lastvisplane - visplanes - 1;
-    Mars_ClearCacheLines((intptr_t)(visplanes + 1), (numplanes * sizeof(visplane_t) + 15) / 16);
+    visplane_t* pl;
+    for (pl = visplanes + 1; pl < lastvisplane; pl++)
+    {
+        pl->pixelcount = 0;
+        // see if there is any open space
+        if (pl->minx > pl->maxx)
+            continue; // nothing to map
+        pl->open[pl->maxx + 1] = OPENMARK;
+        pl->open[pl->minx - 1] = OPENMARK;
+    }
 
+    pl_next = 1;
+}
+
+void Mars_Sec_R_DrawPlanes(void)
+{
     R_DrawPlanes2(1);
 }
 #endif
@@ -312,39 +329,16 @@ void Mars_Sec_R_DrawPlanes(void)
 //
 void R_DrawPlanes(void)
 {
-    visplane_t* pl;
-
-    pl_next = 1;
-    pl_lock = 0;
-
-    for (pl = visplanes + 1; pl < lastvisplane; pl++)
-    {
-        // see if there is any open space
-        if (pl->minx > pl->maxx)
-            continue; // nothing to map
-        pl->open[pl->maxx + 1] = OPENMARK;
-        pl->open[pl->minx - 1] = OPENMARK;
-        pl->pixelcount = 0;
-    }
-
 #ifdef MARS
+    Mars_R_PrepPlanes();
+
     Mars_R_BeginDrawPlanes();
 
     R_DrawPlanes2(0);
 
     Mars_R_EndDrawPlanes();
-
 #else
     R_DrawPlanes2(0);
-#endif
-
-#ifdef MARS
-    for (pl = visplanes + 1; pl < lastvisplane; pl++)
-    {
-        if (pl->minx > pl->maxx)
-            continue;
-       R_AddPixelsToTexCache(&r_texcache, numtextures+pl->flatnum, *((volatile VINT *)((uintptr_t)&pl->pixelcount | 0x20000000)));
-    }
 #endif
 }
 

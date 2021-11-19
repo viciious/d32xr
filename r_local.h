@@ -334,6 +334,8 @@ extern	void			** flatpixels;
 
 extern	int			firstflat, numflats;
 
+#define R_CheckPixels(lumpnum) (void *)((intptr_t)(W_POINTLUMPNUM(lumpnum)))
+
 void R_InitTextures(void) ATTR_OPTIMIZE_SIZE;
 void R_InitFlats(void) ATTR_OPTIMIZE_SIZE;
 int	R_FlatNumForName(const char* name) ATTR_OPTIMIZE_SIZE;
@@ -405,6 +407,13 @@ void R_ClearTexCache(r_texcache_t* c);
 #define	AC_BOTTOMSIL		512
 #define	AC_SOLIDSIL			1024
 
+enum
+{
+	RW_NOTREADY,
+	RW_READY,
+	RW_DRAWN
+};
+
 typedef struct
 {
 	unsigned short	actionbits;
@@ -432,13 +441,11 @@ typedef struct
 	int			t_topheight;
 	int			t_bottomheight;
 	int			t_texturemid;
-	//texture_t	*t_texture;
-	
+
 	int			b_topheight;
 	int			b_bottomheight;
 	int			b_texturemid;
-	//texture_t	*b_texture;
-	
+
 	int			floorheight;
 	int			floornewheight;
 
@@ -453,6 +460,13 @@ typedef struct
 
 	byte		*topsil;
 	byte		*bottomsil;
+
+	VINT		t_pixcount;
+	VINT		b_pixcount;
+
+	unsigned short *newclipbounds;
+
+	VINT		state;
 } viswall_t;
 
 #define	MAXWALLCMDS		100
@@ -485,6 +499,8 @@ extern	vissprite_t	*vissprites/*[MAXVISSPRITES]*/, * lastsprite_p, * vissprite_p
 
 #define	MAXOPENINGS		SCREENWIDTH*8
 extern	unsigned short	*openings/*[MAXOPENINGS]*/;
+extern 	unsigned short	*lastopening;
+extern	unsigned short	*lastsegclip;
 
 #define	MAXVISSSEC		256
 extern	subsector_t		**vissubsectors/*[MAXVISSSEC]*/, ** lastvissubsector;
@@ -514,6 +530,10 @@ ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE
 
 visplane_t *R_FindPlane(visplane_t *ignore, int hash, fixed_t height, int flatnum,
 	int lightlevel, int start, int stop)
+ATTR_DATA_CACHE_ALIGN
+;
+
+void R_InitClipBounds(unsigned *clipbounds)
 ATTR_DATA_CACHE_ALIGN
 ;
 

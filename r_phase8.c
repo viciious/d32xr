@@ -308,7 +308,6 @@ void Mars_Sec_R_DrawSprites(void)
     Mars_ClearCacheLines((intptr_t)&sortedsprites & ~15, 1);
     Mars_ClearCacheLines((intptr_t)sortedsprites & ~15, (sortedcount * sizeof(*sortedsprites) + 15) / 16);
 
-    Mars_ClearCacheLines((intptr_t)&vissprites & ~15, 1);
     Mars_ClearCacheLines((intptr_t)vissprites & ~15, ((lastsprite_p - vissprites) * sizeof(vissprite_t) + 15) / 16);
 
     Mars_ClearCacheLines((intptr_t)&fuzzpos[1] & ~15, 1);
@@ -355,7 +354,7 @@ void R_Sprites(void)
    D_isort(sortedsprites, sortedcount);
 
 #ifdef MARS
-   Mars_R_ResetNextSprite();
+   Mars_ClearCacheLines((intptr_t)openings & ~15, ((lastopening - openings) * sizeof(*openings) + 15) / 16);
 
    Mars_R_BeginDrawSprites();
    R_DrawSpritesStride(0, &fuzzpos[0]);

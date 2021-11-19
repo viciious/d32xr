@@ -62,6 +62,8 @@ vissprite_t	*vissprites/*[MAXVISSPRITES]*/, * lastsprite_p, * vissprite_p;
 /* */
 unsigned short	*openings/*[MAXOPENINGS]*/, * lastopening;
 
+unsigned short	*lastsegclip;
+
 /*===================================== */
 
 #ifndef MARS
@@ -111,11 +113,6 @@ r_texcache_t r_texcache;
 
 void R_Setup(int displayplayer) ATTR_OPTIMIZE_SIZE;
 void R_Cache(void) ATTR_OPTIMIZE_SIZE;
-
-#ifdef MARS
-static void R_RenderPhase1(void) ATTR_OPTIMIZE_SIZE __attribute__((noinline));
-static void R_RenderPhases2To9(void) ATTR_OPTIMIZE_SIZE __attribute__((noinline));
-#endif
 
 /*
 ===============================================================================
@@ -393,9 +390,9 @@ void R_SetupTextureCaches(void)
 
 	// reset pointers from previous level
 	for (i = 0; i < numtextures; i++)
-		textures[i].data = NULL;
-	for (i = 0; i < numflats; i++)
-		flatpixels[i] = NULL;
+		textures[i].data = R_CheckPixels(textures[i].lumpnum);
+	for (i=0 ; i<numflats ; i++)
+		flatpixels[i] = R_CheckPixels(firstflat + i);
 
 	// functioning texture cache requires at least 8kb of ram
 	zonefree = Z_LargestFreeBlock(mainzone);
@@ -630,7 +627,10 @@ void R_Setup (int displayplayer)
 
 	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 15) & ~15);
 	vissprites = (void*)tempbuf;
-	tempbuf += sizeof(*vissubsectors) * MAXVISSPRITES / sizeof(*tempbuf);
+	tempbuf += sizeof(*vissprites) * MAXVISSPRITES / sizeof(*tempbuf);
+
+	lastsegclip = tempbuf;
+	tempbuf += MAXOPENINGS;
 
 	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
 		visplanes_hash[i] = NULL;
@@ -640,6 +640,12 @@ void R_Setup (int displayplayer)
 	lastwallcmd = viswalls;			/* no walls added yet */
 	lastvissubsector = vissubsectors;	/* no subsectors visible yet */
 
+	/*	 */
+	/* clear sprites */
+	/* */
+	vissprite_p = vissprites;
+	lastsprite_p = vissprite_p;
+
 #ifndef MARS
 	phasetime[0] = samplecount;
 #endif
@@ -647,9 +653,31 @@ void R_Setup (int displayplayer)
 	R_SetupTexCacheFrame(&r_texcache);
 
 #ifdef MARS
-	Mars_Sec_R_Setup();
+	Mars_R_SecSetup();
 #endif
 }
+
+#ifdef MARS
+
+void Mars_Sec_R_Setup(void)
+{
+	int i;
+
+	Mars_ClearCacheLines((intptr_t)&vd & ~15, (sizeof(vd) + 15) / 16);
+	Mars_ClearCacheLines((intptr_t)&viewportbuffer & ~15, 1);
+
+	Mars_ClearCacheLines((intptr_t)&viswalls & ~15, 1);
+	Mars_ClearCacheLines((intptr_t)&vissprites & ~15, 1);
+	Mars_ClearCacheLines((intptr_t)&visplanes & ~15, 1);
+	Mars_ClearCacheLines((intptr_t)&lastvisplane & ~15, 1);
+	Mars_ClearCacheLines((intptr_t)&visplanes_hash & ~15, 1);
+	Mars_ClearCacheLines((intptr_t)&lastsegclip & ~15, 1);
+
+	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
+		visplanes_hash[i] = NULL;
+}
+
+#endif
 
 //
 // Check for a matching visplane in the visplanes array, or set up a new one
@@ -672,6 +700,17 @@ void R_MarkOpenPlane(visplane_t* pl)
 	}
 }
 
+void R_InitClipBounds(unsigned *clipbounds)
+{
+	// initialize the clipbounds array
+	int i;
+    int longs = (viewportWidth + 1) / 2;
+    unsigned* clip = clipbounds;
+    unsigned clipval = (unsigned)viewportHeight << 16 | viewportHeight;
+    for (i = 0; i < longs; i++)
+        *clip++ = clipval;
+}
+
 visplane_t* R_FindPlane(visplane_t* ignore, int hash, fixed_t height, 
 	int flatnum, int lightlevel, int start, int stop)
 {
@@ -687,6 +726,11 @@ visplane_t* R_FindPlane(visplane_t* ignore, int hash, fixed_t height,
 			flatnum == check->flatnum &&
 			lightlevel == check->lightlevel)
 		{
+			int minx = start < check->minx ? start : check->minx;
+			int maxx = stop > check->maxx ? stop : check->maxx;
+			if (maxx - minx > centerX)
+				continue;
+
 			if (check->open[start] == OPENMARK)
 			{
 				// found a plane, so adjust bounds and return it
@@ -807,58 +851,17 @@ void R_RenderPlayerView(int displayplayer)
 
 #else
 
-static void R_RenderPhase1(void)
-{
-	Mars_R_BeginWallPrep();
-
-	t_ref_bsp[t_ref_cnt] = I_GetFRTCounter();
-	R_BSP();
-	t_ref_bsp[t_ref_cnt] = I_GetFRTCounter() - t_ref_bsp[t_ref_cnt];
-}
-
-static void R_RenderPhases2To9(void)
-{
-	unsigned short openings_[MAXOPENINGS];
-	vissprite_t vissprites_[MAXVISSPRITES];
-
-	vissprites = vissprites_;
-	openings = openings_;
-	lastopening = openings;
-
-	/*	 */
-	/* clear sprites */
-	/* */
-	vissprite_p = vissprites;
-
-	t_ref_prep[t_ref_cnt] = I_GetFRTCounter();
-	R_SpritePrep();
-	Mars_R_EndWallPrep(MAXVISSSEC);
-	if (R_LatePrep())
-		R_Cache();
-	t_ref_prep[t_ref_cnt] = I_GetFRTCounter() - t_ref_prep[t_ref_cnt];
-
-	if (players[consoleplayer].automapflags & AF_ACTIVE)
-		return;
-
-	t_ref_segs[t_ref_cnt] = I_GetFRTCounter();
-	R_SegCommands ();
-	t_ref_segs[t_ref_cnt] = I_GetFRTCounter() - t_ref_segs[t_ref_cnt];
-
-	t_ref_planes[t_ref_cnt] = I_GetFRTCounter();
-	R_DrawPlanes ();
-	t_ref_planes[t_ref_cnt] = I_GetFRTCounter() - t_ref_planes[t_ref_cnt];
-
-	t_ref_sprites[t_ref_cnt] = I_GetFRTCounter();
-	R_Sprites ();
-	t_ref_sprites[t_ref_cnt] = I_GetFRTCounter() - t_ref_sprites[t_ref_cnt];
-}
-
 void R_RenderPlayerView(int displayplayer)
 {
+	unsigned short openings_[MAXOPENINGS];
+
 #ifdef MARS
 	while (!I_RefreshCompleted())
 		;
 #endif
+
+	openings = openings_;
+	lastopening = openings;
 
 	t_ref_cnt = (t_ref_cnt + 1) & 3;
 
@@ -866,11 +869,38 @@ void R_RenderPlayerView(int displayplayer)
 
 	R_Setup(displayplayer);
 
-	R_RenderPhase1();
+	Mars_R_BeginWallPrep();
 
-	R_RenderPhases2To9();
+	t_ref_bsp[t_ref_cnt] = I_GetFRTCounter();
+	R_BSP();
+	t_ref_bsp[t_ref_cnt] = I_GetFRTCounter() - t_ref_bsp[t_ref_cnt];
 
-	R_Update();
+	Mars_R_EndWallPrep(MAXVISSSEC);
+
+	if (!(players[consoleplayer].automapflags & AF_ACTIVE))
+	{
+		t_ref_prep[t_ref_cnt] = I_GetFRTCounter();
+		R_SpritePrep();
+		if (R_LatePrep())
+			R_Cache();
+		t_ref_prep[t_ref_cnt] = I_GetFRTCounter() - t_ref_prep[t_ref_cnt];
+
+		t_ref_segs[t_ref_cnt] = I_GetFRTCounter();
+		R_SegCommands();
+		t_ref_segs[t_ref_cnt] = I_GetFRTCounter() - t_ref_segs[t_ref_cnt];
+
+		t_ref_planes[t_ref_cnt] = I_GetFRTCounter();
+		R_DrawPlanes();
+		t_ref_planes[t_ref_cnt] = I_GetFRTCounter() - t_ref_planes[t_ref_cnt];
+
+		t_ref_sprites[t_ref_cnt] = I_GetFRTCounter();
+		R_Sprites();
+		t_ref_sprites[t_ref_cnt] = I_GetFRTCounter() - t_ref_sprites[t_ref_cnt];
+
+		R_Update();
+	}
+
+	Mars_R_SecWait();
 
 	t_ref_total[t_ref_cnt] = I_GetFRTCounter() - t_ref_total[t_ref_cnt];
 

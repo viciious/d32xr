@@ -221,10 +221,11 @@ static void R_StoreWallRange(int start, int stop)
    rw->start  = start;
    rw->stop   = stop;
    rw->angle1 = lineangle1;
+   rw->state  = RW_NOTREADY;
    ++lastwallcmd;
 
 #ifdef MARS
-   Mars_R_BeginWallNext();
+   Mars_R_WallNext();
 #endif
 }
 

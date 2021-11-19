@@ -29,13 +29,14 @@ typedef struct
 
     drawtex_t tex[2];
 
-    unsigned short *clipbounds;
     unsigned lightmin, lightmax, lightsub, lightcoef;
     unsigned actionbits;
 } seglocal_t;
 
+static char seg_lock = 0;
+
 static void R_DrawTextures(int x, int floorclipx, int ceilingclipx, fixed_t scale2, int colnum, unsigned light, seglocal_t* lsegl) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static void R_SegLoop(seglocal_t* lseg, const int cpu, boolean gradientlight) ATTR_OPTIMIZE_SIZE;
+static void R_SegLoop(seglocal_t* lseg, boolean gradientlight, unsigned short *clipbounds) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static void R_SegCommands2(const int mask) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
@@ -108,20 +109,11 @@ static void R_DrawTextures(int x, int floorclipx, int ceilingclipx, fixed_t scal
 //
 // Main seg clipping loop
 //
-static void R_SegLoop(seglocal_t* lseg, const int cpu, boolean gradientlight)
+static void R_SegLoop(seglocal_t* lseg, boolean gradientlight, unsigned short *clipbounds)
 {
-   visplane_t *ceiling, *floor;
-   unsigned short* ceilopen, * flooropen;
-
    viswall_t* segl = lseg->segl;
-   unsigned short *clipbounds = lseg->clipbounds;
-
-   // for future reference: the top hoggers are
-   // (AC_TOPTEXTURE | AC_ADDFLOOR | AC_NEWFLOOR)
-   // (AC_TOPTEXTURE | AC_ADDCEILING | AC_NEWCEILING | AC_SOLIDSIL)
 
    const unsigned actionbits = segl->actionbits;
-   const unsigned lightlevel = segl->seglightlevel;
 
    unsigned scalefrac = segl->scalefrac;
    unsigned scalestep = segl->scalestep;
@@ -130,59 +122,19 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu, boolean gradientlight)
    const unsigned offset = segl->offset;
    const unsigned distance = segl->distance;
 
-   int x;
-   const int stop = segl->stop;
-#ifdef MARS
-   unsigned draw = 0;
-#else
-   const unsigned draw = 1;
-#endif
-
-   const fixed_t floorheight = segl->floorheight;
-   const fixed_t floornewheight = segl->floornewheight;
+   unsigned short* newclipbounds = segl->newclipbounds;
 
    const int ceilingheight = segl->ceilingheight;
-   const int ceilingnewheight = segl->ceilingnewheight;
-
-   const int floorpicnum = segl->floorpicnum;
-   const int ceilingpicnum = segl->ceilingpicnum;
-
-   // force R_FindPlane for both planes
-   floor = ceiling = visplanes;
-   flooropen = ceilopen = visplanes[0].open;
 
    unsigned texturelight = lseg->lightmax;
 
-   int floorplhash = 0;
-   int ceilingplhash = 0;
+   int x, stop = segl->stop;
 
-   int midView = viewportWidth/2;
-
-   x = segl->start;
-   if (cpu)
-   {
-       if (midView > stop)
-           return;
-       if (x < midView)
-       {
-           scalefrac += (midView - x) * scalestep;
-           x = midView;
-       }
-       draw = true;
-   }
-   else
-   {
-       if (actionbits & AC_ADDFLOOR)
-           floorplhash = R_PlaneHash(floorheight, floorpicnum, lightlevel);
-       if (actionbits & AC_ADDCEILING)
-           ceilingplhash = R_PlaneHash(ceilingheight, ceilingpicnum, lightlevel);
-   }
-
-   for (; x <= stop; x++)
+   for (x = segl->start; x <= stop; x++)
    {
       fixed_t scale;
       int floorclipx, ceilingclipx;
-      int low, high, top, bottom;
+      int top, bottom;
       unsigned scale2;
 
       scale = scalefrac;
@@ -193,106 +145,18 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu, boolean gradientlight)
       // get ceilingclipx and floorclipx from clipbounds
       //
       ceilingclipx = clipbounds[x];
-      floorclipx   = ceilingclipx & 0x00ff;
+      floorclipx = ceilingclipx & 0x00ff;
       ceilingclipx = (((unsigned)ceilingclipx & 0xff00) >> 8);
 
       //
       // calc high and low
       //
-      FixedMul2(low, scale2, floornewheight);
-      low = centerY - low;
-      if (low < 0)
-          low = 0;
-      else if (low > floorclipx)
-          low = floorclipx;
-
-      FixedMul2(high, scale2, ceilingnewheight);
-      high = centerY - high;
-      if (high > viewportHeight)
-          high = viewportHeight;
-      else if (high < ceilingclipx)
-          high = ceilingclipx;
-
-      if (cpu == 0)
-      {
-          //
-          // floor
-          //
-          if (actionbits & AC_ADDFLOOR)
-          {
-              FixedMul2(top, scale2, floorheight);
-              top = centerY - top;
-              if (top < ceilingclipx)
-                  top = ceilingclipx;
-              bottom = floorclipx - 1;
-
-              if (top <= bottom)
-              {
-                  if (flooropen[x] != OPENMARK)
-                  {
-                      floor = R_FindPlane(floor, floorplhash, 
-                          floorheight, floorpicnum, lightlevel, x, stop);
-                      flooropen = floor->open;
-                  }
-                  flooropen[x] = (unsigned short)((top << 8) + bottom);
-              }
-          }
-
-          //
-          // ceiling
-          //
-          if (actionbits & AC_ADDCEILING)
-          {
-              top = ceilingclipx;
-              FixedMul2(bottom, scale2, ceilingheight);
-              bottom = centerY - 1 - bottom;
-              if (bottom >= floorclipx)
-                  bottom = floorclipx - 1;
-
-              if (top <= bottom)
-              {
-                  if (ceilopen[x] != OPENMARK)
-                  {
-                      ceiling = R_FindPlane(ceiling, ceilingplhash, 
-                          ceilingheight, ceilingpicnum, lightlevel, x, stop);
-                      ceilopen = ceiling->open;
-                  }
-                  ceilopen[x] = (unsigned short)((top << 8) + bottom);
-              }
-          }
-
-          // bottom sprite clip sil
-          if (actionbits & AC_BOTTOMSIL)
-              segl->bottomsil[x] = low;
-
-          // top sprite clip sil
-          if (actionbits & AC_TOPSIL)
-              segl->topsil[x] = high;
-
-#ifdef MARS
-          draw = x < midView;
-#endif
-      }
-
       if(actionbits & (AC_NEWFLOOR|AC_NEWCEILING))
-      {
-          int newfloorclipx = floorclipx;
-          int newceilingclipx = ceilingclipx;
-
-         // rewrite clipbounds
-         if(actionbits & AC_NEWFLOOR)
-            newfloorclipx = low;
-         if(actionbits & AC_NEWCEILING)
-            newceilingclipx = high;
-         clipbounds[x] = ((unsigned)(newceilingclipx) << 8) + newfloorclipx;
-      }
+          clipbounds[x] = newclipbounds[x];
 
       //
       // texture only stuff
       //
-      if (!draw)
-          continue;
-
       if (actionbits & AC_CALCTEXTURE)
       {
           unsigned colnum;
@@ -366,28 +230,39 @@ static void R_SegLoop(seglocal_t* lseg, const int cpu, boolean gradientlight)
    }
 }
 
+static void R_LockSeg(void)
+{
+    volatile int res;
+    do {
+        __asm volatile (\
+        "tas.b %1\n\t" \
+            "movt %0\n\t" \
+            : "=r" (res) \
+            : "m" (seg_lock) \
+            : "r0");
+    } while (res == 0);
+}
+
+static void R_UnlockSeg(void)
+{
+    seg_lock = 0;
+}
+
 static void R_SegCommands2(const int cpu)
 {
-    int i;
     viswall_t* segl;
     seglocal_t lseg;
     drawtex_t* toptex, * bottomtex;
     int extralight;
+    unsigned clipbounds_[SCREENWIDTH / 2 + 1];
+    unsigned short *clipbounds = (unsigned short *)clipbounds_;
 
     // initialize the clipbounds array
-    unsigned short clipbounds[SCREENWIDTH];
-    unsigned *clip = (unsigned *)clipbounds;
-    unsigned clipval = (unsigned)viewportHeight << 16 | viewportHeight;
-    for (i = 0; i < viewportWidth / 4; i++)
-    {
-        *clip++ = clipval;
-        *clip++ = clipval;
-    }
+    R_InitClipBounds(clipbounds_);
 
     extralight = vd.extralight;
     toptex = &lseg.tex[0];
     bottomtex = &lseg.tex[1];
-    lseg.clipbounds = clipbounds;
 
     lseg.lightmin = 0;
     lseg.lightmax = 0;
@@ -402,8 +277,39 @@ static void R_SegCommands2(const int cpu)
 
     for (segl = viswalls; segl < lastwallcmd; segl++)
     {
+#ifdef MARS
+        int state;
+
+        while ((state = *(volatile VINT*)&segl->state) == 0);
+
         if (segl->start > segl->stop)
             continue;
+
+        if (state == RW_DRAWN)
+        {
+skip:
+            if(segl->actionbits & (AC_NEWFLOOR|AC_NEWCEILING))
+            {
+                int x, stop = segl->stop;
+                unsigned short *newclipbounds = segl->newclipbounds;
+                for (x = segl->start; x <= stop; x++)
+                    clipbounds[x] = newclipbounds[x];
+            }
+            continue;
+        }
+
+        R_LockSeg();
+        state = *(volatile VINT*)&segl->state;
+        switch (state) {
+            case RW_READY:
+                segl->state = RW_DRAWN;
+                break;
+            case RW_DRAWN:
+                R_UnlockSeg();
+                goto skip;
+        }
+        R_UnlockSeg();
+#endif
 
         lseg.segl = segl;
         lseg.lightmax = segl->seglightlevel + extralight;
@@ -472,27 +378,25 @@ static void R_SegCommands2(const int cpu)
         {
             lseg.lightcoef = ((lseg.lightmax - lseg.lightmin) << FRACBITS) / (800 - 160);
             lseg.lightsub = 160 * lseg.lightcoef;
-            R_SegLoop(&lseg, cpu, true);
+            R_SegLoop(&lseg, true, clipbounds);
         }
         else
         {
             lseg.lightmin = HWLIGHT(lseg.lightmax);
             lseg.lightmax = lseg.lightmin;
-            R_SegLoop(&lseg, cpu, false);
+            R_SegLoop(&lseg, false, clipbounds);
         }
 
-        if (cpu == 0)
+#ifdef MARS
+        if (segl->actionbits & AC_TOPTEXTURE)
         {
-            if (segl->actionbits & AC_TOPTEXTURE)
-            {
-                R_AddPixelsToTexCache(&r_texcache, segl->t_texturenum, toptex->pixelcount);
-            }
-
-            if (segl->actionbits & AC_BOTTOMTEXTURE)
-            {
-                R_AddPixelsToTexCache(&r_texcache, segl->b_texturenum, bottomtex->pixelcount);
-            }
+            segl->t_pixcount += toptex->pixelcount;
         }
+        if (segl->actionbits & AC_BOTTOMTEXTURE)
+        {
+            segl->b_pixcount += bottomtex->pixelcount;
+        }
+#endif
     }
 }
 
@@ -500,28 +404,12 @@ static void R_SegCommands2(const int cpu)
 
 void Mars_Sec_R_SegCommands(void)
 {
-    Mars_ClearCacheLines((intptr_t)&viswalls & ~15, 1);
-    Mars_ClearCacheLines((intptr_t)&lastwallcmd & ~15, 1);
-    //Mars_ClearCacheLines((intptr_t)viswalls & ~15, ((lastwallcmd - viswalls) * sizeof(viswall_t) + 15) / 16);
-
     R_SegCommands2(1);
-}
-
-void R_SegCommands(void)
-{
-    Mars_R_BeginComputeSeg();
-
-    R_SegCommands2(0);
-
-    Mars_R_EndComputeSeg();
-}
-
-#else
-
-void R_SegCommands(void)
-{
-    R_SegCommands2(0);
 }
 
 #endif
 
+void R_SegCommands(void)
+{
+    R_SegCommands2(0);
+}

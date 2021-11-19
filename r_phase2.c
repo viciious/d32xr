@@ -15,7 +15,8 @@ static void R_WallEarlyPrep(viswall_t* segl) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE
 static fixed_t R_PointToDist(fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, angle_t normalangle) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static void R_WallEarlyPrep2(viswall_t* wc) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static void R_WallLatePrep(viswall_t* wc) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static void R_SegMiniLoop(viswall_t* segl, unsigned short* clipbounds) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 static void R_WallEarlyPrep(viswall_t* segl)
 {
@@ -171,8 +172,8 @@ static void R_WallEarlyPrep(viswall_t* segl)
       segl->b_texturemid  = b_texturemid;
       segl->seglightlevel = f_lightlevel;
       segl->offset        = ((fixed_t)si->textureoffset + seg->offset) << 16;
-       
-      ++segl;  // next viswall
+      segl->t_pixcount    = 0;
+      segl->b_pixcount    = 0;
    }
 }
 
@@ -248,7 +249,7 @@ static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle)
     wc->centerangle = ANG90 + vd.viewangle - normalangle;
 }
 
-static void R_WallEarlyPrep2(viswall_t* wc)
+static void R_WallLatePrep(viswall_t* wc)
 {
     angle_t      distangle, offsetangle, normalangle;
     seg_t* seg = wc->seg;
@@ -302,6 +303,171 @@ static void R_WallEarlyPrep2(viswall_t* wc)
         wc->scalestep = SH2_DIVU_DVDNT; // get 32-bit quotient
     }
 #endif
+
+    int rw_x = wc->start;
+    int rw_stopx = wc->stop + 1;
+    int width = (rw_stopx - rw_x + 1) / 2;
+
+    if (wc->actionbits & AC_BOTTOMSIL)
+    {
+        wc->bottomsil = (byte*)lastopening - rw_x;
+        lastopening += width;
+    }
+
+    if (wc->actionbits & AC_TOPSIL)
+    {
+        wc->topsil = (byte*)lastopening - rw_x;
+        lastopening += width;
+    }
+}
+
+static void R_SegMiniLoop(viswall_t* segl, unsigned short* clipbounds)
+{
+    visplane_t* ceiling, * floor;
+    unsigned short* ceilopen, * flooropen;
+
+    const unsigned actionbits = segl->actionbits;
+    const unsigned lightlevel = segl->seglightlevel;
+
+    unsigned scalefrac = segl->scalefrac;
+    unsigned scalestep = segl->scalestep;
+
+    int x;
+    const int stop = segl->stop;
+    const int width = segl->stop - segl->start + 1;
+
+    const fixed_t floorheight = segl->floorheight;
+    const fixed_t floornewheight = segl->floornewheight;
+
+    const int ceilingheight = segl->ceilingheight;
+    const int ceilingnewheight = segl->ceilingnewheight;
+
+    const int floorpicnum = segl->floorpicnum;
+    const int ceilingpicnum = segl->ceilingpicnum;
+
+    // force R_FindPlane for both planes
+    floor = ceiling = visplanes;
+    flooropen = ceilopen = visplanes[0].open;
+
+    int floorplhash = 0;
+    int ceilingplhash = 0;
+
+    if (actionbits & AC_ADDFLOOR)
+        floorplhash = R_PlaneHash(floorheight, floorpicnum, lightlevel);
+    if (actionbits & AC_ADDCEILING)
+        ceilingplhash = R_PlaneHash(ceilingheight, ceilingpicnum, lightlevel);
+
+    if (actionbits & (AC_NEWFLOOR | AC_NEWCEILING))
+    {
+        segl->newclipbounds = lastsegclip - segl->start;
+        lastsegclip += width;
+    }
+    unsigned short *newclipbounds = segl->newclipbounds;
+
+    for (x = segl->start; x <= stop; x++)
+    {
+        int floorclipx, ceilingclipx;
+        int low, high, top, bottom;
+        unsigned scale2;
+
+        scale2 = (unsigned)scalefrac >> HEIGHTBITS;
+        scalefrac += scalestep;
+
+        //
+        // get ceilingclipx and floorclipx from clipbounds
+        //
+        ceilingclipx = clipbounds[x];
+        floorclipx = ceilingclipx & 0x00ff;
+        ceilingclipx = (((unsigned)ceilingclipx & 0xff00) >> 8);
+
+        //
+        // calc high and low
+        //
+        FixedMul2(low, scale2, floornewheight);
+        low = centerY - low;
+        if (low < 0)
+            low = 0;
+        else if (low > floorclipx)
+            low = floorclipx;
+
+        FixedMul2(high, scale2, ceilingnewheight);
+        high = centerY - high;
+        if (high > viewportHeight)
+            high = viewportHeight;
+        else if (high < ceilingclipx)
+            high = ceilingclipx;
+
+        // bottom sprite clip sil
+        if (actionbits & AC_BOTTOMSIL)
+            segl->bottomsil[x] = low;
+
+        // top sprite clip sil
+        if (actionbits & AC_TOPSIL)
+            segl->topsil[x] = high;
+
+        if (actionbits & (AC_NEWFLOOR | AC_NEWCEILING))
+        {
+            int newfloorclipx = floorclipx;
+            int newceilingclipx = ceilingclipx;
+            unsigned newclip;
+
+            // rewrite clipbounds
+            if (actionbits & AC_NEWFLOOR)
+                newfloorclipx = low;
+            if (actionbits & AC_NEWCEILING)
+                newceilingclipx = high;
+            newclip = ((unsigned)(newceilingclipx) << 8) + newfloorclipx;
+
+            clipbounds[x] = newclip;
+            newclipbounds[x] = newclip;
+        }
+
+        //
+        // floor
+        //
+        if (actionbits & AC_ADDFLOOR)
+        {
+            FixedMul2(top, scale2, floorheight);
+            top = centerY - top;
+            if (top < ceilingclipx)
+                top = ceilingclipx;
+            bottom = floorclipx - 1;
+
+            if (top <= bottom)
+            {
+                if (flooropen[x] != OPENMARK)
+                {
+                    floor = R_FindPlane(floor, floorplhash,
+                        floorheight, floorpicnum, lightlevel, x, stop);
+                    flooropen = floor->open;
+                }
+                flooropen[x] = (unsigned short)((top << 8) + bottom);
+            }
+        }
+
+        //
+        // ceiling
+        //
+        if (actionbits & AC_ADDCEILING)
+        {
+            top = ceilingclipx;
+            FixedMul2(bottom, scale2, ceilingheight);
+            bottom = centerY - 1 - bottom;
+            if (bottom >= floorclipx)
+                bottom = floorclipx - 1;
+
+            if (top <= bottom)
+            {
+                if (ceilopen[x] != OPENMARK)
+                {
+                    ceiling = R_FindPlane(ceiling, ceilingplhash,
+                        ceilingheight, ceilingpicnum, lightlevel, x, stop);
+                    ceilopen = ceiling->open;
+                }
+                ceilopen[x] = (unsigned short)((top << 8) + bottom);
+            }
+        }
+    }
 }
 
 #ifdef MARS
@@ -309,24 +475,29 @@ static void R_WallEarlyPrep2(viswall_t* wc)
 void Mars_Sec_R_WallPrep(void)
 {
     int numsegs;
-    viswall_t* segl;
+    viswall_t *segl;
     viswall_t *first, *verylast;
     volatile viswall_t* volatile* plast;
-    volatile viswall_t* volatile* pfirst;
-  
-    pfirst = (volatile viswall_t* volatile *)((intptr_t)&viswalls | 0x20000000);
-    plast = (volatile viswall_t* volatile*)((intptr_t)&lastwallcmd | 0x20000000);
+    unsigned clipbounds_[SCREENWIDTH/2+1];
+    unsigned short *clipbounds = (unsigned short *)clipbounds_;
 
-    first = (viswall_t*)*pfirst;
+    R_InitClipBounds(clipbounds_);
+  
+	Mars_ClearCacheLines((intptr_t)&openings & ~15, 1);
+	Mars_ClearCacheLines((intptr_t)&lastopening & ~15, 1);
+  
+    plast = (volatile viswall_t* volatile*)((intptr_t)&lastwallcmd | 0x20000000);
+    first = viswalls;
     verylast = NULL;
     numsegs = 0;
 
     for (segl = first; segl != verylast; )
     {
+        int nextsegs;
         viswall_t* last;
         while (1)
         {
-            int nextsegs = MARS_SYS_COMM6;
+            nextsegs = MARS_SYS_COMM6;
             if (numsegs == nextsegs)
                 continue;
 
@@ -348,7 +519,11 @@ void Mars_Sec_R_WallPrep(void)
         {
             R_WallEarlyPrep(segl);
 
-            R_WallEarlyPrep2(segl);
+            R_WallLatePrep(segl);
+
+            R_SegMiniLoop(segl, clipbounds);
+
+            segl->state = RW_READY;
 
             ++segl; // next viswall
         }
@@ -365,7 +540,7 @@ void R_WallPrep(void)
     {
         R_WallEarlyPrep(segl);
 
-        R_WallEarlyPrep2(segl);
+        R_WallLatePrep(segl);
 
         ++segl; // next viswall
     }

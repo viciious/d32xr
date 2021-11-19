@@ -8,9 +8,6 @@
 #include "r_local.h"
 #include "mars.h"
 
-static byte* lastopening;
-
-static void R_FinishWall(viswall_t* wc) ATTR_DATA_CACHE_ALIGN;
 static void R_FinishSprite(vissprite_t* vis) ATTR_DATA_CACHE_ALIGN;
 static void R_FinishPSprite(vissprite_t* vis) ATTR_DATA_CACHE_ALIGN;
 boolean R_LatePrep(void) ATTR_DATA_CACHE_ALIGN;
@@ -18,9 +15,9 @@ boolean R_LatePrep(void) ATTR_DATA_CACHE_ALIGN;
 //
 // Check if texture is loaded; return if so, flag for cache if not
 //
-#ifdef MARS
-#define R_CheckPixels(lumpnum) (void *)((intptr_t)(W_POINTLUMPNUM(lumpnum)))
-#else
+#ifndef MARS
+static void R_FinishWall(viswall_t* wc) ATTR_DATA_CACHE_ALIGN;
+
 static boolean cacheneeded;
 
 static void *R_CheckPixels(int lumpnum)
@@ -39,7 +36,6 @@ static void *R_CheckPixels(int lumpnum)
    
    return lumpdata;
 }
-#endif
 
 //
 // Late prep for viswalls
@@ -47,55 +43,29 @@ static void *R_CheckPixels(int lumpnum)
 static void R_FinishWall(viswall_t* wc)
 {
     unsigned int fw_actionbits = wc->actionbits;
-    int rw_x = wc->start;
-    int rw_stopx = wc->stop + 1;
-    int width = rw_stopx - rw_x + 1;
     texture_t* fw_texture;
-
-    if (fw_actionbits & AC_BOTTOMSIL)
-    {
-        wc->bottomsil = (byte*)lastopening - rw_x;
-        lastopening += width;
-    }
-
-    if (fw_actionbits & AC_TOPSIL)
-    {
-        wc->topsil = (byte*)lastopening - rw_x;
-        lastopening += width;
-    }
 
     // has top or middle texture?
     if (fw_actionbits & AC_TOPTEXTURE)
     {
         fw_texture = &textures[wc->t_texturenum];
-#ifdef MARS
         if (fw_texture->data == NULL)
-#endif
             fw_texture->data = R_CheckPixels(fw_texture->lumpnum);
-        R_TestTexCacheCandidate(&r_texcache, fw_texture - textures);
     }
 
     // has bottom texture?
     if (fw_actionbits & AC_BOTTOMTEXTURE)
     {
         fw_texture = &textures[wc->b_texturenum];
-#ifdef MARS
         if (fw_texture->data == NULL)
-#endif
             fw_texture->data = R_CheckPixels(fw_texture->lumpnum);
-        R_TestTexCacheCandidate(&r_texcache, fw_texture - textures);
     }
 
     int floorpicnum = wc->floorpicnum;
     int ceilingpicnum = wc->ceilingpicnum;
 
-#ifdef MARS
     if (flatpixels[floorpicnum] == NULL)
-#endif
         flatpixels[floorpicnum] = R_CheckPixels(firstflat + floorpicnum);
-
-    // get floor texture
-    R_TestTexCacheCandidate(&r_texcache, numtextures + floorpicnum);
 
     // is there sky at this wall?
     if (ceilingpicnum == -1)
@@ -106,13 +76,11 @@ static void R_FinishWall(viswall_t* wc)
     else
     {
         // normal ceilingpic
-#ifdef MARS
         if (flatpixels[ceilingpicnum] == NULL)
-#endif
             flatpixels[ceilingpicnum] = R_CheckPixels(firstflat + ceilingpicnum);
-        R_TestTexCacheCandidate(&r_texcache, numtextures + ceilingpicnum);
     }
 }
+#endif
 
 //
 // Late prep for vissprites
@@ -224,17 +192,11 @@ static void R_FinishPSprite(vissprite_t *vis)
 //
 boolean R_LatePrep(void)
 {
-   viswall_t   *wall;
    vissprite_t *spr;
    
 #ifndef MARS
    cacheneeded = false;
 #endif
-
-   lastopening = (byte *)openings;
-
-   for (wall = viswalls; wall < lastwallcmd; wall++)
-       R_FinishWall(wall);
 
    // finish actor sprites   
    for(spr = vissprites; spr < lastsprite_p; spr++)

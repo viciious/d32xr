@@ -7,6 +7,109 @@
 #include "doomdef.h"
 #include "r_local.h"
 
+#ifdef MARS
+
+//
+// R_UpdateCacheCounts
+// Update pixel counts for walls and flats
+static void R_UpdateCacheCounts(void)
+{
+   int pixcount;
+   viswall_t *wall;
+
+   for (wall = viswalls; wall < lastwallcmd; wall++)
+   {
+      if (wall->actionbits & AC_TOPTEXTURE)
+      {
+         pixcount = *((volatile VINT *)((uintptr_t)&wall->t_pixcount | 0x20000000));
+         R_AddPixelsToTexCache(&r_texcache, wall->t_texturenum, pixcount);
+      }
+      if (wall->actionbits & AC_BOTTOMTEXTURE)
+      {
+         pixcount = *((volatile VINT *)((uintptr_t)&wall->b_pixcount | 0x20000000));
+         R_AddPixelsToTexCache(&r_texcache, wall->b_texturenum, pixcount);
+      }
+   }
+
+    visplane_t* pl;
+    for (pl = visplanes + 1; pl < lastvisplane; pl++)
+    {
+        pixcount = *((volatile VINT *)((uintptr_t)&pl->pixelcount | 0x20000000));
+        R_AddPixelsToTexCache(&r_texcache, numtextures+pl->flatnum, pixcount);
+    }
+}
+
+//
+// R_FindBestCacheObject
+// Update pixel counts for walls and flats
+static void R_FindBestCacheObject(void)
+{
+   viswall_t *wall;
+
+   R_PostTexCacheFrame(&r_texcache);
+
+   for (wall = viswalls; wall < lastwallcmd; wall++)
+   {
+        unsigned int fw_actionbits = wall->actionbits;
+
+        if (fw_actionbits & AC_TOPTEXTURE)
+            R_TestTexCacheCandidate(&r_texcache, wall->t_texturenum);
+
+        if (fw_actionbits & AC_BOTTOMTEXTURE)
+            R_TestTexCacheCandidate(&r_texcache, wall->b_texturenum);
+
+        R_TestTexCacheCandidate(&r_texcache, numtextures + wall->floorpicnum);
+
+        if (wall->ceilingpicnum != -1)
+            R_TestTexCacheCandidate(&r_texcache, numtextures + wall->ceilingpicnum);
+   }
+}
+
+static void R_CacheBestObject(void)
+{
+    int lumpnum;
+    int pixels;
+    void **pdata;
+    const int id = r_texcache.bestobj;
+
+    if (id == -1)
+        return;
+
+    if (r_texcache.bestcount < 128)
+    {
+        /* ignore extremely small fragments */
+        return;
+    }
+
+    if (id < numtextures)
+    {
+        texture_t* tex = &textures[id];
+        pixels = (int)tex->width * tex->height;
+        lumpnum = tex->lumpnum;
+        pdata = (void**)&tex->data;
+    }
+    else
+    {
+        int flatnum = id - numtextures;
+        pixels = 64 * 64;
+        lumpnum = firstflat + flatnum;
+        pdata = (void**)&flatpixels[flatnum];
+    }
+
+    R_AddToTexCache(&r_texcache, id, pixels, lumpnum, pdata);
+}
+
+static void R_UpdateCache(void)
+{
+    R_UpdateCacheCounts();
+
+    R_FindBestCacheObject();
+
+    R_CacheBestObject();
+}
+
+#endif
+
 void R_Update(void)
 {
 #ifndef MARS
@@ -15,7 +118,7 @@ void R_Update(void)
 #endif
 
 #ifdef MARS
-   R_PostTexCacheFrame(&r_texcache);
+   R_UpdateCache();
 #endif
 
    // NB: appears completely Jag-specific; our drawing may end in phase 8.

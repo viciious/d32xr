@@ -33,6 +33,7 @@
 
 void Mars_Secondary(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
+void Mars_Sec_R_Setup(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void Mars_Sec_R_WallPrep(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void Mars_Sec_R_SegCommands(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void Mars_Sec_R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
@@ -47,39 +48,67 @@ void Mars_Sec_ReadSoundCmds(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 void secondary_dma1_handler(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
-static inline void Mars_Sec_R_Setup(void)
+static inline void Mars_R_SecSetup(void)
 {
 	while (MARS_SYS_COMM4 != 0) {};
 	MARS_SYS_COMM4 = 9;
 	while (MARS_SYS_COMM4 != 0);
 }
 
-static inline void Mars_R_BeginComputeSeg(void)
+static inline void Mars_R_SecWait(void)
 {
 	while (MARS_SYS_COMM4 != 0) {};
-
-	MARS_SYS_COMM4 = 1;
 }
 
-static inline void Mars_R_EndComputeSeg(void)
+// r_phase2
+static inline void Mars_R_BeginWallPrep(void)
 {
 	while (MARS_SYS_COMM4 != 0);
+	MARS_SYS_COMM6 = 0; // next seg
+	MARS_SYS_COMM4 = 6;
 }
 
+static inline void Mars_R_WallNext(void)
+{
+	MARS_SYS_COMM6++;
+}
+
+static inline void Mars_R_EndWallPrep(int maxsegs)
+{
+	MARS_SYS_COMM6 = maxsegs;
+}
+
+// r_phase7
 static inline void Mars_R_BeginDrawPlanes(void)
 {
-	while (MARS_SYS_COMM4 != 0) {};
-	MARS_SYS_COMM4 = 4;
+	while (MARS_SYS_COMM4 != 0);
+	MARS_SYS_COMM4 = 2;
 }
 
 static inline void Mars_R_EndDrawPlanes(void)
 {
-	while (MARS_SYS_COMM4 != 0);
+}
+
+// r_phase8
+static inline void Mars_R_ResetNextSprite(void)
+{
+	MARS_SYS_COMM6 = 0;
+}
+
+static inline void Mars_R_WaitNextSprite(int l)
+{
+	while (MARS_SYS_COMM6 != l) {}
+}
+
+static inline void Mars_R_AdvanceNextSprite(void)
+{
+	MARS_SYS_COMM6 = MARS_SYS_COMM6 + 1;
 }
 
 static inline void Mars_R_BeginDrawSprites(void)
 {
 	while (MARS_SYS_COMM4 != 0) {};
+	Mars_R_ResetNextSprite();
 	MARS_SYS_COMM4 = 5;
 }
 
@@ -103,41 +132,6 @@ static inline void Mars_CommSlaveClearCache(void)
 {
 	while (MARS_SYS_COMM4 != 0) {};
 	MARS_SYS_COMM4 = 3;
-	while (MARS_SYS_COMM4 != 0);
-}
-
-// r_phase8
-static inline void Mars_R_ResetNextSprite(void)
-{
-	MARS_SYS_COMM6 = 0;
-}
-
-static inline void Mars_R_WaitNextSprite(int l)
-{
-	while (MARS_SYS_COMM6 != l) {}
-}
-
-static inline void Mars_R_AdvanceNextSprite(void)
-{
-	MARS_SYS_COMM6 = MARS_SYS_COMM6 + 1;
-}
-
-// r_phase2
-static inline void Mars_R_BeginWallPrep(void)
-{
-	while (MARS_SYS_COMM4 != 0);
-	MARS_SYS_COMM6 = 0;
-	MARS_SYS_COMM4 = 6;
-}
-
-static inline void Mars_R_BeginWallNext(void)
-{
-	MARS_SYS_COMM6++;
-}
-
-static inline void Mars_R_EndWallPrep(int maxsegs)
-{
-	MARS_SYS_COMM6 = maxsegs;
 	while (MARS_SYS_COMM4 != 0);
 }
 

@@ -29,8 +29,6 @@
 
 #define LIFECOUNT_FRAMES 30
 
-#define R_CheckPixels(lumpnum) (void *)((intptr_t)(W_POINTLUMPNUM(lumpnum)))
-
 /*
 ================
 =
@@ -105,7 +103,7 @@ void R_TestTexCacheCandidate(r_texcache_t* c, int id)
 	if (!c->zone)
 		return;
 
-	if (framec[id] == 0 || framec[id] != framecount - 1)
+	if (framec[id] == 0 || framec[id] != framecount)
 		return;
 
 	if (pixcount[id] > c->bestcount)
