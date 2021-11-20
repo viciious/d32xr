@@ -613,7 +613,6 @@ void R_Setup (int displayplayer)
 	tempbuf++; // padding
 	for (i = 0; i < MAXVISPLANES; i++) {
 		visplanes[i].open = tempbuf;
-		visplanes[i].runopen = true;
 		tempbuf += viewportWidth+2;
 	}
 
@@ -635,7 +634,6 @@ void R_Setup (int displayplayer)
 	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
 		visplanes_hash[i] = NULL;
 
-	visplanes[0].runopen = false;
 	lastvisplane = visplanes + 1;		/* visplanes[0] is left empty */
 	lastwallcmd = viswalls;			/* no walls added yet */
 	lastvissubsector = vissubsectors;	/* no subsectors visible yet */
@@ -715,6 +713,7 @@ visplane_t* R_FindPlane(visplane_t* ignore, int hash, fixed_t height,
 	int flatnum, int lightlevel, int start, int stop)
 {
 	visplane_t *check, *tail;
+	int halfview = viewportWidth/2;
 
 	tail = visplanes_hash[hash];
 	for (check = tail; check; check = check->next)
@@ -733,11 +732,14 @@ visplane_t* R_FindPlane(visplane_t* ignore, int hash, fixed_t height,
 
 			if (check->open[start] == OPENMARK)
 			{
+				int minx = start < check->minx ? start : check->minx;
+				int maxx = stop > check->maxx ? stop : check->maxx;
+				if (maxx - minx > halfview)
+					continue;
+
 				// found a plane, so adjust bounds and return it
-				if (start < check->minx) // in range of the plane?
-					check->minx = start; // mark the new edge
-				if (stop > check->maxx)
-					check->maxx = stop;  // mark the new edge
+				check->minx = minx; // mark the new edge
+				check->maxx = maxx;  // mark the new edge
 				return check; // use the same one as before
 			}
 		}
@@ -756,11 +758,7 @@ visplane_t* R_FindPlane(visplane_t* ignore, int hash, fixed_t height,
 	check->minx = start;
 	check->maxx = stop;
 
-	if (check->runopen)
-	{
-		R_MarkOpenPlane(check);
-		check->runopen = false;
-	}
+	R_MarkOpenPlane(check);
 
 	check->next = tail;
 	visplanes_hash[hash] = check;

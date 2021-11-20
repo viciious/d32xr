@@ -509,7 +509,6 @@ typedef struct visplane_s
 {
 	VINT		minx, maxx;
 	VINT 		flatnum;
-	VINT		runopen;
 	fixed_t		height;
 	VINT		lightlevel;
 	VINT		pixelcount;
@@ -517,7 +516,7 @@ typedef struct visplane_s
 	struct visplane_s *next;
 } visplane_t;
 
-#define	MAXVISPLANES	48
+#define	MAXVISPLANES	64
 extern	visplane_t		*visplanes/*[MAXVISPLANES]*/, *lastvisplane;
 
 int R_PlaneHash(fixed_t height, unsigned flatnum, unsigned lightlevel)
