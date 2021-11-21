@@ -33,8 +33,8 @@ typedef struct
 {
 	VINT	x;
 	VINT	y;
+	VINT	screen;
 	char 	name[16];
-	uint8_t screen;
 } mainitem_t;
 
 typedef struct
@@ -46,7 +46,7 @@ typedef struct
 
 typedef enum
 {
-	ms_none,
+	ms_none = -1,
 	ms_main,
 	ms_new,
 	ms_load,
@@ -162,7 +162,7 @@ void M_Start2 (boolean startup_)
 	cursorpos = 0;
 	cursordelay = MOVEWAIT;
 
-	screenpos = startup ? ms_main : ms_none;
+	screenpos = ms_main;
 	playerskill = startskill;
 	if (startup)
 		playermap = 1;
@@ -204,28 +204,34 @@ void M_Start2 (boolean startup_)
 		mainitem[mi_savegame].y = CURSORY(2);
 		mainitem[mi_savegame].screen = ms_save;
 		mainscreen[ms_main].numitems++;
-
 	}
 
 	D_strncpy(mainitem[mi_level].name, "Area", 4);
 	mainitem[mi_level].x = CURSORX + 24;
 	mainitem[mi_level].y = CURSORY(0);
+	mainitem[mi_level].screen = ms_none;
 
 	D_strncpy(mainitem[mi_gamemode].name, "Game Mode", 9);
 	mainitem[mi_gamemode].x = CURSORX + 24;
 	mainitem[mi_gamemode].y = CURSORY((mainscreen[ms_new].numitems - 2) * 2);
+	mainitem[mi_gamemode].screen = ms_none;
 
 	D_strncpy(mainitem[mi_difficulty].name, "Difficulty", 10);
 	mainitem[mi_difficulty].x = CURSORX + 24;
 	mainitem[mi_difficulty].y = CURSORY((mainscreen[ms_new].numitems - 1)*2);
+	mainitem[mi_difficulty].screen = ms_none;
 
 	D_strncpy(mainitem[mi_savelist].name, "Checkpoints", 11);
 	mainitem[mi_savelist].x = CURSORX + 24;
 	mainitem[mi_savelist].y = CURSORY(0);
+	mainitem[mi_savelist].screen = ms_none;
 
 #ifndef MARS
 	DoubleBufferSetup();
 #endif
+
+	if (!startup)
+		S_StartSound(NULL, sfx_pistol);
 }
 
 void M_Start(void)
@@ -276,11 +282,6 @@ int M_Ticker (void)
 	{
 		cursorframe = 0;
 		cursordelay = MOVEWAIT+MOVEWAIT/2;
-	}
-	if (screenpos == ms_none)
-	{
-		screenpos = ms_main;
-		S_StartSound(NULL, sfx_pistol);
 	}
 	menuscr = &mainscreen[screenpos];
 
