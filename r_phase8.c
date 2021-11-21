@@ -370,8 +370,6 @@ void R_Sprites(void)
 
    R_DrawPSprites(0);
 #endif
-
-   lastsprite_p = vissprite_p;
 }
 
 // EOF

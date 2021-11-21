@@ -119,7 +119,6 @@ static inline void Mars_R_BeginDrawSprites(void)
 
 static inline void Mars_R_EndDrawSprites(void)
 {
-	while (MARS_SYS_COMM4 != 0);
 }
 
 static inline void Mars_R_BeginDrawPSprites(void)
@@ -130,7 +129,6 @@ static inline void Mars_R_BeginDrawPSprites(void)
 
 static inline void Mars_R_EndDrawPSprites(void)
 {
-	Mars_R_SecWait();
 }
 
 static inline void Mars_M_BeginDrawFire(void)
