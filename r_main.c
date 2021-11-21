@@ -850,6 +850,9 @@ void R_RenderPlayerView(int displayplayer)
 
 void R_RenderPlayerView(int displayplayer)
 {
+#ifdef MARS
+	__attribute__((aligned(16)))
+#endif
 	unsigned short openings_[MAXOPENINGS];
 	boolean draw_world = !(players[consoleplayer].automapflags & AF_ACTIVE);
 
