@@ -560,7 +560,6 @@ void S_StartSoundReal(mobj_t* origin, unsigned sound_id, int vol)
 		return;		/* couldn't override a channel */
 	}
 
-
 	/* */
 	/* fill in the new values */
 	/* */
@@ -580,8 +579,6 @@ gotchannel:
 
 void Mars_Sec_ReadSoundCmds(void)
 {
-	int i;
-
 	if (!snd_init)
 		return;
 
@@ -591,8 +588,7 @@ void Mars_Sec_ReadSoundCmds(void)
 		int cmd = *p;
 		switch (cmd) {
 		case SNDCMD_CLEAR:
-			for (i = 0; i < SFXCHANNELS; i++)
-				sfxchannels[i].data = NULL;
+			D_memset(sfxchannels, 0, sizeof(*sfxchannels) * SFXCHANNELS);
 			break;
 		case SNDCMD_STARTSND:
 			S_StartSoundReal((void*)(*(intptr_t*)&p[2]), p[1], p[4]);
