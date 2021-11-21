@@ -390,11 +390,11 @@ skip:
 #ifdef MARS
         if (segl->actionbits & AC_TOPTEXTURE)
         {
-            segl->t_pixcount += toptex->pixelcount;
+            segl->t_pixcount = toptex->pixelcount;
         }
         if (segl->actionbits & AC_BOTTOMTEXTURE)
         {
-            segl->b_pixcount += bottomtex->pixelcount;
+            segl->b_pixcount = bottomtex->pixelcount;
         }
 #endif
     }
