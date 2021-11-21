@@ -162,7 +162,9 @@ void M_Start2 (boolean startup_)
 	cursorpos = 0;
 	cursordelay = MOVEWAIT;
 
-	screenpos = ms_main;
+	/* HACK: dunno why but the pistol sound comes out muffled if played from M_Start */
+	/* so defer the playback until M_Ticker is called */
+	screenpos = startup ? ms_main : ms_none;
 	playerskill = startskill;
 	if (startup)
 		playermap = 1;
@@ -229,9 +231,6 @@ void M_Start2 (boolean startup_)
 #ifndef MARS
 	DoubleBufferSetup();
 #endif
-
-	if (!startup)
-		S_StartSound(NULL, sfx_pistol);
 }
 
 void M_Start(void)
@@ -283,6 +282,13 @@ int M_Ticker (void)
 		cursorframe = 0;
 		cursordelay = MOVEWAIT+MOVEWAIT/2;
 	}
+
+	if (screenpos == ms_none)
+	{
+		screenpos = ms_main;
+		S_StartSound(NULL, sfx_pistol);
+	}
+
 	menuscr = &mainscreen[screenpos];
 
 	if (!mapnumbers)
@@ -535,12 +541,13 @@ void M_Drawer (void)
 	int i;
 	int mapnumber = mapnumbers[playermap - 1];
 	int	leveltens = mapnumber / 10, levelones = mapnumber % 10;
-	mainscreen_t* menuscr = &mainscreen[screenpos];
+	int scrpos = screenpos == ms_none ? ms_main : screenpos;
+	mainscreen_t* menuscr = &mainscreen[scrpos];
 	mainitem_t* items = &mainitem[menuscr->firstitem];
 	int y, y_offset = 0;
 
 /* Draw main menu */
-	if (m_doom && screenpos == ms_main)
+	if (m_doom && scrpos == ms_main)
 	{
 		DrawJagobj(m_doom, 100, 2);
 		y_offset = m_doom->height - STARTY;
@@ -565,7 +572,7 @@ void M_Drawer (void)
 	}
 
 	/* draw start level information */
-	if (screenpos == ms_new)
+	if (scrpos == ms_new)
 	{
 		mainitem_t* item;
 		char mapname[64];
@@ -614,7 +621,7 @@ void M_Drawer (void)
 		/* draw difficulty information */
 		DrawJagobjLump(m_skilllump + playerskill, item->x + 10, y + ITEMSPACE + 2, NULL, NULL);
 	}
-	else if (screenpos == ms_load || screenpos == ms_save)
+	else if (scrpos == ms_load || scrpos == ms_save)
 	{
 		mainitem_t* item;
 		
