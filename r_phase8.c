@@ -356,6 +356,7 @@ void R_Sprites(void)
    D_isort(sortedsprites, sortedcount);
 
 #ifdef MARS
+   Mars_ClearCacheLines((intptr_t)&lastopening & ~15, 1);
    Mars_ClearCacheLines((intptr_t)openings & ~15, ((lastopening - openings) * sizeof(*openings) + 15) / 16);
 
    Mars_R_BeginDrawSprites();
