@@ -713,7 +713,6 @@ visplane_t* R_FindPlane(visplane_t* ignore, int hash, fixed_t height,
 	int flatnum, int lightlevel, int start, int stop)
 {
 	visplane_t *check, *tail;
-	int halfview = viewportWidth/2;
 
 	tail = visplanes_hash[hash];
 	for (check = tail; check; check = check->next)
@@ -734,7 +733,7 @@ visplane_t* R_FindPlane(visplane_t* ignore, int hash, fixed_t height,
 			{
 				int minx = start < check->minx ? start : check->minx;
 				int maxx = stop > check->maxx ? stop : check->maxx;
-				if (maxx - minx > halfview)
+				if (maxx - minx > centerX)
 					continue;
 
 				// found a plane, so adjust bounds and return it
