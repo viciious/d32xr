@@ -271,7 +271,7 @@ void I_InitMenuFire(jagobj_t *titlepic)
 		}
 	}
 
-	MARS_SYS_COMM4 = 8;
+	Mars_M_BeginDrawFire();
 }
 
 /*
@@ -283,8 +283,7 @@ void I_InitMenuFire(jagobj_t *titlepic)
 */
 void I_StopMenuFire(void)
 {
-	MARS_SYS_COMM4 = 9;
-	while (MARS_SYS_COMM4 != 0) {}
+	Mars_M_EndDrawFire();
 
 	Z_Free(m_fire->rndtable);
 	Z_Free(m_fire->firePix - FIRE_WIDTH);

@@ -852,6 +852,7 @@ void R_RenderPlayerView(int displayplayer)
 void R_RenderPlayerView(int displayplayer)
 {
 	unsigned short openings_[MAXOPENINGS];
+	boolean draw_world = !(players[consoleplayer].automapflags & AF_ACTIVE);
 
 #ifdef MARS
 	while (!I_RefreshCompleted())
@@ -867,7 +868,7 @@ void R_RenderPlayerView(int displayplayer)
 
 	R_Setup(displayplayer);
 
-	Mars_R_BeginWallPrep();
+	Mars_R_BeginWallPrep(draw_world);
 
 	t_ref_bsp[t_ref_cnt] = I_GetFRTCounter();
 	R_BSP();
@@ -875,7 +876,7 @@ void R_RenderPlayerView(int displayplayer)
 
 	Mars_R_EndWallPrep(MAXVISSSEC);
 
-	if (!(players[consoleplayer].automapflags & AF_ACTIVE))
+	if (draw_world)
 	{
 		t_ref_prep[t_ref_cnt] = I_GetFRTCounter();
 		R_SpritePrep();

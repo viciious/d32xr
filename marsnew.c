@@ -274,23 +274,23 @@ void Mars_Secondary(void)
 
 		switch (cmd) {
 		case 1:
-			break;
-		case 2:
-			Mars_Sec_R_DrawPlanes();
-			break;
-		case 3:
 			Mars_ClearCache();
 			break;
+		case 2:
+			Mars_Sec_R_Setup();
+			break;
+		case 3:
+			Mars_Sec_R_WallPrep();
+			break;
 		case 4:
+			Mars_Sec_R_WallPrep();
+			Mars_Sec_R_SegCommands();
 			break;
 		case 5:
-			Mars_Sec_R_DrawSprites();
+			Mars_Sec_R_DrawPlanes();
 			break;
 		case 6:
-			Mars_Sec_R_WallPrep();
-			if (players[consoleplayer].automapflags & AF_ACTIVE)
-				break;
-			Mars_Sec_R_SegCommands();
+			Mars_Sec_R_DrawSprites();
 			break;
 		case 7:
 			Mars_Sec_R_DrawPSprites();
@@ -299,7 +299,7 @@ void Mars_Secondary(void)
 			Mars_Sec_M_AnimateFire();
 			break;
 		case 9:
-			Mars_Sec_R_Setup();
+			// break current command
 			break;
 		case 10:
 			Mars_Sec_InitSoundDMA();
