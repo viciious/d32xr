@@ -347,6 +347,8 @@ void R_Sprites(void)
        vissprite_t* ds = vissprites + i;
        if (ds->patch == NULL)
            continue;
+       if (ds->x1 > ds->x2)
+           continue;
        sortedsprites[sortedcount] = ((unsigned)ds->xscale << 7) + i;
        sortedcount++;
    }
