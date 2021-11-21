@@ -36,7 +36,7 @@ typedef struct
 static char seg_lock = 0;
 
 static void R_DrawTextures(int x, int floorclipx, int ceilingclipx, fixed_t scale2, int colnum, unsigned light, seglocal_t* lsegl) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static void R_SegLoop(seglocal_t* lseg, boolean gradientlight, unsigned short *clipbounds) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static void R_DrawSeg(seglocal_t* lseg, boolean gradientlight, unsigned short *clipbounds) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static void R_SegCommands2(const int mask) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
@@ -54,6 +54,10 @@ static void R_DrawTextures(int x, int floorclipx, int ceilingclipx, fixed_t scal
    if ((actionbits & (AC_TOPTEXTURE|AC_BOTTOMTEXTURE)) == AC_BOTTOMTEXTURE)
        tex++;
 
+#ifdef MARS
+   unsigned iscale = SH2_DIVU_DVDNTL; // get 32-bit quotient
+#endif
+
    do {
        int top, bottom;
 
@@ -66,10 +70,6 @@ static void R_DrawTextures(int x, int floorclipx, int ceilingclipx, fixed_t scal
        bottom = centerY - 1 - bottom;
        if (bottom >= floorclipx)
            bottom = floorclipx - 1;
-
-#ifdef MARS
-       unsigned iscale = SH2_DIVU_DVDNTL; // get 32-bit quotient
-#endif
 
        // column has no length?
        if (top <= bottom)
@@ -107,13 +107,13 @@ static void R_DrawTextures(int x, int floorclipx, int ceilingclipx, fixed_t scal
 }
 
 //
-// Main seg clipping loop
+// Main seg drawing loop
 //
-static void R_SegLoop(seglocal_t* lseg, boolean gradientlight, unsigned short *clipbounds)
+static void R_DrawSeg(seglocal_t* lseg, boolean gradientlight, unsigned short *clipbounds)
 {
    viswall_t* segl = lseg->segl;
 
-   const unsigned actionbits = segl->actionbits;
+   const unsigned actionbits = lseg->actionbits;
 
    unsigned scalefrac = segl->scalefrac;
    unsigned scalestep = segl->scalestep;
@@ -121,8 +121,6 @@ static void R_SegLoop(seglocal_t* lseg, boolean gradientlight, unsigned short *c
    const unsigned centerangle = segl->centerangle;
    const unsigned offset = segl->offset;
    const unsigned distance = segl->distance;
-
-   unsigned short* newclipbounds = segl->newclipbounds;
 
    const int ceilingheight = segl->ceilingheight;
 
@@ -149,12 +147,6 @@ static void R_SegLoop(seglocal_t* lseg, boolean gradientlight, unsigned short *c
       ceilingclipx = (((unsigned)ceilingclipx & 0xff00) >> 8);
 
       //
-      // calc high and low
-      //
-      if(actionbits & (AC_NEWFLOOR|AC_NEWCEILING))
-          clipbounds[x] = newclipbounds[x];
-
-      //
       // texture only stuff
       //
       if (actionbits & AC_CALCTEXTURE)
@@ -177,7 +169,7 @@ static void R_SegLoop(seglocal_t* lseg, boolean gradientlight, unsigned short *c
           // other texture drawing info
           colnum = (offset - r) >> FRACBITS;
 
-          if (gradientlight)
+          if (0)
           {
               // calc light level
               texturelight = scale2 * lseg->lightcoef;
@@ -280,22 +272,14 @@ static void R_SegCommands2(const int cpu)
 #ifdef MARS
         int state;
 
-        while ((state = *(volatile VINT*)&segl->state) == 0);
-
         if (segl->start > segl->stop)
             continue;
 
-        if (state == RW_DRAWN)
+        while ((state = *(volatile VINT*)&segl->state) == 0);
+
+        if (state == RW_DRAWN || !(segl->actionbits & (AC_CALCTEXTURE | AC_ADDSKY)))
         {
-skip:
-            if(segl->actionbits & (AC_NEWFLOOR|AC_NEWCEILING))
-            {
-                int x, stop = segl->stop;
-                unsigned short *newclipbounds = segl->newclipbounds;
-                for (x = segl->start; x <= stop; x++)
-                    clipbounds[x] = newclipbounds[x];
-            }
-            continue;
+            goto skip_draw;
         }
 
         R_LockSeg();
@@ -306,7 +290,7 @@ skip:
                 break;
             case RW_DRAWN:
                 R_UnlockSeg();
-                goto skip;
+                goto skip_draw;
         }
         R_UnlockSeg();
 #endif
@@ -378,13 +362,13 @@ skip:
         {
             lseg.lightcoef = ((lseg.lightmax - lseg.lightmin) << FRACBITS) / (800 - 160);
             lseg.lightsub = 160 * lseg.lightcoef;
-            R_SegLoop(&lseg, true, clipbounds);
+            R_DrawSeg(&lseg, true, clipbounds);
         }
         else
         {
             lseg.lightmin = HWLIGHT(lseg.lightmax);
             lseg.lightmax = lseg.lightmin;
-            R_SegLoop(&lseg, false, clipbounds);
+            R_DrawSeg(&lseg, false, clipbounds);
         }
 
 #ifdef MARS
@@ -397,6 +381,15 @@ skip:
             segl->b_pixcount = bottomtex->pixelcount;
         }
 #endif
+
+skip_draw:
+        if(segl->actionbits & (AC_NEWFLOOR|AC_NEWCEILING))
+        {
+            int x, stop = segl->stop;
+            unsigned short *newclipbounds = segl->newclipbounds;
+            for (x = segl->start; x <= stop; x++)
+                clipbounds[x] = newclipbounds[x];
+        }
     }
 }
 
