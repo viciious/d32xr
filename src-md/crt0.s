@@ -1147,19 +1147,19 @@ segsmsec:
         .asciz  "s:%2d"
         .align  2
 segscount:
-        .asciz  "%2d"
+        .asciz  "%3d"
         .align  2
 planesmsec:
         .asciz  "p:%2d"
         .align  2
 planescount:
-        .asciz  "%2d"
+        .asciz  "%3d"
         .align  2
 spritesmsec:
         .asciz  "s:%2d"
         .align  2
 spritescount:
-        .asciz  "%2d"
+        .asciz  "%3d"
         .align  2
 refmsec:
         .asciz  "t:%2d"

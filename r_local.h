@@ -469,7 +469,7 @@ typedef struct
 	VINT		state;
 } viswall_t;
 
-#define	MAXWALLCMDS		100
+#define	MAXWALLCMDS		127
 extern	viswall_t *viswalls/*[MAXWALLCMDS] __attribute__((aligned(16)))*/;
 extern	viswall_t *lastwallcmd;
 
