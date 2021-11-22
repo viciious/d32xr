@@ -168,7 +168,7 @@ static void R_DrawSeg(seglocal_t* lseg, boolean gradientlight, unsigned short *c
           // other texture drawing info
           colnum = (offset - r) >> FRACBITS;
 
-          if (0)
+          if (gradientlight)
           {
               // calc light level
               texturelight = scale2 * lseg->lightcoef;
