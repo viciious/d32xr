@@ -81,7 +81,7 @@ void AM_Start(void)
 	if (amcurmap != gamemapinfo.mapNumber)
 	{
 #ifdef MARS
-		scale = 1;
+		scale = 2;
 #else
 		scale = 3;
 #endif
