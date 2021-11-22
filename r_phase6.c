@@ -37,7 +37,6 @@ static char seg_lock = 0;
 
 static void R_DrawTextures(int x, int floorclipx, int ceilingclipx, fixed_t scale2, int colnum, unsigned light, seglocal_t* lsegl) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static void R_DrawSeg(seglocal_t* lseg, boolean gradientlight, unsigned short *clipbounds) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static void R_SegCommands2(const int mask) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 //
@@ -240,7 +239,7 @@ static void R_UnlockSeg(void)
     seg_lock = 0;
 }
 
-static void R_SegCommands2(const int cpu)
+void R_SegCommands(void)
 {
     viswall_t* segl;
     seglocal_t lseg;
@@ -323,12 +322,6 @@ static void R_SegCommands2(const int cpu)
         if (segl->actionbits & AC_TOPTEXTURE)
         {
             texture_t* tex = &textures[segl->t_texturenum];
-
-#ifdef MARS
-            if (cpu == 1)
-                Mars_ClearCacheLines((intptr_t)&tex->data & ~15, 1);
-#endif
-
             toptex->topheight = segl->t_topheight;
             toptex->bottomheight = segl->t_bottomheight;
             toptex->texturemid = segl->t_texturemid;
@@ -342,12 +335,6 @@ static void R_SegCommands2(const int cpu)
         if (segl->actionbits & AC_BOTTOMTEXTURE)
         {
             texture_t* tex = &textures[segl->b_texturenum];
-
-#ifdef MARS
-            if (cpu == 1)
-                Mars_ClearCacheLines((intptr_t)&tex->data & ~15, 1);
-#endif
-
             bottomtex->topheight = segl->b_topheight;
             bottomtex->bottomheight = segl->b_bottomheight;
             bottomtex->texturemid = segl->b_texturemid;
@@ -371,7 +358,6 @@ static void R_SegCommands2(const int cpu)
             R_DrawSeg(&lseg, false, clipbounds);
         }
 
-#ifdef MARS
         if (segl->actionbits & AC_TOPTEXTURE)
         {
             segl->t_pixcount = toptex->pixelcount;
@@ -380,7 +366,6 @@ static void R_SegCommands2(const int cpu)
         {
             segl->b_pixcount = bottomtex->pixelcount;
         }
-#endif
 
 skip_draw:
         if(segl->actionbits & (AC_NEWFLOOR|AC_NEWCEILING))
@@ -397,12 +382,7 @@ skip_draw:
 
 void Mars_Sec_R_SegCommands(void)
 {
-    R_SegCommands2(1);
+    R_SegCommands();
 }
 
 #endif
-
-void R_SegCommands(void)
-{
-    R_SegCommands2(0);
-}
