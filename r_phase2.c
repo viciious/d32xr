@@ -531,6 +531,8 @@ void Mars_Sec_R_WallPrep(void)
             ++segl; // next viswall
         }
     }
+
+    Mars_ClearCacheLines((intptr_t)&lastwallcmd & ~15, 1);
 }
 
 #else
