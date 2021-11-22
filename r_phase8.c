@@ -308,6 +308,7 @@ void Mars_Sec_R_DrawSprites(void)
     Mars_ClearCacheLines((intptr_t)&sortedsprites & ~15, 1);
     Mars_ClearCacheLines((intptr_t)sortedsprites & ~15, (sortedcount * sizeof(*sortedsprites) + 15) / 16);
 
+    Mars_ClearCacheLines((intptr_t)&vissprites & ~15, 1);
     Mars_ClearCacheLines((intptr_t)&lastsprite_p & ~15, 1);
     Mars_ClearCacheLines((intptr_t)vissprites & ~15, ((lastsprite_p - vissprites) * sizeof(vissprite_t) + 15) / 16);
 

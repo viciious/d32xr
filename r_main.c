@@ -624,10 +624,6 @@ void R_Setup (int displayplayer)
 	vissubsectors = (void*)tempbuf;
 	tempbuf += sizeof(*vissubsectors) * MAXVISSSEC / sizeof(*tempbuf);
 
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 15) & ~15);
-	vissprites = (void*)tempbuf;
-	tempbuf += sizeof(*vissprites) * MAXVISSPRITES / sizeof(*tempbuf);
-
 	lastsegclip = tempbuf;
 	tempbuf += MAXOPENINGS;
 
@@ -637,12 +633,6 @@ void R_Setup (int displayplayer)
 	lastvisplane = visplanes + 1;		/* visplanes[0] is left empty */
 	lastwallcmd = viswalls;			/* no walls added yet */
 	lastvissubsector = vissubsectors;	/* no subsectors visible yet */
-
-	/*	 */
-	/* clear sprites */
-	/* */
-	vissprite_p = vissprites;
-	lastsprite_p = vissprite_p;
 
 #ifndef MARS
 	phasetime[0] = samplecount;
@@ -848,37 +838,35 @@ void R_RenderPlayerView(int displayplayer)
 
 #else
 
-void R_RenderPlayerView(int displayplayer)
+__attribute__((noinline))
+ATTR_DATA_CACHE_ALIGN
+void R_RenderPlayerView1(int displayplayer, boolean drawworld)
 {
-#ifdef MARS
-	__attribute__((aligned(16)))
-#endif
-	unsigned short openings_[MAXOPENINGS];
-	boolean draw_world = !(players[consoleplayer].automapflags & AF_ACTIVE);
-
-#ifdef MARS
-	while (!I_RefreshCompleted())
-		;
-#endif
-
-	openings = openings_;
-	lastopening = openings;
-
-	t_ref_cnt = (t_ref_cnt + 1) & 3;
-
-	t_ref_total[t_ref_cnt] = I_GetFRTCounter();
-
 	R_Setup(displayplayer);
 
-	Mars_R_BeginWallPrep(draw_world);
+	Mars_R_BeginWallPrep(drawworld);
 
 	t_ref_bsp[t_ref_cnt] = I_GetFRTCounter();
 	R_BSP();
 	t_ref_bsp[t_ref_cnt] = I_GetFRTCounter() - t_ref_bsp[t_ref_cnt];
 
 	Mars_R_EndWallPrep(MAXVISSSEC);
+}
 
-	if (draw_world)
+__attribute__((noinline))
+ATTR_DATA_CACHE_ALIGN
+void R_RenderPlayerView2(int displayplayer, boolean drawworld)
+{
+	vissprite_t vissprites_[MAXVISSPRITES];
+
+	/*	 */
+	/* clear sprites */
+	/* */
+	vissprites = vissprites_;
+	vissprite_p = vissprites;
+	lastsprite_p = vissprite_p;
+
+	if (drawworld)
 	{
 		t_ref_prep[t_ref_cnt] = I_GetFRTCounter();
 		R_SpritePrep();
@@ -902,6 +890,33 @@ void R_RenderPlayerView(int displayplayer)
 	}
 
 	Mars_R_SecWait();
+}
+
+__attribute__((noinline))
+ATTR_DATA_CACHE_ALIGN
+void R_RenderPlayerView(int displayplayer)
+{
+#ifdef MARS
+	__attribute__((aligned(16)))
+#endif
+	unsigned short openings_[MAXOPENINGS];
+	boolean drawworld = !(players[consoleplayer].automapflags & AF_ACTIVE);
+
+#ifdef MARS
+	while (!I_RefreshCompleted())
+		;
+#endif
+
+	openings = openings_;
+	lastopening = openings;
+
+	t_ref_cnt = (t_ref_cnt + 1) & 3;
+
+	t_ref_total[t_ref_cnt] = I_GetFRTCounter();
+
+	R_RenderPlayerView1(displayplayer, drawworld);
+
+	R_RenderPlayerView2(displayplayer, drawworld);
 
 	t_ref_total[t_ref_cnt] = I_GetFRTCounter() - t_ref_total[t_ref_cnt];
 
