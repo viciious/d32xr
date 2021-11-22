@@ -36,7 +36,7 @@ typedef struct
 static char seg_lock = 0;
 
 static void R_DrawTextures(int x, int floorclipx, int ceilingclipx, fixed_t scale2, int colnum, unsigned light, seglocal_t* lsegl) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static void R_DrawSeg(seglocal_t* lseg, boolean gradientlight, unsigned short *clipbounds) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 //
@@ -108,7 +108,7 @@ static void R_DrawTextures(int x, int floorclipx, int ceilingclipx, fixed_t scal
 //
 // Main seg drawing loop
 //
-static void R_DrawSeg(seglocal_t* lseg, boolean gradientlight, unsigned short *clipbounds)
+static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 {
    viswall_t* segl = lseg->segl;
 
@@ -124,6 +124,7 @@ static void R_DrawSeg(seglocal_t* lseg, boolean gradientlight, unsigned short *c
    const int ceilingheight = segl->ceilingheight;
 
    unsigned texturelight = lseg->lightmax;
+   const boolean gradientlight = lseg->lightmin != lseg->lightmax;
 
    int x, stop = segl->stop;
 
@@ -349,14 +350,13 @@ void R_SegCommands(void)
         {
             lseg.lightcoef = ((lseg.lightmax - lseg.lightmin) << FRACBITS) / (800 - 160);
             lseg.lightsub = 160 * lseg.lightcoef;
-            R_DrawSeg(&lseg, true, clipbounds);
         }
         else
         {
             lseg.lightmin = HWLIGHT(lseg.lightmax);
             lseg.lightmax = lseg.lightmin;
-            R_DrawSeg(&lseg, false, clipbounds);
         }
+        R_DrawSeg(&lseg, clipbounds);
 
         if (segl->actionbits & AC_TOPTEXTURE)
         {
