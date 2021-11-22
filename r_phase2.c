@@ -534,11 +534,19 @@ void Mars_Sec_R_WallPrep(void)
                 texture_t* tex = &textures[segl->t_texturenum];
                 Mars_ClearCacheLines((intptr_t)&tex->data & ~15, 1);
             }
-
             if (segl->actionbits & AC_BOTTOMTEXTURE)
             {
                 texture_t* tex = &textures[segl->b_texturenum];
                 Mars_ClearCacheLines((intptr_t)&tex->data & ~15, 1);
+            }
+
+            if (segl->actionbits & AC_ADDFLOOR)
+            {
+                Mars_ClearCacheLines((intptr_t)&flatpixels[segl->floorpicnum] & ~15, 1);
+            }
+            if (segl->actionbits & AC_ADDCEILING)
+            {
+                Mars_ClearCacheLines((intptr_t)&flatpixels[segl->ceilingpicnum] & ~15, 1);
             }
 
             segl->state = RW_READY;

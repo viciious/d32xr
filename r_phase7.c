@@ -29,8 +29,13 @@ typedef struct
 } localplane_t;
 
 static void R_MapPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-void R_PlaneLoop(localplane_t* lpl) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-void R_DrawPlanes2(const int cpu) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static void R_PlaneLoop(localplane_t* lpl) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static void R_DrawPlanes2(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+
+static void R_LockPln(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static void R_UnlockPln(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static visplane_t* R_GetNextPlane(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+
 void R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 
 static char pl_lock = 0;
@@ -112,7 +117,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
 //
 // Determine the horizontal spans of a single visplane
 //
-void R_PlaneLoop(localplane_t *lpl)
+static void R_PlaneLoop(localplane_t *lpl)
 {
    unsigned pl_x, pl_stopx;
    unsigned short *pl_openptr;
@@ -229,7 +234,7 @@ static visplane_t *R_GetNextPlane(void)
     return pl;
 }
 
-void R_DrawPlanes2(const int cpu)
+static void R_DrawPlanes2(void)
 {
     angle_t angle;
     localplane_t lpl;
@@ -251,11 +256,6 @@ void R_DrawPlanes2(const int cpu)
     {
         if (pl->minx > pl->maxx)
             continue;
-
-#ifdef MARS
-        if (cpu == 1)
-            Mars_ClearCacheLines((intptr_t)&flatpixels[pl->flatnum] & ~15, 1);
-#endif
 
         lpl.pl = pl;
         lpl.pixelcount = 0;
@@ -320,7 +320,7 @@ void Mars_R_PrepPlanes(void)
 
 void Mars_Sec_R_DrawPlanes(void)
 {
-    R_DrawPlanes2(1);
+    R_DrawPlanes2();
 }
 #endif
 
@@ -334,11 +334,11 @@ void R_DrawPlanes(void)
 
     Mars_R_BeginDrawPlanes();
 
-    R_DrawPlanes2(0);
+    R_DrawPlanes2();
 
     Mars_R_EndDrawPlanes();
 #else
-    R_DrawPlanes2(0);
+    R_DrawPlanes2();
 #endif
 }
 
