@@ -408,16 +408,21 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds)
         if (actionbits & AC_TOPSIL)
             segl->topsil[x] = high;
 
-        int newfloorclipx = floorclipx;
-        int newceilingclipx = ceilingclipx;
-
         if (actionbits & (AC_NEWFLOOR | AC_NEWCEILING))
         {
+            int newfloorclipx = floorclipx;
+            int newceilingclipx = ceilingclipx;
+            unsigned newclip;
+
             // rewrite clipbounds
             if (actionbits & AC_NEWFLOOR)
                 newfloorclipx = low;
             if (actionbits & AC_NEWCEILING)
                 newceilingclipx = high;
+
+            newclip = ((unsigned)(newceilingclipx) << 8) + newfloorclipx;
+            clipbounds[x] = newclip;
+            newclipbounds[x] = newclip;
         }
 
         //
@@ -464,14 +469,6 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds)
                 }
                 ceilopen[x] = (unsigned short)((top << 8) + bottom);
             }
-        }
-
-        if (actionbits & (AC_NEWFLOOR | AC_NEWCEILING))
-        {
-            unsigned newclip;
-            newclip = ((unsigned)(newceilingclipx) << 8) + newfloorclipx;
-            clipbounds[x] = newclip;
-            newclipbounds[x] = newclip;
         }
     }
 }
