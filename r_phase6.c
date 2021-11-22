@@ -49,19 +49,21 @@ void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static void R_DrawTextures(int x, int floorclipx, int ceilingclipx, fixed_t scale2, int colnum_, unsigned light, seglocal_t* lsegl)
 {
    unsigned actionbits = lsegl->actionbits;
-   drawtex_t *tex = lsegl->tex, *last;
+   drawtex_t *tex, *last;
 
-   last = tex + 1;
-   if ((actionbits & (AC_TOPTEXTURE | AC_BOTTOMTEXTURE)) == AC_TOPTEXTURE)
-       last = tex;
-   if ((actionbits & (AC_TOPTEXTURE|AC_BOTTOMTEXTURE)) == AC_BOTTOMTEXTURE)
+   tex = lsegl->tex;
+   last = lsegl->tex + 2;
+
+   if (!(actionbits & AC_TOPTEXTURE))
        tex++;
+   if (!(actionbits & AC_BOTTOMTEXTURE))
+       --last;
 
 #ifdef MARS
    unsigned iscale = SH2_DIVU_DVDNTL; // get 32-bit quotient
 #endif
 
-   do {
+   for (; tex < last; tex++) {
        int top, bottom;
 
        FixedMul2(top, scale2, tex->topheight);
@@ -106,7 +108,7 @@ static void R_DrawTextures(int x, int floorclipx, int ceilingclipx, fixed_t scal
            // pixel counter
            tex->pixelcount += (bottom - top);
        }
-   } while (++tex <= last);
+   }
 }
 
 //
