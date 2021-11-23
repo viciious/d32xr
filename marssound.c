@@ -428,10 +428,15 @@ static void S_Update(int16_t* buffer)
 
 	{
 		int32_t *b2 = (int32_t *)buffer;
-		for (i = 0; i < MAX_SAMPLES / 4; i++)
+		for (i = 0; i < MAX_SAMPLES / 8; i++)
+		{
 			*b2++ = 0, *b2++ = 0, *b2++ = 0, *b2++ = 0;
-		for (i *= 4; i < MAX_SAMPLES; i++)
+			*b2++ = 0, *b2++ = 0, *b2++ = 0, *b2++ = 0;
+		}
+		for (i *= 8; i < MAX_SAMPLES; i++)
+		{
 			*b2++ = 0;
+		}
 	}
 
 	for (i = 0; i < SFXCHANNELS; i++)
@@ -467,18 +472,31 @@ static void S_Update(int16_t* buffer)
 		S_PaintChannel(ch, buffer, MAX_SAMPLES, 64);
 	}
 
+#define DO_SAMPLE() do { \
+		int16_t s = *b + SAMPLE_CENTER; \
+		*b++ = (s < 0) ? SAMPLE_MIN : (s > SAMPLE_MAX) ? SAMPLE_MAX : s; \
+	} while (0)
+
+#define DO_STEREO_SAMPLE() do { \
+		DO_SAMPLE(); DO_SAMPLE(); \
+	} while (0)
+
 	// convert buffer from s16 pcm samples to u16 pwm samples
 	b = buffer;
-	for (i = 0; i < MAX_SAMPLES; i++)
+	for (i = 0; i < MAX_SAMPLES / 4; i++)
 	{
-		int16_t s;
-
-		s = *b + SAMPLE_CENTER;
-		*b++ = (s < 0) ? SAMPLE_MIN : (s > SAMPLE_MAX) ? SAMPLE_MAX : s;
-
-		s = *b + SAMPLE_CENTER;
-		*b++ = (s < 0) ? SAMPLE_MIN : (s > SAMPLE_MAX) ? SAMPLE_MAX : s;
+		DO_STEREO_SAMPLE();
+		DO_STEREO_SAMPLE();
+		DO_STEREO_SAMPLE();
+		DO_STEREO_SAMPLE();
 	}
+	for (i *= 4; i < MAX_SAMPLES; i++)
+	{
+		DO_STEREO_SAMPLE();
+	}
+
+#undef DO_STEREO_SAMPLE
+#undef DO_SAMPLE
 }
 
 void sec_dma1_handler(void)
