@@ -158,6 +158,9 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening)
       spropening[x] = viewportHeight;
    
    ds = lastwallcmd;
+   if (ds == viswalls)
+       return;
+
    do
    {
       --ds;
