@@ -469,7 +469,7 @@ dmapinfo_t **G_LoadMaplist(VINT *pmapcount)
 		D_memcpy(zsection, section, sectionlen);
 		zsection[sectionlen] = '\0';
 
-		memset(mi, 0, sizeof(*mi));
+		D_memset(mi, 0, sizeof(*mi));
 		mi->data = (byte *)mi;
 
 		linecount = G_ParseMapinfo(zsection, (kvcall_t)&G_AddMapinfoKey, mi);
