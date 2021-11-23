@@ -200,14 +200,14 @@ static void R_PlaneLoop(localplane_t *lpl)
 
 static void R_LockPln(void)
 {
-    volatile int res;
+    int res;
     do {
         __asm volatile (\
         "tas.b %1\n\t" \
             "movt %0\n\t" \
-            : "=r" (res) \
+            : "=&r" (res) \
             : "m" (pl_lock) \
-            : "r0");
+            );
     } while (res == 0);
 }
 

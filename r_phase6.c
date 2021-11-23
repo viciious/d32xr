@@ -230,14 +230,14 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 
 static void R_LockSeg(void)
 {
-    volatile int res;
+    int res;
     do {
         __asm volatile (\
         "tas.b %1\n\t" \
             "movt %0\n\t" \
-            : "=r" (res) \
+            : "=&r" (res) \
             : "m" (seg_lock) \
-            : "r0");
+            );
     } while (res == 0);
 }
 
