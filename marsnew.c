@@ -786,6 +786,8 @@ void I_Update(void)
 				R_ClearTexCache(&r_texcache);
 			}
 
+			R_SetDetailMode(detailmode);
+
 			if (prevdebugmode == 0)
 			{
 				SH2_WDT_WTCSR_TCNT = 0x5A00; /* WDT TCNT = 0 */

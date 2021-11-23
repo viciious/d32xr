@@ -662,6 +662,9 @@ void ST_Drawer(void)
 	int e = splitscreen ? MAXPLAYERS : consoleplayer + 1;
 	int y[MAXPLAYERS];
 
+	if (debugmode == 3)
+		return;
+
 	y[consoleplayer] = I_FrameBufferHeight() - sbar_height;
 	y[consoleplayer^1] = 0;
 

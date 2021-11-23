@@ -12,12 +12,7 @@
         .align  4
         .global _I_DrawColumnLowA
 _I_DrawColumnLowA:
-	mov.l	draw_debug, r0
-	mov.l	@r0, r0
-	cmp/eq	#3, r0
-	bf/s	0f
 	add	#1,r6
-	rts
 
 0:
         cmp/gt  r6,r5
@@ -78,12 +73,7 @@ do_col_loop_low:
         .align  4
         .global _I_DrawColumnNPo2LowA
 _I_DrawColumnNPo2LowA:
-	mov.l	draw_debug, r0
-	mov.l	@r0, r0
-	cmp/eq	#3, r0
-	bf/s	0f
 	add	#1,r6
-	rts
 
 0:
         cmp/gt  r6,r5
@@ -164,12 +154,7 @@ do_cnp_loop_low:
         .align  4
         .global _I_DrawSpanLowA
 _I_DrawSpanLowA:
-	mov.l	draw_debug, r0
-	mov.l	@r0, r0
-	cmp/eq	#3, r0
-	bf/s	0f
 	add	#1,r6
-	rts
 
 0:
         cmp/gt  r6,r5
@@ -296,12 +281,7 @@ exit_span_low_loop:
         .align  4
         .global _I_DrawColumnA
 _I_DrawColumnA:
-	mov.l	draw_debug, r0
-	mov.l	@r0, r0
-	cmp/eq	#3, r0
-	bf/s	0f
 	add	#1,r6
-	rts
 
 0:
         cmp/gt  r6,r5
@@ -355,12 +335,7 @@ do_col_loop:
         .align  4
         .global _I_DrawColumnNPo2A
 _I_DrawColumnNPo2A:
-	mov.l	draw_debug, r0
-	mov.l	@r0, r0
-	cmp/eq	#3, r0
-	bf/s	0f
 	add	#1,r6
-	rts
 
 0:
         cmp/gt  r6,r5
@@ -438,12 +413,7 @@ do_cnp_loop:
         .align  4
         .global _I_DrawSpanA
 _I_DrawSpanA:
-	mov.l	draw_debug, r0
-	mov.l	@r0, r0
-	cmp/eq	#3, r0
-	bf/s	0f
 	add	#1,r6
-	rts
 
 0:
         cmp/gt  r6,r5
@@ -559,8 +529,6 @@ exit_span_loop:
         mov.l   @r15+,r8
 
         .align  2
-draw_debug:
-	.long	_debugmode
 draw_fb:
         .long   _viewportbuffer
 draw_cmap:

@@ -273,8 +273,9 @@ typedef void (*drawcol_t)(int, int, int, int, fixed_t, fixed_t, inpixel_t*, int,
 typedef void (*drawspan_t)(int, int, int, int, fixed_t, fixed_t, fixed_t, fixed_t, inpixel_t*);
 
 extern drawcol_t drawcol;
-extern drawcol_t drawfuzzycol;
+extern drawcol_t drawfuzzcol;
 extern drawcol_t drawcolnpo2;
+extern drawcol_t drawcollow;
 extern drawspan_t drawspan;
 
 #define FUZZTABLE		64

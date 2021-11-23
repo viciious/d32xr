@@ -135,8 +135,6 @@ void I_DrawColumnNPo2LowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t fra
 		I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
 #endif
 
-	if (debugmode == 3)
-		return;
 	if (dc_yl > dc_yh)
 		return;
 
@@ -199,8 +197,6 @@ void I_DrawSpanLowC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	if (ds_x2 < ds_x1 || ds_x1<0 || ds_x2 >= viewportWidth || ds_y>viewportHeight)
 		I_Error("R_DrawSpan: %i to %i at %i", ds_x1, ds_x2, ds_y);
 #endif 
-	if (debugmode == 3)
-		return;
 
 	count = ds_x2 - ds_x1 + 1;
 	xfrac = ds_xfrac, yfrac = ds_yfrac;
@@ -245,8 +241,6 @@ void I_DrawColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 		I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
 #endif
 
-	if (debugmode == 3)
-		return;
 	if (dc_yl > dc_yh)
 		return;
 
@@ -294,8 +288,6 @@ void I_DrawColumnNPo2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 		I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
 #endif
 
-	if (debugmode == 3)
-		return;
 	if (dc_yl > dc_yh)
 		return;
 
@@ -351,8 +343,6 @@ void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	if (ds_x2 < ds_x1 || ds_x1<0 || ds_x2 >= viewportWidth || ds_y>viewportHeight)
 		I_Error("R_DrawSpan: %i to %i at %i", ds_x1, ds_x2, ds_y);
 #endif 
-	if (debugmode == 3)
-		return;
 
 	count = ds_x2 - ds_x1 + 1;
 	xfrac = ds_xfrac, yfrac = ds_yfrac;
@@ -458,8 +448,6 @@ void I_DrawFuzzColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 		I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
 #endif
 
-	if (debugmode == 3)
-		return;
 	if (dc_yl > dc_yh)
 		return;
 
@@ -509,8 +497,6 @@ void I_DrawSpanPotatoLow(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_x
 		I_Error("R_DrawSpan: %i to %i at %i", ds_x1, ds_x2, ds_y);
 #endif
 
-	if (debugmode == 3)
-		return;
 	if (ds_x2 < ds_x1)
 		return;
 
@@ -546,8 +532,6 @@ void I_DrawSpanPotato(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfra
 
 	if (ds_x2 < ds_x1)
 		return;
-	if (debugmode == 3)
-		return;
 
 	count = ds_x2 - ds_x1 + 1;
 
@@ -578,6 +562,17 @@ void I_DrawSpanPotato(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfra
 	}
 }
 
+void I_DrawColumnNoDraw(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* fuzzpos)
+{
+
+}
+
+void I_DrawSpanNoDraw(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
+	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source)
+{
+
+}
 
 /*
 =============
@@ -595,8 +590,6 @@ void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh)
 	jagobj_t* jo;
 	int width, height;
 
-	if (debugmode == 3)
-		return;
 	if (lumpnum < 0)
 		return;
 
@@ -743,9 +736,6 @@ void DrawJagobj2(jagobj_t* jo, int x, int y,
 	int		srcx, srcy;
 	int		width, height;
 	int		rowsize;
-
-	if (debugmode == 3)
-		return;
 
 	rowsize = BIGSHORT(jo->width);
 	width = BIGSHORT(jo->width);

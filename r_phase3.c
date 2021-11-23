@@ -154,7 +154,7 @@ void R_PrepMobj(mobj_t *thing)
        vis->colormap = HWLIGHT(vis->colormap);
    }
 
-   vis->drawcol = (thing->flags & MF_SHADOW) ? drawfuzzycol : drawcol;
+   vis->drawcol = (thing->flags & MF_SHADOW) ? drawfuzzcol : drawcol;
 }
 
 //

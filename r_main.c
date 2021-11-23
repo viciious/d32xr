@@ -20,8 +20,9 @@ VINT anamorphicview = 0;
 VINT initmathtables = 2;
 
 drawcol_t drawcol;
-drawcol_t drawfuzzycol;
+drawcol_t drawfuzzcol;
 drawcol_t drawcolnpo2;
+drawcol_t drawcollow;
 drawspan_t drawspan;
 
 short fuzzoffset[FUZZTABLE] =
@@ -364,21 +365,38 @@ void R_SetDetailMode(int mode)
 		return;
 
 	detailmode = mode;
+
+	if (debugmode == 3)
+	{
+		drawcol = I_DrawColumnNoDraw;
+		drawcolnpo2 = I_DrawColumnNoDraw;
+		drawfuzzcol = I_DrawColumnNoDraw;
+		drawcollow = I_DrawColumnNoDraw;
+		drawspan = I_DrawSpanNoDraw;
+		return;
+	}
+
 	if (lowResMode)
 	{
 		drawcol = I_DrawColumnLow;
 		drawcolnpo2 = I_DrawColumnNPo2Low;
-		drawfuzzycol = I_DrawFuzzColumnLow;
+		drawfuzzcol = I_DrawFuzzColumnLow;
+		drawcollow = I_DrawColumnLow;
 		drawspan = detailmode == detmode_potato ? I_DrawSpanPotatoLow : I_DrawSpanLow;
 	}
 	else
 	{
 		drawcol = I_DrawColumn;
 		drawcolnpo2 = I_DrawColumnNPo2;
-		drawfuzzycol = I_DrawFuzzColumn;
+		drawfuzzcol = I_DrawFuzzColumn;
 		drawspan = I_DrawSpan;
+		drawcollow = I_DrawColumnLow;
 		drawspan = detailmode == detmode_potato ? I_DrawSpanPotato : I_DrawSpan;
 	}
+
+#ifdef MARS
+	Mars_CommSlaveClearCache();
+#endif
 }
 
 int R_DefaultViewportSize(void)
