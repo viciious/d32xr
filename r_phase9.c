@@ -31,7 +31,10 @@ static void R_UpdateCacheCounts(void)
       }
    }
 
-    visplane_t* pl;
+   if (detailmode == detmode_potato)
+       return;
+
+   visplane_t* pl;
     for (pl = visplanes + 1; pl < lastvisplane; pl++)
     {
         pixcount = *((volatile VINT *)((uintptr_t)&pl->pixelcount | 0x20000000));
