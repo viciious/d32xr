@@ -239,6 +239,9 @@ void O_Control (player_t *player)
 	menuscreen_t* menuscr;
 	boolean newcursor = false;
 
+	if (splitscreen && playernum != consoleplayer)
+		return;
+
 	if (cursorframe == -1)
 	{
 		cursorframe = 0;
@@ -260,24 +263,25 @@ void O_Control (player_t *player)
 		)
 	{
 exit:
-		if (screenpos == ms_game)
+		if (playernum == consoleplayer)
 		{
-			M_Stop();
+			if (screenpos == ms_game)
+				M_Stop();
+			if (!netgame || (netgame == gt_coop && splitscreen))
+				gamepaused ^= 1;
+			movecount = 0;
+			cursorpos = 0;
+			screenpos = ms_main;
+			S_StartSound(NULL, sfx_swtchn);
 		}
-		gamepaused ^= 1;
-		movecount = 0;
-		cursorpos = 0;	
-		screenpos = ms_main;
+
 		player->automapflags ^= AF_OPTIONSACTIVE;
+#ifdef JAGUAR
 		if (player->automapflags & AF_OPTIONSACTIVE)
-#ifdef MARS
-			;
-#else
 			DoubleBufferSetup();
-#endif
 		else
 			WriteEEProm ();		/* save new settings */
-		S_StartSound(NULL, sfx_swtchn);
+#endif
 	}
 	if (!(player->automapflags & AF_OPTIONSACTIVE))
 		return;
