@@ -33,7 +33,7 @@ static	VINT	pause;
 #define MAXSCALES	5
 static	VINT	scale;
 static	VINT	scalex[MAXSCALES] = {18,19,20,21,22};
-static	VINT	scaley[MAXSCALES] = {17,18,19,20,21};
+static	VINT	scaley[MAXSCALES] = {18,19,20,21,22};
 static	VINT	amcurmap = -1;
 #define NOSELENGTH	0x200000		/* PLAYER'S TRIANGLE */
 #define MOBJLENGTH	0x100000
@@ -81,7 +81,7 @@ void AM_Start(void)
 	if (amcurmap != gamemapinfo.mapNumber)
 	{
 #ifdef MARS
-		scale = 2;
+		scale = 1;
 #else
 		scale = 3;
 #endif
