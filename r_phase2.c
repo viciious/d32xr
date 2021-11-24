@@ -524,6 +524,12 @@ void Mars_Sec_R_WallPrep(void)
 
             R_WallLatePrep(segl);
 
+            if (!(segl->actionbits & (AC_NEWFLOOR | AC_NEWCEILING)))
+            {
+                // go ahead and mark the segment as ready for drawing
+                segl->state = RW_READY;
+            }
+
             R_SegLoop(segl, clipbounds);
 
             if (segl->actionbits & AC_TOPTEXTURE)
