@@ -345,7 +345,7 @@ exit:
 		}
 	}
 
-	if (buttons & (BT_C | BT_RMBTN) && !(oldbuttons & (BT_C | BT_RMBTN)))
+	if (buttons & (BT_B | BT_RMBTN) && !(oldbuttons & (BT_B | BT_RMBTN)))
 	{
 		if (screenpos != ms_main)
 		{
