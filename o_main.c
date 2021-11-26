@@ -267,8 +267,7 @@ exit:
 		{
 			if (screenpos == ms_game)
 				M_Stop();
-			if (!netgame || (netgame == gt_coop && splitscreen))
-				gamepaused ^= 1;
+			gamepaused ^= 1;
 			movecount = 0;
 			cursorpos = 0;
 			screenpos = ms_main;

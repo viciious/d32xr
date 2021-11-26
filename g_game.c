@@ -453,6 +453,7 @@ void G_InitNew (skill_t skill, int map, gametype_t gametype)
 	demorecording = false;
 	demoplayback = false;
 
+	gamepaused = false;
 	gametic = 0; 
 } 
 
