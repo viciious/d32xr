@@ -189,14 +189,13 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
          continue;
 
       // stop because it is not two sided anyway
-      // might do this after updating validcount?
       if(!(line->flags & ML_TWOSIDED))
          return false;
 
       // crosses a two sided line
       side = seg->side;
       front = &sectors[sides[line->sidenum[side]].sector];
-      back = (line->flags & ML_TWOSIDED) ? &sectors[sides[line->sidenum[side^1]].sector] : 0;
+      back = &sectors[sides[line->sidenum[side^1]].sector];
 
       // no wall to block sight with?
       if(front->floorheight == back->floorheight && front->ceilingheight == back->ceilingheight)
