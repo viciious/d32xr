@@ -119,7 +119,7 @@ typedef struct line_s
 #define LD_FRONTSECTORNUM(ld) (sides[(ld)->sidenum[0]].sector)
 #define LD_BACKSECTORNUM(ld) ((ld)->sidenum[1] != -1 ? sides[ld->sidenum[1]].sector : -1)
 #define LD_FRONTSECTOR(ld) (&sectors[LD_FRONTSECTORNUM(ld)])
-#define LD_BACKSECTOR(ld) ((ld)->sidenum[1] != -1 ? &sectors[LD_BACKSECTORNUM(ld)] : NULL)
+#define LD_BACKSECTOR(ld) ((ld)->sidenum[1] != -1 ? &sectors[sides[ld->sidenum[1]].sector] : NULL)
 
 typedef struct subsector_s
 {
