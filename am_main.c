@@ -33,7 +33,9 @@ static	VINT	pause;
 #define MAXSCALES	5
 static	VINT	scale;
 static	VINT	scalex[MAXSCALES] = {18,19,20,21,22};
+#ifndef MARS
 static	VINT	scaley[MAXSCALES] = {18,19,20,21,22};
+#endif
 static	VINT	amcurmap = -1;
 #define NOSELENGTH	0x200000		/* PLAYER'S TRIANGLE */
 #define MOBJLENGTH	0x100000
@@ -476,7 +478,11 @@ void AM_Drawer (void)
 	oy = p->automapy;
 	
 	xshift = scalex[scale];
+#ifdef MARS
+	yshift = xshift;
+#else
 	yshift = scaley[scale];
+#endif
 
 	line = lines;
 	drawn = 0;
