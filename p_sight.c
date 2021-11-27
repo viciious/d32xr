@@ -38,8 +38,8 @@ typedef struct
     fixed_t t2x, t2y;
 } sightWork_t;
 
-int P_DivlineSide(fixed_t x, fixed_t y, divline_t* node) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-fixed_t P_InterceptVector2(divline_t* v2, divline_t* v1) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static int P_DivlineSide(fixed_t x, fixed_t y, divline_t* node) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static fixed_t P_InterceptVector2(divline_t* v2, divline_t* v1) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static boolean PS_CrossSubsector(sightWork_t* sw, int num) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static boolean PS_CrossBSPNode(sightWork_t* sw, int bspnum) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static boolean PS_CheckSight(mobj_t* t1, mobj_t* t2) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
@@ -48,7 +48,7 @@ void P_CheckSights2(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 //
 // Returns side 0 (front), 1 (back), or 2 (on).
 //
-int P_DivlineSide(fixed_t x, fixed_t y, divline_t *node)
+static int P_DivlineSide(fixed_t x, fixed_t y, divline_t *node)
 {
    fixed_t dx;
    fixed_t dy;
@@ -99,7 +99,7 @@ int P_DivlineSide(fixed_t x, fixed_t y, divline_t *node)
 // along the first divline.
 // This is only called by the addthings and addlines traversers.
 //
-fixed_t P_InterceptVector2(divline_t *v2, divline_t *v1)
+static fixed_t P_InterceptVector2(divline_t *v2, divline_t *v1)
 {
    fixed_t frac;
    fixed_t num;
