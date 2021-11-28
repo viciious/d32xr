@@ -36,6 +36,9 @@ byte		*rejectmatrix;			/* for fast sight rejection */
 mapthing_t	*deathmatchstarts, *deathmatch_p;
 mapthing_t	playerstarts[MAXPLAYERS];
 
+int			numthings;
+spawnthing_t* spawnthings;
+
 void P_LoadVertexes(int lump) ATTR_OPTIMIZE_SIZE;
 void P_LoadSegs(int lump) ATTR_OPTIMIZE_SIZE;
 void P_LoadSubsectors(int lump) ATTR_OPTIMIZE_SIZE;
@@ -265,7 +268,7 @@ void P_LoadThings (int lump)
 	byte			*data;
 	int				i;
 	mapthing_t		*mt;
-	int				numthings;
+	spawnthing_t	*st;
 	int 			numthingsreal;
 
 	data = I_TempBuffer ();
@@ -283,6 +286,17 @@ void P_LoadThings (int lump)
 		mt->options = LITTLESHORT(mt->options);
 	}
 
+	spawnthings = Z_Malloc(numthings * sizeof(*spawnthings), PU_LEVEL, 0);
+	st = spawnthings;
+	mt = (mapthing_t*)data;
+	for (i = 0; i < numthings; i++, mt++)
+	{
+		st->x = mt->x, st->y = st->y;
+		st->angle = mt->angle;
+		st->type = mt->type;
+		st++;
+	}
+
 	mt = (mapthing_t *)data;
 	for (i=0 ; i<numthings ; i++, mt++)
 		if (P_MapThingSpawnsMobj(mt))
@@ -294,7 +308,7 @@ void P_LoadThings (int lump)
 
 	mt = (mapthing_t *)data;
 	for (i=0 ; i<numthings ; i++, mt++)
-		P_SpawnMapThing (mt);
+		P_SpawnMapThing (mt, i+1);
 }
 
 

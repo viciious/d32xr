@@ -144,7 +144,7 @@ void L_CrossSpecial (mobj_t *mo);
 void P_ExplodeMissile (mobj_t *mo);
 
 boolean P_MapThingSpawnsMobj(mapthing_t* mthing) ATTR_OPTIMIZE_SIZE;
-void	P_SpawnMapThing(mapthing_t* mthing) ATTR_OPTIMIZE_SIZE;
+void	P_SpawnMapThing(mapthing_t* mthing, int thingid) ATTR_OPTIMIZE_SIZE;
 
 /*
 ===============================================================================
@@ -237,6 +237,9 @@ extern	short		*blockmap;
 extern	int			bmapwidth, bmapheight;	/* in mapblocks */
 extern	fixed_t		bmaporgx, bmaporgy;		/* origin of block map */
 extern	mobj_t		**blocklinks;			/* for thing chains */
+
+extern	int			numthings;
+extern	spawnthing_t* spawnthings;
 
 /*
 ===============================================================================
