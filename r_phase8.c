@@ -93,7 +93,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos,
 
          // calc count
          count = bottom - top + 1;
-         if(!count)
+         if(count <= 0)
             continue;
 
          // CALICO: invoke column drawer
