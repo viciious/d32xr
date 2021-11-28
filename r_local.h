@@ -378,6 +378,8 @@ typedef struct
 
 extern r_texcache_t r_texcache;
 
+#define CACHE_FRAMES_DEFAULT 30
+
 void R_InitTexCache(r_texcache_t* c, int maxobjects);
 void R_InitTexCacheZone(r_texcache_t* c, int zonesize);
 void R_SetupTexCacheFrame(r_texcache_t* c);

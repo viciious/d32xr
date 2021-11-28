@@ -78,7 +78,7 @@ static void R_CacheBestObject(void)
     if (id == -1)
         return;
 
-    if (r_texcache.bestcount < 128)
+    if (r_texcache.bestcount < 512)
     {
         /* ignore extremely small fragments */
         return;

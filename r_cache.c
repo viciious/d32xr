@@ -27,8 +27,6 @@
 #include "doomdef.h"
 #include "r_local.h"
 
-#define LIFECOUNT_FRAMES 30
-
 /*
 ================
 =
@@ -73,6 +71,9 @@ void R_InitTexCacheZone(r_texcache_t* c, int zonesize)
 	c->zone = Z_Malloc(zonesize, PU_LEVEL, 0);
 	c->zonesize = zonesize;
 	Z_InitZone(c->zone, zonesize);
+
+	D_memset(c->framecount, 0, c->maxobjects * sizeof(*c->framecount));
+	D_memset(c->pixcount, 0, c->maxobjects * sizeof(*c->pixcount));
 }
 
 /*
@@ -125,7 +126,7 @@ void R_AddPixelsToTexCache(r_texcache_t* c, int id, int pixels)
 	VINT* framec = c->framecount;
 	unsigned short* pixcount = c->pixcount;
 
-	if (!c->zone)
+	if (!c->zone || pixels <= 0)
 		return;
 
 	if (framec[id] != framecount)
@@ -202,7 +203,7 @@ static void R_EvictFromTexCache(void* ptr, void* userp)
 	}
 	else
 	{
-		entry->lifecount = LIFECOUNT_FRAMES;
+		entry->lifecount = CACHE_FRAMES_DEFAULT;
 	}
 }
 
@@ -226,7 +227,7 @@ void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **us
 	if (id < 0)
 		return;
 
-	size = pixels + ((sizeof(texcacheblock_t)+15)&~15) + 16;
+	size = pixels + sizeof(texcacheblock_t) + 32;
 	if (c->zonesize < size + pad)
 		return;
 
@@ -266,13 +267,13 @@ retry:
 	entry->pixelcount = c->pixcount[id];
 	entry->lumpnum = lumpnum;
 	entry->userp = userp;
-	entry->lifecount = LIFECOUNT_FRAMES;
+	entry->lifecount = CACHE_FRAMES_DEFAULT;
 
 	lumpdata = R_CheckPixels(lumpnum);
 
 	// align pointers so that the 4 least significant bits match
-	data = (byte*)entry + ((sizeof(texcacheblock_t) + 15) & ~15);
-	data = (void*)(((intptr_t)data + 15) & ~15);
+	data = (byte*)entry + sizeof(texcacheblock_t) + 16;
+	data = (void*)((intptr_t)data & ~15);
 	data = (void *)((intptr_t)data + ((intptr_t)lumpdata & 15));
 
 	D_memcpy(data, lumpdata, pixels);
@@ -312,4 +313,5 @@ void R_ClearTexCache(r_texcache_t* c)
 	if (!c || !c->zone)
 		return;
 	Z_ForEachBlock(c->zone, &R_ForceEvictFromTexCache, c);
+	Z_InitZone(c->zone, c->zonesize);
 }
