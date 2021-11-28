@@ -50,12 +50,14 @@ void P_RemoveMobj (mobj_t *mobj)
 		(mobj->type != MT_INV) &&
 		(mobj->type != MT_INS))
 	{
+		spawnthing_t *st = &spawnthings[mobj->thingid - 1];
 		spot = iquehead&(ITEMQUESIZE-1);
 
-		itemrespawnque[spot].x = mobj->spawnx;
-		itemrespawnque[spot].y = mobj->spawny;
-		itemrespawnque[spot].type = mobj->spawntype;
-		itemrespawnque[spot].angle = mobj->spawnangle;
+		itemrespawnque[spot].x = st->x;
+		itemrespawnque[spot].y = st->y;
+		itemrespawnque[spot].type = st->type;
+		itemrespawnque[spot].angle = st->angle;
+		itemrespawnque[spot].options = mobj->thingid;
 		itemrespawntime[spot] = ticon;
 		iquehead++;
 	}
@@ -97,7 +99,7 @@ void P_RespawnSpecials (void)
 	mapthing_t		*mthing;
 	int				i;
 	int				spot;
-	
+
 	if (netgame != gt_deathmatch)
 		return;
 		
@@ -135,11 +137,8 @@ void P_RespawnSpecials (void)
 		z = ONFLOORZ;
 	mo = P_SpawnMobj (x,y,z, i);
 	mo->angle = ANG45 * (mthing->angle/45);
-	mo->spawnx = mthing->x;
-	mo->spawny = mthing->y;
-	mo->spawntype = mthing->type;
-	mo->spawnangle = mthing->angle;
-	
+	mo->thingid = mthing->options;
+
 /* pull it from the que */
 	iquetail++;
 }
@@ -494,7 +493,7 @@ boolean P_MapThingSpawnsMobj (mapthing_t* mthing)
 ==================
 */
 
-void P_SpawnMapThing (mapthing_t *mthing)
+void P_SpawnMapThing (mapthing_t *mthing, int thingid)
 {
 	int			i;
 	mobj_t		*mobj;
@@ -559,11 +558,7 @@ return;	/*DEBUG */
 	mobj->angle = ANG45 * (mthing->angle/45);
 	if (mthing->options & MTF_AMBUSH)
 		mobj->flags |= MF_AMBUSH;
-
-	mobj->spawnx = mthing->x;
-	mobj->spawny = mthing->y;
-	mobj->spawntype = mthing->type;
-	mobj->spawnangle = mthing->angle;
+	mobj->thingid = thingid;
 }
 
 

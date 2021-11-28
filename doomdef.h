@@ -200,6 +200,13 @@ typedef struct thinker_s
 
 struct player_s;
 
+typedef struct
+{
+	unsigned short	x, y;
+	unsigned short	angle;
+	unsigned short	type;
+} spawnthing_t;
+
 typedef struct mobj_s
 {
 	struct	mobj_s* prev, * next;
@@ -221,6 +228,8 @@ typedef struct mobj_s
 	VINT 			state;
 	VINT			frame;				/* might be ord with FF_FULLBRIGHT */
 
+	unsigned short		thingid;
+
 	unsigned short		type;
 
 /* info for drawing */
@@ -239,10 +248,11 @@ typedef struct mobj_s
 	struct mobj_s	*target;		/* thing being chased/attacked (or NULL) */
 									/* also the originator for missiles */
 	intptr_t		extradata;		/* for latecall functions */
-	unsigned short	spawnx, spawny;
-	unsigned short	spawnangle;
-	unsigned short	spawntype;
-} mobj_t;
+} mobj_t
+#ifdef MARS
+__attribute__((aligned(16)))
+#endif
+;
 
 /* each sector has a degenmobj_t in it's center for sound origin purposes */
 typedef struct
@@ -250,7 +260,11 @@ typedef struct
 	struct	mobj_s	*prev, *next;
 	latecall_t		latecall;
 	fixed_t			x,y,z;
-} degenmobj_t;		
+} degenmobj_t
+#ifdef MARS
+__attribute__((aligned(16)))
+#endif
+;
 
 
 /* */
