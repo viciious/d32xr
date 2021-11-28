@@ -506,17 +506,17 @@ void AM_Drawer (void)
 		x2 >>= xshift;
 		y1 >>= yshift;
 		y2 >>= yshift;
-		outcode = (y1 > 90) << 1;
-		outcode |= (y1 < -90) ;
-		outcode2 = (y2 > 90) << 1;
-		outcode2 |= (y2 < -90) ;
+		outcode = (y1 > 100) << 1;
+		outcode |= (y1 < -100) ;
+		outcode2 = (y2 > 100) << 1;
+		outcode2 |= (y2 < -100) ;
 #ifndef MARS
 		if (outcode & outcode2) continue;
 #endif
-		outcode = (x1 > 80) << 1;
-		outcode |= (x1 < -80) ;
-		outcode2 = (x2 > 80) << 1;
-		outcode2 |= (x2 < -80) ;
+		outcode = (x1 > 160) << 1;
+		outcode |= (x1 < -160) ;
+		outcode2 = (x2 > 160) << 1;
+		outcode2 |= (x2 < -160) ;
 #ifndef MARS
 		if (outcode & outcode2) continue;
 #endif
@@ -553,7 +553,7 @@ void AM_Drawer (void)
 			LD_BACKSECTOR(line)->ceilingheight)
 			color = CRY_BROWN;		
 		
-		DrawLine (color, 80+x1,90-y1,80+x2,90-y2);
+		DrawLine (color, 160+x1,100-y1,160+x2,100-y2);
 		drawn++;
 	}
 	
@@ -608,9 +608,9 @@ void AM_Drawer (void)
 			nx3 >>= xshift;
 			ny3 >>= yshift;
 			
-			DrawLine(color,80+nx1,90-ny1,80+nx2,90-ny2);
-			DrawLine(color,80+nx2,90-ny2,80+nx3,90-ny3);
-			DrawLine(color,80+nx1,90-ny1,80+nx3,90-ny3);
+			DrawLine(color,160+nx1,100-ny1,160+nx2,100-ny2);
+			DrawLine(color,160+nx2,100-ny2,160+nx3,100-ny3);
+			DrawLine(color,160+nx1,100-ny1,160+nx3,100-ny3);
 		}
 	}
 	
@@ -640,9 +640,9 @@ void AM_Drawer (void)
 			nx3 = (x1 + MOBJLENGTH) >> xshift;
 			ny3 = ny2;
 
-			DrawLine(CRY_AQUA,80+nx1,90-ny1,80+nx2,90-ny2);
-			DrawLine(CRY_AQUA,80+nx2,90-ny2,80+nx3,90-ny3);
-			DrawLine(CRY_AQUA,80+nx1,90-ny1,80+nx3,90-ny3);
+			DrawLine(CRY_AQUA,160+nx1,100-ny1,160+nx2,100-ny2);
+			DrawLine(CRY_AQUA,160+nx2,100-ny2,160+nx3,100-ny3);
+			DrawLine(CRY_AQUA,160+nx1,100-ny1,160+nx3,100-ny3);
 		}
 	}
 }
