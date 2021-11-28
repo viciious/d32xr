@@ -286,15 +286,18 @@ void P_LoadThings (int lump)
 		mt->options = LITTLESHORT(mt->options);
 	}
 
-	spawnthings = Z_Malloc(numthings * sizeof(*spawnthings), PU_LEVEL, 0);
-	st = spawnthings;
-	mt = (mapthing_t*)data;
-	for (i = 0; i < numthings; i++, mt++)
+	if (netgame == gt_deathmatch)
 	{
-		st->x = mt->x, st->y = st->y;
-		st->angle = mt->angle;
-		st->type = mt->type;
-		st++;
+		spawnthings = Z_Malloc(numthings * sizeof(*spawnthings), PU_LEVEL, 0);
+		st = spawnthings;
+		mt = (mapthing_t*)data;
+		for (i = 0; i < numthings; i++, mt++)
+		{
+			st->x = mt->x, st->y = st->y;
+			st->angle = mt->angle;
+			st->type = mt->type;
+			st++;
+		}
 	}
 
 	mt = (mapthing_t *)data;

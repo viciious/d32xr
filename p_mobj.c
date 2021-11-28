@@ -44,22 +44,24 @@ void P_RemoveMobj (mobj_t *mobj)
 	int		spot;
 	
 /* add to the respawnque for altdeath mode */
-
-	if ((mobj->flags & MF_SPECIAL) &&
-		!(mobj->flags & MF_DROPPED) &&
-		(mobj->type != MT_INV) &&
-		(mobj->type != MT_INS))
+	if (netgame == gt_deathmatch)
 	{
-		spawnthing_t *st = &spawnthings[mobj->thingid - 1];
-		spot = iquehead&(ITEMQUESIZE-1);
+		if ((mobj->flags & MF_SPECIAL) &&
+			!(mobj->flags & MF_DROPPED) &&
+			(mobj->type != MT_INV) &&
+			(mobj->type != MT_INS))
+		{
+			spawnthing_t* st = &spawnthings[mobj->thingid - 1];
+			spot = iquehead & (ITEMQUESIZE - 1);
 
-		itemrespawnque[spot].x = st->x;
-		itemrespawnque[spot].y = st->y;
-		itemrespawnque[spot].type = st->type;
-		itemrespawnque[spot].angle = st->angle;
-		itemrespawnque[spot].options = mobj->thingid;
-		itemrespawntime[spot] = ticon;
-		iquehead++;
+			itemrespawnque[spot].x = st->x;
+			itemrespawnque[spot].y = st->y;
+			itemrespawnque[spot].type = st->type;
+			itemrespawnque[spot].angle = st->angle;
+			itemrespawnque[spot].options = mobj->thingid;
+			itemrespawntime[spot] = ticon;
+			iquehead++;
+		}
 	}
 
 /* unlink from sector and block lists */
