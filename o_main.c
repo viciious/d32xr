@@ -275,12 +275,14 @@ exit:
 		}
 
 		player->automapflags ^= AF_OPTIONSACTIVE;
-#ifdef JAGUAR
 		if (player->automapflags & AF_OPTIONSACTIVE)
+#ifndef MARS
 			DoubleBufferSetup();
+#else
+			;
+#endif
 		else
 			WriteEEProm ();		/* save new settings */
-#endif
 	}
 	if (!(player->automapflags & AF_OPTIONSACTIVE))
 		return;
