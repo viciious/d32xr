@@ -3,7 +3,7 @@
 #include "doomdef.h"
 #include "st_main.h"
 
-stbar_t	stbar[MAXPLAYERS];
+stbar_t	*stbar;
 static short stbarframe;
 static short   stbar_y;
 static short micronums;
@@ -78,7 +78,10 @@ void ST_ForceDraw(void)
 
 	stbarframe = 0;
 	for (p = 0; p < MAXPLAYERS; p++)
-		stbar[p].forcedraw = true;
+	{
+		if (playeringame[p])
+			stbar[p].forcedraw = true;
+	}
 	ST_Ticker();
 }
 
@@ -90,10 +93,17 @@ void ST_ForceDraw(void)
 void ST_InitEveryLevel(void)
 {
 	int		i, p;
+	int		numplayers;
 
 	stbarframe = 0;
 
-	for (p = 0; p < MAXPLAYERS; p++)
+	numplayers = 0;
+	for (i = 0; i < MAXPLAYERS; i++)
+		numplayers += playeringame[i] ? 1 : 0;
+
+	stbar = Z_Malloc(sizeof(*stbar)* numplayers, PU_LEVEL, 0);
+
+	for (p = 0; p < numplayers; p++)
 	{
 		stbar_t* sb = &stbar[p];
 
@@ -533,7 +543,11 @@ void ST_Ticker(void)
 	int e = splitscreen ? MAXPLAYERS : consoleplayer + 1;
 
 	while (p < e)
-		ST_Ticker_(&stbar[p++]);
+	{
+		if (playeringame[p])
+			ST_Ticker_(&stbar[p]);
+		p++;
+	}
 
 	stbarframe++;
 }
@@ -659,7 +673,9 @@ void ST_Drawer(void)
 		bufferpage = sbartop;		/* draw into status bar overlay */
 #endif
 
-		ST_Drawer_(&stbar[p++]);
+		if (playeringame[p])
+			ST_Drawer_(&stbar[p]);
+		p++;
 	}
 }
 
