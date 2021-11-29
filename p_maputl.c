@@ -52,19 +52,7 @@ int P_PointOnLineSide (fixed_t x, fixed_t y, line_t *line)
 
 	ldx = line->v2->x - line->v1->x;
 	ldy = line->v2->y - line->v1->y;
-	if (!ldx)
-	{
-		if (x <= line->v1->x)
-			return ldy > 0;
-		return ldy < 0;
-	}
-	if (!ldy)
-	{
-		if (y <= line->v1->y)
-			return ldx < 0;
-		return ldx > 0;
-	}
-	
+
 	dx = (x - line->v1->x);
 	dy = (y - line->v1->y);
 	
@@ -91,22 +79,10 @@ int P_PointOnDivlineSide (fixed_t x, fixed_t y, divline_t *line)
 	fixed_t	dx,dy;
 	fixed_t	left, right;
 	
-	if (!line->dx)
-	{
-		if (x <= line->x)
-			return line->dy > 0;
-		return line->dy < 0;
-	}
-	if (!line->dy)
-	{
-		if (y <= line->y)
-			return line->dx < 0;
-		return line->dx > 0;
-	}
-	
 	dx = (x - line->x);
 	dy = (y - line->y);
 	
+#ifndef MARS
 /* try to quickly decide by looking at sign bits */
 	if ( (line->dy ^ line->dx ^ dx ^ dy)&0x80000000 )
 	{
@@ -114,7 +90,8 @@ int P_PointOnDivlineSide (fixed_t x, fixed_t y, divline_t *line)
 			return 1;	/* (left is negative) */
 		return 0;
 	}
-	
+#endif
+
 	FixedMul2(left, line->dy>>8, dx>>8);
 	FixedMul2(right, dy>>8, line->dx>>8);
 	

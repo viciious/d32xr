@@ -24,7 +24,6 @@ static seg_t       *curline;
 static angle_t      lineangle1;
 static sector_t    *frontsector;
 
-angle_t R_PointToAngle(fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static void R_AddLine(seg_t* line) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static void R_ClipWallSegment(fixed_t first, fixed_t last, boolean solid) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static boolean R_CheckBBox(fixed_t bspcoord[4]) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
@@ -32,64 +31,6 @@ static void R_Subsector(int num) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static void R_StoreWallRange(int start, int stop) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 static void R_RenderBSPNode(int bspnum) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
 void R_BSP(void) ATTR_OPTIMIZE_SIZE ATTR_OPTIMIZE_SIZE;
-
-//
-// To get a global angle from Cartesian coordinates, the coordinates are
-// flipped until they are in the first octant of the coordinate system,
-// then the y (<= x) is scaled and divided by x to get a tangent (slope)
-// value which is looked up in the tantoangle table.
-//
-angle_t R_PointToAngle(fixed_t x, fixed_t y)
-{
-   x -= vd.viewx;
-   y -= vd.viewy;
-
-   if(!x && !y)
-      return 0;
-
-   if(x >= 0)
-   {
-      if(y >= 0)
-      {
-         if(x > y)
-            return tantoangle[SlopeDiv(y, x)]; // octant 0
-         else
-            return ANG90 - 1 - tantoangle[SlopeDiv(x, y)]; // octant 1
-      }
-      else
-      {
-         y = -y;
-
-         if(x > y)
-            return -tantoangle[SlopeDiv(y, x)]; // octant 7
-         else
-            return ANG270 + tantoangle[SlopeDiv(x, y)]; // octant 6
-      }
-   }
-   else
-   {
-      x = -x;
-
-      if(y >= 0)
-      {
-         if(x > y)
-            return ANG180 - 1 - tantoangle[SlopeDiv(y, x)]; // octant 3
-         else
-            return ANG90 + tantoangle[SlopeDiv(x, y)]; // octant 2
-      }
-      else
-      {
-         y = -y;
-
-         if(x > y)
-            return ANG180 + tantoangle[SlopeDiv(y, x)]; // octant 4
-         else
-            return ANG270 - 1 - tantoangle[SlopeDiv(x, y)]; // octant 5
-      }
-   }
-
-   return 0;
-}
 
 static int checkcoord[12][4] =
 {

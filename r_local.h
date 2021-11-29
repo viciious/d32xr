@@ -228,8 +228,9 @@ extern	side_t		*sides;
 extern VINT viewportNum;
 extern const VINT numViewports;
 
-int     R_PointOnSide(int x, int y, node_t *node) ATTR_DATA_CACHE_ALIGN;
+int     R_PointOnSide(int x, int y, node_t* node) ATTR_DATA_CACHE_ALIGN;
 int     SlopeDiv(unsigned int num, unsigned int den) ATTR_DATA_CACHE_ALIGN;
+angle_t R_PointToAngle(fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
 void	R_InitData (void);
 void	R_SetViewportSize(int num);
 void	R_SetDetailMode(int mode);
