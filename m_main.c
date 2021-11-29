@@ -367,7 +367,7 @@ int M_Ticker (void)
 			startmap = mapnumbers[playermap - 1]; /*set map number */
 			startskill = playerskill;	/* set skill level */
 			starttype = currentplaymode;	/* set play type */
-			splitscreen = (starttype != gt_single);
+			//splitscreen = (starttype != gt_single);
 			return ga_startnew;		/* done with menu */
 		}
 

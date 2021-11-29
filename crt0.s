@@ -79,7 +79,7 @@
         .space  72          /* reserved */
         call    0x880840    /* EX_Spurious */
         call    0x880840    /* EX_Level1 */
-        call    0x880840    /* EX_Level2 */
+        jump    0x880900    /* EX_Level2 EXT */
         call    0x880840    /* EX_Level3 */
         jump    0x880880    /* EX_Level4 HBlank */
         call    0x880840    /* EX_Level5 */

@@ -734,6 +734,7 @@ int  RunDemo (char *demoname)
 void RunMenu (void)
 {
 #ifdef MARS
+reselect:
 	M_Start();
 
 	while (1) {
@@ -744,6 +745,13 @@ void RunMenu (void)
 	}
 
 	M_Stop();
+
+	if (starttype != gt_single)
+	{
+		I_NetSetup();
+		if (starttype == gt_single)
+			goto reselect;		/* aborted net startup */
+	}
 #else
 reselect:
 	MiniLoop(M_Start, M_Stop, M_Ticker, M_Drawer);

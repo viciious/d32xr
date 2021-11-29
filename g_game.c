@@ -500,6 +500,8 @@ void G_RunGame (void)
 
 		if (gameaction == ga_startnew)
 		{
+			if (starttype != gt_single)
+				I_NetSetup();
 			if (startsave != -1)
 				G_LoadGame(startsave);
 			else

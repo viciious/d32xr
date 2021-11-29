@@ -103,6 +103,13 @@ uint16_t *Mars_FrameBufferLines(void);
 void Mars_ReadSRAM(uint8_t * buffer, int offset, int len) MARS_ATTR_DATA_CACHE_ALIGN;
 void Mars_WriteSRAM(const uint8_t * buffer, int offset, int len) MARS_ATTR_DATA_CACHE_ALIGN;
 
+void Mars_WaitTicks(int ticks);
+
+// MD network functions
+int Mars_GetNetByte(int wait);
+int Mars_PutNetByte(int val);
+void Mars_SetupNet(int type);
+void Mars_CleanupNet(void);
 
 // MD video debug functions
 void Mars_SetMDCrsr(int x, int y);

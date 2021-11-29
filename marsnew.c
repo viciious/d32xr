@@ -845,14 +845,168 @@ void UpdateBuffer (void) {
 	Mars_FlipFrameBuffers(true);
 }
 
-unsigned I_NetTransfer (unsigned ctrl)
+
+/*
+ *  Network support functions
+ */
+
+static void Player0Setup (void)
 {
-	return 0;
+	int		val, idbyte, buttons;
+
+	consoleplayer = 0;	/* we are player 0 */
+	idbyte = startmap + 24*startskill + 128*(starttype == gt_deathmatch);
+	
+	do
+	{
+		/* wait until rec 0x22 byte from other side or player aborts */
+		buttons = I_ReadControls();
+		if (buttons & BT_START)
+		{
+			starttype = gt_single;
+			return;	/* abort */
+		}
+
+		val = Mars_GetNetByte(1);
+		if (val == 0x22)
+			return;	/* ready to go! */
+
+		Mars_PutNetByte(idbyte);	/* ignore timeout */
+	} while (1);
+}
+
+static void Player1Setup (void)
+{	
+	int		val, oldval, buttons;
+
+	consoleplayer = 1;	/* we are player 1 */
+	oldval = 999;
+
+	do
+	{
+		/* start game after two identical id bytes unless user aborts  */
+		buttons = I_ReadControls();
+		if (buttons & BT_START)
+		{
+			starttype = gt_single;
+			return;	/* abort */
+		}
+
+		val = Mars_GetNetByte(1);
+		if (val < 0)
+			continue;
+		if (val == oldval)
+			break;
+		oldval = val;
+	} while (1);
+
+	starttype = (val & 128) ? gt_deathmatch : gt_coop;
+	startskill = (val & 127) / 24;
+	startmap = (val & 127) % 24;
+
+	Mars_PutNetByte(0x22);	/* send an acknowledge byte */
+	Mars_PutNetByte(0x22);	/* send another acknowledge byte */
 }
 
 void I_NetSetup (void)
 {
+	int		listen1, listen2;
+
+	while (!I_RefreshCompleted());
+
+	Mars_SetupNet(1); /* 0 = no net, 1 = system link cable, -1 = serial cable */
+
+	I_Print8(64,1,"Attempting to connect..."); 
+	I_Print8(80,3,"Press start to abort");
+	I_Update();
+
+	while (Mars_GetNetByte(0) >= 0); /* flush serial buffer */
+	Mars_WaitTicks(5);
+
+	listen1 = Mars_GetNetByte(0);
+	listen2 = Mars_GetNetByte(0);
+	if (listen1 < 0 && listen2 < 0)
+		Player0Setup();	/* bytes not waiting - we are player 0 */
+	else
+		Player1Setup();	/* bytes waiting, we are player 1 */
+
+	Mars_WaitTicks(5);
+
+	while (Mars_GetNetByte(0) >= 0); /* flush serial buffer */
 }
+
+#define PACKET_SIZE 4
+void G_PlayerReborn (int player);
+
+unsigned I_NetTransfer (unsigned buttons)
+{
+	int		i, val;
+	byte	inbytes[PACKET_SIZE];
+	byte	outbytes[PACKET_SIZE];
+	byte	consistancy;
+
+	consistancy = players[0].mo->x ^ players[0].mo->y ^ players[0].mo->z ^ players[1].mo->x ^ players[1].mo->y ^ players[1].mo->z;
+	consistancy = (consistancy>>8) ^ consistancy ^ (consistancy>>16);
+
+	outbytes[0] = buttons>>8;
+	outbytes[1] = buttons;
+	outbytes[2] = consistancy;
+	outbytes[3] = vblsinframe[consoleplayer];
+
+	if (consoleplayer)
+	{
+		/* player 1 waits before sending */
+		for (i=0; i<=PACKET_SIZE-1; i++)
+		{
+			val = Mars_GetNetByte(120);
+			if (val < 0)
+				goto reconnect;
+			inbytes[i] = val;
+			Mars_PutNetByte(outbytes[i]);
+		}
+		vblsinframe[consoleplayer] = inbytes[3];	/* take gamevbls from other player */
+	}
+	else
+	{
+		/* player 0 sends first */
+		for (i=0; i<=PACKET_SIZE-1; i++)
+		{
+			Mars_PutNetByte(outbytes[i]);
+			val = Mars_GetNetByte(120);
+			if (val < 0)
+				goto reconnect;
+			inbytes[i] = val;
+		}
+	}
+	
+	if (inbytes[2] != outbytes[2])
+	{
+		/* consistancy error */
+		I_Print8(108,23,"Network Error"); 
+		I_Update();
+		while (Mars_GetNetByte(0) >= 0); /* flush serial buffer */
+		Mars_WaitTicks(200);
+		goto reconnect;
+	}
+
+	val = (inbytes[0]<<8) + inbytes[1];
+	return val;
+	
+reconnect:
+	/*
+	 *  Player 1 must delay so that Player 0 finds no waiting data during
+	 *  setup and stays Player 0.
+	 */
+	if (consoleplayer)
+		Mars_WaitTicks(15);
+	I_NetSetup();
+	G_PlayerReborn(0);
+	G_PlayerReborn(1);
+	gameaction = ga_warped;
+	ticbuttons[0] = ticbuttons[1] = oldticbuttons[0] = oldticbuttons[1] = 0;
+	return 0;
+}
+
 
 void I_DrawSbar(void)
 {
