@@ -258,8 +258,7 @@ void Mars_Init(void)
 	if (mars_cd_ok)
 	{
 		/* give the CD three seconds to init */
-		unsigned wait = mars_vblank_count + 180;
-		while (mars_vblank_count <= wait) ;
+		Mars_WaitTicks(180);
 	}
 }
 
@@ -357,9 +356,89 @@ void Mars_StopTrack(void)
 	while (MARS_SYS_COMM0);
 }
 
+void Mars_WaitTicks(int ticks)
+{
+	unsigned ticend = mars_vblank_count + ticks;
+	while (mars_vblank_count < ticend);
+}
 
-// MD video debug functions
+/*
+ *  MD network functions
+ */
 
+static inline unsigned short GetNetByte(void)
+{
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM0 = 0x1200;	/* get a byte from the network */
+	while (MARS_SYS_COMM0);
+	return MARS_SYS_COMM2;		/* status:byte */
+}
+
+/*
+ *  Get a byte from the network. The number of ticks to wait for a byte
+ *  is passed in. A wait time of 0 means return immediately. The return
+ *  value is -2 for a timeout/no bytes are waiting, -1 if a network error
+ *  occurred, and 0 to 255 for a received byte.
+ */
+int Mars_GetNetByte(int wait)
+{
+	unsigned short ret;
+	unsigned ticend;
+
+	if (!wait)
+	{
+		/* no wait - return a value immediately */
+		ret = GetNetByte();
+		return ((ret & 0xFF00) == 0xFF00) ? -2 : (ret & 0xFF00) ? -1 : (int)(ret & 0x00FF);
+	}
+
+	/* quick check for byte in rec buffer */
+	ret = GetNetByte();
+	if ((ret & 0xFF00) != 0xFF00)
+		return (ret & 0xFF00) ? -1 : (int)(ret & 0x00FF);
+
+	/* nothing waiting - do timeout loop */
+	ticend = mars_vblank_count + wait;
+	while (mars_vblank_count < ticend)
+	{
+		ret = GetNetByte();
+		if ((ret & 0xFF00) == 0xFF00)
+			continue;	/* no bytes waiting */
+		/* GetNetByte returned a byte or a net error */
+		return (ret & 0xFF00) ? -1 : (int)(ret & 0x00FF);
+	}
+	return -2;	/* timeout */
+}
+
+/*
+ *  Put a byte to the network. Returns -1 if timeout.
+ */
+int Mars_PutNetByte(int val)
+{
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM0 = 0x1300 | (val & 0x00FF);	/* send a byte to the network */
+	while (MARS_SYS_COMM0);
+	return (MARS_SYS_COMM2 == 0xFFFF) ? -1 : 0;
+}
+
+void Mars_SetupNet(int type)
+{
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM0 = 0x1400 | (type & 255);		/* init joyport 2 for networking */
+	while (MARS_SYS_COMM0);
+}
+
+void Mars_CleanupNet(void)
+{
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM0 = 0x1500;		/* cleanup networking */
+	while (MARS_SYS_COMM0);
+}
+
+
+/*
+ *  MD video debug functions
+ */
 void Mars_SetMDCrsr(int x, int y)
 {
 	while (MARS_SYS_COMM0);
@@ -418,7 +497,6 @@ void Mars_MDPutString(char *str)
 		Mars_MDPutChar(*str++);
 }
 
-
 void Mars_DebugStart(void)
 {
 	while (MARS_SYS_COMM0);
@@ -442,7 +520,7 @@ void Mars_SetBankPage(int bank, int page)
 {
 	while (MARS_SYS_COMM0);
 	MARS_SYS_COMM2 = page;
-	MARS_SYS_COMM0 = 0x1200 | bank;
+	MARS_SYS_COMM0 = 0x1600 | bank;
 	while (MARS_SYS_COMM0);
 }
 
