@@ -326,7 +326,7 @@ void R_SegCommands(void)
         }
         lseg.actionbits = segl->actionbits;
 
-        if (segl->actionbits & AC_TOPTEXTURE)
+        if (lseg.actionbits & AC_TOPTEXTURE)
         {
             texture_t* tex = &textures[segl->t_texturenum];
             toptex->topheight = segl->t_topheight;
@@ -339,7 +339,7 @@ void R_SegCommands(void)
             toptex->drawcol = (tex->height & (tex->height - 1)) ? drawcolnpo2 : drawcol;
         }
 
-        if (segl->actionbits & AC_BOTTOMTEXTURE)
+        if (lseg.actionbits & AC_BOTTOMTEXTURE)
         {
             texture_t* tex = &textures[segl->b_texturenum];
             bottomtex->topheight = segl->b_topheight;
@@ -362,13 +362,14 @@ void R_SegCommands(void)
             lseg.lightmin = HWLIGHT(lseg.lightmax);
             lseg.lightmax = lseg.lightmin;
         }
+
         R_DrawSeg(&lseg, clipbounds);
 
-        if (segl->actionbits & AC_TOPTEXTURE)
+        if (lseg.actionbits & AC_TOPTEXTURE)
         {
             segl->t_pixcount = toptex->pixelcount;
         }
-        if (segl->actionbits & AC_BOTTOMTEXTURE)
+        if (lseg.actionbits & AC_BOTTOMTEXTURE)
         {
             segl->b_pixcount = bottomtex->pixelcount;
         }
