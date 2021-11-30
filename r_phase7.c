@@ -59,7 +59,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
 
     remaining = x2 - x + 1;
 
-    if (!remaining)
+    if (remaining <= 0)
         return; // nothing to draw (shouldn't happen)
 
     FixedMul2(distance, lpl->height, yslope[y]);
@@ -155,39 +155,33 @@ static void R_PlaneLoop(localplane_t *lpl)
       x2 = pl_x - 1;
 
       // top diffs
-      if(t1 != pl_oldtop)
+      while (t1 < t2 && t1 <= b1)
       {
-         while(t1 < t2 && t1 <= b1)
-         {
-            x = spanstart[t1];
-            R_MapPlane(lpl, t1, x, x2);
-            ++t1;
-         }
+          x = spanstart[t1];
+          R_MapPlane(lpl, t1, x, x2);
+          ++t1;
+      }
 
-         while(t2 < t1 && t2 <= b2)
-         {
-            // top dif spanstarts
-            spanstart[t2] = pl_x;
-            ++t2;
-         }
+      while (t2 < t1 && t2 <= b2)
+      {
+          // top dif spanstarts
+          spanstart[t2] = pl_x;
+          ++t2;
       }
 
       // bottom diffs
-      if(b1 != b2)
+      while (b1 > b2 && b1 >= t1)
       {
-         while(b1 > b2 && b1 >= t1)
-         {
-            x = spanstart[b1];
-            R_MapPlane(lpl, b1, x, x2);
-            --b1;
-         }
+          x = spanstart[b1];
+          R_MapPlane(lpl, b1, x, x2);
+          --b1;
+      }
 
-         while(b2 > b1 && b2 >= t2)
-         {
-            // bottom dif spanstarts
-            spanstart[b2] = pl_x;
-            --b2;
-         }
+      while (b2 > b1 && b2 >= t2)
+      {
+          // bottom dif spanstarts
+          spanstart[b2] = pl_x;
+          --b2;
       }
 
       ++pl_x;
