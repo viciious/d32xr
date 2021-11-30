@@ -301,25 +301,34 @@ static void R_DrawPlanes2(void)
 #ifdef MARS
 void Mars_R_PrepPlanes(void)
 {
+    R_LockPln();
+
     Mars_ClearCacheLines((intptr_t)&lastvisplane & ~15, 1);
     Mars_ClearCacheLines((intptr_t)&visplanes & ~15, 1);
 
-    visplane_t* pl;
-    for (pl = visplanes + 1; pl < lastvisplane; pl++)
+    if (pl_next == 0 || pl_next == MAXVISSSEC)
     {
-        pl->pixelcount = 0;
-        // see if there is any open space
-        if (pl->minx > pl->maxx)
-            continue; // nothing to map
-        pl->open[pl->maxx + 1] = OPENMARK;
-        pl->open[pl->minx - 1] = OPENMARK;
+        visplane_t* pl;
+        for (pl = visplanes + 1; pl < lastvisplane; pl++)
+        {
+            pl->pixelcount = 0;
+            // see if there is any open space
+            if (pl->minx > pl->maxx)
+                continue; // nothing to map
+            pl->open[pl->maxx + 1] = OPENMARK;
+            pl->open[pl->minx - 1] = OPENMARK;
+        }
+
+        pl_next = 1;
     }
 
-    pl_next = 1;
+    R_UnlockPln();
 }
 
 void Mars_Sec_R_DrawPlanes(void)
 {
+    Mars_R_PrepPlanes();
+
     R_DrawPlanes2();
 }
 #endif
