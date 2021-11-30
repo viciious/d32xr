@@ -745,11 +745,12 @@ void R_InitClipBounds(unsigned *clipbounds)
 visplane_t* R_FindPlane(visplane_t* ignore, int hash, fixed_t height, 
 	int flatnum, int lightlevel, int start, int stop)
 {
-	visplane_t *check, *tail;
+	visplane_t *check, *tail, *next;
 
 	tail = visplanes_hash[hash];
-	for (check = tail; check; check = check->next)
+	for (check = tail; check; check = next)
 	{
+		next = check->next ? &visplanes[check->next - 1] : NULL;
 		if (check == ignore)
 			continue;
 
@@ -784,7 +785,7 @@ visplane_t* R_FindPlane(visplane_t* ignore, int hash, fixed_t height,
 
 	R_MarkOpenPlane(check);
 
-	check->next = tail;
+	check->next = tail ? tail - visplanes + 1 : 0;
 	visplanes_hash[hash] = check;
 
 	return check;

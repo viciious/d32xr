@@ -510,16 +510,16 @@ extern	subsector_t		**vissubsectors/*[MAXVISSSEC]*/, ** lastvissubsector;
 
 typedef struct visplane_s
 {
+	fixed_t		height;
 	VINT		minx, maxx;
 	VINT 		flatnum;
-	fixed_t		height;
 	VINT		lightlevel;
 	VINT		pixelcount;
+	VINT		next;
 	unsigned short		*open/*[SCREENWIDTH+2]*/;		/* top<<8 | bottom */ /* leave pads for [minx-1]/[maxx+1] */
-	struct visplane_s *next;
 } visplane_t;
 
-#define	MAXVISPLANES	64
+#define	MAXVISPLANES	48
 extern	visplane_t		*visplanes/*[MAXVISPLANES]*/, *lastvisplane;
 
 int R_PlaneHash(fixed_t height, unsigned flatnum, unsigned lightlevel)
