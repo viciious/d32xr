@@ -757,16 +757,13 @@ visplane_t* R_FindPlane(visplane_t* ignore, int hash, fixed_t height,
 			flatnum == check->flatnum &&
 			lightlevel == check->lightlevel)
 		{
-			int minx = start < check->minx ? start : check->minx;
-			int maxx = stop > check->maxx ? stop : check->maxx;
-			if (maxx - minx > centerX)
-				continue;
-
 			if (check->open[start] == OPENMARK)
 			{
 				// found a plane, so adjust bounds and return it
-				check->minx = minx; // mark the new edge
-				check->maxx = maxx;  // mark the new edge
+				if (start < check->minx)
+					check->minx = start; // mark the new edge
+				if (stop > check->maxx)
+					check->maxx = stop;  // mark the new edge
 				return check; // use the same one as before
 			}
 		}
