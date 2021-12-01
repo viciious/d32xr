@@ -421,6 +421,8 @@ static void S_Update(int16_t* buffer)
 	for (i = 0; i < MAXPLAYERS; i++)
 	{
 		player_t* player = &players[i];
+		if (!playeringame[i])
+			continue;
 		Mars_ClearCacheLines((intptr_t)player, (sizeof(player_t) + 15) / 16);
 		if (player->mo)
 			Mars_ClearCacheLines((intptr_t)player->mo, (sizeof(mobj_t) + 15) / 16);
