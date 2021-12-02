@@ -414,18 +414,20 @@ static void S_Update(int16_t* buffer)
 {
 	int i;
 	int16_t* b;
-	const size_t 
-		xoff = offsetof(mobj_t, x) & ~15, 
-		yoff = offsetof(mobj_t, y) & ~15;
+	mobj_t* mo;
 
 	for (i = 0; i < MAXPLAYERS; i++)
 	{
 		player_t* player = &players[i];
 		if (!playeringame[i])
 			continue;
-		Mars_ClearCacheLines((intptr_t)player, (sizeof(player_t) + 15) / 16);
-		if (player->mo)
-			Mars_ClearCacheLines((intptr_t)player->mo, (sizeof(mobj_t) + 15) / 16);
+
+		Mars_ClearCacheLines((intptr_t)&player->mo, 1);
+
+		mo = player->mo;
+		Mars_ClearCacheLines((intptr_t)&mo->x & ~15, 1);
+		Mars_ClearCacheLines((intptr_t)&mo->y & ~15, 1);
+		Mars_ClearCacheLines((intptr_t)&mo->angle & ~15, 1);
 	}
 
 	{
@@ -448,12 +450,13 @@ static void S_Update(int16_t* buffer)
 		if (!ch->data)
 			continue;
 
-		if (ch->origin)
+		mo = ch->origin;
+		if (mo)
 		{
 			int vol, sep;
 
-			Mars_ClearCacheLines((intptr_t)ch->origin + xoff, 1);
-			Mars_ClearCacheLines((intptr_t)ch->origin + yoff, 1);
+			Mars_ClearCacheLines((intptr_t)&mo->x & ~15, 1);
+			Mars_ClearCacheLines((intptr_t)&mo->y & ~15, 1);
 
 			/* */
 			/* spatialize */
