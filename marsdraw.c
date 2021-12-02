@@ -606,6 +606,7 @@ void I_DrawSpanPotato(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfra
 void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh)
 {
 	lzss_state_t gfx_lzss;
+	uint8_t lzss_buf[LZSS_BUF_SIZE];
 	byte* lump;
 	jagobj_t* jo;
 	int width, height;
@@ -623,7 +624,7 @@ void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh)
 		return;
 	}
 
-	lzss_setup(&gfx_lzss, lump);
+	lzss_setup(&gfx_lzss, lump, lzss_buf, LZSS_BUF_SIZE);
 	if (lzss_read(&gfx_lzss, 16) != 16)
 		return;
 

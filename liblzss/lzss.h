@@ -6,10 +6,6 @@
  * The buffer cannot be smaller than 0x1000 since that is the look-back size
  * for lzss.
  */
-#ifndef LZSS_BUF_SIZE
-#define LZSS_BUF_SIZE   0x1000
-#endif
-#define LZSS_BUF_MASK   (LZSS_BUF_SIZE-1)
 
 typedef struct
 {
@@ -33,10 +29,12 @@ typedef struct
     uint8_t *base;
 
     // the output ring buffer
-    __attribute__((aligned(4))) uint8_t buf[LZSS_BUF_SIZE];
+    uint32_t buf_size;
+    uint32_t buf_mask;
+    uint8_t *buf;
 } lzss_state_t;
 
-void lzss_setup(lzss_state_t* lzss, uint8_t* base);
+void lzss_setup(lzss_state_t* lzss, uint8_t* base, uint8_t *buf, uint32_t buf_size);
 int lzss_read(lzss_state_t* lzss, uint16_t chunk);
 
 #endif // _LZSS_H_

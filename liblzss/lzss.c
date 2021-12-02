@@ -17,10 +17,13 @@ static void lzss_reset(lzss_state_t* lzss)
 	lzss->getidbyte = 0;
 }
 
-void lzss_setup(lzss_state_t* lzss, uint8_t* base)
+void lzss_setup(lzss_state_t* lzss, uint8_t* base, uint8_t* buf, uint32_t buf_size)
 {
 	lzss->outpos = 0;
 	lzss->base = base;
+	lzss->buf = buf;
+	lzss->buf_size = buf_size;
+	lzss->buf_mask = buf_size - 1;
 	lzss_reset(lzss);
 }
 
@@ -35,6 +38,8 @@ int lzss_read(lzss_state_t* lzss, uint16_t chunk)
 	uint8_t idbyte = lzss->idbyte;
 	uint8_t getidbyte = lzss->getidbyte;
 	uint16_t left = chunk;
+	uint32_t buf_size = lzss->buf_size;
+	uint32_t buf_mask = lzss->buf_mask;
 
 	if (!lzss->input)
 		return 0;
@@ -64,15 +69,18 @@ int lzss_read(lzss_state_t* lzss, uint16_t chunk)
 			uint32_t outpos_masked, source_masked;
 
 			/* decompress */
-#if LZSS_BUF_SIZE <= 0x1000
-			pos = *input++ << LENSHIFT;
-			pos = pos | (*input >> LENSHIFT);
-			len = (*input++ & 0xf) + 1;
-#else
-			pos = *input++ << 8;
-			pos = pos | (*input++);
-			len = (*input++ & 0xff) + 1;
-#endif
+			if (buf_size <= 0x1000)
+			{
+				pos = *input++ << LENSHIFT;
+				pos = pos | (*input >> LENSHIFT);
+				len = (*input++ & 0xf) + 1;
+			}
+			else
+			{
+				pos = *input++ << 8;
+				pos = pos | (*input++);
+				len = (*input++ & 0xff) + 1;
+			}
 			source = outpos - pos - 1;
 
 			if (len == 1) {
@@ -85,10 +93,10 @@ int lzss_read(lzss_state_t* lzss, uint16_t chunk)
 			limit = len - i;
 			if (limit > left) limit = left;
 
-			outpos_masked = outpos & LZSS_BUF_MASK;
-			source_masked = source & LZSS_BUF_MASK;
-			if ((outpos_masked < ((outpos + limit) & LZSS_BUF_MASK)) &&
-				(source_masked < ((source + limit) & LZSS_BUF_MASK)))
+			outpos_masked = outpos & buf_mask;
+			source_masked = source & buf_mask;
+			if ((outpos_masked < ((outpos + limit) & buf_mask)) &&
+				(source_masked < ((source + limit) & buf_mask)))
 			{
 				for (j = 0; j < limit; j++)
 					output[outpos_masked++] = output[source_masked++];
@@ -98,7 +106,7 @@ int lzss_read(lzss_state_t* lzss, uint16_t chunk)
 			else
 			{
 				for (j = 0; j < limit; j++) {
-					output[outpos & LZSS_BUF_MASK] = output[source & LZSS_BUF_MASK];
+					output[outpos & buf_mask] = output[source & buf_mask];
 					outpos++;
 					source++;
 				}
@@ -113,7 +121,7 @@ int lzss_read(lzss_state_t* lzss, uint16_t chunk)
 			}
 		}
 		else {
-			output[outpos & LZSS_BUF_MASK] = *input++;
+			output[outpos & buf_mask] = *input++;
 			outpos++;
 			left--;
 			idbyte = idbyte >> 1;
