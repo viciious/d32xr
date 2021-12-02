@@ -139,3 +139,66 @@ int lzss_read(lzss_state_t* lzss, uint16_t chunk)
 
 	return chunk - left;
 }
+
+int lzss_read_all(lzss_state_t* lzss)
+{
+	uint16_t len;
+	uint8_t getidbyte = 0;
+	uint32_t source = 0;
+	uint8_t* input = lzss->input;
+	uint8_t* output = lzss->buf;
+	uint32_t outpos = 0;
+	uint32_t buf_size = lzss->buf_size;
+
+	if (!lzss->input)
+		return 0;
+
+	len = 0;
+	getidbyte = 0;
+	while (1)
+	{
+		uint8_t idbyte;
+
+		/* get a new idbyte if necessary */
+		if (!getidbyte) idbyte = *input++;
+
+		if (idbyte & 1)
+		{
+			uint16_t j;
+			uint16_t pos;
+
+			/* decompress */
+			if (buf_size <= 0x1000)
+			{
+				pos = *input++ << LENSHIFT;
+				pos = pos | (*input >> LENSHIFT);
+				len = (*input++ & 0xf) + 1;
+			}
+			else
+			{
+				pos = *input++ << 8;
+				pos = pos | (*input++);
+				len = (*input++ & 0xff) + 1;
+			}
+			source = outpos - pos - 1;
+
+			if (len == 1) {
+				/* end of stream */
+				return output - lzss->buf;
+			}
+
+			for (j = 0; j < len; j++)
+				output[outpos++] = output[source++];
+
+			idbyte = idbyte >> 1;
+			getidbyte = (getidbyte + 1) & 7;
+		}
+		else {
+			output[outpos++] = *input++;
+			idbyte = idbyte >> 1;
+			getidbyte = (getidbyte + 1) & 7;
+		}
+	}
+
+	return output - lzss->buf;
+}
