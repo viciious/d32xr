@@ -1,6 +1,8 @@
 /* W_wad.c */
 
 #include "doomdef.h"
+#include "lzss.h"
+
 /* include "r_local.h" */
 
 
@@ -42,7 +44,7 @@ void strupr (char *s)
 }
 
 
-
+#ifdef JAGUAR
 #define WINDOW_SIZE	4096
 #define LOOKAHEAD_SIZE	16
 
@@ -54,7 +56,6 @@ extern int decomp_start;
 
 void decode(unsigned char *input, unsigned char *output)
 {
-#ifdef JAGUAR
 	decomp_input = input;
 	decomp_output = output;
 	
@@ -62,38 +63,13 @@ void decode(unsigned char *input, unsigned char *output)
 	gpucodestart = (int)&decomp_start;
 	while (!I_RefreshCompleted () )
 	;
+}
 #else
-  int getidbyte = 0;
-  int len;
-  int pos;
-  int i;
-  unsigned char *source;
-  int idbyte = 0;
-
-  while (1)
-  {
-
-    /* get a new idbyte if necessary */
-    if (!getidbyte) idbyte = *input++;
-    getidbyte = (getidbyte + 1) & 7;
-
-    if (idbyte&1)
-    {
-      /* decompress */
-      pos = *input++ << LENSHIFT;
-      pos = pos | (*input >> LENSHIFT);
-      source = output - pos - 1;
-      len = (*input++ & 0xf)+1;
-      if (len==1) break;
-      for (i=0 ; i<len ; i++)
-        *output++ = *source++;
-    } else {
-      *output++ = *input++;
-    }
-
-    idbyte = idbyte >> 1;
-
-  }
+void decode(unsigned char* input, unsigned char* output)
+{
+	lzss_state_t lzss;
+	lzss_setup(&lzss, input, output, LZSS_BUF_SIZE);
+	lzss_read_all(&lzss);
 #endif
 }
 
