@@ -119,6 +119,7 @@ static void R_PrepPSprite(pspdef_t *psp)
    spriteframe_t *sprframe;
    int            lump;
    vissprite_t   *vis;
+   int            center;
    const state_t* state = &states[psp->state];
 
    sprdef = &sprites[state->sprite];
@@ -133,7 +134,12 @@ static void R_PrepPSprite(pspdef_t *psp)
    vis->x1 = psp->sx / FRACUNIT;
    vis->texturemid = psp->sy;
 
-   vis->x1 += ((!lowResMode ? (viewportWidth - 320) / 2 : (viewportWidth - 160)) / 2);
+   center = centerX;
+   if (!lowResMode)
+       center /= 2;
+   center -= 80;
+
+   vis->x1 += center;
    vis->texturemid = (vis->texturemid / FRACUNIT + weaponYpos) * FRACUNIT;
 
    if(state->frame & FF_FULLBRIGHT)
