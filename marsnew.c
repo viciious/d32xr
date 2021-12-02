@@ -285,10 +285,9 @@ void Mars_Secondary(void)
 		case 4:
 			Mars_Sec_R_WallPrep();
 			Mars_Sec_R_SegCommands();
-			Mars_Sec_R_DrawPlanes();
 			break;
 		case 5:
-			//Mars_Sec_R_DrawPlanes();
+			Mars_Sec_R_DrawPlanes();
 			break;
 		case 6:
 			Mars_Sec_R_DrawSprites();
