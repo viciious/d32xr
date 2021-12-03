@@ -795,8 +795,8 @@ void DrawJagobj2(jagobj_t* jo, int x, int y,
 
 	if (x + width > 320)
 		width = 320 - x;
-	if (y + height > mars_framebuffer_height-1)
-		height = mars_framebuffer_height-1 - y;
+	if (y + height > mars_framebuffer_height)
+		height = mars_framebuffer_height - y;
 
 	if (width < 1 || height < 1)
 		return;
@@ -858,4 +858,35 @@ void DrawJagobj2(jagobj_t* jo, int x, int y,
 void DrawJagobj(jagobj_t* jo, int x, int y)
 {
 	DrawJagobj2(jo, x, y, 0, 0, 0, 0, I_OverwriteBuffer());
+}
+
+void DrawFillRect(int x, int y, int w, int h, int c)
+{
+	int i;
+
+	if (x + w > 320)
+		w = 320 - x;
+	if (y + h > mars_framebuffer_height)
+		h = mars_framebuffer_height - y;
+
+	c = (c << 8) | c;
+	int hw = w >> 1;
+
+	pixel_t* dest = I_FrameBuffer() + y * 160 + (x>>1);
+	for (i = 0; i < h; i++)
+	{
+		int n = (hw + 3) >> 2;
+		pixel_t* dest2 = dest;
+
+		switch (hw & 3)
+		{
+		case 0: do { *dest2++ = c;
+		case 3:      *dest2++ = c;
+		case 2:      *dest2++ = c;
+		case 1:      *dest2++ = c;
+		} while (--n > 0);
+		}
+
+		dest += 160;
+	}
 }

@@ -38,6 +38,7 @@ typedef struct {
 	jagobj_t* titlepic;
 	int solid_fire_height;
 	int bottom_pos;
+	int titlepic_pos_x;
 } m_fire_t;
 
 #define FIRE_WIDTH		320
@@ -210,6 +211,7 @@ void I_InitMenuFire(jagobj_t *titlepic)
 	doompalette = W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
 
 	m_fire = Z_Malloc(sizeof(*m_fire), PU_STATIC, NULL);
+	D_memset(m_fire, 0, sizeof(*m_fire));
 
 	m_fire->firePalCols = sizeof(fireRGBs) / 3;
 	m_fire->firePal = Z_Malloc(sizeof(*m_fire->firePal) * m_fire->firePalCols, PU_STATIC, NULL);
@@ -222,8 +224,10 @@ void I_InitMenuFire(jagobj_t *titlepic)
 	m_fire->rndtable = Z_Malloc(sizeof(*m_fire->rndtable) * 256, PU_STATIC, NULL);
 
 	m_fire->titlepic = titlepic;
+	if (titlepic)
+		m_fire->titlepic_pos_x = (320 - titlepic->width) / 2;
 
-	m_fire->solid_fire_height = 24;
+	m_fire->solid_fire_height = 18;
 	m_fire->bottom_pos = /*I_FrameBufferHeight()*/224 - m_fire->solid_fire_height;
 
 	char* dest = m_fire->firePix + FIRE_WIDTH * (FIRE_HEIGHT - 1);
@@ -262,10 +266,12 @@ void I_InitMenuFire(jagobj_t *titlepic)
 		{
 			short* lines = Mars_FrameBufferLines();
 
-			DrawJagobj2(titlepic, 0, 0, 0, 0, 0, m_fire->bottom_pos - FIRE_HEIGHT, I_FrameBuffer());
+			DrawFillRect(0, 0, 320, 224, 0);
+
+			DrawJagobj2(titlepic, m_fire->titlepic_pos_x, 0, 0, 0, 0, m_fire->bottom_pos - FIRE_HEIGHT, I_FrameBuffer());
 
 			for (j = 0; j < m_fire->bottom_pos - FIRE_HEIGHT; j++)
-				lines[j] = 0 * 320 / 2 + 0x100;
+				lines[j] = 224 * 320 / 2 + 0x100;
 
 			UpdateBuffer();
 		}
@@ -307,7 +313,7 @@ void I_DrawMenuFire(void)
 	jagobj_t* titlepic = m_fire->titlepic;
 	unsigned char* firePal = m_fire->firePal;
 	unsigned* row;
-	const int pic_startpos = -20;
+	const int pic_startpos = -28;
 	const int pic_cutoff = 16;
 	const int fh = FIRE_HEIGHT;
 	const int solid_fire_height = m_fire->solid_fire_height;
@@ -348,7 +354,12 @@ void I_DrawMenuFire(void)
 		int y = bottom_pos - (pos < fh ? pos : fh);
 		int src_y = pos > fh ? ((pos >= bottom_pos ? bottom_pos : pos) - fh) : 0;
 		if (pos >= solid_fire_height)
-			DrawJagobj2(titlepic, 0, y, 0, src_y, 0, (pos >= 200 ? 0 : pos) - pic_cutoff, I_FrameBuffer());
+		{
+			int h = (pos >= 200 - pic_cutoff ? 0 - pic_cutoff : pos);
+			DrawFillRect(0, y, m_fire->titlepic_pos_x, 200, 0);
+			DrawJagobj2(titlepic, m_fire->titlepic_pos_x, y, 0, src_y, 0, h, I_FrameBuffer());
+			DrawFillRect(titlepic->width + m_fire->titlepic_pos_x, y, 320, 200, 0);
+		}
 	}
 
 	// draw the fire at the bottom
