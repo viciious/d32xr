@@ -4,7 +4,7 @@
 
 #define MOVEWAIT		TICVBLS*6
 #define CURSORX		50
-#define STARTY			44
+#define STARTY			48
 #define ITEMSPACE	20
 #define CURSORY(y)	(STARTY+ITEMSPACE*(y))
 #define	NUMLCHARS 64	
@@ -549,7 +549,7 @@ void M_Drawer (void)
 /* Draw main menu */
 	if (m_doom && scrpos == ms_main)
 	{
-		DrawJagobj(m_doom, 100, 2);
+		DrawJagobj(m_doom, 100, 4);
 		y_offset = m_doom->height - STARTY;
 	}
 
