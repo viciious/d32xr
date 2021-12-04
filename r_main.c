@@ -299,7 +299,7 @@ angle_t R_PointToAngle(fixed_t x, fixed_t y)
 
 /*============================================================================= */
 
-const int viewports[][2][3] = {
+const VINT viewports[][2][3] = {
 	{ { 128, 144, true  }, {  80, 100, true  } },
 	{ { 128, 160, true  }, {  80, 128, true  } },
 	{ { 160, 180, true  }, {  80, 144, true  } },
@@ -389,6 +389,20 @@ void R_SetDetailMode(int mode)
 		drawspan = I_DrawSpan;
 		drawspan = detailmode == detmode_potato ? I_DrawSpanPotato : I_DrawSpan;
 	}
+}
+
+int R_DefaultViewportSize(void)
+{
+	int i;
+
+	for (i = 0; i < numViewports; i++)
+	{
+		const VINT* vp = viewports[i][0];
+		if (vp[0] == 160 && vp[2] == true)
+			return i;
+	}
+
+	return 0;
 }
 
 /*

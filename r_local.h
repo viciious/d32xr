@@ -233,6 +233,7 @@ int     SlopeDiv(unsigned int num, unsigned int den) ATTR_DATA_CACHE_ALIGN;
 angle_t R_PointToAngle(fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
 void	R_InitData (void);
 void	R_SetViewportSize(int num);
+int		R_DefaultViewportSize(void); // returns the viewport id for fullscreen, low detail mode
 void	R_SetDetailMode(int mode);
 void	R_SetupLevel(void);
 void	R_SetupTextureCaches(void) ATTR_OPTIMIZE_SIZE;

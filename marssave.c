@@ -228,6 +228,8 @@ static void ReadOptions(void)
 		so.alwaysrun = 0;
 	if (so.strafebtns < 0 || so.strafebtns > 3)
 		so.strafebtns = 0;
+	if (so.viewport < 0 || so.viewport >= numViewports)
+		so.viewport = R_DefaultViewportSize();
 
 	sfxvolume = so.sfxvolume;
 	musicvolume = so.musicvolume;
@@ -259,7 +261,7 @@ void ReadEEProm(void)
 	sfxvolume = 64;
 	musicvolume = 64;
 	detailmode = detmode_medium;
-	viewportNum = 0;
+	viewportNum = R_DefaultViewportSize();
 	musictype = mustype_fm;
 	alwaysrun = 0;
 	strafebtns = 0;
