@@ -716,7 +716,6 @@ void A_SkullAttack (mobj_t *actor)
 	actor->momz = (dest->z+(dest->height>>1) - actor->z) / dist;
 }
 
-
 void A_Scream (mobj_t *actor)
 {
 	int		sound;
@@ -730,7 +729,12 @@ void A_Scream (mobj_t *actor)
 	case sfx_podth1:
 	case sfx_podth2:
 	case sfx_podth3:
-		sound = sfx_podth1 + (P_Random ()&1);
+#ifdef MARS
+		if (S_sfx[sfx_podth3].lump > 0)
+			sound = sfx_podth1 + (P_Random()%3);
+		else
+#endif
+			sound = sfx_podth1 + (P_Random()&1);
 		break;
 		
 	case sfx_bgdth1:
