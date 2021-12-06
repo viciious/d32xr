@@ -401,7 +401,12 @@ void A_Look (mobj_t *actor)
 		case sfx_posit1:
 		case sfx_posit2:
 		case sfx_posit3:
-			sound = sfx_posit1+(P_Random()&1);
+#ifdef MARS
+			if (S_sfx[sfx_posit3].lump > 0)
+				sound = sfx_posit1+(P_Random()%3);
+			else
+#endif
+				sound = sfx_posit1+(P_Random()&1);
 			break;
 		case sfx_bgsit1:
 		case sfx_bgsit2:
