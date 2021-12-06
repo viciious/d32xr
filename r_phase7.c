@@ -132,10 +132,9 @@ static void R_PlaneLoop(localplane_t *lpl)
    if(pl_x > pl_stopx)
       return; // nothing to map
 
-   pl_stopx += 2;
-   pl_openptr = &pl->open[pl_x - 1];
+   pl_openptr = &pl->open[pl_x];
 
-   t1 = *pl_openptr++;
+   t1 = OPENMARK;
    b1 = t1 & 0xff;
    t1 >>= 8;
    t2 = *pl_openptr;
@@ -149,8 +148,6 @@ static void R_PlaneLoop(localplane_t *lpl)
 
       pl_oldtop = t2;
       pl_oldbottom = b2;
-
-      ++pl_openptr;
 
       x2 = pl_x - 1;
 
@@ -184,12 +181,11 @@ static void R_PlaneLoop(localplane_t *lpl)
           --b2;
       }
 
-      ++pl_x;
       b1 = pl_oldbottom;
       t1 = pl_oldtop;
-      t2 = *pl_openptr;
+      t2 = pl_x < pl_stopx ? *++pl_openptr : OPENMARK;
    }
-   while(pl_x != pl_stopx);
+   while(++pl_x != pl_stopx+2);
 }
 
 static void R_LockPln(void)
@@ -299,21 +295,52 @@ void Mars_R_PrepPlanes(void)
     Mars_ClearCacheLines((intptr_t)&visplanes & ~15, 1);
 
     {
-        visplane_t* pl;
-        for (pl = visplanes + 1; pl < lastvisplane; pl++)
+        visplane_t* pl, *last = lastvisplane;
+        int numplanes = lastvisplane - visplanes + 1;
+        const int maxlen = centerX + centerX / 2;
+
+        for (pl = visplanes + 1; pl < last; pl++)
         {
+            int start, stop;
+
             pl->pixelcount = 0;
+
             // see if there is any open space
-            if (pl->minx > pl->maxx)
+            start = pl->minx, stop = pl->maxx;
+            if (start > stop)
                 continue; // nothing to map
-            pl->open[pl->maxx + 1] = OPENMARK;
-            pl->open[pl->minx - 1] = OPENMARK;
+#ifdef MARS
+            if (numplanes > 10)
+                continue;
+
+            int span = stop - start;
+            if (span < maxlen)
+                continue;
+
+            // split log visplane into two
+            if (lastvisplane == visplanes + MAXVISPLANES)
+                continue;
+
+            start = start + (stop - start) / 2;
+            pl->maxx = start;
+
+            visplane_t* newpl = lastvisplane++;
+            newpl->open = pl->open;
+            newpl->height = pl->height;
+            newpl->flatnum = pl->flatnum;
+            newpl->lightlevel = pl->lightlevel;
+            newpl->minx = start + 1;
+            newpl->maxx = stop;
+            numplanes++;
+#endif
         }
     }
 }
 
 void Mars_Sec_R_DrawPlanes(void)
 {
+    Mars_ClearCacheLines((intptr_t)&lastvisplane & ~15, 1);
+
     R_DrawPlanes2();
 }
 #endif

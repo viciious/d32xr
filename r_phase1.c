@@ -153,21 +153,40 @@ static boolean R_CheckBBox(fixed_t bspcoord[4])
 static void R_StoreWallRange(int start, int stop)
 {
    viswall_t *rw;
+   int newstop;
+   int numwalls = lastwallcmd - viswalls;
+   const int maxlen = centerX + centerX / 2;
 
-   if (lastwallcmd == viswalls + MAXWALLCMDS)
-       return;
+   // split long segments
+   newstop = stop;
+#ifdef MARS
+   if (numwalls < 10)
+   {
+       if (stop - start > maxlen)
+           newstop = start + maxlen / 2;
+   }
+#endif
 
-   rw = lastwallcmd;
-   rw->seg    = curline;
-   rw->start  = start;
-   rw->stop   = stop;
-   rw->angle1 = lineangle1;
-   rw->state  = RW_NOTREADY;
-   ++lastwallcmd;
+   do
+   {
+       if (numwalls == MAXWALLCMDS)
+           return;
+
+       rw = lastwallcmd;
+       rw->seg = curline;
+       rw->start = start;
+       rw->stop = newstop;
+       rw->angle1 = lineangle1;
+       rw->state = RW_NOTREADY;
+       ++lastwallcmd;
 
 #ifdef MARS
-   Mars_R_WallNext();
+       Mars_R_WallNext();
 #endif
+       start = newstop + 1;
+       newstop = stop;
+       numwalls++;
+   } while (start <= stop);
 }
 
 //
