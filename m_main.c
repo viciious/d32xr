@@ -3,7 +3,9 @@
 #include "doomdef.h"
 
 #define MOVEWAIT		TICVBLS*6
-#define CURSORX		50
+#define CURSORX		(80)
+#define CURSORWIDTH	24
+#define ITEMX		(CURSORX+CURSORWIDTH)
 #define STARTY			48
 #define ITEMSPACE	20
 #define CURSORY(y)	(STARTY+ITEMSPACE*(y))
@@ -189,12 +191,12 @@ void M_Start2 (boolean startup_)
 	mainscreen[ms_save].numitems = 1;
 
 	D_strncpy(mainitem[mi_newgame].name, "New Game", 8);
-	mainitem[mi_newgame].x = CURSORX + 24;
+	mainitem[mi_newgame].x = ITEMX;
 	mainitem[mi_newgame].y = CURSORY(0);
 	mainitem[mi_newgame].screen = ms_new;
 
 	D_strncpy(mainitem[mi_loadgame].name, "Load Game", 9);
-	mainitem[mi_loadgame].x = CURSORX + 24;
+	mainitem[mi_loadgame].x = ITEMX;
 	mainitem[mi_loadgame].y = CURSORY(1);
 	mainitem[mi_loadgame].screen = ms_load;
 	mainscreen[ms_main].numitems++;
@@ -202,29 +204,29 @@ void M_Start2 (boolean startup_)
 	if (!startup && netgame != gt_deathmatch)
 	{
 		D_strncpy(mainitem[mi_savegame].name, "Save Game", 9);
-		mainitem[mi_savegame].x = CURSORX + 24;
+		mainitem[mi_savegame].x = ITEMX;
 		mainitem[mi_savegame].y = CURSORY(2);
 		mainitem[mi_savegame].screen = ms_save;
 		mainscreen[ms_main].numitems++;
 	}
 
 	D_strncpy(mainitem[mi_level].name, "Area", 4);
-	mainitem[mi_level].x = CURSORX + 24;
+	mainitem[mi_level].x = ITEMX;
 	mainitem[mi_level].y = CURSORY(0);
 	mainitem[mi_level].screen = ms_none;
 
 	D_strncpy(mainitem[mi_gamemode].name, "Game Mode", 9);
-	mainitem[mi_gamemode].x = CURSORX + 24;
+	mainitem[mi_gamemode].x = ITEMX;
 	mainitem[mi_gamemode].y = CURSORY((mainscreen[ms_new].numitems - 2) * 2);
 	mainitem[mi_gamemode].screen = ms_none;
 
 	D_strncpy(mainitem[mi_difficulty].name, "Difficulty", 10);
-	mainitem[mi_difficulty].x = CURSORX + 24;
+	mainitem[mi_difficulty].x = ITEMX;
 	mainitem[mi_difficulty].y = CURSORY((mainscreen[ms_new].numitems - 1)*2);
 	mainitem[mi_difficulty].screen = ms_none;
 
 	D_strncpy(mainitem[mi_savelist].name, "Checkpoints", 11);
-	mainitem[mi_savelist].x = CURSORX + 24;
+	mainitem[mi_savelist].x = ITEMX;
 	mainitem[mi_savelist].y = CURSORY(0);
 	mainitem[mi_savelist].screen = ms_none;
 
@@ -550,7 +552,7 @@ void M_Drawer (void)
 	if (m_doom && scrpos == ms_main)
 	{
 		DrawJagobj(m_doom, 100, 4);
-		y_offset = m_doom->height - STARTY;
+		y_offset = m_doom->height + 4 - STARTY;
 	}
 
 /* erase old skulls */

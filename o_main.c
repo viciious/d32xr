@@ -8,8 +8,10 @@
 #endif
 
 #define MOVEWAIT		TICVBLS*6
-#define STARTY		44
-#define CURSORX		50
+#define STARTY		48
+#define CURSORX		(80)
+#define CURSORWIDTH	24
+#define ITEMX		(CURSORX+CURSORWIDTH)
 #define ITEMSPACE	20
 #define CURSORY(y)	(STARTY+ITEMSPACE*(y))
 #define SLIDEWIDTH 90
@@ -141,52 +143,52 @@ void O_Init (void)
 	D_memset(slider, 0, sizeof(slider));
 
 	D_strncpy(menuitem[mi_game].name, "Game", 4);
-	menuitem[mi_game].x = 74;
+	menuitem[mi_game].x = ITEMX;
 	menuitem[mi_game].y = STARTY;
 	menuitem[mi_game].slider = NULL;
 	menuitem[mi_game].screen = ms_game;
 
 	D_strncpy(menuitem[mi_audio].name, "Audio", 6);
-	menuitem[mi_audio].x = 74;
+	menuitem[mi_audio].x = ITEMX;
 	menuitem[mi_audio].y = STARTY+ITEMSPACE;
 	menuitem[mi_audio].slider = NULL;
 	menuitem[mi_audio].screen = ms_audio;
 
 	D_strncpy(menuitem[mi_video].name, "Video", 6);
-	menuitem[mi_video].x = 74;
+	menuitem[mi_video].x = ITEMX;
 	menuitem[mi_video].y = STARTY+ITEMSPACE*2;
 	menuitem[mi_video].slider = NULL;
 	menuitem[mi_video].screen = ms_video;
 
 	D_strncpy(menuitem[mi_controls].name, "Controls", 8);
-	menuitem[mi_controls].x = 74;
+	menuitem[mi_controls].x = ITEMX;
 	menuitem[mi_controls].y = STARTY+ITEMSPACE*3;
 	menuitem[mi_controls].slider = NULL;
 	menuitem[mi_controls].screen = ms_controls;
 
 
 	D_strncpy(menuitem[mi_soundvol].name, "Sfx volume", 10);
-	menuitem[mi_soundvol].x = 74;
+	menuitem[mi_soundvol].x = ITEMX;
 	menuitem[mi_soundvol].y = STARTY;
 	menuitem[mi_soundvol].slider = &slider[0];
  	slider[0].maxval = 4;
 	slider[0].curval = 4*sfxvolume/64;
 
 	D_strncpy(menuitem[mi_music].name, "Music", 5);
-	menuitem[mi_music].x = 74;
+	menuitem[mi_music].x = ITEMX;
 	menuitem[mi_music].y = STARTY+ITEMSPACE*2;
 	menuitem[mi_music].slider = NULL;
 
 
 	D_strncpy(menuitem[mi_resolution].name, "Resolution", 10);
-	menuitem[mi_resolution].x = 74;
+	menuitem[mi_resolution].x = ITEMX;
 	menuitem[mi_resolution].y = STARTY;
 	menuitem[mi_resolution].slider = &slider[1];
 	slider[1].maxval = numViewports - 1;
 	slider[1].curval = viewportNum;
 
 	D_strncpy(menuitem[mi_detailmode].name, "Level of detail", 15);
-	menuitem[mi_detailmode].x = 74;
+	menuitem[mi_detailmode].x = ITEMX;
 	menuitem[mi_detailmode].y = STARTY+ITEMSPACE*2;
 	menuitem[mi_detailmode].slider = &slider[2];
 	slider[2].maxval = MAXDETAILMODES;
@@ -194,16 +196,16 @@ void O_Init (void)
 
 
 	D_strncpy(menuitem[mi_controltype].name, "Gamepad", 7);
-	menuitem[mi_controltype].x = 74;
+	menuitem[mi_controltype].x = ITEMX;
 	menuitem[mi_controltype].y = STARTY;
 	menuitem[mi_controltype].slider = NULL;
 
 	D_strncpy(menuitem[mi_alwaysrun].name, "Always run", 10);
-	menuitem[mi_alwaysrun].x = 74;
+	menuitem[mi_alwaysrun].x = ITEMX;
 	menuitem[mi_alwaysrun].y = STARTY+ITEMSPACE*4;
 
 	D_strncpy(menuitem[mi_strafebtns].name, "LR Strafe", 10);
-	menuitem[mi_strafebtns].x = 74;
+	menuitem[mi_strafebtns].x = ITEMX;
 	menuitem[mi_strafebtns].y = STARTY+ITEMSPACE*5;
 
 
