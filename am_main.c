@@ -8,13 +8,13 @@
 
 #ifdef MARS
 
-#define CRY_RED 	176
-#define CRY_BLUE 	199
-#define CRY_GREEN 	121
-#define CRY_BROWN 	73
-#define CRY_YELLOW 	160
-#define CRY_GREY 	96
-#define CRY_AQUA 	250
+#define CRY_RED 	191
+#define CRY_BLUE 	207
+#define CRY_GREEN 	127
+#define CRY_BROWN 	79
+#define CRY_YELLOW 	167
+#define CRY_GREY 	94
+#define CRY_AQUA 	223
 
 #else
 
@@ -136,36 +136,36 @@ cheat_e AM_CheckCheat(int buttons,int oldbuttons)
 }
 #endif
 
-void DrawLine (pixel_t color, int x1, int y1, int x2, int y2)
-{
 #ifdef JAGUAR
+void DrawLine(pixel_t color, int x1, int y1, int x2, int y2)
+{
 	int		dx, dy;
 	int		adx, ady;
 	int		quadcolor;
 	int		xstep, ystep;
 	int		count = 1;
-		
-	*(int *)0xf02200 = (int)workingscreen;	/* a1 base register */
-	*(int *)0xf02204 = (4<<3) /* 16 bit pixels */
-					+ (29<<9) /* 160 width image */
-					+ (3<<16) /* add increment */
-					;							/* a1 flags */
 
-	*(int *)0xf02208 = (180<<16) + 160;		/* a1 clipping size */
-	
-	*(int *)0xf0220c = (y1<<16) + x1;	/* a1 pixel pointer */
-	*(int *)0xf02218 = zero;			/* a1 pixel pointer fraction */
+	*(int*)0xf02200 = (int)workingscreen;	/* a1 base register */
+	*(int*)0xf02204 = (4 << 3) /* 16 bit pixels */
+		+ (29 << 9) /* 160 width image */
+		+ (3 << 16) /* add increment */
+		;							/* a1 flags */
 
-	quadcolor = (color<<16) + color;
-	*(int *)0xf02240 = quadcolor;
-	*(int *)0xf02244 = quadcolor;	/* source data register */
+	*(int*)0xf02208 = (180 << 16) + 160;		/* a1 clipping size */
+
+	*(int*)0xf0220c = (y1 << 16) + x1;	/* a1 pixel pointer */
+	*(int*)0xf02218 = zero;			/* a1 pixel pointer fraction */
+
+	quadcolor = (color << 16) + color;
+	*(int*)0xf02240 = quadcolor;
+	*(int*)0xf02244 = quadcolor;	/* source data register */
 
 
 	dx = x2 - x1;
-	adx = dx<0 ? -dx : dx;
+	adx = dx < 0 ? -dx : dx;
 	dy = y2 - y1;
-	ady = dy<0 ? -dy : dy;
-	
+	ady = dy < 0 ? -dy : dy;
+
 	if (!dx)
 	{
 		xstep = 0;
@@ -184,8 +184,8 @@ void DrawLine (pixel_t color, int x1, int y1, int x2, int y2)
 			xstep = 0x10000;
 		else
 			xstep = -0x10000;
-		
-		ystep = (dy<<16)/adx;
+
+		ystep = (dy << 16) / adx;
 		count = adx;			/* count */
 	}
 	else
@@ -194,93 +194,118 @@ void DrawLine (pixel_t color, int x1, int y1, int x2, int y2)
 			ystep = 0x10000;
 		else
 			ystep = -0x10000;
-		
-		xstep = (dx<<16)/ady;
+
+		xstep = (dx << 16) / ady;
 		count = ady;			/* count */
 	}
 
-	*(int *)0xf0223c = (1<<16) + count;			/* count */
-	
-	*(int *)0xf0221c = (ystep&0xffff0000) + (((unsigned)xstep)>>16); /* a1 icrement */
-	*(int *)0xf02220 = (ystep<<16) + (xstep&0xffff);	 /* a1 icrement frac */
+	*(int*)0xf0223c = (1 << 16) + count;			/* count */
 
-	*(int *)0xf02238 = (1<<6)				/* enable clipping */
-					+ (12<<21);				/* copy source */
-#endif
+	*(int*)0xf0221c = (ystep & 0xffff0000) + (((unsigned)xstep) >> 16); /* a1 icrement */
+	*(int*)0xf02220 = (ystep << 16) + (xstep & 0xffff);	 /* a1 icrement frac */
 
-#ifdef MARS
-	int		dx, dy;
-	int		adx, ady;
-	byte		quadcolor;
-	int		xstep, ystep;
-	int		count = 1;
-	int 	x, y;
-	int		zwidth = 320 * FRACUNIT;
-	int		zheight = I_FrameBufferHeight() * FRACUNIT;
-	byte 	*fb = (byte*)I_FrameBuffer();
+	*(int*)0xf02238 = (1 << 6)				/* enable clipping */
+		+ (12 << 21);				/* copy source */
+}
+#elif defined(MARS)
 
-	dx = x2 - x1;
-	adx = dx<0 ? -dx : dx;
-	dy = y2 - y1;
-	ady = dy<0 ? -dy : dy;
+static void putPixel(byte* fb, pixel_t c, fixed_t x, fixed_t y, fixed_t brightness)
+{
+	if (brightness <= 0)
+		brightness = 0;
+	else if (brightness >= FRACUNIT)
+		brightness = 0x7;
+	else
+		brightness = (brightness >> 13) & 0x7;
 
-	if (!dx)
+	y >>= FRACBITS;
+	x >>= FRACBITS;
+	fb[(y << 8) + (y << 6) + x] = c - brightness;
+}
+
+void DrawLine(pixel_t color, fixed_t x0, fixed_t y0, fixed_t x1, fixed_t y1)
+{
+	fixed_t dx, dy;
+	fixed_t gradient;
+	fixed_t x, steep, temp;
+	fixed_t xpxl1, xpxl2, inters;
+	byte* fb = (byte*)I_FrameBuffer();
+
+	if ((x0 < 0 && x1 < 0) || (x0 >= 320 && x1 >= 320))
+		return;
+	if ((y0 < 0 && y1 < 0) || (y0 >= 224 && y1 >= 224))
+		return;
+
+	steep = D_abs(y1 - y0) > D_abs(x1 - x0);
+	if (steep)
 	{
-		xstep = 0;
-		ystep = dy > 0 ? 1*FRACUNIT : -1*FRACUNIT;
-		count = ady;			/* count */
+		// x and y should be reversed
+		temp = x0, x0 = y0, y0 = temp;
+		temp = x1, x1 = y1, y1 = temp;
 	}
-	else if (!dy)
+	if (x0 > x1)
 	{
-		ystep = 0;
-		xstep = dx > 0 ? 1*FRACUNIT : -1*FRACUNIT;
-		count = adx;			/* count */
+		temp = x0, x0 = x1, x1 = temp;
+		temp = y0, y0 = y1, y1 = temp;
 	}
-	else if (adx > ady)
+
+	x0 <<= FRACBITS;
+	y0 <<= FRACBITS;
+	x1 <<= FRACBITS;
+	y1 <<= FRACBITS;
+
+	// compute the slope
+	dx = x1 - x0;
+	dy = y1 - y0;
+	gradient = FRACUNIT;
+	if (dx != 0)
+		gradient = FixedDiv(dy, dx);
+
+	xpxl1 = x0;
+	xpxl2 = x1;
+	inters = y0;
+
+	if (xpxl1 < 0)
 	{
-		if (dx > 0)
-			xstep = 1*FRACUNIT;
-		else
-			xstep = -1*FRACUNIT;
-		
-		ystep = FixedDiv(dy<<FRACBITS,adx<<FRACBITS);
-		count = adx;			/* count */
+		inters += gradient * ((-xpxl1) >> FRACBITS);
+		xpxl1 = 0;
+	}
+
+	// main loop
+	if (steep)
+	{
+		if (xpxl2 > 223 * FRACUNIT) xpxl2 = 223 * FRACUNIT;
+		for (x = xpxl1; x <= xpxl2; x += FRACUNIT, inters += gradient)
+		{
+			fixed_t y = inters & ~(FRACUNIT - 1);
+			fixed_t b = inters & (FRACUNIT - 1);
+			if (y >= 0 && y <= 318 * FRACUNIT)
+			{
+				putPixel(fb, color, y, x, FRACUNIT - b);
+				putPixel(fb, color, y + FRACUNIT, x, b);
+			}
+		}
 	}
 	else
 	{
-		if (dy > 0)
-			ystep = 1*FRACUNIT;
-		else
-			ystep = -1*FRACUNIT;
-		
-		xstep = FixedDiv(dx<<FRACBITS,ady<<FRACBITS);
-		count = ady;			/* count */
+		if (xpxl2 > 319 * FRACUNIT) xpxl2 = 319 * FRACUNIT;
+		for (x = xpxl1; x <= xpxl2; x += FRACUNIT, inters += gradient)
+		{
+			fixed_t y = inters & ~(FRACUNIT - 1);
+			fixed_t b = inters & (FRACUNIT - 1);
+			if (y >= 0 && y <= 222 * FRACUNIT)
+			{
+				putPixel(fb, color, x, y, FRACUNIT - b);
+				putPixel(fb, color, x, y + FRACUNIT, b);
+			}
+		}
 	}
-
-	quadcolor = color;
-
-	x1 *= FRACUNIT;
-	y1 *= FRACUNIT;
-	x2 *= FRACUNIT;
-	y2 *= FRACUNIT;
-
-	x = x1;
-	y = y1;
- 	while(count-- > 0)
-	{
-		boolean clipped = false;
-		byte *p = fb + (y>>FRACBITS)*320 + (x>>FRACBITS);
-
-		if (x < 0 || x >= zwidth) clipped = true;
-		if (y < 0 || y >= zheight) clipped = true;
-		x += xstep;
-		y += ystep;
-
-		if (!clipped) *p = quadcolor;
-	}
-#endif
 }
-
+#else
+void DrawLine(pixel_t color, int x1, int y1, int x2, int y2)
+{
+}
+#endif
 
 /*
 ==================
