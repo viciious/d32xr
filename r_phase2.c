@@ -532,6 +532,8 @@ void Mars_Sec_R_WallPrep(void)
 
             R_SegLoop(segl, clipbounds);
 
+            // FIXME: optimize this
+
             if (segl->actionbits & AC_TOPTEXTURE)
             {
                 texture_t* tex = &textures[segl->t_texturenum];
