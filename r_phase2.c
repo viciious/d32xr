@@ -10,13 +10,13 @@
 
 static sector_t emptysector = { 0, 0, -2, -2, -2 };
 
-void R_WallPrep(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static void R_WallEarlyPrep(viswall_t* segl) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static fixed_t R_PointToDist(fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, angle_t normalangle) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static void R_WallLatePrep(viswall_t* wc) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void R_WallPrep(void) ATTR_DATA_CACHE_ALIGN;
+static void R_WallEarlyPrep(viswall_t* segl) ATTR_DATA_CACHE_ALIGN;
+static fixed_t R_PointToDist(fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
+static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, angle_t normalangle) ATTR_DATA_CACHE_ALIGN;
+static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle) ATTR_DATA_CACHE_ALIGN;
+static void R_WallLatePrep(viswall_t* wc) ATTR_DATA_CACHE_ALIGN;
+static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds) ATTR_DATA_CACHE_ALIGN;
 
 static void R_WallEarlyPrep(viswall_t* segl)
 {

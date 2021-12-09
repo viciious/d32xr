@@ -48,13 +48,13 @@ extern	line_t	*linespeciallist[MAXLINEANIMS];
 
 
 /* at game start */
-void	P_InitPicAnims (void) ATTR_OPTIMIZE_SIZE;
+void	P_InitPicAnims (void);
 
 /* at map load */
-void	P_SpawnSpecials (void) ATTR_OPTIMIZE_SIZE;
+void	P_SpawnSpecials (void);
 
 /* every tic */
-void 	P_UpdateSpecials (void) ATTR_OPTIMIZE_SIZE;
+void 	P_UpdateSpecials (void);
 
 /* when needed */
 boolean	P_UseSpecialLine ( mobj_t *thing, line_t *line);
@@ -78,7 +78,7 @@ sector_t *getNextSector(line_t *line,sector_t *sec);
 /* */
 /*	SPECIAL */
 /* */
-int EV_DoDonut(line_t *line) ATTR_OPTIMIZE_SIZE;
+int EV_DoDonut(line_t *line);
 
 /*
 ===============================================================================
@@ -170,7 +170,7 @@ extern	VINT		switchlist[MAXSWITCHES * 2];
 extern	button_t buttonlist[MAXBUTTONS];
 
 void	P_ChangeSwitchTexture(line_t *line,int useAgain);
-void 	P_InitSwitchList(void) ATTR_OPTIMIZE_SIZE;
+void 	P_InitSwitchList(void);
 
 /*
 ===============================================================================
@@ -218,7 +218,7 @@ typedef struct
 extern	plat_t	*activeplats[MAXPLATS];
 
 void	T_PlatRaise(plat_t	*plat);
-int		EV_DoPlat(line_t *line,plattype_e type,int amount) ATTR_OPTIMIZE_SIZE;
+int		EV_DoPlat(line_t *line,plattype_e type,int amount);
 void	P_AddActivePlat(plat_t *plat);
 void	P_RemoveActivePlat(plat_t *plat);
 void	EV_StopPlat(line_t *line);
@@ -256,8 +256,8 @@ typedef struct
 #define	VDOORSPEED	FRACUNIT*3*THINKERS_TICS
 #define	VDOORWAIT		140/THINKERS_TICS
 
-void	EV_VerticalDoor (line_t *line, mobj_t *thing) ATTR_OPTIMIZE_SIZE;
-int		EV_DoDoor (line_t *line, vldoor_e  type) ATTR_OPTIMIZE_SIZE;
+void	EV_VerticalDoor (line_t *line, mobj_t *thing);
+int		EV_DoDoor (line_t *line, vldoor_e  type);
 void	T_VerticalDoor (vldoor_t *door);
 void	P_SpawnDoorCloseIn30 (sector_t *sec);
 void	P_SpawnDoorRaiseIn5Mins (sector_t *sec, int secnum);
@@ -351,8 +351,8 @@ typedef enum
 result_e	T_MovePlane(sector_t *sector,fixed_t speed,
 			fixed_t dest,boolean crush,int floorOrCeiling,int direction);
 
-int		EV_BuildStairs(line_t *line) ATTR_OPTIMIZE_SIZE;
-int		EV_DoFloor(line_t *line,floor_e floortype) ATTR_OPTIMIZE_SIZE;
+int		EV_BuildStairs(line_t *line);
+int		EV_DoFloor(line_t *line,floor_e floortype);
 void	T_MoveFloor(floormove_t *floor);
 
 /*

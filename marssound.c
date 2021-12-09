@@ -56,11 +56,10 @@ int             samplecount = 0;
 
 static marsrb_t	soundcmds = { 0 };
 
-void S_StartSound(mobj_t* origin, int sound_id) ATTR_OPTIMIZE_SIZE;
-void S_StartSoundReal(mobj_t* origin, unsigned sound_id, int vol) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-void S_PaintChannel(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static void S_Update(int16_t* buffer) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static void S_Spatialize(mobj_t* origin, int* pvol, int* psep) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static void S_StartSoundReal(mobj_t* origin, unsigned sound_id, int vol) ATTR_DATA_CACHE_ALIGN;
+void S_PaintChannel(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
+static void S_Update(int16_t* buffer) ATTR_DATA_CACHE_ALIGN;
+static void S_Spatialize(mobj_t* origin, int* pvol, int* psep) ATTR_DATA_CACHE_ALIGN;
 
 /*
 ==================
@@ -524,7 +523,7 @@ void sec_dma1_handler(void)
 	S_Update(snd_buffer[snd_bufidx]);
 }
 
-void S_StartSoundReal(mobj_t* origin, unsigned sound_id, int vol)
+static void S_StartSoundReal(mobj_t* origin, unsigned sound_id, int vol)
 {
 	sfxchannel_t* channel, * newchannel;
 	int i;

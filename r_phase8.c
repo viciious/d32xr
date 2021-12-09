@@ -15,11 +15,11 @@ static int *sortedsprites;
 static int fuzzpos[2];
 
 static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy) ATTR_DATA_CACHE_ALIGN;
-void R_DrawVisSprite(vissprite_t* vis, unsigned short* spropening, int *fuzzpos, int half) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;;
-static void R_DrawSpritesStride(const int start, int* fuzzpos) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static void R_DrawPSprites(unsigned cpu) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-void R_Sprites(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void R_DrawVisSprite(vissprite_t* vis, unsigned short* spropening, int *fuzzpos, int half) ATTR_DATA_CACHE_ALIGN;
+void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening) ATTR_DATA_CACHE_ALIGN;
+static void R_DrawSpritesStride(const int start, int* fuzzpos) ATTR_DATA_CACHE_ALIGN;
+static void R_DrawPSprites(unsigned cpu) ATTR_DATA_CACHE_ALIGN;
+void R_Sprites(void) ATTR_DATA_CACHE_ALIGN;
 
 void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos, int half)
 {

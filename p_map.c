@@ -6,12 +6,12 @@
 
 
 fixed_t P_InterceptVector(divline_t* v2, divline_t* v1) ATTR_DATA_CACHE_ALIGN;
-boolean	PIT_UseLines(line_t* li) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-void P_UseLines(player_t* player) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-boolean PIT_RadiusAttack(mobj_t* thing) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-void P_RadiusAttack(mobj_t* spot, mobj_t* source, int damage) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-fixed_t P_AimLineAttack(mobj_t* t1, angle_t angle, fixed_t distance) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-void P_LineAttack(mobj_t* t1, angle_t angle, fixed_t distance, fixed_t slope, int damage) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+boolean	PIT_UseLines(line_t* li) ATTR_DATA_CACHE_ALIGN;
+void P_UseLines(player_t* player) ATTR_DATA_CACHE_ALIGN;
+boolean PIT_RadiusAttack(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
+void P_RadiusAttack(mobj_t* spot, mobj_t* source, int damage) ATTR_DATA_CACHE_ALIGN;
+fixed_t P_AimLineAttack(mobj_t* t1, angle_t angle, fixed_t distance) ATTR_DATA_CACHE_ALIGN;
+void P_LineAttack(mobj_t* t1, angle_t angle, fixed_t distance, fixed_t slope, int damage) ATTR_DATA_CACHE_ALIGN;
 
 /*============================================================================= */
 

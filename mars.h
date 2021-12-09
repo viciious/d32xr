@@ -31,22 +31,22 @@
 
 #include "marshw.h"
 
-void Mars_Secondary(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void Mars_Secondary(void) ATTR_DATA_CACHE_ALIGN;
 
-void Mars_Sec_R_Setup(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-void Mars_Sec_R_WallPrep(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-void Mars_Sec_R_SegCommands(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-void Mars_Sec_R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-void Mars_Sec_R_DrawSprites(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-void Mars_Sec_R_DrawPSprites(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void Mars_Sec_R_Setup(void) ATTR_DATA_CACHE_ALIGN;
+void Mars_Sec_R_WallPrep(void) ATTR_DATA_CACHE_ALIGN;
+void Mars_Sec_R_SegCommands(void) ATTR_DATA_CACHE_ALIGN;
+void Mars_Sec_R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
+void Mars_Sec_R_DrawSprites(void) ATTR_DATA_CACHE_ALIGN;
+void Mars_Sec_R_DrawPSprites(void) ATTR_DATA_CACHE_ALIGN;
 
 void Mars_Sec_M_AnimateFire(void) ATTR_OPTIMIZE_EXTREME;
-void Mars_Sec_InitSoundDMA(void) ATTR_OPTIMIZE_SIZE;
-void Mars_Sec_StopSoundMixer(void) ATTR_OPTIMIZE_SIZE;
-void Mars_Sec_StartSoundMixer(void) ATTR_OPTIMIZE_SIZE;
-void Mars_Sec_ReadSoundCmds(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void Mars_Sec_InitSoundDMA(void);
+void Mars_Sec_StopSoundMixer(void);
+void Mars_Sec_StartSoundMixer(void);
+void Mars_Sec_ReadSoundCmds(void) ATTR_DATA_CACHE_ALIGN;
 
-void secondary_dma1_handler(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void secondary_dma1_handler(void) ATTR_DATA_CACHE_ALIGN;
 
 static inline void Mars_R_SecWait(void)
 {

@@ -24,13 +24,13 @@ static seg_t       *curline;
 static angle_t      lineangle1;
 static sector_t    *frontsector;
 
-static void R_AddLine(seg_t* line) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static void R_ClipWallSegment(fixed_t first, fixed_t last, boolean solid) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static boolean R_CheckBBox(fixed_t bspcoord[4]) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static void R_Subsector(int num) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static void R_StoreWallRange(int start, int stop) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static void R_RenderBSPNode(int bspnum) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-void R_BSP(void) ATTR_OPTIMIZE_SIZE ATTR_OPTIMIZE_SIZE;
+static void R_AddLine(seg_t* line) ATTR_DATA_CACHE_ALIGN;
+static void R_ClipWallSegment(fixed_t first, fixed_t last, boolean solid) ATTR_DATA_CACHE_ALIGN;
+static boolean R_CheckBBox(fixed_t bspcoord[4]) ATTR_DATA_CACHE_ALIGN;
+static void R_Subsector(int num) ATTR_DATA_CACHE_ALIGN;
+static void R_StoreWallRange(int start, int stop) ATTR_DATA_CACHE_ALIGN;
+static void R_RenderBSPNode(int bspnum) ATTR_DATA_CACHE_ALIGN;
+void R_BSP(void) ATTR_DATA_CACHE_ALIGN;
 
 static int checkcoord[12][4] =
 {

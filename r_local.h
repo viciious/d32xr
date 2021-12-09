@@ -236,7 +236,7 @@ void	R_SetViewportSize(int num);
 int		R_DefaultViewportSize(void); // returns the viewport id for fullscreen, low detail mode
 void	R_SetDetailMode(int mode);
 void	R_SetupLevel(void);
-void	R_SetupTextureCaches(void) ATTR_OPTIMIZE_SIZE;
+void	R_SetupTextureCaches(void);
 
 typedef void (*drawcol_t)(int, int, int, int, fixed_t, fixed_t, inpixel_t*, int, int *);
 typedef void (*drawspan_t)(int, int, int, int, fixed_t, fixed_t, fixed_t, fixed_t, inpixel_t*);
@@ -338,12 +338,12 @@ extern	int			firstflat, numflats;
 
 #define R_CheckPixels(lumpnum) (void *)((intptr_t)(W_POINTLUMPNUM(lumpnum)))
 
-void R_InitTextures(void) ATTR_OPTIMIZE_SIZE;
-void R_InitFlats(void) ATTR_OPTIMIZE_SIZE;
-int	R_FlatNumForName(const char* name) ATTR_OPTIMIZE_SIZE;
-int	R_CheckTextureNumForName(const char* name) ATTR_OPTIMIZE_SIZE;
-void	R_InitMathTables(void) ATTR_OPTIMIZE_SIZE;
-void	R_InitSpriteDefs(const char** namelist) ATTR_OPTIMIZE_SIZE;
+void R_InitTextures(void);
+void R_InitFlats(void);
+int	R_FlatNumForName(const char* name);
+int	R_CheckTextureNumForName(const char* name);
+void	R_InitMathTables(void);
+void	R_InitSpriteDefs(const char** namelist);
 
 /*
 ==============================================================================
@@ -528,7 +528,7 @@ ATTR_DATA_CACHE_ALIGN
 ;
 
 void R_MarkOpenPlane(visplane_t* pl)
-ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE
+ATTR_DATA_CACHE_ALIGN
 ;
 
 visplane_t *R_FindPlane(visplane_t *ignore, int hash, fixed_t height, int flatnum,

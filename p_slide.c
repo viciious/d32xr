@@ -53,17 +53,6 @@ enum
    SIDE_FRONT
 };
 
-static int SL_PointOnSide(fixed_t x, fixed_t y) ATTR_OPTIMIZE_SIZE;
-static fixed_t SL_CrossFrac(void) ATTR_OPTIMIZE_SIZE;
-static void SL_ClipToLine(void) ATTR_OPTIMIZE_SIZE;
-static boolean SL_CheckLine(line_t* ld) ATTR_OPTIMIZE_SIZE;
-fixed_t P_CompletableFrac(fixed_t dx, fixed_t dy) ATTR_OPTIMIZE_SIZE;
-static int SL_PointOnSide2(fixed_t x1, fixed_t y1,
-    fixed_t x2, fixed_t y2,
-    fixed_t x3, fixed_t y3) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static void SL_CheckSpecialLines(void) ATTR_OPTIMIZE_SIZE;
-void P_SlideMove(void) ATTR_OPTIMIZE_SIZE;
-
 //
 // Simple point-on-line-side check.
 //

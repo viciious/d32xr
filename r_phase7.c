@@ -28,15 +28,15 @@ typedef struct
 #endif
 } localplane_t;
 
-static void R_MapPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static void R_PlaneLoop(localplane_t* lpl) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static void R_DrawPlanes2(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static void R_MapPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
+static void R_PlaneLoop(localplane_t* lpl) ATTR_DATA_CACHE_ALIGN;
+static void R_DrawPlanes2(void) ATTR_DATA_CACHE_ALIGN;
 
-static void R_LockPln(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static void R_UnlockPln(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static visplane_t* R_GetNextPlane(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static void R_LockPln(void) ATTR_DATA_CACHE_ALIGN;
+static void R_UnlockPln(void) ATTR_DATA_CACHE_ALIGN;
+static visplane_t* R_GetNextPlane(void) ATTR_DATA_CACHE_ALIGN;
 
-void R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
 
 static char pl_lock = 0;
 #ifdef MARS

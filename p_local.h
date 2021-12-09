@@ -125,7 +125,7 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
 
 void 	P_RemoveMobj (mobj_t *th);
 void	P_FreeMobj(mobj_t* mobj);
-boolean	P_SetMobjState (mobj_t *mobj, statenum_t state) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+boolean	P_SetMobjState (mobj_t *mobj, statenum_t state) ATTR_DATA_CACHE_ALIGN;
 void 	P_MobjThinker (mobj_t *mobj);
 void 	P_PreSpawnMobjs(int count);
 
@@ -134,8 +134,8 @@ void 	P_SpawnBlood (fixed_t x, fixed_t y, fixed_t z, int damage);
 void	P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type);
 void	P_SpawnPlayerMissile (mobj_t *source, mobjtype_t type);
 
-void	P_RunMobjBase2 (void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-void	P_RunMobjLate(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void	P_RunMobjBase2 (void) ATTR_DATA_CACHE_ALIGN;
+void	P_RunMobjLate(void) ATTR_DATA_CACHE_ALIGN;
 
 void L_SkullBash (mobj_t *mo);
 void L_MissileHit (mobj_t *mo);
@@ -143,8 +143,8 @@ void L_CrossSpecial (mobj_t *mo);
 
 void P_ExplodeMissile (mobj_t *mo);
 
-boolean P_MapThingSpawnsMobj(mapthing_t* mthing) ATTR_OPTIMIZE_SIZE;
-void	P_SpawnMapThing(mapthing_t* mthing, int thingid) ATTR_OPTIMIZE_SIZE;
+boolean P_MapThingSpawnsMobj(mapthing_t* mthing);
+void	P_SpawnMapThing(mapthing_t* mthing, int thingid);
 
 /*
 ===============================================================================

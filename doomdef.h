@@ -43,7 +43,7 @@ typedef unsigned short inpixel_t;
 #endif
 
 #ifdef MARS
-#define ATTR_DATA_CACHE_ALIGN __attribute__((section(".data"), aligned(16)))
+#define ATTR_DATA_CACHE_ALIGN __attribute__((section(".data"), aligned(16), optimize("Os")))
 #define ATTR_OPTIMIZE_SIZE __attribute__((optimize("Os")))
 #define ATTR_OPTIMIZE_EXTREME __attribute__((optimize("O3", "no-align-loops", "no-align-functions", "no-align-jumps", "no-align-labels")))
 #else
@@ -78,7 +78,7 @@ int D_vsnprintf(char *str, size_t nmax, const char *format, va_list ap);
 int D_snprintf(char *buf, size_t nsize, const char *fmt, ...);
 void D_printf (char *str, ...);
 
-void D_isort(int* a, int len) ATTR_OPTIMIZE_SIZE;
+void D_isort(int* a, int len);
 
 /*
 ===============================================================================
@@ -121,8 +121,8 @@ typedef unsigned angle_t;
 
 #ifdef MARS
 
-fixed_t finesine(angle_t angle) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;;
-fixed_t finecosine(angle_t angle) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+fixed_t finesine(angle_t angle) ATTR_DATA_CACHE_ALIGN;
+fixed_t finecosine(angle_t angle) ATTR_DATA_CACHE_ALIGN;
 
 #else
 
@@ -497,8 +497,7 @@ extern	int		ticrealbuttons, oldticrealbuttons; /* buttons for the console player
 extern	boolean		mousepresent;
 
 int MiniLoop ( void (*start)(void),  void (*stop)(void)
-		,  int (*ticker)(void), void (*drawer)(void) )
-	ATTR_OPTIMIZE_SIZE;
+		,  int (*ticker)(void), void (*drawer)(void) );
 
 int	G_Ticker (void);
 void G_Drawer (void);
@@ -686,16 +685,16 @@ extern	void		*lumpcache[MAXLUMPS];
 
 void	W_Init (void);
 
-int		W_CheckNumForName (const char *name) ATTR_OPTIMIZE_SIZE;
-int		W_GetNumForName (const char *name) ATTR_OPTIMIZE_SIZE;
+int		W_CheckNumForName (const char *name);
+int		W_GetNumForName (const char *name);
 
 int		W_LumpLength (int lump);
 void	W_ReadLump (int lump, void *dest);
 
-void	*W_CacheLumpNum (int lump, int tag) ATTR_OPTIMIZE_SIZE;
-void	*W_CacheLumpName (const char *name, int tag) ATTR_OPTIMIZE_SIZE;
+void	*W_CacheLumpNum (int lump, int tag);
+void	*W_CacheLumpName (const char *name, int tag);
 
-const char *W_GetNameForNum (int lump) ATTR_OPTIMIZE_SIZE;
+const char *W_GetNameForNum (int lump);
 
 #define W_POINTLUMPNUM(x) (void*)(wadfileptr+BIGLONG(lumpinfo[x].filepos))
 
@@ -760,9 +759,9 @@ boolean	I_RefreshLatched (void);
 int	I_GetTime (void);
 int     I_GetFRTCounter (void);
 
-void I_Update (void) ATTR_OPTIMIZE_SIZE;
+void I_Update (void);
 
-void I_Error (char *error, ...) ATTR_OPTIMIZE_SIZE;
+void I_Error (char *error, ...);
 
 #ifdef MARS
 //#define USE_C_DRAW
@@ -811,11 +810,11 @@ void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 
 void I_DrawSpanPotato(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source)
-	ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+	ATTR_DATA_CACHE_ALIGN;
 
 void I_DrawSpanPotatoLow(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source)
-	ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+	ATTR_DATA_CACHE_ALIGN;
 
 void I_DrawFuzzColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* fuzzpos);
@@ -833,7 +832,7 @@ void I_DebugScreen (void);
 
 void G_DeathMatchSpawnPlayer (int playernum);
 void G_Init(void);
-void G_InitNew (skill_t skill, int map, gametype_t gametype) ATTR_OPTIMIZE_SIZE;
+void G_InitNew (skill_t skill, int map, gametype_t gametype);
 void G_ExitLevel (void);
 void G_SecretExitLevel (void);
 void G_WorldDone (void);
@@ -845,33 +844,33 @@ int G_PlayDemoPtr (int *demo);
 /*PLAY */
 /*----- */
 
-void P_SetupLevel (int lumpnum, skill_t skill) ATTR_OPTIMIZE_SIZE;
-void P_Init (void) ATTR_OPTIMIZE_SIZE;
+void P_SetupLevel (int lumpnum, skill_t skill);
+void P_Init (void);
 
-void P_Start (void) ATTR_OPTIMIZE_SIZE;
-void P_Stop (void) ATTR_OPTIMIZE_SIZE;
+void P_Start (void);
+void P_Stop (void);
 int P_Ticker (void);
 void P_Drawer (void);
 
-void IN_Start (void) ATTR_OPTIMIZE_SIZE;
-void IN_Stop (void) ATTR_OPTIMIZE_SIZE;
-int IN_Ticker (void) ATTR_OPTIMIZE_SIZE;
-void IN_Drawer (void) ATTR_OPTIMIZE_SIZE;
+void IN_Start (void);
+void IN_Stop (void);
+int IN_Ticker (void);
+void IN_Drawer (void);
 
-void M_Start (void) ATTR_OPTIMIZE_SIZE;
-void M_Start2(boolean startup) ATTR_OPTIMIZE_SIZE;
-void M_Stop (void) ATTR_OPTIMIZE_SIZE;
-int M_Ticker (void) ATTR_OPTIMIZE_SIZE;
-void M_Drawer (void) ATTR_OPTIMIZE_SIZE;
+void M_Start (void);
+void M_Start2(boolean startup);
+void M_Stop (void);
+int M_Ticker (void);
+void M_Drawer (void);
 
-void F_Start (void) ATTR_OPTIMIZE_SIZE;
-void F_Stop (void) ATTR_OPTIMIZE_SIZE;
-int F_Ticker (void) ATTR_OPTIMIZE_SIZE;
-void F_Drawer (void) ATTR_OPTIMIZE_SIZE;
+void F_Start (void);
+void F_Stop (void);
+int F_Ticker (void);
+void F_Drawer (void);
 
 void AM_Control (player_t *player);
-void AM_Drawer (void) ATTR_OPTIMIZE_SIZE;
-void AM_Start (void) ATTR_OPTIMIZE_SIZE;
+void AM_Drawer (void);
+void AM_Start (void);
 
 /*----- */
 /*OPTIONS */
@@ -879,9 +878,9 @@ void AM_Start (void) ATTR_OPTIMIZE_SIZE;
 
 extern	VINT	o_musictype;
 
-void O_Init (void) ATTR_OPTIMIZE_SIZE;
-void O_Control (player_t *player) ATTR_OPTIMIZE_SIZE;
-void O_Drawer (void) ATTR_OPTIMIZE_SIZE;
+void O_Init (void);
+void O_Control (player_t *player);
+void O_Drawer (void);
 void O_SetButtonsFromControltype(void);
 
 
@@ -889,10 +888,10 @@ void O_SetButtonsFromControltype(void);
 /*STATUS */
 /*----- */
 
-void ST_Init (void) ATTR_OPTIMIZE_SIZE;
-void ST_Ticker (void) ATTR_OPTIMIZE_SIZE;
-void ST_Drawer (void) ATTR_OPTIMIZE_SIZE;
-void ST_ForceDraw(void) ATTR_OPTIMIZE_SIZE;
+void ST_Init (void);
+void ST_Ticker (void);
+void ST_Drawer (void);
+void ST_ForceDraw(void);
 void ST_InitEveryLevel(void);
 
 
@@ -906,7 +905,7 @@ void R_Init (void);
 int	R_FlatNumForName (const char *name);
 int	R_TextureNumForName (const char *name);
 int	R_CheckTextureNumForName (const char *name);
-angle_t R_PointToAngle2 (fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+angle_t R_PointToAngle2 (fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2) ATTR_DATA_CACHE_ALIGN;
 struct subsector_s *R_PointInSubsector (fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
 
 

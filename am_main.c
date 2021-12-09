@@ -71,7 +71,7 @@ int showAllLines;
 #define showAllLines 0
 #endif
 
-void DrawLine(pixel_t color, int x1, int y1, int x2, int y2) ATTR_OPTIMIZE_SIZE;
+void DrawLine(pixel_t color, int x1, int y1, int x2, int y2);
 
 /*================================================================= */
 /* */

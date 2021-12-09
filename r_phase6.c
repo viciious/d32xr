@@ -35,14 +35,14 @@ typedef struct
 
 static char seg_lock = 0;
 
-static void R_DrawTextures(int x, int floorclipx, int ceilingclipx, fixed_t scale2, int colnum, unsigned light, seglocal_t* lsegl) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static void R_DrawTextures(int x, int floorclipx, int ceilingclipx, fixed_t scale2, int colnum, unsigned light, seglocal_t* lsegl) ATTR_DATA_CACHE_ALIGN;
+static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds) ATTR_DATA_CACHE_ALIGN;
 
-static void R_LockSeg(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static void R_UnlockSeg(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-static void R_SegCommands2(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+static void R_LockSeg(void) ATTR_DATA_CACHE_ALIGN;
+static void R_UnlockSeg(void) ATTR_DATA_CACHE_ALIGN;
+static void R_SegCommands2(void) ATTR_DATA_CACHE_ALIGN;
 
-void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN;
 
 //
 // Render a wall texture as columns

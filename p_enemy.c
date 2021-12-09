@@ -15,14 +15,14 @@ Most monsters are spawned unaware of all players, but some can be made preaware
 ===============================================================================
 */
 
-boolean P_CheckMeleeRange (mobj_t *actor) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-boolean P_CheckMissileRange (mobj_t *actor) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-boolean P_Move (mobj_t *actor) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-boolean P_TryWalk (mobj_t *actor) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-void P_NewChaseDir (mobj_t *actor) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-boolean P_LookForPlayers (mobj_t *actor, boolean allaround) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-void A_Look (mobj_t *actor) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-void A_Chase (mobj_t *actor) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+boolean P_CheckMeleeRange (mobj_t *actor) ATTR_DATA_CACHE_ALIGN;
+boolean P_CheckMissileRange (mobj_t *actor) ATTR_DATA_CACHE_ALIGN;
+boolean P_Move (mobj_t *actor) ATTR_DATA_CACHE_ALIGN;
+boolean P_TryWalk (mobj_t *actor) ATTR_DATA_CACHE_ALIGN;
+void P_NewChaseDir (mobj_t *actor) ATTR_DATA_CACHE_ALIGN;
+boolean P_LookForPlayers (mobj_t *actor, boolean allaround) ATTR_DATA_CACHE_ALIGN;
+void A_Look (mobj_t *actor) ATTR_DATA_CACHE_ALIGN;
+void A_Chase (mobj_t *actor) ATTR_DATA_CACHE_ALIGN;
 
 /*
 ================
