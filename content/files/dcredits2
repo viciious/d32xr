@@ -1,20 +1,20 @@
-ci ^99DOOM 32X Resurrection
+ci ^99DOOM 32X Resurrection v1.5
 xi
 r  ^A2Programmers
-c  ...
+c  ^A2...
 li Victor Luchits
 li Joseph Fenton
 xi
 r  ^A2Music
-c  ...
+c  ^A2...
 li Spoony Bard
 xi
 r  ^A2Level fixes
-c  ...
+c  ^A2...
 li Wavy
 xi
 r  ^A2Add'l support
-c  ...
+c  ^A2...
 li MatteusBeus
 li TrekkiesUnite118
 li Barone, Polonium
@@ -25,11 +25,11 @@ xi
 r  ^A2Programming and
 xi
 r  ^A2rev engineering
-c  ...
+c  ^A2...
 li James Haley
 xi
 r  ^A2Add'l code
-c  ...
+c  ^A2...
 li Samuel Villarreal
 li Rebecca Heineman
 xi
