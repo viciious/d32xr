@@ -12,8 +12,8 @@
 
 typedef struct
 {
-   fixed_t first;
-   fixed_t last;
+   VINT first;
+   VINT last;
 } cliprange_t;
 
 #define MAXSEGS 32
