@@ -1,39 +1,39 @@
-ci DOOM 32X Resurrection
+ci ^99DOOM 32X Resurrection
 xi
-r  Programmers
+r  ^A2Programmers
 c  ...
 li Victor Luchits
 li Joseph Fenton
 xi
-r  Music
+r  ^A2Music
 c  ...
 li Spoony Bard
 xi
-r  Level fixes
+r  ^A2Level fixes
 c  ...
 li Wavy
 xi
-r  Additional support
+r  ^A2Add'l support
 c  ...
 li MatteusBeus
 li TrekkiesUnite118
 li Barone, Polonium
 xi
 xi
-ci Calico DOOM
+ci ^99Calico DOOM
 xi
-r  Programming and
+r  ^A2Programming and
 xi
-r  rev engineering
+r  ^A2rev engineering
 c  ...
 li James Haley
 xi
-r  Additional code
+r  ^A2Add'l code
 c  ...
 li Samuel Villarreal
 li Rebecca Heineman
 xi
-ci Special thanks
+ci ^99Special thanks
 xi
-ci id Software, Songbird Productions
-ci RetroRGB
+ci id Software, Songbird Productions,
+ci Retro^B1R^7AG^C7B
