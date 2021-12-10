@@ -589,13 +589,13 @@ static int TIC_Credits (void)
 
 static void DRAW_RightString(int x, int y, const char* str)
 {
-	int len = mystrlen(str);
+	int len = I_Print8Len(str);
 	I_Print8(x - len * 8, y, str);
 }
 
 static void DRAW_CenterString(int y, const char* str)
 {
-	int len = mystrlen(str);
+	int len = I_Print8Len(str);
 	I_Print8((320 - len * 8) / 2, y, str);
 }
 

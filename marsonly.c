@@ -123,9 +123,45 @@ static const byte font8[] =
 // Print a debug message.
 // CALICO: Rewritten to expand 1-bit graphics
 //
+int I_Print8Len(const char* string)
+{
+	int c;
+	int len = 0;
+	int ckey = 0;
+
+	while ((c = *string++))
+	{
+		if (ckey)
+		{
+			ckey--;
+			continue;
+		}
+
+		if (c == '^')
+		{
+			ckey = 2;
+			continue;
+		}
+
+		len++;
+	}
+
+	return len;
+}
+
+static int hextoi(char c)
+{
+	if (c >= '0' && c <= '9') return c - '0';
+	else if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+	else if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+	return 0;
+}
+
 void I_Print8(int x, int y, const char* string)
 {
 	int c;
+	int ckey = 0;
+	int color = COLOR_WHITE;
 	const byte* source;
 	byte *dest;
 
@@ -133,11 +169,24 @@ void I_Print8(int x, int y, const char* string)
 		return;
 
 	dest = (byte *)(I_FrameBuffer() + 320) + (y * 8) * 320 + x;
-
 	while ((c = *string++) && x < 320-8)
 	{
 		int i, b;
 		byte * d;
+
+		if (ckey)
+		{
+			color = (color<<4)|(hextoi(c));
+			ckey--;
+			continue;
+		}
+
+		if (c == '^')
+		{
+			color = 0;
+			ckey = 2;
+			continue;
+		}
 
 		if (c < 32 || c >= 128)
 		{
@@ -155,7 +204,7 @@ void I_Print8(int x, int y, const char* string)
 			for (b = 0; b < 8; b++)
 			{
 				if (s & (1 << (7 - b)))
-					*(d + b) = COLOR_WHITE;
+					*(d + b) = color;
 
 			}
 			d += 320;

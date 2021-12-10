@@ -823,6 +823,7 @@ void I_DrawFuzzColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac
 	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* fuzzpos);
 
 void I_Print8 (int x, int y, const char *string);
+int I_Print8Len(const char* string);
 
 void I_DebugScreen (void);
 
