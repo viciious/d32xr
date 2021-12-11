@@ -14,7 +14,9 @@ typedef struct
 {
    VINT first;
    VINT last;
-} cliprange_t;
+} cliprange_t
+__attribute__((aligned(4)))
+;
 
 #define MAXSEGS 32
 
@@ -219,8 +221,7 @@ static void R_ClipWallSegment(fixed_t first, fixed_t last, boolean solid)
 
                 while (next != start)
                 {
-                    next->first = (next - 1)->first;
-                    next->last = (next - 1)->last;
+                    *((int*)next) = *((int*)(next - 1));
                     --next;
                 }
 
@@ -275,9 +276,8 @@ crunch:
 
         while (next++ != newend)
         {
-            (start + 1)->first = next->first;
-            (start + 1)->last = next->last;
             start++;
+            *((int*)start) = *((int*)next);
         }
 
         newend = start + 1;
