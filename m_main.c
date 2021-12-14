@@ -190,12 +190,12 @@ void M_Start2 (boolean startup_)
 	mainscreen[ms_save].firstitem = mi_savelist;
 	mainscreen[ms_save].numitems = 1;
 
-	D_strncpy(mainitem[mi_newgame].name, "New Game", 8);
+	D_memcpy(mainitem[mi_newgame].name, "New Game", 9);
 	mainitem[mi_newgame].x = ITEMX;
 	mainitem[mi_newgame].y = CURSORY(0);
 	mainitem[mi_newgame].screen = ms_new;
 
-	D_strncpy(mainitem[mi_loadgame].name, "Load Game", 9);
+	D_memcpy(mainitem[mi_loadgame].name, "Load Game", 10);
 	mainitem[mi_loadgame].x = ITEMX;
 	mainitem[mi_loadgame].y = CURSORY(1);
 	mainitem[mi_loadgame].screen = ms_load;
@@ -203,29 +203,29 @@ void M_Start2 (boolean startup_)
 
 	if (!startup && netgame != gt_deathmatch)
 	{
-		D_strncpy(mainitem[mi_savegame].name, "Save Game", 9);
+		D_memcpy(mainitem[mi_savegame].name, "Save Game", 10);
 		mainitem[mi_savegame].x = ITEMX;
 		mainitem[mi_savegame].y = CURSORY(2);
 		mainitem[mi_savegame].screen = ms_save;
 		mainscreen[ms_main].numitems++;
 	}
 
-	D_strncpy(mainitem[mi_level].name, "Area", 4);
+	D_memcpy(mainitem[mi_level].name, "Area", 5);
 	mainitem[mi_level].x = ITEMX;
 	mainitem[mi_level].y = CURSORY(0);
 	mainitem[mi_level].screen = ms_none;
 
-	D_strncpy(mainitem[mi_gamemode].name, "Game Mode", 9);
+	D_memcpy(mainitem[mi_gamemode].name, "Game Mode", 10);
 	mainitem[mi_gamemode].x = ITEMX;
 	mainitem[mi_gamemode].y = CURSORY((mainscreen[ms_new].numitems - 2) * 2);
 	mainitem[mi_gamemode].screen = ms_none;
 
-	D_strncpy(mainitem[mi_difficulty].name, "Difficulty", 10);
+	D_memcpy(mainitem[mi_difficulty].name, "Difficulty", 11);
 	mainitem[mi_difficulty].x = ITEMX;
 	mainitem[mi_difficulty].y = CURSORY((mainscreen[ms_new].numitems - 1)*2);
 	mainitem[mi_difficulty].screen = ms_none;
 
-	D_strncpy(mainitem[mi_savelist].name, "Checkpoints", 11);
+	D_memcpy(mainitem[mi_savelist].name, "Checkpoints", 12);
 	mainitem[mi_savelist].x = ITEMX;
 	mainitem[mi_savelist].y = CURSORY(0);
 	mainitem[mi_savelist].screen = ms_none;
@@ -499,6 +499,14 @@ int M_Ticker (void)
 	if (sound != sfx_None)
 		S_StartSound(NULL, sound);
 
+	if (screenpos == ms_new)
+	{
+		if (currentplaymode == (int)gt_single)
+			D_memcpy(mainitem[mi_gamemode].name, "Game Mode", 10);
+		else
+			D_memcpy(mainitem[mi_gamemode].name, "Split Mode", 11);
+	}
+
 	if (newcursor || sound != sfx_None)
 	{
 		/* long menu item names can spill onto the screen border */
@@ -573,32 +581,23 @@ void M_Drawer (void)
 		print(items[i].x, y, items[i].name);
 	}
 
-	/* draw start level information */
 	if (scrpos == ms_new)
 	{
 		mainitem_t* item;
-		char mapname[64];
-		int mapnamelen;
-
-		M_MapName(mapnumber, mapname, sizeof(mapname));
-		mapnamelen = mystrlen(mapname);
-
-		item = &mainitem[mi_gamemode];
-		y = y_offset + item->y;
+		char tmp[64];
+		int tmplen;
 
 		/* draw game mode information */
-		if (currentplaymode == (int)gt_single)
-		{
-			print(item->x + 10, y + ITEMSPACE + 2, playmodes[currentplaymode]);
-		}
-		else
-		{
-			print(item->x + 10, y + ITEMSPACE + 2, "Split ");
-			print(item->x + 74, y + ITEMSPACE + 2, playmodes[currentplaymode]);
-		}
+		item = &mainitem[mi_gamemode];
+		y = y_offset + item->y;
+		print(item->x + 10, y + ITEMSPACE + 2, playmodes[currentplaymode]);
 
+		/* draw start level information */
 		item = &mainitem[mi_level];
 		y = y_offset + item->y;
+
+		M_MapName(mapnumber, tmp, sizeof(tmp));
+		tmplen = mystrlen(tmp);
 
 #ifndef MARS
 		EraseBlock(80, m_doom_height + CURSORY(NUMMAINITEMS - 2) + ITEMSPACE + 2, 320, nums[0]->height);
@@ -612,7 +611,7 @@ void M_Drawer (void)
 		else
 			DrawJagobjLump(numslump + levelones, item->x + 70, y + 2, NULL, NULL);
 
-		print((320 - (mapnamelen * 14)) >> 1, y + ITEMSPACE + 2, mapname);
+		print((320 - (tmplen * 14)) >> 1, y + ITEMSPACE + 2, tmp);
 
 		item = &mainitem[mi_difficulty];
 		y = y_offset + item->y;

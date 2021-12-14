@@ -142,52 +142,52 @@ void O_Init (void)
 	D_memset(menuitem, 0, sizeof(menuitem));
 	D_memset(slider, 0, sizeof(slider));
 
-	D_strncpy(menuitem[mi_game].name, "Game", 4);
+	D_memcpy(menuitem[mi_game].name, "Game", 5);
 	menuitem[mi_game].x = ITEMX;
 	menuitem[mi_game].y = STARTY;
 	menuitem[mi_game].slider = NULL;
 	menuitem[mi_game].screen = ms_game;
 
-	D_strncpy(menuitem[mi_audio].name, "Audio", 6);
+	D_memcpy(menuitem[mi_audio].name, "Audio", 7);
 	menuitem[mi_audio].x = ITEMX;
 	menuitem[mi_audio].y = STARTY+ITEMSPACE;
 	menuitem[mi_audio].slider = NULL;
 	menuitem[mi_audio].screen = ms_audio;
 
-	D_strncpy(menuitem[mi_video].name, "Video", 6);
+	D_memcpy(menuitem[mi_video].name, "Video", 7);
 	menuitem[mi_video].x = ITEMX;
 	menuitem[mi_video].y = STARTY+ITEMSPACE*2;
 	menuitem[mi_video].slider = NULL;
 	menuitem[mi_video].screen = ms_video;
 
-	D_strncpy(menuitem[mi_controls].name, "Controls", 8);
+	D_memcpy(menuitem[mi_controls].name, "Controls", 9);
 	menuitem[mi_controls].x = ITEMX;
 	menuitem[mi_controls].y = STARTY+ITEMSPACE*3;
 	menuitem[mi_controls].slider = NULL;
 	menuitem[mi_controls].screen = ms_controls;
 
 
-	D_strncpy(menuitem[mi_soundvol].name, "Sfx volume", 10);
+	D_memcpy(menuitem[mi_soundvol].name, "Sfx volume", 11);
 	menuitem[mi_soundvol].x = ITEMX;
 	menuitem[mi_soundvol].y = STARTY;
 	menuitem[mi_soundvol].slider = &slider[0];
  	slider[0].maxval = 4;
 	slider[0].curval = 4*sfxvolume/64;
 
-	D_strncpy(menuitem[mi_music].name, "Music", 5);
+	D_memcpy(menuitem[mi_music].name, "Music", 6);
 	menuitem[mi_music].x = ITEMX;
 	menuitem[mi_music].y = STARTY+ITEMSPACE*2;
 	menuitem[mi_music].slider = NULL;
 
 
-	D_strncpy(menuitem[mi_resolution].name, "Resolution", 10);
+	D_memcpy(menuitem[mi_resolution].name, "Resolution", 11);
 	menuitem[mi_resolution].x = ITEMX;
 	menuitem[mi_resolution].y = STARTY;
 	menuitem[mi_resolution].slider = &slider[1];
 	slider[1].maxval = numViewports - 1;
 	slider[1].curval = viewportNum;
 
-	D_strncpy(menuitem[mi_detailmode].name, "Level of detail", 15);
+	D_memcpy(menuitem[mi_detailmode].name, "Level of detail", 16);
 	menuitem[mi_detailmode].x = ITEMX;
 	menuitem[mi_detailmode].y = STARTY+ITEMSPACE*2;
 	menuitem[mi_detailmode].slider = &slider[2];
@@ -195,33 +195,33 @@ void O_Init (void)
 	slider[2].curval = detailmode + 1;
 
 
-	D_strncpy(menuitem[mi_controltype].name, "Gamepad", 7);
+	D_memcpy(menuitem[mi_controltype].name, "Gamepad", 8);
 	menuitem[mi_controltype].x = ITEMX;
 	menuitem[mi_controltype].y = STARTY;
 	menuitem[mi_controltype].slider = NULL;
 
-	D_strncpy(menuitem[mi_alwaysrun].name, "Always run", 10);
+	D_memcpy(menuitem[mi_alwaysrun].name, "Always run", 11);
 	menuitem[mi_alwaysrun].x = ITEMX;
 	menuitem[mi_alwaysrun].y = STARTY+ITEMSPACE*4;
 
-	D_strncpy(menuitem[mi_strafebtns].name, "LR Strafe", 10);
+	D_memcpy(menuitem[mi_strafebtns].name, "LR Strafe", 11);
 	menuitem[mi_strafebtns].x = ITEMX;
 	menuitem[mi_strafebtns].y = STARTY+ITEMSPACE*5;
 
 
-	D_strncpy(menuscreen[ms_main].name, "Options", 7);
+	D_memcpy(menuscreen[ms_main].name, "Options", 8);
 	menuscreen[ms_main].firstitem = mi_game;
 	menuscreen[ms_main].numitems = mi_controls - mi_game + 1;
 
-	D_strncpy(menuscreen[ms_audio].name, "Audio", 6);
+	D_memcpy(menuscreen[ms_audio].name, "Audio", 7);
 	menuscreen[ms_audio].firstitem = mi_soundvol;
 	menuscreen[ms_audio].numitems = mi_music - mi_soundvol + 1;
 
-	D_strncpy(menuscreen[ms_video].name, "Video", 6);
+	D_memcpy(menuscreen[ms_video].name, "Video", 7);
 	menuscreen[ms_video].firstitem = mi_resolution;
 	menuscreen[ms_video].numitems = mi_detailmode - mi_resolution + 1;
 
-	D_strncpy(menuscreen[ms_controls].name, "Controls", 8);
+	D_memcpy(menuscreen[ms_controls].name, "Controls", 9);
 	menuscreen[ms_controls].firstitem = mi_controltype;
 	menuscreen[ms_controls].numitems = mi_strafebtns - mi_controltype + 1;
 }
