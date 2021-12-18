@@ -437,6 +437,7 @@ D_printf ("Done\n");
 	doompalette = W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
 
 	row = (byte*)(dc_colormaps + 256 * 16);
+	br = 0;
 	for (i = 0; i < 512; i += 2) {
 		br += doompalette[row[i] * 3 + 0];
 		br += doompalette[row[i] * 3 + 1];
