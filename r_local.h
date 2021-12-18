@@ -289,6 +289,8 @@ __attribute__((aligned(16)))
 extern	viewdef_t	vd;
 extern	angle_t		clipangle, doubleclipangle;
 
+extern	VINT		extralight, extralight2;
+
 #ifdef MARS
 __attribute__((aligned(16)))
 #endif
@@ -335,6 +337,8 @@ extern	VINT			*texturetranslation;	/* for global animation */
 extern	void			** flatpixels;
 
 extern	int			firstflat, numflats;
+
+extern short* dc_colormaps;
 
 #define R_CheckPixels(lumpnum) (void *)((intptr_t)(W_POINTLUMPNUM(lumpnum)))
 

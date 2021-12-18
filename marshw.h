@@ -39,6 +39,7 @@ char Mars_FramebuffersFlipped(void) __attribute__((noinline));
 void Mars_Init(void);
 void Mars_InitVideo(int lines);
 void Mars_InitLineTable(void);
+void Mars_SetBrightness(int16_t brightness);
 char Mars_UploadPalette(const uint8_t* palette);
 int Mars_PollMouse(int port);
 int Mars_ParseMousePacket(int mouse, int* pmx, int* pmy);

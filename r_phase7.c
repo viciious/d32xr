@@ -244,6 +244,8 @@ static void R_DrawPlanes2(void)
 
     while ((pl = R_GetNextPlane()) != NULL)
     {
+        int light;
+
         if (pl->minx > pl->maxx)
             continue;
 
@@ -252,19 +254,20 @@ static void R_DrawPlanes2(void)
         lpl.ds_source = flatpixels[pl->flatnum];
         lpl.height = (unsigned)D_abs(pl->height) << FIXEDTOHEIGHT;
 
-        lpl.lightmax = pl->lightlevel + extralight;
-        if (lpl.lightmax > 255)
-            lpl.lightmax = 255;
+        light = pl->lightlevel + extralight;
+        if (light < 0)
+            light = 0;
+        if (light > 255)
+            light = 255;
+        lpl.lightmax = light;
         lpl.lightmin = lpl.lightmax;
 
         if (detailmode == detmode_high)
         {
 #ifdef MARS
-            int light = lpl.lightmax;
             if (light <= 160 + extralight)
                 light = light - (light >> 1);
 #else
-            int light = lpl.lightmax;
             light = light - ((255 - light) << 1);
 #endif
             if (light < MINLIGHT)

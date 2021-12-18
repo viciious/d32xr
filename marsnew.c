@@ -339,6 +339,8 @@ void I_Init (void)
 	const byte	*doompalette;
 	const byte 	*doomcolormap;
 
+	Mars_SetBrightness(1);
+
 	doompalette = W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
 	I_SetPalette(doompalette);
 

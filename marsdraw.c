@@ -38,8 +38,6 @@
 ==============================================================================
 */
 
-extern short* dc_colormaps;
-
 void I_DrawFuzzColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* pfuzzpos) ATTR_DATA_CACHE_ALIGN;
 void I_DrawFuzzColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
@@ -418,7 +416,7 @@ void I_DrawFuzzColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac
 
 	frac = frac_;
 	dest = I_ViewportBuffer() + dc_yl * 320 / 2 + dc_x;
-	dc_colormap = dc_colormaps + 6 * 256;
+	dc_colormap = dc_colormaps + (6 - extralight2 / 2) * 256;
 
 #define DO_PIXEL() do { \
 		*dest = dc_colormap[dest[fuzzoffset[fuzzpos]] & 0xff]; \

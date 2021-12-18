@@ -86,7 +86,8 @@ player_t	*viewplayer;
 VINT			validcount = 1;		/* increment every time a check is made */
 VINT			framecount;		/* incremented every frame */
 
-int			extralight;			/* bumped light from gun blasts */
+VINT		extralight;			/* bumped light from gun blasts */
+VINT		extralight2;		/* bumped light from global colormap */
 
 /* */
 /* precalculated math */
@@ -412,6 +413,9 @@ int R_DefaultViewportSize(void)
 
 void R_Init (void)
 {
+	int	i, br;
+	const byte* doompalette, * row;
+
 D_printf ("R_InitData\n");
 	R_InitData ();
 D_printf ("Done\n");
@@ -424,6 +428,29 @@ D_printf ("Done\n");
 	R_SetDetailMode(detailmode);
 
 	R_InitTexCache(&r_texcache, numflats+numtextures);
+
+	// test avarage mid brightness, which is around 40960
+	// with the standard colormap
+	//
+	// in case of a non-standard colormap, we may need to darken 
+	// the game a bit when diminishing lighting if turn off
+	doompalette = W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
+
+	row = (byte*)(dc_colormaps + 256 * 16);
+	for (i = 0; i < 512; i += 2) {
+		br += doompalette[row[i] * 3 + 0];
+		br += doompalette[row[i] * 3 + 1];
+		br += doompalette[row[i] * 3 + 2];
+	}
+
+	br = br - 40960;
+	if (br < 0)
+		extralight2 = 0;
+	else
+	{
+		br /= (512 * 3);
+		extralight2 = -1 * ((br + 15) & ~15);
+	}
 }
 
 /*
@@ -598,15 +625,11 @@ void R_Setup (int displayplayer)
 
 #ifdef MARS
 	if (detailmode == detmode_high)
-	{
 		vd.extralight = player->extralight << 4;
-		if (vd.extralight > 255)
-			vd.extralight = 255;
-	}
 	else
-	{
 		vd.extralight = 0;
-	}
+	if (detailmode != detmode_high)
+		vd.extralight += extralight2;
 
 	viewportbuffer = (pixel_t*)I_ViewportBuffer();
 

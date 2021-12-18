@@ -276,6 +276,7 @@ void R_SegCommands2(void)
 
     for (segl = viswalls; segl < lastwallcmd; segl++)
     {
+        int seglight;
 #ifdef MARS
         int state;
 
@@ -303,23 +304,24 @@ void R_SegCommands2(void)
 #endif
 
         lseg.segl = segl;
-        lseg.lightmax = segl->seglightlevel + extralight;
+        
+        seglight = segl->seglightlevel + extralight;
 #ifdef MARS
-        if (lseg.lightmax > 255)
-            lseg.lightmax = 255;
+        if (seglight < 0)
+            seglight = 0;
+        if (seglight > 255)
+            seglight = 255;
 #endif
+        lseg.lightmax = seglight;
         lseg.lightmin = lseg.lightmax;
 
         if (detailmode == detmode_high)
         {
 #ifdef MARS
-            int seglight = segl->seglightlevel + extralight;
-            if (seglight > 255)
-                seglight = 255;
-            else if (seglight <= 160 + extralight)
+            if (seglight <= 160 + extralight)
                 seglight = seglight - (seglight >> 1);
 #else
-            int seglight = segl->seglightlevel - (255 - segl->seglightlevel) * 2;
+            seglight = light - (255 - light) * 2;
             if (seglight < 0)
                 seglight = 0;
 #endif

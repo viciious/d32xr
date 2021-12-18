@@ -50,6 +50,8 @@ uint16_t mars_refresh_hz = 0;
 const int NTSC_CLOCK_SPEED = 23011360; // HZ
 const int PAL_CLOCK_SPEED = 22801467; // HZ
 
+static volatile int16_t mars_brightness = 0;
+
 void pri_vbi_handler(void) __attribute__((section(".data"), aligned(16)));
 
 void Mars_WaitFrameBuffersFlip(void)
@@ -101,18 +103,29 @@ void Mars_InitLineTable(void)
 		lines[j] = 0;
 }
 
+void Mars_SetBrightness(int16_t brightness)
+{
+	mars_brightness = brightness;
+}
+
 char Mars_UploadPalette(const uint8_t* palette)
 {
 	int	i;
-	volatile unsigned short* cram = &MARS_CRAM;
+	unsigned short* cram = (unsigned short *)&MARS_CRAM;
+	int16_t br = mars_brightness;
 
 	if ((MARS_SYS_INTMSK & MARS_SH2_ACCESS_VDP) == 0)
 		return 0;
 
 	for (i = 0; i < 256; i++) {
-		uint8_t r = *palette++;
-		uint8_t g = *palette++;
-		uint8_t b = *palette++;
+		int16_t r = br + *palette++;
+		int16_t g = br + *palette++;
+		int16_t b = br + *palette++;
+
+		if (r < 0) r = 0; else if (r > 255) r = 255;
+		if (g < 0) g = 0; else if (g > 255) g = 255;
+		if (b < 0) b = 0; else if (b > 255) b = 255;
+
 		unsigned short b1 = ((b >> 3) & 0x1f) << 10;
 		unsigned short g1 = ((g >> 3) & 0x1f) << 5;
 		unsigned short r1 = ((r >> 3) & 0x1f) << 0;
