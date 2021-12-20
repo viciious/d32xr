@@ -266,7 +266,7 @@ static void R_DrawPlanes2(void)
         {
 #ifdef MARS
             if (light <= 160 + extralight)
-                light = light - (light >> 1);
+                light = (light >> 1);
 #else
             light = light - ((255 - light) << 1);
 #endif

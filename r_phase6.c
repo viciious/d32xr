@@ -319,7 +319,7 @@ void R_SegCommands2(void)
         {
 #ifdef MARS
             if (seglight <= 160 + extralight)
-                seglight = seglight - (seglight >> 1);
+                seglight = (seglight >> 1);
 #else
             seglight = light - (255 - light) * 2;
             if (seglight < 0)
