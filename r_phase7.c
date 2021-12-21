@@ -316,7 +316,7 @@ void Mars_R_PrepPlanes(void)
             if (numplanes > 10)
                 continue;
 
-            int span = stop - start;
+            int span = stop - start + 1;
             if (span < maxlen)
                 continue;
 
@@ -324,7 +324,7 @@ void Mars_R_PrepPlanes(void)
             if (lastvisplane == visplanes + MAXVISPLANES)
                 continue;
 
-            start = start + (stop - start) / 2;
+            start = start + span / 2;
             pl->maxx = start;
 
             visplane_t* newpl = lastvisplane++;
