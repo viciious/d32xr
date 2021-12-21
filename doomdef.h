@@ -437,14 +437,14 @@ typedef struct player_s
 	VINT		attackdown, usedown;	/* true if button down last tic */
 	VINT		cheats;					/* bit flags */
 	
-	int			refire;					/* refired shots are less accurate */
+	VINT		refire;					/* refired shots are less accurate */
 	
 	VINT		killcount, itemcount, secretcount;		/* for intermission */
 	char		*message;				/* hint messages */
 	VINT		damagecount, bonuscount;/* for screen flashing */
 	mobj_t		*attacker;				/* who did damage (NULL for floors) */
-	int			extralight;				/* so gun flashes light up areas */
-	int			colormap;				/* 0-3 for which color to draw player */
+	VINT		extralight;				/* so gun flashes light up areas */
+	VINT		colormap;				/* 0-3 for which color to draw player */
 	pspdef_t	psprites[NUMPSPRITES];	/* view sprites (gun, etc) */
 	boolean		didsecret;				/* true if secret level has been done */
 	void		*lastsoundsector;		/* don't flood noise every time */
