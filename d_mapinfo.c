@@ -409,10 +409,6 @@ int G_FindGameinfo(dgameinfo_t* gi)
 	if (linecount < 2)
 		goto error;
 
-	gi->titleMus = gi->titleMus > 0 ? S_SongForLump(gi->titleMus) : 0;
-	gi->intermissionMus = gi->intermissionMus > 0 ? S_SongForLump(gi->intermissionMus) : 0;
-	gi->victoryMus = gi->victoryMus > 0 ? S_SongForLump(gi->victoryMus) : 0;
-
 	return 1;
 
 error:

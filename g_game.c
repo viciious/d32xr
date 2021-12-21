@@ -140,8 +140,8 @@ void G_DoLoadLevel (void)
 	P_SetupLevel (gamemaplump, gameskill);
 	gameaction = ga_nothing; 
 
-	music = S_SongForLump(gamemapinfo.musicLump);
-	if (!music)
+	music = gamemapinfo.musicLump;
+	if (music <= 0)
 		music = S_SongForMapnum(gamemapinfo.mapNumber);
 	S_StartSong(music, 1, gamemap);
 

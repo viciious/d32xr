@@ -2,9 +2,9 @@
 
 #include "doomdef.h"
 #include "lzss.h"
+#include "mars.h"
 
 /* include "r_local.h" */
-
 
 /*=============== */
 /*   TYPES */
@@ -218,11 +218,11 @@ void W_ReadLump (int lump, void *dest)
 	l = lumpinfo+lump;
 	if (l->name[0] & 0x80) /* compressed */
 	{
-		 decode((unsigned char *) (wadfileptr + BIGLONG(l->filepos)),
+		 decode((unsigned char *)W_GetLumpData(lump),
 		(unsigned char *) dest);
 	}
 	else
-	  D_memcpy (dest, wadfileptr + BIGLONG(l->filepos), BIGLONG(l->size));
+	  D_memcpy (dest, W_GetLumpData(lump), BIGLONG(l->size));
 }
 
 
@@ -305,4 +305,20 @@ const char *W_GetNameForNum (int lump)
 	return lumpinfo[lump].name;
 }
 
+/*
+====================
+=
+= W_GetLumpData
+====================
+*/
+
+void * W_GetLumpData(int lump)
+{
+	lumpinfo_t* l = lumpinfo + lump;
+
+	if (lump >= numlumps)
+		I_Error("W_GetLumpData: %i >= numlumps", lump);
+
+	return I_RemapLumpPtr((void*)(wadfileptr + BIGLONG(l->filepos)));
+}
 

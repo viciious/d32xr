@@ -42,7 +42,7 @@ static uint8_t snd_bufidx = 0;
 int16_t __attribute__((aligned(16))) snd_buffer[2][MAX_SAMPLES * 2];
 static uint8_t	snd_init = 0, snd_stopmix = 0;
 
-static VINT		vgm_start;
+static VINT		*vgm_tracks;
 
 sfxchannel_t	sfxchannels[SFXCHANNELS];
 
@@ -71,8 +71,9 @@ static void S_Spatialize(mobj_t* origin, int* pvol, int* psep) ATTR_DATA_CACHE_A
 
 void S_Init(void)
 {
-	int		i, l;
+	int		i;
 	int		initmusictype;
+	VINT	tmp_tracks[100];
 
 	/* init sound effects */
 	for (i=1 ; i < NUMSFX ; i++)
@@ -86,9 +87,28 @@ void S_Init(void)
 	curcdtrack = cdtrack_none;
 	muslooping = 0;
 
-	vgm_start = l = W_CheckNumForName("VGM_STRT");
-	if (l != -1)
-		num_music = W_GetNumForName("VGM_END") - l - 1;
+	for (i = 1; i < numlumps; i++)
+	{
+		char name[5];
+
+		D_memcpy(name, W_GetNameForNum(i), 4);
+		name[4] = 0;
+
+		if (D_strcasecmp("VGM_", name))
+			continue;
+
+		tmp_tracks[num_music++] = i;
+		if (num_music == (int)sizeof(tmp_tracks) / sizeof(tmp_tracks[0]))
+			break;
+	}
+
+	if (num_music > 0)
+	{
+		vgm_tracks = Z_Malloc(sizeof(*vgm_tracks) * num_music, PU_STATIC, 0);
+		for (i = 0; i < num_music; i++) {
+			vgm_tracks[i] = tmp_tracks[i];
+		}
+	}
 
 	Mars_RB_ResetAll(&soundcmds);
 
@@ -120,6 +140,7 @@ void S_Clear (void)
 		return;
 	*p++ = SNDCMD_CLEAR;
 	Mars_RB_CommitWrite(&soundcmds);
+	Mars_RB_WaitReader(&soundcmds, 0);
 }
 
 void S_RestartSounds (void)
@@ -310,16 +331,6 @@ boolean S_CDAvailable(void)
 	return mars_cd_ok != 0;
 }
 
-int S_SongForLump(int lump)
-{
-	if (lump <= 0)
-		return mus_none;
-	if (lump <= vgm_start || lump > vgm_start + num_music)
-		return mus_none;
-
-	return lump - vgm_start;
-}
-
 int S_SongForMapnum(int mapnum)
 {
 	int i;
@@ -328,7 +339,7 @@ int S_SongForMapnum(int mapnum)
 
 	numsongs = 0;
 	for (i = 0; i < num_music; i++) {
-		VINT mus = i + 1;
+		VINT mus = vgm_tracks[i];
 
 		if (mus == gameinfo.titleMus)
 			continue;
@@ -347,7 +358,7 @@ int S_SongForMapnum(int mapnum)
 	return songs[(mapnum - 1) % numsongs];
 }
 
-void S_StartSong(int music_id, int looping, int cdtrack)
+void S_StartSong(int musiclump, int looping, int cdtrack)
 {
 	int playtrack = 0;
 
@@ -374,22 +385,28 @@ void S_StartSong(int music_id, int looping, int cdtrack)
 	}
 	else if (musictype == mustype_fm)
 	{
-		if (music_id > num_music)
-			return;
+		int i;
 
-		if (music_id == mus_none)
+		if (musiclump == mus_none)
 		{
 			S_StopSong();
 			return;
 		}
 
-		if (music_id == curmusic)
-			return;
+		for (i = 0; i < num_music; i++)
+		{
+			if (vgm_tracks[i] == musiclump)
+			{
+				playtrack = i + 1;
+				break;
+			}
+		}
 
-		playtrack = music_id;
+		if (curmusic == playtrack)
+			return;
 	}
 
-	curmusic = music_id;
+	curmusic = musiclump;
 	curcdtrack = cdtrack;
 	muslooping = looping;
 
@@ -397,9 +414,14 @@ void S_StartSong(int music_id, int looping, int cdtrack)
 		return;
 
 	if (musictype == mustype_cd)
+	{
 		Mars_PlayTrack(1, playtrack, NULL, looping);
-	else
-		Mars_PlayTrack(0, playtrack, W_POINTLUMPNUM(vgm_start + playtrack), looping);
+		return;
+	}
+
+	Mars_StopTrack(); // stop the playback before flipping pages
+	S_Clear();
+	Mars_PlayTrack(0, playtrack, W_POINTLUMPNUM(musiclump), looping);
 }
 
 void S_StopSong(void)

@@ -695,8 +695,9 @@ void	*W_CacheLumpNum (int lump, int tag);
 void	*W_CacheLumpName (const char *name, int tag);
 
 const char *W_GetNameForNum (int lump);
+void* W_GetLumpData(int lump);
 
-#define W_POINTLUMPNUM(x) (void*)(wadfileptr+BIGLONG(lumpinfo[x].filepos))
+#define W_POINTLUMPNUM(x) W_GetLumpData(x)
 
 
 /*---------- */
@@ -722,6 +723,7 @@ extern	int			startsave;
 void I_Init (void);
 byte *I_WadBase (void);
 byte *I_ZoneBase (int *size);
+void* I_RemapLumpPtr (void* ptr);
 
 /* return a pointer to a 64k or so temp work buffer for level setup uses */
 /*(non-displayed frame buffer) */
@@ -1155,8 +1157,7 @@ void I_InitMenuFire(jagobj_t* titlepic);
 void I_StopMenuFire(void);
 void I_DrawMenuFire(void);
 void I_DrawSbar(void);
-void S_StartSong(int music_id, int looping, int cdtrack);
-int S_SongForLump(int lump);
+void S_StartSong(int musiclump, int looping, int cdtrack);
 int S_SongForMapnum(int mapnum);
 void S_StopSong(void);
 void S_RestartSounds (void);

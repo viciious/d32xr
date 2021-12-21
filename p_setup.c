@@ -51,7 +51,7 @@ void P_LoadVertexes (int lump)
 {
 #ifdef MARS
 	numvertexes = W_LumpLength (lump) / sizeof(vertex_t);
-	vertexes = (vertex_t *)(wadfileptr+BIGLONG(lumpinfo[lump].filepos));
+	vertexes = (vertex_t *)W_GetLumpData(lump);
 #else
 	byte		*data;
 	int			i;
@@ -212,7 +212,7 @@ void P_LoadNodes (int lump)
 {
 #ifdef MARS
 	numnodes = W_LumpLength (lump) / sizeof(node_t);
-	nodes = (node_t *)(wadfileptr+BIGLONG(lumpinfo[lump].filepos));
+	nodes = (node_t *)W_GetLumpData(lump);
 #else
 	byte		*data;
 	int			i,j,k;
@@ -415,7 +415,7 @@ void P_LoadBlockMap (int lump)
 	int		count;
 	
 #ifdef MARS
-	blockmaplump = (short *)(wadfileptr+BIGLONG(lumpinfo[lump].filepos));
+	blockmaplump = (short *)W_GetLumpData(lump);
 	blockmap = blockmaplump+4;
 #else
 	int		i;
@@ -596,7 +596,7 @@ D_printf ("P_SetupLevel(%i,%i)\n",lumpnum,skill);
 	P_LoadSegs (lumpnum+ML_SEGS);
 
 #ifdef MARS
-	rejectmatrix = (byte *)(wadfileptr+BIGLONG(lumpinfo[lumpnum+ML_REJECT].filepos));
+	rejectmatrix = (byte *)W_GetLumpData(lumpnum+ML_REJECT);
 #else
 	rejectmatrix = W_CacheLumpNum (lumpnum+ML_REJECT,PU_LEVEL);
 #endif

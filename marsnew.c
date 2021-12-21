@@ -428,6 +428,38 @@ byte *I_WadBase (void)
 }
 
 
+/*
+====================
+=
+= I_RemapLumpPtr
+====================
+*/
+
+void* I_RemapLumpPtr(void *ptr)
+{
+	static int8_t curbank7page = 7;
+
+	if ((uintptr_t)ptr >= 0x02380000)
+	{
+		void* newptr = (void*)(((uintptr_t)ptr & 0x0007FFFF) + 0x02380000);
+
+		int page = (((uintptr_t)ptr - 0x02000000) >> 19);
+		if (curbank7page != page)
+		{
+			S_Clear();
+			Mars_SetBankPage(7, page);
+			Mars_ClearCache();
+			Mars_CommSlaveClearCache();
+			curbank7page = page;
+		}
+
+		ptr = newptr;
+	}
+
+	return ptr;
+}
+
+
 /* 
 ==================== 
 = 
