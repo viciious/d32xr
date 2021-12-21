@@ -59,8 +59,8 @@ extern int tictics;
 static volatile pixel_t* framebuffer = &MARS_FRAMEBUFFER + 0x100;
 static volatile pixel_t *framebufferend = &MARS_FRAMEBUFFER + 0x10000;
 
-static jagobj_t* stbar;
-VINT stbar_height;
+static jagobj_t* jo_stbar;
+static VINT jo_stbar_height;
 
 extern int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sprites[4], t_ref_total[4];
 
@@ -386,13 +386,13 @@ void I_Init (void)
 	i = W_CheckNumForName("STBAR");
 	if (i != -1)
 	{
-		stbar = (jagobj_t*)W_POINTLUMPNUM(i);
-		stbar_height = BIGSHORT(stbar->height);
+		jo_stbar = (jagobj_t*)W_POINTLUMPNUM(i);
+		jo_stbar_height = BIGSHORT(jo_stbar->height);
 	}
 	else
 	{
-		stbar = NULL;
-		stbar_height = 0;
+		jo_stbar = NULL;
+		jo_stbar_height = 0;
 	}
 }
 
@@ -602,10 +602,10 @@ int I_ViewportYPos(void)
 		return (fbh - viewportHeight) / 2;
 
 	if (viewportWidth < 160)
-		return (fbh - stbar_height - viewportHeight) / 2;
+		return (fbh - jo_stbar_height - viewportHeight) / 2;
 	if (viewportWidth == 160 && lowResMode)
-		return (fbh - stbar_height - viewportHeight);
-	return (fbh - stbar_height - viewportHeight) / 2;
+		return (fbh - jo_stbar_height - viewportHeight);
+	return (fbh - jo_stbar_height - viewportHeight) / 2;
 }
 
 pixel_t	*I_ViewportBuffer (void)
@@ -825,11 +825,11 @@ void I_DrawSbar(void)
 	int i, p;
 	int y[MAXPLAYERS];
 
-	if (!stbar)
+	if (!jo_stbar)
 		return;
 
-	int width = BIGSHORT(stbar->width);
-	int height = BIGSHORT(stbar->height);
+	int width = BIGSHORT(jo_stbar->width);
+	int height = BIGSHORT(jo_stbar->height);
 	int halfwidth = (unsigned)width >> 1;
 
 	y[0] = I_FrameBufferHeight() - height;
@@ -839,7 +839,7 @@ void I_DrawSbar(void)
 	p += splitscreen ? 1 : 0;
 	for (i = 0; i < p; i++) {
 		int h;
-		const pixel_t* source = (pixel_t*)stbar->data;
+		const pixel_t* source = (pixel_t*)jo_stbar->data;
 		pixel_t* dest = (pixel_t*)I_FrameBuffer() + y[i] * 320 / 2;
 
 		for (h = height; h; h--)
