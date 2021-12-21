@@ -39,6 +39,15 @@ typedef enum
 	NUMMENUITEMS
 } menupos_t;
 
+typedef enum
+{
+	si_resolution,
+	si_sfxvolume,
+	si_lod,
+
+	NUMMENUSLIDERS
+} sliderid_t;
+
 VINT cursorpos;
 
 typedef struct
@@ -47,15 +56,15 @@ typedef struct
 	char	maxval;
 } slider_t;
 
-static slider_t slider[3];
+static slider_t sliders[NUMMENUSLIDERS];
 
 typedef struct
 {
 	VINT	x;
 	VINT	y;
-	slider_t *slider;
-	char 	name[16];
+	uint8_t	slider;
 	uint8_t screen;
+	char 	name[16];
 } menuitem_t;
 
 static menuitem_t menuitem[NUMMENUITEMS];
@@ -140,65 +149,60 @@ void O_Init (void)
 	screenpos = ms_none;
 
 	D_memset(menuitem, 0, sizeof(menuitem));
-	D_memset(slider, 0, sizeof(slider));
+	D_memset(sliders, 0, sizeof(sliders));
 
 	D_memcpy(menuitem[mi_game].name, "Game", 5);
 	menuitem[mi_game].x = ITEMX;
 	menuitem[mi_game].y = STARTY;
-	menuitem[mi_game].slider = NULL;
 	menuitem[mi_game].screen = ms_game;
 
 	D_memcpy(menuitem[mi_audio].name, "Audio", 7);
 	menuitem[mi_audio].x = ITEMX;
 	menuitem[mi_audio].y = STARTY+ITEMSPACE;
-	menuitem[mi_audio].slider = NULL;
 	menuitem[mi_audio].screen = ms_audio;
 
 	D_memcpy(menuitem[mi_video].name, "Video", 7);
 	menuitem[mi_video].x = ITEMX;
 	menuitem[mi_video].y = STARTY+ITEMSPACE*2;
-	menuitem[mi_video].slider = NULL;
+	menuitem[mi_video].slider = 0;
 	menuitem[mi_video].screen = ms_video;
 
 	D_memcpy(menuitem[mi_controls].name, "Controls", 9);
 	menuitem[mi_controls].x = ITEMX;
 	menuitem[mi_controls].y = STARTY+ITEMSPACE*3;
-	menuitem[mi_controls].slider = NULL;
 	menuitem[mi_controls].screen = ms_controls;
 
 
 	D_memcpy(menuitem[mi_soundvol].name, "Sfx volume", 11);
 	menuitem[mi_soundvol].x = ITEMX;
 	menuitem[mi_soundvol].y = STARTY;
-	menuitem[mi_soundvol].slider = &slider[0];
- 	slider[0].maxval = 4;
-	slider[0].curval = 4*sfxvolume/64;
+	menuitem[mi_soundvol].slider = si_resolution+1;
+ 	sliders[si_resolution].maxval = 4;
+	sliders[si_resolution].curval = 4*sfxvolume/64;
 
 	D_memcpy(menuitem[mi_music].name, "Music", 6);
 	menuitem[mi_music].x = ITEMX;
 	menuitem[mi_music].y = STARTY+ITEMSPACE*2;
-	menuitem[mi_music].slider = NULL;
 
 
 	D_memcpy(menuitem[mi_resolution].name, "Resolution", 11);
 	menuitem[mi_resolution].x = ITEMX;
 	menuitem[mi_resolution].y = STARTY;
-	menuitem[mi_resolution].slider = &slider[1];
-	slider[1].maxval = numViewports - 1;
-	slider[1].curval = viewportNum;
+	menuitem[mi_resolution].slider = si_resolution+1;
+	sliders[si_resolution].maxval = numViewports - 1;
+	sliders[si_resolution].curval = viewportNum;
 
 	D_memcpy(menuitem[mi_detailmode].name, "Level of detail", 16);
 	menuitem[mi_detailmode].x = ITEMX;
 	menuitem[mi_detailmode].y = STARTY+ITEMSPACE*2;
-	menuitem[mi_detailmode].slider = &slider[2];
-	slider[2].maxval = MAXDETAILMODES;
-	slider[2].curval = detailmode + 1;
+	menuitem[mi_detailmode].slider = si_lod+1;
+	sliders[si_lod].maxval = MAXDETAILMODES;
+	sliders[si_lod].curval = detailmode + 1;
 
 
 	D_memcpy(menuitem[mi_controltype].name, "Gamepad", 8);
 	menuitem[mi_controltype].x = ITEMX;
 	menuitem[mi_controltype].y = STARTY;
-	menuitem[mi_controltype].slider = NULL;
 
 	D_memcpy(menuitem[mi_alwaysrun].name, "Always run", 11);
 	menuitem[mi_alwaysrun].x = ITEMX;
@@ -390,7 +394,7 @@ exit:
 	{
 		int sound = sfx_None;
 		int itemno = menuscr->firstitem + cursorpos;
-		slider_t*slider = menuitem[itemno].slider;
+		slider_t*slider = menuitem[itemno].slider ? &sliders[menuitem[itemno].slider-1] : NULL;
 		int oldcursorpos = cursorpos;
 
 		if (slider && (buttons & (BT_RIGHT|BT_LEFT)))
@@ -582,8 +586,9 @@ void O_Drawer (void)
 
 		if(items[i].slider)
 		{
+			slider_t* slider = &sliders[items[i].slider-1];
 			DrawJagobjLump(o_slidertrack, items[i].x + 2, items[i].y + ITEMSPACE, NULL, NULL);
-			offset = (items[i].slider->curval * SLIDEWIDTH) / items[i].slider->maxval;
+			offset = (slider->curval * SLIDEWIDTH) / slider->maxval;
 			DrawJagobjLump(o_slider, items[i].x + 7 + offset, items[i].y + ITEMSPACE, NULL, NULL);
 /*			ST_Num(menuitem[i].x + o_slider->width + 10,	 */
 /*			menuitem[i].y + 20,slider[i].curval);  */
