@@ -537,7 +537,10 @@ exit:
 		}
 
 		if (sound != sfx_noway)
+		{
 			S_StartSound(NULL, sound);
+			clearscreen = 2;
+		}
 	}
 
 	if (newcursor)
