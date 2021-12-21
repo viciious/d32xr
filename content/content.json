@@ -4138,11 +4138,6 @@
         "virtual": true
     },
     {
-        "compressed": true,
-        "filename": "title",
-        "name": "TITLE"
-    },
-    {
         "filename": "stbar",
         "name": "STBAR"
     },
@@ -5568,12 +5563,12 @@
         "name": "TEXTURE1"
     },
     {
-        "filename": "colormap",
-        "name": "COLORMAP"
-    },
-    {
         "filename": "playpals",
         "name": "PLAYPALS"
+    },
+    {
+        "filename": "dmapinfo",
+        "name": "DMAPINFO"
     },
     {
         "compressed": true,
@@ -5584,6 +5579,41 @@
         "compressed": true,
         "filename": "demo2",
         "name": "DEMO2"
+    },
+    {
+        "filename": "dcredits1",
+        "name": "CREDITS1"
+    },
+    {
+        "filename": "dcredits2",
+        "name": "CREDITS2"
+    },
+    {
+        "name": "PAGE7",
+        "virtual": true
+    },
+    {
+        "filename": "colormap",
+        "name": "COLORMAP"
+    },
+    {
+        "filename": "VGM/Intro.vgm",
+        "name": "VGM_NTRO",
+        "group": "intro"
+    },
+    {
+        "compressed": true,
+        "filename": "title",
+        "name": "TITLE",
+        "group": "intro"
+    },
+    {
+        "filename": "VGM/Inter.vgm",
+        "name": "VGM_NTER"
+    },
+    {
+        "filename": "VGM/Bunny.vgm",
+        "name": "VGM_BUNN"
     },
     {
         "name": "MAP01",
@@ -6786,111 +6816,79 @@
         "name": "BLOCKMAP"
     },
     {
-        "name": "VGM_STRT",
-        "virtual": true
-    },
-    {
         "filename": "VGM/E1M1.vgm",
-        "name": "MUS_E1M1"
+        "name": "VGM_E1M1"
     },
     {
         "filename": "VGM/E1M2.vgm",
-        "name": "MUS_E1M2"
+        "name": "VGM_E1M2"
     },
     {
         "filename": "VGM/E1M3.vgm",
-        "name": "MUS_E1M3"
+        "name": "VGM_E1M3"
     },
     {
         "filename": "VGM/E1M4.vgm",
-        "name": "MUS_E1M4"
+        "name": "VGM_E1M4"
     },
     {
         "filename": "VGM/E1M5.vgm",
-        "name": "MUS_E1M5"
+        "name": "VGM_E1M5"
     },
     {
         "filename": "VGM/E1M6.vgm",
-        "name": "MUS_E1M6"
+        "name": "VGM_E1M6"
     },
     {
         "filename": "VGM/E1M7.vgm",
-        "name": "MUS_E1M7"
+        "name": "VGM_E1M7"
     },
     {
         "filename": "VGM/E1M8.vgm",
-        "name": "MUS_E1M8"
+        "name": "VGM_E1M8"
     },
     {
         "filename": "VGM/E1M9.vgm",
-        "name": "MUS_E1M9"
+        "name": "VGM_E1M9"
     },
     {
         "filename": "VGM/E2M1.vgm",
-        "name": "MUS_E2M1"
+        "name": "VGM_E2M1"
     },
     {
         "filename": "VGM/E2M2.vgm",
-        "name": "MUS_E2M2"
+        "name": "VGM_E2M2"
     },
     {
         "filename": "VGM/E2M4.vgm",
-        "name": "MUS_E2M4"
+        "name": "VGM_E2M4"
     },
     {
         "filename": "VGM/E2M6.vgm",
-        "name": "MUS_E2M6"
+        "name": "VGM_E2M6"
     },
     {
         "filename": "VGM/E2M7.vgm",
-        "name": "MUS_E2M7"
+        "name": "VGM_E2M7"
     },
     {
         "filename": "VGM/E2M8.vgm",
-        "name": "MUS_E2M8"
+        "name": "VGM_E2M8"
     },
     {
         "filename": "VGM/E2M9.vgm",
-        "name": "MUS_E2M9"
+        "name": "VGM_E2M9"
     },
     {
         "filename": "VGM/E3M2.vgm",
-        "name": "MUS_E3M2"
+        "name": "VGM_E3M2"
     },
     {
         "filename": "VGM/E3M3.vgm",
-        "name": "MUS_E3M3"
+        "name": "VGM_E3M3"
     },
     {
         "filename": "VGM/E3M8.vgm",
-        "name": "MUS_E3M8"
-    },
-    {
-        "filename": "VGM/Intro.vgm",
-        "name": "MUS_NTRO"
-    },
-    {
-        "filename": "VGM/Inter.vgm",
-        "name": "MUS_NTER"
-    },
-    {
-        "filename": "VGM/Bunny.vgm",
-        "name": "MUS_BUNN"
-    },
-    {
-        "name": "VGM_END",
-        "virtual": true
-    },
-    {
-        "filename": "dmapinfo",
-        "name": "DMAPINFO"
-    },
-    {
-        "filename": "dcredits1",
-        "name": "CREDITS1"
-    },
-    {
-        "filename": "dcredits2",
-        "name": "CREDITS2"
+        "name": "VGM_E3M8"
     }
 ]
