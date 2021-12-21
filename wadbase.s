@@ -1,10 +1,8 @@
         .text
 
-        .align  4
-doom32xwad:
-        .incbin "doom32x.wad"
+        .align  2
 
         .global _wadBase
 _wadBase:
-        .long   doom32xwad
+        .long   0x2030000
 
