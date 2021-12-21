@@ -33,6 +33,8 @@
 #include <stddef.h>
 #include "32x.h"
 
+#define MARS_ATTR_DATA_CACHE_ALIGN __attribute__((section(".data"), aligned(16), optimize("Os")))
+
 void Mars_FlipFrameBuffers(char wait) __attribute__((noinline));
 void Mars_WaitFrameBuffersFlip(void) __attribute__((noinline));
 char Mars_FramebuffersFlipped(void) __attribute__((noinline));
@@ -40,7 +42,7 @@ void Mars_Init(void);
 void Mars_InitVideo(int lines);
 void Mars_InitLineTable(void);
 void Mars_SetBrightness(int16_t brightness);
-char Mars_UploadPalette(const uint8_t* palette);
+char Mars_UploadPalette(const uint8_t* palette) MARS_ATTR_DATA_CACHE_ALIGN;
 int Mars_PollMouse(int port);
 int Mars_ParseMousePacket(int mouse, int* pmx, int* pmy);
 
@@ -118,6 +120,7 @@ void Mars_MDPutString(char *str);
 void Mars_DebugStart(void);
 void Mars_DebugQueue(int id, int val);
 void Mars_DebugEnd(void);
+void Mars_SetBankPage(int bank, int page) MARS_ATTR_DATA_CACHE_ALIGN;
 
 enum {
 	DEBUG_FPSCOUNT,

@@ -52,7 +52,7 @@ const int PAL_CLOCK_SPEED = 22801467; // HZ
 
 static volatile int16_t mars_brightness = 0;
 
-void pri_vbi_handler(void) __attribute__((section(".data"), aligned(16)));
+void pri_vbi_handler(void) MARS_ATTR_DATA_CACHE_ALIGN;
 
 void Mars_WaitFrameBuffersFlip(void)
 {
@@ -435,5 +435,13 @@ void Mars_DebugEnd(void)
 {
 	while (MARS_SYS_COMM0);
 	MARS_SYS_COMM0 = 0x1100;			/* end debug queue and display */
+}
+
+void Mars_SetBankPage(int bank, int page)
+{
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM2 = page;
+	MARS_SYS_COMM0 = 0x1200 | bank;
+	while (MARS_SYS_COMM0);
 }
 

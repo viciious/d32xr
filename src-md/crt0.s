@@ -77,6 +77,8 @@ init_hardware:
         move.w  #0x8104,(a0)            /* display off, vblank disabled */
         move.w  (a0),d0                 /* read VDP Status reg */
 
+        jsr     reset_banks
+
 | init joyports
         move.b  #0x40,0xA10009
         move.b  #0x40,0xA1000B
@@ -289,6 +291,8 @@ handle_req:
         bls     dbug_queue
         cmpi.w  #0x11FF,d0
         bls     dbug_end
+        cmpi.w  #0x12FF,d0
+        bls     set_bankpage
 
 | unknown command
         move.w  #0,0xA15120         /* done */
@@ -701,6 +705,28 @@ dbug_end:
         dbra    d3,0b
         bra     main_loop
 
+set_bankpage:
+        andi.l  #0x07,d0            /* bank number */
+        move.w  0xA15122,d1         /* COMM2 holds page number */
+        lea     0xA130F0,a0
+        add.l   d0,d0
+        move.b  #1,0xA15107         /* set RV */
+        move.b  d1,1(a0,d0.l)
+        move.b  #0,0xA15107         /* set RV */
+        move.w  #0,0xA15120         /* release SH2 now */
+        bra     main_loop
+
+reset_banks:
+        move.b  #1,0xA15107         /* set RV */
+        move.b  #1,0xA130F3         /* bank for 0x080000-0x0FFFFF */
+        move.b  #2,0xA130F5         /* bank for 0x100000-0x17FFFF */
+        move.b  #3,0xA130F7         /* bank for 0x180000-0x1FFFFF */
+        move.b  #4,0xA130F9         /* bank for 0x200000-0x27FFFF */
+        move.b  #5,0xA130FB         /* bank for 0x280000-0x2FFFFF */
+        move.b  #6,0xA130FD         /* bank for 0x300000-0x37FFFF */
+        move.b  #7,0xA130FF         /* bank for 0x380000-0x3FFFFF */
+        move.b  #0,0xA15107         /* set RV */
+        rts
 
 | load font tile data
 
