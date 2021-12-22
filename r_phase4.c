@@ -148,7 +148,9 @@ static void R_FinishSprite(vissprite_t *vis)
 static void R_FinishPSprite(vissprite_t *vis)
 {
    fixed_t  topoffset;
-   int      x1, x2;
+   fixed_t  tx;
+   fixed_t  xscale;
+   fixed_t  x1, x2;
    int      lump;
    byte    *patch;
 
@@ -163,28 +165,43 @@ static void R_FinishPSprite(vissprite_t *vis)
    topoffset = (fixed_t)BIGSHORT(vis->patch->topoffset) << FRACBITS;
    vis->texturemid = BASEYCENTER*FRACUNIT - (vis->texturemid - topoffset);
 
-   x1 = vis->x1 - BIGSHORT(vis->patch->leftoffset);
+   xscale = vis->xscale;
 
-   // off the right side
-   if(x1 > viewportWidth)
-      return;
+   // calculate edges of the shape
+   tx = -((fixed_t)BIGSHORT(vis->patch->leftoffset)) << FRACBITS;
+   x1 = tx;
 
-   x2 = x1 + BIGSHORT(vis->patch->width) - 1;
+   tx = ((fixed_t)BIGSHORT(vis->patch->width) << FRACBITS);
+   FixedMul2(x2, tx, xscale);
+   x1 += (tx - x2) / 2;
+
+   x1 += vis->x1;
+   x2 += x1;
+
+   x1 /= FRACUNIT;
+   x2 /= FRACUNIT;
+   x2 -= 1;
+
+   // off the right side?
+   if (x1 > viewportWidth)
+   {
+       vis->patch = NULL;
+       return;
+   }
 
    // off the left side
-   if(x2 < 0)
-      return;
+   if (x2 < 0)
+   {
+       vis->patch = NULL;
+       return;
+   }
 
    // store information in vissprite
    vis->x1 = x1 < 0 ? 0 : x1;
    vis->x2 = x2 >= viewportWidth ? viewportWidth - 1 : x2;
-   vis->xscale = FRACUNIT;
-   vis->yscale = FRACUNIT;
-   vis->yiscale = FRACUNIT;
-   vis->xiscale = FRACUNIT;
    vis->startfrac = 0;
    if (x1 < 0)
-    vis->startfrac = FRACUNIT * -x1;
+    vis->startfrac = vis->xiscale * -x1;
 }
 
 //

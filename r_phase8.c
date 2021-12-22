@@ -279,6 +279,9 @@ static void R_DrawPSprites(unsigned cpu)
         unsigned  stopx = vis->x2 + 1;
         i = vis->x1;
 
+        if (vis->patch == NULL)
+            continue;
+
 #ifdef MARS
         unsigned mid = i + ((stopx - i)>>1);
         if (cpu)
