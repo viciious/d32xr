@@ -12,6 +12,7 @@ extern fixed_t centerXFrac, centerYFrac;
 extern fixed_t stretch;
 extern fixed_t stretchX;
 extern VINT weaponYpos;
+extern fixed_t weaponXScale;
 
 #define	PROJECTION			centerXFrac
 
@@ -55,7 +56,7 @@ typedef enum
 
 extern detailmode_t detailmode;
 extern VINT viewportnum;
-extern VINT palstretch;
+extern VINT anamorphicview;
 
 /*
 ==============================================================================

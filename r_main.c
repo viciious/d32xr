@@ -13,8 +13,10 @@ fixed_t centerXFrac, centerYFrac;
 fixed_t stretch;
 fixed_t stretchX;
 VINT weaponYpos;
+fixed_t weaponXScale;
 
 detailmode_t detailmode = detmode_medium;
+VINT anamorphicview = 0;
 
 drawcol_t drawcol;
 drawcol_t drawfuzzycol;
@@ -339,9 +341,18 @@ void R_SetViewportSize(int num)
 	centerXFrac = centerX * FRACUNIT;
 	centerYFrac = centerY * FRACUNIT;
 
-	/* proper screen size would be 160*100, stretched to 224 is 2.2 scale */
-	//stretch = (fixed_t)((160.0f / width) * ((float)height / 180.0f) * 2.2f * FRACUNIT);
-	stretch = ((FRACUNIT * 16 * height) / 180 * 22) / width;
+	if (anamorphicview)
+	{
+		stretch = ((FRACUNIT * 16 * height) / 180 * 28) / width;
+		weaponXScale = 1000 * FRACUNIT / 1100;
+	}
+	else
+	{
+		/* proper screen size would be 160*100, stretched to 224 is 2.2 scale */
+		//stretch = (fixed_t)((160.0f / width) * ((float)height / 180.0f) * 2.2f * FRACUNIT);
+		stretch = ((FRACUNIT * 16 * height) / 180 * 22) / width;
+		weaponXScale = FRACUNIT;
+	}
 	stretchX = stretch * centerX;
 
 	weaponYpos = 180;

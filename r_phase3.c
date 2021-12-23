@@ -139,7 +139,7 @@ static void R_PrepPSprite(pspdef_t *psp)
    center -= 80;
    center *= FRACUNIT;
 
-   xscale = FRACUNIT;
+   xscale = weaponXScale;
 
    vis->x1 = psp->sx + center;
    vis->xscale = xscale;

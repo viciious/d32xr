@@ -31,6 +31,7 @@ typedef enum
 
 	mi_resolution,
 	mi_detailmode,
+	mi_anamorphic,
 
 	mi_controltype,
 	mi_alwaysrun,
@@ -44,6 +45,7 @@ typedef enum
 	si_resolution,
 	si_sfxvolume,
 	si_lod,
+	si_anamorphic,
 
 	NUMMENUSLIDERS
 } sliderid_t;
@@ -194,10 +196,17 @@ void O_Init (void)
 
 	D_memcpy(menuitem[mi_detailmode].name, "Level of detail", 16);
 	menuitem[mi_detailmode].x = ITEMX;
-	menuitem[mi_detailmode].y = STARTY+ITEMSPACE*2;
+	menuitem[mi_detailmode].y = STARTY + ITEMSPACE * 2;
 	menuitem[mi_detailmode].slider = si_lod+1;
 	sliders[si_lod].maxval = MAXDETAILMODES;
 	sliders[si_lod].curval = detailmode + 1;
+
+	D_memcpy(menuitem[mi_anamorphic].name, "Widescreen mode", 16);
+	menuitem[mi_anamorphic].x = ITEMX;
+	menuitem[mi_anamorphic].y = STARTY + ITEMSPACE * 4;
+	menuitem[mi_anamorphic].slider = si_anamorphic + 1;
+	sliders[si_anamorphic].maxval = 1;
+	sliders[si_anamorphic].curval = anamorphicview;
 
 
 	D_memcpy(menuitem[mi_controltype].name, "Gamepad", 8);
@@ -223,7 +232,7 @@ void O_Init (void)
 
 	D_memcpy(menuscreen[ms_video].name, "Video", 7);
 	menuscreen[ms_video].firstitem = mi_resolution;
-	menuscreen[ms_video].numitems = mi_detailmode - mi_resolution + 1;
+	menuscreen[ms_video].numitems = mi_anamorphic - mi_resolution + 1;
 
 	D_memcpy(menuscreen[ms_controls].name, "Controls", 9);
 	menuscreen[ms_controls].firstitem = mi_controltype;
@@ -428,6 +437,10 @@ exit:
 					break;
 				case mi_detailmode:
 					R_SetDetailMode(slider->curval - 1);
+					break;
+				case mi_anamorphic:
+					anamorphicview = slider->curval;
+					R_SetViewportSize(viewportNum);
 					break;
 				default:
 					break;
