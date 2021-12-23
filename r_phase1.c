@@ -296,6 +296,7 @@ static void R_AddLine(seg_t *line)
    int side;
    line_t *ldef;
    side_t *sidedef;
+   boolean solid;
 
    curline = line;
 
@@ -347,29 +348,26 @@ static void R_AddLine(seg_t *line)
    ldef = &lines[line->linedef];
    backsector = (ldef->flags & ML_TWOSIDED) ? &sectors[sides[ldef->sidenum[side^1]].sector] : 0;
    sidedef = &sides[ldef->sidenum[side]];
+   solid = false;
 
-   if(!backsector || 
-      backsector->ceilingheight <= frontsector->floorheight ||
-      backsector->floorheight   >= frontsector->ceilingheight)
-      goto clipsolid;
+   if (!backsector ||
+       backsector->ceilingheight <= frontsector->floorheight ||
+       backsector->floorheight >= frontsector->ceilingheight)
+   {
+       solid = true;
+   }
+   else if (backsector->ceilingheight == frontsector->ceilingheight &&
+       backsector->floorheight == frontsector->floorheight)
+   {
+       // reject empty lines used for triggers and special events
+       if (backsector->ceilingpic == frontsector->ceilingpic &&
+           backsector->floorpic == frontsector->floorpic &&
+           backsector->lightlevel == frontsector->lightlevel &&
+           sidedef->midtexture == 0)
+           return;
+   }
 
-   if(backsector->ceilingheight != frontsector->ceilingheight ||
-      backsector->floorheight   != frontsector->floorheight)
-      goto clippass;
-
-   // reject empty lines used for triggers and special events
-   if(backsector->ceilingpic == frontsector->ceilingpic &&
-      backsector->floorpic   == frontsector->floorpic   &&
-      backsector->lightlevel == frontsector->lightlevel &&
-      sidedef->midtexture == 0)
-      return;
-
-clippass:
-   R_ClipWallSegment(x1, x2, false);
-   return;
-
-clipsolid:
-   R_ClipWallSegment(x1, x2, true);
+   R_ClipWallSegment(x1, x2, solid);
 }
 
 //
