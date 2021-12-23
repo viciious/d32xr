@@ -383,12 +383,11 @@ static boolean PA_CrossBSPNode(int bspnum)
    int side;
    divline_t div;
 
+check:
    if(bspnum & NF_SUBSECTOR)
    {
-      if(bspnum == -1) // CALICO: case not originally handled here
-         return PA_CrossSubsector(0);
-      else
-         return PA_CrossSubsector(bspnum & ~NF_SUBSECTOR);
+      // CALICO: bspnum == -1 case not originally handled here
+      return PA_CrossSubsector(bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR);
    }
 
    bsp = &nodes[bspnum];
@@ -409,7 +408,8 @@ static boolean PA_CrossBSPNode(int bspnum)
       return true; // the line doesn't touch the other side
    
    // cross the ending side
-   return PA_CrossBSPNode(bsp->children[side^1]);
+   bspnum = bsp->children[side ^ 1];
+   goto check;
 }
 
 //
