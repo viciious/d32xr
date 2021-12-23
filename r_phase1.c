@@ -405,10 +405,7 @@ static void R_RenderBSPNode(int bspnum)
 check:
    if(bspnum & NF_SUBSECTOR) // reached a subsector leaf?
    {
-      if(bspnum == -1)
-         R_Subsector(0);
-      else
-         R_Subsector(bspnum & ~NF_SUBSECTOR);
+      R_Subsector(bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR);
       return;
    }
 
