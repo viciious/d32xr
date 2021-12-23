@@ -387,11 +387,8 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 	{
 		int i;
 
-		if (musiclump == mus_none)
-		{
-			S_StopSong();
+		if (curmusic == musiclump)
 			return;
-		}
 
 		for (i = 0; i < num_music; i++)
 		{
@@ -402,8 +399,11 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 			}
 		}
 
-		if (curmusic == playtrack)
+		if (musiclump == mus_none || playtrack == 0)
+		{
+			S_StopSong();
 			return;
+		}
 	}
 
 	curmusic = musiclump;
