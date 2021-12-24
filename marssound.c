@@ -373,7 +373,7 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 		/* recheck cd and get number of tracks */
 		Mars_UpdateCD();
 
-		int num_map_tracks = mars_num_cd_tracks + cdtrack_lastmap;
+		int num_map_tracks = (int)mars_num_cd_tracks + cdtrack_lastmap;
 		if ((mars_cd_ok & 0x0100) && (num_map_tracks > 0))
 		{
 			/* there is a disc with at least enough tracks */
@@ -382,13 +382,13 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 			else
 				playtrack = cdtrack % num_map_tracks;
 		}
+
+		if (curmusic == musiclump && muslooping == looping)
+			return;
 	}
 	else if (musictype == mustype_fm)
 	{
 		int i;
-
-		if (curmusic == musiclump)
-			return;
 
 		for (i = 0; i < num_music; i++)
 		{
@@ -406,7 +406,10 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 		}
 	}
 
-	curmusic = musiclump;
+	if (curmusic == playtrack && muslooping == looping)
+		return;
+
+	curmusic = playtrack;
 	curcdtrack = cdtrack;
 	muslooping = looping;
 
