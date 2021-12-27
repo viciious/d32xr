@@ -5215,6 +5215,11 @@
         "name": "SKY3"
     },
     {
+        "filename": "sky4",
+        "name": "SKY4",
+        "tag": "UD"
+    },
+    {
         "filename": "sladwall",
         "name": "SLADWALL"
     },
@@ -5373,6 +5378,11 @@
     {
         "filename": "sw2star",
         "name": "SW2STAR"
+    },
+    {
+        "filename": "blac",
+        "name": "BLAC",
+        "tag": "UD"
     },
     {
         "name": "T_END",
@@ -5580,7 +5590,13 @@
     },
     {
         "filename": "texture1",
-        "name": "TEXTURE1"
+        "name": "TEXTURE1",
+        "tag": "!UD"
+    },
+    {
+        "filename": "texture1_ud",
+        "name": "TEXTURE1",
+        "tag": "UD"
     },
     {
         "filename": "playpals",

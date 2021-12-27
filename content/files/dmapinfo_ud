@@ -181,63 +181,63 @@ map "MAP24" "Military Base"
 }
 map "MAP25" "Hell Beneath"
 {
-    sky = "sky3"
+    sky = "sky4"
     next = "MAP26"
     mapnumber = 25
-    music = "VGM_E1M1"
+    music = "VGM_E1M8"
 }
 map "MAP26" "Perfect Hatred"
 {
-    sky = "sky3"
+    sky = "sky4"
     next = "MAP27"
     secretnext = "MAP33"
     mapnumber = 26
-    music = "VGM_E1M2"
+    music = "VGM_E3M2"
 }
 map "MAP27" "Sever the Wicked"
 {
-    sky = "sky3"
+    sky = "sky4"
     next = "MAP28"
     mapnumber = 27
-    music = "VGM_E1M3"
+    music = "VGM_E3M3"
 }
 map "MAP28" "Unruly Evil"
 {
-    sky = "sky3"
+    sky = "sky4"
     next = "MAP29"
     mapnumber = 28
-    music = "VGM_E1M4"
+    music = "VGM_E1M5"
 }
 map "MAP29" "They Will Repent"
 {
-    sky = "sky3"
+    sky = "sky4"
     next = "MAP30"
     mapnumber = 29
-    music = "VGM_E1M5"
+    music = "VGM_E2M7"
 }
 map "MAP30" "Against Thee Wickedly"
 {
-    sky = "sky3"
+    sky = "sky4"
     next = "MAP31"
     mapnumber = 30
-    music = "VGM_E1M6"
+    music = "VGM_E2M4"
 }
 map "MAP31" "And Hell Followed"
 {
-    sky = "sky3"
+    sky = "sky4"
     next = "MAP32"
     mapnumber = 31
-    music = "VGM_E1M7"
+    music = "VGM_E2M6"
 }
 map "MAP32" "Unto the Cruel"
 {
-    sky = "sky3"
+    sky = "sky4"
     mapnumber = 32
-    music = "VGM_E1M8"
+    music = "VGM_E1M7"
 }
 map "MAP33" "Fear"
 {
-    sky = "sky3"
+    sky = "sky4"
     next = "MAP27"
     mapnumber = 33
     music = "VGM_E1M9"
