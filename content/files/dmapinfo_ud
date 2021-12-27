@@ -234,6 +234,7 @@ map "MAP32" "Unto the Cruel"
     sky = "sky4"
     mapnumber = 32
     music = "VGM_E1M7"
+    BaronSpecial
 }
 map "MAP33" "Fear"
 {
