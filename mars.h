@@ -96,34 +96,18 @@ static inline void Mars_R_EndDrawPlanes(void)
 }
 
 // r_phase8
-static inline void Mars_R_ResetNextSprite(void)
-{
-	MARS_SYS_COMM6 = 0;
-}
-
-static inline void Mars_R_WaitNextSprite(int l)
-{
-	while (MARS_SYS_COMM6 != l) {}
-}
-
-static inline void Mars_R_AdvanceNextSprite(void)
-{
-	MARS_SYS_COMM6 = MARS_SYS_COMM6 + 1;
-}
-
 static inline void Mars_R_BeginDrawSprites(void)
 {
-	Mars_R_ResetNextSprite();
 	MARS_SYS_COMM4 = 6;
 }
 
 static inline void Mars_R_EndDrawSprites(void)
 {
+	Mars_R_SecWait();
 }
 
 static inline void Mars_R_BeginDrawPSprites(void)
 {
-	Mars_R_SecWait();
 	MARS_SYS_COMM4 = 7;
 }
 
