@@ -18,7 +18,7 @@ static int fuzzpos[2];
 static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy) ATTR_DATA_CACHE_ALIGN;
 void R_DrawVisSprite(vissprite_t* vis, unsigned short* spropening, int *fuzzpos, int screenhalf) ATTR_DATA_CACHE_ALIGN;
 void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int screenhalf) ATTR_DATA_CACHE_ALIGN;
-static void R_DrawSpritesStride(const int start, int* fuzzpos) ATTR_DATA_CACHE_ALIGN;
+static void R_DrawSpritesLoop(const int cpu) ATTR_DATA_CACHE_ALIGN;
 static void R_DrawPSprites(const int cpu) ATTR_DATA_CACHE_ALIGN;
 void R_Sprites(void) ATTR_DATA_CACHE_ALIGN;
 
@@ -45,6 +45,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos,
    stopx    = vis->x2 + 1;
    fracstep = vis->xiscale;
 
+#ifdef MARS
    if (screenhalf)
    {
        if (screenhalf == 1)
@@ -61,7 +62,8 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos,
            }
        }
    }
-   
+#endif
+
    for(; x < stopx; x++, xfrac += fracstep)
    {
       column_t *column = (column_t *)((byte *)patch + BIGSHORT(patch->columnofs[xfrac>>FRACBITS]));
@@ -158,6 +160,7 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int screenhal
    x2  = vis->x2;
    scalefrac = vis->yscale;  
 
+#ifdef MARS
    if (screenhalf)
    {
        if (screenhalf == 1)
@@ -174,6 +177,7 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int screenhal
 
    if (x1 > x2)
        return;
+#endif
 
    for(x = x1; x <= x2; x++)
       spropening[x] = viewportHeight;
@@ -250,7 +254,7 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int screenhal
    while(ds != viswalls);
 }
 
-static void R_DrawSpritesStride(const int cpu, int *fuzzpos)
+static void R_DrawSpritesLoop(const int cpu)
 {
     int i;
     unsigned short spropening[SCREENWIDTH];
@@ -263,7 +267,7 @@ static void R_DrawSpritesStride(const int cpu, int *fuzzpos)
 
         R_ClipVisSprite(ds, spropening, cpu+1);
 
-        R_DrawVisSprite(ds, spropening, fuzzpos, cpu+1);
+        R_DrawVisSprite(ds, spropening, &fuzzpos[cpu], cpu+1);
     }
 }
 
@@ -303,21 +307,16 @@ void Mars_Sec_R_DrawSprites(void)
     Mars_ClearCacheLines((intptr_t)sortedsprites & ~15, (sortedcount * sizeof(*sortedsprites) + 15) / 16);
 
     Mars_ClearCacheLines((intptr_t)&vissprites & ~15, 1);
-    Mars_ClearCacheLines((intptr_t)&lastsprite_p & ~15, 1);
-    Mars_ClearCacheLines((intptr_t)vissprites & ~15, ((lastsprite_p - vissprites) * sizeof(vissprite_t) + 15) / 16);
+    Mars_ClearCacheLines((intptr_t)&vissprite_p & ~15, 1);
+    Mars_ClearCacheLines((intptr_t)vissprites & ~15, ((vissprite_p - vissprites) * sizeof(vissprite_t) + 15) / 16);
 
     Mars_ClearCacheLines((intptr_t)&sprscreenhalf & ~15, 1);
 
-    Mars_ClearCacheLines((intptr_t)&fuzzpos[1] & ~15, 1);
-
-    R_DrawSpritesStride(1, &fuzzpos[1]);
+    R_DrawSpritesLoop(1);
 }
 
 void Mars_Sec_R_DrawPSprites(void)
 {
-    Mars_ClearCacheLines((intptr_t)&vissprite_p & ~15, 1);
-    Mars_ClearCacheLines((intptr_t)lastsprite_p & ~15, ((vissprite_p - lastsprite_p) * sizeof(vissprite_t) + 15) / 16);
-
     Mars_ClearCacheLines((intptr_t)&sprscreenhalf & ~15, 1);
 
     R_DrawPSprites(1);
@@ -377,7 +376,7 @@ void R_Sprites(void)
    Mars_ClearCacheLines((intptr_t)openings & ~15, ((lastopening - openings) * sizeof(*openings) + 15) / 16);
 
    Mars_R_BeginDrawSprites();
-   R_DrawSpritesStride(0, &fuzzpos[0]);
+   R_DrawSpritesLoop(0);
    Mars_R_EndDrawSprites();
 
    sprscreenhalf = viewportWidth / 2;
@@ -386,7 +385,7 @@ void R_Sprites(void)
    R_DrawPSprites(0);
    Mars_R_EndDrawPSprites();
 #else
-   R_DrawSpritesStride(0, &fuzzpos[0]);
+   R_DrawSpritesLoop(0);
 
    R_DrawPSprites(0);
 #endif
