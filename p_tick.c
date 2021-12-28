@@ -5,7 +5,7 @@
 #endif
 
 int	playertics, thinkertics, sighttics, basetics, latetics;
-int	tictics;
+int	tictics, drawtics;
 
 boolean		gamepaused;
 jagobj_t	*pausepic;
@@ -526,6 +526,9 @@ void P_Drawer (void)
 	{
 #ifdef MARS
 		static boolean o_wasactive = false;
+		extern	boolean	debugscreenactive;
+
+		drawtics = frtc;
 
 		if (!optionsactive && o_wasactive)
 			clearscreen = 2;
@@ -568,6 +571,11 @@ void P_Drawer (void)
 			O_Drawer();
 
 		o_wasactive = optionsactive;
+
+		drawtics = frtc - drawtics;
+
+		if (debugscreenactive)
+			I_DebugScreen();
 
 		I_Update ();
 #else

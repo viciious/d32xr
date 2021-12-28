@@ -1122,6 +1122,7 @@ dbug_list:
         dc.l    dbug_spritesmsec
         dc.l    dbug_spritescount
         dc.l    dbug_refmsec
+        dc.l    dbug_drawmsec
 
 dbug_fpscount:
         dc.w    28,3
@@ -1156,6 +1157,9 @@ dbug_spritescount:
 dbug_refmsec:
         dc.w    28,11
         dc.l    refmsec
+dbug_drawmsec:
+        dc.w    28,12
+        dc.l    drawmsec
 
 fpscount:
         .asciz  "fps:%2d"
@@ -1170,7 +1174,7 @@ bspmsec:
         .asciz  "b:%2d"
         .align  2
 segsmsec:
-        .asciz  "s:%2d"
+        .asciz  "w:%2d"
         .align  2
 segscount:
         .asciz  "%3d"
@@ -1188,7 +1192,10 @@ spritescount:
         .asciz  "%3d"
         .align  2
 refmsec:
-        .asciz  "t:%2d"
+        .asciz  "r:%2d"
+        .align  2
+drawmsec:
+        .asciz  "d:%2d"
         .align  2
 
         .align  4

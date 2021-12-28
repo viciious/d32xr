@@ -983,9 +983,6 @@ void R_RenderPlayerView(int displayplayer, unsigned short *openings_)
 	}
 
 	t_ref_total[t_ref_cnt] = I_GetFRTCounter() - t_ref_total[t_ref_cnt];
-
-	if (debugscreenactive)
-		I_DebugScreen();
 }
 
 #endif

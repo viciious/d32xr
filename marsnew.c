@@ -53,7 +53,7 @@ int 	debugmode = 0;
 VINT	strafebtns = 0;
 
 extern int 	cy;
-extern int tictics;
+extern int tictics, drawtics;
 
 // framebuffer start is after line table AND a single blank line
 static volatile pixel_t* framebuffer = &MARS_FRAMEBUFFER + 0x100;
@@ -675,7 +675,7 @@ void I_DebugScreen(void)
 
 		Mars_DebugQueue(DEBUG_FPSCOUNT, fpscount);
 		Mars_DebugQueue(DEBUG_LASTTICS, lasttics);
-		Mars_DebugQueue(DEBUG_GAMETICS, Mars_FRTCounter2Msec(tictics));
+		Mars_DebugQueue(DEBUG_GAMEMSEC, Mars_FRTCounter2Msec(tictics));
 
 		Mars_DebugQueue(DEBUG_BSPMSEC, Mars_FRTCounter2Msec(t_ref_bsp_avg));
 
@@ -689,6 +689,8 @@ void I_DebugScreen(void)
 		Mars_DebugQueue(DEBUG_SPRITESCOUNT, vissprite_p - vissprites);
 
 		Mars_DebugQueue(DEBUG_REFMSEC, Mars_FRTCounter2Msec(t_ref_total_avg));
+
+		Mars_DebugQueue(DEBUG_DRAWMSEC, Mars_FRTCounter2Msec(drawtics));
 
 		Mars_DebugEnd();
 	}
