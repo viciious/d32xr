@@ -296,6 +296,7 @@ void Mars_R_PrepPlanes(void)
 {
     Mars_ClearCacheLines((intptr_t)&lastvisplane & ~15, 1);
     Mars_ClearCacheLines((intptr_t)&visplanes & ~15, 1);
+    Mars_ClearCacheLines((intptr_t)visplanes & ~15, ((lastvisplane - visplanes) * sizeof(visplane_t) + 15) / 16);
 
     {
         visplane_t* pl, *last = lastvisplane;

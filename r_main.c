@@ -58,6 +58,7 @@ static visplane_t **visplanes_hash;
 /* sprites */
 /* */
 vissprite_t	*vissprites/*[MAXVISSPRITES]*/, * lastsprite_p, * vissprite_p;
+int* sortedvissprites;
 
 /* */
 /* openings / misc refresh memory */
@@ -533,7 +534,8 @@ extern	pixel_t	*screens[2];	/* [viewportWidth*viewportHeight];  */
 ==================
 */
 
-void R_Setup (int displayplayer)
+static void R_Setup (int displayplayer, unsigned short *openings_, 
+	subsector_t **vissubsectors_, visplane_t *visplanes_, visplane_t **visplanes_hash_)
 {
 	int 		i;
 	int		damagecount, bonuscount;
@@ -690,10 +692,11 @@ void R_Setup (int displayplayer)
 	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 15) & ~15);
 	viswalls = (void*)tempbuf;
 	tempbuf += sizeof(*viswalls) * MAXWALLCMDS / sizeof(*tempbuf);
+	lastwallcmd = viswalls;			/* no walls added yet */
 
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
-	visplanes = (void*)tempbuf;
-	tempbuf += sizeof(*visplanes) * MAXVISPLANES / sizeof(*tempbuf);
+	visplanes = visplanes_;
+	visplanes_hash = visplanes_hash_;
+	lastvisplane = visplanes + 1;		/* visplanes[0] is left empty */
 
 /* */
 /* plane filling */
@@ -702,26 +705,34 @@ void R_Setup (int displayplayer)
 	tempbuf++; // padding
 	for (i = 0; i < MAXVISPLANES; i++) {
 		visplanes[i].open = tempbuf;
-		tempbuf += viewportWidth+2;
+		tempbuf += SCREENWIDTH+2;
 	}
-
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
-	visplanes_hash = (visplane_t**)tempbuf;
-	tempbuf += sizeof(visplane_t*) * NUM_VISPLANES_BUCKETS;
-
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
-	vissubsectors = (void*)tempbuf;
-	tempbuf += sizeof(*vissubsectors) * MAXVISSSEC / sizeof(*tempbuf);
 
 	lastsegclip = tempbuf;
 	tempbuf += MAXOPENINGS;
 
+	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
+	vissprites = (void*)tempbuf;
+	tempbuf += sizeof(*vissprites) * MAXVISSPRITES / sizeof(*tempbuf);
+
+	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
+	sortedvissprites = (void*)tempbuf;
+	tempbuf += sizeof(*sortedvissprites) * MAXVISSPRITES * 2 / sizeof(*tempbuf);
+
+	/* */
+	/* clear sprites */
+	/* */
+	vissprite_p = vissprites;
+	lastsprite_p = vissprite_p;
+
+	openings = openings_;
+	lastopening = openings;
+
+	vissubsectors = vissubsectors_;
+	lastvissubsector = vissubsectors;	/* no subsectors visible yet */
+
 	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
 		visplanes_hash[i] = NULL;
-
-	lastvisplane = visplanes + 1;		/* visplanes[0] is left empty */
-	lastwallcmd = viswalls;			/* no walls added yet */
-	lastvissubsector = vissubsectors;	/* no subsectors visible yet */
 
 #ifndef MARS
 	phasetime[0] = samplecount;
@@ -749,6 +760,7 @@ void Mars_Sec_R_Setup(void)
 	Mars_ClearCacheLines((intptr_t)&lastvisplane & ~15, 1);
 	Mars_ClearCacheLines((intptr_t)&visplanes_hash & ~15, 1);
 	Mars_ClearCacheLines((intptr_t)&lastsegclip & ~15, 1);
+	Mars_ClearCacheLines((intptr_t)&sortedvissprites & ~15, 1);
 
 	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
 		visplanes_hash[i] = NULL;
@@ -869,8 +881,10 @@ extern	ref6_start;
 extern	ref7_start;
 extern	ref8_start;
 
-void R_RenderPlayerView(int displayplayer)
+void R_RenderPlayerView(int displayplayer, unsigned short* openings_)
 {
+	subsector_t* vissubsectors_[MAXVISSSEC];
+
 	/* make sure its done now */
 #if defined(JAGUAR)
 	while (!I_RefreshCompleted())
@@ -883,7 +897,7 @@ void R_RenderPlayerView(int displayplayer)
 	if (debugscreenactive)
 		I_DebugScreen();
 
-	R_Setup(displayplayer);
+	R_Setup(displayplayer, openings_, vissubsectors_);
 
 #ifndef JAGUAR
 	R_BSP();
@@ -920,11 +934,22 @@ void R_RenderPlayerView(int displayplayer)
 
 #else
 
-__attribute__((noinline))
-ATTR_DATA_CACHE_ALIGN
-void R_RenderPlayerView1(int displayplayer, boolean drawworld)
+void R_RenderPlayerView(int displayplayer, unsigned short *openings_)
 {
-	R_Setup(displayplayer);
+	boolean drawworld = !(players[consoleplayer].automapflags & AF_ACTIVE);
+	subsector_t* vissubsectors_[MAXVISSSEC];
+	visplane_t visplanes_[MAXVISPLANES], *visplanes_hash_[NUM_VISPLANES_BUCKETS];
+
+	Mars_R_SecWait();
+
+	while (!I_RefreshCompleted())
+		;
+
+	t_ref_cnt = (t_ref_cnt + 1) & 3;
+
+	t_ref_total[t_ref_cnt] = I_GetFRTCounter();
+
+	R_Setup(displayplayer, openings_, vissubsectors_, visplanes_, visplanes_hash_);
 
 	Mars_R_BeginWallPrep(drawworld);
 
@@ -933,20 +958,6 @@ void R_RenderPlayerView1(int displayplayer, boolean drawworld)
 	t_ref_bsp[t_ref_cnt] = I_GetFRTCounter() - t_ref_bsp[t_ref_cnt];
 
 	Mars_R_EndWallPrep(MAXVISSSEC);
-}
-
-__attribute__((noinline))
-ATTR_DATA_CACHE_ALIGN
-void R_RenderPlayerView2(int displayplayer, boolean drawworld)
-{
-	vissprite_t vissprites_[MAXVISSPRITES];
-
-	/*	 */
-	/* clear sprites */
-	/* */
-	vissprites = vissprites_;
-	vissprite_p = vissprites;
-	lastsprite_p = vissprite_p;
 
 	if (drawworld)
 	{
@@ -970,35 +981,6 @@ void R_RenderPlayerView2(int displayplayer, boolean drawworld)
 
 		R_Update();
 	}
-
-	Mars_R_SecWait();
-}
-
-__attribute__((noinline))
-ATTR_DATA_CACHE_ALIGN
-void R_RenderPlayerView(int displayplayer)
-{
-#ifdef MARS
-	__attribute__((aligned(16)))
-#endif
-	unsigned short openings_[MAXOPENINGS];
-	boolean drawworld = !(players[consoleplayer].automapflags & AF_ACTIVE);
-
-#ifdef MARS
-	while (!I_RefreshCompleted())
-		;
-#endif
-
-	openings = openings_;
-	lastopening = openings;
-
-	t_ref_cnt = (t_ref_cnt + 1) & 3;
-
-	t_ref_total[t_ref_cnt] = I_GetFRTCounter();
-
-	R_RenderPlayerView1(displayplayer, drawworld);
-
-	R_RenderPlayerView2(displayplayer, drawworld);
 
 	t_ref_total[t_ref_cnt] = I_GetFRTCounter() - t_ref_total[t_ref_cnt];
 

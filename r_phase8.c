@@ -293,7 +293,7 @@ static void R_DrawPSprites(const int cpu)
             ++i;
         }
 
-        R_DrawVisSprite(vis, spropening, &fuzzpos[cpu], cpu+1);
+        R_DrawVisSprite(vis, spropening, &fuzzpos[cpu], 0);
 
         ++vis;
     }
@@ -304,7 +304,6 @@ void Mars_Sec_R_DrawSprites(void)
 {
     Mars_ClearCacheLines((intptr_t)&sortedcount & ~15, 1);
     Mars_ClearCacheLines((intptr_t)&sortedsprites & ~15, 1);
-    Mars_ClearCacheLines((intptr_t)sortedsprites & ~15, (sortedcount * sizeof(*sortedsprites) + 15) / 16);
 
     Mars_ClearCacheLines((intptr_t)&vissprites & ~15, 1);
     Mars_ClearCacheLines((intptr_t)&vissprite_p & ~15, 1);
@@ -313,11 +312,8 @@ void Mars_Sec_R_DrawSprites(void)
     Mars_ClearCacheLines((intptr_t)&sprscreenhalf & ~15, 1);
 
     R_DrawSpritesLoop(1);
-}
 
-void Mars_Sec_R_DrawPSprites(void)
-{
-    Mars_ClearCacheLines((intptr_t)&sprscreenhalf & ~15, 1);
+    Mars_R_Sec_WaitDrawSprites();
 
     R_DrawPSprites(1);
 }
@@ -326,19 +322,13 @@ void Mars_Sec_R_DrawPSprites(void)
 //
 // Render all sprites
 //
-int fff1, fff2;
-
 void R_Sprites(void)
 {
    int i = 0, count;
    int midcount = 0;
-#ifdef MARS
-   __attribute__((aligned(16)))
-#endif
-   int sortarr[MAXVISSPRITES * 2];
 
    sortedcount = 0;
-   sortedsprites = sortarr;
+   sortedsprites = sortedvissprites;
 
    count = lastsprite_p - vissprites;
 
@@ -376,14 +366,10 @@ void R_Sprites(void)
    Mars_ClearCacheLines((intptr_t)openings & ~15, ((lastopening - openings) * sizeof(*openings) + 15) / 16);
 
    Mars_R_BeginDrawSprites();
+
    R_DrawSpritesLoop(0);
+
    Mars_R_EndDrawSprites();
-
-   sprscreenhalf = viewportWidth / 2;
-
-   Mars_R_BeginDrawPSprites();
-   R_DrawPSprites(0);
-   Mars_R_EndDrawPSprites();
 #else
    R_DrawSpritesLoop(0);
 

@@ -1,5 +1,8 @@
 #include "doomdef.h"
 #include "p_local.h"
+#ifdef MARS
+#include "mars.h"
+#endif
 
 int	playertics, thinkertics, sighttics, basetics, latetics;
 int	tictics;
@@ -485,6 +488,7 @@ void P_Drawer (void)
 { 	
 	boolean automapactive = (players[consoleplayer].automapflags & AF_ACTIVE) != 0;
 	boolean optionsactive = (players[consoleplayer].automapflags & AF_OPTIONSACTIVE) != 0;
+	unsigned short openings_[MAXOPENINGS];
 
 #ifndef MARS
 	if (optionsactive)
@@ -505,10 +509,10 @@ void P_Drawer (void)
 	if (automapactive)
 	{
 		/* view the guy you are playing */
-		R_RenderPlayerView(consoleplayer);
+		R_RenderPlayerView(consoleplayer, openings_);
 		/* view the other guy in split screen mode */
 		if (splitscreen)
-			R_RenderPlayerView(consoleplayer ^ 1);
+			R_RenderPlayerView(consoleplayer ^ 1, openings_);
 
 		ST_Drawer();
 		AM_Drawer();
@@ -549,20 +553,19 @@ void P_Drawer (void)
 		}
 
 		/* view the guy you are playing */
-		R_RenderPlayerView(consoleplayer);
+		R_RenderPlayerView(consoleplayer, openings_);
 		/* view the other guy in split screen mode */
 		if (splitscreen)
-			R_RenderPlayerView(consoleplayer^1);
+			R_RenderPlayerView(consoleplayer^1, openings_);
 
 		ST_Drawer();
 
+		Mars_R_SecWait();
+
 		if (demoplayback)
 			M_Drawer();
-
 		if (optionsactive)
-		{
 			O_Drawer();
-		}
 
 		o_wasactive = optionsactive;
 
@@ -571,7 +574,7 @@ void P_Drawer (void)
 #ifdef JAGUAR
 		ST_Drawer ();
 #endif
-		R_RenderPlayerView (consoleplayer);
+		R_RenderPlayerView (consoleplayer, openings_);
 		clearscreen = 0;
 #endif
 	/* assume part of the refresh is now running parallel with main code */
