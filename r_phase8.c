@@ -293,7 +293,7 @@ static void R_DrawPSprites(const int cpu)
             ++i;
         }
 
-        R_DrawVisSprite(vis, spropening, &fuzzpos[cpu], 0);
+        R_DrawVisSprite(vis, spropening, &fuzzpos[cpu], cpu+1);
 
         ++vis;
     }
@@ -370,6 +370,8 @@ void R_Sprites(void)
    R_DrawSpritesLoop(0);
 
    Mars_R_EndDrawSprites();
+
+   R_DrawPSprites(0);
 #else
    R_DrawSpritesLoop(0);
 
