@@ -98,18 +98,11 @@ static inline void Mars_R_EndDrawPlanes(void)
 // r_phase8
 static inline void Mars_R_BeginDrawSprites(void)
 {
-	MARS_SYS_COMM6 = 0;
 	MARS_SYS_COMM4 = 6;
 }
 
 static inline void Mars_R_EndDrawSprites(void)
 {
-	MARS_SYS_COMM6 = 1;
-}
-
-static inline void Mars_R_Sec_WaitDrawSprites(void)
-{
-	while (MARS_SYS_COMM6 == 0);
 }
 
 static inline void Mars_M_BeginDrawFire(void)

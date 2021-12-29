@@ -10,9 +10,9 @@
 #endif
 #include <stdlib.h>
 
-static int sortedcount;
+static VINT sortedcount;
 static int *sortedsprites;
-int sprscreenhalf;
+VINT sprscreenhalf;
 static int fuzzpos[2];
 
 static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy) ATTR_DATA_CACHE_ALIGN;
@@ -313,8 +313,6 @@ void Mars_Sec_R_DrawSprites(void)
 
     R_DrawSpritesLoop(1);
 
-    Mars_R_Sec_WaitDrawSprites();
-
     R_DrawPSprites(1);
 }
 #endif
@@ -325,17 +323,18 @@ void Mars_Sec_R_DrawSprites(void)
 void R_Sprites(void)
 {
    int i = 0, count;
-   int midcount = 0;
+   unsigned half, midcount;
 
    sortedcount = 0;
    sortedsprites = sortedvissprites;
-
    count = lastsprite_p - vissprites;
 
+   // sort mobj sprites by distance (back to front)
+   // find approximate average middle point for all
+   // sprites - this will be used to split the draw 
+   // load between the two CPUs on the 32X
+   half = 0;
    midcount = 0;
-   sprscreenhalf = 0;
-
-   // draw mobj sprites
    for (i = 0; i < count; i++)
    {
        vissprite_t* ds = vissprites + i;
@@ -344,22 +343,29 @@ void R_Sprites(void)
        if (ds->x1 > ds->x2)
            continue;
 
-       int pixcount = ds->x2 + 1 - ds->x1;
+       // average mid point
+       unsigned xscale = ds->xscale;
+       unsigned pixcount = ds->x2 + 1 - ds->x1;
        if (pixcount > 10) // FIXME: an arbitrary number
        {
-           midcount++;
-           sprscreenhalf += ds->x1 + (pixcount >> 1);
+           midcount += xscale;
+           half += (ds->x1 + (pixcount >> 1)) * xscale;
        }
 
-       sortedsprites[sortedcount] = ((unsigned)ds->xscale << 7) + i;
-       sortedcount++;
+       // composite sort key: distance + id
+       sortedsprites[sortedcount++] = (xscale << 7) + i;
    }
 
-   if (midcount > 1)
-       sprscreenhalf /= midcount;
-   if (!sprscreenhalf)
-       sprscreenhalf = viewportWidth / 2;
+   // average the mid point
+   if (midcount > 0)
+       half /= midcount;
+   if (!half || half > viewportWidth)
+       half = viewportWidth / 2;
+   sprscreenhalf = half;
+
    D_isort(sortedsprites, sortedcount);
+
+   // draw mobj sprites
 
 #ifdef MARS
    Mars_ClearCacheLines((intptr_t)&lastopening & ~15, 1);
@@ -369,9 +375,9 @@ void R_Sprites(void)
 
    R_DrawSpritesLoop(0);
 
-   Mars_R_EndDrawSprites();
-
    R_DrawPSprites(0);
+
+   Mars_R_EndDrawSprites();
 #else
    R_DrawSpritesLoop(0);
 
