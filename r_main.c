@@ -110,7 +110,7 @@ angle_t xtoviewangle[SCREENWIDTH+1];
 /* */
 /* performance counters */
 /* */
-int t_ref_cnt = 0;
+VINT t_ref_cnt = 0;
 int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sprites[4], t_ref_total[4];
 
 r_texcache_t r_texcache;
