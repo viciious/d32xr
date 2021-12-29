@@ -4202,32 +4202,26 @@
         "name": "PERCENT"
     },
     {
-        "compressed": true,
         "filename": "ckey_b",
         "name": "CKEY_B"
     },
     {
-        "compressed": true,
         "filename": "ckey_y",
         "name": "CKEY_Y"
     },
     {
-        "compressed": true,
         "filename": "ckey_r",
         "name": "CKEY_R"
     },
     {
-        "compressed": true,
         "filename": "skey_b",
         "name": "SKEY_B"
     },
     {
-        "compressed": true,
         "filename": "skey_y",
         "name": "SKEY_Y"
     },
     {
-        "compressed": true,
         "filename": "skey_r",
         "name": "SKEY_R"
     },
