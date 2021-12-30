@@ -293,6 +293,7 @@ void Mars_Secondary(void)
 			Mars_Sec_R_DrawSprites();
 			break;
 		case 7:
+			Mars_Sec_R_DrawPSprites();
 			break;
 		case 8:
 			Mars_Sec_M_AnimateFire();

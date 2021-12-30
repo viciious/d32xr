@@ -312,9 +312,14 @@ void Mars_Sec_R_DrawSprites(void)
     Mars_ClearCacheLines((intptr_t)&sprscreenhalf & ~15, 1);
 
     R_DrawSpritesLoop(1);
+}
 
+void Mars_Sec_R_DrawPSprites(void)
+{
+    Mars_ClearCacheLines((intptr_t)&sprscreenhalf & ~15, 1);
     R_DrawPSprites(1);
 }
+
 #endif
 
 //
@@ -372,12 +377,16 @@ void R_Sprites(void)
    Mars_ClearCacheLines((intptr_t)openings & ~15, ((lastopening - openings) * sizeof(*openings) + 15) / 16);
 
    Mars_R_BeginDrawSprites();
-
    R_DrawSpritesLoop(0);
-
-   R_DrawPSprites(0);
-
    Mars_R_EndDrawSprites();
+
+   sprscreenhalf = viewportWidth / 2;
+   if (!lowResMode)
+       sprscreenhalf /= 2;
+
+   Mars_R_BeginDrawPSprites();
+   R_DrawPSprites(0);
+   Mars_R_EndDrawPSprites();
 #else
    R_DrawSpritesLoop(0);
 
