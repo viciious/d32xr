@@ -58,6 +58,7 @@ typedef struct __attribute((packed))
 	int8_t strafebtns;
 	int8_t unused2;
 	int8_t anamorphic;
+	int8_t colormap;
 } saveopts_t;
 
 static char saveslotguard[SRAM_SLOTSIZE - sizeof(savegame_t)] __attribute__((unused));
@@ -193,6 +194,7 @@ static void SaveOptions(void)
 	so.alwaysrun = alwaysrun;
 	so.strafebtns = strafebtns;
 	so.anamorphic = anamorphicview;
+	so.colormap = colormapopt+1;
 
 	Mars_StopSoundMixer();
 
@@ -236,6 +238,8 @@ static void ReadOptions(void)
 		so.strafebtns = 0;
 	if (so.anamorphic < 0 || so.anamorphic > 1)
 		so.anamorphic = 0;
+	if (so.colormap < 1 || so.colormap > 2)
+		so.colormap = 2;
 
 	sfxvolume = so.sfxvolume;
 	musicvolume = so.musicvolume;
@@ -247,6 +251,7 @@ static void ReadOptions(void)
 	alwaysrun = so.alwaysrun;
 	strafebtns = so.strafebtns;
 	anamorphicview = so.anamorphic;
+	colormapopt = so.colormap - 1;
 }
 
 void ClearEEProm(void)
@@ -274,6 +279,7 @@ void ReadEEProm(void)
 	strafebtns = 0;
 	ticsperframe = MINTICSPERFRAME;
 	anamorphicview = 0;
+	colormapopt = 1;
 
 	ReadOptions();
 }

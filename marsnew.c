@@ -334,10 +334,9 @@ int Mars_FRTCounter2Msec(int c)
 
 void I_Init (void) 
 {	
-	int	i, j;
+	int	i;
 	unsigned minr;
 	const byte	*doompalette;
-	const byte 	*doomcolormap;
 
 	Mars_SetBrightness(1);
 
@@ -364,24 +363,9 @@ void I_Init (void)
 		}
 	}
 
-	doomcolormap = W_POINTLUMPNUM(W_GetNumForName("COLORMAPS"));
 	dc_colormaps = Z_Malloc(64*256, PU_STATIC, 0);
 
-	for(i = 0; i < 32; i++) {
-		const byte *sl1 = &doomcolormap[i*512];
-		const byte *sl2 = &doomcolormap[i*512+256];
-		byte *dl1 = (byte *)&dc_colormaps[i*256];
-		byte *dl2 = (byte *)&dc_colormaps[i*256+128];
-		D_memcpy(dl1, sl2, 256);
-		D_memcpy(dl2, sl1, 256);
-
-		for (j = 0; j < 512; j+=2) {
-			if (dl1[j] == 0)
-				dl1[j] = COLOR_BLACK;
-			if (dl1[j+1] == 0)
-				dl1[j+1] = COLOR_BLACK;
-		}
-	}
+	I_InitColormap();
 
 	i = W_CheckNumForName("STBAR");
 	if (i != -1)
@@ -393,6 +377,42 @@ void I_Init (void)
 	{
 		jo_stbar = NULL;
 		jo_stbar_height = 0;
+	}
+}
+
+void I_InitColormap(void)
+{
+	int	i, j;
+	int l;
+	byte* doomcolormap;
+
+	if (!dc_colormaps)
+		return;
+
+	l = -1;
+	if (colormapopt == 1)
+		l = W_CheckNumForName("COLORMA1");
+	if (l < 0)
+		l = W_CheckNumForName("COLORMAP");
+
+	doomcolormap = I_WorkBuffer();
+	D_memset(doomcolormap, 0, 512 * 32);
+	W_ReadLump(l, doomcolormap);
+
+	for (i = 0; i < 32; i++) {
+		const byte* sl1 = &doomcolormap[i * 512];
+		const byte* sl2 = &doomcolormap[i * 512 + 256];
+		byte* dl1 = (byte*)&dc_colormaps[i * 256];
+		byte* dl2 = (byte*)&dc_colormaps[i * 256 + 128];
+		D_memcpy(dl1, sl2, 256);
+		D_memcpy(dl2, sl1, 256);
+
+		for (j = 0; j < 512; j += 2) {
+			if (dl1[j] == 0)
+				dl1[j] = COLOR_BLACK;
+			if (dl1[j + 1] == 0)
+				dl1[j + 1] = COLOR_BLACK;
+		}
 	}
 }
 

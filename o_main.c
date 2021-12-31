@@ -32,6 +32,7 @@ typedef enum
 	mi_resolution,
 	mi_detailmode,
 	mi_anamorphic,
+	mi_colormap,
 
 	mi_controltype,
 	mi_alwaysrun,
@@ -45,7 +46,6 @@ typedef enum
 	si_resolution,
 	si_sfxvolume,
 	si_lod,
-	si_anamorphic,
 
 	NUMMENUSLIDERS
 } sliderid_t;
@@ -201,12 +201,13 @@ void O_Init (void)
 	sliders[si_lod].maxval = MAXDETAILMODES;
 	sliders[si_lod].curval = detailmode + 1;
 
-	D_memcpy(menuitem[mi_anamorphic].name, "Widescreen mode", 16);
+	D_memcpy(menuitem[mi_anamorphic].name, "Widescreen", 11);
 	menuitem[mi_anamorphic].x = ITEMX;
 	menuitem[mi_anamorphic].y = STARTY + ITEMSPACE * 4;
-	menuitem[mi_anamorphic].slider = si_anamorphic + 1;
-	sliders[si_anamorphic].maxval = 1;
-	sliders[si_anamorphic].curval = anamorphicview;
+
+	D_memcpy(menuitem[mi_colormap].name, "High color", 11);
+	menuitem[mi_colormap].x = ITEMX;
+	menuitem[mi_colormap].y = STARTY + ITEMSPACE * 5;
 
 
 	D_memcpy(menuitem[mi_controltype].name, "Gamepad", 8);
@@ -232,7 +233,7 @@ void O_Init (void)
 
 	D_memcpy(menuscreen[ms_video].name, "Video", 7);
 	menuscreen[ms_video].firstitem = mi_resolution;
-	menuscreen[ms_video].numitems = mi_anamorphic - mi_resolution + 1;
+	menuscreen[ms_video].numitems = mi_colormap - mi_resolution + 1;
 
 	D_memcpy(menuscreen[ms_controls].name, "Controls", 9);
 	menuscreen[ms_controls].firstitem = mi_controltype;
@@ -442,6 +443,10 @@ exit:
 					anamorphicview = slider->curval;
 					R_SetViewportSize(viewportNum);
 					break;
+				case mi_colormap:
+					colormapopt = slider->curval;
+					I_InitColormap();
+					break;
 				default:
 					break;
 
@@ -544,6 +549,51 @@ exit:
 				if (oldmusictype != o_musictype)
 				{
 					S_SetMusicType(o_musictype);
+					sound = sfx_stnmov;
+				}
+			}
+
+			if (screenpos == ms_video)
+			{
+				int oldanamorphicview = anamorphicview;
+				int oldcolormapopt = colormapopt;
+
+				if (buttons & BT_RIGHT)
+				{
+					switch (itemno) {
+					case mi_anamorphic:
+						if (++anamorphicview > 1)
+							anamorphicview = 1;
+						break;
+					case mi_colormap:
+						if (++colormapopt > 1)
+							colormapopt = 1;
+						break;
+					}
+				}
+
+				if (buttons & BT_LEFT)
+				{
+					switch (itemno) {
+					case mi_anamorphic:
+						if (--anamorphicview < 0)
+							anamorphicview = 0;
+						break;
+					case mi_colormap:
+						if (--colormapopt < 0)
+							colormapopt = 0;
+						break;
+					}
+				}
+
+				if (oldanamorphicview != anamorphicview)
+				{
+					R_SetViewportSize(viewportNum);
+					sound = sfx_stnmov;
+				}
+				if (oldcolormapopt != colormapopt)
+				{
+					I_InitColormap();
 					sound = sfx_stnmov;
 				}
 			}
@@ -655,6 +705,24 @@ void O_Drawer (void)
 		char tmp[32];
 		D_snprintf(tmp, sizeof(tmp), "%dx%d", viewportWidth, viewportHeight);
 		I_Print8(menuitem[mi_resolution].x + 114, (unsigned)menuitem[mi_resolution].y/8 + 3, tmp);
+
+		switch (anamorphicview) {
+		case 0:
+			print(menuitem[mi_anamorphic].x + 150, menuitem[mi_anamorphic].y, "off");
+			break;
+		case 1:
+			print(menuitem[mi_anamorphic].x + 150, menuitem[mi_anamorphic].y, "on");
+			break;
+		}
+
+		switch (colormapopt) {
+		case 0:
+			print(menuitem[mi_colormap].x + 150, menuitem[mi_colormap].y, "off");
+			break;
+		case 1:
+			print(menuitem[mi_colormap].x + 150, menuitem[mi_colormap].y, "on");
+			break;
+		}
 	}
 
 #ifndef MARS

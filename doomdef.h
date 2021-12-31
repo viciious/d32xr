@@ -754,7 +754,7 @@ int I_ReadMouse(int *pmx, int *pmy);
 void I_NetSetup (void);
 unsigned I_NetTransfer (unsigned buttons);
 
-
+void I_InitColormap(void);
 
 boolean	I_RefreshCompleted (void);
 boolean	I_RefreshLatched (void);
@@ -1152,6 +1152,7 @@ extern	VINT	ticsperframe;		/* 2 - 4 */
 extern	boolean	spr_rotations;
 extern int debugmode;
 extern char clearscreen;
+extern char colormapopt;
 
 void I_InitMenuFire(jagobj_t* titlepic);
 void I_StopMenuFire(void);

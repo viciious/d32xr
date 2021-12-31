@@ -5630,7 +5630,13 @@
     },
     {
         "filename": "colormap",
-        "name": "COLORMAP"
+        "name": "COLORMAP",
+        "compressed": true
+    },
+    {
+        "filename": "colormap_new",
+        "name": "COLORMA1",
+        "compressed": true
     },
     {
         "filename": "VGM/Intro.vgm",
