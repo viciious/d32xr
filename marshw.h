@@ -62,8 +62,8 @@ extern uint16_t mars_refresh_hz;
 void Mars_UpdateCD(void);
 void Mars_UseCD(int usecd);
 
-void Mars_PlayTrack(char usecd, int playtrack, void* vgmptr, char looping);
-void Mars_StopTrack(void);
+void Mars_PlayTrack(char usecd, int playtrack, void* vgmptr, char looping) MARS_ATTR_DATA_CACHE_ALIGN;
+void Mars_StopTrack(void) MARS_ATTR_DATA_CACHE_ALIGN;
 
 #define Mars_GetTicCount() (*(volatile int *)((intptr_t)&mars_vblank_count | 0x20000000))
 int Mars_GetFRTCounter(void);
@@ -100,11 +100,8 @@ short* Mars_FrameBufferLines(void);
 // functions are executing. That includes DMA, code and
 // interrupt handlers on both CPUs.
 
-void Mars_ReadSRAM(uint8_t * buffer, int offset, int len)
-	__attribute__((section(".data"), aligned(16)));
-
-void Mars_WriteSRAM(const uint8_t * buffer, int offset, int len)
-	__attribute__((section(".data"), aligned(16)));
+void Mars_ReadSRAM(uint8_t * buffer, int offset, int len) MARS_ATTR_DATA_CACHE_ALIGN;
+void Mars_WriteSRAM(const uint8_t * buffer, int offset, int len) MARS_ATTR_DATA_CACHE_ALIGN;
 
 
 // MD video debug functions
@@ -120,6 +117,7 @@ void Mars_MDPutString(char *str);
 void Mars_DebugStart(void);
 void Mars_DebugQueue(int id, int val);
 void Mars_DebugEnd(void);
+
 void Mars_SetBankPage(int bank, int page) MARS_ATTR_DATA_CACHE_ALIGN;
 
 enum {

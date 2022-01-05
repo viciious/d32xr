@@ -9,6 +9,7 @@
 extern uint32_t vblank_vector;
 extern uint16_t gen_lvl2;
 extern uint16_t cd_ok;
+extern uint16_t megasd_ok;
 
 extern uint32_t Sub_Start;
 extern uint32_t Sub_End;
@@ -21,6 +22,8 @@ extern void write_long(unsigned int dst, unsigned int val);
 extern unsigned char read_byte(unsigned int src);
 extern unsigned short read_word(unsigned int src);
 extern unsigned int read_long(unsigned int src);
+
+extern uint16_t InitMegaSD(void);
 
 extern void do_main(void);
 
@@ -119,6 +122,7 @@ uint16_t InitCD(void)
 int main(void)
 {
     cd_ok = InitCD();
+    megasd_ok = InitMegaSD();
 
     /*
      * Main loop in ram - you need to have it in ram to avoid bus contention

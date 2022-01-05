@@ -321,10 +321,11 @@ void Mars_UpdateCD(void)
 
 void Mars_UseCD(int usecd)
 {
+	while (MARS_SYS_COMM0);
+
 	if (!mars_cd_ok)
 		return;
 
-	while (MARS_SYS_COMM0);
 	MARS_SYS_COMM2 = usecd & 1;
 	MARS_SYS_COMM0 = 0x0700;
 	while (MARS_SYS_COMM0);
@@ -333,8 +334,6 @@ void Mars_UseCD(int usecd)
 void Mars_PlayTrack(char usecd, int playtrack, void *vgmptr, char looping)
 {
 	Mars_UseCD(usecd);
-
-	while (MARS_SYS_COMM0);
 
 	if (usecd)
 	{
@@ -348,12 +347,15 @@ void Mars_PlayTrack(char usecd, int playtrack, void *vgmptr, char looping)
 		*(volatile intptr_t*)&MARS_SYS_COMM12 = (intptr_t)vgmptr;
 		MARS_SYS_COMM0 = 0x0300; /* start music */
 	}
+
+	while (MARS_SYS_COMM0);
 }
 
 void Mars_StopTrack(void)
 {
 	while (MARS_SYS_COMM0);
 	MARS_SYS_COMM0 = 0x0400; /* stop music */
+	while (MARS_SYS_COMM0);
 }
 
 

@@ -25,7 +25,7 @@ RM = rm -f
 
 TARGET = m68k
 LIBS = $(LIBPATH) -lc -lgcc -lnosys
-OBJS = crt0.o font.o main.o kos.o cd.o lzss.o vgm.o vgm_player.o xvprintf.o
+OBJS = crt0.o font.o main.o kos.o cd.o lzss.o megasd.o vgm.o vgm_player.o xvprintf.o
 
 all: $(TARGET).bin
 

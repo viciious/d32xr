@@ -378,6 +378,23 @@ start_music:
         bra     main_loop
 
 start_cd:
+        tst.w   megasd_ok
+        beq     9f                  /* couldn't find a MegaSD */
+
+        moveq   #0,d0
+        moveq   #0,d1
+
+        move.w  0xA1512C,d0         /* COMM12 = cdtrack */
+        move.w  0xA15122,d1         /* COMM2 = looping */
+
+        move.l  d1,-(sp)            /* push the looping flag */
+        move.l  d0,-(sp)            /* push the cdtrack */
+        jsr     MegaSD_PlayCDTrack
+        lea     8(sp),sp            /* clear the stack */
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+9:
         tst.w   cd_ok
         beq     2f                  /* couldn't init cd */
         tst.b   cd_ok
@@ -443,6 +460,14 @@ stop_music:
         bra     main_loop
 
 stop_cd:
+        tst.w   megasd_ok
+        beq     3f                  /* couldn't find a MegaSD */
+
+        jsr     MegaSD_PauseCD
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+3:
         tst.w   cd_ok
         beq.b   2f
 0:
@@ -503,6 +528,19 @@ read_mouse:
 
 
 read_cdstate:
+        tst.w   megasd_ok
+        beq     9f                  /* couldn't find a MegaSD */
+        tst.w   megasd_num_cdtracks
+        beq     9f                  /* MegaSD couldn't find a .cue file */
+
+        move.b  #1,megasd_ok        /* we have a disc - get state info */
+
+        move.w  megasd_ok,0xA15122
+        move.w  megasd_num_cdtracks,0xA1512C
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+9:
         tst.w   cd_ok
         beq     0f                  /* couldn't init cd */
         tst.b   cd_ok
@@ -541,10 +579,7 @@ read_cdstate:
         bra     main_loop
 
 set_usecd:
-        tst.w   cd_ok
-        beq.b   1f
         move.w  0xA15122,use_cd     /* COMM2 holds the new value */
-1:
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
@@ -710,13 +745,16 @@ set_bankpage:
         move.w  0xA15122,d1         /* COMM2 holds page number */
         lea     0xA130F0,a0
         add.l   d0,d0
+        move.w  #0x2700,sr          /* disable ints */
         move.b  #1,0xA15107         /* set RV */
         move.b  d1,1(a0,d0.l)
         move.b  #0,0xA15107         /* set RV */
+        move.w  #0x2000,sr          /* enable ints */
         move.w  #0,0xA15120         /* release SH2 now */
         bra     main_loop
 
 reset_banks:
+        move.w  #0x2700,sr          /* disable ints */
         move.b  #1,0xA15107         /* set RV */
         move.b  #1,0xA130F3         /* bank for 0x080000-0x0FFFFF */
         move.b  #2,0xA130F5         /* bank for 0x100000-0x17FFFF */
@@ -726,6 +764,7 @@ reset_banks:
         move.b  #6,0xA130FD         /* bank for 0x300000-0x37FFFF */
         move.b  #7,0xA130FF         /* bank for 0x380000-0x3FFFFF */
         move.b  #0,0xA15107         /* set RV */
+        move.w  #0x2000,sr          /* enable ints */
         rts
 
 | load font tile data
@@ -1074,12 +1113,19 @@ use_cd:
         .global cd_ok
 cd_ok:
         dc.w    0
-
 first_track:
         dc.w    0
 last_track:
         dc.w    0
 number_tracks:
+        dc.w    0
+
+        .global megasd_ok
+megasd_ok:
+        dc.w    0
+
+        .global megasd_num_cdtracks
+megasd_num_cdtracks:
         dc.w    0
 
         .align  4

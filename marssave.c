@@ -226,7 +226,7 @@ static void ReadOptions(void)
 		so.detailmode = detmode_high;
 	if (so.musictype < mustype_none || so.musictype > mustype_cd)
 		so.musictype = mustype_fm;
-	if (so.musictype == mustype_cd && !mars_cd_ok)
+	if (so.musictype == mustype_cd && !S_CDAvailable())
 		so.musictype = mustype_fm;
 	if (so.alwaysrun < 0 || so.alwaysrun > 1)
 		so.alwaysrun = 0;

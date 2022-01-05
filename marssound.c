@@ -83,9 +83,8 @@ void S_Init(void)
 
 	/* init music */
 	num_music = 0;
-	curmusic = mus_none;
-	curcdtrack = cdtrack_none;
 	muslooping = 0;
+	S_StopSong();
 
 	for (i = 1; i < numlumps; i++)
 	{
@@ -328,7 +327,7 @@ void S_SetMusicType(int newtype)
 
 boolean S_CDAvailable(void)
 {
-	return mars_cd_ok != 0;
+	return (mars_cd_ok & 0x0100) != 0;
 }
 
 int S_SongForMapnum(int mapnum)
@@ -383,7 +382,7 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 				playtrack = cdtrack % num_map_tracks;
 		}
 
-		if (curmusic == musiclump && muslooping == looping)
+		if (curcdtrack == cdtrack && muslooping == looping)
 			return;
 	}
 	else if (musictype == mustype_fm)
@@ -404,12 +403,12 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 			S_StopSong();
 			return;
 		}
+
+		if (curmusic == musiclump && muslooping == looping)
+			return;
 	}
 
-	if (curmusic == playtrack && muslooping == looping)
-		return;
-
-	curmusic = playtrack;
+	curmusic = musiclump;
 	curcdtrack = cdtrack;
 	muslooping = looping;
 
