@@ -689,7 +689,7 @@ int		W_CheckNumForName (const char *name);
 int		W_GetNumForName (const char *name);
 
 int		W_LumpLength (int lump);
-void	W_ReadLump (int lump, void *dest);
+int 	W_ReadLump (int lump, void *dest);
 
 void	*W_CacheLumpNum (int lump, int tag);
 void	*W_CacheLumpName (const char *name, int tag);

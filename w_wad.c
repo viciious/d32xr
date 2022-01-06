@@ -207,7 +207,7 @@ int W_LumpLength (int lump)
 ====================
 */
 
-void W_ReadLump (int lump, void *dest)
+int W_ReadLump (int lump, void *dest)
 {
 	lumpinfo_t	*l;
 	
@@ -223,6 +223,7 @@ void W_ReadLump (int lump, void *dest)
 	}
 	else
 	  D_memcpy (dest, W_GetLumpData(lump), BIGLONG(l->size));
+	return BIGLONG(l->size);
 }
 
 
