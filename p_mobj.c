@@ -263,7 +263,7 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 		case S_SARG_ATK1:
 		case S_SARG_ATK2:
 		case S_SARG_ATK3:
-			mobj->tics = 2;
+			mobj->tics /= 2;
 			break;
 		default:
 			break;
@@ -272,38 +272,10 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 		switch (type) {
 		case MT_SERGEANT:
 		case MT_SHADOWS:
-			mobj->speed = 15;
-			break;
 		case MT_BRUISERSHOT:
 		case MT_HEADSHOT:
 		case MT_TROOPSHOT:
-			mobj->speed = 40 * FRACUNIT;
-			break;
-		default:
-			break;
-		}
-	}
-	else
-	{
-		switch (info->spawnstate) {
-		case S_SARG_ATK1:
-		case S_SARG_ATK2:
-		case S_SARG_ATK3:
-			mobj->tics = 4;
-			break;
-		default:
-			break;
-		}
-
-		switch (type) {
-		case MT_SERGEANT:
-		case MT_SHADOWS:
-			mobj->speed = 10;
-			break;
-		case MT_BRUISERSHOT:
-		case MT_HEADSHOT:
-		case MT_TROOPSHOT:
-			mobj->speed = 30 * FRACUNIT;
+			mobj->speed += mobj->speed / 2;
 			break;
 		default:
 			break;
