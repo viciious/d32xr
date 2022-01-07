@@ -304,30 +304,48 @@ void R_SegCommands2(void)
 #endif
 
         lseg.segl = segl;
-        
-        seglight = segl->seglightlevel + extralight;
-#ifdef MARS
-        if (seglight < 0)
-            seglight = 0;
-        if (seglight > 255)
-            seglight = 255;
-#endif
-        lseg.lightmax = seglight;
-        lseg.lightmin = lseg.lightmax;
+        lseg.actionbits = segl->actionbits;
 
-        if (detailmode == detmode_high)
+        if (vd.fixedcolormap)
         {
+            lseg.lightmin = lseg.lightmax = vd.fixedcolormap;
+        }
+        else
+        {
+            seglight = segl->seglightlevel + extralight;
 #ifdef MARS
-            if (seglight <= 160 + extralight)
-                seglight = (seglight >> 1);
-#else
-            seglight = light - (255 - light) * 2;
             if (seglight < 0)
                 seglight = 0;
+            if (seglight > 255)
+                seglight = 255;
 #endif
-            lseg.lightmin = seglight;
+            lseg.lightmax = seglight;
+            lseg.lightmin = lseg.lightmax;
+
+            if (detailmode == detmode_high)
+            {
+#ifdef MARS
+                if (seglight <= 160 + extralight)
+                    seglight = (seglight >> 1);
+#else
+                seglight = light - (255 - light) * 2;
+                if (seglight < 0)
+                    seglight = 0;
+#endif
+                lseg.lightmin = seglight;
+            }
+
+            if (lseg.lightmin != lseg.lightmax)
+            {
+                lseg.lightcoef = ((lseg.lightmax - lseg.lightmin) << FRACBITS) / (800 - 160);
+                lseg.lightsub = 160 * lseg.lightcoef;
+            }
+            else
+            {
+                lseg.lightmin = HWLIGHT(lseg.lightmax);
+                lseg.lightmax = lseg.lightmin;
+            }
         }
-        lseg.actionbits = segl->actionbits;
 
         if (lseg.actionbits & AC_TOPTEXTURE)
         {
@@ -353,17 +371,6 @@ void R_SegCommands2(void)
             bottomtex->data = tex->data;
             bottomtex->pixelcount = 0;
             bottomtex->drawcol = (tex->height & (tex->height - 1)) ? drawcolnpo2 : drawcol;
-        }
-
-        if (lseg.lightmin != lseg.lightmax)
-        {
-            lseg.lightcoef = ((lseg.lightmax - lseg.lightmin) << FRACBITS) / (800 - 160);
-            lseg.lightsub = 160 * lseg.lightcoef;
-        }
-        else
-        {
-            lseg.lightmin = HWLIGHT(lseg.lightmax);
-            lseg.lightmax = lseg.lightmin;
         }
 
         R_DrawSeg(&lseg, clipbounds);

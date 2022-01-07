@@ -254,35 +254,42 @@ static void R_DrawPlanes2(void)
         lpl.ds_source = flatpixels[pl->flatnum];
         lpl.height = (unsigned)D_abs(pl->height) << FIXEDTOHEIGHT;
 
-        light = pl->lightlevel + extralight;
-        if (light < 0)
-            light = 0;
-        if (light > 255)
-            light = 255;
-        lpl.lightmax = light;
-        lpl.lightmin = lpl.lightmax;
-
-        if (detailmode == detmode_high)
+        if (vd.fixedcolormap)
         {
-#ifdef MARS
-            if (light <= 160 + extralight)
-                light = (light >> 1);
-#else
-            light = light - ((255 - light) << 1);
-#endif
-            if (light < MINLIGHT)
-                light = MINLIGHT;
-            lpl.lightmin = (unsigned)light;
-        }
-
-        if (lpl.lightmin != lpl.lightmax)
-        {
-            lpl.lightsub = 160 * (lpl.lightmax - lpl.lightmin) / (800 - 160);
+            lpl.lightmin = lpl.lightmax = vd.fixedcolormap;
         }
         else
         {
-            lpl.lightmin = HWLIGHT(lpl.lightmax);
-            lpl.lightmax = lpl.lightmin;
+            light = pl->lightlevel + extralight;
+            if (light < 0)
+                light = 0;
+            if (light > 255)
+                light = 255;
+            lpl.lightmax = light;
+            lpl.lightmin = lpl.lightmax;
+
+            if (detailmode == detmode_high)
+            {
+#ifdef MARS
+                if (light <= 160 + extralight)
+                    light = (light >> 1);
+#else
+                light = light - ((255 - light) << 1);
+#endif
+                if (light < MINLIGHT)
+                    light = MINLIGHT;
+                lpl.lightmin = (unsigned)light;
+            }
+
+            if (lpl.lightmin != lpl.lightmax)
+            {
+                lpl.lightsub = 160 * (lpl.lightmax - lpl.lightmin) / (800 - 160);
+            }
+            else
+            {
+                lpl.lightmin = HWLIGHT(lpl.lightmax);
+                lpl.lightmax = lpl.lightmin;
+            }
         }
 
         R_PlaneLoop(&lpl);

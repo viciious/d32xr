@@ -40,7 +40,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos,
    spryscale = (unsigned)spryscale >> 8;
 
    // blitter iinc
-   light = HWLIGHT(vis->colormap);
+   light    = vis->colormap;
    x        = vis->x1;
    stopx    = vis->x2 + 1;
    fracstep = vis->xiscale;

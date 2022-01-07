@@ -102,10 +102,18 @@ static void R_PrepMobj(mobj_t *thing)
    else
       vis->xiscale = FixedDiv(FRACUNIT, xscale);
 
-   if(thing->frame & FF_FULLBRIGHT)
-      vis->colormap = 255;
+   if (vd.fixedcolormap)
+   {
+       vis->colormap = vd.fixedcolormap;
+   }
    else
-      vis->colormap = thing->subsector->sector->lightlevel;
+   {
+       if (thing->frame & FF_FULLBRIGHT)
+           vis->colormap = 255;
+       else
+           vis->colormap = thing->subsector->sector->lightlevel;
+       vis->colormap = HWLIGHT(vis->colormap);
+   }
 
    vis->drawcol = (thing->flags & MF_SHADOW) ? drawfuzzycol : drawcol;
 }
@@ -148,10 +156,18 @@ static void R_PrepPSprite(pspdef_t *psp)
    vis->xiscale = FixedDiv(FRACUNIT, xscale);
    vis->texturemid = (vis->texturemid / FRACUNIT + weaponYpos) * FRACUNIT;
 
-   if(state->frame & FF_FULLBRIGHT)
-      vis->colormap = 255;
+   if (vd.fixedcolormap)
+   {
+       vis->colormap = vd.fixedcolormap;
+   }
    else
-      vis->colormap = vd.lightlevel;
+   {
+       if (state->frame & FF_FULLBRIGHT)
+           vis->colormap = 255;
+       else
+           vis->colormap = vd.lightlevel;
+       vis->colormap = HWLIGHT(vis->colormap);
+   }
    vis->drawcol = I_DrawColumnLow;
 }
 

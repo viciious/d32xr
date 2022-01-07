@@ -578,6 +578,7 @@ static void R_Setup (int displayplayer, unsigned short *openings_,
 
 	vd.displayplayer = displayplayer;
 	vd.lightlevel = player->mo->subsector->sector->lightlevel;
+	vd.fixedcolormap = 0;
 
 	damagecount = player->damagecount;
 	bonuscount = player->bonuscount;
@@ -645,6 +646,10 @@ static void R_Setup (int displayplayer, unsigned short *openings_,
 	if (detailmode != detmode_high)
 		vd.extralight += extralight2;
 
+	if (player->powers[pw_invulnerability] > 60
+		|| (player->powers[pw_invulnerability] & 4))
+		vd.fixedcolormap = INVERSECOLORMAP;
+
 	viewportbuffer = (pixel_t*)I_ViewportBuffer();
 
 	palette = 0;
@@ -673,9 +678,6 @@ static void R_Setup (int displayplayer, unsigned short *openings_,
 				palette = 3;
 			palette += 9;
 		}
-		else if (player->powers[pw_invulnerability] > 60
-			|| (player->powers[pw_invulnerability] & 4))
-			palette = 12;
 		else if (player->powers[pw_ironfeet] > 60
 			|| (player->powers[pw_ironfeet] & 4))
 			palette = 13;
@@ -685,6 +687,11 @@ static void R_Setup (int displayplayer, unsigned short *openings_,
 		curpalette = palette;
 		I_SetPalette(W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"))+palette*768);
 	}
+
+	if (vd.fixedcolormap == INVERSECOLORMAP)
+		vd.fuzzcolormap = INVERSECOLORMAP;
+	else
+		vd.fuzzcolormap = (6 - extralight2 / 2) * 256;
 #endif
 
 	tempbuf = (unsigned short *)I_WorkBuffer();

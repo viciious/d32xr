@@ -34,8 +34,12 @@ extern fixed_t weaponXScale;
 /* */
 /* lighting constants */
 /* */
+#ifdef JAGUAR
 #define	LIGHTLEVELS			256		/* number of diminishing */
 #define	INVERSECOLORMAP		255
+#else
+#define	INVERSECOLORMAP		32*256
+#endif
 
 #ifdef MARS
 #define HWLIGHT(light) ((((255 - (light)) >> 3) & 31) * 256)
@@ -285,6 +289,8 @@ __attribute__((aligned(16)))
 	VINT		lightlevel;
 	VINT		extralight;
 	VINT		displayplayer;
+	VINT		fixedcolormap;
+	VINT		fuzzcolormap;
 } viewdef_t;
 
 extern	viewdef_t	vd;

@@ -363,7 +363,7 @@ void I_Init (void)
 		}
 	}
 
-	dc_colormaps = Z_Malloc(64*256, PU_STATIC, 0);
+	dc_colormaps = Z_Malloc(33*512, PU_STATIC, 0);
 
 	I_InitColormap();
 
@@ -383,7 +383,7 @@ void I_Init (void)
 void I_InitColormap(void)
 {
 	int	i, j;
-	int l;
+	int l, s;
 	byte* doomcolormap;
 
 	if (!dc_colormaps)
@@ -396,10 +396,11 @@ void I_InitColormap(void)
 		l = W_CheckNumForName("COLORMAP");
 
 	doomcolormap = I_WorkBuffer();
-	D_memset(doomcolormap, 0, 512 * 32);
-	W_ReadLump(l, doomcolormap);
+	D_memset(doomcolormap, 0, 512 * 33);
+	s = W_ReadLump(l, doomcolormap);
+	s /= 512;
 
-	for (i = 0; i < 32; i++) {
+	for (i = 0; i < s; i++) {
 		const byte* sl1 = &doomcolormap[i * 512];
 		const byte* sl2 = &doomcolormap[i * 512 + 256];
 		byte* dl1 = (byte*)&dc_colormaps[i * 256];
@@ -414,6 +415,9 @@ void I_InitColormap(void)
 				dl1[j + 1] = COLOR_BLACK;
 		}
 	}
+
+	if (s < 33)
+		D_memcpy(dc_colormaps + 256 * 32, dc_colormaps, 512);
 }
 
 void I_SetPalette(const byte* palette)
