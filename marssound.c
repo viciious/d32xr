@@ -379,8 +379,9 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 			if (cdtrack <= cdtrack_title)
 				playtrack = cdtrack + mars_num_cd_tracks;
 			else
-				playtrack = cdtrack % num_map_tracks;
+				playtrack = 1 + (cdtrack - 1) % num_map_tracks;
 		}
+
 		if (playtrack < 0)
 			return;
 
