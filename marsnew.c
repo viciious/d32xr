@@ -335,7 +335,7 @@ int Mars_FRTCounter2Msec(int c)
 void I_Init (void) 
 {	
 	int	i;
-	unsigned minr;
+	unsigned minr, maxr;
 	const byte	*doompalette;
 
 	Mars_SetBrightness(1);
@@ -346,6 +346,7 @@ void I_Init (void)
 	// look up palette indices for black and white colors
 	// if the black color isn't present, use the darkest one
 	minr = 255;
+	maxr = 0;
 	for (i = 1; i < 256; i++)
 	{
 		unsigned r = doompalette[i * 3 + 0];
@@ -358,7 +359,8 @@ void I_Init (void)
 			minr = r;
 			COLOR_BLACK = i;
 		}
-		if (r == 255) {
+		if (r > maxr) {
+			maxr = r;
 			COLOR_WHITE = i;
 		}
 	}
