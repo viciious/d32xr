@@ -347,12 +347,15 @@ void Mars_PlayTrack(char usecd, int playtrack, void *vgmptr, char looping)
 		*(volatile intptr_t*)&MARS_SYS_COMM12 = (intptr_t)vgmptr;
 		MARS_SYS_COMM0 = 0x0300; /* start music */
 	}
+
+	while (MARS_SYS_COMM0);
 }
 
 void Mars_StopTrack(void)
 {
 	while (MARS_SYS_COMM0);
 	MARS_SYS_COMM0 = 0x0400; /* stop music */
+	while (MARS_SYS_COMM0);
 }
 
 

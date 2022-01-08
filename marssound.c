@@ -381,6 +381,8 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 			else
 				playtrack = cdtrack % num_map_tracks;
 		}
+		if (playtrack < 0)
+			return;
 
 		if (curcdtrack == cdtrack && muslooping == looping)
 			return;

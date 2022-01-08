@@ -62,8 +62,8 @@ extern uint16_t mars_refresh_hz;
 void Mars_UpdateCD(void);
 void Mars_UseCD(int usecd);
 
-void Mars_PlayTrack(char usecd, int playtrack, void* vgmptr, char looping);
-void Mars_StopTrack(void);
+void Mars_PlayTrack(char usecd, int playtrack, void* vgmptr, char looping) MARS_ATTR_DATA_CACHE_ALIGN;
+void Mars_StopTrack(void) MARS_ATTR_DATA_CACHE_ALIGN;
 
 #define Mars_GetTicCount() (*(volatile int *)((intptr_t)&mars_vblank_count | 0x20000000))
 int Mars_GetFRTCounter(void);
