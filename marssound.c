@@ -373,13 +373,15 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 		Mars_UpdateCD();
 
 		int num_map_tracks = (int)mars_num_cd_tracks + cdtrack_lastmap;
-		if ((mars_cd_ok & 0x0100) && (num_map_tracks > 0))
+		if (S_CDAvailable())
 		{
 			/* there is a disc with at least enough tracks */
 			if (cdtrack <= cdtrack_title)
 				playtrack = cdtrack + mars_num_cd_tracks;
-			else
+			else if (num_map_tracks > 0)
 				playtrack = 1 + (cdtrack - 1) % num_map_tracks;
+			else
+				playtrack = cdtrack_intermission + mars_num_cd_tracks;
 		}
 
 		if (playtrack < 0)
