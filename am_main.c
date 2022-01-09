@@ -6,6 +6,11 @@
 
 #define	STEPVALUE	0x800000
 
+#define SCALESTEP		0x7ff8
+#define MAXSCALE		18 * FRACUNIT
+#define MINSCALE		2 * FRACUNIT
+#define DEFAULTSCALE	6 * FRACUNIT
+
 #ifdef MARS
 
 #define CRY_RED 	191
@@ -30,12 +35,8 @@
 
 static	VINT	blink = 0;
 static	VINT	pause;
-#define MAXSCALES	5
-static	VINT	scale;
-static	VINT	scalex[MAXSCALES] = {18,19,20,21,22};
-#ifndef MARS
-static	VINT	scaley[MAXSCALES] = {18,19,20,21,22};
-#endif
+static fixed_t  scale;
+
 static	VINT	amcurmap = -1;
 #define NOSELENGTH	0x200000		/* PLAYER'S TRIANGLE */
 #define MOBJLENGTH	0x100000
@@ -82,11 +83,7 @@ void AM_Start(void)
 {
 	if (amcurmap != gamemapinfo.mapNumber)
 	{
-#ifdef MARS
-		scale = 1;
-#else
-		scale = 3;
-#endif
+		scale = DEFAULTSCALE;
 		amcurmap = gamemapinfo.mapNumber;
 	}
 
@@ -379,45 +376,19 @@ void AM_Control (player_t *player)
 
 	if (buttons & BT_RIGHT)
 	{
-		if (buttons & BT_B)
-		{
-			if (pause > 5)
-			{
-				pause = 0;
-				scale--;
-				if (scale < 0)
-					scale = 0;
-			}
-		}
-		else
-			player->automapx+=step;
+		player->automapx+=step;
 	}
 	if (buttons & BT_LEFT)
 	{
-		if (buttons & BT_B)
-		{
-			if (pause > 5)
-			{
-				pause = 0;
-				scale++;
-				if (scale == MAXSCALES)
-					scale--;
-			}
-		}
-		else
-			player->automapx-=step;
+		player->automapx-=step;
 	}
 	if (buttons & BT_UP)
 	{
 		if (buttons & BT_B)
 		{
-			if (pause > 5)
-			{
-				pause = 0;
-				scale--;
-				if (scale < 0)
-					scale = 0;
-			}
+			scale -= SCALESTEP;
+			if (scale < MINSCALE)
+				scale = MINSCALE;
 		}
 		else
 			player->automapy+=step;
@@ -426,13 +397,9 @@ void AM_Control (player_t *player)
 	{
 		if (buttons & BT_B)
 		{
-			if (pause > 5)
-			{
-				pause = 0;
-				scale++;
-				if (scale == MAXSCALES)
-					scale--;
-			}
+			scale += SCALESTEP;
+			if (scale > MAXSCALE)
+				scale = MAXSCALE;
 		}
 		else
 			player->automapy-=step;
@@ -466,8 +433,6 @@ void AM_Drawer (void)
 	int		outcode;
 	int		outcode2;
 	int		color;
-	int		xshift;
-	int		yshift;
 	int		drawn;		/* HOW MANY LINES DRAWN? */
 
 #ifdef JAGUAR
@@ -501,13 +466,6 @@ void AM_Drawer (void)
 	p = &players[consoleplayer];
 	ox = p->automapx;
 	oy = p->automapy;
-	
-	xshift = scalex[scale];
-#ifdef MARS
-	yshift = xshift;
-#else
-	yshift = scaley[scale];
-#endif
 
 	line = lines;
 	drawn = 0;
@@ -527,10 +485,12 @@ void AM_Drawer (void)
 		x2 -= ox;
 		y1 -= oy;
 		y2 -= oy;
-		x1 >>= xshift;
-		x2 >>= xshift;
-		y1 >>= yshift;
-		y2 >>= yshift;
+
+		x1 = FixedDiv(x1, scale) >> FRACBITS;
+		x2 = FixedDiv(x2, scale) >> FRACBITS;
+		y1 = FixedDiv(y1, scale) >> FRACBITS;
+		y2 = FixedDiv(y2, scale) >> FRACBITS;
+
 		outcode = (y1 > 100) << 1;
 		outcode |= (y1 < -100) ;
 		outcode2 = (y2 > 100) << 1;
@@ -625,14 +585,14 @@ void AM_Drawer (void)
 			s = finesine(((angle + ANG90) + ANG45) >> ANGLETOFINESHIFT);
 			nx3 = FixedMul(c, NOSELENGTH) + x1;
 			ny3 = FixedMul(s, NOSELENGTH) + y1;
-			
-			nx1 >>= xshift;
-			ny1 >>= yshift;
-			nx2 >>= xshift;
-			ny2 >>= yshift;
-			nx3 >>= xshift;
-			ny3 >>= yshift;
-			
+
+			nx1 = FixedDiv(nx1, scale) >> FRACBITS;
+			nx2 = FixedDiv(nx2, scale) >> FRACBITS;
+			nx3 = FixedDiv(nx3, scale) >> FRACBITS;
+			ny1 = FixedDiv(ny1, scale) >> FRACBITS;
+			ny2 = FixedDiv(ny2, scale) >> FRACBITS;
+			ny3 = FixedDiv(ny3, scale) >> FRACBITS;
+
 			DrawLine(color,160+nx1,100-ny1,160+nx2,100-ny2);
 			DrawLine(color,160+nx2,100-ny2,160+nx3,100-ny3);
 			DrawLine(color,160+nx1,100-ny1,160+nx3,100-ny3);
@@ -658,11 +618,18 @@ void AM_Drawer (void)
 			x1 = mo->x - p->automapx;
 			y1 = mo->y - p->automapy;
 			
-			nx1 = x1 >> xshift;
-			ny1 = (y1 - MOBJLENGTH) >> yshift;
-			nx2 = (x1 - MOBJLENGTH) >> xshift;
-			ny2 = (y1 + MOBJLENGTH) >> yshift;
-			nx3 = (x1 + MOBJLENGTH) >> xshift;
+			nx1 = x1;
+			ny1 = y1 - MOBJLENGTH;
+			nx2 = x1 - MOBJLENGTH;
+			ny2 = y1 + MOBJLENGTH;
+			nx3 = x1 + MOBJLENGTH;
+
+			nx1 = FixedDiv(nx1, scale) >> FRACBITS;
+			nx2 = FixedDiv(nx2, scale) >> FRACBITS;
+			nx3 = FixedDiv(nx3, scale) >> FRACBITS;
+			ny1 = FixedDiv(ny1, scale) >> FRACBITS;
+			ny2 = FixedDiv(ny2, scale) >> FRACBITS;
+
 			ny3 = ny2;
 
 			DrawLine(CRY_AQUA,160+nx1,100-ny1,160+nx2,100-ny2);
