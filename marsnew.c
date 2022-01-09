@@ -315,6 +315,9 @@ void Mars_Secondary(void)
 		case 13:
 			I_ClearFrameBuffer();
 			break;
+		case 14:
+			Mars_Sec_AM_Drawer();
+			break;
 		default:
 			break;
 		}

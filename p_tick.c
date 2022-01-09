@@ -508,6 +508,9 @@ void P_Drawer (void)
 #else
 	if (automapactive)
 	{
+		while (!I_RefreshCompleted())
+			;
+
 		Mars_CommSlaveClearFrameBuffer();
 
 		/* view the guy you are playing */

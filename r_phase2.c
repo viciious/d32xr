@@ -563,7 +563,7 @@ void Mars_Sec_R_WallPrep(void)
     Mars_ClearCacheLines((intptr_t)&lastwallcmd & ~15, 1);
 }
 
-#else
+#endif
 
 void R_WallPrep(void)
 {
@@ -578,8 +578,6 @@ void R_WallPrep(void)
         ++segl; // next viswall
     }
 }
-
-#endif
 
 // EOF
 

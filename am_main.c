@@ -286,6 +286,52 @@ void DrawLine(pixel_t color, fixed_t x0, fixed_t y0, fixed_t x1, fixed_t y1)
 			}
 		}
 	}
+	else if (y0 == y1)
+	{
+		fixed_t y;
+		uint16_t c1, c2;
+		uint16_t *sfb;
+
+		x0 >>= FRACBITS;
+		x1 >>= FRACBITS;
+		y0 >>= FRACBITS;
+
+		if (x0 < 0) x0 = 0;
+		if (x1 > 319) x1 = 319;
+
+		y = y0;
+		if (y < 0) return;
+		if (y >= 223) return;
+
+		c1 = ((color - 0x7) << 8) | (color - 0x7);
+		c2 = (color << 8) | color;
+
+		x = x0;
+		fb = &fb[(y << 8) + (y << 6) + x];
+		if (x & 1)
+		{
+			fb[0] = c1 & 0xff;
+			fb[320] = c2 & 0xff;
+			fb++;
+			x++;
+		}
+
+		sfb = (uint16_t*)fb;
+
+		for ( ; x <= (x1 & ~1); x += 2)
+		{
+			sfb[0] = c1;
+			sfb[160] = c2;
+			sfb++;
+		}
+
+		if (x < x1)
+		{
+			fb = (byte*)sfb;
+			fb[0] = c1 & 0xff;
+			fb[320] = c2 & 0xff;
+		}
+	}
 	else
 	{
 		if (xpxl2 > 319 * FRACUNIT) xpxl2 = 319 * FRACUNIT;
@@ -424,10 +470,9 @@ void AM_Control (player_t *player)
 extern	int	workpage;
 extern	pixel_t	*screens[2];	/* [SCREENWIDTH*SCREENHEIGHT];  */
 
-void AM_Drawer (void)
+static void AM_Drawer_ (int c)
 {
-
-	int		i;
+	int		i, endl;
 	player_t	*p;
 	line_t	*line;
 	int		x1,y1;
@@ -462,20 +507,31 @@ void AM_Drawer (void)
 
 #endif
 
-#ifdef MARS
-	Mars_R_SecWait();
-#endif
-
 	p = &players[consoleplayer];
 	ox = p->automapx;
 	oy = p->automapy;
 
-	line = lines;
+	i = 0;
 	drawn = 0;
-	for (i=0 ; i<numlines ; i++,line++)
+	endl = numlines;
+
+	if (c == 1)
+		endl = numlines / 2;
+	else
+		i += numlines / 2;
+	line = lines + i;
+
+	for ( ; i<endl ; i++,line++)
 	{
-		if ((!(line->flags & ML_MAPPED) ||		/* IF NOT MAPPED OR DON'T DRAW */
-			line->flags & ML_DONTDRAW) &&
+		int flags;
+
+		flags = line->flags;
+#ifdef MARS
+		flags = *(volatile VINT*)(((intptr_t)&line->flags) | 0x20000000);
+#endif
+
+		if ((!(flags & ML_MAPPED) ||		/* IF NOT MAPPED OR DON'T DRAW */
+			flags & ML_DONTDRAW) &&
 			(!(p->powers[pw_allmap] + showAllLines)))
 			continue;
 			
@@ -544,6 +600,9 @@ void AM_Drawer (void)
 		DrawLine (color, 160+x1,100-y1,160+x2,100-y2);
 		drawn++;
 	}
+
+	if (c > 1)
+		return;
 	
 	/* IF <5 LINES DRAWN, MOVE TO LAST POSITION! */
 	if (drawn < 5)
@@ -641,3 +700,29 @@ void AM_Drawer (void)
 		}
 	}
 }
+
+#ifdef MARS
+
+void Mars_Sec_AM_Drawer(void)
+{
+	AM_Drawer_(2);
+}
+
+void AM_Drawer(void)
+{
+	Mars_AM_BeginDrawer();
+
+	AM_Drawer_(1);
+
+	Mars_AM_EndDrawer();
+}
+
+
+#else
+
+void AM_Drawer(void)
+{
+	AM_Drawer_(0);
+}
+
+#endif

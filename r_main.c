@@ -746,10 +746,6 @@ static void R_Setup (int displayplayer, unsigned short *openings_,
 #endif
 
 	R_SetupTexCacheFrame(&r_texcache);
-
-#ifdef MARS
-	Mars_R_SecSetup();
-#endif
 }
 
 #ifdef MARS
@@ -947,16 +943,26 @@ void R_RenderPlayerView(int displayplayer, unsigned short *openings_)
 	subsector_t* vissubsectors_[MAXVISSSEC];
 	visplane_t visplanes_[MAXVISPLANES], *visplanes_hash_[NUM_VISPLANES_BUCKETS];
 
-	Mars_R_SecWait();
-
 	while (!I_RefreshCompleted())
 		;
+
+	if (!drawworld)
+	{
+		R_Setup(displayplayer, openings_, vissubsectors_, visplanes_, visplanes_hash_);
+		R_BSP();
+		R_WallPrep();
+		return;
+	}
 
 	t_ref_cnt = (t_ref_cnt + 1) & 3;
 
 	t_ref_total[t_ref_cnt] = I_GetFRTCounter();
 
+	Mars_R_SecWait();
+
 	R_Setup(displayplayer, openings_, vissubsectors_, visplanes_, visplanes_hash_);
+
+	Mars_R_SecSetup();
 
 	Mars_R_BeginWallPrep(drawworld);
 
@@ -966,28 +972,25 @@ void R_RenderPlayerView(int displayplayer, unsigned short *openings_)
 
 	Mars_R_EndWallPrep(MAXVISSSEC);
 
-	if (drawworld)
-	{
-		t_ref_prep[t_ref_cnt] = I_GetFRTCounter();
-		R_SpritePrep();
-		if (R_LatePrep())
-			R_Cache();
-		t_ref_prep[t_ref_cnt] = I_GetFRTCounter() - t_ref_prep[t_ref_cnt];
+	t_ref_prep[t_ref_cnt] = I_GetFRTCounter();
+	R_SpritePrep();
+	if (R_LatePrep())
+		R_Cache();
+	t_ref_prep[t_ref_cnt] = I_GetFRTCounter() - t_ref_prep[t_ref_cnt];
 
-		t_ref_segs[t_ref_cnt] = I_GetFRTCounter();
-		R_SegCommands();
-		t_ref_segs[t_ref_cnt] = I_GetFRTCounter() - t_ref_segs[t_ref_cnt];
+	t_ref_segs[t_ref_cnt] = I_GetFRTCounter();
+	R_SegCommands();
+	t_ref_segs[t_ref_cnt] = I_GetFRTCounter() - t_ref_segs[t_ref_cnt];
 
-		t_ref_planes[t_ref_cnt] = I_GetFRTCounter();
-		R_DrawPlanes();
-		t_ref_planes[t_ref_cnt] = I_GetFRTCounter() - t_ref_planes[t_ref_cnt];
+	t_ref_planes[t_ref_cnt] = I_GetFRTCounter();
+	R_DrawPlanes();
+	t_ref_planes[t_ref_cnt] = I_GetFRTCounter() - t_ref_planes[t_ref_cnt];
 
-		t_ref_sprites[t_ref_cnt] = I_GetFRTCounter();
-		R_Sprites();
-		t_ref_sprites[t_ref_cnt] = I_GetFRTCounter() - t_ref_sprites[t_ref_cnt];
+	t_ref_sprites[t_ref_cnt] = I_GetFRTCounter();
+	R_Sprites();
+	t_ref_sprites[t_ref_cnt] = I_GetFRTCounter() - t_ref_sprites[t_ref_cnt];
 
-		R_Update();
-	}
+	R_Update();
 
 	t_ref_total[t_ref_cnt] = I_GetFRTCounter() - t_ref_total[t_ref_cnt];
 }

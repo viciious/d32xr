@@ -46,6 +46,8 @@ void Mars_Sec_StopSoundMixer(void);
 void Mars_Sec_StartSoundMixer(void);
 void Mars_Sec_ReadSoundCmds(void) ATTR_DATA_CACHE_ALIGN;
 
+void Mars_Sec_AM_Drawer(void);
+
 void secondary_dma1_handler(void) ATTR_DATA_CACHE_ALIGN;
 
 static inline void Mars_R_SecWait(void)
@@ -151,6 +153,17 @@ static inline void Mars_StartSoundMixer(void)
 {
 	Mars_R_SecWait();
 	MARS_SYS_COMM4 = 12;
+	Mars_R_SecWait();
+}
+
+static inline void Mars_AM_BeginDrawer(void)
+{
+	Mars_R_SecWait();
+	MARS_SYS_COMM4 = 14;
+}
+
+static inline void Mars_AM_EndDrawer(void)
+{
 	Mars_R_SecWait();
 }
 
