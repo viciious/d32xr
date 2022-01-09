@@ -75,7 +75,7 @@ int showAllLines;
 #define showAllLines 0
 #endif
 
-void DrawLine(pixel_t color, int x1, int y1, int x2, int y2);
+void DrawLine(pixel_t color, fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2, fixed_t miny, fixed_t maxy);
 
 /*================================================================= */
 /* */
@@ -223,17 +223,18 @@ static void putPixel(byte* fb, pixel_t c, fixed_t x, fixed_t y, fixed_t brightne
 	fb[(y << 8) + (y << 6) + x] = c - brightness;
 }
 
-void DrawLine(pixel_t color, fixed_t x0, fixed_t y0, fixed_t x1, fixed_t y1)
+void DrawLine(pixel_t color, fixed_t x0, fixed_t y0, fixed_t x1, fixed_t y1, fixed_t miny, fixed_t maxy)
 {
 	fixed_t dx, dy;
 	fixed_t gradient;
 	fixed_t x, steep, temp;
 	fixed_t xpxl1, xpxl2, inters;
 	byte* fb = (byte*)I_FrameBuffer();
+	fixed_t minyfrac = miny * FRACUNIT;
 
 	if ((x0 < 0 && x1 < 0) || (x0 >= 320 && x1 >= 320))
 		return;
-	if ((y0 < 0 && y1 < 0) || (y0 >= 224 && y1 >= 224))
+	if ((y0 < miny && y1 < miny) || (y0 >= maxy && y1 >= maxy))
 		return;
 
 	steep = D_abs(y1 - y0) > D_abs(x1 - x0);
@@ -265,16 +266,27 @@ void DrawLine(pixel_t color, fixed_t x0, fixed_t y0, fixed_t x1, fixed_t y1)
 	xpxl2 = x1;
 	inters = y0;
 
-	if (xpxl1 < 0)
+	if (steep)
 	{
-		inters += gradient * ((-xpxl1) >> FRACBITS);
-		xpxl1 = 0;
+		if (xpxl1 < minyfrac)
+		{
+			inters += gradient * (((minyfrac-xpxl1)) >> FRACBITS);
+			xpxl1 = minyfrac;
+		}
+	}
+	else
+	{
+		if (xpxl1 < 0)
+		{
+			inters += gradient * ((-xpxl1) >> FRACBITS);
+			xpxl1 = 0;
+		}
 	}
 
 	// main loop
 	if (steep)
 	{
-		if (xpxl2 > 223 * FRACUNIT) xpxl2 = 223 * FRACUNIT;
+		if (xpxl2 > (maxy-1) * FRACUNIT) xpxl2 = (maxy - 1) * FRACUNIT;
 		for (x = xpxl1; x <= xpxl2; x += FRACUNIT, inters += gradient)
 		{
 			fixed_t y = inters & ~(FRACUNIT - 1);
@@ -296,12 +308,21 @@ void DrawLine(pixel_t color, fixed_t x0, fixed_t y0, fixed_t x1, fixed_t y1)
 		x1 >>= FRACBITS;
 		y0 >>= FRACBITS;
 
-		if (x0 < 0) x0 = 0;
-		if (x1 > 319) x1 = 319;
-
+		if (x0 < 0)
+			x0 = 0;
+		if (x1 > 319)
+			x1 = 319;
 		y = y0;
-		if (y < 0) return;
-		if (y >= 223) return;
+
+		if (y >= 223)
+			return;
+		if (y < miny)
+			return;
+		if (y >= maxy)
+		{
+			if (maxy < 223)
+				return;
+		}
 
 		c1 = ((color - 0x7) << 8) | (color - 0x7);
 		c2 = (color << 8) | color;
@@ -334,12 +355,14 @@ void DrawLine(pixel_t color, fixed_t x0, fixed_t y0, fixed_t x1, fixed_t y1)
 	}
 	else
 	{
+		fixed_t maxyfrac = (maxy - 2) * FRACUNIT;
+
 		if (xpxl2 > 319 * FRACUNIT) xpxl2 = 319 * FRACUNIT;
 		for (x = xpxl1; x <= xpxl2; x += FRACUNIT, inters += gradient)
 		{
 			fixed_t y = inters & ~(FRACUNIT - 1);
 			fixed_t b = inters & (FRACUNIT - 1);
-			if (y >= 0 && y <= 222 * FRACUNIT)
+			if (y >= minyfrac && y <= maxyfrac)
 			{
 				putPixel(fb, color, x, y, FRACUNIT - b);
 				putPixel(fb, color, x, y + FRACUNIT, b);
@@ -472,7 +495,7 @@ extern	pixel_t	*screens[2];	/* [SCREENWIDTH*SCREENHEIGHT];  */
 
 static void AM_Drawer_ (int c)
 {
-	int		i, endl;
+	int		i;
 	player_t	*p;
 	line_t	*line;
 	int		x1,y1;
@@ -482,6 +505,7 @@ static void AM_Drawer_ (int c)
 	int		outcode2;
 	int		color;
 	int		drawn;		/* HOW MANY LINES DRAWN? */
+	int		miny, maxy;
 
 #ifdef JAGUAR
 	workingscreen = screens[workpage];
@@ -511,17 +535,26 @@ static void AM_Drawer_ (int c)
 	ox = p->automapx;
 	oy = p->automapy;
 
-	i = 0;
+	line = lines;
 	drawn = 0;
-	endl = numlines;
 
-	if (c == 1)
-		endl = numlines / 2;
-	else
-		i += numlines / 2;
-	line = lines + i;
+	if (c == 0)
+	{
+		miny = 0;
+		maxy = 224;
+	}
+	else if (c == 1)
+	{
+		miny = 0;
+		maxy = 112;
+	}
+	else if (c == 2)
+	{
+		miny = 111;
+		maxy = 224;
+	}
 
-	for ( ; i<endl ; i++,line++)
+	for (i=0 ; i<numlines ; i++,line++)
 	{
 		int flags;
 
@@ -549,21 +582,23 @@ static void AM_Drawer_ (int c)
 		x2 = FixedDiv(x2, scale) >> FRACBITS;
 		y1 = FixedDiv(y1, scale) >> FRACBITS;
 		y2 = FixedDiv(y2, scale) >> FRACBITS;
-
-		outcode = (y1 > 100) << 1;
-		outcode |= (y1 < -100) ;
-		outcode2 = (y2 > 100) << 1;
-		outcode2 |= (y2 < -100) ;
-#ifndef MARS
-		if (outcode & outcode2) continue;
-#endif
+		
 		outcode = (x1 > 160) << 1;
-		outcode |= (x1 < -160) ;
+		outcode |= (x1 < -160);
 		outcode2 = (x2 > 160) << 1;
-		outcode2 |= (x2 < -160) ;
-#ifndef MARS
+		outcode2 |= (x2 < -160);
 		if (outcode & outcode2) continue;
-#endif
+
+		outcode = (y1 > 112) << 1;
+		outcode |= (y1 < -112) ;
+		outcode2 = (y2 > 112) << 1;
+		outcode2 |= (y2 < -112) ;
+		if (outcode & outcode2) continue;
+
+		x1 += 160;
+		x2 += 160;
+		y1 = 112-y1;
+		y2 = 112-y2;
 
 		/* */
 		/* Figure out color */
@@ -571,17 +606,17 @@ static void AM_Drawer_ (int c)
 		color = CRY_BROWN;
 		if ((p->powers[pw_allmap] +
 			showAllLines) &&			/* IF COMPMAP && !MAPPED YET */
-			!(line->flags & ML_MAPPED))
+			!(flags & ML_MAPPED))
 			color = CRY_GREY;
 		else
-		if (!(line->flags & ML_TWOSIDED))	/* ONE-SIDED LINE */
+		if (!(flags & ML_TWOSIDED))	/* ONE-SIDED LINE */
 			color = CRY_RED;
 		else
 		if (line->special == 97 ||		/* TELEPORT LINE */
 			line->special == 39)
 			color = CRY_GREEN;
 		else
-		if (line->flags & ML_SECRET)
+		if (flags & ML_SECRET)
 			color = CRY_RED;
 		else
 		if (line->special)
@@ -597,13 +632,17 @@ static void AM_Drawer_ (int c)
 			LD_BACKSECTOR(line)->ceilingheight)
 			color = CRY_BROWN;		
 		
-		DrawLine (color, 160+x1,100-y1,160+x2,100-y2);
+		DrawLine (color,x1,y1,x2,y2,miny,maxy);
 		drawn++;
 	}
 
 	if (c > 1)
 		return;
 	
+#ifdef MARS
+	Mars_R_SecWait();
+#endif
+
 	/* IF <5 LINES DRAWN, MOVE TO LAST POSITION! */
 	if (drawn < 5)
 	{
@@ -655,9 +694,9 @@ static void AM_Drawer_ (int c)
 			ny2 = FixedDiv(ny2, scale) >> FRACBITS;
 			ny3 = FixedDiv(ny3, scale) >> FRACBITS;
 
-			DrawLine(color,160+nx1,100-ny1,160+nx2,100-ny2);
-			DrawLine(color,160+nx2,100-ny2,160+nx3,100-ny3);
-			DrawLine(color,160+nx1,100-ny1,160+nx3,100-ny3);
+			DrawLine(color,160+nx1,112-ny1,160+nx2,112-ny2, 0, 224);
+			DrawLine(color,160+nx2,112-ny2,160+nx3,112-ny3, 0, 224);
+			DrawLine(color,160+nx1,112-ny1,160+nx3,112-ny3, 0, 224);
 		}
 	}
 	
@@ -694,9 +733,9 @@ static void AM_Drawer_ (int c)
 
 			ny3 = ny2;
 
-			DrawLine(CRY_AQUA,160+nx1,100-ny1,160+nx2,100-ny2);
-			DrawLine(CRY_AQUA,160+nx2,100-ny2,160+nx3,100-ny3);
-			DrawLine(CRY_AQUA,160+nx1,100-ny1,160+nx3,100-ny3);
+			DrawLine(CRY_AQUA,160+nx1,112-ny1,160+nx2,112-ny2, 0, 224);
+			DrawLine(CRY_AQUA,160+nx2,112-ny2,160+nx3,112-ny3, 0, 224);
+			DrawLine(CRY_AQUA,160+nx1,112-ny1,160+nx3,112-ny3, 0, 224);
 		}
 	}
 }

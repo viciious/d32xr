@@ -316,6 +316,15 @@ int P_Ticker (void)
 	;		/* wait for sound mixing to complete */
 #endif
 
+#ifdef MARS
+	if ((players[consoleplayer].automapflags & AF_ACTIVE) != 0)
+	{
+		while (!I_RefreshCompleted())
+			;
+		Mars_CommSlaveClearFrameBuffer();
+	}
+#endif
+
 	gameaction = ga_nothing;
 
 /* */
@@ -508,11 +517,6 @@ void P_Drawer (void)
 #else
 	if (automapactive)
 	{
-		while (!I_RefreshCompleted())
-			;
-
-		Mars_CommSlaveClearFrameBuffer();
-
 		/* view the guy you are playing */
 		R_RenderPlayerView(consoleplayer, openings_);
 		/* view the other guy in split screen mode */
