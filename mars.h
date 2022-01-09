@@ -59,6 +59,12 @@ static inline void Mars_CommSlaveClearCache(void)
 	MARS_SYS_COMM4 = 1;
 }
 
+static inline void Mars_CommSlaveClearFrameBuffer(void)
+{
+	Mars_R_SecWait();
+	MARS_SYS_COMM4 = 13;
+}
+
 static inline void Mars_R_SecSetup(void)
 {
 	Mars_R_SecWait();

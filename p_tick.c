@@ -508,6 +508,8 @@ void P_Drawer (void)
 #else
 	if (automapactive)
 	{
+		Mars_CommSlaveClearFrameBuffer();
+
 		/* view the guy you are playing */
 		R_RenderPlayerView(consoleplayer, openings_);
 		/* view the other guy in split screen mode */

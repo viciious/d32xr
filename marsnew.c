@@ -64,6 +64,8 @@ static VINT jo_stbar_height;
 
 extern int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sprites[4], t_ref_total[4];
 
+void I_ClearFrameBuffer(void) ATTR_DATA_CACHE_ALIGN;
+
 static int Mars_ConvGamepadButtons(int ctrl)
 {
 	int newc = 0;
@@ -309,6 +311,9 @@ void Mars_Secondary(void)
 			break;
 		case 12:
 			Mars_Sec_StartSoundMixer();
+			break;
+		case 13:
+			I_ClearFrameBuffer();
 			break;
 		default:
 			break;

@@ -3,6 +3,9 @@
 
 #include "doomdef.h"
 #include "p_local.h"
+#ifdef MARS
+#include "mars.h"
+#endif
 
 #define	STEPVALUE	0x800000
 
@@ -460,7 +463,7 @@ void AM_Drawer (void)
 #endif
 
 #ifdef MARS
-	I_ClearFrameBuffer();
+	Mars_R_SecWait();
 #endif
 
 	p = &players[consoleplayer];
