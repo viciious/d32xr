@@ -17,7 +17,7 @@
 #define BLUKEYY		15
 #define YELKEYY		27
 #define KEYW		16
-#define KEYH		11
+#define KEYH		12
 
 #define FACEX		144
 #define FACEY		5

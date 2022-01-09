@@ -523,7 +523,7 @@ void P_Drawer (void)
 		if (splitscreen)
 			R_RenderPlayerView(consoleplayer ^ 1, openings_);
 
-		ST_Drawer();
+		ST_ForceDraw();
 		AM_Drawer();
 		if (optionsactive)
 			O_Drawer();
