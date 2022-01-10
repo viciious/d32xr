@@ -70,14 +70,11 @@ const char cheatstrings[][11] =	/* order should mirror cheat_e */
 };
 
 char currentcheat[11]="0000000000";
-int	showAllThings;		/* CHEAT VARS */
-int showAllLines;
-#else
-#define showAllThings 0
-#define showAllLines 0
 #endif
+VINT showAllThings = 0;		/* CHEAT VARS */
+VINT showAllLines = 0;
 
-void DrawLine(pixel_t color, fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2, fixed_t miny, fixed_t maxy);
+static void DrawLine(pixel_t color, fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2, fixed_t miny, fixed_t maxy);
 
 /*================================================================= */
 /* */
@@ -141,7 +138,7 @@ cheat_e AM_CheckCheat(int buttons,int oldbuttons)
 #endif
 
 #ifdef JAGUAR
-void DrawLine(pixel_t color, int x1, int y1, int x2, int y2)
+static void DrawLine(pixel_t color, fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2, fixed_t miny, fixed_t maxy)
 {
 	int		dx, dy;
 	int		adx, ady;
@@ -227,7 +224,7 @@ static void putPixel(byte* fb, pixel_t c, fixed_t x, fixed_t y, fixed_t brightne
 	fb[(y << 8) + (y << 6) + x] = c - brightness;
 }
 
-void DrawLine(pixel_t color, fixed_t x0, fixed_t y0, fixed_t x1, fixed_t y1, fixed_t miny, fixed_t maxy)
+static void DrawLine(pixel_t color, fixed_t x0, fixed_t y0, fixed_t x1, fixed_t y1, fixed_t miny, fixed_t maxy)
 {
 	fixed_t dx, dy;
 	fixed_t gradient;
@@ -373,10 +370,6 @@ void DrawLine(pixel_t color, fixed_t x0, fixed_t y0, fixed_t x1, fixed_t y1, fix
 			}
 		}
 	}
-}
-#else
-void DrawLine(pixel_t color, int x1, int y1, int x2, int y2)
-{
 }
 #endif
 

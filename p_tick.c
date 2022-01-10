@@ -244,6 +244,9 @@ void P_CheckCheats (void)
 	const int stuff_combo = BT_A | BT_B | BT_C | BT_UP;
 	const int godmode_combo = BT_X | BT_Y | BT_Z | BT_UP;
 	player_t* p;
+	boolean automap = (players[consoleplayer].automapflags & AF_ACTIVE) != 0;
+	extern VINT showAllThings;
+	extern VINT showAllLines;
 
 	if (netgame)
 		return;
@@ -255,7 +258,13 @@ void P_CheckCheats (void)
 
 	if ((buttons & stuff_combo) == stuff_combo 
 		&& (oldbuttons & stuff_combo) != stuff_combo)
-	{	/* free stuff */
+	{
+		if (automap)
+		{
+			showAllThings ^= 1;
+			return;
+		}
+		/* free stuff */
 		p = &players[0];
 		for (i = 0; i < NUMCARDS; i++)
 			p->cards[i] = true;
@@ -267,7 +276,13 @@ void P_CheckCheats (void)
 
 	if ((buttons & godmode_combo) == godmode_combo 
 		&& (oldbuttons & godmode_combo) != godmode_combo)
-	{	/* godmode */
+	{
+		if (automap)
+		{
+			showAllLines ^= 1;
+			return;
+		}
+		/* godmode */
 		players[0].cheats ^= CF_GODMODE;
 	}
 #endif
