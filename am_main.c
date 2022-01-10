@@ -7,7 +7,7 @@
 #include "mars.h"
 #endif
 
-#define	STEPVALUE	0x800000
+#define	STEPVALUE		0x800000
 
 #define SCALESTEP		0x7ff8
 #define MAXSCALE		18 * FRACUNIT
@@ -38,6 +38,7 @@
 
 static	VINT	blink = 0;
 static	VINT	pause;
+static	VINT	linesdrawn = 0;
 static fixed_t  scale;
 
 static	VINT	amcurmap = -1;
@@ -46,6 +47,7 @@ static	VINT	amcurmap = -1;
 		
 static	fixed_t	oldplayerx;
 static	fixed_t oldplayery;
+static	fixed_t oldscale;
 
 #ifndef MARS
 int	blockx;
@@ -84,9 +86,11 @@ void DrawLine(pixel_t color, fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2, fix
 /*================================================================= */
 void AM_Start(void)
 {
+	linesdrawn = 0;
 	if (amcurmap != gamemapinfo.mapNumber)
 	{
 		scale = DEFAULTSCALE;
+		oldscale = DEFAULTSCALE;
 		amcurmap = gamemapinfo.mapNumber;
 	}
 
@@ -389,7 +393,8 @@ void DrawLine(pixel_t color, int x1, int y1, int x2, int y2)
 
 void AM_Control (player_t *player)
 {
-	int		buttons, oldbuttons, step;
+	int		buttons, oldbuttons;
+	fixed_t	step;
 #ifdef JAGUAR
 	cheat_e	cheatcode;
 #endif
@@ -400,25 +405,37 @@ void AM_Control (player_t *player)
 	if ( (buttons & BT_AUTOMAP) && !(oldbuttons & BT_AUTOMAP) )
 	{
 		player->automapflags ^= AF_ACTIVE;
-		player->automapx = player->mo->x;
-		player->automapy = player->mo->y;
+		player->automapx = oldplayerx = player->mo->x;
+		player->automapy = oldplayery = player->mo->y;
+		linesdrawn = UINT16_MAX;
 #ifndef MARS
 		blockx = 80;
 		blocky = 90;
 #endif
 	}
 
+	/* IF <5 LINES DRAWN, MOVE TO LAST POSITION! */
+	if (linesdrawn < 5)
+	{
+		player->automapx = oldplayerx;
+		player->automapy = oldplayery;
+		scale = oldscale;
+	}
+	else
+	{
+		oldplayerx = player->automapx;
+		oldplayery = player->automapy;
+		oldscale = scale;
+	}
+
 	if ( !(player->automapflags & AF_ACTIVE) )
 		return;
-
-	oldplayerx = player->automapx;
-	oldplayery = player->automapy;
 	
 	blink = blink&7;	/* BLINK PLAYER'S BOX */
 	blink++;
 	pause++;				/* PAUSE BETWEEN SCALINGS */
 
-	step = STEPVALUE;
+	step = scale * 16;
 	if (buttons & BT_A)
 		step *= 2;
 
@@ -643,13 +660,8 @@ static void AM_Drawer_ (int c)
 	Mars_R_SecWait();
 #endif
 
-	/* IF <5 LINES DRAWN, MOVE TO LAST POSITION! */
-	if (drawn < 5)
-	{
-		p->automapx = oldplayerx;
-		p->automapy = oldplayery;
-	}
-	
+	linesdrawn = drawn;
+
 	if (blink > 2)
 	{
 		fixed_t	c;
