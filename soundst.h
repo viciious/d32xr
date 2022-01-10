@@ -39,7 +39,7 @@ typedef struct
 
 #define	INTERNALQUADS	256			/* 4k / 16 bytes per quad (64 bits) */
 #define	EXTERNALQUADS	512			/* 16k  / 32 bytes per quad (16 bits+music) */
-#define	SFXCHANNELS		4
+#define	SFXCHANNELS		8
 
 typedef struct
 {
