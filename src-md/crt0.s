@@ -128,7 +128,7 @@ init_hardware:
         dbra    d3,1b
 
 | Clear VSRAM
-        move.l  0x40000010,(a0)         /* write VSRAM address 0 */
+        move.l  #0x40000010,(a0)         /* write VSRAM address 0 */
         moveq   #19,d4
 2:
         move.l  d0,(a1)
