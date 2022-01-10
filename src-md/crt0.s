@@ -244,6 +244,15 @@ do_main:
         move.b  #2,0xA130F1         /* SRAM disabled, write protected */
         move.b  #0,0xA15107         /* clear RV */
 
+
+| detect the Mega EverDrive
+        move.w  #0x2700,sr          /* disable ints */
+        move.b  #1,0xA15107         /* set RV */
+        jsr     InitEverDrive
+        move.w  d0,everdrive_ok
+        move.b  #0,0xA15107         /* clear RV */
+        move.w  #0x2000,sr          /* enable ints */
+
         move.w  0xA15100,d0
         or.w    #0x8000,d0
         move.w  d0,0xA15100         /* set FM - allow SH2 access to MARS hw */
@@ -292,7 +301,7 @@ handle_req:
         cmpi.w  #0x11FF,d0
         bls     dbug_end
         cmpi.w  #0x12FF,d0
-        bls     set_bankpage
+        bls     set_bank_page
 
 | unknown command
         move.w  #0,0xA15120         /* done */
@@ -300,31 +309,56 @@ handle_req:
 
 read_sram:
         move.w  #0x2700,sr          /* disable ints */
-        moveq   #0,d1
+        move.b  #1,0xA15107         /* set RV */
         moveq   #0,d0
+        move.w  everdrive_ok,d1
+        andi.l  #0x1000,d1
+        bne.b   2f                  /* not everdrive with extended SSF */
+1:
+        move.w  0xA15122,d0         /* COMM2 holds offset */
+        lea     0x40000,a0          /* use the upper 256K of page 31 */
+        move.w  #0x801F, 0xA130F0   /* map page 31 to bank 0 */
+        move.b  0(a0,d0.l),d1       /* read SRAM */
+        move.w  #0x8000, 0xA130F0   /* map page 0 to bank 0 */
+        move.w  d1,0xA15122         /* COMM2 holds return byte */
+        bra     3f
+2:
         move.w  0xA15122,d0         /* COMM2 holds offset */
         add.l   d0,d0
         lea     0x200000,a0
-        move.b  #1,0xA15107         /* set RV */
         move.b  #3,0xA130F1         /* SRAM enabled, write protected */
         move.b  1(a0,d0.l),d1       /* read SRAM */
         move.b  #2,0xA130F1         /* SRAM disabled, write protected */
-        move.b  #0,0xA15107         /* clear RV */
         move.w  d1,0xA15122         /* COMM2 holds return byte */
+3:
+        move.b  #0,0xA15107         /* clear RV */
         move.w  #0,0xA15120         /* done */
         move.w  #0x2000,sr          /* enable ints */
         bra     main_loop
 
 write_sram:
         move.w  #0x2700,sr          /* disable ints */
+        move.b  #1,0xA15107         /* set RV */
         moveq   #0,d1
+        move.w  everdrive_ok,d1
+        andi.l  #0x1000,d1
+        bne.b   2f                  /* not everdrive with extended SSF */
+
+1:
+        move.w  0xA15122,d1         /* COMM2 holds offset */
+        lea     0x40000,a0          /* use the upper 256K of page 31 */
+        move.w  #0xA01F, 0xA130F0   /* map page 31 to bank 0, enable the write bit */
+        move.b  d0,0(a0,d1.l)       /* write SRAM */
+        move.w  #0x8000, 0xA130F0   /* map page 0 to bank 0 */
+        bra     3f
+2:
         move.w  0xA15122,d1         /* COMM2 holds offset */
         add.l   d1,d1
         lea     0x200000,a0
-        move.b  #1,0xA15107         /* set RV */
         move.b  #1,0xA130F1         /* SRAM enabled, write enabled */
         move.b  d0,1(a0,d1.l)       /* write SRAM */
         move.b  #2,0xA130F1         /* SRAM disabled, write protected */
+3:
         move.b  #0,0xA15107         /* clear RV */
         move.w  #0,0xA15120         /* done */
         move.w  #0x2000,sr          /* enable ints */
@@ -740,7 +774,7 @@ dbug_end:
         dbra    d3,0b
         bra     main_loop
 
-set_bankpage:
+set_bank_page:
         andi.l  #0x07,d0            /* bank number */
         move.w  0xA15122,d1         /* COMM2 holds page number */
         lea     0xA130F0,a0
@@ -1126,6 +1160,10 @@ megasd_ok:
 
         .global megasd_num_cdtracks
 megasd_num_cdtracks:
+        dc.w    0
+
+        .global everdrive_ok
+everdrive_ok:
         dc.w    0
 
         .align  4

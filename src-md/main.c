@@ -10,6 +10,7 @@ extern uint32_t vblank_vector;
 extern uint16_t gen_lvl2;
 extern uint16_t cd_ok;
 extern uint16_t megasd_ok;
+extern uint16_t everdrive_ok;
 
 extern uint32_t Sub_Start;
 extern uint32_t Sub_End;
