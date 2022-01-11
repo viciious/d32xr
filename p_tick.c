@@ -513,6 +513,7 @@ void P_Drawer (void)
 	boolean automapactive = (players[consoleplayer].automapflags & AF_ACTIVE) != 0;
 	boolean optionsactive = (players[consoleplayer].automapflags & AF_OPTIONSACTIVE) != 0;
 	unsigned short openings_[MAXOPENINGS];
+	static boolean o_wasactive, am_wasactive = false;
 
 #ifndef MARS
 	if (optionsactive)
@@ -526,7 +527,6 @@ void P_Drawer (void)
 		ST_Drawer ();
 		AM_Drawer ();
 		I_Update ();
-		clearscreen = 0;
 	}
 	else
 #else
@@ -538,30 +538,29 @@ void P_Drawer (void)
 		if (splitscreen)
 			R_RenderPlayerView(consoleplayer ^ 1, openings_);
 
-		ST_ForceDraw();
 		AM_Drawer();
+
+		ST_Drawer();
+
 		if (optionsactive)
 			O_Drawer();
 		I_Update();
-		clearscreen = 2;
+		am_wasactive = true;
 	}
 	else
 #endif
 	{
 #ifdef MARS
-		static boolean o_wasactive = false;
 		extern	boolean	debugscreenactive;
 
 		drawtics = frtc;
 
-		if (!optionsactive && o_wasactive)
+		if ((!optionsactive && o_wasactive) || am_wasactive)
 			clearscreen = 2;
 
 		if (clearscreen > 0) {
 			I_ResetLineTable();
-		}
 
-		if (clearscreen > 0) {
 			if (viewportWidth == 160 && lowResMode)
 				I_ClearFrameBuffer();
 			else
@@ -570,12 +569,7 @@ void P_Drawer (void)
 			I_DrawSbar();
 
 			if (clearscreen == 2 || optionsactive)
-			{
 				ST_ForceDraw();
-			}
-		}
-
-		if (clearscreen > 0) {
 			clearscreen--;
 		}
 
@@ -595,6 +589,7 @@ void P_Drawer (void)
 			O_Drawer();
 
 		o_wasactive = optionsactive;
+		am_wasactive = false;
 
 		drawtics = frtc - drawtics;
 

@@ -568,8 +568,6 @@ static void ST_Drawer_ (stbar_t* sb)
 
 	if (!sbar || !sbobj[0])
 		return;
-	if (players[consoleplayer].automapflags & AF_ACTIVE)
-		return;
 
 	D_memset(have_cards, 0, sizeof(have_cards));
 

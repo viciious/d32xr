@@ -315,7 +315,7 @@ static void DrawLine(pixel_t color, fixed_t x0, fixed_t y0, fixed_t x1, fixed_t 
 			x1 = 319;
 		y = y0;
 
-		if (y >= 223)
+		if (y >= 222)
 			return;
 		if (y < miny)
 			return;
@@ -551,17 +551,17 @@ static void AM_Drawer_ (int c)
 	if (c == 0)
 	{
 		miny = 0;
-		maxy = 224;
+		maxy = 184-1;
 	}
 	else if (c == 1)
 	{
 		miny = 0;
-		maxy = 112;
+		maxy = 184/2;
 	}
 	else if (c == 2)
 	{
-		miny = 111;
-		maxy = 224;
+		miny = 184/2-1;
+		maxy = 184-1;
 	}
 
 	for (i=0 ; i<numlines ; i++,line++)
@@ -599,16 +599,16 @@ static void AM_Drawer_ (int c)
 		outcode2 |= (x2 < -160);
 		if (outcode & outcode2) continue;
 
-		outcode = (y1 > 112) << 1;
-		outcode |= (y1 < -112) ;
-		outcode2 = (y2 > 112) << 1;
-		outcode2 |= (y2 < -112) ;
+		outcode = (y1 > 184/2) << 1;
+		outcode |= (y1 < -184/2) ;
+		outcode2 = (y2 > 184/2) << 1;
+		outcode2 |= (y2 < -184/2) ;
 		if (outcode & outcode2) continue;
 
 		x1 += 160;
 		x2 += 160;
-		y1 = 112-y1;
-		y2 = 112-y2;
+		y1 = 184/2-y1;
+		y2 = 184/2-y2;
 
 		/* */
 		/* Figure out color */
@@ -699,9 +699,9 @@ static void AM_Drawer_ (int c)
 			ny2 = FixedDiv(ny2, scale) >> FRACBITS;
 			ny3 = FixedDiv(ny3, scale) >> FRACBITS;
 
-			DrawLine(color,160+nx1,112-ny1,160+nx2,112-ny2, 0, 224);
-			DrawLine(color,160+nx2,112-ny2,160+nx3,112-ny3, 0, 224);
-			DrawLine(color,160+nx1,112-ny1,160+nx3,112-ny3, 0, 224);
+			DrawLine(color,160+nx1,184/2-ny1,160+nx2,184/2-ny2, 0, 184);
+			DrawLine(color,160+nx2,184/2-ny2,160+nx3,184/2-ny3, 0, 184);
+			DrawLine(color,160+nx1,184/2-ny1,160+nx3,184/2-ny3, 0, 184);
 		}
 	}
 	
@@ -738,9 +738,9 @@ static void AM_Drawer_ (int c)
 
 			ny3 = ny2;
 
-			DrawLine(CRY_AQUA,160+nx1,112-ny1,160+nx2,112-ny2, 0, 224);
-			DrawLine(CRY_AQUA,160+nx2,112-ny2,160+nx3,112-ny3, 0, 224);
-			DrawLine(CRY_AQUA,160+nx1,112-ny1,160+nx3,112-ny3, 0, 224);
+			DrawLine(CRY_AQUA,160+nx1,184/2-ny1,160+nx2,184/2-ny2, 0, 184);
+			DrawLine(CRY_AQUA,160+nx2,184/2-ny2,160+nx3,184/2-ny3, 0, 184);
+			DrawLine(CRY_AQUA,160+nx1,184/2-ny1,160+nx3,184/2-ny3, 0, 184);
 		}
 	}
 }
