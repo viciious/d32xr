@@ -5585,12 +5585,14 @@
     {
         "filename": "texture1",
         "name": "TEXTURE1",
-        "tag": "!UD"
+        "tag": "!UD",
+	"compressed": true
     },
     {
         "filename": "texture1_ud",
         "name": "TEXTURE1",
-        "tag": "UD"
+        "tag": "UD",
+	"compressed": true
     },
     {
         "filename": "playpals",
