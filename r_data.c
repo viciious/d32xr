@@ -56,24 +56,41 @@ void R_InitTextures (void)
 		I_Error("numtextures == %d", numtextures);
 
 	textures = Z_Malloc (numtextures * sizeof(*textures), PU_STATIC, 0);
-	for (i=0 ; i<numtextures ; i++, directory++)
+	for (i = 0; i < numtextures; i++, directory++)
 	{
 		offset = LITTLELONG(*directory);
-		mtexture = (maptexture_t *) ( (byte *)maptex + offset);
+		mtexture = (maptexture_t*)((byte*)maptex + offset);
 		texture = &textures[i];
 		texture->width = LITTLESHORT(mtexture->width);
 		texture->height = LITTLESHORT(mtexture->height);
-		D_memcpy (texture->name, mtexture->name, 8);
-		for (j=0 ; j<8 ; j++)
+		D_memcpy(texture->name, mtexture->name, 8);
+		for (j = 0; j < 8; j++)
 		{
 			c = texture->name[j];
-			if (c >= 'a' && c<='z')
-				texture->name[j] = c - ('a'-'A');
+			if (c >= 'a' && c <= 'z')
+				texture->name[j] = c - ('a' - 'A');
 		}
 		texture->data = NULL;		/* not cached yet */
-		texture->lumpnum = W_CheckNumForName (texture->name);
-if (texture->lumpnum == -1)
-	texture->lumpnum = 0;
+		texture->lumpnum = W_CheckNumForName(texture->name);
+		if (texture->lumpnum == -1)
+			texture->lumpnum = 0;
+#if 0
+		uint8_t* data = R_CheckPixels(texture->lumpnum);
+		if (data) {
+			int j;
+			for (j = 0; j < texture->width * texture->height; j++)
+			{
+				if (!D_strncasecmp(texture->name, "SP_HOT1", 7))
+					continue;
+				if (!D_strncasecmp(texture->name, "SW1HOT", 6))
+					continue;
+				if (!D_strncasecmp(texture->name, "SW2HOT", 6))
+					continue;
+				if (data[j] == 248 || data[j] == 249)
+					I_Error("%d %s", data[j] & 0xff, texture->name);
+			}
+		}
+#endif
 	}
 	
 /* */
@@ -552,6 +569,47 @@ void R_InitSpriteDefs(const char** namelist)
 		if (!sprtemp[i].rotate)
 			for (rotation = 1; rotation < 8; rotation++)
 				spriteframes[i].lump[rotation] = -1;
+#if 0
+		int j;
+		for (j = 0; j < 8; j++)
+		{
+			int x;
+			int lump = spriteframes[i].lump[j];
+			if (lump < 0)
+				break;
+
+			lump = lump < 0 ? -(lump + 1) : lump;
+			if (!D_strncasecmp(W_GetNameForNum(lump) + 1, "KEY", 3))
+				continue;
+			if (!D_strncasecmp(W_GetNameForNum(lump), "CANDA0", 6))
+				continue;
+			if (!D_strncasecmp(W_GetNameForNum(lump), "CBRAA0", 6))
+				continue;
+
+			patch_t *patch = (patch_t*)W_POINTLUMPNUM(lump);
+			uint8_t *pixels = R_CheckPixels(lump + 1);
+			for (x = 0; x < patch->width; x++)
+			{
+				column_t* column = (column_t*)((byte*)patch +
+					BIGSHORT(patch->columnofs[x]));
+
+				/* */
+				/* draw a masked column */
+				/* */
+				for (; column->topdelta != 0xff; column++)
+				{
+					int count = column->length;
+					uint8_t* src = pixels + column->dataofs;
+					while (count--)
+					{
+						uint8_t pix = *src++;
+						if (pix == 248 || pix == 249)
+							I_Error("%d %d", pix & 0xff, lump);
+					}
+				}
+			}
+		}
+#endif
 	}
 
 	l = 0;

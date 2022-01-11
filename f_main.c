@@ -49,8 +49,7 @@ void BufferedDrawSprite (int sprite, int frame, int rotation)
 	}
 
 	patch = (patch_t *)W_POINTLUMPNUM(lump);
-	pixels = Z_Malloc (lumpinfo[lump+1].size, PU_STATIC, NULL);
-	W_ReadLump (lump+1,pixels);
+	pixels = R_CheckPixels(lump + 1);
 
 	S_UpdateSounds ();
 	 	
@@ -95,8 +94,6 @@ void BufferedDrawSprite (int sprite, int frame, int rotation)
 			}
 		}
 	}
-	
-	Z_Free (pixels);
 }
 
 
