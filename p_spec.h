@@ -192,7 +192,8 @@ typedef enum
 	perpetualRaise,
 	downWaitUpStay,
 	raiseAndChange,
-	raiseToNearestAndChange
+	raiseToNearestAndChange,
+	blazeDWUS
 } plattype_e;
 
 typedef struct
@@ -237,7 +238,10 @@ typedef enum
 	close30ThenOpen,
 	close,
 	open,
-	raiseIn5Mins
+	raiseIn5Mins,
+	blazeRaise,
+	blazeOpen,
+	blazeClose
 } vldoor_e;
 
 typedef struct
@@ -257,6 +261,7 @@ typedef struct
 #define	VDOORWAIT		140/THINKERS_TICS
 
 void	EV_VerticalDoor (line_t *line, mobj_t *thing);
+int		EV_DoLockedDoor(line_t* line, vldoor_e type, mobj_t* thing);
 int		EV_DoDoor (line_t *line, vldoor_e  type);
 void	T_VerticalDoor (vldoor_t *door);
 void	P_SpawnDoorCloseIn30 (sector_t *sec);
@@ -275,7 +280,8 @@ typedef enum
 	raiseToHighest,
 	lowerAndCrush,
 	crushAndRaise,
-	fastCrushAndRaise
+	fastCrushAndRaise,
+	silentCrushAndRaise
 } ceiling_e;
 
 typedef struct
@@ -323,7 +329,9 @@ typedef enum
 	raiseFloor24,
 	raiseFloor24AndChange,
 	raiseFloorCrush,
-	donutRaise
+	raiseFloorTurbo,	/* raise to next highest floor, turbo-speed */
+	donutRaise,
+	raiseFloor512
 } floor_e;
 
 typedef struct
@@ -339,6 +347,12 @@ typedef struct
 	fixed_t		speed;
 } floormove_t;
 
+typedef enum
+{
+	build8,	// slowly build by 8
+	turbo16	// quickly build by 16
+} stair_e;
+
 #define	FLOORSPEED	((FRACUNIT+(FRACUNIT>>1))*THINKERS_TICS)
 
 typedef enum
@@ -351,7 +365,7 @@ typedef enum
 result_e	T_MovePlane(sector_t *sector,fixed_t speed,
 			fixed_t dest,boolean crush,int floorOrCeiling,int direction);
 
-int		EV_BuildStairs(line_t *line);
+int		EV_BuildStairs(line_t *line, int type);
 int		EV_DoFloor(line_t *line,floor_e floortype);
 void	T_MoveFloor(floormove_t *floor);
 

@@ -15,6 +15,35 @@ static const animdef_t	animdefs[] =
 	{false,	"NUKAGE3",	"NUKAGE1"},
 	{false,	"FWATER4",	"FWATER1"},
 	{false,	"LAVA4",	"LAVA1"},
+
+	{false,	"NUKAGE3",	"NUKAGE1"},
+	{false,	"FWATER4",	"FWATER1"},
+	{false,	"SWATER4",	"SWATER1"},
+	{false,	"LAVA4",	"LAVA1"},
+	{false,	"BLOOD3",	"BLOOD1"},
+
+	// DOOM II flat animations.
+	{false,	"RROCK08",	"RROCK05"},
+	{false,	"SLIME04",	"SLIME01"},
+	{false,	"SLIME08",	"SLIME05"},
+	{false,	"SLIME12",	"SLIME09"},
+
+	{true,	"BLODGR4",	"BLODGR1"},
+	{true,	"SLADRIP3",	"SLADRIP1"},
+
+	{true,	"BLODRIP4",	"BLODRIP1"},
+	{true,	"FIREWALL",	"FIREWALA"},
+	{true,	"GSTFONT3",	"GSTFONT1"},
+	{true,	"FIRELAVA",	"FIRELAV3"},
+	{true,	"FIREMAG3",	"FIREMAG1"},
+	{true,	"FIREBLU2",	"FIREBLU1"},
+	{true,	"ROCKRED3",	"ROCKRED1"},
+
+	{true,	"BFALL4",	"BFALL1"},
+	{true,	"SFALL4",	"SFALL1"},
+	{true,	"WFALL4",	"WFALL1"},
+	{true,	"DBRAIN4",	"DBRAIN1"},
+
 	{-1}
 };
 
@@ -33,6 +62,8 @@ void P_InitPicAnims (void)
 	{
 		if (animdefs[i].istexture)
 		{
+			if (R_CheckTextureNumForName(animdefs[i].startname) == -1)
+				continue;
 			lastanim->picnum = R_TextureNumForName (animdefs[i].endname);
 			lastanim->basepic = R_TextureNumForName (animdefs[i].startname);
 		}
@@ -43,7 +74,7 @@ void P_InitPicAnims (void)
 			lastanim->picnum = R_FlatNumForName (animdefs[i].endname);
 			lastanim->basepic = R_FlatNumForName (animdefs[i].startname);
 		}
-		lastanim->current = lastanim->basepic;
+		lastanim->current = 0;
 		lastanim->istexture = animdefs[i].istexture;
 		lastanim->numpics = lastanim->picnum - lastanim->basepic + 1;
 #if 0
@@ -146,7 +177,7 @@ fixed_t	P_FindHighestFloorSurrounding(sector_t *sec)
 	int			i;
 	line_t		*check;
 	sector_t	*other;
-	fixed_t		floor = -500*FRACUNIT;
+	fixed_t		floor = -32000*FRACUNIT;
 	
 	for (i=0 ;i < sec->linecount ; i++)
 	{
@@ -184,8 +215,13 @@ fixed_t	P_FindNextHighestFloor(sector_t *sec,int currentheight)
 			continue;
 		if (other->floorheight > height)
 			heightlist[h++] = other->floorheight;
+		if (h == sizeof(heightlist) / sizeof(heightlist[0]))
+			break;
 	}
 	
+	if (h == 0)
+		return currentheight;
+
 	/* */
 	/* Find lowest height in list */
 	/* */
@@ -207,7 +243,7 @@ fixed_t	P_FindLowestCeilingSurrounding(sector_t *sec)
 	int			i;
 	line_t		*check;
 	sector_t	*other;
-	fixed_t		height = D_MAXINT;
+	fixed_t		height = 32000*FRACUNIT;
 	
 	for (i=0 ;i < sec->linecount ; i++)
 	{
@@ -231,7 +267,7 @@ fixed_t	P_FindHighestCeilingSurrounding(sector_t *sec)
 	int	i;
 	line_t	*check;
 	sector_t	*other;
-	fixed_t	height = 0;
+	fixed_t	height = -32000*FRACUNIT;
 	
 	for (i=0 ;i < sec->linecount ; i++)
 	{
@@ -358,7 +394,7 @@ void P_CrossSpecialLine (line_t *line,mobj_t *thing)
 			line->special = 0;
 			break;
 		case 8:			/* Build Stairs */
-			EV_BuildStairs(line);
+			EV_BuildStairs(line, build8);
 			line->special = 0;
 			break;
 		case 10:		/* PlatDownWaitUp */
@@ -459,6 +495,61 @@ void P_CrossSpecialLine (line_t *line,mobj_t *thing)
 			EV_TurnTagLightsOff(line);
 			line->special = 0;
 			break;
+		case 108:
+			/* Blazing Door Raise(faster than TURBO!) */
+			EV_DoDoor(line, blazeRaise);
+			line->special = 0;
+			break;
+		case 109:
+			/* Blazing Door Open(faster than TURBO!) */
+			EV_DoDoor(line, blazeOpen);
+			line->special = 0;
+			break;
+		case 100:
+			/* Build Stairs Turbo 16 */
+			EV_BuildStairs(line, turbo16);
+			line->special = 0;
+			break;
+		case 110:
+			/* Blazing Door Close(faster than TURBO!) */
+			EV_DoDoor(line, blazeClose);
+			line->special = 0;
+			break;
+		case 119:
+			/* Raise floor to nearest surr.floor */
+			EV_DoFloor(line, raiseFloorToNearest);
+			line->special = 0;
+			break;
+		case 121:
+			/* Blazing PlatDownWaitUpStay */
+			EV_DoPlat(line, blazeDWUS, 0);
+			line->special = 0;
+			break;
+		case 124:
+			// Secret EXIT
+			G_SecretExitLevel();
+			break;
+
+		case 125:
+			// TELEPORT MonsterONLY
+			if (!thing->player)
+			{
+				EV_Teleport(line, thing);
+				line->special = 0;
+			}
+			break;
+
+		case 130:
+			/* Raise Floor Turbo */
+			EV_DoFloor(line, raiseFloorTurbo);
+			line->special = 0;
+			break;
+
+		case 141:
+			/* Silent Ceiling Crush & Raise */
+			EV_DoCeiling(line, silentCrushAndRaise);
+			line->special = 0;
+			break;
 	/*==================================================== */
 	/* RE-DOABLE TRIGGERS */
 	/*==================================================== */
@@ -538,7 +629,42 @@ void P_CrossSpecialLine (line_t *line,mobj_t *thing)
 		case 98:		/* Lower Floor (TURBO) */
 			EV_DoFloor(line,turboLower);
 			break;
-			
+
+		case 105:
+			/* Blazing Door Raise(faster than TURBO!) */
+			EV_DoDoor(line, blazeRaise);
+			break;
+
+		case 106:
+			/* Blazing Door Open (faster than TURBO!) */
+			EV_DoDoor(line, blazeOpen);
+			break;
+
+		case 107:
+			/* Blazing Door Close (faster than TURBO!) */
+			EV_DoDoor(line, blazeClose);
+			break;
+
+		case 120:
+			/* Blazing PlatDownWaitUpStay. */
+			EV_DoPlat(line, blazeDWUS, 0);
+			break;
+
+		case 126:
+			/* TELEPORT MonsterONLY. */
+			if (!thing->player)
+				EV_Teleport(line, thing);
+			break;
+
+		case 128:
+			/* Raise To Nearest Floor */
+			EV_DoFloor(line, raiseFloorToNearest);
+			break;
+
+		case 129:
+			/* Raise Floor Turbo */
+			EV_DoFloor(line, raiseFloorTurbo);
+			break;
 	}
 }
 
@@ -663,10 +789,26 @@ void P_UpdateSpecials (void)
 	{
 		for (anim = anims ; anim < lastanim ; anim++)
 		{
+			int pic;
+
 			anim->current++;
-			if (anim->current > anim->picnum)
-				anim->current = anim->basepic;
-			flattranslation[anim->picnum] = anim->current;
+			if (anim->current < 0)
+				anim->current = 0;
+			if (anim->current >= anim->numpics)
+				anim->current = 0;
+
+			pic = anim->basepic + anim->current;
+			for (i = 0; i < anim->numpics; i++)
+			{
+				if (anim->istexture)
+					texturetranslation[anim->basepic+i] = pic;
+				else
+					flattranslation[anim->basepic+i] = pic;
+
+				pic++;
+				if (pic > anim->picnum)
+					pic -= anim->numpics;
+			}
 		}
 	}
 	
@@ -854,15 +996,20 @@ void P_SpawnSpecials (void)
 	/*	Init line EFFECTs */
 	/* */
 	numlinespecials = 0;
-	for (i = 0;i < numlines; i++)
-		switch(lines[i].special)
+	for (i = 0; i < numlines; i++)
+	{
+		switch (lines[i].special)
 		{
-			case 48:	/* EFFECT FIRSTCOL SCROLL+ */
-				linespeciallist[numlinespecials] = &lines[i];
-				numlinespecials++;
-				break;
+		case 48:	/* EFFECT FIRSTCOL SCROLL+ */
+			linespeciallist[numlinespecials] = &lines[i];
+			numlinespecials++;
+			if (numlinespecials == MAXLINEANIMS)
+				goto done_speciallist;
+			break;
 		}
-		
+	}
+done_speciallist:
+
 	/* */
 	/*	Init other misc stuff */
 	/* */
@@ -872,5 +1019,4 @@ void P_SpawnSpecials (void)
 		activeplats[i] = NULL;
 	for (i = 0;i < MAXBUTTONS;i++)
 		D_memset(&buttonlist[i],0,sizeof(button_t));
-	
 }

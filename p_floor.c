@@ -279,6 +279,13 @@ int EV_DoFloor(line_t *line,floor_e floortype)
 				floor->floordestheight = floor->sector->floorheight +
 						24 * FRACUNIT;
 				break;
+			case raiseFloor512:
+				floor->direction = 1;
+				floor->sector = sec;
+				floor->speed = FLOORSPEED;
+				floor->floordestheight = floor->sector->floorheight +
+					512 * FRACUNIT;
+				break;
 			case raiseFloor24AndChange:
 				floor->direction = 1;
 				floor->sector = sec;
@@ -354,7 +361,7 @@ int EV_DoFloor(line_t *line,floor_e floortype)
 /*	BUILD A STAIRCASE! */
 /* */
 /*================================================================== */
-int EV_BuildStairs(line_t *line)
+int EV_BuildStairs(line_t *line, int type)
 {
 	int		secnum;
 	int		height;
@@ -363,6 +370,7 @@ int EV_BuildStairs(line_t *line)
 	int		texture;
 	int		ok;
 	int		rtn;
+	fixed_t speed, stairsize;
 	sector_t	*sec, *tsec;
 	floormove_t	*floor;
 
@@ -380,14 +388,25 @@ int EV_BuildStairs(line_t *line)
 		/* new floor thinker */
 		/* */
 		rtn = 1;
-		height = sec->floorheight + 8*FRACUNIT;
 		floor = Z_Malloc (sizeof(*floor), PU_LEVSPEC, 0);
 		P_AddThinker (&floor->thinker);
 		sec->specialdata = floor;
 		floor->thinker.function = T_MoveFloor;
 		floor->direction = 1;
 		floor->sector = sec;
-		floor->speed = FLOORSPEED/2;
+		switch (type)
+		{
+		case build8:
+			speed = FLOORSPEED / 2;
+			stairsize = 8 * FRACUNIT;
+			break;
+		case turbo16:
+			speed = FLOORSPEED;
+			stairsize = 16 * FRACUNIT;
+			break;
+		}
+		height = sec->floorheight + stairsize;
+		floor->speed = speed;
 		floor->floordestheight = height;
         // Initialize
         floor->type = lowerFloor;
@@ -420,7 +439,7 @@ int EV_BuildStairs(line_t *line)
 				if (tsec->floorpic != texture)
 					continue;
 					
-				height += 8*FRACUNIT;
+				height += stairsize;
 				if (tsec->specialdata)
 					continue;
 					
@@ -432,7 +451,7 @@ int EV_BuildStairs(line_t *line)
 				floor->thinker.function = T_MoveFloor;
 				floor->direction = 1;
 				floor->sector = sec;
-				floor->speed = FLOORSPEED/2;
+				floor->speed = speed;
 				floor->floordestheight = height;
                 // Initialize
                 floor->type = lowerFloor;

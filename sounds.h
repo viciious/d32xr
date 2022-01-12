@@ -96,5 +96,8 @@ extern VINT num_music;
 extern sfxinfo_t   S_sfx[]; 
 extern const char* const S_sfxnames[];
 
+#define sfx_bdopn sfx_doropn
+#define sfx_bdcls sfx_dorcls
+
 #endif 
  

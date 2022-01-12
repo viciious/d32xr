@@ -44,6 +44,7 @@ void	T_PlatRaise(plat_t	*plat)
 				S_StartSound((mobj_t *)&plat->sector->soundorg,sfx_pstop);
 				switch(plat->type)
 				{
+					case blazeDWUS:
 					case downWaitUpStay:
 						P_RemoveActivePlat(plat);
 						break;
@@ -145,7 +146,8 @@ int	EV_DoPlat(line_t *line,plattype_e type,int amount)
 				S_StartSound((mobj_t *)&sec->soundorg,sfx_stnmov);
 				break;
 			case downWaitUpStay:
-				plat->speed = PLATSPEED * 4;
+			case blazeDWUS:
+				plat->speed = PLATSPEED * 4 * (type == blazeDWUS ? 2 : 1);
 				plat->low = P_FindLowestFloorSurrounding(sec);
 				if (plat->low > sec->floorheight)
 					plat->low = sec->floorheight;

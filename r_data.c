@@ -255,7 +255,7 @@ int	R_CheckTextureNumForName (const char *name)
 		&&  (*(int *)texture_p->name) == v1)
 			return i;
 		
-	return 0;	/* FIXME -1; */
+	return -1;
 }
 
 
@@ -272,8 +272,10 @@ int	R_TextureNumForName (const char *name)
 	int		i;
 	
 	i = R_CheckTextureNumForName (name);
-	if (i==-1)
-		I_Error ("R_TextureNumForName: %s not found",name);
+	if (i == -1)
+		return 0;
+	//if (i==-1)
+	//	I_Error ("R_TextureNumForName: %s not found",name);
 	
 	return i;
 }
