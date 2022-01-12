@@ -721,9 +721,9 @@ static void AM_Drawer_ (int c)
 			ny2 = FixedDiv(ny2, scale) >> FRACBITS;
 			ny3 = FixedDiv(ny3, scale) >> FRACBITS;
 
-			DrawLine(fb,color,160+nx1,am_halfh-ny1,160+nx2,am_halfh-ny2, 0, am_height);
-			DrawLine(fb,color,160+nx2,am_halfh-ny2,160+nx3,am_halfh-ny3, 0, am_height);
-			DrawLine(fb,color,160+nx1,am_halfh-ny1,160+nx3,am_halfh-ny3, 0, am_height);
+			DrawLine(fb,color,160+nx1,am_halfh-ny1,160+nx2,am_halfh-ny2, 0, am_height-1);
+			DrawLine(fb,color,160+nx2,am_halfh-ny2,160+nx3,am_halfh-ny3, 0, am_height-1);
+			DrawLine(fb,color,160+nx1,am_halfh-ny1,160+nx3,am_halfh-ny3, 0, am_height-1);
 		}
 	}
 	
@@ -760,9 +760,9 @@ static void AM_Drawer_ (int c)
 
 			ny3 = ny2;
 
-			DrawLine(fb,CRY_AQUA,160+nx1,am_halfh-ny1,160+nx2,am_halfh-ny2, 0, am_height);
-			DrawLine(fb,CRY_AQUA,160+nx2,am_halfh-ny2,160+nx3,am_halfh-ny3, 0, am_height);
-			DrawLine(fb,CRY_AQUA,160+nx1,am_halfh-ny1,160+nx3,am_halfh-ny3, 0, am_height);
+			DrawLine(fb,CRY_AQUA,160+nx1,am_halfh-ny1,160+nx2,am_halfh-ny2, 0, am_height-1);
+			DrawLine(fb,CRY_AQUA,160+nx2,am_halfh-ny2,160+nx3,am_halfh-ny3, 0, am_height-1);
+			DrawLine(fb,CRY_AQUA,160+nx1,am_halfh-ny1,160+nx3,am_halfh-ny3, 0, am_height-1);
 		}
 	}
 }
