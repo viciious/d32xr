@@ -313,12 +313,6 @@ void Mars_Secondary(void)
 			Mars_Sec_StartSoundMixer();
 			break;
 		case 13:
-		{
-			int* p = (int*)framebuffer;
-			int* p_end = (int*)(framebuffer + 320 / 2 * (I_FrameBufferHeight() - jo_stbar_height));
-			while (p < p_end)
-				*p++ = 0;
-		}
 			break;
 		case 14:
 			Mars_Sec_AM_Drawer();

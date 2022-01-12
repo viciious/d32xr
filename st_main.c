@@ -17,7 +17,7 @@ static short	spclfaceSprite[NUMSPCLFACES] =
 		{0,sbf_facelft,sbf_facergt,sbf_ouch,sbf_gotgat,sbf_mowdown};
 
 jagobj_t	*sbar;
-static VINT	sbar_height;
+VINT		sbar_height;
 #ifndef MARS
 byte		*sbartop;
 #endif

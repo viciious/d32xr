@@ -1,5 +1,4 @@
 /* am_main.c -- automap */
-/* am_main.c -- automap */
 
 #include "doomdef.h"
 #include "p_local.h"
@@ -74,7 +73,7 @@ char currentcheat[11]="0000000000";
 VINT showAllThings = 0;		/* CHEAT VARS */
 VINT showAllLines = 0;
 
-static void DrawLine(pixel_t color, fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2, fixed_t miny, fixed_t maxy);
+static void DrawLine(uint8_t *fb,pixel_t color, fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2, fixed_t miny, fixed_t maxy);
 
 /*================================================================= */
 /* */
@@ -224,13 +223,12 @@ static void putPixel(byte* fb, pixel_t c, fixed_t x, fixed_t y, fixed_t brightne
 	fb[(y << 8) + (y << 6) + x] = c - brightness;
 }
 
-static void DrawLine(pixel_t color, fixed_t x0, fixed_t y0, fixed_t x1, fixed_t y1, fixed_t miny, fixed_t maxy)
+static void DrawLine(uint8_t *fb, pixel_t color, fixed_t x0, fixed_t y0, fixed_t x1, fixed_t y1, fixed_t miny, fixed_t maxy)
 {
 	fixed_t dx, dy;
 	fixed_t gradient;
 	fixed_t x, steep, temp;
 	fixed_t xpxl1, xpxl2, inters;
-	byte* fb = (byte*)I_FrameBuffer();
 	fixed_t minyfrac = miny * FRACUNIT;
 
 	if ((x0 < 0 && x1 < 0) || (x0 >= 320 && x1 >= 320))
@@ -516,6 +514,20 @@ static void AM_Drawer_ (int c)
 	int		color;
 	int		drawn;		/* HOW MANY LINES DRAWN? */
 	int		miny, maxy;
+	extern VINT sbar_height;
+	int		am_y;
+	int		am_height;
+	int		am_halfh;
+	byte	*fb;
+
+	am_y = 0;
+	am_height = I_FrameBufferHeight() - sbar_height;
+	if (splitscreen)
+	{
+		am_y = sbar_height;
+		am_height -= sbar_height;
+	}
+	am_halfh = am_height / 2;
 
 #ifdef JAGUAR
 	workingscreen = screens[workpage];
@@ -551,17 +563,27 @@ static void AM_Drawer_ (int c)
 	if (c == 0)
 	{
 		miny = 0;
-		maxy = 184-1;
+		maxy = am_height-1;
 	}
 	else if (c == 1)
 	{
 		miny = 0;
-		maxy = 184/2;
+		maxy = am_halfh;
 	}
 	else if (c == 2)
 	{
-		miny = 184/2-1;
-		maxy = 184-1;
+		miny = am_halfh-1;
+		maxy = am_height-1;
+	}
+
+	fb = (byte*)I_FrameBuffer();
+	fb += am_y * 320;
+
+	{
+		int* p = (int*)(fb + 320 * ((miny + 1)&~1));
+		int* p_end = (int*)(fb + 320 * ((maxy + 1) & ~1));
+		while (p < p_end)
+			*p++ = 0;
 	}
 
 	for (i=0 ; i<numlines ; i++,line++)
@@ -599,16 +621,16 @@ static void AM_Drawer_ (int c)
 		outcode2 |= (x2 < -160);
 		if (outcode & outcode2) continue;
 
-		outcode = (y1 > 184/2) << 1;
-		outcode |= (y1 < -184/2) ;
-		outcode2 = (y2 > 184/2) << 1;
-		outcode2 |= (y2 < -184/2) ;
+		outcode = (y1 > am_halfh) << 1;
+		outcode |= (y1 < -am_halfh) ;
+		outcode2 = (y2 > am_halfh) << 1;
+		outcode2 |= (y2 < -am_halfh) ;
 		if (outcode & outcode2) continue;
 
 		x1 += 160;
 		x2 += 160;
-		y1 = 184/2-y1;
-		y2 = 184/2-y2;
+		y1 = am_halfh-y1;
+		y2 = am_halfh-y2;
 
 		/* */
 		/* Figure out color */
@@ -642,7 +664,7 @@ static void AM_Drawer_ (int c)
 			LD_BACKSECTOR(line)->ceilingheight)
 			color = CRY_BROWN;		
 		
-		DrawLine (color,x1,y1,x2,y2,miny,maxy);
+		DrawLine (fb,color,x1,y1,x2,y2,miny,maxy);
 		drawn++;
 	}
 
@@ -699,9 +721,9 @@ static void AM_Drawer_ (int c)
 			ny2 = FixedDiv(ny2, scale) >> FRACBITS;
 			ny3 = FixedDiv(ny3, scale) >> FRACBITS;
 
-			DrawLine(color,160+nx1,184/2-ny1,160+nx2,184/2-ny2, 0, 184);
-			DrawLine(color,160+nx2,184/2-ny2,160+nx3,184/2-ny3, 0, 184);
-			DrawLine(color,160+nx1,184/2-ny1,160+nx3,184/2-ny3, 0, 184);
+			DrawLine(fb,color,160+nx1,am_halfh-ny1,160+nx2,am_halfh-ny2, 0, am_height);
+			DrawLine(fb,color,160+nx2,am_halfh-ny2,160+nx3,am_halfh-ny3, 0, am_height);
+			DrawLine(fb,color,160+nx1,am_halfh-ny1,160+nx3,am_halfh-ny3, 0, am_height);
 		}
 	}
 	
@@ -738,9 +760,9 @@ static void AM_Drawer_ (int c)
 
 			ny3 = ny2;
 
-			DrawLine(CRY_AQUA,160+nx1,184/2-ny1,160+nx2,184/2-ny2, 0, 184);
-			DrawLine(CRY_AQUA,160+nx2,184/2-ny2,160+nx3,184/2-ny3, 0, 184);
-			DrawLine(CRY_AQUA,160+nx1,184/2-ny1,160+nx3,184/2-ny3, 0, 184);
+			DrawLine(fb,CRY_AQUA,160+nx1,am_halfh-ny1,160+nx2,am_halfh-ny2, 0, am_height);
+			DrawLine(fb,CRY_AQUA,160+nx2,am_halfh-ny2,160+nx3,am_halfh-ny3, 0, am_height);
+			DrawLine(fb,CRY_AQUA,160+nx1,am_halfh-ny1,160+nx3,am_halfh-ny3, 0, am_height);
 		}
 	}
 }

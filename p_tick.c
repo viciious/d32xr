@@ -331,15 +331,6 @@ int P_Ticker (void)
 	;		/* wait for sound mixing to complete */
 #endif
 
-#ifdef MARS
-	if ((players[consoleplayer].automapflags & AF_ACTIVE) != 0)
-	{
-		while (!I_RefreshCompleted())
-			;
-		Mars_CommSlaveClearFrameBuffer();
-	}
-#endif
-
 	gameaction = ga_nothing;
 
 /* */
@@ -515,7 +506,57 @@ void P_Drawer (void)
 	unsigned short openings_[MAXOPENINGS];
 	static boolean o_wasactive, am_wasactive = false;
 
-#ifndef MARS
+#ifdef MARS
+	extern	boolean	debugscreenactive;
+
+	drawtics = frtc;
+
+	if ((!optionsactive && o_wasactive) || (!automapactive && am_wasactive))
+		clearscreen = 2;
+
+	if (clearscreen > 0) {
+		I_ResetLineTable();
+
+		if (viewportWidth == 160 && lowResMode)
+			I_ClearFrameBuffer();
+		else
+			DrawTiledBackground();
+
+		I_DrawSbar();
+		
+		if (clearscreen == 2 || optionsactive)
+			ST_ForceDraw();
+		clearscreen--;
+	}
+
+	/* view the guy you are playing */
+	R_RenderPlayerView(consoleplayer, openings_);
+	/* view the other guy in split screen mode */
+	if (splitscreen)
+		R_RenderPlayerView(consoleplayer ^ 1, openings_);
+
+	if (automapactive)
+		AM_Drawer();
+
+	ST_Drawer();
+
+	Mars_R_SecWait();
+
+	if (demoplayback)
+		M_Drawer();
+	if (optionsactive)
+		O_Drawer();
+
+	o_wasactive = optionsactive;
+	am_wasactive = automapactive;
+
+	drawtics = frtc - drawtics;
+
+	if (debugscreenactive)
+		I_DebugScreen();
+
+	I_Update();
+#else
 	if (optionsactive)
 	{
 		O_Drawer ();
@@ -529,84 +570,16 @@ void P_Drawer (void)
 		I_Update ();
 	}
 	else
-#else
-	if (automapactive)
 	{
-		/* view the guy you are playing */
-		R_RenderPlayerView(consoleplayer, openings_);
-		/* view the other guy in split screen mode */
-		if (splitscreen)
-			R_RenderPlayerView(consoleplayer ^ 1, openings_);
-
-		AM_Drawer();
-
-		ST_Drawer();
-
-		if (optionsactive)
-			O_Drawer();
-		I_Update();
-		am_wasactive = true;
-	}
-	else
-#endif
-	{
-#ifdef MARS
-		extern	boolean	debugscreenactive;
-
-		drawtics = frtc;
-
-		if ((!optionsactive && o_wasactive) || am_wasactive)
-			clearscreen = 2;
-
-		if (clearscreen > 0) {
-			I_ResetLineTable();
-
-			if (viewportWidth == 160 && lowResMode)
-				I_ClearFrameBuffer();
-			else
-				DrawTiledBackground();
-
-			I_DrawSbar();
-
-			if (clearscreen == 2 || optionsactive)
-				ST_ForceDraw();
-			clearscreen--;
-		}
-
-		/* view the guy you are playing */
-		R_RenderPlayerView(consoleplayer, openings_);
-		/* view the other guy in split screen mode */
-		if (splitscreen)
-			R_RenderPlayerView(consoleplayer^1, openings_);
-
-		ST_Drawer();
-
-		Mars_R_SecWait();
-
-		if (demoplayback)
-			M_Drawer();
-		if (optionsactive)
-			O_Drawer();
-
-		o_wasactive = optionsactive;
-		am_wasactive = false;
-
-		drawtics = frtc - drawtics;
-
-		if (debugscreenactive)
-			I_DebugScreen();
-
-		I_Update ();
-#else
 #ifdef JAGUAR
-		ST_Drawer ();
+		ST_Drawer();
 #endif
-		R_RenderPlayerView (consoleplayer, openings_);
+		R_RenderPlayerView(consoleplayer, openings_);
 		clearscreen = 0;
-#endif
-	/* assume part of the refresh is now running parallel with main code */
 	}
-} 
+	/* assume part of the refresh is now running parallel with main code */
+#endif
+}
  
  
 extern	 VINT		ticremainder[MAXPLAYERS];
