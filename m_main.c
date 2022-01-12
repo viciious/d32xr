@@ -499,14 +499,6 @@ int M_Ticker (void)
 	if (sound != sfx_None)
 		S_StartSound(NULL, sound);
 
-	if (screenpos == ms_new)
-	{
-		if (currentplaymode == (int)gt_single)
-			D_memcpy(mainitem[mi_gamemode].name, "Game Mode", 10);
-		else
-			D_memcpy(mainitem[mi_gamemode].name, "Split Mode", 11);
-	}
-
 	if (newcursor || sound != sfx_None)
 	{
 		/* long menu item names can spill onto the screen border */
@@ -561,6 +553,14 @@ void M_Drawer (void)
 	{
 		DrawJagobj(m_doom, 100, 4);
 		y_offset = m_doom->height + 4 - STARTY;
+	}
+
+	if (screenpos == ms_new)
+	{
+		if (currentplaymode == (int)gt_single)
+			D_memcpy(mainitem[mi_gamemode].name, "Game Mode", 10);
+		else
+			D_memcpy(mainitem[mi_gamemode].name, "Split Mode", 11);
 	}
 
 /* erase old skulls */
