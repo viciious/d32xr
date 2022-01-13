@@ -209,9 +209,9 @@ typedef struct
 
 typedef struct mobj_s
 {
-	struct	mobj_s* prev, * next;
-	latecall_t		latecall;			/* set in p_base if more work needed */
 	fixed_t			x, y, z;
+	latecall_t		latecall;		/* set in p_base if more work needed */
+	struct	mobj_s* prev, * next;
 
 	unsigned char	movedir;		/* 0-7 */
 	char			movecount;		/* when 0, select a new dir */
@@ -254,18 +254,26 @@ __attribute__((aligned(16)))
 #endif
 ;
 
-/* each sector has a degenmobj_t in it's center for sound origin purposes */
+/* each sector has a soundorg_t in it's center for sound origin purposes */
 typedef struct
 {
-	struct	mobj_s	*prev, *next;
-	latecall_t		latecall;
-	fixed_t			x,y,z;
-} degenmobj_t
+	fixed_t			x,y;
+} soundorg_t
 #ifdef MARS
 __attribute__((aligned(16)))
 #endif
 ;
 
+typedef struct
+{
+	fixed_t			x, y, z;
+	latecall_t		latecall;		/* set in p_base if more work needed */
+	struct	mobj_s* prev, * next;
+} degenmobj_t
+#ifdef MARS
+__attribute__((aligned(16)))
+#endif
+;
 
 /* */
 /* frame flags */

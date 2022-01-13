@@ -178,6 +178,8 @@ void P_LoadSectors (int lump)
 	ss = sectors;
 	for (i=0 ; i<numsectors ; i++, ss++, ms++)
 	{
+		int lightlevel, tag, special;
+
 		ss->floorheight = LITTLESHORT(ms->floorheight)<<FRACBITS;
 		ss->ceilingheight = LITTLESHORT(ms->ceilingheight)<<FRACBITS;
 		ss->floorpic = R_FlatNumForName(ms->floorpic);
@@ -187,15 +189,24 @@ void P_LoadSectors (int lump)
 		{
 			ss->ceilingpic = R_FlatNumForName(ms->ceilingpic);
 		}
-		ss->lightlevel = LITTLESHORT(ms->lightlevel);
-		ss->special = LITTLESHORT(ms->special);
-		ss->tag = LITTLESHORT(ms->tag);
 		ss->thinglist = NULL;
 
-		if (ss->lightlevel < 0)
-			ss->lightlevel = 0;
-		if (ss->lightlevel > 255)
-			ss->lightlevel = 255;
+		lightlevel = LITTLESHORT(ms->lightlevel);
+		if (lightlevel < 0)
+			lightlevel = 0;
+		else if (lightlevel > 255)
+			lightlevel = 255;
+		ss->lightlevel = lightlevel;
+
+		special = LITTLESHORT(ms->special);
+		if (special < 0 || special > 255)
+			special = 0;
+		ss->special = special;
+
+		tag = LITTLESHORT(ms->tag);
+		if (tag < 0 || tag > 255)
+			tag = 0;
+		ss->tag = tag;
 	}
 }
 
