@@ -31,8 +31,6 @@
 #include "doomdef.h"
 #include "p_local.h"
 
-#define MAXSPECIALCROSS		8
-
 static mobj_t      *checkthing, *hitthing;
 static fixed_t      testx, testy;
 static fixed_t      testfloorz, testceilingz, testdropoffz;
@@ -40,9 +38,6 @@ static subsector_t *testsubsec;
 static line_t      *ceilingline;
 static fixed_t      testbbox[4];
 static int          testflags;
-
-static line_t       *spechit[MAXSPECIALCROSS];
-static int		    numspechit;
 
 static boolean PB_CheckThing(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
 static boolean PB_BoxCrossLine(line_t* ld) ATTR_DATA_CACHE_ALIGN;
@@ -212,13 +207,6 @@ static boolean PB_CheckLine(line_t *ld)
    if(lowfloor < testdropoffz)
       testdropoffz = lowfloor;
 
-   // if contacted a special line, add it to the list
-   if (ld->special)
-   {
-       spechit[numspechit] = ld;
-       numspechit++;
-   }
-
    return true;
 }
 
@@ -256,7 +244,6 @@ static boolean PB_CheckPosition(mobj_t *mo)
    testceilingz = testsubsec->sector->ceilingheight;
 
    ++validcount;
-   numspechit = 0;
 
    ceilingline = NULL;
    hitthing    = NULL;
@@ -299,9 +286,6 @@ static boolean PB_CheckPosition(mobj_t *mo)
 //
 static boolean PB_TryMove(mobj_t *mo, fixed_t tryx, fixed_t tryy)
 {
-   fixed_t oldx;
-   fixed_t oldy;
-
    testx = tryx;
    testy = tryy;
 
@@ -319,27 +303,11 @@ static boolean PB_TryMove(mobj_t *mo, fixed_t tryx, fixed_t tryy)
 
    // the move is ok, so link the thing into its new position
    P_UnsetThingPosition(mo);
-   oldx         = mo->x;
-   oldy         = mo->y;
    mo->floorz   = testfloorz;
    mo->ceilingz = testceilingz;
    mo->x        = tryx;
    mo->y        = tryy;
    P_SetThingPosition(mo);
-
-   // if any special lines were hit, do the effect
-   if (!(mo->flags & (MF_TELEPORT | MF_NOCLIP)))
-   {
-       while (numspechit--)
-       {
-           // see if the line was crossed
-           line_t *ld = spechit[numspechit];
-           int side = P_PointOnLineSide(mo->x, mo->y, ld);
-           int oldside = P_PointOnLineSide(oldx, oldy, ld);
-           if (side != oldside)
-               P_CrossSpecialLine(ld, oldside, mo);
-       }
-   }
 
    return true;
 }

@@ -87,7 +87,7 @@ stairstep:
 
 dospecial:
 	if (latchedline)
-		P_CrossSpecialLine(latchedline, -1, mo);
+		P_CrossSpecialLine (latchedline, mo);
 }
 
 

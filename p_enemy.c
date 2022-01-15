@@ -846,7 +846,6 @@ void A_Metal (mobj_t *mo)
 
 /*============================================================================= */
 
-#if 0
 /* a move in p_base.c crossed a special line */
 void L_CrossSpecial (mobj_t *mo)
 {
@@ -854,9 +853,8 @@ void L_CrossSpecial (mobj_t *mo)
 	
 	line = (line_t *)(mo->extradata & ~1);
 	
-	P_CrossSpecialLine (line, -1, mo);
+	P_CrossSpecialLine (line, mo);
 }
-#endif
 
 /* a move in p_base.c caused a missile to hit another thing or wall */
 void L_MissileHit (mobj_t *mo)
