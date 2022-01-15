@@ -1,0 +1,732 @@
+[
+    {
+        "height": 128,
+        "name": "ash01",
+        "patches": [
+            {
+                "patch": 0
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "bigdoor2",
+        "patches": [
+            {
+                "patch": 1
+            }
+        ],
+        "width": 128
+    },
+    {
+        "height": 112,
+        "name": "bigdoor6",
+        "patches": [
+            {
+                "patch": 2
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "brick01",
+        "patches": [
+            {
+                "patch": 3
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "brick02",
+        "patches": [
+            {
+                "patch": 4
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "brick03",
+        "patches": [
+            {
+                "patch": 5
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "brnpois",
+        "patches": [
+            {
+                "patch": 6
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "brown1",
+        "patches": [
+            {
+                "patch": 7
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "browngrn",
+        "patches": [
+            {
+                "patch": 8
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "cement01",
+        "patches": [
+            {
+                "patch": 10
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "compspan",
+        "patches": [
+            {
+                "patch": 11
+            }
+        ],
+        "width": 32
+    },
+    {
+        "height": 128,
+        "name": "comptall",
+        "patches": [
+            {
+                "patch": 12
+            }
+        ],
+        "width": 128
+    },
+    {
+        "height": 128,
+        "name": "comtal02",
+        "patches": [
+            {
+                "patch": 13
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "crate1",
+        "patches": [
+            {
+                "patch": 14
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "cratelit",
+        "patches": [
+            {
+                "patch": 15
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 16,
+        "name": "cratiny",
+        "patches": [
+            {
+                "patch": 16
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "dface01",
+        "patches": [
+            {
+                "patch": 17
+            }
+        ],
+        "width": 128
+    },
+    {
+        "height": 72,
+        "name": "door1",
+        "patches": [
+            {
+                "patch": 18
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 72,
+        "name": "door3",
+        "patches": [
+            {
+                "patch": 19
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "doorblu",
+        "patches": [
+            {
+                "patch": 20
+            }
+        ],
+        "width": 8
+    },
+    {
+        "height": 128,
+        "name": "doorred",
+        "patches": [
+            {
+                "patch": 21
+            }
+        ],
+        "width": 8
+    },
+    {
+        "height": 128,
+        "name": "doorstop",
+        "patches": [
+            {
+                "patch": 22
+            }
+        ],
+        "width": 8
+    },
+    {
+        "height": 128,
+        "name": "doortrak",
+        "patches": [
+            {
+                "patch": 23
+            }
+        ],
+        "width": 8
+    },
+    {
+        "height": 128,
+        "name": "dooryel",
+        "patches": [
+            {
+                "patch": 24
+            }
+        ],
+        "width": 8
+    },
+    {
+        "height": 72,
+        "name": "exitdoor",
+        "patches": [
+            {
+                "patch": 25
+            }
+        ],
+        "width": 128
+    },
+    {
+        "height": 16,
+        "name": "exitsign",
+        "patches": [
+            {
+                "patch": 26
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "gray5",
+        "patches": [
+            {
+                "patch": 27
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "gstsatyr",
+        "patches": [
+            {
+                "patch": 28
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "lite5",
+        "patches": [
+            {
+                "patch": 29
+            }
+        ],
+        "width": 16
+    },
+    {
+        "height": 128,
+        "name": "marbfac3",
+        "patches": [
+            {
+                "patch": 30
+            }
+        ],
+        "width": 128
+    },
+    {
+        "height": 128,
+        "name": "marble01",
+        "patches": [
+            {
+                "patch": 31
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "marble02",
+        "patches": [
+            {
+                "patch": 32
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "marble03",
+        "patches": [
+            {
+                "patch": 33
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "marble04",
+        "patches": [
+            {
+                "patch": 34
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "metal",
+        "patches": [
+            {
+                "patch": 35
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "metal1",
+        "patches": [
+            {
+                "patch": 36
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 24,
+        "name": "nuke24",
+        "patches": [
+            {
+                "patch": 37
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "pipe2",
+        "patches": [
+            {
+                "patch": 38
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "plat1",
+        "patches": [
+            {
+                "patch": 39
+            }
+        ],
+        "width": 128
+    },
+    {
+        "height": 128,
+        "name": "shawn2",
+        "patches": [
+            {
+                "patch": 40
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "skin01",
+        "patches": [
+            {
+                "patch": 41
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "skin02",
+        "patches": [
+            {
+                "patch": 42
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "skin03",
+        "patches": [
+            {
+                "patch": 43
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "skinedge",
+        "patches": [
+            {
+                "patch": 44
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "skulls01",
+        "patches": [
+            {
+                "patch": 45
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "sky1",
+        "patches": [
+            {
+                "patch": 46
+            }
+        ],
+        "width": 256
+    },
+    {
+        "height": 128,
+        "name": "sky2",
+        "patches": [
+            {
+                "patch": 47
+            }
+        ],
+        "width": 256
+    },
+    {
+        "height": 128,
+        "name": "sky3",
+        "patches": [
+            {
+                "patch": 48
+            }
+        ],
+        "width": 256
+    },
+    {
+        "height": 128,
+        "name": "sladwall",
+        "patches": [
+            {
+                "patch": 49
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "sp_dude4",
+        "patches": [
+            {
+                "patch": 50
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "sp_hot1",
+        "patches": [
+            {
+                "patch": 51
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 16,
+        "name": "step6",
+        "patches": [
+            {
+                "patch": 52
+            }
+        ],
+        "width": 32
+    },
+    {
+        "height": 128,
+        "name": "stwar01",
+        "patches": [
+            {
+                "patch": 53
+            }
+        ],
+        "width": 32
+    },
+    {
+        "height": 128,
+        "name": "stwar02",
+        "patches": [
+            {
+                "patch": 54
+            }
+        ],
+        "width": 32
+    },
+    {
+        "height": 128,
+        "name": "support2",
+        "patches": [
+            {
+                "patch": 55
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "support3",
+        "patches": [
+            {
+                "patch": 56
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "sw1brn1",
+        "patches": [
+            {
+                "patch": 57
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "sw1garg",
+        "patches": [
+            {
+                "patch": 58
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "sw1gston",
+        "patches": [
+            {
+                "patch": 59
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "sw1hot",
+        "patches": [
+            {
+                "patch": 60
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "sw1star",
+        "patches": [
+            {
+                "patch": 61
+            }
+        ],
+        "width": 32
+    },
+    {
+        "height": 128,
+        "name": "sw1wood",
+        "patches": [
+            {
+                "patch": 62
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "sw2brn1",
+        "patches": [
+            {
+                "patch": 63
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "sw2garg",
+        "patches": [
+            {
+                "patch": 64
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "sw2gston",
+        "patches": [
+            {
+                "patch": 65
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "sw2hot",
+        "patches": [
+            {
+                "patch": 66
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "sw2star",
+        "patches": [
+            {
+                "patch": 67
+            }
+        ],
+        "width": 32
+    },
+    {
+        "height": 128,
+        "name": "sw2wood",
+        "patches": [
+            {
+                "patch": 68
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "tech01",
+        "patches": [
+            {
+                "patch": 69
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "tech02",
+        "patches": [
+            {
+                "patch": 70
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "tech03",
+        "patches": [
+            {
+                "patch": 71
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "tech04",
+        "patches": [
+            {
+                "patch": 72
+            }
+        ],
+        "width": 64
+    },
+    {
+        "height": 128,
+        "name": "wood01",
+        "patches": [
+            {
+                "patch": 73
+            }
+        ],
+        "width": 64
+    }
+]
