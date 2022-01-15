@@ -30,6 +30,11 @@
 #include "p_local.h"
 
 // CALICO_TODO: these ought to be in headers.
+// 
+// keep track of special lines as they are hit,
+// but don't process them until the move is proven valid
+#define MAXSPECIALCROSS		8
+
 extern mobj_t  *tmthing;
 extern fixed_t  tmx, tmy;
 extern boolean  checkposonly;
@@ -40,6 +45,9 @@ fixed_t  tmfloorz;   // current floor z for P_TryMove2
 fixed_t  tmceilingz; // current ceiling z for P_TryMove2
 mobj_t  *movething;  // skull/missile target, or special
 line_t  *blockline;  // possibly a special to activate
+
+static VINT    numspechit;
+static line_t* spechit[MAXSPECIALCROSS];
 
 static fixed_t oldx, oldy;
 static fixed_t tmbbox[4];
@@ -54,6 +62,7 @@ static boolean PIT_CheckLine(line_t* ld) ATTR_DATA_CACHE_ALIGN;
 static boolean PM_CrossCheck(line_t* ld) ATTR_DATA_CACHE_ALIGN;
 static void PM_CheckPosition(void) ATTR_DATA_CACHE_ALIGN;
 void P_TryMove2(void) ATTR_DATA_CACHE_ALIGN;
+void P_CrossMoveSpecials(void) ATTR_DATA_CACHE_ALIGN;
 
 //
 // Check a single mobj in one of the contacted blockmap cells.
@@ -226,6 +235,11 @@ static boolean PIT_CheckLine(line_t *ld)
    if(lowfloor < tmdropoffz)
       tmdropoffz = lowfloor;
 
+   if (ld->special)
+   {
+       if (numspechit < MAXSPECIALCROSS)
+        spechit[numspechit++] = ld;
+   }
    return true;
 }
 
@@ -267,6 +281,7 @@ static void PM_CheckPosition(void)
 
    movething = NULL;
    blockline = NULL;
+   numspechit = 0;
 
    if(tmflags & MF_NOCLIP) // thing has no clipping?
    {
@@ -382,6 +397,16 @@ void P_TryMove2(void)
    P_SetThingPosition(tmthing);
 
    trymove2 = true;
+}
+
+void P_CrossMoveSpecials(void)
+{
+    int i;
+
+    for (i = 0; i < numspechit; i++)
+    {
+        P_CrossSpecialLine(spechit[i], tmthing);
+    }
 }
 
 // EOF

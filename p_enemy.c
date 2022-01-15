@@ -109,6 +109,7 @@ fixed_t	xspeed[8] = {FRACUNIT,47000,0,-47000,-FRACUNIT,-47000,0,47000};
 fixed_t yspeed[8] = {0,47000,FRACUNIT,47000,0,-47000,-FRACUNIT,-47000};
 
 extern	line_t *blockline;
+void P_CrossMoveSpecials(void);
 
 boolean P_Move (mobj_t *actor)
 {
@@ -124,6 +125,8 @@ boolean P_Move (mobj_t *actor)
 	
 	if (!P_TryMove (actor, tryx, tryy) )
 	{	/* open any specials */
+		P_CrossMoveSpecials();
+
 		if (actor->flags & MF_FLOAT && floatok)
 		{	/* must adjust height */
 			if (actor->z < tmfloorz)
@@ -135,14 +138,15 @@ boolean P_Move (mobj_t *actor)
 		}
 		
 		blkline = (line_t *)DSPRead (&blockline);
-		if (!blkline || !blkline->special)
-			return false;
-			
-		actor->movedir = DI_NODIR;
 		good = false;
+		if (blkline && blkline->special)
+		{
+			actor->movedir = DI_NODIR;
 			/* if the special isn't a door that can be opened, return false */
-		if (P_UseSpecialLine (actor, blkline))
-			good = true;
+			if (P_UseSpecialLine(actor, blkline))
+				good = true;
+		}
+
 		return good;
 	}
 	else

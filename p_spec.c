@@ -361,6 +361,8 @@ void P_CrossSpecialLine (line_t *line,mobj_t *thing)
 			case 4:		/* RAISE DOOR */
 			case 10:	/* PLAT DOWN-WAIT-UP-STAY TRIGGER */
 			case 88:	/* PLAT DOWN-WAIT-UP-STAY RETRIGGER */
+			case 125:
+			case 126:
 				ok = 1;
 				break;
 		}
