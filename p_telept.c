@@ -40,7 +40,7 @@ void P_Telefrag (mobj_t *thing, fixed_t x, fixed_t y)
 /*						TELEPORTATION */
 /* */
 /*================================================================== */
-int	EV_Teleport( line_t *line,mobj_t *thing )
+int	EV_Teleport( line_t *line, int side, mobj_t *thing )
 {
 	int		i;
 	int		tag;
@@ -49,13 +49,13 @@ int	EV_Teleport( line_t *line,mobj_t *thing )
 	unsigned	an;
 	sector_t	*sector;
 	fixed_t		oldx, oldy, oldz;
-	int		side;
-	
-	side = !P_PointOnLineSide (thing->x, thing->y, line);
-	
+
 	if (thing->flags & MF_MISSILE)
 		return 0;			/* don't teleport missiles */
-		
+
+	if (side < 0)
+		side = !P_PointOnLineSide(thing->x, thing->y, line);
+
 	if (side == 1)		/* don't teleport if hit back of line, */
 		return 0;		/* so you can get out of teleporter */
 	

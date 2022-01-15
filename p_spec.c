@@ -344,7 +344,7 @@ Events are operations triggered by using, crossing, or shooting special lines, o
 ===============================================================================
 */
 
-void P_CrossSpecialLine (line_t *line,mobj_t *thing)
+void P_CrossSpecialLine (line_t *line, int side, mobj_t *thing)
 {
 	int			ok;
 
@@ -451,7 +451,7 @@ void P_CrossSpecialLine (line_t *line,mobj_t *thing)
 			line->special = 0;
 			break;
 		case 39:		/* TELEPORT! */
-			EV_Teleport( line, thing );
+			EV_Teleport( line, side, thing );
 			line->special = 0;
 			break;
 		case 40:		/* RaiseCeilingLowerFloor */
@@ -534,7 +534,7 @@ void P_CrossSpecialLine (line_t *line,mobj_t *thing)
 			// TELEPORT MonsterONLY
 			if (!thing->player)
 			{
-				EV_Teleport(line, thing);
+				EV_Teleport(line, side, thing);
 				line->special = 0;
 			}
 			break;
@@ -624,7 +624,7 @@ void P_CrossSpecialLine (line_t *line,mobj_t *thing)
 			EV_DoFloor(line,raiseToTexture);
 			break;
 		case 97:		/* TELEPORT! */
-			EV_Teleport( line, thing );
+			EV_Teleport( line, side, thing );
 			break;
 		case 98:		/* Lower Floor (TURBO) */
 			EV_DoFloor(line,turboLower);
@@ -653,7 +653,7 @@ void P_CrossSpecialLine (line_t *line,mobj_t *thing)
 		case 126:
 			/* TELEPORT MonsterONLY. */
 			if (!thing->player)
-				EV_Teleport(line, thing);
+				EV_Teleport(line, side, thing);
 			break;
 
 		case 128:

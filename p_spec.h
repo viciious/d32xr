@@ -59,7 +59,7 @@ void 	P_UpdateSpecials (void);
 /* when needed */
 boolean	P_UseSpecialLine ( mobj_t *thing, line_t *line);
 void	P_ShootSpecialLine ( mobj_t *thing, line_t *line);
-void P_CrossSpecialLine (line_t *line,mobj_t *thing);
+void P_CrossSpecialLine (line_t *line, int side, mobj_t *thing);
 
 void 	P_PlayerInSpecialSector (player_t *player);
 
@@ -376,5 +376,5 @@ void	T_MoveFloor(floormove_t *floor);
 
 ===============================================================================
 */
-int		EV_Teleport( line_t *line,mobj_t *thing );
+int		EV_Teleport( line_t *line, int side, mobj_t *thing );
 
