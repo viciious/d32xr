@@ -93,7 +93,7 @@ typedef	struct
 	mobj_t		*soundtarget;		/* thing that made a sound (or null) */
 	
 	VINT		blockbox[4];		/* mapblock bounding box for height changes */
-	soundorg_t	soundorg;			/* for any sounds played by the sector */
+	vertex_t	soundorg;			/* for any sounds played by the sector */
 
 	mobj_t		*thinglist;			/* list of mobjs in sector */
 	void		*specialdata;		/* thinker_t for reversable actions */

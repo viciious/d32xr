@@ -249,19 +249,6 @@ typedef struct mobj_s
 									/* also the originator for missiles */
 	intptr_t		extradata;		/* for latecall functions */
 } mobj_t
-#ifdef MARS
-__attribute__((aligned(16)))
-#endif
-;
-
-/* each sector has a soundorg_t in it's center for sound origin purposes */
-typedef struct
-{
-	fixed_t			x,y;
-} soundorg_t
-#ifdef MARS
-__attribute__((aligned(16)))
-#endif
 ;
 
 typedef struct
@@ -270,9 +257,6 @@ typedef struct
 	latecall_t		latecall;		/* set in p_base if more work needed */
 	struct	mobj_s* prev, * next;
 } degenmobj_t
-#ifdef MARS
-__attribute__((aligned(16)))
-#endif
 ;
 
 /* */
