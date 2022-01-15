@@ -331,9 +331,6 @@ newtarget:
 	if (!mo || mo->health <= 0)
 		goto newtarget;
 		
-	if (actor->subsector->sector->soundtarget == actor->target)
-		allaround = true;		/* ambush guys will turn around on a shot */
-		
 	if (!allaround)
 	{
 		an = R_PointToAngle2 (actor->x, actor->y, 
@@ -373,24 +370,35 @@ newtarget:
 
 void A_Look (mobj_t *actor)
 {
-	/* mobj_t		*targ;
-        */
+	mobj_t		*targ;
 	const mobjinfo_t* ainfo = &mobjinfo[actor->type];
 	
 /* if current target is visible, start attacking */
 
-	if (!P_LookForPlayers (actor, false) )
-		return;
-
-#if 0
 /* if the sector has a living soundtarget, make that the new target */
 	actor->threshold = 0;		/* any shot will wake up */
 	targ = actor->subsector->sector->soundtarget;
-	if (targ && (targ->flags & MF_SHOOTABLE) )
-		actor->target = targ;
-	return;
-#endif
-		
+	if (targ && (targ->flags & MF_SHOOTABLE))
+	{
+		/* ambush guys will turn around on a shot */
+		if (actor->flags & MF_AMBUSH)
+		{
+			if (actor->target != targ)
+			{
+				actor->target = targ;
+				return;
+			}
+		}
+		else
+		{
+			goto seeyou;
+		}
+	}
+
+	if (!P_LookForPlayers (actor, false) )
+		return;
+	
+seeyou:
 /* go into chase state */
 	if (ainfo->seesound)
 	{
@@ -847,7 +855,6 @@ void L_CrossSpecial (mobj_t *mo)
 	
 	P_CrossSpecialLine (line, mo);
 }
-
 
 /* a move in p_base.c caused a missile to hit another thing or wall */
 void L_MissileHit (mobj_t *mo)
