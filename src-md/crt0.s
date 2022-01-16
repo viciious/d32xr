@@ -311,9 +311,10 @@ read_sram:
         move.w  #0x2700,sr          /* disable ints */
         move.b  #1,0xA15107         /* set RV */
         moveq   #0,d0
+        moveq   #0,d1
         move.w  everdrive_ok,d1
-        andi.l  #0x1000,d1
-        bne.b   2f                  /* not everdrive with extended SSF */
+        andi.l  #0x0100,d1
+        beq.w   2f                  /* not everdrive with extended SSF */
 1:
         move.w  0xA15122,d0         /* COMM2 holds offset */
         lea     0x40000,a0          /* use the upper 256K of page 31 */
@@ -321,6 +322,7 @@ read_sram:
         move.b  0(a0,d0.l),d1       /* read SRAM */
         move.w  #0x8000, 0xA130F0   /* map page 0 to bank 0 */
         move.w  d1,0xA15122         /* COMM2 holds return byte */
+        bra     main_loop
         bra     3f
 2:
         move.w  0xA15122,d0         /* COMM2 holds offset */
@@ -341,8 +343,8 @@ write_sram:
         move.b  #1,0xA15107         /* set RV */
         moveq   #0,d1
         move.w  everdrive_ok,d1
-        andi.l  #0x1000,d1
-        bne.b   2f                  /* not everdrive with extended SSF */
+        andi.l  #0x0100,d1
+        beq.w   2f                  /* not everdrive with extended SSF */
 
 1:
         move.w  0xA15122,d1         /* COMM2 holds offset */
