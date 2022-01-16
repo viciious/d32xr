@@ -397,6 +397,7 @@ int EV_BuildStairs(line_t *line, int type)
 		switch (type)
 		{
 		case build8:
+		default:
 			speed = FLOORSPEED / 2;
 			stairsize = 8 * FRACUNIT;
 			break;
