@@ -4,5 +4,5 @@
 
         .global _wadBase
 _wadBase:
-        .long   0x2030000
+        .long   0x202A000
 
