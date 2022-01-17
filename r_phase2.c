@@ -10,7 +10,6 @@
 
 static sector_t emptysector = { 0, 0, -2, -2, -2 };
 
-void R_WallPrep(void) ATTR_DATA_CACHE_ALIGN;
 static void R_WallEarlyPrep(viswall_t* segl) ATTR_DATA_CACHE_ALIGN;
 static fixed_t R_PointToDist(fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
 static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, angle_t normalangle) ATTR_DATA_CACHE_ALIGN;
@@ -563,7 +562,7 @@ void Mars_Sec_R_WallPrep(void)
     Mars_ClearCacheLines((intptr_t)&lastwallcmd & ~15, 1);
 }
 
-#endif
+#else
 
 void R_WallPrep(void)
 {
@@ -578,6 +577,8 @@ void R_WallPrep(void)
         ++segl; // next viswall
     }
 }
+
+#endif
 
 // EOF
 
