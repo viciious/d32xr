@@ -476,7 +476,6 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds)
 
 void Mars_Sec_R_WallPrep(void)
 {
-    int numsegs;
     viswall_t *segl;
     viswall_t *first, *verylast;
     volatile viswall_t* volatile* plast;
@@ -491,30 +490,23 @@ void Mars_Sec_R_WallPrep(void)
     plast = (volatile viswall_t* volatile*)((intptr_t)&lastwallcmd | 0x20000000);
     first = viswalls;
     verylast = NULL;
-    numsegs = 0;
 
     for (segl = first; segl != verylast; )
     {
         int nextsegs;
         viswall_t* last;
-        while (1)
-        {
-            nextsegs = MARS_SYS_COMM6;
-            if (numsegs == nextsegs)
-                continue;
 
-            // check if master CPU finished exec'ing R_BSP()
-            if (nextsegs == MAXVISSSEC)
-            {
-                verylast = (viswall_t*)*plast;
-                last = verylast;
-            }
-            else
-            {
-                last = first + nextsegs;
-            }
-            numsegs = nextsegs;
-            break;
+        nextsegs = MARS_SYS_COMM6;
+
+        // check if master CPU finished exec'ing R_BSP()
+        if (nextsegs == MAXVISSSEC)
+        {
+            last = (viswall_t*)*plast;
+            verylast = last;
+        }
+        else
+        {
+            last = first + nextsegs;
         }
 
         while (segl < last)
