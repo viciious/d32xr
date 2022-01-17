@@ -246,6 +246,9 @@ do_main:
 
 
 | detect the Mega EverDrive
+        tst.w   megasd_ok
+        beq     main_loop_start
+
         move.w  #0x2700,sr          /* disable ints */
         move.b  #1,0xA15107         /* set RV */
         jsr     InitEverDrive
@@ -253,6 +256,7 @@ do_main:
         move.b  #0,0xA15107         /* clear RV */
         move.w  #0x2000,sr          /* enable ints */
 
+main_loop_start:
         move.w  0xA15100,d0
         or.w    #0x8000,d0
         move.w  d0,0xA15100         /* set FM - allow SH2 access to MARS hw */
