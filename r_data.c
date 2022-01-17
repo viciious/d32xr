@@ -51,9 +51,6 @@ void R_InitTextures (void)
 	W_ReadLump(W_GetNumForName("TEXTURE1"), maptex);
 	numtextures = LITTLELONG(*maptex);
 	directory = maptex+1;
-	
-	if (numtextures > MAXTEXTURES)
-		I_Error("numtextures == %d", numtextures);
 
 	textures = Z_Malloc (numtextures * sizeof(*textures), PU_STATIC, 0);
 	for (i = 0; i < numtextures; i++, directory++)
