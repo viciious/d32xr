@@ -385,7 +385,7 @@ void A_Look (mobj_t *actor)
 	if (targ && (targ->flags & MF_SHOOTABLE))
 	{
 		/* ambush guys will turn around on a shot */
-		if (actor->flags & MF_AMBUSH)
+		if ((actor->flags & (MF_AMBUSH|MF_SEETARGET)) == MF_AMBUSH)
 		{
 			if (actor->target != targ)
 			{
