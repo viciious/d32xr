@@ -9,7 +9,6 @@
 #include "mars.h"
 
 static void R_FinishSprite(vissprite_t* vis) ATTR_DATA_CACHE_ALIGN;
-static void R_FinishPSprite(vissprite_t* vis) ATTR_DATA_CACHE_ALIGN;
 boolean R_LatePrep(void) ATTR_DATA_CACHE_ALIGN;
 
 //
@@ -87,136 +86,12 @@ static void R_FinishWall(viswall_t* wc)
 //
 static void R_FinishSprite(vissprite_t *vis)
 {
-   int      lump;
-   byte    *patch;
-   fixed_t  tx, xscale;
-   fixed_t  gzt, texmid, tz;
-   int      x1, x2;
-
-   // get column headers
-   lump  = (int)vis->patch;
-   patch = wadfileptr + BIGLONG(lumpinfo[lump].filepos); // CALICO: requires endianness correction
-   vis->patch = (patch_t *)patch;
+   int      lump = (int)vis->patch;
+ 
+   vis->patch = (patch_t *)W_POINTLUMPNUM(lump);
   
    // column pixel data is in the next lump
    vis->pixels = R_CheckPixels(lump + 1);
-
-   tx = vis->x1;
-   xscale = vis->xscale;
-
-   // calculate edges of the shape
-   tx -= ((fixed_t)BIGSHORT(vis->patch->leftoffset)) << FRACBITS;
-   FixedMul2(x1, tx, xscale);
-   x1  = (centerXFrac + x1) / FRACUNIT;
-
-   // off the right side?
-   if(x1 > viewportWidth)
-   {
-      vis->patch = NULL;
-      return;
-   }
-
-   tx += ((fixed_t)BIGSHORT(vis->patch->width) << FRACBITS);
-   FixedMul2(x2, tx, xscale);
-   x2  = ((centerXFrac + x2) / FRACUNIT) - 1;
-
-   // off the left side
-   if(x2 < 0)
-   {
-      vis->patch = NULL;
-      return;
-   }
-
-   // killough 4/9/98: clip things which are out of view due to height
-   gzt = vis->gz - vd.viewz;
-   FixedMul2(tz, gzt, xscale);
-   if (tz > centerYFrac)
-   {
-       vis->patch = NULL;
-       return;
-   }
-
-   texmid = gzt + ((fixed_t)BIGSHORT(vis->patch->topoffset) << FRACBITS);
-   FixedMul2(tz, texmid, xscale);
-   if (FixedMul(texmid, xscale) < viewportHeight - centerYFrac)
-   {
-       vis->patch = NULL;
-       return;
-   }
-
-   vis->texturemid = texmid;
-   vis->x1 = x1 < 0 ? 0 : x1;
-   vis->x2 = x2 >= viewportWidth ? viewportWidth - 1 : x2;
-
-   if(vis->xiscale < 0)
-      vis->startfrac = ((fixed_t)BIGSHORT(vis->patch->width) << FRACBITS) - 1;
-   else
-      vis->startfrac = 0;
-
-   if(x1 < 0)
-      vis->startfrac += vis->xiscale * -x1;
-}
-
-//
-// Late prep for player psprites
-//
-static void R_FinishPSprite(vissprite_t *vis)
-{
-   fixed_t  topoffset;
-   fixed_t  tx;
-   fixed_t  xscale;
-   fixed_t  x1, x2;
-   int      lump;
-   byte    *patch;
-
-   // get column headers
-   lump  = (int)vis->patch;
-   patch = wadfileptr + BIGLONG(lumpinfo[lump].filepos); // CALICO: requires endianness correction throughout
-   vis->patch = (patch_t *)patch;
-
-   // column pixel data is in the next lump
-   vis->pixels = R_CheckPixels(lump + 1);
-
-   topoffset = (fixed_t)BIGSHORT(vis->patch->topoffset) << FRACBITS;
-   vis->texturemid = BASEYCENTER*FRACUNIT - (vis->texturemid - topoffset);
-
-   xscale = vis->xscale;
-
-   // calculate edges of the shape
-   tx = -((fixed_t)BIGSHORT(vis->patch->leftoffset)) << FRACBITS;
-   x1 = tx;
-
-   tx = ((fixed_t)BIGSHORT(vis->patch->width) << FRACBITS);
-   FixedMul2(x2, tx, xscale);
-   x1 += (tx - x2) / 2;
-
-   x1 += vis->x1;
-   x2 += x1;
-
-   x1 /= FRACUNIT;
-   x2 /= FRACUNIT;
-   x2 -= 1;
-
-   // off the right side?
-   if (x1 > viewportWidth)
-   {
-       vis->patch = NULL;
-       return;
-   }
-
-   // off the left side
-   if (x2 < 0)
-   {
-       vis->patch = NULL;
-       return;
-   }
-
-   // store information in vissprite
-   vis->x1 = x1 < 0 ? 0 : x1;
-   vis->x2 = x2 >= viewportWidth ? viewportWidth - 1 : x2;
-   vis->startfrac = 0;
-   if (x1 < 0)
-    vis->startfrac = vis->xiscale * -x1;
 }
 
 //
@@ -230,13 +105,9 @@ boolean R_LatePrep(void)
    cacheneeded = false;
 #endif
 
-   // finish actor sprites   
-   for(spr = vissprites; spr < lastsprite_p; spr++)
+   // finish sprites
+   for(spr = vissprites; spr < vissprite_p; spr++)
       R_FinishSprite(spr);
-   
-   // finish player psprites
-   for(; spr < vissprite_p; spr++)
-      R_FinishPSprite(spr);
  
 #ifdef MARS
    return true;

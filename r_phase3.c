@@ -17,16 +17,18 @@ void R_SpritePrep(void) ATTR_DATA_CACHE_ALIGN;
 static void R_PrepMobj(mobj_t *thing)
 {
    fixed_t tr_x, tr_y;
-   fixed_t gxt, gyt;
-   fixed_t tx, tz;
+   fixed_t gxt, gyt, gzt;
+   fixed_t tx, tz, x1, x2;
    fixed_t xscale;
+   fixed_t texmid;
    spritedef_t   *sprdef;
    spriteframe_t *sprframe;
    angle_t      ang;
    unsigned int rot;
    boolean      flip;
    int          lump;
-   vissprite_t *vis;
+   patch_t      *patch;
+   vissprite_t  *vis;
 
    // transform origin relative to viewpoint
    tr_x = thing->x - vd.viewx;
@@ -82,25 +84,61 @@ static void R_PrepMobj(mobj_t *thing)
       flip = true;
    }
 
+   patch = W_POINTLUMPNUM(lump);
+   xscale = FixedDiv(PROJECTION, tz);
+   gzt = thing->z - vd.viewz;
+
+   // calculate edges of the shape
+   tx -= ((fixed_t)BIGSHORT(patch->leftoffset)) << FRACBITS;
+   FixedMul2(x1, tx, xscale);
+   x1 = (centerXFrac + x1) / FRACUNIT;
+
+   // off the right side?
+   if (x1 > viewportWidth)
+       return;
+
+   tx += ((fixed_t)BIGSHORT(patch->width) << FRACBITS);
+   FixedMul2(x2, tx, xscale);
+   x2 = ((centerXFrac + x2) / FRACUNIT) - 1;
+
+   // off the left side
+   if (x2 < 0)
+       return;
+
+   // killough 4/9/98: clip things which are out of view due to height
+   FixedMul2(tz, gzt, xscale);
+   if (tz > centerYFrac)
+       return;
+
+   texmid = gzt + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
+   FixedMul2(tz, texmid, xscale);
+   if (FixedMul(texmid, xscale) < viewportHeight - centerYFrac)
+       return;
 
    // get a new vissprite
    if(vissprite_p == vissprites + MAXVISSPRITES)
       return; // too many visible sprites already
-   vis = vissprite_p++;
 
+   vis = vissprite_p++;
    vis->patch    = (void *)lump;
-   vis->x1       = tx;
+   vis->x1       = x1 < 0 ? 0 : x1;
+   vis->x2       = x2 >= viewportWidth ? viewportWidth - 1 : x2;
    vis->gx       = thing->x;
    vis->gy       = thing->y;
-   vis->gz       = thing->z;
-   vis->xscale   = xscale = FixedDiv(PROJECTION, tz);
+   vis->xscale   = xscale;
+   vis->xiscale  = FixedDiv(FRACUNIT, xscale);
    FixedMul2(vis->yscale, xscale, stretch);
    vis->yiscale  = FixedDiv(FRACUNIT, vis->yscale); // CALICO_FIXME: -1 in GAS... test w/o.
+   vis->texturemid = texmid;
+   vis->startfrac = 0;
 
    if(flip)
-      vis->xiscale = -FixedDiv(FRACUNIT, xscale);
-   else
-      vis->xiscale = FixedDiv(FRACUNIT, xscale);
+      vis->xiscale = -vis->xiscale;
+
+   if (vis->xiscale < 0)
+       vis->startfrac = ((fixed_t)BIGSHORT(patch->width) << FRACBITS) - 1;
+   if (x1 < 0)
+       vis->startfrac += vis->xiscale * -x1;
 
    if (vd.fixedcolormap)
    {
@@ -125,36 +163,65 @@ static void R_PrepPSprite(pspdef_t *psp)
 {
    spritedef_t   *sprdef;
    spriteframe_t *sprframe;
-   int            lump;
-   vissprite_t   *vis;
-   fixed_t        center, xscale;
-   const state_t* state = &states[psp->state];
+   int          lump;
+   patch_t      *patch;
+   vissprite_t  *vis;
+   fixed_t      center, xscale;
+   fixed_t      topoffset, texmid;
+   fixed_t      tx, x1, x2;
+   const state_t* state;
 
+   state = &states[psp->state];
    sprdef = &sprites[state->sprite];
    sprframe = &spriteframes[sprdef->firstframe + (state->frame & FF_FRAMEMASK)];
    lump     = sprframe->lump[0];
+   patch    = W_POINTLUMPNUM(lump);
 
-   if(vissprite_p == vissprites + MAXVISSPRITES)
-      return; // out of vissprites
-   vis = vissprite_p++;
-
-   vis->patch = (void *)lump;
-   vis->texturemid = psp->sy;
-
-   center = centerX;
-   if (!lowResMode)
-       center /= 2;
-   center -= 80;
-   center *= FRACUNIT;
-
+   center = (centerX / (lowResMode ? 1 : 2) - 80) * FRACUNIT;
    xscale = weaponXScale;
 
-   vis->x1 = psp->sx + center;
+   tx = psp->sx + center;
+   topoffset = (((fixed_t)BIGSHORT(patch->topoffset) - weaponYpos) << FRACBITS) - psp->sy;
+
+   texmid = BASEYCENTER * FRACUNIT + topoffset;
+
+   // calculate edges of the shape
+   tx = tx - (((fixed_t)BIGSHORT(patch->leftoffset)) << FRACBITS);
+   x1 = tx;
+
+   tx = ((fixed_t)BIGSHORT(patch->width) << FRACBITS);
+   FixedMul2(x2, tx, xscale);
+   x1 += (tx - x2) / 2;
+   x2 += x1;
+
+   x1 /= FRACUNIT;
+   x2 /= FRACUNIT;
+   x2 -= 1;
+
+   // off the right side?
+   if (x1 > viewportWidth)
+       return;
+
+   // off the left side
+   if (x2 < 0)
+       return;
+
+   // store information in vissprite
+   if(vissprite_p == vissprites + MAXVISSPRITES)
+      return; // out of vissprites
+
+   vis = vissprite_p++;
+   vis->patch = (void *)lump;
+   vis->x1 = x1 < 0 ? 0 : x1;
+   vis->x2 = x2 >= viewportWidth ? viewportWidth - 1 : x2;
    vis->xscale = xscale;
    vis->yscale = FRACUNIT;
    vis->yiscale = FRACUNIT;
    vis->xiscale = FixedDiv(FRACUNIT, xscale);
-   vis->texturemid = (vis->texturemid / FRACUNIT + weaponYpos) * FRACUNIT;
+   vis->texturemid = texmid;
+   vis->startfrac = 0;
+   if (x1 < 0)
+       vis->startfrac = vis->xiscale * -x1;
 
    if (vd.fixedcolormap)
    {
