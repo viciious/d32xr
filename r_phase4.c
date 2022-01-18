@@ -90,7 +90,7 @@ static void R_FinishSprite(vissprite_t *vis)
    int      lump;
    byte    *patch;
    fixed_t  tx, xscale;
-   fixed_t  gzt;
+   fixed_t  gzt, texmid, tz;
    int      x1, x2;
 
    // get column headers
@@ -127,12 +127,27 @@ static void R_FinishSprite(vissprite_t *vis)
       return;
    }
 
-   // store information in vissprite
-   gzt = vis->gz + ((fixed_t)BIGSHORT(vis->patch->topoffset) << FRACBITS);
-   vis->texturemid = gzt - vd.viewz;
+   // killough 4/9/98: clip things which are out of view due to height
+   gzt = vis->gz - vd.viewz;
+   FixedMul2(tz, gzt, xscale);
+   if (tz > centerYFrac)
+   {
+       vis->patch = NULL;
+       return;
+   }
+
+   texmid = gzt + ((fixed_t)BIGSHORT(vis->patch->topoffset) << FRACBITS);
+   FixedMul2(tz, texmid, xscale);
+   if (FixedMul(texmid, xscale) < viewportHeight - centerYFrac)
+   {
+       vis->patch = NULL;
+       return;
+   }
+
+   vis->texturemid = texmid;
    vis->x1 = x1 < 0 ? 0 : x1;
    vis->x2 = x2 >= viewportWidth ? viewportWidth - 1 : x2;
-   
+
    if(vis->xiscale < 0)
       vis->startfrac = ((fixed_t)BIGSHORT(vis->patch->width) << FRACBITS) - 1;
    else
