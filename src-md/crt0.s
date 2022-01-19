@@ -313,59 +313,61 @@ handle_req:
 
 read_sram:
         move.w  #0x2700,sr          /* disable ints */
-        move.b  #1,0xA15107         /* set RV */
         moveq   #0,d0
+        move.w  0xA15122,d0         /* COMM2 holds offset */
         moveq   #0,d1
         move.w  everdrive_ok,d1
         andi.l  #0x0100,d1
         beq.w   2f                  /* not everdrive with extended SSF */
 1:
-        move.w  0xA15122,d0         /* COMM2 holds offset */
+        move.b  #1,0xA15107         /* set RV */
         lea     0x40000,a0          /* use the upper 256K of page 31 */
         move.w  #0x801F, 0xA130F0   /* map page 31 to bank 0 */
         move.b  0(a0,d0.l),d1       /* read SRAM */
         move.w  #0x8000, 0xA130F0   /* map page 0 to bank 0 */
+        move.b  #1,0xA15107         /* set RV */
         move.w  d1,0xA15122         /* COMM2 holds return byte */
         bra     main_loop
         bra     3f
 2:
-        move.w  0xA15122,d0         /* COMM2 holds offset */
         add.l   d0,d0
         lea     0x200000,a0
+        move.b  #1,0xA15107         /* set RV */
         move.b  #3,0xA130F1         /* SRAM enabled, write protected */
         move.b  1(a0,d0.l),d1       /* read SRAM */
         move.b  #2,0xA130F1         /* SRAM disabled, write protected */
+        move.b  #1,0xA15107         /* set RV */
         move.w  d1,0xA15122         /* COMM2 holds return byte */
 3:
-        move.b  #0,0xA15107         /* clear RV */
         move.w  #0,0xA15120         /* done */
         move.w  #0x2000,sr          /* enable ints */
         bra     main_loop
 
 write_sram:
         move.w  #0x2700,sr          /* disable ints */
-        move.b  #1,0xA15107         /* set RV */
         moveq   #0,d1
         move.w  everdrive_ok,d1
         andi.l  #0x0100,d1
         beq.w   2f                  /* not everdrive with extended SSF */
-
 1:
         move.w  0xA15122,d1         /* COMM2 holds offset */
+        move.b  #1,0xA15107         /* set RV */
         lea     0x40000,a0          /* use the upper 256K of page 31 */
         move.w  #0xA01F, 0xA130F0   /* map page 31 to bank 0, enable the write bit */
         move.b  d0,0(a0,d1.l)       /* write SRAM */
         move.w  #0x8000, 0xA130F0   /* map page 0 to bank 0 */
+        move.b  #0,0xA15107         /* clear RV */
         bra     3f
 2:
         move.w  0xA15122,d1         /* COMM2 holds offset */
         add.l   d1,d1
         lea     0x200000,a0
+        move.b  #1,0xA15107         /* set RV */
         move.b  #1,0xA130F1         /* SRAM enabled, write enabled */
         move.b  d0,1(a0,d1.l)       /* write SRAM */
         move.b  #2,0xA130F1         /* SRAM disabled, write protected */
-3:
         move.b  #0,0xA15107         /* clear RV */
+3:
         move.w  #0,0xA15120         /* done */
         move.w  #0x2000,sr          /* enable ints */
         bra     main_loop
