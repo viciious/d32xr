@@ -72,7 +72,6 @@ OBJS = \
 	r_phase1.o \
 	r_phase2.o \
 	r_phase3.o \
-	r_phase4.o \
 	r_phase5.o \
 	r_phase6.o \
 	r_phase7.o \

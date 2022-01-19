@@ -968,8 +968,7 @@ void R_RenderPlayerView(int displayplayer, unsigned short *openings_)
 
 	t_prep = I_GetFRTCounter();
 	R_SpritePrep();
-	if (R_LatePrep())
-		R_Cache();
+	R_Cache();
 	t_prep = I_GetFRTCounter() - t_prep;
 
 	t_segs = I_GetFRTCounter();

@@ -120,7 +120,8 @@ static void R_PrepMobj(mobj_t *thing)
       return; // too many visible sprites already
 
    vis = vissprite_p++;
-   vis->patch    = (void *)lump;
+   vis->patch    = patch;
+   vis->pixels   = R_CheckPixels(lump + 1);
    vis->x1       = x1 < 0 ? 0 : x1;
    vis->x2       = x2 >= viewportWidth ? viewportWidth - 1 : x2;
    vis->gx       = thing->x;
@@ -211,7 +212,8 @@ static void R_PrepPSprite(pspdef_t *psp)
       return; // out of vissprites
 
    vis = vissprite_p++;
-   vis->patch = (void *)lump;
+   vis->patch = patch;
+   vis->pixels = R_CheckPixels(lump + 1);
    vis->x1 = x1 < 0 ? 0 : x1;
    vis->x2 = x2 >= viewportWidth ? viewportWidth - 1 : x2;
    vis->xscale = xscale;

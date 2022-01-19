@@ -82,35 +82,12 @@ static void R_FinishWall(viswall_t* wc)
 #endif
 
 //
-// Late prep for vissprites
-//
-static void R_FinishSprite(vissprite_t *vis)
-{
-   int      lump = (int)vis->patch;
- 
-   vis->patch = (patch_t *)W_POINTLUMPNUM(lump);
-  
-   // column pixel data is in the next lump
-   vis->pixels = R_CheckPixels(lump + 1);
-}
-
-//
 // Start late prep rendering stage
 //
 boolean R_LatePrep(void)
 {
-   vissprite_t *spr;
-   
-#ifndef MARS
-   cacheneeded = false;
-#endif
-
-   // finish sprites
-   for(spr = vissprites; spr < vissprite_p; spr++)
-      R_FinishSprite(spr);
- 
 #ifdef MARS
-   return true;
+    return true;
 #else
    return cacheneeded;
 #endif
