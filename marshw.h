@@ -35,9 +35,9 @@
 
 #define MARS_ATTR_DATA_CACHE_ALIGN __attribute__((section(".data"), aligned(16), optimize("Os")))
 
-void Mars_FlipFrameBuffers(char wait) __attribute__((noinline));
-void Mars_WaitFrameBuffersFlip(void) __attribute__((noinline));
-char Mars_FramebuffersFlipped(void) __attribute__((noinline));
+void Mars_FlipFrameBuffers(char wait);
+void Mars_WaitFrameBuffersFlip(void);
+char Mars_FramebuffersFlipped(void);
 void Mars_Init(void);
 void Mars_InitVideo(int lines);
 void Mars_InitLineTable(void);

@@ -26,7 +26,7 @@
 
 #include "marshw.h"
 
-static int mars_activescreen = 0;
+static volatile ufint16_t mars_activescreen = 0;
 
 volatile unsigned short* mars_gamepadport, * mars_gamepadport2;
 char mars_mouseport;
