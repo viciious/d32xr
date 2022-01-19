@@ -494,11 +494,11 @@ void START_Title(void)
 	l = gameinfo.titlePage;
 	titlepic = l != -1 ? W_CacheLumpNum(l, PU_STATIC) : NULL;
 
+	S_StartSong(gameinfo.titleMus, 0, cdtrack_title);
+
 #ifdef MARS
 	I_InitMenuFire(titlepic);
 #endif
-
-	S_StartSong(gameinfo.titleMus, 0, cdtrack_title);
 }
 
 void STOP_Title (void)

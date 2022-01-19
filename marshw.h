@@ -33,7 +33,7 @@
 #include <stddef.h>
 #include "32x.h"
 
-#define MARS_ATTR_DATA_CACHE_ALIGN __attribute__((section(".data"), aligned(16), optimize("Os")))
+#define MARS_ATTR_DATA_CACHE_ALIGN __attribute__((section(".data"), aligned(16), optimize("O1")))
 
 void Mars_FlipFrameBuffers(char wait);
 void Mars_WaitFrameBuffersFlip(void);
