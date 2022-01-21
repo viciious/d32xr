@@ -325,7 +325,7 @@ read_sram:
         move.w  #0x801F, 0xA130F0   /* map page 31 to bank 0 */
         move.b  0(a0,d0.l),d1       /* read SRAM */
         move.w  #0x8000, 0xA130F0   /* map page 0 to bank 0 */
-        move.b  #1,0xA15107         /* set RV */
+        move.b  #0,0xA15107         /* clear RV */
         move.w  d1,0xA15122         /* COMM2 holds return byte */
         bra     main_loop
         bra     3f
@@ -336,7 +336,7 @@ read_sram:
         move.b  #3,0xA130F1         /* SRAM enabled, write protected */
         move.b  1(a0,d0.l),d1       /* read SRAM */
         move.b  #2,0xA130F1         /* SRAM disabled, write protected */
-        move.b  #1,0xA15107         /* set RV */
+        move.b  #0,0xA15107         /* set RV */
         move.w  d1,0xA15122         /* COMM2 holds return byte */
 3:
         move.w  #0,0xA15120         /* done */
