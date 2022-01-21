@@ -336,7 +336,7 @@ read_sram:
         move.b  #3,0xA130F1         /* SRAM enabled, write protected */
         move.b  1(a0,d0.l),d1       /* read SRAM */
         move.b  #2,0xA130F1         /* SRAM disabled, write protected */
-        move.b  #0,0xA15107         /* set RV */
+        move.b  #0,0xA15107         /* clear RV */
         move.w  d1,0xA15122         /* COMM2 holds return byte */
 3:
         move.w  #0,0xA15120         /* done */
@@ -790,7 +790,7 @@ set_bank_page:
         move.w  #0x2700,sr          /* disable ints */
         move.b  #1,0xA15107         /* set RV */
         move.b  d1,1(a0,d0.l)
-        move.b  #0,0xA15107         /* set RV */
+        move.b  #0,0xA15107         /* clear RV */
         move.w  #0x2000,sr          /* enable ints */
         move.w  #0,0xA15120         /* release SH2 now */
         bra     main_loop
@@ -805,7 +805,7 @@ reset_banks:
         move.b  #5,0xA130FB         /* bank for 0x280000-0x2FFFFF */
         move.b  #6,0xA130FD         /* bank for 0x300000-0x37FFFF */
         move.b  #7,0xA130FF         /* bank for 0x380000-0x3FFFFF */
-        move.b  #0,0xA15107         /* set RV */
+        move.b  #0,0xA15107         /* clear RV */
         move.w  #0x2000,sr          /* enable ints */
         rts
 
