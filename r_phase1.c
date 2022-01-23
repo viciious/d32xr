@@ -162,7 +162,7 @@ static void R_StoreWallRange(int start, int stop)
    // split long segments
    newstop = stop;
 #ifdef MARS
-   if (numwalls < 10)
+   if (numwalls < 16)
    {
        if (stop - start > maxlen)
            newstop = start + maxlen / 2;

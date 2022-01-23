@@ -321,7 +321,7 @@ void Mars_R_PrepPlanes(void)
             if (start > stop)
                 continue; // nothing to map
 #ifdef MARS
-            if (numplanes > 10)
+            if (numplanes >= 16)
                 continue;
 
             int span = stop - start + 1;
