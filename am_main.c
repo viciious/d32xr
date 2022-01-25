@@ -489,6 +489,50 @@ void AM_Control (player_t *player)
 		BT_UP | BT_DOWN | configuration[controltype][1]);
 }
 
+static void AM_DrawMapStats(void)
+{
+	int i;
+	char buf[128];
+	int kc, sc;
+
+	switch (netgame)
+	{
+	default:
+		kc = sc = 0;
+		for (i = 0; i < MAXPLAYERS; i++)
+		{
+			if (!playeringame[i])
+				continue;
+			kc += players[i].killcount;
+			sc += players[i].secretcount;
+		}
+
+		D_snprintf(buf, sizeof(buf), "K:%d/%d S:%d/%d", kc, totalkills, sc, totalsecret);
+		I_Print8(0, 20, buf);
+		break;
+	case gt_coop:
+		for (i = 0; i < MAXPLAYERS; i++)
+		{
+			if (!playeringame[i])
+				continue;
+			D_snprintf(buf, sizeof(buf), "P%d K:%d/%d S:%d/%d", i + 1, players[i].killcount, totalkills, players[i].secretcount, totalsecret);
+			I_Print8(0, 20 - MAXPLAYERS + 1 + i, buf);
+		}
+		break;
+	case gt_deathmatch:
+		for (i = 0; i < MAXPLAYERS; i++)
+		{
+			if (!playeringame[i])
+				continue;
+			D_snprintf(buf, sizeof(buf), "P%d Frags: %d", i + 1, players[i].frags);
+			I_Print8(0, 20 - MAXPLAYERS + 1 + i, buf);
+		}
+		break;
+	}
+
+	I_Print8(0, 21, gamemapinfo.name);
+}
+
 /*
 ==================
 =
@@ -765,6 +809,8 @@ static void AM_Drawer_ (int c)
 			DrawLine(fb,CRY_AQUA,160+nx1,am_halfh-ny1,160+nx3,am_halfh-ny3, 0, am_height-1);
 		}
 	}
+
+	AM_DrawMapStats();
 }
 
 #ifdef MARS
