@@ -766,8 +766,7 @@ void I_Update(void)
 	int ticcount;
 	static int prevsecticcount = 0;
 	static int framenum = 0;
-	boolean NTSC = (MARS_VDP_DISPMODE & MARS_NTSC_FORMAT) != 0;
-	const int refreshHZ = (NTSC ? 60 : 50);
+	const int refreshHZ = Mars_RefreshHZ();
 
 	if (ticsperframe < MINTICSPERFRAME)
 		ticsperframe = MINTICSPERFRAME;
