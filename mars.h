@@ -37,7 +37,7 @@ void Mars_Sec_R_Setup(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_WallPrep(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_SegCommands(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
-void Mars_Sec_R_DrawSprites(void) ATTR_DATA_CACHE_ALIGN;
+void Mars_Sec_R_DrawSprites(int* sortedsprites, int count) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_DrawPSprites(void) ATTR_DATA_CACHE_ALIGN;
 
 void Mars_Sec_M_AnimateFire(void) ATTR_OPTIMIZE_EXTREME;
@@ -104,8 +104,10 @@ static inline void Mars_R_EndDrawPlanes(void)
 }
 
 // r_phase8
-static inline void Mars_R_BeginDrawSprites(void)
+static inline void Mars_R_BeginDrawSprites(int *sortedsprites, int count)
 {
+	*(volatile uintptr_t*)&MARS_SYS_COMM12 = (uintptr_t)sortedsprites;
+	MARS_SYS_COMM6 = count;
 	MARS_SYS_COMM4 = 6;
 }
 
