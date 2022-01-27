@@ -48,6 +48,7 @@ typedef struct
 	VINT titleMus;
 	VINT intermissionMus;
 	VINT victoryMus;
+	VINT endMus;
 	VINT creditsPage;
 	VINT creditsTime;
 	void* data;

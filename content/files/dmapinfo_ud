@@ -3,6 +3,7 @@ gameinfo
     titleMus = "VGM_NTRO"
     intermissionMus = "VGM_NTER"
     victoryMus = "VGM_BUNN"
+    endMus = "VGM_END"
     borderFlat = "FLOOR7_2"
     titleTime = 1000
     titlePage = "title"

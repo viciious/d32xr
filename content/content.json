@@ -5641,6 +5641,10 @@
         "compressed": true
     },
     {
+        "filename": "VGM/End.vgm",
+        "name": "VGM_END"
+    },
+    {
         "filename": "VGM/Intro.vgm",
         "name": "VGM_NTRO",
         "group": "intro"

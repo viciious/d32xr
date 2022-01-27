@@ -277,7 +277,10 @@ void F_Start (void)
 	int	i;
 	int	l;
 
-	S_StartSong(gameinfo.victoryMus, 1, cdtrack_victory);
+	if (gameinfo.endMus <= 0)
+		S_StartSong(gameinfo.victoryMus, 1, cdtrack_end);
+	else
+		S_StartSong(gameinfo.endMus, 1, cdtrack_end);
 
 	status = fin_endtext;		/* END TEXT PRINTS FIRST */
 	textprint = false;
@@ -358,6 +361,12 @@ int F_Ticker (void)
 		textprint == true)
 		{
 			status = fin_charcast;
+
+			if (gameinfo.victoryMus <= 0)
+				S_StartSong(gameinfo.endMus, 1, cdtrack_victory);
+			else
+				S_StartSong(gameinfo.victoryMus, 1, cdtrack_victory);
+
 #ifndef JAGUAR
 			if (mobjinfo[castorder[castnum].type].seesound)
 				S_StartSound (NULL, mobjinfo[castorder[castnum].type].seesound); 
