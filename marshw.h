@@ -65,10 +65,10 @@ void Mars_UseCD(int usecd);
 void Mars_PlayTrack(char usecd, int playtrack, void* vgmptr, char looping) MARS_ATTR_DATA_CACHE_ALIGN;
 void Mars_StopTrack(void) MARS_ATTR_DATA_CACHE_ALIGN;
 
-#define Mars_GetTicCount() (*(volatile int *)((intptr_t)&mars_vblank_count | 0x20000000))
+#define Mars_GetTicCount() (*(volatile uintptr_t *)((uintptr_t)&mars_vblank_count | 0x20000000))
 int Mars_GetFRTCounter(void);
 
-#define Mars_ClearCacheLine(addr) *(volatile int *)((addr) | 0x40000000) = 0
+#define Mars_ClearCacheLine(addr) *(volatile uintptr_t *)((addr) | 0x40000000) = 0
 #define Mars_ClearCache() \
 	do { \
 		CacheControl(0); /* disable cache */ \
@@ -77,7 +77,7 @@ int Mars_GetFRTCounter(void);
 
 #define Mars_ClearCacheLines(paddr,nl) \
 	do { \
-		volatile uintptr_t addr = (volatile uintptr_t)paddr; \
+		uintptr_t addr = paddr; \
 		uint32_t l; \
 		for (l = 0; l < nl; l++) { \
 			Mars_ClearCacheLine(addr); \
