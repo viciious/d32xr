@@ -45,15 +45,25 @@ na_secnum = sec-sectors;
 	
 	for (i=0 ;i<sec->linecount ; i++)
 	{
+		fixed_t opentop, openbottom;
 		check = sec->lines[i];
 		back = LD_BACKSECTOR(check);
 		if (!back)
 			continue;		/* single sided */
 		front = LD_FRONTSECTOR(check);
-		if (front->floorheight >= back->ceilingheight
-		|| front->ceilingheight <= back->floorheight)
+
+		if (front->ceilingheight < back->ceilingheight)
+			opentop = front->ceilingheight;
+		else
+			opentop = back->ceilingheight;
+		if (front->floorheight > back->floorheight)
+			openbottom = front->floorheight;
+		else
+			openbottom = back->floorheight;
+
+		if (opentop <= openbottom)
 			continue;		/* closed door */
-		if ( front == sec)
+		if (front == sec)
 			other = back;
 		else
 			other = front;
