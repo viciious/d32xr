@@ -895,7 +895,7 @@ void ST_InitEveryLevel(void);
 /*------- */
 struct seg_s;
 
-void R_RenderPlayerView (int displayplayer, unsigned short *openings_);
+void R_RenderPlayerView (int displayplayer, unsigned short *openings_) ATTR_DATA_CACHE_ALIGN;
 void R_Init (void);
 int	R_FlatNumForName (const char *name);
 int	R_TextureNumForName (const char *name);
