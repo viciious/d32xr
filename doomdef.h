@@ -755,7 +755,7 @@ int     I_GetFRTCounter (void);
 
 void I_Update (void);
 
-void I_Error (char *error, ...);
+void I_Error (char *error, ...) __attribute__((noreturn));
 
 #ifdef MARS
 //#define USE_C_DRAW
