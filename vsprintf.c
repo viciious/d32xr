@@ -33,23 +33,6 @@
 #define vsnprintf _vsnprintf
 #endif
 
-/* prints number of characters printed. */
-
-int mystrlen(const char *string)
-{
-   int rc = 0;
-   
-   if(string) 
-   {
-      while(*(string++)) 
-         rc++;
-   }
-   else 
-      rc = -1;
-   
-   return rc;
-}
-
 int D_vsnprintf(char* string, size_t nmax, const char* format, va_list argptr)
 {
     int len, i, div, uselong;

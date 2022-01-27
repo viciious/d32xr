@@ -74,11 +74,11 @@ typedef unsigned short inpixel_t;
 #define	NULL	0
 #endif
 
-int D_vsnprintf(char *str, size_t nmax, const char *format, va_list ap);
-int D_snprintf(char *buf, size_t nsize, const char *fmt, ...);
-void D_printf (char *str, ...);
+int D_vsnprintf(char *str, size_t nmax, const char *format, va_list ap) __attribute__((nonnull));
+int D_snprintf(char *buf, size_t nsize, const char *fmt, ...) __attribute__((nonnull));
+void D_printf (char *str, ...) __attribute__((nonnull));
 
-void D_isort(int* a, int len);
+void D_isort(int* a, int len) __attribute__((nonnull));
 
 /*
 ===============================================================================
@@ -167,14 +167,14 @@ static inline int D_abs(int x)
 	return x;
 }
 
-void D_memset (void *dest, int val, int count);
-void D_memcpy (void *dest, const void *src, int count);
-void D_strncpy (char *dest, const char *src, int maxcount);
-int D_strncasecmp (const char *s1, const char *s2, int len);
-int D_strcasecmp (const char *s1, const char *s2);
-int mystrlen(const char *string);
-int D_atoi(const char* str);
-char* D_strchr(const char* str, char chr);
+void D_memset (void *dest, int val, int count) __attribute__((nonnull));
+void D_memcpy (void *dest, const void *src, int count) __attribute__((nonnull));
+void D_strncpy (char *dest, const char *src, int maxcount) __attribute__((nonnull));
+int D_strncasecmp (const char *s1, const char *s2, int len) __attribute__((nonnull));
+int D_strcasecmp (const char *s1, const char *s2) __attribute__((nonnull));
+int mystrlen(const char *string) __attribute__((nonnull));
+int D_atoi(const char* str) __attribute__((nonnull));
+char* D_strchr(const char* str, char chr) __attribute__((nonnull));
 
 /*
 ===============================================================================
