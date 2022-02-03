@@ -178,7 +178,7 @@ void P_LoadSectors (int lump)
 	ss = sectors;
 	for (i=0 ; i<numsectors ; i++, ss++, ms++)
 	{
-		int lightlevel, tag, special;
+		int lightlevel, special;
 
 		ss->floorheight = LITTLESHORT(ms->floorheight)<<FRACBITS;
 		ss->ceilingheight = LITTLESHORT(ms->ceilingheight)<<FRACBITS;
@@ -203,10 +203,7 @@ void P_LoadSectors (int lump)
 			special = 0;
 		ss->special = special;
 
-		tag = LITTLESHORT(ms->tag);
-		if (tag < 0 || tag > 255)
-			tag = 0;
-		ss->tag = tag;
+		ss->tag = LITTLESHORT(ms->tag);
 	}
 }
 

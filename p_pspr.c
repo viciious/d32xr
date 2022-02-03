@@ -26,7 +26,7 @@ mobj_t *soundtarget;
 sector_t	*na_sec;
 int			na_secnum;
 
-void P_RecursiveSound (sector_t *sec, int soundblocks)
+static void P_RecursiveSound (sector_t *sec, int soundblocks, uint8_t *soundtraversed)
 {
 	int			i;
 	line_t		*check;
@@ -37,10 +37,10 @@ na_sec = sec;		/* DEBUG */
 na_secnum = sec-sectors;
 
 /* wake up all monsters in this sector */
-	if (sec->validcount == validcount && sec->soundtraversed <= soundblocks+1)
+	if (sec->validcount == validcount && soundtraversed[sec - sectors] <= soundblocks+1)
 		return;		/* already flooded */
+	soundtraversed[sec - sectors] = soundblocks + 1;
 	sec->validcount = validcount;
-	sec->soundtraversed = soundblocks+1;
 	sec->soundtarget = soundtarget;
 	
 	for (i=0 ;i<sec->linecount ; i++)
@@ -70,10 +70,10 @@ na_secnum = sec-sectors;
 		if (check->flags & ML_SOUNDBLOCK)
 		{
 			if (!soundblocks)
-				P_RecursiveSound (other, 1);
+				P_RecursiveSound (other, 1, soundtraversed);
 		}
 		else
-			P_RecursiveSound (other, soundblocks);
+			P_RecursiveSound (other, soundblocks, soundtraversed);
 	}
 }
 
@@ -89,6 +89,7 @@ na_secnum = sec-sectors;
 void P_NoiseAlert (player_t *player)
 {
 	sector_t	*sec;
+	uint8_t* soundtraversed;
 
 	sec = player->mo->subsector->sector;
 	
@@ -99,7 +100,8 @@ void P_NoiseAlert (player_t *player)
 	
 	soundtarget = player->mo;
 	validcount++;
-	P_RecursiveSound (sec, 0);
+	soundtraversed = (uint8_t *)I_WorkBuffer();
+	P_RecursiveSound (sec, 0, soundtraversed);
 }
 
 

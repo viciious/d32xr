@@ -82,10 +82,10 @@ struct line_s;
 typedef	struct
 {
 	VINT		floorpic, ceilingpic;	/* if ceilingpic == -1,draw sky */
-	uint8_t		lightlevel;
-	uint8_t		special, tag;
 
-	char		soundtraversed;		/* 0 = untraversed, 1,2 = sndlines -1 */
+	uint8_t		lightlevel, special;
+	VINT		tag;
+
 	VINT		validcount;			/* if == validcount, already checked */
 	VINT		linecount;
 
