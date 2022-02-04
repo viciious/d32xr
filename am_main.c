@@ -493,21 +493,22 @@ static void AM_DrawMapStats(void)
 {
 	int i;
 	char buf[128];
-	int kc, sc;
+	int kc, sc, ic;
 
 	switch (netgame)
 	{
 	default:
-		kc = sc = 0;
+		kc = sc = ic = 0;
 		for (i = 0; i < MAXPLAYERS; i++)
 		{
 			if (!playeringame[i])
 				continue;
 			kc += players[i].killcount;
 			sc += players[i].secretcount;
+			ic += players[i].itemcount;
 		}
 
-		D_snprintf(buf, sizeof(buf), "K:%d/%d S:%d/%d", kc, totalkills, sc, totalsecret);
+		D_snprintf(buf, sizeof(buf), "K:%d/%d I:%d/%d S:%d/%d", kc, totalkills, ic, totalitems, sc, totalsecret);
 		I_Print8(0, 20, buf);
 		break;
 	case gt_coop:
