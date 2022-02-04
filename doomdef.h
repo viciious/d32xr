@@ -210,7 +210,6 @@ typedef struct
 typedef struct mobj_s
 {
 	fixed_t			x, y, z;
-	latecall_t		latecall;		/* set in p_base if more work needed */
 	struct	mobj_s* prev, * next;
 
 	unsigned char	movedir;		/* 0-7 */
@@ -247,6 +246,7 @@ typedef struct mobj_s
 	int			flags;
 	struct mobj_s	*target;		/* thing being chased/attacked (or NULL) */
 									/* also the originator for missiles */
+	latecall_t		latecall;		/* set in p_base if more work needed */
 	intptr_t		extradata;		/* for latecall functions */
 } mobj_t
 ;
@@ -254,7 +254,6 @@ typedef struct mobj_s
 typedef struct
 {
 	fixed_t			x, y, z;
-	latecall_t		latecall;		/* set in p_base if more work needed */
 	struct	mobj_s* prev, * next;
 } degenmobj_t
 ;
