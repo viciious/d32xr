@@ -516,7 +516,10 @@ static void AM_DrawMapStats(void)
 		{
 			if (!playeringame[i])
 				continue;
-			D_snprintf(buf, sizeof(buf), "P%d K:%d/%d S:%d/%d", i + 1, players[i].killcount, totalkills, players[i].secretcount, totalsecret);
+			D_snprintf(buf, sizeof(buf), "P%d K:%d/%d I:%d/%d S:%d/%d", i + 1, 
+				players[i].killcount, totalkills, 
+				players[i].itemcount, totalitems,
+				players[i].secretcount, totalsecret);
 			I_Print8(0, 20 - MAXPLAYERS + 1 + i, buf);
 		}
 		break;
