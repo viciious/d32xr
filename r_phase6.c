@@ -210,7 +210,6 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
           top = ceilingclipx;
           FixedMul2(bottom, scale2, ceilingheight);
           bottom = (centerY - bottom) - 1;
-
           if (bottom >= floorclipx)
               bottom = floorclipx - 1;
 
@@ -285,7 +284,7 @@ void R_SegCommands2(void)
 
         while ((state = *(volatile VINT*)&segl->state) == 0);
 
-        if (state == RW_DRAWN || !(segl->actionbits & (AC_CALCTEXTURE | AC_ADDSKY)))
+        if (!(segl->actionbits & (AC_CALCTEXTURE | AC_ADDSKY)) || state == RW_DRAWN)
         {
             goto skip_draw;
         }
