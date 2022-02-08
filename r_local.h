@@ -272,11 +272,7 @@ extern const angle_t tantoangle[SLOPERANGE + 1];
 extern	fixed_t yslope[SCREENHEIGHT];
 extern	fixed_t distscale[SCREENWIDTH];
 
-#ifdef MARS
-#define	HEIGHTBITS			0
-#else
 #define	HEIGHTBITS			6
-#endif
 #define	FIXEDTOHEIGHT		(FRACBITS-HEIGHTBITS)
 
 #define OPENMARK 0xff00
