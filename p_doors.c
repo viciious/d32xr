@@ -265,7 +265,9 @@ void EV_VerticalDoor (line_t *line, mobj_t *thing)
 	{
 		case 26:		/* Blue Card Lock */
 		case 32:
-			if ( player && !player->cards[it_bluecard] && !player->cards[it_blueskull])
+			if (!player)
+				return;
+			if (!player->cards[it_bluecard] && !player->cards[it_blueskull])
 			{
 				S_StartSound(thing,sfx_oof);
 				stbar[pnum].tryopen[it_bluecard] = true;
@@ -274,7 +276,9 @@ void EV_VerticalDoor (line_t *line, mobj_t *thing)
 			break;
 		case 27:		/* Yellow Card Lock */
 		case 34:
-			if ( player && !player->cards[it_yellowcard] && !player->cards[it_yellowskull])
+			if (!player)
+				return;
+			if (!player->cards[it_yellowcard] && !player->cards[it_yellowskull])
 			{
 				S_StartSound(thing,sfx_oof);
 				stbar[pnum].tryopen[it_yellowcard] = true;
@@ -283,7 +287,9 @@ void EV_VerticalDoor (line_t *line, mobj_t *thing)
 			break;
 		case 28:		/* Red Card Lock */
 		case 33:
-			if ( player && !player->cards[it_redcard] && !player->cards[it_redskull])
+			if (!player)
+				return;
+			if (!player->cards[it_redcard] && !player->cards[it_redskull])
 			{
 				S_StartSound(thing,sfx_oof);
 				stbar[pnum].tryopen[it_redcard] = true;
@@ -292,6 +298,12 @@ void EV_VerticalDoor (line_t *line, mobj_t *thing)
 			break;
 	}
 	
+	if (line->sidenum[side ^ 1] < 0)
+	{
+		I_Error("EV_VerticalDoor: DR special type on 1-sided linedef");
+		return;
+	}
+
 	/* if the sector has an active thinker, use it */
 	secnum = sides[ line->sidenum[side^1]] .sector;
 	sec = &sectors[secnum];
