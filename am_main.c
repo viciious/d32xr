@@ -509,7 +509,7 @@ static void AM_DrawMapStats(void)
 		}
 
 		D_snprintf(buf, sizeof(buf), "K:%d/%d I:%d/%d S:%d/%d", kc, totalkills, ic, totalitems, sc, totalsecret);
-		I_Print8(0, 20, buf);
+		I_Print8(12, 20, buf);
 		break;
 	case gt_coop:
 		for (i = 0; i < MAXPLAYERS; i++)
@@ -520,7 +520,7 @@ static void AM_DrawMapStats(void)
 				players[i].killcount, totalkills, 
 				players[i].itemcount, totalitems,
 				players[i].secretcount, totalsecret);
-			I_Print8(0, 20 - MAXPLAYERS + 1 + i, buf);
+			I_Print8(12, 20 - MAXPLAYERS + 1 + i, buf);
 		}
 		break;
 	case gt_deathmatch:
@@ -529,12 +529,12 @@ static void AM_DrawMapStats(void)
 			if (!playeringame[i])
 				continue;
 			D_snprintf(buf, sizeof(buf), "P%d Frags: %d", i + 1, players[i].frags);
-			I_Print8(0, 20 - MAXPLAYERS + 1 + i, buf);
+			I_Print8(12, 20 - MAXPLAYERS + 1 + i, buf);
 		}
 		break;
 	}
 
-	I_Print8(0, 21, gamemapinfo.name);
+	I_Print8(12, 21, gamemapinfo.name);
 }
 
 /*
