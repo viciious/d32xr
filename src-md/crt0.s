@@ -247,7 +247,7 @@ do_main:
 
 | detect the Mega EverDrive
         tst.w   megasd_ok
-        beq     main_loop_start
+        bne     main_loop_start
 
         move.w  #0x2700,sr          /* disable ints */
         move.b  #1,0xA15107         /* set RV */
