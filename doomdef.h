@@ -160,13 +160,7 @@ typedef enum
 /* library replacements */
 /* */
 
-static inline int D_abs(int x)
-{
-	if (x < 0)
-		return -x;
-	return x;
-}
-
+#define D_abs(x) ((x < 0) ? -(x) : x)
 void D_memset (void *dest, int val, int count) __attribute__((nonnull));
 void D_memcpy (void *dest, const void *src, int count) __attribute__((nonnull));
 void D_strncpy (char *dest, const char *src, int maxcount) __attribute__((nonnull));
