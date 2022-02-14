@@ -52,7 +52,7 @@ do_col_loop_low:
         and     r4,r0           /* (frac >> 16) & heightmask */
         mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
         add     r3,r2           /* frac += fracstep */
-        and     #255,r0
+        extu.b  r0,r0
         add     r0,r0
         mov.w   @(r0,r7),r0     /* dpix = dc_colormap[pix] */
         dt      r6              /* count-- */
@@ -132,7 +132,7 @@ do_cnp_loop_low:
         shlr16  r0              /* frac >> 16 */
         mov.b   @(r0,r5),r0     /* pix = dc_source[frac >> 16] */
         add     r3,r2           /* frac += fracstep */
-        and     #255,r0
+        extu.b  r0,r0
         add     r0,r0
         mov.w   @(r0,r7),r0     /* dpix = dc_colormap[pix] */
         cmp/ge  r4,r2
@@ -209,7 +209,7 @@ do_span_loop_low:
         add     r3,r2           /* xfrac += xstep */
         swap.w  r2,r1
         and     r10,r1          /* (xfrac >> 16) & 63 */
-        and     #255,r0
+        extu.b  r0,r0
         add     r0,r0
         mov.w   @(r0,r7),r0     /* dpix = ds_colormap[pix] */
         add     #2,r8           /* fb++ */
@@ -272,7 +272,7 @@ do_col_loop:
         and     r4,r0           /* (frac >> 16) & heightmask */
         mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
         add     r3,r2           /* frac += fracstep */
-        and     #255,r0
+        extu.b  r0,r0
         add     r0,r0
         mov.w   @(r0,r7),r0     /* dpix = dc_colormap[pix] */
         dt      r6              /* count-- */
@@ -350,7 +350,7 @@ do_cnp_loop:
         shlr16  r0              /* frac >> 16 */
         mov.b   @(r0,r5),r0     /* pix = dc_source[frac >> 16] */
         add     r3,r2           /* frac += fracstep */
-        and     #255,r0
+        extu.b  r0,r0
         add     r0,r0
         mov.w   @(r0,r7),r0     /* dpix = dc_colormap[pix] */
         cmp/ge  r4,r2
@@ -425,7 +425,7 @@ do_span_loop:
         add     r3,r2           /* xfrac += xstep */
         swap.w  r2,r1
         and     r10,r1          /* (xfrac >> 16) & 63 */
-        and     #255,r0
+        extu.b  r0,r0
         add     r0,r0
         mov.w   @(r0,r7),r0     /* dpix = ds_colormap[pix] */
         add     #1,r8           /* fb++ */
