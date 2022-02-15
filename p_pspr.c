@@ -12,6 +12,8 @@
 
 #define	BFGCELLS		40			/* plasma cells for a bfg attack */
 
+static void P_RecursiveSound(sector_t* sec, int soundblocks, uint8_t* soundtraversed) ATTR_DATA_CACHE_ALIGN;
+
 /*
 =================
 =
@@ -23,8 +25,6 @@
 */
 
 mobj_t *soundtarget;
-sector_t	*na_sec;
-int			na_secnum;
 
 static void P_RecursiveSound (sector_t *sec, int soundblocks, uint8_t *soundtraversed)
 {
@@ -33,9 +33,6 @@ static void P_RecursiveSound (sector_t *sec, int soundblocks, uint8_t *soundtrav
 	sector_t	*other;
 	sector_t	*front, *back;
 	
-na_sec = sec;		/* DEBUG */
-na_secnum = sec-sectors;
-
 /* wake up all monsters in this sector */
 	if (sec->validcount == validcount && soundtraversed[sec - sectors] <= soundblocks+1)
 		return;		/* already flooded */
