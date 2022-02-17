@@ -10,14 +10,14 @@
 
 static sector_t emptysector = { 0, 0, -2, -2, -2 };
 
-static void R_WallEarlyPrep(viswall_t* segl) ATTR_DATA_CACHE_ALIGN;
+static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floornewheight, fixed_t *ceilingnewheight) ATTR_DATA_CACHE_ALIGN;
 static fixed_t R_PointToDist(fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
 static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, angle_t normalangle) ATTR_DATA_CACHE_ALIGN;
 static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle) ATTR_DATA_CACHE_ALIGN;
 static void R_WallLatePrep(viswall_t* wc) ATTR_DATA_CACHE_ALIGN;
-static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds) ATTR_DATA_CACHE_ALIGN;
+static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floornewheight, fixed_t ceilingnewheight) ATTR_DATA_CACHE_ALIGN;
 
-static void R_WallEarlyPrep(viswall_t* segl)
+static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floornewheight, fixed_t *ceilingnewheight)
 {
    seg_t     *seg;
    line_t    *li;
@@ -73,7 +73,7 @@ static void R_WallEarlyPrep(viswall_t* segl)
           f_lightlevel    != b_lightlevel                 || // light level changes across line?
           b_ceilingheight == b_floorheight))                 // backsector is closed?
       {
-         segl->floorheight = segl->floornewheight = f_floorheight / (1 << FIXEDTOHEIGHT);
+         segl->floorheight = *floornewheight = f_floorheight / (1 << FIXEDTOHEIGHT);
          actionbits |= (AC_ADDFLOOR|AC_NEWFLOOR);
       }
 
@@ -84,7 +84,7 @@ static void R_WallEarlyPrep(viswall_t* segl)
           f_lightlevel    != b_lightlevel                 || // light level changes across line?
           b_ceilingheight == b_floorheight))                 // backsector is closed?
       {
-         segl->ceilingheight = segl->ceilingnewheight = f_ceilingheight / (1 << FIXEDTOHEIGHT);
+         segl->ceilingheight = *ceilingnewheight = f_ceilingheight / (1 << FIXEDTOHEIGHT);
          if(f_ceilingpic == -1)
             actionbits |= (AC_ADDSKY|AC_NEWCEILING);
          else
@@ -123,7 +123,7 @@ static void R_WallEarlyPrep(viswall_t* segl)
 
             b_texturemid += si->rowoffset<<FRACBITS; // add in sidedef texture offset
 
-            segl->b_topheight = segl->floornewheight = b_floorheight / (1 << FIXEDTOHEIGHT);
+            segl->b_topheight = *floornewheight = b_floorheight / (1 << FIXEDTOHEIGHT);
             segl->b_bottomheight = f_floorheight / (1 << FIXEDTOHEIGHT);
             actionbits |= (AC_BOTTOMTEXTURE|AC_NEWFLOOR); // generate bottom wall and floor
          }
@@ -139,7 +139,7 @@ static void R_WallEarlyPrep(viswall_t* segl)
 
             t_texturemid += si->rowoffset<<FRACBITS; // add in sidedef texture offset
 
-            segl->t_bottomheight = segl->ceilingnewheight = b_ceilingheight / (1 << FIXEDTOHEIGHT);
+            segl->t_bottomheight = *ceilingnewheight = b_ceilingheight / (1 << FIXEDTOHEIGHT);
             actionbits |= (AC_NEWCEILING|AC_TOPTEXTURE); // draw top texture and ceiling
          }
 
@@ -323,7 +323,7 @@ static void R_WallLatePrep(viswall_t* wc)
 //
 // Main seg clipping loop
 //
-static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds)
+static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floornewheight, fixed_t ceilingnewheight)
 {
     visplane_t* ceiling, * floor;
     unsigned short* ceilopen, * flooropen;
@@ -339,10 +339,7 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds)
     const int width = segl->stop - segl->start + 1;
 
     const fixed_t floorheight = segl->floorheight;
-    const fixed_t floornewheight = segl->floornewheight;
-
-    const int ceilingheight = segl->ceilingheight;
-    const int ceilingnewheight = segl->ceilingnewheight;
+    const fixed_t ceilingheight = segl->ceilingheight;
 
     const int floorpicnum = segl->floorpicnum;
     const int ceilingpicnum = segl->ceilingpicnum;
@@ -481,6 +478,7 @@ void Mars_Sec_R_WallPrep(void)
     volatile viswall_t* volatile* plast;
     unsigned clipbounds_[SCREENWIDTH/2+1];
     unsigned short *clipbounds = (unsigned short *)clipbounds_;
+    fixed_t floornewheight, ceilingnewheight;
 
     R_InitClipBounds(clipbounds_);
   
@@ -511,7 +509,7 @@ void Mars_Sec_R_WallPrep(void)
 
         while (segl < last)
         {
-            R_WallEarlyPrep(segl);
+            R_WallEarlyPrep(segl, &floornewheight, &ceilingnewheight);
 
             R_WallLatePrep(segl);
 
@@ -521,7 +519,7 @@ void Mars_Sec_R_WallPrep(void)
                 segl->state = RW_READY;
             }
 
-            R_SegLoop(segl, clipbounds);
+            R_SegLoop(segl, clipbounds, floornewheight, ceilingnewheight);
 
             // FIXME: optimize this
 
