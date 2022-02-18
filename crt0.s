@@ -1171,24 +1171,29 @@ mix_loop:
         mov.b   @(r0,r8),r0
         extu.b  r0,r3
         add     #-128,r3
+
         /* scale sample for left output */
         muls.w  r3,r13
-        mov.w   @r5,r1
+        mov.l   @r5,r1
         sts     macl,r0
         shlr8   r0
         exts.w  r0,r0
-        add     r0,r1
-        mov.w   r1,@r5
-        add     #2,r5
+
         /* scale sample for right output */
         muls.w  r3,r14
-        mov.w   @r5,r1
+
+        /* scale sample for left output -- cont */
+        add     r0,r1
+        swap.w  r1,r1
+
+        /* scale sample for right output -- cont */
         sts     macl,r0
         shlr8   r0
         exts.w  r0,r0
         add     r0,r1
-        mov.w   r1,@r5
-        add     #2,r5
+
+        mov.l   r1,@r5
+        add     #4,r5
 
         /* advance position and check for loop */
         add     r10,r9                  /* position += increment */
