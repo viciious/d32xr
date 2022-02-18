@@ -478,7 +478,7 @@ void Mars_Sec_R_WallPrep(void)
     volatile viswall_t* volatile* plast;
     unsigned clipbounds_[SCREENWIDTH/2+1];
     unsigned short *clipbounds = (unsigned short *)clipbounds_;
-    fixed_t floornewheight, ceilingnewheight;
+    fixed_t floornewheight = 0, ceilingnewheight = 0;
 
     R_InitClipBounds(clipbounds_);
   
