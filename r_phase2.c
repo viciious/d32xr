@@ -482,9 +482,6 @@ void Mars_Sec_R_WallPrep(void)
 
     R_InitClipBounds(clipbounds_);
   
-	Mars_ClearCacheLines((intptr_t)&openings & ~15, 1);
-	Mars_ClearCacheLines((intptr_t)&lastopening & ~15, 1);
-  
     plast = (volatile viswall_t* volatile*)((intptr_t)&lastwallcmd | 0x20000000);
     first = viswalls;
     verylast = NULL;

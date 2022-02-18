@@ -301,13 +301,16 @@ static void R_DrawPlanes2(void)
 #ifdef MARS
 void Mars_R_PrepPlanes(void)
 {
+    int numplanes;
+
     Mars_ClearCacheLines((intptr_t)&lastvisplane & ~15, 1);
     Mars_ClearCacheLines((intptr_t)&visplanes & ~15, 1);
-    Mars_ClearCacheLines((intptr_t)visplanes & ~15, ((lastvisplane - visplanes) * sizeof(visplane_t) + 15) / 16);
+
+    numplanes = lastvisplane - visplanes;
+    Mars_ClearCacheLines((intptr_t)visplanes & ~15, (numplanes * sizeof(visplane_t) + 15) / 16);
 
     {
         visplane_t* pl, *last = lastvisplane;
-        int numplanes = lastvisplane - visplanes + 1;
         const int maxlen = centerX + centerX / 2;
 
         for (pl = visplanes + 1; pl < last; pl++)
@@ -350,7 +353,12 @@ void Mars_R_PrepPlanes(void)
 
 void Mars_Sec_R_DrawPlanes(void)
 {
+    int numplanes;
+
     Mars_ClearCacheLines((intptr_t)&lastvisplane & ~15, 1);
+
+    numplanes = lastvisplane - visplanes;
+    Mars_ClearCacheLines((intptr_t)visplanes & ~15, (numplanes * sizeof(visplane_t) + 15) / 16);
 
     R_DrawPlanes2();
 }

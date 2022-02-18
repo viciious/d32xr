@@ -759,6 +759,11 @@ void Mars_Sec_R_Setup(void)
 	Mars_ClearCacheLines((intptr_t)&visplanes_hash & ~15, 1);
 	Mars_ClearCacheLines((intptr_t)&lastsegclip & ~15, 1);
 
+	Mars_ClearCacheLines((intptr_t)&openings & ~15, 1);
+	Mars_ClearCacheLines((intptr_t)&lastopening & ~15, 1);
+
+	Mars_ClearCacheLines((intptr_t)visplanes & ~15, (sizeof(visplane_t)*MAXVISPLANES+15)/16);
+
 	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
 		visplanes_hash[i] = NULL;
 }
