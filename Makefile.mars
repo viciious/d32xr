@@ -92,6 +92,7 @@ OBJS = \
 	d_mapinfo.o \
 	sh2_fixed.o \
 	sh2_draw.o \
+	sh2_mixer.o \
 	r_cache.o \
 	m_fire.o \
 	lzss.o
