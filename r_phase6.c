@@ -40,8 +40,6 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds) ATTR_DATA_CA
 
 static void R_LockSeg(void) ATTR_DATA_CACHE_ALIGN;
 static void R_UnlockSeg(void) ATTR_DATA_CACHE_ALIGN;
-static void R_SegCommands2(void) ATTR_DATA_CACHE_ALIGN;
-
 void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN;
 
 //
@@ -247,7 +245,7 @@ static void R_UnlockSeg(void)
     seg_lock = 0;
 }
 
-void R_SegCommands2(void)
+void R_SegCommands(void)
 {
     viswall_t* segl;
     seglocal_t lseg;
@@ -399,21 +397,7 @@ skip_draw:
 
 void Mars_Sec_R_SegCommands(void)
 {
-    R_SegCommands2();
-}
-
-void R_SegCommands(void)
-{
-    R_SegCommands2();
-
-    Mars_R_SecWait();
-}
-
-#else
-
-void R_SegCommands(void)
-{
-    R_SegCommands2();
+    R_SegCommands();
 }
 
 #endif

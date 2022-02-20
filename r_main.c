@@ -974,6 +974,8 @@ void R_RenderPlayerView(int displayplayer, unsigned short *openings_)
 	R_SegCommands();
 	t_segs = I_GetFRTCounter() - t_segs;
 
+	Mars_R_SecWait();
+
 	t_planes = I_GetFRTCounter();
 	R_DrawPlanes();
 	t_planes = I_GetFRTCounter() - t_planes;
