@@ -141,7 +141,7 @@ static void R_PlaneLoop(localplane_t *lpl)
   
    do
    {
-      int x, x2;
+      int x2;
 
       b2 = t2 & 0xff;
       t2 >>= 8;
@@ -154,24 +154,25 @@ static void R_PlaneLoop(localplane_t *lpl)
       // top diffs
       while (t1 < t2 && t1 <= b1)
       {
-          x = spanstart[t1];
-          R_MapPlane(lpl, t1, x, x2);
+          R_MapPlane(lpl, t1, spanstart[t1], x2);
           ++t1;
       }
+
+      // bottom diffs
+      while (b1 > b2 && b1 >= t1)
+      {
+          R_MapPlane(lpl, b1, spanstart[b1], x2);
+          --b1;
+      }
+
+      if (pl_x == pl_stopx + 1)
+          break;
 
       while (t2 < t1 && t2 <= b2)
       {
           // top dif spanstarts
           spanstart[t2] = pl_x;
           ++t2;
-      }
-
-      // bottom diffs
-      while (b1 > b2 && b1 >= t1)
-      {
-          x = spanstart[b1];
-          R_MapPlane(lpl, b1, x, x2);
-          --b1;
       }
 
       while (b2 > b1 && b2 >= t2)
@@ -183,9 +184,9 @@ static void R_PlaneLoop(localplane_t *lpl)
 
       b1 = pl_oldbottom;
       t1 = pl_oldtop;
-      t2 = pl_x < pl_stopx ? *++pl_openptr : OPENMARK;
+      t2 = pl_x++ < pl_stopx ? *++pl_openptr : OPENMARK;
    }
-   while(++pl_x != pl_stopx+2);
+   while(1);
 }
 
 static void R_LockPln(void)
