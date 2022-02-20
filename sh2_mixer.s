@@ -114,7 +114,6 @@ mix_next:
         dt      r6
         bf      mix_loop
         bra     mix_exit
-        mov.l   r9,@(4,r4)              /* update position field */
 
 mix_wrap:
         /* check if loop sample */
@@ -126,6 +125,7 @@ mix_wrap:
         mov.l   r12,@r4                 /* clear data pointer field */
 
 mix_exit:
+        mov.l   r9,@(4,r4)              /* update position field */
         mov.l   @r15+,r14
         mov.l   @r15+,r13
         mov.l   @r15+,r12
