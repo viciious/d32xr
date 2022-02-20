@@ -28,14 +28,14 @@ typedef struct
     viswall_t* segl;
 
     drawtex_t tex[2];
+    drawtex_t *first, *last;
 
     unsigned lightmin, lightmax, lightsub, lightcoef;
-    unsigned actionbits;
 } seglocal_t;
 
 static char seg_lock = 0;
 
-static void R_DrawTextures(int x, int floorclipx, int ceilingclipx, fixed_t scale2, int colnum, unsigned light, seglocal_t* lsegl) ATTR_DATA_CACHE_ALIGN;
+static void R_DrawTextures(int x, int floorclipx, int ceilingclipx, fixed_t scale2, unsigned iscale, int colnum, unsigned light, seglocal_t* lsegl) ATTR_DATA_CACHE_ALIGN;
 static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds) ATTR_DATA_CACHE_ALIGN;
 
 static void R_LockSeg(void) ATTR_DATA_CACHE_ALIGN;
@@ -45,24 +45,11 @@ void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN;
 //
 // Render a wall texture as columns
 //
-static void R_DrawTextures(int x, int floorclipx, int ceilingclipx, fixed_t scale2, int colnum_, unsigned light, seglocal_t* lsegl)
+static void R_DrawTextures(int x, int floorclipx, int ceilingclipx, fixed_t scale2, unsigned iscale, int colnum_, unsigned light, seglocal_t* lsegl)
 {
-   unsigned actionbits = lsegl->actionbits;
-   drawtex_t *tex, *last;
+   drawtex_t *tex = lsegl->first;
 
-   tex = lsegl->tex;
-   last = lsegl->tex + 2;
-
-   if (!(actionbits & AC_TOPTEXTURE))
-       tex++;
-   if (!(actionbits & AC_BOTTOMTEXTURE))
-       --last;
-
-#ifdef MARS
-   unsigned iscale = SH2_DIVU_DVDNTL; // get 32-bit quotient
-#endif
-
-   for (; tex < last; tex++) {
+   for (; tex < lsegl->last; tex++) {
        int top, bottom;
 
        FixedMul2(top, scale2, tex->topheight);
@@ -117,7 +104,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 {
    viswall_t* segl = lseg->segl;
 
-   const unsigned actionbits = lseg->actionbits;
+   const unsigned actionbits = segl->actionbits;
 
    unsigned scalefrac = segl->scalefrac;
    unsigned scalestep = segl->scalestep;
@@ -137,7 +124,6 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
    {
       fixed_t scale;
       int floorclipx, ceilingclipx;
-      int top, bottom;
       unsigned scale2;
 
       scale = scalefrac;
@@ -149,7 +135,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
       //
       ceilingclipx = clipbounds[x];
       floorclipx = ceilingclipx & 0x00ff;
-      ceilingclipx = (((unsigned)ceilingclipx & 0xff00) >> 8);
+      ceilingclipx = (unsigned)ceilingclipx >> 8;
 
       //
       // texture only stuff
@@ -157,6 +143,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
       if (actionbits & AC_CALCTEXTURE)
       {
           unsigned colnum;
+          unsigned iscale;
           fixed_t r;
 
 #ifdef MARS
@@ -164,7 +151,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
           SH2_DIVU_DVDNTH = 0;           // set high bits of the 64-bit dividend
           SH2_DIVU_DVDNTL = 0xffffffffu; // set low  bits of the 64-bit dividend, start divide
 #else
-          unsigned iscale = 0xffffffffu / scale;
+          iscale = 0xffffffffu / scale;
 #endif
 
           // calculate texture offset
@@ -199,12 +186,18 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
           //
           // draw textures
           //
-          R_DrawTextures(x, floorclipx, ceilingclipx, scale2, colnum, texturelight, lseg);
+
+#ifdef MARS
+          iscale = SH2_DIVU_DVDNTL; // get 32-bit quotient
+#endif
+          R_DrawTextures(x, floorclipx, ceilingclipx, scale2, iscale, colnum, texturelight, lseg);
       }
 
       // sky mapping
       if (actionbits & AC_ADDSKY)
       {
+          int top, bottom;
+
           top = ceilingclipx;
           FixedMul2(bottom, scale2, ceilingheight);
           bottom = (centerY - bottom) - 1;
@@ -275,6 +268,8 @@ void R_SegCommands(void)
     for (segl = viswalls; segl < lastwallcmd; segl++)
     {
         int seglight;
+        unsigned actionbits;
+
 #ifdef MARS
         int state;
 
@@ -283,7 +278,8 @@ void R_SegCommands(void)
 
         while ((state = *(volatile VINT*)&segl->state) == 0);
 
-        if (state == RW_DRAWN || !(segl->actionbits & (AC_CALCTEXTURE | AC_ADDSKY)))
+        actionbits = segl->actionbits;
+        if (state == RW_DRAWN || !(actionbits & (AC_CALCTEXTURE | AC_ADDSKY)))
         {
             goto skip_draw;
         }
@@ -302,7 +298,8 @@ void R_SegCommands(void)
 #endif
 
         lseg.segl = segl;
-        lseg.actionbits = segl->actionbits;
+        lseg.first = lseg.tex + 1;
+        lseg.last = lseg.tex + 1;
 
         if (vd.fixedcolormap)
         {
@@ -345,7 +342,7 @@ void R_SegCommands(void)
             }
         }
 
-        if (lseg.actionbits & AC_TOPTEXTURE)
+        if (actionbits & AC_TOPTEXTURE)
         {
             texture_t* tex = &textures[segl->t_texturenum];
             toptex->topheight = segl->t_topheight;
@@ -354,11 +351,11 @@ void R_SegCommands(void)
             toptex->width = tex->width;
             toptex->height = tex->height;
             toptex->data = tex->data;
-            toptex->pixelcount = 0;
             toptex->drawcol = (tex->height & (tex->height - 1)) ? drawcolnpo2 : drawcol;
+            lseg.first--;
         }
 
-        if (lseg.actionbits & AC_BOTTOMTEXTURE)
+        if (actionbits & AC_BOTTOMTEXTURE)
         {
             texture_t* tex = &textures[segl->b_texturenum];
             bottomtex->topheight = segl->b_topheight;
@@ -367,23 +364,17 @@ void R_SegCommands(void)
             bottomtex->width = tex->width;
             bottomtex->height = tex->height;
             bottomtex->data = tex->data;
-            bottomtex->pixelcount = 0;
             bottomtex->drawcol = (tex->height & (tex->height - 1)) ? drawcolnpo2 : drawcol;
+            lseg.last++;
         }
 
         R_DrawSeg(&lseg, clipbounds);
 
-        if (lseg.actionbits & AC_TOPTEXTURE)
-        {
-            segl->t_pixcount = toptex->pixelcount;
-        }
-        if (lseg.actionbits & AC_BOTTOMTEXTURE)
-        {
-            segl->b_pixcount = bottomtex->pixelcount;
-        }
+        segl->t_pixcount = toptex->pixelcount;
+        segl->b_pixcount = bottomtex->pixelcount;
 
 skip_draw:
-        if(segl->actionbits & (AC_NEWFLOOR|AC_NEWCEILING))
+        if(actionbits & (AC_NEWFLOOR|AC_NEWCEILING))
         {
             int x, stop = segl->stop;
             unsigned short *newclipbounds = segl->newclipbounds;
