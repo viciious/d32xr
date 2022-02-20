@@ -334,16 +334,18 @@ extern	int		phasetime[9];
 /* */
 extern	texture_t	*skytexturep;
 
-extern	int			numtextures;
+extern	VINT		numtextures;
 extern	texture_t	*textures;
 
 extern	VINT			*flattranslation;		/* for global animation */
 extern	VINT			*texturetranslation;	/* for global animation */
 extern	void			** flatpixels;
 
-extern	int			firstflat, numflats;
+extern	VINT		firstflat, numflats;
 
 extern short* dc_colormaps;
+
+extern uint8_t* dc_playpals;
 
 #define R_CheckPixels(lumpnum) (void *)((intptr_t)(W_POINTLUMPNUM(lumpnum)))
 

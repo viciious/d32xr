@@ -445,7 +445,7 @@ D_printf ("Done\n");
 	//
 	// in case of a non-standard colormap, we may need to darken 
 	// the game a bit when diminishing lighting if turn off
-	doompalette = W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
+	doompalette = (byte *)dc_playpals;
 
 	row = (byte*)(dc_colormaps + 256 * 16);
 	br = 0;
@@ -684,7 +684,7 @@ static void R_Setup (int displayplayer, unsigned short *openings_,
 	
 	if (palette != curpalette) {
 		curpalette = palette;
-		I_SetPalette(W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"))+palette*768);
+		I_SetPalette(dc_playpals+palette*768);
 	}
 
 	if (vd.fixedcolormap == INVERSECOLORMAP)

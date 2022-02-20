@@ -6,9 +6,9 @@
 
 boolean	spr_rotations;
 
-int		firstflat, lastflat, numflats;
+VINT		firstflat, lastflat, numflats;
 
-int			numtextures;
+VINT		numtextures;
 texture_t	*textures;
 
 spritedef_t sprites[NUMSPRITES];
@@ -20,6 +20,8 @@ VINT			*texturetranslation;	/* for global animation */
 void			**flatpixels;
 
 texture_t	*skytexturep;
+
+uint8_t		*dc_playpals;
 
 /*============================================================================ */
 
@@ -135,6 +137,8 @@ void R_InitFlats (void)
 
 void R_InitData (void)
 {
+	dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
+
 	R_InitTextures ();
 	R_InitFlats ();
 	R_InitSpriteDefs((const char **)sprnames);
