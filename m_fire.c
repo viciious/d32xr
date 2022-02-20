@@ -264,7 +264,7 @@ void I_InitMenuFire(jagobj_t *titlepic)
 	{
 		for (i = 0; i < 2; i++)
 		{
-			short* lines = Mars_FrameBufferLines();
+			uint16_t* lines = Mars_FrameBufferLines();
 
 			DrawFillRect(0, 0, 320, 224, 0);
 
@@ -328,7 +328,7 @@ void I_DrawMenuFire(void)
 	{
 		int j;
 		int limit = pos > bottom_pos ? 0 : bottom_pos - pos;
-		short* lines = Mars_FrameBufferLines();
+		uint16_t* lines = Mars_FrameBufferLines();
 		for (j = limit; j < bottom_pos - fh; j++)
 			lines[j] = (j - limit) * 320 / 2 + 0x100;
 	}

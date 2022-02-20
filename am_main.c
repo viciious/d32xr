@@ -37,7 +37,7 @@
 
 static	VINT	blink = 0;
 static	VINT	pause;
-static	VINT	linesdrawn = 0;
+static	uint16_t linesdrawn = 0;
 static fixed_t  scale;
 
 static	VINT	amcurmap = -1;

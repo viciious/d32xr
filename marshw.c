@@ -263,9 +263,9 @@ void Mars_Init(void)
 	}
 }
 
-short* Mars_FrameBufferLines(void)
+uint16_t* Mars_FrameBufferLines(void)
 {
-	short* lines = (short*)&MARS_FRAMEBUFFER;
+	uint16_t* lines = (uint16_t*)&MARS_FRAMEBUFFER;
 	if (mars_requested_lines == -240)
 		lines += (240 - 224) / 2;
 	return lines;

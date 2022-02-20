@@ -87,7 +87,7 @@ int Mars_GetFRTCounter(void);
 
 #endif 
 
-short* Mars_FrameBufferLines(void);
+uint16_t *Mars_FrameBufferLines(void);
 
 #define Mars_IsPAL() ((MARS_VDP_DISPMODE & MARS_NTSC_FORMAT) == 0)
 
