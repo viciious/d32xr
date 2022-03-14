@@ -242,12 +242,12 @@ void M_AddToBox (fixed_t *box, fixed_t x, fixed_t y)
   
 /*=============================================================================  */
  
-unsigned LocalToNet (unsigned cmd)
+static inline unsigned LocalToNet (unsigned cmd)
 {
-	return cmd & 0xffff;
+	return cmd;
 }
 
-unsigned NetToLocal (unsigned cmd)
+static inline unsigned NetToLocal (unsigned cmd)
 {
 	return cmd;
 }
@@ -363,10 +363,10 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 			ticbuttons[consoleplayer ^ 1] = I_ReadControls2();
 		}
 		else if (netgame)	/* may also change vblsinframe */
-			ticbuttons[!consoleplayer]
+			ticbuttons[consoleplayer ^ 1]
 				= NetToLocal(I_NetTransfer(LocalToNet(ticbuttons[consoleplayer])));
 
-		gamevbls += vblsinframe[0];
+		gamevbls += vblsinframe[consoleplayer];
 
 		if (demorecording)
 			*demo_p++ = buttons;

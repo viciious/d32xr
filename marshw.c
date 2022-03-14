@@ -389,12 +389,12 @@ int Mars_GetNetByte(int wait)
 	{
 		/* no wait - return a value immediately */
 		ret = GetNetByte();
-		return ((ret & 0xFF00) == 0xFF00) ? -2 : (ret & 0xFF00) ? -1 : (int)(ret & 0x00FF);
+		return (ret == 0xFF00) ? -2 : (ret & 0xFF00) ? -1 : (int)(ret & 0x00FF);
 	}
 
 	/* quick check for byte in rec buffer */
 	ret = GetNetByte();
-	if ((ret & 0xFF00) != 0xFF00)
+	if (ret != 0xFF00)
 		return (ret & 0xFF00) ? -1 : (int)(ret & 0x00FF);
 
 	/* nothing waiting - do timeout loop */
@@ -402,7 +402,7 @@ int Mars_GetNetByte(int wait)
 	while (mars_vblank_count < ticend)
 	{
 		ret = GetNetByte();
-		if ((ret & 0xFF00) == 0xFF00)
+		if (ret == 0xFF00)
 			continue;	/* no bytes waiting */
 		/* GetNetByte returned a byte or a net error */
 		return (ret & 0xFF00) ? -1 : (int)(ret & 0x00FF);

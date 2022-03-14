@@ -83,6 +83,8 @@ _start:
         rte
 
 
+        .align  64
+
 | Initialize the MD side to a known state for the game
 
 init_hardware:
@@ -651,6 +653,7 @@ set_usecd:
 | network support functions
 
 ext_serial:
+        move.w  #0x2700,sr          /* disable ints */
         move.l  d1,-(sp)
         lea     net_rdbuf,a0
         move.w  net_wbix,d1
@@ -676,6 +679,7 @@ ext_serial:
         rte
 
 ext_link:
+        move.w  #0x2700,sr          /* disable ints */
         btst    #6,0xA10005         /* check TH asserted */
         bne.b   1f                  /* no, extraneous ext int */
 
@@ -702,7 +706,10 @@ ext_link:
         rte
 
 init_serial:
+		move.w	#0xF000,0xA1512A	/* port 1 ID = SEGA_CTRL_NONE */
         move.b  #0x10,0xA1000B      /* all pins inputs except TL (Pin 6) */
+		nop
+		nop
         move.b  #0x38,0xA10019      /* 4800 Baud 8-N-1, RDRDY INT allowed */
         clr.w   net_rbix
         clr.w   net_wbix
@@ -712,9 +719,14 @@ init_serial:
         bra     main_loop
 
 init_link:
-        move.b  #0x20,0xA10005      /* TR set */
-        move.b  #0xA0,0xA1000B      /* all pins inputs except TR, TH INT allowed */
+		move.w	#0xF000,0xA1512A	/* port 1 ID = SEGA_CTRL_NONE */
         move.b  #0x00,0xA10019      /* no serial */
+		nop
+		nop
+        move.b  #0xA0,0xA1000B      /* all pins inputs except TR, TH INT allowed */
+		nop
+		nop
+        move.b  #0x20,0xA10005      /* TR set */
         clr.w   net_rbix
         clr.w   net_wbix
         move.l  #ext_link,extint    /* TH INT handler */
@@ -723,6 +735,7 @@ init_link:
         bra     main_loop
 
 read_serial:
+        move.w  #0x2700,sr          /* disable ints */
         lea     net_rdbuf,a0
         move.w  net_rbix,d1
         cmp.w   net_wbix,d1
@@ -738,9 +751,11 @@ read_serial:
 2:
         move.w  d0,0xA15122         /* return received status:data in COMM2 */
         move.w  #0,0xA15120         /* done */
+        move.w  #0x2000,sr          /* enable ints */
         bra     main_loop
 
 read_link:
+        move.w  #0x2700,sr          /* disable ints */
         btst    #0,net_wbix+1       /* check for even index */
         bne.b   1f                  /* in middle of collecting nibbles */
 
@@ -762,75 +777,98 @@ read_link:
 2:
         move.w  d0,0xA15122         /* return received byte and status in COMM2 */
         move.w  #0,0xA15120         /* done */
+        move.w  #0x2000,sr          /* enable ints */
         bra     main_loop
 
 write_serial:
+        move.w  #0x2700,sr          /* disable ints */
         move.w  #0xFFFF,d1
 0:
         btst    #0,0xA10019         /* ok to transmit? */
-        dbeq    d1,0b               /* wait until ok to transmit */
-        bne.b   1f                  /* timeout err */
-
+        beq.b   1f                  /* yes */
+        dbra    d1,0b               /* wait until ok to transmit */
+        bra.b   2f                  /* timeout err */
+1:
         move.b  d0,0xA10015         /* Send byte */
         move.w  #0,0xA15122         /* okay */
         move.w  #0,0xA15120         /* done */
+        move.w  #0x2000,sr          /* enable ints */
         bra     main_loop
-1:
+2:
         move.w  #0xFFFF,0xA15122    /* timeout */
         move.w  #0,0xA15120         /* done */
+        move.w  #0x2000,sr          /* enable ints */
         bra     main_loop
 
 write_link:
+        move.w  #0x2700,sr          /* disable ints */
         move.b  #0x2F,0xA1000B      /* only TL and TH in, TH INT not allowed */
 
-        move.b  d0,d1
+        move.b  d0,d1				/* save lsn */
         lsr.b   #4,d0               /* msn */
         ori.b   #0x20,d0            /* set TR line */
         move.b  d0,0xA10005         /* set nibble out */
+        nop
+        nop
         andi.b  #0x0F,d0            /* clr TR line */
         move.b  d0,0xA10005         /* assert TH of other console */
 
         /* wait on handshake */
         move.w  #0xFFFF,d2
 0:
+		bsr		bump_fm
         btst    #6,0xA10005         /* check for TH low (handshake) */
-        dbeq    d2,0b
-        bne.b   4f                  /* timeout err */
-
+        beq.b   1f                  /* handshake */
+        dbra    d2,0b
+        bra.w   5f                  /* timeout err */
+1:
         ori.b   #0x20,d0            /* set TR line */
         move.b  d0,0xA10005         /* deassert TH of other console */
-1:
+2:
+		nop
+		nop
         btst    #6,0xA10005         /* wait for TH high (handshake done) */
-        beq.b   1b
+        beq.b   2b
 
         moveq   #0x0F,d0
         and.b   d1,d0               /* lsn */
         ori.b   #0x20,d0            /* set TR line */
         move.b  d0,0xA10005         /* set nibble out */
+        nop
+        nop
         andi.b  #0x0F,d0            /* clr TR line */
         move.b  d0,0xA10005         /* assert TH of other console */
 
         /* wait on handshake */
-2:
+3:
+		bsr		bump_fm
         btst    #6,0xA10005         /* check for TH low (handshake) */
-        bne.b   2b
+        bne.b   3b
 
         ori.b   #0x20,d0            /* set TR line */
         move.b  d0,0xA10005         /* deassert TH of other console */
-3:
+4:
+		nop
+		nop
         btst    #6,0xA10005         /* wait for TH high (handshake done) */
-        beq.b   3b
+        beq.b   4b
 
         move.b  #0x20,0xA10005      /* TR set */
+		nop
+		nop
         move.b  #0xA0,0xA1000B      /* all pins inputs except TR, TH INT allowed */
         move.w  #0,0xA15122         /* okay */
         move.w  #0,0xA15120         /* done */
+        move.w  #0x2000,sr          /* enable ints */
         bra     main_loop
-4:
+5:
         move.b  #0x20,0xA10005      /* TR set */
+        nop
+        nop
         move.b  #0xA0,0xA1000B      /* all pins inputs except TR, TH INT allowed */
         move.w  #0xFFFF,0xA15122    /* timeout */
         move.w  #0,0xA15120         /* done */
+        move.w  #0x2000,sr          /* enable ints */
         bra     main_loop
 
 
@@ -862,9 +900,13 @@ net_cleanup:
         clr.b   net_type
         clr.l   extint
         move.w  #0x8B00,0xC00004    /* reg 11 = /IE2 (no EXT INT), full scroll */
-        move.b  #0x60,0xA10005
-        move.b  #0x40,0xA1000B      /* port 2 to neutral setting */
         move.b  #0x00,0xA10019      /* no serial */
+        nop
+        nop
+        move.b  #0x40,0xA1000B      /* port 2 to neutral setting */
+        nop
+        nop
+        move.b  #0x40,0xA10005
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
@@ -1077,9 +1119,10 @@ load_font:
 | Bump the FM player to keep the music going
 
 bump_fm:
-        movem.l d2-d7/a2-a6,-(sp)
         tst.w   fm_idx
-        beq     bump_exit           /* VGM not playing */
+        beq     bump_exit2          /* VGM not playing */
+
+        movem.l d0-d7/a0-a6,-(sp)
         tst.w   fm_smpl
         bne.b   1f                  /* waiting, check timer overflow */
 0:
@@ -1153,7 +1196,8 @@ bump_fm:
         nop
         move.b  d2,0xA04001         /* enable Timer A, start Timer A */
 bump_exit:
-        movem.l (sp)+,d2-d7/a2-a6
+        movem.l (sp)+,d0-d7/a0-a6
+bump_exit2:
         rts
 
 
