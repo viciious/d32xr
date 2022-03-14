@@ -393,7 +393,7 @@ int M_Ticker (void)
 		return ga_nothing;
 	}
 
-	cursordelay -= vblsinframe[0];
+	cursordelay -= vblsinframe;
 	if (cursordelay > 0)
 		return ga_nothing;
 

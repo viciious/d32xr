@@ -33,8 +33,8 @@ void P_PlayerMove (mobj_t *mo)
 	line_t		*latchedline;
 	fixed_t		latchedx, latchedy;
 		
-	momx = vblsinframe[playernum]*(mo->momx>>2);
-	momy = vblsinframe[playernum]*(mo->momy>>2);
+	momx = vblsinframe*(mo->momx>>2);
+	momy = vblsinframe*(mo->momy>>2);
 	
 	slidething = mo;
 	
@@ -172,7 +172,7 @@ void P_PlayerZMovement (mobj_t *mo)
 	}
 	else
 	{
-		fixed_t gravity = (GRAVITY * vblsinframe[0]) / TICVBLS;
+		fixed_t gravity = (GRAVITY * vblsinframe) / TICVBLS;
 		if (mo->momz == 0)
 			mo->momz = -gravity;
 		else
@@ -256,7 +256,7 @@ void P_BuildMove (player_t *player)
 
 	buttons = ticbuttons[playernum];
 	oldbuttons = oldticbuttons[playernum];
-	vbls = vblsinframe[playernum];
+	vbls = vblsinframe;
 	alwrun = demoplayback || demorecording ? 0 : alwaysrun;
 
 	if (mousepresent && !demoplayback)
@@ -427,7 +427,7 @@ void P_CalcHeight (player_t *player)
 	movx = player->mo->momx;
 	movy = player->mo->momy;
 
-	if (vblsinframe[playernum] <= 2)
+	if (vblsinframe <= 2)
 	{
 		movx = FixedDiv(movx, FRICTION);
 		movy = FixedDiv(movy, FRICTION);
