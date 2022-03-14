@@ -7,8 +7,8 @@ VINT		controltype = 0;		/* determine settings for BT_* */
 VINT		alwaysrun = 0;
 VINT		colormapopt = 1;
 
-int			gamevbls;			/* may not really be vbls in multiplayer */
-int			vblsinframe[MAXPLAYERS];		/* range from ticrate to ticrate*2 */
+int			gamevbls;		/* may not really be vbls in multiplayer */
+int			vblsinframe;		/* range from ticrate to ticrate*2 */
 
 VINT		ticsperframe = MINTICSPERFRAME;
 
@@ -298,7 +298,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 
 	gameaction = 0;
 	gamevbls = 0;
-	vblsinframe[0] = vblsinframe[1] = 0;
+	vblsinframe = 0;
 	lasttics = 0;
 
 	ticbuttons[0] = ticbuttons[1] = oldticbuttons[0] = oldticbuttons[1] = 0;
@@ -310,15 +310,15 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 /* adaptive timing based on previous frame */
 /* */
 		if (demoplayback || demorecording)
-			vblsinframe[consoleplayer] = TICVBLS;
+			vblsinframe = TICVBLS;
 		else
 		{
-			vblsinframe[consoleplayer] = lasttics;
-			if (vblsinframe[consoleplayer] > TICVBLS*2)
-				vblsinframe[consoleplayer] = TICVBLS*2;
+			vblsinframe = lasttics;
+			if (vblsinframe > TICVBLS*2)
+				vblsinframe = TICVBLS*2;
 #if 0
-			else if (vblsinframe[consoleplayer] < TICVBLS)
-				vblsinframe[consoleplayer] = TICVBLS;
+			else if (vblsinframe < TICVBLS)
+				vblsinframe = TICVBLS;
 #endif
 		}
 
@@ -358,15 +358,12 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		}
 
 		if (splitscreen && !demoplayback)
-		{
-			vblsinframe[consoleplayer ^ 1] = vblsinframe[consoleplayer];
 			ticbuttons[consoleplayer ^ 1] = I_ReadControls2();
-		}
 		else if (netgame)	/* may also change vblsinframe */
 			ticbuttons[consoleplayer ^ 1]
 				= NetToLocal(I_NetTransfer(LocalToNet(ticbuttons[consoleplayer])));
 
-		gamevbls += vblsinframe[consoleplayer];
+		gamevbls += vblsinframe;
 
 		if (demorecording)
 			*demo_p++ = buttons;

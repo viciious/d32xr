@@ -955,7 +955,7 @@ unsigned I_NetTransfer (unsigned buttons)
 	outbytes[0] = buttons>>8;
 	outbytes[1] = buttons;
 	outbytes[2] = consistancy;
-	outbytes[3] = vblsinframe[consoleplayer];
+	outbytes[3] = vblsinframe;
 
 	if (consoleplayer)
 	{
@@ -968,7 +968,7 @@ unsigned I_NetTransfer (unsigned buttons)
 			inbytes[i] = val;
 			Mars_PutNetByte(outbytes[i]);
 		}
-		vblsinframe[consoleplayer] = inbytes[3];	/* take gamevbls from other player */
+		vblsinframe = inbytes[3];	/* take gamevbls from other player */
 	}
 	else
 	{

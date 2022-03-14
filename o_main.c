@@ -391,7 +391,7 @@ exit:
 		return;
 	}
 
-	cursordelay -= vblsinframe[0];
+	cursordelay -= vblsinframe;
 	if (cursordelay > 0)
 		return;
 
