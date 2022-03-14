@@ -189,35 +189,31 @@ _I_DrawSpanLowA:
         add     r4,r8
         shlr2   r4
         add     r4,r8           /* fb += (ds_y*256 + ds_y*64) */
-        add     #-2,r8
-        mov.l   @(12,r15),r2     /* xfrac */
+        mov.l   @(12,r15),r2    /* xfrac */
         mov.l   @(16,r15),r4    /* yfrac */
         mov.l   @(20,r15),r3    /* xstep */
         mov.l   @(24,r15),r5    /* ystep */
         mov.l   @(28,r15),r9    /* ds_source */
         mov.l   draw_flat_mask,r10
-        swap.w  r2,r1
-        swap.w  r4,r0
-        and     r10,r1          /* (xfrac >> 16) & 63 */
 
 do_span_loop_low:
+        swap.w  r2,r1
+        and     r10,r1          /* (xfrac >> 16) & 63 */
+        swap.w  r4,r0
         and     r10,r0          /* (yfrac >> 16) & 63 */
         shll8   r0
         shlr2   r0              /* ((yfrac >> 16) & 63) << 6 */
         or      r1,r0           /* spot = (((yfrac >> 16) & 63) << 6) | ((xfrac >> 16) & 63) */
         mov.b   @(r0,r9),r0     /* pix = ds_source[spot] */
         add     r3,r2           /* xfrac += xstep */
-        swap.w  r2,r1
-        and     r10,r1          /* (xfrac >> 16) & 63 */
         extu.b  r0,r0
         add     r0,r0
         mov.w   @(r0,r7),r0     /* dpix = ds_colormap[pix] */
-        add     #2,r8           /* fb++ */
         add     r5,r4           /* yfrac += ystep */
         dt      r6              /* count-- */
         mov.w   r0,@r8          /* *fb = dpix */
         bf/s    do_span_loop_low
-        swap.w  r4,r0
+        add     #2,r8           /* fb++ */
 
         mov.l   @r15+,r10
         mov.l   @r15+,r9
@@ -405,35 +401,31 @@ _I_DrawSpanA:
         add     r4,r8
         shlr2   r4
         add     r4,r8           /* fb += (ds_y*256 + ds_y*64) */
-        add     #-1,r8
-        mov.l   @(12,r15),r2     /* xfrac */
+        mov.l   @(12,r15),r2    /* xfrac */
         mov.l   @(16,r15),r4    /* yfrac */
         mov.l   @(20,r15),r3    /* xstep */
         mov.l   @(24,r15),r5    /* ystep */
         mov.l   @(28,r15),r9    /* ds_source */
         mov.l   draw_flat_mask,r10
-        swap.w  r2,r1
-        swap.w  r4,r0
-        and     r10,r1          /* (xfrac >> 16) & 63 */
 
 do_span_loop:
+        swap.w  r2,r1
+        and     r10,r1          /* (xfrac >> 16) & 63 */
+        swap.w  r4,r0
         and     r10,r0          /* (yfrac >> 16) & 63 */
         shll8   r0
         shlr2   r0              /* ((yfrac >> 16) & 63) << 6 */
         or      r1,r0           /* spot = (((yfrac >> 16) & 63) << 6) | ((xfrac >> 16) & 63) */
         mov.b   @(r0,r9),r0     /* pix = ds_source[spot] */
         add     r3,r2           /* xfrac += xstep */
-        swap.w  r2,r1
-        and     r10,r1          /* (xfrac >> 16) & 63 */
         extu.b  r0,r0
         add     r0,r0
         mov.w   @(r0,r7),r0     /* dpix = ds_colormap[pix] */
-        add     #1,r8           /* fb++ */
         add     r5,r4           /* yfrac += ystep */
         dt      r6              /* count-- */
         mov.b   r0,@r8          /* *fb = dpix */
         bf/s    do_span_loop
-        swap.w  r4,r0
+        add     #1,r8           /* fb++ */
 
         mov.l   @r15+,r10
         mov.l   @r15+,r9
