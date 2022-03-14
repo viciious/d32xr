@@ -854,6 +854,8 @@ static void Player0Setup (void)
 {
 	int		val, idbyte, buttons;
 
+	I_Print8(104,5,"Player 0 setup");
+	I_Update();
 	consoleplayer = 0;	/* we are player 0 */
 	idbyte = startmap + 24*startskill + 128*(starttype == gt_deathmatch);
 	
@@ -879,6 +881,8 @@ static void Player1Setup (void)
 {	
 	int		val, oldval, buttons;
 
+	I_Print8(104,5,"Player 1 setup");
+	I_Update();
 	consoleplayer = 1;	/* we are player 1 */
 	oldval = 999;
 
@@ -918,9 +922,9 @@ void I_NetSetup (void)
 
 	I_Print8(64,1,"Attempting to connect..."); 
 	I_Print8(80,3,"Press start to abort");
-	I_Update();
+//	I_Update();
 
-	while (Mars_GetNetByte(0) >= 0); /* flush serial buffer */
+	while (Mars_GetNetByte(0) != -2) ;  /* flush network buffer */
 	Mars_WaitTicks(5);
 
 	listen1 = Mars_GetNetByte(0);
@@ -932,7 +936,7 @@ void I_NetSetup (void)
 
 	Mars_WaitTicks(5);
 
-	while (Mars_GetNetByte(0) >= 0); /* flush serial buffer */
+	while (Mars_GetNetByte(0) != -2); /* flush network buffer */
 }
 
 #define PACKET_SIZE 4
@@ -940,10 +944,10 @@ void G_PlayerReborn (int player);
 
 unsigned I_NetTransfer (unsigned buttons)
 {
-	int		i, val;
-	byte	inbytes[PACKET_SIZE];
-	byte	outbytes[PACKET_SIZE];
-	byte	consistancy;
+	int			i, val;
+	byte		inbytes[PACKET_SIZE];
+	byte		outbytes[PACKET_SIZE];
+	unsigned	consistancy;
 
 	consistancy = players[0].mo->x ^ players[0].mo->y ^ players[0].mo->z ^ players[1].mo->x ^ players[1].mo->y ^ players[1].mo->z;
 	consistancy = (consistancy>>8) ^ consistancy ^ (consistancy>>16);
@@ -984,12 +988,12 @@ unsigned I_NetTransfer (unsigned buttons)
 		/* consistancy error */
 		I_Print8(108,23,"Network Error"); 
 		I_Update();
-		while (Mars_GetNetByte(0) >= 0); /* flush serial buffer */
+		while (Mars_GetNetByte(0) != -2); /* flush network buffer */
 		Mars_WaitTicks(200);
 		goto reconnect;
 	}
 
-	val = (inbytes[0]<<8) + inbytes[1];
+	val = (inbytes[0]<<8) | inbytes[1];
 	return val;
 	
 reconnect:
@@ -998,7 +1002,7 @@ reconnect:
 	 *  setup and stays Player 0.
 	 */
 	if (consoleplayer)
-		Mars_WaitTicks(15);
+		Mars_WaitTicks(60);
 	I_NetSetup();
 	G_PlayerReborn(0);
 	G_PlayerReborn(1);
