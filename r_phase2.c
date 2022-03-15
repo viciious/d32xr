@@ -326,13 +326,13 @@ static void R_WallLatePrep(viswall_t* wc)
 static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floornewheight, fixed_t ceilingnewheight)
 {
     const unsigned actionbits = segl->actionbits;
-
     unsigned scalefrac = segl->scalefrac;
-    unsigned scalestep = segl->scalestep;
+    const unsigned scalestep = segl->scalestep;
 
     int x;
     const int stop = segl->stop;
-    const int width = segl->stop - segl->start + 1;
+
+    unsigned short *newclipbounds;
 
     visplane2_t ceiling, floor;
 
@@ -346,9 +346,9 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floor
     if (actionbits & (AC_NEWFLOOR | AC_NEWCEILING))
     {
         segl->newclipbounds = lastsegclip - segl->start;
-        lastsegclip += width;
+        lastsegclip += segl->stop - segl->start + 1;
+        newclipbounds = segl->newclipbounds;
     }
-    unsigned short *newclipbounds = segl->newclipbounds;
 
     for (x = segl->start; x <= stop; x++)
     {
