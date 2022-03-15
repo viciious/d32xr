@@ -325,11 +325,7 @@ static void R_WallLatePrep(viswall_t* wc)
 //
 static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floornewheight, fixed_t ceilingnewheight)
 {
-    visplane_t* ceiling, * floor;
-    unsigned short* ceilopen, * flooropen;
-
     const unsigned actionbits = segl->actionbits;
-    const unsigned lightlevel = segl->seglightlevel;
 
     unsigned scalefrac = segl->scalefrac;
     unsigned scalestep = segl->scalestep;
@@ -338,23 +334,14 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floor
     const int stop = segl->stop;
     const int width = segl->stop - segl->start + 1;
 
-    const fixed_t floorheight = segl->floorheight;
-    const fixed_t ceilingheight = segl->ceilingheight;
-
-    const int floorpicnum = segl->floorpicnum;
-    const int ceilingpicnum = segl->ceilingpicnum;
+    visplane2_t ceiling, floor;
 
     // force R_FindPlane for both planes
-    floor = ceiling = visplanes;
-    flooropen = ceilopen = visplanes[0].open;
-
-    int floorplhash = 0;
-    int ceilingplhash = 0;
 
     if (actionbits & AC_ADDFLOOR)
-        floorplhash = R_PlaneHash(floorheight, floorpicnum, lightlevel);
+        R_InitVisplane2(&floor, segl->floorheight, segl->floorpicnum, segl->seglightlevel);
     if (actionbits & AC_ADDCEILING)
-        ceilingplhash = R_PlaneHash(ceilingheight, ceilingpicnum, lightlevel);
+        R_InitVisplane2(&ceiling, segl->ceilingheight, segl->ceilingpicnum, segl->seglightlevel);
 
     if (actionbits & (AC_NEWFLOOR | AC_NEWCEILING))
     {
@@ -368,6 +355,8 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floor
         int floorclipx, ceilingclipx;
         int low, high, top, bottom;
         unsigned scale2;
+        visplane2_t *vp;
+        unsigned int planebits;
 
         scale2 = (unsigned)scalefrac >> HEIGHTBITS;
         scalefrac += scalestep;
@@ -422,48 +411,43 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floor
         }
 
         //
-        // floor
+        // visplanes
         //
-        if (actionbits & AC_ADDFLOOR)
+        planebits = actionbits;
+
+        if (planebits & AC_ADDFLOOR)
         {
-            FixedMul2(top, scale2, floorheight);
+            FixedMul2(top, scale2, floor.height);
             top = centerY - top;
             if (top < ceilingclipx)
                 top = ceilingclipx;
             bottom = floorclipx - 1;
-
             if (top <= bottom)
             {
-                if (flooropen[x] != OPENMARK)
+                vp = &floor;
+mark_plane:
+                if (vp->open[x] != OPENMARK)
                 {
-                    floor = R_FindPlane(floor, floorplhash,
-                        floorheight, floorpicnum, lightlevel, x, stop);
-                    flooropen = floor->open;
+                    visplane_t *pl = R_FindPlane(vp, x, stop);
+                    vp->pl = pl;
+                    vp->open = pl->open;
                 }
-                flooropen[x] = (unsigned short)((top << 8) + bottom);
+                vp->open[x] = (unsigned short)((top << 8) + bottom);
             }
         }
 
-        //
-        // ceiling
-        //
-        if (actionbits & AC_ADDCEILING)
+        if (planebits & AC_ADDCEILING)
         {
             top = ceilingclipx;
-            FixedMul2(bottom, scale2, ceilingheight);
+            FixedMul2(bottom, scale2, ceiling.height);
             bottom = centerY - 1 - bottom;
             if (bottom >= floorclipx)
                 bottom = floorclipx - 1;
-
             if (top <= bottom)
             {
-                if (ceilopen[x] != OPENMARK)
-                {
-                    ceiling = R_FindPlane(ceiling, ceilingplhash,
-                        ceilingheight, ceilingpicnum, lightlevel, x, stop);
-                    ceilopen = ceiling->open;
-                }
-                ceilopen[x] = (unsigned short)((top << 8) + bottom);
+                vp = &ceiling;
+                planebits = 0;
+                goto mark_plane;
             }
         }
     }

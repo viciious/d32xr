@@ -531,16 +531,25 @@ typedef struct visplane_s
 #define	MAXVISPLANES	48
 extern	visplane_t		*visplanes/*[MAXVISPLANES]*/, *lastvisplane;
 
-int R_PlaneHash(fixed_t height, unsigned flatnum, unsigned lightlevel)
-ATTR_DATA_CACHE_ALIGN
-;
-
 void R_MarkOpenPlane(visplane_t* pl)
 ATTR_DATA_CACHE_ALIGN
 ;
 
-visplane_t *R_FindPlane(visplane_t *ignore, int hash, fixed_t height, int flatnum,
-	int lightlevel, int start, int stop)
+typedef struct
+{
+	visplane_t *pl;
+	int hash;
+	fixed_t height;
+	VINT lightlevel;
+	VINT flatnum;
+	unsigned short *open;
+} visplane2_t;
+
+void R_InitVisplane2(visplane2_t *pl, fixed_t height, unsigned flatnum, unsigned lightlevel)
+ATTR_DATA_CACHE_ALIGN
+;
+
+visplane_t *R_FindPlane(visplane2_t *pl, int start, int stop)
 ATTR_DATA_CACHE_ALIGN
 ;
 
