@@ -225,13 +225,15 @@ typedef struct mobj_s
 
 	unsigned short		type;
 
+/* interaction info */
+	uint16_t		subsector;
+
 /* info for drawing */
 	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
 	angle_t			angle;
 
 /* interaction info */
 	struct mobj_s	*bnext, *bprev;		/* links in blocks (if needed) */
-	struct subsector_s	*subsector;
 	fixed_t			floorz, ceilingz;	/* closest together of contacted secs */
 	fixed_t			radius, height;		/* for movement checking */
 	fixed_t			momx, momy, momz;	/* momentums */

@@ -222,7 +222,7 @@ void P_UnsetThingPosition (mobj_t *thing)
 		if (thing->sprev)
 			thing->sprev->snext = thing->snext;
 		else
-			thing->subsector->sector->thinglist = thing->snext;
+			subsectors[thing->subsector].sector->thinglist = thing->snext;
 	}
 	
 	if ( ! (thing->flags & MF_NOBLOCKMAP) )
@@ -264,7 +264,7 @@ void P_SetThingPosition (mobj_t *thing)
 /* link into subsector */
 /* */
 	ss = R_PointInSubsector (thing->x,thing->y);
-	thing->subsector = ss;
+	thing->subsector = ss - subsectors;
 	if ( ! (thing->flags & MF_NOSECTOR) )
 	{	/* invisible things don't go into the sector links */
 		sec = ss->sector;

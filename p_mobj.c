@@ -222,6 +222,7 @@ int zonetics;
 mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 {
 	mobj_t		*mobj;
+	sector_t 	*sector;
 	const state_t		*st;
 	const mobjinfo_t *info = &mobjinfo[type];
 
@@ -285,8 +286,9 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 /* set subsector and/or block links */
 	P_SetThingPosition (mobj);
 	
-	mobj->floorz = mobj->subsector->sector->floorheight;
-	mobj->ceilingz = mobj->subsector->sector->ceilingheight;
+	sector = subsectors[mobj->subsector].sector;
+	mobj->floorz = sector->floorheight;
+	mobj->ceilingz = sector->ceilingheight;
 	if (z == ONFLOORZ)
 		mobj->z = mobj->floorz;
 	else if (z == ONCEILINGZ)

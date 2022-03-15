@@ -150,7 +150,7 @@ static void R_PrepMobj(mobj_t *thing)
        if (thing->frame & FF_FULLBRIGHT)
            vis->colormap = 255;
        else
-           vis->colormap = thing->subsector->sector->lightlevel;
+           vis->colormap = subsectors[thing->subsector].sector->lightlevel;
        vis->colormap = HWLIGHT(vis->colormap);
    }
 

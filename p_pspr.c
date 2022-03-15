@@ -88,7 +88,7 @@ void P_NoiseAlert (player_t *player)
 	sector_t	*sec;
 	uint8_t* soundtraversed;
 
-	sec = player->mo->subsector->sector;
+	sec = subsectors[player->mo->subsector].sector;
 	
 	if (player->lastsoundsector == (void *)sec)
 		return;		/* don't bother doing it again here */
