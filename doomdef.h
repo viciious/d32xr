@@ -979,6 +979,8 @@ extern	volatile int		ticcount, joybuttons;
 
 #define BT_AUTOMAP		BT_9
 
+#define BT_FASTTURN		0
+
 #else
 
 enum
@@ -1006,8 +1008,6 @@ enum
 	BT_STRAFELEFT	= 0x2000,
 	BT_STRAFERIGHT	= 0x4000,
 
-	// hardware keys, which are never transmitted
-	// to the other peer over network
 	BT_A			= 0x10000,
 	BT_B			= 0x20000,
 	BT_C			= 0x40000,
@@ -1019,6 +1019,7 @@ enum
 	BT_X			= 0x1000000,
 	BT_Y			= 0x2000000,
 	BT_Z			= 0x4000000,
+	BT_FASTTURN     = 0x8000000
 };
 
 #endif

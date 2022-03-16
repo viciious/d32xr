@@ -247,17 +247,14 @@ void P_PlayerMobjThink (mobj_t *mobj)
  
 void P_BuildMove (player_t *player) 
 { 
-	boolean     strafe;
 	int         speed;
 	int			buttons, oldbuttons;
 	mobj_t		*mo;
 	int			vbls;
-	int			alwrun;
 
 	buttons = ticbuttons[playernum];
 	oldbuttons = oldticbuttons[playernum];
 	vbls = vblsinframe;
-	alwrun = demoplayback || demorecording ? 0 : alwaysrun;
 
 	if (mousepresent && !demoplayback)
 	{
@@ -276,7 +273,7 @@ void P_BuildMove (player_t *player)
 			// normal mouse mode - mouse turns, dpad moves forward/back/sideways
 			player->angleturn = (-mx * 0x200000 * vbls) / TICVBLS;
 
-			speed = ((buttons & BT_SPEED) > 0) ^ alwrun;
+			speed = (buttons & BT_SPEED) > 0;
  
 			player->forwardmove = player->sidemove = 0;
 	
@@ -293,7 +290,7 @@ void P_BuildMove (player_t *player)
 	}
 	else
 	{
-		speed = ((buttons & BT_SPEED) > 0) ^ alwrun;
+		speed = (buttons & BT_SPEED) > 0;
 
 		/*  */
 		/* use two stage accelerative turning on the joypad  */
@@ -310,43 +307,30 @@ void P_BuildMove (player_t *player)
 
 		player->forwardmove = player->sidemove = player->angleturn = 0;
 
-		if (strafebtns)
+		if (buttons & BT_STRAFE)
 		{
+			if (buttons & BT_RIGHT)
+				player->sidemove += (sidemove[speed] * vbls) / TICVBLS;
+			if (buttons & BT_LEFT)
+				player->sidemove += (-sidemove[speed] * vbls) / TICVBLS;
+		}
+		else
+		{
+			fixed_t *turnspeed;
+
 			if (buttons & BT_STRAFERIGHT)
 				player->sidemove += (sidemove[speed] * vbls) / TICVBLS;
 			if (buttons & BT_STRAFELEFT)
 				player->sidemove += (-sidemove[speed] * vbls) / TICVBLS;
-			goto turn;
-		}
-		else
-		{
-			strafe = (buttons & BT_STRAFE) > 0;
 
-			if (strafe)
-			{
-				if (buttons & BT_RIGHT)
-					player->sidemove += (sidemove[speed] * vbls) / TICVBLS;
-				if (buttons & BT_LEFT)
-					player->sidemove += (-sidemove[speed] * vbls) / TICVBLS;
-			}
-			else
-			{
-turn:
-				if (speed && !(buttons & (BT_UP | BT_DOWN)) && !alwrun)
-				{
-					if (buttons & BT_RIGHT)
-						player->angleturn = ((-fastangleturn[player->turnheld] * vbls) / TICVBLS) << 17;
-					if (buttons & BT_LEFT)
-						player->angleturn = ((fastangleturn[player->turnheld] * vbls) / TICVBLS) << 17;
-				}
-				else
-				{
-					if (buttons & BT_RIGHT)
-						player->angleturn = ((-angleturn[player->turnheld] * vbls) / TICVBLS) << 17;
-					if (buttons & BT_LEFT)
-						player->angleturn = ((angleturn[player->turnheld] * vbls) / TICVBLS) << 17;
-				}
-			}
+			turnspeed = angleturn;
+			if (buttons & BT_FASTTURN)
+				turnspeed = fastangleturn;
+
+			if (buttons & BT_RIGHT)
+				player->angleturn = ((-turnspeed[player->turnheld] * vbls) / TICVBLS) << 17;
+			if (buttons & BT_LEFT)
+				player->angleturn = ((turnspeed[player->turnheld] * vbls) / TICVBLS) << 17;
 		}
 
 		if (buttons & BT_UP)

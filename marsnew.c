@@ -69,6 +69,7 @@ void I_ClearFrameBuffer(void) ATTR_DATA_CACHE_ALIGN;
 static int Mars_ConvGamepadButtons(int ctrl)
 {
 	int newc = 0;
+	int	alwrun;
 
 	if (ctrl & SEGA_CTRL_UP)
 		newc |= BT_UP;
@@ -162,6 +163,14 @@ static int Mars_ConvGamepadButtons(int ctrl)
 				newc |= BT_STRAFE;
 		}
 	}
+
+	alwrun = alwaysrun ? BT_SPEED : 0;
+	if (demoplayback || demorecording)
+		alwrun = 0;
+	newc ^= alwrun;
+
+	if ((newc & (BT_UP | BT_DOWN | BT_SPEED)) == BT_SPEED && !alwrun)
+		newc |= BT_FASTTURN;
 
 	return newc;
 }
