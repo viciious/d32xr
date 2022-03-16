@@ -939,7 +939,7 @@ void I_NetSetup (void)
 	while (Mars_GetNetByte(0) != -2); /* flush network buffer */
 }
 
-#define PACKET_SIZE 4
+#define PACKET_SIZE 6
 void G_PlayerReborn (int player);
 
 unsigned I_NetTransfer (unsigned buttons)
@@ -947,15 +947,17 @@ unsigned I_NetTransfer (unsigned buttons)
 	int			i, val;
 	byte		inbytes[PACKET_SIZE];
 	byte		outbytes[PACKET_SIZE];
-	unsigned	consistancy;
+	unsigned	consistency;
 
-	consistancy = players[0].mo->x ^ players[0].mo->y ^ players[0].mo->z ^ players[1].mo->x ^ players[1].mo->y ^ players[1].mo->z;
-	consistancy = (consistancy>>8) ^ consistancy ^ (consistancy>>16);
+	consistency = players[0].mo->x ^ players[0].mo->y ^ players[0].mo->z ^ players[1].mo->x ^ players[1].mo->y ^ players[1].mo->z;
+	consistency = (consistency>>8) ^ consistency ^ (consistency>>16);
 
-	outbytes[0] = buttons>>8;
-	outbytes[1] = buttons;
-	outbytes[2] = consistancy;
-	outbytes[3] = vblsinframe;
+	outbytes[0] = buttons>>24;
+	outbytes[1] = buttons>>16;
+	outbytes[2] = buttons>>8;
+	outbytes[3] = buttons;
+	outbytes[4] = consistency;
+	outbytes[5] = vblsinframe;
 
 	if (consoleplayer)
 	{
@@ -968,7 +970,7 @@ unsigned I_NetTransfer (unsigned buttons)
 			inbytes[i] = val;
 			Mars_PutNetByte(outbytes[i]);
 		}
-		vblsinframe = inbytes[3];	/* take gamevbls from other player */
+		vblsinframe = inbytes[5];	/* take gamevbls from other player */
 	}
 	else
 	{
@@ -983,9 +985,9 @@ unsigned I_NetTransfer (unsigned buttons)
 		}
 	}
 	
-	if (inbytes[2] != outbytes[2])
+	if (inbytes[4] != outbytes[4])
 	{
-		/* consistancy error */
+		/* consistency error */
 		I_Print8(108,23,"Network Error"); 
 		I_Update();
 		while (Mars_GetNetByte(0) != -2); /* flush network buffer */
@@ -993,7 +995,7 @@ unsigned I_NetTransfer (unsigned buttons)
 		goto reconnect;
 	}
 
-	val = (inbytes[0]<<8) | inbytes[1];
+	val = (inbytes[0]<<24) + (inbytes[1]<<16) + (inbytes[2]<<8) + inbytes[3];
 	return val;
 	
 reconnect:
