@@ -546,13 +546,13 @@ fixed_t	FixedDiv (fixed_t a, fixed_t b);
             "sts mach, %1\n\t" \
             "sts macl, %0\n\t" \
             "xtrct %1, %0\n\t" \
-            : "=r" (c), "=&r" (t) \
+            : "=r" (c), "+&r" (t) \
             : "r" (a), "r" (b) \
             : "mach", "macl"); \
         } while (0)
 fixed_t IDiv (fixed_t a, fixed_t b);
 #else
-#define FixedMul2(c,a,b) (c = FixedMul(a,b))
+#define FixedMul2(c,a,b) ((c) = FixedMul(a,b))
 #define IDiv(a,b) ((a) / (b))
 #endif
 
