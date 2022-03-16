@@ -552,7 +552,7 @@ fixed_t	FixedDiv (fixed_t a, fixed_t b);
         } while (0)
 fixed_t IDiv (fixed_t a, fixed_t b);
 #else
-#define FixedMul2(c,a,b) (c = FixedMul(a,b))
+#define FixedMul2(c,a,b) ((c) = FixedMul(a,b))
 #define IDiv(a,b) ((a) / (b))
 #endif
 
