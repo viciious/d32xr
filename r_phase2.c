@@ -440,7 +440,7 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floor
                         floorheight, floorpicnum, lightlevel, x, stop);
                     flooropen = floor->open;
                 }
-                flooropen[x] = (unsigned short)((top << 8) + bottom);
+                flooropen[x] = (unsigned short)((bottom << 8) + top);
             }
         }
 
@@ -463,7 +463,7 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floor
                         ceilingheight, ceilingpicnum, lightlevel, x, stop);
                     ceilopen = ceiling->open;
                 }
-                ceilopen[x] = (unsigned short)((top << 8) + bottom);
+                ceilopen[x] = (unsigned short)((bottom << 8) + top);
             }
         }
     }

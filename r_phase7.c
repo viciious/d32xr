@@ -134,17 +134,17 @@ static void R_PlaneLoop(localplane_t *lpl)
 
    pl_openptr = &pl->open[pl_x];
 
-   t1 = OPENMARK;
-   b1 = t1 & 0xff;
-   t1 >>= 8;
-   t2 = *pl_openptr;
+   b1 = OPENMARK;
+   t1 = b1 & 0xff;
+   b1 >>= 8;
+   b2 = *pl_openptr;
   
    do
    {
       int x2;
 
-      b2 = t2 & 0xff;
-      t2 >>= 8;
+      t2 = b2 & 0xff;
+      b2 >>= 8;
 
       pl_oldtop = t2;
       pl_oldbottom = b2;
@@ -184,7 +184,7 @@ static void R_PlaneLoop(localplane_t *lpl)
 
       b1 = pl_oldbottom;
       t1 = pl_oldtop;
-      t2 = pl_x++ < pl_stopx ? *++pl_openptr : OPENMARK;
+      b2 = pl_x++ < pl_stopx ? *++pl_openptr : OPENMARK;
    }
    while(1);
 }

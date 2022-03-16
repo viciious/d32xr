@@ -275,7 +275,7 @@ extern	fixed_t distscale[SCREENWIDTH];
 #define	HEIGHTBITS			6
 #define	FIXEDTOHEIGHT		(FRACBITS-HEIGHTBITS)
 
-#define OPENMARK 0xff00
+#define OPENMARK 0x00ff
 
 typedef struct
 #ifdef MARS

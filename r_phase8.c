@@ -178,7 +178,7 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int screenhal
 #endif
 
    for(x = x1; x <= x2; x++)
-      spropening[x] = viewportHeight;
+      spropening[x] = viewportHeight << 8;
    
    ds = lastwallcmd;
    if (ds == viswalls)
@@ -222,7 +222,7 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int screenhal
          {
             opening = spropening[x];
             if((opening & 0xff) == viewportHeight)
-               spropening[x] = (opening & OPENMARK) | bottomsil[x];
+               spropening[x] = (bottomsil[x] << 8) | (opening & 0xff);
          }
       }
       else if(silhouette == AC_TOPSIL)
@@ -231,21 +231,21 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int screenhal
          {
             opening = spropening[x];
             if(!(opening & OPENMARK))
-               spropening[x] = (topsil[x] << 8) | (opening & 0xff);
+               spropening[x] = (opening & OPENMARK) | (topsil[x]);
          }
       }
       else if(silhouette == (AC_TOPSIL | AC_BOTTOMSIL))
       {
          for(x = r1; x <= r2; x++)
          {
-            top    = spropening[x];
-            bottom = top & 0xff;
-            top >>= 8;
+            bottom = spropening[x];
+            top = bottom & 0xff;
+            bottom >>= 8;
             if(bottom == viewportHeight)
                bottom = bottomsil[x];
             if(top == 0)
                top = topsil[x];
-            spropening[x] = (top << 8) | bottom;
+            spropening[x] = (bottom << 8) | top;
          }
       }
    }
@@ -287,7 +287,7 @@ static void R_DrawPSprites(const int cpu)
         // clear out the clipping array across the range of the psprite
         while (i < stopx)
         {
-            spropening[i] = viewportHeight;
+            spropening[i] = viewportHeight << 8;
             ++i;
         }
 
