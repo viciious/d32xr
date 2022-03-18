@@ -954,18 +954,18 @@ void G_PlayerReborn (int player);
 unsigned I_NetTransfer (unsigned buttons)
 {
 	int			i, val;
-	byte		inbytes[PACKET_SIZE];
-	byte		outbytes[PACKET_SIZE];
+	unsigned	inbytes[PACKET_SIZE];
+	unsigned	outbytes[PACKET_SIZE];
 	unsigned	consistency;
 
 	consistency = players[0].mo->x ^ players[0].mo->y ^ players[0].mo->z ^ players[1].mo->x ^ players[1].mo->y ^ players[1].mo->z;
 	consistency = (consistency>>8) ^ consistency ^ (consistency>>16);
 
-	outbytes[0] = buttons>>24;
-	outbytes[1] = buttons>>16;
-	outbytes[2] = buttons>>8;
-	outbytes[3] = buttons;
-	outbytes[4] = consistency;
+	outbytes[0] = (buttons>>24) & 0xff;
+	outbytes[1] = (buttons>>16) & 0xff;
+	outbytes[2] = (buttons>>8) & 0xff;
+	outbytes[3] = (buttons) & 0xff;
+	outbytes[4] = consistency & 0xff;
 	outbytes[5] = vblsinframe;
 
 	if (consoleplayer)
