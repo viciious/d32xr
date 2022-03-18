@@ -279,31 +279,33 @@ void O_Control (player_t *player)
 		)
 	{
 exit:
+		player->automapflags ^= AF_OPTIONSACTIVE;
+
 		if (playernum == consoleplayer)
 		{
 			if (screenpos == ms_game)
 				M_Stop();
-			gamepaused ^= 1;
+			if (netgame == gt_single)
+				gamepaused ^= 1;
 			movecount = 0;
 			cursorpos = 0;
 			screenpos = ms_main;
 			S_StartSound(NULL, sfx_swtchn);
-		}
-
-		player->automapflags ^= AF_OPTIONSACTIVE;
-		if (player->automapflags & AF_OPTIONSACTIVE)
+			if (player->automapflags & AF_OPTIONSACTIVE)
 #ifndef MARS
-			DoubleBufferSetup();
+				DoubleBufferSetup();
 #else
-			;
+				;
 #endif
-		else
-			WriteEEProm ();		/* save new settings */
+			else
+				WriteEEProm ();		/* save new settings */
+		}
 	}
+
 	if (!(player->automapflags & AF_OPTIONSACTIVE))
 		return;
 
-/* clear buttons so game player isn't moving aroung */
+/* clear buttons so player isn't moving aroung */
 	ticbuttons[playernum] &= (BT_OPTION|BT_START);	/* leave option status alone */
 
 	if (playernum != consoleplayer)
