@@ -210,7 +210,7 @@ void I_DrawSpanLowC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	dc_colormap = dc_colormaps + light;
 
 #define DO_PIXEL() do { \
-		spot = ((yfrac >> (16 - 6)) & (63 * 64)) + ((xfrac >> 16) & 63); \
+		spot = ((yfrac >> 16) & (63 * 64)) + ((xfrac >> 16) & 63); \
 		*dest++ = dc_colormap[ds_source[spot]]; \
 		xfrac += ds_xstep, yfrac += ds_ystep; \
 	} while(0)
@@ -363,7 +363,7 @@ void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	dc_colormap = dc_colormaps + light;
 
 #define DO_PIXEL() do { \
-		spot = ((yfrac >> (16 - 6)) & (63 * 64)) + ((xfrac >> 16) & 63); \
+		spot = ((yfrac >> 16) & (63 * 64)) + ((xfrac >> 16) & 63); \
 		*dest++ = dc_colormap[ds_source[spot]] & 0xff; \
 		xfrac += ds_xstep, yfrac += ds_ystep; \
 	} while(0)

@@ -79,9 +79,12 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     xfrac = lpl->x + xfrac;
     FixedMul2(yfrac, (finesine(angle)), length);
     yfrac = lpl->y - yfrac;
+#ifdef MARS
+    yfrac *= 64;
+#endif
 
     FixedMul2(xstep, distance, lpl->basexscale);
-    FixedMul2(ystep, lpl->baseyscale, distance);
+    FixedMul2(ystep, distance, lpl->baseyscale);
 
     if (gradientlight)
     {
@@ -240,6 +243,9 @@ static void R_DrawPlanes2(void)
 
     lpl.basexscale = FixedDiv(finecosine(angle), centerXFrac);
     lpl.baseyscale = -FixedDiv(finesine(angle), centerXFrac);
+#ifdef MARS
+    lpl.baseyscale *= 64;
+#endif
 
     extralight = vd.extralight;
 
