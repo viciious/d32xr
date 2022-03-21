@@ -502,6 +502,8 @@ void G_RunGame (void)
 		{
 			if (starttype != gt_single)
 				I_NetSetup();
+			else
+				I_NetStop();
 			if (startsave != -1)
 				G_LoadGame(startsave);
 			else

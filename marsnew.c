@@ -948,6 +948,11 @@ void I_NetSetup (void)
 	while (Mars_GetNetByte(0) != -2); /* flush network buffer */
 }
 
+void I_NetStop(void)
+{
+	Mars_CleanupNet();
+}
+
 #define PACKET_SIZE 6
 void G_PlayerReborn (int player);
 
