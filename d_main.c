@@ -747,7 +747,10 @@ reselect:
 	{
 		I_NetSetup();
 		if (starttype == gt_single)
+		{
+			I_NetStop();
 			goto reselect;		/* aborted net startup */
+		}
 	}
 #else
 reselect:
@@ -757,7 +760,10 @@ reselect:
 	{
 		I_NetSetup ();
 		if (starttype == gt_single)
+		{
+			I_NetStop();
 			goto reselect;		/* aborted net startup */
+		}
 	}
 #endif
 
