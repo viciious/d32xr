@@ -310,8 +310,8 @@ int M_Ticker (void)
 		GetSaveInfo(saveslot, &saveslotmap, &saveslotskill, &saveslotmode);
 	}
 
-	buttons = ticrealbuttons;
-	oldbuttons = oldticrealbuttons;
+	buttons = ticrealbuttons & MENU_BTNMASK;
+	oldbuttons = oldticrealbuttons & MENU_BTNMASK;
 
 	if ((buttons & (BT_A | BT_LMBTN)) && !(oldbuttons & (BT_A | BT_LMBTN)))
 	{
