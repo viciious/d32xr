@@ -161,27 +161,7 @@ init_hardware:
         move.l  #0x0000000A,(a1)        /* entry 32 (black) and 33 (red) */
 
 | init controllers
-        move.w  #0,0xA15128             /* controller 1 */
-        move.w  #0,0xA1512A             /* controller 2 */
-| look for mouse
-        lea     0xA10003,a0
-0:
-        jsr     get_mky
-        cmpi.l  #-2,d0
-        beq.b   0b                      /* timeout */
-        cmpi.l  #-1,d0
-        beq.b   1f                      /* no mouse */
-        move.w  #0xF001,0xA15128        /* mouse in port 1 */
-1:
-        lea     2(a0),a0
-2:
-        jsr     get_mky
-        cmpi.l  #-2,d0
-        beq.b   2b                      /* timeout */
-        cmpi.l  #-1,d0
-        beq.b   3f                      /* no mouse */
-        move.w  #0xF001,0xA1512A        /* mouse in port 2 */
-3:
+        jsr     chk_ports
 
 | allow the 68k to access the FM chip
         move.w  #0x0100,0xA11100        /* Z80 assert bus request */
@@ -281,7 +261,29 @@ main_loop_start:
 main_loop:
         move.w  0xA15120,d0         /* get COMM0 */
         bne.b   handle_req
+
         bsr     bump_fm
+
+		/* check hot-plug count */
+		tst.b	hotplug_cnt
+		bne.b	main_loop
+        move.b  #60,hotplug_cnt
+
+        move.w  0xA15128,d0
+        cmpi.w  #0xF001,d0
+        beq.b   0f                  /* mouse in port 1, check port 2 */
+        cmpi.w  #0xF000,d0
+        beq.b   1f                  /* no pad in port 1, do hot-plug check */
+0:
+        tst.b   net_type
+        bne.b   main_loop           /* networking enabled, ignore port 2 */
+        move.w  0xA1512A,d0
+        cmpi.w  #0xF001,d0
+        beq.b   main_loop           /* mouse in port 2, exit */
+        cmpi.w  #0xF000,d0
+        bne.b   main_loop           /* pad in port 2, exit */
+1:
+        bsr     chk_ports
         bra.b   main_loop
 
 | process request from Master SH2
@@ -554,11 +556,12 @@ read_mouse:
         bne.b   1f                  /* skip port 1 */
 
         move.w  0xA15128,d0
-        andi.w  #0xF001,d0
         cmpi.w  #0xF001,d0
         bne.b   1f                  /* no mouse in port 1 */
         lea     0xA10003,a0
         bsr     get_mky
+        cmpi.l	#-1,d0
+        beq.b	no_mky1
         bset    #31,d0
         move.w  d0,0xA15122
         swap    d0
@@ -569,11 +572,12 @@ read_mouse:
         bra     main_loop
 1:
         move.w  0xA1512A,d0
-        andi.w  #0xF001,d0
         cmpi.w  #0xF001,d0
-        bne.b   3f                  /* no mouse in port 2 */
+        bne.b   no_mouse            /* no mouse in port 2 */
         lea     0xA10005,a0
         bsr     get_mky
+        cmpi.l	#-1,d0
+        beq.b	no_mky2
         bset    #31,d0
         move.w  d0,0xA15122
         swap    d0
@@ -582,8 +586,14 @@ read_mouse:
         move.w  0xA15120,d0
         bne.b   2b                  /* wait for SH2 to read mouse value */
         bra     main_loop
-3:
-        move.l  #-1,d0              /* no mouse */
+
+no_mky1:
+		move.w	#0xF000,0xA15128	/* nothing in port 1 */
+		bra.b	no_mouse
+no_mky2:
+		move.w	#0xF000,0xA1512A	/* nothing in port 2 */
+no_mouse:
+        moveq   #-1,d0              /* no mouse */
         move.w  d0,0xA15122
         swap    d0
         move.w  d0,0xA15120
@@ -666,7 +676,7 @@ ext_serial:
         move.b  0xA10017,d0         /* received byte */
         bra.b   2f
 1:
-        move.w  #0x04FF,d0          /* serial status and received byte = 0x04FF (serial read error) */
+        move.w  #0xFF04,d0          /* serial status and received byte = 0xFF04 (serial read error) */
 2:
         move.w  d0,0(a0,d1.w)       /* write status:data to buffer */
         addq.w  #2,d1
@@ -695,6 +705,8 @@ ext_link:
         andi.w  #31,d1
         move.w  d1,net_wbix         /* update buffer write index */
 0:
+        nop
+        nop
         btst    #6,0xA10005         /* check TH deasserted */
         beq.b   0b                  /* wait TH high (no recursive ints) */
 
@@ -706,10 +718,10 @@ ext_link:
         rte
 
 init_serial:
-		move.w	#0xF000,0xA1512A	/* port 1 ID = SEGA_CTRL_NONE */
+        move.w  #0xF000,0xA1512A    /* port 1 ID = SEGA_CTRL_NONE */
         move.b  #0x10,0xA1000B      /* all pins inputs except TL (Pin 6) */
-		nop
-		nop
+        nop
+        nop
         move.b  #0x38,0xA10019      /* 4800 Baud 8-N-1, RDRDY INT allowed */
         clr.w   net_rbix
         clr.w   net_wbix
@@ -719,13 +731,13 @@ init_serial:
         bra     main_loop
 
 init_link:
-		move.w	#0xF000,0xA1512A	/* port 1 ID = SEGA_CTRL_NONE */
+        move.w  #0xF000,0xA1512A    /* port 1 ID = SEGA_CTRL_NONE */
         move.b  #0x00,0xA10019      /* no serial */
-		nop
-		nop
+        nop
+        nop
         move.b  #0xA0,0xA1000B      /* all pins inputs except TR, TH INT allowed */
-		nop
-		nop
+        nop
+        nop
         move.b  #0x20,0xA10005      /* TR set */
         clr.w   net_rbix
         clr.w   net_wbix
@@ -784,6 +796,7 @@ write_serial:
         move.w  #0x2700,sr          /* disable ints */
         move.w  #0xFFFF,d1
 0:
+        bsr     bump_fm
         btst    #0,0xA10019         /* ok to transmit? */
         beq.b   1f                  /* yes */
         dbra    d1,0b               /* wait until ok to transmit */
@@ -804,7 +817,7 @@ write_link:
         move.w  #0x2700,sr          /* disable ints */
         move.b  #0x2F,0xA1000B      /* only TL and TH in, TH INT not allowed */
 
-        move.b  d0,d1				/* save lsn */
+        move.b  d0,d1               /* save lsn */
         lsr.b   #4,d0               /* msn */
         ori.b   #0x20,d0            /* set TR line */
         move.b  d0,0xA10005         /* set nibble out */
@@ -814,9 +827,9 @@ write_link:
         move.b  d0,0xA10005         /* assert TH of other console */
 
         /* wait on handshake */
-        move.w  #0xFFFF,d2
+        move.w  #0x0FFF,d2
 0:
-		bsr		bump_fm
+        bsr     bump_fm
         btst    #6,0xA10005         /* check for TH low (handshake) */
         beq.b   1f                  /* handshake */
         dbra    d2,0b
@@ -825,8 +838,8 @@ write_link:
         ori.b   #0x20,d0            /* set TR line */
         move.b  d0,0xA10005         /* deassert TH of other console */
 2:
-		nop
-		nop
+        nop
+        nop
         btst    #6,0xA10005         /* wait for TH high (handshake done) */
         beq.b   2b
 
@@ -841,21 +854,21 @@ write_link:
 
         /* wait on handshake */
 3:
-		bsr		bump_fm
+        bsr     bump_fm
         btst    #6,0xA10005         /* check for TH low (handshake) */
         bne.b   3b
 
         ori.b   #0x20,d0            /* set TR line */
         move.b  d0,0xA10005         /* deassert TH of other console */
 4:
-		nop
-		nop
+        nop
+        nop
         btst    #6,0xA10005         /* wait for TH high (handshake done) */
         beq.b   4b
 
         move.b  #0x20,0xA10005      /* TR set */
-		nop
-		nop
+        nop
+        nop
         move.b  #0xA0,0xA1000B      /* all pins inputs except TR, TH INT allowed */
         move.w  #0,0xA15122         /* okay */
         move.w  #0,0xA15120         /* done */
@@ -1213,17 +1226,20 @@ vert_blank:
         cmpi.w  #0xF000,d0
         beq.b   0f                  /* no pad in port 1 (or mouse) */
         lea     0xA10003,a0
-        bsr.b   get_pad
+        bsr     get_pad
         move.w  d2,0xA15128         /* controller 1 current value */
 0:
+        tst.b   net_type
+        bne.b   1f                  /* networking enabled, ignore port 2 */
         move.w  0xA1512A,d0
         andi.w  #0xF000,d0
         cmpi.w  #0xF000,d0
         beq.b   1f                  /* no pad in port 2 (or mouse) */
         lea     0xA10005,a0
-        bsr.b   get_pad
+        bsr     get_pad
         move.w  d2,0xA1512A         /* controller 2 current value */
 1:
+        /* if SCD present, generate IRQ 2 */
         tst.w   gen_lvl2
         beq.b   2f
         lea     0xA12000,a0
@@ -1231,6 +1247,10 @@ vert_blank:
         ori.w   #0x0100,d0
         move.w  d0,(a0)
 2:
+		tst.b	hotplug_cnt
+		beq.b	3f
+        subq.b  #1,hotplug_cnt
+3:
         move.l  (sp)+,d2
         move.l  (sp)+,d1
         movea.l (sp)+,a0
@@ -1424,6 +1444,61 @@ mky_err:
         rts
 
 
+| get_port: returns ID bits of controller pointed to by a0 in d0
+get_port:
+        move.b	(a0),d0
+        move.b	#0x00,(a0)
+        moveq	#12,d1
+        and.b	d0,d1
+        sne		d2
+        andi.b	#8,d2
+        andi.b	#3,d0
+        sne		d0
+        andi.b	#4,d0
+        or.b	d0,d2
+
+        move.b	(a0),d0
+        move.b	#0x40,(a0)
+        moveq	#12,d1
+        and.b	d0,d1
+        sne		d1
+        andi.b	#2,d1
+        or.b	d1,d2
+        andi.b	#3,d0
+        sne		d0
+        andi.b	#1,d0
+        or.b	d0,d2
+
+		move.w	#0xF001,d0
+		cmpi.b	#3,d2
+		beq.b	0f						/* mouse in port */
+		move.w	#0xF000,d0				/* no pad in port */
+		cmpi.b	#0x0D,d2
+		bne.b	0f
+		moveq	#0,d0					/* pad in port */
+0:
+		rts
+
+| Check ports - sets controller word to 0xF001 if mouse, or 0 if not.
+|   The next vblank will try to read a pad if 0, which will set the word
+|   to 0xF000 if no pad found.
+chk_ports:
+        /* get ID port 1 */
+        lea		0xA10003,a0
+        bsr.b	get_port
+        move.w  d0,0xA15128             /* controller 1 */
+
+		tst.b	net_type
+		beq.b	0f						/* ignore controller 2 when networking enabled */
+		rts
+0:
+        /* get ID port 2 */
+        lea		0xA10005,a0
+        bsr.b	get_port
+        move.w  d0,0xA1512A             /* controller 2 */
+        rts
+
+
 | Global variables for 68000
 
         .align  4
@@ -1473,6 +1548,10 @@ net_rdbuf:
     .global net_type
 net_type:
         dc.b    0
+
+hotplug_cnt:
+        dc.b    0
+
 
         .align  4
 
