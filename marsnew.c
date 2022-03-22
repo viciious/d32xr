@@ -871,7 +871,7 @@ static void Player0Setup (void)
 	I_Update();
 	consoleplayer = 0;	/* we are player 0 */
 	idbyte = startmap + 24*startskill + 128*(starttype == gt_deathmatch);
-	
+
 	do
 	{
 		/* wait until rec 0x22 byte from other side or player aborts */
@@ -954,6 +954,7 @@ void I_NetSetup (void)
 
 void I_NetStop(void)
 {
+	consoleplayer = 0;
 	Mars_CleanupNet();
 }
 
