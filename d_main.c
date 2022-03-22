@@ -730,42 +730,33 @@ int  RunDemo (char *demoname)
 
 void RunMenu (void)
 {
+	boolean multiplayer;
+
 #ifdef MARS
 reselect:
 	M_Start();
-
 	while (1) {
 		if (RunDemo("DEMO1") == ga_exitdemo)
 			break;
 		if (RunDemo("DEMO2") == ga_exitdemo)
 			break;
 	}
-
 	M_Stop();
-
-	if (starttype != gt_single)
-	{
-		I_NetSetup();
-		if (starttype == gt_single)
-		{
-			I_NetStop();
-			goto reselect;		/* aborted net startup */
-		}
-	}
 #else
 reselect:
 	MiniLoop(M_Start, M_Stop, M_Ticker, M_Drawer);
-
-	if (starttype != gt_single)
-	{
-		I_NetSetup ();
-		if (starttype == gt_single)
-		{
-			I_NetStop();
-			goto reselect;		/* aborted net startup */
-		}
-	}
 #endif
+
+	multiplayer = (starttype != gt_single);
+	if (multiplayer)
+		I_NetSetup();
+
+	if (starttype == gt_single)
+	{
+		I_NetStop();
+		if (multiplayer)
+			goto reselect;		/* aborted net startup */
+	}
 
 	if (startsave != -1)
 		G_LoadGame(startsave);
