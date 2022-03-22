@@ -269,8 +269,8 @@ void O_Control (player_t *player)
 	}
 	menuscr = &menuscreen[screenpos];
 
-	buttons = ticbuttons[playernum];
-	oldbuttons = oldticbuttons[playernum];
+	buttons = ticbuttons[playernum] & MENU_BTNMASK;
+	oldbuttons = oldticbuttons[playernum] & MENU_BTNMASK;
 	
 	if ( ( (buttons & BT_OPTION) && !(oldbuttons & BT_OPTION) )
 #ifdef MARS
@@ -343,8 +343,8 @@ exit:
 		cursorframe ^= 1;
 	}
 
-	buttons = ticrealbuttons;
-	oldbuttons = oldticrealbuttons;
+	buttons = ticrealbuttons & MENU_BTNMASK;
+	oldbuttons = oldticrealbuttons & MENU_BTNMASK;
 
 	if (buttons & (BT_A | BT_LMBTN) && !(oldbuttons & (BT_A | BT_LMBTN)))
 	{
