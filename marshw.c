@@ -272,16 +272,58 @@ uint16_t* Mars_FrameBufferLines(void)
 
 void pri_vbi_handler(void)
 {
+	unsigned short cv;
+
 	mars_vblank_count++;
+
 	if (mars_newpalette)
 	{
 		if (Mars_UploadPalette(mars_newpalette))
 			mars_newpalette = NULL;
 	}
 
-	mars_controls |= *mars_gamepadport;
+	cv = *mars_gamepadport;
+	if (cv == 0xF001)
+	{
+		/* mouse detected in gamepadport - hot plug! */
+		if (MARS_SYS_COMM10 == 0xF001)
+		{
+			mars_mouseport = 1;
+			mars_gamepadport = &MARS_SYS_COMM8;
+			mars_gamepadport2 = NULL;
+		}
+		else if (MARS_SYS_COMM8 == 0xF001)
+		{
+			mars_mouseport = 0;
+			mars_gamepadport = &MARS_SYS_COMM10;
+			mars_gamepadport2 = NULL;
+		}
+	}
+	else if (cv != 0xF000)
+		mars_controls |= cv;
+
 	if (mars_gamepadport2)
-		mars_controls2 |= *mars_gamepadport2;
+	{
+		cv = *mars_gamepadport2;
+		if (cv == 0xF001)
+		{
+			/* mouse detected in gamepadport2 - hot plug! */
+			if (MARS_SYS_COMM10 == 0xF001)
+			{
+				mars_mouseport = 1;
+				mars_gamepadport = &MARS_SYS_COMM8;
+				mars_gamepadport2 = NULL;
+			}
+			else if (MARS_SYS_COMM8 == 0xF001)
+			{
+				mars_mouseport = 0;
+				mars_gamepadport = &MARS_SYS_COMM10;
+				mars_gamepadport2 = NULL;
+			}
+		}
+		else if (cv != 0xF000)
+			mars_controls2 |= cv;
+	}
 }
 
 void Mars_ReadSRAM(uint8_t * buffer, int offset, int len)

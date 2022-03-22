@@ -554,6 +554,8 @@ int I_ReadMouse(int* pmx, int *pmy)
 	static int oldmval = 0;
 	unsigned val;
 
+	mousepresent = mars_mouseport >= 0;
+
 	*pmx = *pmy = 0;
 	if (!mousepresent)
 		return 0;
@@ -568,6 +570,9 @@ int I_ReadMouse(int* pmx, int *pmy)
 	case -1:
 		// no mouse
 		mousepresent = false;
+		mars_mouseport = -1;
+		mars_gamepadport = &MARS_SYS_COMM8;
+		mars_gamepadport2 = &MARS_SYS_COMM10;
 		oldmval = 0;
 		return 0;
 	default:
