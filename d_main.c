@@ -731,14 +731,28 @@ int  RunDemo (char *demoname)
 void RunMenu (void)
 {
 #ifdef MARS
+	int exit = ga_exitdemo;
+
 reselect:
 	M_Start();
-	while (1) {
-		if (RunDemo("DEMO1") == ga_exitdemo)
-			break;
-		if (RunDemo("DEMO2") == ga_exitdemo)
-			break;
-	}
+	do {
+		int i;
+		char demo[9];
+
+		for (i = 1; i < 10; i++)
+		{
+			int lump;
+
+			D_snprintf(demo, sizeof(demo), "DEMO%1d", i);
+			lump = W_CheckNumForName(demo);
+			if (lump == -1)
+				break;
+
+			exit = RunDemo(demo);
+			if (exit == ga_exitdemo)
+				break;
+		}
+	} while (exit != ga_exitdemo);
 	M_Stop();
 #else
 reselect:
