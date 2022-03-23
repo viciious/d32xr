@@ -730,8 +730,6 @@ int  RunDemo (char *demoname)
 
 void RunMenu (void)
 {
-	boolean multiplayer;
-
 #ifdef MARS
 reselect:
 	M_Start();
@@ -747,14 +745,10 @@ reselect:
 	MiniLoop(M_Start, M_Stop, M_Ticker, M_Drawer);
 #endif
 
-	multiplayer = (starttype != gt_single);
-	if (multiplayer)
-		I_NetSetup();
-
-	if (starttype == gt_single)
+	if (starttype != gt_single)
 	{
-		I_NetStop();
-		if (multiplayer)
+		I_NetSetup();
+		if (starttype == gt_single)
 			goto reselect;		/* aborted net startup */
 	}
 

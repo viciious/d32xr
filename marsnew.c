@@ -884,6 +884,7 @@ static void Player0Setup (void)
 		if (buttons & BT_START)
 		{
 			starttype = gt_single;
+			I_NetStop();
 			return;	/* abort */
 		}
 
@@ -911,6 +912,7 @@ static void Player1Setup (void)
 		if (buttons & BT_START)
 		{
 			starttype = gt_single;
+			I_NetStop();
 			return;	/* abort */
 		}
 
