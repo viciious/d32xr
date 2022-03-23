@@ -883,7 +883,6 @@ static void Player0Setup (void)
 		buttons = I_ReadControls();
 		if (buttons & BT_START)
 		{
-			starttype = gt_single;
 			I_NetStop();
 			return;	/* abort */
 		}
@@ -911,7 +910,6 @@ static void Player1Setup (void)
 		buttons = I_ReadControls();
 		if (buttons & BT_START)
 		{
-			starttype = gt_single;
 			I_NetStop();
 			return;	/* abort */
 		}
@@ -961,6 +959,7 @@ void I_NetSetup (void)
 
 void I_NetStop(void)
 {
+	starttype = gt_single;
 	consoleplayer = 0;
 	Mars_CleanupNet();
 }
