@@ -733,7 +733,6 @@ void RunMenu (void)
 #ifdef MARS
 	int exit = ga_exitdemo;
 
-reselect:
 	M_Start();
 	do {
 		int i;
@@ -759,11 +758,16 @@ reselect:
 	MiniLoop(M_Start, M_Stop, M_Ticker, M_Drawer);
 #endif
 
-	if (starttype != gt_single && !splitscreen)
+	if (consoleplayer == 0)
 	{
-		I_NetSetup();
-		if (starttype == gt_single)
-			goto reselect;		/* aborted net startup */
+		if (starttype != gt_single && !splitscreen)
+		{
+			I_NetSetup();
+#ifndef MARS
+			if (starttype == gt_single)
+				goto reselect;		/* aborted net startup */
+#endif
+		}
 	}
 
 	if (startsave != -1)

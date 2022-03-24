@@ -207,7 +207,7 @@ void M_Start2 (boolean startup_)
 	D_memcpy(mainitem[mi_joingame].name, "Join Game", 10);
 	mainitem[mi_joingame].x = ITEMX;
 	mainitem[mi_joingame].y = CURSORY(1);
-	mainitem[mi_joingame].screen = ms_main;
+	mainitem[mi_joingame].screen = ms_none;
 	mainscreen[ms_main].numitems++;
 
 	D_memcpy(mainitem[mi_loadgame].name, "Load Game", 10);
@@ -414,12 +414,25 @@ int M_Ticker (void)
 	{
 		if (screenpos == ms_new)
 		{
+			consoleplayer = 0;
 			startsave = -1;
 			startmap = mapnumbers[playermap - 1]; /*set map number */
 			startskill = playerskill;	/* set skill level */
 			starttype = currentplaymode;	/* set play type */
 			splitscreen = currentgametype == mi_splitscreen;
 			return ga_startnew;		/* done with menu */
+		}
+
+		if (screenpos == ms_main)
+		{
+			int itemno = menuscr->firstitem + cursorpos;
+			if (itemno == mi_joingame)
+			{
+				consoleplayer = 1;
+				I_NetSetup();
+				if (starttype != gt_single)
+					return ga_startnew;
+			}
 		}
 
 		if (screenpos == ms_load)

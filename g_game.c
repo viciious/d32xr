@@ -500,10 +500,13 @@ void G_RunGame (void)
 
 		if (gameaction == ga_startnew)
 		{
-			if (starttype != gt_single && !splitscreen)
-				I_NetSetup();
-			else
-				I_NetStop();
+			if (consoleplayer == 0)
+			{
+				if (starttype != gt_single && !splitscreen)
+					I_NetSetup();
+				else
+					I_NetStop();
+			}
 			if (startsave != -1)
 				G_LoadGame(startsave);
 			else

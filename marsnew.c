@@ -874,7 +874,6 @@ static void Player0Setup (void)
 
 	I_Print8(104,5,"Player 0 setup");
 	I_Update();
-	consoleplayer = 0;	/* we are player 0 */
 	idbyte = startmap + 24*startskill + 128*(starttype == gt_deathmatch);
 
 	do
@@ -902,7 +901,6 @@ static void Player1Setup (void)
 
 	I_Print8(104,5,"Player 1 setup");
 	I_Update();
-	consoleplayer = 1;	/* we are player 1 */
 	oldval = 999;
 
 	do
@@ -934,7 +932,7 @@ static void Player1Setup (void)
 
 void I_NetSetup (void)
 {
-	int		listen1, listen2;
+	//int		listen1, listen2;
 
 	while (!I_RefreshCompleted());
 
@@ -947,12 +945,10 @@ void I_NetSetup (void)
 	while (Mars_GetNetByte(0) != -2) ;  /* flush network buffer */
 	Mars_WaitTicks(5);
 
-	listen1 = Mars_GetNetByte(0);
-	listen2 = Mars_GetNetByte(0);
-	if (listen1 < 0 && listen2 < 0)
-		Player0Setup();	/* bytes not waiting - we are player 0 */
+	if (consoleplayer == 0)
+		Player0Setup();
 	else
-		Player1Setup();	/* bytes waiting, we are player 1 */
+		Player1Setup();
 
 	Mars_WaitTicks(5);
 
