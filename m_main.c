@@ -14,12 +14,16 @@
 typedef enum
 {
 	mi_newgame,
+	mi_joingame,
 	mi_loadgame,
 	mi_savegame,
 	mi_level,
 	mi_gamemode,
 	mi_difficulty,
 	mi_savelist,
+	mi_singleplayer,
+	mi_splitscreen,
+	mi_network,
 	NUMMAINITEMS
 } menu_t;
 
@@ -50,6 +54,7 @@ typedef enum
 {
 	ms_none = -1,
 	ms_main,
+	ms_gametype,
 	ms_new,
 	ms_load,
 	ms_save,
@@ -72,6 +77,7 @@ static VINT	movecount;
 static VINT	playermap = 1;
 
 static VINT currentplaymode = gt_single;
+static VINT currentgametype = mi_singleplayer;
 static VINT	cursorpos;
 static VINT screenpos;
 static VINT playerskill;
@@ -190,14 +196,23 @@ void M_Start2 (boolean startup_)
 	mainscreen[ms_save].firstitem = mi_savelist;
 	mainscreen[ms_save].numitems = 1;
 
+	mainscreen[ms_gametype].firstitem = mi_singleplayer;
+	mainscreen[ms_gametype].numitems = 3;
+
 	D_memcpy(mainitem[mi_newgame].name, "New Game", 9);
 	mainitem[mi_newgame].x = ITEMX;
 	mainitem[mi_newgame].y = CURSORY(0);
-	mainitem[mi_newgame].screen = ms_new;
+	mainitem[mi_newgame].screen = ms_gametype;
+
+	D_memcpy(mainitem[mi_joingame].name, "Join Game", 10);
+	mainitem[mi_joingame].x = ITEMX;
+	mainitem[mi_joingame].y = CURSORY(1);
+	mainitem[mi_joingame].screen = ms_main;
+	mainscreen[ms_main].numitems++;
 
 	D_memcpy(mainitem[mi_loadgame].name, "Load Game", 10);
 	mainitem[mi_loadgame].x = ITEMX;
-	mainitem[mi_loadgame].y = CURSORY(1);
+	mainitem[mi_loadgame].y = CURSORY(2);
 	mainitem[mi_loadgame].screen = ms_load;
 	mainscreen[ms_main].numitems++;
 
@@ -205,7 +220,7 @@ void M_Start2 (boolean startup_)
 	{
 		D_memcpy(mainitem[mi_savegame].name, "Save Game", 10);
 		mainitem[mi_savegame].x = ITEMX;
-		mainitem[mi_savegame].y = CURSORY(2);
+		mainitem[mi_savegame].y = CURSORY(3);
 		mainitem[mi_savegame].screen = ms_save;
 		mainscreen[ms_main].numitems++;
 	}
@@ -229,6 +244,21 @@ void M_Start2 (boolean startup_)
 	mainitem[mi_savelist].x = ITEMX;
 	mainitem[mi_savelist].y = CURSORY(0);
 	mainitem[mi_savelist].screen = ms_none;
+
+	D_memcpy(mainitem[mi_singleplayer].name, "Single Player", 14);
+	mainitem[mi_singleplayer].x = ITEMX;
+	mainitem[mi_singleplayer].y = CURSORY(0);
+	mainitem[mi_singleplayer].screen = ms_new;
+
+	D_memcpy(mainitem[mi_splitscreen].name, "Split-Screen", 13);
+	mainitem[mi_splitscreen].x = ITEMX;
+	mainitem[mi_splitscreen].y = CURSORY(1);
+	mainitem[mi_splitscreen].screen = ms_new;
+
+	D_memcpy(mainitem[mi_network].name, "Multiplayer", 13);
+	mainitem[mi_network].x = ITEMX;
+	mainitem[mi_network].y = CURSORY(2);
+	mainitem[mi_network].screen = ms_new;
 
 #ifndef MARS
 	DoubleBufferSetup();
@@ -320,6 +350,19 @@ int M_Ticker (void)
 		{
 			movecount = 0;
 			cursorpos = 0;
+			switch (itemno) {
+				case mi_splitscreen:
+				case mi_network:
+					if (currentplaymode == single)
+						currentplaymode++;
+					currentgametype = itemno;
+					break;
+				case mi_singleplayer:
+				default:
+					currentplaymode = single;
+					currentgametype = itemno;
+					break;
+			}
 			screenpos = mainitem[itemno].screen;
 			clearscreen = 2;
 			saveslot = screenpos == ms_save;
@@ -332,19 +375,27 @@ int M_Ticker (void)
 	{
 		if (screenpos != ms_main)
 		{
-			int i;
-			mainscreen_t* mainscr = &mainscreen[ms_main];
+			int i, j;
+			int curscreenpos = screenpos;
 
 			cursorpos = 0;
-			for (i = mainscr->firstitem; i < mainscr->firstitem + mainscr->numitems; i++)
+			screenpos = ms_main;
+
+			for (i =0; i < NUMMAINITEMS; i++)
 			{
-				if (mainitem[i].screen == screenpos) {
-					cursorpos = i - mainscr->firstitem;
-					break;
+				if (mainitem[i].screen == curscreenpos) {
+					for (j = 0; j < NUMMAINSCREENS; j++) {
+						if (i >= mainscreen[j].firstitem && i < mainscreen[j].firstitem+mainscreen[j].numitems) {
+							screenpos = j;
+							cursorpos = i - mainscreen[j].firstitem;
+							break;
+						}
+					}
+					break;				
 				}
 			}
+
 			movecount = 0;
-			screenpos = ms_main;
 			clearscreen = 2;
 			S_StartSound(NULL, sfx_swtchn);
 			return 0;
@@ -367,7 +418,7 @@ int M_Ticker (void)
 			startmap = mapnumbers[playermap - 1]; /*set map number */
 			startskill = playerskill;	/* set skill level */
 			starttype = currentplaymode;	/* set play type */
-			//splitscreen = (starttype != gt_single);
+			splitscreen = currentgametype == mi_splitscreen;
 			return ga_startnew;		/* done with menu */
 		}
 
@@ -375,6 +426,7 @@ int M_Ticker (void)
 		{
 			if (savecount > 0)
 			{
+				splitscreen = saveslotmode != gt_single;
 				startsave = saveslot;
 				return ga_startnew;
 			}
@@ -431,15 +483,22 @@ int M_Ticker (void)
 			switch (itemno)
 			{
 				case mi_gamemode:
-					if (buttons & BT_RIGHT)
+					if (currentgametype == mi_singleplayer)
 					{
-						if (++currentplaymode == NUMMODES)
-							currentplaymode--;
+						currentplaymode = single;
 					}
-					if (buttons & BT_LEFT)
+					else
 					{
-						if (--currentplaymode == -1)
-							currentplaymode++;
+						if (buttons & BT_RIGHT)
+						{
+							if (++currentplaymode == NUMMODES)
+								currentplaymode--;
+						}
+						if (buttons & BT_LEFT)
+						{
+							if (--currentplaymode <= single)
+								currentplaymode++;
+						}
 					}
 					break;
 				case mi_level:
@@ -549,18 +608,10 @@ void M_Drawer (void)
 	int y, y_offset = 0;
 
 /* Draw main menu */
-	if (m_doom && scrpos == ms_main)
+	if (m_doom && (scrpos == ms_main || scrpos == ms_gametype))
 	{
 		DrawJagobj(m_doom, 100, 4);
 		y_offset = m_doom->height + 4 - STARTY;
-	}
-
-	if (screenpos == ms_new)
-	{
-		if (currentplaymode == (int)gt_single)
-			D_memcpy(mainitem[mi_gamemode].name, "Game Mode", 10);
-		else
-			D_memcpy(mainitem[mi_gamemode].name, "Split Mode", 11);
 	}
 
 /* erase old skulls */
