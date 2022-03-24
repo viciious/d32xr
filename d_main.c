@@ -759,7 +759,7 @@ reselect:
 	MiniLoop(M_Start, M_Stop, M_Ticker, M_Drawer);
 #endif
 
-	if (starttype != gt_single)
+	if (starttype != gt_single && !splitscreen)
 	{
 		I_NetSetup();
 		if (starttype == gt_single)

@@ -500,7 +500,7 @@ void G_RunGame (void)
 
 		if (gameaction == ga_startnew)
 		{
-			if (starttype != gt_single)
+			if (starttype != gt_single && !splitscreen)
 				I_NetSetup();
 			else
 				I_NetStop();
