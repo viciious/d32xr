@@ -1028,7 +1028,18 @@ reconnect:
 	I_NetSetup();
 	G_PlayerReborn(0);
 	G_PlayerReborn(1);
-	gameaction = starttype == gt_single ? ga_startnew : ga_warped;
+	if (starttype == gt_single)
+	{
+		gameaction = ga_startnew;
+	}
+	else if (starttype != netgame || startskill != gameskill || startmap != gamemapinfo.mapNumber)
+	{
+		gameaction = ga_startnew;
+	}
+	else
+	{
+		gameaction = ga_warped;
+	}
 	ticbuttons[0] = ticbuttons[1] = oldticbuttons[0] = oldticbuttons[1] = 0;
 	return 0;
 }
