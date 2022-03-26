@@ -657,23 +657,22 @@ D_printf ("P_SetupLevel(%i,%i)\n",lumpnum,skill);
 	deathmatch_p = deathmatchstarts;
 	P_LoadThings (lumpnum+ML_THINGS);
 
-#ifndef MARS	
 /* */
 /* if deathmatch, randomly spawn the active players */
 /* */
 	if (netgame == gt_deathmatch)
 	{
+		int i;
 		for (i=0 ; i<MAXPLAYERS ; i++)
 			if (playeringame[i])
 			{	/* must give a player spot before deathmatchspawn */
-				mobj = P_SpawnMobj (deathmatchstarts[0].x<<16
+				mobj_t *mobj = P_SpawnMobj (deathmatchstarts[0].x<<16
 				,deathmatchstarts[0].y<<16,0, MT_PLAYER);
 				players[i].mo = mobj;
 				G_DeathMatchSpawnPlayer (i);
 				P_RemoveMobj (mobj);
 			}
 	}
-#endif
 
 /* set up world state */
 	P_SpawnSpecials ();

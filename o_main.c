@@ -254,8 +254,9 @@ void O_Control (player_t *player)
 	int		buttons, oldbuttons;
 	menuscreen_t* menuscr;
 	boolean newcursor = false;
+	int curplayer = consoleplayer;
 
-	if (splitscreen && playernum != consoleplayer)
+	if (splitscreen && playernum != curplayer)
 		return;
 
 	if (cursorframe == -1)
@@ -281,7 +282,7 @@ void O_Control (player_t *player)
 exit:
 		player->automapflags ^= AF_OPTIONSACTIVE;
 
-		if (playernum == consoleplayer)
+		if (playernum == curplayer)
 		{
 			if (screenpos == ms_game)
 				M_Stop();
@@ -308,7 +309,7 @@ exit:
 /* clear buttons so player isn't moving aroung */
 	ticbuttons[playernum] &= (BT_OPTION|BT_START);	/* leave option status alone */
 
-	if (playernum != consoleplayer)
+	if (playernum != curplayer)
 		return;
 
 	if (screenpos == ms_game)
@@ -332,6 +333,9 @@ exit:
 		case ga_startnew:
 			gameaction = ga_startnew;
 		case ga_died:
+			goto exit;
+		case ga_warped:
+			gameaction = ga_warped;
 			goto exit;
 		}
 		return;

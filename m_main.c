@@ -430,7 +430,7 @@ int M_Ticker (void)
 			{
 				consoleplayer = 1;
 				I_NetSetup();
-				if (starttype != gt_single)
+				//if (starttype != gt_single)
 					return ga_startnew;
 			}
 		}
