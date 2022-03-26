@@ -883,7 +883,6 @@ static void Player0Setup (void)
 		if (buttons & BT_START)
 		{
 			starttype = gt_single;
-			I_NetStop();
 			return;	/* abort */
 		}
 
@@ -910,7 +909,6 @@ static void Player1Setup (void)
 		if (buttons & BT_START)
 		{
 			starttype = gt_single;
-			I_NetStop();
 			return;	/* abort */
 		}
 
@@ -1030,7 +1028,7 @@ reconnect:
 	I_NetSetup();
 	G_PlayerReborn(0);
 	G_PlayerReborn(1);
-	gameaction = ga_warped;
+	gameaction = starttype == gt_single ? ga_startnew : ga_warped;
 	ticbuttons[0] = ticbuttons[1] = oldticbuttons[0] = oldticbuttons[1] = 0;
 	return 0;
 }

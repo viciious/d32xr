@@ -371,9 +371,9 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		if ((demorecording || demoplayback) && (buttons & BT_PAUSE) )
 			exit = ga_completed;
 
-		if (gameaction == ga_warped)
+		if (gameaction == ga_warped || gameaction == ga_startnew)
 		{
-			exit = ga_warped;	/* hack for NeXT level reloading and net error */
+			exit = gameaction;	/* hack for NeXT level reloading and net error */
 			break;
 		}
 
