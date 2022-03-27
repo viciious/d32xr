@@ -948,6 +948,12 @@ void I_NetSetup (void)
 	else
 		Player1Setup();
 
+	if (starttype == gt_single)
+	{
+		I_NetStop();
+		return;
+	}
+
 	Mars_WaitTicks(5);
 
 	while (Mars_GetNetByte(0) != -2); /* flush network buffer */
@@ -1031,6 +1037,7 @@ reconnect:
 	if (starttype == gt_single)
 	{
 		gameaction = ga_startnew;
+		I_NetStop();
 	}
 	else if (starttype != netgame || startskill != gameskill || startmap != gamemapinfo.mapNumber)
 	{
