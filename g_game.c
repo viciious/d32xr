@@ -562,6 +562,7 @@ void G_RunGame (void)
 		if (finale)
 		{
 			MiniLoop(F_Start, F_Stop, F_Ticker, F_Drawer);
+			I_NetStop();
 			break;
 		}
 
