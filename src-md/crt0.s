@@ -3,6 +3,8 @@
 
         .text
 
+        .equ LINK_TIMEOUT, 0xFFFF
+
 | 0x880800 - entry point for reset/cold-start
 
         .global _start
@@ -691,7 +693,7 @@ ext_serial:
 ext_link:
         move.w  #0x2700,sr          /* disable ints */
         btst    #6,0xA10005         /* check TH asserted */
-        bne.b   1f                  /* no, extraneous ext int */
+        bne.b   2f                  /* no, extraneous ext int */
 
         move.l  d1,-(sp)
         lea     net_rdbuf,a0
@@ -704,15 +706,31 @@ ext_link:
         addq.w  #1,d1
         andi.w  #31,d1
         move.w  d1,net_wbix         /* update buffer write index */
+        move.w  #LINK_TIMEOUT,d1
 0:
         nop
         nop
         btst    #6,0xA10005         /* check TH deasserted */
-        beq.b   0b                  /* wait TH high (no recursive ints) */
-
+        bne.b   1f                  /* handshake */
+        dbra    d2,0b
+        bra.b   3f                  /* timeout err */
+1:
         move.b  #0x20,0xA10005      /* deassert handshake (TR high) */
         move.l  (sp)+,d1
-1:
+2:
+        movea.l (sp)+,a0
+        move.l  (sp)+,d0
+        rte
+3:
+        /* timeout during handshake - shut down link net */
+        clr.b   net_type
+        clr.l   extint
+        move.w  #0x8B00,0xC00004    /* reg 11 = /IE2 (no EXT INT), full scroll */
+        move.b  #0x40,0xA1000B      /* port 2 to neutral setting */
+        nop
+        nop
+        move.b  #0x40,0xA10005
+        move.l  (sp)+,d1
         movea.l (sp)+,a0
         move.l  (sp)+,d0
         rte
@@ -794,7 +812,7 @@ read_link:
 
 write_serial:
         move.w  #0x2700,sr          /* disable ints */
-        move.w  #0xFFFF,d1
+        move.w  #LINK_TIMEOUT,d1
 0:
         bsr     bump_fm
         btst    #0,0xA10019         /* ok to transmit? */
@@ -808,7 +826,7 @@ write_serial:
         move.w  #0x2000,sr          /* enable ints */
         bra     main_loop
 2:
-        move.w  #0xFFFF,0xA15122    /* timeout */
+        move.w  #LINK_TIMEOUT,0xA15122    /* timeout */
         move.w  #0,0xA15120         /* done */
         move.w  #0x2000,sr          /* enable ints */
         bra     main_loop
@@ -827,22 +845,25 @@ write_link:
         move.b  d0,0xA10005         /* assert TH of other console */
 
         /* wait on handshake */
-        move.w  #0x0FFF,d2
+        move.w  #LINK_TIMEOUT,d2
 0:
         bsr     bump_fm
         btst    #6,0xA10005         /* check for TH low (handshake) */
         beq.b   1f                  /* handshake */
         dbra    d2,0b
-        bra.w   5f                  /* timeout err */
+        bra.w   9f                  /* timeout err */
 1:
         ori.b   #0x20,d0            /* set TR line */
         move.b  d0,0xA10005         /* deassert TH of other console */
+        move.w  #LINK_TIMEOUT,d2
 2:
         nop
         nop
         btst    #6,0xA10005         /* wait for TH high (handshake done) */
-        beq.b   2b
-
+        bne.b   3f                  /* handshake */
+        dbra    d2,2b
+        bra.w   9f                  /* timeout err */
+3:
         moveq   #0x0F,d0
         and.b   d1,d0               /* lsn */
         ori.b   #0x20,d0            /* set TR line */
@@ -853,18 +874,18 @@ write_link:
         move.b  d0,0xA10005         /* assert TH of other console */
 
         /* wait on handshake */
-3:
+4:
         bsr     bump_fm
         btst    #6,0xA10005         /* check for TH low (handshake) */
-        bne.b   3b
+        bne.b   4b
 
         ori.b   #0x20,d0            /* set TR line */
         move.b  d0,0xA10005         /* deassert TH of other console */
-4:
+5:
         nop
         nop
         btst    #6,0xA10005         /* wait for TH high (handshake done) */
-        beq.b   4b
+        beq.b   5b
 
         move.b  #0x20,0xA10005      /* TR set */
         nop
@@ -874,7 +895,7 @@ write_link:
         move.w  #0,0xA15120         /* done */
         move.w  #0x2000,sr          /* enable ints */
         bra     main_loop
-5:
+9:
         move.b  #0x20,0xA10005      /* TR set */
         nop
         nop
