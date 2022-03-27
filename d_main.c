@@ -675,6 +675,10 @@ void RunTitle (void)
 {
 	int		exit;
 
+	startskill = sk_medium;
+	startmap = 1;
+	starttype = gt_single;
+
 	exit = MiniLoop (START_Title, STOP_Title, TIC_Abortable, DRAW_Title);
 #ifdef MARS
 	if (exit == ga_exitdemo)
