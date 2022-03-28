@@ -508,13 +508,10 @@ void G_RunGame (void)
 
 		if (gameaction == ga_startnew)
 		{
-			if (consoleplayer == 0)
-			{
-				if (starttype != gt_single && !splitscreen)
-					I_NetSetup();
-				else
-					I_NetStop();
-			}
+			if (starttype != gt_single && !splitscreen)
+				I_NetSetup();
+			else
+				I_NetStop();
 			if (startsave != -1)
 				G_LoadGame(startsave);
 			else
@@ -532,7 +529,11 @@ void G_RunGame (void)
 			continue;			/* died, so restart the level */
 
 		if (gameaction == ga_warped)
+		{
+			if (starttype != netgame || startskill != gameskill || startmap != gamemapinfo.mapNumber)
+				gameaction = ga_startnew;
 			continue;			/* skip intermission */
+		}
 
 		if (gameaction == ga_secretexit && gamemapinfo.secretNext)
 			nextmapl = gamemapinfo.secretNext;
