@@ -303,7 +303,7 @@ void P_LoadThings (int lump)
 			numthingsreal++;
 
 	// preallocate a few mobjs for puffs and projectiles
-	numthingsreal += 15;
+	numthingsreal += 40;
 	P_PreSpawnMobjs(numthingsreal);
 
 	mt = (mapthing_t *)data;
