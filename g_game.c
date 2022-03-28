@@ -29,8 +29,10 @@ int             totalkills, totalitems, totalsecret;    /* for intermission  */
  
 boolean         demorecording; 
 boolean         demoplayback; 
-   
- 
+
+mobj_t*         bodyque[BODYQUESIZE];
+int             bodyqueslot;
+
 /* 
 ============== 
 = 
@@ -253,7 +255,13 @@ boolean G_CheckSpot (int playernum, mapthing_t *mthing)
 	players[playernum].mo->flags &= ~MF_SOLID;
 	if (!an ) 
 		return false; 
-	
+
+	// flush an old corpse if needed
+	if (bodyqueslot >= BODYQUESIZE)
+		P_RemoveMobj(bodyque[bodyqueslot%BODYQUESIZE]);
+	bodyque[bodyqueslot%BODYQUESIZE] = players[playernum].mo;
+	bodyqueslot++;
+
 	return true; 
 } 
  
