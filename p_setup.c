@@ -654,6 +654,7 @@ D_printf ("P_SetupLevel(%i,%i)\n",lumpnum,skill);
 		deathmatchstarts = NULL;
 	}
 
+	bodyqueslot = 0;
 	deathmatch_p = deathmatchstarts;
 	P_LoadThings (lumpnum+ML_THINGS);
 

@@ -527,6 +527,9 @@ extern 	int 		prevgametic;
 extern	mapthing_t	*deathmatchstarts, *deathmatch_p;
 extern	mapthing_t	playerstarts[MAXPLAYERS];
 
+#define	BODYQUESIZE		4
+extern	int			bodyqueslot;
+
 /*
 ===============================================================================
 
