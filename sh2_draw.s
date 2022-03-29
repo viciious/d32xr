@@ -47,6 +47,8 @@ _I_DrawColumnLowA:
         mov.l   @(16,r15),r4
         add     #-1,r4          /* heightmask = texheight - 1 */
         mov.l   draw_width,r1
+
+        .p2alignw 2, 0x0009
 do_col_loop_low:
         swap.w  r2,r0
         and     r4,r0           /* (frac >> 16) & heightmask */
@@ -127,6 +129,8 @@ _I_DrawColumnNPo2LowA:
         bt      4b
 5:
         mov.l   draw_width,r1
+
+        .p2alignw 2, 0x0009
 do_cnp_loop_low:
         mov     r2,r0
         shlr16  r0              /* frac >> 16 */
@@ -198,6 +202,7 @@ _I_DrawSpanLowA:
         mov.l   draw_flat_ymask,r11
         mov     #63,r10
 
+        .p2alignw 2, 0x0009
 do_span_loop_low:
         swap.w  r2,r1           /* (xfrac >> 16) */
         swap.w  r4,r0           /* (yfrac >> 16) */
@@ -264,6 +269,8 @@ _I_DrawColumnA:
         mov.l   @(16,r15),r4
         add     #-1,r4          /* heightmask = texheight - 1 */
         mov.l   draw_width,r1
+
+        .p2alignw 2, 0x0009
 do_col_loop:
         swap.w  r2,r0
         and     r4,r0           /* (frac >> 16) & heightmask */
@@ -342,6 +349,8 @@ _I_DrawColumnNPo2A:
         bt      4b
 5:
         mov.l   draw_width,r1
+
+        .p2alignw 2, 0x0009
 do_cnp_loop:
         mov     r2,r0
         shlr16  r0              /* frac >> 16 */
@@ -411,6 +420,7 @@ _I_DrawSpanA:
         mov.l   draw_flat_ymask,r11
         mov     #63,r10
 
+       .p2alignw 2, 0x0009
 do_span_loop:
         swap.w  r2,r1           /* (xfrac >> 16) */
         swap.w  r4,r0           /* (yfrac >> 16) */
