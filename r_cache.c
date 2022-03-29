@@ -192,7 +192,7 @@ static void R_EvictFromTexCache(void* ptr, void* userp)
 	texcacheblock_t* entry = ptr;
 	r_texcache_t *c = userp;
 
-	if (entry->pixelcount <= c->reqcount_le)
+	if (entry->pixelcount < c->reqcount_le)
 	{
 		if (--entry->lifecount == 0)
 		{

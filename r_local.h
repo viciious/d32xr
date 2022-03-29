@@ -383,7 +383,7 @@ typedef struct
 typedef struct
 {
 	VINT id;
-	VINT pixelcount;
+	uint16_t pixelcount;
 	VINT lumpnum;
 	VINT lifecount;
 	void** userp;
