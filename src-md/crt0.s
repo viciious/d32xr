@@ -3,7 +3,7 @@
 
         .text
 
-        .equ LINK_TIMEOUT, 0xFFFF
+        .equ LINK_TIMEOUT, 0x0FFF
 
 | 0x880800 - entry point for reset/cold-start
 
