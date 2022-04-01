@@ -308,7 +308,10 @@ static void ST_Ticker_(stbar_t* sb)
 	if (sb->health != i || sb->forcedraw)
 	{
 		if (i > sb->health)
+		{
 			sb->gibframe = 0;
+			sb->gibdraw = false;
+		}
 
 		sb->health = i;
 		cmd = &sb->stbarcmds[sb->numstbarcmds++];
