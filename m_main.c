@@ -14,9 +14,9 @@
 typedef enum
 {
 	mi_newgame,
-	mi_joingame,
 	mi_loadgame,
 	mi_savegame,
+	mi_joingame,
 	mi_level,
 	mi_gamemode,
 	mi_difficulty,
@@ -204,26 +204,23 @@ void M_Start2 (boolean startup_)
 	mainitem[mi_newgame].y = CURSORY(0);
 	mainitem[mi_newgame].screen = ms_gametype;
 
-	D_memcpy(mainitem[mi_joingame].name, "Join Game", 10);
-	mainitem[mi_joingame].x = ITEMX;
-	mainitem[mi_joingame].y = CURSORY(1);
-	mainitem[mi_joingame].screen = ms_none;
-	mainscreen[ms_main].numitems++;
-
 	D_memcpy(mainitem[mi_loadgame].name, "Load Game", 10);
 	mainitem[mi_loadgame].x = ITEMX;
-	mainitem[mi_loadgame].y = CURSORY(2);
+	mainitem[mi_loadgame].y = CURSORY(1);
 	mainitem[mi_loadgame].screen = ms_load;
 	mainscreen[ms_main].numitems++;
 
-	if (!startup && netgame != gt_deathmatch)
-	{
-		D_memcpy(mainitem[mi_savegame].name, "Save Game", 10);
-		mainitem[mi_savegame].x = ITEMX;
-		mainitem[mi_savegame].y = CURSORY(3);
-		mainitem[mi_savegame].screen = ms_save;
-		mainscreen[ms_main].numitems++;
-	}
+	D_memcpy(mainitem[mi_savegame].name, "Save Game", 10);
+	mainitem[mi_savegame].x = ITEMX;
+	mainitem[mi_savegame].y = CURSORY(2);
+	mainitem[mi_savegame].screen = ms_save;
+	mainscreen[ms_main].numitems++;
+
+	D_memcpy(mainitem[mi_joingame].name, "Join Game", 10);
+	mainitem[mi_joingame].x = ITEMX;
+	mainitem[mi_joingame].y = CURSORY(3);
+	mainitem[mi_joingame].screen = ms_none;
+	mainscreen[ms_main].numitems++;
 
 	D_memcpy(mainitem[mi_level].name, "Area", 5);
 	mainitem[mi_level].x = ITEMX;
@@ -346,7 +343,12 @@ int M_Ticker (void)
 	if ((buttons & (BT_A | BT_LMBTN)) && !(oldbuttons & (BT_A | BT_LMBTN)))
 	{
 		int itemno = menuscr->firstitem + cursorpos;
-		if (mainitem[itemno].screen != ms_none)
+
+		int nextscreen = mainitem[itemno].screen;
+		if (nextscreen == ms_save && (startup || netgame == gt_deathmatch))
+			nextscreen = ms_none;
+
+		if (nextscreen != ms_none)
 		{
 			movecount = 0;
 			cursorpos = 0;
@@ -363,7 +365,7 @@ int M_Ticker (void)
 					currentgametype = itemno;
 					break;
 			}
-			screenpos = mainitem[itemno].screen;
+			screenpos = nextscreen;
 			clearscreen = 2;
 			saveslot = screenpos == ms_save;
 			S_StartSound(NULL, sfx_pistol);
