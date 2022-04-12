@@ -870,17 +870,60 @@ void UpdateBuffer (void) {
  *  Network support functions
  */
 
+static int Net_SendPacket(int size, uint8_t *data)
+{
+	int i;
+
+	for (i = 0; i < size; i++)
+	{
+		int res = Mars_PutNetByte(data[i]);
+		if (res < 0)
+			return res;
+	}
+
+	return 0;
+}
+
+static int Net_RecvPacket(int size, uint8_t *data)
+{
+	int i;
+
+	for (i = 0; i < size; i++)
+	{
+		int val = Mars_GetNetByte(0);
+		if (val == -2)
+			break;
+		if (val < 0)
+			return val;
+		data[i] = val;
+	}
+
+	return i;
+}
+
+#define CONN_MAGIC 0xAA /* 10101010 in binary */
+
 static void Player0Setup (void)
 {
-	int		val, idbyte, buttons;
+	int		val, buttons;
+	int 	stage, start;
+	uint8_t idbyte[3];
+	const int timeout = 300;
 
 	I_Print8(104,5,"Player 0 setup");
 	I_Update();
-	idbyte = startmap + 24*startskill + 128*(starttype == gt_deathmatch);
 
+	idbyte[0] = 0xFF;
+	idbyte[1] = startmap;
+	idbyte[2] = startskill + 8*starttype;
+
+	stage = 0;
+	start = Mars_GetTicCount();
 	do
 	{
-		/* wait until rec 0x22 byte from other side or player aborts */
+		int tics;
+
+		/* wait until rec 0xAA byte from other side or player aborts */
 		buttons = I_ReadControls();
 		if (buttons & BT_START)
 		{
@@ -888,25 +931,47 @@ static void Player0Setup (void)
 			return;	/* abort */
 		}
 
-		val = Mars_GetNetByte(1);
-		if (val == 0x22)
-			return;	/* ready to go! */
+		switch (stage)
+		{
+		case 0:
+			val = Mars_GetNetByte(1);
+			if (val == CONN_MAGIC)
+				stage++;
+			break;
+		case 1:
+			Net_SendPacket(3, idbyte); /* ignore timeout */
+			stage++;
+			break;
+		case 2:
+			val = Mars_GetNetByte(1);
+			if (val == (CONN_MAGIC ^ 0xFF))
+				return;	/* ready to go! */
+			break;
+		}
 
-		Mars_PutNetByte(idbyte);	/* ignore timeout */
+		tics = Mars_GetTicCount();
+		if (tics - start > timeout)
+		{
+			/* timeout, restart the process */
+			stage = 0;
+			start = tics;
+
+			while (Mars_GetNetByte(0) != -2); /* flush network buffer */
+			Mars_WaitTicks(Mars_GetTicCount()&7);
+		}
 	} while (1);
 }
 
 static void Player1Setup (void)
-{	
-	int		val, oldval, buttons;
+{
+	uint8_t	idbyte[3];
+	int		val, buttons;
 
 	I_Print8(104,5,"Player 1 setup");
 	I_Update();
-	oldval = 999;
 
 	do
 	{
-		/* start game after two identical id bytes unless user aborts  */
 		buttons = I_ReadControls();
 		if (buttons & BT_START)
 		{
@@ -914,26 +979,30 @@ static void Player1Setup (void)
 			return;	/* abort */
 		}
 
-		val = Mars_GetNetByte(1);
-		if (val < 0)
-			continue;
-		if (val == oldval)
+		Mars_PutNetByte(CONN_MAGIC);	/* send an acknowledge byte */
+
+		Mars_WaitTicks(5);
+
+		val = Net_RecvPacket(3, idbyte);
+		if (val == 3 && idbyte[0] == 0xFF)
 			break;
-		oldval = val;
+
+		Mars_WaitTicks(5);
+
+		while (Mars_GetNetByte(0) != -2); /* flush network buffer */
+		Mars_WaitTicks(Mars_GetTicCount()&7);
 	} while (1);
 
-	starttype = (val & 128) ? gt_deathmatch : gt_coop;
-	startskill = (val & 127) / 24;
-	startmap = (val & 127) % 24;
+	startmap = idbyte[1];
+	starttype = idbyte[2] / 8;
+	startskill = idbyte[2] & 7;
 
-	Mars_PutNetByte(0x22);	/* send an acknowledge byte */
-	Mars_PutNetByte(0x22);	/* send another acknowledge byte */
+	Mars_PutNetByte(CONN_MAGIC ^ 0xFF);	/* send an acknowledge byte */
+	Mars_PutNetByte(CONN_MAGIC ^ 0xFF);	/* send another acknowledge byte */
 }
 
 void I_NetSetup (void)
 {
-	//int		listen1, listen2;
-
 	while (!I_RefreshCompleted());
 
 	Mars_SetupNet(1); /* 0 = no net, 1 = system link cable, -1 = serial cable */
@@ -992,7 +1061,7 @@ unsigned I_NetTransfer (unsigned buttons)
 		/* player 1 waits before sending */
 		for (i=0; i<=PACKET_SIZE-1; i++)
 		{
-			val = Mars_GetNetByte(120);
+			val = Mars_GetNetByte(60);
 			if (val < 0)
 				goto reconnect;
 			inbytes[i] = val;
@@ -1006,7 +1075,7 @@ unsigned I_NetTransfer (unsigned buttons)
 		for (i=0; i<=PACKET_SIZE-1; i++)
 		{
 			Mars_PutNetByte(outbytes[i]);
-			val = Mars_GetNetByte(120);
+			val = Mars_GetNetByte(60);
 			if (val < 0)
 				goto reconnect;
 			inbytes[i] = val;
@@ -1016,10 +1085,12 @@ unsigned I_NetTransfer (unsigned buttons)
 	if (inbytes[4] != outbytes[4])
 	{
 		/* consistency error */
-		I_Print8(108,23,"Network Error"); 
+		while (!I_RefreshCompleted());
+		I_Print8(108,23,"Connecting...");
 		I_Update();
 		while (Mars_GetNetByte(0) != -2); /* flush network buffer */
-		Mars_WaitTicks(200);
+		//Mars_CleanupNet();
+		Mars_WaitTicks(32+(Mars_GetTicCount()&31));
 		goto reconnect;
 	}
 
@@ -1027,12 +1098,6 @@ unsigned I_NetTransfer (unsigned buttons)
 	return val;
 	
 reconnect:
-	/*
-	 *  Player 1 must delay so that Player 0 finds no waiting data during
-	 *  setup and stays Player 0.
-	 */
-	if (consoleplayer)
-		Mars_WaitTicks(60);
 	I_NetSetup();
 	G_PlayerReborn(0);
 	G_PlayerReborn(1);
