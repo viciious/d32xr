@@ -147,7 +147,7 @@ void G_DoLoadLevel (void)
 		music = S_SongForMapnum(gamemap);
 	S_StartSong(music, 1, gamemap);
 
-	Z_CheckHeap (mainzone);  		/* DEBUG */
+	//Z_CheckHeap (mainzone);  		/* DEBUG */
 } 
  
  
@@ -508,6 +508,7 @@ void G_RunGame (void)
 
 		if (gameaction == ga_startnew)
 		{
+startnew:
 			if (starttype != gt_single && !splitscreen)
 				I_NetSetup();
 			else
@@ -531,7 +532,10 @@ void G_RunGame (void)
 		if (gameaction == ga_warped)
 		{
 			if (starttype != netgame || startskill != gameskill || startmap != gamemapinfo.mapNumber)
+			{
 				gameaction = ga_startnew;
+				goto startnew;
+			}
 			continue;			/* skip intermission */
 		}
 
