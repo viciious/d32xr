@@ -489,7 +489,7 @@ static void ST_Ticker_(stbar_t* sb)
 	/*                    */
 	/* God mode cheat */
 	/* */
-	i = p->cheats & CF_GODMODE;
+	i = (p->cheats & CF_GODMODE || p->powers[pw_invulnerability]) != 0;
 	if (sb->godmode != i)
 		sb->godmode = i;
 
