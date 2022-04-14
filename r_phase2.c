@@ -328,21 +328,21 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floor
     visplane_t* ceiling, * floor;
     unsigned short* ceilopen, * flooropen;
 
-    const unsigned actionbits = segl->actionbits;
-    const unsigned lightlevel = segl->seglightlevel;
+    const volatile unsigned actionbits = segl->actionbits;
+    const volatile unsigned lightlevel = segl->seglightlevel;
 
     unsigned scalefrac = segl->scalefrac;
-    unsigned scalestep = segl->scalestep;
+    unsigned volatile scalestep = segl->scalestep;
 
     int x;
-    const int stop = segl->stop;
+    const volatile int stop = segl->stop;
     const int width = segl->stop - segl->start + 1;
 
-    const fixed_t floorheight = segl->floorheight;
-    const fixed_t ceilingheight = segl->ceilingheight;
+    const volatile fixed_t floorheight = segl->floorheight;
+    const volatile fixed_t ceilingheight = segl->ceilingheight;
 
-    const int floorpicnum = segl->floorpicnum;
-    const int ceilingpicnum = segl->ceilingpicnum;
+    const volatile int floorpicnum = segl->floorpicnum;
+    const volatile int ceilingpicnum = segl->ceilingpicnum;
 
     // force R_FindPlane for both planes
     floor = ceiling = visplanes;
