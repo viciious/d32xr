@@ -123,11 +123,17 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 
    for (x = segl->start; x <= stop; x++)
    {
-      fixed_t scale;
       int floorclipx, ceilingclipx;
       unsigned scale2;
 
-      scale = scalefrac;
+#ifdef MARS
+      SH2_DIVU_DVSR = scalefrac;         // set 32-bit divisor
+      SH2_DIVU_DVDNTH = 0;           // set high bits of the 64-bit dividend
+      SH2_DIVU_DVDNTL = 0xffffffffu; // set low  bits of the 64-bit dividend, start divide
+#else
+      fixed_t scale = scalefrac;
+#endif
+
       scale2 = (unsigned)scalefrac >> HEIGHTBITS;
       scalefrac += scalestep;
 
@@ -141,17 +147,11 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
       //
       // texture only stuff
       //
-      if (actionbits & AC_CALCTEXTURE)
+      //if (actionbits & AC_CALCTEXTURE)
       {
           unsigned colnum;
           unsigned iscale;
           fixed_t r;
-
-#ifdef MARS
-          SH2_DIVU_DVSR = scale;         // set 32-bit divisor
-          SH2_DIVU_DVDNTH = 0;           // set high bits of the 64-bit dividend
-          SH2_DIVU_DVDNTL = 0xffffffffu; // set low  bits of the 64-bit dividend, start divide
-#endif
 
           // calculate texture offset
           r = finetangent((centerangle + xtoviewangle[x]) >> ANGLETOFINESHIFT);
@@ -174,7 +174,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
                   texturelight /= FRACUNIT;
                   if (texturelight < lseg->lightmin)
                       texturelight = lseg->lightmin;
-                  if (texturelight > lseg->lightmax)
+                  else if (texturelight > lseg->lightmax)
                       texturelight = lseg->lightmax;
               }
 
