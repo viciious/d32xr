@@ -104,21 +104,22 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 {
    viswall_t* segl = lseg->segl;
 
-   const unsigned actionbits = segl->actionbits;
+   const volatile unsigned actionbits = segl->actionbits;
 
    unsigned scalefrac = segl->scalefrac;
-   unsigned scalestep = segl->scalestep;
+   const volatile unsigned scalestep = segl->scalestep;
 
-   const unsigned centerangle = segl->centerangle;
-   const unsigned offset = segl->offset;
-   const unsigned distance = segl->distance;
+   const volatile unsigned centerangle = segl->centerangle;
+   const volatile unsigned offset = segl->offset;
+   const volatile unsigned distance = segl->distance;
 
-   const int ceilingheight = segl->ceilingheight;
+   const volatile int ceilingheight = segl->ceilingheight;
 
    unsigned texturelight = lseg->lightmax;
    const boolean gradientlight = lseg->lightmin != lseg->lightmax;
 
-   int x, stop = segl->stop;
+   const volatile int stop = segl->stop;
+   int x;
 
    for (x = segl->start; x <= stop; x++)
    {
@@ -150,8 +151,6 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
           SH2_DIVU_DVSR = scale;         // set 32-bit divisor
           SH2_DIVU_DVDNTH = 0;           // set high bits of the 64-bit dividend
           SH2_DIVU_DVDNTL = 0xffffffffu; // set low  bits of the 64-bit dividend, start divide
-#else
-          iscale = 0xffffffffu / scale;
 #endif
 
           // calculate texture offset
@@ -189,6 +188,8 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 
 #ifdef MARS
           iscale = SH2_DIVU_DVDNTL; // get 32-bit quotient
+#else
+          iscale = 0xffffffffu / scale;
 #endif
           R_DrawTextures(x, floorclipx, ceilingclipx, scale2, iscale, colnum, texturelight, lseg);
       }
