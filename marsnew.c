@@ -1061,7 +1061,7 @@ unsigned I_NetTransfer (unsigned buttons)
 		/* player 1 waits before sending */
 		for (i=0; i<=PACKET_SIZE-1; i++)
 		{
-			val = Mars_GetNetByte(60);
+			val = Mars_GetNetByte(120);
 			if (val < 0)
 				goto reconnect;
 			inbytes[i] = val;
@@ -1075,7 +1075,7 @@ unsigned I_NetTransfer (unsigned buttons)
 		for (i=0; i<=PACKET_SIZE-1; i++)
 		{
 			Mars_PutNetByte(outbytes[i]);
-			val = Mars_GetNetByte(60);
+			val = Mars_GetNetByte(120);
 			if (val < 0)
 				goto reconnect;
 			inbytes[i] = val;
@@ -1089,7 +1089,7 @@ unsigned I_NetTransfer (unsigned buttons)
 		I_Print8(108,23,"Connecting...");
 		I_Update();
 		while (Mars_GetNetByte(0) != -2); /* flush network buffer */
-		//Mars_CleanupNet();
+		Mars_CleanupNet();
 		Mars_WaitTicks(32+(Mars_GetTicCount()&31));
 		goto reconnect;
 	}
