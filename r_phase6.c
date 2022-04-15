@@ -127,9 +127,19 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
       unsigned scale2;
 
 #ifdef MARS
-      SH2_DIVU_DVSR = scalefrac;         // set 32-bit divisor
-      SH2_DIVU_DVDNTH = 0;           // set high bits of the 64-bit dividend
-      SH2_DIVU_DVDNTL = 0xffffffffu; // set low  bits of the 64-bit dividend, start divide
+      const uintptr_t divisor = (uint32_t)&SH2_DIVU_DVSR;
+
+      do {
+          int32_t t;
+          __asm volatile (
+              "mov #0, %0\n\t"
+              "mov.l %0, @(16,%2) /* set high bits of the 64-bit dividend */ \n\t"
+              "mov.l %1, @(0,%2) /* set 32-bit divisor */ \n\t"
+              "mov #-1, %0\n\t"
+              "mov.l %0, @(20,%2) /* set low  bits of the 64-bit dividend, start divide */\n\t"
+              : "=&r" (t)
+              : "r" (scalefrac), "r" (divisor) );
+      } while (0);
 #else
       fixed_t scale = scalefrac;
 #endif
@@ -187,7 +197,12 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
           //
 
 #ifdef MARS
-          iscale = SH2_DIVU_DVDNTL; // get 32-bit quotient
+          do {
+              __asm volatile (
+                  "mov.l @(20,%1), %0 /* get 32-bit quotient */ \n\t"
+                  : "=r" (iscale)
+                  : "r" (divisor));
+          } while (0);
 #else
           iscale = 0xffffffffu / scale;
 #endif

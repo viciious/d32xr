@@ -56,6 +56,9 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     angle_t angle;
     unsigned light;
     boolean gradientlight = lpl->lightmin != lpl->lightmax;
+#ifdef MARS
+    const uintptr_t divisor = (uint32_t)&SH2_DIVU_DVSR;
+#endif
 
     remaining = x2 - x + 1;
 
@@ -66,9 +69,15 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
 
     if (gradientlight)
     {
-#if defined(MARS)
-        SH2_DIVU_DVSR = distance;   // set 32-bit divisor
-        SH2_DIVU_DVDNT = LIGHTCOEF; // set high bits of the 64-bit dividend, start divide
+#ifdef MARS
+        do {
+            int32_t lc = LIGHTCOEF;
+            __asm volatile (
+                "mov.l %0, @(0,%2) /* set 32-bit divisor */ \n\t"
+                "mov.l %1, @(4,%2) /* start divide */\n\t"
+                :
+                : "r" (lc), "r" (distance), "r" (divisor));
+        } while (0);
 #endif
     }
 
@@ -89,7 +98,12 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     if (gradientlight)
     {
 #ifdef MARS
-        light = SH2_DIVU_DVDNT;
+          do {
+              __asm volatile (
+                  "mov.l @(20,%1), %0 /* get 32-bit quotient */ \n\t"
+                  : "=r" (light)
+                  : "r" (divisor));
+          } while (0);
 #else
         light = LIGHTCOEF / distance;
 #endif
