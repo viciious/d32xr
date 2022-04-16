@@ -77,7 +77,7 @@ int Mars_GetFRTCounter(void);
 
 #define Mars_ClearCacheLines(paddr,nl) \
 	do { \
-		uintptr_t addr = paddr; \
+		volatile uintptr_t addr = paddr; \
 		uint32_t l; \
 		for (l = 0; l < nl; l++) { \
 			Mars_ClearCacheLine(addr); \
