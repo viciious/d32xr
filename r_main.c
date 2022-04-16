@@ -15,7 +15,7 @@ fixed_t stretchX;
 VINT weaponYpos;
 fixed_t weaponXScale;
 
-detailmode_t detailmode = detmode_medium;
+detailmode_t detailmode = detmode_high;
 VINT anamorphicview = 0;
 
 drawcol_t drawcol;
