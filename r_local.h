@@ -539,7 +539,7 @@ void R_MarkOpenPlane(visplane_t* pl)
 ATTR_DATA_CACHE_ALIGN
 ;
 
-visplane_t *R_FindPlane(visplane_t *ignore, int hash, fixed_t height, int flatnum,
+visplane_t *R_FindPlane(int hash, fixed_t height, int flatnum, 
 	int lightlevel, int start, int stop)
 ATTR_DATA_CACHE_ALIGN
 ;
