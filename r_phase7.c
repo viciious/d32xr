@@ -330,6 +330,7 @@ void Mars_R_PrepPlanes(void)
     numplanes = lastvisplane - visplanes;
     Mars_ClearCacheLines((intptr_t)visplanes & ~15, (numplanes * sizeof(visplane_t) + 15) / 16);
 
+#ifdef MARS
     {
         visplane_t* pl, *last = lastvisplane;
         const int maxlen = centerX + centerX / 2;
@@ -337,14 +338,13 @@ void Mars_R_PrepPlanes(void)
         for (pl = visplanes + 1; pl < last; pl++)
         {
             int start, stop;
-
-            pl->pixelcount = 0;
+            visplane_t* newpl;
 
             // see if there is any open space
             start = pl->minx, stop = pl->maxx;
             if (start > stop)
                 continue; // nothing to map
-#ifdef MARS
+
             if (numplanes >= 16)
                 continue;
 
@@ -359,7 +359,7 @@ void Mars_R_PrepPlanes(void)
             start = start + span / 2;
             pl->maxx = start;
 
-            visplane_t* newpl = lastvisplane++;
+            newpl = lastvisplane++;
             newpl->open = pl->open;
             newpl->height = pl->height;
             newpl->flatnum = pl->flatnum;

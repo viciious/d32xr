@@ -41,6 +41,10 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floornewheight, fixed_t *c
       li->flags |= ML_MAPPED; // mark as seen
 
       front_sector    = &sectors[sides[li->sidenum[side]].sector];
+#ifdef MARS
+      Mars_ClearCacheLines((intptr_t)&front_sector->lightlevel & ~15, 1);
+#endif
+
       f_ceilingpic    = front_sector->ceilingpic;
       f_lightlevel    = front_sector->lightlevel;
       f_floorheight   = front_sector->floorheight   - vd.viewz;
@@ -66,6 +70,10 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floornewheight, fixed_t *c
       back_sector = (li->flags & ML_TWOSIDED) ? &sectors[sides[li->sidenum[side^1]].sector] : 0;
       if(!back_sector)
          back_sector = &emptysector;
+#ifdef MARS
+      Mars_ClearCacheLines((intptr_t)&back_sector->lightlevel & ~15, 1);
+#endif
+
       b_ceilingpic    = back_sector->ceilingpic;
       b_lightlevel    = back_sector->lightlevel;
       b_floorheight   = back_sector->floorheight   - vd.viewz;
