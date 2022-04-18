@@ -264,11 +264,13 @@ main_loop:
         move.w  0xA15120,d0         /* get COMM0 */
         bne.b   handle_req
 
+        move.w  #0x2700,sr          /* disable ints */
         bsr     bump_fm
+        move.w  #0x2000,sr          /* enable ints */
 
-		/* check hot-plug count */
-		tst.b	hotplug_cnt
-		bne.b	main_loop
+        /* check hot-plug count */
+        tst.b   hotplug_cnt
+        bne.b   main_loop
         move.b  #60,hotplug_cnt
 
         move.w  0xA15128,d0
@@ -590,10 +592,10 @@ read_mouse:
         bra     main_loop
 
 no_mky1:
-		move.w	#0xF000,0xA15128	/* nothing in port 1 */
-		bra.b	no_mouse
+        move.w  #0xF000,0xA15128    /* nothing in port 1 */
+        bra.b   no_mouse
 no_mky2:
-		move.w	#0xF000,0xA1512A	/* nothing in port 2 */
+       move.w   #0xF000,0xA1512A    /* nothing in port 2 */
 no_mouse:
         moveq   #-1,d0              /* no mouse */
         move.w  d0,0xA15122
@@ -1096,7 +1098,9 @@ dbug_end:
         move.w  d0,(a1)
         bra.b   1b
 2:
+        move.w  #0x2700,sr          /* disable ints */
         bsr     bump_fm
+        move.w  #0x2000,sr          /* enable ints */
         addq.w  #1,d2
         dbra    d3,0b
         bra     main_loop
@@ -1168,8 +1172,10 @@ bump_fm:
         beq.b   0b                  /* no delay */
         bra.b   2f                  /* new delay, set Timer A */
 1:
-        moveq   #1,d0               /* Timer A overflow flag */
-        and.b   0xA04000,d0         /* & YM2612 status */
+        move.b  0xA04000,d0         /* YM2612 status */
+        btst    #7,d0
+        bne     bump_exit           /* busy */
+        btst    #0,d0               /* Timer A overflow flag */
         beq     bump_exit           /* still waiting on Timer A */
         /* overflow */
         move.w  fm_tick,d0
@@ -1200,6 +1206,7 @@ bump_fm:
         andi.w  #3,d1
         lsr.w   #2,d0
         move.b  fm_csm,d2           /* timer control + CSM Mode */
+        andi.b	#0xFE,d2
         move.b  #0x27,0xA04000
         nop
         nop
@@ -1228,6 +1235,7 @@ bump_fm:
         nop
         nop
         nop
+        ori.b	#0x01,d2
         move.b  d2,0xA04001         /* enable Timer A, start Timer A */
 bump_exit:
         movem.l (sp)+,d0-d7/a0-a6
@@ -1268,8 +1276,8 @@ vert_blank:
         ori.w   #0x0100,d0
         move.w  d0,(a0)
 2:
-		tst.b	hotplug_cnt
-		beq.b	3f
+        tst.b   hotplug_cnt
+        beq.b   3f
         subq.b  #1,hotplug_cnt
 3:
         move.l  (sp)+,d2
@@ -1490,13 +1498,13 @@ get_port:
         andi.b	#1,d0
         or.b	d0,d2
 
-		move.w	#0xF001,d0
-		cmpi.b	#3,d2
-		beq.b	0f						/* mouse in port */
-		move.w	#0xF000,d0				/* no pad in port */
-		cmpi.b	#0x0D,d2
-		bne.b	0f
-		moveq	#0,d0					/* pad in port */
+        move.w  #0xF001,d0
+        cmpi.b  #3,d2
+        beq.b   0f                       /* mouse in port */
+        move.w  #0xF000,d0               /* no pad in port */
+        cmpi.b  #0x0D,d2
+        bne.b   0f
+        moveq   #0,d0                    /* pad in port */
 0:
 		rts
 
@@ -1509,9 +1517,9 @@ chk_ports:
         bsr.b	get_port
         move.w  d0,0xA15128             /* controller 1 */
 
-		tst.b	net_type
-		beq.b	0f						/* ignore controller 2 when networking enabled */
-		rts
+        tst.b   net_type
+        beq.b   0f                      /* ignore controller 2 when networking enabled */
+        rts
 0:
         /* get ID port 2 */
         lea		0xA10005,a0
