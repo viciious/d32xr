@@ -261,12 +261,12 @@ main_loop_start:
         move.l  #0,0xA15120         /* let Master SH2 run */
 
 main_loop:
-        move.w  0xA15120,d0         /* get COMM0 */
-        bne.b   handle_req
-
         move.w  #0x2700,sr          /* disable ints */
         bsr     bump_fm
         move.w  #0x2000,sr          /* enable ints */
+
+        move.w  0xA15120,d0         /* get COMM0 */
+        bne.b   handle_req
 
         /* check hot-plug count */
         tst.b   hotplug_cnt
