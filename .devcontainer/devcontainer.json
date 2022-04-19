@@ -15,7 +15,8 @@
 
 	// Add the IDs of extensions you want installed when the container is created in the array below.
 	"extensions": [
-		"ms-vscode.cpptools"
+		"ms-vscode.cpptools",
+		"steventattersall.m68k"
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
