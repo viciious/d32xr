@@ -339,7 +339,7 @@ void R_SegCommands(void)
                 if (seglight <= 160 + extralight)
                     seglight = (seglight >> 1);
 #else
-                seglight = light - (255 - light) * 2;
+                seglight = seglight - (255 - seglight) * 2;
                 if (seglight < 0)
                     seglight = 0;
 #endif

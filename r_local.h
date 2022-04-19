@@ -317,7 +317,7 @@ extern	const fixed_t		finetangent_[FINEANGLES/4];
 fixed_t finetangent(angle_t angle) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_EXTREME;
 #else
 extern	const fixed_t		finetangent_[FINEANGLES/2];
-#define finetangent(x)		finetangent_(x)
+#define finetangent(x)		finetangent_[x]
 #endif
 
 extern	VINT			validcount;

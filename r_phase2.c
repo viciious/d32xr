@@ -585,14 +585,20 @@ void Mars_Sec_R_WallPrep(void)
 void R_WallPrep(void)
 {
     viswall_t* segl;
+    unsigned clipbounds_[SCREENWIDTH/2+1];
+    unsigned short *clipbounds = (unsigned short *)clipbounds_;
 
-    for (segl = viswalls; segl != lastwallcmd; )
+    R_InitClipBounds(clipbounds_);
+
+    for (segl = viswalls; segl != lastwallcmd; segl++)
     {
-        R_WallEarlyPrep(segl);
+        fixed_t floornewheight = 0, ceilingnewheight = 0;
+
+        R_WallEarlyPrep(segl, &floornewheight, &ceilingnewheight);
 
         R_WallLatePrep(segl);
 
-        ++segl; // next viswall
+        R_SegLoop(segl, clipbounds, floornewheight, ceilingnewheight);
     }
 }
 
