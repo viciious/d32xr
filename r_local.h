@@ -347,7 +347,9 @@ extern short* dc_colormaps;
 
 extern uint8_t* dc_playpals;
 
+#ifdef MARS
 #define R_CheckPixels(lumpnum) (void *)((intptr_t)(W_POINTLUMPNUM(lumpnum)))
+#endif
 
 void R_InitTextures(void);
 void R_InitFlats(void);
