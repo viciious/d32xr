@@ -7,8 +7,8 @@
 #include "marshw.h"
 #endif
 
-unsigned short viewportWidth, viewportHeight;
-unsigned short centerX, centerY;
+int16_t viewportWidth, viewportHeight;
+int16_t centerX, centerY;
 fixed_t centerXFrac, centerYFrac;
 fixed_t stretch;
 fixed_t stretchX;
