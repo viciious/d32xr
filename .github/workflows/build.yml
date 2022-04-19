@@ -34,11 +34,11 @@ jobs:
       - name: make debug MARS
         run: |
           dd if=/dev/zero bs=1K count=2324 of=doom32x.wad && \
-          make -f Makefile.mars clean && make -f Makefile.mars -j debug
+          make clean && make -j debug
       - name: make MARS
         run: |
           dd if=/dev/zero bs=1K count=2324 of=doom32x.wad && \
-          make -f Makefile.mars clean && make -f Makefile.mars -j release
+          make clean && make -j release
       - name: readelf -S
         run: |
           /opt/toolchains/sega/sh-elf/bin/sh-elf-readelf -S D32XR.elf
