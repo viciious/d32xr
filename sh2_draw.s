@@ -201,20 +201,22 @@ _I_DrawSpanLowA:
         mov.l   @(32,r15),r9    /* ds_source */
         mov.l   draw_flat_ymask,r11
         mov     #63,r10
+        swap.w  r2,r1           /* (xfrac >> 16) */
+        and     r10,r1          /* (xfrac >> 16) & 63 */
 
         .p2alignw 2, 0x0009
 do_span_loop_low:
-        swap.w  r2,r1           /* (xfrac >> 16) */
         swap.w  r4,r0           /* (yfrac >> 16) */
-        and     r10,r1          /* (xfrac >> 16) & 63 */
         and     r11,r0          /* (yfrac >> 16) & 63*64 */
         or      r1,r0           /* spot = ((yfrac >> 16) & 63*64) | ((xfrac >> 16) & 63) */
         mov.b   @(r0,r9),r0     /* pix = ds_source[spot] */
         add     r3,r2           /* xfrac += xstep */
+        add     r5,r4           /* yfrac += ystep */
         extu.b  r0,r0
         add     r0,r0
         mov.w   @(r0,r7),r0     /* dpix = ds_colormap[pix] */
-        add     r5,r4           /* yfrac += ystep */
+        swap.w  r2,r1           /* (xfrac >> 16) */
+        and     r10,r1          /* (xfrac >> 16) & 63 */
         dt      r6              /* count-- */
         mov.w   r0,@r8          /* *fb = dpix */
         bf/s    do_span_loop_low
@@ -420,19 +422,22 @@ _I_DrawSpanA:
         mov.l   draw_flat_ymask,r11
         mov     #63,r10
 
+        swap.w  r2,r1           /* (xfrac >> 16) */
+        and     r10,r1          /* (xfrac >> 16) & 63 */
+
        .p2alignw 2, 0x0009
 do_span_loop:
-        swap.w  r2,r1           /* (xfrac >> 16) */
         swap.w  r4,r0           /* (yfrac >> 16) */
-        and     r10,r1          /* (xfrac >> 16) & 63 */
         and     r11,r0          /* (yfrac >> 16) & 63*64 */
         or      r1,r0           /* spot = ((yfrac >> 16) & *64) | ((xfrac >> 16) & 63) */
         mov.b   @(r0,r9),r0     /* pix = ds_source[spot] */
         add     r3,r2           /* xfrac += xstep */
+        add     r5,r4           /* yfrac += ystep */
         extu.b  r0,r0
         add     r0,r0
         mov.w   @(r0,r7),r0     /* dpix = ds_colormap[pix] */
-        add     r5,r4           /* yfrac += ystep */
+        swap.w  r2,r1           /* (xfrac >> 16) */
+        and     r10,r1          /* (xfrac >> 16) & 63 */
         dt      r6              /* count-- */
         mov.b   r0,@r8          /* *fb = dpix */
         bf/s    do_span_loop
