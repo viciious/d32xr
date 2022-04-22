@@ -695,7 +695,7 @@ void D_DoomMain (void);
 void D_DoomLoop (void);
 
 extern	boolean	demoplayback, demorecording;
-extern	int		*demo_p, *demobuffer;
+extern	unsigned *demo_p, *demobuffer;
 
 extern	skill_t		startskill;
 extern	int			startmap;
@@ -830,7 +830,7 @@ void G_SecretExitLevel (void);
 void G_WorldDone (void);
 
 void G_RecordDemo (void);
-int G_PlayDemoPtr (int *demo);
+int G_PlayDemoPtr (unsigned *demo);
 
 /*----- */
 /*PLAY */

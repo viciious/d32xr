@@ -584,7 +584,7 @@ startnew:
 }
 
 
-int G_PlayDemoPtr (int *demo)
+int G_PlayDemoPtr (unsigned *demo)
 {
 	int		exit;
 	int		skill, map;

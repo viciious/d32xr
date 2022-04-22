@@ -15,7 +15,7 @@ VINT		ticsperframe = MINTICSPERFRAME;
 int			maxlevel;			/* highest level selectable in menu (1-25) */
 jagobj_t	*backgroundpic;
 
-int				*demo_p, *demobuffer;
+unsigned	*demo_p, *demobuffer;
 
 unsigned configuration[NUMCONTROLOPTIONS][3] =
 {
@@ -707,7 +707,7 @@ void RunCredits (void)
 
 int  RunDemo (char *demoname)
 {
-	int	*demo;
+	unsigned *demo;
 	int	exit;
 	int lump;
 
