@@ -455,6 +455,16 @@ int TIC_Abortable (void)
 	}
 #endif
 
+#ifdef MARS
+	if ( (buttons & BT_A) && !(oldbuttons & BT_A) )
+		return ga_exitdemo;
+	if ( (buttons & BT_B) && !(oldbuttons & BT_B) )
+		return ga_exitdemo;
+	if ( (buttons & BT_C) && !(oldbuttons & BT_C) )
+		return ga_exitdemo;
+	if ( (buttons & BT_START) && !(oldbuttons & BT_START) )
+		return ga_exitdemo;
+#else
 	if ( (buttons & BT_ATTACK) && !(oldbuttons & BT_ATTACK) )
 		return ga_exitdemo;
 	if ( (buttons & BT_USE) && !(oldbuttons & BT_USE) )
@@ -463,6 +473,7 @@ int TIC_Abortable (void)
 		return ga_exitdemo;
 	if ( (buttons & BT_START) && !(oldbuttons & BT_START) )
 		return ga_exitdemo;
+#endif
 
 	return 0;
 }
@@ -553,13 +564,26 @@ static int TIC_Credits (void)
 
 	if (ticon >= gameinfo.creditsTime)
 		return 1;		/* go on to next demo */
-		
+
+#ifdef MARS
+	if ( (buttons & BT_A) && !(oldbuttons & BT_A) )
+		return ga_exitdemo;
+	if ( (buttons & BT_B) && !(oldbuttons & BT_B) )
+		return ga_exitdemo;
+	if ( (buttons & BT_C) && !(oldbuttons & BT_C) )
+		return ga_exitdemo;
+	if ( (buttons & BT_START) && !(oldbuttons & BT_START) )
+		return ga_exitdemo;
+#else
 	if ( (buttons & BT_ATTACK) && !(oldbuttons & BT_ATTACK) )
+		return ga_exitdemo;
+	if ( (buttons & BT_SPEED) && !(oldbuttons & BT_SPEED) )
 		return ga_exitdemo;
 	if ( (buttons & BT_USE) && !(oldbuttons & BT_USE) )
 		return ga_exitdemo;
 	if ( (buttons & BT_START) && !(oldbuttons & BT_START) )
 		return ga_exitdemo;
+#endif
 
 	if (ticon * 2 >= gameinfo.creditsTime)
 	{
