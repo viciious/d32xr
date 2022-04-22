@@ -430,6 +430,8 @@ int TIC_Abortable (void)
 #ifdef JAGUAR
 	jagobj_t	*pl;
 #endif
+	int buttons = ticbuttons[0];
+	int oldbuttons = oldticbuttons[0];
 
 	if (ticon < TICVBLS)
 		return 0;
@@ -453,15 +455,13 @@ int TIC_Abortable (void)
 	}
 #endif
 
-	if ( (ticbuttons[0] & BT_ATTACK) && !(oldticbuttons[0] & BT_ATTACK) )
+	if ( (buttons & BT_ATTACK) && !(oldbuttons & BT_ATTACK) )
 		return ga_exitdemo;
-	if ( (ticbuttons[0] & BT_SPEED) && !(oldticbuttons[0] & BT_SPEED) )
+	if ( (buttons & BT_USE) && !(oldbuttons & BT_USE) )
 		return ga_exitdemo;
-	if ( (ticbuttons[0] & BT_USE) && !(oldticbuttons[0] & BT_USE) )
+	if ( (buttons & BT_OPTION) && !(oldbuttons & BT_OPTION) )
 		return ga_exitdemo;
-	if ( (ticbuttons[0] & BT_OPTION) && !(oldticbuttons[0] & BT_OPTION) )
-		return ga_exitdemo;
-	if ( (ticbuttons[0] & BT_START) && !(oldticbuttons[0] & BT_START) )
+	if ( (buttons & BT_START) && !(oldbuttons & BT_START) )
 		return ga_exitdemo;
 
 	return 0;
@@ -548,16 +548,17 @@ void STOP_Credits (void)
 
 static int TIC_Credits (void)
 {
+	int buttons = ticbuttons[0];
+	int oldbuttons = oldticbuttons[0];
+
 	if (ticon >= gameinfo.creditsTime)
 		return 1;		/* go on to next demo */
 		
-	if ( (ticbuttons[0] & BT_ATTACK) && !(oldticbuttons[0] & BT_ATTACK) )
+	if ( (buttons & BT_ATTACK) && !(oldbuttons & BT_ATTACK) )
 		return ga_exitdemo;
-	if ( (ticbuttons[0] & BT_SPEED) && !(oldticbuttons[0] & BT_SPEED) )
+	if ( (buttons & BT_USE) && !(oldbuttons & BT_USE) )
 		return ga_exitdemo;
-	if ( (ticbuttons[0] & BT_USE) && !(oldticbuttons[0] & BT_USE) )
-		return ga_exitdemo;
-	if ( (ticbuttons[0] & BT_START) && !(oldticbuttons[0] & BT_START) )
+	if ( (buttons & BT_START) && !(oldbuttons & BT_START) )
 		return ga_exitdemo;
 
 	if (ticon * 2 >= gameinfo.creditsTime)
