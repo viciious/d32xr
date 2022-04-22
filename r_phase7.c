@@ -340,13 +340,13 @@ void Mars_R_PrepPlanes(void)
             int start, stop;
             visplane_t* newpl;
 
+            if (numplanes >= 16)
+                break;
+
             // see if there is any open space
             start = pl->minx, stop = pl->maxx;
             if (start > stop)
                 continue; // nothing to map
-
-            if (numplanes >= 16)
-                continue;
 
             int span = stop - start + 1;
             if (span < maxlen)
