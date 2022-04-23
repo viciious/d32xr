@@ -31,6 +31,9 @@
 #include "r_local.h"
 #include "wadbase.h"
 
+#define LINK_TIMEOUT_SHORT 		0x3FF
+#define LINK_TIMEOUT_LONG	 	0x3FFF
+
 typedef struct {
 	VINT repeat;
 	boolean prev_state;
@@ -1009,6 +1012,8 @@ void I_NetSetup (void)
 
 	Mars_SetupNet(1); /* 0 = no net, 1 = system link cable, -1 = serial cable */
 
+	Mars_SetNetLinkTimeout(LINK_TIMEOUT_SHORT);
+
 	I_Print8(64,1,"Attempting to connect..."); 
 	I_Print8(80,3,"Press start to abort");
 //	I_Update();
@@ -1026,6 +1031,8 @@ void I_NetSetup (void)
 		I_NetStop();
 		return;
 	}
+
+	Mars_SetNetLinkTimeout(LINK_TIMEOUT_LONG);
 
 	Mars_WaitTicks(5);
 
