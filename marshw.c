@@ -477,6 +477,14 @@ void Mars_CleanupNet(void)
 	while (MARS_SYS_COMM0);
 }
 
+void Mars_SetNetLinkTimeout(int timeout)
+{
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM2 = timeout;
+	MARS_SYS_COMM0 = 0x1700;
+	while (MARS_SYS_COMM0);
+}
+
 
 /*
  *  MD video debug functions

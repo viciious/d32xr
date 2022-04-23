@@ -3,7 +3,7 @@
 
         .text
 
-        .equ LINK_TIMEOUT, 0x3FFF
+        .equ DEFAULT_LINK_TIMEOUT, 0x3FFF
 
 | 0x880800 - entry point for reset/cold-start
 
@@ -336,6 +336,8 @@ handle_req:
         bls     net_cleanup
         cmpi.w  #0x16FF,d0
         bls     set_bank_page
+        cmpi.w  #0x17FF,d0
+        bls     net_set_link_timeout
 
 | unknown command
         move.w  #0,0xA15120         /* done */
@@ -708,7 +710,7 @@ ext_link:
         addq.w  #1,d1
         andi.w  #31,d1
         move.w  d1,net_wbix         /* update buffer write index */
-        move.w  #LINK_TIMEOUT,d1
+        move.w  net_link_timeout,d1
 0:
         nop
         nop
@@ -814,7 +816,7 @@ read_link:
 
 write_serial:
         move.w  #0x2700,sr          /* disable ints */
-        move.w  #LINK_TIMEOUT,d1
+        move.w  net_link_timeout,d1
 0:
         bsr     bump_fm
         btst    #0,0xA10019         /* ok to transmit? */
@@ -828,7 +830,7 @@ write_serial:
         move.w  #0x2000,sr          /* enable ints */
         bra     main_loop
 2:
-        move.w  #LINK_TIMEOUT,0xA15122    /* timeout */
+        move.w  net_link_timeout,0xA15122    /* timeout */
         move.w  #0,0xA15120         /* done */
         move.w  #0x2000,sr          /* enable ints */
         bra     main_loop
@@ -847,7 +849,7 @@ write_link:
         move.b  d0,0xA10005         /* assert TH of other console */
 
         /* wait on handshake */
-        move.w  #LINK_TIMEOUT,d2
+        move.w  net_link_timeout,d2
 0:
         bsr     bump_fm
         btst    #6,0xA10005         /* check for TH low (handshake) */
@@ -857,7 +859,7 @@ write_link:
 1:
         ori.b   #0x20,d0            /* set TR line */
         move.b  d0,0xA10005         /* deassert TH of other console */
-        move.w  #LINK_TIMEOUT,d2
+        move.w  net_link_timeout,d2
 2:
         nop
         nop
@@ -1115,6 +1117,11 @@ set_bank_page:
         move.b  d1,1(a0,d0.l)
         move.b  #0,0xA15107         /* clear RV */
         move.w  #0x2000,sr          /* enable ints */
+        move.w  #0,0xA15120         /* release SH2 now */
+        bra     main_loop
+
+net_set_link_timeout:
+        move.w  0xA15122,net_link_timeout
         move.w  #0,0xA15120         /* release SH2 now */
         bra     main_loop
 
@@ -1568,11 +1575,13 @@ everdrive_ok:
         dc.w    0
 
 net_rbix:
-    dc.w    0
+        dc.w    0
 net_wbix:
-    dc.w    0
+        dc.w    0
 net_rdbuf:
         .space  32
+net_link_timeout:
+        dc.w    DEFAULT_LINK_TIMEOUT
 
     .global net_type
 net_type:

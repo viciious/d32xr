@@ -110,6 +110,7 @@ int Mars_GetNetByte(int wait);
 int Mars_PutNetByte(int val);
 void Mars_SetupNet(int type);
 void Mars_CleanupNet(void);
+void Mars_SetNetLinkTimeout(int timeout);
 
 // MD video debug functions
 void Mars_SetMDCrsr(int x, int y);
