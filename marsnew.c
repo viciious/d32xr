@@ -442,6 +442,8 @@ void I_InitColormap(void)
 
 	if (s < 33)
 		D_memcpy(dc_colormaps + 256 * 32, dc_colormaps, 512);
+
+	Mars_CommSlaveClearCache();
 }
 
 void I_SetPalette(const byte* palette)
