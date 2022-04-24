@@ -94,7 +94,7 @@ static inline void Mars_R_EndWallPrep(int maxsegs)
 // r_phase7
 static inline void Mars_R_BeginDrawPlanes(void)
 {
-	MARS_SYS_COMM6 = 1; // next visplane
+	MARS_SYS_COMM6 = 0; // next visplane
 	MARS_SYS_COMM4 = 5;
 }
 
