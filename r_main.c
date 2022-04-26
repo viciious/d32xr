@@ -50,6 +50,9 @@ viswall_t	*viswalls/*[MAXWALLCMDS]*/, *lastwallcmd;
 /* planes */
 /* */
 visplane_t	*visplanes/*[MAXVISPLANES]*/, *lastvisplane;
+#ifdef MARS
+uint16_t 		*sortedvisplanes;
+#endif
 
 #define NUM_VISPLANES_BUCKETS 64
 static visplane_t **visplanes_hash;
@@ -721,6 +724,10 @@ static void R_Setup (int displayplayer, unsigned short *openings_,
 	vissprites = (void*)tempbuf;
 	tempbuf += sizeof(*vissprites) * MAXVISSPRITES / sizeof(*tempbuf);
 
+	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
+	sortedvisplanes = tempbuf;
+	tempbuf += MAXVISPLANES * 2;
+
 	/* */
 	/* clear sprites */
 	/* */
@@ -763,6 +770,8 @@ void Mars_Sec_R_Setup(void)
 	Mars_ClearCacheLines((intptr_t)&lastopening & ~15, 1);
 
 	Mars_ClearCacheLines((intptr_t)visplanes & ~15, (sizeof(visplane_t)*MAXVISPLANES+15)/16);
+
+    Mars_ClearCacheLines((intptr_t)&sortedvisplanes & ~15, 1);
 
 	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
 		visplanes_hash[i] = NULL;

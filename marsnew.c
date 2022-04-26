@@ -304,6 +304,7 @@ void Mars_Secondary(void)
 			break;
 		case 4:
 			Mars_Sec_R_WallPrep();
+			Mars_Sec_R_PlanePrep();
 			Mars_Sec_R_SegCommands();
 			break;
 		case 5:

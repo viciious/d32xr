@@ -28,9 +28,6 @@ typedef struct
 #endif
 } localplane_t;
 
-static short numsortedplanes;
-static short* sortedplanes;
-
 static void R_MapPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
 static void R_PlaneLoop(localplane_t* lpl) ATTR_DATA_CACHE_ALIGN;
 static void R_DrawPlanes2(void) ATTR_DATA_CACHE_ALIGN;
@@ -238,9 +235,14 @@ static visplane_t *R_GetNextPlane(void)
 
     R_UnlockPln();
 
-    if (p >= numsortedplanes)
+#ifdef MARS
+    if (p >= lastvisplane - visplanes - 1)
         return NULL;
-    return visplanes + sortedplanes[p*2+1];
+    return visplanes + sortedvisplanes[p*2+1];
+#else
+    visplane_t *pl = visplanes + p + 1;
+    return pl == lastvisplane ? NULL : pl;
+#endif
 }
 
 static void R_DrawPlanes2(void)
@@ -321,89 +323,8 @@ static void R_DrawPlanes2(void)
 }
 
 #ifdef MARS
-void Mars_R_PrepPlanes(short *sortbuf)
-{
-    int j, numplanes;
-    visplane_t* pl;
-
-    Mars_ClearCacheLines((intptr_t)&lastvisplane & ~15, 1);
-    Mars_ClearCacheLines((intptr_t)&visplanes & ~15, 1);
-
-    numplanes = lastvisplane - visplanes;
-    Mars_ClearCacheLines((intptr_t)visplanes & ~15, (numplanes * sizeof(visplane_t) + 15) / 16);
-
-    {
-        visplane_t *last = lastvisplane;
-        const int maxlen = centerX + centerX / 2;
-
-        for (pl = visplanes + 1; pl < last; pl++)
-        {
-            int start, stop;
-            visplane_t* newpl;
-
-            if (numplanes >= 16)
-                break;
-
-            // see if there is any open space
-            start = pl->minx, stop = pl->maxx;
-            if (start > stop)
-                continue; // nothing to map
-
-            int span = stop - start + 1;
-            if (span < maxlen)
-                continue;
-
-            // split log visplane into two
-            if (lastvisplane == visplanes + MAXVISPLANES)
-                continue;
-
-            start = start + span / 2;
-            pl->maxx = start;
-
-            newpl = lastvisplane++;
-            newpl->open = pl->open;
-            newpl->height = pl->height;
-            newpl->flatnum = pl->flatnum;
-            newpl->lightlevel = pl->lightlevel;
-            newpl->minx = start + 1;
-            newpl->maxx = stop;
-            numplanes++;
-        }
-    }
-
-    // sort visplanes by flatnum so that texture data 
-    // has a better chance to stay cached
-    j = 0;
-    numplanes = 0;
-    for (pl = visplanes + 1; pl < lastvisplane; pl++)
-    {
-        if (pl->minx <= pl->maxx)
-        {
-            sortbuf[j + 0] = pl->flatnum;
-            sortbuf[j + 1] = pl - visplanes;
-            j += 2;
-            numplanes++;
-        }
-    }
-
-    numsortedplanes = numplanes;
-    D_isort((int*)sortbuf, numplanes);
-    sortedplanes = (short*)sortbuf;
-}
-
 void Mars_Sec_R_DrawPlanes(void)
 {
-    int numplanes;
-
-    Mars_ClearCacheLines((intptr_t)&lastvisplane & ~15, 1);
-
-    numplanes = lastvisplane - visplanes;
-    Mars_ClearCacheLines((intptr_t)visplanes & ~15, (numplanes * sizeof(visplane_t) + 15) / 16);
-
-    Mars_ClearCacheLines((intptr_t)&sortedplanes & ~15, 1);
-    Mars_ClearCacheLines((intptr_t)&numsortedplanes & ~15, 1);
-    Mars_ClearCacheLines((intptr_t)sortedplanes & ~15, (numsortedplanes * sizeof(*sortedplanes) + 15) / 16);
-
     R_DrawPlanes2();
 }
 #endif
@@ -414,9 +335,9 @@ void Mars_Sec_R_DrawPlanes(void)
 void R_DrawPlanes(void)
 {
 #ifdef MARS
-    short sortbuf[MAXVISPLANES * 2] __attribute__((aligned(4)));
-
-    Mars_R_PrepPlanes(sortbuf);
+    int numplanes = lastvisplane - visplanes;
+    Mars_ClearCacheLines((intptr_t)&lastvisplane & ~15, 1);
+    Mars_ClearCacheLines((intptr_t)visplanes & ~15, (numplanes * sizeof(visplane_t) + 15) / 16);
 
     Mars_R_BeginDrawPlanes();
 

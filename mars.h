@@ -35,6 +35,7 @@ void Mars_Secondary(void) ATTR_DATA_CACHE_ALIGN;
 
 void Mars_Sec_R_Setup(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_WallPrep(void) ATTR_DATA_CACHE_ALIGN;
+void Mars_Sec_R_PlanePrep(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_SegCommands(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_DrawSprites(int* sortedsprites, int count) ATTR_DATA_CACHE_ALIGN;
