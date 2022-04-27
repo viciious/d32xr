@@ -509,14 +509,12 @@ void Mars_Sec_R_WallPrep(void)
 {
     viswall_t *segl;
     viswall_t *first, *verylast;
-    volatile viswall_t* volatile* plast;
     unsigned clipbounds_[SCREENWIDTH/2+1];
     unsigned short *clipbounds = (unsigned short *)clipbounds_;
     fixed_t floornewheight = 0, ceilingnewheight = 0;
 
     R_InitClipBounds(clipbounds_);
   
-    plast = (volatile viswall_t* volatile*)((intptr_t)&lastwallcmd | 0x20000000);
     first = viswalls;
     verylast = NULL;
 
@@ -530,15 +528,12 @@ void Mars_Sec_R_WallPrep(void)
         // check if master CPU finished exec'ing R_BSP()
         if (nextsegs == MAXVISSSEC)
         {
-            last = (viswall_t*)*plast;
-            verylast = last;
-        }
-        else
-        {
-            last = first + nextsegs;
+            Mars_ClearCacheLines((intptr_t)&lastwallcmd & ~15, 1);
+            verylast = lastwallcmd;
+            nextsegs = verylast - first;
         }
 
-        while (segl < last)
+        for (last = first + nextsegs; segl < last; segl++)
         {
             R_WallEarlyPrep(segl, &floornewheight, &ceilingnewheight);
 
@@ -575,12 +570,8 @@ void Mars_Sec_R_WallPrep(void)
             }
 
             segl->state = RW_READY;
-
-            ++segl; // next viswall
         }
-    }
-
-    Mars_ClearCacheLines((intptr_t)&lastwallcmd & ~15, 1);
+    }    
 }
 
 static void Mars_Sec_R_SplitPlanes(void)
