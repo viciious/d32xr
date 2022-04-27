@@ -78,7 +78,7 @@ int D_vsnprintf(char *str, size_t nmax, const char *format, va_list ap) __attrib
 int D_snprintf(char *buf, size_t nsize, const char *fmt, ...) __attribute__((nonnull));
 void D_printf (char *str, ...) __attribute__((nonnull));
 
-void D_isort(int* a, int len) __attribute__((nonnull));
+void D_isort(int* a, int len) __attribute__((nonnull)) ATTR_DATA_CACHE_ALIGN;
 
 /*
 ===============================================================================
