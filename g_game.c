@@ -145,6 +145,9 @@ void G_DoLoadLevel (void)
 	music = gamemapinfo.musicLump;
 	if (music <= 0)
 		music = S_SongForMapnum(gamemap);
+
+	if (netgame != gt_single && !splitscreen)
+		S_StopSong();
 	S_StartSong(music, 1, gamemap);
 
 	//Z_CheckHeap (mainzone);  		/* DEBUG */
