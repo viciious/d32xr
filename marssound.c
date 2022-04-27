@@ -451,12 +451,12 @@ static void S_Update(int16_t* buffer)
 		if (!playeringame[i])
 			continue;
 
-		Mars_ClearCacheLines((intptr_t)&player->mo, 1);
+		Mars_ClearCacheLine(&player->mo);
 
 		mo = player->mo;
-		Mars_ClearCacheLines((intptr_t)&mo->x & ~15, 1);
-		Mars_ClearCacheLines((intptr_t)&mo->y & ~15, 1);
-		Mars_ClearCacheLines((intptr_t)&mo->angle & ~15, 1);
+		Mars_ClearCacheLine(&mo->x);
+		Mars_ClearCacheLine(&mo->y);
+		Mars_ClearCacheLine(&mo->angle);
 	}
 
 	{
@@ -484,8 +484,8 @@ static void S_Update(int16_t* buffer)
 		{
 			int vol, sep;
 
-			Mars_ClearCacheLines((intptr_t)&mo->x & ~15, 1);
-			Mars_ClearCacheLines((intptr_t)&mo->y & ~15, 1);
+			Mars_ClearCacheLine(&mo->x);
+			Mars_ClearCacheLine(&mo->y);
 
 			/* */
 			/* spatialize */

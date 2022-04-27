@@ -300,20 +300,20 @@ static void R_DrawPSprites(const int cpu)
 #ifdef MARS
 void Mars_Sec_R_DrawSprites(int* sortedsprites, int count)
 {
-    Mars_ClearCacheLines((intptr_t)sortedsprites & ~15, (count * sizeof(*sortedsprites) + 15) / 16);
+    Mars_ClearCacheLines(sortedsprites, (count * sizeof(*sortedsprites) + 15) / 16);
 
-    Mars_ClearCacheLines((intptr_t)&vissprites & ~15, 1);
-    Mars_ClearCacheLines((intptr_t)&vissprite_p & ~15, 1);
-    Mars_ClearCacheLines((intptr_t)vissprites & ~15, ((vissprite_p - vissprites) * sizeof(vissprite_t) + 15) / 16);
+    Mars_ClearCacheLine(&vissprites);
+    Mars_ClearCacheLine(&vissprite_p);
+    Mars_ClearCacheLines(vissprites, ((vissprite_p - vissprites) * sizeof(vissprite_t) + 15) / 16);
 
-    Mars_ClearCacheLines((intptr_t)&sprscreenhalf & ~15, 1);
+    Mars_ClearCacheLine(&sprscreenhalf);
 
     R_DrawSpritesLoop(1, sortedsprites, count);
 }
 
 void Mars_Sec_R_DrawPSprites(void)
 {
-    Mars_ClearCacheLines((intptr_t)&sprscreenhalf & ~15, 1);
+    Mars_ClearCacheLine(&sprscreenhalf);
     R_DrawPSprites(1);
 }
 
@@ -375,8 +375,8 @@ void R_Sprites(void)
 
    Mars_R_BeginDrawSprites(sortedsprites, sortedcount);
 
-   Mars_ClearCacheLines((intptr_t)&lastopening & ~15, 1);
-   Mars_ClearCacheLines((intptr_t)openings & ~15, ((lastopening - openings) * sizeof(*openings) + 15) / 16);
+   Mars_ClearCacheLine(&lastopening);
+   Mars_ClearCacheLines(openings, ((lastopening - openings) * sizeof(*openings) + 15) / 16);
    R_DrawSpritesLoop(0, sortedsprites, sortedcount);
 
    Mars_R_EndDrawSprites();

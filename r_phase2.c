@@ -42,7 +42,7 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floornewheight, fixed_t *c
 
       front_sector    = &sectors[sides[li->sidenum[side]].sector];
 #ifdef MARS
-      Mars_ClearCacheLines((intptr_t)&front_sector->lightlevel & ~15, 1);
+      Mars_ClearCacheLine(&front_sector->lightlevel);
 #endif
 
       f_ceilingpic    = front_sector->ceilingpic;
@@ -51,14 +51,14 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floornewheight, fixed_t *c
       f_ceilingheight = front_sector->ceilingheight - vd.viewz;
 
 #ifdef MARS
-      Mars_ClearCacheLines((intptr_t)&flattranslation[front_sector->floorpic] & ~15, 1);
+      Mars_ClearCacheLine(&flattranslation[front_sector->floorpic]);
 #endif
       segl->floorpicnum   = flattranslation[front_sector->floorpic];
 
       if (f_ceilingpic != -1)
       {
 #ifdef MARS
-          Mars_ClearCacheLines((intptr_t)&flattranslation[f_ceilingpic] & ~15, 1);
+          Mars_ClearCacheLine(&flattranslation[f_ceilingpic]);
 #endif
           segl->ceilingpicnum = flattranslation[f_ceilingpic];
       }
@@ -71,7 +71,7 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floornewheight, fixed_t *c
       if(!back_sector)
          back_sector = &emptysector;
 #ifdef MARS
-      Mars_ClearCacheLines((intptr_t)&back_sector->lightlevel & ~15, 1);
+      Mars_ClearCacheLine(&back_sector->lightlevel);
 #endif
 
       b_ceilingpic    = back_sector->ceilingpic;
@@ -119,7 +119,7 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floornewheight, fixed_t *c
       {
          // single-sided line
 #ifdef MARS
-         Mars_ClearCacheLines((intptr_t)&texturetranslation[si->midtexture] & ~15, 1);
+         Mars_ClearCacheLine(&texturetranslation[si->midtexture]);
 #endif
          segl->t_texturenum = texturetranslation[si->midtexture];
 
@@ -141,7 +141,7 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floornewheight, fixed_t *c
          if(b_floorheight > f_floorheight)
          {
 #ifdef MARS
-            Mars_ClearCacheLines((intptr_t)&texturetranslation[si->bottomtexture] & ~15, 1);
+            Mars_ClearCacheLine(&texturetranslation[si->bottomtexture]);
 #endif
             segl->b_texturenum = texturetranslation[si->bottomtexture];
             if(li->flags & ML_DONTPEGBOTTOM)
@@ -160,7 +160,7 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floornewheight, fixed_t *c
          if(b_ceilingheight < f_ceilingheight && !skyhack)
          {
 #ifdef MARS
-            Mars_ClearCacheLines((intptr_t)&texturetranslation[si->toptexture] & ~15, 1);
+            Mars_ClearCacheLine(&texturetranslation[si->toptexture]);
 #endif
             segl->t_texturenum = texturetranslation[si->toptexture];
             if(li->flags & ML_DONTPEGTOP)
@@ -528,7 +528,7 @@ void Mars_Sec_R_WallPrep(void)
         // check if master CPU finished exec'ing R_BSP()
         if (nextsegs == MAXVISSSEC)
         {
-            Mars_ClearCacheLines((intptr_t)&lastwallcmd & ~15, 1);
+            Mars_ClearCacheLine(&lastwallcmd);
             verylast = lastwallcmd;
             nextsegs = verylast - first;
         }
@@ -552,21 +552,21 @@ void Mars_Sec_R_WallPrep(void)
             if (segl->actionbits & AC_TOPTEXTURE)
             {
                 texture_t* tex = &textures[segl->t_texturenum];
-                Mars_ClearCacheLines((intptr_t)&tex->data & ~15, 1);
+                Mars_ClearCacheLine(&tex->data);
             }
             if (segl->actionbits & AC_BOTTOMTEXTURE)
             {
                 texture_t* tex = &textures[segl->b_texturenum];
-                Mars_ClearCacheLines((intptr_t)&tex->data & ~15, 1);
+                Mars_ClearCacheLine(&tex->data);
             }
 
             if (segl->actionbits & AC_ADDFLOOR)
             {
-                Mars_ClearCacheLines((intptr_t)&flatpixels[segl->floorpicnum] & ~15, 1);
+                Mars_ClearCacheLine(&flatpixels[segl->floorpicnum]);
             }
             if (segl->actionbits & AC_ADDCEILING)
             {
-                Mars_ClearCacheLines((intptr_t)&flatpixels[segl->ceilingpicnum] & ~15, 1);
+                Mars_ClearCacheLine(&flatpixels[segl->ceilingpicnum]);
             }
 
             segl->state = RW_READY;

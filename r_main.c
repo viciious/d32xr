@@ -756,22 +756,22 @@ void Mars_Sec_R_Setup(void)
 {
 	int i;
 
-	Mars_ClearCacheLines((intptr_t)&vd & ~15, (sizeof(vd) + 15) / 16);
-	Mars_ClearCacheLines((intptr_t)&viewportbuffer & ~15, 1);
+	Mars_ClearCacheLines(&vd, (sizeof(vd) + 15) / 16);
+	Mars_ClearCacheLine(&viewportbuffer);
 
-	Mars_ClearCacheLines((intptr_t)&viswalls & ~15, 1);
-	Mars_ClearCacheLines((intptr_t)&vissprites & ~15, 1);
-	Mars_ClearCacheLines((intptr_t)&visplanes & ~15, 1);
-	Mars_ClearCacheLines((intptr_t)&lastvisplane & ~15, 1);
-	Mars_ClearCacheLines((intptr_t)&visplanes_hash & ~15, 1);
-	Mars_ClearCacheLines((intptr_t)&lastsegclip & ~15, 1);
+	Mars_ClearCacheLine(&viswalls);
+	Mars_ClearCacheLine(&vissprites);
+	Mars_ClearCacheLine(&visplanes);
+	Mars_ClearCacheLine(&lastvisplane);
+	Mars_ClearCacheLine(&visplanes_hash);
+	Mars_ClearCacheLine(&lastsegclip);
 
-	Mars_ClearCacheLines((intptr_t)&openings & ~15, 1);
-	Mars_ClearCacheLines((intptr_t)&lastopening & ~15, 1);
+	Mars_ClearCacheLine(&openings);
+	Mars_ClearCacheLine(&lastopening);
 
-	Mars_ClearCacheLines((intptr_t)visplanes & ~15, (sizeof(visplane_t)*MAXVISPLANES+15)/16);
+	Mars_ClearCacheLines(visplanes, (sizeof(visplane_t)*MAXVISPLANES+15)/16);
 
-    Mars_ClearCacheLines((intptr_t)&sortedvisplanes & ~15, 1);
+    Mars_ClearCacheLine(&sortedvisplanes);
 
 	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
 		visplanes_hash[i] = NULL;
