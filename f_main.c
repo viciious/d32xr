@@ -4,6 +4,7 @@
 #include "r_local.h"
 
 extern int COLOR_BLACK;
+static drawcol_t drcol;
 
 /*
 ==================
@@ -19,14 +20,16 @@ void BufferedDrawSprite (int sprite, int frame, int rotation)
 	spritedef_t	*sprdef;
 	spriteframe_t	*sprframe;
 	patch_t		*patch;
-	byte		*pixels, *src, *dest, pix;
-	int			count;
-	int			x, sprleft, sprtop;
+	byte		*pixels, *src;
+	int			x, sprleft, sprtop, spryscale;
+	fixed_t 	spriscale;
 	column_t	*column;
 	int			lump;
 	boolean		flip;
 	int			texturecolumn;
-	
+	int 		fuzzpos = 0;
+	int			light = HWLIGHT(255);
+
 	if ((unsigned)sprite >= NUMSPRITES)
 		I_Error ("BufferedDrawSprite: invalid sprite number %i "
 		,sprite);
@@ -58,7 +61,9 @@ void BufferedDrawSprite (int sprite, int frame, int rotation)
 /* */
 	sprtop = 90;
 	sprleft = 80;
-	
+	spryscale = 2;
+	spriscale = FRACUNIT/spryscale;
+
 	sprtop -= patch->topoffset;
 	sprleft -= patch->leftoffset;
 	
@@ -80,18 +85,14 @@ void BufferedDrawSprite (int sprite, int frame, int rotation)
 /* */
 		for ( ; column->topdelta != 0xff ; column++) 
 		{
-	/* calculate unclipped screen coordinates for post */
-			dest = (byte *)I_FrameBuffer() + (short)(sprtop+column->topdelta)*(short)640+(sprleft + x)*2;
-			count = column->length;
-			src = pixels + column->dataofs;
-			while (count--)
-			{
-				pix = *src++;
-				if (!pix)
-					pix = COLOR_BLACK;
-				dest[0] = dest[1] = dest[320] = dest[321] = pix;
-				dest += 640;
-			}
+			int top    = column->topdelta + sprtop;
+			int bottom = top + column->length;
+
+			top *= spryscale;
+			bottom *= spryscale;
+			src = pixels + BIGSHORT(column->dataofs);
+
+			drcol(sprleft+x, top, bottom, light, 0, spriscale, src, 128, &fuzzpos);
 		}
 	}
 }
@@ -110,6 +111,7 @@ static const castinfo_t castorder[] = {
 {"shotgun guy", MT_SHOTGUY},
 {"imp", MT_TROOP},
 {"demon", MT_SERGEANT},
+{"spectre", MT_SERGEANT},
 {"lost soul", MT_SKULL},
 {"cacodemon", MT_HEAD},
 {"baron of hell", MT_BRUISER},
@@ -517,6 +519,16 @@ stopattack:
 
 void F_Drawer (void)
 {
+	drcol = I_DrawColumnLow;
+	if (D_strcasecmp(castorder[castnum].name, "spectre") == 0)
+		drcol = I_DrawFuzzColumnLow;
+
+	// HACK
+	viewportWidth = 320;
+	viewportHeight = I_FrameBufferHeight();
+	viewportbuffer = (pixel_t*)I_FrameBuffer();
+	vd.fuzzcolormap = 14 * 256;
+
 	switch(status)
 	{
 		case fin_endtext:
