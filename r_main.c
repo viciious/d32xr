@@ -105,7 +105,7 @@ fixed_t	*finecosine_ = &finesine_[FINEANGLES/4];
 fixed_t yslope[SCREENHEIGHT];
 fixed_t distscale[SCREENWIDTH];
 
-unsigned char viewangletox[FINEANGLES/2];
+VINT viewangletox[FINEANGLES/2];
 
 angle_t xtoviewangle[SCREENWIDTH+1];
 
@@ -308,6 +308,7 @@ const VINT viewports[][2][3] = {
 	{ { 160, 180, true  }, {  80, 144, true  } },
 	{ { 224, 128, false }, { 160, 100, false } },
 	{ { 252, 144, false }, { 160, 128, false } },
+	{ { 320, 184, false }, { 160, 128, false } },
 };
 
 VINT viewportNum;
@@ -537,7 +538,8 @@ extern	pixel_t	*screens[2];	/* [viewportWidth*viewportHeight];  */
 */
 
 static void R_Setup (int displayplayer, unsigned short *openings_, 
-	subsector_t **vissubsectors_, visplane_t *visplanes_, visplane_t **visplanes_hash_)
+	subsector_t **vissubsectors_, visplane_t *visplanes_, visplane_t **visplanes_hash_,
+	uint32_t *sortedvisplanes_)
 {
 	int 		i;
 	int		damagecount, bonuscount;
@@ -724,9 +726,9 @@ static void R_Setup (int displayplayer, unsigned short *openings_,
 	vissprites = (void*)tempbuf;
 	tempbuf += sizeof(*vissprites) * MAXVISSPRITES / sizeof(*tempbuf);
 
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
-	sortedvisplanes = tempbuf;
-	tempbuf += MAXVISPLANES * 2;
+	sortedvisplanes = (uint16_t *)sortedvisplanes_;
+
+	//I_Error("%d", (uint16_t *)I_FrameBuffer() + 320*200 - tempbuf);
 
 	/* */
 	/* clear sprites */
@@ -949,6 +951,7 @@ void R_RenderPlayerView(int displayplayer, unsigned short *openings_)
 	boolean drawworld = !(players[consoleplayer].automapflags & AF_ACTIVE);
 	subsector_t* vissubsectors_[MAXVISSSEC];
 	visplane_t visplanes_[MAXVISPLANES], *visplanes_hash_[NUM_VISPLANES_BUCKETS];
+	uint32_t sortedvisplanes_[MAXVISPLANES];
 
 	while (!I_RefreshCompleted())
 		;
@@ -957,7 +960,7 @@ void R_RenderPlayerView(int displayplayer, unsigned short *openings_)
 
 	Mars_R_SecWait();
 
-	R_Setup(displayplayer, openings_, vissubsectors_, visplanes_, visplanes_hash_);
+	R_Setup(displayplayer, openings_, vissubsectors_, visplanes_, visplanes_hash_, sortedvisplanes_);
 
 	Mars_R_SecSetup();
 
