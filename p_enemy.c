@@ -472,14 +472,16 @@ void A_Chase (mobj_t *actor)
 			actor->angle += ANG90/2;
 	}
 
-	if (!actor->target || !(actor->target->flags&MF_SHOOTABLE))
+	if (!actor->target || !(actor->target->flags&MF_SHOOTABLE)
+		|| (netgame && !actor->threshold && !(actor->flags & MF_SEETARGET) 
+			&& actor->target != actor->subsector->sector->soundtarget))
 	{	/* look for a new target */
 		if (P_LookForPlayers(actor,true))
 			return;		/* got a new target */
 		P_SetMobjState (actor, ainfo->spawnstate);
 		return;
 	}
-	
+
 /* */
 /* don't attack twice in a row */
 /* */
