@@ -123,6 +123,9 @@ void G_DoLoadLevel (void)
 	/* DMAPINFO can override the map number */
 	gamemap = gamemapinfo.mapNumber;
 
+	/* update the start map */
+	startmap = gamemap;
+
 	/*  */
 	/* set the sky map for the episode  */
 	/*  */
@@ -563,11 +566,23 @@ startnew:
 #endif
 
 #ifdef MARS
-		if (!finale)
+		if (netgame == gt_deathmatch)
 		{
-			/* quick save */
-			int nextmap = G_MapNumForLumpNum(nextmapl);
-			QuickSave(nextmap);
+			if (finale)
+			{
+				/* go back to start map */
+				finale = 0;
+				nextmapl = gameinfo.startMapLump;
+			}
+		}
+		else
+		{
+			if (!finale)
+			{
+				/* quick save */
+				int nextmap = G_MapNumForLumpNum(nextmapl);
+				QuickSave(nextmap);
+			}
 		}
 #endif
 

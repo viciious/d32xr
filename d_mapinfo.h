@@ -51,6 +51,7 @@ typedef struct
 	VINT endMus;
 	VINT creditsPage;
 	VINT creditsTime;
+	VINT startMapLump;
 	void* data;
 } dgameinfo_t;
 

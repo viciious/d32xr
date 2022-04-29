@@ -404,6 +404,7 @@ int G_FindGameinfo(dgameinfo_t* gi)
 
 	D_memset(gi, 0, sizeof(*gi));
 	gi->data = G_MapinfoSectionCStr(buf, "gameinfo", NULL);
+	gi->startMapLump = G_LumpNumForMapNum(1);
 	if (!gi->data)
 		return 0;
 
