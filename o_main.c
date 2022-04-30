@@ -178,9 +178,9 @@ void O_Init (void)
 	D_memcpy(menuitem[mi_soundvol].name, "Sfx volume", 11);
 	menuitem[mi_soundvol].x = ITEMX;
 	menuitem[mi_soundvol].y = STARTY;
-	menuitem[mi_soundvol].slider = si_resolution+1;
- 	sliders[si_resolution].maxval = 4;
-	sliders[si_resolution].curval = 4*sfxvolume/64;
+	menuitem[mi_soundvol].slider = si_sfxvolume+1;
+	sliders[si_sfxvolume].maxval = 4;
+	sliders[si_sfxvolume].curval = 4*sfxvolume/64;
 
 	D_memcpy(menuitem[mi_music].name, "Music", 6);
 	menuitem[mi_music].x = ITEMX;
