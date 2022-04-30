@@ -720,6 +720,8 @@ byte *I_TempBuffer (void);
 
 /* temp work buffer which may contain garbage data */
 byte *I_WorkBuffer (void);
+void I_FreeWorkBuffer(void);
+byte *I_AllocWorkBuffer(int size);
 
 pixel_t *I_FrameBuffer (void);
 pixel_t* I_OverwriteBuffer(void);
@@ -1145,6 +1147,7 @@ extern	boolean	spr_rotations;
 extern int debugmode;
 extern char clearscreen;
 extern VINT colormapopt;
+extern VINT initmathtables;
 
 void I_InitMenuFire(jagobj_t* titlepic);
 void I_StopMenuFire(void);

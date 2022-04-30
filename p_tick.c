@@ -529,6 +529,12 @@ void P_Drawer (void)
 		clearscreen--;
 	}
 
+	if (initmathtables)
+	{
+		R_InitMathTables();
+		initmathtables--;
+	}
+
 	/* view the guy you are playing */
 	R_RenderPlayerView(consoleplayer, openings_);
 	/* view the other guy in split screen mode */

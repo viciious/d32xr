@@ -294,10 +294,13 @@ void R_InitMathTables(void)
 	int i;
 	fixed_t focalLength;
 	fixed_t stretchWidth;
-	short* tempviewangletox;
 	int fuzzunit;
+	VINT *tempviewangletox;
 
-	tempviewangletox = (short *)I_WorkBuffer();
+	I_FreeWorkBuffer();
+
+	viewangletox = (VINT *)I_AllocWorkBuffer(sizeof(*viewangletox) * (FINEANGLES / 2));
+	tempviewangletox = (VINT *)I_WorkBuffer();
 
 	// Use tangent table to generate viewangletox:
 	//  viewangletox will give the next greatest x

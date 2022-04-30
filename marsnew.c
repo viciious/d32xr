@@ -629,10 +629,26 @@ byte *I_TempBuffer (void)
 	return w;
 }
 
+static byte *workbuf_high = NULL;
+
 byte *I_WorkBuffer (void)
 {
 	while (!I_RefreshCompleted());
-	return (byte *)(framebuffer + 320 / 2 * (I_FrameBufferHeight() +1)); // +1 for the blank line
+	if (workbuf_high == NULL)
+		workbuf_high = (byte *)(framebuffer + 320 / 2 * (I_FrameBufferHeight() +1)); // +1 for the blank line
+	return workbuf_high;
+}
+
+void I_FreeWorkBuffer(void)
+{
+	workbuf_high = NULL;
+}
+
+byte *I_AllocWorkBuffer(int size)
+{
+	byte *b = I_WorkBuffer();
+	workbuf_high = b + size;
+	return b;
 }
 
 pixel_t	*I_FrameBuffer (void)

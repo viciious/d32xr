@@ -684,10 +684,6 @@ D_printf ("P_SetupLevel(%i,%i)\n",lumpnum,skill);
 
 	cy = 4;
 
-	/* we used the framebuffer as temporary memory, so it */
-	/* needs to be cleared from potential garbage */
-	I_ClearFrameBuffer();
-
 #ifdef JAGUAR
 {
 extern byte *debugscreen;

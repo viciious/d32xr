@@ -17,6 +17,7 @@ fixed_t weaponXScale;
 
 detailmode_t detailmode = detmode_high;
 VINT anamorphicview = 0;
+VINT initmathtables = 2;
 
 drawcol_t drawcol;
 drawcol_t drawfuzzycol;
@@ -105,7 +106,7 @@ fixed_t	*finecosine_ = &finesine_[FINEANGLES/4];
 fixed_t yslope[SCREENHEIGHT];
 fixed_t distscale[SCREENWIDTH];
 
-VINT viewangletox[FINEANGLES/2];
+VINT *viewangletox/*[FINEANGLES/2]*/;
 
 angle_t xtoviewangle[SCREENWIDTH+1];
 
@@ -365,13 +366,11 @@ void R_SetViewportSize(int num)
 	}
 	weaponYpos = (viewportHeight - weaponYpos) / 2;
 
-	R_InitMathTables();
+	initmathtables = 2;
 
 	// refresh func pointers
 	R_SetDetailMode(detailmode);
 
-	clipangle = xtoviewangle[0];
-	doubleclipangle = clipangle * 2;
 	clearscreen = 2;
 
 #ifdef MARS
@@ -513,9 +512,14 @@ nocache:
 
 void R_SetupLevel(void)
 {
+	/* we used the framebuffer as temporary memory, so it */
+	/* needs to be cleared from potential garbage */
+	I_ClearFrameBuffer();
+
 	R_SetupTextureCaches();
 
 	R_SetViewportSize(viewportNum);
+
 #ifdef MARS
 	curpalette = -1;
 #endif
@@ -586,7 +590,10 @@ static void R_Setup (int displayplayer, unsigned short *openings_,
 
 	damagecount = player->damagecount;
 	bonuscount = player->bonuscount;
-	
+
+	clipangle = xtoviewangle[0];
+	doubleclipangle = clipangle * 2;
+
 #ifdef JAGUAR
 	vd.extralight = player->extralight << 6;
 
