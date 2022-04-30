@@ -542,8 +542,7 @@ extern	pixel_t	*screens[2];	/* [viewportWidth*viewportHeight];  */
 */
 
 static void R_Setup (int displayplayer, unsigned short *openings_, 
-	subsector_t **vissubsectors_, visplane_t *visplanes_, visplane_t **visplanes_hash_,
-	uint32_t *sortedvisplanes_)
+	visplane_t *visplanes_, visplane_t **visplanes_hash_)
 {
 	int 		i;
 	int		damagecount, bonuscount;
@@ -733,9 +732,14 @@ static void R_Setup (int displayplayer, unsigned short *openings_,
 		tempbuf += SCREENWIDTH+2;
 	}
 
-	//I_Error("%d", ((uint16_t *)I_FrameBuffer() + 64*1024-0x100 - tempbuf) * 2);
+	sortedvisplanes = (uint16_t *)tempbuf;
+	tempbuf += MAXVISPLANES*2;
 
-	sortedvisplanes = (uint16_t *)sortedvisplanes_;
+	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
+	vissubsectors = (void *)tempbuf;
+	tempbuf += sizeof(*vissubsectors) * MAXVISSSEC / sizeof(*tempbuf);
+
+	//I_Error("%d", ((uint16_t *)I_FrameBuffer() + 64*1024-0x100 - tempbuf) * 2);
 
 	/* */
 	/* clear sprites */
@@ -746,7 +750,6 @@ static void R_Setup (int displayplayer, unsigned short *openings_,
 	openings = openings_;
 	lastopening = openings;
 
-	vissubsectors = vissubsectors_;
 	lastvissubsector = vissubsectors;	/* no subsectors visible yet */
 
 	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
@@ -901,7 +904,7 @@ extern	ref8_start;
 
 void R_RenderPlayerView(int displayplayer, unsigned short* openings_)
 {
-	subsector_t* vissubsectors_[MAXVISSSEC];
+	visplane_t visplanes_[MAXVISPLANES], *visplanes_hash_[NUM_VISPLANES_BUCKETS];
 
 	/* make sure its done now */
 #if defined(JAGUAR)
@@ -915,7 +918,7 @@ void R_RenderPlayerView(int displayplayer, unsigned short* openings_)
 	if (debugscreenactive)
 		I_DebugScreen();
 
-	R_Setup(displayplayer, openings_, vissubsectors_);
+	R_Setup(displayplayer, openings_, visplanes_, visplanes_hash_);
 
 #ifndef JAGUAR
 	R_BSP();
@@ -956,9 +959,7 @@ void R_RenderPlayerView(int displayplayer, unsigned short *openings_)
 {
 	int t_bsp, t_prep, t_segs, t_planes, t_sprites, t_total;
 	boolean drawworld = !(players[consoleplayer].automapflags & AF_ACTIVE);
-	subsector_t* vissubsectors_[MAXVISSSEC];
 	visplane_t visplanes_[MAXVISPLANES], *visplanes_hash_[NUM_VISPLANES_BUCKETS];
-	uint32_t sortedvisplanes_[MAXVISPLANES];
 
 	while (!I_RefreshCompleted())
 		;
@@ -967,7 +968,7 @@ void R_RenderPlayerView(int displayplayer, unsigned short *openings_)
 
 	Mars_R_SecWait();
 
-	R_Setup(displayplayer, openings_, vissubsectors_, visplanes_, visplanes_hash_, sortedvisplanes_);
+	R_Setup(displayplayer, openings_, visplanes_, visplanes_hash_);
 
 	Mars_R_SecSetup();
 
