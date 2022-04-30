@@ -382,8 +382,14 @@ static void R_Subsector(int num)
    
    frontsector = sub->sector;
    
-   *lastvissubsector = sub;
-   ++lastvissubsector;
+   if (sub->sector->thinglist)
+   {
+      if (lastvissubsector < vissubsectors + MAXVISSSEC)
+      {
+         *lastvissubsector = sub;
+         ++lastvissubsector;
+      }
+   }
 
    line     = &segs[sub->firstline];
    count    = sub->numlines;

@@ -116,8 +116,8 @@ static void R_PrepMobj(mobj_t *thing)
        return;
 
    // get a new vissprite
-   if(vissprite_p == vissprites + MAXVISSPRITES)
-      return; // too many visible sprites already
+   if(vissprite_p >= vissprites + MAXVISSPRITES - 4)
+      return; // too many visible sprites already, leave room for psprites
 
    vis = vissprite_p++;
    vis->patch    = patch;

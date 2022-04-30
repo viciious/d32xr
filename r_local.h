@@ -483,14 +483,14 @@ typedef struct
 	VINT		state;
 } viswall_t;
 
-#define	MAXWALLCMDS		127
+#define	MAXWALLCMDS		120
 extern	viswall_t *viswalls/*[MAXWALLCMDS] __attribute__((aligned(16)))*/;
 extern	viswall_t *lastwallcmd;
 
 /* A vissprite_t is a thing that will be drawn during a refresh */
 typedef struct vissprite_s
 {
-	int			x1, x2;			/* clipped to screen edges column range */
+	VINT		x1, x2;			/* clipped to screen edges column range */
 	fixed_t		startfrac;		/* horizontal position of x1 */
 	fixed_t		xscale;
 	fixed_t		xiscale;		/* negative if flipped */
@@ -508,7 +508,7 @@ typedef struct vissprite_s
 	drawcol_t   drawcol;
 } vissprite_t;
 
-#define	MAXVISSPRITES	128
+#define	MAXVISSPRITES	64
 extern	vissprite_t	*vissprites/*[MAXVISSPRITES]*/, * lastsprite_p, * vissprite_p;
 
 #define	MAXOPENINGS		SCREENWIDTH*8
@@ -516,7 +516,7 @@ extern	unsigned short	*openings/*[MAXOPENINGS]*/;
 extern 	unsigned short	*lastopening;
 extern	unsigned short	*lastsegclip;
 
-#define	MAXVISSSEC		256
+#define	MAXVISSSEC		192
 extern	subsector_t		**vissubsectors/*[MAXVISSSEC]*/, ** lastvissubsector;
 
 typedef struct visplane_s
@@ -530,7 +530,7 @@ typedef struct visplane_s
 	unsigned short		*open/*[SCREENWIDTH+2]*/;		/* top<<8 | bottom */ /* leave pads for [minx-1]/[maxx+1] */
 } visplane_t;
 
-#define	MAXVISPLANES	48
+#define	MAXVISPLANES	42
 extern	visplane_t		*visplanes/*[MAXVISPLANES]*/, *lastvisplane;
 
 #ifdef MARS

@@ -705,6 +705,13 @@ static void R_Setup (int displayplayer, unsigned short *openings_,
 	tempbuf += sizeof(*viswalls) * MAXWALLCMDS / sizeof(*tempbuf);
 	lastwallcmd = viswalls;			/* no walls added yet */
 
+	lastsegclip = tempbuf;
+	tempbuf += MAXOPENINGS;
+
+	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
+	vissprites = (void*)tempbuf;
+	tempbuf += sizeof(*vissprites) * MAXVISSPRITES / sizeof(*tempbuf);
+
 	visplanes = visplanes_;
 	visplanes_hash = visplanes_hash_;
 	lastvisplane = visplanes + 1;		/* visplanes[0] is left empty */
@@ -719,16 +726,9 @@ static void R_Setup (int displayplayer, unsigned short *openings_,
 		tempbuf += SCREENWIDTH+2;
 	}
 
-	lastsegclip = tempbuf;
-	tempbuf += MAXOPENINGS;
-
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
-	vissprites = (void*)tempbuf;
-	tempbuf += sizeof(*vissprites) * MAXVISSPRITES / sizeof(*tempbuf);
+	//I_Error("%d", ((uint16_t *)I_FrameBuffer() + 64*1024-0x100 - tempbuf) * 2);
 
 	sortedvisplanes = (uint16_t *)sortedvisplanes_;
-
-	//I_Error("%d", (uint16_t *)I_FrameBuffer() + 320*200 - tempbuf);
 
 	/* */
 	/* clear sprites */
