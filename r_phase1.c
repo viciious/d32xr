@@ -179,7 +179,7 @@ static void R_StoreWallRange(int start, int stop)
        rw->start = start;
        rw->stop = newstop;
        rw->angle1 = lineangle1;
-       rw->state = RW_NOTREADY;
+       rw->actionbits = 0;
        ++lastwallcmd;
 
 #ifdef MARS

@@ -423,6 +423,8 @@ void R_ClearTexCache(r_texcache_t* c);
 #define	AC_TOPSIL			256
 #define	AC_BOTTOMSIL		512
 #define	AC_SOLIDSIL			1024
+#define	AC_READY			2048
+#define	AC_DRAWN			4096
 
 enum
 {
@@ -455,11 +457,11 @@ typedef struct
 /* */
 /* filled in by early prep */
 /* */
-	int			t_topheight;
+	int			t_topheight;	 // becomes pixelcount after R_SegLoop
 	int			t_bottomheight;
 	int			t_texturemid;
 
-	int			b_topheight;
+	int			b_topheight;	// becomes pixelcount after R_SegLoop
 	int			b_bottomheight;
 	int			b_texturemid;
 
@@ -475,15 +477,10 @@ typedef struct
 	byte		*topsil;
 	byte		*bottomsil;
 
-	VINT		t_pixcount;
-	VINT		b_pixcount;
-
 	unsigned short *newclipbounds;
-
-	VINT		state;
 } viswall_t;
 
-#define	MAXWALLCMDS		127
+#define	MAXWALLCMDS		124
 extern	viswall_t *viswalls/*[MAXWALLCMDS] __attribute__((aligned(16)))*/;
 extern	viswall_t *lastwallcmd;
 
@@ -497,8 +494,8 @@ typedef struct vissprite_s
 	fixed_t		yscale;
 	fixed_t		yiscale;
 	fixed_t		texturemid;
-	patch_t		*patch;
-	int			colormap;		/* -1 = shadow draw */
+	VINT 		patchnum;
+	VINT		colormap;		/* -1 = shadow draw */
 	fixed_t		gx,gy;	/* global coordinates */
 #ifdef MARS
 	inpixel_t 	*pixels;
@@ -508,7 +505,7 @@ typedef struct vissprite_s
 	drawcol_t   drawcol;
 } vissprite_t;
 
-#define	MAXVISSPRITES	64
+#define	MAXVISSPRITES	60
 extern	vissprite_t	*vissprites/*[MAXVISSPRITES]*/, * lastsprite_p, * vissprite_p;
 
 #define	MAXOPENINGS		SCREENWIDTH*8
@@ -530,7 +527,7 @@ typedef struct visplane_s
 	unsigned short		*open/*[SCREENWIDTH+2]*/;		/* top<<8 | bottom */ /* leave pads for [minx-1]/[maxx+1] */
 } visplane_t;
 
-#define	MAXVISPLANES	42
+#define	MAXVISPLANES	40
 extern	visplane_t		*visplanes/*[MAXVISPLANES]*/, *lastvisplane;
 
 #ifdef MARS

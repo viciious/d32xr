@@ -27,7 +27,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos,
    int light, x, stopx;
    drawcol_t drawcol;
 
-   patch     = vis->patch;
+   patch     = W_POINTLUMPNUM(vis->patchnum);
    iscale    = vis->yiscale;
    xfrac     = vis->startfrac;
    spryscale = vis->yscale;
@@ -281,7 +281,7 @@ static void R_DrawPSprites(const int cpu)
         unsigned  stopx = vis->x2 + 1;
         i = vis->x1;
 
-        if (vis->patch == NULL)
+        if (vis->patchnum < 0)
             continue;
 
         // clear out the clipping array across the range of the psprite
@@ -343,7 +343,7 @@ void R_Sprites(void)
    for (i = 0; i < count; i++)
    {
        vissprite_t* ds = vissprites + i;
-       if (ds->patch == NULL)
+       if (ds->patchnum < 0)
            continue;
        if (ds->x1 > ds->x2)
            continue;

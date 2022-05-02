@@ -287,30 +287,25 @@ void R_SegCommands(void)
         unsigned actionbits;
 
 #ifdef MARS
-        int state;
-
         if (segl->start > segl->stop)
             continue;
 
-        while ((state = *(volatile VINT*)&segl->state) == 0);
+        while (((actionbits = *(volatile short *)&segl->actionbits) & AC_READY) == 0);
 
-        actionbits = segl->actionbits;
-        if (state == RW_DRAWN || !(actionbits & (AC_CALCTEXTURE | AC_ADDSKY)))
+        if (actionbits & AC_DRAWN || !(actionbits & (AC_CALCTEXTURE | AC_ADDSKY)))
         {
             goto skip_draw;
         }
 
         R_LockSeg();
-        state = *(volatile VINT*)&segl->state;
-        switch (state) {
-            case RW_READY:
-                segl->state = RW_DRAWN;
-                break;
-            case RW_DRAWN:
-                R_UnlockSeg();
-                goto skip_draw;
+        actionbits = *(volatile short *)&segl->actionbits;
+        if (actionbits & AC_DRAWN) {
+            R_UnlockSeg();
+            goto skip_draw;
+        } else {
+            segl->actionbits |= AC_DRAWN;
+            R_UnlockSeg();
         }
-        R_UnlockSeg();
 #endif
 
         lseg.segl = segl;
@@ -386,8 +381,8 @@ void R_SegCommands(void)
 
         R_DrawSeg(&lseg, clipbounds);
 
-        segl->t_pixcount = toptex->pixelcount;
-        segl->b_pixcount = bottomtex->pixelcount;
+        segl->t_topheight = toptex->pixelcount;
+        segl->b_topheight = bottomtex->pixelcount;
 
 skip_draw:
         if(actionbits & (AC_NEWFLOOR|AC_NEWCEILING))

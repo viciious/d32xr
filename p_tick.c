@@ -503,7 +503,6 @@ void P_Drawer (void)
 { 	
 	boolean automapactive = (players[consoleplayer].automapflags & AF_ACTIVE) != 0;
 	boolean optionsactive = (players[consoleplayer].automapflags & AF_OPTIONSACTIVE) != 0;
-	unsigned short openings_[MAXOPENINGS];
 	static boolean o_wasactive, am_wasactive = false;
 
 #ifdef MARS
@@ -536,10 +535,10 @@ void P_Drawer (void)
 	}
 
 	/* view the guy you are playing */
-	R_RenderPlayerView(consoleplayer, openings_);
+	R_RenderPlayerView(consoleplayer);
 	/* view the other guy in split screen mode */
 	if (splitscreen)
-		R_RenderPlayerView(consoleplayer ^ 1, openings_);
+		R_RenderPlayerView(consoleplayer ^ 1);
 
 	if (automapactive)
 		AM_Drawer();
@@ -580,7 +579,7 @@ void P_Drawer (void)
 #ifdef JAGUAR
 		ST_Drawer();
 #endif
-		R_RenderPlayerView(consoleplayer, openings_);
+		R_RenderPlayerView(consoleplayer);
 		clearscreen = 0;
 	}
 	/* assume part of the refresh is now running parallel with main code */

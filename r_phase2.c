@@ -202,8 +202,6 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floornewheight, fixed_t *c
       segl->b_texturemid  = b_texturemid;
       segl->seglightlevel = f_lightlevel;
       segl->offset        = ((fixed_t)si->textureoffset + seg->offset) << 16;
-      segl->t_pixcount    = 0;
-      segl->b_pixcount    = 0;
    }
 }
 
@@ -539,12 +537,6 @@ void Mars_Sec_R_WallPrep(void)
 
             R_WallLatePrep(segl);
 
-            if (!(segl->actionbits & (AC_NEWFLOOR | AC_NEWCEILING)))
-            {
-                // go ahead and mark the segment as ready for drawing
-                segl->state = RW_READY;
-            }
-
             R_SegLoop(segl, clipbounds, floornewheight, ceilingnewheight);
 
             // FIXME: optimize this
@@ -569,7 +561,7 @@ void Mars_Sec_R_WallPrep(void)
                 Mars_ClearCacheLine(&flatpixels[segl->ceilingpicnum]);
             }
 
-            segl->state = RW_READY;
+            segl->actionbits |= AC_READY;
         }
     }    
 }

@@ -19,14 +19,16 @@ static void R_UpdateCacheCounts(void)
 
    for (wall = viswalls; wall < lastwallcmd; wall++)
    {
+      if (wall->start > wall->stop)
+        continue;
       if (wall->actionbits & AC_TOPTEXTURE)
       {
-         pixcount = *((volatile VINT *)((uintptr_t)&wall->t_pixcount | 0x20000000));
+         pixcount = *((volatile int *)((uintptr_t)&wall->t_topheight | 0x20000000));
          R_AddPixelsToTexCache(&r_texcache, wall->t_texturenum, pixcount);
       }
       if (wall->actionbits & AC_BOTTOMTEXTURE)
       {
-         pixcount = *((volatile VINT *)((uintptr_t)&wall->b_pixcount | 0x20000000));
+         pixcount = *((volatile int *)((uintptr_t)&wall->b_topheight | 0x20000000));
          R_AddPixelsToTexCache(&r_texcache, wall->b_texturenum, pixcount);
       }
    }
