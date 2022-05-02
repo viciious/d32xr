@@ -476,8 +476,6 @@ typedef struct
 
 	byte		*topsil;
 	byte		*bottomsil;
-
-	unsigned short *newclipbounds;
 } viswall_t;
 
 #define	MAXWALLCMDS		124
@@ -511,7 +509,7 @@ extern	vissprite_t	*vissprites/*[MAXVISSPRITES]*/, * lastsprite_p, * vissprite_p
 #define	MAXOPENINGS		SCREENWIDTH*8
 extern	unsigned short	*openings/*[MAXOPENINGS]*/;
 extern 	unsigned short	*lastopening;
-extern	unsigned short	*lastsegclip;
+extern	unsigned short	*segclip, *lastsegclip;
 
 #define	MAXVISSSEC		192
 extern	subsector_t		**vissubsectors/*[MAXVISSSEC]*/, ** lastvissubsector;

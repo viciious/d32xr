@@ -68,7 +68,7 @@ vissprite_t	*vissprites/*[MAXVISSPRITES]*/, * lastsprite_p, * vissprite_p;
 /* */
 unsigned short	*openings/*[MAXOPENINGS]*/, * lastopening;
 
-unsigned short	*lastsegclip;
+unsigned short	*segclip, *lastsegclip;
 
 /*===================================== */
 
@@ -711,7 +711,8 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	tempbuf += sizeof(*viswalls) * MAXWALLCMDS / sizeof(*tempbuf);
 	lastwallcmd = viswalls;			/* no walls added yet */
 
-	lastsegclip = tempbuf;
+	segclip = tempbuf;
+	lastsegclip = segclip;
 	tempbuf += MAXOPENINGS;
 
 	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
@@ -739,7 +740,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		tempbuf += SCREENWIDTH+2;
 	}
 
-	//I_Error("%d", ((uint16_t *)I_FrameBuffer() + 64*1024-0x100 - tempbuf) * 2);
+	//I_Error("%d %d", sizeof(viswall_t), ((uint16_t *)I_FrameBuffer() + 64*1024-0x100 - tempbuf) * 2);
 
 	/* */
 	/* clear sprites */
@@ -778,6 +779,8 @@ void Mars_Sec_R_Setup(void)
 	Mars_ClearCacheLine(&visplanes);
 	Mars_ClearCacheLine(&lastvisplane);
 	Mars_ClearCacheLine(&visplanes_hash);
+
+	Mars_ClearCacheLine(&segclip);
 	Mars_ClearCacheLine(&lastsegclip);
 
 	Mars_ClearCacheLine(&openings);

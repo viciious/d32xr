@@ -385,12 +385,12 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floor
     if (actionbits & AC_ADDCEILING)
         ceilingplhash = R_PlaneHash(ceilingheight, ceilingpicnum, lightlevel);
 
+    unsigned short *newclipbounds = NULL;
     if (actionbits & (AC_NEWFLOOR | AC_NEWCEILING))
     {
-        segl->newclipbounds = lastsegclip - segl->start;
+        newclipbounds = lastsegclip - segl->start;
         lastsegclip += width;
     }
-    unsigned short *newclipbounds = segl->newclipbounds;
 
     for (x = segl->start; x <= stop; x++)
     {
