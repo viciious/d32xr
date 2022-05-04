@@ -213,7 +213,7 @@ void EV_LightTurnOn(line_t *line, int bright)
 						bright = temp->lightlevel;
 				}
 			}
-			sector-> lightlevel = bright;
+			sector->lightlevel = bright;
 		}
 }
 
@@ -226,25 +226,31 @@ void T_Glow(glow_t *g)
 {
 	if (gametic == prevgametic)
 		return;
+
+	int lightlevel = g->sector->lightlevel;
 	switch(g->direction)
 	{
 		case -1:		/* DOWN */
-			g->sector->lightlevel -= GLOWSPEED;
-			if (g->sector->lightlevel <= g->minlight)
+			lightlevel -= GLOWSPEED;
+			if (lightlevel <= g->minlight)
 			{
-				g->sector->lightlevel += GLOWSPEED;
+				lightlevel += GLOWSPEED;
 				g->direction = 1;
 			}
 			break;
 		case 1:			/* UP */
-			g->sector->lightlevel += GLOWSPEED;
-			if (g->sector->lightlevel >= g->maxlight)
+			lightlevel += GLOWSPEED;
+			if (lightlevel >= g->maxlight)
 			{
-				g->sector->lightlevel -= GLOWSPEED;
+				lightlevel -= GLOWSPEED;
 				g->direction = -1;
 			}
 			break;
 	}
+
+	if (lightlevel < 0) lightlevel = 0;
+	else if (lightlevel > 255) lightlevel = 255;
+	g->sector->lightlevel = lightlevel;
 }
 
 void P_SpawnGlowingLight(sector_t *sector)
