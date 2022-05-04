@@ -335,8 +335,13 @@ void Mars_Sec_R_DrawPlanes(void)
 void R_DrawPlanes(void)
 {
 #ifdef MARS
-    int numplanes = lastvisplane - visplanes;
+    int numplanes;
+
     Mars_ClearCacheLine(&lastvisplane);
+    numplanes = lastvisplane - visplanes;
+    if (numplanes <= 1)
+        return;
+
     Mars_ClearCacheLines(visplanes, (numplanes * sizeof(visplane_t) + 15) / 16);
     Mars_ClearCacheLines(sortedvisplanes, ((numplanes-1) * sizeof(*sortedvisplanes) + 15) / 16);
 
