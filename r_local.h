@@ -506,7 +506,7 @@ typedef struct vissprite_s
 #define	MAXVISSPRITES	60
 extern	vissprite_t	*vissprites/*[MAXVISSPRITES]*/, * lastsprite_p, * vissprite_p;
 
-#define	MAXOPENINGS		SCREENWIDTH*8
+#define	MAXOPENINGS		SCREENWIDTH*12
 extern	unsigned short	*openings/*[MAXOPENINGS]*/;
 extern 	unsigned short	*lastopening;
 extern	unsigned short	*segclip, *lastsegclip;
@@ -525,7 +525,7 @@ typedef struct visplane_s
 	unsigned short		*open/*[SCREENWIDTH+2]*/;		/* top<<8 | bottom */ /* leave pads for [minx-1]/[maxx+1] */
 } visplane_t;
 
-#define	MAXVISPLANES	40
+#define	MAXVISPLANES	35
 extern	visplane_t		*visplanes/*[MAXVISPLANES]*/, *lastvisplane;
 
 #ifdef MARS
