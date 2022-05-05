@@ -524,7 +524,7 @@ void Mars_Sec_R_WallPrep(void)
         nextsegs = MARS_SYS_COMM6;
 
         // check if master CPU finished exec'ing R_BSP()
-        if (nextsegs == MAXVISSSEC)
+        if (nextsegs == 0xffff)
         {
             Mars_ClearCacheLine(&lastwallcmd);
             verylast = lastwallcmd;

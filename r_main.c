@@ -38,11 +38,6 @@ short fuzzoffset[FUZZTABLE] =
 /*===================================== */
 
 /* */
-/* subsectors */
-/* */
-subsector_t		**vissubsectors/*[MAXVISSSEC]*/, ** lastvissubsector;
-
-/* */
 /* walls */
 /* */
 viswall_t	*viswalls/*[MAXWALLCMDS]*/, *lastwallcmd;
@@ -726,10 +721,6 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_, vissprite_t *vis
 	sortedvisplanes = tempbuf;
 	tempbuf += MAXVISPLANES*2;
 
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
-	vissubsectors = (void *)tempbuf;
-	tempbuf += sizeof(*vissubsectors) * MAXVISSSEC / sizeof(*tempbuf);
-
 	vissprites = vissprites_;
 
 	visplanes = visplanes_;
@@ -755,8 +746,6 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_, vissprite_t *vis
 	lastsprite_p = vissprite_p;
 
 	lastopening = openings;
-
-	lastvissubsector = vissubsectors;	/* no subsectors visible yet */
 
 	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
 		visplanes_hash[i] = NULL;
@@ -913,7 +902,7 @@ extern	ref8_start;
 void R_RenderPlayerView(int displayplayer)
 {
 	visplane_t visplanes_[MAXVISPLANES], *visplanes_hash_[NUM_VISPLANES_BUCKETS];
-	subsector_t *vissubsectors_[MAXVISSSEC];
+	vissprite_t vissprites_[MAXVISSPRITES];
 
 	/* make sure its done now */
 #if defined(JAGUAR)
@@ -988,7 +977,7 @@ void R_RenderPlayerView(int displayplayer)
 	R_BSP();
 	t_bsp = I_GetFRTCounter() - t_bsp;
 
-	Mars_R_EndWallPrep(MAXVISSSEC);
+	Mars_R_EndWallPrep();
 
 	if (!drawworld)
 		return;
@@ -1006,14 +995,11 @@ void R_RenderPlayerView(int displayplayer)
 
 	Mars_ClearCacheLine(&lastsegclip);
 	Mars_ClearCacheLine(&lastopening);
-	Mars_ClearCacheLine(&lastvissubsector);
 
 	if (lastsegclip - segclip > MAXOPENINGS)
 		I_Error("lastsegclip > MAXOPENINGS: %d", lastsegclip - segclip);
 	if (lastopening - openings > MAXOPENINGS)
 		I_Error("lastopening > MAXOPENINGS: %d", lastopening - openings);
-	if (lastvissubsector - vissubsectors > MAXVISSSEC)
-		I_Error("lastvissubsector > MAXVISSSEC: %d", lastvissubsector - vissubsectors);
 
 	t_planes = I_GetFRTCounter();
 	R_DrawPlanes();

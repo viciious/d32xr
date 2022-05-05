@@ -87,9 +87,9 @@ static inline void Mars_R_WallNext(void)
 	MARS_SYS_COMM6++;
 }
 
-static inline void Mars_R_EndWallPrep(int maxsegs)
+static inline void Mars_R_EndWallPrep(void)
 {
-	MARS_SYS_COMM6 = maxsegs;
+	MARS_SYS_COMM6 = 0xffff;
 }
 
 // r_phase7

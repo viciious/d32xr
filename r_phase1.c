@@ -32,6 +32,8 @@ static boolean R_CheckBBox(fixed_t bspcoord[4]) ATTR_DATA_CACHE_ALIGN;
 static void R_Subsector(int num) ATTR_DATA_CACHE_ALIGN;
 static void R_StoreWallRange(int start, int stop) ATTR_DATA_CACHE_ALIGN;
 static void R_RenderBSPNode(int bspnum) ATTR_DATA_CACHE_ALIGN;
+
+void R_PrepMobj(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
 void R_BSP(void) ATTR_DATA_CACHE_ALIGN;
 
 static int checkcoord[12][4] =
@@ -382,12 +384,18 @@ static void R_Subsector(int num)
    
    frontsector = sub->sector;
    
-   if (sub->sector->thinglist)
+   // process actors
+   if (frontsector->thinglist)
    {
-      if (lastvissubsector < vissubsectors + MAXVISSSEC)
+      mobj_t *thing = frontsector->thinglist;
+      if (frontsector->validcount != framecount) // not already processed?
       {
-         *lastvissubsector = sub;
-         ++lastvissubsector;
+         frontsector->validcount = framecount; // mark it as processed
+         do
+         {
+            R_PrepMobj(thing);
+            thing = thing->snext;
+         } while(thing); // walk sector thing list
       }
    }
 
