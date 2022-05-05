@@ -426,13 +426,6 @@ void R_ClearTexCache(r_texcache_t* c);
 #define	AC_READY			2048
 #define	AC_DRAWN			4096
 
-enum
-{
-	RW_NOTREADY,
-	RW_READY,
-	RW_DRAWN
-};
-
 typedef struct
 {
 	unsigned short	actionbits;
