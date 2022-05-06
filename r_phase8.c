@@ -10,17 +10,16 @@
 #endif
 #include <stdlib.h>
 
-static VINT sprscreenhalf;
 static int fuzzpos[2];
 
 static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy) ATTR_DATA_CACHE_ALIGN;
-void R_DrawVisSprite(vissprite_t* vis, unsigned short* spropening, int *fuzzpos, int screenhalf) ATTR_DATA_CACHE_ALIGN;
-void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int screenhalf) ATTR_DATA_CACHE_ALIGN;
-static void R_DrawSpritesLoop(const int cpu, int* sortedsprites, int count) ATTR_DATA_CACHE_ALIGN;
-static void R_DrawPSprites(const int cpu) ATTR_DATA_CACHE_ALIGN;
+void R_DrawVisSprite(vissprite_t* vis, unsigned short* spropening, int *fuzzpos, int screenhalf, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
+void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int screenhalf, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
+static void R_DrawSpritesLoop(const int cpu, int* sortedsprites, int count, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
+static void R_DrawPSprites(const int cpu, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
 void R_Sprites(void) ATTR_DATA_CACHE_ALIGN;
 
-void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos, int screenhalf)
+void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos, int screenhalf, int sprscreenhalf)
 {
    patch_t *patch;
    fixed_t  iscale, xfrac, spryscale, sprtop, fracstep;
@@ -138,7 +137,7 @@ static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy)
 //
 // Clip a sprite to the openings created by walls
 //
-void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int screenhalf)
+void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int screenhalf, int sprscreenhalf)
 {
    int     x;          // r15
    int     x1;         // FP+5
@@ -252,7 +251,7 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int screenhal
    while(ds != viswalls);
 }
 
-static void R_DrawSpritesLoop(const int cpu, int* sortedsprites, int count)
+static void R_DrawSpritesLoop(const int cpu, int* sortedsprites, int count, int sprscreenhalf)
 {
     int i;
     unsigned short spropening[SCREENWIDTH];
@@ -263,13 +262,13 @@ static void R_DrawSpritesLoop(const int cpu, int* sortedsprites, int count)
 
         ds = vissprites + (sortedsprites[i] & 0x7f);
 
-        R_ClipVisSprite(ds, spropening, cpu+1);
+        R_ClipVisSprite(ds, spropening, cpu+1, sprscreenhalf);
 
-        R_DrawVisSprite(ds, spropening, &fuzzpos[cpu], cpu+1);
+        R_DrawVisSprite(ds, spropening, &fuzzpos[cpu], cpu+1, sprscreenhalf);
     }
 }
 
-static void R_DrawPSprites(const int cpu)
+static void R_DrawPSprites(const int cpu, int sprscreenhalf)
 {
     unsigned i;
     unsigned short spropening[SCREENWIDTH];
@@ -291,30 +290,35 @@ static void R_DrawPSprites(const int cpu)
             ++i;
         }
 
-        R_DrawVisSprite(vis, spropening, &fuzzpos[cpu], cpu+1);
+        R_DrawVisSprite(vis, spropening, &fuzzpos[cpu], cpu+1, sprscreenhalf);
 
         ++vis;
     }
 }
 
 #ifdef MARS
-void Mars_Sec_R_DrawSprites(int* sortedsprites, int count)
+void Mars_Sec_R_DrawSprites(int* sortedsprites, int sprscreenhalf)
 {
-    Mars_ClearCacheLines(sortedsprites, (count * sizeof(*sortedsprites) + 15) / 16);
+    int count;
+
+    Mars_ClearCacheLine(sortedsprites);
+    count = *(volatile int *)&sortedsprites[0];
+    Mars_ClearCacheLines(sortedsprites + 1, (count * sizeof(*sortedsprites) + 15) / 16);
 
     Mars_ClearCacheLine(&vissprites);
-    Mars_ClearCacheLine(&vissprite_p);
-    Mars_ClearCacheLines(vissprites, ((vissprite_p - vissprites) * sizeof(vissprite_t) + 15) / 16);
+    Mars_ClearCacheLine(&lastsprite_p);
+    Mars_ClearCacheLines(vissprites, ((lastsprite_p - vissprites) * sizeof(vissprite_t) + 15) / 16);
 
-    Mars_ClearCacheLine(&sprscreenhalf);
-
-    R_DrawSpritesLoop(1, sortedsprites, count);
+    R_DrawSpritesLoop(1, sortedsprites + 1, count, sprscreenhalf);
 }
 
-void Mars_Sec_R_DrawPSprites(void)
+void Mars_Sec_R_DrawPSprites(int sprscreenhalf)
 {
-    Mars_ClearCacheLine(&sprscreenhalf);
-    R_DrawPSprites(1);
+    Mars_ClearCacheLine(&vissprite_p);
+    Mars_ClearCacheLine(&lastsprite_p);
+    Mars_ClearCacheLines(lastsprite_p, ((vissprite_p - lastsprite_p) * sizeof(vissprite_t) + 15) / 16);
+
+    R_DrawPSprites(1, sprscreenhalf);
 }
 
 #endif
@@ -327,7 +331,8 @@ void R_Sprites(void)
    int i = 0, count;
    int half, sortedcount;
    unsigned midcount;
-   int sortedsprites[MAXVISSPRITES];
+   int sprscreenhalf;
+   int sortedsprites[1+MAXVISSPRITES];
 
    sortedcount = 0;
    count = lastsprite_p - vissprites;
@@ -358,43 +363,45 @@ void R_Sprites(void)
        }
 
        // composite sort key: distance + id
-       sortedsprites[sortedcount++] = (xscale << 7) + i;
+       sortedsprites[1+sortedcount++] = (xscale << 7) + i;
    }
-
-   D_isort(sortedsprites, sortedcount);
 
    // draw mobj sprites
 
 #ifdef MARS
-   // average the mid point
-   if (midcount > 0)
-       half /= midcount;
-   if (!half || half > viewportWidth)
-       half = viewportWidth / 2;
-   sprscreenhalf = half;
+   if (sortedcount > 0)
+   {
+      sortedsprites[0] = sortedcount;
+      D_isort(sortedsprites+1, sortedcount);
 
-   Mars_R_BeginDrawSprites(sortedsprites, sortedcount);
+      // average the mid point
+      if (midcount > 0)
+         half /= midcount;
+      if (!half || half > viewportWidth)
+         half = viewportWidth / 2;
+      sprscreenhalf = half;
 
-   Mars_ClearCacheLine(&lastopening);
-   Mars_ClearCacheLines(openings, ((lastopening - openings) * sizeof(*openings) + 15) / 16);
-   R_DrawSpritesLoop(0, sortedsprites, sortedcount);
+      Mars_R_BeginDrawSprites(sortedsprites, sprscreenhalf);
 
-   Mars_R_EndDrawSprites();
+      R_DrawSpritesLoop(0, sortedsprites+1, sortedcount, sprscreenhalf);
+
+      Mars_R_EndDrawSprites();
+   }
 
    half = viewportWidth / 2;
    if (!lowResMode)
        half /= 2;
    sprscreenhalf = half;
 
-   Mars_R_BeginDrawPSprites();
+   Mars_R_BeginDrawPSprites(sprscreenhalf);
 
-   R_DrawPSprites(0);
+   R_DrawPSprites(0, sprscreenhalf);
 
    Mars_R_EndDrawPSprites();
 #else
-   R_DrawSpritesLoop(0, sortedsprites, sortedcount);
+   R_DrawSpritesLoop(0, sortedsprites+1, sortedcount, 0);
 
-   R_DrawPSprites(0);
+   R_DrawPSprites(0, 0);
 #endif
 }
 

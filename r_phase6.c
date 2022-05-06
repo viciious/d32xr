@@ -287,11 +287,14 @@ void R_SegCommands(void)
         int seglight;
         unsigned actionbits;
 
-#ifdef MARS
         if (segl->start > segl->stop)
             continue;
 
-        while (((actionbits = *(volatile short *)&segl->actionbits) & AC_READY) == 0);
+#ifdef MARS
+        do
+        {
+            actionbits = *(volatile short *)&segl->actionbits;
+        } while ((actionbits & AC_READY) == 0);
 
         if (actionbits & AC_DRAWN || !(actionbits & (AC_CALCTEXTURE | AC_ADDSKY)))
         {
@@ -304,7 +307,7 @@ void R_SegCommands(void)
             R_UnlockSeg();
             goto skip_draw;
         } else {
-            segl->actionbits |= AC_DRAWN;
+            segl->actionbits = actionbits|AC_DRAWN;
             R_UnlockSeg();
         }
 #endif

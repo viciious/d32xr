@@ -236,7 +236,7 @@ static visplane_t *R_GetNextPlane(void)
     R_UnlockPln();
 
 #ifdef MARS
-    if (p >= lastvisplane - visplanes - 1)
+    if (p + visplanes + 1 >= lastvisplane)
         return NULL;
     return visplanes + sortedvisplanes[p*2+1];
 #else
@@ -337,13 +337,9 @@ void R_DrawPlanes(void)
 #ifdef MARS
     int numplanes;
 
-    Mars_ClearCacheLine(&lastvisplane);
     numplanes = lastvisplane - visplanes;
     if (numplanes <= 1)
         return;
-
-    Mars_ClearCacheLines(visplanes, (numplanes * sizeof(visplane_t) + 15) / 16);
-    Mars_ClearCacheLines(sortedvisplanes, ((numplanes-1) * sizeof(*sortedvisplanes) + 15) / 16);
 
     Mars_R_BeginDrawPlanes();
 

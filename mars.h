@@ -38,8 +38,8 @@ void Mars_Sec_R_WallPrep(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_PlanePrep(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_SegCommands(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
-void Mars_Sec_R_DrawSprites(int* sortedsprites, int count) ATTR_DATA_CACHE_ALIGN;
-void Mars_Sec_R_DrawPSprites(void) ATTR_DATA_CACHE_ALIGN;
+void Mars_Sec_R_DrawSprites(int* sortedsprites, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
+void Mars_Sec_R_DrawPSprites(int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
 
 void Mars_Sec_M_AnimateFire(void) ATTR_OPTIMIZE_EXTREME;
 void Mars_Sec_InitSoundDMA(void);
@@ -101,24 +101,25 @@ static inline void Mars_R_BeginDrawPlanes(void)
 
 static inline void Mars_R_EndDrawPlanes(void)
 {
-	Mars_R_SecWait();
 }
 
 // r_phase8
-static inline void Mars_R_BeginDrawSprites(int *sortedsprites, int count)
+static inline void Mars_R_BeginDrawSprites(int *sortedsprites, int sprscreenhalf)
 {
+	Mars_R_SecWait();
 	*(volatile uintptr_t*)&MARS_SYS_COMM12 = (uintptr_t)sortedsprites;
-	MARS_SYS_COMM6 = count;
+	MARS_SYS_COMM6 = sprscreenhalf;
 	MARS_SYS_COMM4 = 6;
 }
 
 static inline void Mars_R_EndDrawSprites(void)
 {
-	Mars_R_SecWait();
 }
 
-static inline void Mars_R_BeginDrawPSprites(void)
+static inline void Mars_R_BeginDrawPSprites(int sprscreenhalf)
 {
+	Mars_R_SecWait();
+	MARS_SYS_COMM6 = sprscreenhalf;
 	MARS_SYS_COMM4 = 7;
 }
 
