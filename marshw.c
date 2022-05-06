@@ -372,7 +372,7 @@ void Mars_UseCD(int usecd)
 	while (MARS_SYS_COMM0);
 }
 
-void Mars_PlayTrack(char usecd, int playtrack, void *vgmptr, char looping)
+void Mars_PlayTrack(char usecd, int playtrack, void *vgmptr, int vgmsize, char looping)
 {
 	Mars_UseCD(usecd);
 
@@ -383,6 +383,10 @@ void Mars_PlayTrack(char usecd, int playtrack, void *vgmptr, char looping)
 	}
 	else
 	{
+		*(volatile intptr_t*)&MARS_SYS_COMM12 = (intptr_t)vgmsize;
+		MARS_SYS_COMM0 = 0x0301;
+		while (MARS_SYS_COMM0);
+
 		MARS_SYS_COMM2 = playtrack | (looping ? 0x8000 : 0x0000);
 		*(volatile intptr_t*)&MARS_SYS_COMM12 = (intptr_t)vgmptr;
 	}

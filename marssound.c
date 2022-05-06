@@ -38,7 +38,7 @@ enum
 	SNDCMD_NONE,
 	SNDCMD_CLEAR,
 	SNDCMD_STARTSND,
-	SNDCMD_STARTORGSND,
+	SNDCMD_STARTORGSND
 };
 
 static uint8_t snd_bufidx = 0;
@@ -46,6 +46,11 @@ int16_t __attribute__((aligned(16))) snd_buffer[2][MAX_SAMPLES * 2];
 static uint8_t	snd_init = 0, snd_stopmix = 0;
 
 static VINT		*vgm_tracks;
+uint8_t			*vgm_ptr;
+
+sfxchannel_t	pcmchannel;
+
+int __attribute__((aligned(16))) pcm_data[4];
 
 sfxchannel_t	sfxchannels[SFXCHANNELS];
 
@@ -64,6 +69,7 @@ void S_PaintChannel8(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) A
 static void S_SpatializeAt(fixed_t*origin, mobj_t* listener, int* pvol, int* psep) ATTR_DATA_CACHE_ALIGN;
 static void S_Spatialize(mobj_t* mobj, int* pvol, int* psep, getsoundpos_t getpos) ATTR_DATA_CACHE_ALIGN;
 static void S_Update(int16_t* buffer) ATTR_DATA_CACHE_ALIGN;
+static void S_UpdatePCM(int16_t* buffer) ATTR_DATA_CACHE_ALIGN;
 
 /*
 ==================
@@ -92,12 +98,12 @@ void S_Init(void)
 
 	for (i = 1; i < numlumps; i++)
 	{
-		char name[5];
+		char name[9];
 
-		D_memcpy(name, W_GetNameForNum(i), 4);
-		name[4] = 0;
+		D_memcpy(name, W_GetNameForNum(i), 8);
+		name[8] = 0;
 
-		if (D_strcasecmp("VGM_", name))
+		if (D_strncasecmp("VGM_", name, 4))
 			continue;
 
 		tmp_tracks[num_music++] = i;
@@ -471,13 +477,15 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 
 	if (musictype == mustype_cd)
 	{
-		Mars_PlayTrack(1, playtrack, NULL, looping);
+		Mars_PlayTrack(1, playtrack, NULL, 0, looping);
 		return;
 	}
 
 	Mars_StopTrack(); // stop the playback before flipping pages
 	S_Clear();
-	Mars_PlayTrack(0, playtrack, W_POINTLUMPNUM(musiclump), looping);
+
+	vgm_ptr = (uint8_t *)W_POINTLUMPNUM(musiclump);
+	Mars_PlayTrack(0, playtrack, vgm_ptr, W_LumpLength(musiclump), looping);
 }
 
 void S_StopSong(void)
@@ -487,11 +495,54 @@ void S_StopSong(void)
 	curcdtrack = cdtrack_none;
 }
 
+static void S_ClearPCM(void)
+{
+	D_memset(pcm_data, 0, sizeof(pcm_data));
+	D_memset(&pcmchannel, 0, sizeof(pcmchannel));
+	pcmchannel.volume = /*musicvolume*/40; /* 64 seems to be too loud */
+	pcmchannel.pan = 128;
+}
+
+static void S_UpdatePCM(int16_t* buffer)
+{
+	int inc, len, offs, flag;
+
+	Mars_ClearCacheLine(pcm_data);
+	inc = pcm_data[0]; /* cache read line loads all vars at once to cache */
+	len = pcm_data[1];
+	offs = pcm_data[2];
+	flag = pcm_data[3];
+
+	if (flag & 1)
+	{
+		if (offs == -1)
+		{
+			pcmchannel.data = NULL;
+			((volatile short *)pcm_data)[7] = 0; // unset bit 0 for flag
+			return;
+		}
+
+		/* do once */
+		pcmchannel.position = 0;
+		pcmchannel.increment = inc;
+		pcmchannel.length = len;
+		pcmchannel.data = vgm_ptr + offs;
+		((volatile short *)pcm_data)[7] = 0; // unset bit 0 for flag
+	}
+
+	/* keep updating the channel until done */
+	if (pcmchannel.data)
+		S_PaintChannel8(&pcmchannel, buffer, MAX_SAMPLES, 64);
+}
+
 static void S_Update(int16_t* buffer)
 {
 	int i;
 	int16_t* b;
 	mobj_t* mo;
+
+	Mars_ClearCacheLine(&sfxvolume);
+	Mars_ClearCacheLine(&musicvolume);
 
 	for (i = 0; i < MAXPLAYERS; i++)
 	{
@@ -519,6 +570,8 @@ static void S_Update(int16_t* buffer)
 			*b2++ = 0;
 		}
 	}
+
+	S_UpdatePCM(buffer);
 
 	for (i = 0; i < SFXCHANNELS; i++)
 	{
@@ -694,6 +747,7 @@ void Mars_Sec_ReadSoundCmds(void)
 		switch (cmd) {
 		case SNDCMD_CLEAR:
 			D_memset(sfxchannels, 0, sizeof(*sfxchannels) * SFXCHANNELS);
+			S_ClearPCM();
 			break;
 		case SNDCMD_STARTSND:
 			S_StartSoundReal((void*)(*(intptr_t*)&p[2]), p[1], p[4], NULL);
@@ -764,6 +818,8 @@ void Mars_Sec_StartSoundMixer(void)
 {
 	snd_stopmix = 0;
 
+	S_ClearPCM();
+
 	// fill first buffer
 	S_Update(snd_buffer[snd_bufidx]);
 
@@ -773,5 +829,45 @@ void Mars_Sec_StartSoundMixer(void)
 
 void pri_cmd_handler(void)
 {
+	volatile int *pcm_cachethru = (volatile int *)((intptr_t)pcm_data | 0x20000000);
+	volatile unsigned short bcomm0 = MARS_SYS_COMM0,	/* save COMM0 reg */
+							bcomm2 = MARS_SYS_COMM2,	/* save COMM2 reg */
+							bcomm12 = MARS_SYS_COMM12,	/* save COMM12 reg */
+							bcomm14 = MARS_SYS_COMM14;	/* save COMM14 reg */
+	unsigned int offs, len, freq;
 
+	MARS_SYS_COMM0 = 0xA55A;				/* handshake with stream code */
+	while (MARS_SYS_COMM0 == 0xA55A);
+
+	((volatile short *)pcm_cachethru)[7] = 0;	/* make sure data array isn't being read */
+	if (MARS_SYS_COMM0 == 0xFFFF)
+	{
+		/* stop pcm channel */
+		pcm_cachethru[2] = -1;
+		pcm_cachethru[3] = 1;
+	}
+	else
+	{
+		freq = (unsigned)MARS_SYS_COMM0;
+		/* offset is COMM12 | top 8 bits of COMM2 */
+		/* length is COMM14 | lower 8 bits of COMM2 */
+		offs = (unsigned)MARS_SYS_COMM12 | ((unsigned)(MARS_SYS_COMM2 & 0x00FF) << 16);
+		len = (unsigned)MARS_SYS_COMM14 | ((unsigned)(MARS_SYS_COMM2 & 0xFF00) << 8);
+		/* limit offset and length to 1M since that's our block size */
+		offs &= 0xFFFFF;
+		len &= 0xFFFFF;
+
+		pcm_cachethru[0] = (freq << 14) / SAMPLE_RATE;
+		pcm_cachethru[1] = len << 14;
+		pcm_cachethru[2] = offs;
+		pcm_cachethru[3] = 1;
+	}
+
+	MARS_SYS_COMM0 = 0xA55A;				/* handshake with stream code */
+	while (MARS_SYS_COMM0 == 0xA55A);
+
+	MARS_SYS_COMM2 = bcomm2;				/* restore COMM2 reg */
+	MARS_SYS_COMM12 = bcomm12;				/* restore COMM12 reg */
+	MARS_SYS_COMM14 = bcomm14;				/* restore COMM14 reg */
+	MARS_SYS_COMM0 = bcomm0;				/* restore COMM0 reg */
 }

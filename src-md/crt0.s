@@ -421,6 +421,17 @@ start_music:
         bne     start_cd
         
         /* start VGM */
+        cmpi.w	#0x0300,d0
+        beq.b	0f
+
+        /* set VGM length */
+        move.l  0xA1512C,d0         /* fetch VGM length */
+        move.l  d0,vgm_size
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+0:
+        /* set VGM pointer and init VGM player */
         move.w  0xA15122,d0          /* COMM2 = index | repeat flag */
         move.w  #0x8000,d1
         and.w   d0,d1                /* repeat flag */
@@ -431,6 +442,7 @@ start_music:
         move.l  #0,a0
         move.l  0xA1512C,d0          /* fetch VGM offset */
         beq.b   9f
+
         move.l  d0,a0
         bsr     set_rom_bank
         move.l  a1,fm_ptr

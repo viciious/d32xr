@@ -1,8 +1,9 @@
 | SEGA 32X VGM Player
 | by Chilly Willy
 |
-| uses two work ram buffers to hold decompressed vgm commands
-| and pcm data
+| uses work ram buffer to hold decompressed vgm commands
+| pcm data is separate from the vgm commands
+
         .equ    buf_size,0x8000    /* must match LZSS_BUF_SIZE */
         .equ    vgm_ahead,0x200    /* must match VGM_READAHEAD */
 
@@ -17,13 +18,13 @@
         .endm
 
         .macro  fetch_pcm reg
-        cmpa.l  a3,a5           /* check for wrap around */
-        bcs.b   9f
-        suba.l  a2,a5           /* wrap */
-        subi.l  #buf_size,pcm_chk
-        jsr     bump_pcm
-9:
+        cmpa.w  #0,a5
+        beq.b   8f
         move.b  (a5)+,\reg
+        bra.b   9f
+8:
+        move.b  #0x80,\reg      /* silence if pcm ptr isn't set */
+9:
         .endm
 
         .data
@@ -72,18 +73,35 @@ fm_init:
         move.b  #0xFF,0xC00011
         rts
 
+        .global fm_newvgmptr
+fm_newvgmptr:
+        movea.l vgm_ptr,a6      /* decompress buffer */
+        move.l  a6,vgm_chk
+        addi.l  #vgm_ahead,vgm_chk    /* vgm_setup reads this for us */
+        move.l  a6,fm_cur       /* current vgm ptr */
+        lea     buf_size,a2     /* wrap length for buffer */
+        lea     0(a6,a2.l),a3   /* buffer limit */
+        clr.b   pcm_en          /* pcm dac not yet enabled */
+        rts
 
         .global fm_setup
 fm_setup:
         tst.l   fm_ptr
         beq     stop            /* no vgm pointer */
 
-        movea.l vgm_ptr,a6      /* decompress buffer */
-        move.l  a6,vgm_chk
-        addi.l  #vgm_ahead,vgm_chk    /* vgm_setup read this for us */
-        move.l  a6,fm_cur       /* current vgm ptr */
-        lea     buf_size,a2     /* wrap length for buffer */
-        lea     0(a6,a2.l),a3   /* buffer limit */
+        tst.l   pcm_baseoffs
+        beq.b   4f
+
+        move.l  vgm_ptr,d3
+        move    d3,d0
+        add.l   pcm_baseoffs,d0
+        move.l  d0,vgm_ptr
+        jsr     fm_newvgmptr
+        bsr     fm_play
+        move.l  d3,vgm_ptr
+
+4:
+        jsr     fm_newvgmptr
 
         lea     0x1C(a6),a6     /* loop offset */
         fetch_vgm d0
@@ -144,6 +162,7 @@ fm_setup:
 3:
         add.l   d3,fm_cur       /* start of song data */
         move.b  #0x15,fm_csm
+        move.l  pcm_base,pcm_cur /* start of pcm data */
         rts
 
 
@@ -324,12 +343,12 @@ cmd_table:
         .word   write_pcm_wait_14 - cmd_table
         .word   write_pcm_wait_15 - cmd_table
         /* 90 - 9F */
-        .word   reserved_2 - cmd_table
-        .word   reserved_2 - cmd_table
-        .word   reserved_2 - cmd_table
-        .word   reserved_2 - cmd_table
-        .word   reserved_2 - cmd_table
-        .word   reserved_2 - cmd_table
+        .word   stream_setup_ctrl - cmd_table
+        .word   stream_set_data - cmd_table
+        .word   stream_set_freq - cmd_table
+        .word   stream_start - cmd_table
+        .word   stream_stop - cmd_table
+        .word   stream_start_fast - cmd_table
         .word   reserved_2 - cmd_table
         .word   reserved_2 - cmd_table
         .word   reserved_2 - cmd_table
@@ -725,6 +744,174 @@ write_pcm_wait_15:
         move.l  a5,pcm_cur      /* update pcm ptr */
         bra     wait_15
 
+| Some notes for streams on the MD
+|   There is only one YM2612, and thus only one DAC,
+|   and thus only one stream. We can probably just
+|   ignore it. We are also assuming an optimized VGM
+|   with only one data block using stream command 93
+|   to play samples.
+|
+|   We currently assume the length mode is 01, and
+|   hence the number of samples to play at the set
+|   frequency.
+
+stream_setup_ctrl:
+        fetch_vgm d0            /* stream ID */
+        fetch_vgm d1            /* chip type */
+        fetch_vgm d2            /* port */
+        fetch_vgm d3            /* command/control value */
+
+        move.b  d0,strm_id
+        move.b  d1,strm_chip    /* should be 0x00 for YM2612 */
+        move.b  d2,strm_port    /* should be 0x00 for YM2612 */
+        move.b  d3,strm_cmd     /* should be 0x2A for YM2612 */
+
+        move.l  a6,fm_cur       /* update vgm ptr */
+        rts
+
+stream_set_data:
+        fetch_vgm d0            /* stream ID */
+        fetch_vgm d1            /* data bank ID */
+        fetch_vgm d2            /* step size */
+        fetch_vgm d3            /* step base */
+
+        move.b  d0,strm_id
+        move.b  d2,strm_ssize
+        move.b  d3,strm_sbase
+
+        move.l  a6,fm_cur       /* update vgm ptr */
+        rts
+
+stream_set_freq:
+        fetch_vgm d0            /* stream ID */
+        move.b  d0,strm_id
+
+        fetch_vgm d0            /* frequency */
+        fetch_vgm d1
+        fetch_vgm d2
+        fetch_vgm d3
+        move.b  d3,-(sp)
+        move.w  (sp)+,d3        /* shift left 8 */
+        move.b  d2,d3
+        swap    d3
+        move.b  d1,-(sp)
+        move.w  (sp)+,d3        /* shift left 8 */
+        move.b  d0,d3
+        move.l  d3,strm_freq
+
+        move.l  a6,fm_cur       /* update vgm ptr */
+        rts
+
+stream_start:
+        fetch_vgm d0            /* stream ID */
+        move.b  d0,strm_id
+
+        fetch_vgm d0            /* data start offset (-1 == ignore) */
+        fetch_vgm d1
+        fetch_vgm d2
+        fetch_vgm d3
+        move.b  d3,-(sp)
+        move.w  (sp)+,d3        /* shift left 8 */
+        move.b  d2,d3
+        swap    d3
+        move.b  d1,-(sp)
+        move.w  (sp)+,d3        /* shift left 8 */
+        move.b  d0,d3
+        cmpi.l  #-1,d3
+        beq.b   0f              /* ignore start offset, leave at current position */
+        addq    #7,d3           /* skip over block command to pcm data */
+        move.l  d3,strm_offs
+0:
+        fetch_vgm d0            /* length mode */
+        move.b  d0,strm_lmode
+
+        fetch_vgm d0            /* data length */
+        fetch_vgm d1
+        fetch_vgm d2
+        fetch_vgm d3
+        move.b  d3,-(sp)
+        move.w  (sp)+,d3        /* shift left 8 */
+        move.b  d2,d3
+        swap    d3
+        move.b  d1,-(sp)
+        move.w  (sp)+,d3        /* shift left 8 */
+        move.b  d0,d3
+        move.l  d3,strm_len
+
+        /* send stream start to primary sh2 */
+        move.w  #0x0001,0xA15102    /* assert CMD INT to primary SH2 */
+10:
+        move.w  0xA15120,d0     /* wait on handshake in COMM0 */
+        cmpi.w  #0xA55A,d0
+        bne.b   10b
+        move.l  strm_offs,d0
+        add.l   pcm_baseoffs,d0
+        move.w  d0,0xA1512C     /* offs 0 to 15 */
+        swap    d0
+        move.l  strm_len,d3
+        move.w  d3,0xA1512E     /* len 0 to 15 */
+        swap    d3
+        move.b  d3,-(sp)
+        move.w  (sp)+,d3        /* shift left 8 len 16 to 23 */
+        move.b  d0,d3           /* offs 16 to 23 */
+        move.w  d3,0xA15122     /* len_hi:off_hi */
+        move.l  strm_freq,d0
+        move.w  d0,0xA15120     /* set frequency and start stream */
+20:
+        move.w  0xA15120,d0     /* wait on handshake in COMM0 */
+        cmpi.w  #0xA55A,d0
+        bne.b   20b
+        /* done */
+        move.w  #0x5AA5,0xA15120
+30:
+        cmpi.w  #0x5AA5, 0xA15120
+        beq.b   30b
+
+        /* pcm stream started on 32X */
+|        move.l  strm_offs,d0
+|        add.l   strm_len,d0
+|        move.l  d0,strm_offs
+
+        move.l  a6,fm_cur       /* update vgm ptr */
+        rts
+
+stream_stop:
+        fetch_vgm d0            /* stream ID (0xFF == stop all streams) */
+
+        /* send stream stop to primary sh2 */
+        move.w  #0x0001,0xA15102    /* assert CMD INT to primary SH2 */
+10:
+        move.w  0xA15120,d0     /* wait on handshake in COMM0 */
+        cmpi.w  #0xA55A,d0
+        bne.b   10b
+        move.w  #0xFFFF,0xA15120    /* stop pcm channel */
+20:
+        move.w  0xA15120,d0     /* wait on handshake in COMM0 */
+        cmpi.w  #0xA55A,d0
+        bne.b   20b
+        /* done */
+        move.w  #0x5AA5,0xA15120
+30:
+        cmpi.w  #0x5AA5, 0xA15120
+        beq.b   30b
+
+        move.l  a6,fm_cur       /* update vgm ptr */
+        rts
+
+stream_start_fast:
+        fetch_vgm d0            /* stream ID */
+
+        fetch_vgm d1            /* block ID */
+        fetch_vgm d2
+        move.b  d2,-(sp)
+        move.w  (sp)+,d2        /* shift left 8 */
+        move.b  d1,d2
+
+        fetch_vgm d3            /* flags (0x01 == loop, 0x10 == reverse) */
+
+        move.l  a6,fm_cur       /* update vgm ptr */
+        rts
+
 seek_pcm:
         fetch_vgm d0
         fetch_vgm d1
@@ -737,9 +924,26 @@ seek_pcm:
         move.b  d1,-(sp)
         move.w  (sp)+,d3        /* shift left 8 */
         move.b  d0,d3
-        add.l   pcm_ptr,d3      /* new pcm ptr */
+        add.l   pcm_base,d3     /* new pcm ptr */
         move.l  d3,pcm_cur
 
+        tst.b   pcm_en
+        bne.b   0f
+        move.b  #0x2B,0xA04000
+        nop
+        nop
+        nop
+        move.b  #0x80,0xA04001  /* enable DAC */
+        nop
+        nop
+        nop
+        move.b  #0x2A,0xA04000
+        nop
+        nop
+        nop
+        move.b  #0x80,0xA04001  /* silence */
+        move.b  #1,pcm_en
+0:
         move.l  a6,fm_cur       /* update vgm ptr */
         rts
 
@@ -767,7 +971,10 @@ data_block:
         bne.b   0f              /* not pcm */
         /* data block of pcm */
         move.l  d1,pcm_base
-        move.l  pcm_ptr,pcm_cur /* curr pcm ptr = pcm buffer */
+        move.l  pcm_base,pcm_cur /* curr pcm ptr = pcm buffer */
+
+        tst.b   pcm_en
+        bne.b   0f
         move.b  #0x2B,0xA04000
         nop
         nop
@@ -781,6 +988,7 @@ data_block:
         nop
         nop
         move.b  #0x80,0xA04001  /* silence */
+        move.b  #1,pcm_en
 0:
         add.l   d1,d3           /* new vgm ptr, skip over data block */
         move.l  d1,fm_cur
@@ -788,7 +996,7 @@ data_block:
 
 end_data:
         tst.w   fm_rep
-        beq.b   stop            /* no repeat, stop music */
+        beq     stop            /* no repeat, stop music */
 
         move.l  vgm_ptr,vgm_chk
         jsr     vgm_setup       /* restart at start of compressed data and fill buffer */
@@ -797,6 +1005,8 @@ end_data:
         move.l  fm_loop,d0      /* offset from data start to song start */
         add.l   vgm_ptr,d0
         move.l  d0,fm_cur
+        move.l  pcm_base,pcm_cur
+        clr.b   pcm_en
 
         move.b  #0x2B,0xA04000
         nop
@@ -902,17 +1112,20 @@ fm_cur:
         dc.l    0
 pcm_base:
         dc.l    0
+        .global pcm_baseoffs
+pcm_baseoffs:
+        dc.l    0
 pcm_cur:
         dc.l    0
 vgm_chk:
         dc.l    0
 pcm_chk:
         dc.l    0
-        .global    pcm_ptr
-pcm_ptr:
-        dc.l    0
         .global    vgm_ptr
 vgm_ptr:
+        dc.l    0
+        .global    vgm_size
+vgm_size:
         dc.l    0
         .global    fm_rep
 fm_rep:
@@ -931,6 +1144,43 @@ fm_ttt:
         dc.w    0
         .global    fm_csm
 fm_csm:
+        dc.b    0
+
+pcm_en:
+        dc.b    0
+
+
+        .align  4
+
+        .global     strm_freq
+strm_freq:
+        dc.l    0
+        .global     strm_len
+strm_len:
+        dc.l    0
+        .global     strm_offs
+strm_offs:
+        dc.l    1
+        .global     strm_id
+strm_id:
+        dc.b    0
+        .global     strm_chip
+strm_chip:
+        dc.b    0
+        .global     strm_port
+strm_port:
+        dc.b    0
+        .global     strm_cmd
+strm_cmd:
+        dc.b    0
+        .global     strm_ssize
+strm_ssize:
+        dc.b    0
+        .global     strm_sbase
+strm_sbase:
+        dc.b    0
+        .global     strm_lmode
+strm_lmode:
         dc.b    0
 
         .align  2
