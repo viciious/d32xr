@@ -300,6 +300,7 @@ void R_InitMathTables(void)
 	I_FreeWorkBuffer();
 
 	viewangletox = (VINT *)I_AllocWorkBuffer(sizeof(*viewangletox) * (FINEANGLES / 2));
+	distscale = (fixed_t *)I_AllocWorkBuffer(sizeof(*distscale) * SCREENWIDTH);
 	tempviewangletox = (VINT *)I_WorkBuffer();
 
 	// Use tangent table to generate viewangletox:

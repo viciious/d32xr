@@ -270,7 +270,7 @@ extern const angle_t tantoangle[SLOPERANGE + 1];
 #endif
 
 extern	fixed_t yslope[SCREENHEIGHT];
-extern	fixed_t distscale[SCREENWIDTH];
+extern	fixed_t *distscale/*[SCREENWIDTH]*/;
 
 #define	HEIGHTBITS			6
 #define	FIXEDTOHEIGHT		(FRACBITS-HEIGHTBITS)
