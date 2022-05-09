@@ -212,8 +212,8 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int screenhal
          continue;
       }
 
-      topsil    = ds->topsil;
-      bottomsil = ds->bottomsil;
+      topsil    = (byte *)openings + ds->topsil - ds->start;
+      bottomsil = (byte *)openings + ds->bottomsil - ds->start;
 
       if(silhouette == AC_BOTTOMSIL)
       {

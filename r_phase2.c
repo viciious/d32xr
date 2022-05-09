@@ -339,13 +339,13 @@ static void R_WallLatePrep(viswall_t* wc)
 
     if (wc->actionbits & AC_BOTTOMSIL)
     {
-        wc->bottomsil = (byte*)lastopening - rw_x;
+        wc->bottomsil = (byte*)lastopening - (byte *)openings;
         lastopening += width;
     }
 
     if (wc->actionbits & AC_TOPSIL)
     {
-        wc->topsil = (byte*)lastopening - rw_x;
+        wc->topsil = (byte*)lastopening - (byte *)openings;
         lastopening += width;
     }
 }
@@ -364,15 +364,18 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floor
     unsigned scalefrac = segl->scalefrac;
     unsigned volatile scalestep = segl->scalestep;
 
-    int x;
+    int x, start = segl->start;
     const volatile int stop = segl->stop;
-    const int width = segl->stop - segl->start + 1;
+    const int width = stop - start + 1;
 
     const volatile fixed_t floorheight = segl->floorheight;
     const volatile fixed_t ceilingheight = segl->ceilingheight;
 
     const volatile int floorpicnum = segl->floorpicnum;
     const volatile int ceilingpicnum = segl->ceilingpicnum;
+
+    byte *topsil = (byte *)openings + segl->topsil - start;
+    byte *bottomsil = (byte *)openings + segl->bottomsil - start;
 
     // force R_FindPlane for both planes
     floor = ceiling = visplanes;
@@ -389,11 +392,11 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floor
     unsigned short *newclipbounds = NULL;
     if (actionbits & (AC_NEWFLOOR | AC_NEWCEILING))
     {
-        newclipbounds = lastsegclip - segl->start;
+        newclipbounds = lastsegclip - start;
         lastsegclip += width;
     }
 
-    for (x = segl->start; x <= stop; x++)
+    for (x = start; x <= stop; x++)
     {
         int floorclipx, ceilingclipx;
         int low, high, top, bottom;
@@ -428,11 +431,11 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floor
 
         // bottom sprite clip sil
         if (actionbits & AC_BOTTOMSIL)
-            segl->bottomsil[x] = low;
+            bottomsil[x] = low;
 
         // top sprite clip sil
         if (actionbits & AC_TOPSIL)
-            segl->topsil[x] = high;
+            topsil[x] = high;
 
         if (actionbits & (AC_NEWFLOOR | AC_NEWCEILING))
         {

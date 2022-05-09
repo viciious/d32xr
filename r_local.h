@@ -466,11 +466,11 @@ typedef struct
 	VINT         floorpicnum;   // floorpic #   - CALICO: avoid type ambiguity w/extra field
 	VINT         ceilingpicnum; // ceilingpic # - CALICO: avoid type ambiguity w/extra field
 
-	byte		*topsil;
-	byte		*bottomsil;
+	VINT 		topsil;
+	VINT 		bottomsil;
 } viswall_t;
 
-#define	MAXWALLCMDS		124
+#define	MAXWALLCMDS		128
 extern	viswall_t *viswalls/*[MAXWALLCMDS] __attribute__((aligned(16)))*/;
 extern	viswall_t *lastwallcmd;
 
@@ -514,7 +514,7 @@ typedef struct visplane_s
 	unsigned short		*open/*[SCREENWIDTH+2]*/;		/* top<<8 | bottom */ /* leave pads for [minx-1]/[maxx+1] */
 } visplane_t;
 
-#define	MAXVISPLANES	34
+#define	MAXVISPLANES	35
 extern	visplane_t		*visplanes/*[MAXVISPLANES]*/, *lastvisplane;
 
 #ifdef MARS
