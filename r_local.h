@@ -269,7 +269,7 @@ extern angle_t* const tantoangle;
 extern const angle_t tantoangle[SLOPERANGE + 1];
 #endif
 
-extern	fixed_t yslope[SCREENHEIGHT];
+extern	fixed_t *yslope/*[SCREENHEIGHT]*/;
 extern	fixed_t *distscale/*[SCREENWIDTH]*/;
 
 #define	HEIGHTBITS			6
@@ -514,7 +514,7 @@ typedef struct visplane_s
 	unsigned short		*open/*[SCREENWIDTH+2]*/;		/* top<<8 | bottom */ /* leave pads for [minx-1]/[maxx+1] */
 } visplane_t;
 
-#define	MAXVISPLANES	35
+#define	MAXVISPLANES	34
 extern	visplane_t		*visplanes/*[MAXVISPLANES]*/, *lastvisplane;
 
 #ifdef MARS
