@@ -523,7 +523,7 @@ void* I_RemapLumpPtr(void *ptr)
 ==================== 
 */ 
  
-static char zone[0x31400] __attribute__((aligned(16)));
+static char zone[0x31800] __attribute__((aligned(16)));
 byte *I_ZoneBase (int *size)
 {
 	*size = sizeof(zone);
