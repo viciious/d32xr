@@ -469,6 +469,8 @@ void R_InitSpriteDefs(const char** namelist)
 	int		maxframe;
 	byte	*tempbuf;
 	int		totalframes;
+	int 	totallumps;
+	VINT 	*lumps;
 
 	spr_rotations = false;
 
@@ -491,6 +493,8 @@ void R_InitSpriteDefs(const char** namelist)
 	//  noting the highest frame letter.
 	maxframe = 29;
 	totalframes = 0;
+	totallumps = 0;
+
 	tempbuf = I_WorkBuffer();
 	sprtemp = (void*)tempbuf;
 	for (i = 0; i < numsprites; i++)
@@ -548,6 +552,7 @@ void R_InitSpriteDefs(const char** namelist)
 				sprtemp[frame].rotate = 0;
 			case 0:
 				// only the first rotation is needed
+				totallumps += 2;
 				break;
 			case 1:
 				// must have all 8 frames
@@ -556,6 +561,7 @@ void R_InitSpriteDefs(const char** namelist)
 						I_Error("Sprite %s frame %c "
 							"is missing rotations",
 							spritename, frame + 'A');
+				totallumps += 8;
 				spr_rotations = true;
 				break;
 			}
@@ -570,13 +576,23 @@ void R_InitSpriteDefs(const char** namelist)
 
 	spriteframes = Z_Malloc(totalframes * sizeof(spriteframe_t), PU_STATIC, NULL);
 	sprtemp = (void*)tempbuf;
+	lumps = Z_Malloc(totallumps * sizeof(*lumps), PU_STATIC, NULL);
 
 	for (i = 0; i < totalframes; i++)
 	{
-		D_memcpy(spriteframes[i].lump, sprtemp[i].lump, sizeof(sprtemp[i].lump));
+		spriteframes[i].lump = lumps;
 		if (!sprtemp[i].rotate)
-			for (rotation = 1; rotation < 8; rotation++)
-				spriteframes[i].lump[rotation] = -1;
+		{
+			lumps[0] = sprtemp[i].lump[0];
+			lumps[1] = -1;
+			lumps += 2;
+		}
+		else
+		{
+			for (l = 0; l < 8; l++)
+				lumps[l] = sprtemp[i].lump[l];
+			lumps += 8;
+		}
 #if 0
 		int j;
 		for (j = 0; j < 8; j++)

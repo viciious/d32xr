@@ -186,8 +186,8 @@ typedef struct
 
 typedef struct
 {
-	short		lump[8];	/* lump to use for view angles 0-7 */
-							/* if lump[1] == -1, use 0 for any position */
+	VINT		*lump;	/* lump to use for view angles 0-7 */
+						/* if lump[1] == -1, use 0 for any position */
 } spriteframe_t;
 
 typedef struct
