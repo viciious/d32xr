@@ -499,7 +499,7 @@ void P_GroupLines (void)
 	int			block;
 	line_t		*li;
 	fixed_t		bbox[4];
-	
+
 /* look up sector number for each subsector */
 	ss = subsectors;
 	for (i=0 ; i<numsubsectors ; i++, ss++)
@@ -518,11 +518,11 @@ void P_GroupLines (void)
 	total = 0;
 	for (i=0 ; i<numlines ; i++, li++)
 	{
-		sector_t *back, *front;
-		total++;
-		front = LD_FRONTSECTOR(li);
-		back = LD_BACKSECTOR(li);
+		sector_t *front = LD_FRONTSECTOR(li);
+		sector_t *back = LD_BACKSECTOR(li);
+
 		front->linecount++;
+		total++;
 		if (back && back != front)
 		{
 			back->linecount++;
@@ -531,25 +531,40 @@ void P_GroupLines (void)
 	}
 	
 /* build line tables for each sector	 */
-	linebuffer = Z_Malloc (total*4, PU_LEVEL, 0);
+	linebuffer = Z_Malloc (total*sizeof(*linebuffer), PU_LEVEL, 0);
+	sector = sectors;
+	for (i=0 ; i<numsectors ; i++, sector++)
+	{
+		sector->lines = linebuffer;
+		linebuffer += sector->linecount;
+		sector->linecount = 0;
+	}
+
+	li = lines;
+	for (i=0 ; i<numlines ; i++, li++)
+	{
+		sector_t *front = LD_FRONTSECTOR(li);
+		sector_t *back = LD_BACKSECTOR(li);
+
+		front->lines[front->linecount++] = li;
+		if (back && back != front)
+		{
+			back->lines[back->linecount++] = li;
+		}
+	}
+
 	sector = sectors;
 	for (i=0 ; i<numsectors ; i++, sector++)
 	{
 		M_ClearBox (bbox);
-		sector->lines = linebuffer;
-		li = lines;
-		for (j=0 ; j<numlines ; j++, li++)
+
+		for (j=0 ; j<sector->linecount ; j++)
 		{
-			if (LD_FRONTSECTOR(li) == sector || LD_BACKSECTOR(li) == sector)
-			{
-				*linebuffer++ = li;
-				M_AddToBox (bbox, li->v1->x, li->v1->y);
-				M_AddToBox (bbox, li->v2->x, li->v2->y);
-			}
+			li = sector->lines[j];
+			M_AddToBox (bbox, li->v1->x, li->v1->y);
+			M_AddToBox (bbox, li->v2->x, li->v2->y);
 		}
-		if (linebuffer - sector->lines != sector->linecount)
-			I_Error ("P_GroupLines: miscounted");
-			
+
 		/* set the degenmobj_t to the middle of the bounding box */
 		sector->soundorg.x = (bbox[BOXRIGHT]+bbox[BOXLEFT])/2;
 		sector->soundorg.y = (bbox[BOXTOP]+bbox[BOXBOTTOM])/2;
