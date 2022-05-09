@@ -433,7 +433,7 @@ typedef struct
 
 	unsigned	scalefrac;
 	unsigned	scale2;
-	int			scalestep;
+	int			scalestep;		/* polar angle to start at phase1, then scalestep after phase2 */
 	
 	unsigned	centerangle;
 	unsigned	offset;
@@ -444,7 +444,6 @@ typedef struct
 /* */
 	VINT			start;
 	VINT			stop;					/* inclusive x coordinates */
-	int			angle1;					/* polar angle to start */
 	seg_t* seg;
 
 /* */

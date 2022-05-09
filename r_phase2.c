@@ -13,7 +13,7 @@ static sector_t emptysector = { 0, 0, -2, -2, -2 };
 static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floornewheight, fixed_t *ceilingnewheight) ATTR_DATA_CACHE_ALIGN;
 static fixed_t R_PointToDist(fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
 static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, angle_t normalangle) ATTR_DATA_CACHE_ALIGN;
-static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle) ATTR_DATA_CACHE_ALIGN;
+static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle, int angle1) ATTR_DATA_CACHE_ALIGN;
 static void R_WallLatePrep(viswall_t* wc) ATTR_DATA_CACHE_ALIGN;
 static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floornewheight, fixed_t ceilingnewheight) ATTR_DATA_CACHE_ALIGN;
 
@@ -254,12 +254,12 @@ static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, ang
 //
 // Setup texture calculations for lines with upper and lower textures
 //
-static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle)
+static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle, int angle1)
 {
     fixed_t sineval, rw_offset;
     angle_t offsetangle;
 
-    offsetangle = normalangle - wc->angle1;
+    offsetangle = normalangle - angle1;
 
     if (offsetangle > ANG180)
         offsetangle = 0 - offsetangle;
@@ -270,7 +270,7 @@ static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle)
     sineval = finesine(offsetangle >> ANGLETOFINESHIFT);
     FixedMul2(rw_offset, hyp, sineval);
 
-    if (normalangle - wc->angle1 < ANG180)
+    if (normalangle - angle1 < ANG180)
         rw_offset = -rw_offset;
 
     wc->offset += rw_offset;
@@ -281,6 +281,7 @@ static void R_WallLatePrep(viswall_t* wc)
 {
     angle_t      distangle, offsetangle, normalangle;
     seg_t* seg = wc->seg;
+    int          angle1 = wc->scalestep;
     fixed_t      sineval, rw_distance;
     fixed_t      scalefrac, scale2;
     fixed_t      hyp;
@@ -288,7 +289,7 @@ static void R_WallLatePrep(viswall_t* wc)
     // this is essentially R_StoreWallRange
     // calculate rw_distance for scale calculation
     normalangle = ((angle_t)seg->angle << 16) + ANG90;
-    offsetangle = normalangle - wc->angle1;
+    offsetangle = normalangle - angle1;
 
     if ((int)offsetangle < 0)
         offsetangle = 0 - offsetangle;
@@ -322,7 +323,7 @@ static void R_WallLatePrep(viswall_t* wc)
     if (wc->actionbits & (AC_TOPTEXTURE | AC_BOTTOMTEXTURE))
     {
         wc->actionbits |= AC_CALCTEXTURE; // set to calculate texture info
-        R_SetupCalc(wc, hyp, normalangle);// do calc setup
+        R_SetupCalc(wc, hyp, normalangle, angle1);// do calc setup
     }
 
 #ifdef MARS

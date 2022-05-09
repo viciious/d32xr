@@ -180,7 +180,7 @@ static void R_StoreWallRange(int start, int stop)
        rw->seg = curline;
        rw->start = start;
        rw->stop = newstop;
-       rw->angle1 = lineangle1;
+       rw->scalestep = lineangle1;
        rw->actionbits = 0;
        ++lastwallcmd;
 
