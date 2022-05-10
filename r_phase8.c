@@ -11,6 +11,7 @@
 #include <stdlib.h>
 
 static int fuzzpos[2];
+static int *gsortedsprites;
 
 static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy) ATTR_DATA_CACHE_ALIGN;
 void R_DrawVisSprite(vissprite_t* vis, unsigned short* spropening, int *fuzzpos, int screenhalf, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
@@ -297,9 +298,13 @@ static void R_DrawPSprites(const int cpu, int sprscreenhalf)
 }
 
 #ifdef MARS
-void Mars_Sec_R_DrawSprites(int* sortedsprites, int sprscreenhalf)
+void Mars_Sec_R_DrawSprites(int sprscreenhalf)
 {
     int count;
+    int *sortedsprites;
+
+    Mars_ClearCacheLine(&gsortedsprites);
+    sortedsprites = gsortedsprites;
 
     Mars_ClearCacheLine(sortedsprites);
     count = *(volatile int *)&sortedsprites[0];
@@ -380,8 +385,9 @@ void R_Sprites(void)
       if (!half || half > viewportWidth)
          half = viewportWidth / 2;
       sprscreenhalf = half;
+      gsortedsprites = sortedsprites;
 
-      Mars_R_BeginDrawSprites(sortedsprites, sprscreenhalf);
+      Mars_R_BeginDrawSprites(sprscreenhalf);
 
       R_DrawSpritesLoop(0, sortedsprites+1, sortedcount, sprscreenhalf);
 
