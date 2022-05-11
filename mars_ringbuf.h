@@ -115,6 +115,7 @@ static inline short* Mars_RB_GetReadBuf(marsrb_t* wb, unsigned wcnt)
 {
     unsigned rrover = MARS_UNCACHED_RROVER;
     unsigned rp = rrover % MARS_RINGBUF_MAXWORDS;
+    short* buf;
 
     if (wcnt > MARS_RINGBUF_MAXWORDS)
         return NULL;
@@ -122,13 +123,13 @@ static inline short* Mars_RB_GetReadBuf(marsrb_t* wb, unsigned wcnt)
     if (wb->readpos > 0) {
         if (wb->readpos + wcnt <= 8) {
             wb->readcnt = wcnt;
-            return wb->ringbuf + rp + wb->readpos;
+            buf = wb->ringbuf + rp + wb->readpos;
+            Mars_ClearCacheLines(buf, 1);
+            return buf;
         }
         Mars_RB_FinishRead(wb);
         rp = rrover % MARS_RINGBUF_MAXWORDS;
     }
-
-    short* buf;
 
     // advance position if there's no space near the end
     unsigned rpn = (rrover + wcnt + 7) & ~7;
@@ -143,6 +144,7 @@ static inline short* Mars_RB_GetReadBuf(marsrb_t* wb, unsigned wcnt)
     wb->readcnt = wcnt;
 
     Mars_RB_WaitWriter(wb, wcnt);
+    Mars_ClearCacheLines(buf, (wcnt*2+15)/16);
 
     return buf;
 }
