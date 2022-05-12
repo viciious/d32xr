@@ -328,6 +328,7 @@ void S_SetMusicType(int newtype)
 
 boolean S_CDAvailable(void)
 {
+	return mars_cd_ok != 0;
 	return (mars_cd_ok & 0x0100) != 0;
 }
 
