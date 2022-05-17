@@ -124,7 +124,7 @@ static inline short* Mars_RB_GetReadBuf(marsrb_t* wb, unsigned wcnt)
         if (wb->readpos + wcnt <= 8) {
             wb->readcnt = wcnt;
             buf = wb->ringbuf + rp + wb->readpos;
-            Mars_ClearCacheLines(buf, 1);
+            Mars_ClearCacheLine(buf);
             return buf;
         }
         Mars_RB_FinishRead(wb);
@@ -144,7 +144,7 @@ static inline short* Mars_RB_GetReadBuf(marsrb_t* wb, unsigned wcnt)
     wb->readcnt = wcnt;
 
     Mars_RB_WaitWriter(wb, wcnt);
-    Mars_ClearCacheLines(buf, (wcnt*2+15)/16);
+    Mars_ClearCacheLines(buf, (wcnt*2+31)/16);
 
     return buf;
 }

@@ -308,11 +308,11 @@ void Mars_Sec_R_DrawSprites(int sprscreenhalf)
 
     Mars_ClearCacheLine(sortedsprites);
     count = *(volatile int *)&sortedsprites[0];
-    Mars_ClearCacheLines(sortedsprites + 1, (count * sizeof(*sortedsprites) + 15) / 16);
+    Mars_ClearCacheLines(sortedsprites + 1, (count * sizeof(*sortedsprites) + 31) / 16);
 
     Mars_ClearCacheLine(&vissprites);
     Mars_ClearCacheLine(&lastsprite_p);
-    Mars_ClearCacheLines(vissprites, ((lastsprite_p - vissprites) * sizeof(vissprite_t) + 15) / 16);
+    Mars_ClearCacheLines(vissprites, ((lastsprite_p - vissprites) * sizeof(vissprite_t) + 31) / 16);
 
     R_DrawSpritesLoop(1, sortedsprites + 1, count, sprscreenhalf);
 }
@@ -321,7 +321,7 @@ void Mars_Sec_R_DrawPSprites(int sprscreenhalf)
 {
     Mars_ClearCacheLine(&vissprite_p);
     Mars_ClearCacheLine(&lastsprite_p);
-    Mars_ClearCacheLines(lastsprite_p, ((vissprite_p - lastsprite_p) * sizeof(vissprite_t) + 15) / 16);
+    Mars_ClearCacheLines(lastsprite_p, ((vissprite_p - lastsprite_p) * sizeof(vissprite_t) + 31) / 16);
 
     R_DrawPSprites(1, sprscreenhalf);
 }
