@@ -220,6 +220,8 @@ static void ReadOptions(void)
 
 	if (so.sfxvolume > 64)
 		so.sfxvolume = 64;
+	if (so.musicvolume > 64)
+		so.musicvolume = 64;
 	if (so.controltype >= NUMCONTROLOPTIONS)
 		so.controltype = 0;
 	if (so.detailmode >= MAXDETAILMODES)
