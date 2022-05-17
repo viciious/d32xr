@@ -715,3 +715,8 @@ void Mars_Sec_StartSoundMixer(void)
 	// start DMA
 	sec_dma1_handler();
 }
+
+void pri_cmd_handler(void)
+{
+
+}

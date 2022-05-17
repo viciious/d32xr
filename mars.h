@@ -45,11 +45,12 @@ void Mars_Sec_M_AnimateFire(void) ATTR_OPTIMIZE_EXTREME;
 void Mars_Sec_InitSoundDMA(void);
 void Mars_Sec_StopSoundMixer(void);
 void Mars_Sec_StartSoundMixer(void);
-void Mars_Sec_ReadSoundCmds(void) ATTR_DATA_CACHE_ALIGN;
+void Mars_Sec_ReadSoundCmds(void) ATTR_DATA_OPTIMIZE_NONE;
 
 void Mars_Sec_AM_Drawer(void);
 
-void secondary_dma1_handler(void) ATTR_DATA_CACHE_ALIGN;
+void sec_dma1_handler(void) ATTR_DATA_OPTIMIZE_NONE;
+void pri_cmd_handler(void) ATTR_DATA_OPTIMIZE_NONE;
 
 static inline void Mars_R_SecWait(void)
 {

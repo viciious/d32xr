@@ -390,7 +390,7 @@ pri_start:
         mov     #0x80,r0
         mov.l   _pri_adapter,r1
         mov.b   r0,@r1                  /* set FM */
-        mov     #0x08,r0                /* vbi enabled */
+        mov     #0x0A,r0                /* vbi and cmd enabled */
         mov.b   r0,@(1,r1)              /* set int enables */
         mov     #0x10,r0
         ldc     r0,sr                   /* allow ints */
@@ -594,21 +594,42 @@ pri_cmd_irq:
 
         mov.l   pci_mars_adapter,r1
         mov.w   r0,@(0x1A,r1)           /* clear CMD IRQ */
-        nop
-        nop
-        nop
+
+        ! handle CMD IRQ
+        sts.l   pr,@-r15
+        mov.l   r3,@-r15
+        mov.l   r4,@-r15
+        mov.l   r5,@-r15
+        mov.l   r6,@-r15
+        mov.l   r7,@-r15
+        sts.l   mach,@-r15
+        sts.l   macl,@-r15
+
+        mov.l   pci_cmd_handler,r0
+        jsr     @r0
         nop
 
-        ! handle CMD IRQ (remove nops if more than 8 cycles)
+        ! restore registers
+        lds.l   @r15+,macl
+        lds.l   @r15+,mach
+        mov.l   @r15+,r7
+        mov.l   @r15+,r6
+        mov.l   @r15+,r5
+        mov.l   @r15+,r4
+        mov.l   @r15+,r3
+        lds.l   @r15+,pr
 
         rts
         nop
+
 
         .align  2
 pci_mars_adapter:
         .long   0x20004000
 pci_sh2_frtctl:
         .long   0xfffffe10
+pci_cmd_handler:
+		.long	_pri_cmd_handler
 
 !-----------------------------------------------------------------------
 ! Primary PWM IRQ handler
