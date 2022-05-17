@@ -3,12 +3,14 @@
 #include "mars_ringbuf.h"
 #include "sounds.h"
 
-#define MAX_SAMPLES		735
+#define MAX_SAMPLES        315		// 70Hz
+//#define MAX_SAMPLES      441		// 50Hz
+//#define MAX_SAMPLES      735		// 30Hz
 
-#define SAMPLE_RATE		22050
-#define SAMPLE_MIN         2
+#define SAMPLE_RATE      22050
+#define SAMPLE_MIN       2
 #define SAMPLE_CENTER    517
-#define SAMPLE_MAX      1032
+#define SAMPLE_MAX       1032
 
 // when to clip out sounds
 // Does not fit the large outdoor areas.
