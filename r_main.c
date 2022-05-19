@@ -304,7 +304,7 @@ const VINT viewports[][2][3] = {
 	{ { 160, 180, true  }, {  80, 144, true  } },
 	{ { 224, 128, false }, { 160, 100, false } },
 	{ { 252, 144, false }, { 160, 128, false } },
-	{ { 320, 184, false }, { 160, 144, false } },
+	{ { 320, 180, false }, { 160, 144, false } },
 };
 
 VINT viewportNum;

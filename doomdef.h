@@ -708,7 +708,7 @@ extern	int			startsave;
 /*SYSTEM IO */
 /*--------- */
 #define	SCREENWIDTH		320
-#define	SCREENHEIGHT	200
+#define	SCREENHEIGHT	180
 
 void I_Init (void);
 byte *I_WadBase (void);
