@@ -444,7 +444,11 @@ typedef struct
 /* */
 	VINT			start;
 	VINT			stop;					/* inclusive x coordinates */
-	seg_t* seg;
+	union
+	{
+		seg_t			*seg;
+		VINT 			v[2];
+	};
 
 /* */
 /* filled in by early prep */

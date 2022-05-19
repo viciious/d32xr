@@ -112,7 +112,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos,
 static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy)
 {
    fixed_t x1, y1, sdx, sdy;
-   vertex_t *v1 = &vertexes[viswall->seg->v1], *v2 = &vertexes[viswall->seg->v2];
+   vertex_t *v1 = &vertexes[viswall->v[0]], *v2 = &vertexes[viswall->v[1]];
 
    x1  = v1->x;
    y1  = v1->y;

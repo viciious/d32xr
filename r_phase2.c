@@ -348,6 +348,9 @@ static void R_WallLatePrep(viswall_t* wc)
         wc->topsil = (byte*)lastopening - (byte *)openings;
         lastopening += width;
     }
+
+    wc->v[0] = seg->v1;
+    wc->v[1] = seg->v2;
 }
 
 //
