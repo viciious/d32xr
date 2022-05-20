@@ -76,14 +76,7 @@ boolean P_CheckPosition (mobj_t *thing, fixed_t x, fixed_t y)
 
 	checkposonly = true;	
 	
-#ifdef JAGUAR
-{
-	extern	p_move_start;
-	checkpostics += DSPFunction (&p_move_start);
-}
-#else
 	P_TryMove2 ();
-#endif
 
 	return trymove2;
 }
@@ -91,49 +84,12 @@ boolean P_CheckPosition (mobj_t *thing, fixed_t x, fixed_t y)
 
 boolean P_TryMove (mobj_t *thing, fixed_t x, fixed_t y)
 {
-	int		damage;
-	mobj_t	*latchedmovething;
-	
 	tmthing = thing;
 	tmx = x;
 	tmy = y;
-	
-#ifdef JAGUAR
-{
-	extern	int p_move_start;
-	checkpostics += DSPFunction (&p_move_start);
-}
-#else
+
 	P_TryMove2 ();
-#endif
 
-
-/* */
-/* pick up the specials */
-/* */
-	latchedmovething =  (mobj_t *)DSPRead (&movething);
-	
-	if (latchedmovething)
-	{
-		const mobjinfo_t* thinfo = &mobjinfo[thing->type];
-
-		if (thing->flags & MF_MISSILE)
-		{	/* missile bash into a monster */
-			damage = ((P_Random()&7)+1)* thinfo->damage;
-			P_DamageMobj (latchedmovething, thing, thing->target, damage);
-		}
-		else if (thing->flags & MF_SKULLFLY)
-		{	/* skull bash into a monster */
-			damage = ((P_Random()&7)+1)* thinfo->damage;
-			P_DamageMobj (latchedmovething, thing, thing, damage);
-			thing->flags &= ~MF_SKULLFLY;
-			thing->momx = thing->momy = thing->momz = 0;
-			P_SetMobjState (thing, thinfo->spawnstate);
-		}
-		else	/* pick up  */
-			P_TouchSpecialThing (latchedmovething, thing);
-	}
-		
 	return trymove2;
 }
 

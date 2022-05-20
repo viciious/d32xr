@@ -43,7 +43,6 @@ boolean  trymove2;   // result from P_TryMove2
 boolean  floatok;    // if true, move would be ok if within tmfloorz - tmceilingz
 fixed_t  tmfloorz;   // current floor z for P_TryMove2
 fixed_t  tmceilingz; // current ceiling z for P_TryMove2
-mobj_t  *movething;  // skull/missile target, or special
 line_t  *blockline;  // possibly a special to activate
 
 static VINT    numspechit;
@@ -71,6 +70,9 @@ boolean PIT_CheckThing(mobj_t *thing)
 {
    fixed_t blockdist;
    int     delta;
+   int     damage;
+   boolean solid;
+   const mobjinfo_t* thinfo = &mobjinfo[tmthing->type];
 
    if(!(thing->flags & (MF_SOLID|MF_SPECIAL|MF_SHOOTABLE)))
       return true;
@@ -95,7 +97,11 @@ boolean PIT_CheckThing(mobj_t *thing)
    // check for skulls slamming into things
    if(tmthing->flags & MF_SKULLFLY)
    {
-      movething = thing;
+		damage = ((P_Random()&7)+1)* thinfo->damage;
+		P_DamageMobj (thing, tmthing, tmthing, damage);
+		tmthing->flags &= ~MF_SKULLFLY;
+		tmthing->momx = tmthing->momy = tmthing->momz = 0;
+		P_SetMobjState (tmthing, thinfo->spawnstate);
       return false; // stop moving
    }
 
@@ -117,18 +123,20 @@ boolean PIT_CheckThing(mobj_t *thing)
          return !(thing->flags & MF_SOLID); // didn't do any damage
 
       // damage/explode
-      movething = thing;
+		damage = ((P_Random()&7)+1)* thinfo->damage;
+		P_DamageMobj (thing, tmthing, tmthing->target, damage);
       return false; // don't traverse any more
    }
+
+   solid = (thing->flags & MF_SOLID) != 0;
 
    // check for special pickup
    if((thing->flags & MF_SPECIAL) && (tmflags & MF_PICKUP))
    {
-      movething = thing;
-      return true;
+      P_TouchSpecialThing (thing,tmthing);
    }
 
-   return !(thing->flags & MF_SOLID);
+   return !solid;
 }
 
 //
@@ -279,7 +287,6 @@ static void PM_CheckPosition(void)
 
    ++validcount;
 
-   movething = NULL;
    blockline = NULL;
    numspechit = 0;
 
