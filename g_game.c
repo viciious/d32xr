@@ -452,9 +452,10 @@ void G_InitNew (skill_t skill, int map, gametype_t gametype)
 
 /* force players to be initialized upon first level load          */
 	for (i=0 ; i<MAXPLAYERS ; i++) 
-		players[i].playerstate = PST_REBORN; 
+		players[i].playerstate = PST_REBORN;
 
-	players[0].mo = players[1].mo = &emptymobj;	/* for net consistancy checks */
+	for (i=0 ; i<MAXPLAYERS ; i++)
+		players[i].mo = &emptymobj;	/* for net consistency checks */
 
 	G_InitPlayerResp();
 

@@ -280,6 +280,7 @@ mobj_t	emptymobj;
 int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		,  int (*ticker)(void), void (*drawer)(void) )
 {
+	int		i;
 	int		exit;
 	int		buttons;
 	int		mx, my;
@@ -413,7 +414,8 @@ while (!I_RefreshCompleted ())
 	stop ();
 	S_Clear ();
 	
-	players[0].mo = players[1].mo = &emptymobj;	/* for net consistancy checks */
+	for (i = 0; i < MAXPLAYERS; i++)
+		players[i].mo = &emptymobj;	/* for net consistency checks */
 	
 	return exit;
 } 
