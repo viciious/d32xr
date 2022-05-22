@@ -317,6 +317,7 @@ void P_NewChaseDir (mobj_t *actor)
 
 boolean P_LookForPlayers (mobj_t *actor, boolean allaround)
 {
+	int 		i, j;
 	angle_t		an;
 	fixed_t		dist;
 	mobj_t		*mo;
@@ -324,10 +325,25 @@ boolean P_LookForPlayers (mobj_t *actor, boolean allaround)
 	if (! (actor->flags & MF_SEETARGET) )
 	{	/* pick another player as target if possible */
 newtarget:
-		if (playeringame[1] && actor->target == players[0].mo)
-			actor->target = players[1].mo;
-		else
-			actor->target = players[0].mo;
+		for (i = 0; i < MAXPLAYERS; i++)
+		{
+			if (actor->target == players[i].mo)
+			{
+				i++; // advance to the next player
+				break;
+			}
+		}
+
+		for (j = 0; j < MAXPLAYERS; j++)
+		{
+			int p = (i + j) % MAXPLAYERS;
+			if (playeringame[p])
+			{
+				actor->target = players[p].mo;
+				break;
+			}
+		}
+
 		return false;
 	}
 		
