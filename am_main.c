@@ -209,18 +209,19 @@ static void DrawLine(pixel_t color, fixed_t x1, fixed_t y1, fixed_t x2, fixed_t 
 }
 #elif defined(MARS)
 
-static void putPixel(byte* fb, pixel_t c, fixed_t x, fixed_t y, fixed_t brightness)
+static inline void putPixel(byte* fb, pixel_t c, unsigned x, unsigned y, fixed_t brightness)
 {
 	if (brightness <= 0)
 		brightness = 0;
 	else if (brightness >= FRACUNIT)
 		brightness = 0x7;
 	else
-		brightness = (brightness >> 13) & 0x7;
+		brightness = ((unsigned)brightness >> 13) & 0x7;
 
 	y >>= FRACBITS;
 	x >>= FRACBITS;
-	fb[(y << 8) + (y << 6) + x] = c - brightness;
+	y <<= 6;
+	fb[(y << 2) + y + x] = c - brightness;
 }
 
 static void DrawLine(uint8_t *fb, pixel_t color, fixed_t x0, fixed_t y0, fixed_t x1, fixed_t y1, fixed_t miny, fixed_t maxy)
@@ -300,8 +301,8 @@ static void DrawLine(uint8_t *fb, pixel_t color, fixed_t x0, fixed_t y0, fixed_t
 	else if (y0 == y1)
 	{
 		fixed_t y;
-		uint16_t c1, c2;
-		uint16_t *sfb;
+		int c1, c2;
+		int16_t *sfb;
 
 		x0 >>= FRACBITS;
 		x1 >>= FRACBITS;
@@ -336,7 +337,7 @@ static void DrawLine(uint8_t *fb, pixel_t color, fixed_t x0, fixed_t y0, fixed_t
 			x++;
 		}
 
-		sfb = (uint16_t*)fb;
+		sfb = (int16_t*)fb;
 
 		for ( ; x <= (x1 & ~1); x += 2)
 		{
@@ -568,7 +569,7 @@ static void AM_Drawer_ (int c)
 	extern VINT sbar_height;
 	int		am_y;
 	int		am_height;
-	int		am_halfh;
+	int		am_halfh, am_halfhFrac;
 	byte	*fb;
 
 	am_y = 0;
@@ -579,6 +580,7 @@ static void AM_Drawer_ (int c)
 		am_height -= sbar_height;
 	}
 	am_halfh = am_height / 2;
+	am_halfhFrac = am_halfh * FRACUNIT;
 
 #ifdef JAGUAR
 	workingscreen = screens[workpage];
@@ -661,22 +663,27 @@ static void AM_Drawer_ (int c)
 		y1 -= oy;
 		y2 -= oy;
 
-		x1 = FixedDiv(x1, scale) >> FRACBITS;
-		x2 = FixedDiv(x2, scale) >> FRACBITS;
-		y1 = FixedDiv(y1, scale) >> FRACBITS;
-		y2 = FixedDiv(y2, scale) >> FRACBITS;
+		x1 = FixedDiv(x1, scale);
+		x2 = FixedDiv(x2, scale);
+		y1 = FixedDiv(y1, scale);
+		y2 = FixedDiv(y2, scale);
 		
-		outcode = (x1 > 160) << 1;
-		outcode |= (x1 < -160);
-		outcode2 = (x2 > 160) << 1;
-		outcode2 |= (x2 < -160);
+		outcode = (x1 > 160 * FRACUNIT) << 1;
+		outcode |= (x1 < -160 * FRACUNIT);
+		outcode2 = (x2 > 160 * FRACUNIT) << 1;
+		outcode2 |= (x2 < -160 * FRACUNIT);
 		if (outcode & outcode2) continue;
 
-		outcode = (y1 > am_halfh) << 1;
-		outcode |= (y1 < -am_halfh) ;
-		outcode2 = (y2 > am_halfh) << 1;
-		outcode2 |= (y2 < -am_halfh) ;
+		outcode = (y1 > am_halfhFrac) << 1;
+		outcode |= (y1 < -am_halfhFrac) ;
+		outcode2 = (y2 > am_halfhFrac) << 1;
+		outcode2 |= (y2 < -am_halfhFrac) ;
 		if (outcode & outcode2) continue;
+
+		x1 >>= FRACBITS;
+		y1 >>= FRACBITS;
+		x2 >>= FRACBITS;
+		y2 >>= FRACBITS;
 
 		x1 += 160;
 		x2 += 160;
