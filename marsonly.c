@@ -4,8 +4,6 @@
 #include "r_local.h"
 #include "mars.h"
 
-extern const int COLOR_WHITE;
-
 void ReadEEProm (void);
 
 /* 

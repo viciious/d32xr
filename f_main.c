@@ -3,7 +3,6 @@
 #include "doomdef.h"
 #include "r_local.h"
 
-extern int COLOR_BLACK;
 static drawcol_t drcol;
 
 /*

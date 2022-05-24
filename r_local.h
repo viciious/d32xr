@@ -344,6 +344,8 @@ extern	void			** flatpixels;
 
 extern	VINT		firstflat, numflats;
 
+extern short* doomcolormap;
+
 extern short* dc_colormaps;
 
 extern uint8_t* dc_playpals;
@@ -358,6 +360,7 @@ int	R_FlatNumForName(const char* name);
 int	R_CheckTextureNumForName(const char* name);
 void	R_InitMathTables(void);
 void	R_InitSpriteDefs(const char** namelist);
+void R_InitColormap(boolean doublepix);
 
 /*
 ==============================================================================

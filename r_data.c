@@ -3,6 +3,9 @@
 #include "doomdef.h"
 #include "r_local.h"
 #include "p_local.h"
+#ifdef MARS
+#include "mars.h"
+#endif
 
 boolean	spr_rotations;
 
@@ -646,4 +649,53 @@ void R_InitSpriteDefs(const char** namelist)
 
 		l += numframes;
 	}
+}
+
+void R_InitColormap(boolean doublepix)
+{
+	int	i, j;
+	int l, s;
+
+	l = -1;
+	if (colormapopt == 1)
+		l = W_CheckNumForName("COLORMA1");
+	if (l < 0)
+		l = W_CheckNumForName("COLORMAP");
+
+	s = W_ReadLump(l, doomcolormap);
+	s /= 512;
+
+	if (doublepix)
+	{
+		for (i = 0; i < s; i++) {
+			byte* dl = (byte*)&doomcolormap[i * 256];
+			for (j = 0; j < 512; j += 2) {
+				if (dl[j] == 0)
+					dl[j] = COLOR_BLACK;
+				if (dl[j + 1] == 0)
+					dl[j + 1] = COLOR_BLACK;
+			}
+		}
+
+		dc_colormaps = doomcolormap + 128;
+	}
+	else
+	{
+		// remove odd entries from the colormap
+		for (i = 0; i < s; i++) {
+			byte* dl = (byte*)&doomcolormap[i * 256];
+			int k = 1;
+			for (j = 2; j < 512; j+=2) {
+				int c = dl[j];
+				if (c == 0)
+					c = COLOR_BLACK;
+				dl[k++] = c;
+			}
+		}
+		dc_colormaps = (short *)((byte *)doomcolormap + 128);
+	}
+
+#ifdef MARS
+	Mars_CommSlaveClearCache();
+#endif
 }

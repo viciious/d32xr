@@ -178,8 +178,9 @@ static void R_PrepPSprite(pspdef_t *psp)
    lump     = sprframe->lump[0];
    patch    = W_POINTLUMPNUM(lump);
 
-   center = (centerX / (lowResMode ? 1 : 2) - 80) * FRACUNIT;
    xscale = weaponXScale;
+   center = centerXFrac - 80 * weaponXScale;
+   center /= (lowResMode ? 1 : 2);
 
    tx = psp->sx + center;
    topoffset = (((fixed_t)BIGSHORT(patch->topoffset) - weaponYpos) << FRACBITS) - psp->sy;
@@ -188,11 +189,10 @@ static void R_PrepPSprite(pspdef_t *psp)
 
    // calculate edges of the shape
    tx = tx - (((fixed_t)BIGSHORT(patch->leftoffset)) << FRACBITS);
-   x1 = tx;
+   FixedMul2(x1, tx, xscale);
 
    tx = ((fixed_t)BIGSHORT(patch->width) << FRACBITS);
    FixedMul2(x2, tx, xscale);
-   x1 += (tx - x2) / 2;
    x2 += x1;
 
    x1 /= FRACUNIT;
@@ -237,7 +237,7 @@ static void R_PrepPSprite(pspdef_t *psp)
            vis->colormap = vd.lightlevel;
        vis->colormap = HWLIGHT(vis->colormap);
    }
-   vis->drawcol = I_DrawColumnLow;
+   vis->drawcol = drawcol;
 }
 
 //
