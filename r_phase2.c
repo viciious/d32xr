@@ -575,7 +575,8 @@ void Mars_Sec_R_WallPrep(void)
 
 static void Mars_Sec_R_SplitPlanes(void)
 {
-    const int maxlen = centerX + centerX / 2;
+    const int minlen = centerX;
+    const int maxlen = centerX * 2;
     visplane_t *pl, *last = lastvisplane;
 
     for (pl = visplanes + 1; pl < last; pl++)
@@ -583,12 +584,11 @@ static void Mars_Sec_R_SplitPlanes(void)
         int start, stop;
         visplane_t* newpl;
         int numplanes;
+        int newstop;
 
         numplanes = lastvisplane - visplanes;
-        if (numplanes >= 16)
-            break;
         if (numplanes >= MAXVISPLANES)
-            break;
+            return;
 
         // see if there is any open space
         start = pl->minx, stop = pl->maxx;
@@ -601,16 +601,25 @@ static void Mars_Sec_R_SplitPlanes(void)
         if (span < maxlen)
             continue;
 
-        start = start + span / 2;
         pl->maxx = start;
+        newstop = start + minlen;
 
-        newpl = lastvisplane++;
-        newpl->open = pl->open;
-        newpl->height = pl->height;
-        newpl->flatnum = pl->flatnum;
-        newpl->lightlevel = pl->lightlevel;
-        newpl->minx = start + 1;
-        newpl->maxx = stop;
+        do {
+            newstop = start + minlen;
+            if (newstop > stop || numplanes == MAXWALLCMDS - 1)
+                newstop = stop;
+
+            newpl = lastvisplane++;
+            newpl->open = pl->open;
+            newpl->height = pl->height;
+            newpl->flatnum = pl->flatnum;
+            newpl->lightlevel = pl->lightlevel;
+            newpl->minx = start + 1;
+            newpl->maxx = newstop;
+
+            numplanes++;
+            start = newstop;
+        } while (start < stop);
     }
 }
 

@@ -159,37 +159,39 @@ static void R_StoreWallRange(int start, int stop)
    viswall_t *rw;
    int newstop;
    int numwalls = lastwallcmd - viswalls;
-   const int maxlen = centerX + centerX / 2;
-
+   const int minlen = centerX;
+   const int maxlen = centerX * 2;
    // split long segments
-   newstop = stop;
-#ifdef MARS
-   if (numwalls < 16)
-   {
-       if (stop - start > maxlen)
-           newstop = start + maxlen / 2;
-   }
-#endif
+   int len = stop - start + 1;
 
-   do
-   {
-       if (numwalls == MAXWALLCMDS)
-           return;
+   if (numwalls == MAXWALLCMDS)
+      return;
+   if (numwalls == MAXWALLCMDS-1 || len < maxlen)
+      newstop = stop;
+   else
+      newstop = start + minlen - 1;
 
-       rw = lastwallcmd;
-       rw->seg = curline;
-       rw->start = start;
-       rw->stop = newstop;
-       rw->scalestep = lineangle1;
-       rw->actionbits = 0;
-       ++lastwallcmd;
+   do {
+      rw = lastwallcmd;
+      rw->seg = curline;
+      rw->start = start;
+      rw->stop = newstop;
+      rw->scalestep = lineangle1;
+      rw->actionbits = 0;
+      ++lastwallcmd;
 
 #ifdef MARS
-       Mars_R_WallNext();
+      Mars_R_WallNext();
 #endif
-       start = newstop + 1;
-       newstop = stop;
-       numwalls++;
+
+      numwalls++;
+      if (numwalls == MAXWALLCMDS)
+         return;
+
+      start = newstop + 1;
+      newstop += minlen;
+      if (newstop > stop || numwalls == MAXWALLCMDS-1)
+         newstop = stop;
    } while (start <= stop);
 }
 
