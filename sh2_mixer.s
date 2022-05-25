@@ -71,6 +71,7 @@ _S_PaintChannel8:
         shlr2   r13             /* left volume = (255 - pan) * ch_vol * scale / 64 / 64 */
 
         /* mix r6 stereo samples */
+        .p2alignw 2, 0x0009
 mix_loop:
         /* process one sample */
         mov     r9,r0
@@ -101,11 +102,11 @@ mix_loop:
         exts.w  r0,r0
         add     r0,r1
 
-        mov.l   r1,@r5
-        add     #4,r5
-
         /* advance position and check for loop */
         add     r10,r9                  /* position += increment */
+
+        mov.l   r1,@r5
+        add     #4,r5
 mix_chk:
         cmp/hs  r11,r9
         bt      mix_wrap                /* position >= length */
