@@ -394,7 +394,7 @@ void I_DrawFuzzColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac
 	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* pfuzzpos)
 {
 	int16_t *dest;
-	short* dc_colormap;
+	int16_t *dc_colormap;
 	unsigned	frac;
 	unsigned    count, n;
 	int	fuzzpos = *pfuzzpos;
@@ -417,21 +417,17 @@ void I_DrawFuzzColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac
 	dc_colormap = dc_colormaps + vd.fuzzcolormap;
 
 #define DO_PIXEL() do { \
-		*dest = dc_colormap[dest[fuzzoffset[fuzzpos++ & FUZZMASK]] & 0xff]; \
+		*dest = dc_colormap[(int8_t)dest[fuzzoffset[fuzzpos++ & FUZZMASK]]]; \
 		dest += 320/2; \
 		frac += fracstep; \
 	} while (0)
 
 	count = dc_yh - dc_yl + 1;
-	n = (count + 7) >> 3;
+	n = (count + 3) >> 2;
 
-	switch (count & 7)
+	switch (count & 3)
 	{
 	case 0: do { DO_PIXEL();
-	case 7:      DO_PIXEL();
-	case 6:      DO_PIXEL();
-	case 5:      DO_PIXEL();
-	case 4:      DO_PIXEL();
 	case 3:      DO_PIXEL();
 	case 2:      DO_PIXEL();
 	case 1:      DO_PIXEL();
@@ -472,21 +468,17 @@ void I_DrawFuzzColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	dc_colormap = (int8_t *)(dc_colormaps + vd.fuzzcolormap);
 
 #define DO_PIXEL() do { \
-		*dest = dc_colormap[dest[fuzzoffset[fuzzpos++ & FUZZMASK]]] & 0xff; \
+		*dest = dc_colormap[dest[fuzzoffset[fuzzpos++ & FUZZMASK]]]; \
 		dest += 320; \
 		frac += fracstep; \
 	} while (0)
 
 	count = dc_yh - dc_yl + 1;
-	n = (count + 7) >> 3;
+	n = (count + 3) >> 2;
 
-	switch (count & 7)
+	switch (count & 3)
 	{
 	case 0: do { DO_PIXEL();
-	case 7:      DO_PIXEL();
-	case 6:      DO_PIXEL();
-	case 5:      DO_PIXEL();
-	case 4:      DO_PIXEL();
 	case 3:      DO_PIXEL();
 	case 2:      DO_PIXEL();
 	case 1:      DO_PIXEL();
