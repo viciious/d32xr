@@ -418,8 +418,7 @@ void I_DrawFuzzColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac
 	dc_colormap = dc_colormaps + vd.fuzzcolormap;
 
 #define DO_PIXEL() do { \
-		*dest = dc_colormap[dest[fuzzoffset[fuzzpos]] & 0xff]; \
-		if (++fuzzpos == FUZZTABLE) fuzzpos = 0; \
+		*dest = dc_colormap[dest[fuzzoffset[fuzzpos++ & FUZZMASK]] & 0xff]; \
 		dest += 320/2; \
 		frac += fracstep; \
 	} while (0)
@@ -474,8 +473,7 @@ void I_DrawFuzzColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	dc_colormap = dc_colormaps + vd.fuzzcolormap;
 
 #define DO_PIXEL() do { \
-		*dest = dc_colormap[dest[fuzzoffset[fuzzpos]]] & 0xff; \
-		if (++fuzzpos == FUZZTABLE) fuzzpos = 0; \
+		*dest = dc_colormap[dest[fuzzoffset[fuzzpos++ & FUZZMASK]]] & 0xff; \
 		dest += 320; \
 		frac += fracstep; \
 	} while (0)

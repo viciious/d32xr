@@ -251,7 +251,8 @@ extern drawcol_t drawfuzzycol;
 extern drawcol_t drawcolnpo2;
 extern drawspan_t drawspan;
 
-#define FUZZTABLE		50 
+#define FUZZTABLE		64
+#define FUZZMASK		(FUZZTABLE-1)
 extern short fuzzoffset[FUZZTABLE];
 
 /* to get a global angle from cartesian coordinates, the coordinates are */
