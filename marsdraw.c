@@ -145,7 +145,7 @@ void I_DrawColumnNPo2LowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t fra
 		while ((frac_ += heightmask) < 0);
 	else
 	{
-		while (frac_ >= heightmask)
+		while ((unsigned)frac_ >= heightmask)
 			frac_ -= heightmask;
 	}
 	frac = frac_;
@@ -235,8 +235,8 @@ void I_DrawColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* fuzzpos)
 {
 	unsigned	heightmask;
-	byte * dest;
-	short* dc_colormap;
+	int8_t *dest;
+	int8_t *dc_colormap;
 	unsigned	frac;
 	unsigned    count, n;
 
@@ -252,11 +252,11 @@ void I_DrawColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 
 	frac = frac_;
 	heightmask = dc_texheight - 1;
-	dest = (byte *)I_ViewportBuffer() + dc_yl * 320 + dc_x;
-	dc_colormap = dc_colormaps + light;
+	dest = (int8_t *)I_ViewportBuffer() + dc_yl * 320 + dc_x;
+	dc_colormap = (int8_t *)(dc_colormaps + light);
 
 #define DO_PIXEL() do { \
-		*dest = dc_colormap[dc_source[(frac >> FRACBITS) & heightmask]] & 0xff; \
+		*dest = dc_colormap[(int8_t)dc_source[(frac >> FRACBITS) & heightmask]] & 0xff; \
 		dest += 320; \
 		frac += fracstep; \
 	} while (0)
@@ -284,13 +284,13 @@ void I_DrawColumnNPo2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* fuzzpos)
 {
 	unsigned	heightmask;
-	byte * dest;
-	short* dc_colormap;
+	int8_t *dest;
+	int8_t *dc_colormap;
 	unsigned    count, n;
 	unsigned 	frac;
 
 #ifdef RANGECHECK
-	if ((unsigned)dc_x >= viewportWidth || dc_yl < 0 || dc_yh >= viewportHeight)
+	if (dc_x >= viewportWidth || dc_yl < 0 || dc_yh >= viewportHeight)
 		I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
 #endif
 
@@ -304,19 +304,19 @@ void I_DrawColumnNPo2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 		while ((frac_ += heightmask) < 0);
 	else
 	{
-		while (frac_ >= heightmask)
+		while ((unsigned)frac_ >= heightmask)
 			frac_ -= heightmask;
 	}
 	frac = frac_;
 
-	dest = (byte *)I_ViewportBuffer() + dc_yl * 320 + dc_x;
-	dc_colormap = dc_colormaps + light;
+	dest = (int8_t *)I_ViewportBuffer() + dc_yl * 320 + dc_x;
+	dc_colormap = (int8_t *)(dc_colormaps + light);
 
 	count = dc_yh - dc_yl + 1;
 	n = (count + 7) >> 3;
 
 #define DO_PIXEL() do { \
-		*dest = dc_colormap[dc_source[frac >> FRACBITS]] & 0xff; \
+		*dest = dc_colormap[(int8_t)dc_source[frac >> FRACBITS]] & 0xff; \
 		dest += 320; \
 		if ((frac += fracstep) >= heightmask) \
 			frac -= heightmask; \
@@ -342,14 +342,13 @@ void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source)
 {
 	unsigned xfrac, yfrac;
-	byte *dest;
+	int8_t  *dest;
 	int		spot;
 	unsigned count, n;
-	short* dc_colormap;
+	int8_t* dc_colormap;
 
 #ifdef RANGECHECK
-	if (ds_x2 < ds_x1 || ds_x1<0 || ds_x2 >= viewportWidth
-		|| (unsigned)ds_y>viewportHeight)
+	if (ds_x2 < ds_x1 || ds_x1<0 || ds_x2 >= viewportWidth || ds_y>viewportHeight)
 		I_Error("R_DrawSpan: %i to %i at %i", ds_x1, ds_x2, ds_y);
 #endif 
 	if (debugmode == 3)
@@ -358,12 +357,12 @@ void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	count = ds_x2 - ds_x1 + 1;
 	xfrac = ds_xfrac, yfrac = ds_yfrac;
 
-	dest = (byte*)I_ViewportBuffer() + ds_y * 320 + ds_x1;
-	dc_colormap = dc_colormaps + light;
+	dest = (int8_t *)I_ViewportBuffer() + ds_y * 320 + ds_x1;
+	dc_colormap = (int8_t *)(dc_colormaps + light);
 
 #define DO_PIXEL() do { \
 		spot = ((yfrac >> 16) & (63 * 64)) + ((xfrac >> 16) & 63); \
-		*dest++ = dc_colormap[ds_source[spot]] & 0xff; \
+		*dest++ = dc_colormap[(int8_t)ds_source[spot]] & 0xff; \
 		xfrac += ds_xstep, yfrac += ds_ystep; \
 	} while(0)
 
@@ -394,8 +393,8 @@ void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 void I_DrawFuzzColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* pfuzzpos)
 {
-	pixel_t* dest;
-	short* dc_colormap;
+	int16_t *dest;
+	int16_t *dc_colormap;
 	unsigned	frac;
 	unsigned    count, n;
 	int	fuzzpos = *pfuzzpos;
@@ -414,25 +413,21 @@ void I_DrawFuzzColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac
 		return;
 
 	frac = frac_;
-	dest = I_ViewportBuffer() + dc_yl * 320 / 2 + dc_x;
+	dest = (short *)(I_ViewportBuffer() + dc_yl * 320 / 2 + dc_x);
 	dc_colormap = dc_colormaps + vd.fuzzcolormap;
 
 #define DO_PIXEL() do { \
-		*dest = dc_colormap[dest[fuzzoffset[fuzzpos++ & FUZZMASK]] & 0xff]; \
+		*dest = dc_colormap[(int8_t)dest[fuzzoffset[fuzzpos++ & FUZZMASK]]]; \
 		dest += 320/2; \
 		frac += fracstep; \
 	} while (0)
 
 	count = dc_yh - dc_yl + 1;
-	n = (count + 7) >> 3;
+	n = (count + 3) >> 2;
 
-	switch (count & 7)
+	switch (count & 3)
 	{
 	case 0: do { DO_PIXEL();
-	case 7:      DO_PIXEL();
-	case 6:      DO_PIXEL();
-	case 5:      DO_PIXEL();
-	case 4:      DO_PIXEL();
 	case 3:      DO_PIXEL();
 	case 2:      DO_PIXEL();
 	case 1:      DO_PIXEL();
@@ -447,8 +442,8 @@ void I_DrawFuzzColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac
 void I_DrawFuzzColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* pfuzzpos)
 {
-	byte * dest;
-	short* dc_colormap;
+	int8_t * dest;
+	int8_t* dc_colormap;
 	unsigned	frac;
 	unsigned    count, n;
 	int	fuzzpos = *pfuzzpos;
@@ -469,25 +464,21 @@ void I_DrawFuzzColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 		return;
 
 	frac = frac_;
-	dest = (byte *)I_ViewportBuffer() + dc_yl * 320 + dc_x;
-	dc_colormap = dc_colormaps + vd.fuzzcolormap;
+	dest = (int8_t *)I_ViewportBuffer() + dc_yl * 320 + dc_x;
+	dc_colormap = (int8_t *)(dc_colormaps + vd.fuzzcolormap);
 
 #define DO_PIXEL() do { \
-		*dest = dc_colormap[dest[fuzzoffset[fuzzpos++ & FUZZMASK]]] & 0xff; \
+		*dest = dc_colormap[dest[fuzzoffset[fuzzpos++ & FUZZMASK]]]; \
 		dest += 320; \
 		frac += fracstep; \
 	} while (0)
 
 	count = dc_yh - dc_yl + 1;
-	n = (count + 7) >> 3;
+	n = (count + 3) >> 2;
 
-	switch (count & 7)
+	switch (count & 3)
 	{
 	case 0: do { DO_PIXEL();
-	case 7:      DO_PIXEL();
-	case 6:      DO_PIXEL();
-	case 5:      DO_PIXEL();
-	case 4:      DO_PIXEL();
 	case 3:      DO_PIXEL();
 	case 2:      DO_PIXEL();
 	case 1:      DO_PIXEL();

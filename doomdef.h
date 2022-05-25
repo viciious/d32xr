@@ -747,8 +747,6 @@ void I_NetSetup (void);
 unsigned I_NetTransfer (unsigned buttons);
 void I_NetStop(void);
 
-void I_InitColormap(void);
-
 boolean	I_RefreshCompleted (void);
 boolean	I_RefreshLatched (void);
 int	I_GetTime (void);
@@ -1150,6 +1148,9 @@ extern int debugmode;
 extern char clearscreen;
 extern VINT colormapopt;
 extern VINT initmathtables;
+
+extern int COLOR_BLACK;
+extern int COLOR_WHITE;
 
 void I_InitMenuFire(jagobj_t* titlepic);
 void I_StopMenuFire(void);

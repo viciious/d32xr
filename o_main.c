@@ -451,7 +451,6 @@ exit:
 					break;
 				case mi_colormap:
 					colormapopt = slider->curval;
-					I_InitColormap();
 					break;
 				default:
 					break;
@@ -599,7 +598,7 @@ exit:
 				}
 				if (oldcolormapopt != colormapopt)
 				{
-					I_InitColormap();
+					R_InitColormap(lowResMode);
 					sound = sfx_stnmov;
 				}
 			}

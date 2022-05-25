@@ -42,6 +42,8 @@ typedef struct {
 int COLOR_WHITE = 0x04;
 int COLOR_BLACK = 0xF7;
 
+short 	*doomcolormap;
+
 short	*dc_colormaps;
 const byte	*new_palette = NULL;
 
@@ -391,9 +393,7 @@ void I_Init (void)
 		}
 	}
 
-	dc_colormaps = Z_Malloc(33*512, PU_STATIC, 0);
-
-	I_InitColormap();
+	doomcolormap = Z_Malloc(33*512, PU_STATIC, 0);
 
 	i = W_CheckNumForName("STBAR");
 	if (i != -1)
@@ -406,48 +406,6 @@ void I_Init (void)
 		jo_stbar = NULL;
 		jo_stbar_height = 0;
 	}
-}
-
-void I_InitColormap(void)
-{
-	int	i, j;
-	int l, s;
-	byte* doomcolormap;
-
-	if (!dc_colormaps)
-		return;
-
-	l = -1;
-	if (colormapopt == 1)
-		l = W_CheckNumForName("COLORMA1");
-	if (l < 0)
-		l = W_CheckNumForName("COLORMAP");
-
-	doomcolormap = I_WorkBuffer();
-	D_memset(doomcolormap, 0, 512 * 33);
-	s = W_ReadLump(l, doomcolormap);
-	s /= 512;
-
-	for (i = 0; i < s; i++) {
-		const byte* sl1 = &doomcolormap[i * 512];
-		const byte* sl2 = &doomcolormap[i * 512 + 256];
-		byte* dl1 = (byte*)&dc_colormaps[i * 256];
-		byte* dl2 = (byte*)&dc_colormaps[i * 256 + 128];
-		D_memcpy(dl1, sl2, 256);
-		D_memcpy(dl2, sl1, 256);
-
-		for (j = 0; j < 512; j += 2) {
-			if (dl1[j] == 0)
-				dl1[j] = COLOR_BLACK;
-			if (dl1[j + 1] == 0)
-				dl1[j + 1] = COLOR_BLACK;
-		}
-	}
-
-	if (s < 33)
-		D_memcpy(dc_colormaps + 256 * 32, dc_colormaps, 512);
-
-	Mars_CommSlaveClearCache();
 }
 
 void I_SetPalette(const byte* palette)

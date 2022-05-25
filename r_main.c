@@ -346,19 +346,19 @@ void R_SetViewportSize(int num)
 	if (anamorphicview)
 	{
 		stretch = ((FRACUNIT * 16 * height) / 180 * 28) / width;
-		weaponXScale = 1000 * FRACUNIT / 1100;
+		weaponXScale = 1000 * (lowResMode ? 1 : 2) * FRACUNIT / 1100;
 	}
 	else
 	{
 		/* proper screen size would be 160*100, stretched to 224 is 2.2 scale */
 		//stretch = (fixed_t)((160.0f / width) * ((float)height / 180.0f) * 2.2f * FRACUNIT);
 		stretch = ((FRACUNIT * 16 * height) / 180 * 22) / width;
-		weaponXScale = FRACUNIT;
+		weaponXScale = FRACUNIT * (lowResMode ? 1 : 2);
 	}
 	stretchX = stretch * centerX;
 
 	weaponYpos = 180;
-	if (viewportWidth < 128 || (viewportWidth <= 160 && !lowResMode)) {
+	if (viewportHeight <= 128) {
 		weaponYpos = 144;
 	}
 	weaponYpos = (viewportHeight - weaponYpos) / 2;
@@ -367,6 +367,8 @@ void R_SetViewportSize(int num)
 
 	// refresh func pointers
 	R_SetDetailMode(detailmode);
+
+	R_InitColormap(lowResMode);
 
 	clearscreen = 2;
 
@@ -435,6 +437,7 @@ D_printf ("Done\n");
 
 	framecount = 0;
 	viewplayer = &players[0];
+	extralight2 = 0;
 
 	R_SetDetailMode(detailmode);
 
@@ -444,10 +447,10 @@ D_printf ("Done\n");
 	// with the standard colormap
 	//
 	// in case of a non-standard colormap, we may need to darken 
-	// the game a bit when diminishing lighting if turn off
+	// the game a bit when diminishing lighting is disabled
 	doompalette = (byte *)dc_playpals;
 
-	row = (byte*)(dc_colormaps + 256 * 16);
+	row = (byte*)(doomcolormap + 256 * 16);
 	br = 0;
 	for (i = 0; i < 512; i += 2) {
 		br += doompalette[row[i] * 3 + 0];
@@ -456,9 +459,7 @@ D_printf ("Done\n");
 	}
 
 	br = br - 40960;
-	if (br < 0)
-		extralight2 = 0;
-	else
+	if (br > 0)
 	{
 		br /= (512 * 3);
 		extralight2 = -1 * ((br + 15) & ~15);
