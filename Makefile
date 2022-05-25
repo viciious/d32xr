@@ -18,7 +18,7 @@ ASFLAGS = --big
 MARSHWCFLAGS := $(CCFLAGS)
 MARSHWCFLAGS += -O1 -fno-lto
 
-release: CCFLAGS += -ffast-math -funroll-loops -fno-align-loops -fno-align-functions -fno-align-jumps -fno-align-labels -ffunction-sections -fdata-sections -flto
+release: CCFLAGS += -ffast-math -funroll-loops -fno-align-loops -fno-align-jumps -fno-align-labels -ffunction-sections -fdata-sections -flto
 release: LDFLAGS += -flto
 
 PREFIX = $(ROOTDIR)/sh-elf/bin/sh-elf-
