@@ -518,7 +518,7 @@ void I_DrawSpanPotatoLow(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_x
 
 	dest = I_ViewportBuffer() + ds_y * 320 / 2 + ds_x1;
 	dc_colormap = dc_colormaps + light;
-	pix = dc_colormap[ds_source[513]];
+	pix = dc_colormap[(int8_t)ds_source[513]];
 
 	do {
 		*dest++ = pix;
@@ -537,7 +537,7 @@ void I_DrawSpanPotato(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfra
 {
 	byte *udest, upix;
 	unsigned count, scount;
-	short* dc_colormap;
+	int8_t* dc_colormap;
 
 #ifdef RANGECHECK
 	if (ds_x2 < ds_x1 || ds_x1<0 || ds_x2 >= viewportWidth || ds_y>viewportHeight)
@@ -552,7 +552,7 @@ void I_DrawSpanPotato(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfra
 	count = ds_x2 - ds_x1 + 1;
 
 	udest = (byte *)I_ViewportBuffer() + ds_y * 320 + ds_x1;
-	dc_colormap = dc_colormaps + light;
+	dc_colormap = (int8_t *)(dc_colormaps + light);
 	upix = dc_colormap[ds_source[513]] & 0xff;
 
 	if (ds_x1 & 1) {
