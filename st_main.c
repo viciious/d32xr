@@ -3,7 +3,7 @@
 #include "doomdef.h"
 #include "st_main.h"
 
-stbar_t	*stbar;
+stbar_t	stbar[MAXPLAYERS];
 static short stbarframe;
 static short   stbar_y;
 static short micronums;
@@ -100,8 +100,6 @@ void ST_InitEveryLevel(void)
 	numplayers = 0;
 	for (i = 0; i < MAXPLAYERS; i++)
 		numplayers += playeringame[i] ? 1 : 0;
-
-	stbar = Z_Malloc(sizeof(*stbar)* numplayers, PU_LEVEL, 0);
 
 	for (p = 0; p < numplayers; p++)
 	{
