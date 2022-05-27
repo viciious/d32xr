@@ -512,7 +512,6 @@ static void Mars_Sec_R_SortPlanes(void) ATTR_DATA_CACHE_ALIGN;
 
 void Mars_Sec_R_WallPrep(void)
 {
-    int i;
     viswall_t *segl;
     viswall_t *first, *verylast;
     unsigned clipbounds_[SCREENWIDTH/2+1];
@@ -523,10 +522,6 @@ void Mars_Sec_R_WallPrep(void)
   
     first = viswalls;
     verylast = NULL;
-
-	for (i = 0; i < MAXOPENINGS/2; i++) {
-		((uint32_t *)openings)[i] = 0;
-	}
 
     for (segl = first; segl != verylast; )
     {
