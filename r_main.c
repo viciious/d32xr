@@ -810,13 +810,13 @@ void R_MarkOpenPlane(visplane_t* pl)
 	}
 }
 
-void R_InitClipBounds(unsigned *clipbounds)
+void R_InitClipBounds(int *clipbounds)
 {
 	// initialize the clipbounds array
 	int i;
     int longs = (viewportWidth + 1) / 2;
-    unsigned* clip = clipbounds;
-    unsigned clipval = (unsigned)viewportHeight << 16 | viewportHeight;
+    int* clip = clipbounds;
+    int clipval = (unsigned)viewportHeight << 16 | viewportHeight;
     for (i = 0; i < longs; i++)
         *clip++ = clipval;
 }
