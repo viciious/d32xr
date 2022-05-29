@@ -470,7 +470,7 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floor
 
             if (top <= bottom)
             {
-                if (flooropen[x] != OPENMARK)
+                if (!MARKEDOPEN(flooropen[x]))
                 {
                     floor = R_FindPlane(floorplhash, floorheight, 
                         floorpicnum, lightlevel, x, stop);
@@ -493,7 +493,7 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floor
 
             if (top <= bottom)
             {
-                if (ceilopen[x] != OPENMARK)
+                if (!MARKEDOPEN(ceilopen[x]))
                 {
                     ceiling = R_FindPlane(ceilingplhash, ceilingheight, 
                         ceilingpicnum, lightlevel, x, stop);

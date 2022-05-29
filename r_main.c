@@ -835,7 +835,7 @@ visplane_t* R_FindPlane(int hash, fixed_t height,
 			flatnum == check->flatnum &&
 			lightlevel == check->lightlevel)
 		{
-			if (check->open[start] == OPENMARK)
+			if (MARKEDOPEN(check->open[start]))
 			{
 				// found a plane, so adjust bounds and return it
 				if (start < check->minx)

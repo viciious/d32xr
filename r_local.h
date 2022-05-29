@@ -277,6 +277,11 @@ extern	fixed_t *distscale/*[SCREENWIDTH]*/;
 #define	FIXEDTOHEIGHT		(FRACBITS-HEIGHTBITS)
 
 #define OPENMARK 0xff00
+#ifdef MARS
+#define MARKEDOPEN(x) ((int8_t)((x)>>8) == -1)
+#else
+#define MARKEDOPEN(x) ((x) == OPENMARK)
+#endif
 
 typedef struct
 #ifdef MARS
