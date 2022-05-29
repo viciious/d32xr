@@ -206,7 +206,8 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int screenhal
       r1 = ds->start < x1 ? x1 : ds->start;
       r2 = ds->stop  > x2 ? x2 : ds->stop;
 
-      if(silhouette == AC_SOLIDSIL)
+      silhouette /= AC_TOPSIL;
+      if(silhouette == 4)
       {
          for (x = r1;  x <= r2; x++)
             spropening[x] = OPENMARK;
@@ -216,16 +217,7 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int screenhal
       topsil    = (byte *)openings + ds->topsil - ds->start;
       bottomsil = (byte *)openings + ds->bottomsil - ds->start;
 
-      if(silhouette == AC_BOTTOMSIL)
-      {
-         for(x = r1; x <= r2; x++)
-         {
-            opening = spropening[x];
-            if((opening & 0xff) == viewportHeight)
-               spropening[x] = (opening & OPENMARK) | bottomsil[x];
-         }
-      }
-      else if(silhouette == AC_TOPSIL)
+      if(silhouette == 1)
       {
          for(x = r1; x <= r2; x++)
          {
@@ -234,7 +226,16 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int screenhal
                spropening[x] = (topsil[x] << 8) | (opening & 0xff);
          }
       }
-      else if(silhouette == (AC_TOPSIL | AC_BOTTOMSIL))
+      else if(silhouette == 2)
+      {
+         for(x = r1; x <= r2; x++)
+         {
+            opening = spropening[x];
+            if((opening & 0xff) == viewportHeight)
+               spropening[x] = (opening & OPENMARK) | bottomsil[x];
+         }
+      }
+      else
       {
          for(x = r1; x <= r2; x++)
          {

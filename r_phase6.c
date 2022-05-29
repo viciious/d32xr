@@ -157,7 +157,6 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
       //
       // texture only stuff
       //
-      //if (actionbits & AC_CALCTEXTURE)
       {
           unsigned colnum;
           unsigned iscale;
@@ -296,7 +295,7 @@ void R_SegCommands(void)
             actionbits = *(volatile short *)&segl->actionbits;
         } while ((actionbits & AC_READY) == 0);
 
-        if (actionbits & AC_DRAWN || !(actionbits & (AC_CALCTEXTURE | AC_ADDSKY)))
+        if (actionbits & AC_DRAWN || !(actionbits & (AC_TOPTEXTURE | AC_BOTTOMTEXTURE | AC_ADDSKY)))
         {
             goto skip_draw;
         }

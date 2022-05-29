@@ -322,7 +322,6 @@ static void R_WallLatePrep(viswall_t* wc)
     // does line have top or bottom textures?
     if (wc->actionbits & (AC_TOPTEXTURE | AC_BOTTOMTEXTURE))
     {
-        wc->actionbits |= AC_CALCTEXTURE; // set to calculate texture info
         R_SetupCalc(wc, hyp, normalangle, angle1);// do calc setup
     }
 
@@ -337,15 +336,15 @@ static void R_WallLatePrep(viswall_t* wc)
     int rw_stopx = wc->stop + 1;
     int width = (rw_stopx - rw_x + 1) / 2;
 
-    if (wc->actionbits & AC_BOTTOMSIL)
-    {
-        wc->bottomsil = (byte*)lastopening - (byte *)openings;
-        lastopening += width;
-    }
-
     if (wc->actionbits & AC_TOPSIL)
     {
         wc->topsil = (byte*)lastopening - (byte *)openings;
+        lastopening += width;
+    }
+
+    if (wc->actionbits & AC_BOTTOMSIL)
+    {
+        wc->bottomsil = (byte*)lastopening - (byte *)openings;
         lastopening += width;
     }
 
@@ -432,13 +431,13 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floor
         else if (high < ceilingclipx)
             high = ceilingclipx;
 
-        // bottom sprite clip sil
-        if (actionbits & AC_BOTTOMSIL)
-            bottomsil[x] = low;
-
         // top sprite clip sil
         if (actionbits & AC_TOPSIL)
             topsil[x] = high;
+
+        // bottom sprite clip sil
+        if (actionbits & AC_BOTTOMSIL)
+            bottomsil[x] = low;
 
         if (actionbits & (AC_NEWFLOOR | AC_NEWCEILING))
         {
