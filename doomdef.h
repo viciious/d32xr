@@ -544,10 +544,7 @@ extern	int			bodyqueslot;
 fixed_t	FixedMul (fixed_t a, fixed_t b);
 fixed_t	FixedDiv (fixed_t a, fixed_t b);
 #ifdef MARS
-# ifdef __GNUC__
-#  define FixedMul2(c,a,b) ((c) = (((int64_t)(a)*(b))>>16))
-# else
-#  define FixedMul2x(c,a,b) do { \
+#define FixedMul2(c,a,b) do { \
         int32_t t; \
        __asm volatile ( \
             "dmuls.l %2, %3\n\t" \
@@ -558,11 +555,10 @@ fixed_t	FixedDiv (fixed_t a, fixed_t b);
             : "r" (a), "r" (b) \
             : "mach", "macl"); \
         } while (0)
-# endif
 fixed_t IDiv (fixed_t a, fixed_t b);
 #else
-# define FixedMul2(c,a,b) ((c) = FixedMul(a,b))
-# define IDiv(a,b) ((a) / (b))
+#define FixedMul2(c,a,b) ((c) = FixedMul(a,b))
+#define IDiv(a,b) ((a) / (b))
 #endif
 
 #define	ACC_FIXEDMUL	4
