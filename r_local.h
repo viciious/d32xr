@@ -471,15 +471,14 @@ typedef struct
 
 	fixed_t		floorheight;
 	fixed_t		ceilingheight;
+
+	byte 		*sil;
 	
 	VINT		t_texturenum;
 	VINT		b_texturenum;
 
-	VINT         floorpicnum;   // floorpic #   - CALICO: avoid type ambiguity w/extra field
-	VINT         ceilingpicnum; // ceilingpic # - CALICO: avoid type ambiguity w/extra field
-
-	VINT 		topsil;
-	VINT 		bottomsil;
+	VINT        floorpicnum;   // floorpic #   - CALICO: avoid type ambiguity w/extra field
+	VINT        ceilingpicnum; // ceilingpic # - CALICO: avoid type ambiguity w/extra field
 } viswall_t;
 
 #define	MAXWALLCMDS		128

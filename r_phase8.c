@@ -186,6 +186,8 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int screenhal
 
    do
    {
+      int width;
+
       --ds;
 
       silhouette = (ds->actionbits & (AC_TOPSIL | AC_BOTTOMSIL | AC_SOLIDSIL));
@@ -205,6 +207,7 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int screenhal
 
       r1 = ds->start < x1 ? x1 : ds->start;
       r2 = ds->stop  > x2 ? x2 : ds->stop;
+      width = ds->stop - ds->start + 1;
 
       silhouette /= AC_TOPSIL;
       if(silhouette == 4)
@@ -214,8 +217,8 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int screenhal
          continue;
       }
 
-      topsil    = (byte *)openings + ds->topsil - ds->start;
-      bottomsil = (byte *)openings + ds->bottomsil - ds->start;
+      topsil = ds->sil;
+      bottomsil = ds->sil + (silhouette & 1 ? width : 0);
 
       if(silhouette == 1)
       {

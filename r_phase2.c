@@ -332,24 +332,19 @@ static void R_WallLatePrep(viswall_t* wc)
     }
 #endif
 
+    wc->v[0] = seg->v1;
+    wc->v[1] = seg->v2;
+
     int rw_x = wc->start;
     int rw_stopx = wc->stop + 1;
     int width = (rw_stopx - rw_x + 1) / 2;
 
+    wc->sil = (byte*)lastopening - rw_x;
+
     if (wc->actionbits & AC_TOPSIL)
-    {
-        wc->topsil = (byte*)lastopening - (byte *)openings;
         lastopening += width;
-    }
-
     if (wc->actionbits & AC_BOTTOMSIL)
-    {
-        wc->bottomsil = (byte*)lastopening - (byte *)openings;
         lastopening += width;
-    }
-
-    wc->v[0] = seg->v1;
-    wc->v[1] = seg->v2;
 }
 
 //
@@ -376,8 +371,8 @@ static void R_SegLoop(viswall_t* segl, int16_t *clipbounds, fixed_t floornewheig
     const volatile int floorpicnum = segl->floorpicnum;
     const volatile int ceilingpicnum = segl->ceilingpicnum;
 
-    byte *topsil = (byte *)openings + segl->topsil - start;
-    byte *bottomsil = (byte *)openings + segl->bottomsil - start;
+    byte *topsil = segl->sil;
+    byte *bottomsil = segl->sil + (actionbits & AC_TOPSIL ? width : 0);
 
     // force R_FindPlane for both planes
     floor = ceiling = visplanes;
