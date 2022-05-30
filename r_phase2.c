@@ -179,7 +179,7 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floornewheight, fixed_t *c
             actionbits |= AC_SOLIDSIL;
          else
          {
-            if((b_floorheight > 0 && b_floorheight > f_floorheight) ||
+            if((b_floorheight >= 0 && b_floorheight > f_floorheight) ||
                (f_floorheight < 0 && f_floorheight > b_floorheight))
             {
                actionbits |= AC_BOTTOMSIL; // set bottom mask
