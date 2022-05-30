@@ -701,7 +701,7 @@ void ST_Num (int x, int y, int num)
 /*================================================= */
 void valtostr(char *string,int val)
 {
-	char temp[10];
+	char temp[12];
 	int	index = 0, i, dindex = 0;
 	
 	do
