@@ -460,7 +460,8 @@ static void R_SegLoop(viswall_t* segl, int16_t *clipbounds, fixed_t floornewheig
             top = centerY - top;
             if (top < ceilingclipx)
                 top = ceilingclipx;
-            bottom = floorclipx - 1;
+            bottom = floorclipx;
+            --bottom;
 
             if (top <= bottom)
             {
@@ -481,9 +482,10 @@ static void R_SegLoop(viswall_t* segl, int16_t *clipbounds, fixed_t floornewheig
         {
             top = ceilingclipx;
             FixedMul2(bottom, scale2, ceilingheight);
-            bottom = centerY - 1 - bottom;
-            if (bottom >= floorclipx)
-                bottom = floorclipx - 1;
+            bottom = centerY - bottom;
+            if (bottom > floorclipx)
+                bottom = floorclipx;
+            --bottom;
 
             if (top <= bottom)
             {
