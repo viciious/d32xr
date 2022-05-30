@@ -15,7 +15,7 @@ static fixed_t R_PointToDist(fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
 static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, angle_t normalangle) ATTR_DATA_CACHE_ALIGN;
 static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle, int angle1) ATTR_DATA_CACHE_ALIGN;
 static void R_WallLatePrep(viswall_t* wc) ATTR_DATA_CACHE_ALIGN;
-static void R_SegLoop(viswall_t* segl, int16_t *clipbounds, fixed_t floornewheight, fixed_t ceilingnewheight) ATTR_DATA_CACHE_ALIGN;
+static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floornewheight, fixed_t ceilingnewheight) ATTR_DATA_CACHE_ALIGN;
 
 static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floornewheight, fixed_t *ceilingnewheight)
 {
@@ -350,7 +350,7 @@ static void R_WallLatePrep(viswall_t* wc)
 //
 // Main seg clipping loop
 //
-static void R_SegLoop(viswall_t* segl, int16_t *clipbounds, fixed_t floornewheight, fixed_t ceilingnewheight)
+static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floornewheight, fixed_t ceilingnewheight)
 {
     visplane_t* ceiling, * floor;
     unsigned short* ceilopen, * flooropen;
@@ -446,7 +446,7 @@ static void R_SegLoop(viswall_t* segl, int16_t *clipbounds, fixed_t floornewheig
             if (actionbits & AC_NEWCEILING)
                 newceilingclipx = high;
 
-            newclip = (newceilingclipx << 8) + newfloorclipx;
+            newclip = ((unsigned)(newceilingclipx) << 8) + newfloorclipx;
             clipbounds[x] = newclip;
             newclipbounds[x] = newclip;
         }
@@ -471,7 +471,7 @@ static void R_SegLoop(viswall_t* segl, int16_t *clipbounds, fixed_t floornewheig
                         floorpicnum, lightlevel, x, stop);
                     flooropen = floor->open;
                 }
-                flooropen[x] = (top << 8) + bottom;
+                flooropen[x] = (unsigned short)((top << 8) + bottom);
             }
         }
 
@@ -495,7 +495,7 @@ static void R_SegLoop(viswall_t* segl, int16_t *clipbounds, fixed_t floornewheig
                         ceilingpicnum, lightlevel, x, stop);
                     ceilopen = ceiling->open;
                 }
-                ceilopen[x] = (top << 8) + bottom;
+                ceilopen[x] = (unsigned short)((top << 8) + bottom);
             }
         }
     }
@@ -510,8 +510,8 @@ void Mars_Sec_R_WallPrep(void)
 {
     viswall_t *segl;
     viswall_t *first, *verylast;
-    int clipbounds_[SCREENWIDTH/2+1];
-    int16_t *clipbounds = (int16_t *)clipbounds_;
+    unsigned clipbounds_[SCREENWIDTH/2+1];
+    unsigned short *clipbounds = (unsigned short *)clipbounds_;
     fixed_t floornewheight = 0, ceilingnewheight = 0;
 
     R_InitClipBounds(clipbounds_);
@@ -665,7 +665,7 @@ void R_WallPrep(void)
 
         R_WallLatePrep(segl);
 
-        R_SegLoop(segl, (int16_t *)clipbounds, floornewheight, ceilingnewheight);
+        R_SegLoop(segl, clipbounds, floornewheight, ceilingnewheight);
     }
 }
 

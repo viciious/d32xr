@@ -36,7 +36,7 @@ typedef struct
 static char seg_lock = 0;
 
 static void R_DrawTextures(int x, int floorclipx, int ceilingclipx, fixed_t scale2, unsigned iscale, int colnum, unsigned light, seglocal_t* lsegl) ATTR_DATA_CACHE_ALIGN;
-static void R_DrawSeg(seglocal_t* lseg, int16_t *clipbounds) ATTR_DATA_CACHE_ALIGN;
+static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds) ATTR_DATA_CACHE_ALIGN;
 
 static void R_LockSeg(void) ATTR_DATA_CACHE_ALIGN;
 static void R_UnlockSeg(void) ATTR_DATA_CACHE_ALIGN;
@@ -100,7 +100,7 @@ static void R_DrawTextures(int x, int floorclipx, int ceilingclipx, fixed_t scal
 //
 // Main seg drawing loop
 //
-static void R_DrawSeg(seglocal_t* lseg, int16_t *clipbounds)
+static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 {
    viswall_t* segl = lseg->segl;
 
@@ -259,8 +259,8 @@ void R_SegCommands(void)
     seglocal_t lseg;
     drawtex_t* toptex, * bottomtex;
     int extralight;
-    int clipbounds_[SCREENWIDTH / 2 + 1];
-    int16_t *clipbounds = (int16_t *)clipbounds_;
+    unsigned clipbounds_[SCREENWIDTH / 2 + 1];
+    unsigned short *clipbounds = (unsigned short *)clipbounds_;
     unsigned short *newclipbounds = segclip;
 
     // initialize the clipbounds array
