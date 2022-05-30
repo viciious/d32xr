@@ -726,8 +726,15 @@ void ST_DrawValue(int x,int y,int value)
 	int		j;
 	int		index;
 
+	if (value < 0)
+		value = 0;
+	if (value > 999)
+		value = 999;
+
 	y += stbar_y;
 	valtostr(v,value);
+	v[sizeof(v)-1] = 0;
+
 	j = mystrlen(v) - 1;
 	while(j >= 0)
 	{
