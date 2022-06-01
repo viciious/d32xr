@@ -127,7 +127,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
       unsigned scale2;
 
 #ifdef MARS
-      const uintptr_t divisor = (uint32_t)&SH2_DIVU_DVSR;
+      const volatile uintptr_t divisor = (uint32_t)&SH2_DIVU_DVSR;
 
       do {
           int32_t t;

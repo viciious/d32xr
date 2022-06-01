@@ -9,7 +9,7 @@
 #include "mars.h"
 #endif
 
-#define LIGHTCOEF (0x7ffff << SLOPEBITS)
+#define LIGHTCOEF (0x7ffffu << SLOPEBITS)
 
 typedef struct
 {
@@ -57,7 +57,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     unsigned light;
     boolean gradientlight = lpl->lightmin != lpl->lightmax;
 #ifdef MARS
-    const uintptr_t divisor = (uint32_t)&SH2_DIVU_DVSR;
+    const volatile uintptr_t divisor = (uint32_t)&SH2_DIVU_DVSR;
 #endif
 
     remaining = x2 - x + 1;
@@ -71,10 +71,10 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     {
 #ifdef MARS
         do {
-            int32_t lc = LIGHTCOEF;
+            const volatile int32_t lc = LIGHTCOEF;
             __asm volatile (
-                "mov.l %0, @(0,%2) /* set 32-bit divisor */ \n\t"
-                "mov.l %1, @(4,%2) /* start divide */\n\t"
+                "mov.l %1, @(0,%2) /* set 32-bit divisor */ \n\t"
+                "mov.l %0, @(4,%2) /* start divide */\n\t"
                 :
                 : "r" (lc), "r" (distance), "r" (divisor));
         } while (0);
