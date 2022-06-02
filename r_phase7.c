@@ -54,7 +54,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     fixed_t distance;
     fixed_t length, xfrac, yfrac, xstep, ystep;
     angle_t angle;
-    unsigned light;
+    volatile unsigned light;
     boolean gradientlight = lpl->lightmin != lpl->lightmax;
 #ifdef MARS
     const volatile uintptr_t divisor = (uint32_t)&SH2_DIVU_DVSR;
