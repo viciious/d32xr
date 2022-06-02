@@ -507,6 +507,7 @@ void P_Drawer (void)
 
 #ifdef MARS
 	extern	boolean	debugscreenactive;
+	int ticratebak;
 
 	drawtics = frtc;
 
@@ -560,7 +561,16 @@ void P_Drawer (void)
 	if (debugscreenactive)
 		I_DebugScreen();
 
+	ticratebak = ticsperframe;
+
+#ifdef MARS
+	if (viewportWidth >= 320 && ticsperframe < 3)
+		ticsperframe = 3;
+#endif
 	I_Update();
+
+	ticsperframe = ticratebak;
+
 #else
 	if (optionsactive)
 	{
