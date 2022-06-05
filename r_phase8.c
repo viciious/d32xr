@@ -65,8 +65,8 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos,
    for(; x < stopx; x++, xfrac += fracstep)
    {
       column_t *column = (column_t *)((byte *)patch + BIGSHORT(patch->columnofs[xfrac>>FRACBITS]));
-      int topclip      = spropening[x] >> 8;
-      int bottomclip   = (spropening[x] & 0xff) - 1;
+      int topclip      = (spropening[x] >> 8) - 1;
+      int bottomclip   = (spropening[x] & 0xff) - 1 - 1;
 
       // column loop
       // a post record has four bytes: topdelta length pixelofs*2
@@ -146,13 +146,14 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int screenhal
    unsigned scalefrac; // FP+3
    int     r1;         // FP+7
    int     r2;         // r18
-   int     silhouette; // FP+4
+   unsigned silhouette; // FP+4
    byte   *topsil;     // FP+6
    byte   *bottomsil;  // r21
-   int     opening;    // r16
+   unsigned opening;    // r16
    unsigned short top;        // r19
    unsigned short bottom;     // r20
    viswall_t *ds;      // r17
+   unsigned vhplus1 = viewportHeight + 1;
 
    x1  = vis->x1;
    x2  = vis->x2;
@@ -178,7 +179,7 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int screenhal
 #endif
 
    for(x = x1; x <= x2; x++)
-      spropening[x] = viewportHeight;
+      spropening[x] = vhplus1 | (1<<8);
    
    ds = lastwallcmd;
    if (ds == viswalls)
@@ -225,7 +226,7 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int screenhal
          for(x = r1; x <= r2; x++)
          {
             opening = spropening[x];
-            if(!(opening & OPENMARK))
+            if((opening>>8) == 1)
                spropening[x] = (topsil[x] << 8) | (opening & 0xff);
          }
       }
@@ -234,7 +235,7 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int screenhal
          for(x = r1; x <= r2; x++)
          {
             opening = spropening[x];
-            if((opening & 0xff) == viewportHeight)
+            if((opening & 0xff) == vhplus1)
                spropening[x] = (opening & OPENMARK) | bottomsil[x];
          }
       }
@@ -245,9 +246,9 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int screenhal
             top    = spropening[x];
             bottom = top & 0xff;
             top >>= 8;
-            if(bottom == viewportHeight)
+            if(bottom == vhplus1)
                bottom = bottomsil[x];
-            if(top == 0)
+            if(top == 1)
                top = topsil[x];
             spropening[x] = (top << 8) | bottom;
          }
@@ -278,6 +279,7 @@ static void R_DrawPSprites(const int cpu, int sprscreenhalf)
     unsigned i;
     unsigned short spropening[SCREENWIDTH];
     vissprite_t *vis = lastsprite_p;
+   unsigned vhplus1 = viewportHeight + 1;
 
     // draw psprites
     while (vis < vissprite_p)
@@ -291,7 +293,7 @@ static void R_DrawPSprites(const int cpu, int sprscreenhalf)
         // clear out the clipping array across the range of the psprite
         while (i < stopx)
         {
-            spropening[i] = viewportHeight;
+            spropening[i] = vhplus1 | (1<<8);
             ++i;
         }
 

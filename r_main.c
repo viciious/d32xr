@@ -716,9 +716,6 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_, vissprite_t *vis
 	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
 	openings = tempbuf;
 	tempbuf += MAXOPENINGS;
-	for (i = 0; i < MAXOPENINGS/2; i++) {
-		((uint32_t *)openings)[i] = 0;
-	}
 
 	sortedvisplanes = sortedvisplanes_;
 

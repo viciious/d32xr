@@ -428,11 +428,11 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floor
 
         // top sprite clip sil
         if (actionbits & AC_TOPSIL)
-            topsil[x] = high;
+            topsil[x] = high+1;
 
         // bottom sprite clip sil
         if (actionbits & AC_BOTTOMSIL)
-            bottomsil[x] = low;
+            bottomsil[x] = low+1;
 
         if (actionbits & (AC_NEWFLOOR | AC_NEWCEILING))
         {
