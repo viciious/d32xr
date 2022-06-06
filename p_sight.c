@@ -28,6 +28,7 @@
 
 #include "doomdef.h"
 #include "p_local.h"
+#include "mars.h"
 
 typedef struct
 {
@@ -78,6 +79,56 @@ static int P_DivlineSide(fixed_t x, fixed_t y, divline_t *node)
 static fixed_t P_InterceptVector2(divline_t *v2, divline_t *v1)
 {
    fixed_t frac;
+ #ifdef MARS
+ #if 1
+   union { int64_t i64; uint32_t i32[2]; } den, num;
+
+   den.i64 =  (int64_t)v1->dy * v2->dx;
+   den.i64 -= (int64_t)v1->dx * v2->dy;
+   if (den.i32[0] == 0)
+     return 0;
+
+   num.i64 =  (int64_t)(v1->x - v2->x) * v1->dy;
+   num.i64 -= (int64_t)(v1->y - v2->y) * v1->dx;
+   num.i64 >>= 16;
+
+   do {
+      int32_t t;
+      __asm volatile (
+         "mov #-128, %0\n\t"
+         "add %0, %0 /* %0 is now 0xFFFFFF00 */ \n\t"
+         "mov.l %4, @(0,%0) /* set 32-bit divisor */ \n\t"
+         "mov.l %2, @(16,%0)\n\t"
+         "mov.l %3, @(20,%0) /* start divide */\n\t"
+         "mov.l @(20,%0), %1 /* get 32-bit quotient */ \n\t"
+         : "=&r" (t), "=r" (frac)
+         : "r" (num.i32[0]), "r" (num.i32[1]), "r" (den.i32[0])
+      );
+   } while (0);
+#else
+   fixed_t num;
+   fixed_t den, temp;
+
+   FixedMul2(temp, v1->dy,FRACUNIT/256);
+   FixedMul2(den, temp,v2->dx);
+
+   FixedMul2(temp, v1->dx,FRACUNIT/256);
+   FixedMul2(temp, temp, v2->dy);
+
+   den = den - temp;
+   if(den == 0)
+      return 0;
+
+   FixedMul2(temp, (v2->y - v1->y),FRACUNIT/256);
+   FixedMul2(temp, temp, v1->dx);
+
+   FixedMul2(num, (v1->x - v2->x),FRACUNIT/256);
+   FixedMul2(num, num, v1->dy);
+
+   num  = num + temp;
+   frac = FixedDiv(num, den);
+#endif
+#else
    fixed_t num;
    fixed_t den, temp;
 
@@ -93,6 +144,7 @@ static fixed_t P_InterceptVector2(divline_t *v2, divline_t *v1)
 
    num  = num + temp;
    frac = FixedDiv(num, den);
+#endif
 
    return frac;
 }

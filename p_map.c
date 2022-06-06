@@ -127,7 +127,7 @@ fixed_t P_InterceptVector (divline_t *v2, divline_t *v1)
 		return -1;
 	num = ((v1->x-v2->x)>>16) *(v1->dy>>16) + 
 		((v2->y-v1->y)>>16) * (v1->dx>>16);
-	frac = (num<<16) / den;
+	frac = IDiv((num<<16), den);
 
 	return frac;
 }
