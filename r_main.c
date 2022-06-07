@@ -185,32 +185,6 @@ angle_t R_PointToAngle2 (fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 #endif
 }
 
-
-/*
-===============================================================================
-=
-= R_PointOnSide
-=
-= Returns side 0 (front) or 1 (back)
-===============================================================================
-*/
-
-int	R_PointOnSide (int x, int y, node_t *node)
-{
-	fixed_t	dx,dy;
-	fixed_t	left, right;
-	
-	dx = (x - node->x);
-	dy = (y - node->y);
-	
-	left = (node->dy>>FRACBITS) * (dx>>FRACBITS);
-	right = (dy>>FRACBITS) * (node->dx>>FRACBITS);
-
-	if (right < left)
-		return 0;		/* front side */
-	return 1;			/* back side */
-}
-
 /*
 ==============
 =

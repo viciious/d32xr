@@ -233,7 +233,34 @@ extern	side_t		*sides;
 extern VINT viewportNum;
 extern const VINT numViewports;
 
-int     R_PointOnSide(int x, int y, node_t* node) ATTR_DATA_CACHE_ALIGN;
+/*
+===============================================================================
+=
+= R_PointOnSide
+=
+= Returns side 0 (front) or 1 (back)
+===============================================================================
+*/
+ATTR_DATA_CACHE_ALIGN
+static inline int R_PointOnSide (int x, int y, node_t *node)
+{
+	fixed_t	dx,dy;
+	fixed_t	left, right;
+
+	dx = (x - node->x);
+	dy = (y - node->y);
+
+#ifdef MARS
+   left = ((int64_t)node->dy*dx) >> 32;
+   right = ((int64_t)dy*node->dx) >> 32;
+#else
+   left  = (node->dy>>FRACBITS) * (dx>>FRACBITS);
+   right = (dy>>FRACBITS) * (node->dx>>FRACBITS);
+#endif
+
+   return (left <= right);
+}
+
 int     SlopeDiv(unsigned int num, unsigned int den) ATTR_DATA_CACHE_ALIGN;
 angle_t R_PointToAngle(fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
 void	R_InitData (void);
