@@ -36,6 +36,9 @@ static void R_RenderBSPNode(int bspnum) ATTR_DATA_CACHE_ALIGN;
 void R_PrepMobj(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
 void R_BSP(void) ATTR_DATA_CACHE_ALIGN;
 
+#ifdef MARS
+__attribute__((aligned(4)))
+#endif
 static int checkcoord[12][4] =
 {
    { 3, 0, 2, 1 },
