@@ -56,19 +56,18 @@ static int P_DivlineSide(fixed_t x, fixed_t y, divline_t *node)
    fixed_t left;
    fixed_t right;
 
-   dx = (x - node->x);
-   dy = (y - node->y);
+   dx = x - node->x;
+   dy = y - node->y;
 
+#ifdef MARS
+   left = ((int64_t)node->dy*dx) >> 32;
+   right = ((int64_t)dy*node->dx) >> 32;
+#else
    left  = (node->dy>>FRACBITS) * (dx>>FRACBITS);
    right = (dy>>FRACBITS) * (node->dx>>FRACBITS);
+#endif
 
-   if(right < left)
-      return 0;    // front side
-
-   if(left == right)
-      return 2;
-   
-   return 1;       // back side
+   return (left <= right) + (left == right);
 }
 
 //
@@ -284,9 +283,7 @@ static boolean PS_CrossBSPNode(sightWork_t* sw, int bspnum)
        bsp = &nodes[bspnum];
 
        // decide which side the start point is on
-       side = P_DivlineSide(strace->x, strace->y, (divline_t*)bsp);
-       if (side == 2)
-           side = 0;
+       side = P_DivlineSide(strace->x, strace->y, (divline_t*)bsp) & 1;
 
        // the partition plane is crossed here
        if (side == P_DivlineSide(sw->t2x, sw->t2y, (divline_t*)bsp))
