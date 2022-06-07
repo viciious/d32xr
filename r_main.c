@@ -127,9 +127,10 @@ r_texcache_t r_texcache;
 int SlopeDiv (unsigned num, unsigned den)
 {
 	unsigned ans;
-	if (den < 512)
+	den >>= 8;
+	if (den < 2)
 		return SLOPERANGE;
-	ans = (num<<3)/(den>>8);
+	ans = (num<<3)/den;
 	return ans <= SLOPERANGE ? ans : SLOPERANGE;
 }
 
