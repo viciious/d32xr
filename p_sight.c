@@ -278,7 +278,11 @@ static boolean PS_CrossBSPNode(sightWork_t* sw, int bspnum)
    int side;
    divline_t* strace = &sw->strace;
 
+#ifdef MARS
+   while ((int16_t)bspnum >= 0)
+#else
    while (!(bspnum & NF_SUBSECTOR))
+#endif
    {
        bsp = &nodes[bspnum];
 

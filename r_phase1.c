@@ -419,7 +419,11 @@ static void R_RenderBSPNode(int bspnum)
    int     side;
 
 check:
+#ifdef MARS
+   if((int16_t)bspnum < 0) // reached a subsector leaf?
+#else
    if(bspnum & NF_SUBSECTOR) // reached a subsector leaf?
+#endif
    {
       R_Subsector(bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR);
       return;
