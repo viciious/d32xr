@@ -314,11 +314,15 @@ void F_Start (void)
 #endif
 
 	I_SetPalette(W_POINTLUMPNUM(W_GetNumForName("PLAYPALS")));
+
+	R_InitColormap(true);
 }
 
 void F_Stop (void)
 {
 	int	i;
+
+	R_InitColormap(lowResMode);
 	
 	for (i = 0;i < NUMENDOBJ; i++)
 		Z_Free(endobj[i]);
