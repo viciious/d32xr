@@ -161,7 +161,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
       //
       {
           unsigned colnum;
-          unsigned iscale;
+          volatile unsigned iscale;
           fixed_t r;
 
           // calculate texture offset
