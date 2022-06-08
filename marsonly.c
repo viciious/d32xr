@@ -163,7 +163,7 @@ void I_Print8(int x, int y, const char* string)
 	const byte* source;
 	byte *dest;
 
-	if (y > 224 / 8)
+	if (y > (224-16) / 8)
 		return;
 
 	dest = (byte *)(I_FrameBuffer() + 320) + (y * 8) * 320 + x;
