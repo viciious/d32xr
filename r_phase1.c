@@ -162,8 +162,8 @@ static void R_StoreWallRange(int start, int stop)
    viswall_t *rw;
    int newstop;
    int numwalls = lastwallcmd - viswalls;
-   const int minlen = centerX;
-   const int maxlen = centerX * 2;
+   const int minlen = centerX/2;
+   const int maxlen = centerX + centerX/4;
    // split long segments
    int len = stop - start + 1;
 
