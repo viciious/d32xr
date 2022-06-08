@@ -175,6 +175,19 @@ boolean P_SetMobjState (mobj_t *mobj, statenum_t state)
 		mobj->sprite = st->sprite;
 		mobj->frame = st->frame;
 
+		if (gameskill == sk_nightmare)
+		{
+			switch (state) {
+			case S_SARG_ATK1:
+			case S_SARG_ATK2:
+			case S_SARG_ATK3:
+				mobj->tics /= 2;
+				break;
+			default:
+				break;
+			}
+		}
+
 		if (st->action)		/* call action functions when the state is set */
 			st->action(mobj);
 
