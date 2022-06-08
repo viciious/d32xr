@@ -158,7 +158,6 @@ static const char	endtextstring[] =
 	"now you can retire to*"
 	"a lifetime of frivolity.**"
 	"  congratulations!";
-#endif
 
 /* '*' = newline */
 static const char	endtextstring[] =
@@ -174,6 +173,7 @@ static const char	endtextstring[] =
 	"  best of all!*"
 	"*"
 	"  congratulations!";
+#endif
 
 /*=============================================== */
 /* */
@@ -539,8 +539,10 @@ void F_Drawer (void)
 			{
 				char	str[2];
 				
+				if (!gameinfo.endText)
+					return;
 				str[1] = 0;
-				str[0] = endtextstring[textindex];
+				str[0] = gameinfo.endText[textindex];
 				if (!str[0])
 					return;
 				F_PrintString2(str);

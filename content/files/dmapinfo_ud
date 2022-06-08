@@ -9,6 +9,7 @@ gameinfo
     titlePage = "title"
     creditsTime = 450
     creditsPage = "credits1"
+    endText = "     id software*     salutes you!**  the horrors of hell*  could not kill you.*  their most cunning*  traps were no match*  for you. you have*  proven yourself the*  best of all!**  congratulations!"
 }
 map "MAP01" "Hangar"
 {
