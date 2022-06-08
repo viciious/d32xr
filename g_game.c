@@ -386,11 +386,18 @@ void G_Init(void)
 	G_InitPlayerResp();
 
 	if (G_FindGameinfo(&gameinfo))
+	{
+		if (gameinfo.borderFlat <= 0)
+			gameinfo.borderFlat = W_CheckNumForName("ROCKS");
+		if (gameinfo.endFlat <= 0)
+			gameinfo.endFlat = gameinfo.borderFlat;
 		return;
+	}
 
 	gameinfo.borderFlat = W_CheckNumForName("ROCKS");
 	gameinfo.titlePage = W_CheckNumForName("title");
 	gameinfo.titleTime = 540;
+	gameinfo.endFlat = gameinfo.borderFlat;
 }
 
 /* 

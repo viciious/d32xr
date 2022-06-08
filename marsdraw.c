@@ -681,7 +681,7 @@ void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh)
 =
 =============
 */
-void DrawTiledBackground(void)
+void DrawTiledBackground2(int flat)
 {
 	int			y, yt;
 	const int	w = 64, h = 64;
@@ -693,13 +693,10 @@ void DrawTiledBackground(void)
 
 	if (debugmode == 3)
 		return;
-	if (gameinfo.borderFlat <= 0)
-	{
-		I_ClearFrameBuffer();
+	if (flat <= 0)
 		return;
-	}
 
-	bsrc = (const pixel_t*)W_POINTLUMPNUM(gameinfo.borderFlat);
+	bsrc = (const pixel_t*)W_POINTLUMPNUM(flat);
 	bdest = I_FrameBuffer();
 
 	y = 0;
@@ -726,6 +723,15 @@ void DrawTiledBackground(void)
 	}
 }
 
+void DrawTiledBackground(void)
+{
+	if (gameinfo.borderFlat <= 0)
+	{
+		I_ClearFrameBuffer();
+		return;
+	}
+	DrawTiledBackground2(gameinfo.borderFlat);
+}
 
 void EraseBlock(int x, int y, int width, int height)
 {

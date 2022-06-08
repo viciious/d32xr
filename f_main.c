@@ -4,6 +4,7 @@
 #include "r_local.h"
 
 static drawcol_t drcol;
+static void F_DrawBackground(void);
 
 /*
 ==================
@@ -305,9 +306,9 @@ void F_Start (void)
 	castattacking = false;
 
 #ifdef MARS
-	DrawTiledBackground();
+	F_DrawBackground();
 	UpdateBuffer();
-	DrawTiledBackground();
+	F_DrawBackground();
 #else
 	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
 	DoubleBufferSetup ();
@@ -510,7 +511,10 @@ stopattack:
 	return 0;
 }
 
-
+static void F_DrawBackground(void)
+{
+	DrawTiledBackground2(gameinfo.endFlat);
+}
 
 /*
 =======================
@@ -553,7 +557,7 @@ void F_Drawer (void)
 			
 		case fin_charcast:
 #ifdef MARS
-			DrawTiledBackground();
+			F_DrawBackground();
 #else
 			EraseBlock(0, 0, 320, 200);
 #endif

@@ -1150,6 +1150,7 @@ boolean GetSaveInfo(int slotnumber, VINT* mapnum, VINT* skill, VINT *mode);
 
 void PrintHex (int x, int y, unsigned num);
 void DrawPlaque (jagobj_t *pl);
+void DrawTiledBackground2(int flat);
 void DrawTiledBackground(void);
 extern	int		maxlevel;			/* highest level selectable in menu (1-25) */
 

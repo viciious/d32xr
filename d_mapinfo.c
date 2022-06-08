@@ -310,6 +310,8 @@ static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
 		gi->endMus = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "endText"))
 		gi->endText = value;
+	else if (!D_strcasecmp(key, "endFlat"))
+		gi->endFlat = W_CheckNumForName(value);
 }
 
 static const char* G_FindMapinfoSection(const char* buf, const char *name, size_t *psectionlen)
