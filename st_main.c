@@ -662,7 +662,7 @@ void ST_Drawer(void)
 	int e = splitscreen ? MAXPLAYERS : consoleplayer + 1;
 	int y[MAXPLAYERS];
 
-	if (debugmode == 3)
+	if (debugmode == DEBUGMODE_NODRAW)
 		return;
 
 	y[consoleplayer] = I_FrameBufferHeight() - sbar_height;
@@ -757,7 +757,7 @@ void ST_EraseBlock(int x, int y, int width, int height)
 	int rowsize;
 	short * source, * dest;
 
-	if (debugmode == 3)
+	if (debugmode == DEBUGMODE_NODRAW)
 		return;
 
 	if (x & 1)

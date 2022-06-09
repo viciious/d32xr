@@ -1167,7 +1167,21 @@ extern	int		vblsinframe;			/* range from 4 to 8 */
 #define MAXTICSPERFRAME		4
 extern	VINT	ticsperframe;		/* 2 - 4 */
 
-extern	boolean	spr_rotations;
+extern boolean	spr_rotations;
+
+typedef enum
+{
+	DEBUGMODE_NONE,
+
+	DEBUGMODE_FPSCOUNT,
+	DEBUGMODE_ALLCOUNT,
+	DEBUGMODE_NOTEXCACHE,
+	DEBUGMODE_NODRAW,
+	DEBUGMODE_TEXCACHE,
+
+	DEBUGMODE_NUM_MODES
+} debugmode_t;
+
 extern int debugmode;
 extern char clearscreen;
 extern VINT colormapopt;

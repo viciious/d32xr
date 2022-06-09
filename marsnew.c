@@ -54,7 +54,7 @@ int		lastticcount = 0;
 int		lasttics = 0;
 static int fpscount = 0;
 
-int 	debugmode = 0;
+int 	debugmode = DEBUGMODE_NONE;
 VINT	strafebtns = 0;
 
 extern int 	cy;
@@ -677,13 +677,13 @@ void I_DebugScreen(void)
 	if (!debugscreenupdate)
 		return;
 
-	if (debugmode == 1)
+	if (debugmode == DEBUGMODE_FPSCOUNT)
 	{
 		Mars_DebugStart();
 		Mars_DebugQueue(DEBUG_FPSCOUNT, fpscount);
 		Mars_DebugEnd();
 	}
-	else if (debugmode > 1)
+	else if (debugmode > DEBUGMODE_FPSCOUNT)
 	{
 		unsigned t_ref_bsp_avg = 0;
 		unsigned t_ref_segs_avg = 0;
@@ -776,19 +776,23 @@ void I_Update(void)
 	if (players[consoleplayer].automapflags & AF_OPTIONSACTIVE)
 		if ((ticrealbuttons & BT_MODE) && !(oldticrealbuttons & BT_MODE))
 		{
-			int prevdebugmode = debugmode;
+			int prevdebugmode;
 
-			debugmode = (debugmode + 1) % 5;
+			prevdebugmode = debugmode;
+			debugmode = (debugmode + 1) % DEBUGMODE_NUM_MODES;
 			debugscreenupdate = true;
 
-			if (prevdebugmode == 4 || debugmode == 4)
+			if (prevdebugmode == DEBUGMODE_TEXCACHE 
+				|| debugmode == DEBUGMODE_TEXCACHE
+				|| prevdebugmode == DEBUGMODE_NOTEXCACHE 
+				|| debugmode == DEBUGMODE_NOTEXCACHE)
 			{
 				R_ClearTexCache(&r_texcache);
 			}
 
 			R_SetDetailMode(detailmode);
 
-			if (prevdebugmode == 0)
+			if (!prevdebugmode)
 			{
 				SH2_WDT_WTCSR_TCNT = 0x5A00; /* WDT TCNT = 0 */
 				SH2_WDT_WTCSR_TCNT = 0xA53E; /* WDT TCSR = clr OVF, IT mode, timer on, clksel = Fs/4096 */
@@ -825,7 +829,7 @@ void I_Update(void)
 		prevsecframe = framenum;
 	}
 	framenum++;
-	debugscreenactive = debugmode != 0;
+	debugscreenactive = debugmode != DEBUGMODE_NONE;
 
 	cy = 1;
 }

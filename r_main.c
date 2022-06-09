@@ -366,7 +366,7 @@ void R_SetDetailMode(int mode)
 
 	detailmode = mode;
 
-	if (debugmode == 3)
+	if (debugmode == DEBUGMODE_NODRAW)
 	{
 		drawcol = I_DrawColumnNoDraw;
 		drawcolnpo2 = I_DrawColumnNoDraw;
@@ -560,7 +560,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_, vissprite_t *vis
 	*(int *)0xf02234 = 0x10000;				/* a2 outer loop add (+1 y) */
 	*(int *)0xf0226c = *(int *)0xf02268 = 0;		/* pattern compare */
 #else
-	if (debugmode == 3)
+	if (debugmode == DEBUGMODE_NODRAW)
 		I_ClearFrameBuffer();
 #endif
 

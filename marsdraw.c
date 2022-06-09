@@ -684,7 +684,7 @@ void DrawTiledBackground2(int flat)
 	pixel_t* bdest;
 	const pixel_t* bsrc;
 
-	if (debugmode == 3)
+	if (debugmode == DEBUGMODE_NODRAW)
 		return;
 	if (flat <= 0)
 		return;

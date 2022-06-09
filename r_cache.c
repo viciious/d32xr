@@ -226,6 +226,8 @@ void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **us
 		return;
 	if (id < 0)
 		return;
+	if (debugmode == DEBUGMODE_NOTEXCACHE)
+		return;
 
 	size = pixels + sizeof(texcacheblock_t) + 32;
 	if (c->zonesize < size + pad)
@@ -277,7 +279,7 @@ retry:
 	data = (void *)((intptr_t)data + ((intptr_t)lumpdata & 15));
 
 	D_memcpy(data, lumpdata, pixels);
-	if (debugmode == 4)
+	if (debugmode == DEBUGMODE_TEXCACHE)
 	{
 		D_memset(data, id & 255, pixels); // DEBUG
 	}
