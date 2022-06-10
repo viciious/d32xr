@@ -106,7 +106,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 
    const volatile unsigned actionbits = segl->actionbits;
 
-   unsigned scalefrac = segl->scalefrac;
+   volatile unsigned scalefrac = segl->scalefrac;
    const volatile unsigned scalestep = segl->scalestep;
 
    const volatile unsigned centerangle = segl->centerangle;
