@@ -292,50 +292,49 @@ void Mars_Secondary(void)
 	while (1)
 	{
 		int cmd;
-		while ((cmd = MARS_SYS_COMM4) == 0);
+
+		while ((cmd = MARS_SYS_COMM4) == MARS_SECCMD_NONE);
 
 		switch (cmd) {
-		case 1:
+		case MARS_SECCMD_CLEAR_CACHE:
 			Mars_ClearCache();
 			break;
-		case 2:
+		case MARS_SECCMD_BREAK:
+			// break current command
+			break;
+		case MARS_SECCMD_R_SETUP:
 			Mars_Sec_R_Setup();
 			break;
-		case 3:
+		case MARS_SECCMD_R_WALL_PREP_NODRAW:
 			Mars_Sec_R_WallPrep();
 			break;
-		case 4:
+		case MARS_SECCMD_R_WALL_PREP:
 			Mars_Sec_R_WallPrep();
 			Mars_Sec_R_PlanePrep();
 			Mars_Sec_R_SegCommands();
 			break;
-		case 5:
+		case MARS_SECCMD_R_DRAW_PLANES:
 			Mars_Sec_R_DrawPlanes();
 			break;
-		case 6:
+		case MARS_SECCMD_R_DRAW_SPRITES:
 			Mars_Sec_R_DrawSprites(MARS_SYS_COMM6);
 			break;
-		case 7:
+		case MARS_SECCMD_R_DRAW_PSPRITES:
 			Mars_Sec_R_DrawPSprites(MARS_SYS_COMM6);
 			break;
-		case 8:
+		case MARS_SECCMD_M_ANIMATE_FIRE:
 			Mars_Sec_M_AnimateFire();
 			break;
-		case 9:
-			// break current command
-			break;
-		case 10:
+		case MARS_SECCMD_S_INIT_DMA:
 			Mars_Sec_InitSoundDMA();
 			break;
-		case 11:
+		case MARS_SECCMD_S_STOP_MIXER:
 			Mars_Sec_StopSoundMixer();
 			break;
-		case 12:
+		case MARS_SECCMD_S_START_MIXER:
 			Mars_Sec_StartSoundMixer();
 			break;
-		case 13:
-			break;
-		case 14:
+		case MARS_SECCMD_AM_DRAW:
 			Mars_Sec_AM_Drawer();
 			break;
 		default:
