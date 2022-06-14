@@ -148,7 +148,7 @@ void S_Clear (void)
 
 	/* do not wait the reader indefinitely */
 	/* a hack to get Gens KMod working */
-	for (tic = I_GetTime(); I_GetTime() < tic + 120; )
+	for (tic = I_GetTime(); I_GetTime() < tic + 10; )
 	{
 		if (Mars_RB_Len(&soundcmds) == 0)
 			break;
