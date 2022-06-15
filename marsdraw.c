@@ -88,7 +88,7 @@ void I_DrawColumnLowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 
 	frac = frac_;
 	heightmask = dc_texheight - 1;
-	dest = I_ViewportBuffer() + dc_yl * 320 / 2 + dc_x;
+	dest = viewportbuffer + dc_yl * 320 / 2 + dc_x;
 	dc_colormap = dc_colormaps + light;
 
 #define DO_PIXEL() do { \
@@ -148,7 +148,7 @@ void I_DrawColumnNPo2LowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t fra
 	}
 	frac = frac_;
 
-	dest = I_ViewportBuffer() + dc_yl * 320 / 2 + dc_x;
+	dest = viewportbuffer + dc_yl * 320 / 2 + dc_x;
 	dc_colormap = dc_colormaps + light;
 
 	count = dc_yh - dc_yl + 1;
@@ -201,7 +201,7 @@ void I_DrawSpanLowC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	count = ds_x2 - ds_x1 + 1;
 	xfrac = ds_xfrac, yfrac = ds_yfrac;
 
-	dest = I_ViewportBuffer() + ds_y * 320 / 2 + ds_x1;
+	dest = viewportbuffer + ds_y * 320 / 2 + ds_x1;
 	dc_colormap = dc_colormaps + light;
 
 #define DO_PIXEL() do { \
@@ -246,7 +246,7 @@ void I_DrawColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 
 	frac = frac_;
 	heightmask = dc_texheight - 1;
-	dest = (int8_t *)I_ViewportBuffer() + dc_yl * 320 + dc_x;
+	dest = (int8_t *)viewportbuffer + dc_yl * 320 + dc_x;
 	dc_colormap = (int8_t *)(dc_colormaps + light);
 
 #define DO_PIXEL() do { \
@@ -301,7 +301,7 @@ void I_DrawColumnNPo2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	}
 	frac = frac_;
 
-	dest = (int8_t *)I_ViewportBuffer() + dc_yl * 320 + dc_x;
+	dest = (int8_t *)viewportbuffer + dc_yl * 320 + dc_x;
 	dc_colormap = (int8_t *)(dc_colormaps + light);
 
 	count = dc_yh - dc_yl + 1;
@@ -347,7 +347,7 @@ void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	count = ds_x2 - ds_x1 + 1;
 	xfrac = ds_xfrac, yfrac = ds_yfrac;
 
-	dest = (int8_t *)I_ViewportBuffer() + ds_y * 320 + ds_x1;
+	dest = (int8_t *)viewportbuffer + ds_y * 320 + ds_x1;
 	dc_colormap = (int8_t *)(dc_colormaps + light);
 
 #define DO_PIXEL() do { \
@@ -403,7 +403,7 @@ void I_DrawFuzzColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac
 		return;
 
 	frac = frac_;
-	dest = (short *)(I_ViewportBuffer() + dc_yl * 320 / 2 + dc_x);
+	dest = (short *)(viewportbuffer + dc_yl * 320 / 2 + dc_x);
 	dc_colormap = dc_colormaps + vd.fuzzcolormap;
 
 #define DO_PIXEL() do { \
@@ -452,7 +452,7 @@ void I_DrawFuzzColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 		return;
 
 	frac = frac_;
-	dest = (int8_t *)I_ViewportBuffer() + dc_yl * 320 + dc_x;
+	dest = (int8_t *)viewportbuffer + dc_yl * 320 + dc_x;
 	dc_colormap = (int8_t *)(dc_colormaps + vd.fuzzcolormap);
 
 #define DO_PIXEL() do { \
@@ -502,7 +502,7 @@ void I_DrawSpanPotatoLow(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_x
 
 	count = ds_x2 - ds_x1 + 1;
 
-	dest = I_ViewportBuffer() + ds_y * 320 / 2 + ds_x1;
+	dest = viewportbuffer + ds_y * 320 / 2 + ds_x1;
 	dc_colormap = dc_colormaps + light;
 	pix = dc_colormap[(int8_t)ds_source[513]];
 
@@ -535,7 +535,7 @@ void I_DrawSpanPotato(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfra
 
 	count = ds_x2 - ds_x1 + 1;
 
-	udest = (byte *)I_ViewportBuffer() + ds_y * 320 + ds_x1;
+	udest = (byte *)viewportbuffer + ds_y * 320 + ds_x1;
 	dc_colormap = (int8_t *)(dc_colormaps + light);
 	upix = dc_colormap[ds_source[513]] & 0xff;
 
