@@ -279,7 +279,7 @@ static void R_DrawPSprites(const int cpu, int sprscreenhalf)
     unsigned i;
     unsigned short spropening[SCREENWIDTH];
     vissprite_t *vis = lastsprite_p;
-   unsigned vhplus1 = viewportHeight + 1;
+    unsigned vhplus1 = viewportHeight + 1;
 
     // draw psprites
     while (vis < vissprite_p)
@@ -306,21 +306,22 @@ static void R_DrawPSprites(const int cpu, int sprscreenhalf)
 #ifdef MARS
 void Mars_Sec_R_DrawSprites(int sprscreenhalf)
 {
-    int count;
+    int count, sortedcount;
     int *sortedsprites;
+
+    Mars_ClearCacheLine(&vissprites);
+    Mars_ClearCacheLine(&lastsprite_p);
+
+    count = lastsprite_p - vissprites;
+    Mars_ClearCacheLines(vissprites, (count * sizeof(vissprite_t) + 31) / 16);
 
     Mars_ClearCacheLine(&gsortedsprites);
     sortedsprites = gsortedsprites;
 
-    Mars_ClearCacheLine(sortedsprites);
-    count = *(volatile int *)&sortedsprites[0];
-    Mars_ClearCacheLines(sortedsprites + 1, (count * sizeof(*sortedsprites) + 31) / 16);
+    Mars_ClearCacheLines(sortedsprites, ((count + 1) * sizeof(*sortedsprites) + 31) / 16);
+    sortedcount = sortedsprites[0];
 
-    Mars_ClearCacheLine(&vissprites);
-    Mars_ClearCacheLine(&lastsprite_p);
-    Mars_ClearCacheLines(vissprites, ((lastsprite_p - vissprites) * sizeof(vissprite_t) + 31) / 16);
-
-    R_DrawSpritesLoop(1, sortedsprites + 1, count, sprscreenhalf);
+    R_DrawSpritesLoop(1, sortedsprites + 1, sortedcount, sprscreenhalf);
 }
 
 void Mars_Sec_R_DrawPSprites(int sprscreenhalf)

@@ -54,10 +54,10 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     fixed_t distance;
     fixed_t length, xfrac, yfrac, xstep, ystep;
     angle_t angle;
-    volatile unsigned light;
+    unsigned light;
     boolean gradientlight = lpl->lightmin != lpl->lightmax;
 #ifdef MARS
-    const volatile uintptr_t divisor = (uint32_t)&SH2_DIVU_DVSR;
+    intptr_t divisor;
 #endif
 
     remaining = x2 - x + 1;
@@ -71,8 +71,10 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     {
 #ifdef MARS
         do {
-            const volatile int32_t lc = LIGHTCOEF;
+            const int32_t lc = LIGHTCOEF;
             __asm volatile (
+                "mov #-128, %2\n\t"
+                "add %2,%2\n\t"
                 "mov.l %1, @(0,%2) /* set 32-bit divisor */ \n\t"
                 "mov.l %0, @(4,%2) /* start divide */\n\t"
                 :
@@ -100,6 +102,8 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
 #ifdef MARS
           do {
               __asm volatile (
+                  "mov #-128, %1\n\t"
+                  "add %1,%1\n\t"
                   "mov.l @(20,%1), %0 /* get 32-bit quotient */ \n\t"
                   : "=r" (light)
                   : "r" (divisor));

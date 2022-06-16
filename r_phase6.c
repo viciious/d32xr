@@ -106,7 +106,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 
    const volatile unsigned actionbits = segl->actionbits;
 
-   volatile unsigned scalefrac = segl->scalefrac;
+   unsigned scalefrac = segl->scalefrac;
    const volatile unsigned scalestep = segl->scalestep;
 
    const volatile unsigned centerangle = segl->centerangle;
@@ -161,7 +161,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
       //
       {
           unsigned colnum;
-          volatile unsigned iscale;
+          unsigned iscale;
           fixed_t r;
 
           // calculate texture offset
