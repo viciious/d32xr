@@ -331,7 +331,8 @@ void P_LoadLineDefs (int lump)
 	vertex_t		*v1, *v2;
 	
 	numlines = W_LumpLength (lump) / sizeof(maplinedef_t);
-	lines = Z_Malloc (numlines*sizeof(line_t),PU_LEVEL,0);	
+	lines = Z_Malloc (numlines*sizeof(line_t)+16,PU_LEVEL,0);
+	lines = (void*)(((uintptr_t)lines + 15) & ~15); // aline on cacheline boundary
 	D_memset (lines, 0, numlines*sizeof(line_t));
 	data = I_TempBuffer ();
 	W_ReadLump (lump,data);
