@@ -194,6 +194,8 @@ void	P_SetThingPosition (mobj_t *thing);
 
 void	P_PlayerLand (mobj_t *mo);
 
+void 	P_SectorOrg(mobj_t* sec, fixed_t *org);
+
 /*
 ===============================================================================
 

@@ -93,7 +93,7 @@ void P_ChangeSwitchTexture(line_t *line,int useAgain)
 	int	texBot;
 	int	i;
 	int	sound;
-	mobj_t *soundorg = (mobj_t*)&(LD_FRONTSECTOR(line))->soundorg;
+	mobj_t *soundorg = (void *)LD_FRONTSECTOR(line);
 
 	if (!useAgain)
 		line->special = 0;
@@ -109,7 +109,7 @@ void P_ChangeSwitchTexture(line_t *line,int useAgain)
 	for (i = 0;i < numswitches*2;i++)
 		if (switchlist[i] == texTop)
 		{
-			S_StartSound(soundorg,sound);
+			S_StartPositionedSound(soundorg,sound,&P_SectorOrg);
 			sides[line->sidenum[0]].toptexture = switchlist[i^1];
 			if (useAgain)
 				P_StartButton(line,top,switchlist[i],BUTTONTIME,soundorg);
@@ -118,7 +118,7 @@ void P_ChangeSwitchTexture(line_t *line,int useAgain)
 		else
 		if (switchlist[i] == texMid)
 		{
-			S_StartSound(soundorg,sound);
+			S_StartPositionedSound(soundorg,sound,&P_SectorOrg);
 			sides[line->sidenum[0]].midtexture = switchlist[i^1];
 			if (useAgain)
 				P_StartButton(line, middle,switchlist[i],BUTTONTIME,soundorg);
@@ -127,7 +127,7 @@ void P_ChangeSwitchTexture(line_t *line,int useAgain)
 		else
 		if (switchlist[i] == texBot)
 		{
-			S_StartSound(soundorg,sound);
+			S_StartPositionedSound(soundorg,sound,&P_SectorOrg);
 			sides[line->sidenum[0]].bottomtexture = switchlist[i^1];
 			if (useAgain)
 				P_StartButton(line, bottom,switchlist[i],BUTTONTIME,soundorg);

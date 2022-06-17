@@ -169,7 +169,8 @@ void P_LoadSectors (int lump)
 	sector_t		*ss;
 			
 	numsectors = W_LumpLength (lump) / sizeof(mapsector_t);
-	sectors = Z_Malloc (numsectors*sizeof(sector_t),PU_LEVEL,0);	
+	sectors = Z_Malloc (numsectors*sizeof(sector_t) + 16,PU_LEVEL,0);
+	sectors = (void*)(((uintptr_t)sectors + 15) & ~15); // aline on cacheline boundary
 	D_memset (sectors, 0, numsectors*sizeof(sector_t));
 	data = I_TempBuffer ();
 	W_ReadLump (lump,data);
@@ -567,8 +568,8 @@ void P_GroupLines (void)
 		}
 
 		/* set the degenmobj_t to the middle of the bounding box */
-		sector->soundorg.x = (bbox[BOXRIGHT]+bbox[BOXLEFT])/2;
-		sector->soundorg.y = (bbox[BOXTOP]+bbox[BOXBOTTOM])/2;
+		sector->soundorg[0] = ((bbox[BOXRIGHT]+bbox[BOXLEFT])/2) >> FRACBITS;
+		sector->soundorg[1] = ((bbox[BOXTOP]+bbox[BOXBOTTOM])/2) >> FRACBITS;
 		
 		/* adjust bounding box to map blocks */
 		block = (bbox[BOXTOP]-bmaporgy+MAXRADIUS)>>MAPBLOCKSHIFT;

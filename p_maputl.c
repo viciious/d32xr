@@ -372,3 +372,9 @@ boolean P_BlockThingsIterator (int x, int y, boolean(*func)(mobj_t*) )
 	return true;
 }
 
+void P_SectorOrg(mobj_t* sec_, fixed_t *org)
+{
+	sector_t *sec = (void *)sec_;
+	org[0] = sec->soundorg[0] << FRACBITS;
+	org[1] = sec->soundorg[1] << FRACBITS;
+}

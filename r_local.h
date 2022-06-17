@@ -81,19 +81,20 @@ struct line_s;
 
 typedef	struct
 {
+	fixed_t		floorheight, ceilingheight;
 	VINT		floorpic, ceilingpic;	/* if ceilingpic == -1,draw sky */
 
 	uint8_t		lightlevel, special;
-	VINT		tag;
 
 	VINT		validcount;			/* if == validcount, already checked */
 	VINT		linecount;
 
-	fixed_t		floorheight, ceilingheight;
+	VINT		tag;
+
 	mobj_t		*soundtarget;		/* thing that made a sound (or null) */
 	
 	VINT		blockbox[4];		/* mapblock bounding box for height changes */
-	vertex_t	soundorg;			/* for any sounds played by the sector */
+	VINT		soundorg[2];		/* for any sounds played by the sector */
 
 	mobj_t		*thinglist;			/* list of mobjs in sector */
 	void		*specialdata;		/* thinker_t for reversable actions */

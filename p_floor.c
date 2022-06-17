@@ -171,7 +171,7 @@ void T_MoveFloor(floormove_t *floor)
 	res = T_MovePlane(floor->sector,floor->speed,
 			floor->floordestheight,floor->crush,0,floor->direction);
 	if (!(gametic&3))
-		S_StartSound((mobj_t *)&floor->sector->soundorg,sfx_stnmov);
+		S_StartPositionedSound((void *)floor->sector,sfx_stnmov,&P_SectorOrg);
 	if (res == pastdest)
 	{
 		floor->sector->specialdata = NULL;

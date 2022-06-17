@@ -41,6 +41,8 @@ typedef struct
 #define	EXTERNALQUADS	512			/* 16k  / 32 bytes per quad (16 bits+music) */
 #define	SFXCHANNELS		8
 
+typedef void (*getsoundpos_t)(mobj_t *, fixed_t *);
+
 typedef struct
 {
 #ifdef MARS
@@ -59,7 +61,8 @@ typedef struct
 #endif
 
 	sfxinfo_t	*sfx;
-	mobj_t		*origin;
+	mobj_t		*mobj;
+	getsoundpos_t getpos;
 } sfxchannel_t;
 
 enum
@@ -94,7 +97,8 @@ extern	VINT	musictype;
 
 void S_Init(void);
 void S_Clear (void);
-void S_StartSound(mobj_t *origin, int sound_id);
+void S_StartSound(mobj_t *mobj, int sound_id);
+void S_StartPositionedSound(mobj_t* mobj, int sound_id, getsoundpos_t getpos);
 void S_UpdateSounds(void);
 boolean S_CDAvailable(void);
 void S_SetMusicType(int t);

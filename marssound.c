@@ -38,6 +38,7 @@ enum
 	SNDCMD_NONE,
 	SNDCMD_CLEAR,
 	SNDCMD_STARTSND,
+	SNDCMD_STARTORGSND,
 };
 
 static uint8_t snd_bufidx = 0;
@@ -58,10 +59,10 @@ int             samplecount = 0;
 
 static marsrb_t	soundcmds = { 0 };
 
-static void S_StartSoundReal(mobj_t* origin, unsigned sound_id, int vol) ATTR_DATA_CACHE_ALIGN;
+static void S_StartSoundReal(mobj_t* mobj, unsigned sound_id, int vol, getsoundpos_t getpos) ATTR_DATA_CACHE_ALIGN;
 void S_PaintChannel8(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
-static void S_SpatializeAt(mobj_t* origin, mobj_t* listener, int* pvol, int* psep) ATTR_DATA_CACHE_ALIGN;
-static void S_Spatialize(mobj_t* origin, int* pvol, int* psep) ATTR_DATA_CACHE_ALIGN;
+static void S_SpatializeAt(fixed_t*origin, mobj_t* listener, int* pvol, int* psep) ATTR_DATA_CACHE_ALIGN;
+static void S_Spatialize(mobj_t* mobj, int* pvol, int* psep, getsoundpos_t getpos) ATTR_DATA_CACHE_ALIGN;
 static void S_Update(int16_t* buffer) ATTR_DATA_CACHE_ALIGN;
 
 /*
@@ -166,15 +167,15 @@ void S_RestartSounds (void)
 =
 ==================
 */
-static void S_SpatializeAt(mobj_t* origin, mobj_t* listener, int* pvol, int* psep)
+static void S_SpatializeAt(fixed_t* origin, mobj_t* listener, int* pvol, int* psep)
 {
 	int dist_approx;
 	int dx, dy;
 	angle_t angle;
 	int	vol, sep;
 
-	dx = D_abs(origin->x - listener->x);
-	dy = D_abs(origin->y - listener->y);
+	dx = D_abs(origin[0] - listener->x);
+	dy = D_abs(origin[1] - listener->y);
 	dist_approx = dx + dy - ((dx < dy ? dx : dy) >> 1);
 	if (dist_approx > S_CLIPPING_DIST)
 	{
@@ -185,7 +186,7 @@ static void S_SpatializeAt(mobj_t* origin, mobj_t* listener, int* pvol, int* pse
 	{
 		// angle of source to listener
 		angle = R_PointToAngle2(listener->x, listener->y,
-			origin->x, origin->y);
+			origin[0], origin[1]);
 
 		if (angle > listener->angle)
 			angle = angle - listener->angle;
@@ -226,7 +227,7 @@ static void S_SpatializeAt(mobj_t* origin, mobj_t* listener, int* pvol, int* pse
 =
 ==================
 */
-static void S_Spatialize(mobj_t* origin, int *pvol, int *psep)
+static void S_Spatialize(mobj_t* mobj, int *pvol, int *psep, getsoundpos_t getpos)
 {
 	int	vol, sep;
 	player_t* player = &players[consoleplayer];
@@ -235,9 +236,20 @@ static void S_Spatialize(mobj_t* origin, int *pvol, int *psep)
 	vol = sfxvolume;
 	sep = 128;
 
-	if (origin)
+	if (mobj)
 	{
-		if (origin != player->mo)
+		fixed_t origin[2];
+
+		if (getpos)
+		{
+			getpos(mobj, origin);
+		}
+		else
+		{
+			origin[0] = mobj->x, origin[1] = mobj->y;
+		}
+
+		if (mobj != player->mo)
 			S_SpatializeAt(origin, player->mo, &vol, &sep);
 
 		if (splitscreen && player2->mo)
@@ -247,7 +259,7 @@ static void S_Spatialize(mobj_t* origin, int *pvol, int *psep)
 			vol2 = sfxvolume;
 			sep2 = 255;
 
-			if (origin != player2->mo)
+			if (mobj != player2->mo)
 				S_SpatializeAt(origin, player2->mo, &vol2, &sep2);
 
 			sep = 128 + (vol2 - vol) * 2;
@@ -269,7 +281,7 @@ static void S_Spatialize(mobj_t* origin, int *pvol, int *psep)
 ==================
 */
 
-void S_StartSound(mobj_t *origin, int sound_id)
+static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 {
 	int vol, sep;
 	sfxinfo_t *sfx;
@@ -285,7 +297,7 @@ void S_StartSound(mobj_t *origin, int sound_id)
 	/* */
 	/* spatialize */
 	/* */
-	S_Spatialize(origin, &vol, &sep);
+	S_Spatialize(mobj, &vol, &sep, getpos);
 	if (!vol)
 		return; /* too far away */
 
@@ -296,11 +308,34 @@ void S_StartSound(mobj_t *origin, int sound_id)
 	uint16_t* p = (uint16_t*)Mars_RB_GetWriteBuf(&soundcmds, 8, false);
 	if (!p)
 		return;
-	*p++ = SNDCMD_STARTSND;
-	*p++ = sound_id;
-	*(int*)p = (intptr_t)origin, p += 2;
-	*p++ = vol;
+
+	if (getpos)
+	{
+		*p++ = SNDCMD_STARTORGSND;
+		*p++ = sound_id;
+		*(int*)p = (intptr_t)mobj, p += 2;
+		*(int*)p = (intptr_t)getpos, p += 2;
+		*p++ = vol;
+	}
+	else
+	{
+		*p++ = SNDCMD_STARTSND;
+		*p++ = sound_id;
+		*(int*)p = (intptr_t)mobj, p += 2;
+		*p++ = vol;
+	}
+
 	Mars_RB_CommitWrite(&soundcmds);
+}
+
+void S_StartSound(mobj_t* mobj, int sound_id)
+{
+	S_StartSoundEx(mobj, sound_id, NULL);
+}
+
+void S_StartPositionedSound(mobj_t* mobj, int sound_id, getsoundpos_t getpos)
+{
+	S_StartSoundEx(mobj, sound_id, getpos);
 }
 
 /*
@@ -492,18 +527,22 @@ static void S_Update(int16_t* buffer)
 		if (!ch->data)
 			continue;
 
-		mo = ch->origin;
+		mo = ch->mobj;
+
 		if (mo)
 		{
 			int vol, sep;
 
-			Mars_ClearCacheLine(&mo->x);
-			Mars_ClearCacheLine(&mo->y);
+			if (!ch->getpos)
+			{
+				Mars_ClearCacheLine(&mo->x);
+				Mars_ClearCacheLine(&mo->y);
+			}
 
 			/* */
 			/* spatialize */
 			/* */
-			S_Spatialize(ch->origin, &vol, &sep);
+			S_Spatialize(mo, &vol, &sep, ch->getpos);
 
 			if (!vol)
 			{
@@ -566,7 +605,7 @@ void sec_dma1_handler(void)
 	S_Update(snd_buffer[snd_bufidx]);
 }
 
-static void S_StartSoundReal(mobj_t* origin, unsigned sound_id, int vol)
+static void S_StartSoundReal(mobj_t* mobj, unsigned sound_id, int vol, getsoundpos_t getpos)
 {
 	sfxchannel_t* channel, * newchannel;
 	int i;
@@ -604,7 +643,7 @@ static void S_StartSoundReal(mobj_t* origin, unsigned sound_id, int vol)
 				goto gotchannel;
 			}
 		}
-		if (origin && channel->origin == origin)
+		if (mobj && channel->mobj == mobj)
 		{	/* cut off whatever was coming from this origin */
 			newchannel = channel;
 			goto gotchannel;
@@ -630,12 +669,13 @@ static void S_StartSoundReal(mobj_t* origin, unsigned sound_id, int vol)
 	/* */
 gotchannel:
 	newchannel->sfx = sfx;
-	newchannel->origin = origin;
+	newchannel->mobj = mobj;
 	newchannel->position = 0;
 	newchannel->increment = (11025 << 14) / SAMPLE_RATE;
 	newchannel->length = length << 14;
 	newchannel->loop_length = loop_length << 14;
 	newchannel->data = &md_data->data[0];
+	newchannel->getpos = getpos;
 
 	// volume and panning will be updated later in S_Spatialize
 	newchannel->volume = vol;
@@ -656,7 +696,10 @@ void Mars_Sec_ReadSoundCmds(void)
 			D_memset(sfxchannels, 0, sizeof(*sfxchannels) * SFXCHANNELS);
 			break;
 		case SNDCMD_STARTSND:
-			S_StartSoundReal((void*)(*(intptr_t*)&p[2]), p[1], p[4]);
+			S_StartSoundReal((void*)(*(intptr_t*)&p[2]), p[1], p[4], NULL);
+			break;
+		case SNDCMD_STARTORGSND:
+			S_StartSoundReal((void*)(*(intptr_t*)&p[2]), p[1], p[6], (getsoundpos_t)(*(intptr_t*)&p[4]));
 			break;
 		}
 
