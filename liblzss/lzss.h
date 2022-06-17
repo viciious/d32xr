@@ -37,5 +37,7 @@ typedef struct
 void lzss_setup(lzss_state_t* lzss, uint8_t* base, uint8_t *buf, uint32_t buf_size);
 int lzss_read(lzss_state_t* lzss, uint16_t chunk);
 int lzss_read_all(lzss_state_t* lzss);
+uint32_t lzss_decompressed_size(lzss_state_t* lzss);
+uint32_t lzss_compressed_size(lzss_state_t* lzss);
 
 #endif // _LZSS_H_
