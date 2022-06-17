@@ -953,9 +953,12 @@ void R_RenderPlayerView(int displayplayer)
 {
 	int t_bsp, t_prep, t_segs, t_planes, t_sprites, t_total;
 	boolean drawworld = !(players[consoleplayer].automapflags & AF_ACTIVE);
-	visplane_t visplanes_[MAXVISPLANES], *visplanes_hash_[NUM_VISPLANES_BUCKETS];
-	vissprite_t vissprites_[MAXVISSPRITES];
-	uint32_t sortedvisplanes_[MAXVISPLANES];
+	__attribute__((aligned(16)))
+		visplane_t visplanes_[MAXVISPLANES], *visplanes_hash_[NUM_VISPLANES_BUCKETS];
+	__attribute__((aligned(16)))
+		vissprite_t vissprites_[MAXVISSPRITES];
+	__attribute__((aligned(16)))
+		uint32_t sortedvisplanes_[MAXVISPLANES];
 
 	while (!I_RefreshCompleted())
 		;
