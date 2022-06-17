@@ -73,12 +73,12 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
         do {
             const int32_t lc = LIGHTCOEF;
             __asm volatile (
-                "mov #-128, %2\n\t"
-                "add %2,%2\n\t"
-                "mov.l %1, @(0,%2) /* set 32-bit divisor */ \n\t"
-                "mov.l %0, @(4,%2) /* start divide */\n\t"
-                :
-                : "r" (lc), "r" (distance), "r" (divisor));
+                "mov #-128, %0\n\t"
+                "add %0,%0\n\t"
+                "mov.l %2, @(0,%0) /* set 32-bit divisor */ \n\t"
+                "mov.l %1, @(4,%0) /* start divide */\n\t"
+                : "=&r" (divisor)
+                : "r" (lc), "r" (distance));
         } while (0);
 #endif
     }
