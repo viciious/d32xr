@@ -5641,11 +5641,11 @@
         "compressed": true
     },
     {
-        "filename": "VGM/End.vgm",
+        "filename": "VGM/End.zgm",
         "name": "VGM_END"
     },
     {
-        "filename": "VGM/Intro.vgm",
+        "filename": "VGM/Intro.zgm",
         "name": "VGM_NTRO",
         "group": "intro"
     },
@@ -5656,11 +5656,11 @@
         "group": "intro"
     },
     {
-        "filename": "VGM/Inter.vgm",
+        "filename": "VGM/Inter.zgm",
         "name": "VGM_NTER"
     },
     {
-        "filename": "VGM/Bunny.vgm",
+        "filename": "VGM/Bunny.zgm",
         "name": "VGM_BUNN"
     },
     {
@@ -7336,79 +7336,79 @@
         "name": "BLOCKMAP"
     },
     {
-        "filename": "VGM/E1M1.vgm",
+        "filename": "VGM/E1M1.zgm",
         "name": "VGM_E1M1"
     },
     {
-        "filename": "VGM/E1M2.vgm",
+        "filename": "VGM/E1M2.zgm",
         "name": "VGM_E1M2"
     },
     {
-        "filename": "VGM/E1M3.vgm",
+        "filename": "VGM/E1M3.zgm",
         "name": "VGM_E1M3"
     },
     {
-        "filename": "VGM/E1M4.vgm",
+        "filename": "VGM/E1M4.zgm",
         "name": "VGM_E1M4"
     },
     {
-        "filename": "VGM/E1M5.vgm",
+        "filename": "VGM/E1M5.zgm",
         "name": "VGM_E1M5"
     },
     {
-        "filename": "VGM/E1M6.vgm",
+        "filename": "VGM/E1M6.zgm",
         "name": "VGM_E1M6"
     },
     {
-        "filename": "VGM/E1M7.vgm",
+        "filename": "VGM/E1M7.zgm",
         "name": "VGM_E1M7"
     },
     {
-        "filename": "VGM/E1M8.vgm",
+        "filename": "VGM/E1M8.zgm",
         "name": "VGM_E1M8"
     },
     {
-        "filename": "VGM/E1M9.vgm",
+        "filename": "VGM/E1M9.zgm",
         "name": "VGM_E1M9"
     },
     {
-        "filename": "VGM/E2M1.vgm",
+        "filename": "VGM/E2M1.zgm",
         "name": "VGM_E2M1"
     },
     {
-        "filename": "VGM/E2M2.vgm",
+        "filename": "VGM/E2M2.zgm",
         "name": "VGM_E2M2"
     },
     {
-        "filename": "VGM/E2M4.vgm",
+        "filename": "VGM/E2M4.zgm",
         "name": "VGM_E2M4"
     },
     {
-        "filename": "VGM/E2M6.vgm",
+        "filename": "VGM/E2M6.zgm",
         "name": "VGM_E2M6"
     },
     {
-        "filename": "VGM/E2M7.vgm",
+        "filename": "VGM/E2M7.zgm",
         "name": "VGM_E2M7"
     },
     {
-        "filename": "VGM/E2M8.vgm",
+        "filename": "VGM/E2M8.zgm",
         "name": "VGM_E2M8"
     },
     {
-        "filename": "VGM/E2M9.vgm",
+        "filename": "VGM/E2M9.zgm",
         "name": "VGM_E2M9"
     },
     {
-        "filename": "VGM/E3M2.vgm",
+        "filename": "VGM/E3M2.zgm",
         "name": "VGM_E3M2"
     },
     {
-        "filename": "VGM/E3M3.vgm",
+        "filename": "VGM/E3M3.zgm",
         "name": "VGM_E3M3"
     },
     {
-        "filename": "VGM/E3M8.vgm",
+        "filename": "VGM/E3M8.zgm",
         "name": "VGM_E3M8"
     }
 ]
