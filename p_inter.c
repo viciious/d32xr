@@ -708,7 +708,7 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 	if (player && gameskill == sk_baby)
 		damage >>= 1;				/* take half damage in trainer mode */
 	
-	if (player && damage > 30)
+	if (player && damage > 20)
 		stbar[pnum].specialFace = f_hurtbad;
 /* */
 /* kick away unless using the chainsaw */
@@ -735,7 +735,7 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 	}
 	else
 		ang = target->angle;
-	
+
 /* */
 /* player specific */
 /* */
@@ -745,9 +745,9 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 			return;
 		{
 			ang -= target->angle;
-			if (ang > 0x30000000 && ang <0x80000000)
+			if (ang > ANG45+ANG45/2 && ang < ANG180)
 				stbar[pnum].specialFace = f_faceright;
-			else if (ang >0x80000000 && ang < 0xd0000000)
+			else if (ang > ANG180 && ang < ANG270+ANG45/2)
 				stbar[pnum].specialFace = f_faceleft;
 		}
 		if (player->armortype)
