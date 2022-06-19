@@ -51,14 +51,18 @@ typedef struct
 	int			increment;
 	int			length;
 	int			loop_length;
+	int			prev_pos;			/* for adpcm decoding */
 	uint8_t		volume;
 	uint8_t		pan;
 #else
-	unsigned* source;			/* work in groups of 4 8 bit samples */
+	unsigned* source;				/* work in groups of 4 8 bit samples */
 	int			startquad;
 	int			stopquad;
 	int			volume;				/* range from 0-32k */
 #endif
+	uint16_t	width;
+	uint16_t	block_size; 		/* size of data block in bytes */
+	int			remaining_bytes; 	/* WAV chunk */
 
 	sfxinfo_t	*sfx;
 	mobj_t		*mobj;

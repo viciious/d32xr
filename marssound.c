@@ -3,7 +3,7 @@
 #include "mars_ringbuf.h"
 #include "sounds.h"
 
-#define MAX_SAMPLES        315		// 70Hz
+#define MAX_SAMPLES        316		// 70Hz
 //#define MAX_SAMPLES      441		// 50Hz
 //#define MAX_SAMPLES      735		// 30Hz
 
@@ -32,6 +32,11 @@
 // Stereo separation
 
 #define S_STEREO_SWING (96 * FRACUNIT)
+
+// WAV
+
+#define S_LE_SHORT(chunk) (((chunk)[0]>>8)|(((chunk)[0]&0xff) << 8))
+#define S_LE_LONG(chunk)  (S_LE_SHORT(chunk) | (S_LE_SHORT(chunk+1)<<16))
 
 enum
 {
@@ -65,6 +70,7 @@ int             samplecount = 0;
 static marsrb_t	soundcmds = { 0 };
 
 static void S_StartSoundReal(mobj_t* mobj, unsigned sound_id, int vol, getsoundpos_t getpos) ATTR_DATA_CACHE_ALIGN;
+int S_PaintChannel4IMA(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
 void S_PaintChannel8(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
 static void S_SpatializeAt(fixed_t*origin, mobj_t* listener, int* pvol, int* psep) ATTR_DATA_CACHE_ALIGN;
 static void S_Spatialize(mobj_t* mobj, int* pvol, int* psep, getsoundpos_t getpos) ATTR_DATA_CACHE_ALIGN;
@@ -608,7 +614,53 @@ static void S_Update(int16_t* buffer)
 			ch->pan = sep;
 		}
 
-		S_PaintChannel8(ch, buffer, MAX_SAMPLES, 64);
+		if (ch->width == 4)
+		{
+			int i = MAX_SAMPLES;
+			int32_t *end = (int32_t *)buffer + MAX_SAMPLES;
+			do
+			{
+				if (ch->position >= ch->length)
+				{
+					// advance to next block
+					ch->data += ch->block_size-3;
+					ch->length = 0;
+				}
+
+				if (!ch->length)
+				{
+					uint8_t *block = (uint8_t *)ch->data;
+					int block_size = ch->block_size;
+
+					if (block_size > ch->remaining_bytes)
+						block_size = ch->remaining_bytes;
+					if (block_size < 4)
+					{
+						// EOF
+						ch->data = NULL;
+						break;
+					}
+
+					ch->position = 1 << 14;
+					ch->prev_pos = -1; // force output of initial predictor
+					ch->length = ((block_size-3) << 1) << 14;
+					// initial step_index : initial predictor
+					ch->loop_length = ((unsigned)block[2] << 16) | ((unsigned)block[1] << 8) | block[0];
+					ch->data += 3;
+					ch->remaining_bytes -= block_size;
+				}
+
+				i = S_PaintChannel4IMA(ch, (int16_t *)(end - i), i, 64);
+			} while (i > 0);
+		}
+		else
+		{
+			S_PaintChannel8(ch, buffer, MAX_SAMPLES, 64);
+			if (ch->position >= ch->length)
+			{
+				ch->data = NULL;
+			}
+		}
 	}
 
 #define DO_SAMPLE() do { \
@@ -721,13 +773,59 @@ static void S_StartSoundReal(mobj_t* mobj, unsigned sound_id, int vol, getsoundp
 	/* fill in the new values */
 	/* */
 gotchannel:
+	if (length == 0x52494646) {	// RIFF
+		// find the format chunk
+		uint16_t *chunk = (uint16_t *)((char *)md_data + 12);
+		uint16_t *end = (uint16_t *)((char *)md_data + 0x40 - 4);
+
+		// set default sample rate and block size
+		newchannel->increment = (11025 << 14) / SAMPLE_RATE;
+		newchannel->block_size = 256;
+
+		while (chunk < end) {
+			// a long value in little endian format
+			length = S_LE_LONG(&chunk[2]);
+
+			if (chunk[0] == 0x6461 && chunk[1] == 0x7461) // 'data'
+				break;
+
+			if (chunk[0] == 0x666D && chunk[1] == 0x7420) // 'fmt '
+			{
+				int sample_rate = S_LE_LONG(&chunk[6]);
+				int block_align = S_LE_SHORT(&chunk[10]);
+
+				// increment = (SampleRate << 14) / mixer sample rate
+				if (sample_rate > SAMPLE_RATE)
+					newchannel->increment = 1 << 14; // limit increment to max of 1.0
+				else
+					newchannel->increment = (sample_rate << 14) / SAMPLE_RATE;
+				newchannel->block_size = block_align;
+			}
+
+			chunk += 4 + ((length + 1) >> 1);
+		}
+
+		if (chunk >= end)
+			return;
+
+		newchannel->remaining_bytes = length;
+		newchannel->length = 0;
+		newchannel->loop_length = 0;
+		newchannel->data = (uint8_t *)&chunk[4];
+		newchannel->width = 4;
+		newchannel->position = -1;
+	}
+	else {
+		newchannel->increment = (11025 << 14) / SAMPLE_RATE;
+		newchannel->length = length << 14;
+		newchannel->loop_length = loop_length << 14;
+		newchannel->data = &md_data->data[0];
+		newchannel->width = 8;
+		newchannel->position = 0;
+	}
+
 	newchannel->sfx = sfx;
 	newchannel->mobj = mobj;
-	newchannel->position = 0;
-	newchannel->increment = (11025 << 14) / SAMPLE_RATE;
-	newchannel->length = length << 14;
-	newchannel->loop_length = loop_length << 14;
-	newchannel->data = &md_data->data[0];
 	newchannel->getpos = getpos;
 
 	// volume and panning will be updated later in S_Spatialize
