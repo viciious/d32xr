@@ -40,7 +40,7 @@ unsigned configuration[NUMCONTROLOPTIONS][3] =
 ====================
 */
 
-void D_memset (void *dest, int val, int count)
+void D_memset (void *dest, int val, size_t count)
 {
 	byte	*p;
 	int		*lp;
@@ -49,7 +49,7 @@ void D_memset (void *dest, int val, int count)
 	p = dest;
 	while ((int)p & WORDMASK)
 	{
-		if (--count < 0)
+		if (count-- == 0)
 			return;
 		*p++ = val;
 	}
@@ -77,7 +77,7 @@ void D_memset (void *dest, int val, int count)
 void fast_memcpy(void *dest, const void *src, int count);
 #endif
 
-void D_memcpy (void *dest, const void *src, int count)
+void D_memcpy (void *dest, const void *src, size_t count)
 {
 	byte	*d;
 	const byte *s;

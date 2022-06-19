@@ -163,8 +163,8 @@ typedef enum
 /* */
 
 #define D_abs(x) ((x < 0) ? -(x) : x)
-void D_memset (void *dest, int val, int count) __attribute__((nonnull));
-void D_memcpy (void *dest, const void *src, int count) __attribute__((nonnull));
+void D_memset (void *dest, int val, size_t count) __attribute__((nonnull));
+void D_memcpy (void *dest, const void *src, size_t count) __attribute__((nonnull));
 void D_strncpy (char *dest, const char *src, int maxcount) __attribute__((nonnull));
 int D_strncasecmp (const char *s1, const char *s2, int len) __attribute__((nonnull));
 int D_strcasecmp (const char *s1, const char *s2) __attribute__((nonnull));
