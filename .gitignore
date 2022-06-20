@@ -5,6 +5,8 @@
 *.o
 *.wad
 *.zip
+*.md
+*.xdelta
 .github
 .vscode
 
