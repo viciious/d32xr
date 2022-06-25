@@ -291,20 +291,19 @@ mix4_gets:
         muls.w  r3,r13
         mov.l   @r5,r1
         sts     macl,r0
-        shlr16  r0
-        exts.w  r0,r0
 
         /* scale sample for right output */
         muls.w  r3,r14
 
         /* scale sample for left output -- cont */
+        shlr16  r0
+        shll16  r0
         add     r0,r1
-        swap.w  r1,r1
 
         /* scale sample for right output -- cont */
         sts     macl,r0
         shlr16  r0
-        exts.w  r0,r0
+        #exts.w  r0,r0
         add     r0,r1
 
         mov.l   r1,@r5
