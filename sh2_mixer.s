@@ -79,27 +79,27 @@ mix_loop:
         shll2   r0
         shlr8   r0
         mov.b   @(r0,r8),r0
-        extu.b  r0,r3
+        extu.w  r0,r3
         add     #-128,r3
+        shll8   r3
 
         /* scale sample for left output */
         muls.w  r3,r13
         mov.l   @r5,r1
         sts     macl,r0
-        shlr8   r0
-        exts.w  r0,r0
 
         /* scale sample for right output */
         muls.w  r3,r14
 
         /* scale sample for left output -- cont */
+        shlr16  r0
+        shll16  r0
         add     r0,r1
-        swap.w  r1,r1
 
         /* scale sample for right output -- cont */
         sts     macl,r0
-        shlr8   r0
-        exts.w  r0,r0
+        shlr16  r0
+        #exts.w  r0,r0
         add     r0,r1
 
         /* advance position and check for loop */
