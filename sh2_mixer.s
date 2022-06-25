@@ -309,10 +309,12 @@ mix4_gets:
         mov.l   r1,@r5
         add     #4,r5
 
-        /* advance position and check for loop */
+        /* advance position */
         add     r10,r9                  /* position += increment */
+
         cmp/hs  r11,r9
-        bt      mix4_exit               /* position >= length */
+        bt/s    mix4_exit               /* position >= length */
+
         /* next sample */
         dt      r6
         bf      mix4_loop
