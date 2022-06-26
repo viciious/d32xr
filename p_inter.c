@@ -749,6 +749,8 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 				stbar[pnum].specialFace = f_faceright;
 			else if (ang > ANG180 && ang < ANG270+ANG45/2)
 				stbar[pnum].specialFace = f_faceleft;
+			else
+				stbar[pnum].specialFace = f_mowdown;
 		}
 		if (player->armortype)
 		{
