@@ -330,7 +330,7 @@ __attribute__((aligned(16)))
 extern	viewdef_t	vd;
 extern	angle_t		clipangle, doubleclipangle;
 
-extern	VINT		extralight, extralight2;
+extern	VINT		extralight;
 
 #ifdef MARS
 __attribute__((aligned(16)))
@@ -377,9 +377,8 @@ extern	void			** flatpixels;
 
 extern	VINT		firstflat, numflats;
 
-extern short* doomcolormap;
-
-extern short* dc_colormaps;
+extern int8_t* doomcolormap;
+extern int8_t* dc_colormaps;
 
 extern uint8_t* dc_playpals;
 

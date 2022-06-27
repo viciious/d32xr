@@ -74,7 +74,7 @@ void I_DrawColumnLowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 {
 	unsigned	heightmask;
 	pixel_t* dest;
-	short* dc_colormap;
+	int16_t* dc_colormap;
 	unsigned	frac;
 	unsigned    count, n;
 
@@ -89,7 +89,7 @@ void I_DrawColumnLowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	frac = frac_;
 	heightmask = dc_texheight - 1;
 	dest = viewportbuffer + dc_yl * 320 / 2 + dc_x;
-	dc_colormap = dc_colormaps + light;
+	dc_colormap = (int16_t *)dc_colormaps + light;
 
 #define DO_PIXEL() do { \
 		*dest = dc_colormap[dc_source[(frac >> FRACBITS) & heightmask]]; \
@@ -126,7 +126,7 @@ void I_DrawColumnNPo2LowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t fra
 {
 	unsigned	heightmask;
 	pixel_t* dest;
-	short* dc_colormap;
+	int16_t* dc_colormap;
 	unsigned    count, n;
 	unsigned 	frac;
 
@@ -149,7 +149,7 @@ void I_DrawColumnNPo2LowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t fra
 	frac = frac_;
 
 	dest = viewportbuffer + dc_yl * 320 / 2 + dc_x;
-	dc_colormap = dc_colormaps + light;
+	dc_colormap = (int16_t *)dc_colormaps + light;
 
 	count = dc_yh - dc_yl + 1;
 	n = (count + 7) >> 3;
@@ -191,7 +191,7 @@ void I_DrawSpanLowC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	pixel_t* dest;
 	int		spot;
 	unsigned count, n;
-	short* dc_colormap;
+	int16_t* dc_colormap;
 
 #ifdef RANGECHECK
 	if (ds_x2 < ds_x1 || ds_x1<0 || ds_x2 >= viewportWidth || ds_y>viewportHeight)
@@ -202,7 +202,7 @@ void I_DrawSpanLowC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	xfrac = ds_xfrac, yfrac = ds_yfrac;
 
 	dest = viewportbuffer + ds_y * 320 / 2 + ds_x1;
-	dc_colormap = dc_colormaps + light;
+	dc_colormap = (int16_t *)dc_colormaps + light;
 
 #define DO_PIXEL() do { \
 		spot = ((yfrac >> 16) & (63 * 64)) + ((xfrac >> 16) & 63); \
@@ -403,8 +403,8 @@ void I_DrawFuzzColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac
 		return;
 
 	frac = frac_;
-	dest = (short *)(viewportbuffer + dc_yl * 320 / 2 + dc_x);
-	dc_colormap = dc_colormaps + vd.fuzzcolormap;
+	dest = (int16_t *)(viewportbuffer + dc_yl * 320 / 2 + dc_x);
+	dc_colormap = (int16_t *)dc_colormaps + vd.fuzzcolormap;
 
 #define DO_PIXEL() do { \
 		*dest = dc_colormap[(int8_t)dest[fuzzoffset[fuzzpos++ & FUZZMASK]]]; \
@@ -503,7 +503,7 @@ void I_DrawSpanPotatoLow(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_x
 	count = ds_x2 - ds_x1 + 1;
 
 	dest = viewportbuffer + ds_y * 320 / 2 + ds_x1;
-	dc_colormap = dc_colormaps + light;
+	dc_colormap = (int16_t *)dc_colormaps + light;
 	pix = dc_colormap[(int8_t)ds_source[513]];
 
 	do {

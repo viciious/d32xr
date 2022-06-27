@@ -653,47 +653,18 @@ void R_InitSpriteDefs(const char** namelist)
 
 void R_InitColormap(boolean doublepix)
 {
-	int	i, j;
-	int l, s;
+	int l;
 
-	l = -1;
-	if (colormapopt == 1)
-		l = W_CheckNumForName("COLORMA1");
-	if (l < 0)
-		l = W_CheckNumForName("COLORMAP");
+	l = W_CheckNumForName("COLORMAP");
+	l -= colormapopt * 2;
+	l -= (int)!doublepix;
 
-	s = W_ReadLump(l, doomcolormap);
-	s /= 512;
+	doomcolormap = (int8_t *)W_GetLumpData(l);
 
 	if (doublepix)
-	{
-		for (i = 0; i < s; i++) {
-			byte* dl = (byte*)&doomcolormap[i * 256];
-			for (j = 0; j < 512; j += 2) {
-				if (dl[j] == 0)
-					dl[j] = COLOR_BLACK;
-				if (dl[j + 1] == 0)
-					dl[j + 1] = COLOR_BLACK;
-			}
-		}
-
-		dc_colormaps = doomcolormap + 128;
-	}
+		dc_colormaps = (void *)((short *)doomcolormap + 128);
 	else
-	{
-		// remove odd entries from the colormap
-		for (i = 0; i < s; i++) {
-			byte* dl = (byte*)&doomcolormap[i * 256];
-			int k = 1;
-			for (j = 2; j < 512; j+=2) {
-				int c = dl[j];
-				if (c == 0)
-					c = COLOR_BLACK;
-				dl[k++] = c;
-			}
-		}
-		dc_colormaps = (short *)((byte *)doomcolormap + 128);
-	}
+		dc_colormaps = (void *)(doomcolormap + 128);
 
 #ifdef MARS
 	Mars_CommSlaveClearCache();

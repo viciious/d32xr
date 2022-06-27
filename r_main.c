@@ -91,7 +91,6 @@ VINT			validcount = 1;		/* increment every time a check is made */
 VINT			framecount;		/* incremented every frame */
 
 VINT		extralight;			/* bumped light from gun blasts */
-VINT		extralight2;		/* bumped light from global colormap */
 
 /* */
 /* precalculated math */
@@ -423,9 +422,6 @@ int R_DefaultViewportSize(void)
 
 void R_Init (void)
 {
-	int	i, br;
-	const byte* doompalette, * row;
-
 D_printf ("R_InitData\n");
 	R_InitData ();
 D_printf ("Done\n");
@@ -434,33 +430,10 @@ D_printf ("Done\n");
 
 	framecount = 0;
 	viewplayer = &players[0];
-	extralight2 = 0;
 
 	R_SetDetailMode(detailmode);
 
 	R_InitTexCache(&r_texcache, numflats+numtextures);
-
-	// test avarage mid brightness, which is around 40960
-	// with the standard colormap
-	//
-	// in case of a non-standard colormap, we may need to darken 
-	// the game a bit when diminishing lighting is disabled
-	doompalette = (byte *)dc_playpals;
-
-	row = (byte*)(doomcolormap + 256 * 16);
-	br = 0;
-	for (i = 0; i < 512; i += 2) {
-		br += doompalette[row[i] * 3 + 0];
-		br += doompalette[row[i] * 3 + 1];
-		br += doompalette[row[i] * 3 + 2];
-	}
-
-	br = br - 40960;
-	if (br > 0)
-	{
-		br /= (512 * 3);
-		extralight2 = -1 * ((br + 15) & ~15);
-	}
 }
 
 /*
@@ -648,8 +621,6 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_, vissprite_t *vis
 		vd.extralight = player->extralight << 4;
 	else
 		vd.extralight = 0;
-	if (detailmode != detmode_high)
-		vd.extralight += extralight2;
 
 	if (player->powers[pw_invulnerability] > 60
 		|| (player->powers[pw_invulnerability] & 4))
@@ -696,7 +667,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_, vissprite_t *vis
 	if (vd.fixedcolormap == INVERSECOLORMAP)
 		vd.fuzzcolormap = INVERSECOLORMAP;
 	else
-		vd.fuzzcolormap = (6 - extralight2 / 2) * 256;
+		vd.fuzzcolormap = 6 * 256;
 #endif
 
 	tempbuf = (unsigned short *)I_WorkBuffer();

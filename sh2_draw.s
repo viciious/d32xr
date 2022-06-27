@@ -295,7 +295,6 @@ _I_DrawColumnA:
         mov.l   r8,@-r15
         mov.l   draw_cmap,r0
         mov.l   @r0,r0
-        add     r7,r7
         add     r0,r7           /* dc_colormap = colormap + light */
         mov.l   draw_fb,r8
         mov.l   @r8,r8          /* frame buffer start */
@@ -349,7 +348,6 @@ _I_DrawColumnNPo2A:
         mov.l   r8,@-r15
         mov.l   draw_cmap,r0
         mov.l   @r0,r0
-        add     r7,r7
         add     r0,r7           /* dc_colormap = colormap + light */
         mov.l   draw_fb,r8
         mov.l   @r8,r8          /* frame buffer start */
@@ -433,7 +431,6 @@ _I_DrawSpanA:
         mov.l   r13,@-r15
         mov.l   draw_cmap,r0
         mov.l   @r0,r0
-        add     r7,r7
         add     r0,r7           /* ds_colormap = colormap + light */
         mov.l   draw_fb,r8
         mov.l   @r8,r8          /* frame buffer start */

@@ -42,9 +42,8 @@ typedef struct {
 int COLOR_WHITE = 0x04;
 int COLOR_BLACK = 0xF7;
 
-short 	*doomcolormap;
-
-short	*dc_colormaps;
+int8_t* doomcolormap;
+int8_t	*dc_colormaps;
 const byte	*new_palette = NULL;
 
 boolean	debugscreenactive = false;
@@ -391,8 +390,6 @@ void I_Init (void)
 			COLOR_WHITE = i;
 		}
 	}
-
-	doomcolormap = Z_Malloc(33*512, PU_STATIC, 0);
 
 	i = W_CheckNumForName("STBAR");
 	if (i != -1)
