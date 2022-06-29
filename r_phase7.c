@@ -17,7 +17,7 @@ typedef struct
     fixed_t height;
     angle_t angle;
     fixed_t x, y;
-    unsigned  lightmin, lightmax, lightsub;
+    int lightmin, lightmax, lightsub;
     fixed_t basexscale, baseyscale;
     int	pixelcount;
 
@@ -54,32 +54,32 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     fixed_t distance;
     fixed_t length, xfrac, yfrac, xstep, ystep;
     angle_t angle;
-    unsigned light;
-    boolean gradientlight = lpl->lightmin != lpl->lightmax;
-#ifdef MARS
-    intptr_t divisor;
-#endif
+    int light;
 
     remaining = x2 - x + 1;
 
     if (remaining <= 0)
         return; // nothing to draw (shouldn't happen)
+    lpl->pixelcount += remaining;
+
+    // set GBR to division unit address
+    __asm volatile (
+        "mov #-128, r0\n\t"
+        "add r0, r0\n\t"
+        "ldc r0, gbr\n\t"
+    );
 
     FixedMul2(distance, lpl->height, yslope[y]);
 
-    if (gradientlight)
+    if (lpl->lightmin != lpl->lightmax)
     {
 #ifdef MARS
-        do {
-            const int32_t lc = LIGHTCOEF;
-            __asm volatile (
-                "mov #-128, %0\n\t"
-                "add %0,%0\n\t"
-                "mov.l %2, @(0,%0) /* set 32-bit divisor */ \n\t"
-                "mov.l %1, @(4,%0) /* start divide */\n\t"
-                : "=&r" (divisor)
-                : "r" (lc), "r" (distance));
-        } while (0);
+        __asm volatile (
+           "mov %0, r0\n\t"
+           "mov.l r0, @(0,gbr) /* set 32-bit divisor */ \n\t"
+           "mov %1, r0\n\t"
+           "mov.l r0, @(4,gbr) /* start divide */\n\t"
+           : : "r" (distance), "r" (LIGHTCOEF) : "r0", "gbr");
 #endif
     }
 
@@ -97,31 +97,22 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     FixedMul2(xstep, distance, lpl->basexscale);
     FixedMul2(ystep, distance, lpl->baseyscale);
 
-    if (gradientlight)
+    if (lpl->lightmin != lpl->lightmax)
     {
 #ifdef MARS
-          do {
-              __asm volatile (
-                  "mov #-128, %1\n\t"
-                  "add %1,%1\n\t"
-                  "mov.l @(20,%1), %0 /* get 32-bit quotient */ \n\t"
-                  : "=r" (light)
-                  : "r" (divisor));
-          } while (0);
+        __asm volatile (
+            "mov.l @(20,gbr), r0 /* get 32-bit quotient */ \n\t"
+            "mov r0, %0"
+            : "=r" (light) : : "r0", "gbr");
 #else
         light = LIGHTCOEF / distance;
 #endif
 
-        if (light <= lpl->lightsub)
+        light -= lpl->lightsub;
+        if (light < lpl->lightmin)
             light = lpl->lightmin;
-        else
-        {
-            light -= lpl->lightsub;
-            if (light < lpl->lightmin)
-                light = lpl->lightmin;
-            else if (light > lpl->lightmax)
-                light = lpl->lightmax;
-        }
+        else if (light > lpl->lightmax)
+            light = lpl->lightmax;
 
         // transform to hardware value
         light = HWLIGHT(light);
@@ -132,7 +123,6 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     }
 
     drawspan(y, x, x2, light, xfrac, yfrac, xstep, ystep, lpl->ds_source);
-    lpl->pixelcount += x2 - x + 1;
 }
 
 //
@@ -310,14 +300,9 @@ static void R_DrawPlanes2(void)
             }
 
             if (lpl.lightmin != lpl.lightmax)
-            {
                 lpl.lightsub = 160 * (lpl.lightmax - lpl.lightmin) / (800 - 160);
-            }
             else
-            {
-                lpl.lightmin = HWLIGHT(lpl.lightmax);
-                lpl.lightmax = lpl.lightmin;
-            }
+                lpl.lightmin = lpl.lightmax = HWLIGHT((unsigned)lpl.lightmax);
         }
 
         R_PlaneLoop(&lpl);
