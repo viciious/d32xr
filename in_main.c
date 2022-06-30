@@ -57,6 +57,7 @@ VINT		i_secret, i_percent, i_level, i_kills,
 VINT		snums;
 VINT		infaces[10];
 VINT		uchar;
+static jagobj_t *interpic;
 
 static dmapinfo_t	*nextmapinfo;
 
@@ -266,11 +267,8 @@ void IN_SingleDrawer(void)
 
 void IN_Start (void)
 {	
-#ifdef MARS
-	int	i;
-#else
 	int	i,l;
-#endif
+
 	earlyexit = false;
 
 	valsdrawn = false;
@@ -327,6 +325,15 @@ void IN_Start (void)
 	infaces[8] = W_CheckNumForName("STSPLAT4");
 	infaces[9] = W_CheckNumForName("STSPLAT5");
 	
+#ifdef MARS
+	Z_FreeTags (mainzone);
+	l = W_CheckNumForName("INTERPIC");
+	if (l != -1)
+		interpic = W_CacheLumpNum(l, PU_STATIC);
+	else
+		interpic = NULL;
+#endif
+
 	snums = W_CheckNumForName("NUM_0");
 
 	uchar = W_CheckNumForName("CHAR_065");
@@ -345,6 +352,11 @@ void IN_Stop (void)
 		if (nextmapinfo->data)
 			Z_Free(nextmapinfo->data);
 		Z_Free(nextmapinfo);
+	}
+	if (interpic)
+	{
+		Z_Free(interpic);
+		interpic = NULL;
 	}
 	nextmapinfo = NULL;
 
@@ -421,7 +433,10 @@ int IN_Ticker (void)
 void IN_Drawer (void)
 {	
 #ifdef MARS
-	DrawTiledBackground();
+	if (interpic != NULL)
+		DrawJagobj(interpic, 0, 0);
+	else
+		DrawTiledBackground();
 #endif
 
 	if (i_secret < 0)
