@@ -136,17 +136,17 @@ typedef struct
 
 	VINT	gibframe;
 	VINT	gibdelay;
-	boolean	gibdraw;
+	char	gibdraw;
 
-	boolean doSpclFace;
-	spclface_e	spclFaceType;
+	char	doSpclFace;
+	VINT	spclFaceType;
 
 	short numstbarcmds;
 	stbarcmd_t stbarcmds[STC_NUMCMDTYPES + NUMMICROS + NUMCARDS * 2];
 
 	sbflash_t	yourFrags;			/* INFO FOR YOUR FRAG FLASHING */
 	sbflash_t	hisFrags;
-	boolean flashInitialDraw;		/* INITIALLY DRAW FRAG AMOUNTS (flag) */
+	char flashInitialDraw;		/* INITIALLY DRAW FRAG AMOUNTS (flag) */
 
 	/* Messaging */
 	char	specialFace;	/* Which type of special face to make */
