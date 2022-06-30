@@ -667,7 +667,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_, vissprite_t *vis
 	if (vd.fixedcolormap == INVERSECOLORMAP)
 		vd.fuzzcolormap = INVERSECOLORMAP;
 	else
-		vd.fuzzcolormap = 6 * 256;
+		vd.fuzzcolormap = (colormapopt ? 12 : 6) * 256;
 #endif
 
 	tempbuf = (unsigned short *)I_WorkBuffer();
