@@ -15,7 +15,7 @@ static fixed_t R_PointToDist(fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
 static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, angle_t normalangle) ATTR_DATA_CACHE_ALIGN;
 static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle, int angle1) ATTR_DATA_CACHE_ALIGN;
 static void R_WallLatePrep(viswall_t* wc) ATTR_DATA_CACHE_ALIGN;
-static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floornewheight, fixed_t ceilingnewheight) ATTR_DATA_CACHE_ALIGN;
+static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floornewheight, fixed_t ceilingnewheight) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 
 static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floornewheight, fixed_t *ceilingnewheight)
 {
@@ -357,35 +357,52 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floor
     unsigned short* ceilopen, * flooropen;
 
     const volatile unsigned actionbits = segl->actionbits;
-    const volatile unsigned lightlevel = segl->seglightlevel;
+    const unsigned lightlevel = segl->seglightlevel;
 
     unsigned scalefrac = segl->scalefrac;
-    unsigned volatile scalestep = segl->scalestep;
+    unsigned scalestep = segl->scalestep;
 
     int x, start = segl->start;
-    const volatile int stop = segl->stop;
+    const int stop = segl->stop;
     const int width = stop - start + 1;
 
-    const volatile fixed_t floorheight = segl->floorheight;
-    const volatile fixed_t ceilingheight = segl->ceilingheight;
+    const fixed_t floorheight = segl->floorheight;
+    const fixed_t ceilingheight = segl->ceilingheight;
 
-    const volatile int floorpicnum = segl->floorpicnum;
-    const volatile int ceilingpicnum = segl->ceilingpicnum;
+    const int floorpicnum = segl->floorpicnum;
+    const int ceilingpicnum = segl->ceilingpicnum;
 
-    byte *topsil = segl->sil;
-    byte *bottomsil = segl->sil + (actionbits & AC_TOPSIL ? width : 0);
+    byte *topsil, *bottomsil;
+
+    int floorplhash = 0;
+    int ceilingplhash = 0;
 
     // force R_FindPlane for both planes
     floor = ceiling = visplanes;
     flooropen = ceilopen = visplanes[0].open;
 
-    int floorplhash = 0;
-    int ceilingplhash = 0;
-
     if (actionbits & AC_ADDFLOOR)
         floorplhash = R_PlaneHash(floorheight, floorpicnum, lightlevel);
     if (actionbits & AC_ADDCEILING)
         ceilingplhash = R_PlaneHash(ceilingheight, ceilingpicnum, lightlevel);
+
+    if (actionbits & AC_TOPSIL)
+        topsil = segl->sil;
+    else
+        topsil = NULL;
+    if (actionbits & AC_BOTTOMSIL)
+        bottomsil = segl->sil + (actionbits & AC_TOPSIL ? width : 0);
+    else
+        bottomsil = NULL;
+
+    if (actionbits & AC_ADDFLOOR)
+        flooropen = visplanes[0].open;
+    else
+        flooropen = NULL;
+    if (actionbits & AC_ADDCEILING)
+        ceilopen = visplanes[0].open;
+    else
+        ceilopen = NULL;
 
     unsigned short *newclipbounds = NULL;
     if (actionbits & (AC_NEWFLOOR | AC_NEWCEILING))
@@ -408,7 +425,7 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floor
         //
         ceilingclipx = clipbounds[x];
         floorclipx = ceilingclipx & 0x00ff;
-        ceilingclipx = (((unsigned)ceilingclipx & 0xff00) >> 8);
+        ceilingclipx = ((unsigned)ceilingclipx & 0xff00) >> 8;
 
         //
         // calc high and low
@@ -428,18 +445,18 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floor
             high = ceilingclipx;
 
         // top sprite clip sil
-        if (actionbits & AC_TOPSIL)
+        if (topsil)
             topsil[x] = high+1;
 
         // bottom sprite clip sil
-        if (actionbits & AC_BOTTOMSIL)
+        if (bottomsil)
             bottomsil[x] = low+1;
 
-        if (actionbits & (AC_NEWFLOOR | AC_NEWCEILING))
+        if (newclipbounds)
         {
             int newfloorclipx = floorclipx;
             int newceilingclipx = ceilingclipx;
-            unsigned newclip;
+            uint16_t newclip;
 
             // rewrite clipbounds
             if (actionbits & AC_NEWFLOOR)
@@ -447,7 +464,7 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floor
             if (actionbits & AC_NEWCEILING)
                 newceilingclipx = high;
 
-            newclip = ((unsigned)(newceilingclipx) << 8) + newfloorclipx;
+            newclip = (newceilingclipx << 8) + newfloorclipx;
             clipbounds[x] = newclip;
             newclipbounds[x] = newclip;
         }
@@ -455,16 +472,15 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floor
         //
         // floor
         //
-        if (actionbits & AC_ADDFLOOR)
+        if (flooropen)
         {
             FixedMul2(top, scale2, floorheight);
             top = centerY - top;
             if (top < ceilingclipx)
                 top = ceilingclipx;
             bottom = floorclipx;
-            --bottom;
 
-            if (top <= bottom)
+            if (top < bottom)
             {
                 if (!MARKEDOPEN(flooropen[x]))
                 {
@@ -472,23 +488,22 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floor
                         floorpicnum, lightlevel, x, stop);
                     flooropen = floor->open;
                 }
-                flooropen[x] = (unsigned short)((top << 8) + bottom);
+                flooropen[x] = (top << 8) + (bottom-1);
             }
         }
 
         //
         // ceiling
         //
-        if (actionbits & AC_ADDCEILING)
+        if (ceilopen)
         {
             top = ceilingclipx;
             FixedMul2(bottom, scale2, ceilingheight);
             bottom = centerY - bottom;
             if (bottom > floorclipx)
                 bottom = floorclipx;
-            --bottom;
 
-            if (top <= bottom)
+            if (top < bottom)
             {
                 if (!MARKEDOPEN(ceilopen[x]))
                 {
@@ -496,7 +511,7 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floor
                         ceilingpicnum, lightlevel, x, stop);
                     ceilopen = ceiling->open;
                 }
-                ceilopen[x] = (unsigned short)((top << 8) + bottom);
+                ceilopen[x] = (top << 8) + (bottom-1);
             }
         }
     }

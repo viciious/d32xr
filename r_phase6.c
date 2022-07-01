@@ -36,7 +36,7 @@ typedef struct
 static char seg_lock = 0;
 
 static void R_DrawTextures(int x, unsigned iscale, int colnum, fixed_t scale2, int floorclipx, int ceilingclipx, unsigned light, seglocal_t* lsegl) ATTR_DATA_CACHE_ALIGN;
-static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds) ATTR_DATA_CACHE_ALIGN;
+static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 
 static void R_LockSeg(void) ATTR_DATA_CACHE_ALIGN;
 static void R_UnlockSeg(void) ATTR_DATA_CACHE_ALIGN;
@@ -92,7 +92,7 @@ static void R_DrawTextures(int x, unsigned iscale, int colnum_, fixed_t scale2, 
            // CALICO: Jaguar-specific GPU blitter input calculation starts here.
            // We invoke a software column drawer instead.
            src = tex->data + colnum * tex->height;
-           tex->drawcol(x, top, --bottom, light, frac, iscale, src, tex->height, NULL);
+           tex->drawcol(x, top, bottom-1, light, frac, iscale, src, tex->height, NULL);
        }
    }
 }
@@ -104,7 +104,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 {
     viswall_t* segl = lseg->segl;
 
-    const boolean addsky = (segl->actionbits & AC_ADDSKY) != 0;
+    drawcol_t drawsky = (segl->actionbits & AC_ADDSKY) != 0 ? drawcol : NULL;
 
     unsigned scalefrac = segl->scalefrac;
     const unsigned scalestep = segl->scalestep;
@@ -194,7 +194,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
         //
         // sky mapping
         //
-        if (addsky)
+        if (drawsky)
         {
             int top, bottom;
 
@@ -213,7 +213,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 #else
                 pixel_t* data = skytexturep->data + colnum * skytexturep->height;
 #endif
-                drawcol(x, top, --bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, 128, NULL);
+                drawsky(x, top, --bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, 128, NULL);
             }
         }
     }
@@ -307,8 +307,6 @@ void R_SegCommands(void)
         {
             seglight = segl->seglightlevel + extralight;
 #ifdef MARS
-            if (seglight < 0)
-                seglight = 0;
             if (seglight > 255)
                 seglight = 255;
 #endif
