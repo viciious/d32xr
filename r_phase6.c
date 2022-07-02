@@ -59,7 +59,7 @@ static void R_DrawTextures(int x, unsigned iscale, int colnum_, fixed_t scale2, 
 
        FixedMul2(bottom, scale2, tex->bottomheight);
        bottom = centerY - bottom;
-       if (bottom >= floorclipx)
+       if (bottom > floorclipx)
            bottom = floorclipx;
 
        // column has no length?
