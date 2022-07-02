@@ -170,7 +170,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
             else if (texturelight > lightmax)
                 texturelight = lightmax;
             // convert to a hardware value
-            texturelight = HWLIGHT((unsigned)(texturelight>>FRACBITS));
+            texturelight = HWLIGHT((unsigned)texturelight>>FRACBITS);
         }
 
         // calculate texture offset
