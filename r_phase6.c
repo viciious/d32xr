@@ -30,8 +30,13 @@ typedef struct
     drawtex_t tex[2];
     drawtex_t *first, *last;
 
-    int lightmin, lightmax, lightsub, lightcoef;
+    int lightsub, lightcoef;
+    int lightmin, lightmax;
+    int8_t *lighttable;
 } seglocal_t;
+
+#define LIGHTBITS 5  // 11 + 3 + LIGHTBITS == 16
+#define LIGHTCOEF (0xffffu * (1<<LIGHTBITS))
 
 static char seg_lock = 0;
 
@@ -115,9 +120,9 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 
     const int ceilingheight = segl->ceilingheight;
 
-    int texturelight = lseg->lightmax;
-    int lightmax = lseg->lightmax, lightmin = lseg->lightmin,
-        lightcoef = lseg->lightcoef, lightsub = lseg->lightsub;
+    int texturelight = lseg->lightsub;
+    int lightcoef = lseg->lightcoef, lightsub = lseg->lightsub;
+    int8_t *lighttable = lseg->lighttable;
 
     const int stop = segl->stop;
     int x;
@@ -164,13 +169,13 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
         if (lightcoef != 0)
         {
             // calc light level
-            texturelight = scale2 * lightcoef - lightsub;
-            if (texturelight < lightmin)
-                texturelight = lightmin;
-            else if (texturelight > lightmax)
-                texturelight = lightmax;
-            // convert to a hardware value
-            texturelight = HWLIGHT((unsigned)texturelight>>FRACBITS);
+            texturelight = lightcoef * scale2 - lightsub;
+            texturelight = texturelight>>(8+3+LIGHTBITS);
+            if (texturelight > 31)
+                texturelight = 31;
+            else if (texturelight < 0)
+                texturelight = 0;
+            texturelight = lighttable[texturelight]*256;
         }
 
         // calculate texture offset
@@ -239,6 +244,7 @@ static void R_UnlockSeg(void)
 
 void R_SegCommands(void)
 {
+    int i;
     viswall_t* segl;
     seglocal_t lseg;
     drawtex_t* toptex, * bottomtex;
@@ -246,6 +252,8 @@ void R_SegCommands(void)
     unsigned clipbounds_[SCREENWIDTH / 2 + 1];
     unsigned short *clipbounds = (unsigned short *)clipbounds_;
     unsigned short *newclipbounds = segclip;
+    __attribute__((aligned(16))) int8_t lighttable[32];
+    int lightmin, lightmax;
 
     // initialize the clipbounds array
     R_InitClipBounds(clipbounds_);
@@ -254,10 +262,10 @@ void R_SegCommands(void)
     toptex = &lseg.tex[0];
     bottomtex = &lseg.tex[1];
 
-    lseg.lightmin = 0;
-    lseg.lightmax = 0;
-    lseg.lightcoef = 0;
-    lseg.lightsub = 0;
+    lightmin = lightmax = 0;
+    lseg.lightmin = lseg.lightmax = 0;
+    lseg.lightcoef = lseg.lightsub = 0;
+    lseg.lighttable = lighttable;
 
     // workaround annoying compilation warnings
     toptex->height = 0;
@@ -301,7 +309,8 @@ void R_SegCommands(void)
 
         if (vd.fixedcolormap)
         {
-            lseg.lightmin = lseg.lightmax = vd.fixedcolormap;
+            lseg.lightcoef = 0;
+            lseg.lightsub = vd.fixedcolormap;
         }
         else
         {
@@ -310,8 +319,8 @@ void R_SegCommands(void)
             if (seglight > 255)
                 seglight = 255;
 #endif
-            lseg.lightmax = seglight;
-            lseg.lightmin = lseg.lightmax;
+            lightmax = seglight;
+            lightmin = lightmax;
 
             if (detailmode == detmode_high)
             {
@@ -323,20 +332,28 @@ void R_SegCommands(void)
                 if (seglight < 0)
                     seglight = 0;
 #endif
-                lseg.lightmin = seglight;
+                lightmin = seglight;
             }
 
-            if (lseg.lightmin != lseg.lightmax)
+            if (lightmin != lightmax)
             {
-                lseg.lightcoef = ((unsigned)(lseg.lightmax - lseg.lightmin) << FRACBITS) / (800 - 160);
-                lseg.lightsub = 160 * lseg.lightcoef;
-                lseg.lightmin <<= FRACBITS;
-                lseg.lightmax <<= FRACBITS;
+                if (lightmin != lseg.lightmin || lightmax != lseg.lightmax)
+                {
+                    for (i = 1; i <= 32; i++)
+                    {
+                        int l = lightmin + (((unsigned)i * FRACUNIT / 32 * (lightmax - lightmin)) / FRACUNIT);
+                        lighttable[i-1] = HWLIGHT(l) / 256;
+                    }
+                    lseg.lightmin = lightmin;
+                    lseg.lightmax = lightmax;
+                }
+                lseg.lightcoef = LIGHTCOEF / (800 - 160) / 2;
+                lseg.lightsub = LIGHTCOEF / 2;
             }
             else
             {
                 lseg.lightcoef = 0;
-                lseg.lightmin = lseg.lightmax = HWLIGHT((unsigned)lseg.lightmax);
+                lseg.lightsub = HWLIGHT((unsigned)lightmax);
             }
         }
 
