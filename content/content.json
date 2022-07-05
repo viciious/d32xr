@@ -4905,6 +4905,14 @@
         "name": "DORCLS"
     },
     {
+        "filename": "dsbdcls",
+        "name": "DSBDCLS"
+    },
+    {
+        "filename": "dsbdopn",
+        "name": "DSBDOPN"
+    },
+    {
         "filename": "doropn",
         "name": "DOROPN"
     },
@@ -5586,13 +5594,13 @@
         "filename": "texture1",
         "name": "TEXTURE1",
         "tag": "!UD",
-	"compressed": true
+        "compressed": true
     },
     {
         "filename": "texture1_ud",
         "name": "TEXTURE1",
         "tag": "UD",
-	"compressed": true
+        "compressed": true
     },
     {
         "filename": "playpals",
@@ -5627,18 +5635,24 @@
         "name": "CREDITS2"
     },
     {
-        "name": "PAGE7",
-        "virtual": true
-    },
-    {
-        "filename": "colormap",
-        "name": "COLORMAP",
-        "compressed": true
+        "filename": "colormap8_new",
+        "name": "COLORMAP"
     },
     {
         "filename": "colormap_new",
-        "name": "COLORMA1",
-        "compressed": true
+        "name": "COLORMAP"
+    },
+    {
+        "filename": "colormap8",
+        "name": "COLORMAP"
+    },
+    {
+        "filename": "colormap",
+        "name": "COLORMAP"
+    },
+    {
+        "name": "PAGE7",
+        "virtual": true
     },
     {
         "filename": "VGM/End.zgm",
@@ -5656,8 +5670,15 @@
         "group": "intro"
     },
     {
+        "compressed": true,
+        "filename": "interpic",
+        "name": "INTERPIC",
+        "group": "inter"
+    },
+    {
         "filename": "VGM/Inter.zgm",
-        "name": "VGM_NTER"
+        "name": "VGM_NTER",
+	"group": "inter"
     },
     {
         "filename": "VGM/Bunny.zgm",
