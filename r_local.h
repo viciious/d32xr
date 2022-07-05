@@ -482,7 +482,7 @@ typedef struct
 	union
 	{
 		seg_t			*seg;
-		VINT 			v[2];
+		vertex_t		v[2];
 	};
 
 /* */
@@ -552,7 +552,7 @@ typedef struct visplane_s
 	unsigned short		*open/*[SCREENWIDTH+2]*/;		/* top<<8 | bottom */ /* leave pads for [minx-1]/[maxx+1] */
 } visplane_t;
 
-#define	MAXVISPLANES	35
+#define	MAXVISPLANES	32
 extern	visplane_t		*visplanes/*[MAXVISPLANES]*/, *lastvisplane;
 
 #ifdef MARS
