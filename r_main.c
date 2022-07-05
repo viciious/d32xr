@@ -219,64 +219,6 @@ struct subsector_s *R_PointInSubsector (fixed_t x, fixed_t y)
 	
 }
 
-//
-// To get a global angle from Cartesian coordinates, the coordinates are
-// flipped until they are in the first octant of the coordinate system,
-// then the y (<= x) is scaled and divided by x to get a tangent (slope)
-// value which is looked up in the tantoangle table.
-//
-angle_t R_PointToAngle(fixed_t x, fixed_t y)
-{
-	x -= vd.viewx;
-	y -= vd.viewy;
-
-	if (!x && !y)
-		return 0;
-
-	if (x >= 0)
-	{
-		if (y >= 0)
-		{
-			if (x > y)
-				return tantoangle[SlopeDiv(y, x)]; // octant 0
-			else
-				return ANG90 - 1 - tantoangle[SlopeDiv(x, y)]; // octant 1
-		}
-		else
-		{
-			y = -y;
-
-			if (x > y)
-				return -tantoangle[SlopeDiv(y, x)]; // octant 7
-			else
-				return ANG270 + tantoangle[SlopeDiv(x, y)]; // octant 6
-		}
-	}
-	else
-	{
-		x = -x;
-
-		if (y >= 0)
-		{
-			if (x > y)
-				return ANG180 - 1 - tantoangle[SlopeDiv(y, x)]; // octant 3
-			else
-				return ANG90 + tantoangle[SlopeDiv(x, y)]; // octant 2
-		}
-		else
-		{
-			y = -y;
-
-			if (x > y)
-				return ANG180 + tantoangle[SlopeDiv(y, x)]; // octant 4
-			else
-				return ANG270 - 1 - tantoangle[SlopeDiv(x, y)]; // octant 5
-		}
-	}
-
-	return 0;
-}
-
 /*============================================================================= */
 
 const VINT viewports[][2][3] = {

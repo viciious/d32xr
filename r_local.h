@@ -262,7 +262,14 @@ static inline int R_PointOnSide (int x, int y, node_t *node)
 }
 
 int     SlopeDiv(unsigned int num, unsigned int den) ATTR_DATA_CACHE_ALIGN;
-angle_t R_PointToAngle(fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
+
+//
+// To get a global angle from Cartesian coordinates, the coordinates are
+// flipped until they are in the first octant of the coordinate system,
+// then the y (<= x) is scaled and divided by x to get a tangent (slope)
+// value which is looked up in the tantoangle table.
+//
+#define R_PointToAngle(x,y) R_PointToAngle2(vd.viewx,vd.viewy,x,y)
 void	R_InitData (void);
 void	R_SetViewportSize(int num);
 int		R_DefaultViewportSize(void); // returns the viewport id for fullscreen, low detail mode
