@@ -261,8 +261,6 @@ static inline int R_PointOnSide (int x, int y, node_t *node)
    return (left <= right);
 }
 
-int     SlopeDiv(unsigned int num, unsigned int den) ATTR_DATA_CACHE_ALIGN;
-
 //
 // To get a global angle from Cartesian coordinates, the coordinates are
 // flipped until they are in the first octant of the coordinate system,

@@ -123,8 +123,9 @@ r_texcache_t r_texcache;
 ===============================================================================
 */
 
+static int SlopeDiv(unsigned int num, unsigned int den) ATTR_DATA_CACHE_ALIGN;
 
-int SlopeDiv (unsigned num, unsigned den)
+static int SlopeDiv (unsigned num, unsigned den)
 {
 	unsigned ans;
 	den >>= 8;
@@ -138,6 +139,8 @@ angle_t R_PointToAngle2 (fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 {	
 	int		x;
 	int		y;
+	int 	base = 0;
+	int 	num = 0, den = 0, n = 1;
 	
 	x = x2 - x1;
 	y = y2 - y1;
@@ -149,17 +152,27 @@ angle_t R_PointToAngle2 (fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 		if (y>= 0)
 		{	/* y>= 0 */
 			if (x>y)
-				return tantoangle[ SlopeDiv(y,x)];     /* octant 0 */
+			{
+				/* octant 0 */
+				num = y, den = x;
+			}
 			else
-				return ANG90-1-tantoangle[ SlopeDiv(x,y)];  /* octant 1 */
+			{
+				/* octant 1 */
+				base = ANG90-1, n = -1,	num = x, den = y;
+			}
 		}
 		else
 		{	/* y<0 */
 			y = -y;
 			if (x>y)
-				return -tantoangle[SlopeDiv(y,x)];  /* octant 8 */
+			{
+				n = -1, num = y, den = x; /* octant 8 */
+			}
 			else
-				return ANG270+tantoangle[ SlopeDiv(x,y)];  /* octant 7 */
+			{
+				base = ANG270, n = 1, num = x, den = y; /* octant 7 */
+			}
 		}
 	}
 	else
@@ -168,22 +181,28 @@ angle_t R_PointToAngle2 (fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 		if (y>= 0)
 		{	/* y>= 0 */
 			if (x>y)
-				return ANG180-1-tantoangle[ SlopeDiv(y,x)]; /* octant 3 */
+			{
+				base = ANG180-1, n = -1, num = y, den = x; /* octant 3 */
+			}
 			else
-				return ANG90+ tantoangle[ SlopeDiv(x,y)];  /* octant 2 */
+			{
+				base = ANG90, num = x, den = y; /* octant 2 */
+			}
 		}
 		else
 		{	/* y<0 */
 			y = -y;
 			if (x>y)
-				return ANG180+tantoangle[ SlopeDiv(y,x)];  /* octant 4 */
+			{
+				base = ANG180, num = y, den = x; /* octant 4 */
+			}
 			else
-				return ANG270-1-tantoangle[ SlopeDiv(x,y)];  /* octant 5 */
+			{
+				base = ANG270-1, n = -1, num = x, den = y; /* octant 5 */
+			}
 		}
-	}	
-#ifndef LCC	
-	return 0;
-#endif
+	}
+	return base + n * tantoangle[SlopeDiv(num, den)];
 }
 
 /*
