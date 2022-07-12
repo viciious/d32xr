@@ -468,8 +468,8 @@ void R_ClearTexCache(r_texcache_t* c);
 
 typedef struct
 {
-	unsigned short	actionbits;
-	unsigned short	seglightlevel;
+	short	actionbits;
+	short	seglightlevel;
 
 	unsigned	scalefrac;
 	unsigned	scale2;

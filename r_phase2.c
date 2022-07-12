@@ -29,7 +29,7 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floornewheight, fixed_t *c
    int        f_ceilingpic, b_ceilingpic;
    int        b_texturemid, t_texturemid;
    boolean    skyhack;
-   unsigned int actionbits;
+   int        actionbits;
    int        side;
 
    {
@@ -356,8 +356,8 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floor
     visplane_t* ceiling, * floor;
     unsigned short* ceilopen, * flooropen;
 
-    const volatile unsigned actionbits = segl->actionbits;
-    const unsigned lightlevel = segl->seglightlevel;
+    const volatile int actionbits = segl->actionbits;
+    const int lightlevel = segl->seglightlevel;
 
     unsigned scalefrac = segl->scalefrac;
     unsigned scalestep = segl->scalestep;
