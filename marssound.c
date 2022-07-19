@@ -38,6 +38,10 @@
 #define S_LE_SHORT(chunk) (((chunk)[0]>>8)|(((chunk)[0]&0xff) << 8))
 #define S_LE_LONG(chunk)  (S_LE_SHORT(chunk) | (S_LE_SHORT(chunk+1)<<16))
 
+#define S_WAV_FORMAT_PCM         0x1
+#define S_WAV_FORMAT_IMA_ADPCM   0x11
+#define S_WAV_FORMAT_EXTENSIBLE  0xfffe
+
 enum
 {
 	SNDCMD_NONE,
@@ -777,6 +781,7 @@ gotchannel:
 		// find the format chunk
 		uint16_t *chunk = (uint16_t *)((char *)md_data + 12);
 		uint16_t *end = (uint16_t *)((char *)md_data + 0x40 - 4);
+		int format;
 
 		// set default sample rate and block size
 		newchannel->increment = (11025 << 14) / SAMPLE_RATE;
@@ -794,6 +799,11 @@ gotchannel:
 				int sample_rate = S_LE_LONG(&chunk[6]);
 				int block_align = S_LE_SHORT(&chunk[10]);
 
+				format = S_LE_SHORT(&chunk[4]);
+				if (format == S_WAV_FORMAT_EXTENSIBLE && length == 40) {
+					format = S_LE_LONG(&chunk[16]); // sub-format
+				}
+
 				// increment = (SampleRate << 14) / mixer sample rate
 				if (sample_rate > SAMPLE_RATE)
 					newchannel->increment = 1 << 14; // limit increment to max of 1.0
@@ -808,12 +818,23 @@ gotchannel:
 		if (chunk >= end)
 			return;
 
-		newchannel->remaining_bytes = length;
-		newchannel->length = 0;
-		newchannel->loop_length = 0;
 		newchannel->data = (uint8_t *)&chunk[4];
-		newchannel->width = 4;
-		newchannel->position = -1;
+		if (format == S_WAV_FORMAT_PCM) {
+			newchannel->length = length << 14;
+			newchannel->loop_length = 0;
+			newchannel->width = 8;
+			newchannel->position = 0;
+		}
+		else if (format == S_WAV_FORMAT_IMA_ADPCM) {
+			newchannel->remaining_bytes = length;
+			newchannel->length = 0;
+			newchannel->loop_length = 0;
+			newchannel->width = 4;
+			newchannel->position = -1;
+		}
+		else {
+			return;
+		}
 	}
 	else {
 		newchannel->increment = (11025 << 14) / SAMPLE_RATE;
