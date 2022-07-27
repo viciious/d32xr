@@ -22,18 +22,18 @@ static boolean cacheneeded;
 static void *R_CheckPixels(int lumpnum)
 {
     void *lumpdata = lumpcache[lumpnum];
-   
-   if(lumpdata)
-   {
-      // touch this graphic resource with the current frame number so that it 
-      // will not be immediately purged again during the same frame
-      memblock_t *memblock = (memblock_t *)((byte *)lumpdata - sizeof(memblock_t));
-      memblock->lockframe = framecount;
-   }
-   else
-      cacheneeded = true; // phase 5 will need to be executed to cache graphics
-   
-   return lumpdata;
+
+    if(lumpdata)
+    {
+        // touch this graphic resource with the current frame number so that it
+        // will not be immediately purged again during the same frame
+        memblock_t *memblock = (memblock_t *)((byte *)lumpdata - sizeof(memblock_t));
+        memblock->lockframe = framecount;
+    }
+    else
+        cacheneeded = true; // phase 5 will need to be executed to cache graphics
+
+    return lumpdata;
 }
 
 //
@@ -45,29 +45,31 @@ static void R_FinishWall(viswall_t* wc)
     texture_t* fw_texture;
 
     // has top or middle texture?
-    if (fw_actionbits & AC_TOPTEXTURE)
+    if(fw_actionbits & AC_TOPTEXTURE)
     {
         fw_texture = &textures[wc->t_texturenum];
-        if (fw_texture->data == NULL)
+
+        if(fw_texture->data == NULL)
             fw_texture->data = R_CheckPixels(fw_texture->lumpnum);
     }
 
     // has bottom texture?
-    if (fw_actionbits & AC_BOTTOMTEXTURE)
+    if(fw_actionbits & AC_BOTTOMTEXTURE)
     {
         fw_texture = &textures[wc->b_texturenum];
-        if (fw_texture->data == NULL)
+
+        if(fw_texture->data == NULL)
             fw_texture->data = R_CheckPixels(fw_texture->lumpnum);
     }
 
     int floorpicnum = wc->floorpicnum;
     int ceilingpicnum = wc->ceilingpicnum;
 
-    if (flatpixels[floorpicnum] == NULL)
+    if(flatpixels[floorpicnum] == NULL)
         flatpixels[floorpicnum] = R_CheckPixels(firstflat + floorpicnum);
 
     // is there sky at this wall?
-    if (ceilingpicnum == -1)
+    if(ceilingpicnum == -1)
     {
         // cache skytexture if needed
         skytexturep->data = R_CheckPixels(skytexturep->lumpnum);
@@ -75,7 +77,7 @@ static void R_FinishWall(viswall_t* wc)
     else
     {
         // normal ceilingpic
-        if (flatpixels[ceilingpicnum] == NULL)
+        if(flatpixels[ceilingpicnum] == NULL)
             flatpixels[ceilingpicnum] = R_CheckPixels(firstflat + ceilingpicnum);
     }
 }
@@ -89,7 +91,7 @@ boolean R_LatePrep(void)
 #ifdef MARS
     return true;
 #else
-   return cacheneeded;
+    return cacheneeded;
 #endif
 }
 

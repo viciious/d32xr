@@ -40,12 +40,12 @@ degenmobj_t		limbomobjhead;
 ===============
 */
 
-void P_InitThinkers (void)
+void P_InitThinkers(void)
 {
-	thinkercap.prev = thinkercap.next  = &thinkercap;
-	mobjhead.next = mobjhead.prev = (void *)&mobjhead;
-	freemobjhead.next = freemobjhead.prev = (void *)&freemobjhead;
-	limbomobjhead.next = limbomobjhead.prev = (void*)&limbomobjhead;
+    thinkercap.prev = thinkercap.next  = &thinkercap;
+    mobjhead.next = mobjhead.prev = (void *)&mobjhead;
+    freemobjhead.next = freemobjhead.prev = (void *)&freemobjhead;
+    limbomobjhead.next = limbomobjhead.prev = (void*)&limbomobjhead;
 }
 
 
@@ -59,12 +59,12 @@ void P_InitThinkers (void)
 ===============
 */
 
-void P_AddThinker (thinker_t *thinker)
+void P_AddThinker(thinker_t *thinker)
 {
-	thinkercap.prev->next = thinker;
-	thinker->next = &thinkercap;
-	thinker->prev = thinkercap.prev;
-	thinkercap.prev = thinker;
+    thinkercap.prev->next = thinker;
+    thinker->next = &thinkercap;
+    thinker->prev = thinkercap.prev;
+    thinkercap.prev = thinker;
 }
 
 
@@ -79,9 +79,9 @@ void P_AddThinker (thinker_t *thinker)
 ===============
 */
 
-void P_RemoveThinker (thinker_t *thinker)
+void P_RemoveThinker(thinker_t *thinker)
 {
-	thinker->function = (think_t)-1;
+    thinker->function = (think_t) -1;
 }
 
 /*
@@ -92,31 +92,35 @@ void P_RemoveThinker (thinker_t *thinker)
 ===============
 */
 
-void P_RunThinkers (void)
+void P_RunThinkers(void)
 {
-	thinker_t	*currentthinker;
-	
-	//activethinkers = 0;
-	
-	currentthinker = thinkercap.next;
-	while (currentthinker != &thinkercap)
-	{
-		if (currentthinker->function == (think_t)-1)
-		{	/* time to remove it */
-			currentthinker->next->prev = currentthinker->prev;
-			currentthinker->prev->next = currentthinker->next;
-			Z_Free (currentthinker);
-		}
-		else
-		{
-			if (currentthinker->function)
-			{
-				currentthinker->function (currentthinker);
-			}
-			//activethinkers++;
-		}
-		currentthinker = currentthinker->next;
-	}
+    thinker_t	*currentthinker;
+
+    //activethinkers = 0;
+
+    currentthinker = thinkercap.next;
+
+    while(currentthinker != &thinkercap)
+    {
+        if(currentthinker->function == (think_t) -1)
+        {
+            /* time to remove it */
+            currentthinker->next->prev = currentthinker->prev;
+            currentthinker->prev->next = currentthinker->next;
+            Z_Free(currentthinker);
+        }
+        else
+        {
+            if(currentthinker->function)
+            {
+                currentthinker->function(currentthinker);
+            }
+
+            //activethinkers++;
+        }
+
+        currentthinker = currentthinker->next;
+    }
 }
 
 
@@ -132,37 +136,37 @@ void P_RunThinkers (void)
 ===============
 */
 
-void P_CheckSights2 ();
+void P_CheckSights2();
 
-void P_CheckSights (void)
+void P_CheckSights(void)
 {
 #ifdef JAGUAR
-	extern	int p_sight_start;
-	DSPFunction (&p_sight_start);
+    extern	int p_sight_start;
+    DSPFunction(&p_sight_start);
 #else
-	P_CheckSights2 ();
+    P_CheckSights2();
 #endif
 }
 
 /*============================================================================= */
 
-/* 
-=================== 
-= 
-= P_RunMobjBase  
+/*
+===================
+=
+= P_RunMobjBase
 =
 = Run stuff that doesn't happen every tick
-=================== 
-*/ 
+===================
+*/
 
-void	P_RunMobjBase (void)
+void	P_RunMobjBase(void)
 {
 #ifdef JAGUAR
-	extern	int p_base_start;
-	 
-	DSPFunction (&p_base_start);
+    extern	int p_base_start;
+
+    DSPFunction(&p_base_start);
 #else
-	P_RunMobjBase2 ();
+    P_RunMobjBase2();
 #endif
 }
 
@@ -175,123 +179,150 @@ void	P_RunMobjBase (void)
 =
 ==============
 */
- 
-void P_CheckCheats (void)
+
+void P_CheckCheats(void)
 {
 #ifdef JAGUAR
-	int		buttons, oldbuttons;
-	int 	warpmap;
-	int		i;
-	player_t	*p;
+    int		buttons, oldbuttons;
+    int 	warpmap;
+    int		i;
+    player_t	*p;
 
-	for (i=0 ; i<MAXPLAYERS ; i++)
-	{
-		if (!playeringame[i])
-			continue;
-		buttons = ticbuttons[i];
-		oldbuttons = oldticbuttons[i];
-	
-		if ( (buttons & BT_PAUSE) && !(oldbuttons&BT_PAUSE) )
-			gamepaused ^= 1;
-	}
+    for(i = 0 ; i < MAXPLAYERS ; i++)
+    {
+        if(!playeringame[i])
+            continue;
 
-	if (netgame)
-		return;
+        buttons = ticbuttons[i];
+        oldbuttons = oldticbuttons[i];
 
-	buttons = ticbuttons[0];
-	oldbuttons = oldticbuttons[0];
+        if((buttons & BT_PAUSE) && !(oldbuttons & BT_PAUSE))
+            gamepaused ^= 1;
+    }
 
-	if ( (oldbuttons&BT_PAUSE) || !(buttons & BT_PAUSE ) )
-		return;
+    if(netgame)
+        return;
 
-	if (buttons&JP_NUM)
-	{	/* free stuff */
-		p=&players[0];
-		for (i=0 ; i<NUMCARDS ; i++)
-			p->cards[i] = true;			
-		p->armorpoints = 200;
-		p->armortype = 2;
-		for (i=0;i<NUMWEAPONS;i++) p->weaponowned[i] = true;
-		for (i=0;i<NUMAMMO;i++) p->ammo[i] = p->maxammo[i] = 500;
-	}
+    buttons = ticbuttons[0];
+    oldbuttons = oldticbuttons[0];
 
-	if (buttons&JP_STAR)
-	{	/* godmode */
-		players[0].cheats ^= CF_GODMODE;
-	}
-	warpmap = 0;
-	if (buttons&JP_1) warpmap = 1;
-	if (buttons&JP_2) warpmap = 2;
-	if (buttons&JP_3) warpmap = 3;
-	if (buttons&JP_4) warpmap = 4;
-	if (buttons&JP_5) warpmap = 5;
-	if (buttons&JP_6) warpmap = 6;
-	if (buttons&JP_7) warpmap = 7;
-	if (buttons&JP_8) warpmap = 8;
-	if (buttons&JP_9) warpmap = 9;
-	if (buttons&JP_A) warpmap += 10;
-	else if (buttons&JP_B) warpmap += 20;
-	
-	if (warpmap>0 && warpmap < 27)
-	{
-		gamemaplump = G_LumpNumForMapNum(warpmap);
-		gameaction = ga_warped;
-	}
+    if((oldbuttons & BT_PAUSE) || !(buttons & BT_PAUSE))
+        return;
+
+    if(buttons & JP_NUM)
+    {
+        /* free stuff */
+        p = &players[0];
+
+        for(i = 0 ; i < NUMCARDS ; i++)
+            p->cards[i] = true;
+
+        p->armorpoints = 200;
+        p->armortype = 2;
+
+        for(i = 0; i < NUMWEAPONS; i++) p->weaponowned[i] = true;
+
+        for(i = 0; i < NUMAMMO; i++) p->ammo[i] = p->maxammo[i] = 500;
+    }
+
+    if(buttons & JP_STAR)
+    {
+        /* godmode */
+        players[0].cheats ^= CF_GODMODE;
+    }
+
+    warpmap = 0;
+
+    if(buttons & JP_1) warpmap = 1;
+
+    if(buttons & JP_2) warpmap = 2;
+
+    if(buttons & JP_3) warpmap = 3;
+
+    if(buttons & JP_4) warpmap = 4;
+
+    if(buttons & JP_5) warpmap = 5;
+
+    if(buttons & JP_6) warpmap = 6;
+
+    if(buttons & JP_7) warpmap = 7;
+
+    if(buttons & JP_8) warpmap = 8;
+
+    if(buttons & JP_9) warpmap = 9;
+
+    if(buttons & JP_A) warpmap += 10;
+    else if(buttons & JP_B) warpmap += 20;
+
+    if(warpmap > 0 && warpmap < 27)
+    {
+        gamemaplump = G_LumpNumForMapNum(warpmap);
+        gameaction = ga_warped;
+    }
+
 #elif defined(MARS)
-	int i;
-	int buttons;
-	int oldbuttons;
-	const int stuff_combo = BT_A | BT_B | BT_C | BT_UP;
-	const int godmode_combo = BT_X | BT_Y | BT_Z | BT_UP;
-	player_t* p;
-	boolean automap = (players[consoleplayer].automapflags & AF_ACTIVE) != 0;
-	extern VINT showAllThings;
-	extern VINT showAllLines;
+    int i;
+    int buttons;
+    int oldbuttons;
+    const int stuff_combo = BT_A | BT_B | BT_C | BT_UP;
+    const int godmode_combo = BT_X | BT_Y | BT_Z | BT_UP;
+    player_t* p;
+    boolean automap = (players[consoleplayer].automapflags & AF_ACTIVE) != 0;
+    extern VINT showAllThings;
+    extern VINT showAllLines;
 
-	if (netgame)
-		return;
-	if (!gamepaused)
-		return;
+    if(netgame)
+        return;
 
-	buttons = ticrealbuttons;
-	oldbuttons = oldticrealbuttons;
+    if(!gamepaused)
+        return;
 
-	if ((buttons & stuff_combo) == stuff_combo 
-		&& (oldbuttons & stuff_combo) != stuff_combo)
-	{
-		if (automap)
-		{
-			showAllThings ^= 1;
-			return;
-		}
-		/* free stuff */
-		p = &players[0];
-		for (i = 0; i < NUMCARDS; i++)
-			p->cards[i] = true;
-		p->armorpoints = 200;
-		p->armortype = 2;
-		for (i = 0; i < NUMWEAPONS; i++) p->weaponowned[i] = true;
-		for (i = 0; i < NUMAMMO; i++) p->ammo[i] = p->maxammo[i] = 500;
-	}
+    buttons = ticrealbuttons;
+    oldbuttons = oldticrealbuttons;
 
-	if ((buttons & godmode_combo) == godmode_combo 
-		&& (oldbuttons & godmode_combo) != godmode_combo)
-	{
-		if (automap)
-		{
-			showAllLines ^= 1;
-			return;
-		}
-		/* godmode */
-		players[0].cheats ^= CF_GODMODE;
-	}
+    if((buttons & stuff_combo) == stuff_combo
+            && (oldbuttons & stuff_combo) != stuff_combo)
+    {
+        if(automap)
+        {
+            showAllThings ^= 1;
+            return;
+        }
+
+        /* free stuff */
+        p = &players[0];
+
+        for(i = 0; i < NUMCARDS; i++)
+            p->cards[i] = true;
+
+        p->armorpoints = 200;
+        p->armortype = 2;
+
+        for(i = 0; i < NUMWEAPONS; i++) p->weaponowned[i] = true;
+
+        for(i = 0; i < NUMAMMO; i++) p->ammo[i] = p->maxammo[i] = 500;
+    }
+
+    if((buttons & godmode_combo) == godmode_combo
+            && (oldbuttons & godmode_combo) != godmode_combo)
+    {
+        if(automap)
+        {
+            showAllLines ^= 1;
+            return;
+        }
+
+        /* godmode */
+        players[0].cheats ^= CF_GODMODE;
+    }
+
 #endif
 }
-  
+
 
 int playernum;
 
-void G_DoReborn (int playernum); 
+void G_DoReborn(int playernum);
 
 /*
 =================
@@ -309,316 +340,339 @@ int		ticphase;
 #define frtc samplecount
 #endif
 
-int P_Ticker (void)
+int P_Ticker(void)
 {
-	int		start;
-	int		ticstart;
-	player_t	*pl;
-	
-	if (demoplayback)
-	{
-		if (M_Ticker())
-			return ga_exitdemo;
-	}
+    int		start;
+    int		ticstart;
+    player_t	*pl;
+
+    if(demoplayback)
+    {
+        if(M_Ticker())
+            return ga_exitdemo;
+    }
 
 
-	while (!I_RefreshLatched () )
-	;		/* wait for refresh to latch all needed data before */
-			/* running the next tick */
+    while(!I_RefreshLatched())
+        ;		/* wait for refresh to latch all needed data before */
+
+    /* running the next tick */
 
 #ifdef JAGAUR
-	while (DSPRead (&dspfinished) != 0xdef6)
-	;		/* wait for sound mixing to complete */
+
+    while(DSPRead(&dspfinished) != 0xdef6)
+        ;		/* wait for sound mixing to complete */
+
 #endif
 
-	gameaction = ga_nothing;
+    gameaction = ga_nothing;
 
-/* */
-/* check for pause and cheats */
-/* */
-	P_CheckCheats ();
-	
-/* */
-/* do option screen processing */
-/* */
+    /* */
+    /* check for pause and cheats */
+    /* */
+    P_CheckCheats();
 
-	for (playernum = 0, pl = players; playernum < MAXPLAYERS; playernum++, pl++)
-		if (playeringame[playernum])
-			O_Control(pl);
+    /* */
+    /* do option screen processing */
+    /* */
 
-	/* */
-	/* run player actions */
-	/* */
-	if (gamepaused)
-		return 0;
+    for(playernum = 0, pl = players; playernum < MAXPLAYERS; playernum++, pl++)
+        if(playeringame[playernum])
+            O_Control(pl);
 
-	start = frtc;
-	for (playernum = 0, pl = players; playernum < MAXPLAYERS; playernum++, pl++)
-		if (playeringame[playernum])
-		{
-			if (pl->playerstate == PST_REBORN)
-				G_DoReborn(playernum);
-			AM_Control(pl);
-			P_PlayerThink(pl);
-		}
-	playertics = frtc - start;
+    /* */
+    /* run player actions */
+    /* */
+    if(gamepaused)
+        return 0;
+
+    start = frtc;
+
+    for(playernum = 0, pl = players; playernum < MAXPLAYERS; playernum++, pl++)
+        if(playeringame[playernum])
+        {
+            if(pl->playerstate == PST_REBORN)
+                G_DoReborn(playernum);
+
+            AM_Control(pl);
+            P_PlayerThink(pl);
+        }
+
+    playertics = frtc - start;
 
 #ifdef THINKERS_30HZ
-	start = frtc;
-	P_RunThinkers();
-	thinkertics = frtc - start;
+    start = frtc;
+    P_RunThinkers();
+    thinkertics = frtc - start;
 #endif
 
-	if (gametic != prevgametic)
-	{
-		ticstart = frtc;
+    if(gametic != prevgametic)
+    {
+        ticstart = frtc;
 
 #ifndef THINKERS_30HZ
-		start = frtc;
-		P_RunThinkers();
-		thinkertics = frtc - start;
+        start = frtc;
+        P_RunThinkers();
+        thinkertics = frtc - start;
 #endif
 
-		start = frtc;
-		P_CheckSights();
-		sighttics = frtc - start;
+        start = frtc;
+        P_CheckSights();
+        sighttics = frtc - start;
 
-		start = frtc;
-		P_RunMobjBase();
-		basetics = frtc - start;
+        start = frtc;
+        P_RunMobjBase();
+        basetics = frtc - start;
 
-		start = frtc;
-		P_RunMobjLate();
-		latetics = frtc - start;
+        start = frtc;
+        P_RunMobjLate();
+        latetics = frtc - start;
 
-		P_UpdateSpecials();
+        P_UpdateSpecials();
 
-		P_RespawnSpecials();
+        P_RespawnSpecials();
 
-		ST_Ticker();			/* update status bar */
+        ST_Ticker();			/* update status bar */
 
-		tictics = frtc - ticstart;
-	}
+        tictics = frtc - ticstart;
+    }
 
-	return gameaction;		/* may have been set to ga_died, ga_completed, */
-							/* or ga_secretexit */
+    return gameaction;		/* may have been set to ga_died, ga_completed, */
+    /* or ga_secretexit */
 }
 
 
-/* 
-============= 
-= 
-= DrawPlaque 
-= 
-============= 
-*/ 
- 
-void DrawPlaque (jagobj_t *pl)
+/*
+=============
+=
+= DrawPlaque
+=
+=============
+*/
+
+void DrawPlaque(jagobj_t *pl)
 {
 #ifndef MARS
-	int			x,y,w;
-	short		*sdest;
-	byte		*bdest, *source;
-	extern		int isrvmode;
-	
-	while ( !I_RefreshCompleted () )
-	;
+    int			x, y, w;
+    short		*sdest;
+    byte		*bdest, *source;
+    extern		int isrvmode;
 
-	bufferpage = (byte *)screens[!workpage];
-	source = pl->data;
-	
-	if (isrvmode == 0xc1 + (3<<9) )
-	{	/* 320 mode, stretch pixels */
-		bdest = (byte *)bufferpage + 80*320 + (160 - pl->width);
-		w = pl->width;
-		for (y=0 ; y<pl->height ; y++)
-		{
-			for (x=0 ; x<w ; x++)
-			{
-				bdest[x*2] = bdest[x*2+1] = *source++;
-			}
-			bdest += 320;
-		}
-	}
-	else
-	{	/* 160 mode, draw directly */
-		sdest = (short *)bufferpage + 80*160 + (80 - pl->width/2);
-		w = pl->width;
-		for (y=0 ; y<pl->height ; y++)
-		{
-			for (x=0 ; x<w ; x++)
-			{
-				sdest[x] = palette8[*source++];
-			}
-			sdest += 160;
-		}
-	}
+    while(!I_RefreshCompleted())
+        ;
+
+    bufferpage = (byte *)screens[!workpage];
+    source = pl->data;
+
+    if(isrvmode == 0xc1 + (3 << 9))
+    {
+        /* 320 mode, stretch pixels */
+        bdest = (byte *)bufferpage + 80 * 320 + (160 - pl->width);
+        w = pl->width;
+
+        for(y = 0 ; y < pl->height ; y++)
+        {
+            for(x = 0 ; x < w ; x++)
+            {
+                bdest[x * 2] = bdest[x * 2 + 1] = *source++;
+            }
+
+            bdest += 320;
+        }
+    }
+    else
+    {
+        /* 160 mode, draw directly */
+        sdest = (short *)bufferpage + 80 * 160 + (80 - pl->width / 2);
+        w = pl->width;
+
+        for(y = 0 ; y < pl->height ; y++)
+        {
+            for(x = 0 ; x < w ; x++)
+            {
+                sdest[x] = palette8[*source++];
+            }
+
+            sdest += 160;
+        }
+    }
+
 #else
-	clearscreen = 2;
+    clearscreen = 2;
 #endif
 }
 
-/* 
-============= 
-= 
-= DrawPlaque 
-= 
-============= 
-*/ 
+/*
+=============
+=
+= DrawPlaque
+=
+=============
+*/
 #ifndef MARS
-void DrawSinglePlaque (jagobj_t *pl)
+void DrawSinglePlaque(jagobj_t *pl)
 {
-	int			x,y,w;
-	byte		*bdest, *source;
-	
-	while ( !I_RefreshCompleted () )
-	;
+    int			x, y, w;
+    byte		*bdest, *source;
 
-	bufferpage = (byte *)screens[!workpage];
-	source = pl->data;
-	
-	bdest = (byte *)bufferpage + 80*320 + (160 - pl->width/2);
-	w = pl->width;
-	for (y=0 ; y<pl->height ; y++)
-	{
-		for (x=0 ; x<w ; x++)
-			bdest[x] = *source++;
-		bdest += 320;
-	}
+    while(!I_RefreshCompleted())
+        ;
+
+    bufferpage = (byte *)screens[!workpage];
+    source = pl->data;
+
+    bdest = (byte *)bufferpage + 80 * 320 + (160 - pl->width / 2);
+    w = pl->width;
+
+    for(y = 0 ; y < pl->height ; y++)
+    {
+        for(x = 0 ; x < w ; x++)
+            bdest[x] = *source++;
+
+        bdest += 320;
+    }
 }
 #endif
 
 
-/* 
-============= 
-= 
-= P_Drawer 
-= 
-= draw current display 
-============= 
-*/ 
- 
- 
-void P_Drawer (void) 
-{ 	
-	boolean automapactive = (players[consoleplayer].automapflags & AF_ACTIVE) != 0;
-	boolean optionsactive = (players[consoleplayer].automapflags & AF_OPTIONSACTIVE) != 0;
-	static boolean o_wasactive, am_wasactive = false;
+/*
+=============
+=
+= P_Drawer
+=
+= draw current display
+=============
+*/
+
+
+void P_Drawer(void)
+{
+    boolean automapactive = (players[consoleplayer].automapflags & AF_ACTIVE) != 0;
+    boolean optionsactive = (players[consoleplayer].automapflags & AF_OPTIONSACTIVE) != 0;
+    static boolean o_wasactive, am_wasactive = false;
 
 #ifdef MARS
-	extern	boolean	debugscreenactive;
-	int ticratebak;
+    extern	boolean	debugscreenactive;
+    int ticratebak;
 
-	drawtics = frtc;
+    drawtics = frtc;
 
-	if ((!optionsactive && o_wasactive) || (!automapactive && am_wasactive))
-		clearscreen = 2;
+    if((!optionsactive && o_wasactive) || (!automapactive && am_wasactive))
+        clearscreen = 2;
 
-	if (clearscreen > 0) {
-		I_ResetLineTable();
+    if(clearscreen > 0)
+    {
+        I_ResetLineTable();
 
-		if ((viewportWidth == 160 && lowResMode) || viewportWidth == 320)
-			I_ClearFrameBuffer();
-		else
-			DrawTiledBackground();
+        if((viewportWidth == 160 && lowResMode) || viewportWidth == 320)
+            I_ClearFrameBuffer();
+        else
+            DrawTiledBackground();
 
-		I_DrawSbar();
-		
-		if (clearscreen == 2 || optionsactive)
-			ST_ForceDraw();
-		clearscreen--;
-	}
+        I_DrawSbar();
 
-	if (initmathtables)
-	{
-		R_InitMathTables();
-		initmathtables--;
-	}
+        if(clearscreen == 2 || optionsactive)
+            ST_ForceDraw();
 
-	/* view the guy you are playing */
-	R_RenderPlayerView(consoleplayer);
-	/* view the other guy in split screen mode */
-	if (splitscreen)
-		R_RenderPlayerView(consoleplayer ^ 1);
+        clearscreen--;
+    }
 
-	if (automapactive)
-		AM_Drawer();
+    if(initmathtables)
+    {
+        R_InitMathTables();
+        initmathtables--;
+    }
 
-	ST_Drawer();
+    /* view the guy you are playing */
+    R_RenderPlayerView(consoleplayer);
 
-	Mars_R_SecWait();
+    /* view the other guy in split screen mode */
+    if(splitscreen)
+        R_RenderPlayerView(consoleplayer ^ 1);
 
-	if (demoplayback)
-		M_Drawer();
-	if (optionsactive)
-		O_Drawer();
+    if(automapactive)
+        AM_Drawer();
 
-	o_wasactive = optionsactive;
-	am_wasactive = automapactive;
+    ST_Drawer();
 
-	drawtics = frtc - drawtics;
+    Mars_R_SecWait();
 
-	if (debugscreenactive)
-		I_DebugScreen();
+    if(demoplayback)
+        M_Drawer();
 
-	ticratebak = ticsperframe;
+    if(optionsactive)
+        O_Drawer();
+
+    o_wasactive = optionsactive;
+    am_wasactive = automapactive;
+
+    drawtics = frtc - drawtics;
+
+    if(debugscreenactive)
+        I_DebugScreen();
+
+    ticratebak = ticsperframe;
 
 #ifdef MARS
-	if (viewportWidth >= 320 && ticsperframe < 3)
-		ticsperframe = 3;
+
+    if(viewportWidth >= 320 && ticsperframe < 3)
+        ticsperframe = 3;
+
 #endif
-	I_Update();
+    I_Update();
 
-	ticsperframe = ticratebak;
+    ticsperframe = ticratebak;
 
 #else
-	if (optionsactive)
-	{
-		O_Drawer ();
-	}
-	else if (gamepaused && refreshdrawn)
-		DrawPlaque (pausepic);
-	else if (automapactive)
-	{
-		ST_Drawer ();
-		AM_Drawer ();
-		I_Update ();
-	}
-	else
-	{
+
+    if(optionsactive)
+    {
+        O_Drawer();
+    }
+    else if(gamepaused && refreshdrawn)
+        DrawPlaque(pausepic);
+    else if(automapactive)
+    {
+        ST_Drawer();
+        AM_Drawer();
+        I_Update();
+    }
+    else
+    {
 #ifdef JAGUAR
-		ST_Drawer();
+        ST_Drawer();
 #endif
-		R_RenderPlayerView(consoleplayer);
-		clearscreen = 0;
-	}
-	/* assume part of the refresh is now running parallel with main code */
+        R_RenderPlayerView(consoleplayer);
+        clearscreen = 0;
+    }
+
+    /* assume part of the refresh is now running parallel with main code */
 #endif
 }
- 
- 
+
+
 extern	 VINT		ticremainder[MAXPLAYERS];
 
-void P_Start (void)
+void P_Start(void)
 {
-	AM_Start ();
+    AM_Start();
 #ifndef MARS
-	S_RestartSounds ();
+    S_RestartSounds();
 #endif
-	players[0].automapflags = 0;
-	players[1].automapflags = 0;
-	ticremainder[0] = ticremainder[1] = 0;
-	M_ClearRandom ();
+    players[0].automapflags = 0;
+    players[1].automapflags = 0;
+    ticremainder[0] = ticremainder[1] = 0;
+    M_ClearRandom();
 
-	if (!demoplayback && !demorecording)
-		if (!netgame || splitscreen)
-			P_RandomSeed(I_GetTime());
+    if(!demoplayback && !demorecording)
+        if(!netgame || splitscreen)
+            P_RandomSeed(I_GetTime());
 
-	clearscreen = 2;
+    clearscreen = 2;
 }
 
-void P_Stop (void)
+void P_Stop(void)
 {
-	Z_FreeTags (mainzone);
+    Z_FreeTags(mainzone);
 }
 

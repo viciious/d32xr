@@ -9,12 +9,12 @@
 
 typedef struct sampleset_struct
 {
-	short			output[NUM_OUTPUT_CHANNELS];
+    short			output[NUM_OUTPUT_CHANNELS];
 } sampleset_t;
 
 typedef struct unsat_sampleset_struct
 {
-	int				output[NUM_OUTPUT_CHANNELS];
+    int				output[NUM_OUTPUT_CHANNELS];
 } unsat_sampleset_t;
 
 /* */
@@ -40,13 +40,13 @@ typedef struct sfx_struct
 
 typedef struct channel_struct
 {
-	sfx_t			*sfx;
-	unsigned char	*data;
-	int				vol[NUM_OUTPUT_CHANNELS];
-	int				step;
-	int				step_leftover;
-	int				decay_step;
-	unsigned int	end_time;
+    sfx_t			*sfx;
+    unsigned char	*data;
+    int				vol[NUM_OUTPUT_CHANNELS];
+    int				step;
+    int				step_leftover;
+    int				decay_step;
+    unsigned int	end_time;
 } channel_t;
 
 /* WRITE (before I_InitSound) or READ */

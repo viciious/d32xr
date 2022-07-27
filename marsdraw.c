@@ -39,25 +39,25 @@
 */
 
 void I_DrawFuzzColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* pfuzzpos) ATTR_DATA_CACHE_ALIGN;
+                         fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* pfuzzpos) ATTR_DATA_CACHE_ALIGN;
 void I_DrawFuzzColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* pfuzzpos) ATTR_DATA_CACHE_ALIGN;
+                      fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* pfuzzpos) ATTR_DATA_CACHE_ALIGN;
 
 #ifdef USE_C_DRAW
 
 void I_DrawColumnLowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int *fuzzpos) ATTR_DATA_CACHE_ALIGN;
+                      fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int *fuzzpos) ATTR_DATA_CACHE_ALIGN;
 void I_DrawColumnNPo2LowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int *fuzzpos) ATTR_DATA_CACHE_ALIGN;
+                          fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int *fuzzpos) ATTR_DATA_CACHE_ALIGN;
 void I_DrawSpanLowC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
-	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source) ATTR_DATA_CACHE_ALIGN;
+                    fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source) ATTR_DATA_CACHE_ALIGN;
 
 void I_DrawColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* fuzzpos) ATTR_DATA_CACHE_ALIGN;
+                   fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* fuzzpos) ATTR_DATA_CACHE_ALIGN;
 void I_DrawColumnNPo2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* fuzzpos) ATTR_DATA_CACHE_ALIGN;
+                       fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* fuzzpos) ATTR_DATA_CACHE_ALIGN;
 void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
-	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source) ATTR_DATA_CACHE_ALIGN;
+                 fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source) ATTR_DATA_CACHE_ALIGN;
 
 /*
 ==================
@@ -70,26 +70,28 @@ void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 */
 
 void I_DrawColumnLowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* fuzzpos)
+                      fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* fuzzpos)
 {
-	unsigned	heightmask;
-	pixel_t* dest;
-	int16_t* dc_colormap;
-	unsigned	frac;
-	unsigned    count, n;
+    unsigned	heightmask;
+    pixel_t* dest;
+    int16_t* dc_colormap;
+    unsigned	frac;
+    unsigned    count, n;
 
 #ifdef RANGECHECK
-	if (dc_x >= viewportWidth || dc_yl < 0 || dc_yh >= viewportHeight)
-		I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
+
+    if(dc_x >= viewportWidth || dc_yl < 0 || dc_yh >= viewportHeight)
+        I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
+
 #endif
 
-	if (dc_yl > dc_yh)
-		return;
+    if(dc_yl > dc_yh)
+        return;
 
-	frac = frac_;
-	heightmask = dc_texheight - 1;
-	dest = viewportbuffer + dc_yl * 320 / 2 + dc_x;
-	dc_colormap = (int16_t *)dc_colormaps + light;
+    frac = frac_;
+    heightmask = dc_texheight - 1;
+    dest = viewportbuffer + dc_yl * 320 / 2 + dc_x;
+    dc_colormap = (int16_t *)dc_colormaps + light;
 
 #define DO_PIXEL() do { \
 		*dest = dc_colormap[dc_source[(frac >> FRACBITS) & heightmask]]; \
@@ -97,21 +99,39 @@ void I_DrawColumnLowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 		frac += fracstep; \
 	} while (0)
 
-	count = dc_yh - dc_yl + 1;
-	n = (count + 7) >> 3;
+    count = dc_yh - dc_yl + 1;
+    n = (count + 7) >> 3;
 
-	switch (count & 7)
-	{
-	case 0: do { DO_PIXEL();
-	case 7:      DO_PIXEL();
-	case 6:      DO_PIXEL();
-	case 5:      DO_PIXEL();
-	case 4:      DO_PIXEL();
-	case 3:      DO_PIXEL();
-	case 2:      DO_PIXEL();
-	case 1:      DO_PIXEL();
-	} while (--n > 0);
-	}
+    switch(count & 7)
+    {
+    case 0:
+        do
+        {
+            DO_PIXEL();
+
+        case 7:
+            DO_PIXEL();
+
+        case 6:
+            DO_PIXEL();
+
+        case 5:
+            DO_PIXEL();
+
+        case 4:
+            DO_PIXEL();
+
+        case 3:
+            DO_PIXEL();
+
+        case 2:
+            DO_PIXEL();
+
+        case 1:
+            DO_PIXEL();
+        }
+        while(--n > 0);
+    }
 
 #undef DO_PIXEL
 }
@@ -122,37 +142,41 @@ void I_DrawColumnLowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 // this for the NeXT "simulator" build of the game.
 //
 void I_DrawColumnNPo2LowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* fuzzpos)
+                          fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* fuzzpos)
 {
-	unsigned	heightmask;
-	pixel_t* dest;
-	int16_t* dc_colormap;
-	unsigned    count, n;
-	unsigned 	frac;
+    unsigned	heightmask;
+    pixel_t* dest;
+    int16_t* dc_colormap;
+    unsigned    count, n;
+    unsigned 	frac;
 
 #ifdef RANGECHECK
-	if (dc_x >= viewportWidth || dc_yl < 0 || dc_yh >= viewportHeight)
-		I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
+
+    if(dc_x >= viewportWidth || dc_yl < 0 || dc_yh >= viewportHeight)
+        I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
+
 #endif
 
-	if (dc_yl > dc_yh)
-		return;
+    if(dc_yl > dc_yh)
+        return;
 
-	heightmask = dc_texheight << FRACBITS;
-	if (frac_ < 0)
-		while ((frac_ += heightmask) < 0);
-	else
-	{
-		while ((unsigned)frac_ >= heightmask)
-			frac_ -= heightmask;
-	}
-	frac = frac_;
+    heightmask = dc_texheight << FRACBITS;
 
-	dest = viewportbuffer + dc_yl * 320 / 2 + dc_x;
-	dc_colormap = (int16_t *)dc_colormaps + light;
+    if(frac_ < 0)
+        while((frac_ += heightmask) < 0);
+    else
+    {
+        while((unsigned)frac_ >= heightmask)
+            frac_ -= heightmask;
+    }
 
-	count = dc_yh - dc_yl + 1;
-	n = (count + 7) >> 3;
+    frac = frac_;
+
+    dest = viewportbuffer + dc_yl * 320 / 2 + dc_x;
+    dc_colormap = (int16_t *)dc_colormaps + light;
+
+    count = dc_yh - dc_yl + 1;
+    n = (count + 7) >> 3;
 
 #define DO_PIXEL() do { \
 		*dest = dc_colormap[dc_source[frac >> FRACBITS]]; \
@@ -161,18 +185,36 @@ void I_DrawColumnNPo2LowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t fra
 			frac -= heightmask; \
 	} while (0)
 
-	switch (count & 7)
-	{
-	case 0: do { DO_PIXEL();
-	case 7:      DO_PIXEL();
-	case 6:      DO_PIXEL();
-	case 5:      DO_PIXEL();
-	case 4:      DO_PIXEL();
-	case 3:      DO_PIXEL();
-	case 2:      DO_PIXEL();
-	case 1:      DO_PIXEL();
-	} while (--n > 0);
-	}
+    switch(count & 7)
+    {
+    case 0:
+        do
+        {
+            DO_PIXEL();
+
+        case 7:
+            DO_PIXEL();
+
+        case 6:
+            DO_PIXEL();
+
+        case 5:
+            DO_PIXEL();
+
+        case 4:
+            DO_PIXEL();
+
+        case 3:
+            DO_PIXEL();
+
+        case 2:
+            DO_PIXEL();
+
+        case 1:
+            DO_PIXEL();
+        }
+        while(--n > 0);
+    }
 
 #undef DO_PIXEL
 }
@@ -185,24 +227,26 @@ void I_DrawColumnNPo2LowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t fra
 ================
 */
 void I_DrawSpanLowC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
-	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source)
+                    fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source)
 {
-	unsigned xfrac, yfrac;
-	pixel_t* dest;
-	int		spot;
-	unsigned count, n;
-	int16_t* dc_colormap;
+    unsigned xfrac, yfrac;
+    pixel_t* dest;
+    int		spot;
+    unsigned count, n;
+    int16_t* dc_colormap;
 
 #ifdef RANGECHECK
-	if (ds_x2 < ds_x1 || ds_x1<0 || ds_x2 >= viewportWidth || ds_y>viewportHeight)
-		I_Error("R_DrawSpan: %i to %i at %i", ds_x1, ds_x2, ds_y);
-#endif 
 
-	count = ds_x2 - ds_x1 + 1;
-	xfrac = ds_xfrac, yfrac = ds_yfrac;
+    if(ds_x2 < ds_x1 || ds_x1 < 0 || ds_x2 >= viewportWidth || ds_y > viewportHeight)
+        I_Error("R_DrawSpan: %i to %i at %i", ds_x1, ds_x2, ds_y);
 
-	dest = viewportbuffer + ds_y * 320 / 2 + ds_x1;
-	dc_colormap = (int16_t *)dc_colormaps + light;
+#endif
+
+    count = ds_x2 - ds_x1 + 1;
+    xfrac = ds_xfrac, yfrac = ds_yfrac;
+
+    dest = viewportbuffer + ds_y * 320 / 2 + ds_x1;
+    dc_colormap = (int16_t *)dc_colormaps + light;
 
 #define DO_PIXEL() do { \
 		spot = ((yfrac >> 16) & (63 * 64)) + ((xfrac >> 16) & 63); \
@@ -210,44 +254,65 @@ void I_DrawSpanLowC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 		xfrac += ds_xstep, yfrac += ds_ystep; \
 	} while(0)
 
-	n = (count + 7) >> 3;
-	switch (count & 7)
-	{
-	case 0: do { DO_PIXEL();
-	case 7:      DO_PIXEL();
-	case 6:      DO_PIXEL();
-	case 5:      DO_PIXEL();
-	case 4:      DO_PIXEL();
-	case 3:      DO_PIXEL();
-	case 2:      DO_PIXEL();
-	case 1:      DO_PIXEL();
-	} while (--n > 0);
-	}
+    n = (count + 7) >> 3;
+
+    switch(count & 7)
+    {
+    case 0:
+        do
+        {
+            DO_PIXEL();
+
+        case 7:
+            DO_PIXEL();
+
+        case 6:
+            DO_PIXEL();
+
+        case 5:
+            DO_PIXEL();
+
+        case 4:
+            DO_PIXEL();
+
+        case 3:
+            DO_PIXEL();
+
+        case 2:
+            DO_PIXEL();
+
+        case 1:
+            DO_PIXEL();
+        }
+        while(--n > 0);
+    }
 
 #undef DO_PIXEL
 }
 
 void I_DrawColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* fuzzpos)
+                   fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* fuzzpos)
 {
-	unsigned	heightmask;
-	int8_t *dest;
-	int8_t *dc_colormap;
-	unsigned	frac;
-	unsigned    count, n;
+    unsigned	heightmask;
+    int8_t *dest;
+    int8_t *dc_colormap;
+    unsigned	frac;
+    unsigned    count, n;
 
 #ifdef RANGECHECK
-	if (dc_x >= viewportWidth || dc_yl < 0 || dc_yh >= viewportHeight)
-		I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
+
+    if(dc_x >= viewportWidth || dc_yl < 0 || dc_yh >= viewportHeight)
+        I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
+
 #endif
 
-	if (dc_yl > dc_yh)
-		return;
+    if(dc_yl > dc_yh)
+        return;
 
-	frac = frac_;
-	heightmask = dc_texheight - 1;
-	dest = (int8_t *)viewportbuffer + dc_yl * 320 + dc_x;
-	dc_colormap = (int8_t *)(dc_colormaps + light);
+    frac = frac_;
+    heightmask = dc_texheight - 1;
+    dest = (int8_t *)viewportbuffer + dc_yl * 320 + dc_x;
+    dc_colormap = (int8_t *)(dc_colormaps + light);
 
 #define DO_PIXEL() do { \
 		*dest = dc_colormap[(int8_t)dc_source[(frac >> FRACBITS) & heightmask]] & 0xff; \
@@ -255,57 +320,79 @@ void I_DrawColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 		frac += fracstep; \
 	} while (0)
 
-	count = dc_yh - dc_yl + 1;
-	n = (count + 7) >> 3;
+    count = dc_yh - dc_yl + 1;
+    n = (count + 7) >> 3;
 
-	switch (count & 7)
-	{
-	case 0: do { DO_PIXEL();
-	case 7:      DO_PIXEL();
-	case 6:      DO_PIXEL();
-	case 5:      DO_PIXEL();
-	case 4:      DO_PIXEL();
-	case 3:      DO_PIXEL();
-	case 2:      DO_PIXEL();
-	case 1:      DO_PIXEL();
-	} while (--n > 0);
-	}
+    switch(count & 7)
+    {
+    case 0:
+        do
+        {
+            DO_PIXEL();
+
+        case 7:
+            DO_PIXEL();
+
+        case 6:
+            DO_PIXEL();
+
+        case 5:
+            DO_PIXEL();
+
+        case 4:
+            DO_PIXEL();
+
+        case 3:
+            DO_PIXEL();
+
+        case 2:
+            DO_PIXEL();
+
+        case 1:
+            DO_PIXEL();
+        }
+        while(--n > 0);
+    }
 
 #undef DO_PIXEL
 }
 
 void I_DrawColumnNPo2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* fuzzpos)
+                       fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* fuzzpos)
 {
-	unsigned	heightmask;
-	int8_t *dest;
-	int8_t *dc_colormap;
-	unsigned    count, n;
-	unsigned 	frac;
+    unsigned	heightmask;
+    int8_t *dest;
+    int8_t *dc_colormap;
+    unsigned    count, n;
+    unsigned 	frac;
 
 #ifdef RANGECHECK
-	if (dc_x >= viewportWidth || dc_yl < 0 || dc_yh >= viewportHeight)
-		I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
+
+    if(dc_x >= viewportWidth || dc_yl < 0 || dc_yh >= viewportHeight)
+        I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
+
 #endif
 
-	if (dc_yl > dc_yh)
-		return;
+    if(dc_yl > dc_yh)
+        return;
 
-	heightmask = dc_texheight << FRACBITS;
-	if (frac_ < 0)
-		while ((frac_ += heightmask) < 0);
-	else
-	{
-		while ((unsigned)frac_ >= heightmask)
-			frac_ -= heightmask;
-	}
-	frac = frac_;
+    heightmask = dc_texheight << FRACBITS;
 
-	dest = (int8_t *)viewportbuffer + dc_yl * 320 + dc_x;
-	dc_colormap = (int8_t *)(dc_colormaps + light);
+    if(frac_ < 0)
+        while((frac_ += heightmask) < 0);
+    else
+    {
+        while((unsigned)frac_ >= heightmask)
+            frac_ -= heightmask;
+    }
 
-	count = dc_yh - dc_yl + 1;
-	n = (count + 7) >> 3;
+    frac = frac_;
+
+    dest = (int8_t *)viewportbuffer + dc_yl * 320 + dc_x;
+    dc_colormap = (int8_t *)(dc_colormaps + light);
+
+    count = dc_yh - dc_yl + 1;
+    n = (count + 7) >> 3;
 
 #define DO_PIXEL() do { \
 		*dest = dc_colormap[(int8_t)dc_source[frac >> FRACBITS]] & 0xff; \
@@ -314,41 +401,61 @@ void I_DrawColumnNPo2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 			frac -= heightmask; \
 	} while (0)
 
-	switch (count & 7)
-	{
-	case 0: do { DO_PIXEL();
-	case 7:      DO_PIXEL();
-	case 6:      DO_PIXEL();
-	case 5:      DO_PIXEL();
-	case 4:      DO_PIXEL();
-	case 3:      DO_PIXEL();
-	case 2:      DO_PIXEL();
-	case 1:      DO_PIXEL();
-	} while (--n > 0);
-	}
+    switch(count & 7)
+    {
+    case 0:
+        do
+        {
+            DO_PIXEL();
+
+        case 7:
+            DO_PIXEL();
+
+        case 6:
+            DO_PIXEL();
+
+        case 5:
+            DO_PIXEL();
+
+        case 4:
+            DO_PIXEL();
+
+        case 3:
+            DO_PIXEL();
+
+        case 2:
+            DO_PIXEL();
+
+        case 1:
+            DO_PIXEL();
+        }
+        while(--n > 0);
+    }
 
 #undef DO_PIXEL
 }
 
 void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
-	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source)
+                 fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source)
 {
-	unsigned xfrac, yfrac;
-	int8_t  *dest;
-	int		spot;
-	unsigned count, n;
-	int8_t* dc_colormap;
+    unsigned xfrac, yfrac;
+    int8_t  *dest;
+    int		spot;
+    unsigned count, n;
+    int8_t* dc_colormap;
 
 #ifdef RANGECHECK
-	if (ds_x2 < ds_x1 || ds_x1<0 || ds_x2 >= viewportWidth || ds_y>viewportHeight)
-		I_Error("R_DrawSpan: %i to %i at %i", ds_x1, ds_x2, ds_y);
-#endif 
 
-	count = ds_x2 - ds_x1 + 1;
-	xfrac = ds_xfrac, yfrac = ds_yfrac;
+    if(ds_x2 < ds_x1 || ds_x1 < 0 || ds_x2 >= viewportWidth || ds_y > viewportHeight)
+        I_Error("R_DrawSpan: %i to %i at %i", ds_x1, ds_x2, ds_y);
 
-	dest = (int8_t *)viewportbuffer + ds_y * 320 + ds_x1;
-	dc_colormap = (int8_t *)(dc_colormaps + light);
+#endif
+
+    count = ds_x2 - ds_x1 + 1;
+    xfrac = ds_xfrac, yfrac = ds_yfrac;
+
+    dest = (int8_t *)viewportbuffer + ds_y * 320 + ds_x1;
+    dc_colormap = (int8_t *)(dc_colormaps + light);
 
 #define DO_PIXEL() do { \
 		spot = ((yfrac >> 16) & (63 * 64)) + ((xfrac >> 16) & 63); \
@@ -356,19 +463,38 @@ void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 		xfrac += ds_xstep, yfrac += ds_ystep; \
 	} while(0)
 
-	n = (count + 7) >> 3;
-	switch (count & 7)
-	{
-	case 0: do { DO_PIXEL();
-	case 7:      DO_PIXEL();
-	case 6:      DO_PIXEL();
-	case 5:      DO_PIXEL();
-	case 4:      DO_PIXEL();
-	case 3:      DO_PIXEL();
-	case 2:      DO_PIXEL();
-	case 1:      DO_PIXEL();
-	} while (--n > 0);
-	}
+    n = (count + 7) >> 3;
+
+    switch(count & 7)
+    {
+    case 0:
+        do
+        {
+            DO_PIXEL();
+
+        case 7:
+            DO_PIXEL();
+
+        case 6:
+            DO_PIXEL();
+
+        case 5:
+            DO_PIXEL();
+
+        case 4:
+            DO_PIXEL();
+
+        case 3:
+            DO_PIXEL();
+
+        case 2:
+            DO_PIXEL();
+
+        case 1:
+            DO_PIXEL();
+        }
+        while(--n > 0);
+    }
 
 #undef DO_PIXEL
 }
@@ -381,30 +507,33 @@ void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 //
 
 void I_DrawFuzzColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* pfuzzpos)
+                         fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* pfuzzpos)
 {
-	int16_t *dest;
-	int16_t *dc_colormap;
-	unsigned	frac;
-	unsigned    count, n;
-	int	fuzzpos = *pfuzzpos;
+    int16_t *dest;
+    int16_t *dc_colormap;
+    unsigned	frac;
+    unsigned    count, n;
+    int	fuzzpos = *pfuzzpos;
 
-	if (!dc_yl)
-		dc_yl = 1;
-	if (dc_yh == viewportHeight - 1)
-		dc_yh = viewportHeight - 2;
+    if(!dc_yl)
+        dc_yl = 1;
+
+    if(dc_yh == viewportHeight - 1)
+        dc_yh = viewportHeight - 2;
 
 #ifdef RANGECHECK
-	if (dc_x >= viewportWidth || dc_yl < 0 || dc_yh >= viewportHeight)
-		I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
+
+    if(dc_x >= viewportWidth || dc_yl < 0 || dc_yh >= viewportHeight)
+        I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
+
 #endif
 
-	if (dc_yl > dc_yh)
-		return;
+    if(dc_yl > dc_yh)
+        return;
 
-	frac = frac_;
-	dest = (int16_t *)(viewportbuffer + dc_yl * 320 / 2 + dc_x);
-	dc_colormap = (int16_t *)dc_colormaps + vd.fuzzcolormap;
+    frac = frac_;
+    dest = (int16_t *)(viewportbuffer + dc_yl * 320 / 2 + dc_x);
+    dc_colormap = (int16_t *)dc_colormaps + vd.fuzzcolormap;
 
 #define DO_PIXEL() do { \
 		*dest = dc_colormap[(int8_t)dest[fuzzoffset[fuzzpos++ & FUZZMASK]]]; \
@@ -412,48 +541,61 @@ void I_DrawFuzzColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac
 		frac += fracstep; \
 	} while (0)
 
-	count = dc_yh - dc_yl + 1;
-	n = (count + 3) >> 2;
+    count = dc_yh - dc_yl + 1;
+    n = (count + 3) >> 2;
 
-	switch (count & 3)
-	{
-	case 0: do { DO_PIXEL();
-	case 3:      DO_PIXEL();
-	case 2:      DO_PIXEL();
-	case 1:      DO_PIXEL();
-	} while (--n > 0);
-	}
+    switch(count & 3)
+    {
+    case 0:
+        do
+        {
+            DO_PIXEL();
+
+        case 3:
+            DO_PIXEL();
+
+        case 2:
+            DO_PIXEL();
+
+        case 1:
+            DO_PIXEL();
+        }
+        while(--n > 0);
+    }
 
 #undef DO_PIXEL
 
-	*pfuzzpos = fuzzpos;
+    *pfuzzpos = fuzzpos;
 }
 
 void I_DrawFuzzColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* pfuzzpos)
+                      fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* pfuzzpos)
 {
-	int8_t * dest;
-	int8_t* dc_colormap;
-	unsigned	frac;
-	unsigned    count, n;
-	int	fuzzpos = *pfuzzpos;
+    int8_t * dest;
+    int8_t* dc_colormap;
+    unsigned	frac;
+    unsigned    count, n;
+    int	fuzzpos = *pfuzzpos;
 
-	if (!dc_yl)
-		dc_yl = 1;
-	if (dc_yh == viewportHeight - 1)
-		dc_yh = viewportHeight - 2;
+    if(!dc_yl)
+        dc_yl = 1;
+
+    if(dc_yh == viewportHeight - 1)
+        dc_yh = viewportHeight - 2;
 
 #ifdef RANGECHECK
-	if (dc_x >= viewportWidth || dc_yl < 0 || dc_yh >= viewportHeight)
-		I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
+
+    if(dc_x >= viewportWidth || dc_yl < 0 || dc_yh >= viewportHeight)
+        I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
+
 #endif
 
-	if (dc_yl > dc_yh)
-		return;
+    if(dc_yl > dc_yh)
+        return;
 
-	frac = frac_;
-	dest = (int8_t *)viewportbuffer + dc_yl * 320 + dc_x;
-	dc_colormap = (int8_t *)(dc_colormaps + vd.fuzzcolormap);
+    frac = frac_;
+    dest = (int8_t *)viewportbuffer + dc_yl * 320 + dc_x;
+    dc_colormap = (int8_t *)(dc_colormaps + vd.fuzzcolormap);
 
 #define DO_PIXEL() do { \
 		*dest = dc_colormap[dest[fuzzoffset[fuzzpos++ & FUZZMASK]]]; \
@@ -461,21 +603,31 @@ void I_DrawFuzzColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 		frac += fracstep; \
 	} while (0)
 
-	count = dc_yh - dc_yl + 1;
-	n = (count + 3) >> 2;
+    count = dc_yh - dc_yl + 1;
+    n = (count + 3) >> 2;
 
-	switch (count & 3)
-	{
-	case 0: do { DO_PIXEL();
-	case 3:      DO_PIXEL();
-	case 2:      DO_PIXEL();
-	case 1:      DO_PIXEL();
-	} while (--n > 0);
-	}
+    switch(count & 3)
+    {
+    case 0:
+        do
+        {
+            DO_PIXEL();
+
+        case 3:
+            DO_PIXEL();
+
+        case 2:
+            DO_PIXEL();
+
+        case 1:
+            DO_PIXEL();
+        }
+        while(--n > 0);
+    }
 
 #undef DO_PIXEL
 
-	*pfuzzpos = fuzzpos;
+    *pfuzzpos = fuzzpos;
 }
 
 /*
@@ -486,29 +638,33 @@ void I_DrawFuzzColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 ================
 */
 void I_DrawSpanPotatoLow(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
-	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source)
+                         fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source)
 {
-	pixel_t* dest, pix;
-	unsigned count;
-	short* dc_colormap;
+    pixel_t* dest, pix;
+    unsigned count;
+    short* dc_colormap;
 
 #ifdef RANGECHECK
-	if (ds_x2 < ds_x1 || ds_x1<0 || ds_x2 >= viewportWidth || ds_y>viewportHeight)
-		I_Error("R_DrawSpan: %i to %i at %i", ds_x1, ds_x2, ds_y);
+
+    if(ds_x2 < ds_x1 || ds_x1 < 0 || ds_x2 >= viewportWidth || ds_y > viewportHeight)
+        I_Error("R_DrawSpan: %i to %i at %i", ds_x1, ds_x2, ds_y);
+
 #endif
 
-	if (ds_x2 < ds_x1)
-		return;
+    if(ds_x2 < ds_x1)
+        return;
 
-	count = ds_x2 - ds_x1 + 1;
+    count = ds_x2 - ds_x1 + 1;
 
-	dest = viewportbuffer + ds_y * 320 / 2 + ds_x1;
-	dc_colormap = (int16_t *)dc_colormaps + light;
-	pix = dc_colormap[(int8_t)ds_source[513]];
+    dest = viewportbuffer + ds_y * 320 / 2 + ds_x1;
+    dc_colormap = (int16_t *)dc_colormaps + light;
+    pix = dc_colormap[(int8_t)ds_source[513]];
 
-	do {
-		*dest++ = pix;
-	} while (--count > 0);
+    do
+    {
+        *dest++ = pix;
+    }
+    while(--count > 0);
 }
 
 /*
@@ -519,57 +675,64 @@ void I_DrawSpanPotatoLow(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_x
 ================
 */
 void I_DrawSpanPotato(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
-	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source)
+                      fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source)
 {
-	byte *udest, upix;
-	unsigned count, scount;
-	int8_t* dc_colormap;
+    byte *udest, upix;
+    unsigned count, scount;
+    int8_t* dc_colormap;
 
 #ifdef RANGECHECK
-	if (ds_x2 < ds_x1 || ds_x1<0 || ds_x2 >= viewportWidth || ds_y>viewportHeight)
-		I_Error("R_DrawSpan: %i to %i at %i", ds_x1, ds_x2, ds_y);
+
+    if(ds_x2 < ds_x1 || ds_x1 < 0 || ds_x2 >= viewportWidth || ds_y > viewportHeight)
+        I_Error("R_DrawSpan: %i to %i at %i", ds_x1, ds_x2, ds_y);
+
 #endif
 
-	if (ds_x2 < ds_x1)
-		return;
+    if(ds_x2 < ds_x1)
+        return;
 
-	count = ds_x2 - ds_x1 + 1;
+    count = ds_x2 - ds_x1 + 1;
 
-	udest = (byte *)viewportbuffer + ds_y * 320 + ds_x1;
-	dc_colormap = (int8_t *)(dc_colormaps + light);
-	upix = dc_colormap[ds_source[513]] & 0xff;
+    udest = (byte *)viewportbuffer + ds_y * 320 + ds_x1;
+    dc_colormap = (int8_t *)(dc_colormaps + light);
+    upix = dc_colormap[ds_source[513]] & 0xff;
 
-	if (ds_x1 & 1) {
-		*udest++ = upix;
-		count--;
-	}
+    if(ds_x1 & 1)
+    {
+        *udest++ = upix;
+        count--;
+    }
 
-	scount = count >> 1;
-	if (scount > 0)
-	{
-		pixel_t spix = (upix << 8) | upix;
-		pixel_t *sdest = (pixel_t*)udest;
+    scount = count >> 1;
 
-		do {
-			*sdest++ = spix;
-		} while (--scount > 0);
+    if(scount > 0)
+    {
+        pixel_t spix = (upix << 8) | upix;
+        pixel_t *sdest = (pixel_t*)udest;
 
-		udest = (byte*)sdest;
-	}
+        do
+        {
+            *sdest++ = spix;
+        }
+        while(--scount > 0);
 
-	if (count & 1) {
-		*udest = upix;
-	}
+        udest = (byte*)sdest;
+    }
+
+    if(count & 1)
+    {
+        *udest = upix;
+    }
 }
 
 void I_DrawColumnNoDraw(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* fuzzpos)
+                        fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* fuzzpos)
 {
 
 }
 
 void I_DrawSpanNoDraw(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
-	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source)
+                      fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source)
 {
 
 }
@@ -584,87 +747,99 @@ void I_DrawSpanNoDraw(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfra
 
 void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh)
 {
-	lzss_state_t gfx_lzss;
-	uint8_t lzss_buf[LZSS_BUF_SIZE];
-	byte* lump;
-	jagobj_t* jo;
-	int width, height;
+    lzss_state_t gfx_lzss;
+    uint8_t lzss_buf[LZSS_BUF_SIZE];
+    byte* lump;
+    jagobj_t* jo;
+    int width, height;
 
-	if (lumpnum < 0)
-		return;
+    if(lumpnum < 0)
+        return;
 
-	lump = W_POINTLUMPNUM(lumpnum);
-	if (!(lumpinfo[lumpnum].name[0] & 0x80))
-	{
-		// uncompressed
-		DrawJagobj((void*)lump, x, y);
-		return;
-	}
+    lump = W_POINTLUMPNUM(lumpnum);
 
-	lzss_setup(&gfx_lzss, lump, lzss_buf, LZSS_BUF_SIZE);
-	if (lzss_read(&gfx_lzss, 16) != 16)
-		return;
+    if(!(lumpinfo[lumpnum].name[0] & 0x80))
+    {
+        // uncompressed
+        DrawJagobj((void*)lump, x, y);
+        return;
+    }
 
-	jo = (jagobj_t*)gfx_lzss.buf;
-	width = BIGSHORT(jo->width);
-	height = BIGSHORT(jo->height);
+    lzss_setup(&gfx_lzss, lump, lzss_buf, LZSS_BUF_SIZE);
 
-	if (ow) *ow = width;
-	if (oh) *oh = height;
+    if(lzss_read(&gfx_lzss, 16) != 16)
+        return;
 
-	if (x + width > 320)
-		width = 320 - x;
-	if (y + height > mars_framebuffer_height)
-		height = mars_framebuffer_height - y;
+    jo = (jagobj_t*)gfx_lzss.buf;
+    width = BIGSHORT(jo->width);
+    height = BIGSHORT(jo->height);
 
-	if (width < 1 || height < 1)
-		return;
-	{
-		byte* dest;
-		byte* source;
-		byte* fb;
-		pixel_t* ob;
-		unsigned p;
+    if(ow) *ow = width;
 
-		source = gfx_lzss.buf;
-		p = 16;
+    if(oh) *oh = height;
 
-		fb = (byte*)I_FrameBuffer();
-		ob = I_OverwriteBuffer();
+    if(x + width > 320)
+        width = 320 - x;
 
-		dest = fb + y * 320 + x;
-		for (; height; height--)
-		{
-			int i;
+    if(y + height > mars_framebuffer_height)
+        height = mars_framebuffer_height - y;
 
-			lzss_read(&gfx_lzss, width);
+    if(width < 1 || height < 1)
+        return;
 
-			i = 0;
-			if (p + width > LZSS_BUF_SIZE) {
-				int rem = LZSS_BUF_SIZE - p;
-				for (; i < rem; i++)
-					dest[i] = source[p++];
-				p = 0;
-			}
+    {
+        byte* dest;
+        byte* source;
+        byte* fb;
+        pixel_t* ob;
+        unsigned p;
 
-			if ((i & 1) == 0 && (width & 1) == 0 && (p & 1) == 0 && (x & 1) == 0)
-			{
-				int j = i;
-				pixel_t* dest2 = ob + ((dest - fb + i) >> 1);
-				pixel_t* source2 = (pixel_t*)&source[p];
-				for (; i < width; i += 2)
-					*dest2++ = *source2++;
-				p += width - j;
-			}
-			else
-			{
-				for (; i < width; i++)
-					dest[i] = source[p++];
-			}
+        source = gfx_lzss.buf;
+        p = 16;
 
-			dest += 320;
-		}
-	}
+        fb = (byte*)I_FrameBuffer();
+        ob = I_OverwriteBuffer();
+
+        dest = fb + y * 320 + x;
+
+        for(; height; height--)
+        {
+            int i;
+
+            lzss_read(&gfx_lzss, width);
+
+            i = 0;
+
+            if(p + width > LZSS_BUF_SIZE)
+            {
+                int rem = LZSS_BUF_SIZE - p;
+
+                for(; i < rem; i++)
+                    dest[i] = source[p++];
+
+                p = 0;
+            }
+
+            if((i & 1) == 0 && (width & 1) == 0 && (p & 1) == 0 && (x & 1) == 0)
+            {
+                int j = i;
+                pixel_t* dest2 = ob + ((dest - fb + i) >> 1);
+                pixel_t* source2 = (pixel_t*)&source[p];
+
+                for(; i < width; i += 2)
+                    * dest2++ = *source2++;
+
+                p += width - j;
+            }
+            else
+            {
+                for(; i < width; i++)
+                    dest[i] = source[p++];
+            }
+
+            dest += 320;
+        }
+    }
 }
 
 /*
@@ -676,197 +851,239 @@ void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh)
 */
 void DrawTiledBackground2(int flat)
 {
-	int			y, yt;
-	const int	w = 64, h = 64;
-	const int	hw = w / 2;
-	const int xtiles = (320 + w - 1) / w;
-	const int ytiles = (224 + h - 1) / h;
-	pixel_t* bdest;
-	const pixel_t* bsrc;
+    int			y, yt;
+    const int	w = 64, h = 64;
+    const int	hw = w / 2;
+    const int xtiles = (320 + w - 1) / w;
+    const int ytiles = (224 + h - 1) / h;
+    pixel_t* bdest;
+    const pixel_t* bsrc;
 
-	if (debugmode == DEBUGMODE_NODRAW)
-		return;
-	if (flat <= 0)
-		return;
+    if(debugmode == DEBUGMODE_NODRAW)
+        return;
 
-	bsrc = (const pixel_t*)W_POINTLUMPNUM(flat);
-	bdest = I_FrameBuffer();
+    if(flat <= 0)
+        return;
 
-	y = 0;
-	for (yt = 0; yt < ytiles; yt++)
-	{
-		int y1;
-		const pixel_t* source = bsrc;
+    bsrc = (const pixel_t*)W_POINTLUMPNUM(flat);
+    bdest = I_FrameBuffer();
 
-		for (y1 = 0; y1 < 64; y1++)
-		{
-			int xt;
+    y = 0;
 
-			for (xt = 0; xt < xtiles; xt++) {
-				int x;
-				for (x = 0; x < hw; x++)
-					*bdest++ = source[x];
-			}
+    for(yt = 0; yt < ytiles; yt++)
+    {
+        int y1;
+        const pixel_t* source = bsrc;
 
-			y++;
-			source += hw;
-			if (y == mars_framebuffer_height)
-				return;
-		}
-	}
+        for(y1 = 0; y1 < 64; y1++)
+        {
+            int xt;
+
+            for(xt = 0; xt < xtiles; xt++)
+            {
+                int x;
+
+                for(x = 0; x < hw; x++)
+                    *bdest++ = source[x];
+            }
+
+            y++;
+            source += hw;
+
+            if(y == mars_framebuffer_height)
+                return;
+        }
+    }
 }
 
 void DrawTiledBackground(void)
 {
-	if (gameinfo.borderFlat <= 0)
-	{
-		I_ClearFrameBuffer();
-		return;
-	}
-	DrawTiledBackground2(gameinfo.borderFlat);
+    if(gameinfo.borderFlat <= 0)
+    {
+        I_ClearFrameBuffer();
+        return;
+    }
+
+    DrawTiledBackground2(gameinfo.borderFlat);
 }
 
 void EraseBlock(int x, int y, int width, int height)
 {
 }
 
-void DrawJagobj2(jagobj_t* jo, int x, int y, 
-	int src_x, int src_y, int src_w, int src_h, pixel_t *fb)
+void DrawJagobj2(jagobj_t* jo, int x, int y,
+                 int src_x, int src_y, int src_w, int src_h, pixel_t *fb)
 {
-	int		srcx, srcy;
-	int		width, height;
-	int		rowsize;
+    int		srcx, srcy;
+    int		width, height;
+    int		rowsize;
 
-	rowsize = BIGSHORT(jo->width);
-	width = BIGSHORT(jo->width);
-	height = BIGSHORT(jo->height);
+    rowsize = BIGSHORT(jo->width);
+    width = BIGSHORT(jo->width);
+    height = BIGSHORT(jo->height);
 
-	if (src_w > 0)
-		width = src_w;
-	else if (src_w < 0)
-		width += src_w;
+    if(src_w > 0)
+        width = src_w;
+    else if(src_w < 0)
+        width += src_w;
 
-	if (src_h > 0)
-		height = src_h;
-	else if (src_h < 0)
-		height += src_h;
+    if(src_h > 0)
+        height = src_h;
+    else if(src_h < 0)
+        height += src_h;
 
-	srcx = 0;
-	srcy = 0;
+    srcx = 0;
+    srcy = 0;
 
-	if (x < 0)
-	{
-		width += x;
-		srcx = -x;
-		x = 0;
-	}
-	srcx += src_x;
-	width -= src_x;
+    if(x < 0)
+    {
+        width += x;
+        srcx = -x;
+        x = 0;
+    }
 
-	if (y < 0)
-	{
-		srcy = -y;
-		height += y;
-		y = 0;
-	}
+    srcx += src_x;
+    width -= src_x;
 
-	srcy += src_y;
-	height -= src_y;
+    if(y < 0)
+    {
+        srcy = -y;
+        height += y;
+        y = 0;
+    }
 
-	if (x + width > 320)
-		width = 320 - x;
-	if (y + height > mars_framebuffer_height)
-		height = mars_framebuffer_height - y;
+    srcy += src_y;
+    height -= src_y;
 
-	if (width < 1 || height < 1)
-		return;
+    if(x + width > 320)
+        width = 320 - x;
 
-	{
-		byte* dest;
-		byte* source;
+    if(y + height > mars_framebuffer_height)
+        height = mars_framebuffer_height - y;
 
-		source = jo->data + srcx + srcy * rowsize;
+    if(width < 1 || height < 1)
+        return;
 
-		if ((x & 1) == 0 && (width & 1) == 0)
-		{
-			unsigned hw = (unsigned)width >> 1;
-			unsigned hx = (unsigned)x >> 1;
-			unsigned hr = (unsigned)rowsize >> 1;
+    {
+        byte* dest;
+        byte* source;
 
-			pixel_t* dest2 = fb + y * 160 + hx;
-			pixel_t* source2 = (pixel_t*)source;
+        source = jo->data + srcx + srcy * rowsize;
 
-			for (; height; height--)
-			{
-				int n = (hw + 3) >> 2;
+        if((x & 1) == 0 && (width & 1) == 0)
+        {
+            unsigned hw = (unsigned)width >> 1;
+            unsigned hx = (unsigned)x >> 1;
+            unsigned hr = (unsigned)rowsize >> 1;
 
-				switch (hw & 3)
-				{
-				case 0: do { *dest2++ = *source2++;
-				case 3:      *dest2++ = *source2++;
-				case 2:      *dest2++ = *source2++;
-				case 1:      *dest2++ = *source2++;
-				} while (--n > 0);
-				}
+            pixel_t* dest2 = fb + y * 160 + hx;
+            pixel_t* source2 = (pixel_t*)source;
 
-				source2 += hr - hw;
-				dest2 += 160 - hw;
-			}
-			return;
-		}
+            for(; height; height--)
+            {
+                int n = (hw + 3) >> 2;
 
-		dest = (byte*)fb + y * 320 + x;
-		for (; height; height--)
-		{
-			int n = (width + 3) >> 2;
+                switch(hw & 3)
+                {
+                case 0:
+                    do
+                    {
+                        *dest2++ = *source2++;
 
-			switch (width & 3)
-			{
-			case 0: do { *dest++ = *source++;
-			case 3:      *dest++ = *source++;
-			case 2:      *dest++ = *source++;
-			case 1:      *dest++ = *source++;
-			} while (--n > 0);
-			}
+                    case 3:
+                        *dest2++ = *source2++;
 
-			source += rowsize - width;
-			dest += 320 - width;
-		}
-	}
+                    case 2:
+                        *dest2++ = *source2++;
+
+                    case 1:
+                        *dest2++ = *source2++;
+                    }
+                    while(--n > 0);
+                }
+
+                source2 += hr - hw;
+                dest2 += 160 - hw;
+            }
+
+            return;
+        }
+
+        dest = (byte*)fb + y * 320 + x;
+
+        for(; height; height--)
+        {
+            int n = (width + 3) >> 2;
+
+            switch(width & 3)
+            {
+            case 0:
+                do
+                {
+                    *dest++ = *source++;
+
+                case 3:
+                    *dest++ = *source++;
+
+                case 2:
+                    *dest++ = *source++;
+
+                case 1:
+                    *dest++ = *source++;
+                }
+                while(--n > 0);
+            }
+
+            source += rowsize - width;
+            dest += 320 - width;
+        }
+    }
 }
 
 void DrawJagobj(jagobj_t* jo, int x, int y)
 {
-	DrawJagobj2(jo, x, y, 0, 0, 0, 0, I_OverwriteBuffer());
+    DrawJagobj2(jo, x, y, 0, 0, 0, 0, I_OverwriteBuffer());
 }
 
 void DrawFillRect(int x, int y, int w, int h, int c)
 {
-	int i;
+    int i;
 
-	if (x + w > 320)
-		w = 320 - x;
-	if (y + h > mars_framebuffer_height)
-		h = mars_framebuffer_height - y;
+    if(x + w > 320)
+        w = 320 - x;
 
-	c = (c << 8) | c;
-	int hw = w >> 1;
+    if(y + h > mars_framebuffer_height)
+        h = mars_framebuffer_height - y;
 
-	pixel_t* dest = I_FrameBuffer() + y * 160 + (x>>1);
-	for (i = 0; i < h; i++)
-	{
-		int n = (hw + 3) >> 2;
-		pixel_t* dest2 = dest;
+    c = (c << 8) | c;
+    int hw = w >> 1;
 
-		switch (hw & 3)
-		{
-		case 0: do { *dest2++ = c;
-		case 3:      *dest2++ = c;
-		case 2:      *dest2++ = c;
-		case 1:      *dest2++ = c;
-		} while (--n > 0);
-		}
+    pixel_t* dest = I_FrameBuffer() + y * 160 + (x >> 1);
 
-		dest += 160;
-	}
+    for(i = 0; i < h; i++)
+    {
+        int n = (hw + 3) >> 2;
+        pixel_t* dest2 = dest;
+
+        switch(hw & 3)
+        {
+        case 0:
+            do
+            {
+                *dest2++ = c;
+
+            case 3:
+                *dest2++ = c;
+
+            case 2:
+                *dest2++ = c;
+
+            case 1:
+                *dest2++ = c;
+            }
+            while(--n > 0);
+        }
+
+        dest += 160;
+    }
 }

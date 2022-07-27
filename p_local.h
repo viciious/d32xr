@@ -40,16 +40,16 @@
 
 typedef enum
 {
-	DI_EAST,
-	DI_NORTHEAST,
-	DI_NORTH,
-	DI_NORTHWEST,
-	DI_WEST,
-	DI_SOUTHWEST,
-	DI_SOUTH,
-	DI_SOUTHEAST,
-	DI_NODIR,
-	NUMDIRS
+    DI_EAST,
+    DI_NORTHEAST,
+    DI_NORTH,
+    DI_NORTHWEST,
+    DI_WEST,
+    DI_SOUTHWEST,
+    DI_SOUTH,
+    DI_SOUTHEAST,
+    DI_NODIR,
+    NUMDIRS
 } dirtype_t;
 
 #define	BASETHRESHOLD	100		/* follow a player exlusively for 3 seconds */
@@ -67,9 +67,9 @@ typedef enum
 extern	thinker_t	thinkercap;	/* both the head and tail of the thinker list */
 
 
-void P_InitThinkers (void);
-void P_AddThinker (thinker_t *thinker);
-void P_RemoveThinker (thinker_t *thinker);
+void P_InitThinkers(void);
+void P_AddThinker(thinker_t *thinker);
+void P_RemoveThinker(thinker_t *thinker);
 
 /*
 ===============================================================================
@@ -79,10 +79,10 @@ void P_RemoveThinker (thinker_t *thinker);
 ===============================================================================
 */
 
-void P_SetupPsprites (player_t *curplayer);
-void P_MovePsprites (player_t *curplayer);
+void P_SetupPsprites(player_t *curplayer);
+void P_MovePsprites(player_t *curplayer);
 
-void P_DropWeapon (player_t *player);
+void P_DropWeapon(player_t *player);
 
 /*
 ===============================================================================
@@ -94,7 +94,7 @@ void P_DropWeapon (player_t *player);
 
 boolean P_CanSelecteWeapon(player_t* player, int weaponnum);
 boolean P_CanFireWeapon(player_t* player, int weaponnum);
-void	P_PlayerThink (player_t *player);
+void	P_PlayerThink(player_t *player);
 void	P_RestoreResp(player_t* p);
 void	P_UpdateResp(player_t* p);
 void	R_ResetResp(player_t* p);
@@ -121,27 +121,27 @@ extern	int			activemobjs;	/* debug count */
 extern	mapthing_t	*itemrespawnque;
 extern	int			*itemrespawntime;
 
-mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
+mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
 
-void 	P_RemoveMobj (mobj_t *th);
+void 	P_RemoveMobj(mobj_t *th);
 void	P_FreeMobj(mobj_t* mobj);
-boolean	P_SetMobjState (mobj_t *mobj, statenum_t state) ATTR_DATA_CACHE_ALIGN;
-void 	P_MobjThinker (mobj_t *mobj);
+boolean	P_SetMobjState(mobj_t *mobj, statenum_t state) ATTR_DATA_CACHE_ALIGN;
+void 	P_MobjThinker(mobj_t *mobj);
 void 	P_PreSpawnMobjs(int count);
 
-void	P_SpawnPuff (fixed_t x, fixed_t y, fixed_t z);
-void 	P_SpawnBlood (fixed_t x, fixed_t y, fixed_t z, int damage);
-void	P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type);
-void	P_SpawnPlayerMissile (mobj_t *source, mobjtype_t type);
+void	P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z);
+void 	P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, int damage);
+void	P_SpawnMissile(mobj_t *source, mobj_t *dest, mobjtype_t type);
+void	P_SpawnPlayerMissile(mobj_t *source, mobjtype_t type);
 
-void	P_RunMobjBase2 (void) ATTR_DATA_CACHE_ALIGN;
+void	P_RunMobjBase2(void) ATTR_DATA_CACHE_ALIGN;
 void	P_RunMobjLate(void) ATTR_DATA_CACHE_ALIGN;
 
-void L_SkullBash (mobj_t *mo);
-void L_MissileHit (mobj_t *mo);
-void L_CrossSpecial (mobj_t *mo);
+void L_SkullBash(mobj_t *mo);
+void L_MissileHit(mobj_t *mo);
+void L_CrossSpecial(mobj_t *mo);
 
-void P_ExplodeMissile (mobj_t *mo);
+void P_ExplodeMissile(mobj_t *mo);
 
 boolean P_MapThingSpawnsMobj(mapthing_t* mthing);
 void	P_SpawnMapThing(mapthing_t* mthing, int thingid);
@@ -154,8 +154,8 @@ void	P_SpawnMapThing(mapthing_t* mthing, int thingid);
 ===============================================================================
 */
 
-void A_MissileExplode (mobj_t *mo);
-void A_SkullBash (mobj_t *mo);
+void A_MissileExplode(mobj_t *mo);
+void A_SkullBash(mobj_t *mo);
 
 /*
 ===============================================================================
@@ -167,32 +167,32 @@ void A_SkullBash (mobj_t *mo);
 
 typedef struct
 {
-	fixed_t	x,y, dx, dy;
+    fixed_t	x, y, dx, dy;
 } divline_t;
 
 
-fixed_t P_AproxDistance (fixed_t dx, fixed_t dy);
-int 	P_PointOnLineSide (fixed_t x, fixed_t y, line_t *line);
-int 	P_PointOnDivlineSide (fixed_t x, fixed_t y, divline_t *line);
-void 	P_MakeDivline (line_t *li, divline_t *dl);
-fixed_t P_InterceptVector (divline_t *v2, divline_t *v1);
-int 	P_BoxOnLineSide (fixed_t *tmbox, line_t *ld);
+fixed_t P_AproxDistance(fixed_t dx, fixed_t dy);
+int 	P_PointOnLineSide(fixed_t x, fixed_t y, line_t *line);
+int 	P_PointOnDivlineSide(fixed_t x, fixed_t y, divline_t *line);
+void 	P_MakeDivline(line_t *li, divline_t *dl);
+fixed_t P_InterceptVector(divline_t *v2, divline_t *v1);
+int 	P_BoxOnLineSide(fixed_t *tmbox, line_t *ld);
 
 extern	fixed_t opentop, openbottom, openrange;
 extern	fixed_t	lowfloor;
-void 	P_LineOpening (line_t *linedef);
+void 	P_LineOpening(line_t *linedef);
 
 fixed_t* P_LineBBox(line_t* ld);
 
-boolean P_BlockLinesIterator (int x, int y, boolean(*func)(line_t*) );
-boolean P_BlockThingsIterator (int x, int y, boolean(*func)(mobj_t*) );
+boolean P_BlockLinesIterator(int x, int y, boolean(*func)(line_t*));
+boolean P_BlockThingsIterator(int x, int y, boolean(*func)(mobj_t*));
 
 extern	divline_t 	trace;
 
-void 	P_UnsetThingPosition (mobj_t *thing);
-void	P_SetThingPosition (mobj_t *thing);
+void 	P_UnsetThingPosition(mobj_t *thing);
+void	P_SetThingPosition(mobj_t *thing);
 
-void	P_PlayerLand (mobj_t *mo);
+void	P_PlayerLand(mobj_t *mo);
 
 void 	P_SectorOrg(mobj_t* sec, fixed_t *org);
 
@@ -211,19 +211,19 @@ extern	line_t	*specialline;
 extern	mobj_t	*movething;
 
 
-boolean P_CheckPosition (mobj_t *thing, fixed_t x, fixed_t y);
-boolean P_TryMove (mobj_t *thing, fixed_t x, fixed_t y);
-boolean P_CheckSight (mobj_t *t1, mobj_t *t2);
-void 	P_UseLines (player_t *player);
+boolean P_CheckPosition(mobj_t *thing, fixed_t x, fixed_t y);
+boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y);
+boolean P_CheckSight(mobj_t *t1, mobj_t *t2);
+void 	P_UseLines(player_t *player);
 
-boolean P_ChangeSector (sector_t *sector, boolean crunch);
+boolean P_ChangeSector(sector_t *sector, boolean crunch);
 
 extern	mobj_t		*linetarget;			/* who got hit (or NULL) */
-fixed_t P_AimLineAttack (mobj_t *t1, angle_t angle, fixed_t distance) ATTR_DATA_CACHE_ALIGN;
+fixed_t P_AimLineAttack(mobj_t *t1, angle_t angle, fixed_t distance) ATTR_DATA_CACHE_ALIGN;
 
-void P_LineAttack (mobj_t *t1, angle_t angle, fixed_t distance, fixed_t slope, int damage) ATTR_DATA_CACHE_ALIGN;
+void P_LineAttack(mobj_t *t1, angle_t angle, fixed_t distance, fixed_t slope, int damage) ATTR_DATA_CACHE_ALIGN;
 
-void P_RadiusAttack (mobj_t *spot, mobj_t *source, int damage) ATTR_DATA_CACHE_ALIGN;
+void P_RadiusAttack(mobj_t *spot, mobj_t *source, int damage) ATTR_DATA_CACHE_ALIGN;
 
 /*
 ===============================================================================
@@ -254,9 +254,9 @@ extern	spawnthing_t* spawnthings;
 extern	int		maxammo[NUMAMMO];
 extern	int		clipammo[NUMAMMO];
 
-void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher);
+void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher);
 
-void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage);
+void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage);
 
 #include "p_spec.h"
 
@@ -264,7 +264,7 @@ extern	int			iquehead, iquetail;
 
 extern	int playernum;
 
-void P_RespawnSpecials (void);
+void P_RespawnSpecials(void);
 
 #endif	/* __P_LOCAL__ */
 

@@ -38,26 +38,26 @@
 
 typedef enum
 {
-	f_none,
-	f_faceleft,		/* turn face left */
-	f_faceright,	/* turn face right */
-	f_hurtbad,		/* surprised look when slammed hard */
-	f_gotgat,		/* picked up a weapon smile */
-	f_mowdown,		/* grimace while continuous firing */
-	NUMSPCLFACES
+    f_none,
+    f_faceleft,		/* turn face left */
+    f_faceright,	/* turn face right */
+    f_hurtbad,		/* surprised look when slammed hard */
+    f_gotgat,		/* picked up a weapon smile */
+    f_mowdown,		/* grimace while continuous firing */
+    NUMSPCLFACES
 } spclface_e;
 
 #define	NUMFACES	48
 typedef enum
 {
-	sbf_lookfwd,
-	sbf_lookrgt,
-	sbf_looklft,
-	sbf_facelft,
-	sbf_facergt,
-	sbf_ouch,
-	sbf_gotgat,
-	sbf_mowdown
+    sbf_lookfwd,
+    sbf_lookrgt,
+    sbf_looklft,
+    sbf_facelft,
+    sbf_facergt,
+    sbf_ouch,
+    sbf_gotgat,
+    sbf_mowdown
 } faces_e;
 #define	GODFACE		40
 #define DEADFACE 	41
@@ -68,97 +68,98 @@ typedef enum
 
 typedef enum
 {
-	sb_minus,
-	sb_0,
-	sb_percent = 11,
-	sb_card_b,
-	sb_card_y,
-	sb_card_r,
-	sb_skul_b,
-	sb_skul_y,
-	sb_skul_r,
-	NUMSBOBJ
+    sb_minus,
+    sb_0,
+    sb_percent = 11,
+    sb_card_b,
+    sb_card_y,
+    sb_card_r,
+    sb_skul_b,
+    sb_skul_y,
+    sb_skul_r,
+    NUMSBOBJ
 } sbobj_e;
 
 typedef struct
 {
-	char	active;
-	char	doDraw;
-	short	delay;
-	short	times;
-	short	x;
-	short	y;
-	short	w;
-	short	h;
+    char	active;
+    char	doDraw;
+    short	delay;
+    short	times;
+    short	x;
+    short	y;
+    short	w;
+    short	h;
 } sbflash_t;
 
-typedef struct {
-	short id;
-	short ind;
-	short value;
+typedef struct
+{
+    short id;
+    short ind;
+    short value;
 } stbarcmd_t;
 
 typedef enum
 {
-	stc_drawammo,
-	stc_drawhealth,
-	stc_drawarmor,
-	stc_drawcard,
-	stc_drawmap,
-	stc_drawmicro,
-	stc_drawyourfrags,
-	stc_drawhisfrags,
-	stc_flashinitial,
-	stc_drawflashcard,
-	stc_drawgibhead,
-	stc_drawhead,
+    stc_drawammo,
+    stc_drawhealth,
+    stc_drawarmor,
+    stc_drawcard,
+    stc_drawmap,
+    stc_drawmicro,
+    stc_drawyourfrags,
+    stc_drawhisfrags,
+    stc_flashinitial,
+    stc_drawflashcard,
+    stc_drawgibhead,
+    stc_drawhead,
 
-	STC_NUMCMDTYPES
+    STC_NUMCMDTYPES
 } stbarcmdtype_t;
 
 typedef struct
 {
-	VINT	ammo, health, armor;
-	VINT	godmode;
-	VINT	face;
-	char	cards[NUMCARDS];
+    VINT	ammo, health, armor;
+    VINT	godmode;
+    VINT	face;
+    char	cards[NUMCARDS];
 
-	sbflash_t	flashCards[NUMCARDS];	/* INFO FOR FLASHING CARDS & SKULLS */
+    sbflash_t	flashCards[NUMCARDS];	/* INFO FOR FLASHING CARDS & SKULLS */
 
-	VINT	yourFragsCount;
-	VINT	hisFragsCount;
-	VINT	currentMap;
-	VINT	drawface;
-	char	weaponowned[NUMMICROS];
+    VINT	yourFragsCount;
+    VINT	hisFragsCount;
+    VINT	currentMap;
+    VINT	drawface;
+    char	weaponowned[NUMMICROS];
 
-	VINT	facetics;
-	VINT	newface;
+    VINT	facetics;
+    VINT	newface;
 
-	VINT	gibframe;
-	VINT	gibdelay;
-	char	gibdraw;
+    VINT	gibframe;
+    VINT	gibdelay;
+    char	gibdraw;
 
-	char	doSpclFace;
-	VINT	spclFaceType;
+    char	doSpclFace;
+    VINT	spclFaceType;
 
-	short numstbarcmds;
-	stbarcmd_t stbarcmds[STC_NUMCMDTYPES + NUMMICROS + NUMCARDS * 2];
+    short numstbarcmds;
+    stbarcmd_t stbarcmds[STC_NUMCMDTYPES + NUMMICROS + NUMCARDS * 2];
 
-	sbflash_t	yourFrags;			/* INFO FOR YOUR FRAG FLASHING */
-	sbflash_t	hisFrags;
-	char flashInitialDraw;		/* INITIALLY DRAW FRAG AMOUNTS (flag) */
+    sbflash_t	yourFrags;			/* INFO FOR YOUR FRAG FLASHING */
+    sbflash_t	hisFrags;
+    char flashInitialDraw;		/* INITIALLY DRAW FRAG AMOUNTS (flag) */
 
-	/* Messaging */
-	char	specialFace;	/* Which type of special face to make */
-	char	gotgibbed;			/* Got gibbed */
-	char	tryopen[NUMCARDS];	/* Tried to open a card or skull door */
-	char	forcedraw;
+    /* Messaging */
+    char	specialFace;	/* Which type of special face to make */
+    char	gotgibbed;			/* Got gibbed */
+    char	tryopen[NUMCARDS];	/* Tried to open a card or skull door */
+    char	forcedraw;
 } stbar_t;
 
 extern	stbar_t	stbar[MAXPLAYERS];
-extern void valtostr(char *string,int val);
-void ST_DrawValue(int x,int y,int value);
-void ST_Num (int x, int y, int num);
+extern void valtostr(char *string, int val);
+void ST_DrawValue(int x, int y, int value);
+void ST_Num(int x, int y, int num);
 void ST_InitEveryLevel(void);
 
 

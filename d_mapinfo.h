@@ -28,33 +28,33 @@
 
 typedef struct
 {
-	VINT baronSpecial;
-	char *name;
-	char *sky;
-	VINT next;
-	VINT secretNext;
-	VINT lumpNum;
-	VINT mapNumber;
-	VINT musicLump;
-	char lumpName[9];
-	void *data;
+    VINT baronSpecial;
+    char *name;
+    char *sky;
+    VINT next;
+    VINT secretNext;
+    VINT lumpNum;
+    VINT mapNumber;
+    VINT musicLump;
+    char lumpName[9];
+    void *data;
 } dmapinfo_t;
 
 typedef struct
 {
-	VINT borderFlat;
-	VINT titleTime;
-	VINT titlePage;
-	VINT titleMus;
-	VINT intermissionMus;
-	VINT victoryMus;
-	VINT endMus;
-	VINT creditsPage;
-	VINT creditsTime;
-	VINT startMapLump;
-	VINT endFlat;
-	char* endText;
-	void* data;
+    VINT borderFlat;
+    VINT titleTime;
+    VINT titlePage;
+    VINT titleMus;
+    VINT intermissionMus;
+    VINT victoryMus;
+    VINT endMus;
+    VINT creditsPage;
+    VINT creditsTime;
+    VINT startMapLump;
+    VINT endFlat;
+    char* endText;
+    void* data;
 } dgameinfo_t;
 
 int G_LumpNumForMapNum(int map);

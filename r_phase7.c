@@ -58,12 +58,13 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
 
     remaining = x2 - x + 1;
 
-    if (remaining <= 0)
+    if(remaining <= 0)
         return; // nothing to draw (shouldn't happen)
+
     lpl->pixelcount += remaining;
 
     // set GBR to division unit address
-    __asm volatile (
+    __asm volatile(
         "mov #-128, r0\n\t"
         "add r0, r0\n\t"
         "ldc r0, gbr\n\t"
@@ -71,15 +72,15 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
 
     FixedMul2(distance, lpl->height, yslope[y]);
 
-    if (lpl->lightmin != lpl->lightmax)
+    if(lpl->lightmin != lpl->lightmax)
     {
 #ifdef MARS
-        __asm volatile (
-           "mov %0, r0\n\t"
-           "mov.l r0, @(0,gbr) /* set 32-bit divisor */ \n\t"
-           "mov %1, r0\n\t"
-           "mov.l r0, @(4,gbr) /* start divide */\n\t"
-           : : "r" (distance), "r" (LIGHTCOEF) : "r0", "gbr");
+        __asm volatile(
+            "mov %0, r0\n\t"
+            "mov.l r0, @(0,gbr) /* set 32-bit divisor */ \n\t"
+            "mov %1, r0\n\t"
+            "mov.l r0, @(4,gbr) /* start divide */\n\t"
+            : : "r"(distance), "r"(LIGHTCOEF) : "r0", "gbr");
 #endif
     }
 
@@ -97,21 +98,22 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     FixedMul2(xstep, distance, lpl->basexscale);
     FixedMul2(ystep, distance, lpl->baseyscale);
 
-    if (lpl->lightmin != lpl->lightmax)
+    if(lpl->lightmin != lpl->lightmax)
     {
 #ifdef MARS
-        __asm volatile (
+        __asm volatile(
             "mov.l @(20,gbr), r0 /* get 32-bit quotient */ \n\t"
             "mov r0, %0"
-            : "=r" (light) : : "r0", "gbr");
+            : "=r"(light) : : "r0", "gbr");
 #else
         light = LIGHTCOEF / distance;
 #endif
 
         light -= lpl->lightsub;
-        if (light < lpl->lightmin)
+
+        if(light < lpl->lightmin)
             light = lpl->lightmin;
-        else if (light > lpl->lightmax)
+        else if(light > lpl->lightmax)
             light = lpl->lightmax;
 
         // transform to hardware value
@@ -130,87 +132,90 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
 //
 static void R_PlaneLoop(localplane_t *lpl)
 {
-   unsigned pl_x, pl_stopx;
-   unsigned short *pl_openptr;
-   unsigned t1, t2, b1, b2, pl_oldtop, pl_oldbottom;
-   unsigned short spanstart[SCREENHEIGHT];
-   visplane_t* pl = lpl->pl;
+    unsigned pl_x, pl_stopx;
+    unsigned short *pl_openptr;
+    unsigned t1, t2, b1, b2, pl_oldtop, pl_oldbottom;
+    unsigned short spanstart[SCREENHEIGHT];
+    visplane_t* pl = lpl->pl;
 
-   pl_x       = pl->minx;
-   pl_stopx   = pl->maxx;
+    pl_x       = pl->minx;
+    pl_stopx   = pl->maxx;
 
-   // see if there is any open space
-   if(pl_x > pl_stopx)
-      return; // nothing to map
+    // see if there is any open space
+    if(pl_x > pl_stopx)
+        return; // nothing to map
 
-   pl_openptr = &pl->open[pl_x];
+    pl_openptr = &pl->open[pl_x];
 
-   t1 = OPENMARK;
-   b1 = t1 & 0xff;
-   t1 >>= 8;
-   t2 = *pl_openptr;
-  
-   do
-   {
-      int x2;
+    t1 = OPENMARK;
+    b1 = t1 & 0xff;
+    t1 >>= 8;
+    t2 = *pl_openptr;
 
-      b2 = t2 & 0xff;
-      t2 >>= 8;
+    do
+    {
+        int x2;
 
-      pl_oldtop = t2;
-      pl_oldbottom = b2;
+        b2 = t2 & 0xff;
+        t2 >>= 8;
 
-      x2 = pl_x - 1;
+        pl_oldtop = t2;
+        pl_oldbottom = b2;
 
-      // top diffs
-      while (t1 < t2 && t1 <= b1)
-      {
-          R_MapPlane(lpl, t1, spanstart[t1], x2);
-          ++t1;
-      }
+        x2 = pl_x - 1;
 
-      // bottom diffs
-      while (b1 > b2 && b1 >= t1)
-      {
-          R_MapPlane(lpl, b1, spanstart[b1], x2);
-          --b1;
-      }
+        // top diffs
+        while(t1 < t2 && t1 <= b1)
+        {
+            R_MapPlane(lpl, t1, spanstart[t1], x2);
+            ++t1;
+        }
 
-      if (pl_x == pl_stopx + 1)
-          break;
+        // bottom diffs
+        while(b1 > b2 && b1 >= t1)
+        {
+            R_MapPlane(lpl, b1, spanstart[b1], x2);
+            --b1;
+        }
 
-      while (t2 < t1 && t2 <= b2)
-      {
-          // top dif spanstarts
-          spanstart[t2] = pl_x;
-          ++t2;
-      }
+        if(pl_x == pl_stopx + 1)
+            break;
 
-      while (b2 > b1 && b2 >= t2)
-      {
-          // bottom dif spanstarts
-          spanstart[b2] = pl_x;
-          --b2;
-      }
+        while(t2 < t1 && t2 <= b2)
+        {
+            // top dif spanstarts
+            spanstart[t2] = pl_x;
+            ++t2;
+        }
 
-      b1 = pl_oldbottom;
-      t1 = pl_oldtop;
-      t2 = pl_x++ < pl_stopx ? *++pl_openptr : OPENMARK;
-   }
-   while(1);
+        while(b2 > b1 && b2 >= t2)
+        {
+            // bottom dif spanstarts
+            spanstart[b2] = pl_x;
+            --b2;
+        }
+
+        b1 = pl_oldbottom;
+        t1 = pl_oldtop;
+        t2 = pl_x++ < pl_stopx ? *++pl_openptr : OPENMARK;
+    }
+    while(1);
 }
 
 static void R_LockPln(void)
 {
     int res;
-    do {
-        __asm volatile (\
-        "tas.b %1\n\t" \
-            "movt %0\n\t" \
-            : "=&r" (res) \
-            : "m" (pl_lock) \
-            );
-    } while (res == 0);
+
+    do
+    {
+        __asm volatile(\
+                       "tas.b %1\n\t" \
+                       "movt %0\n\t" \
+                       : "=&r"(res) \
+                       : "m"(pl_lock) \
+                      );
+    }
+    while(res == 0);
 }
 
 static void R_UnlockPln(void)
@@ -230,9 +235,11 @@ static visplane_t *R_GetNextPlane(void)
     R_UnlockPln();
 
 #ifdef MARS
-    if (p + visplanes + 1 >= lastvisplane)
+
+    if(p + visplanes + 1 >= lastvisplane)
         return NULL;
-    return visplanes + sortedvisplanes[p*2+1];
+
+    return visplanes + sortedvisplanes[p * 2 + 1];
 #else
     visplane_t *pl = visplanes + p + 1;
     return pl == lastvisplane ? NULL : pl;
@@ -260,11 +267,11 @@ static void R_DrawPlanes2(void)
 
     extralight = vd.extralight;
 
-    while ((pl = R_GetNextPlane()) != NULL)
+    while((pl = R_GetNextPlane()) != NULL)
     {
         int light;
 
-        if (pl->minx > pl->maxx)
+        if(pl->minx > pl->maxx)
             continue;
 
         lpl.pl = pl;
@@ -272,34 +279,41 @@ static void R_DrawPlanes2(void)
         lpl.ds_source = flatpixels[pl->flatnum];
         lpl.height = (unsigned)D_abs(pl->height) << FIXEDTOHEIGHT;
 
-        if (vd.fixedcolormap)
+        if(vd.fixedcolormap)
         {
             lpl.lightmin = lpl.lightmax = vd.fixedcolormap;
         }
         else
         {
             light = pl->lightlevel + extralight;
-            if (light < 0)
+
+            if(light < 0)
                 light = 0;
-            if (light > 255)
+
+            if(light > 255)
                 light = 255;
+
             lpl.lightmax = light;
             lpl.lightmin = lpl.lightmax;
 
-            if (detailmode == detmode_high)
+            if(detailmode == detmode_high)
             {
 #ifdef MARS
-                if (light <= 160 + extralight)
+
+                if(light <= 160 + extralight)
                     light = (light >> 1);
+
 #else
                 light = light - ((255 - light) << 1);
 #endif
-                if (light < MINLIGHT)
+
+                if(light < MINLIGHT)
                     light = MINLIGHT;
+
                 lpl.lightmin = (unsigned)light;
             }
 
-            if (lpl.lightmin != lpl.lightmax)
+            if(lpl.lightmin != lpl.lightmax)
                 lpl.lightsub = 160 * (lpl.lightmax - lpl.lightmin) / (800 - 160);
             else
                 lpl.lightmin = lpl.lightmax = HWLIGHT((unsigned)lpl.lightmax);
@@ -327,7 +341,8 @@ void R_DrawPlanes(void)
     int numplanes;
 
     numplanes = lastvisplane - visplanes;
-    if (numplanes <= 1)
+
+    if(numplanes <= 1)
         return;
 
     Mars_R_BeginDrawPlanes();

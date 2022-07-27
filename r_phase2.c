@@ -19,191 +19,197 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floor
 
 static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floornewheight, fixed_t *ceilingnewheight)
 {
-   seg_t     *seg;
-   line_t    *li;
-   side_t    *si;
-   sector_t  *front_sector, *back_sector;
-   fixed_t    f_floorheight, f_ceilingheight;
-   fixed_t    b_floorheight, b_ceilingheight;
-   int        f_lightlevel, b_lightlevel;
-   int        f_ceilingpic, b_ceilingpic;
-   int        b_texturemid, t_texturemid;
-   boolean    skyhack;
-   int        actionbits;
-   int        side;
+    seg_t     *seg;
+    line_t    *li;
+    side_t    *si;
+    sector_t  *front_sector, *back_sector;
+    fixed_t    f_floorheight, f_ceilingheight;
+    fixed_t    b_floorheight, b_ceilingheight;
+    int        f_lightlevel, b_lightlevel;
+    int        f_ceilingpic, b_ceilingpic;
+    int        b_texturemid, t_texturemid;
+    boolean    skyhack;
+    int        actionbits;
+    int        side;
 
-   {
-      seg  = segl->seg;
-      li   = &lines[seg->linedef];
-      side = seg->side;
-      si   = &sides[li->sidenum[seg->side]];
+    {
+        seg  = segl->seg;
+        li   = &lines[seg->linedef];
+        side = seg->side;
+        si   = &sides[li->sidenum[seg->side]];
 
-      li->flags |= ML_MAPPED; // mark as seen
+        li->flags |= ML_MAPPED; // mark as seen
 
-      front_sector    = &sectors[sides[li->sidenum[side]].sector];
+        front_sector    = &sectors[sides[li->sidenum[side]].sector];
 #ifdef MARS
-      Mars_ClearCacheLines(front_sector, (sizeof(sector_t)+31)/16);
+        Mars_ClearCacheLines(front_sector, (sizeof(sector_t) +31) / 16);
 #endif
 
-      f_ceilingpic    = front_sector->ceilingpic;
-      f_lightlevel    = front_sector->lightlevel;
-      f_floorheight   = front_sector->floorheight   - vd.viewz;
-      f_ceilingheight = front_sector->ceilingheight - vd.viewz;
+        f_ceilingpic    = front_sector->ceilingpic;
+        f_lightlevel    = front_sector->lightlevel;
+        f_floorheight   = front_sector->floorheight   - vd.viewz;
+        f_ceilingheight = front_sector->ceilingheight - vd.viewz;
 
 #ifdef MARS
-      Mars_ClearCacheLine(&flattranslation[front_sector->floorpic]);
+        Mars_ClearCacheLine(&flattranslation[front_sector->floorpic]);
 #endif
-      segl->floorpicnum   = flattranslation[front_sector->floorpic];
+        segl->floorpicnum   = flattranslation[front_sector->floorpic];
 
-      if (f_ceilingpic != -1)
-      {
+        if(f_ceilingpic != -1)
+        {
 #ifdef MARS
-          Mars_ClearCacheLine(&flattranslation[f_ceilingpic]);
+            Mars_ClearCacheLine(&flattranslation[f_ceilingpic]);
 #endif
-          segl->ceilingpicnum = flattranslation[f_ceilingpic];
-      }
-      else
-      {
-          segl->ceilingpicnum = -1;
-      }
+            segl->ceilingpicnum = flattranslation[f_ceilingpic];
+        }
+        else
+        {
+            segl->ceilingpicnum = -1;
+        }
 
-      back_sector = (li->flags & ML_TWOSIDED) ? &sectors[sides[li->sidenum[side^1]].sector] : 0;
-      if(!back_sector)
-         back_sector = &emptysector;
+        back_sector = (li->flags & ML_TWOSIDED) ? &sectors[sides[li->sidenum[side ^ 1]].sector] : 0;
+
+        if(!back_sector)
+            back_sector = &emptysector;
+
 #ifdef MARS
-      else
-         Mars_ClearCacheLines(back_sector, (sizeof(sector_t)+31)/16);
+        else
+            Mars_ClearCacheLines(back_sector, (sizeof(sector_t) +31) / 16);
+
 #endif
 
-      b_ceilingpic    = back_sector->ceilingpic;
-      b_lightlevel    = back_sector->lightlevel;
-      b_floorheight   = back_sector->floorheight   - vd.viewz;
-      b_ceilingheight = back_sector->ceilingheight - vd.viewz;
+        b_ceilingpic    = back_sector->ceilingpic;
+        b_lightlevel    = back_sector->lightlevel;
+        b_floorheight   = back_sector->floorheight   - vd.viewz;
+        b_ceilingheight = back_sector->ceilingheight - vd.viewz;
 
-      t_texturemid = b_texturemid = 0;
-      actionbits = 0;
+        t_texturemid = b_texturemid = 0;
+        actionbits = 0;
 
-      // deal with sky ceilings (also missing in 3DO)
-      if(f_ceilingpic == -1 && b_ceilingpic == -1)
-         skyhack = true;
-      else 
-         skyhack = false;
+        // deal with sky ceilings (also missing in 3DO)
+        if(f_ceilingpic == -1 && b_ceilingpic == -1)
+            skyhack = true;
+        else
+            skyhack = false;
 
-      // add floors and ceilings if the wall needs them
-      if(f_floorheight < 0 &&                                // is the camera above the floor?
-         (front_sector->floorpic != back_sector->floorpic || // floor texture changes across line?
-          f_floorheight   != b_floorheight                || // height changes across line?
-          f_lightlevel    != b_lightlevel                 || // light level changes across line?
-          b_ceilingheight == b_floorheight))                 // backsector is closed?
-      {
-         segl->floorheight = *floornewheight = f_floorheight / (1 << FIXEDTOHEIGHT);
-         actionbits |= (AC_ADDFLOOR|AC_NEWFLOOR);
-      }
+        // add floors and ceilings if the wall needs them
+        if(f_floorheight < 0 &&                                // is the camera above the floor?
+                (front_sector->floorpic != back_sector->floorpic || // floor texture changes across line?
+                 f_floorheight   != b_floorheight                || // height changes across line?
+                 f_lightlevel    != b_lightlevel                 || // light level changes across line?
+                 b_ceilingheight == b_floorheight))                 // backsector is closed?
+        {
+            segl->floorheight = *floornewheight = f_floorheight / (1 << FIXEDTOHEIGHT);
+            actionbits |= (AC_ADDFLOOR | AC_NEWFLOOR);
+        }
 
-      if(!skyhack                                         && // not a sky hack wall
-         (f_ceilingheight > 0 || f_ceilingpic == -1)      && // ceiling below camera, or sky
-         (f_ceilingpic    != b_ceilingpic                 || // ceiling texture changes across line?
-          f_ceilingheight != b_ceilingheight              || // height changes across line?              
-          f_lightlevel    != b_lightlevel                 || // light level changes across line?
-          b_ceilingheight == b_floorheight))                 // backsector is closed?
-      {
-         segl->ceilingheight = *ceilingnewheight = f_ceilingheight / (1 << FIXEDTOHEIGHT);
-         if(f_ceilingpic == -1)
-            actionbits |= (AC_ADDSKY|AC_NEWCEILING);
-         else
-            actionbits |= (AC_ADDCEILING|AC_NEWCEILING);
-      }
+        if(!skyhack                                         && // not a sky hack wall
+                (f_ceilingheight > 0 || f_ceilingpic == -1)      && // ceiling below camera, or sky
+                (f_ceilingpic    != b_ceilingpic                 || // ceiling texture changes across line?
+                 f_ceilingheight != b_ceilingheight              || // height changes across line?
+                 f_lightlevel    != b_lightlevel                 || // light level changes across line?
+                 b_ceilingheight == b_floorheight))                 // backsector is closed?
+        {
+            segl->ceilingheight = *ceilingnewheight = f_ceilingheight / (1 << FIXEDTOHEIGHT);
 
-      segl->t_topheight = f_ceilingheight / (1 << FIXEDTOHEIGHT); // top of texturemap
+            if(f_ceilingpic == -1)
+                actionbits |= (AC_ADDSKY | AC_NEWCEILING);
+            else
+                actionbits |= (AC_ADDCEILING | AC_NEWCEILING);
+        }
 
-      if(back_sector == &emptysector)
-      {
-         // single-sided line
+        segl->t_topheight = f_ceilingheight / (1 << FIXEDTOHEIGHT); // top of texturemap
+
+        if(back_sector == &emptysector)
+        {
+            // single-sided line
 #ifdef MARS
-         Mars_ClearCacheLine(&texturetranslation[si->midtexture]);
+            Mars_ClearCacheLine(&texturetranslation[si->midtexture]);
 #endif
-         segl->t_texturenum = texturetranslation[si->midtexture];
+            segl->t_texturenum = texturetranslation[si->midtexture];
 
-         // handle unpegging (bottom of texture at bottom, or top of texture at top)
-         if(li->flags & ML_DONTPEGBOTTOM)
-            t_texturemid = f_floorheight + (textures[segl->t_texturenum].height << FRACBITS);
-         else
-            t_texturemid = f_ceilingheight;
-
-         t_texturemid += si->rowoffset<<FRACBITS;                               // add in sidedef texture offset
-         segl->t_bottomheight = f_floorheight / (1 << FIXEDTOHEIGHT); // set bottom height
-         actionbits |= (AC_SOLIDSIL|AC_TOPTEXTURE);                   // solid line; draw middle texture only
-      }
-      else
-      {
-         // two-sided line
-
-         // is bottom texture visible?
-         if(b_floorheight > f_floorheight)
-         {
-#ifdef MARS
-            Mars_ClearCacheLine(&texturetranslation[si->bottomtexture]);
-#endif
-            segl->b_texturenum = texturetranslation[si->bottomtexture];
+            // handle unpegging (bottom of texture at bottom, or top of texture at top)
             if(li->flags & ML_DONTPEGBOTTOM)
-               b_texturemid = f_ceilingheight;
+                t_texturemid = f_floorheight + (textures[segl->t_texturenum].height << FRACBITS);
             else
-               b_texturemid = b_floorheight;
+                t_texturemid = f_ceilingheight;
 
-            b_texturemid += si->rowoffset<<FRACBITS; // add in sidedef texture offset
+            t_texturemid += si->rowoffset << FRACBITS;                             // add in sidedef texture offset
+            segl->t_bottomheight = f_floorheight / (1 << FIXEDTOHEIGHT); // set bottom height
+            actionbits |= (AC_SOLIDSIL | AC_TOPTEXTURE);                 // solid line; draw middle texture only
+        }
+        else
+        {
+            // two-sided line
 
-            segl->b_topheight = *floornewheight = b_floorheight / (1 << FIXEDTOHEIGHT);
-            segl->b_bottomheight = f_floorheight / (1 << FIXEDTOHEIGHT);
-            actionbits |= (AC_BOTTOMTEXTURE|AC_NEWFLOOR); // generate bottom wall and floor
-         }
-
-         // is top texture visible?
-         if(b_ceilingheight < f_ceilingheight && !skyhack)
-         {
+            // is bottom texture visible?
+            if(b_floorheight > f_floorheight)
+            {
 #ifdef MARS
-            Mars_ClearCacheLine(&texturetranslation[si->toptexture]);
+                Mars_ClearCacheLine(&texturetranslation[si->bottomtexture]);
 #endif
-            segl->t_texturenum = texturetranslation[si->toptexture];
-            if(li->flags & ML_DONTPEGTOP)
-               t_texturemid = f_ceilingheight;
+                segl->b_texturenum = texturetranslation[si->bottomtexture];
+
+                if(li->flags & ML_DONTPEGBOTTOM)
+                    b_texturemid = f_ceilingheight;
+                else
+                    b_texturemid = b_floorheight;
+
+                b_texturemid += si->rowoffset << FRACBITS; // add in sidedef texture offset
+
+                segl->b_topheight = *floornewheight = b_floorheight / (1 << FIXEDTOHEIGHT);
+                segl->b_bottomheight = f_floorheight / (1 << FIXEDTOHEIGHT);
+                actionbits |= (AC_BOTTOMTEXTURE | AC_NEWFLOOR); // generate bottom wall and floor
+            }
+
+            // is top texture visible?
+            if(b_ceilingheight < f_ceilingheight && !skyhack)
+            {
+#ifdef MARS
+                Mars_ClearCacheLine(&texturetranslation[si->toptexture]);
+#endif
+                segl->t_texturenum = texturetranslation[si->toptexture];
+
+                if(li->flags & ML_DONTPEGTOP)
+                    t_texturemid = f_ceilingheight;
+                else
+                    t_texturemid = b_ceilingheight + (textures[segl->t_texturenum].height << FRACBITS);
+
+                t_texturemid += si->rowoffset << FRACBITS; // add in sidedef texture offset
+
+                segl->t_bottomheight = *ceilingnewheight = b_ceilingheight / (1 << FIXEDTOHEIGHT);
+                actionbits |= (AC_NEWCEILING | AC_TOPTEXTURE); // draw top texture and ceiling
+            }
+
+            // check if this wall is solid, for sprite clipping
+            if(b_floorheight >= f_ceilingheight || b_ceilingheight <= f_floorheight)
+                actionbits |= AC_SOLIDSIL;
             else
-               t_texturemid = b_ceilingheight + (textures[segl->t_texturenum].height << FRACBITS);
-
-            t_texturemid += si->rowoffset<<FRACBITS; // add in sidedef texture offset
-
-            segl->t_bottomheight = *ceilingnewheight = b_ceilingheight / (1 << FIXEDTOHEIGHT);
-            actionbits |= (AC_NEWCEILING|AC_TOPTEXTURE); // draw top texture and ceiling
-         }
-
-         // check if this wall is solid, for sprite clipping
-         if(b_floorheight >= f_ceilingheight || b_ceilingheight <= f_floorheight)
-            actionbits |= AC_SOLIDSIL;
-         else
-         {
-            if((b_floorheight >= 0 && b_floorheight > f_floorheight) ||
-               (f_floorheight < 0 && f_floorheight > b_floorheight))
             {
-               actionbits |= AC_BOTTOMSIL; // set bottom mask
-            }
+                if((b_floorheight >= 0 && b_floorheight > f_floorheight) ||
+                        (f_floorheight < 0 && f_floorheight > b_floorheight))
+                {
+                    actionbits |= AC_BOTTOMSIL; // set bottom mask
+                }
 
-            if(!skyhack)
-            {
-               if((b_ceilingheight <= 0 && b_ceilingheight < f_ceilingheight) ||
-                  (f_ceilingheight >  0 && b_ceilingheight > f_ceilingheight))
-               {
-                  actionbits |= AC_TOPSIL; // set top mask
-               }
+                if(!skyhack)
+                {
+                    if((b_ceilingheight <= 0 && b_ceilingheight < f_ceilingheight) ||
+                            (f_ceilingheight >  0 && b_ceilingheight > f_ceilingheight))
+                    {
+                        actionbits |= AC_TOPSIL; // set top mask
+                    }
+                }
             }
-         }
-      }
+        }
 
-      // save local data to the viswall structure
-      segl->actionbits    = actionbits;
-      segl->t_texturemid  = t_texturemid;
-      segl->b_texturemid  = b_texturemid;
-      segl->seglightlevel = f_lightlevel;
-      segl->offset        = ((fixed_t)si->textureoffset + seg->offset) << 16;
-   }
+        // save local data to the viswall structure
+        segl->actionbits    = actionbits;
+        segl->t_texturemid  = t_texturemid;
+        segl->b_texturemid  = b_texturemid;
+        segl->seglightlevel = f_lightlevel;
+        segl->offset        = ((fixed_t)si->textureoffset + seg->offset) << 16;
+    }
 }
 
 //
@@ -217,7 +223,7 @@ static fixed_t R_PointToDist(fixed_t x, fixed_t y)
     dx = D_abs(x - vd.viewx);
     dy = D_abs(y - vd.viewy);
 
-    if (dy > dx)
+    if(dy > dx)
     {
         temp = dx;
         dx = dy;
@@ -262,16 +268,16 @@ static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle, int ang
 
     offsetangle = normalangle - angle1;
 
-    if (offsetangle > ANG180)
+    if(offsetangle > ANG180)
         offsetangle = 0 - offsetangle;
 
-    if (offsetangle > ANG90)
+    if(offsetangle > ANG90)
         offsetangle = ANG90;
 
     sineval = finesine(offsetangle >> ANGLETOFINESHIFT);
     FixedMul2(rw_offset, hyp, sineval);
 
-    if (normalangle - angle1 < ANG180)
+    if(normalangle - angle1 < ANG180)
         rw_offset = -rw_offset;
 
     wc->offset += rw_offset;
@@ -292,10 +298,10 @@ static void R_WallLatePrep(viswall_t* wc)
     normalangle = ((angle_t)seg->angle << 16) + ANG90;
     offsetangle = normalangle - angle1;
 
-    if ((int)offsetangle < 0)
+    if((int)offsetangle < 0)
         offsetangle = 0 - offsetangle;
 
-    if (offsetangle > ANG90)
+    if(offsetangle > ANG90)
         offsetangle = ANG90;
 
     distangle = ANG90 - offsetangle;
@@ -305,9 +311,9 @@ static void R_WallLatePrep(viswall_t* wc)
     wc->distance = rw_distance;
 
     scalefrac = scale2 = wc->scalefrac =
-        R_ScaleFromGlobalAngle(rw_distance, vd.viewangle + xtoviewangle[wc->start], normalangle);
+                             R_ScaleFromGlobalAngle(rw_distance, vd.viewangle + xtoviewangle[wc->start], normalangle);
 
-    if (wc->stop > wc->start)
+    if(wc->stop > wc->start)
     {
         scale2 = R_ScaleFromGlobalAngle(rw_distance, vd.viewangle + xtoviewangle[wc->stop], normalangle);
 #ifdef MARS
@@ -321,16 +327,18 @@ static void R_WallLatePrep(viswall_t* wc)
     wc->scale2 = scale2;
 
     // does line have top or bottom textures?
-    if (wc->actionbits & (AC_TOPTEXTURE | AC_BOTTOMTEXTURE))
+    if(wc->actionbits & (AC_TOPTEXTURE | AC_BOTTOMTEXTURE))
     {
         R_SetupCalc(wc, hyp, normalangle, angle1);// do calc setup
     }
 
 #ifdef MARS
-    if (wc->stop > wc->start)
+
+    if(wc->stop > wc->start)
     {
         wc->scalestep = SH2_DIVU_DVDNT; // get 32-bit quotient
     }
+
 #endif
 
     wc->v[0].x = vertexes[seg->v1].x, wc->v[0].y = vertexes[seg->v1].y;
@@ -342,9 +350,10 @@ static void R_WallLatePrep(viswall_t* wc)
 
     wc->sil = (byte*)lastopening - rw_x;
 
-    if (wc->actionbits & AC_TOPSIL)
+    if(wc->actionbits & AC_TOPSIL)
         lastopening += width;
-    if (wc->actionbits & AC_BOTTOMSIL)
+
+    if(wc->actionbits & AC_BOTTOMSIL)
         lastopening += width;
 }
 
@@ -381,37 +390,41 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floor
     floor = ceiling = visplanes;
     flooropen = ceilopen = visplanes[0].open;
 
-    if (actionbits & AC_ADDFLOOR)
+    if(actionbits & AC_ADDFLOOR)
         floorplhash = R_PlaneHash(floorheight, floorpicnum, lightlevel);
-    if (actionbits & AC_ADDCEILING)
+
+    if(actionbits & AC_ADDCEILING)
         ceilingplhash = R_PlaneHash(ceilingheight, ceilingpicnum, lightlevel);
 
-    if (actionbits & AC_TOPSIL)
+    if(actionbits & AC_TOPSIL)
         topsil = segl->sil;
     else
         topsil = NULL;
-    if (actionbits & AC_BOTTOMSIL)
+
+    if(actionbits & AC_BOTTOMSIL)
         bottomsil = segl->sil + (actionbits & AC_TOPSIL ? width : 0);
     else
         bottomsil = NULL;
 
-    if (actionbits & AC_ADDFLOOR)
+    if(actionbits & AC_ADDFLOOR)
         flooropen = visplanes[0].open;
     else
         flooropen = NULL;
-    if (actionbits & AC_ADDCEILING)
+
+    if(actionbits & AC_ADDCEILING)
         ceilopen = visplanes[0].open;
     else
         ceilopen = NULL;
 
     unsigned short *newclipbounds = NULL;
-    if (actionbits & (AC_NEWFLOOR | AC_NEWCEILING))
+
+    if(actionbits & (AC_NEWFLOOR | AC_NEWCEILING))
     {
         newclipbounds = lastsegclip - start;
         lastsegclip += width;
     }
 
-    for (x = start; x <= stop; x++)
+    for(x = start; x <= stop; x++)
     {
         int floorclipx, ceilingclipx;
         int low, high, top, bottom;
@@ -432,36 +445,39 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floor
         //
         FixedMul2(low, scale2, floornewheight);
         low = centerY - low;
-        if (low < 0)
+
+        if(low < 0)
             low = 0;
-        else if (low > floorclipx)
+        else if(low > floorclipx)
             low = floorclipx;
 
         FixedMul2(high, scale2, ceilingnewheight);
         high = centerY - high;
-        if (high > viewportHeight)
+
+        if(high > viewportHeight)
             high = viewportHeight;
-        else if (high < ceilingclipx)
+        else if(high < ceilingclipx)
             high = ceilingclipx;
 
         // top sprite clip sil
-        if (topsil)
-            topsil[x] = high+1;
+        if(topsil)
+            topsil[x] = high + 1;
 
         // bottom sprite clip sil
-        if (bottomsil)
-            bottomsil[x] = low+1;
+        if(bottomsil)
+            bottomsil[x] = low + 1;
 
-        if (newclipbounds)
+        if(newclipbounds)
         {
             int newfloorclipx = floorclipx;
             int newceilingclipx = ceilingclipx;
             uint16_t newclip;
 
             // rewrite clipbounds
-            if (actionbits & AC_NEWFLOOR)
+            if(actionbits & AC_NEWFLOOR)
                 newfloorclipx = low;
-            if (actionbits & AC_NEWCEILING)
+
+            if(actionbits & AC_NEWCEILING)
                 newceilingclipx = high;
 
             newclip = (newceilingclipx << 8) + newfloorclipx;
@@ -472,46 +488,51 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floor
         //
         // floor
         //
-        if (flooropen)
+        if(flooropen)
         {
             FixedMul2(top, scale2, floorheight);
             top = centerY - top;
-            if (top < ceilingclipx)
+
+            if(top < ceilingclipx)
                 top = ceilingclipx;
+
             bottom = floorclipx;
 
-            if (top < bottom)
+            if(top < bottom)
             {
-                if (!MARKEDOPEN(flooropen[x]))
+                if(!MARKEDOPEN(flooropen[x]))
                 {
-                    floor = R_FindPlane(floorplhash, floorheight, 
-                        floorpicnum, lightlevel, x, stop);
+                    floor = R_FindPlane(floorplhash, floorheight,
+                                        floorpicnum, lightlevel, x, stop);
                     flooropen = floor->open;
                 }
-                flooropen[x] = (top << 8) + (bottom-1);
+
+                flooropen[x] = (top << 8) + (bottom - 1);
             }
         }
 
         //
         // ceiling
         //
-        if (ceilopen)
+        if(ceilopen)
         {
             top = ceilingclipx;
             FixedMul2(bottom, scale2, ceilingheight);
             bottom = centerY - bottom;
-            if (bottom > floorclipx)
+
+            if(bottom > floorclipx)
                 bottom = floorclipx;
 
-            if (top < bottom)
+            if(top < bottom)
             {
-                if (!MARKEDOPEN(ceilopen[x]))
+                if(!MARKEDOPEN(ceilopen[x]))
                 {
-                    ceiling = R_FindPlane(ceilingplhash, ceilingheight, 
-                        ceilingpicnum, lightlevel, x, stop);
+                    ceiling = R_FindPlane(ceilingplhash, ceilingheight,
+                                          ceilingpicnum, lightlevel, x, stop);
                     ceilopen = ceiling->open;
                 }
-                ceilopen[x] = (top << 8) + (bottom-1);
+
+                ceilopen[x] = (top << 8) + (bottom - 1);
             }
         }
     }
@@ -526,16 +547,16 @@ void Mars_Sec_R_WallPrep(void)
 {
     viswall_t *segl;
     viswall_t *first, *verylast;
-    unsigned clipbounds_[SCREENWIDTH/2+1];
+    unsigned clipbounds_[SCREENWIDTH / 2 + 1];
     unsigned short *clipbounds = (unsigned short *)clipbounds_;
     fixed_t floornewheight = 0, ceilingnewheight = 0;
 
     R_InitClipBounds(clipbounds_);
-  
+
     first = viswalls;
     verylast = NULL;
 
-    for (segl = first; segl != verylast; )
+    for(segl = first; segl != verylast;)
     {
         int nextsegs;
         viswall_t* last;
@@ -543,14 +564,14 @@ void Mars_Sec_R_WallPrep(void)
         nextsegs = MARS_SYS_COMM6;
 
         // check if master CPU finished exec'ing R_BSP()
-        if (nextsegs == 0xffff)
+        if(nextsegs == 0xffff)
         {
             Mars_ClearCacheLine(&lastwallcmd);
             verylast = lastwallcmd;
             nextsegs = verylast - first;
         }
 
-        for (last = first + nextsegs; segl < last; segl++)
+        for(last = first + nextsegs; segl < last; segl++)
         {
             R_WallEarlyPrep(segl, &floornewheight, &ceilingnewheight);
 
@@ -560,29 +581,31 @@ void Mars_Sec_R_WallPrep(void)
 
             // FIXME: optimize this
 
-            if (segl->actionbits & AC_TOPTEXTURE)
+            if(segl->actionbits & AC_TOPTEXTURE)
             {
                 texture_t* tex = &textures[segl->t_texturenum];
                 Mars_ClearCacheLine(&tex->data);
             }
-            if (segl->actionbits & AC_BOTTOMTEXTURE)
+
+            if(segl->actionbits & AC_BOTTOMTEXTURE)
             {
                 texture_t* tex = &textures[segl->b_texturenum];
                 Mars_ClearCacheLine(&tex->data);
             }
 
-            if (segl->actionbits & AC_ADDFLOOR)
+            if(segl->actionbits & AC_ADDFLOOR)
             {
                 Mars_ClearCacheLine(&flatpixels[segl->floorpicnum]);
             }
-            if (segl->actionbits & AC_ADDCEILING)
+
+            if(segl->actionbits & AC_ADDCEILING)
             {
                 Mars_ClearCacheLine(&flatpixels[segl->ceilingpicnum]);
             }
 
             segl->actionbits |= AC_READY;
         }
-    }    
+    }
 }
 
 static void Mars_Sec_R_SplitPlanes(void)
@@ -591,7 +614,7 @@ static void Mars_Sec_R_SplitPlanes(void)
     const int maxlen = centerX * 2;
     visplane_t *pl, *last = lastvisplane;
 
-    for (pl = visplanes + 1; pl < last; pl++)
+    for(pl = visplanes + 1; pl < last; pl++)
     {
         int start, stop;
         visplane_t* newpl;
@@ -599,26 +622,31 @@ static void Mars_Sec_R_SplitPlanes(void)
         int newstop;
 
         numplanes = lastvisplane - visplanes;
-        if (numplanes >= MAXVISPLANES)
+
+        if(numplanes >= MAXVISPLANES)
             return;
 
         // see if there is any open space
         start = pl->minx, stop = pl->maxx;
-        if (start > stop)
+
+        if(start > stop)
             continue; // nothing to map
 
         // split long visplane into two
 
         int span = stop - start + 1;
-        if (span < maxlen)
+
+        if(span < maxlen)
             continue;
 
         pl->maxx = start;
         newstop = start + minlen;
 
-        do {
+        do
+        {
             newstop = start + minlen;
-            if (newstop > stop || numplanes == MAXWALLCMDS - 1)
+
+            if(newstop > stop || numplanes == MAXWALLCMDS - 1)
                 newstop = stop;
 
             newpl = lastvisplane++;
@@ -631,11 +659,12 @@ static void Mars_Sec_R_SplitPlanes(void)
 
             numplanes++;
             start = newstop;
-        } while (start < stop);
+        }
+        while(start < stop);
     }
 }
 
-// sort visplanes by flatnum so that texture data 
+// sort visplanes by flatnum so that texture data
 // has a better chance to stay in the CPU cache
 
 static void Mars_Sec_R_SortPlanes(void)
@@ -646,7 +675,8 @@ static void Mars_Sec_R_SortPlanes(void)
 
     i = 0;
     numplanes = 0;
-    for (pl = visplanes + 1; pl < lastvisplane; pl++)
+
+    for(pl = visplanes + 1; pl < lastvisplane; pl++)
     {
         sortbuf[i + 0] = pl->flatnum;
         sortbuf[i + 1] = pl - visplanes;
@@ -668,12 +698,12 @@ void Mars_Sec_R_PlanePrep(void)
 void R_WallPrep(void)
 {
     viswall_t* segl;
-    unsigned clipbounds_[SCREENWIDTH/2+1];
+    unsigned clipbounds_[SCREENWIDTH / 2 + 1];
     unsigned short *clipbounds = (unsigned short *)clipbounds_;
 
     R_InitClipBounds(clipbounds_);
 
-    for (segl = viswalls; segl != lastwallcmd; segl++)
+    for(segl = viswalls; segl != lastwallcmd; segl++)
     {
         fixed_t floornewheight = 0, ceilingnewheight = 0;
 

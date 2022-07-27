@@ -48,7 +48,8 @@ __attribute__((aligned(16)))
     unsigned readcnt;
     unsigned writecnt;
     short ringbuf[MARS_RINGBUF_MAXWORDS] __attribute__((aligned(16)));
-} marsrb_t;
+}
+marsrb_t;
 
 static inline void Mars_RB_ResetRead(marsrb_t* wb)
 {
@@ -71,7 +72,9 @@ static inline void Mars_RB_ResetAll(marsrb_t* wb)
 static inline unsigned Mars_RB_Len(marsrb_t* wb)
 {
     int len = (int)MARS_UNCACHED_WROVER - (int)MARS_UNCACHED_RROVER;
-    if (len <= 0) return 0;
+
+    if(len <= 0) return 0;
+
     return (unsigned)len;
 }
 
@@ -89,25 +92,27 @@ static inline void Mars_RB_FinishWrite(marsrb_t* wb)
 
 static inline void Mars_RB_WaitWriter(marsrb_t* wb, unsigned want)
 {
-    while (Mars_RB_Len(wb) < want) {}
+    while(Mars_RB_Len(wb) < want) {}
 }
 
 static inline void Mars_RB_WaitReader(marsrb_t* wb, unsigned window)
 {
-    while (Mars_RB_Len(wb) > window) {}
+    while(Mars_RB_Len(wb) > window) {}
 }
 
 static inline void Mars_RB_CommitWrite(marsrb_t* wb)
 {
     wb->writepos += wb->writecnt;
-    if (wb->writepos >= 8)
+
+    if(wb->writepos >= 8)
         Mars_RB_FinishWrite(wb);
 }
 
 static inline void Mars_RB_CommitRead(marsrb_t* wb)
 {
     wb->readpos += wb->readcnt;
-    if (wb->readpos >= 8)
+
+    if(wb->readpos >= 8)
         Mars_RB_FinishRead(wb);
 }
 
@@ -117,16 +122,19 @@ static inline short* Mars_RB_GetReadBuf(marsrb_t* wb, unsigned wcnt)
     unsigned rp = rrover % MARS_RINGBUF_MAXWORDS;
     short* buf;
 
-    if (wcnt > MARS_RINGBUF_MAXWORDS)
+    if(wcnt > MARS_RINGBUF_MAXWORDS)
         return NULL;
 
-    if (wb->readpos > 0) {
-        if (wb->readpos + wcnt <= 8) {
+    if(wb->readpos > 0)
+    {
+        if(wb->readpos + wcnt <= 8)
+        {
             wb->readcnt = wcnt;
             buf = wb->ringbuf + rp + wb->readpos;
             Mars_ClearCacheLine(buf);
             return buf;
         }
+
         Mars_RB_FinishRead(wb);
         rp = rrover % MARS_RINGBUF_MAXWORDS;
     }
@@ -134,7 +142,8 @@ static inline short* Mars_RB_GetReadBuf(marsrb_t* wb, unsigned wcnt)
     // advance position if there's no space near the end
     unsigned rpn = (rrover + wcnt + 7) & ~7;
     unsigned rpe = rpn % MARS_RINGBUF_MAXWORDS;
-    if (rpe < rp)
+
+    if(rpe < rp)
     {
         MARS_UNCACHED_RROVER = rpn;
         rp = rpe;
@@ -144,7 +153,7 @@ static inline short* Mars_RB_GetReadBuf(marsrb_t* wb, unsigned wcnt)
     wb->readcnt = wcnt;
 
     Mars_RB_WaitWriter(wb, wcnt);
-    Mars_ClearCacheLines(buf, (wcnt*2+31)/16);
+    Mars_ClearCacheLines(buf, (wcnt * 2 + 31) / 16);
 
     return buf;
 }
@@ -155,23 +164,27 @@ static inline short* Mars_RB_GetWriteBuf(marsrb_t* wb, unsigned wcnt, boolean wa
     unsigned wp = wrover % MARS_RINGBUF_MAXWORDS;
     unsigned window = wcnt;
 
-    if (wcnt > MARS_RINGBUF_MAXWORDS)
+    if(wcnt > MARS_RINGBUF_MAXWORDS)
         return NULL;
 
-    if (window < MARS_RINGBUF_MAXWORDS / 2)
+    if(window < MARS_RINGBUF_MAXWORDS / 2)
         window = MARS_RINGBUF_MAXWORDS / 2;
-    else if (window > MARS_RINGBUF_MAXWORDS)
+    else if(window > MARS_RINGBUF_MAXWORDS)
         window = MARS_RINGBUF_MAXWORDS;
+
     window = MARS_RINGBUF_MAXWORDS - window;
 
-    if (!wait && Mars_RB_Len(wb) > window)
+    if(!wait && Mars_RB_Len(wb) > window)
         return NULL;
 
-    if (wb->writepos > 0) {
-        if (wb->writepos + wcnt <= 8) {
+    if(wb->writepos > 0)
+    {
+        if(wb->writepos + wcnt <= 8)
+        {
             wb->writecnt = wcnt;
             return wb->ringbuf + wp + wb->writepos;
         }
+
         Mars_RB_FinishWrite(wb);
         wp = wrover % MARS_RINGBUF_MAXWORDS;
     }
@@ -181,7 +194,8 @@ static inline short* Mars_RB_GetWriteBuf(marsrb_t* wb, unsigned wcnt, boolean wa
     // advance position if there's no space near the end
     unsigned wpn = (wrover + wcnt + 7) & ~7;
     unsigned wpe = wpn % MARS_RINGBUF_MAXWORDS;
-    if (wpe < wp)
+
+    if(wpe < wp)
     {
         MARS_UNCACHED_WROVER = wpn;
         wp = wpe;

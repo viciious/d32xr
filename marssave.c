@@ -35,31 +35,33 @@
 
 typedef struct __attribute((packed))
 {
-	uint8_t version;
-	uint8_t skill;
-	uint8_t netgame;
-	uint8_t mapnumber;
-	uint8_t pad[12];
+    uint8_t version;
+    uint8_t skill;
+    uint8_t netgame;
+    uint8_t mapnumber;
+    uint8_t pad[12];
 
-	playerresp_t resp[MAXPLAYERS];
-} savegame_t;
+    playerresp_t resp[MAXPLAYERS];
+}
+savegame_t;
 
 typedef struct __attribute((packed))
 {
-	int8_t version;
-	int8_t detailmode;
-	int8_t controltype;
-	int8_t viewport;
-	int8_t sfxvolume;
-	int8_t musicvolume;
-	int8_t musictype;
-	int8_t unused1;
-	int8_t alwaysrun;
-	int8_t strafebtns;
-	int8_t unused2;
-	int8_t anamorphic;
-	int8_t colormap;
-} saveopts_t;
+    int8_t version;
+    int8_t detailmode;
+    int8_t controltype;
+    int8_t viewport;
+    int8_t sfxvolume;
+    int8_t musicvolume;
+    int8_t musictype;
+    int8_t unused1;
+    int8_t alwaysrun;
+    int8_t strafebtns;
+    int8_t unused2;
+    int8_t anamorphic;
+    int8_t colormap;
+}
+saveopts_t;
 
 static char saveslotguard[SRAM_SLOTSIZE - sizeof(savegame_t)] __attribute__((unused));
 static char optslotguard[SRAM_SLOTSIZE - sizeof(saveopts_t)] __attribute__((unused));
@@ -70,223 +72,238 @@ const uint16_t optslotoffset = optslotnumber * SRAM_SLOTSIZE;
 
 void ReadGame(int slotnumber)
 {
-	savegame_t sg;
-	const int offset = slotnumber * SRAM_SLOTSIZE;
+    savegame_t sg;
+    const int offset = slotnumber * SRAM_SLOTSIZE;
 
-	if (slotnumber >= optslotnumber)
-		return;
+    if(slotnumber >= optslotnumber)
+        return;
 
-	D_memset(&sg, 0, sizeof(savegame_t));
+    D_memset(&sg, 0, sizeof(savegame_t));
 
-	Mars_StopSoundMixer();
+    Mars_StopSoundMixer();
 
-	Mars_ReadSRAM((void*)&sg, offset, sizeof(savegame_t));
+    Mars_ReadSRAM((void*)&sg, offset, sizeof(savegame_t));
 
-	Mars_StartSoundMixer();
+    Mars_StartSoundMixer();
 
-	if (sg.version != SRAM_VERSION)
-		return;
+    if(sg.version != SRAM_VERSION)
+        return;
 
-	startskill = sg.skill;
-	starttype = sg.netgame;
-	startmap = sg.mapnumber;
-	starttype = sg.netgame;
-	D_memcpy(playersresp, sg.resp, sizeof(playersresp));
+    startskill = sg.skill;
+    starttype = sg.netgame;
+    startmap = sg.mapnumber;
+    starttype = sg.netgame;
+    D_memcpy(playersresp, sg.resp, sizeof(playersresp));
 }
 
 static void SaveGameExt(int slotnumber, int mapnum)
 {
-	savegame_t sg;
-	const int offset = slotnumber * SRAM_SLOTSIZE;
+    savegame_t sg;
+    const int offset = slotnumber * SRAM_SLOTSIZE;
 
-	if (slotnumber >= optslotnumber)
-		return;
+    if(slotnumber >= optslotnumber)
+        return;
 
-	sg.version = SRAM_VERSION;
-	sg.skill = gameskill;
-	sg.netgame = netgame;
-	sg.mapnumber = mapnum & 0xFF;
-	D_memcpy(sg.resp, playersresp, sizeof(playersresp));
+    sg.version = SRAM_VERSION;
+    sg.skill = gameskill;
+    sg.netgame = netgame;
+    sg.mapnumber = mapnum & 0xFF;
+    D_memcpy(sg.resp, playersresp, sizeof(playersresp));
 
-	Mars_StopSoundMixer();
+    Mars_StopSoundMixer();
 
-	Mars_WriteSRAM((void*)&sg, offset, sizeof(savegame_t));
+    Mars_WriteSRAM((void*)&sg, offset, sizeof(savegame_t));
 
-	Mars_StartSoundMixer();
+    Mars_StartSoundMixer();
 }
 
 void SaveGame(int slotnumber)
 {
-	SaveGameExt(slotnumber, gamemapinfo.mapNumber);
+    SaveGameExt(slotnumber, gamemapinfo.mapNumber);
 }
 
 void QuickSave(int nextmap)
 {
-	SaveGameExt(0, nextmap);
+    SaveGameExt(0, nextmap);
 }
 
 boolean GetSaveInfo(int slotnumber, VINT* mapnum, VINT* skill, VINT *mode)
 {
-	savegame_t sg;
-	const int offset = slotnumber * SRAM_SLOTSIZE;
+    savegame_t sg;
+    const int offset = slotnumber * SRAM_SLOTSIZE;
 
-	if (slotnumber >= optslotnumber)
-		return false;
+    if(slotnumber >= optslotnumber)
+        return false;
 
-	D_memset(&sg, 0, sizeof(savegame_t));
+    D_memset(&sg, 0, sizeof(savegame_t));
 
-	Mars_StopSoundMixer();
+    Mars_StopSoundMixer();
 
-	Mars_ReadSRAM((void*)&sg, offset, sizeof(savegame_t));
+    Mars_ReadSRAM((void*)&sg, offset, sizeof(savegame_t));
 
-	Mars_StartSoundMixer();
+    Mars_StartSoundMixer();
 
-	if (sg.version != SRAM_VERSION)
-		return false;
-	if (sg.netgame >= gt_deathmatch)
-		sg.netgame = gt_single;
+    if(sg.version != SRAM_VERSION)
+        return false;
 
-	*mapnum = sg.mapnumber;
-	*skill = sg.skill;
-	*mode = sg.netgame;
-	return true;
+    if(sg.netgame >= gt_deathmatch)
+        sg.netgame = gt_single;
+
+    *mapnum = sg.mapnumber;
+    *skill = sg.skill;
+    *mode = sg.netgame;
+    return true;
 }
 
 int SaveCount(void)
 {
-	int i;
-	uint8_t temp;
-	int offset = 0;
+    int i;
+    uint8_t temp;
+    int offset = 0;
 
-	Mars_StopSoundMixer();
+    Mars_StopSoundMixer();
 
-	// the last slot is used for storing game options
-	for (i = 0; i < optslotnumber; i++) {
-		Mars_ReadSRAM(&temp, offset, 1);
-		if (temp != SRAM_VERSION)
-			break;
-		offset += SRAM_SLOTSIZE;
-	}
+    // the last slot is used for storing game options
+    for(i = 0; i < optslotnumber; i++)
+    {
+        Mars_ReadSRAM(&temp, offset, 1);
 
-	Mars_StartSoundMixer();
+        if(temp != SRAM_VERSION)
+            break;
 
-	return i;
+        offset += SRAM_SLOTSIZE;
+    }
+
+    Mars_StartSoundMixer();
+
+    return i;
 }
 
 int MaxSaveCount(void)
 {
-	return optslotnumber;
+    return optslotnumber;
 }
 
 static void SaveOptions(void)
 {
-	saveopts_t so;
+    saveopts_t so;
 
-	D_memset(&so, 0, sizeof(saveopts_t));
+    D_memset(&so, 0, sizeof(saveopts_t));
 
-	so.version = SRAM_OPTVERSION;
-	so.detailmode = detailmode;
-	so.controltype = controltype;
-	so.viewport = viewportNum;
-	so.sfxvolume = sfxvolume;
-	so.musicvolume = musicvolume;
-	so.musictype = musictype;
-	so.alwaysrun = alwaysrun;
-	so.strafebtns = strafebtns;
-	so.anamorphic = anamorphicview;
-	so.colormap = colormapopt+1;
+    so.version = SRAM_OPTVERSION;
+    so.detailmode = detailmode;
+    so.controltype = controltype;
+    so.viewport = viewportNum;
+    so.sfxvolume = sfxvolume;
+    so.musicvolume = musicvolume;
+    so.musictype = musictype;
+    so.alwaysrun = alwaysrun;
+    so.strafebtns = strafebtns;
+    so.anamorphic = anamorphicview;
+    so.colormap = colormapopt + 1;
 
-	Mars_StopSoundMixer();
+    Mars_StopSoundMixer();
 
-	Mars_WriteSRAM((void*)&so, optslotoffset, sizeof(saveopts_t));
+    Mars_WriteSRAM((void*)&so, optslotoffset, sizeof(saveopts_t));
 
-	Mars_StartSoundMixer();
+    Mars_StartSoundMixer();
 }
 
 static void ReadOptions(void)
 {
-	saveopts_t so;
+    saveopts_t so;
 
-	D_memset(&so, 0, sizeof(saveopts_t));
+    D_memset(&so, 0, sizeof(saveopts_t));
 
-	Mars_StopSoundMixer();
+    Mars_StopSoundMixer();
 
-	Mars_ReadSRAM((void*)&so, optslotoffset, sizeof(saveopts_t));
+    Mars_ReadSRAM((void*)&so, optslotoffset, sizeof(saveopts_t));
 
-	Mars_StartSoundMixer();
+    Mars_StartSoundMixer();
 
-	if (so.version != SRAM_OPTVERSION)
-		return;
+    if(so.version != SRAM_OPTVERSION)
+        return;
 
-	if (so.sfxvolume > 64)
-		so.sfxvolume = 64;
-	if (so.musicvolume > 64)
-		so.musicvolume = 64;
-	if (so.controltype >= NUMCONTROLOPTIONS)
-		so.controltype = 0;
-	if (so.detailmode >= MAXDETAILMODES)
-		so.detailmode = detmode_high;
-	if (so.musictype < mustype_none || so.musictype > mustype_cd)
-		so.musictype = mustype_fm;
-	if (so.musictype == mustype_cd && !S_CDAvailable())
-		so.musictype = mustype_fm;
-	if (so.alwaysrun < 0 || so.alwaysrun > 1)
-		so.alwaysrun = 0;
-	if (so.strafebtns < 0 || so.strafebtns > 3)
-		so.strafebtns = 0;
-	if (so.viewport < 0 || so.viewport >= numViewports)
-		so.viewport = R_DefaultViewportSize();
-	if (so.strafebtns < 0 || so.strafebtns > 3)
-		so.strafebtns = 0;
-	if (so.anamorphic < 0 || so.anamorphic > 1)
-		so.anamorphic = 0;
-	if (so.colormap < 1 || so.colormap > 2)
-		so.colormap = 2;
+    if(so.sfxvolume > 64)
+        so.sfxvolume = 64;
 
-	sfxvolume = so.sfxvolume;
-	musicvolume = so.musicvolume;
-	controltype = so.controltype;
-	detailmode = so.detailmode;
-	viewportNum = so.viewport;
-	musictype = so.musictype;
-	ticsperframe = MINTICSPERFRAME;
-	alwaysrun = so.alwaysrun;
-	strafebtns = so.strafebtns;
-	anamorphicview = so.anamorphic;
-	colormapopt = so.colormap - 1;
+    if(so.musicvolume > 64)
+        so.musicvolume = 64;
+
+    if(so.controltype >= NUMCONTROLOPTIONS)
+        so.controltype = 0;
+
+    if(so.detailmode >= MAXDETAILMODES)
+        so.detailmode = detmode_high;
+
+    if(so.musictype < mustype_none || so.musictype > mustype_cd)
+        so.musictype = mustype_fm;
+
+    if(so.musictype == mustype_cd && !S_CDAvailable())
+        so.musictype = mustype_fm;
+
+    if(so.alwaysrun < 0 || so.alwaysrun > 1)
+        so.alwaysrun = 0;
+
+    if(so.strafebtns < 0 || so.strafebtns > 3)
+        so.strafebtns = 0;
+
+    if(so.viewport < 0 || so.viewport >= numViewports)
+        so.viewport = R_DefaultViewportSize();
+
+    if(so.strafebtns < 0 || so.strafebtns > 3)
+        so.strafebtns = 0;
+
+    if(so.anamorphic < 0 || so.anamorphic > 1)
+        so.anamorphic = 0;
+
+    if(so.colormap < 1 || so.colormap > 2)
+        so.colormap = 2;
+
+    sfxvolume = so.sfxvolume;
+    musicvolume = so.musicvolume;
+    controltype = so.controltype;
+    detailmode = so.detailmode;
+    viewportNum = so.viewport;
+    musictype = so.musictype;
+    ticsperframe = MINTICSPERFRAME;
+    alwaysrun = so.alwaysrun;
+    strafebtns = so.strafebtns;
+    anamorphicview = so.anamorphic;
+    colormapopt = so.colormap - 1;
 }
 
 void ClearEEProm(void)
 {
-	saveopts_t so;
+    saveopts_t so;
 
-	D_memset(&so, 0, sizeof(saveopts_t));
+    D_memset(&so, 0, sizeof(saveopts_t));
 
-	Mars_StopSoundMixer();
+    Mars_StopSoundMixer();
 
-	Mars_WriteSRAM((void*)&so, optslotoffset, sizeof(saveopts_t));
+    Mars_WriteSRAM((void*)&so, optslotoffset, sizeof(saveopts_t));
 
-	Mars_StartSoundMixer();
+    Mars_StartSoundMixer();
 }
 
 void ReadEEProm(void)
 {
-	controltype = 0;
-	sfxvolume = 64;
-	musicvolume = 64;
-	detailmode = detmode_high;
-	viewportNum = R_DefaultViewportSize();
-	musictype = mustype_fm;
-	alwaysrun = 0;
-	strafebtns = 0;
-	ticsperframe = MINTICSPERFRAME;
-	anamorphicview = 0;
-	colormapopt = 1;
+    controltype = 0;
+    sfxvolume = 64;
+    musicvolume = 64;
+    detailmode = detmode_high;
+    viewportNum = R_DefaultViewportSize();
+    musictype = mustype_fm;
+    alwaysrun = 0;
+    strafebtns = 0;
+    ticsperframe = MINTICSPERFRAME;
+    anamorphicview = 0;
+    colormapopt = 1;
 
-	ReadOptions();
+    ReadOptions();
 }
 
 void WriteEEProm(void)
 {
-	SaveOptions();
+    SaveOptions();
 }

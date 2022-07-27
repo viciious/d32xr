@@ -28,63 +28,70 @@
 
 int D_snprintf(char *buf, size_t nsize, const char *fmt, ...)
 {
-	int ret;
-	va_list ap;
+    int ret;
+    va_list ap;
 
-	buf[0] = '\0';
+    buf[0] = '\0';
 
-	va_start(ap, fmt);
-	ret = D_vsnprintf(buf, nsize, fmt, ap);
-	va_end(ap);
+    va_start(ap, fmt);
+    ret = D_vsnprintf(buf, nsize, fmt, ap);
+    va_end(ap);
 
-	return ret;
+    return ret;
 }
 
-int D_strcasecmp (const char *s1, const char *s2)
+int D_strcasecmp(const char *s1, const char *s2)
 {
-	size_t s1len = mystrlen(s1);
-	size_t s2len = mystrlen(s2);
-	int cmp = D_strncasecmp(s1, s2, s1len < s2len ? s1len : s2len);
+    size_t s1len = mystrlen(s1);
+    size_t s2len = mystrlen(s2);
+    int cmp = D_strncasecmp(s1, s2, s1len < s2len ? s1len : s2len);
 
-	if (cmp != 0)
-		return cmp;
-	if (s1len < s2len)
-		return -1;
-	if (s1len > s2len)
-		return 1;
-	return 0;
+    if(cmp != 0)
+        return cmp;
+
+    if(s1len < s2len)
+        return -1;
+
+    if(s1len > s2len)
+        return 1;
+
+    return 0;
 }
 
 int D_atoi(const char* str)
 {
-	int i;
+    int i;
 
-	i = 0;
-	while (*str && (*str >= '0' && *str <= '9')) {
-		i = i * 10 + (*str - '0');
-		str++;
-	}
-	return i;
+    i = 0;
+
+    while(*str && (*str >= '0' && *str <= '9'))
+    {
+        i = i * 10 + (*str - '0');
+        str++;
+    }
+
+    return i;
 }
 
 char* D_strchr(const char* str, char chr)
 {
-	const char* p;
+    const char* p;
 
-	for (p = str; *p != '\0'; p++) {
-		if (*p == chr)
-			return (char*)p;
-	}
+    for(p = str; *p != '\0'; p++)
+    {
+        if(*p == chr)
+            return (char*)p;
+    }
 
-	return NULL;
+    return NULL;
 }
 
 int mystrlen(const char* string)
 {
-	int rc = 0;
+    int rc = 0;
 
-	while (*(string++))
-		rc++;
+    while(*(string++))
+        rc++;
 
-	return rc;
+    return rc;
 }

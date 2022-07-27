@@ -22,34 +22,35 @@ typedef unsigned char byte;
 
 /* lump order in a map wad */
 enum {ML_LABEL, ML_THINGS, ML_LINEDEFS, ML_SIDEDEFS, ML_VERTEXES, ML_SEGS,
-ML_SSECTORS, ML_NODES, ML_SECTORS , ML_REJECT, ML_BLOCKMAP};
+      ML_SSECTORS, ML_NODES, ML_SECTORS, ML_REJECT, ML_BLOCKMAP
+     };
 
 
 typedef struct
 {
-	short		x,y;
+    short		x, y;
 } mapvertex_t;
 
 typedef struct
 {
-	short		textureoffset;
-	short		rowoffset;
-	char		toptexture[8], bottomtexture[8], midtexture[8];
-	short		sector;				/* on viewer's side */
+    short		textureoffset;
+    short		rowoffset;
+    char		toptexture[8], bottomtexture[8], midtexture[8];
+    short		sector;				/* on viewer's side */
 } mapsidedef_t;
 
 typedef struct
 {
-	short		v1, v2;
-	short		flags;
-	short		special, tag;
-	short		sidenum[2];			/* sidenum[1] will be -1 if one sided */
+    short		v1, v2;
+    short		flags;
+    short		special, tag;
+    short		sidenum[2];			/* sidenum[1] will be -1 if one sided */
 } maplinedef_t;
 
 #define	ML_BLOCKING			1
 #define	ML_BLOCKMONSTERS	2
 #define	ML_TWOSIDED			4		/* backside will not be present at all  */
-									/* if not two sided ???:obsolete */
+/* if not two sided ???:obsolete */
 
 /* if a texture is pegged, the texture will have the end exposed to air held */
 /* constant at the top or bottom of the texture (stairs or pulled down things) */
@@ -67,42 +68,42 @@ typedef struct
 
 typedef	struct
 {
-	short		floorheight, ceilingheight;
-	char		floorpic[8], ceilingpic[8];
-	short		lightlevel;
-	short		special, tag;
+    short		floorheight, ceilingheight;
+    char		floorpic[8], ceilingpic[8];
+    short		lightlevel;
+    short		special, tag;
 } mapsector_t;
 
 typedef struct
 {
-	short		numsegs;
-	short		firstseg;			/* segs are stored sequentially */
+    short		numsegs;
+    short		firstseg;			/* segs are stored sequentially */
 } mapsubsector_t;
 
 typedef struct
 {
-	short		v1, v2;
-	short		angle;			/* ???: make this a sidedef? */
-	short		linedef, side;
-	short		offset;
+    short		v1, v2;
+    short		angle;			/* ???: make this a sidedef? */
+    short		linedef, side;
+    short		offset;
 } mapseg_t;
 
-enum {BOXTOP,BOXBOTTOM,BOXLEFT,BOXRIGHT};	/* bbox coordinates */
+enum {BOXTOP, BOXBOTTOM, BOXLEFT, BOXRIGHT};	/* bbox coordinates */
 
 #define	NF_SUBSECTOR	0x8000
 typedef struct
 {
-	short		x,y,dx,dy;			/* partition line */
-	short		bbox[2][4];			/* bounding box for each child */
-	unsigned short	children[2];		/* if NF_SUBSECTOR its a subsector */
+    short		x, y, dx, dy;			/* partition line */
+    short		bbox[2][4];			/* bounding box for each child */
+    unsigned short	children[2];		/* if NF_SUBSECTOR its a subsector */
 } mapnode_t;
 
 typedef struct
 {
-	short		x,y;
-	short		angle;
-	short		type;
-	short		options;
+    short		x, y;
+    short		angle;
+    short		type;
+    short		options;
 } mapthing_t;
 
 #define	MTF_EASY		1
@@ -120,22 +121,22 @@ typedef struct
 
 typedef struct
 {
-	short	originx;
-	short	originy;
-	short	patch;
-	short	stepdir;
-	short	colormap;
+    short	originx;
+    short	originy;
+    short	patch;
+    short	stepdir;
+    short	colormap;
 } mappatch_t;
 
 typedef struct
 {
-	char		name[8];
-	boolean		masked;	
-	short		width;
-	short		height;
-	void		**columndirectory;	/* OBSOLETE */
-	short		patchcount;
-	mappatch_t	patches[1];
+    char		name[8];
+    boolean		masked;
+    short		width;
+    short		height;
+    void		**columndirectory;	/* OBSOLETE */
+    short		patchcount;
+    mappatch_t	patches[1];
 } maptexture_t;
 
 
@@ -153,22 +154,22 @@ typedef struct
 /* column_t are runs of non masked source pixels */
 typedef struct
 {
-	byte			topdelta;	/* 0xff is the last post in a column */
-	byte			length;
-	unsigned short	dataofs;	/* from data start in patch_t */
+    byte			topdelta;	/* 0xff is the last post in a column */
+    byte			length;
+    unsigned short	dataofs;	/* from data start in patch_t */
 } column_t;
 
 /* a patch holds one or more columns */
 /* patches are used for sprites and all masked pictures */
-typedef struct 
-{ 
-	short		width;				/* bounding box size  */
-	short		height; 
-	short		leftoffset;			/* pixels to the left of origin  */
-	short		topoffset;			/* pixels below the origin  */
-	unsigned short	columnofs[8];	/* only [width] used */
-									/* the [0] is &columnofs[width]  */
-} patch_t; 
+typedef struct
+{
+    short		width;				/* bounding box size  */
+    short		height;
+    short		leftoffset;			/* pixels to the left of origin  */
+    short		topoffset;			/* pixels below the origin  */
+    unsigned short	columnofs[8];	/* only [width] used */
+    /* the [0] is &columnofs[width]  */
+} patch_t;
 
 
 /*

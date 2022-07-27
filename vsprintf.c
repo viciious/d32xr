@@ -43,15 +43,15 @@ int D_vsnprintf(char* string, size_t nmax, const char* format, va_list argptr)
     char* str;
     char* origstring = string;
 
-    while (*format)
+    while(*format)
     {
-        if (*format != '%') *(string++) = *(format++);
+        if(*format != '%') *(string++) = *(format++);
         else
         {
             format++;
 
             /* set field pad character to 0 if necessary */
-            if (*format == '0')
+            if(*format == '0')
             {
                 padchar = '0';
                 format++;
@@ -60,11 +60,12 @@ int D_vsnprintf(char* string, size_t nmax, const char* format, va_list argptr)
 
             /* get the fieldwidth if any */
             fieldsize = 0;
-            while (*format >= '0' && *format <= '9')
+
+            while(*format >= '0' && *format <= '9')
                 fieldsize = fieldsize * 10 + *(format++) - '0';
 
             /* get rid of 'l' if present */
-            if (*format == 'l')
+            if(*format == 'l')
             {
                 uselong = 1;
                 format++;
@@ -72,51 +73,62 @@ int D_vsnprintf(char* string, size_t nmax, const char* format, va_list argptr)
             else uselong = 0;
 
             div = 10;
-            if (*format == 'c')
+
+            if(*format == 'c')
             {
                 *(string++) = va_arg(argptr, int);
                 format++;
             }
-            else if (*format == 's')
+            else if(*format == 's')
             {
                 str = (char*)va_arg(argptr, int);
                 len = mystrlen(str);
-                while (fieldsize-- > len) *(string++) = padchar; /* do field pad */
-                while (*str) *(string++) = *(str++); /* copy string */
+
+                while(fieldsize-- > len) *(string++) = padchar;  /* do field pad */
+
+                while(*str) *(string++) = *(str++);  /* copy string */
+
                 format++;
             }
             else
             {
-                if (*format == 'o') /* octal */
+                if(*format == 'o')  /* octal */
                 {
                     div = 8;
-                    if (uselong)
+
+                    if(uselong)
                         num = va_arg(argptr, int);
                     else
                         num = va_arg(argptr, int);
+
                     /*	  printf("o=0%o\n", num); */
                 }
-                else if (*format == 'x' || *format == 'X' || *format == 'p' || *format == 'P')  /* hex */
+                else if(*format == 'x' || *format == 'X' || *format == 'p' || *format == 'P')   /* hex */
                 {
                     div = 16;
-                    if (uselong)
+
+                    if(uselong)
                         num = va_arg(argptr, int);
                     else
                         num = va_arg(argptr, int);
+
                     /*	  printf("x=%x\n", num); */
                 }
-                else if (*format == 'i' || *format == 'd' || *format == 'u') /* decimal */
+                else if(*format == 'i' || *format == 'd' || *format == 'u')  /* decimal */
                 {
                     div = 10;
-                    if (uselong)
+
+                    if(uselong)
                         snum = va_arg(argptr, int);
                     else
                         snum = va_arg(argptr, int);
-                    if (snum < 0 && *format != 'u') /* handle negative %i or %d */
+
+                    if(snum < 0 && *format != 'u')  /* handle negative %i or %d */
                     {
                         *(string++) = '-';
                         num = -snum;
-                        if (fieldsize) fieldsize--;
+
+                        if(fieldsize) fieldsize--;
                     }
                     else num = snum;
                 }
@@ -124,10 +136,12 @@ int D_vsnprintf(char* string, size_t nmax, const char* format, va_list argptr)
 
                 /* print any decimal or hex integer */
                 len = 0;
-                while (num || fieldsize || !len)
+
+                while(num || fieldsize || !len)
                 {
-                    for (i = len; i; i--) string[i] = string[i - 1]; /* shift right */
-                    if (len && fieldsize && !num) *string = padchar; /* pad out */
+                    for(i = len; i; i--) string[i] = string[i - 1];  /* shift right */
+
+                    if(len && fieldsize && !num) *string = padchar;  /* pad out */
                     else
                     {
                         /* put in a hex or decimal digit */
@@ -136,14 +150,18 @@ int D_vsnprintf(char* string, size_t nmax, const char* format, va_list argptr)
                         /*	    printf("d = %c\n", *string); */
                         num /= div;
                     }
+
                     len++;
-                    if (fieldsize) fieldsize--;
+
+                    if(fieldsize) fieldsize--;
                 }
+
                 string += len;
                 format++;
             }
         }
     }
+
     *string = 0;
 
     return origstring - string;

@@ -36,20 +36,20 @@
 */
 void R_InitTexCache(r_texcache_t* c, int maxobjects)
 {
-	D_memset(c, 0, sizeof(*c));
-	c->bestobj = -1;
+    D_memset(c, 0, sizeof(*c));
+    c->bestobj = -1;
 
 #ifdef MARS
-	c->maxobjects = maxobjects;
+    c->maxobjects = maxobjects;
 
-	if (!maxobjects)
-		return;
+    if(!maxobjects)
+        return;
 
-	c->framecount = Z_Malloc(maxobjects * sizeof(*c->framecount), PU_STATIC, 0);
-	c->pixcount = Z_Malloc(maxobjects * sizeof(*c->pixcount), PU_STATIC, 0);
+    c->framecount = Z_Malloc(maxobjects * sizeof(*c->framecount), PU_STATIC, 0);
+    c->pixcount = Z_Malloc(maxobjects * sizeof(*c->pixcount), PU_STATIC, 0);
 
-	D_memset(c->framecount, 0, maxobjects * sizeof(*c->framecount));
-	D_memset(c->pixcount, 0, maxobjects * sizeof(*c->pixcount));
+    D_memset(c->framecount, 0, maxobjects * sizeof(*c->framecount));
+    D_memset(c->pixcount, 0, maxobjects * sizeof(*c->pixcount));
 #endif
 }
 
@@ -62,18 +62,18 @@ void R_InitTexCache(r_texcache_t* c, int maxobjects)
 */
 void R_InitTexCacheZone(r_texcache_t* c, int zonesize)
 {
-	if (!zonesize)
-	{
-		c->zone = NULL;
-		return;
-	}
+    if(!zonesize)
+    {
+        c->zone = NULL;
+        return;
+    }
 
-	c->zone = Z_Malloc(zonesize, PU_LEVEL, 0);
-	c->zonesize = zonesize;
-	Z_InitZone(c->zone, zonesize);
+    c->zone = Z_Malloc(zonesize, PU_LEVEL, 0);
+    c->zonesize = zonesize;
+    Z_InitZone(c->zone, zonesize);
 
-	D_memset(c->framecount, 0, c->maxobjects * sizeof(*c->framecount));
-	D_memset(c->pixcount, 0, c->maxobjects * sizeof(*c->pixcount));
+    D_memset(c->framecount, 0, c->maxobjects * sizeof(*c->framecount));
+    D_memset(c->pixcount, 0, c->maxobjects * sizeof(*c->pixcount));
 }
 
 /*
@@ -85,8 +85,8 @@ void R_InitTexCacheZone(r_texcache_t* c, int zonesize)
 */
 void R_SetupTexCacheFrame(r_texcache_t* c)
 {
-	c->bestcount = 0;
-	c->bestobj = -1;
+    c->bestcount = 0;
+    c->bestobj = -1;
 }
 
 /*
@@ -98,20 +98,20 @@ void R_SetupTexCacheFrame(r_texcache_t* c)
 */
 void R_TestTexCacheCandidate(r_texcache_t* c, int id)
 {
-	VINT* framec = c->framecount;
-	unsigned short* pixcount = c->pixcount;
-	
-	if (!c->zone)
-		return;
+    VINT* framec = c->framecount;
+    unsigned short* pixcount = c->pixcount;
 
-	if (framec[id] == 0 || framec[id] != framecount)
-		return;
+    if(!c->zone)
+        return;
 
-	if (pixcount[id] > c->bestcount)
-	{
-		c->bestcount = pixcount[id];
-		c->bestobj = id;
-	}
+    if(framec[id] == 0 || framec[id] != framecount)
+        return;
+
+    if(pixcount[id] > c->bestcount)
+    {
+        c->bestcount = pixcount[id];
+        c->bestobj = id;
+    }
 }
 
 /*
@@ -123,22 +123,22 @@ void R_TestTexCacheCandidate(r_texcache_t* c, int id)
 */
 void R_AddPixelsToTexCache(r_texcache_t* c, int id, int pixels)
 {
-	VINT* framec = c->framecount;
-	unsigned short* pixcount = c->pixcount;
+    VINT* framec = c->framecount;
+    unsigned short* pixcount = c->pixcount;
 
-	if (!c->zone || pixels <= 0)
-		return;
+    if(!c->zone || pixels <= 0)
+        return;
 
-	if (framec[id] != framecount)
-	{
-		framec[id] = framecount;
-		pixcount[id] = 0;
-	}
+    if(framec[id] != framecount)
+    {
+        framec[id] = framecount;
+        pixcount[id] = 0;
+    }
 
-	if (pixels + pixcount[id] >= 0xffff)
-		pixcount[id] = 0xffff;
-	else
-		pixcount[id] += pixels;
+    if(pixels + pixcount[id] >= 0xffff)
+        pixcount[id] = 0xffff;
+    else
+        pixcount[id] += pixels;
 }
 
 /*
@@ -150,20 +150,20 @@ void R_AddPixelsToTexCache(r_texcache_t* c, int id, int pixels)
 */
 static void R_UpdateCachedPixelcount(void* ptr, void* userp)
 {
-	r_texcache_t* c = userp;
-	texcacheblock_t* entry = ptr;
-	int id = entry->id;
+    r_texcache_t* c = userp;
+    texcacheblock_t* entry = ptr;
+    int id = entry->id;
 
-	if (!c->zone)
-		return;
+    if(!c->zone)
+        return;
 
-	if (c->framecount[id] == framecount)
-		entry->pixelcount = c->pixcount[id];
-	else
-		entry->pixelcount = 0;
+    if(c->framecount[id] == framecount)
+        entry->pixelcount = c->pixcount[id];
+    else
+        entry->pixelcount = 0;
 
-	// reset for the next frame so that it won't fight for cache in the next frame
-	c->pixcount[id] = 0;
+    // reset for the next frame so that it won't fight for cache in the next frame
+    c->pixcount[id] = 0;
 }
 
 /*
@@ -175,9 +175,10 @@ static void R_UpdateCachedPixelcount(void* ptr, void* userp)
 */
 void R_PostTexCacheFrame(r_texcache_t* c)
 {
-	if (!c->zone)
-		return;
-	Z_ForEachBlock(c->zone, &R_UpdateCachedPixelcount, c);
+    if(!c->zone)
+        return;
+
+    Z_ForEachBlock(c->zone, &R_UpdateCachedPixelcount, c);
 }
 
 /*
@@ -189,22 +190,22 @@ void R_PostTexCacheFrame(r_texcache_t* c)
 */
 static void R_EvictFromTexCache(void* ptr, void* userp)
 {
-	texcacheblock_t* entry = ptr;
-	r_texcache_t *c = userp;
+    texcacheblock_t* entry = ptr;
+    r_texcache_t *c = userp;
 
-	if (entry->pixelcount < c->reqcount_le)
-	{
-		if (--entry->lifecount == 0)
-		{
-			c->reqfreed++;
-			*entry->userp = R_CheckPixels(entry->lumpnum);
-			Z_Free2(c->zone, entry);
-		}
-	}
-	else
-	{
-		entry->lifecount = CACHE_FRAMES_DEFAULT;
-	}
+    if(entry->pixelcount < c->reqcount_le)
+    {
+        if(--entry->lifecount == 0)
+        {
+            c->reqfreed++;
+            *entry->userp = R_CheckPixels(entry->lumpnum);
+            Z_Free2(c->zone, entry);
+        }
+    }
+    else
+    {
+        entry->lifecount = CACHE_FRAMES_DEFAULT;
+    }
 }
 
 /*
@@ -216,75 +217,81 @@ static void R_EvictFromTexCache(void* ptr, void* userp)
 */
 void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **userp)
 {
-	int size;
-	int trynum;
-	const int pad = 16;
-	void* data, * lumpdata;
-	texcacheblock_t* entry;
+    int size;
+    int trynum;
+    const int pad = 16;
+    void* data, * lumpdata;
+    texcacheblock_t* entry;
 
-	if (!c || !c->zone)
-		return;
-	if (id < 0)
-		return;
-	if (debugmode == DEBUGMODE_NOTEXCACHE)
-		return;
+    if(!c || !c->zone)
+        return;
 
-	size = pixels + sizeof(texcacheblock_t) + 32;
-	if (c->zonesize < size + pad)
-		return;
+    if(id < 0)
+        return;
 
-	if (Z_LargestFreeBlock(c->zone) < size + pad)
-	{
-		// free important entries of less than or equal importance
-		c->reqfreed = 0;
-		c->reqcount_le = c->pixcount[id];
-		Z_ForEachBlock(c->zone, &R_EvictFromTexCache, c);
+    if(debugmode == DEBUGMODE_NOTEXCACHE)
+        return;
 
-		// check if there were textures that got freed
-		if (c->reqfreed == 0)
-			return;
+    size = pixels + sizeof(texcacheblock_t) + 32;
 
-		if (Z_LargestFreeBlock(c->zone) < size + pad)
-		{
-			// check for fragmentation
-			//if (Z_FreeBlocks(c->zone) > size + pad)
-			//	R_ClearTexCache(c);
-			return;
-		}
-	}
+    if(c->zonesize < size + pad)
+        return;
 
-	trynum = 0;
+    if(Z_LargestFreeBlock(c->zone) < size + pad)
+    {
+        // free important entries of less than or equal importance
+        c->reqfreed = 0;
+        c->reqcount_le = c->pixcount[id];
+        Z_ForEachBlock(c->zone, &R_EvictFromTexCache, c);
+
+        // check if there were textures that got freed
+        if(c->reqfreed == 0)
+            return;
+
+        if(Z_LargestFreeBlock(c->zone) < size + pad)
+        {
+            // check for fragmentation
+            //if (Z_FreeBlocks(c->zone) > size + pad)
+            //	R_ClearTexCache(c);
+            return;
+        }
+    }
+
+    trynum = 0;
 retry:
-	entry = Z_Malloc2(c->zone, size, PU_LEVEL, NULL, false);
-	if (!entry)
-	{
-		if (trynum != 0)
-			return;
-		R_ClearTexCache(c);
-		trynum++;
-		goto retry;
-	}
+    entry = Z_Malloc2(c->zone, size, PU_LEVEL, NULL, false);
 
-	entry->id = id;
-	entry->pixelcount = c->pixcount[id];
-	entry->lumpnum = lumpnum;
-	entry->userp = userp;
-	entry->lifecount = CACHE_FRAMES_DEFAULT;
+    if(!entry)
+    {
+        if(trynum != 0)
+            return;
 
-	lumpdata = R_CheckPixels(lumpnum);
+        R_ClearTexCache(c);
+        trynum++;
+        goto retry;
+    }
 
-	// align pointers so that the 4 least significant bits match
-	data = (byte*)entry + sizeof(texcacheblock_t) + 16;
-	data = (void*)((intptr_t)data & ~15);
-	data = (void *)((intptr_t)data + ((intptr_t)lumpdata & 15));
+    entry->id = id;
+    entry->pixelcount = c->pixcount[id];
+    entry->lumpnum = lumpnum;
+    entry->userp = userp;
+    entry->lifecount = CACHE_FRAMES_DEFAULT;
 
-	D_memcpy(data, lumpdata, pixels);
-	if (debugmode == DEBUGMODE_TEXCACHE)
-	{
-		D_memset(data, id & 255, pixels); // DEBUG
-	}
+    lumpdata = R_CheckPixels(lumpnum);
 
-	*userp = data;
+    // align pointers so that the 4 least significant bits match
+    data = (byte*)entry + sizeof(texcacheblock_t) + 16;
+    data = (void*)((intptr_t)data & ~15);
+    data = (void *)((intptr_t)data + ((intptr_t)lumpdata & 15));
+
+    D_memcpy(data, lumpdata, pixels);
+
+    if(debugmode == DEBUGMODE_TEXCACHE)
+    {
+        D_memset(data, id & 255, pixels); // DEBUG
+    }
+
+    *userp = data;
 }
 
 /*
@@ -296,11 +303,11 @@ retry:
 */
 static void R_ForceEvictFromTexCache(void* ptr, void* userp)
 {
-	texcacheblock_t* entry = ptr;
-	r_texcache_t* c = userp;
+    texcacheblock_t* entry = ptr;
+    r_texcache_t* c = userp;
 
-	*entry->userp = R_CheckPixels(entry->lumpnum);
-	Z_Free2(c->zone, entry);
+    *entry->userp = R_CheckPixels(entry->lumpnum);
+    Z_Free2(c->zone, entry);
 }
 
 /*
@@ -312,8 +319,9 @@ static void R_ForceEvictFromTexCache(void* ptr, void* userp)
 */
 void R_ClearTexCache(r_texcache_t* c)
 {
-	if (!c || !c->zone)
-		return;
-	Z_ForEachBlock(c->zone, &R_ForceEvictFromTexCache, c);
-	Z_InitZone(c->zone, c->zonesize);
+    if(!c || !c->zone)
+        return;
+
+    Z_ForEachBlock(c->zone, &R_ForceEvictFromTexCache, c);
+    Z_InitZone(c->zone, c->zonesize);
 }

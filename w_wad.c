@@ -13,9 +13,9 @@
 
 typedef struct
 {
-	char		identification[4];		/* should be IWAD */
-	int			numlumps;
-	int			infotableofs;
+    char		identification[4];		/* should be IWAD */
+    int			numlumps;
+    int			infotableofs;
 } wadinfo_t;
 
 
@@ -31,16 +31,17 @@ int			numlumps;
 void		*lumpcache[MAXLUMPS];
 #endif
 
-void strupr (char *s)
+void strupr(char *s)
 {
-	char	c;
-	
-    while ( (c = *s) != 0)
-	{
-		if (c >= 'a' && c <= 'z')
-			c -= 'a'-'A';
-		*s++ = c;
-	}
+    char	c;
+
+    while((c = *s) != 0)
+    {
+        if(c >= 'a' && c <= 'z')
+            c -= 'a' - 'A';
+
+        *s++ = c;
+    }
 }
 
 
@@ -56,20 +57,21 @@ extern int decomp_start;
 
 void decode(unsigned char *input, unsigned char *output)
 {
-	decomp_input = input;
-	decomp_output = output;
-	
-	gpufinished = zero;
-	gpucodestart = (int)&decomp_start;
-	while (!I_RefreshCompleted () )
-	;
+    decomp_input = input;
+    decomp_output = output;
+
+    gpufinished = zero;
+    gpucodestart = (int)&decomp_start;
+
+    while(!I_RefreshCompleted())
+        ;
 }
 #else
 void decode(unsigned char* input, unsigned char* output)
 {
-	lzss_state_t lzss;
-	lzss_setup(&lzss, input, output, LZSS_BUF_SIZE);
-	lzss_read_all(&lzss);
+    lzss_state_t lzss;
+    lzss_setup(&lzss, input, output, LZSS_BUF_SIZE);
+    lzss_read_all(&lzss);
 #endif
 }
 
@@ -89,19 +91,19 @@ void decode(unsigned char* input, unsigned char* output)
 ====================
 */
 
-void W_Init (void)
+void W_Init(void)
 {
-	int				infotableofs;
-	
-	wadfileptr = I_WadBase ();
+    int				infotableofs;
 
-	if (D_strncasecmp(((wadinfo_t*)wadfileptr)->identification,"IWAD",4))
-		I_Error ("Wad file doesn't have IWAD id\n");
-	
-	numlumps = BIGLONG(((wadinfo_t*)wadfileptr)->numlumps);
+    wadfileptr = I_WadBase();
 
-	infotableofs = BIGLONG(((wadinfo_t*)wadfileptr)->infotableofs);
-	lumpinfo = (lumpinfo_t *) (wadfileptr + infotableofs);
+    if(D_strncasecmp(((wadinfo_t*)wadfileptr)->identification, "IWAD", 4))
+        I_Error("Wad file doesn't have IWAD id\n");
+
+    numlumps = BIGLONG(((wadinfo_t*)wadfileptr)->numlumps);
+
+    infotableofs = BIGLONG(((wadinfo_t*)wadfileptr)->infotableofs);
+    lumpinfo = (lumpinfo_t *)(wadfileptr + infotableofs);
 }
 
 
@@ -115,28 +117,28 @@ void W_Init (void)
 ====================
 */
 
-int	W_CheckNumForName (const char *name)
+int	W_CheckNumForName(const char *name)
 {
-	char	name8[12];
-	int		v1,v2;
-	lumpinfo_t	*lump_p;
+    char	name8[12];
+    int		v1, v2;
+    lumpinfo_t	*lump_p;
 
-/* make the name into two integers for easy compares */
-	D_memset (name8,0,sizeof(name8));
-	D_strncpy (name8,name,8);
-	name8[8] = 0;			/* in case the name was a full 8 chars */
-	strupr (name8);			/* case insensitive */
+    /* make the name into two integers for easy compares */
+    D_memset(name8, 0, sizeof(name8));
+    D_strncpy(name8, name, 8);
+    name8[8] = 0;			/* in case the name was a full 8 chars */
+    strupr(name8);			/* case insensitive */
 
-	v1 = *(int *)name8;
-	v2 = *(int *)&name8[4];
+    v1 = *(int *)name8;
+    v2 = *(int *)&name8[4];
 
 
-/* scan backwards so patch lump files take precedence */
+    /* scan backwards so patch lump files take precedence */
 
-	lump_p = lumpinfo + numlumps;
+    lump_p = lumpinfo + numlumps;
 
-	/* used for stripping out the hi bit of the first character of the */
-	/* name of the lump */
+    /* used for stripping out the hi bit of the first character of the */
+    /* name of the lump */
 
 #ifdef i386
 #define HIBIT (1<<7)
@@ -144,13 +146,13 @@ int	W_CheckNumForName (const char *name)
 #define HIBIT (1<<31)
 #endif
 
-	while (lump_p-- != lumpinfo)
-		if (*(int *)&lump_p->name[4] == v2
-		&&  (*(int *)lump_p->name & ~HIBIT) == v1)
-			return lump_p - lumpinfo;
+    while(lump_p-- != lumpinfo)
+        if(*(int *)&lump_p->name[4] == v2
+                && (*(int *)lump_p->name & ~HIBIT) == v1)
+            return lump_p - lumpinfo;
 
 
-	return -1;
+    return -1;
 }
 
 
@@ -164,16 +166,17 @@ int	W_CheckNumForName (const char *name)
 ====================
 */
 
-int	W_GetNumForName (const char *name)
+int	W_GetNumForName(const char *name)
 {
-	int	i;
+    int	i;
 
-	i = W_CheckNumForName (name);
-	if (i != -1)
-		return i;
+    i = W_CheckNumForName(name);
 
-	I_Error ("W_GetNumForName: %s not found!",name);
-	return -1;
+    if(i != -1)
+        return i;
+
+    I_Error("W_GetNumForName: %s not found!", name);
+    return -1;
 }
 
 
@@ -187,13 +190,15 @@ int	W_GetNumForName (const char *name)
 ====================
 */
 
-int W_LumpLength (int lump)
+int W_LumpLength(int lump)
 {
-	if (lump < 0)
-		I_Error("W_LumpLength: %i < 0", lump);
-	if (lump >= numlumps)
-		I_Error ("W_LumpLength: %i >= numlumps",lump);
-	return BIGLONG(lumpinfo[lump].size);
+    if(lump < 0)
+        I_Error("W_LumpLength: %i < 0", lump);
+
+    if(lump >= numlumps)
+        I_Error("W_LumpLength: %i >= numlumps", lump);
+
+    return BIGLONG(lumpinfo[lump].size);
 }
 
 
@@ -207,23 +212,27 @@ int W_LumpLength (int lump)
 ====================
 */
 
-int W_ReadLump (int lump, void *dest)
+int W_ReadLump(int lump, void *dest)
 {
-	lumpinfo_t	*l;
-	
-	if (lump < 0)
-		I_Error("W_ReadLump: %i < 0", lump);
-	if (lump >= numlumps)
-		I_Error ("W_ReadLump: %i >= numlumps",lump);
-	l = lumpinfo+lump;
-	if (l->name[0] & 0x80) /* compressed */
-	{
-		 decode((unsigned char *)W_GetLumpData(lump),
-		(unsigned char *) dest);
-	}
-	else
-	  D_memcpy (dest, W_GetLumpData(lump), BIGLONG(l->size));
-	return BIGLONG(l->size);
+    lumpinfo_t	*l;
+
+    if(lump < 0)
+        I_Error("W_ReadLump: %i < 0", lump);
+
+    if(lump >= numlumps)
+        I_Error("W_ReadLump: %i >= numlumps", lump);
+
+    l = lumpinfo + lump;
+
+    if(l->name[0] & 0x80)  /* compressed */
+    {
+        decode((unsigned char *)W_GetLumpData(lump),
+               (unsigned char *) dest);
+    }
+    else
+        D_memcpy(dest, W_GetLumpData(lump), BIGLONG(l->size));
+
+    return BIGLONG(l->size);
 }
 
 
@@ -236,44 +245,50 @@ int W_ReadLump (int lump, void *dest)
 ====================
 */
 
-void	*W_CacheLumpNum (int lump, int tag)
+void	*W_CacheLumpNum(int lump, int tag)
 {
 #ifdef MARS
-	void* cache;
-	int len;
+    void* cache;
+    int len;
 
-	if (lump < 0)
-		I_Error("W_CacheLumpNum: %i < 0", lump);
-	if (lump >= numlumps)
-		I_Error ("W_CacheLumpNum: %i >= numlumps",lump);
-	if (tag != PU_STATIC)
-		I_Error("W_CacheLumpNum: %i tag != PU_STATIC", lump);
+    if(lump < 0)
+        I_Error("W_CacheLumpNum: %i < 0", lump);
 
-	len = W_LumpLength(lump);
-	Z_Malloc(len+1, tag, &cache);
-	W_ReadLump(lump, cache);
-	((char *)cache)[len] = '\0';
+    if(lump >= numlumps)
+        I_Error("W_CacheLumpNum: %i >= numlumps", lump);
 
-	return cache;
+    if(tag != PU_STATIC)
+        I_Error("W_CacheLumpNum: %i tag != PU_STATIC", lump);
+
+    len = W_LumpLength(lump);
+    Z_Malloc(len + 1, tag, &cache);
+    W_ReadLump(lump, cache);
+    ((char *)cache)[len] = '\0';
+
+    return cache;
 #else
-	if (lump < 0)
-		I_Error("W_CacheLumpNum: %i < 0", lump);
-	if (lump >= numlumps)
-		I_Error("W_CacheLumpNum: %i >= numlumps", lump);
 
-	if (!lumpcache[lump])
-	{	/* read the lump in */
-/*printf ("cache miss on lump %i\n",lump); */
-		len = W_LumpLength(lump);
-		Z_Malloc (len+1, tag, &lumpcache[lump]);
-		W_ReadLump (lump, lumpcache[lump]);
-		((char*)lumpcache[lump])[len] = '\0';
-	}
-	else
-		Z_ChangeTag (lumpcache[lump],tag);
-/*else printf ("cache hit on lump %i\n",lump); */
-	
-	return lumpcache[lump];
+    if(lump < 0)
+        I_Error("W_CacheLumpNum: %i < 0", lump);
+
+    if(lump >= numlumps)
+        I_Error("W_CacheLumpNum: %i >= numlumps", lump);
+
+    if(!lumpcache[lump])
+    {
+        /* read the lump in */
+        /*printf ("cache miss on lump %i\n",lump); */
+        len = W_LumpLength(lump);
+        Z_Malloc(len + 1, tag, &lumpcache[lump]);
+        W_ReadLump(lump, lumpcache[lump]);
+        ((char*)lumpcache[lump])[len] = '\0';
+    }
+    else
+        Z_ChangeTag(lumpcache[lump], tag);
+
+    /*else printf ("cache hit on lump %i\n",lump); */
+
+    return lumpcache[lump];
 #endif
 }
 
@@ -286,9 +301,9 @@ void	*W_CacheLumpNum (int lump, int tag)
 ====================
 */
 
-void	*W_CacheLumpName (const char *name, int tag)
+void	*W_CacheLumpName(const char *name, int tag)
 {
-	return W_CacheLumpNum (W_GetNumForName(name), tag);
+    return W_CacheLumpNum(W_GetNumForName(name), tag);
 }
 
 /*
@@ -299,11 +314,12 @@ void	*W_CacheLumpName (const char *name, int tag)
 ====================
 */
 
-const char *W_GetNameForNum (int lump)
+const char *W_GetNameForNum(int lump)
 {
-	if (lump >= numlumps)
-		I_Error ("W_GetNameForNum: %i >= numlumps",lump);
-	return lumpinfo[lump].name;
+    if(lump >= numlumps)
+        I_Error("W_GetNameForNum: %i >= numlumps", lump);
+
+    return lumpinfo[lump].name;
 }
 
 /*
@@ -315,11 +331,11 @@ const char *W_GetNameForNum (int lump)
 
 void * W_GetLumpData(int lump)
 {
-	lumpinfo_t* l = lumpinfo + lump;
+    lumpinfo_t* l = lumpinfo + lump;
 
-	if (lump >= numlumps)
-		I_Error("W_GetLumpData: %i >= numlumps", lump);
+    if(lump >= numlumps)
+        I_Error("W_GetLumpData: %i >= numlumps", lump);
 
-	return I_RemapLumpPtr((void*)(wadfileptr + BIGLONG(l->filepos)));
+    return I_RemapLumpPtr((void*)(wadfileptr + BIGLONG(l->filepos)));
 }
 

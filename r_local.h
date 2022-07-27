@@ -16,7 +16,7 @@ extern fixed_t weaponXScale;
 
 #define	PROJECTION			centerXFrac
 
-#define	PSPRITEXSCALE		FRACUNIT	
+#define	PSPRITEXSCALE		FRACUNIT
 #define	PSPRITEYSCALE		FRACUNIT
 #define	PSPRITEXISCALE		FRACUNIT
 #define	PSPRITEYISCALE		FRACUNIT
@@ -51,11 +51,11 @@ extern fixed_t weaponXScale;
 
 typedef enum
 {
-	detmode_potato = -1,
-	detmode_medium,
-	detmode_high,
+    detmode_potato = -1,
+    detmode_medium,
+    detmode_high,
 
-	MAXDETAILMODES
+    MAXDETAILMODES
 } detailmode_t;
 
 extern detailmode_t detailmode;
@@ -74,52 +74,52 @@ extern VINT anamorphicview;
 
 typedef struct
 {
-	fixed_t		x,y;
+    fixed_t		x, y;
 } vertex_t;
 
 struct line_s;
 
 typedef	struct
 {
-	fixed_t		floorheight, ceilingheight;
-	VINT		floorpic, ceilingpic;	/* if ceilingpic == -1,draw sky */
+    fixed_t		floorheight, ceilingheight;
+    VINT		floorpic, ceilingpic;	/* if ceilingpic == -1,draw sky */
 
-	uint8_t		lightlevel, special;
+    uint8_t		lightlevel, special;
 
-	VINT		validcount;			/* if == validcount, already checked */
-	VINT		linecount;
+    VINT		validcount;			/* if == validcount, already checked */
+    VINT		linecount;
 
-	VINT		tag;
+    VINT		tag;
 
-	mobj_t		*soundtarget;		/* thing that made a sound (or null) */
-	
-	VINT		blockbox[4];		/* mapblock bounding box for height changes */
-	VINT		soundorg[2];		/* for any sounds played by the sector */
+    mobj_t		*soundtarget;		/* thing that made a sound (or null) */
 
-	mobj_t		*thinglist;			/* list of mobjs in sector */
-	void		*specialdata;		/* thinker_t for reversable actions */
-	struct line_s	**lines;			/* [linecount] size */
+    VINT		blockbox[4];		/* mapblock bounding box for height changes */
+    VINT		soundorg[2];		/* for any sounds played by the sector */
+
+    mobj_t		*thinglist;			/* list of mobjs in sector */
+    void		*specialdata;		/* thinker_t for reversable actions */
+    struct line_s	**lines;			/* [linecount] size */
 } sector_t;
 
 typedef struct
 {
-	VINT		sector;
-	VINT		toptexture, bottomtexture, midtexture;
-	VINT		textureoffset;		/* add this to the calculated texture col */
-	VINT		rowoffset;			/* add this to the calculated texture top */
+    VINT		sector;
+    VINT		toptexture, bottomtexture, midtexture;
+    VINT		textureoffset;		/* add this to the calculated texture col */
+    VINT		rowoffset;			/* add this to the calculated texture top */
 } side_t;
 
 typedef enum {ST_HORIZONTAL, ST_VERTICAL, ST_POSITIVE, ST_NEGATIVE} slopetype_t;
 
 typedef struct line_s
 {
-	VINT		validcount;			/* if == validcount, already checked */
-	VINT		flags;
-	VINT		sidenum[2];			/* sidenum[1] will be -1 if one sided */
-	vertex_t 	*v1, *v2;
-	VINT		slopetype;                      /* to aid move clipping */
-	VINT		special, tag;
-	VINT		fineangle;			/* to get sine / eosine for sliding */
+    VINT		validcount;			/* if == validcount, already checked */
+    VINT		flags;
+    VINT		sidenum[2];			/* sidenum[1] will be -1 if one sided */
+    vertex_t 	*v1, *v2;
+    VINT		slopetype;                      /* to aid move clipping */
+    VINT		special, tag;
+    VINT		fineangle;			/* to get sine / eosine for sliding */
 } line_t;
 
 #define LD_FRONTSECTORNUM(ld) (sides[(ld)->sidenum[0]].sector)
@@ -129,43 +129,43 @@ typedef struct line_s
 
 typedef struct subsector_s
 {
-	VINT		numlines;
-	VINT		firstline;
-	sector_t	*sector;
+    VINT		numlines;
+    VINT		firstline;
+    sector_t	*sector;
 } subsector_t;
 
 typedef struct seg_s
 {
-	VINT 		side;
-	VINT            v1, v2;
-	VINT 		angle;
-	VINT		offset;
-	VINT		linedef;
+    VINT 		side;
+    VINT            v1, v2;
+    VINT 		angle;
+    VINT		offset;
+    VINT		linedef;
 } seg_t;
 
 
 typedef struct
 {
-	fixed_t		x,y,dx,dy;			/* partition line */
-	fixed_t		bbox[2][4];			/* bounding box for each child */
-	int			children[2];		/* if NF_SUBSECTOR its a subsector */
+    fixed_t		x, y, dx, dy;			/* partition line */
+    fixed_t		bbox[2][4];			/* bounding box for each child */
+    int			children[2];		/* if NF_SUBSECTOR its a subsector */
 } node_t;
 
 
 typedef struct
 {
-	char		name[8];		/* for switch changing, etc */
-	VINT			width;
-	VINT			height;
-	int			lumpnum;
+    char		name[8];		/* for switch changing, etc */
+    VINT			width;
+    VINT			height;
+    int			lumpnum;
 #ifdef MARS
-	inpixel_t 	*data;
+    inpixel_t 	*data;
 #else
-	pixel_t		*data;			/* cached data to draw from */
+    pixel_t		*data;			/* cached data to draw from */
 #endif
 #ifndef MARS
-	int			usecount;		/* for precaching */
-	int			pad;
+    int			usecount;		/* for precaching */
+    int			pad;
 #endif
 } texture_t;
 
@@ -187,14 +187,14 @@ typedef struct
 
 typedef struct
 {
-	VINT		*lump;	/* lump to use for view angles 0-7 */
-						/* if lump[1] == -1, use 0 for any position */
+    VINT		*lump;	/* lump to use for view angles 0-7 */
+    /* if lump[1] == -1, use 0 for any position */
 } spriteframe_t;
 
 typedef struct
 {
-	short			numframes;
-	short			firstframe; /* index in the spriteframes array */
+    short			numframes;
+    short			firstframe; /* index in the spriteframes array */
 } spritedef_t;
 
 extern	spriteframe_t	*spriteframes;
@@ -242,23 +242,23 @@ extern const VINT numViewports;
 = Returns side 0 (front) or 1 (back)
 ===============================================================================
 */
-static inline int R_PointOnSide (int x, int y, node_t *node)
+static inline int R_PointOnSide(int x, int y, node_t *node)
 {
-	fixed_t	dx,dy;
-	fixed_t	left, right;
+    fixed_t	dx, dy;
+    fixed_t	left, right;
 
-	dx = (x - node->x);
-	dy = (y - node->y);
+    dx = (x - node->x);
+    dy = (y - node->y);
 
 #ifdef MARS
-   left = ((int64_t)node->dy*dx) >> 32;
-   right = ((int64_t)dy*node->dx) >> 32;
+    left = ((int64_t)node->dy * dx) >> 32;
+    right = ((int64_t)dy * node->dx) >> 32;
 #else
-   left  = (node->dy>>FRACBITS) * (dx>>FRACBITS);
-   right = (dy>>FRACBITS) * (node->dx>>FRACBITS);
+    left  = (node->dy >> FRACBITS) * (dx >> FRACBITS);
+    right = (dy >> FRACBITS) * (node->dx >> FRACBITS);
 #endif
 
-   return (left <= right);
+    return (left <= right);
 }
 
 //
@@ -268,7 +268,7 @@ static inline int R_PointOnSide (int x, int y, node_t *node)
 // value which is looked up in the tantoangle table.
 //
 #define R_PointToAngle(x,y) R_PointToAngle2(vd.viewx,vd.viewy,x,y)
-void	R_InitData (void);
+void	R_InitData(void);
 void	R_SetViewportSize(int num);
 int		R_DefaultViewportSize(void); // returns the viewport id for fullscreen, low detail mode
 void	R_SetDetailMode(int mode);
@@ -321,16 +321,17 @@ typedef struct
 __attribute__((aligned(16)))
 #endif
 {
-	fixed_t		viewx, viewy, viewz;
-	angle_t		viewangle;
-	fixed_t		viewcos, viewsin;
-	player_t	*viewplayer;
-	VINT		lightlevel;
-	VINT		extralight;
-	VINT		displayplayer;
-	VINT		fixedcolormap;
-	VINT		fuzzcolormap;
-} viewdef_t;
+    fixed_t		viewx, viewy, viewz;
+    angle_t		viewangle;
+    fixed_t		viewcos, viewsin;
+    player_t	*viewplayer;
+    VINT		lightlevel;
+    VINT		extralight;
+    VINT		displayplayer;
+    VINT		fixedcolormap;
+    VINT		fuzzcolormap;
+}
+viewdef_t;
 
 extern	viewdef_t	vd;
 extern	angle_t		clipangle, doubleclipangle;
@@ -349,13 +350,13 @@ extern	VINT	*viewangletox/*[FINEANGLES/2]*/;
 
 /* The xtoviewangleangle[] table maps a screen pixel to the lowest viewangle */
 /* that maps back to x ranges from clipangle to -clipangle */
-extern	angle_t		xtoviewangle[SCREENWIDTH+1];
+extern	angle_t		xtoviewangle[SCREENWIDTH + 1];
 
 #ifdef MARS
-extern	const fixed_t		finetangent_[FINEANGLES/4];
+extern	const fixed_t		finetangent_[FINEANGLES / 4];
 fixed_t finetangent(angle_t angle) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_EXTREME;
 #else
-extern	const fixed_t		finetangent_[FINEANGLES/2];
+extern	const fixed_t		finetangent_[FINEANGLES / 2];
 #define finetangent(x)		finetangent_[x]
 #endif
 
@@ -408,28 +409,28 @@ void R_InitColormap(boolean doublepix);
 */
 typedef struct
 {
-	unsigned short* pixcount; /* capped at 0xffff */
-	VINT* framecount;
+    unsigned short* pixcount; /* capped at 0xffff */
+    VINT* framecount;
 
-	int maxobjects;
-	int objectsize;
+    int maxobjects;
+    int objectsize;
 
-	int bestobj;
-	int bestcount;
-	int reqcount_le;
-	int reqfreed;
+    int bestobj;
+    int bestcount;
+    int reqcount_le;
+    int reqfreed;
 
-	int zonesize;
-	void* zone;
+    int zonesize;
+    void* zone;
 } r_texcache_t;
 
 typedef struct
 {
-	VINT id;
-	uint16_t pixelcount;
-	VINT lumpnum;
-	VINT lifecount;
-	void** userp;
+    VINT id;
+    uint16_t pixelcount;
+    VINT lumpnum;
+    VINT lifecount;
+    void** userp;
 } texcacheblock_t;
 
 extern r_texcache_t r_texcache;
@@ -468,49 +469,49 @@ void R_ClearTexCache(r_texcache_t* c);
 
 typedef struct
 {
-	short	actionbits;
-	short	seglightlevel;
+    short	actionbits;
+    short	seglightlevel;
 
-	unsigned	scalefrac;
-	unsigned	scale2;
-	int			scalestep;		/* polar angle to start at phase1, then scalestep after phase2 */
-	
-	unsigned	centerangle;
-	unsigned	offset;
-	unsigned	distance;
+    unsigned	scalefrac;
+    unsigned	scale2;
+    int			scalestep;		/* polar angle to start at phase1, then scalestep after phase2 */
 
-/* */
-/* filled in by bsp */
-/* */
-	VINT			start;
-	VINT			stop;					/* inclusive x coordinates */
-	union
-	{
-		seg_t			*seg;
-		vertex_t		v[2];
-	};
+    unsigned	centerangle;
+    unsigned	offset;
+    unsigned	distance;
 
-/* */
-/* filled in by early prep */
-/* */
-	int			t_topheight;	 // becomes pixelcount after R_SegLoop
-	int			t_bottomheight;
-	int			t_texturemid;
+    /* */
+    /* filled in by bsp */
+    /* */
+    VINT			start;
+    VINT			stop;					/* inclusive x coordinates */
+    union
+    {
+        seg_t			*seg;
+        vertex_t		v[2];
+    };
 
-	int			b_topheight;	// becomes pixelcount after R_SegLoop
-	int			b_bottomheight;
-	int			b_texturemid;
+    /* */
+    /* filled in by early prep */
+    /* */
+    int			t_topheight;	 // becomes pixelcount after R_SegLoop
+    int			t_bottomheight;
+    int			t_texturemid;
 
-	fixed_t		floorheight;
-	fixed_t		ceilingheight;
+    int			b_topheight;	// becomes pixelcount after R_SegLoop
+    int			b_bottomheight;
+    int			b_texturemid;
 
-	byte 		*sil;
-	
-	VINT		t_texturenum;
-	VINT		b_texturenum;
+    fixed_t		floorheight;
+    fixed_t		ceilingheight;
 
-	VINT        floorpicnum;   // floorpic #   - CALICO: avoid type ambiguity w/extra field
-	VINT        ceilingpicnum; // ceilingpic # - CALICO: avoid type ambiguity w/extra field
+    byte 		*sil;
+
+    VINT		t_texturenum;
+    VINT		b_texturenum;
+
+    VINT        floorpicnum;   // floorpic #   - CALICO: avoid type ambiguity w/extra field
+    VINT        ceilingpicnum; // ceilingpic # - CALICO: avoid type ambiguity w/extra field
 } viswall_t;
 
 #define	MAXWALLCMDS		128
@@ -520,22 +521,22 @@ extern	viswall_t *lastwallcmd;
 /* A vissprite_t is a thing that will be drawn during a refresh */
 typedef struct vissprite_s
 {
-	VINT		x1, x2;			/* clipped to screen edges column range */
-	fixed_t		startfrac;		/* horizontal position of x1 */
-	fixed_t		xscale;
-	fixed_t		xiscale;		/* negative if flipped */
-	fixed_t		yscale;
-	fixed_t		yiscale;
-	fixed_t		texturemid;
-	VINT 		patchnum;
-	VINT		colormap;		/* -1 = shadow draw */
-	fixed_t		gx,gy;	/* global coordinates */
+    VINT		x1, x2;			/* clipped to screen edges column range */
+    fixed_t		startfrac;		/* horizontal position of x1 */
+    fixed_t		xscale;
+    fixed_t		xiscale;		/* negative if flipped */
+    fixed_t		yscale;
+    fixed_t		yiscale;
+    fixed_t		texturemid;
+    VINT 		patchnum;
+    VINT		colormap;		/* -1 = shadow draw */
+    fixed_t		gx, gy;	/* global coordinates */
 #ifdef MARS
-	inpixel_t 	*pixels;
+    inpixel_t 	*pixels;
 #else
-	pixel_t		*pixels;		/* data patch header references */
+    pixel_t		*pixels;		/* data patch header references */
 #endif
-	drawcol_t   drawcol;
+    drawcol_t   drawcol;
 } vissprite_t;
 
 #define	MAXVISSPRITES	60
@@ -548,13 +549,13 @@ extern	unsigned short	*segclip, *lastsegclip;
 
 typedef struct visplane_s
 {
-	fixed_t		height;
-	VINT		minx, maxx;
-	VINT 		flatnum;
-	VINT		lightlevel;
-	VINT		pixelcount;
-	VINT		next;
-	unsigned short		*open/*[SCREENWIDTH+2]*/;		/* top<<8 | bottom */ /* leave pads for [minx-1]/[maxx+1] */
+    fixed_t		height;
+    VINT		minx, maxx;
+    VINT 		flatnum;
+    VINT		lightlevel;
+    VINT		pixelcount;
+    VINT		next;
+    unsigned short		*open/*[SCREENWIDTH+2]*/;		/* top<<8 | bottom */ /* leave pads for [minx-1]/[maxx+1] */
 } visplane_t;
 
 #define	MAXVISPLANES	32
@@ -572,8 +573,8 @@ void R_MarkOpenPlane(visplane_t* pl)
 ATTR_DATA_CACHE_ALIGN
 ;
 
-visplane_t *R_FindPlane(int hash, fixed_t height, int flatnum, 
-	int lightlevel, int start, int stop)
+visplane_t *R_FindPlane(int hash, fixed_t height, int flatnum,
+                        int lightlevel, int start, int stop)
 ATTR_DATA_CACHE_ALIGN
 ;
 
