@@ -335,6 +335,8 @@ handle_req:
         bls     set_bank_page
         cmpi.w  #0x17FF,d0
         bls     net_set_link_timeout
+        cmpi.w  #0x18FF,d0
+        bls     set_music_volume
 
 | unknown command
         move.w  #0,0xA15120         /* done */
@@ -1128,6 +1130,20 @@ set_bank_page:
 net_set_link_timeout:
         move.w  0xA15122,net_link_timeout
         move.w  #0,0xA15120         /* release SH2 now */
+        bra     main_loop
+
+set_music_volume:
+        tst.w   megasd_ok
+        beq     1f                  /* couldn't find a MegaSD */
+
+        move    #0xFF,d1
+        and.w   d1,d0
+
+        move.l  d0,-(sp)            /* push the volume */
+        jsr     MegaSD_SetCDVolume
+        lea     4(sp),sp            /* clear the stack */
+1:
+        move.w  #0,0xA15120         /* done */
         bra     main_loop
 
 reset_banks:

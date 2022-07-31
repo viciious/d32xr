@@ -403,6 +403,13 @@ void Mars_StopTrack(void)
 	while (MARS_SYS_COMM0);
 }
 
+void Mars_SetMusicVolume(uint8_t volume)
+{
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM0 = 0x1800|volume;
+	while (MARS_SYS_COMM0);
+}
+
 void Mars_WaitTicks(int ticks)
 {
 	unsigned ticend = mars_vblank_count + ticks;

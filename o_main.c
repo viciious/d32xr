@@ -28,6 +28,7 @@ typedef enum
 
 	mi_soundvol,
 	mi_music,
+	mi_musicvol,
 
 	mi_resolution,
 	mi_detailmode,
@@ -46,6 +47,7 @@ typedef enum
 	si_resolution,
 	si_sfxvolume,
 	si_lod,
+	si_musvolume,
 
 	NUMMENUSLIDERS
 } sliderid_t;
@@ -186,6 +188,12 @@ void O_Init (void)
 	menuitem[mi_music].x = ITEMX;
 	menuitem[mi_music].y = STARTY+ITEMSPACE*2;
 
+	D_memcpy(menuitem[mi_musicvol].name, "CDA volume", 10);
+	menuitem[mi_musicvol].x = ITEMX;
+	menuitem[mi_musicvol].y = STARTY + ITEMSPACE * 3;
+	menuitem[mi_musicvol].slider = si_musvolume+1;
+	sliders[si_musvolume].maxval = 8;
+	sliders[si_musvolume].curval = 8*musicvolume/64;
 
 	D_memcpy(menuitem[mi_resolution].name, "Resolution", 11);
 	menuitem[mi_resolution].x = ITEMX;
@@ -230,6 +238,8 @@ void O_Init (void)
 	D_memcpy(menuscreen[ms_audio].name, "Audio", 7);
 	menuscreen[ms_audio].firstitem = mi_soundvol;
 	menuscreen[ms_audio].numitems = mi_music - mi_soundvol + 1;
+	if (S_CDAvailable()) /* MD+ */
+		menuscreen[ms_audio].numitems++;
 
 	D_memcpy(menuscreen[ms_video].name, "Video", 7);
 	menuscreen[ms_video].firstitem = mi_resolution;
@@ -438,6 +448,9 @@ exit:
 				{
 				case mi_soundvol:
 					sfxvolume = 64 * slider->curval / slider->maxval;
+					break;
+				case mi_musicvol:
+					musicvolume = 64 * slider->curval / slider->maxval;
 					break;
 				case mi_resolution:
 					R_SetViewportSize(slider->curval);

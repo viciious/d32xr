@@ -13,6 +13,7 @@
 #define MEGASD_CMD_PLAYCD_ONCE	0x1100
 #define MEGASD_CMD_PLAYCD_LOOP	0x1200
 #define MEGASD_CMD_PAUSECD		0x1300
+#define MEGASD_CMD_SETVOLUME	0x1500
 #define MEGASD_CMD_GET_NUMTRKS	0x2700
 
 #define MEGASD_MAX_CDTRACKS		0x63
@@ -30,6 +31,7 @@ extern uint16_t megasd_num_cdtracks;
 uint16_t InitMegaSD(void) MEGASD_ATTR_DATA;
 void MegaSD_PlayCDTrack(uint16_t track, uint16_t loop) MEGASD_ATTR_DATA;
 void MegaSD_PauseCD(void) MEGASD_ATTR_DATA;
+void MegaSD_SetCDVolume(int volume) MEGASD_ATTR_DATA;
 static uint16_t ProtectedInitMegaSD(void) MEGASD_ATTR_DATA;
 
 static uint16_t ProtectedInitMegaSD(void)
@@ -109,6 +111,17 @@ void MegaSD_PauseCD(void)
 
 	MEGASD_COMM_OVERLAY = MEGASD_OVERLAY_MAGIC;
 	MEGASD_CTRL_PORT = MEGASD_CMD_PAUSECD;
+	MEGASD_COMM_OVERLAY = 0;
+
+	MEGASD_32X_SET_RV_0();
+}
+
+void MegaSD_SetCDVolume(int volume)
+{
+	MEGASD_32X_SET_RV_1();
+
+	MEGASD_COMM_OVERLAY = MEGASD_OVERLAY_MAGIC;
+	MEGASD_CTRL_PORT = MEGASD_CMD_SETVOLUME|volume;
 	MEGASD_COMM_OVERLAY = 0;
 
 	MEGASD_32X_SET_RV_0();

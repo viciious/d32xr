@@ -363,6 +363,15 @@ void S_StartPositionedSound(mobj_t* mobj, int sound_id, getsoundpos_t getpos)
 */
 void S_UpdateSounds(void)
 {
+	static VINT oldmusvol = -1;
+
+	if (oldmusvol != musicvolume) {
+		if (S_CDAvailable()) {
+			int vol = musicvolume*4;
+			Mars_SetMusicVolume(vol > 255 ? 255 : vol);
+		}
+		oldmusvol = musicvolume;
+	}
 }
 
 void S_SetMusicType(int newtype)
