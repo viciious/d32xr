@@ -620,11 +620,7 @@ no_mouse:
 
 read_cdstate:
         tst.w   megasd_ok
-        beq     9f                  /* couldn't find a MegaSD */
-        tst.w   megasd_num_cdtracks
-        beq     9f                  /* MegaSD couldn't find a .cue file */
-
-        move.b  #1,megasd_ok        /* we have a disc - get state info */
+        beq     9f                  /* couldn't find a MegaSD or CD audio tracks */
 
         move.w  megasd_ok,0xA15122
         move.w  megasd_num_cdtracks,0xA1512C

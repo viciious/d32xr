@@ -59,7 +59,9 @@ static uint16_t ProtectedInitMegaSD(void)
 		MEGASD_CTRL_PORT = MEGASD_CMD_GET_NUMTRKS;
 		MEGASD_WAIT_CMD_RSLT(timeout);
 		megasd_num_cdtracks = MEGASD_RSLT_PORT;
-		return 1;
+		if (megasd_num_cdtracks > 0)
+			return 0x0103; // num tracks > 0, MD+, CD OK
+		return 0x0003; // MD+, CD OK
 	}
 
 #undef MEGASD_WAIT_CMD_RSLT
