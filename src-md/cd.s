@@ -63,6 +63,8 @@ WaitCmd:
         beq     PlayTrack
         cmpi.b  #'S,0x800E.w
         beq     StopPlaying
+        cmpi.b  #'V,0x800E.w
+        beq     SetVolume
         cmpi.b  #'Z,0x800E.w
         beq     PauseResume
         cmpi.b  #'C,0x800E.w
@@ -117,6 +119,14 @@ PlayTrack:
 
 StopPlaying:
         move.w  #0x0002,d0              /* MSCSTOP - stop playing */
+        jsr     0x5F22.w                /* call CDBIOS function */
+
+        move.b  #'D,0x800F.w            /* sub comm port = DONE */
+        bra     WaitAck
+
+SetVolume:
+        move.w  #0x0085,d0              /* BIOS_FDRSET - set audio volume */
+        move.w  0x8010.w,d1             /* cd volume (0 to 1024) */
         jsr     0x5F22.w                /* call CDBIOS function */
 
         move.b  #'D,0x800F.w            /* sub comm port = DONE */

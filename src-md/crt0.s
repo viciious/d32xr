@@ -420,8 +420,8 @@ start_music:
         bne     start_cd
         
         /* start VGM */
-        cmpi.w	#0x0300,d0
-        beq.b	0f
+        cmpi.w  #0x0300,d0
+        beq.b   0f
 
         /* set VGM length */
         move.l  0xA1512C,d0         /* fetch VGM length */
@@ -577,8 +577,8 @@ read_mouse:
         bne.b   1f                  /* no mouse in port 1 */
         lea     0xA10003,a0
         bsr     get_mky
-        cmpi.l	#-1,d0
-        beq.b	no_mky1
+        cmpi.l  #-1,d0
+        beq.b   no_mky1
         bset    #31,d0
         move.w  d0,0xA15122
         swap    d0
@@ -593,8 +593,8 @@ read_mouse:
         bne.b   no_mouse            /* no mouse in port 2 */
         lea     0xA10005,a0
         bsr     get_mky
-        cmpi.l	#-1,d0
-        beq.b	no_mky2
+        cmpi.l  #-1,d0
+        beq.b   no_mky2
         bset    #31,d0
         move.w  d0,0xA15122
         swap    d0
@@ -1143,6 +1143,27 @@ set_music_volume:
         jsr     MegaSD_SetCDVolume
         lea     4(sp),sp            /* clear the stack */
 1:
+        tst.w   cd_ok
+        beq.b   4f                  /* couldn't init cd */
+        tst.b   cd_ok
+        beq.b   4f                  /* disc not found */
+
+        move.w  #0xFF,d1
+        and.w   d0,d1
+        addq.w  #1,d1               /* volume (1 to 256) */
+        add.w   d1,d1
+        add.w   d1,d1               /* volume * 4 (4 to 1024) */
+2:
+        move.b  0xA1200F,d0
+        bne     4b                  /* wait until Sub-CPU is ready to receive command */
+
+        move.w  d1,0xA12010         /* cd volume */
+        move.b  #'V,0xA1200E        /* set main comm port to SetVolume command */
+3:
+        move.b  0xA1200F,d0
+        beq.b   3b                  /* wait for acknowledge byte in sub comm port */
+        move.b  #0x00,0xA1200E      /* acknowledge receipt of command result */
+4:
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
@@ -1234,7 +1255,7 @@ bump_fm:
         andi.w  #3,d1
         lsr.w   #2,d0
         move.b  fm_csm,d2           /* timer control + CSM Mode */
-        andi.b	#0xFE,d2
+        andi.b  #0xFE,d2
         move.b  #0x27,0xA04000
         nop
         nop
@@ -1263,7 +1284,7 @@ bump_fm:
         nop
         nop
         nop
-        ori.b	#0x01,d2
+        ori.b   #0x01,d2
         move.b  d2,0xA04001         /* enable Timer A, start Timer A */
 bump_exit:
         movem.l (sp)+,d0-d7/a0-a6
@@ -1503,28 +1524,28 @@ mky_err:
 
 | get_port: returns ID bits of controller pointed to by a0 in d0
 get_port:
-        move.b	(a0),d0
-        move.b	#0x00,(a0)
-        moveq	#12,d1
-        and.b	d0,d1
-        sne		d2
-        andi.b	#8,d2
-        andi.b	#3,d0
-        sne		d0
-        andi.b	#4,d0
-        or.b	d0,d2
+        move.b  (a0),d0
+        move.b  #0x00,(a0)
+        moveq   #12,d1
+        and.b   d0,d1
+        sne     d2
+        andi.b  #8,d2
+        andi.b  #3,d0
+        sne     d0
+        andi.b  #4,d0
+        or.b    d0,d2
 
-        move.b	(a0),d0
-        move.b	#0x40,(a0)
-        moveq	#12,d1
-        and.b	d0,d1
-        sne		d1
-        andi.b	#2,d1
-        or.b	d1,d2
-        andi.b	#3,d0
-        sne		d0
-        andi.b	#1,d0
-        or.b	d0,d2
+        move.b  (a0),d0
+        move.b  #0x40,(a0)
+        moveq   #12,d1
+        and.b   d0,d1
+        sne     d1
+        andi.b  #2,d1
+        or.b    d1,d2
+        andi.b  #3,d0
+        sne     d0
+        andi.b  #1,d0
+        or.b    d0,d2
 
         move.w  #0xF001,d0
         cmpi.b  #3,d2
@@ -1534,15 +1555,15 @@ get_port:
         bne.b   0f
         moveq   #0,d0                    /* pad in port */
 0:
-		rts
+        rts
 
 | Check ports - sets controller word to 0xF001 if mouse, or 0 if not.
 |   The next vblank will try to read a pad if 0, which will set the word
 |   to 0xF000 if no pad found.
 chk_ports:
         /* get ID port 1 */
-        lea		0xA10003,a0
-        bsr.b	get_port
+        lea     0xA10003,a0
+        bsr.b   get_port
         move.w  d0,0xA15128             /* controller 1 */
 
         tst.b   net_type
@@ -1550,8 +1571,8 @@ chk_ports:
         rts
 0:
         /* get ID port 2 */
-        lea		0xA10005,a0
-        bsr.b	get_port
+        lea     0xA10005,a0
+        bsr.b   get_port
         move.w  d0,0xA1512A             /* controller 2 */
         rts
 
