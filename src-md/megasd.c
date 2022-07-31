@@ -35,7 +35,7 @@ static uint16_t ProtectedInitMegaSD(void) MEGASD_ATTR_DATA;
 static uint16_t ProtectedInitMegaSD(void)
 {
 	char* idstr;
-	const int timeout = 20000;
+	const int timeout = 50000;
 
 #define MEGASD_WAIT_CMD_RSLT(t) do { \
 		volatile int timeout_ = t; \
