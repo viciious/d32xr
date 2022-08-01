@@ -398,10 +398,9 @@ void S_SetMusicType(int newtype)
 	S_StartSong(savemus, muslooping, savecd);
 }
 
-boolean S_CDAvailable(void)
+int S_CDAvailable(void)
 {
-	return mars_cd_ok != 0;
-	//return (mars_cd_ok & 0x0100) != 0;
+	return mars_cd_ok;
 }
 
 int S_SongForMapnum(int mapnum)
