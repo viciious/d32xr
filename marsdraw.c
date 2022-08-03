@@ -597,6 +597,9 @@ void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh)
 	if (!(lumpinfo[lumpnum].name[0] & 0x80))
 	{
 		// uncompressed
+		jo = (jagobj_t*)lump;
+		if (ow) *ow = BIGSHORT(jo->width);
+		if (oh) *oh = BIGSHORT(jo->height);
 		DrawJagobj((void*)lump, x, y);
 		return;
 	}
