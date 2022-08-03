@@ -289,6 +289,16 @@ void M_Stop (void)
 }
 
 
+static void M_UpdateSaveInfo(void)
+{
+	if (prevsaveslot != saveslot) {
+		prevsaveslot = saveslot;
+		saveslotmap = -1;
+		saveslotskill = -1;
+		saveslotmode = gt_single;
+		GetSaveInfo(saveslot, &saveslotmap, &saveslotskill, &saveslotmode);
+	}
+}
 
 /*
 =================
@@ -329,13 +339,7 @@ int M_Ticker (void)
 		cursorframe ^= 1;
 	}
 
-	if (prevsaveslot != saveslot) {
-		prevsaveslot = saveslot;
-		saveslotmap = -1;
-		saveslotskill = -1;
-		saveslotmode = gt_single;
-		GetSaveInfo(saveslot, &saveslotmap, &saveslotskill, &saveslotmode);
-	}
+	M_UpdateSaveInfo();
 
 	buttons = ticrealbuttons & MENU_BTNMASK;
 	oldbuttons = oldticrealbuttons & MENU_BTNMASK;
@@ -367,6 +371,7 @@ int M_Ticker (void)
 			}
 			screenpos = nextscreen;
 			clearscreen = 2;
+			prevsaveslot = -1;
 			saveslot = screenpos == ms_save;
 			S_StartSound(NULL, sfx_pistol);
 			return ga_nothing;
@@ -434,6 +439,7 @@ int M_Ticker (void)
 				I_NetSetup();
 				if (starttype != gt_single)
 					return ga_startnew;
+				clearscreen = 2;
 				return ga_nothing;
 			}
 		}
@@ -695,6 +701,8 @@ void M_Drawer (void)
 		
 		item = &mainitem[mi_savelist];
 		y = y_offset + item->y;
+
+		M_UpdateSaveInfo();
 
 		if (savecount > 0)
 		{
