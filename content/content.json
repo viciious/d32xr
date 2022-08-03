@@ -1,5 +1,1536 @@
 [
     {
+        "filename": "stbar",
+        "name": "STBAR"
+    },
+    {
+        "filename": "minus",
+        "name": "MINUS"
+    },
+    {
+        "filename": "num_0",
+        "name": "NUM_0"
+    },
+    {
+        "filename": "num_1",
+        "name": "NUM_1"
+    },
+    {
+        "filename": "num_2",
+        "name": "NUM_2"
+    },
+    {
+        "filename": "num_3",
+        "name": "NUM_3"
+    },
+    {
+        "filename": "num_4",
+        "name": "NUM_4"
+    },
+    {
+        "filename": "num_5",
+        "name": "NUM_5"
+    },
+    {
+        "filename": "num_6",
+        "name": "NUM_6"
+    },
+    {
+        "filename": "num_7",
+        "name": "NUM_7"
+    },
+    {
+        "filename": "num_8",
+        "name": "NUM_8"
+    },
+    {
+        "filename": "num_9",
+        "name": "NUM_9"
+    },
+    {
+        "filename": "percent",
+        "name": "PERCENT"
+    },
+    {
+        "filename": "ckey_b",
+        "name": "CKEY_B"
+    },
+    {
+        "filename": "ckey_y",
+        "name": "CKEY_Y"
+    },
+    {
+        "filename": "ckey_r",
+        "name": "CKEY_R"
+    },
+    {
+        "filename": "skey_b",
+        "name": "SKEY_B"
+    },
+    {
+        "filename": "skey_y",
+        "name": "SKEY_Y"
+    },
+    {
+        "filename": "skey_r",
+        "name": "SKEY_R"
+    },
+    {
+        "filename": "micro_2",
+        "name": "MICRO_2"
+    },
+    {
+        "filename": "micro_3",
+        "name": "MICRO_3"
+    },
+    {
+        "filename": "micro_4",
+        "name": "MICRO_4"
+    },
+    {
+        "filename": "micro_5",
+        "name": "MICRO_5"
+    },
+    {
+        "filename": "micro_6",
+        "name": "MICRO_6"
+    },
+    {
+        "filename": "micro_7",
+        "name": "MICRO_7"
+    },
+    {
+        "filename": "char_065",
+        "name": "CHAR_065"
+    },
+    {
+        "filename": "char_066",
+        "name": "CHAR_066"
+    },
+    {
+        "filename": "char_067",
+        "name": "CHAR_067"
+    },
+    {
+        "filename": "char_068",
+        "name": "CHAR_068"
+    },
+    {
+        "filename": "char_069",
+        "name": "CHAR_069"
+    },
+    {
+        "filename": "char_070",
+        "name": "CHAR_070"
+    },
+    {
+        "filename": "char_071",
+        "name": "CHAR_071"
+    },
+    {
+        "filename": "char_072",
+        "name": "CHAR_072"
+    },
+    {
+        "filename": "char_073",
+        "name": "CHAR_073"
+    },
+    {
+        "filename": "char_074",
+        "name": "CHAR_074"
+    },
+    {
+        "filename": "char_075",
+        "name": "CHAR_075"
+    },
+    {
+        "filename": "char_076",
+        "name": "CHAR_076"
+    },
+    {
+        "filename": "char_077",
+        "name": "CHAR_077"
+    },
+    {
+        "filename": "char_078",
+        "name": "CHAR_078"
+    },
+    {
+        "filename": "char_079",
+        "name": "CHAR_079"
+    },
+    {
+        "filename": "char_080",
+        "name": "CHAR_080"
+    },
+    {
+        "filename": "char_081",
+        "name": "CHAR_081"
+    },
+    {
+        "filename": "char_082",
+        "name": "CHAR_082"
+    },
+    {
+        "filename": "char_083",
+        "name": "CHAR_083"
+    },
+    {
+        "filename": "char_084",
+        "name": "CHAR_084"
+    },
+    {
+        "filename": "char_085",
+        "name": "CHAR_085"
+    },
+    {
+        "filename": "char_086",
+        "name": "CHAR_086"
+    },
+    {
+        "filename": "char_087",
+        "name": "CHAR_087"
+    },
+    {
+        "filename": "char_088",
+        "name": "CHAR_088"
+    },
+    {
+        "filename": "char_089",
+        "name": "CHAR_089"
+    },
+    {
+        "filename": "char_090",
+        "name": "CHAR_090"
+    },
+    {
+        "filename": "char_097",
+        "name": "CHAR_097"
+    },
+    {
+        "filename": "char_099",
+        "name": "CHAR_099"
+    },
+    {
+        "filename": "char_100",
+        "name": "CHAR_100"
+    },
+    {
+        "filename": "char_101",
+        "name": "CHAR_101"
+    },
+    {
+        "filename": "char_102",
+        "name": "CHAR_102"
+    },
+    {
+        "filename": "char_103",
+        "name": "CHAR_103"
+    },
+    {
+        "filename": "char_104",
+        "name": "CHAR_104"
+    },
+    {
+        "filename": "char_105",
+        "name": "CHAR_105"
+    },
+    {
+        "filename": "char_106",
+        "name": "CHAR_106"
+    },
+    {
+        "filename": "char_107",
+        "name": "CHAR_107"
+    },
+    {
+        "filename": "char_108",
+        "name": "CHAR_108"
+    },
+    {
+        "filename": "char_109",
+        "name": "CHAR_109"
+    },
+    {
+        "filename": "char_110",
+        "name": "CHAR_110"
+    },
+    {
+        "filename": "char_111",
+        "name": "CHAR_111"
+    },
+    {
+        "filename": "char_112",
+        "name": "CHAR_112"
+    },
+    {
+        "filename": "char_113",
+        "name": "CHAR_113"
+    },
+    {
+        "filename": "char_114",
+        "name": "CHAR_114"
+    },
+    {
+        "filename": "char_115",
+        "name": "CHAR_115"
+    },
+    {
+        "filename": "char_116",
+        "name": "CHAR_116"
+    },
+    {
+        "filename": "char_117",
+        "name": "CHAR_117"
+    },
+    {
+        "filename": "char_118",
+        "name": "CHAR_118"
+    },
+    {
+        "filename": "char_119",
+        "name": "CHAR_119"
+    },
+    {
+        "filename": "char_120",
+        "name": "CHAR_120"
+    },
+    {
+        "filename": "char_121",
+        "name": "CHAR_121"
+    },
+    {
+        "filename": "char_122",
+        "name": "CHAR_122"
+    },
+    {
+        "filename": "char_123",
+        "name": "CHAR_123"
+    },
+    {
+        "filename": "char_124",
+        "name": "CHAR_124"
+    },
+    {
+        "filename": "char_125",
+        "name": "CHAR_125"
+    },
+    {
+        "compressed": true,
+        "filename": "i_kills",
+        "name": "I_KILLS"
+    },
+    {
+        "compressed": true,
+        "filename": "i_items",
+        "name": "I_ITEMS"
+    },
+    {
+        "compressed": true,
+        "filename": "i_secret",
+        "name": "I_SECRET"
+    },
+    {
+        "compressed": true,
+        "filename": "i_level",
+        "name": "I_LEVEL"
+    },
+    {
+        "compressed": true,
+        "filename": "i_finish",
+        "name": "I_FINISH"
+    },
+    {
+        "compressed": true,
+        "filename": "o_strack",
+        "name": "O_STRACK"
+    },
+    {
+        "compressed": true,
+        "filename": "o_slider",
+        "name": "O_SLIDER"
+    },
+    {
+        "compressed": true,
+        "filename": "skill0",
+        "name": "SKILL0"
+    },
+    {
+        "compressed": true,
+        "filename": "skill1",
+        "name": "SKILL1"
+    },
+    {
+        "compressed": true,
+        "filename": "skill2",
+        "name": "SKILL2"
+    },
+    {
+        "compressed": true,
+        "filename": "skill3",
+        "name": "SKILL3"
+    },
+    {
+        "compressed": true,
+        "filename": "skill4",
+        "name": "SKILL4"
+    },
+    {
+        "compressed": true,
+        "filename": "face00",
+        "name": "FACE00"
+    },
+    {
+        "compressed": true,
+        "filename": "face01",
+        "name": "FACE01"
+    },
+    {
+        "compressed": true,
+        "filename": "face02",
+        "name": "FACE02"
+    },
+    {
+        "compressed": true,
+        "filename": "face03",
+        "name": "FACE03"
+    },
+    {
+        "compressed": true,
+        "filename": "face04",
+        "name": "FACE04"
+    },
+    {
+        "compressed": true,
+        "filename": "face05",
+        "name": "FACE05"
+    },
+    {
+        "compressed": true,
+        "filename": "face06",
+        "name": "FACE06"
+    },
+    {
+        "compressed": true,
+        "filename": "face07",
+        "name": "FACE07"
+    },
+    {
+        "compressed": true,
+        "filename": "face08",
+        "name": "FACE08"
+    },
+    {
+        "compressed": true,
+        "filename": "face09",
+        "name": "FACE09"
+    },
+    {
+        "compressed": true,
+        "filename": "face10",
+        "name": "FACE10"
+    },
+    {
+        "compressed": true,
+        "filename": "face11",
+        "name": "FACE11"
+    },
+    {
+        "compressed": true,
+        "filename": "face12",
+        "name": "FACE12"
+    },
+    {
+        "compressed": true,
+        "filename": "face13",
+        "name": "FACE13"
+    },
+    {
+        "compressed": true,
+        "filename": "face14",
+        "name": "FACE14"
+    },
+    {
+        "compressed": true,
+        "filename": "face15",
+        "name": "FACE15"
+    },
+    {
+        "compressed": true,
+        "filename": "face16",
+        "name": "FACE16"
+    },
+    {
+        "compressed": true,
+        "filename": "face17",
+        "name": "FACE17"
+    },
+    {
+        "compressed": true,
+        "filename": "face18",
+        "name": "FACE18"
+    },
+    {
+        "compressed": true,
+        "filename": "face19",
+        "name": "FACE19"
+    },
+    {
+        "compressed": true,
+        "filename": "face20",
+        "name": "FACE20"
+    },
+    {
+        "compressed": true,
+        "filename": "face21",
+        "name": "FACE21"
+    },
+    {
+        "compressed": true,
+        "filename": "face22",
+        "name": "FACE22"
+    },
+    {
+        "compressed": true,
+        "filename": "face23",
+        "name": "FACE23"
+    },
+    {
+        "compressed": true,
+        "filename": "face24",
+        "name": "FACE24"
+    },
+    {
+        "compressed": true,
+        "filename": "face25",
+        "name": "FACE25"
+    },
+    {
+        "compressed": true,
+        "filename": "face26",
+        "name": "FACE26"
+    },
+    {
+        "compressed": true,
+        "filename": "face27",
+        "name": "FACE27"
+    },
+    {
+        "compressed": true,
+        "filename": "face28",
+        "name": "FACE28"
+    },
+    {
+        "compressed": true,
+        "filename": "face29",
+        "name": "FACE29"
+    },
+    {
+        "compressed": true,
+        "filename": "face30",
+        "name": "FACE30"
+    },
+    {
+        "compressed": true,
+        "filename": "face31",
+        "name": "FACE31"
+    },
+    {
+        "compressed": true,
+        "filename": "face32",
+        "name": "FACE32"
+    },
+    {
+        "compressed": true,
+        "filename": "face33",
+        "name": "FACE33"
+    },
+    {
+        "compressed": true,
+        "filename": "face34",
+        "name": "FACE34"
+    },
+    {
+        "compressed": true,
+        "filename": "face35",
+        "name": "FACE35"
+    },
+    {
+        "compressed": true,
+        "filename": "face36",
+        "name": "FACE36"
+    },
+    {
+        "compressed": true,
+        "filename": "face37",
+        "name": "FACE37"
+    },
+    {
+        "compressed": true,
+        "filename": "face38",
+        "name": "FACE38"
+    },
+    {
+        "compressed": true,
+        "filename": "face39",
+        "name": "FACE39"
+    },
+    {
+        "compressed": true,
+        "filename": "face40",
+        "name": "FACE40"
+    },
+    {
+        "compressed": true,
+        "filename": "face41",
+        "name": "FACE41"
+    },
+    {
+        "compressed": true,
+        "filename": "stsplat0",
+        "name": "STSPLAT0"
+    },
+    {
+        "compressed": true,
+        "filename": "stsplat1",
+        "name": "STSPLAT1"
+    },
+    {
+        "compressed": true,
+        "filename": "stsplat2",
+        "name": "STSPLAT2"
+    },
+    {
+        "compressed": true,
+        "filename": "stsplat3",
+        "name": "STSPLAT3"
+    },
+    {
+        "compressed": true,
+        "filename": "stsplat4",
+        "name": "STSPLAT4"
+    },
+    {
+        "compressed": true,
+        "filename": "stsplat5",
+        "name": "STSPLAT5"
+    },
+    {
+        "compressed": true,
+        "filename": "m_doom",
+        "name": "M_DOOM"
+    },
+    {
+        "filename": "m_skull1",
+        "name": "M_SKULL1"
+    },
+    {
+        "filename": "m_skull2",
+        "name": "M_SKULL2"
+    },
+    {
+        "name": "DS_START",
+        "virtual": true
+    },
+    {
+        "filename": "barexp",
+        "name": "BAREXP"
+    },
+    {
+        "filename": "bfg",
+        "name": "BFG"
+    },
+    {
+        "filename": "bgact",
+        "name": "BGACT"
+    },
+    {
+        "filename": "bgdth1",
+        "name": "BGDTH1"
+    },
+    {
+        "filename": "bgdth2",
+        "name": "BGDTH2"
+    },
+    {
+        "filename": "bgsit1",
+        "name": "BGSIT1"
+    },
+    {
+        "filename": "bgsit2",
+        "name": "BGSIT2"
+    },
+    {
+        "filename": "brsdth",
+        "name": "BRSDTH"
+    },
+    {
+        "filename": "brssit",
+        "name": "BRSSIT"
+    },
+    {
+        "filename": "cacdth",
+        "name": "CACDTH"
+    },
+    {
+        "filename": "cacsit",
+        "name": "CACSIT"
+    },
+    {
+        "filename": "claw",
+        "name": "CLAW"
+    },
+    {
+        "filename": "dmact",
+        "name": "DMACT"
+    },
+    {
+        "filename": "dmpain",
+        "name": "DMPAIN"
+    },
+    {
+        "filename": "dorcls",
+        "name": "DORCLS"
+    },
+    {
+        "filename": "dsbdcls",
+        "name": "DSBDCLS"
+    },
+    {
+        "filename": "dsbdopn",
+        "name": "DSBDOPN"
+    },
+    {
+        "filename": "doropn",
+        "name": "DOROPN"
+    },
+    {
+        "filename": "firsht",
+        "name": "FIRSHT"
+    },
+    {
+        "filename": "firxpl",
+        "name": "FIRXPL"
+    },
+    {
+        "filename": "itemup",
+        "name": "ITEMUP"
+    },
+    {
+        "filename": "itmbk",
+        "name": "ITMBK"
+    },
+    {
+        "filename": "noway",
+        "name": "NOWAY"
+    },
+    {
+        "filename": "oof",
+        "name": "OOF"
+    },
+    {
+        "filename": "pistol",
+        "name": "PISTOL"
+    },
+    {
+        "filename": "plasma",
+        "name": "PLASMA"
+    },
+    {
+        "filename": "pldeth",
+        "name": "PLDETH"
+    },
+    {
+        "filename": "plpain",
+        "name": "PLPAIN"
+    },
+    {
+        "filename": "podth1",
+        "name": "PODTH1"
+    },
+    {
+        "filename": "podth2",
+        "name": "PODTH2"
+    },
+    {
+        "filename": "podth3",
+        "name": "PODTH3"
+    },
+    {
+        "filename": "popain",
+        "name": "POPAIN"
+    },
+    {
+        "filename": "posact",
+        "name": "POSACT"
+    },
+    {
+        "filename": "posit1",
+        "name": "POSIT1"
+    },
+    {
+        "filename": "posit2",
+        "name": "POSIT2"
+    },
+    {
+        "filename": "posit3",
+        "name": "POSIT3"
+    },
+    {
+        "filename": "pstart",
+        "name": "PSTART"
+    },
+    {
+        "filename": "pstop",
+        "name": "PSTOP"
+    },
+    {
+        "filename": "punch",
+        "name": "PUNCH"
+    },
+    {
+        "filename": "rlaunc",
+        "name": "RLAUNC"
+    },
+    {
+        "filename": "rxplod",
+        "name": "RXPLOD"
+    },
+    {
+        "filename": "sawful",
+        "name": "SAWFUL"
+    },
+    {
+        "filename": "sawhit",
+        "name": "SAWHIT"
+    },
+    {
+        "filename": "sawidl",
+        "name": "SAWIDL"
+    },
+    {
+        "filename": "sawup",
+        "name": "SAWUP"
+    },
+    {
+        "filename": "sgcock",
+        "name": "SGCOCK"
+    },
+    {
+        "filename": "sgtatk",
+        "name": "SGTATK"
+    },
+    {
+        "filename": "sgtdth",
+        "name": "SGTDTH"
+    },
+    {
+        "filename": "sgtsit",
+        "name": "SGTSIT"
+    },
+    {
+        "filename": "shotgn",
+        "name": "SHOTGN"
+    },
+    {
+        "filename": "sklatk",
+        "name": "SKLATK"
+    },
+    {
+        "filename": "skldth",
+        "name": "SKLDTH"
+    },
+    {
+        "filename": "slop",
+        "name": "SLOP"
+    },
+    {
+        "filename": "stnmov",
+        "name": "STNMOV"
+    },
+    {
+        "filename": "swtchn",
+        "name": "SWTCHN"
+    },
+    {
+        "filename": "swtchx",
+        "name": "SWTCHX"
+    },
+    {
+        "filename": "telept",
+        "name": "TELEPT"
+    },
+    {
+        "filename": "wpnup",
+        "name": "WPNUP"
+    },
+    {
+        "name": "DS_END",
+        "virtual": true
+    },
+    {
+        "filename": "VGM/E1M1.zgm",
+        "name": "VGM_E1M1"
+    },
+    {
+        "filename": "VGM/E1M2.zgm",
+        "name": "VGM_E1M2"
+    },
+    {
+        "filename": "VGM/E1M3.zgm",
+        "name": "VGM_E1M3"
+    },
+    {
+        "filename": "VGM/E1M4.zgm",
+        "name": "VGM_E1M4"
+    },
+    {
+        "filename": "VGM/E1M5.zgm",
+        "name": "VGM_E1M5"
+    },
+    {
+        "filename": "VGM/E1M6.zgm",
+        "name": "VGM_E1M6"
+    },
+    {
+        "filename": "VGM/E1M7.zgm",
+        "name": "VGM_E1M7"
+    },
+    {
+        "filename": "VGM/E1M8.zgm",
+        "name": "VGM_E1M8"
+    },
+    {
+        "filename": "VGM/E1M9.zgm",
+        "name": "VGM_E1M9"
+    },
+    {
+        "filename": "VGM/E2M1.zgm",
+        "name": "VGM_E2M1"
+    },
+    {
+        "filename": "VGM/E2M2.zgm",
+        "name": "VGM_E2M2"
+    },
+    {
+        "filename": "VGM/E2M4.zgm",
+        "name": "VGM_E2M4"
+    },
+    {
+        "filename": "VGM/E2M6.zgm",
+        "name": "VGM_E2M6"
+    },
+    {
+        "filename": "VGM/E2M7.zgm",
+        "name": "VGM_E2M7"
+    },
+    {
+        "filename": "VGM/E2M8.zgm",
+        "name": "VGM_E2M8"
+    },
+    {
+        "filename": "VGM/E2M9.zgm",
+        "name": "VGM_E2M9"
+    },
+    {
+        "filename": "VGM/E3M2.zgm",
+        "name": "VGM_E3M2"
+    },
+    {
+        "filename": "VGM/E3M3.zgm",
+        "name": "VGM_E3M3"
+    },
+    {
+        "filename": "VGM/E3M8.zgm",
+        "name": "VGM_E3M8"
+    },
+    {
+        "filename": "VGM/Inter.zgm",
+        "name": "VGM_NTER"
+    },
+    {
+        "filename": "VGM/End.zgm",
+        "name": "VGM_END"
+    },
+    {
+        "filename": "VGM/Intro.zgm",
+        "name": "VGM_NTRO"
+    },
+    {
+        "filename": "VGM/Bunny.zgm",
+        "name": "VGM_BUNN"
+    },
+    {
+        "name": "T_START",
+        "virtual": true
+    },
+    {
+        "filename": "bigdoor2",
+        "name": "BIGDOOR2"
+    },
+    {
+        "filename": "bigdoor6",
+        "name": "BIGDOOR6"
+    },
+    {
+        "filename": "brnpois",
+        "name": "BRNPOIS"
+    },
+    {
+        "filename": "browngrn",
+        "name": "BROWNGRN"
+    },
+    {
+        "filename": "brown1",
+        "name": "BROWN1"
+    },
+    {
+        "filename": "compspan",
+        "name": "COMPSPAN"
+    },
+    {
+        "filename": "comptall",
+        "name": "COMPTALL"
+    },
+    {
+        "filename": "crate1",
+        "name": "CRATE1"
+    },
+    {
+        "filename": "cratelit",
+        "name": "CRATELIT"
+    },
+    {
+        "filename": "cratiny",
+        "name": "CRATINY"
+    },
+    {
+        "filename": "door1",
+        "name": "DOOR1"
+    },
+    {
+        "filename": "door3",
+        "name": "DOOR3"
+    },
+    {
+        "filename": "doorblu",
+        "name": "DOORBLU"
+    },
+    {
+        "filename": "doorred",
+        "name": "DOORRED"
+    },
+    {
+        "filename": "doorstop",
+        "name": "DOORSTOP"
+    },
+    {
+        "filename": "doortrak",
+        "name": "DOORTRAK"
+    },
+    {
+        "filename": "dooryel",
+        "name": "DOORYEL"
+    },
+    {
+        "filename": "exitdoor",
+        "name": "EXITDOOR"
+    },
+    {
+        "filename": "exitsign",
+        "name": "EXITSIGN"
+    },
+    {
+        "filename": "gray5",
+        "name": "GRAY5"
+    },
+    {
+        "filename": "gstsatyr",
+        "name": "GSTSATYR"
+    },
+    {
+        "filename": "lite5",
+        "name": "LITE5"
+    },
+    {
+        "filename": "marbfac3",
+        "name": "MARBFAC3"
+    },
+    {
+        "filename": "metal",
+        "name": "METAL"
+    },
+    {
+        "filename": "metal1",
+        "name": "METAL1"
+    },
+    {
+        "filename": "nuke24",
+        "name": "NUKE24"
+    },
+    {
+        "filename": "pipe2",
+        "name": "PIPE2"
+    },
+    {
+        "filename": "plat1",
+        "name": "PLAT1"
+    },
+    {
+        "filename": "shawn2",
+        "name": "SHAWN2"
+    },
+    {
+        "filename": "skinedge",
+        "name": "SKINEDGE"
+    },
+    {
+        "filename": "sky1",
+        "name": "SKY1"
+    },
+    {
+        "filename": "sky2",
+        "name": "SKY2"
+    },
+    {
+        "filename": "sky3",
+        "name": "SKY3"
+    },
+    {
+        "filename": "sky4",
+        "name": "SKY4",
+        "tag": "UD"
+    },
+    {
+        "filename": "sladwall",
+        "name": "SLADWALL"
+    },
+    {
+        "filename": "sp_dude4",
+        "name": "SP_DUDE4"
+    },
+    {
+        "filename": "sp_hot1",
+        "name": "SP_HOT1"
+    },
+    {
+        "filename": "step6",
+        "name": "STEP6"
+    },
+    {
+        "filename": "support2",
+        "name": "SUPPORT2"
+    },
+    {
+        "filename": "support3",
+        "name": "SUPPORT3"
+    },
+    {
+        "filename": "sw1brn1",
+        "name": "SW1BRN1"
+    },
+    {
+        "filename": "sw1garg",
+        "name": "SW1GARG"
+    },
+    {
+        "filename": "sw1gston",
+        "name": "SW1GSTON"
+    },
+    {
+        "filename": "sw1hot",
+        "name": "SW1HOT"
+    },
+    {
+        "filename": "sw1wood",
+        "name": "SW1WOOD"
+    },
+    {
+        "filename": "sw2brn1",
+        "name": "SW2BRN1"
+    },
+    {
+        "filename": "sw2garg",
+        "name": "SW2GARG"
+    },
+    {
+        "filename": "sw2gston",
+        "name": "SW2GSTON"
+    },
+    {
+        "filename": "sw2hot",
+        "name": "SW2HOT"
+    },
+    {
+        "filename": "sw2wood",
+        "name": "SW2WOOD"
+    },
+    {
+        "filename": "brick01",
+        "name": "BRICK01"
+    },
+    {
+        "filename": "brick02",
+        "name": "BRICK02"
+    },
+    {
+        "filename": "brick03",
+        "name": "BRICK03"
+    },
+    {
+        "filename": "dface01",
+        "name": "DFACE01"
+    },
+    {
+        "filename": "marble01",
+        "name": "MARBLE01"
+    },
+    {
+        "filename": "marble02",
+        "name": "MARBLE02"
+    },
+    {
+        "filename": "marble03",
+        "name": "MARBLE03"
+    },
+    {
+        "filename": "marble04",
+        "name": "MARBLE04"
+    },
+    {
+        "filename": "wood01",
+        "name": "WOOD01"
+    },
+    {
+        "filename": "ash01",
+        "name": "ASH01"
+    },
+    {
+        "filename": "cement01",
+        "name": "CEMENT01"
+    },
+    {
+        "filename": "tech01",
+        "name": "TECH01"
+    },
+    {
+        "filename": "tech02",
+        "name": "TECH02"
+    },
+    {
+        "filename": "tech03",
+        "name": "TECH03"
+    },
+    {
+        "filename": "tech04",
+        "name": "TECH04"
+    },
+    {
+        "filename": "skin01",
+        "name": "SKIN01"
+    },
+    {
+        "filename": "skin02",
+        "name": "SKIN02"
+    },
+    {
+        "filename": "skin03",
+        "name": "SKIN03"
+    },
+    {
+        "filename": "skulls01",
+        "name": "SKULLS01"
+    },
+    {
+        "filename": "stwar01",
+        "name": "STWAR01"
+    },
+    {
+        "filename": "stwar02",
+        "name": "STWAR02"
+    },
+    {
+        "filename": "comtal02",
+        "name": "COMTAL02"
+    },
+    {
+        "filename": "sw1star",
+        "name": "SW1STAR"
+    },
+    {
+        "filename": "sw2star",
+        "name": "SW2STAR"
+    },
+    {
+        "filename": "blac",
+        "name": "BLAC",
+        "tag": "UD"
+    },
+    {
+        "name": "T_END",
+        "virtual": true
+    },
+    {
+        "name": "F_START",
+        "virtual": true
+    },
+    {
+        "filename": "flat14",
+        "name": "FLAT14"
+    },
+    {
+        "filename": "flat23",
+        "name": "FLAT23"
+    },
+    {
+        "filename": "flat5_2",
+        "name": "FLAT5_2"
+    },
+    {
+        "filename": "flat5_4",
+        "name": "FLAT5_4"
+    },
+    {
+        "filename": "flat5_7",
+        "name": "FLAT5_7",
+        "tag": "UD"
+    },
+    {
+        "filename": "nukage1",
+        "name": "NUKAGE1"
+    },
+    {
+        "filename": "nukage2",
+        "name": "NUKAGE2"
+    },
+    {
+        "filename": "nukage3",
+        "name": "NUKAGE3"
+    },
+    {
+        "filename": "floor0_1",
+        "name": "FLOOR0_1"
+    },
+    {
+        "filename": "floor0_3",
+        "name": "FLOOR0_3"
+    },
+    {
+        "filename": "floor0_6",
+        "name": "FLOOR0_6"
+    },
+    {
+        "filename": "floor3_3",
+        "name": "FLOOR3_3"
+    },
+    {
+        "filename": "floor4_6",
+        "name": "FLOOR4_6"
+    },
+    {
+        "filename": "floor4_8",
+        "name": "FLOOR4_8"
+    },
+    {
+        "filename": "floor5_4",
+        "name": "FLOOR5_4"
+    },
+    {
+        "filename": "step1",
+        "name": "STEP1"
+    },
+    {
+        "filename": "step2",
+        "name": "STEP2"
+    },
+    {
+        "filename": "floor6_1",
+        "name": "FLOOR6_1"
+    },
+    {
+        "filename": "floor6_2",
+        "name": "FLOOR6_2"
+    },
+    {
+        "filename": "tlite6_4",
+        "name": "TLITE6_4"
+    },
+    {
+        "filename": "tlite6_6",
+        "name": "TLITE6_6"
+    },
+    {
+        "filename": "floor7_1",
+        "name": "FLOOR7_1"
+    },
+    {
+        "filename": "floor7_2",
+        "name": "FLOOR7_2"
+    },
+    {
+        "filename": "mflr8_1",
+        "name": "MFLR8_1"
+    },
+    {
+        "filename": "mflr8_4",
+        "name": "MFLR8_4"
+    },
+    {
+        "filename": "ceil3_2",
+        "name": "CEIL3_2"
+    },
+    {
+        "filename": "ceil3_4",
+        "name": "CEIL3_4"
+    },
+    {
+        "filename": "ceil5_1",
+        "name": "CEIL5_1"
+    },
+    {
+        "filename": "cratop1",
+        "name": "CRATOP1"
+    },
+    {
+        "filename": "cratop2",
+        "name": "CRATOP2"
+    },
+    {
+        "filename": "flat4",
+        "name": "FLAT4"
+    },
+    {
+        "filename": "flat8",
+        "name": "FLAT8"
+    },
+    {
+        "filename": "gate3",
+        "name": "GATE3"
+    },
+    {
+        "filename": "gate4",
+        "name": "GATE4"
+    },
+    {
+        "filename": "fwater1",
+        "name": "FWATER1"
+    },
+    {
+        "filename": "fwater2",
+        "name": "FWATER2"
+    },
+    {
+        "filename": "fwater3",
+        "name": "FWATER3"
+    },
+    {
+        "filename": "fwater4",
+        "name": "FWATER4"
+    },
+    {
+        "filename": "lava1",
+        "name": "LAVA1"
+    },
+    {
+        "filename": "lava2",
+        "name": "LAVA2"
+    },
+    {
+        "filename": "lava3",
+        "name": "LAVA3"
+    },
+    {
+        "filename": "lava4",
+        "name": "LAVA4"
+    },
+    {
+        "filename": "grass",
+        "name": "GRASS"
+    },
+    {
+        "filename": "blak",
+        "name": "BLAK",
+        "tag": "UD"
+    },
+    {
+        "filename": "fleshh",
+        "name": "FLESHH",
+        "tag": "UD"
+    },
+    {
+        "filename": "rocky",
+        "name": "ROCKY",
+        "tag": "UD"
+    },
+    {
+        "filename": "rocks",
+        "name": "ROCKS"
+    },
+    {
+        "name": "F_END",
+        "virtual": true
+    },
+    {
+        "filename": "texture1",
+        "name": "TEXTURE1",
+        "tag": "!UD",
+        "compressed": true
+    },
+    {
+        "filename": "texture1_ud",
+        "name": "TEXTURE1",
+        "tag": "UD",
+        "compressed": true
+    },
+    {
+        "filename": "playpals",
+        "name": "PLAYPALS"
+    },
+    {
+        "filename": "dmapinfo",
+        "name": "DMAPINFO",
+        "tag": "!UD"
+    },
+    {
+        "filename": "dmapinfo_ud",
+        "name": "DMAPINFO",
+        "tag": "UD"
+    },
+    {
+        "compressed": true,
+        "filename": "demo1",
+        "name": "DEMO1"
+    },
+    {
+        "compressed": true,
+        "filename": "demo2",
+        "name": "DEMO2"
+    },
+    {
+        "filename": "dcredits1",
+        "name": "CREDITS1"
+    },
+    {
+        "filename": "dcredits2",
+        "name": "CREDITS2"
+    },
+    {
+        "filename": "colormap8_new",
+        "name": "COLORMAP"
+    },
+    {
+        "filename": "colormap_new",
+        "name": "COLORMAP"
+    },
+    {
+        "filename": "colormap8",
+        "name": "COLORMAP"
+    },
+    {
+        "filename": "colormap",
+        "name": "COLORMAP"
+    },
+    {
         "name": "S_START",
         "virtual": true
     },
@@ -4138,1530 +5669,8 @@
         "virtual": true
     },
     {
-        "filename": "stbar",
-        "name": "STBAR"
-    },
-    {
-        "compressed": true,
-        "filename": "minus",
-        "name": "MINUS"
-    },
-    {
-        "compressed": true,
-        "filename": "num_0",
-        "name": "NUM_0"
-    },
-    {
-        "compressed": true,
-        "filename": "num_1",
-        "name": "NUM_1"
-    },
-    {
-        "compressed": true,
-        "filename": "num_2",
-        "name": "NUM_2"
-    },
-    {
-        "compressed": true,
-        "filename": "num_3",
-        "name": "NUM_3"
-    },
-    {
-        "compressed": true,
-        "filename": "num_4",
-        "name": "NUM_4"
-    },
-    {
-        "compressed": true,
-        "filename": "num_5",
-        "name": "NUM_5"
-    },
-    {
-        "compressed": true,
-        "filename": "num_6",
-        "name": "NUM_6"
-    },
-    {
-        "compressed": true,
-        "filename": "num_7",
-        "name": "NUM_7"
-    },
-    {
-        "compressed": true,
-        "filename": "num_8",
-        "name": "NUM_8"
-    },
-    {
-        "compressed": true,
-        "filename": "num_9",
-        "name": "NUM_9"
-    },
-    {
-        "compressed": true,
-        "filename": "percent",
-        "name": "PERCENT"
-    },
-    {
-        "filename": "ckey_b",
-        "name": "CKEY_B"
-    },
-    {
-        "filename": "ckey_y",
-        "name": "CKEY_Y"
-    },
-    {
-        "filename": "ckey_r",
-        "name": "CKEY_R"
-    },
-    {
-        "filename": "skey_b",
-        "name": "SKEY_B"
-    },
-    {
-        "filename": "skey_y",
-        "name": "SKEY_Y"
-    },
-    {
-        "filename": "skey_r",
-        "name": "SKEY_R"
-    },
-    {
-        "compressed": true,
-        "filename": "micro_2",
-        "name": "MICRO_2"
-    },
-    {
-        "compressed": true,
-        "filename": "micro_3",
-        "name": "MICRO_3"
-    },
-    {
-        "compressed": true,
-        "filename": "micro_4",
-        "name": "MICRO_4"
-    },
-    {
-        "compressed": true,
-        "filename": "micro_5",
-        "name": "MICRO_5"
-    },
-    {
-        "compressed": true,
-        "filename": "micro_6",
-        "name": "MICRO_6"
-    },
-    {
-        "compressed": true,
-        "filename": "micro_7",
-        "name": "MICRO_7"
-    },
-    {
-        "compressed": true,
-        "filename": "char_065",
-        "name": "CHAR_065"
-    },
-    {
-        "compressed": true,
-        "filename": "char_066",
-        "name": "CHAR_066"
-    },
-    {
-        "compressed": true,
-        "filename": "char_067",
-        "name": "CHAR_067"
-    },
-    {
-        "compressed": true,
-        "filename": "char_068",
-        "name": "CHAR_068"
-    },
-    {
-        "compressed": true,
-        "filename": "char_069",
-        "name": "CHAR_069"
-    },
-    {
-        "compressed": true,
-        "filename": "char_070",
-        "name": "CHAR_070"
-    },
-    {
-        "compressed": true,
-        "filename": "char_071",
-        "name": "CHAR_071"
-    },
-    {
-        "compressed": true,
-        "filename": "char_072",
-        "name": "CHAR_072"
-    },
-    {
-        "compressed": true,
-        "filename": "char_073",
-        "name": "CHAR_073"
-    },
-    {
-        "compressed": true,
-        "filename": "char_074",
-        "name": "CHAR_074"
-    },
-    {
-        "compressed": true,
-        "filename": "char_075",
-        "name": "CHAR_075"
-    },
-    {
-        "compressed": true,
-        "filename": "char_076",
-        "name": "CHAR_076"
-    },
-    {
-        "compressed": true,
-        "filename": "char_077",
-        "name": "CHAR_077"
-    },
-    {
-        "compressed": true,
-        "filename": "char_078",
-        "name": "CHAR_078"
-    },
-    {
-        "compressed": true,
-        "filename": "char_079",
-        "name": "CHAR_079"
-    },
-    {
-        "compressed": true,
-        "filename": "char_080",
-        "name": "CHAR_080"
-    },
-    {
-        "compressed": true,
-        "filename": "char_081",
-        "name": "CHAR_081"
-    },
-    {
-        "compressed": true,
-        "filename": "char_082",
-        "name": "CHAR_082"
-    },
-    {
-        "compressed": true,
-        "filename": "char_083",
-        "name": "CHAR_083"
-    },
-    {
-        "compressed": true,
-        "filename": "char_084",
-        "name": "CHAR_084"
-    },
-    {
-        "compressed": true,
-        "filename": "char_085",
-        "name": "CHAR_085"
-    },
-    {
-        "compressed": true,
-        "filename": "char_086",
-        "name": "CHAR_086"
-    },
-    {
-        "compressed": true,
-        "filename": "char_087",
-        "name": "CHAR_087"
-    },
-    {
-        "compressed": true,
-        "filename": "char_088",
-        "name": "CHAR_088"
-    },
-    {
-        "compressed": true,
-        "filename": "char_089",
-        "name": "CHAR_089"
-    },
-    {
-        "compressed": true,
-        "filename": "char_090",
-        "name": "CHAR_090"
-    },
-    {
-        "compressed": true,
-        "filename": "char_097",
-        "name": "CHAR_097"
-    },
-    {
-        "compressed": true,
-        "filename": "char_099",
-        "name": "CHAR_099"
-    },
-    {
-        "compressed": true,
-        "filename": "char_100",
-        "name": "CHAR_100"
-    },
-    {
-        "compressed": true,
-        "filename": "char_101",
-        "name": "CHAR_101"
-    },
-    {
-        "compressed": true,
-        "filename": "char_102",
-        "name": "CHAR_102"
-    },
-    {
-        "compressed": true,
-        "filename": "char_103",
-        "name": "CHAR_103"
-    },
-    {
-        "compressed": true,
-        "filename": "char_104",
-        "name": "CHAR_104"
-    },
-    {
-        "compressed": true,
-        "filename": "char_105",
-        "name": "CHAR_105"
-    },
-    {
-        "compressed": true,
-        "filename": "char_106",
-        "name": "CHAR_106"
-    },
-    {
-        "compressed": true,
-        "filename": "char_107",
-        "name": "CHAR_107"
-    },
-    {
-        "compressed": true,
-        "filename": "char_108",
-        "name": "CHAR_108"
-    },
-    {
-        "compressed": true,
-        "filename": "char_109",
-        "name": "CHAR_109"
-    },
-    {
-        "compressed": true,
-        "filename": "char_110",
-        "name": "CHAR_110"
-    },
-    {
-        "compressed": true,
-        "filename": "char_111",
-        "name": "CHAR_111"
-    },
-    {
-        "compressed": true,
-        "filename": "char_112",
-        "name": "CHAR_112"
-    },
-    {
-        "compressed": true,
-        "filename": "char_113",
-        "name": "CHAR_113"
-    },
-    {
-        "compressed": true,
-        "filename": "char_114",
-        "name": "CHAR_114"
-    },
-    {
-        "compressed": true,
-        "filename": "char_115",
-        "name": "CHAR_115"
-    },
-    {
-        "compressed": true,
-        "filename": "char_116",
-        "name": "CHAR_116"
-    },
-    {
-        "compressed": true,
-        "filename": "char_117",
-        "name": "CHAR_117"
-    },
-    {
-        "compressed": true,
-        "filename": "char_118",
-        "name": "CHAR_118"
-    },
-    {
-        "compressed": true,
-        "filename": "char_119",
-        "name": "CHAR_119"
-    },
-    {
-        "compressed": true,
-        "filename": "char_120",
-        "name": "CHAR_120"
-    },
-    {
-        "compressed": true,
-        "filename": "char_121",
-        "name": "CHAR_121"
-    },
-    {
-        "compressed": true,
-        "filename": "char_122",
-        "name": "CHAR_122"
-    },
-    {
-        "compressed": true,
-        "filename": "char_123",
-        "name": "CHAR_123"
-    },
-    {
-        "compressed": true,
-        "filename": "char_124",
-        "name": "CHAR_124"
-    },
-    {
-        "compressed": true,
-        "filename": "char_125",
-        "name": "CHAR_125"
-    },
-    {
-        "compressed": true,
-        "filename": "i_kills",
-        "name": "I_KILLS"
-    },
-    {
-        "compressed": true,
-        "filename": "i_items",
-        "name": "I_ITEMS"
-    },
-    {
-        "compressed": true,
-        "filename": "i_secret",
-        "name": "I_SECRET"
-    },
-    {
-        "compressed": true,
-        "filename": "i_level",
-        "name": "I_LEVEL"
-    },
-    {
-        "compressed": true,
-        "filename": "i_finish",
-        "name": "I_FINISH"
-    },
-    {
-        "compressed": true,
-        "filename": "o_strack",
-        "name": "O_STRACK"
-    },
-    {
-        "compressed": true,
-        "filename": "o_slider",
-        "name": "O_SLIDER"
-    },
-    {
-        "compressed": true,
-        "filename": "skill0",
-        "name": "SKILL0"
-    },
-    {
-        "compressed": true,
-        "filename": "skill1",
-        "name": "SKILL1"
-    },
-    {
-        "compressed": true,
-        "filename": "skill2",
-        "name": "SKILL2"
-    },
-    {
-        "compressed": true,
-        "filename": "skill3",
-        "name": "SKILL3"
-    },
-    {
-        "compressed": true,
-        "filename": "skill4",
-        "name": "SKILL4"
-    },
-    {
-        "compressed": true,
-        "filename": "face00",
-        "name": "FACE00"
-    },
-    {
-        "compressed": true,
-        "filename": "face01",
-        "name": "FACE01"
-    },
-    {
-        "compressed": true,
-        "filename": "face02",
-        "name": "FACE02"
-    },
-    {
-        "compressed": true,
-        "filename": "face03",
-        "name": "FACE03"
-    },
-    {
-        "compressed": true,
-        "filename": "face04",
-        "name": "FACE04"
-    },
-    {
-        "compressed": true,
-        "filename": "face05",
-        "name": "FACE05"
-    },
-    {
-        "compressed": true,
-        "filename": "face06",
-        "name": "FACE06"
-    },
-    {
-        "compressed": true,
-        "filename": "face07",
-        "name": "FACE07"
-    },
-    {
-        "compressed": true,
-        "filename": "face08",
-        "name": "FACE08"
-    },
-    {
-        "compressed": true,
-        "filename": "face09",
-        "name": "FACE09"
-    },
-    {
-        "compressed": true,
-        "filename": "face10",
-        "name": "FACE10"
-    },
-    {
-        "compressed": true,
-        "filename": "face11",
-        "name": "FACE11"
-    },
-    {
-        "compressed": true,
-        "filename": "face12",
-        "name": "FACE12"
-    },
-    {
-        "compressed": true,
-        "filename": "face13",
-        "name": "FACE13"
-    },
-    {
-        "compressed": true,
-        "filename": "face14",
-        "name": "FACE14"
-    },
-    {
-        "compressed": true,
-        "filename": "face15",
-        "name": "FACE15"
-    },
-    {
-        "compressed": true,
-        "filename": "face16",
-        "name": "FACE16"
-    },
-    {
-        "compressed": true,
-        "filename": "face17",
-        "name": "FACE17"
-    },
-    {
-        "compressed": true,
-        "filename": "face18",
-        "name": "FACE18"
-    },
-    {
-        "compressed": true,
-        "filename": "face19",
-        "name": "FACE19"
-    },
-    {
-        "compressed": true,
-        "filename": "face20",
-        "name": "FACE20"
-    },
-    {
-        "compressed": true,
-        "filename": "face21",
-        "name": "FACE21"
-    },
-    {
-        "compressed": true,
-        "filename": "face22",
-        "name": "FACE22"
-    },
-    {
-        "compressed": true,
-        "filename": "face23",
-        "name": "FACE23"
-    },
-    {
-        "compressed": true,
-        "filename": "face24",
-        "name": "FACE24"
-    },
-    {
-        "compressed": true,
-        "filename": "face25",
-        "name": "FACE25"
-    },
-    {
-        "compressed": true,
-        "filename": "face26",
-        "name": "FACE26"
-    },
-    {
-        "compressed": true,
-        "filename": "face27",
-        "name": "FACE27"
-    },
-    {
-        "compressed": true,
-        "filename": "face28",
-        "name": "FACE28"
-    },
-    {
-        "compressed": true,
-        "filename": "face29",
-        "name": "FACE29"
-    },
-    {
-        "compressed": true,
-        "filename": "face30",
-        "name": "FACE30"
-    },
-    {
-        "compressed": true,
-        "filename": "face31",
-        "name": "FACE31"
-    },
-    {
-        "compressed": true,
-        "filename": "face32",
-        "name": "FACE32"
-    },
-    {
-        "compressed": true,
-        "filename": "face33",
-        "name": "FACE33"
-    },
-    {
-        "compressed": true,
-        "filename": "face34",
-        "name": "FACE34"
-    },
-    {
-        "compressed": true,
-        "filename": "face35",
-        "name": "FACE35"
-    },
-    {
-        "compressed": true,
-        "filename": "face36",
-        "name": "FACE36"
-    },
-    {
-        "compressed": true,
-        "filename": "face37",
-        "name": "FACE37"
-    },
-    {
-        "compressed": true,
-        "filename": "face38",
-        "name": "FACE38"
-    },
-    {
-        "compressed": true,
-        "filename": "face39",
-        "name": "FACE39"
-    },
-    {
-        "compressed": true,
-        "filename": "face40",
-        "name": "FACE40"
-    },
-    {
-        "compressed": true,
-        "filename": "face41",
-        "name": "FACE41"
-    },
-    {
-        "compressed": true,
-        "filename": "stsplat0",
-        "name": "STSPLAT0"
-    },
-    {
-        "compressed": true,
-        "filename": "stsplat1",
-        "name": "STSPLAT1"
-    },
-    {
-        "compressed": true,
-        "filename": "stsplat2",
-        "name": "STSPLAT2"
-    },
-    {
-        "compressed": true,
-        "filename": "stsplat3",
-        "name": "STSPLAT3"
-    },
-    {
-        "compressed": true,
-        "filename": "stsplat4",
-        "name": "STSPLAT4"
-    },
-    {
-        "compressed": true,
-        "filename": "stsplat5",
-        "name": "STSPLAT5"
-    },
-    {
-        "compressed": true,
-        "filename": "m_doom",
-        "name": "M_DOOM"
-    },
-    {
-        "compressed": true,
-        "filename": "m_skull1",
-        "name": "M_SKULL1"
-    },
-    {
-        "compressed": true,
-        "filename": "m_skull2",
-        "name": "M_SKULL2"
-    },
-    {
-        "name": "DS_START",
-        "virtual": true
-    },
-    {
-        "filename": "barexp",
-        "name": "BAREXP"
-    },
-    {
-        "filename": "bfg",
-        "name": "BFG"
-    },
-    {
-        "filename": "bgact",
-        "name": "BGACT"
-    },
-    {
-        "filename": "bgdth1",
-        "name": "BGDTH1"
-    },
-    {
-        "filename": "bgdth2",
-        "name": "BGDTH2"
-    },
-    {
-        "filename": "bgsit1",
-        "name": "BGSIT1"
-    },
-    {
-        "filename": "bgsit2",
-        "name": "BGSIT2"
-    },
-    {
-        "filename": "brsdth",
-        "name": "BRSDTH"
-    },
-    {
-        "filename": "brssit",
-        "name": "BRSSIT"
-    },
-    {
-        "filename": "cacdth",
-        "name": "CACDTH"
-    },
-    {
-        "filename": "cacsit",
-        "name": "CACSIT"
-    },
-    {
-        "filename": "claw",
-        "name": "CLAW"
-    },
-    {
-        "filename": "dmact",
-        "name": "DMACT"
-    },
-    {
-        "filename": "dmpain",
-        "name": "DMPAIN"
-    },
-    {
-        "filename": "dorcls",
-        "name": "DORCLS"
-    },
-    {
-        "filename": "dsbdcls",
-        "name": "DSBDCLS"
-    },
-    {
-        "filename": "dsbdopn",
-        "name": "DSBDOPN"
-    },
-    {
-        "filename": "doropn",
-        "name": "DOROPN"
-    },
-    {
-        "filename": "firsht",
-        "name": "FIRSHT"
-    },
-    {
-        "filename": "firxpl",
-        "name": "FIRXPL"
-    },
-    {
-        "filename": "itemup",
-        "name": "ITEMUP"
-    },
-    {
-        "filename": "itmbk",
-        "name": "ITMBK"
-    },
-    {
-        "filename": "noway",
-        "name": "NOWAY"
-    },
-    {
-        "filename": "oof",
-        "name": "OOF"
-    },
-    {
-        "filename": "pistol",
-        "name": "PISTOL"
-    },
-    {
-        "filename": "plasma",
-        "name": "PLASMA"
-    },
-    {
-        "filename": "pldeth",
-        "name": "PLDETH"
-    },
-    {
-        "filename": "plpain",
-        "name": "PLPAIN"
-    },
-    {
-        "filename": "podth1",
-        "name": "PODTH1"
-    },
-    {
-        "filename": "podth2",
-        "name": "PODTH2"
-    },
-    {
-        "filename": "podth3",
-        "name": "PODTH3"
-    },
-    {
-        "filename": "popain",
-        "name": "POPAIN"
-    },
-    {
-        "filename": "posact",
-        "name": "POSACT"
-    },
-    {
-        "filename": "posit1",
-        "name": "POSIT1"
-    },
-    {
-        "filename": "posit2",
-        "name": "POSIT2"
-    },
-    {
-        "filename": "posit3",
-        "name": "POSIT3"
-    },
-    {
-        "filename": "pstart",
-        "name": "PSTART"
-    },
-    {
-        "filename": "pstop",
-        "name": "PSTOP"
-    },
-    {
-        "filename": "punch",
-        "name": "PUNCH"
-    },
-    {
-        "filename": "rlaunc",
-        "name": "RLAUNC"
-    },
-    {
-        "filename": "rxplod",
-        "name": "RXPLOD"
-    },
-    {
-        "filename": "sawful",
-        "name": "SAWFUL"
-    },
-    {
-        "filename": "sawhit",
-        "name": "SAWHIT"
-    },
-    {
-        "filename": "sawidl",
-        "name": "SAWIDL"
-    },
-    {
-        "filename": "sawup",
-        "name": "SAWUP"
-    },
-    {
-        "filename": "sgcock",
-        "name": "SGCOCK"
-    },
-    {
-        "filename": "sgtatk",
-        "name": "SGTATK"
-    },
-    {
-        "filename": "sgtdth",
-        "name": "SGTDTH"
-    },
-    {
-        "filename": "sgtsit",
-        "name": "SGTSIT"
-    },
-    {
-        "filename": "shotgn",
-        "name": "SHOTGN"
-    },
-    {
-        "filename": "sklatk",
-        "name": "SKLATK"
-    },
-    {
-        "filename": "skldth",
-        "name": "SKLDTH"
-    },
-    {
-        "filename": "slop",
-        "name": "SLOP"
-    },
-    {
-        "filename": "stnmov",
-        "name": "STNMOV"
-    },
-    {
-        "filename": "swtchn",
-        "name": "SWTCHN"
-    },
-    {
-        "filename": "swtchx",
-        "name": "SWTCHX"
-    },
-    {
-        "filename": "telept",
-        "name": "TELEPT"
-    },
-    {
-        "filename": "wpnup",
-        "name": "WPNUP"
-    },
-    {
-        "name": "DS_END",
-        "virtual": true
-    },
-    {
-        "name": "T_START",
-        "virtual": true
-    },
-    {
-        "filename": "bigdoor2",
-        "name": "BIGDOOR2"
-    },
-    {
-        "filename": "bigdoor6",
-        "name": "BIGDOOR6"
-    },
-    {
-        "filename": "brnpois",
-        "name": "BRNPOIS"
-    },
-    {
-        "filename": "browngrn",
-        "name": "BROWNGRN"
-    },
-    {
-        "filename": "brown1",
-        "name": "BROWN1"
-    },
-    {
-        "filename": "compspan",
-        "name": "COMPSPAN"
-    },
-    {
-        "filename": "comptall",
-        "name": "COMPTALL"
-    },
-    {
-        "filename": "crate1",
-        "name": "CRATE1"
-    },
-    {
-        "filename": "cratelit",
-        "name": "CRATELIT"
-    },
-    {
-        "filename": "cratiny",
-        "name": "CRATINY"
-    },
-    {
-        "filename": "door1",
-        "name": "DOOR1"
-    },
-    {
-        "filename": "door3",
-        "name": "DOOR3"
-    },
-    {
-        "filename": "doorblu",
-        "name": "DOORBLU"
-    },
-    {
-        "filename": "doorred",
-        "name": "DOORRED"
-    },
-    {
-        "filename": "doorstop",
-        "name": "DOORSTOP"
-    },
-    {
-        "filename": "doortrak",
-        "name": "DOORTRAK"
-    },
-    {
-        "filename": "dooryel",
-        "name": "DOORYEL"
-    },
-    {
-        "filename": "exitdoor",
-        "name": "EXITDOOR"
-    },
-    {
-        "filename": "exitsign",
-        "name": "EXITSIGN"
-    },
-    {
-        "filename": "gray5",
-        "name": "GRAY5"
-    },
-    {
-        "filename": "gstsatyr",
-        "name": "GSTSATYR"
-    },
-    {
-        "filename": "lite5",
-        "name": "LITE5"
-    },
-    {
-        "filename": "marbfac3",
-        "name": "MARBFAC3"
-    },
-    {
-        "filename": "metal",
-        "name": "METAL"
-    },
-    {
-        "filename": "metal1",
-        "name": "METAL1"
-    },
-    {
-        "filename": "nuke24",
-        "name": "NUKE24"
-    },
-    {
-        "filename": "pipe2",
-        "name": "PIPE2"
-    },
-    {
-        "filename": "plat1",
-        "name": "PLAT1"
-    },
-    {
-        "filename": "shawn2",
-        "name": "SHAWN2"
-    },
-    {
-        "filename": "skinedge",
-        "name": "SKINEDGE"
-    },
-    {
-        "filename": "sky1",
-        "name": "SKY1"
-    },
-    {
-        "filename": "sky2",
-        "name": "SKY2"
-    },
-    {
-        "filename": "sky3",
-        "name": "SKY3"
-    },
-    {
-        "filename": "sky4",
-        "name": "SKY4",
-        "tag": "UD"
-    },
-    {
-        "filename": "sladwall",
-        "name": "SLADWALL"
-    },
-    {
-        "filename": "sp_dude4",
-        "name": "SP_DUDE4"
-    },
-    {
-        "filename": "sp_hot1",
-        "name": "SP_HOT1"
-    },
-    {
-        "filename": "step6",
-        "name": "STEP6"
-    },
-    {
-        "filename": "support2",
-        "name": "SUPPORT2"
-    },
-    {
-        "filename": "support3",
-        "name": "SUPPORT3"
-    },
-    {
-        "filename": "sw1brn1",
-        "name": "SW1BRN1"
-    },
-    {
-        "filename": "sw1garg",
-        "name": "SW1GARG"
-    },
-    {
-        "filename": "sw1gston",
-        "name": "SW1GSTON"
-    },
-    {
-        "filename": "sw1hot",
-        "name": "SW1HOT"
-    },
-    {
-        "filename": "sw1wood",
-        "name": "SW1WOOD"
-    },
-    {
-        "filename": "sw2brn1",
-        "name": "SW2BRN1"
-    },
-    {
-        "filename": "sw2garg",
-        "name": "SW2GARG"
-    },
-    {
-        "filename": "sw2gston",
-        "name": "SW2GSTON"
-    },
-    {
-        "filename": "sw2hot",
-        "name": "SW2HOT"
-    },
-    {
-        "filename": "sw2wood",
-        "name": "SW2WOOD"
-    },
-    {
-        "filename": "brick01",
-        "name": "BRICK01"
-    },
-    {
-        "filename": "brick02",
-        "name": "BRICK02"
-    },
-    {
-        "filename": "brick03",
-        "name": "BRICK03"
-    },
-    {
-        "filename": "dface01",
-        "name": "DFACE01"
-    },
-    {
-        "filename": "marble01",
-        "name": "MARBLE01"
-    },
-    {
-        "filename": "marble02",
-        "name": "MARBLE02"
-    },
-    {
-        "filename": "marble03",
-        "name": "MARBLE03"
-    },
-    {
-        "filename": "marble04",
-        "name": "MARBLE04"
-    },
-    {
-        "filename": "wood01",
-        "name": "WOOD01"
-    },
-    {
-        "filename": "ash01",
-        "name": "ASH01"
-    },
-    {
-        "filename": "cement01",
-        "name": "CEMENT01"
-    },
-    {
-        "filename": "tech01",
-        "name": "TECH01"
-    },
-    {
-        "filename": "tech02",
-        "name": "TECH02"
-    },
-    {
-        "filename": "tech03",
-        "name": "TECH03"
-    },
-    {
-        "filename": "tech04",
-        "name": "TECH04"
-    },
-    {
-        "filename": "skin01",
-        "name": "SKIN01"
-    },
-    {
-        "filename": "skin02",
-        "name": "SKIN02"
-    },
-    {
-        "filename": "skin03",
-        "name": "SKIN03"
-    },
-    {
-        "filename": "skulls01",
-        "name": "SKULLS01"
-    },
-    {
-        "filename": "stwar01",
-        "name": "STWAR01"
-    },
-    {
-        "filename": "stwar02",
-        "name": "STWAR02"
-    },
-    {
-        "filename": "comtal02",
-        "name": "COMTAL02"
-    },
-    {
-        "filename": "sw1star",
-        "name": "SW1STAR"
-    },
-    {
-        "filename": "sw2star",
-        "name": "SW2STAR"
-    },
-    {
-        "filename": "blac",
-        "name": "BLAC",
-        "tag": "UD"
-    },
-    {
-        "name": "T_END",
-        "virtual": true
-    },
-    {
-        "name": "F_START",
-        "virtual": true
-    },
-    {
-        "filename": "flat14",
-        "name": "FLAT14"
-    },
-    {
-        "filename": "flat23",
-        "name": "FLAT23"
-    },
-    {
-        "filename": "flat5_2",
-        "name": "FLAT5_2"
-    },
-    {
-        "filename": "flat5_4",
-        "name": "FLAT5_4"
-    },
-    {
-        "filename": "flat5_7",
-        "name": "FLAT5_7",
-        "tag": "UD"
-    },
-    {
-        "filename": "nukage1",
-        "name": "NUKAGE1"
-    },
-    {
-        "filename": "nukage2",
-        "name": "NUKAGE2"
-    },
-    {
-        "filename": "nukage3",
-        "name": "NUKAGE3"
-    },
-    {
-        "filename": "floor0_1",
-        "name": "FLOOR0_1"
-    },
-    {
-        "filename": "floor0_3",
-        "name": "FLOOR0_3"
-    },
-    {
-        "filename": "floor0_6",
-        "name": "FLOOR0_6"
-    },
-    {
-        "filename": "floor3_3",
-        "name": "FLOOR3_3"
-    },
-    {
-        "filename": "floor4_6",
-        "name": "FLOOR4_6"
-    },
-    {
-        "filename": "floor4_8",
-        "name": "FLOOR4_8"
-    },
-    {
-        "filename": "floor5_4",
-        "name": "FLOOR5_4"
-    },
-    {
-        "filename": "step1",
-        "name": "STEP1"
-    },
-    {
-        "filename": "step2",
-        "name": "STEP2"
-    },
-    {
-        "filename": "floor6_1",
-        "name": "FLOOR6_1"
-    },
-    {
-        "filename": "floor6_2",
-        "name": "FLOOR6_2"
-    },
-    {
-        "filename": "tlite6_4",
-        "name": "TLITE6_4"
-    },
-    {
-        "filename": "tlite6_6",
-        "name": "TLITE6_6"
-    },
-    {
-        "filename": "floor7_1",
-        "name": "FLOOR7_1"
-    },
-    {
-        "filename": "floor7_2",
-        "name": "FLOOR7_2"
-    },
-    {
-        "filename": "mflr8_1",
-        "name": "MFLR8_1"
-    },
-    {
-        "filename": "mflr8_4",
-        "name": "MFLR8_4"
-    },
-    {
-        "filename": "ceil3_2",
-        "name": "CEIL3_2"
-    },
-    {
-        "filename": "ceil3_4",
-        "name": "CEIL3_4"
-    },
-    {
-        "filename": "ceil5_1",
-        "name": "CEIL5_1"
-    },
-    {
-        "filename": "cratop1",
-        "name": "CRATOP1"
-    },
-    {
-        "filename": "cratop2",
-        "name": "CRATOP2"
-    },
-    {
-        "filename": "flat4",
-        "name": "FLAT4"
-    },
-    {
-        "filename": "flat8",
-        "name": "FLAT8"
-    },
-    {
-        "filename": "gate3",
-        "name": "GATE3"
-    },
-    {
-        "filename": "gate4",
-        "name": "GATE4"
-    },
-    {
-        "filename": "fwater1",
-        "name": "FWATER1"
-    },
-    {
-        "filename": "fwater2",
-        "name": "FWATER2"
-    },
-    {
-        "filename": "fwater3",
-        "name": "FWATER3"
-    },
-    {
-        "filename": "fwater4",
-        "name": "FWATER4"
-    },
-    {
-        "filename": "lava1",
-        "name": "LAVA1"
-    },
-    {
-        "filename": "lava2",
-        "name": "LAVA2"
-    },
-    {
-        "filename": "lava3",
-        "name": "LAVA3"
-    },
-    {
-        "filename": "lava4",
-        "name": "LAVA4"
-    },
-    {
-        "filename": "grass",
-        "name": "GRASS"
-    },
-    {
-        "filename": "blak",
-        "name": "BLAK",
-        "tag": "UD"
-    },
-    {
-        "filename": "fleshh",
-        "name": "FLESHH",
-        "tag": "UD"
-    },
-    {
-        "filename": "rocky",
-        "name": "ROCKY",
-        "tag": "UD"
-    },
-    {
-        "filename": "rocks",
-        "name": "ROCKS"
-    },
-    {
-        "name": "F_END",
-        "virtual": true
-    },
-    {
-        "filename": "texture1",
-        "name": "TEXTURE1",
-        "tag": "!UD",
-        "compressed": true
-    },
-    {
-        "filename": "texture1_ud",
-        "name": "TEXTURE1",
-        "tag": "UD",
-        "compressed": true
-    },
-    {
-        "filename": "playpals",
-        "name": "PLAYPALS"
-    },
-    {
-        "filename": "dmapinfo",
-        "name": "DMAPINFO",
-        "tag": "!UD"
-    },
-    {
-        "filename": "dmapinfo_ud",
-        "name": "DMAPINFO",
-        "tag": "UD"
-    },
-    {
-        "compressed": true,
-        "filename": "demo1",
-        "name": "DEMO1"
-    },
-    {
-        "compressed": true,
-        "filename": "demo2",
-        "name": "DEMO2"
-    },
-    {
-        "filename": "dcredits1",
-        "name": "CREDITS1"
-    },
-    {
-        "filename": "dcredits2",
-        "name": "CREDITS2"
-    },
-    {
-        "filename": "colormap8_new",
-        "name": "COLORMAP"
-    },
-    {
-        "filename": "colormap_new",
-        "name": "COLORMAP"
-    },
-    {
-        "filename": "colormap8",
-        "name": "COLORMAP"
-    },
-    {
-        "filename": "colormap",
-        "name": "COLORMAP"
-    },
-    {
         "name": "PAGE7",
         "virtual": true
-    },
-    {
-        "filename": "VGM/End.zgm",
-        "name": "VGM_END"
-    },
-    {
-        "filename": "VGM/Intro.zgm",
-        "name": "VGM_NTRO",
-        "group": "intro"
     },
     {
         "compressed": true,
@@ -5672,17 +5681,7 @@
     {
         "compressed": true,
         "filename": "interpic",
-        "name": "INTERPIC",
-        "group": "inter"
-    },
-    {
-        "filename": "VGM/Inter.zgm",
-        "name": "VGM_NTER",
-	"group": "inter"
-    },
-    {
-        "filename": "VGM/Bunny.zgm",
-        "name": "VGM_BUNN"
+        "name": "INTERPIC"
     },
     {
         "name": "MAP01",
@@ -7355,81 +7354,5 @@
     {
         "filename": "blockmap_033",
         "name": "BLOCKMAP"
-    },
-    {
-        "filename": "VGM/E1M1.zgm",
-        "name": "VGM_E1M1"
-    },
-    {
-        "filename": "VGM/E1M2.zgm",
-        "name": "VGM_E1M2"
-    },
-    {
-        "filename": "VGM/E1M3.zgm",
-        "name": "VGM_E1M3"
-    },
-    {
-        "filename": "VGM/E1M4.zgm",
-        "name": "VGM_E1M4"
-    },
-    {
-        "filename": "VGM/E1M5.zgm",
-        "name": "VGM_E1M5"
-    },
-    {
-        "filename": "VGM/E1M6.zgm",
-        "name": "VGM_E1M6"
-    },
-    {
-        "filename": "VGM/E1M7.zgm",
-        "name": "VGM_E1M7"
-    },
-    {
-        "filename": "VGM/E1M8.zgm",
-        "name": "VGM_E1M8"
-    },
-    {
-        "filename": "VGM/E1M9.zgm",
-        "name": "VGM_E1M9"
-    },
-    {
-        "filename": "VGM/E2M1.zgm",
-        "name": "VGM_E2M1"
-    },
-    {
-        "filename": "VGM/E2M2.zgm",
-        "name": "VGM_E2M2"
-    },
-    {
-        "filename": "VGM/E2M4.zgm",
-        "name": "VGM_E2M4"
-    },
-    {
-        "filename": "VGM/E2M6.zgm",
-        "name": "VGM_E2M6"
-    },
-    {
-        "filename": "VGM/E2M7.zgm",
-        "name": "VGM_E2M7"
-    },
-    {
-        "filename": "VGM/E2M8.zgm",
-        "name": "VGM_E2M8"
-    },
-    {
-        "filename": "VGM/E2M9.zgm",
-        "name": "VGM_E2M9"
-    },
-    {
-        "filename": "VGM/E3M2.zgm",
-        "name": "VGM_E3M2"
-    },
-    {
-        "filename": "VGM/E3M3.zgm",
-        "name": "VGM_E3M3"
-    },
-    {
-        "filename": "VGM/E3M8.zgm",
-        "name": "VGM_E3M8"
     }
 ]
