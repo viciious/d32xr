@@ -76,6 +76,7 @@ static marsrb_t	soundcmds = { 0 };
 static void S_StartSoundReal(mobj_t* mobj, unsigned sound_id, int vol, getsoundpos_t getpos) ATTR_DATA_CACHE_ALIGN;
 int S_PaintChannel4IMA(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
 void S_PaintChannel8(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
+static void S_PaintChannel(sfxchannel_t *ch, int16_t* buffer) ATTR_DATA_CACHE_ALIGN;
 static void S_SpatializeAt(fixed_t*origin, mobj_t* listener, int* pvol, int* psep) ATTR_DATA_CACHE_ALIGN;
 static void S_Spatialize(mobj_t* mobj, int* pvol, int* psep, getsoundpos_t getpos) ATTR_DATA_CACHE_ALIGN;
 static void S_Update(int16_t* buffer) ATTR_DATA_CACHE_ALIGN;
@@ -549,8 +550,61 @@ static void S_UpdatePCM(int16_t* buffer)
 	}
 
 	/* keep updating the channel until done */
-	if (pcmchannel.data)
-		S_PaintChannel8(&pcmchannel, buffer, MAX_SAMPLES, 64);
+	S_PaintChannel(&pcmchannel, buffer);
+}
+
+static void S_PaintChannel(sfxchannel_t *ch, int16_t* buffer)
+{
+	if (!ch->data)
+		return;
+
+	if (ch->width == 4)
+	{
+		int i = MAX_SAMPLES;
+		int32_t *end = (int32_t *)buffer + MAX_SAMPLES;
+		do
+		{
+			if (ch->position >= ch->length)
+			{
+				// advance to next block
+				ch->data += ch->block_size-3;
+				ch->length = 0;
+			}
+
+			if (!ch->length)
+			{
+				uint8_t *block = (uint8_t *)ch->data;
+				int block_size = ch->block_size;
+
+				if (block_size > ch->remaining_bytes)
+					block_size = ch->remaining_bytes;
+				if (block_size < 4)
+				{
+					// EOF
+					ch->data = NULL;
+					break;
+				}
+
+				ch->position = 1 << 14;
+				ch->prev_pos = -1; // force output of initial predictor
+				ch->length = ((block_size-3) << 1) << 14;
+				// initial step_index : initial predictor
+				ch->loop_length = ((unsigned)block[2] << 16) | ((unsigned)block[1] << 8) | block[0];
+				ch->data += 3;
+				ch->remaining_bytes -= block_size;
+			}
+
+			i = S_PaintChannel4IMA(ch, (int16_t *)(end - i), i, 64);
+		} while (i > 0);
+	}
+	else
+	{
+		S_PaintChannel8(ch, buffer, MAX_SAMPLES, 64);
+		if (ch->position >= ch->length)
+		{
+			ch->data = NULL;
+		}
+	}
 }
 
 static void S_Update(int16_t* buffer)
@@ -626,53 +680,7 @@ static void S_Update(int16_t* buffer)
 			ch->pan = sep;
 		}
 
-		if (ch->width == 4)
-		{
-			int i = MAX_SAMPLES;
-			int32_t *end = (int32_t *)buffer + MAX_SAMPLES;
-			do
-			{
-				if (ch->position >= ch->length)
-				{
-					// advance to next block
-					ch->data += ch->block_size-3;
-					ch->length = 0;
-				}
-
-				if (!ch->length)
-				{
-					uint8_t *block = (uint8_t *)ch->data;
-					int block_size = ch->block_size;
-
-					if (block_size > ch->remaining_bytes)
-						block_size = ch->remaining_bytes;
-					if (block_size < 4)
-					{
-						// EOF
-						ch->data = NULL;
-						break;
-					}
-
-					ch->position = 1 << 14;
-					ch->prev_pos = -1; // force output of initial predictor
-					ch->length = ((block_size-3) << 1) << 14;
-					// initial step_index : initial predictor
-					ch->loop_length = ((unsigned)block[2] << 16) | ((unsigned)block[1] << 8) | block[0];
-					ch->data += 3;
-					ch->remaining_bytes -= block_size;
-				}
-
-				i = S_PaintChannel4IMA(ch, (int16_t *)(end - i), i, 64);
-			} while (i > 0);
-		}
-		else
-		{
-			S_PaintChannel8(ch, buffer, MAX_SAMPLES, 64);
-			if (ch->position >= ch->length)
-			{
-				ch->data = NULL;
-			}
-		}
+		S_PaintChannel(ch, buffer);
 	}
 
 #define DO_SAMPLE() do { \
