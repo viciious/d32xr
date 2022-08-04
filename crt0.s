@@ -30,12 +30,12 @@
         .ascii  "SEGA GENESIS    "
         .ascii  "                "
         .ascii  "DOOM 32X Resurre"
-        .ascii  "ction v2.0      "
+        .ascii  "ction v2.2      "
         .ascii  "                "
         .ascii  "DOOM 32X Resurre"
-        .ascii  "ction v2.0      "
+        .ascii  "ction v2.2      "
         .ascii  "                "
-        .ascii  "GM 20220502-00"
+        .ascii  "GM 20220804-00"
         .word   0x0000
         .ascii  "J6              "
         .long   0x00000000,0x003FFFFF   /* ROM start, end */
