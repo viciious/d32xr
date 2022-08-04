@@ -1,5 +1,53 @@
 [
     {
+        "filename": "playpals",
+        "name": "PLAYPALS"
+    },
+    {
+        "filename": "dmapinfo",
+        "name": "DMAPINFO",
+        "tag": "!UD"
+    },
+    {
+        "filename": "dmapinfo_ud",
+        "name": "DMAPINFO",
+        "tag": "UD"
+    },
+    {
+        "compressed": true,
+        "filename": "demo1",
+        "name": "DEMO1"
+    },
+    {
+        "compressed": true,
+        "filename": "demo2",
+        "name": "DEMO2"
+    },
+    {
+        "filename": "dcredits1",
+        "name": "CREDITS1"
+    },
+    {
+        "filename": "dcredits2",
+        "name": "CREDITS2"
+    },
+    {
+        "filename": "colormap8_new",
+        "name": "COLORMAP"
+    },
+    {
+        "filename": "colormap_new",
+        "name": "COLORMAP"
+    },
+    {
+        "filename": "colormap8",
+        "name": "COLORMAP"
+    },
+    {
+        "filename": "colormap",
+        "name": "COLORMAP"
+    },
+    {
         "filename": "stbar",
         "name": "STBAR"
     },
@@ -1481,54 +1529,6 @@
         "name": "TEXTURE1",
         "tag": "UD",
         "compressed": true
-    },
-    {
-        "filename": "playpals",
-        "name": "PLAYPALS"
-    },
-    {
-        "filename": "dmapinfo",
-        "name": "DMAPINFO",
-        "tag": "!UD"
-    },
-    {
-        "filename": "dmapinfo_ud",
-        "name": "DMAPINFO",
-        "tag": "UD"
-    },
-    {
-        "compressed": true,
-        "filename": "demo1",
-        "name": "DEMO1"
-    },
-    {
-        "compressed": true,
-        "filename": "demo2",
-        "name": "DEMO2"
-    },
-    {
-        "filename": "dcredits1",
-        "name": "CREDITS1"
-    },
-    {
-        "filename": "dcredits2",
-        "name": "CREDITS2"
-    },
-    {
-        "filename": "colormap8_new",
-        "name": "COLORMAP"
-    },
-    {
-        "filename": "colormap_new",
-        "name": "COLORMAP"
-    },
-    {
-        "filename": "colormap8",
-        "name": "COLORMAP"
-    },
-    {
-        "filename": "colormap",
-        "name": "COLORMAP"
     },
     {
         "name": "S_START",
