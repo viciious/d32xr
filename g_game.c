@@ -16,6 +16,10 @@ int				gamemaplump;
 dmapinfo_t		gamemapinfo;
 dgameinfo_t		gameinfo;
 
+VINT 			*gamemapnumbers;
+VINT 			*gamemaplumps;
+VINT 			gamemapcount;
+
 gametype_t		netgame;
 
 boolean         playeringame[MAXPLAYERS];
@@ -44,6 +48,44 @@ int             bodyqueslot;
 extern int              skytexture; 
 extern texture_t		*skytexturep;
 extern texture_t		*textures;
+
+static int G_MapNumForLumpNum(int lump)
+{
+	int i;
+
+	/* find the map by its lump */
+	for (i = 0; i < gamemapcount; i++)
+	{
+		if (gamemaplumps[i] == lump)
+		{
+			return gamemapnumbers[i];
+		}
+	}
+	return -1;
+}
+
+int G_LumpNumForMapNum(int map)
+{
+	int i;
+
+ 	/* find the map by its number */
+	for (i = 0; i < gamemapcount; i++)
+	{
+		if (gamemapnumbers[i] > map)
+			break;
+		if (gamemapnumbers[i] == map)
+			return gamemaplumps[i];
+	}
+	return -1;
+}
+
+static char* G_GetMapNameForLump(int lump)
+{
+	static char name[9];
+	D_memcpy(name, W_GetNameForNum(lump), 8);
+	name[8] = '0';
+	return name;
+}
 
 void G_DoLoadLevel (void) 
 { 
@@ -87,7 +129,7 @@ void G_DoLoadLevel (void)
 		const char *mapname;
 
 		mapname = G_GetMapNameForLump(gamemaplump);
-		gamemap = G_MapNumForMapName(mapname);
+		gamemap = G_BuiltinMapNumForMapName(mapname);
 		if (gamemap == 0)
 			gamemap = gamemapinfo.mapNumber + 1;
 
@@ -155,9 +197,7 @@ void G_DoLoadLevel (void)
 
 	//Z_CheckHeap (mainzone);  		/* DEBUG */
 } 
- 
- 
- 
+
 /* 
 ============================================================================== 
  
@@ -383,6 +423,64 @@ static void G_InitPlayerResp(void)
 
 void G_Init(void)
 {
+	int i;
+	int mapcount;
+	dmapinfo_t** maplist;
+	VINT* tempmapnums;
+
+	// copy mapnumbers to a temp buffer, then free, then allocate again
+	// to avoid zone memory fragmentation
+	gamemapcount = 0;
+	gamemapnumbers = NULL;
+
+	maplist = G_LoadMaplist(&mapcount);
+	if (maplist)
+	{
+		tempmapnums = (VINT*)I_WorkBuffer();
+		for (i = 0; i < mapcount; i++)
+		{
+			int mn = maplist[i]->mapNumber;
+			if (mn == 0)
+				mn = i + 1;
+			tempmapnums[i*2] = mn;
+			tempmapnums[i*2+1] = maplist[i]->lumpNum;
+		}
+
+		for (i = 0; i < mapcount; i++)
+			Z_Free(maplist[i]);
+		Z_Free(maplist);
+
+	}
+	else
+	{
+		char lumpname[9];
+
+		mapcount = 0;
+		tempmapnums = (VINT*)I_WorkBuffer();
+		for (i = 1; i < 99; i++) {
+			int l;
+			D_snprintf(lumpname, sizeof(lumpname), "MAP%02d", i);
+			l = W_CheckNumForName(lumpname);
+			if (l < 0)
+				break;
+			tempmapnums[mapcount*2] = i;
+			tempmapnums[mapcount*2+1] = l;
+			mapcount++;
+		}
+	}
+
+	gamemapcount = mapcount;
+	if (mapcount > 0)
+	{
+		gamemapnumbers = Z_Malloc(sizeof(*gamemapnumbers) * mapcount, PU_STATIC, 0);
+		gamemaplumps = Z_Malloc(sizeof(*gamemaplumps) * mapcount, PU_STATIC, 0);
+		for (i = 0; i < mapcount; i++)
+		{
+			gamemapnumbers[i] = tempmapnums[i*2];
+			gamemaplumps[i] = tempmapnums[i*2+1];
+		}
+	}
+
 	G_InitPlayerResp();
 
 	if (G_FindGameinfo(&gameinfo))
@@ -425,31 +523,6 @@ void G_InitNew (skill_t skill, int map, gametype_t gametype)
 	/* these may be reset by I_NetSetup */
 	gamemaplump = G_LumpNumForMapNum(map);
 	gameskill = skill;
-	if (gamemaplump < 0)
-	{
-		dmapinfo_t** maplist;
-		VINT		mapcount;
-
-		/* find the map by its number */
-		maplist = G_LoadMaplist(&mapcount);
-		for (i = 0; i < mapcount; i++)
-		{
-			if (maplist[i]->mapNumber > map)
-				break;
-			if (maplist[i]->mapNumber == map)
-			{
-				gamemaplump = maplist[i]->lumpNum;
-				break;
-			}
-		}
-
-		if (maplist)
-		{
-			for (i = 0; i < mapcount; i++)
-				Z_Free(maplist[i]);
-			Z_Free(maplist);
-		}
-	}
 
 	if (gamemaplump < 0)
 		I_Error("Lump MAP%02d not found!", map);
@@ -580,7 +653,7 @@ startnew:
 			{
 				/* go back to start map */
 				finale = 0;
-				nextmapl = gameinfo.startMapLump;
+				nextmapl = G_LumpNumForMapNum(1);
 			}
 		}
 		else

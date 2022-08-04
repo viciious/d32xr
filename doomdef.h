@@ -522,6 +522,10 @@ extern	int			gamemaplump;
 extern	dmapinfo_t	gamemapinfo;
 extern	dgameinfo_t	gameinfo;
 
+extern 	VINT 		*gamemapnumbers;
+extern 	VINT 		*gamemaplumps;
+extern 	VINT 		gamemapcount;
+
 extern 	int 		gametic;
 extern 	int 		prevgametic;
 
@@ -856,6 +860,8 @@ void G_WorldDone (void);
 
 void G_RecordDemo (void);
 int G_PlayDemoPtr (unsigned *demo);
+
+int G_LumpNumForMapNum(int map);
 
 /*----- */
 /*PLAY */

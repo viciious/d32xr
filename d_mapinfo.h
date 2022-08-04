@@ -51,20 +51,15 @@ typedef struct
 	VINT endMus;
 	VINT creditsPage;
 	VINT creditsTime;
-	VINT startMapLump;
 	VINT endFlat;
 	char* endText;
 	void* data;
 } dgameinfo_t;
 
-int G_LumpNumForMapNum(int map);
-int G_MapNumForMapName(const char* map);
-char* G_GetMapNameForLump(int lump);
-int G_MapNumForLumpNum(int lump);
-
+int G_BuiltinMapNumForMapName(const char* map);
 int G_FindMapinfo(VINT maplump, dmapinfo_t *mi, char *outmem);
 int G_FindGameinfo(dgameinfo_t* gi);
-dmapinfo_t** G_LoadMaplist(VINT*pmapcount);
+dmapinfo_t** G_LoadMaplist(int*pmapcount);
 
 #endif // D_MAPINFO_H__
 

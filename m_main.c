@@ -89,9 +89,6 @@ static VINT saveslotmap;
 static VINT saveslotskill;
 static VINT saveslotmode;
 
-static VINT *mapnumbers;
-static VINT mapcount;
-
 static boolean startup;
 
 extern VINT	uchar;
@@ -100,50 +97,6 @@ extern void print(int x, int y, const char* string);
 void M_Start2 (boolean startup_)
 {
 	int i;
-#ifndef MARS
-	int j;
-#endif
-	dmapinfo_t** maplist;
-	VINT* tempmapnums;
-
-	// copy mapnumbers to a temp buffer, then free, then allocate again
-	// to avoid zone memory fragmentation
-	maplist = G_LoadMaplist(&mapcount);
-	if (maplist)
-	{
-		tempmapnums = (VINT*)I_WorkBuffer();
-		for (i = 0; i < mapcount; i++)
-			tempmapnums[i] = maplist[i]->mapNumber;
-
-		for (i = 0; i < mapcount; i++)
-			Z_Free(maplist[i]);
-		Z_Free(maplist);
-
-		mapnumbers = Z_Malloc(sizeof(*mapnumbers) * mapcount, PU_STATIC, 0);
-		for (i = 0; i < mapcount; i++)
-			mapnumbers[i] = tempmapnums[i];
-	}
-	else
-	{
-		int i, mapcount;
-		char lumpname[9];
-
-		mapcount = 0;
-		tempmapnums = (VINT*)I_WorkBuffer();
-		for (i = 1; i < 25; i++) {
-			D_snprintf(lumpname, sizeof(lumpname), "MAP%02d", i);
-			if (W_CheckNumForName(lumpname) < 0)
-				continue;
-			tempmapnums[mapcount++] = i;
-		}
-
-		if (mapcount > 0)
-		{
-			mapnumbers = Z_Malloc(sizeof(*mapnumbers) * mapcount, PU_STATIC, 0);
-			for (i = 0; i < mapcount; i++)
-				mapnumbers[i] = tempmapnums[i];
-		}
-	}
 
 /* cache all needed graphics	 */
 	startup = startup_;
@@ -280,9 +233,6 @@ void M_Stop (void)
 	if (m_doom != NULL)
 		Z_Free (m_doom);
 
-	if (mapnumbers != NULL)
-		Z_Free(mapnumbers);
-
 #ifndef MARS
 	WriteEEProm ();
 #endif
@@ -330,7 +280,7 @@ int M_Ticker (void)
 
 	menuscr = &mainscreen[screenpos];
 
-	if (!mapnumbers)
+	if (!gamemapnumbers)
 		return ga_startnew;
 
 /* animate skull */
@@ -423,7 +373,7 @@ int M_Ticker (void)
 		{
 			consoleplayer = 0;
 			startsave = -1;
-			startmap = mapnumbers[playermap - 1]; /*set map number */
+			startmap = gamemapnumbers[playermap - 1]; /*set map number */
 			startskill = playerskill;	/* set skill level */
 			starttype = currentplaymode;	/* set play type */
 			splitscreen = currentgametype == mi_splitscreen;
@@ -526,13 +476,13 @@ int M_Ticker (void)
 				case mi_level:
 					if (buttons & BT_RIGHT)
 					{			
-						if (++playermap == mapcount + 1)
+						if (++playermap == gamemapcount + 1)
 							playermap = 1;
 					}
 					if (buttons & BT_LEFT)
 					{
 						if(--playermap == 0)
-							playermap = mapcount;
+							playermap = gamemapcount;
 					}
 					break;
 				case mi_difficulty:
@@ -622,7 +572,7 @@ static char* M_MapName(VINT mapnum, char *mapname, size_t mapnamesize)
 void M_Drawer (void)
 {
 	int i;
-	int mapnumber = mapnumbers[playermap - 1];
+	int mapnumber = gamemapnumbers[playermap - 1];
 	int	leveltens = mapnumber / 10, levelones = mapnumber % 10;
 	int scrpos = screenpos == ms_none ? ms_main : screenpos;
 	mainscreen_t* menuscr = &mainscreen[scrpos];

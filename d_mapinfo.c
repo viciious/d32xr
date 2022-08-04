@@ -29,21 +29,7 @@
 
 typedef void (*kvcall_t) (char *key, char *value, void *ptr);
 
-int G_LumpNumForMapNum(int map)
-{
-	char            lumpname[8];
-
-	lumpname[0] = 'M';
-	lumpname[1] = 'A';
-	lumpname[2] = 'P';
-	lumpname[3] = '0' + map / 10;
-	lumpname[4] = '0' + map % 10;
-	lumpname[5] = 0;
-
-	return W_CheckNumForName(lumpname);
-}
-
-int G_MapNumForMapName(const char* map)
+int G_BuiltinMapNumForMapName(const char* map)
 {
 	if (mystrlen(map) != 5)
 		return 0;
@@ -52,28 +38,6 @@ int G_MapNumForMapName(const char* map)
 	if ((map[3] >= '0' && map[3] <= '9') && (map[4] >= '0' && map[4] <= '9'))
 		return (map[3] - '0') * 10 + (map[4] - '0');
 	return 0;
-}
-
-char* G_GetMapNameForLump(int lump)
-{
-	static char name[9];
-	D_memcpy(name, W_GetNameForNum(lump), 8);
-	name[8] = '0';
-	return name;
-}
-
-int G_MapNumForLumpNum(int lump)
-{
-	dmapinfo_t mapinfo;
-	const char* mapname;
-	char buf[512];
-
-	if (G_FindMapinfo(lump, &mapinfo, buf) != 0) {
-		return mapinfo.mapNumber;
-	}
-
-	mapname = G_GetMapNameForLump(lump);
-	return G_MapNumForMapName(mapname);
 }
 
 static char* G_LoadMapinfoLump(void)
@@ -261,8 +225,10 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 				mi->name = stripquote(p);
 			}
 
-			D_memcpy(mi->lumpName, G_GetMapNameForLump(mi->lumpNum), 9);
-			mi->mapNumber = G_MapNumForMapName(mi->lumpName);
+			D_memcpy(mi->lumpName, W_GetNameForNum(mi->lumpNum), 8);
+			mi->lumpName[8] = '\0';
+
+			mi->mapNumber = G_BuiltinMapNumForMapName(mi->lumpName);
 
 			if (!mi->name) {
 				mi->name = mi->lumpName;
@@ -359,11 +325,9 @@ static char *G_MapinfoSectionCStr(const char* buf, const char *name, char *outme
 
 int G_FindMapinfo(VINT maplump, dmapinfo_t *mi, char *outmem)
 {
-	int i;
 	const char* buf;
 	int linecount;
-	const char* lumpname;
-	char lumpname8[9]; // null-terminated
+	char lumpname[9]; // null-terminated
 	char name[16];
 
 	if (maplump < 0)
@@ -373,11 +337,9 @@ int G_FindMapinfo(VINT maplump, dmapinfo_t *mi, char *outmem)
 	if (!buf)
 		return 0;
 
-	lumpname = G_GetMapNameForLump(maplump);
-	for (i = 0; i < 8 && lumpname[i] != '\0'; i++)
-		lumpname8[i] = lumpname[i];
-	lumpname8[i] = '\0';
-	D_snprintf(name, sizeof(name), "map \"%s\"", lumpname8);
+	D_memcpy(lumpname, W_GetNameForNum(maplump), 8);
+	lumpname[8] = '\0';
+	D_snprintf(name, sizeof(name), "map \"%s\"", lumpname);
 
 	D_memset(mi, 0, sizeof(*mi));
 	mi->data = G_MapinfoSectionCStr(buf, name, outmem);
@@ -408,7 +370,6 @@ int G_FindGameinfo(dgameinfo_t* gi)
 
 	D_memset(gi, 0, sizeof(*gi));
 	gi->data = G_MapinfoSectionCStr(buf, "gameinfo", NULL);
-	gi->startMapLump = G_LumpNumForMapNum(1);
 	if (!gi->data)
 		return 0;
 
@@ -425,7 +386,7 @@ error:
 	return 0;
 }
 
-dmapinfo_t **G_LoadMaplist(VINT *pmapcount)
+dmapinfo_t **G_LoadMaplist(int *pmapcount)
 {
 	const char* buf;
 	size_t sectionlen = 0;
