@@ -122,12 +122,14 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
     const int stop = segl->stop;
     int x;
 
+#ifdef MARS
     // set GBR to division unit address
     __asm volatile (
         "mov #-128, r0\n\t"
         "add r0, r0\n\t"
         "ldc r0, gbr\n\t"
     );
+#endif
 
     for (x = segl->start; x <= stop; x++)
     {
