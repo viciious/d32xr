@@ -797,7 +797,7 @@ gotchannel:
 		// find the format chunk
 		uint16_t *chunk = (uint16_t *)((char *)md_data + 12);
 		uint16_t *end = (uint16_t *)((char *)md_data + 0x40 - 4);
-		int format;
+		int format = 0;
 
 		// set default sample rate and block size
 		newchannel->increment = (11025 << 14) / SAMPLE_RATE;
