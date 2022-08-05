@@ -43,19 +43,17 @@ _I_DrawColumnLowA:
         mov.l   @(20,r15),r4
         mov.l   draw_width,r1
         add     #-1,r4          /* heightmask = texheight - 1 */
-        swap.w  r2,r0           /* (frac >> 16) */
-        and     r4,r0           /* (frac >> 16) & heightmask */
 
         .p2alignw 2, 0x0009
 do_col_loop_low:
+        swap.w  r2,r0           /* (frac >> 16) */
+        and     r4,r0           /* (frac >> 16) & heightmask */
         mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
         add     r3,r2           /* frac += fracstep */
-        dt      r6              /* count-- */
         add     r0,r0
         mov.w   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
-        swap.w  r2,r0           /* (frac >> 16) */
+        dt      r6              /* count-- */
         mov.w   r9,@r8          /* *fb = dpix */
-        and     r4,r0           /* (frac >> 16) & heightmask */
         bf/s    do_col_loop_low
         add     r1,r8           /* fb += SCREENWIDTH */
 
