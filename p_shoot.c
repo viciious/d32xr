@@ -54,9 +54,6 @@ static fixed_t   firstlinefrac;
 static int       shootdivpositive;
 static int       ssx1, ssy1, ssx2, ssy2;
 
-static line_t thingline;
-static vertex_t tv1, tv2;
-
 // CALICO: removed type punning by bringing back intercept_t
 typedef struct intercept_s
 {
@@ -283,9 +280,10 @@ static boolean PA_CrossSubsector(int bspnum)
    int      count;
    fixed_t  frac;
    mobj_t  *thing;
-
    subsector_t *sub = &subsectors[bspnum];
    intercept_t  in;
+   line_t   thingline;
+   vertex_t tv1, tv2;
 
    // CALICO: removed type punning
    thingline.v1 = &tv1;
@@ -380,8 +378,7 @@ static int PA_DivlineSide(fixed_t x, fixed_t y, divline_t *line)
 static boolean PA_CrossBSPNode(int bspnum)
 {
    node_t *bsp;
-   int side;
-   divline_t div;
+   int side, side2;
 
 check:
    if(bspnum & NF_SUBSECTOR)
@@ -393,18 +390,15 @@ check:
    bsp = &nodes[bspnum];
 
    // decide which side the start point is on
-   div.x  = bsp->x;  // CALICO: no type punning here
-   div.y  = bsp->y;
-   div.dx = bsp->dx;
-   div.dy = bsp->dy;
-   side = PA_DivlineSide(shootdiv.x, shootdiv.y, &div);
+   side = PA_DivlineSide(shootdiv.x, shootdiv.y, (void*)bsp);
+   side2 = PA_DivlineSide(shootx2, shooty2, (void*)bsp);
 
    // cross the starting side
    if(!PA_CrossBSPNode(bsp->children[side]))
       return false;
 
    // the partition plane is crossed here
-   if(side == PA_DivlineSide(shootx2, shooty2, &div))
+   if(side == side2)
       return true; // the line doesn't touch the other side
    
    // cross the ending side
