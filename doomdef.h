@@ -698,6 +698,7 @@ void	W_Init (void);
 
 int		W_CheckNumForName (const char *name);
 int		W_GetNumForName (const char *name);
+int		W_CheckNumForNameExt (const char *name, int start, int end);
 
 int		W_LumpLength (int lump);
 int 	W_ReadLump (int lump, void *dest);

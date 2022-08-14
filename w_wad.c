@@ -115,7 +115,7 @@ void W_Init (void)
 ====================
 */
 
-int	W_CheckNumForName (const char *name)
+int	W_CheckNumForNameExt (const char *name, int start, int end)
 {
 	char	name8[12];
 	int		v1,v2;
@@ -133,7 +133,7 @@ int	W_CheckNumForName (const char *name)
 
 /* scan backwards so patch lump files take precedence */
 
-	lump_p = lumpinfo + numlumps;
+	lump_p = lumpinfo + end;
 
 	/* used for stripping out the hi bit of the first character of the */
 	/* name of the lump */
@@ -144,13 +144,18 @@ int	W_CheckNumForName (const char *name)
 #define HIBIT (1<<31)
 #endif
 
-	while (lump_p-- != lumpinfo)
+	while (lump_p-- != lumpinfo + start)
 		if (*(int *)&lump_p->name[4] == v2
 		&&  (*(int *)lump_p->name & ~HIBIT) == v1)
 			return lump_p - lumpinfo;
 
 
 	return -1;
+}
+
+int	W_CheckNumForName (const char *name)
+{
+	return W_CheckNumForNameExt(name, 0, numlumps);
 }
 
 
