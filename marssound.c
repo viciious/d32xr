@@ -95,11 +95,24 @@ void S_Init(void)
 	int		i;
 	int		initmusictype;
 	VINT	tmp_tracks[100];
+	int 	start, end;
 
 	/* init sound effects */
-	for (i=1 ; i < NUMSFX ; i++)
+	start = W_CheckNumForName("DS_START");
+	end = W_CheckNumForName("DS_END");
+	if (start >= 0 && end > 0)
 	{
-		S_sfx[i].lump = W_CheckNumForName(S_sfxnames[i]);
+		for (i=1 ; i < NUMSFX ; i++)
+		{
+			S_sfx[i].lump = W_CheckNumForNameExt(S_sfxnames[i], start, end);
+		}
+	}
+	else
+	{
+		for (i=1 ; i < NUMSFX ; i++)
+		{
+			S_sfx[i].lump = W_CheckNumForName(S_sfxnames[i]);
+		}
 	}
 
 	/* init music */
