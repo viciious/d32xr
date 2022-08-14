@@ -402,6 +402,11 @@ void I_Init (void)
 		jo_stbar = NULL;
 		jo_stbar_height = 0;
 	}
+/*
+	{
+		__asm volatile("mov #-128,r0\n\tadd r0,r0\n\tldc r0,gbr" : : : "r0");
+	}
+*/
 }
 
 void I_SetPalette(const byte* palette)
@@ -802,6 +807,15 @@ void I_Update(void)
 			clearscreen = 2;
 		}
 
+/*
+	{
+		char buf[32];
+		volatile int p;
+		__asm volatile("stc gbr, r0\n\tmov r0,%0" : "=r"(p));
+		D_snprintf(buf, sizeof(buf), "%p", p);
+		I_Print8(50, 5, buf);
+	}
+*/
 	Mars_FlipFrameBuffers(false);
 
 	/* */

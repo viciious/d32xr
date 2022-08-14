@@ -62,24 +62,17 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
         return; // nothing to draw (shouldn't happen)
     lpl->pixelcount += remaining;
 
-    // set GBR to division unit address
-    __asm volatile (
-        "mov #-128, r0\n\t"
-        "add r0, r0\n\t"
-        "ldc r0, gbr\n\t"
-    );
-
     FixedMul2(distance, lpl->height, yslope[y]);
 
     if (lpl->lightmin != lpl->lightmax)
     {
 #ifdef MARS
         __asm volatile (
-           "mov %0, r0\n\t"
-           "mov.l r0, @(0,gbr) /* set 32-bit divisor */ \n\t"
-           "mov %1, r0\n\t"
-           "mov.l r0, @(4,gbr) /* start divide */\n\t"
-           : : "r" (distance), "r" (LIGHTCOEF) : "r0", "gbr");
+           "mov #-128, r0\n\t"
+           "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
+           "mov.l %0, @(0,r0) /* set 32-bit divisor */ \n\t"
+           "mov.l %1, @(4,r0) /* start divide */\n\t"
+           : : "r" (distance), "r" (LIGHTCOEF) : "r0");
 #endif
     }
 
@@ -101,9 +94,10 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     {
 #ifdef MARS
         __asm volatile (
-            "mov.l @(20,gbr), r0 /* get 32-bit quotient */ \n\t"
-            "mov r0, %0"
-            : "=r" (light) : : "r0", "gbr");
+            "mov #-128, r0\n\t"
+            "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
+            "mov.l @(20,r0), %0 /* get 32-bit quotient */ \n\t"
+            : "=r" (light) : : "r0");
 #else
         light = LIGHTCOEF / distance;
 #endif

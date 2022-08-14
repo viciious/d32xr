@@ -92,16 +92,16 @@ static fixed_t P_InterceptVector2(divline_t *v2, divline_t *v1)
    num.i64 >>= 16;
 
    do {
-      int32_t t;
       __asm volatile (
-         "mov #-128, %0\n\t"
-         "add %0, %0 /* %0 is now 0xFFFFFF00 */ \n\t"
-         "mov.l %4, @(0,%0) /* set 32-bit divisor */ \n\t"
-         "mov.l %2, @(16,%0)\n\t"
-         "mov.l %3, @(20,%0) /* start divide */\n\t"
-         "mov.l @(20,%0), %1 /* get 32-bit quotient */ \n\t"
-         : "=&r" (t), "=r" (frac)
+         "mov #-128, r0\n\t"
+         "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
+         "mov.l %3, @(0,r0) /* set 32-bit divisor */ \n\t"
+         "mov.l %1, @(16,r0)\n\t"
+         "mov.l %2, @(20,r0) /* start divide */\n\t"
+         "mov.l @(20,r0), %0 /* get 32-bit quotient */ \n\t"
+         : "=r" (frac)
          : "r" (num.i32[0]), "r" (num.i32[1]), "r" (den.i32[0])
+         : "r0"
       );
    } while (0);
 #else

@@ -122,15 +122,6 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
     const int stop = segl->stop;
     int x;
 
-#ifdef MARS
-    // set GBR to division unit address
-    __asm volatile (
-        "mov #-128, r0\n\t"
-        "add r0, r0\n\t"
-        "ldc r0, gbr\n\t"
-    );
-#endif
-
     for (x = segl->start; x <= stop; x++)
     {
        fixed_t r;
@@ -138,14 +129,16 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
        unsigned scale2, colnum, iscale;
 
 #ifdef MARS
+        volatile int32_t t;
         __asm volatile (
-           "mov #0, r0\n\t"
-           "mov.l r0, @(16, gbr) /* set high bits of the 64-bit dividend */ \n\t"
-           "mov %0, r0\n\t"
-           "mov.l r0, @(0, gbr) /* set 32-bit divisor */ \n\t"
-           "mov #-1, r0\n\t"
-           "mov.l r0, @(20, gbr) /* set low  bits of the 64-bit dividend, start divide */\n\t"
-           : : "r" (scalefrac) : "r0", "gbr");
+           "mov #-128, r0\n\t"
+           "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
+           "mov #0, %0\n\t"
+           "mov.l %0, @(16, r0) /* set high bits of the 64-bit dividend */ \n\t"
+           "mov.l %1, @(0, r0) /* set 32-bit divisor */ \n\t"
+           "mov #-1, %0\n\t"
+           "mov.l %0, @(20, r0) /* set low  bits of the 64-bit dividend, start divide */\n\t"
+           : "=&r" (t) : "r" (scalefrac) : "r0");
 #else
         fixed_t scale = scalefrac;
 #endif
@@ -184,9 +177,10 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 
 #ifdef MARS
         __asm volatile (
-            "mov.l @(20, gbr), r0 /* get 32-bit quotient */ \n\t"
-            "mov r0, %0"
-            : "=r" (iscale) : : "r0", "gbr");
+            "mov #-128, r0\n\t"
+            "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
+            "mov.l @(20, r0), %0 /* get 32-bit quotient */ \n\t"
+            : "=r" (iscale) : : "r0");
 #else
         iscale = 0xffffffffu / scale;
 #endif
