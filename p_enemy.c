@@ -82,12 +82,17 @@ boolean P_CheckMissileRange (mobj_t *actor)
 
 	dist >>= 16;
 
-	if (actor->type == MT_SKULL)
+	if (actor->type == MT_SKULL
+		|| actor->type == MT_CYBORG
+		|| actor->type == MT_SPIDER)
 		dist >>= 1;
 
 	if (dist > 200)
 		dist = 200;
-		
+
+	if (actor->type == MT_CYBORG && dist > 160)
+		dist = 160;
+
 	if (P_Random () < dist)
 		return false;
 		
@@ -444,7 +449,15 @@ seeyou:
 			sound = ainfo->seesound;
 			break;
 		}
-		S_StartSound (actor, sound);
+
+		if (actor->type == MT_SPIDER
+			|| actor->type == MT_CYBORG)
+		{
+			// full volume
+			S_StartSound (NULL, sound);
+		}
+		else
+			S_StartSound (actor, sound);
 	}
 
 	P_SetMobjState (actor, ainfo->seestate);
@@ -781,7 +794,15 @@ void A_Scream (mobj_t *actor)
 		sound = ainfo->deathsound;
 		break;
 	}
-	S_StartSound (actor, sound);
+
+	if (actor->type == MT_SPIDER
+		|| actor->type == MT_CYBORG)
+	{
+		// full volume
+		S_StartSound (NULL, sound);
+	}
+	else
+		S_StartSound (actor, sound);
 }
 
 void A_XScream (mobj_t *actor)

@@ -11,7 +11,7 @@ const char * const sprnames[NUMSPRITES] = {
 "BROK","CELL","CELP","SHEL","SBOX","BPAK","BFUG","MGUN","CSAW","LAUN",
 "PLAS","SHOT","COLU","SMT2","POL2","POL5","POL4","POL1","GOR4","GOR5",
 "SMIT","COL2","COL4","CAND","CBRA","TRE1","ELEC","FSKU","SMBT","SMGT",
-"SMRT"
+"SMRT","CYBR","SPID"
 };
 
 void A_Light0 ();
@@ -39,6 +39,8 @@ void A_Fall ();
 void A_XScream ();
 void A_Look ();
 void A_Chase ();
+void A_Hoof (mobj_t *mo);
+void A_Metal (mobj_t *mo);
 void A_FaceTarget ();
 void A_PosAttack ();
 void A_SPosAttack ();
@@ -48,6 +50,8 @@ void A_HeadAttack ();
 void A_BruisAttack ();
 void A_BossDeath ();
 void A_SkullAttack ();
+void A_SpidRefire();
+void A_CyberAttack();
 
 #define STATE(sprite,frame,tics,action,nextstate) {sprite,frame,tics,nextstate,action}
 
@@ -483,7 +487,65 @@ STATE(SPR_SMGT,32771,2,NULL,S_GTORCHSHRT),	/* S_GTORCHSHRT4 */
 STATE(SPR_SMRT,32768,2,NULL,S_RTORCHSHRT2),	/* S_RTORCHSHRT */
 STATE(SPR_SMRT,32769,2,NULL,S_RTORCHSHRT3),	/* S_RTORCHSHRT2 */
 STATE(SPR_SMRT,32770,2,NULL,S_RTORCHSHRT4),	/* S_RTORCHSHRT3 */
-STATE(SPR_SMRT,32771,2,NULL,S_RTORCHSHRT)	/* S_RTORCHSHRT4 */
+STATE(SPR_SMRT,32771,2,NULL,S_RTORCHSHRT),	/* S_RTORCHSHRT4 */
+STATE(SPR_CYBR,0,5,A_Look,S_CYBER_STND2),	// S_CYBER_STND
+STATE(SPR_CYBR,1,5,A_Look,S_CYBER_STND),	// S_CYBER_STND2
+STATE(SPR_CYBR,0,1,A_Hoof,S_CYBER_RUN2),	// S_CYBER_RUN1
+STATE(SPR_CYBR,0,2,A_Chase,S_CYBER_RUN3),	// S_CYBER_RUN2
+STATE(SPR_CYBR,1,1,A_Chase,S_CYBER_RUN4),	// S_CYBER_RUN3
+STATE(SPR_CYBR,1,2,A_Chase,S_CYBER_RUN5),	// S_CYBER_RUN4
+STATE(SPR_CYBR,2,1,A_Chase,S_CYBER_RUN6),	// S_CYBER_RUN5
+STATE(SPR_CYBR,2,2,A_Chase,S_CYBER_RUN7),	// S_CYBER_RUN6
+STATE(SPR_CYBR,3,1,A_Metal,S_CYBER_RUN8),	// S_CYBER_RUN7
+STATE(SPR_CYBR,3,2,A_Chase,S_CYBER_RUN1),	// S_CYBER_RUN8
+STATE(SPR_CYBR,4,3,A_FaceTarget,S_CYBER_ATK2),	// S_CYBER_ATK1
+STATE(SPR_CYBR,5,6,A_CyberAttack,S_CYBER_ATK3),	// S_CYBER_ATK2
+STATE(SPR_CYBR,4,6,A_FaceTarget,S_CYBER_ATK4),	// S_CYBER_ATK3
+STATE(SPR_CYBR,5,6,A_CyberAttack,S_CYBER_ATK5),	// S_CYBER_ATK4
+STATE(SPR_CYBR,4,6,A_FaceTarget,S_CYBER_ATK6),	// S_CYBER_ATK5
+STATE(SPR_CYBR,5,6,A_CyberAttack,S_CYBER_RUN1),	// S_CYBER_ATK6
+STATE(SPR_CYBR,6,5,A_Pain,S_CYBER_RUN1),	// S_CYBER_PAIN
+STATE(SPR_CYBR,7,5,NULL,S_CYBER_DIE2),	// S_CYBER_DIE1
+STATE(SPR_CYBR,8,5,A_Scream,S_CYBER_DIE3),	// S_CYBER_DIE2
+STATE(SPR_CYBR,9,5,NULL,S_CYBER_DIE4),	// S_CYBER_DIE3
+STATE(SPR_CYBR,10,5,NULL,S_CYBER_DIE5),	// S_CYBER_DIE4
+STATE(SPR_CYBR,11,5,NULL,S_CYBER_DIE6),	// S_CYBER_DIE5
+STATE(SPR_CYBR,12,5,A_Fall,S_CYBER_DIE7),	// S_CYBER_DIE6
+STATE(SPR_CYBR,13,5,NULL,S_CYBER_DIE8),	// S_CYBER_DIE7
+STATE(SPR_CYBR,14,5,NULL,S_CYBER_DIE9),	// S_CYBER_DIE8
+STATE(SPR_CYBR,15,15,NULL,S_CYBER_DIE10),	// S_CYBER_DIE9
+STATE(SPR_CYBR,15,-1,A_BossDeath,S_NULL),	// S_CYBER_DIE10
+STATE(SPR_SPID,0,5,A_Look,S_SPID_STND2),	// S_SPID_STND
+STATE(SPR_SPID,1,5,A_Look,S_SPID_STND),	// S_SPID_STND2
+STATE(SPR_SPID,0,1,A_Metal,S_SPID_RUN2),	// S_SPID_RUN1
+STATE(SPR_SPID,0,2,A_Chase,S_SPID_RUN3),	// S_SPID_RUN2
+STATE(SPR_SPID,1,1,A_Chase,S_SPID_RUN4),	// S_SPID_RUN3
+STATE(SPR_SPID,1,2,A_Chase,S_SPID_RUN5),	// S_SPID_RUN4
+STATE(SPR_SPID,2,1,A_Metal,S_SPID_RUN6),	// S_SPID_RUN5
+STATE(SPR_SPID,2,2,A_Chase,S_SPID_RUN7),	// S_SPID_RUN6
+STATE(SPR_SPID,3,1,A_Chase,S_SPID_RUN8),	// S_SPID_RUN7
+STATE(SPR_SPID,3,2,A_Chase,S_SPID_RUN9),	// S_SPID_RUN8
+STATE(SPR_SPID,4,1,A_Metal,S_SPID_RUN10),	// S_SPID_RUN9
+STATE(SPR_SPID,4,2,A_Chase,S_SPID_RUN11),	// S_SPID_RUN10
+STATE(SPR_SPID,5,1,A_Chase,S_SPID_RUN12),	// S_SPID_RUN11
+STATE(SPR_SPID,5,2,A_Chase,S_SPID_RUN1),	// S_SPID_RUN12
+STATE(SPR_SPID,32768,10,A_FaceTarget,S_SPID_ATK2),	// S_SPID_ATK1
+STATE(SPR_SPID,32774,1,A_SPosAttack,S_SPID_ATK3),	// S_SPID_ATK2
+STATE(SPR_SPID,32775,2,A_SPosAttack,S_SPID_ATK4),	// S_SPID_ATK3
+STATE(SPR_SPID,32775,1,A_SpidRefire,S_SPID_ATK2),	// S_SPID_ATK4
+STATE(SPR_SPID,8,1,NULL,S_SPID_PAIN2),	// S_SPID_PAIN
+STATE(SPR_SPID,8,2,A_Pain,S_SPID_RUN1),	// S_SPID_PAIN2
+STATE(SPR_SPID,9,10,A_Scream,S_SPID_DIE2),	// S_SPID_DIE1
+STATE(SPR_SPID,10,5,A_Fall,S_SPID_DIE3),	// S_SPID_DIE2
+STATE(SPR_SPID,11,5,NULL,S_SPID_DIE4),	// S_SPID_DIE3
+STATE(SPR_SPID,12,5,NULL,S_SPID_DIE5),	// S_SPID_DIE4
+STATE(SPR_SPID,13,5,NULL,S_SPID_DIE6),	// S_SPID_DIE5
+STATE(SPR_SPID,14,5,NULL,S_SPID_DIE7),	// S_SPID_DIE6
+STATE(SPR_SPID,15,5,NULL,S_SPID_DIE8),	// S_SPID_DIE7
+STATE(SPR_SPID,16,5,NULL,S_SPID_DIE9),	// S_SPID_DIE8
+STATE(SPR_SPID,17,5,NULL,S_SPID_DIE10),	// S_SPID_DIE9
+STATE(SPR_SPID,18,15,NULL,S_SPID_DIE11),	// S_SPID_DIE10
+STATE(SPR_SPID,18,-1,A_BossDeath,S_NULL)	// S_SPID_DIE11
 };
 
 #undef STATE
@@ -714,6 +776,54 @@ sfx_firxpl,		/* deathsound */
 sfx_dmact,		/* activesound */
 MF_SOLID|MF_SHOOTABLE|MF_FLOAT|MF_NOGRAVITY|MF_COUNTKILL		/* flags */
  },
+{		// MT_SPIDER
+7,		// doomednum
+S_SPID_STND,		// spawnstate
+3000,		// spawnhealth
+S_SPID_RUN1,		// seestate
+sfx_spisit,		// seesound
+8,		// reactiontime
+sfx_shotgn,		// attacksound
+S_SPID_PAIN,		// painstate
+40,		// painchance
+sfx_dmpain,		// painsound
+0,		// meleestate
+S_SPID_ATK1,		// missilestate
+S_SPID_DIE1,		// deathstate
+S_NULL,		// xdeathstate
+sfx_spidth,		// deathsound
+12,		// speed
+128*FRACUNIT,		// radius
+100*FRACUNIT,		// height
+1000,		// mass
+0,		// damage
+sfx_dmact,		// activesound
+MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL,		// flags
+},
+{		// MT_CYBORG
+16,		// doomednum
+S_CYBER_STND,		// spawnstate
+4000,		// spawnhealth
+S_CYBER_RUN1,		// seestate
+sfx_cybsit,		// seesound
+8,		// reactiontime
+0,		// attacksound
+S_CYBER_PAIN,		// painstate
+20,		// painchance
+sfx_dmpain,		// painsound
+0,		// meleestate
+S_CYBER_ATK1,		// missilestate
+S_CYBER_DIE1,		// deathstate
+S_NULL,		// xdeathstate
+sfx_cybdth,		// deathsound
+16,		// speed
+40*FRACUNIT,		// radius
+110*FRACUNIT,		// height
+1000,		// mass
+0,		// damage
+sfx_dmact,		// activesound
+MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL,		// flags
+},
 
 {		/* MT_BARREL */
 2035,		/* doomednum */
