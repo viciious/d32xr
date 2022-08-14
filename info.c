@@ -578,7 +578,7 @@ MF_SOLID|MF_SHOOTABLE|MF_DROPOFF|MF_PICKUP|MF_NOTDMATCH		/* flags */
  },
 
 {		/* MT_POSSESSED */
-3004,		/* doomednum */
+16,		/* doomednum */
 S_POSS_STND,		/* spawnstate */
 20,		/* spawnhealth */
 S_POSS_RUN1,		/* seestate */
@@ -603,7 +603,7 @@ MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL		/* flags */
  },
 
 {		/* MT_SHOTGUY */
-9,		/* doomednum */
+7,		/* doomednum */
 S_SPOS_STND,		/* spawnstate */
 30,		/* spawnhealth */
 S_SPOS_RUN1,		/* seestate */
@@ -777,7 +777,7 @@ sfx_dmact,		/* activesound */
 MF_SOLID|MF_SHOOTABLE|MF_FLOAT|MF_NOGRAVITY|MF_COUNTKILL		/* flags */
  },
 {		// MT_SPIDER
-7,		// doomednum
+9,		// doomednum
 S_SPID_STND,		// spawnstate
 3000,		// spawnhealth
 S_SPID_RUN1,		// seestate
@@ -801,7 +801,7 @@ sfx_dmact,		// activesound
 MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL,		// flags
 },
 {		// MT_CYBORG
-16,		// doomednum
+3004,		// doomednum
 S_CYBER_STND,		// spawnstate
 4000,		// spawnhealth
 S_CYBER_RUN1,		// seestate
