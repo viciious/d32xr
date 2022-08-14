@@ -5,6 +5,37 @@
 
         .equ DEFAULT_LINK_TIMEOUT, 0x3FFF
 
+        .macro  sh2_wait
+        move.w  #0x0003,0xA15102    /* assert CMD INT to both SH2s */
+        move.w  #0xA55A,d2
+99:
+        cmp.w   0xA15120,d2         /* wait on handshake in COMM0 */
+        bne.b   99b
+98:
+        cmp.w   0xA15124,d2         /* wait on handshake in COMM4 */
+        bne.b   98b
+        .endm
+
+        .macro  sh2_cont
+        move.w  #0xFFFE,d0          /* command = exit irq */
+        move.w  d0,0xA15120
+        move.w  d0,0xA15124
+99:
+        cmp.w   0xA15120,d0         /* wait on exit */
+        beq.b   99b
+98:
+        cmp.w   0xA15124,d0         /* wait on exit */
+        beq.b   98b
+        .endm
+
+        .macro  set_rv
+        bset    #0,0xA15107         /* set RV */
+        .endm
+
+        .macro  clr_rv
+        bclr    #0,0xA15107         /* clear RV */
+        .endm
+
 | 0x880800 - entry point for reset/cold-start
 
         .global _start
@@ -265,6 +296,10 @@ main_loop:
         move.w  0xA15120,d0         /* get COMM0 */
         bne.b   handle_req
 
+        move.w  0xA15124,d0         /* get COMM4 */
+        bne.w   handle_sec_req
+
+chk_hotplug:
         /* check hot-plug count */
         tst.b   hotplug_cnt
         bne.b   main_loop
@@ -342,6 +377,21 @@ handle_req:
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
+| process request from Secondary SH2
+handle_sec_req:
+        cmpi.w  #0x15FF,d0
+        bls     chk_hotplug
+
+        cmpi.w  #0x16FF,d0
+        bls     set_bank_page_sec
+
+        move.w  #0,0xA15124         /* done */
+        bra     main_loop
+
+| unknown command
+        move.w  #0,0xA15124         /* done */
+        bra     main_loop
+
 read_sram:
         move.w  #0x2700,sr          /* disable ints */
         moveq   #0,d0
@@ -351,25 +401,27 @@ read_sram:
         andi.l  #0x0100,d1
         beq.w   2f                  /* not everdrive with extended SSF */
 1:
-        move.b  #1,0xA15107         /* set RV */
+        sh2_wait
+        set_rv
         lea     0x40000,a0          /* use the upper 256K of page 31 */
         move.w  #0x801F, 0xA130F0   /* map page 31 to bank 0 */
         move.b  0(a0,d0.l),d1       /* read SRAM */
         move.w  #0x8000, 0xA130F0   /* map page 0 to bank 0 */
-        move.b  #0,0xA15107         /* clear RV */
+        clr_rv
         move.w  d1,0xA15122         /* COMM2 holds return byte */
-        bra     main_loop
         bra     3f
 2:
         add.l   d0,d0
         lea     0x200000,a0
-        move.b  #1,0xA15107         /* set RV */
+        sh2_wait
+        set_rv
         move.b  #3,0xA130F1         /* SRAM enabled, write protected */
         move.b  1(a0,d0.l),d1       /* read SRAM */
         move.b  #2,0xA130F1         /* SRAM disabled, write protected */
-        move.b  #0,0xA15107         /* clear RV */
+        clr_rv
         move.w  d1,0xA15122         /* COMM2 holds return byte */
 3:
+        sh2_cont
         move.w  #0,0xA15120         /* done */
         move.w  #0x2000,sr          /* enable ints */
         bra     main_loop
@@ -382,23 +434,26 @@ write_sram:
         beq.w   2f                  /* not everdrive with extended SSF */
 1:
         move.w  0xA15122,d1         /* COMM2 holds offset */
-        move.b  #1,0xA15107         /* set RV */
+        sh2_wait
+        set_rv
         lea     0x40000,a0          /* use the upper 256K of page 31 */
         move.w  #0xA01F, 0xA130F0   /* map page 31 to bank 0, enable the write bit */
         move.b  d0,0(a0,d1.l)       /* write SRAM */
         move.w  #0x8000, 0xA130F0   /* map page 0 to bank 0 */
-        move.b  #0,0xA15107         /* clear RV */
+        clr_rv
         bra     3f
 2:
         move.w  0xA15122,d1         /* COMM2 holds offset */
         add.l   d1,d1
         lea     0x200000,a0
-        move.b  #1,0xA15107         /* set RV */
+        sh2_wait
+        set_rv
         move.b  #1,0xA130F1         /* SRAM enabled, write enabled */
         move.b  d0,1(a0,d1.l)       /* write SRAM */
         move.b  #2,0xA130F1         /* SRAM disabled, write protected */
-        move.b  #0,0xA15107         /* clear RV */
+        clr_rv
 3:
+        sh2_cont
         move.w  #0,0xA15120         /* done */
         move.w  #0x2000,sr          /* enable ints */
         bra     main_loop
@@ -1115,16 +1170,39 @@ dbug_end:
         bra     main_loop
 
 set_bank_page:
+        move.w  d0,d1
         andi.l  #0x07,d0            /* bank number */
-        move.w  0xA15122,d1         /* COMM2 holds page number */
+        lsr.w   #3,d1               /* page number */
+        andi.l  #0x1f,d1
         lea     0xA130F0,a0
         add.l   d0,d0
+        lea     1(a0,d0.l),a0
         move.w  #0x2700,sr          /* disable ints */
-        move.b  #1,0xA15107         /* set RV */
-        move.b  d1,1(a0,d0.l)
-        move.b  #0,0xA15107         /* clear RV */
+        sh2_wait
+        set_rv
+        move.b  d1,(a0)
+        clr_rv
+        sh2_cont
         move.w  #0x2000,sr          /* enable ints */
         move.w  #0,0xA15120         /* release SH2 now */
+        bra     main_loop
+
+set_bank_page_sec:
+        move.w  d0,d1
+        andi.l  #0x07,d0            /* bank number */
+        lsr.w   #3,d1               /* page number */
+        andi.l  #0x1f,d1
+        lea     0xA130F0,a0
+        add.l   d0,d0
+        lea     1(a0,d0.l),a0
+        move.w  #0x2700,sr          /* disable ints */
+        sh2_wait
+        set_rv
+        move.b  d1,(a0)
+        clr_rv
+        sh2_cont
+        move.w  #0x2000,sr          /* enable ints */
+        move.w  #0x1000,0xA15124    /* release SH2 now */
         bra     main_loop
 
 net_set_link_timeout:

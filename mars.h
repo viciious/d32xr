@@ -48,8 +48,6 @@ enum
 	MARS_SECCMD_M_ANIMATE_FIRE,
 
 	MARS_SECCMD_S_INIT_DMA,
-	MARS_SECCMD_S_STOP_MIXER,
-	MARS_SECCMD_S_START_MIXER,
 
 	MARS_SECCMD_AM_DRAW,
 
@@ -68,14 +66,13 @@ void Mars_Sec_R_DrawPSprites(int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
 
 void Mars_Sec_M_AnimateFire(void) ATTR_OPTIMIZE_EXTREME;
 void Mars_Sec_InitSoundDMA(void);
-void Mars_Sec_StopSoundMixer(void);
-void Mars_Sec_StartSoundMixer(void);
 void Mars_Sec_ReadSoundCmds(void) ATTR_DATA_OPTIMIZE_NONE;
 
 void Mars_Sec_AM_Drawer(void);
 
 void sec_dma1_handler(void) ATTR_DATA_OPTIMIZE_NONE;
 void pri_cmd_handler(void) ATTR_DATA_OPTIMIZE_NONE;
+void sec_cmd_handler(void) ATTR_DATA_OPTIMIZE_NONE;
 
 static inline void Mars_R_SecWait(void)
 {
@@ -162,20 +159,6 @@ static inline void Mars_InitSoundDMA(void)
 {
 	Mars_R_SecWait();
 	MARS_SYS_COMM4 = MARS_SECCMD_S_INIT_DMA;
-	Mars_R_SecWait();
-}
-
-static inline void Mars_StopSoundMixer(void)
-{
-	Mars_R_SecWait();
-	MARS_SYS_COMM4 = MARS_SECCMD_S_STOP_MIXER;
-	Mars_R_SecWait();
-}
-
-static inline void Mars_StartSoundMixer(void)
-{
-	Mars_R_SecWait();
-	MARS_SYS_COMM4 = MARS_SECCMD_S_START_MIXER;
 	Mars_R_SecWait();
 }
 

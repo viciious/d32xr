@@ -565,8 +565,17 @@ void Mars_DebugEnd(void)
 void Mars_SetBankPage(int bank, int page)
 {
 	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM2 = page;
-	MARS_SYS_COMM0 = 0x1600 | bank;
+	MARS_SYS_COMM0 = 0x1600 | (page<<3) | bank;
 	while (MARS_SYS_COMM0);
+}
+
+void Mars_SetBankPageSec(int bank, int page)
+{
+	volatile unsigned short bcomm4 = MARS_SYS_COMM4;
+
+	MARS_SYS_COMM4 = 0x1600 | (page<<3) | bank;
+	while (MARS_SYS_COMM4 != 0x1000);
+
+	MARS_SYS_COMM4 = bcomm4;
 }
 

@@ -52,7 +52,7 @@ enum
 
 static uint8_t snd_bufidx = 0;
 int16_t __attribute__((aligned(16))) snd_buffer[2][MAX_SAMPLES * 2];
-static uint8_t	snd_init = 0, snd_stopmix = 0;
+static uint8_t	snd_init = 0;
 
 static VINT		*vgm_tracks;
 uint8_t			*vgm_ptr;
@@ -735,9 +735,6 @@ void sec_dma1_handler(void)
 
 	snd_bufidx ^= 1; // flip audio buffer
 
-	if (snd_stopmix)
-		return;
-
 	Mars_Sec_ReadSoundCmds();
 
 	S_Update(snd_buffer[snd_bufidx]);
@@ -912,6 +909,17 @@ void Mars_Sec_ReadSoundCmds(void)
 	}
 }
 
+void Mars_Sec_StartSoundMixer(void)
+{
+	S_ClearPCM();
+
+	// fill first buffer
+	S_Update(snd_buffer[snd_bufidx]);
+
+	// start DMA
+	sec_dma1_handler();
+}
+
 void Mars_Sec_InitSoundDMA(void)
 {
 	uint16_t sample, ix;
@@ -952,30 +960,8 @@ void Mars_Sec_InitSoundDMA(void)
 
 	snd_bufidx = 0;
 	snd_init = 1;
-	snd_stopmix = 0;
 
 	Mars_Sec_StartSoundMixer();
-}
-
-void Mars_Sec_StopSoundMixer(void)
-{
-	SH2_DMA_CHCR1; // read TE
-	SH2_DMA_CHCR1 = 0; // clear TE
-
-	snd_stopmix = 1;
-}
-
-void Mars_Sec_StartSoundMixer(void)
-{
-	snd_stopmix = 0;
-
-	S_ClearPCM();
-
-	// fill first buffer
-	S_Update(snd_buffer[snd_bufidx]);
-
-	// start DMA
-	sec_dma1_handler();
 }
 
 void pri_cmd_handler(void)
@@ -987,10 +973,9 @@ void pri_cmd_handler(void)
 							bcomm14 = MARS_SYS_COMM14;	/* save COMM14 reg */
 	unsigned int offs, len, freq;
 
-	MARS_SYS_COMM0 = 0xA55A;				/* handshake with stream code */
-	while (MARS_SYS_COMM0 == 0xA55A);
-
 	((volatile short *)pcm_cachethru)[7] = 0;	/* make sure data array isn't being read */
+
+	// check comm0 for command
 	if (MARS_SYS_COMM0 == 0xFFFF)
 	{
 		/* stop pcm channel */
@@ -1014,11 +999,23 @@ void pri_cmd_handler(void)
 		pcm_cachethru[3] = 1;
 	}
 
-	MARS_SYS_COMM0 = 0xA55A;				/* handshake with stream code */
+	// done
+	MARS_SYS_COMM0 = 0xA55A;					/* handshake with code */
 	while (MARS_SYS_COMM0 == 0xA55A);
 
-	MARS_SYS_COMM2 = bcomm2;				/* restore COMM2 reg */
-	MARS_SYS_COMM12 = bcomm12;				/* restore COMM12 reg */
-	MARS_SYS_COMM14 = bcomm14;				/* restore COMM14 reg */
-	MARS_SYS_COMM0 = bcomm0;				/* restore COMM0 reg */
+	MARS_SYS_COMM2 = bcomm2;					/* restore COMM2 reg */
+	MARS_SYS_COMM12 = bcomm12;					/* restore COMM12 reg */
+	MARS_SYS_COMM14 = bcomm14;					/* restore COMM14 reg */
+	MARS_SYS_COMM0 = bcomm0;					/* restore COMM0 reg */
+}
+
+void sec_cmd_handler(void)
+{
+	volatile unsigned short bcomm4 = MARS_SYS_COMM4;	/* save COMM4 reg */
+
+	// done
+	MARS_SYS_COMM4 = 0xA55A;					/* handshake with code */
+	while (MARS_SYS_COMM4 == 0xA55A);
+
+	MARS_SYS_COMM4 = bcomm4;					/* restore COMM4 reg */
 }

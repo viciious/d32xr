@@ -39,6 +39,15 @@ typedef struct {
 	boolean prev_state;
 } btnstate_t;
 
+// !!! if this is changed, it must be changed in asm too!
+typedef void (*setbankpage_t)(int bank, int page);
+typedef struct {
+	uint16_t bank;
+	uint16_t bankpage;
+	setbankpage_t setbankpage;
+	uint16_t pad[4];
+} mars_tls_t __attribute__((aligned(16))); // thread local storage
+
 int COLOR_WHITE = 0x04;
 int COLOR_BLACK = 0xF7;
 
@@ -67,6 +76,8 @@ static jagobj_t* jo_stbar;
 static VINT jo_stbar_height;
 
 extern int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sprites[4], t_ref_total[4];
+
+static volatile mars_tls_t mars_tls_pri, mars_tls_sec;
 
 void I_ClearFrameBuffer(void) ATTR_DATA_CACHE_ALIGN;
 
@@ -270,6 +281,9 @@ static int Mars_ConvMouseButtons(int mouse)
 
 void Mars_Secondary(void)
 {
+	// init thread-local storage
+	__asm volatile("mov %0, r0\n\tldc r0,gbr" : : "rm"(&mars_tls_sec) : "r0", "gbr");
+
 	// init DMA
 	SH2_DMA_SAR0 = 0;
 	SH2_DMA_DAR0 = 0;
@@ -327,12 +341,6 @@ void Mars_Secondary(void)
 		case MARS_SECCMD_S_INIT_DMA:
 			Mars_Sec_InitSoundDMA();
 			break;
-		case MARS_SECCMD_S_STOP_MIXER:
-			Mars_Sec_StopSoundMixer();
-			break;
-		case MARS_SECCMD_S_START_MIXER:
-			Mars_Sec_StartSoundMixer();
-			break;
 		case MARS_SECCMD_AM_DRAW:
 			Mars_Sec_AM_Drawer();
 			break;
@@ -363,6 +371,17 @@ void I_Init (void)
 	int	i;
 	unsigned minr, maxr;
 	const byte	*doompalette;
+
+	// init thread-local storage
+	mars_tls_pri.bank = 6;
+	mars_tls_pri.bankpage = 6;
+	mars_tls_pri.setbankpage = &Mars_SetBankPage;
+
+	mars_tls_sec.bank = 7;
+	mars_tls_sec.bankpage = 7;
+	mars_tls_sec.setbankpage = &Mars_SetBankPageSec;
+
+	__asm volatile("mov %0, r0\n\tldc r0,gbr" : : "rm"(&mars_tls_pri) : "r0", "gbr");
 
 	Mars_SetBrightness(1);
 
@@ -402,11 +421,6 @@ void I_Init (void)
 		jo_stbar = NULL;
 		jo_stbar_height = 0;
 	}
-/*
-	{
-		__asm volatile("mov #-128,r0\n\tadd r0,r0\n\tldc r0,gbr" : : : "r0");
-	}
-*/
 }
 
 void I_SetPalette(const byte* palette)
@@ -447,26 +461,37 @@ byte *I_WadBase (void)
 = I_RemapLumpPtr
 ====================
 */
-
 void* I_RemapLumpPtr(void *ptr)
 {
-	static int8_t curbank7page = 7;
+	uintptr_t newptr = (uintptr_t)ptr;
 
-	if ((uintptr_t)ptr >= 0x02380000)
+	if (newptr >= 0x02300000 && newptr < 0x04000000)
 	{
-		void* newptr = (void*)(((uintptr_t)ptr & 0x0007FFFF) + 0x02380000);
+		unsigned page = (newptr - 0x02000000) >> 19;
+		volatile unsigned bank, bankpage;
+		void (*setbankpage)(int bank, int page);
 
-		int page = (((uintptr_t)ptr - 0x02000000) >> 19);
-		if (curbank7page != page)
+		__asm volatile(	"mov.w @(0,gbr),r0\n\t"
+						"extu.w r0,%0\n\t"
+						"mov.w @(2,gbr),r0\n\t"
+						"extu.w r0,%1\n\t"
+						"mov.l @(4,gbr),r0\n\t"
+						"mov r0,%2\n\t"
+						: "=r"(bank), "=r"(bankpage), "=r"(setbankpage) : : "r0", "gbr");
+
+		newptr = ((newptr & 0x0007FFFF) + 512*1024*bank + 0x02000000);
+		newptr |= 0x20000000; // bypass cache
+
+		if (bankpage != page)
 		{
-			S_Clear();
-			Mars_SetBankPage(7, page);
-			Mars_ClearCache();
-			Mars_CommSlaveClearCache();
-			curbank7page = page;
+			setbankpage(bank, page);
+
+			__asm volatile(	"mov %0,r0\n\t"
+							"mov.w r0,@(2,gbr)\n\t"
+							: : "r"(page) : "r0", "gbr");
 		}
 
-		ptr = newptr;
+		return (void *)newptr;
 	}
 
 	return ptr;
@@ -807,15 +832,6 @@ void I_Update(void)
 			clearscreen = 2;
 		}
 
-/*
-	{
-		char buf[32];
-		volatile int p;
-		__asm volatile("stc gbr, r0\n\tmov r0,%0" : "=r"(p));
-		D_snprintf(buf, sizeof(buf), "%p", p);
-		I_Print8(50, 5, buf);
-	}
-*/
 	Mars_FlipFrameBuffers(false);
 
 	/* */
