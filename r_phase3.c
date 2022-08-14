@@ -121,7 +121,9 @@ static void R_PrepMobj(mobj_t *thing)
 
    vis = vissprite_p++;
    vis->patchnum = lump;
+#ifndef MARS
    vis->pixels   = R_CheckPixels(lump + 1);
+#endif
    vis->x1       = x1 < 0 ? 0 : x1;
    vis->x2       = x2 >= viewportWidth ? viewportWidth - 1 : x2;
    vis->gx       = thing->x;
@@ -214,7 +216,9 @@ static void R_PrepPSprite(pspdef_t *psp)
 
    vis = vissprite_p++;
    vis->patchnum = lump;
+#ifndef MARS
    vis->pixels = R_CheckPixels(lump + 1);
+#endif
    vis->x1 = x1 < 0 ? 0 : x1;
    vis->x2 = x2 >= viewportWidth ? viewportWidth - 1 : x2;
    vis->xscale = xscale;

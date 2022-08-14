@@ -26,8 +26,18 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos,
    fixed_t  iscale, xfrac, spryscale, sprtop, fracstep;
    int light, x, stopx;
    drawcol_t drawcol;
+#ifdef MARS
+	inpixel_t 	*pixels;
+#else
+	pixel_t		*pixels;		/* data patch header references */
+#endif
 
    patch     = W_POINTLUMPNUM(vis->patchnum);
+#ifdef MARS
+   pixels    = W_POINTLUMPNUM(vis->patchnum+1);
+#else
+   pixels    = vis->pixels;
+#endif
    iscale    = vis->yiscale;
    xfrac     = vis->startfrac;
    spryscale = vis->yscale;
@@ -101,7 +111,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos,
             continue;
 
          // CALICO: invoke column drawer
-         drawcol(x, top, bottom, light, frac, iscale, vis->pixels + BIGSHORT(column->dataofs), 128, fuzzpos);
+         drawcol(x, top, bottom, light, frac, iscale, pixels + BIGSHORT(column->dataofs), 128, fuzzpos);
       }
    }
 }

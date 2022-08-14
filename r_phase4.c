@@ -8,7 +8,6 @@
 #include "r_local.h"
 #include "mars.h"
 
-static void R_FinishSprite(vissprite_t* vis) ATTR_DATA_CACHE_ALIGN;
 boolean R_LatePrep(void) ATTR_DATA_CACHE_ALIGN;
 
 //

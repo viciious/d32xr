@@ -463,6 +463,10 @@ void R_BSP(void)
 
    solidsegs = stack_solidsegs;
 
+#ifdef MARS
+   W_GetLumpData(gamemaplump);
+#endif
+
    solidsegs[0].first = -2;
    solidsegs[0].last  = -1;
    solidsegs[1].first = viewportWidth;
