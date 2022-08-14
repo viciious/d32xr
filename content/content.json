@@ -741,12 +741,12 @@
         "name": "DORCLS"
     },
     {
-        "filename": "dsbdcls",
-        "name": "DSBDCLS"
+        "filename": "bdcls",
+        "name": "BDCLS"
     },
     {
-        "filename": "dsbdopn",
-        "name": "DSBDOPN"
+        "filename": "bdopn",
+        "name": "BDOPN"
     },
     {
         "filename": "doropn",
