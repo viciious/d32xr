@@ -78,6 +78,8 @@ const char * const S_sfxnames[] =
   "hoof",
   "metal",
   "itmbk",
+  "bdopn",
+  "bdcls"
 };
 
 #ifdef MARS

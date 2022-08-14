@@ -86,7 +86,9 @@ typedef enum
   sfx_punch, 
   sfx_hoof, 
   sfx_metal, 
-  sfx_itmbk, 
+  sfx_itmbk,
+  sfx_bdopn,
+  sfx_bdcls,
   NUMSFX 
 } sfxenum_t; 
  
@@ -96,9 +98,6 @@ extern VINT num_music;
 
 extern sfxinfo_t   S_sfx[]; 
 extern const char* const S_sfxnames[];
-
-#define sfx_bdopn sfx_doropn
-#define sfx_bdcls sfx_dorcls
 
 #endif 
  
