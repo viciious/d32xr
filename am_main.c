@@ -22,6 +22,7 @@
 #define CRY_YELLOW 	167
 #define CRY_GREY 	94
 #define CRY_AQUA 	250
+#define CRY_THINGS 	223
 
 #else
 
@@ -32,6 +33,7 @@
 #define CRY_YELLOW	0xff80
 #define CRY_GREY	0x9826
 #define CRY_AQUA	0x6aa0
+#define CRY_THINGS 	CRY_AQUA
 
 #endif
 
@@ -830,9 +832,9 @@ static void AM_Drawer_ (int c)
 
 			ny3 = ny2;
 
-			DrawLine(fb,CRY_AQUA,160+nx1,am_halfh-ny1,160+nx2,am_halfh-ny2, 0, am_height-1);
-			DrawLine(fb,CRY_AQUA,160+nx2,am_halfh-ny2,160+nx3,am_halfh-ny3, 0, am_height-1);
-			DrawLine(fb,CRY_AQUA,160+nx1,am_halfh-ny1,160+nx3,am_halfh-ny3, 0, am_height-1);
+			DrawLine(fb,CRY_THINGS,160+nx1,am_halfh-ny1,160+nx2,am_halfh-ny2, 0, am_height-1);
+			DrawLine(fb,CRY_THINGS,160+nx2,am_halfh-ny2,160+nx3,am_halfh-ny3, 0, am_height-1);
+			DrawLine(fb,CRY_THINGS,160+nx1,am_halfh-ny1,160+nx3,am_halfh-ny3, 0, am_height-1);
 		}
 	}
 
