@@ -47,7 +47,7 @@ void R_InitTextures (void)
 	int			i,j,c;
 	int			offset;
 	int			*directory;
-	
+	int 		start, end;
 
 /* */
 /* load the map texture definitions from textures.lmp */
@@ -56,6 +56,9 @@ void R_InitTextures (void)
 	W_ReadLump(W_GetNumForName("TEXTURE1"), maptex);
 	numtextures = LITTLELONG(*maptex);
 	directory = maptex+1;
+
+	start = W_CheckNumForName("T_START");
+	end = W_CheckNumForName("T_END");
 
 	textures = Z_Malloc (numtextures * sizeof(*textures), PU_STATIC, 0);
 	for (i = 0; i < numtextures; i++, directory++)
@@ -73,7 +76,10 @@ void R_InitTextures (void)
 				texture->name[j] = c - ('a' - 'A');
 		}
 		texture->data = NULL;		/* not cached yet */
-		texture->lumpnum = W_CheckNumForName(texture->name);
+		if (start >= 0 && end > 0)
+			texture->lumpnum = W_CheckNumForNameExt(texture->name, start, end);
+		else
+			texture->lumpnum = W_CheckNumForName(texture->name);
 		if (texture->lumpnum == -1)
 			texture->lumpnum = 0;
 #if 0
