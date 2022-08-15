@@ -41,6 +41,11 @@ short fuzzoffset[FUZZTABLE] =
 /*===================================== */
 
 /* */
+/* subsectors */
+/* */
+sector_t	**vissectors/*[MAXVISSSEC]*/, ** lastvissector;
+
+/* */
 /* walls */
 /* */
 viswall_t	*viswalls/*[MAXWALLCMDS]*/, *lastwallcmd;
@@ -648,6 +653,10 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_, vissprite_t *vis
 
 	sortedvisplanes = sortedvisplanes_;
 
+	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
+	vissectors = (void *)tempbuf;
+	tempbuf += sizeof(*vissectors) * MAXVISSSEC / sizeof(*tempbuf);
+
 	vissprites = vissprites_;
 
 	visplanes = visplanes_;
@@ -673,6 +682,8 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_, vissprite_t *vis
 	lastsprite_p = vissprite_p;
 
 	lastopening = openings;
+
+	lastvissector = vissectors;	/* no subsectors visible yet */
 
 	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
 		visplanes_hash[i] = NULL;
@@ -928,11 +939,14 @@ void R_RenderPlayerView(int displayplayer)
 	Mars_ClearCacheLine(&lastsegclip);
 	Mars_ClearCacheLine(&lastopening);
 	Mars_ClearCacheLine(&lastvisplane);
+	Mars_ClearCacheLine(&lastvissector);
 
 	if (lastsegclip - segclip > MAXOPENINGS)
 		I_Error("lastsegclip > MAXOPENINGS: %d", lastsegclip - segclip);
 	if (lastopening - openings > MAXOPENINGS)
 		I_Error("lastopening > MAXOPENINGS: %d", lastopening - openings);
+	if (lastvissector - vissectors > MAXVISSSEC)
+		I_Error("lastvissector > MAXVISSSEC: %d", lastvissector - vissectors);
 
 	Mars_ClearCacheLines(openings, ((lastopening - openings) * sizeof(*openings) + 31) / 16);
 

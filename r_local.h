@@ -546,6 +546,9 @@ extern	unsigned short	*openings/*[MAXOPENINGS]*/;
 extern 	unsigned short	*lastopening;
 extern	unsigned short	*segclip, *lastsegclip;
 
+#define	MAXVISSSEC		128
+extern	sector_t		**vissectors/*[MAXVISSSEC]*/, ** lastvissector;
+
 typedef struct visplane_s
 {
 	fixed_t		height;

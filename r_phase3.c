@@ -7,14 +7,14 @@
 #include "doomdef.h"
 #include "r_local.h"
 
-void R_PrepMobj(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
+static void R_PrepMobj(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
 static void R_PrepPSprite(pspdef_t* psp) ATTR_DATA_CACHE_ALIGN;
 void R_SpritePrep(void) ATTR_DATA_CACHE_ALIGN;
 
 //
 // Project vissprite for potentially visible actor
 //
-void R_PrepMobj(mobj_t *thing)
+static void R_PrepMobj(mobj_t *thing)
 {
    fixed_t tr_x, tr_y;
    fixed_t gxt, gyt, gzt;
@@ -241,12 +241,26 @@ static void R_PrepPSprite(pspdef_t *psp)
 }
 
 //
-// Process player weapon sprites
+// Process actors in all visible subsectors
 //
 void R_SpritePrep(void)
 {
+   sector_t **pse = vissectors;
    pspdef_t     *psp;
    int i;
+
+   while(pse < lastvissector)
+   {
+      sector_t    *se = *pse;
+      mobj_t *thing = se->thinglist;
+
+      while(thing) // walk sector thing list
+      {
+        R_PrepMobj(thing);
+        thing = thing->snext;
+      }
+      ++pse;
+   }
 
    // remember end of actor vissprites
    lastsprite_p = vissprite_p;

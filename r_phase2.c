@@ -534,13 +534,13 @@ void Mars_Sec_R_WallPrep(void)
 
     for (segl = first; segl != verylast; )
     {
-        int nextsegs;
+        int16_t nextsegs;
         viswall_t* last;
 
         nextsegs = MARS_SYS_COMM6;
 
         // check if master CPU finished exec'ing R_BSP()
-        if (nextsegs == 0xffff)
+        if (nextsegs == (int16_t)0xffff)
         {
             Mars_ClearCacheLine(&lastwallcmd);
             verylast = lastwallcmd;
