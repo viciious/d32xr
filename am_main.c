@@ -21,7 +21,7 @@
 #define CRY_BROWN 	79
 #define CRY_YELLOW 	167
 #define CRY_GREY 	94
-#define CRY_AQUA 	223
+#define CRY_AQUA 	250
 
 #else
 
@@ -498,11 +498,13 @@ static void AM_DrawMapStats(void)
 	int i;
 	char buf[128];
 	int kc, sc, ic;
+	int kcol, scol, icol;
 
 	switch (netgame)
 	{
 	default:
 		kc = sc = ic = 0;
+		kcol = scol = icol = COLOR_WHITE;
 		for (i = 0; i < MAXPLAYERS; i++)
 		{
 			if (!playeringame[i])
@@ -512,7 +514,17 @@ static void AM_DrawMapStats(void)
 			ic += players[i].itemcount;
 		}
 
-		D_snprintf(buf, sizeof(buf), "K:%d/%d I:%d/%d S:%d/%d", kc, totalkills, ic, totalitems, sc, totalsecret);
+		if (kc == totalkills)
+			kcol = CRY_AQUA;
+		if (sc == totalsecret)
+			scol = CRY_AQUA;
+		if (ic == totalitems)
+			icol = CRY_AQUA;
+
+		D_snprintf(buf, sizeof(buf), "^%02xK:%d/%d ^%02xI:%d/%d ^%02xS:%d/%d",
+			kcol, kc, totalkills,
+			icol, ic, totalitems,
+			scol, sc, totalsecret);
 		I_Print8(12, 20, buf);
 		break;
 	case gt_coop:
