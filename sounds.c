@@ -11,7 +11,7 @@ const VINT		mus_none = 0;
 /* 
  *  Information about all the sfx 
  */ 
-const char * const S_sfxnames[] =
+const char * const S_sfxnames[NUMSFX] =
 {
   0,
   "pistol",
@@ -88,7 +88,7 @@ const char * const S_sfxnames[] =
 #define SOUND(sing,pri) { sing, pri, -1, -1, NULL, NULL }
 #endif
 
-sfxinfo_t S_sfx[] = 
+sfxinfo_t S_sfx[NUMSFX] =
 { 
   SOUND( 0, 0 ),
   SOUND( false, 64 ),
@@ -154,6 +154,8 @@ sfxinfo_t S_sfx[] =
   SOUND( false, 64 ),
   SOUND( false, 120 ),
   SOUND( false, 120 ),
-  SOUND( false, 120 )
+  SOUND( false, 120 ),
+  SOUND( false, 100 ),
+  SOUND( false, 100 ),
 }; 
  
