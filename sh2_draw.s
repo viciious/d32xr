@@ -38,22 +38,24 @@ _I_DrawColumnLowA:
         shlr2   r5
         add     r5,r8           /* fb += (dc_yl*256 + dc_yl*64) */
         mov.l   @(8,r15),r2     /* frac */
-        mov.l   @(12,r15),r3     /* fracstep */
+        mov.l   @(12,r15),r3    /* fracstep */
         mov.l   @(16,r15),r5    /* dc_source */
         mov.l   @(20,r15),r4
         mov.l   draw_width,r1
         add     #-1,r4          /* heightmask = texheight - 1 */
+        swap.w  r2,r0           /* (frac >> 16) */
+        and     r4,r0           /* (frac >> 16) & heightmask */
 
         .p2alignw 2, 0x0009
 do_col_loop_low:
-        swap.w  r2,r0           /* (frac >> 16) */
-        and     r4,r0           /* (frac >> 16) & heightmask */
         mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
         add     r3,r2           /* frac += fracstep */
+        dt      r6              /* count-- */
         add     r0,r0
         mov.w   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
-        dt      r6              /* count-- */
+        swap.w  r2,r0           /* (frac >> 16) */
         mov.w   r9,@r8          /* *fb = dpix */
+        and     r4,r0           /* (frac >> 16) & heightmask */
         bf/s    do_col_loop_low
         add     r1,r8           /* fb += SCREENWIDTH */
 
