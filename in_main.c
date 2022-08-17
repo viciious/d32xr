@@ -338,7 +338,9 @@ void IN_Start (void)
 
 	uchar = W_CheckNumForName("CHAR_065");
 
+#ifndef MARS
 	DoubleBufferSetup ();
+#endif
 
 	I_SetPalette(W_POINTLUMPNUM(W_GetNumForName("PLAYPALS")));
 
