@@ -372,7 +372,6 @@ handle_req:
         bls     net_set_link_timeout
         cmpi.w  #0x18FF,d0
         bls     set_music_volume
-
 | unknown command
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -381,13 +380,8 @@ handle_req:
 handle_sec_req:
         cmpi.w  #0x15FF,d0
         bls     chk_hotplug
-
         cmpi.w  #0x16FF,d0
         bls     set_bank_page_sec
-
-        move.w  #0,0xA15124         /* done */
-        bra     main_loop
-
 | unknown command
         move.w  #0,0xA15124         /* done */
         bra     main_loop
