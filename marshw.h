@@ -130,6 +130,8 @@ void Mars_DebugEnd(void);
 void Mars_SetBankPage(int bank, int page) MARS_ATTR_DATA_CACHE_ALIGN;
 void Mars_SetBankPageSec(int bank, int page) MARS_ATTR_DATA_CACHE_ALIGN;
 
+int Mars_ROMSize(void);
+
 enum {
 	DEBUG_FPSCOUNT,
 	DEBUG_LASTTICS,

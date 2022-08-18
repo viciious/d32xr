@@ -49,6 +49,8 @@ int main(void)
 /* */
 	D_DoomMain ();
 
+	Mars_CommSlaveClearCache();
+
 	return 0;
 }
 

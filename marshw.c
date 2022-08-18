@@ -579,3 +579,7 @@ void Mars_SetBankPageSec(int bank, int page)
 	MARS_SYS_COMM4 = bcomm4;
 }
 
+int Mars_ROMSize(void)
+{
+	return *((volatile uint32_t *)0x020001a4) - *((volatile uint32_t *)0x020001a0) + 1;
+}

@@ -78,6 +78,7 @@ static VINT jo_stbar_height;
 extern int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sprites[4], t_ref_total[4];
 
 static volatile mars_tls_t mars_tls_pri, mars_tls_sec;
+static uint32_t mars_rom_bsw_start = 0;
 
 void I_ClearFrameBuffer(void) ATTR_DATA_CACHE_ALIGN;
 
@@ -381,6 +382,11 @@ void I_Init (void)
 	mars_tls_sec.bankpage = 7;
 	mars_tls_sec.setbankpage = &Mars_SetBankPageSec;
 
+	// find the memory address in ROM that corresponds to bank 6 in case
+	// the ROM is configured to use the Sega mapper, otherwise set the address
+	// to some value beyond the ROM space
+	mars_rom_bsw_start = Mars_ROMSize() > 0x400000 ? 0x02300000 : 0x02400000;
+
 	__asm volatile("mov %0, r0\n\tldc r0,gbr" : : "rm"(&mars_tls_pri) : "r0", "gbr");
 
 	Mars_SetBrightness(1);
@@ -421,6 +427,8 @@ void I_Init (void)
 		jo_stbar = NULL;
 		jo_stbar_height = 0;
 	}
+
+	Mars_CommSlaveClearCache();
 }
 
 void I_SetPalette(const byte* palette)
@@ -465,7 +473,7 @@ void* I_RemapLumpPtr(void *ptr)
 {
 	uintptr_t newptr = (uintptr_t)ptr;
 
-	if (newptr >= 0x02300000 && newptr < 0x04000000)
+	if (newptr >= mars_rom_bsw_start && newptr < 0x04000000)
 	{
 		unsigned page = (newptr - 0x02000000) >> 19;
 		volatile unsigned bank, bankpage;
