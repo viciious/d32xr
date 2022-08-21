@@ -1,0 +1,74 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build ROM",
+            "type": "shell",
+            "command": "make -j",
+            "presentation": {
+                "reveal": "always"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "Build debug 32X ROM",
+            "type": "shell",
+            "command": "make -j debug",
+            "presentation": {
+                "reveal": "always"
+            },
+            "group": {
+                "kind": "build"
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "Clean",
+            "type": "shell",
+            "command": "make clean",
+            "presentation": {
+                "reveal": "always"
+            },
+            "group": {
+                "kind": "build"
+            },            
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "Send ROM to MEDPro",
+            "type": "shell",
+            "command": ".\\megalink -cp D32XR.32x sd:/D32XR.32x",
+            "windows": {
+                "command": ".\\megalink.exe -cp D32XR.32x sd:/D32XR.32x",
+                "options": {
+                    "cwd": "${workspaceFolder}"
+                },
+            },            
+            "presentation": {
+                "reveal": "always"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Load ROM in MEDPro",
+            "type": "shell",
+            "command": ".\\megalink D32XR.32x",
+            "windows": {
+                "command": ".\\megalink.exe D32XR.32x",
+                "options": {
+                    "cwd": "${workspaceFolder}"
+                },
+            },
+            "presentation": {
+                "reveal": "always"
+            },
+            "problemMatcher": []
+        }
+    ]
+}
