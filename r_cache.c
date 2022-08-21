@@ -194,6 +194,7 @@ static void R_EvictFromTexCache(void* ptr, void* userp)
 
 	if (entry->pixelcount < c->reqcount_le)
 	{
+		// if the entry is less frequently used that the candidate, it will begin ageing
 		if (--entry->lifecount == 0)
 		{
 			c->reqfreed++;
@@ -235,7 +236,7 @@ void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **us
 
 	if (Z_LargestFreeBlock(c->zone) < size + pad)
 	{
-		// free important entries of less than or equal importance
+		// free less frequently used entries 
 		c->reqfreed = 0;
 		c->reqcount_le = c->pixcount[id];
 		Z_ForEachBlock(c->zone, &R_EvictFromTexCache, c);
