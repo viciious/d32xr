@@ -124,10 +124,10 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
 //
 static void R_PlaneLoop(localplane_t *lpl)
 {
-   unsigned pl_x, pl_stopx;
-   unsigned short *pl_openptr;
+   int pl_x, pl_stopx;
+   uint16_t *pl_openptr;
    unsigned t1, t2, b1, b2, pl_oldtop, pl_oldbottom;
-   unsigned short spanstart[SCREENHEIGHT];
+   int16_t spanstart[SCREENHEIGHT];
    visplane_t* pl = lpl->pl;
 
    pl_x       = pl->minx;
