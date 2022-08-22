@@ -37,7 +37,7 @@ void R_BSP(void) ATTR_DATA_CACHE_ALIGN;
 #ifdef MARS
 __attribute__((aligned(4)))
 #endif
-static int checkcoord[12][4] =
+static VINT checkcoord[12][4] =
 {
    { 3, 0, 2, 1 },
    { 3, 0, 2, 0 },
@@ -224,11 +224,18 @@ static void R_ClipWallSegment(fixed_t first, fixed_t last, boolean solid)
                 next = newend;
                 ++newend;
 
-                while (next != start)
-                {
-                    *((int*)next) = *((int*)(next - 1));
-                    --next;
-                }
+               if (next != start)
+               {
+                  int *s = (int *)start;
+                  int n = *s;
+                  int cnt = next - start;
+
+                  next = start;
+                  do {
+                     int nn = *++s;
+                     *s = n, n = nn;
+                  } while (--cnt);
+               }
 
                 next->first = first;
                 next->last = last;
@@ -279,10 +286,14 @@ crunch:
         if (next == start) // post just extended past the bottom of one post
             return;
 
-        while (next++ != newend)
+        if (next != newend)
         {
-            start++;
-            *((int*)start) = *((int*)next);
+            int cnt = newend - next;
+            do
+            {
+               start++, next++;
+               *((int*)start) = *((int*)next);
+            } while (--cnt);
         }
 
         newend = start + 1;
@@ -367,7 +378,7 @@ static void R_AddLine(seg_t *line)
        // reject empty lines used for triggers and special events
        if (backsector->ceilingpic == frontsector->ceilingpic &&
            backsector->floorpic == frontsector->floorpic &&
-           backsector->lightlevel == frontsector->lightlevel &&
+           *(int8_t *)&backsector->lightlevel == *(int8_t *)&frontsector->lightlevel && // hack to get rid of the extu.w on SH-2
            sidedef->midtexture == 0)
            return;
    }
