@@ -112,7 +112,7 @@ static void R_PrepMobj(mobj_t *thing)
 
    texmid = gzt + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
    FixedMul2(tz, texmid, xscale);
-   if (FixedMul(texmid, xscale) < viewportHeight - centerYFrac)
+   if (tz < viewportHeight - centerYFrac)
        return;
 
    // get a new vissprite
@@ -180,7 +180,8 @@ static void R_PrepPSprite(pspdef_t *psp)
 
    xscale = weaponXScale;
    center = centerXFrac - 80 * weaponXScale;
-   center /= (lowResMode ? 1 : 2);
+   if (lowResMode)
+    center >>= 1;
 
    tx = psp->sx + center;
    topoffset = (((fixed_t)BIGSHORT(patch->topoffset) - weaponYpos) << FRACBITS) - psp->sy;
