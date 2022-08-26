@@ -729,7 +729,7 @@ void sec_dma1_handler(void)
 	SH2_DMA_CHCR1 = 0; // clear TE
 
 	// start DMA on buffer and fill the other one
-	SH2_DMA_SAR1 = ((intptr_t)snd_buffer[snd_bufidx]) | 0x20000000;
+	SH2_DMA_SAR1 = (uintptr_t)snd_buffer[snd_bufidx];
 	SH2_DMA_TCR1 = MAX_SAMPLES; // number longs
 	SH2_DMA_CHCR1 = 0x18E5; // dest fixed, src incr, size long, ext req, dack mem to dev, dack hi, dack edge, dreq rising edge, cycle-steal, dual addr, intr enabled, clear TE, dma enabled
 
@@ -881,6 +881,9 @@ gotchannel:
 	// volume and panning will be updated later in S_Spatialize
 	newchannel->volume = vol;
 	newchannel->pan = 128;
+
+	// cache-through access the sample data
+	newchannel->data = (void *)((uintptr_t)newchannel->data | 0x20000000);
 }
 
 void Mars_Sec_ReadSoundCmds(void)
