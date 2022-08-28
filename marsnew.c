@@ -506,13 +506,13 @@ static int I_ReadControls_(volatile unsigned *c, btnstate_t* startbtn)
 int I_ReadControls(void)
 {
 	static btnstate_t startbtn = { 0 };
-	return I_ReadControls_(&mars_controls, &startbtn);
+	return I_ReadControls_(&mars_controls[0], &startbtn);
 }
 
 int I_ReadControls2(void)
 {
 	static btnstate_t startbtn2 = { 0 };
-	return I_ReadControls_(&mars_controls2, &startbtn2);
+	return I_ReadControls_(&mars_controls[1], &startbtn2);
 }
 
 int I_ReadMouse(int* pmx, int *pmy)
@@ -538,8 +538,8 @@ int I_ReadMouse(int* pmx, int *pmy)
 		// no mouse
 		mousepresent = false;
 		mars_mouseport = -1;
-		mars_gamepadport = &MARS_SYS_COMM8;
-		mars_gamepadport2 = &MARS_SYS_COMM10;
+		mars_gamepadport[0] = &MARS_SYS_COMM8;
+		mars_gamepadport[1] = &MARS_SYS_COMM10;
 		oldmval = 0;
 		return 0;
 	default:

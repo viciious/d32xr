@@ -28,10 +28,10 @@
 
 static volatile uint16_t mars_activescreen = 0;
 
-volatile unsigned short* mars_gamepadport, * mars_gamepadport2;
+volatile unsigned short* mars_gamepadport[2];
 char mars_mouseport;
 
-volatile unsigned mars_controls, mars_controls2;
+volatile unsigned mars_controls[2];
 
 volatile unsigned mars_vblank_count = 0;
 volatile unsigned mars_pwdt_ovf_count = 0;
@@ -233,25 +233,24 @@ void Mars_Init(void)
 
 	/* detect input devices */
 	mars_mouseport = -1;
-	mars_gamepadport = &MARS_SYS_COMM8;
-	mars_gamepadport2 = &MARS_SYS_COMM10;
+	mars_gamepadport[0] = &MARS_SYS_COMM8;
+	mars_gamepadport[1] = &MARS_SYS_COMM10;
 
 	/* values set by the m68k on startup */
 	if (MARS_SYS_COMM10 == 0xF001)
 	{
 		mars_mouseport = 1;
-		mars_gamepadport = &MARS_SYS_COMM8;
-		mars_gamepadport2 = NULL;
+		mars_gamepadport[0] = &MARS_SYS_COMM8;
+		mars_gamepadport[1] = NULL;
 	}
 	else if (MARS_SYS_COMM8 == 0xF001)
 	{
 		mars_mouseport = 0;
-		mars_gamepadport = &MARS_SYS_COMM10;
-		mars_gamepadport2 = NULL;
+		mars_gamepadport[0] = &MARS_SYS_COMM10;
+		mars_gamepadport[1] = NULL;
 	}
 
-	mars_controls = 0;
-	mars_controls2 = 0;
+	mars_controls[0] = mars_controls[1] = 0;
 
 	Mars_UpdateCD();
 
@@ -273,7 +272,7 @@ uint16_t* Mars_FrameBufferLines(void)
 
 void pri_vbi_handler(void)
 {
-	unsigned short cv;
+	int i;
 
 	mars_vblank_count++;
 
@@ -283,47 +282,32 @@ void pri_vbi_handler(void)
 			mars_newpalette = NULL;
 	}
 
-	cv = *mars_gamepadport;
-	if (cv == 0xF001)
+	for (i = 0; i < 2; i++)
 	{
-		/* mouse detected in gamepadport - hot plug! */
-		if (MARS_SYS_COMM10 == 0xF001)
-		{
-			mars_mouseport = 1;
-			mars_gamepadport = &MARS_SYS_COMM8;
-			mars_gamepadport2 = NULL;
-		}
-		else if (MARS_SYS_COMM8 == 0xF001)
-		{
-			mars_mouseport = 0;
-			mars_gamepadport = &MARS_SYS_COMM10;
-			mars_gamepadport2 = NULL;
-		}
-	}
-	else if (cv != 0xF000)
-		mars_controls |= cv;
+		unsigned short cv;
 
-	if (mars_gamepadport2)
-	{
-		cv = *mars_gamepadport2;
+		if (!mars_gamepadport[i])
+			continue;
+
+		cv = *mars_gamepadport[i];
 		if (cv == 0xF001)
 		{
-			/* mouse detected in gamepadport2 - hot plug! */
+			/* mouse detected in gamepadport - hot plug! */
 			if (MARS_SYS_COMM10 == 0xF001)
 			{
 				mars_mouseport = 1;
-				mars_gamepadport = &MARS_SYS_COMM8;
-				mars_gamepadport2 = NULL;
+				mars_gamepadport[0] = &MARS_SYS_COMM8;
+				mars_gamepadport[1] = NULL;
 			}
 			else if (MARS_SYS_COMM8 == 0xF001)
 			{
 				mars_mouseport = 0;
-				mars_gamepadport = &MARS_SYS_COMM10;
-				mars_gamepadport2 = NULL;
+				mars_gamepadport[0] = &MARS_SYS_COMM10;
+				mars_gamepadport[1] = NULL;
 			}
 		}
 		else if (cv != 0xF000)
-			mars_controls2 |= cv;
+			mars_controls[i] |= cv;
 	}
 }
 
