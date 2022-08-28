@@ -318,14 +318,14 @@ void I_DrawMenuFire(void)
 	int x, y;
 	char* firePix = m_fire->firePix;
 	jagobj_t* titlepic = m_fire->titlepic;
-	unsigned char* firePal = m_fire->firePal;
-	unsigned* row;
+	uint8_t * firePal = (uint8_t *)m_fire->firePal;
+	int8_t * row;
 	const int pic_startpos = -28;
 	const int pic_cutoff = 16;
 	const int fh = FIRE_HEIGHT;
 	const int solid_fire_height = m_fire->solid_fire_height;
 	const int bottom_pos = m_fire->bottom_pos;
-	unsigned* dest = (unsigned*)(I_OverwriteBuffer() + 320 / 2 * (bottom_pos + solid_fire_height - FIRE_HEIGHT));
+	int16_t* dest = (int16_t*)(I_OverwriteBuffer() + 320 / 2 * (bottom_pos + solid_fire_height - FIRE_HEIGHT));
 
 	// scroll the title pic from bottom to top
 
@@ -355,11 +355,11 @@ void I_DrawMenuFire(void)
 		// no longer draw and thus can no longer as serve as the background
 		if (ticon >= FIRE_STOP_TICON)
 		{
-			row = (unsigned*)(I_FrameBuffer() + 320 / 2 * (200 - pic_cutoff));
+			int *irow = (int*)(I_FrameBuffer() + 320 / 2 * (200 - pic_cutoff));
 			for (y = 200 - pic_cutoff; y <= bottom_pos; y++)
 			{
 				for (x = 0; x < 320 / 4; x += 4)
-					*row++ = 0, *row++ = 0, *row++ = 0, *row++ = 0;
+					*irow++ = 0, *irow++ = 0, *irow++ = 0, *irow++ = 0;
 			}
 		}
 
@@ -381,29 +381,27 @@ void I_DrawMenuFire(void)
 	// draw the fire at the bottom
 	Mars_ClearCache();
 
-	row = (unsigned*)((intptr_t)firePix);
+	row = (int8_t *)firePix;
 	for (y = 0; y < FIRE_HEIGHT; y++) {
-		for (x = 0; x < FIRE_WIDTH; x += 4) {
-			unsigned p = *row;
-			unsigned p1 = p & 255; p >>= 8;
-			unsigned p2 = p & 255; p >>= 8;
-			unsigned p3 = p & 255; p >>= 8;
-			unsigned p4 = p & 255; p >>= 8;
+		for (x = 0; x < FIRE_WIDTH; x+=4) {
+			uint8_t p2, p4;
+			int8_t p1, p3;
 
-			p1 = firePal[p1];
-			p2 = firePal[p2];
-			p3 = firePal[p3];
-			p4 = firePal[p4];
-			p = (p4 << 24) | (p3 << 16) | (p2 << 8) | p1;
+			p1 = firePal[row[0]];
+			p2 = firePal[row[1]];
+			*dest++ = ((p1 << 8) | p2);
 
-			*dest++ = p;
-			row++;
+			p3 = firePal[row[2]];
+			p4 = firePal[row[3]];
+			*dest++ = ((p3 << 8) | p4);
+
+			row += 4;
 		}
 
 		if (y == FIRE_HEIGHT - solid_fire_height)
 		{
-			size_t offs = dest - (unsigned*)I_OverwriteBuffer();
-			dest = (unsigned*)I_FrameBuffer() + offs;
+			size_t offs = dest - (int16_t*)I_OverwriteBuffer();
+			dest = (int16_t*)I_FrameBuffer() + offs;
 		}
 	}
 }
