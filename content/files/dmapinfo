@@ -129,55 +129,62 @@ map "MAP16" "Tower of Babel"
 map "MAP17" "Hell Keep"
 {
     sky = "sky3"
-    next = "MAP18"
+    next = "MAP25"
     mapnumber = 17
     music = "VGM_E2M9"
+}
+map "MAP25" "Slough of Despair"
+{
+    sky = "sky3"
+    next = "MAP18"
+    mapnumber = 18
+    music = "VGM_E3M2"
 }
 map "MAP18" "Pandemonium"
 {
     sky = "sky3"
     next = "MAP19"
-    mapnumber = 18
+    mapnumber = 19
     music = "VGM_E3M3"
 }
 map "MAP19" "House of Pain"
 {
     sky = "sky3"
     next = "MAP20"
-    mapnumber = 19
-    music = "VGM_E3M2"
+    mapnumber = 20
+    music = "VGM_E1M8"
 }
 map "MAP20" "Unholy Cathedral"
 {
     sky = "sky3"
     next = "MAP21"
-    mapnumber = 20
+    mapnumber = 21
     music = "VGM_E1M7"
 }
 map "MAP21" "Mt Erebus"
 {
     sky = "sky3"
     next = "MAP22"
-    mapnumber = 21
+    mapnumber = 22
     music = "VGM_E1M6"
 }
 map "MAP22" "Limbo"
 {
     sky = "sky3"
     next = "MAP23"
-    mapnumber = 22
+    mapnumber = 23
     music = "VGM_E2M7"
 }
 map "MAP23" "Dis"
 {
     sky = "sky3"
-    mapnumber = 23
+    mapnumber = 24
     music = "VGM_E3M8"
 }
 map "MAP24" "Military Base"
 {
     sky = "sky1"
     next = "MAP04"
-    mapnumber = 24
+    mapnumber = 25
     music = "VGM_E1M9"
 }
