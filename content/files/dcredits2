@@ -1,6 +1,6 @@
 ci ^99DOOM 32X Resurrection v2.2
 xi
-r  ^A2Programmers
+r  ^A2Programming
 c  ^A2...
 li Victor Luchits
 li Joseph Fenton
@@ -9,7 +9,7 @@ r  ^A2Music
 c  ^A2...
 li Spoony Bard
 xi
-r  ^A2Level fixes
+r  ^A2Mapping
 c  ^A2...
 li Wavy
 xi
