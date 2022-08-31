@@ -31,6 +31,7 @@ d_e2m6.ogg
 d_e2m7.ogg
 d_e2m8.ogg
 d_e3m1.ogg
+d_e3m2.ogg
 d_e3m3.ogg
 d_e3m4.ogg
 d_e3m5.ogg
@@ -39,6 +40,7 @@ d_e3m7.ogg
 d_e3m8.ogg
 d_e1m9.ogg
 d_bunny.ogg
+d_victor.ogg
 d_inter.ogg
 d_intro.ogg
 
