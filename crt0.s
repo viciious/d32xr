@@ -30,10 +30,10 @@
         .ascii  "SEGA GENESIS    "
         .ascii  "                "
         .ascii  "DOOM 32X Resurre"
-        .ascii  "ction v2.2a     "
+        .ascii  "ction v2.2b     "
         .ascii  "                "
         .ascii  "DOOM 32X Resurre"
-        .ascii  "ction v2.2a     "
+        .ascii  "ction v2.2b     "
         .ascii  "                "
         .ascii  "GM 20220902-00"
         .word   0x0000
