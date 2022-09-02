@@ -180,7 +180,7 @@ static void R_PrepPSprite(pspdef_t *psp)
 
    xscale = weaponXScale;
    center = centerXFrac - 80 * weaponXScale;
-   if (lowResMode)
+   if (!lowResMode)
     center >>= 1;
 
    tx = psp->sx + center;
