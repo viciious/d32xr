@@ -291,7 +291,8 @@ void R_SetViewportSize(int num)
 	if (anamorphicview)
 	{
 		stretch = ((FRACUNIT * 16 * height) / 180 * 28) / width;
-		weaponXScale = 1000 * (lowResMode ? 1 : 2) * FRACUNIT / 1100;
+		//weaponXScale = 1050 * (lowResMode ? 1 : 2) * FRACUNIT / 1100;
+		weaponXScale = FRACUNIT * (lowResMode ? 1 : 2);
 	}
 	else
 	{
