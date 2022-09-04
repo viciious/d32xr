@@ -28,10 +28,8 @@
 
 static volatile uint16_t mars_activescreen = 0;
 
-volatile unsigned short* mars_gamepadport[2];
+mars_getctrl_f mars_gamepadport[2];
 char mars_mouseport;
-
-volatile unsigned mars_controls[2];
 
 volatile unsigned mars_vblank_count = 0;
 volatile unsigned mars_pwdt_ovf_count = 0;
@@ -233,24 +231,10 @@ void Mars_Init(void)
 
 	/* detect input devices */
 	mars_mouseport = -1;
-	mars_gamepadport[0] = &MARS_SYS_COMM8;
-	mars_gamepadport[1] = &MARS_SYS_COMM10;
+	mars_gamepadport[0] = Mars_GetController1;
+	mars_gamepadport[1] = Mars_GetController2;
 
-	/* values set by the m68k on startup */
-	if (MARS_SYS_COMM10 == 0xF001)
-	{
-		mars_mouseport = 1;
-		mars_gamepadport[0] = &MARS_SYS_COMM8;
-		mars_gamepadport[1] = NULL;
-	}
-	else if (MARS_SYS_COMM8 == 0xF001)
-	{
-		mars_mouseport = 0;
-		mars_gamepadport[0] = &MARS_SYS_COMM10;
-		mars_gamepadport[1] = NULL;
-	}
-
-	mars_controls[0] = mars_controls[1] = 0;
+	Mars_DetectControllers();
 
 	Mars_UpdateCD();
 
@@ -272,42 +256,12 @@ uint16_t* Mars_FrameBufferLines(void)
 
 void pri_vbi_handler(void)
 {
-	int i;
-
 	mars_vblank_count++;
 
 	if (mars_newpalette)
 	{
 		if (Mars_UploadPalette(mars_newpalette))
 			mars_newpalette = NULL;
-	}
-
-	for (i = 0; i < 2; i++)
-	{
-		unsigned short cv;
-
-		if (!mars_gamepadport[i])
-			continue;
-
-		cv = *mars_gamepadport[i];
-		if (cv == 0xF001)
-		{
-			/* mouse detected in gamepadport - hot plug! */
-			if (MARS_SYS_COMM10 == 0xF001)
-			{
-				mars_mouseport = 1;
-				mars_gamepadport[0] = &MARS_SYS_COMM8;
-				mars_gamepadport[1] = NULL;
-			}
-			else if (MARS_SYS_COMM8 == 0xF001)
-			{
-				mars_mouseport = 0;
-				mars_gamepadport[0] = &MARS_SYS_COMM10;
-				mars_gamepadport[1] = NULL;
-			}
-		}
-		else if (cv != 0xF000)
-			mars_controls[i] |= cv;
 	}
 }
 
@@ -582,4 +536,50 @@ void Mars_SetBankPageSec(int bank, int page)
 int Mars_ROMSize(void)
 {
 	return *((volatile uint32_t *)0x020001a4) - *((volatile uint32_t *)0x020001a0) + 1;
+}
+
+void Mars_DetectControllers(void)
+{
+	unsigned i;
+	unsigned cmd = 0x1901;
+	int ctrl[2];
+
+	for (i = 0; i < 2; i++)
+	{
+		while (MARS_SYS_COMM0);
+		MARS_SYS_COMM0 = cmd;
+		while (MARS_SYS_COMM0);
+		ctrl[i] = MARS_SYS_COMM2;
+		cmd += 0x100;
+	}
+
+	/* values set by the m68k on startup */
+	if (ctrl[1] == 0xF001)
+	{
+		mars_mouseport = 1;
+		mars_gamepadport[0] = Mars_GetController1;
+		mars_gamepadport[1] = NULL;
+	}
+	else if (ctrl[0] == 0xF001)
+	{
+		mars_mouseport = 0;
+		mars_gamepadport[0] = Mars_GetController2;
+		mars_gamepadport[1] = NULL;
+	}
+}
+
+int Mars_GetController1(void)
+{
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM0 = 0x1900;
+	while (MARS_SYS_COMM0);
+	return MARS_SYS_COMM2;
+}
+
+int Mars_GetController2(void)
+{
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM0 = 0x1A00;
+	while (MARS_SYS_COMM0);
+	return MARS_SYS_COMM2;
 }

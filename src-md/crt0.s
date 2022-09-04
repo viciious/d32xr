@@ -305,7 +305,7 @@ chk_hotplug:
         bne.b   main_loop
         move.b  #60,hotplug_cnt
 
-        move.w  0xA15128,d0
+        move.w  ctrl1,d0
         cmpi.w  #0xF001,d0
         beq.b   0f                  /* mouse in port 1, check port 2 */
         cmpi.w  #0xF000,d0
@@ -313,7 +313,7 @@ chk_hotplug:
 0:
         tst.b   net_type
         bne.b   main_loop           /* networking enabled, ignore port 2 */
-        move.w  0xA1512A,d0
+        move.w  ctrl2,d0
         cmpi.w  #0xF001,d0
         beq.b   main_loop           /* mouse in port 2, exit */
         cmpi.w  #0xF000,d0
@@ -372,6 +372,10 @@ handle_req:
         bls     net_set_link_timeout
         cmpi.w  #0x18FF,d0
         bls     set_music_volume
+        cmpi.w  #0x19FF,d0
+        bls     get_ctrl1
+        cmpi.w  #0x1AFF,d0
+        bls     get_ctrl2
 | unknown command
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -621,7 +625,7 @@ read_mouse:
         tst.b   d0
         bne.b   1f                  /* skip port 1 */
 
-        move.w  0xA15128,d0
+        move.w  ctrl1,d0
         cmpi.w  #0xF001,d0
         bne.b   1f                  /* no mouse in port 1 */
         lea     0xA10003,a0
@@ -637,7 +641,7 @@ read_mouse:
         bne.b   0b                  /* wait for SH2 to read mouse value */
         bra     main_loop
 1:
-        move.w  0xA1512A,d0
+        move.w  ctrl2,d0
         cmpi.w  #0xF001,d0
         bne.b   no_mouse            /* no mouse in port 2 */
         lea     0xA10005,a0
@@ -654,10 +658,10 @@ read_mouse:
         bra     main_loop
 
 no_mky1:
-        move.w  #0xF000,0xA15128    /* nothing in port 1 */
+        move.w  #0xF000,ctrl1    /* nothing in port 1 */
         bra.b   no_mouse
 no_mky2:
-       move.w   #0xF000,0xA1512A    /* nothing in port 2 */
+       move.w   #0xF000,ctrl2    /* nothing in port 2 */
 no_mouse:
         moveq   #-1,d0              /* no mouse */
         move.w  d0,0xA15122
@@ -796,7 +800,7 @@ ext_link:
         rte
 
 init_serial:
-        move.w  #0xF000,0xA1512A    /* port 1 ID = SEGA_CTRL_NONE */
+        move.w  #0xF000,ctrl2    /* port 1 ID = SEGA_CTRL_NONE */
         move.b  #0x10,0xA1000B      /* all pins inputs except TL (Pin 6) */
         nop
         nop
@@ -809,7 +813,7 @@ init_serial:
         bra     main_loop
 
 init_link:
-        move.w  #0xF000,0xA1512A    /* port 1 ID = SEGA_CTRL_NONE */
+        move.w  #0xF000,ctrl2    /* port 1 ID = SEGA_CTRL_NONE */
         move.b  #0x00,0xA10019      /* no serial */
         nop
         nop
@@ -1239,6 +1243,34 @@ set_music_volume:
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
+get_ctrl1:
+        andi.l  #0x1,d0
+        cmpi.b  #0x1,d0
+        bne.b   0f
+
+        move.w  ctrl1,0xA15122      /* controller state OR current value */
+        bra     2f
+0:
+        move.w  ctrl1_latch,0xA15122/* controller value */
+        move.w  #0,ctrl1_latch
+2:
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+get_ctrl2:
+        andi.l  #0x1,d0
+        cmpi.b  #0x1,d0
+        bne.b   0f
+
+        move.w  ctrl2,0xA15122      /* controller state OR current value */
+        bra     2f
+0:
+        move.w  ctrl2_latch,0xA15122/* controller value */
+        move.w  #0,ctrl2_latch
+2:
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
 reset_banks:
         move.w  #0x2700,sr          /* disable ints */
         move.b  #1,0xA15107         /* set RV */
@@ -1309,7 +1341,7 @@ bump_fm:
 2:
         /* set Timer A for delay */
         moveq   #0,d0
-        move.w   fm_smpl,d0
+        move.w  fm_smpl,d0
         lsr.w   #2,d0
         add.w   fm_smpl,d0          /* ticks ~= 1.25 * # samples */
         bcc.b   3f
@@ -1371,23 +1403,25 @@ vert_blank:
         move.l  d2,-(sp)
 
         /* read controllers */
-        move.w  0xA15128,d0
+        move.w  ctrl1,d0
         andi.w  #0xF000,d0
         cmpi.w  #0xF000,d0
-        beq.b   0f                  /* no pad in port 1 (or mouse) */
+        beq.b   0f               /* no pad in port 1 (or mouse) */
         lea     0xA10003,a0
         bsr     get_pad
-        move.w  d2,0xA15128         /* controller 1 current value */
+        move.w  d2,ctrl1         /* controller 1 current value */
+        or.w    d2,ctrl1_latch
 0:
         tst.b   net_type
-        bne.b   1f                  /* networking enabled, ignore port 2 */
-        move.w  0xA1512A,d0
+        bne.b   1f               /* networking enabled, ignore port 2 */
+        move.w  ctrl2,d0
         andi.w  #0xF000,d0
         cmpi.w  #0xF000,d0
-        beq.b   1f                  /* no pad in port 2 (or mouse) */
+        beq.b   1f               /* no pad in port 2 (or mouse) */
         lea     0xA10005,a0
         bsr     get_pad
-        move.w  d2,0xA1512A         /* controller 2 current value */
+        move.w  d2,ctrl2         /* controller 2 current value */
+        or.w    d2,ctrl2_latch
 1:
         /* if SCD present, generate IRQ 2 */
         tst.w   gen_lvl2
@@ -1636,7 +1670,7 @@ chk_ports:
         /* get ID port 1 */
         lea     0xA10003,a0
         bsr.b   get_port
-        move.w  d0,0xA15128             /* controller 1 */
+        move.w  d0,ctrl1             /* controller 1 */
 
         tst.b   net_type
         beq.b   0f                      /* ignore controller 2 when networking enabled */
@@ -1645,7 +1679,7 @@ chk_ports:
         /* get ID port 2 */
         lea     0xA10005,a0
         bsr.b   get_port
-        move.w  d0,0xA1512A             /* controller 2 */
+        move.w  d0,ctrl2             /* controller 2 */
         rts
 
 
@@ -1696,6 +1730,15 @@ net_rdbuf:
         .space  32
 net_link_timeout:
         dc.w    DEFAULT_LINK_TIMEOUT
+
+ctrl1:
+        dc.w    0
+ctrl2:
+        dc.w    0
+ctrl1_latch:
+        dc.w    0
+ctrl2_latch:
+        dc.w    0
 
     .global net_type
 net_type:

@@ -45,8 +45,8 @@
 #define MARS_SYS_COMM2      (*(volatile unsigned short *)0x20004022)
 #define MARS_SYS_COMM4      (*(volatile unsigned short *)0x20004024) /* Slave SH2 communication */
 #define MARS_SYS_COMM6      (*(volatile unsigned short *)0x20004026)
-#define MARS_SYS_COMM8      (*(volatile unsigned short *)0x20004028) /* controller 1 current value */
-#define MARS_SYS_COMM10     (*(volatile unsigned short *)0x2000402A) /* controller 2 current value */
+#define MARS_SYS_COMM8      (*(volatile unsigned short *)0x20004028)
+#define MARS_SYS_COMM10     (*(volatile unsigned short *)0x2000402A)
 #define MARS_SYS_COMM12     (*(volatile unsigned short *)0x2000402C)
 #define MARS_SYS_COMM14     (*(volatile unsigned short *)0x2000402E)
 
