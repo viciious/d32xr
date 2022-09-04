@@ -522,15 +522,15 @@ byte *I_ZoneBase (int *size)
 	return (byte *)zone;
 }
 
-static int I_ReadControls_(mars_getctrl_f getctrl, btnstate_t* startbtn)
+static int I_ReadControls_(int port, btnstate_t* startbtn)
 {
 	int ctrl;
 	unsigned val;
 
-	if (!getctrl)
+	if (port < 0)
 		return 0;
 
-	val = getctrl();
+	val = Mars_ReadController(port);
 
 	ctrl = 0;
 	ctrl |= Mars_HandleStartHeld(&val, SEGA_CTRL_START, startbtn);
@@ -541,7 +541,7 @@ static int I_ReadControls_(mars_getctrl_f getctrl, btnstate_t* startbtn)
 int I_ReadControls(void)
 {
 	static btnstate_t startbtn = { 0 };
-	Mars_DetectControllers();
+	Mars_DetectInputDevices();
 	return I_ReadControls_(mars_gamepadport[0], &startbtn);
 }
 
@@ -557,13 +557,13 @@ int I_ReadMouse(int* pmx, int *pmy)
 	static int oldmval = 0;
 	unsigned val;
 
-	mousepresent = mars_mouseport >= 0;
+	mousepresent = mars_gamepadport[1] < -1;
 
 	*pmx = *pmy = 0;
 	if (!mousepresent)
 		return 0;
 
-	mval = Mars_PollMouse(mars_mouseport);
+	mval = Mars_PollMouse(-(mars_gamepadport[1] + 2));
 	switch (mval)
 	{
 	case -2:
@@ -573,9 +573,8 @@ int I_ReadMouse(int* pmx, int *pmy)
 	case -1:
 		// no mouse
 		mousepresent = false;
-		mars_mouseport = -1;
-		mars_gamepadport[0] = Mars_GetController1;
-		mars_gamepadport[1] = Mars_GetController2;
+		mars_gamepadport[0] = 0;
+		mars_gamepadport[1] = 1;
 		oldmval = 0;
 		return 0;
 	default:
