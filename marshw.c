@@ -28,7 +28,7 @@
 
 static volatile uint16_t mars_activescreen = 0;
 
-char mars_gamepadport[2];
+char mars_gamepadport[2] = { 0, 1 };
 
 volatile unsigned mars_vblank_count = 0;
 volatile unsigned mars_pwdt_ovf_count = 0;

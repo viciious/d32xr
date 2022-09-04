@@ -48,8 +48,8 @@ typedef struct {
 	uint16_t pad[4];
 } mars_tls_t __attribute__((aligned(16))); // thread local storage
 
-int COLOR_WHITE = 0x04;
-int COLOR_BLACK = 0xF7;
+VINT COLOR_WHITE = 0x04;
+VINT COLOR_BLACK = 0xF7;
 
 int8_t* doomcolormap;
 int8_t	*dc_colormaps;
@@ -62,7 +62,7 @@ int		lastticcount = 0;
 int		lasttics = 0;
 static int fpscount = 0;
 
-int 	debugmode = DEBUGMODE_NONE;
+VINT 	debugmode = DEBUGMODE_NONE;
 VINT	strafebtns = 0;
 
 extern int 	cy;
