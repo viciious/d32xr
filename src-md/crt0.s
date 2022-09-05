@@ -519,11 +519,12 @@ start_cd:
         tst.w   megasd_ok
         beq     9f                  /* couldn't find a MegaSD */
 
-        moveq   #0,d0
-        moveq   #0,d1
-
-        move.w  0xA1512C,d0         /* COMM12 = cdtrack */
-        move.w  0xA15122,d1         /* COMM2 = looping */
+        move.w  0xA15122,d0          /* COMM2 = index | repeat flag */
+        move.w  #0x8000,d1
+        and.w   d0,d1                /* repeat flag */
+        eor.w   d1,d0                /* clear flag from index */
+        lsr.w   #7,d1
+        lsr.w   #8,d1
 
         move.l  d1,-(sp)            /* push the looping flag */
         move.l  d0,-(sp)            /* push the cdtrack */
@@ -568,8 +569,12 @@ start_cd:
         move.b  0xA1200F,d1
         bne.b   0b                  /* wait until Sub-CPU is ready to receive command */
 
-        move.w  0xA1512C,d0         /* COMM12 = cdtrack */
-        move.w  0xA15122,d1         /* COMM2 = looping */
+        move.w  0xA15122,d0         /* COMM2 = index | repeat flag */
+        move.w  #0x8000,d1
+        and.w   d0,d1               /* repeat flag */
+        eor.w   d1,d0               /* clear flag from index */
+        lsr.w   #7,d1
+        lsr.w   #8,d1
 
         move.b  d1,0xA12012         /* repeat flag */
         move.w  d0,0xA12010         /* track number */
@@ -677,8 +682,11 @@ read_cdstate:
         tst.w   megasd_ok
         beq     9f                  /* couldn't find a MegaSD or CD audio tracks */
 
-        move.w  megasd_ok,0xA15122
-        move.w  megasd_num_cdtracks,0xA1512C
+        move.w  megasd_num_cdtracks,d0
+        lsl.l   #2,d0
+        or.w    megasd_ok,d0
+
+        move.w  d0,0xA15122
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
@@ -715,8 +723,10 @@ read_cdstate:
         addq.w  #1,d1
         move.w  d1,number_tracks
 0:
-        move.w  cd_ok,0xA15122
-        move.w  number_tracks,0xA1512C
+        move.w  number_tracks,d0
+        lsl.l   #2,d0
+        or.w    cd_ok,d0
+        move.w  d0,0xA15122
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
