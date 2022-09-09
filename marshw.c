@@ -311,20 +311,22 @@ void Mars_PlayTrack(char usecd, int playtrack, void *vgmptr, int vgmsize, char l
 {
 	Mars_UseCD(usecd);
 
-	if (usecd)
+	if (!usecd)
 	{
-		MARS_SYS_COMM2 = playtrack | (looping ? 0x8000 : 0x0000);
-	}
-	else
-	{
-		*(volatile intptr_t*)&MARS_SYS_COMM12 = (intptr_t)vgmsize;
-		MARS_SYS_COMM0 = 0x0301;
-		while (MARS_SYS_COMM0);
+		int i;
+		uint16_t s[4];
 
-		MARS_SYS_COMM2 = playtrack | (looping ? 0x8000 : 0x0000);
-		*(volatile intptr_t*)&MARS_SYS_COMM12 = (intptr_t)vgmptr;
+		s[0] = (uintptr_t)vgmsize>>16, s[1] = (uintptr_t)vgmsize&0xffff;
+		s[2] = (uintptr_t)vgmptr >>16, s[3] = (uintptr_t)vgmptr &0xffff;
+
+		for (i = 0; i < 4; i++) {
+			MARS_SYS_COMM2 = s[i];
+			MARS_SYS_COMM0 = 0x0301+i;
+			while (MARS_SYS_COMM0);
+		}
 	}
 
+	MARS_SYS_COMM2 = playtrack | (looping ? 0x8000 : 0x0000);
 	MARS_SYS_COMM0 = 0x0300; /* start music */
 	while (MARS_SYS_COMM0);
 }

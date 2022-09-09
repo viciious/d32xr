@@ -473,14 +473,40 @@ start_music:
         bne     start_cd
         
         /* start VGM */
+        clr.l   vgm_ptr
         cmpi.w  #0x0300,d0
         beq.b   0f
 
-        /* set VGM length */
-        move.l  0xA1512C,d0         /* fetch VGM length */
-        move.l  d0,vgm_size
-        move.w  #0,0xA15120         /* done */
-        bra     main_loop
+        /* fetch VGM length */
+        lea     vgm_size,a0
+        move.w  0xA15122,0(a0)
+        move.w  #0,0xA15120         /* done with upper word */
+20:
+        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
+        cmpi.w  #0x0302,d0
+        bne.b   20b
+        move.w  0xA15122,2(a0)
+        move.w  #0,0xA15120         /* done with lower word */
+
+        /* fetch VGM offset */
+        lea     vgm_ptr,a0
+21:
+        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
+        cmpi.w  #0x0303,d0
+        bne.b   21b
+        move.w  0xA15122,0(a0)
+        move.w  #0,0xA15120         /* done with upper word */
+22:
+        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
+        cmpi.w  #0x0304,d0
+        bne.b   22b
+        move.w  0xA15122,2(a0)
+        move.w  #0,0xA15120         /* done with lower word */
+
+23:
+        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
+        cmpi.w  #0x0300,d0
+        bne.b   23b
 
 0:
         /* set VGM pointer and init VGM player */
@@ -492,7 +518,7 @@ start_music:
         move.w  d0,fm_idx            /* index 1 to N */
         move.w  #0,0xA15104          /* set cart bank select */
         move.l  #0,a0
-        move.l  0xA1512C,d0          /* fetch VGM offset */
+        move.l  vgm_ptr,d0           /* set VGM offset */
         beq.b   9f
 
         move.l  d0,a0
