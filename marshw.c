@@ -439,18 +439,19 @@ void Mars_SetNetLinkTimeout(int timeout)
 void Mars_SetMDCrsr(int x, int y)
 {
 	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM12 = x;
-	MARS_SYS_COMM14 = y;
+	MARS_SYS_COMM2 = (x<<6)|y;
 	MARS_SYS_COMM0 = 0x0800;			/* set current md cursor */
 }
 
 void Mars_GetMDCrsr(int *x, int *y)
 {
+	unsigned t;
 	while (MARS_SYS_COMM0);
 	MARS_SYS_COMM0 = 0x0900;			/* get current md cursor */
 	while (MARS_SYS_COMM0);
-	*x = (int)MARS_SYS_COMM12;
-	*y = (int)MARS_SYS_COMM14;
+	t = MARS_SYS_COMM2;
+	*y = t & 31;
+	*x = t >> 6;
 }
 
 void Mars_SetMDColor(int fc, int bc)

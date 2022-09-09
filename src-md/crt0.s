@@ -1048,14 +1048,20 @@ net_cleanup:
 | video debug functions
 
 set_crsr:
-        move.w  0xA1512C,crsr_x
-        move.w  0xA1512E,crsr_y
+        move.w  0xA15122,d0         /* cursor y<<6 | x */
+        move.w  d0,d1
+        andi.w  #0x1F,d0
+        move.w  d0,crsr_y
+        lsr.l   #6,d1
+        move.w  d1,crsr_x
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
 get_crsr:
-        move.w  crsr_x,0xA1512C
-        move.w  crsr_y,0xA1512E
+        move.w  crsr_y,d0           /* y coord */
+        lsl.w   #6,d0
+        or.w    crsr_x,d0           /* cursor y<<6 | x */
+        move.w  d0,0xA15122
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
