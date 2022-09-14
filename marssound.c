@@ -414,6 +414,8 @@ void S_SetMusicType(int newtype)
 
 int S_CDAvailable(void)
 {
+	/* recheck cd and get number of tracks */
+	Mars_UpdateCD();
 	return mars_cd_ok;
 }
 
@@ -456,12 +458,10 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 			return;
 		}
 
-		/* recheck cd and get number of tracks */
-		Mars_UpdateCD();
-
-		int num_map_tracks = (int)mars_num_cd_tracks + cdtrack_lastmap;
 		if (S_CDAvailable())
 		{
+			int num_map_tracks = (int)mars_num_cd_tracks + cdtrack_lastmap;
+
 			/* there is a disc with at least enough tracks */
 			if (cdtrack <= cdtrack_title)
 				playtrack = cdtrack + mars_num_cd_tracks;

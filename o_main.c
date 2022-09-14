@@ -548,7 +548,7 @@ exit:
 					case mi_music:
 						if (++o_musictype > mustype_cd)
 							o_musictype = mustype_cd;
-						if (!S_CDAvailable() && o_musictype == mustype_cd)
+						if (o_musictype == mustype_cd && !S_CDAvailable())
 							o_musictype = mustype_fm;
 						break;
 					}
