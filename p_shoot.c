@@ -294,6 +294,8 @@ static boolean PA_CrossSubsector(int bspnum)
    {
       if(thing->subsector != sub)
          continue;
+      if(!(thing->flags & MF_SHOOTABLE))
+         continue; // corpse or something
 
       // check a corner to corner cross-section for hit
       if(shootdivpositive)
