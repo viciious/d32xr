@@ -844,12 +844,13 @@ stream_start:
         move.w  0xA15120,d0     /* wait on handshake in COMM0 */
         cmpi.w  #0xA55A,d0
         bne.b   10b
+
         move.l  strm_offs,d0
         add.l   pcm_baseoffs,d0
-        move.w  d0,0xA1512C     /* offs 0 to 15 */
+|        move.w  d0,0xA1512C     /* offs 0 to 15 */
         swap    d0
         move.l  strm_len,d3
-        move.w  d3,0xA1512E     /* len 0 to 15 */
+|        move.w  d3,0xA1512E     /* len 0 to 15 */
         swap    d3
         move.b  d3,-(sp)
         move.w  (sp)+,d3        /* shift left 8 len 16 to 23 */
@@ -859,13 +860,28 @@ stream_start:
         move.w  d0,0xA15120     /* set frequency and start stream */
 20:
         move.w  0xA15120,d0     /* wait on handshake in COMM0 */
-        cmpi.w  #0xA55A,d0
+        cmpi.w  #0,d0
         bne.b   20b
+
+        move.l  strm_offs,d0
+        add.l   pcm_baseoffs,d0
+        move.w  d0,0xA15122     /* offs 0 to 15 */
+
+        move.l  strm_len,d3
+        lsl.l   #1,d3
+        add.l   #1,d3
+        move.w  d3,0xA15120     /* len 0 to 14 */
+
+30:
+        move.w  0xA15120,d0     /* wait on handshake in COMM0 */
+        cmpi.w  #0xA55A,d0
+        bne.b   30b
+
         /* done */
         move.w  #0x5AA5,0xA15120
-30:
+40:
         cmpi.w  #0x5AA5, 0xA15120
-        beq.b   30b
+        beq.b   40b
 
         /* pcm stream started on 32X */
 |        move.l  strm_offs,d0

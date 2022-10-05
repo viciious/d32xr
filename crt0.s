@@ -597,8 +597,8 @@ pri_cmd_irq:
 
         ! handle wait in sdram
         mov.l   pci_cmd_comm0,r1
-        mov.w   @r1,r0
-        mov.l   r0,@-r15                /* save COMM0 reg */
+        mov.l   @r1,r0
+        mov.l   r0,@-r15                /* save COMM0+COMM2 regs */
         mov.w   pci_cmd_resp,r0
         mov.w   r0,@r1                  /* respond to m68k */
 0:
@@ -612,7 +612,7 @@ pri_cmd_irq:
         bf      3f                      /* not an exit command - call general handler */
 
         mov.l   @r15+,r0
-        mov.w   r0,@r1                  /* restore COMM0 reg */
+        mov.l   r0,@r1                  /* restore COMM0+COMM2 regs */
         
         rts
         nop

@@ -969,10 +969,6 @@ void Mars_Sec_InitSoundDMA(void)
 void pri_cmd_handler(void)
 {
 	volatile int *pcm_cachethru = (volatile int *)((intptr_t)pcm_data | 0x20000000);
-	volatile unsigned short bcomm0 = MARS_SYS_COMM0,	/* save COMM0 reg */
-							bcomm2 = MARS_SYS_COMM2,	/* save COMM2 reg */
-							bcomm12 = MARS_SYS_COMM12,	/* save COMM12 reg */
-							bcomm14 = MARS_SYS_COMM14;	/* save COMM14 reg */
 	unsigned int offs, len, freq;
 
 	((volatile short *)pcm_cachethru)[7] = 0;	/* make sure data array isn't being read */
@@ -987,10 +983,19 @@ void pri_cmd_handler(void)
 	else
 	{
 		freq = (unsigned)MARS_SYS_COMM0;
-		/* offset is COMM12 | top 8 bits of COMM2 */
-		/* length is COMM14 | lower 8 bits of COMM2 */
-		offs = (unsigned)MARS_SYS_COMM12 | ((unsigned)(MARS_SYS_COMM2 & 0x00FF) << 16);
-		len = (unsigned)MARS_SYS_COMM14 | ((unsigned)(MARS_SYS_COMM2 & 0xFF00) << 8);
+
+		/* top 8 bits of COMM2 */
+		offs = ((unsigned)(MARS_SYS_COMM2 & 0x00FF) << 16);
+		/* lower 8 bits of COMM2 */
+		len = ((unsigned)(MARS_SYS_COMM2 & 0xFF00) << 8);
+
+		/* handshake */
+		for (MARS_SYS_COMM0 = 0; MARS_SYS_COMM0 == 0; );
+
+		offs = offs | (unsigned)MARS_SYS_COMM2;
+		/* COMM0 has the LSB set to 1 */ 
+		len = len | ((unsigned)MARS_SYS_COMM0 >> 1);
+
 		/* limit offset and length to 1M since that's our block size */
 		offs &= 0xFFFFF;
 		len &= 0xFFFFF;
@@ -1004,11 +1009,6 @@ void pri_cmd_handler(void)
 	// done
 	MARS_SYS_COMM0 = 0xA55A;					/* handshake with code */
 	while (MARS_SYS_COMM0 == 0xA55A);
-
-	MARS_SYS_COMM2 = bcomm2;					/* restore COMM2 reg */
-	MARS_SYS_COMM12 = bcomm12;					/* restore COMM12 reg */
-	MARS_SYS_COMM14 = bcomm14;					/* restore COMM14 reg */
-	MARS_SYS_COMM0 = bcomm0;					/* restore COMM0 reg */
 }
 
 void sec_cmd_handler(void)
