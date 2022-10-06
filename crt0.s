@@ -643,7 +643,7 @@ pri_cmd_irq:
 
         mov.l   pci_cmd_comm0,r1
         mov.l   @r15+,r0
-        mov.w   r0,@r1                  /* restore COMM0 reg */
+        mov.l   r0,@r1                  /* restore COMM0+COMM2 regs */
 
         rts
         nop
