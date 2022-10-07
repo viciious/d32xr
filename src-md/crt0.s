@@ -1066,16 +1066,35 @@ get_crsr:
         bra     main_loop
 
 set_color:
-        move.w  0xA1512C,d0
+        /* the foreground color is in the LS nibble of COMM0 */
+        move.w  0xA15120,d0
+        andi.l  #0x000F,d0
+        move    d0,d1
+        lsl.w   #4,d0
+        or      d1,d0
+        move.w  d0,d1
+        lsl.w   #8,d0
+        or      d1,d0
         move.w  d0,d1
         swap    d1
         move.w  d0,d1
         move.l  d1,fg_color
-        move.w  0xA1512E,d0
+
+        /* the background color is in the second LS nibble of COMM0 */
+        move.w  0xA15120,d0
+        lsr.w   #4,d0
+        andi.l  #0x000F,d0
+        move    d0,d1
+        lsl.w   #4,d0
+        or      d1,d0
+        move.w  d0,d1
+        lsl.w   #8,d0
+        or      d1,d0
         move.w  d0,d1
         swap    d1
         move.w  d0,d1
         move.l  d1,bg_color
+
         bsr     reload_font
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -1083,10 +1102,12 @@ set_color:
 get_color:
         move.w  fg_color,d0
         andi.w  #0x000F,d0
-        move.w  d0,0xA1512C
+        move    d0,d1
         move.w  bg_color,d0
         andi.w  #0x000F,d0
-        move.w  d0,0xA1512E
+        lsl     #4,d0
+        or      d1,d0
+        move.w  d0,0xA15122
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 

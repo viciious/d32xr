@@ -457,18 +457,15 @@ void Mars_GetMDCrsr(int *x, int *y)
 void Mars_SetMDColor(int fc, int bc)
 {
 	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM12 = fc | (fc << 4) | (fc << 8) | (fc << 12);
-	MARS_SYS_COMM14 = bc | (bc << 4) | (bc << 8) | (bc << 12);
-	MARS_SYS_COMM0 = 0x0A00;			/* set font fg and bg colors */
+	MARS_SYS_COMM0 = 0x0A00 | (bc << 4) | fc;			/* set font fg and bg colors */
 }
 
 void Mars_GetMDColor(int *fc, int *bc)
 {
 	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM0 = 0x0B00;			/* get font fg and bg colors */
-	while (MARS_SYS_COMM0);
-	*fc = (int)MARS_SYS_COMM12;
-	*bc = (int)MARS_SYS_COMM14;
+	for (MARS_SYS_COMM0 = 0x0B00; MARS_SYS_COMM0;);		/* get font fg and bg colors */
+	*fc = (unsigned)(MARS_SYS_COMM2 >> 0) & 15;
+	*bc = (unsigned)(MARS_SYS_COMM2 >> 4) & 15;
 }
 
 void Mars_SetMDPal(int cpsel)
