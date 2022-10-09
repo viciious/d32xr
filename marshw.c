@@ -501,7 +501,7 @@ void Mars_DebugStart(void)
 void Mars_DebugQueue(int id, int val)
 {
 	while (MARS_SYS_COMM0);
-	*(volatile intptr_t *)&MARS_SYS_COMM12 = val;
+	MARS_SYS_COMM2 = val;
 	MARS_SYS_COMM0 = 0x1000 | id;		/* queue debug entry */
 }
 
