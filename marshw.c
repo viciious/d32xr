@@ -498,7 +498,7 @@ void Mars_DebugStart(void)
 	MARS_SYS_COMM0 = 0x0F00;			/* start debug queue */
 }
 
-void Mars_DebugQueue(int id, int val)
+void Mars_DebugQueue(int id, short val)
 {
 	while (MARS_SYS_COMM0);
 	MARS_SYS_COMM2 = val;
