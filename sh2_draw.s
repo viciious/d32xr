@@ -193,18 +193,17 @@ _I_DrawSpanLowA:
         /* test if dst & 2 == 2 */
         mov     r8,r0
         tst     #2,r0
-        bt/s    begin_span_low_loop
-        mov     #63,r10
+        bt      begin_span_low_loop
 
         /* draw 1px so that dst & 1 == 0 afterwards */
-        swap.w  r2,r1           /* (xfrac >> 16) */
+        swap.w  r2,r0           /* (xfrac >> 16) */
+        and     #63,r0          /* (xfrac >> 16) & 63 */
+        swap.w  r4,r1           /* (yfrac >> 16) */
+        and     r11,r1          /* (yfrac >> 16) & 63*64 */
+        or      r1,r0           /* spot = ((yfrac >> 16) & *64) | ((xfrac >> 16) & 63) */
 
         .p2alignw 2, 0x0009
 draw_span_low_1px:
-        and     r10,r1          /* (xfrac >> 16) & 63 */
-        swap.w  r4,r0           /* (yfrac >> 16) */
-        and     r11,r0          /* (yfrac >> 16) & 63*64 */
-        or      r1,r0           /* spot = ((yfrac >> 16) & *64) | ((xfrac >> 16) & 63) */
         mov.b   @(r0,r9),r0     /* pix = ds_source[spot] */
         add     r3,r2           /* xfrac += xstep */
         add     r5,r4           /* yfrac += ystep */
@@ -216,11 +215,16 @@ draw_span_low_1px:
         add     #2,r8           /* fb++ */
 
 begin_span_low_loop:
+        swap.w  r2,r0           /* (xfrac >> 16) */
+        and     #63,r0          /* (xfrac >> 16) & 63 */
+        swap.w  r4,r1           /* (yfrac >> 16) */
+        and     r11,r1          /* (yfrac >> 16) & 63*64 */
+
         /* test if count == 1 */
-        mov     r6,r0
-        cmp/eq  #1,r0
+        mov     #1,r12
+        cmp/eq  r12,r6
         bt/s    draw_span_low_1px
-        swap.w  r2,r1           /* (xfrac >> 16) */
+        or      r1,r0           /* spot = ((yfrac >> 16) & *64) | ((xfrac >> 16) & 63) */
 
         /* count = count / 2 */
         shlr    r6
@@ -228,39 +232,41 @@ begin_span_low_loop:
 
         .p2alignw 2, 0x0009
 do_span_low_loop:
-        and     r10,r1          /* (xfrac >> 16) & 63 */
-        swap.w  r4,r0           /* (yfrac >> 16) */
-        and     r11,r0          /* (yfrac >> 16) & 63*64 */
-        or      r1,r0           /* spot = ((yfrac >> 16) & *64) | ((xfrac >> 16) & 63) */
         mov.b   @(r0,r9),r0     /* pix = ds_source[spot] */
         add     r3,r2           /* xfrac += xstep */
         add     r5,r4           /* yfrac += ystep */
-        swap.w  r2,r1           /* (xfrac >> 16) */
-        and     r10,r1          /* (xfrac >> 16) & 63 */
+        swap.w  r4,r1           /* (yfrac >> 16) */
+        and     r11,r1          /* (yfrac >> 16) & 63*64 */
         add     r0,r0
         mov.w   @(r0,r7),r13    /* dpix = ds_colormap[pix] */
 
-        swap.w  r4,r0           /* (yfrac >> 16) */
-        and     r11,r0          /* (yfrac >> 16) & 63*64 */
+        swap.w  r2,r0           /* (xfrac >> 16) */
+        and     #63,r0          /* (xfrac >> 16) & 63 */
         or      r1,r0           /* spot = ((yfrac >> 16) & *64) | ((xfrac >> 16) & 63) */
         mov.b   @(r0,r9),r0     /* pix = ds_source[spot] */
         add     r3,r2           /* xfrac += xstep */
         add     r5,r4           /* yfrac += ystep */
-        swap.w  r2,r1           /* (xfrac >> 16) */
-        dt      r6              /* count-- */
+        swap.w  r4,r1           /* (yfrac >> 16) */
+        and     r11,r1          /* (yfrac >> 16) & 63*64 */
         add     r0,r0
-        mov.w   @(r0,r7),r0     /* dpix = ds_colormap[pix] */
+        mov.w   @(r0,r7),r10    /* dpix = ds_colormap[pix] */
+
+        swap.w  r2,r0           /* (xfrac >> 16) */
+        and     #63,r0          /* (xfrac >> 16) & 63 */
+        or      r1,r0           /* spot = ((yfrac >> 16) & *64) | ((xfrac >> 16) & 63) */
+
+        dt      r6              /* count-- */
 
         shll16  r13
-        extu.w  r0,r0
-        or      r13,r0
-        mov.l   r0,@r8          /* *fb = dpix */
+        extu.w  r10,r10
+        or      r13,r10
+        mov.l   r10,@r8         /* *fb = dpix */
         bf/s    do_span_low_loop
         add     #4,r8           /* fb += 2 */
 
-        /* test if r12 is even, draw 1px if odd */
-        cmp/gt  r6,r12          /* we know r6 is 0 */
-        bt/s    draw_span_low_1px   /* if r12 == 1, draw 1px */
+        /* test if r12 is 0, draw additional pixel if it's not */
+        tst     r12,r12
+        bf/s    draw_span_low_1px   /* if r12 == 1, draw 1px */
         mov     #1,r6
 
 exit_span_low_loop:
@@ -293,6 +299,7 @@ _I_DrawColumnA:
         nop
 1:
         mov.l   r8,@-r15
+        mov.l   r9,@-r15
         mov.l   draw_cmap,r0
         mov.l   @r0,r0
         add     r0,r7           /* dc_colormap = colormap + light */
@@ -303,25 +310,29 @@ _I_DrawColumnA:
         add     r5,r8
         shlr2   r5
         add     r5,r8           /* fb += (dc_yl*256 + dc_yl*64) */
-        mov.l   @(4,r15),r2     /* frac */
-        mov.l   @(8,r15),r3     /* fracstep */
-        mov.l   @(12,r15),r5    /* dc_source */
-        mov.l   @(16,r15),r4
+        mov.l   @(8,r15),r2     /* frac */
+        mov.l   @(12,r15),r3    /* fracstep */
+        mov.l   @(16,r15),r5    /* dc_source */
+        mov.l   @(20,r15),r4
         mov.l   draw_width,r1
         add     #-1,r4          /* heightmask = texheight - 1 */
 
-        .p2alignw 2, 0x0009
-do_col_loop:
         swap.w  r2,r0           /* (frac >> 16) */
         and     r4,r0           /* (frac >> 16) & heightmask */
+
+        .p2alignw 2, 0x0009
+do_col_loop:
         mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
         add     r3,r2           /* frac += fracstep */
-        mov.b   @(r0,r7),r0     /* dpix = dc_colormap[pix] */
+        mov.b   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
         dt      r6              /* count-- */
-        mov.b   r0,@r8          /* *fb = dpix */
+        swap.w  r2,r0           /* (frac >> 16) */
+        and     r4,r0           /* (frac >> 16) & heightmask */
+        mov.b   r9,@r8          /* *fb = dpix */
         bf/s    do_col_loop
         add     r1,r8           /* fb += SCREENWIDTH */
 
+        mov.l   @r15+,r9
         rts
         mov.l   @r15+,r8
 
@@ -449,18 +460,17 @@ _I_DrawSpanA:
         /* test if dst & 1 == 1 */
         mov     r8,r0
         tst     #1,r0
-        bt/s    begin_span_loop
-        mov     #63,r10
+        bt      begin_span_loop
 
         /* draw 1px so that dst & 1 == 0 afterwards */
-        swap.w  r2,r1           /* (xfrac >> 16) */
+        swap.w  r2,r0           /* (xfrac >> 16) */
+        and     #63,r0          /* (xfrac >> 16) & 63 */
+        swap.w  r4,r1           /* (yfrac >> 16) */
+        and     r11,r1          /* (yfrac >> 16) & 63*64 */
+        or      r1,r0           /* spot = ((yfrac >> 16) & *64) | ((xfrac >> 16) & 63) */
 
         .p2alignw 2, 0x0009
 draw_span_1px:
-        and     r10,r1          /* (xfrac >> 16) & 63 */
-        swap.w  r4,r0           /* (yfrac >> 16) */
-        and     r11,r0          /* (yfrac >> 16) & 63*64 */
-        or      r1,r0           /* spot = ((yfrac >> 16) & *64) | ((xfrac >> 16) & 63) */
         mov.b   @(r0,r9),r0     /* pix = ds_source[spot] */
         add     r3,r2           /* xfrac += xstep */
         mov.b   @(r0,r7),r0     /* dpix = ds_colormap[pix] */
@@ -471,11 +481,16 @@ draw_span_1px:
         add     #1,r8           /* fb++ */
 
 begin_span_loop:
+        swap.w  r2,r0           /* (xfrac >> 16) */
+        and     #63,r0          /* (xfrac >> 16) & 63 */
+        swap.w  r4,r1           /* (yfrac >> 16) */
+        and     r11,r1          /* (yfrac >> 16) & 63*64 */
+
         /* test if count == 1 */
-        mov     r6,r0
-        cmp/eq  #1,r0
+        mov     #1,r12
+        cmp/eq  r12,r6
         bt/s    draw_span_1px
-        swap.w  r2,r1           /* (xfrac >> 16) */
+        or      r1,r0           /* spot = ((yfrac >> 16) & *64) | ((xfrac >> 16) & 63) */
 
         /* count = count / 2 */
         shlr    r6
@@ -483,37 +498,38 @@ begin_span_loop:
 
         .p2alignw 2, 0x0009
 do_span_loop:
-        and     r10,r1          /* (xfrac >> 16) & 63 */
-        swap.w  r4,r0           /* (yfrac >> 16) */
-        and     r11,r0          /* (yfrac >> 16) & 63*64 */
-        or      r1,r0           /* spot = ((yfrac >> 16) & *64) | ((xfrac >> 16) & 63) */
         mov.b   @(r0,r9),r0     /* pix = ds_source[spot] */
         add     r3,r2           /* xfrac += xstep */
         add     r5,r4           /* yfrac += ystep */
-        swap.w  r2,r1           /* (xfrac >> 16) */
-        and     r10,r1          /* (xfrac >> 16) & 63 */
+        swap.w  r4,r1           /* (yfrac >> 16) */
+        and     r11,r1          /* (yfrac >> 16) & 63*64 */
         dt      r6              /* count-- */
         mov.b   @(r0,r7),r13    /* dpix = ds_colormap[pix] */
 
-        swap.w  r4,r0           /* (yfrac >> 16) */
-        and     r11,r0          /* (yfrac >> 16) & 63*64 */
+        swap.w  r2,r0           /* (xfrac >> 16) */
+        and     #63,r0          /* (xfrac >> 16) & 63 */
         or      r1,r0           /* spot = ((yfrac >> 16) & *64) | ((xfrac >> 16) & 63) */
         mov.b   @(r0,r9),r0     /* pix = ds_source[spot] */
         add     r3,r2           /* xfrac += xstep */
         add     r5,r4           /* yfrac += ystep */
-        swap.w  r2,r1           /* (xfrac >> 16) */
-        mov.b   @(r0,r7),r0     /* dpix = ds_colormap[pix] */
-
+        swap.w  r4,r1           /* (yfrac >> 16) */
+        and     r11,r1          /* (yfrac >> 16) & 63*64 */
         shll8   r13
-        extu.b  r0,r0
-        or      r13,r0
-        mov.w   r0,@r8          /* *fb = dpix */
+        mov.b   @(r0,r7),r10    /* dpix = ds_colormap[pix] */
+
+        swap.w  r2,r0           /* (xfrac >> 16) */
+        and     #63,r0          /* (xfrac >> 16) & 63 */
+        or      r1,r0           /* spot = ((yfrac >> 16) & *64) | ((xfrac >> 16) & 63) */
+
+        extu.b  r10,r10
+        or      r13,r10
+        mov.w   r10,@r8         /* *fb = dpix */
         bf/s    do_span_loop
         add     #2,r8           /* fb += 2 */
 
-        /* test if r12 is even, draw 1px if odd */
-        cmp/gt  r6,r12          /* we know r6 is 0 */
-        bt/s    draw_span_1px   /* if r12 == 1, draw 1px */
+        /* test if r12 is 0, draw additional pixel if it's not */
+        tst     r12,r12
+        bf/s    draw_span_1px   /* if r12 == 1, draw 1px */
         mov     #1,r6
 
 exit_span_loop:
