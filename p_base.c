@@ -251,15 +251,25 @@ static boolean PB_CheckPosition(mobj_t *mo)
    // the bounding box is extended by MAXRADIUS because mobj_ts are grouped into
    // mapblocks based on their origin point, and can overlap into adjacent blocks
    // by up to MAXRADIUS units
-   xl = (testbbox[BOXLEFT  ] - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
-   xh = (testbbox[BOXRIGHT ] - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
-   yl = (testbbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
-   yh = (testbbox[BOXTOP   ] - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
+   xl = testbbox[BOXLEFT  ] - bmaporgx - MAXRADIUS;
+   xh = testbbox[BOXRIGHT ] - bmaporgx + MAXRADIUS;
+   yl = testbbox[BOXBOTTOM] - bmaporgy - MAXRADIUS;
+   yh = testbbox[BOXTOP   ] - bmaporgy + MAXRADIUS;
 
    if(xl < 0)
       xl = 0;
    if(yl < 0)
       yl = 0;
+   if(xh < 0)
+      return true;
+   if(yh < 0)
+      return true;
+
+   xl = (unsigned)xl >> MAPBLOCKSHIFT;
+   xh = (unsigned)xh >> MAPBLOCKSHIFT;
+   yl = (unsigned)yl >> MAPBLOCKSHIFT;
+   yh = (unsigned)yh >> MAPBLOCKSHIFT;
+
    if(xh >= bmapwidth)
       xh = bmapwidth - 1;
    if(yh >= bmapheight)

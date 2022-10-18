@@ -300,15 +300,31 @@ static void PM_CheckPosition(void)
    // The bounding box is extended by MAXRADIUS because mobj_ts are grouped
    // into mapblocks based on their origin point, and can overlap into adjacent
    // blocks by up to MAXRADIUS units.
-   xl = (tmbbox[BOXLEFT  ] - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
-   xh = (tmbbox[BOXRIGHT ] - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
-   yl = (tmbbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
-   yh = (tmbbox[BOXTOP   ] - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
+   xl = tmbbox[BOXLEFT  ] - bmaporgx - MAXRADIUS;
+   xh = tmbbox[BOXRIGHT ] - bmaporgx + MAXRADIUS;
+   yl = tmbbox[BOXBOTTOM] - bmaporgy - MAXRADIUS;
+   yh = tmbbox[BOXTOP   ] - bmaporgy + MAXRADIUS;
 
-   if(xl < 0)
-      xl = 0;
-   if(yl < 0)
-      yl = 0;
+	if(xl < 0)
+		xl = 0;
+	if(yl < 0)
+		yl = 0;
+	if(yh < 0)
+   {
+      trymove2 = true;
+		return;
+   }
+	if(xh < 0)
+   {
+      trymove2 = true;
+		return;
+   }
+
+   xl = (unsigned)xl >> MAPBLOCKSHIFT;
+   xh = (unsigned)xh >> MAPBLOCKSHIFT;
+   yl = (unsigned)yl >> MAPBLOCKSHIFT;
+   yh = (unsigned)yh >> MAPBLOCKSHIFT;
+
    if(xh >= bmapwidth)
       xh = bmapwidth - 1;
    if(yh >= bmapheight)
@@ -328,15 +344,31 @@ static void PM_CheckPosition(void)
    }
 
    // check lines
-   xl = (tmbbox[BOXLEFT  ] - bmaporgx) >> MAPBLOCKSHIFT;
-   xh = (tmbbox[BOXRIGHT ] - bmaporgx) >> MAPBLOCKSHIFT;
-   yl = (tmbbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
-   yh = (tmbbox[BOXTOP   ] - bmaporgy) >> MAPBLOCKSHIFT;
+   xl = tmbbox[BOXLEFT  ] - bmaporgx;
+   xh = tmbbox[BOXRIGHT ] - bmaporgx;
+   yl = tmbbox[BOXBOTTOM] - bmaporgy;
+   yh = tmbbox[BOXTOP   ] - bmaporgy;
 
    if(xl < 0)
       xl = 0;
    if(yl < 0)
       yl = 0;
+	if(yh < 0)
+   {
+      trymove2 = true;
+		return;
+   }
+	if(xh < 0)
+   {
+      trymove2 = true;
+		return;
+   }
+
+   xl = (unsigned)xl >> MAPBLOCKSHIFT;
+   xh = (unsigned)xh >> MAPBLOCKSHIFT;
+   yl = (unsigned)yl >> MAPBLOCKSHIFT;
+   yh = (unsigned)yh >> MAPBLOCKSHIFT;
+
    if(xh >= bmapwidth)
       xh = bmapwidth - 1;
    if(yh >= bmapheight)

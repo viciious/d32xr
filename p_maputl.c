@@ -235,9 +235,15 @@ void P_UnsetThingPosition (mobj_t *thing)
 			thing->bprev->bnext = thing->bnext;
 		else
 		{
-			blockx = (thing->x - bmaporgx)>>MAPBLOCKSHIFT;
-			blocky = (thing->y - bmaporgy)>>MAPBLOCKSHIFT;
-			blocklinks[blocky*bmapwidth+blockx] = thing->bnext;
+			blockx = thing->x - bmaporgx;
+			blocky = thing->y - bmaporgy;
+			if (blockx >= 0 && blocky >= 0)
+			{
+				blockx = (unsigned)blockx >> MAPBLOCKSHIFT;
+				blocky = (unsigned)blocky >> MAPBLOCKSHIFT;
+				if (blockx < bmapwidth && blocky <bmapheight)
+					blocklinks[blocky*bmapwidth+blockx] = thing->bnext;
+			}
 		}
 	}
 }
@@ -277,16 +283,25 @@ void P_SetThingPosition2 (mobj_t *thing, subsector_t *ss)
 /* */
 	if ( ! (thing->flags & MF_NOBLOCKMAP) )
 	{	/* inert things don't need to be in blockmap		 */
-		blockx = (thing->x - bmaporgx)>>MAPBLOCKSHIFT;
-		blocky = (thing->y - bmaporgy)>>MAPBLOCKSHIFT;
-		if (blockx>=0 && blockx < bmapwidth && blocky>=0 && blocky <bmapheight)
+		blockx = thing->x - bmaporgx;
+		blocky = thing->y - bmaporgy;
+		if (blockx>=0 && blocky>=0)
 		{
-			link = &blocklinks[blocky*bmapwidth+blockx];
-			thing->bprev = NULL;
-			thing->bnext = *link;
-			if (*link)
-				(*link)->bprev = thing;
-			*link = thing;
+			blockx = (unsigned)blockx >> MAPBLOCKSHIFT;
+			blocky = (unsigned)blocky >> MAPBLOCKSHIFT;
+			if (blockx < bmapwidth && blocky <bmapheight)
+			{
+				link = &blocklinks[blocky*bmapwidth+blockx];
+				thing->bprev = NULL;
+				thing->bnext = *link;
+				if (*link)
+					(*link)->bprev = thing;
+				*link = thing;
+			}
+			else
+			{	/* thing is off the map */
+				thing->bnext = thing->bprev = NULL;
+			}
 		}
 		else
 		{	/* thing is off the map */
@@ -341,8 +356,8 @@ boolean P_BlockLinesIterator (int x, int y, boolean(*func)(line_t*) )
 	short		*list;
 	line_t		*ld;
 	
-	if (x<0 || y<0 || x>=bmapwidth || y>=bmapheight)
-		return true;
+	//if (x<0 || y<0 || x>=bmapwidth || y>=bmapheight)
+	//	return true;
 	offset = y*bmapwidth+x;
 	
 	offset = *(blockmap+offset);
@@ -374,8 +389,8 @@ boolean P_BlockThingsIterator (int x, int y, boolean(*func)(mobj_t*) )
 {
 	mobj_t		*mobj;
 	
-	if (x<0 || y<0 || x>=bmapwidth || y>=bmapheight)
-		return true;
+	//if (x<0 || y<0 || x>=bmapwidth || y>=bmapheight)
+	//	return true;
 
 	for (mobj = blocklinks[y*bmapwidth+x] ; mobj ; mobj = mobj->bnext)
 		if (!func( mobj ) )

@@ -254,15 +254,25 @@ fixed_t P_CompletableFrac(fixed_t dx, fixed_t dy)
    ++validcount;
 
    // check lines
-   xl = (endbox[BOXLEFT  ] - bmaporgx) >> MAPBLOCKSHIFT;
-   xh = (endbox[BOXRIGHT ] - bmaporgx) >> MAPBLOCKSHIFT;
-   yl = (endbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
-   yh = (endbox[BOXTOP   ] - bmaporgy) >> MAPBLOCKSHIFT;
+   xl = endbox[BOXLEFT  ] - bmaporgx;
+   xh = endbox[BOXRIGHT ] - bmaporgx;
+   yl = endbox[BOXBOTTOM] - bmaporgy;
+   yh = endbox[BOXTOP   ] - bmaporgy;
 
    if(xl < 0)
       xl = 0;
    if(yl < 0)
       yl = 0;
+   if(yh < 0)
+      return blockfrac;
+   if(xh < 0)
+      return blockfrac;
+
+   xl = (unsigned)xl >> MAPBLOCKSHIFT;
+   xh = (unsigned)xh >> MAPBLOCKSHIFT;
+   yl = (unsigned)yl >> MAPBLOCKSHIFT;
+   yh = (unsigned)yh >> MAPBLOCKSHIFT;
+
    if(xh >= bmapwidth)
       xh = bmapwidth - 1;
    if(yh >= bmapheight)
@@ -342,15 +352,25 @@ static void SL_CheckSpecialLines(void)
       yh = y1;
    }
 
-   bxl = (xl - bmaporgx) >> MAPBLOCKSHIFT;
-   bxh = (xh - bmaporgx) >> MAPBLOCKSHIFT;
-   byl = (yl - bmaporgy) >> MAPBLOCKSHIFT;
-   byh = (yh - bmaporgy) >> MAPBLOCKSHIFT;
+   bxl = xl - bmaporgx;
+   bxh = xh - bmaporgx;
+   byl = yl - bmaporgy;
+   byh = yh - bmaporgy;
 
    if(bxl < 0)
       bxl = 0;
    if(byl < 0)
       byl = 0;
+   if(byh < 0)
+      return;
+   if(bxh < 0)
+      return;
+
+   bxl = (unsigned)bxl >> MAPBLOCKSHIFT;
+   bxh = (unsigned)bxh >> MAPBLOCKSHIFT;
+   byl = (unsigned)byl >> MAPBLOCKSHIFT;
+   byh = (unsigned)byh >> MAPBLOCKSHIFT;
+
    if(bxh >= bmapwidth)
       bxh = bmapwidth - 1;
    if(byh >= bmapheight)

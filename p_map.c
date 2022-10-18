@@ -231,10 +231,29 @@ void P_UseLines (player_t *player)
 		usebbox[BOXBOTTOM] = y2;
 	}
 	
-	yh = (usebbox[BOXTOP] - bmaporgy)>>MAPBLOCKSHIFT;
-	yl = (usebbox[BOXBOTTOM] - bmaporgy)>>MAPBLOCKSHIFT;
-	xh = (usebbox[BOXRIGHT] - bmaporgx)>>MAPBLOCKSHIFT;
-	xl = (usebbox[BOXLEFT] - bmaporgx)>>MAPBLOCKSHIFT;
+	yh = usebbox[BOXTOP] - bmaporgy;
+	yl = usebbox[BOXBOTTOM] - bmaporgy;
+	xh = usebbox[BOXRIGHT] - bmaporgx;
+	xl = usebbox[BOXLEFT] - bmaporgx;
+
+	if(xl < 0)
+		xl = 0;
+	if(yl < 0)
+		yl = 0;
+	if(yh < 0)
+		return;
+	if(xh < 0)
+		return;
+
+   xl = (unsigned)xl >> MAPBLOCKSHIFT;
+   xh = (unsigned)xh >> MAPBLOCKSHIFT;
+   yl = (unsigned)yl >> MAPBLOCKSHIFT;
+   yh = (unsigned)yh >> MAPBLOCKSHIFT;
+
+   if(xh >= bmapwidth)
+      xh = bmapwidth - 1;
+   if(yh >= bmapheight)
+      yh = bmapheight - 1;
 	
 	closeline = NULL;
 	closedist = FRACUNIT;
@@ -315,10 +334,30 @@ void P_RadiusAttack (mobj_t *spot, mobj_t *source, int damage)
 	fixed_t		dist;
 	
 	dist = (damage+MAXRADIUS)<<FRACBITS;
-	yh = (spot->y + dist - bmaporgy)>>MAPBLOCKSHIFT;
-	yl = (spot->y - dist - bmaporgy)>>MAPBLOCKSHIFT;
-	xh = (spot->x + dist - bmaporgx)>>MAPBLOCKSHIFT;
-	xl = (spot->x - dist - bmaporgx)>>MAPBLOCKSHIFT;
+	yh = spot->y + dist - bmaporgy;
+	yl = spot->y - dist - bmaporgy;
+	xh = spot->x + dist - bmaporgx;
+	xl = spot->x - dist - bmaporgx;
+
+	if(xl < 0)
+		xl = 0;
+	if(yl < 0)
+		yl = 0;
+	if(yh < 0)
+		return;
+	if(xh < 0)
+		return;
+
+    xl = (unsigned)xl >> MAPBLOCKSHIFT;
+    xh = (unsigned)xh >> MAPBLOCKSHIFT;
+    yl = (unsigned)yl >> MAPBLOCKSHIFT;
+    yh = (unsigned)yh >> MAPBLOCKSHIFT;
+
+   if(xh >= bmapwidth)
+      xh = bmapwidth - 1;
+   if(yh >= bmapheight)
+      yh = bmapheight - 1;
+
 	bombspot = spot;
 	bombsource = source;
 	bombdamage = damage;
