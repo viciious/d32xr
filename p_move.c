@@ -401,7 +401,7 @@ void P_TryMove2(void)
    tmthing->ceilingz = tmceilingz;
    tmthing->x        = tmx;
    tmthing->y        = tmy;
-   P_SetThingPosition(tmthing);
+   P_SetThingPosition2(tmthing, newsubsec);
 
    trymove2 = true;
 }

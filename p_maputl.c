@@ -12,6 +12,7 @@ void P_LineOpening(line_t* linedef) ATTR_DATA_CACHE_ALIGN;
 fixed_t* P_LineBBox(line_t* ld) ATTR_DATA_CACHE_ALIGN;
 void P_UnsetThingPosition(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
 void P_SetThingPosition(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
+void P_SetThingPosition2(mobj_t* thing, subsector_t *ss) ATTR_DATA_CACHE_ALIGN;
 boolean P_BlockLinesIterator(int x, int y, boolean(*func)(line_t*)) ATTR_DATA_CACHE_ALIGN;
 boolean P_BlockThingsIterator(int x, int y, boolean(*func)(mobj_t*)) ATTR_DATA_CACHE_ALIGN;
 
@@ -241,21 +242,17 @@ void P_UnsetThingPosition (mobj_t *thing)
 	}
 }
 
-
 /*
 ===================
 =
-= P_SetThingPosition 
+= P_SetThingPosition2
 =
 = Links a thing into both a block and a subsector based on it's x y
-= Sets thing->subsector properly
 =
 ===================
 */
-
-void P_SetThingPosition (mobj_t *thing)
+void P_SetThingPosition2 (mobj_t *thing, subsector_t *ss)
 {
-	subsector_t		*ss;
 	sector_t		*sec;
 	int				blockx, blocky;
 	mobj_t			**link;
@@ -263,7 +260,6 @@ void P_SetThingPosition (mobj_t *thing)
 /* */
 /* link into subsector */
 /* */
-	ss = R_PointInSubsector (thing->x,thing->y);
 	thing->subsector = ss;
 	if ( ! (thing->flags & MF_NOSECTOR) )
 	{	/* invisible things don't go into the sector links */
@@ -297,6 +293,22 @@ void P_SetThingPosition (mobj_t *thing)
 			thing->bnext = thing->bprev = NULL;
 		}
 	}
+}
+
+/*
+===================
+=
+= P_SetThingPosition
+=
+= Links a thing into both a block and a subsector based on it's x y
+= Sets thing->subsector properly
+=
+===================
+*/
+
+void P_SetThingPosition (mobj_t *thing)
+{
+	P_SetThingPosition2(thing, R_PointInSubsector (thing->x,thing->y));
 }
 
 

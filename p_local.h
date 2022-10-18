@@ -191,6 +191,7 @@ extern	divline_t 	trace;
 
 void 	P_UnsetThingPosition (mobj_t *thing);
 void	P_SetThingPosition (mobj_t *thing);
+void	P_SetThingPosition2 (mobj_t *thing, subsector_t *ss);
 
 void	P_PlayerLand (mobj_t *mo);
 
