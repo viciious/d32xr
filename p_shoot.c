@@ -127,6 +127,10 @@ static fixed_t PA_SightCrossLine(line_t *line)
 
    s2 = ndx * dx + ndy * dy; // distance projected onto normal
 
+   /* try to quickly decide by looking at sign bits */
+   if ( (s1 ^ (s1 + s2))&0x80000000 )
+      return -1;
+
    return FixedDiv(s1, (s1 + s2));
 }
 
@@ -314,7 +318,6 @@ static boolean PA_CrossSubsector(int bspnum)
       }
 
       frac = PA_SightCrossLine(&thingline);
-
       if(frac < 0 || frac > FRACUNIT)
          continue;
 
@@ -339,7 +342,6 @@ static boolean PA_CrossSubsector(int bspnum)
       line->validcount = validcount;
 
       frac = PA_SightCrossLine(line);
-
       if(frac < 0 || frac > FRACUNIT)
          continue;
 
