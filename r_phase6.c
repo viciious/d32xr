@@ -156,6 +156,11 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
         //
         // texture only stuff
         //
+
+        // calculate texture offset
+        r = finetangent((centerangle + xtoviewangle[x]) >> ANGLETOFINESHIFT);
+
+        // other texture drawing info
         if (lightcoef != 0)
         {
             // calc light level
@@ -168,11 +173,8 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
             texturelight = HWLIGHT((unsigned)texturelight>>FRACBITS);
         }
 
-        // calculate texture offset
-        r = finetangent((centerangle + xtoviewangle[x]) >> ANGLETOFINESHIFT);
+        // calculate texture offset -- continued
         FixedMul2(r, distance, r);
-
-        // other texture drawing info
         colnum = (offset - r) >> FRACBITS;
 
 #ifdef MARS
