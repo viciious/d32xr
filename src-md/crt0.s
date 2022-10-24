@@ -1165,7 +1165,7 @@ dbug_queue:
         add.w   d1,d1
         add.w   d1,d1
         lea     dbq_val,a1
-        move.w  0xA15122,0(a1,d1.w) /* queue value */
+        move.w  0xA15122,2(a1,d1.w) /* queue value */
         addq.w  #1,dbq_ix
 0:
         move.w  #0,0xA15120         /* done */
