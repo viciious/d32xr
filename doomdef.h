@@ -513,7 +513,7 @@ extern	int			consoleplayer;		/* player taking events and displaying */
 extern	player_t	players[MAXPLAYERS];
 extern	playerresp_t	playersresp[MAXPLAYERS];
 
-extern	int			maxammo[NUMAMMO];
+extern	VINT		maxammo[NUMAMMO];
 
 
 extern	skill_t		gameskill;
