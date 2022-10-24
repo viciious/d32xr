@@ -78,11 +78,7 @@ void ReadGame(int slotnumber)
 
 	D_memset(&sg, 0, sizeof(savegame_t));
 
-	Mars_StopSoundMixer();
-
 	Mars_ReadSRAM((void*)&sg, offset, sizeof(savegame_t));
-
-	Mars_StartSoundMixer();
 
 	if (sg.version != SRAM_VERSION)
 		return;
@@ -108,11 +104,7 @@ static void SaveGameExt(int slotnumber, int mapnum)
 	sg.mapnumber = mapnum & 0xFF;
 	D_memcpy(sg.resp, playersresp, sizeof(playersresp));
 
-	Mars_StopSoundMixer();
-
 	Mars_WriteSRAM((void*)&sg, offset, sizeof(savegame_t));
-
-	Mars_StartSoundMixer();
 }
 
 void SaveGame(int slotnumber)
@@ -135,11 +127,7 @@ boolean GetSaveInfo(int slotnumber, VINT* mapnum, VINT* skill, VINT *mode)
 
 	D_memset(&sg, 0, sizeof(savegame_t));
 
-	Mars_StopSoundMixer();
-
 	Mars_ReadSRAM((void*)&sg, offset, sizeof(savegame_t));
-
-	Mars_StartSoundMixer();
 
 	if (sg.version != SRAM_VERSION)
 		return false;
@@ -158,8 +146,6 @@ int SaveCount(void)
 	uint8_t temp;
 	int offset = 0;
 
-	Mars_StopSoundMixer();
-
 	// the last slot is used for storing game options
 	for (i = 0; i < optslotnumber; i++) {
 		Mars_ReadSRAM(&temp, offset, 1);
@@ -167,8 +153,6 @@ int SaveCount(void)
 			break;
 		offset += SRAM_SLOTSIZE;
 	}
-
-	Mars_StartSoundMixer();
 
 	return i;
 }
@@ -196,11 +180,7 @@ static void SaveOptions(void)
 	so.anamorphic = anamorphicview;
 	so.colormap = colormapopt+1;
 
-	Mars_StopSoundMixer();
-
 	Mars_WriteSRAM((void*)&so, optslotoffset, sizeof(saveopts_t));
-
-	Mars_StartSoundMixer();
 }
 
 static void ReadOptions(void)
@@ -209,11 +189,7 @@ static void ReadOptions(void)
 
 	D_memset(&so, 0, sizeof(saveopts_t));
 
-	Mars_StopSoundMixer();
-
 	Mars_ReadSRAM((void*)&so, optslotoffset, sizeof(saveopts_t));
-
-	Mars_StartSoundMixer();
 
 	if (so.version != SRAM_OPTVERSION)
 		return;
@@ -262,11 +238,7 @@ void ClearEEProm(void)
 
 	D_memset(&so, 0, sizeof(saveopts_t));
 
-	Mars_StopSoundMixer();
-
 	Mars_WriteSRAM((void*)&so, optslotoffset, sizeof(saveopts_t));
-
-	Mars_StartSoundMixer();
 }
 
 void ReadEEProm(void)

@@ -11,7 +11,6 @@
 #include <stdlib.h>
 
 static int fuzzpos[2];
-static int *gsortedsprites;
 
 static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy) ATTR_DATA_CACHE_ALIGN;
 void R_DrawVisSprite(vissprite_t* vis, unsigned short* spropening, int *fuzzpos, int screenhalf, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
@@ -26,8 +25,18 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos,
    fixed_t  iscale, xfrac, spryscale, sprtop, fracstep;
    int light, x, stopx;
    drawcol_t drawcol;
+#ifdef MARS
+	inpixel_t 	*pixels;
+#else
+	pixel_t		*pixels;		/* data patch header references */
+#endif
 
    patch     = W_POINTLUMPNUM(vis->patchnum);
+#ifdef MARS
+   pixels    = W_POINTLUMPNUM(vis->patchnum+1);
+#else
+   pixels    = vis->pixels;
+#endif
    iscale    = vis->yiscale;
    xfrac     = vis->startfrac;
    spryscale = vis->yscale;
@@ -101,7 +110,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos,
             continue;
 
          // CALICO: invoke column drawer
-         drawcol(x, top, bottom, light, frac, iscale, vis->pixels + BIGSHORT(column->dataofs), 128, fuzzpos);
+         drawcol(x, top, bottom, light, frac, iscale, pixels + BIGSHORT(column->dataofs), 128, fuzzpos);
       }
    }
 }
@@ -304,19 +313,15 @@ static void R_DrawPSprites(const int cpu, int sprscreenhalf)
 }
 
 #ifdef MARS
-void Mars_Sec_R_DrawSprites(int sprscreenhalf)
+void Mars_Sec_R_DrawSprites(int sprscreenhalf, int *sortedsprites)
 {
     int count, sortedcount;
-    int *sortedsprites;
 
     Mars_ClearCacheLine(&vissprites);
     Mars_ClearCacheLine(&lastsprite_p);
 
     count = lastsprite_p - vissprites;
     Mars_ClearCacheLines(vissprites, (count * sizeof(vissprite_t) + 31) / 16);
-
-    Mars_ClearCacheLine(&gsortedsprites);
-    sortedsprites = gsortedsprites;
 
     Mars_ClearCacheLines(sortedsprites, ((count + 1) * sizeof(*sortedsprites) + 31) / 16);
     sortedcount = sortedsprites[0];
@@ -392,9 +397,8 @@ void R_Sprites(void)
       if (!half || half > viewportWidth)
          half = viewportWidth / 2;
       sprscreenhalf = half;
-      gsortedsprites = sortedsprites;
 
-      Mars_R_BeginDrawSprites(sprscreenhalf);
+      Mars_R_BeginDrawSprites(sprscreenhalf, sortedsprites);
 
       R_DrawSpritesLoop(0, sortedsprites+1, sortedcount, sprscreenhalf);
 

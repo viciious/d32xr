@@ -5,6 +5,37 @@
 
         .equ DEFAULT_LINK_TIMEOUT, 0x3FFF
 
+        .macro  sh2_wait
+        move.w  #0x0003,0xA15102    /* assert CMD INT to both SH2s */
+        move.w  #0xA55A,d2
+99:
+        cmp.w   0xA15120,d2         /* wait on handshake in COMM0 */
+        bne.b   99b
+98:
+        cmp.w   0xA15124,d2         /* wait on handshake in COMM4 */
+        bne.b   98b
+        .endm
+
+        .macro  sh2_cont
+        move.w  #0xFFFE,d0          /* command = exit irq */
+        move.w  d0,0xA15120
+        move.w  d0,0xA15124
+99:
+        cmp.w   0xA15120,d0         /* wait on exit */
+        beq.b   99b
+98:
+        cmp.w   0xA15124,d0         /* wait on exit */
+        beq.b   98b
+        .endm
+
+        .macro  set_rv
+        bset    #0,0xA15107         /* set RV */
+        .endm
+
+        .macro  clr_rv
+        bclr    #0,0xA15107         /* clear RV */
+        .endm
+
 | 0x880800 - entry point for reset/cold-start
 
         .global _start
@@ -265,12 +296,16 @@ main_loop:
         move.w  0xA15120,d0         /* get COMM0 */
         bne.b   handle_req
 
+        move.w  0xA15124,d0         /* get COMM4 */
+        bne.w   handle_sec_req
+
+chk_hotplug:
         /* check hot-plug count */
         tst.b   hotplug_cnt
         bne.b   main_loop
         move.b  #60,hotplug_cnt
 
-        move.w  0xA15128,d0
+        move.w  ctrl1,d0
         cmpi.w  #0xF001,d0
         beq.b   0f                  /* mouse in port 1, check port 2 */
         cmpi.w  #0xF000,d0
@@ -278,7 +313,7 @@ main_loop:
 0:
         tst.b   net_type
         bne.b   main_loop           /* networking enabled, ignore port 2 */
-        move.w  0xA1512A,d0
+        move.w  ctrl2,d0
         cmpi.w  #0xF001,d0
         beq.b   main_loop           /* mouse in port 2, exit */
         cmpi.w  #0xF000,d0
@@ -337,9 +372,22 @@ handle_req:
         bls     net_set_link_timeout
         cmpi.w  #0x18FF,d0
         bls     set_music_volume
-
+        cmpi.w  #0x19FF,d0
+        bls     get_ctrl1
+        cmpi.w  #0x1AFF,d0
+        bls     get_ctrl2
 | unknown command
         move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+| process request from Secondary SH2
+handle_sec_req:
+        cmpi.w  #0x15FF,d0
+        bls     chk_hotplug
+        cmpi.w  #0x16FF,d0
+        bls     set_bank_page_sec
+| unknown command
+        move.w  #0,0xA15124         /* done */
         bra     main_loop
 
 read_sram:
@@ -351,25 +399,27 @@ read_sram:
         andi.l  #0x0100,d1
         beq.w   2f                  /* not everdrive with extended SSF */
 1:
-        move.b  #1,0xA15107         /* set RV */
+        sh2_wait
+        set_rv
         lea     0x40000,a0          /* use the upper 256K of page 31 */
         move.w  #0x801F, 0xA130F0   /* map page 31 to bank 0 */
         move.b  0(a0,d0.l),d1       /* read SRAM */
         move.w  #0x8000, 0xA130F0   /* map page 0 to bank 0 */
-        move.b  #0,0xA15107         /* clear RV */
+        clr_rv
         move.w  d1,0xA15122         /* COMM2 holds return byte */
-        bra     main_loop
         bra     3f
 2:
         add.l   d0,d0
         lea     0x200000,a0
-        move.b  #1,0xA15107         /* set RV */
+        sh2_wait
+        set_rv
         move.b  #3,0xA130F1         /* SRAM enabled, write protected */
         move.b  1(a0,d0.l),d1       /* read SRAM */
         move.b  #2,0xA130F1         /* SRAM disabled, write protected */
-        move.b  #0,0xA15107         /* clear RV */
+        clr_rv
         move.w  d1,0xA15122         /* COMM2 holds return byte */
 3:
+        sh2_cont
         move.w  #0,0xA15120         /* done */
         move.w  #0x2000,sr          /* enable ints */
         bra     main_loop
@@ -382,23 +432,26 @@ write_sram:
         beq.w   2f                  /* not everdrive with extended SSF */
 1:
         move.w  0xA15122,d1         /* COMM2 holds offset */
-        move.b  #1,0xA15107         /* set RV */
+        sh2_wait
+        set_rv
         lea     0x40000,a0          /* use the upper 256K of page 31 */
         move.w  #0xA01F, 0xA130F0   /* map page 31 to bank 0, enable the write bit */
         move.b  d0,0(a0,d1.l)       /* write SRAM */
         move.w  #0x8000, 0xA130F0   /* map page 0 to bank 0 */
-        move.b  #0,0xA15107         /* clear RV */
+        clr_rv
         bra     3f
 2:
         move.w  0xA15122,d1         /* COMM2 holds offset */
         add.l   d1,d1
         lea     0x200000,a0
-        move.b  #1,0xA15107         /* set RV */
+        sh2_wait
+        set_rv
         move.b  #1,0xA130F1         /* SRAM enabled, write enabled */
         move.b  d0,1(a0,d1.l)       /* write SRAM */
         move.b  #2,0xA130F1         /* SRAM disabled, write protected */
-        move.b  #0,0xA15107         /* clear RV */
+        clr_rv
 3:
+        sh2_cont
         move.w  #0,0xA15120         /* done */
         move.w  #0x2000,sr          /* enable ints */
         bra     main_loop
@@ -420,14 +473,40 @@ start_music:
         bne     start_cd
         
         /* start VGM */
+        clr.l   vgm_ptr
         cmpi.w  #0x0300,d0
         beq.b   0f
 
-        /* set VGM length */
-        move.l  0xA1512C,d0         /* fetch VGM length */
-        move.l  d0,vgm_size
-        move.w  #0,0xA15120         /* done */
-        bra     main_loop
+        /* fetch VGM length */
+        lea     vgm_size,a0
+        move.w  0xA15122,0(a0)
+        move.w  #0,0xA15120         /* done with upper word */
+20:
+        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
+        cmpi.w  #0x0302,d0
+        bne.b   20b
+        move.w  0xA15122,2(a0)
+        move.w  #0,0xA15120         /* done with lower word */
+
+        /* fetch VGM offset */
+        lea     vgm_ptr,a0
+21:
+        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
+        cmpi.w  #0x0303,d0
+        bne.b   21b
+        move.w  0xA15122,0(a0)
+        move.w  #0,0xA15120         /* done with upper word */
+22:
+        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
+        cmpi.w  #0x0304,d0
+        bne.b   22b
+        move.w  0xA15122,2(a0)
+        move.w  #0,0xA15120         /* done with lower word */
+
+23:
+        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
+        cmpi.w  #0x0300,d0
+        bne.b   23b
 
 0:
         /* set VGM pointer and init VGM player */
@@ -439,7 +518,7 @@ start_music:
         move.w  d0,fm_idx            /* index 1 to N */
         move.w  #0,0xA15104          /* set cart bank select */
         move.l  #0,a0
-        move.l  0xA1512C,d0          /* fetch VGM offset */
+        move.l  vgm_ptr,d0           /* set VGM offset */
         beq.b   9f
 
         move.l  d0,a0
@@ -466,11 +545,12 @@ start_cd:
         tst.w   megasd_ok
         beq     9f                  /* couldn't find a MegaSD */
 
-        moveq   #0,d0
-        moveq   #0,d1
-
-        move.w  0xA1512C,d0         /* COMM12 = cdtrack */
-        move.w  0xA15122,d1         /* COMM2 = looping */
+        move.w  0xA15122,d0          /* COMM2 = index | repeat flag */
+        move.w  #0x8000,d1
+        and.w   d0,d1                /* repeat flag */
+        eor.w   d1,d0                /* clear flag from index */
+        lsr.w   #7,d1
+        lsr.w   #8,d1
 
         move.l  d1,-(sp)            /* push the looping flag */
         move.l  d0,-(sp)            /* push the cdtrack */
@@ -515,8 +595,12 @@ start_cd:
         move.b  0xA1200F,d1
         bne.b   0b                  /* wait until Sub-CPU is ready to receive command */
 
-        move.w  0xA1512C,d0         /* COMM12 = cdtrack */
-        move.w  0xA15122,d1         /* COMM2 = looping */
+        move.w  0xA15122,d0         /* COMM2 = index | repeat flag */
+        move.w  #0x8000,d1
+        and.w   d0,d1               /* repeat flag */
+        eor.w   d1,d0               /* clear flag from index */
+        lsr.w   #7,d1
+        lsr.w   #8,d1
 
         move.b  d1,0xA12012         /* repeat flag */
         move.w  d0,0xA12010         /* track number */
@@ -572,7 +656,7 @@ read_mouse:
         tst.b   d0
         bne.b   1f                  /* skip port 1 */
 
-        move.w  0xA15128,d0
+        move.w  ctrl1,d0
         cmpi.w  #0xF001,d0
         bne.b   1f                  /* no mouse in port 1 */
         lea     0xA10003,a0
@@ -588,7 +672,7 @@ read_mouse:
         bne.b   0b                  /* wait for SH2 to read mouse value */
         bra     main_loop
 1:
-        move.w  0xA1512A,d0
+        move.w  ctrl2,d0
         cmpi.w  #0xF001,d0
         bne.b   no_mouse            /* no mouse in port 2 */
         lea     0xA10005,a0
@@ -605,10 +689,10 @@ read_mouse:
         bra     main_loop
 
 no_mky1:
-        move.w  #0xF000,0xA15128    /* nothing in port 1 */
+        move.w  #0xF000,ctrl1    /* nothing in port 1 */
         bra.b   no_mouse
 no_mky2:
-       move.w   #0xF000,0xA1512A    /* nothing in port 2 */
+       move.w   #0xF000,ctrl2    /* nothing in port 2 */
 no_mouse:
         moveq   #-1,d0              /* no mouse */
         move.w  d0,0xA15122
@@ -624,8 +708,11 @@ read_cdstate:
         tst.w   megasd_ok
         beq     9f                  /* couldn't find a MegaSD or CD audio tracks */
 
-        move.w  megasd_ok,0xA15122
-        move.w  megasd_num_cdtracks,0xA1512C
+        move.w  megasd_num_cdtracks,d0
+        lsl.l   #2,d0
+        or.w    megasd_ok,d0
+
+        move.w  d0,0xA15122
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
@@ -662,8 +749,10 @@ read_cdstate:
         addq.w  #1,d1
         move.w  d1,number_tracks
 0:
-        move.w  cd_ok,0xA15122
-        move.w  number_tracks,0xA1512C
+        move.w  number_tracks,d0
+        lsl.l   #2,d0
+        or.w    cd_ok,d0
+        move.w  d0,0xA15122
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
@@ -747,7 +836,7 @@ ext_link:
         rte
 
 init_serial:
-        move.w  #0xF000,0xA1512A    /* port 1 ID = SEGA_CTRL_NONE */
+        move.w  #0xF000,ctrl2    /* port 1 ID = SEGA_CTRL_NONE */
         move.b  #0x10,0xA1000B      /* all pins inputs except TL (Pin 6) */
         nop
         nop
@@ -760,7 +849,7 @@ init_serial:
         bra     main_loop
 
 init_link:
-        move.w  #0xF000,0xA1512A    /* port 1 ID = SEGA_CTRL_NONE */
+        move.w  #0xF000,ctrl2    /* port 1 ID = SEGA_CTRL_NONE */
         move.b  #0x00,0xA10019      /* no serial */
         nop
         nop
@@ -959,28 +1048,53 @@ net_cleanup:
 | video debug functions
 
 set_crsr:
-        move.w  0xA1512C,crsr_x
-        move.w  0xA1512E,crsr_y
+        move.w  0xA15122,d0         /* cursor y<<6 | x */
+        move.w  d0,d1
+        andi.w  #0x1F,d0
+        move.w  d0,crsr_y
+        lsr.l   #6,d1
+        move.w  d1,crsr_x
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
 get_crsr:
-        move.w  crsr_x,0xA1512C
-        move.w  crsr_y,0xA1512E
+        move.w  crsr_y,d0           /* y coord */
+        lsl.w   #6,d0
+        or.w    crsr_x,d0           /* cursor y<<6 | x */
+        move.w  d0,0xA15122
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
 set_color:
-        move.w  0xA1512C,d0
+        /* the foreground color is in the LS nibble of COMM0 */
+        move.w  0xA15120,d0
+        andi.l  #0x000F,d0
+        move    d0,d1
+        lsl.w   #4,d0
+        or      d1,d0
+        move.w  d0,d1
+        lsl.w   #8,d0
+        or      d1,d0
         move.w  d0,d1
         swap    d1
         move.w  d0,d1
         move.l  d1,fg_color
-        move.w  0xA1512E,d0
+
+        /* the background color is in the second LS nibble of COMM0 */
+        move.w  0xA15120,d0
+        lsr.w   #4,d0
+        andi.l  #0x000F,d0
+        move    d0,d1
+        lsl.w   #4,d0
+        or      d1,d0
+        move.w  d0,d1
+        lsl.w   #8,d0
+        or      d1,d0
         move.w  d0,d1
         swap    d1
         move.w  d0,d1
         move.l  d1,bg_color
+
         bsr     reload_font
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -988,10 +1102,12 @@ set_color:
 get_color:
         move.w  fg_color,d0
         andi.w  #0x000F,d0
-        move.w  d0,0xA1512C
+        move    d0,d1
         move.w  bg_color,d0
         andi.w  #0x000F,d0
-        move.w  d0,0xA1512E
+        lsl     #4,d0
+        or      d1,d0
+        move.w  d0,0xA15122
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
@@ -1049,7 +1165,7 @@ dbug_queue:
         add.w   d1,d1
         add.w   d1,d1
         lea     dbq_val,a1
-        move.l  0xA1512C,0(a1,d1.w) /* queue value */
+        move.w  0xA15122,0(a1,d1.w) /* queue value */
         addq.w  #1,dbq_ix
 0:
         move.w  #0,0xA15120         /* done */
@@ -1115,16 +1231,39 @@ dbug_end:
         bra     main_loop
 
 set_bank_page:
+        move.w  d0,d1
         andi.l  #0x07,d0            /* bank number */
-        move.w  0xA15122,d1         /* COMM2 holds page number */
+        lsr.w   #3,d1               /* page number */
+        andi.l  #0x1f,d1
         lea     0xA130F0,a0
         add.l   d0,d0
+        lea     1(a0,d0.l),a0
         move.w  #0x2700,sr          /* disable ints */
-        move.b  #1,0xA15107         /* set RV */
-        move.b  d1,1(a0,d0.l)
-        move.b  #0,0xA15107         /* clear RV */
+        sh2_wait
+        set_rv
+        move.b  d1,(a0)
+        clr_rv
+        sh2_cont
         move.w  #0x2000,sr          /* enable ints */
         move.w  #0,0xA15120         /* release SH2 now */
+        bra     main_loop
+
+set_bank_page_sec:
+        move.w  d0,d1
+        andi.l  #0x07,d0            /* bank number */
+        lsr.w   #3,d1               /* page number */
+        andi.l  #0x1f,d1
+        lea     0xA130F0,a0
+        add.l   d0,d0
+        lea     1(a0,d0.l),a0
+        move.w  #0x2700,sr          /* disable ints */
+        sh2_wait
+        set_rv
+        move.b  d1,(a0)
+        clr_rv
+        sh2_cont
+        move.w  #0x2000,sr          /* enable ints */
+        move.w  #0x1000,0xA15124    /* release SH2 now */
         bra     main_loop
 
 net_set_link_timeout:
@@ -1164,6 +1303,34 @@ set_music_volume:
         beq.b   3b                  /* wait for acknowledge byte in sub comm port */
         move.b  #0x00,0xA1200E      /* acknowledge receipt of command result */
 4:
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+get_ctrl1:
+        andi.l  #0x1,d0
+        cmpi.b  #0x1,d0
+        bne.b   0f
+
+        move.w  ctrl1,0xA15122      /* controller state OR current value */
+        bra     2f
+0:
+        move.w  ctrl1_latch,0xA15122/* controller value */
+        move.w  #0,ctrl1_latch
+2:
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+get_ctrl2:
+        andi.l  #0x1,d0
+        cmpi.b  #0x1,d0
+        bne.b   0f
+
+        move.w  ctrl2,0xA15122      /* controller state OR current value */
+        bra     2f
+0:
+        move.w  ctrl2_latch,0xA15122/* controller value */
+        move.w  #0,ctrl2_latch
+2:
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
@@ -1237,7 +1404,7 @@ bump_fm:
 2:
         /* set Timer A for delay */
         moveq   #0,d0
-        move.w   fm_smpl,d0
+        move.w  fm_smpl,d0
         lsr.w   #2,d0
         add.w   fm_smpl,d0          /* ticks ~= 1.25 * # samples */
         bcc.b   3f
@@ -1299,23 +1466,25 @@ vert_blank:
         move.l  d2,-(sp)
 
         /* read controllers */
-        move.w  0xA15128,d0
+        move.w  ctrl1,d0
         andi.w  #0xF000,d0
         cmpi.w  #0xF000,d0
-        beq.b   0f                  /* no pad in port 1 (or mouse) */
+        beq.b   0f               /* no pad in port 1 (or mouse) */
         lea     0xA10003,a0
         bsr     get_pad
-        move.w  d2,0xA15128         /* controller 1 current value */
+        move.w  d2,ctrl1         /* controller 1 current value */
+        or.w    d2,ctrl1_latch
 0:
         tst.b   net_type
-        bne.b   1f                  /* networking enabled, ignore port 2 */
-        move.w  0xA1512A,d0
+        bne.b   1f               /* networking enabled, ignore port 2 */
+        move.w  ctrl2,d0
         andi.w  #0xF000,d0
         cmpi.w  #0xF000,d0
-        beq.b   1f                  /* no pad in port 2 (or mouse) */
+        beq.b   1f               /* no pad in port 2 (or mouse) */
         lea     0xA10005,a0
         bsr     get_pad
-        move.w  d2,0xA1512A         /* controller 2 current value */
+        move.w  d2,ctrl2         /* controller 2 current value */
+        or.w    d2,ctrl2_latch
 1:
         /* if SCD present, generate IRQ 2 */
         tst.w   gen_lvl2
@@ -1564,7 +1733,7 @@ chk_ports:
         /* get ID port 1 */
         lea     0xA10003,a0
         bsr.b   get_port
-        move.w  d0,0xA15128             /* controller 1 */
+        move.w  d0,ctrl1             /* controller 1 */
 
         tst.b   net_type
         beq.b   0f                      /* ignore controller 2 when networking enabled */
@@ -1573,7 +1742,7 @@ chk_ports:
         /* get ID port 2 */
         lea     0xA10005,a0
         bsr.b   get_port
-        move.w  d0,0xA1512A             /* controller 2 */
+        move.w  d0,ctrl2             /* controller 2 */
         rts
 
 
@@ -1624,6 +1793,15 @@ net_rdbuf:
         .space  32
 net_link_timeout:
         dc.w    DEFAULT_LINK_TIMEOUT
+
+ctrl1:
+        dc.w    0
+ctrl2:
+        dc.w    0
+ctrl1_latch:
+        dc.w    0
+ctrl2_latch:
+        dc.w    0
 
     .global net_type
 net_type:

@@ -39,8 +39,17 @@ typedef struct {
 	boolean prev_state;
 } btnstate_t;
 
-int COLOR_WHITE = 0x04;
-int COLOR_BLACK = 0xF7;
+// !!! if this is changed, it must be changed in asm too!
+typedef void (*setbankpage_t)(int bank, int page);
+typedef struct {
+	uint16_t bank;
+	uint16_t bankpage;
+	setbankpage_t setbankpage;
+	uint16_t pad[4];
+} mars_tls_t __attribute__((aligned(16))); // thread local storage
+
+VINT COLOR_WHITE = 0x04;
+VINT COLOR_BLACK = 0xF7;
 
 int8_t* doomcolormap;
 int8_t	*dc_colormaps;
@@ -53,7 +62,7 @@ int		lastticcount = 0;
 int		lasttics = 0;
 static int fpscount = 0;
 
-int 	debugmode = DEBUGMODE_NONE;
+VINT 	debugmode = DEBUGMODE_NONE;
 VINT	strafebtns = 0;
 
 extern int 	cy;
@@ -67,6 +76,9 @@ static jagobj_t* jo_stbar;
 static VINT jo_stbar_height;
 
 extern int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sprites[4], t_ref_total[4];
+
+static volatile mars_tls_t mars_tls_pri, mars_tls_sec;
+static uint32_t mars_rom_bsw_start = 0;
 
 void I_ClearFrameBuffer(void) ATTR_DATA_CACHE_ALIGN;
 
@@ -270,6 +282,9 @@ static int Mars_ConvMouseButtons(int mouse)
 
 void Mars_Secondary(void)
 {
+	// init thread-local storage
+	__asm volatile("mov %0, r0\n\tldc r0,gbr" : : "rm"(&mars_tls_sec) : "r0", "gbr");
+
 	// init DMA
 	SH2_DMA_SAR0 = 0;
 	SH2_DMA_DAR0 = 0;
@@ -316,7 +331,7 @@ void Mars_Secondary(void)
 			Mars_Sec_R_DrawPlanes();
 			break;
 		case MARS_SECCMD_R_DRAW_SPRITES:
-			Mars_Sec_R_DrawSprites(MARS_SYS_COMM6);
+			Mars_Sec_R_DrawSprites(MARS_SYS_COMM6, (int*)(*(uintptr_t *)&MARS_SYS_COMM8));
 			break;
 		case MARS_SECCMD_R_DRAW_PSPRITES:
 			Mars_Sec_R_DrawPSprites(MARS_SYS_COMM6);
@@ -326,12 +341,6 @@ void Mars_Secondary(void)
 			break;
 		case MARS_SECCMD_S_INIT_DMA:
 			Mars_Sec_InitSoundDMA();
-			break;
-		case MARS_SECCMD_S_STOP_MIXER:
-			Mars_Sec_StopSoundMixer();
-			break;
-		case MARS_SECCMD_S_START_MIXER:
-			Mars_Sec_StartSoundMixer();
 			break;
 		case MARS_SECCMD_AM_DRAW:
 			Mars_Sec_AM_Drawer();
@@ -363,6 +372,22 @@ void I_Init (void)
 	int	i;
 	unsigned minr, maxr;
 	const byte	*doompalette;
+
+	// init thread-local storage
+	mars_tls_pri.bank = 6;
+	mars_tls_pri.bankpage = 6;
+	mars_tls_pri.setbankpage = &Mars_SetBankPage;
+
+	mars_tls_sec.bank = 7;
+	mars_tls_sec.bankpage = 7;
+	mars_tls_sec.setbankpage = &Mars_SetBankPageSec;
+
+	// find the memory address in ROM that corresponds to bank 6 in case
+	// the ROM is configured to use the Sega mapper, otherwise set the address
+	// to some value beyond the ROM space
+	mars_rom_bsw_start = Mars_ROMSize() > 0x400000 ? 0x02300000 : 0x02400000;
+
+	__asm volatile("mov %0, r0\n\tldc r0,gbr" : : "rm"(&mars_tls_pri) : "r0", "gbr");
 
 	Mars_SetBrightness(1);
 
@@ -402,11 +427,8 @@ void I_Init (void)
 		jo_stbar = NULL;
 		jo_stbar_height = 0;
 	}
-/*
-	{
-		__asm volatile("mov #-128,r0\n\tadd r0,r0\n\tldc r0,gbr" : : : "r0");
-	}
-*/
+
+	Mars_CommSlaveClearCache();
 }
 
 void I_SetPalette(const byte* palette)
@@ -447,26 +469,37 @@ byte *I_WadBase (void)
 = I_RemapLumpPtr
 ====================
 */
-
 void* I_RemapLumpPtr(void *ptr)
 {
-	static int8_t curbank7page = 7;
+	uintptr_t newptr = (uintptr_t)ptr;
 
-	if ((uintptr_t)ptr >= 0x02380000)
+	if (newptr >= mars_rom_bsw_start && newptr < 0x04000000)
 	{
-		void* newptr = (void*)(((uintptr_t)ptr & 0x0007FFFF) + 0x02380000);
+		unsigned page = (newptr - 0x02000000) >> 19;
+		volatile unsigned bank, bankpage;
+		void (*setbankpage)(int bank, int page);
 
-		int page = (((uintptr_t)ptr - 0x02000000) >> 19);
-		if (curbank7page != page)
+		__asm volatile(	"mov.w @(0,gbr),r0\n\t"
+						"extu.w r0,%0\n\t"
+						"mov.w @(2,gbr),r0\n\t"
+						"extu.w r0,%1\n\t"
+						"mov.l @(4,gbr),r0\n\t"
+						"mov r0,%2\n\t"
+						: "=r"(bank), "=r"(bankpage), "=r"(setbankpage) : : "r0", "gbr");
+
+		newptr = ((newptr & 0x0007FFFF) + 512*1024*bank + 0x02000000);
+		newptr |= 0x20000000; // bypass cache
+
+		if (bankpage != page)
 		{
-			S_Clear();
-			Mars_SetBankPage(7, page);
-			Mars_ClearCache();
-			Mars_CommSlaveClearCache();
-			curbank7page = page;
+			setbankpage(bank, page);
+
+			__asm volatile(	"mov %0,r0\n\t"
+							"mov.w r0,@(2,gbr)\n\t"
+							: : "r"(page) : "r0", "gbr");
 		}
 
-		ptr = newptr;
+		return (void *)newptr;
 	}
 
 	return ptr;
@@ -489,13 +522,15 @@ byte *I_ZoneBase (int *size)
 	return (byte *)zone;
 }
 
-static int I_ReadControls_(volatile unsigned *c, btnstate_t* startbtn)
+static int I_ReadControls_(int port, btnstate_t* startbtn)
 {
 	int ctrl;
 	unsigned val;
 
-	val = *c;
-	*c = 0;
+	if (port < 0)
+		return 0;
+
+	val = Mars_ReadController(port);
 
 	ctrl = 0;
 	ctrl |= Mars_HandleStartHeld(&val, SEGA_CTRL_START, startbtn);
@@ -506,13 +541,14 @@ static int I_ReadControls_(volatile unsigned *c, btnstate_t* startbtn)
 int I_ReadControls(void)
 {
 	static btnstate_t startbtn = { 0 };
-	return I_ReadControls_(&mars_controls[0], &startbtn);
+	Mars_DetectInputDevices();
+	return I_ReadControls_(mars_gamepadport[0], &startbtn);
 }
 
 int I_ReadControls2(void)
 {
 	static btnstate_t startbtn2 = { 0 };
-	return I_ReadControls_(&mars_controls[1], &startbtn2);
+	return I_ReadControls_(mars_gamepadport[1], &startbtn2);
 }
 
 int I_ReadMouse(int* pmx, int *pmy)
@@ -521,13 +557,13 @@ int I_ReadMouse(int* pmx, int *pmy)
 	static int oldmval = 0;
 	unsigned val;
 
-	mousepresent = mars_mouseport >= 0;
+	mousepresent = mars_gamepadport[1] < -1;
 
 	*pmx = *pmy = 0;
 	if (!mousepresent)
 		return 0;
 
-	mval = Mars_PollMouse(mars_mouseport);
+	mval = Mars_PollMouse(-(mars_gamepadport[1] + 2));
 	switch (mval)
 	{
 	case -2:
@@ -537,9 +573,8 @@ int I_ReadMouse(int* pmx, int *pmy)
 	case -1:
 		// no mouse
 		mousepresent = false;
-		mars_mouseport = -1;
-		mars_gamepadport[0] = &MARS_SYS_COMM8;
-		mars_gamepadport[1] = &MARS_SYS_COMM10;
+		mars_gamepadport[0] = 0;
+		mars_gamepadport[1] = 1;
 		oldmval = 0;
 		return 0;
 	default:
@@ -807,15 +842,6 @@ void I_Update(void)
 			clearscreen = 2;
 		}
 
-/*
-	{
-		char buf[32];
-		volatile int p;
-		__asm volatile("stc gbr, r0\n\tmov r0,%0" : "=r"(p));
-		D_snprintf(buf, sizeof(buf), "%p", p);
-		I_Print8(50, 5, buf);
-	}
-*/
 	Mars_FlipFrameBuffers(false);
 
 	/* */

@@ -252,10 +252,10 @@ extern	spawnthing_t* spawnthings;
 ===============================================================================
 */
 
-extern	int		maxammo[NUMAMMO];
-extern	int		clipammo[NUMAMMO];
+extern	VINT	maxammo[NUMAMMO];
+extern	VINT	clipammo[NUMAMMO];
 
-void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher);
+void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher) __attribute__((noinline));
 
 void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage);
 

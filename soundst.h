@@ -76,7 +76,11 @@ enum
 	mustype_cd,
 };
 
+#ifdef MARS
+extern	sfxchannel_t	*sfxchannels/*[SFXCHANNELS]*/;
+#else
 extern	sfxchannel_t	sfxchannels[SFXCHANNELS];
+#endif
 
 extern	int		finalquad;			/* the last quad mixed by update. */
 									

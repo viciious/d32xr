@@ -46,9 +46,9 @@ char Mars_UploadPalette(const uint8_t* palette) MARS_ATTR_DATA_CACHE_ALIGN;
 int Mars_PollMouse(int port);
 int Mars_ParseMousePacket(int mouse, int* pmx, int* pmy);
 
-extern volatile unsigned short* mars_gamepadport[2];
-extern char mars_mouseport;
-extern volatile unsigned mars_controls[2];
+typedef int (*mars_getctrl_f)(void);
+
+extern char mars_gamepadport[2];
 
 extern volatile unsigned mars_vblank_count;
 extern unsigned mars_frtc2msec_frac;
@@ -124,10 +124,16 @@ void Mars_ClearNTA(void);
 void Mars_MDPutString(char *str);
 
 void Mars_DebugStart(void);
-void Mars_DebugQueue(int id, int val);
+void Mars_DebugQueue(int id, short val);
 void Mars_DebugEnd(void);
 
 void Mars_SetBankPage(int bank, int page) MARS_ATTR_DATA_CACHE_ALIGN;
+void Mars_SetBankPageSec(int bank, int page) MARS_ATTR_DATA_CACHE_ALIGN;
+
+void Mars_DetectInputDevices(void);
+int Mars_ReadController(int port);
+
+int Mars_ROMSize(void);
 
 enum {
 	DEBUG_FPSCOUNT,

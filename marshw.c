@@ -28,10 +28,7 @@
 
 static volatile uint16_t mars_activescreen = 0;
 
-volatile unsigned short* mars_gamepadport[2];
-char mars_mouseport;
-
-volatile unsigned mars_controls[2];
+char mars_gamepadport[2] = { 0, 1 };
 
 volatile unsigned mars_vblank_count = 0;
 volatile unsigned mars_pwdt_ovf_count = 0;
@@ -232,25 +229,7 @@ void Mars_Init(void)
 	MARS_SYS_COMM4 = 0;
 
 	/* detect input devices */
-	mars_mouseport = -1;
-	mars_gamepadport[0] = &MARS_SYS_COMM8;
-	mars_gamepadport[1] = &MARS_SYS_COMM10;
-
-	/* values set by the m68k on startup */
-	if (MARS_SYS_COMM10 == 0xF001)
-	{
-		mars_mouseport = 1;
-		mars_gamepadport[0] = &MARS_SYS_COMM8;
-		mars_gamepadport[1] = NULL;
-	}
-	else if (MARS_SYS_COMM8 == 0xF001)
-	{
-		mars_mouseport = 0;
-		mars_gamepadport[0] = &MARS_SYS_COMM10;
-		mars_gamepadport[1] = NULL;
-	}
-
-	mars_controls[0] = mars_controls[1] = 0;
+	Mars_DetectInputDevices();
 
 	Mars_UpdateCD();
 
@@ -272,42 +251,12 @@ uint16_t* Mars_FrameBufferLines(void)
 
 void pri_vbi_handler(void)
 {
-	int i;
-
 	mars_vblank_count++;
 
 	if (mars_newpalette)
 	{
 		if (Mars_UploadPalette(mars_newpalette))
 			mars_newpalette = NULL;
-	}
-
-	for (i = 0; i < 2; i++)
-	{
-		unsigned short cv;
-
-		if (!mars_gamepadport[i])
-			continue;
-
-		cv = *mars_gamepadport[i];
-		if (cv == 0xF001)
-		{
-			/* mouse detected in gamepadport - hot plug! */
-			if (MARS_SYS_COMM10 == 0xF001)
-			{
-				mars_mouseport = 1;
-				mars_gamepadport[0] = &MARS_SYS_COMM8;
-				mars_gamepadport[1] = NULL;
-			}
-			else if (MARS_SYS_COMM8 == 0xF001)
-			{
-				mars_mouseport = 0;
-				mars_gamepadport[0] = &MARS_SYS_COMM10;
-				mars_gamepadport[1] = NULL;
-			}
-		}
-		else if (cv != 0xF000)
-			mars_controls[i] |= cv;
 	}
 }
 
@@ -342,7 +291,8 @@ void Mars_UpdateCD(void)
 	MARS_SYS_COMM0 = 0x0600;
 	while (MARS_SYS_COMM0);
 	mars_cd_ok = MARS_SYS_COMM2;
-	mars_num_cd_tracks = MARS_SYS_COMM12;
+	mars_num_cd_tracks = mars_cd_ok >> 2;
+	mars_cd_ok = mars_cd_ok & 0x3;
 }
 
 void Mars_UseCD(int usecd)
@@ -361,21 +311,22 @@ void Mars_PlayTrack(char usecd, int playtrack, void *vgmptr, int vgmsize, char l
 {
 	Mars_UseCD(usecd);
 
-	if (usecd)
+	if (!usecd)
 	{
-		MARS_SYS_COMM2 = looping;
-		MARS_SYS_COMM12 = playtrack;
-	}
-	else
-	{
-		*(volatile intptr_t*)&MARS_SYS_COMM12 = (intptr_t)vgmsize;
-		MARS_SYS_COMM0 = 0x0301;
-		while (MARS_SYS_COMM0);
+		int i;
+		uint16_t s[4];
 
-		MARS_SYS_COMM2 = playtrack | (looping ? 0x8000 : 0x0000);
-		*(volatile intptr_t*)&MARS_SYS_COMM12 = (intptr_t)vgmptr;
+		s[0] = (uintptr_t)vgmsize>>16, s[1] = (uintptr_t)vgmsize&0xffff;
+		s[2] = (uintptr_t)vgmptr >>16, s[3] = (uintptr_t)vgmptr &0xffff;
+
+		for (i = 0; i < 4; i++) {
+			MARS_SYS_COMM2 = s[i];
+			MARS_SYS_COMM0 = 0x0301+i;
+			while (MARS_SYS_COMM0);
+		}
 	}
 
+	MARS_SYS_COMM2 = playtrack | (looping ? 0x8000 : 0x0000);
 	MARS_SYS_COMM0 = 0x0300; /* start music */
 	while (MARS_SYS_COMM0);
 }
@@ -488,35 +439,33 @@ void Mars_SetNetLinkTimeout(int timeout)
 void Mars_SetMDCrsr(int x, int y)
 {
 	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM12 = x;
-	MARS_SYS_COMM14 = y;
+	MARS_SYS_COMM2 = (x<<6)|y;
 	MARS_SYS_COMM0 = 0x0800;			/* set current md cursor */
 }
 
 void Mars_GetMDCrsr(int *x, int *y)
 {
+	unsigned t;
 	while (MARS_SYS_COMM0);
 	MARS_SYS_COMM0 = 0x0900;			/* get current md cursor */
 	while (MARS_SYS_COMM0);
-	*x = (int)MARS_SYS_COMM12;
-	*y = (int)MARS_SYS_COMM14;
+	t = MARS_SYS_COMM2;
+	*y = t & 31;
+	*x = t >> 6;
 }
 
 void Mars_SetMDColor(int fc, int bc)
 {
 	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM12 = fc | (fc << 4) | (fc << 8) | (fc << 12);
-	MARS_SYS_COMM14 = bc | (bc << 4) | (bc << 8) | (bc << 12);
-	MARS_SYS_COMM0 = 0x0A00;			/* set font fg and bg colors */
+	MARS_SYS_COMM0 = 0x0A00 | (bc << 4) | fc;			/* set font fg and bg colors */
 }
 
 void Mars_GetMDColor(int *fc, int *bc)
 {
 	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM0 = 0x0B00;			/* get font fg and bg colors */
-	while (MARS_SYS_COMM0);
-	*fc = (int)MARS_SYS_COMM12;
-	*bc = (int)MARS_SYS_COMM14;
+	for (MARS_SYS_COMM0 = 0x0B00; MARS_SYS_COMM0;);		/* get font fg and bg colors */
+	*fc = (unsigned)(MARS_SYS_COMM2 >> 0) & 15;
+	*bc = (unsigned)(MARS_SYS_COMM2 >> 4) & 15;
 }
 
 void Mars_SetMDPal(int cpsel)
@@ -549,10 +498,10 @@ void Mars_DebugStart(void)
 	MARS_SYS_COMM0 = 0x0F00;			/* start debug queue */
 }
 
-void Mars_DebugQueue(int id, int val)
+void Mars_DebugQueue(int id, short val)
 {
 	while (MARS_SYS_COMM0);
-	*(volatile intptr_t *)&MARS_SYS_COMM12 = val;
+	MARS_SYS_COMM2 = val;
 	MARS_SYS_COMM0 = 0x1000 | id;		/* queue debug entry */
 }
 
@@ -565,8 +514,62 @@ void Mars_DebugEnd(void)
 void Mars_SetBankPage(int bank, int page)
 {
 	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM2 = page;
-	MARS_SYS_COMM0 = 0x1600 | bank;
+	MARS_SYS_COMM0 = 0x1600 | (page<<3) | bank;
 	while (MARS_SYS_COMM0);
 }
 
+void Mars_SetBankPageSec(int bank, int page)
+{
+	volatile unsigned short bcomm4 = MARS_SYS_COMM4;
+
+	MARS_SYS_COMM4 = 0x1600 | (page<<3) | bank;
+	while (MARS_SYS_COMM4 != 0x1000);
+
+	MARS_SYS_COMM4 = bcomm4;
+}
+
+int Mars_ROMSize(void)
+{
+	return *((volatile uint32_t *)0x020001a4) - *((volatile uint32_t *)0x020001a0) + 1;
+}
+
+void Mars_DetectInputDevices(void)
+{
+	unsigned i;
+	unsigned cmd = 0x1901;
+
+	for (i = 0; i < 2; i++)
+	{
+		int val;
+
+		while (MARS_SYS_COMM0);
+		MARS_SYS_COMM0 = cmd;
+		while (MARS_SYS_COMM0);
+
+		val = MARS_SYS_COMM2;
+		if (val == 0xF000)
+		{
+			// nothing here
+			mars_gamepadport[i] = -1;
+		}
+		else if (val == 0xF001)
+		{
+			mars_gamepadport[0] = !i; // main controller on the other port
+			mars_gamepadport[1] = -(i + 2); // mouse on this port
+		}
+		else
+		{
+			mars_gamepadport[i] = i;
+		}
+
+		cmd += 0x100;
+	}
+}
+
+int Mars_ReadController(int port)
+{
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM0 = 0x1900 + ((unsigned)port * 0x100);
+	while (MARS_SYS_COMM0);
+	return MARS_SYS_COMM2;
+}

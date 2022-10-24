@@ -530,9 +530,7 @@ typedef struct vissprite_s
 	VINT 		patchnum;
 	VINT		colormap;		/* -1 = shadow draw */
 	fixed_t		gx,gy;	/* global coordinates */
-#ifdef MARS
-	inpixel_t 	*pixels;
-#else
+#ifndef MARS
 	pixel_t		*pixels;		/* data patch header references */
 #endif
 	drawcol_t   drawcol;

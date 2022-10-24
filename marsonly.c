@@ -33,7 +33,6 @@ int main(void)
 	Mars_WaitFrameBuffersFlip();
 
 	ticrate = Mars_RefreshHZ() / TICRATE;
-	mousepresent = mars_mouseport >= 0;
 
 /* */
 /* load defaults */

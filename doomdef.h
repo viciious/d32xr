@@ -513,7 +513,7 @@ extern	int			consoleplayer;		/* player taking events and displaying */
 extern	player_t	players[MAXPLAYERS];
 extern	playerresp_t	playersresp[MAXPLAYERS];
 
-extern	int			maxammo[NUMAMMO];
+extern	VINT		maxammo[NUMAMMO];
 
 
 extern	skill_t		gameskill;
@@ -1189,13 +1189,13 @@ typedef enum
 	DEBUGMODE_NUM_MODES
 } debugmode_t;
 
-extern int debugmode;
+extern VINT debugmode;
 extern char clearscreen;
 extern VINT colormapopt;
 extern VINT initmathtables;
 
-extern int COLOR_BLACK;
-extern int COLOR_WHITE;
+extern VINT COLOR_BLACK;
+extern VINT COLOR_WHITE;
 
 void I_InitMenuFire(jagobj_t* titlepic);
 void I_StopMenuFire(void);

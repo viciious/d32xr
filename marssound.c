@@ -52,7 +52,7 @@ enum
 
 static uint8_t snd_bufidx = 0;
 int16_t __attribute__((aligned(16))) snd_buffer[2][MAX_SAMPLES * 2];
-static uint8_t	snd_init = 0, snd_stopmix = 0;
+static uint8_t	snd_init = 0;
 
 static VINT		*vgm_tracks;
 uint8_t			*vgm_ptr;
@@ -61,7 +61,7 @@ sfxchannel_t	pcmchannel;
 
 int __attribute__((aligned(16))) pcm_data[4];
 
-sfxchannel_t	sfxchannels[SFXCHANNELS];
+sfxchannel_t	*sfxchannels;
 
 VINT 			sfxvolume = 64;	/* range 0 - 64 */
 VINT 			musicvolume = 64;	/* range 0 - 64 */
@@ -96,6 +96,8 @@ void S_Init(void)
 	int		initmusictype;
 	VINT	tmp_tracks[100];
 	int 	start, end;
+
+	sfxchannels = Z_Malloc(sizeof(*sfxchannels)*SFXCHANNELS, PU_STATIC, 0);
 
 	/* init sound effects */
 	start = W_CheckNumForName("DS_START");
@@ -735,9 +737,6 @@ void sec_dma1_handler(void)
 
 	snd_bufidx ^= 1; // flip audio buffer
 
-	if (snd_stopmix)
-		return;
-
 	Mars_Sec_ReadSoundCmds();
 
 	S_Update(snd_buffer[snd_bufidx]);
@@ -912,6 +911,17 @@ void Mars_Sec_ReadSoundCmds(void)
 	}
 }
 
+void Mars_Sec_StartSoundMixer(void)
+{
+	S_ClearPCM();
+
+	// fill first buffer
+	S_Update(snd_buffer[snd_bufidx]);
+
+	// start DMA
+	sec_dma1_handler();
+}
+
 void Mars_Sec_InitSoundDMA(void)
 {
 	uint16_t sample, ix;
@@ -952,45 +962,18 @@ void Mars_Sec_InitSoundDMA(void)
 
 	snd_bufidx = 0;
 	snd_init = 1;
-	snd_stopmix = 0;
 
 	Mars_Sec_StartSoundMixer();
-}
-
-void Mars_Sec_StopSoundMixer(void)
-{
-	SH2_DMA_CHCR1; // read TE
-	SH2_DMA_CHCR1 = 0; // clear TE
-
-	snd_stopmix = 1;
-}
-
-void Mars_Sec_StartSoundMixer(void)
-{
-	snd_stopmix = 0;
-
-	S_ClearPCM();
-
-	// fill first buffer
-	S_Update(snd_buffer[snd_bufidx]);
-
-	// start DMA
-	sec_dma1_handler();
 }
 
 void pri_cmd_handler(void)
 {
 	volatile int *pcm_cachethru = (volatile int *)((intptr_t)pcm_data | 0x20000000);
-	volatile unsigned short bcomm0 = MARS_SYS_COMM0,	/* save COMM0 reg */
-							bcomm2 = MARS_SYS_COMM2,	/* save COMM2 reg */
-							bcomm12 = MARS_SYS_COMM12,	/* save COMM12 reg */
-							bcomm14 = MARS_SYS_COMM14;	/* save COMM14 reg */
 	unsigned int offs, len, freq;
 
-	MARS_SYS_COMM0 = 0xA55A;				/* handshake with stream code */
-	while (MARS_SYS_COMM0 == 0xA55A);
-
 	((volatile short *)pcm_cachethru)[7] = 0;	/* make sure data array isn't being read */
+
+	// check comm0 for command
 	if (MARS_SYS_COMM0 == 0xFFFF)
 	{
 		/* stop pcm channel */
@@ -1000,10 +983,19 @@ void pri_cmd_handler(void)
 	else
 	{
 		freq = (unsigned)MARS_SYS_COMM0;
-		/* offset is COMM12 | top 8 bits of COMM2 */
-		/* length is COMM14 | lower 8 bits of COMM2 */
-		offs = (unsigned)MARS_SYS_COMM12 | ((unsigned)(MARS_SYS_COMM2 & 0x00FF) << 16);
-		len = (unsigned)MARS_SYS_COMM14 | ((unsigned)(MARS_SYS_COMM2 & 0xFF00) << 8);
+
+		/* top 8 bits of COMM2 */
+		offs = ((unsigned)(MARS_SYS_COMM2 & 0x00FF) << 16);
+		/* lower 8 bits of COMM2 */
+		len = ((unsigned)(MARS_SYS_COMM2 & 0xFF00) << 8);
+
+		/* handshake */
+		for (MARS_SYS_COMM0 = 0; MARS_SYS_COMM0 == 0; );
+
+		offs = offs | (unsigned)MARS_SYS_COMM2;
+		/* COMM0 has the LSB set to 1 */ 
+		len = len | ((unsigned)MARS_SYS_COMM0 >> 1);
+
 		/* limit offset and length to 1M since that's our block size */
 		offs &= 0xFFFFF;
 		len &= 0xFFFFF;
@@ -1014,11 +1006,18 @@ void pri_cmd_handler(void)
 		pcm_cachethru[3] = 1;
 	}
 
-	MARS_SYS_COMM0 = 0xA55A;				/* handshake with stream code */
+	// done
+	MARS_SYS_COMM0 = 0xA55A;					/* handshake with code */
 	while (MARS_SYS_COMM0 == 0xA55A);
+}
 
-	MARS_SYS_COMM2 = bcomm2;				/* restore COMM2 reg */
-	MARS_SYS_COMM12 = bcomm12;				/* restore COMM12 reg */
-	MARS_SYS_COMM14 = bcomm14;				/* restore COMM14 reg */
-	MARS_SYS_COMM0 = bcomm0;				/* restore COMM0 reg */
+void sec_cmd_handler(void)
+{
+	volatile unsigned short bcomm4 = MARS_SYS_COMM4;	/* save COMM4 reg */
+
+	// done
+	MARS_SYS_COMM4 = 0xA55A;					/* handshake with code */
+	while (MARS_SYS_COMM4 == 0xA55A);
+
+	MARS_SYS_COMM4 = bcomm4;					/* restore COMM4 reg */
 }
