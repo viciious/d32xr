@@ -275,14 +275,9 @@ void R_SegCommands(void)
             actionbits = *(volatile short *)&segl->actionbits;
         } while ((actionbits & AC_READY) == 0);
 
-        if (actionbits & AC_DRAWN || !(actionbits & (AC_TOPTEXTURE | AC_BOTTOMTEXTURE | AC_ADDSKY)))
-        {
-            goto post_draw;
-        }
-
         R_LockSeg();
         actionbits = *(volatile short *)&segl->actionbits;
-        if (actionbits & AC_DRAWN) {
+        if (actionbits & AC_DRAWN || !(actionbits & (AC_TOPTEXTURE | AC_BOTTOMTEXTURE | AC_ADDSKY))) {
             R_UnlockSeg();
             goto post_draw;
         } else {
