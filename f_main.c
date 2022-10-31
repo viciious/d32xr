@@ -28,7 +28,7 @@ void BufferedDrawSprite (int sprite, int frame, int rotation)
 	boolean		flip;
 	int			texturecolumn;
 	int 		fuzzpos = 0;
-	int			light = HWLIGHT(255);
+	int			light = HWLIGHT(143);
 
 	if ((unsigned)sprite >= NUMSPRITES)
 		I_Error ("BufferedDrawSprite: invalid sprite number %i "
@@ -534,7 +534,6 @@ void F_Drawer (void)
 	viewportWidth = 320;
 	viewportHeight = I_FrameBufferHeight();
 	viewportbuffer = (pixel_t*)I_FrameBuffer();
-	vd.fuzzcolormap = 14 * 256;
 
 	switch(status)
 	{
