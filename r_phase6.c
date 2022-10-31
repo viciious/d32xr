@@ -370,12 +370,13 @@ void R_SegCommands(void)
 post_draw:
         if(actionbits & (AC_NEWFLOOR|AC_NEWCEILING))
         {
-            int i;
-            int x = segl->start;
-            int width = segl->stop - segl->start + 1;
-            for (i = 0; i < width; i++, x++)
-                clipbounds[x] = newclipbounds[i];
-            newclipbounds += width;
+            unsigned w = segl->stop - segl->start + 1;
+            unsigned short *src = newclipbounds - 1, *dst = clipbounds + segl->start;
+
+            newclipbounds += w;
+            do {
+                *dst++ = *++src;
+            } while (--w > 0);
         }
     }
 }
