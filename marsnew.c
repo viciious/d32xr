@@ -333,9 +333,6 @@ void Mars_Secondary(void)
 		case MARS_SECCMD_R_DRAW_SPRITES:
 			Mars_Sec_R_DrawSprites(MARS_SYS_COMM6, (int*)(*(uintptr_t *)&MARS_SYS_COMM8));
 			break;
-		case MARS_SECCMD_R_DRAW_PSPRITES:
-			Mars_Sec_R_DrawPSprites(MARS_SYS_COMM6);
-			break;
 		case MARS_SECCMD_M_ANIMATE_FIRE:
 			Mars_Sec_M_AnimateFire();
 			break;
