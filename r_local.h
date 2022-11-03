@@ -528,12 +528,11 @@ typedef struct vissprite_s
 	fixed_t		yiscale;
 	fixed_t		texturemid;
 	VINT 		patchnum;
-	VINT		colormap;		/* -1 = shadow draw */
+	VINT		colormap;		/* < 0 = shadow draw */
 	fixed_t		gx,gy;	/* global coordinates */
 #ifndef MARS
 	pixel_t		*pixels;		/* data patch header references */
 #endif
-	drawcol_t   drawcol;
 } vissprite_t;
 
 #define	MAXVISSPRITES	60

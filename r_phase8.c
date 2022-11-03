@@ -24,7 +24,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos,
    patch_t *patch;
    fixed_t  iscale, xfrac, spryscale, sprtop, fracstep;
    int light, x, stopx;
-   drawcol_t drawcol;
+   drawcol_t dcol;
 #ifdef MARS
 	inpixel_t 	*pixels;
 #else
@@ -40,14 +40,14 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos,
    iscale    = vis->yiscale;
    xfrac     = vis->startfrac;
    spryscale = vis->yscale;
-   drawcol   = vis->drawcol;
+   dcol      = vis->colormap < 0 ? drawfuzzcol : drawcol;
 
    FixedMul2(sprtop, vis->texturemid, spryscale);
    sprtop = centerYFrac - sprtop;
    spryscale = (unsigned)spryscale >> 8;
 
    // blitter iinc
-   light    = vis->colormap;
+   light    = vis->colormap < 0 ? -vis->colormap : vis->colormap;
    x        = vis->x1;
    stopx    = vis->x2 + 1;
    fracstep = vis->xiscale;
@@ -110,7 +110,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos,
             continue;
 
          // CALICO: invoke column drawer
-         drawcol(x, top, bottom, light, frac, iscale, pixels + BIGSHORT(column->dataofs), 128, fuzzpos);
+         dcol(x, top, bottom, light, frac, iscale, pixels + BIGSHORT(column->dataofs), 128, fuzzpos);
       }
    }
 }

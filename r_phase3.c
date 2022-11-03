@@ -145,7 +145,7 @@ static void R_PrepMobj(mobj_t *thing)
 
    if (thing->flags & MF_SHADOW)
    {
-      vis->colormap = vd.fuzzcolormap;
+      vis->colormap = -vd.fuzzcolormap;
    }
    else if (vd.fixedcolormap)
    {
@@ -159,8 +159,6 @@ static void R_PrepMobj(mobj_t *thing)
            vis->colormap = thing->subsector->sector->lightlevel;
        vis->colormap = HWLIGHT(vis->colormap);
    }
-
-   vis->drawcol = (thing->flags & MF_SHADOW) ? drawfuzzcol : drawcol;
 }
 
 //
@@ -246,7 +244,6 @@ static void R_PrepPSprite(pspdef_t *psp)
            vis->colormap = vd.lightlevel;
        vis->colormap = HWLIGHT(vis->colormap);
    }
-   vis->drawcol = drawcol;
 }
 
 //
