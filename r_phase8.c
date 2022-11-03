@@ -17,7 +17,7 @@ void R_DrawVisSprite(vissprite_t* vis, unsigned short* spropening, int *fuzzpos,
 void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int screenhalf, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
 static void R_DrawSortedSprites(const int cpu, int* sortedsprites, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
 static void R_DrawPSprites(const int cpu, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
-void R_Sprites(void) ATTR_DATA_CACHE_ALIGN;
+void R_Sprites(int *sortedsprites) ATTR_DATA_CACHE_ALIGN;
 
 void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos, int screenhalf, int sprscreenhalf)
 {
@@ -337,12 +337,11 @@ void Mars_Sec_R_DrawSprites(int sprscreenhalf, int *sortedsprites)
 //
 // Render all sprites
 //
-void R_Sprites(void)
+void R_Sprites(int *sortedsprites)
 {
    int i = 0, count;
    int half, sortedcount;
    unsigned midcount;
-   int *sortedsprites = (int *)((intptr_t)vissectors);
    vissprite_t *pspr;
 
    sortedcount = 0;

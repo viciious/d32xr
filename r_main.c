@@ -813,7 +813,7 @@ boolean R_LatePrep (void);
 void R_Cache (void);
 void R_SegCommands (void);
 void R_DrawPlanes (void);
-void R_Sprites (void);
+void R_Sprites (int *sortedsprites);
 void R_Update (void);
 
 /*
@@ -843,6 +843,7 @@ void R_RenderPlayerView(int displayplayer)
 	visplane_t visplanes_[MAXVISPLANES], *visplanes_hash_[NUM_VISPLANES_BUCKETS];
 	vissprite_t vissprites_[MAXVISSPRITES];
 	uint32_t sortedvisplanes_[MAXVISPLANES];
+	int sortedsprites[1+MAXVISSPRITES];
 
 	/* make sure its done now */
 #if defined(JAGUAR)
@@ -871,7 +872,7 @@ void R_RenderPlayerView(int displayplayer)
 
 	R_DrawPlanes();
 
-	R_Sprites();
+	R_Sprites(sortedsprites);
 
 	R_Update();
 #else
@@ -903,6 +904,7 @@ void R_RenderPlayerView(int displayplayer)
 		vissprite_t vissprites_[MAXVISSPRITES];
 	__attribute__((aligned(16)))
 		uint32_t sortedvisplanes_[MAXVISPLANES];
+	int sortedsprites[1+MAXVISSPRITES];
 
 	while (!I_RefreshCompleted())
 		;
@@ -959,7 +961,7 @@ void R_RenderPlayerView(int displayplayer)
 	t_planes = I_GetFRTCounter() - t_planes;
 
 	t_sprites = I_GetFRTCounter();
-	R_Sprites();
+	R_Sprites(sortedsprites);
 	t_sprites = I_GetFRTCounter() - t_sprites;
 	
 	R_Update();
