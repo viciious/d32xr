@@ -463,8 +463,7 @@ void R_ClearTexCache(r_texcache_t* c);
 #define	AC_BOTTOMSIL		128
 #define	AC_SOLIDSIL			256
 #define	AC_ADDSKY			512
-#define	AC_READY			1024
-#define	AC_DRAWN			2048
+#define	AC_DRAWN			1024
 
 typedef struct
 {

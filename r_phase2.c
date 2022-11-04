@@ -581,7 +581,7 @@ void Mars_Sec_R_WallPrep(void)
                 Mars_ClearCacheLine(&flatpixels[segl->ceilingpicnum]);
             }
 
-            segl->actionbits |= AC_READY;
+            MARS_SYS_COMM8++;
         }
     }    
 }
