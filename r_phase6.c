@@ -77,7 +77,7 @@ static void R_DrawTextures(int x, unsigned iscale, int colnum_, fixed_t scale2, 
            tex->pixelcount += (bottom - top);
 
            // DEBUG: fixes green pixels in MAP01...
-           frac += (iscale + (iscale >> 5) + (iscale >> 6));
+           frac += iscale + ((iscale + iscale + iscale) >> 6);
 
            while (frac < 0)
            {
