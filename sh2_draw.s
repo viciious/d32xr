@@ -15,7 +15,7 @@ _I_DrawColumnLowA:
 	add	#1,r6
 
 0:
-        cmp/gt  r6,r5
+        cmp/ge  r6,r5
         bf/s    1f
         sub     r5,r6           /* count = dc_yh - dc_yl */
 
@@ -77,7 +77,7 @@ _I_DrawColumnNPo2LowA:
 	add	#1,r6
 
 0:
-        cmp/gt  r6,r5
+        cmp/ge  r6,r5
         bf/s    1f
         sub     r5,r6           /* count = dc_yh - dc_yl */
 
@@ -145,6 +145,77 @@ do_cnp_loop_low:
         rts
         mov.l   @r15+,r8
 
+! Draw a vertical column of distorted background pixels.
+! Source is the top of the column to scale.
+! Low detail (doubl-wide pixels) mode.
+!
+!void I_DrawFuzzColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
+!       fixed_t fracstep, inpixel_t *dc_source, int dc_texheight, int* pfuzzpos)
+
+        .align  4
+        .global _I_DrawFuzzColumnLowA
+_I_DrawFuzzColumnLowA:
+        mov     #0,r0
+        cmp/eq  r0,r5
+        bf      0f
+        mov     #1,r5
+0:
+        mov.l   draw_height,r0
+        mov.w   @r0,r0
+        add     #-2,r0
+        cmp/gt  r0,r6
+        bf      1f
+        mov     r0,r6
+1:
+	add	#1,r6
+2:
+        cmp/ge  r6,r5
+        bf/s    3f
+        sub     r5,r6           /* count = dc_yh - dc_yl */
+
+        /* dc_yl >= dc_yh, exit */
+        rts
+        nop
+3:
+        mov.l   draw_cmap,r0
+        mov.l   r8,@-r15
+        mov.l   @r0,r0
+        add     r7,r7
+        add     r0,r7           /* dc_colormap = colormap + light */
+        mov.l   draw_fb,r8
+        mov.l   @r8,r8          /* frame buffer start */
+        add     r4,r8
+        add     r4,r8           /* fb += dc_x*2 */
+        shll8   r5
+        add     r5,r8
+        shlr2   r5
+        add     r5,r8           /* fb += (dc_yl*256 + dc_yl*64) */
+        mov.l   draw_fuzzoffset,r5
+        mov.l   draw_width,r1
+        mov.l   @(20,r15),r2    /* pfuzzpos */
+        mov.l   @r2,r3          /* fuzzpos */
+        sub     r1,r8           /* fb -= SCREENWIDTH */
+
+        .p2alignw 2, 0x0009
+do_fuzz_col_loop_low:
+        mov     r3,r0
+        and     #63,r0          /* fuzzpos &= FUZZMASK */
+        add     r0,r0
+        mov.w   @(r0,r5),r0     /* pix = fuzztable[fuzzpos] */
+        add     r1,r8           /* fb += SCREENWIDTH */
+        add     r0,r0
+        mov.b   @(r0,r8),r0     /* pix = dest[pix] */
+        add     #1,r3
+        add     r0,r0
+        dt      r6              /* count-- */
+        mov.w   @(r0,r7),r4     /* dpix = dc_colormap[pix] */
+        bf/s    do_fuzz_col_loop_low
+        mov.w   r4,@r8          /* *fb = dpix */
+
+        mov.l   r3,@r2
+        rts
+        mov.l   @r15+,r8
+
 ! Draw a horizontal row of pixels from a projected flat (floor/ceiling) texture.
 ! Low detail (doubl-wide pixels) mode.
 !
@@ -158,7 +229,7 @@ _I_DrawSpanLowA:
 	add	#1,r6
 
 0:
-        cmp/gt  r6,r5
+        cmp/ge  r6,r5
         bf/s    1f
         sub     r5,r6           /* count = ds_x2 - ds_x1 */
 
@@ -293,7 +364,7 @@ _I_DrawColumnA:
 	add	#1,r6
 
 0:
-        cmp/gt  r6,r5
+        cmp/ge  r6,r5
         bf/s    1f
         sub     r5,r6           /* count = dc_yh - dc_yl */
 
@@ -352,7 +423,7 @@ _I_DrawColumnNPo2A:
 	add	#1,r6
 
 0:
-        cmp/gt  r6,r5
+        cmp/ge  r6,r5
         bf/s    1f
         sub     r5,r6           /* count = dc_yh - dc_yl */
 
@@ -417,6 +488,74 @@ do_cnp_loop:
         rts
         mov.l   @r15+,r8
 
+
+! Draw a vertical column of distorted background pixels.
+! Source is the top of the column to scale.
+! Low detail (doubl-wide pixels) mode.
+!
+!void I_DrawFuzzColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
+!       fixed_t fracstep, inpixel_t *dc_source, int dc_texheight, int* pfuzzpos)
+
+        .align  4
+        .global _I_DrawFuzzColumnA
+_I_DrawFuzzColumnA:
+        mov     #0,r0
+        cmp/eq  r0,r5
+        bf      0f
+        mov     #1,r5
+0:
+        mov.l   draw_height,r0
+        mov.w   @r0,r0
+        add     #-2,r0
+        cmp/gt  r0,r6
+        bf      1f
+        mov     r0,r6
+1:
+	add	#1,r6
+2:
+        cmp/ge  r6,r5
+        bf/s    3f
+        sub     r5,r6           /* count = dc_yh - dc_yl */
+
+        /* dc_yl >= dc_yh, exit */
+        rts
+        nop
+3:
+        mov.l   draw_cmap,r0
+        mov.l   r8,@-r15
+        mov.l   @r0,r0
+        add     r0,r7           /* dc_colormap = colormap + light */
+        mov.l   draw_fb,r8
+        mov.l   @r8,r8          /* frame buffer start */
+        add     r4,r8           /* fb += dc_x */
+        shll8   r5
+        add     r5,r8
+        shlr2   r5
+        add     r5,r8           /* fb += (dc_yl*256 + dc_yl*64) */
+        mov.l   draw_fuzzoffset,r5
+        mov.l   draw_width,r1
+        mov.l   @(20,r15),r2    /* pfuzzpos */
+        mov.l   @r2,r3          /* fuzzpos */
+        sub     r1,r8           /* fb -= SCREENWIDTH */
+
+        .p2alignw 2, 0x0009
+do_fuzz_col_loop:
+        mov     r3,r0
+        and     #63,r0          /* fuzzpos &= FUZZMASK */
+        add     r0,r0
+        add     r1,r8           /* fb += SCREENWIDTH */
+        mov.w   @(r0,r5),r0     /* pix = fuzztable[fuzzpos] */
+        add     #1,r3
+        mov.b   @(r0,r8),r0     /* pix = dest[pix] */
+        dt      r6              /* count-- */
+        mov.b   @(r0,r7),r4     /* dpix = dc_colormap[pix] */
+        bf/s    do_fuzz_col_loop
+        mov.b   r4,@r8          /* *fb = dpix */
+
+        mov.l   r3,@r2
+        rts
+        mov.l   @r15+,r8
+
 ! Draw a horizontal row of pixels from a projected flat (floor/ceiling) texture.
 !
 !void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
@@ -429,7 +568,7 @@ _I_DrawSpanA:
 	add	#1,r6
 
 0:
-        cmp/gt  r6,r5
+        cmp/ge  r6,r5
         bf/s    1f
         sub     r5,r6           /* count = ds_x2 - ds_x1 */
 
@@ -557,5 +696,9 @@ draw_cmap:
 /*      .long   colormap|0x20000000   */
 draw_width:
         .long   320
+draw_height:
+        .long   _viewportHeight
 draw_flat_ymask:
         .long   4032
+draw_fuzzoffset:
+        .long   _fuzzoffset

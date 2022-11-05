@@ -784,21 +784,25 @@ void I_Error (char *error, ...) __attribute__((noreturn));
 #ifdef USE_C_DRAW
 
 #define I_DrawColumnLow I_DrawColumnLowC
+#define I_DrawFuzzColumnLow I_DrawFuzzColumnLowC
 #define I_DrawColumnNPo2Low I_DrawColumnNPo2LowC
 #define I_DrawSpanLow I_DrawSpanLowC
 
 #define I_DrawColumn I_DrawColumnC
 #define I_DrawColumnNPo2 I_DrawColumnNPo2C
+#define I_DrawFuzzColumnC I_DrawFuzzColumnAC
 #define I_DrawSpan I_DrawSpanC
 
 #else
 
 #define I_DrawColumnLow I_DrawColumnLowA
+#define I_DrawFuzzColumnLow I_DrawFuzzColumnLowA
 #define I_DrawColumnNPo2Low I_DrawColumnNPo2LowA
 #define I_DrawSpanLow I_DrawSpanLowA
 
 #define I_DrawColumn I_DrawColumnA
 #define I_DrawColumnNPo2 I_DrawColumnNPo2A
+#define I_DrawFuzzColumn I_DrawFuzzColumnA
 #define I_DrawSpan I_DrawSpanA
 
 #endif
