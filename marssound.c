@@ -9,8 +9,8 @@
 
 #define SAMPLE_RATE      22050
 #define SAMPLE_MIN       2
-#define SAMPLE_CENTER    517
 #define SAMPLE_MAX       1032
+#define SAMPLE_CENTER    (SAMPLE_MAX-SAMPLE_MIN)/2
 
 // when to clip out sounds
 // Does not fit the large outdoor areas.
@@ -625,7 +625,8 @@ static void S_PaintChannel(sfxchannel_t *ch, int16_t* buffer)
 static void S_Update(int16_t* buffer)
 {
 	int i;
-	int16_t* b;
+	int32_t *b2;
+	int c, l, h;
 	mobj_t* mo;
 
 	Mars_ClearCacheLine(&sfxvolume);
@@ -645,17 +646,15 @@ static void S_Update(int16_t* buffer)
 		Mars_ClearCacheLine(&mo->angle);
 	}
 
+	b2 = (int32_t *)buffer;
+	for (i = 0; i < MAX_SAMPLES / 8; i++)
 	{
-		int32_t *b2 = (int32_t *)buffer;
-		for (i = 0; i < MAX_SAMPLES / 8; i++)
-		{
-			*b2++ = 0, *b2++ = 0, *b2++ = 0, *b2++ = 0;
-			*b2++ = 0, *b2++ = 0, *b2++ = 0, *b2++ = 0;
-		}
-		for (i *= 8; i < MAX_SAMPLES; i++)
-		{
-			*b2++ = 0;
-		}
+		*b2++ = 0, *b2++ = 0, *b2++ = 0, *b2++ = 0;
+		*b2++ = 0, *b2++ = 0, *b2++ = 0, *b2++ = 0;
+	}
+	for (i *= 8; i < MAX_SAMPLES; i++)
+	{
+		*b2++ = 0;
 	}
 
 	S_UpdatePCM(buffer);
@@ -698,31 +697,27 @@ static void S_Update(int16_t* buffer)
 		S_PaintChannel(ch, buffer);
 	}
 
-#define DO_SAMPLE() do { \
-		int16_t s = *b + SAMPLE_CENTER; \
-		*b++ = (s < 0) ? SAMPLE_MIN : (s > SAMPLE_MAX) ? SAMPLE_MAX : s; \
-	} while (0)
-
-#define DO_STEREO_SAMPLE() do { \
-		DO_SAMPLE(); DO_SAMPLE(); \
-	} while (0)
+#ifdef MARS
+	// force GCC into keeping constants in registers as it 
+	// is stupid enough to reload them on each loop iteration
+	__asm volatile("mov %1,%0\n\t" : "=&r" (c) : "r"(SAMPLE_CENTER));
+	__asm volatile("mov %1,%0\n\t" : "=&r" (l) : "r"(SAMPLE_MIN));
+	__asm volatile("mov %1,%0\n\t" : "=&r" (h) : "r"(SAMPLE_MAX));
+#else
+	c = SAMPLE_CENTER, l = SAMPLE_MIN, h = SAMPLE_MAX;
+#endif
 
 	// convert buffer from s16 pcm samples to u16 pwm samples
-	b = buffer;
-	for (i = 0; i < MAX_SAMPLES / 4; i++)
+	b2 = (int32_t *)buffer;
+	for (i = 0; i < MAX_SAMPLES; i++)
 	{
-		DO_STEREO_SAMPLE();
-		DO_STEREO_SAMPLE();
-		DO_STEREO_SAMPLE();
-		DO_STEREO_SAMPLE();
+		int s, s1, s2;
+		s = (int16_t)(*b2 >> 16) + c;
+		s1 = (s < 0) ? l : (s > h) ? h : s;
+		s = (int16_t)(*b2      ) + c;
+		s2 = (s < 0) ? l : (s > h) ? h : s;
+		*b2++ = (s1 << 16) | s2;
 	}
-	for (i *= 4; i < MAX_SAMPLES; i++)
-	{
-		DO_STEREO_SAMPLE();
-	}
-
-#undef DO_STEREO_SAMPLE
-#undef DO_SAMPLE
 }
 
 void sec_dma1_handler(void)
