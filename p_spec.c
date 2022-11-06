@@ -47,7 +47,7 @@ static const animdef_t	animdefs[] =
 	{-1}
 };
 
-anim_t	*anims/*[MAXANIMS]*/, * lastanim;
+anim_t	anims[MAXANIMS], *lastanim;
 
 
 void P_InitPicAnims (void)
@@ -946,7 +946,7 @@ int EV_DoDonut(line_t *line)
 */
 
 int		numlinespecials = 0;
-line_t	**linespeciallist = NULL;
+line_t	*linespeciallist[MAXLINEANIMS];
 
 void P_SpawnSpecials (void)
 {
