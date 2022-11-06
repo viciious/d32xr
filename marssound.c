@@ -713,9 +713,9 @@ static void S_Update(int16_t* buffer)
 	{
 		int s, s1, s2;
 		s = (int16_t)(*b2 >> 16) + c;
-		s1 = (s < 0) ? l : (s > h) ? h : s;
+		s1 = (s < l) ? l : (s > h) ? h : s;
 		s = (int16_t)(*b2      ) + c;
-		s2 = (s < 0) ? l : (s > h) ? h : s;
+		s2 = (s < l) ? l : (s > h) ? h : s;
 		*b2++ = (s1 << 16) | s2;
 	}
 }
