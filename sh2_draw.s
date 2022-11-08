@@ -123,24 +123,25 @@ _I_DrawColumnNPo2LowA:
         bt      4b
 5:
         mov.l   draw_width,r1
+        sub     r1,r8           /* fb -= SCREENWIDTH */
 
         .p2alignw 2, 0x0009
 do_cnp_loop_low:
         mov     r2,r0
         shlr16  r0              /* frac >> 16 */
         mov.b   @(r0,r5),r0     /* pix = dc_source[frac >> 16] */
+        add     r1,r8           /* fb += SCREENWIDTH */
         add     r3,r2           /* frac += fracstep */
-        add     r0,r0
-        mov.w   @(r0,r7),r0     /* dpix = dc_colormap[pix] */
         cmp/ge  r4,r2
-        mov.w   r0,@r8          /* *fb = dpix */
-        bf      1f
+        add     r0,r0
+        bf/s    1f
+        mov.w   @(r0,r7),r0     /* dpix = dc_colormap[pix] */
         /* if (frac >= heightmask) */
         sub     r4,r2           /* frac -= heightmask */
 1:
         dt      r6              /* count-- */
         bf/s    do_cnp_loop_low
-        add     r1,r8           /* fb += SCREENWIDTH */
+        mov.w   r0,@r8          /* *fb = dpix */
 
         rts
         mov.l   @r15+,r8
@@ -467,6 +468,7 @@ _I_DrawColumnNPo2A:
         bt      4b
 5:
         mov.l   draw_width,r1
+        sub     r1,r8           /* fb -= SCREENWIDTH */
 
         .p2alignw 2, 0x0009
 do_cnp_loop:
@@ -474,16 +476,16 @@ do_cnp_loop:
         shlr16  r0              /* frac >> 16 */
         mov.b   @(r0,r5),r0     /* pix = dc_source[frac >> 16] */
         add     r3,r2           /* frac += fracstep */
-        mov.b   @(r0,r7),r0     /* dpix = dc_colormap[pix] */
         cmp/ge  r4,r2
-        mov.b   r0,@r8          /* *fb = dpix */
-        bf      1f
+        bf/s    1f
+        mov.b   @(r0,r7),r0     /* dpix = dc_colormap[pix] */
         /* if (frac >= heightmask) */
         sub     r4,r2           /* frac -= heightmask */
 1:
+        add     r1,r8           /* fb += SCREENWIDTH */
         dt      r6              /* count-- */
         bf/s    do_cnp_loop
-        add     r1,r8           /* fb += SCREENWIDTH */
+        mov.b   r0,@r8          /* *fb = dpix */
 
         rts
         mov.l   @r15+,r8
