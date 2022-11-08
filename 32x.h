@@ -47,8 +47,8 @@
 #define MARS_SYS_COMM6      (*(volatile unsigned short *)0x20004026)
 #define MARS_SYS_COMM8      (*(volatile unsigned short *)0x20004028)
 #define MARS_SYS_COMM10     (*(volatile unsigned short *)0x2000402A)
-#define MARS_SYS_COMM12     (*(volatile unsigned short *)0x2000402C)
-#define MARS_SYS_COMM14     (*(volatile unsigned short *)0x2000402E)
+#define MARS_SYS_COMM12     (*(volatile unsigned short *)0x2000402C) /* controller 1 current value */
+#define MARS_SYS_COMM14     (*(volatile unsigned short *)0x2000402E) /* controller 2 current value */
 
 #define MARS_PWM_CTRL       (*(volatile unsigned short *)0x20004030)
 #define MARS_PWM_CYCLE      (*(volatile unsigned short *)0x20004032)

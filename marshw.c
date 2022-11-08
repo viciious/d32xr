@@ -536,17 +536,11 @@ int Mars_ROMSize(void)
 void Mars_DetectInputDevices(void)
 {
 	unsigned i;
-	unsigned cmd = 0x1901;
+	volatile uint16_t *addr = (volatile uint16_t *)&MARS_SYS_COMM12;
 
 	for (i = 0; i < 2; i++)
 	{
-		int val;
-
-		while (MARS_SYS_COMM0);
-		MARS_SYS_COMM0 = cmd;
-		while (MARS_SYS_COMM0);
-
-		val = MARS_SYS_COMM2;
+		int val = *addr++;
 		if (val == 0xF000)
 		{
 			// nothing here
@@ -561,15 +555,10 @@ void Mars_DetectInputDevices(void)
 		{
 			mars_gamepadport[i] = i;
 		}
-
-		cmd += 0x100;
 	}
 }
 
 int Mars_ReadController(int port)
 {
-	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM0 = 0x1900 + ((unsigned)port * 0x100);
-	while (MARS_SYS_COMM0);
-	return MARS_SYS_COMM2;
+	return *((volatile uint16_t *)&MARS_SYS_COMM12 + port);
 }
