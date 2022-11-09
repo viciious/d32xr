@@ -198,7 +198,7 @@ static int Mars_ConvGamepadButtons(int ctrl)
 }
 
 // mostly exists to handle the 3-button controller situation
-static int Mars_HandleStartHeld(unsigned *ctrl, const unsigned ctrl_start, btnstate_t *startbtn)
+static int Mars_HandleStartHeld(int *ctrl, const int ctrl_start, btnstate_t *startbtn)
 {
 	int morebuttons = 0;
 	boolean start = 0;
@@ -522,12 +522,11 @@ byte *I_ZoneBase (int *size)
 static int I_ReadControls_(int port, btnstate_t* startbtn)
 {
 	int ctrl;
-	unsigned val;
-
-	if (port < 0)
-		return 0;
+	int val;
 
 	val = Mars_ReadController(port);
+	if (val < 0)
+		return 0;
 
 	ctrl = 0;
 	ctrl |= Mars_HandleStartHeld(&val, SEGA_CTRL_START, startbtn);
@@ -538,7 +537,6 @@ static int I_ReadControls_(int port, btnstate_t* startbtn)
 int I_ReadControls(void)
 {
 	static btnstate_t startbtn = { 0 };
-	Mars_DetectInputDevices();
 	return I_ReadControls_(mars_gamepadport[0], &startbtn);
 }
 
@@ -554,13 +552,9 @@ int I_ReadMouse(int* pmx, int *pmy)
 	static int oldmval = 0;
 	unsigned val;
 
-	mousepresent = mars_gamepadport[1] < -1;
-
 	*pmx = *pmy = 0;
-	if (!mousepresent)
-		return 0;
 
-	mval = Mars_PollMouse(-(mars_gamepadport[1] + 2));
+	mval = Mars_PollMouse();
 	switch (mval)
 	{
 	case -2:
@@ -570,11 +564,10 @@ int I_ReadMouse(int* pmx, int *pmy)
 	case -1:
 		// no mouse
 		mousepresent = false;
-		mars_gamepadport[0] = 0;
-		mars_gamepadport[1] = 1;
 		oldmval = 0;
 		return 0;
 	default:
+		mousepresent = true;
 		oldmval = mval;
 		break;
 	}

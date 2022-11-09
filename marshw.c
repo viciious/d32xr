@@ -29,6 +29,8 @@
 static volatile uint16_t mars_activescreen = 0;
 
 char mars_gamepadport[2] = { 0, 1 };
+char mars_mouseport = -1;
+static volatile uint16_t mars_controlval[2];
 
 volatile unsigned mars_vblank_count = 0;
 volatile unsigned mars_pwdt_ovf_count = 0;
@@ -132,9 +134,13 @@ char Mars_UploadPalette(const uint8_t* palette)
 	return 1;
 }
 
-int Mars_PollMouse(int port)
+int Mars_PollMouse(void)
 {
 	unsigned int mouse1, mouse2;
+	int port = mars_mouseport;
+
+	if (port < 0)
+		return -1;
 
 	while (MARS_SYS_COMM0); // wait until 68000 has responded to any earlier requests
 	MARS_SYS_COMM0 = 0x0500 | port; // tells 68000 to read mouse
@@ -258,6 +264,8 @@ void pri_vbi_handler(void)
 		if (Mars_UploadPalette(mars_newpalette))
 			mars_newpalette = NULL;
 	}
+
+	Mars_DetectInputDevices();
 }
 
 void Mars_ReadSRAM(uint8_t * buffer, int offset, int len)
@@ -538,27 +546,44 @@ void Mars_DetectInputDevices(void)
 	unsigned i;
 	volatile uint16_t *addr = (volatile uint16_t *)&MARS_SYS_COMM12;
 
+	mars_mouseport = -1;
+	for (i = 0; i < 2; i++)
+		mars_gamepadport[i] = -1;
+
 	for (i = 0; i < 2; i++)
 	{
 		int val = *addr++;
 		if (val == 0xF000)
 		{
-			// nothing here
-			mars_gamepadport[i] = -1;
+			mars_controlval[i] = 0;
+			continue;	// nothing here
 		}
-		else if (val == 0xF001)
+		if (val == 0xF001)
 		{
-			mars_gamepadport[0] = !i; // main controller on the other port
-			mars_gamepadport[1] = -(i + 2); // mouse on this port
+			mars_mouseport = i;
+			mars_controlval[i] = 0;
 		}
 		else
 		{
 			mars_gamepadport[i] = i;
+			mars_controlval[i] |= val;
 		}
+	}
+
+	/* swap controller 1 and 2 around if the former isn't present */
+	if (mars_gamepadport[0] < 0 && mars_gamepadport[1] >= 0)
+	{
+		mars_gamepadport[0] = mars_gamepadport[1];
+		mars_gamepadport[1] = -1;
 	}
 }
 
 int Mars_ReadController(int port)
 {
-	return *((volatile uint16_t *)&MARS_SYS_COMM12 + port);
+	int val;
+	if (port < 0)
+		return -1;
+	val = mars_controlval[port];
+	mars_controlval[port] = 0;
+	return val;
 }

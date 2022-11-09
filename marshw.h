@@ -43,12 +43,12 @@ void Mars_InitVideo(int lines);
 void Mars_InitLineTable(void);
 void Mars_SetBrightness(int16_t brightness);
 char Mars_UploadPalette(const uint8_t* palette) MARS_ATTR_DATA_CACHE_ALIGN;
-int Mars_PollMouse(int port);
+int Mars_PollMouse(void);
 int Mars_ParseMousePacket(int mouse, int* pmx, int* pmy);
 
 typedef int (*mars_getctrl_f)(void);
 
-extern char mars_gamepadport[2];
+extern char mars_gamepadport[2], mars_mouseport;
 
 extern volatile unsigned mars_vblank_count;
 extern unsigned mars_frtc2msec_frac;
