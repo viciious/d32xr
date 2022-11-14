@@ -273,7 +273,8 @@ mix4_loop:
         add     r1,r2           /* step_index += index_table[nibble] */
         /* clamp to 0:88 */
         cmp/pz  r2
-        bt      7f
+        bt/s    7f
+        extu.w  r12,r12         /* clear upper word for step_index */
         bra     8f
         mov     #0,r2           /* clamp step_index to 0 */
 7:
@@ -282,7 +283,6 @@ mix4_loop:
         bf      8f
         mov     #88,r2          /* clamp step_index to 88 */
 8:
-        extu.w  r12,r12         /* clear upper word for step_index */
         shll16  r2
         or      r2,r12          /* r12 is step_index : predictor again */
 mix4_gets:
