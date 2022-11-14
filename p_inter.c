@@ -741,8 +741,13 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 /* */
 	if (player)
 	{
-		if ( (player->cheats&CF_GODMODE)||player->powers[pw_invulnerability] )
-			return;
+		// telefrags ignore the godmode cheat and invulnerability
+		if ( damage < 1000 )
+		{
+			if ( (player->cheats&CF_GODMODE)||player->powers[pw_invulnerability] )
+				return;
+		}
+
 		{
 			ang -= target->angle;
 			if (ang > ANG45+ANG45/2 && ang < ANG180)
