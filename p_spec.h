@@ -59,7 +59,7 @@ void 	P_UpdateSpecials (void);
 /* when needed */
 boolean	P_UseSpecialLine ( mobj_t *thing, line_t *line);
 void	P_ShootSpecialLine ( mobj_t *thing, line_t *line);
-void P_CrossSpecialLine (line_t *line,mobj_t *thing);
+void P_CrossSpecialLine (line_t *line,mobj_t *thing) __attribute((noinline));
 
 void 	P_PlayerInSpecialSector (player_t *player);
 
