@@ -245,7 +245,8 @@ mix4_loop:
 
         /* if (nibble & 8) diff = -diff */
         tst     #8,r0
-        bt      4f
+        bt/s    4f
+        mov     #-128,r1
         neg     r3,r3           /* diff = -diff */
 4:
         mov     r12,r2
@@ -254,13 +255,14 @@ mix4_loop:
         add     r3,r12          /* predictor += diff */
 
         /* clamp to -32768:32767 */
-        mov.l   n32k,r1
+        /* r1 should be -128 at this point */
+        shll8   r1
         cmp/ge  r1,r12
         bt      5f              /* sample >= -32768 */
         bra     6f
         mov     r1,r12          /* clamp */
 5:
-        mov.l   p32k,r1
+        not     r1,r1
         cmp/gt  r1,r12
         bf      6f              /* sample <= 32767 */
         mov     r1,r12          /* clamp */
@@ -334,10 +336,6 @@ mix4_exit:
 
 
         .align  4
-n32k:
-        .long   -32768
-p32k:
-        .long   32767
 
 _step_table:
         .long   step_table
