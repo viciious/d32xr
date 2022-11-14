@@ -227,16 +227,16 @@ mix4_loop:
         mov     #0,r3
         add     r1,r3           /* diff += step */
 1:
-        shlr    r1              /* step >> 1 */
         /* if (nibble & 2) diff += step >> 1 */
         tst     #2,r0
-        bt      2f
+        bt/s    2f
+        shlr    r1              /* step >> 1 */
         add     r1,r3           /* diff += step >> 1 */
 2:
-        shlr    r1              /* step >> 2 */
         /* if (nibble & 1) diff += step >> 2 */
         tst     #1,r0
-        bt      3f
+        bt/s    3f
+        shlr    r1              /* step >> 2 */
         add     r1,r3           /* diff += step >> 2 */
 3:
         shlr    r1              /* step >> 3 */
