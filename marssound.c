@@ -75,6 +75,7 @@ static marsrb_t	soundcmds = { 0 };
 
 static void S_StartSoundReal(mobj_t* mobj, unsigned sound_id, int vol, getsoundpos_t getpos) ATTR_DATA_CACHE_ALIGN;
 int S_PaintChannel4IMA(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
+int S_PaintChannel4IMA2x(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
 void S_PaintChannel8(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
 static void S_PaintChannel(sfxchannel_t *ch, int16_t* buffer) ATTR_DATA_CACHE_ALIGN;
 static void S_SpatializeAt(fixed_t*origin, mobj_t* listener, int* pvol, int* psep) ATTR_DATA_CACHE_ALIGN;
@@ -609,7 +610,13 @@ static void S_PaintChannel(sfxchannel_t *ch, int16_t* buffer)
 				ch->remaining_bytes -= block_size;
 			}
 
-			i = S_PaintChannel4IMA(ch, (int16_t *)(end - i), i, 64);
+			if ((ch->increment < (1 << 14)) && !(ch->increment & (ch->increment-1))) {
+				// optimized 2x upsampling mixer: from 11kHz to 22kHz or 44kHz
+				i = S_PaintChannel4IMA2x(ch, (int16_t *)(end - i), i, 64);
+			} else {
+				// general mixing routine
+				i = S_PaintChannel4IMA(ch, (int16_t *)(end - i), i, 64);
+			}
 		} while (i > 0);
 	}
 	else

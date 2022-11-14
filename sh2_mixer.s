@@ -188,12 +188,13 @@ _S_PaintChannel4IMA:
 !       shlr2   r13
         shlr2   r13             /* left volume = (255 - pan) * ch_vol * scale / 64 / 64 */
 
-        mov.l   @(20,r4),r0     /* prev_pos */
+        mov.l   @(20,r4),r7
+        mov     r7,r0           /* prev_pos */
         cmp/eq  #-1,r0
         bf      mix4_loop
         mov     #1,r0
         bra     mix4_gets
-        mov.l   r0,@(20,r4)
+        mov     r0,r7
 
         /* mix r6 stereo samples */
         .p2alignw 2, 0x0009
@@ -209,10 +210,10 @@ mix4_loop:
         shlr8   r0
         shll2   r0
         shlr8   r0              /* sample position in nibbles */
-        mov.l   @(20,r4),r2     /* prev_pos */
+        mov     r7,r2           /* prev_pos */
         cmp/eq  r0,r2
         bt      mix4_gets       /* haven't advanced a sample yet */
-        mov.l   r0,@(20,r4)     /* update prev_pos and calculate new adpcm sample */
+        mov     r0,r7           /* update prev_pos and calculate new adpcm sample */
  
         shlr    r0              /* one more because samples are nibbles, T set if msn */
         bf/s    0f              /* T not set, lsn */
@@ -220,42 +221,28 @@ mix4_loop:
         shlr2   r0
         shlr2   r0
 0:
-        and     #0x0F,r0
-        /* if (nibble & 4) diff += step */
-        tst     #4,r0
-        bt/s    1f
-        mov     #0,r3
-        add     r1,r3           /* diff += step */
-1:
-        /* if (nibble & 2) diff += step >> 1 */
-        tst     #2,r0
-        bt/s    2f
-        shlr    r1              /* step >> 1 */
-        add     r1,r3           /* diff += step >> 1 */
-2:
-        /* if (nibble & 1) diff += step >> 2 */
-        tst     #1,r0
-        bt/s    3f
-        shlr    r1              /* step >> 2 */
-        add     r1,r3           /* diff += step >> 2 */
-3:
-        shlr    r1              /* step >> 3 */
-        /* always add step >> 3 */
-        add     r1,r3           /* diff += step >> 3 */
-
-        /* if (nibble & 8) diff = -diff */
-        tst     #8,r0
-        bt/s    4f
-        mov     #-128,r1
-        neg     r3,r3           /* diff = -diff */
-4:
+        tst     #8,r0           /* (nibble & 8) */
+        and     #0x07,r0        /* nibble &= 7 */
+        /* diff = (2 * nibble + 1) * step / 8 */
+        mov     r0,r3
+        add     r3,r3           /* 2 * nibble */
+        add     #1,r3
+        muls.w  r1,r3
         mov     r12,r2
         shlr16  r2              /* save step_index */
         exts.w  r12,r12         /* 32-bit predictor */
+        mov     #-128,r1
+        sts     macl,r3         /* diff */
+        /* if (nibble & 8) step = -step */
+        bt/s    1f
+        shar    r3              /* diff / 2 */
+        neg     r3,r3
+1:
+        shar    r3              /* diff / 4 */
+        shar    r3              /* diff / 8 */
         add     r3,r12          /* predictor += diff */
 
         /* clamp to -32768:32767 */
-        /* r1 should be -128 at this point */
         shll8   r1
         cmp/ge  r1,r12
         bt      5f              /* sample >= -32768 */
@@ -292,6 +279,7 @@ mix4_gets:
         /* scale sample for left output */
         muls.w  r3,r13
         mov.l   @r5,r1
+        add     r10,r9                  /* position += increment */
         sts     macl,r0
 
         /* scale sample for right output */
@@ -312,7 +300,6 @@ mix4_gets:
         add     #4,r5
 
         /* advance position */
-        add     r10,r9                  /* position += increment */
 
         cmp/hs  r11,r9
         bt/s    mix4_exit               /* position >= length */
@@ -323,6 +310,200 @@ mix4_gets:
 
         mov.l   r12,@(16,r4)            /* update step_index : predictor */
 mix4_exit:
+        mov.l   r7,@(20,r4)
+        mov.l   r9,@(4,r4)              /* update position field */
+        mov.l   @r15+,r14
+        mov.l   @r15+,r13
+        mov.l   @r15+,r12
+        mov.l   @r15+,r11
+        mov.l   @r15+,r10
+        mov.l   @r15+,r9
+        mov.l   @r15+,r8
+        rts
+        mov     r6,r0
+
+! void S_PaintChannel4IMA2x(void *channel, int16_t *buffer, int32_t cnt, int32_t scale);
+! On entry: r4 = channel pointer
+!           r5 = buffer pointer
+!           r6 = count (number of stereo 16-bit samples / 2)
+!           r7 = scale (global volume - possibly fading, 0 - 64)
+        .align  4
+        .global _S_PaintChannel4IMA2x
+_S_PaintChannel4IMA2x:
+        mov.l   r8,@-r15
+        mov.l   r9,@-r15
+        mov.l   r10,@-r15
+        mov.l   r11,@-r15
+        mov.l   r12,@-r15
+        mov.l   r13,@-r15
+        mov.l   r14,@-r15
+ 
+        mov.l   @r4,r8          /* data pointer */
+        mov.l   @(4,r4),r9      /* position */
+        mov.l   @(8,r4),r10     /* increment (should be <= 1.0 for adpcm) */
+        mov.l   @(12,r4),r11    /* length */
+        mov.l   @(16,r4),r12    /* step_index:predictor */
+        mov.w   @(24,r4),r0     /* volume:pan */
+
+        add     r10,r10         /* increment *= 2 */
+
+        /* calculate left/right volumes from volume, pan, and scale */
+        mov     r0,r13
+        shlr8   r13
+        extu.b  r13,r13         /* ch_vol */
+        mov     r13,r14
+        extu.b  r0,r0           /* pan */
+ 
+        /* LINEAR_CROSSFADE */
+        mov     #0xFF,r1
+        extu.b  r1,r1
+        sub     r0,r1           /* 255 - pan */
+
+        mulu.w  r0,r14
+        sts     macl,r0         /* pan * ch_vol */
+        mul.l   r0,r7
+        sts     macl,r14        /* pan * ch_vol * scale */
+        shlr8   r14
+!       shlr2   r14
+        shlr2   r14             /* right volume = pan * ch_vol * scale / 64 / 64 */
+ 
+        mulu.w  r1,r13
+        sts     macl,r0         /* (255 - pan) * ch_vol */
+        mul.l   r0,r7
+        sts     macl,r13        /* (255 - pan) * ch_vol * scale */
+        shlr8   r13
+!       shlr2   r13
+        shlr2   r13             /* left volume = (255 - pan) * ch_vol * scale / 64 / 64 */
+
+        mov.l   @(20,r4),r7
+        mov     r7,r0     /* prev_pos */
+        cmp/eq  #-1,r0
+        bf      mix4_loop2x
+        mov     #1,r0
+        bra     mix4_gets2x
+        mov     r0,r7
+
+        /* mix r6 stereo samples */
+        .p2alignw 2, 0x0009
+mix4_loop2x:
+        /* process one sample */
+        mov.l   _step_table,r1
+        mov     r12,r0
+        shlr16  r0              /* step_index */
+        add     r0,r0
+        mov.w   @(r0,r1),r1     /* step = step_table[step_index] */
+
+        mov     r9,r0
+        shlr8   r0
+        shll2   r0
+        shlr8   r0              /* sample position in nibbles */
+        mov     r7,r2           /* prev_pos */
+        cmp/eq  r0,r2
+        bt      mix4_gets2x     /* haven't advanced a sample yet */
+        mov     r0,r7           /* update prev_pos and calculate new adpcm sample */
+ 
+        shlr    r0              /* one more because samples are nibbles, T set if msn */
+        bf/s    0f              /* T not set, lsn */
+        mov.b   @(r0,r8),r0
+        shlr2   r0
+        shlr2   r0
+0:
+        tst     #8,r0           /* (nibble & 8) */
+        and     #0x07,r0        /* nibble &= 7 */
+        /* diff = (2 * nibble + 1) * step / 8 */
+        mov     r0,r3
+        add     r3,r3           /* 2 * nibble */
+        add     #1,r3
+        muls.w  r1,r3
+        mov     r12,r2
+        shlr16  r2              /* save step_index */
+        exts.w  r12,r12         /* 32-bit predictor */
+        mov     #-128,r1
+        sts     macl,r3         /* diff */
+        /* if (nibble & 8) step = -step */
+        bt/s    1f
+        shar    r3              /* diff / 2 */
+        neg     r3,r3
+1:
+        shar    r3              /* diff / 4 */
+        shar    r3              /* diff / 8 */
+        add     r3,r12          /* predictor += diff */
+
+        /* clamp to -32768:32767 */
+        shll8   r1
+        cmp/ge  r1,r12
+        bt      5f              /* sample >= -32768 */
+        bra     6f
+        mov     r1,r12          /* clamp */
+5:
+        not     r1,r1
+        cmp/gt  r1,r12
+        bf      6f              /* sample <= 32767 */
+        mov     r1,r12          /* clamp */
+6:
+        /* step_index += index_table[nibble] */
+        mov.l   _index_table,r1
+        mov.b   @(r0,r1),r1
+        add     r1,r2           /* step_index += index_table[nibble] */
+        /* clamp to 0:88 */
+        cmp/pz  r2
+        bt/s    7f
+        extu.w  r12,r12         /* clear upper word for step_index */
+        bra     8f
+        mov     #0,r2           /* clamp step_index to 0 */
+7:
+        mov     #88,r1
+        cmp/gt  r1,r2
+        bf      8f
+        mov     #88,r2          /* clamp step_index to 88 */
+8:
+        shll16  r2
+        or      r2,r12          /* r12 is step_index : predictor again */
+mix4_gets2x:
+        /* get sample */
+        exts.w  r12,r3          /* predictor */
+
+        /* scale sample for left output */
+        muls.w  r3,r13
+        mov.l   @r5,r1
+        add     r10,r9          /* position += increment */
+        sts     macl,r0
+
+        /* scale sample for right output */
+        muls.w  r3,r14
+
+        /* scale sample for left output -- cont */
+        shlr16  r0
+        shll16  r0
+        mov     r0,r3
+
+        /* scale sample for right output -- cont */
+        sts     macl,r0
+        shlr16  r0
+        add     r0,r3
+
+        /* write left and right output */
+        add     r3,r1
+        mov.l   r1,@r5
+
+        mov.l   @(4,r5),r1
+        dt      r6
+        add     r3,r1
+        mov.l   r1,@(4,r5)
+        add     #8,r5
+
+        /* advance position */
+
+        cmp/hs  r11,r9
+        bt/s    mix4_exit2x             /* position >= length */
+
+        /* next sample */
+        dt      r6
+        bf      mix4_loop2x
+
+        mov.l   r12,@(16,r4)            /* update step_index : predictor */
+mix4_exit2x:
+        mov.l   r7,@(20,r4)
         mov.l   r9,@(4,r4)              /* update position field */
         mov.l   @r15+,r14
         mov.l   @r15+,r13
