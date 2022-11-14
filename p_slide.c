@@ -33,7 +33,6 @@
 extern mobj_t *slidething;
 
 fixed_t slidex, slidey;            // the final position
-line_t  *specialline;              // line special to trigger, if any
 
 static fixed_t slidedx, slidedy;   // current move for completable frac
 static fixed_t blockfrac;          // the fraction of the move that gets completed
@@ -288,148 +287,10 @@ fixed_t P_CompletableFrac(fixed_t dx, fixed_t dy)
    if(blockfrac < 0x1000)
    {
       blockfrac   = 0;
-      specialline = NULL; // can't cross anything on a bad move
       return 0;           // solid wall
    }
 
    return blockfrac;
-}
-
-//
-// Point on side check for special crosses.
-//
-static int SL_PointOnSide2(fixed_t x1, fixed_t y1, 
-                           fixed_t x2, fixed_t y2, 
-                           fixed_t x3, fixed_t y3)
-{
-   fixed_t nx, ny;
-   fixed_t dist;
-
-   x1 = (x1 - x2);
-   y1 = (y1 - y2);
-
-   nx = (y3 - y2);
-   ny = (x2 - x3);
-
-   FixedMul2(nx, x1, nx);
-   FixedMul2(ny, y1, ny);
-   dist = nx + ny;
-
-   return ((dist < 0) ? SIDE_BACK : SIDE_FRONT);
-}
-
-static void SL_CheckSpecialLines(void)
-{
-   fixed_t x1 = slidething->x;
-   fixed_t y1 = slidething->y;
-   fixed_t x2 = slidex;
-   fixed_t y2 = slidey;
-
-   fixed_t bx, by, xl, xh, yl, yh;
-   fixed_t bxl, bxh, byl, byh;
-   fixed_t x3, y3, x4, y4;
-   int side1, side2;
-
-   if(x1 < x2)
-   {
-      xl = x1;
-      xh = x2;
-   }
-   else
-   {
-      xl = x2;
-      xh = x1;
-   }
-
-   if(y1 < y2)
-   {
-      yl = y1;
-      yh = y2;
-   }
-   else
-   {
-      yl = y2;
-      yh = y1;
-   }
-
-   bxl = xl - bmaporgx;
-   bxh = xh - bmaporgx;
-   byl = yl - bmaporgy;
-   byh = yh - bmaporgy;
-
-   if(bxl < 0)
-      bxl = 0;
-   if(byl < 0)
-      byl = 0;
-   if(byh < 0)
-      return;
-   if(bxh < 0)
-      return;
-
-   bxl = (unsigned)bxl >> MAPBLOCKSHIFT;
-   bxh = (unsigned)bxh >> MAPBLOCKSHIFT;
-   byl = (unsigned)byl >> MAPBLOCKSHIFT;
-   byh = (unsigned)byh >> MAPBLOCKSHIFT;
-
-   if(bxh >= bmapwidth)
-      bxh = bmapwidth - 1;
-   if(byh >= bmapheight)
-      byh = bmapheight - 1;
-
-   specialline = NULL;
-   ++validcount;
-
-   for(bx = bxl; bx <= bxh; bx++)
-   {
-      for(by = byl; by <= byh; by++)
-      {
-         short  *list;
-         line_t *ld;
-         int offset = by * bmapwidth + bx;
-         offset = *(blockmap + offset);
-	 fixed_t *ldbbox;
-         
-         for(list = blockmaplump + offset; *list != -1; list++)
-         {
-            ld = &lines[*list];
-            if(!ld->special)
-               continue;
-            if(ld->validcount == validcount)
-               continue; // already checked
-            
-            ld->validcount = validcount;
-
-	    ldbbox = P_LineBBox(ld);
-            if(xh < ldbbox[BOXLEFT  ] ||
-               xl > ldbbox[BOXRIGHT ] ||
-               yh < ldbbox[BOXBOTTOM] ||
-               yl > ldbbox[BOXTOP   ])
-            {
-               continue;
-            }
-
-            x3 = ld->v1->x;
-            y3 = ld->v1->y;
-            x4 = ld->v2->x;
-            y4 = ld->v2->y;
-
-            side1 = SL_PointOnSide2(x1, y1, x3, y3, x4, y4);
-            side2 = SL_PointOnSide2(x2, y2, x3, y3, x4, y4);
-
-            if(side1 == side2)
-               continue; // move doesn't cross line
-
-            side1 = SL_PointOnSide2(x3, y3, x1, y1, x2, y2);
-            side2 = SL_PointOnSide2(x4, y4, x1, y1, x2, y2);
-
-            if(side1 == side2)
-               continue; // line doesn't cross move
-
-            specialline = ld;
-            return;
-         }
-      }
-   }
 }
 
 //
@@ -466,7 +327,6 @@ void P_SlideMove(void)
       {
          slidething->momx = dx;
          slidething->momy = dy;
-         SL_CheckSpecialLines();
          return;
       }
 

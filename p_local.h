@@ -208,7 +208,6 @@ void 	P_SectorOrg(mobj_t* sec, fixed_t *org);
 extern	boolean		floatok;				/* if true, move would be ok if */
 extern	fixed_t		tmfloorz, tmceilingz;	/* within tmfloorz - tmceilingz */
 
-extern	line_t	*specialline;
 extern	mobj_t	*movething;
 
 
