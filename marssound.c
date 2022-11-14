@@ -759,7 +759,7 @@ static void S_StartSoundReal(mobj_t* mobj, unsigned sound_id, int vol, getsoundp
 	{
 		if (channel->sfx == sfx)
 		{
-			if (channel->position == 0)
+			if (channel->position <= 0) /* ADPCM has the position set to -1 initially */
 			{
 				if (channel->volume < vol)
 				{
