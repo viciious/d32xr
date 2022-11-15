@@ -884,7 +884,7 @@ gotchannel:
 	newchannel->pan = 128;
 
 	// cache-through access the sample data
-	newchannel->data = (void *)((uintptr_t)newchannel->data | 0x20000000);
+	//newchannel->data = (void *)((uintptr_t)newchannel->data | 0x20000000);
 }
 
 void Mars_Sec_ReadSoundCmds(void)
