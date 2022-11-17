@@ -205,15 +205,6 @@ void 	P_SectorOrg(mobj_t* sec, fixed_t *org);
 ===============================================================================
 */
 
-extern	boolean		floatok;				/* if true, move would be ok if */
-extern	fixed_t		tmfloorz, tmceilingz;	/* within tmfloorz - tmceilingz */
-
-extern	line_t	*specialline;
-extern	mobj_t	*movething;
-
-
-boolean P_CheckPosition (mobj_t *thing, fixed_t x, fixed_t y);
-boolean P_TryMove (mobj_t *thing, fixed_t x, fixed_t y);
 boolean P_CheckSight (mobj_t *t1, mobj_t *t2);
 void 	P_UseLines (player_t *player);
 
@@ -266,6 +257,38 @@ extern	int			iquehead, iquetail;
 extern	int playernum;
 
 void P_RespawnSpecials (void);
+
+
+/*
+===============================================================================
+
+							P_MOVE
+
+===============================================================================
+*/
+
+// 
+// keep track of special lines as they are hit,
+// but don't process them until the move is proven valid
+#define MAXSPECIALCROSS		8
+
+extern 	VINT    numspechit;
+extern 	line_t* spechit[MAXSPECIALCROSS];
+
+extern	boolean		floatok;				/* if true, move would be ok if */
+extern	fixed_t		tmfloorz, tmceilingz;	/* within tmfloorz - tmceilingz */
+
+extern	mobj_t	*movething;
+extern	line_t *blockline;
+
+boolean P_CheckPosition (mobj_t *thing, fixed_t x, fixed_t y);
+boolean P_TryMove (mobj_t *thing, fixed_t x, fixed_t y);
+void P_MoveCrossSpecials(void);
+
+extern mobj_t *slidething;
+extern	fixed_t		slidex, slidey;
+
+void P_SlideMove (void);
 
 #endif	/* __P_LOCAL__ */
 

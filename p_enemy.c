@@ -113,9 +113,6 @@ boolean P_CheckMissileRange (mobj_t *actor)
 fixed_t	xspeed[8] = {FRACUNIT,47000,0,-47000,-FRACUNIT,-47000,0,47000};
 fixed_t yspeed[8] = {0,47000,FRACUNIT,47000,0,-47000,-FRACUNIT,-47000};
 
-extern	line_t *blockline;
-void P_CrossMoveSpecials(void);
-
 boolean P_Move (mobj_t *actor)
 {
 	fixed_t	tryx, tryy;
@@ -130,8 +127,6 @@ boolean P_Move (mobj_t *actor)
 	
 	if (!P_TryMove (actor, tryx, tryy) )
 	{	/* open any specials */
-		P_CrossMoveSpecials();
-
 		if (actor->flags & MF_FLOAT && floatok)
 		{	/* must adjust height */
 			if (actor->z < tmfloorz)
@@ -141,7 +136,7 @@ boolean P_Move (mobj_t *actor)
 			actor->flags |= MF_INFLOAT;
 			return true;
 		}
-		
+
 		blkline = (line_t *)DSPRead (&blockline);
 		good = false;
 		if (blkline && blkline->special)
@@ -155,8 +150,11 @@ boolean P_Move (mobj_t *actor)
 		return good;
 	}
 	else
+	{
+		P_MoveCrossSpecials();
 		actor->flags &= ~MF_INFLOAT;
-		
+	}
+
 	if (! (actor->flags & MF_FLOAT) )	
 		actor->z = actor->floorz;
 	return true; 

@@ -30,10 +30,6 @@
 #include "p_local.h"
 
 // CALICO_TODO: these ought to be in headers.
-// 
-// keep track of special lines as they are hit,
-// but don't process them until the move is proven valid
-#define MAXSPECIALCROSS		8
 
 extern mobj_t  *tmthing;
 extern fixed_t  tmx, tmy;
@@ -45,8 +41,8 @@ fixed_t  tmfloorz;   // current floor z for P_TryMove2
 fixed_t  tmceilingz; // current ceiling z for P_TryMove2
 line_t  *blockline;  // possibly a special to activate
 
-static VINT    numspechit;
-static line_t* spechit[MAXSPECIALCROSS];
+VINT    numspechit;
+line_t* spechit[MAXSPECIALCROSS];
 
 static fixed_t oldx, oldy;
 static fixed_t tmbbox[4];
@@ -61,7 +57,6 @@ static boolean PIT_CheckLine(line_t* ld) ATTR_DATA_CACHE_ALIGN;
 static boolean PM_CrossCheck(line_t* ld) ATTR_DATA_CACHE_ALIGN;
 static void PM_CheckPosition(void) ATTR_DATA_CACHE_ALIGN;
 void P_TryMove2(void) ATTR_DATA_CACHE_ALIGN;
-void P_CrossMoveSpecials(void) ATTR_DATA_CACHE_ALIGN;
 
 //
 // Check a single mobj in one of the contacted blockmap cells.
@@ -438,14 +433,25 @@ void P_TryMove2(void)
    trymove2 = true;
 }
 
-void P_CrossMoveSpecials(void)
+void P_MoveCrossSpecials(void)
 {
     int i;
 
+    if ((tmthing->flags&(MF_TELEPORT|MF_NOCLIP)) )
+      return;
+
     for (i = 0; i < numspechit; i++)
     {
-        P_CrossSpecialLine(spechit[i], tmthing);
+      line_t *ld = spechit[i];
+      int side, oldside;
+      // see if the line was crossed
+      side = P_PointOnLineSide (tmthing->x, tmthing->y, ld);
+      oldside = P_PointOnLineSide (oldx, oldy, ld);
+      if (side != oldside)
+         P_CrossSpecialLine(ld, tmthing);
     }
+
+    numspechit = 0;
 }
 
 // EOF

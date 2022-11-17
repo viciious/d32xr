@@ -30,10 +30,7 @@
 #include "p_local.h"
 
 // CALICO_TODO: these should be in a header
-extern mobj_t *slidething;
-
 fixed_t slidex, slidey;            // the final position
-line_t  *specialline;              // line special to trigger, if any
 
 static fixed_t slidedx, slidedy;   // current move for completable frac
 static fixed_t blockfrac;          // the fraction of the move that gets completed
@@ -288,7 +285,7 @@ fixed_t P_CompletableFrac(fixed_t dx, fixed_t dy)
    if(blockfrac < 0x1000)
    {
       blockfrac   = 0;
-      specialline = NULL; // can't cross anything on a bad move
+      numspechit = 0;     // can't cross anything on a bad move
       return 0;           // solid wall
    }
 
@@ -376,7 +373,7 @@ static void SL_CheckSpecialLines(void)
    if(byh >= bmapheight)
       byh = bmapheight - 1;
 
-   specialline = NULL;
+   numspechit = 0;
    ++validcount;
 
    for(bx = bxl; bx <= bxh; bx++)
@@ -387,7 +384,7 @@ static void SL_CheckSpecialLines(void)
          line_t *ld;
          int offset = by * bmapwidth + bx;
          offset = *(blockmap + offset);
-	 fixed_t *ldbbox;
+	      fixed_t *ldbbox;
          
          for(list = blockmaplump + offset; *list != -1; list++)
          {
@@ -399,7 +396,7 @@ static void SL_CheckSpecialLines(void)
             
             ld->validcount = validcount;
 
-	    ldbbox = P_LineBBox(ld);
+	         ldbbox = P_LineBBox(ld);
             if(xh < ldbbox[BOXLEFT  ] ||
                xl > ldbbox[BOXRIGHT ] ||
                yh < ldbbox[BOXBOTTOM] ||
@@ -425,8 +422,10 @@ static void SL_CheckSpecialLines(void)
             if(side1 == side2)
                continue; // line doesn't cross move
 
-            specialline = ld;
-            return;
+            if (numspechit < MAXSPECIALCROSS)
+               spechit[numspechit++] = ld;
+            if (numspechit == MAXSPECIALCROSS)
+               return;
          }
       }
    }
@@ -445,6 +444,8 @@ void P_SlideMove(void)
    dy = slidething->momy;
    slidex = slidething->x;
    slidey = slidething->y;
+
+   numspechit = 0;
 
    // perform a maximum of three bumps
    for(i = 0; i < 3; i++)
