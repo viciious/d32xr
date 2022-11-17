@@ -22,6 +22,7 @@ fixed_t			fastangleturn[] =
 
 mobj_t		*slidething;
 extern	fixed_t		slidex, slidey;
+extern	line_t	*specialline;
 
 void P_SlideMove ();
 
@@ -29,6 +30,7 @@ void P_SlideMove ();
 void P_PlayerMove (mobj_t *mo)
 {
 	fixed_t		momx, momy;
+	line_t		*latchedline;
 	fixed_t		latchedx, latchedy;
 		
 	momx = vblsinframe*(mo->momx>>2);
@@ -44,7 +46,8 @@ void P_PlayerMove (mobj_t *mo)
 #else
 	P_SlideMove ();
 #endif
-
+		
+	latchedline = (line_t *)DSPRead (&specialline);
 	latchedx = DSPRead (&slidex);
 	latchedy = DSPRead (&slidey);
 	
@@ -52,7 +55,7 @@ void P_PlayerMove (mobj_t *mo)
 		goto stairstep;
 		
 	if ( P_TryMove (mo, latchedx, latchedy) )
-		return;
+		goto dospecial;
 		
 stairstep:
 	if (momx > MAXMOVE)
@@ -70,17 +73,21 @@ stairstep:
 	{
 		mo->momx = 0;
 		mo->momy = momy;
-		return;
+		goto dospecial;
 	}
 	
 	if (P_TryMove (mo, mo->x + momx, mo->y))
 	{
 		mo->momx = momx;
 		mo->momy = 0;
-		return;
+		goto dospecial;
 	}
 
 	mo->momx = mo->momy = 0;
+
+dospecial:
+	if (latchedline)
+		P_CrossSpecialLine (latchedline, mo);
 }
 
 

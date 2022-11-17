@@ -435,8 +435,6 @@ void P_TryMove2(void)
    tmthing->y        = tmy;
    P_SetThingPosition2(tmthing, newsubsec);
 
-   P_CrossMoveSpecials();
-
    trymove2 = true;
 }
 
@@ -444,22 +442,10 @@ void P_CrossMoveSpecials(void)
 {
     int i;
 
-	 if ((tmthing->flags&(MF_TELEPORT|MF_NOCLIP)) )
-      return;
-
     for (i = 0; i < numspechit; i++)
     {
-         line_t *ld = spechit[i];
-         int side, oldside;
-         // see if the line was crossed
-         side = P_PointOnLineSide (tmthing->x, tmthing->y, ld);
-         oldside = P_PointOnLineSide (oldx, oldy, ld);
-         if (side != oldside)
-         {
-            P_CrossSpecialLine(ld, tmthing);
-         }        
+        P_CrossSpecialLine(spechit[i], tmthing);
     }
-    numspechit = 0;
 }
 
 // EOF
