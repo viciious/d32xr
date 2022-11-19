@@ -44,17 +44,16 @@ _S_PaintChannel8:
         mov.w   @(24,r4),r0     /* volume:pan */
 
         /* calculate left/right volumes from volume, pan, and scale */
-        mov     r0,r13
-        shlr8   r13
+        swap.b  r0,r13
         extu.b  r13,r13         /* ch_vol */
-        mov     r13,r14
         extu.b  r0,r0           /* pan */
 
         /* LINEAR_CROSSFADE */
         mov     #0xFF,r1
         extu.b  r1,r1
         sub     r0,r1           /* 255 - pan */
-        mulu.w  r0,r14
+
+        mulu.w  r0,r13
         sts     macl,r0         /* pan * ch_vol */
         mul.l   r0,r7
         sts     macl,r14        /* pan * ch_vol * scale */
@@ -161,10 +160,8 @@ _S_PaintChannel4IMA:
         mov.w   @(24,r4),r0     /* volume:pan */
 
         /* calculate left/right volumes from volume, pan, and scale */
-        mov     r0,r13
-        shlr8   r13
+        swap.b  r0,r13
         extu.b  r13,r13         /* ch_vol */
-        mov     r13,r14
         extu.b  r0,r0           /* pan */
  
         /* LINEAR_CROSSFADE */
@@ -172,7 +169,7 @@ _S_PaintChannel4IMA:
         extu.b  r1,r1
         sub     r0,r1           /* 255 - pan */
 
-        mulu.w  r0,r14
+        mulu.w  r0,r13
         sts     macl,r0         /* pan * ch_vol */
         mul.l   r0,r7
         sts     macl,r14        /* pan * ch_vol * scale */
@@ -346,10 +343,8 @@ _S_PaintChannel4IMA2x:
         add     r10,r10         /* increment *= 2 */
 
         /* calculate left/right volumes from volume, pan, and scale */
-        mov     r0,r13
-        shlr8   r13
+        swap.b  r0,r13
         extu.b  r13,r13         /* ch_vol */
-        mov     r13,r14
         extu.b  r0,r0           /* pan */
  
         /* LINEAR_CROSSFADE */
@@ -357,7 +352,7 @@ _S_PaintChannel4IMA2x:
         extu.b  r1,r1
         sub     r0,r1           /* 255 - pan */
 
-        mulu.w  r0,r14
+        mulu.w  r0,r13
         sts     macl,r0         /* pan * ch_vol */
         mul.l   r0,r7
         sts     macl,r14        /* pan * ch_vol * scale */
