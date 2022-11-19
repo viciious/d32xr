@@ -4,13 +4,17 @@
 #include "sounds.h"
 
 #define MAX_SAMPLES        316		// 70Hz
-//#define MAX_SAMPLES      441		// 50Hz
-//#define MAX_SAMPLES      735		// 30Hz
+//#define MAX_SAMPLES      440		// 50Hz
+//#define MAX_SAMPLES      734		// 30Hz
 
 #define SAMPLE_RATE      22050
 #define SAMPLE_MIN       2
 #define SAMPLE_MAX       1032
 #define SAMPLE_CENTER    (SAMPLE_MAX-SAMPLE_MIN)/2
+
+#define SPATIALIZATION_RATE		15 // Hz
+// this many samples between each spatialization call
+#define SPATIALIZATION_SRATE	(int)(MAX_SAMPLES*(((float)SAMPLE_RATE/MAX_SAMPLES)/SPATIALIZATION_RATE))
 
 // when to clip out sounds
 // Does not fit the large outdoor areas.
@@ -72,6 +76,7 @@ static VINT		curmusic, muslooping = 0, curcdtrack = cdtrack_none;
 int             samplecount = 0;
 
 static marsrb_t	soundcmds = { 0 };
+int spatialized = 0;
 
 static void S_StartSoundReal(mobj_t* mobj, unsigned sound_id, int vol, getsoundpos_t getpos) ATTR_DATA_CACHE_ALIGN;
 int S_PaintChannel4IMA(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
@@ -635,6 +640,7 @@ static void S_Update(int16_t* buffer)
 	int32_t *b2;
 	int c, l, h;
 	mobj_t* mo;
+	boolean spatialize;
 
 	Mars_ClearCacheLine(&sfxvolume);
 	Mars_ClearCacheLine(&musicvolume);
@@ -666,6 +672,8 @@ static void S_Update(int16_t* buffer)
 
 	S_UpdatePCM(buffer);
 
+	spatialize = samplecount >= SPATIALIZATION_SRATE;
+
 	for (i = 0; i < SFXCHANNELS; i++)
 	{
 		sfxchannel_t* ch = &sfxchannels[i];
@@ -674,20 +682,19 @@ static void S_Update(int16_t* buffer)
 			continue;
 
 		mo = ch->mobj;
-
-		if (mo)
+		if (mo && spatialize)
 		{
 			int vol, sep;
 
+			/* */
+			/* spatialize */
+			/* */
 			if (!ch->getpos)
 			{
 				Mars_ClearCacheLine(&mo->x);
 				Mars_ClearCacheLine(&mo->y);
 			}
 
-			/* */
-			/* spatialize */
-			/* */
 			S_Spatialize(mo, &vol, &sep, ch->getpos);
 
 			if (!vol)
@@ -725,6 +732,10 @@ static void S_Update(int16_t* buffer)
 		s2 = (s < l) ? l : (s > h) ? h : s;
 		*b2++ = (s1 << 16) | s2;
 	}
+
+	if (samplecount >= SPATIALIZATION_SRATE)
+		samplecount -= SPATIALIZATION_SRATE;
+	samplecount += MAX_SAMPLES;
 }
 
 void sec_dma1_handler(void)
