@@ -49,21 +49,19 @@ _S_PaintChannel8:
         extu.b  r0,r0           /* pan */
 
         /* LINEAR_CROSSFADE */
+        mulu.w  r7,r13
         mov     #0xFF,r1
         extu.b  r1,r1
         sub     r0,r1           /* 255 - pan */
+        sts     macl,r7         /* ch_vol * scale */
 
-        mulu.w  r0,r13
-        sts     macl,r0         /* pan * ch_vol */
-        mul.l   r0,r7
+        mulu.w  r0,r7
         sts     macl,r14        /* pan * ch_vol * scale */
+
+        mulu.w  r1,r13
         shlr8   r14
 !       shlr2   r14
         shlr2   r14             /* right volume = pan * ch_vol * scale / 64 / 64 */
-
-        mulu.w  r1,r13
-        sts     macl,r0         /* (255 - pan) * ch_vol */
-        mul.l   r0,r7
         sts     macl,r13        /* (255 - pan) * ch_vol * scale */
         shlr8   r13
 !       shlr2   r13
@@ -165,21 +163,19 @@ _S_PaintChannel4IMA:
         extu.b  r0,r0           /* pan */
  
         /* LINEAR_CROSSFADE */
+        mulu.w  r7,r13
         mov     #0xFF,r1
         extu.b  r1,r1
         sub     r0,r1           /* 255 - pan */
+        sts     macl,r7         /* ch_vol * scale */
 
-        mulu.w  r0,r13
-        sts     macl,r0         /* pan * ch_vol */
-        mul.l   r0,r7
+        mulu.w  r0,r7
         sts     macl,r14        /* pan * ch_vol * scale */
+
+        mulu.w  r1,r13
         shlr8   r14
 !       shlr2   r14
         shlr2   r14             /* right volume = pan * ch_vol * scale / 64 / 64 */
- 
-        mulu.w  r1,r13
-        sts     macl,r0         /* (255 - pan) * ch_vol */
-        mul.l   r0,r7
         sts     macl,r13        /* (255 - pan) * ch_vol * scale */
         shlr8   r13
 !       shlr2   r13
@@ -348,21 +344,19 @@ _S_PaintChannel4IMA2x:
         extu.b  r0,r0           /* pan */
  
         /* LINEAR_CROSSFADE */
+        mulu.w  r7,r13
         mov     #0xFF,r1
         extu.b  r1,r1
         sub     r0,r1           /* 255 - pan */
+        sts     macl,r7         /* ch_vol * scale */
 
-        mulu.w  r0,r13
-        sts     macl,r0         /* pan * ch_vol */
-        mul.l   r0,r7
+        mulu.w  r0,r7
         sts     macl,r14        /* pan * ch_vol * scale */
+
+        mulu.w  r1,r13
         shlr8   r14
 !       shlr2   r14
         shlr2   r14             /* right volume = pan * ch_vol * scale / 64 / 64 */
- 
-        mulu.w  r1,r13
-        sts     macl,r0         /* (255 - pan) * ch_vol */
-        mul.l   r0,r7
         sts     macl,r13        /* (255 - pan) * ch_vol * scale */
         shlr8   r13
 !       shlr2   r13
