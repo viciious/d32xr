@@ -183,9 +183,9 @@ _S_PaintChannel4IMA:
 
         mov.l   @(20,r4),r0     /* prev_pos */
         cmp/eq  #-1,r0
-        bf/s    mix4_loop2x
+        bf/s    mix4_loop
         mov     r0,r7
-        bra     mix4_gets2x
+        bra     mix4_gets
         mov     #1,r7
 
         /* mix r6 stereo samples */
@@ -254,7 +254,7 @@ mix4_loop:
         cmp/pz  r2
         bt/s    7f
         mov     #88,r1
-        bra     8f
+        bra     mix4_gets
         mov     #0,r2           /* clamp step_index to 0 */
 7:
         cmp/gt  r1,r2
