@@ -446,7 +446,7 @@ mix4_loop2x:
         cmp/pz  r2
         bt/s    7f
         mov     #88,r1
-        bra     8f
+        bra     mix4_gets2x
         mov     #0,r2           /* clamp step_index to 0 */
 7:
         cmp/gt  r1,r2
