@@ -78,11 +78,15 @@ int             samplecount = 0;
 
 static marsrb_t	soundcmds = { 0 };
 
+extern uintptr_t paintchan_movr5r1;
+extern uintptr_t paintchan_movr5r1_ima;
+extern uintptr_t paintchan_movr5r1_ima2x_1, paintchan_movr5r1_ima2x_2;
+
 static void S_StartSoundReal(mobj_t* mobj, unsigned sound_id, int vol, getsoundpos_t getpos) ATTR_DATA_CACHE_ALIGN;
 int S_PaintChannel4IMA(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
 int S_PaintChannel4IMA2x(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
 void S_PaintChannel8(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
-static void S_PaintChannel(sfxchannel_t *ch, int16_t* buffer) ATTR_DATA_CACHE_ALIGN;
+static int S_PaintChannel(sfxchannel_t *ch, int16_t* buffer, int painted) ATTR_DATA_CACHE_ALIGN;
 static void S_SpatializeAt(fixed_t*origin, mobj_t* listener, int* pvol, int* psep) ATTR_DATA_CACHE_ALIGN;
 static void S_Spatialize(mobj_t* mobj, int* pvol, int* psep, getsoundpos_t getpos) ATTR_DATA_CACHE_ALIGN;
 static void S_Update(int16_t* buffer) ATTR_DATA_CACHE_ALIGN;
@@ -569,10 +573,25 @@ static void S_UpdatePCM(void)
 	}
 }
 
-static void S_PaintChannel(sfxchannel_t *ch, int16_t* buffer)
+static int S_PaintChannel(sfxchannel_t *ch, int16_t* buffer, int painted)
 {
+	boolean patch;
+	const int mov0r1 = 0xE100;
+	const int movpr5r1 = 0x6152;
+	const int movp4r5r1 = 0x5151;
+
 	if (!ch->data)
-		return;
+		return 0;
+
+	patch = painted == 0;
+	if (patch)
+	{
+		/* PATCH */
+		Mars_PatchRAMCode(paintchan_movr5r1, mov0r1); /* mov #0,r1 */
+		Mars_PatchRAMCode(paintchan_movr5r1_ima, mov0r1); /* mov #0,r1 */
+		Mars_PatchRAMCode(paintchan_movr5r1_ima2x_1, mov0r1); /* mov #0,r1 */
+		Mars_PatchRAMCode(paintchan_movr5r1_ima2x_2, mov0r1); /* mov #0,r1 */
+	}
 
 	if (ch->width == 4)
 	{
@@ -622,6 +641,8 @@ static void S_PaintChannel(sfxchannel_t *ch, int16_t* buffer)
 
 			i = paintch(ch, (int16_t *)(end - i), i, 64);
 		} while (i > 0);
+
+		painted = MAX_SAMPLES - i;
 	}
 	else
 	{
@@ -630,7 +651,30 @@ static void S_PaintChannel(sfxchannel_t *ch, int16_t* buffer)
 		{
 			ch->data = NULL;
 		}
+
+		painted = MAX_SAMPLES;
 	}
+
+	if (patch)
+	{
+		int j;
+		int32_t *b2;
+
+		/* PATCH BACK */
+		Mars_PatchRAMCode(paintchan_movr5r1, movpr5r1); /* mov @r5,r1 */
+		Mars_PatchRAMCode(paintchan_movr5r1_ima, movpr5r1); /* mov @r5,r1 */
+		Mars_PatchRAMCode(paintchan_movr5r1_ima2x_1, movpr5r1); /* mov @r5,r1 */
+		Mars_PatchRAMCode(paintchan_movr5r1_ima2x_2, movp4r5r1); /* mov @(4,r5),r1 */
+
+		/* clear the remaining buffer */
+		b2 = (int32_t *)buffer + painted;
+		for (j = painted; j < MAX_SAMPLES; j++)
+		{
+			*b2++ = 0;
+		}
+	}
+
+	return painted;
 }
 
 static void S_Update(int16_t* buffer)
@@ -639,6 +683,7 @@ static void S_Update(int16_t* buffer)
 	int32_t *b2;
 	int c, l, h;
 	mobj_t* mo;
+	int painted = 0;
 	boolean spatialize;
 
 	S_UpdatePCM();
@@ -668,19 +713,8 @@ static void S_Update(int16_t* buffer)
 		return;
 	}
 
-	b2 = (int32_t *)buffer;
-	for (i = 0; i < MAX_SAMPLES / 8; i++)
-	{
-		*b2++ = 0, *b2++ = 0, *b2++ = 0, *b2++ = 0;
-		*b2++ = 0, *b2++ = 0, *b2++ = 0, *b2++ = 0;
-	}
-	for (i *= 8; i < MAX_SAMPLES; i++)
-	{
-		*b2++ = 0;
-	}
-
 	/* keep updating the channel until done */
-	S_PaintChannel(&pcmchannel, buffer);
+	painted += S_PaintChannel(&pcmchannel, buffer, painted);
 
 	spatialize = samplecount >= SPATIALIZATION_SRATE;
 	if (samplecount >= SPATIALIZATION_SRATE)
@@ -738,7 +772,17 @@ static void S_Update(int16_t* buffer)
 			ch->pan = sep;
 		}
 
-		S_PaintChannel(ch, buffer);
+		painted += S_PaintChannel(ch, buffer, painted);
+	}
+
+	// clear the buffer if we painted nothing
+	if (!painted)
+	{
+		b2 = (int32_t *)buffer;
+		for (i = 0; i < MAX_SAMPLES; i++)
+		{
+			*b2++ = 0;
+		}
 	}
 
 #ifdef MARS
