@@ -170,6 +170,7 @@ _S_PaintChannel4IMA:
         sts     macl,r7         /* ch_vol * scale */
 
         mulu.w  r0,r7
+        mov.l   @(20,r4),r0     /* prev_pos */
         sts     macl,r14        /* pan * ch_vol * scale */
 
         mulu.w  r1,r7
@@ -181,7 +182,6 @@ _S_PaintChannel4IMA:
 !       shlr2   r13
         shlr2   r13             /* left volume = (255 - pan) * ch_vol * scale / 64 / 64 */
 
-        mov.l   @(20,r4),r0     /* prev_pos */
         cmp/eq  #-1,r0
         bf/s    mix4_loop
         mov     r0,r7
@@ -351,6 +351,7 @@ _S_PaintChannel4IMA2x:
         sts     macl,r7         /* ch_vol * scale */
 
         mulu.w  r0,r7
+        mov.l   @(20,r4),r0     /* prev_pos */
         sts     macl,r14        /* pan * ch_vol * scale */
 
         mulu.w  r1,r7
@@ -362,7 +363,6 @@ _S_PaintChannel4IMA2x:
 !       shlr2   r13
         shlr2   r13             /* left volume = (255 - pan) * ch_vol * scale / 64 / 64 */
 
-        mov.l   @(20,r4),r0     /* prev_pos */
         cmp/eq  #-1,r0
         bf/s    mix4_loop2x
         mov     r0,r7
@@ -451,6 +451,7 @@ mix4_gets2x:
         /* scale sample for left output */
         muls.w  r3,r13
         mov.l   @r5,r1
+        dt      r6
         add     r10,r9          /* position += increment */
         sts     macl,r0
 
@@ -472,13 +473,12 @@ mix4_gets2x:
         mov.l   r1,@r5
 
         mov.l   @(4,r5),r1
-        dt      r6
+        cmp/hs  r11,r9
         add     r3,r1
         mov.l   r1,@(4,r5)
 
         /* advance position */
 
-        cmp/hs  r11,r9
         bt/s    mix4_exit2x             /* position >= length */
 
         /* next sample */
