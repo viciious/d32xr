@@ -58,7 +58,7 @@ _S_PaintChannel8:
         mulu.w  r0,r7
         sts     macl,r14        /* pan * ch_vol * scale */
 
-        mulu.w  r1,r13
+        mulu.w  r1,r7
         shlr8   r14
 !       shlr2   r14
         shlr2   r14             /* right volume = pan * ch_vol * scale / 64 / 64 */
@@ -172,7 +172,7 @@ _S_PaintChannel4IMA:
         mulu.w  r0,r7
         sts     macl,r14        /* pan * ch_vol * scale */
 
-        mulu.w  r1,r13
+        mulu.w  r1,r7
         shlr8   r14
 !       shlr2   r14
         shlr2   r14             /* right volume = pan * ch_vol * scale / 64 / 64 */
@@ -353,7 +353,7 @@ _S_PaintChannel4IMA2x:
         mulu.w  r0,r7
         sts     macl,r14        /* pan * ch_vol * scale */
 
-        mulu.w  r1,r13
+        mulu.w  r1,r7
         shlr8   r14
 !       shlr2   r14
         shlr2   r14             /* right volume = pan * ch_vol * scale / 64 / 64 */
