@@ -416,34 +416,28 @@ mix4_loop2x:
         /* clamp to -32768:32767 */
         shll8   r1
         cmp/ge  r1,r12
-        bt/s    5f              /* sample >= -32768 */
-        shlr16  r2              /* save step_index */
-        bra     6f
-        mov     r1,r12          /* clamp */
-5:
+        bf/s    2f              /* sample < -32768 */
         not     r1,r1
         cmp/gt  r1,r12
-        bf      6f              /* sample <= 32767 */
-        mov     r1,r12          /* clamp */
-6:
+        bt/s    3f              /* sample > 32767 */
+4:
+        shlr16  r2              /* save step_index */
+5:
         /* step_index += index_table[nibble] */
         mov.l   _index_table,r1
         mov.b   @(r0,r1),r1
         extu.w  r12,r12         /* clear upper word for step_index */
         add     r1,r2           /* step_index += index_table[nibble] */
+
         /* clamp to 0:88 */
         cmp/pz  r2
-        bt/s    7f
+        bf/s    6f
         mov     #88,r1
-        bra     mix4_gets2x
-        mov     #0,r2           /* clamp step_index to 0 */
-7:
         cmp/gt  r1,r2
-        bf      8f
-        mov     #88,r2          /* clamp step_index to 88 */
-8:
+        bt/s    7f
         shll16  r2
         or      r2,r12          /* r12 is step_index : predictor again */
+
 mix4_gets2x:
         /* get sample */
         exts.w  r12,r3          /* predictor */
@@ -499,6 +493,21 @@ mix4_exit2x:
         mov.l   @r15+,r8
         rts
         mov     r6,r0
+2:
+        not     r1,r1
+        bra     4b
+        mov     r1,r12          /* clamp sample to -32768 */
+3:
+        bra     5b
+        mov     r1,r12          /* clamp sample to  32767 */
+6:
+        bra     mix4_gets2x
+        mov     #0,r2           /* clamp step_index to 0 */
+7:
+        mov     #88,r2          /* clamp step_index to 88 */
+        shll16  r2
+        bra     mix4_gets2x
+        or      r2,r12          /* r12 is step_index : predictor again */
 
 
         .align  4
