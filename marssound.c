@@ -57,6 +57,7 @@ enum
 static uint8_t snd_bufidx = 0;
 int16_t __attribute__((aligned(16))) snd_buffer[2][MAX_SAMPLES * 2];
 static uint8_t	snd_init = 0;
+unsigned        snd_nopaintcount = 0;
 
 static VINT		*vgm_tracks;
 uint8_t			*vgm_ptr;
@@ -76,7 +77,6 @@ static VINT		curmusic, muslooping = 0, curcdtrack = cdtrack_none;
 int             samplecount = 0;
 
 static marsrb_t	soundcmds = { 0 };
-int spatialized = 0;
 
 static void S_StartSoundReal(mobj_t* mobj, unsigned sound_id, int vol, getsoundpos_t getpos) ATTR_DATA_CACHE_ALIGN;
 int S_PaintChannel4IMA(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
@@ -86,7 +86,7 @@ static void S_PaintChannel(sfxchannel_t *ch, int16_t* buffer) ATTR_DATA_CACHE_AL
 static void S_SpatializeAt(fixed_t*origin, mobj_t* listener, int* pvol, int* psep) ATTR_DATA_CACHE_ALIGN;
 static void S_Spatialize(mobj_t* mobj, int* pvol, int* psep, getsoundpos_t getpos) ATTR_DATA_CACHE_ALIGN;
 static void S_Update(int16_t* buffer) ATTR_DATA_CACHE_ALIGN;
-static void S_UpdatePCM(int16_t* buffer) ATTR_DATA_CACHE_ALIGN;
+static void S_UpdatePCM(void) ATTR_DATA_CACHE_ALIGN;
 
 /*
 ==================
@@ -543,7 +543,7 @@ static void S_ClearPCM(void)
 	pcmchannel.pan = 128;
 }
 
-static void S_UpdatePCM(int16_t* buffer)
+static void S_UpdatePCM(void)
 {
 	int inc, len, offs, flag;
 
@@ -569,9 +569,6 @@ static void S_UpdatePCM(int16_t* buffer)
 		pcmchannel.data = vgm_ptr + offs;
 		((volatile short *)pcm_data)[7] = 0; // unset bit 0 for flag
 	}
-
-	/* keep updating the channel until done */
-	S_PaintChannel(&pcmchannel, buffer);
 }
 
 static void S_PaintChannel(sfxchannel_t *ch, int16_t* buffer)
@@ -642,21 +639,31 @@ static void S_Update(int16_t* buffer)
 	mobj_t* mo;
 	boolean spatialize;
 
+	S_UpdatePCM();
+
 	Mars_ClearCacheLine(&sfxvolume);
 	Mars_ClearCacheLine(&musicvolume);
 
-	for (i = 0; i < MAXPLAYERS; i++)
+	i = 0;
+	if (!pcmchannel.data)
 	{
-		player_t* player = &players[i];
-		if (!playeringame[i])
-			continue;
+		for (i = 0; i < SFXCHANNELS; i++)
+		{
+			if (sfxchannels[i].data)
+				break;
+		}
+	}
 
-		Mars_ClearCacheLine(&player->mo);
-
-		mo = player->mo;
-		Mars_ClearCacheLine(&mo->x);
-		Mars_ClearCacheLine(&mo->y);
-		Mars_ClearCacheLine(&mo->angle);
+	if (i == SFXCHANNELS)
+		snd_nopaintcount++;
+	else
+		snd_nopaintcount = 0;
+	if (snd_nopaintcount > 2)
+	{
+		// we haven't painted the sound channels to the output buffer
+		// for over two frames, both buffers are cleared and safe to
+		// point the DMA to
+		return;
 	}
 
 	b2 = (int32_t *)buffer;
@@ -670,9 +677,30 @@ static void S_Update(int16_t* buffer)
 		*b2++ = 0;
 	}
 
-	S_UpdatePCM(buffer);
+	/* keep updating the channel until done */
+	S_PaintChannel(&pcmchannel, buffer);
 
 	spatialize = samplecount >= SPATIALIZATION_SRATE;
+	if (samplecount >= SPATIALIZATION_SRATE)
+		samplecount -= SPATIALIZATION_SRATE;
+	samplecount += MAX_SAMPLES;
+
+	if (spatialize)
+	{
+		for (i = 0; i < MAXPLAYERS; i++)
+		{
+			player_t* player = &players[i];
+			if (!playeringame[i])
+				continue;
+
+			Mars_ClearCacheLine(&player->mo);
+
+			mo = player->mo;
+			Mars_ClearCacheLine(&mo->x);
+			Mars_ClearCacheLine(&mo->y);
+			Mars_ClearCacheLine(&mo->angle);
+		}
+	}
 
 	for (i = 0; i < SFXCHANNELS; i++)
 	{
@@ -732,10 +760,6 @@ static void S_Update(int16_t* buffer)
 		s2 = (s < l) ? l : (s > h) ? h : s;
 		*b2++ = (s1 << 16) | s2;
 	}
-
-	if (samplecount >= SPATIALIZATION_SRATE)
-		samplecount -= SPATIALIZATION_SRATE;
-	samplecount += MAX_SAMPLES;
 }
 
 void sec_dma1_handler(void)
@@ -926,6 +950,8 @@ void Mars_Sec_ReadSoundCmds(void)
 
 void Mars_Sec_StartSoundMixer(void)
 {
+	snd_nopaintcount = 0;
+
 	S_ClearPCM();
 
 	// fill first buffer
