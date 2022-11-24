@@ -32,6 +32,8 @@
 
 typedef struct
 {
+    VINT    validcount;
+    VINT    *lvalidcounts;
     fixed_t sightzstart;           // eye z of looker
     fixed_t topslope, bottomslope; // slopes to top and bottom of target
 
@@ -43,8 +45,15 @@ static int P_DivlineSide(fixed_t x, fixed_t y, divline_t* node) ATTR_DATA_CACHE_
 static fixed_t P_InterceptVector2(divline_t* v2, divline_t* v1) ATTR_DATA_CACHE_ALIGN;
 static boolean PS_CrossSubsector(sightWork_t* sw, int num) ATTR_DATA_CACHE_ALIGN;
 static boolean PS_CrossBSPNode(sightWork_t* sw, int bspnum) ATTR_DATA_CACHE_ALIGN;
-static boolean PS_CheckSight(mobj_t* t1, mobj_t* t2) ATTR_DATA_CACHE_ALIGN;
+static boolean PS_RejectCheckSight(mobj_t* t1, mobj_t* t2) ATTR_DATA_CACHE_ALIGN;
+static boolean P_MobjCanSightCheck(mobj_t *mobj) ATTR_DATA_CACHE_ALIGN;
+static mobj_t *P_GetSightMobj(mobj_t *pmobj, int c, int *pcnt) ATTR_DATA_CACHE_ALIGN;
+static boolean PS_CheckSight2(mobj_t* t1, mobj_t* t2, VINT*vc, VINT *lvc) ATTR_DATA_CACHE_ALIGN;
+#ifdef MARS
+void P_CheckSights2(int c) ATTR_DATA_CACHE_ALIGN;
+#else
 void P_CheckSights2(void) ATTR_DATA_CACHE_ALIGN;
+#endif
 
 //
 // Returns side 0 (front), 1 (back), or 2 (on).
@@ -187,13 +196,15 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
 
    for( ; count; seg++, count--)
    {
+      VINT* lvc;
+
       line = &lines[seg->linedef];
+      lvc = &sw->lvalidcounts[seg->linedef];
 
       // allready checked other side?
-      if(line->validcount == validcount)
+      if(*lvc == sw->validcount)
          continue;
-
-      line->validcount = validcount;
+      *lvc = sw->validcount;
 
       v1 = line->v1;
       v2 = line->v2;
@@ -302,13 +313,12 @@ static boolean PS_CrossBSPNode(sightWork_t* sw, int bspnum)
 }
 
 //
-// Returns true if a straight line between t1 and t2 is unobstructed
+// Returns false if a straight line between t1 and t2 is obstructed
 //
-static boolean PS_CheckSight(mobj_t *t1, mobj_t *t2)
+static boolean PS_RejectCheckSight(mobj_t *t1, mobj_t *t2)
 {
    int s1, s2;
    unsigned pnum, bytenum, bitnum;
-   sightWork_t sw;
 
    // First check for trivial rejection
    s1 = (int)(t1->subsector->sector - sectors);
@@ -335,9 +345,21 @@ static boolean PS_CheckSight(mobj_t *t1, mobj_t *t2)
       return false; // can't possibly be connected
    }
 
-   // look from eyes of t1 to any part of t2
-   ++validcount;
+   return true;
+}
 
+//
+// Returns true if a straight line between t1 and t2 is unobstructed
+//
+static boolean PS_CheckSight2(mobj_t *t1, mobj_t *t2, VINT*vc, VINT *lvc)
+{
+   sightWork_t sw;
+
+   // look from eyes of t1 to any part of t2
+   *vc = *vc + 1;
+
+   sw.validcount = *vc;
+   sw.lvalidcounts = lvc;
    sw.sightzstart = t1->z + t1->height - (t1->height >> 2);
    sw.topslope    = (t2->z + t2->height) - sw.sightzstart;
    sw.bottomslope = (t2->z) - sw.sightzstart;
@@ -353,33 +375,149 @@ static boolean PS_CheckSight(mobj_t *t1, mobj_t *t2)
    return PS_CrossBSPNode(&sw, numnodes-1);
 }
 
+static boolean P_MobjCanSightCheck(mobj_t *mobj)
+{
+   // must be killable
+   if (!(mobj->flags & MF_COUNTKILL))
+      return false;
+
+   // must be about to change states
+   if (mobj->tics != 1)
+      return false;
+
+   mobj->flags &= ~MF_SEETARGET;
+
+   // must have a target
+   if (!mobj->target)
+      return false;
+
+   if (!PS_RejectCheckSight(mobj, mobj->target))
+      return false;
+
+   return true;
+}
+
+#ifdef MARS
+static char ps_lock = 0;
+
+static void P_LockSight(void)
+{
+    int res;
+    do {
+        __asm volatile (\
+        "tas.b %1\n\t" \
+            "movt %0\n\t" \
+            : "=&r" (res) \
+            : "m" (ps_lock) \
+            );
+    } while (res == 0);
+}
+
+static void P_UnlockSight(void)
+{
+   ps_lock = 0;
+}
+
+static mobj_t *P_GetSightMobj(mobj_t *mobj, int c, int *pcnt)
+{
+   int next;
+   int cnt = *pcnt;
+
+   P_LockSight();
+
+   for (next = MARS_SYS_COMM6; ; next++)
+   {
+      if (c == 1)
+      {
+         for (; cnt < next; cnt++)
+         {
+            if (mobj == (void*)&mobjhead)
+               goto done;
+            Mars_ClearCacheLine(&mobj->next);
+            mobj = mobj->next;
+         }
+         Mars_ClearCacheLines(mobj, (sizeof(mobj_t)+31)/16);
+      }
+      else
+      {
+         for (; cnt < next; cnt++)
+         {
+            if (mobj == (void*)&mobjhead)
+               goto done;
+            mobj = mobj->next;
+         }
+      }
+
+      if (P_MobjCanSightCheck(mobj))
+        break;
+   }
+
+done:
+   MARS_SYS_COMM6 = cnt + 1;
+
+   P_UnlockSight();
+
+   *pcnt = cnt;
+   return mobj;
+}
+
+#define P_NextSightMobj(mobj) (mobj)
+
+#else
+
+static mobj_t *P_GetSightMobj(mobj_t *mobj, int c, int *pcnt)
+{
+   for ( ; mobj != (void*)&mobjhead; mobj = mobj->next)
+   {
+      if (P_MobjCanSightCheck(mobj))
+         break;
+   }
+   return mobj;
+}
+
+#define P_NextSightMobj(mobj) (mobj)->next
+
+#endif
+
 //
 // Optimal mobj sight checking that checks sights in the main tick loop rather
 // than from multiple mobj action routines.
 //
+#ifdef MARS
+void P_CheckSights2(int c)
+#else
 void P_CheckSights2(void)
+#endif
 {
-   mobj_t *mobj;
+    mobj_t *mobj;
+    int cnt = 0;
+    VINT* vc = &validcount[c];
+    VINT* lvc = lines_validcount;
+#ifndef MARS
+    int c = 0;
+#else
+    mobj_t *ctrgt = NULL;
 
-   for(mobj = mobjhead.next; mobj != (void *)&mobjhead; mobj = mobj->next)
-   {
-      // must be killable
-      if(!(mobj->flags & MF_COUNTKILL))
-         continue;
+    lvc += c * numlines;
+    Mars_ClearCacheLines(&mobjhead.next, 1);
+#endif
 
-      // must be about to change states
-      if(mobj->tics != 1)
-         continue;
+    for (mobj = mobjhead.next; ; mobj = P_NextSightMobj(mobj))
+    {
+        if ((mobj = P_GetSightMobj(mobj, c, &cnt)) == (void*)&mobjhead)
+            return;
 
-      mobj->flags &= ~MF_SEETARGET;
+#ifdef MARS
+        if (c == 1 && ctrgt != mobj->target)
+        {
+           Mars_ClearCacheLines(mobj->target, (sizeof(mobj_t)+31)/16);
+           ctrgt = mobj->target;
+        }
+#endif
 
-      // must have a target
-      if(!mobj->target)
-         continue;
-
-      if(PS_CheckSight(mobj, mobj->target))
-         mobj->flags |= MF_SEETARGET;
-   }
+        if (PS_CheckSight2(mobj, mobj->target, vc, lvc))
+           mobj->flags |= MF_SEETARGET;
+    }
 }
 
 // EOF

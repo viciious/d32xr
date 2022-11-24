@@ -34,10 +34,10 @@ static void P_RecursiveSound (sector_t *sec, int soundblocks, uint8_t *soundtrav
 	sector_t	*front, *back;
 	
 /* wake up all monsters in this sector */
-	if (sec->validcount == validcount && soundtraversed[sec - sectors] <= soundblocks+1)
+	if (sec->validcount == validcount[0] && soundtraversed[sec - sectors] <= soundblocks+1)
 		return;		/* already flooded */
-	soundtraversed[sec - sectors] = soundblocks + 1;
-	sec->validcount = validcount;
+	soundtraversed[sec - sectors] = soundblocks+1;
+	sec->validcount = validcount[0];
 	sec->soundtarget = soundtarget;
 	
 	for (i=0 ;i<sec->linecount ; i++)
@@ -96,7 +96,7 @@ void P_NoiseAlert (player_t *player)
 	player->lastsoundsector = (void *)sec;
 	
 	soundtarget = player->mo;
-	validcount++;
+	validcount[0]++;
 	soundtraversed = (uint8_t *)I_WorkBuffer();
 	P_RecursiveSound (sec, 0, soundtraversed);
 }

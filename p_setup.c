@@ -34,6 +34,10 @@ mobj_t		**blocklinks;			/* for thing chains */
 byte		*rejectmatrix;			/* for fast sight rejection */
 
 mapthing_t	*deathmatchstarts, *deathmatch_p;
+
+VINT		*lines_validcount;
+VINT		validcount[2];			/* increment every time a check is made */
+
 mapthing_t	playerstarts[MAXPLAYERS];
 
 int			numthings;
@@ -337,7 +341,7 @@ void P_LoadLineDefs (int lump)
 	D_memset (lines, 0, numlines*sizeof(line_t));
 	data = I_TempBuffer ();
 	W_ReadLump (lump,data);
-	
+
 	mld = (maplinedef_t *)data;
 	ld = lines;
 	for (i=0 ; i<numlines ; i++, mld++, ld++)
@@ -656,6 +660,10 @@ D_printf ("P_SetupLevel(%i,%i)\n",lumpnum,skill);
 	rejectmatrix = W_CacheLumpNum (lumpnum+ML_REJECT,PU_LEVEL);
 #endif
 
+	lines_validcount = Z_Malloc(numlines * sizeof(*lines_validcount) * 2, PU_LEVEL, 0);
+	D_memset(lines_validcount, 0, numlines * sizeof(*lines_validcount) * 2);
+	validcount[0] = validcount[1] = 1;
+
 	P_GroupLines ();
 
 	if (netgame == gt_deathmatch)
@@ -730,8 +738,15 @@ extern byte *debugscreen;
 
 void P_Init (void)
 {
-	P_InitSwitchList ();
+	anims = Z_Malloc(sizeof(*anims) * MAXANIMS, PU_STATIC, 0);
+	switchlist = Z_Malloc(sizeof(*switchlist)* MAXSWITCHES * 2, PU_STATIC, 0);
+	buttonlist = Z_Malloc(sizeof(*buttonlist) * MAXBUTTONS, PU_STATIC, 0);
+	linespeciallist = Z_Malloc(sizeof(*linespeciallist) * MAXLINEANIMS, PU_STATIC, 0);
 
+	activeplats = Z_Malloc(sizeof(*activeplats) * MAXPLATS, PU_STATIC, 0);
+	activeceilings = Z_Malloc(sizeof(*activeceilings) * MAXCEILINGS, PU_STATIC, 0);
+
+	P_InitSwitchList ();
 	P_InitPicAnims ();
 #ifndef MARS
 	pausepic = W_CacheLumpName ("PAUSED",PU_STATIC);

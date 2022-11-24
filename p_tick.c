@@ -132,15 +132,30 @@ void P_RunThinkers (void)
 ===============
 */
 
-void P_CheckSights2 ();
+#ifdef MARS
+void P_CheckSights2(int c) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+#else
+void P_CheckSights2(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+#endif
+
+#ifdef MARS
+void Mars_Sec_P_CheckSights(void)
+{
+	P_CheckSights2(1);
+}
+#endif
 
 void P_CheckSights (void)
 {
 #ifdef JAGUAR
 	extern	int p_sight_start;
 	DSPFunction (&p_sight_start);
+#elif defined(MARS)
+	Mars_P_BeginCheckSights();
+	P_CheckSights2(0);
+	Mars_P_EndCheckSights();
 #else
-	P_CheckSights2 ();
+	P_CheckSights2();
 #endif
 }
 

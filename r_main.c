@@ -92,7 +92,6 @@ __attribute__((aligned(16)))
 viewdef_t       vd;
 player_t	*viewplayer;
 
-VINT			validcount = 1;		/* increment every time a check is made */
 VINT			framecount;		/* incremented every frame */
 
 VINT		extralight;			/* bumped light from gun blasts */
@@ -505,7 +504,8 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_, vissprite_t *vis
 #endif
 
 	framecount++;	
-	validcount++;
+	validcount[0]++;
+	validcount[1]++;
 		
 	player = &players[displayplayer];
 

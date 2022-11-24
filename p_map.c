@@ -257,7 +257,7 @@ void P_UseLines (player_t *player)
 	
 	closeline = NULL;
 	closedist = FRACUNIT;
-	validcount++;
+	validcount[0]++;
 	
 	for (y=yl ; y<=yh ; y++)
 		for (x=xl ; x<=xh ; x++)
@@ -478,7 +478,7 @@ fixed_t P_AimLineAttack (mobj_t *t1, angle_t angle, fixed_t distance)
 	aimtopslope = 100*FRACUNIT/160;	/* can't shoot outside view angles */
 	aimbottomslope = -100*FRACUNIT/160;
 
-	validcount++;
+	validcount[0]++;
 		
 #ifdef JAGUAR
 {
@@ -526,7 +526,7 @@ void P_LineAttack (mobj_t *t1, angle_t angle, fixed_t distance, fixed_t slope, i
 		aimbottomslope = slope-1;
 	}
 		
-	validcount++;
+	validcount[0]++;
 
 #ifdef JAGUAR
 {
