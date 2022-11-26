@@ -161,8 +161,9 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int screenhal
    unsigned opening;    // r16
    unsigned short top;        // r19
    unsigned short bottom;     // r20
+   unsigned short openmark;
    viswall_t *ds;      // r17
-   unsigned vhplus1 = viewportHeight + 1;
+   unsigned short vhplus1 = viewportHeight + 1;
 
    x1  = vis->x1;
    x2  = vis->x2;
@@ -222,8 +223,13 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int screenhal
       silhouette /= AC_TOPSIL;
       if(silhouette == 4)
       {
+#ifdef MARS
+         // force GCC into keeping constants in registers as it 
+         // is stupid enough to reload them on each loop iteration
+         __asm volatile("mov %1,%0\n\t" : "=&r" (openmark) : "r"(OPENMARK));
+#endif
          for (x = r1;  x <= r2; x++)
-            spropening[x] = OPENMARK;
+            spropening[x] = openmark;
          continue;
       }
 
@@ -245,7 +251,7 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int screenhal
          {
             opening = spropening[x];
             if((opening & 0xff) == vhplus1)
-               spropening[x] = (opening & OPENMARK) | bottomsil[x];
+               spropening[x] = (((volatile uint16_t)opening >> 8) << 8) | bottomsil[x];
          }
       }
       else
