@@ -15,7 +15,7 @@ static void F_DrawBackground(void);
 ==================
 */
 
-void BufferedDrawSprite (int sprite, int frame, int rotation)
+void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 {
 	spritedef_t	*sprdef;
 	spriteframe_t	*sprframe;
@@ -29,6 +29,7 @@ void BufferedDrawSprite (int sprite, int frame, int rotation)
 	int			texturecolumn;
 	int 		fuzzpos = 0;
 	int			light = HWLIGHT(143);
+	int 		height = I_FrameBufferHeight();
 
 	if ((unsigned)sprite >= NUMSPRITES)
 		I_Error ("BufferedDrawSprite: invalid sprite number %i "
@@ -51,6 +52,9 @@ void BufferedDrawSprite (int sprite, int frame, int rotation)
 		flip = true;
 	}
 
+	if (lump <= 0)
+		return;
+
 	patch = (patch_t *)W_POINTLUMPNUM(lump);
 	pixels = R_CheckPixels(lump + 1);
 
@@ -59,8 +63,8 @@ void BufferedDrawSprite (int sprite, int frame, int rotation)
 /* */
 /* coordinates are in a 160*112 screen (doubled pixels) */
 /* */
-	sprtop = 90;
-	sprleft = 80;
+	sprtop = top;
+	sprleft = left;
 	spryscale = 2;
 	spriscale = FRACUNIT/spryscale;
 
@@ -72,6 +76,11 @@ void BufferedDrawSprite (int sprite, int frame, int rotation)
 /* */
 	for (x=0 ; x<patch->width ; x++)
 	{
+		if (sprleft+x < 0)
+			continue;
+		if (sprleft+x >= 160)
+			break;
+
 		if (flip)
 			texturecolumn = patch->width-1-x;
 		else
@@ -91,6 +100,10 @@ void BufferedDrawSprite (int sprite, int frame, int rotation)
 			top *= spryscale;
 			bottom *= spryscale;
 			src = pixels + BIGSHORT(column->dataofs);
+
+			if (top < 0) top = 0;
+			if (bottom > height) bottom = height;
+			if (top > bottom) continue;
 
 			drcol(sprleft+x, top, bottom, light, 0, spriscale, src, 128, &fuzzpos);
 		}
@@ -115,6 +128,8 @@ static const castinfo_t castorder[] = {
 {"lost soul", MT_SKULL},
 {"cacodemon", MT_HEAD},
 {"baron of hell", MT_BRUISER},
+{"cyberdemon", MT_CYBORG},
+{"spider mastermind", MT_SPIDER},
 {"our hero", MT_PLAYER},
 
 {NULL,0}
@@ -262,7 +277,7 @@ void F_CastPrint(char *string)
 		}
 
 	text_x = 160 - (width >> 1);
-	text_y = 20;
+	text_y = 10;
 	F_PrintString1(string);
 }
 
@@ -413,7 +428,8 @@ int F_Ticker (void)
 	{	/* switch from deathstate to next monster */
 		castnum++;
 		castdeath = false;
-		if (castorder[castnum].name == NULL)
+		if (castorder[castnum].name == NULL || 
+			spriteframes[sprites[states[mobjinfo[castorder[castnum].type].seestate].sprite].firstframe].lump[0] < 0)
 			castnum = 0;
 #ifndef JAGUAR
 		if (mobjinfo[castorder[castnum].type].seesound)
@@ -456,12 +472,12 @@ int F_Ticker (void)
 		//case S_BOS2_ATK2:
 		case S_HEAD_ATK2: sfx = sfx_firsht; break;
 		case S_SKULL_ATK2: sfx = sfx_sklatk; break;
-		//case S_SPID_ATK2:
-		//case S_SPID_ATK3: sfx = sfx_shotgn; break;
+		case S_SPID_ATK4:
+		case S_SPID_ATK3: sfx = sfx_shotgn; break;
 		//case S_BSPI_ATK2: sfx = sfx_plasma; break;
-		//case S_CYBER_ATK2:
-		//case S_CYBER_ATK4:
-		//case S_CYBER_ATK6: sfx = sfx_rlaunc; break;
+		case S_CYBER_ATK2:
+		case S_CYBER_ATK4:
+		case S_CYBER_ATK6: sfx = sfx_rlaunc; break;
 		//case S_PAIN_ATK3: sfx = sfx_sklatk; break;
 		default: sfx = 0; break;
 		}
@@ -526,6 +542,8 @@ static void F_DrawBackground(void)
 
 void F_Drawer (void)
 {
+	int	top, left;
+
 	drcol = I_DrawColumnLow;
 	if (D_strcasecmp(castorder[castnum].name, "spectre") == 0)
 		drcol = I_DrawFuzzColumnLow;
@@ -560,10 +578,23 @@ void F_Drawer (void)
 #else
 			EraseBlock(0, 0, 320, 200);
 #endif
-			F_CastPrint (castorder[castnum].name);
-				
+			switch (castorder[castnum].type) {
+				case MT_CYBORG:
+					top = 115;
+					left = 80;
+					break;
+				case MT_SPIDER:
+					top = 110;
+					left = 90;
+					break;
+				default:
+					top = 90;
+					left = 80;
+					break;
+			}
 			BufferedDrawSprite (caststate->sprite,
-					caststate->frame&FF_FRAMEMASK,0);
+					caststate->frame&FF_FRAMEMASK,0,top,left);
+			F_CastPrint (castorder[castnum].name);
 			break;
 	}
 
