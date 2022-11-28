@@ -25,6 +25,7 @@ typedef enum
 	mi_audio,
 	mi_video,
 	mi_controls,
+	mi_help,
 
 	mi_soundvol,
 	mi_music,
@@ -82,6 +83,8 @@ static VINT	uchar;
 static VINT	o_cursor1, o_cursor2;
 static VINT	o_slider, o_slidertrack;
 
+static VINT m_help;
+
 VINT	o_musictype;
 
 static const char buttona[NUMCONTROLOPTIONS][8] =
@@ -106,6 +109,7 @@ typedef enum
 	ms_audio,
 	ms_video,
 	ms_controls,
+	ms_help,
 
 	NUMMENUSCREENS
 } screenpos_t;
@@ -145,6 +149,8 @@ void O_Init (void)
 
 	uchar = W_CheckNumForName("CHAR_065");
 
+	m_help = W_CheckNumForName("M_HELP");
+
 /*	initialize variables */
 
 	cursorframe = -1;
@@ -176,6 +182,10 @@ void O_Init (void)
 	menuitem[mi_controls].y = STARTY+ITEMSPACE*3;
 	menuitem[mi_controls].screen = ms_controls;
 
+	D_memcpy(menuitem[mi_help].name, "Help", 4);
+	menuitem[mi_help].x = ITEMX;
+	menuitem[mi_help].y = STARTY+ITEMSPACE*4;
+	menuitem[mi_help].screen = ms_help;
 
 	D_memcpy(menuitem[mi_soundvol].name, "Sfx volume", 11);
 	menuitem[mi_soundvol].x = ITEMX;
@@ -233,7 +243,7 @@ void O_Init (void)
 
 	D_memcpy(menuscreen[ms_main].name, "Options", 8);
 	menuscreen[ms_main].firstitem = mi_game;
-	menuscreen[ms_main].numitems = mi_controls - mi_game + 1;
+	menuscreen[ms_main].numitems = mi_help - mi_game + 1;
 
 	D_memcpy(menuscreen[ms_audio].name, "Audio", 7);
 	menuscreen[ms_audio].firstitem = mi_soundvol;
@@ -248,6 +258,10 @@ void O_Init (void)
 	D_memcpy(menuscreen[ms_controls].name, "Controls", 9);
 	menuscreen[ms_controls].firstitem = mi_controltype;
 	menuscreen[ms_controls].numitems = mi_strafebtns - mi_controltype + 1;
+
+	D_memcpy(menuscreen[ms_help].name, "Help", 4);
+	menuscreen[ms_help].firstitem = 0;
+	menuscreen[ms_help].numitems = 0;
 }
 
 /*
@@ -650,10 +664,13 @@ void O_Drawer (void)
 
 /* Erase old and Draw new cursor frame */
 	//EraseBlock(56, 40, o_cursor1->width, 200);
-	if(cursorframe)
-		DrawJagobjLump(o_cursor1, CURSORX, items[cursorpos].y - 2, NULL, NULL);
-	else
-		DrawJagobjLump(o_cursor2, CURSORX, items[cursorpos].y - 2, NULL, NULL);
+	if (screenpos != ms_help)
+	{
+		if(cursorframe)
+			DrawJagobjLump(o_cursor1, CURSORX, items[cursorpos].y - 2, NULL, NULL);
+		else
+			DrawJagobjLump(o_cursor2, CURSORX, items[cursorpos].y - 2, NULL, NULL);
+	}
 
 /* Draw menu */
 
@@ -740,6 +757,92 @@ void O_Drawer (void)
 		case 1:
 			print(menuitem[mi_colormap].x + 150, menuitem[mi_colormap].y, "on");
 			break;
+		}
+	}
+
+	if (screenpos == ms_help)
+	{
+		int x, x2, x3, l, l2;
+
+		x = 10;
+		y = CURSORY(0)-10;
+		l = y/8;
+		l += 1;
+
+		x2 = 88;
+		l2 = l;
+		x3 = x2+7*8+4;
+		I_Print8(x, l, "Next weap");
+		I_Print8(x2, l, "START+A");
+		l++;
+		I_Print8(x, l, "Prev weap");
+		I_Print8(x2, l, "START+B");
+		l++;
+		I_Print8(x, l, "Automap");
+		I_Print8(x2, l, "START+C");
+		if (strafebtns)
+		{
+			switch (strafebtns)
+			{
+			default:
+			case 1:
+			case 2:
+				I_Print8(x3, l2, "or");
+				I_Print8(x3+16+4, l2, "X");
+				break;
+			case 3:
+				I_Print8(x3, l2, "or");
+				I_Print8(x3+16+4, l2, "Y");
+				break;
+			}
+		}
+		else
+		{
+			I_Print8(x3, l2, "or");
+			I_Print8(x3+16+4, l2, "X");
+			I_Print8(x3, l2+1, "or");
+			I_Print8(x3+16+4, l2+1, "Y");
+			I_Print8(x3, l2+2, "or");
+			I_Print8(x3+16+4, l2+2, "Z");
+		}
+		l++;
+
+		l++;
+
+		x2 = 138;
+		I_Print8(x, l++, "^E5Hold MODE and press a");
+		I_Print8(x, l++, "^E5button to switch to:");
+		I_Print8(x, l, "Fists/Chainsaw");
+		I_Print8(x2, l++, "START");
+		I_Print8(x, l, "Pistol");
+		I_Print8(x2, l++, "A");
+		I_Print8(x, l, "Shotgun");
+		I_Print8(x2, l++, "B");
+		I_Print8(x, l, "Chaingun");
+		I_Print8(x2, l++, "C");
+		I_Print8(x, l, "Rocket launcher");
+		I_Print8(x2, l++, "X");
+		I_Print8(x, l, "Plasmagun");
+		I_Print8(x2, l++, "Y");
+		I_Print8(x, l, "BFG");
+		I_Print8(x2, l++, "Z");
+
+		l++;
+
+		x2 = 62;
+		I_Print8(x, l++, "^E5Automap");
+		I_Print8(x, l, "Scale");
+		I_Print8(x2, l++, "Hold B+UP/DOWN");
+		I_Print8(x, l, "Lock");
+		I_Print8(x2, l++, "Hold C");
+
+		if (m_help >= 0)
+		{
+			x = 182;
+			l = y/8;
+			I_Print8(x, l, "^E5Scan the QR code");
+			I_Print8(x, l+1, "^E5for more info");
+			DrawJagobjLump(m_help, x, y+16, NULL, NULL);
 		}
 	}
 
