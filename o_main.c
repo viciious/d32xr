@@ -492,16 +492,19 @@ exit:
 
 		if (++movecount == 1)
 		{
-			if (buttons & BT_DOWN)
+			if (menuscr->numitems > 0)
 			{
-				if (++cursorpos == menuscr->numitems)
-					cursorpos = 0;
-			}
-		
-			if (buttons & BT_UP)
-			{
-				if (--cursorpos == -1)
-					cursorpos = menuscr->numitems-1;
+				if (buttons & BT_DOWN)
+				{
+					if (++cursorpos == menuscr->numitems)
+						cursorpos = 0;
+				}
+
+				if (buttons & BT_UP)
+				{
+					if (--cursorpos == -1)
+						cursorpos = menuscr->numitems-1;
+				}
 			}
 
 			if (screenpos == ms_controls)
