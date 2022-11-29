@@ -423,14 +423,19 @@ int F_Ticker (void)
 /* */
 	if (--casttics > 0)
 		return 0;			/* not time to change state yet */
-		
+
 	if (caststate->tics == -1 || caststate->nextstate == S_NULL)
 	{	/* switch from deathstate to next monster */
-		castnum++;
+		int oldnum = castnum;
+		do {
+			castnum++;
+			if (castorder[castnum].name == NULL)
+				castnum = 0;
+			if (sprites[states[mobjinfo[castorder[castnum].type].seestate].sprite].numframes == 0)
+				continue;
+			break;
+		} while (castnum != oldnum);
 		castdeath = false;
-		if (castorder[castnum].name == NULL || 
-			spriteframes[sprites[states[mobjinfo[castorder[castnum].type].seestate].sprite].firstframe].lump[0] < 0)
-			castnum = 0;
 #ifndef JAGUAR
 		if (mobjinfo[castorder[castnum].type].seesound)
 			S_StartSound (NULL, mobjinfo[castorder[castnum].type].seesound);
