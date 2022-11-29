@@ -2,7 +2,7 @@
 
 #include "doomdef.h"
 
-#define MOVEWAIT		TICVBLS*5
+#define MOVEWAIT		(I_IsPAL() ? TICVBLS*5 : TICVBLS*6)
 #define CURSORX		(80)
 #define CURSORWIDTH	24
 #define ITEMX		(CURSORX+CURSORWIDTH)

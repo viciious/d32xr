@@ -7,7 +7,7 @@
 #include "mars.h"
 #endif
 
-#define MOVEWAIT		TICVBLS*5
+#define MOVEWAIT		(I_IsPAL() ? TICVBLS*5 : TICVBLS*6)
 #define STARTY		48
 #define CURSORX		(80)
 #define CURSORWIDTH	24
