@@ -9,11 +9,6 @@
         "tag": "!UD"
     },
     {
-        "filename": "dmapinfo_ud",
-        "name": "DMAPINFO",
-        "tag": "UD"
-    },
-    {
         "compressed": true,
         "filename": "demo1",
         "name": "DEMO1"
@@ -669,6 +664,11 @@
         "name": "M_DOOM"
     },
     {
+        "compressed": true,
+        "filename": "m_help",
+        "name": "M_HELP"
+    },
+    {
         "filename": "m_skull1",
         "name": "M_SKULL1"
     },
@@ -1145,11 +1145,6 @@
         "name": "SKY3"
     },
     {
-        "filename": "sky4",
-        "name": "SKY4",
-        "tag": "UD"
-    },
-    {
         "filename": "sladwall",
         "name": "SLADWALL"
     },
@@ -1310,11 +1305,6 @@
         "name": "SW2STAR"
     },
     {
-        "filename": "blac",
-        "name": "BLAC",
-        "tag": "UD"
-    },
-    {
         "name": "T_END",
         "virtual": true
     },
@@ -1337,11 +1327,6 @@
     {
         "filename": "flat5_4",
         "name": "FLAT5_4"
-    },
-    {
-        "filename": "flat5_7",
-        "name": "FLAT5_7",
-        "tag": "UD"
     },
     {
         "filename": "nukage1",
@@ -1496,21 +1481,6 @@
         "name": "GRASS"
     },
     {
-        "filename": "blak",
-        "name": "BLAK",
-        "tag": "UD"
-    },
-    {
-        "filename": "fleshh",
-        "name": "FLESHH",
-        "tag": "UD"
-    },
-    {
-        "filename": "rocky",
-        "name": "ROCKY",
-        "tag": "UD"
-    },
-    {
         "filename": "rocks",
         "name": "ROCKS"
     },
@@ -1522,12 +1492,6 @@
         "filename": "texture1",
         "name": "TEXTURE1",
         "tag": "!UD",
-        "compressed": true
-    },
-    {
-        "filename": "texture1_ud",
-        "name": "TEXTURE1",
-        "tag": "UD",
         "compressed": true
     },
     {
@@ -6885,8 +6849,7 @@
     },
     {
         "name": "MAP25",
-        "virtual": true,
-        "tag": "UD"
+        "virtual": true
     },
     {
         "compressed": true,
@@ -6932,427 +6895,6 @@
     },
     {
         "filename": "blockmap_024",
-        "name": "BLOCKMAP"
-    },
-    {
-        "name": "MAP26",
-        "virtual": true,
-        "tag": "UD"
-    },
-    {
-        "compressed": true,
-        "filename": "things_025",
-        "name": "THINGS"
-    },
-    {
-        "compressed": true,
-        "filename": "linedefs_025",
-        "name": "LINEDEFS"
-    },
-    {
-        "compressed": true,
-        "filename": "sidedefs_025",
-        "name": "SIDEDEFS"
-    },
-    {
-        "filename": "vertexes_025",
-        "name": "VERTEXES"
-    },
-    {
-        "compressed": true,
-        "filename": "segs_025",
-        "name": "SEGS"
-    },
-    {
-        "compressed": true,
-        "filename": "ssectors_025",
-        "name": "SSECTORS"
-    },
-    {
-        "filename": "nodes_025",
-        "name": "NODES"
-    },
-    {
-        "compressed": true,
-        "filename": "sectors_025",
-        "name": "SECTORS"
-    },
-    {
-        "filename": "reject_025",
-        "name": "REJECT"
-    },
-    {
-        "filename": "blockmap_025",
-        "name": "BLOCKMAP"
-    },
-    {
-        "name": "MAP27",
-        "virtual": true,
-        "tag": "UD"
-    },
-    {
-        "compressed": true,
-        "filename": "things_026",
-        "name": "THINGS"
-    },
-    {
-        "compressed": true,
-        "filename": "linedefs_026",
-        "name": "LINEDEFS"
-    },
-    {
-        "compressed": true,
-        "filename": "sidedefs_026",
-        "name": "SIDEDEFS"
-    },
-    {
-        "filename": "vertexes_026",
-        "name": "VERTEXES"
-    },
-    {
-        "compressed": true,
-        "filename": "segs_026",
-        "name": "SEGS"
-    },
-    {
-        "compressed": true,
-        "filename": "ssectors_026",
-        "name": "SSECTORS"
-    },
-    {
-        "filename": "nodes_026",
-        "name": "NODES"
-    },
-    {
-        "compressed": true,
-        "filename": "sectors_026",
-        "name": "SECTORS"
-    },
-    {
-        "filename": "reject_026",
-        "name": "REJECT"
-    },
-    {
-        "filename": "blockmap_026",
-        "name": "BLOCKMAP"
-    },
-    {
-        "name": "MAP28",
-        "virtual": true,
-        "tag": "UD"
-    },
-    {
-        "compressed": true,
-        "filename": "things_027",
-        "name": "THINGS"
-    },
-    {
-        "compressed": true,
-        "filename": "linedefs_027",
-        "name": "LINEDEFS"
-    },
-    {
-        "compressed": true,
-        "filename": "sidedefs_027",
-        "name": "SIDEDEFS"
-    },
-    {
-        "filename": "vertexes_027",
-        "name": "VERTEXES"
-    },
-    {
-        "compressed": true,
-        "filename": "segs_027",
-        "name": "SEGS"
-    },
-    {
-        "compressed": true,
-        "filename": "ssectors_027",
-        "name": "SSECTORS"
-    },
-    {
-        "filename": "nodes_027",
-        "name": "NODES"
-    },
-    {
-        "compressed": true,
-        "filename": "sectors_027",
-        "name": "SECTORS"
-    },
-    {
-        "filename": "reject_027",
-        "name": "REJECT"
-    },
-    {
-        "filename": "blockmap_027",
-        "name": "BLOCKMAP"
-    },
-    {
-        "name": "MAP29",
-        "virtual": true,
-        "tag": "UD"
-    },
-    {
-        "compressed": true,
-        "filename": "things_028",
-        "name": "THINGS"
-    },
-    {
-        "compressed": true,
-        "filename": "linedefs_028",
-        "name": "LINEDEFS"
-    },
-    {
-        "compressed": true,
-        "filename": "sidedefs_028",
-        "name": "SIDEDEFS"
-    },
-    {
-        "filename": "vertexes_028",
-        "name": "VERTEXES"
-    },
-    {
-        "compressed": true,
-        "filename": "segs_028",
-        "name": "SEGS"
-    },
-    {
-        "compressed": true,
-        "filename": "ssectors_028",
-        "name": "SSECTORS"
-    },
-    {
-        "filename": "nodes_028",
-        "name": "NODES"
-    },
-    {
-        "compressed": true,
-        "filename": "sectors_028",
-        "name": "SECTORS"
-    },
-    {
-        "filename": "reject_028",
-        "name": "REJECT"
-    },
-    {
-        "filename": "blockmap_028",
-        "name": "BLOCKMAP"
-    },
-    {
-        "name": "MAP30",
-        "virtual": true,
-        "tag": "UD"
-    },
-    {
-        "compressed": true,
-        "filename": "things_029",
-        "name": "THINGS"
-    },
-    {
-        "compressed": true,
-        "filename": "linedefs_029",
-        "name": "LINEDEFS"
-    },
-    {
-        "compressed": true,
-        "filename": "sidedefs_029",
-        "name": "SIDEDEFS"
-    },
-    {
-        "filename": "vertexes_029",
-        "name": "VERTEXES"
-    },
-    {
-        "compressed": true,
-        "filename": "segs_029",
-        "name": "SEGS"
-    },
-    {
-        "compressed": true,
-        "filename": "ssectors_029",
-        "name": "SSECTORS"
-    },
-    {
-        "filename": "nodes_029",
-        "name": "NODES"
-    },
-    {
-        "compressed": true,
-        "filename": "sectors_029",
-        "name": "SECTORS"
-    },
-    {
-        "filename": "reject_029",
-        "name": "REJECT"
-    },
-    {
-        "filename": "blockmap_029",
-        "name": "BLOCKMAP"
-    },
-    {
-        "name": "MAP31",
-        "virtual": true,
-        "tag": "UD"
-    },
-    {
-        "compressed": true,
-        "filename": "things_030",
-        "name": "THINGS"
-    },
-    {
-        "compressed": true,
-        "filename": "linedefs_030",
-        "name": "LINEDEFS"
-    },
-    {
-        "compressed": true,
-        "filename": "sidedefs_030",
-        "name": "SIDEDEFS"
-    },
-    {
-        "filename": "vertexes_030",
-        "name": "VERTEXES"
-    },
-    {
-        "compressed": true,
-        "filename": "segs_030",
-        "name": "SEGS"
-    },
-    {
-        "compressed": true,
-        "filename": "ssectors_030",
-        "name": "SSECTORS"
-    },
-    {
-        "filename": "nodes_030",
-        "name": "NODES"
-    },
-    {
-        "compressed": true,
-        "filename": "sectors_030",
-        "name": "SECTORS"
-    },
-    {
-        "filename": "reject_030",
-        "name": "REJECT"
-    },
-    {
-        "filename": "blockmap_030",
-        "name": "BLOCKMAP"
-    },
-    {
-        "name": "MAP32",
-        "virtual": true,
-        "tag": "UD"
-    },
-    {
-        "compressed": true,
-        "filename": "things_031",
-        "name": "THINGS"
-    },
-    {
-        "compressed": true,
-        "filename": "linedefs_031",
-        "name": "LINEDEFS"
-    },
-    {
-        "compressed": true,
-        "filename": "sidedefs_031",
-        "name": "SIDEDEFS"
-    },
-    {
-        "filename": "vertexes_031",
-        "name": "VERTEXES"
-    },
-    {
-        "compressed": true,
-        "filename": "segs_031",
-        "name": "SEGS"
-    },
-    {
-        "compressed": true,
-        "filename": "ssectors_031",
-        "name": "SSECTORS"
-    },
-    {
-        "filename": "nodes_031",
-        "name": "NODES"
-    },
-    {
-        "compressed": true,
-        "filename": "sectors_031",
-        "name": "SECTORS"
-    },
-    {
-        "filename": "reject_031",
-        "name": "REJECT"
-    },
-    {
-        "filename": "blockmap_031",
-        "name": "BLOCKMAP"
-    },
-    {
-        "name": "MAP33",
-        "virtual": true,
-        "tag": "UD"
-    },
-    {
-        "compressed": true,
-        "filename": "things_032",
-        "name": "THINGS"
-    },
-    {
-        "compressed": true,
-        "filename": "linedefs_032",
-        "name": "LINEDEFS"
-    },
-    {
-        "compressed": true,
-        "filename": "sidedefs_032",
-        "name": "SIDEDEFS"
-    },
-    {
-        "filename": "vertexes_032",
-        "name": "VERTEXES"
-    },
-    {
-        "compressed": true,
-        "filename": "segs_032",
-        "name": "SEGS"
-    },
-    {
-        "compressed": true,
-        "filename": "ssectors_032",
-        "name": "SSECTORS"
-    },
-    {
-        "filename": "nodes_032",
-        "name": "NODES"
-    },
-    {
-        "compressed": true,
-        "filename": "sectors_032",
-        "name": "SECTORS"
-    },
-    {
-        "filename": "reject_032",
-        "name": "REJECT"
-    },
-    {
-        "filename": "blockmap_032",
-        "name": "BLOCKMAP"
-    },
-    {
-        "compressed": true,
-        "filename": "sectors_033",
-        "name": "SECTORS"
-    },
-    {
-        "filename": "reject_033",
-        "name": "REJECT"
-    },
-    {
-        "filename": "blockmap_033",
         "name": "BLOCKMAP"
     }
 ]
