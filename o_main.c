@@ -377,7 +377,7 @@ exit:
 	if (buttons & (BT_A | BT_LMBTN) && !(oldbuttons & (BT_A | BT_LMBTN)))
 	{
 		int itemno = menuscr->firstitem + cursorpos;
-		if (menuitem[itemno].screen != ms_none)
+		if (menuscr->numitems > 0 && menuitem[itemno].screen != ms_none)
 		{
 			movecount = 0;
 			cursorpos = 0;
