@@ -381,7 +381,6 @@ extern	void			** flatpixels;
 
 extern	VINT		firstflat, numflats;
 
-extern int8_t* doomcolormap;
 extern int8_t* dc_colormaps;
 
 extern uint8_t* dc_playpals;

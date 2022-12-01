@@ -660,17 +660,18 @@ void R_InitSpriteDefs(const char** namelist)
 void R_InitColormap(boolean doublepix)
 {
 	int l;
+	void *doomcolormap;
 
 	l = W_CheckNumForName("COLORMAP");
 	l -= colormapopt * 2;
 	l -= (int)!doublepix;
 
-	doomcolormap = (int8_t *)W_GetLumpData(l);
+	doomcolormap = W_GetLumpData(l);
 
 	if (doublepix)
 		dc_colormaps = (void *)((short *)doomcolormap + 128);
 	else
-		dc_colormaps = (void *)(doomcolormap + 128);
+		dc_colormaps = (void *)((int8_t*)doomcolormap + 128);
 
 #ifdef MARS
 	Mars_CommSlaveClearCache();

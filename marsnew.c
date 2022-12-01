@@ -51,7 +51,6 @@ typedef struct {
 VINT COLOR_WHITE = 0x04;
 VINT COLOR_BLACK = 0xF7;
 
-int8_t* doomcolormap;
 int8_t	*dc_colormaps;
 const byte	*new_palette = NULL;
 
