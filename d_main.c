@@ -151,14 +151,14 @@ void D_isort(int* a, int len)
 	int i, j;
 	for (i = 1; i < len; i++)
 	{
-		for (j = i; j > 0; j--)
+		int t = a[i];
+		for (j = i - 1; j >= 0; j--)
 		{
-			if (a[j - 1] <= a[j])
+			if (a[j] <= t)
 				break;
-			int t = a[j - 1];
-			a[j - 1] = a[j];
-			a[j] = t;
+			a[j+1] = a[j];
 		}
+		a[j+1] = t;
 	}
 }
 
