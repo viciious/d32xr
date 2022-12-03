@@ -484,7 +484,7 @@ typedef struct
 	union
 	{
 		seg_t			*seg;
-		vertex_t		v[2];
+		mapvertex_t		v[2];
 	};
 
 /* */

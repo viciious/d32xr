@@ -333,8 +333,8 @@ static void R_WallLatePrep(viswall_t* wc, vertex_t *verts)
     }
 #endif
 
-    wc->v[0].x = verts[seg->v1].x, wc->v[0].y = verts[seg->v1].y;
-    wc->v[1].x = verts[seg->v2].x, wc->v[1].y = verts[seg->v2].y;
+    wc->v[0].x = verts[seg->v1].x>>16, wc->v[0].y = verts[seg->v1].y>>16;
+    wc->v[1].x = verts[seg->v2].x>>16, wc->v[1].y = verts[seg->v2].y>>16;
 
     int rw_x = wc->start;
     int rw_stopx = wc->stop + 1;
