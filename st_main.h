@@ -87,9 +87,9 @@ typedef struct
 	short	delay;
 	short	times;
 	short	x;
-	short	y;
 	short	w;
-	short	h;
+	uint8_t	y;
+	uint8_t	h;
 } sbflash_t;
 
 typedef struct {
