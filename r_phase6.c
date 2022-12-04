@@ -235,7 +235,8 @@ static void R_UnlockSeg(void)
 
 void R_SegCommands(void)
 {
-    int i, segcount;
+    int segnum;
+    viswall_t* segl;
     seglocal_t lseg;
     drawtex_t* toptex, * bottomtex;
     int extralight;
@@ -261,18 +262,17 @@ void R_SegCommands(void)
     bottomtex->height = 0;
     bottomtex->pixelcount = 0;
 
-    segcount = lastwallcmd - viswalls;
-    for (i = 0; i < segcount; i++)
+    segnum = 0;
+    for (segl = viswalls; segl < lastwallcmd; segl++)
     {
         int seglight;
         unsigned actionbits;
-        viswall_t* segl = viswalls + i;
 
         if (segl->start > segl->stop)
             continue;
 
 #ifdef MARS
-        while ((int16_t)MARS_SYS_COMM8 <= i);
+        while ((int16_t)MARS_SYS_COMM8 <= segnum);
 
         R_LockSeg();
         actionbits = *(volatile short *)&segl->actionbits;
@@ -372,6 +372,8 @@ post_draw:
                 *dst++ = *++src;
             } while (--w > 0);
         }
+
+        segnum++;
     }
 }
 
