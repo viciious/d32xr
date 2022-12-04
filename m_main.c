@@ -38,8 +38,8 @@ typedef enum
 typedef struct
 {
 	VINT	x;
-	VINT	y;
-	VINT	screen;
+	uint8_t	y;
+	char	screen;
 	char 	name[16];
 } mainitem_t;
 
