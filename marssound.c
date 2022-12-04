@@ -66,7 +66,7 @@ sfxchannel_t	pcmchannel;
 
 int __attribute__((aligned(16))) pcm_data[4];
 
-sfxchannel_t	*sfxchannels;
+sfxchannel_t	sfxchannels[SFXCHANNELS];
 
 VINT 			sfxvolume = 64;	/* range 0 - 64 */
 VINT 			musicvolume = 64;	/* range 0 - 64 */
@@ -102,8 +102,6 @@ void S_Init(void)
 	int		initmusictype;
 	VINT	tmp_tracks[100];
 	int 	start, end;
-
-	sfxchannels = Z_Malloc(sizeof(*sfxchannels)*SFXCHANNELS, PU_STATIC, 0);
 
 	/* init sound effects */
 	start = W_CheckNumForName("DS_START");
