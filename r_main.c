@@ -475,7 +475,7 @@ extern	pixel_t	*screens[2];	/* [viewportWidth*viewportHeight];  */
 ==================
 */
 
-static void R_Setup (int displayplayer, visplane_t *visplanes_, vissprite_t *vissprites_,
+static void R_Setup (int displayplayer, vissprite_t *vissprites_,
 	visplane_t **visplanes_hash_, uint16_t *sortedvisplanes_)
 {
 	int 		i;
@@ -660,9 +660,10 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_, vissprite_t *vis
 
 	vissprites = vissprites_;
 
-	visplanes = visplanes_;
-	visplanes_hash = visplanes_hash_;
+	visplanes = (void *)tempbuf;
+	tempbuf += sizeof(*visplanes) * MAXVISPLANES / sizeof(*tempbuf);
 	lastvisplane = visplanes + 1;		/* visplanes[0] is left empty */
+	visplanes_hash = visplanes_hash_;
 
 /* */
 /* plane filling */
@@ -840,7 +841,7 @@ extern	ref8_start;
 
 void R_RenderPlayerView(int displayplayer)
 {
-	visplane_t visplanes_[MAXVISPLANES], *visplanes_hash_[NUM_VISPLANES_BUCKETS];
+	visplane_t *visplanes_hash_[NUM_VISPLANES_BUCKETS];
 	vissprite_t vissprites_[MAXVISSPRITES];
 	uint32_t sortedvisplanes_[MAXVISPLANES];
 	int sortedsprites[1+MAXVISSPRITES];
@@ -857,7 +858,7 @@ void R_RenderPlayerView(int displayplayer)
 	if (debugscreenactive)
 		I_DebugScreen();
 
-	R_Setup(displayplayer, visplanes_, vissprites_, visplanes_hash_, (uint16_t *)sortedvisplanes_);
+	R_Setup(displayplayer, vissprites_, visplanes_hash_, (uint16_t *)sortedvisplanes_);
 
 #ifndef JAGUAR
 	R_BSP();
@@ -899,7 +900,7 @@ void R_RenderPlayerView(int displayplayer)
 	int t_bsp, t_prep, t_segs, t_planes, t_sprites, t_total;
 	boolean drawworld = !(players[consoleplayer].automapflags & AF_ACTIVE);
 	__attribute__((aligned(16)))
-		visplane_t visplanes_[MAXVISPLANES], *visplanes_hash_[NUM_VISPLANES_BUCKETS];
+		visplane_t *visplanes_hash_[NUM_VISPLANES_BUCKETS];
 	__attribute__((aligned(16)))
 		vissprite_t vissprites_[MAXVISSPRITES];
 	__attribute__((aligned(16)))
@@ -913,7 +914,7 @@ void R_RenderPlayerView(int displayplayer)
 
 	Mars_R_SecWait();
 
-	R_Setup(displayplayer, visplanes_, vissprites_, visplanes_hash_, (uint16_t *)sortedvisplanes_);
+	R_Setup(displayplayer, vissprites_, visplanes_hash_, (uint16_t *)sortedvisplanes_);
 
 	Mars_R_SecSetup();
 
@@ -953,7 +954,7 @@ void R_RenderPlayerView(int displayplayer)
 
 	Mars_ClearCacheLines(openings, ((lastopening - openings) * sizeof(*openings) + 15) / 16);
 
-	Mars_ClearCacheLines(visplanes, ((lastvisplane - visplanes) * sizeof(visplane_t) + 31) / 16);
+	//Mars_ClearCacheLines(visplanes, ((lastvisplane - visplanes) * sizeof(visplane_t) + 31) / 16);
 	Mars_ClearCacheLines(sortedvisplanes, ((lastvisplane - visplanes - 1) * sizeof(int) + 15) / 16);
 
 	t_planes = I_GetFRTCounter();
