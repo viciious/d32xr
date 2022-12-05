@@ -116,6 +116,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
         light = lpl->lightmax;
     }
 
+
     drawspan(y, x, x2, light, xfrac, yfrac, xstep, ystep, lpl->ds_source);
 }
 
