@@ -307,6 +307,7 @@ void P_CheckCheats (void)
 int playernum;
 
 void G_DoReborn (int playernum); 
+void G_DoLoadLevel (void);
 
 /*
 =================
@@ -329,7 +330,7 @@ int P_Ticker (void)
 	int		start;
 	int		ticstart;
 	player_t	*pl;
-	
+
 	if (demoplayback)
 	{
 		if (M_Ticker())
@@ -365,6 +366,9 @@ int P_Ticker (void)
 	for (playernum = 0, pl = players; playernum < MAXPLAYERS; playernum++, pl++)
 		if (playeringame[playernum])
 			O_Control(pl);
+
+	if (gameaction != ga_nothing)
+		return gameaction;
 
 	/* */
 	/* run player actions */
@@ -527,7 +531,6 @@ void P_Drawer (void)
 
 #ifdef MARS
 	extern	boolean	debugscreenactive;
-	int ticratebak;
 
 	drawtics = frtc;
 
@@ -580,17 +583,6 @@ void P_Drawer (void)
 
 	if (debugscreenactive)
 		I_DebugScreen();
-
-	ticratebak = ticsperframe;
-
-#ifdef MARS
-	if (viewportWidth >= 320 && ticsperframe < 3)
-		ticsperframe = 3;
-#endif
-	I_Update();
-
-	ticsperframe = ticratebak;
-
 #else
 	if (optionsactive)
 	{
@@ -621,6 +613,11 @@ extern	 VINT		ticremainder[MAXPLAYERS];
 
 void P_Start (void)
 {
+	extern boolean canwipe;
+
+	/* load a level */
+	G_DoLoadLevel();
+
 	AM_Start ();
 #ifndef MARS
 	S_RestartSounds ();
@@ -635,10 +632,25 @@ void P_Start (void)
 			P_RandomSeed(I_GetTime());
 
 	clearscreen = 2;
+	canwipe = true;
 }
 
 void P_Stop (void)
 {
+	M_Stop();
 	Z_FreeTags (mainzone);
 }
 
+void P_Update (void)
+{
+	int ticratebak;
+
+	ticratebak = ticsperframe;
+
+	if (viewportWidth >= 320 && ticsperframe < 3)
+		ticsperframe = 3;
+
+	I_Update();
+
+	ticsperframe = ticratebak;
+}

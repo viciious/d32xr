@@ -35,6 +35,7 @@ LIBS = $(LIBPATH) -lc -lgcc -lgcc-Os-4-200 -lnosys
 OBJS = \
 	crt0.o \
 	f_main.o \
+	f_wipe.o \
 	in_main.o \
 	am_main.o \
 	st_main.o \

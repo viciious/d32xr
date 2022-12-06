@@ -52,6 +52,8 @@ enum
 
 	MARS_SECCMD_P_SIGHT_CHECKS,
 
+	MARS_SECCMD_MELT_DO_WIPE,
+
 	MARS_SECCMD_NUMCMDS
 };
 
@@ -65,6 +67,7 @@ void Mars_Sec_R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_DrawSprites(int sprscreenhalf, int *sortedsprites) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_DrawPSprites(int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_P_CheckSights(void) ATTR_DATA_CACHE_ALIGN;
+void Mars_Sec_wipe_doMelt(void);
 
 void Mars_Sec_M_AnimateFire(void) ATTR_OPTIMIZE_EXTREME;
 void Mars_Sec_InitSoundDMA(void);
@@ -125,7 +128,7 @@ static inline void Mars_R_BeginDrawSprites(int sprscreenhalf, int *sortedsprites
 {
 	Mars_R_SecWait();
 	MARS_SYS_COMM6 = sprscreenhalf;
-	*(uintptr_t *)&MARS_SYS_COMM8 = (uintptr_t)sortedsprites;
+	*(volatile uintptr_t *)&MARS_SYS_COMM8 = (uintptr_t)sortedsprites;
 	MARS_SYS_COMM4 = MARS_SECCMD_R_DRAW_SPRITES;
 }
 
@@ -171,6 +174,19 @@ static inline void Mars_P_BeginCheckSights(void)
 }
 
 static inline void Mars_P_EndCheckSights(void)
+{
+	while (MARS_SYS_COMM4 != 0);
+}
+
+static inline void Mars_melt_BeginWipe(short *yy)
+{
+	while (MARS_SYS_COMM4 != 0) {};
+	MARS_SYS_COMM6 = 0;
+	*(volatile uintptr_t *)&MARS_SYS_COMM8 = (uintptr_t)yy;
+	MARS_SYS_COMM4 = MARS_SECCMD_MELT_DO_WIPE;
+}
+
+static inline void Mars_melt_EndWipe(void)
 {
 	while (MARS_SYS_COMM4 != 0);
 }

@@ -155,12 +155,14 @@ final_e	status;
 #define STARTY		8
 boolean textprint;	/* is endtext done printing? */
 int		textindex;
-int		textdelay;
-int		text_x;
-int		text_y;
+VINT	textdelay;
+VINT	text_x;
+VINT	text_y;
+VINT	drawbg;
 #define SPACEWIDTH	8
 #define NUMENDOBJ	28
 jagobj_t	**endobj;
+
 #if 0
 /* '*' = newline */
 static const char	endtextstring[] =
@@ -305,6 +307,7 @@ void F_Start (void)
 	textdelay = TEXTTIME;
 	text_x = STARTX;
 	text_y = STARTY;
+	drawbg = 2;
 
 	endobj = Z_Malloc(sizeof(*endobj) * NUMENDOBJ, PU_STATIC, NULL);
 
@@ -320,11 +323,7 @@ void F_Start (void)
 	castonmelee = 0;
 	castattacking = false;
 
-#ifdef MARS
-	F_DrawBackground();
-	UpdateBuffer();
-	F_DrawBackground();
-#else
+#ifndef MARS
 	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
 	DoubleBufferSetup ();
 #endif
@@ -368,7 +367,9 @@ int F_Ticker (void)
 	buttons = ticbuttons[consoleplayer];
 	oldbuttons = oldticbuttons[consoleplayer];
 
-	if (ticon > 10 && (buttons & BT_START) && !(oldbuttons & BT_START))
+	if (ticon <= 10)
+		return 0;
+	if ((buttons & BT_START) && !(oldbuttons & BT_START))
 		return 1;
 
 	if (status == fin_endtext)
@@ -534,7 +535,11 @@ stopattack:
 
 static void F_DrawBackground(void)
 {
+#ifdef MARS
 	DrawTiledBackground2(gameinfo.endFlat);
+#else
+	EraseBlock(0, 0, 320, 200);
+#endif
 }
 
 /*
@@ -558,6 +563,11 @@ void F_Drawer (void)
 	viewportHeight = I_FrameBufferHeight();
 	viewportbuffer = (pixel_t*)I_FrameBuffer();
 
+	if (drawbg) {
+		drawbg--;
+		F_DrawBackground();
+	}
+
 	switch(status)
 	{
 		case fin_endtext:
@@ -578,11 +588,7 @@ void F_Drawer (void)
 			break;
 			
 		case fin_charcast:
-#ifdef MARS
-			F_DrawBackground();
-#else
-			EraseBlock(0, 0, 320, 200);
-#endif
+			drawbg = 2;
 			switch (castorder[castnum].type) {
 				case MT_CYBORG:
 					top = 115;
@@ -602,11 +608,5 @@ void F_Drawer (void)
 			F_CastPrint (castorder[castnum].name);
 			break;
 	}
-
-#ifdef MARS
-	I_Update();
-#else
-	UpdateBuffer ();
-#endif
 }
 

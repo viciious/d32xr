@@ -509,7 +509,7 @@ void G_Init(void)
  
 extern mobj_t emptymobj;
  
-void G_InitNew (skill_t skill, int map, gametype_t gametype) 
+void G_InitNew (skill_t skill, int map, gametype_t gametype, boolean splitscr)
 { 
 	int             i; 
 
@@ -529,7 +529,10 @@ void G_InitNew (skill_t skill, int map, gametype_t gametype)
 		I_Error("Lump MAP%02d not found!", map);
 
  	netgame = gametype;
+	splitscreen = splitscr;
+#ifndef MARS
 	I_DrawSbar ();			/* draw frag boxes if multiplayer */
+#endif
 
 /* force players to be initialized upon first level load          */
 	for (i=0 ; i<MAXPLAYERS ; i++) 
@@ -561,7 +564,7 @@ void G_LoadGame(int saveslot)
 
 	D_memcpy(backup, playersresp, sizeof(playersresp));
 
-	G_InitNew(startskill, startmap, starttype);
+	G_InitNew(startskill, startmap, starttype, startsplitscreen);
 
 	D_memcpy(playersresp, backup, sizeof(playersresp));
 }
@@ -588,23 +591,20 @@ void G_RunGame (void)
 		int			nextmap;
 #endif
 
-		/* load a level */
-		G_DoLoadLevel();
-
 		/* run a level until death or completion */
-		MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
+		MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer, P_Update);
 
 		if (gameaction == ga_startnew)
 		{
 startnew:
-			if (starttype != gt_single && !splitscreen)
+			if (starttype != gt_single && !startsplitscreen)
 				I_NetSetup();
 			else
 				I_NetStop();
 			if (startsave != -1)
 				G_LoadGame(startsave);
 			else
-				G_InitNew(startskill, startmap, starttype);
+				G_InitNew(startskill, startmap, starttype, startsplitscreen);
 			continue;
 		}
 
@@ -669,12 +669,16 @@ startnew:
 #endif
 
 	/* run a stats intermission */
-		MiniLoop (IN_Start, IN_Stop, IN_Ticker, IN_Drawer);
+		MiniLoop (IN_Start, IN_Stop, IN_Ticker, IN_Drawer, UpdateBuffer);
 	
 	/* run the finale if needed */
 		if (finale)
 		{
-			MiniLoop(F_Start, F_Stop, F_Ticker, F_Drawer);
+#ifdef MARS
+			MiniLoop(F_Start, F_Stop, F_Ticker, F_Drawer, I_Update);
+#else
+			MiniLoop(F_Start, F_Stop, F_Ticker, F_Drawer, UpdateBuffer);
+#endif
 			I_NetStop();
 			break;
 		}
@@ -696,10 +700,9 @@ int G_PlayDemoPtr (unsigned *demo)
 
 	demo_p = demo;
 	
-	G_InitNew (skill, map, gt_single);
-	G_DoLoadLevel ();   
+	G_InitNew (skill, map, gt_single, false);
 	demoplayback = true;
-	exit = MiniLoop (P_Start, P_Stop, P_Ticker, P_Drawer);
+	exit = MiniLoop (P_Start, P_Stop, P_Ticker, P_Drawer, P_Update);
 	demoplayback = false;
 	
 	return exit;
@@ -720,10 +723,9 @@ void G_RecordDemo (void)
 	*demo_p++ = startskill;
 	*demo_p++ = startmap;
 	
-	G_InitNew (startskill, startmap, gt_single);
-	G_DoLoadLevel ();  
+	G_InitNew (startskill, startmap, gt_single, false);
 	demorecording = true; 
-	MiniLoop (P_Start, P_Stop, P_Ticker, P_Drawer);
+	MiniLoop (P_Start, P_Stop, P_Ticker, P_Drawer, P_Update);
 	demorecording = false;
 
 #ifdef MARS

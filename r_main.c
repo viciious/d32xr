@@ -309,13 +309,12 @@ void R_SetViewportSize(int num)
 	weaponYpos = (viewportHeight - weaponYpos) / 2;
 
 	initmathtables = 2;
+	clearscreen = 2;
 
 	// refresh func pointers
 	R_SetDetailMode(detailmode);
 
 	R_InitColormap(lowResMode);
-
-	clearscreen = 2;
 
 #ifdef MARS
 	Mars_CommSlaveClearCache();
@@ -446,10 +445,6 @@ nocache:
 
 void R_SetupLevel(void)
 {
-	/* we used the framebuffer as temporary memory, so it */
-	/* needs to be cleared from potential garbage */
-	I_ClearFrameBuffer();
-
 	R_SetupTextureCaches();
 
 	R_SetViewportSize(viewportNum);

@@ -236,7 +236,10 @@ void M_Stop (void)
 /* free all loaded graphics */
 
 	if (m_doom != NULL)
+	{
 		Z_Free (m_doom);
+		m_doom = NULL;
+	}
 
 #ifndef MARS
 	WriteEEProm ();
@@ -404,7 +407,7 @@ int M_Ticker (void)
 			startmap = gamemapnumbers[playermap - 1]; /*set map number */
 			startskill = playerskill;	/* set skill level */
 			starttype = currentplaymode;	/* set play type */
-			splitscreen = currentgametype == mi_splitscreen;
+			startsplitscreen = currentgametype == mi_splitscreen;
 			return ga_startnew;		/* done with menu */
 		}
 
@@ -426,7 +429,7 @@ int M_Ticker (void)
 		{
 			if (savecount > 0)
 			{
-				splitscreen = saveslotmode != gt_single;
+				startsplitscreen = saveslotmode != gt_single;
 				startsave = saveslot;
 				return ga_startnew;
 			}
@@ -712,8 +715,4 @@ void M_Drawer (void)
 			print(CURSORX, y + ITEMSPACE*3+10 + 2, "the first area.");
 		}
 	}
-
-#ifndef MARS
-	UpdateBuffer();
-#endif
 }

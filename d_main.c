@@ -17,6 +17,8 @@ jagobj_t	*backgroundpic;
 
 unsigned	*demo_p, *demobuffer;
 
+boolean canwipe = false;
+
 unsigned configuration[NUMCONTROLOPTIONS][3] =
 {
 	{BT_SPEED, BT_ATTACK, BT_USE},
@@ -276,15 +278,50 @@ mobj_t	emptymobj;
 =
 ===============
 */
+__attribute((noinline))
+static void D_Wipe(void)
+{
+	int b;
+	short y[2][WIPEWIDTH];
+	short yy[WIPEWIDTH];
+	int wipestart[2], done[2] = { 0, 0 };
+	int backbuffer;
+	int step = 0;
+
+	backbuffer = wipe_InitMelt(y[0]);
+	D_memcpy(y[1], y[0], sizeof(y[0])); // double buffered
+
+	wipestart[0] = I_GetTime() - 1;
+	wipestart[1] = wipestart[0];
+
+	b = 0;
+	step = 0;
+	do {
+		int nowtime = I_GetTime ();
+		done[b] = wipe_ScreenWipe(y[b], yy, nowtime - wipestart[b], step++);
+		wipestart[b] = nowtime;
+		b ^= 1;
+	} while (!done[0] || !done[1]);
+
+	wipe_ExitMelt(backbuffer);
+}
 
 int MiniLoop ( void (*start)(void),  void (*stop)(void)
-		,  int (*ticker)(void), void (*drawer)(void) )
+		,  int (*ticker)(void), void (*drawer)(void)
+		,  void (*update)(void) )
 {
 	int		i;
 	int		exit;
 	int		buttons;
 	int		mx, my;
-		
+	boolean wipe = canwipe;
+	boolean firstdraw = true;
+
+	if (wipe)
+	{
+		wipe_StartScreen();
+	}
+
 /* */
 /* setup (cache graphics, etc) */
 /* */
@@ -378,6 +415,13 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 			break;
 		}
 
+		if (!firstdraw)
+		{
+			if (update)
+				update();
+		}
+		firstdraw = false;
+
 		ticon++;
 		if (gamevbls / TICVBLS > gametic)
 			gametic++;
@@ -392,8 +436,23 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		while (!I_RefreshCompleted())
 			;
 
+		drawer();
+
 		if (!exit)
-			drawer();
+		{
+			if (wipe)
+			{
+				wipe_EndScreen();
+				D_Wipe();
+				wipe = false;
+			}
+		}
+		else
+		{
+			if (canwipe)
+			{
+			}
+		}
 
 		prevgametic = gametic;
 
@@ -408,15 +467,12 @@ while (!I_RefreshCompleted ())
 #endif
 	} while (!exit);
 
-
-	while (!I_RefreshCompleted ())
-	;
 	stop ();
 	S_Clear ();
 	
 	for (i = 0; i < MAXPLAYERS; i++)
 		players[i].mo = &emptymobj;	/* for net consistency checks */
-	
+
 	return exit;
 } 
  
@@ -494,7 +550,7 @@ void START_Title(void)
 	for (i = 0; i < 2; i++)
 	{
 		I_ClearFrameBuffer();
-		I_Update();
+		UpdateBuffer();
 	}
 #else
 	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
@@ -527,7 +583,6 @@ void DRAW_Title (void)
 #ifdef MARS
 	I_DrawMenuFire();
 #endif
-	UpdateBuffer();
 }
 
 /*============================================================================= */
@@ -691,8 +746,6 @@ static void DRAW_Credits(void)
 #else
 	DrawJagobj(titlepic, 0, 0);
 #endif
-
-	UpdateBuffer();
 }
 
 /*============================================================================ */
@@ -707,8 +760,10 @@ void RunTitle (void)
 	startmap = 1;
 	starttype = gt_single;
 	consoleplayer = 0;
+	canwipe = false;
 
-	exit = MiniLoop (START_Title, STOP_Title, TIC_Abortable, DRAW_Title);
+	exit = MiniLoop (START_Title, STOP_Title, TIC_Abortable, DRAW_Title, UpdateBuffer);
+
 #ifdef MARS
 	if (exit == ga_exitdemo)
 		RunMenu ();
@@ -724,7 +779,7 @@ void RunCredits (void)
 	
 	l = gameinfo.creditsPage;
 	if (l > 0)
-		exit = MiniLoop(START_Credits, STOP_Credits, TIC_Credits, DRAW_Credits);
+		exit = MiniLoop(START_Credits, STOP_Credits, TIC_Credits, DRAW_Credits, UpdateBuffer);
 	else
 		exit = ga_exitdemo;
 
@@ -788,12 +843,12 @@ void RunMenu (void)
 	M_Stop();
 #else
 reselect:
-	MiniLoop(M_Start, M_Stop, M_Ticker, M_Drawer);
+	MiniLoop(M_Start, M_Stop, M_Ticker, M_Drawer, NULL);
 #endif
 
 	if (consoleplayer == 0)
 	{
-		if (starttype != gt_single && !splitscreen)
+		if (starttype != gt_single && !startsplitscreen)
 		{
 			I_NetSetup();
 #ifndef MARS
@@ -806,7 +861,7 @@ reselect:
 	if (startsave != -1)
 		G_LoadGame(startsave);
 	else
-		G_InitNew(startskill, startmap, starttype);
+		G_InitNew(startskill, startmap, starttype, startsplitscreen);
 
 	G_RunGame ();
 }
@@ -827,6 +882,7 @@ skill_t		startskill = sk_medium;
 int			startmap = 1;
 gametype_t	starttype = gt_single;
 int			startsave = -1;
+boolean 	startsplitscreen = 0;
 
 void D_DoomMain (void) 
 {    
@@ -859,24 +915,24 @@ D_printf ("DM_Main\n");
 
 /*G_RecordDemo ();	// set startmap and startskill */
 
-/*	MiniLoop (F_Start, F_Stop, F_Ticker, F_Drawer); */
+/*	MiniLoop (F_Start, F_Stop, F_Ticker, F_Drawer, UpdateBuffer); */
 
-/*G_InitNew (startskill, startmap, gt_deathmatch); */
+/*G_InitNew (startskill, startmap, gt_deathmatch, false); */
 /*G_RunGame (); */
 
 #ifdef NeXT
 	if (M_CheckParm ("-dm") )
 	{
 		I_NetSetup ();
-		G_InitNew (startskill, startmap, gt_deathmatch);
+		G_InitNew (startskill, startmap, gt_deathmatch, false);
 	}
 	else if (M_CheckParm ("-dial") || M_CheckParm ("-answer") )
 	{
 		I_NetSetup ();
-		G_InitNew (startskill, startmap, gt_coop);
+		G_InitNew (startskill, startmap, gt_coop, false);
 	}
 	else
-		G_InitNew (startskill, startmap, gt_single);
+		G_InitNew (startskill, startmap, gt_single, false);
 	G_RunGame ();
 #endif
 

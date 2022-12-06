@@ -453,7 +453,5 @@ void IN_Drawer (void)
 		statsdrawn = true;
 	if(valsdrawn == false)
 		valsdrawn = true;
-
-	UpdateBuffer();
 }
 

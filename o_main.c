@@ -303,7 +303,6 @@ void O_Control (player_t *player)
 #endif
 		)
 	{
-exit:
 		player->automapflags ^= AF_OPTIONSACTIVE;
 
 		if (playernum == curplayer)
@@ -342,25 +341,23 @@ exit:
 		if (mtick == ga_nothing)
 			return;
 
-		M_Stop();
-
-		movecount = 0;
-		cursorpos = 0;
-		screenpos = ms_main;
 		clearscreen = 2;
 
 		switch (mtick)
 		{
 		case ga_completed:
+			movecount = 0;
+			cursorpos = 0;
+			screenpos = ms_main;
 			S_StartSound(NULL, sfx_swtchn);
 			return;
 		case ga_startnew:
 			gameaction = ga_startnew;
 		case ga_died:
-			goto exit;
+			return;
 		case ga_warped:
 			gameaction = ga_warped;
-			goto exit;
+			return;
 		}
 		return;
 	}
@@ -848,9 +845,5 @@ void O_Drawer (void)
 			DrawJagobjLump(m_help, x, y+16, NULL, NULL);
 		}
 	}
-
-#ifndef MARS
-	UpdateBuffer();
-#endif
 }
 
