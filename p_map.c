@@ -10,8 +10,8 @@ boolean	PIT_UseLines(line_t* li) ATTR_DATA_CACHE_ALIGN;
 void P_UseLines(player_t* player) ATTR_DATA_CACHE_ALIGN;
 boolean PIT_RadiusAttack(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
 void P_RadiusAttack(mobj_t* spot, mobj_t* source, int damage) ATTR_DATA_CACHE_ALIGN;
-fixed_t P_AimLineAttack(mobj_t* t1, angle_t angle, fixed_t distance) ATTR_DATA_CACHE_ALIGN;
-void P_LineAttack(mobj_t* t1, angle_t angle, fixed_t distance, fixed_t slope, int damage) ATTR_DATA_CACHE_ALIGN;
+fixed_t P_AimLineAttack(lineattack_t *la, mobj_t* t1, angle_t angle, fixed_t distance) ATTR_DATA_CACHE_ALIGN;
+void P_LineAttack(lineattack_t *la, mobj_t* t1, angle_t angle, fixed_t distance, fixed_t slope, int damage) ATTR_DATA_CACHE_ALIGN;
 
 /*============================================================================= */
 
@@ -378,37 +378,7 @@ void P_RadiusAttack (mobj_t *spot, mobj_t *source, int damage)
 
 int			sightcounts[2];
 
-/*=================== */
-/* */
-/* IN */
-/* */
-/* A line will be traced from the middle of shooter in the direction of */
-/* attackangle until either a shootable mobj is within the visible */
-/* aimtopslope / aimbottomslope range, or a solid wall blocks further */
-/* tracing.  If no thing is targeted along the entire range, the first line */
-/* that blocks the midpoint of the trace will be hit. */
-/*=================== */
-
-mobj_t		*shooter;
-angle_t		attackangle;
-fixed_t		attackrange;
-fixed_t		aimtopslope;
-fixed_t		aimbottomslope;
-
-/*=================== */
-/* */
-/* OUT */
-/* */
-/*=================== */
-
-extern	line_t		*shootline;
-extern	mobj_t		*shootmobj;
-extern	fixed_t		shootslope;					/* between aimtop and aimbottom */
-extern	fixed_t		shootx, shooty, shootz;		/* location for puff/blood */
-
-void P_Shoot2 (void);
-
-mobj_t	*linetarget;			/* shootmobj latched in main memory */
+void P_Shoot2 (lineattack_t *la);
 
 int		shoottics;
 
@@ -470,28 +440,22 @@ int DSPRead (void volatile *adr)
 =================
 */
 
-fixed_t P_AimLineAttack (mobj_t *t1, angle_t angle, fixed_t distance)
+fixed_t P_AimLineAttack (lineattack_t *la, mobj_t *t1, angle_t angle, fixed_t distance)
 {
-	shooter = t1;
-	attackrange = distance;
-	attackangle = angle;
-	aimtopslope = 100*FRACUNIT/160;	/* can't shoot outside view angles */
-	aimbottomslope = -100*FRACUNIT/160;
+	mobj_t  *linetarget;
 
-	validcount[0]++;
+	la->shooter = t1;
+	la->attackrange = distance;
+	la->attackangle = angle;
+	la->aimtopslope = 100*FRACUNIT/160;	/* can't shoot outside view angles */
+	la->aimbottomslope = -100*FRACUNIT/160;
+
+	P_Shoot2 (la);
+
+	linetarget = (mobj_t *)DSPRead (&la->shootmobj);
 		
-#ifdef JAGUAR
-{
-	extern	int p_shoot_start;
-	shoottics += DSPFunction (&p_shoot_start);
-}
-#else
-	P_Shoot2 ();
-#endif
-	linetarget = (mobj_t *)DSPRead (&shootmobj);
-		
-	if (shootmobj)
-		return DSPRead(&shootslope);
+	if (linetarget)
+		return DSPRead(&la->shootslope);
 	return 0;
 }
  
@@ -506,48 +470,41 @@ fixed_t P_AimLineAttack (mobj_t *t1, angle_t angle, fixed_t distance)
 =================
 */
 
-void P_LineAttack (mobj_t *t1, angle_t angle, fixed_t distance, fixed_t slope, int damage)
+void P_LineAttack (lineattack_t *la, mobj_t *t1, angle_t angle, fixed_t distance, fixed_t slope, int damage)
 {
+	mobj_t  *linetarget;
 	line_t	*shootline2;
 	int		shootx2, shooty2, shootz2;
 	
-	shooter = t1;
-	attackrange = distance;
-	attackangle = angle;
+	la->shooter = t1;
+	la->attackrange = distance;
+	la->attackangle = angle;
 	
 	if (slope == D_MAXINT)
 	{
-		aimtopslope = 100*FRACUNIT/160;	/* can't shoot outside view angles */
-		aimbottomslope = -100*FRACUNIT/160;
+		la->aimtopslope = 100*FRACUNIT/160;	/* can't shoot outside view angles */
+		la->aimbottomslope = -100*FRACUNIT/160;
 	}
 	else
 	{
-		aimtopslope = slope+1;
-		aimbottomslope = slope-1;
+		la->aimtopslope = slope+1;
+		la->aimbottomslope = slope-1;
 	}
-		
-	validcount[0]++;
 
-#ifdef JAGUAR
-{
-	extern	int p_shoot_start;
-	shoottics += DSPFunction (&p_shoot_start);
-}
-#else
-	P_Shoot2 ();
-#endif
-	linetarget = (mobj_t *)DSPRead (&shootmobj);
-	shootline2 = (line_t *)DSPRead (&shootline);
-	shootx2 = DSPRead (&shootx);
-	shooty2 = DSPRead (&shooty);
-	shootz2 = DSPRead (&shootz);
+	P_Shoot2 (la);
+
+	linetarget = (mobj_t *)DSPRead (&la->shootmobj);
+	shootline2 = (line_t *)DSPRead (&la->shootline);
+	shootx2 = DSPRead (&la->shootx);
+	shooty2 = DSPRead (&la->shooty);
+	shootz2 = DSPRead (&la->shootz);
 /* */
 /* shoot thing */
 /* */
 	if (linetarget)
 	{		
 		if (linetarget->flags & MF_NOBLOOD)
-			P_SpawnPuff (shootx2,shooty2,shootz2);
+			P_SpawnPuff (shootx2,shooty2,shootz2, distance);
 		else
 			P_SpawnBlood (shootx2,shooty2,shootz2, damage);
 	
@@ -577,7 +534,7 @@ void P_LineAttack (mobj_t *t1, angle_t angle, fixed_t distance, fixed_t slope, i
 					return;		/* it's a sky hack wall */
 		}
 				
-		P_SpawnPuff (shootx2,shooty2,shootz2);
+		P_SpawnPuff (shootx2,shooty2,shootz2,distance);
 	}
 	
 	

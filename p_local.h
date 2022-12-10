@@ -129,7 +129,7 @@ boolean	P_SetMobjState (mobj_t *mobj, statenum_t state) ATTR_DATA_CACHE_ALIGN;
 void 	P_MobjThinker (mobj_t *mobj);
 void 	P_PreSpawnMobjs(int count);
 
-void	P_SpawnPuff (fixed_t x, fixed_t y, fixed_t z);
+void	P_SpawnPuff (fixed_t x, fixed_t y, fixed_t z, fixed_t attackrange);
 void 	P_SpawnBlood (fixed_t x, fixed_t y, fixed_t z, int damage);
 void	P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type);
 void	P_SpawnPlayerMissile (mobj_t *source, mobjtype_t type);
@@ -210,10 +210,25 @@ void 	P_UseLines (player_t *player);
 
 boolean P_ChangeSector (sector_t *sector, boolean crunch);
 
-extern	mobj_t		*linetarget;			/* who got hit (or NULL) */
-fixed_t P_AimLineAttack (mobj_t *t1, angle_t angle, fixed_t distance) ATTR_DATA_CACHE_ALIGN;
+typedef struct
+{
+   // input
+   mobj_t  *shooter;
+   angle_t  attackangle;
+   fixed_t  attackrange;
+   fixed_t  aimtopslope;
+   fixed_t  aimbottomslope;
 
-void P_LineAttack (mobj_t *t1, angle_t angle, fixed_t distance, fixed_t slope, int damage) ATTR_DATA_CACHE_ALIGN;
+   // output
+   line_t  *shootline;
+   mobj_t  *shootmobj;				/* who got hit (or NULL) */
+   fixed_t  shootslope;             // between aimtop and aimbottom
+   fixed_t  shootx, shooty, shootz; // location for puff/blood
+} lineattack_t;
+
+fixed_t P_AimLineAttack (lineattack_t *la, mobj_t *t1, angle_t angle, fixed_t distance) ATTR_DATA_CACHE_ALIGN;
+
+void P_LineAttack (lineattack_t *la, mobj_t *t1, angle_t angle, fixed_t distance, fixed_t slope, int damage) ATTR_DATA_CACHE_ALIGN;
 
 void P_RadiusAttack (mobj_t *spot, mobj_t *source, int damage) ATTR_DATA_CACHE_ALIGN;
 

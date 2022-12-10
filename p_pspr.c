@@ -520,13 +520,16 @@ void A_Punch (player_t *player, pspdef_t *psp)
 {
 	angle_t		angle;
 	int			damage;
+	mobj_t 		*linetarget;
+	lineattack_t la;
 	
 	damage = ((P_Random ()&7)+1)*3;
 	if (player->powers[pw_strength])	
 		damage *= 10;
 	angle = player->mo->angle;
 	angle += (P_Random()-P_Random())<<18;
-	P_LineAttack (player->mo, angle, MELEERANGE, D_MAXINT, damage);
+	P_LineAttack (&la, player->mo, angle, MELEERANGE, D_MAXINT, damage);
+	linetarget = la.shootmobj;
 /* turn to face target */
 	if (linetarget)
 	{
@@ -548,13 +551,15 @@ void A_Saw (player_t *player, pspdef_t *psp)
 {
 	angle_t		angle;
 	int			damage;
-	
+	mobj_t 		*linetarget;
+	lineattack_t la;
 
 	damage = ((P_Random ()&7)+1)*3;
 	angle = player->mo->angle;
 	angle += (P_Random()-P_Random())<<18;
 /* use meleerange + 1 se the puff doesn't skip the flash */
-	P_LineAttack (player->mo, angle, MELEERANGE+1, D_MAXINT, damage);
+	P_LineAttack (&la, player->mo, angle, MELEERANGE+1, D_MAXINT, damage);
+	linetarget = la.shootmobj;
 	if (!linetarget)
 	{
 		S_StartSound (player->mo, sfx_sawful);
@@ -643,12 +648,13 @@ void P_GunShot (mobj_t *mo, boolean accurate)
 {
 	angle_t		angle;
 	int			damage;
-	
+	lineattack_t la;
+
 	damage = ((P_Random ()&3)+1)*4;
 	angle = mo->angle;
 	if (!accurate)
 		angle += (P_Random()-P_Random())<<18;
-	P_LineAttack (mo, angle, MISSILERANGE, D_MAXINT, damage);
+	P_LineAttack (&la, mo, angle, MISSILERANGE, D_MAXINT, damage);
 }
 
 /* 
@@ -683,13 +689,14 @@ void A_FireShotgun (player_t *player, pspdef_t *psp)
 	int			damage;	
 	int			i;
 	int			slope;
-	
+	lineattack_t la;
+
 	S_StartSound (player->mo, sfx_shotgn);
 
 	player->ammo[weaponinfo[player->readyweapon].ammo]--;
 	P_SetPsprite (player,ps_flash,weaponinfo[player->readyweapon].flashstate);
 
-	slope = P_AimLineAttack (player->mo, player->mo->angle, MISSILERANGE);
+	slope = P_AimLineAttack (&la, player->mo, player->mo->angle, MISSILERANGE);
 	
 /* shotgun pellets all go at a fixed slope */
 
@@ -698,7 +705,7 @@ void A_FireShotgun (player_t *player, pspdef_t *psp)
 		damage = ((P_Random ()&3)+1)*4;
 		angle = player->mo->angle;
 		angle += (P_Random()-P_Random())<<18;
-		P_LineAttack (player->mo, angle, MISSILERANGE, slope, damage);
+		P_LineAttack (&la, player->mo, angle, MISSILERANGE, slope, damage);
 	}
 }
 
@@ -771,13 +778,16 @@ void A_BFGSpray (mobj_t *mo)
 {
 	int			i, j, damage;
 	angle_t		an;
-	
+	mobj_t 		*linetarget;
+	lineattack_t la;
+
 	/* offset angles from its attack angle */
 	for (i=0 ; i<40 ; i++)
 	{
 		an = mo->angle - ANG90/2 + ANG90/40*i;
 		/* mo->target is the originator (player) of the missile */
-		P_AimLineAttack (mo->target, an, 16*64*FRACUNIT);
+		P_AimLineAttack (&la, mo->target, an, 16*64*FRACUNIT);
+		linetarget = la.shootmobj;
 		if (!linetarget)
 			continue;
 		P_SpawnMobj (linetarget->x, linetarget->y, linetarget->z + (linetarget->height>>2), MT_EXTRABFG);

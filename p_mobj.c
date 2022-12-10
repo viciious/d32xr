@@ -565,9 +565,7 @@ return;	/*DEBUG */
 ================
 */
 
-extern fixed_t attackrange;
-
-void P_SpawnPuff (fixed_t x, fixed_t y, fixed_t z)
+void P_SpawnPuff (fixed_t x, fixed_t y, fixed_t z, fixed_t attackrange)
 {
 	mobj_t	*th;
 	
@@ -676,24 +674,29 @@ void P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type)
 void P_SpawnPlayerMissile (mobj_t *source, mobjtype_t type)
 {
 	mobj_t			*th;
+	mobj_t 			*linetarget;
 	angle_t			an;
 	fixed_t			x,y,z, slope;
 	int				speed;
+	lineattack_t	la;
 	const mobjinfo_t* thinfo = &mobjinfo[type];
 
 /* */
 /* see which target is to be aimed at */
 /* */
 	an = source->angle;
-	slope = P_AimLineAttack (source, an, 16*64*FRACUNIT);
+	slope = P_AimLineAttack (&la, source, an, 16*64*FRACUNIT);
+	linetarget = la.shootmobj;
 	if (!linetarget)
 	{
 		an += 1<<26;
-		slope = P_AimLineAttack (source, an, 16*64*FRACUNIT);
+		slope = P_AimLineAttack (&la, source, an, 16*64*FRACUNIT);
+		linetarget = la.shootmobj;
 		if (!linetarget)
 		{
 			an -= 2<<26;
-			slope = P_AimLineAttack (source, an, 16*64*FRACUNIT);
+			slope = P_AimLineAttack (&la, source, an, 16*64*FRACUNIT);
+			linetarget = la.shootmobj;
 		}
 		if (!linetarget)
 		{

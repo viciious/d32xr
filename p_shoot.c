@@ -29,30 +29,11 @@
 #include "doomdef.h"
 #include "p_local.h"
 
-// CALICO_FIXME: should be in a header:
-extern mobj_t  *shooter;
-extern angle_t  attackangle;
-extern fixed_t  attackrange;
-extern fixed_t  aimtopslope;
-extern fixed_t  aimbottomslope;
-
-line_t  *shootline;
-mobj_t  *shootmobj;
-fixed_t  shootslope;             // between aimtop and aimbottom
-fixed_t  shootx, shooty, shootz; // location for puff/blood
-
 // A line will be shootdiv'd from the middle of shooter in the direction of
 // attackangle until either a shootable mobj is within the visible
 // aimtopslope / aimbottomslope range, or a solid wall blocks further
 // tracing.  If no thing is targeted along the entire range, the first line
 // that blocks the midpoint of the shootdiv will be hit.
-
-static fixed_t   aimmidslope;              // for detecting first wall hit
-static divline_t shootdiv;
-static fixed_t   shootx2, shooty2;
-static fixed_t   firstlinefrac;
-static int       shootdivpositive;
-static int       ssx1, ssy1, ssx2, ssy2;
 
 // CALICO: removed type punning by bringing back intercept_t
 typedef struct intercept_s
@@ -66,16 +47,36 @@ typedef struct intercept_s
     boolean isaline;
 } intercept_t;
 
-static intercept_t old_intercept;
+typedef struct
+{
+   mobj_t    *shooter;
+   fixed_t   attackrange;
+   fixed_t   aimmidslope;              // for detecting first wall hit
+   fixed_t   aimbottomslope;
+   fixed_t   aimtopslope;
+   divline_t shootdiv;
+   fixed_t   shootx2, shooty2;
+   fixed_t   firstlinefrac;
+   int       shootdivpositive;
+   int       ssx1, ssy1, ssx2, ssy2;
+   intercept_t old_intercept;
+   VINT      *lvc;
+   VINT      validcount;
 
-static fixed_t PA_SightCrossLine(line_t* line) ATTR_DATA_CACHE_ALIGN;
-static boolean PA_ShootLine(line_t* li, fixed_t interceptfrac) ATTR_DATA_CACHE_ALIGN;
-static boolean PA_ShootThing(mobj_t* th, fixed_t interceptfrac) ATTR_DATA_CACHE_ALIGN;
-static boolean PA_DoIntercept(intercept_t* in) ATTR_DATA_CACHE_ALIGN;
-static boolean PA_CrossSubsector(int bspnum) ATTR_DATA_CACHE_ALIGN;
+   line_t  *shootline;
+   mobj_t  *shootmobj;
+   fixed_t  shootslope;             // between aimtop and aimbottom
+   fixed_t  shootx, shooty, shootz; // location for puff/blood
+} shootWork_t;
+
+static fixed_t PA_SightCrossLine(shootWork_t *sw, line_t* line) ATTR_DATA_CACHE_ALIGN;
+static boolean PA_ShootLine(shootWork_t *sw, line_t* li, fixed_t interceptfrac) ATTR_DATA_CACHE_ALIGN;
+static boolean PA_ShootThing(shootWork_t *sw, mobj_t* th, fixed_t interceptfrac) ATTR_DATA_CACHE_ALIGN;
+static boolean PA_DoIntercept(shootWork_t *sw, intercept_t* in) ATTR_DATA_CACHE_ALIGN;
+static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum) ATTR_DATA_CACHE_ALIGN;
 static int PA_DivlineSide(fixed_t x, fixed_t y, divline_t* line) ATTR_DATA_CACHE_ALIGN;
-static boolean PA_CrossBSPNode(int bspnum) ATTR_DATA_CACHE_ALIGN;
-void P_Shoot2(void) ATTR_DATA_CACHE_ALIGN;
+static boolean PA_CrossBSPNode(shootWork_t *sw, int bspnum) ATTR_DATA_CACHE_ALIGN;
+void P_Shoot2(lineattack_t *la) ATTR_DATA_CACHE_ALIGN;
 
 //
 // First checks the endpoints of the line to make sure that they cross the
@@ -85,7 +86,7 @@ void P_Shoot2(void) ATTR_DATA_CACHE_ALIGN;
 // the intersection occurs at.  If 0 < intercept < 1.0, the line will block
 // the sight.
 //
-static fixed_t PA_SightCrossLine(line_t *line)
+static fixed_t PA_SightCrossLine(shootWork_t *sw, line_t *line)
 {
    fixed_t s1, s2;
    fixed_t p1x, p1y, p2x, p2y, p3x, p3y, p4x, p4y, dx, dy, ndx, ndy;
@@ -97,10 +98,10 @@ static fixed_t PA_SightCrossLine(line_t *line)
    p2y = line->v2->y >> FRACBITS;
 
    // p3, p4 are sight endpoints
-   p3x = ssx1;
-   p3y = ssy1;
-   p4x = ssx2;
-   p4y = ssy2;
+   p3x = sw->ssx1;
+   p3y = sw->ssy1;
+   p4x = sw->ssx2;
+   p4y = sw->ssy2;
 
    dx  = p2x - p3x;
    dy  = p2y - p3y;
@@ -137,7 +138,7 @@ static fixed_t PA_SightCrossLine(line_t *line)
 //
 // Handle shooting a line.
 //
-static boolean PA_ShootLine(line_t *li, fixed_t interceptfrac)
+static boolean PA_ShootLine(shootWork_t *sw, line_t *li, fixed_t interceptfrac)
 {
    fixed_t   slope;
    fixed_t   dist;
@@ -146,12 +147,12 @@ static boolean PA_ShootLine(line_t *li, fixed_t interceptfrac)
 
    if(!(li->flags & ML_TWOSIDED))
    {
-      if(!shootline)
+      if(!sw->shootline)
       {
-         shootline = li;
-         firstlinefrac = interceptfrac;
+         sw->shootline = li;
+         sw->firstlinefrac = interceptfrac;
       }
-      old_intercept.frac = 0; // don't shoot anything past this
+      sw->old_intercept.frac = 0; // don't shoot anything past this
       return false;
    }
 
@@ -169,33 +170,33 @@ static boolean PA_ShootLine(line_t *li, fixed_t interceptfrac)
    else
       openbottom = back->floorheight;
 
-   FixedMul2(dist, attackrange, interceptfrac);
+   FixedMul2(dist, sw->attackrange, interceptfrac);
 
    if(front->floorheight != back->floorheight)
    {
-      slope = FixedDiv(openbottom - shootz, dist);
-      if(slope >= aimmidslope && !shootline)
+      slope = FixedDiv(openbottom - sw->shootz, dist);
+      if(slope >= sw->aimmidslope && !sw->shootline)
       {
-         shootline = li;
-         firstlinefrac = interceptfrac;
+         sw->shootline = li;
+         sw->firstlinefrac = interceptfrac;
       }
-      if(slope > aimbottomslope)
-         aimbottomslope = slope;
+      if(slope > sw->aimbottomslope)
+         sw->aimbottomslope = slope;
    }
 
    if(front->ceilingheight != back->ceilingheight)
    {
-      slope = FixedDiv(opentop - shootz, dist);
-      if(slope <= aimmidslope && !shootline)
+      slope = FixedDiv(opentop - sw->shootz, dist);
+      if(slope <= sw->aimmidslope && !sw->shootline)
       {
-         shootline = li;
-         firstlinefrac = interceptfrac;
+         sw->shootline = li;
+         sw->firstlinefrac = interceptfrac;
       }
-      if(slope < aimtopslope)
-         aimtopslope = slope;
+      if(slope < sw->aimtopslope)
+         sw->aimtopslope = slope;
    }
 
-   if(aimtopslope <= aimbottomslope)
+   if(sw->aimtopslope <= sw->aimbottomslope)
       return false;
 
    return true;
@@ -204,48 +205,48 @@ static boolean PA_ShootLine(line_t *li, fixed_t interceptfrac)
 //
 // Handle shooting a thing.
 //
-static boolean PA_ShootThing(mobj_t *th, fixed_t interceptfrac)
+static boolean PA_ShootThing(shootWork_t *sw, mobj_t *th, fixed_t interceptfrac)
 {
    fixed_t frac, dist, tmp;
    fixed_t thingaimtopslope, thingaimbottomslope;
 
-   if(th == shooter)
+   if(th == sw->shooter)
       return true; // can't shoot self
 
    if(!(th->flags & MF_SHOOTABLE))
       return true; // corpse or something
 
    // check angles to see if the thing can be aimed at
-   FixedMul2(dist, attackrange, interceptfrac);
+   FixedMul2(dist, sw->attackrange, interceptfrac);
    
-   thingaimtopslope = FixedDiv(th->z + th->height - shootz, dist);
-   if(thingaimtopslope < aimbottomslope)
+   thingaimtopslope = FixedDiv(th->z + th->height - sw->shootz, dist);
+   if(thingaimtopslope < sw->aimbottomslope)
       return true; // shot over the thing
 
-   thingaimbottomslope = FixedDiv(th->z - shootz, dist);
-   if(thingaimbottomslope > aimtopslope)
+   thingaimbottomslope = FixedDiv(th->z - sw->shootz, dist);
+   if(thingaimbottomslope > sw->aimtopslope)
       return true; // shot under the thing
 
    // this thing can be hit!
-   if(thingaimtopslope > aimtopslope)
-      thingaimtopslope = aimtopslope;
-   if(thingaimbottomslope < aimbottomslope)
-      thingaimbottomslope = aimbottomslope;
+   if(thingaimtopslope > sw->aimtopslope)
+      thingaimtopslope = sw->aimtopslope;
+   if(thingaimbottomslope < sw->aimbottomslope)
+      thingaimbottomslope = sw->aimbottomslope;
 
    // shoot midway in the visible part of the thing
-   shootslope = (thingaimtopslope + thingaimbottomslope) / 2;
-   shootmobj  = th;
+   sw->shootslope = (thingaimtopslope + thingaimbottomslope) / 2;
+   sw->shootmobj  = th;
 
    // position a bit closer
-   frac   = interceptfrac - FixedDiv(10*FRACUNIT, attackrange);
-   FixedMul2(shootx, shootdiv.dx, frac);
-   FixedMul2(shooty, shootdiv.dy, frac);
-   FixedMul2(tmp, frac, attackrange);
-   FixedMul2(tmp, shootslope, tmp);
+   frac   = interceptfrac - FixedDiv(10*FRACUNIT, sw->attackrange);
+   FixedMul2(sw->shootx, sw->shootdiv.dx, frac);
+   FixedMul2(sw->shooty, sw->shootdiv.dy, frac);
+   FixedMul2(tmp, frac, sw->attackrange);
+   FixedMul2(tmp, sw->shootslope, tmp);
 
-   shootx = shootdiv.x + shootx;
-   shooty = shootdiv.y + shooty;
-   shootz = shootz + tmp;
+   sw->shootx = sw->shootdiv.x + sw->shootx;
+   sw->shooty = sw->shootdiv.y + sw->shooty;
+   sw->shootz = sw->shootz + tmp;
 
    return false; // don't go any further
 }
@@ -254,14 +255,14 @@ static boolean PA_ShootThing(mobj_t *th, fixed_t interceptfrac)
 // Process an intercept
 //
 #define COPY_INTERCEPT(dst,src) do { (dst)->d.line = (src)->d.line, (dst)->frac = (src)->frac, (dst)->isaline = (src)->isaline; } while(0)
-static boolean PA_DoIntercept(intercept_t *in)
+static boolean PA_DoIntercept(shootWork_t *sw, intercept_t *in)
 {
    intercept_t temp;
 
-   if(old_intercept.frac < in->frac)
+   if(sw->old_intercept.frac < in->frac)
    {
-      COPY_INTERCEPT(&temp, &old_intercept);
-      COPY_INTERCEPT(&old_intercept, in);
+      COPY_INTERCEPT(&temp, &sw->old_intercept);
+      COPY_INTERCEPT(&sw->old_intercept, in);
       COPY_INTERCEPT(in, &temp);
    }
 
@@ -269,15 +270,15 @@ static boolean PA_DoIntercept(intercept_t *in)
       return true;
 
    if(in->isaline)
-      return PA_ShootLine(in->d.line, in->frac);
+      return PA_ShootLine(sw, in->d.line, in->frac);
    else
-      return PA_ShootThing(in->d.mo, in->frac);
+      return PA_ShootThing(sw, in->d.mo, in->frac);
 }
 
 //
 // Returns true if strace crosses the given subsector successfuly
 //
-static boolean PA_CrossSubsector(int bspnum)
+static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
 {
    seg_t   *seg;
    line_t  *line;
@@ -302,7 +303,7 @@ static boolean PA_CrossSubsector(int bspnum)
          continue; // corpse or something
 
       // check a corner to corner cross-section for hit
-      if(shootdivpositive)
+      if(sw->shootdivpositive)
       {
          thingline.v1->x = thing->x - thing->radius;
          thingline.v1->y = thing->y + thing->radius;
@@ -317,7 +318,7 @@ static boolean PA_CrossSubsector(int bspnum)
          thingline.v2->y = thing->y + thing->radius;
       }
 
-      frac = PA_SightCrossLine(&thingline);
+      frac = PA_SightCrossLine(sw, &thingline);
       if(frac < 0 || frac > FRACUNIT)
          continue;
 
@@ -325,7 +326,7 @@ static boolean PA_CrossSubsector(int bspnum)
       in.isaline = false;
       in.frac    = frac;
 
-      if(!PA_DoIntercept(&in))
+      if(!PA_DoIntercept(sw, &in))
          return false;
    }
 
@@ -335,13 +336,14 @@ static boolean PA_CrossSubsector(int bspnum)
 
    for(; count; seg++, count--)
    {
-      line = &lines[seg->linedef];
+      int ld = seg->linedef;
+      line = &lines[ld];
 
-      if(lines_validcount[line-lines] == validcount[0])
+      if(sw->lvc[ld] == sw->validcount)
          continue; // already checked other side
-      lines_validcount[line - lines] = validcount[0];
+      sw->lvc[ld] = sw->validcount;
 
-      frac = PA_SightCrossLine(line);
+      frac = PA_SightCrossLine(sw, line);
       if(frac < 0 || frac > FRACUNIT)
          continue;
 
@@ -349,7 +351,7 @@ static boolean PA_CrossSubsector(int bspnum)
       in.isaline = true;
       in.frac    = frac;
 
-      if(!PA_DoIntercept(&in))
+      if(!PA_DoIntercept(sw, &in))
          return false;
    }
 
@@ -379,7 +381,7 @@ static int PA_DivlineSide(fixed_t x, fixed_t y, divline_t *line)
 //
 // Walk the BSP tree to follow the trace.
 //
-static boolean PA_CrossBSPNode(int bspnum)
+static boolean PA_CrossBSPNode(shootWork_t *sw, int bspnum)
 {
    node_t *bsp;
    int side, side2;
@@ -388,17 +390,17 @@ check:
    if(bspnum & NF_SUBSECTOR)
    {
       // CALICO: bspnum == -1 case not originally handled here
-      return PA_CrossSubsector(bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR);
+      return PA_CrossSubsector(sw, bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR);
    }
 
    bsp = &nodes[bspnum];
 
    // decide which side the start point is on
-   side = PA_DivlineSide(shootdiv.x, shootdiv.y, (void*)bsp);
-   side2 = PA_DivlineSide(shootx2, shooty2, (void*)bsp);
+   side = PA_DivlineSide(sw->shootdiv.x, sw->shootdiv.y, (void*)bsp);
+   side2 = PA_DivlineSide(sw->shootx2, sw->shooty2, (void*)bsp);
 
    // cross the starting side
-   if(!PA_CrossBSPNode(bsp->children[side]))
+   if(!PA_CrossBSPNode(sw, bsp->children[side]))
       return false;
 
    // the partition plane is crossed here
@@ -413,70 +415,85 @@ check:
 //
 // Main function to trace a line attack.
 //
-void P_Shoot2(void)
+void P_Shoot2(lineattack_t *la)
 {
    mobj_t  *t1;
    angle_t  angle;
    fixed_t  tmp;
+   shootWork_t sw;
 
-   t1        = shooter;
-   shootline = NULL;
-   shootmobj = NULL;
-   angle     = attackangle >> ANGLETOFINESHIFT;
+   t1        = la->shooter;
+   sw.shooter = la->shooter;
+   sw.shootline = NULL;
+   sw.shootmobj = NULL;
+   angle     = la->attackangle >> ANGLETOFINESHIFT;
 
-   shootdiv.x  = t1->x;
-   shootdiv.y  = t1->y;
-   shootx2     = t1->x + (attackrange >> FRACBITS) * finecosine(angle);
-   shooty2     = t1->y + (attackrange >> FRACBITS) * finesine(angle);
-   shootdiv.dx = shootx2 - shootdiv.x;
-   shootdiv.dy = shooty2 - shootdiv.y;
-   shootz      = t1->z + (t1->height >> 1) + 8*FRACUNIT;
+   sw.attackrange = la->attackrange;
+   sw.shootdiv.x  = t1->x;
+   sw.shootdiv.y  = t1->y;
+   sw.shootx2     = t1->x + (la->attackrange >> FRACBITS) * finecosine(angle);
+   sw.shooty2     = t1->y + (la->attackrange >> FRACBITS) * finesine(angle);
+   sw.shootdiv.dx = sw.shootx2 - sw.shootdiv.x;
+   sw.shootdiv.dy = sw.shooty2 - sw.shootdiv.y;
+   sw.shootz      = t1->z + (t1->height >> 1) + 8*FRACUNIT;
 
-   shootdivpositive = (shootdiv.dx ^ shootdiv.dy) > 0;
+   sw.shootdivpositive = (sw.shootdiv.dx ^ sw.shootdiv.dy) > 0;
 
-   ssx1 = shootdiv.x >> FRACBITS;
-   ssy1 = shootdiv.y >> FRACBITS;
-   ssx2 = shootx2    >> FRACBITS;
-   ssy2 = shooty2    >> FRACBITS;
+   sw.ssx1 = sw.shootdiv.x >> FRACBITS;
+   sw.ssy1 = sw.shootdiv.y >> FRACBITS;
+   sw.ssx2 = sw.shootx2    >> FRACBITS;
+   sw.ssy2 = sw.shooty2    >> FRACBITS;
 
-   aimmidslope = (aimtopslope + aimbottomslope) / 2;
+   sw.aimtopslope    = la->aimtopslope;
+   sw.aimbottomslope = la->aimbottomslope;
+   sw.aimmidslope = (la->aimtopslope + la->aimbottomslope) / 2;
 
    // cross everything
-   old_intercept.d.line  = NULL;
-   old_intercept.frac    = 0;
-   old_intercept.isaline = false;
+   sw.old_intercept.d.line  = NULL;
+   sw.old_intercept.frac    = 0;
+   sw.old_intercept.isaline = false;
 
-   PA_CrossBSPNode(numnodes - 1);
+   sw.lvc = lines_validcount;
+   sw.validcount = ++validcount[0];
+
+   PA_CrossBSPNode(&sw, numnodes - 1);
 
    // check the last intercept if needed
-   if(!shootmobj)
+   if(!la->shootmobj)
    {
       intercept_t in;
       in.d.mo    = NULL;
       in.isaline = false;
       in.frac    = FRACUNIT;
-      PA_DoIntercept(&in);
+      PA_DoIntercept(&sw, &in);
    }
 
+   la->shootline = sw.shootline;
+   la->shootmobj = sw.shootmobj;
+   la->shootslope = sw.shootslope;
+   la->shootx = sw.shootx;
+   la->shooty = sw.shooty;
+   la->shootz = sw.shootz;
+
    // post-process
-   if(shootmobj)
+   if(la->shootmobj)
       return;
 
-   if(!shootline)
+   if(!la->shootline)
       return;
 
    // calculate the intercept point for the first line hit
 
    // position a bit closer
-   firstlinefrac -= FixedDiv(4*FRACUNIT, attackrange);
-   FixedMul2(shootx, shootdiv.dx, firstlinefrac);
-   FixedMul2(shooty, shootdiv.dy, firstlinefrac);
-   FixedMul2(tmp, firstlinefrac, attackrange);
-   FixedMul2(tmp, aimmidslope, tmp);
+   sw.firstlinefrac -= FixedDiv(4*FRACUNIT, la->attackrange);
+   FixedMul2(la->shootx, sw.shootdiv.dx, sw.firstlinefrac);
+   FixedMul2(la->shooty, sw.shootdiv.dy, sw.firstlinefrac);
+   FixedMul2(tmp, sw.firstlinefrac, la->attackrange);
+   FixedMul2(tmp, sw.aimmidslope, tmp);
 
-   shootx  = shootdiv.x + shootx;
-   shooty  = shootdiv.y + shooty;
-   shootz += tmp;
+   la->shootx  = sw.shootdiv.x + la->shootx;
+   la->shooty  = sw.shootdiv.y + la->shooty;
+   la->shootz += tmp;
 }
 
 // EOF
