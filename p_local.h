@@ -178,16 +178,12 @@ void 	P_MakeDivline (line_t *li, divline_t *dl);
 fixed_t P_InterceptVector (divline_t *v2, divline_t *v1);
 int 	P_BoxOnLineSide (fixed_t *tmbox, line_t *ld);
 
-extern	fixed_t opentop, openbottom, openrange;
-extern	fixed_t	lowfloor;
-void 	P_LineOpening (line_t *linedef);
+fixed_t	P_LineOpening (line_t *linedef);
 
 fixed_t* P_LineBBox(line_t* ld);
 
 boolean P_BlockLinesIterator (int x, int y, boolean(*func)(line_t*) );
 boolean P_BlockThingsIterator (int x, int y, boolean(*func)(mobj_t*) );
-
-extern	divline_t 	trace;
 
 void 	P_UnsetThingPosition (mobj_t *thing);
 void	P_SetThingPosition (mobj_t *thing);

@@ -171,7 +171,7 @@ boolean	PIT_UseLines (line_t *li)
 /* */
 	if (!li->special)
 	{
-		P_LineOpening (li);
+		fixed_t openrange = P_LineOpening (li);
 		if (openrange > 0)
 			return true;	/* keep going */
 	}
