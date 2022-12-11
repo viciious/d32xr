@@ -32,20 +32,23 @@
 #include "p_local.h"
 #include "mars.h"
 
-static mobj_t      *checkthing, *hitthing;
-static fixed_t      testx, testy;
-static fixed_t      testfloorz, testceilingz, testdropoffz;
-static subsector_t *testsubsec;
-static line_t      *ceilingline;
-static fixed_t      testbbox[4];
-static int          testflags;
+typedef struct
+{
+   mobj_t      *checkthing, *hitthing;
+   fixed_t      testx, testy;
+   fixed_t      testfloorz, testceilingz, testdropoffz;
+   subsector_t *testsubsec;
+   line_t      *ceilingline;
+   fixed_t      testbbox[4];
+   int          testflags;
+} movetest_t;
 
-static boolean PB_CheckThing(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
-static boolean PB_BoxCrossLine(line_t* ld) ATTR_DATA_CACHE_ALIGN;
-static boolean PB_CheckLine(line_t* ld) ATTR_DATA_CACHE_ALIGN;
-static boolean PB_CrossCheck(line_t* ld) ATTR_DATA_CACHE_ALIGN;
-static boolean PB_CheckPosition(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
-static boolean PB_TryMove(mobj_t* mo, fixed_t tryx, fixed_t tryy) ATTR_DATA_CACHE_ALIGN;
+static boolean PB_CheckThing(mobj_t* thing, movetest_t *mt) ATTR_DATA_CACHE_ALIGN;
+static boolean PB_BoxCrossLine(line_t* ld, movetest_t *mt) ATTR_DATA_CACHE_ALIGN;
+static boolean PB_CheckLine(line_t* ld, movetest_t *mt) ATTR_DATA_CACHE_ALIGN;
+static boolean PB_CrossCheck(line_t* ld, movetest_t *mt) ATTR_DATA_CACHE_ALIGN;
+static boolean PB_CheckPosition(mobj_t* mo, movetest_t *mt) ATTR_DATA_CACHE_ALIGN;
+static boolean PB_TryMove(movetest_t *mt, mobj_t* mo, fixed_t tryx, fixed_t tryy) ATTR_DATA_CACHE_ALIGN;
 static void P_FloatChange(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
 void P_ZMovement(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
 void P_MobjThinker(mobj_t* mobj) ATTR_DATA_CACHE_ALIGN;
@@ -54,7 +57,7 @@ void P_XYMovement(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
 //
 // Check for collision against another mobj in one of the blockmap cells.
 //
-static boolean PB_CheckThing(mobj_t *thing)
+static boolean PB_CheckThing(mobj_t *thing, movetest_t *mt)
 {
    fixed_t  blockdist;
    int      delta;
@@ -63,16 +66,16 @@ static boolean PB_CheckThing(mobj_t *thing)
    if(!(thing->flags & MF_SOLID))
       return true; // not blocking
 
-   mo = checkthing;
+   mo = mt->checkthing;
    blockdist = thing->radius + mo->radius;
 
-   delta = thing->x - testx;
+   delta = thing->x - mt->testx;
    if(delta < 0)
       delta = -delta;
    if(delta >= blockdist)
       return true; // didn't hit it
 
-   delta = thing->y - testy;
+   delta = thing->y - mt->testy;
    if(delta < 0)
       delta = -delta;
    if(delta >= blockdist)
@@ -82,14 +85,14 @@ static boolean PB_CheckThing(mobj_t *thing)
       return true; // don't clip against self
 
    // check for skulls slamming into things
-   if(testflags & MF_SKULLFLY)
+   if(mt->testflags & MF_SKULLFLY)
    {
-      hitthing = thing;
+      mt->hitthing = thing;
       return false;
    }
 
    // missiles can hit other things
-   if(testflags & MF_MISSILE)
+   if(mt->testflags & MF_MISSILE)
    {
       if(mo->z > thing->z + thing->height)
          return true; // went over
@@ -107,7 +110,7 @@ static boolean PB_CheckThing(mobj_t *thing)
          return !(thing->flags & MF_SOLID); // didn't do any damage
 
       // damage/explode
-      hitthing = thing;
+      mt->hitthing = thing;
       return false;
    }
 
@@ -117,7 +120,7 @@ static boolean PB_CheckThing(mobj_t *thing)
 //
 // Test for a bounding box collision with a linedef.
 //
-static boolean PB_BoxCrossLine(line_t *ld)
+static boolean PB_BoxCrossLine(line_t *ld, movetest_t *mt)
 {
    fixed_t x1, x2;
    fixed_t lx, ly;
@@ -127,23 +130,23 @@ static boolean PB_BoxCrossLine(line_t *ld)
    const fixed_t *ldbbox = P_LineBBox(ld);
 
    // entirely outside bounding box of line?
-   if(testbbox[BOXRIGHT ] <= ldbbox[BOXLEFT  ] ||
-      testbbox[BOXLEFT  ] >= ldbbox[BOXRIGHT ] ||
-      testbbox[BOXTOP   ] <= ldbbox[BOXBOTTOM] ||
-      testbbox[BOXBOTTOM] >= ldbbox[BOXTOP   ])
+   if(mt->testbbox[BOXRIGHT ] <= ldbbox[BOXLEFT  ] ||
+      mt->testbbox[BOXLEFT  ] >= ldbbox[BOXRIGHT ] ||
+      mt->testbbox[BOXTOP   ] <= ldbbox[BOXBOTTOM] ||
+      mt->testbbox[BOXBOTTOM] >= ldbbox[BOXTOP   ])
    {
       return false;
    }
 
    if(ld->slopetype == ST_POSITIVE)
    {
-      x1 = testbbox[BOXLEFT ];
-      x2 = testbbox[BOXRIGHT];
+      x1 = mt->testbbox[BOXLEFT ];
+      x2 = mt->testbbox[BOXRIGHT];
    }
    else
    {
-      x1 = testbbox[BOXRIGHT];
-      x2 = testbbox[BOXLEFT ];
+      x1 = mt->testbbox[BOXRIGHT];
+      x2 = mt->testbbox[BOXLEFT ];
    }
 
    lx  = ld->v1->x;
@@ -152,9 +155,9 @@ static boolean PB_BoxCrossLine(line_t *ld)
    ldy = (ld->v2->y - ld->v1->y) >> FRACBITS;
 
    dx1 = (x1 - lx) >> FRACBITS;
-   dy1 = (testbbox[BOXTOP] - ly) >> FRACBITS;
+   dy1 = (mt->testbbox[BOXTOP] - ly) >> FRACBITS;
    dx2 = (x2 - lx) >> FRACBITS;
-   dy2 = (testbbox[BOXBOTTOM] - ly) >> FRACBITS;
+   dy2 = (mt->testbbox[BOXBOTTOM] - ly) >> FRACBITS;
 
    side1 = (ldy * dx1 < dy1 * ldx);
    side2 = (ldy * dx2 < dy2 * ldx);
@@ -165,7 +168,7 @@ static boolean PB_BoxCrossLine(line_t *ld)
 //
 // Adjusts testfloorz and testceilingz as lines are contacted.
 //
-static boolean PB_CheckLine(line_t *ld)
+static boolean PB_CheckLine(line_t *ld, movetest_t *mt)
 {
    fixed_t   opentop, openbottom, lowfloor;
    sector_t *front, *back;
@@ -175,7 +178,7 @@ static boolean PB_CheckLine(line_t *ld)
    if(ld->sidenum[1] == -1)
       return false; // one-sided line
 
-   if(!(testflags & MF_MISSILE) && (ld->flags & (ML_BLOCKING|ML_BLOCKMONSTERS)))
+   if(!(mt->testflags & MF_MISSILE) && (ld->flags & (ML_BLOCKING|ML_BLOCKMONSTERS)))
       return false; // explicitly blocking
 
    front = LD_FRONTSECTOR(ld);
@@ -198,15 +201,15 @@ static boolean PB_CheckLine(line_t *ld)
    }
 
    // adjust floor/ceiling heights
-   if(opentop < testceilingz)
+   if(opentop < mt->testceilingz)
    {
-      testceilingz = opentop;
-      ceilingline  = ld;
+      mt->testceilingz = opentop;
+      mt->ceilingline  = ld;
    }
-   if(openbottom > testfloorz)
-      testfloorz = openbottom;
-   if(lowfloor < testdropoffz)
-      testdropoffz = lowfloor;
+   if(openbottom > mt->testfloorz)
+      mt->testfloorz = openbottom;
+   if(lowfloor < mt->testdropoffz)
+      mt->testdropoffz = lowfloor;
 
    return true;
 }
@@ -214,11 +217,11 @@ static boolean PB_CheckLine(line_t *ld)
 //
 // Check a thing against a linedef in one of the blockmap cells.
 //
-static boolean PB_CrossCheck(line_t *ld)
+static boolean PB_CrossCheck(line_t *ld, movetest_t *mt)
 {
-   if(PB_BoxCrossLine(ld))
+   if(PB_BoxCrossLine(ld, mt))
    {
-      if(!PB_CheckLine(ld))
+      if(!PB_CheckLine(ld, mt))
          return false;
    }
    return true;
@@ -227,35 +230,35 @@ static boolean PB_CrossCheck(line_t *ld)
 //
 // Check an mobj's position for validity against lines and other mobjs
 //
-static boolean PB_CheckPosition(mobj_t *mo)
+static boolean PB_CheckPosition(mobj_t *mo, movetest_t *mt)
 {
    int xl, xh, yl, yh, bx, by;
 
-   testflags = mo->flags;
+   mt->testflags = mo->flags;
 
-   testbbox[BOXTOP   ] = testy + mo->radius;
-   testbbox[BOXBOTTOM] = testy - mo->radius;
-   testbbox[BOXRIGHT ] = testx + mo->radius;
-   testbbox[BOXLEFT  ] = testx - mo->radius;
+   mt->testbbox[BOXTOP   ] = mt->testy + mo->radius;
+   mt->testbbox[BOXBOTTOM] = mt->testy - mo->radius;
+   mt->testbbox[BOXRIGHT ] = mt->testx + mo->radius;
+   mt->testbbox[BOXLEFT  ] = mt->testx - mo->radius;
 
    // the base floor / ceiling is from the subsector that contains the point.
    // Any contacted lines the step closer together will adjust them.
-   testsubsec   = R_PointInSubsector(testx, testy);
-   testfloorz   = testdropoffz = testsubsec->sector->floorheight;
-   testceilingz = testsubsec->sector->ceilingheight;
+   mt->testsubsec   = R_PointInSubsector(mt->testx, mt->testy);
+   mt->testfloorz   = mt->testdropoffz = mt->testsubsec->sector->floorheight;
+   mt->testceilingz = mt->testsubsec->sector->ceilingheight;
 
    validcount[0]++;
 
-   ceilingline = NULL;
-   hitthing    = NULL;
+   mt->ceilingline = NULL;
+   mt->hitthing    = NULL;
 
    // the bounding box is extended by MAXRADIUS because mobj_ts are grouped into
    // mapblocks based on their origin point, and can overlap into adjacent blocks
    // by up to MAXRADIUS units
-   xl = testbbox[BOXLEFT  ] - bmaporgx - MAXRADIUS;
-   xh = testbbox[BOXRIGHT ] - bmaporgx + MAXRADIUS;
-   yl = testbbox[BOXBOTTOM] - bmaporgy - MAXRADIUS;
-   yh = testbbox[BOXTOP   ] - bmaporgy + MAXRADIUS;
+   xl = mt->testbbox[BOXLEFT  ] - bmaporgx - MAXRADIUS;
+   xh = mt->testbbox[BOXRIGHT ] - bmaporgx + MAXRADIUS;
+   yl = mt->testbbox[BOXBOTTOM] - bmaporgy - MAXRADIUS;
+   yh = mt->testbbox[BOXTOP   ] - bmaporgy + MAXRADIUS;
 
    if(xl < 0)
       xl = 0;
@@ -276,14 +279,14 @@ static boolean PB_CheckPosition(mobj_t *mo)
    if(yh >= bmapheight)
       yh = bmapheight - 1;
 
-   checkthing = mo; // store for PB_CheckThing
+   mt->checkthing = mo; // store for PB_CheckThing
    for(bx = xl; bx <= xh; bx++)
    {
       for(by = yl; by <= yh; by++)
       {
-         if(!P_BlockThingsIterator(bx, by, PB_CheckThing))
+         if(!P_BlockThingsIterator(bx, by, (blockthingsiter_t)PB_CheckThing, mt))
             return false;
-         if(!P_BlockLinesIterator(bx, by, PB_CrossCheck))
+         if(!P_BlockLinesIterator(bx, by, (blocklinesiter_t)PB_CrossCheck, mt))
             return false;
       }
    }
@@ -295,30 +298,30 @@ static boolean PB_CheckPosition(mobj_t *mo)
 // Try to move to the new position, and relink the mobj to the new position if
 // successful.
 //
-static boolean PB_TryMove(mobj_t *mo, fixed_t tryx, fixed_t tryy)
+static boolean PB_TryMove(movetest_t *mt, mobj_t *mo, fixed_t tryx, fixed_t tryy)
 {
-   testx = tryx;
-   testy = tryy;
+   mt->testx = tryx;
+   mt->testy = tryy;
 
-   if(!PB_CheckPosition(mo))
+   if(!PB_CheckPosition(mo, mt))
       return false; // solid wall or thing
 
-   if(testceilingz - testfloorz < mo->height)
+   if(mt->testceilingz - mt->testfloorz < mo->height)
       return false; // doesn't fit
-   if(testceilingz - mo->z < mo->height)
+   if(mt->testceilingz - mo->z < mo->height)
       return false; // mobj must lower itself to fit
-   if(testfloorz - mo->z > 24*FRACUNIT)
+   if(mt->testfloorz - mo->z > 24*FRACUNIT)
       return false; // too big a step up
-   if(!(testflags & (MF_DROPOFF|MF_FLOAT)) && testfloorz - testdropoffz > 24*FRACUNIT)
+   if(!(mt->testflags & (MF_DROPOFF|MF_FLOAT)) && mt->testfloorz - mt->testdropoffz > 24*FRACUNIT)
       return false; // don't stand over a dropoff
 
    // the move is ok, so link the thing into its new position
    P_UnsetThingPosition(mo);
-   mo->floorz   = testfloorz;
-   mo->ceilingz = testceilingz;
+   mo->floorz   = mt->testfloorz;
+   mo->ceilingz = mt->testceilingz;
    mo->x        = tryx;
    mo->y        = tryy;
-   P_SetThingPosition2(mo, testsubsec);
+   P_SetThingPosition2(mo, mt->testsubsec);
 
    return true;
 }
@@ -344,17 +347,19 @@ void P_XYMovement(mobj_t *mo)
 
    while(xleft || yleft)
    {
+      movetest_t mt;
+
       xleft -= xuse;
       yleft -= yuse;
 
-      if(!PB_TryMove(mo, mo->x + xuse, mo->y + yuse))
+      if(!PB_TryMove(&mt, mo, mo->x + xuse, mo->y + yuse))
       {
          // blocked move
 
          // flying skull?
          if(mo->flags & MF_SKULLFLY)
          {
-            mo->extradata = (intptr_t)hitthing;
+            mo->extradata = (intptr_t)mt.hitthing;
             mo->latecall = L_SkullBash;
             return;
          }
@@ -362,12 +367,12 @@ void P_XYMovement(mobj_t *mo)
          // explode a missile?
          if(mo->flags & MF_MISSILE)
          {
-            if(ceilingline && ceilingline->sidenum[1] != -1 && LD_BACKSECTOR(ceilingline)->ceilingpic == -1)
+            if(mt.ceilingline && mt.ceilingline->sidenum[1] != -1 && LD_BACKSECTOR(mt.ceilingline)->ceilingpic == -1)
             {
                mo->latecall = P_RemoveMobj;
                return;
             }
-            mo->extradata = (intptr_t)hitthing;
+            mo->extradata = (intptr_t)mt.hitthing;
             mo->latecall = L_MissileHit;
             return;
          }

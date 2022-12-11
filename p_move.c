@@ -51,17 +51,17 @@ static fixed_t tmdropoffz; // lowest point contacted
 
 static subsector_t *newsubsec; // destination subsector
 
-boolean PIT_CheckThing(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
+boolean PIT_CheckThing(mobj_t* thing, void *unused) ATTR_DATA_CACHE_ALIGN;
 static boolean PM_BoxCrossLine(line_t* ld) ATTR_DATA_CACHE_ALIGN;
 static boolean PIT_CheckLine(line_t* ld) ATTR_DATA_CACHE_ALIGN;
-static boolean PM_CrossCheck(line_t* ld) ATTR_DATA_CACHE_ALIGN;
+static boolean PM_CrossCheck(line_t* ld, void *unused) ATTR_DATA_CACHE_ALIGN;
 static void PM_CheckPosition(void) ATTR_DATA_CACHE_ALIGN;
 void P_TryMove2(void) ATTR_DATA_CACHE_ALIGN;
 
 //
 // Check a single mobj in one of the contacted blockmap cells.
 //
-boolean PIT_CheckThing(mobj_t *thing)
+boolean PIT_CheckThing(mobj_t *thing, void *unused)
 {
    fixed_t blockdist;
    int     delta;
@@ -249,7 +249,7 @@ static boolean PIT_CheckLine(line_t *ld)
 //
 // Check a single linedef in a blockmap cell.
 //
-static boolean PM_CrossCheck(line_t *ld)
+static boolean PM_CrossCheck(line_t *ld, void *unused)
 {
    if(PM_BoxCrossLine(ld))
    {
@@ -330,7 +330,7 @@ static void PM_CheckPosition(void)
    {
       for(by = yl; by <= yh; by++)
       {
-         if(!P_BlockThingsIterator(bx, by, PIT_CheckThing))
+         if(!P_BlockThingsIterator(bx, by, PIT_CheckThing, NULL))
          {
             trymove2 = false;
             return;
@@ -373,7 +373,7 @@ static void PM_CheckPosition(void)
    {
       for(by = yl; by <= yh; by++)
       {
-         if(!P_BlockLinesIterator(bx, by, PM_CrossCheck))
+         if(!P_BlockLinesIterator(bx, by, PM_CrossCheck, NULL))
          {
             trymove2 = false;
             return;

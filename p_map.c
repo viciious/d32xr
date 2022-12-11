@@ -6,9 +6,9 @@
 
 
 fixed_t P_InterceptVector(divline_t* v2, divline_t* v1) ATTR_DATA_CACHE_ALIGN;
-boolean	PIT_UseLines(line_t* li) ATTR_DATA_CACHE_ALIGN;
+boolean	PIT_UseLines(line_t* li, void *unused) ATTR_DATA_CACHE_ALIGN;
 void P_UseLines(player_t* player) ATTR_DATA_CACHE_ALIGN;
-boolean PIT_RadiusAttack(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
+boolean PIT_RadiusAttack(mobj_t* thing, void *unused) ATTR_DATA_CACHE_ALIGN;
 void P_RadiusAttack(mobj_t* spot, mobj_t* source, int damage) ATTR_DATA_CACHE_ALIGN;
 fixed_t P_AimLineAttack(lineattack_t *la, mobj_t* t1, angle_t angle, fixed_t distance) ATTR_DATA_CACHE_ALIGN;
 void P_LineAttack(lineattack_t *la, mobj_t* t1, angle_t angle, fixed_t distance, fixed_t slope, int damage) ATTR_DATA_CACHE_ALIGN;
@@ -141,7 +141,7 @@ fixed_t P_InterceptVector (divline_t *v2, divline_t *v1)
 ================
 */
 
-boolean	PIT_UseLines (line_t *li)
+boolean	PIT_UseLines (line_t *li, void *unused)
 {
 	divline_t	dl;
 	fixed_t		frac;
@@ -261,7 +261,7 @@ void P_UseLines (player_t *player)
 	
 	for (y=yl ; y<=yh ; y++)
 		for (x=xl ; x<=xh ; x++)
-			P_BlockLinesIterator (x, y, PIT_UseLines );
+			P_BlockLinesIterator (x, y, PIT_UseLines, NULL );
 			
 /* */
 /* check closest line */
@@ -298,7 +298,7 @@ int			bombdamage;
 =================
 */
 
-boolean PIT_RadiusAttack (mobj_t *thing)
+boolean PIT_RadiusAttack (mobj_t *thing, void *unused)
 {
 	fixed_t		dx, dy, dist;
 	
@@ -370,7 +370,7 @@ void P_RadiusAttack (mobj_t *spot, mobj_t *source, int damage)
 	
 	for (y=yl ; y<=yh ; y++)
 		for (x=xl ; x<=xh ; x++)
-			P_BlockThingsIterator (x, y, PIT_RadiusAttack );
+			P_BlockThingsIterator (x, y, PIT_RadiusAttack, NULL );
 }
 
 

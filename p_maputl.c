@@ -13,8 +13,8 @@ fixed_t* P_LineBBox(line_t* ld) ATTR_DATA_CACHE_ALIGN;
 void P_UnsetThingPosition(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
 void P_SetThingPosition(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
 void P_SetThingPosition2(mobj_t* thing, subsector_t *ss) ATTR_DATA_CACHE_ALIGN;
-boolean P_BlockLinesIterator(int x, int y, boolean(*func)(line_t*)) ATTR_DATA_CACHE_ALIGN;
-boolean P_BlockThingsIterator(int x, int y, boolean(*func)(mobj_t*)) ATTR_DATA_CACHE_ALIGN;
+boolean P_BlockLinesIterator(int x, int y, boolean(*func)(line_t*, void*), void *userp) ATTR_DATA_CACHE_ALIGN;
+boolean P_BlockThingsIterator(int x, int y, boolean(*func)(mobj_t*, void*), void *userp) ATTR_DATA_CACHE_ALIGN;
 
 /*
 ===================
@@ -341,7 +341,7 @@ If the function returns false, exit with false without checking anything else.
 ===================
 */
 
-boolean P_BlockLinesIterator (int x, int y, boolean(*func)(line_t*) )
+boolean P_BlockLinesIterator (int x, int y, blocklinesiter_t func, void *userp )
 {
 	int			offset;
 	short		*list;
@@ -362,7 +362,7 @@ boolean P_BlockLinesIterator (int x, int y, boolean(*func)(line_t*) )
 			continue;		/* line has already been checked */
 		lines_validcount[l] = validcount[0];
 		
-		if ( !func(ld) )
+		if ( !func(ld, userp) )
 			return false;
 	}
 	
@@ -378,7 +378,7 @@ boolean P_BlockLinesIterator (int x, int y, boolean(*func)(line_t*) )
 ==================
 */
 
-boolean P_BlockThingsIterator (int x, int y, boolean(*func)(mobj_t*) )
+boolean P_BlockThingsIterator (int x, int y, blockthingsiter_t func, void *userp )
 {
 	mobj_t		*mobj;
 	
@@ -386,7 +386,7 @@ boolean P_BlockThingsIterator (int x, int y, boolean(*func)(mobj_t*) )
 	//	return true;
 
 	for (mobj = blocklinks[y*bmapwidth+x] ; mobj ; mobj = mobj->bnext)
-		if (!func( mobj ) )
+		if (!func( mobj, userp ) )
 			return false;	
 
 	return true;

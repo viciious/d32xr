@@ -182,8 +182,11 @@ fixed_t	P_LineOpening (line_t *linedef);
 
 fixed_t* P_LineBBox(line_t* ld);
 
-boolean P_BlockLinesIterator (int x, int y, boolean(*func)(line_t*) );
-boolean P_BlockThingsIterator (int x, int y, boolean(*func)(mobj_t*) );
+typedef boolean(*blocklinesiter_t)(line_t*, void*);
+typedef boolean(*blockthingsiter_t)(mobj_t*, void*);
+
+boolean P_BlockLinesIterator (int x, int y, blocklinesiter_t, void *userp );
+boolean P_BlockThingsIterator (int x, int y, blockthingsiter_t, void *userp );
 
 void 	P_UnsetThingPosition (mobj_t *thing);
 void	P_SetThingPosition (mobj_t *thing);

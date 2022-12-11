@@ -152,7 +152,7 @@ blockmove:
 //
 // Check a linedef during wall sliding motion.
 //
-static boolean SL_CheckLine(line_t *ld)
+static boolean SL_CheckLine(line_t *ld, void *unused)
 {
    fixed_t   opentop, openbottom;
    sector_t *front, *back;
@@ -278,7 +278,7 @@ fixed_t P_CompletableFrac(fixed_t dx, fixed_t dy)
    for(bx = xl; bx <= xh; bx++)
    {
       for(by = yl; by <= yh; by++)
-         P_BlockLinesIterator(bx, by, SL_CheckLine);
+         P_BlockLinesIterator(bx, by, SL_CheckLine, NULL);
    }
 
    // examine results

@@ -18,9 +18,12 @@
 = was and call P_ChangeSector again to undo the changes
 ============================================================================== 
 */ 
- 
-boolean		crushchange;
-boolean		nofit;
+
+typedef struct
+{
+	boolean		crushchange;
+	boolean		nofit;
+} changetest_t;
 
 /*
 ==================
@@ -73,7 +76,7 @@ boolean P_ThingHeightClip (mobj_t *thing)
 ===============
 */
 
-boolean PIT_ChangeSector (mobj_t *thing)
+boolean PIT_ChangeSector (mobj_t *thing, changetest_t *ct)
 {
 	mobj_t		*mo;
 	
@@ -99,8 +102,8 @@ boolean PIT_ChangeSector (mobj_t *thing)
 	if (! (thing->flags & MF_SHOOTABLE) )
 		return true;				/* assume it is bloody gibs or something */
 		
-	nofit = true;
-	if (crushchange && !(gametic&3) && (gametic!=prevgametic) )
+	ct->nofit = true;
+	if (ct->crushchange && !(gametic&3) && (gametic!=prevgametic) )
 	{
 		P_DamageMobj(thing,NULL,NULL,10);
 		/* spray blood in a random direction */
@@ -124,22 +127,23 @@ boolean P_ChangeSector (sector_t *sector, boolean crunch)
 {
 	int			x,y;
 	int			i;
+	changetest_t ct;
 	
 /* force next sound to reflood */
 	for (i=0 ; i<MAXPLAYERS ; i++)
 		players[i].lastsoundsector = NULL;
 		
-	nofit = false;
-	crushchange = crunch;
+	ct.nofit = false;
+	ct.crushchange = crunch;
 	
 /* recheck heights for all things near the moving sector */
 
 	for (x=sector->blockbox[BOXLEFT] ; x<= sector->blockbox[BOXRIGHT] ; x++)
 		for (y=sector->blockbox[BOXBOTTOM];y<= sector->blockbox[BOXTOP] ; y++)
-			P_BlockThingsIterator (x, y, PIT_ChangeSector);
+			P_BlockThingsIterator (x, y, (blockthingsiter_t)PIT_ChangeSector, &ct);
 	
 	
-	return nofit;
+	return ct.nofit;
 }
 
 
