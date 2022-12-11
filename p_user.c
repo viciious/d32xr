@@ -20,41 +20,27 @@ fixed_t			fastangleturn[] =
 
 /*============================================================================= */
 
-mobj_t		*slidething;
-
 
 void P_PlayerMove (mobj_t *mo)
 {
 	fixed_t		momx, momy;
-	fixed_t		latchedx, latchedy;
-	int 		numlachedspec;
-	line_t 		*latchedspec[MAXSPECIALCROSS];
 	int 		i;
+	slidemove_t sm;
 
 	momx = vblsinframe*(mo->momx>>2);
 	momy = vblsinframe*(mo->momy>>2);
 	
-	slidething = mo;
+	sm.slidething = mo;
+	sm.numspechit = 0;
+	sm.lvc = lines_validcount;
+	sm.validcount = &validcount[0];
 	
-#ifdef JAGUAR
-{
-	extern	int p_slide_start;
-	DSPFunction (&p_slide_start);
-}
-#else
-	P_SlideMove ();
-#endif
+	P_SlideMove(&sm);
 
-	latchedx = DSPRead (&slidex);
-	latchedy = DSPRead (&slidey);
-	numlachedspec = numspechit;
-	for (i = 0; i < numspechit; i++)
-		latchedspec[i] = spechit[i];
-	
-	if (latchedx == mo->x && latchedy == mo->y)
+	if (sm.slidex == mo->x && sm.slidey == mo->y)
 		goto stairstep;
 		
-	if ( P_TryMove (mo, latchedx, latchedy) )
+	if ( P_TryMove (mo, sm.slidex, sm.slidey) )
 		goto dospecial;
 		
 stairstep:
@@ -86,11 +72,8 @@ stairstep:
 	mo->momx = mo->momy = 0;
 
 dospecial:
-	if (numlachedspec)
-	{
-		for (i = 0; i < numlachedspec; i++)
-			P_CrossSpecialLine (latchedspec[i], mo);
-	}
+	for (i = 0; i < sm.numspechit; i++)
+		P_CrossSpecialLine (sm.spechit[i], mo);
 }
 
 

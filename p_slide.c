@@ -29,9 +29,6 @@
 #include "doomdef.h"
 #include "p_local.h"
 
-// CALICO_TODO: these should be in a header
-fixed_t slidex, slidey;            // the final position
-
 typedef struct
 {
    mobj_t *slidething;
@@ -44,6 +41,11 @@ typedef struct
 
    vertex_t *p1, *p2; // p1, p2 are line endpoints
    fixed_t p3x, p3y, p4x, p4y; // p3, p4 are move endpoints
+
+	int numspechit;
+	line_t *spechit[MAXSPECIALCROSS];
+
+   VINT *lvc, *validcount;
 } slideWork_t;
 
 #define CLIPRADIUS 23
@@ -253,7 +255,7 @@ fixed_t P_CompletableFrac(slideWork_t *sw, fixed_t dx, fixed_t dy)
    else
       sw->endbox[BOXBOTTOM] += dy;
 
-   validcount[0]++;
+   *sw->validcount = *sw->validcount + 1;
 
    // check lines
    xl = sw->endbox[BOXLEFT  ] - bmaporgx;
@@ -290,7 +292,7 @@ fixed_t P_CompletableFrac(slideWork_t *sw, fixed_t dx, fixed_t dy)
    if(sw->blockfrac < 0x1000)
    {
       sw->blockfrac   = 0;
-      numspechit = 0;     // can't cross anything on a bad move
+      sw->numspechit = 0;     // can't cross anything on a bad move
       return 0;           // solid wall
    }
 
@@ -331,6 +333,8 @@ static void SL_CheckSpecialLines(slideWork_t *sw)
    fixed_t bxl, bxh, byl, byh;
    fixed_t x3, y3, x4, y4;
    int side1, side2;
+
+   VINT *lvc = sw->lvc, vc;
 
    if(x1 < x2)
    {
@@ -378,8 +382,9 @@ static void SL_CheckSpecialLines(slideWork_t *sw)
    if(byh >= bmapheight)
       byh = bmapheight - 1;
 
-   numspechit = 0;
-   ++validcount[0];
+   sw->numspechit = 0;
+   vc = *sw->validcount + 1;
+   *sw->validcount = vc;
 
    for(bx = bxl; bx <= bxh; bx++)
    {
@@ -396,10 +401,10 @@ static void SL_CheckSpecialLines(slideWork_t *sw)
             ld = &lines[*list];
             if(!ld->special)
                continue;
-            if(lines_validcount[*list] == validcount[0])
+            if(lvc[*list] == vc)
                continue; // already checked
             
-            lines_validcount[*list] = validcount[0];
+            lvc[*list] = vc;
 
 	         ldbbox = P_LineBBox(ld);
             if(xh < ldbbox[BOXLEFT  ] ||
@@ -427,9 +432,9 @@ static void SL_CheckSpecialLines(slideWork_t *sw)
             if(side1 == side2)
                continue; // line doesn't cross move
 
-            if (numspechit < MAXSPECIALCROSS)
-               spechit[numspechit++] = ld;
-            if (numspechit == MAXSPECIALCROSS)
+            if (sw->numspechit < MAXSPECIALCROSS)
+               sw->spechit[sw->numspechit++] = ld;
+            if (sw->numspechit == MAXSPECIALCROSS)
                return;
          }
       }
@@ -439,20 +444,23 @@ static void SL_CheckSpecialLines(slideWork_t *sw)
 //
 // Try to slide the player against walls by finding the closest move available.
 //
-void P_SlideMove(void)
+void P_SlideMove(slidemove_t *sm)
 {
+   int i;
    fixed_t dx, dy, rx, ry;
    fixed_t frac, slide;
-   int i;
    slideWork_t sw;
+   mobj_t *slidething = sm->slidething;
 
    dx = slidething->momx;
    dy = slidething->momy;
    sw.slidex = slidething->x;
    sw.slidey = slidething->y;
    sw.slidething = slidething;
+   sw.validcount = sm->validcount;
+   sw.lvc = sm->lvc;
 
-   numspechit = 0;
+   sw.numspechit = 0;
 
    // perform a maximum of three bumps
    for(i = 0; i < 3; i++)
@@ -475,9 +483,9 @@ void P_SlideMove(void)
          slidething->momx = dx;
          slidething->momy = dy;
          SL_CheckSpecialLines(&sw);
-         slidex = sw.slidex;
-         slidey = sw.slidey;
-         return;
+         sm->slidex = sw.slidex;
+         sm->slidey = sw.slidey;
+         goto done;
       }
 
       // project the remaining move along the line that blocked movement
@@ -492,9 +500,14 @@ void P_SlideMove(void)
    }
 
    // some hideous situation has happened that won't let the player slide
-   slidex = slidething->x;
-   slidey = slidething->y;
-   slidething->momx = slidething->momy = 0;
+   sm->slidex = slidething->x;
+   sm->slidey = slidething->y;
+   sm->slidething->momx = slidething->momy = 0;
+
+done:
+   sm->numspechit = sw.numspechit;
+   for (i = 0; i < sw.numspechit; i++)
+      sm->spechit[i] = sw.spechit[i];
 }
 
 // EOF

@@ -302,10 +302,16 @@ boolean P_CheckPosition (mobj_t *thing, fixed_t x, fixed_t y);
 boolean P_TryMove (mobj_t *thing, fixed_t x, fixed_t y);
 void P_MoveCrossSpecials(void);
 
-extern mobj_t *slidething;
-extern	fixed_t		slidex, slidey;
+typedef struct
+{
+	mobj_t *slidething;
+	fixed_t	slidex, slidey;
+	int numspechit;
+	line_t *spechit[MAXSPECIALCROSS];
+	VINT *lvc, *validcount;
+} slidemove_t;
 
-void P_SlideMove (void);
+void P_SlideMove (slidemove_t *sm);
 
 #endif	/* __P_LOCAL__ */
 
