@@ -459,7 +459,7 @@ void P_Shoot2(lineattack_t *la)
    PA_CrossBSPNode(&sw, numnodes - 1);
 
    // check the last intercept if needed
-   if(!la->shootmobj)
+   if(!sw.shootmobj)
    {
       intercept_t in;
       in.d.mo    = NULL;
