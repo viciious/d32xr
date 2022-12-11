@@ -304,11 +304,14 @@ void P_MoveCrossSpecials(void);
 
 typedef struct
 {
+	// input
+	VINT *lvc, *validcount;
 	mobj_t *slidething;
-	fixed_t	slidex, slidey;
+
+	// output
 	int numspechit;
 	line_t *spechit[MAXSPECIALCROSS];
-	VINT *lvc, *validcount;
+	fixed_t	slidex, slidey;
 } slidemove_t;
 
 void P_SlideMove (slidemove_t *sm);
