@@ -271,8 +271,7 @@ static boolean PA_DoIntercept(shootWork_t *sw, intercept_t *in)
 
    if(in->isaline)
       return PA_ShootLine(sw, in->d.line, in->frac);
-   else
-      return PA_ShootThing(sw, in->d.mo, in->frac);
+   return PA_ShootThing(sw, in->d.mo, in->frac);
 }
 
 //
@@ -289,6 +288,7 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
    intercept_t  in;
    line_t   thingline;
    vertex_t tv1, tv2;
+   VINT     *lvc = sw->lvc, vc = sw->validcount;
 
    // CALICO: removed type punning
    thingline.v1 = &tv1;
@@ -339,9 +339,9 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
       int ld = seg->linedef;
       line = &lines[ld];
 
-      if(sw->lvc[ld] == sw->validcount)
+      if(lvc[ld] == vc)
          continue; // already checked other side
-      sw->lvc[ld] = sw->validcount;
+      lvc[ld] = vc;
 
       frac = PA_SightCrossLine(sw, line);
       if(frac < 0 || frac > FRACUNIT)
