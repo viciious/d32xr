@@ -32,14 +32,19 @@
 // CALICO_TODO: these should be in a header
 fixed_t slidex, slidey;            // the final position
 
-static fixed_t slidedx, slidedy;   // current move for completable frac
-static fixed_t blockfrac;          // the fraction of the move that gets completed
-static fixed_t blocknvx, blocknvy; // the vector of the line that blocks move
-static fixed_t endbox[4];          // final proposed position
-static fixed_t nvx, nvy;           // normalized line vector
+typedef struct
+{
+   mobj_t *slidething;
+   fixed_t slidex, slidey;     // the final position
+   fixed_t slidedx, slidedy;   // current move for completable frac
+   fixed_t blockfrac;          // the fraction of the move that gets completed
+   fixed_t blocknvx, blocknvy; // the vector of the line that blocks move
+   fixed_t endbox[4];          // final proposed position
+   fixed_t nvx, nvy;           // normalized line vector
 
-static vertex_t *p1, *p2; // p1, p2 are line endpoints
-static fixed_t p3x, p3y, p4x, p4y; // p3, p4 are move endpoints
+   vertex_t *p1, *p2; // p1, p2 are line endpoints
+   fixed_t p3x, p3y, p4x, p4y; // p3, p4 are move endpoints
+} slideWork_t;
 
 #define CLIPRADIUS 23
 
@@ -53,15 +58,15 @@ enum
 //
 // Simple point-on-line-side check.
 //
-static int SL_PointOnSide(fixed_t x, fixed_t y)
+static int SL_PointOnSide(slideWork_t *sw, fixed_t x, fixed_t y)
 {
    fixed_t dx, dy, dist;
 
-   dx = x - p1->x;
-   dy = y - p1->y;
+   dx = x - sw->p1->x;
+   dy = y - sw->p1->y;
 
-   FixedMul2(dx, dx, nvx);
-   FixedMul2(dy, dy, nvy);
+   FixedMul2(dx, dx, sw->nvx);
+   FixedMul2(dy, dy, sw->nvy);
    dist = dx + dy;
 
    if(dist > FRACUNIT)
@@ -75,21 +80,21 @@ static int SL_PointOnSide(fixed_t x, fixed_t y)
 //
 // Return fractional intercept along the slide line.
 //
-static fixed_t SL_CrossFrac(void)
+static fixed_t SL_CrossFrac(slideWork_t *sw)
 {
    fixed_t dx, dy, dist1, dist2;
 
    // project move start and end points onto line normal
-   dx    = p3x - p1->x;
-   dy    = p3y - p1->y;
-   FixedMul2(dx, dx, nvx);
-   FixedMul2(dy, dy, nvy);
+   dx    = sw->p3x - sw->p1->x;
+   dy    = sw->p3y - sw->p1->y;
+   FixedMul2(dx, dx, sw->nvx);
+   FixedMul2(dy, dy, sw->nvy);
    dist1 = dx + dy;
 
-   dx    = p4x - p1->x;
-   dy    = p4y - p1->y;
-   FixedMul2(dx, dx, nvx);
-   FixedMul2(dy, dy, nvy);
+   dx    = sw->p4x - sw->p1->x;
+   dy    = sw->p4y - sw->p1->y;
+   FixedMul2(dx, dx, sw->nvx);
+   FixedMul2(dy, dy, sw->nvy);
    dist2 = dx + dy;
 
    if((dist1 < 0) == (dist2 < 0))
@@ -104,7 +109,7 @@ static fixed_t SL_CrossFrac(void)
 // of the line. Returns the fraction of the current move that crosses the line
 // segment.
 //
-static void SL_ClipToLine(void)
+static void SL_ClipToLine(slideWork_t *sw)
 {
    fixed_t frac;
    int     side2, side3;
@@ -112,18 +117,18 @@ static void SL_ClipToLine(void)
    // adjust start so it will be the first point contacted on the player circle
    // p3, p4 are move endpoints
 
-   p3x = slidex - CLIPRADIUS * nvx;
-   p3y = slidey - CLIPRADIUS * nvy;
-   p4x = p3x + slidedx;
-   p4y = p3y + slidedy;
+   sw->p3x = sw->slidex - CLIPRADIUS * sw->nvx;
+   sw->p3y = sw->slidey - CLIPRADIUS * sw->nvy;
+   sw->p4x = sw->p3x + sw->slidedx;
+   sw->p4y = sw->p3y + sw->slidedy;
 
    // if the adjusted point is on the other side of the line, the endpoint must
    // be checked.
-   side2 = SL_PointOnSide(p3x, p3y);
+   side2 = SL_PointOnSide(sw, sw->p3x, sw->p3y);
    if(side2 == SIDE_BACK)
       return; // ClipToPoint and slide along normal to line
 
-   side3 = SL_PointOnSide(p4x, p4y);
+   side3 = SL_PointOnSide(sw, sw->p4x, sw->p4y);
    if(side3 == SIDE_ON)
       return; // the move goes flush with the wall
    else if(side3 == SIDE_FRONT)
@@ -138,21 +143,21 @@ static void SL_ClipToLine(void)
    // the line endpoints must be on opposite sides of the move trace
 
    // find the fractional intercept
-   frac = SL_CrossFrac();
+   frac = SL_CrossFrac(sw);
 
-   if(frac < blockfrac)
+   if(frac < sw->blockfrac)
    {
 blockmove:
-      blockfrac =  frac;
-      blocknvx  = -nvy;
-      blocknvy  =  nvx;
+      sw->blockfrac =  frac;
+      sw->blocknvx  = -sw->nvy;
+      sw->blocknvy  =  sw->nvx;
    }
 }
 
 //
 // Check a linedef during wall sliding motion.
 //
-static boolean SL_CheckLine(line_t *ld, void *unused)
+static boolean SL_CheckLine(line_t *ld, slideWork_t *sw)
 {
    fixed_t   opentop, openbottom;
    sector_t *front, *back;
@@ -161,10 +166,10 @@ static boolean SL_CheckLine(line_t *ld, void *unused)
    fixed_t  *ldbbox = P_LineBBox(ld);
 
    // check bounding box
-   if(endbox[BOXRIGHT ] < ldbbox[BOXLEFT  ] ||
-      endbox[BOXLEFT  ] > ldbbox[BOXRIGHT ] ||
-      endbox[BOXTOP   ] < ldbbox[BOXBOTTOM] ||
-      endbox[BOXBOTTOM] > ldbbox[BOXTOP   ])
+   if(sw->endbox[BOXRIGHT ] < ldbbox[BOXLEFT  ] ||
+      sw->endbox[BOXLEFT  ] > ldbbox[BOXRIGHT ] ||
+      sw->endbox[BOXTOP   ] < ldbbox[BOXBOTTOM] ||
+      sw->endbox[BOXBOTTOM] > ldbbox[BOXTOP   ])
    {
       return true;
    }
@@ -181,7 +186,7 @@ static boolean SL_CheckLine(line_t *ld, void *unused)
    else
       openbottom = back->floorheight;
 
-   if(openbottom - slidething->z > 24*FRACUNIT)
+   if(openbottom - sw->slidething->z > 24*FRACUNIT)
       goto findfrac; // too big a step up
 
    if(front->ceilingheight < back->ceilingheight)
@@ -194,12 +199,12 @@ static boolean SL_CheckLine(line_t *ld, void *unused)
 
    // the line is definitely blocking movement at this point
 findfrac:
-   p1  = ld->v1;
-   p2  = ld->v2;
-   nvx = finesine(ld->fineangle);
-   nvy = -finecosine(ld->fineangle);
+   sw->p1  = ld->v1;
+   sw->p2  = ld->v2;
+   sw->nvx = finesine(ld->fineangle);
+   sw->nvy = -finecosine(ld->fineangle);
    
-   side1 = SL_PointOnSide(slidex, slidey);
+   side1 = SL_PointOnSide(sw, sw->slidex, sw->slidey);
    switch(side1)
    {
    case SIDE_ON:
@@ -208,62 +213,62 @@ findfrac:
       if(ld->sidenum[1] == -1)
          return true; // don't clip to backs of one-sided lines
       // reverse coordinates and angle
-      vtmp = p1;
-      p1   = p2;
-      p2   = vtmp;
-      nvx  = -nvx;
-      nvy  = -nvy;
+      vtmp = sw->p1;
+      sw->p1   = sw->p2;
+      sw->p2   = vtmp;
+      sw->nvx  = -sw->nvx;
+      sw->nvy  = -sw->nvy;
       break;
    default:
       break;
    }
 
-   SL_ClipToLine();
+   SL_ClipToLine(sw);
    return true;
 }
 
 //
 // Returns the fraction of the move that is completable.
 //
-fixed_t P_CompletableFrac(fixed_t dx, fixed_t dy)
+fixed_t P_CompletableFrac(slideWork_t *sw, fixed_t dx, fixed_t dy)
 {
    int xl, xh, yl, yh, bx, by;
 
-   blockfrac = FRACUNIT;
-   slidedx = dx;
-   slidedy = dy;
+   sw->blockfrac = FRACUNIT;
+   sw->slidedx = dx;
+   sw->slidedy = dy;
 
-   endbox[BOXTOP   ] = slidey + CLIPRADIUS * FRACUNIT;
-   endbox[BOXBOTTOM] = slidey - CLIPRADIUS * FRACUNIT;
-   endbox[BOXRIGHT ] = slidex + CLIPRADIUS * FRACUNIT;
-   endbox[BOXLEFT  ] = slidex - CLIPRADIUS * FRACUNIT;
+   sw->endbox[BOXTOP   ] = sw->slidey + CLIPRADIUS * FRACUNIT;
+   sw->endbox[BOXBOTTOM] = sw->slidey - CLIPRADIUS * FRACUNIT;
+   sw->endbox[BOXRIGHT ] = sw->slidex + CLIPRADIUS * FRACUNIT;
+   sw->endbox[BOXLEFT  ] = sw->slidex - CLIPRADIUS * FRACUNIT;
 
    if(dx > 0)
-      endbox[BOXRIGHT ] += dx;
+      sw->endbox[BOXRIGHT ] += dx;
    else
-      endbox[BOXLEFT  ] += dx;
+      sw->endbox[BOXLEFT  ] += dx;
 
    if(dy > 0)
-      endbox[BOXTOP   ] += dy;
+      sw->endbox[BOXTOP   ] += dy;
    else
-      endbox[BOXBOTTOM] += dy;
+      sw->endbox[BOXBOTTOM] += dy;
 
    validcount[0]++;
 
    // check lines
-   xl = endbox[BOXLEFT  ] - bmaporgx;
-   xh = endbox[BOXRIGHT ] - bmaporgx;
-   yl = endbox[BOXBOTTOM] - bmaporgy;
-   yh = endbox[BOXTOP   ] - bmaporgy;
+   xl = sw->endbox[BOXLEFT  ] - bmaporgx;
+   xh = sw->endbox[BOXRIGHT ] - bmaporgx;
+   yl = sw->endbox[BOXBOTTOM] - bmaporgy;
+   yh = sw->endbox[BOXTOP   ] - bmaporgy;
 
    if(xl < 0)
       xl = 0;
    if(yl < 0)
       yl = 0;
    if(yh < 0)
-      return blockfrac;
+      return FRACUNIT;
    if(xh < 0)
-      return blockfrac;
+      return FRACUNIT;
 
    xl = (unsigned)xl >> MAPBLOCKSHIFT;
    xh = (unsigned)xh >> MAPBLOCKSHIFT;
@@ -278,18 +283,18 @@ fixed_t P_CompletableFrac(fixed_t dx, fixed_t dy)
    for(bx = xl; bx <= xh; bx++)
    {
       for(by = yl; by <= yh; by++)
-         P_BlockLinesIterator(bx, by, SL_CheckLine, NULL);
+         P_BlockLinesIterator(bx, by, (blocklinesiter_t)SL_CheckLine, NULL);
    }
 
    // examine results
-   if(blockfrac < 0x1000)
+   if(sw->blockfrac < 0x1000)
    {
-      blockfrac   = 0;
+      sw->blockfrac   = 0;
       numspechit = 0;     // can't cross anything on a bad move
       return 0;           // solid wall
    }
 
-   return blockfrac;
+   return sw->blockfrac;
 }
 
 //
@@ -315,12 +320,12 @@ static int SL_PointOnSide2(fixed_t x1, fixed_t y1,
    return ((dist < 0) ? SIDE_BACK : SIDE_FRONT);
 }
 
-static void SL_CheckSpecialLines(void)
+static void SL_CheckSpecialLines(slideWork_t *sw)
 {
-   fixed_t x1 = slidething->x;
-   fixed_t y1 = slidething->y;
-   fixed_t x2 = slidex;
-   fixed_t y2 = slidey;
+   fixed_t x1 = sw->slidething->x;
+   fixed_t y1 = sw->slidething->y;
+   fixed_t x2 = sw->slidex;
+   fixed_t y2 = sw->slidey;
 
    fixed_t bx, by, xl, xh, yl, yh;
    fixed_t bxl, bxh, byl, byh;
@@ -439,18 +444,20 @@ void P_SlideMove(void)
    fixed_t dx, dy, rx, ry;
    fixed_t frac, slide;
    int i;
+   slideWork_t sw;
 
    dx = slidething->momx;
    dy = slidething->momy;
-   slidex = slidething->x;
-   slidey = slidething->y;
+   sw.slidex = slidething->x;
+   sw.slidey = slidething->y;
+   sw.slidething = slidething;
 
    numspechit = 0;
 
    // perform a maximum of three bumps
    for(i = 0; i < 3; i++)
    {
-      frac = P_CompletableFrac(dx, dy);
+      frac = P_CompletableFrac(&sw, dx, dy);
       if(frac != FRACUNIT)
          frac -= 0x1000;
       if(frac < 0)
@@ -459,27 +466,29 @@ void P_SlideMove(void)
       FixedMul2(rx, frac, dx);
       FixedMul2(ry, frac, dy);
 
-      slidex += rx;
-      slidey += ry;
+      sw.slidex += rx;
+      sw.slidey += ry;
 
       // made it the entire way
       if(frac == FRACUNIT)
       {
          slidething->momx = dx;
          slidething->momy = dy;
-         SL_CheckSpecialLines();
+         SL_CheckSpecialLines(&sw);
+         slidex = sw.slidex;
+         slidey = sw.slidey;
          return;
       }
 
       // project the remaining move along the line that blocked movement
       dx -= rx;
       dy -= ry;
-      FixedMul2(dx, dx, blocknvx);
-      FixedMul2(dy, dy, blocknvy);
+      FixedMul2(dx, dx, sw.blocknvx);
+      FixedMul2(dy, dy, sw.blocknvy);
       slide = dx + dy;
 
-      FixedMul2(dx, slide, blocknvx);
-      FixedMul2(dy, slide, blocknvy);
+      FixedMul2(dx, slide, sw.blocknvx);
+      FixedMul2(dy, slide, sw.blocknvy);
    }
 
    // some hideous situation has happened that won't let the player slide
