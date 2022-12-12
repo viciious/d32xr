@@ -3,10 +3,17 @@
 #include "doomdef.h"
 #include "p_local.h"
 
+typedef struct
+{
+	int			usebbox[4];
+	divline_t	useline;
 
+	line_t		*closeline;
+	fixed_t		closedist;
+} lineuse_t;
 
 fixed_t P_InterceptVector(divline_t* v2, divline_t* v1) ATTR_DATA_CACHE_ALIGN;
-boolean	PIT_UseLines(line_t* li, void *unused) ATTR_DATA_CACHE_ALIGN;
+boolean	PIT_UseLines(line_t* li, lineuse_t *lu) ATTR_DATA_CACHE_ALIGN;
 void P_UseLines(player_t* player) ATTR_DATA_CACHE_ALIGN;
 boolean PIT_RadiusAttack(mobj_t* thing, void *unused) ATTR_DATA_CACHE_ALIGN;
 void P_RadiusAttack(mobj_t* spot, mobj_t* source, int damage) ATTR_DATA_CACHE_ALIGN;
@@ -101,12 +108,6 @@ boolean P_TryMove (mobj_t *thing, fixed_t x, fixed_t y)
 
 ============================================================================== 
 */ 
- 
-int			usebbox[4];
-divline_t	useline;
-
-line_t		*closeline;
-fixed_t		closedist;
 
 /*
 ===============
@@ -141,7 +142,7 @@ fixed_t P_InterceptVector (divline_t *v2, divline_t *v1)
 ================
 */
 
-boolean	PIT_UseLines (line_t *li, void *unused)
+boolean	PIT_UseLines (line_t *li, lineuse_t *lu)
 {
 	divline_t	dl;
 	fixed_t		frac;
@@ -150,20 +151,20 @@ boolean	PIT_UseLines (line_t *li, void *unused)
 /* */
 /* check bounding box first */
 /* */
-	if (usebbox[BOXRIGHT] <= libbox[BOXLEFT]
-	||	usebbox[BOXLEFT] >= libbox[BOXRIGHT]
-	||	usebbox[BOXTOP] <= libbox[BOXBOTTOM]
-	||	usebbox[BOXBOTTOM] >= libbox[BOXTOP] )
+	if (lu->usebbox[BOXRIGHT] <= libbox[BOXLEFT]
+	||	lu->usebbox[BOXLEFT] >= libbox[BOXRIGHT]
+	||	lu->usebbox[BOXTOP] <= libbox[BOXBOTTOM]
+	||	lu->usebbox[BOXBOTTOM] >= libbox[BOXTOP] )
 		return true;
 
 /* */
 /* find distance along usetrace */
 /* */
 	P_MakeDivline (li, &dl);
-	frac = P_InterceptVector (&useline, &dl);
+	frac = P_InterceptVector (&lu->useline, &dl);
 	if (frac < 0)
 		return true;		/* behind source */
-	if (frac > closedist)
+	if (frac > lu->closedist)
 		return true;		/* too far away */
 
 /* */
@@ -176,8 +177,8 @@ boolean	PIT_UseLines (line_t *li, void *unused)
 			return true;	/* keep going */
 	}
 	
-	closeline = li;
-	closedist = frac;
+	lu->closeline = li;
+	lu->closedist = frac;
 	
 	return true;			/* can't use for than one special line in a row */
 }
@@ -197,6 +198,7 @@ void P_UseLines (player_t *player)
 	int			angle;
 	fixed_t		x1, y1, x2, y2;
 	int			x,y, xl, xh, yl, yh;
+	lineuse_t	lu;
 	
 	angle = player->mo->angle >> ANGLETOFINESHIFT;
 	x1 = player->mo->x;
@@ -204,37 +206,37 @@ void P_UseLines (player_t *player)
 	x2 = x1 + (USERANGE>>FRACBITS)*finecosine(angle);
 	y2 = y1 + (USERANGE>>FRACBITS)*finesine(angle);
 	
-	useline.x = x1;
-	useline.y = y1;
-	useline.dx = x2-x1;
-	useline.dy = y2-y1;
+	lu.useline.x = x1;
+	lu.useline.y = y1;
+	lu.useline.dx = x2-x1;
+	lu.useline.dy = y2-y1;
 	
-	if (useline.dx > 0)
+	if (lu.useline.dx > 0)
 	{
-		usebbox[BOXRIGHT] = x2;
-		usebbox[BOXLEFT] = x1;
+		lu.usebbox[BOXRIGHT] = x2;
+		lu.usebbox[BOXLEFT] = x1;
 	}
 	else
 	{
-		usebbox[BOXRIGHT] = x1;
-		usebbox[BOXLEFT] = x2;
+		lu.usebbox[BOXRIGHT] = x1;
+		lu.usebbox[BOXLEFT] = x2;
 	}
 	
-	if (useline.dy > 0)
+	if (lu.useline.dy > 0)
 	{
-		usebbox[BOXTOP] = y2;
-		usebbox[BOXBOTTOM] = y1;
+		lu.usebbox[BOXTOP] = y2;
+		lu.usebbox[BOXBOTTOM] = y1;
 	}
 	else
 	{
-		usebbox[BOXTOP] = y1;
-		usebbox[BOXBOTTOM] = y2;
+		lu.usebbox[BOXTOP] = y1;
+		lu.usebbox[BOXBOTTOM] = y2;
 	}
 	
-	yh = usebbox[BOXTOP] - bmaporgy;
-	yl = usebbox[BOXBOTTOM] - bmaporgy;
-	xh = usebbox[BOXRIGHT] - bmaporgx;
-	xl = usebbox[BOXLEFT] - bmaporgx;
+	yh = lu.usebbox[BOXTOP] - bmaporgy;
+	yl = lu.usebbox[BOXBOTTOM] - bmaporgy;
+	xh = lu.usebbox[BOXRIGHT] - bmaporgx;
+	xl = lu.usebbox[BOXLEFT] - bmaporgx;
 
 	if(xl < 0)
 		xl = 0;
@@ -255,24 +257,24 @@ void P_UseLines (player_t *player)
    if(yh >= bmapheight)
       yh = bmapheight - 1;
 	
-	closeline = NULL;
-	closedist = FRACUNIT;
+	lu.closeline = NULL;
+	lu.closedist = FRACUNIT;
 	validcount[0]++;
 	
 	for (y=yl ; y<=yh ; y++)
 		for (x=xl ; x<=xh ; x++)
-			P_BlockLinesIterator (x, y, PIT_UseLines, NULL );
+			P_BlockLinesIterator (x, y, (blocklinesiter_t)PIT_UseLines, &lu );
 			
 /* */
 /* check closest line */
 /* */
-	if (!closeline)
+	if (!lu.closeline)
 		return;
 		
-	if (!closeline->special)
+	if (!lu.closeline->special)
 		S_StartSound (player->mo, sfx_noway);
 	else
-		P_UseSpecialLine (player->mo, closeline);
+		P_UseSpecialLine (player->mo, lu.closeline);
 }
 
 
