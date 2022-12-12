@@ -55,7 +55,7 @@ static boolean PM_BoxCrossLine(line_t* ld, pmovework_t *mw) ATTR_DATA_CACHE_ALIG
 static boolean PIT_CheckLine(line_t* ld, pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
 static boolean PM_CrossCheck(line_t* ld, pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
 static boolean PM_CheckPosition(pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
-boolean P_TryMove2(ptrymove_t *tm) ATTR_DATA_CACHE_ALIGN;
+boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly) ATTR_DATA_CACHE_ALIGN;
 
 //
 // Check a single mobj in one of the contacted blockmap cells.
@@ -374,7 +374,7 @@ static boolean PM_CheckPosition(pmovework_t *mw)
 // Attempt to move to a new position, crossing special lines unless MF_TELEPORT
 // is set.
 //
-boolean P_TryMove2(ptrymove_t *tm)
+boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly)
 {
    int i;
    pmovework_t mw;
@@ -396,7 +396,7 @@ boolean P_TryMove2(ptrymove_t *tm)
    for (i = 0; i < mw.numspechit; i++)
       tm->spechit[i] = mw.spechit[i];
 
-   if(tm->checkposonly)
+   if(checkposonly)
       return trymove2;
 
    if(!trymove2)

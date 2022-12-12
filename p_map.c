@@ -55,15 +55,14 @@ movething
 ==================
 */
 
-boolean P_TryMove2 (ptrymove_t *tm);
+boolean P_TryMove2 (ptrymove_t *tm, boolean checkposonly);
 
 boolean P_CheckPosition (ptrymove_t *tm, mobj_t *thing, fixed_t x, fixed_t y)
 {
 	tm->tmthing = thing;
 	tm->tmx = x;
 	tm->tmy = y;
-	tm->checkposonly = true;
-	return P_TryMove2 (tm);
+	return P_TryMove2 (tm, true);
 }
 
 
@@ -72,8 +71,7 @@ boolean P_TryMove (ptrymove_t *tm, mobj_t *thing, fixed_t x, fixed_t y)
 	tm->tmthing = thing;
 	tm->tmx = x;
 	tm->tmy = y;
-	tm->checkposonly = false;
-	return P_TryMove2 (tm);
+	return P_TryMove2 (tm, false);
 }
 
 
