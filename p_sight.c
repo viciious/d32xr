@@ -185,7 +185,7 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
    divline_t    *strace = &sw->strace;
    fixed_t      t2x = sw->t2x, t2y = sw->t2y;
    fixed_t      sightzstart = sw->sightzstart;
-   VINT         *lvc, *pvc, vc;
+   VINT         *lvalidcount, vc;
 
    sub = &subsectors[num];
 
@@ -193,18 +193,18 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
    count = sub->numlines;
    seg   = &segs[sub->firstline];
 
-	I_GetThreadLocalVar(DOOMTLS_VALIDCNTPTR, pvc);
-	I_GetThreadLocalVar(DOOMTLS_VALIDCOUNTS, lvc);
-   vc = *pvc;
+	I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
+	vc = *lvalidcount;
+	++lvalidcount;
 
    for( ; count; seg++, count--)
    {
       line = &lines[seg->linedef];
 
       // allready checked other side?
-      if(lvc[seg->linedef] == vc)
+      if(lvalidcount[seg->linedef] == vc)
          continue;
-      lvc[seg->linedef] = vc;
+      lvalidcount[seg->linedef] = vc;
 
       v1 = line->v1;
       v2 = line->v2;
@@ -354,10 +354,10 @@ static boolean PS_RejectCheckSight(mobj_t *t1, mobj_t *t2)
 static boolean PS_CheckSight2(mobj_t *t1, mobj_t *t2)
 {
    sightWork_t sw;
-   VINT *pvc;
+   VINT *lvalidcount;
 
-	I_GetThreadLocalVar(DOOMTLS_VALIDCNTPTR, pvc);
-   *pvc = *pvc + 1;
+   I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
+   *lvalidcount = *lvalidcount + 1;
 
    // look from eyes of t1 to any part of t2
    sw.sightzstart = t1->z + t1->height - (t1->height >> 2);

@@ -233,7 +233,7 @@ static boolean PB_CrossCheck(line_t *ld, pmovetest_t *mt)
 static boolean PB_CheckPosition(mobj_t *mo, pmovetest_t *mt)
 {
    int xl, xh, yl, yh, bx, by;
-   VINT *pvc;
+   VINT *lvalidcount;
 
    mt->testflags = mo->flags;
 
@@ -248,8 +248,8 @@ static boolean PB_CheckPosition(mobj_t *mo, pmovetest_t *mt)
    mt->testfloorz   = mt->testdropoffz = mt->testsubsec->sector->floorheight;
    mt->testceilingz = mt->testsubsec->sector->ceilingheight;
 
-   I_GetThreadLocalVar(DOOMTLS_VALIDCNTPTR, pvc);
-   *pvc = *pvc + 1;
+   I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
+   *lvalidcount = *lvalidcount + 1;
 
    mt->ceilingline = NULL;
    mt->hitthing    = NULL;

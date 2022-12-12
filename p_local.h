@@ -249,8 +249,7 @@ extern	mobj_t		**blocklinks;			/* for thing chains */
 extern	int			numthings;
 extern	spawnthing_t* spawnthings;
 
-extern	VINT		*lines_validcount;
-extern	VINT		validcount[2];
+extern	VINT		*validcount;		/* (0 - increment every time a check is made, [1..numlines]) x 2 */
 
 /*
 ===============================================================================

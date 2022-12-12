@@ -35,8 +35,7 @@ byte		*rejectmatrix;			/* for fast sight rejection */
 
 mapthing_t	*deathmatchstarts, *deathmatch_p;
 
-VINT		*lines_validcount;
-VINT		validcount[2];			/* increment every time a check is made */
+VINT		*validcount;			/* increment every time a check is made */
 
 mapthing_t	playerstarts[MAXPLAYERS];
 
@@ -660,9 +659,11 @@ D_printf ("P_SetupLevel(%i,%i)\n",lumpnum,skill);
 	rejectmatrix = W_CacheLumpNum (lumpnum+ML_REJECT,PU_LEVEL);
 #endif
 
-	lines_validcount = Z_Malloc(numlines * sizeof(*lines_validcount) * 2, PU_LEVEL, 0);
-	D_memset(lines_validcount, 0, numlines * sizeof(*lines_validcount) * 2);
-	validcount[0] = validcount[1] = 1;
+	validcount = Z_Malloc((numlines + 1) * 2 * sizeof(*validcount), PU_LEVEL, 0);
+	D_memset(validcount, 0, (numlines + 1) * 2 * sizeof(*validcount));
+
+	validcount[0] = 1; // cpu 0
+	validcount[numlines+1] = 1; // cpu 1
 
 	P_GroupLines ();
 
@@ -722,8 +723,7 @@ extern byte *debugscreen;
 
 	R_SetupLevel();
 
-	I_SetThreadLocalVar(DOOMTLS_VALIDCNTPTR, &validcount[0]);
-	I_SetThreadLocalVar(DOOMTLS_VALIDCOUNTS, lines_validcount);
+	I_SetThreadLocalVar(DOOMTLS_VALIDCOUNT, &validcount[0]);
 
 #ifdef MARS
 	Mars_CommSlaveClearCache();

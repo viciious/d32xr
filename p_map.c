@@ -170,7 +170,7 @@ void P_UseLines (player_t *player)
 	fixed_t		x1, y1, x2, y2;
 	int			x,y, xl, xh, yl, yh;
 	plineuse_t	lu;
-	VINT 		*pvc;
+	VINT 		*lvalidcount;
 	
 	angle = player->mo->angle >> ANGLETOFINESHIFT;
 	x1 = player->mo->x;
@@ -232,8 +232,8 @@ void P_UseLines (player_t *player)
 	lu.closeline = NULL;
 	lu.closedist = FRACUNIT;
 
-   I_GetThreadLocalVar(DOOMTLS_VALIDCNTPTR, pvc);
-   *pvc = *pvc + 1;
+   I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
+   *lvalidcount = *lvalidcount + 1;
 	
 	for (y=yl ; y<=yh ; y++)
 		for (x=xl ; x<=xh ; x++)

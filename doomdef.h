@@ -1216,8 +1216,7 @@ void S_RestartSounds (void);
 
 #define DOOMTLS_BANKPAGE 		0
 #define DOOMTLS_SETBANKPAGEPTR 	4
-#define DOOMTLS_VALIDCNTPTR 	8
-#define DOOMTLS_VALIDCOUNTS 	12
+#define DOOMTLS_VALIDCOUNT 		8
 
 #ifdef MARS
 #define STR_INDIR(x) #x

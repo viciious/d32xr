@@ -346,7 +346,7 @@ boolean P_BlockLinesIterator (int x, int y, blocklinesiter_t func, void *userp )
 	int			offset;
 	short		*list;
 	line_t		*ld;
-	VINT 		*lvc, *pvc, vc;
+	VINT 		*lvalidcount, vc;
 
 	//if (x<0 || y<0 || x>=bmapwidth || y>=bmapheight)
 	//	return true;
@@ -354,18 +354,18 @@ boolean P_BlockLinesIterator (int x, int y, blocklinesiter_t func, void *userp )
 	
 	offset = *(blockmap+offset);
 
-	I_GetThreadLocalVar(DOOMTLS_VALIDCNTPTR, pvc);
-	I_GetThreadLocalVar(DOOMTLS_VALIDCOUNTS, lvc);
-	vc = *pvc;
+	I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
+	vc = *lvalidcount;
+	++lvalidcount;
 
 	for ( list = blockmaplump+offset ; *list != -1 ; list++)
 	{
 		int l = *list;
 		ld = &lines[*list];
 
-		if (lvc[l] == vc)
+		if (lvalidcount[l] == vc)
 			continue;		/* line has already been checked */
-		lvc[l] = vc;
+		lvalidcount[l] = vc;
 		
 		if ( !func(ld, userp) )
 			return false;

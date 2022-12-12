@@ -268,7 +268,7 @@ static boolean PM_CheckPosition(pmovework_t *mw)
 {
    int xl, xh, yl, yh, bx, by;
    mobj_t *tmthing = mw->tmthing;
-   VINT *pvc;
+   VINT *lvalidcount;
 
    mw->tmflags = tmthing->flags;
 
@@ -284,8 +284,8 @@ static boolean PM_CheckPosition(pmovework_t *mw)
    mw->tmfloorz   = mw->tmdropoffz = mw->newsubsec->sector->floorheight;
    mw->tmceilingz = mw->newsubsec->sector->ceilingheight;
 
-   I_GetThreadLocalVar(DOOMTLS_VALIDCNTPTR, pvc);
-   *pvc = *pvc + 1;
+   I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
+   *lvalidcount = *lvalidcount + 1;
 
    mw->blockline = NULL;
    mw->numspechit = 0;

@@ -286,7 +286,7 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
    intercept_t  in;
    line_t   thingline;
    vertex_t tv1, tv2;
-   VINT     *lvc, *pvc, vc;
+   VINT     *lvalidcount, vc;
 
    // CALICO: removed type punning
    thingline.v1 = &tv1;
@@ -332,18 +332,18 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
    count = sub->numlines;
    seg   = &segs[sub->firstline];
 
-	I_GetThreadLocalVar(DOOMTLS_VALIDCNTPTR, pvc);
-	I_GetThreadLocalVar(DOOMTLS_VALIDCOUNTS, lvc);
-   vc = *pvc + 1, *pvc = vc;
+	I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
+	vc = *lvalidcount + 1, *lvalidcount = vc;
+	++lvalidcount;
 
    for(; count; seg++, count--)
    {
       int ld = seg->linedef;
       line = &lines[ld];
 
-      if(lvc[ld] == vc)
+      if(lvalidcount[ld] == vc)
          continue; // already checked other side
-      lvc[ld] = vc;
+      lvalidcount[ld] = vc;
 
       frac = PA_SightCrossLine(sw, line);
       if(frac < 0 || frac > FRACUNIT)

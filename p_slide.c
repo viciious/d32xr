@@ -233,7 +233,7 @@ findfrac:
 fixed_t P_CompletableFrac(pslidework_t *sw, fixed_t dx, fixed_t dy)
 {
    int xl, xh, yl, yh, bx, by;
-   VINT *pvc;
+   VINT *lvalidcount;
 
    sw->blockfrac = FRACUNIT;
    sw->slidedx = dx;
@@ -254,8 +254,8 @@ fixed_t P_CompletableFrac(pslidework_t *sw, fixed_t dx, fixed_t dy)
    else
       sw->endbox[BOXBOTTOM] += dy;
 
-	I_GetThreadLocalVar(DOOMTLS_VALIDCNTPTR, pvc);
-   *pvc = *pvc + 1;
+   I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
+   *lvalidcount = *lvalidcount + 1;
 
    // check lines
    xl = sw->endbox[BOXLEFT  ] - bmaporgx;
@@ -334,7 +334,7 @@ static void SL_CheckSpecialLines(pslidework_t *sw)
    fixed_t x3, y3, x4, y4;
    int side1, side2;
 
-   VINT *lvc, *pvc, vc;
+   VINT *lvalidcount, vc;
 
    if(x1 < x2)
    {
@@ -384,9 +384,9 @@ static void SL_CheckSpecialLines(pslidework_t *sw)
 
    sw->numspechit = 0;
 
-	I_GetThreadLocalVar(DOOMTLS_VALIDCNTPTR, pvc);
-   I_GetThreadLocalVar(DOOMTLS_VALIDCOUNTS, lvc);
-   vc = *pvc + 1, *pvc = vc;
+   I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
+   vc = *lvalidcount + 1, *lvalidcount = vc;
+   ++lvalidcount;
 
    for(bx = bxl; bx <= bxh; bx++)
    {
@@ -403,10 +403,10 @@ static void SL_CheckSpecialLines(pslidework_t *sw)
             ld = &lines[*list];
             if(!ld->special)
                continue;
-            if(lvc[*list] == vc)
+            if(lvalidcount[*list] == vc)
                continue; // already checked
             
-            lvc[*list] = vc;
+            lvalidcount[*list] = vc;
 
 	         ldbbox = P_LineBBox(ld);
             if(xh < ldbbox[BOXLEFT  ] ||

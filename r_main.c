@@ -505,8 +505,7 @@ static void R_Setup (int displayplayer, vissprite_t *vissprites_,
 
 	framecount++;	
 	validcount[0]++;
-	validcount[1]++;
-		
+
 	player = &players[displayplayer];
 
 	vd.viewplayer = player;
