@@ -1876,7 +1876,6 @@ reconnect:
 
 extern int ticsinframe;
 
-extern int checkpostics, shoottics;
 extern int lasttics;
 
 extern	int	playertics, thinkertics, sighttics, basetics, latetics;

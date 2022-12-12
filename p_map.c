@@ -12,10 +12,17 @@ typedef struct
 	fixed_t		closedist;
 } plineuse_t;
 
+typedef struct
+{
+	mobj_t		*bombsource;
+	mobj_t		*bombspot;
+	int			bombdamage;
+} pradiusattack_t;
+
 fixed_t P_InterceptVector(divline_t* v2, divline_t* v1) ATTR_DATA_CACHE_ALIGN;
 boolean	PIT_UseLines(line_t* li, plineuse_t *lu) ATTR_DATA_CACHE_ALIGN;
 void P_UseLines(player_t* player) ATTR_DATA_CACHE_ALIGN;
-boolean PIT_RadiusAttack(mobj_t* thing, void *unused) ATTR_DATA_CACHE_ALIGN;
+boolean PIT_RadiusAttack(mobj_t* thing, pradiusattack_t *ra) ATTR_DATA_CACHE_ALIGN;
 void P_RadiusAttack(mobj_t* spot, mobj_t* source, int damage) ATTR_DATA_CACHE_ALIGN;
 fixed_t P_AimLineAttack(lineattack_t *la, mobj_t* t1, angle_t angle, fixed_t distance) ATTR_DATA_CACHE_ALIGN;
 void P_LineAttack(lineattack_t *la, mobj_t* t1, angle_t angle, fixed_t distance, fixed_t slope, int damage) ATTR_DATA_CACHE_ALIGN;
@@ -49,8 +56,6 @@ movething
 */
 
 boolean P_TryMove2 (ptrymove_t *tm);
-
-int checkpostics;
 
 boolean P_CheckPosition (ptrymove_t *tm, mobj_t *thing, fixed_t x, fixed_t y)
 {
@@ -262,10 +267,6 @@ void P_UseLines (player_t *player)
 
 ============================================================================== 
 */ 
- 
-mobj_t		*bombsource;
-mobj_t		*bombspot;
-int			bombdamage;
 
 /*
 =================
@@ -276,7 +277,7 @@ int			bombdamage;
 =================
 */
 
-boolean PIT_RadiusAttack (mobj_t *thing, void *unused)
+boolean PIT_RadiusAttack (mobj_t *thing, pradiusattack_t *ra)
 {
 	fixed_t		dx, dy, dist;
 	
@@ -289,16 +290,16 @@ boolean PIT_RadiusAttack (mobj_t *thing, void *unused)
 		|| thing->type == MT_SPIDER)
 		return true;	
 
-	dx = D_abs(thing->x - bombspot->x);
-	dy = D_abs(thing->y - bombspot->y);
+	dx = D_abs(thing->x - ra->bombspot->x);
+	dy = D_abs(thing->y - ra->bombspot->y);
 	dist = dx>dy ? dx : dy;
 	dist = (dist - thing->radius) >> FRACBITS;
 	if (dist < 0)
 		dist = 0;
-	if (dist >= bombdamage)
+	if (dist >= ra->bombdamage)
 		return true;		/* out of range */
 /* FIXME?	if ( P_CheckSight (thing, bombspot) )	// must be in direct path */
-		P_DamageMobj (thing, bombspot, bombsource, bombdamage - dist);
+		P_DamageMobj (thing, ra->bombspot, ra->bombsource, ra->bombdamage - dist);
 	return true;
 }
 
@@ -316,6 +317,7 @@ void P_RadiusAttack (mobj_t *spot, mobj_t *source, int damage)
 {
 	int			x,y, xl, xh, yl, yh;
 	fixed_t		dist;
+	pradiusattack_t ra;
 	
 	dist = (damage+MAXRADIUS)<<FRACBITS;
 	yh = spot->y + dist - bmaporgy;
@@ -342,24 +344,19 @@ void P_RadiusAttack (mobj_t *spot, mobj_t *source, int damage)
    if(yh >= bmapheight)
       yh = bmapheight - 1;
 
-	bombspot = spot;
-	bombsource = source;
-	bombdamage = damage;
+	ra.bombspot = spot;
+	ra.bombsource = source;
+	ra.bombdamage = damage;
 	
 	for (y=yl ; y<=yh ; y++)
 		for (x=xl ; x<=xh ; x++)
-			P_BlockThingsIterator (x, y, PIT_RadiusAttack, NULL );
+			P_BlockThingsIterator (x, y, (blockthingsiter_t)PIT_RadiusAttack, &ra );
 }
 
 
 /*============================================================================ */
 
-int			sightcounts[2];
-
 void P_Shoot2 (lineattack_t *la);
-
-int		shoottics;
-
 
 #ifdef JAGUAR
 
@@ -430,10 +427,9 @@ fixed_t P_AimLineAttack (lineattack_t *la, mobj_t *t1, angle_t angle, fixed_t di
 
 	P_Shoot2 (la);
 
-	linetarget = (mobj_t *)DSPRead (&la->shootmobj);
-		
+	linetarget = la->shootmobj;
 	if (linetarget)
-		return DSPRead(&la->shootslope);
+		return la->shootslope;
 	return 0;
 }
  
@@ -471,11 +467,12 @@ void P_LineAttack (lineattack_t *la, mobj_t *t1, angle_t angle, fixed_t distance
 
 	P_Shoot2 (la);
 
-	linetarget = (mobj_t *)DSPRead (&la->shootmobj);
-	shootline2 = (line_t *)DSPRead (&la->shootline);
-	shootx2 = DSPRead (&la->shootx);
-	shooty2 = DSPRead (&la->shooty);
-	shootz2 = DSPRead (&la->shootz);
+	linetarget = la->shootmobj;
+	shootline2 = la->shootline;
+	shootx2 = la->shootx;
+	shooty2 = la->shooty;
+	shootz2 = la->shootz;
+
 /* */
 /* shoot thing */
 /* */
