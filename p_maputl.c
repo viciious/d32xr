@@ -9,7 +9,7 @@ int P_PointOnLineSide(fixed_t x, fixed_t y, line_t* line) ATTR_DATA_CACHE_ALIGN;
 int P_PointOnDivlineSide(fixed_t x, fixed_t y, divline_t* line) ATTR_DATA_CACHE_ALIGN;
 void P_MakeDivline(line_t* li, divline_t* dl) ATTR_DATA_CACHE_ALIGN;
 fixed_t P_LineOpening(line_t* linedef) ATTR_DATA_CACHE_ALIGN;
-fixed_t* P_LineBBox(line_t* ld) ATTR_DATA_CACHE_ALIGN;
+void P_LineBBox(line_t* ld, fixed_t* bbox) ATTR_DATA_CACHE_ALIGN;
 void P_UnsetThingPosition(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
 void P_SetThingPosition(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
 void P_SetThingPosition2(mobj_t* thing, subsector_t *ss) ATTR_DATA_CACHE_ALIGN;
@@ -155,9 +155,8 @@ fixed_t P_LineOpening (line_t *linedef)
 	return opentop - openbottom;
 }
 
-fixed_t* P_LineBBox(line_t* ld)
+void P_LineBBox(line_t* ld, fixed_t *bbox)
 {
-	static fixed_t bbox[4];
 	vertex_t* v1 = ld->v1, * v2 = ld->v2;
 
 	if (v1->x < v2->x)
@@ -180,8 +179,6 @@ fixed_t* P_LineBBox(line_t* ld)
 		bbox[BOXBOTTOM] = v2->y;
 		bbox[BOXTOP] = v1->y;
 	}
-
-	return bbox;
 }
 
 /*

@@ -180,7 +180,7 @@ int 	P_BoxOnLineSide (fixed_t *tmbox, line_t *ld);
 
 fixed_t	P_LineOpening (line_t *linedef);
 
-fixed_t* P_LineBBox(line_t* ld);
+void 	P_LineBBox(line_t* ld, fixed_t*bbox);
 
 typedef boolean(*blocklinesiter_t)(line_t*, void*);
 typedef boolean(*blockthingsiter_t)(mobj_t*, void*);

@@ -117,7 +117,9 @@ boolean	PIT_UseLines (line_t *li, plineuse_t *lu)
 {
 	divline_t	dl;
 	fixed_t		frac;
-	fixed_t 	*libbox = P_LineBBox(li);
+	fixed_t 	libbox[4];
+
+	P_LineBBox(li, libbox);
 
 /* */
 /* check bounding box first */

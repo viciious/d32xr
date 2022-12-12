@@ -163,7 +163,9 @@ static boolean SL_CheckLine(line_t *ld, pslidework_t *sw)
    sector_t *front, *back;
    int       side1;
    vertex_t *vtmp;
-   fixed_t  *ldbbox = P_LineBBox(ld);
+   fixed_t  ldbbox[4];
+
+   P_LineBBox(ld, ldbbox);
 
    // check bounding box
    if(sw->endbox[BOXRIGHT ] < ldbbox[BOXLEFT  ] ||
@@ -396,7 +398,7 @@ static void SL_CheckSpecialLines(pslidework_t *sw)
          line_t *ld;
          int offset = by * bmapwidth + bx;
          offset = *(blockmap + offset);
-	      fixed_t *ldbbox;
+	      fixed_t ldbbox[4];
          
          for(list = blockmaplump + offset; *list != -1; list++)
          {
@@ -408,7 +410,7 @@ static void SL_CheckSpecialLines(pslidework_t *sw)
             
             lvalidcount[*list] = vc;
 
-	         ldbbox = P_LineBBox(ld);
+	         P_LineBBox(ld, ldbbox);
             if(xh < ldbbox[BOXLEFT  ] ||
                xl > ldbbox[BOXRIGHT ] ||
                yh < ldbbox[BOXBOTTOM] ||

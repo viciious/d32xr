@@ -144,7 +144,9 @@ static boolean PM_BoxCrossLine(line_t *ld, pmovework_t *mw)
    fixed_t lx, ly, ldx, ldy;
    fixed_t dx1, dx2, dy1, dy2;
    boolean side1, side2;
-   fixed_t *ldbbox = P_LineBBox(ld);
+   fixed_t ldbbox[4];
+
+   P_LineBBox(ld, ldbbox);
 
    if(mw->tmbbox[BOXRIGHT ] <= ldbbox[BOXLEFT  ] ||
       mw->tmbbox[BOXLEFT  ] >= ldbbox[BOXRIGHT ] ||

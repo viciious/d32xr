@@ -127,7 +127,9 @@ static boolean PB_BoxCrossLine(line_t *ld, pmovetest_t *mt)
    fixed_t ldx, ldy;
    fixed_t dx1, dy1, dx2, dy2;
    boolean side1, side2;
-   const fixed_t *ldbbox = P_LineBBox(ld);
+   fixed_t ldbbox[4];
+
+   P_LineBBox(ld, ldbbox);
 
    // entirely outside bounding box of line?
    if(mt->testbbox[BOXRIGHT ] <= ldbbox[BOXLEFT  ] ||
