@@ -46,7 +46,7 @@ typedef struct
 	line_t *spechit[MAXSPECIALCROSS];
 
    VINT *lvc, *validcount;
-} slideWork_t;
+} pslidework_t;
 
 #define CLIPRADIUS 23
 
@@ -60,7 +60,7 @@ enum
 //
 // Simple point-on-line-side check.
 //
-static int SL_PointOnSide(slideWork_t *sw, fixed_t x, fixed_t y)
+static int SL_PointOnSide(pslidework_t *sw, fixed_t x, fixed_t y)
 {
    fixed_t dx, dy, dist;
 
@@ -82,7 +82,7 @@ static int SL_PointOnSide(slideWork_t *sw, fixed_t x, fixed_t y)
 //
 // Return fractional intercept along the slide line.
 //
-static fixed_t SL_CrossFrac(slideWork_t *sw)
+static fixed_t SL_CrossFrac(pslidework_t *sw)
 {
    fixed_t dx, dy, dist1, dist2;
 
@@ -111,7 +111,7 @@ static fixed_t SL_CrossFrac(slideWork_t *sw)
 // of the line. Returns the fraction of the current move that crosses the line
 // segment.
 //
-static void SL_ClipToLine(slideWork_t *sw)
+static void SL_ClipToLine(pslidework_t *sw)
 {
    fixed_t frac;
    int     side2, side3;
@@ -159,7 +159,7 @@ blockmove:
 //
 // Check a linedef during wall sliding motion.
 //
-static boolean SL_CheckLine(line_t *ld, slideWork_t *sw)
+static boolean SL_CheckLine(line_t *ld, pslidework_t *sw)
 {
    fixed_t   opentop, openbottom;
    sector_t *front, *back;
@@ -232,7 +232,7 @@ findfrac:
 //
 // Returns the fraction of the move that is completable.
 //
-fixed_t P_CompletableFrac(slideWork_t *sw, fixed_t dx, fixed_t dy)
+fixed_t P_CompletableFrac(pslidework_t *sw, fixed_t dx, fixed_t dy)
 {
    int xl, xh, yl, yh, bx, by;
 
@@ -322,7 +322,7 @@ static int SL_PointOnSide2(fixed_t x1, fixed_t y1,
    return ((dist < 0) ? SIDE_BACK : SIDE_FRONT);
 }
 
-static void SL_CheckSpecialLines(slideWork_t *sw)
+static void SL_CheckSpecialLines(pslidework_t *sw)
 {
    fixed_t x1 = sw->slidething->x;
    fixed_t y1 = sw->slidething->y;
@@ -444,12 +444,12 @@ static void SL_CheckSpecialLines(slideWork_t *sw)
 //
 // Try to slide the player against walls by finding the closest move available.
 //
-void P_SlideMove(slidemove_t *sm)
+void P_SlideMove(pslidemove_t *sm)
 {
    int i;
    fixed_t dx, dy, rx, ry;
    fixed_t frac, slide;
-   slideWork_t sw;
+   pslidework_t sw;
    mobj_t *slidething = sm->slidething;
 
    dx = slidething->momx;

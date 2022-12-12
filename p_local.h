@@ -312,9 +312,9 @@ typedef struct
 	int numspechit;
 	line_t *spechit[MAXSPECIALCROSS];
 	fixed_t	slidex, slidey;
-} slidemove_t;
+} pslidemove_t;
 
-void P_SlideMove (slidemove_t *sm);
+void P_SlideMove (pslidemove_t *sm);
 
 #endif	/* __P_LOCAL__ */
 

@@ -41,14 +41,14 @@ typedef struct
    line_t      *ceilingline;
    fixed_t      testbbox[4];
    int          testflags;
-} movetest_t;
+} pmovetest_t;
 
-static boolean PB_CheckThing(mobj_t* thing, movetest_t *mt) ATTR_DATA_CACHE_ALIGN;
-static boolean PB_BoxCrossLine(line_t* ld, movetest_t *mt) ATTR_DATA_CACHE_ALIGN;
-static boolean PB_CheckLine(line_t* ld, movetest_t *mt) ATTR_DATA_CACHE_ALIGN;
-static boolean PB_CrossCheck(line_t* ld, movetest_t *mt) ATTR_DATA_CACHE_ALIGN;
-static boolean PB_CheckPosition(mobj_t* mo, movetest_t *mt) ATTR_DATA_CACHE_ALIGN;
-static boolean PB_TryMove(movetest_t *mt, mobj_t* mo, fixed_t tryx, fixed_t tryy) ATTR_DATA_CACHE_ALIGN;
+static boolean PB_CheckThing(mobj_t* thing, pmovetest_t *mt) ATTR_DATA_CACHE_ALIGN;
+static boolean PB_BoxCrossLine(line_t* ld, pmovetest_t *mt) ATTR_DATA_CACHE_ALIGN;
+static boolean PB_CheckLine(line_t* ld, pmovetest_t *mt) ATTR_DATA_CACHE_ALIGN;
+static boolean PB_CrossCheck(line_t* ld, pmovetest_t *mt) ATTR_DATA_CACHE_ALIGN;
+static boolean PB_CheckPosition(mobj_t* mo, pmovetest_t *mt) ATTR_DATA_CACHE_ALIGN;
+static boolean PB_TryMove(pmovetest_t *mt, mobj_t* mo, fixed_t tryx, fixed_t tryy) ATTR_DATA_CACHE_ALIGN;
 static void P_FloatChange(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
 void P_ZMovement(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
 void P_MobjThinker(mobj_t* mobj) ATTR_DATA_CACHE_ALIGN;
@@ -57,7 +57,7 @@ void P_XYMovement(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
 //
 // Check for collision against another mobj in one of the blockmap cells.
 //
-static boolean PB_CheckThing(mobj_t *thing, movetest_t *mt)
+static boolean PB_CheckThing(mobj_t *thing, pmovetest_t *mt)
 {
    fixed_t  blockdist;
    int      delta;
@@ -120,7 +120,7 @@ static boolean PB_CheckThing(mobj_t *thing, movetest_t *mt)
 //
 // Test for a bounding box collision with a linedef.
 //
-static boolean PB_BoxCrossLine(line_t *ld, movetest_t *mt)
+static boolean PB_BoxCrossLine(line_t *ld, pmovetest_t *mt)
 {
    fixed_t x1, x2;
    fixed_t lx, ly;
@@ -168,7 +168,7 @@ static boolean PB_BoxCrossLine(line_t *ld, movetest_t *mt)
 //
 // Adjusts testfloorz and testceilingz as lines are contacted.
 //
-static boolean PB_CheckLine(line_t *ld, movetest_t *mt)
+static boolean PB_CheckLine(line_t *ld, pmovetest_t *mt)
 {
    fixed_t   opentop, openbottom, lowfloor;
    sector_t *front, *back;
@@ -217,7 +217,7 @@ static boolean PB_CheckLine(line_t *ld, movetest_t *mt)
 //
 // Check a thing against a linedef in one of the blockmap cells.
 //
-static boolean PB_CrossCheck(line_t *ld, movetest_t *mt)
+static boolean PB_CrossCheck(line_t *ld, pmovetest_t *mt)
 {
    if(PB_BoxCrossLine(ld, mt))
    {
@@ -230,7 +230,7 @@ static boolean PB_CrossCheck(line_t *ld, movetest_t *mt)
 //
 // Check an mobj's position for validity against lines and other mobjs
 //
-static boolean PB_CheckPosition(mobj_t *mo, movetest_t *mt)
+static boolean PB_CheckPosition(mobj_t *mo, pmovetest_t *mt)
 {
    int xl, xh, yl, yh, bx, by;
 
@@ -298,7 +298,7 @@ static boolean PB_CheckPosition(mobj_t *mo, movetest_t *mt)
 // Try to move to the new position, and relink the mobj to the new position if
 // successful.
 //
-static boolean PB_TryMove(movetest_t *mt, mobj_t *mo, fixed_t tryx, fixed_t tryy)
+static boolean PB_TryMove(pmovetest_t *mt, mobj_t *mo, fixed_t tryx, fixed_t tryy)
 {
    mt->testx = tryx;
    mt->testy = tryy;
@@ -347,7 +347,7 @@ void P_XYMovement(mobj_t *mo)
 
    while(xleft || yleft)
    {
-      movetest_t mt;
+      pmovetest_t mt;
 
       xleft -= xuse;
       yleft -= yuse;

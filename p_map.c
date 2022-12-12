@@ -10,10 +10,10 @@ typedef struct
 
 	line_t		*closeline;
 	fixed_t		closedist;
-} lineuse_t;
+} plineuse_t;
 
 fixed_t P_InterceptVector(divline_t* v2, divline_t* v1) ATTR_DATA_CACHE_ALIGN;
-boolean	PIT_UseLines(line_t* li, lineuse_t *lu) ATTR_DATA_CACHE_ALIGN;
+boolean	PIT_UseLines(line_t* li, plineuse_t *lu) ATTR_DATA_CACHE_ALIGN;
 void P_UseLines(player_t* player) ATTR_DATA_CACHE_ALIGN;
 boolean PIT_RadiusAttack(mobj_t* thing, void *unused) ATTR_DATA_CACHE_ALIGN;
 void P_RadiusAttack(mobj_t* spot, mobj_t* source, int damage) ATTR_DATA_CACHE_ALIGN;
@@ -142,7 +142,7 @@ fixed_t P_InterceptVector (divline_t *v2, divline_t *v1)
 ================
 */
 
-boolean	PIT_UseLines (line_t *li, lineuse_t *lu)
+boolean	PIT_UseLines (line_t *li, plineuse_t *lu)
 {
 	divline_t	dl;
 	fixed_t		frac;
@@ -198,7 +198,7 @@ void P_UseLines (player_t *player)
 	int			angle;
 	fixed_t		x1, y1, x2, y2;
 	int			x,y, xl, xh, yl, yh;
-	lineuse_t	lu;
+	plineuse_t	lu;
 	
 	angle = player->mo->angle >> ANGLETOFINESHIFT;
 	x1 = player->mo->x;
