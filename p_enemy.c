@@ -116,20 +116,24 @@ fixed_t yspeed[8] = {0,47000,FRACUNIT,47000,0,-47000,-FRACUNIT,-47000};
 boolean P_Move (mobj_t *actor)
 {
 	fixed_t	tryx, tryy;
+	fixed_t oldx, oldy;
 	boolean		good;
 	line_t		*blkline;
+	ptrymove_t	tm;
 
 	if (actor->movedir == DI_NODIR)
 		return false;
 		
+	oldx = actor->x;
+	oldy = actor->y;
 	tryx = actor->x + actor->speed*xspeed[actor->movedir];
 	tryy = actor->y + actor->speed*yspeed[actor->movedir];
 	
-	if (!P_TryMove (actor, tryx, tryy) )
+	if (!P_TryMove (&tm, actor, tryx, tryy) )
 	{	/* open any specials */
-		if (actor->flags & MF_FLOAT && floatok)
+		if (actor->flags & MF_FLOAT && tm.floatok)
 		{	/* must adjust height */
-			if (actor->z < tmfloorz)
+			if (actor->z < tm.tmfloorz)
 				actor->z += FLOATSPEED;
 			else
 				actor->z -= FLOATSPEED;
@@ -137,7 +141,7 @@ boolean P_Move (mobj_t *actor)
 			return true;
 		}
 
-		blkline = (line_t *)DSPRead (&blockline);
+		blkline = tm.blockline;
 		good = false;
 		if (blkline && blkline->special)
 		{
@@ -151,7 +155,7 @@ boolean P_Move (mobj_t *actor)
 	}
 	else
 	{
-		P_MoveCrossSpecials();
+		P_MoveCrossSpecials(actor, tm.numspechit, tm.spechit, oldx, oldy);
 		actor->flags &= ~MF_INFLOAT;
 	}
 

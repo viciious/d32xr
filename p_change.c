@@ -43,14 +43,15 @@ typedef struct
 boolean P_ThingHeightClip (mobj_t *thing)
 {
 	boolean		onfloor;
+	ptrymove_t	tm;
 	
 	onfloor = (thing->z == thing->floorz);
 	
-	P_CheckPosition (thing, thing->x, thing->y);	
+	P_CheckPosition (&tm, thing, thing->x, thing->y);	
 	/* what about stranding a monster partially off an edge? */
 	
-	thing->floorz = tmfloorz;
-	thing->ceilingz = tmceilingz;
+	thing->floorz = tm.tmfloorz;
+	thing->ceilingz = tm.tmceilingz;
 	
 	if (onfloor)
 	/* walking monsters rise and fall with the floor */

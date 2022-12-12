@@ -65,6 +65,8 @@ int	EV_Teleport( line_t *line,mobj_t *thing )
 		{
 			for (m=mobjhead.next ; m != (void *)&mobjhead ; m=m->next)
 			{
+				ptrymove_t tm;
+
 				if (m->type != MT_TELEPORTMAN )
 					continue;		/* not a teleportman */
 				sector = m->subsector->sector;
@@ -76,7 +78,7 @@ int	EV_Teleport( line_t *line,mobj_t *thing )
 				oldz = thing->z;
 				thing->flags |= MF_TELEPORT;
 				P_Telefrag (thing, m->x, m->y);
-				flag = P_TryMove (thing, m->x, m->y);
+				flag = P_TryMove (&tm, thing, m->x, m->y);
 				thing->flags &= ~MF_TELEPORT;
 				if (!flag)
 					return 0;	/* move is blocked */

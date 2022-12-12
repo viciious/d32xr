@@ -22,30 +22,7 @@ void P_LineAttack(lineattack_t *la, mobj_t* t1, angle_t angle, fixed_t distance,
 
 /*============================================================================= */
 
-/*================== */
-/* */
-/* in */
-/* */
-/*================== */
 
-mobj_t		*tmthing;
-fixed_t		tmx, tmy;
-boolean		checkposonly;
-
-
-/*================== */
-/* */
-/* out */
-/* */
-/*================== */
-extern	boolean		trymove2;
-
-extern	boolean		floatok;				/* if true, move would be ok if */
-											/* within tmfloorz - tmceilingz */
-											
-extern	fixed_t		tmfloorz, tmceilingz, tmdropoffz;
-
-extern	mobj_t	*movething;
 
 /*============================================================================= */
 
@@ -71,33 +48,27 @@ movething
 ==================
 */
 
-void P_TryMove2 (void);
+boolean P_TryMove2 (ptrymove_t *tm);
 
 int checkpostics;
 
-boolean P_CheckPosition (mobj_t *thing, fixed_t x, fixed_t y)
+boolean P_CheckPosition (ptrymove_t *tm, mobj_t *thing, fixed_t x, fixed_t y)
 {
-	tmthing = thing;
-	tmx = x;
-	tmy = y;
-
-	checkposonly = true;	
-	
-	P_TryMove2 ();
-
-	return trymove2;
+	tm->tmthing = thing;
+	tm->tmx = x;
+	tm->tmy = y;
+	tm->checkposonly = true;
+	return P_TryMove2 (tm);
 }
 
 
-boolean P_TryMove (mobj_t *thing, fixed_t x, fixed_t y)
+boolean P_TryMove (ptrymove_t *tm, mobj_t *thing, fixed_t x, fixed_t y)
 {
-	tmthing = thing;
-	tmx = x;
-	tmy = y;
-
-	P_TryMove2 ();
-
-	return trymove2;
+	tm->tmthing = thing;
+	tm->tmx = x;
+	tm->tmy = y;
+	tm->checkposonly = false;
+	return P_TryMove2 (tm);
 }
 
 

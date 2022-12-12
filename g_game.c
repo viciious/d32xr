@@ -289,7 +289,8 @@ void P_SpawnPlayer (mapthing_t *mthing);
 boolean G_CheckSpot (int playernum, mapthing_t *mthing) 
 { 
 	fixed_t         x,y; 
-	int                     an;
+	int             an;
+	ptrymove_t		tm;
 
 	x = mthing->x << FRACBITS; 
 	y = mthing->y << FRACBITS; 
@@ -297,7 +298,7 @@ boolean G_CheckSpot (int playernum, mapthing_t *mthing)
 	// killough 4/2/98: fix bug where P_CheckPosition() uses a non-solid
 	// corpse to detect collisions with other players in DM starts
 	players[playernum].mo->flags |= MF_SOLID;
-	an = P_CheckPosition(players[playernum].mo, x, y);
+	an = P_CheckPosition(&tm, players[playernum].mo, x, y);
 	players[playernum].mo->flags &= ~MF_SOLID;
 	if (!an ) 
 		return false; 

@@ -289,18 +289,35 @@ void P_RespawnSpecials (void);
 // but don't process them until the move is proven valid
 #define MAXSPECIALCROSS		8
 
-extern 	VINT    numspechit;
-extern 	line_t* spechit[MAXSPECIALCROSS];
+typedef struct
+{
+	/*================== */
+	/* */
+	/* in */
+	/* */
+	/*================== */
+	mobj_t		*tmthing;
+	fixed_t		tmx, tmy;
+	boolean		checkposonly;
 
-extern	boolean		floatok;				/* if true, move would be ok if */
-extern	fixed_t		tmfloorz, tmceilingz;	/* within tmfloorz - tmceilingz */
+	/*================== */
+	/* */
+	/* out */
+	/* */
+	/*================== */
+	boolean		floatok;				/* if true, move would be ok if */
+										/* within tmfloorz - tmceilingz */
+	fixed_t		tmfloorz, tmceilingz, tmdropoffz;
 
-extern	mobj_t	*movething;
-extern	line_t *blockline;
+	VINT    	numspechit;
+ 	line_t		*spechit[MAXSPECIALCROSS];
 
-boolean P_CheckPosition (mobj_t *thing, fixed_t x, fixed_t y);
-boolean P_TryMove (mobj_t *thing, fixed_t x, fixed_t y);
-void P_MoveCrossSpecials(void);
+	line_t		*blockline;
+} ptrymove_t;
+
+boolean P_CheckPosition (ptrymove_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
+boolean P_TryMove (ptrymove_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
+void P_MoveCrossSpecials(mobj_t *tmthing, int numspechit, line_t **spechit, fixed_t oldx, fixed_t oldy);
 
 typedef struct
 {
