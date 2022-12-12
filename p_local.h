@@ -322,7 +322,6 @@ void P_MoveCrossSpecials(mobj_t *tmthing, int numspechit, line_t **spechit, fixe
 typedef struct
 {
 	// input
-	VINT *lvc, *validcount;
 	mobj_t *slidething;
 
 	// output

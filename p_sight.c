@@ -32,8 +32,6 @@
 
 typedef struct
 {
-    VINT    validcount;
-    VINT    *lvalidcounts;
     fixed_t sightzstart;           // eye z of looker
     fixed_t topslope, bottomslope; // slopes to top and bottom of target
 
@@ -48,7 +46,7 @@ static boolean PS_CrossBSPNode(sightWork_t* sw, int bspnum) ATTR_DATA_CACHE_ALIG
 static boolean PS_RejectCheckSight(mobj_t* t1, mobj_t* t2) ATTR_DATA_CACHE_ALIGN;
 static boolean P_MobjCanSightCheck(mobj_t *mobj) ATTR_DATA_CACHE_ALIGN;
 static mobj_t *P_GetSightMobj(mobj_t *pmobj, int c, int *pcnt) ATTR_DATA_CACHE_ALIGN;
-static boolean PS_CheckSight2(mobj_t* t1, mobj_t* t2, VINT*vc, VINT *lvc) ATTR_DATA_CACHE_ALIGN;
+static boolean PS_CheckSight2(mobj_t* t1, mobj_t* t2) ATTR_DATA_CACHE_ALIGN;
 #ifdef MARS
 void P_CheckSights2(int c) ATTR_DATA_CACHE_ALIGN;
 #else
@@ -187,6 +185,7 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
    divline_t    *strace = &sw->strace;
    fixed_t      t2x = sw->t2x, t2y = sw->t2y;
    fixed_t      sightzstart = sw->sightzstart;
+   VINT         *lvc, *pvc, vc;
 
    sub = &subsectors[num];
 
@@ -194,17 +193,18 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
    count = sub->numlines;
    seg   = &segs[sub->firstline];
 
+	I_GetThreadLocalVar(DOOMTLS_VALIDCNTPTR, pvc);
+	I_GetThreadLocalVar(DOOMTLS_VALIDCOUNTS, lvc);
+   vc = *pvc;
+
    for( ; count; seg++, count--)
    {
-      VINT* lvc;
-
       line = &lines[seg->linedef];
-      lvc = &sw->lvalidcounts[seg->linedef];
 
       // allready checked other side?
-      if(*lvc == sw->validcount)
+      if(lvc[seg->linedef] == vc)
          continue;
-      *lvc = sw->validcount;
+      lvc[seg->linedef] = vc;
 
       v1 = line->v1;
       v2 = line->v2;
@@ -351,15 +351,15 @@ static boolean PS_RejectCheckSight(mobj_t *t1, mobj_t *t2)
 //
 // Returns true if a straight line between t1 and t2 is unobstructed
 //
-static boolean PS_CheckSight2(mobj_t *t1, mobj_t *t2, VINT*vc, VINT *lvc)
+static boolean PS_CheckSight2(mobj_t *t1, mobj_t *t2)
 {
    sightWork_t sw;
+   VINT *pvc;
+
+	I_GetThreadLocalVar(DOOMTLS_VALIDCNTPTR, pvc);
+   *pvc = *pvc + 1;
 
    // look from eyes of t1 to any part of t2
-   *vc = *vc + 1;
-
-   sw.validcount = *vc;
-   sw.lvalidcounts = lvc;
    sw.sightzstart = t1->z + t1->height - (t1->height >> 2);
    sw.topslope    = (t2->z + t2->height) - sw.sightzstart;
    sw.bottomslope = (t2->z) - sw.sightzstart;
@@ -491,14 +491,10 @@ void P_CheckSights2(void)
 {
     mobj_t *mobj;
     int cnt = 0;
-    VINT* vc = &validcount[c];
-    VINT* lvc = lines_validcount;
 #ifndef MARS
     int c = 0;
 #else
     mobj_t *ctrgt = NULL;
-
-    lvc += c * numlines;
     Mars_ClearCacheLines(&mobjhead.next, 1);
 #endif
 
@@ -515,7 +511,7 @@ void P_CheckSights2(void)
         }
 #endif
 
-        if (PS_CheckSight2(mobj, mobj->target, vc, lvc))
+        if (PS_CheckSight2(mobj, mobj->target))
            mobj->flags |= MF_SEETARGET;
     }
 }

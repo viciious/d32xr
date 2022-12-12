@@ -722,6 +722,9 @@ extern byte *debugscreen;
 
 	R_SetupLevel();
 
+	I_SetThreadLocalVar(DOOMTLS_VALIDCNTPTR, &validcount[0]);
+	I_SetThreadLocalVar(DOOMTLS_VALIDCOUNTS, lines_validcount);
+
 #ifdef MARS
 	Mars_CommSlaveClearCache();
 #endif

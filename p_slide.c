@@ -44,8 +44,6 @@ typedef struct
 
 	int numspechit;
 	line_t *spechit[MAXSPECIALCROSS];
-
-   VINT *lvc, *validcount;
 } pslidework_t;
 
 #define CLIPRADIUS 23
@@ -235,6 +233,7 @@ findfrac:
 fixed_t P_CompletableFrac(pslidework_t *sw, fixed_t dx, fixed_t dy)
 {
    int xl, xh, yl, yh, bx, by;
+   VINT *pvc;
 
    sw->blockfrac = FRACUNIT;
    sw->slidedx = dx;
@@ -255,7 +254,8 @@ fixed_t P_CompletableFrac(pslidework_t *sw, fixed_t dx, fixed_t dy)
    else
       sw->endbox[BOXBOTTOM] += dy;
 
-   *sw->validcount = *sw->validcount + 1;
+	I_GetThreadLocalVar(DOOMTLS_VALIDCNTPTR, pvc);
+   *pvc = *pvc + 1;
 
    // check lines
    xl = sw->endbox[BOXLEFT  ] - bmaporgx;
@@ -285,7 +285,7 @@ fixed_t P_CompletableFrac(pslidework_t *sw, fixed_t dx, fixed_t dy)
    for(bx = xl; bx <= xh; bx++)
    {
       for(by = yl; by <= yh; by++)
-         P_BlockLinesIterator(bx, by, (blocklinesiter_t)SL_CheckLine, NULL);
+         P_BlockLinesIterator(bx, by, (blocklinesiter_t)SL_CheckLine, sw);
    }
 
    // examine results
@@ -334,7 +334,7 @@ static void SL_CheckSpecialLines(pslidework_t *sw)
    fixed_t x3, y3, x4, y4;
    int side1, side2;
 
-   VINT *lvc = sw->lvc, vc;
+   VINT *lvc, *pvc, vc;
 
    if(x1 < x2)
    {
@@ -383,8 +383,10 @@ static void SL_CheckSpecialLines(pslidework_t *sw)
       byh = bmapheight - 1;
 
    sw->numspechit = 0;
-   vc = *sw->validcount + 1;
-   *sw->validcount = vc;
+
+	I_GetThreadLocalVar(DOOMTLS_VALIDCNTPTR, pvc);
+   I_GetThreadLocalVar(DOOMTLS_VALIDCOUNTS, lvc);
+   vc = *pvc + 1, *pvc = vc;
 
    for(bx = bxl; bx <= bxh; bx++)
    {
@@ -457,8 +459,6 @@ void P_SlideMove(pslidemove_t *sm)
    sw.slidex = slidething->x;
    sw.slidey = slidething->y;
    sw.slidething = slidething;
-   sw.validcount = sm->validcount;
-   sw.lvc = sm->lvc;
 
    sw.numspechit = 0;
 

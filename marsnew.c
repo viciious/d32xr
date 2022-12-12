@@ -45,7 +45,8 @@ typedef struct {
 	uint16_t bank;
 	uint16_t bankpage;
 	setbankpage_t setbankpage;
-	uint16_t pad[4];
+	VINT *validcountptr;
+	VINT *validcounts;
 } mars_tls_t __attribute__((aligned(16))); // thread local storage
 
 VINT COLOR_WHITE = 0x04;
@@ -305,12 +306,16 @@ void Mars_Secondary(void)
 	while (1)
 	{
 		int cmd;
+		extern VINT validcount[], *lines_validcount;
 
 		while ((cmd = MARS_SYS_COMM4) == MARS_SECCMD_NONE);
 
 		switch (cmd) {
 		case MARS_SECCMD_CLEAR_CACHE:
 			Mars_ClearCache();
+			// FIXME: find a better place for this
+			I_SetThreadLocalVar(DOOMTLS_VALIDCNTPTR, &validcount[1]);
+			I_SetThreadLocalVar(DOOMTLS_VALIDCOUNTS, lines_validcount + numlines);
 			break;
 		case MARS_SECCMD_BREAK:
 			// break current command
@@ -478,13 +483,11 @@ void* I_RemapLumpPtr(void *ptr)
 		volatile unsigned bank, bankpage;
 		void (*setbankpage)(int bank, int page);
 
-		__asm volatile(	"mov.w @(0,gbr),r0\n\t"
-						"extu.w r0,%0\n\t"
-						"mov.w @(2,gbr),r0\n\t"
-						"extu.w r0,%1\n\t"
-						"mov.l @(4,gbr),r0\n\t"
-						"mov r0,%2\n\t"
-						: "=r"(bank), "=r"(bankpage), "=r"(setbankpage) : : "r0", "gbr");
+		I_GetThreadLocalVar(DOOMTLS_BANKPAGE, bank);
+		I_GetThreadLocalVar(DOOMTLS_SETBANKPAGEPTR, setbankpage);
+
+		bankpage = bank & 0xffff;
+		bank = bank >> 16;
 
 		newptr = ((newptr & 0x0007FFFF) + 512*1024*bank + 0x02000000);
 		newptr |= 0x20000000; // bypass cache
@@ -493,9 +496,8 @@ void* I_RemapLumpPtr(void *ptr)
 		{
 			setbankpage(bank, page);
 
-			__asm volatile(	"mov %0,r0\n\t"
-							"mov.w r0,@(2,gbr)\n\t"
-							: : "r"(page) : "r0", "gbr");
+			bank = (bank << 16) | page;
+			I_SetThreadLocalVar(DOOMTLS_BANKPAGE, bank);
 		}
 
 		return (void *)newptr;

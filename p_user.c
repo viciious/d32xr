@@ -30,10 +30,8 @@ void P_PlayerMove (mobj_t *mo)
 
 	momx = vblsinframe*(mo->momx>>2);
 	momy = vblsinframe*(mo->momy>>2);
-	
+
 	sm.slidething = mo;
-	sm.lvc = lines_validcount;
-	sm.validcount = &validcount[0];
 	
 	P_SlideMove(&sm);
 

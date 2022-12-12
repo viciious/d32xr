@@ -1210,4 +1210,29 @@ int S_SongForMapnum(int mapnum);
 void S_StopSong(void);
 void S_RestartSounds (void);
 
+/*================= */
+/*TLS */
+/*================= */
+
+#define DOOMTLS_BANKPAGE 		0
+#define DOOMTLS_SETBANKPAGEPTR 	4
+#define DOOMTLS_VALIDCNTPTR 	8
+#define DOOMTLS_VALIDCOUNTS 	12
+
+#ifdef MARS
+#define STR_INDIR(x) #x
+#define STR(x) STR_INDIR(x)
+
+# define I_SetThreadLocalVar(offs,val) \
+	__asm volatile(	"mov %0,r0\n\t" "mov.l r0,@(" STR(offs) ",gbr)\n\t" : : "r"(val) : "r0", "gbr")
+
+# define I_GetThreadLocalVar(offs,val) \
+	__asm volatile(	"mov.l @(" STR(offs) ",gbr),r0\n\t" "mov r0,%0\n\t" : "=r"(val) : : "r0", "gbr")
+#else
+
+void I_SetThreadLocalVar(uintptr_t offs, uint32_t val);
+void I_GetThreadLocalVar(uintptr_t offs, uint32_t val);
+
+#endif
+
 #endif

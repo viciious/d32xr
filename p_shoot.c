@@ -60,8 +60,6 @@ typedef struct
    int       shootdivpositive;
    int       ssx1, ssy1, ssx2, ssy2;
    intercept_t old_intercept;
-   VINT      *lvc;
-   VINT      validcount;
 
    line_t  *shootline;
    mobj_t  *shootmobj;
@@ -288,7 +286,7 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
    intercept_t  in;
    line_t   thingline;
    vertex_t tv1, tv2;
-   VINT     *lvc = sw->lvc, vc = sw->validcount;
+   VINT     *lvc, *pvc, vc;
 
    // CALICO: removed type punning
    thingline.v1 = &tv1;
@@ -333,6 +331,10 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
    // check lines
    count = sub->numlines;
    seg   = &segs[sub->firstline];
+
+	I_GetThreadLocalVar(DOOMTLS_VALIDCNTPTR, pvc);
+	I_GetThreadLocalVar(DOOMTLS_VALIDCOUNTS, lvc);
+   vc = *pvc + 1, *pvc = vc;
 
    for(; count; seg++, count--)
    {
@@ -452,9 +454,6 @@ void P_Shoot2(lineattack_t *la)
    sw.old_intercept.d.line  = NULL;
    sw.old_intercept.frac    = 0;
    sw.old_intercept.isaline = false;
-
-   sw.lvc = lines_validcount;
-   sw.validcount = ++validcount[0];
 
    PA_CrossBSPNode(&sw, numnodes - 1);
 
