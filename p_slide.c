@@ -43,7 +43,7 @@ typedef struct
    fixed_t p3x, p3y, p4x, p4y; // p3, p4 are move endpoints
 
 	int numspechit;
-	line_t *spechit[MAXSPECIALCROSS];
+	line_t **spechit;
 } pslidework_t;
 
 #define CLIPRADIUS 23
@@ -461,8 +461,8 @@ void P_SlideMove(pslidemove_t *sm)
    sw.slidex = slidething->x;
    sw.slidey = slidething->y;
    sw.slidething = slidething;
-
    sw.numspechit = 0;
+   sw.spechit = &sm->spechit[0];
 
    // perform a maximum of three bumps
    for(i = 0; i < 3; i++)
@@ -487,7 +487,8 @@ void P_SlideMove(pslidemove_t *sm)
          SL_CheckSpecialLines(&sw);
          sm->slidex = sw.slidex;
          sm->slidey = sw.slidey;
-         goto done;
+         sm->numspechit = sw.numspechit;
+         return;
       }
 
       // project the remaining move along the line that blocked movement
@@ -505,11 +506,7 @@ void P_SlideMove(pslidemove_t *sm)
    sm->slidex = slidething->x;
    sm->slidey = slidething->y;
    sm->slidething->momx = slidething->momy = 0;
-
-done:
    sm->numspechit = sw.numspechit;
-   for (i = 0; i < sw.numspechit; i++)
-      sm->spechit[i] = sw.spechit[i];
 }
 
 // EOF

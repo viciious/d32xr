@@ -308,7 +308,7 @@ typedef struct
 										/* within tmfloorz - tmceilingz */
 	fixed_t		tmfloorz, tmceilingz, tmdropoffz;
 
-	VINT    	numspechit;
+	int    		numspechit;
  	line_t		*spechit[MAXSPECIALCROSS];
 
 	line_t		*blockline;

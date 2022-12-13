@@ -44,8 +44,8 @@ typedef struct
    int     tmflags;
    fixed_t tmdropoffz; // lowest point contacted
 
-	VINT    	numspechit;
- 	line_t	*spechit[MAXSPECIALCROSS];
+	int    	numspechit;
+ 	line_t	**spechit;
 
    subsector_t *newsubsec; // destination subsector
 } pmovework_t;
@@ -376,7 +376,6 @@ static boolean PM_CheckPosition(pmovework_t *mw)
 //
 boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly)
 {
-   int i;
    pmovework_t mw;
    boolean trymove2; // result from P_TryMove2
    mobj_t *tmthing = tm->tmthing;
@@ -384,6 +383,7 @@ boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly)
    mw.tmx = tm->tmx;
    mw.tmy = tm->tmy;
    mw.tmthing = tm->tmthing;
+   mw.spechit = &tm->spechit[0];
 
    trymove2 = PM_CheckPosition(&mw);
 
@@ -393,8 +393,6 @@ boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly)
    tm->tmceilingz = mw.tmceilingz;
    tm->tmdropoffz = mw.tmdropoffz;
    tm->numspechit = mw.numspechit;
-   for (i = 0; i < mw.numspechit; i++)
-      tm->spechit[i] = mw.spechit[i];
 
    if(checkposonly)
       return trymove2;
