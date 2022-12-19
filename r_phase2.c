@@ -522,7 +522,7 @@ static void Mars_Sec_R_SortPlanes(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_WallPrep(void)
 {
     viswall_t *segl;
-    short nextsegs;
+    viswall_t *first, *verylast;
     unsigned clipbounds_[SCREENWIDTH/2+1];
     unsigned short *clipbounds = (unsigned short *)clipbounds_;
     fixed_t floornewheight = 0, ceilingnewheight = 0;
@@ -532,23 +532,26 @@ void Mars_Sec_R_WallPrep(void)
 #ifdef MARS
     verts = W_GetLumpData(gamemaplump+ML_VERTEXES);
 #endif
-    segl = viswalls;
 
-    for (nextsegs = 0; nextsegs != -1; )
+    first = viswalls;
+    verylast = NULL;
+
+    for (segl = first; segl != verylast; )
     {
-        viswall_t* next;
+        int nextsegs;
+        viswall_t* last;
 
         nextsegs = MARS_SYS_COMM6;
-        next = viswalls + nextsegs;
 
         // check if master CPU finished exec'ing R_BSP()
-        if (nextsegs == -1)
+        if (nextsegs == 0xffff)
         {
             Mars_ClearCacheLine(&lastwallcmd);
-            next = lastwallcmd;
+            verylast = lastwallcmd;
+            nextsegs = verylast - first;
         }
 
-        for (; segl < next; segl++)
+        for (last = first + nextsegs; segl < last; segl++)
         {
             R_WallEarlyPrep(segl, &floornewheight, &ceilingnewheight);
 
