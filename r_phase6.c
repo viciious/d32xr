@@ -272,7 +272,7 @@ void R_SegCommands(void)
             continue;
 
 #ifdef MARS
-        while ((int16_t)MARS_SYS_COMM8 <= i);
+        while (MARS_SYS_COMM8 <= i);
 
         R_LockSeg();
         actionbits = *(volatile short *)&segl->actionbits;
