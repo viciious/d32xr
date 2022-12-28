@@ -323,7 +323,7 @@ void Mars_Sec_R_DrawSprites(int sprscreenhalf, int *sortedsprites)
     Mars_ClearCacheLine(&vissprite_p);
 
     // mobj sprites
-    Mars_ClearCacheLines(sortedsprites, ((lastsprite_p - vissprites + 1) * sizeof(*sortedsprites) + 15) / 16);
+    Mars_ClearCacheLines(sortedsprites, ((lastsprite_p - vissprites + 1) * sizeof(*sortedsprites) + 31) / 16);
 
     // mobj + psprites
     Mars_ClearCacheLines(vissprites, ((vissprite_p - vissprites) * sizeof(vissprite_t) + 31) / 16);
