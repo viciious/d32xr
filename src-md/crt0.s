@@ -126,8 +126,6 @@ init_hardware:
         move.w  #0x8104,(a0)            /* display off, vblank disabled */
         move.w  (a0),d0                 /* read VDP Status reg */
 
-        jsr     reset_banks
-
 | init joyports
         move.b  #0x40,0xA10009
         move.b  #0x40,0xA1000B
