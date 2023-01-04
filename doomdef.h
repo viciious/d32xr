@@ -757,6 +757,7 @@ int I_IsPAL(void);
 
 void I_ClearFrameBuffer (void);
 void I_ClearWorkBuffer(void);
+int I_BackBuffer(void);
 void I_ResetLineTable(void);
 
 void I_SetPalette (const byte *palette);
@@ -777,6 +778,10 @@ int     I_GetFRTCounter (void);
 void I_Update (void);
 
 void I_Error (char *error, ...) __attribute__((noreturn));
+
+void I_StoreScreenCopy(void);
+void I_RestoreScreenCopy(void);
+void I_SwapScreenCopy(void);
 
 #ifdef MARS
 //#define USE_C_DRAW

@@ -121,10 +121,8 @@ _start:
 | Initialize the MD side to a known state for the game
 
 init_hardware:
-        lea     0xC00004,a0
-        lea     0xC00000,a1
-        move.w  #0x8104,(a0)            /* display off, vblank disabled */
-        move.w  (a0),d0                 /* read VDP Status reg */
+        move.w  #0x8104,(0xC00004)      /* display off, vblank disabled */
+        move.w  (0xC00004),d0           /* read VDP Status reg */
 
 | init joyports
         move.b  #0x40,0xA10009
@@ -132,64 +130,12 @@ init_hardware:
         move.b  #0x40,0xA10003
         move.b  #0x40,0xA10005
 
-| init MD VDP
-        move.w  #0x8004,(a0) /* reg 0 = /IE1 (no HBL INT), /M3 (enable read H/V cnt) */
-        move.w  #0x8114,(a0) /* reg 1 = /DISP (display off), /IE0 (no VBL INT), M1 (DMA enabled), /M2 (V28 mode) */
-        move.w  #0x8230,(a0) /* reg 2 = Name Tbl A = 0xC000 */
-        move.w  #0x832C,(a0) /* reg 3 = Name Tbl W = 0xB000 */
-        move.w  #0x8407,(a0) /* reg 4 = Name Tbl B = 0xE000 */
-        move.w  #0x8554,(a0) /* reg 5 = Sprite Attr Tbl = 0xA800 */
-        move.w  #0x8600,(a0) /* reg 6 = always 0 */
-        move.w  #0x8700,(a0) /* reg 7 = BG color */
-        move.w  #0x8800,(a0) /* reg 8 = always 0 */
-        move.w  #0x8900,(a0) /* reg 9 = always 0 */
-        move.w  #0x8A00,(a0) /* reg 10 = HINT = 0 */
-        move.w  #0x8B00,(a0) /* reg 11 = /IE2 (no EXT INT), full scroll */
-        move.w  #0x8C81,(a0) /* reg 12 = H40 mode, no lace, no shadow/hilite */
-        move.w  #0x8D2B,(a0) /* reg 13 = HScroll Tbl = 0xAC00 */
-        move.w  #0x8E00,(a0) /* reg 14 = always 0 */
-        move.w  #0x8F01,(a0) /* reg 15 = data INC = 1 */
-        move.w  #0x9001,(a0) /* reg 16 = Scroll Size = 64x32 */
-        move.w  #0x9100,(a0) /* reg 17 = W Pos H = left */
-        move.w  #0x9200,(a0) /* reg 18 = W Pos V = top */
+| init vdp
+        moveq   #0,d0                   /* full init */
+        jsr     init_vdp
 
-| clear VRAM
-        move.w  #0x8F02,(a0)            /* set INC to 2 */
-        move.l  #0x40000000,(a0)        /* write VRAM address 0 */
-        moveq   #0,d0
-        move.w  #0x7FFF,d1              /* 32K - 1 words */
-0:
-        move.w  d0,(a1)                 /* clear VRAM */
-        dbra    d1,0b
-
-| The VDP state at this point is: Display disabled, ints disabled, Name Tbl A at 0xC000,
-| Name Tbl B at 0xE000, Name Tbl W at 0xB000, Sprite Attr Tbl at 0xA800, HScroll Tbl at 0xAC00,
-| H40 V28 mode, and Scroll size is 64x32.
-
-| Clear CRAM
-        move.l  #0x81048F01,(a0)        /* set reg 1 and reg 15 */
-        move.l  #0xC0000000,(a0)        /* write CRAM address 0 */
-        moveq   #31,d3
-1:
-        move.l  d0,(a1)
-        dbra    d3,1b
-
-| Clear VSRAM
-        move.l  #0x40000010,(a0)         /* write VSRAM address 0 */
-        moveq   #19,d4
-2:
-        move.l  d0,(a1)
-        dbra    d4,2b
-
+| setup default font
         jsr     load_font
-
-| set the default palette for text
-        move.l  #0xC0000000,(a0)        /* write CRAM address 0 */
-        move.l  #0x00000CCC,(a1)        /* entry 0 (black) and 1 (lt gray) */
-        move.l  #0xC0200000,(a0)        /* write CRAM address 32 */
-        move.l  #0x000000A0,(a1)        /* entry 16 (black) and 17 (green) */
-        move.l  #0xC0400000,(a0)        /* write CRAM address 64 */
-        move.l  #0x0000000A,(a1)        /* entry 32 (black) and 33 (red) */
 
 | init controllers
         jsr     chk_ports
@@ -370,6 +316,10 @@ handle_req:
         bls     net_set_link_timeout
         cmpi.w  #0x18FF,d0
         bls     set_music_volume
+        cmpi.w  #0x19FF,d0
+        bls     ctl_md_vdp
+        cmpi.w  #0x1AFF,d0
+        bls     cpy_md_vram
 | unknown command
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -1089,7 +1039,7 @@ set_color:
         move.w  d0,d1
         move.l  d1,bg_color
 
-        bsr     reload_font
+        bsr     load_font
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
@@ -1300,6 +1250,368 @@ set_music_volume:
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
+ctl_md_vdp:
+        andi.w  #255, d0
+        move.w  d0, init_vdp_latch
+
+        tst.b   d0
+        bne.b   1f                  /* re-init vdp and vram */
+
+        move.w  #0x8134,0xC00004    /* display off, vblank enabled, V28 mode */
+1:
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+cpy_md_vram:
+        move.w  0xA15100,d1
+        eor.w   #0x8000,d1
+        move.w  d1,0xA15100         /* unset FM - disallow SH2 access to FB */
+
+        lea     0xA15120,a1         /* 32x comm0 port */
+        lea     0xA15122,a2         /* 32x comm2 port */
+        moveq   #0,d1
+        move.w  (a2),d1             /* word offset into vram */
+        add.l   d1,d1
+
+        lea     0x840200,a2         /* frame buffer */
+        lea     0(a2,d1.l),a2
+
+        cmpi.b  #1,d0
+        beq.w   5f                  /* copy from vram */
+        cmpi.b  #2,d0
+        beq     10f                 /* swap with vram */
+
+        /* COPY TO VRAM */
+        cmpi.l  #280,d1             /* vram or wram? */
+        bhs.b   2f                  /* wram */
+
+        lea     0xC00000,a0         /* vdp data port */
+        move.w  #0x8F02,4(a0)       /* set INC to 2 */
+
+        #mulu.w  #224,d1
+        lsl.w   #5,d1
+        move    d1,d2
+        add     d2,d2
+        add     d2,d1
+        add     d2,d2
+        add     d2,d1
+
+        lsl.l   #2,d1               /* get top two bits of offset into high word */
+        lsr.w   #2,d1
+        ori.w   #0x4000,d1          /* write VRAM */
+        swap    d1
+        move.l  d1,4(a0)            /* cmd port <- write VRAM at offset */
+        move.w  #27,d0
+1:
+        move.w  (a2),(a0)           /* next word */
+        move.w  320(a2),(a0)        /* next word */
+        move.w  640(a2),(a0)        /* next word */
+        move.w  960(a2),(a0)        /* next word */
+        move.w  1280(a2),(a0)       /* next word */
+        move.w  1600(a2),(a0)       /* next word */
+        move.w  1920(a2),(a0)       /* next word */
+        move.w  2240(a2),(a0)       /* next word */
+        lea     2560(a2),a2
+        dbra    d0,1b
+        bra     4f                  /* done */
+2:
+        subi.l  #280,d1
+        #mulu.w  #224,d1
+        lsl.w   #5,d1
+        move    d1,d2
+        add     d2,d2
+        add     d2,d1
+        add     d2,d2
+        add     d2,d1
+
+        lea     col_store,a0
+        lea     0(a0,d1.l),a0
+        move.w  #27,d0
+3:
+        move.w  (a2),(a0)+          /* next word */
+        move.w  320(a2),(a0)+       /* next word */
+        move.w  640(a2),(a0)+       /* next word */
+        move.w  960(a2),(a0)+       /* next word */
+        move.w  1280(a2),(a0)+      /* next word */
+        move.w  1600(a2),(a0)+      /* next word */
+        move.w  1920(a2),(a0)+      /* next word */
+        move.w  2240(a2),(a0)+      /* next word */
+        lea     2560(a2),a2
+        dbra    d0,3b
+4:
+        move.w  0xA15100,d0
+        or.w    #0x8000,d0
+        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+5:
+        /* COPY FROM VRAM */
+        cmpi.l  #280,d1             /* vram or wram? */
+        bhs.w   7f                  /* wram */
+
+        #mulu.w  #224,d1
+        lsl.w   #5,d1
+        move    d1,d2
+        add     d2,d2
+        add     d2,d1
+        add     d2,d2
+        add     d2,d1
+
+        lea     0xC00000,a0         /* vdp data port */
+        move.w  #0x8F02,4(a0)       /* set INC to 2 */
+
+        move.w  #0x9A00, (a1)
+        moveq   #0,d0
+51:
+        move.w  (a1), d0
+        cmpi.w  #0x1A01,d0
+        bne.b   51b
+        move.w  2(a1), d0
+
+        andi.w  #0xFF,d0            /* column offset in words */
+        add.l   d0,d0
+        add.l   d0,d1
+
+        #mulu.w  #160,d0
+        lsl.l   #5,d0
+        move.l  d0,d2
+        add.l   d2,d2
+        add.l   d2,d2
+        add.l   d2,d0
+
+        lea     0(a2,d0.l),a2
+
+        lsl.l   #2,d1               /* get top two bits of offset into high word */
+        lsr.w   #2,d1
+        swap    d1
+        move.l  d1,4(a0)            /* cmd port <- read VRAM from offset */
+
+        move.w  2(a1), d0           /* length in words */
+        lsr.w   #8,d0
+        andi.w  #255,d0
+        subq.w  #1,d0
+        cmpi.w  #223,d0
+        bne.b   6f
+
+        move.w  #27,d0
+60:
+        move.w  (a0),(a2)           /* next word */
+        move.w  (a0),320(a2)        /* next word */
+        move.w  (a0),640(a2)        /* next word */
+        move.w  (a0),960(a2)        /* next word */
+        move.w  (a0),1280(a2)       /* next word */
+        move.w  (a0),1600(a2)       /* next word */
+        move.w  (a0),1920(a2)       /* next word */
+        move.w  (a0),2240(a2)       /* next word */
+        lea     2560(a2),a2
+        dbra    d0,60b
+        bra     9f                  /* done */
+6:
+        move.w  (a0), (a2)
+        lea     320(a2),a2
+        dbra    d0,6b
+        bra     9f                  /* done */
+7:
+        subi.l  #280,d1
+        #mulu.w  #224,d1
+        lsl.w   #5,d1
+        move    d1,d2
+        lsl.w   #1,d2
+        add     d2,d1
+        lsl.w   #1,d2
+        add     d2,d1
+
+        move.w  #0x9A00, (a1)
+        moveq   #0,d0
+71:
+        move.w  (a1), d0
+        cmpi.w  #0x1A01,d0
+        bne.b   71b
+        move.w  2(a1), d0
+
+        andi.w  #0xFF,d0            /* column offset in words */
+        add.l   d0,d0
+        add.l   d0,d1
+
+        #mulu.w  #160,d0
+        lsl.l   #5,d0
+        move    d0,d2
+        lsl.l   #2,d2
+        add.l   d2,d0
+
+        lea     0(a2,d0.l),a2
+
+        lea     col_store,a0
+        lea     0(a0,d1.l),a0
+
+        move.w  2(a1), d0           /* length in words */
+        lsr.w   #8,d0
+        andi.w  #255,d0
+        subq.w  #1,d0
+        cmpi.w  #223,d0
+        bne.b   8f
+
+        move.w  #27,d0
+80:
+        move.w  (a0)+,(a2)          /* next word */
+        move.w  (a0)+,320(a2)       /* next word */
+        move.w  (a0)+,640(a2)       /* next word */
+        move.w  (a0)+,960(a2)       /* next word */
+        move.w  (a0)+,1280(a2)      /* next word */
+        move.w  (a0)+,1600(a2)      /* next word */
+        move.w  (a0)+,1920(a2)      /* next word */
+        move.w  (a0)+,2240(a2)      /* next word */
+        lea     2560(a2),a2
+        dbra    d0,80b
+        bra     9f                  /* done */
+8:
+        move.w  (a0)+, (a2)
+        lea     320(a2),a2
+        dbra    d0,8b
+9:
+        move.w  0xA15100,d0
+        or.w    #0x8000,d0
+        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+10:
+        /* SWAP WITH VRAM */
+        cmpi.l  #280,d1             /* vram or wram? */
+        bhs     12f                 /* wram */
+
+        lea     0xC00000,a0         /* vdp data port */
+        move.w  #0x8F02,4(a0)       /* set INC to 2 */
+
+        #mulu.w  #224,d1
+        lsl.w   #5,d1
+        move    d1,d2
+        add     d2,d2
+        add     d2,d1
+        add     d2,d2
+        add     d2,d1
+
+        lsl.l   #2,d1               /* get top two bits of offset into high word */
+        lsr.w   #2,d1
+        move.l  d1,d2
+        ori.w   #0x4000,d2          /* write VRAM */
+        swap    d1
+        swap    d2
+        move.l  d1,4(a0)            /* cmd port <- read VRAM at offset */
+        move.w  #27,d0
+        lea     col_store+20*224*2,a1
+11:
+        /* vram to swap buffer */
+        move.w  (a0),(a1)+          /* next word */
+        move.w  (a0),(a1)+          /* next word */
+        move.w  (a0),(a1)+          /* next word */
+        move.w  (a0),(a1)+          /* next word */
+        move.w  (a0),(a1)+          /* next word */
+        move.w  (a0),(a1)+          /* next word */
+        move.w  (a0),(a1)+          /* next word */
+        move.w  (a0),(a1)+          /* next word */
+        dbra    d0,11b
+
+        move.l  d2,4(a0)            /* cmd port <- write VRAM at offset */
+        move.w  #27,d0
+111:
+        /* screen to vram */
+        move.w  (a2),(a0)           /* next word */
+        move.w  320(a2),(a0)        /* next word */
+        move.w  640(a2),(a0)        /* next word */
+        move.w  960(a2),(a0)        /* next word */
+        move.w  1280(a2),(a0)       /* next word */
+        move.w  1600(a2),(a0)       /* next word */
+        move.w  1920(a2),(a0)       /* next word */
+        move.w  2240(a2),(a0)       /* next word */
+        lea     2560(a2),a2
+        dbra    d0,111b
+
+        move.w  #27,d0
+        lea     -224*2(a1),a1
+        adda.l  #-320*224,a2
+112:
+        /* swap buffer to screen */
+        move.w  (a1)+,(a2)          /* next word */
+        move.w  (a1)+,320(a2)       /* next word */
+        move.w  (a1)+,640(a2)       /* next word */
+        move.w  (a1)+,960(a2)       /* next word */
+        move.w  (a1)+,1280(a2)      /* next word */
+        move.w  (a1)+,1600(a2)      /* next word */
+        move.w  (a1)+,1920(a2)      /* next word */
+        move.w  (a1)+,2240(a2)      /* next word */
+        lea     2560(a2),a2
+        dbra    d0,112b
+        bra     14f                 /* done */
+12:
+        subi.l  #280,d1
+        #mulu.w  #224,d1
+        lsl.w   #5,d1
+        move    d1,d2
+        add     d2,d2
+        add     d2,d1
+        add     d2,d2
+        add     d2,d1
+
+        lea     col_store,a0
+        lea     0(a0,d1.l),a0
+        move.w  #27,d0
+        lea     col_store+20*224*2,a1
+13:
+        /* wram to swap buffer */
+        move.w  (a0)+,(a1)+         /* next word */
+        move.w  (a0)+,(a1)+         /* next word */
+        move.w  (a0)+,(a1)+         /* next word */
+        move.w  (a0)+,(a1)+         /* next word */
+        move.w  (a0)+,(a1)+         /* next word */
+        move.w  (a0)+,(a1)+         /* next word */
+        move.w  (a0)+,(a1)+         /* next word */
+        move.w  (a0)+,(a1)+         /* next word */
+        dbra    d0,13b
+
+        lea     -224*2(a0),a0
+        move.w  #27,d0
+131:
+        /* screen to wram */
+        move.w  (a2),(a0)+          /* next word */
+        move.w  320(a2),(a0)+       /* next word */
+        move.w  640(a2),(a0)+       /* next word */
+        move.w  960(a2),(a0)+       /* next word */
+        move.w  1280(a2),(a0)+      /* next word */
+        move.w  1600(a2),(a0)+      /* next word */
+        move.w  1920(a2),(a0)+      /* next word */
+        move.w  2240(a2),(a0)+      /* next word */
+        lea     2560(a2),a2
+        dbra    d0,131b
+
+        move.w  #27,d0
+        lea     -224*2(a1),a1
+        adda.l  #-320*224,a2
+132:
+        /* swap buffer to screen */
+        move.w  (a1)+,(a2)          /* next word */
+        move.w  (a1)+,320(a2)       /* next word */
+        move.w  (a1)+,640(a2)       /* next word */
+        move.w  (a1)+,960(a2)       /* next word */
+        move.w  (a1)+,1280(a2)      /* next word */
+        move.w  (a1)+,1600(a2)      /* next word */
+        move.w  (a1)+,1920(a2)      /* next word */
+        move.w  (a1)+,2240(a2)      /* next word */
+        lea     2560(a2),a2
+        dbra    d0,132b
+14:
+        move.w  0xA15100,d0
+        or.w    #0x8000,d0
+        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+| set standard mapper registers to default mapping
+
 reset_banks:
         move.w  #0x2700,sr          /* disable ints */
         move.b  #1,0xA15107         /* set RV */
@@ -1314,12 +1626,107 @@ reset_banks:
         move.w  #0x2000,sr          /* enable ints */
         rts
 
+
+| init MD VDP
+
+init_vdp:
+        move.w  d0,d2
+        lea     0xC00004,a0
+        lea     0xC00000,a1
+        move.w  #0x8004,(a0) /* reg 0 = /IE1 (no HBL INT), /M3 (enable read H/V cnt) */
+        move.w  #0x8114,(a0) /* reg 1 = /DISP (display off), /IE0 (no VBL INT), M1 (DMA enabled), /M2 (V28 mode) */
+        move.w  #0x8230,(a0) /* reg 2 = Name Tbl A = 0xC000 */
+        move.w  #0x832C,(a0) /* reg 3 = Name Tbl W = 0xB000 */
+        move.w  #0x8407,(a0) /* reg 4 = Name Tbl B = 0xE000 */
+        move.w  #0x8554,(a0) /* reg 5 = Sprite Attr Tbl = 0xA800 */
+        move.w  #0x8600,(a0) /* reg 6 = always 0 */
+        move.w  #0x8700,(a0) /* reg 7 = BG color */
+        move.w  #0x8800,(a0) /* reg 8 = always 0 */
+        move.w  #0x8900,(a0) /* reg 9 = always 0 */
+        move.w  #0x8A00,(a0) /* reg 10 = HINT = 0 */
+        move.w  #0x8B00,(a0) /* reg 11 = /IE2 (no EXT INT), full scroll */
+        move.w  #0x8C81,(a0) /* reg 12 = H40 mode, no lace, no shadow/hilite */
+        move.w  #0x8D2B,(a0) /* reg 13 = HScroll Tbl = 0xAC00 */
+        move.w  #0x8E00,(a0) /* reg 14 = always 0 */
+        move.w  #0x8F01,(a0) /* reg 15 = data INC = 1 */
+        move.w  #0x9001,(a0) /* reg 16 = Scroll Size = 64x32 */
+        move.w  #0x9100,(a0) /* reg 17 = W Pos H = left */
+        move.w  #0x9200,(a0) /* reg 18 = W Pos V = top */
+
+| clear VRAM
+        move.w  #0x8F02,(a0)            /* set INC to 2 */
+        move.l  #0x40000000,(a0)        /* write VRAM address 0 */
+        moveq   #0,d0
+        move.w  #0x07FF,d1              /* 2K - 1 tiles */
+        tst.w   d2
+        beq.b   0f
+        moveq   #0,d1                   /* 1 tile */
+0:
+        move.l  d0,(a1)                 /* clear VRAM */
+        move.l  d0,(a1)
+        move.l  d0,(a1)
+        move.l  d0,(a1)
+        move.l  d0,(a1)
+        move.l  d0,(a1)
+        move.l  d0,(a1)
+        move.l  d0,(a1)
+        dbra    d1,0b
+
+        tst.w   d2
+        beq.b   9f
+
+        move.l  #0x60000002,(a0)        /* write VRAM address 0xA800 */
+        moveq   #0,d0
+        move.w  #0x02BF,d1              /* 704 - 1 tiles */
+8:
+        move.l  d0,(a1)                 /* clear VRAM */
+        move.l  d0,(a1)
+        move.l  d0,(a1)
+        move.l  d0,(a1)
+        move.l  d0,(a1)
+        move.l  d0,(a1)
+        move.l  d0,(a1)
+        move.l  d0,(a1)
+        dbra    d1,8b
+        bra.b   3f
+
+| The VDP state at this point is: Display disabled, ints disabled, Name Tbl A at 0xC000,
+| Name Tbl B at 0xE000, Name Tbl W at 0xB000, Sprite Attr Tbl at 0xA800, HScroll Tbl at 0xAC00,
+| H40 V28 mode, and Scroll size is 64x32.
+
+9:
+| Clear CRAM
+        move.l  #0x81048F02,(a0)        /* set reg 1 and reg 15 */
+        move.l  #0xC0000000,(a0)        /* write CRAM address 0 */
+        moveq   #31,d1
+1:
+        move.l  d0,(a1)
+        dbra    d1,1b
+
+| Clear VSRAM
+        move.l  #0x40000010,(a0)         /* write VSRAM address 0 */
+        moveq   #19,d1
+2:
+        move.l  d0,(a1)
+        dbra    d1,2b
+
+| set the default palette for text
+        move.l  #0xC0000000,(a0)        /* write CRAM address 0 */
+        move.l  #0x00000CCC,(a1)        /* entry 0 (black) and 1 (lt gray) */
+        move.l  #0xC0200000,(a0)        /* write CRAM address 32 */
+        move.l  #0x000000A0,(a1)        /* entry 16 (black) and 17 (green) */
+        move.l  #0xC0400000,(a0)        /* write CRAM address 64 */
+        move.l  #0x0000000A,(a1)        /* entry 32 (black) and 33 (red) */
+3:
+        move.w  #0x8174,0xC00004        /* display on, vblank enabled, V28 mode */
+        rts
+
+
 | load font tile data
 
-reload_font:
+load_font:
         lea     0xC00004,a0         /* VDP cmd/sts reg */
         lea     0xC00000,a1         /* VDP data reg */
-load_font:
         move.w  #0x8F02,(a0)        /* INC = 2 */
         move.l  #0x40000000,(a0)    /* write VRAM address 0 */
         lea     font_data,a2
@@ -1430,6 +1837,7 @@ bump_exit2:
 vert_blank:
         move.l  d1,-(sp)
         move.l  d2,-(sp)
+        move.l  a2,-(sp)
 
         /* read controllers */
         move.w  0xA1512C,d0
@@ -1462,6 +1870,18 @@ vert_blank:
         beq.b   3f
         subq.b  #1,hotplug_cnt
 3:
+        move.w  init_vdp_latch,d0
+        move.w  #-1,init_vdp_latch
+
+        cmpi.w  #1,d0
+        bne.b   4f                  /* re-init vdp and vram */
+
+        bsr     init_vdp
+        bsr     bump_fm
+        bsr     load_font
+        move.w  #0x8174,0xC00004    /* display on, vblank enabled, V28 mode */
+4:
+        move.l  (sp)+,a2
         move.l  (sp)+,d2
         move.l  (sp)+,d1
         movea.l (sp)+,a0
@@ -1749,6 +2169,9 @@ megasd_num_cdtracks:
 everdrive_ok:
         dc.w    0
 
+init_vdp_latch:
+        dc.w    -1
+
 net_rbix:
         dc.w    0
 net_wbix:
@@ -1764,7 +2187,6 @@ net_type:
 
 hotplug_cnt:
         dc.b    0
-
 
         .align  4
 
@@ -1790,6 +2212,7 @@ dbq_id:
         .space  64
 dbq_val:
         .space  64*4
+
 
         .text
         .align  4
@@ -1883,3 +2306,10 @@ drawmsec:
         .align  2
 
         .align  4
+
+
+        .bss
+        .align  2
+col_store:
+        .space  21*224*2        /* 140 double-columns in vram, 20 in wram, 1 in wram for swap */
+

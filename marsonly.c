@@ -41,7 +41,10 @@ int main(void)
 
 	/* use letter-boxed 240p mode */
 	if (Mars_IsPAL())
+	{
 		Mars_InitVideo(-240);
+		Mars_SetMDColor(1, 0);
+	}
 
 /* */
 /* start doom */

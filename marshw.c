@@ -107,6 +107,10 @@ void Mars_SetBrightness(int16_t brightness)
 	mars_brightness = brightness;
 }
 
+int Mars_BackBuffer(void) {
+	return mars_activescreen;
+}
+
 char Mars_UploadPalette(const uint8_t* palette)
 {
 	int	i;
@@ -225,6 +229,7 @@ void Mars_InitVideo(int lines)
 void Mars_Init(void)
 {
 	Mars_InitVideo(224);
+	Mars_SetMDColor(1, 0);
 
 	SH2_WDT_WTCSR_TCNT = 0xA518; /* WDT TCSR = clr OVF, IT mode, timer off, clksel = Fs/2 */
 
@@ -586,4 +591,41 @@ int Mars_ReadController(int port)
 	val = mars_controlval[port];
 	mars_controlval[port] = 0;
 	return val;
+}
+
+void Mars_CtlMDVDP(int sel)
+{
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM0 = 0x1900 | (sel & 0x00FF);
+	while (MARS_SYS_COMM0);
+}
+
+void Mars_StoreWordColumnInMDVRAM(int c)
+{
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM2 = c;
+	MARS_SYS_COMM0 = 0x1A00;		/* sel = to VRAM, offset in comm2, start move */
+}
+
+void Mars_LoadWordColumnFromMDVRAM(int c, int offset, int len)
+{
+	while (MARS_SYS_COMM0 != 0);
+	MARS_SYS_COMM2 = c;
+	MARS_SYS_COMM0 = 0x1A01;		/* sel = to VRAM, offset in comm2, start move */
+	while (MARS_SYS_COMM0 != 0x9A00);
+
+	MARS_SYS_COMM2 = (((uint16_t)len)<<8) | offset;  /* (length<<8)|offset */
+	MARS_SYS_COMM0 = 0x1A01;		/* sel = to VRAM, offset in comm2, start move */
+}
+
+void Mars_SwapWordColumnWithMDVRAM(int c)
+{
+    while (MARS_SYS_COMM0);
+    MARS_SYS_COMM2 = c;
+    MARS_SYS_COMM0 = 0x1A02;        /* sel = swap with VRAM, column in comm2, start move */
+}
+
+void Mars_Finish(void)
+{
+	while (MARS_SYS_COMM0 != 0);
 }

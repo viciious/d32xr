@@ -880,6 +880,9 @@ void UpdateBuffer (void) {
 	Mars_FlipFrameBuffers(true);
 }
 
+int I_BackBuffer(void) {
+	return Mars_BackBuffer();
+}
 
 /*
  *  Network support functions
@@ -1157,4 +1160,31 @@ void I_DrawSbar(void)
 			dest += 320 / 2;
 		}
 	}
+}
+
+void I_StoreScreenCopy(void)
+{
+	int i;
+    for (i = 0; i < 160; i++) {
+		Mars_StoreWordColumnInMDVRAM(i);
+	}
+	Mars_Finish();
+}
+
+void I_RestoreScreenCopy(void)
+{
+	int i;
+    for (i = 0; i < 160; i++) {
+		Mars_LoadWordColumnFromMDVRAM(i, 0, 224);
+	}
+	Mars_Finish();
+}
+
+void I_SwapScreenCopy(void)
+{
+    int i;
+    for (i = 0; i < 160; i++) {
+        Mars_SwapWordColumnWithMDVRAM(i);
+    }
+    Mars_Finish();
 }

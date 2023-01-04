@@ -42,6 +42,7 @@ void Mars_Init(void);
 void Mars_InitVideo(int lines);
 void Mars_InitLineTable(void);
 void Mars_SetBrightness(int16_t brightness);
+int Mars_BackBuffer(void);
 char Mars_UploadPalette(const uint8_t* palette) MARS_ATTR_DATA_CACHE_ALIGN;
 int Mars_PollMouse(void);
 int Mars_ParseMousePacket(int mouse, int* pmx, int* pmy);
@@ -134,6 +135,15 @@ void Mars_DetectInputDevices(void);
 int Mars_ReadController(int port);
 
 int Mars_ROMSize(void);
+
+void Mars_CtlMDVDP(int sel);
+
+void Mars_StoreWordColumnInMDVRAM(int c);
+// both offset and length are in words, not in bytes
+void Mars_LoadWordColumnFromMDVRAM(int c, int offset, int len);
+void Mars_SwapWordColumnWithMDVRAM(int c);
+
+void Mars_Finish(void) MARS_ATTR_DATA_CACHE_ALIGN;
 
 enum {
 	DEBUG_FPSCOUNT,
