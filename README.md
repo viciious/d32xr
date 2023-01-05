@@ -31,6 +31,51 @@ To compile the rom you're going to need several things:
 - Statusbar assets are no longer limited to 16 colors
 - DMAPINFO lump support for naming and sequencing levels
 
+Building
+============
+
+**Prerequisites**
+
+A posix system and [Chilly Willy's Sega MD/CD/32X devkit](https://github.com/viciious/32XDK/releases) is requred to build this demo.
+
+**VSCode + Remote Dev Container**
+
+Unless you already have the devkit built, using VSCode with Docker is one of the faster ways to get started. VSCode will offer to set up a Development Container the first time the project folder is opened.
+
+[More information on Developing with VSCode inside a Container](https://code.visualstudio.com/docs/remote/containers)
+
+If you're using Windows 10/11, you must also [install WSL 2](https://docs.docker.com/desktop/windows/wsl/) and Linux distribution before attempting to build from VSCode.
+
+***VSCode settings***
+
+We recommend using the following VSCode settings.json for the project:
+
+```json
+{
+    "C_Cpp.default.includePath": [
+        "/opt/toolchains/sega/sh-elf/include/",
+        "/opt/toolchains/sega/m68k-elf/include/"
+    ],
+    "C_Cpp.default.compilerPath": "/opt/toolchains/sega/sh-elf/bin/sh-elf-gcc",
+    "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",
+
+    "makefile.configurations": [
+        {
+            "name": "release",
+            "makeArgs": ["-j", "release"]
+        },
+        {
+            "name": "debug",
+            "makeArgs": ["-j", "debug"]
+        },
+        {
+            "name": "clean",
+            "makeArgs": ["clean"]
+        }
+    ]
+}
+```
+
 ## "DOOM 32x: Resurrection" Credits
 * Programming : Victor Luchits
 * Programming : Chilly Willy
