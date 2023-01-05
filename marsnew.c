@@ -883,10 +883,6 @@ void UpdateBuffer (void) {
 	Mars_FlipFrameBuffers(true);
 }
 
-int I_BackBuffer(void) {
-	return Mars_BackBuffer();
-}
-
 /*
  *  Network support functions
  */

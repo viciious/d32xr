@@ -759,7 +759,6 @@ int I_IsPAL(void);
 
 void I_ClearFrameBuffer (void);
 void I_ClearWorkBuffer(void);
-int I_BackBuffer(void);
 void I_ResetLineTable(void);
 
 void I_SetPalette (const byte *palette);
@@ -963,7 +962,7 @@ void M_AddToBox (fixed_t *box, fixed_t x, fixed_t y);
 #define WIPEWIDTH   160
 
 int wipe_InitMelt(short *y);
-int wipe_ExitMelt(int backbuffer);
+int wipe_ExitMelt(void);
 int wipe_StartScreen(void);
 int wipe_EndScreen(void);
 int wipe_ScreenWipe(short *y, short *yy, int ticks, int step);

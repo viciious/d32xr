@@ -24,7 +24,7 @@ int wipe_InitMelt(short *y)
 
 	while (!I_RefreshCompleted());
 
-	return I_BackBuffer();
+	return 0;
 }
 
 #ifdef MARS
@@ -204,21 +204,12 @@ void Mars_Sec_wipe_doMelt(void)
 }
 #endif
 
-int wipe_ExitMelt(int backbuffer)
+int wipe_ExitMelt(void)
 {
-    UpdateBuffer();
-
-    /* restore state of the double buffer if needed */
-	if (I_BackBuffer() != backbuffer)
-	{
-		UpdateBuffer();
-	}
-
 #ifdef MARS
 	// re-init the VDP and VRAM on the MD
 	Mars_CtlMDVDP(1);
 #endif
-
     return 0;
 }
 

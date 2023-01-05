@@ -285,10 +285,9 @@ static void D_Wipe(void)
 	short y[2][WIPEWIDTH];
 	short yy[WIPEWIDTH];
 	int wipestart[2], done[2] = { 0, 0 };
-	int backbuffer;
 	int step = 0;
 
-	backbuffer = wipe_InitMelt(y[0]);
+	wipe_InitMelt(y[0]);
 	D_memcpy(y[1], y[0], sizeof(y[0])); // double buffered
 
 	wipestart[0] = I_GetTime() - 1;
@@ -303,7 +302,13 @@ static void D_Wipe(void)
 		b ^= 1;
 	} while (!done[0] || !done[1]);
 
-	wipe_ExitMelt(backbuffer);
+	if (step & 1)
+	{
+		// exit the wipe on the same framebuffer id 
+		UpdateBuffer();
+	}
+
+	wipe_ExitMelt();
 }
 
 int MiniLoop ( void (*start)(void),  void (*stop)(void)
@@ -438,20 +443,11 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 
 		drawer();
 
-		if (!exit)
+		if (!exit && wipe)
 		{
-			if (wipe)
-			{
-				wipe_EndScreen();
-				D_Wipe();
-				wipe = false;
-			}
-		}
-		else
-		{
-			if (canwipe)
-			{
-			}
+			wipe_EndScreen();
+			D_Wipe();
+			wipe = false;
 		}
 
 		prevgametic = gametic;
