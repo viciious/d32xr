@@ -9,20 +9,22 @@ LDSCRIPTSDIR = $(ROOTDIR)/ldscripts
 LIBPATH = -L$(ROOTDIR)/sh-elf/lib -L$(ROOTDIR)/sh-elf/lib/gcc/sh-elf/4.6.2 -L$(ROOTDIR)/sh-elf/sh-elf/lib
 INCPATH = -I. -I$(ROOTDIR)/sh-elf/include -I$(ROOTDIR)/sh-elf/sh-elf/include -I./liblzss
 
-CCFLAGS = -c -std=c11 -g -m2 -mb -Os
+CCFLAGS = -c -std=c11 -g -m2 -mb
 CCFLAGS += -Wall -Wextra -pedantic -Wno-unused-parameter -Wimplicit-fallthrough=0 -Wno-missing-field-initializers -Wnonnull
 CCFLAGS += -D__32X__ -DMARS
 LDFLAGS = -T $(LDSCRIPTSDIR)/mars.ld -Wl,-Map=output.map -nostdlib -Wl,--gc-sections --specs=nosys.specs
 ASFLAGS = --big
 
 MARSHWCFLAGS := $(CCFLAGS)
-MARSHWCFLAGS += -O1 -fno-lto
+MARSHWCFLAGS += -fno-lto
 
-release: CCFLAGS += -fomit-frame-pointer -ffast-math -funroll-loops -fno-align-loops -fno-align-jumps -fno-align-labels -ffunction-sections -fdata-sections -flto
+release: CCFLAGS += -Os -fomit-frame-pointer -ffast-math -funroll-loops -fno-align-loops -fno-align-jumps -fno-align-labels
+release: CCFLAGS += -ffunction-sections -fdata-sections -flto
+release: MARSHWCFLAGS += -O1
 release: LDFLAGS += -flto
 
-debug: CCFLAGS += -ggdb -fno-omit-frame-pointer
-debug: MARSHWCFLAGS += -ggdb -fno-omit-frame-pointer
+debug: CCFLAGS += -O1 -ggdb -fno-omit-frame-pointer
+debug: MARSHWCFLAGS += -O1 -ggdb -fno-omit-frame-pointer
 
 PREFIX = $(ROOTDIR)/sh-elf/bin/sh-elf-
 CC = $(PREFIX)gcc
@@ -113,7 +115,7 @@ m68k.bin:
 
 $(TARGET).32x: $(TARGET).elf
 	$(OBJC) -O binary $< temp2.bin
-	$(DD) if=temp2.bin of=temp.bin bs=180K conv=sync
+	$(DD) if=temp2.bin of=temp.bin bs=192K conv=sync
 	rm -f temp3.bin
 	cat temp.bin doom32x.wad >>temp3.bin
 	$(DD) if=temp3.bin of=$@ bs=512K conv=sync
