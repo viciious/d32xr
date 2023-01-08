@@ -104,9 +104,9 @@ OBJS = \
 	m_fire.o \
 	lzss.o
 
-release: m68k.bin $(TARGET).32x
+release: $(TARGET).32x
 
-debug: m68k.bin $(TARGET).32x
+debug: $(TARGET).32x
 
 all: release
 
