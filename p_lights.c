@@ -268,3 +268,44 @@ void P_SpawnGlowingLight(sector_t *sector)
 	sector->special = 0;
 }
 
+//
+// FIRELIGHT FLICKER
+//
+
+//
+// T_FireFlicker
+//
+void T_FireFlicker (fireflicker_t *flick)
+{
+	int	amount;
+
+	if (--flick->count)
+		return;
+
+	amount = (P_Random()&3)*16;
+	if (flick->sector->lightlevel - amount < flick->minlight)
+		flick->sector->lightlevel = flick->minlight;
+	else
+		flick->sector->lightlevel = flick->maxlight - amount;
+	flick->count = 4;
+}
+
+//
+// P_SpawnFireFlicker
+//
+void P_SpawnFireFlicker (sector_t *sector)
+{
+	fireflicker_t	*flick;
+
+	// Note that we are resetting sector attributes.
+	// Nothing special about it during gameplay.
+	sector->special = 0;
+
+	flick = Z_Malloc ( sizeof(*flick), PU_LEVSPEC, 0);
+	P_AddThinker (&flick->thinker);
+	flick->thinker.function = T_FireFlicker;
+	flick->sector = sector;
+	flick->maxlight = sector->lightlevel;
+	flick->minlight = P_FindMinSurroundingLight(sector,sector->lightlevel)+16;
+	flick->count = 4;
+}

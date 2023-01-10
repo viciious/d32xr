@@ -118,6 +118,15 @@ typedef struct
 	int			direction;
 } glow_t;
 
+typedef struct
+{
+    thinker_t	thinker;
+    sector_t*	sector;
+    VINT		count;
+    VINT		maxlight;
+    VINT		minlight;
+} fireflicker_t;
+
 #define GLOWSPEED		16
 #define	STROBEBRIGHT	3
 #define	FASTDARK		8
@@ -132,6 +141,7 @@ void	EV_TurnTagLightsOff(line_t	*line);
 void	EV_LightTurnOn(line_t *line, int bright);
 void	T_Glow(glow_t *g);
 void	P_SpawnGlowingLight(sector_t *sector);
+void 	P_SpawnFireFlicker (sector_t *sector);
 
 /*
 ===============================================================================
