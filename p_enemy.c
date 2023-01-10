@@ -854,12 +854,24 @@ void A_Explode (mobj_t *thingy)
 
 void A_BossDeath (mobj_t *mo)
 {
+	int 		i;
 	mobj_t		*mo2;
 	line_t		junk;
 		
-	if (!gamemapinfo.baronSpecial)
+	if (mo->type == MT_BRUISER && !gamemapinfo.baronSpecial)
 		return;			/* bruisers apear on other levels */
-		
+	if (mo->type == MT_CYBORG && !gamemapinfo.cyberSpecial)
+		return;
+	if (mo->type == MT_SPIDER && !gamemapinfo.spiderSpecial)
+		return;
+
+    // make sure there is a player alive for victory
+    for (i=0 ; i<MAXPLAYERS ; i++)
+		if (playeringame[i] && players[i].health > 0)
+			break;
+    if (i == MAXPLAYERS)
+		return;
+
 /* */
 /* scan the remaining thinkers to see if all bosses are dead */
 /*	 */
@@ -874,8 +886,16 @@ void A_BossDeath (mobj_t *mo)
 /* */
 /* victory! */
 /* */
-	junk.tag = 666;
-	EV_DoFloor (&junk, lowerFloorToLowest);
+	switch (mo->type) {
+		case MT_BRUISER:
+			junk.tag = 666;
+			EV_DoFloor (&junk, lowerFloorToLowest);
+			break;
+		case MT_CYBORG:
+		case MT_SPIDER:
+			G_ExitLevel();
+			return;
+	}
 }
 
 

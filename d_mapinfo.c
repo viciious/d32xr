@@ -238,6 +238,14 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 		{
 			mi->baronSpecial = true;
 		}
+		else if (!D_strcasecmp(key, "cyberdemonspecial"))
+		{
+			mi->cyberSpecial = true;
+		}
+		else if (!D_strcasecmp(key, "spidermastermindspecial"))
+		{
+			mi->spiderSpecial = true;
+		}
 
 		return;
 	}
