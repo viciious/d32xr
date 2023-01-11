@@ -54,6 +54,7 @@ static char* G_LoadMapinfoLump(void)
 	}
 	else {
 		len = W_LumpLength(lump);
+		D_memset(buf, 0, len);
 		W_ReadLump(lump, buf);
 	}
 	buf[len] = '\0';
@@ -112,6 +113,7 @@ static const char* G_FindNextMapinfoSection(const char *buf, size_t *len)
 
 		if (state == 0 && sectionstart != NULL)
 		{
+			if (!p) p = sectionstart + mystrlen(sectionstart);
 			*len = p - sectionstart;
 			return sectionstart;
 		}
@@ -125,7 +127,7 @@ static const char* G_FindNextMapinfoSection(const char *buf, size_t *len)
 
 static char* skipspaces(char* p)
 {
-	while (p && *p == ' ') p++;
+	while (p && (*p == ' ' || *p == '\t')) p++;
 	return p;
 }
 
