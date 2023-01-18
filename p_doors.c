@@ -26,6 +26,9 @@ void T_VerticalDoor (vldoor_t *door)
 				switch(door->type)
 				{
 					case normal:
+						door->direction = -1; /* time to go back down */
+						S_StartPositionedSound((void *)door->sector,sfx_dorcls,&P_SectorOrg);
+						break;
 					case blazeRaise:
 						door->direction = -1; /* time to go back down */
 						S_StartPositionedSound((void *)door->sector,sfx_bdcls,&P_SectorOrg);
