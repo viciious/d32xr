@@ -76,6 +76,7 @@ mix_loop:
         shll2   r0
         shlr8   r0
         mov.b   @(r0,r8),r0
+        add     r10,r9                  /* position += increment */
         extu.b  r0,r3
         add     #-128,r3
         shll8   r3
@@ -100,8 +101,6 @@ mix_loop:
         add     r0,r1
 
         /* advance position and check for loop */
-        add     r10,r9                  /* position += increment */
-
         mov.l   r1,@r5
         add     #4,r5
 mix_chk:
