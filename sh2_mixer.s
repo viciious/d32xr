@@ -56,7 +56,13 @@ _S_PaintChannel8:
         sts     macl,r7         /* ch_vol * scale */
 
         mulu.w  r0,r7
+        /* process one sample -- begin */
+        mov     r9,r0
+        shlr8   r0
+        shll2   r0
+        shlr8   r0
         sts     macl,r14        /* pan * ch_vol * scale */
+        mov.b   @(r0,r8),r0
 
         mulu.w  r1,r7
         shlr8   r14
@@ -70,20 +76,16 @@ _S_PaintChannel8:
         /* mix r6 stereo samples */
         .p2alignw 2, 0x0009
 mix_loop:
-        /* process one sample */
-        mov     r9,r0
-        shlr8   r0
-        shll2   r0
-        shlr8   r0
-        mov.b   @(r0,r8),r0
-        add     r10,r9                  /* position += increment */
+        mov.l   @r5,r1
+
+        /* process one sample -- cont */
         extu.b  r0,r3
         add     #-128,r3
         shll8   r3
 
         /* scale sample for left output */
         muls.w  r3,r13
-        mov.l   @r5,r1
+        add     r10,r9          /* position += increment */
         sts     macl,r0
 
         /* scale sample for right output */
@@ -97,7 +99,6 @@ mix_loop:
         /* scale sample for right output -- cont */
         sts     macl,r0
         shlr16  r0
-        #exts.w  r0,r0
         add     r0,r1
 
         /* advance position and check for loop */
@@ -105,9 +106,15 @@ mix_loop:
         add     #4,r5
 mix_chk:
         cmp/hs  r11,r9
-        bt      mix_wrap                /* position >= length */
+        bt/s    mix_wrap                /* position >= length */
 mix_next:
         /* next sample */
+        /* process one sample -- begin */
+        mov     r9,r0
+        shlr8   r0
+        shll2   r0
+        shlr8   r0
+        mov.b   @(r0,r8),r0
         dt      r6
         bf      mix_loop
         bra     mix_exit
