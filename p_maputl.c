@@ -7,7 +7,6 @@
 fixed_t P_AproxDistance(fixed_t dx, fixed_t dy) ATTR_DATA_CACHE_ALIGN;
 int P_PointOnLineSide(fixed_t x, fixed_t y, line_t* line) ATTR_DATA_CACHE_ALIGN;
 int P_PointOnDivlineSide(fixed_t x, fixed_t y, divline_t* line) ATTR_DATA_CACHE_ALIGN;
-void P_MakeDivline(line_t* li, divline_t* dl) ATTR_DATA_CACHE_ALIGN;
 fixed_t P_LineOpening(line_t* linedef) ATTR_DATA_CACHE_ALIGN;
 void P_LineBBox(line_t* ld, fixed_t* bbox) ATTR_DATA_CACHE_ALIGN;
 void P_UnsetThingPosition(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
@@ -99,24 +98,6 @@ int P_PointOnDivlineSide (fixed_t x, fixed_t y, divline_t *line)
 	if (right < left)
 		return 0;		/* front side */
 	return 1;			/* back side */
-}
-
-
-
-/*
-==============
-=
-= P_MakeDivline
-=
-==============
-*/
-
-void P_MakeDivline (line_t *li, divline_t *dl)
-{
-	dl->x = li->v1->x;
-	dl->y = li->v1->y;
-	dl->dx = li->v2->x - li->v1->x;
-	dl->dy = li->v2->y - li->v1->y;
 }
 
 

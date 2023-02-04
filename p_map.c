@@ -19,13 +19,14 @@ typedef struct
 	int			bombdamage;
 } pradiusattack_t;
 
-fixed_t P_InterceptVector(divline_t* v2, divline_t* v1) ATTR_DATA_CACHE_ALIGN;
+static fixed_t P_InterceptVector(divline_t* v2, divline_t* v1) ATTR_DATA_CACHE_ALIGN;
 boolean	PIT_UseLines(line_t* li, plineuse_t *lu) ATTR_DATA_CACHE_ALIGN;
 void P_UseLines(player_t* player) ATTR_DATA_CACHE_ALIGN;
 boolean PIT_RadiusAttack(mobj_t* thing, pradiusattack_t *ra) ATTR_DATA_CACHE_ALIGN;
 void P_RadiusAttack(mobj_t* spot, mobj_t* source, int damage) ATTR_DATA_CACHE_ALIGN;
 fixed_t P_AimLineAttack(lineattack_t *la, mobj_t* t1, angle_t angle, fixed_t distance) ATTR_DATA_CACHE_ALIGN;
 void P_LineAttack(lineattack_t *la, mobj_t* t1, angle_t angle, fixed_t distance, fixed_t slope, int damage) ATTR_DATA_CACHE_ALIGN;
+static void P_MakeDivline(line_t* li, divline_t* dl) ATTR_DATA_CACHE_ALIGN;
 
 /*============================================================================= */
 
@@ -105,6 +106,24 @@ fixed_t P_InterceptVector (divline_t *v2, divline_t *v1)
 	frac = IDiv((num<<16), den);
 
 	return frac;
+}
+
+
+
+/*
+==============
+=
+= P_MakeDivline
+=
+==============
+*/
+
+void P_MakeDivline (line_t *li, divline_t *dl)
+{
+	dl->x = li->v1->x;
+	dl->y = li->v1->y;
+	dl->dx = li->v2->x - li->v1->x;
+	dl->dy = li->v2->y - li->v1->y;
 }
 
 
