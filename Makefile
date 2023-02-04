@@ -23,7 +23,7 @@ release: CCFLAGS += -ffunction-sections -fdata-sections -flto
 release: MARSHWCFLAGS += -O1
 release: LDFLAGS += -flto
 
-debug: CCFLAGS += -O1 -ggdb -fno-omit-frame-pointer
+debug: CCFLAGS += -Os -ggdb -fno-omit-frame-pointer
 debug: MARSHWCFLAGS += -O1 -ggdb -fno-omit-frame-pointer
 
 PREFIX = $(ROOTDIR)/sh-elf/bin/sh-elf-
