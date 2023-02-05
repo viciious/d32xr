@@ -4,6 +4,8 @@
 #include "st_main.h"
 
 stbar_t	stbar[MAXPLAYERS];
+int stbar_tics;
+
 static short stbarframe;
 static short   stbar_y;
 static short micronums;
@@ -18,6 +20,7 @@ static short	spclfaceSprite[NUMSPCLFACES] =
 
 jagobj_t	*sbar;
 VINT		sbar_height;
+
 #ifndef MARS
 byte		*sbartop;
 #endif
@@ -146,6 +149,7 @@ void ST_InitEveryLevel(void)
 			sb->flashCards[i].h = KEYH;
 		}
 	}
+	stbar_tics = 0;
 }
 
 /*
@@ -551,6 +555,7 @@ void ST_Ticker(void)
 	}
 
 	stbarframe++;
+	stbar_tics++;
 }
 
 /*

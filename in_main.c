@@ -6,9 +6,11 @@
 #define	KVALX			172
 #define	KVALY			80
 #define	IVALX			172
-#define	IVALY			110	
+#define	IVALY			100
 #define	SVALX			172
-#define	SVALY			140
+#define	SVALY			120
+#define TVALX           172
+#define TVALY           140
 #define	FVALX			230
 #define	FVALY			74
 
@@ -49,7 +51,7 @@ boolean		statsdrawn;
 boolean		valsdrawn;
 boolean		negativefrag[MAXPLAYERS];
 int			killvalue[2], itemvalue[2], secretvalue[2], fragvalue[2];
-int			myticcount, myoldticcount;
+int 		timevalue;
 
 VINT		i_secret, i_percent, i_level, i_kills,
 				i_items, i_finish, i_frags, i_par, i_time;
@@ -116,6 +118,43 @@ void IN_DrawValue(int x,int y,int value)
 
 		x -= w+2;
 		DrawJagobjLump(snums + index, x, y, NULL, NULL);
+	}
+}
+
+/* */
+/* Draws 'value' at x, y  */
+/* */
+void IN_DrawPadValue(int x,int y,int value,int minl)
+{
+	char	v[4];
+	int		j;
+	int		index;
+
+	valtostr(v,value);
+	j = mystrlen(v) - 1;
+	while(j >= 0)
+	{
+		int w;
+
+		index = (v[j--] - '0');
+		DrawJagobjLump(snums + index, 320, 200, &w, NULL);
+
+		x -= w+2;
+		DrawJagobjLump(snums + index, x, y, NULL, NULL);
+
+		minl--;
+	}
+
+	while (minl > 0)
+	{
+		int w;
+
+		DrawJagobjLump(snums + 0, 320, 200, &w, NULL);
+
+		x -= w+2;
+		DrawJagobjLump(snums + 0, x, y, NULL, NULL);
+
+		minl--;
 	}
 }
 
@@ -250,11 +289,13 @@ void IN_SingleDrawer(void)
 			print( (320 - (length*14)) >> 1, 182, nextmapinfo->name);
 		}
 
-		DrawJagobjLump(i_kills, 71, 70, NULL, NULL);
+		DrawJagobjLump(i_kills, 71, KVALY - 10, NULL, NULL);
 
-		DrawJagobjLump(i_items, 65, 100, NULL, NULL);
+		DrawJagobjLump(i_items, 65, IVALY - 10, NULL, NULL);
 
-		DrawJagobjLump(i_secret, 27, 130, NULL, NULL);
+		DrawJagobjLump(i_secret, 27, SVALY - 10, NULL, NULL);
+
+		print(73, TVALY - 10, "Time");
 	}
 	
 	IN_DrawValue(KVALX + 60, KVALY - 10, killvalue[0]);
@@ -263,6 +304,14 @@ void IN_SingleDrawer(void)
 	DrawJagobjLump(i_percent, IVALX + 60, IVALY - 10, NULL, NULL);
 	IN_DrawValue(SVALX + 60, SVALY - 10, secretvalue[0]);
 	DrawJagobjLump(i_percent, SVALX + 60, SVALY - 10, NULL, NULL);
+
+	if (timevalue/60 > 0)
+	{
+		IN_DrawValue(TVALX + 8, TVALY - 10, timevalue/60);
+		print(TVALX + 8, TVALY - 10 - 1, "m");
+	}
+	IN_DrawPadValue(TVALX + 58, TVALY - 10, timevalue%60, 2);
+	print(TVALX + 58, TVALY - 10 - 1, "s");
 }
 
 void IN_Start (void)
@@ -300,6 +349,8 @@ void IN_Start (void)
 		if(netgame)
 			pstats[i].fragcount = players[i].frags;
 	}	
+
+	timevalue = stbar_tics/TICRATE;
 
 /* cache all needed graphics */
 #ifndef MARS

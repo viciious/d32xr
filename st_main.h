@@ -156,6 +156,7 @@ typedef struct
 } stbar_t;
 
 extern	stbar_t	stbar[MAXPLAYERS];
+extern	int stbar_tics;
 extern void valtostr(char *string,int val);
 void ST_DrawValue(int x,int y,int value);
 void ST_Num (int x, int y, int num);
