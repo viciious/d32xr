@@ -319,13 +319,12 @@ void Mars_Secondary(void)
 		case MARS_SECCMD_BREAK:
 			// break current command
 			break;
-		case MARS_SECCMD_R_SETUP:
-			Mars_Sec_R_Setup();
-			break;
 		case MARS_SECCMD_R_WALL_PREP_NODRAW:
+			Mars_Sec_R_Setup();
 			Mars_Sec_R_WallPrep();
 			break;
 		case MARS_SECCMD_R_WALL_PREP:
+			Mars_Sec_R_Setup();
 			Mars_Sec_R_WallPrep();
 			Mars_Sec_R_PlanePrep();
 			Mars_Sec_R_SegCommands();

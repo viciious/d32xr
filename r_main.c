@@ -910,8 +910,6 @@ void R_RenderPlayerView(int displayplayer)
 
 	R_Setup(displayplayer, vissprites_, visplanes_hash_, (uint16_t *)sortedvisplanes_);
 
-	Mars_R_SecSetup();
-
 	Mars_R_BeginWallPrep(drawworld);
 
 	t_bsp = I_GetFRTCounter();

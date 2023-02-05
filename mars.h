@@ -38,7 +38,6 @@ enum
 	MARS_SECCMD_CLEAR_CACHE,
 	MARS_SECCMD_BREAK,
 
-	MARS_SECCMD_R_SETUP,
 	MARS_SECCMD_R_WALL_PREP_NODRAW,
 	MARS_SECCMD_R_WALL_PREP,
 	MARS_SECCMD_R_DRAW_PLANES,
@@ -85,12 +84,6 @@ static inline void Mars_CommSlaveClearCache(void)
 {
 	Mars_R_SecWait();
 	MARS_SYS_COMM4 = MARS_SECCMD_CLEAR_CACHE;
-}
-
-static inline void Mars_R_SecSetup(void)
-{
-	Mars_R_SecWait();
-	MARS_SYS_COMM4 = MARS_SECCMD_R_SETUP;
 }
 
 // r_phase2
