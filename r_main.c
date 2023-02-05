@@ -935,7 +935,7 @@ void R_RenderPlayerView(int displayplayer)
 	Mars_ClearCacheLine(&lastsegclip);
 	Mars_ClearCacheLine(&lastopening);
 	Mars_ClearCacheLine(&lastvisplane);
-	Mars_ClearCacheLine(&lastvissector);
+	//Mars_ClearCacheLine(&lastvissector);
 
 	if (lastsegclip - segclip > MAXOPENINGS)
 		I_Error("lastsegclip > MAXOPENINGS: %d", lastsegclip - segclip);
