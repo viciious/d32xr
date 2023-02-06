@@ -47,7 +47,7 @@ static boolean PB_CheckThing(mobj_t* thing, pmovetest_t *mt) ATTR_DATA_CACHE_ALI
 static boolean PB_BoxCrossLine(line_t* ld, pmovetest_t *mt) ATTR_DATA_CACHE_ALIGN;
 static boolean PB_CheckLine(line_t* ld, pmovetest_t *mt) ATTR_DATA_CACHE_ALIGN;
 static boolean PB_CrossCheck(line_t* ld, pmovetest_t *mt) ATTR_DATA_CACHE_ALIGN;
-static boolean PB_CheckPosition(mobj_t* mo, pmovetest_t *mt) ATTR_DATA_CACHE_ALIGN;
+static boolean PB_CheckPosition(pmovetest_t *mt) ATTR_DATA_CACHE_ALIGN;
 static boolean PB_TryMove(pmovetest_t *mt, mobj_t* mo, fixed_t tryx, fixed_t tryy) ATTR_DATA_CACHE_ALIGN;
 static void P_FloatChange(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
 void P_ZMovement(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
@@ -232,10 +232,11 @@ static boolean PB_CrossCheck(line_t *ld, pmovetest_t *mt)
 //
 // Check an mobj's position for validity against lines and other mobjs
 //
-static boolean PB_CheckPosition(mobj_t *mo, pmovetest_t *mt)
+static boolean PB_CheckPosition(pmovetest_t *mt)
 {
    int xl, xh, yl, yh, bx, by;
    VINT *lvalidcount;
+   mobj_t *mo = mt->checkthing;
 
    mt->testflags = mo->flags;
 
@@ -283,7 +284,6 @@ static boolean PB_CheckPosition(mobj_t *mo, pmovetest_t *mt)
    if(yh >= bmapheight)
       yh = bmapheight - 1;
 
-   mt->checkthing = mo; // store for PB_CheckThing
    for(bx = xl; bx <= xh; bx++)
    {
       for(by = yl; by <= yh; by++)
@@ -306,8 +306,9 @@ static boolean PB_TryMove(pmovetest_t *mt, mobj_t *mo, fixed_t tryx, fixed_t try
 {
    mt->testx = tryx;
    mt->testy = tryy;
+   mt->checkthing = mo; // store for PB_CheckThing
 
-   if(!PB_CheckPosition(mo, mt))
+   if(!PB_CheckPosition(mt))
       return false; // solid wall or thing
 
    if(mt->testceilingz - mt->testfloorz < mo->height)
