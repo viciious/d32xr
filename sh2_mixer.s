@@ -241,34 +241,29 @@ mix4_loop:
         /* clamp to -32768:32767 */
         shll8   r1
         cmp/ge  r1,r12
-        bt/s    5f              /* sample >= -32768 */
-        shlr16  r2              /* save step_index */
-        bra     6f
-        mov     r1,r12          /* clamp */
-5:
+        bf/s    2f              /* sample < -32768 */
         not     r1,r1
         cmp/gt  r1,r12
-        bf      6f              /* sample <= 32767 */
-        mov     r1,r12          /* clamp */
-6:
+        bt/s    3f              /* sample > 32767 */
+4:
+        shlr16  r2              /* save step_index */
+5:
         /* step_index += index_table[nibble] */
         mov.l   _index_table,r1
         mov.b   @(r0,r1),r1
         extu.w  r12,r12         /* clear upper word for step_index */
         add     r1,r2           /* step_index += index_table[nibble] */
+
         /* clamp to 0:88 */
         cmp/pz  r2
-        bt/s    7f
+        bf/s    6f
         mov     #88,r1
-        bra     mix4_gets
-        mov     #0,r2           /* clamp step_index to 0 */
-7:
         cmp/gt  r1,r2
-        bf      8f
-        mov     #88,r2          /* clamp step_index to 88 */
-8:
+        bt/s    7f
         shll16  r2
         or      r2,r12          /* r12 is step_index : predictor again */
+
+        .p2alignw 2, 0x0009
 mix4_gets:
         /* get sample */
         exts.w  r12,r3          /* predictor */
@@ -276,7 +271,7 @@ mix4_gets:
         /* scale sample for left output */
         muls.w  r3,r13
         mov.l   @r5,r1
-        add     r10,r9                  /* position += increment */
+        add     r10,r9          /* position += increment */
         sts     macl,r0
 
         /* scale sample for right output */
@@ -285,19 +280,20 @@ mix4_gets:
         /* scale sample for left output -- cont */
         shlr16  r0
         shll16  r0
-        add     r0,r1
+        mov     r0,r3
 
         /* scale sample for right output -- cont */
         sts     macl,r0
         shlr16  r0
-        #exts.w  r0,r0
-        add     r0,r1
+        add     r0,r3
 
+        /* write left and right output */
+        add     r3,r1
+        cmp/hs  r11,r9
         mov.l   r1,@r5
 
         /* advance position */
 
-        cmp/hs  r11,r9
         bt/s    mix4_exit               /* position >= length */
 
         /* next sample */
@@ -318,6 +314,21 @@ mix4_exit:
         mov.l   @r15+,r8
         rts
         mov     r6,r0
+2:
+        not     r1,r1
+        bra     4b
+        mov     r1,r12          /* clamp sample to -32768 */
+3:
+        bra     5b
+        mov     r1,r12          /* clamp sample to  32767 */
+6:
+        bra     mix4_gets
+        mov     #0,r2           /* clamp step_index to 0 */
+7:
+        mov     #88,r2          /* clamp step_index to 88 */
+        shll16  r2
+        bra     mix4_gets
+        or      r2,r12          /* r12 is step_index : predictor again */
 
 ! void S_PaintChannel4IMA2x(void *channel, int16_t *buffer, int32_t cnt, int32_t scale);
 ! On entry: r4 = channel pointer
@@ -444,6 +455,7 @@ mix4_loop2x:
         shll16  r2
         or      r2,r12          /* r12 is step_index : predictor again */
 
+        .p2alignw 2, 0x0009
 mix4_gets2x:
         /* get sample */
         exts.w  r12,r3          /* predictor */
