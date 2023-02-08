@@ -578,6 +578,16 @@ static void S_PaintChannel(sfxchannel_t *ch, int16_t* buffer)
 	{
 		int i = MAX_SAMPLES;
 		int32_t *end = (int32_t *)buffer + MAX_SAMPLES;
+		int (*paintch)(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale);
+
+		// general mixing routine
+		paintch = S_PaintChannel4IMA;
+
+		if ((ch->increment < (1 << 14)) && !(ch->increment & (ch->increment-1))) {
+			// optimized 2x upsampling mixer: from 11kHz to 22kHz or 44kHz
+			paintch = S_PaintChannel4IMA2x;
+		}
+
 		do
 		{
 			if (ch->position >= ch->length)
@@ -610,13 +620,7 @@ static void S_PaintChannel(sfxchannel_t *ch, int16_t* buffer)
 				ch->remaining_bytes -= block_size;
 			}
 
-			if ((ch->increment < (1 << 14)) && !(ch->increment & (ch->increment-1))) {
-				// optimized 2x upsampling mixer: from 11kHz to 22kHz or 44kHz
-				i = S_PaintChannel4IMA2x(ch, (int16_t *)(end - i), i, 64);
-			} else {
-				// general mixing routine
-				i = S_PaintChannel4IMA(ch, (int16_t *)(end - i), i, 64);
-			}
+			i = paintch(ch, (int16_t *)(end - i), i, 64);
 		} while (i > 0);
 	}
 	else
