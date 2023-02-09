@@ -793,15 +793,15 @@ visplane_t* R_FindPlane(int hash, fixed_t height,
 	return check;
 }
 
-void R_BSP (void);
-void R_WallPrep (void);
-void R_SpritePrep (void);
-boolean R_LatePrep (void);
-void R_Cache (void);
-void R_SegCommands (void);
-void R_DrawPlanes (void);
-void R_Sprites (void);
-void R_Update (void);
+void R_BSP (void) __attribute__((noinline));
+void R_WallPrep (void) __attribute__((noinline));
+void R_SpritePrep (void) __attribute__((noinline));
+boolean R_LatePrep (void) __attribute__((noinline));
+void R_Cache (void); __attribute__((noinline))
+void R_SegCommands (void) __attribute__((noinline));
+void R_DrawPlanes (void) __attribute__((noinline));
+void R_Sprites (void) __attribute__((noinline));
+void R_Update (void) __attribute__((noinline));
 
 /*
 ==============
