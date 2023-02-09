@@ -409,9 +409,9 @@ void R_Sprites(void)
 
    for (wc = viswalls; wc < lastwallcmd; wc++)
    {
-      seg_t *seg = (seg_t *)((volatile seg_t *)wc->seg);
-      wc->v1.x = verts[seg->v1].x>>16, wc->v1.y = verts[seg->v1].y>>16;
-      wc->v2.x = verts[seg->v2].x>>16, wc->v2.y = verts[seg->v2].y>>16;
+      volatile int v1 = wc->seg->v1, v2 = wc->seg->v2;
+      wc->v1.x = verts[v1].x>>16, wc->v1.y = verts[v1].y>>16;
+      wc->v2.x = verts[v2].x>>16, wc->v2.y = verts[v2].y>>16;
    }
 
 #ifdef MARS
