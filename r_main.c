@@ -467,8 +467,7 @@ extern	pixel_t	*screens[2];	/* [viewportWidth*viewportHeight];  */
 ==================
 */
 
-static void R_Setup (int displayplayer, vissprite_t *vissprites_, 
-	visplane_t **visplanes_hash_, sector_t **vissectors_)
+static void R_Setup (int displayplayer, visplane_t **visplanes_hash_, sector_t **vissectors_)
 {
 	int 		i;
 	int		damagecount, bonuscount;
@@ -633,20 +632,25 @@ static void R_Setup (int displayplayer, vissprite_t *vissprites_,
 	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
 	viswalls = (void*)tempbuf;
 	tempbuf += sizeof(*viswalls) * MAXWALLCMDS / sizeof(*tempbuf);
-	lastwallcmd = viswalls;			/* no walls added yet */
 
 	segclip = tempbuf;
-	lastsegclip = segclip;
 	tempbuf += MAXOPENINGS;
 
 	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
 	openings = tempbuf;
 	tempbuf += MAXOPENINGS;
 
-	vissprites = vissprites_;
+	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
+	vissprites = (void *)tempbuf;
+	tempbuf += sizeof(*vissprites) * MAXVISSPRITES / sizeof(*tempbuf);
 
+	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
 	visplanes = (void *)tempbuf;
 	tempbuf += sizeof(*visplanes) * MAXVISPLANES / sizeof(*tempbuf);
+
+	lastwallcmd = viswalls;			/* no walls added yet */
+	lastsegclip = segclip;
+
 	lastvisplane = visplanes + 1;		/* visplanes[0] is left empty */
 	visplanes_hash = visplanes_hash_;
 
@@ -826,7 +830,6 @@ extern	ref8_start;
 void R_RenderPlayerView(int displayplayer)
 {
 	visplane_t *visplanes_hash_[NUM_VISPLANES_BUCKETS];
-	vissprite_t vissprites_[MAXVISSPRITES];
 	sector_t *vissectors_[MAXVISSSEC];
 
 	/* make sure its done now */
@@ -841,7 +844,7 @@ void R_RenderPlayerView(int displayplayer)
 	if (debugscreenactive)
 		I_DebugScreen();
 
-	R_Setup(displayplayer, vissprites_, visplanes_hash_, vissectors_);
+	R_Setup(displayplayer, visplanes_hash_, vissectors_);
 
 #ifndef JAGUAR
 	R_BSP();
@@ -884,8 +887,6 @@ void R_RenderPlayerView(int displayplayer)
 	boolean drawworld = !(players[consoleplayer].automapflags & AF_ACTIVE);
 	__attribute__((aligned(16)))
 		visplane_t *visplanes_hash_[NUM_VISPLANES_BUCKETS];
-	__attribute__((aligned(16)))
-		vissprite_t vissprites_[MAXVISSPRITES];
 	sector_t *vissectors_[MAXVISSSEC];
 
 	while (!I_RefreshCompleted())
@@ -893,7 +894,7 @@ void R_RenderPlayerView(int displayplayer)
 
 	t_total = I_GetFRTCounter();
 
-	R_Setup(displayplayer, vissprites_, visplanes_hash_, vissectors_);
+	R_Setup(displayplayer, visplanes_hash_, vissectors_);
 
 	Mars_R_BeginWallPrep(drawworld);
 
