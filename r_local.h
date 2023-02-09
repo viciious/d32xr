@@ -498,7 +498,6 @@ typedef struct
 	int			b_bottomheight;
 	int			b_texturemid;
 
-	fixed_t		floorheight;
 	fixed_t		ceilingheight;
 
 	byte 		*sil;
