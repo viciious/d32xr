@@ -313,6 +313,7 @@ static void Mars_R_SortPlanes(uint16_t *sortedvisplanes) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_DrawPlanes(uint16_t *sortedvisplanes)
 {
     Mars_ClearCacheLine(&lastvisplane);
+    Mars_ClearCacheLines(visplanes, ((lastvisplane - visplanes) * sizeof(visplane_t) + 31) / 16);
     Mars_ClearCacheLines(sortedvisplanes, ((lastvisplane - visplanes - 1) * sizeof(int) + 31) / 16);
     R_DrawPlanes2(sortedvisplanes);
 }
@@ -402,7 +403,7 @@ void R_DrawPlanes(void)
         uint16_t sortedvisplanes[MAXVISPLANES*2];
 
     Mars_ClearCacheLine(&lastvisplane);
-    //Mars_ClearCacheLines(visplanes, ((lastvisplane - visplanes) * sizeof(visplane_t) + 31) / 16);
+    Mars_ClearCacheLines(visplanes, ((lastvisplane - visplanes) * sizeof(visplane_t) + 31) / 16);
 
     numplanes = lastvisplane - visplanes;
     if (numplanes <= 1)

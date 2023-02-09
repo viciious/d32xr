@@ -467,7 +467,8 @@ extern	pixel_t	*screens[2];	/* [viewportWidth*viewportHeight];  */
 ==================
 */
 
-static void R_Setup (int displayplayer, visplane_t **visplanes_hash_, sector_t **vissectors_)
+static void R_Setup (int displayplayer, visplane_t *visplanes_,
+	visplane_t **visplanes_hash_, sector_t **vissectors_)
 {
 	int 		i;
 	int		damagecount, bonuscount;
@@ -644,9 +645,7 @@ static void R_Setup (int displayplayer, visplane_t **visplanes_hash_, sector_t *
 	vissprites = (void *)tempbuf;
 	tempbuf += sizeof(*vissprites) * MAXVISSPRITES / sizeof(*tempbuf);
 
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
-	visplanes = (void *)tempbuf;
-	tempbuf += sizeof(*visplanes) * MAXVISPLANES / sizeof(*tempbuf);
+	visplanes = visplanes_;
 
 	lastwallcmd = viswalls;			/* no walls added yet */
 	lastsegclip = segclip;
@@ -829,6 +828,7 @@ extern	ref8_start;
 
 void R_RenderPlayerView(int displayplayer)
 {
+	visplane_t visplanes[MAXVISPLANES];
 	visplane_t *visplanes_hash_[NUM_VISPLANES_BUCKETS];
 	sector_t *vissectors_[MAXVISSSEC];
 
@@ -844,7 +844,7 @@ void R_RenderPlayerView(int displayplayer)
 	if (debugscreenactive)
 		I_DebugScreen();
 
-	R_Setup(displayplayer, visplanes_hash_, vissectors_);
+	R_Setup(displayplayer, visplanes_, visplanes_hash_, vissectors_);
 
 #ifndef JAGUAR
 	R_BSP();
@@ -886,6 +886,8 @@ void R_RenderPlayerView(int displayplayer)
 	int t_bsp, t_prep, t_segs, t_planes, t_sprites, t_total;
 	boolean drawworld = !(players[consoleplayer].automapflags & AF_ACTIVE);
 	__attribute__((aligned(16)))
+		visplane_t visplanes_[MAXVISPLANES];
+	__attribute__((aligned(16)))
 		visplane_t *visplanes_hash_[NUM_VISPLANES_BUCKETS];
 	sector_t *vissectors_[MAXVISSSEC];
 
@@ -894,7 +896,7 @@ void R_RenderPlayerView(int displayplayer)
 
 	t_total = I_GetFRTCounter();
 
-	R_Setup(displayplayer, visplanes_hash_, vissectors_);
+	R_Setup(displayplayer, visplanes_, visplanes_hash_, vissectors_);
 
 	Mars_R_BeginWallPrep(drawworld);
 
