@@ -467,7 +467,8 @@ extern	pixel_t	*screens[2];	/* [viewportWidth*viewportHeight];  */
 ==================
 */
 
-static void R_Setup (int displayplayer, vissprite_t *vissprites_, visplane_t **visplanes_hash_)
+static void R_Setup (int displayplayer, vissprite_t *vissprites_, 
+	visplane_t **visplanes_hash_, sector_t **vissectors_)
 {
 	int 		i;
 	int		damagecount, bonuscount;
@@ -642,10 +643,6 @@ static void R_Setup (int displayplayer, vissprite_t *vissprites_, visplane_t **v
 	openings = tempbuf;
 	tempbuf += MAXOPENINGS;
 
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
-	vissectors = (void *)tempbuf;
-	tempbuf += sizeof(*vissectors) * MAXVISSSEC / sizeof(*tempbuf);
-
 	vissprites = vissprites_;
 
 	visplanes = (void *)tempbuf;
@@ -673,6 +670,7 @@ static void R_Setup (int displayplayer, vissprite_t *vissprites_, visplane_t **v
 
 	lastopening = openings;
 
+	vissectors = vissectors_;
 	lastvissector = vissectors;	/* no subsectors visible yet */
 
 	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
@@ -829,6 +827,7 @@ void R_RenderPlayerView(int displayplayer)
 {
 	visplane_t *visplanes_hash_[NUM_VISPLANES_BUCKETS];
 	vissprite_t vissprites_[MAXVISSPRITES];
+	sector_t *vissectors_[MAXVISSSEC];
 
 	/* make sure its done now */
 #if defined(JAGUAR)
@@ -842,7 +841,7 @@ void R_RenderPlayerView(int displayplayer)
 	if (debugscreenactive)
 		I_DebugScreen();
 
-	R_Setup(displayplayer, vissprites_, visplanes_hash_);
+	R_Setup(displayplayer, vissprites_, visplanes_hash_, vissectors_);
 
 #ifndef JAGUAR
 	R_BSP();
@@ -887,13 +886,14 @@ void R_RenderPlayerView(int displayplayer)
 		visplane_t *visplanes_hash_[NUM_VISPLANES_BUCKETS];
 	__attribute__((aligned(16)))
 		vissprite_t vissprites_[MAXVISSPRITES];
+	sector_t *vissectors_[MAXVISSSEC];
 
 	while (!I_RefreshCompleted())
 		;
 
 	t_total = I_GetFRTCounter();
 
-	R_Setup(displayplayer, vissprites_, visplanes_hash_);
+	R_Setup(displayplayer, vissprites_, visplanes_hash_, vissectors_);
 
 	Mars_R_BeginWallPrep(drawworld);
 
@@ -917,7 +917,6 @@ void R_RenderPlayerView(int displayplayer)
 
 	Mars_ClearCacheLine(&lastsegclip);
 	Mars_ClearCacheLine(&lastopening);
-	//Mars_ClearCacheLine(&lastvissector);
 
 	if (lastsegclip - segclip > MAXOPENINGS)
 		I_Error("lastsegclip > MAXOPENINGS: %d", lastsegclip - segclip);
