@@ -637,7 +637,6 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	segclip = tempbuf;
 	tempbuf += MAXOPENINGS;
 
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
 	openings = tempbuf;
 	tempbuf += MAXOPENINGS;
 

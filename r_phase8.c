@@ -340,6 +340,7 @@ void R_Sprites(void)
    vissprite_t *pspr;
    int sortedsprites[1+MAXVISSPRITES];
    viswall_t *wc;
+   vertex_t *verts;
 
    sortedcount = 0;
    count = lastsprite_p - vissprites;
@@ -398,11 +399,18 @@ void R_Sprites(void)
    sortedsprites[0] = sortedcount;
    D_isort(sortedsprites+1, sortedcount);
 
+#ifdef MARS
+   // bank switching
+   verts = W_GetLumpData(gamemaplump+ML_VERTEXES);
+#else
+   verts = vertexes;
+#endif
+
    for (wc = viswalls; wc < lastwallcmd; wc++)
    {
       seg_t *seg = (seg_t *)((volatile seg_t *)wc->seg);
-      wc->v1.x = vertexes[seg->v1].x>>16, wc->v1.y = vertexes[seg->v1].y>>16;
-      wc->v2.x = vertexes[seg->v2].x>>16, wc->v2.y = vertexes[seg->v2].y>>16;
+      wc->v1.x = verts[seg->v1].x>>16, wc->v1.y = verts[seg->v1].y>>16;
+      wc->v2.x = verts[seg->v2].x>>16, wc->v2.y = verts[seg->v2].y>>16;
    }
 
 #ifdef MARS
