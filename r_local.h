@@ -522,7 +522,6 @@ typedef struct vissprite_s
 	fixed_t		xscale;
 	fixed_t		xiscale;		/* negative if flipped */
 	fixed_t		yscale;
-	fixed_t		yiscale;
 	fixed_t		texturemid;
 	VINT 		patchnum;
 	VINT		colormap;		/* < 0 = shadow draw */

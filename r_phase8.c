@@ -37,7 +37,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos,
 #else
    pixels    = vis->pixels;
 #endif
-   iscale    = vis->yiscale;
+   iscale    = FixedDiv(FRACUNIT, vis->yscale); // CALICO_FIXME: -1 in GAS... test w/o.
    xfrac     = vis->startfrac;
    spryscale = vis->yscale;
    dcol      = vis->colormap < 0 ? drawfuzzcol : drawcol;

@@ -131,7 +131,6 @@ static void R_PrepMobj(mobj_t *thing)
    vis->xscale   = xscale;
    vis->xiscale  = FixedDiv(FRACUNIT, xscale);
    FixedMul2(vis->yscale, xscale, stretch);
-   vis->yiscale  = FixedDiv(FRACUNIT, vis->yscale); // CALICO_FIXME: -1 in GAS... test w/o.
    vis->texturemid = texmid;
    vis->startfrac = 0;
 
@@ -225,7 +224,6 @@ static void R_PrepPSprite(pspdef_t *psp)
    vis->x2 = x2 >= viewportWidth ? viewportWidth - 1 : x2;
    vis->xscale = xscale;
    vis->yscale = FRACUNIT;
-   vis->yiscale = FRACUNIT;
    vis->xiscale = FixedDiv(FRACUNIT, xscale);
    vis->texturemid = texmid;
    vis->startfrac = 0;
