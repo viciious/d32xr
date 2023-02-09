@@ -320,7 +320,7 @@ void Mars_Sec_R_DrawSprites(int sprscreenhalf, int *sortedsprites)
     Mars_ClearCacheLine(&vissprite_p);
 
     // mobj sprites
-    Mars_ClearCacheLines(sortedsprites, ((lastsprite_p - vissprites + 1) * sizeof(*sortedsprites) + 31) / 16);
+    //Mars_ClearCacheLines(sortedsprites, ((lastsprite_p - vissprites + 1) * sizeof(*sortedsprites) + 31) / 16);
 
     R_DrawSortedSprites(&fuzzpos[1], sortedsprites, -sprscreenhalf);
 
@@ -339,6 +339,7 @@ void R_Sprites(void)
    unsigned midcount;
    vissprite_t *pspr;
    int sortedsprites[1+MAXVISSPRITES];
+   int *gsortedsprites = sortedsprites;
    viswall_t *wc;
    vertex_t *verts;
 
@@ -414,7 +415,15 @@ void R_Sprites(void)
    }
 
 #ifdef MARS
-   Mars_R_BeginDrawSprites(half, sortedsprites);
+   Mars_R_SecWait();
+   // re-use the openings array in VRAM
+	gsortedsprites = (int*)(((intptr_t)visplanes[1].open + 3) & ~3);
+   for (i = 0; i < sortedcount+1; i++)
+      gsortedsprites[i] = sortedsprites[i];
+#endif
+
+#ifdef MARS
+   Mars_R_BeginDrawSprites(half, gsortedsprites);
 #endif
 
    R_DrawSortedSprites(&fuzzpos[0], sortedsprites, half);

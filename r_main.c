@@ -939,8 +939,6 @@ void R_RenderPlayerView(int displayplayer)
 	
 	R_Update();
 
-	Mars_R_SecWait();
-
 	t_total = I_GetFRTCounter() - t_total;
 
 	t_ref_cnt = (t_ref_cnt + 1) & 3;
