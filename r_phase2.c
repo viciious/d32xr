@@ -516,9 +516,6 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floor
 
 #ifdef MARS
 
-static void Mars_Sec_R_SplitPlanes(void) ATTR_DATA_CACHE_ALIGN;
-static void Mars_Sec_R_SortPlanes(void) ATTR_DATA_CACHE_ALIGN;
-
 void Mars_Sec_R_WallPrep(void)
 {
     viswall_t *segl;
@@ -584,84 +581,6 @@ void Mars_Sec_R_WallPrep(void)
             MARS_SYS_COMM8++;
         }
     }    
-}
-
-static void Mars_Sec_R_SplitPlanes(void)
-{
-    const int minlen = centerX;
-    const int maxlen = centerX * 2;
-    visplane_t *pl, *last = lastvisplane;
-
-    for (pl = visplanes + 1; pl < last; pl++)
-    {
-        int start, stop;
-        visplane_t* newpl;
-        int numplanes;
-        int newstop;
-
-        numplanes = lastvisplane - visplanes;
-        if (numplanes >= MAXVISPLANES)
-            return;
-
-        // see if there is any open space
-        start = pl->minx, stop = pl->maxx;
-        if (start > stop)
-            continue; // nothing to map
-
-        // split long visplane into two
-
-        int span = stop - start + 1;
-        if (span < maxlen)
-            continue;
-
-        pl->maxx = start;
-        newstop = start + minlen;
-
-        do {
-            newstop = start + minlen;
-            if (newstop > stop || numplanes == MAXWALLCMDS - 1)
-                newstop = stop;
-
-            newpl = lastvisplane++;
-            newpl->open = pl->open;
-            newpl->height = pl->height;
-            newpl->flatnum = pl->flatnum;
-            newpl->lightlevel = pl->lightlevel;
-            newpl->minx = start + 1;
-            newpl->maxx = newstop;
-
-            numplanes++;
-            start = newstop;
-        } while (start < stop);
-    }
-}
-
-// sort visplanes by flatnum so that texture data 
-// has a better chance to stay in the CPU cache
-
-static void Mars_Sec_R_SortPlanes(void)
-{
-    int i, numplanes;
-    visplane_t* pl;
-    uint16_t *sortbuf = sortedvisplanes;
-
-    i = 0;
-    numplanes = 0;
-    for (pl = visplanes + 1; pl < lastvisplane; pl++)
-    {
-        sortbuf[i + 0] = pl->flatnum;
-        sortbuf[i + 1] = pl - visplanes;
-        i += 2;
-        numplanes++;
-    }
-
-    D_isort((int*)sortbuf, numplanes);
-}
-
-void Mars_Sec_R_PlanePrep(void)
-{
-    Mars_Sec_R_SplitPlanes();
-    Mars_Sec_R_SortPlanes();
 }
 
 #else

@@ -30,11 +30,11 @@ typedef struct
 
 static void R_MapPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
 static void R_PlaneLoop(localplane_t* lpl) ATTR_DATA_CACHE_ALIGN;
-static void R_DrawPlanes2(void) ATTR_DATA_CACHE_ALIGN;
+static void R_DrawPlanes2(uint16_t *sortedvisplanes) ATTR_DATA_CACHE_ALIGN;
 
 static void R_LockPln(void) ATTR_DATA_CACHE_ALIGN;
 static void R_UnlockPln(void) ATTR_DATA_CACHE_ALIGN;
-static visplane_t* R_GetNextPlane(void) ATTR_DATA_CACHE_ALIGN;
+static visplane_t* R_GetNextPlane(uint16_t *sortedvisplanes) ATTR_DATA_CACHE_ALIGN;
 
 void R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
 
@@ -212,7 +212,7 @@ static void R_UnlockPln(void)
     pl_lock = 0;
 }
 
-static visplane_t *R_GetNextPlane(void)
+static visplane_t *R_GetNextPlane(uint16_t *sortedvisplanes)
 {
     int p;
 
@@ -233,7 +233,7 @@ static visplane_t *R_GetNextPlane(void)
 #endif
 }
 
-static void R_DrawPlanes2(void)
+static void R_DrawPlanes2(uint16_t *sortedvisplanes)
 {
     angle_t angle;
     localplane_t lpl;
@@ -254,7 +254,7 @@ static void R_DrawPlanes2(void)
 
     extralight = vd.extralight;
 
-    while ((pl = R_GetNextPlane()) != NULL)
+    while ((pl = R_GetNextPlane(sortedvisplanes)) != NULL)
     {
         int light;
 
@@ -306,10 +306,89 @@ static void R_DrawPlanes2(void)
 }
 
 #ifdef MARS
-void Mars_Sec_R_DrawPlanes(void)
+
+static void Mars_R_SplitPlanes(void) ATTR_DATA_CACHE_ALIGN;
+static void Mars_R_SortPlanes(uint16_t *sortedvisplanes) ATTR_DATA_CACHE_ALIGN;
+
+void Mars_Sec_R_DrawPlanes(uint16_t *sortedvisplanes)
 {
-    R_DrawPlanes2();
+    Mars_ClearCacheLine(&lastvisplane);
+    Mars_ClearCacheLines(sortedvisplanes, ((lastvisplane - visplanes - 1) * sizeof(int) + 31) / 16);
+    R_DrawPlanes2(sortedvisplanes);
 }
+
+static void Mars_R_SplitPlanes(void)
+{
+    const int minlen = centerX;
+    const int maxlen = centerX * 2;
+    visplane_t *pl, *last = lastvisplane;
+
+    for (pl = visplanes + 1; pl < last; pl++)
+    {
+        int start, stop;
+        visplane_t* newpl;
+        int numplanes;
+        int newstop;
+
+        numplanes = lastvisplane - visplanes;
+        if (numplanes >= MAXVISPLANES)
+            return;
+
+        // see if there is any open space
+        start = pl->minx, stop = pl->maxx;
+        if (start > stop)
+            continue; // nothing to map
+
+        // split long visplane into two
+
+        int span = stop - start + 1;
+        if (span < maxlen)
+            continue;
+
+        pl->maxx = start;
+        newstop = start + minlen;
+
+        do {
+            newstop = start + minlen;
+            if (newstop > stop || numplanes == MAXWALLCMDS - 1)
+                newstop = stop;
+
+            newpl = lastvisplane++;
+            newpl->open = pl->open;
+            newpl->height = pl->height;
+            newpl->flatnum = pl->flatnum;
+            newpl->lightlevel = pl->lightlevel;
+            newpl->minx = start + 1;
+            newpl->maxx = newstop;
+
+            numplanes++;
+            start = newstop;
+        } while (start < stop);
+    }
+}
+
+// sort visplanes by flatnum so that texture data 
+// has a better chance to stay in the CPU cache
+
+static void Mars_R_SortPlanes(uint16_t *sortedvisplanes)
+{
+    int i, numplanes;
+    visplane_t* pl;
+    uint16_t *sortbuf = sortedvisplanes;
+
+    i = 0;
+    numplanes = 0;
+    for (pl = visplanes + 1; pl < lastvisplane; pl++)
+    {
+        sortbuf[i + 0] = pl->flatnum;
+        sortbuf[i + 1] = pl - visplanes;
+        i += 2;
+        numplanes++;
+    }
+
+    D_isort((int*)sortbuf, numplanes);
+}
+
 #endif
 
 //
@@ -319,18 +398,27 @@ void R_DrawPlanes(void)
 {
 #ifdef MARS
     int numplanes;
+    __attribute__((aligned(16)))
+        uint16_t sortedvisplanes[MAXVISPLANES*2];
+
+    Mars_ClearCacheLine(&lastvisplane);
+    //Mars_ClearCacheLines(visplanes, ((lastvisplane - visplanes) * sizeof(visplane_t) + 31) / 16);
 
     numplanes = lastvisplane - visplanes;
     if (numplanes <= 1)
         return;
 
-    Mars_R_BeginDrawPlanes();
+    Mars_R_SplitPlanes();
 
-    R_DrawPlanes2();
+    Mars_R_SortPlanes(sortedvisplanes);
+
+    Mars_R_BeginDrawPlanes(sortedvisplanes);
+
+    R_DrawPlanes2(sortedvisplanes);
 
     Mars_R_EndDrawPlanes();
 #else
-    R_DrawPlanes2();
+    R_DrawPlanes2(NULL);
 #endif
 }
 

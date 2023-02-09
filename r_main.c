@@ -54,9 +54,6 @@ viswall_t	*viswalls/*[MAXWALLCMDS]*/, *lastwallcmd;
 /* planes */
 /* */
 visplane_t	*visplanes/*[MAXVISPLANES]*/, *lastvisplane;
-#ifdef MARS
-uint16_t 		*sortedvisplanes;
-#endif
 
 #define NUM_VISPLANES_BUCKETS 32
 static visplane_t **visplanes_hash;
@@ -470,8 +467,7 @@ extern	pixel_t	*screens[2];	/* [viewportWidth*viewportHeight];  */
 ==================
 */
 
-static void R_Setup (int displayplayer, vissprite_t *vissprites_,
-	visplane_t **visplanes_hash_, uint16_t *sortedvisplanes_)
+static void R_Setup (int displayplayer, vissprite_t *vissprites_, visplane_t **visplanes_hash_)
 {
 	int 		i;
 	int		damagecount, bonuscount;
@@ -646,8 +642,6 @@ static void R_Setup (int displayplayer, vissprite_t *vissprites_,
 	openings = tempbuf;
 	tempbuf += MAXOPENINGS;
 
-	sortedvisplanes = sortedvisplanes_;
-
 	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
 	vissectors = (void *)tempbuf;
 	tempbuf += sizeof(*vissectors) * MAXVISSSEC / sizeof(*tempbuf);
@@ -713,8 +707,6 @@ void Mars_Sec_R_Setup(void)
 	Mars_ClearCacheLine(&lastopening);
 
 	Mars_ClearCacheLines(visplanes, (sizeof(visplane_t)*MAXVISPLANES+31)/16);
-
-    Mars_ClearCacheLine(&sortedvisplanes);
 
 	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
 		visplanes_hash[i] = NULL;
@@ -808,7 +800,7 @@ boolean R_LatePrep (void);
 void R_Cache (void);
 void R_SegCommands (void);
 void R_DrawPlanes (void);
-void R_Sprites (int *sortedsprites);
+void R_Sprites (void);
 void R_Update (void);
 
 /*
@@ -837,8 +829,6 @@ void R_RenderPlayerView(int displayplayer)
 {
 	visplane_t *visplanes_hash_[NUM_VISPLANES_BUCKETS];
 	vissprite_t vissprites_[MAXVISSPRITES];
-	uint32_t sortedvisplanes_[MAXVISPLANES];
-	int sortedsprites[1+MAXVISSPRITES];
 
 	/* make sure its done now */
 #if defined(JAGUAR)
@@ -852,7 +842,7 @@ void R_RenderPlayerView(int displayplayer)
 	if (debugscreenactive)
 		I_DebugScreen();
 
-	R_Setup(displayplayer, vissprites_, visplanes_hash_, (uint16_t *)sortedvisplanes_);
+	R_Setup(displayplayer, vissprites_, visplanes_hash_);
 
 #ifndef JAGUAR
 	R_BSP();
@@ -867,7 +857,7 @@ void R_RenderPlayerView(int displayplayer)
 
 	R_DrawPlanes();
 
-	R_Sprites(sortedsprites);
+	R_Sprites();
 
 	R_Update();
 #else
@@ -897,16 +887,13 @@ void R_RenderPlayerView(int displayplayer)
 		visplane_t *visplanes_hash_[NUM_VISPLANES_BUCKETS];
 	__attribute__((aligned(16)))
 		vissprite_t vissprites_[MAXVISSPRITES];
-	__attribute__((aligned(16)))
-		uint32_t sortedvisplanes_[MAXVISPLANES];
-	int sortedsprites[1+MAXVISSPRITES];
 
 	while (!I_RefreshCompleted())
 		;
 
 	t_total = I_GetFRTCounter();
 
-	R_Setup(displayplayer, vissprites_, visplanes_hash_, (uint16_t *)sortedvisplanes_);
+	R_Setup(displayplayer, vissprites_, visplanes_hash_);
 
 	Mars_R_BeginWallPrep(drawworld);
 
@@ -928,11 +915,8 @@ void R_RenderPlayerView(int displayplayer)
 	R_SegCommands();
 	t_segs = I_GetFRTCounter() - t_segs;
 
-	Mars_R_SecWait();
-
 	Mars_ClearCacheLine(&lastsegclip);
 	Mars_ClearCacheLine(&lastopening);
-	Mars_ClearCacheLine(&lastvisplane);
 	//Mars_ClearCacheLine(&lastvissector);
 
 	if (lastsegclip - segclip > MAXOPENINGS)
@@ -944,15 +928,12 @@ void R_RenderPlayerView(int displayplayer)
 
 	Mars_ClearCacheLines(openings, ((lastopening - openings) * sizeof(*openings) + 31) / 16);
 
-	//Mars_ClearCacheLines(visplanes, ((lastvisplane - visplanes) * sizeof(visplane_t) + 31) / 16);
-	Mars_ClearCacheLines(sortedvisplanes, ((lastvisplane - visplanes - 1) * sizeof(int) + 31) / 16);
-
 	t_planes = I_GetFRTCounter();
 	R_DrawPlanes();
 	t_planes = I_GetFRTCounter() - t_planes;
 
 	t_sprites = I_GetFRTCounter();
-	R_Sprites(sortedsprites);
+	R_Sprites();
 	t_sprites = I_GetFRTCounter() - t_sprites;
 	
 	R_Update();

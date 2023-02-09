@@ -326,11 +326,10 @@ void Mars_Secondary(void)
 		case MARS_SECCMD_R_WALL_PREP:
 			Mars_Sec_R_Setup();
 			Mars_Sec_R_WallPrep();
-			Mars_Sec_R_PlanePrep();
 			Mars_Sec_R_SegCommands();
 			break;
 		case MARS_SECCMD_R_DRAW_PLANES:
-			Mars_Sec_R_DrawPlanes();
+			Mars_Sec_R_DrawPlanes((uint16_t*)(*(volatile uintptr_t *)&MARS_SYS_COMM8));
 			break;
 		case MARS_SECCMD_R_DRAW_SPRITES:
 			Mars_Sec_R_DrawSprites(MARS_SYS_COMM6, (int*)(*(volatile uintptr_t *)&MARS_SYS_COMM8));

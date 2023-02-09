@@ -60,9 +60,8 @@ void Mars_Secondary(void) ATTR_DATA_CACHE_ALIGN;
 
 void Mars_Sec_R_Setup(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_WallPrep(void) ATTR_DATA_CACHE_ALIGN;
-void Mars_Sec_R_PlanePrep(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_SegCommands(void) ATTR_DATA_CACHE_ALIGN;
-void Mars_Sec_R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
+void Mars_Sec_R_DrawPlanes(uint16_t *sortedvisplanes) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_DrawSprites(int sprscreenhalf, int *sortedsprites) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_DrawPSprites(int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_P_CheckSights(void) ATTR_DATA_CACHE_ALIGN;
@@ -106,9 +105,11 @@ static inline void Mars_R_EndWallPrep(void)
 }
 
 // r_phase7
-static inline void Mars_R_BeginDrawPlanes(void)
+static inline void Mars_R_BeginDrawPlanes(uint16_t *sortedvisplanes)
 {
+	Mars_R_SecWait();
 	MARS_SYS_COMM6 = 0; // next visplane
+	*(volatile uintptr_t *)&MARS_SYS_COMM8 = (uintptr_t)sortedvisplanes;
 	MARS_SYS_COMM4 = MARS_SECCMD_R_DRAW_PLANES;
 }
 

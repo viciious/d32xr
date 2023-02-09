@@ -557,10 +557,6 @@ typedef struct visplane_s
 #define	MAXVISPLANES	32
 extern	visplane_t		*visplanes/*[MAXVISPLANES]*/, *lastvisplane;
 
-#ifdef MARS
-extern	uint16_t 		*sortedvisplanes;
-#endif
-
 int R_PlaneHash(fixed_t height, unsigned flatnum, unsigned lightlevel)
 ATTR_DATA_CACHE_ALIGN
 ;
