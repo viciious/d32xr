@@ -129,9 +129,6 @@ static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy)
    sdx -= x1;
    sdy -= y1;
 
-   dx  /= FRACUNIT;
-   dy  /= FRACUNIT;
-
    dx  -= x1;
    dy  -= y1;
 

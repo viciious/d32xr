@@ -526,7 +526,7 @@ typedef struct vissprite_s
 	fixed_t		texturemid;
 	VINT 		patchnum;
 	VINT		colormap;		/* < 0 = shadow draw */
-	fixed_t		gx,gy;	/* global coordinates */
+	short		gx,gy;	/* global coordinates */
 #ifndef MARS
 	pixel_t		*pixels;		/* data patch header references */
 #endif

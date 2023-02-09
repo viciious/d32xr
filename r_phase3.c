@@ -126,8 +126,8 @@ static void R_PrepMobj(mobj_t *thing)
 #endif
    vis->x1       = x1 < 0 ? 0 : x1;
    vis->x2       = x2 >= viewportWidth ? viewportWidth - 1 : x2;
-   vis->gx       = thing->x;
-   vis->gy       = thing->y;
+   vis->gx       = thing->x / FRACUNIT;
+   vis->gy       = thing->y / FRACUNIT;
    vis->xscale   = xscale;
    vis->xiscale  = FixedDiv(FRACUNIT, xscale);
    FixedMul2(vis->yscale, xscale, stretch);
