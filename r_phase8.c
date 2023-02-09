@@ -119,7 +119,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos,
 static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy)
 {
    fixed_t x1, y1, sdx, sdy;
-   mapvertex_t *v1 = &viswall->v[0], *v2 = &viswall->v[1];
+   mapvertex_t *v1 = &viswall->v1, *v2 = &viswall->v2;
 
    x1  = v1->x;
    y1  = v1->y;
@@ -342,6 +342,7 @@ void R_Sprites(void)
    unsigned midcount;
    vissprite_t *pspr;
    int sortedsprites[1+MAXVISSPRITES];
+   viswall_t *wc;
 
    sortedcount = 0;
    count = lastsprite_p - vissprites;
@@ -399,6 +400,13 @@ void R_Sprites(void)
    // draw mobj sprites
    sortedsprites[0] = sortedcount;
    D_isort(sortedsprites+1, sortedcount);
+
+   for (wc = viswalls; wc < lastwallcmd; wc++)
+   {
+      seg_t *seg = (seg_t *)((volatile seg_t *)wc->seg);
+      wc->v1.x = vertexes[seg->v1].x>>16, wc->v1.y = vertexes[seg->v1].y>>16;
+      wc->v2.x = vertexes[seg->v2].x>>16, wc->v2.y = vertexes[seg->v2].y>>16;
+   }
 
 #ifdef MARS
    Mars_R_BeginDrawSprites(half, sortedsprites);

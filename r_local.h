@@ -484,7 +484,7 @@ typedef struct
 	union
 	{
 		seg_t			*seg;
-		mapvertex_t		v[2];
+		mapvertex_t		v1;
 	};
 
 /* */
@@ -498,7 +498,11 @@ typedef struct
 	int			b_bottomheight;
 	int			b_texturemid;
 
-	fixed_t		ceilingheight;
+	union
+	{
+		fixed_t			ceilingheight;
+		mapvertex_t		v2;
+	};
 
 	byte 		*sil;
 	
