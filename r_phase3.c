@@ -119,7 +119,9 @@ static void R_PrepMobj(mobj_t *thing)
    if(vissprite_p >= vissprites + MAXVISSPRITES - 4)
       return; // too many visible sprites already, leave room for psprites
 
-   vis = vissprite_p++;
+   vis = (vissprite_t *)vissprite_p;
+   vissprite_p++;
+
    vis->patchnum = lump;
 #ifndef MARS
    vis->pixels   = R_CheckPixels(lump + 1);
@@ -215,7 +217,9 @@ static void R_PrepPSprite(pspdef_t *psp)
    if(vissprite_p == vissprites + MAXVISSPRITES)
       return; // out of vissprites
 
-   vis = vissprite_p++;
+   vis = (vissprite_t *)vissprite_p;
+   vissprite_p++;
+
    vis->patchnum = lump;
 #ifndef MARS
    vis->pixels = R_CheckPixels(lump + 1);

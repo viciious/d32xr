@@ -275,7 +275,7 @@ static void R_DrawSortedSprites(int *fuzzpos, int* sortedsprites, int sprscreenh
     {
         vissprite_t* ds;
 
-        ds = vissprites + (sortedsprites[i] & 0x7f);
+        ds = (vissprite_t *)(vissprites + (sortedsprites[i] & 0x7f));
 
         R_ClipVisSprite(ds, spropening, sprscreenhalf);
 
@@ -287,12 +287,13 @@ static void R_DrawPSprites(int *fuzzpos, int sprscreenhalf)
 {
     unsigned i;
     unsigned short spropening[SCREENWIDTH];
-    vissprite_t *vis = lastsprite_p;
+    viswall_t *spr;
     unsigned vhplus1 = viewportHeight + 1;
 
     // draw psprites
-    while (vis < vissprite_p)
+    for (spr = lastsprite_p; spr < vissprite_p; spr++)
     {
+        vissprite_t *vis = (vissprite_t *)spr;
         unsigned stopx = vis->x2 + 1;
         i = vis->x1;
 
@@ -307,8 +308,6 @@ static void R_DrawPSprites(int *fuzzpos, int sprscreenhalf)
         }
 
         R_DrawVisSprite(vis, spropening, fuzzpos, sprscreenhalf);
-
-        ++vis;
     }
 }
 
@@ -337,7 +336,7 @@ void R_Sprites(void)
    int i = 0, count;
    int half, sortedcount;
    unsigned midcount;
-   vissprite_t *pspr;
+   viswall_t *spr;
    int sortedsprites[1+MAXVISSPRITES];
    int *gsortedsprites = sortedsprites;
    viswall_t *wc;
@@ -356,7 +355,7 @@ void R_Sprites(void)
    midcount = 0;
    for (i = 0; i < count; i++)
    {
-       vissprite_t* ds = vissprites + i;
+       vissprite_t* ds = (vissprite_t *)(vissprites + i);
        if (ds->patchnum < 0)
            continue;
        if (ds->x1 > ds->x2)
@@ -376,7 +375,8 @@ void R_Sprites(void)
    }
 
    // add the gun midpoint
-   for (pspr = lastsprite_p; pspr < vissprite_p; pspr++) {
+   for (spr = lastsprite_p; spr < vissprite_p; spr++) {
+        vissprite_t *pspr = (vissprite_t *)spr;
         unsigned xscale;
         unsigned pixcount = pspr->x2 + 1 - pspr->x1;
 

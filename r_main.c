@@ -61,7 +61,7 @@ static visplane_t **visplanes_hash;
 /* */
 /* sprites */
 /* */
-vissprite_t	*vissprites/*[MAXVISSPRITES]*/, * lastsprite_p, * vissprite_p;
+viswall_t	*vissprites/*[MAXVISSPRITES]*/, * lastsprite_p, * vissprite_p;
 
 /* */
 /* openings / misc refresh memory */
@@ -640,9 +640,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	openings = tempbuf;
 	tempbuf += MAXOPENINGS;
 
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
-	vissprites = (void *)tempbuf;
-	tempbuf += sizeof(*vissprites) * MAXVISSPRITES / sizeof(*tempbuf);
+	vissprites = (void *)viswalls;
 
 	visplanes = visplanes_;
 
@@ -849,7 +847,6 @@ void R_RenderPlayerView(int displayplayer)
 	R_BSP();
 
 	R_WallPrep();
-	R_SpritePrep();
 	/* the rest of the refresh can be run in parallel with the next game tic */
 	if (R_LatePrep())
 		R_Cache();
@@ -857,6 +854,8 @@ void R_RenderPlayerView(int displayplayer)
 	R_SegCommands();
 
 	R_DrawPlanes();
+
+	R_SpritePrep();
 
 	R_Sprites();
 
@@ -909,7 +908,6 @@ void R_RenderPlayerView(int displayplayer)
 		return;
 
 	t_prep = I_GetFRTCounter();
-	R_SpritePrep();
 	R_Cache();
 	t_prep = I_GetFRTCounter() - t_prep;
 
@@ -934,6 +932,7 @@ void R_RenderPlayerView(int displayplayer)
 	t_planes = I_GetFRTCounter() - t_planes;
 
 	t_sprites = I_GetFRTCounter();
+	R_SpritePrep();
 	R_Sprites();
 	t_sprites = I_GetFRTCounter() - t_sprites;
 	

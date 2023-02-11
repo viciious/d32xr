@@ -465,16 +465,40 @@ void R_ClearTexCache(r_texcache_t* c);
 
 typedef struct
 {
-	short	actionbits;
-	short	seglightlevel;
-
-	unsigned	scalefrac;
-	unsigned	scale2;
-	int			scalestep;		/* polar angle to start at phase1, then scalestep after phase2 */
-	
+/* */
+/* filled in by early prep */
+/* */
+	/* !!! THE FOLLOWING SECTION MUST BE LARGE ENOUGH */
+	/* !!! TO ACCOMODATE VISSPRITE_T STRUCTURE, GETS */
+	/* !!! OVERWRITTEN AFTER PHASE 7 - BEGIN */
 	unsigned	centerangle;
 	unsigned	offset;
 	unsigned	distance;
+	int			scalestep;		/* polar angle to start at phase1, then scalestep after phase2 */
+
+	int			t_bottomheight;
+	int			t_texturemid;
+
+	int			b_bottomheight;
+	int			b_texturemid;
+	/* !!! THE FOLLOWING SECTION MUST BE LARGE ENOUGH */
+	/* !!! TO ACCOMODATE VISSPRITE_T STRUCTURE, GETS */
+	/* !!! OVERWRITTEN AFTER PHASE 7 - END */
+
+	int			t_topheight;	 // becomes pixelcount after R_SegLoop
+	int			b_topheight;	// becomes pixelcount after R_SegLoop
+
+	VINT		t_texturenum;
+	VINT		b_texturenum;
+
+	VINT        floorpicnum;   // floorpic #   - CALICO: avoid type ambiguity w/extra field
+	VINT        ceilingpicnum; // ceilingpic # - CALICO: avoid type ambiguity w/extra field
+
+	unsigned	scalefrac;
+	unsigned	scale2;
+
+	short	actionbits;
+	short	seglightlevel;
 
 /* */
 /* filled in by bsp */
@@ -487,17 +511,6 @@ typedef struct
 		mapvertex_t		v1;
 	};
 
-/* */
-/* filled in by early prep */
-/* */
-	int			t_topheight;	 // becomes pixelcount after R_SegLoop
-	int			t_bottomheight;
-	int			t_texturemid;
-
-	int			b_topheight;	// becomes pixelcount after R_SegLoop
-	int			b_bottomheight;
-	int			b_texturemid;
-
 	union
 	{
 		fixed_t			ceilingheight;
@@ -505,12 +518,6 @@ typedef struct
 	};
 
 	byte 		*sil;
-	
-	VINT		t_texturenum;
-	VINT		b_texturenum;
-
-	VINT        floorpicnum;   // floorpic #   - CALICO: avoid type ambiguity w/extra field
-	VINT        ceilingpicnum; // ceilingpic # - CALICO: avoid type ambiguity w/extra field
 } viswall_t;
 
 #define	MAXWALLCMDS		128
@@ -534,10 +541,10 @@ typedef struct vissprite_s
 #endif
 } vissprite_t;
 
-#define	MAXVISSPRITES	60
-extern	vissprite_t	*vissprites/*[MAXVISSPRITES]*/, * lastsprite_p, * vissprite_p;
+#define	MAXVISSPRITES	MAXWALLCMDS
+extern	viswall_t	*vissprites/*[MAXVISSPRITES]*/, * lastsprite_p, * vissprite_p;
 
-#define	MAXOPENINGS		SCREENWIDTH*12
+#define	MAXOPENINGS		SCREENWIDTH*14
 extern	unsigned short	*openings/*[MAXOPENINGS]*/;
 extern 	unsigned short	*lastopening;
 extern	unsigned short	*segclip, *lastsegclip;
