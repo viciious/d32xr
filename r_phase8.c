@@ -417,7 +417,7 @@ void R_Sprites(void)
 #ifdef MARS
    Mars_R_SecWait();
    // re-use the openings array in VRAM
-	gsortedsprites = (int*)(((intptr_t)visplanes[1].open + 3) & ~3);
+	gsortedsprites = (int*)(((intptr_t)visplanes[MAXVISPLANES-1].open + 3) & ~3);
    for (i = 0; i < sortedcount+1; i++)
       gsortedsprites[i] = sortedsprites[i];
 #endif

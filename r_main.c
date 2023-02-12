@@ -628,37 +628,37 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		vd.fuzzcolormap = (colormapopt ? 12 : 6) * 256;
 #endif
 
+	visplanes = visplanes_;
+
 	tempbuf = (unsigned short *)I_WorkBuffer();
+
+/* */
+/* plane filling */
+/*	 */
+	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
+	tempbuf += 2; // padding
+	for (i = 0; i < MAXVISPLANES; i++) {
+		visplanes[i].open = tempbuf;
+		tempbuf += SCREENWIDTH+2;
+	}
+
+	segclip = tempbuf;
+	tempbuf += MAXOPENINGS;
 
 	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
 	viswalls = (void*)tempbuf;
 	tempbuf += sizeof(*viswalls) * MAXWALLCMDS / sizeof(*tempbuf);
-
-	segclip = tempbuf;
-	tempbuf += MAXOPENINGS;
 
 	openings = tempbuf;
 	tempbuf += MAXOPENINGS;
 
 	vissprites = (void *)viswalls;
 
-	visplanes = visplanes_;
-
 	lastwallcmd = viswalls;			/* no walls added yet */
 	lastsegclip = segclip;
 
 	lastvisplane = visplanes + 1;		/* visplanes[0] is left empty */
 	visplanes_hash = visplanes_hash_;
-
-/* */
-/* plane filling */
-/*	 */
-	tempbuf = (unsigned short *)(((intptr_t)tempbuf+1)&~1);
-	tempbuf++; // padding
-	for (i = 0; i < MAXVISPLANES; i++) {
-		visplanes[i].open = tempbuf;
-		tempbuf += SCREENWIDTH+2;
-	}
 
 	//I_Error("%d", ((uint16_t *)I_FrameBuffer() + 64*1024-0x100 - tempbuf) * 2);
 
@@ -723,25 +723,28 @@ int R_PlaneHash(fixed_t height, unsigned flatnum, unsigned lightlevel) {
 void R_MarkOpenPlane(visplane_t* pl)
 {
 	int i;
-	unsigned short* open = pl->open;
-	for (i = 0; i < viewportWidth / 4; i++)
+	int longs = (viewportWidth + 1) / 2;
+	uint32_t * open = (uint32_t *)pl->open;
+	const uint32_t v = ((uint32_t)OPENMARK << 16) | OPENMARK;
+	for (i = 0; i < longs/2; i++)
 	{
-		*open++ = OPENMARK;
-		*open++ = OPENMARK;
-		*open++ = OPENMARK;
-		*open++ = OPENMARK;
+		*open++ = v;
+		*open++ = v;
 	}
 }
 
-void R_InitClipBounds(unsigned *clipbounds)
+void R_InitClipBounds(uint32_t *clipbounds)
 {
 	// initialize the clipbounds array
 	int i;
-    int longs = (viewportWidth + 1) / 2;
-    unsigned* clip = clipbounds;
-    unsigned clipval = (unsigned)viewportHeight << 16 | viewportHeight;
-    for (i = 0; i < longs; i++)
-        *clip++ = clipval;
+	int longs = (viewportWidth + 1) / 2;
+	uint32_t* clip = clipbounds;
+	const uint32_t v = ((uint32_t)viewportHeight << 16) | viewportHeight;
+	for (i = 0; i < longs/2; i++)
+	{
+		*clip++ = v;
+		*clip++ = v;
+	}
 }
 
 visplane_t* R_FindPlane(int hash, fixed_t height, 

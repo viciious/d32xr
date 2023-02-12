@@ -579,7 +579,7 @@ visplane_t *R_FindPlane(int hash, fixed_t height, int flatnum,
 ATTR_DATA_CACHE_ALIGN
 ;
 
-void R_InitClipBounds(unsigned *clipbounds)
+void R_InitClipBounds(uint32_t *clipbounds)
 ATTR_DATA_CACHE_ALIGN
 ;
 

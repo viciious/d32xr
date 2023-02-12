@@ -18,6 +18,7 @@ static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle, int ang
 static void R_WallLatePrep(viswall_t* wc, vertex_t *verts) ATTR_DATA_CACHE_ALIGN;
 static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floorheight, 
     fixed_t floornewheight, fixed_t ceilingnewheight) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
+static void R_ClearVisplane0(void) ATTR_DATA_CACHE_ALIGN;
 
 static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight, 
     fixed_t *floornewheight, fixed_t *ceilingnewheight)
@@ -514,19 +515,32 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
     }
 }
 
+static void R_ClearVisplane0(void)
+{
+	int i;
+    int longs = (viewportWidth + 1) / 2;
+	uint32_t * open = (uint32_t *)visplanes[0].open;
+	for (i = 0; i < longs/2; i++)
+	{
+		*open++ = 0;
+		*open++ = 0;
+	}
+}
+
 #ifdef MARS
 
 void Mars_Sec_R_WallPrep(void)
 {
     viswall_t *segl;
     viswall_t *first, *verylast;
-    unsigned clipbounds_[SCREENWIDTH/2+1];
-    unsigned short *clipbounds = (unsigned short *)clipbounds_;
+    uint32_t clipbounds_[SCREENWIDTH/2+1];
+    uint16_t *clipbounds = (uint16_t *)clipbounds_;
     fixed_t floorheight = 0;
     fixed_t floornewheight = 0, ceilingnewheight = 0;
     vertex_t *verts;
 
     R_InitClipBounds(clipbounds_);
+
 #ifdef MARS
     verts = W_GetLumpData(gamemaplump+ML_VERTEXES);
 #endif
@@ -551,6 +565,9 @@ void Mars_Sec_R_WallPrep(void)
 
         for (last = first + nextsegs; segl < last; segl++)
         {
+            if (segl == viswalls)
+                R_ClearVisplane0();
+
             R_WallEarlyPrep(segl, &floorheight, &floornewheight, &ceilingnewheight);
 
             R_WallLatePrep(segl, verts);
