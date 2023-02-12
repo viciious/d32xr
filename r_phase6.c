@@ -239,9 +239,9 @@ void R_SegCommands(void)
     seglocal_t lseg;
     drawtex_t* toptex, * bottomtex;
     int extralight;
-    unsigned clipbounds_[SCREENWIDTH / 2 + 1];
-    unsigned short *clipbounds = (unsigned short *)clipbounds_;
-    unsigned short *newclipbounds = segclip;
+    uint32_t clipbounds_[SCREENWIDTH / 2 + 1];
+    uint16_t *clipbounds = (uint16_t *)clipbounds_;
+    uint16_t *newclipbounds = segclip;
 
     // initialize the clipbounds array
     R_InitClipBounds(clipbounds_);
