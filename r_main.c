@@ -895,9 +895,6 @@ void R_RenderPlayerView(int displayplayer)
 		visplane_t *visplanes_hash_[NUM_VISPLANES_BUCKETS];
 	sector_t *vissectors_[MAXVISSSEC];
 
-	while (!I_RefreshCompleted())
-		;
-
 	t_total = I_GetFRTCounter();
 
 	R_Setup(displayplayer, visplanes_, visplanes_hash_, vissectors_);
