@@ -54,7 +54,8 @@ viswall_t	*viswalls/*[MAXWALLCMDS]*/, *lastwallcmd;
 /* planes */
 /* */
 visplane_t	*visplanes/*[MAXVISPLANES]*/, *lastvisplane;
-
+uint16_t visplane0open[SCREENWIDTH+2] = { 0 };
+ 
 #define NUM_VISPLANES_BUCKETS 32
 static visplane_t **visplanes_hash;
 
@@ -635,9 +636,11 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 /* */
 /* plane filling */
 /*	 */
+	visplanes[0].open = visplane0open + 1;
+
 	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
 	tempbuf += 2; // padding
-	for (i = 0; i < MAXVISPLANES; i++) {
+	for (i = 1; i < MAXVISPLANES; i++) {
 		visplanes[i].open = tempbuf;
 		tempbuf += SCREENWIDTH+2;
 	}
@@ -755,7 +758,7 @@ visplane_t* R_FindPlane(int hash, fixed_t height,
 	tail = visplanes_hash[hash];
 	for (check = tail; check; check = next)
 	{
-		next = check->next ? &visplanes[check->next - 1] : NULL;
+		next = check->next;
 
 		if (height == check->height && // same plane as before?
 			flatnum == check->flatnum &&
@@ -788,7 +791,7 @@ visplane_t* R_FindPlane(int hash, fixed_t height,
 
 	R_MarkOpenPlane(check);
 
-	check->next = tail ? tail - visplanes + 1 : 0;
+	check->next = tail;
 	visplanes_hash[hash] = check;
 
 	return check;
