@@ -45,7 +45,7 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
 
       front_sector    = &sectors[sides[li->sidenum[side]].sector];
 #ifdef MARS
-      Mars_ClearCacheLines(front_sector, (sizeof(sector_t)+31)/16);
+      Mars_ClearCacheLines(front_sector, /*(sizeof(sector_t)+31)/16*/2);
 #endif
 
       f_ceilingpic    = front_sector->ceilingpic;
@@ -75,7 +75,7 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
          back_sector = &emptysector;
 #ifdef MARS
       else
-         Mars_ClearCacheLines(back_sector, (sizeof(sector_t)+31)/16);
+         Mars_ClearCacheLines(back_sector, /*(sizeof(sector_t)+31)/16*/2);
 #endif
 
       b_ceilingpic    = back_sector->ceilingpic;
