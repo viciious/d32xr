@@ -70,6 +70,7 @@ void Mars_SetMusicVolume(uint8_t volume) MARS_ATTR_DATA_CACHE_ALIGN;
 #define Mars_GetTicCount() (*(volatile uintptr_t *)((uintptr_t)&mars_vblank_count | 0x20000000))
 int Mars_GetFRTCounter(void);
 
+#define Mars_ClearCacheLine(addr) *(volatile uintptr_t *)(((uintptr_t)addr & ~15) | 0x40000000) = 0
 #define Mars_ClearCache() \
 	do { \
 		CacheControl(0); /* disable cache */ \
@@ -78,30 +79,15 @@ int Mars_GetFRTCounter(void);
 
 #define Mars_ClearCacheLines(paddr,nl) \
 	do { \
-		if (nl > 0) { \
-			uint32_t l; \
-			uintptr_t *addr; \
-			/* addr = ((uintptr_t)(paddr) & ~15) | 0x40000000;*/ \
-			__asm volatile ( \
-				"mov #15, %0\n\t" \
-				"xor %0, %0\n\t" \
-				"and %2, %0\n\t" \
-				"mov #1, %1\n\t" \
-				"rotr %1\n\t" \
-				"rotr %1\n\t" \
-				"or %1, %0\n\t" \
-				: "=r" (addr), "=&r" (l) \
-				: "r" (paddr) ); \
-			l = nl; \
-			do { \
-				*addr = 0, addr += 4; \
-			} while (--l); \
+		uintptr_t addr = ((uintptr_t)(paddr) & ~15) | 0x40000000; \
+		uint32_t l; \
+		for (l = 0; l < nl; l++) { \
+			*(volatile uintptr_t *)addr = 0; \
+			addr += 16; \
 		} \
 	} while (0)
 
-#endif
-
-#define Mars_ClearCacheLine(addr) Mars_ClearCacheLines(addr,1)
+#endif 
 
 uint16_t *Mars_FrameBufferLines(void);
 
