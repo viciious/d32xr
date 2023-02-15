@@ -409,9 +409,12 @@ void R_Sprites(void)
 
    for (wc = viswalls; wc < lastwallcmd; wc++)
    {
-      volatile int v1 = wc->seg->v1, v2 = wc->seg->v2;
-      wc->v1.x = verts[v1].x>>16, wc->v1.y = verts[v1].y>>16;
-      wc->v2.x = verts[v2].x>>16, wc->v2.y = verts[v2].y>>16;
+      if (wc->actionbits & (AC_TOPSIL | AC_BOTTOMSIL | AC_SOLIDSIL))
+      {
+         volatile int v1 = wc->seg->v1, v2 = wc->seg->v2;
+         wc->v1.x = verts[v1].x>>16, wc->v1.y = verts[v1].y>>16;
+         wc->v2.x = verts[v2].x>>16, wc->v2.y = verts[v2].y>>16;
+      }
    }
 
 #ifdef MARS
