@@ -75,7 +75,8 @@ void R_InitTextures (void)
 			if (c >= 'a' && c <= 'z')
 				texture->name[j] = c - ('a' - 'A');
 		}
-		texture->data = NULL;		/* not cached yet */
+		for (j = 0; j < MIPLEVELS; j++)
+			texture->data[j] = NULL;		/* not cached yet */
 		if (start >= 0 && end > 0)
 			texture->lumpnum = W_CheckNumForNameExt(texture->name, start, end);
 		else

@@ -91,7 +91,7 @@ static void R_CacheBestObject(void)
         texture_t* tex = &textures[id];
         pixels = (int)tex->width * tex->height;
         lumpnum = tex->lumpnum;
-        pdata = (void**)&tex->data;
+        pdata = (void**)&(tex->data[0]);
     }
     else
     {

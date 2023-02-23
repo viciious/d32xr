@@ -408,7 +408,7 @@ D_printf ("Done\n");
 */
 void R_SetupTextureCaches(void)
 {
-	int i;
+	int i, j;
 	int zonefree;
 	int cachezonesize;
 	void *margin;
@@ -417,7 +417,25 @@ void R_SetupTextureCaches(void)
 
 	// reset pointers from previous level
 	for (i = 0; i < numtextures; i++)
-		textures[i].data = R_CheckPixels(textures[i].lumpnum);
+	{
+		int w = textures[i].width, h = textures[i].height;
+		uint8_t *data = R_CheckPixels(textures[i].lumpnum);
+
+		if (w < MINMIPSIZE || h < MINMIPSIZE)
+		{
+			for (j = 0; j < MIPLEVELS; j++)
+				textures[i].data[j] = data;
+		}
+		else
+		{
+			for (j = 0; j < MIPLEVELS; j++)
+			{
+				textures[i].data[j] = data;
+				data += w * h;
+				w >>= 1, h >>= 1;
+			}
+		}
+	}
 	for (i=0 ; i<numflats ; i++)
 		flatpixels[i] = R_CheckPixels(firstflat + i);
 

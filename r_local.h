@@ -150,6 +150,8 @@ typedef struct
 	int			children[2];		/* if NF_SUBSECTOR its a subsector */
 } node_t;
 
+#define MIPLEVELS 4
+#define MINMIPSIZE	(1<<MIPLEVELS)
 
 typedef struct
 {
@@ -158,9 +160,9 @@ typedef struct
 	VINT			height;
 	int			lumpnum;
 #ifdef MARS
-	inpixel_t 	*data;
+	inpixel_t 	*data[MIPLEVELS];
 #else
-	pixel_t		*data;			/* cached data to draw from */
+	pixel_t		*data[MIPLEVELS];			/* cached data to draw from */
 #endif
 #ifndef MARS
 	int			usecount;		/* for precaching */
