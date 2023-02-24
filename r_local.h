@@ -170,6 +170,15 @@ typedef struct
 #endif
 } texture_t;
 
+typedef struct
+{
+#ifdef MARS
+	inpixel_t 	*data[MIPLEVELS];
+#else
+	pixel_t		*data[MIPLEVELS];			/* cached data to draw from */
+#endif
+} flattex_t;
+
 /*
 ==============================================================================
 
@@ -379,7 +388,7 @@ extern	texture_t	*textures;
 
 extern	VINT			*flattranslation;		/* for global animation */
 extern	VINT			*texturetranslation;	/* for global animation */
-extern	void			** flatpixels;
+extern	flattex_t		*flatpixels;
 
 extern	VINT		firstflat, numflats;
 

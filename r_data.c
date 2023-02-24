@@ -20,7 +20,7 @@ spriteframe_t* spriteframes;
 VINT			*flattranslation;		/* for global animation */
 VINT			*texturetranslation;	/* for global animation */
 
-void			**flatpixels;
+flattex_t		*flatpixels;
 
 texture_t	*skytexturep;
 

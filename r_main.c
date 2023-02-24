@@ -436,8 +436,13 @@ void R_SetupTextureCaches(void)
 			}
 		}
 	}
+
 	for (i=0 ; i<numflats ; i++)
-		flatpixels[i] = R_CheckPixels(firstflat + i);
+	{
+		void *data = R_CheckPixels(firstflat + i);
+		for (j = 0; j < MIPLEVELS; j++)
+			flatpixels[i].data[j] = data;
+	}
 
 	// functioning texture cache requires at least 8kb of ram
 	zonefree = Z_LargestFreeBlock(mainzone);

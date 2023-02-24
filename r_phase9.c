@@ -96,9 +96,10 @@ static void R_CacheBestObject(void)
     else
     {
         int flatnum = id - numtextures;
+        flattex_t *flat = &flatpixels[flatnum];
         pixels = 64 * 64;
         lumpnum = firstflat + flatnum;
-        pdata = (void**)&flatpixels[flatnum];
+        pdata = (void**)&flat->data[0];
     }
 
     R_AddToTexCache(&r_texcache, id, pixels, lumpnum, pdata);

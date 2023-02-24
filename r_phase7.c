@@ -20,11 +20,12 @@ typedef struct
     int lightmin, lightmax, lightsub;
     fixed_t basexscale, baseyscale;
     int	pixelcount;
+    int mipcount;
 
 #ifdef MARS
-    inpixel_t* ds_source;
+    inpixel_t* ds_source[MIPLEVELS];
 #else
-    pixel_t* ds_source;
+    pixel_t* ds_source[MIPLEVELS];
 #endif
 } localplane_t;
 
@@ -116,7 +117,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
         light = lpl->lightmax;
     }
 
-    drawspan(y, x, x2, light, xfrac, yfrac, xstep, ystep, lpl->ds_source, 64);
+    drawspan(y, x, x2, light, xfrac, yfrac, xstep, ystep, lpl->ds_source[0], 64);
 }
 
 //
@@ -256,6 +257,7 @@ static void R_DrawPlanes2(uint16_t *sortedvisplanes)
 
     while ((pl = R_GetNextPlane(sortedvisplanes)) != NULL)
     {
+        int j;
         int light;
 
         if (pl->minx > pl->maxx)
@@ -263,7 +265,9 @@ static void R_DrawPlanes2(uint16_t *sortedvisplanes)
 
         lpl.pl = pl;
         lpl.pixelcount = 0;
-        lpl.ds_source = flatpixels[pl->flatnum];
+        for (j = 0; j < MIPLEVELS; j++)
+            lpl.ds_source[j] = flatpixels[pl->flatnum].data[j];
+        lpl.mipcount = 0;
         lpl.height = (unsigned)D_abs(pl->height) << FIXEDTOHEIGHT;
 
         if (vd.fixedcolormap)

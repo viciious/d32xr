@@ -573,11 +573,13 @@ void Mars_Sec_R_WallPrep(void)
 
             if (segl->actionbits & AC_ADDFLOOR)
             {
-                Mars_ClearCacheLine(&flatpixels[segl->floorpicnum]);
+                flattex_t *flat = &flatpixels[segl->floorpicnum];
+                Mars_ClearCacheLine(flat->data[0]);
             }
             if (segl->actionbits & AC_ADDCEILING)
             {
-                Mars_ClearCacheLine(&flatpixels[segl->ceilingpicnum]);
+                flattex_t *flat = &flatpixels[segl->ceilingpicnum];
+                Mars_ClearCacheLine(flat->data[0]);
             }
 
             MARS_SYS_COMM8++;
