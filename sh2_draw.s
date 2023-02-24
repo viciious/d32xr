@@ -221,7 +221,7 @@ do_fuzz_col_loop_low:
 !
 !void I_DrawSpanLow(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 !                fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep,
-!                inpixel_t *ds_source)
+!                inpixel_t *ds_source, int ds_height)
 
         .align  4
         .global _I_DrawSpanLowA
@@ -243,6 +243,7 @@ _I_DrawSpanLowA:
         mov.l   r11,@-r15
         mov.l   r12,@-r15
         mov.l   r13,@-r15
+        mov.l   r14,@-r15
         mov.l   draw_cmap,r0
         mov.l   @r0,r0
         add     r7,r7
@@ -255,21 +256,27 @@ _I_DrawSpanLowA:
         add     r4,r8
         shlr2   r4
         add     r4,r8           /* fb += (ds_y*256 + ds_y*64) */
-        mov.l   @(24,r15),r2    /* xfrac */
-        mov.l   @(28,r15),r4    /* yfrac */
-        mov.l   @(32,r15),r3    /* xstep */
-        mov.l   @(36,r15),r5    /* ystep */
-        mov.l   @(40,r15),r9    /* ds_source */
-        mov.l   draw_flat_ymask,r11
+        mov.l   @(28,r15),r2    /* xfrac */
+        mov.l   @(32,r15),r4    /* yfrac */
+        mov.l   @(36,r15),r3    /* xstep */
+        mov.l   @(40,r15),r5    /* ystep */
+        mov.l   @(44,r15),r9    /* ds_source */
+        mov.l   @(48,r15),r14   /* ds_height */
+
+        mov     r14,r11
+        dt      r11
+        mulu.w   r14,r11        /* (ds_height-1) * ds_height */
+        dt      r14             /* (ds_height-1) */
 
         /* test if dst & 2 == 2 */
         mov     r8,r0
         tst     #2,r0
+        sts     macl,r11        /* draw_flat_ymask */
         bt      begin_span_low_loop
 
         /* draw 1px so that dst & 1 == 0 afterwards */
         swap.w  r2,r0           /* (xfrac >> 16) */
-        and     #63,r0          /* (xfrac >> 16) & 63 */
+        and     r14,r0          /* (xfrac >> 16) & 63 */
         swap.w  r4,r1           /* (yfrac >> 16) */
         and     r11,r1          /* (yfrac >> 16) & 63*64 */
         or      r1,r0           /* spot = ((yfrac >> 16) & *64) | ((xfrac >> 16) & 63) */
@@ -288,7 +295,7 @@ draw_span_low_1px:
 
 begin_span_low_loop:
         swap.w  r2,r0           /* (xfrac >> 16) */
-        and     #63,r0          /* (xfrac >> 16) & 63 */
+        and     r14,r0          /* (xfrac >> 16) & 63 */
         swap.w  r4,r1           /* (yfrac >> 16) */
         and     r11,r1          /* (yfrac >> 16) & 63*64 */
 
@@ -313,7 +320,7 @@ do_span_low_loop:
         mov.w   @(r0,r7),r13    /* dpix = ds_colormap[pix] */
 
         swap.w  r2,r0           /* (xfrac >> 16) */
-        and     #63,r0          /* (xfrac >> 16) & 63 */
+        and     r14,r0          /* (xfrac >> 16) & 63 */
         or      r1,r0           /* spot = ((yfrac >> 16) & *64) | ((xfrac >> 16) & 63) */
         mov.b   @(r0,r9),r0     /* pix = ds_source[spot] */
         add     r3,r2           /* xfrac += xstep */
@@ -324,7 +331,7 @@ do_span_low_loop:
         mov.w   @(r0,r7),r10    /* dpix = ds_colormap[pix] */
 
         swap.w  r2,r0           /* (xfrac >> 16) */
-        and     #63,r0          /* (xfrac >> 16) & 63 */
+        and     r14,r0          /* (xfrac >> 16) & 63 */
         or      r1,r0           /* spot = ((yfrac >> 16) & *64) | ((xfrac >> 16) & 63) */
 
         dt      r6              /* count-- */
@@ -342,6 +349,7 @@ do_span_low_loop:
         mov     #1,r6
 
 exit_span_low_loop:
+        mov.l   @r15+,r14
         mov.l   @r15+,r13
         mov.l   @r15+,r12
         mov.l   @r15+,r11
@@ -558,7 +566,7 @@ do_fuzz_col_loop:
 !
 !void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 !                fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep,
-!                inpixel_t *ds_source)
+!                inpixel_t *ds_source, int ds_height)
 
         .align  4
         .global _I_DrawSpanA
@@ -581,6 +589,7 @@ _I_DrawSpanA:
         mov.l   r11,@-r15
         mov.l   r12,@-r15
         mov.l   r13,@-r15
+        mov.l   r14,@-r15
         mov.l   draw_cmap,r0
         mov.l   @r0,r0
         add     r0,r7           /* ds_colormap = colormap + light */
@@ -591,21 +600,27 @@ _I_DrawSpanA:
         add     r4,r8
         shlr2   r4
         add     r4,r8           /* fb += (ds_y*256 + ds_y*64) */
-        mov.l   @(24,r15),r2    /* xfrac */
-        mov.l   @(28,r15),r4    /* yfrac */
-        mov.l   @(32,r15),r3    /* xstep */
-        mov.l   @(36,r15),r5    /* ystep */
-        mov.l   @(40,r15),r9    /* ds_source */
-        mov.l   draw_flat_ymask,r11
+        mov.l   @(28,r15),r2    /* xfrac */
+        mov.l   @(32,r15),r4    /* yfrac */
+        mov.l   @(36,r15),r3    /* xstep */
+        mov.l   @(40,r15),r5    /* ystep */
+        mov.l   @(44,r15),r9    /* ds_source */
+        mov.l   @(48,r15),r14   /* ds_height */
+
+        mov     r14,r11
+        dt      r11
+        mulu.w  r14,r11         /* (ds_height-1) * ds_height */
+        dt      r14             /* (ds_height-1) */
 
         /* test if dst & 1 == 1 */
         mov     r8,r0
         tst     #1,r0
+        sts     macl,r11        /* draw_flat_ymask */
         bt      begin_span_loop
 
         /* draw 1px so that dst & 1 == 0 afterwards */
         swap.w  r2,r0           /* (xfrac >> 16) */
-        and     #63,r0          /* (xfrac >> 16) & 63 */
+        and     r14,r0          /* (xfrac >> 16) & 63 */
         swap.w  r4,r1           /* (yfrac >> 16) */
         and     r11,r1          /* (yfrac >> 16) & 63*64 */
         or      r1,r0           /* spot = ((yfrac >> 16) & *64) | ((xfrac >> 16) & 63) */
@@ -623,7 +638,7 @@ draw_span_1px:
 
 begin_span_loop:
         swap.w  r2,r0           /* (xfrac >> 16) */
-        and     #63,r0          /* (xfrac >> 16) & 63 */
+        and     r14,r0          /* (xfrac >> 16) & 63 */
         swap.w  r4,r1           /* (yfrac >> 16) */
         and     r11,r1          /* (yfrac >> 16) & 63*64 */
 
@@ -648,7 +663,7 @@ do_span_loop:
         mov.b   @(r0,r7),r13    /* dpix = ds_colormap[pix] */
 
         swap.w  r2,r0           /* (xfrac >> 16) */
-        and     #63,r0          /* (xfrac >> 16) & 63 */
+        and     r14,r0          /* (xfrac >> 16) & 63 */
         or      r1,r0           /* spot = ((yfrac >> 16) & *64) | ((xfrac >> 16) & 63) */
         mov.b   @(r0,r9),r0     /* pix = ds_source[spot] */
         add     r3,r2           /* xfrac += xstep */
@@ -659,7 +674,7 @@ do_span_loop:
         mov.b   @(r0,r7),r10    /* dpix = ds_colormap[pix] */
 
         swap.w  r2,r0           /* (xfrac >> 16) */
-        and     #63,r0          /* (xfrac >> 16) & 63 */
+        and     r14,r0          /* (xfrac >> 16) & 63 */
         or      r1,r0           /* spot = ((yfrac >> 16) & *64) | ((xfrac >> 16) & 63) */
 
         extu.b  r10,r10
@@ -674,6 +689,7 @@ do_span_loop:
         mov     #1,r6
 
 exit_span_loop:
+        mov.l   @r15+,r14
         mov.l   @r15+,r13
         mov.l   @r15+,r12
         mov.l   @r15+,r11

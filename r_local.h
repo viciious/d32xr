@@ -277,7 +277,7 @@ void	R_SetupLevel(void);
 void	R_SetupTextureCaches(void);
 
 typedef void (*drawcol_t)(int, int, int, int, fixed_t, fixed_t, inpixel_t*, int, int *);
-typedef void (*drawspan_t)(int, int, int, int, fixed_t, fixed_t, fixed_t, fixed_t, inpixel_t*);
+typedef void (*drawspan_t)(int, int, int, int, fixed_t, fixed_t, fixed_t, fixed_t, inpixel_t*, int);
 
 extern drawcol_t drawcol;
 extern drawcol_t drawfuzzcol;
