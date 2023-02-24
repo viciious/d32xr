@@ -14,8 +14,9 @@
 // Update pixel counts for walls and flats
 static void R_UpdateCacheCounts(void)
 {
-   int pixcount;
+   unsigned pixcount;
    viswall_t *wall;
+   int firstflat = numtextures*2;
 
    for (wall = viswalls; wall < lastwallcmd; wall++)
    {
@@ -23,13 +24,15 @@ static void R_UpdateCacheCounts(void)
         continue;
       if (wall->actionbits & AC_TOPTEXTURE)
       {
-         pixcount = *((volatile int *)((uintptr_t)&wall->t_topheight | 0x20000000));
-         R_AddPixelsToTexCache(&r_texcache, wall->t_texturenum, pixcount);
+         pixcount = *((volatile unsigned *)((uintptr_t)&wall->t_pixelcount[0] | 0x20000000));
+         R_AddPixelsToTexCache(&r_texcache, wall->t_texturenum, pixcount>>16);
+         R_AddPixelsToTexCache(&r_texcache, numtextures+wall->t_texturenum, pixcount&0xffff);
       }
       if (wall->actionbits & AC_BOTTOMTEXTURE)
       {
-         pixcount = *((volatile int *)((uintptr_t)&wall->b_topheight | 0x20000000));
-         R_AddPixelsToTexCache(&r_texcache, wall->b_texturenum, pixcount);
+         pixcount = *((volatile unsigned *)((uintptr_t)&wall->b_pixelcount[0] | 0x20000000));
+         R_AddPixelsToTexCache(&r_texcache, wall->b_texturenum, pixcount>>16);
+         R_AddPixelsToTexCache(&r_texcache, numtextures+wall->b_texturenum, pixcount&0xffff);
       }
    }
 
@@ -39,8 +42,9 @@ static void R_UpdateCacheCounts(void)
    visplane_t* pl;
     for (pl = visplanes + 1; pl < lastvisplane; pl++)
     {
-        pixcount = *((volatile VINT *)((uintptr_t)&pl->pixelcount | 0x20000000));
-        R_AddPixelsToTexCache(&r_texcache, numtextures+pl->flatnum, pixcount);
+        pixcount = *((volatile unsigned *)((uintptr_t)&pl->pixelcount | 0x20000000));
+        R_AddPixelsToTexCache(&r_texcache, firstflat+pl->flatnum, pixcount>>16);
+        R_AddPixelsToTexCache(&r_texcache, firstflat+numflats+pl->flatnum, pixcount&0xffff);
     }
 }
 
@@ -50,6 +54,7 @@ static void R_UpdateCacheCounts(void)
 static void R_FindBestCacheObject(void)
 {
    viswall_t *wall;
+   int firstflat = numtextures*2;
 
    R_PostTexCacheFrame(&r_texcache);
 
@@ -58,24 +63,33 @@ static void R_FindBestCacheObject(void)
         unsigned int fw_actionbits = wall->actionbits;
 
         if (fw_actionbits & AC_TOPTEXTURE)
+        {
             R_TestTexCacheCandidate(&r_texcache, wall->t_texturenum);
-
+            R_TestTexCacheCandidate(&r_texcache, numtextures+wall->t_texturenum);
+        }
         if (fw_actionbits & AC_BOTTOMTEXTURE)
+        {
             R_TestTexCacheCandidate(&r_texcache, wall->b_texturenum);
+            R_TestTexCacheCandidate(&r_texcache, numtextures+wall->t_texturenum);
+        }
 
-        R_TestTexCacheCandidate(&r_texcache, numtextures + wall->floorpicnum);
+        R_TestTexCacheCandidate(&r_texcache, firstflat + wall->floorpicnum);
+        R_TestTexCacheCandidate(&r_texcache, firstflat+numflats + wall->floorpicnum);
 
         if (wall->ceilingpicnum != -1)
-            R_TestTexCacheCandidate(&r_texcache, numtextures + wall->ceilingpicnum);
+        {
+            R_TestTexCacheCandidate(&r_texcache, firstflat + wall->ceilingpicnum);
+            R_TestTexCacheCandidate(&r_texcache, firstflat+numflats + wall->ceilingpicnum);
+        }
    }
 }
 
 static void R_CacheBestObject(void)
 {
-    int lumpnum;
     int pixels;
     void **pdata;
     const int id = r_texcache.bestobj;
+    int firstflat = numtextures*2;
 
     if (id == -1)
         return;
@@ -90,19 +104,30 @@ static void R_CacheBestObject(void)
     {
         texture_t* tex = &textures[id];
         pixels = (int)tex->width * tex->height;
-        lumpnum = tex->lumpnum;
         pdata = (void**)&(tex->data[0]);
+    }
+    else if (id < firstflat)
+    {
+        texture_t* tex = &textures[id-numtextures];
+        pixels = (int)(tex->width>>1) * (tex->height>>1);
+        pdata = (void**)&(tex->data[1]);
+    }
+    else if (id < firstflat+numflats)
+    {
+        int flatnum = id - firstflat;
+        flattex_t *flat = &flatpixels[flatnum];
+        pixels = 64 * 64;
+        pdata = (void**)&flat->data[0];
     }
     else
     {
-        int flatnum = id - numtextures;
+        int flatnum = id - firstflat-numflats;
         flattex_t *flat = &flatpixels[flatnum];
-        pixels = 64 * 64;
-        lumpnum = firstflat + flatnum;
-        pdata = (void**)&flat->data[0];
+        pixels = (64>>1) * (64>>1);
+        pdata = (void**)&flat->data[1];
     }
 
-    R_AddToTexCache(&r_texcache, id, pixels, lumpnum, pdata);
+    R_AddToTexCache(&r_texcache, id, pixels, pdata);
 }
 
 static void R_UpdateCache(void)

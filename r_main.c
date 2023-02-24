@@ -396,7 +396,7 @@ D_printf ("Done\n");
 
 	R_SetDetailMode(detailmode);
 
-	R_InitTexCache(&r_texcache, numflats+numtextures);
+	R_InitTexCache(&r_texcache, (numflats+numtextures)*2);
 }
 
 /*

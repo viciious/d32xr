@@ -198,7 +198,7 @@ static void R_EvictFromTexCache(void* ptr, void* userp)
 		if (--entry->lifecount == 0)
 		{
 			c->reqfreed++;
-			*entry->userp = R_CheckPixels(entry->lumpnum);
+			*entry->userp = entry->userpold;
 			Z_Free2(c->zone, entry);
 		}
 	}
@@ -215,7 +215,7 @@ static void R_EvictFromTexCache(void* ptr, void* userp)
 =
 =================
 */
-void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **userp)
+void R_AddToTexCache(r_texcache_t* c, int id, int pixels, void **userp)
 {
 	int size;
 	int trynum;
@@ -268,11 +268,11 @@ retry:
 
 	entry->id = id;
 	entry->pixelcount = c->pixcount[id];
-	entry->lumpnum = lumpnum;
 	entry->userp = userp;
+	entry->userpold = *userp;
 	entry->lifecount = CACHE_FRAMES_DEFAULT;
 
-	lumpdata = R_CheckPixels(lumpnum);
+	lumpdata = *userp;
 
 	// align pointers so that the 4 least significant bits match
 	data = (byte*)entry + sizeof(texcacheblock_t) + 16;
@@ -300,7 +300,7 @@ static void R_ForceEvictFromTexCache(void* ptr, void* userp)
 	texcacheblock_t* entry = ptr;
 	r_texcache_t* c = userp;
 
-	*entry->userp = R_CheckPixels(entry->lumpnum);
+	*entry->userp = entry->userpold;
 	Z_Free2(c->zone, entry);
 }
 

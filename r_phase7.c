@@ -20,7 +20,7 @@ typedef struct
     fixed_t x, y;
     int lightmin, lightmax, lightsub;
     fixed_t basexscale, baseyscale;
-    int	pixelcount;
+    int	pixelcount[2]; // for 2 closest mip levels
     unsigned mipcount;
 
 #ifdef MARS
@@ -122,16 +122,18 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
         light = lpl->lightmax;
     }
 
-    if (miplevel > 0) {
+    if (miplevel == 0) {
+        lpl->pixelcount[0] += x2 - x + 1;
+    } else if (miplevel == 1) {
+        lpl->pixelcount[1] += x2 - x + 1;
+        xfrac >>= 1, xstep >>= 1;
+        yfrac >>= 2, ystep >>= 2;
+    } else {
         unsigned m = miplevel;
         do {
-            xfrac >>= 1;
-            xstep >>= 1;
-            yfrac >>= 2;
-            ystep >>= 2;
+            xfrac >>= 1, xstep >>= 1;
+            yfrac >>= 2, ystep >>= 2;
         } while (--m);
-    } else {
-        lpl->pixelcount += x2 - x + 1;
     }
 
     drawspan(y, x, x2, light, xfrac, yfrac, xstep, ystep, lpl->ds_source[miplevel], lpl->mipsize[miplevel]);
@@ -280,7 +282,7 @@ static void R_DrawPlanes2(uint16_t *sortedvisplanes)
             continue;
 
         lpl.pl = pl;
-        lpl.pixelcount = 0;
+        lpl.pixelcount[0] = lpl.pixelcount[1] = 0;
         if (debugmode == DEBUGMODE_NOTEXCACHE)
         {
             lpl.ds_source[0] = flatpixels[pl->flatnum].data[0];
@@ -335,7 +337,8 @@ static void R_DrawPlanes2(uint16_t *sortedvisplanes)
 
         R_PlaneLoop(&lpl);
 
-        pl->pixelcount = lpl.pixelcount;
+        pl->pixelcount[0] = lpl.pixelcount[0];
+        pl->pixelcount[1] = lpl.pixelcount[1];
     }
 }
 

@@ -434,11 +434,11 @@ typedef struct
 
 typedef struct
 {
-	VINT id;
+	int id;
 	uint16_t pixelcount;
-	VINT lumpnum;
 	VINT lifecount;
 	void** userp;
+	void *userpold;
 } texcacheblock_t;
 
 extern r_texcache_t r_texcache;
@@ -451,7 +451,7 @@ void R_SetupTexCacheFrame(r_texcache_t* c);
 void R_TestTexCacheCandidate(r_texcache_t* c, int id);
 void R_AddPixelsToTexCache(r_texcache_t* c, int id, int pixels);
 void R_PostTexCacheFrame(r_texcache_t* c);
-void R_AddToTexCache(r_texcache_t* c, int id, int pixels, int lumpnum, void **userp);
+void R_AddToTexCache(r_texcache_t* c, int id, int pixels, void **userp);
 void R_ClearTexCache(r_texcache_t* c);
 
 /*
@@ -496,8 +496,14 @@ typedef struct
 	/* !!! TO ACCOMODATE VISSPRITE_T STRUCTURE, GETS */
 	/* !!! OVERWRITTEN AFTER PHASE 7 - END */
 
-	int			t_topheight;	 // becomes pixelcount after R_SegLoop
-	int			b_topheight;	// becomes pixelcount after R_SegLoop
+	union {
+		int			t_topheight;	 // becomes pixelcount after R_SegLoop
+		uint16_t 	t_pixelcount[2];
+	};
+	union {
+		int			b_topheight;	// becomes pixelcount after R_SegLoop
+		uint16_t 	b_pixelcount[2];
+	};
 
 	VINT		t_texturenum;
 	VINT		b_texturenum;
@@ -569,7 +575,7 @@ typedef struct visplane_s
 	VINT		minx, maxx;
 	VINT 		flatnum;
 	VINT		lightlevel;
-	unsigned VINT pixelcount;
+	unsigned short pixelcount[2];
 	struct visplane_s	*next;
 	unsigned short		*open/*[SCREENWIDTH+2]*/;		/* top<<8 | bottom */ /* leave pads for [minx-1]/[maxx+1] */
 } visplane_t;
