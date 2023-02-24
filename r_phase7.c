@@ -283,7 +283,7 @@ static void R_DrawPlanes2(uint16_t *sortedvisplanes)
 
         lpl.pl = pl;
         lpl.pixelcount[0] = lpl.pixelcount[1] = 0;
-        if (debugmode == DEBUGMODE_NOTEXCACHE)
+        if (detailmode < detmode_mipmaps)
         {
             lpl.ds_source[0] = flatpixels[pl->flatnum].data[0];
             lpl.mipsize[0] = 64;
@@ -316,7 +316,7 @@ static void R_DrawPlanes2(uint16_t *sortedvisplanes)
             lpl.lightmax = light;
             lpl.lightmin = lpl.lightmax;
 
-            if (detailmode == detmode_high)
+            if (detailmode >= detmode_high)
             {
 #ifdef MARS
                 if (light <= 160 + extralight)

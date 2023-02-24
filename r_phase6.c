@@ -326,7 +326,7 @@ void R_SegCommands(void)
             lseg.lightmax = seglight;
             lseg.lightmin = lseg.lightmax;
 
-            if (detailmode == detmode_high)
+            if (detailmode >= detmode_high)
             {
 #ifdef MARS
                 if (seglight <= 160 + extralight)
@@ -361,7 +361,7 @@ void R_SegCommands(void)
             toptex->pixelcount[0] = 0;
             toptex->pixelcount[1] = 0;
 
-            if (tex->data[1] == NULL || debugmode == DEBUGMODE_NOTEXCACHE)
+            if (tex->width < MINMIPSIZE || tex->height < MINMIPSIZE || detailmode < detmode_mipmaps)
             {
                 for (j = 0; j < 1; j++)
                 {
@@ -401,7 +401,7 @@ void R_SegCommands(void)
             bottomtex->pixelcount[0] = 0;
             bottomtex->pixelcount[1] = 0;
 
-            if (tex->width < MINMIPSIZE || tex->height < MINMIPSIZE || debugmode == DEBUGMODE_NOTEXCACHE)
+            if (tex->width < MINMIPSIZE || tex->height < MINMIPSIZE || detailmode < detmode_mipmaps)
             {
                 for (j = 0; j < 1; j++)
                 {
