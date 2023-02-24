@@ -121,24 +121,27 @@ void R_TestTexCacheCandidate(r_texcache_t* c, int id)
 =
 =================
 */
-void R_AddPixelsToTexCache(r_texcache_t* c, int id, int pixels)
+int R_AddPixelsToTexCache(r_texcache_t* c, int id, int pixels)
 {
 	VINT* framec = c->framecount;
 	unsigned short* pixcount = c->pixcount;
+	int new = 0;
 
 	if (!c->zone || pixels <= 0)
-		return;
+		return 0;
 
 	if (framec[id] != framecount)
 	{
 		framec[id] = framecount;
 		pixcount[id] = 0;
+		new = 1;
 	}
 
 	if (pixels + pixcount[id] >= 0xffff)
 		pixcount[id] = 0xffff;
 	else
 		pixcount[id] += pixels;
+	return new;
 }
 
 /*

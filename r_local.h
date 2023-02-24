@@ -450,7 +450,7 @@ void R_InitTexCache(r_texcache_t* c, int maxobjects);
 void R_InitTexCacheZone(r_texcache_t* c, int zonesize);
 void R_SetupTexCacheFrame(r_texcache_t* c);
 void R_TestTexCacheCandidate(r_texcache_t* c, int id);
-void R_AddPixelsToTexCache(r_texcache_t* c, int id, int pixels);
+int R_AddPixelsToTexCache(r_texcache_t* c, int id, int pixels);
 void R_PostTexCacheFrame(r_texcache_t* c);
 void R_AddToTexCache(r_texcache_t* c, int id, int pixels, void **userp);
 void R_ClearTexCache(r_texcache_t* c);
