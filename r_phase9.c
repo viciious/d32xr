@@ -86,35 +86,41 @@ static void R_CacheBestObject(void)
     int pixels;
     void **pdata;
     const int id = r_texcache.bestobj;
+    unsigned miplevel, w, h;
     int firstflat = numtextures*2;
+    void **data;
 
     if (id == -1)
         return;
 
-    if (id < numtextures)
+    miplevel = 0;
+    if (id < firstflat)
     {
         texture_t* tex = &textures[id];
-        pixels = (int)tex->width * tex->height;
-        pdata = (void**)&(tex->data[0]);
-    }
-    else if (id < firstflat)
-    {
-        texture_t* tex = &textures[id-numtextures];
-        pixels = (int)(tex->width>>1) * (tex->height>>1);
-        pdata = (void**)&(tex->data[1]);
-    }
-    else if (id < firstflat+numflats)
-    {
-        flattex_t *flat = &flatpixels[id - firstflat];
-        pixels = 64 * 64;
-        pdata = (void**)&flat->data[0];
+        if (id >= numtextures) {
+            miplevel = 1;
+            tex = &textures[id-numtextures];
+        }
+        w = tex->width, h = tex->height;
+        data = (void **)tex->data;
     }
     else
     {
-        flattex_t *flat = &flatpixels[id-firstflat-numflats];
-        pixels = (64>>1) * (64>>1);
-        pdata = (void**)&flat->data[1];
+        flattex_t *flat = &flatpixels[id - firstflat];
+        if (id >= firstflat+numflats) {
+            miplevel = 1;
+            flat = &flatpixels[id-firstflat-numflats];
+        }
+        w = 64, h = 64;
+        data = (void **)flat->data;
     }
+
+    if (miplevel) {
+        pixels = (w>>1) * (h>>1);
+    } else {
+        pixels = w * h;
+    }
+    pdata = (void**)&data[miplevel];
 
     R_AddToTexCache(&r_texcache, id, pixels, pdata);
 }
