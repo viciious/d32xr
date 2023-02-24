@@ -363,14 +363,11 @@ void R_SegCommands(void)
 
             if (tex->width < MINMIPSIZE || tex->height < MINMIPSIZE || detailmode < detmode_mipmaps)
             {
-                for (j = 0; j < 1; j++)
-                {
-                    toptex->mip[j].width = tex->width;
-                    toptex->mip[j].height = tex->height;
-                    toptex->mip[j].data = tex->data[0];
-                    toptex->mip[j].texturemid = segl->t_texturemid;
-                    toptex->mip[j].drawcol = (tex->height & (tex->height - 1)) ? drawcolnpo2 : drawcol;
-                }
+                toptex->mip[0].width = tex->width;
+                toptex->mip[0].height = tex->height;
+                toptex->mip[0].data = tex->data[0];
+                toptex->mip[0].texturemid = segl->t_texturemid;
+                toptex->mip[0].drawcol = (tex->height & (tex->height - 1)) ? drawcolnpo2 : drawcol;
                 toptex->mipcount = 0;
             }
             else
@@ -403,14 +400,11 @@ void R_SegCommands(void)
 
             if (tex->width < MINMIPSIZE || tex->height < MINMIPSIZE || detailmode < detmode_mipmaps)
             {
-                for (j = 0; j < 1; j++)
-                {
-                    bottomtex->mip[j].width = tex->width;
-                    bottomtex->mip[j].height = tex->height;
-                    bottomtex->mip[j].data = tex->data[0];
-                    bottomtex->mip[j].texturemid = segl->b_texturemid;
-                    bottomtex->mip[j].drawcol = (tex->height & (tex->height - 1)) ? drawcolnpo2 : drawcol;
-                }
+                bottomtex->mip[0].width = tex->width;
+                bottomtex->mip[0].height = tex->height;
+                bottomtex->mip[0].data = tex->data[0];
+                bottomtex->mip[0].texturemid = segl->b_texturemid;
+                bottomtex->mip[0].drawcol = (tex->height & (tex->height - 1)) ? drawcolnpo2 : drawcol;
                 bottomtex->mipcount = 0;
             }
             else

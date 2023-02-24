@@ -114,15 +114,13 @@ static void R_CacheBestObject(void)
     }
     else if (id < firstflat+numflats)
     {
-        int flatnum = id - firstflat;
-        flattex_t *flat = &flatpixels[flatnum];
+        flattex_t *flat = &flatpixels[id - firstflat];
         pixels = 64 * 64;
         pdata = (void**)&flat->data[0];
     }
     else
     {
-        int flatnum = id - firstflat-numflats;
-        flattex_t *flat = &flatpixels[flatnum];
+        flattex_t *flat = &flatpixels[id-firstflat-numflats];
         pixels = (64>>1) * (64>>1);
         pdata = (void**)&flat->data[1];
     }
