@@ -439,9 +439,15 @@ void R_SetupTextureCaches(void)
 
 	for (i=0 ; i<numflats ; i++)
 	{
-		void *data = R_CheckPixels(firstflat + i);
+		int size = 64;
+		uint8_t *data = R_CheckPixels(firstflat + i);
+
 		for (j = 0; j < MIPLEVELS; j++)
+		{
 			flatpixels[i].data[j] = data;
+			data += size * size;
+			size >>= 1;
+		}
 	}
 
 	// functioning texture cache requires at least 8kb of ram

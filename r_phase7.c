@@ -10,6 +10,7 @@
 #endif
 
 #define LIGHTCOEF (0x7ffffu << SLOPEBITS)
+#define MIPSCALE (1<<24)
 
 typedef struct
 {
@@ -20,13 +21,14 @@ typedef struct
     int lightmin, lightmax, lightsub;
     fixed_t basexscale, baseyscale;
     int	pixelcount;
-    int mipcount;
+    unsigned mipcount;
 
 #ifdef MARS
     inpixel_t* ds_source[MIPLEVELS];
 #else
     pixel_t* ds_source[MIPLEVELS];
 #endif
+    int mipsize[MIPLEVELS];
 } localplane_t;
 
 static void R_MapPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
@@ -56,26 +58,24 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     fixed_t length, xfrac, yfrac, xstep, ystep;
     angle_t angle;
     int light;
+    unsigned scale;
+    unsigned miplevel;
 
     remaining = x2 - x + 1;
 
     if (remaining <= 0)
         return; // nothing to draw (shouldn't happen)
-    lpl->pixelcount += remaining;
 
     FixedMul2(distance, lpl->height, yslope[y]);
 
-    if (lpl->lightmin != lpl->lightmax)
-    {
 #ifdef MARS
-        __asm volatile (
-           "mov #-128, r0\n\t"
-           "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
-           "mov.l %0, @(0,r0) /* set 32-bit divisor */ \n\t"
-           "mov.l %1, @(4,r0) /* start divide */\n\t"
-           : : "r" (distance), "r" (LIGHTCOEF) : "r0");
+    __asm volatile (
+        "mov #-128, r0\n\t"
+        "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
+        "mov.l %0, @(0,r0) /* set 32-bit divisor */ \n\t"
+        "mov.l %1, @(4,r0) /* start divide */\n\t"
+        : : "r" (distance), "r" (LIGHTCOEF) : "r0");
 #endif
-    }
 
     FixedMul2(length, distance, distscale[x]);
     angle = (lpl->angle + xtoviewangle[x]) >> ANGLETOFINESHIFT;
@@ -91,18 +91,23 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     FixedMul2(xstep, distance, lpl->basexscale);
     FixedMul2(ystep, distance, lpl->baseyscale);
 
-    if (lpl->lightmin != lpl->lightmax)
-    {
 #ifdef MARS
-        __asm volatile (
-            "mov #-128, r0\n\t"
-            "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
-            "mov.l @(20,r0), %0 /* get 32-bit quotient */ \n\t"
-            : "=r" (light) : : "r0");
+    __asm volatile (
+        "mov #-128, r0\n\t"
+        "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
+        "mov.l @(20,r0), %0 /* get 32-bit quotient */ \n\t"
+        : "=r" (scale) : : "r0");
 #else
-        light = LIGHTCOEF / distance;
+    scale = LIGHTCOEF / distance;
 #endif
 
+    miplevel = (unsigned)distance / MIPSCALE;
+    if (miplevel > lpl->mipcount)
+        miplevel = lpl->mipcount;
+
+    if (lpl->lightmin != lpl->lightmax)
+    {
+        light = scale;
         light -= lpl->lightsub;
         if (light < lpl->lightmin)
             light = lpl->lightmin;
@@ -117,7 +122,19 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
         light = lpl->lightmax;
     }
 
-    drawspan(y, x, x2, light, xfrac, yfrac, xstep, ystep, lpl->ds_source[0], 64);
+    if (miplevel > 0) {
+        unsigned m = miplevel;
+        do {
+            xfrac >>= 1;
+            xstep >>= 1;
+            yfrac >>= 2;
+            ystep >>= 2;
+        } while (--m);
+    } else {
+        lpl->pixelcount += x2 - x + 1;
+    }
+
+    drawspan(y, x, x2, light, xfrac, yfrac, xstep, ystep, lpl->ds_source[miplevel], lpl->mipsize[miplevel]);
 }
 
 //
@@ -252,7 +269,6 @@ static void R_DrawPlanes2(uint16_t *sortedvisplanes)
 #ifdef MARS
     lpl.baseyscale *= 64;
 #endif
-
     extralight = vd.extralight;
 
     while ((pl = R_GetNextPlane(sortedvisplanes)) != NULL)
@@ -265,9 +281,23 @@ static void R_DrawPlanes2(uint16_t *sortedvisplanes)
 
         lpl.pl = pl;
         lpl.pixelcount = 0;
-        for (j = 0; j < MIPLEVELS; j++)
-            lpl.ds_source[j] = flatpixels[pl->flatnum].data[j];
-        lpl.mipcount = 0;
+        if (debugmode == DEBUGMODE_NOTEXCACHE)
+        {
+            lpl.ds_source[0] = flatpixels[pl->flatnum].data[0];
+            lpl.mipsize[0] = 64;
+            lpl.mipcount = 0;
+        }
+        else
+        {
+            int mipsize = 64;
+            for (j = 0; j < MIPLEVELS; j++)
+            {
+                lpl.ds_source[j] = flatpixels[pl->flatnum].data[j];
+                lpl.mipsize[j] = mipsize;
+                mipsize >>= 1;
+            }
+            lpl.mipcount = MIPLEVELS-1;
+        }
         lpl.height = (unsigned)D_abs(pl->height) << FIXEDTOHEIGHT;
 
         if (vd.fixedcolormap)
