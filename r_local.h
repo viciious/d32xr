@@ -418,14 +418,6 @@ void R_InitColormap(boolean doublepix);
 */
 typedef struct
 {
-	unsigned short* pixcount; /* capped at 0xffff */
-	VINT* framecount;
-
-	int maxobjects;
-	int objectsize;
-
-	int bestobj;
-	int bestcount;
 	int reqcount_le;
 	int reqfreed;
 
@@ -435,8 +427,7 @@ typedef struct
 
 typedef struct
 {
-	int id;
-	uint16_t pixelcount;
+	uint16_t pixels;
 	VINT lifecount;
 	void** userp;
 	void *userpold;
@@ -446,14 +437,12 @@ extern r_texcache_t r_texcache;
 
 #define CACHE_FRAMES_DEFAULT 30
 
-void R_InitTexCache(r_texcache_t* c, int maxobjects);
+void R_InitTexCache(r_texcache_t* c);
 void R_InitTexCacheZone(r_texcache_t* c, int zonesize);
-void R_SetupTexCacheFrame(r_texcache_t* c);
-void R_TestTexCacheCandidate(r_texcache_t* c, int id);
-int R_AddPixelsToTexCache(r_texcache_t* c, int id, int pixels);
-void R_PostTexCacheFrame(r_texcache_t* c);
 void R_AddToTexCache(r_texcache_t* c, int id, int pixels, void **userp);
 void R_ClearTexCache(r_texcache_t* c);
+boolean R_TouchIfInTexCache(r_texcache_t* c, void *p);
+void R_PostTexCacheFrame(r_texcache_t* c);
 
 /*
 ==============================================================================
@@ -498,13 +487,10 @@ typedef struct
 	/* !!! OVERWRITTEN AFTER PHASE 7 - END */
 
 	union {
-		int			t_topheight;	 // becomes pixelcount after R_SegLoop
-		uint16_t 	t_pixelcount[2];
+		int			t_topheight;	 // used as miplevels after R_SegLoop
+		int16_t 	miplevels[2];
 	};
-	union {
-		int			b_topheight;	// becomes pixelcount after R_SegLoop
-		uint16_t 	b_pixelcount[2];
-	};
+	int			b_topheight;
 
 	VINT		t_texturenum;
 	VINT		b_texturenum;
@@ -576,7 +562,6 @@ typedef struct visplane_s
 	VINT		minx, maxx;
 	VINT 		flatnum;
 	VINT		lightlevel;
-	unsigned short pixelcount[2];
 	struct visplane_s	*next;
 	unsigned short		*open/*[SCREENWIDTH+2]*/;		/* top<<8 | bottom */ /* leave pads for [minx-1]/[maxx+1] */
 } visplane_t;

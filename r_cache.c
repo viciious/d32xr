@@ -34,23 +34,9 @@
 =
 =================
 */
-void R_InitTexCache(r_texcache_t* c, int maxobjects)
+void R_InitTexCache(r_texcache_t* c)
 {
 	D_memset(c, 0, sizeof(*c));
-	c->bestobj = -1;
-
-#ifdef MARS
-	c->maxobjects = maxobjects;
-
-	if (!maxobjects)
-		return;
-
-	c->framecount = Z_Malloc(maxobjects * sizeof(*c->framecount), PU_STATIC, 0);
-	c->pixcount = Z_Malloc(maxobjects * sizeof(*c->pixcount), PU_STATIC, 0);
-
-	D_memset(c->framecount, 0, maxobjects * sizeof(*c->framecount));
-	D_memset(c->pixcount, 0, maxobjects * sizeof(*c->pixcount));
-#endif
 }
 
 /*
@@ -71,116 +57,23 @@ void R_InitTexCacheZone(r_texcache_t* c, int zonesize)
 	c->zone = Z_Malloc(zonesize, PU_LEVEL, 0);
 	c->zonesize = zonesize;
 	Z_InitZone(c->zone, zonesize);
-
-	D_memset(c->framecount, 0, c->maxobjects * sizeof(*c->framecount));
-	D_memset(c->pixcount, 0, c->maxobjects * sizeof(*c->pixcount));
 }
 
 /*
 ================
 =
-= R_SetupTexCacheFrame
+= R_TouchIfInTexCache
 =
 =================
 */
-void R_SetupTexCacheFrame(r_texcache_t* c)
+boolean R_TouchIfInTexCache(r_texcache_t* c, void *p)
 {
-	c->bestcount = 0;
-	c->bestobj = -1;
-}
-
-/*
-================
-=
-= R_TestTexCacheCandidate
-=
-=================
-*/
-void R_TestTexCacheCandidate(r_texcache_t* c, int id)
-{
-	VINT* framec = c->framecount;
-	unsigned short* pixcount = c->pixcount;
-	
-	if (!c->zone)
-		return;
-
-	if (framec[id] == 0 || framec[id] != framecount)
-		return;
-
-	if (pixcount[id] > c->bestcount)
-	{
-		c->bestcount = pixcount[id];
-		c->bestobj = id;
+	if (((uintptr_t)p >= (uintptr_t)c->zone && (uintptr_t)p < (uintptr_t)c->zone + c->zonesize)) {
+		texcacheblock_t *e = *(texcacheblock_t **)(((uintptr_t)p - 4) & ~3);
+		e->lifecount = CACHE_FRAMES_DEFAULT;
+		return true;
 	}
-}
-
-/*
-================
-=
-= R_AddPixelsToTexCache
-=
-=================
-*/
-int R_AddPixelsToTexCache(r_texcache_t* c, int id, int pixels)
-{
-	VINT* framec = c->framecount;
-	unsigned short* pixcount = c->pixcount;
-	int new = 0;
-
-	if (!c->zone || pixels <= 0)
-		return 0;
-
-	if (framec[id] != framecount)
-	{
-		framec[id] = framecount;
-		pixcount[id] = 0;
-		new = 1;
-	}
-
-	if (pixels + pixcount[id] >= 0xffff)
-		pixcount[id] = 0xffff;
-	else
-		pixcount[id] += pixels;
-	return new;
-}
-
-/*
-================
-=
-= R_UpdateCachedPixelcount
-=
-=================
-*/
-static void R_UpdateCachedPixelcount(void* ptr, void* userp)
-{
-	r_texcache_t* c = userp;
-	texcacheblock_t* entry = ptr;
-	int id = entry->id;
-
-	if (!c->zone)
-		return;
-
-	if (c->framecount[id] == framecount)
-		entry->pixelcount = c->pixcount[id];
-	else
-		entry->pixelcount = 0;
-
-	// reset for the next frame so that it won't fight for cache in the next frame
-	c->pixcount[id] = 0;
-}
-
-/*
-================
-=
-= R_PostTexCacheFrame
-=
-=================
-*/
-void R_PostTexCacheFrame(r_texcache_t* c)
-{
-	if (!c->zone)
-		return;
-	Z_ForEachBlock(c->zone, &R_UpdateCachedPixelcount, c);
+	return false;
 }
 
 /*
@@ -195,20 +88,36 @@ static void R_EvictFromTexCache(void* ptr, void* userp)
 	texcacheblock_t* entry = ptr;
 	r_texcache_t *c = userp;
 
-	if (entry->pixelcount < c->reqcount_le)
+	if (entry->pixels < c->reqcount_le)
+		if (entry->lifecount != CACHE_FRAMES_DEFAULT)
+			entry->lifecount = 0;
+
+	if (entry->lifecount <= 0)
 	{
-		// if the entry is less frequently used that the candidate, it will begin ageing
-		if (--entry->lifecount == 0)
-		{
-			c->reqfreed++;
-			*entry->userp = entry->userpold;
-			Z_Free2(c->zone, entry);
-		}
+		c->reqfreed++;
+		*entry->userp = entry->userpold;
+		Z_Free2(c->zone, entry);
 	}
-	else
-	{
-		entry->lifecount = CACHE_FRAMES_DEFAULT;
-	}
+}
+
+static void R_AgeTexCacheEntries(void* ptr, void* userp)
+{
+	texcacheblock_t* entry = ptr;
+	entry->lifecount--;
+}
+
+/*
+================
+=
+= R_PostTexCacheFrame
+=
+=================
+*/
+void R_PostTexCacheFrame(r_texcache_t* c)
+{
+	if (!c->zone)
+		return;
+	Z_ForEachBlock(c->zone, &R_AgeTexCacheEntries, c);
 }
 
 /*
@@ -224,16 +133,14 @@ void R_AddToTexCache(r_texcache_t* c, int id, int pixels, void **userp)
 	int trynum;
 	const int pad = 16;
 	void* data, * lumpdata;
-	texcacheblock_t* entry;
+	texcacheblock_t* entry, **ref;
 
 	if (!c || !c->zone)
-		return;
-	if (id < 0)
 		return;
 	if (debugmode == DEBUGMODE_NOTEXCACHE)
 		return;
 
-	size = pixels + sizeof(texcacheblock_t) + 32;
+	size = pixels + sizeof(texcacheblock_t) + 36;
 	if (c->zonesize < size + pad)
 		return;
 
@@ -241,7 +148,7 @@ void R_AddToTexCache(r_texcache_t* c, int id, int pixels, void **userp)
 	{
 		// free less frequently used entries 
 		c->reqfreed = 0;
-		c->reqcount_le = c->pixcount[id];
+		c->reqcount_le = pixels;
 		Z_ForEachBlock(c->zone, &R_EvictFromTexCache, c);
 
 		// check if there were textures that got freed
@@ -269,8 +176,7 @@ retry:
 		goto retry;
 	}
 
-	entry->id = id;
-	entry->pixelcount = c->pixcount[id];
+	entry->pixels = pixels;
 	entry->userp = userp;
 	entry->userpold = *userp;
 	entry->lifecount = CACHE_FRAMES_DEFAULT;
@@ -278,9 +184,13 @@ retry:
 	lumpdata = *userp;
 
 	// align pointers so that the 4 least significant bits match
-	data = (byte*)entry + sizeof(texcacheblock_t) + 16;
-	data = (void*)((intptr_t)data & ~15);
-	data = (void *)((intptr_t)data + ((intptr_t)lumpdata & 15));
+	data = (byte*)entry + sizeof(texcacheblock_t) + 20;
+	data = (void*)((uintptr_t)data & ~15);
+	data = (void *)((uintptr_t)data + ((uintptr_t)lumpdata & 15));
+
+	// pointer to cache entry always preceeds the actual data
+	ref = (void *)(((uintptr_t)data - 4) & ~3);
+	*ref = entry;
 
 	D_memcpy(data, lumpdata, pixels);
 	if (debugmode == DEBUGMODE_TEXCACHE)

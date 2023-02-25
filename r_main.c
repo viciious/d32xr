@@ -396,7 +396,7 @@ D_printf ("Done\n");
 
 	R_SetDetailMode(detailmode);
 
-	R_InitTexCache(&r_texcache, (numflats+numtextures)*2);
+	R_InitTexCache(&r_texcache);
 }
 
 /*
@@ -711,8 +711,6 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 #ifndef MARS
 	phasetime[0] = samplecount;
 #endif
-
-	R_SetupTexCacheFrame(&r_texcache);
 }
 
 #ifdef MARS

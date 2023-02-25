@@ -10,126 +10,115 @@
 #ifdef MARS
 
 //
-// R_FindBestCacheObject
-// Update pixel counts for walls and flats
-static void R_FindBestCacheObject(void)
+// R_UpdateCache
+static void R_UpdateCache(void)
 {
-   unsigned pixcount;
    viswall_t *wall;
-   int firstflat = numtextures*2;
-   int i, obj_id, objects[64], num_objs;
-   const int max_objects = sizeof(objects) / sizeof(objects[0]);
+   int i;
+   int bestmips[MIPLEVELS];
+   int minplanemip, maxplanemip;
 
-   num_objs = 0;
+   for (i = 0; i < MIPLEVELS; i++) {
+      bestmips[i] = -1;
+   }
+
+   minplanemip = 0;
+   maxplanemip = 0;
    for (wall = viswalls; wall < lastwallcmd; wall++)
    {
-      int wobj[4], wpxcnt[4], nwobj;
+      int minmip = wall->miplevels[0], maxmip = wall->miplevels[1];
+
       if (wall->start > wall->stop)
         continue;
 
-      nwobj = 0;
-      if (wall->actionbits & AC_TOPTEXTURE)
+      if ((wall->actionbits & (AC_TOPTEXTURE|AC_BOTTOMTEXTURE)) && (maxmip >= minmip))
       {
-         pixcount = *((volatile unsigned *)((uintptr_t)&wall->t_pixelcount[0] | 0x20000000));
-         wobj[0] = wall->t_texturenum, wpxcnt[0] = pixcount>>16; // mip 0
-         wobj[1] = numtextures+wall->t_texturenum, wpxcnt[1] = pixcount&0xffff; // mip 1
-         nwobj = 2;
+        if (wall->actionbits & AC_TOPTEXTURE)
+        {
+            texture_t* tex = &textures[wall->t_texturenum];
+            for (i = minmip; i <= maxmip; i++) {
+                if (!R_TouchIfInTexCache(&r_texcache, tex->data[i]) && (bestmips[i] < 0)) {
+                    bestmips[i] = wall->t_texturenum;
+                }
+            }
+        }
+
+        if (wall->actionbits & AC_BOTTOMTEXTURE)
+        {
+            texture_t* tex = &textures[wall->b_texturenum];
+            for (i = minmip; i <= maxmip; i++) {
+                if (!R_TouchIfInTexCache(&r_texcache, tex->data[i]) && (bestmips[i] < 0)) {
+                    bestmips[i] = wall->b_texturenum;
+                }
+            }
+        }
+
+        // offset the min mip level for planes by -1:
+        // assume planes can be slightly closer than 
+        // the adjacent walls
+        if (minmip-1 > minplanemip)
+            minplanemip = minmip-1;
+        if (maxmip > maxplanemip)
+            maxplanemip = maxmip;
       }
 
-      if (wall->actionbits & AC_BOTTOMTEXTURE)
+      if (detailmode != detmode_potato)
       {
-         pixcount = *((volatile unsigned *)((uintptr_t)&wall->b_pixelcount[0] | 0x20000000));
-         wobj[nwobj] = wall->b_texturenum, wpxcnt[nwobj] = pixcount>>16; // mip 0
-         wobj[nwobj+1] = numtextures+wall->b_texturenum, wpxcnt[nwobj+1] = pixcount&0xffff; // mip 1
-         nwobj += 2;
-      }
+        flattex_t *flat = &flatpixels[wall->floorpicnum];
 
-      for (i = 0; i < nwobj; i++) {
-        obj_id = wobj[i];
-        if (R_AddPixelsToTexCache(&r_texcache, obj_id, wpxcnt[i]) && (num_objs < max_objects)) {
-            objects[num_objs++] = obj_id;
+        for (i = minplanemip; i <= maxplanemip; i++) {
+            if (!R_TouchIfInTexCache(&r_texcache, flat->data[i]) && (bestmips[i] < 0)) {
+                bestmips[i] = numtextures+wall->floorpicnum;
+            }
+        }
+
+        if (wall->ceilingpicnum == -1) {
+            continue;
+        }
+
+        flat = &flatpixels[wall->ceilingpicnum];
+        for (i = minplanemip; i <= maxplanemip; i++) {
+            if (!R_TouchIfInTexCache(&r_texcache, flat->data[i]) && (bestmips[i] < 0)) {
+                bestmips[i] = numtextures+wall->ceilingpicnum;
+            }
         }
       }
    }
 
-   if (detailmode != detmode_potato)
-   {
-    visplane_t* pl;
-    for (pl = visplanes + 1; pl < lastvisplane; pl++)
-    {
-        pixcount = *((volatile unsigned *)((uintptr_t)&pl->pixelcount | 0x20000000));
+   for (i = 0; i < MIPLEVELS; i++) {
+      int id;
+      void **data, **pdata;
+      unsigned w, h, m, pixels;
 
-        // mip 0
-        obj_id = firstflat+pl->flatnum;
-        if (R_AddPixelsToTexCache(&r_texcache, obj_id, pixcount>>16) && (num_objs < max_objects)) {
-            objects[num_objs++] = obj_id;
-        }
+      id = bestmips[i];
+      if (id == -1) {
+        continue;
+      }
 
-        // mip 1
-        obj_id += numflats;
-        if (R_AddPixelsToTexCache(&r_texcache, obj_id, pixcount&0xffff) && (num_objs < max_objects)) {
-            objects[num_objs++] = obj_id;
-        }
-    }
-   }
-
-   R_PostTexCacheFrame(&r_texcache);
-
-   for (i = 0; i < num_objs; i++)
-   {
-        R_TestTexCacheCandidate(&r_texcache, objects[i]);
-   }
-}
-
-static void R_CacheBestObject(void)
-{
-    int pixels;
-    void **pdata;
-    const int id = r_texcache.bestobj;
-    unsigned miplevel, w, h;
-    int firstflat = numtextures*2;
-    void **data;
-
-    if (id == -1)
-        return;
-
-    miplevel = 0;
-    if (id < firstflat)
-    {
-        texture_t* tex = &textures[id];
-        if (id >= numtextures) {
-            miplevel = 1;
-            tex = &textures[id-numtextures];
-        }
-        w = tex->width, h = tex->height;
-        data = (void **)tex->data;
-    }
-    else
-    {
-        flattex_t *flat = &flatpixels[id - firstflat];
-        if (id >= firstflat+numflats) {
-            miplevel = 1;
-            flat = &flatpixels[id-firstflat-numflats];
-        }
-        w = 64, h = 64;
+      if (id >= numtextures) {
+        flattex_t *flat = &flatpixels[id - numtextures];
         data = (void **)flat->data;
-    }
+        w = h = 64;
+      } else {
+        texture_t* tex = &textures[id];
+        data = (void **)tex->data;
+        w = tex->width, h = tex->height;
+      }
 
-    if (miplevel) {
-        pixels = (w>>1) * (h>>1);
-    } else {
-        pixels = w * h;
-    }
-    pdata = (void**)&data[miplevel];
+      if (i > 0) {
+        m = i;
+        do {
+            w >>= 1;
+            h >>= 1;
+        } while (--m);
+      }
 
-    R_AddToTexCache(&r_texcache, id, pixels, pdata);
-}
+      pixels = w * h;
+      pdata = (void**)&data[i];
+      R_AddToTexCache(&r_texcache, id+((unsigned)i<<2), pixels, pdata);
+   }
 
-static void R_UpdateCache(void)
-{
-    R_FindBestCacheObject();
-
-    R_CacheBestObject();
+    R_PostTexCacheFrame(&r_texcache);
 }
 
 #endif
