@@ -158,7 +158,8 @@ typedef struct
 	char		name[8];		/* for switch changing, etc */
 	VINT			width;
 	VINT			height;
-	int			lumpnum;
+	VINT			lumpnum;
+	VINT		mipcount;
 #ifdef MARS
 	inpixel_t 	*data[MIPLEVELS];
 #else

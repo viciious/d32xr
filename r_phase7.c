@@ -20,7 +20,7 @@ typedef struct
     fixed_t x, y;
     int lightmin, lightmax, lightsub;
     fixed_t basexscale, baseyscale;
-    unsigned mipcount;
+    unsigned maxmip;
 
 #ifdef MARS
     inpixel_t* ds_source[MIPLEVELS];
@@ -101,8 +101,8 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
 #endif
 
     miplevel = (unsigned)distance / MIPSCALE;
-    if (miplevel > lpl->mipcount)
-        miplevel = lpl->mipcount;
+    if (miplevel > lpl->maxmip)
+        miplevel = lpl->maxmip;
 
     if (lpl->lightmin != lpl->lightmax)
     {
@@ -121,11 +121,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
         light = lpl->lightmax;
     }
 
-    if (miplevel == 0) {
-    } else if (miplevel == 1) {
-        xfrac >>= 1, xstep >>= 1;
-        yfrac >>= 2, ystep >>= 2;
-    } else {
+    if (miplevel > 0) {{
         unsigned m = miplevel;
         do {
             xfrac >>= 1, xstep >>= 1;
@@ -272,29 +268,21 @@ static void R_DrawPlanes2(uint16_t *sortedvisplanes)
 
     while ((pl = R_GetNextPlane(sortedvisplanes)) != NULL)
     {
-        int j;
+        unsigned j;
         int light;
+        int mipsize = 64;
 
         if (pl->minx > pl->maxx)
             continue;
 
         lpl.pl = pl;
-        if (detailmode < detmode_mipmaps)
+        lpl.maxmip = (detailmode < detmode_mipmaps) ? 0 : MIPLEVELS-1;
+
+        for (j = 0; j <= lpl.maxmip; j++)
         {
-            lpl.ds_source[0] = flatpixels[pl->flatnum].data[0];
-            lpl.mipsize[0] = 64;
-            lpl.mipcount = 0;
-        }
-        else
-        {
-            int mipsize = 64;
-            for (j = 0; j < MIPLEVELS; j++)
-            {
-                lpl.ds_source[j] = flatpixels[pl->flatnum].data[j];
-                lpl.mipsize[j] = mipsize;
-                mipsize >>= 1;
-            }
-            lpl.mipcount = MIPLEVELS-1;
+            lpl.ds_source[j] = flatpixels[pl->flatnum].data[j];
+            lpl.mipsize[j] = mipsize;
+            mipsize >>= 1;
         }
         lpl.height = (unsigned)D_abs(pl->height) << FIXEDTOHEIGHT;
 

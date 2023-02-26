@@ -25,7 +25,7 @@ typedef struct
 typedef struct drawtex_s
 {
    drawmip_t mip[MIPLEVELS];
-   int       mipcount;
+   int       maxmip;
    int       topheight;
    int       bottomheight;
    int       pixelcount[2]; // for 2 closest mip levels
@@ -77,8 +77,8 @@ static void R_DrawTextures(int x, unsigned iscale_, int colnum_, fixed_t scale2,
            unsigned iscale = iscale_;
            int colnum = colnum_;
 
-           if (miplevel > tex->mipcount)
-                miplevel = tex->mipcount;
+           if (miplevel > tex->maxmip)
+                miplevel = tex->maxmip;
            if (miplevel > 0) {
                unsigned m = miplevel;
                do {
@@ -355,33 +355,25 @@ void R_SegCommands(void)
         if (actionbits & AC_TOPTEXTURE)
         {
             texture_t* tex = &textures[segl->t_texturenum];
+            int texturemid = segl->t_texturemid;
+            int width = tex->width, height = tex->height;
+
             toptex->topheight = segl->t_topheight;
             toptex->bottomheight = segl->t_bottomheight;
+            toptex->maxmip = detailmode < detmode_mipmaps ? 0 : tex->mipcount-1;
 
-            if (detailmode < detmode_mipmaps)
+            for (j = 0; j <= toptex->maxmip; j++)
             {
-                toptex->mip[0].width = tex->width;
-                toptex->mip[0].height = tex->height;
-                toptex->mip[0].data = tex->data[0];
-                toptex->mip[0].texturemid = segl->t_texturemid;
-                toptex->mip[0].drawcol = (tex->height & (tex->height - 1)) ? drawcolnpo2 : drawcol;
-                toptex->mipcount = 0;
-            }
-            else
-            {
-                int texturemid = segl->t_texturemid;
-                int width = tex->width, height = tex->height;
-
-                for (j = 0; j < MIPLEVELS; j++)
-                {
-                    toptex->mip[j].width = width;
-                    toptex->mip[j].height = height;
-                    toptex->mip[j].data = tex->data[j];
-                    toptex->mip[j].texturemid = texturemid;
-                    toptex->mip[j].drawcol = (height & (height - 1)) ? drawcolnpo2 : drawcol;
-                    width >>= 1, height >>= 1, texturemid >>= 1;
-                }
-                toptex->mipcount = MIPLEVELS-1;
+                toptex->mip[j].width = width;
+                toptex->mip[j].height = height;
+                toptex->mip[j].data = tex->data[j];
+                toptex->mip[j].texturemid = texturemid;
+                toptex->mip[j].drawcol = (height & (height - 1)) ? drawcolnpo2 : drawcol;
+                width >>= 1, height >>= 1, texturemid >>= 1;
+                if (width < 1)
+                    width = 1;
+                if (height < 1)
+                    height = 1;
             }
 
             lseg.first--;
@@ -390,34 +382,27 @@ void R_SegCommands(void)
         if (actionbits & AC_BOTTOMTEXTURE)
         {
             texture_t* tex = &textures[segl->b_texturenum];
+            int texturemid = segl->b_texturemid;
+            int width = tex->width, height = tex->height;
+
             bottomtex->topheight = segl->b_topheight;
             bottomtex->bottomheight = segl->b_bottomheight;
+            bottomtex->maxmip = detailmode < detmode_mipmaps ? 0 : tex->mipcount-1;
 
-            if (detailmode < detmode_mipmaps)
+            for (j = 0; j <= bottomtex->maxmip; j++)
             {
-                bottomtex->mip[0].width = tex->width;
-                bottomtex->mip[0].height = tex->height;
-                bottomtex->mip[0].data = tex->data[0];
-                bottomtex->mip[0].texturemid = segl->b_texturemid;
-                bottomtex->mip[0].drawcol = (tex->height & (tex->height - 1)) ? drawcolnpo2 : drawcol;
-                bottomtex->mipcount = 0;
+                bottomtex->mip[j].width = width;
+                bottomtex->mip[j].height = height;
+                bottomtex->mip[j].data = tex->data[j];
+                bottomtex->mip[j].texturemid = texturemid;
+                bottomtex->mip[j].drawcol = (height & (height - 1)) ? drawcolnpo2 : drawcol;
+                width >>= 1, height >>= 1, texturemid >>= 1;
+                if (width < 1)
+                    width = 1;
+                if (height < 1)
+                    height = 1;
             }
-            else
-            {
-                int texturemid = segl->b_texturemid;
-                int width = tex->width, height = tex->height;
 
-                for (j = 0; j < MIPLEVELS; j++)
-                {
-                    bottomtex->mip[j].width = width;
-                    bottomtex->mip[j].height = height;
-                    bottomtex->mip[j].data = tex->data[j];
-                    bottomtex->mip[j].texturemid = texturemid;
-                    bottomtex->mip[j].drawcol = (height & (height - 1)) ? drawcolnpo2 : drawcol;
-                    width >>= 1, height >>= 1, texturemid >>= 1;
-                }
-                bottomtex->mipcount = MIPLEVELS-1;
-            }
             lseg.last++;
         }
 

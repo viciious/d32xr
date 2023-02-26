@@ -75,6 +75,7 @@ void R_InitTextures (void)
 			if (c >= 'a' && c <= 'z')
 				texture->name[j] = c - ('a' - 'A');
 		}
+		texture->mipcount = 0;
 		for (j = 0; j < MIPLEVELS; j++)
 			texture->data[j] = NULL;		/* not cached yet */
 		if (start >= 0 && end > 0)

@@ -419,12 +419,30 @@ void R_SetupTextureCaches(void)
 	for (i = 0; i < numtextures; i++)
 	{
 		int w = textures[i].width, h = textures[i].height;
-		uint8_t *data = R_CheckPixels(textures[i].lumpnum);
+		uint8_t *start = R_CheckPixels(textures[i].lumpnum);
+		uint8_t *end = start + W_LumpLength(textures[i].lumpnum);
+		uint8_t *data = start;
 
+		textures[i].mipcount = 0;
+		// detect mipmaps
 		for (j = 0; j < MIPLEVELS; j++)
 		{
+			int size = w * h;
+
+			if (data+size > end) {
+				// no mipmaps
+				data = start;
+				for (j = 0; j < MIPLEVELS; j++) {
+					textures[i].data[j] = data;
+				}
+				textures[i].mipcount = 1;
+				break;
+			}
+
 			textures[i].data[j] = data;
-			data += w * h;
+			textures[i].mipcount++;
+
+			data += size;
 
 			w >>= 1;
 			if (w < 1)
