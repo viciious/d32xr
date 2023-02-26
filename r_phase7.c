@@ -121,7 +121,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
         light = lpl->lightmax;
     }
 
-    if (miplevel > 0) {{
+    if (miplevel > 0) {
         unsigned m = miplevel;
         do {
             xfrac >>= 1, xstep >>= 1;
