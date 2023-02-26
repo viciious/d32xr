@@ -79,14 +79,7 @@ static void R_DrawTextures(int x, unsigned iscale_, int colnum_, fixed_t scale2,
 
            if (miplevel > tex->mipcount)
                 miplevel = tex->mipcount;
-           if (miplevel == 0)
-           {
-           }
-           else if (miplevel == 1)
-           {
-                colnum >>= 1;
-                iscale >>= 1;
-           } else {
+           if (miplevel > 0) {
                unsigned m = miplevel;
                do {
                    colnum >>= 1;
@@ -365,7 +358,7 @@ void R_SegCommands(void)
             toptex->topheight = segl->t_topheight;
             toptex->bottomheight = segl->t_bottomheight;
 
-            if (tex->width < MINMIPSIZE || tex->height < MINMIPSIZE || detailmode < detmode_mipmaps)
+            if (detailmode < detmode_mipmaps)
             {
                 toptex->mip[0].width = tex->width;
                 toptex->mip[0].height = tex->height;
@@ -400,7 +393,7 @@ void R_SegCommands(void)
             bottomtex->topheight = segl->b_topheight;
             bottomtex->bottomheight = segl->b_bottomheight;
 
-            if (tex->width < MINMIPSIZE || tex->height < MINMIPSIZE || detailmode < detmode_mipmaps)
+            if (detailmode < detmode_mipmaps)
             {
                 bottomtex->mip[0].width = tex->width;
                 bottomtex->mip[0].height = tex->height;
@@ -430,8 +423,15 @@ void R_SegCommands(void)
 
         R_DrawSeg(&lseg, clipbounds);
 
-        segl->miplevels[0] = lseg.minmip;
-        segl->miplevels[1] = lseg.maxmip;
+        if (detailmode < detmode_mipmaps)
+        {
+            segl->miplevels[0] = 0;
+            segl->miplevels[1] = 0;
+        }
+        else {
+            segl->miplevels[0] = lseg.minmip;
+            segl->miplevels[1] = lseg.maxmip;
+        }
 
 post_draw:
         if(actionbits & (AC_NEWFLOOR|AC_NEWCEILING))

@@ -152,7 +152,6 @@ typedef struct
 } node_t;
 
 #define MIPLEVELS 4
-#define MINMIPSIZE	(1<<MIPLEVELS)
 
 typedef struct
 {

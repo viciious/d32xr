@@ -111,6 +111,10 @@ static void R_UpdateCache(void)
             w >>= 1;
             h >>= 1;
         } while (--m);
+        if (w < 1)
+          w = 1;
+        if (h < 1)
+          h = 1;
       }
 
       pixels = w * h;

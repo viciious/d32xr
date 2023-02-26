@@ -421,19 +421,18 @@ void R_SetupTextureCaches(void)
 		int w = textures[i].width, h = textures[i].height;
 		uint8_t *data = R_CheckPixels(textures[i].lumpnum);
 
-		if (w < MINMIPSIZE || h < MINMIPSIZE)
+		for (j = 0; j < MIPLEVELS; j++)
 		{
-			for (j = 0; j < MIPLEVELS; j++)
-				textures[i].data[j] = data;
-		}
-		else
-		{
-			for (j = 0; j < MIPLEVELS; j++)
-			{
-				textures[i].data[j] = data;
-				data += w * h;
-				w >>= 1, h >>= 1;
-			}
+			textures[i].data[j] = data;
+			data += w * h;
+
+			w >>= 1;
+			if (w < 1)
+				w = 1;
+
+			h >>= 1;
+			if (h < 1)
+				h = 1;
 		}
 	}
 
