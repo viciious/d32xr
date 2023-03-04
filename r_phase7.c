@@ -252,6 +252,7 @@ static void R_DrawPlanes2(uint16_t *sortedvisplanes)
     localplane_t lpl;
     visplane_t* pl;
     int extralight;
+    boolean nomips = detailmode < detmode_mipmaps;
 
     lpl.x = vd.viewx;
     lpl.y = -vd.viewy;
@@ -276,7 +277,7 @@ static void R_DrawPlanes2(uint16_t *sortedvisplanes)
             continue;
 
         lpl.pl = pl;
-        lpl.maxmip = (detailmode < detmode_mipmaps) ? 0 : MIPLEVELS-1;
+        lpl.maxmip = nomips ? 0 : MIPLEVELS-1;
 
         for (j = 0; j <= lpl.maxmip; j++)
         {

@@ -13,6 +13,7 @@ VINT		firstflat, lastflat, numflats;
 
 VINT		numtextures;
 texture_t	*textures;
+boolean 	texmips = false;
 
 spritedef_t sprites[NUMSPRITES];
 spriteframe_t* spriteframes;
@@ -102,7 +103,51 @@ void R_InitTextures (void)
 		}
 #endif
 	}
-	
+
+	texmips = false;
+	for (i = 0; i < numtextures; i++)
+	{
+		int w = textures[i].width, h = textures[i].height;
+		uint8_t *start = R_CheckPixels(textures[i].lumpnum);
+		uint8_t *end = start + W_LumpLength(textures[i].lumpnum);
+		uint8_t *data = start;
+
+		textures[i].mipcount = 0;
+
+		// detect mipmaps
+		for (j = 0; j < MIPLEVELS; j++)
+		{
+			int size = w * h;
+
+			if (data+size > end) {
+				// no mipmaps
+				textures[i].mipcount = 1;
+				break;
+			}
+
+			textures[i].mipcount++;
+
+			data += size;
+
+			w >>= 1;
+			if (w < 1)
+				w = 1;
+
+			h >>= 1;
+			if (h < 1)
+				h = 1;
+		}
+	}
+
+	for (i = 0; i < numtextures; i++)
+	{
+		if (textures[i].mipcount > 1)
+		{
+			texmips = true;
+			break;
+		}
+	}
+
 /* */
 /* translation table for global animation */
 /* */
@@ -122,7 +167,7 @@ void R_InitTextures (void)
 
 void R_InitFlats (void)
 {
-	int		i;
+	int		i, j;
 	
 	firstflat = W_GetNumForName ("F_START") + 1;
 	lastflat = W_GetNumForName ("F_END") - 1;
@@ -134,6 +179,32 @@ void R_InitFlats (void)
 		flattranslation[i] = i;
 
 	flatpixels = Z_Malloc(numflats * sizeof(*flatpixels), PU_STATIC, 0);
+
+	// detect mip-maps
+	if (!texmips)
+		return;
+
+	for (i=0 ; i<numflats ; i++)
+	{
+		int w = 64;
+		uint8_t *start = R_CheckPixels(firstflat + i);
+		uint8_t *end = start + W_LumpLength(firstflat + i);
+		uint8_t *data = start;
+
+		for (j = 0; j < MIPLEVELS; j++)
+		{
+			int size = w * w;
+
+			if (data+size > end) {
+				// no mipmaps
+				texmips = false;
+				return;
+			}
+
+			data += size;
+			w >>= 1;
+		}
+	}
 }
 
 /*
@@ -148,11 +219,18 @@ void R_InitFlats (void)
 
 void R_InitData (void)
 {
+	int i;
+
 	dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
 
 	R_InitTextures ();
 	R_InitFlats ();
 	R_InitSpriteDefs((const char **)sprnames);
+
+	if (!texmips) {
+		for (i = 0; i < numtextures; i++)
+			textures[i].mipcount = 1;
+	}
 }
 
 

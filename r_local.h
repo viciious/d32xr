@@ -386,6 +386,7 @@ extern	texture_t	*skytexturep;
 
 extern	VINT		numtextures;
 extern	texture_t	*textures;
+extern 	boolean 	texmips;
 
 extern	VINT			*flattranslation;		/* for global animation */
 extern	VINT			*texturetranslation;	/* for global animation */

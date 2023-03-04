@@ -216,7 +216,7 @@ void O_Init (void)
 	menuitem[mi_detailmode].x = ITEMX;
 	menuitem[mi_detailmode].y = STARTY + ITEMSPACE * 2;
 	menuitem[mi_detailmode].slider = si_lod+1;
-	sliders[si_lod].maxval = MAXDETAILMODES;
+	sliders[si_lod].maxval = texmips ? MAXDETAILMODES : detmode_mipmaps;
 	sliders[si_lod].curval = detailmode + 1;
 
 	D_memcpy(menuitem[mi_anamorphic].name, "Widescreen", 11);

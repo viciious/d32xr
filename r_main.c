@@ -325,6 +325,8 @@ void R_SetDetailMode(int mode)
 		return;
 	if (mode >= MAXDETAILMODES)
 		return;
+	if (mode == detmode_mipmaps && !texmips)
+		mode = detmode_high;
 
 	detailmode = mode;
 
@@ -419,29 +421,13 @@ void R_SetupTextureCaches(void)
 	for (i = 0; i < numtextures; i++)
 	{
 		int w = textures[i].width, h = textures[i].height;
-		uint8_t *start = R_CheckPixels(textures[i].lumpnum);
-		uint8_t *end = start + W_LumpLength(textures[i].lumpnum);
-		uint8_t *data = start;
+		uint8_t *data = R_CheckPixels(textures[i].lumpnum);
 
-		textures[i].mipcount = 0;
-		// detect mipmaps
-		for (j = 0; j < MIPLEVELS; j++)
+		for (j = 0; j < textures[i].mipcount; j++)
 		{
 			int size = w * h;
 
-			if (data+size > end) {
-				// no mipmaps
-				data = start;
-				for (j = 0; j < MIPLEVELS; j++) {
-					textures[i].data[j] = data;
-				}
-				textures[i].mipcount = 1;
-				break;
-			}
-
 			textures[i].data[j] = data;
-			textures[i].mipcount++;
-
 			data += size;
 
 			w >>= 1;
@@ -462,8 +448,10 @@ void R_SetupTextureCaches(void)
 		for (j = 0; j < MIPLEVELS; j++)
 		{
 			flatpixels[i].data[j] = data;
-			data += size * size;
-			size >>= 1;
+			if (texmips) {
+				data += size * size;
+				size >>= 1;
+			}
 		}
 	}
 
@@ -622,7 +610,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 #endif
 
 #ifdef MARS
-	if (detailmode == detmode_high)
+	if (detailmode >= detmode_high)
 		vd.extralight = player->extralight << 4;
 	else
 		vd.extralight = 0;
