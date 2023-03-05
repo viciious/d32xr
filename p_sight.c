@@ -206,8 +206,8 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
          continue;
       lvalidcount[seg->linedef] = vc;
 
-      v1 = line->v1;
-      v2 = line->v2;
+      v1 = &vertexes[line->v1];
+      v2 = &vertexes[line->v2];
       s1 = P_DivlineSide(v1->x, v1->y, strace);
       s2 = P_DivlineSide(v2->x, v2->y, strace);
 

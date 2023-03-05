@@ -65,6 +65,12 @@ typedef struct
 #define	ML_MAPPED			256	/* set if allready drawn in automap */
 
 
+/* to aid move clipping */
+#define ML_ST_HORIZONTAL 	512
+#define ML_ST_VERTICAL	 	1024
+#define ML_ST_POSITIVE	 	2048
+#define ML_ST_NEGATIVE	 	4096
+
 typedef	struct
 {
 	short		floorheight, ceilingheight;

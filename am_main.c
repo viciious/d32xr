@@ -656,21 +656,25 @@ static void AM_Drawer_ (int c)
 	for (i=0 ; i<numlines ; i++,line++)
 	{
 		int flags;
+		vertex_t *v1, *v2;
 
-		flags = line->flags;
 #ifdef MARS
 		flags = *(volatile VINT*)(((intptr_t)&line->flags) | 0x20000000);
+#else
+		flags = line->flags;
 #endif
 
 		if ((!(flags & ML_MAPPED) ||		/* IF NOT MAPPED OR DON'T DRAW */
 			flags & ML_DONTDRAW) &&
 			(!(p->powers[pw_allmap] + showAllLines)))
 			continue;
-			
-		x1 = line->v1->x;
-		y1 = line->v1->y;
-		x2 = line->v2->x;
-		y2 = line->v2->y;
+
+		v1 = &vertexes[line->v1];
+		v2 = &vertexes[line->v2];
+		x1 = v1->x;
+		y1 = v1->y;
+		x2 = v2->x;
+		y2 = v2->y;
 		
 		x1 -= ox;
 		x2 -= ox;

@@ -110,14 +110,11 @@ typedef struct
 	VINT		rowoffset;			/* add this to the calculated texture top */
 } side_t;
 
-typedef enum {ST_HORIZONTAL, ST_VERTICAL, ST_POSITIVE, ST_NEGATIVE} slopetype_t;
-
 typedef struct line_s
 {
-	VINT        slopetype;                      /* to aid move clipping */
 	VINT		flags;
 	VINT		sidenum[2];			/* sidenum[1] will be -1 if one sided */
-	vertex_t 	*v1, *v2;
+	VINT 		v1, v2;
 	VINT		special, tag;
 	VINT		fineangle;			/* to get sine / eosine for sliding */
 } line_t;

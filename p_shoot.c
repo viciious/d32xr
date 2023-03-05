@@ -67,7 +67,7 @@ typedef struct
    fixed_t  shootx, shooty, shootz; // location for puff/blood
 } shootWork_t;
 
-static fixed_t PA_SightCrossLine(shootWork_t *sw, line_t* line) ATTR_DATA_CACHE_ALIGN;
+static fixed_t PA_SightCrossLine(shootWork_t *sw, vertex_t *v1, vertex_t *v2) ATTR_DATA_CACHE_ALIGN;
 static boolean PA_ShootLine(shootWork_t *sw, line_t* li, fixed_t interceptfrac) ATTR_DATA_CACHE_ALIGN;
 static boolean PA_ShootThing(shootWork_t *sw, mobj_t* th, fixed_t interceptfrac) ATTR_DATA_CACHE_ALIGN;
 static boolean PA_DoIntercept(shootWork_t *sw, intercept_t* in) ATTR_DATA_CACHE_ALIGN;
@@ -84,16 +84,16 @@ void P_Shoot2(lineattack_t *la) ATTR_DATA_CACHE_ALIGN;
 // the intersection occurs at.  If 0 < intercept < 1.0, the line will block
 // the sight.
 //
-static fixed_t PA_SightCrossLine(shootWork_t *sw, line_t *line)
+static fixed_t PA_SightCrossLine(shootWork_t *sw, vertex_t *v1, vertex_t *v2)
 {
    fixed_t s1, s2;
    fixed_t p1x, p1y, p2x, p2y, p3x, p3y, p4x, p4y, dx, dy, ndx, ndy;
 
    // p1, p2 are endpoints
-   p1x = line->v1->x >> FRACBITS;
-   p1y = line->v1->y >> FRACBITS;
-   p2x = line->v2->x >> FRACBITS;
-   p2y = line->v2->y >> FRACBITS;
+   p1x = v1->x >> FRACBITS;
+   p1y = v1->y >> FRACBITS;
+   p2x = v2->x >> FRACBITS;
+   p2y = v2->y >> FRACBITS;
 
    // p3, p4 are sight endpoints
    p3x = sw->ssx1;
@@ -284,13 +284,8 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
    mobj_t  *thing;
    subsector_t *sub = &subsectors[bspnum];
    intercept_t  in;
-   line_t   thingline;
    vertex_t tv1, tv2;
    VINT     *lvalidcount, vc;
-
-   // CALICO: removed type punning
-   thingline.v1 = &tv1;
-   thingline.v2 = &tv2;
 
    // check things
    for(thing = sub->sector->thinglist; thing; thing = thing->snext)
@@ -303,20 +298,20 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
       // check a corner to corner cross-section for hit
       if(sw->shootdivpositive)
       {
-         thingline.v1->x = thing->x - thing->radius;
-         thingline.v1->y = thing->y + thing->radius;
-         thingline.v2->x = thing->x + thing->radius;
-         thingline.v2->y = thing->y - thing->radius;
+         tv1.x = thing->x - thing->radius;
+         tv1.y = thing->y + thing->radius;
+         tv2.x = thing->x + thing->radius;
+         tv2.y = thing->y - thing->radius;
       }
       else
       {
-         thingline.v1->x = thing->x - thing->radius;
-         thingline.v1->y = thing->y - thing->radius;
-         thingline.v2->x = thing->x + thing->radius;
-         thingline.v2->y = thing->y + thing->radius;
+         tv1.x = thing->x - thing->radius;
+         tv1.y = thing->y - thing->radius;
+         tv2.x = thing->x + thing->radius;
+         tv2.y = thing->y + thing->radius;
       }
 
-      frac = PA_SightCrossLine(sw, &thingline);
+      frac = PA_SightCrossLine(sw, &tv1, &tv2);
       if(frac < 0 || frac > FRACUNIT)
          continue;
 
@@ -345,7 +340,7 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
          continue; // already checked other side
       lvalidcount[ld] = vc;
 
-      frac = PA_SightCrossLine(sw, line);
+      frac = PA_SightCrossLine(sw, &vertexes[line->v1], &vertexes[line->v2]);
       if(frac < 0 || frac > FRACUNIT)
          continue;
 

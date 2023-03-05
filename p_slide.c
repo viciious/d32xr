@@ -201,8 +201,8 @@ static boolean SL_CheckLine(line_t *ld, pslidework_t *sw)
 
    // the line is definitely blocking movement at this point
 findfrac:
-   sw->p1  = ld->v1;
-   sw->p2  = ld->v2;
+   sw->p1  = &vertexes[ld->v1];
+   sw->p2  = &vertexes[ld->v2];
    sw->nvx = finesine(ld->fineangle);
    sw->nvy = -finecosine(ld->fineangle);
    
@@ -419,10 +419,10 @@ static void SL_CheckSpecialLines(pslidework_t *sw)
                continue;
             }
 
-            x3 = ld->v1->x;
-            y3 = ld->v1->y;
-            x4 = ld->v2->x;
-            y4 = ld->v2->y;
+            x3 = vertexes[ld->v1].x;
+            y3 = vertexes[ld->v1].y;
+            x4 = vertexes[ld->v2].x;
+            y4 = vertexes[ld->v2].y;
 
             side1 = SL_PointOnSide2(x1, y1, x3, y3, x4, y4);
             side2 = SL_PointOnSide2(x2, y2, x3, y3, x4, y4);

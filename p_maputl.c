@@ -50,11 +50,11 @@ int P_PointOnLineSide (fixed_t x, fixed_t y, line_t *line)
 	fixed_t	left, right;
 	fixed_t ldx,ldy;
 
-	ldx = line->v2->x - line->v1->x;
-	ldy = line->v2->y - line->v1->y;
+	ldx = vertexes[line->v2].x - vertexes[line->v1].x;
+	ldy = vertexes[line->v2].y - vertexes[line->v1].y;
 
-	dx = (x - line->v1->x);
-	dy = (y - line->v1->y);
+	dx = (x - vertexes[line->v1].x);
+	dy = (y - vertexes[line->v1].y);
 	
 	left = (ldy>>16) * (dx>>16);
 	right = (dy>>16) * (ldx>>16);
@@ -138,7 +138,7 @@ fixed_t P_LineOpening (line_t *linedef)
 
 void P_LineBBox(line_t* ld, fixed_t *bbox)
 {
-	vertex_t* v1 = ld->v1, * v2 = ld->v2;
+	vertex_t* v1 = &vertexes[ld->v1], * v2 = &vertexes[ld->v2];
 
 	if (v1->x < v2->x)
 	{

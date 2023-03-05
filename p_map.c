@@ -120,10 +120,10 @@ fixed_t P_InterceptVector (divline_t *v2, divline_t *v1)
 
 void P_MakeDivline (line_t *li, divline_t *dl)
 {
-	dl->x = li->v1->x;
-	dl->y = li->v1->y;
-	dl->dx = li->v2->x - li->v1->x;
-	dl->dy = li->v2->y - li->v1->y;
+	dl->x = vertexes[li->v1].x;
+	dl->y = vertexes[li->v1].y;
+	dl->dx = vertexes[li->v2].x - vertexes[li->v1].x;
+	dl->dy = vertexes[li->v2].y - vertexes[li->v1].y;
 }
 
 

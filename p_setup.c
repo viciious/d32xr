@@ -119,7 +119,7 @@ void P_LoadSegs (int lump)
 		side = LITTLESHORT(ml->side);
 		li->side = side;
 
-		if (ldef->v1 == &vertexes[li->v1])
+		if (ldef->v1 == li->v1)
 			ldef->fineangle = angle >> ANGLETOFINESHIFT;
 	}
 }
@@ -349,20 +349,22 @@ void P_LoadLineDefs (int lump)
 		ld->flags = LITTLESHORT(mld->flags);
 		ld->special = LITTLESHORT(mld->special);
 		ld->tag = LITTLESHORT(mld->tag);
-		v1 = ld->v1 = &vertexes[LITTLESHORT(mld->v1)];
-		v2 = ld->v2 = &vertexes[LITTLESHORT(mld->v2)];
+		ld->v1 = LITTLESHORT(mld->v1);
+		ld->v2 = LITTLESHORT(mld->v2);
+		v1 = &vertexes[ld->v1];
+		v2 = &vertexes[ld->v2];
 		dx = v2->x - v1->x;
 		dy = v2->y - v1->y;
 		if (!dx)
-			ld->slopetype = ST_VERTICAL;
+			ld->flags |= ML_ST_VERTICAL;
 		else if (!dy)
-			ld->slopetype = ST_HORIZONTAL;
+			ld->flags |= ML_ST_HORIZONTAL;
 		else
 		{
 			if (FixedDiv (dy , dx) > 0)
-				ld->slopetype = ST_POSITIVE;
+				ld->flags |= ML_ST_POSITIVE;
 			else
-				ld->slopetype = ST_NEGATIVE;
+				ld->flags |= ML_ST_NEGATIVE;
 		}
 
 		ld->sidenum[0] = LITTLESHORT(mld->sidenum[0]);
@@ -566,8 +568,8 @@ void P_GroupLines (void)
 		for (j=0 ; j<sector->linecount ; j++)
 		{
 			li = sector->lines[j];
-			M_AddToBox (bbox, li->v1->x, li->v1->y);
-			M_AddToBox (bbox, li->v2->x, li->v2->y);
+			M_AddToBox (bbox, vertexes[li->v1].x, vertexes[li->v1].y);
+			M_AddToBox (bbox, vertexes[li->v2].x, vertexes[li->v2].y);
 		}
 
 		/* set the degenmobj_t to the middle of the bounding box */

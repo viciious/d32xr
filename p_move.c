@@ -159,7 +159,7 @@ static boolean PM_BoxCrossLine(line_t *ld, pmovework_t *mw)
    y1 = mw->tmbbox[BOXTOP   ];
    y2 = mw->tmbbox[BOXBOTTOM];
 
-   if(ld->slopetype == ST_POSITIVE)
+   if(ld->flags & ML_ST_POSITIVE)
    {
       x1 = mw->tmbbox[BOXLEFT ];
       x2 = mw->tmbbox[BOXRIGHT];
@@ -170,10 +170,10 @@ static boolean PM_BoxCrossLine(line_t *ld, pmovework_t *mw)
       x2 = mw->tmbbox[BOXLEFT ];
    }
 
-   lx  = ld->v1->x;
-   ly  = ld->v1->y;
-   ldx = (ld->v2->x - lx) >> FRACBITS;
-   ldy = (ld->v2->y - ly) >> FRACBITS;
+   lx  = vertexes[ld->v1].x;
+   ly  = vertexes[ld->v1].y;
+   ldx = (vertexes[ld->v2].x - lx) >> FRACBITS;
+   ldy = (vertexes[ld->v2].y - ly) >> FRACBITS;
 
    dx1 = (x1 - lx) >> FRACBITS;
    dy1 = (y1 - ly) >> FRACBITS;
