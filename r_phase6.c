@@ -174,6 +174,32 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
         ceilingclipx = (unsigned)ceilingclipx >> 8;
 
         //
+        // sky mapping
+        //
+        if (drawsky)
+        {
+            int top, bottom;
+
+            top = ceilingclipx;
+            FixedMul2(bottom, scale2, ceilingheight);
+            bottom = centerY - bottom;
+            if (bottom > floorclipx)
+                bottom = floorclipx;
+
+            if (top < bottom)
+            {
+                // CALICO: draw sky column
+                int colnum = ((vd.viewangle + xtoviewangle[x]) >> ANGLETOSKYSHIFT) & 0xff;
+#ifdef MARS
+                inpixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
+#else
+                pixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
+#endif
+                drawsky(x, top, --bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, 128, NULL);
+            }
+        }
+
+        //
         // texture only stuff
         //
         if (lightcoef != 0)
@@ -211,32 +237,6 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
         if (miplevel < lseg->minmip)
             lseg->minmip = miplevel;
         R_DrawTextures(x, iscale, colnum, scale2, floorclipx, ceilingclipx, texturelight, lseg, miplevel);
-
-        //
-        // sky mapping
-        //
-        if (drawsky)
-        {
-            int top, bottom;
-
-            top = ceilingclipx;
-            FixedMul2(bottom, scale2, ceilingheight);
-            bottom = centerY - bottom;
-            if (bottom > floorclipx)
-                bottom = floorclipx;
-
-            if (top < bottom)
-            {
-                // CALICO: draw sky column
-                int colnum = ((vd.viewangle + xtoviewangle[x]) >> ANGLETOSKYSHIFT) & 0xff;
-#ifdef MARS
-                inpixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
-#else
-                pixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
-#endif
-                drawsky(x, top, --bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, 128, NULL);
-            }
-        }
     }
 }
 
