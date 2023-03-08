@@ -18,7 +18,7 @@ typedef struct
 #endif
    int       width;
    int       height;
-   int       texturemid;
+   fixed_t   texturemid;
    drawcol_t drawcol;
 } drawmip_t;
 
@@ -26,9 +26,8 @@ typedef struct drawtex_s
 {
    drawmip_t mip[MIPLEVELS];
    int       maxmip;
-   int       topheight;
-   int       bottomheight;
-   int       pixelcount[2]; // for 2 closest mip levels
+   fixed_t   topheight;
+   fixed_t   bottomheight;
 } drawtex_t;
 
 typedef struct
