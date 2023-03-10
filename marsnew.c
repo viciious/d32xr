@@ -490,7 +490,7 @@ void* I_RemapLumpPtr(void *ptr)
 		bank = bank >> 16;
 
 		newptr = ((newptr & 0x0007FFFF) + 512*1024*bank + 0x02000000);
-		if (page > 7)
+		if (page >= 6)
 			newptr |= 0x20000000; // bypass cache
 
 		if (bankpage != page)
