@@ -231,10 +231,12 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 
         // other texture drawing info
         miplevel = iscale / MIPSCALE;
+#if MIPLEVELS > 1
         if (miplevel > lseg->maxmip)
             lseg->maxmip = miplevel;
         if (miplevel < lseg->minmip)
             lseg->minmip = miplevel;
+#endif
         R_DrawTextures(x, iscale, colnum, scale2, floorclipx, ceilingclipx, texturelight, lseg, miplevel);
     }
 }
@@ -407,14 +409,17 @@ void R_SegCommands(void)
 
         R_DrawSeg(&lseg, clipbounds);
 
-        if (detailmode < detmode_mipmaps)
+#if MIPLEVELS > 1
+        if (detailmode >= detmode_mipmaps)
+        {
+            segl->miplevels[0] = lseg.minmip;
+            segl->miplevels[1] = lseg.maxmip;
+        }
+        else
+#endif
         {
             segl->miplevels[0] = 0;
             segl->miplevels[1] = 0;
-        }
-        else {
-            segl->miplevels[0] = lseg.minmip;
-            segl->miplevels[1] = lseg.maxmip;
         }
 
 post_draw:
