@@ -139,13 +139,13 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 
     const int stop = segl->stop;
     int x;
+    unsigned miplevel = 0;
 
     for (x = segl->start; x <= stop; x++)
     {
        fixed_t r;
        int floorclipx, ceilingclipx;
        unsigned scale2, colnum, iscale;
-       unsigned miplevel;
 
 #ifdef MARS
         volatile int32_t t;
@@ -229,14 +229,15 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
         iscale = 0xffffffffu / scale;
 #endif
 
+#if MIPLEVELS > 1
         // other texture drawing info
         miplevel = iscale / MIPSCALE;
-#if MIPLEVELS > 1
         if (miplevel > lseg->maxmip)
             lseg->maxmip = miplevel;
         if (miplevel < lseg->minmip)
             lseg->minmip = miplevel;
 #endif
+
         R_DrawTextures(x, iscale, colnum, scale2, floorclipx, ceilingclipx, texturelight, lseg, miplevel);
     }
 }
