@@ -288,6 +288,8 @@ static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
 		gi->endText = value;
 	else if (!D_strcasecmp(key, "endFlat"))
 		gi->endFlat = W_CheckNumForName(value);
+	else if (!D_strcasecmp(key, "endShowCast"))
+		gi->endShowCast = D_atoi(value);
 }
 
 static const char* G_FindMapinfoSection(const char* buf, const char *name, size_t *psectionlen)
@@ -379,6 +381,7 @@ int G_FindGameinfo(dgameinfo_t* gi)
 		return 0;
 
 	D_memset(gi, 0, sizeof(*gi));
+	gi->endShowCast = 1;
 	gi->data = G_MapinfoSectionCStr(buf, "gameinfo", NULL);
 	if (!gi->data)
 		return 0;

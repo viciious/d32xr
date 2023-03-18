@@ -54,6 +54,7 @@ typedef struct
 	VINT creditsPage;
 	VINT creditsTime;
 	VINT endFlat;
+	VINT endShowCast;
 	char* endText;
 	void* data;
 } dgameinfo_t;

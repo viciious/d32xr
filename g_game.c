@@ -497,6 +497,7 @@ void G_Init(void)
 	gameinfo.titlePage = W_CheckNumForName("title");
 	gameinfo.titleTime = 540;
 	gameinfo.endFlat = gameinfo.borderFlat;
+	gameinfo.endShowCast = 1;
 }
 
 /* 

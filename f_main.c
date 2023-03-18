@@ -380,7 +380,7 @@ int F_Ticker (void)
 		if (( ((buttons & BT_ATTACK) && !(oldbuttons & BT_ATTACK) )
 		|| ((buttons & BT_SPEED) && !(oldbuttons & BT_SPEED) )
 		|| ((buttons & BT_USE) && !(oldbuttons & BT_USE) ) ) &&
-		textprint == true)
+		textprint == true && gameinfo.endShowCast)
 		{
 			status = fin_charcast;
 
