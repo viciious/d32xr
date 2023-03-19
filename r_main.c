@@ -751,9 +751,8 @@ void Mars_Sec_R_Setup(void)
 // Check for a matching visplane in the visplanes array, or set up a new one
 // if no compatible match can be found.
 //
-int R_PlaneHash(fixed_t height, unsigned flatnum, unsigned lightlevel) {
-	return ((((unsigned)height >> 8) + lightlevel) ^ flatnum) & (NUM_VISPLANES_BUCKETS - 1);
-}
+#define R_PlaneHash(height, lightlevel) \
+	((((unsigned)(height) >> 8) + (flatandlight>>16)) ^ (flatandlight&0xffff)) & (NUM_VISPLANES_BUCKETS - 1)
 
 void R_MarkOpenPlane(visplane_t* pl)
 {
@@ -782,10 +781,11 @@ void R_InitClipBounds(uint32_t *clipbounds)
 	}
 }
 
-visplane_t* R_FindPlane(int hash, fixed_t height, 
-	int flatnum, int lightlevel, int start, int stop)
+visplane_t* R_FindPlane(fixed_t height, 
+	int flatandlight, int start, int stop)
 {
 	visplane_t *check, *tail, *next;
+	int hash = R_PlaneHash(height, flatandlight);
 
 	tail = visplanes_hash[hash];
 	for (check = tail; check; check = next)
@@ -793,8 +793,7 @@ visplane_t* R_FindPlane(int hash, fixed_t height,
 		next = check->next;
 
 		if (height == check->height && // same plane as before?
-			flatnum == check->flatnum &&
-			lightlevel == check->lightlevel)
+			flatandlight == check->flatandlight)
 		{
 			if (MARKEDOPEN(check->open[start]))
 			{
@@ -816,8 +815,7 @@ visplane_t* R_FindPlane(int hash, fixed_t height,
 	++lastvisplane;
 
 	check->height = height;
-	check->flatnum = flatnum;
-	check->lightlevel = lightlevel;
+	check->flatandlight = flatandlight;
 	check->minx = start;
 	check->maxx = stop;
 

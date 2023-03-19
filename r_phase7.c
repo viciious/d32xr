@@ -281,7 +281,7 @@ static void R_DrawPlanes2(uint16_t *sortedvisplanes)
 
         for (j = 0; j <= lpl.maxmip; j++)
         {
-            lpl.ds_source[j] = flatpixels[pl->flatnum].data[j];
+            lpl.ds_source[j] = flatpixels[pl->flatandlight&0xffff].data[j];
             lpl.mipsize[j] = mipsize;
             mipsize >>= 1;
         }
@@ -293,7 +293,7 @@ static void R_DrawPlanes2(uint16_t *sortedvisplanes)
         }
         else
         {
-            light = pl->lightlevel + extralight;
+            light = (pl->flatandlight>>16) + extralight;
             if (light < 0)
                 light = 0;
             if (light > 255)
@@ -376,8 +376,7 @@ static void Mars_R_SplitPlanes(void)
             newpl = lastvisplane++;
             newpl->open = pl->open;
             newpl->height = pl->height;
-            newpl->flatnum = pl->flatnum;
-            newpl->lightlevel = pl->lightlevel;
+            newpl->flatandlight = pl->flatandlight;
             newpl->minx = start + 1;
             newpl->maxx = newstop;
 
@@ -400,7 +399,7 @@ static void Mars_R_SortPlanes(uint16_t *sortedvisplanes)
     numplanes = 0;
     for (pl = visplanes + 1; pl < lastvisplane; pl++)
     {
-        sortbuf[i + 0] = pl->flatnum;
+        sortbuf[i + 0] = pl->flatandlight&0xffff;
         sortbuf[i + 1] = pl - visplanes;
         i += 2;
         numplanes++;

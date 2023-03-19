@@ -358,7 +358,6 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
     unsigned short* ceilopen, * flooropen;
 
     const volatile int actionbits = segl->actionbits;
-    const int lightlevel = segl->seglightlevel;
 
     unsigned scalefrac = segl->scalefrac;
     unsigned scalestep = segl->scalestep;
@@ -369,22 +368,14 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
 
     const fixed_t ceilingheight = segl->ceilingheight;
 
-    const int floorpicnum = segl->floorpicnum;
-    const int ceilingpicnum = segl->ceilingpicnum;
+    const int floorandlight = (segl->seglightlevel << 16) | segl->floorpicnum;
+    const int ceilandlight = (segl->seglightlevel << 16) | segl->ceilingpicnum;
 
     byte *topsil, *bottomsil;
-
-    int floorplhash = 0;
-    int ceilingplhash = 0;
 
     // force R_FindPlane for both planes
     floor = ceiling = visplanes;
     flooropen = ceilopen = visplanes[0].open;
-
-    if (actionbits & AC_ADDFLOOR)
-        floorplhash = R_PlaneHash(floorheight, floorpicnum, lightlevel);
-    if (actionbits & AC_ADDCEILING)
-        ceilingplhash = R_PlaneHash(ceilingheight, ceilingpicnum, lightlevel);
 
     if (actionbits & AC_TOPSIL)
         topsil = segl->sil;
@@ -481,8 +472,7 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
             {
                 if (!MARKEDOPEN(flooropen[x]))
                 {
-                    floor = R_FindPlane(floorplhash, floorheight, 
-                        floorpicnum, lightlevel, x, stop);
+                    floor = R_FindPlane(floorheight, floorandlight, x, stop);
                     flooropen = floor->open;
                 }
                 flooropen[x] = (top << 8) + (bottom-1);
@@ -504,8 +494,7 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
             {
                 if (!MARKEDOPEN(ceilopen[x]))
                 {
-                    ceiling = R_FindPlane(ceilingplhash, ceilingheight, 
-                        ceilingpicnum, lightlevel, x, stop);
+                    ceiling = R_FindPlane(ceilingheight, ceilandlight, x, stop);
                     ceilopen = ceiling->open;
                 }
                 ceilopen[x] = (top << 8) + (bottom-1);
