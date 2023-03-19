@@ -354,9 +354,6 @@ static void R_WallLatePrep(viswall_t* wc, vertex_t *verts)
 static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, 
     fixed_t floorheight, fixed_t floornewheight, fixed_t ceilingnewheight)
 {
-    visplane_t* ceiling, * floor;
-    unsigned short* ceilopen, * flooropen;
-
     const volatile int actionbits = segl->actionbits;
 
     unsigned scalefrac = segl->scalefrac;
@@ -373,27 +370,19 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
 
     byte *topsil, *bottomsil;
 
-    // force R_FindPlane for both planes
-    floor = ceiling = visplanes;
-    flooropen = ceilopen = visplanes[0].open;
-
     if (actionbits & AC_TOPSIL)
+    {
         topsil = segl->sil;
+        bottomsil = (actionbits & AC_BOTTOMSIL) ? segl->sil + width : NULL;
+    }
     else
+    {
         topsil = NULL;
-    if (actionbits & AC_BOTTOMSIL)
-        bottomsil = segl->sil + (actionbits & AC_TOPSIL ? width : 0);
-    else
-        bottomsil = NULL;
+        bottomsil = (actionbits & AC_BOTTOMSIL) ? segl->sil : NULL;
+    }
 
-    if (actionbits & AC_ADDFLOOR)
-        flooropen = visplanes[0].open;
-    else
-        flooropen = NULL;
-    if (actionbits & AC_ADDCEILING)
-        ceilopen = visplanes[0].open;
-    else
-        ceilopen = NULL;
+    unsigned short *flooropen = (actionbits & AC_ADDFLOOR) ? visplanes[0].open : NULL;
+    unsigned short *ceilopen = (actionbits & AC_ADDCEILING) ? visplanes[0].open : NULL;
 
     unsigned short *newclipbounds = NULL;
     if (actionbits & (AC_NEWFLOOR | AC_NEWCEILING))
@@ -472,7 +461,7 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
             {
                 if (!MARKEDOPEN(flooropen[x]))
                 {
-                    floor = R_FindPlane(floorheight, floorandlight, x, stop);
+                    visplane_t *floor = R_FindPlane(floorheight, floorandlight, x, stop);
                     flooropen = floor->open;
                 }
                 flooropen[x] = (top << 8) + (bottom-1);
@@ -494,7 +483,7 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
             {
                 if (!MARKEDOPEN(ceilopen[x]))
                 {
-                    ceiling = R_FindPlane(ceilingheight, ceilandlight, x, stop);
+                    visplane_t *ceiling = R_FindPlane(ceilingheight, ceilandlight, x, stop);
                     ceilopen = ceiling->open;
                 }
                 ceilopen[x] = (top << 8) + (bottom-1);
