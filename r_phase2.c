@@ -391,6 +391,8 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
         lastsegclip += width;
     }
 
+    const int cy = centerY;
+
     for (x = start; x <= stop; x++)
     {
         int floorclipx, ceilingclipx;
@@ -411,14 +413,14 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
         // calc high and low
         //
         FixedMul2(low, scale2, floornewheight);
-        low = centerY - low;
+        low = cy - low;
         if (low < 0)
             low = 0;
         else if (low > floorclipx)
             low = floorclipx;
 
         FixedMul2(high, scale2, ceilingnewheight);
-        high = centerY - high;
+        high = cy - high;
         if (high > viewportHeight)
             high = viewportHeight;
         else if (high < ceilingclipx)
@@ -452,7 +454,7 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
         if (flooropen)
         {
             FixedMul2(top, scale2, floorheight);
-            top = centerY - top;
+            top = cy - top;
             if (top < ceilingclipx)
                 top = ceilingclipx;
             bottom = floorclipx;
