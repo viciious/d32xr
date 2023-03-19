@@ -76,6 +76,7 @@ static void R_DrawTextures(int x, unsigned iscale_, int colnum_, fixed_t scale2,
            unsigned iscale = iscale_;
            int colnum = colnum_;
 
+#if MIPLEVELS > 1
            if (miplevel > tex->maxmip)
                 miplevel = tex->maxmip;
            if (miplevel > 0) {
@@ -85,6 +86,7 @@ static void R_DrawTextures(int x, unsigned iscale_, int colnum_, fixed_t scale2,
                    iscale >>= 1;
                } while (--m);
            }
+#endif
 
            drawmip_t *mip = &tex->mip[miplevel];
            fixed_t frac = mip->texturemid - (centerY - top) * iscale;
@@ -362,8 +364,11 @@ void R_SegCommands(void)
 
             toptex->topheight = segl->t_topheight;
             toptex->bottomheight = segl->t_bottomheight;
+#if MIPLEVELS > 1
             toptex->maxmip = detailmode < detmode_mipmaps ? 0 : tex->mipcount-1;
-
+#else
+            toptex->maxmip = 0;
+#endif
             for (j = 0; j <= toptex->maxmip; j++)
             {
                 toptex->mip[j].width = width;
@@ -390,7 +395,11 @@ void R_SegCommands(void)
             bottomtex->topheight = segl->b_topheight;
             bottomtex->bottomheight = segl->b_bottomheight;
             bottomtex->maxmip = detailmode < detmode_mipmaps ? 0 : tex->mipcount-1;
-
+#if MIPLEVELS > 1
+            bottomtex->maxmip = detailmode < detmode_mipmaps ? 0 : tex->mipcount-1;
+#else
+            bottomtex->maxmip = 0;
+#endif
             for (j = 0; j <= bottomtex->maxmip; j++)
             {
                 bottomtex->mip[j].width = width;
