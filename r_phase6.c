@@ -394,7 +394,6 @@ void R_SegCommands(void)
 
             bottomtex->topheight = segl->b_topheight;
             bottomtex->bottomheight = segl->b_bottomheight;
-            bottomtex->maxmip = detailmode < detmode_mipmaps ? 0 : tex->mipcount-1;
 #if MIPLEVELS > 1
             bottomtex->maxmip = detailmode < detmode_mipmaps ? 0 : tex->mipcount-1;
 #else
