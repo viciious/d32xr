@@ -421,6 +421,8 @@ void R_SegCommands(void)
 #if MIPLEVELS > 1
         if (detailmode >= detmode_mipmaps)
         {
+            if (lseg.maxmip >= MIPLEVELS)
+                lseg.maxmip = MIPLEVELS-1;
             segl->miplevels[0] = lseg.minmip;
             segl->miplevels[1] = lseg.maxmip;
         }

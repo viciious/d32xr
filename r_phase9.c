@@ -70,6 +70,11 @@ static void R_UpdateCache(void)
       {
         flattex_t *flat = &flatpixels[wall->floorpicnum];
 
+        if (minplanemip < 0)
+          minplanemip = 0;
+        if (maxplanemip >= MIPLEVELS)
+          maxplanemip = MIPLEVELS-1;
+
         for (i = minplanemip; i <= maxplanemip; i++) {
             if (!R_TouchIfInTexCache(&r_texcache, flat->data[i]) && (bestmips[i] < 0)) {
                 bestmips[i] = numtextures+wall->floorpicnum;
