@@ -104,6 +104,8 @@ static void R_AgeTexCacheEntries(void* ptr, void* userp)
 {
 	texcacheblock_t* entry = ptr;
 	entry->lifecount--;
+	if (entry->lifecount < 0)
+		entry->lifecount = 0;
 }
 
 /*
