@@ -391,7 +391,7 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
         lastsegclip += width;
     }
 
-    const int cy = centerY;
+    const int cy = centerY, vh = viewportHeight;
 
     for (x = start; x <= stop; x++)
     {
@@ -421,18 +421,18 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
 
         FixedMul2(high, scale2, ceilingnewheight);
         high = cy - high;
-        if (high > viewportHeight)
-            high = viewportHeight;
+        if (high > vh)
+            high = vh;
         else if (high < ceilingclipx)
             high = ceilingclipx;
-
-        // top sprite clip sil
-        if (topsil)
-            topsil[x] = high+1;
 
         // bottom sprite clip sil
         if (bottomsil)
             bottomsil[x] = low+1;
+
+        // top sprite clip sil
+        if (topsil)
+            topsil[x] = high+1;
 
         int newclip = actionbits & (AC_NEWFLOOR|AC_NEWCEILING);
         if (newclipbounds)
