@@ -92,8 +92,8 @@ static int R_ClipToViewEdges(angle_t angle1, angle_t angle2)
    // are touching).
    angle1 = (angle1 + ANG90) >> ANGLETOFINESHIFT;
    angle2 = (angle2 + ANG90) >> ANGLETOFINESHIFT;
-   x1    = viewangletox[angle1];
-   x2    = viewangletox[angle2];
+   x1    = vd.viewangletox[angle1];
+   x2    = vd.viewangletox[angle2];
 
    // does not cross a pixel?
    if(x1 == x2)

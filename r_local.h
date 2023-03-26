@@ -339,6 +339,7 @@ __attribute__((aligned(16)))
 	VINT		fixedcolormap;
 	VINT		fuzzcolormap;
 	angle_t		clipangle, doubleclipangle;
+	VINT 		*viewangletox;
 } viewdef_t;
 
 extern	viewdef_t	vd;
