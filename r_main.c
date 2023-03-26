@@ -97,7 +97,6 @@ VINT		extralight;			/* bumped light from gun blasts */
 /* */
 /* precalculated math */
 /* */
-angle_t		clipangle,doubleclipangle;
 #ifndef MARS
 fixed_t	*finecosine_ = &finesine_[FINEANGLES/4];
 #endif
@@ -548,11 +547,11 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	vd.lightlevel = player->mo->subsector->sector->lightlevel;
 	vd.fixedcolormap = 0;
 
+	vd.clipangle = xtoviewangle[0];
+	vd.doubleclipangle = vd.clipangle * 2;
+
 	damagecount = player->damagecount;
 	bonuscount = player->bonuscount;
-
-	clipangle = xtoviewangle[0];
-	doubleclipangle = clipangle * 2;
 
 #ifdef JAGUAR
 	vd.extralight = player->extralight << 6;

@@ -26,6 +26,7 @@ static seg_t       *curline;
 static angle_t      lineangle1;
 static sector_t    *frontsector;
 
+static int R_ClipToViewEdges(angle_t angle1, angle_t angle2) ATTR_DATA_CACHE_ALIGN;
 static void R_AddLine(seg_t* line) ATTR_DATA_CACHE_ALIGN;
 static void R_ClipWallSegment(fixed_t first, fixed_t last, boolean solid) ATTR_DATA_CACHE_ALIGN;
 static boolean R_CheckBBox(fixed_t bspcoord[4]) ATTR_DATA_CACHE_ALIGN;
@@ -53,6 +54,52 @@ static VINT checkcoord[12][4] =
    { 0, 0, 0, 0 }
 };
 
+static int R_ClipToViewEdges(angle_t angle1, angle_t angle2)
+{
+   angle_t span, tspan;
+   int x1, x2;
+
+   // clip to view edges
+   span = angle1 - angle2;
+   if(span >= ANG180)
+      return 0;
+
+   angle1 -= vd.viewangle;
+   angle2 -= vd.viewangle;
+
+   tspan = angle1 + vd.clipangle;
+   if(tspan > vd.doubleclipangle)
+   {
+      tspan -= vd.doubleclipangle;
+      // totally off the left edge?
+      if(tspan >= span)
+         return -1;
+      angle1 = vd.clipangle;
+   }
+
+   tspan = vd.clipangle - angle2;
+   if(tspan > vd.doubleclipangle)
+   {
+      tspan -= vd.doubleclipangle;
+      if(tspan >= span)
+         return -1;
+      angle2 = 0 - vd.clipangle;
+   }
+
+   // find the first clippost that touches the source post (adjacent pixels
+   // are touching).
+   angle1 = (angle1 + ANG90) >> ANGLETOFINESHIFT;
+   angle2 = (angle2 + ANG90) >> ANGLETOFINESHIFT;
+   x1    = viewangletox[angle1];
+   x2    = viewangletox[angle2];
+
+   // does not cross a pixel?
+   if(x1 == x2)
+      return -1;
+
+   return (x1<<16) | x2;
+}
+
 //
 // Checks BSP node/subtree bounding box. Returns true if some part of the bbox
 // might be visible.
@@ -65,7 +112,7 @@ static boolean R_CheckBBox(fixed_t bspcoord[4])
 
    fixed_t x1, y1, x2, y2;
 
-   angle_t angle1, angle2, span, tspan;
+   angle_t angle1, angle2;
 
    cliprange_t *start;
 
@@ -96,50 +143,16 @@ static boolean R_CheckBBox(fixed_t bspcoord[4])
    y2 = bspcoord[checkcoord[boxpos][3]];
 
    // check clip list for an open space
-   angle1 = R_PointToAngle(x1, y1) - vd.viewangle;
-   angle2 = R_PointToAngle(x2, y2) - vd.viewangle;
+   angle1 = R_PointToAngle(x1, y1);
+   angle2 = R_PointToAngle(x2, y2);
 
-   span = angle1 - angle2;
-
-   // sitting on a line?
-   if(span >= ANG180)
+   sx1 = R_ClipToViewEdges(angle1, angle2);
+   if (sx1 == 0)
       return true;
-   
-   tspan = angle1 + clipangle;
-   if(tspan > doubleclipangle)
-   {
-      tspan -= doubleclipangle;
-
-      // totally off the left edge?
-      if(tspan >= span)
-         return false;
-
-      angle1 = clipangle;
-   }
-
-   tspan = clipangle - angle2;
-   if(tspan > doubleclipangle)
-   {
-      tspan -= doubleclipangle;
-
-      // totally off the left edge?
-      if(tspan >= span)
-         return false;
-
-      angle2 = 0 - clipangle;
-   }
-
-   // find the first clippost that touches the source post (adjacent pixels
-   // are touching).
-   angle1 = (angle1 + ANG90) >> ANGLETOFINESHIFT;
-   angle2 = (angle2 + ANG90) >> ANGLETOFINESHIFT;
-   sx1    = viewangletox[angle1];
-   sx2    = viewangletox[angle2];
-
-   // does not cross a pixel?
-   if(sx1 == sx2)
+   if (sx1 == -1)
       return false;
-   --sx2;
+   sx2 = (sx1 & 0xffff) - 1;
+   sx1 = sx1 >>    16;
 
    start = solidsegs;
    while(start->last < sx2)
@@ -305,7 +318,7 @@ crunch:
 //
 static void R_AddLine(seg_t *line)
 {
-   angle_t angle1, angle2, span, tspan;
+   angle_t angle1, angle2;
    fixed_t x1, x2;
    sector_t *backsector;
    vertex_t *v1 = &vertexes[line->v1], *v2 = &vertexes[line->v2];
@@ -318,46 +331,13 @@ static void R_AddLine(seg_t *line)
 
    angle1 = R_PointToAngle(v1->x, v1->y);
    angle2 = R_PointToAngle(v2->x, v2->y);
-
-   // clip to view edges
-   span = angle1 - angle2;
-
-   if(span >= ANG180)
-      return;
-
    lineangle1 = angle1;
-   angle1 -= vd.viewangle;
-   angle2 -= vd.viewangle;
 
-   tspan = angle1 + clipangle;
-   if(tspan > doubleclipangle)
-   {
-      tspan -= doubleclipangle;
-      if(tspan >= span)
-         return;
-      angle1 = clipangle;
-   }
-
-   tspan = clipangle - angle2;
-   if(tspan > doubleclipangle)
-   {
-      tspan -= doubleclipangle;
-      if(tspan >= span)
-         return;
-      angle2 = 0 - clipangle;
-   }
-
-   // the seg is in the view range, but not necessarily visible
-
-   angle1 = (angle1 + ANG90) >> ANGLETOFINESHIFT;
-   angle2 = (angle2 + ANG90) >> ANGLETOFINESHIFT;
-
-   x1 = viewangletox[angle1];
-   x2 = viewangletox[angle2];
-
-   if(x1 == x2) // doesn't cross a pixel
+   x1 = R_ClipToViewEdges(angle1, angle2);
+   if (x1 <= 0)
       return;
-   --x2;
+   x2 = (x1 & 0xffff) - 1;
+   x1 = x1 >>    16;
 
    // decide which clip routine to use
    side = line->side;

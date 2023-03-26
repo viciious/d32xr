@@ -338,10 +338,10 @@ __attribute__((aligned(16)))
 	VINT		displayplayer;
 	VINT		fixedcolormap;
 	VINT		fuzzcolormap;
+	angle_t		clipangle, doubleclipangle;
 } viewdef_t;
 
 extern	viewdef_t	vd;
-extern	angle_t		clipangle, doubleclipangle;
 
 extern	VINT		extralight;
 
