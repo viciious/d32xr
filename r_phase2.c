@@ -481,7 +481,7 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
         {
             top = ceilingclipx;
             FixedMul2(bottom, scale2, ceilingheight);
-            bottom = centerY - bottom;
+            bottom = cy - bottom;
             if (bottom > floorclipx)
                 bottom = floorclipx;
 
