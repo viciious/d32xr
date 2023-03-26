@@ -20,19 +20,21 @@ __attribute__((aligned(4)))
 
 #define MAXSEGS 32
 
-static cliprange_t *newend;
-static cliprange_t  *solidsegs;
-static seg_t       *curline;
-static angle_t      lineangle1;
-static sector_t    *frontsector;
+typedef struct
+{
+   cliprange_t *newend;
+   cliprange_t solidsegs[MAXSEGS];
+   seg_t       *curline;
+   angle_t    lineangle1;
+} rbspWork_t;
 
 static int R_ClipToViewEdges(angle_t angle1, angle_t angle2) ATTR_DATA_CACHE_ALIGN;
-static void R_AddLine(seg_t* line) ATTR_DATA_CACHE_ALIGN;
-static void R_ClipWallSegment(fixed_t first, fixed_t last, boolean solid) ATTR_DATA_CACHE_ALIGN;
-static boolean R_CheckBBox(fixed_t bspcoord[4]) ATTR_DATA_CACHE_ALIGN;
-static void R_Subsector(int num) ATTR_DATA_CACHE_ALIGN;
-static void R_StoreWallRange(int start, int stop) ATTR_DATA_CACHE_ALIGN;
-static void R_RenderBSPNode(int bspnum) ATTR_DATA_CACHE_ALIGN;
+static void R_AddLine(rbspWork_t *rbsp, sector_t *frontsector, seg_t* line) ATTR_DATA_CACHE_ALIGN;
+static void R_ClipWallSegment(rbspWork_t *rbsp, fixed_t first, fixed_t last, boolean solid) ATTR_DATA_CACHE_ALIGN;
+static boolean R_CheckBBox(rbspWork_t *rbsp, fixed_t bspcoord[4]) ATTR_DATA_CACHE_ALIGN;
+static void R_Subsector(rbspWork_t *rbsp, int num) ATTR_DATA_CACHE_ALIGN;
+static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop) ATTR_DATA_CACHE_ALIGN;
+static void R_RenderBSPNode(rbspWork_t *rbsp, int bspnum) ATTR_DATA_CACHE_ALIGN;
 void R_BSP(void) ATTR_DATA_CACHE_ALIGN;
 
 #ifdef MARS
@@ -104,7 +106,7 @@ static int R_ClipToViewEdges(angle_t angle1, angle_t angle2)
 // Checks BSP node/subtree bounding box. Returns true if some part of the bbox
 // might be visible.
 //
-static boolean R_CheckBBox(fixed_t bspcoord[4])
+static boolean R_CheckBBox(rbspWork_t *rbsp, fixed_t bspcoord[4])
 {
    int boxx;
    int boxy;
@@ -154,7 +156,7 @@ static boolean R_CheckBBox(fixed_t bspcoord[4])
    sx2 = (sx1 & 0xffff) - 1;
    sx1 = sx1 >>    16;
 
-   start = solidsegs;
+   start = rbsp->solidsegs;
    while(start->last < sx2)
       ++start;
 
@@ -168,7 +170,7 @@ static boolean R_CheckBBox(fixed_t bspcoord[4])
 //
 // Store information about the clipped seg range into the viswall array.
 //
-static void R_StoreWallRange(int start, int stop)
+static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop)
 {
    viswall_t *rw;
    int newstop;
@@ -187,10 +189,10 @@ static void R_StoreWallRange(int start, int stop)
 
    do {
       rw = lastwallcmd;
-      rw->seg = curline;
+      rw->seg = rbsp->curline;
       rw->start = start;
       rw->stop = newstop;
-      rw->scalestep = lineangle1;
+      rw->scalestep = rbsp->lineangle1;
       rw->actionbits = 0;
       ++lastwallcmd;
 
@@ -213,14 +215,14 @@ static void R_StoreWallRange(int start, int stop)
 // Clips the given range of columns, but does not include it in the clip list.
 // Does handle windows, e.g., linedefs with upper and lower textures.
 //
-static void R_ClipWallSegment(fixed_t first, fixed_t last, boolean solid)
+static void R_ClipWallSegment(rbspWork_t *rbsp, fixed_t first, fixed_t last, boolean solid)
 {
     fixed_t      scratch;
     cliprange_t* start, * next;
 
     // find the first range that touches the range (adjacent pixels are touching)
     scratch = first - 1;
-    start = solidsegs;
+    start = rbsp->solidsegs;
     while (start->last < scratch)
         ++start;
 
@@ -230,12 +232,12 @@ static void R_ClipWallSegment(fixed_t first, fixed_t last, boolean solid)
         if (last < start->first - 1)
         {
             // post is entirely visible (above start)
-            R_StoreWallRange(first, last);
+            R_StoreWallRange(rbsp, first, last);
 
             if (solid)
             {
-                next = newend;
-                ++newend;
+                next = rbsp->newend;
+                ++rbsp->newend;
 
                if (next != start)
                {
@@ -258,7 +260,7 @@ static void R_ClipWallSegment(fixed_t first, fixed_t last, boolean solid)
         }
 
         // there is a fragment above *start
-        R_StoreWallRange(first, start->first - 1);
+        R_StoreWallRange(rbsp, first, start->first - 1);
 
         // now adjust the clip size
         if (solid)
@@ -275,7 +277,7 @@ static void R_ClipWallSegment(fixed_t first, fixed_t last, boolean solid)
     while (last >= (next + 1)->first - 1)
     {
         // there is a fragment between two posts
-        R_StoreWallRange(next->last + 1, (next + 1)->first - 1);
+        R_StoreWallRange(rbsp, next->last + 1, (next + 1)->first - 1);
         ++next;
 
         if (last <= next->last)
@@ -287,7 +289,7 @@ static void R_ClipWallSegment(fixed_t first, fixed_t last, boolean solid)
     }
 
     // there is a fragment after *next
-    R_StoreWallRange(next->last + 1, last);
+    R_StoreWallRange(rbsp, next->last + 1, last);
 crunch:
     if (solid)
     {
@@ -299,9 +301,9 @@ crunch:
         if (next == start) // post just extended past the bottom of one post
             return;
 
-        if (next != newend)
+        if (next != rbsp->newend)
         {
-            int cnt = newend - next;
+            int cnt = rbsp->newend - next;
             do
             {
                start++, next++;
@@ -309,14 +311,14 @@ crunch:
             } while (--cnt);
         }
 
-        newend = start + 1;
+        rbsp->newend = start + 1;
     }
 }
 
 //
 // Clips the given segment and adds any visible pieces to the line list.
 //
-static void R_AddLine(seg_t *line)
+static void R_AddLine(rbspWork_t *rbsp, sector_t *frontsector, seg_t *line)
 {
    angle_t angle1, angle2;
    fixed_t x1, x2;
@@ -327,11 +329,8 @@ static void R_AddLine(seg_t *line)
    side_t *sidedef;
    boolean solid;
 
-   curline = line;
-
    angle1 = R_PointToAngle(v1->x, v1->y);
    angle2 = R_PointToAngle(v2->x, v2->y);
-   lineangle1 = angle1;
 
    x1 = R_ClipToViewEdges(angle1, angle2);
    if (x1 <= 0)
@@ -363,21 +362,22 @@ static void R_AddLine(seg_t *line)
            return;
    }
 
-   R_ClipWallSegment(x1, x2, solid);
+   rbsp->curline = line;
+   rbsp->lineangle1 = angle1;
+   R_ClipWallSegment(rbsp, x1, x2, solid);
 }
 
 //
 // Determine floor/ceiling planes, add sprites of things in sector,
 // draw one or more segments.
 //
-static void R_Subsector(int num)
+static void R_Subsector(rbspWork_t *rbsp, int num)
 {
    subsector_t *sub = &subsectors[num];
    seg_t       *line, *stopline;
    int          count;
-   
-   frontsector = sub->sector;
-   
+   sector_t    *frontsector = sub->sector;
+      
    if (frontsector->thinglist)
    {
       if(frontsector->validcount != validcount[0]) // not already processed?
@@ -395,14 +395,14 @@ static void R_Subsector(int num)
    stopline = line + count;
 
    while(line != stopline)
-      R_AddLine(line++);
+      R_AddLine(rbsp, frontsector, line++);
 }
 
 //
 // Recursively descend through the BSP, classifying nodes according to the
 // player's point of view, and render subsectors in view.
 //
-static void R_RenderBSPNode(int bspnum)
+static void R_RenderBSPNode(rbspWork_t *rbsp, int bspnum)
 {
    node_t *bsp;
    int     side;
@@ -414,7 +414,7 @@ check:
    if(bspnum & NF_SUBSECTOR) // reached a subsector leaf?
 #endif
    {
-      R_Subsector(bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR);
+      R_Subsector(rbsp, bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR);
       return;
    }
 
@@ -424,10 +424,10 @@ check:
    side = R_PointOnSide(vd.viewx, vd.viewy, bsp);
 
    // recursively render front space
-   R_RenderBSPNode(bsp->children[side]);
+   R_RenderBSPNode(rbsp, bsp->children[side]);
 
    // possibly divide back space
-   if(R_CheckBBox(bsp->bbox[side^1])) {
+   if(R_CheckBBox(rbsp, bsp->bbox[side^1])) {
       bspnum = bsp->children[side^1];
       goto check;
    }
@@ -439,9 +439,8 @@ check:
 //
 void R_BSP(void)
 {
-   cliprange_t stack_solidsegs[MAXSEGS];
-
-   solidsegs = stack_solidsegs;
+   rbspWork_t rbsp;
+   cliprange_t *solidsegs = rbsp.solidsegs;
 
 #ifdef MARS
    W_GetLumpData(gamemaplump);
@@ -451,9 +450,9 @@ void R_BSP(void)
    solidsegs[0].last  = -1;
    solidsegs[1].first = viewportWidth;
    solidsegs[1].last  = viewportWidth+1;
-   newend = &solidsegs[2];
+   rbsp.newend = &solidsegs[2];
 
-   R_RenderBSPNode(numnodes - 1);
+   R_RenderBSPNode(&rbsp, numnodes - 1);
 }
 
 // EOF
