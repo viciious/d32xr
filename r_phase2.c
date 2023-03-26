@@ -391,12 +391,13 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
         lastsegclip += width;
     }
 
-    const int cy = centerY, vh = viewportHeight;
+    const int cyvh = (centerY << 16) | viewportHeight;
 
     for (x = start; x <= stop; x++)
     {
         int floorclipx, ceilingclipx;
         int low, high, top, bottom;
+        int cy, vh;
         unsigned scale2;
 
         scale2 = (unsigned)scalefrac >> HEIGHTBITS;
@@ -408,6 +409,9 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
         ceilingclipx = clipbounds[x];
         floorclipx = ceilingclipx & 0x00ff;
         ceilingclipx = ((unsigned)ceilingclipx & 0xff00) >> 8;
+
+        cy = cyvh >> 16;
+        vh = cyvh & 0xffff;
 
         //
         // calc high and low
