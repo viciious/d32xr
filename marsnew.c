@@ -343,9 +343,6 @@ void Mars_Secondary(void)
 		case MARS_SECCMD_AM_DRAW:
 			Mars_Sec_AM_Drawer();
 			break;
-		case MARS_SECCMD_P_SIGHT_CHECKS:
-			Mars_Sec_P_CheckSights();
-			break;
 		case MARS_SECCMD_MELT_DO_WIPE:
 			Mars_Sec_wipe_doMelt();
 			break;
