@@ -330,7 +330,7 @@ boolean P_BlockLinesIterator (int x, int y, blocklinesiter_t func, void *userp )
 	//	return true;
 	offset = y*bmapwidth+x;
 	
-	offset = *(blockmap+offset);
+	offset = *(blockmaplump+4+offset);
 
 	I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
 	vc = *lvalidcount;

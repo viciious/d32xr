@@ -397,7 +397,7 @@ static void SL_CheckSpecialLines(pslidework_t *sw)
          short  *list;
          line_t *ld;
          int offset = by * bmapwidth + bx;
-         offset = *(blockmap + offset);
+         offset = *(blockmaplump+4 + offset);
 	      fixed_t ldbbox[4];
          
          for(list = blockmaplump + offset; *list != -1; list++)

@@ -26,7 +26,6 @@ int			numsides;
 side_t		*sides;
 
 short		*blockmaplump;			/* offsets in blockmap are from here */
-short		*blockmap;
 int			bmapwidth, bmapheight;	/* in mapblocks */
 fixed_t		bmaporgx, bmaporgy;		/* origin of block map */
 mobj_t		**blocklinks;			/* for thing chains */
@@ -458,10 +457,9 @@ void P_LoadSideDefs (int lump)
 void P_LoadBlockMap (int lump)
 {
 	int		count;
-	
+
 #ifdef MARS
 	blockmaplump = (short *)W_GetLumpData(lump);
-	blockmap = blockmaplump+4;
 #else
 	int		i;
 	
