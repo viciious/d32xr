@@ -113,14 +113,14 @@ void P_RespawnSpecials (void)
 		
 	spot = iquetail&(ITEMQUESIZE-1);
 	
-	if (ticon - itemrespawntime[spot] < 30*15)
+	if (ticon - itemrespawntime[spot] < 30*TICRATE*2)
 		return;			/* wait at least 30 seconds */
 
 	mthing = &itemrespawnque[spot];
 	
 	x = mthing->x << FRACBITS; 
 	y = mthing->y << FRACBITS; 
-	  
+
 /* spawn a teleport fog at the new spot */
 	ss = R_PointInSubsector (x,y); 
 	mo = P_SpawnMobj (x, y, ss->sector->floorheight , MT_IFOG); 
@@ -545,7 +545,7 @@ return;	/*DEBUG */
 	mobj->angle = ANG45 * (mthing->angle/45);
 	if (mthing->options & MTF_AMBUSH)
 		mobj->flags |= MF_AMBUSH;
-	mobj->thingid = thingid;
+	mobj->thingid = thingid + 1;
 }
 
 

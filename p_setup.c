@@ -293,7 +293,7 @@ void P_LoadThings (int lump)
 		mt = (mapthing_t*)data;
 		for (i = 0; i < numthings; i++, mt++)
 		{
-			st->x = mt->x, st->y = st->y;
+			st->x = mt->x, st->y = mt->y;
 			st->angle = mt->angle;
 			st->type = mt->type;
 			st++;
@@ -311,7 +311,7 @@ void P_LoadThings (int lump)
 
 	mt = (mapthing_t *)data;
 	for (i=0 ; i<numthings ; i++, mt++)
-		P_SpawnMapThing (mt, i+1);
+		P_SpawnMapThing (mt, i);
 }
 
 

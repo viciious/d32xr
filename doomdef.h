@@ -208,8 +208,13 @@ typedef struct mobj_s
 	fixed_t			x, y, z;
 	struct	mobj_s* prev, * next;
 
-	unsigned char	movedir;		/* 0-7 */
-	char			movecount;		/* when 0, select a new dir */
+	union {
+		struct {
+			unsigned char	movedir;		/* 0-7 */
+			char			movecount;		/* when 0, select a new dir */
+		};
+		unsigned short		thingid;
+	};
 	unsigned char		reactiontime;	/* if non 0, don't attack yet */
 									/* used by player to freeze a bit after */
 									/* teleporting */
@@ -222,8 +227,6 @@ typedef struct mobj_s
 	VINT			tics;				/* state tic counter	 */
 	VINT 			state;
 	VINT			frame;				/* might be ord with FF_FULLBRIGHT */
-
-	unsigned short		thingid;
 
 	unsigned short		type;
 
