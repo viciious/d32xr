@@ -67,6 +67,14 @@ void P_RemoveMobj (mobj_t *mobj)
 /* unlink from sector and block lists */
 	P_UnsetThingPosition (mobj);
 
+	if (mobj->flags & MF_STATIC)
+	{
+		/* unlink from mobj list */
+		P_RemoveMobjFromCurrList(mobj);
+		P_AddMobjToList(mobj, (void*)&freestaticmobjhead);
+		return;
+	}
+
 	mobj->target = NULL;
 	mobj->extradata = 0;
 	mobj->latecall = (latecall_t)-1;	/* make sure it doesn't come back to life... */
@@ -191,7 +199,8 @@ boolean P_SetMobjState (mobj_t *mobj, statenum_t state)
 		if (st->action)		/* call action functions when the state is set */
 			st->action(mobj);
 
-		mobj->latecall = NULL;	/* make sure it doesn't come back to life... */
+		if (!(mobj->flags & MF_STATIC))
+			mobj->latecall = NULL;	/* make sure it doesn't come back to life... */
 
 		state = st->nextstate;
 	} while (!mobj->tics && --changes > 0);
@@ -230,29 +239,42 @@ void P_ExplodeMissile (mobj_t *mo)
 ===============
 */
 
-int zonetics;
-
 mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 {
 	mobj_t		*mobj;
 	const state_t		*st;
 	const mobjinfo_t *info = &mobjinfo[type];
 
-/* try to reuse a previous ombj first */	
-	if (freemobjhead.next != (void *)&freemobjhead)
+/* try to reuse a previous mobj first */
+	if (info->flags & MF_STATIC)
 	{
-		mobj = freemobjhead.next;
-		P_RemoveMobjFromCurrList(mobj);
+		if (freestaticmobjhead.next != (void *)&freestaticmobjhead)
+		{
+			mobj = freestaticmobjhead.next;
+			P_RemoveMobjFromCurrList(mobj);
+		}
+		else
+		{
+			mobj = Z_Malloc (static_mobj_size, PU_LEVEL, NULL);
+		}
+		D_memset (mobj, 0, static_mobj_size);
 	}
 	else
 	{
-		mobj = Z_Malloc (sizeof(*mobj), PU_LEVEL, NULL);
+		if (freemobjhead.next != (void *)&freemobjhead)
+		{
+			mobj = freemobjhead.next;
+			P_RemoveMobjFromCurrList(mobj);
+		}
+		else
+		{
+			mobj = Z_Malloc (sizeof(*mobj), PU_LEVEL, NULL);
+		}
+		D_memset (mobj, 0, sizeof (*mobj));
+		mobj->speed = info->speed;
 	}
 
-	D_memset (mobj, 0, sizeof (*mobj));
-	
 	mobj->type = type;
-	mobj->speed = info->speed;
 	mobj->x = x;
 	mobj->y = y;
 	mobj->radius = info->radius;
@@ -323,17 +345,24 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 =
 ================
 */
-void P_PreSpawnMobjs(int count)
+void P_PreSpawnMobjs(int count, int staticcount)
 {
-	mobj_t *mobj;
+	if (count > 0)
+	{
+		mobj_t *mobj = Z_Malloc (sizeof(*mobj)*count, PU_LEVEL, NULL);
+		for (; count > 0; count--) {
+			P_AddMobjToList(mobj, (void *)&freemobjhead);
+			mobj++;
+		}
+	}
 
-	if (count <= 0)
-		return;
-
-	mobj = Z_Malloc (sizeof(*mobj)*count, PU_LEVEL, NULL);
-	for (; count > 0; count--) {
-		P_AddMobjToList(mobj, (void *)&freemobjhead);
-		mobj++;
+	if (staticcount > 0)
+	{
+		uint8_t *mobj = Z_Malloc (static_mobj_size*staticcount, PU_LEVEL, NULL);
+		for (; staticcount > 0; staticcount--) {
+			P_AddMobjToList((void *)mobj, (void *)&freestaticmobjhead);
+			mobj += static_mobj_size;
+		}
 	}
 }
 
@@ -418,13 +447,13 @@ y = 0xff500000;
 = Returns false for things that don't spawn a mobj
 ==================
 */
-boolean P_MapThingSpawnsMobj (mapthing_t* mthing)
+int P_MapThingSpawnsMobj (mapthing_t* mthing)
 {
 	int			i, bit;
 
 /* count deathmatch start positions */
 	if (mthing->type == 11)
-		return false;
+		return 0;
 
 /* check for players specially */
 #if 0
@@ -433,11 +462,11 @@ boolean P_MapThingSpawnsMobj (mapthing_t* mthing)
 #endif
 
 	if (mthing->type <= 4)
-		return false;
+		return 0;
 
 /* check for apropriate skill level */
 	if ((netgame != gt_deathmatch) && (mthing->options & 16))
-		return false;
+		return 0;
 
 	if (gameskill == sk_baby)
 		bit = 1;
@@ -446,7 +475,7 @@ boolean P_MapThingSpawnsMobj (mapthing_t* mthing)
 	else
 		bit = 1 << (gameskill - 1);
 	if (!(mthing->options & bit))
-		return false;
+		return 0;
 
 	if (sprites[SPR_PLAY].numframes == 1)
 	{
@@ -456,19 +485,36 @@ boolean P_MapThingSpawnsMobj (mapthing_t* mthing)
 			mthing->type = 18;		/* possessed human corpse */
 	}
 
-	if (netgame != gt_deathmatch)
-		return true;
-
 /* find which type to spawn */
-	for (i = 0; i < NUMMOBJTYPES; i++)
+	if (netgame == gt_deathmatch)
 	{
-		/* don't spawn keycards and players in deathmatch */
-		if (mthing->type == mobjinfo[i].doomednum)
-			if (mobjinfo[i].flags & (MF_NOTDMATCH | MF_COUNTKILL))
-				return false;
+		for (i = 0; i < NUMMOBJTYPES; i++)
+		{
+			/* don't spawn keycards and players in deathmatch */
+			if (mthing->type == mobjinfo[i].doomednum)
+			{
+				if (mobjinfo[i].flags & (MF_NOTDMATCH | MF_COUNTKILL))
+					return 0;
+				if (mobjinfo[i].flags & MF_STATIC)
+					return 2;
+				return 1;
+			}
+		}
+	}
+	else
+	{
+		for (i = 0; i < NUMMOBJTYPES; i++)
+		{
+			if (mthing->type == mobjinfo[i].doomednum)
+			{
+				if (mobjinfo[i].flags & MF_STATIC)
+					return 2;
+				return 1;
+			}
+		}
 	}
 
-	return true;
+	return 0;
 }
 
 /*
@@ -543,6 +589,9 @@ return;	/*DEBUG */
 		totalitems++;
 		
 	mobj->angle = ANG45 * (mthing->angle/45);
+	if (mobj->flags & MF_STATIC)
+		return;
+
 	if (mthing->options & MTF_AMBUSH)
 		mobj->flags |= MF_AMBUSH;
 	if (mobj->flags & MF_SPECIAL)

@@ -497,20 +497,23 @@ void P_ZMovement(mobj_t *mo)
 //
 void P_MobjThinker(mobj_t *mobj)
 {
-   // momentum movement
-   if(mobj->momx || mobj->momy)
-      P_XYMovement(mobj);
+   if (!(mobj->flags & MF_STATIC))
+   {
+      // momentum movement
+      if(mobj->momx || mobj->momy)
+         P_XYMovement(mobj);
 
-   // removed or has a special action to perform?
-   if(mobj->latecall)
-      return;
+      // removed or has a special action to perform?
+      if(mobj->latecall)
+         return;
 
-   if(mobj->z != mobj->floorz || mobj->momz)
-      P_ZMovement(mobj);
+      if(mobj->z != mobj->floorz || mobj->momz)
+         P_ZMovement(mobj);
 
-   // removed or has a special action to perform?
-   if(mobj->latecall)
-      return;
+      // removed or has a special action to perform?
+      if(mobj->latecall)
+         return;
+   }
 
    // cycle through states
    if (mobj->tics != -1)
@@ -556,6 +559,8 @@ void P_RunMobjLate(void)
     for (mo = mobjhead.next; mo != (void*)&mobjhead; mo = next)
     {
         next = mo->next;	/* in case mo is removed this time */
+        if (mo->flags & MF_STATIC)
+            continue;
         if (mo->latecall)
         {
             mo->latecall(mo);

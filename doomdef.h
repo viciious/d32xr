@@ -208,18 +208,6 @@ typedef struct mobj_s
 	fixed_t			x, y, z;
 	struct	mobj_s* prev, * next;
 
-	union {
-		struct {
-			unsigned char	movedir;		/* 0-7 */
-			char			movecount;		/* when 0, select a new dir */
-		};
-		unsigned short		thingid;		/* thing id for respawning specials */
-	};
-	unsigned char		reactiontime;	/* if non 0, don't attack yet */
-									/* used by player to freeze a bit after */
-									/* teleporting */
-	unsigned char		threshold;		/* if >0, the target will be chased */
-									/* no matter what (even if shot) */
 	unsigned char		sprite;				/* used to find patch_t and flip value */
 	unsigned char		player;		/* only valid if type == MT_PLAYER */
 
@@ -238,11 +226,27 @@ typedef struct mobj_s
 	struct mobj_s	*bnext, *bprev;		/* links in blocks (if needed) */
 	struct subsector_s	*subsector;
 	fixed_t			floorz, ceilingz;	/* closest together of contacted secs */
-	fixed_t			radius, height;		/* for movement checking */
-	fixed_t			momx, momy, momz;	/* momentums */
-	
-	unsigned 		speed;			/* mobjinfo[mobj->type].speed */
+
 	int			flags;
+	fixed_t			radius, height;		/* for movement checking */
+
+	/* STATIC OBJECTS END HERE */
+	union {
+		struct {
+			unsigned char	movedir;		/* 0-7 */
+			char			movecount;		/* when 0, select a new dir */
+		};
+		unsigned short		thingid;		/* thing id for respawning specials */
+	};
+	unsigned char		reactiontime;	/* if non 0, don't attack yet */
+									/* used by player to freeze a bit after */
+									/* teleporting */
+	unsigned char		threshold;		/* if >0, the target will be chased */
+									/* no matter what (even if shot) */
+
+	fixed_t			momx, momy, momz;	/* momentums */
+
+	unsigned 		speed;			/* mobjinfo[mobj->type].speed */
 	struct mobj_s	*target;		/* thing being chased/attacked (or NULL) */
 									/* also the originator for missiles */
 	latecall_t		latecall;		/* set in p_base if more work needed */
@@ -256,6 +260,8 @@ typedef struct
 	struct	mobj_s* prev, * next;
 } degenmobj_t
 ;
+
+#define static_mobj_size (offsetof(mobj_t,momx))
 
 /* */
 /* frame flags */
@@ -302,6 +308,8 @@ typedef struct
 #define	MF_NOTDMATCH	0x2000000	/* don't spawn in death match (key cards) */
 
 #define	MF_SEETARGET	0x4000000	/* is target visible? */
+
+#define	MF_STATIC		0x8000000	/* can't move or think */
 
 /*============================================================================= */
 typedef enum

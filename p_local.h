@@ -108,7 +108,7 @@ void	R_ResetResp(player_t* p);
 */
 
 extern	degenmobj_t	mobjhead;
-extern	degenmobj_t	freemobjhead;
+extern	degenmobj_t	freemobjhead, freestaticmobjhead;
 extern	degenmobj_t	limbomobjhead;
 
 extern	int			activethinkers;	/* debug count */
@@ -127,7 +127,7 @@ void 	P_RemoveMobj (mobj_t *th);
 void	P_FreeMobj(mobj_t* mobj);
 boolean	P_SetMobjState (mobj_t *mobj, statenum_t state) ATTR_DATA_CACHE_ALIGN;
 void 	P_MobjThinker (mobj_t *mobj);
-void 	P_PreSpawnMobjs(int count);
+void 	P_PreSpawnMobjs(int count, int staticcount);
 
 void	P_SpawnPuff (fixed_t x, fixed_t y, fixed_t z, fixed_t attackrange);
 void 	P_SpawnBlood (fixed_t x, fixed_t y, fixed_t z, int damage);
@@ -143,7 +143,7 @@ void L_CrossSpecial (mobj_t *mo);
 
 void P_ExplodeMissile (mobj_t *mo);
 
-boolean P_MapThingSpawnsMobj(mapthing_t* mthing);
+int 	P_MapThingSpawnsMobj(mapthing_t* mthing); /* 0 -- skip, 1 -- real thing, 2 -- static */
 void	P_SpawnMapThing(mapthing_t* mthing, int thingid);
 
 /*

@@ -269,12 +269,13 @@ void P_LoadThings (int lump)
 	int				i;
 	mapthing_t		*mt;
 	spawnthing_t	*st;
-	int 			numthingsreal;
+	int 			numthingsreal, numstaticthings;
 
 	data = I_TempBuffer ();
 	W_ReadLump (lump,data);
 	numthings = W_LumpLength (lump) / sizeof(mapthing_t);
 	numthingsreal = 0;
+	numstaticthings = 0;
 
 	mt = (mapthing_t *)data;
 	for (i=0 ; i<numthings ; i++, mt++)
@@ -302,12 +303,23 @@ void P_LoadThings (int lump)
 
 	mt = (mapthing_t *)data;
 	for (i=0 ; i<numthings ; i++, mt++)
-		if (P_MapThingSpawnsMobj(mt))
-			numthingsreal++;
+	{
+		switch (P_MapThingSpawnsMobj(mt))
+		{
+			case 0:
+				break;
+			case 1:
+				numthingsreal++;
+				break;
+			case 2:
+				numstaticthings++;
+				break;
+		}
+	}
 
 	// preallocate a few mobjs for puffs and projectiles
 	numthingsreal += 40;
-	P_PreSpawnMobjs(numthingsreal);
+	P_PreSpawnMobjs(numthingsreal, numstaticthings);
 
 	mt = (mapthing_t *)data;
 	for (i=0 ; i<numthings ; i++, mt++)

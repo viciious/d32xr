@@ -2022,7 +2022,7 @@ sfx_None,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-MF_SOLID		/* flags */
+MF_SOLID|MF_STATIC		/* flags */
  },
 
 {		/* MT_MISC30 */
@@ -2047,7 +2047,7 @@ sfx_None,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-MF_SOLID		/* flags */
+MF_SOLID|MF_STATIC		/* flags */
  },
 
 {		/* MT_MISC31 */
@@ -2072,7 +2072,7 @@ sfx_None,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-MF_SOLID		/* flags */
+MF_SOLID|MF_STATIC		/* flags */
  },
 
 {		/* MT_MISC32 */
@@ -2097,7 +2097,7 @@ sfx_None,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-MF_SOLID		/* flags */
+MF_SOLID|MF_STATIC		/* flags */
  },
 
 {		/* MT_MISC33 */
@@ -2122,7 +2122,7 @@ sfx_None,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-MF_SOLID		/* flags */
+MF_SOLID|MF_STATIC		/* flags */
  },
 
 {		/* MT_MISC34 */
@@ -2147,7 +2147,7 @@ sfx_None,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-MF_SOLID		/* flags */
+MF_SOLID|MF_STATIC		/* flags */
  },
 
 {		/* MT_MISC35 */
@@ -2172,7 +2172,7 @@ sfx_None,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-MF_SOLID		/* flags */
+MF_SOLID|MF_STATIC		/* flags */
  },
 
 {		/* MT_MISC36 */
@@ -2197,7 +2197,7 @@ sfx_None,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-MF_SOLID		/* flags */
+MF_SOLID|MF_STATIC		/* flags */
  },
 
 {		/* MT_MISC37 */
@@ -2222,7 +2222,7 @@ sfx_None,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-MF_SOLID		/* flags */
+MF_SOLID|MF_STATIC		/* flags */
  },
 
 {		/* MT_MISC38 */
@@ -2247,7 +2247,7 @@ sfx_None,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-MF_SOLID		/* flags */
+MF_SOLID|MF_STATIC		/* flags */
  },
 
 {		/* MT_MISC39 */
@@ -2272,7 +2272,7 @@ sfx_None,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-0		/* flags */
+0|MF_STATIC		/* flags */
  },
 
 {		/* MT_MISC40 */
@@ -2297,7 +2297,7 @@ sfx_None,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-MF_SOLID		/* flags */
+MF_SOLID|MF_STATIC		/* flags */
  },
 
 {		/* MT_MISC41 */
@@ -2322,7 +2322,7 @@ sfx_None,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-MF_SOLID|MF_SPAWNCEILING|MF_NOGRAVITY		/* flags */
+MF_SOLID|MF_SPAWNCEILING|MF_NOGRAVITY|MF_STATIC		/* flags */
  },
 
 {		/* MT_MISC42 */
@@ -2347,7 +2347,7 @@ sfx_None,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-MF_SPAWNCEILING|MF_NOGRAVITY		/* flags */
+MF_SPAWNCEILING|MF_NOGRAVITY|MF_STATIC		/* flags */
  },
 
 {		/* MT_MISC43 */
@@ -2372,7 +2372,7 @@ sfx_None,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-0		/* flags */
+0|MF_STATIC		/* flags */
  },
 
 {		/* MT_MISC44 */
@@ -2397,7 +2397,7 @@ sfx_None,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-0		/* flags */
+0|MF_STATIC		/* flags */
  },
 
 {		/* MT_MISC45 */
@@ -2422,7 +2422,7 @@ sfx_None,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-0		/* flags */
+0|MF_STATIC		/* flags */
  },
 
 {		/* MT_MISC46 */
@@ -2447,7 +2447,7 @@ sfx_None,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-0		/* flags */
+0|MF_STATIC		/* flags */
  },
 
 {		/* MT_MISC47 */
@@ -2472,7 +2472,7 @@ sfx_None,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-0		/* flags */
+0|MF_STATIC		/* flags */
  },
 
 {		/* MT_MISC48 */
@@ -2497,7 +2497,7 @@ sfx_None,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-0		/* flags */
+0|MF_STATIC		/* flags */
  },
 
 {		/* MT_MISC49 */
@@ -2522,7 +2522,7 @@ sfx_None,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-0		/* flags */
+0|MF_STATIC		/* flags */
  },
 
 {		/* MT_MISC50 */
@@ -2547,7 +2547,7 @@ sfx_None,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-MF_SOLID		/* flags */
+MF_SOLID|MF_STATIC		/* flags */
  },
 
 {		/* MT_MISC51 */
@@ -2572,7 +2572,7 @@ sfx_None,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-0		/* flags */
+0|MF_STATIC		/* flags */
  },
 
 {		/* MT_MISC52 */
@@ -2597,7 +2597,7 @@ sfx_None,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-MF_SOLID		/* flags */
+MF_SOLID|MF_STATIC		/* flags */
  },
 
 {		/* MT_MISC53 */
@@ -2622,7 +2622,7 @@ sfx_None,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-MF_SOLID		/* flags */
+MF_SOLID|MF_STATIC		/* flags */
  },
 
 {		/* MT_MISC54 */
@@ -2647,7 +2647,7 @@ sfx_None,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-MF_SOLID		/* flags */
+MF_SOLID|MF_STATIC		/* flags */
  }
 };
 
