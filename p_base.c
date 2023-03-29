@@ -557,8 +557,10 @@ void P_RunMobjLate(void)
     {
         next = mo->next;	/* in case mo is removed this time */
         if (mo->latecall)
+        {
             mo->latecall(mo);
-        mo->latecall = NULL;
+            mo->latecall = NULL;
+        }
     }
 
     /* move entities, removed this frame, from limbo to free list */

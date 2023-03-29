@@ -545,7 +545,8 @@ return;	/*DEBUG */
 	mobj->angle = ANG45 * (mthing->angle/45);
 	if (mthing->options & MTF_AMBUSH)
 		mobj->flags |= MF_AMBUSH;
-	mobj->thingid = thingid + 1;
+	if (mobj->flags & MF_SPECIAL)
+		mobj->thingid = thingid + 1;
 }
 
 

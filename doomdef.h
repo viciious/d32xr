@@ -213,7 +213,7 @@ typedef struct mobj_s
 			unsigned char	movedir;		/* 0-7 */
 			char			movecount;		/* when 0, select a new dir */
 		};
-		unsigned short		thingid;
+		unsigned short		thingid;		/* thing id for respawning specials */
 	};
 	unsigned char		reactiontime;	/* if non 0, don't attack yet */
 									/* used by player to freeze a bit after */
