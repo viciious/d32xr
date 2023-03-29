@@ -428,14 +428,15 @@ int EV_BuildStairs(line_t *line, int type)
 			ok = 0;
 			for (i = 0;i < sec->linecount;i++)
 			{
-				if ( !((sec->lines[i])->flags & ML_TWOSIDED) )
+				line_t *check = lines + sec->lines[i];
+				if ( !(check->flags & ML_TWOSIDED) )
 					continue;
 					
-				newsecnum = LD_FRONTSECTORNUM(sec->lines[i]);
+				newsecnum = LD_FRONTSECTORNUM(check);
 				tsec = &sectors[newsecnum];
 				if (secnum != newsecnum)
 					continue;
-				newsecnum = LD_BACKSECTORNUM(sec->lines[i]);
+				newsecnum = LD_BACKSECTORNUM(check);
 				tsec = &sectors[newsecnum];
 				if (tsec->floorpic != texture)
 					continue;

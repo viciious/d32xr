@@ -43,7 +43,7 @@ static void P_RecursiveSound (sector_t *sec, int soundblocks, uint8_t *soundtrav
 	for (i=0 ;i<sec->linecount ; i++)
 	{
 		fixed_t opentop, openbottom;
-		check = sec->lines[i];
+		check = lines + sec->lines[i];
 		back = LD_BACKSECTOR(check);
 		if (!back)
 			continue;		/* single sided */

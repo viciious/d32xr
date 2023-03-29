@@ -496,7 +496,7 @@ void P_LoadBlockMap (int lump)
 
 void P_GroupLines (void)
 {
-	line_t		**linebuffer;
+	VINT		*linebuffer;
 	int			i, j, total;
 	sector_t	*sector;
 	subsector_t	*ss;
@@ -551,10 +551,10 @@ void P_GroupLines (void)
 		sector_t *front = LD_FRONTSECTOR(li);
 		sector_t *back = LD_BACKSECTOR(li);
 
-		front->lines[front->linecount++] = li;
+		front->lines[front->linecount++] = i;
 		if (back && back != front)
 		{
-			back->lines[back->linecount++] = li;
+			back->lines[back->linecount++] = i;
 		}
 	}
 
@@ -565,7 +565,7 @@ void P_GroupLines (void)
 
 		for (j=0 ; j<sector->linecount ; j++)
 		{
-			li = sector->lines[j];
+			li = lines + sector->lines[j];
 			M_AddToBox (bbox, vertexes[li->v1].x, vertexes[li->v1].y);
 			M_AddToBox (bbox, vertexes[li->v2].x, vertexes[li->v2].y);
 		}

@@ -99,7 +99,7 @@ typedef	struct
 
 	mobj_t		*thinglist;			/* list of mobjs in sector */
 	void		*specialdata;		/* thinker_t for reversable actions */
-	struct line_s	**lines;			/* [linecount] size */
+	VINT		*lines;				/* [linecount] size */
 } sector_t;
 
 typedef struct

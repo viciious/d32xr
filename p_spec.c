@@ -103,7 +103,8 @@ void P_InitPicAnims (void)
 /* */
 side_t *getSide(int currentSector,int line, int side)
 {
-	return &sides[ (sectors[currentSector].lines[line])->sidenum[side] ];
+	line_t *check = lines + sectors[currentSector].lines[line];
+	return &sides[ check->sidenum[side] ];
 }
 
 /* */
@@ -112,7 +113,8 @@ side_t *getSide(int currentSector,int line, int side)
 /* */
 sector_t *getSector(int currentSector,int line,int side)
 {
-	return &sectors[sides[ (sectors[currentSector].lines[line])->sidenum[side] ].sector];
+	line_t *check = lines + sectors[currentSector].lines[line];
+	return &sectors[sides[ check->sidenum[side] ].sector];
 }
 
 /* */
@@ -121,7 +123,8 @@ sector_t *getSector(int currentSector,int line,int side)
 /* */
 int	twoSided(int sector,int line)
 {
-	return (sectors[sector].lines[line])->flags & ML_TWOSIDED;
+	line_t *check = lines + sectors[sector].lines[line];
+	return check->flags & ML_TWOSIDED;
 }
 
 /*================================================================== */
@@ -157,7 +160,7 @@ fixed_t	P_FindLowestFloorSurrounding(sector_t *sec)
 	
 	for (i=0 ;i < sec->linecount ; i++)
 	{
-		check = sec->lines[i];
+		check = lines + sec->lines[i];
 		other = getNextSector(check,sec);
 		if (!other)
 			continue;
@@ -181,7 +184,7 @@ fixed_t	P_FindHighestFloorSurrounding(sector_t *sec)
 	
 	for (i=0 ;i < sec->linecount ; i++)
 	{
-		check = sec->lines[i];
+		check = lines + sec->lines[i];
 		other = getNextSector(check,sec);
 		if (!other)
 			continue;			
@@ -209,7 +212,7 @@ fixed_t	P_FindNextHighestFloor(sector_t *sec,int currentheight)
 	heightlist[0] = 0;
 	for (i =0,h = 0 ;i < sec->linecount ; i++)
 	{
-		check = sec->lines[i];
+		check = lines + sec->lines[i];
 		other = getNextSector(check,sec);
 		if (!other)
 			continue;
@@ -247,7 +250,7 @@ fixed_t	P_FindLowestCeilingSurrounding(sector_t *sec)
 	
 	for (i=0 ;i < sec->linecount ; i++)
 	{
-		check = sec->lines[i];
+		check = lines + sec->lines[i];
 		other = getNextSector(check,sec);
 		if (!other)
 			continue;
@@ -271,7 +274,7 @@ fixed_t	P_FindHighestCeilingSurrounding(sector_t *sec)
 	
 	for (i=0 ;i < sec->linecount ; i++)
 	{
-		check = sec->lines[i];
+		check = lines + sec->lines[i];
 		other = getNextSector(check,sec);
 		if (!other)
 			continue;
@@ -311,7 +314,7 @@ int	P_FindMinSurroundingLight(sector_t *sector,int max)
 	min = max;
 	for (i=0 ; i < sector->linecount ; i++)
 	{
-		line = sector->lines[i];
+		line = lines + sector->lines[i];
 		check = getNextSector(line,sector);
 		if (!check)
 			continue;
@@ -878,6 +881,7 @@ int EV_DoDonut(line_t *line)
 	rtn = 0;
 	while ((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
 	{
+		line_t *line;
 		s1 = &sectors[secnum];
 		
 		/*	ALREADY MOVING?  IF SO, KEEP GOING... */
@@ -885,11 +889,13 @@ int EV_DoDonut(line_t *line)
 			continue;
 			
 		rtn = 1;
-		s2 = getNextSector(s1->lines[0],s1);
+		line = lines + s1->lines[0];
+		s2 = getNextSector(line,s1);
 		for (i = 0;i < s2->linecount;i++)
 		{
-			s3 = LD_BACKSECTOR(s2->lines[i]);
-			if (!(s2->lines[i]->flags & ML_TWOSIDED) ||
+			line = lines + s2->lines[i];
+			s3 = LD_BACKSECTOR(line);
+			if (!(line->flags & ML_TWOSIDED) ||
 				(s3 == s1))
 				continue;
 
