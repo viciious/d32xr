@@ -539,13 +539,13 @@ static int I_ReadControls_(int port, btnstate_t* startbtn)
 int I_ReadControls(void)
 {
 	static btnstate_t startbtn = { 0 };
-	return I_ReadControls_(mars_gamepadport[0], &startbtn);
+	return I_ReadControls_(0, &startbtn);
 }
 
 int I_ReadControls2(void)
 {
 	static btnstate_t startbtn2 = { 0 };
-	return I_ReadControls_(mars_gamepadport[1], &startbtn2);
+	return I_ReadControls_(1, &startbtn2);
 }
 
 int I_ReadMouse(int* pmx, int *pmy)

@@ -35,6 +35,8 @@
 
 #define MARS_ATTR_DATA_CACHE_ALIGN __attribute__((section(".data"), aligned(16), optimize("O1")))
 
+#define MARS_MAX_CONTROLLERS 2
+
 void Mars_FlipFrameBuffers(char wait);
 void Mars_WaitFrameBuffersFlip(void);
 char Mars_FramebuffersFlipped(void);
@@ -46,10 +48,6 @@ int Mars_BackBuffer(void);
 char Mars_UploadPalette(const uint8_t* palette) MARS_ATTR_DATA_CACHE_ALIGN;
 int Mars_PollMouse(void);
 int Mars_ParseMousePacket(int mouse, int* pmx, int* pmy);
-
-typedef int (*mars_getctrl_f)(void);
-
-extern char mars_gamepadport[2], mars_mouseport;
 
 extern volatile unsigned mars_vblank_count;
 extern unsigned mars_frtc2msec_frac;

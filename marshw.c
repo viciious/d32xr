@@ -28,8 +28,8 @@
 
 static volatile uint16_t mars_activescreen = 0;
 
-char mars_gamepadport[2] = { 0, 1 };
-char mars_mouseport = -1;
+static char mars_gamepadport[MARS_MAX_CONTROLLERS];
+static char mars_mouseport;
 static volatile uint16_t mars_controlval[2];
 
 volatile unsigned mars_vblank_count = 0;
@@ -228,6 +228,13 @@ void Mars_InitVideo(int lines)
 
 void Mars_Init(void)
 {
+	int i;
+
+	/* no controllers or mouse by default */
+	for (i = 0; i < MARS_MAX_CONTROLLERS; i++)
+		mars_gamepadport[i] = -1;
+	mars_mouseport = -1;
+
 	Mars_InitVideo(224);
 	Mars_SetMDColor(1, 0);
 
@@ -552,10 +559,10 @@ void Mars_DetectInputDevices(void)
 	volatile uint16_t *addr = (volatile uint16_t *)&MARS_SYS_COMM12;
 
 	mars_mouseport = -1;
-	for (i = 0; i < 2; i++)
+	for (i = 0; i < MARS_MAX_CONTROLLERS; i++)
 		mars_gamepadport[i] = -1;
 
-	for (i = 0; i < 2; i++)
+	for (i = 0; i < MARS_MAX_CONTROLLERS; i++)
 	{
 		int val = *addr++;
 		if (val == 0xF000)
@@ -583,11 +590,18 @@ void Mars_DetectInputDevices(void)
 	}
 }
 
-int Mars_ReadController(int port)
+int Mars_ReadController(int ctrl)
 {
 	int val;
+	int port;
+
+	if (ctrl < 0 || ctrl >= MARS_MAX_CONTROLLERS)
+		return -1;
+
+	port = mars_gamepadport[ctrl];
 	if (port < 0)
 		return -1;
+
 	val = mars_controlval[port];
 	mars_controlval[port] = 0;
 	return val;
