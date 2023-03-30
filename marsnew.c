@@ -306,15 +306,12 @@ void Mars_Secondary(void)
 	while (1)
 	{
 		int cmd;
-		extern VINT *validcount;
 
 		while ((cmd = MARS_SYS_COMM4) == MARS_SECCMD_NONE);
 
 		switch (cmd) {
 		case MARS_SECCMD_CLEAR_CACHE:
 			Mars_ClearCache();
-			// FIXME: find a better place for this
-			I_SetThreadLocalVar(DOOMTLS_VALIDCOUNT, &validcount[numlines+1]);
 			break;
 		case MARS_SECCMD_BREAK:
 			// break current command
