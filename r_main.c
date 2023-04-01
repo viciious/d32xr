@@ -670,7 +670,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 /* */
 /* plane filling */
 /*	 */
-	visplanes[0].open = visplane0open + 1;
+	visplanes[0].open = (uint16_t *)visplane0open + 1;
 
 	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
 	tempbuf += 2; // padding
