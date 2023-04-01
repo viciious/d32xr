@@ -586,7 +586,7 @@ int	I_GetTime (void)
 
 int I_GetFRTCounter(void)
 {
-	return Mars_GetFRTCounter();
+	return Mars_GetWDTCount();
 }
 
 /*

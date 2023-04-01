@@ -66,7 +66,7 @@ void Mars_StopTrack(void) MARS_ATTR_DATA_CACHE_ALIGN;
 void Mars_SetMusicVolume(uint8_t volume) MARS_ATTR_DATA_CACHE_ALIGN;
 
 #define Mars_GetTicCount() (*(volatile uintptr_t *)((uintptr_t)&mars_vblank_count | 0x20000000))
-int Mars_GetFRTCounter(void);
+int Mars_GetWDTCount(void);
 
 #define Mars_ClearCacheLine(addr) *(volatile uintptr_t *)(((uintptr_t)addr & ~15) | 0x40000000) = 0
 #define Mars_ClearCache() \

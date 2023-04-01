@@ -183,7 +183,7 @@ int Mars_ParseMousePacket(int mouse, int* pmx, int* pmy)
 	return mouse;
 }
 
-int Mars_GetFRTCounter(void)
+int Mars_GetWDTCount(void)
 {
 	unsigned int cnt = SH2_WDT_RTCNT;
 	return (int)((mars_pwdt_ovf_count << 8) | cnt);
