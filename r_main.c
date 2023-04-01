@@ -54,7 +54,7 @@ viswall_t	*viswalls/*[MAXWALLCMDS]*/, *lastwallcmd;
 /* planes */
 /* */
 visplane_t	*visplanes/*[MAXVISPLANES]*/, *lastvisplane;
-uint16_t visplane0open[SCREENWIDTH+2] = { 0 };
+const uint16_t visplane0open[SCREENWIDTH+2] = { 0 };
  
 #define NUM_VISPLANES_BUCKETS 32
 static visplane_t **visplanes_hash;
