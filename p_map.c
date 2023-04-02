@@ -98,11 +98,23 @@ fixed_t P_InterceptVector (divline_t *v2, divline_t *v1)
 {
 	fixed_t	frac, num, den;
 	
+
+#ifdef MARS
+   den = (((int64_t)v1->dy*v2->dx) >> 32) - 
+	(((int64_t)v1->dx*v2->dy) >> 32);
+#else
 	den = (v1->dy>>16)*(v2->dx>>16) - (v1->dx>>16)*(v2->dy>>16);
+#endif
 	if (den == 0)
 		return -1;
+
+#ifdef MARS
+	num = (((int64_t)(v1->x-v2->x)*v1->dy) >> 32) + 
+		(((int64_t)(v2->y-v1->y)*v1->dx) >> 32);
+#else
 	num = ((v1->x-v2->x)>>16) *(v1->dy>>16) + 
 		((v2->y-v1->y)>>16) * (v1->dx>>16);
+#endif
 	frac = IDiv((num<<16), den);
 
 	return frac;
