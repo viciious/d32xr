@@ -195,7 +195,7 @@ typedef struct
 
 typedef struct
 {
-	VINT		*lump;	/* lump to use for view angles 0-7 */
+	VINT		lump;	/* lump to use for view angles 0-7 */
 						/* if lump[1] == -1, use 0 for any position */
 } spriteframe_t;
 
@@ -206,6 +206,7 @@ typedef struct
 } spritedef_t;
 
 extern	spriteframe_t	*spriteframes;
+extern	VINT 			*spritelumps;
 extern	spritedef_t		sprites[NUMSPRITES];
 
 /*

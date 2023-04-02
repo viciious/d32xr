@@ -19,6 +19,7 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 {
 	spritedef_t	*sprdef;
 	spriteframe_t	*sprframe;
+	VINT 		*sprlump;
 	patch_t		*patch;
 	byte		*pixels, *src;
 	int			x, sprleft, sprtop, spryscale;
@@ -39,11 +40,12 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 		I_Error ("BufferedDrawSprite: invalid sprite frame %i : %i "
 		,sprite,frame);
 	sprframe = &spriteframes[sprdef->firstframe + (frame & FF_FRAMEMASK)];
+	sprlump = &spritelumps[sprframe->lump];
 
-	if (sprframe->lump[rotation] != -1)
-		lump = sprframe->lump[rotation];
+	if (sprlump[rotation] != -1)
+		lump = sprlump[rotation];
 	else
-		lump = sprframe->lump[0];
+		lump = sprlump[0];
 
 	flip = false;
 	if (lump < 0)

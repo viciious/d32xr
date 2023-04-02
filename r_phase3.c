@@ -23,6 +23,7 @@ static void R_PrepMobj(mobj_t *thing)
    fixed_t texmid;
    spritedef_t   *sprdef;
    spriteframe_t *sprframe;
+   VINT         *sprlump;
    angle_t      ang;
    unsigned int rot;
    boolean      flip;
@@ -63,18 +64,19 @@ static void R_PrepMobj(mobj_t *thing)
        return;
 
    sprframe = &spriteframes[sprdef->firstframe + (thing->frame & FF_FRAMEMASK)];
+   sprlump = &spritelumps[sprframe->lump];
 
-   if(sprframe->lump[1] != -1)
+   if(sprlump[1] != -1)
    {
       // select proper rotation depending on player's view point
       ang  = R_PointToAngle2(vd.viewx, vd.viewy, thing->x, thing->y);
       rot  = (ang - thing->angle + (unsigned int)(ANG45 / 2)*9) >> 29;
-      lump = sprframe->lump[rot];
+      lump = sprlump[rot];
    }
    else
    {
       // sprite has a single view for all rotations
-      lump = sprframe->lump[0];
+      lump = sprlump[0];
    }
 
    flip = false;
@@ -169,6 +171,7 @@ static void R_PrepPSprite(pspdef_t *psp)
 {
    spritedef_t   *sprdef;
    spriteframe_t *sprframe;
+   VINT         *sprlump;
    int          lump;
    patch_t      *patch;
    vissprite_t  *vis;
@@ -180,7 +183,8 @@ static void R_PrepPSprite(pspdef_t *psp)
    state = &states[psp->state];
    sprdef = &sprites[state->sprite];
    sprframe = &spriteframes[sprdef->firstframe + (state->frame & FF_FRAMEMASK)];
-   lump     = sprframe->lump[0];
+   sprlump  = &spritelumps[sprframe->lump];
+   lump     = sprlump[0];
    patch    = W_POINTLUMPNUM(lump);
 
    xscale = weaponXScale;

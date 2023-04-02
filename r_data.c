@@ -17,6 +17,7 @@ boolean 	texmips = false;
 
 spritedef_t sprites[NUMSPRITES];
 spriteframe_t* spriteframes;
+VINT 			*spritelumps;
 
 VINT			*flattranslation;		/* for global animation */
 VINT			*texturetranslation;	/* for global animation */
@@ -666,10 +667,11 @@ void R_InitSpriteDefs(const char** namelist)
 	spriteframes = Z_Malloc(totalframes * sizeof(spriteframe_t), PU_STATIC, NULL);
 	sprtemp = (void*)tempbuf;
 	lumps = Z_Malloc(totallumps * sizeof(*lumps), PU_STATIC, NULL);
+	spritelumps = lumps;
 
 	for (i = 0; i < totalframes; i++)
 	{
-		spriteframes[i].lump = lumps;
+		spriteframes[i].lump = lumps - spritelumps;
 		if (!sprtemp[i].rotate)
 		{
 			lumps[0] = sprtemp[i].lump[0];
