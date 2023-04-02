@@ -3,7 +3,63 @@
 #include "doomdef.h"
 #include "r_local.h"
 
-static drawcol_t drcol;
+typedef struct
+{
+	char		*name;
+	mobjtype_t	type;
+} castinfo_t;
+
+static const castinfo_t castorder[] = {
+{"zombieman", MT_POSSESSED},
+{"shotgun guy", MT_SHOTGUY},
+{"imp", MT_TROOP},
+{"demon", MT_SERGEANT},
+{"spectre", MT_SERGEANT},
+{"lost soul", MT_SKULL},
+{"cacodemon", MT_HEAD},
+{"baron of hell", MT_BRUISER},
+{"cyberdemon", MT_CYBORG},
+{"spider mastermind", MT_SPIDER},
+{"our hero", MT_PLAYER},
+
+{NULL,0}
+};
+
+typedef enum
+{
+	fin_endtext,
+	fin_charcast
+} final_e;
+
+#define TEXTTIME	4
+#define STARTX		8
+#define STARTY		8
+
+#define SPACEWIDTH	8
+#define NUMENDOBJ	28
+
+typedef struct
+{
+	int			castnum;
+	int			casttics;
+	const state_t		*caststate;
+	boolean		castdeath;
+	int			castframes;
+	int			castonmelee;
+	boolean		castattacking;
+	final_e		status;
+	boolean 	textprint;	/* is endtext done printing? */
+	int			textindex;
+	VINT		textdelay;
+	VINT		text_x;
+	VINT		text_y;
+	VINT		drawbg;
+	jagobj_t	**endobj;
+	drawcol_t	drcol;
+} finale_t;
+
+finale_t *fin;
+
 static void F_DrawBackground(void);
 
 /*
@@ -97,73 +153,23 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 		for ( ; column->topdelta != 0xff ; column++) 
 		{
 			int top    = column->topdelta + sprtop;
-			int bottom = top + column->length;
+			int bottom = top + column->length - 1;
 
 			top *= spryscale;
 			bottom *= spryscale;
 			src = pixels + BIGSHORT(column->dataofs);
 
 			if (top < 0) top = 0;
-			if (bottom > height) bottom = height;
+			if (bottom >= height) bottom = height - 1;
 			if (top > bottom) continue;
 
-			drcol(sprleft+x, top, bottom, light, 0, spriscale, src, 128, &fuzzpos);
+			fin->drcol(sprleft+x, top, bottom, light, 0, spriscale, src, 128, &fuzzpos);
 		}
 	}
 }
 
 
 /*============================================================================ */
-
-typedef struct
-{
-	char		*name;
-	mobjtype_t	type;
-} castinfo_t;
-
-static const castinfo_t castorder[] = {
-{"zombieman", MT_POSSESSED},
-{"shotgun guy", MT_SHOTGUY},
-{"imp", MT_TROOP},
-{"demon", MT_SERGEANT},
-{"spectre", MT_SERGEANT},
-{"lost soul", MT_SKULL},
-{"cacodemon", MT_HEAD},
-{"baron of hell", MT_BRUISER},
-{"cyberdemon", MT_CYBORG},
-{"spider mastermind", MT_SPIDER},
-{"our hero", MT_PLAYER},
-
-{NULL,0}
-};
-
-int			castnum;
-int			casttics;
-const state_t		*caststate;
-boolean		castdeath;
-int			castframes;
-int			castonmelee;
-boolean		castattacking;
-
-typedef enum
-{
-	fin_endtext,
-	fin_charcast
-} final_e;
-
-final_e	status;
-#define TEXTTIME	4
-#define STARTX		8
-#define STARTY		8
-boolean textprint;	/* is endtext done printing? */
-int		textindex;
-VINT	textdelay;
-VINT	text_x;
-VINT	text_y;
-VINT	drawbg;
-#define SPACEWIDTH	8
-#define NUMENDOBJ	28
-jagobj_t	**endobj;
 
 #if 0
 /* '*' = newline */
@@ -212,7 +218,7 @@ void F_PrintString1(const char *string)
 		{
 			case 0: return;
 			case ' ':
-				text_x += SPACEWIDTH;
+				fin->text_x += SPACEWIDTH;
 				val = 30;
 				break;
 			case '.':
@@ -223,8 +229,8 @@ void F_PrintString1(const char *string)
 				break;
 			case '*':
 				val = 30;
-				text_x = STARTX;
-				text_y += endobj[0]->height + 4;
+				fin->text_x = STARTX;
+				fin->text_y += fin->endobj[0]->height + 4;
 				break;
 			default:
 				val = string[index] - 'a';
@@ -232,12 +238,12 @@ void F_PrintString1(const char *string)
 		}
 		if (val < NUMENDOBJ)
 		{
-			DrawJagobj(endobj[val],text_x,text_y);
-			text_x += endobj[val]->width;
-			if (text_x > 316)
+			DrawJagobj(fin->endobj[val],fin->text_x,fin->text_y);
+			fin->text_x += fin->endobj[val]->width;
+			if (fin->text_x > 316)
 			{
-				text_x = STARTX;
-				text_y += endobj[val]->height + 4;
+				fin->text_x = STARTX;
+				fin->text_y += fin->endobj[val]->height + 4;
 			}
 		}
 		index++;
@@ -250,14 +256,14 @@ void F_PrintString2(const char* string)
 #ifdef MARS
 	int		btext_x, btext_y;
 
-	btext_x = text_x;
-	btext_y = text_y;
+	btext_x = fin->text_x;
+	btext_y = fin->text_y;
 	F_PrintString1(string);
 
 	UpdateBuffer();
 
-	text_x = btext_x;
-	text_y = btext_y;
+	fin->text_x = btext_x;
+	fin->text_y = btext_y;
 #endif
 	F_PrintString1(string);
 }
@@ -277,11 +283,11 @@ void F_CastPrint(char *string)
 		switch(string[i])
 		{
 			case ' ': width += SPACEWIDTH; break;
-			default : width += endobj[string[i] - 'a']->width;
+			default : width += fin->endobj[string[i] - 'a']->width;
 		}
 
-	text_x = 160 - (width >> 1);
-	text_y = 10;
+	fin->text_x = 160 - (width >> 1);
+	fin->text_y = 10;
 	F_PrintString1(string);
 }
 
@@ -303,27 +309,29 @@ void F_Start (void)
 	else
 		S_StartSong(gameinfo.endMus, 1, cdtrack_end);
 
-	status = fin_endtext;		/* END TEXT PRINTS FIRST */
-	textprint = false;
-	textindex = 0;
-	textdelay = TEXTTIME;
-	text_x = STARTX;
-	text_y = STARTY;
-	drawbg = 2;
+	fin = Z_Malloc(sizeof(*fin), PU_STATIC, NULL);
+	D_memset(fin, 0, sizeof(*fin));
 
-	endobj = Z_Malloc(sizeof(*endobj) * NUMENDOBJ, PU_STATIC, NULL);
+	fin->status = fin_endtext;		/* END TEXT PRINTS FIRST */
+	fin->textprint = false;
+	fin->textindex = 0;
+	fin->textdelay = TEXTTIME;
+	fin->text_x = STARTX;
+	fin->text_y = STARTY;
+	fin->drawbg = 2;
+	fin->endobj = Z_Malloc(sizeof(*fin->endobj) * NUMENDOBJ, PU_STATIC, NULL);
 
 	l = W_GetNumForName ("CHAR_097");
 	for (i = 0; i < NUMENDOBJ; i++)
-		endobj[i] = W_CacheLumpNum(l+i, PU_STATIC);
+		fin->endobj[i] = W_CacheLumpNum(l+i, PU_STATIC);
 
-	castnum = 0;
-	caststate = &states[mobjinfo[castorder[castnum].type].seestate];
-	casttics = caststate->tics;
-	castdeath = false;
-	castframes = 0;
-	castonmelee = 0;
-	castattacking = false;
+	fin->castnum = 0;
+	fin->caststate = &states[mobjinfo[castorder[fin->castnum].type].seestate];
+	fin->casttics = fin->caststate->tics;
+	fin->castdeath = false;
+	fin->castframes = 0;
+	fin->castonmelee = 0;
+	fin->castattacking = false;
 
 #ifndef MARS
 	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
@@ -342,8 +350,9 @@ void F_Stop (void)
 	R_InitColormap(lowResMode);
 	
 	for (i = 0;i < NUMENDOBJ; i++)
-		Z_Free(endobj[i]);
-	Z_Free(endobj);
+		Z_Free(fin->endobj[i]);
+	Z_Free(fin->endobj);
+	Z_Free(fin);
 }
 
 
@@ -374,17 +383,17 @@ int F_Ticker (void)
 	if ((buttons & BT_START) && !(oldbuttons & BT_START))
 		return 1;
 
-	if (status == fin_endtext)
+	if (fin->status == fin_endtext)
 	{
-		if (textindex == (3*15)/TEXTTIME)
-			textprint = true;
+		if (fin->textindex == (3*15)/TEXTTIME)
+			fin->textprint = true;
 			
 		if (( ((buttons & BT_ATTACK) && !(oldbuttons & BT_ATTACK) )
 		|| ((buttons & BT_SPEED) && !(oldbuttons & BT_SPEED) )
 		|| ((buttons & BT_USE) && !(oldbuttons & BT_USE) ) ) &&
-		textprint == true && gameinfo.endShowCast)
+		fin->textprint == true && gameinfo.endShowCast)
 		{
-			status = fin_charcast;
+			fin->status = fin_charcast;
 
 			if (gameinfo.victoryMus <= 0)
 				S_StartSong(gameinfo.endMus, 1, cdtrack_victory);
@@ -392,14 +401,14 @@ int F_Ticker (void)
 				S_StartSong(gameinfo.victoryMus, 1, cdtrack_victory);
 
 #ifndef JAGUAR
-			if (mobjinfo[castorder[castnum].type].seesound)
-				S_StartSound (NULL, mobjinfo[castorder[castnum].type].seesound); 
+			if (mobjinfo[castorder[fin->castnum].type].seesound)
+				S_StartSound (NULL, mobjinfo[castorder[fin->castnum].type].seesound); 
 #endif
 		}
 		return 0;
 	}
 	
-	if (!castdeath)
+	if (!fin->castdeath)
 	{
 		if ( ((buttons & BT_ATTACK) && !(oldbuttons & BT_ATTACK) )
 		|| ((buttons & BT_SPEED) && !(oldbuttons & BT_SPEED) )
@@ -407,14 +416,14 @@ int F_Ticker (void)
 		{
 		/* go into death frame */
 #ifndef JAGUAR
-			if (mobjinfo[castorder[castnum].type].deathsound)
-				S_StartSound(NULL, mobjinfo[castorder[castnum].type].deathsound);
+			if (mobjinfo[castorder[fin->castnum].type].deathsound)
+				S_StartSound(NULL, mobjinfo[castorder[fin->castnum].type].deathsound);
 #endif
-			castdeath = true;
-			caststate = &states[mobjinfo[castorder[castnum].type].deathstate];
-			casttics = caststate->tics;
-			castframes = 0;
-			castattacking = false;
+			fin->castdeath = true;
+			fin->caststate = &states[mobjinfo[castorder[fin->castnum].type].deathstate];
+			fin->casttics = fin->caststate->tics;
+			fin->castframes = 0;
+			fin->castattacking = false;
 		}
 	}
 
@@ -424,35 +433,35 @@ int F_Ticker (void)
 /* */
 /* advance state */
 /* */
-	if (--casttics > 0)
+	if (--fin->casttics > 0)
 		return 0;			/* not time to change state yet */
 
-	if (caststate->tics == -1 || caststate->nextstate == S_NULL)
+	if (fin->caststate->tics == -1 || fin->caststate->nextstate == S_NULL)
 	{	/* switch from deathstate to next monster */
-		int oldnum = castnum;
+		int oldnum = fin->castnum;
 		do {
-			castnum++;
-			if (castorder[castnum].name == NULL)
-				castnum = 0;
-			if (sprites[states[mobjinfo[castorder[castnum].type].seestate].sprite].numframes == 0)
+			fin->castnum++;
+			if (castorder[fin->castnum].name == NULL)
+				fin->castnum = 0;
+			if (sprites[states[mobjinfo[castorder[fin->castnum].type].seestate].sprite].numframes == 0)
 				continue;
 			break;
-		} while (castnum != oldnum);
-		castdeath = false;
+		} while (fin->castnum != oldnum);
+		fin->castdeath = false;
 #ifndef JAGUAR
-		if (mobjinfo[castorder[castnum].type].seesound)
-			S_StartSound (NULL, mobjinfo[castorder[castnum].type].seesound);
+		if (mobjinfo[castorder[fin->castnum].type].seesound)
+			S_StartSound (NULL, mobjinfo[castorder[fin->castnum].type].seesound);
 #endif
-		caststate = &states[mobjinfo[castorder[castnum].type].seestate];
-		castframes = 0;
+		fin->caststate = &states[mobjinfo[castorder[fin->castnum].type].seestate];
+		fin->castframes = 0;
 	}
 	else
 	{	/* just advance to next state in animation */
-		if (caststate == &states[S_PLAY_ATK2])
+		if (fin->caststate == &states[S_PLAY_ATK2])
 			goto stopattack;	/* Oh, gross hack! */
-		st = caststate->nextstate;
-		caststate = &states[st];
-		castframes++;
+		st = fin->caststate->nextstate;
+		fin->caststate = &states[st];
+		fin->castframes++;
 #if 1
 /*============================================== */
 /* sound hacks.... */
@@ -497,40 +506,40 @@ int F_Ticker (void)
 /*============================================== */
 	}
 	
-	if (castframes == 12)
+	if (fin->castframes == 12)
 	{	/* go into attack frame */
-		castattacking = true;
-		if (castonmelee)
-			caststate=&states[mobjinfo[castorder[castnum].type].meleestate];
+		fin->castattacking = true;
+		if (fin->castonmelee)
+			fin->caststate=&states[mobjinfo[castorder[fin->castnum].type].meleestate];
 		else
-			caststate=&states[mobjinfo[castorder[castnum].type].missilestate];
-		castonmelee ^= 1;
-		if (caststate == &states[S_NULL])
+			fin->caststate=&states[mobjinfo[castorder[fin->castnum].type].missilestate];
+		fin->castonmelee ^= 1;
+		if (fin->caststate == &states[S_NULL])
 		{
-			if (castonmelee)
-				caststate=
-				&states[mobjinfo[castorder[castnum].type].meleestate];
+			if (fin->castonmelee)
+				fin->caststate=
+				&states[mobjinfo[castorder[fin->castnum].type].meleestate];
 			else
-				caststate=
-				&states[mobjinfo[castorder[castnum].type].missilestate];
+				fin->caststate=
+				&states[mobjinfo[castorder[fin->castnum].type].missilestate];
 		}
 	}
 	
-	if (castattacking)
+	if (fin->castattacking)
 	{
-		if (castframes == 24 
-		||	caststate == &states[mobjinfo[castorder[castnum].type].seestate] )
+		if (fin->castframes == 24 
+		||	fin->caststate == &states[mobjinfo[castorder[fin->castnum].type].seestate] )
 		{
 stopattack:
-			castattacking = false;
-			castframes = 0;
-			caststate = &states[mobjinfo[castorder[castnum].type].seestate];
+			fin->castattacking = false;
+			fin->castframes = 0;
+			fin->caststate = &states[mobjinfo[castorder[fin->castnum].type].seestate];
 		}
 	}
 	
-	casttics = caststate->tics;
-	if (casttics == -1)
-		casttics = 15;
+	fin->casttics = fin->caststate->tics;
+	if (fin->casttics == -1)
+		fin->casttics = 15;
 		
 	return 0;
 }
@@ -556,42 +565,42 @@ void F_Drawer (void)
 {
 	int	top, left;
 
-	drcol = I_DrawColumnLow;
-	if (D_strcasecmp(castorder[castnum].name, "spectre") == 0)
-		drcol = I_DrawFuzzColumnLow;
+	fin->drcol = I_DrawColumnLow;
+	if (D_strcasecmp(castorder[fin->castnum].name, "spectre") == 0)
+		fin->drcol = I_DrawFuzzColumnLow;
 
 	// HACK
 	viewportWidth = 320;
 	viewportHeight = I_FrameBufferHeight();
 	viewportbuffer = (pixel_t*)I_FrameBuffer();
 
-	if (drawbg) {
-		drawbg--;
+	if (fin->drawbg) {
+		fin->drawbg--;
 		F_DrawBackground();
 	}
 
-	switch(status)
+	switch(fin->status)
 	{
 		case fin_endtext:
-			if (!--textdelay)
+			if (!--fin->textdelay)
 			{
 				char	str[2];
 				
 				if (!gameinfo.endText)
 					return;
 				str[1] = 0;
-				str[0] = gameinfo.endText[textindex];
+				str[0] = gameinfo.endText[fin->textindex];
 				if (!str[0])
 					return;
 				F_PrintString2(str);
-				textdelay = TEXTTIME;
-				textindex++;
+				fin->textdelay = TEXTTIME;
+				fin->textindex++;
 			}
 			break;
 			
 		case fin_charcast:
-			drawbg = 2;
-			switch (castorder[castnum].type) {
+			fin->drawbg = 2;
+			switch (castorder[fin->castnum].type) {
 				case MT_CYBORG:
 					top = 115;
 					left = 80;
@@ -605,9 +614,9 @@ void F_Drawer (void)
 					left = 80;
 					break;
 			}
-			BufferedDrawSprite (caststate->sprite,
-					caststate->frame&FF_FRAMEMASK,0,top,left);
-			F_CastPrint (castorder[castnum].name);
+			BufferedDrawSprite (fin->caststate->sprite,
+					fin->caststate->frame&FF_FRAMEMASK,0,top,left);
+			F_CastPrint (castorder[fin->castnum].name);
 			break;
 	}
 }
