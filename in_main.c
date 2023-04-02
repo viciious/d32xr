@@ -43,25 +43,29 @@ typedef enum
 	f_splatsix
 } faces_t;
 
-pstats_t		pstats[MAXPLAYERS];
-faces_t		facenum;
+typedef struct
+{
+	pstats_t	pstats[MAXPLAYERS];
+	faces_t		facenum;
 
-boolean		earlyexit;
-boolean		statsdrawn;
-boolean		valsdrawn;
-boolean		negativefrag[MAXPLAYERS];
-int			killvalue[2], itemvalue[2], secretvalue[2], fragvalue[2];
-int 		timevalue;
+	boolean		earlyexit;
+	boolean		statsdrawn;
+	boolean		valsdrawn;
+	boolean		negativefrag[MAXPLAYERS];
+	int			killvalue[2], itemvalue[2], secretvalue[2], fragvalue[2];
+	int 		timevalue;
 
-VINT		i_secret, i_percent, i_level, i_kills,
-				i_items, i_finish, i_frags, i_par, i_time;
+	VINT		i_secret, i_percent, i_level, i_kills,
+					i_items, i_finish, i_frags, i_par, i_time;
 
-VINT		snums;
-VINT		infaces[10];
-VINT		uchar;
-static jagobj_t *interpic;
+	VINT		infaces[10];
+	jagobj_t 	*interpic;
 
-static dmapinfo_t	*nextmapinfo;
+	dmapinfo_t	*nextmapinfo;
+} intermission_t;
+
+VINT	uchar, snums;
+static intermission_t *interm;
 
 /* */
 /* Lame-o print routine */
@@ -166,13 +170,13 @@ void IN_NetgameDrawer(void)
 	int		i;
 	int length;
 
-	if(earlyexit == true)
+	if(interm->earlyexit == true)
 		for (i = 0; i < MAXPLAYERS; i++)
 		{
-			killvalue[i] = pstats[i].killpercent;
-			itemvalue[i] = pstats[i].itempercent;
-			secretvalue[i] = pstats[i].secretpercent;
-			fragvalue[i] = 
+			interm->killvalue[i] = interm->pstats[i].killpercent;
+			interm->itemvalue[i] = interm->pstats[i].itempercent;
+			interm->secretvalue[i] = interm->pstats[i].secretpercent;
+			interm->fragvalue[i] = 
 				players[i].frags;
 		}
 
@@ -186,12 +190,12 @@ void IN_NetgameDrawer(void)
 			print((320 - (length * 14)) >> 1, 10, gamemapinfo.name);
 		}
 
-		if (nextmapinfo && nextmapinfo->name != NULL)
+		if (interm->nextmapinfo && interm->nextmapinfo->name != NULL)
 		{
 			length = mystrlen("Entering");
 			print((320 - (length * 14)) >> 1, 162, "Entering");
-			length = mystrlen(nextmapinfo->name);
-			print((320 - (length * 14)) >> 1, 182, nextmapinfo->name);
+			length = mystrlen(interm->nextmapinfo->name);
+			print((320 - (length * 14)) >> 1, 182, interm->nextmapinfo->name);
 		}
 
 		if (netgame == gt_deathmatch)
@@ -212,11 +216,11 @@ void IN_NetgameDrawer(void)
 			print (28, 50, "Player");
 			print (KVALX - 18, 50, "1");
 			print (KVALX + 66, 50, "2");
-			DrawJagobjLump(i_kills, 57, 80, NULL, NULL);
+			DrawJagobjLump(interm->i_kills, 57, 80, NULL, NULL);
 	 
-			DrawJagobjLump(i_items, 51, 110, NULL, NULL);
+			DrawJagobjLump(interm->i_items, 51, 110, NULL, NULL);
 	 	
-			DrawJagobjLump(i_secret, 13, 140, NULL, NULL);
+			DrawJagobjLump(interm->i_secret, 13, 140, NULL, NULL);
 		}
 	}			
 	
@@ -225,31 +229,31 @@ void IN_NetgameDrawer(void)
 		if (splitscreen)
 		{
 			EraseBlock(30 + (mystrlen("Player 1 Frags") * 15), FVALY, 80, 80);
-			IN_DrawValue(FVALX + 40, FVALY, fragvalue[0]);
-			IN_DrawValue(FVALX + 40, FVALY + 40, fragvalue[1]);
+			IN_DrawValue(FVALX + 40, FVALY, interm->fragvalue[0]);
+			IN_DrawValue(FVALX + 40, FVALY + 40, interm->fragvalue[1]);
 		}
 		else
 		{
 			EraseBlock(30 + (mystrlen("Your Frags") * 15), FVALY, 80, 80);
-			IN_DrawValue(FVALX, FVALY, fragvalue[consoleplayer]);
-			IN_DrawValue(FVALX, FVALY + 40, fragvalue[!consoleplayer]);
+			IN_DrawValue(FVALX, FVALY, interm->fragvalue[consoleplayer]);
+			IN_DrawValue(FVALX, FVALY + 40, interm->fragvalue[!consoleplayer]);
 		}
 	}
 	else
 	{
 		EraseBlock(57 + (mystrlen("Kills") * 15), KVALY, 100, 100);
-		IN_DrawValue(KVALX, KVALY, killvalue[consoleplayer]);
-		IN_DrawValue(KVALX + 80, KVALY, killvalue[!consoleplayer]);
-		IN_DrawValue(IVALX, IVALY, itemvalue[consoleplayer]);
-		IN_DrawValue(IVALX + 80, IVALY, itemvalue[!consoleplayer]);
-		IN_DrawValue(SVALX, SVALY, secretvalue[consoleplayer]);
-		IN_DrawValue(SVALX + 80, SVALY, secretvalue[!consoleplayer]);
-		DrawJagobjLump(i_percent, KVALX, KVALY, NULL, NULL);
-		DrawJagobjLump(i_percent, KVALX + 80, KVALY, NULL, NULL);
-		DrawJagobjLump(i_percent, IVALX, IVALY, NULL, NULL);
-		DrawJagobjLump(i_percent, IVALX + 80, IVALY, NULL, NULL);
-		DrawJagobjLump(i_percent, SVALX, SVALY, NULL, NULL);
-		DrawJagobjLump(i_percent, SVALX + 80, SVALY, NULL, NULL);
+		IN_DrawValue(KVALX, KVALY, interm->killvalue[consoleplayer]);
+		IN_DrawValue(KVALX + 80, KVALY, interm->killvalue[!consoleplayer]);
+		IN_DrawValue(IVALX, IVALY, interm->itemvalue[consoleplayer]);
+		IN_DrawValue(IVALX + 80, IVALY, interm->itemvalue[!consoleplayer]);
+		IN_DrawValue(SVALX, SVALY, interm->secretvalue[consoleplayer]);
+		IN_DrawValue(SVALX + 80, SVALY, interm->secretvalue[!consoleplayer]);
+		DrawJagobjLump(interm->i_percent, KVALX, KVALY, NULL, NULL);
+		DrawJagobjLump(interm->i_percent, KVALX + 80, KVALY, NULL, NULL);
+		DrawJagobjLump(interm->i_percent, IVALX, IVALY, NULL, NULL);
+		DrawJagobjLump(interm->i_percent, IVALX + 80, IVALY, NULL, NULL);
+		DrawJagobjLump(interm->i_percent, SVALX, SVALY, NULL, NULL);
+		DrawJagobjLump(interm->i_percent, SVALX + 80, SVALY, NULL, NULL);
 	}
 }
 
@@ -260,11 +264,11 @@ void IN_SingleDrawer(void)
 {
 	int length;
 	
-	if(earlyexit == true)
+	if(interm->earlyexit == true)
 	{
-		killvalue[0] = pstats[0].killpercent;
-		itemvalue[0] = pstats[0].itempercent;
-		secretvalue[0] = pstats[0].secretpercent;
+		interm->killvalue[0] = interm->pstats[0].killpercent;
+		interm->itemvalue[0] = interm->pstats[0].itempercent;
+		interm->secretvalue[0] = interm->pstats[0].secretpercent;
 	}
 		
 	EraseBlock(71 + (mystrlen("Secrets") * 15), 70, 55, 80);
@@ -281,58 +285,64 @@ void IN_SingleDrawer(void)
 			print((320 - (length * 14)) >> 1, 34, "Finished");
 		}
 
-		if (nextmapinfo && nextmapinfo->name != NULL)
+		if (interm->nextmapinfo && interm->nextmapinfo->name != NULL)
 		{
 			length = mystrlen("Entering");
 			print( (320 - (length * 14)) >> 1, 162, "Entering");	
-			length = mystrlen(nextmapinfo->name);
-			print( (320 - (length*14)) >> 1, 182, nextmapinfo->name);
+			length = mystrlen(interm->nextmapinfo->name);
+			print( (320 - (length*14)) >> 1, 182, interm->nextmapinfo->name);
 		}
 
-		DrawJagobjLump(i_kills, 71, KVALY - 10, NULL, NULL);
+		DrawJagobjLump(interm->i_kills, 71, KVALY - 10, NULL, NULL);
 
-		DrawJagobjLump(i_items, 65, IVALY - 10, NULL, NULL);
+		DrawJagobjLump(interm->i_items, 65, IVALY - 10, NULL, NULL);
 
-		DrawJagobjLump(i_secret, 27, SVALY - 10, NULL, NULL);
+		DrawJagobjLump(interm->i_secret, 27, SVALY - 10, NULL, NULL);
 
 		print(73, TVALY - 10, "Time");
 	}
 	
-	IN_DrawValue(KVALX + 60, KVALY - 10, killvalue[0]);
-	DrawJagobjLump(i_percent, KVALX + 60, KVALY - 10, NULL, NULL);
-	IN_DrawValue(IVALX + 60, IVALY - 10, itemvalue[0]);		
-	DrawJagobjLump(i_percent, IVALX + 60, IVALY - 10, NULL, NULL);
-	IN_DrawValue(SVALX + 60, SVALY - 10, secretvalue[0]);
-	DrawJagobjLump(i_percent, SVALX + 60, SVALY - 10, NULL, NULL);
+	IN_DrawValue(KVALX + 60, KVALY - 10, interm->killvalue[0]);
+	DrawJagobjLump(interm->i_percent, KVALX + 60, KVALY - 10, NULL, NULL);
+	IN_DrawValue(IVALX + 60, IVALY - 10, interm->itemvalue[0]);		
+	DrawJagobjLump(interm->i_percent, IVALX + 60, IVALY - 10, NULL, NULL);
+	IN_DrawValue(SVALX + 60, SVALY - 10, interm->secretvalue[0]);
+	DrawJagobjLump(interm->i_percent, SVALX + 60, SVALY - 10, NULL, NULL);
 
-	if (timevalue/60 > 0)
+	if (interm->timevalue/60 > 0)
 	{
-		IN_DrawValue(TVALX + 8, TVALY - 10, timevalue/60);
+		IN_DrawValue(TVALX + 8, TVALY - 10, interm->timevalue/60);
 		print(TVALX + 8, TVALY - 10 - 1, "m");
 	}
-	IN_DrawPadValue(TVALX + 58, TVALY - 10, timevalue%60, 2);
+	IN_DrawPadValue(TVALX + 58, TVALY - 10, interm->timevalue%60, 2);
 	print(TVALX + 58, TVALY - 10 - 1, "s");
 }
 
 void IN_Start (void)
 {	
 	int	i,l;
+	VINT *infaces;
 
-	earlyexit = false;
+	interm = Z_Malloc(sizeof(*interm), PU_STATIC, 0);
+	D_memset(interm, 0, sizeof(*interm));
 
-	valsdrawn = false;
+	interm->earlyexit = false;
 
-	nextmapinfo = Z_Malloc(sizeof(*nextmapinfo), PU_STATIC, 0);
-	D_memset(nextmapinfo, 0, sizeof(*nextmapinfo));
+	interm->valsdrawn = false;
+
+	interm->nextmapinfo = Z_Malloc(sizeof(dmapinfo_t), PU_STATIC, 0);
+	D_memset(interm->nextmapinfo, 0, sizeof(dmapinfo_t));
 
 	if (gameaction == ga_secretexit && gamemapinfo.secretNext)
-		G_FindMapinfo(gamemapinfo.secretNext, nextmapinfo, NULL);
+		G_FindMapinfo(gamemapinfo.secretNext, interm->nextmapinfo, NULL);
 	else if (gamemapinfo.next)
-		G_FindMapinfo(gamemapinfo.next, nextmapinfo, NULL);
+		G_FindMapinfo(gamemapinfo.next, interm->nextmapinfo, NULL);
 
 	for (i = 0; i < MAXPLAYERS; i++) 
 	{
-		killvalue[i] = itemvalue[i] = secretvalue[i] = fragvalue[i] = 0;
+		pstats_t *pstats = interm->pstats;
+
+		interm->killvalue[i] = interm->itemvalue[i] = interm->secretvalue[i] = interm->fragvalue[i] = 0;
 		if (totalkills)
 			pstats[i].killpercent = (players[i].killcount * 100) / totalkills;
 		else
@@ -350,18 +360,20 @@ void IN_Start (void)
 			pstats[i].fragcount = players[i].frags;
 	}	
 
-	timevalue = stbar_tics/TICRATE;
+	interm->timevalue = stbar_tics/TICRATE;
+
+	infaces = interm->infaces;
 
 /* cache all needed graphics */
 #ifndef MARS
 	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
 #endif
-	i_secret = W_CheckNumForName ("I_SECRET");
-	i_percent = W_CheckNumForName("PERCENT");
-	i_level = W_CheckNumForName("I_LEVEL");
-	i_kills = W_CheckNumForName("I_KILLS");
-	i_items = W_CheckNumForName("I_ITEMS");
-	i_finish = W_CheckNumForName("I_FINISH");
+	interm->i_secret = W_CheckNumForName ("I_SECRET");
+	interm->i_percent = W_CheckNumForName("PERCENT");
+	interm->i_level = W_CheckNumForName("I_LEVEL");
+	interm->i_kills = W_CheckNumForName("I_KILLS");
+	interm->i_items = W_CheckNumForName("I_ITEMS");
+	interm->i_finish = W_CheckNumForName("I_FINISH");
 #ifndef MARS
 	i_frags = W_CheckNumForName("I_FRAGS");
 #endif
@@ -380,9 +392,9 @@ void IN_Start (void)
 	Z_FreeTags (mainzone);
 	l = W_CheckNumForName("INTERPIC");
 	if (l != -1)
-		interpic = W_CacheLumpNum(l, PU_STATIC);
+		interm->interpic = W_CacheLumpNum(l, PU_STATIC);
 	else
-		interpic = NULL;
+		interm->interpic = NULL;
 #endif
 
 	snums = W_CheckNumForName("NUM_0");
@@ -400,24 +412,21 @@ void IN_Start (void)
 
 void IN_Stop (void)
 {	
-	if (nextmapinfo)
+	if (interm->nextmapinfo)
 	{
-		if (nextmapinfo->data)
-			Z_Free(nextmapinfo->data);
-		Z_Free(nextmapinfo);
+		if (interm->nextmapinfo->data)
+			Z_Free(interm->nextmapinfo->data);
+		Z_Free(interm->nextmapinfo);
 	}
-	if (interpic)
+	if (interm->interpic)
 	{
-		Z_Free(interpic);
-		interpic = NULL;
+		Z_Free(interm->interpic);
 	}
-	nextmapinfo = NULL;
 
-	statsdrawn = false;
-	valsdrawn = false;
+	Z_Free(interm);
+	interm = NULL;
 
 	S_StopSong();
-
 }
 
 int IN_Ticker (void)
@@ -426,7 +435,7 @@ int IN_Ticker (void)
 	int		oldbuttons;		
 	int 		i;
 
-	if (i_secret < 0)
+	if (interm->i_secret < 0)
 		return 1;
 	if (ticon < 5)
 		return 0;		/* don't exit immediately */
@@ -439,24 +448,30 @@ int IN_Ticker (void)
 	/* exit menu if button press */
 		if ( (buttons & BT_ATTACK) && !(oldbuttons & BT_ATTACK) )
 		{
-			earlyexit = true;
+			interm->earlyexit = true;
 			return 1;		/* done with intermission */
 		}
 		if ( (buttons & BT_SPEED) && !(oldbuttons & BT_SPEED) )
 		{
-			earlyexit = true;
+			interm->earlyexit = true;
 			return 1;		/* done with intermission */
 		}
 		if ( (buttons & BT_USE) && !(oldbuttons & BT_USE) )
 		{
-			earlyexit = true;
+			interm->earlyexit = true;
 			return 1;		/* done with intermission */
 		}
 	}
 	
 	for (i = 0; i < MAXPLAYERS; i++)
 	{
-		if (valsdrawn == true)
+		int *killvalue = interm->killvalue;
+		int *itemvalue = interm->itemvalue;
+		int *secretvalue = interm->secretvalue;
+		int *fragvalue = interm->fragvalue;
+		pstats_t *pstats = interm->pstats;
+
+		if (interm->valsdrawn == true)
 		{
 			if (killvalue[i] < pstats[i].killpercent )
 				killvalue[i]+=2;
@@ -486,13 +501,13 @@ int IN_Ticker (void)
 void IN_Drawer (void)
 {	
 #ifdef MARS
-	if (interpic != NULL)
-		DrawJagobj(interpic, 0, 0);
+	if (interm->interpic != NULL)
+		DrawJagobj(interm->interpic, 0, 0);
 	else
 		DrawTiledBackground();
 #endif
 
-	if (i_secret < 0)
+	if (interm->i_secret < 0)
 		return;
 
 	if (netgame != gt_single)
@@ -500,9 +515,9 @@ void IN_Drawer (void)
 	else
 		IN_SingleDrawer();
 
-	if(statsdrawn == false)
-		statsdrawn = true;
-	if(valsdrawn == false)
-		valsdrawn = true;
+	if(interm->statsdrawn == false)
+		interm->statsdrawn = true;
+	if(interm->valsdrawn == false)
+		interm->valsdrawn = true;
 }
 
