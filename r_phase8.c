@@ -14,7 +14,7 @@ static int fuzzpos[2];
 
 static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy) ATTR_DATA_CACHE_ALIGN;
 void R_DrawVisSprite(vissprite_t* vis, unsigned short* spropening, int *fuzzpos, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
-void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
+void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreenhalf, int16_t *walls) ATTR_DATA_CACHE_ALIGN;
 static void R_DrawSortedSprites(int *fuzzpos, int* sortedsprites, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
 static void R_DrawPSprites(int *fuzzpos, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
 void R_Sprites(void) ATTR_DATA_CACHE_ALIGN;
@@ -141,7 +141,7 @@ static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy)
 //
 // Clip a sprite to the openings created by walls
 //
-void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreenhalf)
+void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreenhalf, int16_t *walls)
 {
    int     x;          // r15
    int     x1;         // FP+5
@@ -183,24 +183,17 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
    for(x = x1; x <= x2; x++)
       spropening[x] = vhplus1 | (1<<8);
    
-   ds = lastwallcmd;
-   if (ds == viswalls)
-       return;
-
    do
    {
       int width;
 
-      --ds;
+      ds = viswalls + *walls++;
 
       silhouette = (ds->actionbits & (AC_TOPSIL | AC_BOTTOMSIL | AC_SOLIDSIL));
-
-      if(ds->start > x2 || ds->stop < x1 ||                            // does not intersect
-         (ds->scalefrac < scalefrac && ds->scale2 < scalefrac) ||      // is completely behind
-         !silhouette)                                                  // does not clip sprites
-      {
+      
+      if(ds->start > x2 || ds->stop < x1 ||                         // does not intersect
+         (ds->scalefrac < scalefrac && ds->scale2 < scalefrac))     // is completely behind
          continue;
-      }
 
       if(ds->scalefrac <= scalefrac || ds->scale2 <= scalefrac)
       {
@@ -260,27 +253,65 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
             spropening[x] = (top << 8) | bottom;
          }
       }
-   }
-   while(ds != viswalls);
+   } while (*walls != -1);
 }
 
 static void R_DrawSortedSprites(int *fuzzpos, int* sortedsprites, int sprscreenhalf)
 {
-    int i;
-    unsigned short spropening[SCREENWIDTH];
-    int count = sortedsprites[0];
+   int i;
+   int x1, x2;
+   uint16_t spropening[SCREENWIDTH];
+   int count = sortedsprites[0];
+   int16_t walls[MAXWALLCMDS+1], *pwalls;
+   viswall_t *ds;
 
-    sortedsprites++;
-    for (i = 0; i < count; i++)
-    {
-        vissprite_t* ds;
+#ifndef MARS
+   sprscreenhalf = viewportWidth - 1;
+#endif
 
-        ds = (vissprite_t *)(vissprites + (sortedsprites[i] & 0x7f));
+   if (sprscreenhalf > 0)
+   {
+      x1 = 0;
+      x2 = sprscreenhalf - 1;
+   }
+   else if (sprscreenhalf < 0)
+   {
+      if (x1 < -sprscreenhalf)
+         x1 = -sprscreenhalf;
+      x2 = viewportWidth - 1;
+   }
 
-        R_ClipVisSprite(ds, spropening, sprscreenhalf);
+   // compile the list of walls that clip sprites for this side part of the screen
+   pwalls = walls;
 
-        R_DrawVisSprite(ds, spropening, fuzzpos, sprscreenhalf);
-    }
+   ds = lastwallcmd;
+   if (ds == viswalls)
+       return;
+   do
+   {
+      --ds;
+
+      if(ds->start > x2 || ds->stop < x1 ||                             // does not intersect
+         !(ds->actionbits & (AC_TOPSIL | AC_BOTTOMSIL | AC_SOLIDSIL)))  // does not clip sprites
+         continue;
+
+      *pwalls++ = ds - viswalls;
+   } while (ds != viswalls);
+
+   if (pwalls == walls)
+      return;
+   *pwalls = -1;
+
+   sortedsprites++;
+   for (i = 0; i < count; i++)
+   {
+      vissprite_t* ds;
+
+      ds = (vissprite_t *)(vissprites + (sortedsprites[i] & 0x7f));
+
+      R_ClipVisSprite(ds, spropening, sprscreenhalf, walls);
+      R_DrawVisSprite(ds, spropening, fuzzpos, sprscreenhalf);
+   }
 }
 
 static void R_DrawPSprites(int *fuzzpos, int sprscreenhalf)
