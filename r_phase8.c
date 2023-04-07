@@ -265,19 +265,17 @@ static void R_DrawSortedSprites(int *fuzzpos, int* sortedsprites, int sprscreenh
    int16_t walls[MAXWALLCMDS+1], *pwalls;
    viswall_t *ds;
 
-#ifndef MARS
-   sprscreenhalf = viewportWidth - 1;
-#endif
-
+#ifdef MARS
    if (sprscreenhalf > 0)
    {
       x1 = 0;
       x2 = sprscreenhalf - 1;
-   }
-   else if (sprscreenhalf < 0)
+   } else
+#else
+   sprscreenhalf = 0;
+#endif 
    {
-      if (x1 < -sprscreenhalf)
-         x1 = -sprscreenhalf;
+      x1 = -sprscreenhalf;
       x2 = viewportWidth - 1;
    }
 
