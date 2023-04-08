@@ -8,7 +8,6 @@
 #include "mars.h"
 
 #define MIPSCALE 0x20000
-#define LIGHTCOEF (1<<10) // the max seglight is 31, so 15 bits
 
 typedef struct
 {
@@ -209,7 +208,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
         if (lightcoef != 0)
         {
             // calc light level
-            texturelight = scale2 * lightcoef - lightsub;
+            texturelight = FixedMul3(scale2, lightcoef) - lightsub;
             if (texturelight < lightmin)
                 texturelight = lightmin;
             else if (texturelight > lightmax)
@@ -347,8 +346,9 @@ void R_SegCommands(void)
 
             if (lseg.lightmin != lseg.lightmax)
             {
-                lseg.lightcoef = ((unsigned)(lseg.lightmax - lseg.lightmin) * LIGHTCOEF) / (800 - 160);
+                lseg.lightcoef = ((unsigned)(lseg.lightmax - lseg.lightmin) << FRACBITS) / (800 - 160);
                 lseg.lightsub = 160 * lseg.lightcoef;
+                lseg.lightcoef <<= 10;
                 lseg.lightmin <<= FRACBITS;
                 lseg.lightmax <<= FRACBITS;
             }
