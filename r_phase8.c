@@ -447,7 +447,6 @@ void R_Sprites(void)
    }
 
 #ifdef MARS
-   Mars_R_SecWait();
    // re-use the openings array in VRAM
 	gsortedsprites = (int*)(((intptr_t)segclip + 3) & ~3);
    for (i = 0; i < sortedcount+1; i++)

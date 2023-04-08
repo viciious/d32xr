@@ -99,7 +99,7 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
           f_lightlevel    != b_lightlevel                 || // light level changes across line?
           b_ceilingheight == b_floorheight))                 // backsector is closed?
       {
-         *floorheight = *floornewheight = f_floorheight / (1 << FIXEDTOHEIGHT);
+         *floorheight = *floornewheight = f_floorheight;
          actionbits |= (AC_ADDFLOOR|AC_NEWFLOOR);
       }
 
@@ -110,14 +110,14 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
           f_lightlevel    != b_lightlevel                 || // light level changes across line?
           b_ceilingheight == b_floorheight))                 // backsector is closed?
       {
-         segl->ceilingheight = *ceilingnewheight = f_ceilingheight / (1 << FIXEDTOHEIGHT);
+         segl->ceilingheight = *ceilingnewheight = f_ceilingheight;
          if(f_ceilingpic == -1)
             actionbits |= (AC_ADDSKY|AC_NEWCEILING);
          else
             actionbits |= (AC_ADDCEILING|AC_NEWCEILING);
       }
 
-      segl->t_topheight = f_ceilingheight / (1 << FIXEDTOHEIGHT); // top of texturemap
+      segl->t_topheight = f_ceilingheight; // top of texturemap
 
       if(back_sector == &emptysector)
       {
@@ -134,7 +134,7 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
             t_texturemid = f_ceilingheight;
 
          t_texturemid += si->rowoffset<<FRACBITS;                               // add in sidedef texture offset
-         segl->t_bottomheight = f_floorheight / (1 << FIXEDTOHEIGHT); // set bottom height
+         segl->t_bottomheight = f_floorheight; // set bottom height
          actionbits |= (AC_SOLIDSIL|AC_TOPTEXTURE);                   // solid line; draw middle texture only
       }
       else
@@ -155,8 +155,8 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
 
             b_texturemid += si->rowoffset<<FRACBITS; // add in sidedef texture offset
 
-            segl->b_topheight = *floornewheight = b_floorheight / (1 << FIXEDTOHEIGHT);
-            segl->b_bottomheight = f_floorheight / (1 << FIXEDTOHEIGHT);
+            segl->b_topheight = *floornewheight = b_floorheight;
+            segl->b_bottomheight = f_floorheight;
             actionbits |= (AC_BOTTOMTEXTURE|AC_NEWFLOOR); // generate bottom wall and floor
          }
 
@@ -174,7 +174,7 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
 
             t_texturemid += si->rowoffset<<FRACBITS; // add in sidedef texture offset
 
-            segl->t_bottomheight = *ceilingnewheight = b_ceilingheight / (1 << FIXEDTOHEIGHT);
+            segl->t_bottomheight = *ceilingnewheight = b_ceilingheight;
             actionbits |= (AC_NEWCEILING|AC_TOPTEXTURE); // draw top texture and ceiling
          }
 
@@ -356,8 +356,8 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
 {
     const volatile int actionbits = segl->actionbits;
 
-    unsigned scalefrac = segl->scalefrac;
-    unsigned scalestep = segl->scalestep;
+    fixed_t scalefrac = segl->scalefrac;
+    volatile const fixed_t scalestep = segl->scalestep;
 
     int x, start = segl->start;
     const int stop = segl->stop;
@@ -398,9 +398,9 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
         int floorclipx, ceilingclipx;
         int low, high, top, bottom;
         int cy, vh;
-        unsigned scale2;
+        fixed_t scale2;
 
-        scale2 = (unsigned)scalefrac >> HEIGHTBITS;
+        scale2 = scalefrac;
         scalefrac += scalestep;
 
         //
@@ -416,14 +416,14 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
         //
         // calc high and low
         //
-        FixedMul2(low, scale2, floornewheight);
+        low = FixedMul3(scale2, floornewheight)>>FRACBITS;
         low = cy - low;
         if (low < 0)
             low = 0;
         else if (low > floorclipx)
             low = floorclipx;
 
-        FixedMul2(high, scale2, ceilingnewheight);
+        high = FixedMul3(scale2, ceilingnewheight)>>FRACBITS;
         high = cy - high;
         if (high > vh)
             high = vh;
@@ -457,7 +457,7 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
         //
         if (flooropen)
         {
-            FixedMul2(top, scale2, floorheight);
+            top = FixedMul3(scale2, floorheight)>>FRACBITS;
             top = cy - top;
             if (top < ceilingclipx)
                 top = ceilingclipx;
@@ -480,7 +480,7 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
         if (ceilopen)
         {
             top = ceilingclipx;
-            FixedMul2(bottom, scale2, ceilingheight);
+            bottom = FixedMul3(scale2, ceilingheight)>>FRACBITS;
             bottom = cy - bottom;
             if (bottom > floorclipx)
                 bottom = floorclipx;

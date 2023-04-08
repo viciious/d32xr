@@ -7,7 +7,8 @@
 #include "r_local.h"
 #include "mars.h"
 
-#define MIPSCALE (2048 << HEIGHTBITS)
+#define MIPSCALE 0x20000
+#define LIGHTCOEF (1<<10) // the max seglight is 31, so 15 bits
 
 typedef struct
 {
@@ -60,12 +61,13 @@ static void R_DrawTextures(int x, unsigned iscale_, int colnum_, fixed_t scale2,
    for (; tex < lsegl->last; tex++) {
        int top, bottom;
 
-       FixedMul2(top, scale2, tex->topheight);
+       top = FixedMul3(scale2, tex->topheight)>>FRACBITS;
+       bottom = FixedMul3(scale2, tex->bottomheight)>>FRACBITS;
+
        top = centerY - top;
        if (top < ceilingclipx)
            top = ceilingclipx;
 
-       FixedMul2(bottom, scale2, tex->bottomheight);
        bottom = centerY - bottom;
        if (bottom > floorclipx)
            bottom = floorclipx;
@@ -126,12 +128,12 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 
     drawcol_t drawsky = (segl->actionbits & AC_ADDSKY) != 0 ? drawcol : NULL;
 
-    unsigned scalefrac = segl->scalefrac;
-    const unsigned scalestep = segl->scalestep;
+    fixed_t scalefrac = segl->scalefrac;
+    const fixed_t scalestep = segl->scalestep;
 
     const unsigned centerangle = segl->centerangle;
     unsigned offset = segl->offset;
-    unsigned distance = segl->distance;
+    fixed_t distance = segl->distance;
 
     const int ceilingheight = segl->ceilingheight;
 
@@ -147,7 +149,8 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
     {
        fixed_t r;
        int floorclipx, ceilingclipx;
-       unsigned scale2, colnum, iscale;
+       fixed_t scale2;
+       unsigned colnum, iscale;
 
 #ifdef MARS
         volatile int32_t t;
@@ -164,7 +167,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
         fixed_t scale = scalefrac;
 #endif
 
-        scale2 = scalefrac >> HEIGHTBITS;
+        scale2 = scalefrac;
         scalefrac += scalestep;
 
         //
@@ -182,7 +185,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
             int top, bottom;
 
             top = ceilingclipx;
-            FixedMul2(bottom, scale2, ceilingheight);
+            bottom = FixedMul3(scale2, ceilingheight)>>FRACBITS;
             bottom = centerY - bottom;
             if (bottom > floorclipx)
                 bottom = floorclipx;
@@ -217,7 +220,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 
         // calculate texture offset
         r = finetangent((centerangle + xtoviewangle[x]) >> ANGLETOFINESHIFT);
-        FixedMul2(r, distance, r);
+        r = FixedMul3(distance, r);
 
         colnum = (offset - r) >> FRACBITS;
 
@@ -344,7 +347,7 @@ void R_SegCommands(void)
 
             if (lseg.lightmin != lseg.lightmax)
             {
-                lseg.lightcoef = ((unsigned)(lseg.lightmax - lseg.lightmin) << FRACBITS) / (800 - 160);
+                lseg.lightcoef = ((unsigned)(lseg.lightmax - lseg.lightmin) * LIGHTCOEF) / (800 - 160);
                 lseg.lightsub = 160 * lseg.lightcoef;
                 lseg.lightmin <<= FRACBITS;
                 lseg.lightmax <<= FRACBITS;

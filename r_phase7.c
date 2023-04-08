@@ -65,7 +65,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     if (remaining <= 0)
         return; // nothing to draw (shouldn't happen)
 
-    FixedMul2(distance, lpl->height, yslope[y]);
+    distance = FixedMul3(lpl->height, yslope[y]);
 
 #ifdef MARS
     __asm volatile (
@@ -76,19 +76,19 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
         : : "r" (distance), "r" (LIGHTCOEF) : "r0");
 #endif
 
-    FixedMul2(length, distance, distscale[x]);
+    length = FixedMul3(distance, distscale[x]);
     angle = (lpl->angle + xtoviewangle[x]) >> ANGLETOFINESHIFT;
 
-    FixedMul2(xfrac, (finecosine(angle)), length);
+    xfrac = FixedMul3(finecosine(angle), length);
     xfrac = lpl->x + xfrac;
-    FixedMul2(yfrac, (finesine(angle)), length);
+    yfrac = FixedMul3(finesine(angle), length);
     yfrac = lpl->y - yfrac;
 #ifdef MARS
     yfrac *= 64;
 #endif
 
-    FixedMul2(xstep, distance, lpl->basexscale);
-    FixedMul2(ystep, distance, lpl->baseyscale);
+    xstep = FixedMul3(distance, lpl->basexscale);
+    ystep = FixedMul3(distance, lpl->baseyscale);
 
 #ifdef MARS
     __asm volatile (
@@ -285,7 +285,7 @@ static void R_DrawPlanes2(uint16_t *sortedvisplanes)
             lpl.mipsize[j] = mipsize;
             mipsize >>= 1;
         }
-        lpl.height = (unsigned)D_abs(pl->height) << FIXEDTOHEIGHT;
+        lpl.height = (unsigned)D_abs(pl->height);
 
         if (vd.fixedcolormap)
         {
