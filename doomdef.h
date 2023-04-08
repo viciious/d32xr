@@ -571,6 +571,7 @@ fixed_t	FixedDiv (fixed_t a, fixed_t b);
             : "r" (a), "r" (b) \
             : "mach", "macl"); \
         } while (0)
+#define FixedMul3(a,b) (((int64_t)(a) * (b))>>16)
 
 static inline fixed_t IDiv(fixed_t a, fixed_t b)
 {
@@ -591,6 +592,7 @@ static inline fixed_t IDiv(fixed_t a, fixed_t b)
 }
 #else
 #define FixedMul2(c,a,b) ((c) = FixedMul(a,b))
+#define FixedMul3(a,b) FixedMul(a,b)
 #define IDiv(a,b) ((a) / (b))
 #endif
 
