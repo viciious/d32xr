@@ -230,7 +230,7 @@ static void S_SpatializeAt(fixed_t* origin, mobj_t* listener, int* pvol, int* ps
 			angle = angle + (0xffffffff - listener->angle);
 		angle >>= ANGLETOFINESHIFT;
 
-		FixedMul2(sep, S_STEREO_SWING, finesine(angle));
+		sep = FixedMul(S_STEREO_SWING, finesine(angle));
 		sep >>= FRACBITS;
 
 		sep = 128 - sep;

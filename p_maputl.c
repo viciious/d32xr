@@ -56,13 +56,8 @@ int P_PointOnLineSide (fixed_t x, fixed_t y, line_t *line)
 	dx = (x - vertexes[line->v1].x);
 	dy = (y - vertexes[line->v1].y);
 	
-#ifdef MARS
-	left = ((int64_t)ldy*dx) >> 32;
-	right = ((int64_t)dy*ldx) >> 32;
-#else
 	left = (ldy>>16) * (dx>>16);
 	right = (dy>>16) * (ldx>>16);
-#endif
 
 	if (right < left)
 		return 0;		/* front side */
@@ -97,8 +92,8 @@ int P_PointOnDivlineSide (fixed_t x, fixed_t y, divline_t *line)
 	}
 #endif
 
-	FixedMul2(left, line->dy>>8, dx>>8);
-	FixedMul2(right, dy>>8, line->dx>>8);
+	left = FixedMul(line->dy>>8, dx>>8);
+	right = FixedMul(dy>>8, line->dx>>8);
 	
 	if (right < left)
 		return 0;		/* front side */

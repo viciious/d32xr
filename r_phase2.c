@@ -249,8 +249,8 @@ static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, ang
     angleb = visangle - normalangle;
     sineb = finesine(angleb >> ANGLETOFINESHIFT);
 
-    FixedMul2(num, stretchX, sineb);
-    FixedMul2(den, rw_distance, sinea);
+    num = FixedMul(stretchX, sineb);
+    den = FixedMul(rw_distance, sinea);
 
     return FixedDiv(num, den);
 }
@@ -272,7 +272,7 @@ static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle, int ang
         offsetangle = ANG90;
 
     sineval = finesine(offsetangle >> ANGLETOFINESHIFT);
-    FixedMul2(rw_offset, hyp, sineval);
+    rw_offset = FixedMul(hyp, sineval);
 
     if (normalangle - angle1 < ANG180)
         rw_offset = -rw_offset;
@@ -304,7 +304,7 @@ static void R_WallLatePrep(viswall_t* wc, vertex_t *verts)
     distangle = ANG90 - offsetangle;
     hyp = R_PointToDist(verts[seg->v1].x, verts[seg->v1].y);
     sineval = finesine(distangle >> ANGLETOFINESHIFT);
-    FixedMul2(rw_distance, hyp, sineval);
+    rw_distance = FixedMul(hyp, sineval);
     wc->distance = rw_distance;
 
     scalefrac = scale2 = wc->scalefrac =
@@ -416,14 +416,14 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
         //
         // calc high and low
         //
-        low = FixedMul3(scale2, floornewheight)>>FRACBITS;
+        low = FixedMul(scale2, floornewheight)>>FRACBITS;
         low = cy - low;
         if (low < 0)
             low = 0;
         else if (low > floorclipx)
             low = floorclipx;
 
-        high = FixedMul3(scale2, ceilingnewheight)>>FRACBITS;
+        high = FixedMul(scale2, ceilingnewheight)>>FRACBITS;
         high = cy - high;
         if (high > vh)
             high = vh;
@@ -457,7 +457,7 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
         //
         if (flooropen)
         {
-            top = FixedMul3(scale2, floorheight)>>FRACBITS;
+            top = FixedMul(scale2, floorheight)>>FRACBITS;
             top = cy - top;
             if (top < ceilingclipx)
                 top = ceilingclipx;
@@ -480,7 +480,7 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
         if (ceilopen)
         {
             top = ceilingclipx;
-            bottom = FixedMul3(scale2, ceilingheight)>>FRACBITS;
+            bottom = FixedMul(scale2, ceilingheight)>>FRACBITS;
             bottom = cy - bottom;
             if (bottom > floorclipx)
                 bottom = floorclipx;

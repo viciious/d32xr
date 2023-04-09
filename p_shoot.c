@@ -168,7 +168,7 @@ static boolean PA_ShootLine(shootWork_t *sw, line_t *li, fixed_t interceptfrac)
    else
       openbottom = back->floorheight;
 
-   FixedMul2(dist, sw->attackrange, interceptfrac);
+   dist = FixedMul(sw->attackrange, interceptfrac);
 
    if(front->floorheight != back->floorheight)
    {
@@ -215,7 +215,7 @@ static boolean PA_ShootThing(shootWork_t *sw, mobj_t *th, fixed_t interceptfrac)
       return true; // corpse or something
 
    // check angles to see if the thing can be aimed at
-   FixedMul2(dist, sw->attackrange, interceptfrac);
+   dist = FixedMul(sw->attackrange, interceptfrac);
    
    thingaimtopslope = FixedDiv(th->z + th->height - sw->shootz, dist);
    if(thingaimtopslope < sw->aimbottomslope)
@@ -237,10 +237,10 @@ static boolean PA_ShootThing(shootWork_t *sw, mobj_t *th, fixed_t interceptfrac)
 
    // position a bit closer
    frac   = interceptfrac - FixedDiv(10*FRACUNIT, sw->attackrange);
-   FixedMul2(sw->shootx, sw->shootdiv.dx, frac);
-   FixedMul2(sw->shooty, sw->shootdiv.dy, frac);
-   FixedMul2(tmp, frac, sw->attackrange);
-   FixedMul2(tmp, sw->shootslope, tmp);
+   sw->shootx = FixedMul(sw->shootdiv.dx, frac);
+   sw->shooty = FixedMul(sw->shootdiv.dy, frac);
+   tmp = FixedMul(frac, sw->attackrange);
+   tmp = FixedMul(sw->shootslope, tmp);
 
    sw->shootx = sw->shootdiv.x + sw->shootx;
    sw->shooty = sw->shootdiv.y + sw->shooty;
@@ -480,10 +480,10 @@ void P_Shoot2(lineattack_t *la)
 
    // position a bit closer
    sw.firstlinefrac -= FixedDiv(4*FRACUNIT, la->attackrange);
-   FixedMul2(la->shootx, sw.shootdiv.dx, sw.firstlinefrac);
-   FixedMul2(la->shooty, sw.shootdiv.dy, sw.firstlinefrac);
-   FixedMul2(tmp, sw.firstlinefrac, la->attackrange);
-   FixedMul2(tmp, sw.aimmidslope, tmp);
+   la->shootx = FixedMul(sw.shootdiv.dx, sw.firstlinefrac);
+   la->shooty = FixedMul(sw.shootdiv.dy, sw.firstlinefrac);
+   tmp = FixedMul(sw.firstlinefrac, la->attackrange);
+   tmp = FixedMul(tmp, sw.aimmidslope);
 
    la->shootx  = sw.shootdiv.x + la->shootx;
    la->shooty  = sw.shootdiv.y + la->shooty;

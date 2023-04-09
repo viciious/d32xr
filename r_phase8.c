@@ -42,7 +42,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos,
    spryscale = vis->yscale;
    dcol      = vis->colormap < 0 ? drawfuzzcol : drawcol;
 
-   FixedMul2(sprtop, vis->texturemid, spryscale);
+   sprtop = FixedMul(vis->texturemid, spryscale);
    sprtop = centerYFrac - sprtop;
    spryscale = (unsigned)spryscale >> 8;
 

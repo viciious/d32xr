@@ -35,8 +35,8 @@ static void R_PrepMobj(mobj_t *thing)
    tr_x = thing->x - vd.viewx;
    tr_y = thing->y - vd.viewy;
 
-   FixedMul2(gxt, tr_x, vd.viewcos);
-   FixedMul2(gyt, tr_y, vd.viewsin);
+   gxt = FixedMul(tr_x, vd.viewcos);
+   gyt = FixedMul(tr_y, vd.viewsin);
    gyt = -gyt;
    tz  = gxt - gyt;
 
@@ -44,9 +44,9 @@ static void R_PrepMobj(mobj_t *thing)
    if(tz < MINZ)
       return;
 
-   FixedMul2(gxt, tr_x, vd.viewsin);
+   gxt = FixedMul(tr_x, vd.viewsin);
    gxt = -gxt;
-   FixedMul2(gyt, tr_y, vd.viewcos);
+   gyt = FixedMul(tr_y, vd.viewcos);
    tx  = -(gyt + gxt);
 
    // too far off the side?
@@ -92,7 +92,7 @@ static void R_PrepMobj(mobj_t *thing)
 
    // calculate edges of the shape
    tx -= ((fixed_t)BIGSHORT(patch->leftoffset)) << FRACBITS;
-   FixedMul2(x1, tx, xscale);
+   x1 = FixedMul(tx, xscale);
    x1 = (centerXFrac + x1) / FRACUNIT;
 
    // off the right side?
@@ -100,7 +100,7 @@ static void R_PrepMobj(mobj_t *thing)
        return;
 
    tx += ((fixed_t)BIGSHORT(patch->width) << FRACBITS);
-   FixedMul2(x2, tx, xscale);
+   x2 = FixedMul(tx, xscale);
    x2 = ((centerXFrac + x2) / FRACUNIT) - 1;
 
    // off the left side
@@ -108,12 +108,12 @@ static void R_PrepMobj(mobj_t *thing)
        return;
 
    // killough 4/9/98: clip things which are out of view due to height
-   FixedMul2(tz, gzt, xscale);
+   tz = FixedMul(gzt, xscale);
    if (tz > centerYFrac)
        return;
 
    texmid = gzt + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
-   FixedMul2(tz, texmid, xscale);
+   tz = FixedMul(texmid, xscale);
    if (tz < viewportHeight - centerYFrac)
        return;
 
@@ -134,7 +134,7 @@ static void R_PrepMobj(mobj_t *thing)
    vis->gy       = thing->y / FRACUNIT;
    vis->xscale   = xscale;
    vis->xiscale  = FixedDiv(FRACUNIT, xscale);
-   FixedMul2(vis->yscale, xscale, stretch);
+   vis->yscale   = FixedMul(xscale, stretch);
    vis->texturemid = texmid;
    vis->startfrac = 0;
 
@@ -199,10 +199,10 @@ static void R_PrepPSprite(pspdef_t *psp)
 
    // calculate edges of the shape
    tx = tx - (((fixed_t)BIGSHORT(patch->leftoffset)) << FRACBITS);
-   FixedMul2(x1, tx, xscale);
+   x1 = FixedMul(tx, xscale);
 
    tx = ((fixed_t)BIGSHORT(patch->width) << FRACBITS);
-   FixedMul2(x2, tx, xscale);
+   x2 = FixedMul(tx, xscale);
    x2 += x1;
 
    x1 /= FRACUNIT;

@@ -557,25 +557,13 @@ extern	int			bodyqueslot;
 */
 
 
-fixed_t	FixedMul (fixed_t a, fixed_t b);
+#ifdef MARS
+#define FixedMul(a,b) (((int64_t)(a) * (b))>>16)
 fixed_t	FixedDiv (fixed_t a, fixed_t b);
 fixed_t IDiv (fixed_t a, fixed_t b);
-
-#ifdef MARS
-#define FixedMul2(c,a,b) do { \
-        int32_t t; \
-       __asm volatile ( \
-            "dmuls.l %2, %3\n\t" \
-            "sts mach, %1\n\t" \
-            "sts macl, %0\n\t" \
-            "xtrct %1, %0\n\t" \
-            : "=r" (c), "=&r" (t) \
-            : "r" (a), "r" (b) \
-            : "mach", "macl"); \
-        } while (0)
-
-#define FixedMul2(c,a,b) ((c) = FixedMul(a,b))
-#define FixedMul3(a,b) FixedMul(a,b)
+#else
+fixed_t	FixedMul (fixed_t a, fixed_t b);
+fixed_t	FixedDiv (fixed_t a, fixed_t b);
 #define IDiv(a,b) ((a) / (b))
 #endif
 

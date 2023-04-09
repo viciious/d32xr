@@ -110,21 +110,21 @@ static fixed_t P_InterceptVector2(divline_t *v2, divline_t *v1)
    fixed_t num;
    fixed_t den, temp;
 
-   FixedMul2(temp, v1->dy,FRACUNIT/256);
-   FixedMul2(den, temp,v2->dx);
+   temp = FixedMul(v1->dy,FRACUNIT/256);
+   den = FixedMul(temp,v2->dx);
 
-   FixedMul2(temp, v1->dx,FRACUNIT/256);
-   FixedMul2(temp, temp, v2->dy);
+   temp = FixedMul(v1->dx,FRACUNIT/256);
+   temp = FixedMul(temp, v2->dy);
 
    den = den - temp;
    if(den == 0)
       return 0;
 
-   FixedMul2(temp, (v2->y - v1->y),FRACUNIT/256);
-   FixedMul2(temp, temp, v1->dx);
+   temp = FixedMul((v2->y - v1->y),FRACUNIT/256);
+   temp = FixedMul(temp, v1->dx);
 
-   FixedMul2(num, (v1->x - v2->x),FRACUNIT/256);
-   FixedMul2(num, num, v1->dy);
+   num = FixedMul((v1->x - v2->x),FRACUNIT/256);
+   num = FixedMul(num, v1->dy);
 
    num  = num + temp;
    frac = FixedDiv(num, den);
@@ -133,15 +133,15 @@ static fixed_t P_InterceptVector2(divline_t *v2, divline_t *v1)
    fixed_t num;
    fixed_t den, temp;
 
-   FixedMul2(den, v1->dy>>8,v2->dx);
-   FixedMul2(temp, v1->dx >> 8, v2->dy);
+   den = FixedMul(v1->dy>>8,v2->dx);
+   temp = FixedMul(v1->dx >> 8, v2->dy);
 
    den = den - temp;
    if(den == 0)
       return 0;
 
-   FixedMul2(temp, (v2->y - v1->y) >> 8, v1->dx);
-   FixedMul2(num, (v1->x - v2->x) >> 8, v1->dy);
+   temp = FixedMul((v2->y - v1->y) >> 8, v1->dx);
+   num = FixedMul((v1->x - v2->x) >> 8, v1->dy);
 
    num  = num + temp;
    frac = FixedDiv(num, den);

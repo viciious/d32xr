@@ -65,8 +65,8 @@ static int SL_PointOnSide(pslidework_t *sw, fixed_t x, fixed_t y)
    dx = x - sw->p1->x;
    dy = y - sw->p1->y;
 
-   FixedMul2(dx, dx, sw->nvx);
-   FixedMul2(dy, dy, sw->nvy);
+   dx = FixedMul(dx, sw->nvx);
+   dy = FixedMul(dy, sw->nvy);
    dist = dx + dy;
 
    if(dist > FRACUNIT)
@@ -85,16 +85,16 @@ static fixed_t SL_CrossFrac(pslidework_t *sw)
    fixed_t dx, dy, dist1, dist2;
 
    // project move start and end points onto line normal
-   dx    = sw->p3x - sw->p1->x;
-   dy    = sw->p3y - sw->p1->y;
-   FixedMul2(dx, dx, sw->nvx);
-   FixedMul2(dy, dy, sw->nvy);
+   dx = sw->p3x - sw->p1->x;
+   dy = sw->p3y - sw->p1->y;
+   dx = FixedMul(dx, sw->nvx);
+   dy = FixedMul(dy, sw->nvy);
    dist1 = dx + dy;
 
-   dx    = sw->p4x - sw->p1->x;
-   dy    = sw->p4y - sw->p1->y;
-   FixedMul2(dx, dx, sw->nvx);
-   FixedMul2(dy, dy, sw->nvy);
+   dx = sw->p4x - sw->p1->x;
+   dy = sw->p4y - sw->p1->y;
+   dx = FixedMul(dx, sw->nvx);
+   dy = FixedMul(dy, sw->nvy);
    dist2 = dx + dy;
 
    if((dist1 < 0) == (dist2 < 0))
@@ -317,8 +317,8 @@ static int SL_PointOnSide2(fixed_t x1, fixed_t y1,
    nx = (y3 - y2);
    ny = (x2 - x3);
 
-   FixedMul2(nx, x1, nx);
-   FixedMul2(ny, y1, ny);
+   nx = FixedMul(x1, nx);
+   ny = FixedMul(y1, ny);
    dist = nx + ny;
 
    return ((dist < 0) ? SIDE_BACK : SIDE_FRONT);
@@ -473,8 +473,8 @@ void P_SlideMove(pslidemove_t *sm)
       if(frac < 0)
          frac = 0;
 
-      FixedMul2(rx, frac, dx);
-      FixedMul2(ry, frac, dy);
+      rx = FixedMul(frac, dx);
+      ry = FixedMul(frac, dy);
 
       sw.slidex += rx;
       sw.slidey += ry;
@@ -494,12 +494,12 @@ void P_SlideMove(pslidemove_t *sm)
       // project the remaining move along the line that blocked movement
       dx -= rx;
       dy -= ry;
-      FixedMul2(dx, dx, sw.blocknvx);
-      FixedMul2(dy, dy, sw.blocknvy);
+      dx = FixedMul(dx, sw.blocknvx);
+      dy = FixedMul(dy, sw.blocknvy);
       slide = dx + dy;
 
-      FixedMul2(dx, slide, sw.blocknvx);
-      FixedMul2(dy, slide, sw.blocknvy);
+      dx = FixedMul(slide, sw.blocknvx);
+      dy = FixedMul(slide, sw.blocknvy);
    }
 
    // some hideous situation has happened that won't let the player slide

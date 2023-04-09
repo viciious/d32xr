@@ -60,8 +60,8 @@ static void R_DrawTextures(int x, unsigned iscale_, int colnum_, fixed_t scale2,
    for (; tex < lsegl->last; tex++) {
        int top, bottom;
 
-       top = FixedMul3(scale2, tex->topheight)>>FRACBITS;
-       bottom = FixedMul3(scale2, tex->bottomheight)>>FRACBITS;
+       top = FixedMul(scale2, tex->topheight)>>FRACBITS;
+       bottom = FixedMul(scale2, tex->bottomheight)>>FRACBITS;
 
        top = centerY - top;
        if (top < ceilingclipx)
@@ -184,7 +184,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
             int top, bottom;
 
             top = ceilingclipx;
-            bottom = FixedMul3(scale2, ceilingheight)>>FRACBITS;
+            bottom = FixedMul(scale2, ceilingheight)>>FRACBITS;
             bottom = centerY - bottom;
             if (bottom > floorclipx)
                 bottom = floorclipx;
@@ -208,7 +208,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
         if (lightcoef != 0)
         {
             // calc light level
-            texturelight = FixedMul3(scale2, lightcoef) - lightsub;
+            texturelight = FixedMul(scale2, lightcoef) - lightsub;
             if (texturelight < lightmin)
                 texturelight = lightmin;
             else if (texturelight > lightmax)
@@ -219,7 +219,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 
         // calculate texture offset
         r = finetangent((centerangle + xtoviewangle[x]) >> ANGLETOFINESHIFT);
-        r = FixedMul3(distance, r);
+        r = FixedMul(distance, r);
 
         colnum = (offset - r) >> FRACBITS;
 

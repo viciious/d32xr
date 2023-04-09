@@ -20,11 +20,12 @@
 
 .data
 
-! Perform a signed 16.16 by 16.16 multiply ! On entry: r4 = a, r5 = b ! On exit: r0 = (a * b) >> 16
+! #define FixedMul(a,b) (((int64_t)(a) * (b))>>16)
 
+! Perform a signed 16.16 by 16.16 multiply ! On entry: r4 = a, r5 = b ! On exit: r0 = (a * b) >> 16
     .align 4
-    .global _FixedMul
-_FixedMul:
+    .global _FixedMul2
+_FixedMul2:
     dmuls.l r4,r5
     sts mach,r1
     sts macl,r0
