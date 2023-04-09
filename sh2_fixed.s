@@ -48,6 +48,19 @@ _FixedDiv:
     rts
     mov.l @(20,r2),r0 /* return 32-bit quotient */
 
+! Perform a signed 32 by 32 divide ! On entry: r4 = a, r5 = b ! On exit: r0 = a / b
+
+    .align 4
+    .global _IDiv
+_IDiv:
+    mov.l _sh2_div_unit,r2
+    mov.l r5,@r2 /* set 32-bit divisor */
+    mov.l r4,@(4,r2) /* set 32-bit dividend, start divide */
+    /* note - overflow returns 0x7FFFFFFF or 0x80000000 after 6 cycles
+    no overflow returns the quotient after 39 cycles */
+    rts
+    mov.l @(4,r2),r0 /* return 32-bit quotient */
+
     .align 2
 
 _sh2_div_unit:

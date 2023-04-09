@@ -251,6 +251,7 @@ extern const VINT numViewports;
 = Returns side 0 (front) or 1 (back)
 ===============================================================================
 */
+ATTR_DATA_CACHE_ALIGN
 static inline int R_PointOnSide (int x, int y, node_t *node)
 {
 	fixed_t	dx,dy;

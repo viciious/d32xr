@@ -559,6 +559,8 @@ extern	int			bodyqueslot;
 
 fixed_t	FixedMul (fixed_t a, fixed_t b);
 fixed_t	FixedDiv (fixed_t a, fixed_t b);
+fixed_t IDiv (fixed_t a, fixed_t b);
+
 #ifdef MARS
 #define FixedMul2(c,a,b) do { \
         int32_t t; \
@@ -571,26 +573,7 @@ fixed_t	FixedDiv (fixed_t a, fixed_t b);
             : "r" (a), "r" (b) \
             : "mach", "macl"); \
         } while (0)
-#define FixedMul3(a,b) (((int64_t)(a) * (b))>>16)
 
-static inline fixed_t IDiv(fixed_t a, fixed_t b)
-{
-	fixed_t res;
-	uintptr_t div;
-	__asm volatile(
-		"mov #-128, %1\n\t"
-		"add %1,%1\n\t"
-		"mov.l %3,@%1 /* set 32-bit divisor */\n\t"
-		"mov.l %2,@(4,%1) /* set 32-bit dividend, start divide */\n\t"
-		"/* note - overflow returns 0x7FFFFFFF or 0x80000000 after 6 cycles\n\t"
-		"no overflow returns the quotient after 39 cycles */\n\t"
-		"mov.l @(4,%1),%0 /* return 32-bit quotient */\n\t"
-		: "=r" (res), "=&r"(div)
-		: "r" (a), "r"(b)
-	);
-	return res;
-}
-#else
 #define FixedMul2(c,a,b) ((c) = FixedMul(a,b))
 #define FixedMul3(a,b) FixedMul(a,b)
 #define IDiv(a,b) ((a) / (b))
