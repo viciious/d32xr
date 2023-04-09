@@ -61,13 +61,8 @@ static int P_DivlineSide(fixed_t x, fixed_t y, divline_t *node)
    dx = x - node->x;
    dy = y - node->y;
 
-#ifdef MARS
-   left = ((int64_t)node->dy*dx) >> 32;
-   right = ((int64_t)dy*node->dx) >> 32;
-#else
    left  = (node->dy>>FRACBITS) * (dx>>FRACBITS);
    right = (dy>>FRACBITS) * (node->dx>>FRACBITS);
-#endif
 
    return (left <= right) + (left == right);
 }
