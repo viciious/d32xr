@@ -37,6 +37,10 @@ static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop) ATTR_DATA_CA
 static void R_RenderBSPNode(rbspWork_t *rbsp, int bspnum) ATTR_DATA_CACHE_ALIGN;
 void R_BSP(void) ATTR_DATA_CACHE_ALIGN;
 
+void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight, 
+    fixed_t *floornewheight, fixed_t *ceilingnewheight);
+void R_WallLatePrep(viswall_t* wc, vertex_t *verts);
+
 #ifdef MARS
 __attribute__((aligned(4)))
 #endif
@@ -173,6 +177,7 @@ static boolean R_CheckBBox(rbspWork_t *rbsp, fixed_t bspcoord[4])
 static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop)
 {
    viswall_t *rw;
+   viswallextra_t *rwex;
    int newstop;
    int numwalls = lastwallcmd - viswalls;
    const int minlen = centerX/2;
@@ -187,6 +192,7 @@ static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop)
    else
       newstop = start + minlen - 1;
 
+   rwex = viswallextras + numwalls;
    do {
       rw = lastwallcmd;
       rw->seg = rbsp->curline;
@@ -196,10 +202,15 @@ static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop)
       rw->actionbits = 0;
       ++lastwallcmd;
 
+      R_WallEarlyPrep(rw, &rwex->floorheight, &rwex->floornewheight, &rwex->ceilnewheight);
+
+      R_WallLatePrep(rw, vertexes);
+
 #ifdef MARS
       Mars_R_WallNext();
 #endif
 
+      rwex++;
       numwalls++;
       if (numwalls == MAXWALLCMDS)
          return;

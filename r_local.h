@@ -522,9 +522,15 @@ typedef struct
 	byte 		*sil;
 } viswall_t;
 
+typedef struct
+{
+	fixed_t 	floorheight, floornewheight, ceilnewheight, pad;
+} viswallextra_t;
+
 #define	MAXWALLCMDS		128
 extern	viswall_t *viswalls/*[MAXWALLCMDS] __attribute__((aligned(16)))*/;
 extern	viswall_t *lastwallcmd;
+extern	viswallextra_t *viswallextras;
 
 /* A vissprite_t is a thing that will be drawn during a refresh */
 typedef struct vissprite_s

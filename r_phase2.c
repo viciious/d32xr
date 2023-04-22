@@ -10,16 +10,16 @@
 
 static sector_t emptysector = { 0, 0, -2, -2, -2 };
 
-static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight, 
+void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight, 
     fixed_t *floornewheight, fixed_t *ceilingnewheight) ATTR_DATA_CACHE_ALIGN;
 static fixed_t R_PointToDist(fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
 static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, angle_t normalangle) ATTR_DATA_CACHE_ALIGN;
 static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle, int angle1) ATTR_DATA_CACHE_ALIGN;
-static void R_WallLatePrep(viswall_t* wc, vertex_t *verts) ATTR_DATA_CACHE_ALIGN;
+void R_WallLatePrep(viswall_t* wc, vertex_t *verts) ATTR_DATA_CACHE_ALIGN;
 static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floorheight, 
     fixed_t floornewheight, fixed_t ceilingnewheight) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 
-static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight, 
+void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight, 
     fixed_t *floornewheight, fixed_t *ceilingnewheight)
 {
    seg_t     *seg;
@@ -281,7 +281,7 @@ static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle, int ang
     wc->centerangle = ANG90 + vd.viewangle - normalangle;
 }
 
-static void R_WallLatePrep(viswall_t* wc, vertex_t *verts)
+void R_WallLatePrep(viswall_t* wc, vertex_t *verts)
 {
     angle_t      distangle, offsetangle, normalangle;
     seg_t* seg = wc->seg;
@@ -503,21 +503,16 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
 void Mars_Sec_R_WallPrep(void)
 {
     viswall_t *segl;
+    viswallextra_t *seglex;
     viswall_t *first, *verylast;
     uint32_t clipbounds_[SCREENWIDTH/2+1];
     uint16_t *clipbounds = (uint16_t *)clipbounds_;
-    fixed_t floorheight = 0;
-    fixed_t floornewheight = 0, ceilingnewheight = 0;
-    vertex_t *verts;
 
     R_InitClipBounds(clipbounds_);
 
-#ifdef MARS
-    verts = W_GetLumpData(gamemaplump+ML_VERTEXES);
-#endif
-
     first = viswalls;
     verylast = NULL;
+    seglex = viswallextras;
 
     for (segl = first; segl != verylast; )
     {
@@ -536,13 +531,12 @@ void Mars_Sec_R_WallPrep(void)
 
         for (last = first + nextsegs; segl < last; segl++)
         {
-            R_WallEarlyPrep(segl, &floorheight, &floornewheight, &ceilingnewheight);
+#ifdef MARS
+            Mars_ClearCacheLine(seglex);
+#endif
+            R_SegLoop(segl, clipbounds, seglex->floorheight, seglex->floornewheight, seglex->ceilnewheight);
 
-            R_WallLatePrep(segl, verts);
-
-            R_SegLoop(segl, clipbounds, floorheight, floornewheight, ceilingnewheight);
-
-            MARS_SYS_COMM8++;
+            seglex++;
         }
     }    
 }

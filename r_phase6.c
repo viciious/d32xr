@@ -297,8 +297,6 @@ void R_SegCommands(void)
             continue;
 
 #ifdef MARS
-        while (MARS_SYS_COMM8 <= i);
-
         R_LockSeg();
         actionbits = *(volatile short *)&segl->actionbits;
         if (actionbits & AC_DRAWN || !(actionbits & (AC_TOPTEXTURE | AC_BOTTOMTEXTURE | AC_ADDSKY))) {
