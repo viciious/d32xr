@@ -479,7 +479,7 @@ void Mars_Sec_R_SegCommands(void)
             flattex_t *flat = &flatpixels[segl->ceilingpicnum];
             Mars_ClearCacheLines(flat->data, (sizeof(flat->data)+31)/16);
         }
-}
+    }
 
     R_SegCommands();
 }
