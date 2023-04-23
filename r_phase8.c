@@ -455,6 +455,8 @@ void R_Sprites(void)
 
 #ifdef MARS
    Mars_R_BeginDrawSprites(half, gsortedsprites);
+
+	Mars_ClearCacheLines(openings, ((lastopening - openings) * sizeof(*openings) + 31) / 16);
 #endif
 
    R_DrawSortedSprites(&fuzzpos[0], sortedsprites, half);

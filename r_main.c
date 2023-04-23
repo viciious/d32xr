@@ -60,6 +60,8 @@ const uint16_t visplane0open[SCREENWIDTH+2] = { 0 };
 #define NUM_VISPLANES_BUCKETS 32
 static visplane_t **visplanes_hash;
 
+uint16_t *gsortedvisplanes;
+
 /* */
 /* sprites */
 /* */
@@ -503,7 +505,8 @@ extern	pixel_t	*screens[2];	/* [viewportWidth*viewportHeight];  */
 */
 
 static void R_Setup (int displayplayer, visplane_t *visplanes_,
-	visplane_t **visplanes_hash_, sector_t **vissectors_, viswallextra_t *viswallex_)
+	visplane_t **visplanes_hash_, sector_t **vissectors_, viswallextra_t *viswallex_,
+	uint16_t *sortedvisplanes_)
 {
 	int 		i;
 	int		damagecount, bonuscount;
@@ -700,6 +703,9 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	lastvisplane = visplanes + 1;		/* visplanes[0] is left empty */
 	visplanes_hash = visplanes_hash_;
 
+	gsortedvisplanes = sortedvisplanes_;
+	gsortedvisplanes[0] = 0;
+
 	//I_Error("%d", ((uint16_t *)I_FrameBuffer() + 64*1024-0x100 - tempbuf) * 2);
 
 	/* */
@@ -736,6 +742,9 @@ void Mars_Sec_R_Setup(void)
 	Mars_ClearCacheLine(&visplanes);
 	Mars_ClearCacheLine(&lastvisplane);
 	Mars_ClearCacheLine(&visplanes_hash);
+
+	Mars_ClearCacheLine(&gsortedvisplanes);
+	gsortedvisplanes[0] = 0;
 
 	Mars_ClearCacheLine(&segclip);
 	Mars_ClearCacheLine(&lastsegclip);
@@ -930,12 +939,13 @@ void R_RenderPlayerView(int displayplayer)
 		visplane_t *visplanes_hash_[NUM_VISPLANES_BUCKETS];
 	sector_t *vissectors_[MAXVISSSEC];
 	viswallextra_t viswallex_[MAXWALLCMDS] __attribute__((aligned(16)));
+    uint16_t sortedvisplanes[MAXVISPLANES*2];
 
 	t_total = I_GetFRTCounter();
 
 	Mars_R_SecWait();
 
-	R_Setup(displayplayer, visplanes_, visplanes_hash_, vissectors_, viswallex_);
+	R_Setup(displayplayer, visplanes_, visplanes_hash_, vissectors_, viswallex_, sortedvisplanes);
 
 	Mars_R_BeginWallPrep(drawworld);
 
@@ -965,8 +975,6 @@ void R_RenderPlayerView(int displayplayer)
 		I_Error("lastopening > MAXOPENINGS: %d", lastopening - openings);
 	if (lastvissector - vissectors > MAXVISSSEC)
 		I_Error("lastvissector > MAXVISSSEC: %d", lastvissector - vissectors);
-
-	Mars_ClearCacheLines(openings, ((lastopening - openings) * sizeof(*openings) + 31) / 16);
 
 	t_planes = I_GetFRTCounter();
 	R_DrawPlanes();

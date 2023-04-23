@@ -26,6 +26,7 @@ typedef struct
    cliprange_t solidsegs[MAXSEGS];
    seg_t       *curline;
    angle_t    lineangle1;
+   int        splitspans; /* generate wall splits until this reaches 0 */
 } rbspWork_t;
 
 static int R_ClipToViewEdges(angle_t angle1, angle_t angle2) ATTR_DATA_CACHE_ALIGN;
@@ -180,17 +181,16 @@ static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop)
    viswallextra_t *rwex;
    int newstop;
    int numwalls = lastwallcmd - viswalls;
-   const int minlen = centerX/2;
-   const int maxlen = centerX + centerX/4;
+   const int maxlen = centerX/2;
    // split long segments
    int len = stop - start + 1;
 
    if (numwalls == MAXWALLCMDS)
       return;
-   if (numwalls == MAXWALLCMDS-1 || len < maxlen)
+   if (rbsp->splitspans <= 0 || len < maxlen)
       newstop = stop;
    else
-      newstop = start + minlen - 1;
+      newstop = start + maxlen - 1;
 
    rwex = viswallextras + numwalls;
    do {
@@ -216,10 +216,12 @@ static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop)
          return;
 
       start = newstop + 1;
-      newstop += minlen;
-      if (newstop > stop || numwalls == MAXWALLCMDS-1)
+      newstop += maxlen;
+      if (newstop > stop)
          newstop = stop;
    } while (start <= stop);
+
+   rbsp->splitspans -= len;
 }
 
 //
@@ -462,6 +464,7 @@ void R_BSP(void)
    solidsegs[1].first = viewportWidth;
    solidsegs[1].last  = viewportWidth+1;
    rbsp.newend = &solidsegs[2];
+   rbsp.splitspans = viewportWidth + viewportWidth/2;
 
    R_RenderBSPNode(&rbsp, numnodes - 1);
 }

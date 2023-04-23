@@ -32,12 +32,14 @@ typedef struct
 
 static void R_MapPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
 static void R_PlaneLoop(localplane_t* lpl) ATTR_DATA_CACHE_ALIGN;
-static void R_DrawPlanes2(uint16_t *sortedvisplanes) ATTR_DATA_CACHE_ALIGN;
+static void R_DrawPlanes2(void) ATTR_DATA_CACHE_ALIGN;
 
+static int  R_TryLockPln(void) ATTR_DATA_CACHE_ALIGN;
 static void R_LockPln(void) ATTR_DATA_CACHE_ALIGN;
 static void R_UnlockPln(void) ATTR_DATA_CACHE_ALIGN;
 static visplane_t* R_GetNextPlane(uint16_t *sortedvisplanes) ATTR_DATA_CACHE_ALIGN;
 
+void R_PreDrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
 void R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
 
 static char pl_lock = 0;
@@ -207,17 +209,23 @@ static void R_PlaneLoop(localplane_t *lpl)
    while(1);
 }
 
-static void R_LockPln(void)
+static int R_TryLockPln(void)
 {
     int res;
-    do {
-        __asm volatile (\
-        "tas.b %1\n\t" \
-            "movt %0\n\t" \
-            : "=&r" (res) \
-            : "m" (pl_lock) \
-            );
-    } while (res == 0);
+
+    __asm volatile (\
+       "tas.b %1\n\t" \
+        "movt %0\n\t" \
+        : "=&r" (res) \
+        : "m" (pl_lock) \
+    );
+
+    return res != 0;
+}
+
+static void R_LockPln(void)
+{
+    while (!R_TryLockPln());
 }
 
 static void R_UnlockPln(void)
@@ -246,13 +254,19 @@ static visplane_t *R_GetNextPlane(uint16_t *sortedvisplanes)
 #endif
 }
 
-static void R_DrawPlanes2(uint16_t *sortedvisplanes)
+static void R_DrawPlanes2(void)
 {
     angle_t angle;
     localplane_t lpl;
     visplane_t* pl;
     int extralight;
+    uint16_t *sortedvisplanes = gsortedvisplanes;
     boolean nomips = detailmode < detmode_mipmaps;
+
+#ifdef MARS
+    Mars_ClearCacheLine(&lastvisplane);
+    Mars_ClearCacheLines(sortedvisplanes, ((lastvisplane - visplanes - 1) * sizeof(*sortedvisplanes) + 31) / 16);
+#endif
 
     lpl.x = vd.viewx;
     lpl.y = -vd.viewy;
@@ -272,6 +286,10 @@ static void R_DrawPlanes2(uint16_t *sortedvisplanes)
         unsigned j;
         int light;
         int mipsize = 64;
+
+#ifdef MARS
+        Mars_ClearCacheLines(pl, (sizeof(visplane_t) + 31) / 16);
+#endif
 
         if (pl->minx > pl->maxx)
             continue;
@@ -329,12 +347,9 @@ static void R_DrawPlanes2(uint16_t *sortedvisplanes)
 static void Mars_R_SplitPlanes(void) ATTR_DATA_CACHE_ALIGN;
 static void Mars_R_SortPlanes(uint16_t *sortedvisplanes) ATTR_DATA_CACHE_ALIGN;
 
-void Mars_Sec_R_DrawPlanes(uint16_t *sortedvisplanes)
+void Mars_Sec_R_DrawPlanes(void)
 {
-    Mars_ClearCacheLine(&lastvisplane);
-    Mars_ClearCacheLines(visplanes, ((lastvisplane - visplanes) * sizeof(visplane_t) + 31) / 16);
-    Mars_ClearCacheLines(sortedvisplanes, ((lastvisplane - visplanes - 1) * sizeof(int) + 31) / 16);
-    R_DrawPlanes2(sortedvisplanes);
+    R_DrawPlanes2();
 }
 
 static void Mars_R_SplitPlanes(void)
@@ -342,17 +357,17 @@ static void Mars_R_SplitPlanes(void)
     const int minlen = centerX;
     const int maxlen = centerX * 2;
     visplane_t *pl, *last = lastvisplane;
+    int numplanes;
+
+    numplanes = lastvisplane - visplanes;
+    if (numplanes >= MAXVISPLANES)
+        return;
 
     for (pl = visplanes + 1; pl < last; pl++)
     {
         int start, stop;
         visplane_t* newpl;
-        int numplanes;
         int newstop;
-
-        numplanes = lastvisplane - visplanes;
-        if (numplanes >= MAXVISPLANES)
-            return;
 
         // see if there is any open space
         start = pl->minx, stop = pl->maxx;
@@ -370,7 +385,7 @@ static void Mars_R_SplitPlanes(void)
 
         do {
             newstop = start + minlen;
-            if (newstop > stop || numplanes == MAXWALLCMDS - 1)
+            if (newstop > stop || numplanes == MAXVISPLANES - 1)
                 newstop = stop;
 
             newpl = lastvisplane++;
@@ -381,6 +396,9 @@ static void Mars_R_SplitPlanes(void)
             newpl->maxx = newstop;
 
             numplanes++;
+            if (numplanes >= MAXVISPLANES)
+                return;
+
             start = newstop;
         } while (start < stop);
     }
@@ -389,23 +407,50 @@ static void Mars_R_SplitPlanes(void)
 // sort visplanes by flatnum so that texture data 
 // has a better chance to stay in the CPU cache
 
-static void Mars_R_SortPlanes(uint16_t *sortedvisplanes)
+static void Mars_R_SortPlanes(uint16_t *sortbuf)
 {
     int i, numplanes;
     visplane_t* pl;
-    uint16_t *sortbuf = sortedvisplanes;
 
     i = 0;
     numplanes = 0;
     for (pl = visplanes + 1; pl < lastvisplane; pl++)
     {
         sortbuf[i + 0] = pl->flatandlight&0xffff;
-        sortbuf[i + 1] = pl - visplanes;
+        sortbuf[i + 1] = ++numplanes;
         i += 2;
-        numplanes++;
     }
 
     D_isort((int*)sortbuf, numplanes);
+}
+
+void R_PreDrawPlanes(void)
+{
+    int numplanes;
+    uint16_t *sortbuf = gsortedvisplanes;
+
+    Mars_ClearCacheLine(&lastvisplane);
+    Mars_ClearCacheLine(sortbuf);
+
+    numplanes = lastvisplane - visplanes; // visplane 0 is a dummy plane
+
+    // check to see if we still need to fill the sorted planes list
+    if (numplanes > 1 && sortbuf[0] == 0) 
+    {
+        Mars_ClearCacheLines(visplanes, (numplanes * sizeof(visplane_t) + 31) / 16);
+
+        Mars_R_SplitPlanes();
+        Mars_R_SortPlanes(sortbuf);
+    }
+}
+
+void Mars_Sec_R_PreDrawPlanes(void)
+{
+    if (R_TryLockPln())
+    {
+        R_PreDrawPlanes();
+        R_UnlockPln();
+    }
 }
 
 #endif
@@ -416,24 +461,20 @@ static void Mars_R_SortPlanes(uint16_t *sortedvisplanes)
 void R_DrawPlanes(void)
 {
 #ifdef MARS
-    int numplanes;
-    __attribute__((aligned(16)))
-        uint16_t sortedvisplanes[MAXVISPLANES*2];
+    if (R_TryLockPln())
+    {
+        R_PreDrawPlanes();
+        R_UnlockPln();
+    }
+    else
+    {
+        // the secondary CPU is already on it, take our hands off the bus
+        Mars_R_SecWait();
+    }
 
-    Mars_ClearCacheLine(&lastvisplane);
-    Mars_ClearCacheLines(visplanes, ((lastvisplane - visplanes) * sizeof(visplane_t) + 31) / 16);
+    Mars_R_BeginDrawPlanes();
 
-    numplanes = lastvisplane - visplanes;
-    if (numplanes <= 1)
-        return;
-
-    Mars_R_SplitPlanes();
-
-    Mars_R_SortPlanes(sortedvisplanes);
-
-    Mars_R_BeginDrawPlanes(sortedvisplanes);
-
-    R_DrawPlanes2(sortedvisplanes);
+    R_DrawPlanes2();
 
     Mars_R_EndDrawPlanes();
 #else
