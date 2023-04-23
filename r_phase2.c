@@ -538,7 +538,9 @@ void Mars_Sec_R_WallPrep(void)
 
             seglex++;
         }
-    }    
+    }
+
+    Mars_Sec_R_EndWallPrep();
 }
 
 #else
