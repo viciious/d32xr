@@ -416,7 +416,9 @@ static void Mars_R_SortPlanes(uint16_t *sortbuf)
     numplanes = 0;
     for (pl = visplanes + 1; pl < lastvisplane; pl++)
     {
-        sortbuf[i + 0] = pl->flatandlight&0xffff;
+        // composite sort key: 1b - sign bit, 3b - reverse span length, 12b - flat+light
+        // to minimize pipeline stalls, the larger planes must be drawn first, hence length inversion
+        sortbuf[i + 0] = ((unsigned)(3 - ((pl->maxx - pl->minx - 1) >> 6)) << 12) | (pl->flatandlight & 0xFFF);
         sortbuf[i + 1] = ++numplanes;
         i += 2;
     }
