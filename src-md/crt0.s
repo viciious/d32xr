@@ -2230,6 +2230,7 @@ dbug_list:
         dc.l    dbug_spritescount
         dc.l    dbug_refmsec
         dc.l    dbug_drawmsec
+        dc.l    dbug_totalmsec
 
 dbug_fpscount:
         dc.w    28,3
@@ -2267,6 +2268,9 @@ dbug_refmsec:
 dbug_drawmsec:
         dc.w    28,12
         dc.l    drawmsec
+dbug_totalmsec:
+        dc.w    28,13
+        dc.l    totalmsec
 
 fpscount:
         .asciz  "fps:%2d"
@@ -2303,6 +2307,9 @@ refmsec:
         .align  2
 drawmsec:
         .asciz  "d:%2d"
+        .align  2
+totalmsec:
+        .asciz  "t:%2d"
         .align  2
 
         .align  4

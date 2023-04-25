@@ -19,6 +19,8 @@ unsigned	*demo_p, *demobuffer;
 
 boolean canwipe = false;
 
+int 		ticstart;
+
 unsigned configuration[NUMCONTROLOPTIONS][3] =
 {
 	{BT_SPEED, BT_ATTACK, BT_USE},
@@ -349,6 +351,8 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 
 	do
 	{
+		ticstart = I_GetFRTCounter();
+
 /* */
 /* adaptive timing based on previous frame */
 /* */
