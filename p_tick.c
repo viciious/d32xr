@@ -547,15 +547,17 @@ void P_Drawer (void)
 	/* view the guy you are playing */
 	R_RenderPlayerView(consoleplayer);
 	/* view the other guy in split screen mode */
-	if (splitscreen)
+	if (splitscreen) {
+		Mars_R_SecWait();
 		R_RenderPlayerView(consoleplayer ^ 1);
-
-	if (automapactive)
-		AM_Drawer();
+	}
 
 	ST_Drawer();
 
 	Mars_R_SecWait();
+
+	if (automapactive)
+		AM_Drawer();
 
 	if (demoplayback)
 		M_Drawer();

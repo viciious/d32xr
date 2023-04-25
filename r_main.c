@@ -943,8 +943,6 @@ void R_RenderPlayerView(int displayplayer)
 
 	t_total = I_GetFRTCounter();
 
-	Mars_R_SecWait();
-
 	R_Setup(displayplayer, visplanes_, visplanes_hash_, vissectors_, viswallex_, sortedvisplanes);
 
 	Mars_R_BeginWallPrep(drawworld);

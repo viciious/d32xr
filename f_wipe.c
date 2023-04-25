@@ -21,9 +21,6 @@ int wipe_InitMelt(short *y)
         else if (y[i] == -16) y[i] = -15;
     }
 
-
-	while (!I_RefreshCompleted());
-
 	return 0;
 }
 
