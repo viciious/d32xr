@@ -2589,37 +2589,33 @@ const unsigned short finesine__[FINEANGLES/4] = {
 #ifdef MARS
 // cache-through access
 const fixed_t * finetangent_ = (const fixed_t* const)(&finetangent__[0 + 0x20000000 / sizeof(fixed_t)]);
+const fixed_t * finetangent2_ = (const fixed_t* const)(&finetangent__[0 + 0x20000000 / sizeof(fixed_t)]) + FINEANGLES / 2;
+
 const unsigned short* finesine_ = (const unsigned short* const)(&finesine__[0 + 0x20000000 / sizeof(unsigned short)]);
 const angle_t* tantoangle = (const angle_t* const)(&tantoangle_[0 + 0x20000000 / sizeof(angle_t)]);
 
 fixed_t finetangent(angle_t angle) {
 	angle &= (FINEANGLES/2-1);
 	if (angle >= FINEANGLES / 4)
-	{
-		angle = (FINEANGLES / 2 - angle - 1);
-		return -finetangent_[angle];
-	}
+		return -finetangent2_[~angle];
 	return finetangent_[angle];
 }
 
-
 fixed_t finesine(angle_t angle) {
-	unsigned quad;
+	int o, res;
+	unsigned q;
+	static int16_t offset[4] = { 0, 16, -16, 32 };
+	const unsigned short *s;
 
 	angle &= FINEMASK;
-	quad = angle / (FINEANGLES / 4);
+	q = angle / (FINEANGLES / 4);
+	o = offset[q];
+	s = finesine_ + o * (FINEANGLES / 32); // *= 256
+	if (q & 1)
+		angle = ~angle;
 
-	switch (quad)
-	{
-	case 0:
-		return finesine_[angle];
-	case 1:
-		return finesine_[FINEANGLES / 2 - angle - 1];
-	case 2:
-		return -finesine_[angle - FINEANGLES / 2];
-	default:
-		return -finesine_[4 * FINEANGLES / 4 - angle - 1];
-	}
+	res = s[angle];
+	return q >= 2 ? -res : res;
 }
 
 fixed_t finecosine(angle_t angle) {
