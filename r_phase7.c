@@ -82,6 +82,14 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
 #endif
 
     length = FixedMul(distance, distscale[x]);
+
+    xstep = FixedMul(distance, lpl->basexscale);
+    ystep = FixedMul(distance, lpl->baseyscale);
+
+    miplevel = (unsigned)distance / MIPSCALE;
+    if (miplevel > lpl->maxmip)
+        miplevel = lpl->maxmip;
+
     angle = (lpl->angle + xtoviewangle[x]) >> ANGLETOFINESHIFT;
 
     xfrac = FixedMul(finecosine(angle), length);
@@ -92,25 +100,26 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     yfrac *= 64;
 #endif
 
-    xstep = FixedMul(distance, lpl->basexscale);
-    ystep = FixedMul(distance, lpl->baseyscale);
-
-#ifdef MARS
-    __asm volatile (
-        "mov #-128, r0\n\t"
-        "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
-        "mov.l @(20,r0), %0 /* get 32-bit quotient */ \n\t"
-        : "=r" (scale) : : "r0");
-#else
-    scale = LIGHTCOEF / distance;
-#endif
-
-    miplevel = (unsigned)distance / MIPSCALE;
-    if (miplevel > lpl->maxmip)
-        miplevel = lpl->maxmip;
+    if (miplevel > 0) {
+        unsigned m = miplevel;
+        do {
+            xfrac >>= 1, xstep >>= 1;
+            yfrac >>= 2, ystep >>= 2;
+        } while (--m);
+    }
 
     if (lpl->lightmin != lpl->lightmax)
     {
+#ifdef MARS
+        __asm volatile (
+            "mov #-128, r0\n\t"
+            "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
+            "mov.l @(20,r0), %0 /* get 32-bit quotient */ \n\t"
+            : "=r" (scale) : : "r0");
+#else
+        scale = LIGHTCOEF / distance;
+#endif
+
         light = scale;
         light -= lpl->lightsub;
         if (light < lpl->lightmin)
@@ -124,14 +133,6 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     else
     {
         light = lpl->lightmax;
-    }
-
-    if (miplevel > 0) {
-        unsigned m = miplevel;
-        do {
-            xfrac >>= 1, xstep >>= 1;
-            yfrac >>= 2, ystep >>= 2;
-        } while (--m);
     }
 
     drawspan(y, x, x2, light, xfrac, yfrac, xstep, ystep, lpl->ds_source[miplevel], lpl->mipsize[miplevel]);
