@@ -266,13 +266,14 @@ static void R_UnlockSeg(void)
 
 void R_SegCommands(void)
 {
-    int i, segcount;
     seglocal_t lseg;
     drawtex_t* toptex, * bottomtex;
     int extralight;
     uint32_t clipbounds_[SCREENWIDTH / 2 + 1];
     uint16_t *clipbounds = (uint16_t *)clipbounds_;
     uint16_t *newclipbounds = segclip;
+    viswall_t* segl;
+    unsigned actionbits = 0;
 
     // initialize the clipbounds array
     R_InitClipBounds(clipbounds_);
@@ -286,22 +287,37 @@ void R_SegCommands(void)
     lseg.lightcoef = 0;
     lseg.lightsub = 0;
 
-    segcount = lastwallcmd - viswalls;
-    for (i = 0; i < segcount; i++)
+    for (segl = viswalls - 1; ; )
     {
         int j, seglight;
-        unsigned actionbits;
-        viswall_t* segl = viswalls + i;
 
-        if (segl->start > segl->stop)
+        if(actionbits & (AC_NEWFLOOR|AC_NEWCEILING))
+        {
+            unsigned w = segl->stop - segl->start + 1;
+            unsigned short *src = newclipbounds - 1, *dst = clipbounds + segl->start;
+
+            newclipbounds += w;
+            do {
+                *dst++ = *++src;
+            } while (--w > 0);
+        }
+
+        segl++;
+        actionbits = 0;
+
+        if (segl == lastwallcmd) {
+            break;
+        }
+        if (segl->start > segl->stop) {
             continue;
+        }
 
 #ifdef MARS
         R_LockSeg();
         actionbits = *(volatile short *)&segl->actionbits;
         if (actionbits & AC_DRAWN || !(actionbits & (AC_TOPTEXTURE | AC_BOTTOMTEXTURE | AC_ADDSKY))) {
             R_UnlockSeg();
-            goto post_draw;
+            continue;
         } else {
             segl->actionbits = actionbits|AC_DRAWN;
             R_UnlockSeg();
@@ -432,18 +448,6 @@ void R_SegCommands(void)
         {
             segl->miplevels[0] = 0;
             segl->miplevels[1] = 0;
-        }
-
-post_draw:
-        if(actionbits & (AC_NEWFLOOR|AC_NEWCEILING))
-        {
-            unsigned w = segl->stop - segl->start + 1;
-            unsigned short *src = newclipbounds - 1, *dst = clipbounds + segl->start;
-
-            newclipbounds += w;
-            do {
-                *dst++ = *++src;
-            } while (--w > 0);
         }
     }
 }
