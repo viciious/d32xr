@@ -291,6 +291,10 @@ void R_SegCommands(void)
     {
         int j, seglight;
 
+        if (segl == lastwallcmd - 1) {
+            break;
+        }
+
         if(actionbits & (AC_NEWFLOOR|AC_NEWCEILING))
         {
             unsigned w = segl->stop - segl->start + 1;
@@ -302,12 +306,9 @@ void R_SegCommands(void)
             } while (--w > 0);
         }
 
-        segl++;
         actionbits = 0;
 
-        if (segl == lastwallcmd) {
-            break;
-        }
+        segl++;
         if (segl->start > segl->stop) {
             continue;
         }
