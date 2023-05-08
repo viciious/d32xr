@@ -2618,10 +2618,6 @@ fixed_t finesine(angle_t angle) {
 	return q >= 2 ? -res : res;
 }
 
-fixed_t finecosine(angle_t angle) {
-	return finesine(angle + FINEANGLES / 4);
-}
-
 #else
 
 const angle_t* const tantoangle = tantoangle_;

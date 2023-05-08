@@ -124,7 +124,7 @@ typedef unsigned angle_t;
 #ifdef MARS
 
 fixed_t finesine(angle_t angle) ATTR_DATA_CACHE_ALIGN;
-fixed_t finecosine(angle_t angle) ATTR_DATA_CACHE_ALIGN;
+#define finecosine(angle) finesine((angle) + FINEANGLES / 4)
 
 #else
 
