@@ -432,7 +432,7 @@ void R_InitMathTables(void)
 	{
 		int x;
 		for (x = 0; tempviewangletox[x] > i; x++);
-		xtoviewangle[i] = (x << (ANGLETOFINESHIFT)) - ANG90;
+		xtoviewangle[i] = ((x << ANGLETOFINESHIFT) - ANG90) >> FRACBITS;
 	}
 
 	// Take out the fencepost cases from viewangletox.
@@ -460,7 +460,7 @@ void R_InitMathTables(void)
 	// Create the distance scale table for floor and ceiling textures
 	for (i = 0; i < viewportWidth; i++)
 	{
-		fixed_t cosang = finecosine(xtoviewangle[i] >> ANGLETOFINESHIFT);
+		fixed_t cosang = finecosine(xtoviewangle[i] >> (ANGLETOFINESHIFT-FRACBITS));
 		cosang = D_abs(cosang);
 		distscale[i] = FixedDiv(FRACUNIT, cosang);
 	}

@@ -308,11 +308,11 @@ void R_WallLatePrep(viswall_t* wc, vertex_t *verts)
     wc->distance = rw_distance;
 
     scalefrac = scale2 = wc->scalefrac =
-        R_ScaleFromGlobalAngle(rw_distance, vd.viewangle + xtoviewangle[wc->start], normalangle);
+        R_ScaleFromGlobalAngle(rw_distance, vd.viewangle + (xtoviewangle[wc->start]<<FRACBITS), normalangle);
 
     if (wc->stop > wc->start)
     {
-        scale2 = R_ScaleFromGlobalAngle(rw_distance, vd.viewangle + xtoviewangle[wc->stop], normalangle);
+        scale2 = R_ScaleFromGlobalAngle(rw_distance, vd.viewangle + (xtoviewangle[wc->stop]<<FRACBITS), normalangle);
 #ifdef MARS
         SH2_DIVU_DVSR = wc->stop - wc->start;  // set 32-bit divisor
         SH2_DIVU_DVDNT = scale2 - scalefrac;   // set 32-bit dividend, start divide

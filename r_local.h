@@ -357,7 +357,7 @@ extern	VINT	*viewangletox/*[FINEANGLES/2]*/;
 
 /* The xtoviewangleangle[] table maps a screen pixel to the lowest viewangle */
 /* that maps back to x ranges from clipangle to -clipangle */
-extern	angle_t		xtoviewangle[SCREENWIDTH+1];
+extern	uint16_t		xtoviewangle[SCREENWIDTH+1];
 
 #ifdef MARS
 extern	const fixed_t		finetangent_[FINEANGLES/4];

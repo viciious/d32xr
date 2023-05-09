@@ -192,7 +192,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
             if (top < bottom)
             {
                 // CALICO: draw sky column
-                int colnum = ((vd.viewangle + xtoviewangle[x]) >> ANGLETOSKYSHIFT) & 0xff;
+                int colnum = ((vd.viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
 #ifdef MARS
                 inpixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
 #else
@@ -218,7 +218,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
         }
 
         // calculate texture offset
-        r = finetangent((centerangle + xtoviewangle[x]) >> ANGLETOFINESHIFT);
+        r = finetangent((centerangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOFINESHIFT);
         r = FixedMul(distance, r);
 
         colnum = (offset - r) >> FRACBITS;

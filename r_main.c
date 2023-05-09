@@ -109,7 +109,7 @@ fixed_t *distscale/*[SCREENWIDTH]*/;
 
 VINT *viewangletox/*[FINEANGLES/2]*/;
 
-angle_t xtoviewangle[SCREENWIDTH+1];
+uint16_t xtoviewangle[SCREENWIDTH+1];
 
 /* */
 /* performance counters */
@@ -551,7 +551,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	vd.lightlevel = player->mo->subsector->sector->lightlevel;
 	vd.fixedcolormap = 0;
 
-	vd.clipangle = xtoviewangle[0];
+	vd.clipangle = xtoviewangle[0]<<FRACBITS;
 	vd.doubleclipangle = vd.clipangle * 2;
 	vd.viewangletox = viewangletox;
 

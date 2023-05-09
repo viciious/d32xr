@@ -90,7 +90,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     if (miplevel > lpl->maxmip)
         miplevel = lpl->maxmip;
 
-    angle = (lpl->angle + xtoviewangle[x]) >> ANGLETOFINESHIFT;
+    angle = (lpl->angle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOFINESHIFT;
 
     xfrac = FixedMul(finecosine(angle), length);
     xfrac = lpl->x + xfrac;
