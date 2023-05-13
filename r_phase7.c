@@ -12,6 +12,10 @@
 #define LIGHTCOEF (0x7ffffu << SLOPEBITS)
 #define MIPSCALE (1<<24)
 
+struct localplane_s;
+
+typedef void (*mapplane_fn)(struct localplane_s* lpl, int, int, int);
+
 typedef struct localplane_s
 {
     visplane_t* pl;
@@ -29,7 +33,7 @@ typedef struct localplane_s
 #endif
     int mipsize[MIPLEVELS];
 
-    void (*mapplane)(struct localplane_s* lpl, int, int, int);
+    mapplane_fn mapplane;
 } localplane_t;
 
 static void R_MapPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
@@ -155,6 +159,7 @@ static void R_PlaneLoop(localplane_t *lpl)
    unsigned t1, t2, b1, b2, pl_oldtop, pl_oldbottom;
    int16_t spanstart[SCREENHEIGHT];
    visplane_t* pl = lpl->pl;
+   const mapplane_fn mapplane = lpl->mapplane;
 
    pl_x       = pl->minx;
    pl_stopx   = pl->maxx;
@@ -185,14 +190,14 @@ static void R_PlaneLoop(localplane_t *lpl)
       // top diffs
       while (t1 < t2 && t1 <= b1)
       {
-          lpl->mapplane(lpl, t1, spanstart[t1], x2);
+          mapplane(lpl, t1, spanstart[t1], x2);
           ++t1;
       }
 
       // bottom diffs
       while (b1 > b2 && b1 >= t1)
       {
-          lpl->mapplane(lpl, b1, spanstart[b1], x2);
+          mapplane(lpl, b1, spanstart[b1], x2);
           --b1;
       }
 
