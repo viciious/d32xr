@@ -77,6 +77,7 @@ void I_DrawColumnLowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	int16_t* dc_colormap;
 	unsigned	frac;
 	unsigned    count, n;
+	int deststep;
 
 #ifdef RANGECHECK
 	if (dc_x >= viewportWidth || dc_yl < 0 || dc_yh >= viewportHeight)
@@ -90,10 +91,11 @@ void I_DrawColumnLowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	heightmask = dc_texheight - 1;
 	dest = viewportbuffer + dc_yl * 320 / 2 + dc_x;
 	dc_colormap = (int16_t *)dc_colormaps + light;
+	__asm volatile("mov %1,%0\n\t" : "=&r" (deststep) : "r"(320/2));
 
 #define DO_PIXEL() do { \
 		*dest = dc_colormap[dc_source[(frac >> FRACBITS) & heightmask]]; \
-		dest += 320/2; \
+		dest += deststep; \
 		frac += fracstep; \
 	} while (0)
 
@@ -129,6 +131,7 @@ void I_DrawColumnNPo2LowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t fra
 	int16_t* dc_colormap;
 	unsigned    count, n;
 	unsigned 	frac;
+	int deststep;
 
 #ifdef RANGECHECK
 	if (dc_x >= viewportWidth || dc_yl < 0 || dc_yh >= viewportHeight)
@@ -150,13 +153,14 @@ void I_DrawColumnNPo2LowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t fra
 
 	dest = viewportbuffer + dc_yl * 320 / 2 + dc_x;
 	dc_colormap = (int16_t *)dc_colormaps + light;
+	__asm volatile("mov %1,%0\n\t" : "=&r" (deststep) : "r"(320/2));
 
 	count = dc_yh - dc_yl + 1;
 	n = (count + 7) >> 3;
 
 #define DO_PIXEL() do { \
 		*dest = dc_colormap[dc_source[frac >> FRACBITS]]; \
-		dest += 320/2; \
+		dest += deststep; \
 		if ((frac += fracstep) >= heightmask) \
 			frac -= heightmask; \
 	} while (0)
@@ -239,6 +243,7 @@ void I_DrawColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	int8_t *dc_colormap;
 	unsigned	frac;
 	unsigned    count, n;
+	int deststep;
 
 #ifdef RANGECHECK
 	if (dc_x >= viewportWidth || dc_yl < 0 || dc_yh >= viewportHeight)
@@ -252,10 +257,11 @@ void I_DrawColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	heightmask = dc_texheight - 1;
 	dest = (int8_t *)viewportbuffer + dc_yl * 320 + dc_x;
 	dc_colormap = (int8_t *)(dc_colormaps + light);
+	__asm volatile("mov %1,%0\n\t" : "=&r" (deststep) : "r"(320));
 
 #define DO_PIXEL() do { \
 		*dest = dc_colormap[(int8_t)dc_source[(frac >> FRACBITS) & heightmask]] & 0xff; \
-		dest += 320; \
+		dest += deststep; \
 		frac += fracstep; \
 	} while (0)
 
@@ -286,6 +292,7 @@ void I_DrawColumnNPo2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	int8_t *dc_colormap;
 	unsigned    count, n;
 	unsigned 	frac;
+	int deststep;
 
 #ifdef RANGECHECK
 	if (dc_x >= viewportWidth || dc_yl < 0 || dc_yh >= viewportHeight)
@@ -307,13 +314,14 @@ void I_DrawColumnNPo2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 
 	dest = (int8_t *)viewportbuffer + dc_yl * 320 + dc_x;
 	dc_colormap = (int8_t *)(dc_colormaps + light);
+	__asm volatile("mov %1,%0\n\t" : "=&r" (deststep) : "r"(320));
 
 	count = dc_yh - dc_yl + 1;
 	n = (count + 7) >> 3;
 
 #define DO_PIXEL() do { \
 		*dest = dc_colormap[(int8_t)dc_source[frac >> FRACBITS]] & 0xff; \
-		dest += 320; \
+		dest += deststep; \
 		if ((frac += fracstep) >= heightmask) \
 			frac -= heightmask; \
 	} while (0)
@@ -395,7 +403,9 @@ void I_DrawFuzzColumnLowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t fra
 	int16_t *dc_colormap;
 	unsigned	frac;
 	unsigned    count, n;
-	int	fuzzpos = *pfuzzpos;
+	int8_t *bfuzzoffset;
+	int	fuzzpos = *pfuzzpos * 2;
+	int deststep;
 
 	if (!dc_yl)
 		dc_yl = 1;
@@ -413,10 +423,14 @@ void I_DrawFuzzColumnLowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t fra
 	frac = frac_;
 	dest = (int16_t *)(viewportbuffer + dc_yl * 320 / 2 + dc_x);
 	dc_colormap = (int16_t *)dc_colormaps + light;
+	bfuzzoffset = (int8_t *)fuzzoffset;
+	__asm volatile("mov %1,%0\n\t" : "=&r" (deststep) : "r"(320/2));
 
 #define DO_PIXEL() do { \
-		*dest = dc_colormap[(int8_t)dest[fuzzoffset[fuzzpos++ & FUZZMASK]]]; \
-		dest += 320/2; \
+		int offset = *(int16_t *)(bfuzzoffset + (fuzzpos & FUZZMASK*2)); \
+		*dest = dc_colormap[*((int8_t *)dest + offset)]; \
+		fuzzpos += 2; \
+		dest += deststep; \
 		frac += fracstep; \
 	} while (0)
 
@@ -444,7 +458,9 @@ void I_DrawFuzzColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	int8_t* dc_colormap;
 	unsigned	frac;
 	unsigned    count, n;
-	int	fuzzpos = *pfuzzpos;
+	int8_t *bfuzzoffset;
+	int	fuzzpos = *pfuzzpos * 2;
+	int deststep;
 
 	if (!dc_yl)
 		dc_yl = 1;
@@ -462,10 +478,13 @@ void I_DrawFuzzColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	frac = frac_;
 	dest = (int8_t *)viewportbuffer + dc_yl * 320 + dc_x;
 	dc_colormap = (int8_t *)(dc_colormaps + light);
+	bfuzzoffset = (int8_t *)fuzzoffset;
+	__asm volatile("mov %1,%0\n\t" : "=&r" (deststep) : "r"(320));
 
 #define DO_PIXEL() do { \
-		*dest = dc_colormap[dest[fuzzoffset[fuzzpos++ & FUZZMASK]]]; \
-		dest += 320; \
+		int offset = *(int16_t *)(bfuzzoffset + (fuzzpos & FUZZMASK*2)); \
+		*dest = dc_colormap[dest[offset]]; \
+		dest += deststep; \
 		frac += fracstep; \
 	} while (0)
 

@@ -780,7 +780,7 @@ void I_SwapScreenCopy(void);
 
 #define I_DrawColumn I_DrawColumnC
 #define I_DrawColumnNPo2 I_DrawColumnNPo2C
-#define I_DrawFuzzColumnC I_DrawFuzzColumnAC
+#define I_DrawFuzzColumn I_DrawFuzzColumnC
 #define I_DrawSpan I_DrawSpanC
 
 #else

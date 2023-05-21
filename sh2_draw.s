@@ -194,23 +194,23 @@ _I_DrawFuzzColumnLowA:
         mov.l   draw_width,r1
         mov.l   @(20,r15),r2    /* pfuzzpos */
         mov.l   @r2,r3          /* fuzzpos */
-        sub     r1,r8           /* fb -= SCREENWIDTH */
+        add     r3,r3
+        mov     r3,r0
+        and     #126,r0         /* fuzzpos &= FUZZMASK */
 
         .p2alignw 2, 0x0009
 do_fuzz_col_loop_low:
-        mov     r3,r0
-        and     #63,r0          /* fuzzpos &= FUZZMASK */
-        add     r0,r0
         mov.w   @(r0,r5),r0     /* pix = fuzztable[fuzzpos] */
-        add     r1,r8           /* fb += SCREENWIDTH */
-        add     r0,r0
-        mov.b   @(r0,r8),r0     /* pix = dest[pix] */
-        add     #1,r3
-        add     r0,r0
         dt      r6              /* count-- */
+        mov.b   @(r0,r8),r0     /* pix = dest[pix] */
+        add     r0,r0
         mov.w   @(r0,r7),r4     /* dpix = dc_colormap[pix] */
-        bf/s    do_fuzz_col_loop_low
+        add     #2,r3
+        mov     r3,r0
+        and     #126,r0         /* fuzzpos &= FUZZMASK */
         mov.w   r4,@r8          /* *fb = dpix */
+        bf/s    do_fuzz_col_loop_low
+        add     r1,r8           /* fb += SCREENWIDTH */
 
         mov.l   r3,@r2
         rts
@@ -542,21 +542,22 @@ _I_DrawFuzzColumnA:
         mov.l   draw_width,r1
         mov.l   @(20,r15),r2    /* pfuzzpos */
         mov.l   @r2,r3          /* fuzzpos */
-        sub     r1,r8           /* fb -= SCREENWIDTH */
+        add     r3,r3
+        mov     r3,r0
+        and     #126,r0         /* fuzzpos &= FUZZMASK */
 
         .p2alignw 2, 0x0009
 do_fuzz_col_loop:
-        mov     r3,r0
-        and     #63,r0          /* fuzzpos &= FUZZMASK */
-        add     r0,r0
-        add     r1,r8           /* fb += SCREENWIDTH */
         mov.w   @(r0,r5),r0     /* pix = fuzztable[fuzzpos] */
-        add     #1,r3
+        add     #2,r3
         mov.b   @(r0,r8),r0     /* pix = dest[pix] */
         dt      r6              /* count-- */
         mov.b   @(r0,r7),r4     /* dpix = dc_colormap[pix] */
-        bf/s    do_fuzz_col_loop
+        mov     r3,r0
         mov.b   r4,@r8          /* *fb = dpix */
+        and     #126,r0         /* fuzzpos &= FUZZMASK */
+        bf/s    do_fuzz_col_loop
+        add     r1,r8           /* fb += SCREENWIDTH */
 
         mov.l   r3,@r2
         rts
