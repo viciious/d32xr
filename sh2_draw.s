@@ -49,10 +49,10 @@ _I_DrawColumnLowA:
         .p2alignw 2, 0x0009
 do_col_loop_low:
         mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
-        add     r3,r2           /* frac += fracstep */
-        dt      r6              /* count-- */
         add     r0,r0
         mov.w   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
+        add     r3,r2           /* frac += fracstep */
+        dt      r6              /* count-- */
         swap.w  r2,r0           /* (frac >> 16) */
         mov.w   r9,@r8          /* *fb = dpix */
         and     r4,r0           /* (frac >> 16) & heightmask */
