@@ -37,7 +37,7 @@
         .ascii  "                "
         .ascii  "GM 20220902-00"
         .word   0x0000
-        .ascii  "J6              "
+        .ascii  "J6CM            "
         .long   0x00000000,0x003FFFFF   /* ROM start, end */
         .long   0x00FF0000,0x00FFFFFF   /* RAM start, end */
 
