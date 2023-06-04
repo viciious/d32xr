@@ -437,6 +437,7 @@ int M_Ticker (void)
 
 		if (screenpos == ms_save)
 		{
+			S_StartSound(NULL, sfx_pistol);
 			SaveGame(saveslot);
 			return ga_died;
 		}
