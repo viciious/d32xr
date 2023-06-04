@@ -439,6 +439,7 @@ int M_Ticker (void)
 		{
 			S_StartSound(NULL, sfx_pistol);
 			SaveGame(saveslot);
+			prevsaveslot = -1;
 			return ga_died;
 		}
 	}
