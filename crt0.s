@@ -30,12 +30,12 @@
         .ascii  "SEGA SSF        "
         .ascii  "                "
         .ascii  "DOOM 32X Resurre"
-        .ascii  "ction v2.2c     "
+        .ascii  "ction v3.0      "
         .ascii  "                "
         .ascii  "DOOM 32X Resurre"
-        .ascii  "ction v2.2c     "
+        .ascii  "ction v3.0      "
         .ascii  "                "
-        .ascii  "GM 20220902-00"
+        .ascii  "GM 20230611-00"
         .word   0x0000
         .ascii  "J6CM            "
         .long   0x00000000,0x005FFFFF   /* ROM start, end */
