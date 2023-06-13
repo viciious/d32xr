@@ -16,20 +16,22 @@ jobs:
         id: devkit-cache
         with:
           path: /opt/toolchains
-          key: chilly-willy-devkit-3
+          key: chilly-willy-devkit-4
+      - name: Install libdebuginfod1
+        run: sudo apt install -y libdebuginfod1
       - name: Download The devkit archive
         if: steps.devkit-cache.outputs.cache-hit != 'true'
         run: | 
           curl -sL --fail \
           -H "Accept: application/vnd.github.v3+json" \
-          "https://api.github.com/repos/viciious/32XDK/releases/tags/20190504" \
-          | jq -r ".assets | .[] | select(.name | test(\"chillys-sega-devkit-20190504-opt.tar.zst$\")) | .url" \
-          | xargs curl -sL --fail -H "Accept: application/octet-stream" -o "chillys-sega-devkit-20190504-opt.tar.zst"
+          "https://api.github.com/repos/viciious/32XDK/releases/tags/20220418" \
+          | jq -r ".assets | .[] | select(.name | test(\"chillys-sega-devkit-20220418-opt.tar.zst$\")) | .url" \
+          | xargs curl -sL --fail -H "Accept: application/octet-stream" -o "chillys-sega-devkit-20220418-opt.tar.zst"
       - name: Unpack the devkit archive
         if: steps.devkit-cache.outputs.cache-hit != 'true'
         run: |
-          ls -la ./chillys-sega-devkit-20190504-opt.tar.zst && \
-          zstdcat ./chillys-sega-devkit-20190504-opt.tar.zst | sudo tar -C / -xa
+          ls -la ./chillys-sega-devkit-20220418-opt.tar.zst && \
+          zstdcat ./chillys-sega-devkit-20220418-opt.tar.zst | sudo tar -C / -xa
       - uses: actions/checkout@v2
       - name: make debug MARS
         run: |
