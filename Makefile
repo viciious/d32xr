@@ -20,7 +20,7 @@ MARSHWCFLAGS += -O1 -fno-lto
 
 release: CCFLAGS += -Os -fomit-frame-pointer -ffast-math -funroll-loops -fno-align-loops -fno-align-jumps -fno-align-labels
 release: CCFLAGS += -ffunction-sections -fdata-sections -flto
-release: LDFLAGS += -flto
+release: LDFLAGS += -flto=3
 
 debug: CCFLAGS += -Os -ggdb -fno-omit-frame-pointer
 debug: MARSHWCFLAGS += -ggdb -fno-omit-frame-pointer
