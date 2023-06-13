@@ -5,6 +5,32 @@
 
         .equ DEFAULT_LINK_TIMEOUT, 0x3FFF
 
+        /* Z80 local mem variable offsets */
+        .equ FM_IDX,    0x40        /* music track index */
+        .equ FM_CSM,    0x41        /* music CSM mode */
+        .equ FM_SMPL,   0x42        /* music delay in samples (low) */
+        .equ FM_SMPH,   0x43        /* music delay in samples (high) */
+        .equ FM_TICL,   0x44        /* music timer ticks (low) */
+        .equ FM_TICH,   0x45        /* music timer ticks (high) */
+        .equ FM_TTTL,   0x46        /* music time to tick (low) */
+        .equ FM_TTTH,   0x47        /* music time to tick (high) */
+        .equ FM_BUFCSM, 0x48        /* music buffer reads requested */
+        .equ FM_BUFGEN, 0x49        /* music buffer reads available */
+        .equ FM_RQPND,  0x4A        /* 68000 request pending */
+        .equ FM_RQARG,  0x4B        /* 68000 request arg */
+        .equ FM_START,  0x4C        /* start offset in sram (for starting/looping vgm) */
+        .equ CRITICAL,  0x4F        /* Z80 critical section flag */
+
+        .equ REQ_ACT,   0xFFEF      /* Request 68000 Action */
+
+        .macro  z80rd adr, dst
+        move.b  0xA00000+\adr,\dst
+        .endm
+
+        .macro  z80wr adr, src
+        move.b  \src,0xA00000+\adr
+        .endm
+
         .macro  sh2_wait
         move.w  #0x0003,0xA15102    /* assert CMD INT to both SH2s */
         move.w  #0xA55A,d2
@@ -58,7 +84,8 @@ _start:
         move.w  (a0)+,(a1)+
         dbra    d0,2b
 
-        lea     __stack,sp              /* set stack pointer to top of Work RAM */
+|        lea     __stack,sp              /* set stack pointer to top of Work RAM */
+        lea     0x00FFFFE0,sp           /* top of Work RAM - space for Z80 comm */
 
         bsr     init_hardware           /* initialize the console hardware */
 
@@ -130,30 +157,118 @@ init_hardware:
         move.b  #0x40,0xA10003
         move.b  #0x40,0xA10005
 
-| init vdp
-        moveq   #0,d0                   /* full init */
-        jsr     init_vdp
+| init MD VDP
+        move.w  #0x8004,(a0) /* reg 0 = /IE1 (no HBL INT), /M3 (enable read H/V cnt) */
+        move.w  #0x8114,(a0) /* reg 1 = /DISP (display off), /IE0 (no VBL INT), M1 (DMA enabled), /M2 (V28 mode) */
+        move.w  #0x8230,(a0) /* reg 2 = Name Tbl A = 0xC000 */
+        move.w  #0x832C,(a0) /* reg 3 = Name Tbl W = 0xB000 */
+        move.w  #0x8407,(a0) /* reg 4 = Name Tbl B = 0xE000 */
+        move.w  #0x8554,(a0) /* reg 5 = Sprite Attr Tbl = 0xA800 */
+        move.w  #0x8600,(a0) /* reg 6 = always 0 */
+        move.w  #0x8700,(a0) /* reg 7 = BG color */
+        move.w  #0x8800,(a0) /* reg 8 = always 0 */
+        move.w  #0x8900,(a0) /* reg 9 = always 0 */
+        move.w  #0x8A00,(a0) /* reg 10 = HINT = 0 */
+        move.w  #0x8B00,(a0) /* reg 11 = /IE2 (no EXT INT), full scroll */
+        move.w  #0x8C81,(a0) /* reg 12 = H40 mode, no lace, no shadow/hilite */
+        move.w  #0x8D2B,(a0) /* reg 13 = HScroll Tbl = 0xAC00 */
+        move.w  #0x8E00,(a0) /* reg 14 = always 0 */
+        move.w  #0x8F01,(a0) /* reg 15 = data INC = 1 */
+        move.w  #0x9001,(a0) /* reg 16 = Scroll Size = 64x32 */
+        move.w  #0x9100,(a0) /* reg 17 = W Pos H = left */
+        move.w  #0x9200,(a0) /* reg 18 = W Pos V = top */
 
-| setup default font
+| clear VRAM
+        move.w  #0x8F02,(a0)            /* set INC to 2 */
+        move.l  #0x40000000,(a0)        /* write VRAM address 0 */
+        moveq   #0,d0
+        move.w  #0x7FFF,d1              /* 32K - 1 words */
+0:
+        move.w  d0,(a1)                 /* clear VRAM */
+        dbra    d1,0b
+
+| The VDP state at this point is: Display disabled, ints disabled, Name Tbl A at 0xC000,
+| Name Tbl B at 0xE000, Name Tbl W at 0xB000, Sprite Attr Tbl at 0xA800, HScroll Tbl at 0xAC00,
+| H40 V28 mode, and Scroll size is 64x32.
+
+| Clear CRAM
+        move.l  #0x81048F01,(a0)        /* set reg 1 and reg 15 */
+        move.l  #0xC0000000,(a0)        /* write CRAM address 0 */
+        moveq   #31,d3
+1:
+        move.l  d0,(a1)
+        dbra    d3,1b
+
+| Clear VSRAM
+        move.l  #0x40000010,(a0)         /* write VSRAM address 0 */
+        moveq   #19,d4
+2:
+        move.l  d0,(a1)
+        dbra    d4,2b
+
         jsr     load_font
+
+| set the default palette for text
+        move.l  #0xC0000000,(a0)        /* write CRAM address 0 */
+        move.l  #0x00000CCC,(a1)        /* entry 0 (black) and 1 (lt gray) */
+        move.l  #0xC0200000,(a0)        /* write CRAM address 32 */
+        move.l  #0x000000A0,(a1)        /* entry 16 (black) and 17 (green) */
+        move.l  #0xC0400000,(a0)        /* write CRAM address 64 */
+        move.l  #0x0000000A,(a1)        /* entry 32 (black) and 33 (red) */
 
 | init controllers
         jsr     chk_ports
 
-| allow the 68k to access the FM chip
+| setup Z80 for FM music
         move.w  #0x0100,0xA11100        /* Z80 assert bus request */
         move.w  #0x0100,0xA11200        /* Z80 deassert reset */
+3:
+        move.w  0xA11100,d0
+        andi.w  #0x0100,d0
+        bne.b   3b                      /* wait for bus acquired */
 
-        move.w  #0,0xA15104             /* set cart bank select */
+        jsr     rst_ym2612              /* reset FM chip */
+
+        moveq   #0,d0
+        lea     0x00FFFFE0,a0           /* top of stack */
+        moveq   #7,d1
+4:
+        move.l  d0,(a0)+                /* clear work ram used by FM driver */
+        dbra    d1,4b
+
+        lea     0xA00000,a0
+        move.w  #0x1FFF,d1
+5:
+        move.b  d0,(a0)+                /* clear Z80 sram */
+        dbra    d1,5b
+
+        lea     z80_vgm_start,a0
+        lea     z80_vgm_end,a1
+        lea     0xA00000,a2
+6:
+        move.b  (a0)+,(a2)+             /* copy Z80 driver */
+        cmpa.l  a0,a1
+        bne.b   6b
+
+        move.w  #0x0000,0xA11200        /* Z80 assert reset */
+
+        move.w  #0x0000,0xA11100        /* Z80 deassert bus request */
+7:
+|        move.w  0xA11100,d0
+|        andi.w  #0x0100,d0
+|        beq.b   7b                      /* wait for bus released */
+
+        move.w  #0x0100,0xA11200        /* Z80 deassert reset - run driver */
 
 | wait on Mars side
+        move.w  #0,0xA15104             /* set cart bank select */
         move.b  #0,0xA15107             /* clear RV - allow SH2 to access ROM */
-0:
+8:
         cmp.l   #0x4D5F4F4B,0xA15120    /* M_OK */
-        bne.b   0b                      /* wait for master ok */
-1:
+        bne.b   8b                      /* wait for master ok */
+9:
         cmp.l   #0x535F4F4B,0xA15124    /* S_OK */
-        bne.b   1b                      /* wait for slave ok */
+        bne.b   9b                      /* wait for slave ok */
 
         move.l  #vert_blank,vblank      /* set vertical blank interrupt handler */
         move.w  #0x8174,0xC00004        /* display on, vblank enabled */
@@ -454,27 +569,144 @@ start_music:
 
 0:
         /* set VGM pointer and init VGM player */
-        move.w  0xA15122,d0          /* COMM2 = index | repeat flag */
+        move.w  0xA15122,d0         /* COMM2 = index | repeat flag */
         move.w  #0x8000,d1
-        and.w   d0,d1                /* repeat flag */
-        eor.w   d1,d0                /* clear flag from index */
-        move.w  d1,fm_rep            /* repeat flag */
-        move.w  d0,fm_idx            /* index 1 to N */
-        move.w  #0,0xA15104          /* set cart bank select */
+        and.w   d0,d1               /* repeat flag */
+        eor.w   d1,d0               /* clear flag from index */
+        move.w  d1,fm_rep           /* repeat flag */
+        move.w  d0,fm_idx           /* index 1 to N */
+        move.w  #0,0xA15104         /* set cart bank select */
         move.l  #0,a0
-        move.l  vgm_ptr,d0           /* set VGM offset */
-        beq.b   9f
+        move.l  vgm_ptr,d0          /* set VGM offset */
+        beq     9f
 
         move.l  d0,a0
         bsr     set_rom_bank
-        move.l  a1,fm_ptr
+        move.l  a1,fm_ptr           /* MD lump ptr used by vgm_setup */
+        jsr     vgm_setup           /* setup lzss, set pcm_baseoffs, set vgm_ptr, read first block */
 
-        jsr     vgm_setup
+        /* start VGM on Z80 */
+        move.w  #0x0100,0xA11100    /* Z80 assert bus request */
+        move.w  #0x0100,0xA11200    /* Z80 deassert reset */
+1:
+        move.w  0xA11100,d0
+        andi.w  #0x0100,d0
+        bne.b   1b                  /* wait for bus acquired */
 
-        clr.w   fm_smpl
-        clr.w   fm_tick
-        bsr     fm_init             /* initial YM2612 */
-        bsr     fm_setup            /* initial VGM player */
+        moveq   #0,d0
+        lea     0x00FFFFE0,a0       /* top of stack */
+        moveq   #7,d1
+2:
+        move.l  d0,(a0)+            /* clear work ram used by FM driver */
+        dbra    d1,2b
+
+        lea     z80_vgm_start,a0
+        lea     z80_vgm_end,a1
+        lea     0xA00000,a2
+3:
+        move.b  (a0)+,(a2)+         /* copy Z80 driver */
+        cmpa.l  a0,a1
+        bne.b   3b
+
+| FM setup
+        movea.l vgm_ptr,a6          /* lzss buffer */
+        lea     0x1C(a6),a6         /* loop offset */
+| get vgm loop offset
+        move.b  (a6)+,d0
+        move.b  (a6)+,d1
+        move.b  (a6)+,d2
+        move.b  (a6)+,d3
+        move.b  d3,-(sp)
+        move.w  (sp)+,d3            /* shift left 8 */
+        move.b  d2,d3
+        swap    d3
+        move.b  d1,-(sp)
+        move.w  (sp)+,d3            /* shift left 8 */
+        move.b  d0,d3
+        tst.l   d3
+        beq.b   0f                  /* no loop offset, use default song start */
+        addi.l  #0x1C,d3
+        bra.b   1f
+0:
+        moveq   #0x40,d3
+1:
+        move.l  d3,fm_loop          /* loop offset */
+
+        movea.l vgm_ptr,a6
+        lea     8(a6),a6            /* version */
+        move.b  (a6)+,d0
+        move.b  (a6)+,d1
+        move.b  (a6)+,d2
+        move.b  (a6)+,d3
+        move.b  d3,-(sp)
+        move.w  (sp)+,d3            /* shift left 8 */
+        move.b  d2,d3
+        swap    d3
+        move.b  d1,-(sp)
+        move.w  (sp)+,d3            /* shift left 8 */
+        move.b  d0,d3
+        cmpi.l  #0x150,d3           /* >= v1.50? */
+        bcs     2f                  /* no, default to song start of offset 0x40 */
+
+        movea.l vgm_ptr,a6
+        lea     0x34(a6),a6         /* VGM data offset */
+        move.b  (a6)+,d0
+        move.b  (a6)+,d1
+        move.b  (a6)+,d2
+        move.b  (a6)+,d3
+        move.b  d3,-(sp)
+        move.w  (sp)+,d3            /* shift left 8 */
+        move.b  d2,d3
+        swap    d3
+        move.b  d1,-(sp)
+        move.w  (sp)+,d3            /* shift left 8 */
+        move.b  d0,d3
+        tst.l   d3
+        beq.b   2f                  /* not set - use 0x40 */
+        addi.l  #0x34,d3
+        bra.b   3f
+2:
+        moveq   #0x40,d3
+3:
+        move.l  d3,fm_start         /* start of song data */
+        z80wr   FM_START,d3         /* start song => FX_START = start offset */
+        lsr.w   #8,d3
+        z80wr   FM_START+1,d3
+
+        move.w  fm_idx,d0
+        z80wr   FM_IDX,d0           /* set FM_IDX */
+
+        jsr     vgm_read
+        jsr     vgm_read
+        jsr     vgm_read
+        jsr     vgm_read
+        jsr     vgm_read
+        jsr     vgm_read
+        jsr     vgm_read            /* 4KB to fill Z80 sram buffer */
+
+        z80wr   FM_BUFCSM,#0
+        z80wr   FM_BUFGEN,#8
+        z80wr   FM_RQPND,#0
+
+        movea.l vgm_ptr,a0
+        lea     0xA01000,a1
+        move.w  #0x0FFF,d1
+4:
+        move.b  (a0)+,(a1)+         /* copy vgm data from decompressor buffer to sram */
+        dbra    d1,4b
+
+        move.w  #0x1000,offs68k
+        move.w  #0x0000,offsz80
+
+        move.w  #0x0000,0xA11200    /* Z80 assert reset */
+
+        move.w  #0x0000,0xA11100    /* Z80 deassert bus request */
+8:
+|        move.w  0xA11100,d0
+|        andi.w  #0x0100,d0
+|        beq.b   8b                  /* wait for bus released */
+
+        move.w  #0x0100,0xA11200    /* Z80 deassert reset - run driver */
 
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -562,12 +794,43 @@ stop_music:
         bne.b    stop_cd
 
         /* stop VGM */
-        clr.w   fm_idx          /* stop music */
+        move.w  #0x0100,0xA11100    /* Z80 assert bus request */
+        move.w  #0x0100,0xA11200    /* Z80 deassert reset */
+0:
+        move.w  0xA11100,d0
+        andi.w  #0x0100,d0
+        bne.b   0b                  /* wait for bus acquired */
+
+        jsr     rst_ym2612          /* reset FM chip */
+
+        moveq   #0,d0
+        lea     0x00FFFFE0,a0       /* top of stack */
+        moveq   #7,d1
+1:
+        move.l  d0,(a0)+            /* clear work ram used by FM driver */
+        dbra    d1,1b
+
+        lea     z80_vgm_start,a0
+        lea     z80_vgm_end,a1
+        lea     0xA00000,a2
+2:
+        move.b  (a0)+,(a2)+         /* copy Z80 driver */
+        cmpa.l  a0,a1
+        bne.b   2b
+
+        move.w  #0x0000,0xA11200    /* Z80 assert reset */
+
+        move.w  #0x0000,0xA11100    /* Z80 deassert bus request */
+3:
+|        move.w  0xA11100,d0
+|        andi.w  #0x0100,d0
+|        beq.b   3b                  /* wait for bus released */
+
+        move.w  #0x0100,0xA11200    /* Z80 deassert reset - run driver */
+
+        clr.w   fm_idx              /* stop music */
         clr.w   fm_rep
-        clr.w   fm_smpl
-        clr.w   fm_tick
         clr.l   fm_ptr
-        bsr     fm_init
 
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -1746,89 +2009,139 @@ load_font:
 | Bump the FM player to keep the music going
 
 bump_fm:
-        tst.w   fm_idx
-        beq     bump_exit2          /* VGM not playing */
-
-        movem.l d0-d7/a0-a6,-(sp)
-        tst.w   fm_smpl
-        bne.b   1f                  /* waiting, check timer overflow */
+        tst.b   REQ_ACT.w
+        bpl.b   0f
+        /* no requests or sram locked */
+        rts
 0:
-        /* process more VGM commands */
-        bsr     fm_play
-        tst.w   fm_idx
-        beq     bump_exit           /* no longer playing */
-        tst.w   fm_smpl
-        beq.b   0b                  /* no delay */
-        bra.b   2f                  /* new delay, set Timer A */
+        movem.l d0-d7/a0-a6,-(sp)
+        move.w  #0x0100,0xA11100    /* Z80 assert bus request */
+        move.w  #0x0100,0xA11200    /* Z80 deassert reset */
 1:
-        move.b  0xA04000,d0         /* YM2612 status */
-        btst    #7,d0
-        bne     bump_exit           /* busy */
-        btst    #0,d0               /* Timer A overflow flag */
-        beq     bump_exit           /* still waiting on Timer A */
-        /* overflow */
-        move.w  fm_tick,d0
-        sub.w   fm_ttt,d0
-        bne.b   3f                  /* longer delay, set Timer A */
-        clr.w   fm_smpl             /* delay done, process commands */
-        clr.w   fm_tick
-        clr.w   fm_ttt
-        bra.b   0b
+        move.w  0xA11100,d0
+        andi.w  #0x0100,d0
+        bne.b   1b                  /* wait for bus acquired */
+
+        z80rd   CRITICAL,d0
+        bne     8f                  /* z80 critical section, just exit */
+
+        move.b  REQ_ACT.w,d0
+        cmpi.b  #0x01,d0
+        bne.b   5f
+
+        /* read a buffer */
+        jsr     vgm_read
+        z80rd   FM_BUFGEN,d0
+        addq.b  #1,d0
+        z80wr   FM_BUFGEN,d0
+
+        /* copy buffer to z80 sram */
+        movea.l vgm_ptr,a0
+        lea     0xA01000,a1
+        move.w  #0x01FF,d1          /* one buffer worth of data */
+        move.w  offs68k,d2
+        move.w  offsz80,d3
+        lea     0(a0,d2.w),a0
+        lea     0(a1,d3.w),a1
 2:
-        /* set Timer A for delay */
-        moveq   #0,d0
-        move.w  fm_smpl,d0
-        lsr.w   #2,d0
-        add.w   fm_smpl,d0          /* ticks ~= 1.25 * # samples */
-        bcc.b   3f
-        ori.w   #0xFFFF,d0          /* saturate ticks to word */
-3:
-        move.w  d0,fm_tick
-        cmpi.w  #1024,d0            /* max ticks for Timer A */
-        bls.b   4f
-        move.w  #1024,d0
-4:
-        move.w  d0,fm_ttt
-        move.w  #1024,d1
-        sub.w   d0,d1               /* Timer A count value */
-        move.w  d1,d0
-        andi.w  #3,d1
-        lsr.w   #2,d0
-        move.b  fm_csm,d2           /* timer control + CSM Mode */
-        andi.b  #0xFE,d2
-        move.b  #0x27,0xA04000
-        nop
-        nop
-        nop
-        move.b  d2,0xA04001         /* reset Timer A flag */
-        nop
-        nop
-        nop
-        move.b  #0x24,0xA04000
-        nop
-        nop
-        nop
-        move.b  d0,0xA04001         /* set Timer A msbs */
-        nop
-        nop
-        nop
-        move.b  #0x25,0xA04000
-        nop
-        nop
-        nop
-        move.b  d1,0xA04001         /* set Timer A lsbs */
-        nop
-        nop
-        nop
-        move.b  #0x27,0xA04000
-        nop
-        nop
-        nop
-        ori.b   #0x01,d2
-        move.b  d2,0xA04001         /* enable Timer A, start Timer A */
-bump_exit:
+        move.b  (a0)+,(a1)+
+        dbra    d1,2b
+
+        addi.w  #0x0200,d2
+        addi.w  #0x0200,d3
+        andi.w  #0x7FFF,d2          /* 32KB buffer */
+        andi.w  #0x0FFF,d3          /* 4KB buffer */
+        move.w  d2,offs68k
+        move.w  d3,offsz80
+        bra     7f
+5:
+        cmpi.b  #0x02,d0
+        bne     7f                  /* unknown request, ignore */
+
+        /* music ended, check for loop */
+        tst.w   fm_rep
+        beq     7f                  /* no repeat, leave FM_IDX as 0 */
+
+        jsr     vgm_setup           /* restart at start of compressed data and read a buffer */
+        jsr     vgm_read
+        jsr     vgm_read
+        jsr     vgm_read
+        jsr     vgm_read
+        jsr     vgm_read
+        jsr     vgm_read
+        jsr     vgm_read            /* 4KB to fill Z80 sram buffer */
+
+        z80wr   FM_BUFCSM,#0
+        z80wr   FM_BUFGEN,#8
+
+        movea.l vgm_ptr,a0
+        lea     0xA01000,a1         /* z80 sram buffer start */
+        move.w  #0x0FFF,d1
+6:
+        move.b  (a0)+,(a1)+         /* copy vgm data from decompressor buffer to sram */
+        dbra    d1,6b
+
+        move.w  #0x1000,offs68k     /* 32K buffer */
+        move.w  #0x0000,offsz80     /* 4K buffer */
+
+        move.l  fm_loop,d0
+        z80wr   FM_START,d0
+        lsr.w   #8,d0
+        z80wr   FM_START+1,d0       /* music start = loop offset */
+        move.w  fm_idx,d0
+        z80wr   FM_IDX,d0           /* set FM_IDX to start music */
+7:
+        z80wr   FM_RQPND,#0         /* request handled */
+        move.b  #0,REQ_ACT.w
+8:
+        move.w  #0x0000,0xA11100    /* Z80 deassert bus request */
+9:
+|        move.w  0xA11100,d0
+|        andi.w  #0x0100,d0
+|        beq.b   9b                  /* wait for bus released */
         movem.l (sp)+,d0-d7/a0-a6
-bump_exit2:
+        rts
+
+
+| reset YM2612
+rst_ym2612:
+        lea     FMReset,a1
+        lea     0xA00000,a0
+        moveq   #6,d3
+0:
+        move.b  (a1)+,d0                /* FM reg */
+        move.b  (a1)+,d1                /* FM data */
+        moveq   #15,d2
+1:
+        move.b  d0,0x4000(a0)           /* FM reg */
+        nop
+        nop
+        nop
+        move.b  d1,0x4001(a0)           /* FM data */
+        nop
+        nop
+        nop
+        move.b  d0,0x4002(a0)           /* FM reg */
+        nop
+        nop
+        nop
+        move.b  d1,0x4003(a0)           /* FM data */
+        addq.b  #1,d0
+        dbra    d2,1b
+        dbra    d3,0b
+
+        move.w  #0x4000,d1
+        moveq   #28,d2
+2:
+        move.b  (a1)+,d1                /* YM reg */
+        move.b  (a1)+,0(a0,d1.w)        /* YM data */
+        dbra    d2,2b
+
+| reset PSG
+        move.b  #0x9F,0xC00011
+        move.b  #0xBF,0xC00011
+        move.b  #0xDF,0xC00011
+        move.b  #0xFF,0xC00011
         rts
 
 
@@ -2190,6 +2503,37 @@ hotplug_cnt:
 
         .align  4
 
+        .global    fm_ptr
+fm_ptr:
+        dc.l    0
+        .global    fm_start
+fm_start:
+        dc.l    0
+        .global    fm_loop
+fm_loop:
+        dc.l    0
+        .global pcm_baseoffs
+pcm_baseoffs:
+        dc.l    0
+        .global    vgm_ptr
+vgm_ptr:
+        dc.l    0
+        .global    vgm_size
+vgm_size:
+        dc.l    0
+        .global    fm_rep
+fm_rep:
+        dc.w    0
+        .global    fm_idx
+fm_idx:
+        dc.w    0
+offs68k:
+        dc.w    0
+offsz80:
+        dc.w    0
+
+        .align  4
+
 fg_color:
         dc.l    0x11111111      /* default to color 1 for fg color */
 bg_color:
@@ -2314,9 +2658,52 @@ totalmsec:
 
         .align  4
 
+FMReset:
+        /* block settings */
+        .byte   0x30,0x00
+        .byte   0x40,0x7F
+        .byte   0x50,0x1F
+        .byte   0x60,0x1F
+        .byte   0x70,0x1F
+        .byte   0x80,0xFF
+        .byte   0x90,0x00
+
+        /* disable LFO */
+        .byte   0,0x22
+        .byte   1,0x00
+        /* disable timers & set channel 6 to normal mode */
+        .byte   0,0x27
+        .byte   1,0x00
+        /* all KEY_OFF */
+        .byte   0,0x28
+        .byte   1,0x00
+        .byte   1,0x04
+        .byte   1,0x01
+        .byte   1,0x05
+        .byte   1,0x02
+        .byte   1,0x06
+        /* disable DAC */
+        .byte   0,0x2B
+        .byte   1,0x80
+        .byte   0,0x2A
+        .byte   1,0x80
+        .byte   0,0x2B
+        .byte   1,0x00
+        /* turn off channels */
+        .byte   0,0xB4
+        .byte   1,0x00
+        .byte   0,0xB5
+        .byte   1,0x00
+        .byte   0,0xB6
+        .byte   1,0x00
+        .byte   2,0xB4
+        .byte   3,0x00
+        .byte   2,0xB5
+        .byte   3,0x00
+        .byte   2,0xB6
+        .byte   3,0x00
 
         .bss
         .align  2
 col_store:
         .space  21*224*2        /* 140 double-columns in vram, 20 in wram, 1 in wram for swap */
-

@@ -20,14 +20,17 @@ AS = $(PREFIX)as
 LD = $(PREFIX)ld
 OBJC = $(PREFIX)objcopy
 
+ASMZ80 = $(ROOTDIR)/bin/zasm
+FLAGSZ80 = -bv2
+
 DD = dd
 RM = rm -f
 
 TARGET = m68k
 LIBS = $(LIBPATH) -lc -lgcc -lnosys
-OBJS = crt0.o everdrive.o font.o main.o kos.o cd.o lzss.o megasd.o vgm.o vgm_player.o xvprintf.o
+OBJS = crt0.o everdrive.o font.o main.o kos.o cd.o lzss.o megasd.o vgm.o xvprintf.o zfiles.o
 
-all: $(TARGET).bin
+all: z80_vgm.o80 $(TARGET).bin
 
 $(TARGET).bin: $(TARGET).elf
 	$(OBJC) -O binary $< $(TARGET).bin
@@ -35,10 +38,15 @@ $(TARGET).bin: $(TARGET).elf
 $(TARGET).elf: $(OBJS)
 	$(CC) $(LINKFLAGS) $(OBJS) $(LIBS) -o $(TARGET).elf
 
+%.o80: %.s80
+	$(ASMZ80) $(FLAGSZ80) -o $@ $<
+
 main.o: main.c
 	$(CC) $(HWCCFLAGS) $(INCPATH) $< -o $@
+
 megasd.o: megasd.c
 	$(CC) $(HWCCFLAGS) $(INCPATH) $< -o $@
+
 everdrive.o: everdrive.c
 	$(CC) $(HWCCFLAGS) $(INCPATH) $< -o $@
 
@@ -52,4 +60,5 @@ everdrive.o: everdrive.c
 	$(AS) $(ASFLAGS) $(INCPATH) $< -o $@
 
 clean:
-	$(RM) *.o *.bin *.elf output.map
+	$(RM) *.o *.o80 *.bin *.elf output.map
+

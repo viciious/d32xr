@@ -16,15 +16,14 @@ LDFLAGS = -T mars-ssf.ld -Wl,-Map=output.map -nostdlib -Wl,--gc-sections --specs
 ASFLAGS = --big
 
 MARSHWCFLAGS := $(CCFLAGS)
-MARSHWCFLAGS += -fno-lto
+MARSHWCFLAGS += -O1 -fno-lto
 
 release: CCFLAGS += -Os -fomit-frame-pointer -ffast-math -funroll-loops -fno-align-loops -fno-align-jumps -fno-align-labels
 release: CCFLAGS += -ffunction-sections -fdata-sections -flto
-release: MARSHWCFLAGS += -O1
 release: LDFLAGS += -flto
 
 debug: CCFLAGS += -Os -ggdb -fno-omit-frame-pointer
-debug: MARSHWCFLAGS += -O1 -ggdb -fno-omit-frame-pointer
+debug: MARSHWCFLAGS += -ggdb -fno-omit-frame-pointer
 
 PREFIX = $(ROOTDIR)/sh-elf/bin/sh-elf-
 CC = $(PREFIX)gcc
