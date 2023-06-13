@@ -46,7 +46,7 @@ static boolean PS_CrossBSPNode(sightWork_t* sw, int bspnum) ATTR_DATA_CACHE_ALIG
 static boolean PS_RejectCheckSight(mobj_t* t1, mobj_t* t2) ATTR_DATA_CACHE_ALIGN;
 static boolean P_MobjCanSightCheck(mobj_t *mobj) ATTR_DATA_CACHE_ALIGN;
 static boolean PS_CheckSight2(mobj_t* t1, mobj_t* t2) ATTR_DATA_CACHE_ALIGN;
-void P_CheckSights2(void) ATTR_DATA_CACHE_ALIGN;
+void P_CheckSights2(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 
 //
 // Returns side 0 (front), 1 (back), or 2 (on).

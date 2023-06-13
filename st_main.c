@@ -104,6 +104,8 @@ void ST_InitEveryLevel(void)
 	for (i = 0; i < MAXPLAYERS; i++)
 		numplayers += playeringame[i] ? 1 : 0;
 
+	D_memset(stbar, 0, sizeof(stbar[0])*MAXPLAYERS);
+
 	for (p = 0; p < numplayers; p++)
 	{
 		stbar_t* sb = &stbar[p];
@@ -111,9 +113,6 @@ void ST_InitEveryLevel(void)
 		/* force everything to be updated on next ST_Update */
 		sb->forcedraw = true;
 		sb->drawface = -1;
-		sb->facetics = 0;
-
-		sb->numstbarcmds = 0;
 
 		/* DRAW FRAG COUNTS INITIALLY */
 		{
@@ -131,18 +130,11 @@ void ST_InitEveryLevel(void)
 			sb->yourFragsCount = players[p].frags;
 			sb->hisFragsCount = players[!p].frags;
 		}
-
-		sb->gotgibbed = false;
-		sb->gibdraw = false;	/* DON'T DRAW GIBBED HEAD SEQUENCE */
-		sb->gibframe = 0;
 		sb->gibdelay = GIBTIME;
-		sb->doSpclFace = false;
 		sb->specialFace = f_none;
 
 		for (i = 0; i < NUMCARDS; i++)
 		{
-			sb->tryopen[i] = false;
-			sb->flashCards[i].active = false;
 			sb->flashCards[i].x = KEYX + (i > 2 ? 3 : 0);
 			sb->flashCards[i].y = card_y[i];
 			sb->flashCards[i].w = KEYW;

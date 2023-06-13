@@ -338,11 +338,15 @@ void IN_Start (void)
 	else if (gamemapinfo.next)
 		G_FindMapinfo(gamemapinfo.next, interm->nextmapinfo, NULL);
 
+	D_memset(interm->killvalue, 0, sizeof(*interm->killvalue)*MAXPLAYERS);
+	D_memset(interm->itemvalue, 0, sizeof(*interm->itemvalue)*MAXPLAYERS);
+	D_memset(interm->secretvalue, 0, sizeof(*interm->secretvalue)*MAXPLAYERS);
+	D_memset(interm->fragvalue, 0, sizeof(*interm->fragvalue)*MAXPLAYERS);
+
 	for (i = 0; i < MAXPLAYERS; i++) 
 	{
 		pstats_t *pstats = interm->pstats;
 
-		interm->killvalue[i] = interm->itemvalue[i] = interm->secretvalue[i] = interm->fragvalue[i] = 0;
 		if (totalkills)
 			pstats[i].killpercent = (players[i].killcount * 100) / totalkills;
 		else

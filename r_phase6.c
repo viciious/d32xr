@@ -48,7 +48,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds) ATTR_DATA_CA
 
 static void R_LockSeg(void) ATTR_DATA_CACHE_ALIGN;
 static void R_UnlockSeg(void) ATTR_DATA_CACHE_ALIGN;
-void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN;
+void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 
 //
 // Render a wall texture as columns

@@ -891,10 +891,14 @@ int EV_DoDonut(line_t *line)
 		rtn = 1;
 		line = lines + s1->lines[0];
 		s2 = getNextSector(line,s1);
+		if (!s2)
+			continue;
 		for (i = 0;i < s2->linecount;i++)
 		{
 			line = lines + s2->lines[i];
 			s3 = LD_BACKSECTOR(line);
+			if (!s3)
+				continue;
 			if (!(line->flags & ML_TWOSIDED) ||
 				(s3 == s1))
 				continue;
@@ -1024,10 +1028,8 @@ done_speciallist:
 	/* */
 	/*	Init other misc stuff */
 	/* */
-	for (i = 0;i < MAXCEILINGS;i++)
-		activeceilings[i] = NULL;
-	for (i = 0;i < MAXPLATS;i++)
-		activeplats[i] = NULL;
+	D_memset(activeceilings, 0, sizeof(*activeceilings)*MAXCEILINGS);
+	D_memset(activeplats, 0, sizeof(*activeplats)*MAXCEILINGS);
 	for (i = 0;i < MAXBUTTONS;i++)
 		D_memset(&buttonlist[i],0,sizeof(button_t));
 }

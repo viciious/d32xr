@@ -844,7 +844,7 @@ void R_BSP (void) __attribute__((noinline));
 void R_WallPrep (void) __attribute__((noinline));
 void R_SpritePrep (void) __attribute__((noinline));
 boolean R_LatePrep (void) __attribute__((noinline));
-void R_Cache (void); __attribute__((noinline))
+void R_Cache (void) __attribute__((noinline));
 void R_SegCommands (void) __attribute__((noinline));
 void R_DrawPlanes (void) __attribute__((noinline));
 void R_Sprites (void) __attribute__((noinline));

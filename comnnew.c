@@ -81,7 +81,7 @@ char* D_strchr(const char* str, char chr)
 
 int mystrlen(const char* string)
 {
-	int rc = 0;
+	volatile int rc = 0;
 
 	while (*(string++))
 		rc++;

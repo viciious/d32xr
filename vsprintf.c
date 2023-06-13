@@ -81,8 +81,14 @@ int D_vsnprintf(char* string, size_t nmax, const char* format, va_list argptr)
             {
                 str = (char*)va_arg(argptr, int);
                 len = mystrlen(str);
-                while (fieldsize-- > len) *(string++) = padchar; /* do field pad */
-                while (*str) *(string++) = *(str++); /* copy string */
+                while (fieldsize-- > len) {
+                    __asm volatile("");
+                    *(string++) = padchar; /* do field pad */
+                }
+                while (*str) {
+                    __asm volatile("");
+                    *(string++) = *(str++); /* copy string */
+                }
                 format++;
             }
             else
@@ -126,8 +132,14 @@ int D_vsnprintf(char* string, size_t nmax, const char* format, va_list argptr)
                 len = 0;
                 while (num || fieldsize || !len)
                 {
-                    for (i = len; i; i--) string[i] = string[i - 1]; /* shift right */
-                    if (len && fieldsize && !num) *string = padchar; /* pad out */
+                    for (i = len; i; i--) {
+                        __asm volatile("");
+                        string[i] = string[i - 1]; /* shift right */
+                    }
+                    if (len && fieldsize && !num) {
+                        __asm volatile("");
+                        *string = padchar; /* pad out */
+                    }
                     else
                     {
                         /* put in a hex or decimal digit */

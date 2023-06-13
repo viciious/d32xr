@@ -17,18 +17,20 @@ int			iquehead, iquetail;
 =
 ===============
 */
-static void P_AddMobjToList (mobj_t *mobj, mobj_t *head)
+static void P_AddMobjToList (mobj_t *mobj_, mobj_t *head_)
 {
-	head->prev->next = mobj;
+	degenmobj_t *mobj = (void*)mobj_, *head = (void *)head_;
+	((degenmobj_t *)head->prev)->next = mobj;
 	mobj->next = head;
 	mobj->prev = head->prev;
 	head->prev = mobj;
 }
 
-static void P_RemoveMobjFromCurrList (mobj_t *mobj)
+static void P_RemoveMobjFromCurrList (mobj_t *mobj_)
 {
-	mobj->next->prev = mobj->prev;
-	mobj->prev->next = mobj->next;
+	degenmobj_t *mobj = (void*)mobj_;
+	((degenmobj_t *)mobj->next)->prev = mobj->prev;
+	((degenmobj_t *)mobj->prev)->next = mobj->next;
 }
 
 /*

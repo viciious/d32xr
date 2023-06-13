@@ -18,6 +18,7 @@ static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle, int ang
 void R_WallLatePrep(viswall_t* wc, vertex_t *verts) ATTR_DATA_CACHE_ALIGN;
 static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floorheight, 
     fixed_t floornewheight, fixed_t ceilingnewheight) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
+void R_WallPrep(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 
 void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight, 
     fixed_t *floornewheight, fixed_t *ceilingnewheight)

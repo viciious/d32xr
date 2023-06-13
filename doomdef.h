@@ -254,10 +254,10 @@ typedef struct mobj_s
 } mobj_t
 ;
 
-typedef struct
+typedef struct degenmobj_s
 {
 	fixed_t			x, y, z;
-	struct	mobj_s* prev, * next;
+	void 			*prev, *next;
 } degenmobj_t
 ;
 

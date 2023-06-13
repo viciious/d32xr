@@ -649,8 +649,7 @@ static void AM_Drawer_ (int c)
 	{
 		int* p = (int*)(fb + 320 * ((miny + 1)&~1));
 		int* p_end = (int*)(fb + 320 * ((maxy + 1) & ~1));
-		while (p < p_end)
-			*p++ = 0;
+		D_memset(p, 0, (p_end-p)*sizeof(*p));
 	}
 
 	for (i=0 ; i<numlines ; i++,line++)

@@ -36,7 +36,6 @@ static boolean R_CheckBBox(rbspWork_t *rbsp, fixed_t bspcoord[4]) ATTR_DATA_CACH
 static void R_Subsector(rbspWork_t *rbsp, int num) ATTR_DATA_CACHE_ALIGN;
 static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop) ATTR_DATA_CACHE_ALIGN;
 static void R_RenderBSPNode(rbspWork_t *rbsp, int bspnum) ATTR_DATA_CACHE_ALIGN;
-void R_BSP(void) ATTR_DATA_CACHE_ALIGN;
 
 void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight, 
     fixed_t *floornewheight, fixed_t *ceilingnewheight);
