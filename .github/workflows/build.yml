@@ -45,7 +45,7 @@ jobs:
         run: |
           /opt/toolchains/sega/sh-elf/bin/sh-elf-readelf -S D32XR.elf
       - name: Print sizes
-        run: nm --print-size --size-sort --radix=d D32XR.elf | egrep -Ei ' (B|D) ' | tail -n 50
+        run: nm --print-size --size-sort --radix=d D32XR.elf | egrep -Ei ' (B|D) ' | tail -n 50 && cat output.map
       - name: .bss plus .data size
         run: |
           /opt/toolchains/sega/sh-elf/bin/sh-elf-readelf -S D32XR.elf | \
