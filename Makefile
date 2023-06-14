@@ -9,7 +9,7 @@ LDSCRIPTSDIR = $(ROOTDIR)/ldscripts
 LIBPATH = -L$(ROOTDIR)/sh-elf/lib -L$(ROOTDIR)/sh-elf/lib/gcc/sh-elf/4.6.2 -L$(ROOTDIR)/sh-elf/sh-elf/lib
 INCPATH = -I. -I$(ROOTDIR)/sh-elf/include -I$(ROOTDIR)/sh-elf/sh-elf/include -I./liblzss
 
-CCFLAGS = -c -std=c11 -g -m2 -mb
+CCFLAGS = -c -std=c11 -m2 -mb
 CCFLAGS += -Wall -Wextra -pedantic -Wno-unused-parameter -Wimplicit-fallthrough=0 -Wno-missing-field-initializers -Wnonnull
 CCFLAGS += -D__32X__ -DMARS
 LDFLAGS = -T mars-ssf.ld -Wl,-Map=output.map -nostdlib -Wl,--gc-sections --specs=nosys.specs
@@ -22,7 +22,7 @@ release: CCFLAGS += -Os -fomit-frame-pointer -ffast-math -funroll-loops -fno-ali
 release: CCFLAGS += -ffunction-sections -fdata-sections -flto
 release: LDFLAGS += -flto=3
 
-debug: CCFLAGS += -Os -ggdb -fno-omit-frame-pointer
+debug: CCFLAGS += -g -Os -ggdb -fno-omit-frame-pointer
 debug: MARSHWCFLAGS += -ggdb -fno-omit-frame-pointer
 
 PREFIX = $(ROOTDIR)/sh-elf/bin/sh-elf-
