@@ -4,6 +4,8 @@ else
 ROOTDIR = /opt/toolchains/sega
 endif
 
+WAD ?= doom32x.wad
+
 LDSCRIPTSDIR = $(ROOTDIR)/ldscripts
 
 LIBPATH = -L$(ROOTDIR)/sh-elf/lib -L$(ROOTDIR)/sh-elf/lib/gcc/sh-elf/4.6.2 -L$(ROOTDIR)/sh-elf/sh-elf/lib
@@ -116,7 +118,7 @@ $(TARGET).32x: $(TARGET).elf
 	$(OBJC) -O binary $< temp2.bin
 	$(DD) if=temp2.bin of=temp.bin bs=192K conv=sync
 	rm -f temp3.bin
-	cat temp.bin doom32x.wad >>temp3.bin
+	cat temp.bin $(WAD) >>temp3.bin
 	$(DD) if=temp3.bin of=$@ bs=512K conv=sync
 
 $(TARGET).elf: $(OBJS)
