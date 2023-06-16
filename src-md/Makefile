@@ -30,13 +30,15 @@ TARGET = m68k
 LIBS = $(LIBPATH) -lc -lgcc -lnosys
 OBJS = crt0.o everdrive.o font.o main.o kos.o cd.o lzss.o megasd.o vgm.o xvprintf.o zfiles.o
 
-all: z80_vgm.o80 $(TARGET).bin
+all: $(TARGET).bin
 
 $(TARGET).bin: $(TARGET).elf
 	$(OBJC) -O binary $< $(TARGET).bin
 
 $(TARGET).elf: $(OBJS)
 	$(CC) $(LINKFLAGS) $(OBJS) $(LIBS) -o $(TARGET).elf
+
+zfiles.o: z80_vgm.o80
 
 %.o80: %.s80
 	$(ASMZ80) $(FLAGSZ80) -o $@ $<
