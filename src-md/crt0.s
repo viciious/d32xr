@@ -593,6 +593,8 @@ start_music:
         andi.w  #0x0100,d0
         bne.b   1b                  /* wait for bus acquired */
 
+        jsr     rst_ym2612
+
         moveq   #0,d0
         lea     0x00FFFFE0,a0       /* top of stack */
         moveq   #7,d1
@@ -2702,6 +2704,8 @@ FMReset:
         .byte   3,0x00
         .byte   2,0xB6
         .byte   3,0x00
+
+        .align  4
 
         .bss
         .align  2
