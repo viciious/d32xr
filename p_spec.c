@@ -896,11 +896,10 @@ int EV_DoDonut(line_t *line)
 		for (i = 0;i < s2->linecount;i++)
 		{
 			line = lines + s2->lines[i];
-			s3 = LD_BACKSECTOR(line);
-			if (!s3)
+			if (!(line->flags & ML_TWOSIDED))
 				continue;
-			if (!(line->flags & ML_TWOSIDED) ||
-				(s3 == s1))
+			s3 = &sectors[sides[line->sidenum[1]].sector];
+			if (s3 == s1)
 				continue;
 
 			/* */

@@ -432,11 +432,11 @@ int EV_BuildStairs(line_t *line, int type)
 				if ( !(check->flags & ML_TWOSIDED) )
 					continue;
 					
-				newsecnum = LD_FRONTSECTORNUM(check);
+				newsecnum = sides[check->sidenum[0]].sector;
 				tsec = &sectors[newsecnum];
 				if (secnum != newsecnum)
 					continue;
-				newsecnum = LD_BACKSECTORNUM(check);
+				newsecnum = sides[check->sidenum[1]].sector;
 				tsec = &sectors[newsecnum];
 				if (tsec->floorpic != texture)
 					continue;

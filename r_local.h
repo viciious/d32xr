@@ -119,9 +119,7 @@ typedef struct line_s
 	VINT		fineangle;			/* to get sine / eosine for sliding */
 } line_t;
 
-#define LD_FRONTSECTORNUM(ld) (sides[(ld)->sidenum[0]].sector)
-#define LD_BACKSECTORNUM(ld) ((ld)->sidenum[1] != -1 ? sides[ld->sidenum[1]].sector : -1)
-#define LD_FRONTSECTOR(ld) (&sectors[LD_FRONTSECTORNUM(ld)])
+#define LD_FRONTSECTOR(ld) (&sectors[sides[(ld)->sidenum[0]].sector])
 #define LD_BACKSECTOR(ld) ((ld)->sidenum[1] != -1 ? &sectors[sides[ld->sidenum[1]].sector] : NULL)
 
 typedef struct subsector_s
