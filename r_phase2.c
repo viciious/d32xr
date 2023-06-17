@@ -508,6 +508,7 @@ void Mars_Sec_R_WallPrep(void)
     viswall_t *first, *verylast;
     uint32_t clipbounds_[SCREENWIDTH/2+1];
     uint16_t *clipbounds = (uint16_t *)clipbounds_;
+    int ready = 1;
 
     R_InitClipBounds(clipbounds_);
 
@@ -538,6 +539,7 @@ void Mars_Sec_R_WallPrep(void)
             R_SegLoop(segl, clipbounds, seglex->floorheight, seglex->floornewheight, seglex->ceilnewheight);
 
             seglex++;
+            MARS_SYS_COMM8 = ready++;
         }
     }
 
