@@ -937,7 +937,7 @@ void R_RenderPlayerView(int displayplayer)
 		visplane_t visplanes_[MAXVISPLANES];
 	__attribute__((aligned(16)))
 		visplane_t *visplanes_hash_[NUM_VISPLANES_BUCKETS];
-	sector_t *vissectors_[MAXVISSSEC];
+	sector_t *vissectors_[(MAXVISSSEC > MAXVISSPRITES ? MAXVISSSEC : MAXVISSPRITES) + 1];
 	viswallextra_t viswallex_[MAXWALLCMDS] __attribute__((aligned(16)));
     uint32_t sortedvisplanes[MAXVISPLANES];
 

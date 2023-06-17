@@ -497,7 +497,7 @@ void R_DrawPlanes(void)
 
     Mars_R_EndDrawPlanes();
 #else
-    R_DrawPlanes2(NULL);
+    R_DrawPlanes2();
 #endif
 }
 

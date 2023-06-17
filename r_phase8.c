@@ -366,8 +366,8 @@ void R_Sprites(void)
    int half, sortedcount;
    unsigned midcount;
    viswall_t *spr;
-   int sortedsprites[1+MAXVISSPRITES];
-   int *gsortedsprites = sortedsprites;
+   int *sortedsprites = (void *)vissectors;
+   int *gsortedsprites;
    viswall_t *wc;
    vertex_t *verts;
 
