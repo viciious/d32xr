@@ -18,6 +18,9 @@ static void R_UpdateCache(void)
    int bestmips[MIPLEVELS];
    int minplanemip, maxplanemip;
 
+	  if (debugmode == DEBUGMODE_NOTEXCACHE)
+		  return;
+
    for (i = 0; i < MIPLEVELS; i++) {
       bestmips[i] = -1;
    }
