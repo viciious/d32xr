@@ -129,7 +129,7 @@ void Mars_DebugEnd(void);
 void Mars_SetBankPage(int bank, int page) MARS_ATTR_DATA_CACHE_ALIGN;
 void Mars_SetBankPageSec(int bank, int page) MARS_ATTR_DATA_CACHE_ALIGN;
 
-void Mars_DetectInputDevices(void);
+void Mars_DetectInputDevices(void) MARS_ATTR_DATA_CACHE_ALIGN;
 int Mars_ReadController(int port);
 
 int Mars_ROMSize(void);
