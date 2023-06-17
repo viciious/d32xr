@@ -12,6 +12,8 @@
 
 #define	BFGCELLS		40			/* plasma cells for a bfg attack */
 
+#define MAXSOUNDSECS	2048
+
 static void P_RecursiveSound(sector_t* sec, int soundblocks, uint8_t* soundtraversed) ATTR_DATA_CACHE_ALIGN;
 
 /*
@@ -29,14 +31,19 @@ mobj_t *soundtarget;
 static void P_RecursiveSound (sector_t *sec, int soundblocks, uint8_t *soundtraversed)
 {
 	int			i;
+	int 		secnum;
 	line_t		*check;
 	sector_t	*other;
 	sector_t	*front, *back;
 	
 /* wake up all monsters in this sector */
-	if (sec->validcount == validcount[0] && soundtraversed[sec - sectors] <= soundblocks+1)
+	secnum = sec - sectors;
+	if (secnum >= MAXSOUNDSECS)
+		return;
+
+	if (sec->validcount == validcount[0] && soundtraversed[secnum] <= soundblocks+1)
 		return;		/* already flooded */
-	soundtraversed[sec - sectors] = soundblocks+1;
+	soundtraversed[secnum] = soundblocks+1;
 	sec->validcount = validcount[0];
 	sec->soundtarget = soundtarget;
 	
@@ -86,7 +93,7 @@ static void P_RecursiveSound (sector_t *sec, int soundblocks, uint8_t *soundtrav
 void P_NoiseAlert (player_t *player)
 {
 	sector_t	*sec;
-	uint8_t* soundtraversed;
+	uint8_t soundtraversed[MAXSOUNDSECS];
 
 	sec = player->mo->subsector->sector;
 	
@@ -97,7 +104,6 @@ void P_NoiseAlert (player_t *player)
 	
 	soundtarget = player->mo;
 	validcount[0]++;
-	soundtraversed = (uint8_t *)I_WorkBuffer();
 	P_RecursiveSound (sec, 0, soundtraversed);
 }
 
