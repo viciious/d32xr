@@ -348,6 +348,8 @@ static boolean PS_CheckSight2(mobj_t *t1, mobj_t *t2)
 
    I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
    *lvalidcount = *lvalidcount + 1;
+   if (*lvalidcount == 0)
+      *lvalidcount = 1;
 
    // look from eyes of t1 to any part of t2
    sw.sightzstart = t1->z + t1->height - (t1->height >> 2);

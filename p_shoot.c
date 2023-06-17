@@ -327,9 +327,13 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
    count = sub->numlines;
    seg   = &segs[sub->firstline];
 
-	I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
-	vc = *lvalidcount + 1, *lvalidcount = vc;
-	++lvalidcount;
+   I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
+   vc = *lvalidcount + 1;
+   if (vc == 0)
+      vc = 1;
+
+   *lvalidcount = vc;
+   ++lvalidcount;
 
    for(; count; seg++, count--)
    {

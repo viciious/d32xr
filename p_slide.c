@@ -258,6 +258,8 @@ fixed_t P_CompletableFrac(pslidework_t *sw, fixed_t dx, fixed_t dy)
 
    I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
    *lvalidcount = *lvalidcount + 1;
+   if (*lvalidcount == 0)
+      *lvalidcount = 1;
 
    // check lines
    xl = sw->endbox[BOXLEFT  ] - bmaporgx;
@@ -387,7 +389,10 @@ static void SL_CheckSpecialLines(pslidework_t *sw)
    sw->numspechit = 0;
 
    I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
-   vc = *lvalidcount + 1, *lvalidcount = vc;
+   vc = *lvalidcount + 1;
+   if (vc == 0)
+      vc = 0;
+   *lvalidcount = vc;
    ++lvalidcount;
 
    for(bx = bxl; bx <= bxh; bx++)

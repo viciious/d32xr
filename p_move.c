@@ -288,6 +288,8 @@ static boolean PM_CheckPosition(pmovework_t *mw)
 
    I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
    *lvalidcount = *lvalidcount + 1;
+   if (*lvalidcount == 0)
+      *lvalidcount = 1;
 
    mw->blockline = NULL;
    mw->numspechit = 0;

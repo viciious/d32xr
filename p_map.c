@@ -255,9 +255,11 @@ void P_UseLines (player_t *player)
 	lu.closeline = NULL;
 	lu.closedist = FRACUNIT;
 
-   I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
-   *lvalidcount = *lvalidcount + 1;
-	
+	I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
+	*lvalidcount = *lvalidcount + 1;
+	if (*lvalidcount == 0)
+		*lvalidcount = 1;
+
 	for (y=yl ; y<=yh ; y++)
 		for (x=xl ; x<=xh ; x++)
 			P_BlockLinesIterator (x, y, (blocklinesiter_t)PIT_UseLines, &lu );

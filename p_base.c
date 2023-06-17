@@ -253,6 +253,8 @@ static boolean PB_CheckPosition(pmovetest_t *mt)
 
    I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
    *lvalidcount = *lvalidcount + 1;
+   if (*lvalidcount == 0)
+      *lvalidcount = 1;
 
    mt->ceilingline = NULL;
    mt->hitthing    = NULL;
