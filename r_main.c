@@ -939,11 +939,11 @@ void R_RenderPlayerView(int displayplayer)
 		visplane_t *visplanes_hash_[NUM_VISPLANES_BUCKETS];
 	sector_t *vissectors_[MAXVISSSEC];
 	viswallextra_t viswallex_[MAXWALLCMDS] __attribute__((aligned(16)));
-    uint16_t sortedvisplanes[MAXVISPLANES*2];
+    uint32_t sortedvisplanes[MAXVISPLANES];
 
 	t_total = I_GetFRTCounter();
 
-	R_Setup(displayplayer, visplanes_, visplanes_hash_, vissectors_, viswallex_, sortedvisplanes);
+	R_Setup(displayplayer, visplanes_, visplanes_hash_, vissectors_, viswallex_, (uint16_t *)sortedvisplanes);
 
 	Mars_R_BeginWallPrep(drawworld);
 
