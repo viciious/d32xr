@@ -50,6 +50,21 @@ __attribute__((aligned(16)))
     short ringbuf[MARS_RINGBUF_MAXWORDS] __attribute__((aligned(16)));
 } marsrb_t;
 
+
+static inline void Mars_RB_ResetRead(marsrb_t* wb) ATTR_DATA_CACHE_ALIGN;
+static inline void Mars_RB_ResetWrite(marsrb_t* wb) ATTR_DATA_CACHE_ALIGN;
+static inline void Mars_RB_ResetAll(marsrb_t* wb) ATTR_DATA_CACHE_ALIGN;
+static inline unsigned Mars_RB_Len(marsrb_t* wb) ATTR_DATA_CACHE_ALIGN;
+static inline void Mars_RB_FinishRead(marsrb_t* wb) ATTR_DATA_CACHE_ALIGN;
+static inline void Mars_RB_FinishWrite(marsrb_t* wb) ATTR_DATA_CACHE_ALIGN;
+static inline void Mars_RB_FinishWrite(marsrb_t* wb) ATTR_DATA_CACHE_ALIGN;
+static inline void Mars_RB_WaitWriter(marsrb_t* wb, unsigned want) ATTR_DATA_CACHE_ALIGN;
+static inline void Mars_RB_WaitReader(marsrb_t* wb, unsigned window) ATTR_DATA_CACHE_ALIGN;
+static inline void Mars_RB_CommitWrite(marsrb_t* wb) ATTR_DATA_CACHE_ALIGN;
+static inline void Mars_RB_CommitRead(marsrb_t* wb) ATTR_DATA_CACHE_ALIGN;
+static inline short* Mars_RB_GetReadBuf(marsrb_t* wb, unsigned wcnt) ATTR_DATA_CACHE_ALIGN;
+static inline short* Mars_RB_GetWriteBuf(marsrb_t* wb, unsigned wcnt, boolean wait) ATTR_DATA_CACHE_ALIGN;
+
 static inline void Mars_RB_ResetRead(marsrb_t* wb)
 {
     MARS_UNCACHED_RROVER = 0;
