@@ -276,7 +276,7 @@ static void R_DrawPlanes2(void)
     localplane_t lpl;
     visplane_t* pl;
     int extralight;
-    uint16_t *sortedvisplanes = gsortedvisplanes;
+    uint16_t *sortedvisplanes = (uint16_t *)gsortedvisplanes;
     boolean nomips = detailmode < detmode_mipmaps;
 
 #ifdef MARS
@@ -362,7 +362,7 @@ static void R_DrawPlanes2(void)
 #ifdef MARS
 
 static void Mars_R_SplitPlanes(void) ATTR_DATA_CACHE_ALIGN;
-static void Mars_R_SortPlanes(uint16_t *sortedvisplanes) ATTR_DATA_CACHE_ALIGN;
+static void Mars_R_SortPlanes(void) ATTR_DATA_CACHE_ALIGN;
 
 void Mars_Sec_R_DrawPlanes(void)
 {
@@ -424,10 +424,11 @@ static void Mars_R_SplitPlanes(void)
 // sort visplanes by flatnum so that texture data 
 // has a better chance to stay in the CPU cache
 
-static void Mars_R_SortPlanes(uint16_t *sortbuf)
+static void Mars_R_SortPlanes(void)
 {
     int i, numplanes;
     visplane_t* pl;
+    uint16_t *sortbuf = (uint16_t *)gsortedvisplanes;
 
     i = 0;
     numplanes = 0;
@@ -440,13 +441,13 @@ static void Mars_R_SortPlanes(uint16_t *sortbuf)
         i += 2;
     }
 
-    D_isort((int*)sortbuf, numplanes);
+    D_isort((int *)gsortedvisplanes, numplanes);
 }
 
 void R_PreDrawPlanes(void)
 {
     int numplanes;
-    uint16_t *sortbuf = gsortedvisplanes;
+    uint16_t *sortbuf = (uint16_t *)gsortedvisplanes;
 
     Mars_ClearCacheLine(&lastvisplane);
     Mars_ClearCacheLine(sortbuf);
@@ -459,7 +460,8 @@ void R_PreDrawPlanes(void)
         Mars_ClearCacheLines(visplanes, (numplanes * sizeof(visplane_t) + 31) / 16);
 
         Mars_R_SplitPlanes();
-        Mars_R_SortPlanes(sortbuf);
+
+        Mars_R_SortPlanes();
     }
 }
 

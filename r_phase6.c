@@ -293,10 +293,6 @@ void R_SegCommands(void)
         unsigned actionbits;
         viswall_t* segl = viswalls + i;
 
-#ifdef MARS
-        if (MARS_SYS_COMM8 <= i)
-            continue;
-#endif
         if (segl->start > segl->stop)
             continue;
 

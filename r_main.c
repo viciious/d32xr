@@ -60,7 +60,7 @@ const uint16_t visplane0open[SCREENWIDTH+2] = { 0 };
 #define NUM_VISPLANES_BUCKETS 32
 static visplane_t **visplanes_hash;
 
-uint16_t *gsortedvisplanes;
+uint32_t *gsortedvisplanes;
 
 /* */
 /* sprites */
