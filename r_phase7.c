@@ -447,14 +447,16 @@ static void Mars_R_SortPlanes(void)
 void R_PreDrawPlanes(void)
 {
     int numplanes;
-    uint16_t *sortbuf = (uint16_t *)gsortedvisplanes;
+    uint16_t *sortbuf;
 
     Mars_ClearCacheLine(&lastvisplane);
+    Mars_ClearCacheLine(&gsortedvisplanes);
+
+    sortbuf = (uint16_t *)gsortedvisplanes;
     Mars_ClearCacheLine(sortbuf);
 
-    numplanes = lastvisplane - visplanes; // visplane 0 is a dummy plane
-
     // check to see if we still need to fill the sorted planes list
+    numplanes = lastvisplane - visplanes; // visplane 0 is a dummy plane
     if (numplanes > 1 && sortbuf[0] == 0) 
     {
         Mars_ClearCacheLines(visplanes, (numplanes * sizeof(visplane_t) + 31) / 16);
