@@ -539,6 +539,7 @@ void Mars_Sec_R_WallPrep(void)
             R_SegLoop(segl, clipbounds, seglex->floorheight, seglex->floornewheight, seglex->ceilnewheight);
 
             seglex++;
+            MARS_SYS_COMM8++;
         }
     }
 }
