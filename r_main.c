@@ -506,7 +506,7 @@ extern	pixel_t	*screens[2];	/* [viewportWidth*viewportHeight];  */
 
 static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	visplane_t **visplanes_hash_, sector_t **vissectors_, viswallextra_t *viswallex_,
-	uint16_t *sortedvisplanes_)
+	uint32_t *sortedvisplanes_)
 {
 	int 		i;
 	int		damagecount, bonuscount;
@@ -943,7 +943,7 @@ void R_RenderPlayerView(int displayplayer)
 
 	t_total = I_GetFRTCounter();
 
-	R_Setup(displayplayer, visplanes_, visplanes_hash_, vissectors_, viswallex_, (uint16_t *)sortedvisplanes);
+	R_Setup(displayplayer, visplanes_, visplanes_hash_, vissectors_, viswallex_, sortedvisplanes);
 
 	Mars_R_BeginWallPrep(drawworld);
 
