@@ -526,9 +526,9 @@ typedef struct
 } viswallextra_t;
 
 #define	MAXWALLCMDS		128
-extern	viswall_t *viswalls/*[MAXWALLCMDS] __attribute__((aligned(16)))*/;
-extern	viswall_t *lastwallcmd;
-extern	viswallextra_t *viswallextras;
+extern	viswall_t * volatile viswalls/*[MAXWALLCMDS] __attribute__((aligned(16)))*/;
+extern	viswall_t * volatile lastwallcmd;
+extern	viswallextra_t * volatile viswallextras;
 
 /* A vissprite_t is a thing that will be drawn during a refresh */
 typedef struct vissprite_s
@@ -548,15 +548,15 @@ typedef struct vissprite_s
 } vissprite_t;
 
 #define	MAXVISSPRITES	MAXWALLCMDS
-extern	viswall_t	*vissprites/*[MAXVISSPRITES]*/, * lastsprite_p, * vissprite_p;
+extern	viswall_t	* volatile vissprites/*[MAXVISSPRITES]*/, * volatile  lastsprite_p, * volatile vissprite_p;
 
 #define	MAXOPENINGS		SCREENWIDTH*14
-extern	unsigned short	*openings/*[MAXOPENINGS]*/;
-extern 	unsigned short	*lastopening;
-extern	unsigned short	*segclip, *lastsegclip;
+extern	unsigned short	* volatile openings/*[MAXOPENINGS]*/;
+extern 	unsigned short	* volatile lastopening;
+extern	unsigned short	* volatile segclip, * volatile lastsegclip;
 
 #define	MAXVISSSEC		128
-extern	sector_t		**vissectors/*[MAXVISSSEC]*/, ** lastvissector;
+extern	sector_t		**vissectors/*[MAXVISSSEC]*/, **lastvissector;
 
 typedef struct visplane_s
 {
@@ -568,8 +568,8 @@ typedef struct visplane_s
 } visplane_t;
 
 #define	MAXVISPLANES	32
-extern	visplane_t		*visplanes/*[MAXVISPLANES]*/, *lastvisplane;
-extern uint32_t *gsortedvisplanes;
+extern	visplane_t		* volatile visplanes/*[MAXVISPLANES]*/, * volatile lastvisplane;
+extern uint32_t * volatile gsortedvisplanes;
 
 void R_MarkOpenPlane(visplane_t* pl)
 ATTR_DATA_CACHE_ALIGN

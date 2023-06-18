@@ -46,7 +46,7 @@ static void R_LockPln(void) ATTR_DATA_CACHE_ALIGN;
 static void R_UnlockPln(void) ATTR_DATA_CACHE_ALIGN;
 static visplane_t* R_GetNextPlane(uint16_t *sortedvisplanes) ATTR_DATA_CACHE_ALIGN;
 
-void R_PreDrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
+//void R_PreDrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
 void R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 
 static char pl_lock = 0;
@@ -450,7 +450,6 @@ void R_PreDrawPlanes(void)
     uint16_t *sortbuf;
 
     Mars_ClearCacheLine(&lastvisplane);
-    Mars_ClearCacheLine(&gsortedvisplanes);
 
     sortbuf = (uint16_t *)gsortedvisplanes;
     Mars_ClearCacheLine(sortbuf);

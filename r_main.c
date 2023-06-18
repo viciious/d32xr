@@ -43,36 +43,36 @@ short fuzzoffset[FUZZTABLE] =
 /* */
 /* subsectors */
 /* */
-sector_t	**vissectors/*[MAXVISSSEC]*/, ** lastvissector;
+sector_t	**vissectors/*[MAXVISSSEC]*/, **lastvissector;
 
 /* */
 /* walls */
 /* */
-viswall_t	*viswalls/*[MAXWALLCMDS]*/, *lastwallcmd;
-viswallextra_t *viswallextras;
+viswall_t	* volatile viswalls/*[MAXWALLCMDS]*/, * volatile lastwallcmd;
+viswallextra_t * volatile viswallextras;
 
 /* */
 /* planes */
 /* */
-visplane_t	*visplanes/*[MAXVISPLANES]*/, *lastvisplane;
+visplane_t	* volatile visplanes/*[MAXVISPLANES]*/, * volatile lastvisplane;
 const uint16_t visplane0open[SCREENWIDTH+2] = { 0 };
  
 #define NUM_VISPLANES_BUCKETS 32
-static visplane_t **visplanes_hash;
+static visplane_t * volatile * visplanes_hash;
 
-uint32_t *gsortedvisplanes;
+uint32_t * volatile gsortedvisplanes;
 
 /* */
 /* sprites */
 /* */
-viswall_t	*vissprites/*[MAXVISSPRITES]*/, * lastsprite_p, * vissprite_p;
+viswall_t	* volatile vissprites/*[MAXVISSPRITES]*/, * volatile lastsprite_p, * volatile vissprite_p;
 
 /* */
 /* openings / misc refresh memory */
 /* */
-unsigned short	*openings/*[MAXOPENINGS]*/, * lastopening;
+unsigned short	* volatile openings/*[MAXOPENINGS]*/, * volatile lastopening;
 
-unsigned short	*segclip, *lastsegclip;
+unsigned short	* volatile segclip, * volatile lastsegclip;
 
 /*===================================== */
 
