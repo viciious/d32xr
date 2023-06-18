@@ -964,9 +964,6 @@ void R_RenderPlayerView(int displayplayer)
 	R_SegCommands();
 	t_segs = I_GetFRTCounter() - t_segs;
 
-	// wait for the secondary CPU to finish phase 2
-	Mars_R_WaitSecWallPrep();
-
 	Mars_ClearCacheLine(&lastsegclip);
 	Mars_ClearCacheLine(&lastopening);
 

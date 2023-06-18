@@ -107,11 +107,6 @@ static inline void Mars_R_WaitSecWallPrep(void)
 	while (MARS_SYS_COMM6 != 0xfffe);
 }
 
-static inline void Mars_Sec_R_EndWallPrep(void)
-{
-	MARS_SYS_COMM6 = 0xfffe;
-}
-
 // r_phase7
 static inline void Mars_R_BeginDrawPlanes(void)
 {

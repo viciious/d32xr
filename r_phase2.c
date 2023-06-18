@@ -542,8 +542,6 @@ void Mars_Sec_R_WallPrep(void)
             MARS_SYS_COMM8 = ready++;
         }
     }
-
-    Mars_Sec_R_EndWallPrep();
 }
 
 #else
