@@ -505,8 +505,7 @@ extern	pixel_t	*screens[2];	/* [viewportWidth*viewportHeight];  */
 */
 
 static void R_Setup (int displayplayer, visplane_t *visplanes_,
-	visplane_t **visplanes_hash_, sector_t **vissectors_, viswallextra_t *viswallex_,
-	uint32_t *sortedvisplanes_)
+	visplane_t **visplanes_hash_, sector_t **vissectors_, viswallextra_t *viswallex_)
 {
 	int 		i;
 	int		damagecount, bonuscount;
@@ -690,7 +689,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	viswalls = (void*)tempbuf;
 	tempbuf += sizeof(*viswalls) * MAXWALLCMDS / sizeof(*tempbuf);
 
-	viswallextras = viswallex_;
+	viswallextras = viswallex_ + 1;
 
 	openings = tempbuf;
 	tempbuf += MAXOPENINGS;
@@ -703,7 +702,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	lastvisplane = visplanes + 1;		/* visplanes[0] is left empty */
 	visplanes_hash = visplanes_hash_;
 
-	gsortedvisplanes = sortedvisplanes_;
+	gsortedvisplanes = (uint32_t *)viswallex_;
 	gsortedvisplanes[0] = 0;
 
 	//I_Error("%d", ((uint16_t *)I_FrameBuffer() + 64*1024-0x100 - tempbuf) * 2);
@@ -874,10 +873,10 @@ extern	ref8_start;
 
 void R_RenderPlayerView(int displayplayer)
 {
-	visplane_t visplanes[MAXVISPLANES];
+	visplane_t visplanes_[MAXVISPLANES];
 	visplane_t *visplanes_hash_[NUM_VISPLANES_BUCKETS];
 	sector_t *vissectors_[MAXVISSSEC];
-	viswallextra_t viswallex_[MAXWALLCMDS] __attribute__((aligned(16)));
+	viswallextra_t viswallex_[MAXWALLCMDS + 1] __attribute__((aligned(16)));
 
 	/* make sure its done now */
 #if defined(JAGUAR)
@@ -938,12 +937,11 @@ void R_RenderPlayerView(int displayplayer)
 	__attribute__((aligned(16)))
 		visplane_t *visplanes_hash_[NUM_VISPLANES_BUCKETS];
 	sector_t *vissectors_[(MAXVISSSEC > MAXVISSPRITES ? MAXVISSSEC : MAXVISSPRITES) + 1];
-	viswallextra_t viswallex_[MAXWALLCMDS] __attribute__((aligned(16)));
-    uint32_t sortedvisplanes[MAXVISPLANES];
+	viswallextra_t viswallex_[MAXWALLCMDS + 1] __attribute__((aligned(16)));
 
 	t_total = I_GetFRTCounter();
 
-	R_Setup(displayplayer, visplanes_, visplanes_hash_, vissectors_, viswallex_, sortedvisplanes);
+	R_Setup(displayplayer, visplanes_, visplanes_hash_, vissectors_, viswallex_);
 
 	Mars_R_BeginWallPrep(drawworld);
 
