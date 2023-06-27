@@ -483,6 +483,8 @@ while (!I_RefreshCompleted ())
 void ClearEEProm (void);
 void DrawSinglePlaque (jagobj_t *pl);
 
+jagobj_t	*titlepic;
+
 int TIC_Abortable (void)
 {
 #ifdef JAGUAR
@@ -491,6 +493,8 @@ int TIC_Abortable (void)
 	int buttons = ticbuttons[0];
 	int oldbuttons = oldticbuttons[0];
 
+	if (titlepic == NULL)
+		return 1;
 	if (ticon < TICVBLS)
 		return 0;
 	if (ticon >= gameinfo.titleTime)
@@ -538,8 +542,6 @@ int TIC_Abortable (void)
 
 
 /*============================================================================= */
-
-jagobj_t	*titlepic;
 
 void START_Title(void)
 {
@@ -595,8 +597,11 @@ static short creditspage;
 static void START_Credits (void)
 {
 #ifdef MARS
+	credits = NULL;
 	titlepic = NULL;
 	creditspage = 1;
+	if (gameinfo.creditsPage < 0)
+		return;
 	credits = W_CacheLumpNum(gameinfo.creditsPage, PU_STATIC);
 #else
 	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
@@ -620,6 +625,8 @@ static int TIC_Credits (void)
 	int buttons = ticbuttons[0];
 	int oldbuttons = oldticbuttons[0];
 
+	if (gameinfo.creditsPage < 0)
+		return ga_exitdemo;
 	if (ticon >= gameinfo.creditsTime)
 		return 1;		/* go on to next demo */
 

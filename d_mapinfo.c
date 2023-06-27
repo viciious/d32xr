@@ -381,6 +381,7 @@ int G_FindGameinfo(dgameinfo_t* gi)
 		return 0;
 
 	D_memset(gi, 0, sizeof(*gi));
+	gi->creditsPage = -1;
 	gi->endShowCast = 1;
 	gi->data = G_MapinfoSectionCStr(buf, "gameinfo", NULL);
 	if (!gi->data)
