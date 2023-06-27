@@ -8,10 +8,6 @@
 #include "r_local.h"
 #include "mars.h"
 
-static sector_t emptysector = { 0, 0, -2, -2, -2 };
-
-void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight, 
-    fixed_t *floornewheight, fixed_t *ceilingnewheight) ATTR_DATA_CACHE_ALIGN;
 static fixed_t R_PointToDist(fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
 static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, angle_t normalangle) ATTR_DATA_CACHE_ALIGN;
 static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle, int angle1) ATTR_DATA_CACHE_ALIGN;
@@ -19,174 +15,6 @@ void R_WallLatePrep(viswall_t* wc, vertex_t *verts) ATTR_DATA_CACHE_ALIGN;
 static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floorheight, 
     fixed_t floornewheight, fixed_t ceilingnewheight) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 void R_WallPrep(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
-
-void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight, 
-    fixed_t *floornewheight, fixed_t *ceilingnewheight)
-{
-   seg_t     *seg;
-   line_t    *li;
-   side_t    *si;
-   sector_t  *front_sector, *back_sector;
-   fixed_t    f_floorheight, f_ceilingheight;
-   fixed_t    b_floorheight, b_ceilingheight;
-   int        f_lightlevel, b_lightlevel;
-   int        f_ceilingpic, b_ceilingpic;
-   int        b_texturemid, t_texturemid;
-   boolean    skyhack;
-   int        actionbits;
-   int        side;
-
-   {
-      seg  = segl->seg;
-      li   = &lines[seg->linedef];
-      side = seg->side;
-      si   = &sides[li->sidenum[seg->side]];
-
-      li->flags |= ML_MAPPED; // mark as seen
-
-      front_sector    = &sectors[sides[li->sidenum[side]].sector];
-
-      f_ceilingpic    = front_sector->ceilingpic;
-      f_lightlevel    = front_sector->lightlevel;
-      f_floorheight   = front_sector->floorheight   - vd.viewz;
-      f_ceilingheight = front_sector->ceilingheight - vd.viewz;
-
-      segl->floorpicnum   = flattranslation[front_sector->floorpic];
-
-      if (f_ceilingpic != -1)
-      {
-          segl->ceilingpicnum = flattranslation[f_ceilingpic];
-      }
-      else
-      {
-          segl->ceilingpicnum = -1;
-      }
-
-      back_sector = (li->flags & ML_TWOSIDED) ? &sectors[sides[li->sidenum[side^1]].sector] : 0;
-      if(!back_sector)
-         back_sector = &emptysector;
-
-      b_ceilingpic    = back_sector->ceilingpic;
-      b_lightlevel    = back_sector->lightlevel;
-      b_floorheight   = back_sector->floorheight   - vd.viewz;
-      b_ceilingheight = back_sector->ceilingheight - vd.viewz;
-
-      t_texturemid = b_texturemid = 0;
-      actionbits = 0;
-
-      // deal with sky ceilings (also missing in 3DO)
-      if(f_ceilingpic == -1 && b_ceilingpic == -1)
-         skyhack = true;
-      else 
-         skyhack = false;
-
-      // add floors and ceilings if the wall needs them
-      if(f_floorheight < 0 &&                                // is the camera above the floor?
-         (front_sector->floorpic != back_sector->floorpic || // floor texture changes across line?
-          f_floorheight   != b_floorheight                || // height changes across line?
-          f_lightlevel    != b_lightlevel                 || // light level changes across line?
-          b_ceilingheight == b_floorheight))                 // backsector is closed?
-      {
-         *floorheight = *floornewheight = f_floorheight;
-         actionbits |= (AC_ADDFLOOR|AC_NEWFLOOR);
-      }
-
-      if(!skyhack                                         && // not a sky hack wall
-         (f_ceilingheight > 0 || f_ceilingpic == -1)      && // ceiling below camera, or sky
-         (f_ceilingpic    != b_ceilingpic                 || // ceiling texture changes across line?
-          f_ceilingheight != b_ceilingheight              || // height changes across line?              
-          f_lightlevel    != b_lightlevel                 || // light level changes across line?
-          b_ceilingheight == b_floorheight))                 // backsector is closed?
-      {
-         segl->ceilingheight = *ceilingnewheight = f_ceilingheight;
-         if(f_ceilingpic == -1)
-            actionbits |= (AC_ADDSKY|AC_NEWCEILING);
-         else
-            actionbits |= (AC_ADDCEILING|AC_NEWCEILING);
-      }
-
-      segl->t_topheight = f_ceilingheight; // top of texturemap
-
-      if(back_sector == &emptysector)
-      {
-         // single-sided line
-         segl->t_texturenum = texturetranslation[si->midtexture];
-
-         // handle unpegging (bottom of texture at bottom, or top of texture at top)
-         if(li->flags & ML_DONTPEGBOTTOM)
-            t_texturemid = f_floorheight + (textures[segl->t_texturenum].height << FRACBITS);
-         else
-            t_texturemid = f_ceilingheight;
-
-         t_texturemid += si->rowoffset<<FRACBITS;                               // add in sidedef texture offset
-         segl->t_bottomheight = f_floorheight; // set bottom height
-         actionbits |= (AC_SOLIDSIL|AC_TOPTEXTURE);                   // solid line; draw middle texture only
-      }
-      else
-      {
-         // two-sided line
-
-         // is bottom texture visible?
-         if(b_floorheight > f_floorheight)
-         {
-            segl->b_texturenum = texturetranslation[si->bottomtexture];
-            if(li->flags & ML_DONTPEGBOTTOM)
-               b_texturemid = f_ceilingheight;
-            else
-               b_texturemid = b_floorheight;
-
-            b_texturemid += si->rowoffset<<FRACBITS; // add in sidedef texture offset
-
-            segl->b_topheight = *floornewheight = b_floorheight;
-            segl->b_bottomheight = f_floorheight;
-            actionbits |= (AC_BOTTOMTEXTURE|AC_NEWFLOOR); // generate bottom wall and floor
-         }
-
-         // is top texture visible?
-         if(b_ceilingheight < f_ceilingheight && !skyhack)
-         {
-            segl->t_texturenum = texturetranslation[si->toptexture];
-            if(li->flags & ML_DONTPEGTOP)
-               t_texturemid = f_ceilingheight;
-            else
-               t_texturemid = b_ceilingheight + (textures[segl->t_texturenum].height << FRACBITS);
-
-            t_texturemid += si->rowoffset<<FRACBITS; // add in sidedef texture offset
-
-            segl->t_bottomheight = *ceilingnewheight = b_ceilingheight;
-            actionbits |= (AC_NEWCEILING|AC_TOPTEXTURE); // draw top texture and ceiling
-         }
-
-         // check if this wall is solid, for sprite clipping
-         if(b_floorheight >= f_ceilingheight || b_ceilingheight <= f_floorheight)
-            actionbits |= AC_SOLIDSIL;
-         else
-         {
-            if((b_floorheight >= 0 && b_floorheight > f_floorheight) ||
-               (f_floorheight < 0 && f_floorheight > b_floorheight))
-            {
-               actionbits |= AC_BOTTOMSIL; // set bottom mask
-            }
-
-            if(!skyhack)
-            {
-               if((b_ceilingheight <= 0 && b_ceilingheight < f_ceilingheight) ||
-                  (f_ceilingheight >  0 && b_ceilingheight > f_ceilingheight))
-               {
-                  actionbits |= AC_TOPSIL; // set top mask
-               }
-            }
-         }
-      }
-
-      // save local data to the viswall structure
-      segl->actionbits    = actionbits;
-      segl->t_texturemid  = t_texturemid;
-      segl->b_texturemid  = b_texturemid;
-      segl->seglightlevel = f_lightlevel;
-      segl->offset        = ((fixed_t)si->textureoffset + seg->offset) << 16;
-   }
-}
 
 //
 // Get distance to point in 3D projection
@@ -486,12 +314,14 @@ void Mars_Sec_R_WallPrep(void)
     viswall_t *first, *verylast;
     uint32_t clipbounds_[SCREENWIDTH/2+1];
     uint16_t *clipbounds = (uint16_t *)clipbounds_;
+    vertex_t *verts;
 
     R_InitClipBounds(clipbounds_);
 
     first = viswalls;
     verylast = NULL;
     seglex = viswallextras;
+    verts = W_GetLumpData(gamemaplump+ML_VERTEXES);
 
     for (segl = first; segl != verylast; )
     {
@@ -514,6 +344,8 @@ void Mars_Sec_R_WallPrep(void)
 #ifdef MARS
             Mars_ClearCacheLine(seglex);
 #endif
+            R_WallLatePrep(segl, verts);
+
             R_SegLoop(segl, clipbounds, seglex->floorheight, seglex->floornewheight, seglex->ceilnewheight);
 
             seglex++;
@@ -535,8 +367,6 @@ void R_WallPrep(void)
     for (segl = viswalls; segl != lastwallcmd; segl++)
     {
         fixed_t floornewheight = 0, ceilingnewheight = 0;
-
-        R_WallEarlyPrep(segl, &floornewheight, &ceilingnewheight);
 
         R_WallLatePrep(segl, vertexes);
 
