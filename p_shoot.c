@@ -397,8 +397,8 @@ check:
    bsp = &nodes[bspnum];
 
    // decide which side the start point is on
-   side = PA_DivlineSide(sw->shootdiv.x, sw->shootdiv.y, (void*)bsp);
-   side2 = PA_DivlineSide(sw->shootx2, sw->shooty2, (void*)bsp);
+   side = PA_DivlineSide(sw->shootdiv.x, sw->shootdiv.y, (divline_t*)bsp);
+   side2 = PA_DivlineSide(sw->shootx2, sw->shooty2, (divline_t*)bsp);
 
    // cross the starting side
    if(!PA_CrossBSPNode(sw, bsp->children[side]))
