@@ -45,25 +45,16 @@ void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
       li->flags |= ML_MAPPED; // mark as seen
 
       front_sector    = &sectors[sides[li->sidenum[side]].sector];
-#ifdef MARS
-      Mars_ClearCacheLines(front_sector, /*(sizeof(sector_t)+31)/16*/2);
-#endif
 
       f_ceilingpic    = front_sector->ceilingpic;
       f_lightlevel    = front_sector->lightlevel;
       f_floorheight   = front_sector->floorheight   - vd.viewz;
       f_ceilingheight = front_sector->ceilingheight - vd.viewz;
 
-#ifdef MARS
-      Mars_ClearCacheLine(&flattranslation[front_sector->floorpic]);
-#endif
       segl->floorpicnum   = flattranslation[front_sector->floorpic];
 
       if (f_ceilingpic != -1)
       {
-#ifdef MARS
-          Mars_ClearCacheLine(&flattranslation[f_ceilingpic]);
-#endif
           segl->ceilingpicnum = flattranslation[f_ceilingpic];
       }
       else
@@ -74,10 +65,6 @@ void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
       back_sector = (li->flags & ML_TWOSIDED) ? &sectors[sides[li->sidenum[side^1]].sector] : 0;
       if(!back_sector)
          back_sector = &emptysector;
-#ifdef MARS
-      else
-         Mars_ClearCacheLines(back_sector, /*(sizeof(sector_t)+31)/16*/2);
-#endif
 
       b_ceilingpic    = back_sector->ceilingpic;
       b_lightlevel    = back_sector->lightlevel;
@@ -123,9 +110,6 @@ void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
       if(back_sector == &emptysector)
       {
          // single-sided line
-#ifdef MARS
-         Mars_ClearCacheLine(&texturetranslation[si->midtexture]);
-#endif
          segl->t_texturenum = texturetranslation[si->midtexture];
 
          // handle unpegging (bottom of texture at bottom, or top of texture at top)
@@ -145,9 +129,6 @@ void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
          // is bottom texture visible?
          if(b_floorheight > f_floorheight)
          {
-#ifdef MARS
-            Mars_ClearCacheLine(&texturetranslation[si->bottomtexture]);
-#endif
             segl->b_texturenum = texturetranslation[si->bottomtexture];
             if(li->flags & ML_DONTPEGBOTTOM)
                b_texturemid = f_ceilingheight;
@@ -164,9 +145,6 @@ void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
          // is top texture visible?
          if(b_ceilingheight < f_ceilingheight && !skyhack)
          {
-#ifdef MARS
-            Mars_ClearCacheLine(&texturetranslation[si->toptexture]);
-#endif
             segl->t_texturenum = texturetranslation[si->toptexture];
             if(li->flags & ML_DONTPEGTOP)
                t_texturemid = f_ceilingheight;
