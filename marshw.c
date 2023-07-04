@@ -617,26 +617,20 @@ void Mars_CtlMDVDP(int sel)
 void Mars_StoreWordColumnInMDVRAM(int c)
 {
 	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM2 = c;
-	MARS_SYS_COMM0 = 0x1A00;		/* sel = to VRAM, offset in comm2, start move */
+	MARS_SYS_COMM0 = 0x1A00|c;		/* sel = to VRAM, column in LB of comm0, start move */
 }
 
 void Mars_LoadWordColumnFromMDVRAM(int c, int offset, int len)
 {
 	while (MARS_SYS_COMM0 != 0);
-	MARS_SYS_COMM2 = c;
-	MARS_SYS_COMM0 = 0x1A01;		/* sel = to VRAM, offset in comm2, start move */
-	while (MARS_SYS_COMM0 != 0x9A00);
-
 	MARS_SYS_COMM2 = (((uint16_t)len)<<8) | offset;  /* (length<<8)|offset */
-	MARS_SYS_COMM0 = 0x1A01;		/* sel = to VRAM, offset in comm2, start move */
+	MARS_SYS_COMM0 = 0x1B00|c;		/* sel = to VRAM, column in LB of comm0, start move */
 }
 
 void Mars_SwapWordColumnWithMDVRAM(int c)
 {
     while (MARS_SYS_COMM0);
-    MARS_SYS_COMM2 = c;
-    MARS_SYS_COMM0 = 0x1A02;        /* sel = swap with VRAM, column in comm2, start move */
+    MARS_SYS_COMM0 = 0x1C00|c;        /* sel = swap with VRAM, column in LB of comm0, start move */
 }
 
 void Mars_Finish(void)

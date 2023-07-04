@@ -435,6 +435,10 @@ handle_req:
         bls     ctl_md_vdp
         cmpi.w  #0x1AFF,d0
         bls     cpy_md_vram
+        cmpi.w  #0x1BFF,d0
+        bls     cpy_md_vram
+        cmpi.w  #0x1CFF,d0
+        bls     cpy_md_vram
 | unknown command
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -1533,18 +1537,18 @@ cpy_md_vram:
         move.w  d1,0xA15100         /* unset FM - disallow SH2 access to FB */
 
         lea     0xA15120,a1         /* 32x comm0 port */
-        lea     0xA15122,a2         /* 32x comm2 port */
+
         moveq   #0,d1
-        move.w  (a2),d1             /* word offset into vram */
-        add.l   d1,d1
+        move.b  d0,d1               /* column number */
+        add.w   d1,d1
 
         lea     0x840200,a2         /* frame buffer */
         lea     0(a2,d1.l),a2
 
-        cmpi.b  #1,d0
-        beq.w   5f                  /* copy from vram */
-        cmpi.b  #2,d0
-        beq     10f                 /* swap with vram */
+        cmpi.w  #0x1C00,d0
+        bhs.w   10f                 /* swap with vram */
+        cmpi.w  #0x1B00,d0
+        bhs.w   5f                  /* copy from vram */
 
         /* COPY TO VRAM */
         cmpi.l  #280,d1             /* vram or wram? */
@@ -1612,6 +1616,12 @@ cpy_md_vram:
         bra     main_loop
 
 5:
+        moveq   #0,d0
+        move.w  2(a1), d0
+
+        andi.w  #0xFF,d0            /* column offset in words */
+        add.l   d0,d0
+
         /* COPY FROM VRAM */
         cmpi.l  #280,d1             /* vram or wram? */
         bhs.w   7f                  /* wram */
@@ -1627,16 +1637,6 @@ cpy_md_vram:
         lea     0xC00000,a0         /* vdp data port */
         move.w  #0x8F02,4(a0)       /* set INC to 2 */
 
-        move.w  #0x9A00, (a1)
-        moveq   #0,d0
-51:
-        move.w  (a1), d0
-        cmpi.w  #0x1A01,d0
-        bne.b   51b
-        move.w  2(a1), d0
-
-        andi.w  #0xFF,d0            /* column offset in words */
-        add.l   d0,d0
         add.l   d0,d1
 
         #mulu.w  #160,d0
@@ -1687,17 +1687,6 @@ cpy_md_vram:
         add     d2,d1
         lsl.w   #1,d2
         add     d2,d1
-
-        move.w  #0x9A00, (a1)
-        moveq   #0,d0
-71:
-        move.w  (a1), d0
-        cmpi.w  #0x1A01,d0
-        bne.b   71b
-        move.w  2(a1), d0
-
-        andi.w  #0xFF,d0            /* column offset in words */
-        add.l   d0,d0
         add.l   d0,d1
 
         #mulu.w  #160,d0
