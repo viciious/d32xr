@@ -24,8 +24,8 @@ release: CCFLAGS += -Os -fomit-frame-pointer -ffast-math -funroll-loops -fno-ali
 release: CCFLAGS += -ffunction-sections -fdata-sections -flto
 release: LDFLAGS += -flto=3
 
-debug: CCFLAGS += -g -Os -ggdb -fno-omit-frame-pointer
-debug: MARSHWCFLAGS += -ggdb -fno-omit-frame-pointer
+debug: CCFLAGS += -g -Os -ggdb -fomit-frame-pointer
+debug: MARSHWCFLAGS += -ggdb -fomit-frame-pointer
 
 PREFIX = $(ROOTDIR)/sh-elf/bin/sh-elf-
 CC = $(PREFIX)gcc
