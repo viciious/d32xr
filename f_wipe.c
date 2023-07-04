@@ -195,7 +195,7 @@ void Mars_Sec_wipe_doMelt(void)
     short   *yy;
 
     yy = (short*)(*(volatile uintptr_t *)&MARS_SYS_COMM8);
-    Mars_ClearCacheLines(yy, (sizeof(*yy)*WIPEWIDTH+31)/16);
+    Mars_ClearCache();
 
     wipe_meltBottomUp(yy);
 }
