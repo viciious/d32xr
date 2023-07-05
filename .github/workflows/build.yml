@@ -45,7 +45,10 @@ jobs:
         run: |
           /opt/toolchains/sega/sh-elf/bin/sh-elf-readelf -S D32XR.elf
       - name: Print sizes
-        run: /opt/toolchains/sega/sh-elf/bin/sh-elf-nm --print-size --size-sort --radix=d D32XR.elf | egrep -Ei ' (B|D) ' | tail -n 50
+        run: |
+          /opt/toolchains/sega/sh-elf/bin/sh-elf-gcc-nm --numeric-sort --radix=d D32XR.elf | egrep -Ei ' (B|D|t|T) ' | grep '^100' | grep -v __data_start >syms && \
+          tail +2 syms | awk '{print $1}' >syms2 && \
+          paste -d " " syms syms2 | awk '{ $5 = $4 - $1 } 1' | awk '{ printf "%08x %08i %s\n", $1,$5,$3 }' | sort -n -k 2,2 | tail -n 50
       - name: .bss plus .data size
         run: |
           /opt/toolchains/sega/sh-elf/bin/sh-elf-readelf -S D32XR.elf | \
