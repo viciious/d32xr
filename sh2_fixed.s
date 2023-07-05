@@ -18,7 +18,7 @@
 !  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 !  SOFTWARE.
 
-.data
+.section .sdata
 
 ! #define FixedMul(a,b) (((int64_t)(a) * (b))>>16)
 

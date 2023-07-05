@@ -18,7 +18,7 @@
 !  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 !  SOFTWARE.
 
-.data
+.section .sdata
 
 ! void S_PaintChannel8(void *channel, int16_t *buffer, int32_t cnt, int32_t scale);
 ! On entry: r4 = channel pointer

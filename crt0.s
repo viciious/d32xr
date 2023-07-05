@@ -195,7 +195,7 @@
 
         .incbin "src-md/m68k.bin"       /* all 68000 code & data, compiled to 0x880800/0xFF0000 */
 
-        .data
+        .section .sdata
 
 !-----------------------------------------------------------------------
 ! Primary Vector Base Table
