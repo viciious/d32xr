@@ -46,7 +46,6 @@ static void R_LockPln(void) ATTR_DATA_CACHE_ALIGN;
 static void R_UnlockPln(void) ATTR_DATA_CACHE_ALIGN;
 static visplane_t* R_GetNextPlane(uint16_t *sortedvisplanes) ATTR_DATA_CACHE_ALIGN;
 
-//void R_PreDrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
 void R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 
 static char pl_lock = 0;
@@ -276,13 +275,16 @@ static void R_DrawPlanes2(void)
     localplane_t lpl;
     visplane_t* pl;
     int extralight;
-    uint16_t *sortedvisplanes = (uint16_t *)gsortedvisplanes;
     boolean nomips = detailmode < detmode_mipmaps;
 
 #ifdef MARS
     Mars_ClearCacheLine(&lastvisplane);
-    Mars_ClearCacheLines(sortedvisplanes, ((lastvisplane - visplanes - 1) * sizeof(*sortedvisplanes) + 31) / 16);
+    Mars_ClearCacheLine(&gsortedvisplanes);
+    Mars_ClearCacheLines(gsortedvisplanes, ((lastvisplane - visplanes - 1) * sizeof(*gsortedvisplanes) + 31) / 16);
 #endif
+
+    if (gsortedvisplanes == NULL)
+        return;
 
     lpl.x = vd.viewx;
     lpl.y = -vd.viewy;
@@ -298,7 +300,7 @@ static void R_DrawPlanes2(void)
     lpl.mapplane = detailmode == detmode_potato ? R_MapPotatoPlane : R_MapPlane;
     extralight = vd.extralight;
 
-    while ((pl = R_GetNextPlane(sortedvisplanes)) != NULL)
+    while ((pl = R_GetNextPlane((uint16_t *)gsortedvisplanes)) != NULL)
     {
         unsigned j;
         int light;
@@ -441,28 +443,30 @@ static void Mars_R_SortPlanes(void)
         i += 2;
     }
 
-    D_isort((int *)gsortedvisplanes, numplanes);
+    D_isort(gsortedvisplanes, numplanes);
 }
 
-void R_PreDrawPlanes(void)
+static void R_PreDrawPlanes(void)
 {
     int numplanes;
-    uint16_t *sortbuf;
 
     Mars_ClearCacheLine(&lastvisplane);
-
-    sortbuf = (uint16_t *)gsortedvisplanes;
-    Mars_ClearCacheLine(sortbuf);
+    Mars_ClearCacheLine(&gsortedvisplanes);
 
     // check to see if we still need to fill the sorted planes list
     numplanes = lastvisplane - visplanes; // visplane 0 is a dummy plane
-    if (numplanes > 1 && sortbuf[0] == 0) 
+    if (numplanes > 1) 
     {
         Mars_ClearCacheLines(visplanes, (numplanes * sizeof(visplane_t) + 31) / 16);
 
-        Mars_R_SplitPlanes();
+        if (gsortedvisplanes == NULL)
+        {
+            gsortedvisplanes = (int *)viswallextras;
 
-        Mars_R_SortPlanes();
+            Mars_R_SplitPlanes();
+
+            Mars_R_SortPlanes();
+        }
     }
 }
 

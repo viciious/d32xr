@@ -60,7 +60,7 @@ const uint16_t visplane0open[SCREENWIDTH+2] = { 0 };
 #define NUM_VISPLANES_BUCKETS 32
 static visplane_t * volatile * visplanes_hash;
 
-uint32_t * volatile gsortedvisplanes;
+int * volatile gsortedvisplanes;
 
 /* */
 /* sprites */
@@ -667,6 +667,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 #endif
 
 	visplanes = visplanes_;
+	visplanes[0].flatandlight = 0;
 
 	tempbuf = (unsigned short *)I_WorkBuffer();
 
@@ -702,8 +703,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	lastvisplane = visplanes + 1;		/* visplanes[0] is left empty */
 	visplanes_hash = visplanes_hash_;
 
-	gsortedvisplanes = (uint32_t *)viswallex_;
-	gsortedvisplanes[0] = 0;
+	gsortedvisplanes = NULL;
 
 	//I_Error("%d", ((uint16_t *)I_FrameBuffer() + 64*1024-0x100 - tempbuf) * 2);
 
@@ -743,7 +743,6 @@ void Mars_Sec_R_Setup(void)
 	Mars_ClearCacheLine(&visplanes_hash);
 
 	Mars_ClearCacheLine(&gsortedvisplanes);
-	gsortedvisplanes[0] = 0;
 
 	Mars_ClearCacheLine(&segclip);
 	Mars_ClearCacheLine(&lastsegclip);

@@ -569,7 +569,7 @@ typedef struct visplane_s
 
 #define	MAXVISPLANES	32
 extern	visplane_t		* volatile visplanes/*[MAXVISPLANES]*/, * volatile lastvisplane;
-extern uint32_t * volatile gsortedvisplanes;
+extern int * volatile gsortedvisplanes;
 
 void R_MarkOpenPlane(visplane_t* pl)
 ATTR_DATA_CACHE_ALIGN
