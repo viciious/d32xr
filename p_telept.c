@@ -77,7 +77,8 @@ int	EV_Teleport( line_t *line,mobj_t *thing )
 				oldy = thing->y;
 				oldz = thing->z;
 				thing->flags |= MF_TELEPORT;
-				P_Telefrag (thing, m->x, m->y);
+				if (thing->player)
+					P_Telefrag (thing, m->x, m->y);
 				flag = P_TryMove (&tm, thing, m->x, m->y);
 				thing->flags &= ~MF_TELEPORT;
 				if (!flag)
