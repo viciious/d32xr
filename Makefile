@@ -30,7 +30,6 @@ debug: MARSHWCFLAGS += -ggdb -fomit-frame-pointer
 PREFIX = $(ROOTDIR)/sh-elf/bin/sh-elf-
 CC = $(PREFIX)gcc
 AS = $(PREFIX)as
-LD = $(PREFIX)ld
 OBJC = $(PREFIX)objcopy
 
 DD = dd
