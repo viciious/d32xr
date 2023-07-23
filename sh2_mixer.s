@@ -535,6 +535,7 @@ step_table:
         .word   15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794
         .word   32767
 
+.text
 .global index_table
 index_table:
         .byte   0, 0, 0, 0, 2, 4, 6, 8
