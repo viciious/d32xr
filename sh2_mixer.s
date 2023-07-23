@@ -166,6 +166,9 @@ _S_PaintChannel4IMA:
         mov.l   @(16,r4),r12    /* step_index:predictor */
         mov.w   @(24,r4),r0     /* volume:pan */
 
+        mov     r12,r2          /* save step_index */
+        shlr16  r2
+
         /* calculate left/right volumes from volume, pan, and scale */
         swap.b  r0,r13
         extu.b  r13,r13         /* ch_vol */
@@ -202,9 +205,7 @@ _S_PaintChannel4IMA:
 mix4_loop:
         /* process one sample */
         mov.l   _step_table,r1
-        mov     r12,r0
-        shlr16  r0              /* step_index */
-        add     r0,r0
+        mov     r2,r0
         mov.w   @(r0,r1),r1     /* step = step_table[step_index] */
 
         mov     r9,r0
@@ -228,7 +229,6 @@ mix4_loop:
         add     r3,r3           /* 2 * nibble */
         add     #1,r3
         muls.w  r1,r3
-        mov     r12,r2
         exts.w  r12,r12         /* 32-bit predictor */
         mov     #-128,r1
         sts     macl,r3         /* diff */
@@ -249,25 +249,18 @@ mix4_loop:
         cmp/gt  r1,r12
         bt/s    3f              /* sample > 32767 */
 4:
-        shlr16  r2              /* save step_index */
-5:
         /* step_index += index_table[nibble] */
         mov.l   _index_table,r1
-        add     r2,r2           /* index *= 2 */
         shll2   r2              /* index *= 4 */
         add     r2,r0
         mov.b   @(r0,r1),r2
-        extu.w  r12,r12         /* clear upper word for step_index */
-        shll16  r2
-        or      r2,r12          /* r12 is step_index : predictor again */
 
         .p2alignw 2, 0x0009
 mix4_gets:
         /* get sample */
-        exts.w  r12,r3          /* predictor */
 
         /* scale sample for left output */
-        muls.w  r3,r13
+        muls.w  r12,r13
 .global _paintchan_movr5r1_ima
 _paintchan_movr5r1_ima:
         mov.l   @r5,r1
@@ -275,7 +268,7 @@ _paintchan_movr5r1_ima:
         sts     macl,r0
 
         /* scale sample for right output */
-        muls.w  r3,r14
+        muls.w  r12,r14
 
         /* scale sample for left output -- cont */
         shlr16  r0
@@ -292,6 +285,8 @@ _paintchan_movr5r1_ima:
         cmp/hs  r11,r9
         mov.l   r1,@r5
 
+        extu.b  r2,r2                   /* index = (uint8_t)index */
+
         /* advance position */
 
         bt/s    mix4_exit               /* position >= length */
@@ -301,7 +296,12 @@ _paintchan_movr5r1_ima:
         bf/s    mix4_loop
         add     #4,r5
 
+        /* not done with the whole file, so update step_index : predictor */ 
+        extu.w  r12,r12                 /* clear upper word for step_index */
+        shll16  r2
+        or      r2,r12                  /* r12 is step_index : predictor again */
         mov.l   r12,@(16,r4)            /* update step_index : predictor */
+
 mix4_exit:
         mov.l   r7,@(20,r4)
         mov.l   r9,@(4,r4)              /* update position field */
@@ -319,7 +319,7 @@ mix4_exit:
         bra     4b
         mov     r1,r12          /* clamp sample to -32768 */
 3:
-        bra     5b
+        bra     4b
         mov     r1,r12          /* clamp sample to  32767 */
         bra     mix4_gets
         nop
@@ -346,6 +346,9 @@ _S_PaintChannel4IMA2x:
         mov.l   @(12,r4),r11    /* length */
         mov.l   @(16,r4),r12    /* step_index:predictor */
         mov.w   @(24,r4),r0     /* volume:pan */
+
+        mov     r12,r2          /* save step_index */
+        shlr16  r2
 
         add     r10,r10         /* increment *= 2 */
 
@@ -385,9 +388,7 @@ _S_PaintChannel4IMA2x:
 mix4_loop2x:
         /* process one sample */
         mov.l   _step_table,r1
-        mov     r12,r0
-        shlr16  r0              /* step_index */
-        add     r0,r0
+        mov     r2,r0           /* step_index */
         mov.w   @(r0,r1),r1     /* step = step_table[step_index] */
 
         mov     r9,r0
@@ -411,7 +412,6 @@ mix4_loop2x:
         add     r3,r3           /* 2 * nibble */
         add     #1,r3
         muls.w  r1,r3
-        mov     r12,r2
         exts.w  r12,r12         /* 32-bit predictor */
         mov     #-128,r1
         sts     macl,r3         /* diff */
@@ -432,25 +432,18 @@ mix4_loop2x:
         cmp/gt  r1,r12
         bt/s    3f              /* sample > 32767 */
 4:
-        shlr16  r2              /* save step_index */
-5:
         /* step_index += index_table[nibble] */
         mov.l   _index_table,r1
-        add     r2,r2           /* index *= 2 */
         shll2   r2              /* index *= 4 */
         add     r2,r0
         mov.b   @(r0,r1),r2
-        extu.w  r12,r12         /* clear upper word for step_index */
-        shll16  r2
-        or      r2,r12          /* r12 is step_index : predictor again */
 
         .p2alignw 2, 0x0009
 mix4_gets2x:
         /* get sample */
-        exts.w  r12,r3          /* predictor */
 
         /* scale sample for left output */
-        muls.w  r3,r13
+        muls.w  r12,r13
 .global _paintchan_movr5r1_ima2x_1
 _paintchan_movr5r1_ima2x_1:
         mov.l   @r5,r1
@@ -459,7 +452,7 @@ _paintchan_movr5r1_ima2x_1:
         sts     macl,r0
 
         /* scale sample for right output */
-        muls.w  r3,r14
+        muls.w  r12,r14
 
         /* scale sample for left output -- cont */
         shlr16  r0
@@ -482,6 +475,8 @@ _paintchan_movr5r1_ima2x_2:
         add     r3,r1
         mov.l   r1,@(4,r5)
 
+        extu.b  r2,r2                   /* index = (uint8_t)index */
+
         /* advance position */
 
         bt/s    mix4_exit2x             /* position >= length */
@@ -491,7 +486,12 @@ _paintchan_movr5r1_ima2x_2:
         bf/s    mix4_loop2x
         add     #8,r5
 
+        /* not done with the whole file, so update step_index : predictor */ 
+        extu.w  r12,r12                 /* clear upper word for step_index */
+        shll16  r2
+        or      r2,r12                  /* r12 is step_index : predictor again */
         mov.l   r12,@(16,r4)            /* update step_index : predictor */
+
 mix4_exit2x:
         mov.l   r7,@(20,r4)
         mov.l   r9,@(4,r4)              /* update position field */
@@ -509,7 +509,7 @@ mix4_exit2x:
         bra     4b
         mov     r1,r12          /* clamp sample to -32768 */
 3:
-        bra     5b
+        bra     4b
         mov     r1,r12          /* clamp sample to  32767 */
         bra     mix4_gets2x
         nop
@@ -538,92 +538,92 @@ step_table:
 .text
 .global index_table
 index_table:
-        .byte   0, 0, 0, 0, 2, 4, 6, 8
-        .byte   0, 0, 0, 0, 3, 5, 7, 9
-        .byte   1, 1, 1, 1, 4, 6, 8, 10
-        .byte   2, 2, 2, 2, 5, 7, 9, 11
-        .byte   3, 3, 3, 3, 6, 8, 10, 12
-        .byte   4, 4, 4, 4, 7, 9, 11, 13
-        .byte   5, 5, 5, 5, 8, 10, 12, 14
-        .byte   6, 6, 6, 6, 9, 11, 13, 15
-        .byte   7, 7, 7, 7, 10, 12, 14, 16
-        .byte   8, 8, 8, 8, 11, 13, 15, 17
-        .byte   9, 9, 9, 9, 12, 14, 16, 18
-        .byte   10, 10, 10, 10, 13, 15, 17, 19
-        .byte   11, 11, 11, 11, 14, 16, 18, 20
-        .byte   12, 12, 12, 12, 15, 17, 19, 21
-        .byte   13, 13, 13, 13, 16, 18, 20, 22
-        .byte   14, 14, 14, 14, 17, 19, 21, 23
-        .byte   15, 15, 15, 15, 18, 20, 22, 24
-        .byte   16, 16, 16, 16, 19, 21, 23, 25
-        .byte   17, 17, 17, 17, 20, 22, 24, 26
-        .byte   18, 18, 18, 18, 21, 23, 25, 27
-        .byte   19, 19, 19, 19, 22, 24, 26, 28
-        .byte   20, 20, 20, 20, 23, 25, 27, 29
-        .byte   21, 21, 21, 21, 24, 26, 28, 30
-        .byte   22, 22, 22, 22, 25, 27, 29, 31
-        .byte   23, 23, 23, 23, 26, 28, 30, 32
-        .byte   24, 24, 24, 24, 27, 29, 31, 33
-        .byte   25, 25, 25, 25, 28, 30, 32, 34
-        .byte   26, 26, 26, 26, 29, 31, 33, 35
-        .byte   27, 27, 27, 27, 30, 32, 34, 36
-        .byte   28, 28, 28, 28, 31, 33, 35, 37
-        .byte   29, 29, 29, 29, 32, 34, 36, 38
-        .byte   30, 30, 30, 30, 33, 35, 37, 39
-        .byte   31, 31, 31, 31, 34, 36, 38, 40
-        .byte   32, 32, 32, 32, 35, 37, 39, 41
-        .byte   33, 33, 33, 33, 36, 38, 40, 42
-        .byte   34, 34, 34, 34, 37, 39, 41, 43
-        .byte   35, 35, 35, 35, 38, 40, 42, 44
-        .byte   36, 36, 36, 36, 39, 41, 43, 45
-        .byte   37, 37, 37, 37, 40, 42, 44, 46
-        .byte   38, 38, 38, 38, 41, 43, 45, 47
-        .byte   39, 39, 39, 39, 42, 44, 46, 48
-        .byte   40, 40, 40, 40, 43, 45, 47, 49
-        .byte   41, 41, 41, 41, 44, 46, 48, 50
-        .byte   42, 42, 42, 42, 45, 47, 49, 51
-        .byte   43, 43, 43, 43, 46, 48, 50, 52
-        .byte   44, 44, 44, 44, 47, 49, 51, 53
-        .byte   45, 45, 45, 45, 48, 50, 52, 54
-        .byte   46, 46, 46, 46, 49, 51, 53, 55
-        .byte   47, 47, 47, 47, 50, 52, 54, 56
-        .byte   48, 48, 48, 48, 51, 53, 55, 57
-        .byte   49, 49, 49, 49, 52, 54, 56, 58
-        .byte   50, 50, 50, 50, 53, 55, 57, 59
-        .byte   51, 51, 51, 51, 54, 56, 58, 60
-        .byte   52, 52, 52, 52, 55, 57, 59, 61
-        .byte   53, 53, 53, 53, 56, 58, 60, 62
-        .byte   54, 54, 54, 54, 57, 59, 61, 63
-        .byte   55, 55, 55, 55, 58, 60, 62, 64
-        .byte   56, 56, 56, 56, 59, 61, 63, 65
-        .byte   57, 57, 57, 57, 60, 62, 64, 66
-        .byte   58, 58, 58, 58, 61, 63, 65, 67
-        .byte   59, 59, 59, 59, 62, 64, 66, 68
-        .byte   60, 60, 60, 60, 63, 65, 67, 69
-        .byte   61, 61, 61, 61, 64, 66, 68, 70
-        .byte   62, 62, 62, 62, 65, 67, 69, 71
-        .byte   63, 63, 63, 63, 66, 68, 70, 72
-        .byte   64, 64, 64, 64, 67, 69, 71, 73
-        .byte   65, 65, 65, 65, 68, 70, 72, 74
-        .byte   66, 66, 66, 66, 69, 71, 73, 75
-        .byte   67, 67, 67, 67, 70, 72, 74, 76
-        .byte   68, 68, 68, 68, 71, 73, 75, 77
-        .byte   69, 69, 69, 69, 72, 74, 76, 78
-        .byte   70, 70, 70, 70, 73, 75, 77, 79
-        .byte   71, 71, 71, 71, 74, 76, 78, 80
-        .byte   72, 72, 72, 72, 75, 77, 79, 81
-        .byte   73, 73, 73, 73, 76, 78, 80, 82
-        .byte   74, 74, 74, 74, 77, 79, 81, 83
-        .byte   75, 75, 75, 75, 78, 80, 82, 84
-        .byte   76, 76, 76, 76, 79, 81, 83, 85
-        .byte   77, 77, 77, 77, 80, 82, 84, 86
-        .byte   78, 78, 78, 78, 81, 83, 85, 87
-        .byte   79, 79, 79, 79, 82, 84, 86, 88
-        .byte   80, 80, 80, 80, 83, 85, 87, 88
-        .byte   81, 81, 81, 81, 84, 86, 88, 88
-        .byte   82, 82, 82, 82, 85, 87, 88, 88
-        .byte   83, 83, 83, 83, 86, 88, 88, 88
-        .byte   84, 84, 84, 84, 87, 88, 88, 88
-        .byte   85, 85, 85, 85, 88, 88, 88, 88
-        .byte   86, 86, 86, 86, 88, 88, 88, 88
-        .byte   87, 87, 87, 87, 88, 88, 88, 88
+        .byte   0, 0, 0, 0, 4, 8, 12, 16
+        .byte   0, 0, 0, 0, 6, 10, 14, 18
+        .byte   2, 2, 2, 2, 8, 12, 16, 20
+        .byte   4, 4, 4, 4, 10, 14, 18, 22
+        .byte   6, 6, 6, 6, 12, 16, 20, 24
+        .byte   8, 8, 8, 8, 14, 18, 22, 26
+        .byte   10, 10, 10, 10, 16, 20, 24, 28
+        .byte   12, 12, 12, 12, 18, 22, 26, 30
+        .byte   14, 14, 14, 14, 20, 24, 28, 32
+        .byte   16, 16, 16, 16, 22, 26, 30, 34
+        .byte   18, 18, 18, 18, 24, 28, 32, 36
+        .byte   20, 20, 20, 20, 26, 30, 34, 38
+        .byte   22, 22, 22, 22, 28, 32, 36, 40
+        .byte   24, 24, 24, 24, 30, 34, 38, 42
+        .byte   26, 26, 26, 26, 32, 36, 40, 44
+        .byte   28, 28, 28, 28, 34, 38, 42, 46
+        .byte   30, 30, 30, 30, 36, 40, 44, 48
+        .byte   32, 32, 32, 32, 38, 42, 46, 50
+        .byte   34, 34, 34, 34, 40, 44, 48, 52
+        .byte   36, 36, 36, 36, 42, 46, 50, 54
+        .byte   38, 38, 38, 38, 44, 48, 52, 56
+        .byte   40, 40, 40, 40, 46, 50, 54, 58
+        .byte   42, 42, 42, 42, 48, 52, 56, 60
+        .byte   44, 44, 44, 44, 50, 54, 58, 62
+        .byte   46, 46, 46, 46, 52, 56, 60, 64
+        .byte   48, 48, 48, 48, 54, 58, 62, 66
+        .byte   50, 50, 50, 50, 56, 60, 64, 68
+        .byte   52, 52, 52, 52, 58, 62, 66, 70
+        .byte   54, 54, 54, 54, 60, 64, 68, 72
+        .byte   56, 56, 56, 56, 62, 66, 70, 74
+        .byte   58, 58, 58, 58, 64, 68, 72, 76
+        .byte   60, 60, 60, 60, 66, 70, 74, 78
+        .byte   62, 62, 62, 62, 68, 72, 76, 80
+        .byte   64, 64, 64, 64, 70, 74, 78, 82
+        .byte   66, 66, 66, 66, 72, 76, 80, 84
+        .byte   68, 68, 68, 68, 74, 78, 82, 86
+        .byte   70, 70, 70, 70, 76, 80, 84, 88
+        .byte   72, 72, 72, 72, 78, 82, 86, 90
+        .byte   74, 74, 74, 74, 80, 84, 88, 92
+        .byte   76, 76, 76, 76, 82, 86, 90, 94
+        .byte   78, 78, 78, 78, 84, 88, 92, 96
+        .byte   80, 80, 80, 80, 86, 90, 94, 98
+        .byte   82, 82, 82, 82, 88, 92, 96, 100
+        .byte   84, 84, 84, 84, 90, 94, 98, 102
+        .byte   86, 86, 86, 86, 92, 96, 100, 104
+        .byte   88, 88, 88, 88, 94, 98, 102, 106
+        .byte   90, 90, 90, 90, 96, 100, 104, 108
+        .byte   92, 92, 92, 92, 98, 102, 106, 110
+        .byte   94, 94, 94, 94, 100, 104, 108, 112
+        .byte   96, 96, 96, 96, 102, 106, 110, 114
+        .byte   98, 98, 98, 98, 104, 108, 112, 116
+        .byte   100, 100, 100, 100, 106, 110, 114, 118
+        .byte   102, 102, 102, 102, 108, 112, 116, 120
+        .byte   104, 104, 104, 104, 110, 114, 118, 122
+        .byte   106, 106, 106, 106, 112, 116, 120, 124
+        .byte   108, 108, 108, 108, 114, 118, 122, 126
+        .byte   110, 110, 110, 110, 116, 120, 124, 128
+        .byte   112, 112, 112, 112, 118, 122, 126, 130
+        .byte   114, 114, 114, 114, 120, 124, 128, 132
+        .byte   116, 116, 116, 116, 122, 126, 130, 134
+        .byte   118, 118, 118, 118, 124, 128, 132, 136
+        .byte   120, 120, 120, 120, 126, 130, 134, 138
+        .byte   122, 122, 122, 122, 128, 132, 136, 140
+        .byte   124, 124, 124, 124, 130, 134, 138, 142
+        .byte   126, 126, 126, 126, 132, 136, 140, 144
+        .byte   128, 128, 128, 128, 134, 138, 142, 146
+        .byte   130, 130, 130, 130, 136, 140, 144, 148
+        .byte   132, 132, 132, 132, 138, 142, 146, 150
+        .byte   134, 134, 134, 134, 140, 144, 148, 152
+        .byte   136, 136, 136, 136, 142, 146, 150, 154
+        .byte   138, 138, 138, 138, 144, 148, 152, 156
+        .byte   140, 140, 140, 140, 146, 150, 154, 158
+        .byte   142, 142, 142, 142, 148, 152, 156, 160
+        .byte   144, 144, 144, 144, 150, 154, 158, 162
+        .byte   146, 146, 146, 146, 152, 156, 160, 164
+        .byte   148, 148, 148, 148, 154, 158, 162, 166
+        .byte   150, 150, 150, 150, 156, 160, 164, 168
+        .byte   152, 152, 152, 152, 158, 162, 166, 170
+        .byte   154, 154, 154, 154, 160, 164, 168, 172
+        .byte   156, 156, 156, 156, 162, 166, 170, 174
+        .byte   158, 158, 158, 158, 164, 168, 172, 176
+        .byte   160, 160, 160, 160, 166, 170, 174, 176
+        .byte   162, 162, 162, 162, 168, 172, 176, 176
+        .byte   164, 164, 164, 164, 170, 174, 176, 176
+        .byte   166, 166, 166, 166, 172, 176, 176, 176
+        .byte   168, 168, 168, 168, 174, 176, 176, 176
+        .byte   170, 170, 170, 170, 176, 176, 176, 176
+        .byte   172, 172, 172, 172, 176, 176, 176, 176
+        .byte   174, 174, 174, 174, 176, 176, 176, 176

@@ -634,7 +634,7 @@ static int S_PaintChannel(sfxchannel_t *ch, int16_t* buffer, int painted)
 				ch->prev_pos = -1; // force output of initial predictor
 				ch->length = ((block_size-3) << 1) << 14;
 				// initial step_index : initial predictor
-				ch->loop_length = ((unsigned)block[2] << 16) | ((unsigned)block[1] << 8) | block[0];
+				ch->loop_length = (((unsigned)block[2]*2) << 16) | ((unsigned)block[1] << 8) | block[0];
 				ch->data += 3;
 				ch->remaining_bytes -= block_size;
 			}
