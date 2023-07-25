@@ -276,6 +276,10 @@ init_hardware:
         rts
 
 
+        .data
+
+| Put remaining code in data section to lower bus contention for the rom.
+
 | void write_byte(void *dst, unsigned char val)
         .global write_byte
 write_byte:
@@ -320,11 +324,6 @@ read_long:
         movea.l 4(sp),a0
         move.l  (a0),d0
         rts
-
-
-        .data
-
-| Put remaining code in data section to lower bus contention for the rom.
 
         .global do_main
 do_main:

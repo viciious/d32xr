@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include "scd_pcm.h"
 
 extern uint32_t vblank_vector;
 extern uint16_t gen_lvl2;
@@ -116,6 +117,8 @@ uint16_t InitCD(void)
      * Wait for Sub-CPU to indicate it is ready to receive commands
      */
     while (read_byte(0xA1200F) != 0x00) ;
+
+    scd_init_pcm();
 
     return 1; // CD ready to go!
 }

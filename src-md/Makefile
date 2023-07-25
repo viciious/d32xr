@@ -10,7 +10,7 @@ LIBPATH = -L$(ROOTDIR)/m68k-elf/lib -L$(ROOTDIR)/m68k-elf/lib/gcc/m68k-elf/12.1.
 INCPATH = -I$. -I$(ROOTDIR)/m68k-elf/include -I$(ROOTDIR)/m68k-elf/m68k-elf/include -I../liblzss
 
 HWCCFLAGS = -m68000 -Wall -O1 -c -fomit-frame-pointer -fno-lto
-CCFLAGS = -m68000 -Wall -Os -c -fomit-frame-pointer -flto
+CCFLAGS = -m68000 -Wall -Os -c -fomit-frame-pointer -fno-lto -DUSE_SCD_IN_RAM
 ASFLAGS = -m68000 --register-prefix-optional
 LINKFLAGS = -T $(LDSCRIPTSDIR)/mars-md.ld -Wl,-Map=output.map -nostdlib -flto
 
@@ -28,7 +28,7 @@ RM = rm -f
 
 TARGET = m68k
 LIBS = $(LIBPATH) -lc -lgcc -lnosys
-OBJS = crt0.o everdrive.o font.o main.o kos.o cd.o lzss.o megasd.o vgm.o xvprintf.o zfiles.o
+OBJS = crt0.o everdrive.o font.o main.o kos.o cd.o lzss.o megasd.o vgm.o xvprintf.o zfiles.o scd_pcm.o
 
 all: $(TARGET).bin
 
@@ -52,6 +52,11 @@ megasd.o: megasd.c
 everdrive.o: everdrive.c
 	$(CC) $(HWCCFLAGS) $(INCPATH) $< -o $@
 
+cd.bin:
+	make -C cd
+
+cd.o: cd.s cd.bin
+
 %.o: %.c
 	$(CC) $(CCFLAGS) $(INCPATH) $< -o $@
 
@@ -62,5 +67,6 @@ everdrive.o: everdrive.c
 	$(AS) $(ASFLAGS) $(INCPATH) $< -o $@
 
 clean:
+	make clean -C cd
 	$(RM) *.o *.o80 *.bin *.elf output.map
 
