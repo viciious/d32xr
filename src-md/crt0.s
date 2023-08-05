@@ -438,6 +438,20 @@ handle_req:
         bls     cpy_md_vram
         cmpi.w  #0x1CFF,d0
         bls     cpy_md_vram
+        cmpi.w  #0x1DFF,d0
+        bls     load_sfx
+        cmpi.w  #0x1EFF,d0
+        bls     play_sfx
+        cmpi.w  #0x1FFF,d0
+        bls     get_sfx_status
+        cmpi.w  #0x20FF,d0
+        bls     sfx_clear
+        cmpi.w  #0x21FF,d0
+        bls     update_sfx
+        cmpi.w  #0x22FF,d0
+        bls     stop_sfx
+        cmpi.w  #0x23FF,d0
+        bls     flush_sfx
 | unknown command
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -1861,6 +1875,151 @@ cpy_md_vram:
         move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
 
         move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+load_sfx:
+        /* fetch sample length */
+        move.w  0xA15122,d2
+        swap.w  d2
+        move.w  #0,0xA15120         /* done with upper word */
+20:
+        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
+        cmpi.w  #0x1D02,d0
+        bne.b   20b
+        move.w  0xA15122,d2
+        move.w  #0,0xA15120         /* done with lower word */
+21:
+        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
+        cmpi.w  #0x1D03,d0
+        bne.b   21b
+
+        /* fetch sample address */
+        move.w  0xA15122,d1
+        swap.w  d1
+        move.w  #0,0xA15120         /* done with upper word */
+22:
+        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
+        cmpi.w  #0x1D04,d0
+        bne.b   22b
+        move.w  0xA15122,d1
+        move.w  #0,0xA15120         /* done with lower word */
+
+23:
+        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
+        cmpi.w  #0x1D00,d0
+        bne.b   23b
+
+        /* set buffer id */
+        moveq   #0,d0
+        move.w  0xA15122,d0         /* COMM2 = buffer id */
+
+        move.l  d1,a0
+        bsr     set_rom_bank
+        move.l  a1,d1
+
+        move.l  d2,-(sp)
+        move.l  d1,-(sp)
+        move.l  d0,-(sp)
+
+        move.w  #0,0xA15120         /* done */
+
+        jsr     scd_upload_buf
+        lea     12(sp),sp
+
+        bra     main_loop
+
+play_sfx:
+        /* set source id */
+        moveq   #0,d0
+        move.b  0xA15121,d0         /* LB of COMM0 = src id */
+
+        moveq   #0,d2
+        move.w  0xA15122,d2         /* pan|vol */
+        move.w  #0,0xA15120
+20:
+        move.w  0xA15120,d1         /* wait on handshake in COMM0 */
+        cmpi.w  #0x1E01,d1
+        bne.b   20b
+
+        moveq   #0,d1
+        move.w  0xA15122,d1         /* buf_id */
+
+        move.w  d2,d3
+        andi.l  #255,d3
+        lsr.w   #8,d2
+
+        move.l  #0,-(sp)            /* autoloop */
+        move.l  d3,-(sp)            /* vol */
+        move.l  d2,-(sp)            /* pan */ 
+        move.l  #0,-(sp)            /* freq */
+        move.l  d1,-(sp)            /* buf id */
+        move.l  d0,-(sp)            /* src id */
+
+        move.w  #0,0xA15120         /* done */
+
+        jsr     scd_queue_play_src
+        lea     24(sp),sp
+
+        bra     main_loop
+
+get_sfx_status:
+        jsr     scd_get_playback_status
+
+        move.w  d0,0xA15122         /* state */
+        move.w  #0,0xA15120         /* done */
+
+        bra     main_loop
+
+sfx_clear:
+        jsr     scd_queue_clear_pcm
+
+        move.w  #0,0xA15120         /* done */
+
+        bra     main_loop
+
+update_sfx:
+        /* set source id */
+        moveq   #0,d0
+        move.b  0xA15121,d0         /* LB of COMM0 = src id */
+
+        moveq   #0,d2
+        move.w  0xA15122,d2         /* pan|vol */
+
+        move.w  d2,d3
+        andi.l  #255,d3
+        lsr.w   #8,d2
+
+        move.l  #0,-(sp)            /* autoloop */
+        move.l  d3,-(sp)            /* vol */
+        move.l  d2,-(sp)            /* pan */ 
+        move.l  #0,-(sp)            /* freq */
+        move.l  d0,-(sp)            /* src id */
+
+        move.w  #0,0xA15120         /* done */
+
+        jsr     scd_queue_update_src
+        lea     20(sp),sp
+
+        bra     main_loop
+
+stop_sfx:
+        /* set source id */
+        moveq   #0,d0
+        move.b  0xA15121,d0         /* LB of COMM0 = src id */
+
+        move.w  #0,0xA15120         /* done */
+
+        move.l  d0,-(sp)            /* src id */
+        jsr     scd_queue_stop_src
+        lea     4(sp),sp
+
+        bra     main_loop
+
+flush_sfx:
+        move.w  #0,0xA15120         /* done */
+
+        jsr     scd_flush_cmd_queue
+
         bra     main_loop
 
 | set standard mapper registers to default mapping
