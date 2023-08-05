@@ -1090,6 +1090,7 @@ extern	VINT	alwaysrun;
 extern	boolean	splitscreen;
 
 extern	VINT	sfxvolume, musicvolume;		/* range from 0 to 255 */
+extern	VINT 	sfxdriver;
 
 /* */
 /* comnjag.c */

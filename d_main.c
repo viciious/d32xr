@@ -431,13 +431,14 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		}
 		firstdraw = false;
 
+		S_PreUpdateSounds();
+
 		ticon++;
 		if (gamevbls / TICVBLS > gametic)
 			gametic++;
 		exit = ticker();
 
-		if (gametic > prevgametic)
-			S_UpdateSounds();
+		S_UpdateSounds();
 
 		/* */
 		/* sync up with the refresh */
