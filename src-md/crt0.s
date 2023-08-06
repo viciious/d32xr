@@ -382,79 +382,55 @@ chk_hotplug:
 
 | process request from Master SH2
 handle_req:
-        cmpi.w  #0x01FF,d0
-        bls     read_sram
-        cmpi.w  #0x02FF,d0
-        bls     write_sram
-        cmpi.w  #0x03FF,d0
-        bls     start_music
-        cmpi.w  #0x04FF,d0
-        bls     stop_music
-        cmpi.w  #0x05FF,d0
-        bls     read_mouse
-        cmpi.w  #0x06FF,d0
-        bls     read_cdstate
-        cmpi.w  #0x07FF,d0
-        bls     set_usecd
-        cmpi.w  #0x08FF,d0
-        bls     set_crsr
-        cmpi.w  #0x09FF,d0
-        bls     get_crsr
-        cmpi.w  #0x0AFF,d0
-        bls     set_color
-        cmpi.w  #0x0BFF,d0
-        bls     get_color
-        cmpi.w  #0x0CFF,d0
-        bls     set_dbpal
-        cmpi.w  #0x0DFF,d0
-        bls     put_chr
-        cmpi.w  #0x0EFF,d0
-        bls     clear_a
-        cmpi.w  #0x0FFF,d0
-        bls     dbug_start
-        cmpi.w  #0x10FF,d0
-        bls     dbug_queue
-        cmpi.w  #0x11FF,d0
-        bls     dbug_end
-        cmpi.w  #0x12FF,d0
-        bls     net_getbyte
-        cmpi.w  #0x13FF,d0
-        bls     net_putbyte
-        cmpi.w  #0x14FF,d0
-        bls     net_setup
-        cmpi.w  #0x15FF,d0
-        bls     net_cleanup
-        cmpi.w  #0x16FF,d0
-        bls     set_bank_page
-        cmpi.w  #0x17FF,d0
-        bls     net_set_link_timeout
-        cmpi.w  #0x18FF,d0
-        bls     set_music_volume
-        cmpi.w  #0x19FF,d0
-        bls     ctl_md_vdp
-        cmpi.w  #0x1AFF,d0
-        bls     cpy_md_vram
-        cmpi.w  #0x1BFF,d0
-        bls     cpy_md_vram
-        cmpi.w  #0x1CFF,d0
-        bls     cpy_md_vram
-        cmpi.w  #0x1DFF,d0
-        bls     load_sfx
-        cmpi.w  #0x1EFF,d0
-        bls     play_sfx
-        cmpi.w  #0x1FFF,d0
-        bls     get_sfx_status
-        cmpi.w  #0x20FF,d0
-        bls     sfx_clear
-        cmpi.w  #0x21FF,d0
-        bls     update_sfx
-        cmpi.w  #0x22FF,d0
-        bls     stop_sfx
-        cmpi.w  #0x23FF,d0
-        bls     flush_sfx
+        moveq   #0,d1
+        move.w  d0,-(sp)
+        move.b  (sp)+,d1
+        add.w   d1,d1
+        move.w  prireqtbl(pc,d1.w),d1
+        jmp     prireqtbl(pc,d1.w)
 | unknown command
+no_cmd:
         move.w  #0,0xA15120         /* done */
         bra     main_loop
+
+        .align  2
+ prireqtbl:
+        dc.w    no_cmd - prireqtbl
+        dc.w    read_sram - prireqtbl
+        dc.w    write_sram - prireqtbl
+        dc.w    start_music - prireqtbl
+        dc.w    stop_music - prireqtbl
+        dc.w    read_mouse - prireqtbl
+        dc.w    read_cdstate - prireqtbl
+        dc.w    set_usecd - prireqtbl
+        dc.w    set_crsr - prireqtbl
+        dc.w    get_crsr - prireqtbl
+        dc.w    set_color - prireqtbl
+        dc.w    get_color - prireqtbl
+        dc.w    set_dbpal - prireqtbl
+        dc.w    put_chr - prireqtbl
+        dc.w    clear_a - prireqtbl
+        dc.w    dbug_start - prireqtbl
+        dc.w    dbug_queue - prireqtbl
+        dc.w    dbug_end - prireqtbl
+        dc.w    net_getbyte - prireqtbl
+        dc.w    net_putbyte - prireqtbl
+        dc.w    net_setup - prireqtbl
+        dc.w    net_cleanup - prireqtbl
+        dc.w    set_bank_page - prireqtbl
+        dc.w    net_set_link_timeout - prireqtbl
+        dc.w    set_music_volume - prireqtbl
+        dc.w    ctl_md_vdp - prireqtbl
+        dc.w    cpy_md_vram - prireqtbl
+        dc.w    cpy_md_vram - prireqtbl
+        dc.w    cpy_md_vram - prireqtbl
+        dc.w    load_sfx - prireqtbl
+        dc.w    play_sfx - prireqtbl
+        dc.w    get_sfx_status - prireqtbl
+        dc.w    sfx_clear - prireqtbl
+        dc.w    update_sfx - prireqtbl
+        dc.w    stop_sfx - prireqtbl
+        dc.w    flush_sfx - prireqtbl
 
 | process request from Secondary SH2
 handle_sec_req:
