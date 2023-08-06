@@ -49,6 +49,8 @@ enum
 
 	MARS_SECCMD_AM_DRAW,
 
+	MARS_SECCMD_P_SIGHT_CHECKS,
+
 	MARS_SECCMD_MELT_DO_WIPE,
 
 	MARS_SECCMD_NUMCMDS
@@ -63,6 +65,7 @@ void Mars_Sec_R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_PreDrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_DrawSprites(int sprscreenhalf, int *sortedsprites) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_DrawPSprites(int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
+void Mars_Sec_P_CheckSights(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_wipe_doMelt(void);
 
 void Mars_Sec_M_AnimateFire(void) ATTR_OPTIMIZE_EXTREME;
@@ -160,6 +163,18 @@ static inline void Mars_AM_BeginDrawer(void)
 static inline void Mars_AM_EndDrawer(void)
 {
 	Mars_R_SecWait();
+}
+
+static inline void Mars_P_BeginCheckSights(void)
+{
+	while (MARS_SYS_COMM4 != 0) {};
+	MARS_SYS_COMM6 = 0;
+	MARS_SYS_COMM4 = MARS_SECCMD_P_SIGHT_CHECKS;
+}
+
+static inline void Mars_P_EndCheckSights(void)
+{
+	while (MARS_SYS_COMM4 != 0);
 }
 
 static inline void Mars_melt_BeginWipe(short *yy)

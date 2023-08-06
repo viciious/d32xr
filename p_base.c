@@ -538,6 +538,12 @@ void P_RunMobjBase2(void)
 
     for (mo = mobjhead.next; mo != (void*)&mobjhead; mo = next)
     {
+#ifdef MARS
+        // clear cache for mobj flags following the sight check as 
+        // the other CPU might have modified the MF_SEETARGET state
+        if (mo->tics == 1)
+            Mars_ClearCacheLine(&mo->flags);
+#endif
         next = mo->next;	/* in case mo is removed this time */
         if (!mo->player)
             P_MobjThinker(mo);
