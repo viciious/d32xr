@@ -86,9 +86,6 @@ mix_loop:
         /* scale sample for left output */
         muls.w  r3,r13
         add     r10,r9          /* position += increment */
-.global _paintchan_movr5r1
-_paintchan_movr5r1:
-        mov.l   @r5,r1
         sts     macl,r0
 
         /* scale sample for right output */
@@ -261,8 +258,6 @@ mix4_gets:
 
         /* scale sample for left output */
         muls.w  r12,r13
-.global _paintchan_movr5r1_ima
-_paintchan_movr5r1_ima:
         mov.l   @r5,r1
         add     r10,r9          /* position += increment */
         sts     macl,r0
@@ -444,8 +439,6 @@ mix4_gets2x:
 
         /* scale sample for left output */
         muls.w  r12,r13
-.global _paintchan_movr5r1_ima2x_1
-_paintchan_movr5r1_ima2x_1:
         mov.l   @r5,r1
         dt      r6
         add     r10,r9          /* position += increment */
@@ -468,8 +461,6 @@ _paintchan_movr5r1_ima2x_1:
         add     r3,r1
         mov.l   r1,@r5
 
-.global _paintchan_movr5r1_ima2x_2
-_paintchan_movr5r1_ima2x_2:
         mov.l   @(4,r5),r1
         cmp/hs  r11,r9
         add     r3,r1

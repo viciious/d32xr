@@ -87,11 +87,6 @@ int Mars_GetWDTCount(void);
 
 #endif
 
-#define Mars_PatchRAMCode(loc,inst) do {\
-		__asm volatile("mov.w %0, %1\n\t" : : "r"(inst), "m"(loc) : "memory"); \
-		Mars_ClearCacheLine(loc); \
-	} while(0)
-
 uint16_t *Mars_FrameBufferLines(void);
 
 #define Mars_IsPAL() ((MARS_VDP_DISPMODE & MARS_NTSC_FORMAT) == 0)
