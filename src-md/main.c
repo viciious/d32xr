@@ -120,7 +120,7 @@ uint16_t InitCD(void)
 
     scd_init_pcm();
 
-    return 1; // CD ready to go!
+    return 0x1; // CD ready to go!
 }
 
 int main(void)

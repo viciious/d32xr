@@ -140,6 +140,8 @@ void O_DrawControl(void)
 
 void O_Init (void)
 {
+	int cd_avail;
+
 /* cache all needed graphics */
 	o_cursor1 = W_CheckNumForName("M_SKULL1");
 	o_cursor2 = W_CheckNumForName("M_SKULL2");
@@ -254,10 +256,13 @@ void O_Init (void)
 	D_memcpy(menuscreen[ms_audio].name, "Audio", 7);
 	menuscreen[ms_audio].firstitem = mi_soundvol;
 	menuscreen[ms_audio].numitems = mi_music - mi_soundvol + 1;
-	if (S_CDAvailable()) /* MD+ */
+
+	cd_avail = S_CDAvailable();
+	if (cd_avail) /* CDA or MD+ */
 	{
 		menuscreen[ms_audio].numitems++;
-		menuscreen[ms_audio].numitems++;
+		if (cd_avail & 0x1) /* CD, not MD+ */
+			menuscreen[ms_audio].numitems++;
 	}
 
 	D_memcpy(menuscreen[ms_video].name, "Video", 7);

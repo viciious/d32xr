@@ -120,7 +120,7 @@ void S_Init(void)
 		sfxchannels[i].data = NULL;
 
 	// check if CD is available, reset the driver option if not
-	mcd_avail = S_CDAvailable();
+	mcd_avail = S_CDAvailable() & 0x1;
 	if (!mcd_avail && sfxdriver > 1)
 		sfxdriver = 0;
 

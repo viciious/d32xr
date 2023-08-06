@@ -251,10 +251,9 @@ void Mars_Init(void)
 
 	Mars_UpdateCD();
 
-	if (mars_cd_ok && !(mars_cd_ok & 0x2))
+	if (mars_cd_ok & 0x1)
 	{
-		/* if the CD is present and it's */
-		/* not an MD+, give it seconds to init */
+		/* if the CD is present, give it seconds to init */
 		Mars_WaitTicks(180);
 	}
 }
