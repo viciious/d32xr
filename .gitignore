@@ -9,4 +9,7 @@
 *.xdelta
 .github
 .vscode
-
+*.o80
+*.lst
+*.bat
+*.ram
