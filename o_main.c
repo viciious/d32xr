@@ -30,6 +30,7 @@ typedef enum
 	mi_soundvol,
 	mi_music,
 	mi_musicvol,
+	mi_sfxdriver,
 
 	mi_resolution,
 	mi_detailmode,
@@ -85,7 +86,7 @@ static VINT	o_slider, o_slidertrack;
 
 static VINT m_help;
 
-VINT	o_musictype;
+VINT	o_musictype, o_sfxdriver;
 
 static const char buttona[NUMCONTROLOPTIONS][8] =
 		{"Speed","Speed","Fire","Fire","Use","Use"};
@@ -139,6 +140,8 @@ void O_DrawControl(void)
 
 void O_Init (void)
 {
+	int cd_avail;
+
 /* cache all needed graphics */
 	o_cursor1 = W_CheckNumForName("M_SKULL1");
 	o_cursor2 = W_CheckNumForName("M_SKULL2");
@@ -146,6 +149,7 @@ void O_Init (void)
 	o_slidertrack = W_CheckNumForName("O_STRACK");
 
 	o_musictype = musictype;
+	o_sfxdriver = sfxdriver;
 
 	uchar = W_CheckNumForName("CHAR_065");
 
@@ -198,12 +202,16 @@ void O_Init (void)
 	menuitem[mi_music].x = ITEMX;
 	menuitem[mi_music].y = STARTY+ITEMSPACE*2;
 
-	D_memcpy(menuitem[mi_musicvol].name, "CDA volume", 10);
+	D_memcpy(menuitem[mi_musicvol].name, "CDA volume", 11);
 	menuitem[mi_musicvol].x = ITEMX;
 	menuitem[mi_musicvol].y = STARTY + ITEMSPACE * 3;
 	menuitem[mi_musicvol].slider = si_musvolume+1;
 	sliders[si_musvolume].maxval = 8;
 	sliders[si_musvolume].curval = 8*musicvolume/64;
+
+	D_memcpy(menuitem[mi_sfxdriver].name, "SFX driver", 11);
+	menuitem[mi_sfxdriver].x = ITEMX;
+	menuitem[mi_sfxdriver].y = STARTY+ITEMSPACE*5;
 
 	D_memcpy(menuitem[mi_resolution].name, "Resolution", 11);
 	menuitem[mi_resolution].x = ITEMX;
@@ -248,8 +256,14 @@ void O_Init (void)
 	D_memcpy(menuscreen[ms_audio].name, "Audio", 7);
 	menuscreen[ms_audio].firstitem = mi_soundvol;
 	menuscreen[ms_audio].numitems = mi_music - mi_soundvol + 1;
-	if (S_CDAvailable()) /* MD+ */
+
+	cd_avail = S_CDAvailable();
+	if (cd_avail) /* CDA or MD+ */
+	{
 		menuscreen[ms_audio].numitems++;
+		if (cd_avail & 0x1) /* CD, not MD+ */
+			menuscreen[ms_audio].numitems++;
+	}
 
 	D_memcpy(menuscreen[ms_video].name, "Video", 7);
 	menuscreen[ms_video].firstitem = mi_resolution;
@@ -555,6 +569,7 @@ void O_Control (player_t *player)
 			if (screenpos == ms_audio)
 			{
 				int oldmusictype = o_musictype;
+				int oldsfxdriver = o_sfxdriver;
 
 				if (buttons & BT_RIGHT)
 				{
@@ -564,6 +579,10 @@ void O_Control (player_t *player)
 							o_musictype = mustype_cd;
 						if (o_musictype == mustype_cd && !S_CDAvailable())
 							o_musictype = mustype_fm;
+						break;
+					case mi_sfxdriver:
+						if (++o_sfxdriver > sfxdriver_pwm)
+							o_sfxdriver = sfxdriver_pwm;
 						break;
 					}
 				}
@@ -575,6 +594,10 @@ void O_Control (player_t *player)
 						if (--o_musictype < mustype_none)
 							o_musictype = mustype_none;
 						break;
+					case mi_sfxdriver:
+						if (--o_sfxdriver < sfxdriver_auto)
+							o_sfxdriver = sfxdriver_auto;
+						break;
 					}
 				}
 
@@ -582,6 +605,12 @@ void O_Control (player_t *player)
 				{
 					S_SetMusicType(o_musictype);
 					sound = sfx_stnmov;
+				}
+
+				if (oldsfxdriver != o_sfxdriver)
+				{
+					S_Clear();
+					sfxdriver = o_sfxdriver;
 				}
 			}
 
@@ -635,7 +664,7 @@ void O_Control (player_t *player)
 				sound = sfx_pistol;
 		}
 
-		if (sound != sfx_noway)
+		if (sound != sfx_None)
 		{
 			S_StartSound(NULL, sound);
 			clearscreen = 2;
@@ -727,11 +756,26 @@ void O_Drawer (void)
 			print(menuitem[mi_music].x + 85, menuitem[mi_music].y, "off");
 			break;
 		case mustype_fm:
-			print(menuitem[mi_music].x + 85, menuitem[mi_music].y, "fm synth");
+			print(menuitem[mi_music].x + 85, menuitem[mi_music].y, "fm");
 			break;
 		case mustype_cd:
 			print(menuitem[mi_music].x + 85, menuitem[mi_music].y, "cd");
 			break;
+		}
+
+		if (menuscreen[ms_audio].numitems > 3)
+		{
+			switch (o_sfxdriver) {
+			case sfxdriver_auto:
+				print(menuitem[mi_sfxdriver].x + 150, menuitem[mi_sfxdriver].y, "auto");
+				break;
+			case sfxdriver_mcd:
+				print(menuitem[mi_sfxdriver].x + 150, menuitem[mi_sfxdriver].y, "mcd");
+				break;
+			case sfxdriver_pwm:
+				print(menuitem[mi_sfxdriver].x + 150, menuitem[mi_sfxdriver].y, "pwm");
+				break;
+			}
 		}
 	}
 

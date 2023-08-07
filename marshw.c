@@ -251,10 +251,9 @@ void Mars_Init(void)
 
 	Mars_UpdateCD();
 
-	if (mars_cd_ok && !(mars_cd_ok & 0x2))
+	if (mars_cd_ok & 0x1)
 	{
-		/* if the CD is present and it's */
-		/* not an MD+, give it seconds to init */
+		/* if the CD is present, give it seconds to init */
 		Mars_WaitTicks(180);
 	}
 }
@@ -348,6 +347,86 @@ void Mars_PlayTrack(char usecd, int playtrack, void *vgmptr, int vgmsize, char l
 
 	MARS_SYS_COMM2 = playtrack | (looping ? 0x8000 : 0x0000);
 	MARS_SYS_COMM0 = 0x0300; /* start music */
+	while (MARS_SYS_COMM0);
+}
+
+void Mars_MCDLoadSfx(uint16_t id, void *data, uint32_t data_len)
+{
+	int i;
+	uint16_t s[4];
+
+	while (MARS_SYS_COMM0);
+
+	s[0] = (uintptr_t)data_len>>16, s[1] = (uintptr_t)data_len&0xffff;
+	s[2] = (uintptr_t)data>>16, s[3] = (uintptr_t)data&0xffff;
+
+	for (i = 0; i < 4; i++) {
+		MARS_SYS_COMM2 = s[i];
+		MARS_SYS_COMM0 = 0x1D01+i;
+		while (MARS_SYS_COMM0);
+	}
+
+	MARS_SYS_COMM2 = id;
+	MARS_SYS_COMM0 = 0x1D00; /* load sfx */
+	while (MARS_SYS_COMM0);
+}
+
+void Mars_MCDPlaySfx(uint8_t src_id, uint16_t buf_id, uint8_t pan, uint8_t vol)
+{
+	if (src_id == 0)
+		return;
+
+	while (MARS_SYS_COMM0);
+
+	MARS_SYS_COMM2 = (pan<<8)|vol;
+	MARS_SYS_COMM0 = 0x1E00|src_id;
+	while (MARS_SYS_COMM0);
+
+	MARS_SYS_COMM2 = buf_id;
+	MARS_SYS_COMM0 = 0x1E01;
+
+	while (MARS_SYS_COMM0);
+}
+
+int Mars_MCDGetSfxPlaybackStatus(void)
+{
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM0 = 0x1F00;
+	while (MARS_SYS_COMM0);
+	return MARS_SYS_COMM2;
+}
+
+void Mars_MCDClearSfx(void)
+{
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM0 = 0x2000;
+	while (MARS_SYS_COMM0);
+}
+
+void Mars_MCDUpdateSfx(uint8_t src_id, uint8_t pan, uint8_t vol)
+{
+	if (src_id == 0)
+		return;
+
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM2 = (pan<<8)|vol;
+	MARS_SYS_COMM0 = 0x2100|src_id;
+	while (MARS_SYS_COMM0);
+}
+
+void Mars_MCDStopSfx(uint8_t src_id)
+{
+	if (src_id == 0)
+		return;
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM0 = 0x2200|src_id;
+	while (MARS_SYS_COMM0);
+}
+
+void Mars_MCDFlushSfx(void)
+{
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM0 = 0x2300;
 	while (MARS_SYS_COMM0);
 }
 

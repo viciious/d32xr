@@ -87,11 +87,6 @@ int Mars_GetWDTCount(void);
 
 #endif
 
-#define Mars_PatchRAMCode(loc,inst) do {\
-		__asm volatile("mov.w %0, %1\n\t" : : "r"(inst), "m"(loc) : "memory"); \
-		Mars_ClearCacheLine(loc); \
-	} while(0)
-
 uint16_t *Mars_FrameBufferLines(void);
 
 #define Mars_IsPAL() ((MARS_VDP_DISPMODE & MARS_NTSC_FORMAT) == 0)
@@ -147,6 +142,14 @@ void Mars_LoadWordColumnFromMDVRAM(int c, int offset, int len);
 void Mars_SwapWordColumnWithMDVRAM(int c);
 
 void Mars_Finish(void) MARS_ATTR_DATA_CACHE_ALIGN;
+
+void Mars_MCDLoadSfx(uint16_t id, void *data, uint32_t data_len);
+void Mars_MCDPlaySfx(uint8_t src_id, uint16_t buf_id, uint8_t pan, uint8_t vol);
+int Mars_MCDGetSfxPlaybackStatus(void);
+void Mars_MCDClearSfx(void);
+void Mars_MCDUpdateSfx(uint8_t src_id, uint8_t pan, uint8_t vol);
+void Mars_MCDStopSfx(uint8_t src_id);
+void Mars_MCDFlushSfx(void);
 
 enum {
 	DEBUG_FPSCOUNT,

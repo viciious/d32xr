@@ -59,6 +59,7 @@ typedef struct __attribute((packed))
 	int8_t unused2;
 	int8_t anamorphic;
 	int8_t colormap;
+	int8_t sfxdriver;
 } saveopts_t;
 
 static char saveslotguard[SRAM_SLOTSIZE - sizeof(savegame_t)] __attribute__((unused));
@@ -179,6 +180,7 @@ static void SaveOptions(void)
 	so.strafebtns = strafebtns;
 	so.anamorphic = anamorphicview;
 	so.colormap = colormapopt+1;
+	so.sfxdriver = sfxdriver;
 
 	Mars_WriteSRAM((void*)&so, optslotoffset, sizeof(saveopts_t));
 }
@@ -218,6 +220,8 @@ static void ReadOptions(void)
 		so.anamorphic = 0;
 	if (so.colormap < 1 || so.colormap > 2)
 		so.colormap = 2;
+	if (so.sfxdriver < 0 || so.sfxdriver > 2)
+		so.sfxdriver = 0;
 
 	sfxvolume = so.sfxvolume;
 	musicvolume = so.musicvolume;
@@ -230,6 +234,7 @@ static void ReadOptions(void)
 	strafebtns = so.strafebtns;
 	anamorphicview = so.anamorphic;
 	colormapopt = so.colormap - 1;
+	sfxdriver = so.sfxdriver;
 }
 
 void ClearEEProm(void)
@@ -254,6 +259,7 @@ void ReadEEProm(void)
 	ticsperframe = MINTICSPERFRAME;
 	anamorphicview = 0;
 	colormapopt = 1;
+	sfxdriver = 0;
 
 	ReadOptions();
 }

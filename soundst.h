@@ -76,6 +76,13 @@ enum
 	mustype_cd,
 };
 
+enum
+{
+	sfxdriver_auto,
+	sfxdriver_mcd,
+	sfxdriver_pwm,
+};
+
 extern	sfxchannel_t	sfxchannels[SFXCHANNELS];
 
 extern	int		finalquad;			/* the last quad mixed by update. */
@@ -104,6 +111,7 @@ void S_Clear (void);
 void S_StartSound(mobj_t *mobj, int sound_id);
 void S_StartPositionedSound(mobj_t* mobj, int sound_id, getsoundpos_t getpos);
 void S_UpdateSounds(void);
+void S_PreUpdateSounds(void);
 int S_CDAvailable(void);
 void S_SetMusicType(int t);
 

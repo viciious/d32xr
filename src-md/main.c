@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include "scd_pcm.h"
 
 extern uint32_t vblank_vector;
 extern uint16_t gen_lvl2;
@@ -117,7 +118,9 @@ uint16_t InitCD(void)
      */
     while (read_byte(0xA1200F) != 0x00) ;
 
-    return 1; // CD ready to go!
+    scd_init_pcm();
+
+    return 0x1; // CD ready to go!
 }
 
 int main(void)

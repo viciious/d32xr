@@ -46,6 +46,10 @@
 #define S_WAV_FORMAT_IMA_ADPCM   0x11
 #define S_WAV_FORMAT_EXTENSIBLE  0xfffe
 
+#define S_SEP_VOL_TO_MCD(sep,vol) do { if ((sep) > 254) (sep) = 254; (vol) <<= 2; /* 64 -> 256 max */ if ((vol) > 255) (vol) = 255; } while (0)
+
+#define S_USE_MEGACD_DRV() (mcd_avail && (sfxdriver == sfxdriver_auto || sfxdriver == sfxdriver_mcd))
+
 enum
 {
 	SNDCMD_NONE,
@@ -78,17 +82,18 @@ int             samplecount = 0;
 
 static marsrb_t	soundcmds = { 0 };
 
-extern uintptr_t paintchan_movr5r1;
-extern uintptr_t paintchan_movr5r1_ima;
-extern uintptr_t paintchan_movr5r1_ima2x_1, paintchan_movr5r1_ima2x_2;
+VINT 			sfxdriver = 0, mcd_avail = 0; // 0 - auto, 2 - megacd, 2 - 32x
 
-static void S_StartSoundReal(mobj_t* mobj, unsigned sound_id, int vol, getsoundpos_t getpos) ATTR_DATA_CACHE_ALIGN;
+static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol, getsoundpos_t getpos);
+static void S_SetChannelData(sfxchannel_t* channel);
 int S_PaintChannel4IMA(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
 int S_PaintChannel4IMA2x(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
 void S_PaintChannel8(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
 static int S_PaintChannel(sfxchannel_t *ch, int16_t* buffer, int painted) ATTR_DATA_CACHE_ALIGN;
+static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos) ATTR_DATA_CACHE_ALIGN;
 static void S_SpatializeAt(fixed_t*origin, mobj_t* listener, int* pvol, int* psep) ATTR_DATA_CACHE_ALIGN;
 static void S_Spatialize(mobj_t* mobj, int* pvol, int* psep, getsoundpos_t getpos) ATTR_DATA_CACHE_ALIGN;
+static void S_SpatializeAll(void) ATTR_DATA_CACHE_ALIGN;
 static void S_Update(int16_t* buffer) ATTR_DATA_CACHE_ALIGN;
 static void S_UpdatePCM(void) ATTR_DATA_CACHE_ALIGN;
 
@@ -107,6 +112,14 @@ void S_Init(void)
 	VINT	tmp_tracks[100];
 	int 	start, end;
 
+	for (i = 0; i < SFXCHANNELS; i++)
+		sfxchannels[i].data = NULL;
+
+	// check if CD is available, reset the driver option if not
+	mcd_avail = S_CDAvailable() & 0x1;
+	if (!mcd_avail && sfxdriver > 1)
+		sfxdriver = 0;
+
 	/* init sound effects */
 	start = W_CheckNumForName("DS_START");
 	end = W_CheckNumForName("DS_END");
@@ -122,6 +135,18 @@ void S_Init(void)
 		for (i=1 ; i < NUMSFX ; i++)
 		{
 			S_sfx[i].lump = W_CheckNumForName(S_sfxnames[i]);
+		}
+	}
+
+	if (mcd_avail)
+	{
+		for (i=1 ; i < NUMSFX ; i++)
+		{
+			int lump = S_sfx[i].lump;
+			if (lump < 0) {
+				continue;
+			}
+			Mars_MCDLoadSfx(i, W_POINTLUMPNUM(lump), W_LumpLength(lump));
 		}
 	}
 
@@ -179,6 +204,15 @@ void S_Init(void)
 void S_Clear (void)
 {
 	volatile int tic;
+
+	if (S_USE_MEGACD_DRV())
+	{
+		D_memset(sfxchannels, 0, sizeof(*sfxchannels) * SFXCHANNELS);
+		Mars_MCDClearSfx();
+		Mars_MCDFlushSfx();
+
+		// fallthrough
+	}
 
 	uint16_t *p = (uint16_t*)Mars_RB_GetWriteBuf(&soundcmds, 8, false);
 	if (!p)
@@ -316,11 +350,59 @@ static void S_Spatialize(mobj_t* mobj, int *pvol, int *psep, getsoundpos_t getpo
 /*
 ==================
 =
-= S_StartSound
+= S_SpatializeAll
 =
 ==================
 */
 
+static void S_SpatializeAll(void)
+{
+	int i;
+	mobj_t *mo;
+
+	for (i = 0; i < SFXCHANNELS; i++)
+	{
+		sfxchannel_t* ch = &sfxchannels[i];
+
+		if (!ch->data)
+			continue;
+
+		mo = ch->mobj;
+		if (mo)
+		{
+			int vol, sep;
+
+			/* */
+			/* spatialize */
+			/* */
+			if (!ch->getpos)
+			{
+				Mars_ClearCacheLine(&mo->x);
+				Mars_ClearCacheLine(&mo->y);
+			}
+
+			S_Spatialize(mo, &vol, &sep, ch->getpos);
+
+			if (!vol)
+			{
+				// inaudible
+				ch->data = NULL;
+				continue;
+			}
+
+			ch->volume = vol;
+			ch->pan = sep;
+		}
+	}
+}
+
+/*
+==================
+=
+= S_StartSoundEx
+=
+==================
+*/
 static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 {
 	int vol, sep;
@@ -344,6 +426,22 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 	// HACK: boost volume for item pickups
 	if (sound_id == sfx_itemup)
 		vol <<= 1;
+
+	if (S_USE_MEGACD_DRV())
+	{
+		sfxchannel_t *ch;
+
+		ch = S_AllocateChannel(mobj, sound_id, vol, getpos);
+		if (!ch)
+			return;
+
+		S_SEP_VOL_TO_MCD(sep, vol);
+		if (sound_id == sfx_itemup && sep == 128)
+			sep = 255; // full volume from both channels
+
+		Mars_MCDPlaySfx((ch - sfxchannels) + 1, sound_id, sep, vol);
+		return;
+	}
 
 	uint16_t* p = (uint16_t*)Mars_RB_GetWriteBuf(&soundcmds, 8, false);
 	if (!p)
@@ -385,6 +483,31 @@ void S_StartPositionedSound(mobj_t* mobj, int sound_id, getsoundpos_t getpos)
 =
 ===================
 */
+void S_PreUpdateSounds(void)
+{
+	if (S_USE_MEGACD_DRV())
+	{
+		int i;
+		sfxchannel_t *ch;
+		int status, bit;
+
+		bit = 1;
+		status = Mars_MCDGetSfxPlaybackStatus();
+		for (ch = sfxchannels, i = 0; i < SFXCHANNELS; i++, ch++, bit <<= 1)
+		{
+			if (!ch->data)
+				continue;
+
+			if (!(status & bit)) {
+				// stopped
+				ch->data = NULL;
+			} else {
+				ch->position = 1;
+			}
+		}
+	}
+}
+
 void S_UpdateSounds(void)
 {
 	static VINT oldmusvol = -1;
@@ -395,6 +518,31 @@ void S_UpdateSounds(void)
 			Mars_SetMusicVolume(vol > 255 ? 255 : vol);
 		}
 		oldmusvol = musicvolume;
+	}
+
+	if (S_USE_MEGACD_DRV())
+	{
+		int i;
+		sfxchannel_t *ch;
+
+		// spatalize
+		S_SpatializeAll();
+
+		for (ch = sfxchannels, i = 0; i < SFXCHANNELS; i++, ch++)
+		{
+			int vol, sep;
+
+			if (!ch->data)
+				continue;
+
+			sep = ch->pan;
+			vol = ch->volume;
+			S_SEP_VOL_TO_MCD(sep, vol);
+
+			Mars_MCDUpdateSfx(i + 1, sep, vol);
+		}
+
+		Mars_MCDFlushSfx();
 	}
 }
 
@@ -575,23 +723,8 @@ static void S_UpdatePCM(void)
 
 static int S_PaintChannel(sfxchannel_t *ch, int16_t* buffer, int painted)
 {
-	boolean patch;
-	const int mov0r1 = 0xE100;
-	const int movpr5r1 = 0x6152;
-	const int movp4r5r1 = 0x5151;
-
 	if (!ch->data)
 		return 0;
-
-	patch = painted == 0;
-	if (patch)
-	{
-		/* PATCH */
-		Mars_PatchRAMCode(paintchan_movr5r1, mov0r1); /* mov #0,r1 */
-		Mars_PatchRAMCode(paintchan_movr5r1_ima, mov0r1); /* mov #0,r1 */
-		Mars_PatchRAMCode(paintchan_movr5r1_ima2x_1, mov0r1); /* mov #0,r1 */
-		Mars_PatchRAMCode(paintchan_movr5r1_ima2x_2, mov0r1); /* mov #0,r1 */
-	}
 
 	if (ch->width == 4)
 	{
@@ -655,25 +788,6 @@ static int S_PaintChannel(sfxchannel_t *ch, int16_t* buffer, int painted)
 		painted = MAX_SAMPLES;
 	}
 
-	if (patch)
-	{
-		int j;
-		int32_t *b2;
-
-		/* PATCH BACK */
-		Mars_PatchRAMCode(paintchan_movr5r1, movpr5r1); /* mov @r5,r1 */
-		Mars_PatchRAMCode(paintchan_movr5r1_ima, movpr5r1); /* mov @r5,r1 */
-		Mars_PatchRAMCode(paintchan_movr5r1_ima2x_1, movpr5r1); /* mov @r5,r1 */
-		Mars_PatchRAMCode(paintchan_movr5r1_ima2x_2, movp4r5r1); /* mov @(4,r5),r1 */
-
-		/* clear the remaining buffer */
-		b2 = (int32_t *)buffer + painted;
-		for (j = painted; j < MAX_SAMPLES; j++)
-		{
-			*b2++ = 0;
-		}
-	}
-
 	return painted;
 }
 
@@ -684,27 +798,37 @@ static void S_Update(int16_t* buffer)
 	int c, l, h;
 	mobj_t* mo;
 	int painted = 0;
-	boolean spatialize;
 
 	S_UpdatePCM();
 
 	Mars_ClearCacheLine(&sfxvolume);
 	Mars_ClearCacheLine(&musicvolume);
+	Mars_ClearCacheLine(&sfxdriver);
 
-	i = 0;
-	if (!pcmchannel.data)
+	if (pcmchannel.data)
 	{
-		for (i = 0; i < SFXCHANNELS; i++)
+		snd_nopaintcount = 0;
+	}
+	else
+	{
+		if (S_USE_MEGACD_DRV())
 		{
-			if (sfxchannels[i].data)
-				break;
+			snd_nopaintcount++;
+		}
+		else
+		{
+			for (i = 0; i < SFXCHANNELS; i++)
+			{
+				if (sfxchannels[i].data)
+					break;
+			}
+			if (i == SFXCHANNELS)
+				snd_nopaintcount++;
+			else
+				snd_nopaintcount = 0;
 		}
 	}
 
-	if (i == SFXCHANNELS)
-		snd_nopaintcount++;
-	else
-		snd_nopaintcount = 0;
 	if (snd_nopaintcount > 2)
 	{
 		// we haven't painted the sound channels to the output buffer
@@ -713,77 +837,52 @@ static void S_Update(int16_t* buffer)
 		return;
 	}
 
+	b2 = (int32_t *)buffer;
+	for (i = 0; i < MAX_SAMPLES; i++)
+	{
+		*b2++ = 0;
+	}
+
 	/* keep updating the channel until done */
 	painted += S_PaintChannel(&pcmchannel, buffer, painted);
 
-	spatialize = samplecount >= SPATIALIZATION_SRATE;
+	if (!S_USE_MEGACD_DRV())
+	{
+		boolean spatialize = samplecount >= SPATIALIZATION_SRATE;
+
+		if (spatialize)
+		{
+			for (i = 0; i < MAXPLAYERS; i++)
+			{
+				player_t* player = &players[i];
+				if (!playeringame[i])
+					continue;
+
+				Mars_ClearCacheLine(&player->mo);
+
+				mo = player->mo;
+				Mars_ClearCacheLine(&mo->x);
+				Mars_ClearCacheLine(&mo->y);
+				Mars_ClearCacheLine(&mo->angle);
+			}
+
+			S_SpatializeAll();
+		}
+
+		for (i = 0; i < SFXCHANNELS; i++)
+		{
+			sfxchannel_t* ch = &sfxchannels[i];
+
+			if (!ch->data)
+				continue;
+
+			painted += S_PaintChannel(ch, buffer, painted);
+		}
+	}
+
 	if (samplecount >= SPATIALIZATION_SRATE)
 		samplecount -= SPATIALIZATION_SRATE;
 	samplecount += MAX_SAMPLES;
-
-	if (spatialize)
-	{
-		for (i = 0; i < MAXPLAYERS; i++)
-		{
-			player_t* player = &players[i];
-			if (!playeringame[i])
-				continue;
-
-			Mars_ClearCacheLine(&player->mo);
-
-			mo = player->mo;
-			Mars_ClearCacheLine(&mo->x);
-			Mars_ClearCacheLine(&mo->y);
-			Mars_ClearCacheLine(&mo->angle);
-		}
-	}
-
-	for (i = 0; i < SFXCHANNELS; i++)
-	{
-		sfxchannel_t* ch = &sfxchannels[i];
-
-		if (!ch->data)
-			continue;
-
-		mo = ch->mobj;
-		if (mo && spatialize)
-		{
-			int vol, sep;
-
-			/* */
-			/* spatialize */
-			/* */
-			if (!ch->getpos)
-			{
-				Mars_ClearCacheLine(&mo->x);
-				Mars_ClearCacheLine(&mo->y);
-			}
-
-			S_Spatialize(mo, &vol, &sep, ch->getpos);
-
-			if (!vol)
-			{
-				// inaudible
-				ch->data = NULL;
-				continue;
-			}
-
-			ch->volume = vol;
-			ch->pan = sep;
-		}
-
-		painted += S_PaintChannel(ch, buffer, painted);
-	}
-
-	// clear the buffer if we painted nothing
-	if (!painted)
-	{
-		b2 = (int32_t *)buffer;
-		for (i = 0; i < MAX_SAMPLES; i++)
-		{
-			*b2++ = 0;
-		}
-	}
 
 #ifdef MARS
 	// force GCC into keeping constants in registers as it 
@@ -825,11 +924,18 @@ void sec_dma1_handler(void)
 	S_Update(snd_buffer[snd_bufidx]);
 }
 
-static void S_StartSoundReal(mobj_t* mobj, unsigned sound_id, int vol, getsoundpos_t getpos)
+/*
+==================
+=
+= S_AllocateChannel
+=
+==================
+*/
+static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol, getsoundpos_t getpos)
 {
 	sfxchannel_t* channel, * newchannel;
 	int i;
-	int length, loop_length;
+	int length;
 	sfxinfo_t* sfx;
 	sfx_t* md_data;
 
@@ -837,10 +943,9 @@ static void S_StartSoundReal(mobj_t* mobj, unsigned sound_id, int vol, getsoundp
 	sfx = &S_sfx[sound_id];
 	md_data = W_POINTLUMPNUM(sfx->lump);
 	length = md_data->samples;
-	loop_length = 0;
 
 	if (length < 4)
-		return;
+		return NULL;
 
 	/* reject sounds started at the same instant and singular sounds */
 	for (channel = sfxchannels, i = 0; i < SFXCHANNELS; i++, channel++)
@@ -854,7 +959,7 @@ static void S_StartSoundReal(mobj_t* mobj, unsigned sound_id, int vol, getsoundp
 					newchannel = channel;
 					goto gotchannel;	/* overlay this	*/
 				}
-				return;		/* exact sound allready started */
+				return NULL;		/* exact sound already started */
 			}
 
 			if (sfx->singularity)
@@ -881,80 +986,19 @@ static void S_StartSoundReal(mobj_t* mobj, unsigned sound_id, int vol, getsoundp
 		for (newchannel = sfxchannels, i = 0; i < SFXCHANNELS; i++, newchannel++)
 			if (newchannel->sfx->priority >= sfx->priority)
 				goto gotchannel;
-		return;		/* couldn't override a channel */
+		return NULL;		/* couldn't override a channel */
 	}
 
 	/* */
 	/* fill in the new values */
 	/* */
 gotchannel:
-	if (length == 0x52494646) {	// RIFF
-		// find the format chunk
-		uint16_t *chunk = (uint16_t *)((char *)md_data + 12);
-		uint16_t *end = (uint16_t *)((char *)md_data + 0x40 - 4);
-		int format = 0;
-
-		// set default sample rate and block size
-		newchannel->increment = (11025 << 14) / SAMPLE_RATE;
-		newchannel->block_size = 256;
-
-		while (chunk < end) {
-			// a long value in little endian format
-			length = S_LE_LONG(&chunk[2]);
-
-			if (chunk[0] == 0x6461 && chunk[1] == 0x7461) // 'data'
-				break;
-
-			if (chunk[0] == 0x666D && chunk[1] == 0x7420) // 'fmt '
-			{
-				int sample_rate = S_LE_LONG(&chunk[6]);
-				int block_align = S_LE_SHORT(&chunk[10]);
-
-				format = S_LE_SHORT(&chunk[4]);
-				if (format == S_WAV_FORMAT_EXTENSIBLE && length == 40) {
-					format = S_LE_LONG(&chunk[16]); // sub-format
-				}
-
-				// increment = (SampleRate << 14) / mixer sample rate
-				if (sample_rate > SAMPLE_RATE)
-					newchannel->increment = 1 << 14; // limit increment to max of 1.0
-				else
-					newchannel->increment = (sample_rate << 14) / SAMPLE_RATE;
-				newchannel->block_size = block_align;
-			}
-
-			chunk += 4 + ((length + 1) >> 1);
-		}
-
-		if (chunk >= end)
-			return;
-
-		newchannel->data = (uint8_t *)&chunk[4];
-		if (format == S_WAV_FORMAT_PCM) {
-			newchannel->length = length << 14;
-			newchannel->loop_length = 0;
-			newchannel->width = 8;
-			newchannel->position = 0;
-		}
-		else if (format == S_WAV_FORMAT_IMA_ADPCM) {
-			newchannel->remaining_bytes = length;
-			newchannel->length = 0;
-			newchannel->loop_length = 0;
-			newchannel->width = 4;
-			newchannel->position = -1;
-		}
-		else {
-			return;
-		}
-	}
-	else {
-		newchannel->increment = (11025 << 14) / SAMPLE_RATE;
-		newchannel->length = length << 14;
-		newchannel->loop_length = loop_length << 14;
-		newchannel->data = &md_data->data[0];
-		newchannel->width = 8;
-		newchannel->position = 0;
-	}
+	newchannel->increment = (11025 << 14) / SAMPLE_RATE;
+	newchannel->length = length << 14;
+	newchannel->loop_length = 0;
+	newchannel->data = (void *)md_data;
+	newchannel->width = 8;
+	newchannel->position = 0;
 
 	newchannel->sfx = sfx;
 	newchannel->mobj = mobj;
@@ -964,8 +1008,82 @@ gotchannel:
 	newchannel->volume = vol;
 	newchannel->pan = 128;
 
-	// cache-through access the sample data
-	//newchannel->data = (void *)((uintptr_t)newchannel->data | 0x20000000);
+	return newchannel;
+}
+
+static void S_SetChannelData(sfxchannel_t* channel)
+{
+	int length;
+	sfx_t* md_data;
+
+	md_data = (void*)channel->data;
+	length = md_data->samples;
+
+	if (length != 0x52494646) { // RIFF
+		channel->data = &md_data->data[0];
+		return;
+	}
+
+	// find the format chunk
+	uint16_t *chunk = (uint16_t *)((char *)md_data + 12);
+	uint16_t *end = (uint16_t *)((char *)md_data + 0x40 - 4);
+	int format = 0;
+
+	// set default sample rate and block size
+	channel->increment = (11025 << 14) / SAMPLE_RATE;
+	channel->block_size = 256;
+
+	while (chunk < end) {
+		// a long value in little endian format
+		length = S_LE_LONG(&chunk[2]);
+
+		if (chunk[0] == 0x6461 && chunk[1] == 0x7461) // 'data'
+			break;
+
+		if (chunk[0] == 0x666D && chunk[1] == 0x7420) // 'fmt '
+		{
+			int sample_rate = S_LE_LONG(&chunk[6]);
+			int block_align = S_LE_SHORT(&chunk[10]);
+
+			format = S_LE_SHORT(&chunk[4]);
+			if (format == S_WAV_FORMAT_EXTENSIBLE && length == 40) {
+				format = S_LE_LONG(&chunk[16]); // sub-format
+			}
+
+			// increment = (SampleRate << 14) / mixer sample rate
+			if (sample_rate > SAMPLE_RATE)
+				channel->increment = 1 << 14; // limit increment to max of 1.0
+			else
+				channel->increment = (sample_rate << 14) / SAMPLE_RATE;
+			channel->block_size = block_align;
+		}
+
+		chunk += 4 + ((length + 1) >> 1);
+	}
+
+	if (chunk >= end) {
+		channel->data = NULL;
+		return;
+	}
+
+	channel->data = (uint8_t *)&chunk[4];
+	if (format == S_WAV_FORMAT_PCM) {
+		channel->length = length << 14;
+		channel->loop_length = 0;
+		channel->width = 8;
+		channel->position = 0;
+	}
+	else if (format == S_WAV_FORMAT_IMA_ADPCM) {
+		channel->remaining_bytes = length;
+		channel->length = 0;
+		channel->loop_length = 0;
+		channel->width = 4;
+		channel->position = -1;
+	}
+	else {
+		channel->data = NULL;
+		return;
+	}
 }
 
 void Mars_Sec_ReadSoundCmds(void)
@@ -975,22 +1093,28 @@ void Mars_Sec_ReadSoundCmds(void)
 
 	while (Mars_RB_Len(&soundcmds) >= 8) {
 		short* p = Mars_RB_GetReadBuf(&soundcmds, 8);
+		sfxchannel_t *ch = NULL;
 
 		int cmd = *p;
 		switch (cmd) {
 		case SNDCMD_CLEAR:
 			D_memset(sfxchannels, 0, sizeof(*sfxchannels) * SFXCHANNELS);
+			snd_nopaintcount = 0;
 			S_ClearPCM();
 			break;
 		case SNDCMD_STARTSND:
-			S_StartSoundReal((void*)(*(intptr_t*)&p[2]), p[1], p[4], NULL);
+			ch = S_AllocateChannel((void*)(*(intptr_t*)&p[2]), p[1], p[4], NULL);
 			break;
 		case SNDCMD_STARTORGSND:
-			S_StartSoundReal((void*)(*(intptr_t*)&p[2]), p[1], p[6], (getsoundpos_t)(*(intptr_t*)&p[4]));
+			ch = S_AllocateChannel((void*)(*(intptr_t*)&p[2]), p[1], p[6], (getsoundpos_t)(*(intptr_t*)&p[4]));
 			break;
 		}
 
 		Mars_RB_CommitRead(&soundcmds);
+
+		if (ch) {
+			S_SetChannelData(ch);
+		}
 	}
 }
 
