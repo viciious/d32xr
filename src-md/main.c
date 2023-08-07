@@ -10,7 +10,7 @@
 extern uint32_t vblank_vector;
 extern uint16_t gen_lvl2;
 extern uint16_t cd_ok;
-extern uint16_t megasd_ok;
+extern uint16_t megasd_ok, megasd_num_cdtracks;
 extern uint16_t everdrive_ok;
 
 extern uint32_t Sub_Start;
@@ -26,6 +26,7 @@ extern unsigned short read_word(unsigned int src);
 extern unsigned int read_long(unsigned int src);
 
 extern uint16_t InitMegaSD(void);
+extern uint16_t InitEverDrive(void);
 
 extern void do_main(void);
 
@@ -127,6 +128,15 @@ int main(void)
 {
     cd_ok = InitCD();
     megasd_ok = InitMegaSD();
+    everdrive_ok = InitEverDrive();
+
+    /* workaround a MEDPro quirk where it exposes a single-track MD+ OST, */
+    /* which only occurs if the letter 'C' is present in the ROM header */
+    if (!cd_ok && everdrive_ok && megasd_ok && megasd_num_cdtracks == 1)
+    {
+        megasd_ok = 0;
+        megasd_num_cdtracks = 0;
+    }
 
     /*
      * Main loop in ram - you need to have it in ram to avoid bus contention

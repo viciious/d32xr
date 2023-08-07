@@ -331,15 +331,6 @@ do_main:
         move.b  #2,0xA130F1         /* SRAM disabled, write protected */
         move.b  #0,0xA15107         /* clear RV */
 
-
-| detect the Mega EverDrive
-        move.w  #0x2700,sr          /* disable ints */
-        move.b  #1,0xA15107         /* set RV */
-        jsr     InitEverDrive
-        move.w  d0,everdrive_ok
-        move.b  #0,0xA15107         /* clear RV */
-        move.w  #0x2000,sr          /* enable ints */
-
 main_loop_start:
         move.w  0xA15100,d0
         or.w    #0x8000,d0
