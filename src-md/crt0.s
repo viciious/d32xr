@@ -338,10 +338,15 @@ main_loop_start:
         move.l  #0,0xA15120         /* let Master SH2 run */
 
 main_loop:
+        tst.b   need_bump_fm
+        beq.s   main_loop_handle_req
+        move.b  #0,need_bump_fm
+
         move.w  #0x2700,sr          /* disable ints */
         bsr     bump_fm
         move.w  #0x2000,sr          /* enable ints */
 
+main_loop_handle_req:
         move.w  0xA15120,d0         /* get COMM0 */
         bne.b   handle_req
 
@@ -1417,9 +1422,6 @@ dbug_end:
         move.w  d0,(a1)
         bra.b   1b
 2:
-        move.w  #0x2700,sr          /* disable ints */
-        bsr     bump_fm
-        move.w  #0x2000,sr          /* enable ints */
         addq.w  #1,d2
         dbra    d3,0b
         bra     main_loop
@@ -2269,6 +2271,8 @@ vert_blank:
         move.l  d2,-(sp)
         move.l  a2,-(sp)
 
+        move.b  #1,need_bump_fm
+
         /* read controllers */
         move.w  0xA1512C,d0
         andi.w  #0xF000,d0
@@ -2617,6 +2621,9 @@ net_type:
 
 hotplug_cnt:
         dc.b    0
+
+need_bump_fm:
+        dc.b    1
 
         .align  4
 
