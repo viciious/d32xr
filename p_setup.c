@@ -671,8 +671,8 @@ D_printf ("P_SetupLevel(%i,%i)\n",lumpnum,skill);
 	rejectmatrix = W_CacheLumpNum (lumpnum+ML_REJECT,PU_LEVEL);
 #endif
 
-	validcount = Z_Malloc((numlines + 1) * sizeof(*validcount), PU_LEVEL, 0);
-	D_memset(validcount, 0, (numlines + 1) * sizeof(*validcount));
+	validcount = Z_Malloc((numlines + 1) * sizeof(*validcount) * 2, PU_LEVEL, 0);
+	D_memset(validcount, 0, (numlines + 1) * sizeof(*validcount) * 2);
 	validcount[0] = 1; // cpu 0
 
 	P_GroupLines ();
