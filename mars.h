@@ -90,6 +90,8 @@ static inline void Mars_CommSlaveClearCache(void)
 static inline void Mars_R_BeginWallPrep(boolean draw)
 {
 	Mars_R_SecWait();
+	if (!draw)
+		return;
 	MARS_SYS_COMM6 = 0; // next seg
 	MARS_SYS_COMM8 = 0; // last unready seg
 	MARS_SYS_COMM4 = draw ? MARS_SECCMD_R_WALL_PREP : MARS_SECCMD_R_WALL_PREP_NODRAW;

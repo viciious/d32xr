@@ -583,7 +583,7 @@ static void AM_Drawer_ (int c)
 	extern VINT sbar_height;
 	int		am_y;
 	int		am_height;
-	int		am_halfh, am_halfhFrac;
+	int		am_halfh;
 	byte	*fb;
 
 	am_y = 0;
@@ -594,7 +594,6 @@ static void AM_Drawer_ (int c)
 		am_height -= sbar_height;
 	}
 	am_halfh = am_height / 2;
-	am_halfhFrac = am_halfh * FRACUNIT;
 
 #ifdef JAGUAR
 	workingscreen = screens[workpage];
@@ -670,42 +669,42 @@ static void AM_Drawer_ (int c)
 
 		v1 = &vertexes[line->v1];
 		v2 = &vertexes[line->v2];
-		x1 = v1->x;
+
 		y1 = v1->y;
-		x2 = v2->x;
 		y2 = v2->y;
-		
-		x1 -= ox;
-		x2 -= ox;
+
 		y1 -= oy;
 		y2 -= oy;
 
-		x1 = FixedDiv(x1, scale);
-		x2 = FixedDiv(x2, scale);
-		y1 = FixedDiv(y1, scale);
-		y2 = FixedDiv(y2, scale);
-		
-		outcode = (x1 > 160 * FRACUNIT) << 1;
-		outcode |= (x1 < -160 * FRACUNIT);
-		outcode2 = (x2 > 160 * FRACUNIT) << 1;
-		outcode2 |= (x2 < -160 * FRACUNIT);
+		y1 = IDiv(y1, scale);
+		y2 = IDiv(y2, scale);
+
+		y1 = am_halfh-y1;
+		y2 = am_halfh-y2;
+
+		outcode = (y1 > maxy) << 1;
+		outcode |= (y1 < miny) ;
+		outcode2 = (y2 > maxy) << 1;
+		outcode2 |= (y2 < miny) ;
 		if (outcode & outcode2) continue;
 
-		outcode = (y1 > am_halfhFrac) << 1;
-		outcode |= (y1 < -am_halfhFrac) ;
-		outcode2 = (y2 > am_halfhFrac) << 1;
-		outcode2 |= (y2 < -am_halfhFrac) ;
-		if (outcode & outcode2) continue;
+		x1 = v1->x;
+		x2 = v2->x;
 
-		x1 >>= FRACBITS;
-		y1 >>= FRACBITS;
-		x2 >>= FRACBITS;
-		y2 >>= FRACBITS;
+		x1 -= ox;
+		x2 -= ox;
+
+		x1 = IDiv(x1, scale);
+		x2 = IDiv(x2, scale);
+
+		outcode = (x1 > 160) << 1;
+		outcode |= (x1 < -160);
+		outcode2 = (x2 > 160) << 1;
+		outcode2 |= (x2 < -160);
+		if (outcode & outcode2) continue;
 
 		x1 += 160;
 		x2 += 160;
-		y1 = am_halfh-y1;
-		y2 = am_halfh-y2;
 
 		/* */
 		/* Figure out color */
@@ -789,12 +788,12 @@ static void AM_Drawer_ (int c)
 			nx3 = FixedMul(c, NOSELENGTH) + x1;
 			ny3 = FixedMul(s, NOSELENGTH) + y1;
 
-			nx1 = FixedDiv(nx1, scale) >> FRACBITS;
-			nx2 = FixedDiv(nx2, scale) >> FRACBITS;
-			nx3 = FixedDiv(nx3, scale) >> FRACBITS;
-			ny1 = FixedDiv(ny1, scale) >> FRACBITS;
-			ny2 = FixedDiv(ny2, scale) >> FRACBITS;
-			ny3 = FixedDiv(ny3, scale) >> FRACBITS;
+			nx1 = IDiv(nx1, scale);
+			nx2 = IDiv(nx2, scale);
+			nx3 = IDiv(nx3, scale);
+			ny1 = IDiv(ny1, scale);
+			ny2 = IDiv(ny2, scale);
+			ny3 = IDiv(ny3, scale);
 
 			DrawLine(fb,color,160+nx1,am_halfh-ny1,160+nx2,am_halfh-ny2, 0, am_height-1);
 			DrawLine(fb,color,160+nx2,am_halfh-ny2,160+nx3,am_halfh-ny3, 0, am_height-1);
@@ -827,11 +826,11 @@ static void AM_Drawer_ (int c)
 			ny2 = y1 + MOBJLENGTH;
 			nx3 = x1 + MOBJLENGTH;
 
-			nx1 = FixedDiv(nx1, scale) >> FRACBITS;
-			nx2 = FixedDiv(nx2, scale) >> FRACBITS;
-			nx3 = FixedDiv(nx3, scale) >> FRACBITS;
-			ny1 = FixedDiv(ny1, scale) >> FRACBITS;
-			ny2 = FixedDiv(ny2, scale) >> FRACBITS;
+			nx1 = IDiv(nx1, scale);
+			nx2 = IDiv(nx2, scale);
+			nx3 = IDiv(nx3, scale);
+			ny1 = IDiv(ny1, scale);
+			ny2 = IDiv(ny2, scale);
 
 			ny3 = ny2;
 
