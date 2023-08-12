@@ -1214,6 +1214,7 @@ void S_StartSong(int musiclump, int looping, int cdtrack);
 int S_SongForMapnum(int mapnum);
 void S_StopSong(void);
 void S_RestartSounds (void);
+void S_SetSoundDriver (int newdrv);
 
 /*================= */
 /*TLS */

@@ -339,7 +339,7 @@ void Mars_Secondary(void)
 			Mars_Sec_M_AnimateFire();
 			break;
 		case MARS_SECCMD_S_INIT_DMA:
-			Mars_Sec_InitSoundDMA();
+			Mars_Sec_InitSoundDMA(MARS_SYS_COMM6);
 			break;
 		case MARS_SECCMD_AM_DRAW:
 			Mars_Sec_AM_Drawer();

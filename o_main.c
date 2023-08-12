@@ -609,8 +609,7 @@ void O_Control (player_t *player)
 
 				if (oldsfxdriver != o_sfxdriver)
 				{
-					S_Clear();
-					sfxdriver = o_sfxdriver;
+					S_SetSoundDriver(o_sfxdriver);
 				}
 			}
 

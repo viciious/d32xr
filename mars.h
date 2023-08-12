@@ -69,7 +69,7 @@ void Mars_Sec_P_CheckSights(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_wipe_doMelt(void);
 
 void Mars_Sec_M_AnimateFire(void) ATTR_OPTIMIZE_EXTREME;
-void Mars_Sec_InitSoundDMA(void);
+void Mars_Sec_InitSoundDMA(int initfull);
 void Mars_Sec_ReadSoundCmds(void) ATTR_DATA_OPTIMIZE_NONE;
 
 void Mars_Sec_AM_Drawer(void);
@@ -147,10 +147,11 @@ static inline void Mars_M_EndDrawFire(void)
 	Mars_R_SecWait();
 }
 
-static inline void Mars_InitSoundDMA(void)
+static inline void Mars_InitSoundDMA(int initfull)
 {
 	Mars_R_SecWait();
 	MARS_SYS_COMM4 = MARS_SECCMD_S_INIT_DMA;
+	MARS_SYS_COMM6 = initfull;
 	Mars_R_SecWait();
 }
 

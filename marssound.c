@@ -180,7 +180,7 @@ void S_Init(void)
 
 	Mars_RB_ResetAll(&soundcmds);
 
-	Mars_InitSoundDMA();
+	Mars_InitSoundDMA(1);
 
 	// FIXME: this is ugly, get rid of global variables!
 
@@ -210,8 +210,7 @@ void S_Clear (void)
 		D_memset(sfxchannels, 0, sizeof(*sfxchannels) * SFXCHANNELS);
 		Mars_MCDClearSfx();
 		Mars_MCDFlushSfx();
-
-		// fallthrough
+		return;
 	}
 
 	uint16_t *p = (uint16_t*)Mars_RB_GetWriteBuf(&soundcmds, 8, false);
@@ -232,6 +231,19 @@ void S_Clear (void)
 
 void S_RestartSounds (void)
 {
+}
+
+void S_SetSoundDriver (int newdrv)
+{
+	S_Clear();
+
+	sfxdriver = newdrv;
+	switch (newdrv) {
+		case sfxdriver_pwm:
+			Mars_RB_ResetAll(&soundcmds);
+			Mars_InitSoundDMA(0);
+			break;
+	}
 }
 
 /*
@@ -912,6 +924,15 @@ void sec_dma1_handler(void)
 	SH2_DMA_CHCR1; // read TE
 	SH2_DMA_CHCR1 = 0; // clear TE
 
+	Mars_ClearCacheLine(&sfxdriver);
+
+	if (snd_nopaintcount > 2 && S_USE_MEGACD_DRV())
+	{
+		snd_init = 0;
+		Mars_RB_ResetRead(&soundcmds);
+		return;
+	}
+
 	// start DMA on buffer and fill the other one
 	SH2_DMA_SAR1 = (uintptr_t)snd_buffer[snd_bufidx];
 	SH2_DMA_TCR1 = MAX_SAMPLES; // number longs
@@ -1121,6 +1142,7 @@ void Mars_Sec_ReadSoundCmds(void)
 void Mars_Sec_StartSoundMixer(void)
 {
 	snd_nopaintcount = 0;
+	snd_init = 1;
 
 	S_ClearPCM();
 
@@ -1131,7 +1153,7 @@ void Mars_Sec_StartSoundMixer(void)
 	sec_dma1_handler();
 }
 
-void Mars_Sec_InitSoundDMA(void)
+void Mars_Sec_InitSoundDMA(int initfull)
 {
 	uint16_t sample, ix;
 
@@ -1139,38 +1161,40 @@ void Mars_Sec_InitSoundDMA(void)
 
 	Mars_RB_ResetRead(&soundcmds);
 
-	// init DMA
-	SH2_DMA_SAR1 = 0;
-	SH2_DMA_DAR1 = (uint32_t)&MARS_PWM_STEREO; // storing a long here will set the left and right channels
-	SH2_DMA_TCR1 = 0;
-	SH2_DMA_CHCR1 = 0;
-	SH2_DMA_DRCR1 = 0;
-
-	// init the sound hardware
-	MARS_PWM_MONO = 1;
-	MARS_PWM_MONO = 1;
-	MARS_PWM_MONO = 1;
-	if (MARS_VDP_DISPMODE & MARS_NTSC_FORMAT)
-		MARS_PWM_CYCLE = (((23011361 << 1) / (SAMPLE_RATE)+1) >> 1) + 1; // for NTSC clock
-	else
-		MARS_PWM_CYCLE = (((22801467 << 1) / (SAMPLE_RATE)+1) >> 1) + 1; // for PAL clock
-	MARS_PWM_CTRL = 0x0185; // TM = 1, RTP, RMD = right, LMD = left
-
-	sample = SAMPLE_MIN;
-
-	// ramp up to SAMPLE_CENTER to avoid click in audio (real 32X)
-	while (sample < SAMPLE_CENTER)
+	if (initfull)
 	{
-		for (ix = 0; ix < (SAMPLE_RATE * 2) / (SAMPLE_CENTER - SAMPLE_MIN); ix++)
+		// init DMA
+		SH2_DMA_SAR1 = 0;
+		SH2_DMA_DAR1 = (uint32_t)&MARS_PWM_STEREO; // storing a long here will set the left and right channels
+		SH2_DMA_TCR1 = 0;
+		SH2_DMA_CHCR1 = 0;
+		SH2_DMA_DRCR1 = 0;
+
+		// init the sound hardware
+		MARS_PWM_MONO = 1;
+		MARS_PWM_MONO = 1;
+		MARS_PWM_MONO = 1;
+		if (MARS_VDP_DISPMODE & MARS_NTSC_FORMAT)
+			MARS_PWM_CYCLE = (((23011361 << 1) / (SAMPLE_RATE)+1) >> 1) + 1; // for NTSC clock
+		else
+			MARS_PWM_CYCLE = (((22801467 << 1) / (SAMPLE_RATE)+1) >> 1) + 1; // for PAL clock
+		MARS_PWM_CTRL = 0x0185; // TM = 1, RTP, RMD = right, LMD = left
+
+		sample = SAMPLE_MIN;
+
+		// ramp up to SAMPLE_CENTER to avoid click in audio (real 32X)
+		while (sample < SAMPLE_CENTER)
 		{
-			while (MARS_PWM_MONO & 0x8000); // wait while full
-			MARS_PWM_MONO = sample;
+			for (ix = 0; ix < (SAMPLE_RATE * 2) / (SAMPLE_CENTER - SAMPLE_MIN); ix++)
+			{
+				while (MARS_PWM_MONO & 0x8000); // wait while full
+				MARS_PWM_MONO = sample;
+			}
+			sample++;
 		}
-		sample++;
 	}
 
 	snd_bufidx = 0;
-	snd_init = 1;
 
 	Mars_Sec_StartSoundMixer();
 }
@@ -1218,6 +1242,11 @@ void pri_cmd_handler(void)
 	// done
 	MARS_SYS_COMM0 = 0xA55A;					/* handshake with code */
 	while (MARS_SYS_COMM0 == 0xA55A);
+
+	if (!snd_init)
+	{
+		Mars_Sec_StartSoundMixer();
+	}
 }
 
 void sec_cmd_handler(void)
