@@ -951,7 +951,10 @@ void R_RenderPlayerView(int displayplayer)
 	Mars_R_EndWallPrep();
 
 	if (!drawworld)
+	{
+		Mars_R_SecWait();
 		return;
+	}
 
 	t_prep = I_GetFRTCounter();
 	R_Cache();
