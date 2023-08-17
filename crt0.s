@@ -831,12 +831,6 @@ sec_start:
         bt      1b
 
         mov.l   _sec_adapter,r1
-!       mov     #0x00,r0
-!       mov.b   r0,@(1,r1)              /* set int enables (different from primary despite same address!) */
-!       mov     #0x0F,r0
-!       shll2   r0
-!       shll2   r0
-!       ldc     r0,sr                   /* disallow ints */
         mov     #0x02,r0                /* cmd enabled */
         mov.b   r0,@(1,r1)              /* set int enables */
         mov     #0x10,r0
@@ -1021,7 +1015,7 @@ sec_cmd_irq:
         ! handle wait in sdram
         mov.l   sci_cmd_comm4,r1
         mov.w   @r1,r0
-        mov.l   r0,@-r15                /* save COMM0 reg */
+        mov.l   r0,@-r15                /* save COMM4 reg */
         mov.w   sci_cmd_resp,r0
         mov.w   r0,@r1                  /* respond to m68k */
 0:
@@ -1066,7 +1060,7 @@ sec_cmd_irq:
 
         mov.l   sci_cmd_comm4,r1
         mov.l   @r15+,r0
-        mov.w   r0,@r1                  /* restore COMM0 reg */
+        mov.w   r0,@r1                  /* restore COMM4 reg */
 
         rts
         nop

@@ -1251,11 +1251,7 @@ void pri_cmd_handler(void)
 
 void sec_cmd_handler(void)
 {
-	volatile unsigned short bcomm4 = MARS_SYS_COMM4;	/* save COMM4 reg */
-
 	// done
 	MARS_SYS_COMM4 = 0xA55A;					/* handshake with code */
 	while (MARS_SYS_COMM4 == 0xA55A);
-
-	MARS_SYS_COMM4 = bcomm4;					/* restore COMM4 reg */
 }

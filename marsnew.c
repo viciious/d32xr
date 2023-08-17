@@ -301,8 +301,6 @@ void Mars_Secondary(void)
 	SH2_DMA_VCR1 = 66; 	// set exception vector for DMA channel 1
 	SH2_INT_IPRA = (SH2_INT_IPRA & 0xF0FF) | 0x0400; // set DMA INT to priority 4
 
-	SetSH2SR(1); 		// allow ints
-
 	while (1)
 	{
 		int cmd;
