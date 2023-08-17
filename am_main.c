@@ -656,12 +656,6 @@ static void AM_Drawer_ (int c)
 		int flags;
 		vertex_t *v1, *v2;
 
-#ifdef MARS
-		flags = *(volatile VINT*)(((intptr_t)&line->flags) | 0x20000000);
-#else
-		flags = line->flags;
-#endif
-
 		if ((!(flags & ML_MAPPED) ||		/* IF NOT MAPPED OR DON'T DRAW */
 			flags & ML_DONTDRAW) &&
 			(!(p->powers[pw_allmap] + showAllLines)))
@@ -847,6 +841,7 @@ static void AM_Drawer_ (int c)
 
 void Mars_Sec_AM_Drawer(void)
 {
+	Mars_ClearCache();
 	AM_Drawer_(2);
 }
 
