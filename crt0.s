@@ -35,7 +35,7 @@
         .ascii  "DOOM 32X Resurre"
         .ascii  "ction v3.0      "
         .ascii  "                "
-        .ascii  "GM 20230611-00"
+        .ascii  "GM 20230819-00"
         .word   0x0000
         .ascii  "J6CM            "
         .long   0x00000000,0x004FFFFF   /* ROM start, end */
