@@ -15,7 +15,7 @@ fixed_t stretchX;
 VINT weaponYpos;
 fixed_t weaponXScale;
 
-detailmode_t detailmode = detmode_high;
+detailmode_t detailmode = detmode_mipmaps;
 VINT anamorphicview = 0;
 VINT initmathtables = 2;
 

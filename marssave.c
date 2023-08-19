@@ -203,7 +203,7 @@ static void ReadOptions(void)
 	if (so.controltype >= NUMCONTROLOPTIONS)
 		so.controltype = 0;
 	if (so.detailmode >= MAXDETAILMODES)
-		so.detailmode = detmode_high;
+		so.detailmode = detmode_mipmaps;
 	if (so.musictype < mustype_none || so.musictype > mustype_cd)
 		so.musictype = mustype_fm;
 	if (so.musictype == mustype_cd && !S_CDAvailable())
@@ -251,7 +251,7 @@ void ReadEEProm(void)
 	controltype = 0;
 	sfxvolume = 64;
 	musicvolume = 64;
-	detailmode = detmode_high;
+	detailmode = detmode_mipmaps;
 	viewportNum = R_DefaultViewportSize();
 	musictype = mustype_fm;
 	alwaysrun = 0;
