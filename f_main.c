@@ -318,7 +318,7 @@ void F_Start (void)
 	fin->textdelay = TEXTTIME;
 	fin->text_x = STARTX;
 	fin->text_y = STARTY;
-	fin->drawbg = 2;
+	fin->drawbg = 3;
 	fin->endobj = Z_Malloc(sizeof(*fin->endobj) * NUMENDOBJ, PU_STATIC, NULL);
 
 	l = W_GetNumForName ("CHAR_097");
