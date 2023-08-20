@@ -20,11 +20,11 @@
 
 #define MEGASD_32X_SET_RV_1()	__asm volatile("movew #0x2700,%%sr\n\t" \
 												"moveb #1,0xA15107\n\t" \
-												: : : "cc"); // disable interrupts and set RV=1
+												: : : "cc" ); // disable interrupts and set RV=1
 
 #define MEGASD_32X_SET_RV_0()	__asm volatile("moveb #0,0xA15107\n\t" \
 												"movew #0x2000,%%sr\n\t" \
-												: : : "cc"); // set RV=0 and re-enable interrupts
+												: : : "cc" ); // set RV=0 and re-enable interrupts
 
 extern uint16_t megasd_num_cdtracks;
 
@@ -34,9 +34,12 @@ void MegaSD_PauseCD(void) MEGASD_ATTR_DATA;
 void MegaSD_SetCDVolume(int volume) MEGASD_ATTR_DATA;
 static uint16_t ProtectedInitMegaSD(void) MEGASD_ATTR_DATA;
 
+// fake MegaSD serial and version the MEDPro uses
+static const uint8_t fakemsdid[10] = {0x99, 0x99, 0x99, 0x00, 0xFF, 0XFF, 0x12, 0x34, 0x56, 0x78};
+
 static uint16_t ProtectedInitMegaSD(void)
 {
-	char* idstr;
+	volatile uint8_t* idstr;
 	const int timeout = 50000;
 
 #define MEGASD_WAIT_CMD_RSLT(t) do { \
@@ -50,7 +53,8 @@ static uint16_t ProtectedInitMegaSD(void)
 	MEGASD_CTRL_PORT = MEGASD_CMD_GET_SERIAL;
 	MEGASD_WAIT_CMD_RSLT(timeout);
 
-	idstr = (char*)MEGASD_DATA_AREA;
+	idstr = (uint8_t*)MEGASD_DATA_AREA;
+
 	if (idstr[0] == 'M' &&
 		idstr[1] == 'E' &&
 		idstr[2] == 'G' &&
@@ -58,10 +62,22 @@ static uint16_t ProtectedInitMegaSD(void)
 		idstr[4] == 'S' &&
 		idstr[5] == 'D')
 	{
+		int i;
+		int res = 0x0002; // MD+, CD OK
+
+		for (i = 0; i < 10; i++) {
+			if (idstr[i+6] != fakemsdid[i]) {
+				break;
+			}
+		}
+		if (i == 10) {
+			res |= 0x0004; // fake MegaSD
+		}
+
 		MEGASD_CTRL_PORT = MEGASD_CMD_GET_NUMTRKS;
 		MEGASD_WAIT_CMD_RSLT(timeout);
 		megasd_num_cdtracks = MEGASD_RSLT_PORT;
-		return 0x0002; // MD+, CD OK
+		return res;
 	}
 
 #undef MEGASD_WAIT_CMD_RSLT

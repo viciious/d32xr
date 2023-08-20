@@ -918,8 +918,11 @@ read_cdstate:
 
         move.w  megasd_num_cdtracks,d0
         lsl.l   #2,d0
-        or.w    megasd_ok,d0
-        or.w    cd_ok,d0
+
+        move.w  megasd_ok,d1
+        or.w    cd_ok,d1
+        andi.w  #3,d1
+        or.w    d1,d0
 
         move.w  d0,0xA15122
         move.w  #0,0xA15120         /* done */
