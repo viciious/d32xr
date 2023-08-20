@@ -656,6 +656,7 @@ static void AM_Drawer_ (int c)
 		int flags;
 		vertex_t *v1, *v2;
 
+		flags = line->flags;
 		if ((!(flags & ML_MAPPED) ||		/* IF NOT MAPPED OR DON'T DRAW */
 			flags & ML_DONTDRAW) &&
 			(!(p->powers[pw_allmap] + showAllLines)))
