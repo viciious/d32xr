@@ -327,9 +327,19 @@ read_long:
 
         .global do_main
 do_main:
-        move.b  #1,0xA15107         /* set RV */
+| make sure save ram is disabled
+        move.w  #0x2700,sr          /* disable ints */
+        set_rv
+        move.w  everdrive_ok,d0
+        btst    #8,d0
+        beq.b   1f                  /* not MED/MSD with extended SSF */
+        move.w  #0x8000, 0xA130F0   /* map page 0 to bank 0 */
+        bra.b   2f
+1:
         move.b  #2,0xA130F1         /* SRAM disabled, write protected */
-        move.b  #0,0xA15107         /* clear RV */
+2:
+        clr_rv
+        move.w  #0x2000,sr          /* enable ints */
 
 main_loop_start:
         move.w  0xA15100,d0
