@@ -674,6 +674,7 @@ D_printf ("P_SetupLevel(%i,%i)\n",lumpnum,skill);
 	validcount = Z_Malloc((numlines + 1) * sizeof(*validcount) * 2, PU_LEVEL, 0);
 	D_memset(validcount, 0, (numlines + 1) * sizeof(*validcount) * 2);
 	validcount[0] = 1; // cpu 0
+	validcount[numlines] = 1; // cpu 1
 
 	P_GroupLines ();
 
