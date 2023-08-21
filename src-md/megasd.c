@@ -34,13 +34,12 @@ void MegaSD_PauseCD(void) MEGASD_ATTR_DATA;
 void MegaSD_SetCDVolume(int volume) MEGASD_ATTR_DATA;
 static uint16_t ProtectedInitMegaSD(void) MEGASD_ATTR_DATA;
 
-// fake MegaSD serial and version the MEDPro uses
-static const uint8_t fakemsdid[10] = {0x99, 0x99, 0x99, 0x00, 0xFF, 0XFF, 0x12, 0x34, 0x56, 0x78};
-
 static uint16_t ProtectedInitMegaSD(void)
 {
 	volatile uint8_t* idstr;
 	const int timeout = 50000;
+	// fake MegaSD serial and version the MEDPro uses
+	const uint8_t fakemsdid[10] = {0x99, 0x99, 0x99, 0x00, 0xFF, 0XFF, 0x12, 0x34, 0x56, 0x78};
 
 #define MEGASD_WAIT_CMD_RSLT(t) do { \
 		volatile int timeout_ = t; \

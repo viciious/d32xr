@@ -3,6 +3,8 @@
 
         .text
 
+        .equ NEW_MED, 1             /* set to 0 for old MED save ram support */
+
         .equ DEFAULT_LINK_TIMEOUT, 0x3FFF
 
         /* Z80 local mem variable offsets */
@@ -330,14 +332,18 @@ do_main:
 | make sure save ram is disabled
         move.w  #0x2700,sr          /* disable ints */
         set_rv
-        move.w  everdrive_ok,d0
-        btst    #8,d0
-        beq.b   1f                  /* not MED/MSD with extended SSF */
-        move.w  #0x8000, 0xA130F0   /* map page 0 to bank 0 */
-        bra.b   2f
-1:
+        tst.w   megasd_ok
+        bne.b   1f
+        tst.w   everdrive_ok
+        bne.b   2f
+| assume standard mapper save ram
         move.b  #2,0xA130F1         /* SRAM disabled, write protected */
+        bra.b   3f
+1:
+        move.b  bnk7_save,0xA130FF  /* MegaSD => restore bank 7, fall into MED case */
 2:
+        move.w  #0x8000,0xA130F0    /* MED/MSD => map bank 0 to page 0, write disabled */
+3:
         clr_rv
         move.w  #0x2000,sr          /* enable ints */
 
@@ -453,31 +459,51 @@ read_sram:
         moveq   #0,d0
         move.w  0xA15122,d0         /* COMM2 holds offset */
         moveq   #0,d1
-        move.w  everdrive_ok,d1
-        andi.l  #0x0100,d1
-        beq.w   2f                  /* not everdrive with extended SSF */
-1:
-        sh2_wait
-        set_rv
-        lea     0x40000,a0          /* use the upper 256K of page 31 */
-        move.w  #0x801F, 0xA130F0   /* map page 31 to bank 0 */
-        move.b  0(a0,d0.l),d1       /* read SRAM */
-        move.w  #0x8000, 0xA130F0   /* map page 0 to bank 0 */
-        clr_rv
-        move.w  d1,0xA15122         /* COMM2 holds return byte */
-        bra     3f
-2:
+        tst.w   megasd_ok
+        bne.b   rd_msd_sram
+        tst.w   everdrive_ok
+        bne.w   rd_med_sram
+| assume standard mapper save ram
         add.l   d0,d0
-        lea     0x200000,a0
+        lea     0x200000,a0         /* use standard mapper save ram base */
         sh2_wait
         set_rv
         move.b  #3,0xA130F1         /* SRAM enabled, write protected */
-        move.b  1(a0,d0.l),d1       /* read SRAM */
+        move.b  1(a0,d0.l),d1       /* read SRAM from ODD bytes */
         move.b  #2,0xA130F1         /* SRAM disabled, write protected */
+        bra.w   exit_rd_sram
+
+rd_msd_sram:
+        add.l   d0,d0
+        lea     0x380000,a0         /* use the lower 32K of bank 7 */
+        sh2_wait
+        set_rv
+        move.b  #0x80,0xA130FF      /* bank 7 is save ram */
+        move.b  1(a0,d0.l),d1       /* read SRAM from ODD bytes */
+        move.b  bnk7_save,0xA130FF  /* restore bank 7 */
+        bra.b   exit_rd_sram
+
+rd_med_sram:
+        .if     NEW_MED
+        lea     0x040000,a0         /* use the upper 256K of page 31 */
+        sh2_wait
+        set_rv
+        move.w  #0x801F,0xA130F0    /* map bank 0 to page 31, disable write */
+        move.b  0(a0,d0.l),d1       /* read SRAM */
+        move.w  #0x8000,0xA130F0    /* map bank 0 to page 0, disable write */
+        .else
+        lea     0x000000,a0         /* use the lower 32K of page 28 */
+        sh2_wait
+        set_rv
+        move.w  #0x801C,0xA130F0    /* map bank 0 to page 28, disable write */
+        move.b  0(a0,d0.l),d1       /* read SRAM */
+        move.w  #0x8000,0xA130F0    /* map bank 0 to page 0, disable write */
+        .endif
+
+exit_rd_sram:
         clr_rv
-        move.w  d1,0xA15122         /* COMM2 holds return byte */
-3:
         sh2_cont
+        move.w  d1,0xA15122         /* COMM2 holds return byte */
         move.w  #0,0xA15120         /* done */
         move.w  #0x2000,sr          /* enable ints */
         bra     main_loop
@@ -485,30 +511,52 @@ read_sram:
 write_sram:
         move.w  #0x2700,sr          /* disable ints */
         moveq   #0,d1
-        move.w  everdrive_ok,d1
-        andi.l  #0x0100,d1
-        beq.w   2f                  /* not everdrive with extended SSF */
-1:
         move.w  0xA15122,d1         /* COMM2 holds offset */
-        sh2_wait
-        set_rv
-        lea     0x40000,a0          /* use the upper 256K of page 31 */
-        move.w  #0xA01F, 0xA130F0   /* map page 31 to bank 0, enable the write bit */
-        move.b  d0,0(a0,d1.l)       /* write SRAM */
-        move.w  #0x8000, 0xA130F0   /* map page 0 to bank 0 */
-        clr_rv
-        bra     3f
-2:
-        move.w  0xA15122,d1         /* COMM2 holds offset */
+        tst.w   megasd_ok
+        bne.b   wr_msd_sram
+        tst.w   everdrive_ok
+        bne.w   wr_med_sram
+| assume standard mapper save ram
         add.l   d1,d1
-        lea     0x200000,a0
+        lea     0x200000,a0         /* use standard mapper save ram base */
         sh2_wait
         set_rv
         move.b  #1,0xA130F1         /* SRAM enabled, write enabled */
-        move.b  d0,1(a0,d1.l)       /* write SRAM */
+        move.b  d0,1(a0,d1.l)       /* write SRAM to ODD bytes */
         move.b  #2,0xA130F1         /* SRAM disabled, write protected */
+        bra.w   exit_wr_sram
+
+wr_msd_sram:
+        add.l   d1,d1
+        lea     0x380000,a0         /* use the lower 32K of bank 7 */
+        sh2_wait
+        set_rv
+        move.w  #0xA000,0xA130F0    /* enable write */
+        move.b  #0x80,0xA130FF      /* bank 7 is save ram */
+        move.b  d0,1(a0,d1.l)       /* write SRAM to ODD bytes */
+        move.b  bnk7_save,0xA130FF  /* restore bank 7 */
+        move.w  #0x8000,0xA130F0    /* disable write */
+        bra.b   exit_wr_sram
+
+wr_med_sram:
+        .if     NEW_MED
+        lea     0x040000,a0         /* use the upper 256K of page 31 */
+        sh2_wait
+        set_rv
+        move.w  #0xA01F,0xA130F0    /* map bank 0 to page 31, enable write */
+        move.b  d0,0(a0,d1.l)       /* write SRAM */
+        move.w  #0x8000,0xA130F0    /* map bank 0 to page 0, disable write */
+        .else
+        lea     0x000000,a0         /* use the lower 32K of page 28 */
+        sh2_wait
+        set_rv
+        move.w  #0xA01C,0xA130F0    /* map bank 0 to page 28, enable write */
+        move.b  d0,0(a0,d1.l)       /* write SRAM */
+        move.w  #0x8000,0xA130F0    /* map bank 0 to page 0, disable write */
+        .endif
+
+exit_wr_sram:
         clr_rv
-3:
         sh2_cont
         move.w  #0,0xA15120         /* done */
         move.w  #0x2000,sr          /* enable ints */
@@ -1444,6 +1492,10 @@ set_bank_page:
         andi.l  #0x07,d0            /* bank number */
         lsr.w   #3,d1               /* page number */
         andi.l  #0x1f,d1
+        cmpi.b  #7,d0
+        bne.b   1f
+        move.b  d1,bnk7_save
+1:
         lea     0xA130F0,a0
         add.l   d0,d0
         lea     1(a0,d0.l),a0
@@ -1462,6 +1514,10 @@ set_bank_page_sec:
         andi.l  #0x07,d0            /* bank number */
         lsr.w   #3,d1               /* page number */
         andi.l  #0x1f,d1
+        cmpi.b  #7,d0
+        bne.b   1f
+        move.b  d1,bnk7_save
+1:
         lea     0xA130F0,a0
         add.l   d0,d0
         lea     1(a0,d0.l),a0
@@ -2637,6 +2693,9 @@ hotplug_cnt:
 
 need_bump_fm:
         dc.b    1
+
+bnk7_save:
+        dc.b    7
 
         .align  4
 

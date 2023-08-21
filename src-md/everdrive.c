@@ -21,7 +21,8 @@ uint16_t InitEverDrive(void)
 
 	MED_SET_RV_1();
 
-	// map bank 0 to page 2
+	// map bank 0 to page 2 - if this is a standard mapper instead of MED, the
+	//  MSB will do nothing, and the LSB disables and write-protects the sram
 	__asm volatile("move.w #0x8002, 0xA130F0" : : : "memory");
 
 	// compare first N bytes of banks 0 and 2
@@ -35,12 +36,10 @@ uint16_t InitEverDrive(void)
 
 	if (i == bs)
 	{
-		res = 1; // MED Pro detected
-		res |= 0x0100; // Extended SSF detected
+		res = 1; // MED detected
+		// map bank 0 back to page 0 - only needed if MED
+		__asm volatile("move.w #0x8000, 0xA130F0" : : : "memory");
 	}
-
-	// map bank 0 back to page 0
-	__asm volatile("move.w #0x8000, 0xA130F0" : : : "memory");
 
 	MED_SET_RV_0();
 
