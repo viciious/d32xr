@@ -332,8 +332,8 @@ do_main:
 | make sure save ram is disabled
         move.w  #0x2700,sr          /* disable ints */
         set_rv
-        tst.w   megasd_ok
-        bne.b   1f
+        cmpi.w  #2,megasd_ok
+        beq.b   1f
         tst.w   everdrive_ok
         bne.b   2f
 | assume standard mapper save ram
@@ -459,8 +459,8 @@ read_sram:
         moveq   #0,d0
         move.w  0xA15122,d0         /* COMM2 holds offset */
         moveq   #0,d1
-        tst.w   megasd_ok
-        bne.b   rd_msd_sram
+        cmpi.w  #2,megasd_ok
+        beq.b   rd_msd_sram
         tst.w   everdrive_ok
         bne.w   rd_med_sram
 | assume standard mapper save ram
@@ -512,8 +512,8 @@ write_sram:
         move.w  #0x2700,sr          /* disable ints */
         moveq   #0,d1
         move.w  0xA15122,d1         /* COMM2 holds offset */
-        tst.w   megasd_ok
-        bne.b   wr_msd_sram
+        cmpi.w  #2,megasd_ok
+        beq.b   wr_msd_sram
         tst.w   everdrive_ok
         bne.w   wr_med_sram
 | assume standard mapper save ram
