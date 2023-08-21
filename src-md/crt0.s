@@ -767,8 +767,8 @@ start_music:
         bra     main_loop
 
 start_cd:
-        tst.w   megasd_ok
-        beq     9f                  /* couldn't find a MegaSD */
+        tst.w   megasd_num_cdtracks
+        beq     9f                   /* no MD+ tracks */
 
         move.w  0xA15122,d0          /* COMM2 = index | repeat flag */
         move.w  #0x8000,d1
@@ -885,8 +885,8 @@ stop_music:
         bra     main_loop
 
 stop_cd:
-        tst.w   megasd_ok
-        beq     3f                  /* couldn't find a MegaSD */
+        tst.w   megasd_num_cdtracks
+        beq     3f                  /* no MD+ */
 
         jsr     MegaSD_PauseCD
         move.w  #0,0xA15120         /* done */
@@ -961,8 +961,8 @@ no_mouse:
 
 
 read_cdstate:
-        tst.w   megasd_ok
-        beq     9f                  /* couldn't find a MegaSD or CD audio tracks */
+        tst.w   megasd_num_cdtracks
+        beq     9f                  /* no MD+ tracks */
 
         move.w  megasd_num_cdtracks,d0
         lsl.l   #2,d0
@@ -1537,8 +1537,8 @@ net_set_link_timeout:
         bra     main_loop
 
 set_music_volume:
-        tst.w   megasd_ok
-        beq     1f                  /* couldn't find a MegaSD */
+        tst.w   megasd_num_cdtracks
+        beq     1f                  /* no MD+ */
 
         move    #0xFF,d1
         and.w   d1,d0

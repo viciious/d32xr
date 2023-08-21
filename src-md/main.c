@@ -133,12 +133,12 @@ int main(void)
     /* only attempt a MEDPro detection if a MegaSD is not present or is fake */
     if (megasd_ok == 0 || megasd_ok & 0x4) {
         everdrive_ok = InitEverDrive();
-        if (everdrive_ok && !cd_ok && megasd_num_cdtracks == 1) {
-            /* workaround a MEDPro quirk where it exposes a single-track MD+ OST, */
-            /* which only occurs if the letter 'C' is present in the ROM header */
-            megasd_ok = 0;
-            megasd_num_cdtracks = 0;
-        }
+    }
+
+    if (megasd_num_cdtracks == 1) {
+        /* workaround a MD+ quirk where it exposes a single-track MD+ OST, */
+        /* which only occurs if the letter 'C' is present in the ROM header */
+        megasd_num_cdtracks = 0;
     }
 
     /*
