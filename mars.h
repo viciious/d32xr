@@ -152,8 +152,8 @@ static inline void Mars_M_EndDrawFire(void)
 static inline void Mars_InitSoundDMA(int initfull)
 {
 	Mars_R_SecWait();
-	MARS_SYS_COMM4 = MARS_SECCMD_S_INIT_DMA;
 	MARS_SYS_COMM6 = initfull;
+	MARS_SYS_COMM4 = MARS_SECCMD_S_INIT_DMA;
 	Mars_R_SecWait();
 }
 
