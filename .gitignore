@@ -13,3 +13,5 @@
 *.lst
 *.bat
 *.ram
+
+!extras/megasave/D32XR.32X
