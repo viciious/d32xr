@@ -82,7 +82,7 @@ int             samplecount = 0;
 
 static marsrb_t	soundcmds = { 0 };
 
-VINT 			sfxdriver = 0, mcd_avail = 0; // 0 - auto, 2 - megacd, 2 - 32x
+VINT 			sfxdriver = sfxdriver_auto, mcd_avail = 0; // 0 - auto, 2 - megacd, 2 - 32x
 
 static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol, getsoundpos_t getpos);
 static void S_SetChannelData(sfxchannel_t* channel);
@@ -117,8 +117,8 @@ void S_Init(void)
 
 	// check if CD is available, reset the driver option if not
 	mcd_avail = S_CDAvailable() & 0x1;
-	if (!mcd_avail && sfxdriver > 1)
-		sfxdriver = 0;
+	if (!mcd_avail)
+		sfxdriver = sfxdriver_auto;
 
 	/* init sound effects */
 	start = W_CheckNumForName("DS_START");
