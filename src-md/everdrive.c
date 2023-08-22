@@ -1,5 +1,10 @@
 #include <stdint.h>
 
+#define SRAM_MAXSLOTS	10
+#define SRAM_SLOTSIZE	200
+#define SRAM_MAGIC1		0xDE
+#define SRAM_MAGIC2		0xAD
+
 #define MED_ATTR_DATA	__attribute__((section(".data")))
 
 #define MED_SET_RV_1()	__asm volatile("movew #0x2700,%%sr\n\t" \
@@ -26,7 +31,7 @@ uint16_t InitEverDrive(void)
 	__asm volatile("move.w #0x8002, 0xA130F0" : : : "memory");
 
 	// compare first N bytes of banks 0 and 2
-	b0 = (volatile uint8_t*)0x100;
+	b0 = (volatile uint8_t*)0x000100;
 	b2 = (volatile uint8_t*)0x100100;
 	for (i = 0; i < bs; i++)
 	{
@@ -37,7 +42,19 @@ uint16_t InitEverDrive(void)
 	if (i == bs)
 	{
 		res = 1; // MED detected
-		// map bank 0 back to page 0 - only needed if MED
+
+		// now check if v1/v2a MED, or v2b/v3 MED
+		// look for SRAM_OPTVERSION at first byte of maxslot-1 in save ram at page 28
+		// can only detect old MED if valid save file is always present!
+		// don't forget to update this if save ram defines ever change!!
+
+		// map bank 0 to page 28 to look for save ram
+		__asm volatile("move.w #0x801C, 0xA130F0" : : : "memory");
+		b0 = (volatile uint8_t*)((SRAM_MAXSLOTS-1)*SRAM_SLOTSIZE);
+		if (b0[7] == SRAM_MAGIC1 && b0[10] == SRAM_MAGIC2)
+			res |= 0x0100; // old MED
+
+		// map bank 0 back to page 0
 		__asm volatile("move.w #0x8000, 0xA130F0" : : : "memory");
 	}
 

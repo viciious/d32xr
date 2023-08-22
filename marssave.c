@@ -28,6 +28,9 @@
 #include "mars.h"
 #include "r_local.h"
 
+#define SRAM_MAGIC1		0xDE
+#define SRAM_MAGIC2		0xAD
+
 #define SRAM_VERSION	1
 #define SRAM_OPTVERSION	2
 #define SRAM_MAXSLOTS	10
@@ -53,10 +56,10 @@ typedef struct __attribute((packed))
 	int8_t sfxvolume;
 	int8_t musicvolume;
 	int8_t musictype;
-	int8_t unused1;
+	uint8_t magic1;
 	int8_t alwaysrun;
 	int8_t strafebtns;
-	int8_t unused2;
+	uint8_t magic2;
 	int8_t anamorphic;
 	int8_t colormap;
 	int8_t sfxdriver;
@@ -181,6 +184,8 @@ static void SaveOptions(void)
 	so.anamorphic = anamorphicview;
 	so.colormap = colormapopt+1;
 	so.sfxdriver = sfxdriver;
+	so.magic1 = SRAM_MAGIC1;
+	so.magic2 = SRAM_MAGIC2;
 
 	Mars_WriteSRAM((void*)&so, optslotoffset, sizeof(saveopts_t));
 }
