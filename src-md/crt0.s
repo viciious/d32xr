@@ -654,14 +654,6 @@ start_music:
         move.l  d0,(a0)+            /* clear work ram used by FM driver */
         dbra    d1,2b
 
-        lea     z80_vgm_start,a0
-        lea     z80_vgm_end,a1
-        lea     0xA00000,a2
-3:
-        move.b  (a0)+,(a2)+         /* copy Z80 driver */
-        cmpa.l  a0,a1
-        bne.b   3b
-
 | FM setup
         movea.l vgm_ptr,a6          /* lzss buffer */
         lea     0x1C(a6),a6         /* loop offset */
@@ -862,14 +854,6 @@ stop_music:
 1:
         move.l  d0,(a0)+            /* clear work ram used by FM driver */
         dbra    d1,1b
-
-        lea     z80_vgm_start,a0
-        lea     z80_vgm_end,a1
-        lea     0xA00000,a2
-2:
-        move.b  (a0)+,(a2)+         /* copy Z80 driver */
-        cmpa.l  a0,a1
-        bne.b   2b
 
         move.w  #0x0000,0xA11200    /* Z80 assert reset */
 
