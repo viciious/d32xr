@@ -2381,6 +2381,7 @@ vert_blank:
         cmpi.w  #1,d0
         bne.b   4f                  /* re-init vdp and vram */
 
+        bsr     bump_fm
         bsr     init_vdp
         bsr     bump_fm
         bsr     load_font
