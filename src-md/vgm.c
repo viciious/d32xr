@@ -15,6 +15,7 @@ __attribute__((aligned(4))) uint8_t vgm_lzss_buf[VGM_LZSS_BUF_SIZE];
 
 void lzss_setup(lzss_state_t* lzss, uint8_t* base, uint8_t *buf, uint32_t buf_size) __attribute__((section(".data"), aligned(16)));
 int lzss_read(lzss_state_t* lzss, uint16_t chunk) __attribute__((section(".data"), aligned(16)));
+void lzss_reset(lzss_state_t* lzss) __attribute__((section(".data"), aligned(16)));
 
 int vgm_setup(void* fm_ptr) __attribute__((section(".data"), aligned(16)));
 int vgm_read(void) __attribute__((section(".data"), aligned(16)));
@@ -38,6 +39,13 @@ int vgm_setup(void* fm_ptr)
 
     vgm_ptr = vgm_lzss_buf;
 
+    return vgm_read();
+}
+
+int vgm_reset(void)
+{
+    lzss_reset(&vgm_lzss);
+    vgm_ptr = vgm_lzss_buf;
     return vgm_read();
 }
 

@@ -39,5 +39,6 @@ int lzss_read(lzss_state_t* lzss, uint16_t chunk);
 int lzss_read_all(lzss_state_t* lzss);
 uint32_t lzss_decompressed_size(lzss_state_t* lzss);
 uint32_t lzss_compressed_size(lzss_state_t* lzss);
+void lzss_reset(lzss_state_t* lzss);
 
 #endif // _LZSS_H_

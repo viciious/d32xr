@@ -4,10 +4,9 @@
 
 #define LENSHIFT 4		/* this must be log2(LOOKAHEAD_SIZE) */
 
-static inline void lzss_reset(lzss_state_t* lzss);
-
-static void lzss_reset(lzss_state_t* lzss)
+void lzss_reset(lzss_state_t* lzss)
 {
+	lzss->outpos = 0;
 	lzss->eof = 0;
 	lzss->run = 0;
 	lzss->runlen = 0;
@@ -19,7 +18,6 @@ static void lzss_reset(lzss_state_t* lzss)
 
 void lzss_setup(lzss_state_t* lzss, uint8_t* base, uint8_t* buf, uint32_t buf_size)
 {
-	lzss->outpos = 0;
 	lzss->base = base;
 	lzss->buf = buf;
 	lzss->buf_size = buf_size;

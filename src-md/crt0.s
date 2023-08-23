@@ -2253,7 +2253,7 @@ bump_fm:
         tst.w   fm_rep
         beq     7f                  /* no repeat, leave FM_IDX as 0 */
 
-        jsr     vgm_setup           /* restart at start of compressed data and read a buffer */
+        jsr     vgm_reset           /* restart at start of compressed data and read a buffer */
         jsr     vgm_read
         jsr     vgm_read
         jsr     vgm_read
