@@ -631,8 +631,11 @@ start_music:
 
         move.l  d0,a0
         bsr     set_rom_bank
-        move.l  a1,fm_ptr           /* MD lump ptr used by vgm_setup */
+
+
+        move.l  a1,-(sp)            /* MD lump ptr */
         jsr     vgm_setup           /* setup lzss, set pcm_baseoffs, set vgm_ptr, read first block */
+        lea     4(sp),sp
 
         /* start VGM on Z80 */
         move.w  #0x0100,0xA11100    /* Z80 assert bus request */
@@ -762,7 +765,6 @@ start_music:
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 9:
-        clr.l   fm_ptr
         clr.w   fm_idx              /* not playing VGM */
 
         move.w  #0,0xA15120         /* done */
@@ -881,7 +883,6 @@ stop_music:
 
         clr.w   fm_idx              /* stop music */
         clr.w   fm_rep
-        clr.l   fm_ptr
 
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -2702,9 +2703,6 @@ bnk7_save:
 
         .align  4
 
-        .global    fm_ptr
-fm_ptr:
-        dc.l    0
         .global    fm_start
 fm_start:
         dc.l    0

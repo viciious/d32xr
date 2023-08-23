@@ -6,21 +6,30 @@
 #define VGM_LZSS_BUF_SIZE   0x8000
 
 static lzss_state_t vgm_lzss = { 0 };
-extern void* fm_ptr, * vgm_ptr;
+extern void *vgm_ptr;
 extern int pcm_baseoffs;
 extern int vgm_size;
+extern uint16_t cd_ok;
 
 __attribute__((aligned(4))) uint8_t vgm_lzss_buf[VGM_LZSS_BUF_SIZE];
 
 void lzss_setup(lzss_state_t* lzss, uint8_t* base, uint8_t *buf, uint32_t buf_size) __attribute__((section(".data"), aligned(16)));
 int lzss_read(lzss_state_t* lzss, uint16_t chunk) __attribute__((section(".data"), aligned(16)));
 
-int vgm_setup(void) __attribute__((section(".data"), aligned(16)));
+int vgm_setup(void* fm_ptr) __attribute__((section(".data"), aligned(16)));
 int vgm_read(void) __attribute__((section(".data"), aligned(16)));
 
-int vgm_setup(void)
+int vgm_setup(void* fm_ptr)
 {
     int s;
+
+    if (cd_ok && vgm_size < 0x20000) {
+        // precache the whole VGM file in word ram to reduce bus
+        // contention when reading from ROM during the gameplay
+        uint8_t *scdWordRam = (uint8_t *)0x600000;
+        memcpy(scdWordRam, fm_ptr, vgm_size);
+        fm_ptr = scdWordRam;
+    }
 
     lzss_setup(&vgm_lzss, fm_ptr, vgm_lzss_buf, VGM_LZSS_BUF_SIZE);
 
