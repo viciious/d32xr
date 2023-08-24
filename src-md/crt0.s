@@ -2044,6 +2044,7 @@ stop_sfx:
 flush_sfx:
         move.w  #0,0xA15120         /* done */
 
+        jsr     bump_fm
         jsr     scd_flush_cmd_queue
 
         bra     main_loop
