@@ -113,7 +113,7 @@ static int wipe_doMelt(short *y, short *yy, int ticks, int step)
     int     width = WIPEWIDTH;
     int     height = I_FrameBufferHeight();
 #ifdef MARS
-    int     movy = 4; // half the original movement to account for double buffering
+    int     movy = I_IsPAL() ? 5 : 4; // half the original movement to account for double buffering
 #else
     int     movy = 8;
 #endif
@@ -204,8 +204,9 @@ void Mars_Sec_wipe_doMelt(void)
 int wipe_ExitMelt(void)
 {
 #ifdef MARS
-	// re-init the VDP and VRAM on the MD
-	Mars_CtlMDVDP(1);
+    // re-init the VDP and VRAM on the MD
+    Mars_CtlMDVDP(1);
+    clearscreen = 2;
 #endif
     return 0;
 }
@@ -213,12 +214,12 @@ int wipe_ExitMelt(void)
 int wipe_StartScreen(void)
 {
 #ifdef MARS
-	Mars_CtlMDVDP(0);
+    Mars_CtlMDVDP(0);
 #endif
 
-	I_StoreScreenCopy();
-	UpdateBuffer();
-	I_RestoreScreenCopy();
+    I_StoreScreenCopy();
+    UpdateBuffer();
+    I_RestoreScreenCopy();
 
     return 0;
 }
