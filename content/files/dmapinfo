@@ -104,6 +104,7 @@ map "MAP13" "Command Center"
     next = "MAP14"
     mapnumber = 13
     music = "VGM_E1M7"
+    secretnext = "MAP23"
 }
 map "MAP14" "Halls of the Damned"
 {
@@ -115,16 +116,17 @@ map "MAP14" "Halls of the Damned"
 map "MAP15" "Spawning Vats"
 {
     sky = "sky2"
-    next = "MAP16"
+    next = "RMAP16"
     mapnumber = 15
     music = "VGM_E2M7"
 }
-map "MAP16" "Tower of Babel"
+map "RMAP16" "Tower of Babel"
 {
-    sky = "sky3"
+    sky = "sky2"
     next = "MAP17"
     mapnumber = 16
     music = "VGM_E2M8"
+    CyberdemonSpecial
 }
 map "MAP17" "Hell Keep"
 {
@@ -167,19 +169,21 @@ map "MAP21" "Mt Erebus"
     next = "MAP22"
     mapnumber = 22
     music = "VGM_E1M6"
+    secretnext = "MAP16"
 }
 map "MAP22" "Limbo"
 {
     sky = "sky3"
-    next = "MAP23"
+    next = "RMAP23"
     mapnumber = 23
     music = "VGM_E2M7"
 }
-map "MAP23" "Dis"
+map "RMAP23" "Dis"
 {
     sky = "sky3"
     mapnumber = 24
     music = "VGM_E3M8"
+    SpiderMastermindSpecial
 }
 map "MAP24" "Military Base"
 {
@@ -187,4 +191,18 @@ map "MAP24" "Military Base"
     next = "MAP04"
     mapnumber = 25
     music = "VGM_E1M9"
+}
+map "MAP23" "Fortress of Mystery"
+{
+    sky = "sky2"
+    next = "MAP14"
+    mapnumber = 26
+    music = "VGM_E2M9"
+}
+map "MAP16" "Hell Gate"
+{
+    sky = "sky3"
+    next = "MAP22"
+    mapnumber = 27
+    music = "VGM_E1M5"
 }
