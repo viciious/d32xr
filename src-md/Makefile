@@ -21,7 +21,7 @@ LD = $(PREFIX)ld
 OBJC = $(PREFIX)objcopy
 
 ASMZ80 = $(ROOTDIR)/bin/zasm
-FLAGSZ80 = -bv2
+FLAGSZ80 = -bv2 -uwy
 
 DD = dd
 RM = rm -f
