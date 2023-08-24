@@ -12,6 +12,8 @@
 ;     data, and the 32X registers may become corrupted.
 
 
+ACCURATE    EQU 1       ; set to 0 for 1.25, 1 for 1.1953125
+
 LOCAL_MEM   EQU $0040   ; player variable base address
 FM_IDX      EQU $00     ; music track index
 FM_CSM      EQU $01     ; music CSM mode
@@ -179,16 +181,43 @@ waiting
     LD      (IX+FM_TTTH),A
     JP      play_loop_exx
 
-; timer ticks ~= sample delay * 1.25
+; timer ticks ~= sample delay * 1.2
 calc_timer
     LD      HL,(LOCAL_MEM+FM_SMPL)
     LD      BC,HL
-    SRL     H
-    RR      L
-    SRL     H
-    RR      L                   ; ticks = samples >> 2
-    ADD     HL,BC               ; ticks = ticks + samples
+#if ACCURATE
+    SRL     B
+    RR      C
+    SRL     B
+    RR      C
+    SRL     B
+    RR      C                   ; samples/8
+    PUSH    BC
+    SRL     B
+    RR      C                   ; samples/16
+    PUSH    BC
+    SRL     B
+    RR      C
+    SRL     B
+    RR      C
+    SRL     B
+    RR      C                   ; samples/128
+    ADD     HL,BC
+    JR      C,overflow
+    POP     BC
+    ADD     HL,BC
+    JR      C,overflow
+    POP     BC
+    ADD     HL,BC               ; ticks = samples * 1.1953125
+#else
+    SRL     B
+    RR      C
+    SRL     B
+    RR      C                   ; samples >> 2
+    ADD     HL,BC               ; ticks = samples * 1.25
+#endif
     JR      NC,set_timer
+overflow
     LD      HL,$FFFF            ; saturate to word ($FFFF)
 
 set_timer
