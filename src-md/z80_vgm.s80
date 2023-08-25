@@ -184,8 +184,13 @@ waiting
 ; timer ticks ~= sample delay * 1.2
 calc_timer
     LD      HL,(LOCAL_MEM+FM_SMPL)
-    LD      BC,HL
 #if ACCURATE
+    LD      BC,54928            ; 65535 / 1.1953125
+    OR      A                   ; clear carry
+    SBC     HL,BC
+    JR      NC,overflow
+    ADD     HL,BC
+    LD      BC,HL
     SRL     B
     RR      C
     SRL     B
@@ -203,23 +208,22 @@ calc_timer
     SRL     B
     RR      C                   ; samples/128
     ADD     HL,BC
-    JR      C,overflow
     POP     BC
     ADD     HL,BC
-    JR      C,overflow
     POP     BC
     ADD     HL,BC               ; ticks = samples * 1.1953125
+    JR      set_timer
 #else
+    LD      BC,HL
     SRL     B
     RR      C
     SRL     B
     RR      C                   ; samples >> 2
     ADD     HL,BC               ; ticks = samples * 1.25
-#endif
     JR      NC,set_timer
+#endif
 overflow
-    LD      HL,$FFFF            ; saturate to word ($FFFF)
-
+    LD      HL,$FFFF
 set_timer
     LD      (LOCAL_MEM+FM_TICL),HL  ; save total ticks
     LD      (LOCAL_MEM+FM_TTTL),HL  ; ticks for timer A = ticks
