@@ -2217,6 +2217,36 @@ bump_fm:
         z80rd   CRITICAL,d0
         bne     8f                  /* z80 critical section, just exit */
 
+        move.w  preread_cnt,d0
+        beq.b   11f
+        subq.w  #1,d0
+        move.w  d0,preread_cnt
+
+        /* read a buffer */
+        jsr     vgm_read
+        z80rd   FM_BUFGEN,d0
+        addq.b  #1,d0
+        z80wr   FM_BUFGEN,d0
+
+        /* copy buffer to z80 sram */
+        movea.l vgm_ptr,a0
+        lea     0xA01000,a1
+        move.w  #0x01FF,d1          /* one buffer worth of data */
+        move.w  offs68k,d2
+        move.w  offsz80,d3
+        lea     0(a0,d2.w),a0
+        lea     0(a1,d3.w),a1
+22:
+        move.b  (a0)+,(a1)+
+        dbra    d1,22b
+
+        addi.w  #0x0200,d2
+        addi.w  #0x0200,d3
+        andi.w  #0x7FFF,d2          /* 32KB buffer */
+        andi.w  #0x0FFF,d3          /* 4KB buffer */
+        move.w  d2,offs68k
+        move.w  d3,offsz80
+11:
         move.b  REQ_ACT.w,d0
         cmpi.b  #0x01,d0
         bne.b   5f
@@ -2256,25 +2286,27 @@ bump_fm:
 
         jsr     vgm_reset           /* restart at start of compressed data and read a buffer */
         jsr     vgm_read
-        jsr     vgm_read
-        jsr     vgm_read
-        jsr     vgm_read
-        jsr     vgm_read
-        jsr     vgm_read
-        jsr     vgm_read            /* 4KB to fill Z80 sram buffer */
+|        jsr     vgm_read
+|        jsr     vgm_read
+|        jsr     vgm_read
+|        jsr     vgm_read
+|        jsr     vgm_read
+|        jsr     vgm_read            /* 4KB to fill Z80 sram buffer */
+
+        move.w  #6,preread_cnt      /* do six more vgm_reads */
 
         z80wr   FM_BUFCSM,#0
-        z80wr   FM_BUFGEN,#8
+        z80wr   FM_BUFGEN,#2
 
         movea.l vgm_ptr,a0
         lea     0xA01000,a1         /* z80 sram buffer start */
-        move.w  #0x0FFF,d1
+        move.w  #0x03FF,d1
 6:
         move.b  (a0)+,(a1)+         /* copy vgm data from decompressor buffer to sram */
         dbra    d1,6b
 
-        move.w  #0x1000,offs68k     /* 32K buffer */
-        move.w  #0x0000,offsz80     /* 4K buffer */
+        move.w  #0x0400,offs68k     /* 32K buffer */
+        move.w  #0x0400,offsz80     /* 4K buffer */
 
         move.l  fm_loop,d0
         z80wr   FM_START,d0
@@ -2728,6 +2760,8 @@ fm_idx:
 offs68k:
         dc.w    0
 offsz80:
+        dc.w    0
+preread_cnt:
         dc.w    0
 
         .align  4
