@@ -281,6 +281,10 @@ wait_pend
     LD      A,$01
     LD      (REQ_ACT),A         ; request action - read buffer
 
+buf_wait
+    LD      A,(IX+FM_BUFGEN)
+    CP      (IX+FM_BUFCSM)
+    JR      Z,buf_wait          ; make sure we have at least one buffer ready
     EX      AF,AF'              ; restore A
 
     ; check buffer wrap around
@@ -414,7 +418,15 @@ end_wait
     JR      NZ,end_wait
 
     LD      SP,$1000            ; reset stack (half-way to end of sram)
-    JP      start_loop          ; restart player
+    LD      A,(LOCAL_MEM+FM_IDX)
+    OR      A
+    JP      Z,start_loop        ; not playing VGM music
+
+    LD      BC,(LOCAL_MEM+FM_START)
+    LD      HL,VGMBUF
+    ADD     HL,BC
+    CALL    next_buffer
+    JP      play_loop           ; restart player
 
 ; wait nn+1 sample periods
 wait_nn

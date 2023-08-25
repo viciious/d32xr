@@ -357,10 +357,7 @@ main_loop:
         tst.b   need_bump_fm
         beq.s   main_loop_handle_req
         move.b  #0,need_bump_fm
-
-        move.w  #0x2700,sr          /* disable ints */
         bsr     bump_fm
-        move.w  #0x2000,sr          /* enable ints */
 
 main_loop_handle_req:
         move.w  0xA15120,d0         /* get COMM0 */
@@ -632,7 +629,6 @@ start_music:
         move.l  d0,a0
         bsr     set_rom_bank
 
-
         move.l  a1,-(sp)            /* MD lump ptr */
         jsr     vgm_setup           /* setup lzss, set pcm_baseoffs, set vgm_ptr, read first block */
         lea     4(sp),sp
@@ -731,35 +727,24 @@ start_music:
         z80wr   FM_IDX,d0           /* set FM_IDX */
 
         jsr     vgm_read
-        jsr     vgm_read
-        jsr     vgm_read
-        jsr     vgm_read
-        jsr     vgm_read
-        jsr     vgm_read
-        jsr     vgm_read            /* 4KB to fill Z80 sram buffer */
+        move.w  #6, preread_cnt     /* preread blocks to fill buffer */
 
         z80wr   FM_BUFCSM,#0
-        z80wr   FM_BUFGEN,#8
+        z80wr   FM_BUFGEN,#2
         z80wr   FM_RQPND,#0
 
         movea.l vgm_ptr,a0
         lea     0xA01000,a1
-        move.w  #0x0FFF,d1
+        move.w  #1023,d1
 4:
         move.b  (a0)+,(a1)+         /* copy vgm data from decompressor buffer to sram */
         dbra    d1,4b
 
-        move.w  #0x1000,offs68k
-        move.w  #0x0000,offsz80
+        move.w  #0x0400,offs68k
+        move.w  #0x0400,offsz80
 
         move.w  #0x0000,0xA11200    /* Z80 assert reset */
-
         move.w  #0x0000,0xA11100    /* Z80 deassert bus request */
-8:
-|        move.w  0xA11100,d0
-|        andi.w  #0x0100,d0
-|        beq.b   8b                  /* wait for bus released */
-
         move.w  #0x0100,0xA11200    /* Z80 deassert reset - run driver */
 
         move.w  #0,0xA15120         /* done */
@@ -863,13 +848,17 @@ stop_music:
         move.l  d0,(a0)+            /* clear work ram used by FM driver */
         dbra    d1,1b
 
-        lea     z80_vgm_start,a0
-        lea     z80_vgm_end,a1
-        lea     0xA00000,a2
+|        lea     z80_vgm_start,a0
+|        lea     z80_vgm_end,a1
+|        lea     0xA00000,a2
 2:
-        move.b  (a0)+,(a2)+         /* copy Z80 driver */
-        cmpa.l  a0,a1
-        bne.b   2b
+|        move.b  (a0)+,(a2)+         /* copy Z80 driver */
+|        cmpa.l  a0,a1
+|        bne.b   2b
+
+        z80wr   FM_IDX,#0           /* no music playing */
+        z80wr   FM_RQPND,#0         /* no requests pending */
+        z80wr   CRITICAL,#0         /* not in a critical section */
 
         move.w  #0x0000,0xA11200    /* Z80 assert reset */
 
@@ -2060,9 +2049,9 @@ stop_sfx:
 flush_sfx:
         move.w  #0,0xA15120         /* done */
 
-        jsr     bump_fm
         jsr     scd_flush_cmd_queue
 
+        move.b  #1,need_bump_fm
         bra     main_loop
 
 | set standard mapper registers to default mapping
@@ -2201,10 +2190,17 @@ load_font:
 | Bump the FM player to keep the music going
 
 bump_fm:
+        move.w  sr,-(sp)
+        move.w  #0x2700,sr          /* disable ints */
         tst.b   REQ_ACT.w
-        bpl.b   0f
-        /* no requests or sram locked */
+        bmi.b   99f                 /* sram locked */
+        bne.b   0f                  /* Z80 requesting action */
+        tst.w   preread_cnt
+        bne.b   0f                  /* buffer preread pending */
+99:
+        move.w  (sp)+,sr            /* restore int level */
         rts
+
 0:
         movem.l d0-d7/a0-a6,-(sp)
         move.w  #0x0100,0xA11100    /* Z80 assert bus request */
@@ -2217,113 +2213,110 @@ bump_fm:
         z80rd   CRITICAL,d0
         bne     8f                  /* z80 critical section, just exit */
 
-        move.w  preread_cnt,d0
-        beq.b   11f
-        subq.w  #1,d0
-        move.w  d0,preread_cnt
-
-        /* read a buffer */
-        jsr     vgm_read
-        z80rd   FM_BUFGEN,d0
-        addq.b  #1,d0
-        z80wr   FM_BUFGEN,d0
-
-        /* copy buffer to z80 sram */
-        movea.l vgm_ptr,a0
-        lea     0xA01000,a1
-        move.w  #0x01FF,d1          /* one buffer worth of data */
-        move.w  offs68k,d2
-        move.w  offsz80,d3
-        lea     0(a0,d2.w),a0
-        lea     0(a1,d3.w),a1
-22:
-        move.b  (a0)+,(a1)+
-        dbra    d1,22b
-
-        addi.w  #0x0200,d2
-        addi.w  #0x0200,d3
-        andi.w  #0x7FFF,d2          /* 32KB buffer */
-        andi.w  #0x0FFF,d3          /* 4KB buffer */
-        move.w  d2,offs68k
-        move.w  d3,offsz80
-11:
+10:
         move.b  REQ_ACT.w,d0
         cmpi.b  #0x01,d0
-        bne.b   5f
+        bne.w   5f                  /* not read buffer block */
+11:
+        /* check for space in Z80 sram buffer */
+        moveq   #0,d0
+        z80rd   FM_BUFGEN,d0
+        moveq   #0,d1
+        z80rd   FM_BUFCSM,d1
+        sub.w   d1,d0
+        bge.b   111f
+        addi.w  #256,d0             /* how far ahead the decompressor is */
+111:
+        cmpi.w  #8,d0
+        bge.w   7f                  /* no space in circular buffer */
+        moveq   #8,d1
+        sub.w   d0,d1
+        ble.w   7f                  /* sanity check */
+        subq.w  #1,d1
+        move.w  d1,preread_cnt      /* try to fill buffer */
 
-        /* read a buffer */
+        /* read a buffer block */
         jsr     vgm_read
+        move.w  d0,d4
+        move.w  offs68k,d2
+        move.w  offsz80,d3
+        cmpi.w  #0,d4
+        beq.b   13f                 /* EOF with no more data */
+
+        /* read returned some or all requested data */
         z80rd   FM_BUFGEN,d0
         addq.b  #1,d0
         z80wr   FM_BUFGEN,d0
 
         /* copy buffer to z80 sram */
-        movea.l vgm_ptr,a0
-        lea     0xA01000,a1
-        move.w  #0x01FF,d1          /* one buffer worth of data */
-        move.w  offs68k,d2
-        move.w  offsz80,d3
-        lea     0(a0,d2.w),a0
-        lea     0(a1,d3.w),a1
-2:
-        move.b  (a0)+,(a1)+
-        dbra    d1,2b
+        movea.l vgm_ptr,a3
+        lea     0xA01000,a4
+        move.w  d4,d1
+        subi.w  #1,d1
+        lea     0(a3,d2.w),a3
+        lea     0(a4,d3.w),a4
+12:
+        move.b  (a3)+,(a4)+
+        dbra    d1,12b
 
-        addi.w  #0x0200,d2
-        addi.w  #0x0200,d3
+        addi.w  #512,d2
+        addi.w  #512,d3
         andi.w  #0x7FFF,d2          /* 32KB buffer */
         andi.w  #0x0FFF,d3          /* 4KB buffer */
+
+        cmpi.w  #512,d4
+        beq.b   14f                 /* got entire block, not EOF */
+13:
+        /* EOF reached */
+        move.l  fm_loop,d0
+        add.w   d3,d0
+        andi.w  #0x0FFF,d0          /* 4KB buffer */
+        move.l  d0,fm_loop2         /* offset to z80 loop start */
+
+        /* reset */
+        jsr     vgm_reset           /* restart at start of compressed data */
+        move.w  #0,offs68k
+        move.w  d3,offsz80
+        move.w  #7,preread_cnt      /* refill buffer if room */
+        bra.b   7f
+14:
         move.w  d2,offs68k
         move.w  d3,offsz80
-        bra     7f
+        bra.b   7f
+
 5:
         cmpi.b  #0x02,d0
-        bne     7f                  /* unknown request, ignore */
+        bne.b   6f                  /* unknown request, ignore */
 
         /* music ended, check for loop */
         tst.w   fm_rep
-        beq     7f                  /* no repeat, leave FM_IDX as 0 */
+        beq.b   7f                  /* no repeat, leave FM_IDX as 0 */
 
-        jsr     vgm_reset           /* restart at start of compressed data and read a buffer */
-        jsr     vgm_read
-|        jsr     vgm_read
-|        jsr     vgm_read
-|        jsr     vgm_read
-|        jsr     vgm_read
-|        jsr     vgm_read
-|        jsr     vgm_read            /* 4KB to fill Z80 sram buffer */
-
-        move.w  #6,preread_cnt      /* do six more vgm_reads */
-
-        z80wr   FM_BUFCSM,#0
-        z80wr   FM_BUFGEN,#2
-
-        movea.l vgm_ptr,a0
-        lea     0xA01000,a1         /* z80 sram buffer start */
-        move.w  #0x03FF,d1
-6:
-        move.b  (a0)+,(a1)+         /* copy vgm data from decompressor buffer to sram */
-        dbra    d1,6b
-
-        move.w  #0x0400,offs68k     /* 32K buffer */
-        move.w  #0x0400,offsz80     /* 4K buffer */
-
-        move.l  fm_loop,d0
+        move.l  fm_loop2,d0
         z80wr   FM_START,d0
         lsr.w   #8,d0
         z80wr   FM_START+1,d0       /* music start = loop offset */
         move.w  fm_idx,d0
         z80wr   FM_IDX,d0           /* set FM_IDX to start music */
+        bra.w   11b                 /* try to load a block */
+
+6:
+        /* check if need to preread a block */
+        tst.w   preread_cnt
+        beq.w   7f
+        subq.w  #1,preread_cnt
+
+        /* read a buffer */
+        bra.w   11b
+
 7:
         z80wr   FM_RQPND,#0         /* request handled */
         move.b  #0,REQ_ACT.w
 8:
         move.w  #0x0000,0xA11100    /* Z80 deassert bus request */
 9:
-|        move.w  0xA11100,d0
-|        andi.w  #0x0100,d0
-|        beq.b   9b                  /* wait for bus released */
         movem.l (sp)+,d0-d7/a0-a6
+        move.w  (sp)+,sr            /* restore int level */
         rts
 
 
@@ -2741,6 +2734,9 @@ fm_start:
         dc.l    0
         .global    fm_loop
 fm_loop:
+        dc.l    0
+        .global    fm_loop2
+fm_loop2:
         dc.l    0
         .global pcm_baseoffs
 pcm_baseoffs:
