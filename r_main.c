@@ -747,8 +747,8 @@ void Mars_Sec_R_Setup(void)
 	Mars_ClearCacheLine(&segclip);
 	Mars_ClearCacheLine(&lastsegclip);
 
-	//Mars_ClearCacheLine(&openings);
-	//Mars_ClearCacheLine(&lastopening);
+	Mars_ClearCacheLine(&openings);
+	Mars_ClearCacheLine(&lastopening);
 
 	Mars_ClearCacheLines(visplanes, (sizeof(visplane_t)*MAXVISPLANES+31)/16);
 
