@@ -58,7 +58,7 @@ pixel_t* viewportbuffer;
 
 __attribute__((aligned(16)))
 #endif
-viewdef_t       vd;
+viewdef_t   *vd;
 player_t	*viewplayer;
 
 VINT			framecount;		/* incremented every frame */
@@ -472,8 +472,7 @@ extern	pixel_t	*screens[2];	/* [viewportWidth*viewportHeight];  */
 ==================
 */
 
-static void R_Setup (int displayplayer, visplane_t *visplanes_,
-	visplane_t **visplanes_hash_, sector_t **vissectors_, viswallextra_t *viswallex_)
+static void R_Setup (int displayplayer, viewdef_t *lvd)
 {
 	int 		i;
 	int		damagecount, bonuscount;
@@ -504,29 +503,30 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	validcount[0]++;
 
 	player = &players[displayplayer];
+	vd = lvd;
 
-	vd.viewplayer = player;
-	vd.viewx = player->mo->x;
-	vd.viewy = player->mo->y;
-	vd.viewz = player->viewz;
-	vd.viewangle = player->mo->angle;
+	vd->viewplayer = player;
+	vd->viewx = player->mo->x;
+	vd->viewy = player->mo->y;
+	vd->viewz = player->viewz;
+	vd->viewangle = player->mo->angle;
 
-	vd.viewsin = finesine(vd.viewangle>>ANGLETOFINESHIFT);
-	vd.viewcos = finecosine(vd.viewangle>>ANGLETOFINESHIFT);
+	vd->viewsin = finesine(vd->viewangle>>ANGLETOFINESHIFT);
+	vd->viewcos = finecosine(vd->viewangle>>ANGLETOFINESHIFT);
 
-	vd.displayplayer = displayplayer;
-	vd.lightlevel = player->mo->subsector->sector->lightlevel;
-	vd.fixedcolormap = 0;
+	vd->displayplayer = displayplayer;
+	vd->lightlevel = player->mo->subsector->sector->lightlevel;
+	vd->fixedcolormap = 0;
 
-	vd.clipangle = xtoviewangle[0]<<FRACBITS;
-	vd.doubleclipangle = vd.clipangle * 2;
-	vd.viewangletox = viewangletox;
+	vd->clipangle = xtoviewangle[0]<<FRACBITS;
+	vd->doubleclipangle = vd->clipangle * 2;
+	vd->viewangletox = viewangletox;
 
 	damagecount = player->damagecount;
 	bonuscount = player->bonuscount;
 
 #ifdef JAGUAR
-	vd.extralight = player->extralight << 6;
+	vd->extralight = player->extralight << 6;
 
 /* */
 /* calc shadepixel */
@@ -582,13 +582,13 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 
 #ifdef MARS
 	if (detailmode >= detmode_high)
-		vd.extralight = player->extralight << 4;
+		vd->extralight = player->extralight << 4;
 	else
-		vd.extralight = 0;
+		vd->extralight = 0;
 
 	if (player->powers[pw_invulnerability] > 60
 		|| (player->powers[pw_invulnerability] & 4))
-		vd.fixedcolormap = INVERSECOLORMAP;
+		vd->fixedcolormap = INVERSECOLORMAP;
 
 	viewportbuffer = (pixel_t*)I_ViewportBuffer();
 
@@ -628,66 +628,63 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		I_SetPalette(dc_playpals+palette*768);
 	}
 
-	if (vd.fixedcolormap == INVERSECOLORMAP)
-		vd.fuzzcolormap = INVERSECOLORMAP;
+	if (vd->fixedcolormap == INVERSECOLORMAP)
+		vd->fuzzcolormap = INVERSECOLORMAP;
 	else
-		vd.fuzzcolormap = (colormapopt ? 12 : 6) * 256;
+		vd->fuzzcolormap = (colormapopt ? 12 : 6) * 256;
 #endif
 
-	vd.visplanes = visplanes_;
-	vd.visplanes[0].flatandlight = 0;
+	vd->visplanes[0].flatandlight = 0;
 
 	tempbuf = (unsigned short *)I_WorkBuffer();
 
 /* */
 /* plane filling */
 /*	 */
-	vd.visplanes[0].open = (uint16_t *)visplane0open + 1;
+	vd->visplanes[0].open = (uint16_t *)visplane0open + 1;
 
 	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
 	tempbuf += 2; // padding
 	for (i = 1; i < MAXVISPLANES; i++) {
-		vd.visplanes[i].open = tempbuf;
+		vd->visplanes[i].open = tempbuf;
 		tempbuf += SCREENWIDTH+2;
 	}
 
-	vd.segclip = tempbuf;
+	vd->segclip = tempbuf;
 	tempbuf += MAXOPENINGS;
 
 	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
-	vd.viswalls = (void*)tempbuf;
-	tempbuf += sizeof(*vd.viswalls) * MAXWALLCMDS / sizeof(*tempbuf);
+	vd->viswalls = (void*)tempbuf;
+	tempbuf += sizeof(*vd->viswalls) * MAXWALLCMDS / sizeof(*tempbuf);
 
-	vd.viswallextras = viswallex_ + 1;
+	vd->viswallextras = vd->viswallex + 1;
 
-	vd.openings = tempbuf;
+	vd->openings = tempbuf;
 	tempbuf += MAXOPENINGS;
 
-	vd.vissprites = (void *)vd.viswalls;
+	vd->vissprites = (void *)vd->viswalls;
 
-	vd.lastwallcmd = vd.viswalls;			/* no walls added yet */
-	vd.lastsegclip = vd.segclip;
+	vd->lastwallcmd = vd->viswalls;			/* no walls added yet */
+	vd->lastsegclip = vd->segclip;
 
-	vd.lastvisplane = vd.visplanes + 1;		/* visplanes[0] is left empty */
-	vd.visplanes_hash = visplanes_hash_;
+	vd->lastvisplane = vd->visplanes + 1;		/* visplanes[0] is left empty */
 
-	vd.gsortedvisplanes = NULL;
+	vd->gsortedvisplanes = NULL;
 
 	//I_Error("%d", ((uint16_t *)I_FrameBuffer() + 64*1024-0x100 - tempbuf) * 2);
 
 	/* */
 	/* clear sprites */
 	/* */
-	vd.vissprite_p = vd.vissprites;
-	vd.lastsprite_p = vd.vissprite_p;
+	vd->vissprite_p = vd->vissprites;
+	vd->lastsprite_p = vd->vissprite_p;
 
-	vd.lastopening = vd.openings;
+	vd->lastopening = vd->openings;
 
-	vd.vissectors = vissectors_;
-	vd.lastvissector = vd.vissectors;	/* no subsectors visible yet */
+	vd->lastvissector = vd->vissectors;	/* no subsectors visible yet */
 
 	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
-		vd.visplanes_hash[i] = NULL;
+		vd->visplanes_hash[i] = NULL;
 
 #ifndef MARS
 	phasetime[0] = samplecount;
@@ -698,15 +695,9 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 
 void Mars_Sec_R_Setup(void)
 {
-	int i;
-
-	Mars_ClearCacheLines(&vd, (sizeof(vd) + 31) / 16);
+	Mars_ClearCacheLine(&vd);
+	Mars_ClearCacheLines(vd, (sizeof(vd) + 31) / 16);
 	Mars_ClearCacheLine(&viewportbuffer);
-
-	Mars_ClearCacheLines(vd.visplanes, (sizeof(visplane_t)*MAXVISPLANES+31)/16);
-
-	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
-		vd.visplanes_hash[i] = NULL;
 }
 
 #endif
@@ -751,7 +742,7 @@ visplane_t* R_FindPlane(fixed_t height,
 	visplane_t *check, *tail, *next;
 	int hash = R_PlaneHash(height, flatandlight);
 
-	tail = vd.visplanes_hash[hash];
+	tail = vd->visplanes_hash[hash];
 	for (check = tail; check; check = next)
 	{
 		next = check->next;
@@ -771,12 +762,12 @@ visplane_t* R_FindPlane(fixed_t height,
 		}
 	}
 
-	if (vd.lastvisplane == vd.visplanes + MAXVISPLANES)
-		return vd.visplanes;
+	if (vd->lastvisplane == vd->visplanes + MAXVISPLANES)
+		return vd->visplanes;
 
 	// make a new plane
-	check = vd.lastvisplane;
-	++vd.lastvisplane;
+	check = vd->lastvisplane;
+	++vd->lastvisplane;
 
 	check->height = height;
 	check->flatandlight = flatandlight;
@@ -786,7 +777,7 @@ visplane_t* R_FindPlane(fixed_t height,
 	R_MarkOpenPlane(check);
 
 	check->next = tail;
-	vd.visplanes_hash[hash] = check;
+	vd->visplanes_hash[hash] = check;
 
 	return check;
 }
@@ -884,16 +875,11 @@ void R_RenderPlayerView(int displayplayer)
 {
 	int t_bsp, t_prep, t_segs, t_planes, t_sprites, t_total;
 	boolean drawworld = !(players[consoleplayer].automapflags & AF_ACTIVE);
-	__attribute__((aligned(16)))
-		visplane_t visplanes_[MAXVISPLANES];
-	__attribute__((aligned(16)))
-		visplane_t *visplanes_hash_[NUM_VISPLANES_BUCKETS];
-	sector_t *vissectors_[(MAXVISSSEC > MAXVISSPRITES ? MAXVISSSEC : MAXVISSPRITES) + 1];
-	viswallextra_t viswallex_[MAXWALLCMDS + 1] __attribute__((aligned(16)));
+	viewdef_t lvd;
 
 	t_total = I_GetFRTCounter();
 
-	R_Setup(displayplayer, visplanes_, visplanes_hash_, vissectors_, viswallex_);
+	R_Setup(displayplayer, &lvd);
 
 	Mars_R_BeginWallPrep(drawworld);
 
@@ -917,15 +903,15 @@ void R_RenderPlayerView(int displayplayer)
 	R_SegCommands();
 	t_segs = I_GetFRTCounter() - t_segs;
 
-	Mars_ClearCacheLine(&vd.lastsegclip);
-	Mars_ClearCacheLine(&vd.lastopening);
+	Mars_ClearCacheLine(&vd->lastsegclip);
+	Mars_ClearCacheLine(&vd->lastopening);
 
-	if (vd.lastsegclip - vd.segclip > MAXOPENINGS)
-		I_Error("lastsegclip > MAXOPENINGS: %d", vd.lastsegclip - vd.segclip);
-	if (vd.lastopening - vd.openings > MAXOPENINGS)
-		I_Error("lastopening > MAXOPENINGS: %d", vd.lastopening - vd.openings);
-	if (vd.lastvissector - vd.vissectors > MAXVISSSEC)
-		I_Error("lastvissector > MAXVISSSEC: %d", vd.lastvissector - vd.vissectors);
+	if (vd->lastsegclip - vd->segclip > MAXOPENINGS)
+		I_Error("lastsegclip > MAXOPENINGS: %d", vd->lastsegclip - vd->segclip);
+	if (vd->lastopening - vd->openings > MAXOPENINGS)
+		I_Error("lastopening > MAXOPENINGS: %d", vd->lastopening - vd->openings);
+	if (vd->lastvissector - vd->vissectors > MAXVISSSEC)
+		I_Error("lastvissector > MAXVISSSEC: %d", vd->lastvissector - vd->vissectors);
 
 	t_planes = I_GetFRTCounter();
 	R_DrawPlanes();

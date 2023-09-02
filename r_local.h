@@ -275,7 +275,7 @@ static inline int R_PointOnSide (int x, int y, node_t *node)
 // then the y (<= x) is scaled and divided by x to get a tangent (slope)
 // value which is looked up in the tantoangle table.
 //
-#define R_PointToAngle(x,y) R_PointToAngle2(vd.viewx,vd.viewy,x,y)
+#define R_PointToAngle(x,y) R_PointToAngle2(vd->viewx,vd->viewy,x,y)
 void	R_InitData (void);
 void	R_SetViewportSize(int num);
 int		R_DefaultViewportSize(void); // returns the viewport id for fullscreen, low detail mode
@@ -578,6 +578,7 @@ __attribute__((aligned(16)))
 	/* */
 	viswall_t * volatile viswalls/*[MAXWALLCMDS] __attribute__((aligned(16)))*/;
 	viswall_t * volatile lastwallcmd;
+	viswallextra_t viswallex[MAXWALLCMDS + 1] __attribute__((aligned(16)));
 	viswallextra_t * volatile viswallextras;
 
 	/* */
@@ -588,14 +589,15 @@ __attribute__((aligned(16)))
 	/* */
 	/* subsectors */
 	/* */
-	sector_t		**vissectors/*[MAXVISSSEC]*/, **lastvissector;
+	sector_t		*vissectors[(MAXVISSSEC > MAXVISSPRITES ? MAXVISSSEC : MAXVISSPRITES) + 1], **lastvissector;
 
 	/* */
 	/* planes */
 	/* */
-	visplane_t		* volatile visplanes/*[MAXVISPLANES]*/, * volatile lastvisplane;
+	visplane_t		visplanes[MAXVISPLANES] __attribute__((aligned(16)));
+	visplane_t 		* volatile lastvisplane;
 	int * volatile gsortedvisplanes;
-	visplane_t * volatile * visplanes_hash;
+	visplane_t   	*visplanes_hash[NUM_VISPLANES_BUCKETS] __attribute__((aligned(16)));
 
 	/* */
 	/* openings / misc refresh memory */
@@ -605,7 +607,7 @@ __attribute__((aligned(16)))
 	unsigned short	* volatile segclip, * volatile lastsegclip;
 } viewdef_t;
 
-extern	viewdef_t	vd;
+extern	viewdef_t	*vd;
 
 #endif		/* __R_LOCAL__ */
 

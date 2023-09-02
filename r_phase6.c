@@ -192,7 +192,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
             if (top < bottom)
             {
                 // CALICO: draw sky column
-                int colnum = ((vd.viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
+                int colnum = ((vd->viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
 #ifdef MARS
                 inpixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
 #else
@@ -272,12 +272,12 @@ void R_SegCommands(void)
     int extralight;
     uint32_t clipbounds_[SCREENWIDTH / 2 + 1];
     uint16_t *clipbounds = (uint16_t *)clipbounds_;
-    uint16_t *newclipbounds = vd.segclip;
+    uint16_t *newclipbounds = vd->segclip;
 
     // initialize the clipbounds array
     R_InitClipBounds(clipbounds_);
 
-    extralight = vd.extralight;
+    extralight = vd->extralight;
     toptex = &lseg.tex[0];
     bottomtex = &lseg.tex[1];
 
@@ -286,12 +286,12 @@ void R_SegCommands(void)
     lseg.lightcoef = 0;
     lseg.lightsub = 0;
 
-    segcount = vd.lastwallcmd - vd.viswalls;
+    segcount = vd->lastwallcmd - vd->viswalls;
     for (i = 0; i < segcount; i++)
     {
         int j, seglight;
         unsigned actionbits;
-        viswall_t* segl = vd.viswalls + i;
+        viswall_t* segl = vd->viswalls + i;
 
 #ifdef MARS
         while (MARS_SYS_COMM8 <= i)
@@ -319,9 +319,9 @@ void R_SegCommands(void)
         lseg.minmip = MIPLEVELS;
         lseg.maxmip = 0;
 
-        if (vd.fixedcolormap)
+        if (vd->fixedcolormap)
         {
-            lseg.lightmin = lseg.lightmax = vd.fixedcolormap;
+            lseg.lightmin = lseg.lightmax = vd->fixedcolormap;
         }
         else
         {
@@ -458,7 +458,7 @@ void Mars_Sec_R_SegCommands(void)
 {
     viswall_t *segl;
 
-    for (segl = vd.viswalls; segl < vd.lastwallcmd; segl++)
+    for (segl = vd->viswalls; segl < vd->lastwallcmd; segl++)
     {
         if (segl->actionbits & AC_TOPTEXTURE)
         {

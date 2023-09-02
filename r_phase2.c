@@ -24,8 +24,8 @@ static fixed_t R_PointToDist(fixed_t x, fixed_t y)
     int angle;
     fixed_t dx, dy, temp;
 
-    dx = D_abs(x - vd.viewx);
-    dy = D_abs(y - vd.viewy);
+    dx = D_abs(x - vd->viewx);
+    dy = D_abs(y - vd->viewy);
 
     if (dy > dx)
     {
@@ -51,7 +51,7 @@ static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, ang
 
     visangle += ANG90;
 
-    anglea = visangle - vd.viewangle;
+    anglea = visangle - vd->viewangle;
     sinea = finesine(anglea >> ANGLETOFINESHIFT);
     angleb = visangle - normalangle;
     sineb = finesine(angleb >> ANGLETOFINESHIFT);
@@ -85,7 +85,7 @@ static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle, int ang
         rw_offset = -rw_offset;
 
     wc->offset += rw_offset;
-    wc->centerangle = ANG90 + vd.viewangle - normalangle;
+    wc->centerangle = ANG90 + vd->viewangle - normalangle;
 }
 
 void R_WallLatePrep(viswall_t* wc, vertex_t *verts)
@@ -115,11 +115,11 @@ void R_WallLatePrep(viswall_t* wc, vertex_t *verts)
     wc->distance = rw_distance;
 
     scalefrac = scale2 = wc->scalefrac =
-        R_ScaleFromGlobalAngle(rw_distance, vd.viewangle + (xtoviewangle[wc->start]<<FRACBITS), normalangle);
+        R_ScaleFromGlobalAngle(rw_distance, vd->viewangle + (xtoviewangle[wc->start]<<FRACBITS), normalangle);
 
     if (wc->stop > wc->start)
     {
-        scale2 = R_ScaleFromGlobalAngle(rw_distance, vd.viewangle + (xtoviewangle[wc->stop]<<FRACBITS), normalangle);
+        scale2 = R_ScaleFromGlobalAngle(rw_distance, vd->viewangle + (xtoviewangle[wc->stop]<<FRACBITS), normalangle);
 #ifdef MARS
         SH2_DIVU_DVSR = wc->stop - wc->start;  // set 32-bit divisor
         SH2_DIVU_DVDNT = scale2 - scalefrac;   // set 32-bit dividend, start divide
@@ -147,12 +147,12 @@ void R_WallLatePrep(viswall_t* wc, vertex_t *verts)
     int rw_stopx = wc->stop + 1;
     int width = (rw_stopx - rw_x + 1) / 2;
 
-    wc->sil = (byte*)vd.lastopening - rw_x;
+    wc->sil = (byte*)vd->lastopening - rw_x;
 
     if (wc->actionbits & AC_TOPSIL)
-        vd.lastopening += width;
+        vd->lastopening += width;
     if (wc->actionbits & AC_BOTTOMSIL)
-        vd.lastopening += width;
+        vd->lastopening += width;
 }
 
 //
@@ -188,14 +188,14 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
         bottomsil = (actionbits & AC_BOTTOMSIL) ? segl->sil : NULL;
     }
 
-    unsigned short *flooropen = (actionbits & AC_ADDFLOOR) ? vd.visplanes[0].open : NULL;
-    unsigned short *ceilopen = (actionbits & AC_ADDCEILING) ? vd.visplanes[0].open : NULL;
+    unsigned short *flooropen = (actionbits & AC_ADDFLOOR) ? vd->visplanes[0].open : NULL;
+    unsigned short *ceilopen = (actionbits & AC_ADDCEILING) ? vd->visplanes[0].open : NULL;
 
     unsigned short *newclipbounds = NULL;
     if (actionbits & (AC_NEWFLOOR | AC_NEWCEILING))
     {
-        newclipbounds = vd.lastsegclip - start;
-        vd.lastsegclip += width;
+        newclipbounds = vd->lastsegclip - start;
+        vd->lastsegclip += width;
     }
 
     const int cyvh = (centerY << 16) | viewportHeight;
@@ -318,9 +318,9 @@ void Mars_Sec_R_WallPrep(void)
 
     R_InitClipBounds(clipbounds_);
 
-    first = vd.viswalls;
+    first = vd->viswalls;
     verylast = NULL;
-    seglex = vd.viswallextras;
+    seglex = vd->viswallextras;
     verts = W_GetLumpData(gamemaplump+ML_VERTEXES);
 
     for (segl = first; segl != verylast; )
@@ -333,8 +333,8 @@ void Mars_Sec_R_WallPrep(void)
         // check if master CPU finished exec'ing R_BSP()
         if (nextsegs == 0xffff)
         {
-            Mars_ClearCacheLine(&vd.lastwallcmd);
-            verylast = vd.lastwallcmd;
+            Mars_ClearCacheLine(&vd->lastwallcmd);
+            verylast = vd->lastwallcmd;
             nextsegs = verylast - first;
         }
 
@@ -364,7 +364,7 @@ void R_WallPrep(void)
 
     R_InitClipBounds(clipbounds_);
 
-    for (segl = vd.viswalls; segl != vd.lastwallcmd; segl++)
+    for (segl = vd->viswalls; segl != vd->lastwallcmd; segl++)
     {
         fixed_t floornewheight = 0, ceilingnewheight = 0;
 
