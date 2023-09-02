@@ -147,12 +147,12 @@ void R_WallLatePrep(viswall_t* wc, vertex_t *verts)
     int rw_stopx = wc->stop + 1;
     int width = (rw_stopx - rw_x + 1) / 2;
 
-    wc->sil = (byte*)lastopening - rw_x;
+    wc->sil = (byte*)vd.lastopening - rw_x;
 
     if (wc->actionbits & AC_TOPSIL)
-        lastopening += width;
+        vd.lastopening += width;
     if (wc->actionbits & AC_BOTTOMSIL)
-        lastopening += width;
+        vd.lastopening += width;
 }
 
 //
@@ -188,14 +188,14 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
         bottomsil = (actionbits & AC_BOTTOMSIL) ? segl->sil : NULL;
     }
 
-    unsigned short *flooropen = (actionbits & AC_ADDFLOOR) ? visplanes[0].open : NULL;
-    unsigned short *ceilopen = (actionbits & AC_ADDCEILING) ? visplanes[0].open : NULL;
+    unsigned short *flooropen = (actionbits & AC_ADDFLOOR) ? vd.visplanes[0].open : NULL;
+    unsigned short *ceilopen = (actionbits & AC_ADDCEILING) ? vd.visplanes[0].open : NULL;
 
     unsigned short *newclipbounds = NULL;
     if (actionbits & (AC_NEWFLOOR | AC_NEWCEILING))
     {
-        newclipbounds = lastsegclip - start;
-        lastsegclip += width;
+        newclipbounds = vd.lastsegclip - start;
+        vd.lastsegclip += width;
     }
 
     const int cyvh = (centerY << 16) | viewportHeight;
@@ -318,9 +318,9 @@ void Mars_Sec_R_WallPrep(void)
 
     R_InitClipBounds(clipbounds_);
 
-    first = viswalls;
+    first = vd.viswalls;
     verylast = NULL;
-    seglex = viswallextras;
+    seglex = vd.viswallextras;
     verts = W_GetLumpData(gamemaplump+ML_VERTEXES);
 
     for (segl = first; segl != verylast; )
@@ -333,8 +333,8 @@ void Mars_Sec_R_WallPrep(void)
         // check if master CPU finished exec'ing R_BSP()
         if (nextsegs == 0xffff)
         {
-            Mars_ClearCacheLine(&lastwallcmd);
-            verylast = lastwallcmd;
+            Mars_ClearCacheLine(&vd.lastwallcmd);
+            verylast = vd.lastwallcmd;
             nextsegs = verylast - first;
         }
 
@@ -364,7 +364,7 @@ void R_WallPrep(void)
 
     R_InitClipBounds(clipbounds_);
 
-    for (segl = viswalls; segl != lastwallcmd; segl++)
+    for (segl = vd.viswalls; segl != vd.lastwallcmd; segl++)
     {
         fixed_t floornewheight = 0, ceilingnewheight = 0;
 

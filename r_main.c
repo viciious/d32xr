@@ -40,39 +40,7 @@ short fuzzoffset[FUZZTABLE] =
 
 /*===================================== */
 
-/* */
-/* subsectors */
-/* */
-sector_t	**vissectors/*[MAXVISSSEC]*/, **lastvissector;
-
-/* */
-/* walls */
-/* */
-viswall_t	* volatile viswalls/*[MAXWALLCMDS]*/, * volatile lastwallcmd;
-viswallextra_t * volatile viswallextras;
-
-/* */
-/* planes */
-/* */
-visplane_t	* volatile visplanes/*[MAXVISPLANES]*/, * volatile lastvisplane;
 const uint16_t visplane0open[SCREENWIDTH+2] = { 0 };
- 
-#define NUM_VISPLANES_BUCKETS 32
-static visplane_t * volatile * visplanes_hash;
-
-int * volatile gsortedvisplanes;
-
-/* */
-/* sprites */
-/* */
-viswall_t	* volatile vissprites/*[MAXVISSPRITES]*/, * volatile lastsprite_p, * volatile vissprite_p;
-
-/* */
-/* openings / misc refresh memory */
-/* */
-unsigned short	* volatile openings/*[MAXOPENINGS]*/, * volatile lastopening;
-
-unsigned short	* volatile segclip, * volatile lastsegclip;
 
 /*===================================== */
 
@@ -666,60 +634,60 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		vd.fuzzcolormap = (colormapopt ? 12 : 6) * 256;
 #endif
 
-	visplanes = visplanes_;
-	visplanes[0].flatandlight = 0;
+	vd.visplanes = visplanes_;
+	vd.visplanes[0].flatandlight = 0;
 
 	tempbuf = (unsigned short *)I_WorkBuffer();
 
 /* */
 /* plane filling */
 /*	 */
-	visplanes[0].open = (uint16_t *)visplane0open + 1;
+	vd.visplanes[0].open = (uint16_t *)visplane0open + 1;
 
 	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
 	tempbuf += 2; // padding
 	for (i = 1; i < MAXVISPLANES; i++) {
-		visplanes[i].open = tempbuf;
+		vd.visplanes[i].open = tempbuf;
 		tempbuf += SCREENWIDTH+2;
 	}
 
-	segclip = tempbuf;
+	vd.segclip = tempbuf;
 	tempbuf += MAXOPENINGS;
 
 	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
-	viswalls = (void*)tempbuf;
-	tempbuf += sizeof(*viswalls) * MAXWALLCMDS / sizeof(*tempbuf);
+	vd.viswalls = (void*)tempbuf;
+	tempbuf += sizeof(*vd.viswalls) * MAXWALLCMDS / sizeof(*tempbuf);
 
-	viswallextras = viswallex_ + 1;
+	vd.viswallextras = viswallex_ + 1;
 
-	openings = tempbuf;
+	vd.openings = tempbuf;
 	tempbuf += MAXOPENINGS;
 
-	vissprites = (void *)viswalls;
+	vd.vissprites = (void *)vd.viswalls;
 
-	lastwallcmd = viswalls;			/* no walls added yet */
-	lastsegclip = segclip;
+	vd.lastwallcmd = vd.viswalls;			/* no walls added yet */
+	vd.lastsegclip = vd.segclip;
 
-	lastvisplane = visplanes + 1;		/* visplanes[0] is left empty */
-	visplanes_hash = visplanes_hash_;
+	vd.lastvisplane = vd.visplanes + 1;		/* visplanes[0] is left empty */
+	vd.visplanes_hash = visplanes_hash_;
 
-	gsortedvisplanes = NULL;
+	vd.gsortedvisplanes = NULL;
 
 	//I_Error("%d", ((uint16_t *)I_FrameBuffer() + 64*1024-0x100 - tempbuf) * 2);
 
 	/* */
 	/* clear sprites */
 	/* */
-	vissprite_p = vissprites;
-	lastsprite_p = vissprite_p;
+	vd.vissprite_p = vd.vissprites;
+	vd.lastsprite_p = vd.vissprite_p;
 
-	lastopening = openings;
+	vd.lastopening = vd.openings;
 
-	vissectors = vissectors_;
-	lastvissector = vissectors;	/* no subsectors visible yet */
+	vd.vissectors = vissectors_;
+	vd.lastvissector = vd.vissectors;	/* no subsectors visible yet */
 
 	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
-		visplanes_hash[i] = NULL;
+		vd.visplanes_hash[i] = NULL;
 
 #ifndef MARS
 	phasetime[0] = samplecount;
@@ -735,25 +703,10 @@ void Mars_Sec_R_Setup(void)
 	Mars_ClearCacheLines(&vd, (sizeof(vd) + 31) / 16);
 	Mars_ClearCacheLine(&viewportbuffer);
 
-	Mars_ClearCacheLine(&viswalls);
-	Mars_ClearCacheLine(&viswallextras);
-	Mars_ClearCacheLine(&vissprites);
-	Mars_ClearCacheLine(&visplanes);
-	Mars_ClearCacheLine(&lastvisplane);
-	Mars_ClearCacheLine(&visplanes_hash);
-
-	Mars_ClearCacheLine(&gsortedvisplanes);
-
-	Mars_ClearCacheLine(&segclip);
-	Mars_ClearCacheLine(&lastsegclip);
-
-	Mars_ClearCacheLine(&openings);
-	Mars_ClearCacheLine(&lastopening);
-
-	Mars_ClearCacheLines(visplanes, (sizeof(visplane_t)*MAXVISPLANES+31)/16);
+	Mars_ClearCacheLines(vd.visplanes, (sizeof(visplane_t)*MAXVISPLANES+31)/16);
 
 	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
-		visplanes_hash[i] = NULL;
+		vd.visplanes_hash[i] = NULL;
 }
 
 #endif
@@ -798,7 +751,7 @@ visplane_t* R_FindPlane(fixed_t height,
 	visplane_t *check, *tail, *next;
 	int hash = R_PlaneHash(height, flatandlight);
 
-	tail = visplanes_hash[hash];
+	tail = vd.visplanes_hash[hash];
 	for (check = tail; check; check = next)
 	{
 		next = check->next;
@@ -818,12 +771,12 @@ visplane_t* R_FindPlane(fixed_t height,
 		}
 	}
 
-	if (lastvisplane == visplanes + MAXVISPLANES)
-		return visplanes;
+	if (vd.lastvisplane == vd.visplanes + MAXVISPLANES)
+		return vd.visplanes;
 
 	// make a new plane
-	check = lastvisplane;
-	++lastvisplane;
+	check = vd.lastvisplane;
+	++vd.lastvisplane;
 
 	check->height = height;
 	check->flatandlight = flatandlight;
@@ -833,7 +786,7 @@ visplane_t* R_FindPlane(fixed_t height,
 	R_MarkOpenPlane(check);
 
 	check->next = tail;
-	visplanes_hash[hash] = check;
+	vd.visplanes_hash[hash] = check;
 
 	return check;
 }
@@ -964,15 +917,15 @@ void R_RenderPlayerView(int displayplayer)
 	R_SegCommands();
 	t_segs = I_GetFRTCounter() - t_segs;
 
-	Mars_ClearCacheLine(&lastsegclip);
-	Mars_ClearCacheLine(&lastopening);
+	Mars_ClearCacheLine(&vd.lastsegclip);
+	Mars_ClearCacheLine(&vd.lastopening);
 
-	if (lastsegclip - segclip > MAXOPENINGS)
-		I_Error("lastsegclip > MAXOPENINGS: %d", lastsegclip - segclip);
-	if (lastopening - openings > MAXOPENINGS)
-		I_Error("lastopening > MAXOPENINGS: %d", lastopening - openings);
-	if (lastvissector - vissectors > MAXVISSSEC)
-		I_Error("lastvissector > MAXVISSSEC: %d", lastvissector - vissectors);
+	if (vd.lastsegclip - vd.segclip > MAXOPENINGS)
+		I_Error("lastsegclip > MAXOPENINGS: %d", vd.lastsegclip - vd.segclip);
+	if (vd.lastopening - vd.openings > MAXOPENINGS)
+		I_Error("lastopening > MAXOPENINGS: %d", vd.lastopening - vd.openings);
+	if (vd.lastvissector - vd.vissectors > MAXVISSSEC)
+		I_Error("lastvissector > MAXVISSSEC: %d", vd.lastvissector - vd.vissectors);
 
 	t_planes = I_GetFRTCounter();
 	R_DrawPlanes();

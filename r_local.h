@@ -321,26 +321,6 @@ extern	fixed_t *distscale/*[SCREENWIDTH]*/;
 #define MARKEDOPEN(x) ((x) == OPENMARK)
 #endif
 
-typedef struct
-#ifdef MARS
-__attribute__((aligned(16)))
-#endif
-{
-	fixed_t		viewx, viewy, viewz;
-	angle_t		viewangle;
-	fixed_t		viewcos, viewsin;
-	player_t	*viewplayer;
-	VINT		lightlevel;
-	VINT		extralight;
-	VINT		displayplayer;
-	VINT		fixedcolormap;
-	VINT		fuzzcolormap;
-	angle_t		clipangle, doubleclipangle;
-	VINT 		*viewangletox;
-} viewdef_t;
-
-extern	viewdef_t	vd;
-
 extern	VINT		extralight;
 
 #ifdef MARS
@@ -526,9 +506,6 @@ typedef struct
 } viswallextra_t;
 
 #define	MAXWALLCMDS		128
-extern	viswall_t * volatile viswalls/*[MAXWALLCMDS] __attribute__((aligned(16)))*/;
-extern	viswall_t * volatile lastwallcmd;
-extern	viswallextra_t * volatile viswallextras;
 
 /* A vissprite_t is a thing that will be drawn during a refresh */
 typedef struct vissprite_s
@@ -548,15 +525,10 @@ typedef struct vissprite_s
 } vissprite_t;
 
 #define	MAXVISSPRITES	MAXWALLCMDS
-extern	viswall_t	* volatile vissprites/*[MAXVISSPRITES]*/, * volatile  lastsprite_p, * volatile vissprite_p;
 
 #define	MAXOPENINGS		SCREENWIDTH*14
-extern	unsigned short	* volatile openings/*[MAXOPENINGS]*/;
-extern 	unsigned short	* volatile lastopening;
-extern	unsigned short	* volatile segclip, * volatile lastsegclip;
 
 #define	MAXVISSSEC		128
-extern	sector_t		**vissectors/*[MAXVISSSEC]*/, **lastvissector;
 
 typedef struct visplane_s
 {
@@ -568,8 +540,8 @@ typedef struct visplane_s
 } visplane_t;
 
 #define	MAXVISPLANES	32
-extern	visplane_t		* volatile visplanes/*[MAXVISPLANES]*/, * volatile lastvisplane;
-extern int * volatile gsortedvisplanes;
+
+#define NUM_VISPLANES_BUCKETS 32
 
 void R_MarkOpenPlane(visplane_t* pl)
 ATTR_DATA_CACHE_ALIGN
@@ -583,6 +555,57 @@ ATTR_DATA_CACHE_ALIGN
 void R_InitClipBounds(uint32_t *clipbounds)
 ATTR_DATA_CACHE_ALIGN
 ;
+
+typedef struct
+#ifdef MARS
+__attribute__((aligned(16)))
+#endif
+{
+	fixed_t		viewx, viewy, viewz;
+	angle_t		viewangle;
+	fixed_t		viewcos, viewsin;
+	player_t	*viewplayer;
+	VINT		lightlevel;
+	VINT		extralight;
+	VINT		displayplayer;
+	VINT		fixedcolormap;
+	VINT		fuzzcolormap;
+	angle_t		clipangle, doubleclipangle;
+	VINT 		*viewangletox;
+
+	/* */
+	/* walls */
+	/* */
+	viswall_t * volatile viswalls/*[MAXWALLCMDS] __attribute__((aligned(16)))*/;
+	viswall_t * volatile lastwallcmd;
+	viswallextra_t * volatile viswallextras;
+
+	/* */
+	/* sprites */
+	/* */
+	viswall_t	* volatile vissprites/*[MAXVISSPRITES]*/, * volatile  lastsprite_p, * volatile vissprite_p;
+
+	/* */
+	/* subsectors */
+	/* */
+	sector_t		**vissectors/*[MAXVISSSEC]*/, **lastvissector;
+
+	/* */
+	/* planes */
+	/* */
+	visplane_t		* volatile visplanes/*[MAXVISPLANES]*/, * volatile lastvisplane;
+	int * volatile gsortedvisplanes;
+	visplane_t * volatile * visplanes_hash;
+
+	/* */
+	/* openings / misc refresh memory */
+	/* */
+	unsigned short	* volatile openings/*[MAXOPENINGS]*/;
+	unsigned short	* volatile lastopening;
+	unsigned short	* volatile segclip, * volatile lastsegclip;
+} viewdef_t;
+
+extern	viewdef_t	vd;
 
 #endif		/* __R_LOCAL__ */
 

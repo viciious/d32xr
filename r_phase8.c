@@ -187,7 +187,7 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
    {
       int width;
 
-      ds = viswalls + *walls++;
+      ds = vd.viswalls + *walls++;
 
       silhouette = (ds->actionbits & (AC_TOPSIL | AC_BOTTOMSIL | AC_SOLIDSIL));
       
@@ -282,8 +282,8 @@ static void R_DrawSortedSprites(int *fuzzpos, int* sortedsprites, int sprscreenh
    // compile the list of walls that clip sprites for this side part of the screen
    pwalls = walls;
 
-   ds = lastwallcmd;
-   if (ds == viswalls)
+   ds = vd.lastwallcmd;
+   if (ds == vd.viswalls)
        return;
    do
    {
@@ -293,8 +293,8 @@ static void R_DrawSortedSprites(int *fuzzpos, int* sortedsprites, int sprscreenh
          !(ds->actionbits & (AC_TOPSIL | AC_BOTTOMSIL | AC_SOLIDSIL)))  // does not clip sprites
          continue;
 
-      *pwalls++ = ds - viswalls;
-   } while (ds != viswalls);
+      *pwalls++ = ds - vd.viswalls;
+   } while (ds != vd.viswalls);
 
    if (pwalls == walls)
       return;
@@ -305,7 +305,7 @@ static void R_DrawSortedSprites(int *fuzzpos, int* sortedsprites, int sprscreenh
    {
       vissprite_t* ds;
 
-      ds = (vissprite_t *)(vissprites + (sortedsprites[i] & 0x7f));
+      ds = (vissprite_t *)(vd.vissprites + (sortedsprites[i] & 0x7f));
 
       R_ClipVisSprite(ds, spropening, sprscreenhalf, walls);
       R_DrawVisSprite(ds, spropening, fuzzpos, sprscreenhalf);
@@ -320,7 +320,7 @@ static void R_DrawPSprites(int *fuzzpos, int sprscreenhalf)
     unsigned vhplus1 = viewportHeight + 1;
 
     // draw psprites
-    for (spr = lastsprite_p; spr < vissprite_p; spr++)
+    for (spr = vd.lastsprite_p; spr < vd.vissprite_p; spr++)
     {
         vissprite_t *vis = (vissprite_t *)spr;
         unsigned stopx = vis->x2 + 1;
@@ -343,9 +343,9 @@ static void R_DrawPSprites(int *fuzzpos, int sprscreenhalf)
 #ifdef MARS
 void Mars_Sec_R_DrawSprites(int sprscreenhalf, int *sortedsprites)
 {
-    Mars_ClearCacheLine(&vissprites);
-    Mars_ClearCacheLine(&lastsprite_p);
-    Mars_ClearCacheLine(&vissprite_p);
+    Mars_ClearCacheLine(&vd.vissprites);
+    Mars_ClearCacheLine(&vd.lastsprite_p);
+    Mars_ClearCacheLine(&vd.vissprite_p);
 
     // mobj sprites
     //Mars_ClearCacheLines(sortedsprites, ((lastsprite_p - vissprites + 1) * sizeof(*sortedsprites) + 31) / 16);
@@ -366,13 +366,13 @@ void R_Sprites(void)
    int half, sortedcount;
    unsigned midcount;
    viswall_t *spr;
-   int *sortedsprites = (void *)vissectors;
+   int *sortedsprites = (void *)vd.vissectors;
    int *gsortedsprites;
    viswall_t *wc;
    vertex_t *verts;
 
    sortedcount = 0;
-   count = lastsprite_p - vissprites;
+   count = vd.lastsprite_p - vd.vissprites;
    if (count > MAXVISSPRITES)
        count = MAXVISSPRITES;
 
@@ -384,7 +384,7 @@ void R_Sprites(void)
    midcount = 0;
    for (i = 0; i < count; i++)
    {
-       vissprite_t* ds = (vissprite_t *)(vissprites + i);
+       vissprite_t* ds = (vissprite_t *)(vd.vissprites + i);
        if (ds->patchnum < 0)
            continue;
        if (ds->x1 > ds->x2)
@@ -404,7 +404,7 @@ void R_Sprites(void)
    }
 
    // add the gun midpoint
-   for (spr = lastsprite_p; spr < vissprite_p; spr++) {
+   for (spr = vd.lastsprite_p; spr < vd.vissprite_p; spr++) {
         vissprite_t *pspr = (vissprite_t *)spr;
         unsigned xscale;
         unsigned pixcount = pspr->x2 + 1 - pspr->x1;
@@ -436,7 +436,7 @@ void R_Sprites(void)
    verts = vertexes;
 #endif
 
-   for (wc = viswalls; wc < lastwallcmd; wc++)
+   for (wc = vd.viswalls; wc < vd.lastwallcmd; wc++)
    {
       if (wc->actionbits & (AC_TOPSIL | AC_BOTTOMSIL | AC_SOLIDSIL))
       {
@@ -448,7 +448,7 @@ void R_Sprites(void)
 
 #ifdef MARS
    // re-use the openings array in VRAM
-	gsortedsprites = (int*)(((intptr_t)segclip + 3) & ~3);
+	gsortedsprites = (int*)(((intptr_t)vd.segclip + 3) & ~3);
    for (i = 0; i < sortedcount+1; i++)
       gsortedsprites[i] = sortedsprites[i];
 #endif

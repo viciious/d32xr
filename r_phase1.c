@@ -347,7 +347,7 @@ static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop)
    viswall_t *rw;
    viswallextra_t *rwex;
    int newstop;
-   int numwalls = lastwallcmd - viswalls;
+   int numwalls = vd.lastwallcmd - vd.viswalls;
    const int maxlen = centerX/2;
    // split long segments
    int len = stop - start + 1;
@@ -359,15 +359,15 @@ static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop)
    else
       newstop = start + maxlen - 1;
 
-   rwex = viswallextras + numwalls;
+   rwex = vd.viswallextras + numwalls;
    do {
-      rw = lastwallcmd;
+      rw = vd.lastwallcmd;
       rw->seg = rbsp->curline;
       rw->start = start;
       rw->stop = newstop;
       rw->scalestep = rbsp->lineangle1;
       rw->actionbits = 0;
-      ++lastwallcmd;
+      ++vd.lastwallcmd;
 
       R_WallEarlyPrep(rw, &rwex->floorheight, &rwex->floornewheight, &rwex->ceilnewheight);
 
@@ -561,9 +561,9 @@ static void R_Subsector(rbspWork_t *rbsp, int num)
       if(frontsector->validcount != validcount[0]) // not already processed?
       {
          frontsector->validcount = validcount[0];  // mark it as processed
-         if (lastvissector < vissectors + MAXVISSSEC)
+         if (vd.lastvissector < vd.vissectors + MAXVISSSEC)
          {
-           *lastvissector++ = frontsector;
+           *vd.lastvissector++ = frontsector;
          }
       }
    }

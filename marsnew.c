@@ -744,13 +744,13 @@ void I_DebugScreen(void)
 		Mars_DebugQueue(DEBUG_BSPMSEC, Mars_FRTCounter2Msec(t_ref_bsp_avg));
 
 		Mars_DebugQueue(DEBUG_SEGSMSEC, Mars_FRTCounter2Msec(t_ref_segs_avg));
-		Mars_DebugQueue(DEBUG_SEGSCOUNT, lastwallcmd - viswalls);
+		Mars_DebugQueue(DEBUG_SEGSCOUNT, vd.lastwallcmd - vd.viswalls);
 
 		Mars_DebugQueue(DEBUG_PLANESMSEC, Mars_FRTCounter2Msec(t_ref_planes_avg));
-		Mars_DebugQueue(DEBUG_PLANESCOUNT, lastvisplane - visplanes - 1);
+		Mars_DebugQueue(DEBUG_PLANESCOUNT, vd.lastvisplane - vd.visplanes - 1);
 
 		Mars_DebugQueue(DEBUG_SPRITESMSEC, Mars_FRTCounter2Msec(t_ref_sprites_avg));
-		Mars_DebugQueue(DEBUG_SPRITESCOUNT, vissprite_p - vissprites);
+		Mars_DebugQueue(DEBUG_SPRITESCOUNT, vd.vissprite_p - vd.vissprites);
 
 		Mars_DebugQueue(DEBUG_REFMSEC, Mars_FRTCounter2Msec(t_ref_total_avg));
 

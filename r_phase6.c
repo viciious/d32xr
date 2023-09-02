@@ -272,7 +272,7 @@ void R_SegCommands(void)
     int extralight;
     uint32_t clipbounds_[SCREENWIDTH / 2 + 1];
     uint16_t *clipbounds = (uint16_t *)clipbounds_;
-    uint16_t *newclipbounds = segclip;
+    uint16_t *newclipbounds = vd.segclip;
 
     // initialize the clipbounds array
     R_InitClipBounds(clipbounds_);
@@ -286,12 +286,12 @@ void R_SegCommands(void)
     lseg.lightcoef = 0;
     lseg.lightsub = 0;
 
-    segcount = lastwallcmd - viswalls;
+    segcount = vd.lastwallcmd - vd.viswalls;
     for (i = 0; i < segcount; i++)
     {
         int j, seglight;
         unsigned actionbits;
-        viswall_t* segl = viswalls + i;
+        viswall_t* segl = vd.viswalls + i;
 
 #ifdef MARS
         while (MARS_SYS_COMM8 <= i)
@@ -458,7 +458,7 @@ void Mars_Sec_R_SegCommands(void)
 {
     viswall_t *segl;
 
-    for (segl = viswalls; segl < lastwallcmd; segl++)
+    for (segl = vd.viswalls; segl < vd.lastwallcmd; segl++)
     {
         if (segl->actionbits & AC_TOPTEXTURE)
         {

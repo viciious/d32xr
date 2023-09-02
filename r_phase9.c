@@ -27,7 +27,7 @@ static void R_UpdateCache(void)
 
    minplanemip = 0;
    maxplanemip = 0;
-   for (wall = viswalls; wall < lastwallcmd; wall++)
+   for (wall = vd.viswalls; wall < vd.lastwallcmd; wall++)
    {
       int minmip = wall->miplevels[0], maxmip = wall->miplevels[1];
 

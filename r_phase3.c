@@ -118,11 +118,11 @@ static void R_PrepMobj(mobj_t *thing)
        return;
 
    // get a new vissprite
-   if(vissprite_p >= vissprites + MAXVISSPRITES - NUMPSPRITES)
+   if(vd.vissprite_p >= vd.vissprites + MAXVISSPRITES - NUMPSPRITES)
       return; // too many visible sprites already, leave room for psprites
 
-   vis = (vissprite_t *)vissprite_p;
-   vissprite_p++;
+   vis = (vissprite_t *)vd.vissprite_p;
+   vd.vissprite_p++;
 
    vis->patchnum = lump;
 #ifndef MARS
@@ -218,11 +218,11 @@ static void R_PrepPSprite(pspdef_t *psp)
        return;
 
    // store information in vissprite
-   if(vissprite_p == vissprites + MAXVISSPRITES)
+   if(vd.vissprite_p == vd.vissprites + MAXVISSPRITES)
       return; // out of vissprites
 
-   vis = (vissprite_t *)vissprite_p;
-   vissprite_p++;
+   vis = (vissprite_t *)vd.vissprite_p;
+   vd.vissprite_p++;
 
    vis->patchnum = lump;
 #ifndef MARS
@@ -257,11 +257,11 @@ static void R_PrepPSprite(pspdef_t *psp)
 //
 void R_SpritePrep(void)
 {
-   sector_t **pse = vissectors;
+   sector_t **pse = vd.vissectors;
    pspdef_t     *psp;
    int i;
 
-   while(pse < lastvissector)
+   while(pse < vd.lastvissector)
    {
       sector_t    *se = *pse;
       mobj_t *thing = se->thinglist;
@@ -275,7 +275,7 @@ void R_SpritePrep(void)
    }
 
    // remember end of actor vissprites
-   lastsprite_p = vissprite_p;
+   vd.lastsprite_p = vd.vissprite_p;
 
    // draw player weapon sprites
    for(i = 0, psp = vd.viewplayer->psprites; i < NUMPSPRITES; i++, psp++)
