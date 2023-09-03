@@ -829,26 +829,28 @@ void RunMenu (void)
 #ifdef MARS
 	int exit = ga_exitdemo;
 
-	M_Start();
-	do {
-		int i;
-		char demo[9];
+	if (!gameinfo.noAttractDemo) {
+		M_Start();
+		do {
+			int i;
+			char demo[9];
 
-		for (i = 1; i < 10; i++)
-		{
-			int lump;
+			for (i = 1; i < 10; i++)
+			{
+				int lump;
 
-			D_snprintf(demo, sizeof(demo), "DEMO%1d", i);
-			lump = W_CheckNumForName(demo);
-			if (lump == -1)
-				break;
+				D_snprintf(demo, sizeof(demo), "DEMO%1d", i);
+				lump = W_CheckNumForName(demo);
+				if (lump == -1)
+					break;
 
-			exit = RunDemo(demo);
-			if (exit == ga_exitdemo)
-				break;
-		}
-	} while (exit != ga_exitdemo);
-	M_Stop();
+				exit = RunDemo(demo);
+				if (exit == ga_exitdemo)
+					break;
+			}
+		} while (exit != ga_exitdemo);
+		M_Stop();
+	}
 #else
 reselect:
 	MiniLoop(M_Start, M_Stop, M_Ticker, M_Drawer, NULL);

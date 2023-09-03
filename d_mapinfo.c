@@ -290,6 +290,8 @@ static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
 		gi->endFlat = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "endShowCast"))
 		gi->endShowCast = D_atoi(value);
+	else if (!D_strcasecmp(key, "noAttractDemo"))
+		gi->noAttractDemo = D_atoi(value);
 }
 
 static const char* G_FindMapinfoSection(const char* buf, const char *name, size_t *psectionlen)
