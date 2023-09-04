@@ -829,8 +829,8 @@ void RunMenu (void)
 #ifdef MARS
 	int exit = ga_exitdemo;
 
+	M_Start();
 	if (!gameinfo.noAttractDemo) {
-		M_Start();
 		do {
 			int i;
 			char demo[9];
@@ -849,8 +849,8 @@ void RunMenu (void)
 					break;
 			}
 		} while (exit != ga_exitdemo);
-		M_Stop();
 	}
+	M_Stop();
 #else
 reselect:
 	MiniLoop(M_Start, M_Stop, M_Ticker, M_Drawer, NULL);
