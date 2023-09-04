@@ -458,7 +458,7 @@ typedef struct
 
 	int			b_bottomheight;
 	int			b_texturemid;
-	/* !!! THE FOLLOWING SECTION MUST BE LARGE ENOUGH */
+	/* !!! THE SECTION ABOVE MUST BE LARGE ENOUGH */
 	/* !!! TO ACCOMODATE VISSPRITE_T STRUCTURE, GETS */
 	/* !!! OVERWRITTEN AFTER PHASE 7 - END */
 
@@ -497,7 +497,7 @@ typedef struct
 		mapvertex_t		v2;
 	};
 
-	byte 		*sil;
+	uint16_t 		*clipbounds;
 } viswall_t;
 
 typedef struct
@@ -526,7 +526,7 @@ typedef struct vissprite_s
 
 #define	MAXVISSPRITES	MAXWALLCMDS
 
-#define	MAXOPENINGS		SCREENWIDTH*14
+#define	MAXOPENINGS		SCREENWIDTH*16
 
 #define	MAXVISSSEC		128
 
@@ -600,9 +600,9 @@ __attribute__((aligned(16)))
 	/* */
 	/* openings / misc refresh memory */
 	/* */
-	unsigned short	* volatile openings/*[MAXOPENINGS]*/;
-	unsigned short	* volatile lastopening;
 	unsigned short	* volatile segclip, * volatile lastsegclip;
+
+	int * volatile gsortedsprites;
 } viewdef_t;
 
 extern	viewdef_t	vd;
