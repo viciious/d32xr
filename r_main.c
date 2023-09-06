@@ -77,7 +77,7 @@ fixed_t *distscale/*[SCREENWIDTH]*/;
 
 VINT *viewangletox/*[FINEANGLES/2]*/;
 
-uint16_t xtoviewangle[SCREENWIDTH+1];
+uint16_t *xtoviewangle/*[SCREENWIDTH+1]*/;
 
 /* */
 /* performance counters */
