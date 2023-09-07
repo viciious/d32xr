@@ -32,7 +32,7 @@ typedef struct
 
 #define	MAXANIMS		32
 
-extern	anim_t	anims[MAXANIMS], *lastanim;
+extern	anim_t	*anims/*[MAXANIMS]*/, * lastanim;
 
 
 /* */
@@ -40,7 +40,7 @@ extern	anim_t	anims[MAXANIMS], *lastanim;
 /* */
 #define	MAXLINEANIMS		64
 extern	int		numlinespecials;
-extern	line_t	*linespeciallist[MAXLINEANIMS];
+extern	line_t	**linespeciallist/*[MAXLINEANIMS]*/;
 
 
 /*	Define values for map objects */
@@ -176,8 +176,8 @@ typedef struct
 #define	MAXBUTTONS	16		/* 4 players, 4 buttons each at once, max. */
 #define BUTTONTIME	15		/* 1 second */
 
-extern	VINT		switchlist[MAXSWITCHES * 2];
-extern	button_t buttonlist[MAXBUTTONS];
+extern	VINT		*switchlist/*[MAXSWITCHES * 2]*/;
+extern	button_t* buttonlist/*[MAXBUTTONS]*/;
 
 void	P_ChangeSwitchTexture(line_t *line,int useAgain);
 void 	P_InitSwitchList(void);
@@ -226,7 +226,7 @@ typedef struct
 #define	PLATSPEED	(FRACUNIT*THINKERS_TICS)
 #define	MAXPLATS	30
 
-extern	plat_t	*activeplats[MAXPLATS];
+extern	plat_t	**activeplats/*[MAXPLATS]*/;
 
 void	T_PlatRaise(plat_t	*plat);
 int		EV_DoPlat(line_t *line,plattype_e type,int amount);
@@ -310,7 +310,7 @@ typedef struct
 #define	CEILSPEED		FRACUNIT*THINKERS_TICS
 #define MAXCEILINGS		30
 
-extern	ceiling_t	*activeceilings[MAXCEILINGS];
+extern	ceiling_t	**activeceilings/*[MAXCEILINGS]*/;
 
 int		EV_DoCeiling (line_t *line, ceiling_e  type);
 void	T_MoveCeiling (ceiling_t *ceiling);
