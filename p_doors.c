@@ -86,7 +86,7 @@ void T_VerticalDoor (vldoor_t *door)
 						break;
 					default:
 						door->direction = 1;
-						S_StartPositionedSound((void *)door->sector,sfx_bdopn,&P_SectorOrg);
+						S_StartPositionedSound((void *)door->sector,sfx_doropn,&P_SectorOrg);
 						break;
 				}
 			}
