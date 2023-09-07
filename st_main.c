@@ -3,7 +3,7 @@
 #include "doomdef.h"
 #include "st_main.h"
 
-stbar_t	stbar[MAXPLAYERS];
+stbar_t	*stbar;
 int stbar_tics;
 
 static short stbarframe;
@@ -45,6 +45,8 @@ static void ST_EraseBlock(int x, int y, int width, int height);
 void ST_Init (void)
 {
 	int i, l;
+
+	stbar = Z_Malloc(sizeof(*stbar)*MAXPLAYERS, PU_STATIC, NULL);
 
 	l = W_CheckNumForName("STBAR");
 	if (l != -1)
