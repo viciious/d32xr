@@ -90,7 +90,7 @@ int S_PaintChannel4IMA(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale)
 int S_PaintChannel4IMA2x(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
 void S_PaintChannel8(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
 static int S_PaintChannel(sfxchannel_t *ch, int16_t* buffer, int painted) ATTR_DATA_CACHE_ALIGN;
-static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos) ATTR_DATA_CACHE_ALIGN;
+static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos);
 static void S_SpatializeAt(fixed_t*origin, mobj_t* listener, int* pvol, int* psep) ATTR_DATA_CACHE_ALIGN;
 static void S_Spatialize(mobj_t* mobj, int* pvol, int* psep, getsoundpos_t getpos) ATTR_DATA_CACHE_ALIGN;
 static void S_SpatializeAll(void) ATTR_DATA_CACHE_ALIGN;
