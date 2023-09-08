@@ -83,6 +83,7 @@ void T_VerticalDoor (vldoor_t *door)
 						break;
 					case blazeRaise:
 						door->direction = 1;
+						S_StartPositionedSound((void *)door->sector,sfx_bdopn,&P_SectorOrg);
 						break;
 					default:
 						door->direction = 1;
