@@ -15,7 +15,7 @@ static int fuzzpos[2];
 static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy) ATTR_DATA_CACHE_ALIGN;
 void R_DrawVisSprite(vissprite_t* vis, unsigned short* spropening, int *fuzzpos, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
 void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreenhalf, int16_t *walls) ATTR_DATA_CACHE_ALIGN;
-static void R_DrawSortedSprites(int *fuzzpos, int* sortedsprites, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
+static void R_DrawSortedSprites(int* sortedsprites, int *fuzzpos, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
 static void R_DrawPSprites(int *fuzzpos, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
 void R_Sprites(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 
@@ -258,7 +258,7 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
    } while (*walls != -1);
 }
 
-static void R_DrawSortedSprites(int *fuzzpos, int* sortedsprites, int sprscreenhalf)
+static void R_DrawSortedSprites(int* sortedsprites, int *fuzzpos, int sprscreenhalf)
 {
    int i;
    int x1, x2;
@@ -353,7 +353,7 @@ void Mars_Sec_R_DrawSprites(int sprscreenhalf)
     // mobj sprites
     //Mars_ClearCacheLines(vd.gsortedsprites, ((lastsprite_p - vissprites + 1) * sizeof(*vd.gsortedsprites) + 31) / 16);
 
-    R_DrawSortedSprites(&fuzzpos[1], vd.gsortedsprites, -sprscreenhalf);
+    R_DrawSortedSprites(vd.gsortedsprites, &fuzzpos[1], -sprscreenhalf);
 
     R_DrawPSprites(&fuzzpos[1], -sprscreenhalf);
 }
@@ -458,9 +458,9 @@ void R_Sprites(void)
    Mars_R_BeginDrawSprites(half);
 #endif
 
-   R_DrawSortedSprites(&fuzzpos[0], sortedsprites, half);
+   R_DrawSortedSprites(sortedsprites, &fuzzpos[0], half);
 
-   R_DrawPSprites(0, half);
+   R_DrawPSprites(&fuzzpos[0], half);
 
 #ifdef MARS
    Mars_R_EndDrawSprites();
