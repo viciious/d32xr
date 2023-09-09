@@ -323,14 +323,14 @@ void IN_Start (void)
 	int	i,l;
 	VINT *infaces;
 
-	interm = Z_Malloc(sizeof(*interm), PU_STATIC, 0);
+	interm = Z_Malloc(sizeof(*interm), PU_STATIC);
 	D_memset(interm, 0, sizeof(*interm));
 
 	interm->earlyexit = false;
 
 	interm->valsdrawn = false;
 
-	interm->nextmapinfo = Z_Malloc(sizeof(dmapinfo_t), PU_STATIC, 0);
+	interm->nextmapinfo = Z_Malloc(sizeof(dmapinfo_t), PU_STATIC);
 	D_memset(interm->nextmapinfo, 0, sizeof(dmapinfo_t));
 
 	if (gameaction == ga_secretexit && gamemapinfo.secretNext)

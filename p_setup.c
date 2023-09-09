@@ -61,7 +61,7 @@ void P_LoadVertexes (int lump)
 	vertex_t	*li;
 	
 	numvertexes = W_LumpLength (lump) / sizeof(mapvertex_t);
-	vertexes = Z_Malloc (numvertexes*sizeof(vertex_t),PU_LEVEL,0);	
+	vertexes = Z_Malloc (numvertexes*sizeof(vertex_t),PU_LEVEL);
 	data = I_TempBuffer ();	
 	W_ReadLump (lump,data);
 	
@@ -96,7 +96,7 @@ void P_LoadSegs (int lump)
 	angle_t angle;
 
 	numsegs = W_LumpLength (lump) / sizeof(mapseg_t);
-	segs = Z_Malloc (numsegs*sizeof(seg_t),PU_LEVEL,0);	
+	segs = Z_Malloc (numsegs*sizeof(seg_t),PU_LEVEL);
 	D_memset (segs, 0, numsegs*sizeof(seg_t));
 	data = I_TempBuffer ();
 	W_ReadLump (lump,data);
@@ -140,7 +140,7 @@ void P_LoadSubsectors (int lump)
 	subsector_t		*ss;
 
 	numsubsectors = W_LumpLength (lump) / sizeof(mapsubsector_t);
-	subsectors = Z_Malloc (numsubsectors*sizeof(subsector_t),PU_LEVEL,0);	
+	subsectors = Z_Malloc (numsubsectors*sizeof(subsector_t),PU_LEVEL);
 	data = I_TempBuffer ();
 	W_ReadLump (lump,data);
 
@@ -171,7 +171,7 @@ void P_LoadSectors (int lump)
 	sector_t		*ss;
 			
 	numsectors = W_LumpLength (lump) / sizeof(mapsector_t);
-	sectors = Z_Malloc (numsectors*sizeof(sector_t) + 16,PU_LEVEL,0);
+	sectors = Z_Malloc (numsectors*sizeof(sector_t) + 16,PU_LEVEL);
 	sectors = (void*)(((uintptr_t)sectors + 15) & ~15); // aline on cacheline boundary
 	D_memset (sectors, 0, numsectors*sizeof(sector_t));
 	data = I_TempBuffer ();
@@ -231,7 +231,7 @@ void P_LoadNodes (int lump)
 	node_t		*no;
 	
 	numnodes = W_LumpLength (lump) / sizeof(mapnode_t);
-	nodes = Z_Malloc (numnodes*sizeof(node_t),PU_LEVEL,0);	
+	nodes = Z_Malloc (numnodes*sizeof(node_t),PU_LEVEL);
 	data = I_TempBuffer ();
 	W_ReadLump (lump,data);
 	
@@ -289,7 +289,7 @@ void P_LoadThings (int lump)
 
 	if (netgame == gt_deathmatch)
 	{
-		spawnthings = Z_Malloc(numthings * sizeof(*spawnthings), PU_LEVEL, 0);
+		spawnthings = Z_Malloc(numthings * sizeof(*spawnthings), PU_LEVEL);
 		st = spawnthings;
 		mt = (mapthing_t*)data;
 		for (i = 0; i < numthings; i++, mt++)
@@ -346,7 +346,7 @@ void P_LoadLineDefs (int lump)
 	vertex_t		*v1, *v2;
 	
 	numlines = W_LumpLength (lump) / sizeof(maplinedef_t);
-	lines = Z_Malloc (numlines*sizeof(line_t)+16,PU_LEVEL,0);
+	lines = Z_Malloc (numlines*sizeof(line_t)+16,PU_LEVEL);
 	lines = (void*)(((uintptr_t)lines + 15) & ~15); // aline on cacheline boundary
 	D_memset (lines, 0, numlines*sizeof(line_t));
 	data = I_TempBuffer ();
@@ -433,7 +433,7 @@ void P_LoadSideDefs (int lump)
 		textures[i].usecount = 0;
 #endif	
 	numsides = W_LumpLength (lump) / sizeof(mapsidedef_t);
-	sides = Z_Malloc (numsides*sizeof(side_t),PU_LEVEL,0);	
+	sides = Z_Malloc (numsides*sizeof(side_t),PU_LEVEL);
 	D_memset (sides, 0, numsides*sizeof(side_t));
 	data = I_TempBuffer ();
 	W_ReadLump (lump,data);
@@ -489,7 +489,7 @@ void P_LoadBlockMap (int lump)
 	
 /* clear out mobj chains */
 	count = sizeof(*blocklinks)* bmapwidth*bmapheight;
-	blocklinks = Z_Malloc (count,PU_LEVEL, 0);
+	blocklinks = Z_Malloc (count,PU_LEVEL);
 	D_memset (blocklinks, 0, count);
 }
 
@@ -548,7 +548,7 @@ void P_GroupLines (void)
 	}
 	
 /* build line tables for each sector	 */
-	linebuffer = Z_Malloc (total*sizeof(*linebuffer), PU_LEVEL, 0);
+	linebuffer = Z_Malloc (total*sizeof(*linebuffer), PU_LEVEL);
 	sector = sectors;
 	for (i=0 ; i<numsectors ; i++, sector++)
 	{
@@ -671,7 +671,7 @@ D_printf ("P_SetupLevel(%i,%i)\n",lumpnum,skill);
 	rejectmatrix = W_CacheLumpNum (lumpnum+ML_REJECT,PU_LEVEL);
 #endif
 
-	validcount = Z_Malloc((numlines + 1) * sizeof(*validcount) * 2, PU_LEVEL, 0);
+	validcount = Z_Malloc((numlines + 1) * sizeof(*validcount) * 2, PU_LEVEL);
 	D_memset(validcount, 0, (numlines + 1) * sizeof(*validcount) * 2);
 	validcount[0] = 1; // cpu 0
 	validcount[numlines] = 1; // cpu 1
@@ -680,9 +680,9 @@ D_printf ("P_SetupLevel(%i,%i)\n",lumpnum,skill);
 
 	if (netgame == gt_deathmatch)
 	{
-		itemrespawnque = Z_Malloc(sizeof(*itemrespawnque) * ITEMQUESIZE, PU_LEVEL, 0);
-		itemrespawntime = Z_Malloc(sizeof(*itemrespawntime) * ITEMQUESIZE, PU_LEVEL, 0);
-		deathmatchstarts = Z_Malloc(sizeof(*deathmatchstarts) * MAXDMSTARTS, PU_LEVEL, 0);
+		itemrespawnque = Z_Malloc(sizeof(*itemrespawnque) * ITEMQUESIZE, PU_LEVEL);
+		itemrespawntime = Z_Malloc(sizeof(*itemrespawntime) * ITEMQUESIZE, PU_LEVEL);
+		deathmatchstarts = Z_Malloc(sizeof(*deathmatchstarts) * MAXDMSTARTS, PU_LEVEL);
 	}
 	else
 	{
@@ -752,13 +752,13 @@ extern byte *debugscreen;
 
 void P_Init (void)
 {
-	anims = Z_Malloc(sizeof(*anims) * MAXANIMS, PU_STATIC, 0);
-	switchlist = Z_Malloc(sizeof(*switchlist)* MAXSWITCHES * 2, PU_STATIC, 0);
-	buttonlist = Z_Malloc(sizeof(*buttonlist) * MAXBUTTONS, PU_STATIC, 0);
-	linespeciallist = Z_Malloc(sizeof(*linespeciallist) * MAXLINEANIMS, PU_STATIC, 0);
+	anims = Z_Malloc(sizeof(*anims) * MAXANIMS, PU_STATIC);
+	switchlist = Z_Malloc(sizeof(*switchlist)* MAXSWITCHES * 2, PU_STATIC);
+	buttonlist = Z_Malloc(sizeof(*buttonlist) * MAXBUTTONS, PU_STATIC);
+	linespeciallist = Z_Malloc(sizeof(*linespeciallist) * MAXLINEANIMS, PU_STATIC);
 
-	activeplats = Z_Malloc(sizeof(*activeplats) * MAXPLATS, PU_STATIC, 0);
-	activeceilings = Z_Malloc(sizeof(*activeceilings) * MAXCEILINGS, PU_STATIC, 0);
+	activeplats = Z_Malloc(sizeof(*activeplats) * MAXPLATS, PU_STATIC);
+	activeceilings = Z_Malloc(sizeof(*activeceilings) * MAXCEILINGS, PU_STATIC);
 
 	P_InitSwitchList ();
 	P_InitPicAnims ();

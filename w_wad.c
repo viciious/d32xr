@@ -255,7 +255,7 @@ void	*W_CacheLumpNum (int lump, int tag)
 		I_Error("W_CacheLumpNum: %i tag != PU_STATIC", lump);
 
 	len = W_LumpLength(lump);
-	Z_Malloc(len+1, tag, &cache);
+	cache = Z_Malloc(len+1, tag);
 	W_ReadLump(lump, cache);
 	((char *)cache)[len] = '\0';
 

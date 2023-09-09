@@ -610,9 +610,6 @@ long LongSwap (long dat);
 #define	PU_MUSIC		3			/* static while playing */
 #define	PU_LEVEL		50			/* static until level exited */
 #define	PU_LEVSPEC		51			/* a special thinker in a level */
-/* tags >= 100 are purgable whenever needed */
-#define	PU_PURGELEVEL	100
-#define	PU_CACHE		101
 
 #define	ZONEID	0x1d4a
 
@@ -620,7 +617,6 @@ long LongSwap (long dat);
 typedef struct memblock_s
 {
 	int		size;           /* including the header and possibly tiny fragments */
-	void    **user;         /* NULL if a free block */
 	short   tag;            /* purgelevel */
 	short   id;             /* should be ZONEID */
 #ifndef MARS
@@ -647,10 +643,10 @@ extern	memzone_t	*refzone;
 void	Z_Init (void);
 memzone_t *Z_InitZone (byte *base, int size);
 
-void 	*Z_Malloc2 (memzone_t *mainzone, int size, int tag, void *user, boolean err);
+void 	*Z_Malloc2 (memzone_t *mainzone, int size, int tag, boolean err);
 void 	Z_Free2 (memzone_t *mainzone,void *ptr);
 
-#define Z_Malloc(x,y,z) Z_Malloc2(mainzone,x,y,z,true)
+#define Z_Malloc(x,y) Z_Malloc2(mainzone,x,y,true)
 #define Z_Free(x) Z_Free2(mainzone,x)
 
 void 	Z_FreeTags (memzone_t *mainzone);

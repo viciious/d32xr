@@ -309,7 +309,7 @@ void F_Start (void)
 	else
 		S_StartSong(gameinfo.endMus, 1, cdtrack_end);
 
-	fin = Z_Malloc(sizeof(*fin), PU_STATIC, NULL);
+	fin = Z_Malloc(sizeof(*fin), PU_STATIC);
 	D_memset(fin, 0, sizeof(*fin));
 
 	fin->status = fin_endtext;		/* END TEXT PRINTS FIRST */
@@ -319,7 +319,7 @@ void F_Start (void)
 	fin->text_x = STARTX;
 	fin->text_y = STARTY;
 	fin->drawbg = 3;
-	fin->endobj = Z_Malloc(sizeof(*fin->endobj) * NUMENDOBJ, PU_STATIC, NULL);
+	fin->endobj = Z_Malloc(sizeof(*fin->endobj) * NUMENDOBJ, PU_STATIC);
 
 	l = W_GetNumForName ("CHAR_097");
 	for (i = 0; i < NUMENDOBJ; i++)

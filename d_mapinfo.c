@@ -330,7 +330,7 @@ static char *G_MapinfoSectionCStr(const char* buf, const char *name, char *outme
 	if (outmem)
 		newstr = outmem;
 	else
-		newstr = Z_Malloc(sectionlen + 1, PU_STATIC, NULL);
+		newstr = Z_Malloc(sectionlen + 1, PU_STATIC);
 	D_memcpy(newstr, section, sectionlen);
 	newstr[sectionlen] = '\0';
 
@@ -429,7 +429,7 @@ dmapinfo_t **G_LoadMaplist(int *pmapcount)
 	if (!mapcount)
 		return NULL;
 
-	maplist = Z_Malloc(sizeof(*maplist) * (mapcount + 1), PU_STATIC, NULL);
+	maplist = Z_Malloc(sizeof(*maplist) * (mapcount + 1), PU_STATIC);
 
 	i = 0;
 
@@ -444,7 +444,7 @@ dmapinfo_t **G_LoadMaplist(int *pmapcount)
 		if (!section)
 			break;
 
-		mi = Z_Malloc(sizeof(dmapinfo_t) + sectionlen + 1, PU_STATIC, NULL);
+		mi = Z_Malloc(sizeof(dmapinfo_t) + sectionlen + 1, PU_STATIC);
 		zsection = (char *)mi + sizeof(dmapinfo_t);
 		D_memcpy(zsection, section, sectionlen);
 		zsection[sectionlen] = '\0';

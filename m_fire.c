@@ -211,19 +211,19 @@ void I_InitMenuFire(jagobj_t *titlepic)
 
 	doompalette = W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
 
-	m_fire = Z_Malloc(sizeof(*m_fire), PU_STATIC, NULL);
+	m_fire = Z_Malloc(sizeof(*m_fire), PU_STATIC);
 	D_memset(m_fire, 0, sizeof(*m_fire));
 	m_fire->start_song = 1;
 
 	m_fire->firePalCols = sizeof(fireRGBs) / 3;
-	m_fire->firePal = Z_Malloc(sizeof(*m_fire->firePal) * m_fire->firePalCols, PU_STATIC, NULL);
+	m_fire->firePal = Z_Malloc(sizeof(*m_fire->firePal) * m_fire->firePalCols, PU_STATIC);
 
-	m_fire->firePix = Z_Malloc(sizeof(*m_fire->firePix) * FIRE_WIDTH * (FIRE_HEIGHT + 1), PU_STATIC, NULL);
+	m_fire->firePix = Z_Malloc(sizeof(*m_fire->firePix) * FIRE_WIDTH * (FIRE_HEIGHT + 1), PU_STATIC);
 	m_fire->firePix += FIRE_WIDTH;
 	D_memset(m_fire->firePix, 0, sizeof(*m_fire->firePix) * FIRE_WIDTH * FIRE_HEIGHT);
 
 	m_fire->rndindex = 0;
-	m_fire->rndtable = Z_Malloc(sizeof(*m_fire->rndtable) * 256, PU_STATIC, NULL);
+	m_fire->rndtable = Z_Malloc(sizeof(*m_fire->rndtable) * 256, PU_STATIC);
 
 	m_fire->titlepic = titlepic;
 	if (titlepic)
