@@ -272,7 +272,6 @@ void R_SegCommands(void)
     int extralight;
     uint32_t clipbounds_[SCREENWIDTH / 2 + 1];
     uint16_t *clipbounds = (uint16_t *)clipbounds_;
-    uint16_t *newclipbounds = vd.segclip;
 
     // initialize the clipbounds array
     R_InitClipBounds(clipbounds_);
@@ -442,12 +441,24 @@ post_draw:
         if(actionbits & (AC_NEWFLOOR|AC_NEWCEILING))
         {
             unsigned w = segl->stop - segl->start + 1;
-            unsigned short *src = newclipbounds - 1, *dst = clipbounds + segl->start;
+            unsigned short *src = segl->clipbounds + segl->start, *dst = clipbounds + segl->start;
 
-            newclipbounds += w;
-            do {
-                *dst++ = *++src;
-            } while (--w > 0);
+            if ((actionbits & (AC_NEWFLOOR|AC_NEWCEILING)) == (AC_NEWFLOOR|AC_NEWCEILING)) {
+                --src;
+                do {
+                    *dst++ = *++src;
+                } while (--w > 0);
+            }
+            else {
+                int8_t *psrc = (int8_t *)src;
+                int8_t *pdst = (int8_t *)dst;
+                if (actionbits & AC_NEWFLOOR) {
+                    psrc++, pdst++;
+                }                 
+                do {
+                    *pdst = *psrc, psrc += 2, pdst += 2;
+                } while (--w > 0);
+            }
         }
     }
 }

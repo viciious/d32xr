@@ -77,7 +77,7 @@ fixed_t *distscale/*[SCREENWIDTH]*/;
 
 VINT *viewangletox/*[FINEANGLES/2]*/;
 
-uint16_t xtoviewangle[SCREENWIDTH+1];
+uint16_t *xtoviewangle/*[SCREENWIDTH+1]*/;
 
 /* */
 /* performance counters */
@@ -660,8 +660,8 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 
 	vd.viswallextras = viswallex_ + 1;
 
-	vd.openings = tempbuf;
-	tempbuf += MAXOPENINGS;
+	// re-use the openings array in VRAM
+	vd.gsortedsprites = (void *)(((intptr_t)vd.visplanes[1].open + 3) & ~3);
 
 	vd.vissprites = (void *)vd.viswalls;
 
@@ -680,8 +680,6 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	/* */
 	vd.vissprite_p = vd.vissprites;
 	vd.lastsprite_p = vd.vissprite_p;
-
-	vd.lastopening = vd.openings;
 
 	vd.vissectors = vissectors_;
 	vd.lastvissector = vd.vissectors;	/* no subsectors visible yet */
@@ -918,12 +916,9 @@ void R_RenderPlayerView(int displayplayer)
 	t_segs = I_GetFRTCounter() - t_segs;
 
 	Mars_ClearCacheLine(&vd.lastsegclip);
-	Mars_ClearCacheLine(&vd.lastopening);
 
 	if (vd.lastsegclip - vd.segclip > MAXOPENINGS)
 		I_Error("lastsegclip > MAXOPENINGS: %d", vd.lastsegclip - vd.segclip);
-	if (vd.lastopening - vd.openings > MAXOPENINGS)
-		I_Error("lastopening > MAXOPENINGS: %d", vd.lastopening - vd.openings);
 	if (vd.lastvissector - vd.vissectors > MAXVISSSEC)
 		I_Error("lastvissector > MAXVISSSEC: %d", vd.lastvissector - vd.vissectors);
 

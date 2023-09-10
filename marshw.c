@@ -115,23 +115,28 @@ char Mars_UploadPalette(const uint8_t* palette)
 {
 	int	i;
 	unsigned short* cram = (unsigned short *)&MARS_CRAM;
-	int16_t br = mars_brightness;
+	int br = mars_brightness;
 
 	if ((MARS_SYS_INTMSK & MARS_SH2_ACCESS_VDP) == 0)
 		return 0;
 
 	for (i = 0; i < 256; i++) {
-		int16_t r = br + *palette++;
-		int16_t g = br + *palette++;
-		int16_t b = br + *palette++;
+		int r = br + *palette++;
+		int g = br + *palette++;
+		int b = br + *palette++;
 
 		if (r < 0) r = 0; else if (r > 255) r = 255;
 		if (g < 0) g = 0; else if (g > 255) g = 255;
 		if (b < 0) b = 0; else if (b > 255) b = 255;
 
-		unsigned short b1 = ((b >> 3) & 0x1f) << 10;
-		unsigned short g1 = ((g >> 3) & 0x1f) << 5;
-		unsigned short r1 = ((r >> 3) & 0x1f) << 0;
+		unsigned b1 = b;
+		unsigned g1 = g;
+		unsigned r1 = r;
+
+		b1 = ((b1 >> 3) & 0x1f) << 10;
+		g1 = ((g1 >> 3) & 0x1f) << 5;
+		r1 = ((r1 >> 3) & 0x1f) << 0;
+
 		cram[i] = r1 | g1 | b1;
 	}
 

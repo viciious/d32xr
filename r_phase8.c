@@ -15,7 +15,7 @@ static int fuzzpos[2];
 static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy) ATTR_DATA_CACHE_ALIGN;
 void R_DrawVisSprite(vissprite_t* vis, unsigned short* spropening, int *fuzzpos, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
 void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreenhalf, int16_t *walls) ATTR_DATA_CACHE_ALIGN;
-static void R_DrawSortedSprites(int *fuzzpos, int* sortedsprites, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
+static void R_DrawSortedSprites(int* sortedsprites, int *fuzzpos, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
 static void R_DrawPSprites(int *fuzzpos, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
 void R_Sprites(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 
@@ -72,8 +72,8 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos,
    for(; x < stopx; x++, xfrac += fracstep)
    {
       column_t *column = (column_t *)((byte *)patch + BIGSHORT(patch->columnofs[xfrac>>FRACBITS]));
-      int topclip      = (spropening[x] >> 8) - 1;
-      int bottomclip   = (spropening[x] & 0xff) - 1 - 1;
+      int topclip      = (spropening[x] >> 8);
+      int bottomclip   = (spropening[x] & 0xff) - 1;
 
       // column loop
       // a post record has four bytes: topdelta length pixelofs*2
@@ -150,14 +150,12 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
    int     r1;         // FP+7
    int     r2;         // r18
    unsigned silhouette; // FP+4
-   byte   *topsil;     // FP+6
-   byte   *bottomsil;  // r21
-   unsigned opening;    // r16
-   unsigned short top;        // r19
-   unsigned short bottom;     // r20
-   unsigned short openmark;
+   uint16_t *sil;     // FP+6
+   uint16_t *opening;
+   int top;        // r19
+   int bottom;     // r20
+   unsigned short openmark = OPENMARK;
    viswall_t *ds;      // r17
-   unsigned short vhplus1 = viewportHeight + 1;
 
    x1  = vis->x1;
    x2  = vis->x2;
@@ -181,12 +179,10 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
 #endif
 
    for(x = x1; x <= x2; x++)
-      spropening[x] = vhplus1 | (1<<8);
-   
+      spropening[x] = viewportHeight;
+
    do
    {
-      int width;
-
       ds = vd.viswalls + *walls++;
 
       silhouette = (ds->actionbits & (AC_TOPSIL | AC_BOTTOMSIL | AC_SOLIDSIL));
@@ -203,60 +199,66 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
 
       r1 = ds->start < x1 ? x1 : ds->start;
       r2 = ds->stop  > x2 ? x2 : ds->stop;
-      width = ds->stop - ds->start + 1;
+      if (r1 > r2)
+         continue;
+
+      sil = ds->clipbounds + r1;
+      opening = spropening + r1;
+      x = r2 - r1 + 1;
 
       silhouette /= AC_TOPSIL;
-      if(silhouette == 4)
-      {
-#ifdef MARS
-         // force GCC into keeping constants in registers as it 
-         // is stupid enough to reload them on each loop iteration
-         __asm volatile("mov %1,%0\n\t" : "=&r" (openmark) : "r"(OPENMARK));
-#endif
-         for (x = r1;  x <= r2; x++)
-            spropening[x] = openmark;
-         continue;
-      }
-
-      topsil = ds->sil;
-      bottomsil = ds->sil + (silhouette & 1 ? width : 0);
-
       if(silhouette == 1)
       {
-         for(x = r1; x <= r2; x++)
+         int8_t *popn = (int8_t *)opening;
+         int8_t *psil = (int8_t *)sil;
+         do
          {
-            opening = spropening[x];
-            if((opening>>8) == 1)
-               spropening[x] = (topsil[x] << 8) | (opening & 0xff);
-         }
+            if(*popn == 0)
+               *popn = *psil;
+            popn += 2, psil += 2;
+         } while (--x);
       }
       else if(silhouette == 2)
       {
-         for(x = r1; x <= r2; x++)
+         int8_t *popn = (int8_t *)opening;
+         int8_t *psil = (int8_t *)sil;
+         int vph = (int8_t)viewportHeight;
+         popn++, psil++;
+         do
          {
-            opening = spropening[x];
-            if((opening & 0xff) == vhplus1)
-               spropening[x] = (((volatile uint16_t)opening >> 8) << 8) | bottomsil[x];
-         }
+            if(*popn == vph)
+               *popn = *psil;
+            popn += 2, psil += 2;
+         } while (--x);
+      }
+      else if (silhouette == 3)
+      {
+         do
+         {
+            uint16_t clip = *sil;
+            top    = *opening;
+            bottom = top & 0xff;
+            top = top & openmark;
+            if(bottom == viewportHeight)
+               bottom = clip & 0xff;
+            if(top == 0)
+               top = clip & openmark;
+            *opening = top | bottom;
+            opening++, sil++;
+         } while (--x);
       }
       else
       {
-         for(x = r1; x <= r2; x++)
-         {
-            top    = spropening[x];
-            bottom = top & 0xff;
-            top >>= 8;
-            if(bottom == vhplus1)
-               bottom = bottomsil[x];
-            if(top == 1)
-               top = topsil[x];
-            spropening[x] = (top << 8) | bottom;
-         }
+         opening += x;
+         do {
+            --opening;
+            *opening = openmark;
+         } while (--x);
       }
    } while (*walls != -1);
 }
 
-static void R_DrawSortedSprites(int *fuzzpos, int* sortedsprites, int sprscreenhalf)
+static void R_DrawSortedSprites(int* sortedsprites, int *fuzzpos, int sprscreenhalf)
 {
    int i;
    int x1, x2;
@@ -317,7 +319,7 @@ static void R_DrawPSprites(int *fuzzpos, int sprscreenhalf)
     unsigned i;
     unsigned short spropening[SCREENWIDTH];
     viswall_t *spr;
-    unsigned vhplus1 = viewportHeight + 1;
+    unsigned vph = viewportHeight;
 
     // draw psprites
     for (spr = vd.lastsprite_p; spr < vd.vissprite_p; spr++)
@@ -332,7 +334,7 @@ static void R_DrawPSprites(int *fuzzpos, int sprscreenhalf)
         // clear out the clipping array across the range of the psprite
         while (i < stopx)
         {
-            spropening[i] = vhplus1 | (1<<8);
+            spropening[i] = vph;
             ++i;
         }
 
@@ -341,16 +343,17 @@ static void R_DrawPSprites(int *fuzzpos, int sprscreenhalf)
 }
 
 #ifdef MARS
-void Mars_Sec_R_DrawSprites(int sprscreenhalf, int *sortedsprites)
+void Mars_Sec_R_DrawSprites(int sprscreenhalf)
 {
     Mars_ClearCacheLine(&vd.vissprites);
     Mars_ClearCacheLine(&vd.lastsprite_p);
     Mars_ClearCacheLine(&vd.vissprite_p);
+    Mars_ClearCacheLine(&vd.gsortedsprites);
 
     // mobj sprites
-    //Mars_ClearCacheLines(sortedsprites, ((lastsprite_p - vissprites + 1) * sizeof(*sortedsprites) + 31) / 16);
+    //Mars_ClearCacheLines(vd.gsortedsprites, ((lastsprite_p - vissprites + 1) * sizeof(*vd.gsortedsprites) + 31) / 16);
 
-    R_DrawSortedSprites(&fuzzpos[1], sortedsprites, -sprscreenhalf);
+    R_DrawSortedSprites(vd.gsortedsprites, &fuzzpos[1], -sprscreenhalf);
 
     R_DrawPSprites(&fuzzpos[1], -sprscreenhalf);
 }
@@ -367,7 +370,6 @@ void R_Sprites(void)
    unsigned midcount;
    viswall_t *spr;
    int *sortedsprites = (void *)vd.vissectors;
-   int *gsortedsprites;
    viswall_t *wc;
    vertex_t *verts;
 
@@ -447,20 +449,18 @@ void R_Sprites(void)
    }
 
 #ifdef MARS
-   // re-use the openings array in VRAM
-	gsortedsprites = (int*)(((intptr_t)vd.segclip + 3) & ~3);
+   Mars_R_SecWait();
    for (i = 0; i < sortedcount+1; i++)
-      gsortedsprites[i] = sortedsprites[i];
+      vd.gsortedsprites[i] = sortedsprites[i];
 #endif
 
 #ifdef MARS
-   Mars_R_BeginDrawSprites(half, gsortedsprites);
-	//Mars_ClearCacheLines(openings, ((lastopening - openings) * sizeof(*openings) + 31) / 16);
+   Mars_R_BeginDrawSprites(half);
 #endif
 
-   R_DrawSortedSprites(&fuzzpos[0], sortedsprites, half);
+   R_DrawSortedSprites(sortedsprites, &fuzzpos[0], half);
 
-   R_DrawPSprites(0, half);
+   R_DrawPSprites(&fuzzpos[0], half);
 
 #ifdef MARS
    Mars_R_EndDrawSprites();

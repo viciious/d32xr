@@ -143,16 +143,16 @@ void R_WallLatePrep(viswall_t* wc, vertex_t *verts)
     }
 #endif
 
-    int rw_x = wc->start;
-    int rw_stopx = wc->stop + 1;
-    int width = (rw_stopx - rw_x + 1) / 2;
+    wc->clipbounds = NULL;
 
-    wc->sil = (byte*)vd.lastopening - rw_x;
-
-    if (wc->actionbits & AC_TOPSIL)
-        vd.lastopening += width;
-    if (wc->actionbits & AC_BOTTOMSIL)
-        vd.lastopening += width;
+    const int start = wc->start;
+    const int stop = wc->stop;
+    const int width = stop - start + 1;
+    if (wc->actionbits & (AC_NEWFLOOR | AC_NEWCEILING | AC_TOPSIL | AC_BOTTOMSIL))
+    {
+        wc->clipbounds = vd.lastsegclip - start;
+        vd.lastsegclip += width;
+    }
 }
 
 //
@@ -168,35 +168,16 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
 
     int x, start = segl->start;
     const int stop = segl->stop;
-    const int width = stop - start + 1;
 
     const fixed_t ceilingheight = segl->ceilingheight;
 
     const int floorandlight = (segl->seglightlevel << 16) | segl->floorpicnum;
     const int ceilandlight = (segl->seglightlevel << 16) | segl->ceilingpicnum;
 
-    byte *topsil, *bottomsil;
-
-    if (actionbits & AC_TOPSIL)
-    {
-        topsil = segl->sil;
-        bottomsil = (actionbits & AC_BOTTOMSIL) ? segl->sil + width : NULL;
-    }
-    else
-    {
-        topsil = NULL;
-        bottomsil = (actionbits & AC_BOTTOMSIL) ? segl->sil : NULL;
-    }
-
     unsigned short *flooropen = (actionbits & AC_ADDFLOOR) ? vd.visplanes[0].open : NULL;
     unsigned short *ceilopen = (actionbits & AC_ADDCEILING) ? vd.visplanes[0].open : NULL;
 
-    unsigned short *newclipbounds = NULL;
-    if (actionbits & (AC_NEWFLOOR | AC_NEWCEILING))
-    {
-        newclipbounds = vd.lastsegclip - start;
-        vd.lastsegclip += width;
-    }
+    unsigned short *newclipbounds = segl->clipbounds;
 
     const int cyvh = (centerY << 16) | viewportHeight;
 
@@ -237,26 +218,20 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
         else if (high < ceilingclipx)
             high = ceilingclipx;
 
-        // bottom sprite clip sil
-        if (bottomsil)
-            bottomsil[x] = low+1;
-
-        // top sprite clip sil
-        if (topsil)
-            topsil[x] = high+1;
+        if (newclipbounds)
+        {
+            newclipbounds[x] = (high << 8) | low;
+        }
 
         int newclip = actionbits & (AC_NEWFLOOR|AC_NEWCEILING);
-        if (newclipbounds)
+        if (newclip)
         {
             if (!(newclip & AC_NEWFLOOR))
                 low = floorclipx;
             if (!(newclip & AC_NEWCEILING))
                 high = ceilingclipx;
-            newclip = (high << 8) | low;
-
             // rewrite clipbounds
-            clipbounds[x] = newclip;
-            newclipbounds[x] = newclip;
+            clipbounds[x] = (high << 8) | low;
         }
 
         //
