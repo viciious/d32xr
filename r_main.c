@@ -434,7 +434,7 @@ void R_SetupTextureCaches(void)
 	if (cachezonesize < flatblocksize)
 		goto nocache;
 	
-	margin = Z_Malloc(zonemargin, PU_LEVEL, 0);
+	margin = Z_Malloc(zonemargin, PU_LEVEL);
 
 	R_InitTexCacheZone(&r_texcache, cachezonesize);
 

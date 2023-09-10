@@ -257,7 +257,7 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 		}
 		else
 		{
-			mobj = Z_Malloc (static_mobj_size, PU_LEVEL, NULL);
+			mobj = Z_Malloc (static_mobj_size, PU_LEVEL);
 		}
 		D_memset (mobj, 0, static_mobj_size);
 	}
@@ -270,7 +270,7 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 		}
 		else
 		{
-			mobj = Z_Malloc (sizeof(*mobj), PU_LEVEL, NULL);
+			mobj = Z_Malloc (sizeof(*mobj), PU_LEVEL);
 		}
 		D_memset (mobj, 0, sizeof (*mobj));
 		mobj->speed = info->speed;
@@ -351,7 +351,7 @@ void P_PreSpawnMobjs(int count, int staticcount)
 {
 	if (count > 0)
 	{
-		mobj_t *mobj = Z_Malloc (sizeof(*mobj)*count, PU_LEVEL, NULL);
+		mobj_t *mobj = Z_Malloc (sizeof(*mobj)*count, PU_LEVEL);
 		for (; count > 0; count--) {
 			P_AddMobjToList(mobj, (void *)&freemobjhead);
 			mobj++;
@@ -360,7 +360,7 @@ void P_PreSpawnMobjs(int count, int staticcount)
 
 	if (staticcount > 0)
 	{
-		uint8_t *mobj = Z_Malloc (static_mobj_size*staticcount, PU_LEVEL, NULL);
+		uint8_t *mobj = Z_Malloc (static_mobj_size*staticcount, PU_LEVEL);
 		for (; staticcount > 0; staticcount--) {
 			P_AddMobjToList((void *)mobj, (void *)&freestaticmobjhead);
 			mobj += static_mobj_size;

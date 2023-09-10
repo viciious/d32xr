@@ -46,7 +46,7 @@ void ST_Init (void)
 {
 	int i, l;
 
-	stbar = Z_Malloc(sizeof(*stbar)*MAXPLAYERS, PU_STATIC, NULL);
+	stbar = Z_Malloc(sizeof(*stbar)*MAXPLAYERS, PU_STATIC);
 
 	l = W_CheckNumForName("STBAR");
 	if (l != -1)

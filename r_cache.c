@@ -54,7 +54,7 @@ void R_InitTexCacheZone(r_texcache_t* c, int zonesize)
 		return;
 	}
 
-	c->zone = Z_Malloc(zonesize, PU_LEVEL, 0);
+	c->zone = Z_Malloc(zonesize, PU_LEVEL);
 	c->zonesize = zonesize;
 	Z_InitZone(c->zone, zonesize);
 }
@@ -168,7 +168,7 @@ void R_AddToTexCache(r_texcache_t* c, int id, int pixels, void **userp)
 
 	trynum = 0;
 retry:
-	entry = Z_Malloc2(c->zone, size, PU_LEVEL, NULL, false);
+	entry = Z_Malloc2(c->zone, size, PU_LEVEL, false);
 	if (!entry)
 	{
 		if (trynum != 0)

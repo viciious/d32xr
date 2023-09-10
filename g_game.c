@@ -473,8 +473,8 @@ void G_Init(void)
 	gamemapcount = mapcount;
 	if (mapcount > 0)
 	{
-		gamemapnumbers = Z_Malloc(sizeof(*gamemapnumbers) * mapcount, PU_STATIC, 0);
-		gamemaplumps = Z_Malloc(sizeof(*gamemaplumps) * mapcount, PU_STATIC, 0);
+		gamemapnumbers = Z_Malloc(sizeof(*gamemapnumbers) * mapcount, PU_STATIC);
+		gamemaplumps = Z_Malloc(sizeof(*gamemaplumps) * mapcount, PU_STATIC);
 		for (i = 0; i < mapcount; i++)
 		{
 			gamemapnumbers[i] = tempmapnums[i*2];
@@ -719,7 +719,7 @@ int G_PlayDemoPtr (unsigned *demo)
 
 void G_RecordDemo (void)
 {
-	demo_p = demobuffer = Z_Malloc (0x8000, PU_STATIC, NULL);
+	demo_p = demobuffer = Z_Malloc (0x8000, PU_STATIC);
 	
 	*demo_p++ = startskill;
 	*demo_p++ = startmap;

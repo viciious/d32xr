@@ -62,7 +62,7 @@ void R_InitTextures (void)
 	start = W_CheckNumForName("T_START");
 	end = W_CheckNumForName("T_END");
 
-	textures = Z_Malloc (numtextures * sizeof(*textures), PU_STATIC, 0);
+	textures = Z_Malloc (numtextures * sizeof(*textures), PU_STATIC);
 	for (i = 0; i < numtextures; i++, directory++)
 	{
 		offset = LITTLELONG(*directory);
@@ -152,7 +152,7 @@ void R_InitTextures (void)
 /* */
 /* translation table for global animation */
 /* */
-	texturetranslation = Z_Malloc ((numtextures+1)*sizeof(*texturetranslation), PU_STATIC, 0);
+	texturetranslation = Z_Malloc ((numtextures+1)*sizeof(*texturetranslation), PU_STATIC);
 	for (i=0 ; i<numtextures ; i++)
 		texturetranslation[i] = i;	
 }
@@ -175,11 +175,11 @@ void R_InitFlats (void)
 	numflats = lastflat - firstflat + 1;
 	
 /* translation table for global animation */
-	flattranslation = Z_Malloc ((numflats+1)*sizeof(*flattranslation), PU_STATIC, 0);
+	flattranslation = Z_Malloc ((numflats+1)*sizeof(*flattranslation), PU_STATIC);
 	for (i=0 ; i<numflats ; i++)
 		flattranslation[i] = i;
 
-	flatpixels = Z_Malloc(numflats * sizeof(*flatpixels), PU_STATIC, 0);
+	flatpixels = Z_Malloc(numflats * sizeof(*flatpixels), PU_STATIC);
 
 	// detect mip-maps
 	if (!texmips)
@@ -671,9 +671,9 @@ void R_InitSpriteDefs(const char** namelist)
 		totalframes += maxframe;
 	}
 
-	spriteframes = Z_Malloc(totalframes * sizeof(spriteframe_t), PU_STATIC, NULL);
+	spriteframes = Z_Malloc(totalframes * sizeof(spriteframe_t), PU_STATIC);
 	sprtemp = (void*)tempbuf;
-	lumps = Z_Malloc(totallumps * sizeof(*lumps), PU_STATIC, NULL);
+	lumps = Z_Malloc(totallumps * sizeof(*lumps), PU_STATIC);
 	spritelumps = lumps;
 
 	for (i = 0; i < totalframes; i++)

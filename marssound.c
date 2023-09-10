@@ -172,7 +172,7 @@ void S_Init(void)
 
 	if (num_music > 0)
 	{
-		vgm_tracks = Z_Malloc(sizeof(*vgm_tracks) * num_music, PU_STATIC, 0);
+		vgm_tracks = Z_Malloc(sizeof(*vgm_tracks) * num_music, PU_STATIC);
 		for (i = 0; i < num_music; i++) {
 			vgm_tracks[i] = tmp_tracks[i];
 		}
