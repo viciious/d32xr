@@ -173,11 +173,10 @@ static inline void Mars_P_EndCheckSights(void)
 	while (MARS_SYS_COMM4 != 0);
 }
 
-static inline void Mars_melt_BeginWipe(short *yy)
+static inline void Mars_melt_BeginWipe(void)
 {
 	while (MARS_SYS_COMM4 != 0) {};
 	MARS_SYS_COMM6 = 0;
-	*(volatile uintptr_t *)&MARS_SYS_COMM8 = (uintptr_t)yy;
 	MARS_SYS_COMM4 = MARS_SECCMD_MELT_DO_WIPE;
 }
 

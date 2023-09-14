@@ -1,6 +1,8 @@
 #include "doomdef.h"
 #include "mars.h"
 
+static short *melt_yy;
+
 //
 //                       SCREEN WIPE PACKAGE
 //
@@ -56,9 +58,10 @@ static int wipe_getNextMeltCol(void)
 }
 #endif
 
-static void wipe_meltBottomUp(short *yy)
+static void wipe_meltBottomUp(void)
 {
     int i;
+    short   *yy = melt_yy;
     int     width = WIPEWIDTH;
     int     height = I_FrameBufferHeight();
     short   *fb = (short *)I_FrameBuffer();
@@ -176,11 +179,13 @@ static int wipe_doMelt(short *y, short *yy, int ticks, int step)
 
     UpdateBuffer();
 
+    melt_yy = yy;
+
 #ifdef MARS
-    Mars_melt_BeginWipe(yy);
+    Mars_melt_BeginWipe();
 #endif
 
-    wipe_meltBottomUp(yy);
+    wipe_meltBottomUp();
 
 #ifdef MARS
     Mars_melt_EndWipe();
@@ -192,12 +197,9 @@ static int wipe_doMelt(short *y, short *yy, int ticks, int step)
 #ifdef MARS
 void Mars_Sec_wipe_doMelt(void)
 {
-    short   *yy;
-
-    yy = (short*)(*(volatile uintptr_t *)&MARS_SYS_COMM8);
     Mars_ClearCache();
 
-    wipe_meltBottomUp(yy);
+    wipe_meltBottomUp();
 }
 #endif
 
