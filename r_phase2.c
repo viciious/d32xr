@@ -284,18 +284,16 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
 
 void Mars_Sec_R_WallPrep(void)
 {
-    int cnt;
     viswall_t *segl;
     viswallextra_t *seglex;
-    viswall_t *first, *verylast;
+    viswall_t *first, *last, *verylast;
     uint32_t clipbounds_[SCREENWIDTH/2+1];
     uint16_t *clipbounds = (uint16_t *)clipbounds_;
     vertex_t *verts;
 
     R_InitClipBounds(clipbounds_);
 
-    cnt = 0;
-    first = vd.viswalls;
+    first = last = vd.viswalls;
     verylast = NULL;
     seglex = vd.viswallextras;
     verts = W_GetLumpData(gamemaplump+ML_VERTEXES);
@@ -303,17 +301,16 @@ void Mars_Sec_R_WallPrep(void)
     for (segl = first; segl != verylast; )
     {
         unsigned nextsegs;
-        viswall_t* last;
 
         nextsegs = MARS_SYS_COMM6 >> 8;
 
         // check if master CPU finished exec'ing R_BSP()
         if (nextsegs == 0xff)
         {
+            MARS_SYS_COMM6 = 0xff00 | (last - first);
             Mars_ClearCacheLine(&vd.lastwallcmd);
             verylast = vd.lastwallcmd;
             last = verylast;
-            MARS_SYS_COMM6 = 0xff00 | cnt;
         }
         else
         {
@@ -330,9 +327,8 @@ void Mars_Sec_R_WallPrep(void)
             R_SegLoop(segl, clipbounds, seglex->floorheight, seglex->floornewheight, seglex->ceilnewheight);
 
             seglex++;
-            cnt++;
             if (last == verylast)
-                MARS_SYS_COMM6 = 0xff00 | cnt;
+                MARS_SYS_COMM6++;
         }
     }
 }
