@@ -293,7 +293,7 @@ void R_SegCommands(void)
         viswall_t* segl = vd.viswalls + i;
 
 #ifdef MARS
-        while (MARS_SYS_COMM8 <= i)
+        while ((MARS_SYS_COMM6 & 0xff) <= i)
             continue;
 #endif
         if (segl->start > segl->stop)
