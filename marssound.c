@@ -97,6 +97,10 @@ static void S_SpatializeAll(void) ATTR_DATA_CACHE_ALIGN;
 static void S_Update(int16_t* buffer) ATTR_DATA_CACHE_ALIGN;
 static void S_UpdatePCM(void) ATTR_DATA_CACHE_ALIGN;
 
+static void S_Sec_DMA1Handler(void);
+static void S_Pri_CmdHandler(void);
+static void S_Sec_DMA1Handler(void);
+
 /*
 ==================
 =
@@ -179,6 +183,8 @@ void S_Init(void)
 	}
 
 	Mars_RB_ResetAll(&soundcmds);
+
+	Mars_SetPriCmdCallback(&S_Pri_CmdHandler);
 
 	Mars_InitSoundDMA(1);
 
@@ -919,11 +925,8 @@ static void S_Update(int16_t* buffer)
 	}
 }
 
-void sec_dma1_handler(void)
+static void S_Sec_DMA1Handler(void)
 {
-	SH2_DMA_CHCR1; // read TE
-	SH2_DMA_CHCR1 = 0; // clear TE
-
 	Mars_ClearCacheLine(&sfxdriver);
 
 	if (snd_nopaintcount > 2 && S_USE_MEGACD_DRV())
@@ -1139,27 +1142,11 @@ void Mars_Sec_ReadSoundCmds(void)
 	}
 }
 
-void Mars_Sec_StartSoundMixer(void)
-{
-	snd_nopaintcount = 0;
-	snd_init = 1;
-
-	S_ClearPCM();
-
-	// fill first buffer
-	S_Update(snd_buffer[snd_bufidx]);
-
-	// start DMA
-	sec_dma1_handler();
-}
-
 void Mars_Sec_InitSoundDMA(int initfull)
 {
 	uint16_t sample, ix;
 
 	Mars_ClearCache();
-
-	Mars_RB_ResetRead(&soundcmds);
 
 	if (initfull)
 	{
@@ -1194,12 +1181,25 @@ void Mars_Sec_InitSoundDMA(int initfull)
 		}
 	}
 
+	Mars_RB_ResetRead(&soundcmds);
+
+	Mars_SetSecDMA1Callback(&S_Sec_DMA1Handler);
+
 	snd_bufidx = 0;
 
-	Mars_Sec_StartSoundMixer();
+	snd_nopaintcount = 0;
+	snd_init = 1;
+
+	S_ClearPCM();
+
+	// fill first buffer
+	S_Update(snd_buffer[snd_bufidx]);
+
+	// start DMA
+	S_Sec_DMA1Handler();
 }
 
-void pri_cmd_handler(void)
+static void S_Pri_CmdHandler(void)
 {
 	volatile int *pcm_cachethru = (volatile int *)((intptr_t)pcm_data | 0x20000000);
 	unsigned int offs, len, freq;
@@ -1239,19 +1239,10 @@ void pri_cmd_handler(void)
 		pcm_cachethru[3] = 1;
 	}
 
-	// done
-	MARS_SYS_COMM0 = 0xA55A;					/* handshake with code */
-	while (MARS_SYS_COMM0 == 0xA55A);
+	Mars_ClearCacheLine(&snd_init);
 
 	if (!snd_init)
 	{
-		Mars_Sec_StartSoundMixer();
+		Mars_InitSoundDMA(0);
 	}
-}
-
-void sec_cmd_handler(void)
-{
-	// done
-	MARS_SYS_COMM4 = 0xA55A;					/* handshake with code */
-	while (MARS_SYS_COMM4 == 0xA55A);
 }

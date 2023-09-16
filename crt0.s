@@ -637,6 +637,14 @@ pri_cmd_irq:
         jsr     @r0
         nop
 
+        mov.w   pci_cmd_resp,r0
+        mov.l   pci_cmd_comm0,r1
+        mov.w   r0,@r1
+4:
+        mov.w   @r1,r2
+        cmp/eq  r2,r0
+        bt      4b                      /* handshake with m68k */
+
         ! restore registers
         lds.l   @r15+,macl
         lds.l   @r15+,mach
@@ -647,7 +655,6 @@ pri_cmd_irq:
         mov.l   @r15+,r3
         lds.l   @r15+,pr
 
-        mov.l   pci_cmd_comm0,r1
         mov.l   @r15+,r0
         mov.w   r0,@(2,r1)              /* restore COMM2 reg */
         mov.l   @r15+,r0
@@ -1048,6 +1055,14 @@ sec_cmd_irq:
         jsr     @r0
         nop
 
+        mov.w   sci_cmd_resp,r0
+        mov.l   sci_cmd_comm4,r1
+        mov.w   r0,@r1
+4:
+        mov.w   @r1,r2
+        cmp/eq  r2,r0
+        bt      4b                      /* handshake with m68k */
+
         ! restore registers
         lds.l   @r15+,macl
         lds.l   @r15+,mach
@@ -1058,7 +1073,6 @@ sec_cmd_irq:
         mov.l   @r15+,r3
         lds.l   @r15+,pr
 
-        mov.l   sci_cmd_comm4,r1
         mov.l   @r15+,r0
         mov.w   r0,@r1                  /* restore COMM4 reg */
 

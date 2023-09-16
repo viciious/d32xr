@@ -128,8 +128,6 @@ void Mars_DebugEnd(void);
 
 void Mars_SetBankPage(int bank, int page) MARS_ATTR_DATA_CACHE_ALIGN;
 void Mars_SetBankPageSec(int bank, int page) MARS_ATTR_DATA_CACHE_ALIGN;
-
-void Mars_DetectInputDevices(void) MARS_ATTR_DATA_CACHE_ALIGN;
 int Mars_ReadController(int port);
 
 int Mars_ROMSize(void);
@@ -150,6 +148,10 @@ void Mars_MCDClearSfx(void);
 void Mars_MCDUpdateSfx(uint8_t src_id, uint8_t pan, uint8_t vol);
 void Mars_MCDStopSfx(uint8_t src_id);
 void Mars_MCDFlushSfx(void);
+
+void Mars_SetPriCmdCallback(void (*cb)(void));
+void Mars_SetSecCmdCallback(void (*cb)(void));
+void Mars_SetSecDMA1Callback(void (*cb)(void));
 
 enum {
 	DEBUG_FPSCOUNT,

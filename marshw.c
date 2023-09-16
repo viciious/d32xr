@@ -51,7 +51,16 @@ const int PAL_CLOCK_SPEED = 22801467; // HZ
 
 static volatile int16_t mars_brightness = 0;
 
-void pri_vbi_handler(void) MARS_ATTR_DATA_CACHE_ALIGN;
+void sec_dma1_handler(void) MARS_ATTR_DATA_CACHE_ALIGN;
+void pri_cmd_handler(void) MARS_ATTR_DATA_CACHE_ALIGN;
+void sec_cmd_handler(void) MARS_ATTR_DATA_CACHE_ALIGN;
+
+static void intr_handler_stub(void) MARS_ATTR_DATA_CACHE_ALIGN;
+static void intr_handler_stub(void) {}
+
+static void (*pri_cmd_cb)(void) = &intr_handler_stub;
+static void (*sci_cmd_cb)(void) = &intr_handler_stub;
+static void (*sci_dma1_cb)(void) = &intr_handler_stub;
 
 void Mars_WaitFrameBuffersFlip(void)
 {
@@ -251,9 +260,6 @@ void Mars_Init(void)
 
 	MARS_SYS_COMM4 = 0;
 
-	/* detect input devices */
-	Mars_DetectInputDevices();
-
 	Mars_UpdateCD();
 
 	if (mars_cd_ok & 0x1)
@@ -269,19 +275,6 @@ uint16_t* Mars_FrameBufferLines(void)
 	if (mars_requested_lines == -240)
 		lines += (240 - 224) / 2;
 	return lines;
-}
-
-void pri_vbi_handler(void)
-{
-	mars_vblank_count++;
-
-	if (mars_newpalette)
-	{
-		if (Mars_UploadPalette(mars_newpalette))
-			mars_newpalette = NULL;
-	}
-
-	Mars_DetectInputDevices();
 }
 
 void Mars_ReadSRAM(uint8_t * buffer, int offset, int len)
@@ -640,7 +633,7 @@ int Mars_ROMSize(void)
 void Mars_DetectInputDevices(void)
 {
 	unsigned i;
-	volatile uint16_t *addr = (volatile uint16_t *)&MARS_SYS_COMM12;
+	unsigned ctrl_wait = 0xFF00;
 
 	mars_mouseport = -1;
 	for (i = 0; i < MARS_MAX_CONTROLLERS; i++)
@@ -648,13 +641,15 @@ void Mars_DetectInputDevices(void)
 
 	for (i = 0; i < MARS_MAX_CONTROLLERS; i++)
 	{
-		int val = *addr++;
+		/* wait on COMM0 */
+		while (MARS_SYS_COMM0 != ctrl_wait);
+
+		int val = MARS_SYS_COMM2;
 		if (val == 0xF000)
 		{
 			mars_controlval[i] = 0;
-			continue;	// nothing here
 		}
-		if (val == 0xF001)
+		else if (val == 0xF001)
 		{
 			mars_mouseport = i;
 			mars_controlval[i] = 0;
@@ -664,6 +659,9 @@ void Mars_DetectInputDevices(void)
 			mars_gamepadport[i] = i;
 			mars_controlval[i] |= val;
 		}
+
+		MARS_SYS_COMM0 = ++ctrl_wait;
+		++ctrl_wait;
 	}
 
 	/* swap controller 1 and 2 around if the former isn't present */
@@ -720,4 +718,58 @@ void Mars_SwapWordColumnWithMDVRAM(int c)
 void Mars_Finish(void)
 {
 	while (MARS_SYS_COMM0 != 0);
+}
+
+void pri_vbi_handler(void)
+{
+	mars_vblank_count++;
+
+	if (mars_newpalette)
+	{
+		if (Mars_UploadPalette(mars_newpalette))
+			mars_newpalette = NULL;
+	}
+}
+
+void Mars_SetPriCmdCallback(void (*cb)(void))
+{
+	sci_cmd_cb = cb;
+}
+
+void Mars_SetSecCmdCallback(void (*cb)(void))
+{
+	pri_cmd_cb = cb;
+}
+
+void Mars_SetSecDMA1Callback(void (*cb)(void))
+{
+	sci_dma1_cb = cb;
+}
+
+/* ======================== INTERRUPT HANDLERS ======================== */
+
+void pri_cmd_handler(void)
+{
+	switch (MARS_SYS_COMM0)
+	{
+		case 0xFF00:
+			Mars_DetectInputDevices();
+			break;
+		default:
+			pri_cmd_cb();
+			break;
+	}
+}
+
+void sec_cmd_handler(void)
+{
+	sci_cmd_cb();
+}
+
+void sec_dma1_handler(void)
+{
+	SH2_DMA_CHCR1; // read TE
+	SH2_DMA_CHCR1 = 0; // clear TE
+
+	sci_dma1_cb();
 }
