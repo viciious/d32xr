@@ -10,7 +10,7 @@ LIBPATH = -L$(ROOTDIR)/m68k-elf/lib -L$(ROOTDIR)/m68k-elf/lib/gcc/m68k-elf/12.1.
 INCPATH = -I$. -I$(ROOTDIR)/m68k-elf/include -I$(ROOTDIR)/m68k-elf/m68k-elf/include -I../liblzss
 
 HWCCFLAGS = -m68000 -Wall -O1 -c -fomit-frame-pointer -fno-lto
-CCFLAGS = -m68000 -Wall -Os -c -fomit-frame-pointer -fno-lto -DUSE_SCD_IN_RAM
+CCFLAGS = -m68000 -Wall -Os -c -fomit-frame-pointer -flto -DUSE_SCD_IN_RAM
 ASFLAGS = -m68000 --register-prefix-optional
 LINKFLAGS = -T $(LDSCRIPTSDIR)/mars-md.ld -Wl,-Map=output.map -nostdlib -flto
 
