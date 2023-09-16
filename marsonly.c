@@ -182,21 +182,22 @@ void I_Print8(int x, int y, const char* string)
 
 		if (ckey)
 		{
-			ckey = 0;
-			if (c != '^')
+			color = (color<<4)|hextoi(c);
+			ckey--;
+			if (!ckey)
 			{
-				color = hextoi(c);
 				colortbl[1] = color;
 				colortbl[2] = color << 8;
 				colortbl[3] = (color << 8) | color;
-				continue;
 			}
+			continue;
 		}
 		else
 		{
 			if (c == '^')
 			{
-				ckey = 1;
+				color = 0;
+				ckey = 2;
 				continue;
 			}
 		}
