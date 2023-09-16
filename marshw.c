@@ -238,6 +238,8 @@ void Mars_InitVideo(int lines)
 
 		Mars_FlipFrameBuffers(1);
 	}
+
+	Mars_SetMDColor(1, 0);
 }
 
 void Mars_Init(void)
@@ -249,16 +251,11 @@ void Mars_Init(void)
 		mars_gamepadport[i] = -1;
 	mars_mouseport = -1;
 
-	Mars_InitVideo(224);
-	Mars_SetMDColor(1, 0);
-
 	SH2_WDT_WTCSR_TCNT = 0xA518; /* WDT TCSR = clr OVF, IT mode, timer off, clksel = Fs/2 */
 
 	/* init hires timer system */
 	SH2_WDT_VCR = (65<<8) | (SH2_WDT_VCR & 0x00FF); // set exception vector for WDT
 	SH2_INT_IPRA = (SH2_INT_IPRA & 0xFF0F) | 0x0020; // set WDT INT to priority 2
-
-	MARS_SYS_COMM4 = 0;
 
 	Mars_UpdateCD();
 
