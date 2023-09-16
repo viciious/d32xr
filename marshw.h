@@ -122,10 +122,6 @@ void Mars_MDPutChar(char chr);
 void Mars_ClearNTA(void);
 void Mars_MDPutString(char *str);
 
-void Mars_DebugStart(void);
-void Mars_DebugQueue(int id, short val);
-void Mars_DebugEnd(void);
-
 void Mars_SetBankPage(int bank, int page) MARS_ATTR_DATA_CACHE_ALIGN;
 void Mars_SetBankPageSec(int bank, int page) MARS_ATTR_DATA_CACHE_ALIGN;
 int Mars_ReadController(int port);

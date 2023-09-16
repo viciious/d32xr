@@ -586,25 +586,6 @@ void Mars_MDPutString(char *str)
 		Mars_MDPutChar(*str++);
 }
 
-void Mars_DebugStart(void)
-{
-	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM0 = 0x0F00;			/* start debug queue */
-}
-
-void Mars_DebugQueue(int id, short val)
-{
-	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM2 = val;
-	MARS_SYS_COMM0 = 0x1000 | id;		/* queue debug entry */
-}
-
-void Mars_DebugEnd(void)
-{
-	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM0 = 0x1100;			/* end debug queue and display */
-}
-
 void Mars_SetBankPage(int bank, int page)
 {
 	while (MARS_SYS_COMM0);
