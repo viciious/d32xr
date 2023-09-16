@@ -623,6 +623,7 @@ static void R_RenderBSPNode(rbspWork_t *rbsp, int bspnum)
 {
    node_t *bsp;
    int     side;
+   fixed_t bbox[4];
 
 check:
 #ifdef MARS
@@ -643,9 +644,34 @@ check:
    // recursively render front space
    R_RenderBSPNode(rbsp, bsp->children[side]);
 
+   side = side^1;
+
+   if (debugmode == DEBUGMODE_NOTEXCACHE)
+   {
+      while (MARS_SYS_COMM0);
+      MARS_SYS_COMM2 = bspnum;
+      MARS_SYS_COMM0 = 0x2500|side;
+      while (MARS_SYS_COMM0);
+
+      int16_t *b = (int16_t *)&MARS_SYS_COMM8;
+      bbox[0] = b[0] << 16;
+      bbox[1] = b[1] << 16;
+      bbox[2] = b[2] << 16;
+      bbox[3] = b[3] << 16;
+
+      //I_Error("%d %d %d %d", bspnum, side, b[0], bbox[0] >> 16);
+   }
+   else
+   {
+      bbox[0] = bsp->bbox[side][0];
+      bbox[1] = bsp->bbox[side][1];
+      bbox[2] = bsp->bbox[side][2];
+      bbox[3] = bsp->bbox[side][3];
+   }
+
    // possibly divide back space
-   if(R_CheckBBox(rbsp, bsp->bbox[side^1])) {
-      bspnum = bsp->children[side^1];
+   if(R_CheckBBox(rbsp, bbox)) {
+      bspnum = bsp->children[side];
       goto check;
    }
 }
