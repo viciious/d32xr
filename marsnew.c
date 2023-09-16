@@ -703,15 +703,14 @@ void I_ClearFrameBuffer (void)
 void I_DebugScreen(void)
 {
 	int i;
-
-	if (!debugscreenupdate)
-		return;
+	int x = 200;
+	int line = 5;
+	static char buf[10][16];
 
 	if (debugmode == DEBUGMODE_FPSCOUNT)
 	{
-		Mars_DebugStart();
-		Mars_DebugQueue(DEBUG_FPSCOUNT, fpscount);
-		Mars_DebugEnd();
+		D_snprintf(buf[0], sizeof(buf[0]), "fps:%2d", fpscount);
+		I_Print8(x, line++, buf[0]);
 	}
 	else if (debugmode > DEBUGMODE_FPSCOUNT)
 	{
@@ -735,30 +734,25 @@ void I_DebugScreen(void)
 		t_ref_sprites_avg >>= 2;
 		t_ref_total_avg >>= 2;
 
-		Mars_DebugStart();
+		if (debugscreenupdate)
+		{
+			D_snprintf(buf[0], sizeof(buf[0]), "fps:%2d", fpscount);
+			D_snprintf(buf[1], sizeof(buf[0]), "tcs:%d", lasttics);
+			D_snprintf(buf[2], sizeof(buf[0]), "g:%2d", Mars_FRTCounter2Msec(tictics));
+			D_snprintf(buf[3], sizeof(buf[0]), "b:%2d", Mars_FRTCounter2Msec(t_ref_bsp_avg));
+			D_snprintf(buf[4], sizeof(buf[0]), "w:%2d %2d", Mars_FRTCounter2Msec(t_ref_segs_avg), vd.lastwallcmd - vd.viswalls);
+			D_snprintf(buf[5], sizeof(buf[0]), "p:%2d %2d", Mars_FRTCounter2Msec(t_ref_planes_avg), vd.lastvisplane - vd.visplanes - 1);
+			D_snprintf(buf[6], sizeof(buf[0]), "s:%2d %2d", Mars_FRTCounter2Msec(t_ref_sprites_avg), vd.vissprite_p - vd.vissprites);
+			D_snprintf(buf[7], sizeof(buf[0]), "r:%2d", Mars_FRTCounter2Msec(t_ref_total_avg));
+			D_snprintf(buf[8], sizeof(buf[0]), "d:%2d", Mars_FRTCounter2Msec(drawtics));
+			D_snprintf(buf[9], sizeof(buf[0]), "t:%2d", Mars_FRTCounter2Msec(I_GetFRTCounter() - ticstart));
+		}
 
-		Mars_DebugQueue(DEBUG_FPSCOUNT, fpscount);
-		Mars_DebugQueue(DEBUG_LASTTICS, lasttics);
-		Mars_DebugQueue(DEBUG_GAMEMSEC, Mars_FRTCounter2Msec(tictics));
-
-		Mars_DebugQueue(DEBUG_BSPMSEC, Mars_FRTCounter2Msec(t_ref_bsp_avg));
-
-		Mars_DebugQueue(DEBUG_SEGSMSEC, Mars_FRTCounter2Msec(t_ref_segs_avg));
-		Mars_DebugQueue(DEBUG_SEGSCOUNT, vd.lastwallcmd - vd.viswalls);
-
-		Mars_DebugQueue(DEBUG_PLANESMSEC, Mars_FRTCounter2Msec(t_ref_planes_avg));
-		Mars_DebugQueue(DEBUG_PLANESCOUNT, vd.lastvisplane - vd.visplanes - 1);
-
-		Mars_DebugQueue(DEBUG_SPRITESMSEC, Mars_FRTCounter2Msec(t_ref_sprites_avg));
-		Mars_DebugQueue(DEBUG_SPRITESCOUNT, vd.vissprite_p - vd.vissprites);
-
-		Mars_DebugQueue(DEBUG_REFMSEC, Mars_FRTCounter2Msec(t_ref_total_avg));
-
-		Mars_DebugQueue(DEBUG_DRAWMSEC, Mars_FRTCounter2Msec(drawtics));
-
-		Mars_DebugQueue(DEBUG_TOTALMSEC, Mars_FRTCounter2Msec(I_GetFRTCounter() - ticstart));
-
-		Mars_DebugEnd();
+        I_Print8(x, line++, buf[0]);
+        I_Print8(x, line++, buf[1]);
+        line++;
+		for (i = 2; i < 10; i++)
+	        I_Print8(x, line++, buf[i]);
 	}
 
 	debugscreenupdate = false;
