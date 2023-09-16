@@ -147,7 +147,7 @@ int I_Print8Len(const char* string)
 	return len;
 }
 
-static int hextoi(char c)
+static int hextoi(int c)
 {
 	if (c >= '0' && c <= '9') return c - '0';
 	else if (c >= 'a' && c <= 'f') return c - 'a' + 10;
@@ -160,55 +160,65 @@ void I_Print8(int x, int y, const char* string)
 	int c;
 	int ckey = 0;
 	int color = COLOR_WHITE;
-	const byte* source;
-	byte *dest;
+	int16_t colortbl[4];
+	const uint8_t* source;
+	int16_t *dest;
 
 	if (y > (224-16) / 8)
 		return;
 
-	dest = (byte *)(I_FrameBuffer() + 320) + (y * 8) * 320 + x;
+	colortbl[0] = 0;
+	colortbl[1] = color;
+	colortbl[2] = color << 8;
+	colortbl[3] = (color << 8) | color;
+
+	dest = (int16_t *)(I_OverwriteBuffer() + 320 + (y * 8) * 160 + x/2);
 	while ((c = *string++) && x < 320-8)
 	{
-		int i, b;
-		byte * d;
+		int i;
+		int16_t * d;
 
 		if (ckey)
 		{
-			color = (color<<4)|(hextoi(c));
-			ckey--;
-			continue;
+			ckey = 0;
+			if (c != '^')
+			{
+				color = hextoi(c);
+				colortbl[1] = color;
+				colortbl[2] = color << 8;
+				colortbl[3] = (color << 8) | color;
+				continue;
+			}
 		}
-
-		if (c == '^')
+		else
 		{
-			color = 0;
-			ckey = 2;
-			continue;
+			if (c == '^')
+			{
+				ckey = 1;
+				continue;
+			}
 		}
 
 		if (c < 32 || c >= 128)
 		{
-			dest += 8;
+			dest += 4;
 			++x;
 			continue;
 		}
 
-		source = font8 + ((c - 32) << 3);
-
+		source = (uint8_t *)font8 + ((unsigned)(c - 32) << 3);
 		d = dest;
 		for (i = 0; i < 7; i++)
 		{
-			byte s = *source++;
-			for (b = 0; b < 8; b++)
-			{
-				if (s & (1 << (7 - b)))
-					*(d + b) = color;
-
-			}
-			d += 320;
+			uint8_t s = *source++;
+			d[3] = colortbl[s & 3], s >>= 2;
+			d[2] = colortbl[s & 3], s >>= 2;
+			d[1] = colortbl[s & 3], s >>= 2;
+			d[0] = colortbl[s & 3], s >>= 2;
+			d += 160;
 		}
 
-		dest+=8;
+		dest+=4;
 		++x;
 	}
 }
