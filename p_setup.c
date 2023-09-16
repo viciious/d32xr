@@ -224,6 +224,29 @@ void P_LoadNodes (int lump)
 #ifdef MARS
 	numnodes = W_LumpLength (lump) / sizeof(node_t);
 	nodes = (node_t *)W_GetLumpData(lump);
+
+	/* transfer nodes to the MD */
+	{
+		int i, j, k;
+		struct {
+			int16_t b[2][4];
+		} *b = (void *)I_FrameBuffer(), *ob = b;
+
+		for (i = 0; i < numnodes; i++) {
+			for (j=0 ; j<2 ; j++) {
+				for (k=0 ; k<4 ; k++) {
+					b->b[j][k] = nodes[i].bbox[j][k]>>16;
+				}
+			}
+			b++;
+		}
+
+//I_Error("%d", ob[322].b[1][0]);
+		while (MARS_SYS_COMM0);
+		MARS_SYS_COMM2 = numnodes;
+		MARS_SYS_COMM0 = 0x2400;
+		while (MARS_SYS_COMM0);
+	}
 #else
 	byte		*data;
 	int			i,j,k;

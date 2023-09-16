@@ -388,6 +388,7 @@ main_loop_bump_fm:
         bsr     bump_fm
 
 main_loop_handle_req:
+        moveq   #0,d0
         move.w  0xA15120,d0         /* get COMM0 */
         bne.b   handle_req
 
@@ -467,6 +468,8 @@ no_cmd:
         dc.w    update_sfx - prireqtbl
         dc.w    stop_sfx - prireqtbl
         dc.w    flush_sfx - prireqtbl
+        dc.w    test_handle - prireqtbl
+        dc.w    get_bbox - prireqtbl
 
 | process request from Secondary SH2
 handle_sec_req:
@@ -2005,6 +2008,61 @@ flush_sfx:
         move.b  #1,need_bump_fm
         bra     main_loop
 
+test_handle:
+        move.w  0xA15100,d1
+        eor.w   #0x8000,d1
+        move.w  d1,0xA15100         /* unset FM - disallow SH2 access to FB */
+
+        moveq   #0,d1
+        move.w  0xA15122,d1         /* number of nodes */
+        add.w   d1,d1               /* x2 */
+        add.w   d1,d1               /* x4 */
+        add.w   d1,d1               /* x8 */
+        add.w   d1,d1               /* x16 */
+
+        lea     0x840200,a2         /* frame buffer */
+        lea     nodes_store,a1
+        
+        move.l  d1,-(sp)            /* length */
+        move.l  a2,-(sp)            /* framebuffer */
+        move.l  a1,-(sp)            /* destination */
+        
+        jsr     memcpy
+
+        lea     12(sp),sp            /* clear the stack */
+
+        move.w  0xA15100,d0
+        or.w    #0x8000,d0
+        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+get_bbox:
+        moveq   #0,d0
+        move.b  0xA15121,d0         /* side */
+        add.w   d0,d0               /* x2 */
+        add.w   d0,d0               /* x4 */
+        add.w   d0,d0               /* x8 */
+
+        move.w  0xA15122,d1         /* node id */
+        add.w   d1,d1               /* x2 */
+        add.w   d1,d1               /* x4 */
+        add.w   d1,d1               /* x8 */
+        add.w   d1,d1               /* x16 */
+        add.w   d0,d1
+
+        lea     nodes_store,a1
+        lea     0(a1,d1.w),a1
+
+        move.w  0(a1), 0xA15128     /* COMM8 */
+        move.w  2(a1), 0xA1512A     /* COMM10 */
+        move.w  4(a1), 0xA1512C     /* COMM12 */
+        move.w  6(a1), 0xA1512E     /* COMM14 */
+
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
 | set standard mapper registers to default mapping
 
 reset_banks:
@@ -2786,3 +2844,7 @@ FMReset:
         .align  2
 col_store:
         .space  21*224*2        /* 140 double-columns in vram, 20 in wram, 1 in wram for swap */
+
+nodes_store:
+        .global nodes_store
+        .space  500*2*4*2       /* 2 16.0 bounding boxes per node, 500 nodes max */
