@@ -424,9 +424,9 @@ no_cmd:
         dc.w    set_dbpal - prireqtbl
         dc.w    put_chr - prireqtbl
         dc.w    clear_a - prireqtbl
-        dc.w    dbug_start - prireqtbl
-        dc.w    dbug_queue - prireqtbl
-        dc.w    dbug_end - prireqtbl
+        dc.w    no_cmd - prireqtbl
+        dc.w    no_cmd - prireqtbl
+        dc.w    no_cmd - prireqtbl
         dc.w    net_getbyte - prireqtbl
         dc.w    net_putbyte - prireqtbl
         dc.w    net_setup - prireqtbl
@@ -1416,82 +1416,6 @@ clear_a:
         move.w  d0,(a0)             /* clear name pattern */
         dbra    d1,0b
         move.w  #0,0xA15120         /* done */
-        bra     main_loop
-
-dbug_start:
-        clr.w   dbq_ix              /* no entries in queue */
-        move.w  #0,0xA15120         /* done */
-        bra     main_loop
-
-dbug_queue:
-        move.w  dbq_ix,d1
-        cmpi.w  #64,d1
-        beq.b   0f                  /* queue full, ignore */
-        lea     dbq_id,a1
-        move.b  d0,0(a1,d1.w)       /* queue id */
-        add.w   d1,d1
-        add.w   d1,d1
-        lea     dbq_val,a1
-        move.w  0xA15122,2(a1,d1.w) /* queue value */
-        addq.w  #1,dbq_ix
-0:
-        move.w  #0,0xA15120         /* done */
-        bra     main_loop
-
-dbug_end:
-        move.w  #0,0xA15120         /* release SH2 now */
-
-| process queue
-        moveq   #0,d2
-        move.w  dbq_ix,d3
-        beq     main_loop           /* nothing to do */
-        subq.w  #1,d3               /* for dbra */
-        lea     dbq_id,a2
-        lea     dbq_val,a3
-        lea     dbug_list,a4
-        lea     dbug_tmp,a5
-0:
-        moveq   #0,d4
-        move.b  0(a2,d2.w),d4       /* id */
-        move.w  d2,d0
-        add.w   d0,d0
-        add.w   d0,d0
-        move.l  0(a3,d0.w),d0      /* value */
-        add.w   d4,d4
-        add.w   d4,d4
-        movea.l 0(a4,d4.w),a0       /* debug list entry for id */
-        move.w  (a0)+,crsr_x
-        move.w  (a0)+,crsr_y
-        movea.l (a0),a0             /* address of format string */
-
-        move.l  d0,-(sp)            /* push the value */
-        move.l  a0,-(sp)            /* push the format string pointer */
-        move.l  a5,-(sp)            /* push the output buffer pointer */
-        jsr     xvprintf            /* print to output buffer */
-        lea     12(sp),sp           /* clear the stack */
-
-| convert dbug_tmp to name patterns
-        moveq   #0,d1
-        move.w  crsr_y,d1           /* y coord */
-        lsl.w   #6,d1
-        or.w    crsr_x,d1           /* cursor y<<6 | x */
-        add.w   d1,d1               /* pattern names are words */
-        swap    d1
-        ori.l   #0x40000003,d1      /* OR cursor with VDP write VRAM at 0xC000 (scroll plane A) */
-        lea     0xC00000,a1
-        move.l  d1,4(a1)            /* write VRAM at location of cursor in plane A */
-        moveq   #0,d0
-        movea.l a5,a0
-1:
-        move.b  (a0)+,d0
-        beq.b   2f                  /* end of string */
-        subi.b  #0x20,d0            /* font starts at space */
-        or.w    dbug_color,d0       /* OR with color palette */
-        move.w  d0,(a1)
-        bra.b   1b
-2:
-        addq.w  #1,d2
-        dbra    d3,0b
         bra     main_loop
 
 set_bank_page:
@@ -2761,117 +2685,7 @@ crsr_y:
 dbug_color:
         dc.w    0
 
-
-dbq_ix:
-        dc.w    0
-
-        .align  4
-dbug_tmp:
-        .space  64
-dbq_id:
-        .space  64
-dbq_val:
-        .space  64*4
-
-
         .text
-        .align  4
-
-dbug_list:
-        dc.l    dbug_fpscount
-        dc.l    dbug_lastticks
-        dc.l    dbug_gameticks
-        dc.l    dbug_bspmsec
-        dc.l    dbug_segsmsec
-        dc.l    dbug_segscount
-        dc.l    dbug_planesmsec
-        dc.l    dbug_planescount
-        dc.l    dbug_spritesmsec
-        dc.l    dbug_spritescount
-        dc.l    dbug_refmsec
-        dc.l    dbug_drawmsec
-        dc.l    dbug_totalmsec
-
-dbug_fpscount:
-        dc.w    28,3
-        dc.l    fpscount
-dbug_lastticks:
-        dc.w    28,4
-        dc.l    lastticks
-dbug_gameticks:
-        dc.w    28,6
-        dc.l    gameticks
-dbug_bspmsec:
-        dc.w    28,7
-        dc.l    bspmsec
-dbug_segsmsec:
-        dc.w    28,8
-        dc.l    segsmsec
-dbug_segscount:
-        dc.w    33,8
-        dc.l    segscount
-dbug_planesmsec:
-        dc.w    28,9
-        dc.l    planesmsec
-dbug_planescount:
-        dc.w    33,9
-        dc.l    planescount
-dbug_spritesmsec:
-        dc.w    28,10
-        dc.l    spritesmsec
-dbug_spritescount:
-        dc.w    33,10
-        dc.l    spritescount
-dbug_refmsec:
-        dc.w    28,11
-        dc.l    refmsec
-dbug_drawmsec:
-        dc.w    28,12
-        dc.l    drawmsec
-dbug_totalmsec:
-        dc.w    28,13
-        dc.l    totalmsec
-
-fpscount:
-        .asciz  "fps:%2d"
-        .align  2
-lastticks:
-        .asciz  "tcs:%2d"
-        .align  2
-gameticks:
-        .asciz  "g:%2d"
-        .align  2
-bspmsec:
-        .asciz  "b:%2d"
-        .align  2
-segsmsec:
-        .asciz  "w:%2d"
-        .align  2
-segscount:
-        .asciz  "%3d"
-        .align  2
-planesmsec:
-        .asciz  "p:%2d"
-        .align  2
-planescount:
-        .asciz  "%3d"
-        .align  2
-spritesmsec:
-        .asciz  "s:%2d"
-        .align  2
-spritescount:
-        .asciz  "%3d"
-        .align  2
-refmsec:
-        .asciz  "r:%2d"
-        .align  2
-drawmsec:
-        .asciz  "d:%2d"
-        .align  2
-totalmsec:
-        .asciz  "t:%2d"
-        .align  2
-
         .align  4
 
 FMReset:
