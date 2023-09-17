@@ -645,8 +645,9 @@ check:
       {
          if (depth > 0)
          {
+            int offset = (unsigned)bspstack[depth-1] * 8;
             while (MARS_SYS_COMM0);
-            MARS_SYS_COMM2 = (unsigned)bspstack[depth-1] * 8;
+            MARS_SYS_COMM2 = offset;
             MARS_SYS_COMM0 = 0x2500;
          }
 
@@ -679,8 +680,9 @@ check:
 
          if (depth > 0)
          {
+            int offset = (unsigned)bspstack[depth-1] * 8;
             while (MARS_SYS_COMM0);
-            MARS_SYS_COMM2 = (unsigned)bspstack[depth-1] * 8;
+            MARS_SYS_COMM2 = offset;
             MARS_SYS_COMM0 = 0x2500;
          }
 
