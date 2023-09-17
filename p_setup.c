@@ -52,8 +52,20 @@ spawnthing_t* spawnthings;
 void P_LoadVertexes (int lump)
 {
 #ifdef MARS
+	int			i;
+	vertex_t	*ml;
+	vertex_t	*li;
+
 	numvertexes = W_LumpLength (lump) / sizeof(vertex_t);
-	vertexes = (vertex_t *)W_GetLumpData(lump);
+	vertexes = Z_Malloc (numvertexes*sizeof(vertex_t),PU_LEVEL);
+	
+	ml = (vertex_t *)W_GetLumpData(lump);
+	li = vertexes;
+	for (i=0 ; i<numvertexes ; i++, li++, ml++)
+	{
+		li->x = BIGLONG(ml->x);
+		li->y = BIGLONG(ml->y);
+	}
 #else
 	byte		*data;
 	int			i;
