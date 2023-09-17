@@ -527,18 +527,15 @@ void P_LoadBlockMap (int lump)
 {
 	int		count;
 
-#ifdef MARS
-	blockmaplump = (short *)W_GetLumpData(lump);
-#else
+	blockmaplump = Z_Malloc (W_LumpLength (lump),PU_LEVEL);
+	W_ReadLump (lump,blockmaplump);
+#ifndef MARS
 	int		i;
-	
-	blockmaplump = W_CacheLumpNum (lump,PU_LEVEL);
 	blockmap = blockmaplump+4;
 	count = W_LumpLength (lump)/2;
 	for (i=0 ; i<count ; i++)
 		blockmaplump[i] = LITTLESHORT(blockmaplump[i]);
 #endif
-		
 	bmaporgx = blockmaplump[0]<<FRACBITS;
 	bmaporgy = blockmaplump[1]<<FRACBITS;
 	bmapwidth = blockmaplump[2];
@@ -722,11 +719,8 @@ D_printf ("P_SetupLevel(%i,%i)\n",lumpnum,skill);
 	P_LoadNodes (lumpnum+ML_NODES);
 	P_LoadSegs (lumpnum+ML_SEGS);
 
-#ifdef MARS
-	rejectmatrix = (byte *)W_GetLumpData(lumpnum+ML_REJECT);
-#else
-	rejectmatrix = W_CacheLumpNum (lumpnum+ML_REJECT,PU_LEVEL);
-#endif
+	rejectmatrix = Z_Malloc (W_LumpLength (lumpnum+ML_REJECT),PU_LEVEL);
+	W_ReadLump (lumpnum+ML_REJECT,rejectmatrix);
 
 	validcount = Z_Malloc((numlines + 1) * sizeof(*validcount) * 2, PU_LEVEL);
 	D_memset(validcount, 0, (numlines + 1) * sizeof(*validcount) * 2);
