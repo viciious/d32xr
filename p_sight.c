@@ -282,7 +282,7 @@ static boolean PS_CrossBSPNode(sightWork_t* sw, int bspnum)
 {
    node_t *bsp;
    int side;
-   divline_t* strace = &sw->strace;
+   divline_t dl, * strace = &sw->strace;
 
 #ifdef MARS
    while ((int16_t)bspnum >= 0)
@@ -290,18 +290,22 @@ static boolean PS_CrossBSPNode(sightWork_t* sw, int bspnum)
    while (!(bspnum & NF_SUBSECTOR))
 #endif
    {
-       bsp = &nodes[bspnum];
+      bsp = &nodes[bspnum];
+      dl.dx = (fixed_t)bsp->dx << 16;
+      dl.dy = (fixed_t)bsp->dy << 16;
+      dl.x = (fixed_t)bsp->x << 16;
+      dl.y = (fixed_t)bsp->y << 16;
 
-       // decide which side the start point is on
-       side = P_DivlineSide(strace->x, strace->y, (divline_t*)bsp) & 1;
+      // decide which side the start point is on
+      side = P_DivlineSide(strace->x, strace->y, &dl) & 1;
 
-       // the partition plane is crossed here
-       if (side == P_DivlineSide(sw->t2x, sw->t2y, (divline_t*)bsp))
-           bspnum = bsp->children[side]; // the line doesn't touch the other side
-       else if (!PS_CrossBSPNode(sw, bsp->children[side]))
-           return false; // cross the starting side
-       else
-           bspnum = bsp->children[side ^ 1]; // cross the ending side
+      // the partition plane is crossed here
+      if (side == P_DivlineSide(sw->t2x, sw->t2y, &dl))
+         bspnum = bsp->children[side]; // the line doesn't touch the other side
+      else if (!PS_CrossBSPNode(sw, bsp->children[side]))
+         return false; // cross the starting side
+      else
+         bspnum = bsp->children[side ^ 1]; // cross the ending side
    }
 
    return PS_CrossSubsector(sw, bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR);

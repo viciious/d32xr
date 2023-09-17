@@ -141,9 +141,8 @@ typedef struct seg_s
 
 typedef struct
 {
-	fixed_t		x,y,dx,dy;			/* partition line */
-	fixed_t		bbox[2][4];			/* bounding box for each child */
-	int			children[2];		/* if NF_SUBSECTOR its a subsector */
+	int16_t		x,y,dx,dy;			/* partition line */
+	uint16_t	children[2];		/* if NF_SUBSECTOR its a subsector */
 } node_t;
 
 #define MIPLEVELS 4
@@ -255,15 +254,15 @@ static inline int R_PointOnSide (int x, int y, node_t *node)
 	fixed_t	dx,dy;
 	fixed_t	left, right;
 
-	dx = (x - node->x);
-	dy = (y - node->y);
+	dx = x - ((fixed_t)node->x<<16);
+	dy = y - ((fixed_t)node->y<<16);
 
 #ifdef MARS
-   left = ((int64_t)node->dy*dx) >> 32;
-   right = ((int64_t)dy*node->dx) >> 32;
+   left = ((int64_t)((fixed_t)node->dy<<16)*dx) >> 32;
+   right = ((int64_t)dy*((fixed_t)node->dx<<16)) >> 32;
 #else
-   left  = (node->dy>>FRACBITS) * (dx>>FRACBITS);
-   right = (dy>>FRACBITS) * (node->dx>>FRACBITS);
+   left  = (node->dy) * (dx>>FRACBITS);
+   right = (dy>>FRACBITS) * (node->dx);
 #endif
 
    return (left <= right);
