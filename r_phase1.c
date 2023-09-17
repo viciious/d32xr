@@ -39,7 +39,7 @@ static void R_ClipWallSegment(rbspWork_t *rbsp, fixed_t first, fixed_t last, boo
 static boolean R_CheckBBox(rbspWork_t *rbsp, fixed_t bspcoord[4]) ATTR_DATA_CACHE_ALIGN;
 static void R_Subsector(rbspWork_t *rbsp, int num) ATTR_DATA_CACHE_ALIGN;
 static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop) ATTR_DATA_CACHE_ALIGN;
-static void R_RenderBSPNode(rbspWork_t *rbsp, int bspnum) ATTR_DATA_CACHE_ALIGN;
+static void R_RenderBSPNode(rbspWork_t *rbsp) ATTR_DATA_CACHE_ALIGN;
 static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight, 
     fixed_t *floornewheight, fixed_t *ceilingnewheight) ATTR_DATA_CACHE_ALIGN;
 
@@ -630,64 +630,77 @@ static void R_Subsector(rbspWork_t *rbsp, int num)
       R_AddLine(rbsp, frontsector, line++);
 }
 
+#define MAX_BSP_DEPTH 40
+
+#if 0
+         if (debugmode == DEBUGMODE_NOTEXCACHE)
+         {
+            while (MARS_SYS_COMM0);
+            MARS_SYS_COMM2 = bspnum;
+            MARS_SYS_COMM0 = 0x2500|side;
+            while (MARS_SYS_COMM0);
+
+            int16_t *b = (int16_t *)&MARS_SYS_COMM8;
+            bbox[0] = b[0] << 16;
+            bbox[1] = b[1] << 16;
+            bbox[2] = b[2] << 16;
+            bbox[3] = b[3] << 16;
+         }
+         else
+         {
+            bbox[0] = bsp->bbox[side][0];
+            bbox[1] = bsp->bbox[side][1];
+            bbox[2] = bsp->bbox[side][2];
+            bbox[3] = bsp->bbox[side][3];
+         }
+#endif
+
 //
 // Recursively descend through the BSP, classifying nodes according to the
 // player's point of view, and render subsectors in view.
 //
-static void R_RenderBSPNode(rbspWork_t *rbsp, int bspnum)
+static void R_RenderBSPNode(rbspWork_t *rbsp)
 {
-   node_t *bsp;
-   int     side;
-   fixed_t bbox[4];
+   int      bspnum;
+   int      bspstack[MAX_BSP_DEPTH];
+   int      depth = 0;
 
+   bspnum = numnodes - 1;
+   while (1) {
+      node_t  *bsp;
+      int      side;
 check:
-#ifdef MARS
-   if((int16_t)bspnum < 0) // reached a subsector leaf?
-#else
-   if(bspnum & NF_SUBSECTOR) // reached a subsector leaf?
-#endif
-   {
-      R_Subsector(rbsp, bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR);
+      if(bspnum & NF_SUBSECTOR) // reached a subsector leaf?
+      {
+         R_Subsector(rbsp, bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR);
+      }
+      else
+      {
+         bsp = &nodes[bspnum];
+         // decide which side the view point is on
+         side = R_PointOnSide(vd.viewx, vd.viewy, bsp);
+
+         if (depth < MAX_BSP_DEPTH)
+            bspstack[depth++] = (bspnum << 1) | (side ^ 1);
+
+         // recursively render front space
+         bspnum = bsp->children[side];
+         continue;
+      }
+
+      while (depth > 0) {
+         bspnum = bspstack[--depth];
+         side = bspnum & 1;
+         bsp = &nodes[bspnum >> 1];
+
+         // possibly divide back space
+         if(R_CheckBBox(rbsp, bsp->bbox[side])) {
+            bspnum = bsp->children[side];
+            goto check;
+         }
+      }
+
       return;
-   }
-
-   bsp = &nodes[bspnum];
-
-   // decide which side the view point is on
-   side = R_PointOnSide(vd.viewx, vd.viewy, bsp);
-
-   // recursively render front space
-   R_RenderBSPNode(rbsp, bsp->children[side]);
-
-   side = side^1;
-
-   if (debugmode == DEBUGMODE_NOTEXCACHE)
-   {
-      while (MARS_SYS_COMM0);
-      MARS_SYS_COMM2 = bspnum;
-      MARS_SYS_COMM0 = 0x2500|side;
-      while (MARS_SYS_COMM0);
-
-      int16_t *b = (int16_t *)&MARS_SYS_COMM8;
-      bbox[0] = b[0] << 16;
-      bbox[1] = b[1] << 16;
-      bbox[2] = b[2] << 16;
-      bbox[3] = b[3] << 16;
-
-      //I_Error("%d %d %d %d", bspnum, side, b[0], bbox[0] >> 16);
-   }
-   else
-   {
-      bbox[0] = bsp->bbox[side][0];
-      bbox[1] = bsp->bbox[side][1];
-      bbox[2] = bsp->bbox[side][2];
-      bbox[3] = bsp->bbox[side][3];
-   }
-
-   // possibly divide back space
-   if(R_CheckBBox(rbsp, bbox)) {
-      bspnum = bsp->children[side];
-      goto check;
    }
 }
 
@@ -713,7 +726,7 @@ void R_BSP(void)
    rbsp.lastv1 = -1;
    rbsp.lastv2 = -1;
 
-   R_RenderBSPNode(&rbsp, numnodes - 1);
+   R_RenderBSPNode(&rbsp);
 }
 
 // EOF
