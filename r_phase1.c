@@ -32,7 +32,7 @@ typedef struct
 static int R_ClipToViewEdges(angle_t angle1, angle_t angle2) ATTR_DATA_CACHE_ALIGN;
 static void R_AddLine(rbspWork_t *rbsp, sector_t *frontsector, seg_t* line) ATTR_DATA_CACHE_ALIGN;
 static void R_ClipWallSegment(rbspWork_t *rbsp, fixed_t first, fixed_t last, boolean solid) ATTR_DATA_CACHE_ALIGN;
-static boolean R_CheckBBox(rbspWork_t *rbsp, fixed_t bspcoord[4]) ATTR_DATA_CACHE_ALIGN;
+static boolean R_CheckBBox(rbspWork_t *rbsp, int16_t bspcoord[4]) ATTR_DATA_CACHE_ALIGN;
 static void R_Subsector(rbspWork_t *rbsp, int num) ATTR_DATA_CACHE_ALIGN;
 static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop) ATTR_DATA_CACHE_ALIGN;
 static void R_RenderBSPNode(rbspWork_t *rbsp) ATTR_DATA_CACHE_ALIGN;
@@ -110,7 +110,7 @@ static int R_ClipToViewEdges(angle_t angle1, angle_t angle2)
 // Checks BSP node/subtree bounding box. Returns true if some part of the bbox
 // might be visible.
 //
-static boolean R_CheckBBox(rbspWork_t *rbsp, fixed_t bspcoord[4])
+static boolean R_CheckBBox(rbspWork_t *rbsp, int16_t bspcoord_[4])
 {
    int boxx;
    int boxy;
@@ -123,6 +123,13 @@ static boolean R_CheckBBox(rbspWork_t *rbsp, fixed_t bspcoord[4])
    cliprange_t *start;
 
    int sx1, sx2;
+
+   fixed_t bspcoord[4];
+
+   bspcoord[0] = bspcoord_[0] << 16;
+   bspcoord[1] = bspcoord_[1] << 16;
+   bspcoord[2] = bspcoord_[2] << 16;
+   bspcoord[3] = bspcoord_[3] << 16;
 
    // find the corners of the box that define the edges from current viewpoint
    if(vd.viewx <= bspcoord[BOXLEFT])
@@ -617,29 +624,6 @@ static void R_Subsector(rbspWork_t *rbsp, int num)
 
 #define MAX_BSP_DEPTH 40
 
-#if 0
-         if (debugmode == DEBUGMODE_NOTEXCACHE)
-         {
-            while (MARS_SYS_COMM0);
-            MARS_SYS_COMM2 = bspnum;
-            MARS_SYS_COMM0 = 0x2500|side;
-            while (MARS_SYS_COMM0);
-
-            int16_t *b = (int16_t *)&MARS_SYS_COMM8;
-            bbox[0] = b[0] << 16;
-            bbox[1] = b[1] << 16;
-            bbox[2] = b[2] << 16;
-            bbox[3] = b[3] << 16;
-         }
-         else
-         {
-            bbox[0] = bsp->bbox[side][0];
-            bbox[1] = bsp->bbox[side][1];
-            bbox[2] = bsp->bbox[side][2];
-            bbox[3] = bsp->bbox[side][3];
-         }
-#endif
-
 //
 // Recursively descend through the BSP, classifying nodes according to the
 // player's point of view, and render subsectors in view.
@@ -649,6 +633,8 @@ static void R_RenderBSPNode(rbspWork_t *rbsp)
    int      bspnum;
    int      bspstack[MAX_BSP_DEPTH];
    int      depth = 0;
+   int32_t  bbox[2];
+   int32_t  *ib = (int32_t *)&MARS_SYS_COMM8;
 
    bspnum = numnodes - 1;
    while (1) {
@@ -657,7 +643,20 @@ static void R_RenderBSPNode(rbspWork_t *rbsp)
 check:
       if(bspnum & NF_SUBSECTOR) // reached a subsector leaf?
       {
+         if (depth > 0)
+         {
+            while (MARS_SYS_COMM0);
+            MARS_SYS_COMM2 = (unsigned)bspstack[depth-1] * 8;
+            MARS_SYS_COMM0 = 0x2500;
+         }
+
          R_Subsector(rbsp, bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR);
+
+         if (depth > 0)
+         {
+            while (MARS_SYS_COMM0);
+            bbox[0] = ib[0], bbox[1] = ib[1];
+         }
       }
       else
       {
@@ -678,10 +677,23 @@ check:
          side = bspnum & 1;
          bsp = &nodes[bspnum >> 1];
 
+         if (depth > 0)
+         {
+            while (MARS_SYS_COMM0);
+            MARS_SYS_COMM2 = (unsigned)bspstack[depth-1] * 8;
+            MARS_SYS_COMM0 = 0x2500;
+         }
+
          // possibly divide back space
-         if(R_CheckBBox(rbsp, bsp->bbox[side])) {
+         if(R_CheckBBox(rbsp, (int16_t *)&bbox[0])) {
             bspnum = bsp->children[side];
             goto check;
+         }
+
+         if (depth > 0)
+         {
+            while (MARS_SYS_COMM0);
+            bbox[0] = ib[0], bbox[1] = ib[1];
          }
       }
 

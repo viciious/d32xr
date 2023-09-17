@@ -2055,26 +2055,11 @@ test_handle:
         bra     main_loop
 
 get_bbox:
-        moveq   #0,d0
-        move.b  0xA15121,d0         /* side */
-        add.w   d0,d0               /* x2 */
-        add.w   d0,d0               /* x4 */
-        add.w   d0,d0               /* x8 */
-
-        move.w  0xA15122,d1         /* node id */
-        add.w   d1,d1               /* x2 */
-        add.w   d1,d1               /* x4 */
-        add.w   d1,d1               /* x8 */
-        add.w   d1,d1               /* x16 */
-        add.w   d0,d1
+        move.w  0xA15122,d1         /* offset */
 
         lea     nodes_store,a1
-        lea     0(a1,d1.w),a1
-
-        move.w  0(a1), 0xA15128     /* COMM8 */
-        move.w  2(a1), 0xA1512A     /* COMM10 */
-        move.w  4(a1), 0xA1512C     /* COMM12 */
-        move.w  6(a1), 0xA1512E     /* COMM14 */
+        move.l  0(a1,d1.w), 0xA15128     /* COMM8 */
+        move.l  4(a1,d1.w), 0xA1512C     /* COMM12 */
 
         move.w  #0,0xA15120         /* done */
         bra     main_loop
