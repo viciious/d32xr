@@ -53,9 +53,14 @@ static char* G_LoadMapinfoLump(void)
 		return NULL;
 	}
 	else {
+		char *data;
 		len = W_LumpLength(lump);
-		D_memset(buf, 0, len);
-		W_ReadLump(lump, buf);
+		data = W_GetLumpData(lump);
+		if (buf != data)
+		{
+			D_memset(buf, 0, (len+1) & ~1);
+			D_memcpy(buf, data, len);
+		}
 	}
 	buf[len] = '\0';
 
@@ -210,7 +215,8 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 		char* p;
 
 		if (!D_strncasecmp(key, "map ", 4)) {
-			char* pp = NULL;
+			int len;
+			char* pp = NULL, *l;
 
 			p = skipspaces(D_strchr(key, ' '));
 			if (p)
@@ -220,15 +226,18 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 				pp = skipspaces(pp + 1);
 			}
 
-			mi->lumpNum = W_GetNumForName(stripquote(p));
+			l = stripquote(p);
+			len = mystrlen(l);
+			if (len > 8) {
+				len = 8;
+			}
+			D_memcpy(mi->lumpName, l, len);
+			mi->lumpName[8] = '\0';
 
 			p = pp;
 			if (p) {
 				mi->name = stripquote(p);
 			}
-
-			D_memcpy(mi->lumpName, W_GetNameForNum(mi->lumpNum), 8);
-			mi->lumpName[8] = '\0';
 
 			mi->mapNumber = G_BuiltinMapNumForMapName(mi->lumpName);
 
@@ -253,11 +262,11 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 	}
 
 	if (!D_strcasecmp(key, "next"))
-		mi->next = W_GetNumForName(value);
+		mi->next = value;
 	else if (!D_strcasecmp(key, "sky"))
 		mi->sky = value;
 	else if (!D_strcasecmp(key, "secretnext"))
-		mi->secretNext = W_GetNumForName(value);
+		mi->secretNext = value;
 	else if (!D_strcasecmp(key, "mapnumber"))
 		mi->mapNumber = D_atoi(value);
 	else if (!D_strcasecmp(key, "music"))
@@ -337,22 +346,19 @@ static char *G_MapinfoSectionCStr(const char* buf, const char *name, char *outme
 	return newstr;
 }
 
-int G_FindMapinfo(VINT maplump, dmapinfo_t *mi, char *outmem)
+int G_FindMapinfo(const char *lumpname, dmapinfo_t *mi, char *outmem)
 {
 	const char* buf;
 	int linecount;
-	char lumpname[9]; // null-terminated
 	char name[16];
 
-	if (maplump < 0)
+	if (!lumpname)
 		return -1;
 
 	buf = G_LoadMapinfoLump();
 	if (!buf)
 		return 0;
 
-	D_memcpy(lumpname, W_GetNameForNum(maplump), 8);
-	lumpname[8] = '\0';
 	D_snprintf(name, sizeof(name), "map \"%s\"", lumpname);
 
 	D_memset(mi, 0, sizeof(*mi));

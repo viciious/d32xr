@@ -1171,3 +1171,38 @@ void I_SwapScreenCopy(void)
     }
     Mars_Finish();
 }
+
+void I_PushPWAD(const char *name)
+{
+	int l;
+	wadinfo_t wad;
+
+	if (Mars_OpenCDFile(name) < 0)
+		I_Error("Failed to open %s", name);
+
+	Mars_ReadCDFile(sizeof(wadinfo_t));
+
+	W_OpenPWAD(&wad, Mars_GetCDFileBuffer());
+
+	Mars_SeekCDFile(wad.infotableofs, SEEK_SET);
+
+	Mars_ReadCDFile(wad.numlumps*sizeof(lumpinfo_t));
+
+	W_Push(); // push PWAD onto stack
+
+	W_InitPWAD(&wad, Mars_GetCDFileBuffer());
+}
+
+void I_PopPWAD(void)
+{
+	W_Pop();
+}
+
+void *I_ReadPWAD(int offset, int length)
+{
+	Mars_SeekCDFile(offset, SEEK_SET);
+
+	Mars_ReadCDFile(length);
+
+	return Mars_GetCDFileBuffer();
+}

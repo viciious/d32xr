@@ -531,12 +531,13 @@ extern	VINT		maxammo[NUMAMMO];
 
 extern	skill_t		gameskill;
 extern	int			totalkills, totalitems, totalsecret;	/* for intermission */
-extern	int			gamemaplump;
+extern	char		*gamemaplump;
 extern	dmapinfo_t	gamemapinfo;
 extern	dgameinfo_t	gameinfo;
 
 extern 	VINT 		*gamemapnumbers;
-extern 	VINT 		*gamemaplumps;
+extern 	char 		**gamemaplumps;
+extern 	char 		**gamemapnames;
 extern 	VINT 		gamemapcount;
 
 extern 	int 		gametic;
@@ -661,6 +662,19 @@ int		Z_FreeBlocks(memzone_t* mainzone);
 /*------- */
 /*WADFILE */
 /*------- */
+
+/*=============== */
+/*   TYPES */
+/*=============== */
+
+
+typedef struct
+{
+	char		identification[4];		/* should be IWAD */
+	int			numlumps;
+	int			infotableofs;
+} wadinfo_t;
+
 typedef struct
 {
 	int			filepos;					/* also texture_t * for comp lumps */
@@ -668,15 +682,13 @@ typedef struct
 	char		name[8];
 } lumpinfo_t;
 
-#define	MAXLUMPS	2048
-
-extern	byte		*wadfileptr;
-
-extern	lumpinfo_t	*lumpinfo;			/* points directly to rom image */
-extern	int			numlumps;
-extern	void		*lumpcache[MAXLUMPS];
-
 void	W_Init (void);
+
+int 	W_Push (void);
+int 	W_Pop (void);
+void	W_OpenPWAD (wadinfo_t *wad, void *ptr);
+void 	W_InitPWAD (wadinfo_t *wad, void *lumpinfo);
+lumpinfo_t *W_GetLumpInfo (void);
 
 int		W_CheckNumForName (const char *name);
 int		W_GetNumForName (const char *name);
@@ -693,6 +705,9 @@ void* W_GetLumpData(int lump) ATTR_DATA_CACHE_ALIGN;
 
 #define W_POINTLUMPNUM(x) W_GetLumpData(x)
 
+void I_PushPWAD(const char *name);
+void I_PopPWAD(void);
+void *I_ReadPWAD(int offset, int length);
 
 /*---------- */
 /*BASE LEVEL */
@@ -845,13 +860,14 @@ void G_WorldDone (void);
 void G_RecordDemo (void);
 int G_PlayDemoPtr (unsigned *demo);
 
-int G_LumpNumForMapNum(int map);
+char *G_LumpNameForMapNum(int map);
+char *G_MapNameForMapNum(int map);
 
 /*----- */
 /*PLAY */
 /*----- */
 
-void P_SetupLevel (int lumpnum, skill_t skill);
+void P_SetupLevel (const char *lumpname, skill_t skill);
 void P_Init (void);
 
 void P_Start (void);
