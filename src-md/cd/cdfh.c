@@ -6,6 +6,10 @@
 #include "hw_md.h"
 #include "cdfh.h"
 
+extern int DENTRY_OFFSET;
+extern int DENTRY_LENGTH;
+extern char DISC_BUFFER[2048];
+
 //----------------------------------------------------------------------
 // SegaCD File Handler - by Chilly Willy
 //   Inspired by the MikMod READER structure.
@@ -49,7 +53,7 @@ static int32_t cd_Read(CDFileHandle_t *handle, void *ptr, int32_t size)
         blk = (pos >> 11) + handle->offset;
         if (handle->block != blk)
         {
-            read_cd(blk, 1, (void *)0x6800);
+            read_cd(blk, 1, (void *)DISC_BUFFER);
             handle->block = blk;
         }
 
@@ -59,7 +63,7 @@ static int32_t cd_Read(CDFileHandle_t *handle, void *ptr, int32_t size)
         if (len > (handle->length - pos))
             len = (handle->length - pos);
 
-        memcpy(dst, (char *)0x6800 + (pos & 0x7FF), len);
+        memcpy(dst, (char *)DISC_BUFFER + (pos & 0x7FF), len);
 
         handle->pos += len;
         dst += len;
@@ -81,12 +85,12 @@ static uint8_t cd_Get(CDFileHandle_t *handle)
     blk = (pos >> 11) + handle->offset;
     if (handle->block != blk)
     {
-        read_cd(blk, 1, (void *)0x6800);
+        read_cd(blk, 1, (void *)DISC_BUFFER);
         handle->block = blk;
     }
 
     handle->pos++;
-    return ((uint8_t*)0x6800)[pos & 0x7FF];
+    return DISC_BUFFER[pos & 0x7FF];
 }
 
 static int32_t cd_Seek(CDFileHandle_t *handle, int32_t offset, int32_t whence)
@@ -173,7 +177,6 @@ CDFileHandle_t *cd_handle_from_name(CDFileHandle_t *handle, char *name)
             if (set_cwd(temp) < 0)
             {
                 // error setting working directory
-                free(handle);
                 return NULL;
             }
             memcpy(temp, &name[i+1], mystrlen(&name[i+1])+1);
@@ -188,12 +191,11 @@ CDFileHandle_t *cd_handle_from_name(CDFileHandle_t *handle, char *name)
         if (find_dir_entry(temp) < 0)
         {
             // error finding entry
-            free(handle);
             return NULL;
         }
 
-        handle->offset = global_vars->DENTRY_OFFSET;
-        handle->length = global_vars->DENTRY_LENGTH;
+        handle->offset = DENTRY_OFFSET;
+        handle->length = DENTRY_LENGTH;
         handle->block = -1; // nothing read yet
         handle->pos = 0;
     }
