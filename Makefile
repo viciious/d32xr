@@ -115,7 +115,7 @@ m68k.bin:
 
 $(TARGET).32x: $(TARGET).elf
 	$(OBJC) -O binary $< temp2.bin
-	$(DD) if=temp2.bin of=temp.bin bs=180K conv=sync
+	$(DD) if=temp2.bin of=temp.bin bs=190K conv=sync
 	rm -f temp3.bin
 	cat temp.bin $(WAD) >>temp3.bin
 	$(DD) if=temp3.bin of=$@ bs=512K conv=sync
@@ -140,3 +140,7 @@ marshw.o: marshw.c
 clean:
 	make clean -C src-md
 	$(RM) *.o mr8k.bin $(TARGET).32x $(TARGET).elf output.map temp.bin temp2.bin
+
+iso: $(TARGET).32x
+	mkdir -p iso
+	genisoimage -sysid "SEGA SEGACD" -volid "DOOM32X" -full-iso9660-filenames -l -o $(TARGET).iso iso

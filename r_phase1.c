@@ -217,7 +217,6 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
       f_ceilingheight = front_sector->ceilingheight - vd.viewz;
 
       segl->floorpicnum   = flattranslation[front_sector->floorpic];
-
       if (f_ceilingpic != -1)
       {
           segl->ceilingpicnum = flattranslation[f_ceilingpic];
@@ -713,7 +712,7 @@ void R_BSP(void)
    cliprange_t *solidsegs = rbsp.solidsegs;
 
 #ifdef MARS
-   W_GetLumpData(gamemaplump);
+   //W_GetLumpData(gamemaplump);
 #endif
 
    solidsegs[0].first = -2;
