@@ -24,6 +24,10 @@ SPInit:
         move.b  #'I,0x800F.w            /* sub comm port = INITIALIZING */
         andi.b  #0xE2,0x8003.w          /* Priority Mode = off, 2M mode, Sub-CPU has access */
         bset    #2,0x8003.w             /* switch to 1M mode */
+
+        jsr     0x5F3A.w                /* SPNull - returns boot loader globals */
+        move.l  d0,global_vars
+
         rts
 
 | Sub-CPU Program Main Entry Point (VBlank now enabled)
@@ -356,6 +360,158 @@ SPInt2:
 SPNull:
         rts
 
+|-----------------------------------------------------------------------|
+|                            Sub-CPU code                               |
+|-----------------------------------------------------------------------|
+
+| Global Variable offsets - must match boot loader
+        .equ    VBLANK_HANDLER, 0
+        .equ    VBLANK_PARAM,   4
+        .equ    INIT_CD,        8
+        .equ    READ_CD,        12
+        .equ    SET_CWD,        16
+        .equ    FIRST_DIR_SEC,  20
+        .equ    NEXT_DIR_SEC,   24
+        .equ    FIND_DIR_ENTRY, 28
+        .equ    NEXT_DIR_ENTRY, 32
+        .equ    LOAD_FILE,      36
+        .equ    DISC_TYPE,      40
+        .equ    DIR_ENTRY,      42
+        .equ    CWD_OFFSET,     44
+        .equ    CWD_LENGTH,     48
+        .equ    CURR_OFFSET,    52
+        .equ    CURR_LENGTH,    56
+        .equ    ROOT_OFFSET,    60
+        .equ    ROOT_LENGTH,    64
+        .equ    DENTRY_OFFSET,  68
+        .equ    DENTRY_LENGTH,  72
+        .equ    DENTRY_FLAGS,   76
+        .equ    DENTRY_NAME,    78
+        .equ    TEMP_NAME,      78+256
+        .equ    SIZE_GLOBALVARS,78+256+256
+
+| Disc Read Buffer
+        .equ    DISC_BUFFER, 0x6800
+
+| Program Load Buffer
+        .equ    LOAD_BUFFER, 0x8000
+
+| ISO directory offsets (big-endian where applicable)
+        .equ    RECORD_LENGTH,  0
+        .equ    EXTENT,         6
+        .equ    FILE_LENGTH,    14
+        .equ    FILE_FLAGS,     25
+        .equ    FILE_NAME_LEN,  32
+        .equ    FILE_NAME,      33
+
+| Primary Volume Descriptor offset
+        .equ    PVD_ROOT, 0x9C
+
+| CDFS Error codes
+        .equ    ERR_READ_FAILED,    -2
+        .equ    ERR_NO_PVD,         -3
+        .equ    ERR_NO_MORE_ENTRIES,-4
+        .equ    ERR_BAD_ENTRY,      -5
+        .equ    ERR_NAME_NOT_FOUND, -6
+        .equ    ERR_NO_DISC,        -7
+
+| XCMD Error codes
+        .equ    ERR_UNKNOWN_CMD,    -1
+        .equ    ERR_CMDDONE_TIMEOUT,-2
+        .equ    ERR_CMDACK_TIMEOUT, -3
+
+|-----------------------------------------------------------------------
+| Global functions
+|-----------------------------------------------------------------------
+
+| int init_cd(void);
+        .global init_cd
+init_cd:
+        movem.l d2-d7/a2-a6,-(sp)
+        movea.l global_vars,a6
+        lea     iso_pvd_magic,a5
+        movea.l INIT_CD(a6),a2
+        jsr     (a2)
+        movem.l (sp)+,d2-d7/a2-a6
+        rts
+
+| int read_cd(int lba, int len, void *buffer);
+        .global read_cd
+read_cd:
+        move.l  4(sp),d0                /* lba */
+        move.l  8(sp),d1                /* length */
+        movea.l 12(sp),a0               /* buffer */
+        movem.l d2-d7/a2-a6,-(sp)
+        movea.l global_vars,a6
+        movea.l READ_CD(a6),a2
+        jsr     (a2)
+        movem.l (sp)+,d2-d7/a2-a6
+        rts
+
+| int set_cwd(char *path);
+        .global set_cwd
+set_cwd:
+        movea.l 4(sp),a0                /* path */
+        movem.l d2-d7/a2-a6,-(sp)
+        movea.l global_vars,a6
+        movea.l SET_CWD(a6),a2
+        jsr     (a2)
+        movem.l (sp)+,d2-d7/a2-a6
+        rts
+
+| int first_dir_sec(void);
+        .global first_dir_sec
+first_dir_sec:
+        movem.l d2-d7/a2-a6,-(sp)
+        movea.l global_vars,a6
+        movea.l FIRST_DIR_SEC(a6),a2
+        jsr     (a2)
+        movem.l (sp)+,d2-d7/a2-a6
+        rts
+
+| int next_dir_sec(void);
+        .global next_dir_sec
+next_dir_sec:
+        movem.l d2-d7/a2-a6,-(sp)
+        movea.l global_vars,a6
+        movea.l NEXT_DIR_SEC(a6),a2
+        jsr     (a2)
+        movem.l (sp)+,d2-d7/a2-a6
+        rts
+
+| int find_dir_entry(char *name);
+        .global find_dir_entry
+find_dir_entry:
+        movea.l 4(sp),a0
+        movem.l d2-d7/a2-a6,-(sp)
+        movea.l global_vars,a6
+        movea.l FIND_DIR_ENTRY(a6),a2
+        jsr     (a2)
+        movem.l (sp)+,d2-d7/a2-a6
+        rts
+
+| int next_dir_entry(void)
+        .global next_dir_entry
+next_dir_entry:
+        movem.l d2-d7/a2-a6,-(sp)
+        movea.l global_vars,a6
+        movea.l NEXT_DIR_ENTRY(a6),a2
+        jsr     (a2)
+        movem.l (sp)+,d2-d7/a2-a6
+        rts
+
+| int load_file(char *filename, void *buffer);
+        .global load_file
+load_file:
+        movea.l 4(sp),a0                /* filename */
+        movea.l 8(sp),a1                /* buffer */
+        movem.l d2-d7/a2-a6,-(sp)
+        movea.l global_vars,a6
+        movea.l LOAD_FILE(a6),a2
+        jsr     (a2)
+        movem.l (sp)+,d2-d7/a2-a6
+        rts
+
     .align  4
 
 int3_callback:
@@ -375,6 +531,17 @@ track_number:
 
 updates_suspend:
         .byte   0
+
+        .data
+
+        .align  4
+
+        .global global_vars
+global_vars:
+        .long   0
+
+iso_pvd_magic:
+        .asciz  "\1CD001\1"
 
         .global _start
 _start:
