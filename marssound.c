@@ -158,7 +158,7 @@ void S_Init(void)
 	num_music = 0;
 	muslooping = 0;
 	S_StopSong();
-
+#if 0
 	for (i = 1; i < numlumps; i++)
 	{
 		char name[9];
@@ -173,7 +173,7 @@ void S_Init(void)
 		if (num_music == (int)sizeof(tmp_tracks) / sizeof(tmp_tracks[0]))
 			break;
 	}
-
+#endif
 	if (num_music > 0)
 	{
 		vgm_tracks = Z_Malloc(sizeof(*vgm_tracks) * num_music, PU_STATIC);

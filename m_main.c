@@ -256,14 +256,10 @@ void M_Stop (void)
 
 static char* M_MapName(VINT mapnum)
 {
-	dmapinfo_t mi;
-	char buf[512];
-
 	if (displaymapnum == mapnum)
 		return displaymapname;
 
-	G_FindMapinfo(G_LumpNumForMapNum(mapnum), &mi, buf);
-	D_snprintf(displaymapname, sizeof(displaymapname), "%s", mi.name);
+	D_snprintf(displaymapname, sizeof(displaymapname), "%s", G_MapNameForMapNum(mapnum));
 	displaymapname[sizeof(displaymapname) - 1] = '\0';
 
 	displaymapnum = mapnum;
