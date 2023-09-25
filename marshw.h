@@ -135,6 +135,8 @@ void Mars_StoreWordColumnInMDVRAM(int c);
 void Mars_LoadWordColumnFromMDVRAM(int c, int offset, int len);
 void Mars_SwapWordColumnWithMDVRAM(int c);
 
+int Mars_OpenCDFile(const char *name);
+
 void Mars_Finish(void) MARS_ATTR_DATA_CACHE_ALIGN;
 
 void Mars_MCDLoadSfx(uint16_t id, void *data, uint32_t data_len);

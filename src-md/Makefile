@@ -28,7 +28,7 @@ RM = rm -f
 
 TARGET = m68k
 LIBS = $(LIBPATH) -lc -lgcc -lnosys
-OBJS = crt0.o everdrive.o font.o main.o kos.o cd.o lzss.o megasd.o vgm.o xvprintf.o zfiles.o scd_pcm.o
+OBJS = crt0.o everdrive.o font.o main.o kos.o cd.o lzss.o megasd.o vgm.o xvprintf.o zfiles.o scd_pcm.o scd_fs.o
 
 all: $(TARGET).bin
 

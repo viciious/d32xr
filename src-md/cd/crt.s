@@ -347,8 +347,8 @@ OpenFile:
         move.l  0x8010.w,d0             /* name */
         move.l  d0,-(sp)
         jsr     open_file
-        move.l  d0,0x8020.w             /* length */
         lea     4(sp),sp                /* clear the stack */
+        move.l  d0,0x8020.w             /* length */
         move.b  #'D,0x800F.w            /* sub comm port = DONE */
         bra     WaitAck
 
