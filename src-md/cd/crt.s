@@ -24,6 +24,7 @@ SPInit:
         move.b  #'I,0x800F.w            /* sub comm port = INITIALIZING */
         andi.b  #0xE2,0x8003.w          /* Priority Mode = off, 2M mode, Sub-CPU has access */
         bset    #2,0x8003.w             /* switch to 1M mode */
+        jsr     init_cd
         rts
 
 | Sub-CPU Program Main Entry Point (VBlank now enabled)
@@ -98,6 +99,11 @@ WaitCmdPostUpdate:
         beq     SfxGetSourcePosition
         cmpi.b  #'E,0x800E.w
         beq     SfxSuspendUpdates
+
+        cmpi.b  #'F,0x800E.w
+        beq     OpenFile
+        cmpi.b  #'H,0x800E.w
+        beq     ReadFile
 
         move.b  #'E,0x800F.w            /* sub comm port = ERROR */
 WaitAck:
@@ -333,6 +339,29 @@ SfxGetSourcePosition:
 SfxSuspendUpdates:
         move.b  0x8010.w,updates_suspend
 
+        move.b  #'D,0x800F.w            /* sub comm port = DONE */
+        bra     WaitAck
+
+OpenFile:
+        jsr     switch_banks
+        move.l  0x8010.w,d0             /* name */
+        move.l  d0,-(sp)
+        jsr     open_file
+        move.l  d0,0x8020.w             /* length */
+        lea     4(sp),sp                /* clear the stack */
+        move.b  #'D,0x800F.w            /* sub comm port = DONE */
+        bra     WaitAck
+
+ReadFile:
+        jsr     switch_banks
+        move.l  0x8014.w,d0             /* length */
+        move.l  d0,-(sp)
+        move.l  0x8010.w,d0             /* address in RAM */
+        move.l  d0,-(sp)
+        jsr     open_file
+        move.l  d0,0x8020.w             /* read bytes */
+        lea     8(sp),sp                /* clear the stack */
+        jsr     switch_banks
         move.b  #'D,0x800F.w            /* sub comm port = DONE */
         bra     WaitAck
 

@@ -146,7 +146,7 @@ CDFileHandle_t *cd_handle_from_offset(CDFileHandle_t *handle, int32_t offset, in
     return handle;
 }
 
-CDFileHandle_t *cd_handle_from_name(CDFileHandle_t *handle, char *name)
+CDFileHandle_t *cd_handle_from_name(CDFileHandle_t *handle, const char *name)
 {
     int32_t i;
     char temp[256];
@@ -200,4 +200,21 @@ CDFileHandle_t *cd_handle_from_name(CDFileHandle_t *handle, char *name)
         handle->pos = 0;
     }
     return handle;
+}
+
+// ===================================================================
+
+CDFileHandle_t gfh;
+
+int open_file(const char *name)
+{
+    if (!cd_handle_from_name(&gfh, name)) {
+        return -1;
+    }
+    return gfh.length;
+}
+
+int read_file(uint8_t *dest, int len)
+{
+    return cd_Read(&gfh, dest, len);
 }
