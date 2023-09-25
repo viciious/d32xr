@@ -8,11 +8,6 @@ WAD ?= doom32x.wad
 
 LDSCRIPTSDIR = $(ROOTDIR)/ldscripts
 
-BOOTBLOCKDIR = $(ROOTDIR)/bootblocks
-BOOTBLOCK = $(BOOTBLOCKDIR)/US_BOOT.BIN
-#BOOTBLOCK = $(BOOTBLOCKDIR)/EU_BOOT.BIN
-#BOOTBLOCK = $(BOOTBLOCKDIR)/JP_BOOT.BIN
-
 LIBPATH = -L$(ROOTDIR)/sh-elf/lib -L$(ROOTDIR)/sh-elf/lib/gcc/sh-elf/4.6.2 -L$(ROOTDIR)/sh-elf/sh-elf/lib
 INCPATH = -I. -I$(ROOTDIR)/sh-elf/include -I$(ROOTDIR)/sh-elf/sh-elf/include -I./liblzss
 
@@ -149,4 +144,4 @@ clean:
 iso: $(TARGET).32x
 	mkdir -p iso
 	cp $(WAD) iso/doom32x
-	genisoimage -sysid "SEGA SEGACD" -volid "DOOM32X" -generic-boot $(BOOTBLOCK) -full-iso9660-filenames -o $(TARGET).iso iso
+	genisoimage -sysid "SEGA SEGACD" -volid "DOOM32X" -full-iso9660-filenames -o $(TARGET).iso iso
