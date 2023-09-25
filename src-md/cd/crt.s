@@ -24,7 +24,6 @@ SPInit:
         move.b  #'I,0x800F.w            /* sub comm port = INITIALIZING */
         andi.b  #0xE2,0x8003.w          /* Priority Mode = off, 2M mode, Sub-CPU has access */
         bset    #2,0x8003.w             /* switch to 1M mode */
-        jsr     init_cd
         rts
 
 | Sub-CPU Program Main Entry Point (VBlank now enabled)
@@ -343,12 +342,15 @@ SfxSuspendUpdates:
         bra     WaitAck
 
 OpenFile:
+        jsr     init_cd
+
         jsr     switch_banks
         move.l  0x8010.w,d0             /* name */
         move.l  d0,-(sp)
         jsr     open_file
         lea     4(sp),sp                /* clear the stack */
         move.l  d0,0x8020.w             /* length */
+
         move.b  #'D,0x800F.w            /* sub comm port = DONE */
         bra     WaitAck
 
@@ -358,10 +360,11 @@ ReadFile:
         move.l  d0,-(sp)
         move.l  0x8010.w,d0             /* address in RAM */
         move.l  d0,-(sp)
-        jsr     open_file
+        jsr     read_file
         move.l  d0,0x8020.w             /* read bytes */
         lea     8(sp),sp                /* clear the stack */
         jsr     switch_banks
+
         move.b  #'D,0x800F.w            /* sub comm port = DONE */
         bra     WaitAck
 
