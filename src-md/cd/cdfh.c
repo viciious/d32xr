@@ -8,7 +8,9 @@
 
 extern int DENTRY_OFFSET;
 extern int DENTRY_LENGTH;
+extern char DENTRY_NAME[256];
 extern short DIR_ENTRY;
+extern uint8_t DENTRY_FLAGS;
 extern char DISC_BUFFER[2048];
 
 //----------------------------------------------------------------------
@@ -206,16 +208,17 @@ CDFileHandle_t *cd_handle_from_name(CDFileHandle_t *handle, const char *name)
 
 CDFileHandle_t gfh;
 
-int open_file(const char *name)
+int open_file(char *name)
 {
     CDFileHandle_t *handle = &gfh;
     static int icd = ERR_NO_DISC;
 
-    if (icd == ERR_NO_DISC) {
+    if (icd < 0) {
         icd = init_cd();
-        if (icd >= 0) {
-            set_cwd("/");
+        if (icd < 0) {
+            return icd;
         }
+        icd = set_cwd("/");
     }
 
     if (icd < 0) {
@@ -226,10 +229,23 @@ int open_file(const char *name)
         return -1;
     }
 
+#if 0
+    {
+        char *dname = DENTRY_NAME;
+        dname[255] = 0;
+        memcpy(name, dname, mystrlen(dname)+1);
+    }
+#endif
+
     return handle->length;
 }
 
 int read_file(uint8_t *dest, int len)
 {
-    return cd_Read(&gfh, dest, len);
+    return gfh.Read(&gfh, dest, len);
+}
+
+int seek_file(int offset, int whence)
+{
+    return gfh.Seek(&gfh, offset, whence);
 }

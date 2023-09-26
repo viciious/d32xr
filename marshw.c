@@ -697,24 +697,48 @@ int Mars_OpenCDFile(const char *name)
 {
 	char *fb = (char *)&MARS_FRAMEBUFFER + 0x200;
 
-	while (*name) {
-		*fb++ = *name;
-		name++;
+	if (!*name) {
+		return -1;
 	}
 
-	if ((uintptr_t)fb & 1) {
-		*(uint16_t *)(fb - 1) = *((uint8_t *)name-1) << 8;
-	} else {
-		*(uint16_t *)fb = 0;
-	}
+	do {
+		*fb++ = *name++;
+	} while (*name);
+
+	*(uint16_t *)((uintptr_t)fb & ~1) = 0;
+	*(fb-1) = *(name-1);
 
     while (MARS_SYS_COMM0) {}
-
-    MARS_SYS_COMM0 = 0x2600;        /* sel = swap with VRAM, column in LB of comm0, start move */
+    MARS_SYS_COMM0 = 0x2600;
 
     while (MARS_SYS_COMM0) {}
-
 	return *(int *)&MARS_SYS_COMM8;
+}
+
+int Mars_ReadCDFile(int length)
+{
+	while (MARS_SYS_COMM0) {}
+	MARS_SYS_COMM2 = length;
+	MARS_SYS_COMM0 = 0x2700;
+
+	while (MARS_SYS_COMM0) {}
+	return *(int *)&MARS_SYS_COMM8;
+}
+
+int Mars_SeekCDFile(int offset, int whence)
+{
+	while (MARS_SYS_COMM0) {}
+	*(int *)&MARS_SYS_COMM8 = offset;
+	MARS_SYS_COMM2 = whence;
+	MARS_SYS_COMM0 = 0x2800;
+
+	while (MARS_SYS_COMM0) {}
+	return *(int *)&MARS_SYS_COMM8;
+}
+
+void *Mars_GetCDFileBuffer(void)
+{
+	return (void *)(&MARS_FRAMEBUFFER + 0x100);
 }
 
 void Mars_Finish(void)

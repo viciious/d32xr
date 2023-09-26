@@ -3,6 +3,7 @@
 #include "doomdef.h"
 #include "r_local.h"
 #include "mars.h"
+#include <stdio.h>
 
 void ReadEEProm (void);
 
@@ -43,9 +44,29 @@ int main(void)
 /* load defaults */
 /* */
 	ReadEEProm();
+#if 0
+	{
+		char temp[2][12];
+		int off;
+		char *src;
 
-	I_Error("%d", Mars_OpenCDFile("DOOM32X"));
+		int res = Mars_OpenCDFile("DOOM32X.WAD");
+		src = Mars_GetCDFileBuffer();
+		D_memcpy(temp, src, mystrlen(src)+1);
+		Mars_ReadCDFile(4);
+		src[4] = 0;
+		D_memcpy(temp[0], src, 12);
 
+		off = Mars_SeekCDFile(12, SEEK_CUR);
+		src = Mars_GetCDFileBuffer();
+		Mars_ReadCDFile(4);
+		src[4] = 0;
+		off = Mars_SeekCDFile(0, SEEK_CUR);
+		D_memcpy(temp[1], src, 4);
+
+		I_Error("%d %d %02X%02X%02X%02X", res, off, temp[1][0] & 0xff, temp[1][1] & 0xff, temp[1][2] & 0xff, temp[1][3] & 0xff);
+	}
+#endif
 /* */
 /* start doom */
 /* */

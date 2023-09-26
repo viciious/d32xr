@@ -471,6 +471,8 @@ no_cmd:
         dc.w    test_handle - prireqtbl
         dc.w    get_bbox - prireqtbl
         dc.w    open_file - prireqtbl
+        dc.w    read_file - prireqtbl
+        dc.w    seek_file - prireqtbl
 
 | process request from Secondary SH2
 handle_sec_req:
@@ -2050,9 +2052,9 @@ get_bbox:
         bra     main_loop
 
 open_file:
-        move.w  0xA15100,d1
-        eor.w   #0x8000,d1
-        move.w  d1,0xA15100         /* unset FM - disallow SH2 access to FB */
+        move.w  0xA15100,d0
+        eor.w   #0x8000,d0
+        move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
 
         lea     0x840200,a1         /* frame buffer */
         move.l  a1,-(sp)            /* string pointer */
@@ -2063,6 +2065,42 @@ open_file:
         move.w  0xA15100,d0
         or.w    #0x8000,d0
         move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+read_file:
+        move.w  0xA15100,d0
+        eor.w   #0x8000,d0
+        move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
+
+        moveq   #0,d0
+        |move.b  0xA151221,d0        /* MSG of length in COMM0 */
+        |lsl.w   #8,d0
+        move.w  0xA15122,d0         /* length in COMM2 */
+        move.l  d0,-(sp)            /* string pointer */
+        lea     0x840200,a1         /* frame buffer */
+        move.l  a1,-(sp)            /* string pointer */
+        jsr     scd_read_file
+        lea     8(sp),sp            /* clear the stack */
+        move.l  d0,0xA15128         /* length => COMM8 */
+
+        move.w  0xA15100,d0
+        or.w    #0x8000,d0
+        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+seek_file:
+        moveq   #0,d0
+        move.w  0xA15122,d0         /* whence in COMM2 */
+        move.l  d0,-(sp)
+        move.l  0xA15128,d0         /* offset in COMM8 */
+        move.l  d0,-(sp)
+        jsr     scd_seek_file
+        lea     8(sp),sp            /* clear the stack */
+        move.l  d0,0xA15128         /* position => COMM8 */
 
         move.w  #0,0xA15120         /* done */
         bra     main_loop

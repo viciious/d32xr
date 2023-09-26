@@ -103,6 +103,8 @@ WaitCmdPostUpdate:
         beq     OpenFile
         cmpi.b  #'H,0x800E.w
         beq     ReadFile
+        cmpi.b  #'J,0x800E.w
+        beq     SeekFile
 
         move.b  #'E,0x800F.w            /* sub comm port = ERROR */
 WaitAck:
@@ -348,6 +350,7 @@ OpenFile:
         jsr     open_file
         lea     4(sp),sp                /* clear the stack */
         move.l  d0,0x8020.w             /* length */
+        jsr     switch_banks
 
         move.b  #'D,0x800F.w            /* sub comm port = DONE */
         bra     WaitAck
@@ -362,6 +365,18 @@ ReadFile:
         move.l  d0,0x8020.w             /* read bytes */
         lea     8(sp),sp                /* clear the stack */
         jsr     switch_banks
+
+        move.b  #'D,0x800F.w            /* sub comm port = DONE */
+        bra     WaitAck
+
+SeekFile:
+        move.l  0x8010.w,d0             /* whence */
+        move.l  d0,-(sp)
+        move.l  0x8014.w,d0             /* offset */
+        move.l  d0,-(sp)
+        jsr     seek_file
+        move.l  d0,0x8020.w             /* position */
+        lea     8(sp),sp                /* clear the stack */
 
         move.b  #'D,0x800F.w            /* sub comm port = DONE */
         bra     WaitAck
@@ -864,10 +879,12 @@ DENTRY_LENGTH:
         .long   0
 DENTRY_FLAGS:
         .byte   0
+        .global DENTRY_FLAGS
 
         .align  2
 DENTRY_NAME:
         .space  256
+        .global DENTRY_NAME
 TEMP_NAME:
         .space  256
 
