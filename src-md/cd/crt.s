@@ -342,8 +342,6 @@ SfxSuspendUpdates:
         bra     WaitAck
 
 OpenFile:
-        jsr     init_cd
-
         jsr     switch_banks
         move.l  0x8010.w,d0             /* name */
         move.l  d0,-(sp)

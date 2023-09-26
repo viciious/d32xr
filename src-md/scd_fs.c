@@ -40,9 +40,7 @@ int scd_open_file(const char *name)
 {
     int i;
     int length;
-    char *scdfn = (char *)0x0C0000; /* word ram on CD side (in 1M mode) */
-
-    write_long(0xA12010, (uintptr_t)scdfn);
+    char *scdfn = (uint8_t *)0x600000; /* word ram on MD side (in 1M mode) */
 
     if (name[0] != '/')
     {
@@ -53,6 +51,7 @@ int scd_open_file(const char *name)
         *scdfn++ = name[i];
     *scdfn = 0;
 
+    write_long(0xA12010, 0x0C0000); /* word ram on CD side (in 1M mode) */
     wait_do_cmd('F');
     wait_cmd_ack();
     length = read_long(0xA12020);

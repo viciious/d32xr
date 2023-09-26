@@ -207,12 +207,12 @@ CDFileHandle_t gfh;
 
 int open_file(const char *name)
 {
-    int i;
     CDFileHandle_t *handle = &gfh;
     static int icd = ERR_NO_DISC;
 
-    if (icd == ERR_NO_DISC)
+    if (icd == ERR_NO_DISC) {
         icd = init_cd();
+    }
     if (icd < 0) {
         return icd;
     }
