@@ -843,6 +843,7 @@ DISC_TYPE:
         .word   0
 DIR_ENTRY:
         .word   0
+        .global DIR_ENTRY
 CWD_OFFSET:
         .long   0
 CWD_LENGTH:

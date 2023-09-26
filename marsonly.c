@@ -44,7 +44,7 @@ int main(void)
 /* */
 	ReadEEProm();
 
-	I_Error("%d", Mars_OpenCDFile("doom32x"));
+	I_Error("%d", Mars_OpenCDFile("DOOM32X"));
 
 /* */
 /* start doom */

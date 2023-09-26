@@ -8,6 +8,7 @@
 
 extern int DENTRY_OFFSET;
 extern int DENTRY_LENGTH;
+extern short DIR_ENTRY;
 extern char DISC_BUFFER[2048];
 
 //----------------------------------------------------------------------
@@ -212,7 +213,11 @@ int open_file(const char *name)
 
     if (icd == ERR_NO_DISC) {
         icd = init_cd();
+        if (icd >= 0) {
+            set_cwd("/");
+        }
     }
+
     if (icd < 0) {
         return icd;
     }
