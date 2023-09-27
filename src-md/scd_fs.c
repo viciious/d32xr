@@ -1,6 +1,8 @@
 
 #include <stdint.h>
 
+#define CHUNK_SIZE 2048
+
 extern void write_byte(unsigned int dst, unsigned char val);
 extern void write_word(unsigned int dst, unsigned short val);
 extern void write_long(unsigned int dst, unsigned int val);
@@ -71,33 +73,51 @@ int scd_open_file(char *name)
 
 int scd_read_file(void *ptr, int length)
 {
-    write_long(0xA12010, (uintptr_t)0x0C0000); /* word ram on CD side (in 1M mode) */
-    write_long(0xA12014, length);
-    wait_do_cmd('H');
-    wait_cmd_ack();
-    length = read_long(0xA12020);
-    write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
+    int r;
+    uint8_t *dst = ptr;
 
-    if ((intptr_t)ptr < 0x600000 || (uintptr_t)ptr >= 0x640000)
+    r = 0;
+    while (r < length)
     {
-        int i;
-        int words;
-        short *wordRam = (short *)0x600000; /* word ram on MD side (in 1M mode) */
+        int l;
 
-        // copy from wordRam to destination buffer
-        words = length / 2;
-        for (i = 0; i < words; i++) {
-            ((short *)ptr)[i] = wordRam[i];
-        }
-        ((short *)ptr)[i] = 0;
-        ((short *)ptr)[i+1] = 0; // NULL-termination of strings of even length
+        write_long(0xA12010, (uintptr_t)0x0C0000 + 0x20000 - CHUNK_SIZE); /* end of 128K of word ram on CD side (in 1M mode) */
+        write_long(0xA12014, CHUNK_SIZE);
+        wait_do_cmd('H');
+        wait_cmd_ack();
+        l = read_long(0xA12020);
+        write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
 
-        if (length & 1) {
-            ((char *)ptr)[length - 1] = ((char *)wordRam)[length - 1];
+        if (l == 0)
+            break;
+
+        if ((intptr_t)dst < 0x600000 || (uintptr_t)dst >= 0x640000)
+        {
+            int i;
+            int words;
+            short *wordRam = (short *)0x600000 + 0x20000 - CHUNK_SIZE; /* end of 128K of word ram on MD side (in 1M mode) */
+
+            // copy from wordRam to destination buffer           
+            words = r / 2;
+            for (i = 0; i < words; i++) {
+                ((short *)dst)[i] = wordRam[i];
+            }
+            ((short *)dst)[i] = 0;
+
+            if (r & 1) {
+                dst[r - 1] = ((char *)wordRam)[r - 1];
+            }
         }
+
+        r += l;
+        dst += l;
+        if (r < CHUNK_SIZE)
+            break;
     }
 
-    return length;
+    ((short *)dst)[r/2+1] = 0; // NULL-termination of strings
+
+    return r;
 }
 
 int scd_seek_file(int offset, int whence)
