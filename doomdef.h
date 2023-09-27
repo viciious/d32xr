@@ -660,6 +660,19 @@ int		Z_FreeBlocks(memzone_t* mainzone);
 /*------- */
 /*WADFILE */
 /*------- */
+
+/*=============== */
+/*   TYPES */
+/*=============== */
+
+
+typedef struct
+{
+	char		identification[4];		/* should be IWAD */
+	int			numlumps;
+	int			infotableofs;
+} wadinfo_t;
+
 typedef struct
 {
 	int			filepos;					/* also texture_t * for comp lumps */
@@ -668,6 +681,10 @@ typedef struct
 } lumpinfo_t;
 
 void	W_Init (void);
+
+int 	W_Push (void);
+int 	W_Pop (void);
+void 	W_InitPWAD (void *ptr);
 
 int		W_CheckNumForName (const char *name);
 int		W_GetNumForName (const char *name);

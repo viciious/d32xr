@@ -6,21 +6,11 @@
 
 /* include "r_local.h" */
 
-/*=============== */
-/*   TYPES */
-/*=============== */
-
-
-typedef struct
-{
-	char		identification[4];		/* should be IWAD */
-	int			numlumps;
-	int			infotableofs;
-} wadinfo_t;
-
 /*============= */
 /* GLOBALS */
 /*============= */
+
+#define MAXWADS 2 					/* IWAD + PWAD */
 
 typedef struct
 {
@@ -33,7 +23,7 @@ typedef struct
 #endif
 } wadfile_t;
 
-static wadfile_t wadfile[2]; /* IWAD + PWAD */
+static wadfile_t wadfile[MAXWADS];
 static int wadnum = 0;
 
 void strupr (char *s)
@@ -113,6 +103,70 @@ void W_Init (void)
 	wad->lumpinfo = (lumpinfo_t *) (wad->fileptr + infotableofs);
 }
 
+/*
+====================
+=
+= W_InitPWAD
+=
+====================
+*/
+
+void W_InitPWAD (void *ptr)
+{
+	int 			i;
+	int				infotableofs;
+	wadfile_t 		*wad;
+
+	if (wadnum == 0)
+		I_Error ("Can't init PWAD for IWAD\n");
+
+	wad = &wadfile[wadnum];
+
+	wad->fileptr = ptr;
+
+	if (D_strncasecmp(((wadinfo_t*)wad->fileptr)->identification,"IWAD",4))
+		I_Error ("Wad file doesn't have IWAD id\n");
+	
+	wad->numlumps = LITTLELONG(((wadinfo_t*)wad->fileptr)->numlumps);
+
+	infotableofs = LITTLELONG(((wadinfo_t*)wad->fileptr)->infotableofs);
+	wad->lumpinfo = (lumpinfo_t *) (wad->fileptr + infotableofs);
+
+	for (i = 0; i < wad->numlumps; i++) {
+		wad->lumpinfo[i].filepos = LITTLELONG(wad->lumpinfo[i].filepos);
+		wad->lumpinfo[i].size = LITTLELONG(wad->lumpinfo[i].size);
+	}
+}
+
+/*
+====================
+=
+= W_Push
+=
+====================
+*/
+int W_Push (void)
+{
+	if (wadnum >= MAXWADS-1)
+		return -1;
+	wadnum++;
+	return 0;
+}
+
+/*
+====================
+=
+= W_Pop
+=
+====================
+*/
+int W_Pop (void)
+{
+	if (wadnum == 0)
+		return - 1;
+	--wadnum;
+	return 0;
+}
 
 /*
 ====================
