@@ -667,14 +667,6 @@ typedef struct
 	char		name[8];
 } lumpinfo_t;
 
-#define	MAXLUMPS	2048
-
-extern	byte		*wadfileptr;
-
-extern	lumpinfo_t	*lumpinfo;			/* points directly to rom image */
-extern	int			numlumps;
-extern	void		*lumpcache[MAXLUMPS];
-
 void	W_Init (void);
 
 int		W_CheckNumForName (const char *name);

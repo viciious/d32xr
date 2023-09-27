@@ -253,57 +253,7 @@ void R_InitData (void)
 
 int	R_FlatNumForName (const char *name)
 {
-#if 0
-	int		i;
-	static char	namet[16];
-
-	i = W_CheckNumForName (name);
-	if (i == -1)
-	{
-		namet[8] = 0;
-		D_memcpy (namet, name,8);
-		I_Error ("R_FlatNumForName: %s not found",namet);
-	}
-	
-	i -= firstflat;
-	if (i>numflats)
-		I_Error ("R_FlatNumForName: %s past f_end",namet);
-	return i;
-#endif
-	int			i;
-	lumpinfo_t	*lump_p;
-	char	name8[12];
-	int		v1,v2;
-	int		c;
-	
-/* make the name into two integers for easy compares */
-	*(int *)&name8[0] = 0;
-	*(int *)&name8[4] = 0;
-	for (i=0 ; i<8 && name[i] ; i++)
-	{
-		c = name[i];
-		if (c >= 'a' && c <= 'z')
-			c -= 'a'-'A';
-		name8[i] = c;
-	}
-
-	v1 = *(int *)name8;
-	v2 = *(int *)&name8[4];
-
-#ifndef MARS
-	v1 |= HIBIT;
-#endif
-
-	lump_p = &lumpinfo[firstflat];
-	for (i=0 ; i<numflats; i++, lump_p++)
-	{
-		if (*(int *)&lump_p->name[4] == v2
-		&&  (*(int *)lump_p->name) == v1)
-			return i;
-	}
-
-	I_Error ("R_FlatNumForName: %s not found",name);
-	return -1;
+	return W_CheckNumForNameExt (name, firstflat, lastflat);
 }
 
 

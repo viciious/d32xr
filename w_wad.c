@@ -18,18 +18,23 @@ typedef struct
 	int			infotableofs;
 } wadinfo_t;
 
-
-byte		*wadfileptr;
-
 /*============= */
 /* GLOBALS */
 /*============= */
 
-lumpinfo_t	*lumpinfo;			/* points directly to rom image */
-int			numlumps;
+typedef struct
+{
+	byte		*fileptr;
+
+	lumpinfo_t	*lumpinfo;			/* points directly to rom image */
+	int			numlumps;
 #ifndef MARS
-void		*lumpcache[MAXLUMPS];
+	void		*lumpcache[MAXLUMPS];
 #endif
+} wadfile_t;
+
+static wadfile_t wadfile[2]; /* IWAD + PWAD */
+static int wadnum = 0;
 
 void strupr (char *s)
 {
@@ -92,16 +97,20 @@ void decode(unsigned char* input, unsigned char* output)
 void W_Init (void)
 {
 	int				infotableofs;
-	
-	wadfileptr = I_WadBase ();
+	wadfile_t 		*wad;
 
-	if (D_strncasecmp(((wadinfo_t*)wadfileptr)->identification,"IWAD",4))
+	wadnum = 0;
+	wad = &wadfile[0];
+
+	wad->fileptr = I_WadBase ();
+
+	if (D_strncasecmp(((wadinfo_t*)wad->fileptr)->identification,"IWAD",4))
 		I_Error ("Wad file doesn't have IWAD id\n");
 	
-	numlumps = BIGLONG(((wadinfo_t*)wadfileptr)->numlumps);
+	wad->numlumps = BIGLONG(((wadinfo_t*)wad->fileptr)->numlumps);
 
-	infotableofs = BIGLONG(((wadinfo_t*)wadfileptr)->infotableofs);
-	lumpinfo = (lumpinfo_t *) (wadfileptr + infotableofs);
+	infotableofs = BIGLONG(((wadinfo_t*)wad->fileptr)->infotableofs);
+	wad->lumpinfo = (lumpinfo_t *) (wad->fileptr + infotableofs);
 }
 
 
@@ -133,7 +142,7 @@ int	W_CheckNumForNameExt (const char *name, int start, int end)
 
 /* scan backwards so patch lump files take precedence */
 
-	lump_p = lumpinfo + end;
+	lump_p = wadfile[wadnum].lumpinfo + end;
 
 	/* used for stripping out the hi bit of the first character of the */
 	/* name of the lump */
@@ -144,10 +153,10 @@ int	W_CheckNumForNameExt (const char *name, int start, int end)
 #define HIBIT (1<<31)
 #endif
 
-	while (lump_p-- != lumpinfo + start)
+	while (lump_p-- != wadfile[wadnum].lumpinfo + start)
 		if (*(int *)&lump_p->name[4] == v2
 		&&  (*(int *)lump_p->name & ~HIBIT) == v1)
-			return lump_p - lumpinfo;
+			return lump_p - wadfile[wadnum].lumpinfo;
 
 
 	return -1;
@@ -155,7 +164,7 @@ int	W_CheckNumForNameExt (const char *name, int start, int end)
 
 int	W_CheckNumForName (const char *name)
 {
-	return W_CheckNumForNameExt(name, 0, numlumps);
+	return W_CheckNumForNameExt(name, 0, wadfile[wadnum].numlumps);
 }
 
 
@@ -196,9 +205,9 @@ int W_LumpLength (int lump)
 {
 	if (lump < 0)
 		I_Error("W_LumpLength: %i < 0", lump);
-	if (lump >= numlumps)
+	if (lump >= wadfile[wadnum].numlumps)
 		I_Error ("W_LumpLength: %i >= numlumps",lump);
-	return BIGLONG(lumpinfo[lump].size);
+	return BIGLONG(wadfile[wadnum].lumpinfo[lump].size);
 }
 
 
@@ -218,9 +227,9 @@ int W_ReadLump (int lump, void *dest)
 	
 	if (lump < 0)
 		I_Error("W_ReadLump: %i < 0", lump);
-	if (lump >= numlumps)
+	if (lump >= wadfile[wadnum].numlumps)
 		I_Error ("W_ReadLump: %i >= numlumps",lump);
-	l = lumpinfo+lump;
+	l = wadfile[wadnum].lumpinfo+lump;
 	if (l->name[0] & 0x80) /* compressed */
 	{
 		 decode((unsigned char *)W_GetLumpData(lump),
@@ -249,7 +258,7 @@ void	*W_CacheLumpNum (int lump, int tag)
 
 	if (lump < 0)
 		I_Error("W_CacheLumpNum: %i < 0", lump);
-	if (lump >= numlumps)
+	if (lump >= wadfile[wadnum].numlumps)
 		I_Error ("W_CacheLumpNum: %i >= numlumps",lump);
 	if (tag != PU_STATIC)
 		I_Error("W_CacheLumpNum: %i tag != PU_STATIC", lump);
@@ -306,9 +315,9 @@ void	*W_CacheLumpName (const char *name, int tag)
 
 const char *W_GetNameForNum (int lump)
 {
-	if (lump >= numlumps)
+	if (lump >= wadfile[wadnum].numlumps)
 		I_Error ("W_GetNameForNum: %i >= numlumps",lump);
-	return lumpinfo[lump].name;
+	return wadfile[wadnum].lumpinfo[lump].name;
 }
 
 /*
@@ -320,11 +329,11 @@ const char *W_GetNameForNum (int lump)
 
 void * W_GetLumpData(int lump)
 {
-	lumpinfo_t* l = lumpinfo + lump;
+	lumpinfo_t* l = wadfile[wadnum].lumpinfo + lump;
 
-	if (lump >= numlumps)
+	if (lump >= wadfile[wadnum].numlumps)
 		I_Error("W_GetLumpData: %i >= numlumps", lump);
 
-	return I_RemapLumpPtr((void*)(wadfileptr + BIGLONG(l->filepos)));
+	return I_RemapLumpPtr((void*)(wadfile[wadnum].fileptr + BIGLONG(l->filepos)));
 }
 
