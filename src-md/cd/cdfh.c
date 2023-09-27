@@ -9,9 +9,9 @@
 extern int DENTRY_OFFSET;
 extern int DENTRY_LENGTH;
 extern char DENTRY_NAME[256];
-extern short DIR_ENTRY;
 extern uint8_t DENTRY_FLAGS;
 extern char DISC_BUFFER[2048];
+extern short CURR_OFFSET;
 
 //----------------------------------------------------------------------
 // SegaCD File Handler - by Chilly Willy
@@ -57,6 +57,7 @@ static int32_t cd_Read(CDFileHandle_t *handle, void *ptr, int32_t size)
         if (handle->block != blk)
         {
             read_cd(blk, 1, (void *)DISC_BUFFER);
+            CURR_OFFSET = blk;
             handle->block = blk;
         }
 
@@ -89,6 +90,7 @@ static uint8_t cd_Get(CDFileHandle_t *handle)
     if (handle->block != blk)
     {
         read_cd(blk, 1, (void *)DISC_BUFFER);
+        CURR_OFFSET = blk;
         handle->block = blk;
     }
 
@@ -186,6 +188,11 @@ CDFileHandle_t *cd_handle_from_name(CDFileHandle_t *handle, const char *name)
         }
         else
         {
+            if (set_cwd("/") < 0)
+            {
+                // error setting working directory
+                return NULL;
+            }
             memcpy(temp, name, mystrlen(name)+1);
             temp[255] = 0;
         }
@@ -218,7 +225,6 @@ int open_file(char *name)
         if (icd < 0) {
             return icd;
         }
-        icd = set_cwd("/");
     }
 
     if (icd < 0) {

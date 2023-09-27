@@ -858,13 +858,13 @@ DISC_TYPE:
         .word   0
 DIR_ENTRY:
         .word   0
-        .global DIR_ENTRY
 CWD_OFFSET:
         .long   0
 CWD_LENGTH:
         .long   0
 CURR_OFFSET:
         .long   0
+        .global CURR_OFFSET
 CURR_LENGTH:
         .long   0
 ROOT_OFFSET:

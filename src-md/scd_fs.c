@@ -95,17 +95,17 @@ int scd_read_file(void *ptr, int length)
         {
             int i;
             int words;
-            short *wordRam = (short *)0x600000 + 0x20000 - CHUNK_SIZE; /* end of 128K of word ram on MD side (in 1M mode) */
+            short *wordRam = (void *)((uintptr_t)0x600000 + 0x20000 - CHUNK_SIZE); /* end of 128K of word ram on MD side (in 1M mode) */
 
             // copy from wordRam to destination buffer           
-            words = r / 2;
+            words = l / 2;
             for (i = 0; i < words; i++) {
                 ((short *)dst)[i] = wordRam[i];
             }
             ((short *)dst)[i] = 0;
 
-            if (r & 1) {
-                dst[r - 1] = ((char *)wordRam)[r - 1];
+            if (l & 1) {
+                dst[l - 1] = ((char *)wordRam)[l - 1];
             }
         }
 
