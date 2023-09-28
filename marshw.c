@@ -717,6 +717,13 @@ int Mars_OpenCDFile(const char *name)
 
 int Mars_ReadCDFile(int length)
 {
+	int words = length / 2 + 1;
+	short *fb = (short *)(&MARS_FRAMEBUFFER + 0x100);
+
+	do {
+		*fb++ = 0;
+	} while (--words);
+
 	while (MARS_SYS_COMM0) {}
 	MARS_SYS_COMM2 = length;
 	MARS_SYS_COMM0 = 0x2700;

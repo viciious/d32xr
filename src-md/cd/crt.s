@@ -350,20 +350,23 @@ OpenFile:
         jsr     open_file
         lea     4(sp),sp                /* clear the stack */
         move.l  d0,0x8020.w             /* length */
+        move.l  d1,0x8024.w             /* offset */
         jsr     switch_banks
 
         move.b  #'D,0x800F.w            /* sub comm port = DONE */
         bra     WaitAck
 
 ReadFile:
-        jsr     switch_banks
-        move.l  0x8014.w,d0             /* length */
+        |jsr     switch_banks
+        move.l  0x8018.w,d0             /* length */
+        move.l  d0,-(sp)
+        move.l  0x8014.w,d0             /* lba */
         move.l  d0,-(sp)
         move.l  0x8010.w,d0             /* address in RAM */
         move.l  d0,-(sp)
-        jsr     read_file
+        jsr     read_block
         move.l  d0,0x8020.w             /* read bytes */
-        lea     8(sp),sp                /* clear the stack */
+        lea     12(sp),sp               /* clear the stack */
         jsr     switch_banks
 
         move.b  #'D,0x800F.w            /* sub comm port = DONE */

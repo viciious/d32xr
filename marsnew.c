@@ -1184,6 +1184,7 @@ void I_SwapScreenCopy(void)
 
 void I_PushPWAD(const char *name)
 {
+	int l;
 	wadinfo_t wad;
 
 	if (Mars_OpenCDFile(name) < 0)

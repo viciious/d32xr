@@ -215,7 +215,7 @@ CDFileHandle_t *cd_handle_from_name(CDFileHandle_t *handle, const char *name)
 
 CDFileHandle_t gfh;
 
-int open_file(char *name)
+int64_t open_file(char *name)
 {
     CDFileHandle_t *handle = &gfh;
     static int icd = ERR_NO_DISC;
@@ -235,7 +235,7 @@ int open_file(char *name)
         return -1;
     }
 
-    return handle->length;
+    return ((int64_t)handle->length << 32) | handle->offset;
 }
 
 int read_file(uint8_t *dest, int len)
@@ -246,4 +246,12 @@ int read_file(uint8_t *dest, int len)
 int seek_file(int offset, int whence)
 {
     return gfh.Seek(&gfh, offset, whence);
+}
+
+int read_block(uint8_t *dest, int blk, int len)
+{
+    int r = read_cd(blk, len, (void *)dest);
+    //CURR_OFFSET = blk;
+    return r;
+    //return gfh.Read(&gfh, dest, len);
 }
