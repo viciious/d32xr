@@ -89,7 +89,7 @@ void D_memcpy (void *dest, const void *src, size_t count)
 #ifdef MARS
 	if ( (((intptr_t)dest & 15) == ((intptr_t)src & 15)) && (count > 16)) {
 		unsigned i;
-		unsigned rem = 16 - ((intptr_t)dest & 15), wordbytes;
+		unsigned rem = ((intptr_t)dest & 15), wordbytes;
 
 		d = (byte*)dest;
 		s = (const byte*)src;
@@ -547,6 +547,7 @@ int TIC_Abortable (void)
 void START_Title(void)
 {
 	int l;
+
 #ifdef MARS
 	int		i;
 
