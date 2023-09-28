@@ -187,7 +187,10 @@ void P_LoadSectors (int lump)
 	D_memset (sectors, 0, numsectors*sizeof(sector_t));
 	data = I_TempBuffer ();
 	W_ReadLump (lump,data);
-	
+
+	// pop the WAD stack to point to the IWAD, so that R_FlatNumForName can actually work
+	W_Pop();
+
 	ms = (mapsector_t *)data;
 	ss = sectors;
 	for (i=0 ; i<numsectors ; i++, ss++, ms++)
@@ -219,6 +222,8 @@ void P_LoadSectors (int lump)
 
 		ss->tag = LITTLESHORT(ms->tag);
 	}
+
+	W_Push();
 }
 
 
@@ -480,7 +485,7 @@ void P_LoadSideDefs (int lump)
 	D_memset (sides, 0, numsides*sizeof(side_t));
 	data = I_TempBuffer ();
 	W_ReadLump (lump,data);
-	
+
 	msd = (mapsidedef_t *)data;
 	sd = sides;
 	for (i=0 ; i<numsides ; i++, msd++, sd++)

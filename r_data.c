@@ -253,7 +253,10 @@ void R_InitData (void)
 
 int	R_FlatNumForName (const char *name)
 {
-	return W_CheckNumForNameExt (name, firstflat, lastflat);
+	int f = W_CheckNumForNameExt (name, firstflat, lastflat);
+	if (f < 0)
+		return f;
+	return f - firstflat;
 }
 
 

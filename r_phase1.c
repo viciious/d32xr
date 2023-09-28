@@ -210,7 +210,6 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
       f_ceilingheight = front_sector->ceilingheight - vd.viewz;
 
       segl->floorpicnum   = flattranslation[front_sector->floorpic];
-
       if (f_ceilingpic != -1)
       {
           segl->ceilingpicnum = flattranslation[f_ceilingpic];
