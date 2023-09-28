@@ -251,7 +251,7 @@ int seek_file(int offset, int whence)
 int read_block(uint8_t *dest, int blk, int len)
 {
     int r = read_cd(blk, len, (void *)dest);
-    //CURR_OFFSET = blk;
+    CURR_OFFSET = blk + len - 1;
     return r;
     //return gfh.Read(&gfh, dest, len);
 }

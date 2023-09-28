@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#define CHUNK_SIZE 4*1024
+#define CHUNK_SIZE 8*1024
 #define MCD_DISC_BUFFER (void*)((uintptr_t)0x0C0000 + 0x20000 - CHUNK_SIZE*2)
 #define MD_DISC_BUFFER (void*)((uintptr_t)0x600000 + 0x20000 - CHUNK_SIZE*2)
 
@@ -14,7 +14,7 @@ typedef struct CDFileHandle {
     uint8_t  (*Eof)(struct CDFileHandle *handle);
     int32_t  offset; // start block of file
     int32_t  length; // length of file
-    int32_t  block; // current block in buffer
+    int32_t  sblock, eblock; // current block in buffer
     int32_t  pos; // current position in file
     int16_t  wblkid, rblkid;
 } CDFileHandle_t;
@@ -123,6 +123,39 @@ static uint8_t cd_Eof(CDFileHandle_t *handle)
     return 0;
 }
 
+void mymemcpy(void *dst, void *src, int len)
+{
+    uint8_t *psrc = src;
+    uint8_t *pdst = dst;
+
+    if (!len || psrc == pdst) {
+        return;
+    }
+
+    if (((uintptr_t)pdst & 1) == ((uintptr_t)psrc & 1)) {
+        short *sdst, *ssrc;
+
+        if ((uintptr_t)pdst & 1) {
+            *pdst++ = *psrc++;
+        }
+
+        ssrc = psrc;
+        sdst = pdst;
+        len /= 2;
+        if (!len)
+            return;
+
+        do {
+            *sdst++ = *ssrc++;
+        } while (--len);
+        return;
+    }
+
+    do {
+        *pdst++ = *psrc++;
+    } while (--len);
+}
+
 static int32_t cd_Read(CDFileHandle_t *handle, void *ptr, int32_t size)
 {
     int32_t wait = 0;
@@ -137,12 +170,14 @@ static int32_t cd_Read(CDFileHandle_t *handle, void *ptr, int32_t size)
         return 0;
 
     blk = (handle->pos >> 11) + handle->offset;
-    if (handle->block != blk)
+    if (blk >= handle->eblock || blk < handle->sblock)
     {
+        int blks = CHUNK_SIZE>>11;
         handle->rblkid = handle->wblkid;
         handle->wblkid ^= 1;
-        local_scd_read_block_begin((void *)MCD_DISC_BUFFER + CHUNK_SIZE*(handle->wblkid&1), blk, CHUNK_SIZE>>11);
-        handle->block = blk;
+        local_scd_read_block_begin((void *)MCD_DISC_BUFFER + CHUNK_SIZE*(handle->wblkid&1), blk, blks);
+        handle->sblock = blk;
+        handle->eblock = blk + len;
     }
 
     do
@@ -156,7 +191,7 @@ static int32_t cd_Read(CDFileHandle_t *handle, void *ptr, int32_t size)
             return read;
 
         pos = handle->pos;
-        len = 0x800 - (pos & 0x7FF);
+        len = CHUNK_SIZE - (pos & (CHUNK_SIZE-1));
         if (len > size)
             len = size;
         if (len > (handle->length - pos))
@@ -165,15 +200,17 @@ static int32_t cd_Read(CDFileHandle_t *handle, void *ptr, int32_t size)
         if (size > len)
         {
             blk = ((handle->pos+len) >> 11) + handle->offset;
-            if (handle->block != blk)
+            if (blk >= handle->eblock || blk < handle->sblock)
             {
+                int blks = CHUNK_SIZE>>11;
                 handle->wblkid ^= 1;
-                local_scd_read_block_begin((void *)MCD_DISC_BUFFER + CHUNK_SIZE*(handle->wblkid&1), blk, CHUNK_SIZE>>11);
-                handle->block = blk;
+                local_scd_read_block_begin((void *)MCD_DISC_BUFFER + CHUNK_SIZE*(handle->wblkid&1), blk, blks);
+                handle->sblock = blk;
+                handle->eblock = blk + len;
             }
         }
 
-        memcpy(dst, (char *)MD_DISC_BUFFER + CHUNK_SIZE*(handle->rblkid&1) + (pos & 0x7FF), len);
+        mymemcpy(dst, (char *)MD_DISC_BUFFER + CHUNK_SIZE*(handle->rblkid&1) + (pos & (CHUNK_SIZE-1)), len);
 
         handle->pos += len;
         dst += len;
@@ -229,7 +266,8 @@ CDFileHandle_t *cd_handle_from_offset(CDFileHandle_t *handle, int32_t offset, in
         handle->Tell = &cd_Tell;
         handle->offset = offset;
         handle->length = length;
-        handle->block = -1; // nothing read yet
+        handle->eblock = -1; // nothing read yet
+        handle->sblock = 0xffffffff; // nothing read yet
         handle->pos = 0;
         handle->wblkid = 1;
         handle->rblkid = 0;
@@ -259,7 +297,8 @@ int scd_open_file(char *name)
     handle->Tell = &cd_Tell;
     handle->offset = offset;
     handle->length = length;
-    handle->block = -1; // nothing read yet
+    handle->eblock = -1; // nothing read yet
+    handle->sblock = 0xffffffff; // nothing read yet
     handle->pos = 0;
     handle->wblkid = 0;
     handle->rblkid = 1;

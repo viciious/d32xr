@@ -118,7 +118,7 @@ void P_LoadSegs (int lump)
 	int start = I_GetTime();
 	data = W_GetLumpData(lump);
 	int end = I_GetTime();
-	I_Error("segs %d", end - start);
+	//I_Error("segs %d", end - start);
 
 	ml = (mapseg_t *)data;
 	li = segs;
@@ -341,7 +341,7 @@ void P_LoadThings (int lump)
 	int start = I_GetTime();
 	data = W_GetLumpData(lump);
 	int end = I_GetTime();
-	I_Error("things %d", end - start);
+	//I_Error("things %d", end - start);
 
 	numthings = W_LumpLength (lump) / sizeof(mapthing_t);
 	numthingsreal = 0;
