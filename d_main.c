@@ -86,6 +86,9 @@ void D_memcpy (void *dest, const void *src, size_t count)
 	byte	*d;
 	const byte *s;
 
+	if (dest == src)
+		return;
+
 #ifdef MARS
 	if ( (((intptr_t)dest & 15) == ((intptr_t)src & 15)) && (count > 16)) {
 		unsigned i;
