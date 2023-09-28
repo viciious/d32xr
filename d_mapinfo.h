@@ -33,9 +33,9 @@ typedef struct
 	VINT spiderSpecial;
 	char *name;
 	char *sky;
-	VINT next;
-	VINT secretNext;
-	VINT lumpNum;
+	char *next;
+	char *secretNext;
+	//VINT lumpNum;
 	VINT mapNumber;
 	VINT musicLump;
 	char lumpName[9];
@@ -61,7 +61,7 @@ typedef struct
 } dgameinfo_t;
 
 int G_BuiltinMapNumForMapName(const char* map);
-int G_FindMapinfo(VINT maplump, dmapinfo_t *mi, char *outmem);
+int G_FindMapinfo(const char *lumpname, dmapinfo_t *mi, char *outmem);
 int G_FindGameinfo(dgameinfo_t* gi);
 dmapinfo_t** G_LoadMaplist(int*pmapcount);
 

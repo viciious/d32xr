@@ -1,5 +1,6 @@
 
 #include <stdint.h>
+#include <string.h>
 
 #define CHUNK_SIZE 2048
 
@@ -90,13 +91,12 @@ int scd_read_file(void *ptr, int length)
 
         if (l == 0)
             break;
-
         if ((intptr_t)dst < 0x600000 || (uintptr_t)dst >= 0x640000)
         {
-            int i;
-            int words;
             short *wordRam = (void *)((uintptr_t)0x600000 + 0x20000 - CHUNK_SIZE); /* end of 128K of word ram on MD side (in 1M mode) */
-
+#if 1
+            int i, words;
+            
             // copy from wordRam to destination buffer           
             words = l / 2;
             for (i = 0; i < words; i++) {
@@ -107,6 +107,9 @@ int scd_read_file(void *ptr, int length)
             if (l & 1) {
                 dst[l - 1] = ((char *)wordRam)[l - 1];
             }
+#else
+            memmove(dst, wordRam, (l+3) & ~3);
+#endif
         }
 
         r += l;

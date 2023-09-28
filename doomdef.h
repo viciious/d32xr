@@ -530,12 +530,13 @@ extern	VINT		maxammo[NUMAMMO];
 
 extern	skill_t		gameskill;
 extern	int			totalkills, totalitems, totalsecret;	/* for intermission */
-extern	int			gamemaplump;
+extern	char		*gamemaplump;
 extern	dmapinfo_t	gamemapinfo;
 extern	dgameinfo_t	gameinfo;
 
 extern 	VINT 		*gamemapnumbers;
-extern 	VINT 		*gamemaplumps;
+extern 	char 		**gamemaplumps;
+extern 	char 		**gamemapnames;
 extern 	VINT 		gamemapcount;
 
 extern 	int 		gametic;
@@ -684,7 +685,9 @@ void	W_Init (void);
 
 int 	W_Push (void);
 int 	W_Pop (void);
-void 	W_InitPWAD (void *ptr);
+void	W_OpenPWAD (wadinfo_t *wad, void *ptr);
+void 	W_InitPWAD (wadinfo_t *wad, void *lumpinfo);
+lumpinfo_t *W_GetLumpInfo (void);
 
 int		W_CheckNumForName (const char *name);
 int		W_GetNumForName (const char *name);
@@ -701,6 +704,9 @@ void* W_GetLumpData(int lump) ATTR_DATA_CACHE_ALIGN;
 
 #define W_POINTLUMPNUM(x) W_GetLumpData(x)
 
+void I_PushPWAD(const char *name);
+void I_PopPWAD(void);
+void *I_ReadPWAD(int offset, int length);
 
 /*---------- */
 /*BASE LEVEL */
@@ -861,13 +867,14 @@ void G_WorldDone (void);
 void G_RecordDemo (void);
 int G_PlayDemoPtr (unsigned *demo);
 
-int G_LumpNumForMapNum(int map);
+char *G_LumpNameForMapNum(int map);
+char *G_MapNameForMapNum(int map);
 
 /*----- */
 /*PLAY */
 /*----- */
 
-void P_SetupLevel (int lumpnum, skill_t skill);
+void P_SetupLevel (const char *lumpname, skill_t skill);
 void P_Init (void);
 
 void P_Start (void);

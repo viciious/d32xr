@@ -433,7 +433,7 @@ void R_Sprites(void)
 
 #ifdef MARS
    // bank switching
-   verts = W_GetLumpData(gamemaplump+ML_VERTEXES);
+   verts = /*W_GetLumpData(gamemaplump+ML_VERTEXES)*/vertexes;
 #else
    verts = vertexes;
 #endif

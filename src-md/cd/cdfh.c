@@ -235,14 +235,6 @@ int open_file(char *name)
         return -1;
     }
 
-#if 0
-    {
-        char *dname = DENTRY_NAME;
-        dname[255] = 0;
-        memcpy(name, dname, mystrlen(dname)+1);
-    }
-#endif
-
     return handle->length;
 }
 

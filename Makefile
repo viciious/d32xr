@@ -143,6 +143,4 @@ clean:
 
 iso: $(TARGET).32x
 	mkdir -p iso
-	rm -f iso/*
-	cp $(WAD) iso/DOOM32X.WAD
 	genisoimage -sysid "SEGA SEGACD" -volid "DOOM32X" -full-iso9660-filenames -l -o $(TARGET).iso iso

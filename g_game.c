@@ -12,12 +12,13 @@ void G_DoLoadLevel (void);
  
 gameaction_t    gameaction; 
 skill_t         gameskill; 
-int				gamemaplump;
+char			*gamemaplump;
 dmapinfo_t		gamemapinfo;
 dgameinfo_t		gameinfo;
 
 VINT 			*gamemapnumbers;
-VINT 			*gamemaplumps;
+char 			**gamemaplumps;
+char 			**gamemapnames;
 VINT 			gamemapcount;
 
 gametype_t		netgame;
@@ -49,22 +50,22 @@ extern int              skytexture;
 extern texture_t		*skytexturep;
 extern texture_t		*textures;
 
-static int G_MapNumForLumpNum(int lump)
+static int G_MapNumForLumpName(const char *lumpName)
 {
 	int i;
 
 	/* find the map by its lump */
 	for (i = 0; i < gamemapcount; i++)
 	{
-		if (gamemaplumps[i] == lump)
+		if (!D_strcasecmp(gamemaplumps[i], lumpName))
 		{
 			return gamemapnumbers[i];
 		}
 	}
-	return -1;
+	return 0;
 }
 
-int G_LumpNumForMapNum(int map)
+char *G_LumpNameForMapNum(int map)
 {
 	int i;
 
@@ -76,15 +77,22 @@ int G_LumpNumForMapNum(int map)
 		if (gamemapnumbers[i] == map)
 			return gamemaplumps[i];
 	}
-	return -1;
+	return "";
 }
 
-static char* G_GetMapNameForLump(int lump)
+char *G_MapNameForMapNum(int map)
 {
-	static char name[9];
-	D_memcpy(name, W_GetNameForNum(lump), 8);
-	name[8] = '0';
-	return name;
+	int i;
+
+ 	/* find the map by its number */
+	for (i = 0; i < gamemapcount; i++)
+	{
+		if (gamemapnumbers[i] > map)
+			break;
+		if (gamemapnumbers[i] == map)
+			return gamemapnames[i];
+	}
+	return "";
 }
 
 void G_DoLoadLevel (void) 
@@ -126,18 +134,15 @@ void G_DoLoadLevel (void)
 
 	if (G_FindMapinfo(gamemaplump, &gamemapinfo, NULL) == 0) {
 		int nextmap;
-		const char *mapname;
 
-		mapname = G_GetMapNameForLump(gamemaplump);
-		gamemap = G_BuiltinMapNumForMapName(mapname);
+		gamemap = G_BuiltinMapNumForMapName(gamemaplump);
 		if (gamemap == 0)
 			gamemap = gamemapinfo.mapNumber + 1;
 
 		gamemapinfo.sky = NULL;
 		gamemapinfo.mapNumber = gamemap;
-		gamemapinfo.lumpNum = gamemaplump;
 		gamemapinfo.baronSpecial = (gamemap == 8);
-		gamemapinfo.secretNext = G_LumpNumForMapNum(24);
+		gamemapinfo.secretNext = G_LumpNameForMapNum(24);
 
 		/* decide which level to go to next */
 #ifdef MARS
@@ -157,7 +162,7 @@ void G_DoLoadLevel (void)
 		}
 #endif
 		if (nextmap)
-			gamemapinfo.next = G_LumpNumForMapNum(nextmap);
+			gamemapinfo.next = G_LumpNameForMapNum(nextmap);
 		else
 			gamemapinfo.next = 0;
 	}
@@ -424,48 +429,71 @@ static void G_InitPlayerResp(void)
 
 void G_Init(void)
 {
-	int i;
-	int mapcount;
+	int i, len;
+	int mapcount = 0;
 	dmapinfo_t** maplist;
-	VINT* tempmapnums;
+	VINT tempmapnums[99];
+	int mapLumpsSize = 0;
+	char mapLumps[99][9];
+	int mapNamesSize = 0;
+	char mapNames[99][32];
 
 	// copy mapnumbers to a temp buffer, then free, then allocate again
 	// to avoid zone memory fragmentation
 	gamemapcount = 0;
 	gamemapnumbers = NULL;
+	gamemapnames = NULL;
+
+	I_PushPWAD("MAPS.WAD");
 
 	maplist = G_LoadMaplist(&mapcount);
+	if (mapcount > 99)
+		mapcount = 99;
 	if (maplist)
 	{
-		tempmapnums = (VINT*)I_WorkBuffer();
 		for (i = 0; i < mapcount; i++)
 		{
 			int mn = maplist[i]->mapNumber;
 			if (mn == 0)
 				mn = i + 1;
-			tempmapnums[i*2] = mn;
-			tempmapnums[i*2+1] = maplist[i]->lumpNum;
+			tempmapnums[i] = mn;
+
+			len = mystrlen(maplist[i]->lumpName);
+			D_memcpy(mapLumps[i], maplist[i]->lumpName, len+1);
+			mapLumpsSize += len + 1;
+
+			len = mystrlen(maplist[i]->name);
+			if (len > 31)
+				len = 31;
+			D_memcpy(mapNames[i], maplist[i]->name, len+1);
+			mapNames[i][31] = 0;
+			mapNamesSize += mystrlen(mapNames[i]) + 1;
 		}
 
 		for (i = 0; i < mapcount; i++)
 			Z_Free(maplist[i]);
 		Z_Free(maplist);
-
 	}
 	else
 	{
 		char lumpname[9];
 
 		mapcount = 0;
-		tempmapnums = (VINT*)I_WorkBuffer();
 		for (i = 1; i < 99; i++) {
 			int l;
 			D_snprintf(lumpname, sizeof(lumpname), "MAP%02d", i);
 			l = W_CheckNumForName(lumpname);
 			if (l < 0)
 				break;
-			tempmapnums[mapcount*2] = i;
-			tempmapnums[mapcount*2+1] = l;
+			tempmapnums[mapcount] = i;
+
+			len = mystrlen(lumpname);
+			D_memcpy(mapLumps[mapcount], lumpname, len+1);
+			mapLumpsSize += len + 1;
+
+			D_memcpy(mapNames[i], lumpname, len+1);
+			mapNamesSize += len + 1;
+
 			mapcount++;
 		}
 	}
@@ -473,18 +501,38 @@ void G_Init(void)
 	gamemapcount = mapcount;
 	if (mapcount > 0)
 	{
+		char *lump, *name;
+
 		gamemapnumbers = Z_Malloc(sizeof(*gamemapnumbers) * mapcount, PU_STATIC);
 		gamemaplumps = Z_Malloc(sizeof(*gamemaplumps) * mapcount, PU_STATIC);
+		gamemapnames = Z_Malloc(sizeof(*gamemapnames) * mapcount, PU_STATIC);
+		lump = Z_Malloc(mapLumpsSize, PU_STATIC);
+		name = Z_Malloc(mapNamesSize, PU_STATIC);
+
 		for (i = 0; i < mapcount; i++)
 		{
-			gamemapnumbers[i] = tempmapnums[i*2];
-			gamemaplumps[i] = tempmapnums[i*2+1];
+			gamemapnumbers[i] = tempmapnums[i];
+			gamemaplumps[i] = lump;
+			gamemapnames[i] = name;
+
+			len = mystrlen(mapLumps[i]);
+			D_memcpy(lump, mapLumps[i], len+1);
+			lump += len + 1;
+
+			len = mystrlen(mapNames[i]);
+			D_memcpy(name, mapNames[i], len+1);
+			name += len + 1;
+
 		}
 	}
 
 	G_InitPlayerResp();
 
-	if (G_FindGameinfo(&gameinfo))
+	i = G_FindGameinfo(&gameinfo);
+
+	I_PopPWAD();
+
+	if (i)
 	{
 		if (gameinfo.borderFlat <= 0)
 			gameinfo.borderFlat = W_CheckNumForName("ROCKS");
@@ -523,11 +571,11 @@ void G_InitNew (skill_t skill, int map, gametype_t gametype, boolean splitscr)
 	D_memset(&gamemapinfo, 0, sizeof(gamemapinfo));
 
 	/* these may be reset by I_NetSetup */
-	gamemaplump = G_LumpNumForMapNum(map);
+	gamemaplump = G_LumpNameForMapNum(map);
 	gameskill = skill;
 
-	if (gamemaplump < 0)
-		I_Error("Lump MAP%02d not found!", map);
+	if (gamemaplump == NULL || *gamemaplump == '\0')
+		I_Error("Map %d not found!", map);
 
  	netgame = gametype;
 	splitscreen = splitscr;
@@ -586,7 +634,7 @@ void G_RunGame (void)
 
 	while (1)
 	{
-		int 		nextmapl;
+		char		*nextmapl;
 		boolean		finale;
 #ifdef JAGUAR
 		int			nextmap;
@@ -632,7 +680,7 @@ startnew:
 			nextmapl = gamemapinfo.secretNext;
 		else
 			nextmapl = gamemapinfo.next;
-		finale = nextmapl == 0;
+		finale = nextmapl == NULL;
 
 #ifdef JAGUAR
 		if (finale)
@@ -655,7 +703,7 @@ startnew:
 			{
 				/* go back to start map */
 				finale = 0;
-				nextmapl = G_LumpNumForMapNum(1);
+				nextmapl = G_LumpNameForMapNum(1);
 			}
 		}
 		else
@@ -663,7 +711,7 @@ startnew:
 			if (!finale)
 			{
 				/* quick save */
-				int nextmap = G_MapNumForLumpNum(nextmapl);
+				int nextmap = G_MapNumForLumpName(nextmapl);
 				QuickSave(nextmap);
 			}
 		}

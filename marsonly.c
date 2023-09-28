@@ -50,7 +50,7 @@ int main(void)
 		int off;
 		char *src;
 
-		int res = Mars_OpenCDFile("DOOM32X.WAD");
+		int res = Mars_OpenCDFile("MAPS.WAD");
 		src = Mars_GetCDFileBuffer();
 		D_memcpy(temp, src, mystrlen(src)+1);
 		Mars_ReadCDFile(4);

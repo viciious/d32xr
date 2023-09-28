@@ -106,31 +106,35 @@ void W_Init (void)
 /*
 ====================
 =
-= W_InitPWAD
+= W_OpenPWAD
 =
 ====================
 */
 
-void W_InitPWAD (void *ptr)
+void W_OpenPWAD (wadinfo_t *wad, void *ptr)
+{
+	if (D_strncasecmp(((wadinfo_t*)ptr)->identification,"PWAD",4))
+		I_Error ("Wad file doesn't have PWAD id\n");
+	wad->numlumps = LITTLELONG(((wadinfo_t*)ptr)->numlumps);
+	wad->infotableofs = LITTLELONG(((wadinfo_t*)ptr)->infotableofs);
+}
+
+/*
+====================
+=
+= W_InitPWAD
+=
+====================
+*/
+void W_InitPWAD (wadinfo_t *wadi, void *lumpinfo)
 {
 	int 			i;
-	int				infotableofs;
 	wadfile_t 		*wad;
 
-	if (wadnum == 0)
-		I_Error ("Can't init PWAD for IWAD\n");
-
 	wad = &wadfile[wadnum];
-
-	wad->fileptr = ptr;
-
-	if (D_strncasecmp(((wadinfo_t*)wad->fileptr)->identification,"IWAD",4))
-		I_Error ("Wad file doesn't have IWAD id\n");
-	
-	wad->numlumps = LITTLELONG(((wadinfo_t*)wad->fileptr)->numlumps);
-
-	infotableofs = LITTLELONG(((wadinfo_t*)wad->fileptr)->infotableofs);
-	wad->lumpinfo = (lumpinfo_t *) (wad->fileptr + infotableofs);
+	wad->fileptr = lumpinfo;
+	wad->lumpinfo = lumpinfo;
+	wad->numlumps = wadi->numlumps;
 
 	for (i = 0; i < wad->numlumps; i++) {
 		wad->lumpinfo[i].filepos = LITTLELONG(wad->lumpinfo[i].filepos);
@@ -163,9 +167,14 @@ int W_Push (void)
 int W_Pop (void)
 {
 	if (wadnum == 0)
-		return - 1;
+		return -1;
 	--wadnum;
 	return 0;
+}
+
+lumpinfo_t *W_GetLumpInfo (void)
+{
+	return wadfile[wadnum].lumpinfo;
 }
 
 /*
@@ -388,6 +397,8 @@ void * W_GetLumpData(int lump)
 	if (lump >= wadfile[wadnum].numlumps)
 		I_Error("W_GetLumpData: %i >= numlumps", lump);
 
+	if (wadnum > 0)
+		return I_ReadPWAD(BIGLONG(l->filepos), BIGLONG(l->size)); 
 	return I_RemapLumpPtr((void*)(wadfile[wadnum].fileptr + BIGLONG(l->filepos)));
 }
 

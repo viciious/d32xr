@@ -674,7 +674,7 @@ void R_BSP(void)
    cliprange_t *solidsegs = rbsp.solidsegs;
 
 #ifdef MARS
-   W_GetLumpData(gamemaplump);
+   //W_GetLumpData(gamemaplump);
 #endif
 
    solidsegs[0].first = -2;

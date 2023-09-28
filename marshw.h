@@ -31,6 +31,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdio.h>
 #include "32x.h"
 
 #define MARS_ATTR_DATA_CACHE_ALIGN __attribute__((section(".sdata"), aligned(16), optimize("O1")))
