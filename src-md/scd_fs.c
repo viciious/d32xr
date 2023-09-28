@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#define CHUNK_SIZE 2048
+#define CHUNK_SIZE 8*1024
 
 extern void write_byte(unsigned int dst, unsigned char val);
 extern void write_word(unsigned int dst, unsigned short val);
@@ -82,8 +82,12 @@ int scd_read_file(void *ptr, int length)
     {
         int l;
 
+        l = length - r;
+        if (l > CHUNK_SIZE)
+            l = CHUNK_SIZE;
+
         write_long(0xA12010, (uintptr_t)0x0C0000 + 0x20000 - CHUNK_SIZE); /* end of 128K of word ram on CD side (in 1M mode) */
-        write_long(0xA12014, CHUNK_SIZE);
+        write_long(0xA12014, l);
         wait_do_cmd('H');
         wait_cmd_ack();
         l = read_long(0xA12020);
@@ -91,6 +95,7 @@ int scd_read_file(void *ptr, int length)
 
         if (l == 0)
             break;
+
         if ((intptr_t)dst < 0x600000 || (uintptr_t)dst >= 0x640000)
         {
             short *wordRam = (void *)((uintptr_t)0x600000 + 0x20000 - CHUNK_SIZE); /* end of 128K of word ram on MD side (in 1M mode) */
@@ -108,13 +113,13 @@ int scd_read_file(void *ptr, int length)
                 dst[l - 1] = ((char *)wordRam)[l - 1];
             }
 #else
-            memmove(dst, wordRam, (l+3) & ~3);
+            memmove(dst, wordRam, l);
 #endif
         }
 
         r += l;
         dst += l;
-        if (r < CHUNK_SIZE)
+        if (l < CHUNK_SIZE)
             break;
     }
 
