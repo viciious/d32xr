@@ -446,7 +446,7 @@ void G_Init(void)
 
 	I_PushPWAD("MAPS.WAD");
 
-	maplist = G_LoadMaplist(&mapcount);
+	maplist = G_LoadMaplist(&mapcount, &gameinfo);
 	if (mapcount > 99)
 		mapcount = 99;
 	if (maplist)
@@ -528,23 +528,18 @@ void G_Init(void)
 
 	G_InitPlayerResp();
 
-	i = G_FindGameinfo(&gameinfo);
-
 	I_PopPWAD();
 
-	if (i)
-	{
-		if (gameinfo.borderFlat <= 0)
-			gameinfo.borderFlat = W_CheckNumForName("ROCKS");
-		if (gameinfo.endFlat <= 0)
-			gameinfo.endFlat = gameinfo.borderFlat;
-		return;
-	}
+	if (gameinfo.borderFlat <= 0)
+		gameinfo.borderFlat = W_CheckNumForName("ROCKS");
+	if (gameinfo.endFlat <= 0)
+		gameinfo.endFlat = gameinfo.borderFlat;
 
-	gameinfo.borderFlat = W_CheckNumForName("ROCKS");
+	if (gameinfo.data)
+		return;
+
 	gameinfo.titlePage = W_CheckNumForName("title");
 	gameinfo.titleTime = 540;
-	gameinfo.endFlat = gameinfo.borderFlat;
 	gameinfo.endShowCast = 1;
 }
 

@@ -379,36 +379,7 @@ error:
 	return 0;
 }
 
-int G_FindGameinfo(dgameinfo_t* gi)
-{
-	const char* buf;
-	int linecount;
-
-	buf = G_LoadMapinfoLump();
-	if (!buf)
-		return 0;
-
-	D_memset(gi, 0, sizeof(*gi));
-	gi->creditsPage = -1;
-	gi->endShowCast = 1;
-	gi->data = G_MapinfoSectionCStr(buf, "gameinfo", NULL);
-	if (!gi->data)
-		return 0;
-
-	linecount = G_ParseMapinfo(gi->data, (kvcall_t)&G_AddGameinfoKey, gi);
-	if (linecount < 2)
-		goto error;
-
-	return 1;
-
-error:
-	if (gi->data)
-		Z_Free(gi->data);
-	D_memset(gi, 0, sizeof(*gi));
-	return 0;
-}
-
-dmapinfo_t **G_LoadMaplist(int *pmapcount)
+dmapinfo_t **G_LoadMaplist(int *pmapcount, dgameinfo_t* gi)
 {
 	const char* buf;
 	size_t sectionlen = 0;
@@ -416,12 +387,16 @@ dmapinfo_t **G_LoadMaplist(int *pmapcount)
 	int mapcount, i;
 	dmapinfo_t** maplist;
 
-	buf = G_LoadMapinfoLump();
-	if (!buf)
-		return NULL;
+	D_memset(gi, 0, sizeof(*gi));
+	gi->creditsPage = -1;
+	gi->endShowCast = 1;
 
 	mapcount = 0;
 	*pmapcount = 0;
+
+	buf = G_LoadMapinfoLump();
+	if (!buf)
+		return NULL;
 
 	section = NULL;
 	sectionlen = 0;
@@ -429,6 +404,8 @@ dmapinfo_t **G_LoadMaplist(int *pmapcount)
 		section = G_FindNextMapinfoSection(ptr, &sectionlen);
 		if (!section)
 			break;
+		if (!D_strncasecmp(section, "gameinfo", 8))
+			continue;
 		mapcount++;
 	}
 
@@ -449,6 +426,22 @@ dmapinfo_t **G_LoadMaplist(int *pmapcount)
 		section = G_FindNextMapinfoSection(ptr, &sectionlen);
 		if (!section)
 			break;
+
+		if (!D_strncasecmp(section, "gameinfo", 8))
+		{
+			zsection = Z_Malloc(sectionlen + 1, PU_STATIC);
+			D_memcpy(zsection, section, sectionlen);
+			zsection[sectionlen] = '\0';
+			gi->data = zsection;
+
+			linecount = G_ParseMapinfo(zsection, (kvcall_t)&G_AddGameinfoKey, gi);
+			if (linecount < 2)
+			{
+				Z_Free(gi->data);
+				D_memset(gi, 0, sizeof(*gi));
+			}
+			continue;
+		}
 
 		mi = Z_Malloc(sizeof(dmapinfo_t) + sectionlen + 1, PU_STATIC);
 		zsection = (char *)mi + sizeof(dmapinfo_t);
