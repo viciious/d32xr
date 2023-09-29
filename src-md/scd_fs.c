@@ -158,7 +158,7 @@ static int32_t cd_Read(CDFileHandle_t *handle, void *ptr, int32_t size)
     uint8_t *dst = ptr;
 
     if (!handle)
-        return 0;
+        return -1;
 
     while (size > 0 && !handle->Eof(handle))
     {
@@ -325,6 +325,8 @@ int scd_read_file(void *ptr, int length)
     int r;
 
     r = cd_Read(&gfh, ptr, length);
+    if (r < 0)
+        return r;
 #endif
 
     ((short *)ptr)[r/2+1] = 0; // NULL-termination of strings
