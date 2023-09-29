@@ -62,8 +62,7 @@ typedef struct
 
 int G_BuiltinMapNumForMapName(const char* map);
 int G_FindMapinfo(const char *lumpname, dmapinfo_t *mi, char *outmem);
-int G_FindGameinfo(dgameinfo_t* gi);
-dmapinfo_t** G_LoadMaplist(int*pmapcount);
+dmapinfo_t** G_LoadMaplist(int*pmapcount, dgameinfo_t* gi);
 
 #endif // D_MAPINFO_H__
 
