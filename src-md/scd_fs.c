@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#define CHUNK_SIZE 8*1024
+#define CHUNK_SIZE 2*1024
 #define MCD_DISC_BUFFER (void*)((uintptr_t)0x0C0000 + 0x20000 - CHUNK_SIZE)
 #define MD_DISC_BUFFER (void*)((uintptr_t)0x600000 + 0x20000 - CHUNK_SIZE)
 
