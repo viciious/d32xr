@@ -563,6 +563,11 @@ void P_LoadBlockMap (int lump)
 	bmapwidth = blockmaplump[2];
 	bmapheight = blockmaplump[3];
 	
+	if (bmapwidth < 0)
+		I_Error("bmapwidth == %d", bmapwidth);
+	if (bmapheight < 0)
+		I_Error("bmapheight == %d", bmapheight);
+
 /* clear out mobj chains */
 	count = sizeof(*blocklinks)* bmapwidth*bmapheight;
 	blocklinks = Z_Malloc (count,PU_LEVEL);

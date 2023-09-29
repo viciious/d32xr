@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#define CHUNK_SIZE 4*1024
+#define CHUNK_SIZE 8*1024
 #define MCD_DISC_BUFFER (void*)((uintptr_t)0x0C0000 + 0x20000 - CHUNK_SIZE)
 #define MD_DISC_BUFFER (void*)((uintptr_t)0x600000 + 0x20000 - CHUNK_SIZE)
 
@@ -179,12 +179,13 @@ static int32_t cd_Read(CDFileHandle_t *handle, void *ptr, int32_t size)
         }
 
         mymemcpy(dst, (char *)MD_DISC_BUFFER + (pos & (CHUNK_SIZE-1)), len);
+        //memcpy(dst, (char *)MD_DISC_BUFFER + (pos & (CHUNK_SIZE-1)), len);
 
         handle->pos += len;
         dst += len;
         read += len;
         size -= len;
-    } while (1);
+    }
 
     return read;
 }
@@ -235,7 +236,7 @@ CDFileHandle_t *cd_handle_from_offset(CDFileHandle_t *handle, int32_t offset, in
         handle->offset = offset;
         handle->length = length;
         handle->eblk = -1; // nothing read yet
-        handle->sblk = 0;
+        handle->sblk = 0x0fffffff;
         handle->pos = 0;
     }
     return handle;
@@ -264,7 +265,7 @@ int scd_open_file(char *name)
     handle->offset = offset;
     handle->length = length;
     handle->eblk = -1; // nothing read yet
-    handle->sblk = 0;
+    handle->sblk = 0x0fffffff;
     handle->pos = 0;
     return length;
 }
