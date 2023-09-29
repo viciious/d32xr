@@ -1180,13 +1180,17 @@ void I_PushPWAD(const char *name)
 	if (Mars_OpenCDFile(name) < 0)
 		I_Error("Failed to open %s", name);
 
-	Mars_ReadCDFile(sizeof(wadinfo_t));
+	l = sizeof(wadinfo_t);
+	if (Mars_ReadCDFile(l) < 0)
+		I_Error("Reading %d bytes failed", l);
 
 	W_OpenPWAD(&wad, Mars_GetCDFileBuffer());
 
 	Mars_SeekCDFile(wad.infotableofs, SEEK_SET);
 
-	Mars_ReadCDFile(wad.numlumps*sizeof(lumpinfo_t));
+	l = wad.numlumps*sizeof(lumpinfo_t);
+	if (Mars_ReadCDFile(l) < 0)
+		I_Error("Reading %d bytes failed", l);
 
 	W_Push(); // push PWAD onto stack
 
@@ -1202,7 +1206,8 @@ void *I_ReadPWAD(int offset, int length)
 {
 	Mars_SeekCDFile(offset, SEEK_SET);
 
-	Mars_ReadCDFile(length);
+	if (Mars_ReadCDFile(length) < 0)
+		I_Error("Reading %d bytes failed", length);
 
 	return Mars_GetCDFileBuffer();
 }
