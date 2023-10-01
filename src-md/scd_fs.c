@@ -5,7 +5,8 @@
 
 #define BLOCK_SIZE 2048
 #define CHUNK_SHIFT 3
-#define CHUNK_SIZE ((1<<CHUNK_SHIFT)*BLOCK_SIZE)
+#define CHUNK_BLOCKS (1<<CHUNK_SHIFT) 
+#define CHUNK_SIZE (CHUNK_BLOCKS*BLOCK_SIZE)
 #define MCD_DISC_BUFFER (void*)((uintptr_t)0x0C0000 + 0x20000 - CHUNK_SIZE)
 #define MD_DISC_BUFFER (void*)((uintptr_t)0x600000 + 0x20000 - CHUNK_SIZE)
 
@@ -138,11 +139,10 @@ static int32_t cd_Read(CDFileHandle_t *handle, void *ptr, int32_t size)
         if (len > (handle->length - pos))
             len = (handle->length - pos);
 
-        blk = (pos >> (11+CHUNK_SHIFT));
+        blk = pos / CHUNK_SIZE;
         if (blk != handle->blk)
         {
-            int blks = (1<<CHUNK_SHIFT);
-            local_scd_read_block((void *)MCD_DISC_BUFFER, blk*(1<<CHUNK_SHIFT) + handle->offset, blks);
+            local_scd_read_block((void *)MCD_DISC_BUFFER, blk*CHUNK_BLOCKS + handle->offset, CHUNK_BLOCKS);
             handle->blk = blk;
         }
 
