@@ -725,7 +725,7 @@ int Mars_ReadCDFile(int length)
 	} while (--words);
 
 	while (MARS_SYS_COMM0) {}
-	MARS_SYS_COMM2 = length;
+	*(int *)&MARS_SYS_COMM8 = length;
 	MARS_SYS_COMM0 = 0x2700;
 
 	while (MARS_SYS_COMM0) {}
