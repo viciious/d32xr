@@ -142,7 +142,7 @@ static int32_t cd_Read(CDFileHandle_t *handle, void *ptr, int32_t size)
         if (blk != handle->blk)
         {
             int blks = (1<<CHUNK_SHIFT);
-            local_scd_read_block((void *)MCD_DISC_BUFFER, blk*(1<<CHUNK_SHIFT) + handle->offset, blks);
+            local_scd_read_block((void *)MCD_DISC_BUFFER, blk*blks + handle->offset, blks);
             handle->blk = blk;
         }
 
