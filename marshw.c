@@ -137,7 +137,7 @@ char Mars_UploadPalette(const uint8_t* palette)
 		g1 = ((g1 >> 3) & 0x1f) << 5;
 		r1 = ((r1 >> 3) & 0x1f) << 0;
 
-		cram[i] = r1 | g1 | b1;
+		cram[i] = 0x8000 | r1 | g1 | b1;
 	}
 
 	return 1;
