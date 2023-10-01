@@ -4,7 +4,8 @@
 #include <stdio.h>
 
 #define BLOCK_SIZE 2048
-#define CHUNK_SIZE 4*BLOCK_SIZE
+#define CHUNK_SHIFT 3
+#define CHUNK_SIZE ((1<<CHUNK_SHIFT)*BLOCK_SIZE)
 #define MCD_DISC_BUFFER (void*)((uintptr_t)0x0C0000 + 0x20000 - CHUNK_SIZE)
 #define MD_DISC_BUFFER (void*)((uintptr_t)0x600000 + 0x20000 - CHUNK_SIZE)
 
@@ -15,7 +16,7 @@ typedef struct CDFileHandle {
     uint8_t  (*Eof)(struct CDFileHandle *handle);
     int32_t  offset; // start block of file
     int32_t  length; // length of file
-    int32_t  sblk, eblk; // current block in buffer
+    int32_t  blk; // current block in buffer
     int32_t  pos; // current position in file
 } CDFileHandle_t;
 
@@ -131,22 +132,21 @@ static int32_t cd_Read(CDFileHandle_t *handle, void *ptr, int32_t size)
     while (size > 0 && !handle->Eof(handle))
     {
         pos = handle->pos;
-        len = CHUNK_SIZE - (pos & (BLOCK_SIZE-1));
+        len = CHUNK_SIZE - (pos & (CHUNK_SIZE-1));
         if (len > size)
             len = size;
         if (len > (handle->length - pos))
             len = (handle->length - pos);
 
-        blk = (pos >> 11) + handle->offset;
-        if (blk >= handle->eblk || blk < handle->sblk)
+        blk = (pos >> (11+CHUNK_SHIFT));
+        if (blk != handle->blk)
         {
-            int blks = CHUNK_SIZE>>11;
-            local_scd_read_block((void *)MCD_DISC_BUFFER, blk, blks);
-            handle->sblk = blk;
-            handle->eblk = blk + blks;
+            int blks = (1<<CHUNK_SHIFT);
+            local_scd_read_block((void *)MCD_DISC_BUFFER, blk*(1<<CHUNK_SHIFT) + handle->offset, blks);
+            handle->blk = blk;
         }
 
-        memcpy(dst, (char *)MD_DISC_BUFFER + (pos & (BLOCK_SIZE-1)), len);
+        memcpy(dst, (char *)MD_DISC_BUFFER + (pos & (CHUNK_SIZE-1)), len);
 
         handle->pos += len;
         dst += len;
@@ -202,8 +202,7 @@ CDFileHandle_t *cd_handle_from_offset(CDFileHandle_t *handle, int32_t offset, in
         handle->Tell = &cd_Tell;
         handle->offset = offset;
         handle->length = length;
-        handle->eblk = -1; // nothing read yet
-        handle->sblk = 0x0fffffff;
+        handle->blk = -1; // nothing read yet
         handle->pos = 0;
     }
     return handle;
@@ -231,8 +230,7 @@ int scd_open_file(char *name)
     handle->Tell = &cd_Tell;
     handle->offset = offset;
     handle->length = length;
-    handle->eblk = -1; // nothing read yet
-    handle->sblk = 0x0fffffff;
+    handle->blk = -1; // nothing read yet
     handle->pos = 0;
     return length;
 }
