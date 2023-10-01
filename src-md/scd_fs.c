@@ -329,8 +329,6 @@ int scd_read_file(void *ptr, int length)
         return r;
 #endif
 
-    ((short *)ptr)[r/2+1] = 0; // NULL-termination of strings
-
     return r;
 }
 
