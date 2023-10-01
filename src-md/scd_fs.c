@@ -3,7 +3,8 @@
 #include <string.h>
 #include <stdio.h>
 
-#define CHUNK_SIZE 2*1024
+#define BLOCK_SIZE 2048
+#define CHUNK_SIZE 4*BLOCK_SIZE
 #define MCD_DISC_BUFFER (void*)((uintptr_t)0x0C0000 + 0x20000 - CHUNK_SIZE)
 #define MD_DISC_BUFFER (void*)((uintptr_t)0x600000 + 0x20000 - CHUNK_SIZE)
 
@@ -118,39 +119,6 @@ static uint8_t cd_Eof(CDFileHandle_t *handle)
     return 0;
 }
 
-void mymemcpy(void *dst, void *src, int len)
-{
-    uint8_t *psrc = src;
-    uint8_t *pdst = dst;
-
-    if (!len || psrc == pdst) {
-        return;
-    }
-
-    if (((uintptr_t)pdst & 1) == ((uintptr_t)psrc & 1)) {
-        short *sdst, *ssrc;
-
-        if ((uintptr_t)pdst & 1) {
-            *pdst++ = *psrc++;
-        }
-
-        ssrc = psrc;
-        sdst = pdst;
-        len /= 2;
-        if (!len)
-            return;
-
-        do {
-            *sdst++ = *ssrc++;
-        } while (--len);
-        return;
-    }
-
-    do {
-        *pdst++ = *psrc++;
-    } while (--len);
-}
-
 static int32_t cd_Read(CDFileHandle_t *handle, void *ptr, int32_t size)
 {
     int32_t wait = 0;
@@ -163,7 +131,7 @@ static int32_t cd_Read(CDFileHandle_t *handle, void *ptr, int32_t size)
     while (size > 0 && !handle->Eof(handle))
     {
         pos = handle->pos;
-        len = CHUNK_SIZE - (pos & (CHUNK_SIZE-1));
+        len = CHUNK_SIZE - (pos & (BLOCK_SIZE-1));
         if (len > size)
             len = size;
         if (len > (handle->length - pos))
@@ -178,8 +146,7 @@ static int32_t cd_Read(CDFileHandle_t *handle, void *ptr, int32_t size)
             handle->eblk = blk + blks;
         }
 
-        mymemcpy(dst, (char *)MD_DISC_BUFFER + (pos & (CHUNK_SIZE-1)), len);
-        //memcpy(dst, (char *)MD_DISC_BUFFER + (pos & (CHUNK_SIZE-1)), len);
+        memcpy(dst, (char *)MD_DISC_BUFFER + (pos & (BLOCK_SIZE-1)), len);
 
         handle->pos += len;
         dst += len;
