@@ -158,6 +158,8 @@ init_hardware:
         move.b  #0x40,0xA10005
 
 | init MD VDP
+        lea     0xC00004,a0
+        lea     0xC00000,a1
         move.w  #0x8004,(a0) /* reg 0 = /IE1 (no HBL INT), /M3 (enable read H/V cnt) */
         move.w  #0x8114,(a0) /* reg 1 = /DISP (display off), /IE0 (no VBL INT), M1 (DMA enabled), /M2 (V28 mode) */
         move.w  #0x8230,(a0) /* reg 2 = Name Tbl A = 0xC000 */
@@ -1524,11 +1526,25 @@ ctl_md_vdp:
         andi.w  #255, d0
         move.w  d0, init_vdp_latch
 
+        move.w  0xA15100,d0
+        eor.w   #0x8000,d0
+        move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
+
+        move.w  0xA15180,d0
+        andi.w  #0xFF7F,d0
+        move.w  d0,0xA15180         /* set MD priority */
         tst.b   d0
         bne.b   1f                  /* re-init vdp and vram */
 
-        move.w  #0x8134,0xC00004    /* display off, vblank enabled, V28 mode */
+|       move.w  #0x8134,0xC00004    /* display off, vblank enabled, V28 mode */
+        move.w  0xA15180,d0
+        ori.w   #0x0080,d0
+        move.w  d0,0xA15180         /* set 32X priority */
 1:
+        move.w  0xA15100,d0
+        or.w    #0x8000,d0
+        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
