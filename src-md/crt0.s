@@ -2090,10 +2090,7 @@ read_file:
         eor.w   #0x8000,d0
         move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
 
-        moveq   #0,d0
-        |move.b  0xA151221,d0        /* MSG of length in COMM0 */
-        |lsl.w   #8,d0
-        move.w  0xA15122,d0         /* length in COMM2 */
+        move.l  0xA15128,d0         /* length in COMM8 */
         move.l  d0,-(sp)            /* string pointer */
         lea     0x840200,a1         /* frame buffer */
         move.l  a1,-(sp)            /* string pointer */
