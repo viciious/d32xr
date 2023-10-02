@@ -444,7 +444,7 @@ void G_Init(void)
 	gamemapnumbers = NULL;
 	gamemapnames = NULL;
 
-	I_PushPWAD("MAPS.WAD");
+	I_PushPWAD(PWAD_NAME);
 
 	maplist = G_LoadMaplist(&mapcount, &gameinfo);
 	if (mapcount > 99)
