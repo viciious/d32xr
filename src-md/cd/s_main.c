@@ -140,11 +140,26 @@ uint16_t S_GetSourcePosition(uint8_t src_id)
     return S_Src_GetPosition(src);
 }
 
-int S_LoadCDBufferData(uint16_t buf_id, const char *name, int32_t offset, int32_t len)
+int S_LoadCDBuffersData(uint16_t buf_id, int numsfx, const uint8_t *data)
 {
+    int i;
+    const char *name;
+    const int32_t *offsetlen;
+
     if (buf_id == 0 || buf_id > S_MAX_BUFFERS) {
         return 0;
     }
-    S_CD_LoadBufferData(&s_buffers[ buf_id - 1 ], name, offset, len);
+
+    if (buf_id + numsfx > S_MAX_BUFFERS) {
+        numsfx = S_MAX_BUFFERS - buf_id;
+    }
+    if (numsfx <= 0) {
+        return 0;
+    }
+
+    name = (const char *)data;
+    offsetlen = (void *)(((uintptr_t)name + mystrlen(name) + 1 + 3) & ~3);
+
+    S_CD_LoadBuffersData(&s_buffers[ buf_id - 1 ], numsfx, name, offsetlen);
     return 1;
 }

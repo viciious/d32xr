@@ -141,8 +141,6 @@ int Mars_ReadCDFile(int length);
 int Mars_SeekCDFile(int offset, int whence);
 void *Mars_GetCDFileBuffer(void) __attribute__((noinline));
 
-void Mars_LoadCDSfx(uint16_t id, const char *name, uint32_t offset, uint32_t length);
-
 void Mars_Finish(void) MARS_ATTR_DATA_CACHE_ALIGN;
 
 void Mars_MCDLoadSfx(uint16_t id, void *data, uint32_t data_len);
@@ -152,6 +150,7 @@ void Mars_MCDClearSfx(void);
 void Mars_MCDUpdateSfx(uint8_t src_id, uint8_t pan, uint8_t vol);
 void Mars_MCDStopSfx(uint8_t src_id);
 void Mars_MCDFlushSfx(void);
+void Mars_MCDLoadSfxFileOfs(uint16_t start_id, int numsfx, const char *name, int *offsetlen);
 
 void Mars_SetPriCmdCallback(void (*cb)(void));
 void Mars_SetSecCmdCallback(void (*cb)(void));

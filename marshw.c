@@ -693,16 +693,20 @@ void Mars_SwapWordColumnWithMDVRAM(int c)
     MARS_SYS_COMM0 = 0x1C00|c;        /* sel = swap with VRAM, column in LB of comm0, start move */
 }
 
-static void Mars_StringToFramebuffer(const char *str)
+static char *Mars_StringToFramebuffer(const char *str)
 {
 	char *fb = (char *)(&MARS_FRAMEBUFFER + 0x100);
+
+	if (!*str)
+		return fb;
 
 	do {
 		*fb++ = *str++;
 	} while (*str);
 
-	*(uint16_t *)((uintptr_t)fb & ~1) = 0;
+	*(int16_t *)((uintptr_t)fb & ~1) = 0;
 	*(fb-1) = *(str-1);
+	return fb;
 }
 
 int Mars_OpenCDFile(const char *name)
@@ -753,20 +757,22 @@ void *Mars_GetCDFileBuffer(void)
 	return (void *)(&MARS_FRAMEBUFFER + 0x100);
 }
 
-void Mars_LoadCDSfx(uint16_t id, const char *name, uint32_t offset, uint32_t length)
+void Mars_MCDLoadSfxFileOfs(uint16_t start_id, int numsfx, const char *name, int *offsetlen)
 {
+	void *ptr;
+
 	if (!*name) {
 		return;
 	}
 
 	while (MARS_SYS_COMM0);
 
-	*(int *)&MARS_SYS_COMM8 = offset;
-	*(int *)&MARS_SYS_COMM12 = length;
-	Mars_StringToFramebuffer(name);
+	ptr = Mars_StringToFramebuffer(name);
+	ptr = (void*)(((uintptr_t)ptr + 1 + 3) & ~3);
+	fast_memcpy(ptr, offsetlen, numsfx*2*sizeof(*offsetlen));
 
-	MARS_SYS_COMM2 = id;
-	MARS_SYS_COMM0 = 0x2900; /* load sfx */
+	MARS_SYS_COMM2 = start_id;
+	MARS_SYS_COMM0 = 0x2900|numsfx; /* load sfx */
 	while (MARS_SYS_COMM0);
 }
 

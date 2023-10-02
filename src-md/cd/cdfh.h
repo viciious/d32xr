@@ -23,6 +23,7 @@ extern CDFileHandle_t *cd_handle_from_name(CDFileHandle_t *handle, const char *n
 extern CDFileHandle_t *cd_handle_from_offset(CDFileHandle_t *handle, int32_t offset, int32_t length);
 
 extern int mystrlen(const char* string);
+int read_block(uint8_t *dest, int blk, int len);
 
 #ifdef __cplusplus
 }
