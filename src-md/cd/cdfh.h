@@ -22,6 +22,8 @@ typedef struct CDFileHandle {
 extern CDFileHandle_t *cd_handle_from_name(CDFileHandle_t *handle, const char *name);
 extern CDFileHandle_t *cd_handle_from_offset(CDFileHandle_t *handle, int32_t offset, int32_t length);
 
+extern int mystrlen(const char* string);
+
 #ifdef __cplusplus
 }
 #endif

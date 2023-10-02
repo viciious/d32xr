@@ -98,6 +98,8 @@ WaitCmdPostUpdate:
         beq     SfxGetSourcePosition
         cmpi.b  #'E,0x800E.w
         beq     SfxSuspendUpdates
+        cmpi.b  #'K,0x800E.w
+        beq     SfxCopyCDBuffer
 
         cmpi.b  #'F,0x800E.w
         beq     OpenFile
@@ -229,6 +231,26 @@ SfxCopyBufferWaitAck:
         bne.b   SfxCopyBufferWaitAck    /* wait for result acknowledged */
         move.b  #0,0x800F.w             /* sub comm port = READY */
         jsr     S_CopyBufferData        /* copy the buffer data in the background */
+        lea     12(sp),sp               /* clear the stack */
+        bra.w   WaitCmd
+
+SfxCopyCDBuffer:
+        jsr     switch_banks
+        move.l  0x8018.w,d0             /* length */
+        move.l  d0,-(sp)
+        move.l  0x8014.w,d0             /* offset */
+        move.l  d0,-(sp)
+        move.l  #0x0C0000,d0            /* file name */
+        move.l  d0,-(sp)
+        moveq   #0,d0
+        move.w  0x8010.w,d0             /* buffer id */
+        move.l  d0,-(sp)
+        move.b  #'D,0x800F.w            /* sub comm port = DONE */
+SfxCopyCDBufferWaitAck:
+        tst.b   0x800E.w
+        bne.b   SfxCopyCDBufferWaitAck  /* wait for result acknowledged */
+        move.b  #0,0x800F.w             /* sub comm port = READY */
+        jsr     S_LoadCDBufferData      /* copy the buffer data in the background */
         lea     12(sp),sp               /* clear the stack */
         bra.w   WaitCmd
 
