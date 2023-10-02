@@ -112,6 +112,26 @@ int S_Buf_ParseWaveFile(sfx_buffer_t *buf, uint8_t *data, uint32_t len)
     return 1;
 }
 
+uint8_t *S_Buf_AllocData(sfx_buffer_t *buf, uint32_t data_len)
+{
+    if (buf->data && buf->size >= data_len) {
+        buf->freq = 0;
+        buf->num_channels = 0;
+        return buf->data;
+    }
+
+    if (s_mem_rover + data_len > s_mem_end) {
+        return NULL;
+    }
+
+    buf->freq = 0;
+    buf->num_channels = 0;
+    buf->size = data_len;
+    buf->data = s_mem_rover;
+    s_mem_rover += data_len;
+    return buf->data;
+}
+
 void S_Buf_SetData(sfx_buffer_t *buf, uint8_t *data, uint32_t data_len)
 {
     int wav;
@@ -140,19 +160,11 @@ error:
 
 void S_Buf_CopyData(sfx_buffer_t *buf, const uint8_t *data, uint32_t data_len)
 {
-    if (buf->data && buf->size >= data_len) {
-        // in-place update
-        memcpy(buf->data, data, data_len);
-        S_Buf_SetData(buf, buf->data, data_len);
+    if (!S_Buf_AllocData(buf, data_len)) {
         return;
     }
 
-    if (s_mem_rover + data_len > s_mem_end) {
-        return;
-    }
-
-    memcpy(s_mem_rover, data, data_len);
-    buf->size = data_len;
-    S_Buf_SetData(buf, s_mem_rover, data_len);
-    s_mem_rover += data_len;
+    // in-place update
+    memcpy(buf->data, data, data_len);
+    S_Buf_SetData(buf, buf->data, data_len);
 }
