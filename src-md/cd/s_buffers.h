@@ -31,5 +31,6 @@ void S_ClearBuffersMem(void);
 
 void S_Buf_SetData(sfx_buffer_t *buf, uint8_t *data, uint32_t data_len);
 void S_Buf_CopyData(sfx_buffer_t *buf, const uint8_t *data, uint32_t data_len);
+uint8_t *S_Buf_AllocData(sfx_buffer_t *buf, uint32_t data_len);
 
 #endif
