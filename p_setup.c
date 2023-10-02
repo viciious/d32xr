@@ -748,7 +748,7 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 
 	P_InitThinkers ();
 
-	I_PushPWAD("MAPS.WAD");
+	I_PushPWAD(PWAD_NAME);
 
 	lumpnum = W_GetNumForName(lumpname);
 	if (lumpnum < 0)

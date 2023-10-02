@@ -7,6 +7,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define PWAD_NAME "MAPS.WAD"
+
 /* JAGUAR should be defined on the compiler command line for console builds */
 /* if MARS isn't defined, assume jaguar version */
 
