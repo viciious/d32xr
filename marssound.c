@@ -48,7 +48,7 @@
 
 #define S_SEP_VOL_TO_MCD(sep,vol) do { if ((sep) > 254) (sep) = 254; (vol) <<= 2; /* 64 -> 256 max */ if ((vol) > 255) (vol) = 255; } while (0)
 
-#define S_USE_MEGACD_DRV() (mcd_avail && (sfxdriver == sfxdriver_auto || sfxdriver == sfxdriver_mcd))
+#define S_USE_MEGACD_DRV() (/*mcd_avail && (sfxdriver == sfxdriver_auto || sfxdriver == sfxdriver_mcd)*/sfxdriver_mcd)
 
 enum
 {
@@ -115,6 +115,8 @@ void S_Init(void)
 	int		initmusictype;
 	VINT	tmp_tracks[100];
 	int 	start, end;
+	lumpinfo_t sfxlumps[NUMSFX], *li;
+	wadinfo_t pwad;
 
 	for (i = 0; i < SFXCHANNELS; i++)
 		sfxchannels[i].data = NULL;
@@ -123,36 +125,46 @@ void S_Init(void)
 	mcd_avail = S_CDAvailable() & 0x1;
 	if (!mcd_avail)
 		sfxdriver = sfxdriver_auto;
+	else
+		sfxdriver = sfxdriver_mcd;
 
 	/* init sound effects */
+	for (i=1 ; i < NUMSFX ; i++)
+	{
+		S_sfx[i].lump = -1;
+	}
+
+	I_PushPWAD(PWAD_NAME);
+
 	start = W_CheckNumForName("DS_START");
 	end = W_CheckNumForName("DS_END");
-	if (start >= 0 && end > 0)
+	if (start >= 0 && end > start+1)
 	{
-		for (i=1 ; i < NUMSFX ; i++)
-		{
-			S_sfx[i].lump = W_CheckRangeForName(S_sfxnames[i], start, end);
+		/* build a temp in-memory PWAD */
+		li = W_GetLumpInfo();
+		for (i = start+1; i < end; i++) {
+			int j = i - start - 1;
+			D_memcpy(sfxlumps[j].name, li[i].name, 8);
+			sfxlumps[j].filepos = LITTLELONG(li[i].filepos);
+			sfxlumps[j].size = LITTLELONG(li[i].size);
 		}
-	}
-	else
-	{
+		pwad.numlumps = end - start - 1;
+
+		W_InitPWAD(&pwad, sfxlumps);
+
 		for (i=1 ; i < NUMSFX ; i++)
 		{
-			S_sfx[i].lump = W_CheckNumForName(S_sfxnames[i]);
+			int lump;
+			lump = W_CheckNumForNameExt(S_sfxnames[i], 0, pwad.numlumps - 1);
+			if (lump < 0)
+				continue;
+
+			S_sfx[i].lump = lump;
+			Mars_LoadCDSfx(i, PWAD_NAME, sfxlumps[lump].filepos, sfxlumps[lump].size);
 		}
 	}
 
-	if (mcd_avail)
-	{
-		for (i=1 ; i < NUMSFX ; i++)
-		{
-			int lump = S_sfx[i].lump;
-			if (lump < 0) {
-				continue;
-			}
-			Mars_MCDLoadSfx(i, W_POINTLUMPNUM(lump), W_LumpLength(lump));
-		}
-	}
+	I_PopPWAD();
 
 	/* init music */
 	num_music = 0;
