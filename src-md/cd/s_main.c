@@ -5,7 +5,7 @@
 #include "s_main.h"
 #include "s_cd.h"
 
-#define S_MEMBANK_ADDR 0xC000 // assumed to be greater than __bss_end
+#define S_MEMBANK_ADDR 0xD000 // assumed to be greater than __bss_end
 #define S_MEMBANK_PTR ((uint8_t *)S_MEMBANK_ADDR)
 #define S_MEMBANK_SIZE (0x80000 - S_MEMBANK_ADDR) // 512K - addr
 
@@ -86,6 +86,7 @@ uint8_t S_PlaySource(uint8_t src_id, uint16_t buf_id, uint16_t freq, uint8_t pan
         // refused to start
         return 0;
     }
+
     return src_id;
 }
 

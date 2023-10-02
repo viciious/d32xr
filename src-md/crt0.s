@@ -2121,10 +2121,10 @@ seek_file:
 
 load_cd_sfx:
         move.l  0xA1512C,d0         /* length in COMM12 */
-        move.l  d2,-(sp)
+        move.l  d0,-(sp)
 
         move.l  0xA15128,d0         /* offset in COMM8 */
-        move.l  d2,-(sp)
+        move.l  d0,-(sp)
 
         lea     0x840200,a1         /* frame buffer */
         move.l  a1,-(sp)            /* string pointer */
