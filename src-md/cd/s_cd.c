@@ -27,4 +27,6 @@ void S_CD_LoadBufferData(sfx_buffer_t *buf, const char *name, int32_t offset, in
     fh.Seek(&fh, offset, SEEK_SET);
 
     fh.Read(&fh, buf->data, len);
+
+    S_Buf_SetData(buf, buf->data, len);
 }
