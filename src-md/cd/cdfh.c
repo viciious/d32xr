@@ -13,12 +13,7 @@ extern uint8_t DENTRY_FLAGS;
 extern char DISC_BUFFER[2048];
 extern short CURR_OFFSET;
 
-//----------------------------------------------------------------------
-// SegaCD File Handler - by Chilly Willy
-//   Inspired by the MikMod READER structure.
-//----------------------------------------------------------------------
-
-static int mystrlen(const char* string)
+int mystrlen(const char* string)
 {
 	volatile int rc = 0;
 
@@ -27,6 +22,11 @@ static int mystrlen(const char* string)
 
 	return rc;
 }
+
+//----------------------------------------------------------------------
+// SegaCD File Handler - by Chilly Willy
+//   Inspired by the MikMod READER structure.
+//----------------------------------------------------------------------
 
 static uint8_t cd_Eof(CDFileHandle_t *handle)
 {
@@ -133,8 +133,23 @@ static int32_t cd_Tell(CDFileHandle_t *handle)
     return handle ? handle->pos : 0;
 }
 
+static int cd_init(void)
+{
+    static int icd = ERR_NO_DISC;
+    if (icd < 0) {
+        icd = init_cd();
+        if (icd < 0) {
+            return icd;
+        }
+    }
+    return icd;
+}
+
 CDFileHandle_t *cd_handle_from_offset(CDFileHandle_t *handle, int32_t offset, int32_t length)
 {
+    if (cd_init() < 0)
+        return NULL;
+
     if (handle)
     {
         handle->Eof  = &cd_Eof;
@@ -154,6 +169,9 @@ CDFileHandle_t *cd_handle_from_name(CDFileHandle_t *handle, const char *name)
 {
     int32_t i;
     char temp[256];
+
+    if (cd_init() < 0)
+        return NULL;
 
     if (handle)
     {
@@ -218,18 +236,6 @@ CDFileHandle_t gfh;
 int64_t open_file(char *name)
 {
     CDFileHandle_t *handle = &gfh;
-    static int icd = ERR_NO_DISC;
-
-    if (icd < 0) {
-        icd = init_cd();
-        if (icd < 0) {
-            return icd;
-        }
-    }
-
-    if (icd < 0) {
-        return icd;
-    }
 
     if (!cd_handle_from_name(handle, name)) {
         return -1;

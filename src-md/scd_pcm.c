@@ -26,6 +26,16 @@ static void scd_delay(void) SCD_CODE_ATTR;
 static char wait_cmd_ack(void) SCD_CODE_ATTR;
 static void wait_do_cmd(char cmd) SCD_CODE_ATTR;
 
+static int mystrlen(const char* string)
+{
+	volatile int rc = 0;
+
+	while (*(string++))
+		rc++;
+
+	return rc;
+}
+
 static char wait_cmd_ack(void)
 {
     char ack = 0;
@@ -66,6 +76,20 @@ void scd_upload_buf(uint16_t buf_id, const uint8_t *data, uint32_t data_len)
     write_long(0xA12014, 0x0C0000); /* word ram on CD side (in 1M mode) */
     write_long(0xA12018, data_len); /* sample length */
     wait_do_cmd('B'); // SfxCopyBuffer command
+    wait_cmd_ack();
+    write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
+}
+
+void scd_loadcd_buf(uint16_t buf_id, const char *name, uint32_t offset, uint32_t length)
+{
+    char *scdWordRam = (char *)0x600000;
+
+    memcpy(scdWordRam, name, mystrlen(name)+1);
+
+    write_word(0xA12010, buf_id); /* buf_id */
+    write_long(0xA12014, offset); /* sample offset */
+    write_long(0xA12018, length); /* sample length */
+    wait_do_cmd('K'); // SfxCopyBuffer command
     wait_cmd_ack();
     write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
 }
