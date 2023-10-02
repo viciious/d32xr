@@ -116,6 +116,7 @@ void S_Init(void)
 	VINT	tmp_tracks[100];
 	int 	start, end;
 	lumpinfo_t sfxlumps[NUMSFX], *li;
+	int   	sfxol[NUMSFX*2];
 	wadinfo_t pwad;
 
 	for (i = 0; i < SFXCHANNELS; i++)
@@ -142,26 +143,29 @@ void S_Init(void)
 	{
 		/* build a temp in-memory PWAD */
 		li = W_GetLumpInfo();
-		for (i = start+1; i < end; i++) {
-			int j = i - start - 1;
-			D_memcpy(sfxlumps[j].name, li[i].name, 8);
-			sfxlumps[j].filepos = LITTLELONG(li[i].filepos);
-			sfxlumps[j].size = LITTLELONG(li[i].size);
-		}
+
 		pwad.numlumps = end - start - 1;
+
+		for (i = 0; i < pwad.numlumps; i++) {
+			int j = start + i + 1;
+			D_memcpy(sfxlumps[i].name, li[j].name, 8);
+			sfxlumps[i].filepos = LITTLELONG(li[j].filepos);
+			sfxlumps[i].size = LITTLELONG(li[j].size);
+		}
 
 		W_InitPWAD(&pwad, sfxlumps);
 
 		for (i=1 ; i < NUMSFX ; i++)
 		{
-			int lump;
-			lump = W_CheckNumForNameExt(S_sfxnames[i], 0, pwad.numlumps - 1);
-			if (lump < 0)
-				continue;
-
-			S_sfx[i].lump = lump;
-			Mars_LoadCDSfx(i, PWAD_NAME, sfxlumps[lump].filepos, sfxlumps[lump].size);
+			S_sfx[i].lump = W_CheckNumForNameExt(S_sfxnames[i], 0, pwad.numlumps);
 		}
+
+		for (i = 0; i < pwad.numlumps; i++) {
+			sfxol[i*2] = sfxlumps[i].filepos;
+			sfxol[i*2+1] = sfxlumps[i].size;
+		}
+
+		Mars_LoadCDSfx(1, pwad.numlumps, PWAD_NAME, sfxol);
 	}
 
 	I_PopPWAD();
@@ -469,7 +473,7 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 		if (sound_id == sfx_itemup && sep == 128)
 			sep = 255; // full volume from both channels
 
-		Mars_MCDPlaySfx((ch - sfxchannels) + 1, sound_id, sep, vol);
+		Mars_MCDLoadSfxFileOfs((ch - sfxchannels) + 1, sfx->lump + 1, sep, vol);
 		return;
 	}
 
@@ -977,11 +981,22 @@ static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol,
 
 	newchannel = NULL;
 	sfx = &S_sfx[sound_id];
-	md_data = W_POINTLUMPNUM(sfx->lump);
-	length = md_data->samples;
-
-	if (length < 4)
+	if (sfx->lump < 0)
 		return NULL;
+
+	if (S_USE_MEGACD_DRV())
+	{
+		// dummy data to trick NULL pointer checks
+		md_data = (void *)sfx;
+		length = 4;
+	}
+	else
+	{
+		md_data = W_POINTLUMPNUM(sfx->lump);
+		length = md_data->samples;
+		if (length < 4)
+			return NULL;
+	}
 
 	/* reject sounds started at the same instant and singular sounds */
 	for (channel = sfxchannels, i = 0; i < SFXCHANNELS; i++, channel++)
