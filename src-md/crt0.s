@@ -2119,26 +2119,23 @@ seek_file:
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
-load_cd_sfx:
-        move.l  0xA1512C,d0         /* length in COMM12 */
-        move.l  d0,-(sp)
-
-        move.l  0xA15128,d0         /* offset in COMM8 */
-        move.l  d0,-(sp)
-
+load_sfx_cd_fileofs:
         lea     0x840200,a1         /* frame buffer */
-        move.l  a1,-(sp)            /* string pointer */
+        move.l  a1,-(sp)            /* file name + offsets */
+
+        moveq   #0,d0
+        move.b  0xA15121,d0         /* LSB of COMM0 = num sfx */
+        move.l  d0,-(sp)
 
         /* set buffer id */
-        moveq   #0,d0
-        move.w  0xA15122,d0         /* COMM2 = buffer id */
+        move.w  0xA15122,d0         /* COMM2 = start buffer id */
         move.l  d0,-(sp)
 
         move.w  0xA15100,d0
         eor.w   #0x8000,d0
         move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
 
-        jsr     scd_loadcd_buf
+        jsr     scd_upload_buf_fileofs
         lea     16(sp),sp
 
         move.w  0xA15100,d0

@@ -80,15 +80,23 @@ void scd_upload_buf(uint16_t buf_id, const uint8_t *data, uint32_t data_len)
     write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
 }
 
-void scd_loadcd_buf(uint16_t buf_id, const char *name, uint32_t offset, uint32_t length)
+void scd_upload_buf_fileofs(uint16_t buf_id, int numsfx, const uint8_t *data)
 {
+    int filelen;
     char *scdWordRam = (char *)0x600000;
 
-    memcpy(scdWordRam, name, mystrlen(name)+1);
+    // copy filename
+    filelen = mystrlen((char *)data);
+    memcpy(scdWordRam, data, filelen+1);
+
+    // copy offsets and lengths
+    scdWordRam = (void *)(((uintptr_t)scdWordRam + filelen + 1 + 3) & ~3);
+    data = (void *)(((uintptr_t)data + filelen + 1 + 3) & ~3);
+    memcpy(scdWordRam, data, numsfx*2*sizeof(int32_t));
 
     write_word(0xA12010, buf_id); /* buf_id */
-    write_long(0xA12014, offset); /* sample offset */
-    write_long(0xA12018, length); /* sample length */
+    write_word(0xA12012, numsfx); /* num samples */
+    write_long(0xA12014, 0x0C0000); /* word ram on CD side (in 1M mode) */
     wait_do_cmd('K'); // SfxCopyBuffer command
     wait_cmd_ack();
     write_byte(0xA1200E, 0x00); // acknowledge receipt of command result

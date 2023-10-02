@@ -234,23 +234,21 @@ SfxCopyBufferWaitAck:
         lea     12(sp),sp               /* clear the stack */
         bra.w   WaitCmd
 
-SfxCopyCDBuffer:
+SfxCopyBufferFromCDFile:
         jsr     switch_banks
-        move.l  0x8018.w,d0             /* length */
-        move.l  d0,-(sp)
-        move.l  0x8014.w,d0             /* offset */
-        move.l  d0,-(sp)
-        move.l  #0x0C0000,d0            /* file name */
+        move.l  #0x0C0000,d0            /* file name + offsets */
         move.l  d0,-(sp)
         moveq   #0,d0
-        move.w  0x8010.w,d0             /* buffer id */
+        move.w  0x8012.w,d0             /* num sfx */
+        move.l  d0,-(sp)
+        move.w  0x8010.w,d0             /* start buffer id */
         move.l  d0,-(sp)
         move.b  #'D,0x800F.w            /* sub comm port = DONE */
-SfxCopyCDBufferWaitAck:
+SfxCopyBufferFromCDFileWaitAck:
         tst.b   0x800E.w
-        bne.b   SfxCopyCDBufferWaitAck  /* wait for result acknowledged */
+        bne.b   SfxCopyBufferFromCDFileWaitAck  /* wait for result acknowledged */
         move.b  #0,0x800F.w             /* sub comm port = READY */
-        jsr     S_LoadCDBufferData      /* copy the buffer data in the background */
+        jsr     S_LoadCDBuffersData     /* copy the buffer data in the background */
         lea     12(sp),sp               /* clear the stack */
         bra.w   WaitCmd
 

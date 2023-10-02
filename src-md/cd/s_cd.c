@@ -3,9 +3,13 @@
 #include "cdfh.h"
 #include "s_buffers.h"
 
-void S_CD_LoadBufferData(sfx_buffer_t *buf, const char *name, int32_t offset, int32_t len)
+int S_CD_LoadBufferData(sfx_buffer_t *buf, int numsfx, const char *name, const int32_t *offsetlen)
 {
-    int flen;
+    int i;
+    int minofs, maxofs;
+    int flen, datalen;
+    int block;
+    uint8_t *data;
     static char fname[256] = { 0 };
     static CDFileHandle_t fh;
 
@@ -16,17 +20,44 @@ void S_CD_LoadBufferData(sfx_buffer_t *buf, const char *name, int32_t offset, in
         if (!cd_handle_from_name(&fh, name))
         {
             fname[0] = 0;
-            return;
+            return 0;
         }
         memcpy(fname, name, flen+1);
     }
 
-    if (!S_Buf_AllocData(buf, len))
-        return;
+    minofs = 0x0fffffff;
+    maxofs = 0;
+    for (i = 0; i < numsfx; i++) {
+        int startofs = offsetlen[i*2];
+        int length = offsetlen[i*2+1];
+        int endofs = startofs + length;
 
-    fh.Seek(&fh, offset, SEEK_SET);
+        if (startofs < minofs) {
+            minofs = startofs;
+        }
+        if (endofs > maxofs) {
+            maxofs = endofs;
+        }
+    }
 
-    fh.Read(&fh, buf->buf, len);
+    datalen = maxofs - minofs;
+    if (datalen <= 0)
+        return datalen;
 
-    S_Buf_SetData(buf, buf->buf, len);
+    // allocate enough memory to hold all sound effects + CD block padding
+    data = S_Buf_Alloc(datalen + 0x800);
+    if (!data)
+        return datalen;
+
+    block = (minofs >> 11) + fh.offset;
+    read_block(data, block, (datalen + 0x7FF) >> 11);
+
+    data = data + (minofs & 0x7FF);
+    for (i = 0; i < numsfx; i++) {
+        int ofs = offsetlen[i*2+0] - minofs;
+        int len = offsetlen[i*2+1];
+        S_Buf_SetData(buf + i, data + ofs, len);
+    }
+
+    return datalen;
 }
