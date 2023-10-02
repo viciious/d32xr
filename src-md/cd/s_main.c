@@ -1,7 +1,9 @@
+#include <string.h>
 #include "s_sources.h"
 #include "s_channels.h"
 #include "s_buffers.h"
 #include "s_main.h"
+#include "s_cd.h"
 
 #define S_MEMBANK_ADDR 0xC000 // assumed to be greater than __bss_end
 #define S_MEMBANK_PTR ((uint8_t *)S_MEMBANK_ADDR)
@@ -135,4 +137,12 @@ uint16_t S_GetSourcePosition(uint8_t src_id)
         return 0xffff;
     }
     return S_Src_GetPosition(src);
+}
+
+void S_LoadCDBufferData(uint16_t buf_id, const char *name, int32_t offset, int32_t len)
+{
+    if (buf_id == 0 || buf_id > S_MAX_BUFFERS) {
+        return;
+    }
+    S_CD_LoadBufferData(&s_buffers[ buf_id - 1 ], name, offset, len);
 }

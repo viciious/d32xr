@@ -475,6 +475,7 @@ no_cmd:
         dc.w    open_file - prireqtbl
         dc.w    read_file - prireqtbl
         dc.w    seek_file - prireqtbl
+        dc.w    load_cd_sfx - prireqtbl
 
 | process request from Secondary SH2
 handle_sec_req:
@@ -2116,6 +2117,36 @@ seek_file:
         move.l  d0,0xA15128         /* position => COMM8 */
 
         move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+load_cd_sfx:
+        move.l  0xA1512C,d0         /* length in COMM12 */
+        move.l  d2,-(sp)
+
+        move.l  0xA15128,d0         /* offset in COMM8 */
+        move.l  d2,-(sp)
+
+        lea     0x840200,a1         /* frame buffer */
+        move.l  a1,-(sp)            /* string pointer */
+
+        /* set buffer id */
+        moveq   #0,d0
+        move.w  0xA15122,d0         /* COMM2 = buffer id */
+        move.l  d0,-(sp)
+
+        move.w  0xA15100,d0
+        eor.w   #0x8000,d0
+        move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
+
+        jsr     scd_loadcd_buf
+        lea     16(sp),sp
+
+        move.w  0xA15100,d0
+        or.w    #0x8000,d0
+        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        move.w  #0,0xA15120         /* done */
+
         bra     main_loop
 
 | set standard mapper registers to default mapping
