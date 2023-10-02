@@ -26,11 +26,12 @@ typedef struct
 
 extern sfx_buffer_t s_buffers [ S_MAX_BUFFERS ];
 
+uint8_t *S_Buf_Alloc(uint32_t data_len);
+
 void S_InitBuffers(uint8_t *start_addr, uint32_t size);
 void S_ClearBuffersMem(void);
 
 void S_Buf_SetData(sfx_buffer_t *buf, uint8_t *data, uint32_t data_len);
 void S_Buf_CopyData(sfx_buffer_t *buf, const uint8_t *data, uint32_t data_len);
-uint8_t *S_Buf_AllocData(sfx_buffer_t *buf, uint32_t data_len);
 
 #endif
