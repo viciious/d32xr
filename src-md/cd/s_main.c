@@ -140,10 +140,11 @@ uint16_t S_GetSourcePosition(uint8_t src_id)
     return S_Src_GetPosition(src);
 }
 
-void S_LoadCDBufferData(uint16_t buf_id, const char *name, int32_t offset, int32_t len)
+int S_LoadCDBufferData(uint16_t buf_id, const char *name, int32_t offset, int32_t len)
 {
     if (buf_id == 0 || buf_id > S_MAX_BUFFERS) {
-        return;
+        return 0;
     }
     S_CD_LoadBufferData(&s_buffers[ buf_id - 1 ], name, offset, len);
+    return 1;
 }
