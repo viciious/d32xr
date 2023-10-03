@@ -76,20 +76,6 @@ int64_t local_scd_open_file(char *name)
     offset = read_long(0xA12024);
     write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
 
-#if 0
-    {
-        volatile char *temp = (volatile char *)0x600000; /* word ram on MD side (in 1M mode) */
-        for (i = 0; temp[i]; i++) {}
-        int words = (i + 2) / 2;
-        for (i = 0; i < words; i++) {
-            *((volatile short *)name+i) = 0;
-        }
-        for (i = 0; temp[i]; i++) {
-            ((volatile char *)name)[i] = temp[i];
-        }
-    }
-#endif
-
     if (length < 0)
         return length;
     return ((int64_t)length << 32) | offset;
@@ -237,77 +223,10 @@ int scd_open_file(char *name)
 
 int scd_read_file(void *ptr, int length)
 {
-#if 0
-    int r;
-    uint8_t *dst = ptr;
-
-    r = 0;
-    while (r < length)
-    {
-        int l;
-
-        l = length - r;
-        if (l > CHUNK_SIZE)
-            l = CHUNK_SIZE;
-
-        write_long(0xA12010, (uintptr_t)0x0C0000 + 0x20000 - CHUNK_SIZE); /* end of 128K of word ram on CD side (in 1M mode) */
-        write_long(0xA12014, l);
-        wait_do_cmd('H');
-        wait_cmd_ack();
-        l = read_long(0xA12020);
-        write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
-
-        if (l == 0)
-            break;
-
-        if ((intptr_t)dst < 0x600000 || (uintptr_t)dst >= 0x640000)
-        {
-            short *wordRam = (void *)((uintptr_t)0x600000 + 0x20000 - CHUNK_SIZE); /* end of 128K of word ram on MD side (in 1M mode) */
-#if 1
-            int i, words;
-            
-            // copy from wordRam to destination buffer
-            words = l / 2;
-            for (i = 0; i < words; i++) {
-                ((short *)dst)[i] = wordRam[i];
-            }
-            ((short *)dst)[i] = 0;
-
-            if (l & 1) {
-                dst[l - 1] = ((char *)wordRam)[l - 1];
-            }
-#else
-            memmove(dst, wordRam, l);
-#endif
-        }
-
-        r += l;
-        dst += l;
-        if (l < CHUNK_SIZE)
-            break;
-    }
-#else
-    int r;
-
-    r = cd_Read(&gfh, ptr, length);
-    if (r < 0)
-        return r;
-#endif
-
-    return r;
+    return cd_Read(&gfh, ptr, length);
 }
 
 int scd_seek_file(int offset, int whence)
 {
-#if 0 
-    write_long(0xA12010, whence); /* word ram on CD side (in 1M mode) */
-    write_long(0xA12014, offset);
-    wait_do_cmd('J');
-    wait_cmd_ack();
-    offset = read_long(0xA12020);
-    write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
-    return offset;
-#else
     return cd_Seek(&gfh, offset, whence);
-#endif
 }
