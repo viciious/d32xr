@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-int S_CD_LoadBufferData(sfx_buffer_t *buf, int numsfx, const char *name, const int32_t *offsetlen);
+int S_CD_LoadBuffers(sfx_buffer_t *buf, int numsfx, const char *name, const int32_t *offsetlen);
 extern int mystrlen(const char* string);
 
 #endif

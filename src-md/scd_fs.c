@@ -83,15 +83,12 @@ int64_t local_scd_open_file(char *name)
 
 void local_scd_read_block(void *ptr, int lba, int len)
 {
-    int blk;
     write_long(0xA12010, (uintptr_t)ptr); /* end of 128K of word ram on CD side (in 1M mode) */
     write_long(0xA12014, lba);
     write_long(0xA12018, len);
     wait_do_cmd('H');
     wait_cmd_ack();
-    blk = read_long(0xA12020);
     write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
-    return blk;
 }
 
 /// 
@@ -109,7 +106,6 @@ static uint8_t cd_Eof(CDFileHandle_t *handle)
 
 static int32_t cd_Read(CDFileHandle_t *handle, void *ptr, int32_t size)
 {
-    int32_t wait = 0;
     int32_t pos, blk, len, read = 0;
     uint8_t *dst = ptr;
 
