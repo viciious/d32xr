@@ -50,7 +50,7 @@ int S_CD_LoadBufferData(sfx_buffer_t *buf, int numsfx, const char *name, const i
         return datalen;
 
     block = (minofs >> 11) + fh.offset;
-    read_block(data, block, (datalen + 0x7FF) >> 11);
+    read_block(data, block, (datalen + 0x800 + 0x7FF) >> 11);
 
     data = data + (minofs & 0x7FF);
     for (i = 0; i < numsfx; i++) {
