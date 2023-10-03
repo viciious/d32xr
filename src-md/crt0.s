@@ -475,7 +475,7 @@ no_cmd:
         dc.w    open_file - prireqtbl
         dc.w    read_file - prireqtbl
         dc.w    seek_file - prireqtbl
-        dc.w    load_cd_sfx - prireqtbl
+        dc.w    load_sfx_cd_fileofs - prireqtbl
 
 | process request from Secondary SH2
 handle_sec_req:

@@ -140,9 +140,8 @@ uint16_t S_GetSourcePosition(uint8_t src_id)
     return S_Src_GetPosition(src);
 }
 
-int S_LoadCDBuffersData(uint16_t buf_id, int numsfx, const uint8_t *data)
+int S_LoadCDBuffers(uint16_t buf_id, int numsfx, const uint8_t *data)
 {
-    int i;
     const char *name;
     const int32_t *offsetlen;
 
@@ -160,6 +159,6 @@ int S_LoadCDBuffersData(uint16_t buf_id, int numsfx, const uint8_t *data)
     name = (const char *)data;
     offsetlen = (void *)(((uintptr_t)name + mystrlen(name) + 1 + 3) & ~3);
 
-    S_CD_LoadBuffersData(&s_buffers[ buf_id - 1 ], numsfx, name, offsetlen);
+    S_CD_LoadBuffers(&s_buffers[ buf_id - 1 ], numsfx, name, offsetlen);
     return 1;
 }
