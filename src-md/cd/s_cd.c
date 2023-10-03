@@ -3,7 +3,7 @@
 #include "cdfh.h"
 #include "s_buffers.h"
 
-int S_CD_LoadBufferData(sfx_buffer_t *buf, int numsfx, const char *name, const int32_t *offsetlen)
+int S_CD_LoadBuffers(sfx_buffer_t *buf, int numsfx, const char *name, const int32_t *offsetlen)
 {
     int i;
     int minofs, maxofs;

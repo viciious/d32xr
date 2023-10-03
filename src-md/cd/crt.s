@@ -99,7 +99,7 @@ WaitCmdPostUpdate:
         cmpi.b  #'E,0x800E.w
         beq     SfxSuspendUpdates
         cmpi.b  #'K,0x800E.w
-        beq     SfxCopyCDBuffer
+        beq     SfxCopyBuffersFromCDFile
 
         cmpi.b  #'F,0x800E.w
         beq     OpenFile
@@ -234,7 +234,7 @@ SfxCopyBufferWaitAck:
         lea     12(sp),sp               /* clear the stack */
         bra.w   WaitCmd
 
-SfxCopyBufferFromCDFile:
+SfxCopyBuffersFromCDFile:
         jsr     switch_banks
         move.l  #0x0C0000,d0            /* file name + offsets */
         move.l  d0,-(sp)
@@ -244,11 +244,11 @@ SfxCopyBufferFromCDFile:
         move.w  0x8010.w,d0             /* start buffer id */
         move.l  d0,-(sp)
         move.b  #'D,0x800F.w            /* sub comm port = DONE */
-SfxCopyBufferFromCDFileWaitAck:
+SfxCopyBuffersFromCDFileWaitAck:
         tst.b   0x800E.w
-        bne.b   SfxCopyBufferFromCDFileWaitAck  /* wait for result acknowledged */
+        bne.b   SfxCopyBuffersFromCDFileWaitAck  /* wait for result acknowledged */
         move.b  #0,0x800F.w             /* sub comm port = READY */
-        jsr     S_LoadCDBuffersData     /* copy the buffer data in the background */
+        jsr     S_LoadCDBuffers         /* copy the buffer data in the background */
         lea     12(sp),sp               /* clear the stack */
         bra.w   WaitCmd
 
@@ -385,7 +385,6 @@ ReadFile:
         move.l  0x8010.w,d0             /* address in RAM */
         move.l  d0,-(sp)
         jsr     read_block
-        move.l  d0,0x8020.w             /* read bytes */
         lea     12(sp),sp               /* clear the stack */
         jsr     switch_banks
 
