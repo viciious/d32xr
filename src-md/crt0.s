@@ -612,51 +612,53 @@ set_rom_bank:
 start_music:
         tst.w   use_cd
         bne     start_cd
-        
-        /* start VGM */
+
         clr.l   vgm_ptr
-        cmpi.w  #0x0300,d0
-        beq.b   0f
 
-        /* fetch VGM length */
-        lea     vgm_size,a0
-        move.w  0xA15122,0(a0)
-        move.w  #0,0xA15120         /* done with upper word */
-20:
-        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
-        cmpi.w  #0x0302,d0
-        bne.b   20b
-        move.w  0xA15122,2(a0)
-        move.w  #0,0xA15120         /* done with lower word */
-
-        /* fetch VGM offset */
-        lea     vgm_ptr,a0
-21:
-        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
-        cmpi.w  #0x0303,d0
-        bne.b   21b
-        move.w  0xA15122,0(a0)
-        move.w  #0,0xA15120         /* done with upper word */
-22:
-        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
-        cmpi.w  #0x0304,d0
-        bne.b   22b
-        move.w  0xA15122,2(a0)
-        move.w  #0,0xA15120         /* done with lower word */
-
-23:
-        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
-        cmpi.w  #0x0300,d0
-        bne.b   23b
-
-0:
-        /* set VGM pointer and init VGM player */
+        /* init VGM player */
         move.w  0xA15122,d0         /* COMM2 = index | repeat flag */
         move.w  #0x8000,d1
         and.w   d0,d1               /* repeat flag */
         eor.w   d1,d0               /* clear flag from index */
         move.w  d1,fm_rep           /* repeat flag */
         move.w  d0,fm_idx           /* index 1 to N */
+        move.w  0xA15120,d0         /* COMM0 */
+
+        /* fetch VGM offset */
+        lea     vgm_ptr,a0
+        move.l  0xA15128,(a0)       /* offset in COMM8 */
+        /* fetch VGM length */
+        lea     vgm_size,a0
+        move.l  0xA1512C,(a0)       /* length in COMM12 */
+
+        /* start VGM */
+        btst    #0,d0               /* check if we read from CD */
+        beq.b   0f
+
+        /* CD VGM playback */
+        move.l  0xA1512C,d1         /* length in COMM12 */
+        move.l  d1,-(sp)
+        move.l  0xA15128,d1         /* offset in COMM8 */
+        move.l  d1,-(sp)
+        lea     0x840200,a1         /* frame buffer */
+        move.l  a1,-(sp)
+
+        move.w  0xA15100,d0
+        eor.w   #0x8000,d0
+        move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
+
+        jsr     vgm_cache_scd
+        lea     12(sp),sp
+        move.l  d0,a1
+
+        move.w  0xA15100,d0
+        or.w    #0x8000,d0
+        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        bra     01f
+
+0:
+        /* ROM VGM playback */
         move.w  #0,0xA15104         /* set cart bank select */
         move.l  #0,a0
         move.l  vgm_ptr,d0          /* set VGM offset */
@@ -664,7 +666,7 @@ start_music:
 
         move.l  d0,a0
         bsr     set_rom_bank
-
+01:
         move.l  a1,-(sp)            /* MD lump ptr */
         jsr     vgm_setup           /* setup lzss, set pcm_baseoffs, set vgm_ptr, read first block */
         lea     4(sp),sp
@@ -2075,7 +2077,7 @@ open_file:
 
         lea     0x840200,a1         /* frame buffer */
         move.l  a1,-(sp)            /* string pointer */
-        jsr     scd_open_file
+        jsr     scd32x_open_file
         lea     4(sp),sp            /* clear the stack */
         move.l  d0,0xA15128         /* length => COMM8 */
 
@@ -2095,7 +2097,7 @@ read_file:
         move.l  d0,-(sp)            /* string pointer */
         lea     0x840200,a1         /* frame buffer */
         move.l  a1,-(sp)            /* string pointer */
-        jsr     scd_read_file
+        jsr     scd32x_read_file
         lea     8(sp),sp            /* clear the stack */
         move.l  d0,0xA15128         /* length => COMM8 */
 
@@ -2112,7 +2114,7 @@ seek_file:
         move.l  d0,-(sp)
         move.l  0xA15128,d0         /* offset in COMM8 */
         move.l  d0,-(sp)
-        jsr     scd_seek_file
+        jsr     scd32x_seek_file
         lea     8(sp),sp            /* clear the stack */
         move.l  d0,0xA15128         /* position => COMM8 */
 
