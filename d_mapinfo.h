@@ -31,15 +31,14 @@ typedef struct
 	VINT baronSpecial;
 	VINT cyberSpecial;
 	VINT spiderSpecial;
+	VINT mapNumber;
 	char *name;
 	char *sky;
 	char *next;
 	char *secretNext;
 	//VINT lumpNum;
-	VINT mapNumber;
-	VINT musicLump;
-	char lumpName[9];
-	void *data;
+	char *musicLump;
+	char *lumpName;
 } dmapinfo_t;
 
 typedef struct
@@ -47,10 +46,10 @@ typedef struct
 	VINT borderFlat;
 	VINT titleTime;
 	VINT titlePage;
-	VINT titleMus;
-	VINT intermissionMus;
-	VINT victoryMus;
-	VINT endMus;
+	char *titleMus;
+	char *intermissionMus;
+	char *victoryMus;
+	char *endMus;
 	VINT creditsPage;
 	VINT creditsTime;
 	VINT endFlat;

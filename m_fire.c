@@ -345,7 +345,7 @@ void I_DrawMenuFire(void)
 		if (m_fire->start_song)
 		{
 			m_fire->start_song = 0;
-			S_StartSong(gameinfo.titleMus, 0, cdtrack_title);
+			S_StartSongByName(gameinfo.titleMus, 0, cdtrack_title);
 		}
 	}
 
