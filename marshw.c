@@ -299,6 +299,22 @@ void Mars_WriteSRAM(const uint8_t* buffer, int offset, int len)
 	}
 }
 
+static char *Mars_StringToFramebuffer(const char *str)
+{
+	char *fb = (char *)(&MARS_FRAMEBUFFER + 0x100);
+
+	if (!*str)
+		return fb;
+
+	do {
+		*fb++ = *str++;
+	} while (*str);
+
+	*(int16_t *)((uintptr_t)fb & ~1) = 0;
+	*(fb-1) = *(str-1);
+	return fb;
+}
+
 void Mars_UpdateCD(void)
 {
 	while (MARS_SYS_COMM0);
@@ -321,8 +337,15 @@ void Mars_UseCD(int usecd)
 	while (MARS_SYS_COMM0);
 }
 
-void Mars_PlayTrack(char usecd, int playtrack, void *vgmptr, int vgmsize, char looping)
+void Mars_PlayTrack(char usecd, int playtrack, const char *name, int offset, int length, char looping)
 {
+#if 0
+	int backup[64];
+
+	ptr = Mars_StringToFramebuffer(name);
+	ptr = (void*)(((uintptr_t)ptr + 1 + 3) & ~3);
+	fast_memcpy(ptr, offsetlen, numsfx*2*sizeof(*offsetlen));
+
 	Mars_UseCD(usecd);
 
 	if (!usecd)
@@ -343,6 +366,7 @@ void Mars_PlayTrack(char usecd, int playtrack, void *vgmptr, int vgmsize, char l
 	MARS_SYS_COMM2 = playtrack | (looping ? 0x8000 : 0x0000);
 	MARS_SYS_COMM0 = 0x0300; /* start music */
 	while (MARS_SYS_COMM0);
+#endif
 }
 
 void Mars_MCDLoadSfx(uint16_t id, void *data, uint32_t data_len)
@@ -691,22 +715,6 @@ void Mars_SwapWordColumnWithMDVRAM(int c)
 {
     while (MARS_SYS_COMM0);
     MARS_SYS_COMM0 = 0x1C00|c;        /* sel = swap with VRAM, column in LB of comm0, start move */
-}
-
-static char *Mars_StringToFramebuffer(const char *str)
-{
-	char *fb = (char *)(&MARS_FRAMEBUFFER + 0x100);
-
-	if (!*str)
-		return fb;
-
-	do {
-		*fb++ = *str++;
-	} while (*str);
-
-	*(int16_t *)((uintptr_t)fb & ~1) = 0;
-	*(fb-1) = *(str-1);
-	return fb;
 }
 
 int Mars_OpenCDFile(const char *name)

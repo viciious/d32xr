@@ -330,13 +330,10 @@ void IN_Start (void)
 
 	interm->valsdrawn = false;
 
-	interm->nextmapinfo = Z_Malloc(sizeof(dmapinfo_t), PU_STATIC);
-	D_memset(interm->nextmapinfo, 0, sizeof(dmapinfo_t));
-
 	if (gameaction == ga_secretexit && gamemapinfo.secretNext)
-		G_FindMapinfo(gamemapinfo.secretNext, interm->nextmapinfo, NULL);
+		interm->nextmapinfo = G_MapInfoForLumpName(gamemapinfo.secretNext);
 	else if (gamemapinfo.next)
-		G_FindMapinfo(gamemapinfo.next, interm->nextmapinfo, NULL);
+		interm->nextmapinfo = G_MapInfoForLumpName(gamemapinfo.next);
 
 	D_memset(interm->killvalue, 0, sizeof(*interm->killvalue)*MAXPLAYERS);
 	D_memset(interm->itemvalue, 0, sizeof(*interm->itemvalue)*MAXPLAYERS);
@@ -411,17 +408,11 @@ void IN_Start (void)
 
 	I_SetPalette(W_POINTLUMPNUM(W_GetNumForName("PLAYPALS")));
 
-	S_StartSong(gameinfo.intermissionMus, 1, cdtrack_intermission);
+	S_StartSongByName(gameinfo.intermissionMus, 1, cdtrack_intermission);
 }
 
 void IN_Stop (void)
 {	
-	if (interm->nextmapinfo)
-	{
-		if (interm->nextmapinfo->data)
-			Z_Free(interm->nextmapinfo->data);
-		Z_Free(interm->nextmapinfo);
-	}
 	if (interm->interpic)
 	{
 		Z_Free(interm->interpic);

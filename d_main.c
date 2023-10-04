@@ -570,7 +570,7 @@ void START_Title(void)
 #ifdef MARS
 	I_InitMenuFire(titlepic);
 #else
-	S_StartSong(gameinfo.titleMus, 0, cdtrack_title);
+	S_StartSongByName(gameinfo.titleMus, 0, cdtrack_title);
 #endif
 }
 
