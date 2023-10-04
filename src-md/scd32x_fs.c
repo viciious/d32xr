@@ -3,12 +3,16 @@
 #include <string.h>
 #include <stdio.h>
 
+#define MD_WORDRAM          (void*)0x600000
+#define MCD_WORDRAM         (void*)((uintptr_t)0x0C0000)
+
 #define BLOCK_SIZE 2048
 #define CHUNK_SHIFT 3
 #define CHUNK_BLOCKS (1<<CHUNK_SHIFT) 
 #define CHUNK_SIZE (CHUNK_BLOCKS*BLOCK_SIZE)
-#define MCD_DISC_BUFFER (void*)((uintptr_t)0x0C0000 + 0x20000 - CHUNK_SIZE)
-#define MD_DISC_BUFFER (void*)((uintptr_t)0x600000 + 0x20000 - CHUNK_SIZE)
+
+#define MCD_DISC_BUFFER (void*)(MCD_WORDRAM + 0x20000 - CHUNK_SIZE)
+#define MD_DISC_BUFFER (void*)(MD_WORDRAM + 0x20000 - CHUNK_SIZE)
 
 typedef struct CDFileHandle {
     int32_t  (*Seek)(struct CDFileHandle *handle, int32_t offset, int32_t whence);
@@ -24,74 +28,8 @@ typedef struct CDFileHandle {
 extern CDFileHandle_t *cd_handle_from_name(CDFileHandle_t *handle, const char *name);
 extern CDFileHandle_t *cd_handle_from_offset(CDFileHandle_t *handle, int32_t offset, int32_t length);
 
-extern void write_byte(unsigned int dst, unsigned char val);
-extern void write_word(unsigned int dst, unsigned short val);
-extern void write_long(unsigned int dst, unsigned int val);
-extern unsigned char read_byte(unsigned int src);
-extern unsigned short read_word(unsigned int src);
-extern unsigned int read_long(unsigned int src);
-
-static void scd_delay(void)
-{
-    int cnt = 5;
-    do {
-        asm __volatile("nop");
-    } while (--cnt);
-}
-
-static char wait_cmd_ack(void)
-{
-    char ack = 0;
-
-    do {
-        scd_delay();
-        ack = read_byte(0xA1200F); // wait for acknowledge byte in sub comm port
-    } while (!ack);
-
-    return ack;
-}
-
-static void wait_do_cmd(char cmd)
-{
-    while (read_byte(0xA1200F)) {
-        scd_delay(); // wait until Sub-CPU is ready to receive command
-    }
-    write_byte(0xA1200E, cmd); // set main comm port to command
-}
-
-int64_t local_scd_open_file(char *name)
-{
-    int i;
-    int length, offset;
-    char *scdfn = (char *)0x600000; /* word ram on MD side (in 1M mode) */
-
-    for (i = 0; name[i]; i++)
-        *scdfn++ = name[i];
-    *scdfn = 0;
-
-    write_long(0xA12010, 0x0C0000); /* word ram on CD side (in 1M mode) */
-    wait_do_cmd('F');
-    wait_cmd_ack();
-    length = read_long(0xA12020);
-    offset = read_long(0xA12024);
-    write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
-
-    if (length < 0)
-        return length;
-    return ((int64_t)length << 32) | offset;
-}
-
-void local_scd_read_block(void *ptr, int lba, int len)
-{
-    write_long(0xA12010, (uintptr_t)ptr); /* end of 128K of word ram on CD side (in 1M mode) */
-    write_long(0xA12014, lba);
-    write_long(0xA12018, len);
-    wait_do_cmd('H');
-    wait_cmd_ack();
-    write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
-}
-
-/// 
+extern int64_t scd_open_file(const char *name);
+extern void scd_read_block(void *ptr, int lba, int len);
 
 static uint8_t cd_Eof(CDFileHandle_t *handle)
 {
@@ -124,7 +62,7 @@ static int32_t cd_Read(CDFileHandle_t *handle, void *ptr, int32_t size)
         blk = pos / CHUNK_SIZE;
         if (blk != handle->blk)
         {
-            local_scd_read_block((void *)MCD_DISC_BUFFER, blk*CHUNK_BLOCKS + handle->offset, CHUNK_BLOCKS);
+            scd_read_block((void *)MCD_DISC_BUFFER, blk*CHUNK_BLOCKS + handle->offset, CHUNK_BLOCKS);
             handle->blk = blk;
         }
 
@@ -194,13 +132,13 @@ CDFileHandle_t *cd_handle_from_offset(CDFileHandle_t *handle, int32_t offset, in
 
 CDFileHandle_t gfh;
 
-int scd_open_file(char *name)
+int scd32x_open_file(char *name)
 {
     int64_t lo;
     CDFileHandle_t *handle = &gfh;
     int length, offset;
 
-    lo = local_scd_open_file(name);
+    lo = scd_open_file(name);
     length = lo >> 32;
     if (length < 0)
         return -1;
@@ -217,12 +155,12 @@ int scd_open_file(char *name)
     return length;
 }
 
-int scd_read_file(void *ptr, int length)
+int scd32x_read_file(void *ptr, int length)
 {
     return cd_Read(&gfh, ptr, length);
 }
 
-int scd_seek_file(int offset, int whence)
+int scd32x_seek_file(int offset, int whence)
 {
     return cd_Seek(&gfh, offset, whence);
 }
