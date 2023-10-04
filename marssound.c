@@ -138,6 +138,11 @@ void S_Init(void)
 	I_PushPWAD(PWAD_NAME);
 	li = W_GetLumpInfo();
 
+	/* init music */
+	num_music = 0;
+	muslooping = 0;
+	S_StopSong();
+
 	start = W_CheckNumForName("M_START");
 	end = W_CheckNumForName("M_END");
 	num_music = end - start - 1;
@@ -147,8 +152,8 @@ void S_Init(void)
 		for (i = 0; i < num_music; i++) {
 			int j = start + i + 1;
 			D_memcpy(vgm_tracks[i].name, li[j].name, 8);
-			vgm_tracks[i].filepos = LITTLELONG(li[j].filepos);
-			vgm_tracks[i].size = LITTLELONG(li[j].size);
+			vgm_tracks[i].filepos = li[j].filepos;
+			vgm_tracks[i].size = li[j].size;
 		}
 	}
 
@@ -187,27 +192,6 @@ void S_Init(void)
 	}
 
 	I_PopPWAD();
-
-	/* init music */
-	num_music = 0;
-	muslooping = 0;
-	S_StopSong();
-#if 0
-	for (i = 1; i < numlumps; i++)
-	{
-		char name[9];
-
-		D_memcpy(name, W_GetNameForNum(i), 8);
-		name[8] = 0;
-
-		if (D_strncasecmp("VGM_", name, 4))
-			continue;
-
-		tmp_tracks[num_music++] = i;
-		if (num_music == (int)sizeof(tmp_tracks) / sizeof(tmp_tracks[0]))
-			break;
-	}
-#endif
 
 	Mars_RB_ResetAll(&soundcmds);
 
