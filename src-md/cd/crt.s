@@ -377,7 +377,6 @@ OpenFile:
         bra     WaitAck
 
 ReadFile:
-        |jsr     switch_banks
         move.l  0x8018.w,d0             /* length */
         move.l  d0,-(sp)
         move.l  0x8014.w,d0             /* lba */
