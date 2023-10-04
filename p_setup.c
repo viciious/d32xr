@@ -51,22 +51,6 @@ spawnthing_t* spawnthings;
 
 void P_LoadVertexes (int lump)
 {
-#ifdef MARS1
-	int			i;
-	vertex_t	*ml;
-	vertex_t	*li;
-
-	numvertexes = W_LumpLength (lump) / sizeof(vertex_t);
-	vertexes = Z_Malloc (numvertexes*sizeof(vertex_t),PU_LEVEL);
-	
-	ml = (vertex_t *)W_GetLumpData(lump);
-	li = vertexes;
-	for (i=0 ; i<numvertexes ; i++, li++, ml++)
-	{
-		li->x = BIGLONG(ml->x);
-		li->y = BIGLONG(ml->y);
-	}
-#else
 	byte		*data;
 	int			i;
 	mapvertex_t	*ml;
@@ -74,12 +58,7 @@ void P_LoadVertexes (int lump)
 	
 	numvertexes = W_LumpLength (lump) / sizeof(mapvertex_t);
 	vertexes = Z_Malloc (numvertexes*sizeof(vertex_t),PU_LEVEL);
-	//data = I_TempBuffer ();	
-	//W_ReadLump (lump,data);
-	int start = I_GetTime();
 	data = W_GetLumpData(lump);
-	int end = I_GetTime();
-	//I_Error("verts %d", end - start);
 
 	ml = (mapvertex_t *)data;
 	li = vertexes;
@@ -88,7 +67,6 @@ void P_LoadVertexes (int lump)
 		li->x = LITTLESHORT(ml->x)<<FRACBITS;
 		li->y = LITTLESHORT(ml->y)<<FRACBITS;
 	}
-#endif
 }
 
 
@@ -114,12 +92,7 @@ void P_LoadSegs (int lump)
 	segs = Z_Malloc (numsegs*sizeof(seg_t)+16,PU_LEVEL);
 	segs = (void*)(((uintptr_t)segs + 15) & ~15); // aline on cacheline boundary
 	D_memset (segs, 0, numsegs*sizeof(seg_t));
-	//data = I_TempBuffer ();
-	//W_ReadLump (lump,data);
-	int start = I_GetTime();
 	data = W_GetLumpData(lump);
-	int end = I_GetTime();
-	//I_Error("segs %d", end - start);
 
 	ml = (mapseg_t *)data;
 	li = segs;
@@ -163,8 +136,6 @@ void P_LoadSubsectors (int lump)
 
 	numsubsectors = W_LumpLength (lump) / sizeof(mapsubsector_t);
 	subsectors = Z_Malloc (numsubsectors*sizeof(subsector_t),PU_LEVEL);
-	//data = I_TempBuffer ();
-	//W_ReadLump (lump,data);
 	data = W_GetLumpData(lump);
 
 	ms = (mapsubsector_t *)data;
@@ -197,14 +168,10 @@ void P_LoadSectors (int lump)
 	sectors = Z_Malloc (numsectors*sizeof(sector_t) + 16,PU_LEVEL);
 	sectors = (void*)(((uintptr_t)sectors + 15) & ~15); // aline on cacheline boundary
 	D_memset (sectors, 0, numsectors*sizeof(sector_t));
-	//data = I_TempBuffer ();
-	//W_ReadLump (lump,data);
-	int start = I_GetTime();
 	data = W_GetLumpData(lump);
-	int end = I_GetTime();
-	//I_Error("sectors %d", end - start);
 
-	// pop the WAD stack to point to the IWAD, so that R_FlatNumForName can actually work
+	// pop the WAD stack to point to the IWAD,
+	// otherwise R_FlatNumForName is going to break
 	W_Pop();
 
 	ms = (mapsector_t *)data;
@@ -253,23 +220,19 @@ void P_LoadSectors (int lump)
 
 void P_LoadNodes (int lump)
 {
-#ifdef MARS
-	mapnode_t *mn;
-	struct {
-		int16_t 	b[2][4];
-	} *bb = (void *)I_FrameBuffer();
-
+	byte		*data;
 	int			i,j,k;
 	node_t		*no;
+	mapnode_t 	*mn;
+	struct {
+		int16_t b[2][4];
+	} *bb = (void *)I_FrameBuffer();
 
 	numnodes = W_LumpLength (lump) / sizeof(*mn);
-	int start = I_GetTime();
-	mn = W_GetLumpData(lump);
-	int end = I_GetTime();
-	//I_Error("nodes %d", end - start);
-
+	data = W_GetLumpData(lump);
 	nodes = Z_Malloc (numnodes*sizeof(node_t),PU_LEVEL);
 
+	mn = (mapnode_t *)data;
 	no = nodes;
 	for (i=0 ; i<numnodes ; i++, no++, mn++)
 	{
@@ -287,37 +250,12 @@ void P_LoadNodes (int lump)
 		bb++;
 	}
 
+#ifdef MARS
 	/* transfer nodes to the MD */
 	while (MARS_SYS_COMM0);
 	MARS_SYS_COMM2 = numnodes;
 	MARS_SYS_COMM0 = 0x2400;
 	while (MARS_SYS_COMM0);
-#else
-	byte		*data;
-	int			i,j,k;
-	mapnode_t	*mn;
-	node_t		*no;
-	
-	numnodes = W_LumpLength (lump) / sizeof(mapnode_t);
-	nodes = Z_Malloc (numnodes*sizeof(node_t),PU_LEVEL);
-	data = I_TempBuffer ();
-	W_ReadLump (lump,data);
-	
-	mn = (mapnode_t *)data;
-	no = nodes;
-	for (i=0 ; i<numnodes ; i++, no++, mn++)
-	{
-		no->x = LITTLESHORT(mn->x)<<FRACBITS;
-		no->y = LITTLESHORT(mn->y)<<FRACBITS;
-		no->dx = LITTLESHORT(mn->dx)<<FRACBITS;
-		no->dy = LITTLESHORT(mn->dy)<<FRACBITS;
-		for (j=0 ; j<2 ; j++)
-		{
-			no->children[j] = (unsigned short)LITTLESHORT(mn->children[j]);
-			for (k=0 ; k<4 ; k++)
-				no->bbox[j][k] = LITTLESHORT(mn->bbox[j][k])<<FRACBITS;
-		}
-	}
 #endif
 }
 
@@ -339,13 +277,7 @@ void P_LoadThings (int lump)
 	spawnthing_t	*st;
 	int 			numthingsreal, numstaticthings;
 
-	//data = I_TempBuffer ();
-	//W_ReadLump (lump,data);
-	int start = I_GetTime();
 	data = W_GetLumpData(lump);
-	int end = I_GetTime();
-	//I_Error("things %d", end - start);
-
 	numthings = W_LumpLength (lump) / sizeof(mapthing_t);
 	numthingsreal = 0;
 	numstaticthings = 0;
@@ -422,13 +354,7 @@ void P_LoadLineDefs (int lump)
 	lines = Z_Malloc (numlines*sizeof(line_t)+16,PU_LEVEL);
 	lines = (void*)(((uintptr_t)lines + 15) & ~15); // aline on cacheline boundary
 	D_memset (lines, 0, numlines*sizeof(line_t));
-	//data = I_TempBuffer ();
-	//W_ReadLump (lump,data);
-	int start = I_GetTime();
 	data = W_GetLumpData(lump);
-	int end = I_GetTime();
-	//I_Error("linedefs %d", end - start);
-
 
 	mld = (maplinedef_t *)data;
 	ld = lines;
@@ -515,13 +441,7 @@ void P_LoadSideDefs (int lump)
 	sides = Z_Malloc (numsides*sizeof(side_t)+16,PU_LEVEL);
 	sides = (void*)(((uintptr_t)sides + 15) & ~15); // aline on cacheline boundary
 	D_memset (sides, 0, numsides*sizeof(side_t));
-	//data = I_TempBuffer ();
-	//W_ReadLump (lump,data);
-
-	int start = I_GetTime();
 	data = W_GetLumpData(lump);
-	int end = I_GetTime();
-	//I_Error("sidedefs %d", end - start);
 
 	msd = (mapsidedef_t *)data;
 	sd = sides;
@@ -556,25 +476,19 @@ void P_LoadSideDefs (int lump)
 
 void P_LoadBlockMap (int lump)
 {
+	int		i;
 	int		count;
 
 	blockmaplump = Z_Malloc (W_LumpLength (lump),PU_LEVEL);
 	W_ReadLump (lump,blockmaplump);
-#ifndef MARS1
-	int		i;
 	count = W_LumpLength (lump)/2;
 	for (i=0 ; i<count ; i++)
 		blockmaplump[i] = LITTLESHORT(blockmaplump[i]);
-#endif
+
 	bmaporgx = blockmaplump[0]<<FRACBITS;
 	bmaporgy = blockmaplump[1]<<FRACBITS;
 	bmapwidth = blockmaplump[2];
 	bmapheight = blockmaplump[3];
-	
-	if (bmapwidth < 0)
-		I_Error("bmapwidth == %d", bmapwidth);
-	if (bmapheight < 0)
-		I_Error("bmapheight == %d", bmapheight);
 
 /* clear out mobj chains */
 	count = sizeof(*blocklinks)* bmapwidth*bmapheight;

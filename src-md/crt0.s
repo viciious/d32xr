@@ -2031,10 +2031,6 @@ flush_sfx:
         bra     main_loop
 
 test_handle:
-        move.w  0xA15100,d1
-        eor.w   #0x8000,d1
-        move.w  d1,0xA15100         /* unset FM - disallow SH2 access to FB */
-
         moveq   #0,d1
         move.w  0xA15122,d1         /* number of nodes */
         add.w   d1,d1               /* x2 */
@@ -2048,9 +2044,12 @@ test_handle:
         move.l  d1,-(sp)            /* length */
         move.l  a2,-(sp)            /* framebuffer */
         move.l  a1,-(sp)            /* destination */
-        
-        jsr     memcpy
 
+        move.w  0xA15100,d1
+        eor.w   #0x8000,d1
+        move.w  d1,0xA15100         /* unset FM - disallow SH2 access to FB */
+
+        jsr     memcpy
         lea     12(sp),sp            /* clear the stack */
 
         move.w  0xA15100,d0
@@ -2945,6 +2944,7 @@ FMReset:
 col_store:
         .space  21*224*2        /* 140 double-columns in vram, 20 in wram, 1 in wram for swap */
 
+        .align  16
 nodes_store:
         .global nodes_store
         .space  500*2*4*2       /* 2 16.0 bounding boxes per node, 500 nodes max */
