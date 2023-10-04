@@ -711,10 +711,6 @@ void R_BSP(void)
    rbspWork_t rbsp;
    cliprange_t *solidsegs = rbsp.solidsegs;
 
-#ifdef MARS
-   //W_GetLumpData(gamemaplump);
-#endif
-
    solidsegs[0].first = -2;
    solidsegs[0].last  = -1;
    solidsegs[1].first = viewportWidth;
