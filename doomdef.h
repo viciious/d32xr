@@ -534,12 +534,10 @@ extern	VINT		maxammo[NUMAMMO];
 extern	skill_t		gameskill;
 extern	int			totalkills, totalitems, totalsecret;	/* for intermission */
 extern	char		*gamemaplump;
-extern	dmapinfo_t	gamemapinfo;
 extern	dgameinfo_t	gameinfo;
 
-extern 	VINT 		*gamemapnumbers;
-extern 	char 		**gamemaplumps;
-extern 	char 		**gamemapnames;
+extern 	dmapinfo_t	**gamemaplist;
+extern	dmapinfo_t	gamemapinfo;
 extern 	VINT 		gamemapcount;
 
 extern 	int 		gametic;
@@ -862,6 +860,7 @@ void G_WorldDone (void);
 void G_RecordDemo (void);
 int G_PlayDemoPtr (unsigned *demo);
 
+dmapinfo_t *G_MapInfoForLumpName(const char *lumpName);
 char *G_LumpNameForMapNum(int map);
 char *G_MapNameForMapNum(int map);
 
@@ -1216,7 +1215,9 @@ void I_InitMenuFire(jagobj_t* titlepic);
 void I_StopMenuFire(void);
 void I_DrawMenuFire(void);
 void I_DrawSbar(void);
+int S_SongForName(const char *str);
 void S_StartSong(int musiclump, int looping, int cdtrack);
+void S_StartSongByName(const char *name, int looping, int cdtrack);
 int S_SongForMapnum(int mapnum);
 void S_StopSong(void);
 void S_RestartSounds (void);

@@ -16,9 +16,7 @@ char			*gamemaplump;
 dmapinfo_t		gamemapinfo;
 dgameinfo_t		gameinfo;
 
-VINT 			*gamemapnumbers;
-char 			**gamemaplumps;
-char 			**gamemapnames;
+dmapinfo_t		**gamemaplist;
 VINT 			gamemapcount;
 
 gametype_t		netgame;
@@ -50,19 +48,19 @@ extern int              skytexture;
 extern texture_t		*skytexturep;
 extern texture_t		*textures;
 
-static int G_MapNumForLumpName(const char *lumpName)
+dmapinfo_t *G_MapInfoForLumpName(const char *lumpName)
 {
 	int i;
 
 	/* find the map by its lump */
 	for (i = 0; i < gamemapcount; i++)
 	{
-		if (!D_strcasecmp(gamemaplumps[i], lumpName))
+		if (!D_strcasecmp(gamemaplist[i]->lumpName, lumpName))
 		{
-			return gamemapnumbers[i];
+			return gamemaplist[i];
 		}
 	}
-	return 0;
+	return NULL;
 }
 
 char *G_LumpNameForMapNum(int map)
@@ -72,10 +70,10 @@ char *G_LumpNameForMapNum(int map)
  	/* find the map by its number */
 	for (i = 0; i < gamemapcount; i++)
 	{
-		if (gamemapnumbers[i] > map)
+		if (gamemaplist[i]->mapNumber > map)
 			break;
-		if (gamemapnumbers[i] == map)
-			return gamemaplumps[i];
+		if (gamemaplist[i]->mapNumber == map)
+			return gamemaplist[i]->lumpName;
 	}
 	return "";
 }
@@ -87,10 +85,10 @@ char *G_MapNameForMapNum(int map)
  	/* find the map by its number */
 	for (i = 0; i < gamemapcount; i++)
 	{
-		if (gamemapnumbers[i] > map)
+		if (gamemaplist[i]->mapNumber > map)
 			break;
-		if (gamemapnumbers[i] == map)
-			return gamemapnames[i];
+		if (gamemaplist[i]->mapNumber == map)
+			return gamemaplist[i]->name;
 	}
 	return "";
 }
@@ -101,6 +99,7 @@ void G_DoLoadLevel (void)
 	int		skytexturel;
 	int 		gamemap;
 	int			music;
+	dmapinfo_t  *mi;
 
 	for (i=0 ; i<MAXPLAYERS ; i++) 
 	{ 
@@ -126,65 +125,15 @@ void G_DoLoadLevel (void)
 /*
  * get lump number for the next map
  */
+	mi = G_MapInfoForLumpName(gamemaplump);
+	if (!mi)
+		I_Error("No mapinfo for lump %s", gamemaplump);
 
- /* free DMAPINFO now */
-	if (gamemapinfo.data)
-		Z_Free(gamemapinfo.data);
-	gamemapinfo.data = NULL;
-
-	if (G_FindMapinfo(gamemaplump, &gamemapinfo, NULL) == 0) {
-		int nextmap;
-
-		gamemap = G_BuiltinMapNumForMapName(gamemaplump);
-		if (gamemap == 0)
-			gamemap = gamemapinfo.mapNumber + 1;
-
-		gamemapinfo.sky = NULL;
-		gamemapinfo.mapNumber = gamemap;
-		gamemapinfo.baronSpecial = (gamemap == 8);
-		gamemapinfo.secretNext = G_LumpNameForMapNum(24);
-
-		/* decide which level to go to next */
-#ifdef MARS
-		switch (gamemap)
-		{
-			case 15: nextmap = 23; break;
-			case 23: nextmap = 0; break;
-			case 24: nextmap = 4; break;
-			default: nextmap = gamemap + 1; break;
-		}
-#else
-		switch (gamemap)
-		{
-			case 23: nextmap = 0; break;
-			case 24: nextmap = 4; break;
-			default: nextmap = gamemap + 1; break;
-		}
-#endif
-		if (nextmap)
-			gamemapinfo.next = G_LumpNameForMapNum(nextmap);
-		else
-			gamemapinfo.next = 0;
-	}
-
-	/* DMAPINFO can override the map number */
-	gamemap = gamemapinfo.mapNumber;
+	D_memcpy(&gamemapinfo, mi, sizeof(dmapinfo_t));
 
 	/* update the start map */
+	gamemap = gamemapinfo.mapNumber;
 	startmap = gamemap;
-
-	/*  */
-	/* set the sky map for the episode  */
-	/*  */
-	if (gamemapinfo.sky == NULL)
-	{
-		if (gamemap < 9)
-			gamemapinfo.sky = "SKY1";
-		else if (gamemap < 18)
-			gamemapinfo.sky = "SKY2";
-		else
-			gamemapinfo.sky = "SKY3";
-	}
 
 	skytexturel = R_TextureNumForName(gamemapinfo.sky);
  	skytexturep = &textures[skytexturel];
@@ -192,8 +141,8 @@ void G_DoLoadLevel (void)
 	P_SetupLevel (gamemaplump, gameskill);
 	gameaction = ga_nothing; 
 
-	music = gamemapinfo.musicLump;
-	if (music <= 0)
+	music = S_SongForName(gamemapinfo.musicLump);
+	if (music <= mus_none)
 		music = S_SongForMapnum(gamemap);
 
 	if (netgame != gt_single && !splitscreen)
@@ -429,21 +378,12 @@ static void G_InitPlayerResp(void)
 
 void G_Init(void)
 {
-	int i, len;
+	int i;
 	int mapcount = 0;
 	dmapinfo_t** maplist;
-	VINT tempmapnums[99];
-	int mapLumpsSize = 0;
-	char mapLumps[99][9];
-	int mapNamesSize = 0;
-	char mapNames[99][32];
 
 	// copy mapnumbers to a temp buffer, then free, then allocate again
 	// to avoid zone memory fragmentation
-	gamemapcount = 0;
-	gamemapnumbers = NULL;
-	gamemapnames = NULL;
-
 	I_PushPWAD(PWAD_NAME);
 
 	maplist = G_LoadMaplist(&mapcount, &gameinfo);
@@ -451,28 +391,8 @@ void G_Init(void)
 		mapcount = 99;
 	if (maplist)
 	{
-		for (i = 0; i < mapcount; i++)
-		{
-			int mn = maplist[i]->mapNumber;
-			if (mn == 0)
-				mn = i + 1;
-			tempmapnums[i] = mn;
-
-			len = mystrlen(maplist[i]->lumpName);
-			D_memcpy(mapLumps[i], maplist[i]->lumpName, len+1);
-			mapLumpsSize += len + 1;
-
-			len = mystrlen(maplist[i]->name);
-			if (len > 31)
-				len = 31;
-			D_memcpy(mapNames[i], maplist[i]->name, len+1);
-			mapNames[i][31] = 0;
-			mapNamesSize += mystrlen(mapNames[i]) + 1;
-		}
-
-		for (i = 0; i < mapcount; i++)
-			Z_Free(maplist[i]);
-		Z_Free(maplist);
+		gamemaplist = maplist;
+		gamemapcount = mapcount;
 	}
 	else
 	{
@@ -480,50 +400,54 @@ void G_Init(void)
 
 		mapcount = 0;
 		for (i = 1; i < 99; i++) {
-			int l;
 			D_snprintf(lumpname, sizeof(lumpname), "MAP%02d", i);
-			l = W_CheckNumForName(lumpname);
-			if (l < 0)
+			if (W_CheckNumForName(lumpname) < 0)
 				break;
-			tempmapnums[mapcount] = i;
-
-			len = mystrlen(lumpname);
-			D_memcpy(mapLumps[mapcount], lumpname, len+1);
-			mapLumpsSize += len + 1;
-
-			D_memcpy(mapNames[i], lumpname, len+1);
-			mapNamesSize += len + 1;
-
 			mapcount++;
 		}
-	}
 
-	gamemapcount = mapcount;
-	if (mapcount > 0)
-	{
-		char *lump, *name;
+		maplist = Z_Malloc(sizeof(*maplist) * (mapcount + 1), PU_STATIC);
+		for (i = 0; i < mapcount; i++) {
+			int len;
 
-		gamemapnumbers = Z_Malloc(sizeof(*gamemapnumbers) * mapcount, PU_STATIC);
-		gamemaplumps = Z_Malloc(sizeof(*gamemaplumps) * mapcount, PU_STATIC);
-		gamemapnames = Z_Malloc(sizeof(*gamemapnames) * mapcount, PU_STATIC);
-		lump = Z_Malloc(mapLumpsSize, PU_STATIC);
-		name = Z_Malloc(mapNamesSize, PU_STATIC);
+			D_snprintf(lumpname, sizeof(lumpname), "MAP%02d", i+1);
+			len = mystrlen(lumpname);
 
-		for (i = 0; i < mapcount; i++)
-		{
-			gamemapnumbers[i] = tempmapnums[i];
-			gamemaplumps[i] = lump;
-			gamemapnames[i] = name;
-
-			len = mystrlen(mapLumps[i]);
-			D_memcpy(lump, mapLumps[i], len+1);
-			lump += len + 1;
-
-			len = mystrlen(mapNames[i]);
-			D_memcpy(name, mapNames[i], len+1);
-			name += len + 1;
-
+			maplist[i] = Z_Malloc(sizeof(dmapinfo_t) + len + 1, PU_STATIC);
+			maplist[i]->mapNumber = i + 1;
+			maplist[i]->name = maplist[i]->lumpName;
+			maplist[i]->lumpName = (char*)maplist[i] + sizeof(dmapinfo_t);
+			maplist[i]->baronSpecial = (maplist[i]->mapNumber == 8);
+			D_memcpy(maplist[i]->lumpName, lumpname, len + 1);
 		}
+
+		for (i = 0; i < mapcount; i++) {
+			int nextmap = 0;
+			int gamemap = maplist[i]->mapNumber;
+
+			switch (gamemap)
+			{
+				case 15: nextmap = 23; break;
+				case 23: nextmap = 0; break;
+				case 24: nextmap = 4; break;
+				default: nextmap = gamemap + 1; break;
+			}
+
+			if (gamemap < 9)
+				maplist[i]->sky = "SKY1";
+			else if (gamemap < 18)
+				maplist[i]->sky = "SKY2";
+			else
+				maplist[i]->sky = "SKY3";
+
+			if (nextmap)
+				maplist[i]->next = maplist[nextmap-1]->name;
+			if (mapcount >= 24)
+				maplist[i]->secretNext = maplist[23]->name;
+		}
+
+		gamemaplist = maplist;
+		gamemapcount = mapcount;
 	}
 
 	G_InitPlayerResp();
@@ -561,8 +485,6 @@ void G_InitNew (skill_t skill, int map, gametype_t gametype, boolean splitscr)
 
 	M_ClearRandom (); 
 
-	if (gamemapinfo.data)
-		Z_Free(gamemapinfo.data);
 	D_memset(&gamemapinfo, 0, sizeof(gamemapinfo));
 
 	/* these may be reset by I_NetSetup */
@@ -706,8 +628,9 @@ startnew:
 			if (!finale)
 			{
 				/* quick save */
-				int nextmap = G_MapNumForLumpName(nextmapl);
-				QuickSave(nextmap);
+				dmapinfo_t *mi = G_MapInfoForLumpName(nextmapl);
+				if (mi)
+					QuickSave(mi->mapNumber);
 			}
 		}
 #endif

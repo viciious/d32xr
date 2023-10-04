@@ -303,10 +303,10 @@ void F_Start (void)
 	int	i;
 	int	l;
 
-	if (gameinfo.endMus <= 0)
-		S_StartSong(gameinfo.victoryMus, 1, cdtrack_end);
+	if (!gameinfo.endMus || !*gameinfo.endMus)
+		S_StartSongByName(gameinfo.victoryMus, 1, cdtrack_end);
 	else
-		S_StartSong(gameinfo.endMus, 1, cdtrack_end);
+		S_StartSongByName(gameinfo.endMus, 1, cdtrack_end);
 
 	fin = Z_Malloc(sizeof(*fin), PU_STATIC);
 	D_memset(fin, 0, sizeof(*fin));
@@ -394,10 +394,10 @@ int F_Ticker (void)
 		{
 			fin->status = fin_charcast;
 
-			if (gameinfo.victoryMus <= 0)
-				S_StartSong(gameinfo.endMus, 1, cdtrack_victory);
+			if (!gameinfo.victoryMus || !*gameinfo.victoryMus)
+				S_StartSongByName(gameinfo.endMus, 1, cdtrack_victory);
 			else
-				S_StartSong(gameinfo.victoryMus, 1, cdtrack_victory);
+				S_StartSongByName(gameinfo.victoryMus, 1, cdtrack_victory);
 
 #ifndef JAGUAR
 			if (mobjinfo[castorder[fin->castnum].type].seesound)
