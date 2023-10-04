@@ -805,9 +805,14 @@ int  RunDemo (char *demoname)
 	int	exit;
 	int lump;
 
+	I_PushPWAD(PWAD_NAME);
+
 	lump = W_CheckNumForName(demoname);
 	if (lump == -1)
+	{
+		W_Pop();
 		return ga_exitdemo;
+	}
 
 	// avoid zone memory fragmentation which is due to happen
 	// if the demo lump cache is tucked after the level zone.
@@ -817,6 +822,8 @@ int  RunDemo (char *demoname)
 	Z_FreeTags(mainzone);
 
 	demo = W_CacheLumpNum(lump, PU_STATIC);
+	W_Pop();
+
 	exit = G_PlayDemoPtr (demo);
 	Z_Free(demo);
 
@@ -834,20 +841,15 @@ void RunMenu (void)
 	int exit = ga_exitdemo;
 
 	M_Start();
-	if (!gameinfo.noAttractDemo) {
+	if (!gameinfo.noAttractDemo)
+	{
 		do {
 			int i;
 			char demo[9];
 
 			for (i = 1; i < 10; i++)
 			{
-				int lump;
-
 				D_snprintf(demo, sizeof(demo), "DEMO%1d", i);
-				lump = W_CheckNumForName(demo);
-				if (lump == -1)
-					break;
-
 				exit = RunDemo(demo);
 				if (exit == ga_exitdemo)
 					break;
