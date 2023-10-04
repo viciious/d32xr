@@ -307,9 +307,6 @@ int M_Ticker (void)
 
 	menuscr = &mainscreen[screenpos];
 
-	if (!gamemapnumbers)
-		return ga_startnew;
-
 /* animate skull */
 	if (gametic != prevgametic && (gametic&3) == 0)
 	{
@@ -400,7 +397,7 @@ int M_Ticker (void)
 		{
 			consoleplayer = 0;
 			startsave = -1;
-			startmap = gamemapnumbers[playermap - 1]; /*set map number */
+			startmap = gamemaplist[playermap - 1]->mapNumber; /*set map number */
 			startskill = playerskill;	/* set skill level */
 			starttype = currentplaymode;	/* set play type */
 			startsplitscreen = currentgametype == mi_splitscreen;
@@ -580,7 +577,7 @@ int M_Ticker (void)
 void M_Drawer (void)
 {
 	int i;
-	int mapnumber = gamemapnumbers[playermap - 1];
+	int mapnumber = gamemaplist[playermap - 1]->mapNumber;
 	int	leveltens = mapnumber / 10, levelones = mapnumber % 10;
 	int scrpos = screenpos == ms_none ? ms_main : screenpos;
 	mainscreen_t* menuscr = &mainscreen[scrpos];
