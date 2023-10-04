@@ -78,7 +78,7 @@ void *vgm_cache_scd(const char *name, int offset, int length)
     foffset = lo & 0xffffffff;
 
     blk = offset >> 11;
-    blks = (length + 0x800 + 0x7FF) >> 11;
+    blks = ((offset + length + 0x7FF) >> 11) - blk;
 
     // store a copy in both banks
     scd_read_block(MCD_WORDRAM_VGM_PTR, blk + foffset, blks);
