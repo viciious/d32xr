@@ -304,7 +304,13 @@ int W_ReadLump (int lump, void *dest)
 		(unsigned char *) dest);
 	}
 	else
-	  D_memcpy (dest, W_GetLumpData(lump), BIGLONG(l->size));
+	{
+		volatile int size;
+		// cache the file size because W_GetLumpData can overwrite 
+		// the memory region that stores the lump info - the l pointer
+		size = BIGLONG(l->size);
+		D_memcpy (dest, W_GetLumpData(lump), size);
+	}
 	return BIGLONG(l->size);
 }
 
