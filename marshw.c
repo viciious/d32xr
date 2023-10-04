@@ -339,34 +339,32 @@ void Mars_UseCD(int usecd)
 
 void Mars_PlayTrack(char usecd, int playtrack, const char *name, int offset, int length, char looping)
 {
-#if 0
-	int backup[64];
-
-	ptr = Mars_StringToFramebuffer(name);
-	ptr = (void*)(((uintptr_t)ptr + 1 + 3) & ~3);
-	fast_memcpy(ptr, offsetlen, numsfx*2*sizeof(*offsetlen));
+	int len;
+	int backup[128];
+	char *ptr;
+	char *fb = (char *)(&MARS_FRAMEBUFFER + 0x100);
 
 	Mars_UseCD(usecd);
 
 	if (!usecd)
 	{
-		int i;
-		uint16_t s[4];
+		ptr = Mars_StringToFramebuffer(name);
+		ptr = (void*)(((uintptr_t)ptr + 1 + 3) & ~3);
+		len = ptr - fb;
+		fast_memcpy(backup, fb, (unsigned)len/4);
 
-		s[0] = (uintptr_t)vgmsize>>16, s[1] = (uintptr_t)vgmsize&0xffff;
-		s[2] = (uintptr_t)vgmptr >>16, s[3] = (uintptr_t)vgmptr &0xffff;
-
-		for (i = 0; i < 4; i++) {
-			MARS_SYS_COMM2 = s[i];
-			MARS_SYS_COMM0 = 0x0301+i;
-			while (MARS_SYS_COMM0);
-		}
+		*(int *)&MARS_SYS_COMM8 = offset;
+		*(int *)&MARS_SYS_COMM12 = length;
 	}
 
 	MARS_SYS_COMM2 = playtrack | (looping ? 0x8000 : 0x0000);
 	MARS_SYS_COMM0 = 0x0300; /* start music */
 	while (MARS_SYS_COMM0);
-#endif
+
+	if (!usecd)
+	{
+		fast_memcpy(backup, fb, (unsigned)len/4);
+	}
 }
 
 void Mars_MCDLoadSfx(uint16_t id, void *data, uint32_t data_len)
@@ -777,7 +775,7 @@ void Mars_MCDLoadSfxFileOfs(uint16_t start_id, int numsfx, const char *name, int
 
 	ptr = Mars_StringToFramebuffer(name);
 	ptr = (void*)(((uintptr_t)ptr + 1 + 3) & ~3);
-	fast_memcpy(ptr, offsetlen, numsfx*2*sizeof(*offsetlen));
+	fast_memcpy(ptr, offsetlen, (unsigned)numsfx*2*sizeof(*offsetlen)/4);
 
 	MARS_SYS_COMM2 = start_id;
 	MARS_SYS_COMM0 = 0x2900|numsfx; /* load sfx */
