@@ -74,13 +74,21 @@ int64_t scd_open_file(const char *name)
     return ((int64_t)length << 32) | offset;
 }
 
-void scd_read_block(void *ptr, int lba, int len)
+void scd_read_block(void *ptr, int lba, int len, void (*wait)(void))
 {
+    char ack = 0;
+    if (!wait)
+        wait = scd_delay;
+
     write_long(0xA12010, (uintptr_t)ptr); /* end of 128K of word ram on CD side (in 1M mode) */
     write_long(0xA12014, lba);
     write_long(0xA12018, len);
     wait_do_cmd('H');
-    wait_cmd_ack();
+    do {
+        // do some useful work while waiting
+        wait();
+        ack = read_byte(0xA1200F); // wait for acknowledge byte in sub comm port
+    } while (!ack);
     write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
 }
 
