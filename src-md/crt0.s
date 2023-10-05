@@ -2289,6 +2289,7 @@ load_font:
 
 | Bump the FM player to keep the music going
 
+        .global bump_fm
 bump_fm:
         move.w  sr,-(sp)
         move.w  #0x2700,sr          /* disable ints */
