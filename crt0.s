@@ -201,7 +201,7 @@
 ! Primary Vector Base Table
 !-----------------------------------------------------------------------
 
-        .equ    pri_stack, 0x0603F800
+        .equ    pri_stack, 0x0603F400
         .equ    sec_stack, 0x06040000
 
         .align  4
