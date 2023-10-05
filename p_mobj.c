@@ -142,6 +142,9 @@ void P_RespawnSpecials (void)
 		if (mthing->type == mobjinfo[i].doomednum)
 			break;
 
+	if (i == NUMMOBJTYPES)
+		return;
+
 /* spawn it */
 	if (mobjinfo[i].flags & MF_SPAWNCEILING)
 		z = ONCEILINGZ;

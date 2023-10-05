@@ -626,20 +626,21 @@ static void AM_Drawer_ (int c)
 	line = lines;
 	drawn = 0;
 
-	if (c == 0)
+	switch (c)
 	{
-		miny = 0;
-		maxy = am_height-1;
-	}
-	else if (c == 1)
-	{
-		miny = 0;
-		maxy = am_halfh;
-	}
-	else if (c == 2)
-	{
-		miny = am_halfh-1;
-		maxy = am_height-1;
+		case 1:
+			miny = 0;
+			maxy = am_halfh;
+			break;
+		case 2:
+			miny = am_halfh-1;
+			maxy = am_height-1;
+			break;
+		case 0:
+		default:
+			miny = 0;
+			maxy = am_height-1;
+			break;
 	}
 
 	fb = (byte*)I_FrameBuffer();
