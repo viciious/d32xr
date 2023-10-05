@@ -454,15 +454,17 @@ void G_Init(void)
 
 	I_PopPWAD();
 
-	if (gameinfo.borderFlat <= 0)
-		gameinfo.borderFlat = W_CheckNumForName("ROCKS");
-	if (gameinfo.endFlat <= 0)
+	if (!*gameinfo.borderFlat)
+		gameinfo.borderFlat = "ROCKS";
+	if (!*gameinfo.endFlat)
 		gameinfo.endFlat = gameinfo.borderFlat;
+
+	gameinfo.borderFlatNum = W_CheckNumForName(gameinfo.borderFlat);
 
 	if (gameinfo.data)
 		return;
 
-	gameinfo.titlePage = W_CheckNumForName("title");
+	gameinfo.titlePage = "title";
 	gameinfo.titleTime = 540;
 	gameinfo.endShowCast = 1;
 }
