@@ -691,7 +691,7 @@ void P_CheckMissileSpawn (mobj_t *th)
 ================
 */
 
-void P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type)
+mobj_t *P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type)
 {
 	mobj_t		*th;
 	angle_t		an;
@@ -716,6 +716,8 @@ void P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type)
 		dist = 1;
 	th->momz = (dest->z - source->z) / dist;
 	P_CheckMissileSpawn (th);
+
+	return th;
 }
 
 
