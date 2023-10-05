@@ -539,7 +539,7 @@ void P_DeathThink (player_t *player)
 // * unless the player also has the berserk pack.
 // Returns true otherwise.
 //
-boolean P_CanSelecteWeapon(player_t* player, int weaponnum)
+boolean P_CanSelectWeapon(player_t* player, int weaponnum)
 {
 	if (!player->weaponowned[weaponnum])
 		return false;
@@ -560,13 +560,21 @@ boolean P_CanSelecteWeapon(player_t* player, int weaponnum)
 //
 boolean P_CanFireWeapon(player_t* player, int weaponnum)
 {
-	if (!P_CanSelecteWeapon(player, weaponnum))
+	if (!P_CanSelectWeapon(player, weaponnum))
 		return false;
 
 	if (weaponinfo[weaponnum].ammo == am_noammo)
 		return true;
 
-	int neededAmmo = (weaponnum == wp_bfg) ? 40 : 1;
+	int neededAmmo = 1;
+	switch (weaponnum) {
+		case wp_bfg:
+			neededAmmo = 40;
+			break;
+		case wp_supershotgun:
+			neededAmmo = 2;
+			break;
+	}
 	return player->ammo[weaponinfo[weaponnum].ammo] >= neededAmmo;
 }
 
@@ -654,15 +662,20 @@ ticphase = 23;
 #elif defined(MARS)
 		if ((buttons & (BT_MODE | BT_START)) == (BT_MODE | BT_START))
 		{
-			if (P_CanSelecteWeapon(player, wp_fist))
+			if (P_CanSelectWeapon(player, wp_fist))
 				player->pendingweapon = wp_fist;
 			else/* if (player->weaponowned[wp_chainsaw])*/
 				player->pendingweapon = wp_chainsaw;
 		}
 		if ((buttons & (BT_MODE | BT_A)) == (BT_MODE | BT_A))
 			player->pendingweapon = wp_pistol;
-		if ((buttons & (BT_MODE | BT_B)) == (BT_MODE | BT_B) && player->weaponowned[wp_shotgun])
-			player->pendingweapon = wp_shotgun;
+		if ((buttons & (BT_MODE | BT_B)) == (BT_MODE | BT_B))
+		{
+			if (P_CanSelectWeapon(player, wp_supershotgun))
+				player->pendingweapon = wp_supershotgun;
+			else
+				player->pendingweapon = wp_shotgun;
+		}
 		if ((buttons & (BT_MODE | BT_C)) == (BT_MODE | BT_C) && player->weaponowned[wp_chaingun])
 			player->pendingweapon = wp_chaingun;
 		if ((buttons & (BT_MODE | BT_X)) == (BT_MODE | BT_X) && player->weaponowned[wp_missile])
