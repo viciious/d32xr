@@ -354,6 +354,7 @@ typedef enum
 	wp_fist,
 	wp_pistol,
 	wp_shotgun,
+	wp_supershotgun,
 	wp_chaingun,
 	wp_missile,
 	wp_plasma,

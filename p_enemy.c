@@ -911,7 +911,6 @@ void A_Metal (mobj_t *mo)
 	A_Chase (mo);
 }
 
-
 /*============================================================================= */
 
 /* a move in p_base.c crossed a special line */
