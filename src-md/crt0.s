@@ -640,13 +640,20 @@ start_music:
         move.l  d1,-(sp)
         move.l  0xA15128,d1         /* offset in COMM8 */
         move.l  d1,-(sp)
-        lea     0x840200,a1         /* frame buffer */
-        move.l  a1,-(sp)
 
         move.w  0xA15100,d0
         eor.w   #0x8000,d0
         move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
 
+        /* copy frame buffer string to local buffer */
+        lea     0x840200,a0         /* frame buffer */
+        lea     vgm_lzss_buf,a1
+00:
+        move.b  (a0)+,(a1)+
+        bne.b   00b
+
+        lea     vgm_lzss_buf,a1
+        move.l  a1,-(sp)
         jsr     vgm_cache_scd
         lea     12(sp),sp
         move.l  d0,a1
@@ -667,6 +674,8 @@ start_music:
         move.l  d0,a0
         bsr     set_rom_bank
 01:
+        move.w  #0,0xA15120         /* done */
+
         move.l  a1,-(sp)            /* MD lump ptr */
         jsr     vgm_setup           /* setup lzss, set pcm_baseoffs, set vgm_ptr, read first block */
         lea     4(sp),sp
@@ -785,12 +794,10 @@ start_music:
         move.w  #0x0000,0xA11100    /* Z80 deassert bus request */
         move.w  #0x0100,0xA11200    /* Z80 deassert reset - run driver */
 
-        move.w  #0,0xA15120         /* done */
         bra     main_loop
 9:
         clr.w   fm_idx              /* not playing VGM */
 
-        move.w  #0,0xA15120         /* done */
         bra     main_loop
 
 start_cd:
