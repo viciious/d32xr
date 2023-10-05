@@ -626,9 +626,40 @@ void A_SPosAttack (mobj_t *actor)
 	}
 }
 
+void A_CPosAttack (mobj_t* actor)
+{
+	int		angle;
+	int		bangle;
+	int		damage;
+	int		slope;
+	lineattack_t	la;
+
+	if (!actor->target)
+		return;
+
+	S_StartSound (actor, sfx_shotgn);
+	A_FaceTarget (actor);
+	bangle = actor->angle;
+	slope = P_AimLineAttack (&la, actor, bangle, MISSILERANGE);
+
+	angle = bangle + ((P_Random()-P_Random())<<20);
+	damage = ((P_Random()%5)+1)*3;
+	P_LineAttack (&la, actor, angle, MISSILERANGE, slope, damage);
+}
+
+void A_CPosRefire (mobj_t* actor)
+{
+	// keep firing unless target got out of sight
+	A_FaceTarget (actor);
+	if (P_Random () < 40)
+		return;
+	if (!actor->target || actor->target->health <= 0|| !(actor->flags&MF_SEETARGET) )
+		P_SetMobjState (actor, mobjinfo[actor->type].seestate);
+}
+
 void A_SpidRefire (mobj_t *actor)
 {	
-/* keep firing unless target got out of sight */
+	/* keep firing unless target got out of sight */
 	A_FaceTarget (actor);
 	if (P_Random () < 10)
 		return;
@@ -636,6 +667,14 @@ void A_SpidRefire (mobj_t *actor)
 		P_SetMobjState (actor, mobjinfo[actor->type].seestate);
 }
 
+void A_BspiAttack (mobj_t *actor)
+{
+	if (!actor->target)
+		return;
+	A_FaceTarget (actor);
+	// launch a missile
+	P_SpawnMissile (actor, actor->target, MT_ARACHPLAZ);
+}
 
 /*
 ==============
@@ -730,7 +769,194 @@ void A_BruisAttack (mobj_t *actor)
 }
 
 
+//
+// A_SkelMissile
+//
+void A_SkelMissile (mobj_t* actor)
+{	
+	mobj_t*	mo;
 
+	if (!actor->target)
+		return;
+
+	A_FaceTarget (actor);
+	actor->z += 16*FRACUNIT;	// so missile spawns higher
+	mo = P_SpawnMissile (actor, actor->target, MT_TRACER);
+	actor->z -= 16*FRACUNIT;	// back to normal
+
+	mo->x += mo->momx;
+	mo->y += mo->momy;
+	mo->extradata = (uintptr_t)actor->target;
+}
+
+const int TRACEANGLE = 0xc000000;
+
+void A_Tracer (mobj_t *actor)
+{
+	angle_t	exact;
+	fixed_t	dist;
+	fixed_t	slope;
+	mobj_t*	dest;
+	mobj_t*	th;
+	const mobjinfo_t* ainfo = &mobjinfo[actor->type];
+
+	if (gametic & 3)
+		return;
+
+	// spawn a puff of smoke behind the rocket
+	P_SpawnPuff (actor->x, actor->y, actor->z, 0);
+
+	th = P_SpawnMobj (actor->x-actor->momx, actor->y-actor->momy, actor->z, MT_SMOKE);
+
+	th->momz = FRACUNIT;
+	th->tics -= P_Random()&3;
+	if (th->tics < 1)
+		th->tics = 1;
+
+	// adjust direction
+	dest = (void*)actor->extradata;
+
+	if (!dest || dest->health <= 0)
+		return;
+
+	// change angle	
+	exact = R_PointToAngle2 (actor->x, actor->y, dest->x, dest->y);
+
+	if (exact != actor->angle)
+	{
+		if (exact - actor->angle > 0x80000000)
+		{
+			actor->angle -= TRACEANGLE;
+			if (exact - actor->angle < 0x80000000)
+				actor->angle = exact;
+		}
+		else
+		{
+			actor->angle += TRACEANGLE;
+			if (exact - actor->angle > 0x80000000)
+				actor->angle = exact;
+		}
+	}
+
+	exact = actor->angle>>ANGLETOFINESHIFT;
+	actor->momx = FixedMul (ainfo->speed, finecosine(exact));
+	actor->momy = FixedMul (ainfo->speed, finesine(exact));
+
+	// change slope
+	dist = P_AproxDistance (dest->x - actor->x, dest->y - actor->y);
+
+	dist = dist / ainfo->speed;
+
+	if (dist < 1)
+		dist = 1;
+	slope = (dest->z+40*FRACUNIT - actor->z) / dist;
+
+	if (slope < actor->momz)
+		actor->momz -= FRACUNIT/8;
+	else
+		actor->momz += FRACUNIT/8;
+	}
+
+
+void A_SkelWhoosh (mobj_t *actor)
+{
+	if (!actor->target)
+		return;
+	A_FaceTarget (actor);
+	S_StartSound (actor,sfx_skeswg);
+}
+
+void A_SkelFist (mobj_t *actor)
+{
+	int		damage;
+
+	if (!actor->target)
+		return;
+
+	A_FaceTarget (actor);
+
+	if (P_CheckMeleeRange (actor))
+	{
+		damage = ((P_Random()%10)+1)*6;
+		S_StartSound (actor, sfx_skepch);
+		P_DamageMobj (actor->target, actor, actor, damage);
+	}
+}
+
+//
+// Mancubus attack,
+// firing three missiles (bruisers)
+// in three different directions?
+// Doesn't look like it. 
+//
+#define	FATSPREAD	(ANG90/8)
+
+void A_FatRaise (mobj_t *actor)
+{
+    A_FaceTarget (actor);
+    S_StartSound (actor, sfx_manatk);
+}
+
+void A_FatAttack1 (mobj_t* actor)
+{
+    mobj_t*	mo;
+    int		an;
+	const mobjinfo_t* moinfo;
+
+    A_FaceTarget (actor);
+    // Change direction  to ...
+    actor->angle += FATSPREAD;
+    P_SpawnMissile (actor, actor->target, MT_FATSHOT);
+
+    mo = P_SpawnMissile (actor, actor->target, MT_FATSHOT);
+    mo->angle += FATSPREAD;
+    an = mo->angle >> ANGLETOFINESHIFT;
+	moinfo = &mobjinfo[mo->type];
+    mo->momx = FixedMul (moinfo->speed, finecosine(an));
+    mo->momy = FixedMul (moinfo->speed, finesine(an));
+}
+
+void A_FatAttack2 (mobj_t* actor)
+{
+    mobj_t*	mo;
+    int		an;
+	const mobjinfo_t* moinfo;
+
+    A_FaceTarget (actor);
+    // Now here choose opposite deviation.
+    actor->angle -= FATSPREAD;
+    P_SpawnMissile (actor, actor->target, MT_FATSHOT);
+
+    mo = P_SpawnMissile (actor, actor->target, MT_FATSHOT);
+    mo->angle -= FATSPREAD*2;
+    an = mo->angle >> ANGLETOFINESHIFT;
+	moinfo = &mobjinfo[mo->type];
+    mo->momx = FixedMul (moinfo->speed, finecosine(an));
+    mo->momy = FixedMul (moinfo->speed, finesine(an));
+}
+
+void A_FatAttack3 (mobj_t*	actor)
+{
+    mobj_t*	mo;
+    int		an;
+	const mobjinfo_t* moinfo;
+
+    A_FaceTarget (actor);
+    
+    mo = P_SpawnMissile (actor, actor->target, MT_FATSHOT);
+    mo->angle -= FATSPREAD/2;
+    an = mo->angle >> ANGLETOFINESHIFT;
+	moinfo = &mobjinfo[mo->type];
+    mo->momx = FixedMul (moinfo->speed, finecosine(an));
+    mo->momy = FixedMul (moinfo->speed, finesine(an));
+
+    mo = P_SpawnMissile (actor, actor->target, MT_FATSHOT);
+    mo->angle += FATSPREAD/2;
+    an = mo->angle >> ANGLETOFINESHIFT;
+	moinfo = &mobjinfo[mo->type];
+    mo->momx = FixedMul (moinfo->speed, finecosine(an));
+    mo->momy = FixedMul (moinfo->speed, finesine(an));
+}
 
 /*
 ==================
@@ -908,6 +1134,12 @@ void A_Hoof (mobj_t *mo)
 void A_Metal (mobj_t *mo)
 {
 	S_StartSound (mo, sfx_metal);
+	A_Chase (mo);
+}
+
+void A_BabyMetal (mobj_t* mo)
+{
+	S_StartSound (mo, sfx_bspwlk);
 	A_Chase (mo);
 }
 
