@@ -56,6 +56,7 @@ typedef struct
 	VINT		drawbg;
 	jagobj_t	**endobj;
 	drawcol_t	drcol;
+	int 		endFlat;
 } finale_t;
 
 finale_t *fin;
@@ -333,6 +334,10 @@ void F_Start (void)
 	fin->castonmelee = 0;
 	fin->castattacking = false;
 
+	fin->endFlat = -1;
+	if (gameinfo.endFlat && *gameinfo.endFlat)
+		fin->endFlat = W_CheckNumForName(gameinfo.endFlat);
+
 #ifndef MARS
 	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
 	DoubleBufferSetup ();
@@ -547,7 +552,7 @@ stopattack:
 static void F_DrawBackground(void)
 {
 #ifdef MARS
-	DrawTiledBackground2(gameinfo.endFlat);
+	DrawTiledBackground2(fin->endFlat);
 #else
 	EraseBlock(0, 0, 320, 200);
 #endif

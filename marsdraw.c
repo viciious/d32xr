@@ -748,12 +748,12 @@ void DrawTiledBackground2(int flat)
 
 void DrawTiledBackground(void)
 {
-	if (gameinfo.borderFlat <= 0)
+	if (gameinfo.borderFlatNum <= 0)
 	{
 		I_ClearFrameBuffer();
 		return;
 	}
-	DrawTiledBackground2(gameinfo.borderFlat);
+	DrawTiledBackground2(gameinfo.borderFlatNum);
 }
 
 void EraseBlock(int x, int y, int width, int height)

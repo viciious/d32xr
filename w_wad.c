@@ -287,12 +287,16 @@ int W_LumpLength (int lump)
 int W_ReadLump (int lump, void *dest)
 {
 	lumpinfo_t	*l;
-	
+	volatile int size;
+
 	if (lump < 0)
 		I_Error("W_ReadLump: %i < 0", lump);
 	if (lump >= wadfile[wadnum].numlumps)
 		I_Error ("W_ReadLump: %i >= numlumps",lump);
 	l = wadfile[wadnum].lumpinfo+lump;
+	// cache the file size because W_GetLumpData can overwrite 
+	// the memory region that stores the lump info - the l pointer
+	size = BIGLONG(l->size);
 	if (l->name[0] & 0x80) /* compressed */
 	{
 		 decode((unsigned char *)W_GetLumpData(lump),
@@ -300,13 +304,9 @@ int W_ReadLump (int lump, void *dest)
 	}
 	else
 	{
-		volatile int size;
-		// cache the file size because W_GetLumpData can overwrite 
-		// the memory region that stores the lump info - the l pointer
-		size = BIGLONG(l->size);
 		D_memcpy (dest, W_GetLumpData(lump), size);
 	}
-	return BIGLONG(l->size);
+	return size;
 }
 
 

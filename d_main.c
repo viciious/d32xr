@@ -549,7 +549,7 @@ int TIC_Abortable (void)
 
 void START_Title(void)
 {
-	int l;
+	const char *l;
 
 #ifdef MARS
 	int		i;
@@ -564,8 +564,18 @@ void START_Title(void)
 	DoubleBufferSetup();
 #endif
 
+	titlepic = NULL;
 	l = gameinfo.titlePage;
-	titlepic = l != -1 ? W_CacheLumpNum(l, PU_STATIC) : NULL;
+
+	if (*l) {
+		I_PushPWAD(PWAD_NAME);
+
+		int lump = W_CheckNumForName(l);
+		if (lump >= 0)
+			titlepic = W_CacheLumpNum(lump, PU_STATIC);
+
+		I_PopPWAD();
+	}
 
 #ifdef MARS
 	I_InitMenuFire(titlepic);
@@ -605,9 +615,9 @@ static void START_Credits (void)
 	credits = NULL;
 	titlepic = NULL;
 	creditspage = 1;
-	if (gameinfo.creditsPage < 0)
+	if (!*gameinfo.creditsPage)
 		return;
-	credits = W_CacheLumpNum(gameinfo.creditsPage, PU_STATIC);
+	credits = W_CacheLumpName(gameinfo.creditsPage, PU_STATIC);
 #else
 	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
 	titlepic = W_CacheLumpName("credits", PU_STATIC);
@@ -630,7 +640,7 @@ static int TIC_Credits (void)
 	int buttons = ticbuttons[0];
 	int oldbuttons = oldticbuttons[0];
 
-	if (gameinfo.creditsPage < 0)
+	if (!*gameinfo.creditsPage)
 		return ga_exitdemo;
 	if (ticon >= gameinfo.creditsTime)
 		return 1;		/* go on to next demo */
@@ -661,7 +671,7 @@ static int TIC_Credits (void)
 		{
 			char name[9];
 
-			D_memcpy(name, W_GetNameForNum(gameinfo.creditsPage), 8);
+			D_strncpy(name, gameinfo.creditsPage, 8);
 			name[7]+= creditspage;
 			name[8] = '\0';
 
@@ -786,11 +796,9 @@ void RunTitle (void)
 
 void RunCredits (void)
 {
-	int		l;
 	int		exit;
 	
-	l = gameinfo.creditsPage;
-	if (l > 0)
+	if (*gameinfo.creditsPage)
 		exit = MiniLoop(START_Credits, STOP_Credits, TIC_Credits, DRAW_Credits, UpdateBuffer);
 	else
 		exit = ga_exitdemo;
@@ -810,7 +818,7 @@ int  RunDemo (char *demoname)
 	lump = W_CheckNumForName(demoname);
 	if (lump == -1)
 	{
-		W_Pop();
+		I_PopPWAD();
 		return ga_exitdemo;
 	}
 
@@ -822,7 +830,7 @@ int  RunDemo (char *demoname)
 	Z_FreeTags(mainzone);
 
 	demo = W_CacheLumpNum(lump, PU_STATIC);
-	W_Pop();
+	I_PopPWAD();
 
 	exit = G_PlayDemoPtr (demo);
 	Z_Free(demo);
