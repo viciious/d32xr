@@ -65,8 +65,8 @@ void decode(unsigned char* input, unsigned char* output)
 	lzss_state_t lzss;
 	lzss_setup(&lzss, input, output, LZSS_BUF_SIZE);
 	lzss_read_all(&lzss);
-#endif
 }
+#endif
 
 /*
 ============================================================================
@@ -353,7 +353,7 @@ void	*W_CacheLumpNum (int lump, int tag)
 	{	/* read the lump in */
 /*printf ("cache miss on lump %i\n",lump); */
 		len = W_LumpLength(lump);
-		Z_Malloc (len+1, tag, &lumpcache[lump]);
+		Z_Malloc (len+1, tag);
 		W_ReadLump (lump, lumpcache[lump]);
 		((char*)lumpcache[lump])[len] = '\0';
 	}
