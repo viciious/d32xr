@@ -39,7 +39,6 @@ typedef struct {
 	int16_t solid_fire_height;
 	int16_t bottom_pos;
 	int16_t titlepic_pos_x;
-	int16_t start_song;
 } m_fire_t;
 
 #define FIRE_WIDTH		320
@@ -213,7 +212,6 @@ void I_InitMenuFire(jagobj_t *titlepic)
 
 	m_fire = Z_Malloc(sizeof(*m_fire), PU_STATIC);
 	D_memset(m_fire, 0, sizeof(*m_fire));
-	m_fire->start_song = 1;
 
 	m_fire->firePalCols = sizeof(fireRGBs) / 3;
 	m_fire->firePal = Z_Malloc(sizeof(*m_fire->firePal) * m_fire->firePalCols, PU_STATIC);
@@ -262,6 +260,8 @@ void I_InitMenuFire(jagobj_t *titlepic)
 	for (i = 0; i < 256; i++)
 		m_fire->rndtable[i] = M_Random() & 3;
 
+	S_StartSongByName(gameinfo.titleMus, 0, cdtrack_title);
+
 	if (titlepic != NULL)
 	{
 		for (i = 0; i < 2; i++)
@@ -291,10 +291,7 @@ void I_InitMenuFire(jagobj_t *titlepic)
 */
 void I_StopMenuFire(void)
 {
-	if (!m_fire->start_song)
-	{
-		S_StopSong();
-	}
+	S_StopSong();
 
 	Mars_M_EndDrawFire();
 
@@ -340,19 +337,10 @@ void I_DrawMenuFire(void)
 			lines[j] = (j - limit) * 320 / 2 + 0x100;
 	}
 
-	if (pos >= solid_fire_height)
-	{
-		if (m_fire->start_song)
-		{
-			m_fire->start_song = 0;
-			S_StartSongByName(gameinfo.titleMus, 0, cdtrack_title);
-		}
-	}
-
 	if (titlepic != NULL)
 	{
 		// clear the framebuffer underneath the fire where the title pic is 
-		// no longer draw and thus can no longer as serve as the background
+		// no longer drawn and thus can no longer as serve as the background
 		if (ticon >= FIRE_STOP_TICON)
 		{
 			int *irow = (int*)(I_FrameBuffer() + 320 / 2 * (200 - pic_cutoff));

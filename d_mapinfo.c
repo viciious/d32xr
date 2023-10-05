@@ -269,15 +269,15 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
 {
 	if (!D_strcasecmp(key, "borderFlat"))
-		gi->borderFlat = W_CheckNumForName(value);
+		gi->borderFlat = value;
 	else if (!D_strcasecmp(key, "titleTime"))
 		gi->titleTime = D_atoi(value);
 	else if (!D_strcasecmp(key, "creditsTime"))
 		gi->creditsTime = D_atoi(value);
 	else if (!D_strcasecmp(key, "titlePage"))
-		gi->titlePage = W_CheckNumForName(value);
+		gi->titlePage = value;
 	else if (!D_strcasecmp(key, "creditsPage"))
-		gi->creditsPage = W_CheckNumForName(value);
+		gi->creditsPage = value;
 	else if (!D_strcasecmp(key, "titleMus"))
 		gi->titleMus = value;
 	else if (!D_strcasecmp(key, "intermissionMus"))
@@ -289,11 +289,26 @@ static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
 	else if (!D_strcasecmp(key, "endText"))
 		gi->endText = value;
 	else if (!D_strcasecmp(key, "endFlat"))
-		gi->endFlat = W_CheckNumForName(value);
+		gi->endFlat = value;
 	else if (!D_strcasecmp(key, "endShowCast"))
 		gi->endShowCast = D_atoi(value);
 	else if (!D_strcasecmp(key, "noAttractDemo"))
 		gi->noAttractDemo = D_atoi(value);
+}
+
+static void G_ClearGameInfo(dgameinfo_t* gi)
+{
+	D_memset(gi, 0, sizeof(*gi));
+	gi->endShowCast = 1;
+	gi->borderFlat = "";
+	gi->endFlat = "";
+	gi->titlePage = "";
+	gi->titleMus = "";
+	gi->intermissionMus = "";
+	gi->victoryMus = "";
+	gi->endMus = "";
+	gi->creditsPage = "";
+	gi->endText = "";
 }
 
 dmapinfo_t **G_LoadMaplist(int *pmapcount, dgameinfo_t* gi)
@@ -304,9 +319,7 @@ dmapinfo_t **G_LoadMaplist(int *pmapcount, dgameinfo_t* gi)
 	int mapcount, i;
 	dmapinfo_t** maplist;
 
-	D_memset(gi, 0, sizeof(*gi));
-	gi->creditsPage = -1;
-	gi->endShowCast = 1;
+	G_ClearGameInfo(gi);
 
 	mapcount = 0;
 	*pmapcount = 0;
@@ -355,7 +368,7 @@ dmapinfo_t **G_LoadMaplist(int *pmapcount, dgameinfo_t* gi)
 			if (linecount < 2)
 			{
 				Z_Free(gi->data);
-				D_memset(gi, 0, sizeof(*gi));
+				G_ClearGameInfo(gi);
 			}
 			continue;
 		}
