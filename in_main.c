@@ -391,11 +391,16 @@ void IN_Start (void)
 	
 #ifdef MARS
 	Z_FreeTags (mainzone);
+
+	I_PushPWAD(PWAD_NAME);
+
 	l = W_CheckNumForName("INTERPIC");
 	if (l != -1)
 		interm->interpic = W_CacheLumpNum(l, PU_STATIC);
 	else
 		interm->interpic = NULL;
+
+	I_PopPWAD();
 #endif
 
 	snums = W_CheckNumForName("NUM_0");
