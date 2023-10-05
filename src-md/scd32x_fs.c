@@ -29,7 +29,8 @@ extern CDFileHandle_t *cd_handle_from_name(CDFileHandle_t *handle, const char *n
 extern CDFileHandle_t *cd_handle_from_offset(CDFileHandle_t *handle, int32_t offset, int32_t length);
 
 extern int64_t scd_open_file(const char *name);
-extern void scd_read_block(void *ptr, int lba, int len);
+extern void scd_read_block(void *ptr, int lba, int len, void (*wait)(void));
+extern void bump_fm(void);
 
 static uint8_t cd_Eof(CDFileHandle_t *handle)
 {
@@ -62,7 +63,8 @@ static int32_t cd_Read(CDFileHandle_t *handle, void *ptr, int32_t size)
         blk = pos / CHUNK_SIZE;
         if (blk != handle->blk)
         {
-            scd_read_block((void *)MCD_DISC_BUFFER, blk*CHUNK_BLOCKS + handle->offset, CHUNK_BLOCKS);
+            // keep the FM music going by calling bump_fm
+            scd_read_block((void *)MCD_DISC_BUFFER, blk*CHUNK_BLOCKS + handle->offset, CHUNK_BLOCKS, bump_fm);
             handle->blk = blk;
         }
 
