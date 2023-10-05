@@ -426,7 +426,7 @@ void IN_Stop (void)
 	Z_Free(interm);
 	interm = NULL;
 
-	S_StopSong();
+	//S_StopSong();
 }
 
 int IN_Ticker (void)
