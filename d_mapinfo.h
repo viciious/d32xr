@@ -43,16 +43,17 @@ typedef struct
 
 typedef struct
 {
-	VINT borderFlat;
-	VINT titleTime;
-	VINT titlePage;
+	char *borderFlat;
+	char *endFlat;
+	char *creditsPage;
+	char *titlePage;
 	char *titleMus;
 	char *intermissionMus;
 	char *victoryMus;
 	char *endMus;
-	VINT creditsPage;
+	VINT borderFlatNum;
+	VINT titleTime;
 	VINT creditsTime;
-	VINT endFlat;
 	VINT endShowCast;
 	VINT noAttractDemo;
 	char* endText;
