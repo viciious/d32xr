@@ -108,7 +108,10 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
          return true; // went overhead
       if(tmthing->z + tmthing->height < thing->z)
          return true; // went underneath
-      if(tmthing->target->type == thing->type) // don't hit same species as originator
+      if((tmthing->target->type == thing->type) ||
+	    (tmthing->target->type == MT_KNIGHT && thing->type == MT_BRUISER) ||
+	    (tmthing->target->type == MT_BRUISER && thing->type == MT_KNIGHT)
+      ) // don't hit same species as originator
       {
          if(thing == tmthing->target) // don't hit originator
             return true;

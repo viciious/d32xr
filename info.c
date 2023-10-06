@@ -508,6 +508,28 @@ STATE(SPR_BOSS,11,4,A_Fall,S_BOSS_DIE5),	/* S_BOSS_DIE4 */
 STATE(SPR_BOSS,12,4,NULL,S_BOSS_DIE6),	/* S_BOSS_DIE5 */
 STATE(SPR_BOSS,13,4,NULL,S_BOSS_DIE7),	/* S_BOSS_DIE6 */
 STATE(SPR_BOSS,14,-1,A_BossDeath,S_NULL),	/* S_BOSS_DIE7 */
+STATE(SPR_BOSS,0,5,A_Look,S_BOS2_STND2),	// S_BOS2_STND
+STATE(SPR_BOSS,1,5,A_Look,S_BOS2_STND),	// S_BOS2_STND2
+STATE(SPR_BOSS,0,1,A_Chase,S_BOS2_RUN2),	// S_BOS2_RUN1
+STATE(SPR_BOSS,0,2,A_Chase,S_BOS2_RUN3),	// S_BOS2_RUN2
+STATE(SPR_BOSS,1,1,A_Chase,S_BOS2_RUN4),	// S_BOS2_RUN3
+STATE(SPR_BOSS,1,2,A_Chase,S_BOS2_RUN5),	// S_BOS2_RUN4
+STATE(SPR_BOSS,2,1,A_Chase,S_BOS2_RUN6),	// S_BOS2_RUN5
+STATE(SPR_BOSS,2,2,A_Chase,S_BOS2_RUN7),	// S_BOS2_RUN6
+STATE(SPR_BOSS,3,1,A_Chase,S_BOS2_RUN8),	// S_BOS2_RUN7
+STATE(SPR_BOSS,3,2,A_Chase,S_BOS2_RUN1),	// S_BOS2_RUN8
+STATE(SPR_BOSS,4,4,A_FaceTarget,S_BOS2_ATK2),	// S_BOS2_ATK1
+STATE(SPR_BOSS,5,4,A_FaceTarget,S_BOS2_ATK3),	// S_BOS2_ATK2
+STATE(SPR_BOSS,6,4,A_BruisAttack,S_BOS2_RUN1),	// S_BOS2_ATK3
+STATE(SPR_BOSS,7,1,NULL,S_BOS2_PAIN2),	// S_BOS2_PAIN
+STATE(SPR_BOSS,7,1,A_Pain,S_BOS2_RUN1),	// S_BOS2_PAIN2
+STATE(SPR_BOSS,8,4,NULL,S_BOS2_DIE2),	// S_BOS2_DIE1
+STATE(SPR_BOSS,9,4,A_Scream,S_BOS2_DIE3),	// S_BOS2_DIE2
+STATE(SPR_BOSS,10,4,NULL,S_BOS2_DIE4),	// S_BOS2_DIE3
+STATE(SPR_BOSS,11,4,A_Fall,S_BOS2_DIE5),	// S_BOS2_DIE4
+STATE(SPR_BOSS,12,4,NULL,S_BOS2_DIE6),	// S_BOS2_DIE5
+STATE(SPR_BOSS,13,4,NULL,S_BOS2_DIE7),	// S_BOS2_DIE6
+STATE(SPR_BOSS,14,-1,NULL,S_NULL),	// S_BOS2_DIE7
 STATE(SPR_SKUL,32768,5,A_Look,S_SKULL_STND2),	/* S_SKULL_STND */
 STATE(SPR_SKUL,32769,5,A_Look,S_SKULL_STND),	/* S_SKULL_STND2 */
 STATE(SPR_SKUL,32768,3,A_Chase,S_SKULL_RUN2),	/* S_SKULL_RUN1 */
@@ -1084,6 +1106,31 @@ sfx_brsdth,		/* deathsound */
 sfx_dmact,		/* activesound */
 MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL		/* flags */
  },
+
+{		// MT_KNIGHT
+69,		// doomednum
+S_BOS2_STND,		// spawnstate
+500,		// spawnhealth
+S_BOS2_RUN1,		// seestate
+sfx_kntsit,		// seesound
+8,		// reactiontime
+0,		// attacksound
+S_BOS2_PAIN,		// painstate
+50,		// painchance
+sfx_dmpain,		// painsound
+S_BOS2_ATK1,		// meleestate
+S_BOS2_ATK1,		// missilestate
+S_BOS2_DIE1,		// deathstate
+S_NULL,		// xdeathstate
+sfx_kntdth,		// deathsound
+8,		// speed
+24*FRACUNIT,		// radius
+64*FRACUNIT,		// height
+1000,		// mass
+0,		// damage
+sfx_dmact,		// activesound
+MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL		// flags
+},
 
 {		/* MT_SKULL */
 3006,		/* doomednum */
