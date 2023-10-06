@@ -650,9 +650,9 @@ void P_SetupLevel (const char *lumpname, skill_t skill)
 	mobj_t	*mobj;
 #endif
 	extern	int	cy;
-	int lumpnum;
+	int lumpnum, lumps[ML_BLOCKMAP+1];
 	wadinfo_t pwad;
-	lumpinfo_t maplumps[ML_BLOCKMAP+1], *li;
+	lumpinfo_t li[ML_BLOCKMAP+1];
 
 	M_ClearRandom ();
 
@@ -669,14 +669,11 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 		I_Error("Map %s not found!", lumpname);
 
 	/* build a temp in-memory PWAD */
-	li = W_GetLumpInfo();
-	for (i = 0; i < ML_BLOCKMAP+1; i++) {
-		maplumps[i].filepos = LITTLELONG(li[lumpnum+i].filepos);
-		maplumps[i].size = LITTLELONG(li[lumpnum+i].size);
-	}
-	pwad.numlumps = i;
+	for (i = 0; i < ML_BLOCKMAP+1; i++)
+		lumps[i] = lumpnum+i;
+	pwad.numlumps = W_GetLumpInfoSubset(li, W_GetLumpInfo(), ML_BLOCKMAP+1, lumps);
 
-	W_InitPWAD(&pwad, maplumps);
+	W_InitPWAD(&pwad, li);
 
 /* note: most of this ordering is important	 */
 	P_LoadBlockMap (ML_BLOCKMAP);
