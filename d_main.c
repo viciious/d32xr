@@ -607,19 +607,47 @@ void DRAW_Title (void)
 /*============================================================================= */
 
 #ifdef MARS
-static char* credits;
+static char* credits[2];
 static short creditspage;
 #endif
 
 static void START_Credits (void)
 {
 #ifdef MARS
-	credits = NULL;
+	int i;
+	int lumps[2];
+	lumpinfo_t li[2];
+	wadinfo_t pwad;
+
+	credits[0] = credits[1] = NULL;
 	titlepic = NULL;
 	creditspage = 1;
 	if (!*gameinfo.creditsPage)
 		return;
-	credits = W_CacheLumpName(gameinfo.creditsPage, PU_STATIC);
+
+	I_PushPWAD(PWAD_NAME);
+
+	/* build a temp in-memory PWAD */
+	for (i = 0; i < 2; i++)
+	{
+		char name[9];
+		D_strncpy(name, gameinfo.creditsPage, 8);
+		name[7]+= i;
+		name[8] = '\0';
+
+		lumps[i] = W_CheckNumForName(name);
+	}
+
+	pwad.numlumps = W_GetLumpInfoSubset(li, W_GetLumpInfo(), i, lumps);
+	W_InitPWAD(&pwad, li);
+
+	for (i = 0; i < 2; i++)
+		credits[i] = W_CacheLumpName(li[i].name, PU_STATIC);
+
+	I_PopPWAD();
+
+	if (!credits[0])
+		return;
 #else
 	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
 	titlepic = W_CacheLumpName("credits", PU_STATIC);
@@ -630,9 +658,15 @@ static void START_Credits (void)
 void STOP_Credits (void)
 {
 #ifdef MARS
-	if (credits)
-		Z_Free(credits);
+	int i;
+	for (i = 0; i < 2; i++)
+	{
+		if (credits[i])
+			Z_Free(credits[i]);
+	}
+	D_memset(credits, 0, sizeof(credits));
 #endif
+
 	if (titlepic)
 		Z_Free(titlepic);
 }
@@ -667,24 +701,13 @@ static int TIC_Credits (void)
 		return ga_exitdemo;
 #endif
 
-	if (ticon * 2 >= gameinfo.creditsTime)
+	if (ticon >= gameinfo.creditsTime/2)
 	{
+		if (!credits[1])
+			return 1;
 		if (creditspage != 2)
 		{
-			char name[9];
-
-			D_strncpy(name, gameinfo.creditsPage, 8);
-			name[7]+= creditspage;
-			name[8] = '\0';
-
-			int l = W_CheckNumForName(name);
-			if (l >= 0)
-			{
-				Z_Free(credits);
-				credits = W_CacheLumpNum(l, PU_STATIC);
-			}
 			creditspage = 2;
-
 			DoubleBufferSetup();
 		}
 	}
@@ -766,7 +789,7 @@ static void DRAW_LineCmds(char *lines)
 static void DRAW_Credits(void)
 {
 #ifdef MARS
-	DRAW_LineCmds(credits);
+	DRAW_LineCmds(credits[creditspage-1]);
 #else
 	DrawJagobj(titlepic, 0, 0);
 #endif
