@@ -128,14 +128,26 @@ void W_OpenPWAD (wadinfo_t *wad, void *ptr)
 */
 void W_InitPWAD (wadinfo_t *wadi, void *lumpinfo)
 {
-	int 			i;
 	wadfile_t 		*wad;
-
 	wad = &wadfile[wadnum];
 	wad->fileptr = lumpinfo;
 	wad->lumpinfo = lumpinfo;
 	wad->numlumps = wadi->numlumps;
+}
 
+/*
+====================
+=
+= W_FixPWADEndianess
+=
+====================
+*/
+void W_FixPWADEndianess (void)
+{
+	int 			i;
+	wadfile_t 		*wad;
+
+	wad = &wadfile[wadnum];
 	for (i = 0; i < wad->numlumps; i++) {
 		wad->lumpinfo[i].filepos = LITTLELONG(wad->lumpinfo[i].filepos);
 		wad->lumpinfo[i].size = LITTLELONG(wad->lumpinfo[i].size);
@@ -175,6 +187,29 @@ int W_Pop (void)
 lumpinfo_t *W_GetLumpInfo (void)
 {
 	return wadfile[wadnum].lumpinfo;
+}
+
+/*
+====================
+=
+= W_GetLumpInfoSubset
+====================
+*/
+int W_GetLumpInfoSubset(lumpinfo_t *out, const lumpinfo_t *in, int numlumps, int *lumps)
+{
+	int i, n;
+
+	n = 0;
+	for (i = 0; i < numlumps; i++) {
+		int l = lumps[i];
+		if (l < 0)
+			continue;
+		D_memcpy(out[n].name, in[l].name, 8);
+		out[n].filepos = in[l].filepos;
+		out[n].size = in[l].size;
+		n++;
+	}
+	return n;
 }
 
 /*
@@ -407,4 +442,3 @@ void * W_GetLumpData(int lump)
 		return I_ReadPWAD(BIGLONG(l->filepos), BIGLONG(l->size)); 
 	return I_RemapLumpPtr((void*)(wadfile[wadnum].fileptr + BIGLONG(l->filepos)));
 }
-

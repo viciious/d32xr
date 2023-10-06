@@ -688,7 +688,9 @@ int 	W_Push (void);
 int 	W_Pop (void);
 void	W_OpenPWAD (wadinfo_t *wad, void *ptr);
 void 	W_InitPWAD (wadinfo_t *wad, void *lumpinfo);
+void 	W_FixPWADEndianess (void);
 lumpinfo_t *W_GetLumpInfo (void);
+int 	W_GetLumpInfoSubset(lumpinfo_t *out, const lumpinfo_t *in, int numlumps, int *lumps);
 
 int		W_CheckNumForName (const char *name);
 int		W_GetNumForName (const char *name);
