@@ -1195,6 +1195,8 @@ void I_PushPWAD(const char *name)
 	W_Push(); // push PWAD onto stack
 
 	W_InitPWAD(&wad, Mars_GetCDFileBuffer());
+
+	W_FixPWADEndianess();
 }
 
 void I_PopPWAD(void)

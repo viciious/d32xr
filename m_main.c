@@ -184,7 +184,7 @@ void M_Start2 (boolean startup_)
 	mainitem[mi_joingame].screen = ms_none;
 	mainscreen[ms_main].numitems++;
 
-	D_memcpy(mainitem[mi_level].name, "Area", 5);
+	D_memcpy(mainitem[mi_level].name, "Level", 5);
 	mainitem[mi_level].x = ITEMX;
 	mainitem[mi_level].y = CURSORY(0);
 	mainitem[mi_level].screen = ms_none;
@@ -637,11 +637,11 @@ void M_Drawer (void)
 		if (leveltens)
 		{
 			DrawJagobjLump(numslump + leveltens,
-				item->x + 70, y + 2, NULL, NULL);
-			DrawJagobjLump(numslump + levelones, item->x + 84, y + 2, NULL, NULL);
+				item->x + 76, y + 2, NULL, NULL);
+			DrawJagobjLump(numslump + levelones, item->x + 90, y, NULL, NULL);
 		}
 		else
-			DrawJagobjLump(numslump + levelones, item->x + 70, y + 2, NULL, NULL);
+			DrawJagobjLump(numslump + levelones, item->x + 76, y, NULL, NULL);
 
 		print((320 - (tmplen * 14)) >> 1, y + ITEMSPACE + 2, tmp);
 
@@ -683,16 +683,16 @@ void M_Drawer (void)
 
 				leveltens = saveslotmap / 10, levelones = saveslotmap % 10;
 
-				print(item->x + 10, y + 40 + 2, "Area");
+				print(item->x + 10, y + 40 + 2, "Level");
 
 				if (leveltens)
 				{
 					DrawJagobjLump(numslump + leveltens,
-						item->x + 80, y + 40 + 3, NULL, NULL);
-					DrawJagobjLump(numslump + levelones, item->x + 94, y + ITEMSPACE*2 + 3, NULL, NULL);
+						item->x + 86, y + 40, NULL, NULL);
+					DrawJagobjLump(numslump + levelones, item->x + 100, y + ITEMSPACE*2, NULL, NULL);
 				}
 				else
-					DrawJagobjLump(numslump + levelones, item->x + 80, y + ITEMSPACE*2 + 3, NULL, NULL);
+					DrawJagobjLump(numslump + levelones, item->x + 86, y + ITEMSPACE*2, NULL, NULL);
 
 				print((320 - (mapnamelen * 14)) >> 1, y + ITEMSPACE*3 + 3, mapname);
 			}
