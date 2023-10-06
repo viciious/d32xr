@@ -166,8 +166,8 @@ void S_Init(void)
 		for (i = 0; i < pwad.numlumps; i++) {
 			int j = start + i + 1;
 			D_memcpy(sfxlumps[i].name, li[j].name, 8);
-			sfxlumps[i].filepos = LITTLELONG(li[j].filepos);
-			sfxlumps[i].size = LITTLELONG(li[j].size);
+			sfxlumps[i].filepos = li[j].filepos;
+			sfxlumps[i].size = li[j].size;
 		}
 	}
 
