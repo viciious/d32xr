@@ -366,7 +366,7 @@ void Mars_PlayTrack(char use_cda, int playtrack, const char *name, int offset, i
 
 	if (use_cdvgm)
 	{
-		fast_memcpy(backup, fb, (unsigned)len/4);
+		fast_memcpy(fb, backup, (unsigned)len/4);
 	}
 }
 
