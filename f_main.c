@@ -12,12 +12,17 @@ typedef struct
 static const castinfo_t castorder[] = {
 {"zombieman", MT_POSSESSED},
 {"shotgun guy", MT_SHOTGUY},
+{"heavy weapon dude", MT_CHAINGUY},
 {"imp", MT_TROOP},
 {"demon", MT_SERGEANT},
 {"spectre", MT_SERGEANT},
 {"lost soul", MT_SKULL},
 {"cacodemon", MT_HEAD},
+{"hell knight", MT_KNIGHT},
 {"baron of hell", MT_BRUISER},
+{"arachnotron", MT_BABY},
+{"revenant", MT_UNDEAD},
+{"mancubus", MT_FATSO},
 {"cyberdemon", MT_CYBORG},
 {"spider mastermind", MT_SPIDER},
 {"our hero", MT_PLAYER},
@@ -478,24 +483,24 @@ int F_Ticker (void)
 		case S_POSS_ATK2: sfx = sfx_pistol; break;
 		case S_SPOS_ATK2: sfx = sfx_shotgn; break;
 		//case S_VILE_ATK2: sfx = sfx_vilatk; break;
-		//case S_SKEL_FIST2: sfx = sfx_skeswg; break;
-		//case S_SKEL_FIST4: sfx = sfx_skepch; break;
-		//case S_SKEL_MISS2: sfx = sfx_skeatk; break;
-		//case S_FATT_ATK8:
-		//case S_FATT_ATK5:
-		//case S_FATT_ATK2: sfx = sfx_firsht; break;
-		//case S_CPOS_ATK2:
-		//case S_CPOS_ATK3:
-		//case S_CPOS_ATK4: sfx = sfx_shotgn; break;
+		case S_SKEL_FIST2: sfx = sfx_skeswg; break;
+		case S_SKEL_FIST4: sfx = sfx_skepch; break;
+		case S_SKEL_MISS2: sfx = sfx_skeatk; break;
+		case S_FATT_ATK8:
+		case S_FATT_ATK5:
+		case S_FATT_ATK2: sfx = sfx_firsht; break;
+		case S_CPOS_ATK2:
+		case S_CPOS_ATK3:
+		case S_CPOS_ATK4: sfx = sfx_shotgn; break;
 		case S_TROO_ATK3: sfx = sfx_claw; break;
 		case S_SARG_ATK2: sfx = sfx_sgtatk; break;
 		case S_BOSS_ATK2: 
-		//case S_BOS2_ATK2:
+		case S_BOS2_ATK2:
 		case S_HEAD_ATK2: sfx = sfx_firsht; break;
 		case S_SKULL_ATK2: sfx = sfx_sklatk; break;
 		case S_SPID_ATK4:
 		case S_SPID_ATK3: sfx = sfx_shotgn; break;
-		//case S_BSPI_ATK2: sfx = sfx_plasma; break;
+		case S_BSPI_ATK2: sfx = sfx_plasma; break;
 		case S_CYBER_ATK2:
 		case S_CYBER_ATK4:
 		case S_CYBER_ATK6: sfx = sfx_rlaunc; break;
@@ -612,6 +617,10 @@ void F_Drawer (void)
 				case MT_SPIDER:
 					top = 110;
 					left = 90;
+					break;
+				case MT_UNDEAD:
+					top = 100;
+					left = 80;
 					break;
 				default:
 					top = 90;
