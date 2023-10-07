@@ -2083,7 +2083,7 @@ open_file:
 
         lea     0x840200,a1         /* frame buffer */
         move.l  a1,-(sp)            /* string pointer */
-        jsr     scd32x_open_file
+        jsr     scd_open_gfile
         lea     4(sp),sp            /* clear the stack */
         move.l  d0,0xA15128         /* length => COMM8 */
 
@@ -2103,7 +2103,7 @@ read_file:
         move.l  d0,-(sp)            /* string pointer */
         lea     0x840200,a1         /* frame buffer */
         move.l  a1,-(sp)            /* string pointer */
-        jsr     scd32x_read_file
+        jsr     scd_read_gfile
         lea     8(sp),sp            /* clear the stack */
         move.l  d0,0xA15128         /* length => COMM8 */
 
@@ -2120,7 +2120,7 @@ seek_file:
         move.l  d0,-(sp)
         move.l  0xA15128,d0         /* offset in COMM8 */
         move.l  d0,-(sp)
-        jsr     scd32x_seek_file
+        jsr     scd_seek_gfile
         lea     8(sp),sp            /* clear the stack */
         move.l  d0,0xA15128         /* position => COMM8 */
 
