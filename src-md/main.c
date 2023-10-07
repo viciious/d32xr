@@ -15,6 +15,7 @@ extern uint16_t InitMegaSD(void);
 extern uint16_t InitEverDrive(void);
 
 extern void do_main(void);
+extern uint16_t InitCD(void);
 
 int mystrlen(const char* string)
 {
