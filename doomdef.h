@@ -708,6 +708,7 @@ void* W_GetLumpData(int lump) ATTR_DATA_CACHE_ALIGN;
 #define W_POINTLUMPNUM(x) W_GetLumpData(x)
 
 void I_PushPWAD(const char *name);
+void I_PushPWAD2(const char *name, wadinfo_t *pwad, lumpinfo_t *li);
 void I_PopPWAD(void);
 void *I_ReadPWAD(int offset, int length);
 
