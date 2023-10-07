@@ -724,9 +724,10 @@ int Mars_OpenCDFile(const char *name)
 		return -1;
 	}
 
+    while (MARS_SYS_COMM0) {}
+
 	Mars_StringToFramebuffer(name);
 
-    while (MARS_SYS_COMM0) {}
     MARS_SYS_COMM0 = 0x2600;
 
     while (MARS_SYS_COMM0) {}
@@ -738,11 +739,12 @@ int Mars_ReadCDFile(int length)
 	int words = length / 2 + 1;
 	short *fb = (short *)(&MARS_FRAMEBUFFER + 0x100);
 
+	while (MARS_SYS_COMM0) {}
+
 	do {
 		*fb++ = 0;
 	} while (--words);
 
-	while (MARS_SYS_COMM0) {}
 	*(int *)&MARS_SYS_COMM8 = length;
 	MARS_SYS_COMM0 = 0x2700;
 
@@ -782,7 +784,6 @@ void Mars_MCDLoadSfxFileOfs(uint16_t start_id, int numsfx, const char *name, int
 
 	MARS_SYS_COMM2 = start_id;
 	MARS_SYS_COMM0 = 0x2900|numsfx; /* load sfx */
-	while (MARS_SYS_COMM0);
 }
 
 void Mars_Finish(void)
