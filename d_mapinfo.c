@@ -311,6 +311,46 @@ static void G_ClearGameInfo(dgameinfo_t* gi)
 	gi->endText = "";
 }
 
+static dmapinfo_t *G_CompressMapInfo(dmapinfo_t *mi)
+{
+	int size = 0;
+	char *buf;
+	dmapinfo_t *nmi;
+
+#define ALLOC_STR_FIELD(fld) do { size += mystrlen(mi->fld) + 1; } while(0)
+
+	size = sizeof(dmapinfo_t);
+	ALLOC_STR_FIELD(name);
+	ALLOC_STR_FIELD(sky);
+	ALLOC_STR_FIELD(next);
+	ALLOC_STR_FIELD(secretNext);
+	ALLOC_STR_FIELD(musicLump);
+	ALLOC_STR_FIELD(lumpName);
+
+	buf = Z_Malloc(size, PU_STATIC);
+
+	nmi = (void*)buf;
+	size = sizeof(dmapinfo_t);
+	D_memcpy(nmi, mi, sizeof(dmapinfo_t));
+	buf += size;
+
+#define COPY_STR_FIELD(fld) do { \
+		nmi->fld = buf; \
+		size = mystrlen(mi->fld) + 1; \
+		D_memcpy(nmi->fld, mi->fld, size); \
+		buf += size; \
+	} while (0)
+	
+	COPY_STR_FIELD(name);
+	COPY_STR_FIELD(sky);
+	COPY_STR_FIELD(next);
+	COPY_STR_FIELD(secretNext);
+	COPY_STR_FIELD(musicLump);
+	COPY_STR_FIELD(lumpName);
+
+	return nmi;
+}
+
 dmapinfo_t **G_LoadMaplist(int *pmapcount, dgameinfo_t* gi)
 {
 	const char* buf;
@@ -318,6 +358,7 @@ dmapinfo_t **G_LoadMaplist(int *pmapcount, dgameinfo_t* gi)
 	const char* section = NULL, * ptr;
 	int mapcount, i;
 	dmapinfo_t** maplist;
+	char tmpbuf[5000];
 
 	G_ClearGameInfo(gi);
 
@@ -373,7 +414,7 @@ dmapinfo_t **G_LoadMaplist(int *pmapcount, dgameinfo_t* gi)
 			continue;
 		}
 
-		mi = Z_Malloc(sizeof(dmapinfo_t) + sectionlen + 1, PU_STATIC);
+		mi = (void *)tmpbuf;
 		zsection = (char *)mi + sizeof(dmapinfo_t);
 		D_memcpy(zsection, section, sectionlen);
 		zsection[sectionlen] = '\0';
@@ -384,11 +425,10 @@ dmapinfo_t **G_LoadMaplist(int *pmapcount, dgameinfo_t* gi)
 		linecount = G_ParseMapinfo(zsection, (kvcall_t)&G_AddMapinfoKey, mi);
 		if (linecount < 2 || mi->mapNumber <= 0)
 		{
-			Z_Free(mi);
 			continue;
 		}
 
-		maplist[i] = mi;
+		maplist[i] = G_CompressMapInfo(mi);
 		i++;
 	}
 	maplist[i] = NULL;
