@@ -415,8 +415,8 @@ void G_Init(void)
 
 			maplist[i] = Z_Malloc(sizeof(dmapinfo_t) + len + 1, PU_STATIC);
 			maplist[i]->mapNumber = i + 1;
-			maplist[i]->name = maplist[i]->lumpName;
 			maplist[i]->lumpName = (char*)maplist[i] + sizeof(dmapinfo_t);
+			maplist[i]->name = maplist[i]->lumpName;
 			maplist[i]->baronSpecial = (maplist[i]->mapNumber == 8);
 			D_memcpy(maplist[i]->lumpName, lumpname, len + 1);
 		}

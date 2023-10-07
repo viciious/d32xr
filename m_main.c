@@ -89,9 +89,6 @@ static VINT saveslotmap;
 static VINT saveslotskill;
 static VINT saveslotmode;
 
-static char displaymapname[32];
-static VINT displaymapnum;
-
 static boolean startup;
 
 extern VINT	uchar;
@@ -140,8 +137,6 @@ void M_Start2 (boolean startup_)
 	saveslot = 0;
 	savecount = SaveCount();
 	prevsaveslot = -1;
-
-	displaymapnum = -1;
 
 	D_memset(mainscreen, 0, sizeof(mainscreen));
 	D_memset(mainitem, 0, sizeof(mainitem));
@@ -260,14 +255,7 @@ void M_Stop (void)
 
 static char* M_MapName(VINT mapnum)
 {
-	if (displaymapnum == mapnum)
-		return displaymapname;
-
-	D_snprintf(displaymapname, sizeof(displaymapname), "%s", G_MapNameForMapNum(mapnum));
-	displaymapname[sizeof(displaymapname) - 1] = '\0';
-
-	displaymapnum = mapnum;
-	return displaymapname;
+	return G_MapNameForMapNum(mapnum);
 }
 
 static void M_UpdateSaveInfo(void)
@@ -636,8 +624,7 @@ void M_Drawer (void)
 #endif
 		if (leveltens)
 		{
-			DrawJagobjLump(numslump + leveltens,
-				item->x + 76, y + 2, NULL, NULL);
+			DrawJagobjLump(numslump + leveltens, item->x + 76, y, NULL, NULL);
 			DrawJagobjLump(numslump + levelones, item->x + 90, y, NULL, NULL);
 		}
 		else
@@ -687,8 +674,7 @@ void M_Drawer (void)
 
 				if (leveltens)
 				{
-					DrawJagobjLump(numslump + leveltens,
-						item->x + 86, y + 40, NULL, NULL);
+					DrawJagobjLump(numslump + leveltens, item->x + 86, y + ITEMSPACE*2, NULL, NULL);
 					DrawJagobjLump(numslump + levelones, item->x + 100, y + ITEMSPACE*2, NULL, NULL);
 				}
 				else
