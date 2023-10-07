@@ -74,7 +74,7 @@ int64_t scd_open_file(const char *name)
     return ((int64_t)length << 32) | offset;
 }
 
-void scd_read_block(void *ptr, int lba, int len, void (*wait)(void))
+void scd_read_sectors(void *ptr, int lba, int len, void (*wait)(void))
 {
     char ack = 0;
     if (!wait)

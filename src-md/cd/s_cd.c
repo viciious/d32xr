@@ -7,23 +7,16 @@ int S_CD_LoadBuffers(sfx_buffer_t *buf, int numsfx, const char *name, const int3
 {
     int i;
     int minofs, maxofs;
-    int flen, datalen;
+    int datalen;
     int block;
     uint8_t *data;
-    static char fname[256] = { 0 };
-    static CDFileHandle_t fh;
+    int32_t offset;
+    int64_t lo;
 
-    flen = mystrlen(name);
-    if (!memcmp(fname, name, flen+1)) {
-        // same file
-    } else {
-        if (!cd_handle_from_name(&fh, name))
-        {
-            fname[0] = 0;
-            return 0;
-        }
-        memcpy(fname, name, flen+1);
-    }
+    lo = open_file(name);
+    if (lo < 0)
+        return 0;
+    offset = lo & 0x0fffffff;
 
     minofs = 0x0fffffff;
     maxofs = 0;
@@ -49,8 +42,8 @@ int S_CD_LoadBuffers(sfx_buffer_t *buf, int numsfx, const char *name, const int3
     if (!data)
         return datalen;
 
-    block = (minofs >> 11) + fh.offset;
-    read_block(data, block, (datalen + 0x800 + 0x7FF) >> 11);
+    block = (minofs >> 11) + offset;
+    read_sectors(data, block, (datalen + 0x800 + 0x7FF) >> 11);
 
     data = data + (minofs & 0x7FF);
     for (i = 0; i < numsfx; i++) {
