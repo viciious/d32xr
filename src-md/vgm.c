@@ -29,7 +29,7 @@ int vgm_setup(void* fm_ptr) __attribute__((section(".data"), aligned(16)));
 int vgm_read(void) __attribute__((section(".data"), aligned(16)));
 
 extern int64_t scd_open_file(const char *name);
-extern void scd_read_block(void *ptr, int lba, int len, void (*wait)(void));
+extern void scd_read_sectors(void *ptr, int lba, int len, void (*wait)(void));
 
 int vgm_setup(void* fm_ptr)
 {
@@ -81,8 +81,8 @@ void *vgm_cache_scd(const char *name, int offset, int length)
     blks = ((offset + length + 0x7FF) >> 11) - blk;
 
     // store a copy in both banks
-    scd_read_block(MCD_WORDRAM_VGM_PTR, blk + foffset, blks, NULL);
-    scd_read_block(MCD_WORDRAM_VGM_PTR, blk + foffset, blks, NULL);
+    scd_read_sectors(MCD_WORDRAM_VGM_PTR, blk + foffset, blks, NULL);
+    scd_read_sectors(MCD_WORDRAM_VGM_PTR, blk + foffset, blks, NULL);
 
     return MD_WORDRAM_VGM_PTR + (offset & 0x7FF);
 }

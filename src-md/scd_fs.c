@@ -14,23 +14,18 @@
 #define MCD_DISC_BUFFER (void*)(MCD_WORDRAM + 0x20000 - CHUNK_SIZE)
 #define MD_DISC_BUFFER (void*)(MD_WORDRAM + 0x20000 - CHUNK_SIZE)
 
+extern int64_t scd_open_file(const char *name);
+extern void scd_read_sectors(void *ptr, int lba, int len, void (*wait)(void));
+extern void bump_fm(void);
+
 typedef struct CDFileHandle {
-    int32_t  (*Seek)(struct CDFileHandle *handle, int32_t offset, int32_t whence);
-    int32_t  (*Tell)(struct CDFileHandle *handle);
-    int32_t  (*Read)(struct CDFileHandle *handle, void *ptr, int32_t size);
-    uint8_t  (*Eof)(struct CDFileHandle *handle);
     int32_t  offset; // start block of file
     int32_t  length; // length of file
     int32_t  blk; // current block in buffer
     int32_t  pos; // current position in file
 } CDFileHandle_t;
 
-extern CDFileHandle_t *cd_handle_from_name(CDFileHandle_t *handle, const char *name);
-extern CDFileHandle_t *cd_handle_from_offset(CDFileHandle_t *handle, int32_t offset, int32_t length);
-
-extern int64_t scd_open_file(const char *name);
-extern void scd_read_block(void *ptr, int lba, int len, void (*wait)(void));
-extern void bump_fm(void);
+CDFileHandle_t gfh;
 
 static uint8_t cd_Eof(CDFileHandle_t *handle)
 {
@@ -51,7 +46,7 @@ static int32_t cd_Read(CDFileHandle_t *handle, void *ptr, int32_t size)
     if (!handle)
         return -1;
 
-    while (size > 0 && !handle->Eof(handle))
+    while (size > 0 && !cd_Eof(handle))
     {
         pos = handle->pos;
         len = CHUNK_SIZE - (pos & (CHUNK_SIZE-1));
@@ -64,7 +59,7 @@ static int32_t cd_Read(CDFileHandle_t *handle, void *ptr, int32_t size)
         if (blk != handle->blk)
         {
             // keep the FM music going by calling bump_fm
-            scd_read_block((void *)MCD_DISC_BUFFER, blk*CHUNK_BLOCKS + handle->offset, CHUNK_BLOCKS, bump_fm);
+            scd_read_sectors((void *)MCD_DISC_BUFFER, blk*CHUNK_BLOCKS + handle->offset, CHUNK_BLOCKS, bump_fm);
             handle->blk = blk;
         }
 
@@ -109,32 +104,7 @@ static int32_t cd_Seek(CDFileHandle_t *handle, int32_t offset, int32_t whence)
     return handle->pos;
 }
 
-static int32_t cd_Tell(CDFileHandle_t *handle)
-{
-    return handle ? handle->pos : 0;
-}
-
-CDFileHandle_t *cd_handle_from_offset(CDFileHandle_t *handle, int32_t offset, int32_t length)
-{
-    if (handle)
-    {
-        handle->Eof  = &cd_Eof;
-        handle->Read = &cd_Read;
-        handle->Seek = &cd_Seek;
-        handle->Tell = &cd_Tell;
-        handle->offset = offset;
-        handle->length = length;
-        handle->blk = -1; // nothing read yet
-        handle->pos = 0;
-    }
-    return handle;
-}
-
-///
-
-CDFileHandle_t gfh;
-
-int scd32x_open_file(char *name)
+int scd_open_gfile(char *name)
 {
     int64_t lo;
     CDFileHandle_t *handle = &gfh;
@@ -144,12 +114,8 @@ int scd32x_open_file(char *name)
     length = lo >> 32;
     if (length < 0)
         return -1;
-    offset = lo & 0xffffffff;
-    
-    handle->Eof  = &cd_Eof;
-    handle->Read = &cd_Read;
-    handle->Seek = &cd_Seek;
-    handle->Tell = &cd_Tell;
+    offset = lo & 0x0fffffff;
+
     handle->offset = offset;
     handle->length = length;
     handle->blk = -1; // nothing read yet
@@ -157,12 +123,12 @@ int scd32x_open_file(char *name)
     return length;
 }
 
-int scd32x_read_file(void *ptr, int length)
+int scd_read_gfile(void *ptr, int length)
 {
     return cd_Read(&gfh, ptr, length);
 }
 
-int scd32x_seek_file(int offset, int whence)
+int scd_seek_gfile(int offset, int whence)
 {
     return cd_Seek(&gfh, offset, whence);
 }
