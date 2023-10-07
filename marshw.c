@@ -720,17 +720,27 @@ void Mars_SwapWordColumnWithMDVRAM(int c)
 
 int Mars_OpenCDFile(const char *name)
 {
+	int backup[64];
+	char *fb = (char *)(&MARS_FRAMEBUFFER + 0x100), *ptr;
+	int len;
+
 	if (!*name) {
 		return -1;
 	}
 
     while (MARS_SYS_COMM0) {}
 
-	Mars_StringToFramebuffer(name);
+	ptr = Mars_StringToFramebuffer(name);
+	ptr = (void*)(((uintptr_t)ptr + 1 + 3) & ~3);
+	len = ptr - fb;
+	fast_memcpy(backup, fb, (unsigned)len/4);
 
     MARS_SYS_COMM0 = 0x2600;
 
     while (MARS_SYS_COMM0) {}
+
+	fast_memcpy(fb, backup, (unsigned)len/4);
+
 	return *(int *)&MARS_SYS_COMM8;
 }
 
