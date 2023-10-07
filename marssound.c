@@ -114,9 +114,9 @@ void S_Init(void)
 	int		i;
 	int		initmusictype;
 	int 	start, end;
-	lumpinfo_t sfxlumps[NUMSFX], *li;
+	int 	lumps[NUMSFX > 99 ? NUMSFX : 99];
+	lumpinfo_t sfxlumps[NUMSFX];
 	int   	sfxol[NUMSFX*2];
-	wadinfo_t pwad;
 
 	for (i = 0; i < SFXCHANNELS; i++)
 		sfxchannels[i].data = NULL;
@@ -134,61 +134,56 @@ void S_Init(void)
 		S_sfx[i].lump = -1;
 	}
 
-	pwad.numlumps = 0;
-	I_PushPWAD(PWAD_NAME);
-	li = W_GetLumpInfo();
-
 	/* init music */
 	num_music = 0;
 	muslooping = 0;
 	S_StopSong();
 
+	I_PushPWAD(PWAD_NAME);
+
+	/* build an in-memory PWAD with all music */
 	start = W_CheckNumForName("M_START");
 	end = W_CheckNumForName("M_END");
-	num_music = end - start - 1;
-	if (num_music > 0)
+	if (start >= 0 && end > start + 1)
 	{
+		num_music = end - start - 1;
+		if (num_music > 99)
+			num_music = 99;
+		for (i = 0; i < num_music; i++)
+			lumps[i] = start + i + 1;
 		vgm_tracks = Z_Malloc(sizeof(*vgm_tracks) * num_music, PU_STATIC);
-		for (i = 0; i < num_music; i++) {
-			int j = start + i + 1;
-			D_memcpy(vgm_tracks[i].name, li[j].name, 8);
-			vgm_tracks[i].filepos = li[j].filepos;
-			vgm_tracks[i].size = li[j].size;
-		}
+		W_GetLumpInfoSubset(vgm_tracks, W_GetLumpInfo(), num_music, lumps);
 	}
 
 	/* build an in-memory PWAD with all SFX */
 	start = W_CheckNumForName("DS_START");
 	end = W_CheckNumForName("DS_END");
-	if (start >= 0 && end > start+1)
+	if (start >= 0 && end > start + 1)
 	{
-		pwad.numlumps = end - start - 1;
-		for (i = 0; i < pwad.numlumps; i++) {
-			int j = start + i + 1;
-			D_memcpy(sfxlumps[i].name, li[j].name, 8);
-			sfxlumps[i].filepos = li[j].filepos;
-			sfxlumps[i].size = li[j].size;
-		}
-	}
+		wadinfo_t pwad;
+		int numsfx = end - start - 1;
+		if (numsfx > NUMSFX)
+			numsfx = NUMSFX;
+		for (i = 0; i < numsfx; i++)
+			lumps[i] = start + i + 1;
+		W_GetLumpInfoSubset(sfxlumps, W_GetLumpInfo(), numsfx, lumps);
 
-	/* map lumps to SFX and batch-load all SFX on the CD */
-	if (pwad.numlumps > 0)
-	{
+		pwad.numlumps = numsfx;
 		W_InitPWAD(&pwad, sfxlumps);
 
 		for (i=1 ; i < NUMSFX ; i++)
 		{
-			S_sfx[i].lump = W_CheckNumForNameExt(S_sfxnames[i], 0, pwad.numlumps);
+			S_sfx[i].lump = W_CheckNumForNameExt(S_sfxnames[i], 0, numsfx);
 		}
 
 		/* load all SFX in a single batch */
-		for (i = 0; i < pwad.numlumps; i++)
+		for (i = 0; i < numsfx; i++)
 		{
 			sfxol[i*2] = sfxlumps[i].filepos;
 			sfxol[i*2+1] = sfxlumps[i].size;
 		}
 
-		Mars_MCDLoadSfxFileOfs(1, pwad.numlumps, PWAD_NAME, sfxol);
+		Mars_MCDLoadSfxFileOfs(1, numsfx, PWAD_NAME, sfxol);
 	}
 
 	I_PopPWAD();
