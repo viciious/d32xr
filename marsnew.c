@@ -1199,6 +1199,16 @@ void I_PushPWAD(const char *name)
 	W_FixPWADEndianess();
 }
 
+void I_PushPWAD2(const char *name, wadinfo_t *pwad, lumpinfo_t *li)
+{
+	if (Mars_OpenCDFile(name) < 0)
+		I_Error("Failed to open %s", name);
+
+	W_Push(); // push PWAD onto stack
+
+	W_InitPWAD(pwad, li);
+}
+
 void I_PopPWAD(void)
 {
 	W_Pop();
