@@ -844,7 +844,7 @@ int  RunDemo (char *demoname)
 	if (lump == -1)
 	{
 		I_PopPWAD();
-		return ga_exitdemo;
+		return ga_nothing;
 	}
 
 	// avoid zone memory fragmentation which is due to happen
@@ -855,6 +855,7 @@ int  RunDemo (char *demoname)
 	Z_FreeTags(mainzone);
 
 	demo = W_CacheLumpNum(lump, PU_STATIC);
+
 	I_PopPWAD();
 
 	exit = G_PlayDemoPtr (demo);
