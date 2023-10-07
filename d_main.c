@@ -832,40 +832,64 @@ void RunCredits (void)
 		RunMenu ();
 }
 
-int  RunDemo (char *demoname)
+#define MAX_ATTRACT_DEMOS 10
+
+static void RunAttractDemos (void)
 {
-	unsigned *demo;
-	int	exit;
-	int lump;
+	int i, num_demos;
+	int lumps[MAX_ATTRACT_DEMOS];
+	wadinfo_t pwad;
+	lumpinfo_t li[MAX_ATTRACT_DEMOS];
+	int exit = ga_exitdemo;
+
+	if (gameinfo.noAttractDemo)
+		return;
 
 	I_PushPWAD(PWAD_NAME);
 
-	lump = W_CheckNumForName(demoname);
-	if (lump == -1)
+	/* build a temp in-memory PWAD */
+	for (i = 0; i < MAX_ATTRACT_DEMOS; i++)
 	{
-		I_PopPWAD();
-		return ga_nothing;
+		char demo[9];
+		D_snprintf(demo, sizeof(demo), "DEMO%1d", i+1);
+		lumps[i] = W_CheckNumForName(demo);
+		if (lumps[i] < 0)
+			break;
 	}
 
-	// avoid zone memory fragmentation which is due to happen
-	// if the demo lump cache is tucked after the level zone.
-	// this will cause shrinking of the zone area available
-	// for the level data after each demo playback and eventual
-	// Z_Malloc failure
-	Z_FreeTags(mainzone);
-
-	demo = W_CacheLumpNum(lump, PU_STATIC);
+	num_demos = i;
+	pwad.numlumps = W_GetLumpInfoSubset(li, W_GetLumpInfo(), num_demos, lumps);
 
 	I_PopPWAD();
 
-	exit = G_PlayDemoPtr (demo);
-	Z_Free(demo);
+	if (!num_demos)
+		return;
 
-#ifndef MARS
-	if (exit == ga_exitdemo)
-		RunMenu ();
-#endif
-	return exit;
+	do {
+		for (i = 0; i < num_demos; i++)
+		{
+			unsigned *demo;
+
+			// avoid zone memory fragmentation which is due to happen
+			// if the demo lump cache is tucked after the level zone.
+			// this will cause shrinking of the zone area available
+			// for the level data after each demo playback and eventual
+			// Z_Malloc failure
+			Z_FreeTags(mainzone);
+
+			I_PushPWAD2(PWAD_NAME, &pwad, li);
+
+			demo = W_CacheLumpNum(i, PU_STATIC);
+
+			I_PopPWAD();
+
+			exit = G_PlayDemoPtr (demo);
+			Z_Free(demo);
+
+			if (exit == ga_exitdemo)
+				break;
+		}
+	} while (exit != ga_exitdemo);
 }
 
 
@@ -873,23 +897,9 @@ void RunMenu (void)
 {
 #ifdef MARS
 	M_Start();
-	if (!gameinfo.noAttractDemo)
-	{
-		do {
-			int i;
-			char demo[9];
 
-			for (i = 1; i < 10; i++)
-			{
-				D_snprintf(demo, sizeof(demo), "DEMO%1d", i);
-				int lump = W_CheckNumForName(demo);
-				if (lump == -1)
-					break;
+	RunAttractDemos();
 
-				RunDemo(demo);
-			}
-		} while (true);
-	}
 	M_Stop();
 #else
 reselect:
@@ -996,9 +1006,9 @@ D_printf ("DM_Main\n");
 	while (1)
 	{
 		RunTitle();
-		RunDemo("DEMO1");
+		//RunDemo("DEMO1");
 		RunCredits ();
-		RunDemo("DEMO2");
+		//RunDemo("DEMO2");
 	}
 #endif
 }
