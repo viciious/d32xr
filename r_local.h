@@ -145,7 +145,7 @@ typedef struct
 	uint16_t	children[2];		/* if NF_SUBSECTOR its a subsector */
 } node_t;
 
-#define MIPLEVELS 4
+#define MIPLEVELS 1
 
 typedef struct
 {
