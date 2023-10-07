@@ -104,9 +104,7 @@ WaitCmdPostUpdate:
         cmpi.b  #'F,0x800E.w
         beq     OpenFile
         cmpi.b  #'H,0x800E.w
-        beq     ReadFile
-        cmpi.b  #'J,0x800E.w
-        beq     SeekFile
+        beq     ReadSectors
 
         move.b  #'E,0x800F.w            /* sub comm port = ERROR */
 WaitAck:
@@ -376,28 +374,16 @@ OpenFile:
         move.b  #'D,0x800F.w            /* sub comm port = DONE */
         bra     WaitAck
 
-ReadFile:
+ReadSectors:
         move.l  0x8018.w,d0             /* length */
         move.l  d0,-(sp)
         move.l  0x8014.w,d0             /* lba */
         move.l  d0,-(sp)
         move.l  0x8010.w,d0             /* address in RAM */
         move.l  d0,-(sp)
-        jsr     read_block
+        jsr     read_sectors
         lea     12(sp),sp               /* clear the stack */
         jsr     switch_banks
-
-        move.b  #'D,0x800F.w            /* sub comm port = DONE */
-        bra     WaitAck
-
-SeekFile:
-        move.l  0x8010.w,d0             /* whence */
-        move.l  d0,-(sp)
-        move.l  0x8014.w,d0             /* offset */
-        move.l  d0,-(sp)
-        jsr     seek_file
-        move.l  d0,0x8020.w             /* position */
-        lea     8(sp),sp                /* clear the stack */
 
         move.b  #'D,0x800F.w            /* sub comm port = DONE */
         bra     WaitAck
