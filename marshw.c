@@ -740,7 +740,6 @@ int Mars_OpenCDFile(const char *name)
     while (MARS_SYS_COMM0) {}
 
 	fast_memcpy(fb, backup, (unsigned)len/4);
-
 	return *(int *)&MARS_SYS_COMM8;
 }
 

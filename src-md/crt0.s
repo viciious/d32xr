@@ -2088,6 +2088,7 @@ open_file:
         jsr     scd_open_gfile
         lea     4(sp),sp            /* clear the stack */
         move.l  d0,0xA15128         /* length => COMM8 */
+        move.l  d1,0xA1512C         /* offset => COMM12 */
 
         move.w  0xA15100,d0
         or.w    #0x8000,d0
