@@ -23,6 +23,8 @@
 
         .equ REQ_ACT,   0xFFEF      /* Request 68000 Action */
 
+        .equ MARS_FRAMEBUFFER, 0x840200 /* 32X frame buffer */
+
         .macro  z80rd adr, dst
         move.b  0xA00000+\adr,\dst
         .endm
@@ -646,7 +648,7 @@ start_music:
         move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
 
         /* copy frame buffer string to local buffer */
-        lea     0x840200,a0         /* frame buffer */
+        lea     MARS_FRAMEBUFFER,a0         /* frame buffer */
         lea     vgm_lzss_buf,a1
 00:
         move.b  (a0)+,(a1)+
@@ -1569,7 +1571,7 @@ cpy_md_vram:
         move.b  d0,d1               /* column number */
         add.w   d1,d1
 
-        lea     0x840200,a2         /* frame buffer */
+        lea     MARS_FRAMEBUFFER,a2         /* frame buffer */
         lea     0(a2,d1.l),a2
 
         cmpi.w  #0x1C00,d0
@@ -2045,7 +2047,7 @@ test_handle:
         add.w   d1,d1               /* x8 */
         add.w   d1,d1               /* x16 */
 
-        lea     0x840200,a2         /* frame buffer */
+        lea     MARS_FRAMEBUFFER,a2         /* frame buffer */
         lea     nodes_store,a1
         
         move.l  d1,-(sp)            /* length */
@@ -2081,7 +2083,7 @@ open_file:
         eor.w   #0x8000,d0
         move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
 
-        lea     0x840200,a1         /* frame buffer */
+        lea     MARS_FRAMEBUFFER,a1         /* frame buffer */
         move.l  a1,-(sp)            /* string pointer */
         jsr     scd_open_gfile
         lea     4(sp),sp            /* clear the stack */
@@ -2101,7 +2103,7 @@ read_file:
 
         move.l  0xA15128,d0         /* length in COMM8 */
         move.l  d0,-(sp)            /* string pointer */
-        lea     0x840200,a1         /* frame buffer */
+        lea     MARS_FRAMEBUFFER,a1         /* frame buffer */
         move.l  a1,-(sp)            /* string pointer */
         jsr     scd_read_gfile
         lea     8(sp),sp            /* clear the stack */
@@ -2128,7 +2130,7 @@ seek_file:
         bra     main_loop
 
 load_sfx_cd_fileofs:
-        lea     0x840200,a1         /* frame buffer */
+        lea     MARS_FRAMEBUFFER,a1         /* frame buffer */
         move.l  a1,-(sp)            /* file name + offsets */
 
         moveq   #0,d0
