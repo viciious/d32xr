@@ -104,7 +104,7 @@ static int32_t cd_Seek(CDFileHandle_t *handle, int32_t offset, int32_t whence)
     return handle->pos;
 }
 
-int64_t scd_open_gfile(char *name)
+int64_t scd_open_gfile_by_name(char *name)
 {
     int64_t lo;
     CDFileHandle_t *handle = &gfh;
@@ -121,6 +121,15 @@ int64_t scd_open_gfile(char *name)
     handle->blk = -1; // nothing read yet
     handle->pos = 0;
     return lo;
+}
+
+void scd_open_gfile_by_length_offset(int length, int offset)
+{
+    CDFileHandle_t *handle = &gfh;
+    handle->offset = offset;
+    handle->length = length;
+    handle->blk = -1; // nothing read yet
+    handle->pos = 0;
 }
 
 int scd_read_gfile(void *ptr, int length)
