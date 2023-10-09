@@ -105,6 +105,8 @@ WaitCmdPostUpdate:
         beq     OpenFile
         cmpi.b  #'H,0x800E.w
         beq     ReadSectors
+        cmpi.b  #'J,0x800E.w
+        beq     SwitchToBank
 
         move.b  #'E,0x800F.w            /* sub comm port = ERROR */
 WaitAck:
@@ -385,6 +387,25 @@ ReadSectors:
         lea     12(sp),sp               /* clear the stack */
         jsr     switch_banks
 
+        move.b  #'D,0x800F.w            /* sub comm port = DONE */
+        bra     WaitAck
+
+SwitchToBank:
+        btst    #0,0x8010.w
+        bne.b   1f
+
+        bclr    #0,0x8003.w             /* switch banks */
+0:
+        btst    #1,0x8003.w
+        bne.b   0b                      /* bank switch not finished */
+        move.b  #'D,0x800F.w            /* sub comm port = DONE */
+        bra     WaitAck
+
+1:
+        bset    #0,0x8003.w             /* switch banks */
+11:
+        btst    #1,0x8003.w
+        bne.b   11b                      /* bank switch not finished */
         move.b  #'D,0x800F.w            /* sub comm port = DONE */
         bra     WaitAck
 
