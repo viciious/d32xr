@@ -843,6 +843,7 @@ static void RunAttractDemos (void)
 	wadinfo_t pwad;
 	lumpinfo_t li[MAX_ATTRACT_DEMOS];
 	int exit = ga_exitdemo;
+	boolean first = true;
 
 	if (gameinfo.noAttractDemo)
 		return;
@@ -873,12 +874,15 @@ static void RunAttractDemos (void)
 		{
 			unsigned *demo;
 
-			// loading demo from CD is going to write some data into
-			// the framebuffer, so store a copy of the framebuffer,
-			// then flip and blit the stored copy after we finished
-			// loading the demo
-			I_StoreScreenCopy();
-			UpdateBuffer();
+			if (!first)
+			{
+				// loading demo from CD is going to write some data into
+				// the framebuffer, so store a copy of the framebuffer,
+				// then flip and blit the stored copy after we finished
+				// loading the demo
+				I_StoreScreenCopy();
+				UpdateBuffer();
+			}
 
 			// avoid zone memory fragmentation which is due to happen
 			// if the demo lump cache is tucked after the level zone.
@@ -898,8 +902,12 @@ static void RunAttractDemos (void)
 
 			W_Pop();
 
-			I_RestoreScreenCopy();
+			if (!first)
+			{
+				I_RestoreScreenCopy();
+			}
 
+			first = false;
 			exit = G_PlayDemoPtr (demo);
 			Z_Free(demo);
 
