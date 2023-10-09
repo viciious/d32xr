@@ -92,6 +92,14 @@ void scd_read_sectors(void *ptr, int lba, int len, void (*wait)(void))
     write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
 }
 
+void scd_switch_to_bank(int bank)
+{
+    write_byte(0xA12010, bank);
+    wait_do_cmd('J');
+    wait_cmd_ack();
+    write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
+}
+
 uint16_t InitCD(void)
 {
     char *bios;
