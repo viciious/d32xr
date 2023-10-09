@@ -718,11 +718,11 @@ void Mars_SwapWordColumnWithMDVRAM(int c)
     MARS_SYS_COMM0 = 0x1C00|c;        /* sel = swap with VRAM, column in LB of comm0, start move */
 }
 
-int Mars_OpenCDFile(const char *name)
+int Mars_OpenCDFileByName(const char *name, int *poffset)
 {
 	int backup[64];
 	char *fb = (char *)(&MARS_FRAMEBUFFER + 0x100), *ptr;
-	int len;
+	int len, ofs;
 
 	if (!*name) {
 		return -1;
@@ -740,7 +740,23 @@ int Mars_OpenCDFile(const char *name)
     while (MARS_SYS_COMM0) {}
 
 	fast_memcpy(fb, backup, (unsigned)len/4);
+
+	if (poffset)
+		*poffset = *(int *)&MARS_SYS_COMM12;
 	return *(int *)&MARS_SYS_COMM8;
+}
+
+void Mars_OpenCDFileByOffset(int length, int offset)
+{
+	if (length < 0)
+		return;
+
+    while (MARS_SYS_COMM0) {}
+	*(int *)&MARS_SYS_COMM8 = length;
+	*(int *)&MARS_SYS_COMM12 = offset;
+
+    MARS_SYS_COMM0 = 0x2700;
+    while (MARS_SYS_COMM0) {}
 }
 
 int Mars_ReadCDFile(int length)
@@ -755,7 +771,7 @@ int Mars_ReadCDFile(int length)
 	} while (--words);
 
 	*(int *)&MARS_SYS_COMM8 = length;
-	MARS_SYS_COMM0 = 0x2700;
+	MARS_SYS_COMM0 = 0x2800;
 
 	while (MARS_SYS_COMM0) {}
 	return *(int *)&MARS_SYS_COMM8;
@@ -766,7 +782,7 @@ int Mars_SeekCDFile(int offset, int whence)
 	while (MARS_SYS_COMM0) {}
 	*(int *)&MARS_SYS_COMM8 = offset;
 	MARS_SYS_COMM2 = whence;
-	MARS_SYS_COMM0 = 0x2800;
+	MARS_SYS_COMM0 = 0x2900;
 
 	while (MARS_SYS_COMM0) {}
 	return *(int *)&MARS_SYS_COMM8;
@@ -792,7 +808,7 @@ void Mars_MCDLoadSfxFileOfs(uint16_t start_id, int numsfx, const char *name, int
 	fast_memcpy(ptr, offsetlen, (unsigned)numsfx*2*sizeof(*offsetlen)/4);
 
 	MARS_SYS_COMM2 = start_id;
-	MARS_SYS_COMM0 = 0x2900|numsfx; /* load sfx */
+	MARS_SYS_COMM0 = 0x2A00|numsfx; /* load sfx */
 }
 
 void Mars_Finish(void)
