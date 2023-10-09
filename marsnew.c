@@ -1182,54 +1182,27 @@ void I_SwapScreenCopy(void)
     Mars_Finish();
 }
 
-void I_PushPWAD(const char *name)
+int I_OpenCDFileByName(const char *name, int *poffset)
 {
-	int l;
-	wadinfo_t wad;
-
-	if (Mars_OpenCDFile(name) < 0)
-		I_Error("Failed to open %s", name);
-
-	l = sizeof(wadinfo_t);
-	if (Mars_ReadCDFile(l) < 0)
-		I_Error("Reading %d bytes failed", l);
-
-	W_OpenPWAD(&wad, Mars_GetCDFileBuffer());
-
-	Mars_SeekCDFile(wad.infotableofs, SEEK_SET);
-
-	l = wad.numlumps*sizeof(lumpinfo_t);
-	if (Mars_ReadCDFile(l) < 0)
-		I_Error("Reading %d bytes failed", l);
-
-	W_Push(); // push PWAD onto stack
-
-	W_InitPWAD(&wad, Mars_GetCDFileBuffer());
-
-	W_FixPWADEndianess();
+	return Mars_OpenCDFileByName(name, poffset);
 }
 
-void I_PushPWAD2(const char *name, wadinfo_t *pwad, lumpinfo_t *li)
+void I_OpenCDFileByOffset(int length, int offset)
 {
-	if (Mars_OpenCDFile(name) < 0)
-		I_Error("Failed to open %s", name);
-
-	W_Push(); // push PWAD onto stack
-
-	W_InitPWAD(pwad, li);
+	Mars_OpenCDFileByOffset(length, offset);
 }
 
-void I_PopPWAD(void)
+void *I_GetCDFileBuffer(void)
 {
-	W_Pop();
-}
-
-void *I_ReadPWAD(int offset, int length)
-{
-	Mars_SeekCDFile(offset, SEEK_SET);
-
-	if (Mars_ReadCDFile(length) < 0)
-		I_Error("Reading %d bytes failed", length);
-
 	return Mars_GetCDFileBuffer();
+}
+
+int I_SeekCDFile(int offset, int whence)
+{
+	return Mars_SeekCDFile(offset, whence);
+}
+
+int I_ReadCDFile(int length)
+{
+	return Mars_ReadCDFile(length);
 }
