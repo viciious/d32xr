@@ -10,14 +10,16 @@
 /* GLOBALS */
 /*============= */
 
-#define MAXWADS 2 					/* IWAD + PWAD */
+#define MAXWADS 3 					/* IWAD + CD PWAD + virtual CD PWAD */
 
 typedef struct
 {
 	byte		*fileptr;
+	int 		cdlength, cdoffset;
 
 	lumpinfo_t	*lumpinfo;			/* points directly to rom image */
 	int			numlumps;
+	int 		infotableofs;
 #ifndef MARS
 	void		*lumpcache[MAXLUMPS];
 #endif
@@ -79,6 +81,39 @@ void decode(unsigned char* input, unsigned char* output)
 /*
 ====================
 =
+= W_InitPWAD
+=
+====================
+*/
+
+static void W_InitPWAD (void)
+{
+	int 			l;
+	int				infotableofs;
+	char 			*ptr;
+	wadfile_t 		*wad;
+	wadinfo_t 		info;
+
+	wad = &wadfile[1];
+	wad->cdlength = I_OpenCDFileByName(PWAD_NAME, &wad->cdoffset);
+	if (wad->cdlength <= 0)
+		I_Error ("Failed to open %s", PWAD_NAME);
+
+	l = sizeof(wadinfo_t);
+	if (I_ReadCDFile(l) < 0)
+		I_Error("Reading %d bytes failed", l);
+
+	ptr = Mars_GetCDFileBuffer();
+
+	if (D_strncasecmp(((wadinfo_t*)ptr)->identification,"PWAD",4))
+		I_Error ("Wad file doesn't have PWAD id\n");
+	wad->numlumps = LITTLELONG(((wadinfo_t*)ptr)->numlumps);
+	wad->infotableofs = LITTLELONG(((wadinfo_t*)ptr)->infotableofs);
+}
+
+/*
+====================
+=
 = W_Init
 =
 ====================
@@ -90,8 +125,9 @@ void W_Init (void)
 	wadfile_t 		*wad;
 
 	wadnum = 0;
-	wad = &wadfile[0];
+	D_memset(wadfile, 0, sizeof(wadfile));
 
+	wad = &wadfile[0];
 	wad->fileptr = I_WadBase ();
 
 	if (D_strncasecmp(((wadinfo_t*)wad->fileptr)->identification,"IWAD",4))
@@ -101,36 +137,23 @@ void W_Init (void)
 
 	infotableofs = BIGLONG(((wadinfo_t*)wad->fileptr)->infotableofs);
 	wad->lumpinfo = (lumpinfo_t *) (wad->fileptr + infotableofs);
+
+	W_InitPWAD();
 }
 
 /*
 ====================
 =
-= W_OpenPWAD
+= W_SetPWAD
 =
 ====================
 */
-
-void W_OpenPWAD (wadinfo_t *wad, void *ptr)
-{
-	if (D_strncasecmp(((wadinfo_t*)ptr)->identification,"PWAD",4))
-		I_Error ("Wad file doesn't have PWAD id\n");
-	wad->numlumps = LITTLELONG(((wadinfo_t*)ptr)->numlumps);
-	wad->infotableofs = LITTLELONG(((wadinfo_t*)ptr)->infotableofs);
-}
-
-/*
-====================
-=
-= W_InitPWAD
-=
-====================
-*/
-void W_InitPWAD (wadinfo_t *wadi, void *lumpinfo)
+void W_SetPWAD (wadinfo_t *wadi, void *lumpinfo)
 {
 	wadfile_t 		*wad;
 	wad = &wadfile[wadnum];
-	wad->fileptr = lumpinfo;
+	wad->cdlength = wadfile[1].cdlength;
+	wad->cdoffset = wadfile[1].cdoffset;
 	wad->lumpinfo = lumpinfo;
 	wad->numlumps = wadi->numlumps;
 }
@@ -138,19 +161,30 @@ void W_InitPWAD (wadinfo_t *wadi, void *lumpinfo)
 /*
 ====================
 =
-= W_FixPWADEndianess
+= W_ReadPWAD
 =
 ====================
 */
-void W_FixPWADEndianess (void)
+void W_ReadPWAD (void)
 {
-	int 			i;
-	wadfile_t 		*wad;
+	int i, l;
+	wadfile_t *wad = &wadfile[1];
+	lumpinfo_t *li;
 
-	wad = &wadfile[wadnum];
+	I_OpenCDFileByOffset(wad->cdlength, wad->cdoffset);
+
+	I_SeekCDFile(wad->infotableofs, SEEK_SET);
+
+	l = wad->numlumps*sizeof(lumpinfo_t);
+	if (I_ReadCDFile(l) < 0)
+		I_Error("Reading %d bytes failed", l);
+
+	li = I_GetCDFileBuffer();
+	wad->lumpinfo = li;
+
 	for (i = 0; i < wad->numlumps; i++) {
-		wad->lumpinfo[i].filepos = LITTLELONG(wad->lumpinfo[i].filepos);
-		wad->lumpinfo[i].size = LITTLELONG(wad->lumpinfo[i].size);
+		li[i].filepos = LITTLELONG(li[i].filepos);
+		li[i].size = LITTLELONG(li[i].size);
 	}
 }
 
@@ -165,6 +199,12 @@ int W_Push (void)
 {
 	if (wadnum >= MAXWADS-1)
 		return -1;
+
+	if (wadnum == 1) {
+		wadfile_t *wad = &wadfile[1];
+		I_OpenCDFileByOffset(wad->cdlength, wad->cdoffset);
+	}
+
 	wadnum++;
 	return 0;
 }
@@ -180,6 +220,11 @@ int W_Pop (void)
 {
 	if (wadnum == 0)
 		return -1;
+
+	if (wadnum == 1) {
+
+	}
+
 	--wadnum;
 	return 0;
 }
@@ -438,12 +483,28 @@ const char *W_GetNameForNum (int lump)
 
 void * W_GetLumpData(int lump)
 {
-	lumpinfo_t* l = wadfile[wadnum].lumpinfo + lump;
+	wadfile_t *wad = &wadfile[wadnum];
+	lumpinfo_t* l = wad->lumpinfo + lump;
 
-	if (lump >= wadfile[wadnum].numlumps)
+	if (lump >= wad->numlumps)
 		I_Error("W_GetLumpData: %i >= numlumps", lump);
 
-	if (wadnum > 0)
-		return I_ReadPWAD(BIGLONG(l->filepos), BIGLONG(l->size)); 
-	return I_RemapLumpPtr((void*)(wadfile[wadnum].fileptr + BIGLONG(l->filepos)));
+	if (wad->cdlength)
+	{
+		int pos = BIGLONG(l->filepos);
+		int len = BIGLONG(l->size);
+
+		I_SeekCDFile(pos, SEEK_SET);
+
+		if (I_ReadCDFile(len) < 0)
+			I_Error("Reading %d bytes failed", len);
+
+		return I_GetCDFileBuffer();
+	}
+
+	return I_RemapLumpPtr((void*)(wad->fileptr + BIGLONG(l->filepos)));
+}
+
+void I_Debug(void)
+{
 }

@@ -39,7 +39,7 @@ int G_BuiltinMapNumForMapName(const char* map)
 		return (map[3] - '0') * 10 + (map[4] - '0');
 	return 0;
 }
-
+extern void I_Debug(void);
 static char* G_LoadMapinfoLump(void)
 {
 	int len;
@@ -47,7 +47,7 @@ static char* G_LoadMapinfoLump(void)
 	char *buf;
 
 	buf = (char*)I_WorkBuffer();
-
+I_Debug();
 	lump = W_CheckNumForName("DMAPINFO");
 	if (lump < 0) {
 		return NULL;

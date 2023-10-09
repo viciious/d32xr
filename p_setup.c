@@ -173,6 +173,7 @@ void P_LoadSectors (int lump)
 	// pop the WAD stack to point to the IWAD,
 	// otherwise R_FlatNumForName is going to break
 	W_Pop();
+	W_Pop();
 
 	ms = (mapsector_t *)data;
 	ss = sectors;
@@ -206,6 +207,7 @@ void P_LoadSectors (int lump)
 		ss->tag = LITTLESHORT(ms->tag);
 	}
 
+	W_Push();
 	W_Push();
 }
 
@@ -662,7 +664,9 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 
 	P_InitThinkers ();
 
-	I_PushPWAD(PWAD_NAME);
+	W_Push();
+
+	W_ReadPWAD();
 
 	lumpnum = W_GetNumForName(lumpname);
 	if (lumpnum < 0)
@@ -673,7 +677,8 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 		lumps[i] = lumpnum+i;
 	pwad.numlumps = W_GetLumpInfoSubset(li, W_GetLumpInfo(), ML_BLOCKMAP+1, lumps);
 
-	W_InitPWAD(&pwad, li);
+	W_Push();
+	W_SetPWAD(&pwad, li);
 
 /* note: most of this ordering is important	 */
 	P_LoadBlockMap (ML_BLOCKMAP);
@@ -713,7 +718,9 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 	deathmatch_p = deathmatchstarts;
 	P_LoadThings (ML_THINGS);
 
-	I_PopPWAD();
+	W_Pop();
+
+	W_Pop();
 
 /* */
 /* if deathmatch, randomly spawn the active players */
