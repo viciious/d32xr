@@ -688,8 +688,8 @@ void	W_Init (void);
 int 	W_Push (void);
 int 	W_Pop (void);
 void	W_OpenPWAD (wadinfo_t *wad, void *ptr);
-void 	W_InitPWAD (wadinfo_t *wad, void *lumpinfo);
-void 	W_FixPWADEndianess (void);
+void 	W_ReadPWAD(void);
+void 	W_SetPWAD (wadinfo_t *wad, void *lumpinfo);
 lumpinfo_t *W_GetLumpInfo (void);
 int 	W_GetLumpInfoSubset(lumpinfo_t *out, const lumpinfo_t *in, int numlumps, int *lumps);
 
@@ -707,11 +707,6 @@ const char *W_GetNameForNum (int lump);
 void* W_GetLumpData(int lump) ATTR_DATA_CACHE_ALIGN;
 
 #define W_POINTLUMPNUM(x) W_GetLumpData(x)
-
-void I_PushPWAD(const char *name);
-void I_PushPWAD2(const char *name, wadinfo_t *pwad, lumpinfo_t *li);
-void I_PopPWAD(void);
-void *I_ReadPWAD(int offset, int length);
 
 /*---------- */
 /*BASE LEVEL */
@@ -1226,6 +1221,12 @@ int S_SongForMapnum(int mapnum);
 void S_StopSong(void);
 void S_RestartSounds (void);
 void S_SetSoundDriver (int newdrv);
+
+int I_OpenCDFileByName(const char *name, int *poffset);
+void I_OpenCDFileByOffset(int length, int offset);
+void *I_GetCDFileBuffer(void);
+int I_SeekCDFile(int offset, int whence);
+int I_ReadCDFile(int length);
 
 /*================= */
 /*TLS */
