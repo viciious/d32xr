@@ -876,6 +876,13 @@ static void RunAttractDemos (void)
 		{
 			unsigned *demo;
 
+			// loading demo from CD is going to write some data into
+			// the framebuffer, so store a copy of the framebuffer,
+			// then flip and blit the stored copy after we finished
+			// loading the demo
+			I_StoreScreenCopy();
+			UpdateBuffer();
+
 			// avoid zone memory fragmentation which is due to happen
 			// if the demo lump cache is tucked after the level zone.
 			// this will cause shrinking of the zone area available
@@ -893,6 +900,8 @@ static void RunAttractDemos (void)
 			W_Pop();
 
 			W_Pop();
+
+			I_RestoreScreenCopy();
 
 			exit = G_PlayDemoPtr (demo);
 			Z_Free(demo);
