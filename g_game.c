@@ -384,7 +384,8 @@ void G_Init(void)
 
 	// copy mapnumbers to a temp buffer, then free, then allocate again
 	// to avoid zone memory fragmentation
-	I_PushPWAD(PWAD_NAME);
+	W_Push();
+	W_ReadPWAD();
 
 	maplist = G_LoadMaplist(&mapcount, &gameinfo);
 	if (mapcount > 99)
@@ -452,7 +453,7 @@ void G_Init(void)
 
 	G_InitPlayerResp();
 
-	I_PopPWAD();
+	W_Pop();
 
 	if (!*gameinfo.borderFlat)
 		gameinfo.borderFlat = "ROCKS";

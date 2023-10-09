@@ -367,7 +367,8 @@ void IN_Start (void)
 #ifdef MARS
 	Z_FreeTags (mainzone);
 
-	I_PushPWAD(PWAD_NAME);
+	W_Push();
+	W_ReadPWAD();
 
 	/* build a temp in-memory PWAD */
 	lumps[0] = W_CheckNumForName("INTERPIC");
@@ -378,7 +379,9 @@ void IN_Start (void)
 	lumps[5] = W_CheckNumForName("I_ITEMS");
 	lumps[6] = W_CheckNumForName("I_FINISH");
 	pwad.numlumps = W_GetLumpInfoSubset(li, W_GetLumpInfo(), 7, lumps);
-	W_InitPWAD(&pwad, li);
+
+	W_Push();
+	W_SetPWAD(&pwad, li);
 
 	l = W_CheckNumForName("INTERPIC");
 	if (l != -1)
@@ -402,7 +405,8 @@ void IN_Start (void)
 #endif
 
 #ifdef MARS
-	I_PopPWAD();
+	W_Pop();
+	W_Pop();
 #endif
 
 	snums = W_CheckNumForName("NUM_0");

@@ -115,7 +115,6 @@ void S_Init(void)
 	int		initmusictype;
 	int 	start, end;
 	int 	lumps[NUMSFX > 99 ? NUMSFX : 99];
-	lumpinfo_t sfxlumps[NUMSFX];
 	int   	sfxol[NUMSFX*2];
 
 	for (i = 0; i < SFXCHANNELS; i++)
@@ -139,7 +138,8 @@ void S_Init(void)
 	muslooping = 0;
 	S_StopSong();
 
-	I_PushPWAD(PWAD_NAME);
+	W_Push();
+	W_ReadPWAD();
 
 	/* build an in-memory PWAD with all music */
 	start = W_CheckNumForName("M_START");
@@ -160,33 +160,28 @@ void S_Init(void)
 	end = W_CheckNumForName("DS_END");
 	if (start >= 0 && end > start + 1)
 	{
-		wadinfo_t pwad;
+		lumpinfo_t *li = W_GetLumpInfo();
+
 		int numsfx = end - start - 1;
 		if (numsfx > NUMSFX)
 			numsfx = NUMSFX;
-		for (i = 0; i < numsfx; i++)
-			lumps[i] = start + i + 1;
-		W_GetLumpInfoSubset(sfxlumps, W_GetLumpInfo(), numsfx, lumps);
-
-		pwad.numlumps = numsfx;
-		W_InitPWAD(&pwad, sfxlumps);
 
 		for (i=1 ; i < NUMSFX ; i++)
 		{
-			S_sfx[i].lump = W_CheckNumForNameExt(S_sfxnames[i], 0, numsfx);
+			S_sfx[i].lump = W_CheckNumForNameExt(S_sfxnames[i], start, end) - start;
 		}
 
 		/* load all SFX in a single batch */
 		for (i = 0; i < numsfx; i++)
 		{
-			sfxol[i*2] = sfxlumps[i].filepos;
-			sfxol[i*2+1] = sfxlumps[i].size;
+			sfxol[i*2] = li[start + 1 + i].filepos;
+			sfxol[i*2+1] = li[start + 1 + i].size;
 		}
 
 		Mars_MCDLoadSfxFileOfs(1, numsfx, PWAD_NAME, sfxol);
 	}
 
-	I_PopPWAD();
+	W_Pop();
 
 	Mars_RB_ResetAll(&soundcmds);
 
@@ -437,7 +432,7 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 		return;
 
 	sfx = &S_sfx[sound_id];
-	if (sfx->lump < 0)
+	if (sfx->lump <= 0)
 		return;
 
 	/* */
@@ -463,7 +458,7 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 		if (sound_id == sfx_itemup && sep == 128)
 			sep = 255; // full volume from both channels
 
-		Mars_MCDPlaySfx((ch - sfxchannels) + 1, sfx->lump + 1, sep, vol);
+		Mars_MCDPlaySfx((ch - sfxchannels) + 1, sfx->lump, sep, vol);
 		return;
 	}
 
@@ -995,7 +990,7 @@ static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol,
 
 	newchannel = NULL;
 	sfx = &S_sfx[sound_id];
-	if (sfx->lump < 0)
+	if (sfx->lump <= 0)
 		return NULL;
 
 	if (S_USE_MEGACD_DRV())
