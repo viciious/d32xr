@@ -81,18 +81,16 @@ void decode(unsigned char* input, unsigned char* output)
 /*
 ====================
 =
-= W_InitPWAD
+= W_InitCDPWAD
 =
 ====================
 */
 
-static void W_InitPWAD (void)
+static void W_InitCDPWAD (void)
 {
 	int 			l;
-	int				infotableofs;
 	char 			*ptr;
 	wadfile_t 		*wad;
-	wadinfo_t 		info;
 
 	wad = &wadfile[1];
 	wad->cdlength = I_OpenCDFileByName(PWAD_NAME, &wad->cdoffset);
@@ -138,7 +136,7 @@ void W_Init (void)
 	infotableofs = BIGLONG(((wadinfo_t*)wad->fileptr)->infotableofs);
 	wad->lumpinfo = (lumpinfo_t *) (wad->fileptr + infotableofs);
 
-	W_InitPWAD();
+	W_InitCDPWAD();
 }
 
 /*
