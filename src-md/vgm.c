@@ -2,7 +2,7 @@
 #include <string.h>
 #include "lzss.h"
 
-#define VGM_WORDRAM_OFS     0x4000
+#define VGM_WORDRAM_OFS     0x3000
 #define VGM_READAHEAD       0x200
 #define VGM_LZSS_BUF_SIZE   0x8000
 #define VGM_MAX_SIZE        0x18000
