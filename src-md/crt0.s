@@ -474,7 +474,8 @@ no_cmd:
         dc.w    flush_sfx - prireqtbl
         dc.w    test_handle - prireqtbl
         dc.w    get_bbox - prireqtbl
-        dc.w    open_file - prireqtbl
+        dc.w    open_file_by_name - prireqtbl
+        dc.w    open_file_by_handle - prireqtbl
         dc.w    read_file - prireqtbl
         dc.w    seek_file - prireqtbl
         dc.w    load_sfx_cd_fileofs - prireqtbl
@@ -2078,14 +2079,14 @@ get_bbox:
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
-open_file:
+open_file_by_name:
         move.w  0xA15100,d0
         eor.w   #0x8000,d0
         move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
 
-        lea     MARS_FRAMEBUFFER,a1         /* frame buffer */
+        lea     MARS_FRAMEBUFFER,a1 /* frame buffer */
         move.l  a1,-(sp)            /* string pointer */
-        jsr     scd_open_gfile
+        jsr     scd_open_gfile_by_name
         lea     4(sp),sp            /* clear the stack */
         move.l  d0,0xA15128         /* length => COMM8 */
         move.l  d1,0xA1512C         /* offset => COMM12 */
@@ -2097,15 +2098,27 @@ open_file:
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
+open_file_by_handle:
+        move.l  0xA15128,d0         /* length => COMM8 */
+        move.l  0xA1512C,d1         /* offset => COMM12 */
+
+        move.l  d1,-(sp)
+        move.l  d0,-(sp)
+        jsr     scd_open_gfile_by_length_offset
+        lea     8(sp),sp            /* clear the stack */
+
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
 read_file:
         move.w  0xA15100,d0
         eor.w   #0x8000,d0
         move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
 
         move.l  0xA15128,d0         /* length in COMM8 */
-        move.l  d0,-(sp)            /* string pointer */
-        lea     MARS_FRAMEBUFFER,a1         /* frame buffer */
-        move.l  a1,-(sp)            /* string pointer */
+        move.l  d0,-(sp)
+        lea     MARS_FRAMEBUFFER,a1
+        move.l  a1,-(sp)            /* destination pointer */
         jsr     scd_read_gfile
         lea     8(sp),sp            /* clear the stack */
         move.l  d0,0xA15128         /* length => COMM8 */
