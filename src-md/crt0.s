@@ -25,6 +25,8 @@
 
         .equ MARS_FRAMEBUFFER, 0x840200 /* 32X frame buffer */
 
+        .equ COL_STORE, 0x600800    /* WORD RAM + 2K */
+
         .macro  z80rd adr, dst
         move.b  0xA00000+\adr,\dst
         .endm
@@ -1623,7 +1625,12 @@ cpy_md_vram:
         add     d2,d2
         add     d2,d1
 
-        lea     col_store,a0
+        moveq   #0,d0
+        move.l  d0,-(sp)
+        jsr     scd_switch_to_bank
+        lea     4(sp),sp
+
+        lea     COL_STORE,a0
         lea     0(a0,d1.l),a0
         move.w  #27,d0
 3:
@@ -1727,7 +1734,12 @@ cpy_md_vram:
 
         lea     0(a2,d0.l),a2
 
-        lea     col_store,a0
+        moveq   #0,d0
+        move.l  d0,-(sp)
+        jsr     scd_switch_to_bank
+        lea     4(sp),sp
+
+        lea     COL_STORE,a0
         lea     0(a0,d1.l),a0
 
         move.w  2(a1), d0           /* length in words */
@@ -1786,7 +1798,7 @@ cpy_md_vram:
         swap    d2
         move.l  d1,4(a0)            /* cmd port <- read VRAM at offset */
         move.w  #27,d0
-        lea     col_store+20*224*2,a1
+        lea     col_swap,a1
 11:
         /* vram to swap buffer */
         move.w  (a0),(a1)+          /* next word */
@@ -1840,10 +1852,15 @@ cpy_md_vram:
         add     d2,d2
         add     d2,d1
 
-        lea     col_store,a0
+        moveq   #0,d0
+        move.l  d0,-(sp)
+        jsr     scd_switch_to_bank
+        lea     4(sp),sp
+
+        lea     COL_STORE,a0
         lea     0(a0,d1.l),a0
         move.w  #27,d0
-        lea     col_store+20*224*2,a1
+        lea     col_swap,a1
 13:
         /* wram to swap buffer */
         move.w  (a0)+,(a1)+         /* next word */
@@ -2301,7 +2318,6 @@ load_font:
         move.l  d0,(a1)             /* set tile line */
         dbra    d2,0b
         rts
-
 
 | Bump the FM player to keep the music going
 
@@ -2950,8 +2966,8 @@ FMReset:
 
         .bss
         .align  2
-col_store:
-        .space  21*224*2        /* 140 double-columns in vram, 20 in wram, 1 in wram for swap */
+col_swap:
+        .space  1*224*2         /* 1 double-column in wram for swap */
 
         .align  16
 nodes_store:
