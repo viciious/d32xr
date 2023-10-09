@@ -2986,4 +2986,4 @@ col_swap:
         .align  16
 nodes_store:
         .global nodes_store
-        .space  500*2*4*2       /* 2 16.0 bounding boxes per node, 500 nodes max */
+        .space  1000*2*4*2       /* 2 16.0 bounding boxes per node, 1000 nodes max */
