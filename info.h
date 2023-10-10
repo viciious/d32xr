@@ -696,8 +696,8 @@ typedef struct {
 	uint16_t	spawnstate;
 	int16_t		spawnhealth;
 	uint16_t	seestate;
-	uint16_t	seesound;
-	uint16_t	reactiontime;
+	uint8_t		seesound;
+	uint8_t		reactiontime;
 	uint16_t	attacksound;
 	uint16_t	painstate;
 	uint16_t	painchance;
