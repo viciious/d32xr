@@ -5,9 +5,9 @@
 #include "s_main.h"
 #include "s_cd.h"
 
-#define S_MEMBANK_ADDR 0xD000 // assumed to be greater than __bss_end
-#define S_MEMBANK_PTR ((uint8_t *)S_MEMBANK_ADDR)
-#define S_MEMBANK_SIZE (0x80000 - S_MEMBANK_ADDR) // 512K - addr
+#define S_MEMBANK_SIZE 450*1024
+#define S_MEMBANK_PTR s_membank
+static uint8_t s_membank[S_MEMBANK_SIZE];
 
 void S_Init(void)
 {
