@@ -114,7 +114,7 @@ int64_t scd_open_gfile_by_name(char *name)
     length = lo >> 32;
     if (length < 0)
         return -1;
-    offset = lo & 0x0fffffff;
+    offset = lo & 0x7fffffff;
 
     handle->offset = offset;
     handle->length = length;

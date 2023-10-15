@@ -16,9 +16,9 @@ int S_CD_LoadBuffers(sfx_buffer_t *buf, int numsfx, const char *name, const int3
     lo = open_file(name);
     if (lo < 0)
         return 0;
-    offset = lo & 0x0fffffff;
+    offset = lo & 0x7fffffff;
 
-    minofs = 0x0fffffff;
+    minofs = 0x7fffffff;
     maxofs = 0;
     for (i = 0; i < numsfx; i++) {
         int startofs = offsetlen[i*2];
