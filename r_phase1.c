@@ -180,7 +180,7 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
    sector_t  *front_sector, *back_sector;
    fixed_t    f_floorheight, f_ceilingheight;
    fixed_t    b_floorheight, b_ceilingheight;
-   int        f_lightlevel, b_lightlevel;
+   int        f_lightlevel, b_lightlevel, lightshift;
    int        f_ceilingpic, b_ceilingpic;
    int        b_texturemid, t_texturemid;
    boolean    skyhack;
@@ -330,11 +330,18 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
          }
       }
 
+      if (vertexes[li->v1].y == vertexes[li->v2].y)
+         lightshift = -1;
+      else if (vertexes[li->v1].x == vertexes[li->v2].x)
+         lightshift = 1;
+      else
+         lightshift = 0;
+
       // save local data to the viswall structure
       segl->actionbits    = actionbits;
       segl->t_texturemid  = t_texturemid;
       segl->b_texturemid  = b_texturemid;
-      segl->seglightlevel = f_lightlevel;
+      segl->seglightlevel = (lightshift << 8) | f_lightlevel;
       segl->offset        = ((fixed_t)si->textureoffset + seg->offset) << 16;
    }
 }
