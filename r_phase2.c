@@ -171,8 +171,8 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
 
     const fixed_t ceilingheight = segl->ceilingheight;
 
-    const int floorandlight = (segl->seglightlevel << 16) | segl->floorpicnum;
-    const int ceilandlight = (segl->seglightlevel << 16) | segl->ceilingpicnum;
+    const int floorandlight = ((segl->seglightlevel & 0xff) << 16) | segl->floorpicnum;
+    const int ceilandlight = ((segl->seglightlevel & 0xff) << 16) | segl->ceilingpicnum;
 
     unsigned short *flooropen = (actionbits & AC_ADDFLOOR) ? vd.visplanes[0].open : NULL;
     unsigned short *ceilopen = (actionbits & AC_ADDCEILING) ? vd.visplanes[0].open : NULL;
