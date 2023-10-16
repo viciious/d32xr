@@ -49,16 +49,6 @@ extern fixed_t weaponXScale;
 
 #define MINLIGHT 0
 
-typedef enum
-{
-	detmode_medium,
-	detmode_high,
-	detmode_mipmaps,
-
-	MAXDETAILMODES
-} detailmode_t;
-
-extern detailmode_t detailmode;
 extern VINT viewportnum;
 extern VINT anamorphicview;
 
@@ -277,7 +267,7 @@ static inline int R_PointOnSide (int x, int y, node_t *node)
 void	R_InitData (void);
 void	R_SetViewportSize(int num);
 int		R_DefaultViewportSize(void); // returns the viewport id for fullscreen, low detail mode
-void	R_SetDetailMode(int mode);
+void	R_SetDrawMode(void);
 void	R_SetupLevel(void);
 void	R_SetupTextureCaches(void);
 

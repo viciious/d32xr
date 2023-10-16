@@ -33,7 +33,6 @@ typedef enum
 	mi_sfxdriver,
 
 	mi_resolution,
-	mi_detailmode,
 	mi_anamorphic,
 	mi_colormap,
 
@@ -219,13 +218,6 @@ void O_Init (void)
 	menuitem[mi_resolution].slider = si_resolution+1;
 	sliders[si_resolution].maxval = numViewports - 1;
 	sliders[si_resolution].curval = viewportNum;
-
-	D_memcpy(menuitem[mi_detailmode].name, "Level of detail", 16);
-	menuitem[mi_detailmode].x = ITEMX;
-	menuitem[mi_detailmode].y = STARTY + ITEMSPACE * 2;
-	menuitem[mi_detailmode].slider = si_lod+1;
-	sliders[si_lod].maxval = texmips ? MAXDETAILMODES : detmode_mipmaps;
-	sliders[si_lod].curval = detailmode + 1;
 
 	D_memcpy(menuitem[mi_anamorphic].name, "Widescreen", 11);
 	menuitem[mi_anamorphic].x = ITEMX;
@@ -479,9 +471,6 @@ void O_Control (player_t *player)
 					break;
 				case mi_resolution:
 					R_SetViewportSize(slider->curval);
-					break;
-				case mi_detailmode:
-					R_SetDetailMode(slider->curval - 1);
 					break;
 				case mi_anamorphic:
 					anamorphicview = slider->curval;

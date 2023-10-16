@@ -334,18 +334,15 @@ void R_SegCommands(void)
             lseg.lightmax = seglight;
             lseg.lightmin = lseg.lightmax;
 
-            if (detailmode >= detmode_high)
-            {
 #ifdef MARS
-                if (seglight <= 160 + extralight)
-                    seglight = (seglight >> 1);
+            if (seglight <= 160 + extralight)
+                seglight = (seglight >> 1);
 #else
-                seglight = seglight - (255 - seglight) * 2;
-                if (seglight < 0)
-                    seglight = 0;
+            seglight = seglight - (255 - seglight) * 2;
+            if (seglight < 0)
+                seglight = 0;
 #endif
-                lseg.lightmin = seglight;
-            }
+            lseg.lightmin = seglight;
 
             if (lseg.lightmin != lseg.lightmax)
             {
@@ -371,7 +368,7 @@ void R_SegCommands(void)
             toptex->topheight = segl->t_topheight;
             toptex->bottomheight = segl->t_bottomheight;
 #if MIPLEVELS > 1
-            toptex->maxmip = detailmode < detmode_mipmaps ? 0 : tex->mipcount-1;
+            toptex->maxmip = !texmips ? 0 : tex->mipcount-1;
 #else
             toptex->maxmip = 0;
 #endif
@@ -401,7 +398,7 @@ void R_SegCommands(void)
             bottomtex->topheight = segl->b_topheight;
             bottomtex->bottomheight = segl->b_bottomheight;
 #if MIPLEVELS > 1
-            bottomtex->maxmip = detailmode < detmode_mipmaps ? 0 : tex->mipcount-1;
+            bottomtex->maxmip = !texmips ? 0 : tex->mipcount-1;
 #else
             bottomtex->maxmip = 0;
 #endif
@@ -425,7 +422,7 @@ void R_SegCommands(void)
         R_DrawSeg(&lseg, clipbounds);
 
 #if MIPLEVELS > 1
-        if (detailmode >= detmode_mipmaps)
+        if (1)
         {
             if (lseg.maxmip >= MIPLEVELS)
                 lseg.maxmip = MIPLEVELS-1;
