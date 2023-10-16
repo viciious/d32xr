@@ -14,8 +14,6 @@
 
 struct localplane_s;
 
-typedef void (*mapplane_fn)(struct localplane_s* lpl, int, int, int);
-
 typedef struct localplane_s
 {
     visplane_t* pl;
@@ -32,12 +30,9 @@ typedef struct localplane_s
     pixel_t* ds_source[MIPLEVELS];
 #endif
     int mipsize[MIPLEVELS];
-
-    mapplane_fn mapplane;
 } localplane_t;
 
 static void R_MapPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
-static void R_MapPotatoPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
 static void R_PlaneLoop(localplane_t* lpl) ATTR_DATA_CACHE_ALIGN;
 static void R_DrawPlanes2(void) ATTR_DATA_CACHE_ALIGN;
 
@@ -141,13 +136,6 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     drawspan(y, x, x2, light, xfrac, yfrac, xstep, ystep, lpl->ds_source[miplevel], lpl->mipsize[miplevel]);
 }
 
-static void R_MapPotatoPlane(localplane_t* lpl, int y, int x, int x2)
-{
-    if (x2 < x)
-        return; // nothing to draw (shouldn't happen)
-    drawspan(y, x, x2, lpl->lightmax, 0, 0, 0, 0, lpl->ds_source[0], 64);
-}
-
 //
 // Determine the horizontal spans of a single visplane
 //
@@ -158,7 +146,6 @@ static void R_PlaneLoop(localplane_t *lpl)
    unsigned t1, t2, b1, b2, pl_oldtop, pl_oldbottom;
    int16_t spanstart[SCREENHEIGHT];
    visplane_t* pl = lpl->pl;
-   const mapplane_fn mapplane = lpl->mapplane;
 
    pl_x       = pl->minx;
    pl_stopx   = pl->maxx;
@@ -189,14 +176,14 @@ static void R_PlaneLoop(localplane_t *lpl)
       // top diffs
       while (t1 < t2 && t1 <= b1)
       {
-          mapplane(lpl, t1, spanstart[t1], x2);
+          R_MapPlane(lpl, t1, spanstart[t1], x2);
           ++t1;
       }
 
       // bottom diffs
       while (b1 > b2 && b1 >= t1)
       {
-          mapplane(lpl, b1, spanstart[b1], x2);
+          R_MapPlane(lpl, b1, spanstart[b1], x2);
           --b1;
       }
 
@@ -297,7 +284,6 @@ static void R_DrawPlanes2(void)
 #ifdef MARS
     lpl.baseyscale *= 64;
 #endif
-    lpl.mapplane = detailmode == detmode_potato ? R_MapPotatoPlane : R_MapPlane;
     extralight = vd.extralight;
 
     while ((pl = R_GetNextPlane((uint16_t *)vd.gsortedvisplanes)) != NULL)
