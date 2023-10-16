@@ -262,7 +262,7 @@ static void R_DrawPlanes2(void)
     localplane_t lpl;
     visplane_t* pl;
     int extralight;
-    boolean nomips = detailmode < detmode_mipmaps;
+    boolean nomips = !texmips;
 
 #ifdef MARS
     Mars_ClearCacheLine(&vd.lastvisplane);
@@ -324,18 +324,15 @@ static void R_DrawPlanes2(void)
             lpl.lightmax = light;
             lpl.lightmin = lpl.lightmax;
 
-            if (detailmode >= detmode_high)
-            {
 #ifdef MARS
-                if (light <= 160 + extralight)
-                    light = (light >> 1);
+            if (light <= 160 + extralight)
+                light = (light >> 1);
 #else
-                light = light - ((255 - light) << 1);
+            light = light - ((255 - light) << 1);
 #endif
-                if (light < MINLIGHT)
-                    light = MINLIGHT;
-                lpl.lightmin = (unsigned)light;
-            }
+            if (light < MINLIGHT)
+                light = MINLIGHT;
+            lpl.lightmin = (unsigned)light;
 
             if (lpl.lightmin != lpl.lightmax)
                 lpl.lightsub = 160 * (lpl.lightmax - lpl.lightmin) / (800 - 160);

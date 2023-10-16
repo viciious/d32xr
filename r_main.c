@@ -15,7 +15,6 @@ fixed_t stretchX;
 VINT weaponYpos;
 fixed_t weaponXScale;
 
-detailmode_t detailmode = detmode_mipmaps;
 VINT anamorphicview = 0;
 VINT initmathtables = 2;
 
@@ -280,7 +279,7 @@ void R_SetViewportSize(int num)
 	clearscreen = 2;
 
 	// refresh func pointers
-	R_SetDetailMode(detailmode);
+	R_SetDrawMode();
 
 	R_InitColormap(lowResMode);
 
@@ -289,15 +288,8 @@ void R_SetViewportSize(int num)
 #endif
 }
 
-void R_SetDetailMode(int mode)
+void R_SetDrawMode(void)
 {
-	if (mode >= MAXDETAILMODES)
-		return;
-	if (mode == detmode_mipmaps && !texmips)
-		mode = detmode_high;
-
-	detailmode = mode;
-
 	if (debugmode == DEBUGMODE_NODRAW)
 	{
 		drawcol = I_DrawColumnNoDraw;
@@ -364,7 +356,7 @@ D_printf ("Done\n");
 	framecount = 0;
 	viewplayer = &players[0];
 
-	R_SetDetailMode(detailmode);
+	R_SetDrawMode();
 
 	R_InitTexCache(&r_texcache);
 }
@@ -579,10 +571,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 #endif
 
 #ifdef MARS
-	if (detailmode >= detmode_high)
-		vd.extralight = player->extralight << 4;
-	else
-		vd.extralight = 0;
+	vd.extralight = player->extralight << 4;
 
 	if (player->powers[pw_invulnerability] > 60
 		|| (player->powers[pw_invulnerability] & 4))

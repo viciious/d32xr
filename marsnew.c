@@ -816,7 +816,7 @@ void I_Update(void)
 				R_ClearTexCache(&r_texcache);
 			}
 
-			R_SetDetailMode(detailmode);
+			R_SetDrawMode();
 
 			if (!prevdebugmode)
 			{
