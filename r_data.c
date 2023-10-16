@@ -705,7 +705,6 @@ void R_InitColormap(boolean doublepix)
 	void *doomcolormap;
 
 	l = W_CheckNumForName("COLORMAP");
-	l -= colormapopt * 2;
 	l -= (int)!doublepix;
 
 	doomcolormap = W_GetLumpData(l);
