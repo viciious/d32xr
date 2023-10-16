@@ -1204,7 +1204,6 @@ typedef enum
 
 extern VINT debugmode;
 extern char clearscreen;
-extern VINT colormapopt;
 extern VINT initmathtables;
 
 extern VINT COLOR_BLACK;

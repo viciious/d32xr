@@ -34,7 +34,6 @@ typedef enum
 
 	mi_resolution,
 	mi_anamorphic,
-	mi_colormap,
 
 	mi_controltype,
 	mi_alwaysrun,
@@ -221,11 +220,7 @@ void O_Init (void)
 
 	D_memcpy(menuitem[mi_anamorphic].name, "Widescreen", 11);
 	menuitem[mi_anamorphic].x = ITEMX;
-	menuitem[mi_anamorphic].y = STARTY + ITEMSPACE * 4;
-
-	D_memcpy(menuitem[mi_colormap].name, "High color", 11);
-	menuitem[mi_colormap].x = ITEMX;
-	menuitem[mi_colormap].y = STARTY + ITEMSPACE * 5;
+	menuitem[mi_anamorphic].y = STARTY + ITEMSPACE * 2;
 
 
 	D_memcpy(menuitem[mi_controltype].name, "Gamepad", 8);
@@ -259,7 +254,7 @@ void O_Init (void)
 
 	D_memcpy(menuscreen[ms_video].name, "Video", 7);
 	menuscreen[ms_video].firstitem = mi_resolution;
-	menuscreen[ms_video].numitems = mi_colormap - mi_resolution + 1;
+	menuscreen[ms_video].numitems = mi_anamorphic - mi_resolution + 1;
 
 	D_memcpy(menuscreen[ms_controls].name, "Controls", 9);
 	menuscreen[ms_controls].firstitem = mi_controltype;
@@ -476,9 +471,6 @@ void O_Control (player_t *player)
 					anamorphicview = slider->curval;
 					R_SetViewportSize(viewportNum);
 					break;
-				case mi_colormap:
-					colormapopt = slider->curval;
-					break;
 				default:
 					break;
 
@@ -605,7 +597,6 @@ void O_Control (player_t *player)
 			if (screenpos == ms_video)
 			{
 				int oldanamorphicview = anamorphicview;
-				int oldcolormapopt = colormapopt;
 
 				if (buttons & BT_RIGHT)
 				{
@@ -613,10 +604,6 @@ void O_Control (player_t *player)
 					case mi_anamorphic:
 						if (++anamorphicview > 1)
 							anamorphicview = 1;
-						break;
-					case mi_colormap:
-						if (++colormapopt > 1)
-							colormapopt = 1;
 						break;
 					}
 				}
@@ -628,21 +615,12 @@ void O_Control (player_t *player)
 						if (--anamorphicview < 0)
 							anamorphicview = 0;
 						break;
-					case mi_colormap:
-						if (--colormapopt < 0)
-							colormapopt = 0;
-						break;
 					}
 				}
 
 				if (oldanamorphicview != anamorphicview)
 				{
 					R_SetViewportSize(viewportNum);
-					sound = sfx_stnmov;
-				}
-				if (oldcolormapopt != colormapopt)
-				{
-					R_InitColormap(lowResMode);
 					sound = sfx_stnmov;
 				}
 			}
@@ -779,15 +757,6 @@ void O_Drawer (void)
 			break;
 		case 1:
 			print(menuitem[mi_anamorphic].x + 150, menuitem[mi_anamorphic].y, "on");
-			break;
-		}
-
-		switch (colormapopt) {
-		case 0:
-			print(menuitem[mi_colormap].x + 150, menuitem[mi_colormap].y, "off");
-			break;
-		case 1:
-			print(menuitem[mi_colormap].x + 150, menuitem[mi_colormap].y, "on");
 			break;
 		}
 	}

@@ -5,7 +5,6 @@
 boolean		splitscreen = false;
 VINT		controltype = 0;		/* determine settings for BT_* */
 VINT		alwaysrun = 0;
-VINT		colormapopt = 1;
 
 int			gamevbls;		/* may not really be vbls in multiplayer */
 int			vblsinframe;		/* range from ticrate to ticrate*2 */

@@ -61,7 +61,7 @@ typedef struct __attribute((packed))
 	int8_t strafebtns;
 	uint8_t magic2;
 	int8_t anamorphic;
-	int8_t colormap;
+	int8_t unused2;
 	int8_t sfxdriver;
 } saveopts_t;
 
@@ -181,7 +181,6 @@ static void SaveOptions(void)
 	so.alwaysrun = alwaysrun;
 	so.strafebtns = strafebtns;
 	so.anamorphic = anamorphicview;
-	so.colormap = colormapopt+1;
 	so.sfxdriver = sfxdriver;
 	so.magic1 = SRAM_MAGIC1;
 	so.magic2 = SRAM_MAGIC2;
@@ -220,8 +219,6 @@ static void ReadOptions(void)
 		so.strafebtns = 0;
 	if (so.anamorphic < 0 || so.anamorphic > 1)
 		so.anamorphic = 0;
-	if (so.colormap < 1 || so.colormap > 2)
-		so.colormap = 2;
 	if (so.sfxdriver < 0 || so.sfxdriver > 2)
 		so.sfxdriver = 0;
 
@@ -234,7 +231,6 @@ static void ReadOptions(void)
 	alwaysrun = so.alwaysrun;
 	strafebtns = so.strafebtns;
 	anamorphicview = so.anamorphic;
-	colormapopt = so.colormap - 1;
 	sfxdriver = so.sfxdriver;
 }
 
@@ -258,7 +254,6 @@ void ReadEEProm(void)
 	strafebtns = 0;
 	ticsperframe = MINTICSPERFRAME;
 	anamorphicview = 0;
-	colormapopt = 1;
 	sfxdriver = 0;
 
 	ReadOptions();
