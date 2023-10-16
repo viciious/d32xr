@@ -51,7 +51,6 @@ extern fixed_t weaponXScale;
 
 typedef enum
 {
-	detmode_potato = -1,
 	detmode_medium,
 	detmode_high,
 	detmode_mipmaps,

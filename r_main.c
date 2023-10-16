@@ -291,8 +291,6 @@ void R_SetViewportSize(int num)
 
 void R_SetDetailMode(int mode)
 {
-	if (mode < detmode_potato)
-		return;
 	if (mode >= MAXDETAILMODES)
 		return;
 	if (mode == detmode_mipmaps && !texmips)
@@ -316,7 +314,7 @@ void R_SetDetailMode(int mode)
 		drawcolnpo2 = I_DrawColumnNPo2Low;
 		drawfuzzcol = I_DrawFuzzColumnLow;
 		drawcollow = I_DrawColumnLow;
-		drawspan = detailmode == detmode_potato ? I_DrawSpanPotatoLow : I_DrawSpanLow;
+		drawspan = I_DrawSpanLow;
 	}
 	else
 	{
@@ -325,7 +323,7 @@ void R_SetDetailMode(int mode)
 		drawfuzzcol = I_DrawFuzzColumn;
 		drawspan = I_DrawSpan;
 		drawcollow = I_DrawColumnLow;
-		drawspan = detailmode == detmode_potato ? I_DrawSpanPotato : I_DrawSpan;
+		drawspan = I_DrawSpan;
 	}
 
 #ifdef MARS
