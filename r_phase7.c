@@ -11,6 +11,7 @@
 
 #define LIGHTCOEF (0x7ffffu << SLOPEBITS)
 #define MIPSCALE (1<<24)
+#define FLATSIZE 64
 
 struct localplane_s;
 
@@ -22,14 +23,16 @@ typedef struct localplane_s
     fixed_t x, y;
     int lightmin, lightmax, lightsub;
     fixed_t basexscale, baseyscale;
-    unsigned maxmip;
 
 #ifdef MARS
     inpixel_t* ds_source[MIPLEVELS];
 #else
     pixel_t* ds_source[MIPLEVELS];
 #endif
+#if MIPLEVELS > 1
+    unsigned maxmip;
     int mipsize[MIPLEVELS];
+#endif
 } localplane_t;
 
 static void R_MapPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
@@ -61,7 +64,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     angle_t angle;
     int light;
     unsigned scale;
-    unsigned miplevel;
+    unsigned miplevel, mipsize;
 
     remaining = x2 - x + 1;
 
@@ -84,9 +87,15 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     xstep = FixedMul(distance, lpl->basexscale);
     ystep = FixedMul(distance, lpl->baseyscale);
 
+#if MIPLEVELS > 1
     miplevel = (unsigned)distance / MIPSCALE;
     if (miplevel > lpl->maxmip)
         miplevel = lpl->maxmip;
+    mipsize = lpl->mipsize[miplevel];
+#else
+    miplevel = 0;
+    mipsize = FLATSIZE;
+#endif
 
     angle = (lpl->angle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOFINESHIFT;
 
@@ -95,7 +104,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     yfrac = FixedMul(finesine(angle), length);
     yfrac = lpl->y - yfrac;
 #ifdef MARS
-    yfrac *= 64;
+    yfrac *= FLATSIZE;
 #endif
 
     if (miplevel > 0) {
@@ -133,7 +142,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
         light = lpl->lightmax;
     }
 
-    drawspan(y, x, x2, light, xfrac, yfrac, xstep, ystep, lpl->ds_source[miplevel], lpl->mipsize[miplevel]);
+    drawspan(y, x, x2, light, xfrac, yfrac, xstep, ystep, lpl->ds_source[miplevel], mipsize);
 }
 
 //
@@ -262,7 +271,6 @@ static void R_DrawPlanes2(void)
     localplane_t lpl;
     visplane_t* pl;
     int extralight;
-    boolean nomips = !texmips;
 
 #ifdef MARS
     Mars_ClearCacheLine(&vd.lastvisplane);
@@ -282,15 +290,14 @@ static void R_DrawPlanes2(void)
     lpl.basexscale = FixedDiv(finecosine(angle), centerXFrac);
     lpl.baseyscale = -FixedDiv(finesine(angle), centerXFrac);
 #ifdef MARS
-    lpl.baseyscale *= 64;
+    lpl.baseyscale *= FLATSIZE;
 #endif
     extralight = vd.extralight;
 
     while ((pl = R_GetNextPlane((uint16_t *)vd.gsortedvisplanes)) != NULL)
     {
-        unsigned j;
         int light;
-        int mipsize = 64;
+        int flatnum;
 
 #ifdef MARS
         Mars_ClearCacheLines(pl, (sizeof(visplane_t) + 31) / 16);
@@ -299,15 +306,25 @@ static void R_DrawPlanes2(void)
         if (pl->minx > pl->maxx)
             continue;
 
+        flatnum = pl->flatandlight&0xffff;
         lpl.pl = pl;
-        lpl.maxmip = nomips ? 0 : MIPLEVELS-1;
+        lpl.ds_source[0] = flatpixels[flatnum].data[0];
 
-        for (j = 0; j <= lpl.maxmip; j++)
+#if MIPLEVELS > 1
+        lpl.mipsize[0] = FLATSIZE;
+        lpl.maxmip = texmips ? MIPLEVELS-1 : 0;
+        if (lpl.maxmip > 0)
         {
-            lpl.ds_source[j] = flatpixels[pl->flatandlight&0xffff].data[j];
-            lpl.mipsize[j] = mipsize;
-            mipsize >>= 1;
+            int j;
+            int mipsize = FLATSIZE>>1;
+            for (j = 1; j <= lpl.maxmip; j++)
+            {
+                lpl.ds_source[j] = flatpixels[flatnum].data[j];
+                lpl.mipsize[j] = mipsize;
+                mipsize >>= 1;
+            }
         }
+#endif
         lpl.height = (unsigned)D_abs(pl->height);
 
         if (vd.fixedcolormap)
