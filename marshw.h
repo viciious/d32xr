@@ -153,6 +153,9 @@ void Mars_MCDStopSfx(uint8_t src_id);
 void Mars_MCDFlushSfx(void);
 void Mars_MCDLoadSfxFileOfs(uint16_t start_id, int numsfx, const char *name, int *offsetlen);
 
+void Mars_MCDSetFileCache(int length);
+void *Mars_MCDGetFileCache(int length);
+
 void Mars_SetPriCmdCallback(void (*cb)(void));
 void Mars_SetSecCmdCallback(void (*cb)(void));
 void Mars_SetSecDMA1Callback(void (*cb)(void));
