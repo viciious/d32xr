@@ -169,8 +169,10 @@ void W_ReadPWAD (void)
 	wadfile_t *wad = &wadfile[1];
 	lumpinfo_t *li;
 	static int cache_size = -1;
+	static int cache_num_lumps = 0;
 
 	if (cache_size != -1) {
+		wad->numlumps = cache_num_lumps;
 		wad->lumpinfo = I_GetCDFileCache(cache_size);
 		return;
 	}
@@ -192,6 +194,7 @@ void W_ReadPWAD (void)
 	}
 
 	cache_size = l;
+	cache_num_lumps = wad->numlumps;
 	I_SetCDFileCache(l);
 }
 
@@ -256,9 +259,7 @@ int W_GetLumpInfoSubset(lumpinfo_t *out, const lumpinfo_t *in, int numlumps, int
 		int l = lumps[i];
 		if (l < 0)
 			continue;
-		D_memcpy(out[n].name, in[l].name, 8);
-		out[n].filepos = in[l].filepos;
-		out[n].size = in[l].size;
+		D_memcpy(&out[n], &in[l], sizeof(lumpinfo_t));
 		n++;
 	}
 	return n;
