@@ -641,13 +641,10 @@ static void START_Credits (void)
 	}
 
 	pwad.numlumps = W_GetLumpInfoSubset(li, W_GetLumpInfo(), i, lumps);
-	W_Push();
 	W_SetPWAD(&pwad, li);
 
 	for (i = 0; i < 2; i++)
 		credits[i] = W_CacheLumpName(li[i].name, PU_STATIC);
-
-	W_Pop();
 
 	W_Pop();
 
@@ -841,41 +838,19 @@ void RunCredits (void)
 
 static void RunAttractDemos (void)
 {
-	int i, num_demos;
-	int lumps[MAX_ATTRACT_DEMOS];
-	wadinfo_t pwad;
-	lumpinfo_t li[MAX_ATTRACT_DEMOS];
+	int i;
 	int exit = ga_exitdemo;
 	boolean first = true;
 
 	if (gameinfo.noAttractDemo)
 		return;
 
-	W_Push();
-	W_ReadPWAD();
-
-	/* build a temp in-memory PWAD */
-	for (i = 0; i < MAX_ATTRACT_DEMOS; i++)
-	{
-		char demo[9];
-		D_snprintf(demo, sizeof(demo), "DEMO%1d", i+1);
-		lumps[i] = W_CheckNumForName(demo);
-		if (lumps[i] < 0)
-			break;
-	}
-
-	num_demos = i;
-	pwad.numlumps = W_GetLumpInfoSubset(li, W_GetLumpInfo(), num_demos, lumps);
-
-	W_Pop();
-
-	if (!num_demos)
-		return;
-
 	do {
-		for (i = 0; i < num_demos; i++)
+		for (i = 0; i < MAX_ATTRACT_DEMOS; i++)
 		{
+			int l;
 			unsigned *demo;
+			char demoname[9];
 
 			if (!first)
 			{
@@ -896,19 +871,24 @@ static void RunAttractDemos (void)
 
 			W_Push();
 
-			W_Push();
-			W_SetPWAD(&pwad, li);
+			W_ReadPWAD();
 
-			demo = W_CacheLumpNum(i, PU_STATIC);
+			demo = NULL;
+			D_snprintf(demoname, sizeof(demoname), "DEMO%1d", i+1);
 
-			W_Pop();
+			l = W_CheckNumForName(demoname);
+			if (l >= 0)
+				demo = W_CacheLumpNum(l, PU_STATIC);
 
 			W_Pop();
 
 			if (!first)
-			{
 				I_RestoreScreenCopy();
-			}
+
+			if (!demo && first)
+				return;
+			if (!demo)
+				break;
 
 			first = false;
 			exit = G_PlayDemoPtr (demo);
