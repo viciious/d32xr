@@ -171,7 +171,7 @@ void W_ReadPWAD (void)
 	static int cache_size = -1;
 
 	if (cache_size != -1) {
-		I_GetCDFileCache(cache_size);
+		wad->lumpinfo = I_GetCDFileCache(cache_size);
 		return;
 	}
 
@@ -192,7 +192,7 @@ void W_ReadPWAD (void)
 	}
 
 	cache_size = l;
-	I_SetCDSetFileCache(l);
+	I_SetCDFileCache(l);
 }
 
 /*
