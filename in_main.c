@@ -380,7 +380,6 @@ void IN_Start (void)
 	lumps[6] = W_CheckNumForName("I_FINISH");
 	pwad.numlumps = W_GetLumpInfoSubset(li, W_GetLumpInfo(), 7, lumps);
 
-	W_Push();
 	W_SetPWAD(&pwad, li);
 
 	l = W_CheckNumForName("INTERPIC");
@@ -405,7 +404,6 @@ void IN_Start (void)
 #endif
 
 #ifdef MARS
-	W_Pop();
 	W_Pop();
 #endif
 
