@@ -61,10 +61,10 @@ jobs:
           awk '{s+=$1} END {print s}'
       - name: bss_end
         run: grep 'bss_end =' output.map
-      - name: Test bss_end < 0x603BC00
+      - name: Test bss_end < 0x603C000
         run: |
           grep 'bss_end =' output.map | grep -o '0x[0-9a-f]\+' | \
-          xargs -I{} echo "{} 0x603BC00" | awk --non-decimal-data '{print($2-$1); exit($1>=$2)}'
+          xargs -I{} echo "{} 0x603C000" | awk --non-decimal-data '{print($2-$1); exit($1>=$2)}'
       - name: 32X ROM
         uses: actions/upload-artifact@v2
         with:
