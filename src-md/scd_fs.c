@@ -3,8 +3,8 @@
 #include <string.h>
 #include <stdio.h>
 
-#define MD_WORDRAM          (void*)0x600000
-#define MCD_WORDRAM         (void*)((uintptr_t)0x0C0000)
+#define MD_WORDRAM          (void*)0x600000 /* word RAM address on the MD in 1M mode */
+#define MCD_WORDRAM         (void*)((uintptr_t)0x0C0000) /* word RAM address on the SCD in 1M mode */
 
 #define BLOCK_SIZE 2048
 #define CHUNK_SHIFT 3
@@ -17,6 +17,7 @@
 extern int64_t scd_open_file(const char *name);
 extern void scd_read_sectors(void *ptr, int lba, int len, void (*wait)(void));
 extern void bump_fm(void);
+extern void scd_get_or_set_fs_cache(int set, void *ptr, int length);
 
 typedef struct CDFileHandle {
     int32_t  offset; // start block of file
@@ -140,4 +141,16 @@ int scd_read_gfile(void *ptr, int length)
 int scd_seek_gfile(int offset, int whence)
 {
     return cd_Seek(&gfh, offset, whence);
+}
+
+void scd_set_fs_cache(const void *ptr, int length)
+{
+    memcpy((char *)MD_DISC_BUFFER, ptr, length);
+    scd_get_or_set_fs_cache(1, MCD_DISC_BUFFER, length);
+}
+
+void scd_get_fs_cache(void *ptr, int length)
+{
+    scd_get_or_set_fs_cache(0, (char *)MCD_DISC_BUFFER, length);
+    memcpy(ptr, (char *)MD_DISC_BUFFER, length);
 }
