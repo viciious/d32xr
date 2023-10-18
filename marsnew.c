@@ -1215,7 +1215,7 @@ int I_ReadCDFile(int length)
 	return Mars_ReadCDFile(length);
 }
 
-void I_SetCDSetFileCache(int length)
+void I_SetCDFileCache(int length)
 {
 	Mars_MCDSetFileCache(length);
 }

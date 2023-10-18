@@ -1226,7 +1226,7 @@ void I_OpenCDFileByOffset(int length, int offset);
 void *I_GetCDFileBuffer(void);
 int I_SeekCDFile(int offset, int whence);
 int I_ReadCDFile(int length);
-void I_SetCDSetFileCache(int length);
+void I_SetCDFileCache(int length);
 void *I_GetCDFileCache(int length);
 
 /*================= */

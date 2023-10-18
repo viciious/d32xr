@@ -810,21 +810,21 @@ void Mars_MCDLoadSfxFileOfs(uint16_t start_id, int numsfx, const char *name, int
 	MARS_SYS_COMM0 = 0x2A00|numsfx; /* load sfx */
 }
 
-void Mars_MCDSetFileCache(int length)
+void *Mars_MCDGetFileCache(int length)
 {
 	while (MARS_SYS_COMM0);
 	MARS_SYS_COMM2 = length;
 	MARS_SYS_COMM0 = 0x2B00;
 	while (MARS_SYS_COMM0);
+	return (void *)(&MARS_FRAMEBUFFER + 0x100);
 }
 
-void *Mars_MCDGetFileCache(int length)
+void Mars_MCDSetFileCache(int length)
 {
 	while (MARS_SYS_COMM0);
 	MARS_SYS_COMM2 = length;
 	MARS_SYS_COMM0 = 0x2C00;
 	while (MARS_SYS_COMM0);
-	return (void *)(&MARS_FRAMEBUFFER + 0x100);
 }
 
 void Mars_Finish(void)
