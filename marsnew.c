@@ -1214,3 +1214,13 @@ int I_ReadCDFile(int length)
 {
 	return Mars_ReadCDFile(length);
 }
+
+void I_SetCDSetFileCache(int length)
+{
+	Mars_MCDSetFileCache(length);
+}
+
+void *I_GetCDFileCache(int length)
+{
+	return Mars_MCDGetFileCache(length);
+}
