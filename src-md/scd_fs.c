@@ -143,14 +143,14 @@ int scd_seek_gfile(int offset, int whence)
     return cd_Seek(&gfh, offset, whence);
 }
 
-void scd_set_fs_cache(const void *ptr, int length)
-{
-    memcpy((char *)MD_DISC_BUFFER, ptr, length);
-    scd_get_or_set_fs_cache(1, MCD_DISC_BUFFER, length);
-}
-
 void scd_get_fs_cache(void *ptr, int length)
 {
     scd_get_or_set_fs_cache(0, (char *)MCD_DISC_BUFFER, length);
     memcpy(ptr, (char *)MD_DISC_BUFFER, length);
+}
+
+void scd_set_fs_cache(const void *ptr, int length)
+{
+    memcpy((char *)MD_DISC_BUFFER, ptr, length);
+    scd_get_or_set_fs_cache(1, MCD_DISC_BUFFER, length);
 }

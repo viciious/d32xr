@@ -2190,23 +2190,41 @@ load_sfx_cd_fileofs:
         bra     main_loop
 
 get_cd_file_cache:
-        lea     MARS_FRAMEBUFFER,a1 /* frame buffer */
-        move.l  a1,-(sp)            /* file name + offsets */
-        move.w  0xA15122,d0         /* COMM2 = start buffer id */
+        move.w  0xA15100,d0
+        eor.w   #0x8000,d0
+        move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
+
+        moveq   #0,d0
+        move.w  0xA15122,d0         /* COMM2 = length */
         move.l  d0,-(sp)
+        lea     MARS_FRAMEBUFFER,a1 /* frame buffer */
+        move.l  a1,-(sp)
         jsr     scd_get_fs_cache
         lea     8(sp),sp
+
+        move.w  0xA15100,d0
+        or.w    #0x8000,d0
+        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
 
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
 set_cd_file_cache:
-        lea     MARS_FRAMEBUFFER,a1 /* frame buffer */
-        move.l  a1,-(sp)            /* file name + offsets */
-        move.w  0xA15122,d0         /* COMM2 = start buffer id */
+        move.w  0xA15100,d0
+        eor.w   #0x8000,d0
+        move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
+
+        moveq   #0,d0
+        move.w  0xA15122,d0         /* COMM2 = length */
         move.l  d0,-(sp)
+        lea     MARS_FRAMEBUFFER,a1 /* frame buffer */
+        move.l  a1,-(sp)
         jsr     scd_set_fs_cache
         lea     8(sp),sp
+
+        move.w  0xA15100,d0
+        or.w    #0x8000,d0
+        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
 
         move.w  #0,0xA15120         /* done */
         bra     main_loop
