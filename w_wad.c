@@ -168,6 +168,12 @@ void W_ReadPWAD (void)
 	int i, l;
 	wadfile_t *wad = &wadfile[1];
 	lumpinfo_t *li;
+	static int cache_size = -1;
+
+	if (cache_size != -1) {
+		I_GetCDFileCache(cache_size);
+		return;
+	}
 
 	I_OpenCDFileByOffset(wad->cdlength, wad->cdoffset);
 
@@ -184,6 +190,9 @@ void W_ReadPWAD (void)
 		li[i].filepos = LITTLELONG(li[i].filepos);
 		li[i].size = LITTLELONG(li[i].size);
 	}
+
+	cache_size = l;
+	I_SetCDSetFileCache(l);
 }
 
 /*
