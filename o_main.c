@@ -30,7 +30,9 @@ typedef enum
 	mi_soundvol,
 	mi_music,
 	mi_musicvol,
+#ifndef DISABLE_DMA_SOUND
 	mi_sfxdriver,
+#endif
 
 	mi_resolution,
 	mi_anamorphic,
@@ -207,9 +209,11 @@ void O_Init (void)
 	sliders[si_musvolume].maxval = 8;
 	sliders[si_musvolume].curval = 8*musicvolume/64;
 
+#ifndef DISABLE_DMA_SOUND
 	D_memcpy(menuitem[mi_sfxdriver].name, "SFX driver", 11);
 	menuitem[mi_sfxdriver].x = ITEMX;
 	menuitem[mi_sfxdriver].y = STARTY+ITEMSPACE*5;
+#endif
 
 	D_memcpy(menuitem[mi_resolution].name, "Resolution", 11);
 	menuitem[mi_resolution].x = ITEMX;
@@ -561,10 +565,12 @@ void O_Control (player_t *player)
 						if (o_musictype == mustype_cd && !S_CDAvailable())
 							o_musictype = mustype_fm;
 						break;
+#ifndef DISABLE_DMA_SOUND
 					case mi_sfxdriver:
 						if (++o_sfxdriver > sfxdriver_pwm)
 							o_sfxdriver = sfxdriver_pwm;
 						break;
+#endif
 					}
 				}
 
@@ -575,10 +581,12 @@ void O_Control (player_t *player)
 						if (--o_musictype < mustype_none)
 							o_musictype = mustype_none;
 						break;
+#ifndef DISABLE_DMA_SOUND
 					case mi_sfxdriver:
 						if (--o_sfxdriver < sfxdriver_auto)
 							o_sfxdriver = sfxdriver_auto;
 						break;
+#endif
 					}
 				}
 
@@ -729,6 +737,7 @@ void O_Drawer (void)
 			break;
 		}
 
+#ifndef DISABLE_DMA_SOUND
 		if (menuscreen[ms_audio].numitems > 3)
 		{
 			switch (o_sfxdriver) {
@@ -743,6 +752,7 @@ void O_Drawer (void)
 				break;
 			}
 		}
+#endif
 	}
 
 	if (screenpos == ms_video)

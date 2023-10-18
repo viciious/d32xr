@@ -1,6 +1,8 @@
 #include "doomdef.h"
 #include "mars.h"
+#ifndef DISABLE_DMA_SOUND
 #include "mars_ringbuf.h"
+#endif
 #include "sounds.h"
 
 #define MAX_SAMPLES        316		// 70Hz
@@ -48,7 +50,11 @@
 
 #define S_SEP_VOL_TO_MCD(sep,vol) do { if ((sep) > 254) (sep) = 254; (vol) <<= 2; /* 64 -> 256 max */ if ((vol) > 255) (vol) = 255; } while (0)
 
-#define S_USE_MEGACD_DRV() (/*mcd_avail && (sfxdriver == sfxdriver_auto || sfxdriver == sfxdriver_mcd)*/sfxdriver_mcd)
+#ifdef DISABLE_DMA_SOUND
+#define S_USE_MEGACD_DRV() (mcd_avail)
+#else
+#define S_USE_MEGACD_DRV() (mcd_avail && (sfxdriver == sfxdriver_auto || sfxdriver == sfxdriver_mcd))
+#endif
 
 enum
 {
@@ -58,17 +64,23 @@ enum
 	SNDCMD_STARTORGSND
 };
 
+#ifndef DISABLE_DMA_SOUND
 static uint8_t snd_bufidx = 0;
 int16_t __attribute__((aligned(16))) snd_buffer[2][MAX_SAMPLES * 2];
-static uint8_t	snd_init = 0;
-unsigned        snd_nopaintcount = 0;
-
-static lumpinfo_t *vgm_tracks;
-uint8_t			*vgm_ptr;
 
 sfxchannel_t	pcmchannel;
 
 int __attribute__((aligned(16))) pcm_data[4];
+
+static marsrb_t	soundcmds = { 0 };
+
+static unsigned snd_nopaintcount = 0;
+#endif
+
+static uint8_t	snd_init = 0;
+
+static lumpinfo_t *vgm_tracks;
+uint8_t			*vgm_ptr;
 
 sfxchannel_t	sfxchannels[SFXCHANNELS];
 
@@ -80,26 +92,25 @@ VINT			musictype = mustype_fm;
 static VINT		curmusic, muslooping = 0, curcdtrack = cdtrack_none;
 int             samplecount = 0;
 
-static marsrb_t	soundcmds = { 0 };
-
 VINT 			sfxdriver = sfxdriver_auto, mcd_avail = 0; // 0 - auto, 2 - megacd, 2 - 32x
 
 static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol, getsoundpos_t getpos);
+#ifndef DISABLE_DMA_SOUND
 static void S_SetChannelData(sfxchannel_t* channel);
 int S_PaintChannel4IMA(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
 int S_PaintChannel4IMA2x(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
 void S_PaintChannel8(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
 static int S_PaintChannel(sfxchannel_t *ch, int16_t* buffer, int painted) ATTR_DATA_CACHE_ALIGN;
+static void S_Update(int16_t* buffer) ATTR_DATA_CACHE_ALIGN;
+static void S_UpdatePCM(void) ATTR_DATA_CACHE_ALIGN;
+static void S_Sec_DMA1Handler(void);
+#endif
 static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos);
 static void S_SpatializeAt(fixed_t*origin, mobj_t* listener, int* pvol, int* psep) ATTR_DATA_CACHE_ALIGN;
 static void S_Spatialize(mobj_t* mobj, int* pvol, int* psep, getsoundpos_t getpos) ATTR_DATA_CACHE_ALIGN;
 static void S_SpatializeAll(void) ATTR_DATA_CACHE_ALIGN;
-static void S_Update(int16_t* buffer) ATTR_DATA_CACHE_ALIGN;
-static void S_UpdatePCM(void) ATTR_DATA_CACHE_ALIGN;
 
-static void S_Sec_DMA1Handler(void);
 static void S_Pri_CmdHandler(void);
-static void S_Sec_DMA1Handler(void);
 
 /*
 ==================
@@ -171,23 +182,28 @@ void S_Init(void)
 			S_sfx[i].lump = W_CheckNumForNameExt(S_sfxnames[i], start, end) - start;
 		}
 
-		/* load all SFX in a single batch */
-		for (i = 0; i < numsfx; i++)
+		if (mcd_avail)
 		{
-			sfxol[i*2] = li[start + 1 + i].filepos;
-			sfxol[i*2+1] = li[start + 1 + i].size;
-		}
+			/* load all SFX in a single batch */
+			for (i = 0; i < numsfx; i++)
+			{
+				sfxol[i*2] = li[start + 1 + i].filepos;
+				sfxol[i*2+1] = li[start + 1 + i].size;
+			}
 
-		Mars_MCDLoadSfxFileOfs(1, numsfx, PWAD_NAME, sfxol);
+			Mars_MCDLoadSfxFileOfs(1, numsfx, PWAD_NAME, sfxol);
+		}
 	}
 
 	W_Pop();
 
-	Mars_RB_ResetAll(&soundcmds);
-
 	Mars_SetPriCmdCallback(&S_Pri_CmdHandler);
 
+#ifndef DISABLE_DMA_SOUND
+	Mars_RB_ResetAll(&soundcmds);
+
 	Mars_InitSoundDMA(1);
+#endif
 
 	// FIXME: this is ugly, get rid of global variables!
 
@@ -210,8 +226,6 @@ void S_Init(void)
 
 void S_Clear (void)
 {
-	volatile int tic;
-
 	if (S_USE_MEGACD_DRV())
 	{
 		D_memset(sfxchannels, 0, sizeof(*sfxchannels) * SFXCHANNELS);
@@ -220,6 +234,8 @@ void S_Clear (void)
 		return;
 	}
 
+#ifndef DISABLE_DMA_SOUND
+	volatile int tic;
 	uint16_t *p = (uint16_t*)Mars_RB_GetWriteBuf(&soundcmds, 8, false);
 	if (!p)
 		return;
@@ -234,6 +250,7 @@ void S_Clear (void)
 		if (Mars_RB_Len(&soundcmds) == 0)
 			break;
 	}
+#endif
 }
 
 void S_RestartSounds (void)
@@ -244,6 +261,7 @@ void S_SetSoundDriver (int newdrv)
 {
 	S_Clear();
 
+#ifndef DISABLE_DMA_SOUND
 	sfxdriver = newdrv;
 	switch (newdrv) {
 		case sfxdriver_pwm:
@@ -251,6 +269,7 @@ void S_SetSoundDriver (int newdrv)
 			Mars_InitSoundDMA(0);
 			break;
 	}
+#endif
 }
 
 /*
@@ -462,6 +481,7 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 		return;
 	}
 
+#ifndef DISABLE_DMA_SOUND
 	uint16_t* p = (uint16_t*)Mars_RB_GetWriteBuf(&soundcmds, 8, false);
 	if (!p)
 		return;
@@ -483,6 +503,7 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 	}
 
 	Mars_RB_CommitWrite(&soundcmds);
+#endif
 }
 
 void S_StartSound(mobj_t* mobj, int sound_id)
@@ -727,6 +748,8 @@ void S_StopSong(void)
 	curmusic = mus_none;
 	curcdtrack = cdtrack_none;
 }
+
+#ifndef DISABLE_DMA_SOUND
 
 static void S_ClearPCM(void)
 {
@@ -973,6 +996,8 @@ static void S_Sec_DMA1Handler(void)
 	S_Update(snd_buffer[snd_bufidx]);
 }
 
+#endif
+
 /*
 ==================
 =
@@ -1001,9 +1026,12 @@ static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol,
 	}
 	else
 	{
+#ifndef DISABLE_DMA_SOUND
+
 		md_data = W_POINTLUMPNUM(sfx->lump);
 		length = md_data->samples;
 		if (length < 4)
+#endif
 			return NULL;
 	}
 
@@ -1070,6 +1098,8 @@ gotchannel:
 
 	return newchannel;
 }
+
+#ifndef DISABLE_DMA_SOUND
 
 static void S_SetChannelData(sfxchannel_t* channel)
 {
@@ -1235,8 +1265,20 @@ void Mars_Sec_InitSoundDMA(int initfull)
 	S_Sec_DMA1Handler();
 }
 
+#else
+
+void Mars_Sec_InitSoundDMA(int initfull)
+{
+	snd_init = 1;
+}
+
+#endif
+
 static void S_Pri_CmdHandler(void)
 {
+#ifdef DISABLE_DMA_SOUND
+	int __attribute__((aligned(16))) pcm_data[4];
+#endif
 	volatile int *pcm_cachethru = (volatile int *)((intptr_t)pcm_data | 0x20000000);
 	unsigned int offs, len, freq;
 
