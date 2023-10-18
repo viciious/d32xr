@@ -425,10 +425,15 @@ GetOrSetGlobalCache:
         move.l  d0,-(sp)
         jsr     memcpy
         lea     12(sp),sp               /* clear the stack */
+
+        jsr     switch_banks
+
         move.b  #'D,0x800F.w            /* sub comm port = DONE */
         bra     WaitAck
 1:
         /* set */
+        jsr     switch_banks
+
         move.l  0x8014.w,d0             /* length */
         move.l  d0,-(sp)
         move.l  0x8010.w,d0             /* src address */
@@ -437,6 +442,7 @@ GetOrSetGlobalCache:
         move.l  a0,-(sp)
         jsr     memcpy
         lea     12(sp),sp               /* clear the stack */
+
         move.b  #'D,0x800F.w            /* sub comm port = DONE */
         bra     WaitAck
 
