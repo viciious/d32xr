@@ -476,11 +476,13 @@ no_cmd:
         dc.w    flush_sfx - prireqtbl
         dc.w    test_handle - prireqtbl
         dc.w    get_bbox - prireqtbl
-        dc.w    open_file_by_name - prireqtbl
-        dc.w    open_file_by_handle - prireqtbl
-        dc.w    read_file - prireqtbl
-        dc.w    seek_file - prireqtbl
+        dc.w    open_cd_file_by_name - prireqtbl
+        dc.w    open_cd_file_by_handle - prireqtbl
+        dc.w    read_cd_file - prireqtbl
+        dc.w    seek_cd_file - prireqtbl
         dc.w    load_sfx_cd_fileofs - prireqtbl
+        dc.w    get_cd_file_cache - prireqtbl
+        dc.w    set_cd_file_cache - prireqtbl
 
 | process request from Secondary SH2
 handle_sec_req:
@@ -2096,7 +2098,7 @@ get_bbox:
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
-open_file_by_name:
+open_cd_file_by_name:
         move.w  0xA15100,d0
         eor.w   #0x8000,d0
         move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
@@ -2115,7 +2117,7 @@ open_file_by_name:
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
-open_file_by_handle:
+open_cd_file_by_handle:
         move.l  0xA15128,d0         /* length => COMM8 */
         move.l  0xA1512C,d1         /* offset => COMM12 */
 
@@ -2127,7 +2129,7 @@ open_file_by_handle:
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
-read_file:
+read_cd_file:
         move.w  0xA15100,d0
         eor.w   #0x8000,d0
         move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
@@ -2147,7 +2149,7 @@ read_file:
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
-seek_file:
+seek_cd_file:
         moveq   #0,d0
         move.w  0xA15122,d0         /* whence in COMM2 */
         move.l  d0,-(sp)
@@ -2161,7 +2163,7 @@ seek_file:
         bra     main_loop
 
 load_sfx_cd_fileofs:
-        lea     MARS_FRAMEBUFFER,a1         /* frame buffer */
+        lea     MARS_FRAMEBUFFER,a1 /* frame buffer */
         move.l  a1,-(sp)            /* file name + offsets */
 
         moveq   #0,d0
@@ -2185,6 +2187,28 @@ load_sfx_cd_fileofs:
 
         move.w  #0,0xA15120         /* done */
 
+        bra     main_loop
+
+get_cd_file_cache:
+        lea     MARS_FRAMEBUFFER,a1 /* frame buffer */
+        move.l  a1,-(sp)            /* file name + offsets */
+        move.w  0xA15122,d0         /* COMM2 = start buffer id */
+        move.l  d0,-(sp)
+        jsr     scd_get_fs_cache
+        lea     8(sp),sp
+
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+set_cd_file_cache:
+        lea     MARS_FRAMEBUFFER,a1 /* frame buffer */
+        move.l  a1,-(sp)            /* file name + offsets */
+        move.w  0xA15122,d0         /* COMM2 = start buffer id */
+        move.l  d0,-(sp)
+        jsr     scd_set_fs_cache
+        lea     8(sp),sp
+
+        move.w  #0,0xA15120         /* done */
         bra     main_loop
 
 | set standard mapper registers to default mapping
