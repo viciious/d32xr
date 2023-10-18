@@ -171,8 +171,6 @@ void S_Init(void)
 	end = W_CheckNumForName("DS_END");
 	if (start >= 0 && end > start + 1)
 	{
-		lumpinfo_t *li = W_GetLumpInfo();
-
 		int numsfx = end - start - 1;
 		if (numsfx > NUMSFX)
 			numsfx = NUMSFX;
@@ -184,6 +182,8 @@ void S_Init(void)
 
 		if (mcd_avail)
 		{
+			lumpinfo_t *li = W_GetLumpInfo();
+
 			/* load all SFX in a single batch */
 			for (i = 0; i < numsfx; i++)
 			{
