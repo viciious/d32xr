@@ -150,7 +150,7 @@ void S_Init(void)
 	S_StopSong();
 
 	W_Push();
-	W_ReadPWAD();
+	W_LoadPWAD();
 
 	/* build an in-memory PWAD with all music */
 	start = W_CheckNumForName("M_START");

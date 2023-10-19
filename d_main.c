@@ -571,7 +571,7 @@ void START_Title(void)
 
 	if (*l) {
 		W_Push();
-		W_ReadPWAD();
+		W_LoadPWAD();
 
 		int lump = W_CheckNumForName(l);
 		if (lump >= 0)
@@ -627,7 +627,7 @@ static void START_Credits (void)
 		return;
 
 	W_Push();
-	W_ReadPWAD();
+	W_LoadPWAD();
 
 	/* build a temp in-memory PWAD */
 	for (i = 0; i < 2; i++)
@@ -871,7 +871,7 @@ static void RunAttractDemos (void)
 
 			W_Push();
 
-			W_ReadPWAD();
+			W_LoadPWAD();
 
 			demo = NULL;
 			D_snprintf(demoname, sizeof(demoname), "DEMO%1d", i+1);
