@@ -320,9 +320,8 @@ void IN_SingleDrawer(void)
 void IN_Start (void)
 {	
 	int	i,l;
-	int lumps[7];
+	VINT lumps[7];
 	lumpinfo_t li[7];
-	wadinfo_t pwad;
 
 	interm = Z_Malloc(sizeof(*interm), PU_STATIC);
 	D_memset(interm, 0, sizeof(*interm));
@@ -367,7 +366,6 @@ void IN_Start (void)
 #ifdef MARS
 	Z_FreeTags (mainzone);
 
-	W_Push();
 	W_LoadPWAD();
 
 	/* build a temp in-memory PWAD */
@@ -378,9 +376,8 @@ void IN_Start (void)
 	lumps[4] = W_CheckNumForName("I_KILLS");
 	lumps[5] = W_CheckNumForName("I_ITEMS");
 	lumps[6] = W_CheckNumForName("I_FINISH");
-	pwad.numlumps = W_GetLumpInfoSubset(li, W_GetLumpInfo(), 7, lumps);
 
-	W_SetPWAD(&pwad, li);
+	W_CacheWADLumps(li, 7, lumps, true);
 
 	l = W_CheckNumForName("INTERPIC");
 	if (l != -1)
@@ -404,7 +401,7 @@ void IN_Start (void)
 #endif
 
 #ifdef MARS
-	W_Pop();
+	W_UnloadPWAD();
 #endif
 
 	snums = W_CheckNumForName("NUM_0");

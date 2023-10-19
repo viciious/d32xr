@@ -125,8 +125,7 @@ void S_Init(void)
 	int		i;
 	int		initmusictype;
 	int 	start, end;
-	int 	lumps[NUMSFX > 99 ? NUMSFX : 99];
-	int   	sfxol[NUMSFX*2];
+	VINT 	lumps[NUMSFX > 99 ? NUMSFX : 99];
 
 	for (i = 0; i < SFXCHANNELS; i++)
 		sfxchannels[i].data = NULL;
@@ -149,7 +148,6 @@ void S_Init(void)
 	muslooping = 0;
 	S_StopSong();
 
-	W_Push();
 	W_LoadPWAD();
 
 	/* build an in-memory PWAD with all music */
@@ -163,7 +161,7 @@ void S_Init(void)
 		for (i = 0; i < num_music; i++)
 			lumps[i] = start + i + 1;
 		vgm_tracks = Z_Malloc(sizeof(*vgm_tracks) * num_music, PU_STATIC);
-		W_GetLumpInfoSubset(vgm_tracks, W_GetLumpInfo(), num_music, lumps);
+		W_CacheWADLumps(vgm_tracks, num_music, lumps, false);
 	}
 
 	/* build an in-memory PWAD with all SFX */
@@ -177,25 +175,35 @@ void S_Init(void)
 
 		for (i=1 ; i < NUMSFX ; i++)
 		{
-			S_sfx[i].lump = W_CheckNumForNameExt(S_sfxnames[i], start, end) - start;
+			S_sfx[i].lump = W_CheckRangeForName(S_sfxnames[i], start, end);
 		}
 
 		if (mcd_avail)
 		{
-			lumpinfo_t *li = W_GetLumpInfo();
+			lumpinfo_t li[NUMSFX];
+			int sfxol[NUMSFX*2];
+
+			for (i = 0; i < numsfx; i++)
+			{
+ 				if (S_sfx[i].lump >= 0)
+					S_sfx[i].lump -= start;
+				lumps[i] = start + 1 + i;
+			}
+
+			W_CacheWADLumps(li, numsfx, lumps, false);
 
 			/* load all SFX in a single batch */
 			for (i = 0; i < numsfx; i++)
 			{
-				sfxol[i*2] = li[start + 1 + i].filepos;
-				sfxol[i*2+1] = li[start + 1 + i].size;
+				sfxol[i*2] = li[i].filepos;
+				sfxol[i*2+1] = li[i].size;
 			}
 
 			Mars_MCDLoadSfxFileOfs(1, numsfx, PWAD_NAME, sfxol);
 		}
 	}
 
-	W_Pop();
+	W_UnloadPWAD();
 
 	Mars_SetPriCmdCallback(&S_Pri_CmdHandler);
 
@@ -619,20 +627,11 @@ int S_CDAvailable(void)
 
 int S_SongForMapnum(int mapnum)
 {
-	int i;
-	VINT songs[100];
-	VINT numsongs;
-
-	numsongs = 0;
-	for (i = 0; i < num_music + cdtrack_lastmap; i++) {
-		songs[numsongs++] = i + 1;
-		if (numsongs == sizeof(songs) / sizeof(songs[0]))
-			break;
-	}
-
-	if (numsongs == 0)
+	int numsongs;
+	numsongs = num_music + cdtrack_lastmap;
+	if (numsongs <= 0)
 		return mus_none;
-	return songs[(mapnum - 1) % numsongs];
+	return (mapnum - 1) % numsongs + 1;
 }
 
 int S_SongForName(const char *str)
