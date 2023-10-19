@@ -10,7 +10,7 @@
 /* GLOBALS */
 /*============= */
 
-#define MAXWADS 3 					/* IWAD + CD PWAD + virtual CD PWAD */
+#define MAXWADS 2 					/* IWAD + CD PWAD + virtual CD PWAD */
 
 typedef struct
 {
@@ -107,6 +107,8 @@ static void W_InitCDPWAD (void)
 		I_Error ("Wad file doesn't have PWAD id\n");
 	wad->numlumps = LITTLELONG(((wadinfo_t*)ptr)->numlumps);
 	wad->infotableofs = LITTLELONG(((wadinfo_t*)ptr)->infotableofs);
+
+	W_LoadPWAD();
 }
 
 /*
@@ -159,11 +161,11 @@ void W_SetPWAD (wadinfo_t *wadi, void *lumpinfo)
 /*
 ====================
 =
-= W_ReadPWAD
+= W_LoadPWAD
 =
 ====================
 */
-void W_ReadPWAD (void)
+void W_LoadPWAD (void)
 {
 	int i, l;
 	wadfile_t *wad = &wadfile[1];
@@ -171,14 +173,13 @@ void W_ReadPWAD (void)
 	static int cache_size = -1;
 	static int cache_num_lumps = 0;
 
+	I_OpenCDFileByOffset(wad->cdlength, wad->cdoffset);
+
 	if (cache_size != -1) {
-		I_OpenCDFileByOffset(wad->cdlength, wad->cdoffset);
 		wad->numlumps = cache_num_lumps;
 		wad->lumpinfo = I_GetCDFileCache(cache_size);
 		return;
 	}
-
-	I_OpenCDFileByOffset(wad->cdlength, wad->cdoffset);
 
 	I_SeekCDFile(wad->infotableofs, SEEK_SET);
 
@@ -210,12 +211,6 @@ int W_Push (void)
 {
 	if (wadnum >= MAXWADS-1)
 		return -1;
-
-	if (wadnum == 1) {
-		wadfile_t *wad = &wadfile[1];
-		I_OpenCDFileByOffset(wad->cdlength, wad->cdoffset);
-	}
-
 	wadnum++;
 	return 0;
 }
@@ -231,11 +226,6 @@ int W_Pop (void)
 {
 	if (wadnum == 0)
 		return -1;
-
-	if (wadnum == 1) {
-
-	}
-
 	--wadnum;
 	return 0;
 }
