@@ -685,12 +685,9 @@ typedef struct
 
 void	W_Init (void);
 
-int 	W_Push (void);
-int 	W_Pop (void);
 void 	W_LoadPWAD(void);
-void 	W_SetPWAD (wadinfo_t *wad, void *lumpinfo);
-lumpinfo_t *W_GetLumpInfo (void);
-int 	W_GetLumpInfoSubset(lumpinfo_t *out, const lumpinfo_t *in, int numlumps, int *lumps);
+void 	W_UnloadPWAD (void);
+int 	W_CacheWADLumps (lumpinfo_t *li, int numlumps, VINT *lumps, boolean setpwad);
 
 int		W_CheckNumForName (const char *name);
 int		W_GetNumForName (const char *name);

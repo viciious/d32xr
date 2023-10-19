@@ -170,10 +170,6 @@ void P_LoadSectors (int lump)
 	D_memset (sectors, 0, numsectors*sizeof(sector_t));
 	data = W_GetLumpData(lump);
 
-	// pop the WAD stack to point to the IWAD,
-	// otherwise R_FlatNumForName is going to break
-	W_Pop();
-
 	ms = (mapsector_t *)data;
 	ss = sectors;
 	for (i=0 ; i<numsectors ; i++, ss++, ms++)
@@ -205,8 +201,6 @@ void P_LoadSectors (int lump)
 
 		ss->tag = LITTLESHORT(ms->tag);
 	}
-
-	W_Push();
 }
 
 
@@ -650,8 +644,7 @@ void P_SetupLevel (const char *lumpname, skill_t skill)
 	mobj_t	*mobj;
 #endif
 	extern	int	cy;
-	int lumpnum, lumps[ML_BLOCKMAP+1];
-	wadinfo_t pwad;
+	VINT lumpnum, lumps[ML_BLOCKMAP+1];
 	lumpinfo_t li[ML_BLOCKMAP+1];
 
 	M_ClearRandom ();
@@ -662,32 +655,32 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 
 	P_InitThinkers ();
 
-	W_Push();
 	W_LoadPWAD();
 
-	lumpnum = W_GetNumForName(lumpname);
+	lumpnum = W_CheckNumForName(lumpname);
 	if (lumpnum < 0)
 		I_Error("Map %s not found!", lumpname);
 
 	/* build a temp in-memory PWAD */
 	for (i = 0; i < ML_BLOCKMAP+1; i++)
 		lumps[i] = lumpnum+i;
-	pwad.numlumps = W_GetLumpInfoSubset(li, W_GetLumpInfo(), ML_BLOCKMAP+1, lumps);
 
-	W_SetPWAD(&pwad, li);
+	W_CacheWADLumps(li, ML_BLOCKMAP+1, lumps, true);
+
+	lumpnum = W_GetNumForName(lumpname);
 
 /* note: most of this ordering is important	 */
-	P_LoadBlockMap (ML_BLOCKMAP);
-	P_LoadVertexes (ML_VERTEXES);
-	P_LoadSectors (ML_SECTORS);
-	P_LoadSideDefs (ML_SIDEDEFS);
-	P_LoadLineDefs (ML_LINEDEFS);
-	P_LoadSubsectors (ML_SSECTORS);
-	P_LoadNodes (ML_NODES);
-	P_LoadSegs (ML_SEGS);
+	P_LoadBlockMap (lumpnum+ML_BLOCKMAP);
+	P_LoadVertexes (lumpnum+ML_VERTEXES);
+	P_LoadSectors (lumpnum+ML_SECTORS);
+	P_LoadSideDefs (lumpnum+ML_SIDEDEFS);
+	P_LoadLineDefs (lumpnum+ML_LINEDEFS);
+	P_LoadSubsectors (lumpnum+ML_SSECTORS);
+	P_LoadNodes (lumpnum+ML_NODES);
+	P_LoadSegs (lumpnum+ML_SEGS);
 
-	rejectmatrix = Z_Malloc (W_LumpLength (ML_REJECT),PU_LEVEL);
-	W_ReadLump (ML_REJECT,rejectmatrix);
+	rejectmatrix = Z_Malloc (W_LumpLength (lumpnum+ML_REJECT),PU_LEVEL);
+	W_ReadLump (lumpnum+ML_REJECT,rejectmatrix);
 
 	validcount = Z_Malloc((numlines + 1) * sizeof(*validcount) * 2, PU_LEVEL);
 	D_memset(validcount, 0, (numlines + 1) * sizeof(*validcount) * 2);
@@ -712,9 +705,9 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 
 	bodyqueslot = 0;
 	deathmatch_p = deathmatchstarts;
-	P_LoadThings (ML_THINGS);
+	P_LoadThings (lumpnum+ML_THINGS);
 
-	W_Pop();
+	W_UnloadPWAD();
 
 /* */
 /* if deathmatch, randomly spawn the active players */
