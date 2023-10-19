@@ -172,6 +172,7 @@ void W_ReadPWAD (void)
 	static int cache_num_lumps = 0;
 
 	if (cache_size != -1) {
+		I_OpenCDFileByOffset(wad->cdlength, wad->cdoffset);
 		wad->numlumps = cache_num_lumps;
 		wad->lumpinfo = I_GetCDFileCache(cache_size);
 		return;
