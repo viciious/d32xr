@@ -368,7 +368,7 @@ void IN_Start (void)
 	Z_FreeTags (mainzone);
 
 	W_Push();
-	W_ReadPWAD();
+	W_LoadPWAD();
 
 	/* build a temp in-memory PWAD */
 	lumps[0] = W_CheckNumForName("INTERPIC");
