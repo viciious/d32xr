@@ -385,7 +385,7 @@ void G_Init(void)
 	// copy mapnumbers to a temp buffer, then free, then allocate again
 	// to avoid zone memory fragmentation
 	W_Push();
-	W_ReadPWAD();
+	W_LoadPWAD();
 
 	maplist = G_LoadMaplist(&mapcount, &gameinfo);
 	if (mapcount > 99)
