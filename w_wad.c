@@ -14,6 +14,13 @@
 
 typedef struct
 {
+	char		identification[4];		/* should be IWAD */
+	int			numlumps;
+	int			infotableofs;
+} wadinfo_t;
+
+typedef struct
+{
 	byte		*fileptr;
 	int 		cdlength, cdoffset;
 

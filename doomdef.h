@@ -667,14 +667,6 @@ int		Z_FreeBlocks(memzone_t* mainzone);
 /*   TYPES */
 /*=============== */
 
-
-typedef struct
-{
-	char		identification[4];		/* should be IWAD */
-	int			numlumps;
-	int			infotableofs;
-} wadinfo_t;
-
 typedef struct
 {
 	int			filepos;					/* also texture_t * for comp lumps */
