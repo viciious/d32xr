@@ -63,54 +63,44 @@ WaitCmd:
 WaitCmdPostUpdate:
         tst.b   0x800E.w
         beq.b   WaitCmd
-        cmpi.b  #'D,0x800E.w
-        beq     GetDiscInfo
-        cmpi.b  #'T,0x800E.w
-        beq     GetTrackInfo
-        cmpi.b  #'P,0x800E.w
-        beq     PlayTrack
-        cmpi.b  #'S,0x800E.w
-        beq     StopPlaying
-        cmpi.b  #'V,0x800E.w
-        beq     SetVolume
-        cmpi.b  #'Z,0x800E.w
-        beq     PauseResume
-        cmpi.b  #'C,0x800E.w
-        beq     CheckDisc
 
-        cmpi.b  #'I,0x800E.w
-        beq     SfxInit
-        cmpi.b  #'L,0x800E.w
-        beq     SfxClear
-        cmpi.b  #'B,0x800E.w
-        beq     SfxCopyBuffer
-        cmpi.b  #'A,0x800E.w
-        beq     SfxPlaySource
-        cmpi.b  #'N,0x800E.w
-        beq     SfxPUnPSource
-        cmpi.b  #'W,0x800E.w
-        beq     SfxRewindSource
-        cmpi.b  #'U,0x800E.w
-        beq     SfxUpdateSource
-        cmpi.b  #'O,0x800E.w
-        beq     SfxStopSource
-        cmpi.b  #'G,0x800E.w
-        beq     SfxGetSourcePosition
-        cmpi.b  #'E,0x800E.w
-        beq     SfxSuspendUpdates
-        cmpi.b  #'K,0x800E.w
-        beq     SfxCopyBuffersFromCDFile
+        moveq   #0,d0
+        move.b  0x800E.w,d0
+        sub.b   #'A,d0
+        add.w   d0,d0
+        move.w  RequestTable(pc,d0.w),d0
+        jmp     RequestTable(pc,d0.w)
 
-        cmpi.b  #'F,0x800E.w
-        beq     OpenFile
-        cmpi.b  #'H,0x800E.w
-        beq     ReadSectors
-        cmpi.b  #'J,0x800E.w
-        beq     SwitchToBank
+        | from 'A' to 'Z'
+RequestTable:
+        dc.w    SfxPlaySource - RequestTable
+        dc.w    SfxCopyBuffer - RequestTable
+        dc.w    CheckDisc - RequestTable
+        dc.w    GetDiscInfo - RequestTable
+        dc.w    SfxSuspendUpdates - RequestTable
+        dc.w    OpenFile - RequestTable
+        dc.w    SfxGetSourcePosition - RequestTable
+        dc.w    ReadSectors - RequestTable
+        dc.w    SfxInit - RequestTable
+        dc.w    SwitchToBank - RequestTable
+        dc.w    SfxCopyBuffersFromCDFile - RequestTable
+        dc.w    SfxClear - RequestTable
+        dc.w    GetOrSetGlobalCache - RequestTable
+        dc.w    SfxPUnPSource - RequestTable
+        dc.w    SfxStopSource - RequestTable
+        dc.w    PlayTrack - RequestTable
+        dc.w    UknownCmd - RequestTable
+        dc.w    UknownCmd - RequestTable
+        dc.w    StopPlayback  - RequestTable
+        dc.w    GetTrackInfo - RequestTable
+        dc.w    SfxUpdateSource - RequestTable
+        dc.w    SetVolume - RequestTable
+        dc.w    SfxRewindSource - RequestTable
+        dc.w    UknownCmd - RequestTable
+        dc.w    UknownCmd - RequestTable
+        dc.w    PauseResume - RequestTable
 
-        cmpi.b  #'M,0x800E.w
-        beq     GetOrSetGlobalCache
-
+UknownCmd:
         move.b  #'E,0x800F.w            /* sub comm port = ERROR */
 WaitAck:
         tst.b   0x800E.w
@@ -159,7 +149,7 @@ PlayTrack:
         move.b  #'D,0x800F.w            /* sub comm port = DONE */
         bra     WaitAck
 
-StopPlaying:
+StopPlayback:
         move.w  #0x0002,d0              /* MSCSTOP - stop playing */
         jsr     0x5F22.w                /* call CDBIOS function */
 
