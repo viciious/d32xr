@@ -2092,8 +2092,10 @@ get_bbox:
         move.w  0xA15122,d1         /* offset */
 
         lea     nodes_store,a1
-        move.l  0(a1,d1.w), 0xA15128     /* COMM8 */
-        move.l  4(a1,d1.w), 0xA1512C     /* COMM12 */
+        lea     0xA15128,a0
+        adda.w  d1,a1
+        move.l  (a1)+, (a0)+        /* COMM8 */
+        move.l  (a1)+, (a0)+        /* COMM12 */
 
         move.w  #0,0xA15120         /* done */
         bra     main_loop
