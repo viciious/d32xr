@@ -32,7 +32,7 @@
 #define SRAM_MAGIC2		0xAD
 
 #define SRAM_VERSION	1
-#define SRAM_OPTVERSION	2
+#define SRAM_OPTVERSION	3
 #define SRAM_MAXSLOTS	10
 #define SRAM_SLOTSIZE	200
 
