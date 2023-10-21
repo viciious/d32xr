@@ -44,9 +44,6 @@ uint16_t InitEverDrive(void)
 		res = 1; // MED detected
 
 		// now check if v1/v2a MED, or v2b/v3 MED
-		// look for SRAM_OPTVERSION at first byte of maxslot-1 in save ram at page 28
-		// can only detect old MED if valid save file is always present!
-		// don't forget to update this if save ram defines ever change!!
 
 		// map bank 0 to page 28 to look for save ram
 		__asm volatile("move.w #0x801C, 0xA130F0" : : : "memory");
