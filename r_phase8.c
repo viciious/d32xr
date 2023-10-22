@@ -44,7 +44,6 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos,
 
    sprtop = FixedMul(vis->texturemid, spryscale);
    sprtop = centerYFrac - sprtop;
-   spryscale = (unsigned)spryscale >> 8;
 
    // blitter iinc
    light    = vis->colormap < 0 ? -vis->colormap : vis->colormap;
@@ -79,8 +78,8 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos,
       // a post record has four bytes: topdelta length pixelofs*2
       for(; column->topdelta != 0xff; column++)
       {
-         int top    = ((column->topdelta * spryscale) << 8) + sprtop;
-         int bottom = ((column->length   * spryscale) << 8) + top;
+         int top    = column->topdelta * spryscale + sprtop;
+         int bottom = column->length   * spryscale + top;
          int count;
          fixed_t frac;
 
