@@ -16,8 +16,8 @@ typedef struct
 #else
    pixel_t   *data;
 #endif
-   int       width;
-   int       height;
+   VINT      widthmask;
+   VINT      height;
    fixed_t   texturemid;
    drawcol_t drawcol;
 } drawmip_t;
@@ -100,15 +100,9 @@ static void R_DrawTextures(int x, unsigned iscale_, int colnum_, fixed_t scale2,
            // DEBUG: fixes green pixels in MAP01...
            frac += iscale + ((iscale + iscale + iscale) >> 6);
 
-           while (frac < 0)
-           {
-               colnum--;
-               frac += mip->height << FRACBITS;
-           }
-
            // CALICO: comment says this, but the code does otherwise...
            // colnum = colnum - tex->width * (colnum / tex->width)
-           colnum &= (mip->width - 1);
+           colnum &= mip->widthmask;
 
            // CALICO: Jaguar-specific GPU blitter input calculation starts here.
            // We invoke a software column drawer instead.
@@ -374,7 +368,7 @@ void R_SegCommands(void)
 #endif
             for (j = 0; j <= toptex->maxmip; j++)
             {
-                toptex->mip[j].width = width;
+                toptex->mip[j].widthmask = width - 1;
                 toptex->mip[j].height = height;
                 toptex->mip[j].data = tex->data[j];
                 toptex->mip[j].texturemid = texturemid;
@@ -404,7 +398,7 @@ void R_SegCommands(void)
 #endif
             for (j = 0; j <= bottomtex->maxmip; j++)
             {
-                bottomtex->mip[j].width = width;
+                bottomtex->mip[j].widthmask = width - 1;
                 bottomtex->mip[j].height = height;
                 bottomtex->mip[j].data = tex->data[j];
                 bottomtex->mip[j].texturemid = texturemid;
