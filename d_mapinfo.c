@@ -240,15 +240,15 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 		}
 		else if (!D_strcasecmp(key, "baronspecial"))
 		{
-			mi->baronSpecial = true;
+			mi->specials |= MI_BARON_SPECIAL;
 		}
 		else if (!D_strcasecmp(key, "cyberdemonspecial"))
 		{
-			mi->cyberSpecial = true;
+			mi->specials |= MI_CYBER_SPECIAL;
 		}
 		else if (!D_strcasecmp(key, "spidermastermindspecial"))
 		{
-			mi->spiderSpecial = true;
+			mi->specials |= MI_SPIDER_SPECIAL;
 		}
 
 		return;
@@ -257,13 +257,13 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 	if (!D_strcasecmp(key, "next"))
 		mi->next = value;
 	else if (!D_strcasecmp(key, "sky"))
-		mi->sky = value;
+		mi->skyLumpNum = R_TextureNumForName(value);
 	else if (!D_strcasecmp(key, "secretnext"))
 		mi->secretNext = value;
 	else if (!D_strcasecmp(key, "mapnumber"))
 		mi->mapNumber = D_atoi(value);
 	else if (!D_strcasecmp(key, "music"))
-		mi->musicLump = value;
+		mi->songNum = S_SongForName(value);
 }
 
 static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
@@ -321,10 +321,8 @@ static dmapinfo_t *G_CompressMapInfo(dmapinfo_t *mi)
 
 	size = sizeof(dmapinfo_t);
 	ALLOC_STR_FIELD(name);
-	ALLOC_STR_FIELD(sky);
 	ALLOC_STR_FIELD(next);
 	ALLOC_STR_FIELD(secretNext);
-	ALLOC_STR_FIELD(musicLump);
 	ALLOC_STR_FIELD(lumpName);
 
 	buf = Z_Malloc(size, PU_STATIC);
@@ -342,10 +340,8 @@ static dmapinfo_t *G_CompressMapInfo(dmapinfo_t *mi)
 	} while (0)
 	
 	COPY_STR_FIELD(name);
-	COPY_STR_FIELD(sky);
 	COPY_STR_FIELD(next);
 	COPY_STR_FIELD(secretNext);
-	COPY_STR_FIELD(musicLump);
 	COPY_STR_FIELD(lumpName);
 
 	return nmi;
@@ -420,13 +416,14 @@ dmapinfo_t **G_LoadMaplist(int *pmapcount, dgameinfo_t* gi)
 		zsection[sectionlen] = '\0';
 
 		D_memset(mi, 0, sizeof(*mi));
-		mi->sky = "SKY1";
+		mi->skyLumpNum = -1;
+		mi->songNum = mus_none;
 
 		linecount = G_ParseMapinfo(zsection, (kvcall_t)&G_AddMapinfoKey, mi);
 		if (linecount < 2 || mi->mapNumber <= 0)
-		{
 			continue;
-		}
+		if (mi->skyLumpNum < 0)
+			mi->skyLumpNum = R_TextureNumForName("SKY1");
 
 		maplist[i] = G_CompressMapInfo(mi);
 		i++;
