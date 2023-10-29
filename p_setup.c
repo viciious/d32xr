@@ -57,7 +57,8 @@ void P_LoadVertexes (int lump)
 	vertex_t	*li;
 	
 	numvertexes = W_LumpLength (lump) / sizeof(mapvertex_t);
-	vertexes = Z_Malloc (numvertexes*sizeof(vertex_t),PU_LEVEL);
+	vertexes = Z_Malloc (numvertexes*sizeof(vertex_t) + 16,PU_LEVEL);
+	vertexes = (void*)(((uintptr_t)vertexes + 15) & ~15); // aline on cacheline boundary
 	data = W_GetLumpData(lump);
 
 	ml = (mapvertex_t *)data;
