@@ -26,18 +26,19 @@
 #ifndef D_MAPINFO_H__
 #define D_MAPINFO_H__
 
+#define MI_BARON_SPECIAL 	1
+#define MI_CYBER_SPECIAL 	2
+#define MI_SPIDER_SPECIAL 	4
+
 typedef struct
 {
-	VINT baronSpecial;
-	VINT cyberSpecial;
-	VINT spiderSpecial;
+	VINT specials;
 	VINT mapNumber;
+	VINT skyLumpNum;
+	VINT songNum;
 	char *name;
-	char *sky;
 	char *next;
 	char *secretNext;
-	//VINT lumpNum;
-	char *musicLump;
 	char *lumpName;
 } dmapinfo_t;
 
