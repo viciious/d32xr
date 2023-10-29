@@ -1084,11 +1084,11 @@ void A_BossDeath (mobj_t *mo)
 	mobj_t		*mo2;
 	line_t		junk;
 		
-	if (mo->type == MT_BRUISER && !gamemapinfo.baronSpecial)
+	if (mo->type == MT_BRUISER && !(gamemapinfo.specials & MI_BARON_SPECIAL))
 		return;			/* bruisers apear on other levels */
-	if (mo->type == MT_CYBORG && !gamemapinfo.cyberSpecial)
+	if (mo->type == MT_CYBORG && !(gamemapinfo.specials & MI_CYBER_SPECIAL))
 		return;
-	if (mo->type == MT_SPIDER && !gamemapinfo.spiderSpecial)
+	if (mo->type == MT_SPIDER && !(gamemapinfo.specials & MI_SPIDER_SPECIAL))
 		return;
 
     // make sure there is a player alive for victory

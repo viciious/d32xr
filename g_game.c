@@ -135,13 +135,13 @@ void G_DoLoadLevel (void)
 	gamemap = gamemapinfo.mapNumber;
 	startmap = gamemap;
 
-	skytexturel = R_TextureNumForName(gamemapinfo.sky);
+	skytexturel = gamemapinfo.skyLumpNum;
  	skytexturep = &textures[skytexturel];
 
 	P_SetupLevel (gamemaplump, gameskill);
 	gameaction = ga_nothing; 
 
-	music = S_SongForName(gamemapinfo.musicLump);
+	music = gamemapinfo.songNum;
 	if (music <= mus_none)
 		music = S_SongForMapnum(gamemap);
 
@@ -382,7 +382,7 @@ void G_Init(void)
 	int mapcount = 0;
 	dmapinfo_t** maplist;
 
-	// copy mapnumbers to a temp buffer, then free, then allocate again
+	// copy mapnumbers to a temp buffer, then free, then allocate againccccbbgbdcfhk
 	// to avoid zone memory fragmentation
 	W_LoadPWAD();
 
@@ -417,13 +417,14 @@ void G_Init(void)
 			maplist[i]->mapNumber = i + 1;
 			maplist[i]->lumpName = (char*)maplist[i] + sizeof(dmapinfo_t);
 			maplist[i]->name = maplist[i]->lumpName;
-			maplist[i]->baronSpecial = (maplist[i]->mapNumber == 8);
+			maplist[i]->specials |= (maplist[i]->mapNumber == 8 ? MI_BARON_SPECIAL : 0);
 			D_memcpy(maplist[i]->lumpName, lumpname, len + 1);
 		}
 
 		for (i = 0; i < mapcount; i++) {
 			int nextmap = 0;
 			int gamemap = maplist[i]->mapNumber;
+			const char *sky;
 
 			switch (gamemap)
 			{
@@ -434,11 +435,12 @@ void G_Init(void)
 			}
 
 			if (gamemap < 9)
-				maplist[i]->sky = "SKY1";
+				sky = "SKY1";
 			else if (gamemap < 18)
-				maplist[i]->sky = "SKY2";
+				sky = "SKY2";
 			else
-				maplist[i]->sky = "SKY3";
+				sky = "SKY3";
+			maplist[i]->skyLumpNum = R_TextureNumForName(sky);
 
 			if (nextmap)
 				maplist[i]->next = maplist[nextmap-1]->name;
