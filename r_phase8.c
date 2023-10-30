@@ -370,7 +370,7 @@ void R_Sprites(void)
    viswall_t *spr;
    int *sortedsprites = (void *)vd.vissectors;
    viswall_t *wc;
-   vertex_t *verts;
+   mapvertex_t *verts;
 
    sortedcount = 0;
    count = vd.lastsprite_p - vd.vissprites;
@@ -442,8 +442,8 @@ void R_Sprites(void)
       if (wc->actionbits & (AC_TOPSIL | AC_BOTTOMSIL | AC_SOLIDSIL))
       {
          volatile int v1 = wc->seg->v1, v2 = wc->seg->v2;
-         wc->v1.x = verts[v1].x>>16, wc->v1.y = verts[v1].y>>16;
-         wc->v2.x = verts[v2].x>>16, wc->v2.y = verts[v2].y>>16;
+         wc->v1.x = verts[v1].x, wc->v1.y = verts[v1].y;
+         wc->v2.x = verts[v2].x, wc->v2.y = verts[v2].y;
       }
    }
 

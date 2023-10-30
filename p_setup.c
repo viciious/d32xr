@@ -5,7 +5,7 @@
 #include "mars.h"
 
 int			numvertexes;
-vertex_t	*vertexes;
+mapvertex_t	*vertexes;
 
 int			numsegs;
 seg_t		*segs;
@@ -54,10 +54,10 @@ void P_LoadVertexes (int lump)
 	byte		*data;
 	int			i;
 	mapvertex_t	*ml;
-	vertex_t	*li;
+	mapvertex_t	*li;
 	
 	numvertexes = W_LumpLength (lump) / sizeof(mapvertex_t);
-	vertexes = Z_Malloc (numvertexes*sizeof(vertex_t) + 16,PU_LEVEL);
+	vertexes = Z_Malloc (numvertexes*sizeof(mapvertex_t) + 16,PU_LEVEL);
 	vertexes = (void*)(((uintptr_t)vertexes + 15) & ~15); // aline on cacheline boundary
 	data = W_GetLumpData(lump);
 
@@ -65,8 +65,8 @@ void P_LoadVertexes (int lump)
 	li = vertexes;
 	for (i=0 ; i<numvertexes ; i++, li++, ml++)
 	{
-		li->x = LITTLESHORT(ml->x)<<FRACBITS;
-		li->y = LITTLESHORT(ml->y)<<FRACBITS;
+		li->x = LITTLESHORT(ml->x);
+		li->y = LITTLESHORT(ml->y);
 	}
 }
 
@@ -340,7 +340,7 @@ void P_LoadLineDefs (int lump)
 	int				i;
 	maplinedef_t	*mld;
 	line_t			*ld;
-	vertex_t		*v1, *v2;
+	mapvertex_t		*v1, *v2;
 	
 	numlines = W_LumpLength (lump) / sizeof(maplinedef_t);
 	lines = Z_Malloc (numlines*sizeof(line_t)+16,PU_LEVEL);
@@ -360,8 +360,8 @@ void P_LoadLineDefs (int lump)
 		ld->v2 = LITTLESHORT(mld->v2);
 		v1 = &vertexes[ld->v1];
 		v2 = &vertexes[ld->v2];
-		dx = v2->x - v1->x;
-		dy = v2->y - v1->y;
+		dx = (v2->x - v1->x) << FRACBITS;
+		dy = (v2->y - v1->y) << FRACBITS;
 		if (!dx)
 			ld->flags |= ML_ST_VERTICAL;
 		else if (!dy)
@@ -568,8 +568,8 @@ void P_GroupLines (void)
 		for (j=0 ; j<sector->linecount ; j++)
 		{
 			li = lines + sector->lines[j];
-			M_AddToBox (bbox, vertexes[li->v1].x, vertexes[li->v1].y);
-			M_AddToBox (bbox, vertexes[li->v2].x, vertexes[li->v2].y);
+			M_AddToBox (bbox, vertexes[li->v1].x << FRACBITS, vertexes[li->v1].y << FRACBITS);
+			M_AddToBox (bbox, vertexes[li->v2].x << FRACBITS, vertexes[li->v2].y << FRACBITS);
 		}
 
 		/* set the degenmobj_t to the middle of the bounding box */
