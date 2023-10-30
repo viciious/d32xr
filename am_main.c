@@ -655,7 +655,7 @@ static void AM_Drawer_ (int c)
 	for (i=0 ; i<numlines ; i++,line++)
 	{
 		int flags;
-		vertex_t *v1, *v2;
+		mapvertex_t *v1, *v2;
 
 		flags = line->flags;
 		if ((!(flags & ML_MAPPED) ||		/* IF NOT MAPPED OR DON'T DRAW */
@@ -666,8 +666,8 @@ static void AM_Drawer_ (int c)
 		v1 = &vertexes[line->v1];
 		v2 = &vertexes[line->v2];
 
-		y1 = v1->y;
-		y2 = v2->y;
+		y1 = v1->y << FRACBITS;
+		y2 = v2->y << FRACBITS;
 
 		y1 -= oy;
 		y2 -= oy;
@@ -684,8 +684,8 @@ static void AM_Drawer_ (int c)
 		outcode2 |= (y2 < miny) ;
 		if (outcode & outcode2) continue;
 
-		x1 = v1->x;
-		x2 = v2->x;
+		x1 = v1->x << FRACBITS;
+		x2 = v2->x << FRACBITS;
 
 		x1 -= ox;
 		x2 -= ox;

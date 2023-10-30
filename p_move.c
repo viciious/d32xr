@@ -175,8 +175,11 @@ static boolean PM_BoxCrossLine(line_t *ld, pmovework_t *mw)
 
    lx  = vertexes[ld->v1].x;
    ly  = vertexes[ld->v1].y;
-   ldx = (vertexes[ld->v2].x - lx) >> FRACBITS;
-   ldy = (vertexes[ld->v2].y - ly) >> FRACBITS;
+   ldx = vertexes[ld->v2].x - lx;
+   ldy = vertexes[ld->v2].y - ly;
+
+   lx <<= FRACBITS;
+   ly <<= FRACBITS;
 
    dx1 = (x1 - lx) >> FRACBITS;
    dy1 = (y1 - ly) >> FRACBITS;

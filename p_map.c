@@ -94,7 +94,7 @@ boolean P_TryMove (ptrymove_t *tm, mobj_t *thing, fixed_t x, fixed_t y)
 ===============
 */
 
-fixed_t P_InterceptVector (divline_t *v2, divline_t *v1)
+static fixed_t P_InterceptVector (divline_t *v2, divline_t *v1)
 {
 	fixed_t	frac, num, den;
 	
@@ -117,12 +117,12 @@ fixed_t P_InterceptVector (divline_t *v2, divline_t *v1)
 ==============
 */
 
-void P_MakeDivline (line_t *li, divline_t *dl)
+static void P_MakeDivline (line_t *li, divline_t *dl)
 {
-	dl->x = vertexes[li->v1].x;
-	dl->y = vertexes[li->v1].y;
-	dl->dx = vertexes[li->v2].x - vertexes[li->v1].x;
-	dl->dy = vertexes[li->v2].y - vertexes[li->v1].y;
+	dl->x = vertexes[li->v1].x << FRACBITS;
+	dl->y = vertexes[li->v1].y << FRACBITS;
+	dl->dx = (vertexes[li->v2].x - vertexes[li->v1].x) << FRACBITS;
+	dl->dy = (vertexes[li->v2].y - vertexes[li->v1].y) << FRACBITS;
 }
 
 
