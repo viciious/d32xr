@@ -546,14 +546,19 @@ static void R_AddLine(rbspWork_t *rbsp, sector_t *frontsector, seg_t *line)
    angle_t angle1, angle2;
    fixed_t x1, x2;
    sector_t *backsector;
-   vertex_t *v1 = &vertexes[line->v1], *v2 = &vertexes[line->v2];
+   vertex_t v1, v2;
    int side;
    line_t *ldef;
    side_t *sidedef;
    boolean solid;
 
-   angle1 = R_PointToAngle(v1->x, v1->y);
-   angle2 = R_PointToAngle(v2->x, v2->y);
+   v1.x = vertexes[line->v1].x << FRACBITS;
+   v1.y = vertexes[line->v1].y << FRACBITS;
+   v2.x = vertexes[line->v2].x << FRACBITS;
+   v2.y = vertexes[line->v2].y << FRACBITS;
+
+   angle1 = R_PointToAngle(v1.x, v1.y);
+   angle2 = R_PointToAngle(v2.x, v2.y);
 
    x1 = R_ClipToViewEdges(angle1, angle2);
    if (x1 <= 0)
