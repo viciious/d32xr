@@ -11,7 +11,7 @@
 static fixed_t R_PointToDist(fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
 static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, angle_t normalangle) ATTR_DATA_CACHE_ALIGN;
 static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle, int angle1) ATTR_DATA_CACHE_ALIGN;
-void R_WallLatePrep(viswall_t* wc, vertex_t *verts) ATTR_DATA_CACHE_ALIGN;
+void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts) ATTR_DATA_CACHE_ALIGN;
 static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floorheight, 
     fixed_t floornewheight, fixed_t ceilingnewheight) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 void R_WallPrep(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
@@ -88,7 +88,7 @@ static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle, int ang
     wc->centerangle = ANG90 + vd.viewangle - normalangle;
 }
 
-void R_WallLatePrep(viswall_t* wc, vertex_t *verts)
+void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
 {
     angle_t      distangle, offsetangle, normalangle;
     seg_t* seg = wc->seg;
@@ -111,7 +111,7 @@ void R_WallLatePrep(viswall_t* wc, vertex_t *verts)
         offsetangle = ANG90;
 
     distangle = ANG90 - offsetangle;
-    hyp = R_PointToDist(verts[seg->v1].x, verts[seg->v1].y);
+    hyp = R_PointToDist(verts[seg->v1].x << FRACBITS, verts[seg->v1].y << FRACBITS);
     sineval = finesine(distangle >> ANGLETOFINESHIFT);
     rw_distance = FixedMul(hyp, sineval);
     wc->distance = rw_distance;
@@ -297,7 +297,7 @@ void Mars_Sec_R_WallPrep(void)
     viswall_t *first, *last, *verylast;
     uint32_t clipbounds_[SCREENWIDTH/2+1];
     uint16_t *clipbounds = (uint16_t *)clipbounds_;
-    vertex_t *verts;
+    mapvertex_t *verts;
     volatile uint8_t *addedsegs = (volatile uint8_t *)&MARS_SYS_COMM6;
     volatile uint8_t *readysegs = addedsegs + 1;
 
