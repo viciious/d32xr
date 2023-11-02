@@ -50,7 +50,7 @@ int main(void)
 		int off;
 		char *src;
 
-		int res = Mars_OpenCDFileByName(PWAD_NAME);
+		int res = Mars_OpenCDFileByName(BASE_PWAD);
 		src = Mars_GetCDFileBuffer();
 		D_memcpy(temp, src, mystrlen(src)+1);
 		Mars_ReadCDFile(4);

@@ -567,13 +567,13 @@ void START_Title(void)
 	l = gameinfo.titlePage;
 
 	if (*l) {
-		W_LoadPWAD();
+		W_LoadPWAD(PWAD_BASE);
 
 		int lump = W_CheckNumForName(l);
 		if (lump >= 0)
 			titlepic = W_CacheLumpNum(lump, PU_STATIC);
 
-		W_UnloadPWAD();
+		W_LoadPWAD(PWAD_NONE);
 	}
 
 #ifdef MARS
@@ -621,7 +621,7 @@ static void START_Credits (void)
 	if (!*gameinfo.creditsPage)
 		return;
 
-	W_LoadPWAD();
+	W_LoadPWAD(PWAD_BASE);
 
 	/* build a temp in-memory PWAD */
 	for (i = 0; i < 2; i++)
@@ -639,7 +639,7 @@ static void START_Credits (void)
 	for (i = 0; i < 2; i++)
 		credits[i] = W_CacheLumpName(li[i].name, PU_STATIC);
 
-	W_UnloadPWAD();
+	W_LoadPWAD(PWAD_NONE);
 
 	if (!credits[0])
 		return;
@@ -862,7 +862,7 @@ static void RunAttractDemos (void)
 			// Z_Malloc failure
 			Z_FreeTags(mainzone);
 
-			W_LoadPWAD();
+			W_LoadPWAD(PWAD_BASE);
 
 			demo = NULL;
 			D_snprintf(demoname, sizeof(demoname), "DEMO%1d", i+1);
@@ -871,7 +871,7 @@ static void RunAttractDemos (void)
 			if (l >= 0)
 				demo = W_CacheLumpNum(l, PU_STATIC);
 
-			W_UnloadPWAD();
+			W_LoadPWAD(PWAD_NONE);
 
 			if (!first)
 				I_RestoreScreenCopy();

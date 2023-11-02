@@ -7,8 +7,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define PWAD_NAME "BASE.WAD"
-
 /* JAGUAR should be defined on the compiler command line for console builds */
 /* if MARS isn't defined, assume jaguar version */
 
@@ -663,6 +661,17 @@ int		Z_FreeBlocks(memzone_t* mainzone);
 /*WADFILE */
 /*------- */
 
+enum
+{
+	PWAD_NONE,
+	PWAD_BASE,
+	PWAD_SOUNDS,
+	MAXWADS,
+};
+
+#define BASE_PWAD_NAME 	"BASE.WAD"
+#define SOUNDS_PWAD_NAME "SOUNDS.WAD"
+
 /*=============== */
 /*   TYPES */
 /*=============== */
@@ -676,8 +685,7 @@ typedef struct
 
 void	W_Init (void);
 
-void 	W_LoadPWAD(void);
-void 	W_UnloadPWAD (void);
+void 	W_LoadPWAD(int wadnum);
 int 	W_CacheWADLumps (lumpinfo_t *li, int numlumps, VINT *lumps, boolean setpwad);
 
 int		W_CheckNumForName (const char *name);

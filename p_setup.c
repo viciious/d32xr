@@ -648,7 +648,7 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 
 	P_InitThinkers ();
 
-	W_LoadPWAD();
+	W_LoadPWAD(PWAD_BASE);
 
 	lumpnum = W_CheckNumForName(lumpname);
 	if (lumpnum < 0)
@@ -700,7 +700,7 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 	deathmatch_p = deathmatchstarts;
 	P_LoadThings (lumpnum+ML_THINGS);
 
-	W_UnloadPWAD();
+	W_LoadPWAD(PWAD_NONE);
 
 /* */
 /* if deathmatch, randomly spawn the active players */
