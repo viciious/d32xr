@@ -366,7 +366,7 @@ void IN_Start (void)
 #ifdef MARS
 	Z_FreeTags (mainzone);
 
-	W_LoadPWAD();
+	W_LoadPWAD(PWAD_BASE);
 
 	/* build a temp in-memory PWAD */
 	lumps[0] = W_CheckNumForName("INTERPIC");
@@ -401,7 +401,7 @@ void IN_Start (void)
 #endif
 
 #ifdef MARS
-	W_UnloadPWAD();
+	W_LoadPWAD(PWAD_NONE);
 #endif
 
 	snums = W_CheckNumForName("NUM_0");
