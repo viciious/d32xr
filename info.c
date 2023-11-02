@@ -6,15 +6,15 @@ const char * const sprnames[NUMSPRITES] = {
 "MISF","SAWG","PLSG","PLSF","BFGG","BFGF","BLUD","PUFF","BAL1","BAL2",
 "BAL7","PLSS","PLSE","MISL","BFS1","BFE1","BFE2","TFOG","IFOG","PLAY",
 "POSS","SPOS","FATB","FBXP","SKEL","MANF","FATT","CPOS","SARG","HEAD",
-"BOSS","SKUL","SPID","BSPI","APLS","APBX","CYBR","ARM1","ARM2","BAR1",
-"BEXP","FCAN","BON1","BON2","BKEY","RKEY","YKEY","BSKU","RSKU","YSKU",
-"STIM","MEDI","SOUL","PINV","PSTR","PINS","SUIT","PMAP","PVIS","CLIP",
-"AMMO","ROCK","BROK","CELL","CELP","SHEL","SBOX","BPAK","BFUG","MGUN",
-"CSAW","LAUN","PLAS","SHOT","SGN2","COLU","SMT2","GOR1","POL2","POL5",
-"POL4","POL3","POL1","POL6","GOR2","GOR3","GOR4","GOR5","SMIT","COL1",
-"COL2","COL4","CAND","CBRA","COL6","TRE1","TRE2","ELEC","CEYE","FSKU",
-"COL5","TBLU","TGRN","TRED","SMBT","SMGT","SMRT","HDB1","HDB2","HDB3",
-"HDB4","HDB5","HDB6","POB1","POB2","BRS1","TLMP","TLP2"
+"BOSS","SKUL","SPID","BSPI","APLS","APBX","CYBR","BBRN","ARM1","ARM2",
+"BAR1","BEXP","FCAN","BON1","BON2","BKEY","RKEY","YKEY","BSKU","RSKU",
+"YSKU","STIM","MEDI","SOUL","PINV","PSTR","PINS","SUIT","PMAP","PVIS",
+"CLIP","AMMO","ROCK","BROK","CELL","CELP","SHEL","SBOX","BPAK","BFUG",
+"MGUN","CSAW","LAUN","PLAS","SHOT","SGN2","COLU","SMT2","GOR1","POL2",
+"POL5","POL4","POL3","POL1","POL6","GOR2","GOR3","GOR4","GOR5","SMIT",
+"COL1","COL2","COL4","CAND","CBRA","COL6","TRE1","TRE2","ELEC","CEYE",
+"FSKU","COL5","TBLU","TGRN","TRED","SMBT","SMGT","SMRT","HDB1","HDB2",
+"HDB3","HDB4","HDB5","HDB6","POB1","POB2","BRS1","TLMP","TLP2"
 };
 
 void A_Light0 ();
@@ -74,6 +74,10 @@ void A_BossDeath ();
 void A_SkullAttack ();
 void A_SpidRefire();
 void A_CyberAttack();
+void A_BrainPain();
+void A_BrainScream();
+void A_BrainDie();
+void A_BrainExplode();
 
 #define STATE(sprite,frame,tics,action,nextstate) {sprite,frame,tics,nextstate,action}
 
@@ -641,6 +645,15 @@ STATE(SPR_CYBR,13,5,NULL,S_CYBER_DIE8),	// S_CYBER_DIE7
 STATE(SPR_CYBR,14,5,NULL,S_CYBER_DIE9),	// S_CYBER_DIE8
 STATE(SPR_CYBR,15,15,NULL,S_CYBER_DIE10),	// S_CYBER_DIE9
 STATE(SPR_CYBR,15,-1,A_BossDeath,S_NULL),	// S_CYBER_DIE10
+STATE(SPR_BBRN,0,-1,NULL,S_NULL),		// S_BRAIN
+STATE(SPR_BBRN,1,18,A_BrainPain,S_BRAIN),	// S_BRAIN_PAIN
+STATE(SPR_BBRN,0,50,A_BrainScream,S_BRAIN_DIE2),	// S_BRAIN_DIE1
+STATE(SPR_BBRN,0,5,NULL,S_BRAIN_DIE3),	// S_BRAIN_DIE2
+STATE(SPR_BBRN,0,5,NULL,S_BRAIN_DIE4),	// S_BRAIN_DIE3
+STATE(SPR_BBRN,0,-1,A_BrainDie,S_NULL),	// S_BRAIN_DIE4
+STATE(SPR_MISL,32769,5,NULL,S_BRAINEXPLODE2),	// S_BRAINEXPLODE1
+STATE(SPR_MISL,32770,5,NULL,S_BRAINEXPLODE3),	// S_BRAINEXPLODE2
+STATE(SPR_MISL,32771,5,A_BrainExplode,S_NULL),	// S_BRAINEXPLODE3
 STATE(SPR_ARM1,0,3,NULL,S_ARM1A),	/* S_ARM1 */
 STATE(SPR_ARM1,32769,3,NULL,S_ARM1),	/* S_ARM1A */
 STATE(SPR_ARM2,0,3,NULL,S_ARM2A),	/* S_ARM2 */
@@ -1279,6 +1292,31 @@ sfx_cybdth,		// deathsound
 0,		// damage
 sfx_dmact,		// activesound
 MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL,		// flags
+},
+
+{		// MT_BOSSBRAIN
+88,		// doomednum
+S_BRAIN,		// spawnstate
+250,		// spawnhealth
+S_NULL,		// seestate
+sfx_None,		// seesound
+8,		// reactiontime
+sfx_None,		// attacksound
+S_BRAIN_PAIN,		// painstate
+255,		// painchance
+sfx_dmpain,		// painsound
+S_NULL,		// meleestate
+S_NULL,		// missilestate
+S_BRAIN_DIE1,		// deathstate
+S_NULL,		// xdeathstate
+sfx_cybdth,		// deathsound
+0,		// speed
+16*FRACUNIT,		// radius
+16*FRACUNIT,		// height
+10000,		// mass
+0,		// damage
+sfx_None,		// activesound
+MF_SOLID|MF_SHOOTABLE,		// flags
 },
 
 {		/* MT_BARREL */
