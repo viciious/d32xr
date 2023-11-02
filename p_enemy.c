@@ -1143,6 +1143,58 @@ void A_BabyMetal (mobj_t* mo)
 	A_Chase (mo);
 }
 
+void A_BrainPain (mobj_t*	mo)
+{
+    S_StartSound (NULL,sfx_popain);
+}
+
+void A_BrainScream (mobj_t*	mo)
+{
+	int		x;
+	int		y;
+	int		z;
+	mobj_t*	th;
+
+	for (x=mo->x - 196*FRACUNIT ; x< mo->x + 320*FRACUNIT ; x+= FRACUNIT*8)
+	{
+		y = mo->y - 320*FRACUNIT;
+		z = 128 + P_Random()*2*FRACUNIT;
+		th = P_SpawnMobj (x,y,z, MT_ROCKET);
+		th->momz = P_Random()*512;
+
+		P_SetMobjState (th, S_BRAINEXPLODE1);
+
+		th->tics -= P_Random()&3;
+		if (th->tics < 1)
+			th->tics = 1;
+	}
+}
+
+void A_BrainExplode (mobj_t* mo)
+{
+	int		x;
+	int		y;
+	int		z;
+	mobj_t*	th;
+
+	x = mo->x + (P_Random()-P_Random()) * 2048;
+	y = mo->y;
+	z = 128 + P_Random()*2*FRACUNIT;
+	th = P_SpawnMobj (x,y,z, MT_ROCKET);
+	th->momz = P_Random()*512;
+
+	P_SetMobjState (th, S_BRAINEXPLODE1);
+
+	th->tics -= P_Random()&3;
+	if (th->tics < 1)
+		th->tics = 1;
+}
+
+void A_BrainDie (mobj_t *mo)
+{
+	G_ExitLevel ();
+}
+
 /*============================================================================= */
 
 /* a move in p_base.c crossed a special line */
