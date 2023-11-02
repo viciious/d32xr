@@ -102,12 +102,12 @@ void M_Start2 (boolean startup_)
 	startup = startup_;
 	if (startup)
 	{
-		W_LoadPWAD();
+		W_LoadPWAD(PWAD_BASE);
 
 		i = W_CheckNumForName("M_DOOM");
 		m_doom = i != -1 ? W_CacheLumpNum(i, PU_STATIC) : NULL;
 
-		W_UnloadPWAD();
+		W_LoadPWAD(PWAD_NONE);
 	}
 	else
 	{
