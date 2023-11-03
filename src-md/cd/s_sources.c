@@ -307,7 +307,7 @@ void S_Src_Update(sfx_source_t *src, uint16_t freq, uint8_t pan, uint8_t vol, ui
     }
     if (freq) {
         src->freq = freq;
-    } else if (src->buf->freq) {
+    } else if (!src->freq && src->buf->freq) {
         src->freq = src->buf->freq;
     }
     if (src->num_channels == 1) {
