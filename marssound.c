@@ -1010,7 +1010,9 @@ static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol,
 {
 	sfxchannel_t* channel, * newchannel;
 	int i;
+#ifndef DISABLE_DMA_SOUND
 	int length;
+#endif
 	sfxinfo_t* sfx;
 	sfx_t* md_data;
 
@@ -1023,12 +1025,10 @@ static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol,
 	{
 		// dummy data to trick NULL pointer checks
 		md_data = (void *)sfx;
-		length = 4;
 	}
 	else
 	{
 #ifndef DISABLE_DMA_SOUND
-
 		md_data = W_POINTLUMPNUM(sfx->lump);
 		length = md_data->samples;
 		if (length < 4)
@@ -1082,9 +1082,11 @@ static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol,
 	/* fill in the new values */
 	/* */
 gotchannel:
+#ifndef DISABLE_DMA_SOUND
 	newchannel->increment = (11025 << 14) / SAMPLE_RATE;
 	newchannel->length = length << 14;
 	newchannel->loop_length = 0;
+#endif
 	newchannel->data = (void *)md_data;
 	newchannel->width = 8;
 	newchannel->position = 0;
