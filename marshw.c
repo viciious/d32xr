@@ -391,7 +391,7 @@ void Mars_MCDLoadSfx(uint16_t id, void *data, uint32_t data_len)
 	while (MARS_SYS_COMM0);
 }
 
-void Mars_MCDPlaySfx(uint8_t src_id, uint16_t buf_id, uint8_t pan, uint8_t vol)
+void Mars_MCDPlaySfx(uint8_t src_id, uint16_t buf_id, uint8_t pan, uint8_t vol, uint16_t freq)
 {
 	if (src_id == 0)
 		return;
@@ -399,11 +399,9 @@ void Mars_MCDPlaySfx(uint8_t src_id, uint16_t buf_id, uint8_t pan, uint8_t vol)
 	while (MARS_SYS_COMM0);
 
 	MARS_SYS_COMM2 = (pan<<8)|vol;
+	MARS_SYS_COMM8 = freq;
+	MARS_SYS_COMM10 = buf_id;
 	MARS_SYS_COMM0 = 0x1E00|src_id;
-	while (MARS_SYS_COMM0);
-
-	MARS_SYS_COMM2 = buf_id;
-	MARS_SYS_COMM0 = 0x1E01;
 
 	while (MARS_SYS_COMM0);
 }
@@ -423,13 +421,14 @@ void Mars_MCDClearSfx(void)
 	while (MARS_SYS_COMM0);
 }
 
-void Mars_MCDUpdateSfx(uint8_t src_id, uint8_t pan, uint8_t vol)
+void Mars_MCDUpdateSfx(uint8_t src_id, uint8_t pan, uint8_t vol, uint16_t freq)
 {
 	if (src_id == 0)
 		return;
 
 	while (MARS_SYS_COMM0);
 	MARS_SYS_COMM2 = (pan<<8)|vol;
+	MARS_SYS_COMM8 = freq;
 	MARS_SYS_COMM0 = 0x2100|src_id;
 	while (MARS_SYS_COMM0);
 }

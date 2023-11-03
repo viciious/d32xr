@@ -487,7 +487,7 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 		if (sound_id == sfx_itemup && sep == 128)
 			sep = 255; // full volume from both channels
 
-		Mars_MCDPlaySfx((ch - sfxchannels) + 1, sfx->lump, sep, vol);
+		Mars_MCDPlaySfx((ch - sfxchannels) + 1, sfx->lump, sep, vol, 0);
 		return;
 	}
 
@@ -589,7 +589,7 @@ void S_UpdateSounds(void)
 			vol = ch->volume;
 			S_SEP_VOL_TO_MCD(sep, vol);
 
-			Mars_MCDUpdateSfx(i + 1, sep, vol);
+			Mars_MCDUpdateSfx(i + 1, sep, vol, 0);
 		}
 
 		Mars_MCDFlushSfx();
