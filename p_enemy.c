@@ -1145,7 +1145,7 @@ void A_BabyMetal (mobj_t* mo)
 
 void A_BrainPain (mobj_t*	mo)
 {
-    S_StartSound (NULL,sfx_popain);
+    S_StartSound (NULL,sfx_bospn);
 }
 
 void A_BrainScream (mobj_t*	mo)
@@ -1188,6 +1188,8 @@ void A_BrainExplode (mobj_t* mo)
 	th->tics -= P_Random()&3;
 	if (th->tics < 1)
 		th->tics = 1;
+
+	S_StartSound (NULL,sfx_bosdth);
 }
 
 void A_BrainDie (mobj_t *mo)
