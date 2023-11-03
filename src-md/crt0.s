@@ -1967,18 +1967,12 @@ load_sfx:
 play_sfx:
         /* set source id */
         moveq   #0,d0
-        move.b  0xA15121,d0         /* LB of COMM0 = src id */
-
-        moveq   #0,d2
-        move.w  0xA15122,d2         /* pan|vol */
-        move.w  #0,0xA15120
-20:
-        move.w  0xA15120,d1         /* wait on handshake in COMM0 */
-        cmpi.w  #0x1E01,d1
-        bne.b   20b
-
         moveq   #0,d1
-        move.w  0xA15122,d1         /* buf_id */
+        moveq   #0,d2
+
+        move.b  0xA15121,d0         /* LB of COMM0 = src id */
+        move.w  0xA15122,d2         /* pan|vol */
+        move.w  0xA15128,d1         /* freq */
 
         move.w  d2,d3
         andi.l  #255,d3
@@ -1987,8 +1981,9 @@ play_sfx:
         move.l  #0,-(sp)            /* autoloop */
         move.l  d3,-(sp)            /* vol */
         move.l  d2,-(sp)            /* pan */ 
-        move.l  #0,-(sp)            /* freq */
-        move.l  d1,-(sp)            /* buf id */
+        move.l  d1,-(sp)
+        move.w  0xA1512A,d1         /* buf_id */
+        move.l  d1,-(sp)
         move.l  d0,-(sp)            /* src id */
 
         move.w  #0,0xA15120         /* done */
@@ -2016,10 +2011,11 @@ sfx_clear:
 update_sfx:
         /* set source id */
         moveq   #0,d0
-        move.b  0xA15121,d0         /* LB of COMM0 = src id */
-
         moveq   #0,d2
+
+        move.b  0xA15121,d0         /* LB of COMM0 = src id */
         move.w  0xA15122,d2         /* pan|vol */
+        move.w  0xA15128,d1         /* freq */
 
         move.w  d2,d3
         andi.l  #255,d3
@@ -2028,7 +2024,7 @@ update_sfx:
         move.l  #0,-(sp)            /* autoloop */
         move.l  d3,-(sp)            /* vol */
         move.l  d2,-(sp)            /* pan */ 
-        move.l  #0,-(sp)            /* freq */
+        move.l  d1,-(sp)            /* freq */
         move.l  d0,-(sp)            /* src id */
 
         move.w  #0,0xA15120         /* done */
