@@ -94,7 +94,7 @@ int             samplecount = 0;
 
 VINT 			sfxdriver = sfxdriver_auto, mcd_avail = 0; // 0 - auto, 2 - megacd, 2 - 32x
 
-static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol, getsoundpos_t getpos);
+static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol, int freq, getsoundpos_t getpos);
 #ifndef DISABLE_DMA_SOUND
 static void S_SetChannelData(sfxchannel_t* channel);
 int S_PaintChannel4IMA(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
@@ -455,12 +455,33 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 {
 	int vol, sep;
 	sfxinfo_t *sfx;
+	int freq = 0;
+	boolean nosep = false;
 
 	/* Get sound effect data pointer */
 	if (sound_id <= 0 || sound_id >= NUMSFX)
 		return;
 
 	sfx = &S_sfx[sound_id];
+	if (sfx->lump <= 0)
+	{
+		switch (sound_id)
+		{
+			// re-use general monster sound effects, but play them at a lower frequency
+			case sfx_bospn:
+				nosep = true;
+				sound_id = sfx_popain;
+				freq = 5512;
+				break;
+			case sfx_bosdth:
+				nosep = true;
+				sound_id = sfx_podth1;
+				freq = 5512;
+				break;
+		}
+		sfx = &S_sfx[sound_id];
+	}
+
 	if (sfx->lump <= 0)
 		return;
 
@@ -479,15 +500,17 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 	{
 		sfxchannel_t *ch;
 
-		ch = S_AllocateChannel(mobj, sound_id, vol, getpos);
+		ch = S_AllocateChannel(mobj, sound_id, vol, freq, getpos);
 		if (!ch)
 			return;
 
 		S_SEP_VOL_TO_MCD(sep, vol);
 		if (sound_id == sfx_itemup && sep == 128)
+			nosep = true;
+		if (nosep)
 			sep = 255; // full volume from both channels
 
-		Mars_MCDPlaySfx((ch - sfxchannels) + 1, sfx->lump, sep, vol, 0);
+		Mars_MCDPlaySfx((ch - sfxchannels) + 1, sfx->lump, sep, vol, freq);
 		return;
 	}
 
@@ -1006,7 +1029,7 @@ static void S_Sec_DMA1Handler(void)
 =
 ==================
 */
-static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol, getsoundpos_t getpos)
+static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol, int freq, getsoundpos_t getpos)
 {
 	sfxchannel_t* channel, * newchannel;
 	int i;
@@ -1039,7 +1062,7 @@ static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol,
 	/* reject sounds started at the same instant and singular sounds */
 	for (channel = sfxchannels, i = 0; i < SFXCHANNELS; i++, channel++)
 	{
-		if (channel->sfx == sfx)
+		if (channel->sfx == sfx && channel->freq == freq)
 		{
 			if (channel->position <= 0) /* ADPCM has the position set to -1 initially */
 			{
@@ -1082,6 +1105,7 @@ static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol,
 	/* fill in the new values */
 	/* */
 gotchannel:
+	newchannel->freq = freq;
 #ifndef DISABLE_DMA_SOUND
 	newchannel->increment = (11025 << 14) / SAMPLE_RATE;
 	newchannel->length = length << 14;
@@ -1196,10 +1220,10 @@ void Mars_Sec_ReadSoundCmds(void)
 			S_ClearPCM();
 			break;
 		case SNDCMD_STARTSND:
-			ch = S_AllocateChannel((void*)(*(intptr_t*)&p[2]), p[1], p[4], NULL);
+			ch = S_AllocateChannel((void*)(*(intptr_t*)&p[2]), p[1], p[4], 0, NULL);
 			break;
 		case SNDCMD_STARTORGSND:
-			ch = S_AllocateChannel((void*)(*(intptr_t*)&p[2]), p[1], p[6], (getsoundpos_t)(*(intptr_t*)&p[4]));
+			ch = S_AllocateChannel((void*)(*(intptr_t*)&p[2]), p[1], p[6], 0, (getsoundpos_t)(*(intptr_t*)&p[4]));
 			break;
 		}
 

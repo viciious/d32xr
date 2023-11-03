@@ -1304,12 +1304,12 @@ sfx_None,		// seesound
 sfx_None,		// attacksound
 S_BRAIN_PAIN,		// painstate
 255,		// painchance
-sfx_dmpain,		// painsound
+sfx_bospn,		// painsound
 S_NULL,		// meleestate
 S_NULL,		// missilestate
 S_BRAIN_DIE1,		// deathstate
 S_NULL,		// xdeathstate
-sfx_cybdth,		// deathsound
+sfx_bosdth,		// deathsound
 0,		// speed
 16*FRACUNIT,		// radius
 16*FRACUNIT,		// height
