@@ -65,6 +65,7 @@ typedef struct
 	int			prev_pos;			/* for adpcm decoding */
 	int			increment;
 #endif
+	int			freq;
 
 	sfxinfo_t	*sfx;
 	mobj_t		*mobj;

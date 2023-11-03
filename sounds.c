@@ -99,7 +99,9 @@ const char * const S_sfxnames[NUMSFX] =
   "mandth",
   "skeact",
   "skesit",
-  "skeatk"
+  "skeatk",
+  "bospn",
+  "bosdth"
 };
 
 #ifdef MARS
