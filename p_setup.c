@@ -246,11 +246,7 @@ void P_LoadNodes (int lump)
 	}
 
 #ifdef MARS
-	/* transfer nodes to the MD */
-	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM2 = numnodes;
-	MARS_SYS_COMM0 = 0x2400;
-	while (MARS_SYS_COMM0);
+	Mars_CopyLLongs(numnodes * 2);
 #endif
 }
 
