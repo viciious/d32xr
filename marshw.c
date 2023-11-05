@@ -449,6 +449,15 @@ void Mars_MCDFlushSfx(void)
 	while (MARS_SYS_COMM0);
 }
 
+void Mars_CopyLLongs(int numllongs)
+{
+	/* transfer nodes to the MD */
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM2 = numllongs;
+	MARS_SYS_COMM0 = 0x2400;
+	while (MARS_SYS_COMM0);
+}
+
 void Mars_StopTrack(void)
 {
 	while (MARS_SYS_COMM0);
