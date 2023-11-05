@@ -474,8 +474,8 @@ no_cmd:
         dc.w    update_sfx - prireqtbl
         dc.w    stop_sfx - prireqtbl
         dc.w    flush_sfx - prireqtbl
-        dc.w    test_handle - prireqtbl
-        dc.w    get_bbox - prireqtbl
+        dc.w    copy_llongs - prireqtbl
+        dc.w    get_llong - prireqtbl
         dc.w    open_cd_file_by_name - prireqtbl
         dc.w    open_cd_file_by_handle - prireqtbl
         dc.w    read_cd_file - prireqtbl
@@ -2055,27 +2055,26 @@ flush_sfx:
         move.b  #1,need_bump_fm
         bra     main_loop
 
-test_handle:
+copy_llongs:
         moveq   #0,d1
-        move.w  0xA15122,d1         /* number of nodes */
+        move.w  0xA15122,d1         /* number of llongs */
         add.w   d1,d1               /* x2 */
         add.w   d1,d1               /* x4 */
         add.w   d1,d1               /* x8 */
-        add.w   d1,d1               /* x16 */
 
-        lea     MARS_FRAMEBUFFER,a2         /* frame buffer */
+        lea     MARS_FRAMEBUFFER,a2
         lea     nodes_store,a1
         
         move.l  d1,-(sp)            /* length */
         move.l  a2,-(sp)            /* framebuffer */
         move.l  a1,-(sp)            /* destination */
 
-        move.w  0xA15100,d1
-        eor.w   #0x8000,d1
-        move.w  d1,0xA15100         /* unset FM - disallow SH2 access to FB */
+        move.w  0xA15100,d0
+        eor.w   #0x8000,d0
+        move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
 
         jsr     memcpy
-        lea     12(sp),sp            /* clear the stack */
+        lea     12(sp),sp           /* clear the stack */
 
         move.w  0xA15100,d0
         or.w    #0x8000,d0
@@ -2084,7 +2083,7 @@ test_handle:
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
-get_bbox:
+get_llong:
         move.w  0xA15122,d1         /* offset */
 
         lea     nodes_store,a1
