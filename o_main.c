@@ -252,8 +252,10 @@ void O_Init (void)
 	if (cd_avail) /* CDA or MD+ */
 	{
 		menuscreen[ms_audio].numitems++;
+#ifndef DISABLE_DMA_SOUND
 		if (cd_avail & 0x1) /* CD, not MD+ */
 			menuscreen[ms_audio].numitems++;
+#endif
 	}
 
 	D_memcpy(menuscreen[ms_video].name, "Video", 7);
