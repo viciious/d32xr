@@ -70,16 +70,19 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos,
 
    for(; x < stopx; x++, xfrac += fracstep)
    {
-      column_t *column = (column_t *)((byte *)patch + BIGSHORT(patch->columnofs[xfrac>>FRACBITS]));
+      byte *columnptr  = ((byte *)patch + BIGSHORT(patch->columnofs[xfrac>>FRACBITS]));
       int topclip      = (spropening[x] >> 8);
       int bottomclip   = (spropening[x] & 0xff) - 1;
 
       // column loop
       // a post record has four bytes: topdelta length pixelofs*2
-      for(; column->topdelta != 0xff; column++)
+      for(; *columnptr != 0xff; columnptr += sizeof(column_t))
       {
+         column_t *column = (column_t *)columnptr;
          int top    = column->topdelta * spryscale + sprtop;
          int bottom = column->length   * spryscale + top;
+         byte *dataofsofs = columnptr + offsetof(column_t, dataofs);
+         int dataofs = (dataofsofs[0] << 8) | dataofsofs[1];
          int count;
          fixed_t frac;
 
@@ -107,7 +110,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos,
             continue;
 
          // CALICO: invoke column drawer
-         dcol(x, top, bottom, light, frac, iscale, pixels + BIGSHORT(column->dataofs), 128, fuzzpos);
+         dcol(x, top, bottom, light, frac, iscale, pixels + BIGSHORT(dataofs), 128, fuzzpos);
       }
    }
 }
