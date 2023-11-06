@@ -381,7 +381,9 @@ void R_SetupTextureCaches(void)
 	for (i = 0; i < numtextures; i++)
 	{
 		int w = textures[i].width, h = textures[i].height;
-		uint8_t *data = R_CheckPixels(textures[i].lumpnum);
+		int lump = textures[i].lumpnum;
+		uint8_t *start = R_CheckPixels(lump);
+		uint8_t *data = R_SkipJagObjHeader(start, W_LumpLength(lump), w, h);
 
 		for (j = 0; j < textures[i].mipcount; j++)
 		{

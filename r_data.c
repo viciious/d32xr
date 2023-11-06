@@ -40,7 +40,28 @@ uint8_t		*dc_playpals;
 ==================
 */
 
-int			*maptex;
+void *R_SkipJagObjHeader(void *data, int size, int width, int height)
+{
+	jagobj_t *header = data;
+
+	if (!data) {
+		return NULL;
+	}
+	if ((int)sizeof(jagobj_t) > size) {
+		return data;
+	}
+	if (BIGSHORT(header->width) != width) {
+		return data;
+	}
+	if (BIGSHORT(header->height) != height) {
+		return data;
+	}
+	if (BIGSHORT(header->depth) != 3) {
+		return data;
+	}
+	return (char *)data + sizeof(jagobj_t) - sizeof(header->data);
+}
+
 
 void R_InitTextures (void)
 {
@@ -50,6 +71,7 @@ void R_InitTextures (void)
 	int			offset;
 	int			*directory;
 	int 		start, end;
+	int			*maptex;
 
 /* */
 /* load the map texture definitions from textures.lmp */
@@ -110,8 +132,9 @@ void R_InitTextures (void)
 	{
 		int w = textures[i].width, h = textures[i].height;
 		uint8_t *start = R_CheckPixels(textures[i].lumpnum);
-		uint8_t *end = start + W_LumpLength(textures[i].lumpnum);
-		uint8_t *data = start;
+		int size = W_LumpLength(textures[i].lumpnum);
+		uint8_t *end = start + size;
+		uint8_t *data = R_SkipJagObjHeader(start, size, w, h);
 
 		textures[i].mipcount = 0;
 

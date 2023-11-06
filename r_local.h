@@ -364,6 +364,9 @@ extern uint8_t* dc_playpals;
 
 #ifdef MARS
 #define R_CheckPixels(lumpnum) (void *)(W_POINTLUMPNUM(lumpnum))
+
+// auto-detect presence of jagobj_t header
+void *R_SkipJagObjHeader(void *data, int size, int width, int height);
 #endif
 
 void R_InitTextures(void);
