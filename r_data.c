@@ -99,35 +99,21 @@ void R_InitTextures (void)
 			if (c >= 'a' && c <= 'z')
 				texture->name[j] = c - ('a' - 'A');
 		}
-		texture->mipcount = 0;
+
+		texture->mipcount = 1;
 		for (j = 0; j < MIPLEVELS; j++)
 			texture->data[j] = NULL;		/* not cached yet */
+
 		if (start >= 0 && end > 0)
 			texture->lumpnum = W_CheckNumForNameExt(texture->name, start, end);
 		else
 			texture->lumpnum = W_CheckNumForName(texture->name);
 		if (texture->lumpnum == -1)
 			texture->lumpnum = 0;
-#if 0
-		uint8_t* data = R_CheckPixels(texture->lumpnum);
-		if (data) {
-			int j;
-			for (j = 0; j < texture->width * texture->height; j++)
-			{
-				if (!D_strncasecmp(texture->name, "SP_HOT1", 7))
-					continue;
-				if (!D_strncasecmp(texture->name, "SW1HOT", 6))
-					continue;
-				if (!D_strncasecmp(texture->name, "SW2HOT", 6))
-					continue;
-				if (data[j] == 248 || data[j] == 249)
-					I_Error("%d %s", data[j] & 0xff, texture->name);
-			}
-		}
-#endif
 	}
 
 	texmips = false;
+#if MIPLEVELS > 1
 	for (i = 0; i < numtextures; i++)
 	{
 		int w = textures[i].width, h = textures[i].height;
@@ -171,6 +157,7 @@ void R_InitTextures (void)
 			break;
 		}
 	}
+#endif
 
 /* */
 /* translation table for global animation */
@@ -243,7 +230,9 @@ void R_InitFlats (void)
 
 void R_InitData (void)
 {
+#if MIPLEVELS > 1
 	int i;
+#endif
 
 	dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
 
@@ -251,10 +240,12 @@ void R_InitData (void)
 	R_InitFlats ();
 	R_InitSpriteDefs((const char **)sprnames);
 
+#if MIPLEVELS > 1
 	if (!texmips) {
 		for (i = 0; i < numtextures; i++)
 			textures[i].mipcount = 1;
 	}
+#endif
 }
 
 
@@ -672,7 +663,7 @@ void R_InitSpriteDefs(const char** namelist)
 		for (j = 0; j < 8; j++)
 		{
 			int x;
-			int lump = spriteframes[i].lump[j];
+			int lump = sprtemp[i].lump[j];
 			if (lump < 0)
 				break;
 
