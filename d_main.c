@@ -567,8 +567,11 @@ void START_Title(void)
 #endif
 
 	titlepic = NULL;
-	l = gameinfo.titlePage;
 
+	if (!gameinfo.titleTime)
+		return;
+
+	l = gameinfo.titlePage;
 	if (*l) {
 		W_LoadPWAD(PWAD_BASE);
 
@@ -588,6 +591,8 @@ void START_Title(void)
 
 void STOP_Title (void)
 {
+	if (!gameinfo.titleTime)
+		return;
 	if (titlepic != NULL)
 		Z_Free (titlepic);
 #ifdef MARS
@@ -617,6 +622,9 @@ static void START_Credits (void)
 	int i;
 	VINT lumps[2];
 	lumpinfo_t li[2];
+
+	if (!gameinfo.creditsTime)
+		return;
 
 	credits[0] = credits[1] = NULL;
 	titlepic = NULL;
