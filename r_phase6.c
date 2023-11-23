@@ -328,6 +328,8 @@ void R_SegCommands(void)
             seglight += (int8_t)((unsigned)segl->seglightlevel >> 8);
             seglight += extralight;
 #ifdef MARS
+            if (seglight < 0)
+                seglight = 0;
             if (seglight > 255)
                 seglight = 255;
 #endif
