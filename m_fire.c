@@ -87,7 +87,7 @@ const unsigned char fireRGBs[] =
 		0xFF, 0xFF, 0xFF
 };
 
-static m_fire_t *m_fire;
+static m_fire_t *m_fire = NULL;
 
 static inline void M_SpreadFire(int src) ATTR_OPTIMIZE_EXTREME;
 static inline void M_StopFire(void) ATTR_OPTIMIZE_EXTREME;
@@ -299,6 +299,7 @@ void I_StopMenuFire(void)
 	Z_Free(m_fire->firePix - FIRE_WIDTH);
 	Z_Free(m_fire->firePal);
 	Z_Free(m_fire);
+	m_fire = NULL;
 
 	Mars_ClearCache();
 }
