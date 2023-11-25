@@ -680,12 +680,16 @@ void DrawJagobj2(jagobj_t* jo, int x, int y,
 	int src_x, int src_y, int src_w, int src_h, pixel_t *fb)
 {
 	int		srcx, srcy;
-	int		width, height;
-	int		rowsize;
+	int		width, height, depth, flags, index, hw;
+	int		rowsize, inc;
+	byte	*dest, *source;
 
 	rowsize = BIGSHORT(jo->width);
 	width = BIGSHORT(jo->width);
 	height = BIGSHORT(jo->height);
+	depth = BIGSHORT(jo->depth);
+	flags = BIGSHORT(jo->flags);
+	index = BIGSHORT(jo->index);
 
 	if (src_w > 0)
 		width = src_w;
@@ -707,7 +711,6 @@ void DrawJagobj2(jagobj_t* jo, int x, int y,
 		x = 0;
 	}
 	srcx += src_x;
-	width -= src_x;
 
 	if (y < 0)
 	{
@@ -715,69 +718,109 @@ void DrawJagobj2(jagobj_t* jo, int x, int y,
 		height += y;
 		y = 0;
 	}
-
 	srcy += src_y;
-	height -= src_y;
 
 	if (x + width > 320)
 		width = 320 - x;
 	if (y + height > mars_framebuffer_height)
 		height = mars_framebuffer_height - y;
+	inc = rowsize - width;
 
 	if (width < 1 || height < 1)
 		return;
 
+	hw = width >> 1;
+
+	if (depth == 2)
 	{
-		byte* dest;
-		byte* source;
+		inc >>= 1;
+		srcx >>= 1;
+		rowsize >>= 1;
+		index = (index << 1) + (flags & 2 ? 1 : 0);
+	}
 
-		source = jo->data + srcx + srcy * rowsize;
+	dest = (byte*)fb + y * 320 + x;
+	source = jo->data + srcx + srcy * rowsize;
 
-		if ((x & 1) == 0 && (width & 1) == 0)
+	if (depth == 2)
+	{
+		if (((intptr_t)dest & 1) == 0 && hw >= 1)
 		{
-			unsigned hw = (unsigned)width >> 1;
-			unsigned hx = (unsigned)x >> 1;
-			unsigned hr = (unsigned)rowsize >> 1;
+			pixel_t* dest2 = (pixel_t *)dest, *source2 = (pixel_t*)source;
+			index = ((unsigned)index << 8) | index;
 
-			pixel_t* dest2 = fb + y * 160 + hx;
-			pixel_t* source2 = (pixel_t*)source;
-
+			inc >>= 1;
 			for (; height; height--)
 			{
 				int n = (hw + 3) >> 2;
-
 				switch (hw & 3)
 				{
-				case 0: do { *dest2++ = *source2++;
-				case 3:      *dest2++ = *source2++;
-				case 2:      *dest2++ = *source2++;
-				case 1:      *dest2++ = *source2++;
+				case 0: do { *dest2++ = index + (((((*source2 >> 12)      ) << 8) | ((*source2 >> 8) & 0xF)) << 1);
+				case 3:      *dest2++ = index + (((((*source2 >>  4) & 0xF) << 8) | ((*source2 >> 0) & 0xF)) << 1), source2++;
+				case 2:      *dest2++ = index + (((((*source2 >> 12)      ) << 8) | ((*source2 >> 8) & 0xF)) << 1);
+				case 1:      *dest2++ = index + (((((*source2 >>  4) & 0xF) << 8) | ((*source2 >> 0) & 0xF)) << 1), source2++;
 				} while (--n > 0);
 				}
-
-				source2 += hr - hw;
+				source2 += inc;
 				dest2 += 160 - hw;
 			}
+
 			return;
 		}
 
-		dest = (byte*)fb + y * 320 + x;
 		for (; height; height--)
 		{
 			int n = (width + 3) >> 2;
-
 			switch (width & 3)
 			{
-			case 0: do { *dest++ = *source++;
-			case 3:      *dest++ = *source++;
-			case 2:      *dest++ = *source++;
-			case 1:      *dest++ = *source++;
+			case 0: do { *dest++ = index + (((*source >> 4) & 0xF) << 1);
+			case 3:      *dest++ = index + (((*source >> 0) & 0xF) << 1), source++;
+			case 2:      *dest++ = index + (((*source >> 4) & 0xF) << 1);
+			case 1:      *dest++ = index + (((*source >> 0) & 0xF) << 1), source++;
 			} while (--n > 0);
 			}
-
-			source += rowsize - width;
+			source += inc;
 			dest += 320 - width;
 		}
+		return;
+	}
+
+	if ((x & 1) == 0 && (width & 1) == 0)
+	{
+		pixel_t* dest2 = (pixel_t*)dest, * source2 = (pixel_t*)source;
+
+		inc >>= 1;
+		for (; height; height--)
+		{
+			int n = (hw + 3) >> 2;
+			switch (hw & 3)
+			{
+			case 0: do { *dest2++ = *source2++;
+			case 3:      *dest2++ = *source2++;
+			case 2:      *dest2++ = *source2++;
+			case 1:      *dest2++ = *source2++;
+			} while (--n > 0);
+			}
+			source2 += inc;
+			dest2 += 160 - hw;
+		}
+
+		return;
+	}
+
+	for (; height; height--)
+	{
+		int n = (width + 3) >> 2;
+		switch (width & 3)
+		{
+		case 0: do { *dest++ = *source++;
+		case 3:      *dest++ = *source++;
+		case 2:      *dest++ = *source++;
+		case 1:      *dest++ = *source++;
+		} while (--n > 0);
+		}
+		source += rowsize - width;
+		dest += 320 - width;
 	}
 }
 

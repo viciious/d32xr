@@ -752,47 +752,15 @@ void ST_DrawValue(int x,int y,int value)
 
 void ST_EraseBlock(int x, int y, int width, int height)
 {
-	int i, j;
-	int rowsize;
-	short * source, * dest;
-
 	if (debugmode == DEBUGMODE_NODRAW)
 		return;
 
 	if (x & 1)
 		x -= 1;
 	if (width & 1)
-		width += 1;
+		width -= 1;
 
-	if (x < 0)
-		x = 0;
-	if (y < 0)
-		y = 0;
-
-	if (x + width > BIGSHORT(sbar->width))
-		width = BIGSHORT(sbar->width) - x;
-	if (y + height > BIGSHORT(sbar->height))
-		height = BIGSHORT(sbar->height) - y;
-	rowsize = BIGSHORT(sbar->width) / 2;
-
-	source = (short *)sbar->data + y * rowsize + (unsigned)x/2;
-
-	y += stbar_y;
-	if (y > I_FrameBufferHeight())
-		height = I_FrameBufferHeight() - y;
-	if (height <= 0)
-		return;
-
-	dest = (short*)I_FrameBuffer() + y * 320/2 + (unsigned)x/2;
-
-	width = (unsigned)width >> 1;
-	for (j = 0; j < height; j++)
-	{
-		for (i = 0; i < width; i++)
-			dest[i] = source[i];
-		source += rowsize;
-		dest += 320/2;
-	}
+	DrawJagobj2(sbar, x, stbar_y + y, x, y, width, height, I_FrameBuffer());
 }
 
 #endif

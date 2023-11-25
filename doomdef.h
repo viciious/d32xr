@@ -1103,7 +1103,7 @@ typedef struct
 	short	height;
 	short	depth;		/* 1-5 */
 	short	index;		/* location in palette of color 0 */
-	short	pad1,pad2,pad3,pad4;	/* future expansion */
+	short	flags,pad2,pad3,pad4;	/* future expansion */
 	byte	data[8];		/* as much as needed */
 } jagobj_t;
 
