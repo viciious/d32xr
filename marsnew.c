@@ -1138,9 +1138,7 @@ void I_DrawSbar(void)
 	if (!jo_stbar)
 		return;
 
-	int width = BIGSHORT(jo_stbar->width);
 	int height = BIGSHORT(jo_stbar->height);
-	int halfwidth = (unsigned)width >> 1;
 
 	y[0] = I_FrameBufferHeight() - height;
 	y[1] = 0;
@@ -1148,18 +1146,7 @@ void I_DrawSbar(void)
 	p = 1;
 	p += splitscreen ? 1 : 0;
 	for (i = 0; i < p; i++) {
-		int h;
-		const pixel_t* source = (pixel_t*)jo_stbar->data;
-		pixel_t* dest = (pixel_t*)I_FrameBuffer() + y[i] * 320 / 2;
-
-		for (h = height; h; h--)
-		{
-			int i;
-			for (i = 0; i < halfwidth; i++)
-				dest[i] = source[i];
-			source += halfwidth;
-			dest += 320 / 2;
-		}
+		DrawJagobj2(jo_stbar, 0, y[i], 0, 0, 0, 0, I_FrameBuffer());
 	}
 }
 
