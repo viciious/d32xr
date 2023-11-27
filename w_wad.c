@@ -318,6 +318,8 @@ int	W_CheckRangeForName (const char *name, int start, int end)
 	wad = W_GetWadForLump(start);
 	if (start < 0 || end < 0)
 		return -1;
+	if (end > wad->numlumps + wad->firstlump)
+		end = wad->numlumps + wad->firstlump;
 
 	l = W_CheckWadForName(wad, name, start - wad->firstlump, end - wad->firstlump);
 	if (l < 0)
