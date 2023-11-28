@@ -59,7 +59,7 @@ void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 //
 // Render a wall texture as columns
 //
-static void R_DrawTexture(int x, unsigned iscale_, int colnum_, fixed_t scale2, int floorclipx, int ceilingclipx, unsigned light, drawtex_t *tex, int miplevel)
+static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, int floorclipx, int ceilingclipx, unsigned light, drawtex_t *tex, int miplevel)
 {
     int i;
     fixed_t top, bottom;
@@ -82,9 +82,17 @@ static void R_DrawTexture(int x, unsigned iscale_, int colnum_, fixed_t scale2, 
     // column has no length?
     if (top < bottom)
     {
-        unsigned iscale = iscale_;
+        drawmip_t *mip;
+        fixed_t frac;
+#ifdef MARS
+        inpixel_t* src;
+#else
+        pixel_t* src;
+#endif
         int colnum = colnum_;
-        fixed_t texturemid = tex->texturemid;
+
+        colnum &= tex->widthmask;
+        frac = tex->texturemid - (centerY - top) * iscale;
 
 #if MIPLEVELS > 1
         if (miplevel > tex->maxmip)
@@ -93,22 +101,14 @@ static void R_DrawTexture(int x, unsigned iscale_, int colnum_, fixed_t scale2, 
             unsigned m = miplevel;
             do {
                 colnum >>= 1;
-                iscale >>= 1;
-                texturemid >>= 1;
+                frac >>= 1;
             } while (--m);
         }
 #endif
 
-        drawmip_t *mip = &tex->mip[miplevel];
-        fixed_t frac = texturemid - (centerY - top) * iscale;
-#ifdef MARS
-        inpixel_t* src;
-#else
-        pixel_t* src;
-#endif
-
         // CALICO: Jaguar-specific GPU blitter input calculation starts here.
         // We invoke a software column drawer instead.
+        mip = &tex->mip[miplevel];
         src = mip->data + colnum * mip->height;
         mip->drawcol(x, top, bottom-1, light, frac, iscale, src, mip->height, NULL);
 
@@ -118,7 +118,7 @@ static void R_DrawTexture(int x, unsigned iscale_, int colnum_, fixed_t scale2, 
             drawtex_t *decal = tex->decals[i];
             if (colnum < decal->mincol || colnum > decal->maxcol)
                 continue;
-            R_DrawTexture(x, iscale_, colnum_ - decal->mincol, scale2, floorclipx, ceilingclipx, light, decal, miplevel);
+            R_DrawTexture(x, iscale, colnum - decal->mincol, scale2, floorclipx, ceilingclipx, light, decal, miplevel);
         }
     }
 }
@@ -307,7 +307,7 @@ static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex, fixed_t textu
         drawtex->numdecals = maxdecals;
 
     for (j = 0; j < drawtex->numdecals; j++) {
-        int offsety = 32;
+        int offsety = I_GetTime() % tex->height;
         int offsetx = 16;
         texture_t *decaltex = testtex;
         drawtex_t *decal = drawtex->decals[j];
@@ -318,7 +318,7 @@ static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex, fixed_t textu
         topheight = drawtex->texturemid - offsety * FRACUNIT;
         bottomheight = topheight - testtex->height * FRACUNIT;
 
-        R_SetupDrawTexture(decal, decaltex, drawtex->texturemid, topheight, bottomheight, 0);
+        R_SetupDrawTexture(decal, decaltex, topheight, topheight, bottomheight, 0);
     }
 }
 
