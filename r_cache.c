@@ -62,13 +62,28 @@ void R_InitTexCacheZone(r_texcache_t* c, int zonesize)
 /*
 ================
 =
+= R_InTexCache
+=
+=================
+*/
+boolean R_InTexCache(r_texcache_t* c, void *p)
+{
+	if (((uintptr_t)p >= (uintptr_t)c->zone && (uintptr_t)p < (uintptr_t)c->zone + c->zonesize)) {
+		return true;
+	}
+	return false;
+}
+
+/*
+================
+=
 = R_TouchIfInTexCache
 =
 =================
 */
 boolean R_TouchIfInTexCache(r_texcache_t* c, void *p)
 {
-	if (((uintptr_t)p >= (uintptr_t)c->zone && (uintptr_t)p < (uintptr_t)c->zone + c->zonesize)) {
+	if (R_InTexCache(c, p)) {
 		texcacheblock_t *e = *(texcacheblock_t **)(((uintptr_t)p - 4) & ~3);
 		e->lifecount = CACHE_FRAMES_DEFAULT;
 		return true;

@@ -86,6 +86,8 @@ int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sprites[4
 
 r_texcache_t r_texcache;
 
+texture_t *testtex;
+
 /*
 ===============================================================================
 =
@@ -359,6 +361,8 @@ D_printf ("Done\n");
 	R_SetDrawMode();
 
 	R_InitTexCache(&r_texcache);
+
+	testtex = &textures[R_TextureNumForName("SLADWALL")];
 }
 
 /*
@@ -381,11 +385,15 @@ void R_SetupTextureCaches(void)
 	for (i = 0; i < numtextures; i++)
 	{
 		int w = textures[i].width, h = textures[i].height;
+		int mipcount = 1;
 		int lump = textures[i].lumpnum;
 		uint8_t *start = R_CheckPixels(lump);
 		uint8_t *data = R_SkipJagObjHeader(start, W_LumpLength(lump), w, h);
 
-		for (j = 0; j < textures[i].mipcount; j++)
+#if MIPLEVELS > 1
+		mipcount = textures[i].mipcount;
+#endif
+		for (j = 0; j < mipcount; j++)
 		{
 			int size = w * h;
 
@@ -662,7 +670,14 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 
 	vd.gsortedvisplanes = NULL;
 
+	vd.columncache[0] = (uint8_t*)(((intptr_t)tempbuf + 3) & ~3);
+	tempbuf += sizeof(uint8_t) * COLUMN_CACHE_SIZE * 2 / sizeof(*tempbuf);
+	vd.columncache[1] = (uint8_t*)(((intptr_t)tempbuf + 3) & ~3);
+	tempbuf += sizeof(uint8_t) * COLUMN_CACHE_SIZE * 2 / sizeof(*tempbuf);
+
 	//I_Error("%d", ((uint16_t *)I_FrameBuffer() + 64*1024-0x100 - tempbuf) * 2);
+
+	I_SetThreadLocalVar(DOOMTLS_COLUMNCACHE, vd.columncache[0]);
 
 	/* */
 	/* clear sprites */
@@ -694,6 +709,8 @@ void Mars_Sec_R_Setup(void)
 
 	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
 		vd.visplanes_hash[i] = NULL;
+
+	I_SetThreadLocalVar(DOOMTLS_COLUMNCACHE, vd.columncache[1]);
 }
 
 #endif

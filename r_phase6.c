@@ -17,18 +17,25 @@ typedef struct
 #else
    pixel_t   *data;
 #endif
-   VINT      widthmask;
    VINT      height;
-   fixed_t   texturemid;
    drawcol_t drawcol;
+
+    // decals stuff
+   int       numdecals;
+   texdecal_t *decals;
+   int       lastcol;
+   uint8_t   *columncache;
 } drawmip_t;
 
 typedef struct drawtex_s
 {
    drawmip_t mip[MIPLEVELS];
-   int       maxmip;
+   VINT      maxmip;
+   VINT      widthmask;
+   fixed_t   texturemid;
    fixed_t   topheight;
    fixed_t   bottomheight;
+   uint8_t   *columncache;
 } drawtex_t;
 
 typedef struct
@@ -39,13 +46,16 @@ typedef struct
     drawtex_t *first, *last;
 
     int lightmin, lightmax, lightsub, lightcoef;
+#if MIPLEVELS > 1   
     unsigned minmip, maxmip;
+#endif
 } seglocal_t;
 
 static char seg_lock = 0;
 
-static void R_DrawTextures(int x, unsigned iscale, int colnum, fixed_t scale2, int floorclipx, int ceilingclipx, unsigned light, seglocal_t* lsegl, int miplevel) ATTR_DATA_CACHE_ALIGN;
+static void R_DrawTexture(int x, unsigned iscale, int colnum, fixed_t scale2, int floorclipx, int ceilingclipx, unsigned light, drawtex_t *tex, int miplevel) ATTR_DATA_CACHE_ALIGN;
 static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
+static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex, fixed_t texturemid, fixed_t topheight, fixed_t bottomheight) ATTR_DATA_CACHE_ALIGN;
 
 static void R_LockSeg(void) ATTR_DATA_CACHE_ALIGN;
 static void R_UnlockSeg(void) ATTR_DATA_CACHE_ALIGN;
@@ -54,60 +64,85 @@ void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 //
 // Render a wall texture as columns
 //
-static void R_DrawTextures(int x, unsigned iscale_, int colnum_, fixed_t scale2, int floorclipx, int ceilingclipx, unsigned light, seglocal_t* lsegl, int miplevel)
+static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, int floorclipx, int ceilingclipx, unsigned light, drawtex_t *tex, int miplevel)
 {
-   drawtex_t *tex = lsegl->first;
+    fixed_t top, bottom;
 
-   for (; tex < lsegl->last; tex++) {
-       int top, bottom;
+    top = FixedMul(scale2, tex->topheight)>>FRACBITS;
+    bottom = FixedMul(scale2, tex->bottomheight)>>FRACBITS;
 
-       top = FixedMul(scale2, tex->topheight)>>FRACBITS;
-       bottom = FixedMul(scale2, tex->bottomheight)>>FRACBITS;
+    top = centerY - top;
+    if (top < ceilingclipx)
+        top = ceilingclipx;
 
-       top = centerY - top;
-       if (top < ceilingclipx)
-           top = ceilingclipx;
+    bottom = centerY - bottom;
+    if (bottom > floorclipx)
+        bottom = floorclipx;
 
-       bottom = centerY - bottom;
-       if (bottom > floorclipx)
-           bottom = floorclipx;
+#if MIPLEVELS <= 1
+    miplevel = 0;
+#endif
 
-       // column has no length?
-       if (top < bottom)
-       {
-           unsigned iscale = iscale_;
-           int colnum = colnum_;
+    // CALICO: comment says this, but the code does otherwise...
+    // colnum = colnum - tex->width * (colnum / tex->width)
+    colnum_ &= tex->widthmask;
+
+    // column has no length?
+    if (top < bottom)
+    {
+        int colnum, mipcolnum;
+        drawmip_t *mip;
+        fixed_t frac;
+#ifdef MARS
+        inpixel_t* src;
+#else
+        pixel_t* src;
+#endif
+
+        colnum = colnum_ & tex->widthmask;
+        mipcolnum = colnum;
+        frac = tex->texturemid - (centerY - top) * iscale;
 
 #if MIPLEVELS > 1
-           if (miplevel > tex->maxmip)
-                miplevel = tex->maxmip;
-           if (miplevel > 0) {
-               unsigned m = miplevel;
-               do {
-                   colnum >>= 1;
-                   iscale >>= 1;
-               } while (--m);
-           }
+        if (miplevel > tex->maxmip)
+            miplevel = tex->maxmip;
+        if (miplevel > 0) {
+            unsigned m = miplevel;
+            do {
+                frac >>= 1;
+                mipcolnum >>= 1;
+            } while (--m);
+        }
 #endif
 
-           drawmip_t *mip = &tex->mip[miplevel];
-           fixed_t frac = mip->texturemid - (centerY - top) * iscale;
-#ifdef MARS
-           inpixel_t* src;
-#else
-           pixel_t* src;
-#endif
+        // CALICO: Jaguar-specific GPU blitter input calculation starts here.
+        // We invoke a software column drawer instead.
+        mip = &tex->mip[miplevel];
+        src = mip->data + mipcolnum * mip->height;
 
-           // CALICO: comment says this, but the code does otherwise...
-           // colnum = colnum - tex->width * (colnum / tex->width)
-           colnum &= mip->widthmask;
+        if (mip->numdecals > 0)
+        {
+            // decals/composite textures
+            if (mip->lastcol == colnum)
+            {
+                src = mip->columncache;
+            }
+            else
+            {
+                boolean decaled;
 
-           // CALICO: Jaguar-specific GPU blitter input calculation starts here.
-           // We invoke a software column drawer instead.
-           src = mip->data + colnum * mip->height;
-           mip->drawcol(x, top, bottom-1, light, frac, iscale, src, mip->height, NULL);
-       }
-   }
+                decaled = R_CompositeColumn(colnum, mip->numdecals, mip->decals,
+                    src, mip->columncache, mip->height, miplevel);
+                if (decaled)
+                {
+                    src = mip->columncache;
+                    mip->lastcol = colnum;
+                }
+            }
+        }
+
+        mip->drawcol(x, top, bottom-1, light, frac, iscale, src, mip->height, NULL);
+    }
 }
 
 //
@@ -135,6 +170,8 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
     const int stop = segl->stop;
     int x;
     unsigned miplevel = 0;
+
+    drawtex_t *tex;
 
     for (x = segl->start; x <= stop; x++)
     {
@@ -234,7 +271,8 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
             lseg->minmip = miplevel;
 #endif
 
-        R_DrawTextures(x, iscale, colnum, scale2, floorclipx, ceilingclipx, texturelight, lseg, miplevel);
+        for (tex = lseg->first; tex < lseg->last; tex++)
+            R_DrawTexture(x, iscale, colnum, scale2, floorclipx, ceilingclipx, texturelight, tex, miplevel);
     }
 }
 
@@ -256,6 +294,53 @@ static void R_UnlockSeg(void)
     seg_lock = 0;
 }
 
+static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex, 
+    fixed_t texturemid, fixed_t topheight, fixed_t bottomheight)
+{
+    int j;
+    int width = tex->width, height = tex->height;
+    uint8_t *columncache = drawtex->columncache;
+    int mipwidth, mipheight;
+
+    drawtex->widthmask = width-1;
+    drawtex->topheight = topheight;
+    drawtex->bottomheight = bottomheight;
+    drawtex->texturemid = texturemid;
+#if MIPLEVELS > 1
+    drawtex->maxmip = !texmips ? 0 : tex->mipcount-1;
+#else
+    drawtex->maxmip = 0;
+#endif
+
+    mipwidth = width;
+    mipheight = height;
+    for (j = 0; j <= drawtex->maxmip; j++)
+    {
+        drawmip_t *mip = &drawtex->mip[j];
+
+        mip->height = mipheight;
+        mip->data = tex->data[j];
+        mip->drawcol = (mipheight & (mipheight - 1)) ? drawcolnpo2 : drawcol;
+        mipwidth >>= 1, mipheight >>= 1;
+        if (mipwidth < 1)
+            mipwidth = 1;
+        if (mipheight < 1)
+            mipheight = 1;
+
+        // decals stuff
+        mip->lastcol = -1;
+        mip->columncache = columncache;
+        columncache += mipheight;
+
+        mip->numdecals = tex->decals & 0x3;
+        if (mip->numdecals && R_InTexCache(&r_texcache, mip->data)) {
+            mip->numdecals = 0;
+            continue;
+        }
+        mip->decals = &decals[tex->decals >> 2];
+    }
+}
+
 void R_SegCommands(void)
 {
     int i, segcount;
@@ -268,19 +353,23 @@ void R_SegCommands(void)
     // initialize the clipbounds array
     R_InitClipBounds(clipbounds_);
 
-    extralight = vd.extralight;
+    D_memset(&lseg, 0, sizeof(lseg));
+
     toptex = &lseg.tex[0];
     bottomtex = &lseg.tex[1];
 
-    lseg.lightmin = 0;
-    lseg.lightmax = 0;
-    lseg.lightcoef = 0;
-    lseg.lightsub = 0;
+    D_memset(toptex, 0, sizeof(*toptex));
+    D_memset(bottomtex, 0, sizeof(*bottomtex));
+
+    I_GetThreadLocalVar(DOOMTLS_COLUMNCACHE, toptex->columncache);
+    bottomtex->columncache = toptex->columncache + COLUMN_CACHE_SIZE;
+
+    extralight = vd.extralight;
 
     segcount = vd.lastwallcmd - vd.viswalls;
     for (i = 0; i < segcount; i++)
     {
-        int j, seglight;
+        int seglight;
         unsigned actionbits;
         viswall_t* segl = vd.viswalls + i;
 
@@ -306,9 +395,10 @@ void R_SegCommands(void)
         lseg.segl = segl;
         lseg.first = lseg.tex + 1;
         lseg.last = lseg.tex + 1;
-
+#if MIPLEVELS > 1
         lseg.minmip = MIPLEVELS;
         lseg.maxmip = 0;
+#endif
 
         if (vd.fixedcolormap)
         {
@@ -356,61 +446,15 @@ void R_SegCommands(void)
 
         if (actionbits & AC_TOPTEXTURE)
         {
-            texture_t* tex = &textures[segl->t_texturenum];
-            int texturemid = segl->t_texturemid;
-            int width = tex->width, height = tex->height;
-
-            toptex->topheight = segl->t_topheight;
-            toptex->bottomheight = segl->t_bottomheight;
-#if MIPLEVELS > 1
-            toptex->maxmip = !texmips ? 0 : tex->mipcount-1;
-#else
-            toptex->maxmip = 0;
-#endif
-            for (j = 0; j <= toptex->maxmip; j++)
-            {
-                toptex->mip[j].widthmask = width - 1;
-                toptex->mip[j].height = height;
-                toptex->mip[j].data = tex->data[j];
-                toptex->mip[j].texturemid = texturemid;
-                toptex->mip[j].drawcol = (height & (height - 1)) ? drawcolnpo2 : drawcol;
-                width >>= 1, height >>= 1, texturemid >>= 1;
-                if (width < 1)
-                    width = 1;
-                if (height < 1)
-                    height = 1;
-            }
-
+            R_SetupDrawTexture(toptex, &textures[segl->t_texturenum],
+                segl->t_texturemid, segl->t_topheight, segl->t_bottomheight);
             lseg.first--;
         }
 
         if (actionbits & AC_BOTTOMTEXTURE)
         {
-            texture_t* tex = &textures[segl->b_texturenum];
-            int texturemid = segl->b_texturemid;
-            int width = tex->width, height = tex->height;
-
-            bottomtex->topheight = segl->b_topheight;
-            bottomtex->bottomheight = segl->b_bottomheight;
-#if MIPLEVELS > 1
-            bottomtex->maxmip = !texmips ? 0 : tex->mipcount-1;
-#else
-            bottomtex->maxmip = 0;
-#endif
-            for (j = 0; j <= bottomtex->maxmip; j++)
-            {
-                bottomtex->mip[j].widthmask = width - 1;
-                bottomtex->mip[j].height = height;
-                bottomtex->mip[j].data = tex->data[j];
-                bottomtex->mip[j].texturemid = texturemid;
-                bottomtex->mip[j].drawcol = (height & (height - 1)) ? drawcolnpo2 : drawcol;
-                width >>= 1, height >>= 1, texturemid >>= 1;
-                if (width < 1)
-                    width = 1;
-                if (height < 1)
-                    height = 1;
-            }
-
+            R_SetupDrawTexture(bottomtex, &textures[segl->b_texturenum],
+                segl->b_texturemid, segl->b_topheight, segl->b_bottomheight);
             lseg.last++;
         }
 

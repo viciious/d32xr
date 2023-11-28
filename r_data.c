@@ -11,9 +11,12 @@ boolean	spr_rotations;
 
 VINT		firstflat, lastflat, numflats;
 
-VINT		numtextures;
-texture_t	*textures;
+VINT		numtextures = 0;
+texture_t	*textures = NULL;
 boolean 	texmips = false;
+
+VINT 		numdecals = 0;
+texdecal_t  *decals = NULL;
 
 spritedef_t sprites[NUMSPRITES];
 spriteframe_t* spriteframes;
@@ -67,10 +70,12 @@ void R_InitTextures (void)
 {
 	maptexture_t	*mtexture;
 	texture_t		*texture;
+	texdecal_t		*decal;
 	int			i,j,c;
 	int			offset;
 	int			*directory;
 	int 		start, end;
+	int 		patchcount;
 	int			*maptex;
 
 /* */
@@ -85,13 +90,31 @@ void R_InitTextures (void)
 	end = W_CheckNumForName("T_END");
 
 	textures = Z_Malloc (numtextures * sizeof(*textures), PU_STATIC);
+	D_memset(textures, 0, numtextures * sizeof(*textures));
+
 	for (i = 0; i < numtextures; i++, directory++)
 	{
 		offset = LITTLELONG(*directory);
 		mtexture = (maptexture_t*)((byte*)maptex + offset);
+		patchcount = LITTLESHORT(mtexture->patchcount);
+		if (patchcount > 1)
+			numdecals += patchcount - 1;
+	}
+
+	decals = Z_Malloc (numdecals * sizeof(*decals), PU_STATIC);
+	D_memset(decals, 0, numdecals * sizeof(*decals));
+
+	directory = maptex+1;
+	for (i = 0; i < numtextures; i++, directory++)
+	{
+		offset = LITTLELONG(*directory);
+		mtexture = (maptexture_t*)((byte*)maptex + offset);
+		patchcount = LITTLESHORT(mtexture->patchcount);
+
 		texture = &textures[i];
 		texture->width = LITTLESHORT(mtexture->width);
 		texture->height = LITTLESHORT(mtexture->height);
+		texture->decals = 0;
 		D_memcpy(texture->name, mtexture->name, 8);
 		for (j = 0; j < 8; j++)
 		{
@@ -100,29 +123,98 @@ void R_InitTextures (void)
 				texture->name[j] = c - ('a' - 'A');
 		}
 
-		texture->mipcount = 1;
-		for (j = 0; j < MIPLEVELS; j++)
-			texture->data[j] = NULL;		/* not cached yet */
-
 		if (start >= 0 && end > 0)
 			texture->lumpnum = W_CheckNumForNameExt(texture->name, start, end);
 		else
 			texture->lumpnum = W_CheckNumForName(texture->name);
-		if (texture->lumpnum == -1)
+	}
+
+	// process patches/decals
+	directory = maptex+1;
+	decal = decals;
+	for (i = 0; i < numtextures; i++, directory++)
+	{
+		int texnum;
+
+		offset = LITTLELONG(*directory);
+		mtexture = (maptexture_t*)((byte*)maptex + offset);
+		patchcount = LITTLESHORT(mtexture->patchcount);
+
+		if (patchcount == 0)
+			continue;
+
+		texture = &textures[i];
+		if (texture->lumpnum >= 0)
+			continue;
+
+		texnum = LITTLESHORT(mtexture->patches[0].patch);
+		if (texnum < 0 || texnum >= numtextures)
+			continue;
+
+		texture->lumpnum = textures[texnum].lumpnum;
+
+		if (patchcount > 1)
+		{
+			int j;
+			texture_t *texture2;
+			int firstdecal = decal - decals;
+			int numdecals = 0;
+
+			for (j = 1; j < patchcount; j++) {
+				mappatch_t *mp = &mtexture->patches[j];
+
+				texnum = LITTLESHORT(mp->patch);
+				if (texnum < 0 || texnum >= numtextures)
+					continue;
+
+				texture2 = &textures[texnum];
+				if (texture2->lumpnum < 0)
+					continue;
+
+				decal->texturenum = texnum;
+				decal->mincol = LITTLESHORT(mp->originx);
+				decal->maxcol = decal->mincol + texture2->width - 1;
+				decal->minrow = LITTLESHORT(mp->originy);
+				decal->maxrow = decal->minrow + texture2->height - 1;
+
+				if (decal->mincol >= texture->width || decal->maxcol < 0)
+					continue;
+				if (decal->minrow >= texture->height || decal->maxrow < 0)
+					continue;
+
+				if (decal->maxcol >= texture->width)
+					decal->maxcol = texture->width - 1;
+				if (decal->minrow >= texture->height)
+					decal->minrow = texture->height - 1;
+
+				decal++;
+				numdecals++;
+			}
+
+			if (texture->decals == 0)
+				texture->decals = (firstdecal << 2) | numdecals;
+		}
+	}
+
+	for (i = 0; i < numtextures; i++)
+	{
+		texture = &textures[i];
+		if (texture->lumpnum < 0)
 			texture->lumpnum = 0;
 	}
 
 	texmips = false;
 #if MIPLEVELS > 1
-	for (i = 0; i < numtextures; i++)
+	texture = textures;
+	for (i = 0; i < numtextures; i++, texture++)
 	{
-		int w = textures[i].width, h = textures[i].height;
-		uint8_t *start = R_CheckPixels(textures[i].lumpnum);
-		int size = W_LumpLength(textures[i].lumpnum);
+		int w = texture->width, h = texture->height;
+		uint8_t *start = R_CheckPixels(texture->lumpnum);
+		int size = W_LumpLength(texture->lumpnum);
 		uint8_t *end = start + size;
 		uint8_t *data = R_SkipJagObjHeader(start, size, w, h);
 
-		textures[i].mipcount = 0;
+		texture->mipcount = 0;
 
 		// detect mipmaps
 		for (j = 0; j < MIPLEVELS; j++)
@@ -131,11 +223,11 @@ void R_InitTextures (void)
 
 			if (data+size > end) {
 				// no mipmaps
-				textures[i].mipcount = 1;
+				texture->mipcount = 1;
 				break;
 			}
 
-			textures[i].mipcount++;
+			texture->mipcount++;
 
 			data += size;
 
@@ -149,9 +241,29 @@ void R_InitTextures (void)
 		}
 	}
 
-	for (i = 0; i < numtextures; i++)
+	/* textures can't have more mip levels than their respective decals */
+	texture = textures;
+	for (i = 0; i < numtextures; i++, texture++)
 	{
-		if (textures[i].mipcount > 1)
+		if (texture->mipcount <= 1)
+			continue;
+		if (texture->decals == 0)
+			continue;
+
+		int i, numdecals = texture->decals & 0x3;
+		int firstdecal = texture->decals >> 2;
+		for (i = 0; i < numdecals; i++) {
+			texdecal_t *decal = &decals[firstdecal + i];
+			texture_t *texture2 = &textures[decal->texturenum];
+			if (texture->mipcount > texture2->mipcount)
+				texture->mipcount = texture2->mipcount;
+		}
+	}
+
+	texture = textures;
+	for (i = 0; i < numtextures; i++, texture++)
+	{
+		if (texture->mipcount > 1)
 		{
 			texmips = true;
 			break;
@@ -731,4 +843,51 @@ void R_InitColormap(boolean doublepix)
 #ifdef MARS
 	Mars_CommSlaveClearCache();
 #endif
+}
+
+boolean R_CompositeColumn(int colnum, int numdecals, texdecal_t *decals, inpixel_t *src, inpixel_t *dst, int height, int miplevel)
+{
+	int i;
+	boolean decaled = false;
+
+	if (!numdecals)
+		return false;
+
+	i = 0;
+	do
+	{
+		int count;
+		texdecal_t *decal = &decals[i];
+		texture_t *decaltex = &textures[decal->texturenum];
+
+		if (colnum < decal->mincol || colnum > decal->maxcol)
+			continue;
+
+		if (!decaled)
+		{
+			decaled = true;
+			D_memcpy(dst, src, sizeof(inpixel_t) * height);
+		}
+
+		src = (inpixel_t *)decaltex->data[0];
+		count = (colnum - decal->mincol) * decaltex->height;
+
+#if MIPLEVEL > 1
+		// FIXME
+		int j;
+		for (j = 0; j < miplevel; j++)
+			count >>= 1;
+		src = (inpixel_t *)decaltex->data[miplevel];
+#endif
+		src += count;
+		count = decal->maxrow - decal->minrow + 1;
+
+#ifdef MARS
+		dst = (void *)((intptr_t)dst | 0x20000); // overwrite area of VRAM
+#endif
+		D_memcpy(dst + decal->minrow, src, sizeof(inpixel_t) * count);
+		src = dst;
+	} while (++i < numdecals);
+
+	return decaled;
 }

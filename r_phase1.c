@@ -336,6 +336,10 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
          lightshift = 1;
       else
          lightshift = 0;
+      if(li->flags & ML_DONTPEGBOTTOM)
+         actionbits |= AC_DONTPEGBOTTOM;
+      //if(li->flags & ML_DONTPEGTOP)
+      //   actionbits |= AC_DONTPEGBOTTOM;
 
       // save local data to the viswall structure
       segl->actionbits    = actionbits;

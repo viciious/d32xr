@@ -139,11 +139,21 @@ typedef struct
 
 typedef struct
 {
+	VINT	mincol, maxcol;
+	VINT	minrow, maxrow;
+	VINT 	texturenum;
+} texdecal_t;
+
+typedef struct
+{
 	char		name[8];		/* for switch changing, etc */
-	VINT			width;
-	VINT			height;
-	VINT			lumpnum;
+	VINT		width;
+	VINT		height;
+	VINT		lumpnum;
+	uint16_t	decals;
+#if MIPLEVELS > 1
 	VINT		mipcount;
+#endif
 #ifdef MARS
 	inpixel_t 	*data[MIPLEVELS];
 #else
@@ -352,6 +362,9 @@ extern	VINT		numtextures;
 extern	texture_t	*textures;
 extern 	boolean 	texmips;
 
+extern 	VINT 		numdecals;
+extern 	texdecal_t  *decals;
+
 extern	VINT			*flattranslation;		/* for global animation */
 extern	VINT			*texturetranslation;	/* for global animation */
 extern	flattex_t		*flatpixels;
@@ -376,6 +389,7 @@ int	R_CheckTextureNumForName(const char* name);
 void	R_InitMathTables(void);
 void	R_InitSpriteDefs(const char** namelist);
 void R_InitColormap(boolean doublepix);
+boolean R_CompositeColumn(int colnum, int numdecals, texdecal_t *decals, inpixel_t *src, inpixel_t *dst, int height, int miplevel) ATTR_DATA_CACHE_ALIGN;
 
 /*
 ==============================================================================
@@ -409,6 +423,7 @@ void R_InitTexCache(r_texcache_t* c);
 void R_InitTexCacheZone(r_texcache_t* c, int zonesize);
 void R_AddToTexCache(r_texcache_t* c, int id, int pixels, void **userp);
 void R_ClearTexCache(r_texcache_t* c);
+boolean R_InTexCache(r_texcache_t* c, void *p) ATTR_DATA_CACHE_ALIGN;
 boolean R_TouchIfInTexCache(r_texcache_t* c, void *p);
 void R_PostTexCacheFrame(r_texcache_t* c);
 
@@ -431,6 +446,7 @@ void R_PostTexCacheFrame(r_texcache_t* c);
 #define	AC_SOLIDSIL			256
 #define	AC_ADDSKY			512
 #define	AC_DRAWN			1024
+#define	AC_DONTPEGBOTTOM	2048
 
 typedef struct
 {
@@ -548,6 +564,13 @@ void R_InitClipBounds(uint32_t *clipbounds)
 ATTR_DATA_CACHE_ALIGN
 ;
 
+#define MAX_COLUMN_LENGTH 128
+#if MIPLEVELS > 1
+#define COLUMN_CACHE_SIZE MAX_COLUMN_LENGTH * 2
+#else
+#define COLUMN_CACHE_SIZE MAX_COLUMN_LENGTH
+#endif
+
 typedef struct
 #ifdef MARS
 __attribute__((aligned(16)))
@@ -595,9 +618,13 @@ __attribute__((aligned(16)))
 	unsigned short	* volatile segclip, * volatile lastsegclip;
 
 	int * volatile gsortedsprites;
+
+	uint8_t *columncache[2]; // composite column cache for both CPUs
 } viewdef_t;
 
 extern	viewdef_t	vd;
+
+extern texture_t *testtex;
 
 #endif		/* __R_LOCAL__ */
 
