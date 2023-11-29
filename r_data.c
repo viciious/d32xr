@@ -85,6 +85,8 @@ void R_InitTextures (void)
 	end = W_CheckNumForName("T_END");
 
 	textures = Z_Malloc (numtextures * sizeof(*textures), PU_STATIC);
+	D_memset(textures, 0, numtextures * sizeof(*textures));
+
 	for (i = 0; i < numtextures; i++, directory++)
 	{
 		offset = LITTLELONG(*directory);
@@ -99,10 +101,6 @@ void R_InitTextures (void)
 			if (c >= 'a' && c <= 'z')
 				texture->name[j] = c - ('a' - 'A');
 		}
-
-		texture->mipcount = 1;
-		for (j = 0; j < MIPLEVELS; j++)
-			texture->data[j] = NULL;		/* not cached yet */
 
 		if (start >= 0 && end > 0)
 			texture->lumpnum = W_CheckRangeForName(texture->name, start, end);

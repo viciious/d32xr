@@ -39,8 +39,13 @@ static void R_UpdateCache(void)
         if (wall->actionbits & AC_TOPTEXTURE)
         {
             texture_t* tex = &textures[wall->t_texturenum];
+#if MIPLEVELS > 1
+            int mipcount = tex->mipcount;
+#else
+            int mipcount = 1;
+#endif
             for (i = minmip; i <= maxmip; i++) {
-                if (i >= tex->mipcount)
+                if (i >= mipcount)
                   break;
                 if (!R_TouchIfInTexCache(&r_texcache, tex->data[i]) && (bestmips[i] < 0)) {
                     bestmips[i] = wall->t_texturenum;
@@ -51,8 +56,13 @@ static void R_UpdateCache(void)
         if (wall->actionbits & AC_BOTTOMTEXTURE)
         {
             texture_t* tex = &textures[wall->b_texturenum];
+#if MIPLEVELS > 1
+            int mipcount = tex->mipcount;
+#else
+            int mipcount = 1;
+#endif
             for (i = minmip; i <= maxmip; i++) {
-                if (i >= tex->mipcount)
+                if (i >= mipcount)
                   break;
                 if (!R_TouchIfInTexCache(&r_texcache, tex->data[i]) && (bestmips[i] < 0)) {
                     bestmips[i] = wall->b_texturenum;

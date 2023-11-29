@@ -124,14 +124,15 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, i
 
         if (tex->numdecals > 0)
         {
-            boolean decaled = false;
+            // decals/composite textures
             if (tex->lastcol == colnum)
             {
                 src = tex->columncache;
             }
             else
             {
-                // decals/composite textures
+                boolean decaled = false;
+
                 i = 0;
                 do
                 {
@@ -151,7 +152,7 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, i
                     src = decal->data + (colnum - decal->mincol) * 16;
                     count = decal->maxrow - decal->minrow + 1;
 
-                    dst = (void *)((intptr_t)dst | 0x20000);
+                    dst = (void *)((intptr_t)dst | 0x20000); // overwrite area of VRAM
                     D_memcpy(dst + decal->minrow, src, sizeof(inpixel_t) * count);
                     src = dst;
                 } while (++i < tex->numdecals);

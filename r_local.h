@@ -138,11 +138,20 @@ typedef struct
 
 typedef struct
 {
+	VINT	mincol, maxcol;
+	VINT	minrow, maxrow;
+} texdecal_t;
+
+typedef struct
+{
 	char		name[8];		/* for switch changing, etc */
-	VINT			width;
-	VINT			height;
-	VINT			lumpnum;
+	VINT		width;
+	VINT		height;
+	VINT		lumpnum;
+	VINT 		decalnum;
+#if MIPLEVELS > 1
 	VINT		mipcount;
+#endif
 #ifdef MARS
 	inpixel_t 	*data[MIPLEVELS];
 #else
