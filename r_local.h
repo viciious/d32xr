@@ -430,6 +430,7 @@ void R_PostTexCacheFrame(r_texcache_t* c);
 #define	AC_SOLIDSIL			256
 #define	AC_ADDSKY			512
 #define	AC_DRAWN			1024
+#define	AC_DONTPEGBOTTOM	2048
 
 typedef struct
 {
@@ -547,6 +548,8 @@ void R_InitClipBounds(uint32_t *clipbounds)
 ATTR_DATA_CACHE_ALIGN
 ;
 
+#define MAX_COLUMN_LENGTH 256
+
 typedef struct
 #ifdef MARS
 __attribute__((aligned(16)))
@@ -594,6 +597,8 @@ __attribute__((aligned(16)))
 	unsigned short	* volatile segclip, * volatile lastsegclip;
 
 	int * volatile gsortedsprites;
+
+	uint8_t *columncache[2]; // composite column cache for both CPUs
 } viewdef_t;
 
 extern	viewdef_t	vd;
