@@ -389,7 +389,7 @@ void R_SetupTextureCaches(void)
 		uint8_t *data = R_SkipJagObjHeader(start, W_LumpLength(lump), w, h);
 
 #if MIPLEVELS > 1
-		mipcount =  textures[i].mipcount;
+		mipcount = textures[i].mipcount;
 #endif
 		for (j = 0; j < mipcount; j++)
 		{

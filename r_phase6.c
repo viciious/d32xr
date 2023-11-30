@@ -21,15 +21,6 @@ typedef struct
    drawcol_t drawcol;
 } drawmip_t;
 
-typedef struct drawdecal_s
-{
-   int       mincol, maxcol;
-   int       minrow, maxrow;
-   int       width, height;
-   inpixel_t *data;
-   texture_t *tex;
-} drawdecal_t;
-
 typedef struct drawtex_s
 {
    drawmip_t mip[MIPLEVELS];
@@ -40,7 +31,7 @@ typedef struct drawtex_s
    fixed_t   bottomheight;
    // decals
    int       numdecals;
-   drawdecal_t decals[MAXDECALS];
+   texdecal_t *decals;
    int       lastcol;
    uint8_t   *columncache;
 } drawtex_t;
@@ -53,7 +44,9 @@ typedef struct
     drawtex_t *first, *last;
 
     int lightmin, lightmax, lightsub, lightcoef;
+#if MIPLEVELS > 1   
     unsigned minmip, maxmip;
+#endif
 } seglocal_t;
 
 static char seg_lock = 0;
@@ -71,7 +64,6 @@ void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 //
 static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, int floorclipx, int ceilingclipx, unsigned light, drawtex_t *tex, int miplevel)
 {
-    int i;
     fixed_t top, bottom;
 
     top = FixedMul(scale2, tex->topheight)>>FRACBITS;
@@ -131,34 +123,15 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, i
             }
             else
             {
-                boolean decaled = false;
+                boolean decaled;
 
-                i = 0;
-                do
-                {
-                    int count;
-                    inpixel_t *dst = tex->columncache;
-                    drawdecal_t *decal = &tex->decals[i];
-            
-                    if (colnum < decal->mincol || colnum > decal->maxcol)
-                        continue;
-
-                    if (!decaled)
-                    {
-                        decaled = true;
-                        D_memcpy(dst, src, sizeof(inpixel_t) * mip->height);
-                    }
-
-                    src = decal->data + (colnum - decal->mincol) * 16;
-                    count = decal->maxrow - decal->minrow + 1;
-
-                    dst = (void *)((intptr_t)dst | 0x20000); // overwrite area of VRAM
-                    D_memcpy(dst + decal->minrow, src, sizeof(inpixel_t) * count);
-                    src = dst;
-                } while (++i < tex->numdecals);
-
+                decaled = R_CompositeColumn(colnum, tex->numdecals, tex->decals,
+                    src, tex->columncache, mip->height, miplevel);
                 if (decaled)
+                {
+                    src = tex->columncache;
                     tex->lastcol = colnum;
+                }
             }
         }
 
@@ -347,26 +320,8 @@ static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex,
             mipheight = 1;
     }
 
-    drawtex->numdecals = 1;
-    for (j = 0; j < drawtex->numdecals; j++) {
-        int offsety = 74;
-        int offsetx = 16;
-        texture_t *decaltex = testtex;
-        extern VINT uchar;
-        jagobj_t *foo;
-        drawdecal_t *decal = &drawtex->decals[j];
-
-        if (uchar == 0)
-            uchar = W_CheckNumForName("CHAR_065");
-        foo = W_POINTLUMPNUM(uchar);
-        decal->height = foo->height;
-        decal->width = foo->width;
-        decal->mincol = offsetx;
-        decal->maxcol = offsetx + decal->width - 1;
-        decal->minrow = offsety;
-        decal->maxrow = offsety + decal->height - 1;
-        decal->data = foo->data;
-    }
+    drawtex->numdecals = tex->decals & 0x3;
+    drawtex->decals = &decals[tex->decals >> 2];
 }
 
 void R_SegCommands(void)
@@ -423,9 +378,10 @@ void R_SegCommands(void)
         lseg.segl = segl;
         lseg.first = lseg.tex + 1;
         lseg.last = lseg.tex + 1;
-
+#if MIPLEVELS > 1
         lseg.minmip = MIPLEVELS;
         lseg.maxmip = 0;
+#endif
 
         if (vd.fixedcolormap)
         {
@@ -472,7 +428,7 @@ void R_SegCommands(void)
 
         if (actionbits & AC_TOPTEXTURE)
         {
-            R_SetupDrawTexture(toptex, &textures[segl->t_texturenum],
+            R_SetupDrawTexture(toptex, &textures[numtextures-1],
                 segl->t_texturemid, segl->t_topheight, segl->t_bottomheight);
             lseg.first--;
         }

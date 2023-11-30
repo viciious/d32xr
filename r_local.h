@@ -140,6 +140,7 @@ typedef struct
 {
 	VINT	mincol, maxcol;
 	VINT	minrow, maxrow;
+	VINT 	texturenum;
 } texdecal_t;
 
 typedef struct
@@ -148,7 +149,7 @@ typedef struct
 	VINT		width;
 	VINT		height;
 	VINT		lumpnum;
-	VINT 		decalnum;
+	uint16_t	decals;
 #if MIPLEVELS > 1
 	VINT		mipcount;
 #endif
@@ -360,6 +361,9 @@ extern	VINT		numtextures;
 extern	texture_t	*textures;
 extern 	boolean 	texmips;
 
+extern 	VINT 		numdecals;
+extern 	texdecal_t  *decals;
+
 extern	VINT			*flattranslation;		/* for global animation */
 extern	VINT			*texturetranslation;	/* for global animation */
 extern	flattex_t		*flatpixels;
@@ -384,6 +388,7 @@ int	R_CheckTextureNumForName(const char* name);
 void	R_InitMathTables(void);
 void	R_InitSpriteDefs(const char** namelist);
 void R_InitColormap(boolean doublepix);
+boolean R_CompositeColumn(int colnum, int numdecals, texdecal_t *decals, inpixel_t *src, inpixel_t *dst, int height, int miplevel) ATTR_DATA_CACHE_ALIGN;
 
 /*
 ==============================================================================
