@@ -428,7 +428,7 @@ void R_SegCommands(void)
 
         if (actionbits & AC_TOPTEXTURE)
         {
-            R_SetupDrawTexture(toptex, &textures[numtextures-1],
+            R_SetupDrawTexture(toptex, &textures[segl->t_texturenum],
                 segl->t_texturemid, segl->t_topheight, segl->t_bottomheight);
             lseg.first--;
         }
