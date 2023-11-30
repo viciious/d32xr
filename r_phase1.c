@@ -268,7 +268,6 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
       {
          // single-sided line
          segl->t_texturenum = texturetranslation[si->midtexture];
-         segl->t_texturenum = numtextures-1;
 
          // handle unpegging (bottom of texture at bottom, or top of texture at top)
          if(li->flags & ML_DONTPEGBOTTOM)
@@ -304,8 +303,6 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
          if(b_ceilingheight < f_ceilingheight && !skyhack)
          {
             segl->t_texturenum = texturetranslation[si->toptexture];
-            segl->t_texturenum = numtextures-1;
-
             if(li->flags & ML_DONTPEGTOP)
                t_texturemid = f_ceilingheight;
             else

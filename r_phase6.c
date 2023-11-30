@@ -8,7 +8,6 @@
 #include "mars.h"
 
 #define MIPSCALE 0x20000
-#define MAXDECALS 4
 
 typedef struct
 {
@@ -20,9 +19,9 @@ typedef struct
    VINT      height;
    drawcol_t drawcol;
 
+    // decals stuff
    int       numdecals;
    texdecal_t *decals;
-
    int       lastcol;
    uint8_t   *columncache;
 } drawmip_t;
@@ -327,6 +326,7 @@ static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex,
         if (mipheight < 1)
             mipheight = 1;
 
+        // decals stuff
         mip->lastcol = -1;
         mip->columncache = columncache;
         columncache += mipheight;
