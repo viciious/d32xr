@@ -669,9 +669,9 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	vd.gsortedvisplanes = NULL;
 
 	vd.columncache[0] = (uint8_t*)(((intptr_t)tempbuf + 3) & ~3);
-	tempbuf += sizeof(uint8_t) * MAX_COLUMN_LENGTH * 2 / sizeof(*tempbuf);
+	tempbuf += sizeof(uint8_t) * COLUMN_CACHE_SIZE * 2 / sizeof(*tempbuf);
 	vd.columncache[1] = (uint8_t*)(((intptr_t)tempbuf + 3) & ~3);
-	tempbuf += sizeof(uint8_t) * MAX_COLUMN_LENGTH * 2 / sizeof(*tempbuf);
+	tempbuf += sizeof(uint8_t) * COLUMN_CACHE_SIZE * 2 / sizeof(*tempbuf);
 
 	//I_Error("%d", ((uint16_t *)I_FrameBuffer() + 64*1024-0x100 - tempbuf) * 2);
 

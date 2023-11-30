@@ -19,6 +19,12 @@ typedef struct
 #endif
    VINT      height;
    drawcol_t drawcol;
+
+   int       numdecals;
+   texdecal_t *decals;
+
+   int       lastcol;
+   uint8_t   *columncache;
 } drawmip_t;
 
 typedef struct drawtex_s
@@ -29,10 +35,6 @@ typedef struct drawtex_s
    fixed_t   texturemid;
    fixed_t   topheight;
    fixed_t   bottomheight;
-   // decals
-   int       numdecals;
-   texdecal_t *decals;
-   int       lastcol;
    uint8_t   *columncache;
 } drawtex_t;
 
@@ -77,6 +79,10 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, i
     if (bottom > floorclipx)
         bottom = floorclipx;
 
+#if MIPLEVELS <= 1
+    miplevel = 0;
+#endif
+
     // CALICO: comment says this, but the code does otherwise...
     // colnum = colnum - tex->width * (colnum / tex->width)
     colnum_ &= tex->widthmask;
@@ -114,23 +120,23 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, i
         mip = &tex->mip[miplevel];
         src = mip->data + mipcolnum * mip->height;
 
-        if (tex->numdecals > 0)
+        if (mip->numdecals > 0)
         {
             // decals/composite textures
-            if (tex->lastcol == colnum)
+            if (mip->lastcol == colnum)
             {
-                src = tex->columncache;
+                src = mip->columncache;
             }
             else
             {
                 boolean decaled;
 
-                decaled = R_CompositeColumn(colnum, tex->numdecals, tex->decals,
-                    src, tex->columncache, mip->height, miplevel);
+                decaled = R_CompositeColumn(colnum, mip->numdecals, mip->decals,
+                    src, mip->columncache, mip->height, miplevel);
                 if (decaled)
                 {
-                    src = tex->columncache;
-                    tex->lastcol = colnum;
+                    src = mip->columncache;
+                    mip->lastcol = colnum;
                 }
             }
         }
@@ -293,13 +299,13 @@ static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex,
 {
     int j;
     int width = tex->width, height = tex->height;
+    uint8_t *columncache = drawtex->columncache;
     int mipwidth, mipheight;
 
     drawtex->widthmask = width-1;
     drawtex->topheight = topheight;
     drawtex->bottomheight = bottomheight;
     drawtex->texturemid = texturemid;
-    drawtex->lastcol = -1;
 #if MIPLEVELS > 1
     drawtex->maxmip = !texmips ? 0 : tex->mipcount-1;
 #else
@@ -310,18 +316,28 @@ static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex,
     mipheight = height;
     for (j = 0; j <= drawtex->maxmip; j++)
     {
-        drawtex->mip[j].height = mipheight;
-        drawtex->mip[j].data = tex->data[j];
-        drawtex->mip[j].drawcol = (mipheight & (mipheight - 1)) ? drawcolnpo2 : drawcol;
+        drawmip_t *mip = &drawtex->mip[j];
+
+        mip->height = mipheight;
+        mip->data = tex->data[j];
+        mip->drawcol = (mipheight & (mipheight - 1)) ? drawcolnpo2 : drawcol;
         mipwidth >>= 1, mipheight >>= 1;
         if (mipwidth < 1)
             mipwidth = 1;
         if (mipheight < 1)
             mipheight = 1;
-    }
 
-    drawtex->numdecals = tex->decals & 0x3;
-    drawtex->decals = &decals[tex->decals >> 2];
+        mip->lastcol = -1;
+        mip->columncache = columncache;
+        columncache += mipheight;
+
+        mip->numdecals = tex->decals & 0x3;
+        if (mip->numdecals && R_InTexCache(&r_texcache, mip->data)) {
+            mip->numdecals = 0;
+            continue;
+        }
+        mip->decals = &decals[tex->decals >> 2];
+    }
 }
 
 void R_SegCommands(void)
@@ -345,7 +361,7 @@ void R_SegCommands(void)
     D_memset(bottomtex, 0, sizeof(*bottomtex));
 
     I_GetThreadLocalVar(DOOMTLS_COLUMNCACHE, toptex->columncache);
-    bottomtex->columncache = toptex->columncache + MAX_COLUMN_LENGTH;
+    bottomtex->columncache = toptex->columncache + COLUMN_CACHE_SIZE;
 
     extralight = vd.extralight;
 

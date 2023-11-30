@@ -422,6 +422,7 @@ void R_InitTexCache(r_texcache_t* c);
 void R_InitTexCacheZone(r_texcache_t* c, int zonesize);
 void R_AddToTexCache(r_texcache_t* c, int id, int pixels, void **userp);
 void R_ClearTexCache(r_texcache_t* c);
+boolean R_InTexCache(r_texcache_t* c, void *p) ATTR_DATA_CACHE_ALIGN;
 boolean R_TouchIfInTexCache(r_texcache_t* c, void *p);
 void R_PostTexCacheFrame(r_texcache_t* c);
 
@@ -562,7 +563,12 @@ void R_InitClipBounds(uint32_t *clipbounds)
 ATTR_DATA_CACHE_ALIGN
 ;
 
-#define MAX_COLUMN_LENGTH 256
+#define MAX_COLUMN_LENGTH 128
+#if MIPLEVELS > 1
+#define COLUMN_CACHE_SIZE MAX_COLUMN_LENGTH * 2
+#else
+#define COLUMN_CACHE_SIZE MAX_COLUMN_LENGTH
+#endif
 
 typedef struct
 #ifdef MARS

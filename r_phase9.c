@@ -141,6 +141,30 @@ static void R_UpdateCache(void)
       pixels = w * h;
       pdata = (void**)&data[i];
       R_AddToTexCache(&r_texcache, id+((unsigned)i<<2), pixels, pdata);
+
+      if (debugmode == DEBUGMODE_TEXCACHE)
+        continue;
+
+      if (id < numtextures) {
+        int j;
+        texture_t* tex = &textures[id];
+        uint8_t *src = *pdata;
+        uint8_t *dst;
+
+        I_GetThreadLocalVar(DOOMTLS_COLUMNCACHE, dst);
+
+        for (j = 0; j < tex->width; j++) {
+          boolean decaled;
+
+          decaled = R_CompositeColumn(j, tex->decals & 0x3, &decals[tex->decals >> 2],
+            src, dst, h, i);
+          if (decaled) {
+            D_memcpy(src, dst, h);
+          }
+
+          src += h;
+        }
+      }
    }
 
     R_PostTexCacheFrame(&r_texcache);
