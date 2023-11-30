@@ -180,6 +180,16 @@ void R_InitTextures (void)
 				decal->minrow = LITTLESHORT(mp->originy);
 				decal->maxrow = decal->minrow + texture2->height;
 
+				if (decal->mincol >= texture->width || decal->maxcol < 0)
+					continue;
+				if (decal->minrow >= texture->height || decal->maxrow < 0)
+					continue;
+
+				if (decal->maxcol >= texture->width)
+					decal->maxcol = texture->width - 1;
+				if (decal->minrow >= texture->height)
+					decal->minrow = texture->height - 1;
+
 				numdecals++;
 			}
 
