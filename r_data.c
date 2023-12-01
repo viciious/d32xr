@@ -127,12 +127,6 @@ void R_InitTextures (void)
 			texture->lumpnum = W_CheckRangeForName(texture->name, start, end);
 		else
 			texture->lumpnum = W_CheckNumForName(texture->name);
-
-		if (patchcount != 0)
-			continue;
-
-		if (texture->lumpnum == -1)
-			texture->lumpnum = 0;
 	}
 
 	// process patches/decals
@@ -149,12 +143,12 @@ void R_InitTextures (void)
 		if (patchcount == 0)
 			continue;
 
-		texnum = LITTLESHORT(mtexture->patches[0].patch);
-		if (texnum < 0 || texnum >= numtextures)
-			continue;
-
 		texture = &textures[i];
 		if (texture->lumpnum >= 0)
+			continue;
+
+		texnum = LITTLESHORT(mtexture->patches[0].patch);
+		if (texnum < 0 || texnum >= numtextures)
 			continue;
 
 		texture->lumpnum = textures[texnum].lumpnum;
@@ -174,11 +168,14 @@ void R_InitTextures (void)
 					continue;
 
 				texture2 = &textures[texnum];
+				if (texture2->lumpnum < 0)
+					continue;
+
 				decal->texturenum = texnum;
 				decal->mincol = LITTLESHORT(mp->originx);
-				decal->maxcol = decal->mincol + texture2->width;
+				decal->maxcol = decal->mincol + texture2->width - 1;
 				decal->minrow = LITTLESHORT(mp->originy);
-				decal->maxrow = decal->minrow + texture2->height;
+				decal->maxrow = decal->minrow + texture2->height - 1;
 
 				if (decal->mincol >= texture->width || decal->maxcol < 0)
 					continue;
@@ -190,12 +187,20 @@ void R_InitTextures (void)
 				if (decal->minrow >= texture->height)
 					decal->minrow = texture->height - 1;
 
+				decal++;
 				numdecals++;
 			}
 
 			if (texture->decals == 0)
 				texture->decals = (firstdecal << 2) | numdecals;
 		}
+	}
+
+	for (i = 0; i < numtextures; i++)
+	{
+		texture = &textures[i];
+		if (texture->lumpnum < 0)
+			texture->lumpnum = 0;
 	}
 
 	texmips = false;
