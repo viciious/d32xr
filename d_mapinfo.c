@@ -220,7 +220,7 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 				pp = skipspaces(pp + 1);
 			}
 
-			mi->lumpNum = W_GetNumForName(stripquote(p));
+			mi->lumpNum = W_CheckNumForName(stripquote(p));
 
 			p = pp;
 			if (p) {
@@ -253,11 +253,11 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 	}
 
 	if (!D_strcasecmp(key, "next"))
-		mi->next = W_GetNumForName(value);
+		mi->next = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "sky"))
 		mi->sky = value;
 	else if (!D_strcasecmp(key, "secretnext"))
-		mi->secretNext = W_GetNumForName(value);
+		mi->secretNext = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "mapnumber"))
 		mi->mapNumber = D_atoi(value);
 	else if (!D_strcasecmp(key, "music"))
