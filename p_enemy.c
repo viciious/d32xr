@@ -1090,6 +1090,10 @@ void A_BossDeath (mobj_t *mo)
 		return;
 	if (mo->type == MT_SPIDER && !(gamemapinfo.specials & MI_SPIDER_SPECIAL))
 		return;
+	if (mo->type == MT_FATSO && !(gamemapinfo.specials & MI_FATSO_SPECIAL))
+		return;
+	if (mo->type == MT_BABY && !(gamemapinfo.specials & MI_BABY_SPECIAL))
+		return;
 
     // make sure there is a player alive for victory
     for (i=0 ; i<MAXPLAYERS ; i++)
@@ -1113,9 +1117,14 @@ void A_BossDeath (mobj_t *mo)
 /* victory! */
 /* */
 	switch (mo->type) {
+		case MT_FATSO:
 		case MT_BRUISER:
 			junk.tag = 666;
 			EV_DoFloor (&junk, lowerFloorToLowest);
+			break;
+		case MT_BABY:
+			junk.tag = 667;
+			EV_DoFloor (&junk, raiseToTexture);
 			break;
 		case MT_CYBORG:
 		case MT_SPIDER:

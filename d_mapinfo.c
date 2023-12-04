@@ -250,6 +250,14 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 		{
 			mi->specials |= MI_SPIDER_SPECIAL;
 		}
+		else if (!D_strcasecmp(key, "mancubispecial"))
+		{
+			mi->specials |= MI_FATSO_SPECIAL;
+		}
+		else if (!D_strcasecmp(key, "arachnospecial"))
+		{
+			mi->specials |= MI_BABY_SPECIAL;
+		}
 
 		return;
 	}

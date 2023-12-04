@@ -29,6 +29,8 @@
 #define MI_BARON_SPECIAL 	1
 #define MI_CYBER_SPECIAL 	2
 #define MI_SPIDER_SPECIAL 	4
+#define MI_FATSO_SPECIAL 	8
+#define MI_BABY_SPECIAL 	16
 
 typedef struct
 {
