@@ -110,6 +110,7 @@ start_loop
     LD      DE,VGMTOP
     LD      IX,LOCAL_MEM
     LD      IY,YM2612
+    LD      (IX+FM_CSM),$15
     EXX
     LD      IX,LOCAL_MEM
     LD      IY,YM2612
