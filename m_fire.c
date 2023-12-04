@@ -188,10 +188,10 @@ void Mars_Sec_M_AnimateFire(void)
 			}
 		}
 
-		//if (I_GetTime() - start > FIRE_STOP_TICON)
-		//{
-		//	M_StopFire();
-		//}
+		if (I_GetTime() - start > FIRE_STOP_TICON)
+		{
+			M_StopFire();
+		}
 	}
 
 	Mars_ClearCache();

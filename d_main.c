@@ -498,8 +498,8 @@ int TIC_Abortable (void)
 		return 1;
 	if (ticon < TICVBLS)
 		return 0;
-	if (ticon >= gameinfo.titleTime)
-		return 1;		/* go on to next demo */
+	//if (ticon >= gameinfo.titleTime)
+	//	return 1;		/* go on to next demo */
 
 #ifdef JAGUAR	
 	if (ticbuttons[0] == (BT_OPTION|BT_STAR|BT_HASH) )

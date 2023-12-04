@@ -27,7 +27,7 @@
 
 ! Standard MegaDrive ROM header at 0x100
 
-        .ascii  "SEGA SSF        "
+        .ascii  "SEGA GENESIS    "
         .ascii  "                "
         .ascii  "DOOM 32X Resurre"
         .ascii  "ction v3.1      "
@@ -38,7 +38,7 @@
         .ascii  "GM 20230824-00"
         .word   0x0000
         .ascii  "J6CM            "
-        .long   0x00000000,0x004FFFFF   /* ROM start, end */
+        .long   0x00000000,0x003FFFFF   /* ROM start, end */
         .long   0x00FF0000,0x00FFFFFF   /* RAM start, end */
 
 ! 2KB of save ram on odd byte lane
