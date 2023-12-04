@@ -457,20 +457,25 @@ strm_ctrl
     OR      A
     JR      NZ,strm_ctrl        ; request still pending
 
+    CALL    strm_get            ; stream ID
+    PUSH    AF
+    CALL    strm_get            ; chip type = 0x00 for YM2612
+    PUSH    AF
+    CALL    strm_get            ; port = 0x00 for YM2612
+    CALL    strm_get            ; command/control value = 0x2A for YM2612
+
     LD      A,$FF
     LD      (REQ_ACT),A         ; request action - locked
     LD      (IX+FM_RQPND),A     ; request pending
 
-    CALL    strm_get            ; stream ID
-    LD      (STRM_ID),A
-    CALL    strm_get            ; chip type = 0x00 for YM2612
+    POP     AF
     LD      (STRM_CHIP),A
-    CALL    strm_get            ; port = 0x00 for YM2612
-    CALL    strm_get            ; command/control value = 0x2A for YM2612
+    POP     AF
+    LD      (STRM_ID),A
 
     XOR     A
-    LD      (IX+FM_RQPND),A     ; request not pending
-    LD      (REQ_ACT),A         ; request action - unlocked
+    LD      (IX+FM_RQPND),A
+    LD      (REQ_ACT),A
     JP      play_loop
 
 ; stream set data
@@ -479,21 +484,27 @@ strm_data
     OR      A
     JR      NZ,strm_data        ; request still pending
 
+    CALL    strm_get            ; stream ID
+    PUSH    AF
+    CALL    strm_get            ; data bank ID
+    CALL    strm_get            ; step size
+    PUSH    AF
+    CALL    strm_get            ; step base
+    PUSH    AF
+
     LD      A,$FF
     LD      (REQ_ACT),A         ; request action - locked
     LD      (IX+FM_RQPND),A     ; request pending
-
-    CALL    strm_get            ; stream ID
-    LD      (STRM_ID),A
-    CALL    strm_get            ; data bank ID
-    CALL    strm_get            ; step size
-    LD      (STRM_SSIZE),A
-    CALL    strm_get            ; step base
+    POP     AF
     LD      (STRM_SBASE),A
+    POP     AF
+    LD      (STRM_SSIZE),A
+    POP     AF
+    LD      (STRM_ID),A
 
     XOR     A
-    LD      (IX+FM_RQPND),A     ; request not pending
-    LD      (REQ_ACT),A         ; request action - unlocked
+    LD      (IX+FM_RQPND),A
+    LD      (REQ_ACT),A
     JP      play_loop
 
 ; stream set frequency
@@ -502,22 +513,29 @@ strm_freq
     OR      A
     JR      NZ,strm_freq        ; request still pending
 
+    CALL    strm_get            ; stream ID
+    PUSH    AF
+    CALL    strm_get            ; frequency LL
+    PUSH    AF
+    CALL    strm_get            ; frequency LH
+    PUSH    AF
+    CALL    strm_get            ; frequency HL
+    CALL    strm_get            ; frequency HH
+
     LD      A,$FF
     LD      (REQ_ACT),A         ; request action - locked
     LD      (IX+FM_RQPND),A     ; request pending
 
-    CALL    strm_get            ; stream ID
-    LD      (STRM_ID),A
-    CALL    strm_get            ; frequency LL
-    LD      (STRM_FREQL),A
-    CALL    strm_get            ; frequency LH
+    POP     AF
     LD      (STRM_FREQH),A
-    CALL    strm_get            ; frequency HL
-    CALL    strm_get            ; frequency HH
+    POP     AF
+    LD      (STRM_FREQL),A
+    POP     AF
+    LD      (STRM_ID),A
 
     XOR     A
-    LD      (IX+FM_RQPND),A     ; request not pending
-    LD      (REQ_ACT),A         ; request action - unlocked
+    LD      (IX+FM_RQPND),A
+    LD      (REQ_ACT),A
     JP      play_loop
 
 ; stream start
@@ -526,30 +544,51 @@ strm_start
     OR      A
     JR      NZ,strm_start       ; request still pending
 
+    CALL    strm_get            ; stream ID
+    PUSH    AF
+    CALL    strm_get            ; data start offset LL
+    PUSH    AF
+    CALL    strm_get            ; data start offset LH
+    PUSH    AF
+    CALL    strm_get            ; data start offset HL
+    PUSH    AF
+    CALL    strm_get            ; data start offset HH
+    PUSH    AF
+    CALL    strm_get            ; length mode
+    PUSH    AF
+    CALL    strm_get            ; data length LL
+    PUSH    AF
+    CALL    strm_get            ; data length LH
+    PUSH    AF
+    CALL    strm_get            ; data length HL
+    PUSH    AF
+    CALL    strm_get            ; data length HH
+    PUSH    AF
+
     LD      A,$FF
     LD      (REQ_ACT),A         ; request action - locked
     LD      (IX+FM_RQPND),A     ; request pending
 
-    CALL    strm_get            ; stream ID
-    LD      (STRM_ID),A
-    CALL    strm_get            ; data start offset LL
-    LD      (STRM_OFFLL),A
-    CALL    strm_get            ; data start offset LH
-    LD      (STRM_OFFLH),A
-    CALL    strm_get            ; data start offset HL
-    LD      (STRM_OFFHL),A
-    CALL    strm_get            ; data start offset HH
-    LD      (STRM_OFFHH),A
-    CALL    strm_get            ; length mode
-    LD      (STRM_LMODE),A
-    CALL    strm_get            ; data length LL
-    LD      (STRM_LENLL),A
-    CALL    strm_get            ; data length LH
-    LD      (STRM_LENLH),A
-    CALL    strm_get            ; data length HL
-    LD      (STRM_LENHL),A
-    CALL    strm_get            ; data length HH
+    POP     AF
     LD      (STRM_LENHH),A
+    POP     AF
+    LD      (STRM_LENHL),A
+    POP     AF
+    LD      (STRM_LENLH),A
+    POP     AF
+    LD      (STRM_LENLL),A
+    POP     AF
+    LD      (STRM_LMODE),A
+    POP     AF
+    LD      (STRM_OFFHH),A
+    POP     AF
+    LD      (STRM_OFFHL),A
+    POP     AF
+    LD      (STRM_OFFLH),A
+    POP     AF
+    LD      (STRM_OFFLL),A
+    POP     AF
+    LD      (STRM_ID),A
 
     LD      A,$03
     LD      (REQ_ACT),A         ; request action - stream start
@@ -561,15 +600,18 @@ strm_stop
     OR      A
     JR      NZ,strm_stop        ; request still pending
 
+    CALL    strm_get            ; stream ID (0xFF means stop all streams)
+    PUSH    AF
+
     LD      A,$FF
     LD      (REQ_ACT),A         ; request action - locked
     LD      (IX+FM_RQPND),A     ; request pending
 
-    CALL    strm_get            ; stream ID (0xFF means stop all streams)
+    POP     AF
     LD      (STRM_ID),A
 
     LD      A,$04
-    LD      (REQ_ACT),A      ; request action - stream stop
+    LD      (REQ_ACT),A         ; request action - stream stop
     JP      play_loop
 
 ; stream fast start
@@ -578,22 +620,30 @@ strm_fast
     OR      A
     JR      NZ,strm_fast        ; request still pending
 
+    CALL    strm_get            ; stream ID
+    PUSH    AF
+    CALL    strm_get            ; block ID low
+    PUSH    AF
+    CALL    strm_get            ; block ID high
+    PUSH    AF
+    CALL    strm_get            ; flags (0x01 == loop, 0x10 == reverse)
+    PUSH    AF
+
     LD      A,$FF
     LD      (REQ_ACT),A         ; request action - locked
     LD      (IX+FM_RQPND),A     ; request pending
 
-    CALL    strm_get            ; stream ID
+    POP     AF
+    LD      (STRM_OFFHL),A
+    POP     AF
+    LD      (STRM_OFFLH),A
+    POP     AF
+    LD      (STRM_OFFLL),A
+    POP     AF
     LD      (STRM_ID),A
 
-    CALL    strm_get            ; block ID low
-    LD      (STRM_OFFLL),A
-    CALL    strm_get            ; block ID high
-    LD      (STRM_OFFLH),A
-    CALL    strm_get            ; flags (0x01 == loop, 0x10 == reverse)
-    LD      (STRM_OFFHL),A
-
     LD      A,$05
-    LD      (REQ_ACT),A      ; request action - stream fast start
+    LD      (REQ_ACT),A         ; request action - stream fast start
     JP      play_loop
 
 
