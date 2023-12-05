@@ -94,9 +94,9 @@ typedef	struct
 typedef struct
 {
 	VINT		sector;
-	VINT		toptexture, bottomtexture, midtexture;
+	uint8_t		toptexture, bottomtexture, midtexture;
+	int8_t		rowoffset;			/* add this to the calculated texture top */
 	VINT		textureoffset;		/* add this to the calculated texture col */
-	VINT		rowoffset;			/* add this to the calculated texture top */
 } side_t;
 
 typedef struct line_s

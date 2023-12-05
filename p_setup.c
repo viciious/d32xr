@@ -431,12 +431,14 @@ void P_LoadSideDefs (int lump)
 	int				i;
 	mapsidedef_t	*msd;
 	side_t			*sd;
+
 #ifndef MARS
 	for (i=0 ; i<numtextures ; i++)
 		textures[i].usecount = 0;
 #endif	
 	numsides = W_LumpLength (lump) / sizeof(mapsidedef_t);
-	sides = Z_Malloc (numsides*sizeof(side_t),PU_LEVEL);
+	sides = Z_Malloc (numsides*sizeof(side_t)+16,PU_LEVEL);
+	sides = (void*)(((uintptr_t)sides + 15) & ~15); // aline on cacheline boundary
 	D_memset (sides, 0, numsides*sizeof(side_t));
 	data = I_TempBuffer ();
 	W_ReadLump (lump,data);
@@ -451,7 +453,7 @@ void P_LoadSideDefs (int lump)
 		sd->bottomtexture = R_TextureNumForName(msd->bottomtexture);
 		sd->midtexture = R_TextureNumForName(msd->midtexture);
 		sd->sector = LITTLESHORT(msd->sector);
-#ifndef MARS		
+#ifndef MARS
 		textures[sd->toptexture].usecount++;
 		textures[sd->bottomtexture].usecount++;
 		textures[sd->midtexture].usecount++;
