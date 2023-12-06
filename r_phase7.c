@@ -20,7 +20,7 @@ typedef struct localplane_s
     fixed_t height;
     angle_t angle;
     fixed_t x, y;
-    int lightmin, lightmax, lightsub;
+    int lightmin, lightmax, lightsub, lightcoef;
     fixed_t basexscale, baseyscale;
     unsigned maxmip;
 
@@ -71,12 +71,16 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     distance = FixedMul(lpl->height, yslope[y]);
 
 #ifdef MARS
+    volatile int32_t t;
     __asm volatile (
         "mov #-128, r0\n\t"
         "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
-        "mov.l %0, @(0,r0) /* set 32-bit divisor */ \n\t"
-        "mov.l %1, @(4,r0) /* start divide */\n\t"
-        : : "r" (distance), "r" (LIGHTCOEF) : "r0");
+        "mov #0, %0\n\t"
+        "mov.l %2, @(16, r0) /* set high bits of the 64-bit dividend */ \n\t"
+        "mov.l %1, @(0, r0) /* set 32-bit divisor */ \n\t"
+        "mov #0, %0\n\t"
+        "mov.l %0, @(20, r0) /* set low  bits of the 64-bit dividend, start divide */\n\t"
+        : "=&r" (t) : "r" (distance), "r"(lpl->lightcoef) : "r0");
 #endif
 
     length = FixedMul(distance, distscale[x]);
@@ -106,7 +110,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
         } while (--m);
     }
 
-    if (lpl->lightmin != lpl->lightmax)
+    if (lpl->lightcoef != 0)
     {
 #ifdef MARS
         __asm volatile (
@@ -115,7 +119,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
             "mov.l @(20,r0), %0 /* get 32-bit quotient */ \n\t"
             : "=r" (scale) : : "r0");
 #else
-        scale = LIGHTCOEF / distance;
+        scale = (lpl->lightcoef << SLOPEBITS) / distance;
 #endif
 
         light = scale;
@@ -124,6 +128,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
             light = lpl->lightmin;
         else if (light > lpl->lightmax)
             light = lpl->lightmax;
+        light >>= FRACBITS;
 
         // transform to hardware value
         light = HWLIGHT(light);
@@ -316,28 +321,36 @@ static void R_DrawPlanes2(void)
         }
         else
         {
-            light = (pl->flatandlight>>16) + extralight;
-            if (light < 0)
-                light = 0;
-            if (light > 255)
-                light = 255;
+            light = ((unsigned)pl->flatandlight>>16);
             lpl.lightmax = light;
-            lpl.lightmin = lpl.lightmax;
+            lpl.lightmax += extralight;
+            if (lpl.lightmax > 255)
+                lpl.lightmax = 255;
 
 #ifdef MARS
-            if (light <= 160 + extralight)
-                light = (light >> 1);
+            light = light - ((255 - light - light/2) << 1);
 #else
             light = light - ((255 - light) << 1);
 #endif
+            light += extralight;
             if (light < MINLIGHT)
                 light = MINLIGHT;
-            lpl.lightmin = (unsigned)light;
+            if (light > lpl.lightmax)
+                light = lpl.lightmax;
+            lpl.lightmin = light;
 
             if (lpl.lightmin != lpl.lightmax)
-                lpl.lightsub = 160 * (lpl.lightmax - lpl.lightmin) / (800 - 160);
+            {
+                lpl.lightcoef = (unsigned)(lpl.lightmax - lpl.lightmin) << 8;
+                lpl.lightsub = (((lpl.lightmax - lpl.lightmin) * 160) << FRACBITS) / (800 - 160);
+                lpl.lightmin <<= FRACBITS;
+                lpl.lightmax <<= FRACBITS;
+            }
             else
+            {
+                lpl.lightcoef = 0;
                 lpl.lightmin = lpl.lightmax = HWLIGHT((unsigned)lpl.lightmax);
+            }
         }
 
         R_PlaneLoop(&lpl);
