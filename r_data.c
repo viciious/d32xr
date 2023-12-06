@@ -825,20 +825,25 @@ void R_InitSpriteDefs(const char** namelist)
 	}
 }
 
-void R_InitColormap(boolean doublepix)
+static void *R_LoadColormap(const char *name, boolean doublepix)
 {
 	int l;
 	void *doomcolormap;
 
-	l = W_CheckNumForName("COLORMAP");
+	l = W_CheckNumForName(name);
 	l -= (int)!doublepix;
 
 	doomcolormap = W_GetLumpData(l);
 
 	if (doublepix)
-		dc_colormaps = (void *)((short *)doomcolormap + 128);
-	else
-		dc_colormaps = (void *)((int8_t*)doomcolormap + 128);
+		return (void *)((short *)doomcolormap + 128);
+	return (void *)((int8_t*)doomcolormap + 128);
+}
+
+void R_InitColormap(boolean doublepix)
+{
+	dc_colormaps = R_LoadColormap("COLORMAP", doublepix);
+	dc_colormaps_hk = R_LoadColormap("COLORMHK", doublepix);
 
 #ifdef MARS
 	Mars_CommSlaveClearCache();

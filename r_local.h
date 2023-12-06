@@ -371,6 +371,7 @@ extern	flattex_t		*flatpixels;
 extern	VINT		firstflat, numflats;
 
 extern int8_t* dc_colormaps;
+extern int8_t* dc_colormaps_hk;
 
 extern uint8_t* dc_playpals;
 
@@ -465,6 +466,8 @@ typedef struct
 
 	int			b_bottomheight;
 	int			b_texturemid;
+
+	int			b_topheight;
 	/* !!! THE SECTION ABOVE MUST BE LARGE ENOUGH */
 	/* !!! TO ACCOMODATE VISSPRITE_T STRUCTURE, GETS */
 	/* !!! OVERWRITTEN AFTER PHASE 7 - END */
@@ -473,13 +476,12 @@ typedef struct
 		int			t_topheight;	 // used as miplevels after R_SegLoop
 		int16_t 	miplevels[2];
 	};
-	int			b_topheight;
 
 	VINT		t_texturenum;
 	VINT		b_texturenum;
 
-	VINT        floorpicnum;   // floorpic #   - CALICO: avoid type ambiguity w/extra field
-	VINT        ceilingpicnum; // ceilingpic # - CALICO: avoid type ambiguity w/extra field
+	VINT        floorpicnum;
+	VINT        ceilingpicnum;
 
 	unsigned	scalefrac;
 	unsigned	scale2;
@@ -526,6 +528,7 @@ typedef struct vissprite_s
 	VINT 		patchnum;
 	VINT		colormap;		/* < 0 = shadow draw */
 	short		gx,gy;	/* global coordinates */
+	void 		*colormaps;
 #ifndef MARS
 	pixel_t		*pixels;		/* data patch header references */
 #endif

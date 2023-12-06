@@ -51,6 +51,8 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos,
    stopx    = vis->x2 + 1;
    fracstep = vis->xiscale;
 
+   I_SetThreadLocalVar(DOOMTLS_COLORMAP, vis->colormaps);
+
 #ifdef MARS
    if (sprscreenhalf > 0)
    {
