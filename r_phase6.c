@@ -8,6 +8,7 @@
 #include "mars.h"
 
 #define MIPSCALE 0x20000
+#define LIGHTZSHIFT	10
 
 typedef struct
 {
@@ -407,31 +408,32 @@ void R_SegCommands(void)
         {
             seglight = segl->seglightlevel & 0xff;
             seglight += (int8_t)((unsigned)segl->seglightlevel >> 8);
-            seglight += extralight;
-#ifdef MARS
             if (seglight < 0)
                 seglight = 0;
-            if (seglight > 255)
-                seglight = 255;
-#endif
+#ifdef MARS
             lseg.lightmax = seglight;
-            lseg.lightmin = lseg.lightmax;
+            lseg.lightmax += extralight;
+#endif
+            if (lseg.lightmax > 255)
+                lseg.lightmax = 255;
 
 #ifdef MARS
-            if (seglight <= 160 + extralight)
-                seglight = (seglight >> 1);
+            seglight = seglight - (255 - seglight - seglight/2) * 2;
 #else
             seglight = seglight - (255 - seglight) * 2;
-            if (seglight < 0)
-                seglight = 0;
 #endif
+            seglight += extralight;
+            if (seglight < MINLIGHT)
+                seglight = MINLIGHT;
+            if (seglight > lseg.lightmax)
+                seglight = lseg.lightmax;
             lseg.lightmin = seglight;
 
             if (lseg.lightmin != lseg.lightmax)
             {
                 lseg.lightcoef = ((unsigned)(lseg.lightmax - lseg.lightmin) << FRACBITS) / (800 - 160);
                 lseg.lightsub = 160 * lseg.lightcoef;
-                lseg.lightcoef <<= 10;
+                lseg.lightcoef <<= LIGHTZSHIFT;
                 lseg.lightmin <<= FRACBITS;
                 lseg.lightmax <<= FRACBITS;
             }
