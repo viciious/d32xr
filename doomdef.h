@@ -311,6 +311,8 @@ typedef struct degenmobj_s
 
 #define	MF_STATIC		0x8000000	/* can't move or think */
 
+#define	MF_KNIGHT_CMAP	0x10000000	/* hell knight colormap */
+
 /*============================================================================= */
 typedef enum
 {
