@@ -496,7 +496,6 @@ int F_Ticker (void)
 		case S_TROO_ATK3: sfx = sfx_claw; break;
 		case S_SARG_ATK2: sfx = sfx_sgtatk; break;
 		case S_BOSS_ATK2: 
-		case S_BOS2_ATK2:
 		case S_HEAD_ATK2: sfx = sfx_firsht; break;
 		case S_SKULL_ATK2: sfx = sfx_sklatk; break;
 		case S_SPID_ATK4:
