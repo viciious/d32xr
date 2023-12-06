@@ -46,13 +46,15 @@ typedef struct {
 	uint16_t bankpage;
 	setbankpage_t setbankpage;
 	VINT *validcount;
-	uint16_t pad[2];
+	void *columncache;
+	void *colormaps;
 } mars_tls_t __attribute__((aligned(16))); // thread local storage
 
 VINT COLOR_WHITE = 0x04;
 VINT COLOR_BLACK = 0xF7;
 
 int8_t	*dc_colormaps;
+int8_t	*dc_colormaps_hk;
 const byte	*new_palette = NULL;
 
 boolean	debugscreenactive = false;

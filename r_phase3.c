@@ -162,6 +162,8 @@ static void R_PrepMobj(mobj_t *thing)
            vis->colormap = thing->subsector->sector->lightlevel;
        vis->colormap = HWLIGHT(vis->colormap);
    }
+
+   vis->colormaps = dc_colormaps;
 }
 
 //
@@ -250,6 +252,7 @@ static void R_PrepPSprite(pspdef_t *psp)
            vis->colormap = vd.lightlevel;
        vis->colormap = HWLIGHT(vis->colormap);
    }
+   vis->colormaps = dc_colormaps;
 }
 
 //
