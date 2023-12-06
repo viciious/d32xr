@@ -269,6 +269,8 @@ static void R_DrawSortedSprites(int* sortedsprites, int *fuzzpos, int sprscreenh
    int16_t walls[MAXWALLCMDS+1], *pwalls;
    viswall_t *ds;
 
+    I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
+
 #ifdef MARS
    if (sprscreenhalf > 0)
    {
@@ -322,6 +324,8 @@ static void R_DrawPSprites(int *fuzzpos, int sprscreenhalf)
     unsigned short spropening[SCREENWIDTH];
     viswall_t *spr;
     unsigned vph = viewportHeight;
+
+    I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
 
     // draw psprites
     for (spr = vd.lastsprite_p; spr < vd.vissprite_p; spr++)
