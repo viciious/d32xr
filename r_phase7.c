@@ -286,6 +286,8 @@ static void R_DrawPlanes2(void)
     if (vd.gsortedvisplanes == NULL)
         return;
 
+    I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
+
     lpl.x = vd.viewx;
     lpl.y = -vd.viewy;
 

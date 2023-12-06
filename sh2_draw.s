@@ -2,6 +2,8 @@
 
 .section .sdata
 
+.equ DOOMTLS_COLORMAP, 16
+
 ! Draw a vertical column of pixels from a projected wall texture.
 ! Source is the top of the column to scale.
 ! Low detail (doubl-wide pixels) mode.
@@ -25,8 +27,7 @@ _I_DrawColumnLowA:
 1:
         mov.l   r8,@-r15
         mov.l   r9,@-r15
-        mov.l   draw_cmap,r0
-        mov.l   @r0,r0
+        mov.l   @(DOOMTLS_COLORMAP, gbr),r0
         add     r7,r7
         add     r0,r7           /* dc_colormap = colormap + light */
         mov.l   draw_fb,r8
@@ -85,8 +86,7 @@ _I_DrawColumnNPo2LowA:
         nop
 1:
         mov.l   r8,@-r15
-        mov.l   draw_cmap,r0
-        mov.l   @r0,r0
+        mov.l   @(DOOMTLS_COLORMAP, gbr),r0
         add     r7,r7
         add     r0,r7           /* dc_colormap = colormap + light */
         mov.l   draw_fb,r8
@@ -177,9 +177,8 @@ _I_DrawFuzzColumnLowA:
         rts
         nop
 3:
-        mov.l   draw_cmap,r0
+        mov.l   @(DOOMTLS_COLORMAP, gbr),r0
         mov.l   r8,@-r15
-        mov.l   @r0,r0
         add     r7,r7
         add     r0,r7           /* dc_colormap = colormap + light */
         mov.l   draw_fb,r8
@@ -244,8 +243,7 @@ _I_DrawSpanLowA:
         mov.l   r12,@-r15
         mov.l   r13,@-r15
         mov.l   r14,@-r15
-        mov.l   draw_cmap,r0
-        mov.l   @r0,r0
+        mov.l   @(DOOMTLS_COLORMAP, gbr),r0
         add     r7,r7
         add     r0,r7           /* ds_colormap = colormap + light */
         mov.l   draw_fb,r8
@@ -380,8 +378,7 @@ _I_DrawColumnA:
 1:
         mov.l   r8,@-r15
         mov.l   r9,@-r15
-        mov.l   draw_cmap,r0
-        mov.l   @r0,r0
+        mov.l   @(DOOMTLS_COLORMAP, gbr),r0
         add     r0,r7           /* dc_colormap = colormap + light */
         mov.l   draw_fb,r8
         mov.l   @r8,r8          /* frame buffer start */
@@ -437,8 +434,7 @@ _I_DrawColumnNPo2A:
         nop
 1:
         mov.l   r8,@-r15
-        mov.l   draw_cmap,r0
-        mov.l   @r0,r0
+        mov.l   @(DOOMTLS_COLORMAP, gbr),r0
         add     r0,r7           /* dc_colormap = colormap + light */
         mov.l   draw_fb,r8
         mov.l   @r8,r8          /* frame buffer start */
@@ -527,9 +523,8 @@ _I_DrawFuzzColumnA:
         rts
         nop
 3:
-        mov.l   draw_cmap,r0
+        mov.l   @(DOOMTLS_COLORMAP, gbr),r0
         mov.l   r8,@-r15
-        mov.l   @r0,r0
         add     r0,r7           /* dc_colormap = colormap + light */
         mov.l   draw_fb,r8
         mov.l   @r8,r8          /* frame buffer start */
@@ -591,8 +586,7 @@ _I_DrawSpanA:
         mov.l   r12,@-r15
         mov.l   r13,@-r15
         mov.l   r14,@-r15
-        mov.l   draw_cmap,r0
-        mov.l   @r0,r0
+        mov.l   @(DOOMTLS_COLORMAP, gbr),r0
         add     r0,r7           /* ds_colormap = colormap + light */
         mov.l   draw_fb,r8
         mov.l   @r8,r8          /* frame buffer start */
@@ -702,9 +696,6 @@ exit_span_loop:
         .align  2
 draw_fb:
         .long   _viewportbuffer
-draw_cmap:
-        .long   _dc_colormaps		/* cached */
-/*      .long   colormap|0x20000000   */
 draw_width:
         .long   320
 draw_height:
