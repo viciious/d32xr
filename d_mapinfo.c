@@ -302,6 +302,10 @@ static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
 		gi->endShowCast = D_atoi(value);
 	else if (!D_strcasecmp(key, "noAttractDemo"))
 		gi->noAttractDemo = D_atoi(value);
+	else if (!D_strcasecmp(key, "stopFireTime"))
+		gi->stopFireTime = D_atoi(value);
+	else if (!D_strcasecmp(key, "titleStartPos"))
+		gi->titleStartPos = D_atoi(value);
 }
 
 static void G_ClearGameInfo(dgameinfo_t* gi)
@@ -317,6 +321,8 @@ static void G_ClearGameInfo(dgameinfo_t* gi)
 	gi->endMus = "";
 	gi->creditsPage = "";
 	gi->endText = "";
+	gi->stopFireTime = -1;
+	gi->titleStartPos = -1;
 }
 
 static dmapinfo_t *G_CompressMapInfo(dmapinfo_t *mi)

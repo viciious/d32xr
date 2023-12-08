@@ -839,10 +839,13 @@ void DrawFillRect(int x, int y, int w, int h, int c)
 {
 	int i;
 
-	if (x + w > 320)
+	if (x + w >= 320)
 		w = 320 - x;
-	if (y + h > mars_framebuffer_height)
+	if (y + h >= mars_framebuffer_height)
 		h = mars_framebuffer_height - y;
+
+	if (w == 0 || h == 0)
+		return;
 
 	c = (c << 8) | c;
 	int hw = w >> 1;
