@@ -3219,7 +3219,7 @@ sfx_None,		// deathsound
 100,		// mass
 0,		// damage
 sfx_None,		// activesound
-MF_SOLID|MF_SPAWNCEILING|MF_NOGRAVITY|MF_STATIC,		// flags
+MF_SOLID|MF_STATIC,		// flags
 },
 
 {		// MT_MISC57
