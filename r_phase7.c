@@ -337,6 +337,7 @@ static void R_DrawPlanes2(void)
         if (vd.fixedcolormap)
         {
             lpl.lightmin = lpl.lightmax = vd.fixedcolormap;
+            lpl.lightcoef = 0;
         }
         else
         {
