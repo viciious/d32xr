@@ -164,7 +164,7 @@ static void R_PrepMobj(mobj_t *thing)
    }
 
    if (thing->flags & MF_KNIGHT_CMAP)
-      vis->colormaps = dc_colormaps_hk;
+      vis->colormaps = dc_colormaps2;
    else
       vis->colormaps = dc_colormaps;
 }

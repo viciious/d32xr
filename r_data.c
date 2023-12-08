@@ -9,7 +9,7 @@
 
 boolean	spr_rotations;
 
-VINT		firstflat, lastflat, numflats;
+VINT		firstflat, numflats, col2flat;
 
 VINT		numtextures = 0;
 texture_t	*textures = NULL;
@@ -290,12 +290,13 @@ void R_InitTextures (void)
 
 void R_InitFlats (void)
 {
-	int		i, j;
-	
+	int		i;
+	int 	lastflat;
+
 	firstflat = W_GetNumForName ("F_START") + 1;
 	lastflat = W_GetNumForName ("F_END") - 1;
 	numflats = lastflat - firstflat + 1;
-	
+
 /* translation table for global animation */
 	flattranslation = Z_Malloc ((numflats+1)*sizeof(*flattranslation), PU_STATIC);
 	for (i=0 ; i<numflats ; i++)
@@ -303,12 +304,18 @@ void R_InitFlats (void)
 
 	flatpixels = Z_Malloc(numflats * sizeof(*flatpixels), PU_STATIC);
 
+	col2flat = R_FlatNumForName ("F_STCOL2");
+	if (col2flat < 0)
+		col2flat = numflats + 1;
+
+#if MIPLEVELS > 1
 	// detect mip-maps
 	if (!texmips)
 		return;
 
 	for (i=0 ; i<numflats ; i++)
 	{
+		int j;
 		int w = 64;
 		uint8_t *start = R_CheckPixels(firstflat + i);
 		uint8_t *end = start + W_LumpLength(firstflat + i);
@@ -328,6 +335,7 @@ void R_InitFlats (void)
 			w >>= 1;
 		}
 	}
+#endif
 }
 
 /*
@@ -379,7 +387,7 @@ void R_InitData (void)
 
 int	R_FlatNumForName (const char *name)
 {
-	int f = W_CheckRangeForName (name, firstflat, lastflat+1);
+	int f = W_CheckRangeForName (name, firstflat, firstflat + numflats);
 	if (f < 0)
 		return f;
 	return f - firstflat;
@@ -846,7 +854,7 @@ void R_InitColormap(boolean doublepix)
 	dc_colormaps = R_LoadColormap(l, doublepix);
 
 	l -= 2;
-	dc_colormaps_hk = R_LoadColormap(l, doublepix);
+	dc_colormaps2 = R_LoadColormap(l, doublepix);
 
 #ifdef MARS
 	Mars_CommSlaveClearCache();
