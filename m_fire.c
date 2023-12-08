@@ -39,12 +39,14 @@ typedef struct {
 	int16_t solid_fire_height;
 	int16_t bottom_pos;
 	int16_t titlepic_pos_x;
+	int startpos;
+	int stopticon;
 } m_fire_t;
 
 #define FIRE_WIDTH		320
 #define FIRE_HEIGHT		72
 
-#define FIRE_STOP_TICON 470
+#define FIRE_DEFAULT_STOP_TICON 470
 
 const unsigned char fireRGBs[] =
 {
@@ -187,7 +189,7 @@ void Mars_Sec_M_AnimateFire(void)
 			}
 		}
 
-		if (I_GetTime() - start > FIRE_STOP_TICON)
+		if (I_GetTime() - start > m_fire->stopticon)
 		{
 			M_StopFire();
 		}
@@ -207,11 +209,21 @@ void I_InitMenuFire(jagobj_t *titlepic)
 {
 	int i, j;
 	const byte* doompalette;
+	int titlepos = gameinfo.titleStartPos;
+	int stopticon = gameinfo.stopFireTime;
 
 	doompalette = W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
 
 	m_fire = Z_Malloc(sizeof(*m_fire), PU_STATIC);
 	D_memset(m_fire, 0, sizeof(*m_fire));
+
+	if (stopticon < 0)
+		stopticon = FIRE_DEFAULT_STOP_TICON;
+	m_fire->stopticon = stopticon;
+
+	if (titlepos < 0)
+		titlepos = 224+28;
+	m_fire->startpos = titlepos;
 
 	m_fire->firePalCols = sizeof(fireRGBs) / 3;
 	m_fire->firePal = Z_Malloc(sizeof(*m_fire->firePal) * m_fire->firePalCols, PU_STATIC);
@@ -264,22 +276,25 @@ void I_InitMenuFire(jagobj_t *titlepic)
 
 	if (titlepic != NULL)
 	{
+		int lastline = m_fire->bottom_pos - FIRE_HEIGHT;
+
 		for (i = 0; i < 2; i++)
 		{
 			uint16_t* lines = Mars_FrameBufferLines();
 
 			DrawFillRect(0, 0, 320, 224, 0);
 
-			DrawJagobj2(titlepic, m_fire->titlepic_pos_x, 0, 0, 0, 0, m_fire->bottom_pos - FIRE_HEIGHT, I_FrameBuffer());
+			DrawJagobj2(titlepic, m_fire->titlepic_pos_x, 0, 0, 0, 0, lastline, I_FrameBuffer());
 
-			for (j = 0; j < m_fire->bottom_pos - FIRE_HEIGHT; j++)
+			for (j = 0; j < lastline; j++)
 				lines[j] = 224 * 320 / 2 + 0x100;
 
 			UpdateBuffer();
 		}
 	}
 
-	Mars_M_BeginDrawFire();
+	if (m_fire->stopticon > 0)
+		Mars_M_BeginDrawFire();
 }
 
 /*
@@ -318,7 +333,7 @@ void I_DrawMenuFire(void)
 	jagobj_t* titlepic = m_fire->titlepic;
 	uint8_t * firePal = (uint8_t *)m_fire->firePal;
 	int8_t * row;
-	const int pic_startpos = -28;
+	const int pic_startpos = m_fire->startpos;
 	const int pic_cutoff = 16;
 	const int fh = FIRE_HEIGHT;
 	const int solid_fire_height = m_fire->solid_fire_height;
@@ -328,12 +343,15 @@ void I_DrawMenuFire(void)
 	// scroll the title pic from bottom to top
 
 	// unroll the hidden part as the picture moves
-	int pos = (ticon + pic_startpos) / 2;
-	if (pos >= fh && pos <= bottom_pos+2)
+	int pos = (ticon + (224 - pic_startpos)*2) / 2;
+	if (pos >= fh)
 	{
 		int j;
 		int limit = pos > bottom_pos ? 0 : bottom_pos - pos;
 		uint16_t* lines = Mars_FrameBufferLines();
+
+		if (limit < 0)
+			limit = 0;
 		for (j = limit; j < bottom_pos - fh; j++)
 			lines[j] = (j - limit) * 320 / 2 + 0x100;
 	}
@@ -342,7 +360,7 @@ void I_DrawMenuFire(void)
 	{
 		// clear the framebuffer underneath the fire where the title pic is 
 		// no longer drawn and thus can no longer as serve as the background
-		if (ticon >= FIRE_STOP_TICON)
+		if (ticon >= m_fire->stopticon)
 		{
 			int *irow = (int*)(I_FrameBuffer() + 320 / 2 * (200 - pic_cutoff));
 			for (y = 200 - pic_cutoff; y <= bottom_pos; y++)
@@ -366,6 +384,9 @@ void I_DrawMenuFire(void)
 			DrawFillRect(titlepic->width + m_fire->titlepic_pos_x, y, 320, 200, 0);
 		}
 	}
+
+	if (m_fire->stopticon <= 0)
+		return;
 
 	// draw the fire at the bottom
 	Mars_ClearCache();
