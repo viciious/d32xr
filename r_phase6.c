@@ -405,6 +405,7 @@ void R_SegCommands(void)
         if (vd.fixedcolormap)
         {
             lseg.lightmin = lseg.lightmax = vd.fixedcolormap;
+            lseg.lightcoef = 0;
         }
         else
         {
