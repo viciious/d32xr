@@ -41,6 +41,8 @@ mapthing_t	playerstarts[MAXPLAYERS];
 int			numthings;
 spawnthing_t* spawnthings;
 
+int16_t 	worldbbox[4];
+
 /*
 =================
 =
@@ -210,19 +212,102 @@ void P_LoadSectors (int lump)
 =================
 */
 
+
+static int P_EncodeBBoxSide(int16_t *b, int16_t *outerbbox, int pc, int nc)
+{
+	int length, unit;
+	int nu, pu;
+
+	length = outerbbox[pc] - outerbbox[nc] + 15;
+	if (length < 16)
+		return 0;
+	unit = length / 16;
+
+	// negative corner is increasing
+	nu = 0;
+	length = b[nc] - outerbbox[nc];
+	if (length > 0) {
+		nu = length / unit;
+		b[nc] = outerbbox[nc] + nu * unit;
+	}
+
+	// positive corner is decreasing
+	pu = 0;
+	length = outerbbox[pc] - b[pc];
+	if (length > 0) {
+		pu = length / unit;
+		b[pc] = outerbbox[pc] - pu * unit;
+	}
+
+	return (pu << 4) | nu;
+}
+
+// encodes bbox as the number of 1/16th units of parent bbox on each side
+static int P_EncodeBBox(int16_t *cb, int16_t *outerbbox)
+{
+	int encbbox;
+	encbbox = P_EncodeBBoxSide(cb, outerbbox, BOXRIGHT, BOXLEFT);
+	encbbox <<= 8;
+	encbbox |= P_EncodeBBoxSide(cb, outerbbox, BOXTOP, BOXBOTTOM);
+	return encbbox;
+}
+
+static void P_EncodeNodeBBox_r(int nn, int16_t *bboxes, int16_t *outerbbox)
+{
+	int 		j;
+	node_t 		*n;
+
+	if (nn & NF_SUBSECTOR)
+		return;
+
+	n = nodes + nn;
+	for (j=0 ; j<2 ; j++)
+	{
+		int16_t *bbox = &bboxes[nn*8+j*4];
+		n->encbbox[j] = P_EncodeBBox(bbox, outerbbox);
+		P_EncodeNodeBBox_r(n->children[j], bboxes, bbox);
+	}
+}
+
+// set the world's bounding box
+// recursively encode bounding boxes for all BSP nodes
+static void P_EncodeNodesBBoxes(int16_t *bboxes)
+{
+	int j;
+
+	worldbbox[BOXLEFT] = INT16_MAX;
+	worldbbox[BOXRIGHT] = INT16_MIN;
+	worldbbox[BOXBOTTOM] = INT16_MAX;
+	worldbbox[BOXTOP] = INT16_MIN;
+
+	for (j=0 ; j<2 ; j++)
+	{
+		int16_t *cb = &bboxes[(numnodes-1)*8+j*4];
+		if (cb[BOXLEFT] < worldbbox[BOXLEFT])
+			worldbbox[BOXLEFT] = cb[BOXLEFT];
+		if (cb[BOXRIGHT] > worldbbox[BOXRIGHT])
+			worldbbox[BOXRIGHT] = cb[BOXRIGHT];
+		if (cb[BOXBOTTOM] < worldbbox[BOXBOTTOM])
+			worldbbox[BOXBOTTOM] = cb[BOXBOTTOM];
+		if (cb[BOXTOP] > worldbbox[BOXTOP])
+			worldbbox[BOXTOP] = cb[BOXTOP];
+	}
+
+	P_EncodeNodeBBox_r(numnodes-1, bboxes, worldbbox);
+}
+
 void P_LoadNodes (int lump)
 {
 	byte		*data;
 	int			i,j,k;
 	node_t		*no;
 	mapnode_t 	*mn;
-	struct {
-		int16_t b[2][4];
-	} *bb = (void *)I_FrameBuffer();
+	int16_t 	*bboxes;
 
 	numnodes = W_LumpLength (lump) / sizeof(*mn);
 	data = W_GetLumpData(lump);
 	nodes = Z_Malloc (numnodes*sizeof(node_t),PU_LEVEL);
+	bboxes = (void *)I_FrameBuffer();
 
 	mn = (mapnode_t *)data;
 	no = nodes;
@@ -237,17 +322,12 @@ void P_LoadNodes (int lump)
 		{
 			no->children[j] = LITTLESHORT(mn->children[j]);
 			for (k=0 ; k<4 ; k++)
-				bb->b[j][k] = LITTLESHORT(mn->bbox[j][k]);
+				bboxes[i*8+j*4+k] = LITTLESHORT(mn->bbox[j][k]);
 		}
-		bb++;
 	}
 
-#ifdef MARS
-	Mars_CopyLLongs(numnodes * 2);
-#endif
+	P_EncodeNodesBBoxes(bboxes);
 }
-
-
 
 /*
 =================
