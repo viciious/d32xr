@@ -22,8 +22,8 @@ spritedef_t sprites[NUMSPRITES];
 spriteframe_t* spriteframes;
 VINT 			*spritelumps;
 
-VINT			*flattranslation;		/* for global animation */
-VINT			*texturetranslation;	/* for global animation */
+uint8_t			*flattranslation;		/* for global animation */
+uint8_t			*texturetranslation;	/* for global animation */
 
 flattex_t		*flatpixels;
 
