@@ -306,7 +306,8 @@ void P_LoadNodes (int lump)
 
 	numnodes = W_LumpLength (lump) / sizeof(*mn);
 	data = W_GetLumpData(lump);
-	nodes = Z_Malloc (numnodes*sizeof(node_t),PU_LEVEL);
+	nodes = Z_Malloc (numnodes*sizeof(node_t) + 16,PU_LEVEL);
+	nodes = (void*)(((uintptr_t)nodes + 15) & ~15); // aline on cacheline boundary
 	bboxes = (void *)I_FrameBuffer();
 
 	mn = (mapnode_t *)data;
