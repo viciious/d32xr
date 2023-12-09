@@ -474,15 +474,13 @@ no_cmd:
         dc.w    update_sfx - prireqtbl
         dc.w    stop_sfx - prireqtbl
         dc.w    flush_sfx - prireqtbl
-        dc.w    copy_llongs - prireqtbl
-        dc.w    get_llong - prireqtbl
+        dc.w    store_bytes - prireqtbl
+        dc.w    load_bytes - prireqtbl
         dc.w    open_cd_file_by_name - prireqtbl
         dc.w    open_cd_file_by_handle - prireqtbl
         dc.w    read_cd_file - prireqtbl
         dc.w    seek_cd_file - prireqtbl
         dc.w    load_sfx_cd_fileofs - prireqtbl
-        dc.w    get_cd_file_cache - prireqtbl
-        dc.w    set_cd_file_cache - prireqtbl
 
 | process request from Secondary SH2
 handle_sec_req:
@@ -2055,18 +2053,15 @@ flush_sfx:
         move.b  #1,need_bump_fm
         bra     main_loop
 
-copy_llongs:
+store_bytes:
         moveq   #0,d1
-        move.w  0xA15122,d1         /* number of llongs */
-        add.w   d1,d1               /* x2 */
-        add.w   d1,d1               /* x4 */
-        add.w   d1,d1               /* x8 */
+        move.w  0xA15122,d1         /* COMM2 = length */
 
         lea     MARS_FRAMEBUFFER,a2
-        lea     nodes_store,a1
+        lea     aux_store,a1
         
         move.l  d1,-(sp)            /* length */
-        move.l  a2,-(sp)            /* framebuffer */
+        move.l  a2,-(sp)            /* source */
         move.l  a1,-(sp)            /* destination */
 
         move.w  0xA15100,d0
@@ -2083,14 +2078,27 @@ copy_llongs:
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
-get_llong:
-        move.w  0xA15122,d1         /* offset */
+load_bytes:
+        moveq   #0,d1
+        move.w  0xA15122,d1         /* COMM2 = length */
 
-        lea     nodes_store,a1
-        lea     0xA15128,a0
-        adda.w  d1,a1
-        move.l  (a1)+, (a0)+        /* COMM8 */
-        move.l  (a1)+, (a0)+        /* COMM12 */
+        lea     MARS_FRAMEBUFFER,a1
+        lea     aux_store,a2
+
+        move.l  d1,-(sp)            /* length */
+        move.l  a2,-(sp)            /* source */
+        move.l  a1,-(sp)            /* destination */
+
+        move.w  0xA15100,d0
+        eor.w   #0x8000,d0
+        move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
+
+        jsr     memcpy
+        lea     12(sp),sp           /* clear the stack */
+
+        move.w  0xA15100,d0
+        or.w    #0x8000,d0
+        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
 
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -2184,46 +2192,6 @@ load_sfx_cd_fileofs:
 
         move.w  #0,0xA15120         /* done */
 
-        bra     main_loop
-
-get_cd_file_cache:
-        move.w  0xA15100,d0
-        eor.w   #0x8000,d0
-        move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
-
-        moveq   #0,d0
-        move.w  0xA15122,d0         /* COMM2 = length */
-        move.l  d0,-(sp)
-        lea     MARS_FRAMEBUFFER,a1 /* frame buffer */
-        move.l  a1,-(sp)
-        jsr     scd_get_fs_cache
-        lea     8(sp),sp
-
-        move.w  0xA15100,d0
-        or.w    #0x8000,d0
-        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
-
-        move.w  #0,0xA15120         /* done */
-        bra     main_loop
-
-set_cd_file_cache:
-        move.w  0xA15100,d0
-        eor.w   #0x8000,d0
-        move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
-
-        moveq   #0,d0
-        move.w  0xA15122,d0         /* COMM2 = length */
-        move.l  d0,-(sp)
-        lea     MARS_FRAMEBUFFER,a1 /* frame buffer */
-        move.l  a1,-(sp)
-        jsr     scd_set_fs_cache
-        lea     8(sp),sp
-
-        move.w  0xA15100,d0
-        or.w    #0x8000,d0
-        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
-
-        move.w  #0,0xA15120         /* done */
         bra     main_loop
 
 | set standard mapper registers to default mapping
@@ -3023,6 +2991,6 @@ col_swap:
         .space  1*224*2         /* 1 double-column in wram for swap */
 
         .align  16
-nodes_store:
-        .global nodes_store
-        .space  1000*2*4*2       /* 2 16.0 bounding boxes per node, 1000 nodes max */
+aux_store:
+        .global aux_store
+        .space  16*1024

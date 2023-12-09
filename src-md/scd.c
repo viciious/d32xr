@@ -100,20 +100,6 @@ void scd_switch_to_bank(int bank)
     write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
 }
 
-void scd_get_or_set_fs_cache(int set, void *ptr, int length)
-{
-    char ack;
-    write_long(0xA12010, (uintptr_t)ptr);
-    write_long(0xA12014, length);
-    write_byte(0xA12018, set);
-    wait_do_cmd('M');
-    do {
-        scd_delay();
-        ack = read_byte(0xA1200F); // wait for acknowledge byte in sub comm port
-    } while (!ack);
-    write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
-}
-
 uint16_t InitCD(void)
 {
     char *bios;
