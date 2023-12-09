@@ -449,15 +449,6 @@ void Mars_MCDFlushSfx(void)
 	while (MARS_SYS_COMM0);
 }
 
-void Mars_CopyLLongs(int numllongs)
-{
-	/* transfer nodes to the MD */
-	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM2 = numllongs;
-	MARS_SYS_COMM0 = 0x2400;
-	while (MARS_SYS_COMM0);
-}
-
 void Mars_StopTrack(void)
 {
 	while (MARS_SYS_COMM0);
@@ -818,21 +809,21 @@ void Mars_MCDLoadSfxFileOfs(uint16_t start_id, int numsfx, const char *name, int
 	MARS_SYS_COMM0 = 0x2A00|numsfx; /* load sfx */
 }
 
-void *Mars_MCDGetFileCache(int length)
+void Mars_StoreAuxBytes(int length)
 {
 	while (MARS_SYS_COMM0);
 	MARS_SYS_COMM2 = length;
-	MARS_SYS_COMM0 = 0x2B00;
+	MARS_SYS_COMM0 = 0x2400;
 	while (MARS_SYS_COMM0);
-	return (void *)(&MARS_FRAMEBUFFER + 0x100);
 }
 
-void Mars_MCDSetFileCache(int length)
+void *Mars_LoadAuxBytes(int length)
 {
 	while (MARS_SYS_COMM0);
 	MARS_SYS_COMM2 = length;
-	MARS_SYS_COMM0 = 0x2C00;
+	MARS_SYS_COMM0 = 0x2500;
 	while (MARS_SYS_COMM0);
+	return (void *)(&MARS_FRAMEBUFFER + 0x100);
 }
 
 void Mars_Finish(void)

@@ -153,11 +153,10 @@ void Mars_MCDStopSfx(uint8_t src_id);
 void Mars_MCDFlushSfx(void);
 void Mars_MCDLoadSfxFileOfs(uint16_t start_id, int numsfx, const char *name, int *offsetlen);
 
-// copies numllongs number of 64-bit values from the framebufer into MD RAM
-void Mars_CopyLLongs(int numllongs);
-
-void Mars_MCDSetFileCache(int length);
-void *Mars_MCDGetFileCache(int length);
+// copies bytes from the framebuffer into AUX storage area on the MD
+void Mars_StoreAuxBytes(int numbytes);
+// copies bytes from AUX storage area on the MD to the framebuffer
+void *Mars_LoadAuxBytes(int numbytes);
 
 void Mars_SetPriCmdCallback(void (*cb)(void));
 void Mars_SetSecCmdCallback(void (*cb)(void));
