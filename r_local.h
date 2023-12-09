@@ -130,6 +130,7 @@ typedef struct
 {
 	int16_t		x,y,dx,dy;			/* partition line */
 	uint16_t	children[2];		/* if NF_SUBSECTOR its a subsector */
+	uint16_t 	encbbox[2]; 		/* encoded bounding box for each child */
 } node_t;
 
 #define MIPLEVELS 1
@@ -231,6 +232,8 @@ extern	line_t		*lines;
 
 extern	int			numsides;
 extern	side_t		*sides;
+
+extern 	int16_t 	worldbbox[4];
 
 /*============================================================================= */
 
