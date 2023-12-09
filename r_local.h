@@ -367,8 +367,8 @@ extern 	boolean 	texmips;
 extern 	VINT 		numdecals;
 extern 	texdecal_t  *decals;
 
-extern	VINT			*flattranslation;		/* for global animation */
-extern	VINT			*texturetranslation;	/* for global animation */
+extern	uint8_t			*flattranslation;		/* for global animation */
+extern	uint8_t			*texturetranslation;	/* for global animation */
 extern	flattex_t		*flatpixels;
 
 extern	VINT		firstflat, numflats, col2flat;
