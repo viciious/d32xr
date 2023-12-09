@@ -85,7 +85,7 @@ RequestTable:
         dc.w    SwitchToBank - RequestTable
         dc.w    SfxCopyBuffersFromCDFile - RequestTable
         dc.w    SfxClear - RequestTable
-        dc.w    GetOrSetGlobalCache - RequestTable
+        dc.w    UknownCmd - RequestTable
         dc.w    SfxPUnPSource - RequestTable
         dc.w    SfxStopSource - RequestTable
         dc.w    PlayTrack - RequestTable
@@ -399,40 +399,6 @@ SwitchToBank:
 11:
         btst    #1,0x8003.w
         bne.b   11b                     /* bank switch not finished */
-        move.b  #'D,0x800F.w            /* sub comm port = DONE */
-        bra     WaitAck
-
-GetOrSetGlobalCache:
-        btst    #0,0x8018.w
-        bne.b   1f
-
-        /* get */
-        move.l  0x8014.w,d0             /* length */
-        move.l  d0,-(sp)
-        lea     FILE_CACHE,a0           /* src address */
-        move.l  a0,-(sp)
-        move.l  0x8010.w,d0             /* dst address */
-        move.l  d0,-(sp)
-        jsr     memcpy
-        lea     12(sp),sp               /* clear the stack */
-
-        jsr     switch_banks
-
-        move.b  #'D,0x800F.w            /* sub comm port = DONE */
-        bra     WaitAck
-1:
-        /* set */
-        jsr     switch_banks
-
-        move.l  0x8014.w,d0             /* length */
-        move.l  d0,-(sp)
-        move.l  0x8010.w,d0             /* src address */
-        move.l  d0,-(sp)
-        lea     FILE_CACHE,a0           /* dst address */
-        move.l  a0,-(sp)
-        jsr     memcpy
-        lea     12(sp),sp               /* clear the stack */
-
         move.b  #'D,0x800F.w            /* sub comm port = DONE */
         bra     WaitAck
 
@@ -947,11 +913,6 @@ TEMP_NAME:
         .global DISC_BUFFER
 DISC_BUFFER:
         .space  2048
-
-        .align  4
-        .global FILE_CACHE
-FILE_CACHE:
-        .space  10240
 
         .global _start
 _start:
