@@ -449,7 +449,6 @@ void R_PostTexCacheFrame(r_texcache_t* c);
 #define	AC_SOLIDSIL			256
 #define	AC_ADDSKY			512
 #define	AC_DRAWN			1024
-#define	AC_DONTPEGBOTTOM	2048
 
 typedef struct
 {
