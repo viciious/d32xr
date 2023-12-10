@@ -105,13 +105,16 @@ void P_LoadSegs (int lump)
 					
 		li->angle = LITTLESHORT(ml->angle);
 		angle = LITTLESHORT(ml->angle)<<16;
-		li->offset = LITTLESHORT(ml->offset);
+		li->sideoffset = LITTLESHORT(ml->offset);
 		linedef = LITTLESHORT(ml->linedef);
 
 		li->linedef = linedef;
 		ldef = &lines[linedef];
 		side = LITTLESHORT(ml->side);
-		li->side = side;
+		side &= 1;
+
+		li->sideoffset <<= 1;
+		li->sideoffset |= side;
 
 		if (ldef->v1 == li->v1)
 			ldef->fineangle = angle >> ANGLETOFINESHIFT;
@@ -595,7 +598,7 @@ void P_GroupLines (void)
 
 		seg = &segs[ss->firstline];
 		linedef = &lines[seg->linedef];
-		sidedef = &sides[linedef->sidenum[seg->side]];
+		sidedef = &sides[linedef->sidenum[seg->sideoffset & 1]];
 		ss->sector = &sectors[sidedef->sector];
 	}
 

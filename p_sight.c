@@ -228,7 +228,7 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
          return false;
 
       // crosses a two sided line
-      side = seg->side;
+      side = seg->sideoffset & 1;
       front = &sectors[sides[line->sidenum[side]].sector];
       back = &sectors[sides[line->sidenum[side^1]].sector];
 
