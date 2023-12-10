@@ -185,13 +185,14 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
    int        b_texturemid, t_texturemid;
    boolean    skyhack;
    int        actionbits;
-   int        side;
+   int        side, offset;
 
    {
       seg  = segl->seg;
       li   = &lines[seg->linedef];
-      side = seg->side;
-      si   = &sides[li->sidenum[seg->side]];
+      side = seg->sideoffset & 1;
+      offset = seg->sideoffset >> 1;
+      si   = &sides[li->sidenum[side]];
 
       li->flags |= ML_MAPPED; // mark as seen
 
@@ -346,7 +347,7 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
       segl->t_texturemid  = t_texturemid;
       segl->b_texturemid  = b_texturemid;
       segl->seglightlevel = (lightshift << 8) | f_lightlevel;
-      segl->offset        = ((fixed_t)si->textureoffset + seg->offset) << 16;
+      segl->offset        = ((fixed_t)si->textureoffset + offset) << 16;
    }
 }
 
@@ -528,7 +529,7 @@ static void R_AddLine(rbspWork_t *rbsp, sector_t *frontsector, seg_t *line)
    x1 = x1 >>    16;
 
    // decide which clip routine to use
-   side = line->side;
+   side = line->sideoffset & 1;
    ldef = &lines[line->linedef];
    backsector = (ldef->flags & ML_TWOSIDED) ? &sectors[sides[ldef->sidenum[side^1]].sector] : 0;
    sidedef = &sides[ldef->sidenum[side]];
