@@ -231,6 +231,8 @@ static int P_EncodeBBoxSide(int16_t *b, int16_t *outerbbox, int pc, int nc)
 	length = b[nc] - outerbbox[nc];
 	if (length > 0) {
 		nu = length / unit;
+		if (nu > 15)
+			nu = 15;
 		b[nc] = outerbbox[nc] + nu * unit;
 	}
 
@@ -239,6 +241,8 @@ static int P_EncodeBBoxSide(int16_t *b, int16_t *outerbbox, int pc, int nc)
 	length = outerbbox[pc] - b[pc];
 	if (length > 0) {
 		pu = length / unit;
+		if (pu > 15)
+			pu = 15;
 		b[pc] = outerbbox[pc] - pu * unit;
 	}
 
