@@ -141,7 +141,7 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, i
             }
         }
 
-        mip->drawcol(x, top, bottom-1, light, frac, iscale, src, mip->height, NULL);
+        mip->drawcol(x, top, bottom-1, light, frac, iscale, src, mip->height);
     }
 }
 
@@ -227,7 +227,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 #else
                 pixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
 #endif
-                drawsky(x, top, --bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, 128, NULL);
+                drawsky(x, top, --bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, 128);
             }
         }
 

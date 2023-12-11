@@ -3,6 +3,7 @@
 .section .sdata
 
 .equ DOOMTLS_COLORMAP, 16
+.equ DOOMTLS_FUZZPOS,  20
 
 ! Draw a vertical column of pixels from a projected wall texture.
 ! Source is the top of the column to scale.
@@ -150,7 +151,7 @@ do_cnp_loop_low:
 ! Low detail (doubl-wide pixels) mode.
 !
 !void I_DrawFuzzColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
-!       fixed_t fracstep, inpixel_t *dc_source, int dc_texheight, int* pfuzzpos)
+!       fixed_t fracstep, inpixel_t *dc_source, int dc_texheight)
 
         .align  4
         .global _I_DrawFuzzColumnLowA
@@ -191,10 +192,9 @@ _I_DrawFuzzColumnLowA:
         add     r5,r8           /* fb += (dc_yl*256 + dc_yl*64) */
         mov.l   draw_fuzzoffset,r5
         mov.l   draw_width,r1
-        mov.l   @(20,r15),r2    /* pfuzzpos */
-        mov.l   @r2,r3          /* fuzzpos */
-        add     r3,r3
-        mov     r3,r0
+        mov.l   @(DOOMTLS_FUZZPOS, gbr),r0 /* pfuzzpos */
+        add     r0,r0
+        mov     r0,r3
         and     #126,r0         /* fuzzpos &= FUZZMASK */
 
         .p2alignw 2, 0x0009
@@ -211,7 +211,9 @@ do_fuzz_col_loop_low:
         bf/s    do_fuzz_col_loop_low
         add     r1,r8           /* fb += SCREENWIDTH */
 
-        mov.l   r3,@r2
+        shlr    r3
+        mov     r3,r0
+        mov.l   r0,@(DOOMTLS_FUZZPOS, gbr)
         rts
         mov.l   @r15+,r8
 
@@ -496,7 +498,7 @@ do_cnp_loop:
 ! Low detail (doubl-wide pixels) mode.
 !
 !void I_DrawFuzzColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
-!       fixed_t fracstep, inpixel_t *dc_source, int dc_texheight, int* pfuzzpos)
+!       fixed_t fracstep, inpixel_t *dc_source, int dc_texheight)
 
         .align  4
         .global _I_DrawFuzzColumnA
@@ -535,10 +537,9 @@ _I_DrawFuzzColumnA:
         add     r5,r8           /* fb += (dc_yl*256 + dc_yl*64) */
         mov.l   draw_fuzzoffset,r5
         mov.l   draw_width,r1
-        mov.l   @(20,r15),r2    /* pfuzzpos */
-        mov.l   @r2,r3          /* fuzzpos */
-        add     r3,r3
-        mov     r3,r0
+        mov.l   @(DOOMTLS_FUZZPOS, gbr),r0 /* pfuzzpos */
+        add     r0,r0
+        mov     r0,r3
         and     #126,r0         /* fuzzpos &= FUZZMASK */
 
         .p2alignw 2, 0x0009
@@ -554,7 +555,9 @@ do_fuzz_col_loop:
         bf/s    do_fuzz_col_loop
         add     r1,r8           /* fb += SCREENWIDTH */
 
-        mov.l   r3,@r2
+        shlr    r3
+        mov     r3,r0
+        mov.l   r0,@(DOOMTLS_FUZZPOS, gbr)
         rts
         mov.l   @r15+,r8
 
