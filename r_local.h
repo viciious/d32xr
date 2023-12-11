@@ -418,7 +418,7 @@ typedef struct
 
 extern r_texcache_t r_texcache;
 
-#define CACHE_FRAMES_DEFAULT 30
+#define CACHE_FRAMES_DEFAULT 15
 
 void R_InitTexCache(r_texcache_t* c);
 void R_InitTexCacheZone(r_texcache_t* c, int zonesize);
