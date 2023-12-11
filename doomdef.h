@@ -809,31 +809,31 @@ void I_SwapScreenCopy(void);
 #endif
 
 void I_DrawColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
-	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight, int *fuzzpos);
+	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
 
 void I_DrawColumnNPo2Low(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
-	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight, int *fuzzpos);
+	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
 
 void I_DrawSpanLow(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int dc_texheight);
 
 void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
-	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight, int* fuzzpos);
+	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
 
 void I_DrawColumnNPo2(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
-	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight, int* fuzzpos);
+	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
 
 void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int dc_texheight);
 
 void I_DrawFuzzColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* fuzzpos);
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight);
 
 void I_DrawFuzzColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* fuzzpos);
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight);
 
 void I_DrawColumnNoDraw(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* fuzzpos);
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight);
 
 void I_DrawSpanNoDraw(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int dc_texheight);
@@ -1238,6 +1238,7 @@ void *I_GetCDFileCache(int length);
 #define DOOMTLS_VALIDCOUNT 		8
 #define DOOMTLS_COLUMNCACHE		12
 #define DOOMTLS_COLORMAP		16
+#define DOOMTLS_FUZZPOS			20
 // !!! if this is changed, it must be changed in mars_tls_t too!
 
 #ifdef MARS

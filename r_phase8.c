@@ -10,16 +10,14 @@
 #endif
 #include <stdlib.h>
 
-static int fuzzpos[2];
-
 static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy) ATTR_DATA_CACHE_ALIGN;
-void R_DrawVisSprite(vissprite_t* vis, unsigned short* spropening, int *fuzzpos, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
+void R_DrawVisSprite(vissprite_t* vis, unsigned short* spropening, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
 void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreenhalf, int16_t *walls) ATTR_DATA_CACHE_ALIGN;
-static void R_DrawSortedSprites(int* sortedsprites, int *fuzzpos, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
-static void R_DrawPSprites(int *fuzzpos, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
+static void R_DrawSortedSprites(int* sortedsprites, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
+static void R_DrawPSprites(int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
 void R_Sprites(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 
-void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos, int sprscreenhalf)
+void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreenhalf)
 {
    patch_t *patch;
    fixed_t  iscale, xfrac, spryscale, sprtop, fracstep;
@@ -112,7 +110,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int *fuzzpos,
             continue;
 
          // CALICO: invoke column drawer
-         dcol(x, top, bottom, light, frac, iscale, pixels + BIGSHORT(dataofs), 128, fuzzpos);
+         dcol(x, top, bottom, light, frac, iscale, pixels + BIGSHORT(dataofs), 128);
       }
    }
 }
@@ -262,7 +260,7 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
    } while (*walls != -1);
 }
 
-static void R_DrawSortedSprites(int* sortedsprites, int *fuzzpos, int sprscreenhalf)
+static void R_DrawSortedSprites(int* sortedsprites, int sprscreenhalf)
 {
    int i;
    int x1, x2;
@@ -316,11 +314,11 @@ static void R_DrawSortedSprites(int* sortedsprites, int *fuzzpos, int sprscreenh
       ds = (vissprite_t *)(vd.vissprites + (sortedsprites[i] & 0x7f));
 
       R_ClipVisSprite(ds, spropening, sprscreenhalf, walls);
-      R_DrawVisSprite(ds, spropening, fuzzpos, sprscreenhalf);
+      R_DrawVisSprite(ds, spropening, sprscreenhalf);
    }
 }
 
-static void R_DrawPSprites(int *fuzzpos, int sprscreenhalf)
+static void R_DrawPSprites(int sprscreenhalf)
 {
     unsigned i;
     unsigned short spropening[SCREENWIDTH];
@@ -346,13 +344,13 @@ static void R_DrawPSprites(int *fuzzpos, int sprscreenhalf)
             ++i;
         }
 
-        R_DrawVisSprite(vis, spropening, fuzzpos, sprscreenhalf);
+        R_DrawVisSprite(vis, spropening, sprscreenhalf);
     }
 }
 
 #ifdef MARS
 void Mars_Sec_R_DrawSprites(int sprscreenhalf)
-{
+{  
     Mars_ClearCacheLine(&vd.vissprites);
     Mars_ClearCacheLine(&vd.lastsprite_p);
     Mars_ClearCacheLine(&vd.vissprite_p);
@@ -361,9 +359,9 @@ void Mars_Sec_R_DrawSprites(int sprscreenhalf)
     // mobj sprites
     //Mars_ClearCacheLines(vd.gsortedsprites, ((lastsprite_p - vissprites + 1) * sizeof(*vd.gsortedsprites) + 31) / 16);
 
-    R_DrawSortedSprites(vd.gsortedsprites, &fuzzpos[1], -sprscreenhalf);
+    R_DrawSortedSprites(vd.gsortedsprites, -sprscreenhalf);
 
-    R_DrawPSprites(&fuzzpos[1], -sprscreenhalf);
+    R_DrawPSprites(-sprscreenhalf);
 }
 
 #endif
@@ -466,9 +464,9 @@ void R_Sprites(void)
    Mars_R_BeginDrawSprites(half);
 #endif
 
-   R_DrawSortedSprites(sortedsprites, &fuzzpos[0], half);
+   R_DrawSortedSprites(sortedsprites, half);
 
-   R_DrawPSprites(&fuzzpos[0], half);
+   R_DrawPSprites(half);
 
 #ifdef MARS
    Mars_R_EndDrawSprites();

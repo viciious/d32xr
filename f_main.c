@@ -90,7 +90,6 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 	int			lump;
 	boolean		flip;
 	int			texturecolumn;
-	int 		fuzzpos = 0;
 	int			light = HWLIGHT(143);
 	int 		height = I_FrameBufferHeight();
 
@@ -134,7 +133,7 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 
 	sprtop -= patch->topoffset;
 	sprleft -= patch->leftoffset;
-	
+
 /* */
 /* draw it by hand */
 /* */
@@ -169,7 +168,7 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 			if (bottom >= height) bottom = height - 1;
 			if (top > bottom) continue;
 
-			fin->drcol(sprleft+x, top, bottom, light, 0, spriscale, src, 128, &fuzzpos);
+			fin->drcol(sprleft+x, top, bottom, light, 0, spriscale, src, 128);
 		}
 	}
 }

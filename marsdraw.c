@@ -39,23 +39,23 @@
 */
 
 void I_DrawFuzzColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* pfuzzpos) ATTR_DATA_CACHE_ALIGN;
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
 void I_DrawFuzzColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* pfuzzpos) ATTR_DATA_CACHE_ALIGN;
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
 
 #ifdef USE_C_DRAW
 
 void I_DrawColumnLowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int *fuzzpos) ATTR_DATA_CACHE_ALIGN;
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
 void I_DrawColumnNPo2LowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int *fuzzpos) ATTR_DATA_CACHE_ALIGN;
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
 void I_DrawSpanLowC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
 
 void I_DrawColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* fuzzpos) ATTR_DATA_CACHE_ALIGN;
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
 void I_DrawColumnNPo2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* fuzzpos) ATTR_DATA_CACHE_ALIGN;
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
 void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
 
@@ -70,7 +70,7 @@ void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 */
 
 void I_DrawColumnLowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* fuzzpos)
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight)
 {
 	unsigned	heightmask;
 	pixel_t* dest;
@@ -124,7 +124,7 @@ void I_DrawColumnLowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 // this for the NeXT "simulator" build of the game.
 //
 void I_DrawColumnNPo2LowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* fuzzpos)
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight)
 {
 	unsigned	heightmask;
 	pixel_t* dest;
@@ -236,7 +236,7 @@ void I_DrawSpanLowC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 }
 
 void I_DrawColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* fuzzpos)
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight)
 {
 	unsigned	heightmask;
 	int8_t *dest;
@@ -285,7 +285,7 @@ void I_DrawColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 }
 
 void I_DrawColumnNPo2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* fuzzpos)
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight)
 {
 	unsigned	heightmask;
 	int8_t *dest;
@@ -397,15 +397,18 @@ void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 //
 
 void I_DrawFuzzColumnLowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* pfuzzpos)
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight)
 {
 	int16_t *dest;
 	int16_t *dc_colormap;
 	unsigned	frac;
 	unsigned    count, n;
 	int8_t *bfuzzoffset;
-	int	fuzzpos = *pfuzzpos * 2;
+	int fuzzpos;
 	int deststep;
+
+	I_GetThreadLocalVar(DOOMTLS_FUZZPOS, fuzzpos);
+	fuzzpos = fuzzpos * 2;
 
 	if (!dc_yl)
 		dc_yl = 1;
@@ -448,19 +451,22 @@ void I_DrawFuzzColumnLowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t fra
 
 #undef DO_PIXEL
 
-	*pfuzzpos = fuzzpos;
+	I_SetThreadLocalVar(DOOMTLS_FUZZPOS, fuzzpos / 2);
 }
 
 void I_DrawFuzzColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* pfuzzpos)
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight)
 {
 	int8_t * dest;
 	int8_t* dc_colormap;
 	unsigned	frac;
 	unsigned    count, n;
 	int8_t *bfuzzoffset;
-	int	fuzzpos = *pfuzzpos * 2;
+	int	fuzzpos;
 	int deststep;
+
+	I_GetThreadLocalVar(DOOMTLS_FUZZPOS, fuzzpos); 
+	fuzzpos = fuzzpos * 2;
 
 	if (!dc_yl)
 		dc_yl = 1;
@@ -502,11 +508,11 @@ void I_DrawFuzzColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 
 #undef DO_PIXEL
 
-	*pfuzzpos = fuzzpos;
+	I_SetThreadLocalVar(DOOMTLS_FUZZPOS, fuzzpos / 2);
 }
 
 void I_DrawColumnNoDraw(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight, int* fuzzpos)
+	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight)
 {
 
 }
