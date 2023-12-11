@@ -581,9 +581,21 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 #ifdef MARS
 	vd.extralight = player->extralight << 4;
 
-	if (player->powers[pw_invulnerability] > 60
-		|| (player->powers[pw_invulnerability] & 4))
-		vd.fixedcolormap = INVERSECOLORMAP;
+	if (player->powers[pw_invulnerability] > 0)
+	{
+		if (player->powers[pw_invulnerability] > 60
+			|| (player->powers[pw_invulnerability] & 4))
+			vd.fixedcolormap = INVERSECOLORMAP;
+	}
+    else if (player->powers[pw_infrared] > 0)
+    {
+		if (player->powers[pw_infrared] > 4*32
+			|| (player->powers[pw_infrared]&8) )
+		{
+			// almost full bright
+			vd.fixedcolormap = 1*256;
+		}
+	}
 
 	viewportbuffer = (pixel_t*)I_ViewportBuffer();
 

@@ -390,6 +390,7 @@ typedef enum
 	pw_strength,
 	pw_ironfeet,
 	pw_allmap,
+	pw_infrared,
 	NUMPOWERS
 } powertype_t;
 
