@@ -254,7 +254,12 @@ boolean P_GivePower (player_t *player, powertype_t power)
 		player->powers[power] = 1;
 		return true;
 	}
-	
+	if (power == pw_infrared)
+	{
+		player->powers[power] = INFRATICS;
+		return true;
+	}
+
 	if (player->powers[power])
 		return false;		/* already got it */
 		
@@ -341,6 +346,9 @@ int P_TouchSpecialThing2 (mobj_t *special, mobj_t *toucher)
 		player->message = "Computer Area Map";
 		break;
 	case SPR_PVIS:
+		if (!P_GivePower (player, pw_infrared))
+			return -1;
+		player->message = "Light Amplification Visor";
 		break;
 	default:
 		I_Error ("P_SpecialThing: Unknown gettable thing");

@@ -760,6 +760,9 @@ ticphase = 26;
 		if (player->powers[pw_ironfeet])
 			player->powers[pw_ironfeet]--;
 
+		if (player->powers[pw_infrared])
+			player->powers[pw_infrared]--;
+
 		if (player->damagecount)
 			player->damagecount--;
 
