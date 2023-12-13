@@ -463,28 +463,22 @@ typedef struct
 	unsigned	centerangle;
 	unsigned	offset;
 	unsigned	distance;
-	int 		pad;
 
+	int			t_topheight;
 	int			t_bottomheight;
 	int			t_texturemid;
 
 	int			b_bottomheight;
 	int			b_texturemid;
-
 	int			b_topheight;
+
 	/* !!! THE SECTION ABOVE MUST BE LARGE ENOUGH */
 	/* !!! TO ACCOMODATE VISSPRITE_T STRUCTURE, GETS */
 	/* !!! OVERWRITTEN AFTER PHASE 7 - END */
 
-	union {
-		int			t_topheight;	 // used as miplevels after R_SegLoop
-		int16_t 	miplevels[2];
-	};
-
 	int 		m_texturemid;
-	VINT 		m_texturenum;
-	VINT 		m_segmaskoffset;
 
+	VINT 		m_texturenum;
 	VINT		t_texturenum;
 	VINT		b_texturenum;
 
@@ -496,7 +490,11 @@ typedef struct
 	unsigned	scale2;
 
 	short	actionbits;
-	short	seglightlevel;
+	union {
+		 // used as miplevels after R_SegLoop
+		uint8_t miplevels[2];
+		short	seglightlevel;
+	};
 
 /* */
 /* filled in by bsp */

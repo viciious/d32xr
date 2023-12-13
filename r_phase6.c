@@ -167,15 +167,16 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
     int lightmax = lseg->lightmax, lightmin = lseg->lightmin,
         lightcoef = lseg->lightcoef, lightsub = lseg->lightsub;
 
+    const int start = segl->start;
     const int stop = segl->stop;
     int x;
     unsigned miplevel = 0;
 
     drawtex_t *tex;
 
-    uint16_t *segcolmask = (segl->actionbits & AC_MIDTEXTURE) ? vd.segclip + segl->m_segmaskoffset : NULL;
+    uint16_t *segcolmask = (segl->actionbits & AC_MIDTEXTURE) ? segl->clipbounds + (stop - start + 1) : NULL;
 
-    for (x = segl->start; x <= stop; x++)
+    for (x = start; x <= stop; x++)
     {
        fixed_t r;
        int floorclipx, ceilingclipx;

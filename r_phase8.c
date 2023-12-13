@@ -48,7 +48,7 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
       return;
 
    spropening = seg->clipbounds;
-   maskedcol  = vd.segclip + seg->m_segmaskoffset;
+   maskedcol  = seg->clipbounds + (seg->realstop - seg->realstart + 1);
 
    widthmask = texture->width - 1;
    fracstep  = seg->scalestep;
