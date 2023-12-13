@@ -167,13 +167,16 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
     int lightmax = lseg->lightmax, lightmin = lseg->lightmin,
         lightcoef = lseg->lightcoef, lightsub = lseg->lightsub;
 
+    const int start = segl->start;
     const int stop = segl->stop;
     int x;
     unsigned miplevel = 0;
 
     drawtex_t *tex;
 
-    for (x = segl->start; x <= stop; x++)
+    uint16_t *segcolmask = (segl->actionbits & AC_MIDTEXTURE) ? segl->clipbounds + (stop - start + 1) : NULL;
+
+    for (x = start; x <= stop; x++)
     {
        fixed_t r;
        int floorclipx, ceilingclipx;
@@ -251,6 +254,9 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
         r = FixedMul(distance, r);
 
         colnum = (offset - r) >> FRACBITS;
+
+        if (segcolmask)
+            segcolmask[x] = texturelight | (colnum & 0xff);
 
 #ifdef MARS
         __asm volatile (
@@ -385,7 +391,7 @@ void R_SegCommands(void)
 #ifdef MARS
         R_LockSeg();
         actionbits = *(volatile short *)&segl->actionbits;
-        if (actionbits & AC_DRAWN || !(actionbits & (AC_TOPTEXTURE | AC_BOTTOMTEXTURE | AC_ADDSKY))) {
+        if (actionbits & AC_DRAWN || !(actionbits & (AC_TOPTEXTURE | AC_BOTTOMTEXTURE | AC_MIDTEXTURE | AC_ADDSKY))) {
             R_UnlockSeg();
             goto post_draw;
         } else {

@@ -11,11 +11,134 @@
 #include <stdlib.h>
 
 static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy) ATTR_DATA_CACHE_ALIGN;
+void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx) ATTR_DATA_CACHE_ALIGN;
 void R_DrawVisSprite(vissprite_t* vis, unsigned short* spropening, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
 void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreenhalf, int16_t *walls) ATTR_DATA_CACHE_ALIGN;
 static void R_DrawSortedSprites(int* sortedsprites, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
 static void R_DrawPSprites(int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
 void R_Sprites(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
+
+void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
+{
+   patch_t *patch;
+   fixed_t  spryscale, scalefrac, fracstep;
+   uint16_t *spropening, *maskedcol;
+#ifdef MARS
+	inpixel_t 	*pixels;
+#else
+	pixel_t		*pixels;		/* data patch header references */
+#endif
+   texture_t  *texture;
+   int widthmask;
+
+   if (x > stopx)
+      return;
+
+   if (x <= seg->start && seg->start <= stopx)
+      seg->start = stopx + 1;
+   if (stopx >= seg->stop && seg->stop <= x)
+      seg->stop = x - 1;
+
+   texture   = &textures[seg->m_texturenum];
+   patch     = W_POINTLUMPNUM(texture->lumpnum);
+   pixels    = W_POINTLUMPNUM(texture->lumpnum+1);
+
+   if (texture->lumpnum < firstsprite || texture->lumpnum >= firstsprite + numsprites)
+      return;
+
+   spropening = seg->clipbounds;
+   maskedcol  = seg->clipbounds + (seg->realstop - seg->realstart + 1);
+
+   widthmask = texture->width - 1;
+   fracstep  = seg->scalestep;
+   scalefrac = seg->scalefrac + (x - seg->realstart) * fracstep;
+
+   I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
+
+   for(; x <= stopx; x++)
+   {
+      int light          = maskedcol[x] & OPENMARK;
+      int colnum         = maskedcol[x] & widthmask;
+
+      spryscale = scalefrac;
+      scalefrac += fracstep;  
+
+      if (light == OPENMARK)
+         continue;
+      maskedcol[x] = OPENMARK;
+
+#ifdef MARS
+        volatile int32_t t;
+        __asm volatile (
+           "mov #-128, r0\n\t"
+           "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
+           "mov #0, %0\n\t"
+           "mov.l %0, @(16, r0) /* set high bits of the 64-bit dividend */ \n\t"
+           "mov.l %1, @(0, r0) /* set 32-bit divisor */ \n\t"
+           "mov #-1, %0\n\t"
+           "mov.l %0, @(20, r0) /* set low  bits of the 64-bit dividend, start divide */\n\t"
+           : "=&r" (t) : "r" (scalefrac) : "r0");
+#else
+      fixed_t scale = scalefrac;
+#endif
+
+      int topclip     = (spropening[x] >> 8);
+      int bottomclip  = (spropening[x] & 0xff) - 1;
+      byte *columnptr = ((byte *)patch + BIGSHORT(patch->columnofs[colnum]));
+      fixed_t sprtop, iscale;
+
+      sprtop = FixedMul(seg->m_texturemid, spryscale);
+      sprtop = centerYFrac - sprtop;
+
+#ifdef MARS
+      __asm volatile (
+         "mov #-128, r0\n\t"
+         "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
+         "mov.l @(20, r0), %0 /* get 32-bit quotient */ \n\t"
+         : "=r" (iscale) : : "r0");
+#else
+      iscale = 0xffffffffu / scalefrac;
+#endif
+
+      // column loop
+      // a post record has four bytes: topdelta length pixelofs*2
+      for(; *columnptr != 0xff; columnptr += sizeof(column_t))
+      {
+         column_t *column = (column_t *)columnptr;
+         int top    = column->topdelta * spryscale + sprtop;
+         int bottom = column->length   * spryscale + top;
+         byte *dataofsofs = columnptr + offsetof(column_t, dataofs);
+         int dataofs = (dataofsofs[0] << 8) | dataofsofs[1];
+         int count;
+         fixed_t frac;
+
+         top += (FRACUNIT - 1);
+         top /= FRACUNIT;
+         bottom -= 1;
+         bottom /= FRACUNIT;
+
+         // clip to bottom
+         if(bottom > bottomclip)
+            bottom = bottomclip;
+
+         frac = 0;
+
+         // clip to top
+         if(topclip > top)
+         {
+            frac += (topclip - top) * iscale;
+            top = topclip;
+         }
+
+         // calc count
+         count = bottom - top + 1;
+         if(count <= 0)
+            continue;
+
+         drawcol(x, top, bottom, light, frac, iscale, pixels + BIGSHORT(dataofs), 128);
+      }
+   }
+}
 
 void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreenhalf)
 {
@@ -166,14 +289,17 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
 #ifdef MARS
    if (sprscreenhalf > 0)
    {
+      if (x1 < 0)
+         x1 = 0;
       if (x2 >= sprscreenhalf)
          x2 = sprscreenhalf - 1;
    }
    else if (sprscreenhalf < 0)
    {
-      sprscreenhalf = -sprscreenhalf;
-      if (x1 < sprscreenhalf)
-         x1 = sprscreenhalf;
+      if (x1 < -sprscreenhalf)
+         x1 = -sprscreenhalf;
+      if (x2 >= viewportWidth)
+         x2 = viewportWidth-1;
    }
 
    if (x1 > x2)
@@ -186,29 +312,30 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
    do
    {
       ds = vd.viswalls + *walls++;
-
-      silhouette = (ds->actionbits & (AC_TOPSIL | AC_BOTTOMSIL | AC_SOLIDSIL));
-      
-      if(ds->start > x2 || ds->stop < x1 ||                         // does not intersect
-         (ds->scalefrac < scalefrac && ds->scale2 < scalefrac))     // is completely behind
+      if(ds->start > x2 || ds->stop < x1)                          // does not intersect
          continue;
-
-      if(ds->scalefrac <= scalefrac || ds->scale2 <= scalefrac)
-      {
-         if(R_SegBehindPoint(ds, vis->gx, vis->gy))
-            continue;
-      }
 
       r1 = ds->start < x1 ? x1 : ds->start;
       r2 = ds->stop  > x2 ? x2 : ds->stop;
       if (r1 > r2)
          continue;
 
+      if((ds->scalefrac < scalefrac && ds->scale2 < scalefrac) ||
+         ((ds->scalefrac <= scalefrac || ds->scale2 <= scalefrac) && R_SegBehindPoint(ds, vis->gx, vis->gy))) {
+         if (ds->actionbits & AC_MIDTEXTURE)
+            R_DrawMaskedSegRange(ds, r1, r2);
+         continue;
+      }
+
       sil = ds->clipbounds + r1;
       opening = spropening + r1;
       x = r2 - r1 + 1;
 
+      silhouette = (ds->actionbits & (AC_TOPSIL | AC_BOTTOMSIL | AC_SOLIDSIL));
       silhouette /= AC_TOPSIL;
+      if(silhouette == 0)
+         continue;
+
       if(silhouette == 1)
       {
          int8_t *popn = (int8_t *)opening;
@@ -296,7 +423,7 @@ static void R_DrawSortedSprites(int* sortedsprites, int sprscreenhalf)
       --ds;
 
       if(ds->start > x2 || ds->stop < x1 ||                             // does not intersect
-         !(ds->actionbits & (AC_TOPSIL | AC_BOTTOMSIL | AC_SOLIDSIL)))  // does not clip sprites
+         !(ds->actionbits & (AC_TOPSIL | AC_BOTTOMSIL | AC_SOLIDSIL | AC_MIDTEXTURE)))  // does not clip sprites
          continue;
 
       *pwalls++ = ds - vd.viswalls;
@@ -316,6 +443,20 @@ static void R_DrawSortedSprites(int* sortedsprites, int sprscreenhalf)
       R_ClipVisSprite(ds, spropening, sprscreenhalf, walls);
       R_DrawVisSprite(ds, spropening, sprscreenhalf);
    }
+
+   // draw masked segments
+   pwalls = walls;
+   do
+   {
+      int r1, r2;
+
+      ds = vd.viswalls + *pwalls++;
+      r1 = ds->start < x1 ? x1 : ds->start;
+      r2 = ds->stop  > x2 ? x2 : ds->stop;
+
+      if (ds->actionbits & AC_MIDTEXTURE)
+         R_DrawMaskedSegRange(ds, r1, r2);
+   } while (*pwalls != -1);
 }
 
 static void R_DrawPSprites(int sprscreenhalf)
@@ -446,7 +587,7 @@ void R_Sprites(void)
 
    for (wc = vd.viswalls; wc < vd.lastwallcmd; wc++)
    {
-      if (wc->actionbits & (AC_TOPSIL | AC_BOTTOMSIL | AC_SOLIDSIL))
+      if (wc->actionbits & (AC_TOPSIL | AC_BOTTOMSIL | AC_SOLIDSIL | AC_MIDTEXTURE))
       {
          volatile int v1 = wc->seg->v1, v2 = wc->seg->v2;
          wc->v1.x = verts[v1].x>>16, wc->v1.y = verts[v1].y>>16;

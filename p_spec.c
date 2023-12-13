@@ -822,11 +822,19 @@ void P_UpdateSpecials (void)
 	/* */
 	for (i = 0; i < numlinespecials; i++)
 	{
+		int textureoffset, rowoffset;
 		line = linespeciallist[i];
 		switch(line->special)
 		{
 			case 48:	/* EFFECT FIRSTCOL SCROLL + */
-				sides[line->sidenum[0]].textureoffset += 1;
+				// 12-bit texture offset + 4-bit rowoffset
+				textureoffset = sides[line->sidenum[0]].textureoffset;
+				rowoffset = textureoffset & 0xf00;
+				textureoffset <<= 4;
+				textureoffset += 1<<4;
+				textureoffset >>= 4;
+				textureoffset |= rowoffset;
+				sides[line->sidenum[0]].textureoffset = textureoffset;
 				break;
 		}
 	}

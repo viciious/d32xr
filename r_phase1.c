@@ -182,10 +182,11 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
    fixed_t    b_floorheight, b_ceilingheight;
    int        f_lightlevel, b_lightlevel, lightshift;
    int        f_ceilingpic, b_ceilingpic;
-   int        b_texturemid, t_texturemid;
+   int        b_texturemid, t_texturemid, m_texturemid;
    boolean    skyhack;
    int        actionbits;
    int        side, offset;
+   int16_t    rowoffset, textureoffset;
 
    {
       seg  = segl->seg;
@@ -193,6 +194,10 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
       side = seg->sideoffset & 1;
       offset = seg->sideoffset >> 1;
       si   = &sides[li->sidenum[side]];
+      textureoffset = si->textureoffset & 0xfff;
+      textureoffset <<= 4;
+      textureoffset >>= 4;
+      rowoffset = (si->textureoffset & 0xf000) | si->rowoffset;
 
       li->flags |= ML_MAPPED; // mark as seen
 
@@ -213,6 +218,7 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
       {
           segl->ceilingpicnum = -1;
       }
+      segl->m_texturenum = -1;
 
       back_sector = (li->flags & ML_TWOSIDED) ? &sectors[sides[li->sidenum[side^1]].sector] : 0;
       if(!back_sector)
@@ -223,7 +229,7 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
       b_floorheight   = back_sector->floorheight   - vd.viewz;
       b_ceilingheight = back_sector->ceilingheight - vd.viewz;
 
-      t_texturemid = b_texturemid = 0;
+      t_texturemid = b_texturemid = m_texturemid = 0;
       actionbits = 0;
 
       // deal with sky ceilings (also missing in 3DO)
@@ -239,9 +245,9 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
           f_lightlevel    != b_lightlevel                 || // light level changes across line?
           b_ceilingheight == b_floorheight))                 // backsector is closed?
       {
-         *floorheight = *floornewheight = f_floorheight;
          actionbits |= (AC_ADDFLOOR|AC_NEWFLOOR);
       }
+      *floorheight = *floornewheight = f_floorheight;
 
       if(!skyhack                                         && // not a sky hack wall
          (f_ceilingheight > 0 || f_ceilingpic == -1)      && // ceiling below camera, or sky
@@ -250,12 +256,12 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
           f_lightlevel    != b_lightlevel                 || // light level changes across line?
           b_ceilingheight == b_floorheight))                 // backsector is closed?
       {
-         segl->ceilingheight = *ceilingnewheight = f_ceilingheight;
          if(f_ceilingpic == -1)
             actionbits |= (AC_ADDSKY|AC_NEWCEILING);
          else
             actionbits |= (AC_ADDCEILING|AC_NEWCEILING);
       }
+      segl->ceilingheight = *ceilingnewheight = f_ceilingheight;
 
       segl->t_topheight = f_ceilingheight; // top of texturemap
 
@@ -270,13 +276,34 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
          else
             t_texturemid = f_ceilingheight;
 
-         t_texturemid += si->rowoffset<<FRACBITS;                               // add in sidedef texture offset
+         t_texturemid += rowoffset<<FRACBITS;                               // add in sidedef texture offset
          segl->t_bottomheight = f_floorheight; // set bottom height
          actionbits |= (AC_SOLIDSIL|AC_TOPTEXTURE);                   // solid line; draw middle texture only
       }
       else
       {
          // two-sided line
+         if (si->midtexture > 0)
+         {
+            segl->m_texturenum = texturetranslation[si->midtexture];
+            if(li->flags & ML_DONTPEGBOTTOM)
+            {
+               if(f_floorheight > b_floorheight)
+                  m_texturemid = f_floorheight;
+               else
+                  m_texturemid = b_floorheight;
+               m_texturemid += (textures[segl->m_texturenum].height << FRACBITS);
+            }
+            else
+            {
+               if(b_ceilingheight > f_ceilingheight)
+                  m_texturemid = f_ceilingheight;
+               else
+                  m_texturemid = b_ceilingheight;
+            }
+            m_texturemid += rowoffset<<FRACBITS; // add in sidedef texture offset
+            actionbits |= AC_MIDTEXTURE; // set bottom and top masks
+         }
 
          // is bottom texture visible?
          if(b_floorheight > f_floorheight)
@@ -287,7 +314,7 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
             else
                b_texturemid = b_floorheight;
 
-            b_texturemid += si->rowoffset<<FRACBITS; // add in sidedef texture offset
+            b_texturemid += rowoffset<<FRACBITS; // add in sidedef texture offset
 
             segl->b_topheight = *floornewheight = b_floorheight;
             segl->b_bottomheight = f_floorheight;
@@ -303,7 +330,7 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
             else
                t_texturemid = b_ceilingheight + (textures[segl->t_texturenum].height << FRACBITS);
 
-            t_texturemid += si->rowoffset<<FRACBITS; // add in sidedef texture offset
+            t_texturemid += rowoffset<<FRACBITS; // add in sidedef texture offset
 
             segl->t_bottomheight = *ceilingnewheight = b_ceilingheight;
             actionbits |= (AC_NEWCEILING|AC_TOPTEXTURE); // draw top texture and ceiling
@@ -342,8 +369,9 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
       segl->actionbits    = actionbits;
       segl->t_texturemid  = t_texturemid;
       segl->b_texturemid  = b_texturemid;
+      segl->m_texturemid  = m_texturemid;
       segl->seglightlevel = (lightshift << 8) | f_lightlevel;
-      segl->offset        = ((fixed_t)si->textureoffset + offset) << 16;
+      segl->offset        = ((fixed_t)textureoffset + offset) << 16;
    }
 }
 
@@ -372,7 +400,9 @@ static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop)
       rw = vd.lastwallcmd;
       rw->seg = rbsp->curline;
       rw->start = start;
+      rw->realstart = start;
       rw->stop = newstop;
+      rw->realstop = newstop;
       rw->scalestep = rbsp->lineangle1;
       rw->actionbits = 0;
       ++vd.lastwallcmd;
