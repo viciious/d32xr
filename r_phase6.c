@@ -173,6 +173,8 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 
     drawtex_t *tex;
 
+    uint16_t *segcolmask = (segl->actionbits & AC_MIDTEXTURE) ? vd.segclip + segl->m_segmaskoffset : NULL;
+
     for (x = segl->start; x <= stop; x++)
     {
        fixed_t r;
@@ -251,6 +253,9 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
         r = FixedMul(distance, r);
 
         colnum = (offset - r) >> FRACBITS;
+
+        if (segcolmask)
+            segcolmask[x] = texturelight | (colnum & 0xff);
 
 #ifdef MARS
         __asm volatile (
@@ -385,7 +390,7 @@ void R_SegCommands(void)
 #ifdef MARS
         R_LockSeg();
         actionbits = *(volatile short *)&segl->actionbits;
-        if (actionbits & AC_DRAWN || !(actionbits & (AC_TOPTEXTURE | AC_BOTTOMTEXTURE | AC_ADDSKY))) {
+        if (actionbits & AC_DRAWN || !(actionbits & (AC_TOPTEXTURE | AC_BOTTOMTEXTURE | AC_MIDTEXTURE | AC_ADDSKY))) {
             R_UnlockSeg();
             goto post_draw;
         } else {

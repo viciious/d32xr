@@ -95,8 +95,8 @@ typedef struct
 {
 	VINT		sector;
 	uint8_t		toptexture, bottomtexture, midtexture;
-	int8_t		rowoffset;			/* add this to the calculated texture top */
-	VINT		textureoffset;		/* add this to the calculated texture col */
+	uint8_t		rowoffset;			/* add this to the calculated texture top */
+	int16_t		textureoffset;		/* 8.4, add this to the calculated texture col */
 } side_t;
 
 typedef struct line_s
@@ -372,6 +372,8 @@ extern	flattex_t		*flatpixels;
 
 extern	VINT		firstflat, numflats, col2flat;
 
+extern	VINT		firstsprite, numsprites;
+
 extern int8_t* dc_colormaps;
 extern int8_t* dc_colormaps2;
 
@@ -448,6 +450,7 @@ void R_PostTexCacheFrame(r_texcache_t* c);
 #define	AC_SOLIDSIL			256
 #define	AC_ADDSKY			512
 #define	AC_DRAWN			1024
+#define	AC_MIDTEXTURE		2048
 
 typedef struct
 {
@@ -460,7 +463,7 @@ typedef struct
 	unsigned	centerangle;
 	unsigned	offset;
 	unsigned	distance;
-	int			scalestep;		/* polar angle to start at phase1, then scalestep after phase2 */
+	int 		pad;
 
 	int			t_bottomheight;
 	int			t_texturemid;
@@ -478,12 +481,17 @@ typedef struct
 		int16_t 	miplevels[2];
 	};
 
+	int 		m_texturemid;
+	VINT 		m_texturenum;
+	VINT 		m_segmaskoffset;
+
 	VINT		t_texturenum;
 	VINT		b_texturenum;
 
 	VINT        floorpicnum;
 	VINT        ceilingpicnum;
 
+	int			scalestep;		/* polar angle to start at phase1, then scalestep after phase2 */
 	unsigned	scalefrac;
 	unsigned	scale2;
 
@@ -493,8 +501,8 @@ typedef struct
 /* */
 /* filled in by bsp */
 /* */
-	VINT			start;
-	VINT			stop;					/* inclusive x coordinates */
+	VINT			start, realstart;
+	VINT			stop, realstop;					/* inclusive x coordinates */
 	union
 	{
 		seg_t			*seg;

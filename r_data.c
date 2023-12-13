@@ -11,6 +11,8 @@ boolean	spr_rotations;
 
 VINT		firstflat, numflats, col2flat;
 
+VINT		firstsprite, numsprites;
+
 VINT		numtextures = 0;
 texture_t	*textures = NULL;
 boolean 	texmips = false;
@@ -107,9 +109,12 @@ void R_InitTextures (void)
 	directory = maptex+1;
 	for (i = 0; i < numtextures; i++, directory++)
 	{
+		boolean masked;
+
 		offset = LITTLELONG(*directory);
 		mtexture = (maptexture_t*)((byte*)maptex + offset);
 		patchcount = LITTLESHORT(mtexture->patchcount);
+		masked = *((byte *)&mtexture->masked);
 
 		texture = &textures[i];
 		texture->width = LITTLESHORT(mtexture->width);
@@ -123,7 +128,9 @@ void R_InitTextures (void)
 				texture->name[j] = c - ('a' - 'A');
 		}
 
-		if (start >= 0 && end > 0)
+		if (masked)
+			texture->lumpnum = W_CheckRangeForName(texture->name, firstsprite, firstsprite + numsprites);
+		else if (start >= 0 && end > 0)
 			texture->lumpnum = W_CheckRangeForName(texture->name, start, end);
 		else
 			texture->lumpnum = W_CheckNumForName(texture->name);
@@ -355,6 +362,9 @@ void R_InitData (void)
 #endif
 
 	dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
+
+	firstsprite = W_GetNumForName ("S_START") + 1;
+	numsprites = W_GetNumForName ("S_END") - firstsprite;
 
 	R_InitTextures ();
 	R_InitFlats ();
@@ -648,7 +658,6 @@ void R_InitSpriteDefs(const char** namelist)
 	int		rotation;
 	int		start;
 	int		end;
-	int		numsprites = NUMSPRITES;
 	tempspriteframe_t* sprtemp;
 	int		maxframe;
 	byte	*tempbuf;
@@ -658,8 +667,7 @@ void R_InitSpriteDefs(const char** namelist)
 
 	spr_rotations = false;
 
-	start = W_CheckNumForName("S_START");
-	if (start < 0)
+	if (firstsprite < 0)
 	{
 		start = 0;
 		end = W_GetNumForName("T_START");
@@ -669,8 +677,8 @@ void R_InitSpriteDefs(const char** namelist)
 	}
 	else
 	{
-		start += 1;
-		end = W_GetNumForName("S_END");
+		start = firstsprite;
+		end = firstsprite + numsprites + 1;
 	}
 
 	// scan all the lump names for each of the names,
@@ -681,7 +689,7 @@ void R_InitSpriteDefs(const char** namelist)
 
 	tempbuf = I_WorkBuffer();
 	sprtemp = (void*)tempbuf;
-	for (i = 0; i < numsprites; i++)
+	for (i = 0; i < NUMSPRITES; i++)
 	{
 		const char* spritename = namelist[i];
 
@@ -822,7 +830,7 @@ void R_InitSpriteDefs(const char** namelist)
 	}
 
 	l = 0;
-	for (i = 0; i < numsprites; i++)
+	for (i = 0; i < NUMSPRITES; i++)
 	{
 		int numframes;
 

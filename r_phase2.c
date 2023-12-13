@@ -131,7 +131,7 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
     wc->scale2 = scale2;
 
     // does line have top or bottom textures?
-    if (wc->actionbits & (AC_TOPTEXTURE | AC_BOTTOMTEXTURE))
+    if (wc->actionbits & (AC_TOPTEXTURE | AC_BOTTOMTEXTURE | AC_MIDTEXTURE))
     {
         R_SetupCalc(wc, hyp, normalangle, angle1);// do calc setup
     }
@@ -148,9 +148,16 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
     const int start = wc->start;
     const int stop = wc->stop;
     const int width = stop - start + 1;
-    if (wc->actionbits & (AC_NEWFLOOR | AC_NEWCEILING | AC_TOPSIL | AC_BOTTOMSIL))
+    if (wc->actionbits & (AC_NEWFLOOR | AC_NEWCEILING | AC_TOPSIL | AC_BOTTOMSIL | AC_MIDTEXTURE))
     {
         wc->clipbounds = vd.lastsegclip - start;
+        vd.lastsegclip += width;
+    }
+    if (wc->actionbits & AC_MIDTEXTURE)
+    {
+        // lighting + column
+        wc->m_segmaskoffset = (vd.lastsegclip - vd.segclip) - start;
+        D_memset(vd.lastsegclip, 255, sizeof(*vd.lastsegclip)*width);
         vd.lastsegclip += width;
     }
 }
