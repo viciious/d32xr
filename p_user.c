@@ -566,7 +566,15 @@ boolean P_CanFireWeapon(player_t* player, int weaponnum)
 	if (weaponinfo[weaponnum].ammo == am_noammo)
 		return true;
 
-	int neededAmmo = (weaponnum == wp_bfg) ? 40 : 1;
+	int neededAmmo = 1;
+	switch (weaponnum) {
+		case wp_bfg:
+			neededAmmo = 40;
+			break;
+		case wp_supershotgun:
+			neededAmmo = 2;
+			break;
+	}
 	return player->ammo[weaponinfo[weaponnum].ammo] >= neededAmmo;
 }
 
