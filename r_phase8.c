@@ -22,15 +22,14 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
 {
    patch_t *patch;
    fixed_t  spryscale, scalefrac, fracstep;
-   int widthmask;
    uint16_t *spropening, *maskedcol;
-   drawcol_t dcol;
 #ifdef MARS
 	inpixel_t 	*pixels;
 #else
 	pixel_t		*pixels;		/* data patch header references */
 #endif
    texture_t  *texture;
+   int widthmask;
 
    if (x > stopx)
       return;
@@ -53,7 +52,6 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
    widthmask = texture->width - 1;
    fracstep  = seg->scalestep;
    scalefrac = seg->scalefrac + (x - seg->realstart) * fracstep;
-   dcol      = drawcol;
 
    I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
 
@@ -137,8 +135,7 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
          if(count <= 0)
             continue;
 
-         // CALICO: invoke column drawer
-         dcol(x, top, bottom, light, frac, iscale, pixels + BIGSHORT(dataofs), 128);
+         drawcol(x, top, bottom, light, frac, iscale, pixels + BIGSHORT(dataofs), 128);
       }
    }
 }
