@@ -8,13 +8,14 @@ const char * const sprnames[NUMSPRITES] = {
 "POSS","SPOS","FATB","FBXP","SKEL","MANF","FATT","CPOS","SARG","HEAD",
 "BOSS",/*"BOS2",*/"SKUL","SPID","BSPI","APLS","APBX","CYBR","BBRN","ARM1",
 "ARM2","BAR1","BEXP","FCAN","BON1","BON2","BKEY","RKEY","YKEY","BSKU",
-"RSKU","YSKU","STIM","MEDI","SOUL","PINV","PSTR","PINS","SUIT","PMAP",
-"PVIS","CLIP","AMMO","ROCK","BROK","CELL","CELP","SHEL","SBOX","BPAK",
-"BFUG","MGUN","CSAW","LAUN","PLAS","SHOT","SGN2","COLU","SMT2","GOR1",
-"POL2","POL5","POL4","POL3","POL1","POL6","GOR2","GOR3","GOR4","GOR5",
-"SMIT","COL1","COL2","COL4","CAND","CBRA","COL6","TRE1","TRE2","ELEC",
-"CEYE","FSKU","COL5","TBLU","TGRN","TRED","SMBT","SMGT","SMRT","HDB1",
-"HDB2","HDB3","HDB4","HDB5","HDB6","POB1","POB2","BRS1","TLMP","TLP2"
+"RSKU","YSKU","STIM","MEDI","SOUL","PINV","PSTR","PINS","MEGA","SUIT",
+"PMAP","PVIS","CLIP","AMMO","ROCK","BROK","CELL","CELP","SHEL","SBOX",
+"BPAK","BFUG","MGUN","CSAW","LAUN","PLAS","SHOT","SGN2","COLU","SMT2",
+"GOR1","POL2","POL5","POL4","POL3","POL1","POL6","GOR2","GOR3","GOR4",
+"GOR5","SMIT","COL1","COL2","COL4","CAND","CBRA","COL6","TRE1","TRE2",
+"ELEC","CEYE","FSKU","COL5","TBLU","TGRN","TRED","SMBT","SMGT","SMRT",
+"HDB1","HDB2","HDB3","HDB4","HDB5","HDB6","POB1","POB2","BRS1","TLMP",
+"TLP2"
 };
 
 void A_Light0 ();
@@ -687,6 +688,10 @@ STATE(SPR_PINS,32768,3,NULL,S_PINS2),	/* S_PINS */
 STATE(SPR_PINS,32769,3,NULL,S_PINS3),	/* S_PINS2 */
 STATE(SPR_PINS,32770,3,NULL,S_PINS4),	/* S_PINS3 */
 STATE(SPR_PINS,32771,3,NULL,S_PINS),	/* S_PINS4 */
+STATE(SPR_MEGA,32768,3,NULL,S_MEGA2),	// S_MEGA
+STATE(SPR_MEGA,32769,3,NULL,S_MEGA3),	// S_MEGA2
+STATE(SPR_MEGA,32770,3,NULL,S_MEGA4),	// S_MEGA3
+STATE(SPR_MEGA,32771,3,NULL,S_MEGA),	// S_MEGA4
 STATE(SPR_SUIT,32768,-1,NULL,S_NULL),	/* S_SUIT */
 STATE(SPR_PMAP,32768,3,NULL,S_PMAP2),	/* S_PMAP */
 STATE(SPR_PMAP,32769,3,NULL,S_PMAP3),	/* S_PMAP2 */
@@ -2121,6 +2126,31 @@ sfx_None,		/* deathsound */
 sfx_None,		/* activesound */
 MF_SPECIAL|MF_COUNTITEM		/* flags */
  },
+
+{		// MT_MEGA
+83,		// doomednum
+S_MEGA,		// spawnstate
+1000,		// spawnhealth
+S_NULL,		// seestate
+sfx_None,		// seesound
+8,		// reactiontime
+sfx_None,		// attacksound
+S_NULL,		// painstate
+0,		// painchance
+sfx_None,		// painsound
+S_NULL,		// meleestate
+S_NULL,		// missilestate
+S_NULL,		// deathstate
+S_NULL,		// xdeathstate
+sfx_None,		// deathsound
+0,		// speed
+20*FRACUNIT,		// radius
+16*FRACUNIT,		// height
+100,		// mass
+0,		// damage
+sfx_None,		// activesound
+MF_SPECIAL|MF_COUNTITEM		// flags
+},
 
 {		/* MT_CLIP */
 2007,		/* doomednum */
