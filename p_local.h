@@ -174,7 +174,7 @@ typedef struct
 fixed_t P_AproxDistance (fixed_t dx, fixed_t dy);
 int 	P_PointOnLineSide (fixed_t x, fixed_t y, line_t *line);
 int 	P_PointOnDivlineSide (fixed_t x, fixed_t y, divline_t *line);
-int 	P_BoxOnLineSide (fixed_t *tmbox, line_t *ld);
+boolean P_BoxCrossLine (line_t *ld, fixed_t testbbox[4]) ATTR_DATA_CACHE_ALIGN;
 
 fixed_t	P_LineOpening (line_t *linedef);
 

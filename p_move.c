@@ -51,7 +51,6 @@ typedef struct
 } pmovework_t;
 
 boolean PIT_CheckThing(mobj_t* thing, pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
-static boolean PM_BoxCrossLine(line_t* ld, pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
 static boolean PIT_CheckLine(line_t* ld, pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
 static boolean PM_CrossCheck(line_t* ld, pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
 static boolean PM_CheckPosition(pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
@@ -139,60 +138,6 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
 }
 
 //
-// Check if the thing intersects a linedef
-//
-static boolean PM_BoxCrossLine(line_t *ld, pmovework_t *mw)
-{
-   fixed_t x1, x2, y1, y2;
-   fixed_t lx, ly, ldx, ldy;
-   fixed_t dx1, dx2, dy1, dy2;
-   boolean side1, side2;
-   fixed_t ldbbox[4];
-
-   P_LineBBox(ld, ldbbox);
-
-   if(mw->tmbbox[BOXRIGHT ] <= ldbbox[BOXLEFT  ] ||
-      mw->tmbbox[BOXLEFT  ] >= ldbbox[BOXRIGHT ] ||
-      mw->tmbbox[BOXTOP   ] <= ldbbox[BOXBOTTOM] ||
-      mw->tmbbox[BOXBOTTOM] >= ldbbox[BOXTOP   ])
-   {
-      return false; // bounding boxes don't intersect
-   }
-
-   y1 = mw->tmbbox[BOXTOP   ];
-   y2 = mw->tmbbox[BOXBOTTOM];
-
-   if(ld->flags & ML_ST_POSITIVE)
-   {
-      x1 = mw->tmbbox[BOXLEFT ];
-      x2 = mw->tmbbox[BOXRIGHT];
-   }
-   else
-   {
-      x1 = mw->tmbbox[BOXRIGHT];
-      x2 = mw->tmbbox[BOXLEFT ];
-   }
-
-   lx  = vertexes[ld->v1].x;
-   ly  = vertexes[ld->v1].y;
-   ldx = vertexes[ld->v2].x - lx;
-   ldy = vertexes[ld->v2].y - ly;
-
-   lx <<= FRACBITS;
-   ly <<= FRACBITS;
-
-   dx1 = (x1 - lx) >> FRACBITS;
-   dy1 = (y1 - ly) >> FRACBITS;
-   dx2 = (x2 - lx) >> FRACBITS;
-   dy2 = (y2 - ly) >> FRACBITS;
-
-   side1 = (ldy * dx1 < dy1 * ldx);
-   side2 = (ldy * dx2 < dy2 * ldx);
-
-   return (side1 != side2);
-}
-
-//
 // Adjusts tmfloorz and tmceilingz as lines are contacted.
 //
 static boolean PIT_CheckLine(line_t *ld, pmovework_t *mw)
@@ -261,7 +206,7 @@ static boolean PIT_CheckLine(line_t *ld, pmovework_t *mw)
 //
 static boolean PM_CrossCheck(line_t *ld, pmovework_t *mw)
 {
-   if(PM_BoxCrossLine(ld, mw))
+   if(P_BoxCrossLine(ld, mw->tmbbox))
    {
       if(!PIT_CheckLine(ld, mw))
          return false;
