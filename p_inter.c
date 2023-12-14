@@ -317,7 +317,7 @@ int P_TouchSpecialThing2 (mobj_t *special, mobj_t *toucher)
 		else
 			player->message = "You pick up a medikit.";
 		break;
-	
+
 /* */
 /* power ups */
 /* */
@@ -407,8 +407,15 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 			player->health = 200;
 		player->mo->health = player->health;
 		player->message = "Supercharge!";
+		sound = sfx_getpow;
 		break;
-				
+	case SPR_MEGA:
+		player->health = 200;
+		player->mo->health = player->health;
+		P_GiveArmor (player,2);
+		player->message = "Megasphere!";
+		sound = sfx_getpow;
+		break;
 
 		
 /* */
