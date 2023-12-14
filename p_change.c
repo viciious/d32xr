@@ -43,7 +43,7 @@ typedef struct
 boolean P_ThingHeightClip (mobj_t *thing)
 {
 	boolean		onfloor;
-	ptrymove_t	tm;
+	pmovework_t tm;
 	
 	onfloor = (thing->z == thing->floorz);
 	
