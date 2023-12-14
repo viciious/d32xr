@@ -165,25 +165,57 @@ void A_SkullBash (mobj_t *mo);
 ===============================================================================
 */
 
+// 
+// keep track of special lines as they are hit,
+// but don't process them until the move is proven valid
+#define MAXSPECIALCROSS		8
+
 typedef struct
 {
 	fixed_t	x,y, dx, dy;
 } divline_t;
 
+typedef boolean(*blocklinesiter_t)(line_t*, void*);
+typedef boolean(*blockthingsiter_t)(mobj_t*, void*);
+
+typedef struct
+{
+	// input
+	mobj_t  *tmthing;
+	fixed_t tmx, tmy;
+	boolean checkposonly;
+
+	// output
+	fixed_t tmbbox[4];
+
+	int    	numspechit;
+ 	line_t	*spechit[MAXSPECIALCROSS];
+	
+	fixed_t tmfloorz;   // current floor z for P_TryMove2
+	fixed_t tmceilingz; // current ceiling z for P_TryMove2
+	fixed_t tmdropoffz; // lowest point contacted
+
+	boolean	floatok;	/* if true, move would be ok if */
+						/* within tmfloorz - tmceilingz */
+
+	line_t  *ceilingline;
+	subsector_t *newsubsec;
+
+	mobj_t  *hitthing;
+} pmovework_t;
 
 fixed_t P_AproxDistance (fixed_t dx, fixed_t dy);
 int 	P_PointOnLineSide (fixed_t x, fixed_t y, line_t *line);
 int 	P_PointOnDivlineSide (fixed_t x, fixed_t y, divline_t *line);
-int 	P_BoxOnLineSide (fixed_t *tmbox, line_t *ld);
+boolean P_BoxCrossLine (line_t *ld, fixed_t testbbox[4]);
 
 fixed_t	P_LineOpening (line_t *linedef);
 
 void 	P_LineBBox(line_t* ld, fixed_t*bbox);
 
-typedef boolean(*blocklinesiter_t)(line_t*, void*);
-typedef boolean(*blockthingsiter_t)(mobj_t*, void*);
-
+// the userp must conform to pmovework_t interface
 boolean P_BlockLinesIterator (int x, int y, blocklinesiter_t, void *userp );
+// the userp must conform to pmovework_t interface
 boolean P_BlockThingsIterator (int x, int y, blockthingsiter_t, void *userp );
 
 void 	P_UnsetThingPosition (mobj_t *thing);
@@ -280,39 +312,8 @@ void P_RespawnSpecials (void);
 ===============================================================================
 */
 
-// 
-// keep track of special lines as they are hit,
-// but don't process them until the move is proven valid
-#define MAXSPECIALCROSS		8
-
-typedef struct
-{
-	/*================== */
-	/* */
-	/* in */
-	/* */
-	/*================== */
-	mobj_t		*tmthing;
-	fixed_t		tmx, tmy;
-	boolean		checkposonly;
-
-	/*================== */
-	/* */
-	/* out */
-	/* */
-	/*================== */
-	boolean		floatok;				/* if true, move would be ok if */
-										/* within tmfloorz - tmceilingz */
-	fixed_t		tmfloorz, tmceilingz, tmdropoffz;
-
-	int    		numspechit;
- 	line_t		*spechit[MAXSPECIALCROSS];
-
-	line_t		*blockline;
-} ptrymove_t;
-
-boolean P_CheckPosition (ptrymove_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
-boolean P_TryMove (ptrymove_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
+boolean P_CheckPosition (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
+boolean P_TryMove (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
 void P_MoveCrossSpecials(mobj_t *tmthing, int numspechit, line_t **spechit, fixed_t oldx, fixed_t oldy);
 
 typedef struct
