@@ -22,6 +22,7 @@ typedef struct
 static fixed_t P_InterceptVector(divline_t* v2, divline_t* v1) ATTR_DATA_CACHE_ALIGN;
 boolean	PIT_UseLines(line_t* li, plineuse_t *lu) ATTR_DATA_CACHE_ALIGN;
 void P_UseLines(player_t* player) __attribute__((noinline));
+
 boolean PIT_RadiusAttack(mobj_t* thing, pradiusattack_t *ra) ATTR_DATA_CACHE_ALIGN;
 void P_RadiusAttack(mobj_t* spot, mobj_t* source, int damage) ATTR_DATA_CACHE_ALIGN;
 fixed_t P_AimLineAttack(lineattack_t *la, mobj_t* t1, angle_t angle, fixed_t distance) ATTR_DATA_CACHE_ALIGN;
@@ -29,52 +30,6 @@ void P_LineAttack(lineattack_t *la, mobj_t* t1, angle_t angle, fixed_t distance,
 static void P_MakeDivline(line_t* li, divline_t* dl) ATTR_DATA_CACHE_ALIGN;
 
 /*============================================================================= */
-
-
-
-/*============================================================================= */
-
-/*
-===================
-=
-= P_TryMove
-=
-in:
-tmthing		a mobj_t (can be valid or invalid)
-tmx,tmy		a position to be checked (doesn't need relate to the mobj_t->x,y)
-
-out:
-
-newsubsec
-floatok			if true, move would be ok if within tmfloorz - tmceilingz
-floorz
-ceilingz
-tmdropoffz		the lowest point contacted (monsters won't move to a dropoff)
-
-movething
-
-==================
-*/
-
-boolean P_TryMove2 (ptrymove_t *tm, boolean checkposonly);
-
-boolean P_CheckPosition (ptrymove_t *tm, mobj_t *thing, fixed_t x, fixed_t y)
-{
-	tm->tmthing = thing;
-	tm->tmx = x;
-	tm->tmy = y;
-	return P_TryMove2 (tm, true);
-}
-
-
-boolean P_TryMove (ptrymove_t *tm, mobj_t *thing, fixed_t x, fixed_t y)
-{
-	tm->tmthing = thing;
-	tm->tmx = x;
-	tm->tmy = y;
-	return P_TryMove2 (tm, false);
-}
-
 
 /* 
 ============================================================================== 

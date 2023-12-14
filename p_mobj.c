@@ -673,7 +673,7 @@ void P_SpawnBlood (fixed_t x, fixed_t y, fixed_t z, int damage)
 
 void P_CheckMissileSpawn (mobj_t *th)
 {
-	ptrymove_t tm;
+	pmovework_t tm;
 
 	th->x += (th->momx>>1);
 	th->y += (th->momy>>1);	/* move a little forward so an angle can */

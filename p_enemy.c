@@ -119,7 +119,7 @@ boolean P_Move (mobj_t *actor)
 	fixed_t oldx, oldy;
 	boolean		good;
 	line_t		*blkline;
-	ptrymove_t	tm;
+	pmovework_t tm;
 
 	if (actor->movedir == DI_NODIR)
 		return false;
@@ -130,7 +130,15 @@ boolean P_Move (mobj_t *actor)
 	tryy = actor->y + actor->speed*yspeed[actor->movedir];
 	
 	if (!P_TryMove (&tm, actor, tryx, tryy) )
-	{	/* open any specials */
+	{
+		if (actor->flags & MF_SKULLFLY && tm.hitthing)
+		{
+			actor->extradata = (intptr_t)tm.hitthing;
+			L_SkullBash(actor);
+			return false;
+		}
+
+		/* open any specials */
 		if (actor->flags & MF_FLOAT && tm.floatok)
 		{	/* must adjust height */
 			if (actor->z < tm.tmfloorz)
@@ -141,14 +149,18 @@ boolean P_Move (mobj_t *actor)
 			return true;
 		}
 
-		blkline = tm.blockline;
 		good = false;
-		if (blkline && blkline->special)
+		if (tm.numspechit)
 		{
-			actor->movedir = DI_NODIR;
-			/* if the special isn't a door that can be opened, return false */
-			if (P_UseSpecialLine(actor, blkline))
-				good = true;
+			int i = tm.numspechit;
+			do
+			{
+				actor->movedir = DI_NODIR;
+				/* if the special isn't a door that can be opened, return false */
+				blkline = tm.spechit[--i];
+				if (P_UseSpecialLine(actor, blkline))
+					good = true;
+			} while (i);
 		}
 
 		return good;
