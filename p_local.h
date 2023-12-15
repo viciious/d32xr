@@ -165,6 +165,11 @@ void A_SkullBash (mobj_t *mo);
 ===============================================================================
 */
 
+// 
+// keep track of special lines as they are hit,
+// but don't process them until the move is proven valid
+#define MAXSPECIALCROSS		8
+
 typedef struct
 {
 	fixed_t	x,y, dx, dy;
@@ -175,14 +180,19 @@ typedef struct
 	// input
 	mobj_t  *tmthing;
 	fixed_t tmx, tmy;
-	fixed_t tmbbox[4];
 
 	// output
+	fixed_t tmbbox[4];
+
 	int    	numspechit;
-	line_t	**spechit;
+ 	line_t	*spechit[MAXSPECIALCROSS];
+	
 	fixed_t tmfloorz;   // current floor z for P_TryMove2
 	fixed_t tmceilingz; // current ceiling z for P_TryMove2
 	fixed_t tmdropoffz; // lowest point contacted
+
+	boolean	floatok;	/* if true, move would be ok if */
+						/* within tmfloorz - tmceilingz */
 
 	line_t  *ceilingline;
 
@@ -303,37 +313,8 @@ void P_RespawnSpecials (void);
 ===============================================================================
 */
 
-// 
-// keep track of special lines as they are hit,
-// but don't process them until the move is proven valid
-#define MAXSPECIALCROSS		8
-
-typedef struct
-{
-	/*================== */
-	/* */
-	/* in */
-	/* */
-	/*================== */
-	mobj_t		*tmthing;
-	fixed_t		tmx, tmy;
-	boolean		checkposonly;
-
-	/*================== */
-	/* */
-	/* out */
-	/* */
-	/*================== */
-	boolean		floatok;				/* if true, move would be ok if */
-										/* within tmfloorz - tmceilingz */
-	fixed_t		tmfloorz, tmceilingz, tmdropoffz;
-
-	int    		numspechit;
- 	line_t		*spechit[MAXSPECIALCROSS];
-} ptrymove_t;
-
-boolean P_CheckPosition (ptrymove_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
-boolean P_TryMove (ptrymove_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
+boolean P_CheckPosition (pcheckwork_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
+boolean P_TryMove (pcheckwork_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
 void P_MoveCrossSpecials(mobj_t *tmthing, int numspechit, line_t **spechit, fixed_t oldx, fixed_t oldy);
 
 typedef struct

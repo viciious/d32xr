@@ -119,7 +119,7 @@ boolean P_Move (mobj_t *actor)
 	fixed_t oldx, oldy;
 	boolean		good;
 	line_t		*blkline;
-	ptrymove_t	tm;
+	pcheckwork_t tm;
 
 	if (actor->movedir == DI_NODIR)
 		return false;

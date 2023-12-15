@@ -31,7 +31,7 @@
 
 static boolean PM_CheckThing(mobj_t *thing, pcheckwork_t *w) ATTR_DATA_CACHE_ALIGN;
 static boolean PM_CheckPosition(pcheckwork_t *w, subsector_t **pnewsubsec) ATTR_DATA_CACHE_ALIGN;
-boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly) ATTR_DATA_CACHE_ALIGN;
+boolean P_TryMove2(pcheckwork_t *tm, boolean checkposonly) ATTR_DATA_CACHE_ALIGN;
 
 static boolean PM_CheckThing(mobj_t *thing, pcheckwork_t *w)
 {
@@ -181,25 +181,14 @@ static boolean PM_CheckPosition(pcheckwork_t *w, subsector_t **pnewsubsec)
 // Attempt to move to a new position, crossing special lines unless MF_TELEPORT
 // is set.
 //
-boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly)
+boolean P_TryMove2(pcheckwork_t *tm, boolean checkposonly)
 {
-   pcheckwork_t w;
    subsector_t *newsubsec;
    boolean trymove2; // result from P_TryMove2
    mobj_t *tmthing = tm->tmthing;
 
-   w.tmx = tm->tmx;
-   w.tmy = tm->tmy;
-   w.tmthing = tm->tmthing;
-   w.spechit = &tm->spechit[0];
-
-   trymove2 = PM_CheckPosition(&w, &newsubsec);
-
+   trymove2 = PM_CheckPosition(tm, &newsubsec);
    tm->floatok = false;
-   tm->tmfloorz = w.tmfloorz;
-   tm->tmceilingz = w.tmceilingz;
-   tm->tmdropoffz = w.tmdropoffz;
-   tm->numspechit = w.numspechit;
 
    if(checkposonly)
       return trymove2;
@@ -209,23 +198,23 @@ boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly)
 
    if(!(tmthing->flags & MF_NOCLIP))
    {
-      if(w.tmceilingz - w.tmfloorz < tmthing->height)
+      if(tm->tmceilingz - tm->tmfloorz < tmthing->height)
          return false; // doesn't fit
       tm->floatok = true;
-      if(!(tmthing->flags & MF_TELEPORT) && w.tmceilingz - tmthing->z < tmthing->height)
+      if(!(tmthing->flags & MF_TELEPORT) && tm->tmceilingz - tmthing->z < tmthing->height)
          return false; // mobj must lower itself to fit
-      if(!(tmthing->flags & MF_TELEPORT) && w.tmfloorz - tmthing->z > 24*FRACUNIT)
+      if(!(tmthing->flags & MF_TELEPORT) && tm->tmfloorz - tmthing->z > 24*FRACUNIT)
          return false; // too big a step up
-      if(!(tmthing->flags & (MF_DROPOFF|MF_FLOAT)) && w.tmfloorz - w.tmdropoffz > 24*FRACUNIT)
+      if(!(tmthing->flags & (MF_DROPOFF|MF_FLOAT)) && tm->tmfloorz - tm->tmdropoffz > 24*FRACUNIT)
          return false; // don't stand over a dropoff
    }
 
    // the move is ok, so link the thing into its new position.
    P_UnsetThingPosition(tmthing);
-   tmthing->floorz   = w.tmfloorz;
-   tmthing->ceilingz = w.tmceilingz;
-   tmthing->x        = w.tmx;
-   tmthing->y        = w.tmy;
+   tmthing->floorz   = tm->tmfloorz;
+   tmthing->ceilingz = tm->tmceilingz;
+   tmthing->x        = tm->tmx;
+   tmthing->y        = tm->tmy;
    P_SetThingPosition2(tmthing, newsubsec);
 
    return true;
