@@ -141,14 +141,18 @@ boolean P_Move (mobj_t *actor)
 			return true;
 		}
 
-		blkline = tm.blockline;
 		good = false;
-		if (blkline && blkline->special)
+		if (tm.numspechit)
 		{
-			actor->movedir = DI_NODIR;
-			/* if the special isn't a door that can be opened, return false */
-			if (P_UseSpecialLine(actor, blkline))
-				good = true;
+			int i = tm.numspechit;
+			do
+			{
+				actor->movedir = DI_NODIR;
+				/* if the special isn't a door that can be opened, return false */
+				blkline = tm.spechit[--i];
+				if (P_UseSpecialLine(actor, blkline))
+					good = true;
+			} while (i);
 		}
 
 		return good;

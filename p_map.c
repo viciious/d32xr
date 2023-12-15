@@ -22,6 +22,8 @@ typedef struct
 static fixed_t P_InterceptVector(divline_t* v2, divline_t* v1) ATTR_DATA_CACHE_ALIGN;
 boolean	PIT_UseLines(line_t* li, plineuse_t *lu) ATTR_DATA_CACHE_ALIGN;
 void P_UseLines(player_t* player) __attribute__((noinline));
+boolean PIT_CheckThing(mobj_t* thing, pcheckwork_t *w) ATTR_DATA_CACHE_ALIGN;
+boolean PIT_CheckLine(line_t* ld, pcheckwork_t *w) ATTR_DATA_CACHE_ALIGN;
 boolean PIT_RadiusAttack(mobj_t* thing, pradiusattack_t *ra) ATTR_DATA_CACHE_ALIGN;
 void P_RadiusAttack(mobj_t* spot, mobj_t* source, int damage) ATTR_DATA_CACHE_ALIGN;
 fixed_t P_AimLineAttack(lineattack_t *la, mobj_t* t1, angle_t angle, fixed_t distance) ATTR_DATA_CACHE_ALIGN;
@@ -125,6 +127,140 @@ static void P_MakeDivline (line_t *li, divline_t *dl)
 	dl->dy = (vertexes[li->v2].y - vertexes[li->v1].y) << FRACBITS;
 }
 
+
+//
+// Check a single mobj in one of the contacted blockmap cells.
+//
+boolean PIT_CheckThing(mobj_t *thing, pcheckwork_t *w)
+{
+   fixed_t blockdist;
+   int     delta;
+   mobj_t  *tmthing = w->tmthing;
+   int     tmflags = tmthing->flags;
+
+   if(!(thing->flags & (MF_SOLID|MF_SPECIAL|MF_SHOOTABLE)))
+      return true;
+
+   blockdist = thing->radius + tmthing->radius;
+   
+   delta = thing->x - w->tmx;
+   if(delta < 0)
+      delta = -delta;
+   if(delta >= blockdist)
+      return true; // didn't hit it
+
+   delta = thing->y - w->tmy;
+   if(delta < 0)
+      delta = -delta;
+   if(delta >= blockdist)
+      return true; // didn't hit it
+
+   if(thing == tmthing)
+      return true; // don't clip against self
+
+   // check for skulls slamming into things
+   if(tmthing->flags & MF_SKULLFLY)
+   {
+	  w->hitthing = thing;
+      return false; // stop moving
+   }
+
+   // missiles can hit other things
+   if(tmthing->flags & MF_MISSILE)
+   {
+      if(tmthing->z > thing->z + thing->height)
+         return true; // went overhead
+      if(tmthing->z + tmthing->height < thing->z)
+         return true; // went underneath
+      if(thing == tmthing->target) // don't hit originator
+         return true;
+      if((tmthing->target->type == thing->type) ||
+	    (tmthing->target->type == MT_KNIGHT && thing->type == MT_BRUISER) ||
+	    (tmthing->target->type == MT_BRUISER && thing->type == MT_KNIGHT)
+      ) // don't hit same species as originator
+      {
+         if(thing->type != MT_PLAYER) // let players missile each other
+            return false; // explode, but do no damage
+      }
+      if(!(thing->flags & MF_SHOOTABLE))
+         return !(thing->flags & MF_SOLID); // didn't do any damage
+	  w->hitthing = thing;
+      return false; // don't traverse any more
+   }
+
+   // check for special pickup
+   if((thing->flags & MF_SPECIAL) && (tmflags & MF_PICKUP))
+   {
+      P_TouchSpecialThing (thing,tmthing);
+   }
+
+   return !(thing->flags & MF_SOLID);
+}
+
+//
+// Check a single linedef in a blockmap cell.
+//
+// Adjusts tmfloorz and tmceilingz as lines are contacted.
+//
+boolean PIT_CheckLine(line_t *ld, pcheckwork_t *w)
+{
+   fixed_t   opentop, openbottom, lowfloor;
+   sector_t *front, *back;
+   mobj_t   *tmthing = w->tmthing;
+
+   if(!P_BoxCrossLine(ld, w->tmbbox))
+	return true;
+
+   // The moving thing's destination positoin will cross the given line.
+   // If this should not be allowed, return false.
+   if(ld->sidenum[1] == -1)
+      return false; // one-sided line
+
+   if(!(tmthing->flags & MF_MISSILE))
+   {
+      if(ld->flags & ML_BLOCKING)
+         return false; // explicitly blocking everything
+      if(!tmthing->player && (ld->flags & ML_BLOCKMONSTERS))
+         return false; // block monsters only
+   }
+
+   front = LD_FRONTSECTOR(ld);
+   back  = LD_BACKSECTOR(ld);
+
+   if(front->ceilingheight < back->ceilingheight)
+      opentop = front->ceilingheight;
+   else
+      opentop = back->ceilingheight;
+
+   if(front->floorheight > back->floorheight)
+   {
+      openbottom = front->floorheight;
+      lowfloor   = back->floorheight;
+   }
+   else
+   {
+      openbottom = back->floorheight;
+      lowfloor   = front->floorheight;
+   }
+
+   // adjust floor/ceiling heights
+   if(opentop < w->tmceilingz)
+   {
+      w->tmceilingz = opentop;
+	  w->ceilingline = ld;
+   }
+   if(openbottom > w->tmfloorz)
+      w->tmfloorz = openbottom;
+   if(lowfloor < w->tmdropoffz)
+      w->tmdropoffz = lowfloor;
+
+   if (ld->special)
+   {
+       if (w->numspechit < MAXSPECIALCROSS)
+        w->spechit[w->numspechit++] = ld;
+   }
+   return true;
+}
 
 /*
 ================

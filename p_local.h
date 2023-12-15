@@ -170,6 +170,27 @@ typedef struct
 	fixed_t	x,y, dx, dy;
 } divline_t;
 
+typedef struct
+{
+	// input
+	mobj_t  *tmthing;
+	fixed_t tmx, tmy;
+	fixed_t tmbbox[4];
+
+	// output
+	int    	numspechit;
+	line_t	**spechit;
+	fixed_t tmfloorz;   // current floor z for P_TryMove2
+	fixed_t tmceilingz; // current ceiling z for P_TryMove2
+	fixed_t tmdropoffz; // lowest point contacted
+
+	line_t  *ceilingline;
+
+	mobj_t  *hitthing;
+} pcheckwork_t;
+
+boolean PIT_CheckThing(mobj_t* thing, pcheckwork_t *w) ATTR_DATA_CACHE_ALIGN;
+boolean PIT_CheckLine(line_t* ld, pcheckwork_t *w) ATTR_DATA_CACHE_ALIGN;
 
 fixed_t P_AproxDistance (fixed_t dx, fixed_t dy);
 int 	P_PointOnLineSide (fixed_t x, fixed_t y, line_t *line);
@@ -183,7 +204,9 @@ void 	P_LineBBox(line_t* ld, fixed_t*bbox);
 typedef boolean(*blocklinesiter_t)(line_t*, void*);
 typedef boolean(*blockthingsiter_t)(mobj_t*, void*);
 
+// the userp must conform to pcheckwork_t interface
 boolean P_BlockLinesIterator (int x, int y, blocklinesiter_t, void *userp );
+// the userp must conform to pcheckwork_t interface
 boolean P_BlockThingsIterator (int x, int y, blockthingsiter_t, void *userp );
 
 void 	P_UnsetThingPosition (mobj_t *thing);
@@ -307,8 +330,6 @@ typedef struct
 
 	int    		numspechit;
  	line_t		*spechit[MAXSPECIALCROSS];
-
-	line_t		*blockline;
 } ptrymove_t;
 
 boolean P_CheckPosition (ptrymove_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
