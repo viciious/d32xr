@@ -24,6 +24,7 @@ boolean	PIT_UseLines(line_t* li, plineuse_t *lu) ATTR_DATA_CACHE_ALIGN;
 void P_UseLines(player_t* player) __attribute__((noinline));
 boolean PIT_CheckThing(mobj_t* thing, pcheckwork_t *w) ATTR_DATA_CACHE_ALIGN;
 boolean PIT_CheckLine(line_t* ld, pcheckwork_t *w) ATTR_DATA_CACHE_ALIGN;
+boolean PIT_CheckPosition(pcheckwork_t *w, blockthingsiter_t thcheck) ATTR_DATA_CACHE_ALIGN;
 boolean PIT_RadiusAttack(mobj_t* thing, pradiusattack_t *ra) ATTR_DATA_CACHE_ALIGN;
 void P_RadiusAttack(mobj_t* spot, mobj_t* source, int damage) ATTR_DATA_CACHE_ALIGN;
 fixed_t P_AimLineAttack(lineattack_t *la, mobj_t* t1, angle_t angle, fixed_t distance) ATTR_DATA_CACHE_ALIGN;
@@ -58,14 +59,15 @@ movething
 ==================
 */
 
-boolean P_TryMove2 (pcheckwork_t *tm, boolean checkposonly);
+boolean P_TryMove2 (pcheckwork_t *tm);
 
 boolean P_CheckPosition (pcheckwork_t *tm, mobj_t *thing, fixed_t x, fixed_t y)
 {
 	tm->tmthing = thing;
 	tm->tmx = x;
 	tm->tmy = y;
-	return P_TryMove2 (tm, true);
+	tm->checkposonly = true;
+	return P_TryMove2 (tm);
 }
 
 
@@ -74,7 +76,8 @@ boolean P_TryMove (pcheckwork_t *tm, mobj_t *thing, fixed_t x, fixed_t y)
 	tm->tmthing = thing;
 	tm->tmx = x;
 	tm->tmy = y;
-	return P_TryMove2 (tm, false);
+	tm->checkposonly = false;
+	return P_TryMove2 (tm);
 }
 
 
@@ -259,6 +262,117 @@ boolean PIT_CheckLine(line_t *ld, pcheckwork_t *w)
        if (w->numspechit < MAXSPECIALCROSS)
         w->spechit[w->numspechit++] = ld;
    }
+   return true;
+}
+
+//
+// This is purely informative, nothing is modified (except things picked up)
+//
+boolean PIT_CheckPosition(pcheckwork_t *w, blockthingsiter_t thcheck)
+{
+   int xl, xh, yl, yh, bx, by;
+   mobj_t *tmthing = w->tmthing;
+   int tmflags = tmthing->flags;
+   VINT *lvalidcount;
+   subsector_t *newsubsec;
+
+   newsubsec = R_PointInSubsector(w->tmx, w->tmy);
+   w->newsubsec = newsubsec;
+
+   w->tmbbox[BOXTOP   ] = w->tmy + tmthing->radius;
+   w->tmbbox[BOXBOTTOM] = w->tmy - tmthing->radius;
+   w->tmbbox[BOXRIGHT ] = w->tmx + tmthing->radius;
+   w->tmbbox[BOXLEFT  ] = w->tmx - tmthing->radius;
+
+   // the base floor/ceiling is from the subsector that contains the point.
+   // Any contacted lines the step closer together will adjust them.
+   w->tmfloorz   = w->tmdropoffz = newsubsec->sector->floorheight;
+   w->tmceilingz = newsubsec->sector->ceilingheight;
+
+   w->numspechit = 0;
+   w->hitthing = NULL;
+   w->ceilingline = NULL;
+
+   if(tmflags & MF_NOCLIP) // thing has no clipping?
+      return true;
+
+   I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
+   *lvalidcount = *lvalidcount + 1;
+   if (*lvalidcount == 0)
+      *lvalidcount = 1;
+
+   // Check things first, possibly picking things up.
+   // The bounding box is extended by MAXRADIUS because mobj_ts are grouped
+   // into mapblocks based on their origin point, and can overlap into adjacent
+   // blocks by up to MAXRADIUS units.
+   xl = w->tmbbox[BOXLEFT  ] - bmaporgx - MAXRADIUS;
+   xh = w->tmbbox[BOXRIGHT ] - bmaporgx + MAXRADIUS;
+   yl = w->tmbbox[BOXBOTTOM] - bmaporgy - MAXRADIUS;
+   yh = w->tmbbox[BOXTOP   ] - bmaporgy + MAXRADIUS;
+
+	if(xl < 0)
+		xl = 0;
+	if(yl < 0)
+		yl = 0;
+	if(yh < 0)
+		return true;
+	if(xh < 0)
+		return true;
+
+   xl = (unsigned)xl >> MAPBLOCKSHIFT;
+   xh = (unsigned)xh >> MAPBLOCKSHIFT;
+   yl = (unsigned)yl >> MAPBLOCKSHIFT;
+   yh = (unsigned)yh >> MAPBLOCKSHIFT;
+
+   if(xh >= bmapwidth)
+      xh = bmapwidth - 1;
+   if(yh >= bmapheight)
+      yh = bmapheight - 1;
+
+   // check things
+   for(bx = xl; bx <= xh; bx++)
+   {
+      for(by = yl; by <= yh; by++)
+      {
+         if(!P_BlockThingsIterator(bx, by, thcheck, w))
+            return false;
+      }
+   }
+
+   // check lines
+   xl = w->tmbbox[BOXLEFT  ] - bmaporgx;
+   xh = w->tmbbox[BOXRIGHT ] - bmaporgx;
+   yl = w->tmbbox[BOXBOTTOM] - bmaporgy;
+   yh = w->tmbbox[BOXTOP   ] - bmaporgy;
+
+   if(xl < 0)
+      xl = 0;
+   if(yl < 0)
+      yl = 0;
+	if(yh < 0)
+		return true;
+	if(xh < 0)
+		return true;
+
+   xl = (unsigned)xl >> MAPBLOCKSHIFT;
+   xh = (unsigned)xh >> MAPBLOCKSHIFT;
+   yl = (unsigned)yl >> MAPBLOCKSHIFT;
+   yh = (unsigned)yh >> MAPBLOCKSHIFT;
+
+   if(xh >= bmapwidth)
+      xh = bmapwidth - 1;
+   if(yh >= bmapheight)
+      yh = bmapheight - 1;
+
+   for(bx = xl; bx <= xh; bx++)
+   {
+      for(by = yl; by <= yh; by++)
+      {
+         if(!P_BlockLinesIterator(bx, by, PIT_CheckLine, w))
+            return false;
+      }
+   }
+
    return true;
 }
 

@@ -175,11 +175,15 @@ typedef struct
 	fixed_t	x,y, dx, dy;
 } divline_t;
 
+typedef boolean(*blocklinesiter_t)(line_t*, void*);
+typedef boolean(*blockthingsiter_t)(mobj_t*, void*);
+
 typedef struct
 {
 	// input
 	mobj_t  *tmthing;
 	fixed_t tmx, tmy;
+	boolean checkposonly;
 
 	// output
 	fixed_t tmbbox[4];
@@ -195,24 +199,23 @@ typedef struct
 						/* within tmfloorz - tmceilingz */
 
 	line_t  *ceilingline;
+	subsector_t *newsubsec;
 
 	mobj_t  *hitthing;
 } pcheckwork_t;
 
-boolean PIT_CheckThing(mobj_t* thing, pcheckwork_t *w) ATTR_DATA_CACHE_ALIGN;
-boolean PIT_CheckLine(line_t* ld, pcheckwork_t *w) ATTR_DATA_CACHE_ALIGN;
+boolean PIT_CheckThing(mobj_t* thing, pcheckwork_t *w);
+boolean PIT_CheckLine(line_t* ld, pcheckwork_t *w);
+boolean PIT_CheckPosition(pcheckwork_t *w, blockthingsiter_t thcheck);
 
 fixed_t P_AproxDistance (fixed_t dx, fixed_t dy);
 int 	P_PointOnLineSide (fixed_t x, fixed_t y, line_t *line);
 int 	P_PointOnDivlineSide (fixed_t x, fixed_t y, divline_t *line);
-boolean P_BoxCrossLine (line_t *ld, fixed_t testbbox[4]) ATTR_DATA_CACHE_ALIGN;
+boolean P_BoxCrossLine (line_t *ld, fixed_t testbbox[4]);
 
 fixed_t	P_LineOpening (line_t *linedef);
 
 void 	P_LineBBox(line_t* ld, fixed_t*bbox);
-
-typedef boolean(*blocklinesiter_t)(line_t*, void*);
-typedef boolean(*blockthingsiter_t)(mobj_t*, void*);
 
 // the userp must conform to pcheckwork_t interface
 boolean P_BlockLinesIterator (int x, int y, blocklinesiter_t, void *userp );

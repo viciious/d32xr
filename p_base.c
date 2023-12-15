@@ -32,83 +32,11 @@
 #include "p_local.h"
 #include "mars.h"
 
-static boolean PB_CheckPosition(pcheckwork_t *w, subsector_t **pnewsubsec) ATTR_DATA_CACHE_ALIGN;
 static boolean PB_TryMove(pcheckwork_t *w, mobj_t* mo, fixed_t tryx, fixed_t tryy) ATTR_DATA_CACHE_ALIGN;
 static void P_FloatChange(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
 void P_ZMovement(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
 void P_MobjThinker(mobj_t* mobj) ATTR_DATA_CACHE_ALIGN;
 void P_XYMovement(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
-
-//
-// Check an mobj's position for validity against lines and other mobjs
-//
-static boolean PB_CheckPosition(pcheckwork_t *w, subsector_t **pnewsubsec)
-{
-   int xl, xh, yl, yh, bx, by;
-   VINT *lvalidcount;
-   mobj_t *mo = w->tmthing;
-   subsector_t *testsubsec;
-
-   w->tmbbox[BOXTOP   ] = w->tmy + mo->radius;
-   w->tmbbox[BOXBOTTOM] = w->tmy - mo->radius;
-   w->tmbbox[BOXRIGHT ] = w->tmx + mo->radius;
-   w->tmbbox[BOXLEFT  ] = w->tmx - mo->radius;
-
-   // the base floor / ceiling is from the subsector that contains the point.
-   // Any contacted lines the step closer together will adjust them.
-   testsubsec = *pnewsubsec = R_PointInSubsector(w->tmx, w->tmy);
-   w->tmfloorz   = w->tmdropoffz = testsubsec->sector->floorheight;
-   w->tmceilingz = testsubsec->sector->ceilingheight;
-
-   I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
-   *lvalidcount = *lvalidcount + 1;
-   if (*lvalidcount == 0)
-      *lvalidcount = 1;
-
-   w->numspechit  = 0;
-   w->ceilingline = NULL;
-   w->hitthing    = NULL;
-
-   // the bounding box is extended by MAXRADIUS because mobj_ts are grouped into
-   // mapblocks based on their origin point, and can overlap into adjacent blocks
-   // by up to MAXRADIUS units
-   xl = w->tmbbox[BOXLEFT  ] - bmaporgx - MAXRADIUS;
-   xh = w->tmbbox[BOXRIGHT ] - bmaporgx + MAXRADIUS;
-   yl = w->tmbbox[BOXBOTTOM] - bmaporgy - MAXRADIUS;
-   yh = w->tmbbox[BOXTOP   ] - bmaporgy + MAXRADIUS;
-
-   if(xl < 0)
-      xl = 0;
-   if(yl < 0)
-      yl = 0;
-   if(xh < 0)
-      return true;
-   if(yh < 0)
-      return true;
-
-   xl = (unsigned)xl >> MAPBLOCKSHIFT;
-   xh = (unsigned)xh >> MAPBLOCKSHIFT;
-   yl = (unsigned)yl >> MAPBLOCKSHIFT;
-   yh = (unsigned)yh >> MAPBLOCKSHIFT;
-
-   if(xh >= bmapwidth)
-      xh = bmapwidth - 1;
-   if(yh >= bmapheight)
-      yh = bmapheight - 1;
-
-   for(bx = xl; bx <= xh; bx++)
-   {
-      for(by = yl; by <= yh; by++)
-      {
-         if(!P_BlockThingsIterator(bx, by, (blockthingsiter_t)PIT_CheckThing, w))
-            return false;
-         if(!P_BlockLinesIterator(bx, by, (blocklinesiter_t)PIT_CheckLine, w))
-            return false;
-      }
-   }
-
-   return true;
-}
 
 // 
 // Try to move to the new position, and relink the mobj to the new position if
@@ -116,13 +44,11 @@ static boolean PB_CheckPosition(pcheckwork_t *w, subsector_t **pnewsubsec)
 //
 static boolean PB_TryMove(pcheckwork_t *w, mobj_t *mo, fixed_t tryx, fixed_t tryy)
 {
-   subsector_t *testsubsec;
-
    w->tmx = tryx;
    w->tmy = tryy;
    w->tmthing = mo; // store for PB_CheckThing
 
-   if(!PB_CheckPosition(w, &testsubsec))
+   if(!PIT_CheckPosition(w, (blockthingsiter_t)&PIT_CheckThing))
       return false; // solid wall or thing
 
    if(w->tmceilingz - w->tmfloorz < mo->height)
@@ -140,7 +66,7 @@ static boolean PB_TryMove(pcheckwork_t *w, mobj_t *mo, fixed_t tryx, fixed_t try
    mo->ceilingz = w->tmceilingz;
    mo->x        = tryx;
    mo->y        = tryy;
-   P_SetThingPosition2(mo, testsubsec);
+   P_SetThingPosition2(mo, w->newsubsec);
 
    return true;
 }

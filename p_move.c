@@ -30,8 +30,7 @@
 #include "p_local.h"
 
 static boolean PM_CheckThing(mobj_t *thing, pcheckwork_t *w) ATTR_DATA_CACHE_ALIGN;
-static boolean PM_CheckPosition(pcheckwork_t *w, subsector_t **pnewsubsec) ATTR_DATA_CACHE_ALIGN;
-boolean P_TryMove2(pcheckwork_t *tm, boolean checkposonly) ATTR_DATA_CACHE_ALIGN;
+boolean P_TryMove2(pcheckwork_t *tm) ATTR_DATA_CACHE_ALIGN;
 
 static boolean PM_CheckThing(mobj_t *thing, pcheckwork_t *w)
 {
@@ -67,127 +66,16 @@ static boolean PM_CheckThing(mobj_t *thing, pcheckwork_t *w)
 }
 
 //
-// This is purely informative, nothing is modified (except things picked up)
-//
-static boolean PM_CheckPosition(pcheckwork_t *w, subsector_t **pnewsubsec)
-{
-   int xl, xh, yl, yh, bx, by;
-   mobj_t *tmthing = w->tmthing;
-   int tmflags = tmthing->flags;
-   VINT *lvalidcount;
-   subsector_t *newsubsec;
-
-   newsubsec = R_PointInSubsector(w->tmx, w->tmy);
-   *pnewsubsec = newsubsec;
-
-   w->tmbbox[BOXTOP   ] = w->tmy + tmthing->radius;
-   w->tmbbox[BOXBOTTOM] = w->tmy - tmthing->radius;
-   w->tmbbox[BOXRIGHT ] = w->tmx + tmthing->radius;
-   w->tmbbox[BOXLEFT  ] = w->tmx - tmthing->radius;
-
-   // the base floor/ceiling is from the subsector that contains the point.
-   // Any contacted lines the step closer together will adjust them.
-   w->tmfloorz   = w->tmdropoffz = newsubsec->sector->floorheight;
-   w->tmceilingz = newsubsec->sector->ceilingheight;
-
-   w->numspechit = 0;
-   w->hitthing = NULL;
-   w->ceilingline = NULL;
-
-   if(tmflags & MF_NOCLIP) // thing has no clipping?
-      return true;
-
-   I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
-   *lvalidcount = *lvalidcount + 1;
-   if (*lvalidcount == 0)
-      *lvalidcount = 1;
-
-   // Check things first, possibly picking things up.
-   // The bounding box is extended by MAXRADIUS because mobj_ts are grouped
-   // into mapblocks based on their origin point, and can overlap into adjacent
-   // blocks by up to MAXRADIUS units.
-   xl = w->tmbbox[BOXLEFT  ] - bmaporgx - MAXRADIUS;
-   xh = w->tmbbox[BOXRIGHT ] - bmaporgx + MAXRADIUS;
-   yl = w->tmbbox[BOXBOTTOM] - bmaporgy - MAXRADIUS;
-   yh = w->tmbbox[BOXTOP   ] - bmaporgy + MAXRADIUS;
-
-	if(xl < 0)
-		xl = 0;
-	if(yl < 0)
-		yl = 0;
-	if(yh < 0)
-		return true;
-	if(xh < 0)
-		return true;
-
-   xl = (unsigned)xl >> MAPBLOCKSHIFT;
-   xh = (unsigned)xh >> MAPBLOCKSHIFT;
-   yl = (unsigned)yl >> MAPBLOCKSHIFT;
-   yh = (unsigned)yh >> MAPBLOCKSHIFT;
-
-   if(xh >= bmapwidth)
-      xh = bmapwidth - 1;
-   if(yh >= bmapheight)
-      yh = bmapheight - 1;
-
-   // check things
-   for(bx = xl; bx <= xh; bx++)
-   {
-      for(by = yl; by <= yh; by++)
-      {
-         if(!P_BlockThingsIterator(bx, by, (blockthingsiter_t)PM_CheckThing, w))
-            return false;
-      }
-   }
-
-   // check lines
-   xl = w->tmbbox[BOXLEFT  ] - bmaporgx;
-   xh = w->tmbbox[BOXRIGHT ] - bmaporgx;
-   yl = w->tmbbox[BOXBOTTOM] - bmaporgy;
-   yh = w->tmbbox[BOXTOP   ] - bmaporgy;
-
-   if(xl < 0)
-      xl = 0;
-   if(yl < 0)
-      yl = 0;
-	if(yh < 0)
-		return true;
-	if(xh < 0)
-		return true;
-
-   xl = (unsigned)xl >> MAPBLOCKSHIFT;
-   xh = (unsigned)xh >> MAPBLOCKSHIFT;
-   yl = (unsigned)yl >> MAPBLOCKSHIFT;
-   yh = (unsigned)yh >> MAPBLOCKSHIFT;
-
-   if(xh >= bmapwidth)
-      xh = bmapwidth - 1;
-   if(yh >= bmapheight)
-      yh = bmapheight - 1;
-
-   for(bx = xl; bx <= xh; bx++)
-   {
-      for(by = yl; by <= yh; by++)
-      {
-         if(!P_BlockLinesIterator(bx, by, (blocklinesiter_t)PIT_CheckLine, w))
-            return false;
-      }
-   }
-
-   return true;
-}
-
-//
 // Attempt to move to a new position, crossing special lines unless MF_TELEPORT
 // is set.
 //
-boolean P_TryMove2(pcheckwork_t *tm, boolean checkposonly)
+boolean P_TryMove2(pcheckwork_t *tm)
 {
-   subsector_t *newsubsec;
    boolean trymove2; // result from P_TryMove2
    mobj_t *tmthing = tm->tmthing;
+   boolean checkposonly = tm->checkposonly;
 
-   trymove2 = PM_CheckPosition(tm, &newsubsec);
+   trymove2 = PIT_CheckPosition(tm, (blockthingsiter_t)&PM_CheckThing);
    tm->floatok = false;
 
    if(checkposonly)
@@ -215,7 +103,7 @@ boolean P_TryMove2(pcheckwork_t *tm, boolean checkposonly)
    tmthing->ceilingz = tm->tmceilingz;
    tmthing->x        = tm->tmx;
    tmthing->y        = tm->tmy;
-   P_SetThingPosition2(tmthing, newsubsec);
+   P_SetThingPosition2(tmthing, tm->newsubsec);
 
    return true;
 }
