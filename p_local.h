@@ -204,10 +204,6 @@ typedef struct
 	mobj_t  *hitthing;
 } pcheckwork_t;
 
-boolean PIT_CheckThing(mobj_t* thing, pcheckwork_t *w);
-boolean PIT_CheckLine(line_t* ld, pcheckwork_t *w);
-boolean PIT_CheckPosition(pcheckwork_t *w, blockthingsiter_t thcheck);
-
 fixed_t P_AproxDistance (fixed_t dx, fixed_t dy);
 int 	P_PointOnLineSide (fixed_t x, fixed_t y, line_t *line);
 int 	P_PointOnDivlineSide (fixed_t x, fixed_t y, divline_t *line);
@@ -317,7 +313,8 @@ void P_RespawnSpecials (void);
 */
 
 boolean P_CheckPosition (pcheckwork_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
-boolean P_TryMove (pcheckwork_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
+boolean P_TryMove (pcheckwork_t *tm, mobj_t *thing, fixed_t x, fixed_t y, boolean latecheck);
+boolean P_TryNoImpactMove (pcheckwork_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
 void P_MoveCrossSpecials(mobj_t *tmthing, int numspechit, line_t **spechit, fixed_t oldx, fixed_t oldy);
 
 typedef struct

@@ -38,7 +38,7 @@ void P_PlayerMove (mobj_t *mo)
 	if (sm.slidex == mo->x && sm.slidey == mo->y)
 		goto stairstep;
 		
-	if ( P_TryMove (&tm, mo, sm.slidex, sm.slidey) )
+	if ( P_TryMove (&tm, mo, sm.slidex, sm.slidey, false) )
 		goto dospecial;
 		
 stairstep:
@@ -53,14 +53,14 @@ stairstep:
 		
 /* something fucked up in slidemove, so stairstep */
 
-	if (P_TryMove (&tm, mo, mo->x, mo->y + momy))
+	if (P_TryMove (&tm, mo, mo->x, mo->y + momy, false))
 	{
 		mo->momx = 0;
 		mo->momy = momy;
 		goto dospecial;
 	}
 	
-	if (P_TryMove (&tm, mo, mo->x + momx, mo->y))
+	if (P_TryMove (&tm, mo, mo->x + momx, mo->y, false))
 	{
 		mo->momx = momx;
 		mo->momy = 0;

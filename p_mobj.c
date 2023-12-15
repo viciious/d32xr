@@ -679,7 +679,7 @@ void P_CheckMissileSpawn (mobj_t *th)
 	th->y += (th->momy>>1);	/* move a little forward so an angle can */
 							/* be computed if it immediately explodes */
 	th->z += (th->momz>>1);
-	if (!P_TryMove (&tm, th, th->x, th->y))
+	if (!P_TryMove (&tm, th, th->x, th->y, false))
 		P_ExplodeMissile (th);
 }
 

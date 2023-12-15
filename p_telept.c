@@ -79,7 +79,7 @@ int	EV_Teleport( line_t *line,mobj_t *thing )
 				thing->flags |= MF_TELEPORT;
 				if (thing->player)
 					P_Telefrag (thing, m->x, m->y);
-				flag = P_TryMove (&tm, thing, m->x, m->y);
+				flag = P_TryMove (&tm, thing, m->x, m->y, false);
 				thing->flags &= ~MF_TELEPORT;
 				if (!flag)
 					return 0;	/* move is blocked */

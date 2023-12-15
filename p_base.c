@@ -32,44 +32,10 @@
 #include "p_local.h"
 #include "mars.h"
 
-static boolean PB_TryMove(pcheckwork_t *w, mobj_t* mo, fixed_t tryx, fixed_t tryy) ATTR_DATA_CACHE_ALIGN;
 static void P_FloatChange(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
 void P_ZMovement(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
 void P_MobjThinker(mobj_t* mobj) ATTR_DATA_CACHE_ALIGN;
 void P_XYMovement(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
-
-// 
-// Try to move to the new position, and relink the mobj to the new position if
-// successful.
-//
-static boolean PB_TryMove(pcheckwork_t *w, mobj_t *mo, fixed_t tryx, fixed_t tryy)
-{
-   w->tmx = tryx;
-   w->tmy = tryy;
-   w->tmthing = mo; // store for PB_CheckThing
-
-   if(!PIT_CheckPosition(w, (blockthingsiter_t)&PIT_CheckThing))
-      return false; // solid wall or thing
-
-   if(w->tmceilingz - w->tmfloorz < mo->height)
-      return false; // doesn't fit
-   if(w->tmceilingz - mo->z < mo->height)
-      return false; // mobj must lower itself to fit
-   if(w->tmfloorz - mo->z > 24*FRACUNIT)
-      return false; // too big a step up
-   if(!(mo->flags & (MF_DROPOFF|MF_FLOAT)) && w->tmfloorz - w->tmdropoffz > 24*FRACUNIT)
-      return false; // don't stand over a dropoff
-
-   // the move is ok, so link the thing into its new position
-   P_UnsetThingPosition(mo);
-   mo->floorz   = w->tmfloorz;
-   mo->ceilingz = w->tmceilingz;
-   mo->x        = tryx;
-   mo->y        = tryy;
-   P_SetThingPosition2(mo, w->newsubsec);
-
-   return true;
-}
 
 #define STOPSPEED 0x1000
 #define FRICTION  0xd240
@@ -97,7 +63,7 @@ void P_XYMovement(mobj_t *mo)
       xleft -= xuse;
       yleft -= yuse;
 
-      if(!PB_TryMove(&w, mo, mo->x + xuse, mo->y + yuse))
+      if(!P_TryMove(&w, mo, mo->x + xuse, mo->y + yuse, true))
       {
          // blocked move
 
