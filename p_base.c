@@ -58,7 +58,7 @@ void P_XYMovement(mobj_t *mo)
 
    while(xleft || yleft)
    {
-      pcheckwork_t w;
+      pmovework_t w;
 
       xleft -= xuse;
       yleft -= yuse;

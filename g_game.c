@@ -244,7 +244,7 @@ boolean G_CheckSpot (int playernum, mapthing_t *mthing)
 { 
 	fixed_t         x,y; 
 	int             an;
-	pcheckwork_t	tm;
+	pmovework_t	tm;
 
 	x = mthing->x << FRACBITS; 
 	y = mthing->y << FRACBITS; 

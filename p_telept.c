@@ -65,7 +65,7 @@ int	EV_Teleport( line_t *line,mobj_t *thing )
 		{
 			for (m=mobjhead.next ; m != (void *)&mobjhead ; m=m->next)
 			{
-				pcheckwork_t tm;
+				pmovework_t tm;
 
 				if (m->type != MT_TELEPORTMAN )
 					continue;		/* not a teleportman */

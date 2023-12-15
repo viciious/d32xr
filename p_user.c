@@ -26,7 +26,7 @@ void P_PlayerMove (mobj_t *mo)
 	fixed_t		momx, momy;
 	int 		i;
 	pslidemove_t sm;
-	pcheckwork_t tm;
+	pmovework_t tm;
 
 	momx = vblsinframe*(mo->momx>>2);
 	momy = vblsinframe*(mo->momy>>2);

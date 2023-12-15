@@ -202,7 +202,7 @@ typedef struct
 	subsector_t *newsubsec;
 
 	mobj_t  *hitthing;
-} pcheckwork_t;
+} pmovework_t;
 
 fixed_t P_AproxDistance (fixed_t dx, fixed_t dy);
 int 	P_PointOnLineSide (fixed_t x, fixed_t y, line_t *line);
@@ -213,9 +213,9 @@ fixed_t	P_LineOpening (line_t *linedef);
 
 void 	P_LineBBox(line_t* ld, fixed_t*bbox);
 
-// the userp must conform to pcheckwork_t interface
+// the userp must conform to pmovework_t interface
 boolean P_BlockLinesIterator (int x, int y, blocklinesiter_t, void *userp );
-// the userp must conform to pcheckwork_t interface
+// the userp must conform to pmovework_t interface
 boolean P_BlockThingsIterator (int x, int y, blockthingsiter_t, void *userp );
 
 void 	P_UnsetThingPosition (mobj_t *thing);
@@ -312,9 +312,9 @@ void P_RespawnSpecials (void);
 ===============================================================================
 */
 
-boolean P_CheckPosition (pcheckwork_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
-boolean P_TryMove (pcheckwork_t *tm, mobj_t *thing, fixed_t x, fixed_t y, boolean latecheck);
-boolean P_TryNoImpactMove (pcheckwork_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
+boolean P_CheckPosition (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
+boolean P_TryMove (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y, boolean latecheck);
+boolean P_TryNoImpactMove (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
 void P_MoveCrossSpecials(mobj_t *tmthing, int numspechit, line_t **spechit, fixed_t oldx, fixed_t oldy);
 
 typedef struct

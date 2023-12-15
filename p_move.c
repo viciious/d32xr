@@ -29,20 +29,20 @@
 #include "doomdef.h"
 #include "p_local.h"
 
-boolean PIT_CheckThing(mobj_t* thing, pcheckwork_t *w) ATTR_DATA_CACHE_ALIGN;
-boolean PIT_CheckLine(line_t* ld, pcheckwork_t *w) ATTR_DATA_CACHE_ALIGN;
-boolean PIT_CheckPosition(pcheckwork_t *w, blockthingsiter_t thcheck) ATTR_DATA_CACHE_ALIGN;
+boolean PIT_CheckThing(mobj_t* thing, pmovework_t *w) ATTR_DATA_CACHE_ALIGN;
+boolean PIT_CheckLine(line_t* ld, pmovework_t *w) ATTR_DATA_CACHE_ALIGN;
+boolean PIT_CheckPosition(pmovework_t *w, blockthingsiter_t thcheck) ATTR_DATA_CACHE_ALIGN;
 
-static boolean PM_CheckThing(mobj_t *thing, pcheckwork_t *w) ATTR_DATA_CACHE_ALIGN;
-static boolean P_TryMove2(pcheckwork_t *tm, boolean checkposonly, blockthingsiter_t thcheck) ATTR_DATA_CACHE_ALIGN;
+static boolean PM_CheckThing(mobj_t *thing, pmovework_t *w) ATTR_DATA_CACHE_ALIGN;
+static boolean P_TryMove2(pmovework_t *tm, boolean checkposonly, blockthingsiter_t thcheck) ATTR_DATA_CACHE_ALIGN;
 
-boolean P_CheckPosition (pcheckwork_t *tm, mobj_t *thing, fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
-boolean P_TryMove (pcheckwork_t *tm, mobj_t *thing, fixed_t x, fixed_t y, boolean latecheck) ATTR_DATA_CACHE_ALIGN;
+boolean P_CheckPosition (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
+boolean P_TryMove (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y, boolean latecheck) ATTR_DATA_CACHE_ALIGN;
 
 //
 // Check a single mobj in one of the contacted blockmap cells.
 //
-boolean PIT_CheckThing(mobj_t *thing, pcheckwork_t *w)
+boolean PIT_CheckThing(mobj_t *thing, pmovework_t *w)
 {
    fixed_t blockdist;
    int     delta;
@@ -113,7 +113,7 @@ boolean PIT_CheckThing(mobj_t *thing, pcheckwork_t *w)
 //
 // Adjusts tmfloorz and tmceilingz as lines are contacted.
 //
-boolean PIT_CheckLine(line_t *ld, pcheckwork_t *w)
+boolean PIT_CheckLine(line_t *ld, pmovework_t *w)
 {
    fixed_t   opentop, openbottom, lowfloor;
    sector_t *front, *back;
@@ -176,7 +176,7 @@ boolean PIT_CheckLine(line_t *ld, pcheckwork_t *w)
 //
 // This is purely informative, nothing is modified (except things picked up)
 //
-boolean PIT_CheckPosition(pcheckwork_t *w, blockthingsiter_t thcheck)
+boolean PIT_CheckPosition(pmovework_t *w, blockthingsiter_t thcheck)
 {
    int xl, xh, yl, yh, bx, by;
    mobj_t *tmthing = w->tmthing;
@@ -284,7 +284,7 @@ boolean PIT_CheckPosition(pcheckwork_t *w, blockthingsiter_t thcheck)
    return true;
 }
 
-static boolean PM_CheckThing(mobj_t *thing, pcheckwork_t *w)
+static boolean PM_CheckThing(mobj_t *thing, pmovework_t *w)
 {
    mobj_t *tmthing = w->tmthing;
    int     damage;
@@ -321,7 +321,7 @@ static boolean PM_CheckThing(mobj_t *thing, pcheckwork_t *w)
 // Attempt to move to a new position, crossing special lines unless MF_TELEPORT
 // is set.
 //
-static boolean P_TryMove2(pcheckwork_t *w, boolean checkposonly, blockthingsiter_t thcheck)
+static boolean P_TryMove2(pmovework_t *w, boolean checkposonly, blockthingsiter_t thcheck)
 {
    boolean trymove2; // result from P_TryMove2
    mobj_t *tmthing = w->tmthing;
@@ -403,7 +403,7 @@ movething
 ==================
 */
 
-boolean P_CheckPosition (pcheckwork_t *tm, mobj_t *thing, fixed_t x, fixed_t y)
+boolean P_CheckPosition (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y)
 {
 	tm->tmthing = thing;
 	tm->tmx = x;
@@ -411,7 +411,7 @@ boolean P_CheckPosition (pcheckwork_t *tm, mobj_t *thing, fixed_t x, fixed_t y)
 	return P_TryMove2 (tm, true, (blockthingsiter_t)&PM_CheckThing);
 }
 
-boolean P_TryMove (pcheckwork_t *tm, mobj_t *thing, fixed_t x, fixed_t y, boolean latecheck)
+boolean P_TryMove (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y, boolean latecheck)
 {
 	tm->tmthing = thing;
 	tm->tmx = x;
