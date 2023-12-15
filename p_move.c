@@ -323,7 +323,7 @@ static boolean PM_CheckThing(mobj_t *thing, pmovework_t *w)
 //
 static boolean P_TryMove2(pmovework_t *w, boolean checkposonly, blockthingsiter_t thcheck)
 {
-   boolean trymove2; // result from P_TryMove2
+   boolean trymove2; // result from PIT_CheckPosition
    mobj_t *tmthing = w->tmthing;
 
    trymove2 = PIT_CheckPosition(w, thcheck);
