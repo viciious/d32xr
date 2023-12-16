@@ -63,7 +63,7 @@ void P_XYMovement(mobj_t *mo)
       xleft -= xuse;
       yleft -= yuse;
 
-      if(!P_TryMove(&w, mo, mo->x + xuse, mo->y + yuse, true))
+      if(!P_TryMove(&w, mo, mo->x + xuse, mo->y + yuse))
       {
          // blocked move
 

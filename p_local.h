@@ -313,8 +313,7 @@ void P_RespawnSpecials (void);
 */
 
 boolean P_CheckPosition (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
-boolean P_TryMove (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y, boolean latecheck);
-boolean P_TryNoImpactMove (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
+boolean P_TryMove (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
 void P_MoveCrossSpecials(mobj_t *tmthing, int numspechit, line_t **spechit, fixed_t oldx, fixed_t oldy);
 
 typedef struct

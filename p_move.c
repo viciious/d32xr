@@ -29,15 +29,14 @@
 #include "doomdef.h"
 #include "p_local.h"
 
-boolean PIT_CheckThing(mobj_t* thing, pmovework_t *w) ATTR_DATA_CACHE_ALIGN;
-boolean PIT_CheckLine(line_t* ld, pmovework_t *w) ATTR_DATA_CACHE_ALIGN;
-boolean PIT_CheckPosition(pmovework_t *w, blockthingsiter_t thcheck) ATTR_DATA_CACHE_ALIGN;
+static boolean PIT_CheckThing(mobj_t* thing, pmovework_t *w) ATTR_DATA_CACHE_ALIGN;
+static boolean PIT_CheckLine(line_t* ld, pmovework_t *w) ATTR_DATA_CACHE_ALIGN;
+static boolean PIT_CheckPosition(pmovework_t *w) ATTR_DATA_CACHE_ALIGN;
 
-static boolean PM_CheckThing(mobj_t *thing, pmovework_t *w) ATTR_DATA_CACHE_ALIGN;
-static boolean P_TryMove2(pmovework_t *tm, boolean checkposonly, blockthingsiter_t thcheck) ATTR_DATA_CACHE_ALIGN;
+static boolean P_TryMove2(pmovework_t *tm, boolean checkposonly) ATTR_DATA_CACHE_ALIGN;
 
 boolean P_CheckPosition (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
-boolean P_TryMove (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y, boolean latecheck) ATTR_DATA_CACHE_ALIGN;
+boolean P_TryMove (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
 
 //
 // Check a single mobj in one of the contacted blockmap cells.
@@ -176,7 +175,7 @@ boolean PIT_CheckLine(line_t *ld, pmovework_t *w)
 //
 // This is purely informative, nothing is modified (except things picked up)
 //
-boolean PIT_CheckPosition(pmovework_t *w, blockthingsiter_t thcheck)
+boolean PIT_CheckPosition(pmovework_t *w)
 {
    int xl, xh, yl, yh, bx, by;
    mobj_t *tmthing = w->tmthing;
@@ -242,7 +241,7 @@ boolean PIT_CheckPosition(pmovework_t *w, blockthingsiter_t thcheck)
    {
       for(by = yl; by <= yh; by++)
       {
-         if(!P_BlockThingsIterator(bx, by, thcheck, w))
+         if(!P_BlockThingsIterator(bx, by, (blockthingsiter_t)PIT_CheckThing, w))
             return false;
       }
    }
@@ -284,49 +283,16 @@ boolean PIT_CheckPosition(pmovework_t *w, blockthingsiter_t thcheck)
    return true;
 }
 
-static boolean PM_CheckThing(mobj_t *thing, pmovework_t *w)
-{
-   mobj_t *tmthing = w->tmthing;
-   int     damage;
-   const mobjinfo_t* thinfo = &mobjinfo[tmthing->type];
-
-   if (PIT_CheckThing(thing, w)) {
-      return true;
-   }
-
-   if (!w->hitthing) {
-      return false;
-   }
-
-   if(tmthing->flags & MF_SKULLFLY) {
-      damage = ((P_Random()&7)+1)* thinfo->damage;
-      P_DamageMobj (thing, tmthing, tmthing, damage);
-      tmthing->flags &= ~MF_SKULLFLY;
-      tmthing->momx = tmthing->momy = tmthing->momz = 0;
-      P_SetMobjState (tmthing, thinfo->spawnstate);
-      return false;
-   }
-
-   if(tmthing->flags & MF_MISSILE) {
-      // damage/explode
-      damage = ((P_Random()&7)+1)* thinfo->damage;
-		P_DamageMobj (thing, tmthing, tmthing->target, damage);
-      return false;
-   }
-
-   return false;
-}
-
 //
 // Attempt to move to a new position, crossing special lines unless MF_TELEPORT
 // is set.
 //
-static boolean P_TryMove2(pmovework_t *w, boolean checkposonly, blockthingsiter_t thcheck)
+static boolean P_TryMove2(pmovework_t *w, boolean checkposonly)
 {
    boolean trymove2; // result from PIT_CheckPosition
    mobj_t *tmthing = w->tmthing;
 
-   trymove2 = PIT_CheckPosition(w, thcheck);
+   trymove2 = PIT_CheckPosition(w);
    w->floatok = false;
 
    if(checkposonly)
@@ -408,15 +374,15 @@ boolean P_CheckPosition (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y)
 	tm->tmthing = thing;
 	tm->tmx = x;
 	tm->tmy = y;
-	return P_TryMove2 (tm, true, (blockthingsiter_t)&PM_CheckThing);
+	return P_TryMove2 (tm, true);
 }
 
-boolean P_TryMove (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y, boolean latecheck)
+boolean P_TryMove (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y)
 {
 	tm->tmthing = thing;
 	tm->tmx = x;
 	tm->tmy = y;
-	return P_TryMove2 (tm, false, latecheck ? (blockthingsiter_t)&PIT_CheckThing : (blockthingsiter_t)&PM_CheckThing);
+	return P_TryMove2 (tm, false);
 }
 
 // EOF

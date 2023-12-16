@@ -129,8 +129,16 @@ boolean P_Move (mobj_t *actor)
 	tryx = actor->x + actor->speed*xspeed[actor->movedir];
 	tryy = actor->y + actor->speed*yspeed[actor->movedir];
 	
-	if (!P_TryMove (&tm, actor, tryx, tryy, true) )
-	{	/* open any specials */
+	if (!P_TryMove (&tm, actor, tryx, tryy) )
+	{
+		if (actor->flags & MF_SKULLFLY && tm.hitthing)
+		{
+			actor->extradata = (intptr_t)tm.hitthing;
+			L_SkullBash(actor);
+			return false;
+		}
+
+		/* open any specials */
 		if (actor->flags & MF_FLOAT && tm.floatok)
 		{	/* must adjust height */
 			if (actor->z < tm.tmfloorz)
