@@ -71,6 +71,7 @@ OBJS = \
 	p_base.o \
 	p_user.o \
 	p_sight.o \
+	p_sight2.o \
 	p_shoot.o \
 	p_move.o \
 	p_change.o \

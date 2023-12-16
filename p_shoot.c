@@ -35,18 +35,6 @@
 // tracing.  If no thing is targeted along the entire range, the first line
 // that blocks the midpoint of the shootdiv will be hit.
 
-// CALICO: removed type punning by bringing back intercept_t
-typedef struct intercept_s
-{
-    union ptr_u
-    {
-        mobj_t* mo;
-        line_t* line;
-    } d;
-    fixed_t frac;
-    boolean isaline;
-} intercept_t;
-
 typedef struct
 {
    mobj_t    *shooter;
