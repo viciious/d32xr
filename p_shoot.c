@@ -72,7 +72,6 @@ static boolean PA_ShootLine(shootWork_t *sw, line_t* li, fixed_t interceptfrac) 
 static boolean PA_ShootThing(shootWork_t *sw, mobj_t* th, fixed_t interceptfrac) ATTR_DATA_CACHE_ALIGN;
 static boolean PA_DoIntercept(shootWork_t *sw, intercept_t* in) ATTR_DATA_CACHE_ALIGN;
 static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum) ATTR_DATA_CACHE_ALIGN;
-static int PA_DivlineSide(fixed_t x, fixed_t y, divline_t* line) ATTR_DATA_CACHE_ALIGN;
 static boolean PA_CrossBSPNode(shootWork_t *sw, int bspnum) ATTR_DATA_CACHE_ALIGN;
 void P_Shoot2(lineattack_t *la) ATTR_DATA_CACHE_ALIGN;
 
@@ -359,26 +358,6 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
    return true; // passed the subsector ok
 }
 
-/*
-=====================
-=
-= PA_DivlineSide
-=
-=====================
-*/
-static int PA_DivlineSide(fixed_t x, fixed_t y, divline_t *line)
-{
-	fixed_t dx, dy;
-
-	x = (x - line->x) >> FRACBITS;
-	y = (y - line->y) >> FRACBITS;
-
-	dx = x * (line->dy >> FRACBITS);
-	dy = y * (line->dx >> FRACBITS);
-
-	return (dy < dx) ^ 1;
-}
-
 //
 // Walk the BSP tree to follow the trace.
 //
@@ -402,8 +381,8 @@ check:
    dl.y = (fixed_t)bsp->y << 16;
 
    // decide which side the start point is on
-   side = PA_DivlineSide(sw->shootdiv.x, sw->shootdiv.y, &dl);
-   side2 = PA_DivlineSide(sw->shootx2, sw->shooty2, &dl);
+   side = P_DivlineSide(sw->shootdiv.x, sw->shootdiv.y, &dl) == 1;
+   side2 = P_DivlineSide(sw->shootx2, sw->shooty2, &dl) == 1;
 
    // cross the starting side
    if(!PA_CrossBSPNode(sw, bsp->children[side]))
