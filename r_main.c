@@ -196,17 +196,18 @@ struct subsector_s *R_PointInSubsector (fixed_t x, fixed_t y)
 		
 	nodenum = numnodes-1;
 
-#ifdef MARS
-	while ( (int16_t)nodenum >= 0 )
-#else
-	while (! (nodenum & NF_SUBSECTOR) )
-#endif
+	do
 	{
 		node = &nodes[nodenum];
 		side = R_PointOnSide(x, y, node);
 		nodenum = node->children[side];
 	}
-	
+	#ifdef MARS
+	while ( (int16_t)nodenum >= 0 );
+#else
+	while (! (nodenum & NF_SUBSECTOR) );
+#endif
+
 	return &subsectors[nodenum & ~NF_SUBSECTOR];
 	
 }
