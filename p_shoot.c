@@ -35,18 +35,6 @@
 // tracing.  If no thing is targeted along the entire range, the first line
 // that blocks the midpoint of the shootdiv will be hit.
 
-// CALICO: removed type punning by bringing back intercept_t
-typedef struct intercept_s
-{
-    union ptr_u
-    {
-        mobj_t* mo;
-        line_t* line;
-    } d;
-    fixed_t frac;
-    boolean isaline;
-} intercept_t;
-
 typedef struct
 {
    mobj_t    *shooter;
@@ -256,7 +244,7 @@ static boolean PA_ShootThing(shootWork_t *sw, mobj_t *th, fixed_t interceptfrac)
 //
 // Process an intercept
 //
-#define COPY_INTERCEPT(dst,src) do { (dst)->d.line = (src)->d.line, (dst)->frac = (src)->frac, (dst)->isaline = (src)->isaline; } while(0)
+#define COPY_INTERCEPT(dst,src) do { (dst)->d.line = (src)->d.line, (dst)->frac = (src)->frac, (dst)->front = (src)->front; } while(0)
 static boolean PA_DoIntercept(shootWork_t *sw, intercept_t *in)
 {
    intercept_t temp;
@@ -271,7 +259,7 @@ static boolean PA_DoIntercept(shootWork_t *sw, intercept_t *in)
    if(in->frac == 0 || in->frac >= FRACUNIT)
       return true;
 
-   if(in->isaline)
+   if(in->front)
       return PA_ShootLine(sw, in->d.line, in->frac);
    return PA_ShootThing(sw, in->d.mo, in->frac);
 }
@@ -320,7 +308,7 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
          continue;
 
       in.d.mo    = thing;
-      in.isaline = false;
+      in.front   = NULL;
       in.frac    = frac;
 
       if(!PA_DoIntercept(sw, &in))
@@ -353,7 +341,7 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
          continue;
 
       in.d.line  = line;
-      in.isaline = true;
+      in.front   = (void*)1;
       in.frac    = frac;
 
       if(!PA_DoIntercept(sw, &in))
@@ -436,7 +424,7 @@ void P_Shoot2(lineattack_t *la)
    // cross everything
    sw.old_intercept.d.line  = NULL;
    sw.old_intercept.frac    = 0;
-   sw.old_intercept.isaline = false;
+   sw.old_intercept.front   = NULL;
 
    PA_CrossBSPNode(&sw, numnodes - 1);
 
@@ -445,7 +433,7 @@ void P_Shoot2(lineattack_t *la)
    {
       intercept_t in;
       in.d.mo    = NULL;
-      in.isaline = false;
+      in.front   = NULL;
       in.frac    = FRACUNIT;
       PA_DoIntercept(&sw, &in);
    }

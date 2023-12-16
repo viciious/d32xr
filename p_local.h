@@ -329,6 +329,51 @@ typedef struct
 
 void P_SlideMove (pslidemove_t *sm);
 
+
+
+/*
+===============================================================================
+
+							P_SIGHT
+
+===============================================================================
+*/
+
+#define MAXINTERCEPTS 32
+
+// CALICO: removed type punning by bringing back intercept_t
+typedef struct
+{
+    union
+    {
+        mobj_t* mo;
+        line_t* line;
+    } d;
+    fixed_t frac;
+	sector_t *front, *back; // a line if front != NULL
+} intercept_t;
+
+typedef struct 
+{
+   int16_t x, y, dx, dy;
+} i16divline_t;
+
+typedef struct
+{
+   int numintercepts;
+   intercept_t intercepts[MAXINTERCEPTS];
+
+   fixed_t sightzstart;           // eye z of looker
+   fixed_t topslope, bottomslope; // slopes to top and bottom of target
+
+   i16divline_t strace; // from t1 to t2
+   fixed_t t2x, t2y;
+} sightWork_t;
+
+boolean PTR_SightTraverse(sightWork_t *sw, intercept_t * in);
+boolean PS_SightBlockLinesIterator(sightWork_t *sw, int x, int y);
+boolean PS_SightPathTraverse(sightWork_t *sw);
+
 #endif	/* __P_LOCAL__ */
 
 

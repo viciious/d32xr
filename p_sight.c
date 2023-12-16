@@ -1,22 +1,22 @@
 /*
   CALICO
-  
+
   Line-of-sight checking
 
   The MIT License (MIT)
-  
+
   Copyright (c) 2015 James Haley, Olde Skuul, id Software and ZeniMax Media
-  
+
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
   in the Software without restriction, including without limitation the rights
   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
   copies of the Software, and to permit persons to whom the Software is
   furnished to do so, subject to the following conditions:
-  
+
   The above copyright notice and this permission notice shall be included in all
   copies or substantial portions of the Software.
-  
+
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,31 +26,16 @@
   SOFTWARE.
 */
 
+#include <limits.h>
 #include "doomdef.h"
 #include "p_local.h"
 #include "mars.h"
 
-typedef struct 
-{
-   int16_t x, y, dx, dy;
-} i16divline_t;
-
-typedef struct
-{
-    fixed_t sightzstart;           // eye z of looker
-    fixed_t topslope, bottomslope; // slopes to top and bottom of target
-
-    i16divline_t strace;  // from t1 to t2
-    fixed_t t2x, t2y;
-} sightWork_t;
-
 static fixed_t PS_InterceptVector2(i16divline_t* v2, i16divline_t* v1) ATTR_DATA_CACHE_ALIGN;
-static boolean PS_CrossSubsector(sightWork_t* sw, int num) ATTR_DATA_CACHE_ALIGN;
-static boolean PS_CrossBSPNode(sightWork_t* sw, int bspnum) ATTR_DATA_CACHE_ALIGN;
-static boolean PS_RejectCheckSight(mobj_t* t1, mobj_t* t2) ATTR_DATA_CACHE_ALIGN;
+static boolean PS_RejectCheckSight(mobj_t *t1, mobj_t *t2) ATTR_DATA_CACHE_ALIGN;
 static boolean P_MobjCanSightCheck(mobj_t *mobj) ATTR_DATA_CACHE_ALIGN;
 static mobj_t *P_GetSightMobj(mobj_t *pmobj, int c, int *pcnt) ATTR_DATA_CACHE_ALIGN;
-static boolean PS_CheckSight2(mobj_t* t1, mobj_t* t2) ATTR_DATA_CACHE_ALIGN;
+static boolean PS_CheckSight2(mobj_t *t1, mobj_t *t2) ATTR_DATA_CACHE_ALIGN;
 #ifdef MARS
 void P_CheckSights2(int c) ATTR_DATA_CACHE_ALIGN;
 #else
@@ -113,55 +98,37 @@ static fixed_t PS_InterceptVector2(i16divline_t *v2, i16divline_t *v1)
    return frac;
 }
 
-/*
-=================
-=
-= PS_CrossSubsector
-=
-= Returns true if strace crosses the given subsector successfuly
-=================
-*/
-
-static boolean PS_CrossSubsector(sightWork_t *sw, int num)
+boolean PS_SightBlockLinesIterator(sightWork_t *sw, int x, int y)
 {
-   seg_t       *seg;
+   int          offset;
+   short       *list;
    line_t      *line;
-   int          s1;
-   int          s2;
-   int          count;
-   subsector_t *sub;
    sector_t    *front;
    sector_t    *back;
-   fixed_t      opentop;
-   fixed_t      openbottom;
+   int          s1;
+   int          s2;
    i16divline_t divl;
    mapvertex_t  *v1, *v2;
-   fixed_t      frac;
-   fixed_t      slope;
-   int          side;
    i16divline_t *strace = &sw->strace;
-   fixed_t      t2x = sw->t2x, t2y = sw->t2y;
-   fixed_t      sightzstart = sw->sightzstart;
+   int16_t      t2x = sw->t2x, t2y = sw->t2y;
    VINT         *lvalidcount, vc;
 
-   sub = &subsectors[num];
+   I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
+   vc = *lvalidcount;
+   ++lvalidcount;
 
-   // check lines
-   count = sub->numlines;
-   seg   = &segs[sub->firstline];
+   offset = y * bmapwidth + x;
 
-	I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
-	vc = *lvalidcount;
-	++lvalidcount;
+   offset = *(blockmaplump + 4 + offset);
 
-   for( ; count; seg++, count--)
+   for (list = blockmaplump + offset; *list != -1; list++)
    {
-      line = &lines[seg->linedef];
+      line = &lines[*list];
 
-      // allready checked other side?
-      if(lvalidcount[seg->linedef] == vc)
+      // already checked other side?
+      if (lvalidcount[*list] == vc)
          continue;
-      lvalidcount[seg->linedef] = vc;
+      lvalidcount[*list] = vc;
 
       v1 = &vertexes[line->v1];
       v2 = &vertexes[line->v2];
@@ -184,14 +151,12 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
       if (s1 == s2)
          continue;
 
-      // stop because it is not two sided anyway
-      if(!(line->flags & ML_TWOSIDED))
+      // try to early out the check
+      if (line->sidenum[1] < 0 || !(line->flags & ML_TWOSIDED))
          return false;
 
-      // crosses a two sided line
-      side = seg->sideoffset & 1;
-      front = &sectors[sides[line->sidenum[side]].sector];
-      back = &sectors[sides[line->sidenum[side^1]].sector];
+      front = LD_FRONTSECTOR(line);
+      back = LD_BACKSECTOR(line);
 
       // no wall to block sight with?
       if(front->floorheight == back->floorheight && front->ceilingheight == back->ceilingheight)
@@ -199,78 +164,70 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
 
       // possible occluder
       // because of ceiling height differences
-      if (front->ceilingheight < back->ceilingheight)
-         opentop = front->ceilingheight;
-      else
-         opentop = back->ceilingheight;
 
-      // because of ceiling height differences
-      if (front->floorheight > back->floorheight)
-         openbottom = front->floorheight;
-      else
-         openbottom = back->floorheight;
-
-      // quick test for totally closed doors
-      if(openbottom >= opentop)
-         return false; // stop
-
-      frac = PS_InterceptVector2(strace, &divl);
-
-      if(front->floorheight != back->floorheight)
+      // store the line for later intersection testing
+      if(sw->numintercepts < MAXINTERCEPTS)
       {
-         slope = FixedDiv(openbottom - sightzstart , frac);
-         if(slope > sw->bottomslope)
-             sw->bottomslope = slope;
+         sw->intercepts[sw->numintercepts].d.line = line;
+         sw->intercepts[sw->numintercepts].front = front;
+         sw->intercepts[sw->numintercepts].back = back;
+         sw->intercepts[sw->numintercepts].frac = PS_InterceptVector2(strace, &divl);
+         sw->numintercepts++;
       }
-
-      if(front->ceilingheight != back->ceilingheight)
-      {
-         slope = FixedDiv (opentop - sightzstart , frac);
-         if(slope < sw->topslope)
-             sw->topslope = slope;
-      }
-
-      if(sw->topslope <= sw->bottomslope)
-         return false;    // stop
    }
 
-   // passed the subsector ok
+   // everything was checked
+   return true;
+}
+
+boolean PTR_SightTraverse(sightWork_t *sw, intercept_t * in)
+{
+   sector_t  *front = in->front;
+   sector_t  *back = in->back;
+   fixed_t    opentop;
+   fixed_t    openbottom;
+   fixed_t    slope;
+   fixed_t    sightzstart = sw->sightzstart;
+   fixed_t    frac = in->frac;
+
+   if (front->ceilingheight < back->ceilingheight)
+      opentop = front->ceilingheight;
+   else
+      opentop = back->ceilingheight;
+
+   if (front->floorheight > back->floorheight)
+      openbottom = front->floorheight;
+   else
+      openbottom = back->floorheight;
+
+   // quick test for totally closed doors
+   if(openbottom >= opentop)
+      return false; // stop
+
+   if(front->floorheight != back->floorheight)
+   {
+      slope = FixedDiv(openbottom - sightzstart , frac);
+      if(slope > sw->bottomslope)
+            sw->bottomslope = slope;
+   }
+
+   if(front->ceilingheight != back->ceilingheight)
+   {
+      slope = FixedDiv (opentop - sightzstart , frac);
+      if(slope < sw->topslope)
+            sw->topslope = slope;
+   }
+
+   if(sw->topslope <= sw->bottomslope)
+      return false;    // stop
+
+   // keep going
    return true;
 }
 
 //
-// Returns true if strace crosses the given node successfuly
+// Returns false if a straight line between t1 and t2 is obstructed
 //
-static boolean PS_CrossBSPNode(sightWork_t* sw, int bspnum)
-{
-   node_t *bsp;
-   int side, side2;
-   i16divline_t *strace = &sw->strace;
-
-#ifdef MARS
-   while ((int16_t)bspnum >= 0)
-#else
-   while (!(bspnum & NF_SUBSECTOR))
-#endif
-   {
-      bsp = &nodes[bspnum];
-
-      // decide which side the start point is on
-      side = PS_DivlineSide(strace->x, strace->y, (i16divline_t *)bsp);
-      side2 = PS_DivlineSide(sw->t2x, sw->t2y, (i16divline_t *)bsp);
-
-      // the partition plane is crossed here
-      if (side == side2)
-         bspnum = bsp->children[side]; // the line doesn't touch the other side
-      else if (!PS_CrossBSPNode(sw, bsp->children[side]))
-         return false; // cross the starting side
-      else
-         bspnum = bsp->children[side ^ 1]; // cross the ending side
-   }
-
-   return PS_CrossSubsector(sw, bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR);
-}
-
 //
 // Returns false if a straight line between t1 and t2 is obstructed
 //
@@ -330,10 +287,8 @@ static boolean PS_CheckSight2(mobj_t *t1, mobj_t *t2)
    sw.strace.y = ((t1->y & ~0x1ffff) | 0x10000) >> FRACBITS;
    sw.t2x = ((t2->x & ~0x1ffff) | 0x10000) >> FRACBITS;
    sw.t2y = ((t2->y & ~0x1ffff) | 0x10000) >> FRACBITS;
-   sw.strace.dx = sw.t2x - sw.strace.x;
-   sw.strace.dy = sw.t2y - sw.strace.y;
 
-   return PS_CrossBSPNode(&sw, numnodes-1);
+   return PS_SightPathTraverse(&sw);
 }
 
 static boolean P_MobjCanSightCheck(mobj_t *mobj)
@@ -478,4 +433,3 @@ void P_CheckSights2(void)
 }
 
 // EOF
-
