@@ -39,7 +39,6 @@ typedef struct
     fixed_t t2x, t2y;
 } sightWork_t;
 
-static int P_DivlineSide(fixed_t x, fixed_t y, divline_t* node) ATTR_DATA_CACHE_ALIGN;
 static fixed_t P_InterceptVector2(divline_t* v2, divline_t* v1) ATTR_DATA_CACHE_ALIGN;
 static boolean PS_CrossSubsector(sightWork_t* sw, int num) ATTR_DATA_CACHE_ALIGN;
 static boolean PS_CrossBSPNode(sightWork_t* sw, int bspnum) ATTR_DATA_CACHE_ALIGN;
@@ -52,25 +51,6 @@ void P_CheckSights2(int c) ATTR_DATA_CACHE_ALIGN;
 #else
 void P_CheckSights2(void) ATTR_DATA_CACHE_ALIGN;
 #endif
-
-//
-// Returns side 0 (front), 1 (back), or 2 (on).
-//
-static int P_DivlineSide(fixed_t x, fixed_t y, divline_t *node)
-{
-   fixed_t dx;
-   fixed_t dy;
-   fixed_t left;
-   fixed_t right;
-
-   dx = x - node->x;
-   dy = y - node->y;
-
-   left  = (node->dy>>FRACBITS) * (dx>>FRACBITS);
-   right = (dy>>FRACBITS) * (node->dx>>FRACBITS);
-
-   return (left <= right) + (left == right);
-}
 
 //
 // Returns the fractional intercept point
