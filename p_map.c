@@ -7,7 +7,7 @@ typedef struct
 {
    fixed_t x, y;
    int16_t dx, dy;
-} i16divline_t;
+} id16divline_t;
 
 typedef struct
 {
@@ -25,7 +25,7 @@ typedef struct
 	int			bombdamage;
 } pradiusattack_t;
 
-static fixed_t P_InterceptVector(divline_t* v2, i16divline_t* v1) ATTR_DATA_CACHE_ALIGN;
+static fixed_t P_InterceptVector(divline_t* v2, id16divline_t* v1) ATTR_DATA_CACHE_ALIGN;
 boolean	PIT_UseLines(line_t* li, plineuse_t *lu) ATTR_DATA_CACHE_ALIGN;
 void P_UseLines(player_t* player) __attribute__((noinline));
 
@@ -33,7 +33,7 @@ boolean PIT_RadiusAttack(mobj_t* thing, pradiusattack_t *ra) ATTR_DATA_CACHE_ALI
 void P_RadiusAttack(mobj_t* spot, mobj_t* source, int damage) ATTR_DATA_CACHE_ALIGN;
 fixed_t P_AimLineAttack(lineattack_t *la, mobj_t* t1, angle_t angle, fixed_t distance) ATTR_DATA_CACHE_ALIGN;
 void P_LineAttack(lineattack_t *la, mobj_t* t1, angle_t angle, fixed_t distance, fixed_t slope, int damage) ATTR_DATA_CACHE_ALIGN;
-static void P_MakeI16Divline(line_t* li, i16divline_t* dl) ATTR_DATA_CACHE_ALIGN;
+static void P_MakeI16Divline(line_t* li, id16divline_t* dl) ATTR_DATA_CACHE_ALIGN;
 
 /*============================================================================= */
 
@@ -55,7 +55,7 @@ static void P_MakeI16Divline(line_t* li, i16divline_t* dl) ATTR_DATA_CACHE_ALIGN
 ===============
 */
 
-static fixed_t P_InterceptVector (divline_t *v2, i16divline_t *v1)
+static fixed_t P_InterceptVector (divline_t *v2, id16divline_t *v1)
 {
 	fixed_t	frac, num, den;
 	
@@ -78,7 +78,7 @@ static fixed_t P_InterceptVector (divline_t *v2, i16divline_t *v1)
 ==============
 */
 
-static void P_MakeI16Divline (line_t *li, i16divline_t *dl)
+static void P_MakeI16Divline (line_t *li, id16divline_t *dl)
 {
 	dl->x = vertexes[li->v1].x << FRACBITS;
 	dl->y = vertexes[li->v1].y << FRACBITS;
@@ -97,7 +97,7 @@ static void P_MakeI16Divline (line_t *li, i16divline_t *dl)
 
 boolean	PIT_UseLines (line_t *li, plineuse_t *lu)
 {
-	i16divline_t	dl;
+	id16divline_t	dl;
 	fixed_t		frac;
 	fixed_t 	libbox[4];
 
