@@ -185,12 +185,14 @@ void S_Init(void)
 			lumpinfo_t li[NUMSFX];
 			int sfxol[NUMSFX*2];
 
-			for (i = 0; i < numsfx; i++)
+			for (i = 0; i < NUMSFX; i++)
 			{
  				if (S_sfx[i].lump >= 0)
 					S_sfx[i].lump -= start;
-				lumps[i] = start + 1 + i;
 			}
+
+			for (i = 0; i < numsfx; i++)
+				lumps[i] = start + 1 + i;
 
 			W_CacheWADLumps(li, numsfx, lumps, false);
 
