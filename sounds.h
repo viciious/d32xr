@@ -111,6 +111,7 @@ typedef enum
   sfx_skeatk,
   sfx_bospn,
   sfx_bosdth,
+  sfx_getpow,
   NUMSFX 
 } sfxenum_t; 
  
