@@ -5,7 +5,7 @@
 #include "s_main.h"
 #include "s_cd.h"
 
-#define S_MEMBANK_SIZE 460*1024
+#define S_MEMBANK_SIZE 463*1024
 #define S_MEMBANK_PTR s_membank
 static uint8_t s_membank[S_MEMBANK_SIZE];
 
