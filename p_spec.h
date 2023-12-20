@@ -38,7 +38,7 @@ extern	anim_t	*anims/*[MAXANIMS]*/, * lastanim;
 /* */
 /*	Animating line specials */
 /* */
-#define	MAXLINEANIMS		64
+#define	MAXLINEANIMS		128
 extern	int		numlinespecials;
 extern	line_t	**linespeciallist/*[MAXLINEANIMS]*/;
 

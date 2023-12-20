@@ -822,19 +822,30 @@ void P_UpdateSpecials (void)
 	/* */
 	for (i = 0; i < numlinespecials; i++)
 	{
-		int textureoffset, rowoffset;
+		side_t *side;
+		int16_t textureoffset, rowoffset;
 		line = linespeciallist[i];
+		side = &sides[line->sidenum[0]];
 		switch(line->special)
 		{
 			case 48:	/* EFFECT FIRSTCOL SCROLL + */
 				// 12-bit texture offset + 4-bit rowoffset
-				textureoffset = sides[line->sidenum[0]].textureoffset;
-				rowoffset = textureoffset & 0xf00;
+				textureoffset = side->textureoffset;
+				rowoffset = textureoffset & 0xf000;
 				textureoffset <<= 4;
 				textureoffset += 1<<4;
 				textureoffset >>= 4;
 				textureoffset |= rowoffset;
-				sides[line->sidenum[0]].textureoffset = textureoffset;
+				side->textureoffset = textureoffset;
+				break;
+
+			case 142:	/* MODERATE VERT SCROLL */
+				// 12-bit texture offset + 4-bit rowoffset
+				textureoffset = side->textureoffset;
+				rowoffset = ((textureoffset & 0xf000)>>4) | side->rowoffset;
+				rowoffset -= 3;
+				side->rowoffset = rowoffset & 0xff;
+				side->textureoffset = (textureoffset & 0xfff) | (rowoffset & 0xf00);
 				break;
 		}
 	}
@@ -1023,6 +1034,7 @@ void P_SpawnSpecials (void)
 		switch (lines[i].special)
 		{
 		case 48:	/* EFFECT FIRSTCOL SCROLL+ */
+		case 142:	/* MODERATE VERT SCROLL */
 			linespeciallist[numlinespecials] = &lines[i];
 			numlinespecials++;
 			if (numlinespecials == MAXLINEANIMS)
