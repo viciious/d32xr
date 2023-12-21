@@ -305,7 +305,7 @@ void Mars_UpdateCD(void)
 	MARS_SYS_COMM0 = 0x0600;
 	while (MARS_SYS_COMM0);
 	mars_cd_ok = MARS_SYS_COMM2;
-	mars_num_cd_tracks = mars_cd_ok >> 2;
+	mars_num_cd_tracks = (mars_cd_ok >> 2) & 63;
 	mars_cd_ok = mars_cd_ok & 0x3;
 }
 
