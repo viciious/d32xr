@@ -12,10 +12,10 @@ const char * const sprnames[NUMSPRITES] = {
 "PMAP","PVIS","CLIP","AMMO","ROCK","BROK","CELL","CELP","SHEL","SBOX",
 "BPAK","BFUG","MGUN","CSAW","LAUN","PLAS","SHOT","SGN2","COLU","SMT2",
 "GOR1","POL2","POL5","POL4","POL3","POL1","POL6","GOR2","GOR3","GOR4",
-"GOR5","SMIT","COL1","COL2","COL4","CAND","CBRA","COL6","TRE1","TRE2",
-"ELEC","CEYE","FSKU","COL5","TBLU","TGRN","TRED","SMBT","SMGT","SMRT",
-"HDB1","HDB2","HDB3","HDB4","HDB5","HDB6","POB1","POB2","BRS1","TLMP",
-"TLP2"
+"GOR5","SMIT","COL1","COL2","COL3","COL4","CAND","CBRA","COL6","TRE1",
+"TRE2","ELEC","CEYE","FSKU","COL5","TBLU","TGRN","TRED","SMBT","SMGT",
+"SMRT","HDB1","HDB2","HDB3","HDB4","HDB5","HDB6","POB1","POB2","BRS1",
+"TLMP","TLP2"
 };
 
 void A_Light0 ();
@@ -740,6 +740,7 @@ STATE(SPR_GOR5,0,-1,NULL,S_NULL),	/* S_MEAT5 */
 STATE(SPR_SMIT,0,-1,NULL,S_NULL),	/* S_STALAGTITE */
 STATE(SPR_COL1,0,-1,NULL,S_NULL),	// S_TALLGRNCOL
 STATE(SPR_COL2,0,-1,NULL,S_NULL),	/* S_SHRTGRNCOL */
+STATE(SPR_COL3,0,-1,NULL,S_NULL),	// S_TALLREDCOL
 STATE(SPR_COL4,0,-1,NULL,S_NULL),	/* S_SHRTREDCOL */
 STATE(SPR_CAND,32768,-1,NULL,S_NULL),	/* S_CANDLESTIK */
 STATE(SPR_CBRA,32768,-1,NULL,S_NULL),	/* S_CANDELABRA */
@@ -3980,6 +3981,31 @@ MF_SPAWNCEILING|MF_NOGRAVITY|MF_STATIC		// flags
 {		// MT_MISC86
 37,		// doomednum
 S_SKULLCOL,		// spawnstate
+1000,		// spawnhealth
+S_NULL,		// seestate
+sfx_None,		// seesound
+8,		// reactiontime
+sfx_None,		// attacksound
+S_NULL,		// painstate
+0,		// painchance
+sfx_None,		// painsound
+S_NULL,		// meleestate
+S_NULL,		// missilestate
+S_NULL,		// deathstate
+S_NULL,		// xdeathstate
+sfx_None,		// deathsound
+0,		// speed
+16*FRACUNIT,		// radius
+16*FRACUNIT,		// height
+100,		// mass
+0,		// damage
+sfx_None,		// activesound
+MF_SOLID|MF_STATIC		// flags
+},
+
+{		// MT_MISC87
+32,		// doomednum
+S_TALLREDCOL,		// spawnstate
 1000,		// spawnhealth
 S_NULL,		// seestate
 sfx_None,		// seesound
