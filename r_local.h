@@ -488,11 +488,8 @@ typedef struct
 	unsigned	scale2;
 
 	short	actionbits;
-	union {
-		 // used as miplevels after R_SegLoop
-		uint8_t miplevels[2];
-		short	seglightlevel;
-	};
+	short	seglightlevel;
+	int16_t miplevels[2];
 
 /* */
 /* filled in by bsp */
