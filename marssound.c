@@ -131,7 +131,7 @@ void S_Init(void)
 	{
 		for (i=1 ; i < NUMSFX ; i++)
 		{
-			S_sfx[i].lump = W_CheckNumForNameExt(S_sfxnames[i], start, end);
+			S_sfx[i].lump = W_CheckRangeForName(S_sfxnames[i], start, end);
 		}
 	}
 	else

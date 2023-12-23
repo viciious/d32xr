@@ -108,14 +108,14 @@ void W_Init (void)
 /*
 ====================
 =
-= W_CheckNumForName
+= W_CheckRangeForName
 =
 = Returns -1 if name not found
 =
 ====================
 */
 
-int	W_CheckNumForNameExt (const char *name, int start, int end)
+int	W_CheckRangeForName (const char *name, int start, int end)
 {
 	char	name8[12];
 	int		v1,v2;
@@ -151,6 +151,11 @@ int	W_CheckNumForNameExt (const char *name, int start, int end)
 
 
 	return -1;
+}
+
+int	W_CheckNumForNameExt (const char *name, int start, int end)
+{
+	return W_CheckRangeForName(name, start, end);
 }
 
 int	W_CheckNumForName (const char *name)

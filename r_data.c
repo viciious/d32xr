@@ -124,7 +124,7 @@ void R_InitTextures (void)
 		}
 
 		if (start >= 0 && end > 0)
-			texture->lumpnum = W_CheckNumForNameExt(texture->name, start, end);
+			texture->lumpnum = W_CheckRangeForName(texture->name, start, end);
 		else
 			texture->lumpnum = W_CheckNumForName(texture->name);
 	}
@@ -379,7 +379,7 @@ void R_InitData (void)
 
 int	R_FlatNumForName (const char *name)
 {
-	int f = W_CheckNumForNameExt (name, firstflat, lastflat+1);
+	int f = W_CheckRangeForName (name, firstflat, lastflat+1);
 	if (f < 0)
 		return f;
 	return f - firstflat;
