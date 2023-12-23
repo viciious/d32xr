@@ -328,7 +328,7 @@ static void R_DrawPlanes2(void)
         {
             int j;
             int mipsize = FLATSIZE>>1;
-            for (j = 1; j <= lpl.maxmip; j++)
+            for (j = 1; j <= (int)lpl.maxmip; j++)
             {
                 lpl.ds_source[j] = flatpixels[flatnum].data[j];
                 lpl.mipsize[j] = mipsize;
@@ -363,10 +363,15 @@ static void R_DrawPlanes2(void)
                 light = lpl.lightmax;
             lpl.lightmin = light;
 
+            lpl.lightsub = 0;
             if (lpl.lightmin != lpl.lightmax)
             {
                 lpl.lightcoef = (unsigned)(lpl.lightmax - lpl.lightmin) << 8;
                 lpl.lightsub = (((lpl.lightmax - lpl.lightmin) * 160) << FRACBITS) / (800 - 160);
+            }
+
+            if (lpl.lightsub != 0)
+            {
                 lpl.lightmin <<= FRACBITS;
                 lpl.lightmax <<= FRACBITS;
             }

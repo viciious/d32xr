@@ -439,9 +439,12 @@ void R_SegCommands(void)
                 seglight = lseg.lightmax;
             lseg.lightmin = seglight;
 
+            lseg.lightcoef = 0;
             if (lseg.lightmin != lseg.lightmax)
-            {
                 lseg.lightcoef = ((unsigned)(lseg.lightmax - lseg.lightmin) << FRACBITS) / (800 - 160);
+
+            if (lseg.lightcoef != 0)
+            {
                 lseg.lightsub = 160 * lseg.lightcoef;
                 lseg.lightcoef <<= LIGHTZSHIFT;
                 lseg.lightmin <<= FRACBITS;
