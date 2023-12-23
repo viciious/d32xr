@@ -111,6 +111,7 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, i
             do {
                 frac >>= 1;
                 mipcolnum >>= 1;
+                iscale >>= 1;
             } while (--m);
         }
 #endif
