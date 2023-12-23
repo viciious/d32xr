@@ -360,14 +360,17 @@ static void ST_Ticker_(stbar_t* sb)
 	/* */
 	for (ind = 0; ind < NUMMICROS; ind++)
 	{
-		if (p->weaponowned[ind + 1] != sb->weaponowned[ind] || sb->forcedraw)
+		int weaponowned = ind + 1 == wp_shotgun ? 
+			(p->weaponowned[wp_shotgun] || p->weaponowned[wp_supershotgun]) :
+				(ind + 1 < wp_shotgun ? p->weaponowned[ind + 1] : p->weaponowned[ind + 2]);
+
+		if (weaponowned != sb->weaponowned[ind] || sb->forcedraw)
 		{
 			cmd = &sb->stbarcmds[sb->numstbarcmds++];
 			cmd->id = stc_drawmicro;
 			cmd->ind = ind;
-			cmd->value = p->weaponowned[ind + 1];
-
-			sb->weaponowned[ind] = p->weaponowned[ind + 1];
+			cmd->value = weaponowned;
+			sb->weaponowned[ind] = weaponowned;
 		}
 	}
 
