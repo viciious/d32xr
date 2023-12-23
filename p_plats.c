@@ -49,6 +49,7 @@ void	T_PlatRaise(plat_t	*plat)
 						P_RemoveActivePlat(plat);
 						break;
 					case raiseAndChange:
+					case raiseToNearestAndChange:
 						P_RemoveActivePlat(plat);
 						break;
 					default:
