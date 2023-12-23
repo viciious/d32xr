@@ -55,7 +55,7 @@ VINT COLOR_WHITE = 0x04;
 VINT COLOR_BLACK = 0xF7;
 
 int8_t	*dc_colormaps;
-int8_t	*dc_colormaps_hk;
+int8_t	*dc_colormaps2;
 const byte	*new_palette = NULL;
 
 boolean	debugscreenactive = false;

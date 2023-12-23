@@ -368,12 +368,12 @@ extern	uint8_t			*flattranslation;		/* for global animation */
 extern	uint8_t			*texturetranslation;	/* for global animation */
 extern	flattex_t		*flatpixels;
 
-extern	VINT		firstflat, numflats;
+extern	VINT		firstflat, numflats, col2flat;
 
 extern	VINT		firstsprite, numsprites;
 
 extern int8_t* dc_colormaps;
-extern int8_t* dc_colormaps_hk;
+extern int8_t* dc_colormaps2;
 
 extern uint8_t* dc_playpals;
 

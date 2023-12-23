@@ -286,8 +286,6 @@ static void R_DrawPlanes2(void)
     if (vd.gsortedvisplanes == NULL)
         return;
 
-    I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
-
     lpl.x = vd.viewx;
     lpl.y = -vd.viewy;
 
@@ -314,6 +312,12 @@ static void R_DrawPlanes2(void)
             continue;
 
         flatnum = pl->flatandlight&0xffff;
+
+        if (flatnum >= col2flat)
+            I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps2);
+        else
+            I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
+
         lpl.pl = pl;
         lpl.ds_source[0] = flatpixels[flatnum].data[0];
 
