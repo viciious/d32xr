@@ -80,7 +80,7 @@ void scd_read_sectors(void *ptr, int lba, int len, void (*wait)(void))
     if (!wait)
         wait = scd_delay;
 
-    write_long(0xA12010, (uintptr_t)ptr); /* end of 128K of word ram on CD side (in 1M mode) */
+    write_long(0xA12010, (uintptr_t)ptr);
     write_long(0xA12014, lba);
     write_long(0xA12018, len);
     wait_do_cmd('H');
