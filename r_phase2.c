@@ -96,11 +96,20 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
     fixed_t      sineval, rw_distance;
     fixed_t      scalefrac, scale2;
     fixed_t      hyp;
+    fixed_t      x1, y1, x2, y2;
 
     // this is essentially R_StoreWallRange
     // calculate rw_distance for scale calculation
-    normalangle = R_PointToAngle2(verts[seg->v1].x, verts[seg->v1].y,
-        verts[seg->v2].x, verts[seg->v2].y);
+
+    x1 = verts[seg->v1].x << FRACBITS;
+    y1 = verts[seg->v1].y << FRACBITS;
+
+    x2 = verts[seg->v2].x << FRACBITS;
+    y2 = verts[seg->v2].y << FRACBITS;
+
+    hyp = R_PointToDist(x1, y1);
+
+    normalangle = R_PointToAngle2(x1, y1, x2, y2);
     normalangle += ANG90;
     offsetangle = normalangle - angle1;
 
@@ -111,7 +120,6 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
         offsetangle = ANG90;
 
     distangle = ANG90 - offsetangle;
-    hyp = R_PointToDist(verts[seg->v1].x << FRACBITS, verts[seg->v1].y << FRACBITS);
     sineval = finesine(distangle >> ANGLETOFINESHIFT);
     rw_distance = FixedMul(hyp, sineval);
     wc->distance = rw_distance;
