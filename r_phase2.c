@@ -99,7 +99,9 @@ void R_WallLatePrep(viswall_t* wc, vertex_t *verts)
 
     // this is essentially R_StoreWallRange
     // calculate rw_distance for scale calculation
-    normalangle = ((angle_t)seg->angle << 16) + ANG90;
+    normalangle = R_PointToAngle2(verts[seg->v1].x, verts[seg->v1].y,
+        verts[seg->v2].x, verts[seg->v2].y);
+    normalangle += ANG90;
     offsetangle = normalangle - angle1;
 
     if ((int)offsetangle < 0)

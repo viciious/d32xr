@@ -96,7 +96,8 @@ void P_LoadSegs (int lump)
 	angle_t angle;
 
 	numsegs = W_LumpLength (lump) / sizeof(mapseg_t);
-	segs = Z_Malloc (numsegs*sizeof(seg_t),PU_LEVEL);
+	segs = Z_Malloc (numsegs*sizeof(seg_t)+16,PU_LEVEL);
+	segs = (void*)(((uintptr_t)segs + 15) & ~15); // aline on cacheline boundary
 	D_memset (segs, 0, numsegs*sizeof(seg_t));
 	data = I_TempBuffer ();
 	W_ReadLump (lump,data);
@@ -107,8 +108,7 @@ void P_LoadSegs (int lump)
 	{
 		li->v1 = LITTLESHORT(ml->v1);
 		li->v2 = LITTLESHORT(ml->v2);
-					
-		li->angle = LITTLESHORT(ml->angle);
+
 		angle = LITTLESHORT(ml->angle)<<16;
 		li->sideoffset = LITTLESHORT(ml->offset);
 		linedef = LITTLESHORT(ml->linedef);

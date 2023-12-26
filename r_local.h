@@ -121,7 +121,6 @@ typedef struct subsector_s
 typedef struct seg_s
 {
 	VINT 		v1, v2;
-	VINT 		angle;
 	VINT		sideoffset;
 	VINT		linedef;
 } seg_t;
