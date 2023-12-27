@@ -20,10 +20,10 @@ typedef struct
    VINT      height;
    drawcol_t drawcol;
 
-    // decals stuff
-   int       numdecals;
+   // decals stuff
+   VINT       numdecals;
+   VINT       lastcol;
    texdecal_t *decals;
-   int       lastcol;
    uint8_t   *columncache;
 } drawmip_t;
 
