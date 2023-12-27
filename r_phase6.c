@@ -64,7 +64,7 @@ void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 //
 // Render a wall texture as columns
 //
-static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, int floorclipx, int ceilingclipx, unsigned light, drawtex_t *tex, int miplevel)
+static void R_DrawTexture(int x, unsigned iscale, int colnum, fixed_t scale2, int floorclipx, int ceilingclipx, unsigned light, drawtex_t *tex, int miplevel)
 {
     fixed_t top, bottom;
 
@@ -83,14 +83,10 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, i
     miplevel = 0;
 #endif
 
-    // CALICO: comment says this, but the code does otherwise...
-    // colnum = colnum - tex->width * (colnum / tex->width)
-    colnum_ &= tex->widthmask;
-
     // column has no length?
     if (top < bottom)
     {
-        int colnum, mipcolnum;
+        int mipcolnum;
         drawmip_t *mip;
         fixed_t frac;
 #ifdef MARS
@@ -99,7 +95,7 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, i
         pixel_t* src;
 #endif
 
-        colnum = colnum_ & tex->widthmask;
+        colnum &= tex->widthmask;
         mipcolnum = colnum;
         frac = tex->texturemid - (centerY - top) * iscale;
 
