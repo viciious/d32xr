@@ -430,13 +430,13 @@ do_col_loop:
         add     r3,r2           /* frac += fracstep */
         mov.b   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
         swap.w  r2,r0           /* (frac >> 16) */
-        and     r4,r0           /* (frac >> 16) & heightmask */
-        add     r3,r2           /* frac += fracstep */
         mov.b   r9,@r8          /* *fb = dpix */
         add     r1,r8           /* fb += SCREENWIDTH */
+        and     r4,r0           /* (frac >> 16) & heightmask */
 do_col_loop_1px:
-        mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
         dt      r6              /* count-- */
+        mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
+        add     r3,r2           /* frac += fracstep */
         mov.b   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
         swap.w  r2,r0           /* (frac >> 16) */
         and     r4,r0           /* (frac >> 16) & heightmask */
