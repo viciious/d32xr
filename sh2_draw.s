@@ -31,7 +31,7 @@ _I_DrawColumnLowA:
         mov.l   @(DOOMTLS_COLORMAP, gbr),r0
         add     r7,r7
         add     r0,r7           /* dc_colormap = colormap + light */
-        mov.l   draw_fb,r8
+        mov.l   draw_fb_low,r8
         mov.l   @r8,r8          /* frame buffer start */
         add     r4,r8
         add     r4,r8           /* fb += dc_x*2 */
@@ -105,7 +105,7 @@ _I_DrawColumnNPo2LowA:
         mov.l   @(DOOMTLS_COLORMAP, gbr),r0
         add     r7,r7
         add     r0,r7           /* dc_colormap = colormap + light */
-        mov.l   draw_fb,r8
+        mov.l   draw_fb_low,r8
         mov.l   @r8,r8          /* frame buffer start */
         add     r4,r8
         add     r4,r8           /* fb += dc_x*2 */
@@ -197,7 +197,7 @@ _I_DrawFuzzColumnLowA:
         mov.l   r8,@-r15
         add     r7,r7
         add     r0,r7           /* dc_colormap = colormap + light */
-        mov.l   draw_fb,r8
+        mov.l   draw_fb_low,r8
         mov.l   @r8,r8          /* frame buffer start */
         add     r4,r8
         add     r4,r8           /* fb += dc_x*2 */
@@ -263,7 +263,7 @@ _I_DrawSpanLowA:
         mov.l   @(DOOMTLS_COLORMAP, gbr),r0
         add     r7,r7
         add     r0,r7           /* ds_colormap = colormap + light */
-        mov.l   draw_fb,r8
+        mov.l   draw_fb_low,r8
         mov.l   @r8,r8          /* frame buffer start */
         add     r5,r8
         add     r5,r8           /* fb += ds_x1*2 */
@@ -373,6 +373,10 @@ exit_span_low_loop:
         rts
         mov.l   @r15+,r8
 
+        .align  2
+draw_fb_low:
+        .long   _viewportbuffer
+
 ! Draw a vertical column of pixels from a projected wall texture.
 ! Source is the top of the column to scale.
 !
@@ -414,12 +418,26 @@ _I_DrawColumnA:
         swap.w  r2,r0           /* (frac >> 16) */
         and     r4,r0           /* (frac >> 16) & heightmask */
 
+        /* test if count & 1 */
+        shlr    r6
+        movt    r9              /* 1 if count was odd */
+        bt/s    do_col_loop_1px
+        add     r9,r6
+
         .p2alignw 2, 0x0009
 do_col_loop:
         mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
         add     r3,r2           /* frac += fracstep */
         mov.b   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
+        swap.w  r2,r0           /* (frac >> 16) */
+        and     r4,r0           /* (frac >> 16) & heightmask */
+        add     r3,r2           /* frac += fracstep */
+        mov.b   r9,@r8          /* *fb = dpix */
+        add     r1,r8           /* fb += SCREENWIDTH */
+do_col_loop_1px:
+        mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
         dt      r6              /* count-- */
+        mov.b   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
         swap.w  r2,r0           /* (frac >> 16) */
         and     r4,r0           /* (frac >> 16) & heightmask */
         mov.b   r9,@r8          /* *fb = dpix */
