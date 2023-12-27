@@ -48,8 +48,23 @@ _I_DrawColumnLowA:
         swap.w  r2,r0           /* (frac >> 16) */
         and     r4,r0           /* (frac >> 16) & heightmask */
 
+        /* test if count & 1 */
+        shlr    r6
+        movt    r9              /* 1 if count was odd */
+        bt/s    do_col_loop_low_1px
+        add     r9,r6
+
         .p2alignw 2, 0x0009
 do_col_loop_low:
+        mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
+        add     r0,r0
+        mov.w   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
+        add     r3,r2           /* frac += fracstep */
+        swap.w  r2,r0           /* (frac >> 16) */
+        and     r4,r0           /* (frac >> 16) & heightmask */
+        mov.w   r9,@r8          /* *fb = dpix */
+        add     r1,r8           /* fb += SCREENWIDTH */
+do_col_loop_low_1px:
         mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
         add     r0,r0
         mov.w   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
