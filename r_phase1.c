@@ -195,9 +195,10 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
       offset = seg->sideoffset >> 1;
       si   = &sides[li->sidenum[side]];
       textureoffset = si->textureoffset & 0xfff;
-      textureoffset <<= 4;
-      textureoffset >>= 4;
-      rowoffset = (si->textureoffset & 0xf000) | si->rowoffset;
+      textureoffset <<= 4; // sign extend
+      textureoffset >>= 4; // sign extend
+      rowoffset = (si->textureoffset & 0xf000) | ((unsigned)si->rowoffset << 4);
+      rowoffset >>= 4; // sign extend
 
       li->flags |= ML_MAPPED; // mark as seen
 

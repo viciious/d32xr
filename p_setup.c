@@ -455,7 +455,7 @@ void P_LoadSideDefs (int lump)
 		sd->midtexture = R_TextureNumForName(msd->midtexture);
 		sd->sector = LITTLESHORT(msd->sector);
 		sd->rowoffset = rowoffset & 0xff;
-		sd->textureoffset = (textureoffset & 0xfff) | (rowoffset & 0xf00);
+		sd->textureoffset = (textureoffset & 0xfff) | ((rowoffset & 0x0f00) << 4);
 #ifndef MARS
 		textures[sd->toptexture].usecount++;
 		textures[sd->bottomtexture].usecount++;
