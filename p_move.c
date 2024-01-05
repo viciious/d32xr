@@ -371,6 +371,9 @@ movething
 
 boolean P_CheckPosition (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y)
 {
+   pmovework_t tm2;
+   if (tm == NULL)
+      tm = &tm2;
 	tm->tmthing = thing;
 	tm->tmx = x;
 	tm->tmy = y;
@@ -379,6 +382,9 @@ boolean P_CheckPosition (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y)
 
 boolean P_TryMove (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y)
 {
+   pmovework_t tm2;
+   if (tm == NULL)
+      tm = &tm2;
 	tm->tmthing = thing;
 	tm->tmx = x;
 	tm->tmy = y;
