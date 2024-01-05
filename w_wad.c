@@ -534,17 +534,17 @@ const char *W_GetNameForNum (int lump)
 ====================
 */
 
-void * W_GetLumpData(int lump)
+void * W_GetLumpData_(int lump, const char *func)
 {
 	wadfile_t *wad;
 	lumpinfo_t* l;
 
 	if (lump < 0)
-		I_Error("W_GetLumpData: %i < 0", lump);
+		I_Error("%s: %i < 0", func, lump);
 
 	wad = W_GetWadForLump(lump);
 	if (lump >= wad->firstlump+wad->numlumps)
-		I_Error ("W_GetLumpData: %i >= numlumps",lump);
+		I_Error ("%s: %i >= numlumps", func, lump);
 
 	l = &wad->lumpinfo[lump-wad->firstlump];
 	if (wad->cdlength)
@@ -555,7 +555,7 @@ void * W_GetLumpData(int lump)
 		I_SeekCDFile(pos, SEEK_SET);
 
 		if (I_ReadCDFile(len) < 0)
-			I_Error("Reading %d bytes failed", len);
+			I_Error("%s: reading %d bytes failed", func, len);
 
 		return I_GetCDFileBuffer();
 	}
