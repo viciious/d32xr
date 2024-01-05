@@ -102,7 +102,9 @@ const char * const S_sfxnames[NUMSFX] =
   "skeatk",
   "bospn",
   "bosdth",
-  "getpow"
+  "getpow",
+  "bospit",
+  "boscub"
 };
 
 #ifdef MARS
@@ -202,6 +204,8 @@ sfxinfo_t S_sfx[NUMSFX] =
   SOUND( false, skeatk, 70 ),
   SOUND( false, bospn, 70 ),
   SOUND( false, bosdth, 70 ),
-  SOUND( false, getpow, 60 )
+  SOUND( false, getpow, 60 ),
+  SOUND( false, bospit, 70 ),
+  SOUND( false, boscub, 70 )
 }; 
  

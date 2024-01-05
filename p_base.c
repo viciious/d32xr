@@ -165,7 +165,7 @@ void P_ZMovement(mobj_t *mo)
       if(mo->momz < 0)
          mo->momz = 0;
       mo->z = mo->floorz; // hit the floor
-      if(mo->flags & MF_MISSILE)
+      if((mo->flags & MF_MISSILE) && !(mo->flags & MF_NOCLIP))
       {
          mo->latecall = P_ExplodeMissile;
          return;
@@ -193,7 +193,7 @@ void P_ZMovement(mobj_t *mo)
           mo->momz = -mo->momz;
       }
 
-      if(mo->flags & MF_MISSILE)
+      if((mo->flags & MF_MISSILE) && !(mo->flags & MF_NOCLIP))
          mo->latecall = P_ExplodeMissile;
    }
 }
