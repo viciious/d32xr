@@ -23,6 +23,8 @@ void P_NewChaseDir (mobj_t *actor) ATTR_DATA_CACHE_ALIGN;
 boolean P_LookForPlayers (mobj_t *actor, boolean allaround) ATTR_DATA_CACHE_ALIGN;
 void A_Look (mobj_t *actor) ATTR_DATA_CACHE_ALIGN;
 void A_Chase (mobj_t *actor) ATTR_DATA_CACHE_ALIGN;
+void A_SpawnFly(mobj_t *mo);
+void P_Telefrag (mobj_t *thing, fixed_t x, fixed_t y);
 
 /*
 ================
@@ -1164,6 +1166,33 @@ void A_BabyMetal (mobj_t* mo)
 	A_Chase (mo);
 }
 
+#define MAXBRAINTARGETS 16
+mobj_t *braintargets[MAXBRAINTARGETS];
+int numbraintargets;
+int braintargeton = 0;
+
+void A_BrainAwake(mobj_t *mo)
+{
+	mobj_t *m;
+
+	// find all the target spots
+	numbraintargets = 0;
+	braintargeton = 0;
+
+	for (m=mobjhead.next ; m != (void *)&mobjhead ; m=m->next)
+	{
+		if (m->type == MT_BOSSTARGET)
+		{
+			if (numbraintargets == MAXBRAINTARGETS)
+				break;
+			braintargets[numbraintargets] = m;
+			numbraintargets++;
+		}
+	}
+
+	//S_StartSound(NULL, sfx_bossit);
+}
+
 void A_BrainPain (mobj_t*	mo)
 {
     S_StartSound (NULL,sfx_bospn);
@@ -1216,6 +1245,101 @@ void A_BrainExplode (mobj_t* mo)
 void A_BrainDie (mobj_t *mo)
 {
 	G_ExitLevel ();
+}
+
+void A_BrainSpit(mobj_t *mo)
+{
+	mobj_t *targ;
+	mobj_t *newmobj;
+	int tics, vanillatics;
+	static VINT easy = 0;
+
+	easy ^= 1;
+	if (gameskill <= sk_easy && (!easy))
+		return;
+
+	// shoot a cube at current target
+	targ = braintargets[braintargeton];
+	if (numbraintargets == 0)
+		I_Error("A_BrainSpit: numbraintargets == 0");
+	braintargeton = (braintargeton + 1) % numbraintargets;
+
+	// spawn brain missile
+	newmobj = P_SpawnMissile(mo, targ, MT_SPAWNSHOT);
+	if (!(newmobj->flags & MF_MISSILE))
+		return;
+
+	vanillatics = states[S_SPAWN1].tics + states[S_SPAWN2].tics;
+	tics = states[S_SPAWN1].tics > states[S_SPAWN2].tics ? states[S_SPAWN1].tics : states[S_SPAWN2].tics;
+
+	newmobj->reactiontime = ((targ->y - mo->y) / newmobj->momy) * tics / vanillatics;
+	newmobj->target = targ;
+
+	S_StartSound(NULL, sfx_bospit);
+}
+
+// travelling cube sound
+void A_SpawnSound(mobj_t *mo)
+{
+	S_StartSound(mo, sfx_boscub);
+	A_SpawnFly(mo);
+}
+
+void A_SpawnFly(mobj_t *mo)
+{
+	mobj_t *newmobj;
+	mobj_t *fog;
+	mobj_t *targ;
+	int r;
+	mobjtype_t type;
+
+	if (--mo->reactiontime)
+		return; // still flying
+
+	targ = mo->target;
+
+	// First spawn teleport fog.
+	fog = P_SpawnMobj(targ->x, targ->y, targ->z, MT_TFOG);
+	S_StartSound(fog, sfx_telept);
+
+	// Randomly select monster to spawn.
+	r = P_Random();
+
+	// Probability distribution (kind of :),
+	// decreasing likelihood.
+	if (r < 50)
+		type = MT_TROOP;
+	else if (r < 90)
+		type = MT_SERGEANT;
+	else if (r < 120)
+		type = MT_SHADOWS;
+	else if (r < 130)
+		type = MT_HEAD;
+	else if (r < 172)
+		type = MT_UNDEAD;
+	else if (r < 192)
+		type = MT_BABY;
+	else if (r < 222)
+		type = MT_FATSO;
+	else if (r < 246)
+		type = MT_KNIGHT;
+	else
+		type = MT_BRUISER;
+
+	newmobj = P_SpawnMobj(targ->x, targ->y, targ->z, type);
+	if (P_LookForPlayers(newmobj, true))
+	{
+		const mobjinfo_t* ainfo = &mobjinfo[type];
+		P_SetMobjState(newmobj, ainfo->seestate);
+	}
+
+	// telefrag anything in this spot
+	newmobj->flags = (newmobj->flags & ~MF_SHOOTABLE) | MF_TELEPORT;
+	P_Telefrag (newmobj, targ->x, targ->y);
+	newmobj->flags = (newmobj->flags & ~MF_TELEPORT) | MF_SHOOTABLE;
+
+	// remove self (i.e., cube).
+	P_RemoveMobj(mo);
 }
 
 /*============================================================================= */

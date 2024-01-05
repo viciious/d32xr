@@ -6,16 +6,16 @@ const char * const sprnames[NUMSPRITES] = {
 "MISF","SAWG","PLSG","PLSF","BFGG","BFGF","BLUD","PUFF","BAL1","BAL2",
 "BAL7","PLSS","PLSE","MISL","BFS1","BFE1","BFE2","TFOG","IFOG","PLAY",
 "POSS","SPOS","FATB","FBXP","SKEL","MANF","FATT","CPOS","SARG","HEAD",
-"BOSS",/*"BOS2",*/"SKUL","SPID","BSPI","APLS","APBX","CYBR","BBRN","ARM1",
-"ARM2","BAR1","BEXP","FCAN","BON1","BON2","BKEY","RKEY","YKEY","BSKU",
-"RSKU","YSKU","STIM","MEDI","SOUL","PINV","PSTR","PINS","MEGA","SUIT",
-"PMAP","PVIS","CLIP","AMMO","ROCK","BROK","CELL","CELP","SHEL","SBOX",
-"BPAK","BFUG","MGUN","CSAW","LAUN","PLAS","SHOT","SGN2","COLU","GOR1",
-"POL2","POL5","POL4","POL3","POL1","POL6","GOR2","GOR3","GOR4","GOR5",
-"SMIT","COL1","COL2","COL3","COL4","CAND","CBRA","COL6","TRE1","TRE2",
-"ELEC","CEYE","FSKU","COL5","TBLU","TGRN","TRED","SMBT","SMGT","SMRT",
-"HDB1","HDB2","HDB3","HDB4","HDB5","HDB6","POB1","POB2","BRS1","TLMP",
-"TLP2"
+"BOSS",/*"BOS2",*/"SKUL","SPID","BSPI","APLS","APBX","CYBR","BBRN","BOSF",
+"ARM1","ARM2","BAR1","BEXP","FCAN","BON1","BON2","BKEY","RKEY","YKEY",
+"BSKU","RSKU","YSKU","STIM","MEDI","SOUL","PINV","PSTR","PINS","MEGA",
+"SUIT","PMAP","PVIS","CLIP","AMMO","ROCK","BROK","CELL","CELP","SHEL",
+"SBOX","BPAK","BFUG","MGUN","CSAW","LAUN","PLAS","SHOT","SGN2","COLU",
+"GOR1","POL2","POL5","POL4","POL3","POL1","POL6","GOR2","GOR3","GOR4",
+"GOR5","SMIT","COL1","COL2","COL3","COL4","CAND","CBRA","COL6","TRE1",
+"TRE2","ELEC","CEYE","FSKU","COL5","TBLU","TGRN","TRED","SMBT","SMGT",
+"SMRT","HDB1","HDB2","HDB3","HDB4","HDB5","HDB6","POB1","POB2","BRS1",
+"TLMP","TLP2"
 };
 
 void A_Light0 ();
@@ -79,6 +79,10 @@ void A_BrainPain();
 void A_BrainScream();
 void A_BrainDie();
 void A_BrainExplode();
+void A_BrainAwake();
+void A_BrainSpit();
+void A_SpawnSound();
+void A_SpawnFly();
 
 #define STATE(sprite,frame,tics,action,nextstate) {sprite,frame,tics,nextstate,action}
 
@@ -630,9 +634,16 @@ STATE(SPR_BBRN,0,50,A_BrainScream,S_BRAIN_DIE2),	// S_BRAIN_DIE1
 STATE(SPR_BBRN,0,5,NULL,S_BRAIN_DIE3),	// S_BRAIN_DIE2
 STATE(SPR_BBRN,0,5,NULL,S_BRAIN_DIE4),	// S_BRAIN_DIE3
 STATE(SPR_BBRN,0,-1,A_BrainDie,S_NULL),	// S_BRAIN_DIE4
+STATE(SPR_POSS,0,5,A_Look,S_BRAINEYE),	// S_BRAINEYE
+STATE(SPR_POSS,0,90,A_BrainAwake,S_BRAINEYE1),	// S_BRAINEYESEE
+STATE(SPR_POSS,0,75,A_BrainSpit,S_BRAINEYE1),	// S_BRAINEYE1
 STATE(SPR_MISL,32769,5,NULL,S_BRAINEXPLODE2),	// S_BRAINEXPLODE1
 STATE(SPR_MISL,32770,5,NULL,S_BRAINEXPLODE3),	// S_BRAINEXPLODE2
 STATE(SPR_MISL,32771,5,A_BrainExplode,S_NULL),	// S_BRAINEXPLODE3
+STATE(SPR_BOSF,32768,1,A_SpawnSound,S_SPAWN2),	// S_SPAWN1
+STATE(SPR_BOSF,32769,2,A_SpawnFly,S_SPAWN3),	// S_SPAWN2
+STATE(SPR_BOSF,32770,1,A_SpawnFly,S_SPAWN4),	// S_SPAWN3
+STATE(SPR_BOSF,32771,2,A_SpawnFly,S_SPAWN1),	// S_SPAWN4
 STATE(SPR_ARM1,0,3,NULL,S_ARM1A),	/* S_ARM1 */
 STATE(SPR_ARM1,32769,3,NULL,S_ARM1),	/* S_ARM1A */
 STATE(SPR_ARM2,0,3,NULL,S_ARM2A),	/* S_ARM2 */
@@ -1299,7 +1310,82 @@ sfx_bosdth,		// deathsound
 10000,		// mass
 0,		// damage
 sfx_None,		// activesound
-MF_SOLID|MF_SHOOTABLE,		// flags
+MF_SOLID|MF_SHOOTABLE		// flags
+},
+
+{		// MT_BOSSSPIT
+89,		// doomednum
+S_BRAINEYE,		// spawnstate
+1000,		// spawnhealth
+S_BRAINEYESEE,		// seestate
+sfx_None,		// seesound
+8,		// reactiontime
+sfx_None,		// attacksound
+S_NULL,		// painstate
+0,		// painchance
+sfx_None,		// painsound
+S_NULL,		// meleestate
+S_NULL,		// missilestate
+S_NULL,		// deathstate
+S_NULL,		// xdeathstate
+sfx_None,		// deathsound
+0,		// speed
+20*FRACUNIT,		// radius
+32*FRACUNIT,		// height
+100,		// mass
+0,		// damage
+sfx_None,		// activesound
+MF_NOBLOCKMAP|MF_NOSECTOR		// flags
+},
+
+{		// MT_BOSSTARGET
+87,		// doomednum
+S_NULL,		// spawnstate
+1000,		// spawnhealth
+S_NULL,		// seestate
+sfx_None,		// seesound
+8,		// reactiontime
+sfx_None,		// attacksound
+S_NULL,		// painstate
+0,		// painchance
+sfx_None,		// painsound
+S_NULL,		// meleestate
+S_NULL,		// missilestate
+S_NULL,		// deathstate
+S_NULL,		// xdeathstate
+sfx_None,		// deathsound
+0,		// speed
+20*FRACUNIT,		// radius
+32*FRACUNIT,		// height
+100,		// mass
+0,		// damage
+sfx_None,		// activesound
+MF_NOBLOCKMAP|MF_NOSECTOR		// flags
+},
+
+{		// MT_SPAWNSHOT
+-1,		// doomednum
+S_SPAWN1,		// spawnstate
+1000,		// spawnhealth
+S_NULL,		// seestate
+sfx_bospit,		// seesound
+8,		// reactiontime
+sfx_None,		// attacksound
+S_NULL,		// painstate
+0,		// painchance
+sfx_None,		// painsound
+S_NULL,		// meleestate
+S_NULL,		// missilestate
+S_NULL,		// deathstate
+S_NULL,		// xdeathstate
+sfx_firxpl,		// deathsound
+10*FRACUNIT,		// speed
+6*FRACUNIT,		// radius
+32*FRACUNIT,		// height
+100,		// mass
+3,		// damage
+sfx_None,		// activesound
+MF_NOBLOCKMAP|MF_MISSILE|MF_DROPOFF|MF_NOGRAVITY|MF_NOCLIP		// flags
 },
 
 {		/* MT_BARREL */
