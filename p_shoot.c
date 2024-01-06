@@ -76,6 +76,11 @@ static boolean PA_CrossBSPNode(shootWork_t *sw, int bspnum) ATTR_DATA_CACHE_ALIG
 void P_Shoot2(lineattack_t *la) ATTR_DATA_CACHE_ALIGN;
 
 //
+// Returns side 0 (front or on), 1 (back)
+//
+#define PA_NodeSide(xx,yy,n) (!((((xx) - (n)->x * FRACUNIT)>>FRACBITS) * ((n)->dy) > (((yy) - (n)->y * FRACUNIT)>>FRACBITS) * ((n)->dx)))
+
+//
 // First checks the endpoints of the line to make sure that they cross the
 // sight trace treated as an infinite line.
 //
@@ -364,7 +369,6 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
 static boolean PA_CrossBSPNode(shootWork_t *sw, int bspnum)
 {
    node_t *bsp;
-   divline_t dl;
    int side, side2;
 
 check:
@@ -375,14 +379,10 @@ check:
    }
 
    bsp = &nodes[bspnum];
-   dl.dx = (fixed_t)bsp->dx << 16;
-   dl.dy = (fixed_t)bsp->dy << 16;
-   dl.x = (fixed_t)bsp->x << 16;
-   dl.y = (fixed_t)bsp->y << 16;
 
    // decide which side the start point is on
-   side = P_DivlineSide(sw->shootdiv.x, sw->shootdiv.y, &dl) == 1;
-   side2 = P_DivlineSide(sw->shootx2, sw->shooty2, &dl) == 1;
+   side = PA_NodeSide(sw->shootdiv.x, sw->shootdiv.y, bsp);
+   side2 = PA_NodeSide(sw->shootx2, sw->shooty2, bsp);
 
    // cross the starting side
    if(!PA_CrossBSPNode(sw, bsp->children[side]))
