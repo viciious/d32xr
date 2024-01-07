@@ -44,7 +44,7 @@ static void R_LockPln(void) ATTR_DATA_CACHE_ALIGN;
 static void R_UnlockPln(void) ATTR_DATA_CACHE_ALIGN;
 static visplane_t* R_GetNextPlane(uint16_t *sortedvisplanes) ATTR_DATA_CACHE_ALIGN;
 
-void R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
+void R_DrawPlanes(void) __attribute__((noinline));
 
 static char pl_lock = 0;
 #ifdef MARS
