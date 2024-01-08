@@ -479,14 +479,6 @@ int P_MapThingSpawnsMobj (mapthing_t* mthing)
 	if (!(mthing->options & bit))
 		return 0;
 
-	if (sprites[SPR_PLAY].numframes == 1)
-	{
-		/* hack player corpses into something else, because player graphics */
-		/* aren't included */
-		if (mthing->type == 10 || mthing->type == 12)	/* player corpse */
-			mthing->type = 18;		/* possessed human corpse */
-	}
-
 /* find which type to spawn */
 	if (netgame == gt_deathmatch)
 	{
