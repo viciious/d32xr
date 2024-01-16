@@ -210,6 +210,13 @@ void R_InitTextures (void)
 			texture->lumpnum = 0;
 	}
 
+	// remap the dummy texture to the first valid texture
+	textures[0].lumpnum = textures[1].lumpnum;
+	textures[0].width = textures[1].width;
+	textures[0].height = textures[1].height;
+	textures[0].decals = textures[1].decals;
+	D_memcpy(textures[0].data, textures[1].data, sizeof(textures[0].data));
+
 	texmips = false;
 #if MIPLEVELS > 1
 	texture = textures;
