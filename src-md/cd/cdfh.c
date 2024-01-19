@@ -8,6 +8,8 @@
 
 extern int DENTRY_OFFSET;
 extern int DENTRY_LENGTH;
+extern char DENTRY_FLAGS;
+extern char DENTRY_NAME[];
 extern short CURR_OFFSET;
 
 extern int init_cd(void);
@@ -94,3 +96,44 @@ int read_sectors(uint8_t *dest, int blk, int len)
     CURR_OFFSET = blk + len - 1;
     return r;
 }
+
+int64_t read_directory(char *buf)
+{
+    int r;
+    int count;
+    char *obuf;
+
+    if (cd_init() < 0)
+        return -1;
+
+    if (set_cwd(buf) < 0)
+    {
+        // error setting working directory
+        return -1;
+    }
+
+    count = 0;
+    obuf = buf;
+    do
+    {
+        *buf = 0;
+
+        r = next_dir_entry();
+        if (!r && memcmp(DENTRY_NAME, ".", 2))
+        {
+            int len = strlen(DENTRY_NAME);
+            memcpy(buf, DENTRY_NAME, len+1);
+            buf += len + 1;
+            memcpy(buf, &DENTRY_LENGTH, sizeof(int));
+            buf += 4;
+            memcpy(buf, &DENTRY_FLAGS, sizeof(char));
+            buf += 1;
+            count++;
+        }
+    } while (!r);
+
+    buf++;
+
+    return ((int64_t)(buf - obuf) << 32) | count;
+}
+
