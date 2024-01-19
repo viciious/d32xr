@@ -85,7 +85,7 @@ RequestTable:
         dc.w    SwitchToBank - RequestTable
         dc.w    SfxCopyBuffersFromCDFile - RequestTable
         dc.w    SfxClear - RequestTable
-        dc.w    UknownCmd - RequestTable
+        dc.w    ReadDir - RequestTable
         dc.w    SfxPUnPSource - RequestTable
         dc.w    SfxStopSource - RequestTable
         dc.w    PlayTrack - RequestTable
@@ -364,6 +364,19 @@ OpenFile:
         lea     4(sp),sp                /* clear the stack */
         move.l  d0,0x8020.w             /* length */
         move.l  d1,0x8024.w             /* offset */
+        jsr     switch_banks
+
+        move.b  #'D,0x800F.w            /* sub comm port = DONE */
+        bra     WaitAck
+
+ReadDir:
+        jsr     switch_banks
+        move.l  0x8010.w,d0             /* path */
+        move.l  d0,-(sp)
+        jsr     read_directory
+        lea     4(sp),sp                /* clear the stack */
+        move.l  d0,0x8020.w             /* buffer length */
+        move.l  d1,0x8024.w             /* num entries */
         jsr     switch_banks
 
         move.b  #'D,0x800F.w            /* sub comm port = DONE */
