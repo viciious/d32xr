@@ -481,6 +481,7 @@ no_cmd:
         dc.w    read_cd_file - prireqtbl
         dc.w    seek_cd_file - prireqtbl
         dc.w    load_sfx_cd_fileofs - prireqtbl
+        dc.w    read_cd_directory - prireqtbl
 
 | process request from Secondary SH2
 handle_sec_req:
@@ -2192,6 +2193,25 @@ load_sfx_cd_fileofs:
 
         move.w  #0,0xA15120         /* done */
 
+        bra     main_loop
+
+read_cd_directory:
+        move.w  0xA15100,d0
+        eor.w   #0x8000,d0
+        move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
+
+        lea     MARS_FRAMEBUFFER,a1
+        move.l  a1,-(sp)            /* path and destination buffer */
+        jsr     scd_read_directory
+        lea     4(sp),sp            /* clear the stack */
+        move.l  d0,0xA15128         /* length => COMM8 */
+        move.l  d1,0xA1512C         /* num entries(result) => COMM12 */
+
+        move.w  0xA15100,d0
+        or.w    #0x8000,d0
+        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        move.w  #0,0xA15120         /* done */
         bra     main_loop
 
 | set standard mapper registers to default mapping

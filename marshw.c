@@ -809,6 +809,21 @@ void Mars_MCDLoadSfxFileOfs(uint16_t start_id, int numsfx, const char *name, int
 	MARS_SYS_COMM0 = 0x2A00|numsfx; /* load sfx */
 }
 
+int Mars_MCDReadDirectory(const char *path)
+{
+	if (!*path) {
+		return -1;
+	}
+
+	while (MARS_SYS_COMM0);
+
+	Mars_StringToFramebuffer(path);
+	MARS_SYS_COMM0 = 0x2B00; /* read directory */
+	while (MARS_SYS_COMM0);
+
+	return *(int *)&MARS_SYS_COMM12;
+}
+
 void Mars_StoreAuxBytes(int length)
 {
 	while (MARS_SYS_COMM0);
