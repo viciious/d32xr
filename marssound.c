@@ -123,7 +123,6 @@ static void S_Pri_CmdHandler(void);
 void S_Init(void)
 {
 	int		i;
-	int		initmusictype;
 	int 	start, end;
 	VINT 	lumps[NUMSFX > 99 ? NUMSFX : 99];
 
@@ -143,28 +142,7 @@ void S_Init(void)
 		S_sfx[i].lump = -1;
 	}
 
-	/* init music */
-	num_music = 0;
-	muslooping = 0;
-	S_StopSong();
-
-	W_LoadPWAD(PWAD_BASE);
-
-	/* build an in-memory PWAD with all music */
-	start = W_CheckNumForName("M_START");
-	end = W_CheckNumForName("M_END");
-	if (start >= 0 && end > start + 1)
-	{
-		num_music = end - start - 1;
-		if (num_music > 99)
-			num_music = 99;
-		for (i = 0; i < num_music; i++)
-			lumps[i] = start + i + 1;
-		vgm_tracks = Z_Malloc(sizeof(*vgm_tracks) * num_music, PU_STATIC);
-		W_CacheWADLumps(vgm_tracks, num_music, lumps, false);
-	}
-
-	W_LoadPWAD(PWAD_SOUNDS);
+	W_LoadPWAD(PWAD_CD);
 
 	/* build an in-memory PWAD with all SFX */
 	start = W_CheckNumForName("DS_START");
@@ -216,6 +194,45 @@ void S_Init(void)
 
 	Mars_InitSoundDMA(1);
 #endif
+}
+
+/*
+==================
+=
+= S_InitMusic
+=
+==================
+*/
+
+void S_InitMusic(void)
+{
+	int		i;
+	int		initmusictype;
+	int 	start, end;
+	VINT 	lumps[99];
+
+	/* init music */
+	num_music = 0;
+	muslooping = 0;
+	S_StopSong();
+
+	W_LoadPWAD(PWAD_CD);
+
+	/* build an in-memory PWAD with all music */
+	start = W_CheckNumForName("M_START");
+	end = W_CheckNumForName("M_END");
+	if (start >= 0 && end > start + 1)
+	{
+		num_music = end - start - 1;
+		if (num_music > 99)
+			num_music = 99;
+		for (i = 0; i < num_music; i++)
+			lumps[i] = start + i + 1;
+		vgm_tracks = Z_Malloc(sizeof(*vgm_tracks) * num_music, PU_STATIC);
+		W_CacheWADLumps(vgm_tracks, num_music, lumps, false);
+	}
+
+	W_LoadPWAD(PWAD_NONE);
 
 	// FIXME: this is ugly, get rid of global variables!
 
@@ -758,7 +775,7 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 	Mars_StopTrack(); // stop the playback before flipping pages
 	S_Clear();
 
-	Mars_PlayTrack(0, playtrack, BASE_PWAD_NAME, vgm_tracks[playtrack-1].filepos, vgm_tracks[playtrack-1].size, looping);
+	Mars_PlayTrack(0, playtrack, cd_pwad_name, vgm_tracks[playtrack-1].filepos, vgm_tracks[playtrack-1].size, looping);
 }
 
 void S_StartSongByName(const char *name, int looping, int cdtrack)

@@ -18,6 +18,8 @@ unsigned	*demo_p, *demobuffer;
 
 boolean canwipe = false;
 
+char 		cd_pwad_name[16];
+
 int 		ticstart;
 
 unsigned configuration[NUMCONTROLOPTIONS][3] =
@@ -573,7 +575,7 @@ void START_Title(void)
 
 	l = gameinfo.titlePage;
 	if (*l) {
-		W_LoadPWAD(PWAD_BASE);
+		W_LoadPWAD(PWAD_CD);
 
 		int lump = W_CheckNumForName(l);
 		if (lump >= 0)
@@ -632,7 +634,7 @@ static void START_Credits (void)
 	if (!*gameinfo.creditsPage)
 		return;
 
-	W_LoadPWAD(PWAD_BASE);
+	W_LoadPWAD(PWAD_CD);
 
 	/* build a temp in-memory PWAD */
 	for (i = 0; i < 2; i++)
@@ -873,7 +875,7 @@ static void RunAttractDemos (void)
 			// Z_Malloc failure
 			Z_FreeTags(mainzone);
 
-			W_LoadPWAD(PWAD_BASE);
+			W_LoadPWAD(PWAD_CD);
 
 			demo = NULL;
 			D_snprintf(demoname, sizeof(demoname), "DEMO%1d", i+1);
@@ -964,12 +966,19 @@ D_printf ("W_Init\n");
 	W_Init ();
 D_printf ("I_Init\n");
 	I_Init (); 
+D_printf ("S_Init\n");
+	S_Init ();
+#ifdef MARS
+	MiniLoop(GS_Start, GS_Stop, GS_Ticker, GS_Drawer, I_Update);
+D_printf ("W_Init2\n");
+    W_InitCDPWAD(PWAD_CD, cd_pwad_name);
+#endif
 D_printf ("R_Init\n");
 	R_Init (); 
 D_printf ("P_Init\n");
 	P_Init (); 
-D_printf ("S_Init\n");
-	S_Init ();
+D_printf ("S_InitMusic\n");
+	S_InitMusic();
 D_printf("ST_Init\n");
 	ST_Init ();
 D_printf("O_Init\n");
