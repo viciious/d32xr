@@ -637,7 +637,7 @@ startnew:
 				/* quick save */
 				dmapinfo_t *mi = G_MapInfoForLumpName(nextmapl);
 				if (mi)
-					QuickSave(mi->mapNumber);
+					QuickSave(mi->mapNumber, mi->name);
 			}
 		}
 #endif
