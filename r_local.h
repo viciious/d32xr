@@ -274,7 +274,7 @@ static inline int R_PointOnSide (int x, int y, node_t *node)
 // then the y (<= x) is scaled and divided by x to get a tangent (slope)
 // value which is looked up in the tantoangle table.
 //
-#define R_PointToAngle(x,y) R_PointToAngle2(vd.viewx,vd.viewy,x,y)
+#define R_PointToAngle(x,y) R_PointToAngle2(vd->viewx,vd->viewy,x,y)
 void	R_InitData (void);
 void	R_SetViewportSize(int num);
 int		R_DefaultViewportSize(void); // returns the viewport id for fullscreen, low detail mode
@@ -627,7 +627,7 @@ __attribute__((aligned(16)))
 	uint8_t *columncache[2]; // composite column cache for both CPUs
 } viewdef_t;
 
-extern	viewdef_t	vd;
+extern	viewdef_t	*vd;
 
 extern texture_t *testtex;
 

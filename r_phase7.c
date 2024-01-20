@@ -261,12 +261,12 @@ static visplane_t *R_GetNextPlane(uint16_t *sortedvisplanes)
     R_UnlockPln();
 
 #ifdef MARS
-    if (p + vd.visplanes + 1 >= vd.lastvisplane)
+    if (p + vd->visplanes + 1 >= vd->lastvisplane)
         return NULL;
-    return vd.visplanes + sortedvisplanes[p*2+1];
+    return vd->visplanes + sortedvisplanes[p*2+1];
 #else
-    visplane_t *pl = vd.visplanes + p + 1;
-    return pl == vd.lastvisplane ? NULL : pl;
+    visplane_t *pl = vd->visplanes + p + 1;
+    return pl == vd->lastvisplane ? NULL : pl;
 #endif
 }
 
@@ -278,18 +278,18 @@ static void R_DrawPlanes2(void)
     int extralight;
 
 #ifdef MARS
-    Mars_ClearCacheLine(&vd.lastvisplane);
-    Mars_ClearCacheLine(&vd.gsortedvisplanes);
-    Mars_ClearCacheLines(vd.gsortedvisplanes, ((vd.lastvisplane - vd.visplanes - 1) * sizeof(*vd.gsortedvisplanes) + 31) / 16);
+    Mars_ClearCacheLine(&vd->lastvisplane);
+    Mars_ClearCacheLine(&vd->gsortedvisplanes);
+    Mars_ClearCacheLines(vd->gsortedvisplanes, ((vd->lastvisplane - vd->visplanes - 1) * sizeof(*vd->gsortedvisplanes) + 31) / 16);
 #endif
 
-    if (vd.gsortedvisplanes == NULL)
+    if (vd->gsortedvisplanes == NULL)
         return;
 
-    lpl.x = vd.viewx;
-    lpl.y = -vd.viewy;
+    lpl.x = vd->viewx;
+    lpl.y = -vd->viewy;
 
-    lpl.angle = vd.viewangle;
+    lpl.angle = vd->viewangle;
     angle = (lpl.angle - ANG90) >> ANGLETOFINESHIFT;
 
     lpl.basexscale = FixedDiv(finecosine(angle), centerXFrac);
@@ -297,9 +297,9 @@ static void R_DrawPlanes2(void)
 #ifdef MARS
     lpl.baseyscale *= FLATSIZE;
 #endif
-    extralight = vd.extralight;
+    extralight = vd->extralight;
 
-    while ((pl = R_GetNextPlane((uint16_t *)vd.gsortedvisplanes)) != NULL)
+    while ((pl = R_GetNextPlane((uint16_t *)vd->gsortedvisplanes)) != NULL)
     {
         int light;
         int flatnum;
@@ -338,9 +338,9 @@ static void R_DrawPlanes2(void)
 #endif
         lpl.height = (unsigned)D_abs(pl->height);
 
-        if (vd.fixedcolormap)
+        if (vd->fixedcolormap)
         {
-            lpl.lightmin = lpl.lightmax = vd.fixedcolormap;
+            lpl.lightmin = lpl.lightmax = vd->fixedcolormap;
             lpl.lightcoef = 0;
         }
         else
@@ -400,14 +400,14 @@ static void Mars_R_SplitPlanes(void)
 {
     const int minlen = centerX;
     const int maxlen = centerX * 2;
-    visplane_t *pl, *last = vd.lastvisplane;
+    visplane_t *pl, *last = vd->lastvisplane;
     int numplanes;
 
-    numplanes = vd.lastvisplane - vd.visplanes;
+    numplanes = vd->lastvisplane - vd->visplanes;
     if (numplanes >= MAXVISPLANES)
         return;
 
-    for (pl = vd.visplanes + 1; pl < last; pl++)
+    for (pl = vd->visplanes + 1; pl < last; pl++)
     {
         int start, stop;
         visplane_t* newpl;
@@ -432,7 +432,7 @@ static void Mars_R_SplitPlanes(void)
             if (newstop > stop || numplanes == MAXVISPLANES - 1)
                 newstop = stop;
 
-            newpl = vd.lastvisplane++;
+            newpl = vd->lastvisplane++;
             newpl->open = pl->open;
             newpl->height = pl->height;
             newpl->flatandlight = pl->flatandlight;
@@ -455,11 +455,11 @@ static void Mars_R_SortPlanes(void)
 {
     int i, numplanes;
     visplane_t* pl;
-    uint16_t *sortbuf = (uint16_t *)vd.gsortedvisplanes;
+    uint16_t *sortbuf = (uint16_t *)vd->gsortedvisplanes;
 
     i = 0;
     numplanes = 0;
-    for (pl = vd.visplanes + 1; pl < vd.lastvisplane; pl++)
+    for (pl = vd->visplanes + 1; pl < vd->lastvisplane; pl++)
     {
         // composite sort key: 1b - sign bit, 3b - negated span length, 12b - flat+light
         unsigned key = (unsigned)(pl->maxx - pl->minx - 1) >> 6;
@@ -474,25 +474,25 @@ static void Mars_R_SortPlanes(void)
         i += 2;
     }
 
-    D_isort(vd.gsortedvisplanes, numplanes);
+    D_isort(vd->gsortedvisplanes, numplanes);
 }
 
 static void R_PreDrawPlanes(void)
 {
     int numplanes;
 
-    Mars_ClearCacheLine(&vd.lastvisplane);
-    Mars_ClearCacheLine(&vd.gsortedvisplanes);
+    Mars_ClearCacheLine(&vd->lastvisplane);
+    Mars_ClearCacheLine(&vd->gsortedvisplanes);
 
     // check to see if we still need to fill the sorted planes list
-    numplanes = vd.lastvisplane - vd.visplanes; // visplane 0 is a dummy plane
+    numplanes = vd->lastvisplane - vd->visplanes; // visplane 0 is a dummy plane
     if (numplanes > 1) 
     {
-        Mars_ClearCacheLines(vd.visplanes, (numplanes * sizeof(visplane_t) + 31) / 16);
+        Mars_ClearCacheLines(vd->visplanes, (numplanes * sizeof(visplane_t) + 31) / 16);
 
-        if (vd.gsortedvisplanes == NULL)
+        if (vd->gsortedvisplanes == NULL)
         {
-            vd.gsortedvisplanes = (int *)vd.viswallextras;
+            vd->gsortedvisplanes = (int *)vd->viswallextras;
 
             Mars_R_SplitPlanes();
 
