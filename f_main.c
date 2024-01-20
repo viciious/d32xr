@@ -86,7 +86,6 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 	byte		*pixels, *src;
 	int			x, sprleft, sprtop, spryscale;
 	fixed_t 	spriscale;
-	column_t	*column;
 	int			lump;
 	boolean		flip;
 	int			texturecolumn;
@@ -139,6 +138,8 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 /* */
 	for (x=0 ; x<patch->width ; x++)
 	{
+		byte	*columnptr;
+
 		if (sprleft+x < 0)
 			continue;
 		if (sprleft+x >= 160)
@@ -149,20 +150,22 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 		else
 			texturecolumn = x;
 			
-		column = (column_t *) ((byte *)patch +
-		 BIGSHORT(patch->columnofs[texturecolumn]));
+		columnptr = (byte *)patch + BIGSHORT(patch->columnofs[texturecolumn]);
 
 /* */
 /* draw a masked column */
 /* */
-		for ( ; column->topdelta != 0xff ; column++) 
+		for ( ; *columnptr != 0xff ; columnptr += sizeof(column_t)) 
 		{
+			column_t *column = (column_t *)columnptr;
 			int top    = column->topdelta + sprtop;
 			int bottom = top + column->length - 1;
+			byte *dataofsofs = columnptr + offsetof(column_t, dataofs);
+			int dataofs = (dataofsofs[0] << 8) | dataofsofs[1];
 
 			top *= spryscale;
 			bottom *= spryscale;
-			src = pixels + BIGSHORT(column->dataofs);
+			src = pixels + dataofs;
 
 			if (top < 0) top = 0;
 			if (bottom >= height) bottom = height - 1;
