@@ -32,11 +32,11 @@ static void R_PrepMobj(mobj_t *thing)
    vissprite_t  *vis;
 
    // transform origin relative to viewpoint
-   tr_x = thing->x - vd.viewx;
-   tr_y = thing->y - vd.viewy;
+   tr_x = thing->x - vd->viewx;
+   tr_y = thing->y - vd->viewy;
 
-   gxt = FixedMul(tr_x, vd.viewcos);
-   gyt = FixedMul(tr_y, vd.viewsin);
+   gxt = FixedMul(tr_x, vd->viewcos);
+   gyt = FixedMul(tr_y, vd->viewsin);
    gyt = -gyt;
    tz  = gxt - gyt;
 
@@ -44,9 +44,9 @@ static void R_PrepMobj(mobj_t *thing)
    if(tz < MINZ)
       return;
 
-   gxt = FixedMul(tr_x, vd.viewsin);
+   gxt = FixedMul(tr_x, vd->viewsin);
    gxt = -gxt;
-   gyt = FixedMul(tr_y, vd.viewcos);
+   gyt = FixedMul(tr_y, vd->viewcos);
    tx  = -(gyt + gxt);
 
    // too far off the side?
@@ -69,7 +69,7 @@ static void R_PrepMobj(mobj_t *thing)
    if(sprlump[1] != -1)
    {
       // select proper rotation depending on player's view point
-      ang  = R_PointToAngle2(vd.viewx, vd.viewy, thing->x, thing->y);
+      ang  = R_PointToAngle2(vd->viewx, vd->viewy, thing->x, thing->y);
       rot  = (ang - thing->angle + (unsigned int)(ANG45 / 2)*9) >> 29;
       lump = sprlump[rot];
    }
@@ -91,7 +91,7 @@ static void R_PrepMobj(mobj_t *thing)
 
    patch = W_POINTLUMPNUM(lump);
    xscale = FixedDiv(PROJECTION, tz);
-   gzt = thing->z - vd.viewz;
+   gzt = thing->z - vd->viewz;
 
    // calculate edges of the shape
    if (flip)
@@ -125,11 +125,11 @@ static void R_PrepMobj(mobj_t *thing)
        return;
 
    // get a new vissprite
-   if(vd.vissprite_p >= vd.vissprites + MAXVISSPRITES - NUMPSPRITES)
+   if(vd->vissprite_p >= vd->vissprites + MAXVISSPRITES - NUMPSPRITES)
       return; // too many visible sprites already, leave room for psprites
 
-   vis = (vissprite_t *)vd.vissprite_p;
-   vd.vissprite_p++;
+   vis = (vissprite_t *)vd->vissprite_p;
+   vd->vissprite_p++;
 
    vis->patchnum = lump;
 #ifndef MARS
@@ -161,11 +161,11 @@ static void R_PrepMobj(mobj_t *thing)
 
    if (thing->flags & MF_SHADOW)
    {
-      vis->colormap = -vd.fuzzcolormap;
+      vis->colormap = -vd->fuzzcolormap;
    }
-   else if (vd.fixedcolormap)
+   else if (vd->fixedcolormap)
    {
-       vis->colormap = vd.fixedcolormap;
+       vis->colormap = vd->fixedcolormap;
    }
    else
    {
@@ -241,11 +241,11 @@ static void R_PrepPSprite(pspdef_t *psp)
        return;
 
    // store information in vissprite
-   if(vd.vissprite_p == vd.vissprites + MAXVISSPRITES)
+   if(vd->vissprite_p == vd->vissprites + MAXVISSPRITES)
       return; // out of vissprites
 
-   vis = (vissprite_t *)vd.vissprite_p;
-   vd.vissprite_p++;
+   vis = (vissprite_t *)vd->vissprite_p;
+   vd->vissprite_p++;
 
    vis->patchnum = lump;
 #ifndef MARS
@@ -261,16 +261,16 @@ static void R_PrepPSprite(pspdef_t *psp)
    if (x1 < 0)
        vis->startfrac = vis->xiscale * -x1;
 
-   if (vd.fixedcolormap)
+   if (vd->fixedcolormap)
    {
-       vis->colormap = vd.fixedcolormap;
+       vis->colormap = vd->fixedcolormap;
    }
    else
    {
        if (state->frame & FF_FULLBRIGHT)
            vis->colormap = 255;
        else
-           vis->colormap = vd.lightlevel;
+           vis->colormap = vd->lightlevel;
        vis->colormap = HWLIGHT(vis->colormap);
    }
    vis->colormaps = dc_colormaps;
@@ -281,11 +281,11 @@ static void R_PrepPSprite(pspdef_t *psp)
 //
 void R_SpritePrep(void)
 {
-   sector_t **pse = vd.vissectors;
+   sector_t **pse = vd->vissectors;
    pspdef_t     *psp;
    int i;
 
-   while(pse < vd.lastvissector)
+   while(pse < vd->lastvissector)
    {
       sector_t    *se = *pse;
       mobj_t *thing = se->thinglist;
@@ -299,10 +299,10 @@ void R_SpritePrep(void)
    }
 
    // remember end of actor vissprites
-   vd.lastsprite_p = vd.vissprite_p;
+   vd->lastsprite_p = vd->vissprite_p;
 
    // draw player weapon sprites
-   for(i = 0, psp = vd.viewplayer->psprites; i < NUMPSPRITES; i++, psp++)
+   for(i = 0, psp = vd->viewplayer->psprites; i < NUMPSPRITES; i++, psp++)
    {
       if(psp->state)
          R_PrepPSprite(psp);

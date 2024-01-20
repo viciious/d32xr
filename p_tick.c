@@ -529,6 +529,9 @@ void P_Drawer (void)
 	boolean automapactive = (players[consoleplayer].automapflags & AF_ACTIVE) != 0;
 	boolean optionsactive = (players[consoleplayer].automapflags & AF_OPTIONSACTIVE) != 0;
 	static boolean o_wasactive, am_wasactive = false;
+	viewdef_t vd_;
+
+	vd = &vd_;
 
 #ifdef MARS
 	extern	boolean	debugscreenactive;
