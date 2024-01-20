@@ -737,7 +737,7 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 
 	P_InitThinkers ();
 
-	W_LoadPWAD(PWAD_BASE);
+	W_LoadPWAD(PWAD_CD);
 
 	lumpnum = W_CheckNumForName(lumpname);
 	if (lumpnum < 0)

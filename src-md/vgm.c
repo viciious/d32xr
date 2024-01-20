@@ -72,6 +72,8 @@ void *vgm_cache_scd(const char *name, int offset, int length)
     int flength, foffset;
 
     lo = scd_open_file(name);
+    if (lo < 0)
+        return NULL;
     flength = lo >> 32;
     if (flength < 0)
         return NULL;

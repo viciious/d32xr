@@ -667,12 +667,11 @@ int		Z_FreeBlocks(memzone_t* mainzone);
 enum
 {
 	PWAD_NONE,
-	PWAD_BASE,
-	PWAD_SOUNDS,
+	PWAD_CD,
 	MAXWADS,
 };
 
-#define BASE_PWAD_NAME 	"BASE.WAD"
+extern char cd_pwad_name[16];
 #define SOUNDS_PWAD_NAME "SOUNDS.WAD"
 
 /*=============== */
@@ -687,6 +686,7 @@ typedef struct
 } lumpinfo_t;
 
 void	W_Init (void);
+void 	W_InitCDPWAD(int wawdnum, const char *name);
 
 void 	W_LoadPWAD(int wadnum);
 int 	W_CacheWADLumps (lumpinfo_t *li, int numlumps, VINT *lumps, boolean setpwad);
@@ -893,6 +893,11 @@ void F_Drawer (void);
 void AM_Control (player_t *player);
 void AM_Drawer (void);
 void AM_Start (void);
+
+void GS_Start(void);
+void GS_Stop (void);
+int GS_Ticker (void);
+void GS_Drawer (void);
 
 /*----- */
 /*OPTIONS */
@@ -1227,6 +1232,7 @@ int I_SeekCDFile(int offset, int whence);
 int I_ReadCDFile(int length);
 void I_SetCDFileCache(int length);
 void *I_GetCDFileCache(int length);
+int I_ReadCDDirectory(const char *path);
 
 /*================= */
 /*TLS */
