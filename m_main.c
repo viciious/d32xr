@@ -88,6 +88,9 @@ static VINT prevsaveslot;
 static VINT saveslotmap;
 static VINT saveslotskill;
 static VINT saveslotmode;
+static char savewadname[16];
+static char savemapname[32];
+static char savewadmismatch;
 
 static boolean startup;
 
@@ -137,6 +140,7 @@ void M_Start2 (boolean startup_)
 	saveslot = 0;
 	savecount = SaveCount();
 	prevsaveslot = -1;
+	savewadmismatch = 0;
 
 	D_memset(mainscreen, 0, sizeof(mainscreen));
 	D_memset(mainitem, 0, sizeof(mainitem));
@@ -265,7 +269,8 @@ static void M_UpdateSaveInfo(void)
 		saveslotmap = -1;
 		saveslotskill = -1;
 		saveslotmode = gt_single;
-		GetSaveInfo(saveslot, &saveslotmap, &saveslotskill, &saveslotmode);
+		GetSaveInfo(saveslot, &saveslotmap, &saveslotskill, &saveslotmode, savewadname, savemapname);
+		savewadmismatch = D_strcasecmp(savewadname, cd_pwad_name);
 	}
 }
 
@@ -412,7 +417,7 @@ int M_Ticker (void)
 
 		if (screenpos == ms_load)
 		{
-			if (savecount > 0)
+			if (savecount > 0 && !savewadmismatch)
 			{
 				startsplitscreen = saveslotmode != gt_single;
 				startsave = saveslot;
@@ -665,7 +670,7 @@ void M_Drawer (void)
 				char *mapname;
 				int mapnamelen;
 
-				mapname = M_MapName(saveslotmap);
+				mapname = savemapname;
 				mapnamelen = mystrlen(mapname);
 
 				leveltens = saveslotmap / 10, levelones = saveslotmap % 10;
@@ -681,11 +686,19 @@ void M_Drawer (void)
 					DrawJagobjLump(numslump + levelones, item->x + 86, y + ITEMSPACE*2, NULL, NULL);
 
 				print((320 - (mapnamelen * 14)) >> 1, y + ITEMSPACE*3 + 3, mapname);
+
+				if (scrpos == ms_load && savewadmismatch)
+				{
+					print(item->x + 10, y + ITEMSPACE*4 + 2, "WAD Mismatch");
+					print(item->x + 10, y + ITEMSPACE*5 + 2, savewadname);
+					return;
+				}
 			}
 			else
 			{
 				print(item->x + 10, y + ITEMSPACE*2 + 2, "Empty");
 			}
+
 			if (saveslotskill != -1)
 			{
 				/* draw difficulty information */
