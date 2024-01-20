@@ -2,7 +2,7 @@
 
 #include "doomdef.h"
 #include "lzss.h"
-#include "mars.h"
+#include <stdio.h>
 
 /* include "r_local.h" */
 
@@ -30,6 +30,9 @@ typedef struct
 	void		*lumpcache[MAXLUMPS];
 #endif
 } wadfile_t;
+
+static VINT cd_pwad_cache_size = -1;
+static VINT cd_pwad_cache_num_lumps = 0;
 
 static wadfile_t wadfile[MAXWADS];
 static int wadnum = 0;
@@ -92,7 +95,7 @@ void decode(unsigned char* input, unsigned char* output)
 ====================
 */
 
-static void W_InitCDPWAD (int wadnum, const char *name)
+void W_InitCDPWAD (int wadnum, const char *name)
 {
 	int 			l;
 	char 			*ptr;
@@ -104,6 +107,9 @@ static void W_InitCDPWAD (int wadnum, const char *name)
 		return;
 	}
 
+	if (wadnum == PWAD_CD)
+		cd_pwad_cache_size = -1;
+
 	wad = &wadfile[wadnum];
 	wad->firstlump = wadfile[wadnum-1].numlumps;
 	wad->cdlength = I_OpenCDFileByName(name, &wad->cdoffset);
@@ -114,7 +120,7 @@ static void W_InitCDPWAD (int wadnum, const char *name)
 	if (I_ReadCDFile(l) < 0)
 		I_Error("Reading %d bytes failed", l);
 
-	ptr = Mars_GetCDFileBuffer();
+	ptr = I_GetCDFileBuffer();
 
 	if (D_strncasecmp(((wadinfo_t*)ptr)->identification,"PWAD",4))
 		I_Error ("Wad file doesn't have PWAD id\n");
@@ -149,9 +155,7 @@ void W_Init (void)
 	infotableofs = BIGLONG(((wadinfo_t*)wad->fileptr)->infotableofs);
 	wad->lumpinfo = (lumpinfo_t *) (wad->fileptr + infotableofs);
 
-	W_InitCDPWAD(PWAD_BASE, BASE_PWAD_NAME);
-
-	W_InitCDPWAD(PWAD_SOUNDS, SOUNDS_PWAD_NAME);
+	W_InitCDPWAD(PWAD_CD, SOUNDS_PWAD_NAME);
 }
 
 /*
@@ -222,8 +226,6 @@ void W_LoadPWAD (int wadnum_)
 	int i, l;
 	wadfile_t *wad;
 	lumpinfo_t *li;
-	static VINT cache_size = -1;
-	static VINT cache_num_lumps = 0;
 
 	if (wadnum_ == PWAD_NONE) {
 		wadnum = PWAD_NONE;
@@ -235,9 +237,9 @@ void W_LoadPWAD (int wadnum_)
 
 	I_OpenCDFileByOffset(wad->cdlength, wad->cdoffset);
 
-	if (wadnum == PWAD_BASE && cache_size != -1) {
-		wad->numlumps = cache_num_lumps;
-		wad->lumpinfo = I_GetCDFileCache(cache_size);
+	if (wadnum == PWAD_CD && cd_pwad_cache_size != -1) {
+		wad->numlumps = cd_pwad_cache_num_lumps;
+		wad->lumpinfo = I_GetCDFileCache(cd_pwad_cache_size);
 		return;
 	}
 
@@ -255,10 +257,10 @@ void W_LoadPWAD (int wadnum_)
 		li[i].size = LITTLELONG(li[i].size);
 	}
 
-	if (wadnum == PWAD_BASE)
+	if (wadnum == PWAD_CD)
 	{
-		cache_size = l;
-		cache_num_lumps = wad->numlumps;
+		cd_pwad_cache_size = l;
+		cd_pwad_cache_num_lumps = wad->numlumps;
 		I_SetCDFileCache(l);
 	}
 }

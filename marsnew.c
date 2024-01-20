@@ -1214,3 +1214,8 @@ void *I_GetCDFileCache(int length)
 {
 	return Mars_LoadAuxBytes((length + 3) & ~3);
 }
+
+int I_ReadCDDirectory(const char *path)
+{
+	return Mars_MCDReadDirectory(path);
+}

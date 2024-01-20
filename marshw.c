@@ -719,7 +719,8 @@ void Mars_SwapWordColumnWithMDVRAM(int c)
 
 int Mars_OpenCDFileByName(const char *name, int *poffset)
 {
-	int len, backup[64];
+	int len;
+	int backup[16];
 	char *fb = (char *)(&MARS_FRAMEBUFFER + 0x100), *ptr;
 
 	if (!*name) {
