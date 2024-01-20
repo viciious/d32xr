@@ -70,34 +70,34 @@ static int R_ClipToViewEdges(angle_t angle1, angle_t angle2)
    if(span >= ANG180)
       return 0;
 
-   angle1 -= vd.viewangle;
-   angle2 -= vd.viewangle;
+   angle1 -= vd->viewangle;
+   angle2 -= vd->viewangle;
 
-   tspan = angle1 + vd.clipangle;
-   if(tspan > vd.doubleclipangle)
+   tspan = angle1 + vd->clipangle;
+   if(tspan > vd->doubleclipangle)
    {
-      tspan -= vd.doubleclipangle;
+      tspan -= vd->doubleclipangle;
       // totally off the left edge?
       if(tspan >= span)
          return -1;
-      angle1 = vd.clipangle;
+      angle1 = vd->clipangle;
    }
 
-   tspan = vd.clipangle - angle2;
-   if(tspan > vd.doubleclipangle)
+   tspan = vd->clipangle - angle2;
+   if(tspan > vd->doubleclipangle)
    {
-      tspan -= vd.doubleclipangle;
+      tspan -= vd->doubleclipangle;
       if(tspan >= span)
          return -1;
-      angle2 = 0 - vd.clipangle;
+      angle2 = 0 - vd->clipangle;
    }
 
    // find the first clippost that touches the source post (adjacent pixels
    // are touching).
    angle1 = (angle1 + ANG90) >> ANGLETOFINESHIFT;
    angle2 = (angle2 + ANG90) >> ANGLETOFINESHIFT;
-   x1    = vd.viewangletox[angle1];
-   x2    = vd.viewangletox[angle2];
+   x1    = vd->viewangletox[angle1];
+   x2    = vd->viewangletox[angle2];
 
    // does not cross a pixel?
    if(x1 == x2)
@@ -132,16 +132,16 @@ static boolean R_CheckBBox(rbspWork_t *rbsp, int16_t bspcoord_[4])
    bspcoord[3] = bspcoord_[3] << 16;
 
    // find the corners of the box that define the edges from current viewpoint
-   if(vd.viewx <= bspcoord[BOXLEFT])
+   if(vd->viewx <= bspcoord[BOXLEFT])
       boxx = 0;
-   else if(vd.viewx < bspcoord[BOXRIGHT])
+   else if(vd->viewx < bspcoord[BOXRIGHT])
       boxx = 1;
    else
       boxx = 2;
 
-   if(vd.viewy >= bspcoord[BOXTOP])
+   if(vd->viewy >= bspcoord[BOXTOP])
       boxy = 0;
-   else if(vd.viewy > bspcoord[BOXBOTTOM])
+   else if(vd->viewy > bspcoord[BOXBOTTOM])
       boxy = 1;
    else
       boxy = 2;
@@ -213,8 +213,8 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
 
       f_ceilingpic    = front_sector->ceilingpic;
       f_lightlevel    = front_sector->lightlevel;
-      f_floorheight   = front_sector->floorheight   - vd.viewz;
-      f_ceilingheight = front_sector->ceilingheight - vd.viewz;
+      f_floorheight   = front_sector->floorheight   - vd->viewz;
+      f_ceilingheight = front_sector->ceilingheight - vd->viewz;
 
       segl->floorpicnum   = flattranslation[front_sector->floorpic];
       if (f_ceilingpic != -1)
@@ -233,8 +233,8 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
 
       b_ceilingpic    = back_sector->ceilingpic;
       b_lightlevel    = back_sector->lightlevel;
-      b_floorheight   = back_sector->floorheight   - vd.viewz;
-      b_ceilingheight = back_sector->ceilingheight - vd.viewz;
+      b_floorheight   = back_sector->floorheight   - vd->viewz;
+      b_ceilingheight = back_sector->ceilingheight - vd->viewz;
 
       t_texturemid = b_texturemid = m_texturemid = 0;
       actionbits = 0;
@@ -390,7 +390,7 @@ static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop)
    viswall_t *rw;
    viswallextra_t *rwex;
    int newstop;
-   int numwalls = vd.lastwallcmd - vd.viswalls;
+   int numwalls = vd->lastwallcmd - vd->viswalls;
    const int maxlen = centerX/2;
    // split long segments
    int len = stop - start + 1;
@@ -402,9 +402,9 @@ static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop)
    else
       newstop = start + maxlen - 1;
 
-   rwex = vd.viswallextras + numwalls;
+   rwex = vd->viswallextras + numwalls;
    do {
-      rw = vd.lastwallcmd;
+      rw = vd->lastwallcmd;
       rw->seg = rbsp->curline;
       rw->start = start;
       rw->realstart = start;
@@ -412,7 +412,7 @@ static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop)
       rw->realstop = newstop;
       rw->scalestep = rbsp->lineangle1;
       rw->actionbits = 0;
-      ++vd.lastwallcmd;
+      ++vd->lastwallcmd;
 
       R_WallEarlyPrep(rw, &rwex->floorheight, &rwex->floornewheight, &rwex->ceilnewheight);
 
@@ -611,9 +611,9 @@ static void R_Subsector(rbspWork_t *rbsp, int num)
       if(frontsector->validcount != validcount[0]) // not already processed?
       {
          frontsector->validcount = validcount[0];  // mark it as processed
-         if (vd.lastvissector < vd.vissectors + MAXVISSSEC)
+         if (vd->lastvissector < vd->vissectors + MAXVISSSEC)
          {
-           *vd.lastvissector++ = frontsector;
+           *vd->lastvissector++ = frontsector;
          }
       }
    }
@@ -664,7 +664,7 @@ static void R_RenderBSPNode(rbspWork_t *rbsp, int bspnum, int16_t *outerbbox)
    bsp = &nodes[bspnum];
 
    // decide which side the view point is on
-   side = R_PointOnSide(vd.viewx, vd.viewy, bsp);
+   side = R_PointOnSide(vd->viewx, vd->viewy, bsp);
    R_DecodeBBox(bbox, outerbbox, bsp->encbbox[side]);
 
    // recursively render front space
