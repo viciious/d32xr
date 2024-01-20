@@ -1173,10 +1173,10 @@ extern	int		workpage;
 void WriteEEProm (void);
 void SaveGame(int slotnum);
 void ReadGame(int slotnum);
-void QuickSave(int nextmap);
+void QuickSave(int nextmap, const char *mapname);
 int SaveCount(void);
 int MaxSaveCount(void);
-boolean GetSaveInfo(int slotnumber, VINT* mapnum, VINT* skill, VINT *mode);
+boolean GetSaveInfo(int slotnumber, VINT* mapnum, VINT* skill, VINT *mode, char *wadname, char *mapname);
 
 void PrintHex (int x, int y, unsigned num);
 void DrawPlaque (jagobj_t *pl);
