@@ -604,7 +604,7 @@ startnew:
 			nextmapl = gamemapinfo.secretNext;
 		else
 			nextmapl = gamemapinfo.next;
-		finale = nextmapl == NULL;
+		finale = nextmapl == NULL || *nextmapl == '\0';
 
 #ifdef JAGUAR
 		if (finale)
