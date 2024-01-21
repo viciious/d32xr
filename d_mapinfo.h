@@ -36,7 +36,7 @@ typedef struct
 {
 	VINT specials;
 	VINT mapNumber;
-	VINT skyLumpNum;
+	VINT skyTexture;
 	VINT songNum;
 	char *name;
 	char *next;
