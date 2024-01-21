@@ -307,14 +307,14 @@ int EV_DoFloor(line_t *line,floor_e floortype)
 						if (twoSided (secnum, i) )
 						{
 							side = getSide(secnum,i,0);
-							if (side->bottomtexture >= 0)
+							if (side->bottomtexture > 0)
 								if (
 					(textures[side->bottomtexture].height<<FRACBITS)  < 
 									minsize)
 									minsize = 
 										(textures[side->bottomtexture].height<<FRACBITS);
 							side = getSide(secnum,i,1);
-							if (side->bottomtexture >= 0)
+							if (side->bottomtexture > 0)
 								if ((textures[side->bottomtexture].height<<FRACBITS) < 
 									minsize)
 									minsize = 

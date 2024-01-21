@@ -279,17 +279,20 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
       if(back_sector == &emptysector)
       {
          // single-sided line
-         segl->t_texturenum = texturetranslation[si->midtexture];
+         if (si->midtexture > 0)
+         {
+            segl->t_texturenum = texturetranslation[si->midtexture];
 
-         // handle unpegging (bottom of texture at bottom, or top of texture at top)
-         if(li->flags & ML_DONTPEGBOTTOM)
-            t_texturemid = f_floorheight + (textures[segl->t_texturenum].height << FRACBITS);
-         else
-            t_texturemid = f_ceilingheight;
+            // handle unpegging (bottom of texture at bottom, or top of texture at top)
+            if(li->flags & ML_DONTPEGBOTTOM)
+               t_texturemid = f_floorheight + (textures[segl->t_texturenum].height << FRACBITS);
+            else
+               t_texturemid = f_ceilingheight;
 
-         t_texturemid += rowoffset<<FRACBITS;                               // add in sidedef texture offset
-         segl->t_bottomheight = f_floorheight; // set bottom height
-         actionbits |= (AC_SOLIDSIL|AC_TOPTEXTURE);                   // solid line; draw middle texture only
+            t_texturemid += rowoffset<<FRACBITS;                               // add in sidedef texture offset
+            segl->t_bottomheight = f_floorheight; // set bottom height
+            actionbits |= (AC_SOLIDSIL|AC_TOPTEXTURE);                   // solid line; draw middle texture only
+         }
       }
       else
       {
@@ -319,32 +322,38 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
          // is bottom texture visible?
          if(b_floorheight > f_floorheight)
          {
-            segl->b_texturenum = texturetranslation[si->bottomtexture];
-            if(li->flags & ML_DONTPEGBOTTOM)
-               b_texturemid = f_ceilingheight;
-            else
-               b_texturemid = b_floorheight;
+            if (si->bottomtexture > 0)
+            {
+               segl->b_texturenum = texturetranslation[si->bottomtexture];
+               if(li->flags & ML_DONTPEGBOTTOM)
+                  b_texturemid = f_ceilingheight;
+               else
+                  b_texturemid = b_floorheight;
 
-            b_texturemid += rowoffset<<FRACBITS; // add in sidedef texture offset
+               b_texturemid += rowoffset<<FRACBITS; // add in sidedef texture offset
 
-            segl->b_topheight = *floornewheight = b_floorheight;
-            segl->b_bottomheight = f_floorheight;
-            actionbits |= (AC_BOTTOMTEXTURE|AC_NEWFLOOR); // generate bottom wall and floor
+               segl->b_topheight = *floornewheight = b_floorheight;
+               segl->b_bottomheight = f_floorheight;
+               actionbits |= (AC_BOTTOMTEXTURE|AC_NEWFLOOR); // generate bottom wall and floor
+            }
          }
 
          // is top texture visible?
          if(b_ceilingheight < f_ceilingheight && !skyhack)
          {
-            segl->t_texturenum = texturetranslation[si->toptexture];
-            if(li->flags & ML_DONTPEGTOP)
-               t_texturemid = f_ceilingheight;
-            else
-               t_texturemid = b_ceilingheight + (textures[segl->t_texturenum].height << FRACBITS);
+            if (si->toptexture > 0)
+            {
+               segl->t_texturenum = texturetranslation[si->toptexture];
+               if(li->flags & ML_DONTPEGTOP)
+                  t_texturemid = f_ceilingheight;
+               else
+                  t_texturemid = b_ceilingheight + (textures[segl->t_texturenum].height << FRACBITS);
 
-            t_texturemid += rowoffset<<FRACBITS; // add in sidedef texture offset
+               t_texturemid += rowoffset<<FRACBITS; // add in sidedef texture offset
 
-            segl->t_bottomheight = *ceilingnewheight = b_ceilingheight;
-            actionbits |= (AC_NEWCEILING|AC_TOPTEXTURE); // draw top texture and ceiling
+               segl->t_bottomheight = *ceilingnewheight = b_ceilingheight;
+               actionbits |= (AC_NEWCEILING|AC_TOPTEXTURE); // draw top texture and ceiling
+            }
          }
 
          // check if this wall is solid, for sprite clipping
