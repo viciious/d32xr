@@ -135,7 +135,7 @@ void G_DoLoadLevel (void)
 	gamemap = gamemapinfo.mapNumber;
 	startmap = gamemap;
 
-	skytexturel = gamemapinfo.skyLumpNum;
+	skytexturel = gamemapinfo.skyTexture;
  	skytexturep = &textures[skytexturel];
 
 	P_SetupLevel (gamemaplump, gameskill);
@@ -440,7 +440,7 @@ void G_Init(void)
 				sky = "SKY2";
 			else
 				sky = "SKY3";
-			maplist[i]->skyLumpNum = R_TextureNumForName(sky);
+			maplist[i]->skyTexture = R_TextureNumForName(sky);
 
 			if (nextmap)
 				maplist[i]->next = maplist[nextmap-1]->name;
