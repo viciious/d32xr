@@ -1129,9 +1129,9 @@ gotchannel:
 	newchannel->increment = (11025 << 14) / SAMPLE_RATE;
 	newchannel->length = length << 14;
 	newchannel->loop_length = 0;
+	newchannel->width = 8;
 #endif
 	newchannel->data = (void *)md_data;
-	newchannel->width = 8;
 	newchannel->position = 0;
 
 	newchannel->sfx = sfx;
