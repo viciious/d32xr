@@ -56,9 +56,9 @@ typedef struct
 	int			stopquad;
 	int			volume;				/* range from 0-32k */
 #endif
+#if defined(MARS) && !defined(DISABLE_DMA_SOUND)
 	uint16_t	width;
 	uint16_t	block_size; 		/* size of data block in bytes */
-#if defined(MARS) && !defined(DISABLE_DMA_SOUND)
 	int			length;
 	int			loop_length;
 	int			remaining_bytes; 	/* WAV chunk */
