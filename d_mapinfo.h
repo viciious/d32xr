@@ -44,6 +44,7 @@ typedef struct
 	char *next;
 	char *secretNext;
 	char *lumpName;
+	char *interText;
 } dmapinfo_t;
 
 typedef struct
@@ -63,6 +64,7 @@ typedef struct
 	VINT noAttractDemo;
 	VINT stopFireTime;
 	VINT titleStartPos;
+	char* interText;
 	char* endText;
 	void* data;
 } dgameinfo_t;
