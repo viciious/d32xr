@@ -702,7 +702,7 @@ void	*W_CacheLumpNum (int lump, int tag);
 void	*W_CacheLumpName (const char *name, int tag);
 
 const char *W_GetNameForNum (int lump);
-void * W_GetLumpData_(int lump, const char *func) ATTR_DATA_CACHE_ALIGN;
+void * W_GetLumpData_(int lump, const char *func);
 #define W_GetLumpData(lump) W_GetLumpData_(lump,__func__)
 #define W_POINTLUMPNUM(x) W_GetLumpData(x)
 
