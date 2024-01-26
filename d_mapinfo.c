@@ -280,6 +280,8 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 		mi->mapNumber = D_atoi(value);
 	else if (!D_strcasecmp(key, "music"))
 		mi->songNum = S_SongForName(value);
+	else if (!D_strcasecmp(key, "intermissionText"))
+		mi->interText = value;
 }
 
 static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
@@ -346,6 +348,7 @@ static dmapinfo_t *G_CompressMapInfo(dmapinfo_t *mi)
 	ALLOC_STR_FIELD(next);
 	ALLOC_STR_FIELD(secretNext);
 	ALLOC_STR_FIELD(lumpName);
+	ALLOC_STR_FIELD(interText);
 
 	buf = Z_Malloc(size, PU_STATIC);
 
@@ -365,6 +368,7 @@ static dmapinfo_t *G_CompressMapInfo(dmapinfo_t *mi)
 	COPY_STR_FIELD(next);
 	COPY_STR_FIELD(secretNext);
 	COPY_STR_FIELD(lumpName);
+	COPY_STR_FIELD(interText);
 
 	return nmi;
 }
