@@ -551,6 +551,8 @@ extern	mapthing_t	playerstarts[MAXPLAYERS];
 #define	BODYQUESIZE		4
 extern	int			bodyqueslot;
 
+extern 	boolean		finale;
+
 /*
 ===============================================================================
 

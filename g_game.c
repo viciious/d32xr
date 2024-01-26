@@ -36,6 +36,8 @@ boolean         demoplayback;
 mobj_t*         bodyque[BODYQUESIZE];
 int             bodyqueslot;
 
+boolean			finale;
+
 /* 
 ============== 
 = 
@@ -556,10 +558,10 @@ void G_RunGame (void)
 	while (1)
 	{
 		char		*nextmapl;
-		boolean		finale;
 #ifdef JAGUAR
 		int			nextmap;
 #endif
+		boolean 	finale_ = false;
 
 		/* run a level until death or completion */
 		MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer, P_Update);
@@ -604,10 +606,10 @@ startnew:
 			nextmapl = gamemapinfo.secretNext;
 		else
 			nextmapl = gamemapinfo.next;
-		finale = nextmapl == NULL || *nextmapl == '\0';
+		finale_ = nextmapl == NULL || *nextmapl == '\0';
 
 #ifdef JAGUAR
-		if (finale)
+		if (finale_)
 			nextmap = gamemapinfo.mapnumber; /* don't add secret level to eeprom */
 		else
 			nextmap = G_LumpNumForMapNum(nextmapl);
@@ -623,16 +625,16 @@ startnew:
 #ifdef MARS
 		if (netgame == gt_deathmatch)
 		{
-			if (finale)
+			if (finale_)
 			{
 				/* go back to start map */
-				finale = 0;
+				finale_ = 0;
 				nextmapl = G_LumpNameForMapNum(1);
 			}
 		}
 		else
 		{
-			if (!finale)
+			if (!finale_)
 			{
 				/* quick save */
 				dmapinfo_t *mi = G_MapInfoForLumpName(nextmapl);
@@ -644,8 +646,19 @@ startnew:
 
 	/* run a stats intermission */
 		MiniLoop (IN_Start, IN_Stop, IN_Ticker, IN_Drawer, UpdateBuffer);
-	
+
+	/* run a text screen */
+		if (gamemapinfo.interText && *gamemapinfo.interText)
+		{
+#ifdef MARS
+			MiniLoop(F_Start, F_Stop, F_Ticker, F_Drawer, I_Update);
+#else
+			MiniLoop(F_Start, F_Stop, F_Ticker, F_Drawer, UpdateBuffer);
+#endif
+		}
+
 	/* run the finale if needed */
+		finale = finale_;
 		if (finale)
 		{
 #ifdef MARS
@@ -656,6 +669,7 @@ startnew:
 			I_NetStop();
 			break;
 		}
+		else 
 
 		gamemaplump = nextmapl;
 	}
