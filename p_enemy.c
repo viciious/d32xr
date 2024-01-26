@@ -1141,8 +1141,26 @@ void A_BossDeath (mobj_t *mo)
 			EV_DoFloor (&junk, raiseToTexture);
 			break;
 		case MT_CYBORG:
+			if (gamemapinfo.specials & MI_CYBER_SPECIAL2)
+			{
+				junk.tag = 666;
+				EV_DoDoor (&junk, blazeOpen);
+			}
+			else
+			{
+				G_ExitLevel();
+			}
+			break;
 		case MT_SPIDER:
-			G_ExitLevel();
+			if (gamemapinfo.specials & MI_SPIDER_SPECIAL2)
+			{
+				junk.tag = 666;
+				EV_DoFloor (&junk, lowerFloorToLowest);
+			}
+			else
+			{
+				G_ExitLevel();
+			}
 			return;
 	}
 }
