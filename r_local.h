@@ -356,7 +356,9 @@ extern	int		phasetime[9];
 /* */
 /* R_data.c */
 /* */
-extern	texture_t	*skytexturep;
+extern	inpixel_t	*skytexturep;
+extern 	int8_t 		*skycolormaps;
+extern 	VINT 		col2sky;
 
 extern	VINT		numtextures;
 extern	texture_t	*textures;

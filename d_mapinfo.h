@@ -33,6 +33,7 @@
 #define MI_BABY_SPECIAL 	16
 #define MI_CYBER_SPECIAL2 	32
 #define MI_SPIDER_SPECIAL2 	64
+#define MI_PISTOL_START 	128
 
 typedef struct
 {
