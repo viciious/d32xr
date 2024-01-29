@@ -779,7 +779,7 @@ ticphase = 26;
 	}
 }
 
-void R_ResetResp(player_t* p)
+void P_ResetResp(player_t* p)
 {
 	int j;
 	int pnum = p - players;

@@ -29,7 +29,9 @@ uint8_t			*texturetranslation;	/* for global animation */
 
 flattex_t		*flatpixels;
 
-texture_t	*skytexturep;
+inpixel_t	*skytexturep;
+int8_t 		*skycolormaps;
+VINT 		col2sky;
 
 uint8_t		*dc_playpals;
 
@@ -372,6 +374,8 @@ void R_InitData (void)
 
 	firstsprite = W_GetNumForName ("S_START") + 1;
 	numsprites = W_GetNumForName ("S_END") - firstsprite;
+
+	col2sky = W_CheckNumForName ("S_STCOL2");
 
 	R_InitTextures ();
 	R_InitFlats ();

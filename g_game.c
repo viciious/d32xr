@@ -46,9 +46,7 @@ boolean			finale;
 ============== 
 */ 
   
-extern int              skytexture; 
-extern texture_t		*skytexturep;
-extern texture_t		*textures;
+extern VINT              skytexture; 
 
 dmapinfo_t *G_MapInfoForLumpName(const char *lumpName)
 {
@@ -98,7 +96,6 @@ char *G_MapNameForMapNum(int map)
 void G_DoLoadLevel (void) 
 { 
 	int             i; 
-	int		skytexturel;
 	int 		gamemap;
 	int			music;
 	dmapinfo_t  *mi;
@@ -137,10 +134,7 @@ void G_DoLoadLevel (void)
 	gamemap = gamemapinfo.mapNumber;
 	startmap = gamemap;
 
-	skytexturel = gamemapinfo.skyTexture;
- 	skytexturep = &textures[skytexturel];
-
-	P_SetupLevel (gamemaplump, gameskill);
+	P_SetupLevel (gamemaplump, gameskill, gamemapinfo.skyTexture);
 	gameaction = ga_nothing; 
 
 	music = gamemapinfo.songNum;
@@ -226,6 +220,8 @@ void G_PlayerReborn (int player)
 	p->usedown = p->attackdown = true;		/* don't do anything immediately */
 	p->playerstate = PST_LIVE;
 
+	if (gamemapinfo.specials & MI_PISTOL_START)
+		P_ResetResp(p);
 	P_RestoreResp(p);
 }
  
@@ -375,7 +371,7 @@ static void G_InitPlayerResp(void)
 {
 	int i;
 	for (i = 0; i < MAXPLAYERS; i++)
-		R_ResetResp(&players[i]);
+		P_ResetResp(&players[i]);
 }
 
 void G_Init(void)
@@ -442,7 +438,7 @@ void G_Init(void)
 				sky = "SKY2";
 			else
 				sky = "SKY3";
-			maplist[i]->skyTexture = R_TextureNumForName(sky);
+			maplist[i]->skyTexture = W_CheckNumForName(sky);
 
 			if (nextmap)
 				maplist[i]->next = maplist[nextmap-1]->name;

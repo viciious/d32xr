@@ -266,6 +266,10 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 		{
 			mi->specials |= MI_SPIDER_SPECIAL|MI_SPIDER_SPECIAL2;
 		}
+		else if (!D_strcasecmp(key, "pistolstart"))
+		{
+			mi->specials |= MI_PISTOL_START;
+		}
 
 		return;
 	}
@@ -273,7 +277,7 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 	if (!D_strcasecmp(key, "next"))
 		mi->next = value;
 	else if (!D_strcasecmp(key, "sky"))
-		mi->skyTexture = R_TextureNumForName(value);
+		mi->skyTexture = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "secretnext"))
 		mi->secretNext = value;
 	else if (!D_strcasecmp(key, "mapnumber"))
@@ -449,7 +453,7 @@ dmapinfo_t **G_LoadMaplist(int *pmapcount, dgameinfo_t* gi)
 		if (linecount < 2 || mi->mapNumber <= 0)
 			continue;
 		if (mi->skyTexture < 0)
-			mi->skyTexture = R_TextureNumForName("SKY1");
+			mi->skyTexture = W_CheckNumForName("SKY1");
 
 		maplist[i] = G_CompressMapInfo(mi);
 		i++;
