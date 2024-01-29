@@ -719,7 +719,7 @@ void P_LoadingPlaque (void)
 =================
 */
 
-void P_SetupLevel (const char *lumpname, skill_t skill)
+void P_SetupLevel (const char *lumpname, skill_t skill, int skytexture)
 {
 	int i;
 #ifndef MARS
@@ -827,6 +827,13 @@ extern byte *debugscreen;
 
 	iquehead = iquetail = 0;
 	gamepaused = false;
+
+	skytexturep = R_CheckPixels(skytexture);
+	skytexturep = R_SkipJagObjHeader(skytexturep, W_LumpLength(skytexture), 256, 128);
+	if (col2sky > 0 && skytexture >= col2sky)
+		skycolormaps = dc_colormaps2;
+	else
+		skycolormaps = dc_colormaps;
 
 	R_SetupLevel();
 

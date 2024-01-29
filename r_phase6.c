@@ -221,13 +221,17 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
             if (top < bottom)
             {
                 // CALICO: draw sky column
-                int colnum = ((vd->viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
+                unsigned colnum = ((vd->viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
 #ifdef MARS
-                inpixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
+                inpixel_t* data = skytexturep + colnum * 128;
 #else
-                pixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
+                pixel_t* data = skytexturep + colnum * 128;
 #endif
+                I_SetThreadLocalVar(DOOMTLS_COLORMAP, skycolormaps);
+
                 drawsky(x, top, --bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, 128);
+
+                I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
             }
         }
 

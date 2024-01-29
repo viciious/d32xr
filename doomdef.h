@@ -867,7 +867,7 @@ char *G_MapNameForMapNum(int map);
 /*PLAY */
 /*----- */
 
-void P_SetupLevel (const char *lumpname, skill_t skill);
+void P_SetupLevel (const char *lumpname, skill_t skill, int skytexture);
 void P_Init (void);
 
 void P_Start (void);
