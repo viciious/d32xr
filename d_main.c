@@ -317,6 +317,56 @@ static void D_Wipe(void)
 	wipe_ExitMelt();
 }
 
+int latched_buttons[2];
+
+void D_UpdateTicButtons(void)
+{
+	int buttons;
+	int mx, my;
+
+/* */
+/* get buttons for next tic */
+/* */
+	oldticbuttons[0] = ticbuttons[0];
+	oldticbuttons[1] = ticbuttons[1];
+	oldticrealbuttons = ticrealbuttons;
+
+	buttons = I_ReadControls();
+	buttons |= I_ReadMouse(&mx, &my);
+	if (demoplayback)
+	{
+		ticmousex[consoleplayer] = 0;
+		ticmousey[consoleplayer] = 0;
+	}
+	else
+	{
+		ticmousex[consoleplayer] = mx;
+		ticmousey[consoleplayer] = my;
+	}
+
+	ticbuttons[consoleplayer] = buttons | latched_buttons[consoleplayer];
+	latched_buttons[consoleplayer] = 0;
+	ticrealbuttons = buttons;
+
+	if (demoplayback)
+	{
+#ifndef MARS
+		if (buttons & (BT_ATTACK|BT_SPEED|BT_USE) )
+		{
+			exit = ga_exitdemo;
+			break;
+		}
+#endif
+		ticbuttons[consoleplayer] = buttons = *demo_p++;
+	}
+
+	if (splitscreen && !demoplayback)
+		ticbuttons[consoleplayer ^ 1] = I_ReadControls2();
+	else if (netgame)	/* may also change vblsinframe */
+		ticbuttons[consoleplayer ^ 1]
+			= NetToLocal(I_NetTransfer(LocalToNet(ticbuttons[consoleplayer])));
+}
+
 int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		,  int (*ticker)(void), void (*drawer)(void)
 		,  void (*update)(void) )
@@ -373,46 +423,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 #endif
 		}
 
-/* */
-/* get buttons for next tic */
-/* */
-		oldticbuttons[0] = ticbuttons[0];
-		oldticbuttons[1] = ticbuttons[1];
-		oldticrealbuttons = ticrealbuttons;
-
-		buttons = I_ReadControls();
-		buttons |= I_ReadMouse(&mx, &my);
-		if (demoplayback)
-		{
-			ticmousex[consoleplayer] = 0;
-			ticmousey[consoleplayer] = 0;
-		}
-		else
-		{
-			ticmousex[consoleplayer] = mx;
-			ticmousey[consoleplayer] = my;
-		}
-
-		ticbuttons[consoleplayer] = buttons;
-		ticrealbuttons = buttons;
-
-		if (demoplayback)
-		{
-#ifndef MARS
-			if (buttons & (BT_ATTACK|BT_SPEED|BT_USE) )
-			{
-				exit = ga_exitdemo;
-				break;
-			}
-#endif
-			ticbuttons[consoleplayer] = buttons = *demo_p++;
-		}
-
-		if (splitscreen && !demoplayback)
-			ticbuttons[consoleplayer ^ 1] = I_ReadControls2();
-		else if (netgame)	/* may also change vblsinframe */
-			ticbuttons[consoleplayer ^ 1]
-				= NetToLocal(I_NetTransfer(LocalToNet(ticbuttons[consoleplayer])));
+		D_UpdateTicButtons();
 
 		gamevbls += vblsinframe;
 

@@ -228,13 +228,14 @@ void P_PlayerMobjThink (mobj_t *mobj)
 = 
 ==================== 
 */ 
- 
+
 void P_BuildMove (player_t *player) 
 { 
 	int         speed;
 	int			buttons, oldbuttons;
 	mobj_t		*mo;
 	int			vbls;
+	int 		playernum = player - players;
 
 	buttons = ticbuttons[playernum];
 	oldbuttons = oldticbuttons[playernum];
@@ -322,22 +323,6 @@ void P_BuildMove (player_t *player)
 		if (buttons & BT_DOWN)
 			player->forwardmove += (-forwardmove[speed] * vbls) / TICVBLS;
 	}
-
-/* */
-/* if slowed down to a stop, change to a standing frame */
-/* */
-	mo = player->mo;
-	
-	if (!mo->momx && !mo->momy
-	&& player->forwardmove== 0 && player->sidemove == 0 )
-	{	/* if in a walking frame, stop moving */
-		if (mo->state == S_PLAY_RUN1 
-		|| mo->state == S_PLAY_RUN2
-		|| mo->state == S_PLAY_RUN3
-		|| mo->state == S_PLAY_RUN4)
-			P_SetMobjState (mo, S_PLAY);
-	}
-	
 } 
  
 
@@ -591,6 +576,7 @@ extern int ticphase;
 void P_PlayerThink (player_t *player)
 {
 	int		buttons;
+	mobj_t 	*mo;
 	
 	buttons = ticbuttons[playernum];
 
@@ -599,11 +585,26 @@ ticphase = 20;
 	
 ticphase = 21;
 	P_BuildMove (player);
+
+/* */
+/* if slowed down to a stop, change to a standing frame */
+/* */
+	mo = player->mo;
 	
+	if (!mo->momx && !mo->momy
+	&& player->forwardmove== 0 && player->sidemove == 0 )
+	{	/* if in a walking frame, stop moving */
+		if (mo->state == S_PLAY_RUN1 
+		|| mo->state == S_PLAY_RUN2
+		|| mo->state == S_PLAY_RUN3
+		|| mo->state == S_PLAY_RUN4)
+			P_SetMobjState (mo, S_PLAY);
+	}
+
 /* */
 /* chain saw run forward */
 /* */
-	if (player->mo->flags & MF_JUSTATTACKED)
+	if (mo->flags & MF_JUSTATTACKED)
 	{
 		player->angleturn = 0;
 		player->forwardmove = 25 * FRACUNIT / 32;

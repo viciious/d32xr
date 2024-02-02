@@ -484,6 +484,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 #ifdef MARS
 	int		palette = 0;
 #endif
+	int 	angleturn = 0;
 
 /* */
 /* set up globals for new frame */
@@ -504,11 +505,51 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 
 	player = &players[displayplayer];
 
+	if (debugmode && !demoplayback)
+	{
+		extern int lastticcount;
+
+		if (I_GetTime() != lastticcount)
+		{
+			int ovblsinframe;
+			int osidemove, ofwdmove, oangleturn, oturnheld;
+			int ooldbuttons, buttons;
+			extern int latched_buttons[2];
+
+			osidemove = player->sidemove;
+			ofwdmove = player->forwardmove;
+			oangleturn = player->angleturn;
+			oturnheld = player->turnheld;
+
+			ovblsinframe = vblsinframe;
+
+			ooldbuttons = oldticbuttons[consoleplayer];
+			buttons = ticbuttons[consoleplayer];
+			oldticbuttons[consoleplayer] = ticbuttons[consoleplayer];
+			ticbuttons[consoleplayer] = I_ReadControls();
+
+			vblsinframe = I_GetTime() - lastticcount;
+			P_BuildMove(player);
+			vblsinframe = ovblsinframe;
+
+			latched_buttons[consoleplayer] = ticbuttons[consoleplayer];
+			oldticbuttons[consoleplayer] = ooldbuttons;
+			ticbuttons[consoleplayer] = buttons;
+
+			angleturn = player->angleturn;
+
+			player->sidemove = osidemove;
+			player->forwardmove = ofwdmove;
+			player->angleturn = oangleturn;
+			player->turnheld = oturnheld;
+		}
+	}
+
 	vd->viewplayer = player;
 	vd->viewx = player->mo->x;
 	vd->viewy = player->mo->y;
 	vd->viewz = player->viewz;
-	vd->viewangle = player->mo->angle;
+	vd->viewangle = player->mo->angle + angleturn;
 
 	vd->viewsin = finesine(vd->viewangle>>ANGLETOFINESHIFT);
 	vd->viewcos = finecosine(vd->viewangle>>ANGLETOFINESHIFT);
