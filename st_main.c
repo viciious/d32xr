@@ -686,7 +686,7 @@ static void ST_Drawer_ (stbar_t* sb)
 			break;
 		case stc_drawgibhead:
 		case stc_drawhead:
-			ST_EraseBlock(FACEX, FACEY, FACEW, FACEH);
+			ST_EraseBlock(FACEX + 2, FACEY, FACEW, FACEH);
 			if (cmd->value != -1)
 				DrawJagobjLump(faces + cmd->value, FACEX + 2, stbar_y + FACEY, NULL, NULL);
 			break;

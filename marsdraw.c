@@ -752,22 +752,22 @@ void DrawJagobj2(jagobj_t* jo, int x, int y,
 	{
 		if (((intptr_t)dest & 1) == 0 && hw >= 1)
 		{
-			pixel_t* dest2 = (pixel_t *)dest, *source2 = (pixel_t*)source;
+			pixel_t* dest2 = (pixel_t *)dest;
 			index = ((unsigned)index << 8) | index;
 
-			inc >>= 1;
 			for (; height; height--)
 			{
 				int n = (hw + 3) >> 2;
 				switch (hw & 3)
 				{
-				case 0: do { *dest2++ = index + (((((*source2 >> 12)      ) << 8) | ((*source2 >> 8) & 0xF)) << 1);
-				case 3:      *dest2++ = index + (((((*source2 >>  4) & 0xF) << 8) | ((*source2 >> 0) & 0xF)) << 1), source2++;
-				case 2:      *dest2++ = index + (((((*source2 >> 12)      ) << 8) | ((*source2 >> 8) & 0xF)) << 1);
-				case 1:      *dest2++ = index + (((((*source2 >>  4) & 0xF) << 8) | ((*source2 >> 0) & 0xF)) << 1), source2++;
+				case 0: do { *dest2++ = index + (((((*source >>  4) & 0xF) << 8) | ((*source >> 0) & 0xF)) << 1), source++;
+				case 3:      *dest2++ = index + (((((*source >>  4) & 0xF) << 8) | ((*source >> 0) & 0xF)) << 1), source++;
+				case 2:      *dest2++ = index + (((((*source >>  4) & 0xF) << 8) | ((*source >> 0) & 0xF)) << 1), source++;
+				case 1:      *dest2++ = index + (((((*source >>  4) & 0xF) << 8) | ((*source >> 0) & 0xF)) << 1), source++;
 				} while (--n > 0);
 				}
-				source2 += inc;
+
+				source += inc;
 				dest2 += 160 - hw;
 			}
 
