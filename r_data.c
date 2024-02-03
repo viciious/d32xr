@@ -868,12 +868,15 @@ static void *R_LoadColormap(int l, boolean doublepix)
 void R_InitColormap(boolean doublepix)
 {
 	int l;
+	int osky = skycolormaps == dc_colormaps;
 
 	l = W_CheckNumForName("COLORMAP");
 	dc_colormaps = R_LoadColormap(l, doublepix);
 
 	l -= 2;
 	dc_colormaps2 = R_LoadColormap(l, doublepix);
+
+	skycolormaps = osky ? dc_colormaps : dc_colormaps2;
 
 #ifdef MARS
 	Mars_CommSlaveClearCache();
