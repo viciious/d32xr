@@ -62,13 +62,10 @@ void GS_Start(void)
     cursordelay = MOVEWAIT;
     gs_menu = NULL;
 
-    n = I_ReadCDDirectory("/");
-    if (n <= 0)
-        return;
-
     gs_menu = Z_Malloc(sizeof(*gs_menu), PU_STATIC);
     D_memset(gs_menu, 0, sizeof(*gs_menu));
 
+    n = I_ReadCDDirectory("/");
     buf = I_GetCDFileBuffer();
     for (i = 0; i < n; i++)
     {
