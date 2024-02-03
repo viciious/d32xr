@@ -46,8 +46,6 @@ boolean			finale;
 ============== 
 */ 
   
-extern VINT              skytexture; 
-
 dmapinfo_t *G_MapInfoForLumpName(const char *lumpName)
 {
 	int i;
