@@ -265,6 +265,13 @@ int EV_DoFloor(line_t *line,floor_e floortype)
 				if (floor->floordestheight > sec->ceilingheight)
 					floor->floordestheight = sec->ceilingheight;
 				break;
+			case raiseFloorTurbo:
+				floor->direction = 1;
+				floor->sector = sec;
+				floor->speed = FLOORSPEED*4;
+				floor->floordestheight = 
+				P_FindNextHighestFloor(sec,sec->floorheight);
+				break;
 			case raiseFloorToNearest:
 				floor->direction = 1;
 				floor->sector = sec;
