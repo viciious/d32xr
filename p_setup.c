@@ -830,10 +830,7 @@ extern byte *debugscreen;
 
 	skytexturep = R_CheckPixels(skytexture);
 	skytexturep = R_SkipJagObjHeader(skytexturep, W_LumpLength(skytexture), 256, 128);
-	if (col2sky > 0 && skytexture >= col2sky)
-		skycolormaps = dc_colormaps2;
-	else
-		skycolormaps = dc_colormaps;
+	skycolormaps = (col2sky > 0 && skytexture >= col2sky) ? dc_colormaps2 : dc_colormaps;
 
 	R_SetupLevel();
 
