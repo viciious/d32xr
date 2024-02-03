@@ -23,6 +23,10 @@
 
         .equ REQ_ACT,   0xFFEF      /* Request 68000 Action */
 
+        .equ MARS_FRAMEBUFFER, 0x840200 /* 32X frame buffer */
+
+        .equ COL_STORE, 0x600800    /* WORD RAM + 2K */
+
         .macro  z80rd adr, dst
         move.b  0xA00000+\adr,\dst
         .endm
@@ -390,6 +394,7 @@ main_loop_bump_fm:
         bsr     bump_fm
 
 main_loop_handle_req:
+        moveq   #0,d0
         move.w  0xA15120,d0         /* get COMM0 */
         bne.b   handle_req
 
@@ -469,6 +474,14 @@ no_cmd:
         dc.w    update_sfx - prireqtbl
         dc.w    stop_sfx - prireqtbl
         dc.w    flush_sfx - prireqtbl
+        dc.w    store_bytes - prireqtbl
+        dc.w    load_bytes - prireqtbl
+        dc.w    open_cd_file_by_name - prireqtbl
+        dc.w    open_cd_file_by_handle - prireqtbl
+        dc.w    read_cd_file - prireqtbl
+        dc.w    seek_cd_file - prireqtbl
+        dc.w    load_sfx_cd_fileofs - prireqtbl
+        dc.w    read_cd_directory - prireqtbl
 
 | process request from Secondary SH2
 handle_sec_req:
@@ -605,51 +618,60 @@ set_rom_bank:
 start_music:
         tst.w   use_cd
         bne     start_cd
-        
-        /* start VGM */
+
         clr.l   vgm_ptr
-        cmpi.w  #0x0300,d0
-        beq.b   0f
 
-        /* fetch VGM length */
-        lea     vgm_size,a0
-        move.w  0xA15122,0(a0)
-        move.w  #0,0xA15120         /* done with upper word */
-20:
-        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
-        cmpi.w  #0x0302,d0
-        bne.b   20b
-        move.w  0xA15122,2(a0)
-        move.w  #0,0xA15120         /* done with lower word */
-
-        /* fetch VGM offset */
-        lea     vgm_ptr,a0
-21:
-        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
-        cmpi.w  #0x0303,d0
-        bne.b   21b
-        move.w  0xA15122,0(a0)
-        move.w  #0,0xA15120         /* done with upper word */
-22:
-        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
-        cmpi.w  #0x0304,d0
-        bne.b   22b
-        move.w  0xA15122,2(a0)
-        move.w  #0,0xA15120         /* done with lower word */
-
-23:
-        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
-        cmpi.w  #0x0300,d0
-        bne.b   23b
-
-0:
-        /* set VGM pointer and init VGM player */
+        /* init VGM player */
         move.w  0xA15122,d0         /* COMM2 = index | repeat flag */
         move.w  #0x8000,d1
         and.w   d0,d1               /* repeat flag */
         eor.w   d1,d0               /* clear flag from index */
         move.w  d1,fm_rep           /* repeat flag */
         move.w  d0,fm_idx           /* index 1 to N */
+        move.w  0xA15120,d0         /* COMM0 */
+
+        /* fetch VGM offset */
+        lea     vgm_ptr,a0
+        move.l  0xA15128,(a0)       /* offset in COMM8 */
+        /* fetch VGM length */
+        lea     vgm_size,a0
+        move.l  0xA1512C,(a0)       /* length in COMM12 */
+
+        /* start VGM */
+        btst    #0,d0               /* check if we read from CD */
+        beq.b   0f
+
+        /* CD VGM playback */
+        move.l  0xA1512C,d1         /* length in COMM12 */
+        move.l  d1,-(sp)
+        move.l  0xA15128,d1         /* offset in COMM8 */
+        move.l  d1,-(sp)
+
+        move.w  0xA15100,d0
+        eor.w   #0x8000,d0
+        move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
+
+        /* copy frame buffer string to local buffer */
+        lea     MARS_FRAMEBUFFER,a0         /* frame buffer */
+        lea     vgm_lzss_buf,a1
+00:
+        move.b  (a0)+,(a1)+
+        bne.b   00b
+
+        lea     vgm_lzss_buf,a1
+        move.l  a1,-(sp)
+        jsr     vgm_cache_scd
+        lea     12(sp),sp
+        move.l  d0,a1
+
+        move.w  0xA15100,d0
+        or.w    #0x8000,d0
+        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        bra     01f
+
+0:
+        /* ROM VGM playback */
         move.w  #0,0xA15104         /* set cart bank select */
         move.l  #0,a0
         move.l  vgm_ptr,d0          /* set VGM offset */
@@ -657,6 +679,8 @@ start_music:
 
         move.l  d0,a0
         bsr     set_rom_bank
+01:
+        move.w  #0,0xA15120         /* done */
 
         move.l  a1,-(sp)            /* MD lump ptr */
         jsr     vgm_setup           /* setup lzss, set pcm_baseoffs, set vgm_ptr, read first block */
@@ -776,12 +800,10 @@ start_music:
         move.w  #0x0000,0xA11100    /* Z80 deassert bus request */
         move.w  #0x0100,0xA11200    /* Z80 deassert reset - run driver */
 
-        move.w  #0,0xA15120         /* done */
         bra     main_loop
 9:
         clr.w   fm_idx              /* not playing VGM */
 
-        move.w  #0,0xA15120         /* done */
         bra     main_loop
 
 start_cd:
@@ -1553,7 +1575,7 @@ cpy_md_vram:
         move.b  d0,d1               /* column number */
         add.w   d1,d1
 
-        lea     0x840200,a2         /* frame buffer */
+        lea     MARS_FRAMEBUFFER,a2         /* frame buffer */
         lea     0(a2,d1.l),a2
 
         cmpi.w  #0x1C00,d0
@@ -1604,7 +1626,12 @@ cpy_md_vram:
         add     d2,d2
         add     d2,d1
 
-        lea     col_store,a0
+        moveq   #0,d0
+        move.l  d0,-(sp)
+        jsr     scd_switch_to_bank
+        lea     4(sp),sp
+
+        lea     COL_STORE,a0
         lea     0(a0,d1.l),a0
         move.w  #27,d0
 3:
@@ -1708,7 +1735,12 @@ cpy_md_vram:
 
         lea     0(a2,d0.l),a2
 
-        lea     col_store,a0
+        moveq   #0,d0
+        move.l  d0,-(sp)
+        jsr     scd_switch_to_bank
+        lea     4(sp),sp
+
+        lea     COL_STORE,a0
         lea     0(a0,d1.l),a0
 
         move.w  2(a1), d0           /* length in words */
@@ -1767,7 +1799,7 @@ cpy_md_vram:
         swap    d2
         move.l  d1,4(a0)            /* cmd port <- read VRAM at offset */
         move.w  #27,d0
-        lea     col_store+20*224*2,a1
+        lea     col_swap,a1
 11:
         /* vram to swap buffer */
         move.w  (a0),(a1)+          /* next word */
@@ -1821,10 +1853,15 @@ cpy_md_vram:
         add     d2,d2
         add     d2,d1
 
-        lea     col_store,a0
+        moveq   #0,d0
+        move.l  d0,-(sp)
+        jsr     scd_switch_to_bank
+        lea     4(sp),sp
+
+        lea     COL_STORE,a0
         lea     0(a0,d1.l),a0
         move.w  #27,d0
-        lea     col_store+20*224*2,a1
+        lea     col_swap,a1
 13:
         /* wram to swap buffer */
         move.w  (a0)+,(a1)+         /* next word */
@@ -1929,18 +1966,12 @@ load_sfx:
 play_sfx:
         /* set source id */
         moveq   #0,d0
-        move.b  0xA15121,d0         /* LB of COMM0 = src id */
-
-        moveq   #0,d2
-        move.w  0xA15122,d2         /* pan|vol */
-        move.w  #0,0xA15120
-20:
-        move.w  0xA15120,d1         /* wait on handshake in COMM0 */
-        cmpi.w  #0x1E01,d1
-        bne.b   20b
-
         moveq   #0,d1
-        move.w  0xA15122,d1         /* buf_id */
+        moveq   #0,d2
+
+        move.b  0xA15121,d0         /* LB of COMM0 = src id */
+        move.w  0xA15122,d2         /* pan|vol */
+        move.w  0xA15128,d1         /* freq */
 
         move.w  d2,d3
         andi.l  #255,d3
@@ -1949,8 +1980,9 @@ play_sfx:
         move.l  #0,-(sp)            /* autoloop */
         move.l  d3,-(sp)            /* vol */
         move.l  d2,-(sp)            /* pan */ 
-        move.l  #0,-(sp)            /* freq */
-        move.l  d1,-(sp)            /* buf id */
+        move.l  d1,-(sp)
+        move.w  0xA1512A,d1         /* buf_id */
+        move.l  d1,-(sp)
         move.l  d0,-(sp)            /* src id */
 
         move.w  #0,0xA15120         /* done */
@@ -1978,10 +2010,11 @@ sfx_clear:
 update_sfx:
         /* set source id */
         moveq   #0,d0
-        move.b  0xA15121,d0         /* LB of COMM0 = src id */
-
         moveq   #0,d2
+
+        move.b  0xA15121,d0         /* LB of COMM0 = src id */
         move.w  0xA15122,d2         /* pan|vol */
+        move.w  0xA15128,d1         /* freq */
 
         move.w  d2,d3
         andi.l  #255,d3
@@ -1990,7 +2023,7 @@ update_sfx:
         move.l  #0,-(sp)            /* autoloop */
         move.l  d3,-(sp)            /* vol */
         move.l  d2,-(sp)            /* pan */ 
-        move.l  #0,-(sp)            /* freq */
+        move.l  d1,-(sp)            /* freq */
         move.l  d0,-(sp)            /* src id */
 
         move.w  #0,0xA15120         /* done */
@@ -2019,6 +2052,166 @@ flush_sfx:
         jsr     scd_flush_cmd_queue
 
         move.b  #1,need_bump_fm
+        bra     main_loop
+
+store_bytes:
+        moveq   #0,d1
+        move.w  0xA15122,d1         /* COMM2 = length */
+
+        lea     MARS_FRAMEBUFFER,a2
+        lea     aux_store,a1
+        
+        move.l  d1,-(sp)            /* length */
+        move.l  a2,-(sp)            /* source */
+        move.l  a1,-(sp)            /* destination */
+
+        move.w  0xA15100,d0
+        eor.w   #0x8000,d0
+        move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
+
+        jsr     memcpy
+        lea     12(sp),sp           /* clear the stack */
+
+        move.w  0xA15100,d0
+        or.w    #0x8000,d0
+        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+load_bytes:
+        moveq   #0,d1
+        move.w  0xA15122,d1         /* COMM2 = length */
+
+        lea     MARS_FRAMEBUFFER,a1
+        lea     aux_store,a2
+
+        move.l  d1,-(sp)            /* length */
+        move.l  a2,-(sp)            /* source */
+        move.l  a1,-(sp)            /* destination */
+
+        move.w  0xA15100,d0
+        eor.w   #0x8000,d0
+        move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
+
+        jsr     memcpy
+        lea     12(sp),sp           /* clear the stack */
+
+        move.w  0xA15100,d0
+        or.w    #0x8000,d0
+        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+open_cd_file_by_name:
+        move.w  0xA15100,d0
+        eor.w   #0x8000,d0
+        move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
+
+        lea     MARS_FRAMEBUFFER,a1 /* frame buffer */
+        move.l  a1,-(sp)            /* string pointer */
+        jsr     scd_open_gfile_by_name
+        lea     4(sp),sp            /* clear the stack */
+        move.l  d0,0xA15128         /* length => COMM8 */
+        move.l  d1,0xA1512C         /* offset => COMM12 */
+
+        move.w  0xA15100,d0
+        or.w    #0x8000,d0
+        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+open_cd_file_by_handle:
+        move.l  0xA15128,d0         /* length => COMM8 */
+        move.l  0xA1512C,d1         /* offset => COMM12 */
+
+        move.l  d1,-(sp)
+        move.l  d0,-(sp)
+        jsr     scd_open_gfile_by_length_offset
+        lea     8(sp),sp            /* clear the stack */
+
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+read_cd_file:
+        move.w  0xA15100,d0
+        eor.w   #0x8000,d0
+        move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
+
+        move.l  0xA15128,d0         /* length in COMM8 */
+        move.l  d0,-(sp)
+        lea     MARS_FRAMEBUFFER,a1
+        move.l  a1,-(sp)            /* destination pointer */
+        jsr     scd_read_gfile
+        lea     8(sp),sp            /* clear the stack */
+        move.l  d0,0xA15128         /* length => COMM8 */
+
+        move.w  0xA15100,d0
+        or.w    #0x8000,d0
+        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+seek_cd_file:
+        moveq   #0,d0
+        move.w  0xA15122,d0         /* whence in COMM2 */
+        move.l  d0,-(sp)
+        move.l  0xA15128,d0         /* offset in COMM8 */
+        move.l  d0,-(sp)
+        jsr     scd_seek_gfile
+        lea     8(sp),sp            /* clear the stack */
+        move.l  d0,0xA15128         /* position => COMM8 */
+
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+load_sfx_cd_fileofs:
+        lea     MARS_FRAMEBUFFER,a1 /* frame buffer */
+        move.l  a1,-(sp)            /* file name + offsets */
+
+        moveq   #0,d0
+        move.b  0xA15121,d0         /* LSB of COMM0 = num sfx */
+        move.l  d0,-(sp)
+
+        /* set buffer id */
+        move.w  0xA15122,d0         /* COMM2 = start buffer id */
+        move.l  d0,-(sp)
+
+        move.w  0xA15100,d0
+        eor.w   #0x8000,d0
+        move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
+
+        jsr     scd_upload_buf_fileofs
+        lea     16(sp),sp
+
+        move.w  0xA15100,d0
+        or.w    #0x8000,d0
+        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        move.w  #0,0xA15120         /* done */
+
+        bra     main_loop
+
+read_cd_directory:
+        move.w  0xA15100,d0
+        eor.w   #0x8000,d0
+        move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
+
+        lea     MARS_FRAMEBUFFER,a1
+        move.l  a1,-(sp)            /* path and destination buffer */
+        jsr     scd_read_directory
+        lea     4(sp),sp            /* clear the stack */
+        move.l  d0,0xA15128         /* length => COMM8 */
+        move.l  d1,0xA1512C         /* num entries(result) => COMM12 */
+
+        move.w  0xA15100,d0
+        or.w    #0x8000,d0
+        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        move.w  #0,0xA15120         /* done */
         bra     main_loop
 
 | set standard mapper registers to default mapping
@@ -2153,9 +2346,9 @@ load_font:
         dbra    d2,0b
         rts
 
-
 | Bump the FM player to keep the music going
 
+        .global bump_fm
 bump_fm:
         move.w  sr,-(sp)
         move.w  #0x2700,sr          /* disable ints */
@@ -2800,5 +2993,10 @@ FMReset:
 
         .bss
         .align  2
-col_store:
-        .space  21*224*2        /* 140 double-columns in vram, 20 in wram, 1 in wram for swap */
+col_swap:
+        .space  1*224*2         /* 1 double-column in wram for swap */
+
+        .align  16
+aux_store:
+        .global aux_store
+        .space  16*1024

@@ -192,7 +192,16 @@ const weaponinfo_t	weaponinfo[NUMWEAPONS] =
 /* atkstate 	*/	S_SGUN2,
 /* flashstate 	*/	S_SGUNFLASH1
 	},
-	
+		
+	{	/* super shotgun */
+/* ammo 		*/	am_shell,
+/* upstate 		*/	S_DSGUNUP,
+/* downstate 	*/	S_DSGUNDOWN,
+/* readystate 	*/	S_DSGUN,
+/* atkstate 	*/	S_DSGUN1,
+/* flashstate 	*/	S_DSGUNFLASH1
+	},
+
 	{	/* chaingun */
 /* ammo 		*/	am_clip,
 /* upstate 		*/	S_CHAINUP,
@@ -237,7 +246,7 @@ const weaponinfo_t	weaponinfo[NUMWEAPONS] =
 /* atkstate 	*/	S_SAW1,
 /* flashstate 	*/	S_NULL
 	}
-	
+
 };
 
 
@@ -286,6 +295,8 @@ boolean P_CheckAmmo (player_t *player)
 	ammo = weaponinfo[player->readyweapon].ammo;
 	if (player->readyweapon == wp_bfg)
 		count = BFGCELLS;
+	else if (player->readyweapon == wp_supershotgun)
+		count = 2;
 	else
 		count = 1;
 	if (ammo == am_noammo || player->ammo[ammo] >= count)
@@ -298,6 +309,8 @@ boolean P_CheckAmmo (player_t *player)
 			player->pendingweapon = wp_plasma;
 		else if (P_CanFireWeapon(player, wp_chaingun))
 			player->pendingweapon = wp_chaingun;
+		else if (P_CanFireWeapon(player, wp_supershotgun))
+			player->pendingweapon = wp_supershotgun;
 		else if (P_CanFireWeapon(player, wp_shotgun))
 			player->pendingweapon = wp_shotgun;
 		else if (P_CanFireWeapon(player, wp_pistol))
@@ -725,6 +738,53 @@ void A_FireShotgun (player_t *player, pspdef_t *psp)
 	}
 }
 
+//
+// A_FireShotgun2
+//
+void A_FireShotgun2(player_t *player, pspdef_t *psp)
+{
+	int			i;
+	angle_t		angle;
+	int			damage;
+	int			slope;
+	lineattack_t la;
+
+	if (player->ammo[weaponinfo[player->readyweapon].ammo] < 2)
+		return;
+
+	S_StartSound (player->mo, sfx_dshtgn);
+	P_SetMobjState (player->mo, S_PLAY_ATK2);
+
+	player->ammo[weaponinfo[player->readyweapon].ammo] -= 2;
+	P_SetPsprite (player, ps_flash, weaponinfo[player->readyweapon].flashstate);
+
+	slope = P_AimLineAttack (&la, player->mo, player->mo->angle, MISSILERANGE);
+
+	for (i=0 ; i<20 ; i++)
+	{
+		damage = 5*(P_Random ()%3+1);
+		angle = player->mo->angle;
+		angle += (P_Random()-P_Random()) << ANGLETOFINESHIFT;
+		P_LineAttack (&la, player->mo, angle, MISSILERANGE, slope + ((P_Random()-P_Random())<<5), damage);
+	}
+}
+
+void A_OpenShotgun2(player_t *player, pspdef_t *psp)
+{
+    S_StartSound (player->mo, sfx_dbopn);
+}
+
+void A_LoadShotgun2(player_t *player, pspdef_t *psp)
+{
+    S_StartSound (player->mo, sfx_dbload);
+}
+
+void A_CloseShotgun2(player_t *player, pspdef_t *psp)
+{
+    S_StartSound (player->mo, sfx_dbcls);
+    A_ReFire(player,psp);
+}
+
 /* 
 ================== 
 = 
@@ -761,6 +821,10 @@ void A_FireCGun (player_t *player, pspdef_t *psp)
 	P_GunShot (player->mo, !player->refire);
 }
 
+void A_CheckReload(player_t *player, pspdef_t *psp)
+{
+    P_CheckAmmo (player);
+}
 
 /*============================================================================= */
 

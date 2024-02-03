@@ -32,10 +32,10 @@ typedef struct
 static int R_ClipToViewEdges(angle_t angle1, angle_t angle2) ATTR_DATA_CACHE_ALIGN;
 static void R_AddLine(rbspWork_t *rbsp, sector_t *frontsector, seg_t* line) ATTR_DATA_CACHE_ALIGN;
 static void R_ClipWallSegment(rbspWork_t *rbsp, fixed_t first, fixed_t last, boolean solid) ATTR_DATA_CACHE_ALIGN;
-static boolean R_CheckBBox(rbspWork_t *rbsp, fixed_t bspcoord[4]) ATTR_DATA_CACHE_ALIGN;
+static boolean R_CheckBBox(rbspWork_t *rbsp, int16_t bspcoord[4]) ATTR_DATA_CACHE_ALIGN;
 static void R_Subsector(rbspWork_t *rbsp, int num) ATTR_DATA_CACHE_ALIGN;
 static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop) ATTR_DATA_CACHE_ALIGN;
-static void R_RenderBSPNode(rbspWork_t *rbsp, int bspnum) ATTR_DATA_CACHE_ALIGN;
+static void R_RenderBSPNode(rbspWork_t *rbsp, int bspnum, int16_t *outerbbox) ATTR_DATA_CACHE_ALIGN;
 static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight, 
     fixed_t *floornewheight, fixed_t *ceilingnewheight) ATTR_DATA_CACHE_ALIGN;
 
@@ -70,34 +70,34 @@ static int R_ClipToViewEdges(angle_t angle1, angle_t angle2)
    if(span >= ANG180)
       return 0;
 
-   angle1 -= vd.viewangle;
-   angle2 -= vd.viewangle;
+   angle1 -= vd->viewangle;
+   angle2 -= vd->viewangle;
 
-   tspan = angle1 + vd.clipangle;
-   if(tspan > vd.doubleclipangle)
+   tspan = angle1 + vd->clipangle;
+   if(tspan > vd->doubleclipangle)
    {
-      tspan -= vd.doubleclipangle;
+      tspan -= vd->doubleclipangle;
       // totally off the left edge?
       if(tspan >= span)
          return -1;
-      angle1 = vd.clipangle;
+      angle1 = vd->clipangle;
    }
 
-   tspan = vd.clipangle - angle2;
-   if(tspan > vd.doubleclipangle)
+   tspan = vd->clipangle - angle2;
+   if(tspan > vd->doubleclipangle)
    {
-      tspan -= vd.doubleclipangle;
+      tspan -= vd->doubleclipangle;
       if(tspan >= span)
          return -1;
-      angle2 = 0 - vd.clipangle;
+      angle2 = 0 - vd->clipangle;
    }
 
    // find the first clippost that touches the source post (adjacent pixels
    // are touching).
    angle1 = (angle1 + ANG90) >> ANGLETOFINESHIFT;
    angle2 = (angle2 + ANG90) >> ANGLETOFINESHIFT;
-   x1    = vd.viewangletox[angle1];
-   x2    = vd.viewangletox[angle2];
+   x1    = vd->viewangletox[angle1];
+   x2    = vd->viewangletox[angle2];
 
    // does not cross a pixel?
    if(x1 == x2)
@@ -110,7 +110,7 @@ static int R_ClipToViewEdges(angle_t angle1, angle_t angle2)
 // Checks BSP node/subtree bounding box. Returns true if some part of the bbox
 // might be visible.
 //
-static boolean R_CheckBBox(rbspWork_t *rbsp, fixed_t bspcoord[4])
+static boolean R_CheckBBox(rbspWork_t *rbsp, int16_t bspcoord_[4])
 {
    int boxx;
    int boxy;
@@ -124,17 +124,24 @@ static boolean R_CheckBBox(rbspWork_t *rbsp, fixed_t bspcoord[4])
 
    int sx1, sx2;
 
+   fixed_t bspcoord[4];
+
+   bspcoord[0] = bspcoord_[0] << 16;
+   bspcoord[1] = bspcoord_[1] << 16;
+   bspcoord[2] = bspcoord_[2] << 16;
+   bspcoord[3] = bspcoord_[3] << 16;
+
    // find the corners of the box that define the edges from current viewpoint
-   if(vd.viewx <= bspcoord[BOXLEFT])
+   if(vd->viewx <= bspcoord[BOXLEFT])
       boxx = 0;
-   else if(vd.viewx < bspcoord[BOXRIGHT])
+   else if(vd->viewx < bspcoord[BOXRIGHT])
       boxx = 1;
    else
       boxx = 2;
 
-   if(vd.viewy >= bspcoord[BOXTOP])
+   if(vd->viewy >= bspcoord[BOXTOP])
       boxy = 0;
-   else if(vd.viewy > bspcoord[BOXBOTTOM])
+   else if(vd->viewy > bspcoord[BOXBOTTOM])
       boxy = 1;
    else
       boxy = 2;
@@ -206,11 +213,10 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
 
       f_ceilingpic    = front_sector->ceilingpic;
       f_lightlevel    = front_sector->lightlevel;
-      f_floorheight   = front_sector->floorheight   - vd.viewz;
-      f_ceilingheight = front_sector->ceilingheight - vd.viewz;
+      f_floorheight   = front_sector->floorheight   - vd->viewz;
+      f_ceilingheight = front_sector->ceilingheight - vd->viewz;
 
       segl->floorpicnum   = flattranslation[front_sector->floorpic];
-
       if (f_ceilingpic != -1)
       {
           segl->ceilingpicnum = flattranslation[f_ceilingpic];
@@ -227,8 +233,8 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
 
       b_ceilingpic    = back_sector->ceilingpic;
       b_lightlevel    = back_sector->lightlevel;
-      b_floorheight   = back_sector->floorheight   - vd.viewz;
-      b_ceilingheight = back_sector->ceilingheight - vd.viewz;
+      b_floorheight   = back_sector->floorheight   - vd->viewz;
+      b_ceilingheight = back_sector->ceilingheight - vd->viewz;
 
       t_texturemid = b_texturemid = m_texturemid = 0;
       actionbits = 0;
@@ -269,17 +275,20 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
       if(back_sector == &emptysector)
       {
          // single-sided line
-         segl->t_texturenum = texturetranslation[si->midtexture];
+         if (si->midtexture > 0)
+         {
+            segl->t_texturenum = texturetranslation[si->midtexture];
 
-         // handle unpegging (bottom of texture at bottom, or top of texture at top)
-         if(li->flags & ML_DONTPEGBOTTOM)
-            t_texturemid = f_floorheight + (textures[segl->t_texturenum].height << FRACBITS);
-         else
-            t_texturemid = f_ceilingheight;
+            // handle unpegging (bottom of texture at bottom, or top of texture at top)
+            if(li->flags & ML_DONTPEGBOTTOM)
+               t_texturemid = f_floorheight + (textures[segl->t_texturenum].height << FRACBITS);
+            else
+               t_texturemid = f_ceilingheight;
 
-         t_texturemid += rowoffset<<FRACBITS;                               // add in sidedef texture offset
-         segl->t_bottomheight = f_floorheight; // set bottom height
-         actionbits |= (AC_SOLIDSIL|AC_TOPTEXTURE);                   // solid line; draw middle texture only
+            t_texturemid += rowoffset<<FRACBITS;                               // add in sidedef texture offset
+            segl->t_bottomheight = f_floorheight; // set bottom height
+            actionbits |= (AC_SOLIDSIL|AC_TOPTEXTURE);                   // solid line; draw middle texture only
+         }
       }
       else
       {
@@ -309,32 +318,38 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
          // is bottom texture visible?
          if(b_floorheight > f_floorheight)
          {
-            segl->b_texturenum = texturetranslation[si->bottomtexture];
-            if(li->flags & ML_DONTPEGBOTTOM)
-               b_texturemid = f_ceilingheight;
-            else
-               b_texturemid = b_floorheight;
+            if (si->bottomtexture > 0)
+            {
+               segl->b_texturenum = texturetranslation[si->bottomtexture];
+               if(li->flags & ML_DONTPEGBOTTOM)
+                  b_texturemid = f_ceilingheight;
+               else
+                  b_texturemid = b_floorheight;
 
-            b_texturemid += rowoffset<<FRACBITS; // add in sidedef texture offset
+               b_texturemid += rowoffset<<FRACBITS; // add in sidedef texture offset
 
-            segl->b_topheight = *floornewheight = b_floorheight;
-            segl->b_bottomheight = f_floorheight;
-            actionbits |= (AC_BOTTOMTEXTURE|AC_NEWFLOOR); // generate bottom wall and floor
+               segl->b_topheight = *floornewheight = b_floorheight;
+               segl->b_bottomheight = f_floorheight;
+               actionbits |= (AC_BOTTOMTEXTURE|AC_NEWFLOOR); // generate bottom wall and floor
+            }
          }
 
          // is top texture visible?
          if(b_ceilingheight < f_ceilingheight && !skyhack)
          {
-            segl->t_texturenum = texturetranslation[si->toptexture];
-            if(li->flags & ML_DONTPEGTOP)
-               t_texturemid = f_ceilingheight;
-            else
-               t_texturemid = b_ceilingheight + (textures[segl->t_texturenum].height << FRACBITS);
+            if (si->toptexture > 0)
+            {
+               segl->t_texturenum = texturetranslation[si->toptexture];
+               if(li->flags & ML_DONTPEGTOP)
+                  t_texturemid = f_ceilingheight;
+               else
+                  t_texturemid = b_ceilingheight + (textures[segl->t_texturenum].height << FRACBITS);
 
-            t_texturemid += rowoffset<<FRACBITS; // add in sidedef texture offset
+               t_texturemid += rowoffset<<FRACBITS; // add in sidedef texture offset
 
-            segl->t_bottomheight = *ceilingnewheight = b_ceilingheight;
-            actionbits |= (AC_NEWCEILING|AC_TOPTEXTURE); // draw top texture and ceiling
+               segl->t_bottomheight = *ceilingnewheight = b_ceilingheight;
+               actionbits |= (AC_NEWCEILING|AC_TOPTEXTURE); // draw top texture and ceiling
+            }
          }
 
          // check if this wall is solid, for sprite clipping
@@ -384,7 +399,7 @@ static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop)
    viswall_t *rw;
    viswallextra_t *rwex;
    int newstop;
-   int numwalls = vd.lastwallcmd - vd.viswalls;
+   int numwalls = vd->lastwallcmd - vd->viswalls;
    const int maxlen = centerX/2;
    // split long segments
    int len = stop - start + 1;
@@ -396,9 +411,9 @@ static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop)
    else
       newstop = start + maxlen - 1;
 
-   rwex = vd.viswallextras + numwalls;
+   rwex = vd->viswallextras + numwalls;
    do {
-      rw = vd.lastwallcmd;
+      rw = vd->lastwallcmd;
       rw->seg = rbsp->curline;
       rw->start = start;
       rw->realstart = start;
@@ -406,7 +421,7 @@ static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop)
       rw->realstop = newstop;
       rw->scalestep = rbsp->lineangle1;
       rw->actionbits = 0;
-      ++vd.lastwallcmd;
+      ++vd->lastwallcmd;
 
       R_WallEarlyPrep(rw, &rwex->floorheight, &rwex->floornewheight, &rwex->ceilnewheight);
 
@@ -540,14 +555,19 @@ static void R_AddLine(rbspWork_t *rbsp, sector_t *frontsector, seg_t *line)
    angle_t angle1, angle2;
    fixed_t x1, x2;
    sector_t *backsector;
-   vertex_t *v1 = &vertexes[line->v1], *v2 = &vertexes[line->v2];
+   vertex_t v1, v2;
    int side;
    line_t *ldef;
    side_t *sidedef;
    boolean solid;
 
-   angle1 = R_PointToAngle(v1->x, v1->y);
-   angle2 = R_PointToAngle(v2->x, v2->y);
+   v1.x = vertexes[line->v1].x << FRACBITS;
+   v1.y = vertexes[line->v1].y << FRACBITS;
+   v2.x = vertexes[line->v2].x << FRACBITS;
+   v2.y = vertexes[line->v2].y << FRACBITS;
+
+   angle1 = R_PointToAngle(v1.x, v1.y);
+   angle2 = R_PointToAngle(v2.x, v2.y);
 
    x1 = R_ClipToViewEdges(angle1, angle2);
    if (x1 <= 0)
@@ -600,9 +620,9 @@ static void R_Subsector(rbspWork_t *rbsp, int num)
       if(frontsector->validcount != validcount[0]) // not already processed?
       {
          frontsector->validcount = validcount[0];  // mark it as processed
-         if (vd.lastvissector < vd.vissectors + MAXVISSSEC)
+         if (vd->lastvissector < vd->vissectors + MAXVISSSEC)
          {
-           *vd.lastvissector++ = frontsector;
+           *vd->lastvissector++ = frontsector;
          }
       }
    }
@@ -619,12 +639,27 @@ static void R_Subsector(rbspWork_t *rbsp, int num)
 // Recursively descend through the BSP, classifying nodes according to the
 // player's point of view, and render subsectors in view.
 //
-static void R_RenderBSPNode(rbspWork_t *rbsp, int bspnum)
+
+static void R_DecodeBBox(int16_t *bbox, const int16_t *outerbbox, uint16_t encbbox)
+{
+   unsigned l;
+
+   l = outerbbox[BOXTOP] - outerbbox[BOXBOTTOM];
+   bbox[BOXBOTTOM] = outerbbox[BOXBOTTOM] + ((l * (encbbox & 0x0f)) >> 4);
+   bbox[BOXTOP] = outerbbox[BOXTOP] - ((l * (encbbox & 0xf0)) >> 8);
+
+   encbbox >>= 8;
+   l = outerbbox[BOXRIGHT] - outerbbox[BOXLEFT];
+   bbox[BOXLEFT] = outerbbox[BOXLEFT] + ((l * (encbbox & 0x0f)) >> 4);
+   bbox[BOXRIGHT] = outerbbox[BOXRIGHT] - ((l * (encbbox & 0xf0)) >> 8);
+}
+
+static void R_RenderBSPNode(rbspWork_t *rbsp, int bspnum, int16_t *outerbbox)
 {
    node_t *bsp;
    int     side;
+   int16_t bbox[4];
 
-check:
 #ifdef MARS
    if((int16_t)bspnum < 0) // reached a subsector leaf?
 #else
@@ -638,15 +673,18 @@ check:
    bsp = &nodes[bspnum];
 
    // decide which side the view point is on
-   side = R_PointOnSide(vd.viewx, vd.viewy, bsp);
+   side = R_PointOnSide(vd->viewx, vd->viewy, bsp);
+   R_DecodeBBox(bbox, outerbbox, bsp->encbbox[side]);
 
    // recursively render front space
-   R_RenderBSPNode(rbsp, bsp->children[side]);
+   R_RenderBSPNode(rbsp, bsp->children[side], bbox);
 
    // possibly divide back space
-   if(R_CheckBBox(rbsp, bsp->bbox[side^1])) {
-      bspnum = bsp->children[side^1];
-      goto check;
+   side ^= 1;
+   R_DecodeBBox(bbox, outerbbox, bsp->encbbox[side]);
+
+   if(R_CheckBBox(rbsp, bbox)) {
+      R_RenderBSPNode(rbsp, bsp->children[side], bbox);
    }
 }
 
@@ -659,10 +697,6 @@ void R_BSP(void)
    rbspWork_t rbsp;
    cliprange_t *solidsegs = rbsp.solidsegs;
 
-#ifdef MARS
-   W_GetLumpData(gamemaplump);
-#endif
-
    solidsegs[0].first = -2;
    solidsegs[0].last  = -1;
    solidsegs[1].first = viewportWidth;
@@ -670,7 +704,7 @@ void R_BSP(void)
    rbsp.newend = &solidsegs[2];
    rbsp.splitspans = viewportWidth + viewportWidth/2;
 
-   R_RenderBSPNode(&rbsp, numnodes - 1);
+   R_RenderBSPNode(&rbsp, numnodes-1, worldbbox);
 }
 
 // EOF

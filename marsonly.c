@@ -3,6 +3,7 @@
 #include "doomdef.h"
 #include "r_local.h"
 #include "mars.h"
+#include <stdio.h>
 
 void ReadEEProm (void);
 

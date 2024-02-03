@@ -48,10 +48,6 @@ typedef struct
 #ifdef MARS
 	uint8_t		*data;
 	int			position;
-	int			increment;
-	int			length;
-	int			loop_length;
-	int			prev_pos;			/* for adpcm decoding */
 	uint8_t		volume;
 	uint8_t		pan;
 #else
@@ -60,9 +56,16 @@ typedef struct
 	int			stopquad;
 	int			volume;				/* range from 0-32k */
 #endif
+#if defined(MARS) && !defined(DISABLE_DMA_SOUND)
 	uint16_t	width;
 	uint16_t	block_size; 		/* size of data block in bytes */
+	int			length;
+	int			loop_length;
 	int			remaining_bytes; 	/* WAV chunk */
+	int			prev_pos;			/* for adpcm decoding */
+	int			increment;
+#endif
+	int			freq;
 
 	sfxinfo_t	*sfx;
 	mobj_t		*mobj;
@@ -107,6 +110,7 @@ extern	VINT	musictype;
 /*============================================================================ */
 
 void S_Init(void);
+void S_InitMusic(void);
 void S_Clear (void);
 void S_StartSound(mobj_t *mobj, int sound_id);
 void S_StartPositionedSound(mobj_t* mobj, int sound_id, getsoundpos_t getpos);

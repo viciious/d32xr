@@ -30,6 +30,7 @@ void S_InitBuffers(uint8_t *start_addr, uint32_t size)
         buf->data = NULL;
         buf->freq = 0;
         buf->num_channels = 0;
+        buf->buf = 0;
         buf->size = 0;
         buf->format = S_FORMAT_NONE;
     }
@@ -110,6 +111,19 @@ int S_Buf_ParseWaveFile(sfx_buffer_t *buf, uint8_t *data, uint32_t len)
     buf->data = &chunk[8];
     buf->data_len = length;
     return 1;
+}
+
+uint8_t *S_Buf_Alloc(uint32_t data_len)
+{
+    void *ptr;
+
+    if (s_mem_rover + data_len > s_mem_end) {
+        return NULL;
+    }
+
+    ptr = s_mem_rover;
+    s_mem_rover += data_len;
+    return ptr;
 }
 
 void S_Buf_SetData(sfx_buffer_t *buf, uint8_t *data, uint32_t data_len)

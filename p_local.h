@@ -92,12 +92,12 @@ void P_DropWeapon (player_t *player);
 ===============================================================================
 */
 
-boolean P_CanSelecteWeapon(player_t* player, int weaponnum);
+boolean P_CanSelectWeapon(player_t* player, int weaponnum);
 boolean P_CanFireWeapon(player_t* player, int weaponnum);
 void	P_PlayerThink (player_t *player);
 void	P_RestoreResp(player_t* p);
 void	P_UpdateResp(player_t* p);
-void	R_ResetResp(player_t* p);
+void	P_ResetResp(player_t* p);
 
 /*
 ===============================================================================
@@ -131,7 +131,7 @@ void 	P_PreSpawnMobjs(int count, int staticcount);
 
 void	P_SpawnPuff (fixed_t x, fixed_t y, fixed_t z, fixed_t attackrange);
 void 	P_SpawnBlood (fixed_t x, fixed_t y, fixed_t z, int damage);
-void	P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type);
+mobj_t	*P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type);
 void	P_SpawnPlayerMissile (mobj_t *source, mobjtype_t type);
 
 void	P_RunMobjBase2 (void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
@@ -165,25 +165,57 @@ void A_SkullBash (mobj_t *mo);
 ===============================================================================
 */
 
+// 
+// keep track of special lines as they are hit,
+// but don't process them until the move is proven valid
+#define MAXSPECIALCROSS		8
+
 typedef struct
 {
 	fixed_t	x,y, dx, dy;
 } divline_t;
 
+typedef boolean(*blocklinesiter_t)(line_t*, void*);
+typedef boolean(*blockthingsiter_t)(mobj_t*, void*);
+
+typedef struct
+{
+	// input
+	mobj_t  *tmthing;
+	fixed_t tmx, tmy;
+	boolean checkposonly;
+
+	// output
+	fixed_t tmbbox[4];
+
+	int    	numspechit;
+ 	line_t	*spechit[MAXSPECIALCROSS];
+	
+	fixed_t tmfloorz;   // current floor z for P_TryMove2
+	fixed_t tmceilingz; // current ceiling z for P_TryMove2
+	fixed_t tmdropoffz; // lowest point contacted
+
+	boolean	floatok;	/* if true, move would be ok if */
+						/* within tmfloorz - tmceilingz */
+
+	line_t  *ceilingline;
+	subsector_t *newsubsec;
+
+	mobj_t  *hitthing;
+} pmovework_t;
 
 fixed_t P_AproxDistance (fixed_t dx, fixed_t dy);
 int 	P_PointOnLineSide (fixed_t x, fixed_t y, line_t *line);
 int 	P_PointOnDivlineSide (fixed_t x, fixed_t y, divline_t *line);
-int 	P_BoxOnLineSide (fixed_t *tmbox, line_t *ld);
+boolean P_BoxCrossLine (line_t *ld, fixed_t testbbox[4]);
 
 fixed_t	P_LineOpening (line_t *linedef);
 
 void 	P_LineBBox(line_t* ld, fixed_t*bbox);
 
-typedef boolean(*blocklinesiter_t)(line_t*, void*);
-typedef boolean(*blockthingsiter_t)(mobj_t*, void*);
-
+// the userp must conform to pmovework_t interface
 boolean P_BlockLinesIterator (int x, int y, blocklinesiter_t, void *userp );
+// the userp must conform to pmovework_t interface
 boolean P_BlockThingsIterator (int x, int y, blockthingsiter_t, void *userp );
 
 void 	P_UnsetThingPosition (mobj_t *thing);
@@ -280,39 +312,8 @@ void P_RespawnSpecials (void);
 ===============================================================================
 */
 
-// 
-// keep track of special lines as they are hit,
-// but don't process them until the move is proven valid
-#define MAXSPECIALCROSS		8
-
-typedef struct
-{
-	/*================== */
-	/* */
-	/* in */
-	/* */
-	/*================== */
-	mobj_t		*tmthing;
-	fixed_t		tmx, tmy;
-	boolean		checkposonly;
-
-	/*================== */
-	/* */
-	/* out */
-	/* */
-	/*================== */
-	boolean		floatok;				/* if true, move would be ok if */
-										/* within tmfloorz - tmceilingz */
-	fixed_t		tmfloorz, tmceilingz, tmdropoffz;
-
-	int    		numspechit;
- 	line_t		*spechit[MAXSPECIALCROSS];
-
-	line_t		*blockline;
-} ptrymove_t;
-
-boolean P_CheckPosition (ptrymove_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
-boolean P_TryMove (ptrymove_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
+boolean P_CheckPosition (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
+boolean P_TryMove (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
 void P_MoveCrossSpecials(mobj_t *tmthing, int numspechit, line_t **spechit, fixed_t oldx, fixed_t oldy);
 
 typedef struct
@@ -327,6 +328,51 @@ typedef struct
 } pslidemove_t;
 
 void P_SlideMove (pslidemove_t *sm);
+
+
+
+/*
+===============================================================================
+
+							P_SIGHT
+
+===============================================================================
+*/
+
+#define MAXINTERCEPTS 32
+
+// CALICO: removed type punning by bringing back intercept_t
+typedef struct
+{
+    union
+    {
+        mobj_t* mo;
+        line_t* line;
+    } d;
+    fixed_t frac;
+	sector_t *front, *back; // a line if front != NULL
+} intercept_t;
+
+typedef struct 
+{
+   int16_t x, y, dx, dy;
+} i16divline_t;
+
+typedef struct
+{
+   int numintercepts;
+   intercept_t intercepts[MAXINTERCEPTS];
+
+   fixed_t sightzstart;           // eye z of looker
+   fixed_t topslope, bottomslope; // slopes to top and bottom of target
+
+   i16divline_t strace; // from t1 to t2
+   fixed_t t2x, t2y;
+} sightWork_t;
+
+boolean PTR_SightTraverse(sightWork_t *sw, intercept_t * in);
+boolean PS_SightBlockLinesIterator(sightWork_t *sw, int x, int y);
+boolean PS_SightPathTraverse(sightWork_t *sw);
 
 #endif	/* __P_LOCAL__ */
 

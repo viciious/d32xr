@@ -519,7 +519,15 @@ void* I_RemapLumpPtr(void *ptr)
 ==================== 
 */ 
  
-static char zone[0x33000] __attribute__((aligned(16)));
+#define BASE_ZONE_SIZE 0x34000
+
+#ifdef DISABLE_DMA_SOUND
+#define ZONE_SIZE (BASE_ZONE_SIZE+0x1000)
+#else
+#define ZONE_SIZE BASE_ZONE_SIZE
+#endif
+
+static char zone[ZONE_SIZE] __attribute__((aligned(16)));
 byte *I_ZoneBase (int *size)
 {
 	*size = sizeof(zone);
@@ -681,7 +689,7 @@ pixel_t	*I_ViewportBuffer (void)
 	
 	if (splitscreen)
 	{
-		x = vd.displayplayer ? 160 : 0;
+		x = vd->displayplayer ? 160 : 0;
 	}
 	else
 	{
@@ -708,7 +716,7 @@ void I_DebugScreen(void)
 	int i;
 	int x = 200;
 	int line = 5;
-	static char buf[10][16];
+	static char buf[10][10];
 
 	if (debugmode == DEBUGMODE_FPSCOUNT)
 	{
@@ -743,9 +751,9 @@ void I_DebugScreen(void)
 			D_snprintf(buf[1], sizeof(buf[0]), "tcs:%d", lasttics);
 			D_snprintf(buf[2], sizeof(buf[0]), "g:%2d", Mars_FRTCounter2Msec(tictics));
 			D_snprintf(buf[3], sizeof(buf[0]), "b:%2d", Mars_FRTCounter2Msec(t_ref_bsp_avg));
-			D_snprintf(buf[4], sizeof(buf[0]), "w:%2d %2d", Mars_FRTCounter2Msec(t_ref_segs_avg), vd.lastwallcmd - vd.viswalls);
-			D_snprintf(buf[5], sizeof(buf[0]), "p:%2d %2d", Mars_FRTCounter2Msec(t_ref_planes_avg), vd.lastvisplane - vd.visplanes - 1);
-			D_snprintf(buf[6], sizeof(buf[0]), "s:%2d %2d", Mars_FRTCounter2Msec(t_ref_sprites_avg), vd.vissprite_p - vd.vissprites);
+			D_snprintf(buf[4], sizeof(buf[0]), "w:%2d %2d", Mars_FRTCounter2Msec(t_ref_segs_avg), vd->lastwallcmd - vd->viswalls);
+			D_snprintf(buf[5], sizeof(buf[0]), "p:%2d %2d", Mars_FRTCounter2Msec(t_ref_planes_avg), vd->lastvisplane - vd->visplanes - 1);
+			D_snprintf(buf[6], sizeof(buf[0]), "s:%2d %2d", Mars_FRTCounter2Msec(t_ref_sprites_avg), vd->vissprite_p - vd->vissprites);
 			D_snprintf(buf[7], sizeof(buf[0]), "r:%2d", Mars_FRTCounter2Msec(t_ref_total_avg));
 			D_snprintf(buf[8], sizeof(buf[0]), "d:%2d", Mars_FRTCounter2Msec(drawtics));
 			D_snprintf(buf[9], sizeof(buf[0]), "t:%2d", Mars_FRTCounter2Msec(I_GetFRTCounter() - ticstart));
@@ -1170,4 +1178,44 @@ void I_SwapScreenCopy(void)
         Mars_SwapWordColumnWithMDVRAM(i);
     }
     Mars_Finish();
+}
+
+int I_OpenCDFileByName(const char *name, int *poffset)
+{
+	return Mars_OpenCDFileByName(name, poffset);
+}
+
+void I_OpenCDFileByOffset(int length, int offset)
+{
+	Mars_OpenCDFileByOffset(length, offset);
+}
+
+void *I_GetCDFileBuffer(void)
+{
+	return Mars_GetCDFileBuffer();
+}
+
+int I_SeekCDFile(int offset, int whence)
+{
+	return Mars_SeekCDFile(offset, whence);
+}
+
+int I_ReadCDFile(int length)
+{
+	return Mars_ReadCDFile(length);
+}
+
+void I_SetCDFileCache(int length)
+{
+	Mars_StoreAuxBytes((length + 3) & ~3);
+}
+
+void *I_GetCDFileCache(int length)
+{
+	return Mars_LoadAuxBytes((length + 3) & ~3);
+}
+
+int I_ReadCDDirectory(const char *path)
+{
+	return Mars_MCDReadDirectory(path);
 }

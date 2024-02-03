@@ -9,7 +9,7 @@ int stbar_tics;
 static short stbarframe;
 static short   stbar_y;
 static short micronums;
-static short	micronums_x[NUMMICROS] = {249,261,272,249,261,272};
+static short	micronums_x[NUMMICROS] = {125,137,149,125,137,149};
 static short	micronums_y[NUMMICROS] = {15,15,15,25,25,25};
 
 static short	card_x[NUMCARDS] = {KEYX,KEYX,KEYX,KEYX+3, KEYX+3, KEYX+3};
@@ -73,7 +73,7 @@ void ST_Init (void)
 		D_memset(sbobj, 0, sizeof(sbobj[0]) * NUMSBOBJ);
 	}
 
-	l = W_CheckNumForName("MICRO_2");
+	l = W_CheckNumForName("MICRO_0");
 	micronums = l;
 }
 
@@ -121,19 +121,20 @@ void ST_InitEveryLevel(void)
 			sb->yourFrags.active = false;
 			sb->yourFrags.x = YOURFRAGX;
 			sb->yourFrags.y = YOURFRAGY;
-			sb->yourFrags.w = 30;
-			sb->yourFrags.h = 8;
+			sb->yourFrags.w = 28;
+			sb->yourFrags.h = 16;
 			sb->hisFrags.active = false;
 			sb->hisFrags.x = HISFRAGX;
 			sb->hisFrags.y = HISFRAGY;
 			sb->hisFrags.w = 30;
 			sb->hisFrags.h = 8;
-			sb->flashInitialDraw = true;
 			sb->yourFragsCount = players[p].frags;
 			sb->hisFragsCount = players[!p].frags;
 		}
 		sb->gibdelay = GIBTIME;
 		sb->specialFace = f_none;
+		sb->flashInitialDraw = true;
+		sb->flashSecrets.doDraw = true;
 
 		for (i = 0; i < NUMCARDS; i++)
 		{
@@ -220,6 +221,14 @@ static void ST_Ticker_(stbar_t* sb)
 			sb->yourFrags.active = false;
 		if (sb->yourFrags.doDraw && sb->yourFrags.active && !splitscreen)
 			S_StartSound(NULL,sfx_itemup);
+	}
+
+	if (sb->flashSecrets.active && --sb->flashSecrets.delay <= 0)
+	{
+		sb->yourFrags.delay = FLASHDELAY;
+		sb->flashSecrets.doDraw ^= 1;
+		if (!--sb->flashSecrets.times)
+			sb->flashSecrets.active = false;
 	}
 	
 	/* */
@@ -351,14 +360,17 @@ static void ST_Ticker_(stbar_t* sb)
 	/* */
 	for (ind = 0; ind < NUMMICROS; ind++)
 	{
-		if (p->weaponowned[ind + 1] != sb->weaponowned[ind] || sb->forcedraw)
+		int weaponowned = ind + 1 == wp_shotgun ? 
+			(p->weaponowned[wp_shotgun] || p->weaponowned[wp_supershotgun]) :
+				(ind + 1 < wp_shotgun ? p->weaponowned[ind + 1] : p->weaponowned[ind + 2]);
+
+		if (weaponowned != sb->weaponowned[ind] || sb->forcedraw)
 		{
 			cmd = &sb->stbarcmds[sb->numstbarcmds++];
 			cmd->id = stc_drawmicro;
 			cmd->ind = ind;
-			cmd->value = p->weaponowned[ind + 1];
-
-			sb->weaponowned[ind] = p->weaponowned[ind + 1];
+			cmd->value = weaponowned;
+			sb->weaponowned[ind] = weaponowned;
 		}
 	}
 
@@ -367,14 +379,33 @@ static void ST_Ticker_(stbar_t* sb)
 	/* */
 	if (netgame != gt_deathmatch)
 	{
-		i = gamemapinfo.mapNumber;
-		if (sb->currentMap != i || sb->forcedraw)
+		if (sb->secretcount != p->secretcount)
+		{
+			sb->secretcount = p->secretcount;
+
+			/* SIGNAL THE FLASHING SECRETS! */
+			sb->flashSecrets.active = true;
+			sb->flashSecrets.delay = FLASHDELAY;
+			sb->flashSecrets.times = FLASHTIMES;
+			sb->flashSecrets.doDraw = false;
+		}
+
+		if (sb->killcount != p->killcount || 
+			sb->itemcount != p->itemcount || 
+			sb->forcedraw)
 		{
 			cmd = &sb->stbarcmds[sb->numstbarcmds++];
-			cmd->id = stc_drawmap;
-			cmd->value = i;
+			cmd->id = stc_drawstats;
 
-			sb->currentMap = i;
+			sb->killcount = p->killcount;
+			sb->itemcount = p->itemcount;
+		}
+
+		if (sb->flashSecrets.active || sb->forcedraw)
+		{
+			cmd = &sb->stbarcmds[sb->numstbarcmds++];
+			cmd->id = stc_drawsecrets;
+			cmd->ind = sb->flashSecrets.active ? sb->flashSecrets.doDraw : sb->forcedraw;
 		}
 	}
 	/* */
@@ -597,29 +628,47 @@ static void ST_Drawer_ (stbar_t* sb)
 			ST_EraseBlock(KEYX, card_y[ind], KEYW, KEYH);
 			have_cards[ind] = cmd->value;
 			break;
-		case stc_drawmap:
-			x = MAPX;
-			/* CENTER THE LEVEL # IF < 10 */
-			if (cmd->value < 10)
-				x -= 6;
-			ST_EraseBlock(MAPX - 30, MAPY, 30, 16);
-			ST_DrawValue(x, MAPY, cmd->value);
+		case stc_drawstats:
+			x = STATSX - 30;
+			ST_EraseBlock(x, STATSY, 34, 14);
+
+			DrawJagobjLump(micronums + 11, x, stbar_y + STATSY, NULL, NULL);
+			ST_DrawMicroValue(x + 17, STATSY, sb->killcount);
+			DrawJagobjLump(micronums + 13, x + 17, stbar_y + STATSY, NULL, NULL);
+			ST_DrawMicroValue(x + 17 + 16, STATSY, totalkills);
+
+			DrawJagobjLump(micronums + 10, x, stbar_y + STATSY + 7, NULL, NULL);
+			ST_DrawMicroValue(x + 17, STATSY + 7, sb->itemcount);
+			DrawJagobjLump(micronums + 13, x + 17, stbar_y + STATSY + 7, NULL, NULL);
+			ST_DrawMicroValue(x + 17 + 16, STATSY + 7, totalitems);
+			break;
+		case stc_drawsecrets:
+			x = STATSX - 30;
+			ST_EraseBlock(x, STATSY + 14, 34, 7);
+
+			if (cmd->ind)
+			{
+				DrawJagobjLump(micronums + 12, x, stbar_y + STATSY + 14, NULL, NULL);
+				ST_DrawMicroValue(x + 17, STATSY + 14, sb->secretcount);
+				DrawJagobjLump(micronums + 13, x + 17, stbar_y + STATSY + 14, NULL, NULL);
+				ST_DrawMicroValue(x + 17 + 16, STATSY + 14, totalsecret);
+			}
 			break;
 		case stc_drawmicro:
 			if (micronums != -1)
 			{
 				ind = cmd->ind;
 				if (cmd->value)
-					DrawJagobjLump(micronums + ind,
+					DrawJagobjLump(micronums + ind + 2,
 						micronums_x[ind], stbar_y + micronums_y[ind], NULL, NULL);
 				else
 					ST_EraseBlock(micronums_x[ind], micronums_y[ind], 4, 6);
 			}
 			break;
 		case stc_drawyourfrags:
-			ST_EraseBlock(sb->yourFrags.x,
-				sb->yourFrags.y, sb->yourFrags.w, sb->yourFrags.h);
-			ST_Num(sb->yourFrags.x, sb->yourFrags.y, cmd->value);
+			ST_EraseBlock(STATSX - 30, STATSY, 14 * 3 + 4, 21);
+			ST_DrawValue(sb->yourFrags.x, sb->yourFrags.y, cmd->value);
+#ifndef MARS
 			break;
 		case stc_drawhisfrags:
 			ST_EraseBlock(sb->hisFrags.x,
@@ -627,7 +676,6 @@ static void ST_Drawer_ (stbar_t* sb)
 			ST_Num(sb->hisFrags.x, sb->hisFrags.y, cmd->value);
 			break;
 		case stc_flashinitial:
-#ifndef MARS
 			ST_EraseBlock(yourFrags.x - yourFrags.w, yourFrags.y,
 				yourFrags.w, yourFrags.h);
 			ST_EraseBlock(hisFrags.x - hisFrags.w, hisFrags.y,
@@ -638,9 +686,9 @@ static void ST_Drawer_ (stbar_t* sb)
 			break;
 		case stc_drawgibhead:
 		case stc_drawhead:
-			ST_EraseBlock(FACEX, FACEY, FACEW, FACEH);
+			ST_EraseBlock(FACEX + 2, FACEY, FACEW, FACEH);
 			if (cmd->value != -1)
-				DrawJagobjLump(faces + cmd->value, FACEX, stbar_y + FACEY, NULL, NULL);
+				DrawJagobjLump(faces + cmd->value, FACEX + 2, stbar_y + FACEY, NULL, NULL);
 			break;
 		}
 	}
@@ -745,6 +793,35 @@ void ST_DrawValue(int x,int y,int value)
 		w = sbobj[index]->width;
 		x -= w + 1;
 		DrawJagobj(sbobj[index], x, y);
+	}
+}
+
+void ST_DrawMicroValue(int x,int y,int value)
+{
+	char	v[4];
+	int		j;
+	int		index;
+
+	if (micronums < 0)
+		return;
+
+	if (value < 0)
+		value = 0;
+	if (value > 999)
+		value = 999;
+
+	y += stbar_y;
+	valtostr(v,value);
+	v[sizeof(v)-1] = 0;
+
+	j = mystrlen(v) - 1;
+	while(j >= 0)
+	{
+		int w;
+		index = micronums + (v[j--] - '0');
+		w = 4;
+		x -= w;
+		DrawJagobjLump(index, x, y, NULL, NULL);
 	}
 }
 

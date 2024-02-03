@@ -142,6 +142,9 @@ void P_RespawnSpecials (void)
 		if (mthing->type == mobjinfo[i].doomednum)
 			break;
 
+	if (i == NUMMOBJTYPES)
+		return;
+
 /* spawn it */
 	if (mobjinfo[i].flags & MF_SPAWNCEILING)
 		z = ONCEILINGZ;
@@ -662,7 +665,7 @@ void P_SpawnBlood (fixed_t x, fixed_t y, fixed_t z, int damage)
 
 void P_CheckMissileSpawn (mobj_t *th)
 {
-	ptrymove_t tm;
+	pmovework_t tm;
 
 	th->x += (th->momx>>1);
 	th->y += (th->momy>>1);	/* move a little forward so an angle can */
@@ -680,7 +683,7 @@ void P_CheckMissileSpawn (mobj_t *th)
 ================
 */
 
-void P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type)
+mobj_t *P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type)
 {
 	mobj_t		*th;
 	angle_t		an;
@@ -705,6 +708,8 @@ void P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type)
 		dist = 1;
 	th->momz = (dest->z - source->z) / dist;
 	P_CheckMissileSpawn (th);
+
+	return th;
 }
 
 

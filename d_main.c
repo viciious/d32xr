@@ -18,6 +18,8 @@ unsigned	*demo_p, *demobuffer;
 
 boolean canwipe = false;
 
+char 		cd_pwad_name[16];
+
 int 		ticstart;
 
 unsigned configuration[NUMCONTROLOPTIONS][3] =
@@ -548,7 +550,7 @@ int TIC_Abortable (void)
 
 void START_Title(void)
 {
-	int l;
+	const char *l;
 
 #ifdef MARS
 	int		i;
@@ -563,18 +565,33 @@ void START_Title(void)
 	DoubleBufferSetup();
 #endif
 
+	titlepic = NULL;
+
+	if (!gameinfo.titleTime)
+		return;
+
 	l = gameinfo.titlePage;
-	titlepic = l != -1 ? W_CacheLumpNum(l, PU_STATIC) : NULL;
+	if (*l) {
+		W_LoadPWAD(PWAD_CD);
+
+		int lump = W_CheckNumForName(l);
+		if (lump >= 0)
+			titlepic = W_CacheLumpNum(lump, PU_STATIC);
+
+		W_LoadPWAD(PWAD_NONE);
+	}
 
 #ifdef MARS
 	I_InitMenuFire(titlepic);
 #else
-	S_StartSong(gameinfo.titleMus, 0, cdtrack_title);
+	S_StartSongByName(gameinfo.titleMus, 0, cdtrack_title);
 #endif
 }
 
 void STOP_Title (void)
 {
+	if (!gameinfo.titleTime)
+		return;
 	if (titlepic != NULL)
 		Z_Free (titlepic);
 #ifdef MARS
@@ -594,19 +611,48 @@ void DRAW_Title (void)
 /*============================================================================= */
 
 #ifdef MARS
-static char* credits;
+static char* credits[2];
 static short creditspage;
 #endif
 
 static void START_Credits (void)
 {
 #ifdef MARS
-	credits = NULL;
+	int i;
+	VINT lumps[2];
+	lumpinfo_t li[2];
+
+	if (!gameinfo.creditsTime)
+		return;
+
+	credits[0] = credits[1] = NULL;
 	titlepic = NULL;
 	creditspage = 1;
-	if (gameinfo.creditsPage < 0)
+	if (!*gameinfo.creditsPage)
 		return;
-	credits = W_CacheLumpNum(gameinfo.creditsPage, PU_STATIC);
+
+	W_LoadPWAD(PWAD_CD);
+
+	/* build a temp in-memory PWAD */
+	for (i = 0; i < 2; i++)
+	{
+		char name[9];
+		D_strncpy(name, gameinfo.creditsPage, 8);
+		name[7]+= i;
+		name[8] = '\0';
+
+		lumps[i] = W_CheckNumForName(name);
+	}
+
+	W_CacheWADLumps(li, i, lumps, true);
+
+	for (i = 0; i < 2; i++)
+		credits[i] = W_CacheLumpName(li[i].name, PU_STATIC);
+
+	W_LoadPWAD(PWAD_NONE);
+
+	if (!credits[0])
+		return;
 #else
 	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
 	titlepic = W_CacheLumpName("credits", PU_STATIC);
@@ -617,9 +663,15 @@ static void START_Credits (void)
 void STOP_Credits (void)
 {
 #ifdef MARS
-	if (credits)
-		Z_Free(credits);
+	int i;
+	for (i = 0; i < 2; i++)
+	{
+		if (credits[i])
+			Z_Free(credits[i]);
+	}
+	D_memset(credits, 0, sizeof(credits));
 #endif
+
 	if (titlepic)
 		Z_Free(titlepic);
 }
@@ -629,7 +681,7 @@ static int TIC_Credits (void)
 	int buttons = ticbuttons[0];
 	int oldbuttons = oldticbuttons[0];
 
-	if (gameinfo.creditsPage < 0)
+	if (!*gameinfo.creditsPage)
 		return ga_exitdemo;
 	if (ticon >= gameinfo.creditsTime)
 		return 1;		/* go on to next demo */
@@ -654,24 +706,13 @@ static int TIC_Credits (void)
 		return ga_exitdemo;
 #endif
 
-	if (ticon * 2 >= gameinfo.creditsTime)
+	if (ticon >= gameinfo.creditsTime/2)
 	{
+		if (!credits[1])
+			return 1;
 		if (creditspage != 2)
 		{
-			char name[9];
-
-			D_memcpy(name, W_GetNameForNum(gameinfo.creditsPage), 8);
-			name[7]+= creditspage;
-			name[8] = '\0';
-
-			int l = W_CheckNumForName(name);
-			if (l >= 0)
-			{
-				Z_Free(credits);
-				credits = W_CacheLumpNum(l, PU_STATIC);
-			}
 			creditspage = 2;
-
 			DoubleBufferSetup();
 		}
 	}
@@ -753,7 +794,7 @@ static void DRAW_LineCmds(char *lines)
 static void DRAW_Credits(void)
 {
 #ifdef MARS
-	DRAW_LineCmds(credits);
+	DRAW_LineCmds(credits[creditspage-1]);
 #else
 	DrawJagobj(titlepic, 0, 0);
 #endif
@@ -785,11 +826,9 @@ void RunTitle (void)
 
 void RunCredits (void)
 {
-	int		l;
 	int		exit;
 	
-	l = gameinfo.creditsPage;
-	if (l > 0)
+	if (*gameinfo.creditsPage)
 		exit = MiniLoop(START_Credits, STOP_Credits, TIC_Credits, DRAW_Credits, UpdateBuffer);
 	else
 		exit = ga_exitdemo;
@@ -798,61 +837,76 @@ void RunCredits (void)
 		RunMenu ();
 }
 
-int  RunDemo (char *demoname)
+#define MAX_ATTRACT_DEMOS 10
+
+static void RunAttractDemos (void)
 {
-	unsigned *demo;
-	int	exit;
-	int lump;
+	int i;
+	int exit = ga_exitdemo;
+	boolean first = true;
 
-	lump = W_CheckNumForName(demoname);
-	if (lump == -1)
-		return ga_exitdemo;
+	if (gameinfo.noAttractDemo)
+		return;
 
-	// avoid zone memory fragmentation which is due to happen
-	// if the demo lump cache is tucked after the level zone.
-	// this will cause shrinking of the zone area available
-	// for the level data after each demo playback and eventual
-	// Z_Malloc failure
-	Z_FreeTags(mainzone);
+	do {
+		for (i = 0; i < MAX_ATTRACT_DEMOS; i++)
+		{
+			int l;
+			unsigned *demo;
+			char demoname[9];
 
-	demo = W_CacheLumpNum(lump, PU_STATIC);
-	exit = G_PlayDemoPtr (demo);
-	Z_Free(demo);
+			if (!first)
+			{
+				// loading demo from CD is going to write some data into
+				// the framebuffer, so store a copy of the framebuffer,
+				// then flip and blit the stored copy after we finished
+				// loading the demo
+				I_StoreScreenCopy();
+				UpdateBuffer();
+			}
 
-#ifndef MARS
-	if (exit == ga_exitdemo)
-		RunMenu ();
-#endif
-	return exit;
+			// avoid zone memory fragmentation which is due to happen
+			// if the demo lump cache is tucked after the level zone.
+			// this will cause shrinking of the zone area available
+			// for the level data after each demo playback and eventual
+			// Z_Malloc failure
+			Z_FreeTags(mainzone);
+
+			W_LoadPWAD(PWAD_CD);
+
+			demo = NULL;
+			D_snprintf(demoname, sizeof(demoname), "DEMO%1d", i+1);
+
+			l = W_CheckNumForName(demoname);
+			if (l >= 0)
+				demo = W_CacheLumpNum(l, PU_STATIC);
+
+			W_LoadPWAD(PWAD_NONE);
+
+			if (!first)
+				I_RestoreScreenCopy();
+
+			if (!demo && first)
+				return;
+			if (!demo)
+				break;
+
+			first = false;
+			exit = G_PlayDemoPtr (demo);
+			Z_Free(demo);
+
+			if (exit == ga_exitdemo)
+				break;
+		}
+	} while (exit != ga_exitdemo);
 }
 
 
 void RunMenu (void)
 {
 #ifdef MARS
-	int exit = ga_exitdemo;
-
 	M_Start();
-	if (!gameinfo.noAttractDemo) {
-		do {
-			int i;
-			char demo[9];
-
-			for (i = 1; i < 10; i++)
-			{
-				int lump;
-
-				D_snprintf(demo, sizeof(demo), "DEMO%1d", i);
-				lump = W_CheckNumForName(demo);
-				if (lump == -1)
-					break;
-
-				exit = RunDemo(demo);
-				if (exit == ga_exitdemo)
-					break;
-			}
-		} while (exit != ga_exitdemo);
-	}
+	RunAttractDemos();
 	M_Stop();
 #else
 reselect:
@@ -907,12 +961,19 @@ D_printf ("W_Init\n");
 	W_Init ();
 D_printf ("I_Init\n");
 	I_Init (); 
+D_printf ("S_Init\n");
+	S_Init ();
+#ifdef MARS
+	MiniLoop(GS_Start, GS_Stop, GS_Ticker, GS_Drawer, I_Update);
+D_printf ("W_Init2\n");
+    W_InitCDPWAD(PWAD_CD, cd_pwad_name);
+#endif
 D_printf ("R_Init\n");
 	R_Init (); 
 D_printf ("P_Init\n");
 	P_Init (); 
-D_printf ("S_Init\n");
-	S_Init ();
+D_printf ("S_InitMusic\n");
+	S_InitMusic();
 D_printf("ST_Init\n");
 	ST_Init ();
 D_printf("O_Init\n");
@@ -959,9 +1020,9 @@ D_printf ("DM_Main\n");
 	while (1)
 	{
 		RunTitle();
-		RunDemo("DEMO1");
+		//RunDemo("DEMO1");
 		RunCredits ();
-		RunDemo("DEMO2");
+		//RunDemo("DEMO2");
 	}
 #endif
 }

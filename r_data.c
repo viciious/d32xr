@@ -29,7 +29,9 @@ uint8_t			*texturetranslation;	/* for global animation */
 
 flattex_t		*flatpixels;
 
-texture_t	*skytexturep;
+inpixel_t	*skytexturep;
+int8_t 		*skycolormaps;
+VINT 		col2sky;
 
 uint8_t		*dc_playpals;
 
@@ -210,6 +212,13 @@ void R_InitTextures (void)
 			texture->lumpnum = 0;
 	}
 
+	// remap the dummy texture to the first valid texture
+	textures[0].lumpnum = textures[1].lumpnum;
+	textures[0].width = textures[1].width;
+	textures[0].height = textures[1].height;
+	textures[0].decals = textures[1].decals;
+	D_memcpy(textures[0].data, textures[1].data, sizeof(textures[0].data));
+
 	texmips = false;
 #if MIPLEVELS > 1
 	texture = textures;
@@ -365,6 +374,8 @@ void R_InitData (void)
 
 	firstsprite = W_GetNumForName ("S_START") + 1;
 	numsprites = W_GetNumForName ("S_END") - firstsprite;
+
+	col2sky = W_CheckNumForName ("S_STCOL2");
 
 	R_InitTextures ();
 	R_InitFlats ();

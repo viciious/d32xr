@@ -5,7 +5,7 @@
 #include "mars.h"
 
 int			numvertexes;
-vertex_t	*vertexes;
+mapvertex_t	*vertexes;
 
 int			numsegs;
 seg_t		*segs;
@@ -41,6 +41,8 @@ mapthing_t	playerstarts[MAXPLAYERS];
 int			numthings;
 spawnthing_t* spawnthings;
 
+int16_t 	worldbbox[4];
+
 /*
 =================
 =
@@ -51,29 +53,23 @@ spawnthing_t* spawnthings;
 
 void P_LoadVertexes (int lump)
 {
-#ifdef MARS
-	numvertexes = W_LumpLength (lump) / sizeof(vertex_t);
-	vertexes = (vertex_t *)W_GetLumpData(lump);
-#else
 	byte		*data;
 	int			i;
 	mapvertex_t	*ml;
-	vertex_t	*li;
+	mapvertex_t	*li;
 	
 	numvertexes = W_LumpLength (lump) / sizeof(mapvertex_t);
-	vertexes = Z_Malloc (numvertexes*sizeof(vertex_t),PU_LEVEL);
-	data = I_TempBuffer ();	
-	W_ReadLump (lump,data);
-	
-	
+	vertexes = Z_Malloc (numvertexes*sizeof(mapvertex_t) + 16,PU_LEVEL);
+	vertexes = (void*)(((uintptr_t)vertexes + 15) & ~15); // aline on cacheline boundary
+	data = W_GetLumpData(lump);
+
 	ml = (mapvertex_t *)data;
 	li = vertexes;
 	for (i=0 ; i<numvertexes ; i++, li++, ml++)
 	{
-		li->x = LITTLESHORT(ml->x)<<FRACBITS;
-		li->y = LITTLESHORT(ml->y)<<FRACBITS;
+		li->x = LITTLESHORT(ml->x);
+		li->y = LITTLESHORT(ml->y);
 	}
-#endif
 }
 
 
@@ -99,9 +95,8 @@ void P_LoadSegs (int lump)
 	segs = Z_Malloc (numsegs*sizeof(seg_t)+16,PU_LEVEL);
 	segs = (void*)(((uintptr_t)segs + 15) & ~15); // aline on cacheline boundary
 	D_memset (segs, 0, numsegs*sizeof(seg_t));
-	data = I_TempBuffer ();
-	W_ReadLump (lump,data);
-	
+	data = W_GetLumpData(lump);
+
 	ml = (mapseg_t *)data;
 	li = segs;
 	for (i=0 ; i<numsegs ; i++, li++, ml++)
@@ -144,8 +139,7 @@ void P_LoadSubsectors (int lump)
 
 	numsubsectors = W_LumpLength (lump) / sizeof(mapsubsector_t);
 	subsectors = Z_Malloc (numsubsectors*sizeof(subsector_t),PU_LEVEL);
-	data = I_TempBuffer ();
-	W_ReadLump (lump,data);
+	data = W_GetLumpData(lump);
 
 	ms = (mapsubsector_t *)data;
 	D_memset (subsectors,0, numsubsectors*sizeof(subsector_t));
@@ -177,9 +171,8 @@ void P_LoadSectors (int lump)
 	sectors = Z_Malloc (numsectors*sizeof(sector_t) + 16,PU_LEVEL);
 	sectors = (void*)(((uintptr_t)sectors + 15) & ~15); // aline on cacheline boundary
 	D_memset (sectors, 0, numsectors*sizeof(sector_t));
-	data = I_TempBuffer ();
-	W_ReadLump (lump,data);
-	
+	data = W_GetLumpData(lump);
+
 	ms = (mapsector_t *)data;
 	ss = sectors;
 	for (i=0 ; i<numsectors ; i++, ss++, ms++)
@@ -222,41 +215,127 @@ void P_LoadSectors (int lump)
 =================
 */
 
+
+static int P_EncodeBBoxSide(int16_t *b, int16_t *outerbbox, int pc, int nc)
+{
+	int length, unit;
+	int nu, pu;
+
+	length = outerbbox[pc] - outerbbox[nc] + 15;
+	if (length < 16)
+		return 0;
+	unit = length / 16;
+
+	// negative corner is increasing
+	nu = 0;
+	length = b[nc] - outerbbox[nc];
+	if (length > 0) {
+		nu = length / unit;
+		if (nu > 15)
+			nu = 15;
+		b[nc] = outerbbox[nc] + nu * unit;
+	}
+
+	// positive corner is decreasing
+	pu = 0;
+	length = outerbbox[pc] - b[pc];
+	if (length > 0) {
+		pu = length / unit;
+		if (pu > 15)
+			pu = 15;
+		b[pc] = outerbbox[pc] - pu * unit;
+	}
+
+	return (pu << 4) | nu;
+}
+
+// encodes bbox as the number of 1/16th units of parent bbox on each side
+static int P_EncodeBBox(int16_t *cb, int16_t *outerbbox)
+{
+	int encbbox;
+	encbbox = P_EncodeBBoxSide(cb, outerbbox, BOXRIGHT, BOXLEFT);
+	encbbox <<= 8;
+	encbbox |= P_EncodeBBoxSide(cb, outerbbox, BOXTOP, BOXBOTTOM);
+	return encbbox;
+}
+
+static void P_EncodeNodeBBox_r(int nn, int16_t *bboxes, int16_t *outerbbox)
+{
+	int 		j;
+	node_t 		*n;
+
+	if (nn & NF_SUBSECTOR)
+		return;
+
+	n = nodes + nn;
+	for (j=0 ; j<2 ; j++)
+	{
+		int16_t *bbox = &bboxes[nn*8+j*4];
+		n->encbbox[j] = P_EncodeBBox(bbox, outerbbox);
+		P_EncodeNodeBBox_r(n->children[j], bboxes, bbox);
+	}
+}
+
+// set the world's bounding box
+// recursively encode bounding boxes for all BSP nodes
+static void P_EncodeNodesBBoxes(int16_t *bboxes)
+{
+	int j;
+
+	worldbbox[BOXLEFT] = INT16_MAX;
+	worldbbox[BOXRIGHT] = INT16_MIN;
+	worldbbox[BOXBOTTOM] = INT16_MAX;
+	worldbbox[BOXTOP] = INT16_MIN;
+
+	for (j=0 ; j<2 ; j++)
+	{
+		int16_t *cb = &bboxes[(numnodes-1)*8+j*4];
+		if (cb[BOXLEFT] < worldbbox[BOXLEFT])
+			worldbbox[BOXLEFT] = cb[BOXLEFT];
+		if (cb[BOXRIGHT] > worldbbox[BOXRIGHT])
+			worldbbox[BOXRIGHT] = cb[BOXRIGHT];
+		if (cb[BOXBOTTOM] < worldbbox[BOXBOTTOM])
+			worldbbox[BOXBOTTOM] = cb[BOXBOTTOM];
+		if (cb[BOXTOP] > worldbbox[BOXTOP])
+			worldbbox[BOXTOP] = cb[BOXTOP];
+	}
+
+	P_EncodeNodeBBox_r(numnodes-1, bboxes, worldbbox);
+}
+
 void P_LoadNodes (int lump)
 {
-#ifdef MARS
-	numnodes = W_LumpLength (lump) / sizeof(node_t);
-	nodes = (node_t *)W_GetLumpData(lump);
-#else
 	byte		*data;
 	int			i,j,k;
-	mapnode_t	*mn;
 	node_t		*no;
-	
-	numnodes = W_LumpLength (lump) / sizeof(mapnode_t);
-	nodes = Z_Malloc (numnodes*sizeof(node_t),PU_LEVEL);
-	data = I_TempBuffer ();
-	W_ReadLump (lump,data);
-	
+	mapnode_t 	*mn;
+	int16_t 	*bboxes;
+
+	numnodes = W_LumpLength (lump) / sizeof(*mn);
+	data = W_GetLumpData(lump);
+	nodes = Z_Malloc (numnodes*sizeof(node_t) + 16,PU_LEVEL);
+	nodes = (void*)(((uintptr_t)nodes + 15) & ~15); // aline on cacheline boundary
+	bboxes = (void *)I_FrameBuffer();
+
 	mn = (mapnode_t *)data;
 	no = nodes;
 	for (i=0 ; i<numnodes ; i++, no++, mn++)
 	{
-		no->x = LITTLESHORT(mn->x)<<FRACBITS;
-		no->y = LITTLESHORT(mn->y)<<FRACBITS;
-		no->dx = LITTLESHORT(mn->dx)<<FRACBITS;
-		no->dy = LITTLESHORT(mn->dy)<<FRACBITS;
+		no->x = LITTLESHORT(mn->x);
+		no->y = LITTLESHORT(mn->y);
+		no->dx = LITTLESHORT(mn->dx);
+		no->dy = LITTLESHORT(mn->dy);
+
 		for (j=0 ; j<2 ; j++)
 		{
-			no->children[j] = (unsigned short)LITTLESHORT(mn->children[j]);
+			no->children[j] = LITTLESHORT(mn->children[j]);
 			for (k=0 ; k<4 ; k++)
-				no->bbox[j][k] = LITTLESHORT(mn->bbox[j][k])<<FRACBITS;
+				bboxes[i*8+j*4+k] = LITTLESHORT(mn->bbox[j][k]);
 		}
 	}
-#endif
+
+	P_EncodeNodesBBoxes(bboxes);
 }
-
-
 
 /*
 =================
@@ -274,8 +353,7 @@ void P_LoadThings (int lump)
 	spawnthing_t	*st;
 	int 			numthingsreal, numstaticthings;
 
-	data = I_TempBuffer ();
-	W_ReadLump (lump,data);
+	data = W_GetLumpData(lump);
 	numthings = W_LumpLength (lump) / sizeof(mapthing_t);
 	numthingsreal = 0;
 	numstaticthings = 0;
@@ -346,14 +424,13 @@ void P_LoadLineDefs (int lump)
 	int				i;
 	maplinedef_t	*mld;
 	line_t			*ld;
-	vertex_t		*v1, *v2;
+	mapvertex_t		*v1, *v2;
 	
 	numlines = W_LumpLength (lump) / sizeof(maplinedef_t);
 	lines = Z_Malloc (numlines*sizeof(line_t)+16,PU_LEVEL);
 	lines = (void*)(((uintptr_t)lines + 15) & ~15); // aline on cacheline boundary
 	D_memset (lines, 0, numlines*sizeof(line_t));
-	data = I_TempBuffer ();
-	W_ReadLump (lump,data);
+	data = W_GetLumpData(lump);
 
 	mld = (maplinedef_t *)data;
 	ld = lines;
@@ -367,8 +444,8 @@ void P_LoadLineDefs (int lump)
 		ld->v2 = LITTLESHORT(mld->v2);
 		v1 = &vertexes[ld->v1];
 		v2 = &vertexes[ld->v2];
-		dx = v2->x - v1->x;
-		dy = v2->y - v1->y;
+		dx = (v2->x - v1->x) << FRACBITS;
+		dy = (v2->y - v1->y) << FRACBITS;
 		if (!dx)
 			ld->flags |= ML_ST_VERTICAL;
 		else if (!dy)
@@ -440,9 +517,8 @@ void P_LoadSideDefs (int lump)
 	sides = Z_Malloc (numsides*sizeof(side_t)+16,PU_LEVEL);
 	sides = (void*)(((uintptr_t)sides + 15) & ~15); // aline on cacheline boundary
 	D_memset (sides, 0, numsides*sizeof(side_t));
-	data = I_TempBuffer ();
-	W_ReadLump (lump,data);
-	
+	data = W_GetLumpData(lump);
+
 	msd = (mapsidedef_t *)data;
 	sd = sides;
 	for (i=0 ; i<numsides ; i++, msd++, sd++)
@@ -476,25 +552,20 @@ void P_LoadSideDefs (int lump)
 
 void P_LoadBlockMap (int lump)
 {
+	int		i;
 	int		count;
 
-#ifdef MARS
-	blockmaplump = (short *)W_GetLumpData(lump);
-#else
-	int		i;
-	
-	blockmaplump = W_CacheLumpNum (lump,PU_LEVEL);
-	blockmap = blockmaplump+4;
+	blockmaplump = Z_Malloc (W_LumpLength (lump),PU_LEVEL);
+	W_ReadLump (lump,blockmaplump);
 	count = W_LumpLength (lump)/2;
 	for (i=0 ; i<count ; i++)
 		blockmaplump[i] = LITTLESHORT(blockmaplump[i]);
-#endif
-		
+
 	bmaporgx = blockmaplump[0]<<FRACBITS;
 	bmaporgy = blockmaplump[1]<<FRACBITS;
 	bmapwidth = blockmaplump[2];
 	bmapheight = blockmaplump[3];
-	
+
 /* clear out mobj chains */
 	count = sizeof(*blocklinks)* bmapwidth*bmapheight;
 	blocklinks = Z_Malloc (count,PU_LEVEL);
@@ -586,8 +657,8 @@ void P_GroupLines (void)
 		for (j=0 ; j<sector->linecount ; j++)
 		{
 			li = lines + sector->lines[j];
-			M_AddToBox (bbox, vertexes[li->v1].x, vertexes[li->v1].y);
-			M_AddToBox (bbox, vertexes[li->v2].x, vertexes[li->v2].y);
+			M_AddToBox (bbox, vertexes[li->v1].x << FRACBITS, vertexes[li->v1].y << FRACBITS);
+			M_AddToBox (bbox, vertexes[li->v2].x << FRACBITS, vertexes[li->v2].y << FRACBITS);
 		}
 
 		/* set the degenmobj_t to the middle of the bounding box */
@@ -648,21 +719,38 @@ void P_LoadingPlaque (void)
 =================
 */
 
-void P_SetupLevel (int lumpnum, skill_t skill)
+void P_SetupLevel (const char *lumpname, skill_t skill, int skytexture)
 {
+	int i;
 #ifndef MARS
 	mobj_t	*mobj;
 #endif
 	extern	int	cy;
-	
+	VINT lumpnum, lumps[ML_BLOCKMAP+1];
+	lumpinfo_t li[ML_BLOCKMAP+1];
+
 	M_ClearRandom ();
 
 	P_LoadingPlaque ();
 	
-D_printf ("P_SetupLevel(%i,%i)\n",lumpnum,skill);
+D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 
 	P_InitThinkers ();
-	
+
+	W_LoadPWAD(PWAD_CD);
+
+	lumpnum = W_CheckNumForName(lumpname);
+	if (lumpnum < 0)
+		I_Error("Map %s not found!", lumpname);
+
+	/* build a temp in-memory PWAD */
+	for (i = 0; i < ML_BLOCKMAP+1; i++)
+		lumps[i] = lumpnum+i;
+
+	W_CacheWADLumps(li, ML_BLOCKMAP+1, lumps, true);
+
+	lumpnum = W_GetNumForName(lumpname);
+
 /* note: most of this ordering is important	 */
 	P_LoadBlockMap (lumpnum+ML_BLOCKMAP);
 	P_LoadVertexes (lumpnum+ML_VERTEXES);
@@ -673,16 +761,14 @@ D_printf ("P_SetupLevel(%i,%i)\n",lumpnum,skill);
 	P_LoadNodes (lumpnum+ML_NODES);
 	P_LoadSegs (lumpnum+ML_SEGS);
 
-#ifdef MARS
-	rejectmatrix = (byte *)W_GetLumpData(lumpnum+ML_REJECT);
-#else
-	rejectmatrix = W_CacheLumpNum (lumpnum+ML_REJECT,PU_LEVEL);
-#endif
+	rejectmatrix = Z_Malloc (W_LumpLength (lumpnum+ML_REJECT),PU_LEVEL);
+	W_ReadLump (lumpnum+ML_REJECT,rejectmatrix);
 
 	validcount = Z_Malloc((numlines + 1) * sizeof(*validcount) * 2, PU_LEVEL);
 	D_memset(validcount, 0, (numlines + 1) * sizeof(*validcount) * 2);
 	validcount[0] = 1; // cpu 0
 	validcount[numlines] = 1; // cpu 1
+
 
 	P_GroupLines ();
 
@@ -702,6 +788,8 @@ D_printf ("P_SetupLevel(%i,%i)\n",lumpnum,skill);
 	bodyqueslot = 0;
 	deathmatch_p = deathmatchstarts;
 	P_LoadThings (lumpnum+ML_THINGS);
+
+	W_LoadPWAD(PWAD_NONE);
 
 /* */
 /* if deathmatch, randomly spawn the active players */
@@ -739,6 +827,13 @@ extern byte *debugscreen;
 
 	iquehead = iquetail = 0;
 	gamepaused = false;
+
+	skytexturep = R_CheckPixels(skytexture);
+	skytexturep = R_SkipJagObjHeader(skytexturep, W_LumpLength(skytexture), 256, 128);
+	if (col2sky > 0 && skytexture >= col2sky)
+		skycolormaps = dc_colormaps2;
+	else
+		skycolormaps = dc_colormaps;
 
 	R_SetupLevel();
 

@@ -88,9 +88,9 @@ static VINT prevsaveslot;
 static VINT saveslotmap;
 static VINT saveslotskill;
 static VINT saveslotmode;
-
-static char displaymapname[32];
-static VINT displaymapnum;
+static char savewadname[16];
+static char savemapname[32];
+static char savewadmismatch;
 
 static boolean startup;
 
@@ -105,8 +105,12 @@ void M_Start2 (boolean startup_)
 	startup = startup_;
 	if (startup)
 	{
+		W_LoadPWAD(PWAD_CD);
+
 		i = W_CheckNumForName("M_DOOM");
 		m_doom = i != -1 ? W_CacheLumpNum(i, PU_STATIC) : NULL;
+
+		W_LoadPWAD(PWAD_NONE);
 	}
 	else
 	{
@@ -136,8 +140,7 @@ void M_Start2 (boolean startup_)
 	saveslot = 0;
 	savecount = SaveCount();
 	prevsaveslot = -1;
-
-	displaymapnum = -1;
+	savewadmismatch = 0;
 
 	D_memset(mainscreen, 0, sizeof(mainscreen));
 	D_memset(mainitem, 0, sizeof(mainitem));
@@ -180,7 +183,7 @@ void M_Start2 (boolean startup_)
 	mainitem[mi_joingame].screen = ms_none;
 	mainscreen[ms_main].numitems++;
 
-	D_memcpy(mainitem[mi_level].name, "Area", 5);
+	D_memcpy(mainitem[mi_level].name, "Level", 5);
 	mainitem[mi_level].x = ITEMX;
 	mainitem[mi_level].y = CURSORY(0);
 	mainitem[mi_level].screen = ms_none;
@@ -256,18 +259,7 @@ void M_Stop (void)
 
 static char* M_MapName(VINT mapnum)
 {
-	dmapinfo_t mi;
-	char buf[512];
-
-	if (displaymapnum == mapnum)
-		return displaymapname;
-
-	G_FindMapinfo(G_LumpNumForMapNum(mapnum), &mi, buf);
-	D_snprintf(displaymapname, sizeof(displaymapname), "%s", mi.name);
-	displaymapname[sizeof(displaymapname) - 1] = '\0';
-
-	displaymapnum = mapnum;
-	return displaymapname;
+	return G_MapNameForMapNum(mapnum);
 }
 
 static void M_UpdateSaveInfo(void)
@@ -277,7 +269,8 @@ static void M_UpdateSaveInfo(void)
 		saveslotmap = -1;
 		saveslotskill = -1;
 		saveslotmode = gt_single;
-		GetSaveInfo(saveslot, &saveslotmap, &saveslotskill, &saveslotmode);
+		GetSaveInfo(saveslot, &saveslotmap, &saveslotskill, &saveslotmode, savewadname, savemapname);
+		savewadmismatch = D_strcasecmp(savewadname, cd_pwad_name);
 	}
 }
 
@@ -310,9 +303,6 @@ int M_Ticker (void)
 	}
 
 	menuscr = &mainscreen[screenpos];
-
-	if (!gamemapnumbers)
-		return ga_startnew;
 
 /* animate skull */
 	if (gametic != prevgametic && (gametic&3) == 0)
@@ -404,7 +394,7 @@ int M_Ticker (void)
 		{
 			consoleplayer = 0;
 			startsave = -1;
-			startmap = gamemapnumbers[playermap - 1]; /*set map number */
+			startmap = gamemaplist[playermap - 1]->mapNumber; /*set map number */
 			startskill = playerskill;	/* set skill level */
 			starttype = currentplaymode;	/* set play type */
 			startsplitscreen = currentgametype == mi_splitscreen;
@@ -427,7 +417,7 @@ int M_Ticker (void)
 
 		if (screenpos == ms_load)
 		{
-			if (savecount > 0)
+			if (savecount > 0 && !savewadmismatch)
 			{
 				startsplitscreen = saveslotmode != gt_single;
 				startsave = saveslot;
@@ -584,7 +574,7 @@ int M_Ticker (void)
 void M_Drawer (void)
 {
 	int i;
-	int mapnumber = gamemapnumbers[playermap - 1];
+	int mapnumber = gamemaplist[playermap - 1]->mapNumber;
 	int	leveltens = mapnumber / 10, levelones = mapnumber % 10;
 	int scrpos = screenpos == ms_none ? ms_main : screenpos;
 	mainscreen_t* menuscr = &mainscreen[scrpos];
@@ -639,12 +629,11 @@ void M_Drawer (void)
 #endif
 		if (leveltens)
 		{
-			DrawJagobjLump(numslump + leveltens,
-				item->x + 70, y + 2, NULL, NULL);
-			DrawJagobjLump(numslump + levelones, item->x + 84, y + 2, NULL, NULL);
+			DrawJagobjLump(numslump + leveltens, item->x + 76, y, NULL, NULL);
+			DrawJagobjLump(numslump + levelones, item->x + 90, y, NULL, NULL);
 		}
 		else
-			DrawJagobjLump(numslump + levelones, item->x + 70, y + 2, NULL, NULL);
+			DrawJagobjLump(numslump + levelones, item->x + 76, y, NULL, NULL);
 
 		print((320 - (tmplen * 14)) >> 1, y + ITEMSPACE + 2, tmp);
 
@@ -681,28 +670,35 @@ void M_Drawer (void)
 				char *mapname;
 				int mapnamelen;
 
-				mapname = M_MapName(saveslotmap);
+				mapname = savemapname;
 				mapnamelen = mystrlen(mapname);
 
 				leveltens = saveslotmap / 10, levelones = saveslotmap % 10;
 
-				print(item->x + 10, y + 40 + 2, "Area");
+				print(item->x + 10, y + 40 + 2, "Level");
 
 				if (leveltens)
 				{
-					DrawJagobjLump(numslump + leveltens,
-						item->x + 80, y + 40 + 3, NULL, NULL);
-					DrawJagobjLump(numslump + levelones, item->x + 94, y + ITEMSPACE*2 + 3, NULL, NULL);
+					DrawJagobjLump(numslump + leveltens, item->x + 86, y + ITEMSPACE*2, NULL, NULL);
+					DrawJagobjLump(numslump + levelones, item->x + 100, y + ITEMSPACE*2, NULL, NULL);
 				}
 				else
-					DrawJagobjLump(numslump + levelones, item->x + 80, y + ITEMSPACE*2 + 3, NULL, NULL);
+					DrawJagobjLump(numslump + levelones, item->x + 86, y + ITEMSPACE*2, NULL, NULL);
 
 				print((320 - (mapnamelen * 14)) >> 1, y + ITEMSPACE*3 + 3, mapname);
+
+				if (scrpos == ms_load && savewadmismatch)
+				{
+					print(item->x + 10, y + ITEMSPACE*4 + 2, "WAD Mismatch");
+					print(item->x + 10, y + ITEMSPACE*5 + 2, savewadname);
+					return;
+				}
 			}
 			else
 			{
 				print(item->x + 10, y + ITEMSPACE*2 + 2, "Empty");
 			}
+
 			if (saveslotskill != -1)
 			{
 				/* draw difficulty information */

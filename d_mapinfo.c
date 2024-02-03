@@ -53,9 +53,14 @@ static char* G_LoadMapinfoLump(void)
 		return NULL;
 	}
 	else {
+		char *data;
 		len = W_LumpLength(lump);
-		D_memset(buf, 0, len);
-		W_ReadLump(lump, buf);
+		data = W_GetLumpData(lump);
+		if (buf != data)
+		{
+			D_memset(buf, 0, (len+1) & ~1);
+			D_memcpy(buf, data, len);
+		}
 	}
 	buf[len] = '\0';
 
@@ -220,15 +225,12 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 				pp = skipspaces(pp + 1);
 			}
 
-			mi->lumpNum = W_GetNumForName(stripquote(p));
+			mi->lumpName = stripquote(p);
 
 			p = pp;
 			if (p) {
 				mi->name = stripquote(p);
 			}
-
-			D_memcpy(mi->lumpName, W_GetNameForNum(mi->lumpNum), 8);
-			mi->lumpName[8] = '\0';
 
 			mi->mapNumber = G_BuiltinMapNumForMapName(mi->lumpName);
 
@@ -238,184 +240,160 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 		}
 		else if (!D_strcasecmp(key, "baronspecial"))
 		{
-			mi->baronSpecial = true;
+			mi->specials |= MI_BARON_SPECIAL;
 		}
 		else if (!D_strcasecmp(key, "cyberdemonspecial"))
 		{
-			mi->cyberSpecial = true;
+			mi->specials |= MI_CYBER_SPECIAL;
 		}
 		else if (!D_strcasecmp(key, "spidermastermindspecial"))
 		{
-			mi->spiderSpecial = true;
+			mi->specials |= MI_SPIDER_SPECIAL;
+		}
+		else if (!D_strcasecmp(key, "mancubispecial"))
+		{
+			mi->specials |= MI_FATSO_SPECIAL;
+		}
+		else if (!D_strcasecmp(key, "arachnospecial"))
+		{
+			mi->specials |= MI_BABY_SPECIAL;
+		}
+		else if (!D_strcasecmp(key, "cyberdemonspecial2"))
+		{
+			mi->specials |= MI_CYBER_SPECIAL|MI_CYBER_SPECIAL2;
+		}
+		else if (!D_strcasecmp(key, "spidermastermindspecial2"))
+		{
+			mi->specials |= MI_SPIDER_SPECIAL|MI_SPIDER_SPECIAL2;
+		}
+		else if (!D_strcasecmp(key, "pistolstart"))
+		{
+			mi->specials |= MI_PISTOL_START;
 		}
 
 		return;
 	}
 
 	if (!D_strcasecmp(key, "next"))
-		mi->next = W_GetNumForName(value);
+		mi->next = value;
 	else if (!D_strcasecmp(key, "sky"))
-		mi->sky = value;
+		mi->skyTexture = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "secretnext"))
-		mi->secretNext = W_GetNumForName(value);
+		mi->secretNext = value;
 	else if (!D_strcasecmp(key, "mapnumber"))
 		mi->mapNumber = D_atoi(value);
 	else if (!D_strcasecmp(key, "music"))
-		mi->musicLump = W_CheckNumForName(value);
+		mi->songNum = S_SongForName(value);
+	else if (!D_strcasecmp(key, "intermissionText"))
+		mi->interText = value;
 }
 
 static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
 {
 	if (!D_strcasecmp(key, "borderFlat"))
-		gi->borderFlat = W_CheckNumForName(value);
+		gi->borderFlat = value;
 	else if (!D_strcasecmp(key, "titleTime"))
 		gi->titleTime = D_atoi(value);
 	else if (!D_strcasecmp(key, "creditsTime"))
 		gi->creditsTime = D_atoi(value);
 	else if (!D_strcasecmp(key, "titlePage"))
-		gi->titlePage = W_CheckNumForName(value);
+		gi->titlePage = value;
 	else if (!D_strcasecmp(key, "creditsPage"))
-		gi->creditsPage = W_CheckNumForName(value);
+		gi->creditsPage = value;
 	else if (!D_strcasecmp(key, "titleMus"))
-		gi->titleMus = W_CheckNumForName(value);
+		gi->titleMus = value;
 	else if (!D_strcasecmp(key, "intermissionMus"))
-		gi->intermissionMus = W_CheckNumForName(value);
+		gi->intermissionMus = value;
 	else if (!D_strcasecmp(key, "victoryMus"))
-		gi->victoryMus = W_CheckNumForName(value);
+		gi->victoryMus = value;
 	else if (!D_strcasecmp(key, "endMus"))
-		gi->endMus = W_CheckNumForName(value);
+		gi->endMus = value;
 	else if (!D_strcasecmp(key, "endText"))
 		gi->endText = value;
 	else if (!D_strcasecmp(key, "endFlat"))
-		gi->endFlat = W_CheckNumForName(value);
+		gi->endFlat = value;
 	else if (!D_strcasecmp(key, "endShowCast"))
 		gi->endShowCast = D_atoi(value);
 	else if (!D_strcasecmp(key, "noAttractDemo"))
 		gi->noAttractDemo = D_atoi(value);
+	else if (!D_strcasecmp(key, "stopFireTime"))
+		gi->stopFireTime = D_atoi(value);
+	else if (!D_strcasecmp(key, "titleStartPos"))
+		gi->titleStartPos = D_atoi(value);
 }
 
-static const char* G_FindMapinfoSection(const char* buf, const char *name, size_t *psectionlen)
+static void G_ClearGameInfo(dgameinfo_t* gi)
 {
-	const char* section, *ptr;
-	size_t namelen, sectionlen;
-
-	namelen = mystrlen(name);
-	*psectionlen = 0;
-
-	section = NULL;
-	sectionlen = 0;
-	for (ptr = buf; ; ptr = section + sectionlen + 1) {
-		section = G_FindNextMapinfoSection(ptr, &sectionlen);
-		if (!section)
-			break;
-		if (D_strncasecmp(section, name, namelen))
-			continue;
-		*psectionlen = sectionlen;
-		return section;
-	}
-
-	return NULL;
-}
-
-static char *G_MapinfoSectionCStr(const char* buf, const char *name, char *outmem)
-{
-	char* newstr;
-	const char* section;
-	size_t sectionlen;
-
-	section = G_FindMapinfoSection(buf, name, &sectionlen);
-	if (!section)
-		return NULL;
-
-	if (outmem)
-		newstr = outmem;
-	else
-		newstr = Z_Malloc(sectionlen + 1, PU_STATIC);
-	D_memcpy(newstr, section, sectionlen);
-	newstr[sectionlen] = '\0';
-
-	return newstr;
-}
-
-int G_FindMapinfo(VINT maplump, dmapinfo_t *mi, char *outmem)
-{
-	const char* buf;
-	int linecount;
-	char lumpname[9]; // null-terminated
-	char name[16];
-
-	if (maplump < 0)
-		return -1;
-
-	buf = G_LoadMapinfoLump();
-	if (!buf)
-		return 0;
-
-	D_memcpy(lumpname, W_GetNameForNum(maplump), 8);
-	lumpname[8] = '\0';
-	D_snprintf(name, sizeof(name), "map \"%s\"", lumpname);
-
-	D_memset(mi, 0, sizeof(*mi));
-	mi->data = G_MapinfoSectionCStr(buf, name, outmem);
-	if (!mi->data)
-		return 0;
-
-	linecount = G_ParseMapinfo(mi->data, (kvcall_t)&G_AddMapinfoKey, mi);
-	if (linecount < 2)
-		goto error;
-
-	return 1;
-
-error:
-	if (mi->data)
-		Z_Free(mi->data);
-	D_memset(mi, 0, sizeof(*mi));
-	return 0;
-}
-
-int G_FindGameinfo(dgameinfo_t* gi)
-{
-	const char* buf;
-	int linecount;
-
-	buf = G_LoadMapinfoLump();
-	if (!buf)
-		return 0;
-
 	D_memset(gi, 0, sizeof(*gi));
-	gi->creditsPage = -1;
 	gi->endShowCast = 1;
-	gi->data = G_MapinfoSectionCStr(buf, "gameinfo", NULL);
-	if (!gi->data)
-		return 0;
-
-	linecount = G_ParseMapinfo(gi->data, (kvcall_t)&G_AddGameinfoKey, gi);
-	if (linecount < 2)
-		goto error;
-
-	return 1;
-
-error:
-	if (gi->data)
-		Z_Free(gi->data);
-	D_memset(gi, 0, sizeof(*gi));
-	return 0;
+	gi->borderFlat = "";
+	gi->endFlat = "";
+	gi->titlePage = "";
+	gi->titleMus = "";
+	gi->intermissionMus = "";
+	gi->victoryMus = "";
+	gi->endMus = "";
+	gi->creditsPage = "";
+	gi->endText = "";
+	gi->stopFireTime = -1;
+	gi->titleStartPos = -1;
 }
 
-dmapinfo_t **G_LoadMaplist(int *pmapcount)
+static dmapinfo_t *G_CompressMapInfo(dmapinfo_t *mi)
+{
+	int size = 0;
+	char *buf;
+	dmapinfo_t *nmi;
+
+#define ALLOC_STR_FIELD(fld) do { size += mystrlen(mi->fld) + 1; } while(0)
+
+	size = sizeof(dmapinfo_t);
+	ALLOC_STR_FIELD(name);
+	ALLOC_STR_FIELD(next);
+	ALLOC_STR_FIELD(secretNext);
+	ALLOC_STR_FIELD(lumpName);
+	ALLOC_STR_FIELD(interText);
+
+	buf = Z_Malloc(size, PU_STATIC);
+
+	nmi = (void*)buf;
+	size = sizeof(dmapinfo_t);
+	D_memcpy(nmi, mi, sizeof(dmapinfo_t));
+	buf += size;
+
+#define COPY_STR_FIELD(fld) do { \
+		nmi->fld = buf; \
+		size = mystrlen(mi->fld) + 1; \
+		D_memcpy(nmi->fld, mi->fld, size); \
+		buf += size; \
+	} while (0)
+	
+	COPY_STR_FIELD(name);
+	COPY_STR_FIELD(next);
+	COPY_STR_FIELD(secretNext);
+	COPY_STR_FIELD(lumpName);
+	COPY_STR_FIELD(interText);
+
+	return nmi;
+}
+
+dmapinfo_t **G_LoadMaplist(int *pmapcount, dgameinfo_t* gi)
 {
 	const char* buf;
 	size_t sectionlen = 0;
 	const char* section = NULL, * ptr;
 	int mapcount, i;
 	dmapinfo_t** maplist;
+	char tmpbuf[5000];
+
+	G_ClearGameInfo(gi);
+
+	mapcount = 0;
+	*pmapcount = 0;
 
 	buf = G_LoadMapinfoLump();
 	if (!buf)
 		return NULL;
-
-	mapcount = 0;
-	*pmapcount = 0;
 
 	section = NULL;
 	sectionlen = 0;
@@ -423,6 +401,8 @@ dmapinfo_t **G_LoadMaplist(int *pmapcount)
 		section = G_FindNextMapinfoSection(ptr, &sectionlen);
 		if (!section)
 			break;
+		if (!D_strncasecmp(section, "gameinfo", 8))
+			continue;
 		mapcount++;
 	}
 
@@ -444,22 +424,38 @@ dmapinfo_t **G_LoadMaplist(int *pmapcount)
 		if (!section)
 			break;
 
-		mi = Z_Malloc(sizeof(dmapinfo_t) + sectionlen + 1, PU_STATIC);
+		if (!D_strncasecmp(section, "gameinfo", 8))
+		{
+			zsection = Z_Malloc(sectionlen + 1, PU_STATIC);
+			D_memcpy(zsection, section, sectionlen);
+			zsection[sectionlen] = '\0';
+			gi->data = zsection;
+
+			linecount = G_ParseMapinfo(zsection, (kvcall_t)&G_AddGameinfoKey, gi);
+			if (linecount < 2)
+			{
+				Z_Free(gi->data);
+				G_ClearGameInfo(gi);
+			}
+			continue;
+		}
+
+		mi = (void *)tmpbuf;
 		zsection = (char *)mi + sizeof(dmapinfo_t);
 		D_memcpy(zsection, section, sectionlen);
 		zsection[sectionlen] = '\0';
 
 		D_memset(mi, 0, sizeof(*mi));
-		mi->data = (byte *)mi;
+		mi->skyTexture = -1;
+		mi->songNum = mus_none;
 
 		linecount = G_ParseMapinfo(zsection, (kvcall_t)&G_AddMapinfoKey, mi);
 		if (linecount < 2 || mi->mapNumber <= 0)
-		{
-			Z_Free(mi);
 			continue;
-		}
+		if (mi->skyTexture < 0)
+			mi->skyTexture = W_CheckNumForName("SKY1");
 
-		maplist[i] = mi;
+		maplist[i] = G_CompressMapInfo(mi);
 		i++;
 	}
 	maplist[i] = NULL;
