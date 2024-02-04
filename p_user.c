@@ -236,14 +236,14 @@ void P_BuildMove (player_t *player)
 	mobj_t		*mo;
 	int			vbls;
 
-	buttons = ticbuttons[playernum];
-	oldbuttons = oldticbuttons[playernum];
+	buttons = player->ticbuttons;
+	oldbuttons = player->oldticbuttons;
 	vbls = vblsinframe;
 
 	if (mousepresent && !demoplayback)
 	{
-		int mx = ticmousex[playernum];
-		int my = ticmousey[playernum];
+		int mx = player->ticmousex;
+		int my = player->ticmousey;
 
 		if ((buttons & BT_RMBTN) && (oldbuttons & BT_RMBTN))
 		{
@@ -528,7 +528,7 @@ void P_DeathThink (player_t *player)
 		player->damagecount--;
 	
 
-	if ( (ticbuttons[playernum] & BT_USE) && player->viewheight <= 8*FRACUNIT)
+	if ( (player->ticbuttons & BT_USE) && player->viewheight <= 8*FRACUNIT)
 		player->playerstate = PST_REBORN;
 }
 
@@ -591,8 +591,9 @@ extern int ticphase;
 void P_PlayerThink (player_t *player)
 {
 	int		buttons;
+	int 	playernum = player - players;
 	
-	buttons = ticbuttons[playernum];
+	buttons = player->ticbuttons;
 
 ticphase = 20;
 	P_PlayerMobjThink (player->mo);
@@ -636,7 +637,7 @@ ticphase = 22;
 ticphase = 23;
 	if (player->pendingweapon == wp_nochange)
 	{
-		int oldbuttons = oldticbuttons[playernum];
+		int oldbuttons = player->oldticbuttons;
 
 #ifdef JAGUAR
 		if ( buttons & BT_1 )

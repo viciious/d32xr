@@ -206,8 +206,8 @@ int EV_DoLockedDoor(line_t* line, vldoor_e type, mobj_t* thing)
 /* */
 /*	Check for locks */
 /* */
-	player = thing->player ? &players[thing->player - 1] : NULL;
-	pnum = player ? player - players : 0;
+	pnum = thing->player ? thing->player -1 : 0;
+	player = thing->player ? &players[pnum] : NULL;
 	if (!player)
 		return 0;
 
@@ -262,8 +262,8 @@ void EV_VerticalDoor (line_t *line, mobj_t *thing)
 /* */
 /*	Check for locks */
 /* */
-	player = thing->player ? &players[thing->player - 1] : NULL;
-	pnum = player ? player - players : 0;
+	pnum = thing->player ? thing->player - 1 : 0;
+	player = thing->player ? &players[pnum] : NULL;
 
 	switch(line->special)
 	{

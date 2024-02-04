@@ -453,8 +453,8 @@ int IN_Ticker (void)
 	
 	for (i=0 ; i<= (netgame > gt_single) ; i++)
 	{
-		buttons = ticbuttons[i];
-		oldbuttons = oldticbuttons[i];
+		buttons = players[i].ticbuttons;
+		oldbuttons = players[i].oldticbuttons;
 		
 	/* exit menu if button press */
 		if ( (buttons & BT_ATTACK) && !(oldbuttons & BT_ATTACK) )

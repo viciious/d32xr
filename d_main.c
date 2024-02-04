@@ -267,9 +267,6 @@ int		ticrate = 4;
 int		ticsinframe;	/* how many tics since last drawer */
 int		ticon;
 int		frameon;
-int		ticbuttons[MAXPLAYERS];
-int		oldticbuttons[MAXPLAYERS];
-int		ticmousex[MAXPLAYERS], ticmousey[MAXPLAYERS];
 int		ticrealbuttons, oldticrealbuttons;
 boolean	mousepresent;
 
@@ -350,8 +347,11 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 	vblsinframe = 0;
 	lasttics = 0;
 
-	ticbuttons[0] = ticbuttons[1] = oldticbuttons[0] = oldticbuttons[1] = 0;
-	ticmousex[0] = ticmousex[1] = ticmousey[0] = ticmousey[1] = 0;
+	for (i = 0; i < MAXPLAYERS; i++)
+	{
+		players[i].ticbuttons = players[i].oldticbuttons = 0;
+		players[i].ticmousex = players[i].ticmousey = 0;
+	}
 
 	do
 	{
@@ -376,43 +376,45 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 /* */
 /* get buttons for next tic */
 /* */
-		oldticbuttons[0] = ticbuttons[0];
-		oldticbuttons[1] = ticbuttons[1];
+		for (i = 0; i < MAXPLAYERS; i++)
+		{
+			players[i].oldticbuttons = players[i].ticbuttons;
+		}
 		oldticrealbuttons = ticrealbuttons;
 
 		buttons = I_ReadControls();
 		buttons |= I_ReadMouse(&mx, &my);
 		if (demoplayback)
 		{
-			ticmousex[consoleplayer] = 0;
-			ticmousey[consoleplayer] = 0;
+			players[consoleplayer].ticmousex = 0;
+			players[consoleplayer].ticmousey = 0;
 		}
 		else
 		{
-			ticmousex[consoleplayer] = mx;
-			ticmousey[consoleplayer] = my;
+			players[consoleplayer].ticmousex = mx;
+			players[consoleplayer].ticmousey = my;
 		}
 
-		ticbuttons[consoleplayer] = buttons;
+		players[consoleplayer].ticbuttons = buttons;
 		ticrealbuttons = buttons;
 
 		if (demoplayback)
 		{
-#ifndef MARS
+	#ifndef MARS
 			if (buttons & (BT_ATTACK|BT_SPEED|BT_USE) )
 			{
 				exit = ga_exitdemo;
 				break;
 			}
-#endif
-			ticbuttons[consoleplayer] = buttons = *demo_p++;
+	#endif
+			players[consoleplayer].ticbuttons = buttons = *demo_p++;
 		}
 
 		if (splitscreen && !demoplayback)
-			ticbuttons[consoleplayer ^ 1] = I_ReadControls2();
+			players[consoleplayer ^ 1].ticbuttons = I_ReadControls2();
 		else if (netgame)	/* may also change vblsinframe */
-			ticbuttons[consoleplayer ^ 1]
-				= NetToLocal(I_NetTransfer(LocalToNet(ticbuttons[consoleplayer])));
+			players[consoleplayer ^ 1].ticbuttons
+				= NetToLocal(I_NetTransfer(LocalToNet(players[consoleplayer].ticbuttons)));
 
 		gamevbls += vblsinframe;
 
@@ -498,8 +500,8 @@ int TIC_Abortable (void)
 #ifdef JAGUAR
 	jagobj_t	*pl;
 #endif
-	int buttons = ticbuttons[0];
-	int oldbuttons = oldticbuttons[0];
+	int buttons = players[consoleplayer].ticbuttons;
+	int oldbuttons = players[consoleplayer].oldticbuttons;
 
 	if (titlepic == NULL)
 		return 1;
@@ -681,8 +683,8 @@ void STOP_Credits (void)
 
 static int TIC_Credits (void)
 {
-	int buttons = ticbuttons[0];
-	int oldbuttons = oldticbuttons[0];
+	int buttons = players[consoleplayer].ticbuttons;
+	int oldbuttons = players[consoleplayer].oldticbuttons;
 
 	if (!*gameinfo.creditsPage)
 		return ga_exitdemo;

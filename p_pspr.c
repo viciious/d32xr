@@ -407,7 +407,7 @@ void A_WeaponReady (player_t *player, pspdef_t *psp)
 /* check for fire */
 /* */
 /* the missile launcher and bfg do not auto fire */
-	if (ticbuttons[playernum] & BT_ATTACK)
+	if (player->ticbuttons & BT_ATTACK)
 	{
 		P_FireWeapon (player);
 		return;
@@ -438,7 +438,7 @@ void A_ReFire (player_t *player, pspdef_t *psp)
 /* */
 /* check for fire (if a weaponchange is pending, let it go through instead) */
 /* */
-	if ( (ticbuttons[playernum] & BT_ATTACK) 
+	if ( (player->ticbuttons & BT_ATTACK) 
 	&& player->pendingweapon == wp_nochange && player->health)
 	{
 		player->refire++;
@@ -927,8 +927,6 @@ void P_SetupPsprites (player_t *player)
 = Called every tic by player thinking routine
 ================== 
 */ 
- 
-VINT		ticremainder[MAXPLAYERS];
 
 void P_MovePsprites (player_t *player) 
 {
@@ -936,12 +934,12 @@ void P_MovePsprites (player_t *player)
 	pspdef_t	*psp;
 	statenum_t	state;
 
-	ticremainder[playernum] += vblsinframe;
+	player->ticremainder += vblsinframe;
 	
-	while (ticremainder[playernum] >= TICVBLS)
+	while (player->ticremainder>= TICVBLS)
 	{
-		ticremainder[playernum] -= TICVBLS;
-			
+		player->ticremainder -= TICVBLS;
+
 		psp = &player->psprites[0];
 		for (i=0 ; i<NUMPSPRITES ; i++, psp++)
 			if ( (state = psp->state) != S_NULL)		/* a null state means not active */

@@ -299,8 +299,6 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 
 extern	int			iquehead, iquetail;
 
-extern	int playernum;
-
 void P_RespawnSpecials (void);
 
 
