@@ -394,8 +394,8 @@ void AM_Control (player_t *player)
 #endif
 	int actionbtns = BT_ATTACK | BT_STRAFE | BT_USE;
 
-	buttons = ticbuttons[playernum];
-	oldbuttons = oldticbuttons[playernum];
+	buttons = player->ticbuttons;
+	oldbuttons = player->oldticbuttons;
 
 	if ( (buttons & BT_AUTOMAP) && !(oldbuttons & BT_AUTOMAP) )
 	{
@@ -448,16 +448,16 @@ void AM_Control (player_t *player)
 	}
 #endif
 
-	ticbuttons[playernum] &= ~actionbtns;
-	oldticbuttons[playernum] &= ~actionbtns;
+	player->ticbuttons &= ~actionbtns;
+	player->oldticbuttons &= ~actionbtns;
 
 	if (buttons & BT_C)		/* IF 'C' IS HELD DOWN, MOVE AROUND */
 	{
 		player->automapx = player->mo->x;
 		player->automapy = player->mo->y;
 
-		ticbuttons[playernum] &= ~(BT_C | BT_STRAFELEFT | BT_STRAFERIGHT);
-		oldticbuttons[playernum] &= ~(BT_C | BT_STRAFELEFT | BT_STRAFERIGHT);
+		player->ticbuttons &= ~(BT_C | BT_STRAFELEFT | BT_STRAFERIGHT);
+		player->oldticbuttons &= ~(BT_C | BT_STRAFELEFT | BT_STRAFERIGHT);
 		return;
 	}
 
@@ -492,7 +492,7 @@ void AM_Control (player_t *player)
 			player->automapy-=step;
 	}
 	
-	ticbuttons[playernum] &= ~(BT_B | BT_LEFT | BT_RIGHT | BT_UP | BT_DOWN);
+	player->ticbuttons &= ~(BT_B | BT_LEFT | BT_RIGHT | BT_UP | BT_DOWN);
 }
 
 static void AM_DrawMapStats(void)

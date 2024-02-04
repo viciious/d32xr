@@ -304,9 +304,6 @@ void P_CheckCheats (void)
 #endif
 }
   
-
-int playernum;
-
 void G_DoReborn (int playernum); 
 void G_DoLoadLevel (void);
 
@@ -331,6 +328,7 @@ int P_Ticker (void)
 	int		start;
 	int		ticstart;
 	player_t	*pl;
+	int 	playernum;
 
 	if (demoplayback)
 	{
@@ -619,6 +617,7 @@ extern	 VINT		ticremainder[MAXPLAYERS];
 
 void P_Start (void)
 {
+	int i;
 	extern boolean canwipe;
 
 	/* load a level */
@@ -628,9 +627,11 @@ void P_Start (void)
 #ifndef MARS
 	S_RestartSounds ();
 #endif
-	players[0].automapflags = 0;
-	players[1].automapflags = 0;
-	ticremainder[0] = ticremainder[1] = 0;
+	for (i = 0; i < MAXPLAYERS; i++)
+	{
+		players[i].automapflags = 0;
+		players[i].ticremainder = 0;
+	}
 	M_ClearRandom ();
 
 	if (!demoplayback && !demorecording)

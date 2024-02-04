@@ -393,8 +393,8 @@ int F_Ticker (void)
 /* */
 /* check for press a key to kill actor */
 /* */
-	buttons = ticbuttons[consoleplayer];
-	oldbuttons = oldticbuttons[consoleplayer];
+	buttons = players[consoleplayer].ticbuttons;
+	oldbuttons = players[consoleplayer].oldticbuttons;
 
 	if (ticon <= 10)
 		return 0;

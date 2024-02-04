@@ -285,6 +285,7 @@ void O_Control (player_t *player)
 	int		buttons, oldbuttons;
 	menuscreen_t* menuscr;
 	boolean newcursor = false;
+	int playernum = player - players;
 	int curplayer = consoleplayer;
 
 	if (splitscreen && playernum != curplayer)
@@ -301,8 +302,8 @@ void O_Control (player_t *player)
 	}
 	menuscr = &menuscreen[screenpos];
 
-	buttons = ticbuttons[playernum] & MENU_BTNMASK;
-	oldbuttons = oldticbuttons[playernum] & MENU_BTNMASK;
+	buttons = player->ticbuttons & MENU_BTNMASK;
+	oldbuttons = player->oldticbuttons & MENU_BTNMASK;
 	
 	if ( ( (buttons & BT_OPTION) && !(oldbuttons & BT_OPTION) )
 #ifdef MARS
@@ -337,7 +338,7 @@ void O_Control (player_t *player)
 		return;
 
 /* clear buttons so player isn't moving aroung */
-	ticbuttons[playernum] &= (BT_OPTION|BT_START);	/* leave option status alone */
+	player->ticbuttons &= (BT_OPTION|BT_START);	/* leave option status alone */
 
 	if (playernum != curplayer)
 		return;

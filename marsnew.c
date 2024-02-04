@@ -1128,7 +1128,11 @@ reconnect:
 	G_PlayerReborn(0);
 	G_PlayerReborn(1);
 	gameaction = starttype == gt_single ? ga_startnew : ga_warped;
-	ticbuttons[0] = ticbuttons[1] = oldticbuttons[0] = oldticbuttons[1] = 0;
+	for (i = 0; i < MAXPLAYERS; i++)
+	{
+		players[i].ticbuttons = players[i].oldticbuttons = 0;
+		players[i].ticmousex = players[i].ticmousey = 0;
+	}
 	return 0;
 }
 
