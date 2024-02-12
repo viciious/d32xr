@@ -17,6 +17,9 @@ extern "C" {
 
 extern int init_cd(void);
 extern int read_cd(int lba, int len, void *buffer);
+extern int begin_read_cd(int lba, int len);
+extern int read_cd_pcm(void *buffer);
+extern void stop_read_cd(void);
 extern int set_cwd(char *path);
 extern int first_dir_sec(void);
 extern int next_dir_sec(void);

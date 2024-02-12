@@ -61,6 +61,8 @@ WaitCmd:
         jsr     S_Update
         
 WaitCmdPostUpdate:
+        jsr     S_UpdateSPCM
+
         tst.b   0x800E.w
         beq.b   WaitCmd
 
@@ -89,8 +91,8 @@ RequestTable:
         dc.w    SfxPUnPSource - RequestTable
         dc.w    SfxStopSource - RequestTable
         dc.w    PlayTrack - RequestTable
-        dc.w    UknownCmd - RequestTable
-        dc.w    UknownCmd - RequestTable
+        dc.w    PlaySPCMTrack - RequestTable
+        dc.w    StopSPCMTrack - RequestTable
         dc.w    StopPlayback  - RequestTable
         dc.w    GetTrackInfo - RequestTable
         dc.w    SfxUpdateSource - RequestTable
@@ -228,7 +230,10 @@ SfxCopyBufferWaitAck:
         bra.w   WaitCmd
 
 SfxCopyBuffersFromCDFile:
+        jsr     S_SPCM_Suspend
+
         jsr     switch_banks
+
         move.l  #0x0C0000,d0            /* file name + offsets */
         move.l  d0,-(sp)
         moveq   #0,d0
@@ -243,7 +248,30 @@ SfxCopyBuffersFromCDFileWaitAck:
         move.b  #0,0x800F.w             /* sub comm port = READY */
         jsr     S_LoadCDBuffers         /* copy the buffer data in the background */
         lea     12(sp),sp               /* clear the stack */
+
+        |jsr     S_SPCM_Unsuspend
+
         bra.w   WaitCmd
+
+PlaySPCMTrack:
+        jsr     switch_banks
+        move.l  #0x0C0000,d0            /* file name */
+        move.l  d0,-(sp)
+
+        jsr     S_PlaySPCMTrack
+        lea     4(sp),sp                /* clear the stack */
+
+        move.w  d0,0x8020.w             /* 0 if the playback failed */
+
+        move.b  #'D,0x800F.w            /* sub comm port = DONE */
+        bra     WaitAck
+
+StopSPCMTrack:
+        jsr     S_StopSPCMTrack
+
+        move.b  #'D,0x800F.w            /* sub comm port = DONE */
+        bra     WaitAck
+
 
 SfxPlaySource:
 | uint8_t S_PlaySource(uint8_t src_id, uint16_t buf_id, uint16_t freq, uint8_t pan, uint8_t vol, uint8_t autoloop);
@@ -357,7 +385,10 @@ SfxSuspendUpdates:
         bra     WaitAck
 
 OpenFile:
+        jsr     S_SPCM_Suspend
+
         jsr     switch_banks
+
         move.l  0x8010.w,d0             /* name */
         move.l  d0,-(sp)
         jsr     open_file
@@ -366,11 +397,16 @@ OpenFile:
         move.l  d1,0x8024.w             /* offset */
         jsr     switch_banks
 
+        |jsr     S_SPCM_Unsuspend
+
         move.b  #'D,0x800F.w            /* sub comm port = DONE */
         bra     WaitAck
 
 ReadDir:
+        jsr     S_SPCM_Suspend
+
         jsr     switch_banks
+
         move.l  0x8010.w,d0             /* path */
         move.l  d0,-(sp)
         jsr     read_directory
@@ -379,10 +415,14 @@ ReadDir:
         move.l  d1,0x8024.w             /* num entries */
         jsr     switch_banks
 
+        |jsr     S_SPCM_Unsuspend
+
         move.b  #'D,0x800F.w            /* sub comm port = DONE */
         bra     WaitAck
 
 ReadSectors:
+        jsr     S_SPCM_Suspend
+
         move.l  0x8018.w,d0             /* length */
         move.l  d0,-(sp)
         move.l  0x8014.w,d0             /* lba */
@@ -392,6 +432,8 @@ ReadSectors:
         jsr     read_sectors
         lea     12(sp),sp               /* clear the stack */
         jsr     switch_banks
+
+        |jsr     S_SPCM_Unsuspend
 
         move.b  #'D,0x800F.w            /* sub comm port = DONE */
         bra     WaitAck
@@ -486,6 +528,33 @@ read_cd:
         movea.l 12(sp),a0               /* buffer */
         movem.l d2-d7/a2-a6,-(sp)
         jsr     ReadCD
+        movem.l (sp)+,d2-d7/a2-a6
+        rts
+
+| int begin_read_cd(int lba, int len);
+        .global begin_read_cd
+begin_read_cd:
+        move.l  4(sp),d0                /* lba */
+        move.l  8(sp),d1                /* length */
+        movem.l d2-d7/a2-a6,-(sp)
+        jsr     BeginReadCD
+        movem.l (sp)+,d2-d7/a2-a6
+        rts
+
+| int read_cd_pcm(void *buffer);
+        .global read_cd_pcm
+read_cd_pcm:
+        movea.l 4(sp),a0                /* buffer */
+        movem.l d2-d7/a2-a6,-(sp)
+        jsr     ReadCDPCM
+        movem.l (sp)+,d2-d7/a2-a6
+        rts
+
+| int stop_read_cd(void);
+        .global stop_read_cd
+stop_read_cd:
+        movem.l d2-d7/a2-a6,-(sp)
+        jsr     StopReadCD
         movem.l (sp)+,d2-d7/a2-a6
         rts
 
@@ -858,6 +927,65 @@ ReadCD:
         lea     16(sp),sp               /* cleanup stack */
         rts
 
+
+| Begin reading d1 sectors starting at d0
+
+BeginReadCD:
+        movem.l d0-d1/a0-a1,-(sp)
+
+        move.l  d0,CURR_OFFSET
+
+0:
+        move.w  #0x0089,d0              /* CDCSTOP */
+        jsr     0x5F22.w                /* call CDBIOS function */
+
+        movea.l sp,a0                   /* ptr to 32 bit sector start and 32 bit sector count */
+        move.w  #0x0020,d0              /* ROMREADN */
+        jsr     0x5F22.w                /* call CDBIOS function */
+
+        lea     16(sp),sp               /* cleanup stack */
+        rts
+
+| Read 1 sector into buffer in a0 (using PCM DMA)
+
+ReadCDPCM:
+        movem.l d0-d1/a0-a1,-(sp)
+
+1:
+        move.w  #0x008A,d0              /* CDCSTAT */
+        jsr     0x5F22.w                /* call CDBIOS function */
+        bcc.b   2f                      /* at least one sector in CD buffer */
+
+        lea     16(sp),sp               /* cleanup stack */
+        moveq   #0,d0
+        rts
+2:
+        /* set CDC Mode destination device to PCM */
+        move.b  #0x4,0x8004.w
+        move.l  8(sp),d0
+        lsr.w   #3,d0
+        move.w  d0,0x800A.w             /* DMA destination address */
+
+        move.w  #0x008B,d0              /* CDCREAD */
+        jsr     0x5F22.w                /* call CDBIOS function */
+        bcs.b   2b                      /* not ready to xfer data */
+
+3:
+        /* check for EDT (end of data transfer) to be set */
+        btst    #0x7,0x8004.w
+        beq.s   3b
+
+        move.w  #0x008D,d0              /* CDCACK */
+        jsr     0x5F22.w                /* call CDBIOS function */
+
+        lea     16(sp),sp               /* cleanup stack */
+        moveq   #1,d0
+        rts
+
+StopReadCD:
+        move.w  #0x0089,d0              /* CDCSTOP */
+        jsr     0x5F22.w                /* call CDBIOS function */
+        rts
 
 | Sub-CPU variables
 

@@ -4,8 +4,9 @@
 #include "s_buffers.h"
 #include "s_main.h"
 #include "s_cd.h"
+#include "s_spcm.h"
 
-#define S_MEMBANK_SIZE 463*1024
+#define S_MEMBANK_SIZE 462*1024
 #define S_MEMBANK_PTR s_membank
 static uint8_t s_membank[S_MEMBANK_SIZE];
 
@@ -160,5 +161,21 @@ int S_LoadCDBuffers(uint16_t buf_id, int numsfx, const uint8_t *data)
     offsetlen = (void *)(((uintptr_t)name + mystrlen(name) + 1 + 3) & ~3);
 
     S_CD_LoadBuffers(&s_buffers[ buf_id - 1 ], numsfx, name, offsetlen);
+
     return 1;
+}
+
+void S_UpdateSPCM(void)
+{
+    S_SPCM_Update();
+}
+
+int S_PlaySPCMTrack(const char *name)
+{
+    return S_SCM_PlayTrack(name);
+}
+
+void S_StopSPCMTrack(void)
+{
+    S_SPCM_StopTrack();
 }

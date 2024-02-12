@@ -77,6 +77,7 @@ enum
 	mustype_none,
 	mustype_fm,
 	mustype_cd,
+	mustype_spcm,
 };
 
 enum

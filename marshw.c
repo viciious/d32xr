@@ -342,11 +342,12 @@ void Mars_PlayTrack(char use_cda, int playtrack, const char *name, int offset, i
 	int len;
 	int backup[128];
 	char *fb = (char *)(&MARS_FRAMEBUFFER + 0x100), *ptr;
-	int use_cdvgm = !use_cda && name;
+	int send_fn = !use_cda && name ? 0x1 : 0;
+	int use_cdf = send_fn && offset < 0 ? 0x2 : 0;
 
 	Mars_UseCD(use_cda);
 
-	if (use_cdvgm)
+	if (send_fn)
 	{
 		ptr = Mars_StringToFramebuffer(name);
 		ptr = (void*)(((uintptr_t)ptr + 1 + 3) & ~3);
@@ -361,10 +362,10 @@ void Mars_PlayTrack(char use_cda, int playtrack, const char *name, int offset, i
 	}
 
 	MARS_SYS_COMM2 = playtrack | (looping ? 0x8000 : 0x0000);
-	MARS_SYS_COMM0 = 0x0300 | (use_cdvgm ? 1 : 0); /* start music */
+	MARS_SYS_COMM0 = 0x0300 | use_cdf | send_fn; /* start music */
 	while (MARS_SYS_COMM0);
 
-	if (use_cdvgm)
+	if (send_fn)
 	{
 		fast_memcpy(fb, backup, (unsigned)len/4);
 	}

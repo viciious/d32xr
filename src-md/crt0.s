@@ -658,6 +658,28 @@ start_music:
         move.b  (a0)+,(a1)+
         bne.b   00b
 
+        move.w  0xA15120,d0         /* COMM0 */
+        btst    #1,d0               /* check if we read SPCM */
+        beq.b   01f
+
+        move.w  0xA15100,d0
+        or.w    #0x8000,d0
+        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        move.w  #0,0xA15120         /* done */
+
+        /* we read SPCM from CD */
+        lea     8(sp),sp
+
+        lea     vgm_lzss_buf,a1
+        move.l  a1,-(sp)
+        jsr     scd_play_spcm_track
+        lea     4(sp),sp
+
+        bra     main_loop
+
+01:
+        /* we read VGM from CD */
         lea     vgm_lzss_buf,a1
         move.l  a1,-(sp)
         jsr     vgm_cache_scd
@@ -668,7 +690,7 @@ start_music:
         or.w    #0x8000,d0
         move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
 
-        bra     01f
+        bra     02f
 
 0:
         /* ROM VGM playback */
@@ -679,7 +701,7 @@ start_music:
 
         move.l  d0,a0
         bsr     set_rom_bank
-01:
+02:
         move.w  #0,0xA15120         /* done */
 
         move.l  a1,-(sp)            /* MD lump ptr */
@@ -879,8 +901,10 @@ start_cd:
         bra     main_loop
 
 stop_music:
-        tst.w    use_cd
-        bne.b    stop_cd
+        tst.w   use_cd
+        bne.b   stop_cd
+
+        |jsr     scd_stop_spcm_track
 
         /* stop VGM */
         move.w  #0x0100,0xA11100    /* Z80 assert bus request */

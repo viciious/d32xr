@@ -210,9 +210,9 @@ static void ReadOptions(void)
 		so.musicvolume = 64;
 	if (so.controltype >= NUMCONTROLOPTIONS)
 		so.controltype = 0;
-	if (so.musictype < mustype_none || so.musictype > mustype_cd)
+	if (so.musictype < mustype_none || so.musictype > mustype_spcm)
 		so.musictype = mustype_fm;
-	if (so.musictype == mustype_cd && !S_CDAvailable())
+	if (so.musictype >= mustype_cd && !S_CDAvailable())
 		so.musictype = mustype_fm;
 	if (so.alwaysrun < 0 || so.alwaysrun > 1)
 		so.alwaysrun = 0;
