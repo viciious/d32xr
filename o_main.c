@@ -563,9 +563,9 @@ void O_Control (player_t *player)
 				{
 					switch (itemno) {
 					case mi_music:
-						if (++o_musictype > mustype_cd)
-							o_musictype = mustype_cd;
-						if (o_musictype == mustype_cd && !S_CDAvailable())
+						if (++o_musictype > mustype_spcm)
+							o_musictype = mustype_spcm;
+						if (o_musictype >= mustype_cd && !S_CDAvailable())
 							o_musictype = mustype_fm;
 						break;
 #ifndef DISABLE_DMA_SOUND
@@ -737,6 +737,9 @@ void O_Drawer (void)
 			break;
 		case mustype_cd:
 			print(menuitem[mi_music].x + 85, menuitem[mi_music].y, "cd");
+			break;
+		case mustype_spcm:
+			print(menuitem[mi_music].x + 85, menuitem[mi_music].y, "spcm");
 			break;
 		}
 

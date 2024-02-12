@@ -125,7 +125,7 @@ void S_Chan_Update(sfx_channel_t *chan)
 
     pcm_set_loop(startpos);
 
-    pcm_set_on(chan->realid);    
+    pcm_set_on(chan->realid);
 }
 
 int S_AllocChannel(void)

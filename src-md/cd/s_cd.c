@@ -15,7 +15,7 @@ int S_CD_LoadBuffers(sfx_buffer_t *buf, int numsfx, const char *name, const int3
 
     lo = open_file(name);
     if (lo < 0)
-        return 0;
+        return lo;
     offset = lo & 0x7fffffff;
 
     minofs = 0x7fffffff;

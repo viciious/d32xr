@@ -642,11 +642,11 @@ void S_SetMusicType(int newtype)
 {
 	int savemus, savecd;
 
-	if (newtype < mustype_none || newtype > mustype_cd)
+	if (newtype < mustype_none || newtype > mustype_spcm)
 		return;
 	if (musictype == newtype)
 		return;
-	if (newtype == mustype_cd && !S_CDAvailable())
+	if (newtype >= mustype_cd && !S_CDAvailable())
 		return;
 
 	// restart the current track
@@ -713,6 +713,7 @@ int S_SongForName(const char *str)
 void S_StartSong(int musiclump, int looping, int cdtrack)
 {
 	int playtrack = 0;
+	char filename[32];
 
 	if (musiclump < 0)
 		musiclump = mus_none;
@@ -762,6 +763,11 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 		if (curmusic == musiclump && muslooping == looping)
 			return;
 	}
+	else if (musictype == mustype_spcm)
+	{
+		playtrack = cdtrack;
+		D_snprintf(filename, sizeof(filename), "/D1SPCM/%02d.PCM", playtrack);
+	}
 
 	curmusic = musiclump;
 	curcdtrack = cdtrack;
@@ -770,14 +776,14 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 	if (musictype == mustype_none)
 		return;
 
-	if (musictype == mustype_cd)
-	{
-		Mars_PlayTrack(1, playtrack, "", 0, 0, looping);
-		return;
-	}
-
 	Mars_StopTrack(); // stop the playback before flipping pages
 	S_Clear();
+
+	if (musictype == mustype_spcm)
+	{
+		Mars_PlayTrack(0, playtrack, filename, -1, 0, looping);
+		return;
+	}
 
 	Mars_PlayTrack(0, playtrack, cd_pwad_name, vgm_tracks[playtrack-1].filepos, vgm_tracks[playtrack-1].size, looping);
 }
