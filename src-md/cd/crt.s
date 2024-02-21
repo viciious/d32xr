@@ -610,6 +610,7 @@ NextDirEntry:
 1:
         tst.b   (a0,d2.w)               /* record length */
         bne.b   2f
+        move.w  #2048,DIR_ENTRY
         moveq   #ERR_NO_MORE_ENTRIES,d0
         rts
 2:
