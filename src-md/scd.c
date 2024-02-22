@@ -55,8 +55,11 @@ void wait_do_cmd(char cmd)
 int64_t scd_open_file(const char *name)
 {
     int i;
-    int length, offset;
     char *scdfn = (char *)0x600000; /* word ram on MD side (in 1M mode) */
+    union {
+        int lo[2];
+        int64_t value;
+    } handle;
 
     for (i = 0; name[i]; i++)
         *scdfn++ = name[i];
@@ -65,13 +68,11 @@ int64_t scd_open_file(const char *name)
     write_long(0xA12010, 0x0C0000); /* word ram on CD side (in 1M mode) */
     wait_do_cmd('F');
     wait_cmd_ack();
-    length = read_long(0xA12020);
-    offset = read_long(0xA12024);
+    handle.lo[0] = read_long(0xA12020);
+    handle.lo[1] = read_long(0xA12024);
     write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
 
-    if (length < 0)
-        return length;
-    return ((int64_t)length << 32) | offset;
+    return handle.value;
 }
 
 int64_t scd_read_directory(char *buf)

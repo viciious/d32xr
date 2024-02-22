@@ -38,12 +38,12 @@ static int cd_init(void)
 
 int64_t open_file(const char *name)
 {
-    int32_t i;
+    int32_t i, r;
     int32_t length, offset;
     char temp[256];
 
     if (cd_init() < 0)
-        return -1;
+        return -3;
 
     i = mystrlen(name);
     while (i && (name[i] != '/'))
@@ -60,29 +60,46 @@ int64_t open_file(const char *name)
             temp[0] = '/';
             temp[1] = 0;
         }
-        if (set_cwd(temp) < 0)
+
+        r = set_cwd(temp);
+        if (r < 0)
         {
             // error setting working directory
-            return -1;
+            return r;
         }
         memcpy(temp, &name[i+1], mystrlen(&name[i+1])+1);
         temp[255] = 0;
     }
     else
     {
-        if (set_cwd("/") < 0)
+        r = set_cwd("/");
+        if (r < 0)
         {
             // error setting working directory
-            return -1;
+            return r;
         }
         memcpy(temp, name, mystrlen(name)+1);
         temp[255] = 0;
     }
 
-    if (find_dir_entry(temp) < 0)
+    while (1)
     {
-        // error finding entry
-        return -1;
+        r = find_dir_entry(temp);
+        if (r >= 0)
+            break;
+
+        if (r == ERR_NAME_NOT_FOUND)
+        {
+            r = next_dir_sec();
+            if (r == ERR_NO_MORE_ENTRIES)
+            {
+                // error finding entry
+                return -1;
+            }
+        }
+
+        if (r < 0)
+            return r;
     }
 
     offset = DENTRY_OFFSET;
