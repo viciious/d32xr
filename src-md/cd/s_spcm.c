@@ -44,6 +44,7 @@ typedef struct
     uint8_t playing;
     uint8_t sector_num, sector_cnt;
     uint8_t state;
+    uint8_t repeat;
 } s_spcm_t;
 
 static s_spcm_t track = { 0 };
@@ -144,7 +145,9 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
     {
     case SPCM_STATE_PLAYING:
         if (!spcm->playing) {
-            spcm->state = SPCM_STATE_SUSPENDED;
+            pcm_set_off(spcm->chan_id);
+            stop_read_cd();
+            spcm->state = SPCM_STATE_STOPPED;
             return;
         }
 
@@ -177,8 +180,15 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
         spcm->block++;
         if (spcm->block > spcm->final_block)
         {
-            spcm->block = spcm->start_block;
-            spcm->state = SPCM_STATE_PLAYING;
+            if (spcm->repeat)
+            {
+                spcm->block = spcm->start_block;
+                spcm->state = SPCM_STATE_PLAYING;
+            }
+            else
+            {
+                spcm->playing = 0;
+            }
         }
         else if (++spcm->sector_num == spcm->sector_cnt)
         {
@@ -206,13 +216,9 @@ void S_SPCM_Suspend(void)
     }
 
     spcm->playing = 0;
-    while (spcm->state != SPCM_STATE_SUSPENDED) {
+    while (spcm->state != SPCM_STATE_STOPPED) {
         S_SPCM_UpdateTrack(spcm);
     }
-
-    pcm_set_off(spcm->chan_id);
-    stop_read_cd();
-    spcm->state = SPCM_STATE_STOPPED;
 }
 
 void S_SPCM_Unsuspend(void)
@@ -249,7 +255,7 @@ void S_SPCM_Tick(void)
     spcm_tic++;
 }
 
-int S_SCM_PlayTrack(const char *name)
+int S_SCM_PlayTrack(const char *name, int repeat)
 {
     int32_t length, offset;
     int64_t lo;
@@ -278,6 +284,7 @@ int S_SCM_PlayTrack(const char *name)
     spcm->state = SPCM_STATE_STOPPED;
     spcm->startpos = SPCM_LEFT_CHAN_SOFFSET;
     spcm->looppos = SPCM_LEFT_CHAN_SOFFSET;
+    spcm->repeat = repeat;
 
     pcm_set_timer(SPCM_TIMER_BPM); // 60Hz
 

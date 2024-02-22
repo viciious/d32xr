@@ -671,6 +671,12 @@ start_music:
         /* we read SPCM from CD */
         lea     8(sp),sp
 
+        moveq   #0,d1
+        tst.w   fm_rep
+        beq.b   03f
+        moveq   #1,d1
+03:
+        move.l  d1,-(sp)
         lea     vgm_lzss_buf,a1
         move.l  a1,-(sp)
         jsr     scd_play_spcm_track

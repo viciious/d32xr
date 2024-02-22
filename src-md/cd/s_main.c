@@ -170,9 +170,9 @@ void S_UpdateSPCM(void)
     S_SPCM_Update();
 }
 
-int S_PlaySPCMTrack(const char *name)
+int S_PlaySPCMTrack(const char *name, int repeat)
 {
-    return S_SCM_PlayTrack(name);
+    return S_SCM_PlayTrack(name, repeat);
 }
 
 void S_StopSPCMTrack(void)

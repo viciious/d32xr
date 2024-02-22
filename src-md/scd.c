@@ -122,13 +122,13 @@ void scd_switch_to_bank(int bank)
     write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
 }
 
-void scd_play_spcm_track(const char *name)
+void scd_play_spcm_track(const char *name, int repeat)
 {
     char *scdWordRam = (char *)0x600000; /* word ram on MD side (in 1M mode) */
 
     memcpy(scdWordRam, name, strlen(name)+1);
-
     write_long(0xA12010, 0x0C0000); /* word ram on CD side (in 1M mode) */
+    write_long(0xA12014, repeat);
     wait_do_cmd('Q'); // PlaySPCMTrack command
     wait_cmd_ack();
     write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
