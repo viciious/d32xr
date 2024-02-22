@@ -161,6 +161,7 @@ StopPlayback:
 SetVolume:
         move.w  #0x0085,d0              /* BIOS_FDRSET - set audio volume */
         move.w  0x8010.w,d1             /* cd volume (0 to 1024) */
+        move.w  d1,CDA_VOLUME
         jsr     0x5F22.w                /* call CDBIOS function */
 
         move.b  #'D,0x800F.w            /* sub comm port = DONE */
@@ -1055,6 +1056,11 @@ TEMP_NAME:
         .global DISC_BUFFER
 DISC_BUFFER:
         .space  2048
+
+        .align  2
+CDA_VOLUME:
+        .global CDA_VOLUME
+        .word   0
 
         .global _start
 _start:
