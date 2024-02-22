@@ -23,7 +23,7 @@ void S_StopSource(uint8_t src_id);
 void S_PUnPSource(uint8_t src_id, uint8_t pause);
 uint16_t S_GetSourcePosition(uint8_t src_id);
 
-int S_PlaySPCMTrack(const char *name);
+int S_PlaySPCMTrack(const char *name, int repeat);
 void S_StopSPCMTrack(void);
 void S_UpdateSPCM(void);
 

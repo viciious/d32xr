@@ -256,7 +256,12 @@ SfxCopyBuffersFromCDFileWaitAck:
 
 PlaySPCMTrack:
         jsr     switch_banks
-        move.l  #0x0C0000,d0            /* file name */
+
+        moveq   #0,d0
+
+        move.l  0x8014.w,d0             /* repeat/autoloop flag */
+        move.l  d0,-(sp)
+        move.l  0x8010.w,d0             /* file name */
         move.l  d0,-(sp)
 
         jsr     S_PlaySPCMTrack
