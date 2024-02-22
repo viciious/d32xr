@@ -719,7 +719,10 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 
 	if (musictype == mustype_cd)
 	{
-		if (cdtrack == cdtrack_none)
+		// ignore the first data track
+		int num_cd_tracks = (int)mars_num_cd_tracks - 1;
+
+		if (cdtrack == cdtrack_none || num_cd_tracks <= 0)
 		{
 			S_StopSong();
 			return;
@@ -727,15 +730,16 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 
 		if (S_CDAvailable())
 		{
-			int num_map_tracks = (int)mars_num_cd_tracks + cdtrack_lastmap;
+			int num_map_tracks = num_cd_tracks + cdtrack_lastmap;
 
 			/* there is a disc with at least enough tracks */
 			if (cdtrack <= cdtrack_title)
-				playtrack = cdtrack + mars_num_cd_tracks;
+				playtrack = cdtrack + num_cd_tracks;
 			else if (num_map_tracks > 0)
 				playtrack = 1 + (cdtrack - 1) % num_map_tracks;
 			else
-				playtrack = cdtrack_intermission + mars_num_cd_tracks;
+				playtrack = cdtrack_intermission + num_cd_tracks;
+			playtrack++;
 		}
 
 		if (playtrack < 0)
