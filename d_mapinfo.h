@@ -58,6 +58,7 @@ typedef struct
 	char *intermissionMus;
 	char *victoryMus;
 	char *endMus;
+	char *spcmDir;
 	VINT borderFlatNum;
 	VINT titleTime;
 	VINT creditsTime;
