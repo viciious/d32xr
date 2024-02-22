@@ -765,8 +765,16 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 	}
 	else if (musictype == mustype_spcm)
 	{
-		playtrack = cdtrack;
-		D_snprintf(filename, sizeof(filename), "/D1SPCM/%02d.PCM", playtrack);
+		if (*gameinfo.spcmDir)
+		{
+			playtrack = cdtrack;
+			D_snprintf(filename, sizeof(filename), "/%s/%02d.PCM", gameinfo.spcmDir, playtrack);
+		}
+		else
+		{
+			S_StopSong();
+			return;			
+		}
 	}
 
 	curmusic = musiclump;
