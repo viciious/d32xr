@@ -810,6 +810,8 @@ NextDirSector:
 | Set current working directory using path at a0
 
 SetCWD:
+        jsr     S_SPCM_Suspend
+
         cmpi.b  #0x2F,(a0)              /* check for leading "/" */
         bne.b   0f                      /* relative to cwd */
         /* start at root dir */
@@ -865,6 +867,8 @@ SetCWD:
 | Load file in CWD with name at a0 to memory at a1
 
 LoadFile:
+        jsr     S_SPCM_Suspend
+
         movem.l a0-a1,-(sp)
         bsr     FirstDirSector
         movem.l (sp)+,a0-a1
@@ -938,9 +942,6 @@ ReadCD:
 
 BeginReadCD:
         movem.l d0-d1/a0-a1,-(sp)
-
-        move.l  d0,CURR_OFFSET
-
 0:
         move.w  #0x0089,d0              /* CDCSTOP */
         jsr     0x5F22.w                /* call CDBIOS function */

@@ -641,12 +641,6 @@ start_music:
         btst    #0,d0               /* check if we read from CD */
         beq.b   0f
 
-        /* CD VGM playback */
-        move.l  0xA1512C,d1         /* length in COMM12 */
-        move.l  d1,-(sp)
-        move.l  0xA15128,d1         /* offset in COMM8 */
-        move.l  d1,-(sp)
-
         move.w  0xA15100,d0
         eor.w   #0x8000,d0
         move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
@@ -662,15 +656,7 @@ start_music:
         btst    #1,d0               /* check if we read SPCM */
         beq.b   01f
 
-        move.w  0xA15100,d0
-        or.w    #0x8000,d0
-        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
-
-        move.w  #0,0xA15120         /* done */
-
         /* we read SPCM from CD */
-        lea     8(sp),sp
-
         moveq   #0,d1
         tst.w   fm_rep
         beq.b   03f
@@ -682,9 +668,21 @@ start_music:
         jsr     scd_play_spcm_track
         lea     4(sp),sp
 
+        move.w  0xA15100,d0
+        or.w    #0x8000,d0
+        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        move.w  #0,0xA15120         /* done */
+
         bra     main_loop
 
 01:
+        /* CD VGM playback */
+        move.l  0xA1512C,d1         /* length in COMM12 */
+        move.l  d1,-(sp)
+        move.l  0xA15128,d1         /* offset in COMM8 */
+        move.l  d1,-(sp)
+
         /* we read VGM from CD */
         lea     vgm_lzss_buf,a1
         move.l  a1,-(sp)
