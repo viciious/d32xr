@@ -28,6 +28,8 @@ void S_Clear(void)
     S_StopSources();
 
     S_ClearChannels();
+
+    S_StopSPCMTrack();
 }
 
 void S_Update(void)
