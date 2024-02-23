@@ -785,7 +785,10 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 		}
 
 		if (curcdtrack == cdtrack && muslooping == looping)
-			return;		
+		{
+			Mars_MCDResumeSPCMTrack();
+			return;
+		}
 	}
 
 	curmusic = musiclump;

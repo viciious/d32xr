@@ -179,5 +179,15 @@ int S_PlaySPCMTrack(const char *name, int repeat)
 
 void S_StopSPCMTrack(void)
 {
-    S_SPCM_StopTrack();
+    S_SPCM_Suspend();
+}
+
+void S_PauseSPCMTrack(void)
+{
+    S_SPCM_Suspend();
+}
+
+void S_UnpauseSPCMTrack(void)
+{
+    S_SPCM_Unsuspend();
 }

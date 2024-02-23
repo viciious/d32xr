@@ -482,6 +482,7 @@ no_cmd:
         dc.w    seek_cd_file - prireqtbl
         dc.w    load_sfx_cd_fileofs - prireqtbl
         dc.w    read_cd_directory - prireqtbl
+        dc.w    resume_spcm_track - prireqtbl
 
 | process request from Secondary SH2
 handle_sec_req:
@@ -910,7 +911,7 @@ stop_music:
         tst.w   use_cd
         bne.b   stop_cd
 
-        |jsr     scd_stop_spcm_track
+        jsr     scd_stop_spcm_track
 
         /* stop VGM */
         move.w  #0x0100,0xA11100    /* Z80 assert bus request */
@@ -2241,6 +2242,11 @@ read_cd_directory:
         or.w    #0x8000,d0
         move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
 
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+resume_spcm_track:
+        jsr     scd_resume_spcm_track
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 

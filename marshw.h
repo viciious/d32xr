@@ -153,6 +153,7 @@ void Mars_MCDStopSfx(uint8_t src_id);
 void Mars_MCDFlushSfx(void);
 void Mars_MCDLoadSfxFileOfs(uint16_t start_id, int numsfx, const char *name, int *offsetlen);
 int Mars_MCDReadDirectory(const char *path);
+void Mars_MCDResumeSPCMTrack(void);
 
 // copies bytes from the framebuffer into AUX storage area on the MD
 void Mars_StoreAuxBytes(int numbytes);

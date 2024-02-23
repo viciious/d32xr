@@ -98,7 +98,7 @@ RequestTable:
         dc.w    SfxUpdateSource - RequestTable
         dc.w    SetVolume - RequestTable
         dc.w    SfxRewindSource - RequestTable
-        dc.w    UknownCmd - RequestTable
+        dc.w    ResumeSPCMTrack - RequestTable
         dc.w    UknownCmd - RequestTable
         dc.w    PauseResume - RequestTable
 
@@ -231,7 +231,7 @@ SfxCopyBufferWaitAck:
         bra.w   WaitCmd
 
 SfxCopyBuffersFromCDFile:
-        jsr     S_SPCM_Suspend
+        jsr     S_PauseSPCMTrack
 
         jsr     switch_banks
 
@@ -278,6 +278,11 @@ StopSPCMTrack:
         move.b  #'D,0x800F.w            /* sub comm port = DONE */
         bra     WaitAck
 
+ResumeSPCMTrack:
+        jsr     S_UnpauseSPCMTrack
+
+        move.b  #'D,0x800F.w            /* sub comm port = DONE */
+        bra     WaitAck
 
 SfxPlaySource:
 | uint8_t S_PlaySource(uint8_t src_id, uint16_t buf_id, uint16_t freq, uint8_t pan, uint8_t vol, uint8_t autoloop);
@@ -391,7 +396,7 @@ SfxSuspendUpdates:
         bra     WaitAck
 
 OpenFile:
-        jsr     S_SPCM_Suspend
+        jsr     S_PauseSPCMTrack
 
         jsr     switch_banks
 
@@ -409,7 +414,7 @@ OpenFile:
         bra     WaitAck
 
 ReadDir:
-        jsr     S_SPCM_Suspend
+        jsr     S_PauseSPCMTrack
 
         jsr     switch_banks
 
@@ -427,7 +432,7 @@ ReadDir:
         bra     WaitAck
 
 ReadSectors:
-        jsr     S_SPCM_Suspend
+        jsr     S_PauseSPCMTrack
 
         move.l  0x8018.w,d0             /* length */
         move.l  d0,-(sp)
@@ -810,7 +815,7 @@ NextDirSector:
 | Set current working directory using path at a0
 
 SetCWD:
-        jsr     S_SPCM_Suspend
+        jsr     S_PauseSPCMTrack
 
         cmpi.b  #0x2F,(a0)              /* check for leading "/" */
         bne.b   0f                      /* relative to cwd */
@@ -867,7 +872,7 @@ SetCWD:
 | Load file in CWD with name at a0 to memory at a1
 
 LoadFile:
-        jsr     S_SPCM_Suspend
+        jsr     S_PauseSPCMTrack
 
         movem.l a0-a1,-(sp)
         bsr     FirstDirSector

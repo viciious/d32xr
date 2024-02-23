@@ -141,6 +141,13 @@ void scd_stop_spcm_track(const char *name)
     write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
 }
 
+void scd_resume_spcm_track(void)
+{
+    wait_do_cmd('X'); // ResumeSPCMTrack command
+    wait_cmd_ack();
+    write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
+}
+
 uint16_t InitCD(void)
 {
     char *bios;
