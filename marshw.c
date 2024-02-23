@@ -371,6 +371,12 @@ void Mars_PlayTrack(char use_cda, int playtrack, const char *name, int offset, i
 	}
 }
 
+void Mars_MCDResumeSPCMTrack(void)
+{
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM0 = 0x2C00;
+}
+
 void Mars_MCDLoadSfx(uint16_t id, void *data, uint32_t data_len)
 {
 	int i;

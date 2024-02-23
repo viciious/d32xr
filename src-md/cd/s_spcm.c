@@ -300,5 +300,7 @@ int S_SCM_PlayTrack(const char *name, int repeat)
 
 void S_SPCM_StopTrack(void)
 {
+    s_spcm_t *spcm = &track; 
     S_SPCM_Suspend();
+    spcm->num_channels = 0;
 }
