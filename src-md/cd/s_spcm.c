@@ -146,7 +146,6 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
     case SPCM_STATE_PLAYING:
         if (!spcm->playing) {
             pcm_set_off(spcm->chan_id);
-            stop_read_cd();
             spcm->state = SPCM_STATE_STOPPED;
             return;
         }
@@ -166,8 +165,10 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
         break;
 
     case SPCM_STATE_WAIT_BUF:
-        if (S_SPCM_FrontBuffer(spcm) == spcm->frontbuf) {
-            break;
+        if (spcm->playing) {
+            if (S_SPCM_FrontBuffer(spcm) == spcm->frontbuf) {
+                break;
+            }
         }
 
         spcm->state = SPCM_STATE_PAINT;
