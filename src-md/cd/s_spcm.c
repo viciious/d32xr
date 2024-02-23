@@ -219,6 +219,8 @@ void S_SPCM_Suspend(void)
     while (spcm->state != SPCM_STATE_STOPPED) {
         S_SPCM_UpdateTrack(spcm);
     }
+
+    pcm_load_zero(SPCM_LEFT_CHAN_SOFFSET, SPCM_BUF_SIZE*SPCM_NUM_BUFFERS);
 }
 
 void S_SPCM_Unsuspend(void)
