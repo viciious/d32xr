@@ -52,8 +52,17 @@ int64_t open_file(const char *name)
     {
         if (i)
         {
-            memcpy(temp, name, i);
-            temp[i] = 0;
+            if (name[0] != '/')
+            {
+                temp[0] = '/';
+                memcpy(temp + 1, name, i);
+                temp[i + 1] = 0;
+            }
+            else
+            {
+                memcpy(temp, name, i);
+                temp[i] = 0;
+            }
         }
         else
         {
