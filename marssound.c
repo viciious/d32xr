@@ -777,11 +777,11 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 		if (playtrack < 0)
 		{
 			playtrack = -playtrack;
-			D_snprintf(filename, sizeof(filename), "/%s/_%02d.PCM", gameinfo.spcmDir, playtrack);
+			D_snprintf(filename, sizeof(filename), "%s/_%02d.PCM", gameinfo.spcmDir, playtrack);
 		}
 		else
 		{
-			D_snprintf(filename, sizeof(filename), "/%s/%02d.PCM", gameinfo.spcmDir, playtrack);
+			D_snprintf(filename, sizeof(filename), "%s/%02d.PCM", gameinfo.spcmDir, playtrack);
 		}
 
 		if (curcdtrack == cdtrack && muslooping == looping)
