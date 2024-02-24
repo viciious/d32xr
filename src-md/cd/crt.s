@@ -265,7 +265,7 @@ PlaySPCMTrack:
         move.l  d0,-(sp)
 
         jsr     S_PlaySPCMTrack
-        lea     4(sp),sp                /* clear the stack */
+        lea     8(sp),sp                /* clear the stack */
 
         move.w  d0,0x8020.w             /* 0 if the playback failed */
 

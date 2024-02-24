@@ -665,8 +665,10 @@ start_music:
         move.l  d1,-(sp)
         lea     vgm_lzss_buf,a1
         move.l  a1,-(sp)
+        move.w  #0x2700,sr          /* disable ints */
         jsr     scd_play_spcm_track
-        lea     4(sp),sp
+        move.w  #0x2000,sr          /* enable ints */
+        lea     8(sp),sp
 
         move.w  0xA15100,d0
         or.w    #0x8000,d0
