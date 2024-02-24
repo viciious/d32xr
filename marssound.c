@@ -87,6 +87,8 @@ sfxchannel_t	sfxchannels[SFXCHANNELS];
 VINT 			sfxvolume = 64;	/* range 0 - 64 */
 VINT 			musicvolume = 64;	/* range 0 - 64 */
 
+static VINT 	oldmusvol = -1;
+
 VINT			musictype = mustype_fm;
 
 static VINT		curmusic, muslooping = 0, curcdtrack = cdtrack_none;
@@ -602,8 +604,6 @@ void S_PreUpdateSounds(void)
 
 void S_UpdateSounds(void)
 {
-	static VINT oldmusvol = -1;
-
 	if (oldmusvol != musicvolume) {
 		if (S_CDAvailable()) {
 			int vol = musicvolume*4;
@@ -794,6 +794,7 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 	curmusic = musiclump;
 	curcdtrack = cdtrack;
 	muslooping = looping;
+	oldmusvol = -1; // force-update music volume
 
 	if (musictype == mustype_none)
 		return;
