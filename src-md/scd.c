@@ -57,7 +57,7 @@ int64_t scd_open_file(const char *name)
     int i;
     char *scdfn = (char *)0x600000; /* word ram on MD side (in 1M mode) */
     union {
-        int lo[2];
+        int32_t lo[2];
         int64_t value;
     } handle;
 
@@ -77,23 +77,26 @@ int64_t scd_open_file(const char *name)
 
 int64_t scd_read_directory(char *buf)
 {
-    int length, nentries;
     char *scdWordRam = (char *)0x600000; /* word ram on MD side (in 1M mode) */
+    union {
+        int32_t ln[2]; /* length, num entries */
+        int64_t value;
+    } res;
 
     memcpy(scdWordRam, buf, strlen(buf)+1);
 
     write_long(0xA12010, 0x0C0000); /* word ram on CD side (in 1M mode) */
     wait_do_cmd('M'); // ReadDir command
     wait_cmd_ack();
-    length = read_long(0xA12020);
-    nentries = read_long(0xA12024);
+    res.ln[0] = read_long(0xA12020);
+    res.ln[1] = read_long(0xA12024);
     write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
 
-    if (nentries < 0)
-        return nentries;
+    if (res.value < 0)
+        return res.value;
 
-    memcpy(buf, scdWordRam, length);
-    return ((int64_t)length << 32) | nentries;
+    memcpy(buf, scdWordRam, res.ln[0]);
+    return res.value;
 }
 
 void scd_read_sectors(void *ptr, int lba, int len, void (*wait)(void))
