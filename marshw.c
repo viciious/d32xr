@@ -375,6 +375,7 @@ void Mars_MCDResumeSPCMTrack(void)
 {
 	while (MARS_SYS_COMM0);
 	MARS_SYS_COMM0 = 0x2C00;
+	while (MARS_SYS_COMM0);
 }
 
 void Mars_MCDLoadSfx(uint16_t id, void *data, uint32_t data_len)

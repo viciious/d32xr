@@ -2246,7 +2246,9 @@ read_cd_directory:
         bra     main_loop
 
 resume_spcm_track:
+        move.w  #0x2700,sr          /* disable ints */
         jsr     scd_resume_spcm_track
+        move.w  #0x2000,sr          /* enable ints */
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
