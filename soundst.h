@@ -78,6 +78,7 @@ enum
 	mustype_fm,
 	mustype_cd,
 	mustype_spcm,
+	mustype_spcmhack, 				/* forces refresh of the current SPCM dir */
 };
 
 enum
@@ -108,6 +109,8 @@ extern	int		samplecount;		/* 22khz sample counter in DSP memory */
 
 extern	VINT	musictype;
 
+extern 	char 	spcmDir[9];
+
 /*============================================================================ */
 
 void S_Init(void);
@@ -119,4 +122,4 @@ void S_UpdateSounds(void);
 void S_PreUpdateSounds(void);
 int S_CDAvailable(void);
 void S_SetMusicType(int t);
-
+void S_SetSPCMDir(const char *dir);

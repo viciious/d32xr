@@ -8,7 +8,7 @@
 #endif
 
 #define MOVEWAIT		(I_IsPAL() ? TICVBLS*5 : TICVBLS*6)
-#define STARTY		48
+#define STARTY		38
 #define CURSORX		(80)
 #define CURSORWIDTH	24
 #define ITEMX		(CURSORX+CURSORWIDTH)
@@ -30,6 +30,7 @@ typedef enum
 	mi_soundvol,
 	mi_music,
 	mi_musicvol,
+	mi_spcmpack,
 #ifndef DISABLE_DMA_SOUND
 	mi_sfxdriver,
 #endif
@@ -209,10 +210,14 @@ void O_Init (void)
 	sliders[si_musvolume].maxval = 8;
 	sliders[si_musvolume].curval = 8*musicvolume/64;
 
+	D_memcpy(menuitem[mi_spcmpack].name, "SPCM", 4);
+	menuitem[mi_spcmpack].x = ITEMX;
+	menuitem[mi_spcmpack].y = STARTY+ITEMSPACE*5;
+
 #ifndef DISABLE_DMA_SOUND
 	D_memcpy(menuitem[mi_sfxdriver].name, "SFX driver", 11);
 	menuitem[mi_sfxdriver].x = ITEMX;
-	menuitem[mi_sfxdriver].y = STARTY+ITEMSPACE*5;
+	menuitem[mi_sfxdriver].y = STARTY+ITEMSPACE*6;
 #endif
 
 	D_memcpy(menuitem[mi_resolution].name, "Resolution", 11);
@@ -252,6 +257,7 @@ void O_Init (void)
 	if (cd_avail) /* CDA or MD+ */
 	{
 		menuscreen[ms_audio].numitems++;
+		menuscreen[ms_audio].numitems++; // SPCM
 #ifndef DISABLE_DMA_SOUND
 		if (cd_avail & 0x1) /* CD, not MD+ */
 			menuscreen[ms_audio].numitems++;
@@ -556,8 +562,25 @@ void O_Control (player_t *player)
 
 			if (screenpos == ms_audio)
 			{
+				int i;
 				int oldmusictype = o_musictype;
 				int oldsfxdriver = o_sfxdriver;
+				int oldspcmpack, curpack, numpacks;
+
+				curpack = -1;
+				numpacks = 0;
+				for (i = 0; i < MAX_SPCM_PACKS; i++) {
+					if (!gameinfo.spcmDirList[i][0]) {
+						numpacks = i;
+						break;
+					}
+					if (!D_strcasecmp(gameinfo.spcmDirList[i], spcmDir)) {
+						curpack = i;
+					}
+				}
+				if (i == MAX_SPCM_PACKS)
+					numpacks = MAX_SPCM_PACKS;
+				oldspcmpack = curpack;
 
 				if (buttons & BT_RIGHT)
 				{
@@ -567,6 +590,10 @@ void O_Control (player_t *player)
 							o_musictype = mustype_spcm;
 						if (o_musictype >= mustype_cd && !S_CDAvailable())
 							o_musictype = mustype_fm;
+						break;
+					case mi_spcmpack:
+						if (++curpack >= numpacks)
+							curpack = numpacks-1;
 						break;
 #ifndef DISABLE_DMA_SOUND
 					case mi_sfxdriver:
@@ -583,6 +610,10 @@ void O_Control (player_t *player)
 					case mi_music:
 						if (--o_musictype < mustype_none)
 							o_musictype = mustype_none;
+						break;
+					case mi_spcmpack:
+						if (--curpack < 0)
+							curpack = 0;
 						break;
 #ifndef DISABLE_DMA_SOUND
 					case mi_sfxdriver:
@@ -602,6 +633,13 @@ void O_Control (player_t *player)
 				if (oldsfxdriver != o_sfxdriver)
 				{
 					S_SetSoundDriver(o_sfxdriver);
+				}
+
+				if (oldspcmpack != curpack && curpack != -1)
+				{
+					S_SetSPCMDir(gameinfo.spcmDirList[curpack]);
+					if (musictype == mustype_spcm)
+						S_SetMusicType(mustype_spcmhack); // force refresh of the current dir
 				}
 			}
 
@@ -741,6 +779,12 @@ void O_Drawer (void)
 		case mustype_spcm:
 			print(menuitem[mi_music].x + 85, menuitem[mi_music].y, "spcm");
 			break;
+		}
+
+		if (spcmDir[0] != '\0') {
+			print(menuitem[mi_spcmpack].x + 85, menuitem[mi_spcmpack].y, spcmDir);
+		} else {
+			print(menuitem[mi_spcmpack].x + 85, menuitem[mi_spcmpack].y, "NONE");
 		}
 
 #ifndef DISABLE_DMA_SOUND
