@@ -909,9 +909,11 @@ start_cd:
 
 stop_music:
         tst.w   use_cd
-        bne.b   stop_cd
+        bne.w   stop_cd
 
+        move.w  #0x2700,sr          /* disable ints */
         jsr     scd_stop_spcm_track
+        move.w  #0x2000,sr          /* enable ints */
 
         /* stop VGM */
         move.w  #0x0100,0xA11100    /* Z80 assert bus request */
