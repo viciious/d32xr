@@ -82,6 +82,8 @@ static uint8_t	snd_init = 0;
 static lumpinfo_t *vgm_tracks;
 uint8_t			*vgm_ptr;
 
+char 			spcmDir[9] = { 0 };
+
 sfxchannel_t	sfxchannels[SFXCHANNELS];
 
 VINT 			sfxvolume = 64;	/* range 0 - 64 */
@@ -638,14 +640,21 @@ void S_UpdateSounds(void)
 	}
 }
 
+void S_SetSPCMDir(const char *dir)
+{
+	D_snprintf(spcmDir, sizeof(spcmDir), "%s", dir);
+}
+
 void S_SetMusicType(int newtype)
 {
 	int savemus, savecd;
 
-	if (newtype < mustype_none || newtype > mustype_spcm)
+	if (newtype < mustype_none || newtype > mustype_spcmhack)
 		return;
 	if (musictype == newtype)
 		return;
+	if (newtype == mustype_spcmhack)
+		newtype = mustype_spcm;
 	if (newtype >= mustype_cd && !S_CDAvailable())
 		return;
 
@@ -770,18 +779,18 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 			S_StopSong();
 			return;
 		}
-		if (*gameinfo.spcmDir == '\0')
+		if (*spcmDir == '\0')
 			return;
 
 		playtrack = cdtrack;
 		if (playtrack < 0)
 		{
 			playtrack = -playtrack;
-			D_snprintf(filename, sizeof(filename), "%s/_%02d.PCM", gameinfo.spcmDir, playtrack);
+			D_snprintf(filename, sizeof(filename), "%s/_%02d.PCM", spcmDir, playtrack);
 		}
 		else
 		{
-			D_snprintf(filename, sizeof(filename), "%s/%02d.PCM", gameinfo.spcmDir, playtrack);
+			D_snprintf(filename, sizeof(filename), "%s/%02d.PCM", spcmDir, playtrack);
 		}
 
 		if (curcdtrack == cdtrack && muslooping == looping)

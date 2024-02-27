@@ -452,6 +452,28 @@ void G_Init(void)
 
 	G_InitPlayerResp();
 
+	// make sure SPCM dir is up to date
+	for (i = 0; i < MAX_SPCM_PACKS; i++)
+	{
+		if (!spcmDir[0] || !gameinfo.spcmDirList[i][0]) {
+			i = MAX_SPCM_PACKS;
+			break;
+		}
+		if (!D_strcasecmp(gameinfo.spcmDirList[i], spcmDir)) {
+			break;
+		}
+	}
+
+	// if not found, default to the first dir
+	if (i == MAX_SPCM_PACKS) {
+		S_SetSPCMDir(gameinfo.spcmDirList[0]);
+
+		// revert to FM if SPCM isn't present at all
+		if (*gameinfo.spcmDirList[0] == '\0' && musictype == mustype_spcm) {
+			S_SetMusicType(mustype_fm);
+		}
+	}
+
 	if (!*gameinfo.borderFlat)
 		gameinfo.borderFlat = "ROCKS";
 	if (!*gameinfo.endFlat)

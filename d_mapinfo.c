@@ -288,6 +288,30 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 		mi->interText = value;
 }
 
+static void G_FixSPCMDirList(dgameinfo_t *gi)
+{
+	unsigned i;
+	char list[sizeof(gi->spcmDirList)], *p;
+
+	D_snprintf(list, sizeof(list), "%s", &gi->spcmDirList[0][0]);
+	D_memset(gi->spcmDirList, 0, sizeof(gi->spcmDirList));
+
+	for (i = mystrlen(list); i > 0; i--)  {
+		if (list[i] == ',') {
+			list[i] = 0;
+		}
+	}
+
+	p = list;
+	for (i = 0; i < MAX_SPCM_PACKS; i++) {
+		if (*p == '\0') {
+			break;
+		}
+		D_snprintf(gi->spcmDirList[i], sizeof(gi->spcmDirList[i]), "%s", p);
+		p += mystrlen(p) + 1;
+	}
+}
+
 static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
 {
 	if (!D_strcasecmp(key, "borderFlat"))
@@ -320,8 +344,14 @@ static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
 		gi->stopFireTime = D_atoi(value);
 	else if (!D_strcasecmp(key, "titleStartPos"))
 		gi->titleStartPos = D_atoi(value);
-	else if (!D_strcasecmp(key, "spcmDir"))
-		gi->spcmDir = value;
+	else if (!D_strcasecmp(key, "spcmDirs"))
+	{
+		char *p = &gi->spcmDirList[0][0];
+		D_memset(gi->spcmDirList, 0, sizeof(gi->spcmDirList));
+		D_snprintf(p, sizeof(gi->spcmDirList), "%s", value);
+		p[sizeof(gi->spcmDirList)-2] = '\0';
+		p[sizeof(gi->spcmDirList)-1] = '\0';
+	}
 }
 
 static void G_ClearGameInfo(dgameinfo_t* gi)
@@ -337,7 +367,7 @@ static void G_ClearGameInfo(dgameinfo_t* gi)
 	gi->endMus = "";
 	gi->creditsPage = "";
 	gi->endText = "";
-	gi->spcmDir = "";
+	D_memset(gi->spcmDirList, 0, sizeof(gi->spcmDirList));
 	gi->stopFireTime = -1;
 	gi->titleStartPos = -1;
 }
@@ -440,6 +470,8 @@ dmapinfo_t **G_LoadMaplist(int *pmapcount, dgameinfo_t* gi)
 				Z_Free(gi->data);
 				G_ClearGameInfo(gi);
 			}
+
+			G_FixSPCMDirList(gi);
 			continue;
 		}
 

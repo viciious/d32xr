@@ -35,6 +35,8 @@
 #define MI_SPIDER_SPECIAL2 	64
 #define MI_PISTOL_START 	128
 
+#define MAX_SPCM_PACKS 		3
+
 typedef struct
 {
 	VINT specials;
@@ -58,7 +60,7 @@ typedef struct
 	char *intermissionMus;
 	char *victoryMus;
 	char *endMus;
-	char *spcmDir;
+	char spcmDirList[MAX_SPCM_PACKS][9];
 	VINT borderFlatNum;
 	VINT titleTime;
 	VINT creditsTime;
