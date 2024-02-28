@@ -11,19 +11,15 @@
 #define SPCM_LEFT_CHANNEL_ID   (S_MAX_CHANNELS)
 
 #define SPCM_BUF_NUM_SECTORS   5
-#define SPCM_BUF_SIZE          (SPCM_BUF_NUM_SECTORS*2048)
+#define SPCM_BUF_SIZE          (SPCM_BUF_NUM_SECTORS*2048)  /* 5*2048/21500*1000 = ~476ms */
 #define SPCM_NUM_BUFFERS       5
 
-#define SPCM_TIMER_BPM         3600 /* 60 Hz */
-#define SPCM_WAIT_TICS         12 /* 12*1000/60 = ~200 ms */
-
 // start at 12KiB offset in PCM RAM
-#define SPCM_LEFT_CHAN_SOFFSET  0x3000
+#define SPCM_LEFT_CHAN_SOFFSET 0x3000
 
 enum
 {
     SPCM_STATE_PLAYING,
-    SPCM_STATE_WAIT_DATA,
     SPCM_STATE_WAIT_BUF,
     SPCM_STATE_PAINT,
     SPCM_STATE_STOPPED,
@@ -34,7 +30,6 @@ typedef struct
     int block;
     int start_block;
     int final_block;
-    unsigned data_tic;
     uint16_t startpos;
     uint16_t looppos;
     uint8_t num_channels;
@@ -48,8 +43,6 @@ typedef struct
 } s_spcm_t;
 
 static s_spcm_t track = { 0 };
-
-static volatile unsigned spcm_tic = 0;
 
 // buffer currently being played back by hardware
 int8_t S_SPCM_FrontBuffer(s_spcm_t *spcm) {
@@ -79,14 +72,13 @@ void S_SPCM_UpdateChannel(s_spcm_t *spcm)
         return;
     }
 
+    pcm_set_env(spcm->env);
+
     if (!pcm_is_off(chan_id)) {
-        pcm_set_env(spcm->env);
         return;
     }
 
     // kick off playback
-    pcm_set_env(spcm->env);
-
     pcm_set_freq(SPCM_SAMPLE_RATE);
 
     PCM_PAN = 0xff;
@@ -125,7 +117,7 @@ static int S_SPCM_DMA(s_spcm_t *spcm)
     pcm = (uint8_t *)(woff << 1);
 
     pcm_set_ctrl(0x80 + (doff >> 12)); // make sure PCM chip is ON to write wave memory, and set wave bank
-    return read_cd_pcm(pcm);
+    return dma_cd_sector_pcm(pcm);
 }
 
 void S_SPCM_UpdateTrack(s_spcm_t *spcm)
@@ -143,35 +135,28 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
     {
     case SPCM_STATE_PLAYING:
         if (!spcm->playing) {
+            pcm_load_zero(SPCM_LEFT_CHAN_SOFFSET, SPCM_BUF_SIZE*SPCM_NUM_BUFFERS);
             pcm_set_off(spcm->chan_id);
             spcm->state = SPCM_STATE_STOPPED;
             return;
         }
 
         S_SPCM_BeginRead(spcm);
-        spcm->frontbuf = S_SPCM_FrontBuffer(spcm);
-        spcm->data_tic = spcm_tic;
-        spcm->state = SPCM_STATE_WAIT_DATA;
-        break;
-
-    case SPCM_STATE_WAIT_DATA:
-        if (spcm_tic < spcm->data_tic + SPCM_WAIT_TICS) {
-            break;
-        }
-
+        spcm->frontbuf++;
+        spcm->frontbuf %= SPCM_NUM_BUFFERS;
         spcm->state = SPCM_STATE_WAIT_BUF;
         break;
 
     case SPCM_STATE_WAIT_BUF:
         if (spcm->playing) {
-            uint8_t frontbuf = S_SPCM_FrontBuffer(spcm);
-
             // start the playback, otherwise DMA won't work
             if (pcm_is_off(spcm->chan_id)) {
+                pcm_load_zero(SPCM_LEFT_CHAN_SOFFSET, SPCM_BUF_SIZE*SPCM_NUM_BUFFERS);
+                pcm_loop_markers(SPCM_LEFT_CHAN_SOFFSET + SPCM_BUF_SIZE*SPCM_NUM_BUFFERS);
                 pcm_set_on(spcm->chan_id);
             }
 
-            if (frontbuf == spcm->frontbuf) {
+            if (S_SPCM_FrontBuffer(spcm) == spcm->frontbuf) {
                 break;
             }
         }
@@ -225,8 +210,6 @@ void S_SPCM_Suspend(void)
     while (spcm->state != SPCM_STATE_STOPPED) {
         S_SPCM_UpdateTrack(spcm);
     }
-
-    pcm_load_zero(SPCM_LEFT_CHAN_SOFFSET, SPCM_BUF_SIZE*SPCM_NUM_BUFFERS);
 }
 
 void S_SPCM_Unsuspend(void)
@@ -246,20 +229,12 @@ void S_SPCM_Unsuspend(void)
     spcm->playing = 1;
     spcm->state = SPCM_STATE_PLAYING;
 
-    pcm_load_zero(SPCM_LEFT_CHAN_SOFFSET, SPCM_BUF_SIZE*SPCM_NUM_BUFFERS);
-    pcm_loop_markers(SPCM_LEFT_CHAN_SOFFSET + SPCM_BUF_SIZE*SPCM_NUM_BUFFERS);
-
     S_SPCM_UpdateTrack(spcm);
 }
 
 void S_SPCM_Update(void)
 {
     S_SPCM_UpdateTrack(&track);
-}
-
-void S_SPCM_Tick(void)
-{
-    spcm_tic++;
 }
 
 int S_SCM_PlayTrack(const char *name, int repeat)
@@ -292,10 +267,6 @@ int S_SCM_PlayTrack(const char *name, int repeat)
     spcm->startpos = SPCM_LEFT_CHAN_SOFFSET;
     spcm->looppos = SPCM_LEFT_CHAN_SOFFSET;
     spcm->repeat = repeat;
-
-    pcm_set_timer(SPCM_TIMER_BPM); // 60Hz
-
-    pcm_start_timer(S_SPCM_Tick);
 
     S_SPCM_Unsuspend();
 
