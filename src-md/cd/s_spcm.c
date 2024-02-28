@@ -15,7 +15,7 @@
 #define SPCM_NUM_BUFFERS       5
 
 #define SPCM_TIMER_BPM         3600 /* 60 Hz */
-#define SPCM_WAIT_TICS         23 /* 23*1000/60 = ~383 ms */
+#define SPCM_WAIT_TICS         12 /* 12*1000/60 = ~200 ms */
 
 // start at 12KiB offset in PCM RAM
 #define SPCM_LEFT_CHAN_SOFFSET  0x3000
@@ -95,8 +95,6 @@ void S_SPCM_UpdateChannel(s_spcm_t *spcm)
     pcm_set_start(spcm->startpos>>8, 0);
 
     pcm_set_loop(spcm->looppos);
-
-    pcm_set_on(chan_id);
 }
 
 void S_SPCM_BeginRead(s_spcm_t *spcm)
@@ -166,7 +164,14 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
 
     case SPCM_STATE_WAIT_BUF:
         if (spcm->playing) {
-            if (S_SPCM_FrontBuffer(spcm) == spcm->frontbuf) {
+            uint8_t frontbuf = S_SPCM_FrontBuffer(spcm);
+
+            // start the playback, otherwise DMA won't work
+            if (pcm_is_off(spcm->chan_id)) {
+                pcm_set_on(spcm->chan_id);
+            }
+
+            if (frontbuf == spcm->frontbuf) {
                 break;
             }
         }
@@ -244,7 +249,6 @@ void S_SPCM_Unsuspend(void)
     pcm_load_zero(SPCM_LEFT_CHAN_SOFFSET, SPCM_BUF_SIZE*SPCM_NUM_BUFFERS);
     pcm_loop_markers(SPCM_LEFT_CHAN_SOFFSET + SPCM_BUF_SIZE*SPCM_NUM_BUFFERS);
 
-    // start the playback, otherwise DMA won't work
     S_SPCM_UpdateTrack(spcm);
 }
 
