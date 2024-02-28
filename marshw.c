@@ -340,7 +340,7 @@ void Mars_UseCD(int usecd)
 void Mars_PlayTrack(char use_cda, int playtrack, const char *name, int offset, int length, char looping)
 {
 	int len;
-	int backup[128];
+	int backup[256];
 	char *fb = (char *)(&MARS_FRAMEBUFFER + 0x100), *ptr;
 	int send_fn = !use_cda && name ? 0x1 : 0;
 	int use_cdf = send_fn && offset < 0 ? 0x2 : 0;
@@ -728,7 +728,7 @@ void Mars_SwapWordColumnWithMDVRAM(int c)
 int Mars_OpenCDFileByName(const char *name, int *poffset)
 {
 	int len;
-	int backup[16];
+	int backup[256];
 	char *fb = (char *)(&MARS_FRAMEBUFFER + 0x100), *ptr;
 
 	if (!*name) {
