@@ -538,7 +538,7 @@ read_cd:
         move.l  8(sp),d1                /* length */
         movea.l 12(sp),a0               /* buffer */
         movem.l d2-d7/a2-a6,-(sp)
-        jsr     ReadCD
+        jsr     ReadSectorsSUB
         movem.l (sp)+,d2-d7/a2-a6
         rts
 
@@ -552,20 +552,12 @@ begin_read_cd:
         movem.l (sp)+,d2-d7/a2-a6
         rts
 
-| int read_cd_pcm(void *buffer);
-        .global read_cd_pcm
-read_cd_pcm:
+| int dma_cd_sector_pcm(void *buffer);
+        .global dma_cd_sector_pcm
+dma_cd_sector_pcm:
         movea.l 4(sp),a0                /* buffer */
         movem.l d2-d7/a2-a6,-(sp)
-        jsr     ReadCDPCM
-        movem.l (sp)+,d2-d7/a2-a6
-        rts
-
-| int stop_read_cd(void);
-        .global stop_read_cd
-stop_read_cd:
-        movem.l d2-d7/a2-a6,-(sp)
-        jsr     StopReadCD
+        jsr     ReadSectorPCM
         movem.l (sp)+,d2-d7/a2-a6
         rts
 
@@ -611,16 +603,6 @@ next_dir_entry:
         movem.l (sp)+,d2-d7/a2-a6
         rts
 
-| int load_file(char *filename, void *buffer);
-        .global load_file
-load_file:
-        movea.l 4(sp),a0                /* filename */
-        movea.l 8(sp),a1                /* buffer */
-        movem.l d2-d7/a2-a6,-(sp)
-        jsr     LoadFile
-        movem.l (sp)+,d2-d7/a2-a6
-        rts
-
 |----------------------------------------------------------------------|
 |                      File System Support Code                        |
 |----------------------------------------------------------------------|
@@ -651,7 +633,7 @@ InitCD:
         move.l  d2,d0                   /* sector */
         moveq   #1,d1                   /* # sectors */
         move.w  d2,-(sp)
-        bsr     ReadCD
+        bsr     ReadSectorsSUB
         move.w  (sp)+,d2
         tst.l   d0
         bmi.b   9f                      /* error */
@@ -779,7 +761,7 @@ FirstDirSector:
         beq.b   0f                      /* already loaded, just reset length */
         moveq   #1,d1
         lea     DISC_BUFFER,a0          /* buffer */
-        bsr     ReadCD
+        bsr     ReadSectorsSUB
         bmi.b   1f
         /* disc buffer holds first sector of dir */
         move.l  CWD_OFFSET,CURR_OFFSET
@@ -804,7 +786,7 @@ NextDirSector:
         move.l  CURR_OFFSET,d0
         moveq   #1,d1
         lea     DISC_BUFFER,a0          /* buffer */
-        bsr     ReadCD
+        bsr     ReadSectorsSUB
         bmi     1f
         /* disc buffer holds next sector of dir */
         clr.w   DIR_ENTRY
@@ -869,41 +851,24 @@ SetCWD:
         moveq   #ERR_NAME_NOT_FOUND,d0
         rts
 
-| Load file in CWD with name at a0 to memory at a1
+| Begin reading d1 sectors starting at d0
 
-LoadFile:
-        jsr     S_PauseSPCMTrack
-
-        movem.l a0-a1,-(sp)
-        bsr     FirstDirSector
-        movem.l (sp)+,a0-a1
+BeginReadCD:
+        movem.l d0-d1/a0-a1,-(sp)
 0:
-        /* check current directory sector for entry */
-        movem.l a0-a1,-(sp)
-        bsr     FindDirEntry
-        movem.l (sp)+,a0-a1
-        bmi.b   1f
+        move.w  #0x0089,d0              /* CDCSTOP */
+        jsr     0x5F22.w                /* call CDBIOS function */
 
-        /* found file */
-        move.l  DENTRY_OFFSET,d0
-        move.l  DENTRY_LENGTH,d1
-        addi.l  #2047,d1
-        moveq   #11,d2
-        lsr.l   d2,d1                   /* # sectors */
-        movea.l a1,a0
-        bra     ReadCD
-1:
-        /* not found, try next sector */
-        movem.l a0-a1,-(sp)
-        bsr     NextDirSector
-        movem.l (sp)+,a0-a1
-        beq.b   0b
-        moveq   #ERR_NAME_NOT_FOUND,d0
+        movea.l sp,a0                   /* ptr to 32 bit sector start and 32 bit sector count */
+        move.w  #0x0020,d0              /* ROMREADN */
+        jsr     0x5F22.w                /* call CDBIOS function */
+
+        lea     16(sp),sp               /* cleanup stack */
         rts
 
 | Read d1 sectors starting at d0 into buffer in a0 (using Sub-CPU)
 
-ReadCD:
+ReadSectorsSUB:
         movem.l d0-d1/a0-a1,-(sp)
 0:
         move.w  #0x0089,d0              /* CDCSTOP */
@@ -942,36 +907,11 @@ ReadCD:
         lea     16(sp),sp               /* cleanup stack */
         rts
 
-
-| Begin reading d1 sectors starting at d0
-
-BeginReadCD:
-        movem.l d0-d1/a0-a1,-(sp)
-0:
-        move.w  #0x0089,d0              /* CDCSTOP */
-        jsr     0x5F22.w                /* call CDBIOS function */
-
-        movea.l sp,a0                   /* ptr to 32 bit sector start and 32 bit sector count */
-        move.w  #0x0020,d0              /* ROMREADN */
-        jsr     0x5F22.w                /* call CDBIOS function */
-
-        lea     16(sp),sp               /* cleanup stack */
-        rts
-
 | Read 1 sector into buffer in a0 (using PCM DMA)
 
-ReadCDPCM:
+ReadSectorPCM:
         movem.l d0-d1/a0-a1,-(sp)
 
-1:
-        move.w  #0x008A,d0              /* CDCSTAT */
-        jsr     0x5F22.w                /* call CDBIOS function */
-        bcc.b   2f                      /* at least one sector in CD buffer */
-
-        lea     16(sp),sp               /* cleanup stack */
-        moveq   #0,d0
-        rts
-2:
         /* set CDC Mode destination device to PCM */
         move.b  #0x4,0x8004.w
         move.l  8(sp),d0
@@ -980,23 +920,22 @@ ReadCDPCM:
 
         move.w  #0x008B,d0              /* CDCREAD */
         jsr     0x5F22.w                /* call CDBIOS function */
-        bcs.b   2b                      /* not ready to xfer data */
+        bcc.b   1f                      /* ready to xfer data */
 
-3:
+        lea     16(sp),sp               /* cleanup stack */
+        moveq   #0,d0
+        rts
+
+1:
         /* check for EDT (end of data transfer) to be set */
         btst    #0x7,0x8004.w
-        beq.s   3b
+        beq.s   1b
 
         move.w  #0x008D,d0              /* CDCACK */
         jsr     0x5F22.w                /* call CDBIOS function */
 
         lea     16(sp),sp               /* cleanup stack */
         moveq   #1,d0
-        rts
-
-StopReadCD:
-        move.w  #0x0089,d0              /* CDCSTOP */
-        jsr     0x5F22.w                /* call CDBIOS function */
         rts
 
 | Sub-CPU variables
