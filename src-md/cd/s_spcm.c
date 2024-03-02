@@ -6,7 +6,13 @@
 #include "pcm.h"
 #include "s_channels.h"
 
-#define SPCM_SAMPLE_RATE       21500
+/* page 9 of https://segaretro.org/images/2/2d/MCDHardware_Manual_PCM_Sound_Source.pdf */
+/* or page 55 of https://segaretro.org/images/2/2e/Sega-CD_Technical_Bulletins.pdf */
+#define SPCM_RF5C164_BASEFREQ  32604 /* should not be modified */
+
+#define SPCM_RF5C164_INCREMENT 0x0500 /* equivalent to the sample rate of 20378 Hz */
+
+//#define SPCM_SAMPLE_RATE       (SPCM_RF5C164_INCREMENT * SPCM_RF5C164_BASEFREQ / 2048) /* 20378 */
 
 #define SPCM_LEFT_CHANNEL_ID   (S_MAX_CHANNELS)
 
@@ -79,7 +85,10 @@ void S_SPCM_UpdateChannel(s_spcm_t *spcm)
     }
 
     // kick off playback
-    pcm_set_freq(SPCM_SAMPLE_RATE);
+    PCM_FDL = (SPCM_RF5C164_INCREMENT >> 0) & 0xff;
+    pcm_delay();
+    PCM_FDH = (SPCM_RF5C164_INCREMENT >> 8) & 0xff;
+    pcm_delay();
 
     PCM_PAN = 0xff;
     pcm_delay();
