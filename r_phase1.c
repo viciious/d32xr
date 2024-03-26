@@ -657,8 +657,8 @@ static void R_DecodeBBox(int16_t *bbox, const int16_t *outerbbox, uint16_t encbb
 static void R_RenderBSPNode(rbspWork_t *rbsp, int bspnum, int16_t *outerbbox)
 {
    node_t *bsp;
-   int     side;
-   int16_t bbox[4];
+   int     i, side;
+   int16_t bbox[2][4];
 
 #ifdef MARS
    if((int16_t)bspnum < 0) // reached a subsector leaf?
@@ -674,17 +674,16 @@ static void R_RenderBSPNode(rbspWork_t *rbsp, int bspnum, int16_t *outerbbox)
 
    // decide which side the view point is on
    side = R_PointOnSide(vd->viewx, vd->viewy, bsp);
-   R_DecodeBBox(bbox, outerbbox, bsp->encbbox[side]);
+   for (i = 0; i < 2; i++)
+      R_DecodeBBox(bbox[i], outerbbox, bsp->encbbox[i]);
 
    // recursively render front space
-   R_RenderBSPNode(rbsp, bsp->children[side], bbox);
+   R_RenderBSPNode(rbsp, bsp->children[side], bbox[side]);
 
    // possibly divide back space
    side ^= 1;
-   R_DecodeBBox(bbox, outerbbox, bsp->encbbox[side]);
-
-   if(R_CheckBBox(rbsp, bbox)) {
-      R_RenderBSPNode(rbsp, bsp->children[side], bbox);
+   if(R_CheckBBox(rbsp, bbox[side])) {
+      R_RenderBSPNode(rbsp, bsp->children[side], bbox[side]);
    }
 }
 
