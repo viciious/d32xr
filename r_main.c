@@ -96,16 +96,53 @@ texture_t *testtex;
 ===============================================================================
 */
 
-static int SlopeDiv(unsigned int num, unsigned int den) ATTR_DATA_CACHE_ALIGN;
+static int SlopeAngle (unsigned int num, unsigned int den) ATTR_DATA_CACHE_ALIGN;
 
-static int SlopeDiv (unsigned num, unsigned den)
+static int SlopeAngle (unsigned num, unsigned den)
 {
 	unsigned ans;
+	angle_t *t2a;
+
 	den >>= 8;
+#ifdef MARS
+    __asm volatile (
+      "mov #-128, r0\n\t"
+      "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
+      "mov.l %1, @(0,r0) /* set 32-bit divisor */ \n\t"
+      "mov.l %0, @(4,r0) /* start divide */\n\t"
+      : : "r" (num << 3), "r" (den)
+      : "r0"
+    );
+
+    __asm volatile (
+      "mov.l %1, %0"
+      : "=r" (t2a)
+      : "m" (tantoangle)
+   );
+
+   if (den < 2)
+	  ans = SLOPERANGE;
+   else {
+      __asm volatile (
+	    "mov #-128, r0\n\t"
+        "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
+        "mov.l @(4,r0), %0 /* get 32-bit quotient */ \n\t"
+        :"=r" (ans)
+		: : "r0"
+	);
+   }
+#else
 	if (den < 2)
-		return SLOPERANGE;
-	ans = (num<<3)/den;
-	return ans <= SLOPERANGE ? ans : SLOPERANGE;
+		ans = SLOPERANGE;
+	else
+	{
+		ans = (num<<3)/den;
+		if (ans > SLOPERANGE)
+			ans = SLOPERANGE;
+	}
+	t2a = tantoangle;
+#endif
+	return t2a[ans];
 }
 
 angle_t R_PointToAngle2 (fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
@@ -175,7 +212,7 @@ angle_t R_PointToAngle2 (fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 			}
 		}
 	}
-	return base + n * tantoangle[SlopeDiv(num, den)];
+	return base + n * SlopeAngle(num, den);
 }
 
 /*
