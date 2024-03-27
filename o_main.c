@@ -171,12 +171,12 @@ void O_Init (void)
 	menuitem[mi_game].y = STARTY;
 	menuitem[mi_game].screen = ms_game;
 
-	D_memcpy(menuitem[mi_audio].name, "Audio", 7);
+	D_memcpy(menuitem[mi_audio].name, "Audio", 6);
 	menuitem[mi_audio].x = ITEMX;
 	menuitem[mi_audio].y = STARTY+ITEMSPACE;
 	menuitem[mi_audio].screen = ms_audio;
 
-	D_memcpy(menuitem[mi_video].name, "Video", 7);
+	D_memcpy(menuitem[mi_video].name, "Video", 6);
 	menuitem[mi_video].x = ITEMX;
 	menuitem[mi_video].y = STARTY+ITEMSPACE*2;
 	menuitem[mi_video].slider = 0;
@@ -240,7 +240,7 @@ void O_Init (void)
 	menuitem[mi_alwaysrun].x = ITEMX;
 	menuitem[mi_alwaysrun].y = STARTY+ITEMSPACE*4;
 
-	D_memcpy(menuitem[mi_strafebtns].name, "LR Strafe", 11);
+	D_memcpy(menuitem[mi_strafebtns].name, "LR Strafe", 10);
 	menuitem[mi_strafebtns].x = ITEMX;
 	menuitem[mi_strafebtns].y = STARTY+ITEMSPACE*5;
 
@@ -249,7 +249,7 @@ void O_Init (void)
 	menuscreen[ms_main].firstitem = mi_game;
 	menuscreen[ms_main].numitems = mi_help - mi_game + 1;
 
-	D_memcpy(menuscreen[ms_audio].name, "Audio", 7);
+	D_memcpy(menuscreen[ms_audio].name, "Audio", 6);
 	menuscreen[ms_audio].firstitem = mi_soundvol;
 	menuscreen[ms_audio].numitems = mi_music - mi_soundvol + 1;
 
@@ -264,7 +264,7 @@ void O_Init (void)
 #endif
 	}
 
-	D_memcpy(menuscreen[ms_video].name, "Video", 7);
+	D_memcpy(menuscreen[ms_video].name, "Video", 6);
 	menuscreen[ms_video].firstitem = mi_resolution;
 	menuscreen[ms_video].numitems = mi_anamorphic - mi_resolution + 1;
 

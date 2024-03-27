@@ -183,7 +183,7 @@ void M_Start2 (boolean startup_)
 	mainitem[mi_joingame].screen = ms_none;
 	mainscreen[ms_main].numitems++;
 
-	D_memcpy(mainitem[mi_level].name, "Level", 5);
+	D_memcpy(mainitem[mi_level].name, "Level", 6);
 	mainitem[mi_level].x = ITEMX;
 	mainitem[mi_level].y = CURSORY(0);
 	mainitem[mi_level].screen = ms_none;
@@ -213,7 +213,7 @@ void M_Start2 (boolean startup_)
 	mainitem[mi_splitscreen].y = CURSORY(1);
 	mainitem[mi_splitscreen].screen = ms_new;
 
-	D_memcpy(mainitem[mi_network].name, "Multiplayer", 13);
+	D_memcpy(mainitem[mi_network].name, "Multiplayer", 12);
 	mainitem[mi_network].x = ITEMX;
 	mainitem[mi_network].y = CURSORY(2);
 	mainitem[mi_network].screen = ms_new;
