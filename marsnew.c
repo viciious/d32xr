@@ -83,7 +83,12 @@ extern int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sp
 static volatile mars_tls_t mars_tls_pri, mars_tls_sec;
 static uint32_t mars_rom_bsw_start = 0;
 
-void I_ClearFrameBuffer(void) ATTR_DATA_CACHE_ALIGN;
+// disable compiler optimizations as these functions deal with
+// the framebuffer and we don't want GCC to use the builtins on
+// such as memset or memcpy that
+void I_ClearWorkBuffer(void) __attribute__((optimize("O1")));
+void I_ClearFrameBuffer(void) __attribute__((optimize("O1")));
+byte *I_TempBuffer (void) __attribute__((optimize("O1")));
 
 static int Mars_ConvGamepadButtons(int ctrl)
 {
