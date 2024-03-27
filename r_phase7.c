@@ -388,64 +388,9 @@ static void R_DrawPlanes2(void)
 
 #ifdef MARS
 
-static void Mars_R_SplitPlanes(void) ATTR_DATA_CACHE_ALIGN;
-static void Mars_R_SortPlanes(void) ATTR_DATA_CACHE_ALIGN;
-
 void Mars_Sec_R_DrawPlanes(void)
 {
     R_DrawPlanes2();
-}
-
-static void Mars_R_SplitPlanes(void)
-{
-    const int minlen = centerX;
-    const int maxlen = centerX * 2;
-    visplane_t *pl, *last = vd->lastvisplane;
-    int numplanes;
-
-    numplanes = vd->lastvisplane - vd->visplanes;
-    if (numplanes >= MAXVISPLANES)
-        return;
-
-    for (pl = vd->visplanes + 1; pl < last; pl++)
-    {
-        int start, stop;
-        visplane_t* newpl;
-        int newstop;
-
-        // see if there is any open space
-        start = pl->minx, stop = pl->maxx;
-        if (start > stop)
-            continue; // nothing to map
-
-        // split long visplane into two
-
-        int span = stop - start + 1;
-        if (span < maxlen)
-            continue;
-
-        pl->maxx = start;
-        newstop = start + minlen;
-
-        do {
-            newstop = start + minlen;
-            if (newstop > stop || numplanes == MAXVISPLANES - 1)
-                newstop = stop;
-
-            newpl = vd->lastvisplane++;
-            newpl->open = pl->open;
-            newpl->height = pl->height;
-            newpl->flatandlight = pl->flatandlight;
-            newpl->minx = start + 1;
-            newpl->maxx = newstop;
-
-            numplanes++;
-            if (numplanes >= MAXVISPLANES)
-                return;
-
-            start = newstop;
-        } while (start < stop);
-    }
 }
 
 // sort visplanes by flatnum so that texture data 
@@ -493,8 +438,6 @@ static void R_PreDrawPlanes(void)
         if (vd->gsortedvisplanes == NULL)
         {
             vd->gsortedvisplanes = (int *)vd->viswallextras;
-
-            Mars_R_SplitPlanes();
 
             Mars_R_SortPlanes();
         }
