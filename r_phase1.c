@@ -592,10 +592,10 @@ static void R_AddLine(rbspWork_t *rbsp, sector_t *frontsector, seg_t *line)
        backsector->floorheight == frontsector->floorheight)
    {
        // reject empty lines used for triggers and special events
-       if (backsector->ceilingpic == frontsector->ceilingpic &&
+       if (sidedef->midtexture == 0 &&
+           backsector->ceilingpic == frontsector->ceilingpic &&
            backsector->floorpic == frontsector->floorpic &&
-           *(int8_t *)&backsector->lightlevel == *(int8_t *)&frontsector->lightlevel && // hack to get rid of the extu.w on SH-2
-           sidedef->midtexture == 0)
+           *(int8_t *)&backsector->lightlevel == *(int8_t *)&frontsector->lightlevel) // hack to get rid of the extu.w on SH-2
            return;
    }
 
