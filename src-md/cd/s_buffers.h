@@ -15,7 +15,7 @@ enum
 
 typedef struct
 {
-    uint8_t *data;
+    uint8_t *data, *buf;
     uint32_t data_len, size;
     uint16_t freq;
     uint8_t num_channels;
@@ -25,6 +25,8 @@ typedef struct
 } sfx_buffer_t;
 
 extern sfx_buffer_t s_buffers [ S_MAX_BUFFERS ];
+
+uint8_t *S_Buf_Alloc(uint32_t data_len);
 
 void S_InitBuffers(uint8_t *start_addr, uint32_t size);
 void S_ClearBuffersMem(void);

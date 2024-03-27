@@ -304,9 +304,6 @@ void P_CheckCheats (void)
 #endif
 }
   
-
-int playernum;
-
 void G_DoReborn (int playernum); 
 void G_DoLoadLevel (void);
 
@@ -331,6 +328,7 @@ int P_Ticker (void)
 	int		start;
 	int		ticstart;
 	player_t	*pl;
+	int 	playernum;
 
 	if (demoplayback)
 	{
@@ -350,7 +348,7 @@ int P_Ticker (void)
 
 #ifdef MARS
     // bank-switch to the page with map data
-    W_GetLumpData(gamemaplump);
+    //W_GetLumpData(gamemaplump);
 #endif
 
 	gameaction = ga_nothing;
@@ -529,6 +527,9 @@ void P_Drawer (void)
 	boolean automapactive = (players[consoleplayer].automapflags & AF_ACTIVE) != 0;
 	boolean optionsactive = (players[consoleplayer].automapflags & AF_OPTIONSACTIVE) != 0;
 	static boolean o_wasactive, am_wasactive = false;
+	viewdef_t vd_;
+
+	vd = &vd_;
 
 #ifdef MARS
 	extern	boolean	debugscreenactive;
@@ -616,6 +617,7 @@ extern	 VINT		ticremainder[MAXPLAYERS];
 
 void P_Start (void)
 {
+	int i;
 	extern boolean canwipe;
 
 	/* load a level */
@@ -625,9 +627,11 @@ void P_Start (void)
 #ifndef MARS
 	S_RestartSounds ();
 #endif
-	players[0].automapflags = 0;
-	players[1].automapflags = 0;
-	ticremainder[0] = ticremainder[1] = 0;
+	for (i = 0; i < MAXPLAYERS; i++)
+	{
+		players[i].automapflags = 0;
+		players[i].ticremainder = 0;
+	}
 	M_ClearRandom ();
 
 	if (!demoplayback && !demorecording)

@@ -128,12 +128,12 @@ typedef struct seg_s
 
 typedef struct
 {
-	fixed_t		x,y,dx,dy;			/* partition line */
-	fixed_t		bbox[2][4];			/* bounding box for each child */
-	int			children[2];		/* if NF_SUBSECTOR its a subsector */
+	int16_t		x,y,dx,dy;			/* partition line */
+	uint16_t	children[2];		/* if NF_SUBSECTOR its a subsector */
+	uint16_t 	encbbox[2]; 		/* encoded bounding box for each child */
 } node_t;
 
-#define MIPLEVELS 4
+#define MIPLEVELS 1
 
 typedef struct
 {
@@ -213,7 +213,7 @@ extern	spritedef_t		sprites[NUMSPRITES];
 */
 
 extern	int			numvertexes;
-extern	vertex_t	*vertexes;
+extern	mapvertex_t	*vertexes;
 
 extern	int			numsegs;
 extern	seg_t		*segs;
@@ -232,6 +232,8 @@ extern	line_t		*lines;
 
 extern	int			numsides;
 extern	side_t		*sides;
+
+extern 	int16_t 	worldbbox[4];
 
 /*============================================================================= */
 
@@ -252,15 +254,15 @@ static inline int R_PointOnSide (int x, int y, node_t *node)
 	fixed_t	dx,dy;
 	fixed_t	left, right;
 
-	dx = (x - node->x);
-	dy = (y - node->y);
+	dx = x - ((fixed_t)node->x<<16);
+	dy = y - ((fixed_t)node->y<<16);
 
 #ifdef MARS
-   left = ((int64_t)node->dy*dx) >> 32;
-   right = ((int64_t)dy*node->dx) >> 32;
+   left = ((int64_t)((fixed_t)node->dy<<16)*dx) >> 32;
+   right = ((int64_t)dy*((fixed_t)node->dx<<16)) >> 32;
 #else
-   left  = (node->dy>>FRACBITS) * (dx>>FRACBITS);
-   right = (dy>>FRACBITS) * (node->dx>>FRACBITS);
+   left  = (node->dy) * (dx>>FRACBITS);
+   right = (dy>>FRACBITS) * (node->dx);
 #endif
 
    return (left <= right);
@@ -272,7 +274,7 @@ static inline int R_PointOnSide (int x, int y, node_t *node)
 // then the y (<= x) is scaled and divided by x to get a tangent (slope)
 // value which is looked up in the tantoangle table.
 //
-#define R_PointToAngle(x,y) R_PointToAngle2(vd.viewx,vd.viewy,x,y)
+#define R_PointToAngle(x,y) R_PointToAngle2(vd->viewx,vd->viewy,x,y)
 void	R_InitData (void);
 void	R_SetViewportSize(int num);
 int		R_DefaultViewportSize(void); // returns the viewport id for fullscreen, low detail mode
@@ -354,7 +356,9 @@ extern	int		phasetime[9];
 /* */
 /* R_data.c */
 /* */
-extern	texture_t	*skytexturep;
+extern	inpixel_t	*skytexturep;
+extern 	int8_t 		*skycolormaps;
+extern 	VINT 		col2sky;
 
 extern	VINT		numtextures;
 extern	texture_t	*textures;
@@ -625,7 +629,7 @@ __attribute__((aligned(16)))
 	uint8_t *columncache[2]; // composite column cache for both CPUs
 } viewdef_t;
 
-extern	viewdef_t	vd;
+extern	viewdef_t	*vd;
 
 extern texture_t *testtex;
 

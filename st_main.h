@@ -12,28 +12,28 @@
 #define HEALTHX		104
 #define HEALTHY		AMMOY
 
-#define KEYX		124
-#define REDKEYY		3
-#define BLUKEYY		15
-#define YELKEYY		27
-#define KEYW		16
-#define KEYH		12
+#define KEYX		260
+#define REDKEYY		4
+#define BLUKEYY		14
+#define YELKEYY		24
+#define KEYW		9
+#define KEYH		7
 
-#define FACEX		144
+#define FACEX		156
 #define FACEY		5
 #define FACEW		32
 #define FACEH		32
 
-#define ARMORX		226
+#define ARMORX		240
 #define ARMORY		HEALTHY
 
-#define MAPX		316
-#define MAPY		HEALTHY
+#define STATSX		308
+#define STATSY		12
 
-#define YOURFRAGX	(MAPX - 28)
-#define YOURFRAGY	8
+#define YOURFRAGX	(STATSX + 6)
+#define YOURFRAGY	(AMMOY)
 
-#define HISFRAGX	(MAPX - 28)
+#define HISFRAGX	(STATSX - 28)
 #define HISFRAGY	(HEALTHY+12)
 
 typedef enum
@@ -104,7 +104,8 @@ typedef enum
 	stc_drawhealth,
 	stc_drawarmor,
 	stc_drawcard,
-	stc_drawmap,
+	stc_drawstats,
+	stc_drawsecrets,
 	stc_drawmicro,
 	stc_drawyourfrags,
 	stc_drawhisfrags,
@@ -127,7 +128,6 @@ typedef struct
 
 	VINT	yourFragsCount;
 	VINT	hisFragsCount;
-	VINT	currentMap;
 	VINT	drawface;
 	char	weaponowned[NUMMICROS];
 
@@ -144,6 +144,9 @@ typedef struct
 	short numstbarcmds;
 	stbarcmd_t stbarcmds[STC_NUMCMDTYPES + NUMMICROS + NUMCARDS * 2];
 
+	int 	killcount, secretcount, itemcount;
+	sbflash_t flashSecrets;
+
 	sbflash_t	yourFrags;			/* INFO FOR YOUR FRAG FLASHING */
 	sbflash_t	hisFrags;
 	char flashInitialDraw;		/* INITIALLY DRAW FRAG AMOUNTS (flag) */
@@ -159,6 +162,7 @@ extern	stbar_t	*stbar;
 extern	int stbar_tics;
 extern void valtostr(char *string,int val);
 void ST_DrawValue(int x,int y,int value);
+void ST_DrawMicroValue(int x,int y,int value);
 void ST_Num (int x, int y, int num);
 void ST_InitEveryLevel(void);
 

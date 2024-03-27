@@ -22,9 +22,18 @@ int8_t S_Chan_FrontBuffer(sfx_channel_t *chan) {
     volatile uint8_t *ptr = S_Chan_RAMPtr(chan);
     uint16_t lo = *(ptr + 0); // LSB of PCM RAM location
     uint16_t hi = *(ptr + 2); // MSB of PCM RAM location
-    if (CHBUF_SHIFT <= 8)
-        return (lo & (1<<(CHBUF_SHIFT-1))) != 0;
-    return (hi & (1<<(CHBUF_SHIFT-8))) != 0;
+    if (chan->realid & 1)
+    {
+        if (CHBUF_SHIFT <= 8)
+            return (lo & (1<<(CHBUF_SHIFT-1))) == 0;
+        return (hi & (1<<(CHBUF_SHIFT-8))) == 0;
+    }
+    else
+    {
+        if (CHBUF_SHIFT <= 8)
+            return (lo & (1<<(CHBUF_SHIFT-1))) != 0;
+        return (hi & (1<<(CHBUF_SHIFT-8))) != 0;
+    }
 }
 
 // buffer we can paint to
@@ -36,7 +45,7 @@ int8_t S_Chan_StartBlock(sfx_channel_t *chan) {
     if (chan->id == 0) {
         return 0;
     }    
-    return (chan->realid) << 2;
+    return (chan->realid + chan->realid + chan->realid); // * 3
 }
 
 int8_t S_Chan_LoopBlock(sfx_channel_t *chan) {
@@ -125,7 +134,7 @@ void S_Chan_Update(sfx_channel_t *chan)
 
     pcm_set_loop(startpos);
 
-    pcm_set_on(chan->realid);    
+    pcm_set_on(chan->realid);
 }
 
 int S_AllocChannel(void)

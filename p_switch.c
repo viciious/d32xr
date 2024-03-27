@@ -11,7 +11,6 @@ static const switchlist_t alphSwitchList[] =
 	{"SW1BRN1", 	"SW2BRN1"},
 	{"SW1BRMET",    "SW2BRMET"},
 	{"SW1CMT2",     "SW2CMT2"},
-	{"SW1COMPQ",    "SW2COMPQ"},
 	{"SW1DBLU",     "SW2DBLU"},
 	{"SW1DRED",     "SW2DRED"},
 	{"SW1DYEL",     "SW2DYEL"},
@@ -51,7 +50,7 @@ static const switchlist_t alphSwitchList[] =
 	{"SW1ZIM", 		"SW2ZIM"}
 };
 
-VINT		*switchlist/*[MAXSWITCHES * 2]*/ = NULL;
+uint8_t		*switchlist/*[MAXSWITCHES * 2]*/ = NULL;
 int			numswitches;
 button_t	*buttonlist/*[MAXBUTTONS]*/ = NULL;
 
@@ -83,8 +82,7 @@ void P_InitSwitchList(void)
 		index++;
 	}
 	
-	switchlist[index] = -1;
-	
+	switchlist[index] = 0;
 }
 
 /*================================================================== */

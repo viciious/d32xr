@@ -29,7 +29,9 @@ uint8_t			*texturetranslation;	/* for global animation */
 
 flattex_t		*flatpixels;
 
-texture_t	*skytexturep;
+inpixel_t	*skytexturep;
+int8_t 		*skycolormaps;
+VINT 		col2sky;
 
 uint8_t		*dc_playpals;
 
@@ -210,6 +212,13 @@ void R_InitTextures (void)
 			texture->lumpnum = 0;
 	}
 
+	// remap the dummy texture to the first valid texture
+	textures[0].lumpnum = textures[1].lumpnum;
+	textures[0].width = textures[1].width;
+	textures[0].height = textures[1].height;
+	textures[0].decals = textures[1].decals;
+	D_memcpy(textures[0].data, textures[1].data, sizeof(textures[0].data));
+
 	texmips = false;
 #if MIPLEVELS > 1
 	texture = textures;
@@ -365,6 +374,8 @@ void R_InitData (void)
 
 	firstsprite = W_GetNumForName ("S_START") + 1;
 	numsprites = W_GetNumForName ("S_END") - firstsprite;
+
+	col2sky = W_CheckNumForName ("S_STCOL2");
 
 	R_InitTextures ();
 	R_InitFlats ();
@@ -857,12 +868,15 @@ static void *R_LoadColormap(int l, boolean doublepix)
 void R_InitColormap(boolean doublepix)
 {
 	int l;
+	int osky = skycolormaps == dc_colormaps;
 
 	l = W_CheckNumForName("COLORMAP");
 	dc_colormaps = R_LoadColormap(l, doublepix);
 
 	l -= 2;
 	dc_colormaps2 = R_LoadColormap(l, doublepix);
+
+	skycolormaps = osky ? dc_colormaps : dc_colormaps2;
 
 #ifdef MARS
 	Mars_CommSlaveClearCache();

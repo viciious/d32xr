@@ -8,7 +8,7 @@
 #endif
 
 #define MOVEWAIT		(I_IsPAL() ? TICVBLS*5 : TICVBLS*6)
-#define STARTY		48
+#define STARTY		38
 #define CURSORX		(80)
 #define CURSORWIDTH	24
 #define ITEMX		(CURSORX+CURSORWIDTH)
@@ -30,7 +30,10 @@ typedef enum
 	mi_soundvol,
 	mi_music,
 	mi_musicvol,
+	mi_spcmpack,
+#ifndef DISABLE_DMA_SOUND
 	mi_sfxdriver,
+#endif
 
 	mi_resolution,
 	mi_anamorphic,
@@ -168,12 +171,12 @@ void O_Init (void)
 	menuitem[mi_game].y = STARTY;
 	menuitem[mi_game].screen = ms_game;
 
-	D_memcpy(menuitem[mi_audio].name, "Audio", 7);
+	D_memcpy(menuitem[mi_audio].name, "Audio", 6);
 	menuitem[mi_audio].x = ITEMX;
 	menuitem[mi_audio].y = STARTY+ITEMSPACE;
 	menuitem[mi_audio].screen = ms_audio;
 
-	D_memcpy(menuitem[mi_video].name, "Video", 7);
+	D_memcpy(menuitem[mi_video].name, "Video", 6);
 	menuitem[mi_video].x = ITEMX;
 	menuitem[mi_video].y = STARTY+ITEMSPACE*2;
 	menuitem[mi_video].slider = 0;
@@ -207,9 +210,15 @@ void O_Init (void)
 	sliders[si_musvolume].maxval = 8;
 	sliders[si_musvolume].curval = 8*musicvolume/64;
 
+	D_memcpy(menuitem[mi_spcmpack].name, "SPCM", 4);
+	menuitem[mi_spcmpack].x = ITEMX;
+	menuitem[mi_spcmpack].y = STARTY+ITEMSPACE*5;
+
+#ifndef DISABLE_DMA_SOUND
 	D_memcpy(menuitem[mi_sfxdriver].name, "SFX driver", 11);
 	menuitem[mi_sfxdriver].x = ITEMX;
-	menuitem[mi_sfxdriver].y = STARTY+ITEMSPACE*5;
+	menuitem[mi_sfxdriver].y = STARTY+ITEMSPACE*6;
+#endif
 
 	D_memcpy(menuitem[mi_resolution].name, "Resolution", 11);
 	menuitem[mi_resolution].x = ITEMX;
@@ -231,7 +240,7 @@ void O_Init (void)
 	menuitem[mi_alwaysrun].x = ITEMX;
 	menuitem[mi_alwaysrun].y = STARTY+ITEMSPACE*4;
 
-	D_memcpy(menuitem[mi_strafebtns].name, "LR Strafe", 11);
+	D_memcpy(menuitem[mi_strafebtns].name, "LR Strafe", 10);
 	menuitem[mi_strafebtns].x = ITEMX;
 	menuitem[mi_strafebtns].y = STARTY+ITEMSPACE*5;
 
@@ -240,7 +249,7 @@ void O_Init (void)
 	menuscreen[ms_main].firstitem = mi_game;
 	menuscreen[ms_main].numitems = mi_help - mi_game + 1;
 
-	D_memcpy(menuscreen[ms_audio].name, "Audio", 7);
+	D_memcpy(menuscreen[ms_audio].name, "Audio", 6);
 	menuscreen[ms_audio].firstitem = mi_soundvol;
 	menuscreen[ms_audio].numitems = mi_music - mi_soundvol + 1;
 
@@ -248,11 +257,14 @@ void O_Init (void)
 	if (cd_avail) /* CDA or MD+ */
 	{
 		menuscreen[ms_audio].numitems++;
+		menuscreen[ms_audio].numitems++; // SPCM
+#ifndef DISABLE_DMA_SOUND
 		if (cd_avail & 0x1) /* CD, not MD+ */
 			menuscreen[ms_audio].numitems++;
+#endif
 	}
 
-	D_memcpy(menuscreen[ms_video].name, "Video", 7);
+	D_memcpy(menuscreen[ms_video].name, "Video", 6);
 	menuscreen[ms_video].firstitem = mi_resolution;
 	menuscreen[ms_video].numitems = mi_anamorphic - mi_resolution + 1;
 
@@ -279,6 +291,7 @@ void O_Control (player_t *player)
 	int		buttons, oldbuttons;
 	menuscreen_t* menuscr;
 	boolean newcursor = false;
+	int playernum = player - players;
 	int curplayer = consoleplayer;
 
 	if (splitscreen && playernum != curplayer)
@@ -295,8 +308,8 @@ void O_Control (player_t *player)
 	}
 	menuscr = &menuscreen[screenpos];
 
-	buttons = ticbuttons[playernum] & MENU_BTNMASK;
-	oldbuttons = oldticbuttons[playernum] & MENU_BTNMASK;
+	buttons = player->ticbuttons & MENU_BTNMASK;
+	oldbuttons = player->oldticbuttons & MENU_BTNMASK;
 	
 	if ( ( (buttons & BT_OPTION) && !(oldbuttons & BT_OPTION) )
 #ifdef MARS
@@ -331,7 +344,7 @@ void O_Control (player_t *player)
 		return;
 
 /* clear buttons so player isn't moving aroung */
-	ticbuttons[playernum] &= (BT_OPTION|BT_START);	/* leave option status alone */
+	player->ticbuttons &= (BT_OPTION|BT_START);	/* leave option status alone */
 
 	if (playernum != curplayer)
 		return;
@@ -549,22 +562,45 @@ void O_Control (player_t *player)
 
 			if (screenpos == ms_audio)
 			{
+				int i;
 				int oldmusictype = o_musictype;
 				int oldsfxdriver = o_sfxdriver;
+				int oldspcmpack, curpack, numpacks;
+
+				curpack = -1;
+				numpacks = 0;
+				for (i = 0; i < MAX_SPCM_PACKS; i++) {
+					if (!gameinfo.spcmDirList[i][0]) {
+						numpacks = i;
+						break;
+					}
+					if (!D_strcasecmp(gameinfo.spcmDirList[i], spcmDir)) {
+						curpack = i;
+					}
+				}
+				if (i == MAX_SPCM_PACKS)
+					numpacks = MAX_SPCM_PACKS;
+				oldspcmpack = curpack;
 
 				if (buttons & BT_RIGHT)
 				{
 					switch (itemno) {
 					case mi_music:
-						if (++o_musictype > mustype_cd)
-							o_musictype = mustype_cd;
-						if (o_musictype == mustype_cd && !S_CDAvailable())
+						if (++o_musictype > mustype_spcm)
+							o_musictype = mustype_spcm;
+						if (o_musictype >= mustype_cd && !S_CDAvailable())
 							o_musictype = mustype_fm;
 						break;
+					case mi_spcmpack:
+						if (++curpack >= numpacks)
+							curpack = numpacks-1;
+						break;
+#ifndef DISABLE_DMA_SOUND
 					case mi_sfxdriver:
 						if (++o_sfxdriver > sfxdriver_pwm)
 							o_sfxdriver = sfxdriver_pwm;
 						break;
+#endif
 					}
 				}
 
@@ -575,10 +611,16 @@ void O_Control (player_t *player)
 						if (--o_musictype < mustype_none)
 							o_musictype = mustype_none;
 						break;
+					case mi_spcmpack:
+						if (--curpack < 0)
+							curpack = 0;
+						break;
+#ifndef DISABLE_DMA_SOUND
 					case mi_sfxdriver:
 						if (--o_sfxdriver < sfxdriver_auto)
 							o_sfxdriver = sfxdriver_auto;
 						break;
+#endif
 					}
 				}
 
@@ -591,6 +633,13 @@ void O_Control (player_t *player)
 				if (oldsfxdriver != o_sfxdriver)
 				{
 					S_SetSoundDriver(o_sfxdriver);
+				}
+
+				if (oldspcmpack != curpack && curpack != -1)
+				{
+					S_SetSPCMDir(gameinfo.spcmDirList[curpack]);
+					if (musictype == mustype_spcm)
+						S_SetMusicType(mustype_spcmhack); // force refresh of the current dir
 				}
 			}
 
@@ -727,8 +776,18 @@ void O_Drawer (void)
 		case mustype_cd:
 			print(menuitem[mi_music].x + 85, menuitem[mi_music].y, "cd");
 			break;
+		case mustype_spcm:
+			print(menuitem[mi_music].x + 85, menuitem[mi_music].y, "spcm");
+			break;
 		}
 
+		if (spcmDir[0] != '\0') {
+			print(menuitem[mi_spcmpack].x + 85, menuitem[mi_spcmpack].y, spcmDir);
+		} else {
+			print(menuitem[mi_spcmpack].x + 85, menuitem[mi_spcmpack].y, "NONE");
+		}
+
+#ifndef DISABLE_DMA_SOUND
 		if (menuscreen[ms_audio].numitems > 3)
 		{
 			switch (o_sfxdriver) {
@@ -743,6 +802,7 @@ void O_Drawer (void)
 				break;
 			}
 		}
+#endif
 	}
 
 	if (screenpos == ms_video)

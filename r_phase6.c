@@ -221,13 +221,17 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
             if (top < bottom)
             {
                 // CALICO: draw sky column
-                int colnum = ((vd.viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
+                unsigned colnum = ((vd->viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
 #ifdef MARS
-                inpixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
+                inpixel_t* data = skytexturep + colnum * 128;
 #else
-                pixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
+                pixel_t* data = skytexturep + colnum * 128;
 #endif
+                I_SetThreadLocalVar(DOOMTLS_COLORMAP, skycolormaps);
+
                 drawsky(x, top, --bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, 128);
+
+                I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
             }
         }
 
@@ -369,14 +373,14 @@ void R_SegCommands(void)
     I_GetThreadLocalVar(DOOMTLS_COLUMNCACHE, toptex->columncache);
     bottomtex->columncache = toptex->columncache + COLUMN_CACHE_SIZE;
 
-    extralight = vd.extralight;
+    extralight = vd->extralight;
 
-    segcount = vd.lastwallcmd - vd.viswalls;
+    segcount = vd->lastwallcmd - vd->viswalls;
     for (i = 0; i < segcount; i++)
     {
         int seglight;
         unsigned actionbits;
-        viswall_t* segl = vd.viswalls + i;
+        viswall_t* segl = vd->viswalls + i;
 
 #ifdef MARS
         while ((MARS_SYS_COMM6 & 0xff) <= i)
@@ -405,9 +409,9 @@ void R_SegCommands(void)
         lseg.maxmip = 0;
 #endif
 
-        if (vd.fixedcolormap)
+        if (vd->fixedcolormap)
         {
-            lseg.lightmin = lseg.lightmax = vd.fixedcolormap;
+            lseg.lightmin = lseg.lightmax = vd->fixedcolormap;
             lseg.lightcoef = 0;
         }
         else
@@ -516,7 +520,7 @@ void Mars_Sec_R_SegCommands(void)
 {
     viswall_t *segl;
 
-    for (segl = vd.viswalls; segl < vd.lastwallcmd; segl++)
+    for (segl = vd->viswalls; segl < vd->lastwallcmd; segl++)
     {
         if (segl->actionbits & AC_TOPTEXTURE)
         {

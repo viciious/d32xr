@@ -543,7 +543,7 @@ void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh)
 		return;
 
 	lump = W_POINTLUMPNUM(lumpnum);
-	if (!(lumpinfo[lumpnum].name[0] & 0x80))
+	if (!(W_GetNameForNum(lumpnum)[0] & 0x80))
 	{
 		// uncompressed
 		jo = (jagobj_t*)lump;
@@ -670,12 +670,12 @@ void DrawTiledBackground2(int flat)
 
 void DrawTiledBackground(void)
 {
-	if (gameinfo.borderFlat <= 0)
+	if (gameinfo.borderFlatNum <= 0)
 	{
 		I_ClearFrameBuffer();
 		return;
 	}
-	DrawTiledBackground2(gameinfo.borderFlat);
+	DrawTiledBackground2(gameinfo.borderFlatNum);
 }
 
 void EraseBlock(int x, int y, int width, int height)
@@ -752,22 +752,22 @@ void DrawJagobj2(jagobj_t* jo, int x, int y,
 	{
 		if (((intptr_t)dest & 1) == 0 && hw >= 1)
 		{
-			pixel_t* dest2 = (pixel_t *)dest, *source2 = (pixel_t*)source;
+			pixel_t* dest2 = (pixel_t *)dest;
 			index = ((unsigned)index << 8) | index;
 
-			inc >>= 1;
 			for (; height; height--)
 			{
 				int n = (hw + 3) >> 2;
 				switch (hw & 3)
 				{
-				case 0: do { *dest2++ = index + (((((*source2 >> 12)      ) << 8) | ((*source2 >> 8) & 0xF)) << 1);
-				case 3:      *dest2++ = index + (((((*source2 >>  4) & 0xF) << 8) | ((*source2 >> 0) & 0xF)) << 1), source2++;
-				case 2:      *dest2++ = index + (((((*source2 >> 12)      ) << 8) | ((*source2 >> 8) & 0xF)) << 1);
-				case 1:      *dest2++ = index + (((((*source2 >>  4) & 0xF) << 8) | ((*source2 >> 0) & 0xF)) << 1), source2++;
+				case 0: do { *dest2++ = index + (((((*source >>  4) & 0xF) << 8) | ((*source >> 0) & 0xF)) << 1), source++;
+				case 3:      *dest2++ = index + (((((*source >>  4) & 0xF) << 8) | ((*source >> 0) & 0xF)) << 1), source++;
+				case 2:      *dest2++ = index + (((((*source >>  4) & 0xF) << 8) | ((*source >> 0) & 0xF)) << 1), source++;
+				case 1:      *dest2++ = index + (((((*source >>  4) & 0xF) << 8) | ((*source >> 0) & 0xF)) << 1), source++;
 				} while (--n > 0);
 				}
-				source2 += inc;
+
+				source += inc;
 				dest2 += 160 - hw;
 			}
 
@@ -839,10 +839,13 @@ void DrawFillRect(int x, int y, int w, int h, int c)
 {
 	int i;
 
-	if (x + w > 320)
+	if (x + w >= 320)
 		w = 320 - x;
-	if (y + h > mars_framebuffer_height)
+	if (y + h >= mars_framebuffer_height)
 		h = mars_framebuffer_height - y;
+
+	if (w == 0 || h == 0)
+		return;
 
 	c = (c << 8) | c;
 	int hw = w >> 1;

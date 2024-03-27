@@ -394,8 +394,8 @@ void AM_Control (player_t *player)
 #endif
 	int actionbtns = BT_ATTACK | BT_STRAFE | BT_USE;
 
-	buttons = ticbuttons[playernum];
-	oldbuttons = oldticbuttons[playernum];
+	buttons = player->ticbuttons;
+	oldbuttons = player->oldticbuttons;
 
 	if ( (buttons & BT_AUTOMAP) && !(oldbuttons & BT_AUTOMAP) )
 	{
@@ -448,16 +448,16 @@ void AM_Control (player_t *player)
 	}
 #endif
 
-	ticbuttons[playernum] &= ~actionbtns;
-	oldticbuttons[playernum] &= ~actionbtns;
+	player->ticbuttons &= ~actionbtns;
+	player->oldticbuttons &= ~actionbtns;
 
 	if (buttons & BT_C)		/* IF 'C' IS HELD DOWN, MOVE AROUND */
 	{
 		player->automapx = player->mo->x;
 		player->automapy = player->mo->y;
 
-		ticbuttons[playernum] &= ~(BT_C | BT_STRAFELEFT | BT_STRAFERIGHT);
-		oldticbuttons[playernum] &= ~(BT_C | BT_STRAFELEFT | BT_STRAFERIGHT);
+		player->ticbuttons &= ~(BT_C | BT_STRAFELEFT | BT_STRAFERIGHT);
+		player->oldticbuttons &= ~(BT_C | BT_STRAFELEFT | BT_STRAFERIGHT);
 		return;
 	}
 
@@ -492,7 +492,7 @@ void AM_Control (player_t *player)
 			player->automapy-=step;
 	}
 	
-	ticbuttons[playernum] &= ~(BT_B | BT_LEFT | BT_RIGHT | BT_UP | BT_DOWN);
+	player->ticbuttons &= ~(BT_B | BT_LEFT | BT_RIGHT | BT_UP | BT_DOWN);
 }
 
 static void AM_DrawMapStats(void)
@@ -626,20 +626,21 @@ static void AM_Drawer_ (int c)
 	line = lines;
 	drawn = 0;
 
-	if (c == 0)
+	switch (c)
 	{
-		miny = 0;
-		maxy = am_height-1;
-	}
-	else if (c == 1)
-	{
-		miny = 0;
-		maxy = am_halfh;
-	}
-	else if (c == 2)
-	{
-		miny = am_halfh-1;
-		maxy = am_height-1;
+		case 1:
+			miny = 0;
+			maxy = am_halfh;
+			break;
+		case 2:
+			miny = am_halfh-1;
+			maxy = am_height-1;
+			break;
+		case 0:
+		default:
+			miny = 0;
+			maxy = am_height-1;
+			break;
 	}
 
 	fb = (byte*)I_FrameBuffer();
@@ -654,7 +655,7 @@ static void AM_Drawer_ (int c)
 	for (i=0 ; i<numlines ; i++,line++)
 	{
 		int flags;
-		vertex_t *v1, *v2;
+		mapvertex_t *v1, *v2;
 
 		flags = line->flags;
 		if ((!(flags & ML_MAPPED) ||		/* IF NOT MAPPED OR DON'T DRAW */
@@ -665,8 +666,8 @@ static void AM_Drawer_ (int c)
 		v1 = &vertexes[line->v1];
 		v2 = &vertexes[line->v2];
 
-		y1 = v1->y;
-		y2 = v2->y;
+		y1 = v1->y << FRACBITS;
+		y2 = v2->y << FRACBITS;
 
 		y1 -= oy;
 		y2 -= oy;
@@ -683,8 +684,8 @@ static void AM_Drawer_ (int c)
 		outcode2 |= (y2 < miny) ;
 		if (outcode & outcode2) continue;
 
-		x1 = v1->x;
-		x2 = v2->x;
+		x1 = v1->x << FRACBITS;
+		x2 = v2->x << FRACBITS;
 
 		x1 -= ox;
 		x2 -= ox;

@@ -311,6 +311,8 @@ typedef struct degenmobj_s
 
 #define	MF_STATIC		0x8000000	/* can't move or think */
 
+#define	MF_KNIGHT_CMAP	0x10000000	/* hell knight colormap */
+
 /*============================================================================= */
 typedef enum
 {
@@ -352,6 +354,7 @@ typedef enum
 	wp_fist,
 	wp_pistol,
 	wp_shotgun,
+	wp_supershotgun,
 	wp_chaingun,
 	wp_missile,
 	wp_plasma,
@@ -411,7 +414,11 @@ typedef struct player_s
 {
 	mobj_t		*mo;
 	playerstate_t	playerstate;
-	
+
+	int			ticbuttons;
+	int			oldticbuttons;
+	VINT		ticmousex, ticmousey;
+
 	fixed_t		forwardmove, sidemove;	/* built from ticbuttons */
 	angle_t		angleturn;				/* built from ticbuttons */
 	
@@ -419,7 +426,7 @@ typedef struct player_s
 	fixed_t		viewheight;				/* base height above floor for viewz */
 	fixed_t		deltaviewheight;		/* squat speed */
 	fixed_t		bob;					/* bounded/scaled total momentum */
-	
+
 	VINT		health;					/* only used between levels, mo->health */
 										/* is used during levels	 */
 	VINT		armorpoints, armortype;	/* armor type is 0-2 */
@@ -437,6 +444,8 @@ typedef struct player_s
 	VINT		cheats;					/* bit flags */
 	
 	VINT		refire;					/* refired shots are less accurate */
+
+	VINT		ticremainder;
 	
 	VINT		killcount, itemcount, secretcount;		/* for intermission */
 	char		*message;				/* hint messages */
@@ -445,7 +454,6 @@ typedef struct player_s
 	VINT		extralight;				/* so gun flashes light up areas */
 	VINT		colormap;				/* 0-3 for which color to draw player */
 	pspdef_t	psprites[NUMPSPRITES];	/* view sprites (gun, etc) */
-	boolean		didsecret;				/* true if secret level has been done */
 	void		*lastsoundsector;		/* don't flood noise every time */
 	
 	int			automapx, automapy, automapscale, automapflags;
@@ -489,9 +497,6 @@ extern	int 	ticrate;	/* 4 for NTSC, 3 for PAL */
 extern	int		ticsinframe;	/* how many tics since last drawer */
 extern	int		ticon;
 extern	int		frameon;
-extern	int		ticbuttons[MAXPLAYERS];
-extern	int		oldticbuttons[MAXPLAYERS];
-extern	int		ticmousex[MAXPLAYERS], ticmousey[MAXPLAYERS];
 extern	int		ticrealbuttons, oldticrealbuttons; /* buttons for the console player before reading the demo file */
 extern	boolean		mousepresent;
 
@@ -531,12 +536,11 @@ extern	VINT		maxammo[NUMAMMO];
 
 extern	skill_t		gameskill;
 extern	int			totalkills, totalitems, totalsecret;	/* for intermission */
-extern	int			gamemaplump;
-extern	dmapinfo_t	gamemapinfo;
+extern	char		*gamemaplump;
 extern	dgameinfo_t	gameinfo;
 
-extern 	VINT 		*gamemapnumbers;
-extern 	VINT 		*gamemaplumps;
+extern 	dmapinfo_t	**gamemaplist;
+extern	dmapinfo_t	gamemapinfo;
 extern 	VINT 		gamemapcount;
 
 extern 	int 		gametic;
@@ -548,6 +552,8 @@ extern	mapthing_t	playerstarts[MAXPLAYERS];
 
 #define	BODYQUESIZE		4
 extern	int			bodyqueslot;
+
+extern 	boolean		finale;
 
 /*
 ===============================================================================
@@ -661,6 +667,21 @@ int		Z_FreeBlocks(memzone_t* mainzone);
 /*------- */
 /*WADFILE */
 /*------- */
+
+enum
+{
+	PWAD_NONE,
+	PWAD_CD,
+	MAXWADS,
+};
+
+extern char cd_pwad_name[16];
+#define SOUNDS_PWAD_NAME "SOUNDS.WAD"
+
+/*=============== */
+/*   TYPES */
+/*=============== */
+
 typedef struct
 {
 	int			filepos;					/* also texture_t * for comp lumps */
@@ -668,15 +689,11 @@ typedef struct
 	char		name[8];
 } lumpinfo_t;
 
-#define	MAXLUMPS	2048
-
-extern	byte		*wadfileptr;
-
-extern	lumpinfo_t	*lumpinfo;			/* points directly to rom image */
-extern	int			numlumps;
-extern	void		*lumpcache[MAXLUMPS];
-
 void	W_Init (void);
+void 	W_InitCDPWAD(int wawdnum, const char *name);
+
+void 	W_LoadPWAD(int wadnum);
+int 	W_CacheWADLumps (lumpinfo_t *li, int numlumps, VINT *lumps, boolean setpwad);
 
 int		W_CheckNumForName (const char *name);
 int		W_GetNumForName (const char *name);
@@ -689,10 +706,9 @@ void	*W_CacheLumpNum (int lump, int tag);
 void	*W_CacheLumpName (const char *name, int tag);
 
 const char *W_GetNameForNum (int lump);
-void* W_GetLumpData(int lump) ATTR_DATA_CACHE_ALIGN;
-
+void * W_GetLumpData_(int lump, const char *func);
+#define W_GetLumpData(lump) W_GetLumpData_(lump,__func__)
 #define W_POINTLUMPNUM(x) W_GetLumpData(x)
-
 
 /*---------- */
 /*BASE LEVEL */
@@ -845,13 +861,15 @@ void G_WorldDone (void);
 void G_RecordDemo (void);
 int G_PlayDemoPtr (unsigned *demo);
 
-int G_LumpNumForMapNum(int map);
+dmapinfo_t *G_MapInfoForLumpName(const char *lumpName);
+char *G_LumpNameForMapNum(int map);
+char *G_MapNameForMapNum(int map);
 
 /*----- */
 /*PLAY */
 /*----- */
 
-void P_SetupLevel (int lumpnum, skill_t skill);
+void P_SetupLevel (const char *lumpname, skill_t skill, int skytexture);
 void P_Init (void);
 
 void P_Start (void);
@@ -879,6 +897,11 @@ void F_Drawer (void);
 void AM_Control (player_t *player);
 void AM_Drawer (void);
 void AM_Start (void);
+
+void GS_Start(void);
+void GS_Stop (void);
+int GS_Ticker (void);
+void GS_Drawer (void);
 
 /*----- */
 /*OPTIONS */
@@ -1154,10 +1177,10 @@ extern	int		workpage;
 void WriteEEProm (void);
 void SaveGame(int slotnum);
 void ReadGame(int slotnum);
-void QuickSave(int nextmap);
+void QuickSave(int nextmap, const char *mapname);
 int SaveCount(void);
 int MaxSaveCount(void);
-boolean GetSaveInfo(int slotnumber, VINT* mapnum, VINT* skill, VINT *mode);
+boolean GetSaveInfo(int slotnumber, VINT* mapnum, VINT* skill, VINT *mode, char *wadname, char *mapname);
 
 void PrintHex (int x, int y, unsigned num);
 void DrawPlaque (jagobj_t *pl);
@@ -1198,11 +1221,22 @@ void I_InitMenuFire(jagobj_t* titlepic);
 void I_StopMenuFire(void);
 void I_DrawMenuFire(void);
 void I_DrawSbar(void);
+int S_SongForName(const char *str);
 void S_StartSong(int musiclump, int looping, int cdtrack);
+void S_StartSongByName(const char *name, int looping, int cdtrack);
 int S_SongForMapnum(int mapnum);
 void S_StopSong(void);
 void S_RestartSounds (void);
 void S_SetSoundDriver (int newdrv);
+
+int I_OpenCDFileByName(const char *name, int *poffset);
+void I_OpenCDFileByOffset(int length, int offset);
+void *I_GetCDFileBuffer(void);
+int I_SeekCDFile(int offset, int whence);
+int I_ReadCDFile(int length);
+void I_SetCDFileCache(int length);
+void *I_GetCDFileCache(int length);
+int I_ReadCDDirectory(const char *path);
 
 /*================= */
 /*TLS */

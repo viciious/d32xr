@@ -73,7 +73,9 @@ boolean P_GiveAmmo (player_t *player, ammotype_t ammo, int num)
 	case am_shell:
 		if (player->readyweapon == wp_fist || player->readyweapon == wp_pistol)
 		{
-			if (player->weaponowned[wp_shotgun])
+			if (player->weaponowned[wp_supershotgun])
+				player->pendingweapon = wp_supershotgun;
+			else if (player->weaponowned[wp_shotgun])
 				player->pendingweapon = wp_shotgun;
 		}
 		break;
@@ -315,7 +317,7 @@ int P_TouchSpecialThing2 (mobj_t *special, mobj_t *toucher)
 		else
 			player->message = "You pick up a medikit.";
 		break;
-	
+
 /* */
 /* power ups */
 /* */
@@ -405,8 +407,15 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 			player->health = 200;
 		player->mo->health = player->health;
 		player->message = "Supercharge!";
+		sound = sfx_getpow;
 		break;
-				
+	case SPR_MEGA:
+		player->health = 200;
+		player->mo->health = player->health;
+		P_GiveArmor (player,2);
+		player->message = "Megasphere!";
+		sound = sfx_getpow;
+		break;
 
 		
 /* */
@@ -510,6 +519,12 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 		if (!P_GiveWeapon (player, wp_shotgun, special->flags&MF_DROPPED ) )
 			return;
 		player->message = "You got the shotgun!";
+		sound = sfx_wpnup;	
+		break;
+	case SPR_SGN2:
+		if (!P_GiveWeapon (player, wp_supershotgun, special->flags&MF_DROPPED ) )
+			return;
+		player->message = "You got the super shotgun!";
 		sound = sfx_wpnup;	
 		break;
 
@@ -642,7 +657,7 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 		else
 			S_StartSound (target, sfx_pldeth);
 		if (netgame == gt_coop)
-			R_ResetResp(player);
+			P_ResetResp(player);
 	}
 
 	if (target->health < -targinfo->spawnhealth
@@ -664,6 +679,9 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 		break;
 	case MT_SHOTGUY:
 		item = MT_SHOTGUN;
+		break;
+	case MT_CHAINGUY:
+		item = MT_CHAINGUN;
 		break;
 	default:
 		return;

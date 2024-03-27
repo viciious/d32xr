@@ -156,7 +156,7 @@ void S_Src_Paint(sfx_source_t *src)
             S_Src_Stop(src);
             return;
         }
-        
+
         src->backbuf = backbuf;
         src->rem = CHBUF_SIZE;
         if (src->eof)

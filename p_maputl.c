@@ -6,6 +6,7 @@
 
 fixed_t P_AproxDistance(fixed_t dx, fixed_t dy) ATTR_DATA_CACHE_ALIGN;
 int P_PointOnLineSide(fixed_t x, fixed_t y, line_t* line) ATTR_DATA_CACHE_ALIGN;
+boolean P_BoxCrossLine(line_t *ld, fixed_t testbbox[4]) ATTR_DATA_CACHE_ALIGN;
 int P_PointOnDivlineSide(fixed_t x, fixed_t y, divline_t* line) ATTR_DATA_CACHE_ALIGN;
 fixed_t P_LineOpening(line_t* linedef) ATTR_DATA_CACHE_ALIGN;
 void P_LineBBox(line_t* ld, fixed_t* bbox) ATTR_DATA_CACHE_ALIGN;
@@ -53,17 +54,66 @@ int P_PointOnLineSide (fixed_t x, fixed_t y, line_t *line)
 	ldx = vertexes[line->v2].x - vertexes[line->v1].x;
 	ldy = vertexes[line->v2].y - vertexes[line->v1].y;
 
-	dx = (x - vertexes[line->v1].x);
-	dy = (y - vertexes[line->v1].y);
+	dx = x - (vertexes[line->v1].x << FRACBITS);
+	dy = y - (vertexes[line->v1].y << FRACBITS);
 	
-	left = (ldy>>16) * (dx>>16);
-	right = (dy>>16) * (ldx>>16);
+	left = (ldy) * (dx>>16);
+	right = (dy>>16) * (ldx);
 
 	if (right < left)
 		return 0;		/* front side */
 	return 1;			/* back side */
 }
 
+//
+// Check if the thing intersects a linedef
+//
+boolean P_BoxCrossLine(line_t *ld, fixed_t testbbox[4])
+{
+   fixed_t x1, x2;
+   fixed_t lx, ly;
+   fixed_t ldx, ldy;
+   fixed_t dx1, dy1, dx2, dy2;
+   boolean side1, side2;
+   fixed_t ldbbox[4];
+
+   P_LineBBox(ld, ldbbox);
+
+   // entirely outside bounding box of line?
+   if(testbbox[BOXRIGHT ] <= ldbbox[BOXLEFT  ] ||
+      testbbox[BOXLEFT  ] >= ldbbox[BOXRIGHT ] ||
+      testbbox[BOXTOP   ] <= ldbbox[BOXBOTTOM] ||
+      testbbox[BOXBOTTOM] >= ldbbox[BOXTOP   ])
+   {
+      return false;
+   }
+
+   if(ld->flags & ML_ST_POSITIVE)
+   {
+      x1 = testbbox[BOXLEFT ];
+      x2 = testbbox[BOXRIGHT];
+   }
+   else
+   {
+      x1 = testbbox[BOXRIGHT];
+      x2 = testbbox[BOXLEFT ];
+   }
+
+   lx  = vertexes[ld->v1].x << FRACBITS;
+   ly  = vertexes[ld->v1].y << FRACBITS;
+   ldx = vertexes[ld->v2].x - vertexes[ld->v1].x;
+   ldy = vertexes[ld->v2].y - vertexes[ld->v1].y;
+
+   dx1 = (x1 - lx) >> FRACBITS;
+   dy1 = (testbbox[BOXTOP] - ly) >> FRACBITS;
+   dx2 = (x2 - lx) >> FRACBITS;
+   dy2 = (testbbox[BOXBOTTOM] - ly) >> FRACBITS;
+
+   side1 = (ldy * dx1 < dy1 * ldx);
+   side2 = (ldy * dx2 < dy2 * ldx);
+
+   return (side1 != side2);
+}
 
 /*
 ==================
@@ -99,7 +149,6 @@ int P_PointOnDivlineSide (fixed_t x, fixed_t y, divline_t *line)
 		return 0;		/* front side */
 	return 1;			/* back side */
 }
-
 
 /*
 ==================
@@ -138,7 +187,7 @@ fixed_t P_LineOpening (line_t *linedef)
 
 void P_LineBBox(line_t* ld, fixed_t *bbox)
 {
-	vertex_t* v1 = &vertexes[ld->v1], * v2 = &vertexes[ld->v2];
+	mapvertex_t* v1 = &vertexes[ld->v1], * v2 = &vertexes[ld->v2];
 
 	if (v1->x < v2->x)
 	{
@@ -160,6 +209,11 @@ void P_LineBBox(line_t* ld, fixed_t *bbox)
 		bbox[BOXBOTTOM] = v2->y;
 		bbox[BOXTOP] = v1->y;
 	}
+
+	bbox[BOXTOP] <<= FRACBITS;
+	bbox[BOXBOTTOM] <<= FRACBITS;
+	bbox[BOXLEFT] <<= FRACBITS;
+	bbox[BOXRIGHT] <<= FRACBITS;
 }
 
 /*
