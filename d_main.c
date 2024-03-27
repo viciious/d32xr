@@ -1,6 +1,9 @@
 /* D_main.c  */
  
 #include "doomdef.h" 
+#ifdef MARS
+#include <string.h>
+#endif
 
 boolean		splitscreen = false;
 VINT		controltype = 0;		/* determine settings for BT_* */
@@ -47,6 +50,9 @@ unsigned configuration[NUMCONTROLOPTIONS][3] =
 
 void D_memset (void *dest, int val, size_t count)
 {
+#ifdef MARS
+	memset(dest, val, count);
+#else
 	byte	*p;
 	int		*lp;
 
@@ -76,6 +82,7 @@ void D_memset (void *dest, int val, size_t count)
 		*p++ = val;
 		count--;
 	}
+#endif
 }
 
 #ifdef MARS
@@ -84,6 +91,9 @@ void fast_memcpy(void *dest, const void *src, int count);
 
 void D_memcpy (void *dest, const void *src, size_t count)
 {
+#ifdef MARS
+	memcpy (dest, src, count);
+#else
 	byte	*d;
 	const byte *s;
 
@@ -117,6 +127,7 @@ void D_memcpy (void *dest, const void *src, size_t count)
 	s = (const byte *)src;
 	while (count--)
 		*d++ = *s++;
+#endif
 }
 
 
