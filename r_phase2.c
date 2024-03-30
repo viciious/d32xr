@@ -34,7 +34,7 @@ static fixed_t R_PointToDist(fixed_t x, fixed_t y)
         dy = temp;
     }
 
-    angle = (tantoangle[FixedDiv(dy, dx) >> DBITS] + ANG90) >> ANGLETOFINESHIFT;
+    angle = (tantoangle[(unsigned)FixedDiv(dy, dx) >> DBITS] + ANG90) >> ANGLETOFINESHIFT;
 
     // use as cosine
     return FixedDiv(dx, finesine(angle));
@@ -146,13 +146,6 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
         R_SetupCalc(wc, hyp, normalangle, angle1);// do calc setup
     }
 
-#ifdef MARS
-    if (wc->stop > wc->start)
-    {
-        wc->scalestep = SH2_DIVU_DVDNT; // get 32-bit quotient
-    }
-#endif
-
     wc->clipbounds = NULL;
 
     const int start = wc->start;
@@ -169,6 +162,13 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
         D_memset(vd->lastsegclip, 255, sizeof(*vd->lastsegclip)*width);
         vd->lastsegclip += width;
     }
+
+#ifdef MARS
+    if (wc->stop > wc->start)
+    {
+        wc->scalestep = SH2_DIVU_DVDNT; // get 32-bit quotient
+    }
+#endif
 }
 
 //
