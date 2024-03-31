@@ -275,8 +275,8 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
    int     r1;         // FP+7
    int     r2;         // r18
    unsigned silhouette; // FP+4
-   uint16_t *sil;     // FP+6
-   uint16_t *opening;
+   int16_t *sil;     // FP+6
+   int16_t *opening;
    int top;        // r19
    int bottom;     // r20
    unsigned short openmark = OPENMARK;
@@ -327,8 +327,8 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
          continue;
       }
 
-      sil = ds->clipbounds + r1;
-      opening = spropening + r1;
+      sil = (int16_t *)ds->clipbounds + r1;
+      opening = (int16_t *)spropening + r1;
       x = r2 - r1 + 1;
 
       silhouette = (ds->actionbits & (AC_TOPSIL | AC_BOTTOMSIL | AC_SOLIDSIL));
@@ -336,26 +336,21 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
       if(silhouette == 0)
          continue;
 
-      if(silhouette == 1)
+      if(silhouette < 3)
       {
          int8_t *popn = (int8_t *)opening;
          int8_t *psil = (int8_t *)sil;
+         int mark = 0;
+
+         if (silhouette == 2)
+         {
+            mark = (int8_t)viewportHeight;
+            popn++, psil++;
+         }
+
          do
          {
-            if(*popn == 0)
-               *popn = *psil;
-            popn += 2, psil += 2;
-         } while (--x);
-      }
-      else if(silhouette == 2)
-      {
-         int8_t *popn = (int8_t *)opening;
-         int8_t *psil = (int8_t *)sil;
-         int vph = (int8_t)viewportHeight;
-         popn++, psil++;
-         do
-         {
-            if(*popn == vph)
+            if(*popn == mark)
                *popn = *psil;
             popn += 2, psil += 2;
          } while (--x);
@@ -364,7 +359,7 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
       {
          do
          {
-            uint16_t clip = *sil;
+            int16_t clip = *sil++;
             top    = *opening;
             bottom = top & 0xff;
             top = top & openmark;
@@ -372,8 +367,7 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
                bottom = clip & 0xff;
             if(top == 0)
                top = clip & openmark;
-            *opening = top | bottom;
-            opening++, sil++;
+            *opening++ = top | bottom;
          } while (--x);
       }
       else
