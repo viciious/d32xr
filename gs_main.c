@@ -23,16 +23,16 @@ typedef struct
 {
 	VINT numitems;
     menuitem_t items[MAXITEMS];
+
+    VINT m_skull1lump, m_skull2lump;
+    VINT m_skilllump;
+    VINT numslump;
+
+    VINT cursorframe;
+    VINT cursordelay;
+    VINT cursorpos;
+    VINT movecount;
 } menuscreen_t;
-
-static VINT m_skull1lump, m_skull2lump;
-static VINT m_skilllump;
-static VINT numslump;
-
-static VINT	cursorframe;
-static VINT cursordelay;
-static VINT	cursorpos;
-static VINT	movecount;
 
 static menuscreen_t *gs_menu;
 
@@ -45,25 +45,24 @@ void GS_Start(void)
     int n;
     char *buf;
 
+    gs_menu = Z_Malloc(sizeof(*gs_menu), PU_STATIC);
+    D_memset(gs_menu, 0, sizeof(*gs_menu));
+
     /* cache all needed graphics	 */
-    m_skull1lump = W_CheckNumForName("M_SKULL1");
-    m_skull2lump = W_CheckNumForName("M_SKULL2");
+    gs_menu->m_skull1lump = W_CheckNumForName("M_SKULL1");
+    gs_menu->m_skull2lump = W_CheckNumForName("M_SKULL2");
 
-    m_skilllump = W_CheckNumForName("SKILL0");
+    gs_menu->m_skilllump = W_CheckNumForName("SKILL0");
 
-    numslump = W_CheckNumForName("NUM_0");
+    gs_menu->numslump = W_CheckNumForName("NUM_0");
 
     uchar = W_CheckNumForName("CHAR_065");
 
     snums = W_CheckNumForName("NUM_0");
 
-    cursorframe = -1;
-    cursorpos = 0;
-    cursordelay = MOVEWAIT;
-    gs_menu = NULL;
-
-    gs_menu = Z_Malloc(sizeof(*gs_menu), PU_STATIC);
-    D_memset(gs_menu, 0, sizeof(*gs_menu));
+    gs_menu->cursorframe = -1;
+    gs_menu->cursorpos = 0;
+    gs_menu->cursordelay = MOVEWAIT;
 
     n = I_ReadCDDirectory("/");
     buf = I_GetCDFileBuffer();
@@ -114,7 +113,7 @@ void GS_Stop(void)
     if (gs_menu == NULL)
         return;
 
-    D_snprintf(cd_pwad_name, sizeof(cd_pwad_name), "%s", gs_menu->items[cursorpos].name);
+    D_snprintf(cd_pwad_name, sizeof(cd_pwad_name), "%s", gs_menu->items[gs_menu->cursorpos].name);
     Z_Free(gs_menu);
     gs_menu = NULL;
 
@@ -139,17 +138,17 @@ int GS_Ticker (void)
     if (menuscr->numitems <= 1)
         return ga_startnew;
 
-    if (cursorframe == -1)
+    if (gs_menu->cursorframe == -1)
     {
-        cursorframe = 0;
-        cursordelay = MOVEWAIT + MOVEWAIT / 2;
+        gs_menu->cursorframe = 0;
+        gs_menu->cursordelay = MOVEWAIT + MOVEWAIT / 2;
         S_StartSound(NULL, sfx_swtchn);
     }
 
     /* animate skull */
     if (gametic != prevgametic && (gametic & 3) == 0)
     {
-        cursorframe ^= 1;
+        gs_menu->cursorframe ^= 1;
     }
 
     buttons = ticrealbuttons & MENU_BTNMASK;
@@ -161,40 +160,40 @@ int GS_Ticker (void)
 
     if (buttons == 0)
     {
-        cursordelay = 0;
+        gs_menu->cursordelay = 0;
         return ga_nothing;
     }
 
-    cursordelay -= vblsinframe;
-    if (cursordelay > 0)
+    gs_menu->cursordelay -= vblsinframe;
+    if (gs_menu->cursordelay > 0)
         return ga_nothing;
 
-    cursordelay = MOVEWAIT;
+    gs_menu->cursordelay = MOVEWAIT;
 
     /* check for movement */
     if (!(buttons & (BT_UP | BT_DOWN | BT_LEFT | BT_RIGHT)))
-        movecount = 0; /* move immediately on next press */
+        gs_menu->movecount = 0; /* move immediately on next press */
     else
     {
-        movecount = 0; /* repeat move */
+        gs_menu->movecount = 0; /* repeat move */
 
-        if (++movecount == 1)
+        if (++gs_menu->movecount == 1)
         {
-            int oldcursorpos = cursorpos;
+            int oldcursorpos = gs_menu->cursorpos;
 
             if (buttons & BT_DOWN)
             {
-                if (++cursorpos == menuscr->numitems)
-                    cursorpos = 0;
+                if (++gs_menu->cursorpos == menuscr->numitems)
+                    gs_menu->cursorpos = 0;
             }
 
             if (buttons & BT_UP)
             {
-                if (--cursorpos == -1)
-                    cursorpos = menuscr->numitems - 1;
+                if (--gs_menu->cursorpos == -1)
+                    gs_menu->cursorpos = menuscr->numitems - 1;
             }
 
-            newcursor = cursorpos != oldcursorpos;
+            newcursor = gs_menu->cursorpos != oldcursorpos;
 
             if (newcursor)
                 sound = sfx_pistol;
@@ -228,10 +227,10 @@ void GS_Drawer (void)
     y_offset += ITEMSPACE + 4;
 
     /* draw new skull */
-    if (cursorframe)
-        DrawJagobjLump(m_skull2lump, CURSORX, y_offset + items[cursorpos].y - 2, NULL, NULL);
+    if (gs_menu->cursorframe)
+        DrawJagobjLump(gs_menu->m_skull2lump, CURSORX, y_offset + items[gs_menu->cursorpos].y - 2, NULL, NULL);
     else
-        DrawJagobjLump(m_skull1lump, CURSORX, y_offset + items[cursorpos].y - 2, NULL, NULL);
+        DrawJagobjLump(gs_menu->m_skull1lump, CURSORX, y_offset + items[gs_menu->cursorpos].y - 2, NULL, NULL);
 
     /* draw menu items */
     for (i = 0; i < gs_menu->numitems; i++)
