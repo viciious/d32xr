@@ -524,13 +524,14 @@ rd_msd_sram:
         bra.w   exit_rd_sram
 
 rd_med_sram:
+        add.l   d0,d0
         tst.b   everdrive_ok
         bne.b   1f                  /* v1 or v2a MED */
         lea     0x040000,a0         /* use the upper 256K of page 31 */
         sh2_wait
         set_rv
         move.w  #0x801F,0xA130F0    /* map bank 0 to page 31, disable write */
-        move.b  0(a0,d0.l),d1       /* read SRAM */
+        move.b  1(a0,d0.l),d1       /* read SRAM */
         move.w  #0x8000,0xA130F0    /* map bank 0 to page 0, disable write */
         bra.b   exit_rd_sram
 1:
@@ -538,7 +539,7 @@ rd_med_sram:
         sh2_wait
         set_rv
         move.w  #0x801C,0xA130F0    /* map bank 0 to page 28, disable write */
-        move.b  0(a0,d0.l),d1       /* read SRAM */
+        move.b  1(a0,d0.l),d1       /* read SRAM */
         move.w  #0x8000,0xA130F0    /* map bank 0 to page 0, disable write */
 
 exit_rd_sram:
@@ -580,13 +581,14 @@ wr_msd_sram:
         bra.w   exit_wr_sram
 
 wr_med_sram:
+        add.l   d1,d1
         tst.b   everdrive_ok
         bne.b   1f                  /* v1 or v2a MED */
         lea     0x040000,a0         /* use the upper 256K of page 31 */
         sh2_wait
         set_rv
         move.w  #0xA01F,0xA130F0    /* map bank 0 to page 31, enable write */
-        move.b  d0,0(a0,d1.l)       /* write SRAM */
+        move.b  d0,1(a0,d1.l)       /* write SRAM */
         move.w  #0x8000,0xA130F0    /* map bank 0 to page 0, disable write */
         bra.b   exit_wr_sram
 1:
@@ -594,7 +596,7 @@ wr_med_sram:
         sh2_wait
         set_rv
         move.w  #0xA01C,0xA130F0    /* map bank 0 to page 28, enable write */
-        move.b  d0,0(a0,d1.l)       /* write SRAM */
+        move.b  d0,1(a0,d1.l)       /* write SRAM */
         move.w  #0x8000,0xA130F0    /* map bank 0 to page 0, disable write */
 
 exit_wr_sram:
