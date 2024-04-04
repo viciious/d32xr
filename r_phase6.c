@@ -97,9 +97,6 @@ static void R_DrawTextures(int x, unsigned iscale_, int colnum_, fixed_t scale2,
            pixel_t* src;
 #endif
 
-           // DEBUG: fixes green pixels in MAP01...
-           frac += iscale + ((iscale + iscale + iscale) >> 6);
-
            while (frac < 0)
            {
                colnum--;
