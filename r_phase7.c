@@ -74,16 +74,15 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     distance = FixedMul(lpl->height, yslope[y]);
 
 #ifdef MARS
-    volatile int32_t t;
+    int32_t t, divunit;
     __asm volatile (
-        "mov #-128, r0\n\t"
-        "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
+        "mov #-128, %1\n\t"
+        "add %1, %1 /* r0 is now 0xFFFFFF00 */ \n\t"
+        "mov.l %2, @(0, %1) /* set 32-bit divisor */ \n\t"
         "mov #0, %0\n\t"
-        "mov.l %2, @(16, r0) /* set high bits of the 64-bit dividend */ \n\t"
-        "mov.l %1, @(0, r0) /* set 32-bit divisor */ \n\t"
-        "mov #0, %0\n\t"
-        "mov.l %0, @(20, r0) /* set low  bits of the 64-bit dividend, start divide */\n\t"
-        : "=&r" (t) : "r" (distance), "r"(lpl->lightcoef) : "r0");
+        "mov.l %3, @(16, %1) /* set high bits of the 64-bit dividend */ \n\t"
+        "mov.l %0, @(20, %1) /* set low  bits of the 64-bit dividend, start divide */\n\t"
+        : "=&r" (t), "=&r" (divunit) : "r" (distance), "r"(lpl->lightcoef));
 #endif
 
     length = FixedMul(distance, distscale[x]);
@@ -111,6 +110,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     yfrac *= FLATSIZE;
 #endif
 
+#if MIPLEVELS > 1
     if (miplevel > 0) {
         unsigned m = miplevel;
         do {
@@ -118,15 +118,16 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
             yfrac >>= 2, ystep >>= 2;
         } while (--m);
     }
+#endif
 
     if (lpl->lightcoef != 0)
     {
 #ifdef MARS
         __asm volatile (
-            "mov #-128, r0\n\t"
-            "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
-            "mov.l @(20,r0), %0 /* get 32-bit quotient */ \n\t"
-            : "=r" (scale) : : "r0");
+            "mov #-128, %0\n\t"
+            "add %0, %0 /* %0 is now 0xFFFFFF00 */ \n\t"
+            "mov.l @(20,%0), %0 /* get 32-bit quotient */ \n\t"
+            : "=r" (scale));
 #else
         scale = (lpl->lightcoef << SLOPEBITS) / distance;
 #endif

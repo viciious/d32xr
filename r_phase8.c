@@ -68,16 +68,16 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
       maskedcol[x] = OPENMARK;
 
 #ifdef MARS
-        volatile int32_t t;
+        int32_t t, divunit;
         __asm volatile (
-           "mov #-128, r0\n\t"
-           "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
+           "mov #-128, %1\n\t"
+           "add %1, %1 /* %1 is now 0xFFFFFF00 */ \n\t"
+           "mov.l %2, @(0, %1) /* set 32-bit divisor */ \n\t"
            "mov #0, %0\n\t"
-           "mov.l %0, @(16, r0) /* set high bits of the 64-bit dividend */ \n\t"
-           "mov.l %1, @(0, r0) /* set 32-bit divisor */ \n\t"
+           "mov.l %0, @(16, %1) /* set high bits of the 64-bit dividend */ \n\t"
            "mov #-1, %0\n\t"
-           "mov.l %0, @(20, r0) /* set low  bits of the 64-bit dividend, start divide */\n\t"
-           : "=&r" (t) : "r" (scalefrac) : "r0");
+           "mov.l %0, @(20, %1) /* set low  bits of the 64-bit dividend, start divide */\n\t"
+           : "=&r" (t), "=&r"(divunit) : "r" (scalefrac));
 #else
       fixed_t scale = scalefrac;
 #endif
@@ -92,10 +92,10 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
 
 #ifdef MARS
       __asm volatile (
-         "mov #-128, r0\n\t"
-         "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
-         "mov.l @(20, r0), %0 /* get 32-bit quotient */ \n\t"
-         : "=r" (iscale) : : "r0");
+         "mov #-128, %0\n\t"
+         "add %0, %0 /* %0 is now 0xFFFFFF00 */ \n\t"
+         "mov.l @(20, %0), %0 /* get 32-bit quotient */ \n\t"
+         : "=r" (iscale));
 #else
       iscale = 0xffffffffu / scalefrac;
 #endif
