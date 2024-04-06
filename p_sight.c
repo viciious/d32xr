@@ -67,34 +67,33 @@ void P_CheckSights2(void) ATTR_DATA_CACHE_ALIGN;
 //
 static fixed_t PS_InterceptVector2(i16divline_t *v2, i16divline_t *v1)
 {
-   fixed_t frac;
+   fixed_t frac, num, den;
  #ifdef MARS
-   union { int64_t i64; int32_t i32[2]; } den, num;
+   fixed_t temp;
 
-   den.i32[0] =  (int32_t)v1->dy * v2->dx;
-   den.i32[0] -= (int32_t)v1->dx * v2->dy;
-   if (den.i32[0] == 0)
+   den =  (int32_t)v1->dy * v2->dx;
+   den -= (int32_t)v1->dx * v2->dy;
+   if (den == 0)
      return 0;
 
-   num.i64 =  (int64_t)(v1->x - v2->x) * FRACUNIT * v1->dy;
-   num.i64 -= (int64_t)(v1->y - v2->y) * FRACUNIT * v1->dx;
+   num =  (int32_t)(v1->x - v2->x) * v1->dy;
+   num -= (int32_t)(v1->y - v2->y) * v1->dx;
 
-   do {
-      __asm volatile (
-         "mov #-128, r0\n\t"
-         "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
-         "mov.l %3, @(0,r0) /* set 32-bit divisor */ \n\t"
-         "mov.l %1, @(16,r0)\n\t"
-         "mov.l %2, @(20,r0) /* start divide */\n\t"
-         "mov.l @(20,r0), %0 /* get 32-bit quotient */ \n\t"
-         : "=r" (frac)
-         : "r" (num.i32[0]), "r" (num.i32[1]), "r" (den.i32[0])
-         : "r0"
-      );
-   } while (0);
+   __asm volatile (
+      "mov #-128, %1\n\t"
+      "add %1, %1 /* %1 is now 0xFFFFFF00 */ \n\t"
+      "mov.l %3, @(0,%1) /* set 32-bit divisor */ \n\t"
+      "swap.w %2, %0\n\t"
+      "exts.w %0, %0\n\t"
+      "mov.l %0, @(16,%1)\n\t"
+      "shll16 %2\n\t"
+      "mov.l %2, @(20,%1) /* start divide */\n\t"
+      "mov.l @(20,%1), %0 /* get 32-bit quotient */ \n\t"
+      : "=&r" (frac), "=&r" (temp)
+      : "r" (num), "r" (den)
+   );
 #else
-   fixed_t num;
-   fixed_t den, temp;
+   fixed_t temp;
 
    den = FixedMul(v1->dy<<8,v2->dx<<8);
    temp = FixedMul(v1->dx<<8, v2->dy<<8);
