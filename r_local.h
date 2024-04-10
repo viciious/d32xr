@@ -7,7 +7,6 @@
 
 extern int16_t viewportWidth, viewportHeight;
 extern int16_t centerX, centerY;
-extern boolean lowResMode;
 extern fixed_t centerXFrac, centerYFrac;
 extern fixed_t stretch;
 extern fixed_t stretchX;
@@ -288,7 +287,6 @@ typedef void (*drawspan_t)(int, int, int, int, fixed_t, fixed_t, fixed_t, fixed_
 extern drawcol_t drawcol;
 extern drawcol_t drawfuzzcol;
 extern drawcol_t drawcolnpo2;
-extern drawcol_t drawcollow;
 extern drawspan_t drawspan;
 
 #define FUZZTABLE		64
@@ -393,7 +391,7 @@ int	R_FlatNumForName(const char* name);
 int	R_CheckTextureNumForName(const char* name);
 void	R_InitMathTables(void);
 void	R_InitSpriteDefs(const char** namelist);
-void R_InitColormap(boolean doublepix);
+void R_InitColormap(void);
 boolean R_CompositeColumn(int colnum, int numdecals, texdecal_t *decals, inpixel_t *src, inpixel_t *dst, int height, int miplevel) ATTR_DATA_CACHE_ALIGN;
 
 /*

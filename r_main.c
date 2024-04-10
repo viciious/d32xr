@@ -21,7 +21,6 @@ VINT initmathtables = 2;
 drawcol_t drawcol;
 drawcol_t drawfuzzcol;
 drawcol_t drawcolnpo2;
-drawcol_t drawcollow;
 drawspan_t drawspan;
 
 short fuzzoffset[FUZZTABLE] =
@@ -239,14 +238,12 @@ struct subsector_s *R_PointInSubsector (fixed_t x, fixed_t y)
 /*============================================================================= */
 
 const VINT viewports[][2][3] = {
-	{ { 128, 144, true  }, {  80, 100, true  } },
-	{ { 160, 180, true  }, {  80, 144, true  } },
-	{ { 256, 144, false }, { 160, 128, false } },
+	{ { 224, 128, false }, { 160, 100, false } },
+	{ { 256, 144, true }, { 160, 128, true } },
 	{ { 320, 180, false }, { 160, 144, false } },
 };
 
 VINT viewportNum;
-boolean lowResMode;
 const VINT numViewports = sizeof(viewports) / sizeof(viewports[0]);
 
 /*
@@ -267,7 +264,6 @@ void R_SetViewportSize(int num)
 
 	width = viewports[num][splitscreen][0];
 	height = viewports[num][splitscreen][1];
-	lowResMode = viewports[num][splitscreen][2];
 
 	viewportNum = num;
 	viewportWidth = width;
@@ -282,16 +278,14 @@ void R_SetViewportSize(int num)
 	if (anamorphicview)
 	{
 		stretch = ((FRACUNIT * 16 * height) / 180 * 28) / width;
-		//weaponXScale = 1050 * (lowResMode ? 1 : 2) * FRACUNIT / 1100;
-		weaponXScale = FRACUNIT * (lowResMode ? 1 : 2);
 	}
 	else
 	{
 		/* proper screen size would be 160*100, stretched to 224 is 2.2 scale */
 		//stretch = (fixed_t)((160.0f / width) * ((float)height / 180.0f) * 2.2f * FRACUNIT);
 		stretch = ((FRACUNIT * 16 * height) / 180 * 22) / width;
-		weaponXScale = FRACUNIT * (lowResMode ? 1 : 2);
 	}
+	weaponXScale = FRACUNIT;
 	stretchX = stretch * centerX;
 
 	weaponYpos = 180;
@@ -306,7 +300,7 @@ void R_SetViewportSize(int num)
 	// refresh func pointers
 	R_SetDrawMode();
 
-	R_InitColormap(lowResMode);
+	R_InitColormap();
 
 #ifdef MARS
 	Mars_CommSlaveClearCache();
@@ -320,28 +314,15 @@ void R_SetDrawMode(void)
 		drawcol = I_DrawColumnNoDraw;
 		drawcolnpo2 = I_DrawColumnNoDraw;
 		drawfuzzcol = I_DrawColumnNoDraw;
-		drawcollow = I_DrawColumnNoDraw;
 		drawspan = I_DrawSpanNoDraw;
 		return;
 	}
 
-	if (lowResMode)
-	{
-		drawcol = I_DrawColumnLow;
-		drawcolnpo2 = I_DrawColumnNPo2Low;
-		drawfuzzcol = I_DrawFuzzColumnLow;
-		drawcollow = I_DrawColumnLow;
-		drawspan = I_DrawSpanLow;
-	}
-	else
-	{
-		drawcol = I_DrawColumn;
-		drawcolnpo2 = I_DrawColumnNPo2;
-		drawfuzzcol = I_DrawFuzzColumn;
-		drawspan = I_DrawSpan;
-		drawcollow = I_DrawColumnLow;
-		drawspan = I_DrawSpan;
-	}
+	drawcol = I_DrawColumn;
+	drawcolnpo2 = I_DrawColumnNPo2;
+	drawfuzzcol = I_DrawFuzzColumn;
+	drawspan = I_DrawSpan;
+	drawspan = I_DrawSpan;
 
 #ifdef MARS
 	Mars_CommSlaveClearCache();
@@ -355,7 +336,7 @@ int R_DefaultViewportSize(void)
 	for (i = 0; i < numViewports; i++)
 	{
 		const VINT* vp = viewports[i][0];
-		if (vp[0] == 160 && vp[2] == true)
+		if (vp[2] == true)
 			return i;
 	}
 

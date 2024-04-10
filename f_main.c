@@ -140,6 +140,7 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 /* */
 	for (x=0 ; x<patch->width ; x++)
 	{
+		int 	colx;
 		byte	*columnptr;
 
 		if (sprleft+x < 0)
@@ -173,7 +174,11 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 			if (bottom >= height) bottom = height - 1;
 			if (top > bottom) continue;
 
-			fin->drcol(sprleft+x, top, bottom, light, 0, spriscale, src, 128);
+			colx = sprleft + x;
+			colx += colx;
+
+			fin->drcol(colx, top, bottom, light, 0, spriscale, src, 128);
+			fin->drcol(colx+1, top, bottom, light, 0, spriscale, src, 128);
 		}
 	}
 }
@@ -354,9 +359,6 @@ void F_Start (void)
 
 	I_SetPalette(W_POINTLUMPNUM(W_GetNumForName("PLAYPALS")));
 
-	if (finale && gameinfo.endShowCast)
-		R_InitColormap(true);
-
 	canwipe = true;
 }
 
@@ -364,9 +366,6 @@ void F_Stop (void)
 {
 	int	i;
 
-	if (finale && gameinfo.endShowCast)
-		R_InitColormap(lowResMode);
-	
 	for (i = 0;i < NUMENDOBJ; i++)
 		Z_Free(fin->endobj[i]);
 	Z_Free(fin->endobj);
@@ -589,9 +588,9 @@ void F_Drawer (void)
 {
 	int	top, left;
 
-	fin->drcol = I_DrawColumnLow;
+	fin->drcol = I_DrawColumn;
 	if (D_strcasecmp(castorder[fin->castnum].name, "spectre") == 0)
-		fin->drcol = I_DrawFuzzColumnLow;
+		fin->drcol = I_DrawFuzzColumn;
 
 	// HACK
 	if (finale)

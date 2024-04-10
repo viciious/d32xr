@@ -852,29 +852,24 @@ void R_InitSpriteDefs(const char** namelist)
 	}
 }
 
-static void *R_LoadColormap(int l, boolean doublepix)
+static void *R_LoadColormap(int l)
 {
 	void *doomcolormap;
 
-	l -= (int)!doublepix;
-
 	doomcolormap = W_GetLumpData(l);
-
-	if (doublepix)
-		return (void *)((short *)doomcolormap + 128);
 	return (void *)((int8_t*)doomcolormap + 128);
 }
 
-void R_InitColormap(boolean doublepix)
+void R_InitColormap(void)
 {
 	int l;
 	int osky = skycolormaps == dc_colormaps;
 
 	l = W_CheckNumForName("COLORMAP");
-	dc_colormaps = R_LoadColormap(l, doublepix);
+	dc_colormaps = R_LoadColormap(l);
 
-	l -= 2;
-	dc_colormaps2 = R_LoadColormap(l, doublepix);
+	l -= 1;
+	dc_colormaps2 = R_LoadColormap(l);
 
 	skycolormaps = osky ? dc_colormaps : dc_colormaps2;
 
