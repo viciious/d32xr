@@ -15,7 +15,7 @@ static const castinfo_t castorder[] = {
 {"heavy weapon dude", MT_CHAINGUY},
 {"imp", MT_TROOP},
 {"demon", MT_SERGEANT},
-{"spectre", MT_SERGEANT},
+{"spectre", MT_SHADOWS},
 {"lost soul", MT_SKULL},
 {"cacodemon", MT_HEAD},
 {"hell knight", MT_KNIGHT},
@@ -61,6 +61,7 @@ typedef struct
 	VINT		drawbg;
 	jagobj_t	**endobj;
 	drawcol_t	drcol;
+	void 		*drcolormaps;
 	int 		endFlat;
 } finale_t;
 
@@ -133,7 +134,7 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 	sprtop -= patch->topoffset;
 	sprleft -= patch->leftoffset;
 
-	I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
+	I_SetThreadLocalVar(DOOMTLS_COLORMAP, fin->drcolormaps);
 
 /* */
 /* draw it by hand */
@@ -589,8 +590,12 @@ void F_Drawer (void)
 	int	top, left;
 
 	fin->drcol = I_DrawColumn;
-	if (D_strcasecmp(castorder[fin->castnum].name, "spectre") == 0)
+	if (mobjinfo[castorder[fin->castnum].type].flags & MF_SHADOW)
 		fin->drcol = I_DrawFuzzColumn;
+
+	fin->drcolormaps = dc_colormaps;
+	if (mobjinfo[castorder[fin->castnum].type].flags & MF_KNIGHT_CMAP)
+		fin->drcolormaps = dc_colormaps2;
 
 	// HACK
 	if (finale)
