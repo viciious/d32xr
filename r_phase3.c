@@ -203,9 +203,7 @@ static void R_PrepPSprite(pspdef_t *psp)
    patch    = W_POINTLUMPNUM(lump);
 
    xscale = weaponXScale;
-   center = centerXFrac - 80 * weaponXScale;
-   if (!lowResMode)
-    center >>= 1;
+   center = centerXFrac - 160 * weaponXScale;
 
    tx = psp->sx + center;
    topoffset = (((fixed_t)BIGSHORT(patch->topoffset) - weaponYpos) << FRACBITS) - psp->sy;

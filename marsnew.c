@@ -682,7 +682,7 @@ int I_ViewportYPos(void)
 
 	if (viewportWidth < 160)
 		return (fbh - jo_stbar_height - viewportHeight) / 2;
-	if ((viewportWidth == 160 && lowResMode) || viewportWidth == 320)
+	if (viewportWidth == 320)
 		return (fbh - jo_stbar_height - viewportHeight);
 	return (fbh - jo_stbar_height - viewportHeight) / 2;
 }
