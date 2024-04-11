@@ -6,28 +6,29 @@
 typedef struct
 {
 	char		*name;
-	mobjtype_t	type;
+	VINT		type;
+	VINT 		castType;
 } castinfo_t;
 
 static const castinfo_t castorder[] = {
-{"zombieman", MT_POSSESSED},
-{"shotgun guy", MT_SHOTGUY},
-{"heavy weapon dude", MT_CHAINGUY},
-{"imp", MT_TROOP},
-{"demon", MT_SERGEANT},
-{"spectre", MT_SHADOWS},
-{"lost soul", MT_SKULL},
-{"cacodemon", MT_HEAD},
-{"hell knight", MT_KNIGHT},
+{"zombieman", MT_POSSESSED, 1},
+{"shotgun guy", MT_SHOTGUY, 1},
+{"heavy weapon dude", MT_CHAINGUY, 2},
+{"imp", MT_TROOP, 1},
+{"demon", MT_SERGEANT, 1},
+{"spectre", MT_SHADOWS, 1},
+{"lost soul", MT_SKULL, 1},
+{"cacodemon", MT_HEAD, 1},
+{"hell knight", MT_KNIGHT, 2},
 {"baron of hell", MT_BRUISER},
-{"arachnotron", MT_BABY},
-{"revenant", MT_UNDEAD},
-{"mancubus", MT_FATSO},
-{"cyberdemon", MT_CYBORG},
-{"spider mastermind", MT_SPIDER},
-{"our hero", MT_PLAYER},
+{"arachnotron", MT_BABY, 2},
+{"revenant", MT_UNDEAD, 2},
+{"mancubus", MT_FATSO, 2},
+{"cyberdemon", MT_CYBORG, 1},
+{"spider mastermind", MT_SPIDER, 1},
+{"our hero", MT_PLAYER, 1},
 
-{NULL,0}
+{NULL,0,0}
 };
 
 typedef enum
@@ -469,6 +470,8 @@ int F_Ticker (void)
 			if (castorder[fin->castnum].name == NULL)
 				fin->castnum = 0;
 			if (sprites[states[mobjinfo[castorder[fin->castnum].type].seestate].sprite].numframes == 0)
+				continue;
+			if (castorder[fin->castnum].castType > gameinfo.endShowCast)
 				continue;
 			break;
 		} while (fin->castnum != oldnum);
