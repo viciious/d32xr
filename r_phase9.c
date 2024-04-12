@@ -79,6 +79,7 @@ static void R_UpdateCache(void)
             maxplanemip = maxmip;
       }
 
+      if (detailmode != detmode_potato)
       {
         flattex_t *flat = &flatpixels[wall->floorpicnum];
 
