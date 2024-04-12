@@ -15,6 +15,8 @@ fixed_t stretchX;
 VINT weaponYpos;
 fixed_t weaponXScale;
 
+VINT detailmode;
+
 VINT anamorphicview = 0;
 VINT initmathtables = 2;
 
@@ -298,7 +300,7 @@ void R_SetViewportSize(int num)
 	clearscreen = 2;
 
 	// refresh func pointers
-	R_SetDrawMode();
+	R_SetDrawFuncs();
 
 	R_InitColormap();
 
@@ -307,7 +309,7 @@ void R_SetViewportSize(int num)
 #endif
 }
 
-void R_SetDrawMode(void)
+void R_SetDrawFuncs(void)
 {
 	if (debugmode == DEBUGMODE_NODRAW)
 	{
@@ -318,11 +320,13 @@ void R_SetDrawMode(void)
 		return;
 	}
 
+	if (detailmode < detmode_potato || detailmode >= MAXDETAILMODES)
+		detailmode = detmode_normal;
+
 	drawcol = I_DrawColumn;
 	drawcolnpo2 = I_DrawColumnNPo2;
 	drawfuzzcol = I_DrawFuzzColumn;
-	drawspan = I_DrawSpan;
-	drawspan = I_DrawSpan;
+	drawspan = detailmode == detmode_potato ? I_DrawSpanPotato : I_DrawSpan;
 
 #ifdef MARS
 	Mars_CommSlaveClearCache();
@@ -362,7 +366,7 @@ D_printf ("Done\n");
 	framecount = 0;
 	viewplayer = &players[0];
 
-	R_SetDrawMode();
+	R_SetDrawFuncs();
 
 	R_InitTexCache(&r_texcache);
 

@@ -37,6 +37,7 @@ typedef enum
 
 	mi_resolution,
 	mi_anamorphic,
+	mi_detailmode,
 
 	mi_controltype,
 	mi_alwaysrun,
@@ -231,6 +232,9 @@ void O_Init (void)
 	menuitem[mi_anamorphic].x = ITEMX;
 	menuitem[mi_anamorphic].y = STARTY + ITEMSPACE * 2;
 
+	D_memcpy(menuitem[mi_detailmode].name, "Potato mode", 12);
+	menuitem[mi_detailmode].x = ITEMX;
+	menuitem[mi_detailmode].y = STARTY + ITEMSPACE * 3;
 
 	D_memcpy(menuitem[mi_controltype].name, "Gamepad", 8);
 	menuitem[mi_controltype].x = ITEMX;
@@ -266,7 +270,7 @@ void O_Init (void)
 
 	D_memcpy(menuscreen[ms_video].name, "Video", 6);
 	menuscreen[ms_video].firstitem = mi_resolution;
-	menuscreen[ms_video].numitems = mi_anamorphic - mi_resolution + 1;
+	menuscreen[ms_video].numitems = mi_detailmode - mi_resolution + 1;
 
 	D_memcpy(menuscreen[ms_controls].name, "Controls", 9);
 	menuscreen[ms_controls].firstitem = mi_controltype;
@@ -480,10 +484,6 @@ void O_Control (player_t *player)
 				case mi_resolution:
 					R_SetViewportSize(slider->curval);
 					break;
-				case mi_anamorphic:
-					anamorphicview = slider->curval;
-					R_SetViewportSize(viewportNum);
-					break;
 				default:
 					break;
 
@@ -646,6 +646,7 @@ void O_Control (player_t *player)
 			if (screenpos == ms_video)
 			{
 				int oldanamorphicview = anamorphicview;
+				int olddetailmode = detailmode;
 
 				if (buttons & BT_RIGHT)
 				{
@@ -653,6 +654,10 @@ void O_Control (player_t *player)
 					case mi_anamorphic:
 						if (++anamorphicview > 1)
 							anamorphicview = 1;
+						break;
+					case mi_detailmode:
+						if (detailmode != detmode_potato)
+							detailmode = detmode_potato;
 						break;
 					}
 				}
@@ -664,9 +669,18 @@ void O_Control (player_t *player)
 						if (--anamorphicview < 0)
 							anamorphicview = 0;
 						break;
+					case mi_detailmode:
+						if (detailmode != detmode_normal)
+							detailmode = detmode_normal;
+						break;
 					}
 				}
 
+				if (olddetailmode != detailmode)
+				{
+					R_SetDrawFuncs();
+					sound = sfx_stnmov;
+				}
 				if (oldanamorphicview != anamorphicview)
 				{
 					R_SetViewportSize(viewportNum);
@@ -813,10 +827,19 @@ void O_Drawer (void)
 
 		switch (anamorphicview) {
 		case 0:
-			print(menuitem[mi_anamorphic].x + 150, menuitem[mi_anamorphic].y, "off");
+			print(menuitem[mi_anamorphic].x + 160, menuitem[mi_anamorphic].y, "off");
 			break;
 		case 1:
 			print(menuitem[mi_anamorphic].x + 150, menuitem[mi_anamorphic].y, "on");
+			break;
+		}
+
+		switch (detailmode) {
+		case detmode_potato:
+			print(menuitem[mi_detailmode].x + 160, menuitem[mi_detailmode].y, "on");
+			break;
+		default:
+			print(menuitem[mi_detailmode].x + 160, menuitem[mi_detailmode].y, "off");
 			break;
 		}
 	}

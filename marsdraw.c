@@ -511,6 +511,91 @@ void I_DrawFuzzColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	I_SetThreadLocalVar(DOOMTLS_FUZZPOS, fuzzpos / 2);
 }
 
+/*
+================
+=
+= I_DrawSpanPotatoLow
+=
+================
+*/
+void I_DrawSpanPotatoLow(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
+	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int dc_texheight)
+{
+	pixel_t* dest, pix;
+	unsigned count;
+	short* dc_colormap;
+
+#ifdef RANGECHECK
+	if (ds_x2 < ds_x1 || ds_x1<0 || ds_x2 >= viewportWidth || ds_y>viewportHeight)
+		I_Error("R_DrawSpan: %i to %i at %i", ds_x1, ds_x2, ds_y);
+#endif
+
+	if (ds_x2 < ds_x1)
+		return;
+
+	count = ds_x2 - ds_x1 + 1;
+
+	dest = viewportbuffer + ds_y * 320 / 2 + ds_x1;
+	dc_colormap = (int16_t *)dc_colormaps + light;
+	pix = dc_colormap[(int8_t)ds_source[513]];
+
+	do {
+		*dest++ = pix;
+	} while (--count > 0);
+}
+
+/*
+================
+=
+= I_DrawSpanPotato
+=
+================
+*/
+void I_DrawSpanPotato(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
+	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int dc_texheight)
+{
+	int8_t *udest, upix;
+	unsigned count, scount;
+	int8_t* dc_colormap;
+
+#ifdef RANGECHECK
+	if (ds_x2 < ds_x1 || ds_x1<0 || ds_x2 >= viewportWidth || ds_y>viewportHeight)
+		I_Error("R_DrawSpan: %i to %i at %i", ds_x1, ds_x2, ds_y);
+#endif
+
+	if (ds_x2 < ds_x1)
+		return;
+
+	I_GetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormap);
+
+	count = ds_x2 - ds_x1 + 1;
+	udest = (int8_t *)viewportbuffer + ds_y * 320 + ds_x1;
+	dc_colormap = (int8_t *)(dc_colormap + light);
+	upix = dc_colormap[(int8_t)ds_source[513]];
+
+	if (ds_x1 & 1) {
+		*udest++ = upix;
+		count--;
+	}
+
+	scount = count >> 1;
+	if (scount > 0)
+	{
+		pixel_t spix = (upix << 8) | (uint8_t)upix;
+		pixel_t *sdest = (pixel_t*)udest;
+
+		do {
+			*sdest++ = spix;
+		} while (--scount > 0);
+
+		udest = (int8_t*)sdest;
+	}
+
+	if (count & 1) {
+		*udest = upix;
+	}
+}
+
 void I_DrawColumnNoDraw(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight)
 {

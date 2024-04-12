@@ -51,7 +51,7 @@ typedef struct __attribute((packed))
 typedef struct __attribute((packed))
 {
 	int8_t version;
-	int8_t unused;
+	int8_t detailmode;
 	int8_t controltype;
 	int8_t viewport;
 	int8_t sfxvolume;
@@ -179,6 +179,7 @@ static void SaveOptions(void)
 	D_memset(&so, 0, sizeof(saveopts_t));
 
 	so.version = SRAM_OPTVERSION;
+	so.detailmode = detailmode;
 	so.controltype = controltype;
 	so.viewport = viewportNum;
 	so.sfxvolume = sfxvolume;
@@ -206,6 +207,8 @@ static void ReadOptions(void)
 	if (so.version != SRAM_OPTVERSION)
 		return;
 
+	if (so.detailmode < detmode_potato || so.detailmode >= MAXDETAILMODES)
+		so.detailmode = detmode_normal;
 	if (so.sfxvolume > 64)
 		so.sfxvolume = 64;
 	if (so.musicvolume > 64)
@@ -229,6 +232,7 @@ static void ReadOptions(void)
 	if (so.sfxdriver < 0 || so.sfxdriver > 2)
 		so.sfxdriver = 0;
 
+	detailmode = so.detailmode;
 	sfxvolume = so.sfxvolume;
 	musicvolume = so.musicvolume;
 	controltype = so.controltype;
@@ -265,6 +269,7 @@ void ReadEEProm(void)
 	ticsperframe = MINTICSPERFRAME;
 	anamorphicview = 0;
 	sfxdriver = 0;
+	detailmode = detmode_normal;
 
 	ReadOptions();
 }
