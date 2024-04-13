@@ -259,21 +259,10 @@ extern const VINT numViewports;
 ATTR_DATA_CACHE_ALIGN
 static inline int R_PointOnSide (int x, int y, node_t *node)
 {
-	fixed_t	dx,dy;
-	fixed_t	left, right;
-
-	dx = x - ((fixed_t)node->x<<16);
-	dy = y - ((fixed_t)node->y<<16);
-
-#ifdef MARS
-   left = ((int64_t)((fixed_t)node->dy<<16)*dx) >> 32;
-   right = ((int64_t)dy*((fixed_t)node->dx<<16)) >> 32;
-#else
-   left  = (node->dy) * (dx>>FRACBITS);
-   right = (dy>>FRACBITS) * (node->dx);
-#endif
-
-   return (left <= right);
+	int16_t	dx,dy;
+	dx = (x - ((fixed_t)node->x << FRACBITS)) >> FRACBITS;
+	dy = (y - ((fixed_t)node->y << FRACBITS)) >> FRACBITS;
+    return (node->dy * dx <= dy * node->dx);
 }
 
 //
