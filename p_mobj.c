@@ -672,7 +672,16 @@ void P_CheckMissileSpawn (mobj_t *th)
 							/* be computed if it immediately explodes */
 	th->z += (th->momz>>1);
 	if (!P_TryMove (&tm, th, th->x, th->y))
-		P_ExplodeMissile (th);
+	{
+		th->momx = th->momy = th->momz = 0;
+		if(tm.ceilingline && tm.ceilingline->sidenum[1] != -1 && LD_BACKSECTOR(tm.ceilingline)->ceilingpic == -1)
+		{
+			th->latecall = P_RemoveMobj;
+			return;
+		}
+		th->extradata = (intptr_t)tm.hitthing;
+		th->latecall = L_MissileHit;
+	}
 }
 
 /*
