@@ -257,23 +257,25 @@ _I_DrawSpanA:
         add     r4,r8
         shlr2   r4
         add     r4,r8           /* fb += (ds_y*256 + ds_y*64) */
+        mov.l   @(40,r15),r11   /* ds_height */
         mov.l   @(20,r15),r2    /* xfrac */
         mov.l   @(24,r15),r4    /* yfrac */
         mov.l   @(28,r15),r3    /* xstep */
         mov.l   @(32,r15),r5    /* ystep */
         mov.l   @(36,r15),r9    /* ds_source */
-        mov.l   @(40,r15),r12   /* ds_height */
 
-        mov     r12,r11
-        dt      r11
-        mulu.w  r12,r11         /* (ds_height-1) * ds_height */
+        mov     r11,r12
         dt      r12             /* (ds_height-1) */
+        mulu.w  r12,r11         /* (ds_height-1) * ds_height */
+
+        swap.w  r2,r0           /* (xfrac >> 16) */
+        and     r12,r0          /* (xfrac >> 16) & 63 */
+
         sts     macl,r11        /* draw_flat_ymask */
 
         swap.w  r4,r1           /* (yfrac >> 16) */
         and     r11,r1          /* (yfrac >> 16) & 63*64 */
-        swap.w  r2,r0           /* (xfrac >> 16) */
-        and     r12,r0          /* (xfrac >> 16) & 63 */
+
         or      r1,r0           /* spot = ((yfrac >> 16) & *64) | ((xfrac >> 16) & 63) */
 
         /* test if count & 1 */
