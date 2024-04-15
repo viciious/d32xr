@@ -422,11 +422,11 @@ static void Mars_R_SortPlanes(void)
     {
         // composite sort key: 1b - sign bit, 3b - negated span length, 12b - flat+light
         unsigned key = (unsigned)(pl->maxx - pl->minx - 1) >> 6;
-        if (key > 3) {
-            key = 3;
+        if (key > 5) {
+            key = 5;
         }
         // to minimize pipeline stalls, the larger planes must be drawn first, hence length negation
-        key = (3 - key) << 12;
+        key = (5 - key) << 12;
         key |= (pl->flatandlight & 0xFFF);
         sortbuf[i + 0] = key;
         sortbuf[i + 1] = ++numplanes;
