@@ -302,8 +302,6 @@ void R_SetViewportSize(int num)
 	// refresh func pointers
 	R_SetDrawFuncs();
 
-	R_InitColormap();
-
 #ifdef MARS
 	Mars_CommSlaveClearCache();
 #endif

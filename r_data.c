@@ -380,6 +380,7 @@ void R_InitData (void)
 	R_InitTextures ();
 	R_InitFlats ();
 	R_InitSpriteDefs((const char **)sprnames);
+	R_InitColormap();
 
 #if MIPLEVELS > 1
 	if (!texmips) {
@@ -863,19 +864,12 @@ static void *R_LoadColormap(int l)
 void R_InitColormap(void)
 {
 	int l;
-	int osky = skycolormaps == dc_colormaps;
 
 	l = W_CheckNumForName("COLORMAP");
 	dc_colormaps = R_LoadColormap(l);
 
 	l -= 1;
 	dc_colormaps2 = R_LoadColormap(l);
-
-	skycolormaps = osky ? dc_colormaps : dc_colormaps2;
-
-#ifdef MARS
-	Mars_CommSlaveClearCache();
-#endif
 }
 
 boolean R_CompositeColumn(int colnum, int numdecals, texdecal_t *decals, inpixel_t *src, inpixel_t *dst, int height, int miplevel)
