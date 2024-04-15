@@ -450,10 +450,34 @@ void R_SegCommands(void)
                 lseg.lightmin <<= FRACBITS;
                 lseg.lightmax <<= FRACBITS;
             }
+
+            // calculate lighting values at both end points
+            // if they are the same, disable gradient lighting
+            if (lseg.lightcoef != 0)
+            {
+                int light1, light2;
+
+                light1 = FixedMul(segl->scalefrac, lseg.lightcoef) - lseg.lightsub;
+                if (light1 < lseg.lightmin)
+                    light1 = lseg.lightmin;
+                else if (light1 > lseg.lightmax)
+                    light1 = lseg.lightmax;
+
+                light2 = FixedMul(segl->scale2, lseg.lightcoef) - lseg.lightsub;
+                if (light2 < lseg.lightmin)
+                    light2 = lseg.lightmin;
+                else if (light2 > lseg.lightmax)
+                    light2 = lseg.lightmax;
+
+                if (light1 == light2)
+                {
+                    lseg.lightcoef = 0;
+                    lseg.lightmax = HWLIGHT((unsigned)light1>>FRACBITS);
+                }
+            }
             else
             {
-                lseg.lightcoef = 0;
-                lseg.lightmin = lseg.lightmax = HWLIGHT((unsigned)lseg.lightmax);
+                lseg.lightmax = HWLIGHT((unsigned)lseg.lightmax);
             }
         }
 
