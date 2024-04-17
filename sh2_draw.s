@@ -251,27 +251,42 @@ _I_DrawSpanA:
         mov.l   @(DOOMTLS_COLORMAP, gbr),r0
         add     r0,r7           /* ds_colormap = colormap + light */
         mov.l   draw_fb,r8
+
         mov.l   @r8,r8          /* frame buffer start */
         add     r5,r8
+        add     r6,r8
         shll8   r4
         add     r4,r8
         shlr2   r4
         add     r4,r8           /* fb += (ds_y*256 + ds_y*64) */
-        mov.l   @(40,r15),r11   /* ds_height */
-        mov.l   @(20,r15),r2    /* xfrac */
-        mov.l   @(24,r15),r4    /* yfrac */
-        mov.l   @(28,r15),r3    /* xstep */
-        mov.l   @(32,r15),r5    /* ystep */
+
         mov.l   @(36,r15),r9    /* ds_source */
+        mov.l   @(40,r15),r11   /* ds_height */
 
         mov     r11,r12
         dt      r12             /* (ds_height-1) */
         mulu.w  r12,r11         /* (ds_height-1) * ds_height */
 
+        mov.l   @(20,r15),r2    /* xfrac */
+        mov.l   @(28,r15),r3    /* xstep */
+
+        sts     macl,r11        /* draw_flat_ymask */
+
+        dmuls.l r3,r6
+
+        mov.l   @(24,r15),r4    /* yfrac */
+        mov.l   @(32,r15),r5    /* ystep */
+
+        sts     macl,r10
+        add     r10,r2          /* xfrac += xstep * count */
+
+        dmuls.l r5,r6
+
         swap.w  r2,r0           /* (xfrac >> 16) */
         and     r12,r0          /* (xfrac >> 16) & 63 */
 
-        sts     macl,r11        /* draw_flat_ymask */
+        sts     macl,r10
+        add     r10,r4          /* yfrac += ystep * count */
 
         swap.w  r4,r1           /* (yfrac >> 16) */
         and     r11,r1          /* (yfrac >> 16) & 63*64 */
@@ -287,31 +302,29 @@ _I_DrawSpanA:
         .p2alignw 2, 0x0009
 do_span_loop:
         mov.b   @(r0,r9),r0     /* pix = ds_source[spot] */
-        add     r3,r2           /* xfrac += xstep */
-        add     r5,r4           /* yfrac += ystep */
+        sub     r3,r2           /* xfrac += xstep */
+        sub     r5,r4           /* yfrac += ystep */
         swap.w  r4,r1           /* (yfrac >> 16) */
         mov.b   @(r0,r7),r10    /* dpix = ds_colormap[pix] */
         and     r11,r1          /* (yfrac >> 16) & 63*64 */
         swap.w  r2,r0           /* (xfrac >> 16) */
         and     r12,r0          /* (xfrac >> 16) & 63 */
-        mov.b   r10,@r8         /* *fb = dpix */
+        mov.b   r10,@-r8        /* *--fb = dpix */
         or      r1,r0           /* spot = ((yfrac >> 16) & *64) | ((xfrac >> 16) & 63) */
-        add     #1,r8           /* fb++ */
 do_span_loop_1px:
-        add     r3,r2           /* xfrac += xstep */
         mov.b   @(r0,r9),r0     /* pix = ds_source[spot] */
-        add     r5,r4           /* yfrac += ystep */
+        sub     r3,r2           /* xfrac += xstep */
+        sub     r5,r4           /* yfrac += ystep */
         swap.w  r4,r1           /* (yfrac >> 16) */
-        and     r11,r1          /* (yfrac >> 16) & 63*64 */
         mov.b   @(r0,r7),r10    /* dpix = ds_colormap[pix] */
+        and     r11,r1          /* (yfrac >> 16) & 63*64 */
         swap.w  r2,r0           /* (xfrac >> 16) */
         and     r12,r0          /* (xfrac >> 16) & 63 */
-        or      r1,r0           /* spot = ((yfrac >> 16) & *64) | ((xfrac >> 16) & 63) */
-        mov.b   r10,@r8         /* *fb = dpix */
+        mov.b   r10,@-r8        /* *--fb = dpix */
 
         dt      r6              /* count-- */
         bf/s    do_span_loop
-        add     #1,r8           /* fb++ */
+        or      r1,r0           /* spot = ((yfrac >> 16) & *64) | ((xfrac >> 16) & 63) */
 
         mov.l   @r15+,r12
         mov.l   @r15+,r11
