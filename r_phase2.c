@@ -12,7 +12,7 @@ static fixed_t R_PointToDist(fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
 static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, angle_t normalangle) ATTR_DATA_CACHE_ALIGN;
 static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle, int angle1) ATTR_DATA_CACHE_ALIGN;
 void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts) ATTR_DATA_CACHE_ALIGN;
-static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floorheight, 
+static void R_SegLoop(viswall_t* segl, unsigned short *restrict clipbounds, fixed_t floorheight, 
     fixed_t floornewheight, fixed_t ceilingnewheight) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 void R_WallPrep(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 
@@ -174,7 +174,7 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
 //
 // Main seg clipping loop
 //
-static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, 
+static void R_SegLoop(viswall_t* segl, unsigned short * restrict clipbounds, 
     fixed_t floorheight, fixed_t floornewheight, fixed_t ceilingnewheight)
 {
     const volatile int actionbits = segl->actionbits;
@@ -190,10 +190,10 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
     const int floorandlight = ((segl->seglightlevel & 0xff) << 16) | segl->floorpicnum;
     const int ceilandlight = ((segl->seglightlevel & 0xff) << 16) | segl->ceilingpicnum;
 
-    unsigned short *flooropen = (actionbits & AC_ADDFLOOR) ? vd->visplanes[0].open : NULL;
-    unsigned short *ceilopen = (actionbits & AC_ADDCEILING) ? vd->visplanes[0].open : NULL;
+    unsigned short * restrict flooropen = (actionbits & AC_ADDFLOOR) ? vd->visplanes[0].open : NULL;
+    unsigned short * restrict ceilopen = (actionbits & AC_ADDCEILING) ? vd->visplanes[0].open : NULL;
 
-    unsigned short *newclipbounds = segl->clipbounds;
+    unsigned short * restrict newclipbounds = segl->clipbounds;
 
     const int cyvh = (centerY << 16) | viewportHeight;
 
