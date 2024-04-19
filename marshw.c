@@ -51,8 +51,9 @@ const int PAL_CLOCK_SPEED = 22801467; // HZ
 
 static volatile int16_t mars_brightness = 0;
 
-void sec_dma1_handler(void) MARS_ATTR_DATA_CACHE_ALIGN;
+void pri_vbi_handler(void) MARS_ATTR_DATA_CACHE_ALIGN;
 void pri_cmd_handler(void) MARS_ATTR_DATA_CACHE_ALIGN;
+void sec_dma1_handler(void) MARS_ATTR_DATA_CACHE_ALIGN;
 void sec_cmd_handler(void) MARS_ATTR_DATA_CACHE_ALIGN;
 
 static void intr_handler_stub(void) MARS_ATTR_DATA_CACHE_ALIGN;
@@ -855,17 +856,6 @@ void Mars_Finish(void)
 	while (MARS_SYS_COMM0 != 0);
 }
 
-void pri_vbi_handler(void)
-{
-	mars_vblank_count++;
-
-	if (mars_newpalette)
-	{
-		if (Mars_UploadPalette(mars_newpalette))
-			mars_newpalette = NULL;
-	}
-}
-
 void Mars_SetPriCmdCallback(void (*cb)(void))
 {
 	sci_cmd_cb = cb;
@@ -882,6 +872,17 @@ void Mars_SetSecDMA1Callback(void (*cb)(void))
 }
 
 /* ======================== INTERRUPT HANDLERS ======================== */
+
+void pri_vbi_handler(void)
+{
+	mars_vblank_count++;
+
+	if (mars_newpalette)
+	{
+		if (Mars_UploadPalette(mars_newpalette))
+			mars_newpalette = NULL;
+	}
+}
 
 void pri_cmd_handler(void)
 {
