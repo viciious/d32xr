@@ -36,8 +36,8 @@ static boolean R_CheckBBox(rbspWork_t *rbsp, int16_t bspcoord[4]) ATTR_DATA_CACH
 static void R_Subsector(rbspWork_t *rbsp, int num) ATTR_DATA_CACHE_ALIGN;
 static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop) ATTR_DATA_CACHE_ALIGN;
 static void R_RenderBSPNode(rbspWork_t *rbsp, int bspnum, int16_t *outerbbox) ATTR_DATA_CACHE_ALIGN;
-static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight, 
-    fixed_t *floornewheight, fixed_t *ceilingnewheight) ATTR_DATA_CACHE_ALIGN;
+static void R_WallEarlyPrep(viswall_t* segl, fixed_t *restrict floorheight, 
+    fixed_t *restrict floornewheight, fixed_t *restrict ceilingnewheight) ATTR_DATA_CACHE_ALIGN;
 
 #ifdef MARS
 __attribute__((aligned(4)))
@@ -178,8 +178,8 @@ static boolean R_CheckBBox(rbspWork_t *rbsp, int16_t bspcoord_[4])
    return true;
 }
 
-static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight, 
-    fixed_t *floornewheight, fixed_t *ceilingnewheight)
+static void R_WallEarlyPrep(viswall_t* segl, fixed_t *restrict floorheight, 
+    fixed_t *restrict  floornewheight, fixed_t *restrict  ceilingnewheight)
 {
    seg_t     *seg;
    line_t    *li;

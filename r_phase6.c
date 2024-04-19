@@ -54,7 +54,7 @@ typedef struct
 static char seg_lock = 0;
 
 static void R_DrawTexture(int x, unsigned iscale, int colnum, fixed_t scale2, int floorclipx, int ceilingclipx, unsigned light, drawtex_t *tex, int miplevel) ATTR_DATA_CACHE_ALIGN;
-static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
+static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex, fixed_t texturemid, fixed_t topheight, fixed_t bottomheight) ATTR_DATA_CACHE_ALIGN;
 
 static void R_LockSeg(void) ATTR_DATA_CACHE_ALIGN;
@@ -145,7 +145,7 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum, fixed_t scale2, in
 //
 // Main seg drawing loop
 //
-static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
+static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds)
 {
     viswall_t* segl = lseg->segl;
 
@@ -171,7 +171,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 
     drawtex_t *tex;
 
-    uint16_t *segcolmask = (segl->actionbits & AC_MIDTEXTURE) ? segl->clipbounds + (stop - start + 1) : NULL;
+    uint16_t *restrict segcolmask = (segl->actionbits & AC_MIDTEXTURE) ? segl->clipbounds + (stop - start + 1) : NULL;
 
     for (x = start; x <= stop; x++)
     {
@@ -516,7 +516,7 @@ post_draw:
         if(actionbits & (AC_NEWFLOOR|AC_NEWCEILING))
         {
             unsigned w = segl->stop - segl->start + 1;
-            unsigned short *src = segl->clipbounds + segl->start, *dst = clipbounds + segl->start;
+            unsigned short *restrict src = segl->clipbounds + segl->start, *restrict dst = clipbounds + segl->start;
 
             if ((actionbits & (AC_NEWFLOOR|AC_NEWCEILING)) == (AC_NEWFLOOR|AC_NEWCEILING)) {
                 --src;
