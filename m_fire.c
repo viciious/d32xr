@@ -284,10 +284,13 @@ void I_InitMenuFire(jagobj_t *titlepic)
 
 			DrawFillRect(0, 0, 320, 224, 0);
 
-			DrawJagobj2(titlepic, m_fire->titlepic_pos_x, 0, 0, 0, 0, lastline, I_FrameBuffer());
+			DrawJagobj2(titlepic, m_fire->titlepic_pos_x, 0, 0, 0, 0, m_fire->stopticon > 0 ? lastline : 0, I_FrameBuffer());
 
-			for (j = 0; j < lastline; j++)
-				lines[j] = 224 * 320 / 2 + 0x100;
+			if (m_fire->stopticon > 0)
+			{
+				for (j = 0; j < lastline; j++)
+					lines[j] = 224 * 320 / 2 + 0x100;
+			}
 
 			UpdateBuffer();
 		}
@@ -339,6 +342,9 @@ void I_DrawMenuFire(void)
 	const int solid_fire_height = m_fire->solid_fire_height;
 	const int bottom_pos = m_fire->bottom_pos;
 	int16_t* dest = (int16_t*)(I_OverwriteBuffer() + 320 / 2 * (bottom_pos + solid_fire_height - FIRE_HEIGHT));
+
+	if (m_fire->stopticon == 0)
+		return;
 
 	// scroll the title pic from bottom to top
 
