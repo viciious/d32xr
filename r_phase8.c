@@ -506,8 +506,8 @@ void Mars_Sec_R_DrawSprites(int sprscreenhalf)
 //
 void R_Sprites(void)
 {
-   int i = 0, count;
-   int half, sortedcount;
+   int i = 0, count, sortedcount;
+   unsigned half;
    unsigned midcount;
    viswall_t *spr;
    int *sortedsprites = (void *)vd->vissectors;
@@ -536,11 +536,9 @@ void R_Sprites(void)
        // average mid point
        unsigned xscale = ds->xscale;
        unsigned pixcount = ds->x2 + 1 - ds->x1;
-       if (pixcount > 10) // FIXME: an arbitrary number
-       {
-           midcount += xscale;
-           half += (ds->x1 + (pixcount >> 1)) * xscale;
-       }
+
+       midcount += pixcount;
+       half += (ds->x1 + (pixcount >> 1)) * pixcount;
 
        // composite sort key: distance + id
        sortedsprites[1+sortedcount++] = (xscale << 7) + i;
@@ -549,22 +547,34 @@ void R_Sprites(void)
    // add the gun midpoint
    for (spr = vd->lastsprite_p; spr < vd->vissprite_p; spr++) {
         vissprite_t *pspr = (vissprite_t *)spr;
-        unsigned xscale;
         unsigned pixcount = pspr->x2 + 1 - pspr->x1;
 
-        xscale = pspr->xscale;
         if (pspr->patchnum < 0 || pspr->x2 < pspr->x1)
             continue;
 
-        midcount += xscale;
-        half += (pspr->x1 + (pixcount >> 1)) * xscale;
+        midcount += pixcount;
+        half += (pspr->x1 + (pixcount >> 1)) * pixcount;
+   }
+
+   // add masked segs
+   for (wc = vd->viswalls; wc < vd->lastwallcmd; wc++)
+   {
+      unsigned pixcount = wc->stop - wc->start + 1;
+
+      if (wc->start > wc->stop)
+         continue;
+      if (!(wc->actionbits & AC_MIDTEXTURE))
+         continue;
+
+      midcount += pixcount;
+      half += (wc->start + (pixcount >> 1)) * pixcount;
    }
 
    // average the mid point
    if (midcount > 0)
    {
       half /= midcount;
-      if (!half || half > viewportWidth)
+      if (!half || (int)half > viewportWidth)
          half = viewportWidth / 2;
    }
 
