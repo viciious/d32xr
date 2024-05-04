@@ -94,6 +94,8 @@ void GS_Start(void)
 
         if (!D_strcasecmp(name, SOUNDS_PWAD_NAME))
             continue;
+        if (!D_strcasecmp(name, MAPDEV_PWAD_NAME))
+            continue;
 
         if (D_strncasecmp(&name[namelen - 4], ".wad", 4))
             continue;
