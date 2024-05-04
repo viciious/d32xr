@@ -58,7 +58,7 @@ typedef struct
    fixed_t   shootx2, shooty2;
    fixed_t   firstlinefrac;
    int       shootdivpositive;
-   int       ssx1, ssy1, ssx2, ssy2;
+   int16_t   ssx1, ssy1, ssx2, ssy2;
    intercept_t old_intercept;
 
    line_t  *shootline;
