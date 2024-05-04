@@ -677,6 +677,7 @@ enum
 
 extern char cd_pwad_name[16];
 #define SOUNDS_PWAD_NAME "SOUNDS.WAD"
+#define MAPDEV_PWAD_NAME "MAPDEV.WAD"
 
 /*=============== */
 /*   TYPES */
