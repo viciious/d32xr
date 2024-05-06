@@ -458,7 +458,7 @@ typedef struct
 	/* !!! TO ACCOMODATE VISSPRITE_T STRUCTURE, GETS */
 	/* !!! OVERWRITTEN AFTER PHASE 7 - BEGIN */
 	unsigned	centerangle;
-	unsigned	offset;
+	fixed_t 	offset;
 	unsigned	distance;
 
 	int			t_topheight;

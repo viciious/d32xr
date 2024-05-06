@@ -155,7 +155,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds)
     const fixed_t scalestep = segl->scalestep;
 
     const unsigned centerangle = segl->centerangle;
-    unsigned offset = segl->offset;
+    fixed_t offset = segl->offset;
     fixed_t distance = segl->distance;
 
     const int ceilingheight = segl->ceilingheight;
@@ -164,9 +164,9 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds)
     int lightmax = lseg->lightmax, lightmin = lseg->lightmin,
         lightcoef = lseg->lightcoef, lightsub = lseg->lightsub;
 
-    const int start = segl->start;
-    const int stop = segl->stop;
-    int x;
+    const VINT start = segl->start;
+    const VINT stop = segl->stop;
+    VINT x;
     unsigned miplevel = 0;
 
     drawtex_t *tex;
@@ -379,7 +379,7 @@ void R_SegCommands(void)
     for (i = 0; i < segcount; i++)
     {
         int seglight;
-        unsigned actionbits;
+        int actionbits;
         viswall_t* segl = vd->viswalls + i;
 
 #ifdef MARS

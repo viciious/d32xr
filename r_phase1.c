@@ -181,33 +181,30 @@ static boolean R_CheckBBox(rbspWork_t *rbsp, int16_t bspcoord_[4])
 static void R_WallEarlyPrep(viswall_t* segl, fixed_t *restrict floorheight, 
     fixed_t *restrict  floornewheight, fixed_t *restrict  ceilingnewheight)
 {
-   seg_t     *seg;
-   line_t    *li;
-   side_t    *si;
+   seg_t     *seg  = segl->seg;
+   line_t    *li   = &lines[seg->linedef];
+   short      side = seg->sideoffset & 1;
+   short      offset = seg->sideoffset >> 1;
+   side_t    *si   = &sides[li->sidenum[side]];
    sector_t  *front_sector, *back_sector;
    fixed_t    f_floorheight, f_ceilingheight;
    fixed_t    b_floorheight, b_ceilingheight;
    int        f_lightlevel, b_lightlevel, lightshift;
-   int        f_ceilingpic, b_ceilingpic;
+   short      f_ceilingpic, b_ceilingpic;
    int        b_texturemid, t_texturemid, m_texturemid;
-   boolean    skyhack;
-   int        actionbits;
-   int        side, offset;
+   short      skyhack;
+   short      actionbits;
    int16_t    rowoffset, textureoffset;
+   const short liflags = li->flags;
 
    {
-      seg  = segl->seg;
-      li   = &lines[seg->linedef];
-      side = seg->sideoffset & 1;
-      offset = seg->sideoffset >> 1;
-      si   = &sides[li->sidenum[side]];
+      li->flags |= ML_MAPPED; // mark as seen
+
       textureoffset = si->textureoffset & 0xfff;
       textureoffset <<= 4; // sign extend
       textureoffset >>= 4; // sign extend
       rowoffset = (si->textureoffset & 0xf000) | ((unsigned)si->rowoffset << 4);
       rowoffset >>= 4; // sign extend
-
-      li->flags |= ML_MAPPED; // mark as seen
 
       front_sector    = &sectors[sides[li->sidenum[side]].sector];
 
@@ -227,9 +224,9 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *restrict floorheight,
       }
       segl->m_texturenum = -1;
 
-      back_sector = (li->flags & ML_TWOSIDED) ? &sectors[sides[li->sidenum[side^1]].sector] : 0;
-      if(!back_sector)
-         back_sector = &emptysector;
+      back_sector = &emptysector;
+      if (liflags & ML_TWOSIDED)
+         back_sector = &sectors[sides[li->sidenum[side^1]].sector];
 
       b_ceilingpic    = back_sector->ceilingpic;
       b_lightlevel    = back_sector->lightlevel;
@@ -272,7 +269,7 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *restrict floorheight,
 
       segl->t_topheight = f_ceilingheight; // top of texturemap
 
-      if(back_sector == &emptysector)
+      if (!(liflags & ML_TWOSIDED))
       {
          // single-sided line
          if (si->midtexture > 0)
@@ -280,7 +277,7 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *restrict floorheight,
             segl->t_texturenum = texturetranslation[si->midtexture];
 
             // handle unpegging (bottom of texture at bottom, or top of texture at top)
-            if(li->flags & ML_DONTPEGBOTTOM)
+            if(liflags & ML_DONTPEGBOTTOM)
                t_texturemid = f_floorheight + (textures[segl->t_texturenum].height << FRACBITS);
             else
                t_texturemid = f_ceilingheight;
@@ -296,7 +293,7 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *restrict floorheight,
          if (si->midtexture > 0)
          {
             segl->m_texturenum = texturetranslation[si->midtexture];
-            if(li->flags & ML_DONTPEGBOTTOM)
+            if(liflags & ML_DONTPEGBOTTOM)
             {
                if(f_floorheight > b_floorheight)
                   m_texturemid = f_floorheight;
@@ -321,7 +318,7 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *restrict floorheight,
             if (si->bottomtexture > 0)
             {
                segl->b_texturenum = texturetranslation[si->bottomtexture];
-               if(li->flags & ML_DONTPEGBOTTOM)
+               if(liflags & ML_DONTPEGBOTTOM)
                   b_texturemid = f_ceilingheight;
                else
                   b_texturemid = b_floorheight;
@@ -340,7 +337,7 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *restrict floorheight,
             if (si->toptexture > 0)
             {
                segl->t_texturenum = texturetranslation[si->toptexture];
-               if(li->flags & ML_DONTPEGTOP)
+               if(liflags & ML_DONTPEGTOP)
                   t_texturemid = f_ceilingheight;
                else
                   t_texturemid = b_ceilingheight + (textures[segl->t_texturenum].height << FRACBITS);
@@ -387,7 +384,7 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *restrict floorheight,
       segl->b_texturemid  = b_texturemid;
       segl->m_texturemid  = m_texturemid;
       segl->seglightlevel = (lightshift << 8) | f_lightlevel;
-      segl->offset        = ((fixed_t)textureoffset + offset) << 16;
+      segl->offset        = ((fixed_t)textureoffset + offset) << FRACBITS;
    }
 }
 
