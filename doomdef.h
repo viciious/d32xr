@@ -209,14 +209,14 @@ typedef struct mobj_s
 	struct	mobj_s* prev, * next;
 
 	unsigned char		sprite;				/* used to find patch_t and flip value */
-	unsigned char		player;		/* only valid if type == MT_PLAYER */
+	char			player;		/* only valid if type == MT_PLAYER */
 
 	VINT			health;
 	VINT			tics;				/* state tic counter	 */
 	VINT 			state;
 	VINT			frame;				/* might be ord with FF_FULLBRIGHT */
 
-	unsigned short		type;
+	VINT			type;
 
 /* info for drawing */
 	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
