@@ -169,7 +169,7 @@ static void R_PlaneLoop(localplane_t *lpl)
 {
    int pl_x, pl_stopx;
    uint16_t *pl_openptr;
-   unsigned t1, t2, b1, b2, pl_oldtop, pl_oldbottom;
+   int t1, t2, b1, b2, pl_oldtop, pl_oldbottom;
    int16_t spanstart[SCREENHEIGHT];
    visplane_t* pl = lpl->pl;
    const mapplane_fn mapplane = lpl->mapplane;
@@ -185,7 +185,7 @@ static void R_PlaneLoop(localplane_t *lpl)
 
    t1 = OPENMARK;
    b1 = t1 & 0xff;
-   t1 >>= 8;
+   t1 = (unsigned)t1 >> 8;
    t2 = *pl_openptr;
   
    do
@@ -193,7 +193,7 @@ static void R_PlaneLoop(localplane_t *lpl)
       int x2;
 
       b2 = t2 & 0xff;
-      t2 >>= 8;
+      t2 = (unsigned)t2 >> 8;
 
       pl_oldtop = t2;
       pl_oldbottom = b2;
