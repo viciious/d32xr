@@ -241,13 +241,13 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds)
         if (lightcoef != 0)
         {
             // calc light level
-            texturelight = FixedMul(scale2, lightcoef) - lightsub;
+            texturelight = lightsub - FixedMul(scale2, lightcoef);
             if (texturelight < lightmin)
                 texturelight = lightmin;
-            else if (texturelight > lightmax)
+            if (texturelight > lightmax)
                 texturelight = lightmax;
-            // convert to a hardware value
-            texturelight = HWLIGHT((unsigned)texturelight>>FRACBITS);
+            texturelight = (unsigned)texturelight >> FRACBITS;
+            texturelight <<= 8;
         }
 
         // calculate texture offset
@@ -445,17 +445,15 @@ void R_SegCommands(void)
 
             if (lseg.lightcoef != 0)
             {
+                int light1, light2;
+
                 lseg.lightsub = 160 * lseg.lightcoef;
                 lseg.lightcoef <<= LIGHTZSHIFT;
                 lseg.lightmin <<= FRACBITS;
                 lseg.lightmax <<= FRACBITS;
-            }
 
-            // calculate lighting values at both end points
-            // if they are the same, disable gradient lighting
-            if (lseg.lightcoef != 0)
-            {
-                int light1, light2;
+                // calculate lighting values at both end points
+                // if they are the same, disable gradient lighting
 
                 light1 = FixedMul(segl->scalefrac, lseg.lightcoef) - lseg.lightsub;
                 if (light1 < lseg.lightmin)
@@ -473,6 +471,31 @@ void R_SegCommands(void)
                 {
                     lseg.lightcoef = 0;
                     lseg.lightmax = HWLIGHT((unsigned)light1>>FRACBITS);
+                }
+                else
+                {
+                    int t;
+
+                    // perform HWLIGHT calculations on the coefficients
+                    // to reduce the number of calculations we will do
+                    // later per column
+                    t = lseg.lightmax;
+                    lseg.lightmax = -lseg.lightmin;
+                    lseg.lightmin = -t;
+
+                    lseg.lightsub += 255 * FRACUNIT;
+                    lseg.lightmax += 255 * FRACUNIT;
+                    lseg.lightmin += 255 * FRACUNIT;
+
+                    lseg.lightcoef >>= 3;
+                    lseg.lightsub >>= 3;
+                    lseg.lightmax >>= 3;
+                    lseg.lightmin >>= 3;
+
+                    if (lseg.lightmin < 0)
+                        lseg.lightmin = 0;
+                    if (lseg.lightmax > 31*FRACUNIT)
+                        lseg.lightmax = 31*FRACUNIT;
                 }
             }
             else

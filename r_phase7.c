@@ -133,19 +133,18 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
             "mov.l @(20,%0), %0 /* get 32-bit quotient */ \n\t"
             : "=r" (scale));
 #else
-        scale = (lpl->lightcoef << SLOPEBITS) / distance;
+        scale = lpl->lightcoef / distance;
 #endif
 
-        light = scale;
-        light -= lpl->lightsub;
+        light = lpl->lightsub;
+        light -= scale;
+
         if (light < lpl->lightmin)
             light = lpl->lightmin;
-        else if (light > lpl->lightmax)
+        if (light > lpl->lightmax)
             light = lpl->lightmax;
-        light >>= FRACBITS;
-
-        // transform to hardware value
-        light = HWLIGHT(light);
+        light = (unsigned)light >> FRACBITS;
+        light <<= 8;
     }
     else
     {
@@ -386,8 +385,31 @@ static void R_DrawPlanes2(void)
 
             if (detailmode != detmode_potato && lpl.lightsub != 0)
             {
+                int t;
+
                 lpl.lightmin <<= FRACBITS;
                 lpl.lightmax <<= FRACBITS;
+
+                // perform HWLIGHT calculations on the coefficients
+                // to reduce the number of calculations we will do
+                // later per column
+                t = lpl.lightmax;
+                lpl.lightmax = -lpl.lightmin;
+                lpl.lightmin = -t;
+
+                lpl.lightsub += 255 * FRACUNIT;
+                lpl.lightmax += 255 * FRACUNIT;
+                lpl.lightmin += 255 * FRACUNIT;
+
+                lpl.lightcoef >>= 3;
+                lpl.lightsub >>= 3;
+                lpl.lightmax >>= 3;
+                lpl.lightmin >>= 3;
+
+                if (lpl.lightmin < 0)
+                    lpl.lightmin = 0;
+                if (lpl.lightmax > 31 * FRACUNIT)
+                    lpl.lightmax = 31 * FRACUNIT;
             }
             else
             {
