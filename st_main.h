@@ -20,7 +20,7 @@
 #define KEYH		7
 
 #define FACEX		156
-#define FACEY		5
+#define FACEY		2
 #define FACEW		32
 #define FACEH		32
 
