@@ -482,9 +482,9 @@ typedef struct
 	VINT        floorpicnum;
 	VINT        ceilingpicnum;
 
-	int			scalestep;		/* polar angle to start at phase1, then scalestep after phase2 */
-	unsigned	scalefrac;
-	unsigned	scale2;
+	fixed_t		scalestep;		/* polar angle to start at phase1, then scalestep after phase2 */
+	fixed_t		scalefrac;
+	fixed_t		scale2;
 
 	short	actionbits;
 	short	seglightlevel;
