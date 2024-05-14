@@ -206,6 +206,53 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds)
         ceilingclipx = (unsigned)ceilingclipx >> 8;
 
         //
+        // texture only stuff
+        //
+        if (lightcoef != 0)
+        {
+            // calc light level
+            texturelight = lightsub - FixedMul(scale2, lightcoef);
+            if (texturelight < lightmin)
+                texturelight = lightmin;
+            if (texturelight > lightmax)
+                texturelight = lightmax;
+            texturelight = (unsigned)texturelight >> FRACBITS;
+            texturelight <<= 8;
+        }
+
+        // calculate texture offset
+        r = finetangent((centerangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOFINESHIFT);
+        r = FixedMul(distance, r);
+
+        colnum = ((unsigned)(offset - r)) >> FRACBITS;
+        colnum = (uint8_t)colnum;
+
+        if (segcolmask)
+            segcolmask[x] = texturelight | colnum;
+
+#ifdef MARS
+        __asm volatile (
+            "mov #-128, %0\n\t"
+            "add %0, %0 /* %0 is now 0xFFFFFF00 */ \n\t"
+            "mov.l @(20, %0), %0 /* get 32-bit quotient */ \n\t"
+            : "=r" (iscale));
+#else
+        iscale = 0xffffffffu / scale;
+#endif
+
+#if MIPLEVELS > 1
+        // other texture drawing info
+        miplevel = iscale / MIPSCALE;
+        if (miplevel > lseg->maxmip)
+            lseg->maxmip = miplevel;
+        if (miplevel < lseg->minmip)
+            lseg->minmip = miplevel;
+#endif
+
+        for (tex = lseg->first; tex < lseg->last; tex++)
+            R_DrawTexture(x, iscale, colnum, scale2, floorclipx, ceilingclipx, texturelight, tex, miplevel);
+
+        //
         // sky mapping
         //
         if (drawsky)
@@ -234,52 +281,6 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds)
                 I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
             }
         }
-
-        //
-        // texture only stuff
-        //
-        if (lightcoef != 0)
-        {
-            // calc light level
-            texturelight = lightsub - FixedMul(scale2, lightcoef);
-            if (texturelight < lightmin)
-                texturelight = lightmin;
-            if (texturelight > lightmax)
-                texturelight = lightmax;
-            texturelight = (unsigned)texturelight >> FRACBITS;
-            texturelight <<= 8;
-        }
-
-        // calculate texture offset
-        r = finetangent((centerangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOFINESHIFT);
-        r = FixedMul(distance, r);
-
-        colnum = (offset - r) >> FRACBITS;
-
-        if (segcolmask)
-            segcolmask[x] = texturelight | (colnum & 0xff);
-
-#ifdef MARS
-        __asm volatile (
-            "mov #-128, %0\n\t"
-            "add %0, %0 /* %0 is now 0xFFFFFF00 */ \n\t"
-            "mov.l @(20, %0), %0 /* get 32-bit quotient */ \n\t"
-            : "=r" (iscale));
-#else
-        iscale = 0xffffffffu / scale;
-#endif
-
-#if MIPLEVELS > 1
-        // other texture drawing info
-        miplevel = iscale / MIPSCALE;
-        if (miplevel > lseg->maxmip)
-            lseg->maxmip = miplevel;
-        if (miplevel < lseg->minmip)
-            lseg->minmip = miplevel;
-#endif
-
-        for (tex = lseg->first; tex < lseg->last; tex++)
-            R_DrawTexture(x, iscale, colnum, scale2, floorclipx, ceilingclipx, texturelight, tex, miplevel);
     }
 }
 
