@@ -204,7 +204,7 @@ void O_Init (void)
 	menuitem[mi_music].x = ITEMX;
 	menuitem[mi_music].y = STARTY+ITEMSPACE*2;
 
-	D_memcpy(menuitem[mi_musicvol].name, "CDA volume", 11);
+	D_memcpy(menuitem[mi_musicvol].name, "CD volume", 10);
 	menuitem[mi_musicvol].x = ITEMX;
 	menuitem[mi_musicvol].y = STARTY + ITEMSPACE * 3;
 	menuitem[mi_musicvol].slider = si_musvolume+1;
@@ -788,7 +788,7 @@ void O_Drawer (void)
 			print(menuitem[mi_music].x + 85, menuitem[mi_music].y, "fm");
 			break;
 		case mustype_cd:
-			print(menuitem[mi_music].x + 85, menuitem[mi_music].y, "cd");
+			print(menuitem[mi_music].x + 85, menuitem[mi_music].y, "cda");
 			break;
 		case mustype_spcm:
 			print(menuitem[mi_music].x + 85, menuitem[mi_music].y, "spcm");
