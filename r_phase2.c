@@ -21,7 +21,7 @@ void R_WallPrep(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 //
 static fixed_t R_PointToDist(fixed_t x, fixed_t y)
 {
-    int angle;
+    angle_t angle;
     fixed_t dx, dy, temp;
 
     dx = D_abs(x - vd->viewx);
@@ -92,7 +92,7 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
 {
     angle_t      distangle, offsetangle, normalangle;
     seg_t* seg = wc->seg;
-    int          angle1 = wc->scalestep;
+    angle_t      angle1 = wc->scalestep;
     fixed_t      sineval, rw_distance;
     fixed_t      scalefrac, scale2;
     fixed_t      hyp;

@@ -271,7 +271,7 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
    int     x;          // r15
    int     x1;         // FP+5
    int     x2;         // r22
-   unsigned scalefrac; // FP+3
+   fixed_t scalefrac; // FP+3
    int     r1;         // FP+7
    int     r2;         // r18
    unsigned silhouette; // FP+4

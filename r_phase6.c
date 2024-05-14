@@ -68,8 +68,13 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum, fixed_t scale2, in
 {
     fixed_t top, bottom;
 
+#ifdef MARS
     top = FixedMul(scale2, tex->topheight)>>FRACBITS;
     bottom = FixedMul(scale2, tex->bottomheight)>>FRACBITS;
+#else
+    top = FixedMul(scale2, tex->topheight)>>FRACBITS;
+    bottom = FixedMul(scale2, tex->bottomheight)>>FRACBITS;
+#endif
 
     top = centerY - top;
     if (top < ceilingclipx)
@@ -86,7 +91,7 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum, fixed_t scale2, in
     // column has no length?
     if (top < bottom)
     {
-        int mipcolnum;
+        VINT mipcolnum;
         drawmip_t *mip;
         fixed_t frac;
 #ifdef MARS
@@ -95,8 +100,8 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum, fixed_t scale2, in
         pixel_t* src;
 #endif
 
-        colnum &= tex->widthmask;
         mipcolnum = colnum;
+        mipcolnum &= tex->widthmask;
         frac = tex->texturemid - (centerY - top) * iscale;
 
 #if MIPLEVELS > 1
