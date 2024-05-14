@@ -444,19 +444,17 @@ void R_SegCommands(void)
             if (seglight > lseg.lightmax)
                 seglight = lseg.lightmax;
             lseg.lightmin = seglight;
-
             lseg.lightcoef = 0;
-            if (lseg.lightmin != lseg.lightmax)
-                lseg.lightcoef = ((unsigned)(lseg.lightmax - lseg.lightmin) << FRACBITS) / (800 - 160);
 
-            if (lseg.lightcoef != 0)
+            if (lseg.lightmin != lseg.lightmax)
             {
                 int light1, light2;
 
-                lseg.lightsub = 160 * lseg.lightcoef;
-                lseg.lightcoef <<= LIGHTZSHIFT;
                 lseg.lightmin <<= FRACBITS;
                 lseg.lightmax <<= FRACBITS;
+                lseg.lightcoef = (unsigned)(lseg.lightmax - lseg.lightmin) / (800 - 160);
+                lseg.lightsub = 160 * lseg.lightcoef;
+                lseg.lightcoef <<= LIGHTZSHIFT;
 
                 // calculate lighting values at both end points
                 // if they are the same, disable gradient lighting
@@ -489,19 +487,17 @@ void R_SegCommands(void)
                     lseg.lightmax = -lseg.lightmin;
                     lseg.lightmin = -t;
 
+                    if (lseg.lightmax > 0)
+                        lseg.lightmax = 0;
+
                     lseg.lightsub += 255 * FRACUNIT;
                     lseg.lightmax += 255 * FRACUNIT;
                     lseg.lightmin += 255 * FRACUNIT;
 
-                    lseg.lightcoef >>= 3;
-                    lseg.lightsub >>= 3;
-                    lseg.lightmax >>= 3;
-                    lseg.lightmin >>= 3;
-
-                    if (lseg.lightmin < 0)
-                        lseg.lightmin = 0;
-                    if (lseg.lightmax > 31*FRACUNIT)
-                        lseg.lightmax = 31*FRACUNIT;
+                    lseg.lightcoef = (unsigned)lseg.lightcoef >> 3;
+                    lseg.lightsub = (unsigned)lseg.lightsub >> 3;
+                    lseg.lightmax = (unsigned)lseg.lightmax >> 3;
+                    lseg.lightmin = (unsigned)lseg.lightmin >> 3;
                 }
             }
             else
