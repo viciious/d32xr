@@ -92,7 +92,7 @@ int	EV_Teleport( line_t *line,mobj_t *thing )
 					, thing->z, MT_TFOG);
 				S_StartSound (fog, sfx_telept);
 				if (thing->player)
-					thing->reactiontime = 18;	/* don't move for a bit */
+					thing->reactiontime = 18 / 2;	/* don't move for a bit */
 				thing->angle = m->angle;
 				thing->momx = thing->momy = thing->momz = 0;
 				return 1;
