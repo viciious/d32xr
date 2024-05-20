@@ -53,7 +53,7 @@ typedef struct
 
 static char seg_lock = 0;
 
-static void R_DrawTexture(int x, unsigned iscale, int colnum, fixed_t scale2, int floorclipx, int ceilingclipx, unsigned light, drawtex_t *tex, int miplevel) ATTR_DATA_CACHE_ALIGN;
+static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, int floorclipx, int ceilingclipx, unsigned light, drawtex_t *tex, int miplevel) ATTR_DATA_CACHE_ALIGN;
 static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex, fixed_t texturemid, fixed_t topheight, fixed_t bottomheight) ATTR_DATA_CACHE_ALIGN;
 
@@ -64,7 +64,7 @@ void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 //
 // Render a wall texture as columns
 //
-static void R_DrawTexture(int x, unsigned iscale, int colnum, fixed_t scale2, int floorclipx, int ceilingclipx, unsigned light, drawtex_t *tex, int miplevel)
+static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, int floorclipx, int ceilingclipx, unsigned light, drawtex_t *tex, int miplevel)
 {
     fixed_t top, bottom;
 
@@ -91,7 +91,7 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum, fixed_t scale2, in
     // column has no length?
     if (top < bottom)
     {
-        VINT mipcolnum;
+        VINT colnum, mipcolnum;
         drawmip_t *mip;
         fixed_t frac;
 #ifdef MARS
@@ -100,8 +100,8 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum, fixed_t scale2, in
         pixel_t* src;
 #endif
 
+        colnum = colnum_ & tex->widthmask;
         mipcolnum = colnum;
-        mipcolnum &= tex->widthmask;
         frac = tex->texturemid - (centerY - top) * iscale;
 
 #if MIPLEVELS > 1
