@@ -134,9 +134,9 @@ void P_RunThinkers (void)
 */
 
 #ifdef MARS
-void P_CheckSights2(int c) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void P_CheckSights2(int c) ATTR_DATA_CACHE_ALIGN;
 #else
-void P_CheckSights2(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
+void P_CheckSights2(void) ATTR_DATA_CACHE_ALIGN;
 #endif
 
 #ifdef MARS
