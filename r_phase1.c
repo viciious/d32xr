@@ -37,7 +37,7 @@ static void R_Subsector(rbspWork_t *rbsp, int num) ATTR_DATA_CACHE_ALIGN;
 static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop) ATTR_DATA_CACHE_ALIGN;
 static void R_RenderBSPNode(rbspWork_t *rbsp, int bspnum, int16_t *outerbbox) ATTR_DATA_CACHE_ALIGN;
 static void R_WallEarlyPrep(viswall_t* segl, fixed_t *restrict floorheight, 
-    fixed_t *restrict floornewheight, fixed_t *restrict ceilingnewheight) ATTR_DATA_CACHE_ALIGN;
+    fixed_t *restrict floornewheight, fixed_t *restrict ceilingnewheight) ATTR_DATA_CACHE_ALIGN  __attribute__((noinline));
 
 #ifdef MARS
 __attribute__((aligned(4)))
