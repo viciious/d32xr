@@ -477,13 +477,13 @@ static void R_ClipWallSegment(rbspWork_t *rbsp, fixed_t first, fixed_t last, boo
                if (next != start)
                {
                   int *s = (int *)start;
-                  int n = *s;
+                  int n = *s++;
                   int cnt = next - start;
 
                   next = start;
                   do {
-                     int nn = *++s;
-                     *s = n, n = nn;
+                     int nn = *s;
+                     *s++ = n, n = nn;
                   } while (--cnt);
                }
 
