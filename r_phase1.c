@@ -645,7 +645,7 @@ static void R_Subsector(rbspWork_t *rbsp, int num)
 
 static void R_DecodeBBox(int16_t *bbox, const int16_t *outerbbox, uint16_t encbbox)
 {
-   unsigned l;
+   uint16_t l;
 
    l = outerbbox[BOXTOP] - outerbbox[BOXBOTTOM];
    bbox[BOXBOTTOM] = outerbbox[BOXBOTTOM] + ((l * (encbbox & 0x0f)) >> 4);
