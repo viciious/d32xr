@@ -12,8 +12,9 @@ static fixed_t R_PointToDist(fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
 static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, angle_t normalangle) ATTR_DATA_CACHE_ALIGN;
 static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle, int angle1) ATTR_DATA_CACHE_ALIGN;
 void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts) ATTR_DATA_CACHE_ALIGN;
-static void R_SegLoop(viswall_t* segl, unsigned short *restrict clipbounds, fixed_t floorheight, 
-    fixed_t floornewheight, fixed_t ceilingnewheight) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
+// the volatiles help gcc produce less silly SH2 assembler code
+static void R_SegLoop(viswall_t* segl, unsigned short *restrict clipbounds, volatile fixed_t floorheight, 
+    volatile fixed_t floornewheight, volatile fixed_t ceilingnewheight) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 void R_WallPrep(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 
 //
@@ -175,17 +176,17 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
 // Main seg clipping loop
 //
 static void R_SegLoop(viswall_t* segl, unsigned short * restrict clipbounds, 
-    fixed_t floorheight, fixed_t floornewheight, fixed_t ceilingnewheight)
+    volatile fixed_t floorheight, volatile fixed_t floornewheight, volatile fixed_t ceilingnewheight)
 {
     const volatile int actionbits = segl->actionbits;
 
     fixed_t scalefrac = segl->scalefrac;
-    volatile const fixed_t scalestep = segl->scalestep;
+    const fixed_t scalestep = segl->scalestep;
 
     int x, start = segl->start;
     const int stop = segl->stop;
 
-    const fixed_t ceilingheight = segl->ceilingheight;
+    const volatile fixed_t ceilingheight = segl->ceilingheight;
 
     const int floorandlight = ((segl->seglightlevel & 0xff) << 16) | segl->floorpicnum;
     const int ceilandlight = ((segl->seglightlevel & 0xff) << 16) | segl->ceilingpicnum;
@@ -195,13 +196,13 @@ static void R_SegLoop(viswall_t* segl, unsigned short * restrict clipbounds,
 
     unsigned short * restrict newclipbounds = segl->clipbounds;
 
-    const int cyvh = (centerY << 16) | viewportHeight;
+    const int cy = centerY;
+    const int vh = viewportHeight;
 
     for (x = start; x <= stop; x++)
     {
-        int floorclipx, ceilingclipx;
-        int low, high, top, bottom;
-        int cy, vh;
+        fixed_t floorclipx, ceilingclipx;
+        fixed_t low, high, top, bottom;
         fixed_t scale2;
 
         scale2 = scalefrac;
@@ -213,9 +214,6 @@ static void R_SegLoop(viswall_t* segl, unsigned short * restrict clipbounds,
         ceilingclipx = clipbounds[x];
         floorclipx = ceilingclipx & 0x00ff;
         ceilingclipx = ((unsigned)ceilingclipx & 0xff00) >> 8;
-
-        cy = cyvh >> 16;
-        vh = cyvh & 0xffff;
 
         //
         // calc high and low
@@ -234,14 +232,11 @@ static void R_SegLoop(viswall_t* segl, unsigned short * restrict clipbounds,
         else if (high < ceilingclipx)
             high = ceilingclipx;
 
-        if (newclipbounds)
-        {
-            newclipbounds[x] = (high << 8) | low;
-        }
-
-        int newclip = actionbits & (AC_NEWFLOOR|AC_NEWCEILING);
+        const int newclip = actionbits & (AC_NEWFLOOR|AC_NEWCEILING);
         if (newclip)
         {
+            newclipbounds[x] = (high << 8) | low;
+
             if (!(newclip & AC_NEWFLOOR))
                 low = floorclipx;
             if (!(newclip & AC_NEWCEILING))
