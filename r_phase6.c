@@ -68,13 +68,8 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, i
 {
     fixed_t top, bottom;
 
-#ifdef MARS
     top = FixedMul(scale2, tex->topheight)>>FRACBITS;
     bottom = FixedMul(scale2, tex->bottomheight)>>FRACBITS;
-#else
-    top = FixedMul(scale2, tex->topheight)>>FRACBITS;
-    bottom = FixedMul(scale2, tex->bottomheight)>>FRACBITS;
-#endif
 
     top = centerY - top;
     if (top < ceilingclipx)
@@ -163,7 +158,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds)
     fixed_t offset = segl->offset;
     fixed_t distance = segl->distance;
 
-    const int ceilingheight = segl->ceilingheight;
+    const fixed_t ceilingheight = segl->ceilingheight;
 
     int texturelight = lseg->lightmax;
     int lightmax = lseg->lightmax, lightmin = lseg->lightmin,
