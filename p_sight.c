@@ -276,7 +276,8 @@ static boolean PS_CrossBSPNode(sightWork_t* sw, int bspnum)
 static boolean PS_RejectCheckSight(mobj_t *t1, mobj_t *t2)
 {
    unsigned s1, s2;
-   unsigned pnum, bytenum, bitnum;
+   unsigned pnum, bitnum;
+   int bytenum;
 
    // First check for trivial rejection
    s1 = ((uintptr_t)t1->subsector->sector - (uintptr_t)sectors);
@@ -284,6 +285,24 @@ static boolean PS_RejectCheckSight(mobj_t *t1, mobj_t *t2)
    pnum = (s1*numsectors + s2) / sizeof(sector_t);
    bytenum = pnum >> 3;
 
+#ifdef MARS
+   bitnum = pnum & 7;
+   __asm volatile(
+      "add #-7,%0\n\t"
+      "neg %0,%0\n\t"
+      "add %0,%0\n\t"
+      "braf %0\n\t"
+      "mov #1,%0\n\t"
+      "shll %0\n\t"
+      "shll %0\n\t"
+      "shll %0\n\t"
+      "shll %0\n\t"
+      "shll %0\n\t"
+      "shll %0\n\t"
+      "shll %0\n\t"
+      : "+r"(bitnum)
+   );
+#else
    bitnum = 1;
    switch (pnum & 7)
    {
@@ -297,8 +316,9 @@ static boolean PS_RejectCheckSight(mobj_t *t1, mobj_t *t2)
    case 0:      break;
    } while (0);
    }
+#endif
 
-   if(rejectmatrix[bytenum] & bitnum) 
+   if((int8_t)rejectmatrix[bytenum] & bitnum) 
    {
       return false; // can't possibly be connected
    }
