@@ -125,8 +125,8 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
 {
    seg_t       *seg;
    line_t      *line;
-   int          s1;
-   int          s2;
+   VINT         s1;
+   VINT         s2;
    int          count;
    subsector_t *sub;
    sector_t    *front;
@@ -137,11 +137,11 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
    mapvertex_t  *v1, *v2;
    fixed_t      frac;
    fixed_t      slope;
-   int          side;
    i16divline_t *strace = &sw->strace;
-   fixed_t      t2x = sw->t2x, t2y = sw->t2y;
+   int16_t      t2x = sw->t2x, t2y = sw->t2y;
    fixed_t      sightzstart = sw->sightzstart;
    VINT         *lvalidcount, vc;
+   VINT         side;
 
    sub = &subsectors[num];
 
