@@ -232,9 +232,10 @@ static void R_SegLoop(viswall_t* segl, unsigned short * restrict clipbounds,
         else if (high < ceilingclipx)
             high = ceilingclipx;
 
-        const int newclip = actionbits & (AC_NEWFLOOR|AC_NEWCEILING);
-        if (newclip)
+        if (newclipbounds)
         {
+            const int newclip = actionbits & (AC_NEWFLOOR|AC_NEWCEILING);
+
             newclipbounds[x] = (high << 8) | low;
 
             if (!(newclip & AC_NEWFLOOR))
