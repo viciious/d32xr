@@ -149,27 +149,21 @@ static void R_UpdateCache(void)
       if (id < numtextures) {
         int j;
         texture_t* tex = &textures[id];
-        int numdecals = tex->decals & 0x3;
-        texdecal_t *decals = &decals[tex->decals >> 2];
+        uint8_t *src = *pdata;
+        uint8_t *dst;
 
-        if (numdecals > 0)
-        {
-          uint8_t *src = *pdata;
-          uint8_t *dst;
+        I_GetThreadLocalVar(DOOMTLS_COLUMNCACHE, dst);
 
-          I_GetThreadLocalVar(DOOMTLS_COLUMNCACHE, dst);
+        for (j = 0; j < tex->width; j++) {
+          boolean decaled;
 
-          for (j = 0; j < tex->width; j++) {
-            boolean decaled;
-
-            decaled = R_CompositeColumn(j, numdecals, decals,
-              src, dst, h, i);
-            if (decaled) {
-              D_memcpy(src, dst, h);
-            }
-
-            src += h;
+          decaled = R_CompositeColumn(j, tex->decals & 0x3, &decals[tex->decals >> 2],
+            src, dst, h, i);
+          if (decaled) {
+            D_memcpy(src, dst, h);
           }
+
+          src += h;
         }
       }
    }
