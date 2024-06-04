@@ -99,6 +99,30 @@ void	P_RestoreResp(player_t* p);
 void	P_UpdateResp(player_t* p);
 void	R_ResetResp(player_t* p);
 
+#ifdef USECAMERA
+typedef struct camera_s
+{
+	// Info for drawing: position.
+	fixed_t x, y, z;
+
+	angle_t angle; // orientation
+	angle_t aiming; // up/down
+
+	struct subsector_s *subsector;
+	fixed_t floorz, ceilingz;
+
+	// Momentums used to update position
+	fixed_t momx, momy, momz;
+} camera_t;
+
+#define CAM_HEIGHT (16<<FRACBITS)
+#define CAM_RADIUS (20<<FRACBITS)
+#define CAM_DIST (128<<FRACBITS)
+
+extern camera_t camera, camera2;
+void P_CameraThinker(player_t *player, camera_t *thiscam);
+#endif
+
 /*
 ===============================================================================
 

@@ -503,17 +503,41 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 
 	player = &players[displayplayer];
 
-	vd.viewplayer = player;
-	vd.viewx = player->mo->x;
-	vd.viewy = player->mo->y;
-	vd.viewz = player->viewz;
-	vd.viewangle = player->mo->angle;
+#ifdef USECAMERA
+	camera_t *thiscam = NULL;
 
-	vd.viewsin = finesine(vd.viewangle>>ANGLETOFINESHIFT);
-	vd.viewcos = finecosine(vd.viewangle>>ANGLETOFINESHIFT);
+	if (displayplayer == consoleplayer)
+		thiscam = &camera;
+	else if (displayplayer == (consoleplayer ^ 1)) // Splitscreen
+		thiscam = &camera2;
+
+#ifdef USECAMERAFORDEMOS
+	if (thiscam && demoplayback)
+#else
+	if (thiscam)
+#endif
+	{
+		vd.viewx = camera.x;
+		vd.viewy = camera.y;
+		vd.viewz = camera.z;
+		vd.viewangle = camera.angle;
+		vd.lightlevel = camera.subsector->sector->lightlevel; // SSNTails
+	}
+	else
+#endif
+	{
+		vd.viewx = player->mo->x;
+		vd.viewy = player->mo->y;
+		vd.viewz = player->viewz;
+		vd.viewangle = player->mo->angle;
+		vd.lightlevel = player->mo->subsector->sector->lightlevel;
+	}
+
+	vd.viewplayer = player;
+	vd.viewsin = finesine(vd.viewangle >> ANGLETOFINESHIFT);
+	vd.viewcos = finecosine(vd.viewangle >> ANGLETOFINESHIFT);
 
 	vd.displayplayer = displayplayer;
-	vd.lightlevel = player->mo->subsector->sector->lightlevel;
 	vd.fixedcolormap = 0;
 
 	vd.clipangle = xtoviewangle[0]<<FRACBITS;

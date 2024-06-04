@@ -18,6 +18,9 @@
 /* will not be compiled */
 #define	RANGECHECK
 
+#define USECAMERA
+#define USECAMERAFORDEMOS
+
 /* if SIMULATOR is defined, compile in extra code for things like console */
 /* debugging aids */
 #ifndef JAGUAR

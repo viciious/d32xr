@@ -532,6 +532,204 @@ void P_DeathThink (player_t *player)
 		player->playerstate = PST_REBORN;
 }
 
+#ifdef USECAMERA
+camera_t camera, camera2;
+//#define NOCLIPCAMERA
+
+void P_ResetCamera(player_t *player, camera_t *thiscam)
+{
+	thiscam->x = player->mo->x;
+	thiscam->y = player->mo->y;
+	thiscam->z = player->mo->z + VIEWHEIGHT;
+}
+
+// SSNTails
+// Process the mobj-ish required functions of the camera
+void P_CameraThinker(player_t *player, camera_t *thiscam)
+{
+#ifdef NOCLIPCAMERA
+	thiscam->x += thiscam->momx;
+	thiscam->y += thiscam->momy;
+	thiscam->z += thiscam->momz;
+	return;
+#else
+	// P_CameraXYMovement()
+	if (thiscam->momx || thiscam->momy)
+	{
+		fixed_t momx, momy;
+		pslidemove_t sm;
+		ptrymove_t tm;
+
+		momx = vblsinframe * (thiscam->momx >> 2);
+		momy = vblsinframe * (thiscam->momy >> 2);
+
+		mobj_t mo; // Our temporary dummy to pretend we are a mobj
+		mo.flags = MF_SOLID | MF_FLOAT;
+		mo.x = thiscam->x;
+		mo.y = thiscam->y;
+		mo.z = thiscam->z;
+		mo.floorz = thiscam->floorz;
+		mo.ceilingz = thiscam->ceilingz;
+		mo.momx = thiscam->momx;
+		mo.momy = thiscam->momy;
+		mo.momz = thiscam->momz;
+		mo.radius = CAM_RADIUS;
+		mo.height = CAM_HEIGHT;
+		sm.slidething = &mo;
+
+		P_CameraSlideMove(&sm);
+
+		if (sm.slidex == mo.x && sm.slidey == mo.y)
+			goto camstairstep;
+
+		if (P_CameraTryMove(&tm, &mo, sm.slidex, sm.slidey))
+			goto camwrapup;
+
+	camstairstep:
+		// something fucked up in slidemove, so stairstep
+		if (P_CameraTryMove(&tm, &mo, mo.x, mo.y + momy))
+		{
+			mo.momx = 0;
+			mo.momy = momy;
+			goto camwrapup;
+		}
+
+		if (P_CameraTryMove(&tm, &mo, mo.x + momx, mo.y))
+		{
+			mo.momx = momx;
+			mo.momy = 0;
+			goto camwrapup;
+		}
+
+		mo.momx = mo.momy = 0;
+
+	camwrapup:
+		thiscam->x = mo.x;
+		thiscam->y = mo.y;
+		thiscam->z = mo.z;
+		thiscam->floorz = mo.floorz;
+		thiscam->ceilingz = mo.ceilingz;
+		thiscam->momx = mo.momx;
+		thiscam->momy = mo.momy;
+		thiscam->momz = mo.momz;
+	}
+
+	// P_CameraZMovement()
+	if (thiscam->momz)
+	{
+		thiscam->z += thiscam->momz;
+
+		// clip movement
+		if (thiscam->z <= thiscam->floorz) // hit the floor
+		{
+			thiscam->z = thiscam->floorz;
+			if (thiscam->z > player->viewz + CAM_HEIGHT + (16 << FRACBITS))
+			{
+				// Camera got stuck, so reset it
+				P_ResetCamera(player, thiscam);
+			}
+		}
+
+		if (thiscam->z + CAM_HEIGHT > thiscam->ceilingz)
+		{
+			if (thiscam->momz > 0)
+			{
+				// hit the ceiling
+				thiscam->momz = 0;
+			}
+
+			thiscam->z = thiscam->ceilingz - CAM_HEIGHT;
+
+			if (thiscam->z + CAM_HEIGHT < player->mo->z - player->mo->height)
+			{
+				// Camera got stuck, so reset it
+				P_ResetCamera(player, thiscam);
+			}
+		}
+	}
+
+	if (thiscam->ceilingz - thiscam->z < CAM_HEIGHT && thiscam->ceilingz >= thiscam->z)
+	{
+		thiscam->ceilingz = thiscam->z + CAM_HEIGHT;
+		thiscam->floorz = thiscam->z;
+	}
+#endif
+}
+
+static void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
+{
+	angle_t angle = 0;
+	angle_t focusangle = 0;
+	fixed_t x, y, z, viewpointx, viewpointy, camspeed, camdist, camheight, pviewheight;
+	fixed_t dist;
+	mobj_t *mo;
+	subsector_t *newsubsec;
+
+	mo = player->mo;
+	//	const fixed_t radius = CAM_RADIUS;
+	const fixed_t height = CAM_HEIGHT;
+
+	angle = focusangle = mo->angle;
+
+	P_CameraThinker(player, thiscam);
+
+	camspeed = FRACUNIT / 4;
+	camdist = CAM_DIST;
+	camheight = 20 << FRACBITS;
+
+	if (P_AproxDistance(thiscam->x - mo->x, thiscam->y - mo->y) > camdist * 2)
+	{
+		// Camera got stuck, so reset it
+		P_ResetCamera(player, thiscam);
+	}
+
+	dist = camdist;
+
+	// sets ideal cam pos
+	if (player->health <= 0)
+		dist >>= 1;
+
+	x = mo->x - FixedMul(finecosine((angle >> ANGLETOFINESHIFT) & FINEMASK), dist);
+	y = mo->y - FixedMul(finesine((angle >> ANGLETOFINESHIFT) & FINEMASK), dist);
+
+	pviewheight = VIEWHEIGHT;
+
+	z = mo->z + pviewheight + camheight;
+
+	// move camera down to move under lower ceilings
+	newsubsec = R_PointInSubsector(((mo->x >> FRACBITS) + (thiscam->x >> FRACBITS)) << (FRACBITS - 1), ((mo->y >> FRACBITS) + (thiscam->y >> FRACBITS)) << (FRACBITS - 1));
+
+	{
+		const fixed_t myfloorz = newsubsec->sector->floorheight;
+		const fixed_t myceilingz = newsubsec->sector->ceilingheight;
+
+		// camera fit?
+		if (myceilingz != myfloorz
+			&& myceilingz - height < z)
+		{
+			// no fit
+			z = myceilingz - height - (11 << FRACBITS);
+		}
+	}
+
+	if (thiscam->z < thiscam->floorz)
+		thiscam->z = thiscam->floorz;
+
+	// point viewed by the camera
+	// this point is just 64 unit forward the player
+	dist = 64 << FRACBITS;
+	viewpointx = mo->x + FixedMul(finecosine((angle >> ANGLETOFINESHIFT) & FINEMASK), dist);
+	viewpointy = mo->y + FixedMul(finesine((angle >> ANGLETOFINESHIFT) & FINEMASK), dist);
+
+	thiscam->angle = R_PointToAngle2(thiscam->x, thiscam->y, viewpointx, viewpointy);
+
+	// follow the player
+	thiscam->momx = FixedMul(x - thiscam->x, camspeed);
+	thiscam->momy = FixedMul(y - thiscam->y, camspeed);
+	thiscam->momz = FixedMul(z - thiscam->z, camspeed);
+}
+#endif
+
 //
 // CALICO: Returns false if:
 // * player doesn't own the weapon in question -or-
@@ -606,6 +804,19 @@ ticphase = 21;
 	
 	if (player->playerstate == PST_DEAD)
 	{
+#ifdef USECAMERA
+#ifdef USECAMERAFORDEMOS
+		if (demoplayback) {
+#endif
+			if (player == &players[consoleplayer])
+				P_MoveChaseCamera(player, &camera);
+			else if (player == &players[consoleplayer ^ 1])
+				P_MoveChaseCamera(player, &camera2);
+#ifdef USECAMERAFORDEMOS
+		}
+#endif
+#endif
+
 		P_DeathThink (player);
 		return;
 	}
@@ -619,6 +830,20 @@ ticphase = 22;
 	else
 		P_MovePlayer (player);
 	P_CalcHeight (player);
+
+#ifdef USECAMERA
+#ifdef USECAMERAFORDEMOS
+	if (demoplayback) {
+#endif
+		if (player == &players[consoleplayer])
+			P_MoveChaseCamera(player, &camera);
+		else if (player == &players[consoleplayer ^ 1])
+			P_MoveChaseCamera(player, &camera2);
+#ifdef USECAMERAFORDEMOS
+	}
+#endif
+#endif
+
 	if (player->mo->subsector->sector->special)
 		P_PlayerInSpecialSector (player);
 		

@@ -466,6 +466,15 @@ static void R_DrawPSprites(int sprscreenhalf)
     viswall_t *spr;
     unsigned vph = viewportHeight;
 
+#ifdef USECAMERA
+#ifdef USECAMERAFORDEMOS
+    if (demoplayback)
+        return;
+#else
+    return; // No psprites in camera view
+#endif
+#endif
+
     I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
 
     // draw psprites
