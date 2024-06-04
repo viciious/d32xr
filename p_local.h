@@ -352,6 +352,11 @@ typedef struct
 
 void P_SlideMove (pslidemove_t *sm);
 
+#ifdef USECAMERA
+void P_CameraSlideMove (pslidemove_t *sm);
+boolean P_CameraTryMove (ptrymove_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
+#endif
+
 #endif	/* __P_LOCAL__ */
 
 

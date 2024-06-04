@@ -6,6 +6,7 @@
 #include "mars.h"
 #include "marshw.h"
 #endif
+#include "p_local.h"
 
 int16_t viewportWidth, viewportHeight;
 int16_t centerX, centerY;
