@@ -3,7 +3,7 @@
 #include "doomdef.h"
 #include "p_local.h"
 #include "st_main.h"
-
+#include "p_camera.h"
 
 fixed_t 		forwardmove[2] = {0x40000, 0x60000}; 
 fixed_t 		sidemove[2] = {0x38000, 0x58000}; 
@@ -532,204 +532,6 @@ void P_DeathThink (player_t *player)
 		player->playerstate = PST_REBORN;
 }
 
-#ifdef USECAMERA
-camera_t camera, camera2;
-//#define NOCLIPCAMERA
-
-void P_ResetCamera(player_t *player, camera_t *thiscam)
-{
-	thiscam->x = player->mo->x;
-	thiscam->y = player->mo->y;
-	thiscam->z = player->mo->z + VIEWHEIGHT;
-}
-
-// SSNTails
-// Process the mobj-ish required functions of the camera
-void P_CameraThinker(player_t *player, camera_t *thiscam)
-{
-#ifdef NOCLIPCAMERA
-	thiscam->x += thiscam->momx;
-	thiscam->y += thiscam->momy;
-	thiscam->z += thiscam->momz;
-	return;
-#else
-	// P_CameraXYMovement()
-	if (thiscam->momx || thiscam->momy)
-	{
-		fixed_t momx, momy;
-		pslidemove_t sm;
-		ptrymove_t tm;
-
-		momx = vblsinframe * (thiscam->momx >> 2);
-		momy = vblsinframe * (thiscam->momy >> 2);
-
-		mobj_t mo; // Our temporary dummy to pretend we are a mobj
-		mo.flags = MF_SOLID | MF_FLOAT;
-		mo.x = thiscam->x;
-		mo.y = thiscam->y;
-		mo.z = thiscam->z;
-		mo.floorz = thiscam->floorz;
-		mo.ceilingz = thiscam->ceilingz;
-		mo.momx = thiscam->momx;
-		mo.momy = thiscam->momy;
-		mo.momz = thiscam->momz;
-		mo.radius = CAM_RADIUS;
-		mo.height = CAM_HEIGHT;
-		sm.slidething = &mo;
-
-		P_CameraSlideMove(&sm);
-
-		if (sm.slidex == mo.x && sm.slidey == mo.y)
-			goto camstairstep;
-
-		if (P_CameraTryMove(&tm, &mo, sm.slidex, sm.slidey))
-			goto camwrapup;
-
-	camstairstep:
-		// something fucked up in slidemove, so stairstep
-		if (P_CameraTryMove(&tm, &mo, mo.x, mo.y + momy))
-		{
-			mo.momx = 0;
-			mo.momy = momy;
-			goto camwrapup;
-		}
-
-		if (P_CameraTryMove(&tm, &mo, mo.x + momx, mo.y))
-		{
-			mo.momx = momx;
-			mo.momy = 0;
-			goto camwrapup;
-		}
-
-		mo.momx = mo.momy = 0;
-
-	camwrapup:
-		thiscam->x = mo.x;
-		thiscam->y = mo.y;
-		thiscam->z = mo.z;
-		thiscam->floorz = mo.floorz;
-		thiscam->ceilingz = mo.ceilingz;
-		thiscam->momx = mo.momx;
-		thiscam->momy = mo.momy;
-		thiscam->momz = mo.momz;
-	}
-
-	// P_CameraZMovement()
-	if (thiscam->momz)
-	{
-		thiscam->z += thiscam->momz;
-
-		// clip movement
-		if (thiscam->z <= thiscam->floorz) // hit the floor
-		{
-			thiscam->z = thiscam->floorz;
-			if (thiscam->z > player->viewz + CAM_HEIGHT + (16 << FRACBITS))
-			{
-				// Camera got stuck, so reset it
-				P_ResetCamera(player, thiscam);
-			}
-		}
-
-		if (thiscam->z + CAM_HEIGHT > thiscam->ceilingz)
-		{
-			if (thiscam->momz > 0)
-			{
-				// hit the ceiling
-				thiscam->momz = 0;
-			}
-
-			thiscam->z = thiscam->ceilingz - CAM_HEIGHT;
-
-			if (thiscam->z + CAM_HEIGHT < player->mo->z - player->mo->height)
-			{
-				// Camera got stuck, so reset it
-				P_ResetCamera(player, thiscam);
-			}
-		}
-	}
-
-	if (thiscam->ceilingz - thiscam->z < CAM_HEIGHT && thiscam->ceilingz >= thiscam->z)
-	{
-		thiscam->ceilingz = thiscam->z + CAM_HEIGHT;
-		thiscam->floorz = thiscam->z;
-	}
-#endif
-}
-
-static void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
-{
-	angle_t angle = 0;
-	angle_t focusangle = 0;
-	fixed_t x, y, z, viewpointx, viewpointy, camspeed, camdist, camheight, pviewheight;
-	fixed_t dist;
-	mobj_t *mo;
-	subsector_t *newsubsec;
-
-	mo = player->mo;
-	//	const fixed_t radius = CAM_RADIUS;
-	const fixed_t height = CAM_HEIGHT;
-
-	angle = focusangle = mo->angle;
-
-	P_CameraThinker(player, thiscam);
-
-	camspeed = FRACUNIT / 4;
-	camdist = CAM_DIST;
-	camheight = 20 << FRACBITS;
-
-	if (P_AproxDistance(thiscam->x - mo->x, thiscam->y - mo->y) > camdist * 2)
-	{
-		// Camera got stuck, so reset it
-		P_ResetCamera(player, thiscam);
-	}
-
-	dist = camdist;
-
-	// sets ideal cam pos
-	if (player->health <= 0)
-		dist >>= 1;
-
-	x = mo->x - FixedMul(finecosine((angle >> ANGLETOFINESHIFT) & FINEMASK), dist);
-	y = mo->y - FixedMul(finesine((angle >> ANGLETOFINESHIFT) & FINEMASK), dist);
-
-	pviewheight = VIEWHEIGHT;
-
-	z = mo->z + pviewheight + camheight;
-
-	// move camera down to move under lower ceilings
-	newsubsec = R_PointInSubsector(((mo->x >> FRACBITS) + (thiscam->x >> FRACBITS)) << (FRACBITS - 1), ((mo->y >> FRACBITS) + (thiscam->y >> FRACBITS)) << (FRACBITS - 1));
-
-	{
-		const fixed_t myfloorz = newsubsec->sector->floorheight;
-		const fixed_t myceilingz = newsubsec->sector->ceilingheight;
-
-		// camera fit?
-		if (myceilingz != myfloorz
-			&& myceilingz - height < z)
-		{
-			// no fit
-			z = myceilingz - height - (11 << FRACBITS);
-		}
-	}
-
-	if (thiscam->z < thiscam->floorz)
-		thiscam->z = thiscam->floorz;
-
-	// point viewed by the camera
-	// this point is just 64 unit forward the player
-	dist = 64 << FRACBITS;
-	viewpointx = mo->x + FixedMul(finecosine((angle >> ANGLETOFINESHIFT) & FINEMASK), dist);
-	viewpointy = mo->y + FixedMul(finesine((angle >> ANGLETOFINESHIFT) & FINEMASK), dist);
-
-	thiscam->angle = R_PointToAngle2(thiscam->x, thiscam->y, viewpointx, viewpointy);
-
-	// follow the player
-	thiscam->momx = FixedMul(x - thiscam->x, camspeed);
-	thiscam->momy = FixedMul(y - thiscam->y, camspeed);
-	thiscam->momz = FixedMul(z - thiscam->z, camspeed);
-}
-#endif
-
 //
 // CALICO: Returns false if:
 // * player doesn't own the weapon in question -or-
@@ -867,6 +669,192 @@ ticphase = 23;
 		if ( buttons & BT_2 )
 			player->pendingweapon = wp_pistol;
 		if ( (buttons & BT_3) && player->weaponowned[wp_shotgun] )
+			player->pendingweapon = wp_shotgun;
+		if ( (buttons & BT_4) && player->weaponowned[wp_chaingun] )
+			player->pendingweapon = wp_chaingun;
+		if ( (buttons & BT_5) && player->weaponowned[wp_missile] )
+			player->pendingweapon = wp_missile;
+		if ( (buttons & BT_6) && player->weaponowned[wp_plasma] )
+			player->pendingweapon = wp_plasma;
+		if ( (buttons & BT_7) && player->weaponowned[wp_bfg] )
+			player->pendingweapon = wp_bfg;
+#elif defined(MARS)
+		if ((buttons & (BT_MODE | BT_START)) == (BT_MODE | BT_START))
+		{
+			if (P_CanSelecteWeapon(player, wp_fist))
+				player->pendingweapon = wp_fist;
+			else/* if (player->weaponowned[wp_chainsaw])*/
+				player->pendingweapon = wp_chainsaw;
+		}
+		if ((buttons & (BT_MODE | BT_A)) == (BT_MODE | BT_A))
+			player->pendingweapon = wp_pistol;
+		if ((buttons & (BT_MODE | BT_B)) == (BT_MODE | BT_B) && player->weaponowned[wp_shotgun])
+			player->pendingweapon = wp_shotgun;
+		if ((buttons & (BT_MODE | BT_C)) == (BT_MODE | BT_C) && player->weaponowned[wp_chaingun])
+			player->pendingweapon = wp_chaingun;
+		if ((buttons & (BT_MODE | BT_X)) == (BT_MODE | BT_X) && player->weaponowned[wp_missile])
+			player->pendingweapon = wp_missile;
+		if ((buttons & (BT_MODE | BT_Y)) == (BT_MODE | BT_Y) && player->weaponowned[wp_plasma])
+			player->pendingweapon = wp_plasma;
+		if ((buttons & (BT_MODE | BT_Z)) == (BT_MODE | BT_Z) && player->weaponowned[wp_bfg])
+			player->pendingweapon = wp_bfg;
+#endif
+
+		if ((buttons & BT_RMBTN) && (oldbuttons & BT_RMBTN))
+		{
+			// holding the RMB - swap the next and previous weapon actions
+			if (buttons & BT_NWEAPN)
+			{
+				buttons = (buttons ^ BT_NWEAPN) | BT_PWEAPN;
+			}
+		}
+
+		// CALICO: added support for explicit next weapon and previous weapon actions
+		if (buttons & BT_PWEAPN)
+		{
+			int wp = player->readyweapon;
+			do
+			{
+				if (--wp < 0)
+					wp = NUMWEAPONS - 1;
+			} while (wp != player->readyweapon && !P_CanFireWeapon(player, wp));
+			player->pendingweapon = wp;
+		}
+		else if (buttons & BT_NWEAPN)
+		{
+			int wp = player->readyweapon;
+			do
+			{
+				if (++wp == NUMWEAPONS)
+					wp = 0;
+			} while (wp != player->readyweapon && !P_CanFireWeapon(player, wp));
+			player->pendingweapon = wp;
+		}
+
+		if (player->pendingweapon == player->readyweapon)
+			player->pendingweapon = wp_nochange;
+	}
+	
+/* */
+/* check for use */
+/* */
+	if (buttons & BT_USE)
+	{
+		if (!player->usedown)
+		{
+			P_UseLines (player);
+			player->usedown = true;
+		}
+	}
+	else
+		player->usedown = false;
+
+ticphase = 24;
+	if (buttons & BT_ATTACK)
+	{
+		player->attackdown++;
+		if (player->attackdown > 30 &&
+		(player->readyweapon == wp_chaingun || player->readyweapon == wp_plasma) )
+			stbar[playernum].specialFace = f_mowdown;
+	}
+	else
+		player->attackdown = 0;
+			
+/* */
+/* cycle psprites */
+/* */
+ticphase = 25;
+	P_MovePsprites (player);
+ticphase = 26;
+	
+	
+/* */
+/* counters */
+/* */
+	if (gametic != prevgametic)
+	{
+		if (player->powers[pw_strength])
+			player->powers[pw_strength]++;	/* strength counts up to diminish fade */
+
+		if (player->powers[pw_invulnerability])
+			player->powers[pw_invulnerability]--;
+
+		if (player->powers[pw_ironfeet])
+			player->powers[pw_ironfeet]--;
+
+		if (player->powers[pw_infrared])
+			player->powers[pw_infrared]--;
+
+		if (player->damagecount)
+			player->damagecount--;
+
+		if (player->bonuscount)
+			player->bonuscount--;
+	}
+}
+
+void R_ResetResp(player_t* p)
+{
+	int j;
+	int pnum = p - players;
+	playerresp_t* resp = &playersresp[pnum];
+
+	D_memset(resp, 0, sizeof(playerresp_t));
+	resp->weapon = wp_pistol;
+	resp->health = MAXHEALTH;
+	resp->ammo[am_clip] = 50;
+	resp->weaponowned[wp_fist] = true;
+	resp->weaponowned[wp_pistol] = true;
+	for (j = 0; j < NUMAMMO; j++)
+		resp->maxammo[j] = maxammo[j];
+}
+
+void P_RestoreResp(player_t* p)
+{
+	int i;
+	int pnum = p - players;
+	playerresp_t* resp = &playersresp[pnum];
+
+	for (i = 0; i < NUMAMMO; i++)
+	{
+		p->ammo[i] = resp->ammo[i];
+		p->maxammo[i] = resp->maxammo[i];
+	}
+	for (i = 0; i < NUMWEAPONS; i++)
+	{
+		p->weaponowned[i] = resp->weaponowned[i];
+	}
+	p->health = resp->health;
+	p->readyweapon = p->pendingweapon = resp->weapon;
+	p->armorpoints = resp->armorpoints;
+	p->armortype = resp->armortype;
+	p->backpack = resp->backpack;
+	p->cheats = resp->cheats;
+}
+
+void P_UpdateResp(player_t* p)
+{
+	int i;
+	int pnum = p - players;
+	playerresp_t* resp = &playersresp[pnum];
+
+	for (i = 0; i < NUMAMMO; i++)
+	{
+		resp->ammo[i] = p->ammo[i];
+		resp->maxammo[i] = p->maxammo[i];
+	}
+	for (i = 0; i < NUMWEAPONS; i++)
+	{
+		resp->weaponowned[i] = p->weaponowned[i];
+	}
+	resp->health = p->health;
+	resp->weapon = p->readyweapon;
+	resp->armorpoints = p->armorpoints;
+	resp->armortype = p->armortype;
+	resp->backpack = p->backpack;
+	resp->cheats = p->cheats;
+}
+ns & BT_3) && player->weaponowned[wp_shotgun] )
 			player->pendingweapon = wp_shotgun;
 		if ( (buttons & BT_4) && player->weaponowned[wp_chaingun] )
 			player->pendingweapon = wp_chaingun;

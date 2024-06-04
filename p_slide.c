@@ -29,23 +29,6 @@
 #include "doomdef.h"
 #include "p_local.h"
 
-typedef struct
-{
-   mobj_t *slidething;
-   fixed_t slidex, slidey;     // the final position
-   fixed_t slidedx, slidedy;   // current move for completable frac
-   fixed_t blockfrac;          // the fraction of the move that gets completed
-   fixed_t blocknvx, blocknvy; // the vector of the line that blocks move
-   fixed_t endbox[4];          // final proposed position
-   fixed_t nvx, nvy;           // normalized line vector
-
-   vertex_t *p1, *p2; // p1, p2 are line endpoints
-   fixed_t p3x, p3y, p4x, p4y; // p3, p4 are move endpoints
-
-	int numspechit;
-	line_t **spechit;
-} pslidework_t;
-
 #define CLIPRADIUS 23
 
 enum
@@ -556,6 +539,31 @@ void P_CameraSlideMove(pslidemove_t *sm)
             slidething->momy = dy;
             //         SL_CheckSpecialLines(&sw); // Camera doesn't trip lines
             sm->slidex = sw.slidex;
+            sm->slidey = sw.slidey;
+            return;
+        }
+
+        // project the remaining move along the line that blocked movement
+        dx -= rx;
+        dy -= ry;
+        dx = FixedMul(dx, sw.blocknvx);
+        dy = FixedMul(dy, sw.blocknvy);
+        slide = dx + dy;
+
+        dx = FixedMul(slide, sw.blocknvx);
+        dy = FixedMul(slide, sw.blocknvy);
+    }
+
+    // some hideous situation has happened that won't let the camera slide
+    sm->slidex = slidething->x;
+    sm->slidey = slidething->y;
+    sm->slidething->momx = slidething->momy = 0;
+}
+#endif
+
+// EOF
+
+ex;
             sm->slidey = sw.slidey;
             return;
         }
