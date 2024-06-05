@@ -79,7 +79,7 @@ static unsigned snd_nopaintcount = 0;
 
 static uint8_t	snd_init = 0;
 
-static lumpinfo_t *vgm_tracks;
+static lumpinfo_t *vgm_tracks = NULL;
 uint8_t			*vgm_ptr;
 
 char 			spcmDir[9] = { 0 };
@@ -219,6 +219,10 @@ void S_InitMusic(void)
 	num_music = 0;
 	muslooping = 0;
 	S_StopSong();
+
+	if (vgm_tracks)
+		Z_Free(vgm_tracks);
+	vgm_tracks = NULL;
 
 	W_LoadPWAD(PWAD_CD);
 

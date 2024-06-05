@@ -16,8 +16,8 @@ char			*gamemaplump;
 dmapinfo_t		gamemapinfo;
 dgameinfo_t		gameinfo;
 
-dmapinfo_t		**gamemaplist;
-VINT 			gamemapcount;
+dmapinfo_t		**gamemaplist = NULL;
+VINT 			gamemapcount = 0;
 
 gametype_t		netgame;
 
@@ -564,7 +564,7 @@ void G_LoadGame(int saveslot)
 =
 = G_RunGame
 =
-= The game should allready have been initialized or laoded
+= The game should allready have been initialized or loaded
 =================
 */
 void G_RunGame (void)
@@ -581,6 +581,12 @@ void G_RunGame (void)
 
 		/* run a level until death or completion */
 		MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer, P_Update);
+
+		if (gameaction == ga_quit)
+		{
+			I_NetStop();
+			return;
+		}
 
 		if (gameaction == ga_startnew)
 		{

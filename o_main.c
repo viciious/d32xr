@@ -26,6 +26,7 @@ typedef enum
 	mi_video,
 	mi_controls,
 	mi_help,
+	mi_quit,
 
 	mi_soundvol,
 	mi_music,
@@ -42,6 +43,9 @@ typedef enum
 	mi_controltype,
 	mi_alwaysrun,
 	mi_strafebtns,
+
+	mi_quityes,
+	mi_quitno,
 
 	NUMMENUITEMS
 } menupos_t;
@@ -113,6 +117,7 @@ typedef enum
 	ms_video,
 	ms_controls,
 	ms_help,
+	ms_quit,
 
 	NUMMENUSCREENS
 } screenpos_t;
@@ -193,6 +198,11 @@ void O_Init (void)
 	menuitem[mi_help].y = STARTY+ITEMSPACE*4;
 	menuitem[mi_help].screen = ms_help;
 
+	D_memcpy(menuitem[mi_quit].name, "Quit", 4);
+	menuitem[mi_quit].x = ITEMX;
+	menuitem[mi_quit].y = STARTY+ITEMSPACE*5;
+	menuitem[mi_quit].screen = ms_quit;
+
 	D_memcpy(menuitem[mi_soundvol].name, "Sfx volume", 11);
 	menuitem[mi_soundvol].x = ITEMX;
 	menuitem[mi_soundvol].y = STARTY;
@@ -249,9 +259,17 @@ void O_Init (void)
 	menuitem[mi_strafebtns].y = STARTY+ITEMSPACE*5;
 
 
+	D_memcpy(menuitem[mi_quityes].name, "Yes", 4);
+	menuitem[mi_quityes].x = ITEMX;
+	menuitem[mi_quityes].y = STARTY;
+
+	D_memcpy(menuitem[mi_quitno].name, "No", 3);
+	menuitem[mi_quitno].x = ITEMX;
+	menuitem[mi_quitno].y = STARTY+ITEMSPACE*1;
+
 	D_memcpy(menuscreen[ms_main].name, "Options", 8);
 	menuscreen[ms_main].firstitem = mi_game;
-	menuscreen[ms_main].numitems = mi_help - mi_game + 1;
+	menuscreen[ms_main].numitems = mi_quit - mi_game + 1;
 
 	D_memcpy(menuscreen[ms_audio].name, "Audio", 6);
 	menuscreen[ms_audio].firstitem = mi_soundvol;
@@ -276,9 +294,13 @@ void O_Init (void)
 	menuscreen[ms_controls].firstitem = mi_controltype;
 	menuscreen[ms_controls].numitems = mi_strafebtns - mi_controltype + 1;
 
-	D_memcpy(menuscreen[ms_help].name, "Help", 4);
+	D_memcpy(menuscreen[ms_help].name, "Help", 5);
 	menuscreen[ms_help].firstitem = 0;
 	menuscreen[ms_help].numitems = 0;
+
+	D_memcpy(menuscreen[ms_quit].name, "Quit?", 6);
+	menuscreen[ms_quit].firstitem = mi_quityes;
+	menuscreen[ms_quit].numitems = mi_quitno - mi_quityes + 1;
 }
 
 /*
@@ -392,6 +414,33 @@ void O_Control (player_t *player)
 	if (buttons & (BT_A | BT_LMBTN) && !(oldbuttons & (BT_A | BT_LMBTN)))
 	{
 		int itemno = menuscr->firstitem + cursorpos;
+
+		if (itemno == mi_quityes)
+		{
+			clearscreen = 2;
+
+			S_StartSound(NULL, sfx_slop);
+
+			// let the exit sound play
+			int ticcount = I_GetTime();
+			int lastticcount = ticcount;
+			int ticwait = 150;
+			do {
+				ticcount = I_GetTime();
+				S_UpdateSounds();
+			} while (ticcount - lastticcount < ticwait);
+
+			S_StopSong();
+
+			gameaction = ga_quit;
+			return;
+		}
+
+		if (itemno == mi_quitno)
+		{
+			goto goback;
+		}
+
 		if (menuscr->numitems > 0 && menuitem[itemno].screen != ms_none)
 		{
 			movecount = 0;
@@ -409,6 +458,7 @@ void O_Control (player_t *player)
 
 	if (buttons & (BT_B | BT_RMBTN) && !(oldbuttons & (BT_B | BT_RMBTN)))
 	{
+goback:
 		if (screenpos != ms_main)
 		{
 			int i;

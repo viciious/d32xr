@@ -154,7 +154,8 @@ typedef enum
 	ga_secretexit,
 	ga_warped,
 	ga_exitdemo,
-	ga_startnew
+	ga_startnew,
+	ga_quit
 } gameaction_t;
 
 

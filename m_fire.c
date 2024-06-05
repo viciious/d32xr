@@ -46,8 +46,6 @@ typedef struct {
 #define FIRE_WIDTH		320
 #define FIRE_HEIGHT		72
 
-#define FIRE_DEFAULT_STOP_TICON 470
-
 const unsigned char fireRGBs[] =
 {
 		0x00, 0x00, 0x00,
@@ -217,12 +215,7 @@ void I_InitMenuFire(jagobj_t *titlepic)
 	m_fire = Z_Malloc(sizeof(*m_fire), PU_STATIC);
 	D_memset(m_fire, 0, sizeof(*m_fire));
 
-	if (stopticon < 0)
-		stopticon = FIRE_DEFAULT_STOP_TICON;
 	m_fire->stopticon = stopticon;
-
-	if (titlepos < 0)
-		titlepos = 224+28;
 	m_fire->startpos = titlepos;
 
 	m_fire->firePalCols = sizeof(fireRGBs) / 3;

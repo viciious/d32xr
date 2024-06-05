@@ -609,7 +609,10 @@ void STOP_Title (void)
 	if (!gameinfo.titleTime)
 		return;
 	if (titlepic != NULL)
+	{
 		Z_Free (titlepic);
+		titlepic = NULL;
+	}
 #ifdef MARS
 	I_StopMenuFire();
 #else
@@ -833,24 +836,15 @@ void RunTitle (void)
 	exit = MiniLoop (START_Title, STOP_Title, TIC_Abortable, DRAW_Title, UpdateBuffer);
 
 #ifdef MARS
-	if (exit == ga_exitdemo)
-		RunMenu ();
-	else
-#endif
+	if (exit != ga_exitdemo)
 		RunCredits();
+#endif
 }
 
 void RunCredits (void)
 {
-	int		exit;
-	
 	if (*gameinfo.creditsPage)
-		exit = MiniLoop(START_Credits, STOP_Credits, TIC_Credits, DRAW_Credits, UpdateBuffer);
-	else
-		exit = ga_exitdemo;
-
-	if (exit == ga_exitdemo)
-		RunMenu ();
+		MiniLoop(START_Credits, STOP_Credits, TIC_Credits, DRAW_Credits, UpdateBuffer);
 }
 
 #define MAX_ATTRACT_DEMOS 10
@@ -981,21 +975,35 @@ D_printf ("I_Init\n");
 	I_Init (); 
 D_printf ("S_Init\n");
 	S_Init ();
-#ifdef MARS
-	MiniLoop(GS_Start, GS_Stop, GS_Ticker, GS_Drawer, I_Update);
-D_printf ("W_Init2\n");
-    W_InitCDPWAD(PWAD_CD, cd_pwad_name);
-#endif
 D_printf ("R_Init\n");
 	R_Init (); 
 D_printf ("P_Init\n");
 	P_Init (); 
-D_printf ("S_InitMusic\n");
-	S_InitMusic();
 D_printf("ST_Init\n");
 	ST_Init ();
 D_printf("O_Init\n");
 	O_Init ();
+
+gameselect:
+	if (gamemaplist)
+	{
+		int i;
+		for (i = 0; gamemaplist[i]; i++)
+			Z_Free(gamemaplist[i]);
+		Z_Free(gamemaplist);
+		gamemaplist = NULL;
+	}
+	gamemapcount = 0;
+
+#ifdef MARS
+	canwipe = false;
+	MiniLoop(GS_Start, GS_Stop, GS_Ticker, GS_Drawer, I_Update);
+D_printf ("W_Init2\n");
+    W_InitCDPWAD(PWAD_CD, cd_pwad_name);
+#endif
+
+D_printf ("S_InitMusic\n");
+	S_InitMusic();
 D_printf("G_Init\n");
 	G_Init();
 
@@ -1028,20 +1036,10 @@ D_printf ("DM_Main\n");
 	G_RunGame ();
 #endif
 
-#ifdef MARS
-	while (1)
-	{
-		RunTitle();
-		RunMenu();
-	}
-#else
-	while (1)
-	{
-		RunTitle();
-		//RunDemo("DEMO1");
-		RunCredits ();
-		//RunDemo("DEMO2");
-	}
-#endif
+	RunTitle();
+
+	RunMenu();
+
+	gameaction = 0;
+	goto gameselect;
 }
- 
