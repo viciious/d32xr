@@ -115,7 +115,6 @@ void R_InitTextures (void)
 
 		offset = LITTLELONG(*directory);
 		mtexture = (maptexture_t*)((byte*)maptex + offset);
-		patchcount = LITTLESHORT(mtexture->patchcount);
 		masked = *((byte *)&mtexture->masked);
 
 		texture = &textures[i];
