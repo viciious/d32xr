@@ -34,7 +34,7 @@ typedef struct
     VINT movecount;
 } menuscreen_t;
 
-static menuscreen_t *gs_menu;
+static menuscreen_t *gs_menu = NULL;
 
 extern VINT	uchar, snums;
 extern void print(int x, int y, const char* string);
@@ -45,7 +45,8 @@ void GS_Start(void)
     int n;
     char *buf;
 
-    gs_menu = Z_Malloc(sizeof(*gs_menu), PU_STATIC);
+    if (gs_menu == NULL)
+        gs_menu = Z_Malloc(sizeof(*gs_menu), PU_STATIC);
     D_memset(gs_menu, 0, sizeof(*gs_menu));
 
     /* cache all needed graphics	 */

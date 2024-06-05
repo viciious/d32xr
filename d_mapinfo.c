@@ -290,13 +290,14 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 
 static void G_FixSPCMDirList(dgameinfo_t *gi)
 {
-	unsigned i;
-	char list[sizeof(gi->spcmDirList)], *p;
+	int i;
+	char list[sizeof(gi->spcmDirList)+2], *p;
 
+	D_memset(list, 0, sizeof(list));
 	D_snprintf(list, sizeof(list), "%s", &gi->spcmDirList[0][0]);
 	D_memset(gi->spcmDirList, 0, sizeof(gi->spcmDirList));
 
-	for (i = mystrlen(list); i > 0; i--)  {
+	for (i = mystrlen(list) - 1; i > 0; i--)  {
 		if (list[i] == ',') {
 			list[i] = 0;
 		}
@@ -368,8 +369,8 @@ static void G_ClearGameInfo(dgameinfo_t* gi)
 	gi->creditsPage = "";
 	gi->endText = "";
 	D_memset(gi->spcmDirList, 0, sizeof(gi->spcmDirList));
-	gi->stopFireTime = -1;
-	gi->titleStartPos = -1;
+	gi->stopFireTime = 0;
+	gi->titleStartPos = 0;
 }
 
 static dmapinfo_t *G_CompressMapInfo(dmapinfo_t *mi)
