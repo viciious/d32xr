@@ -51,6 +51,7 @@ OBJS = \
 	d_main.o \
 	g_game.o \
 	info.o \
+	p_camera.o \
 	p_ceilng.o \
 	p_doors.o \
 	p_enemy.o \

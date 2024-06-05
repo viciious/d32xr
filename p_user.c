@@ -3,7 +3,7 @@
 #include "doomdef.h"
 #include "p_local.h"
 #include "st_main.h"
-
+#include "p_camera.h"
 
 fixed_t 		forwardmove[2] = {0x40000, 0x60000}; 
 fixed_t 		sidemove[2] = {0x38000, 0x58000}; 
@@ -606,6 +606,19 @@ ticphase = 21;
 	
 	if (player->playerstate == PST_DEAD)
 	{
+#ifdef USECAMERA
+#ifdef USECAMERAFORDEMOS
+		if (demoplayback) {
+#endif
+			if (player == &players[consoleplayer])
+				P_MoveChaseCamera(player, &camera);
+			else if (player == &players[consoleplayer ^ 1])
+				P_MoveChaseCamera(player, &camera2);
+#ifdef USECAMERAFORDEMOS
+		}
+#endif
+#endif
+
 		P_DeathThink (player);
 		return;
 	}
@@ -619,6 +632,20 @@ ticphase = 22;
 	else
 		P_MovePlayer (player);
 	P_CalcHeight (player);
+
+#ifdef USECAMERA
+#ifdef USECAMERAFORDEMOS
+	if (demoplayback) {
+#endif
+		if (player == &players[consoleplayer])
+			P_MoveChaseCamera(player, &camera);
+		else if (player == &players[consoleplayer ^ 1])
+			P_MoveChaseCamera(player, &camera2);
+#ifdef USECAMERAFORDEMOS
+	}
+#endif
+#endif
+
 	if (player->mo->subsector->sector->special)
 		P_PlayerInSpecialSector (player);
 		
@@ -642,6 +669,192 @@ ticphase = 23;
 		if ( buttons & BT_2 )
 			player->pendingweapon = wp_pistol;
 		if ( (buttons & BT_3) && player->weaponowned[wp_shotgun] )
+			player->pendingweapon = wp_shotgun;
+		if ( (buttons & BT_4) && player->weaponowned[wp_chaingun] )
+			player->pendingweapon = wp_chaingun;
+		if ( (buttons & BT_5) && player->weaponowned[wp_missile] )
+			player->pendingweapon = wp_missile;
+		if ( (buttons & BT_6) && player->weaponowned[wp_plasma] )
+			player->pendingweapon = wp_plasma;
+		if ( (buttons & BT_7) && player->weaponowned[wp_bfg] )
+			player->pendingweapon = wp_bfg;
+#elif defined(MARS)
+		if ((buttons & (BT_MODE | BT_START)) == (BT_MODE | BT_START))
+		{
+			if (P_CanSelecteWeapon(player, wp_fist))
+				player->pendingweapon = wp_fist;
+			else/* if (player->weaponowned[wp_chainsaw])*/
+				player->pendingweapon = wp_chainsaw;
+		}
+		if ((buttons & (BT_MODE | BT_A)) == (BT_MODE | BT_A))
+			player->pendingweapon = wp_pistol;
+		if ((buttons & (BT_MODE | BT_B)) == (BT_MODE | BT_B) && player->weaponowned[wp_shotgun])
+			player->pendingweapon = wp_shotgun;
+		if ((buttons & (BT_MODE | BT_C)) == (BT_MODE | BT_C) && player->weaponowned[wp_chaingun])
+			player->pendingweapon = wp_chaingun;
+		if ((buttons & (BT_MODE | BT_X)) == (BT_MODE | BT_X) && player->weaponowned[wp_missile])
+			player->pendingweapon = wp_missile;
+		if ((buttons & (BT_MODE | BT_Y)) == (BT_MODE | BT_Y) && player->weaponowned[wp_plasma])
+			player->pendingweapon = wp_plasma;
+		if ((buttons & (BT_MODE | BT_Z)) == (BT_MODE | BT_Z) && player->weaponowned[wp_bfg])
+			player->pendingweapon = wp_bfg;
+#endif
+
+		if ((buttons & BT_RMBTN) && (oldbuttons & BT_RMBTN))
+		{
+			// holding the RMB - swap the next and previous weapon actions
+			if (buttons & BT_NWEAPN)
+			{
+				buttons = (buttons ^ BT_NWEAPN) | BT_PWEAPN;
+			}
+		}
+
+		// CALICO: added support for explicit next weapon and previous weapon actions
+		if (buttons & BT_PWEAPN)
+		{
+			int wp = player->readyweapon;
+			do
+			{
+				if (--wp < 0)
+					wp = NUMWEAPONS - 1;
+			} while (wp != player->readyweapon && !P_CanFireWeapon(player, wp));
+			player->pendingweapon = wp;
+		}
+		else if (buttons & BT_NWEAPN)
+		{
+			int wp = player->readyweapon;
+			do
+			{
+				if (++wp == NUMWEAPONS)
+					wp = 0;
+			} while (wp != player->readyweapon && !P_CanFireWeapon(player, wp));
+			player->pendingweapon = wp;
+		}
+
+		if (player->pendingweapon == player->readyweapon)
+			player->pendingweapon = wp_nochange;
+	}
+	
+/* */
+/* check for use */
+/* */
+	if (buttons & BT_USE)
+	{
+		if (!player->usedown)
+		{
+			P_UseLines (player);
+			player->usedown = true;
+		}
+	}
+	else
+		player->usedown = false;
+
+ticphase = 24;
+	if (buttons & BT_ATTACK)
+	{
+		player->attackdown++;
+		if (player->attackdown > 30 &&
+		(player->readyweapon == wp_chaingun || player->readyweapon == wp_plasma) )
+			stbar[playernum].specialFace = f_mowdown;
+	}
+	else
+		player->attackdown = 0;
+			
+/* */
+/* cycle psprites */
+/* */
+ticphase = 25;
+	P_MovePsprites (player);
+ticphase = 26;
+	
+	
+/* */
+/* counters */
+/* */
+	if (gametic != prevgametic)
+	{
+		if (player->powers[pw_strength])
+			player->powers[pw_strength]++;	/* strength counts up to diminish fade */
+
+		if (player->powers[pw_invulnerability])
+			player->powers[pw_invulnerability]--;
+
+		if (player->powers[pw_ironfeet])
+			player->powers[pw_ironfeet]--;
+
+		if (player->powers[pw_infrared])
+			player->powers[pw_infrared]--;
+
+		if (player->damagecount)
+			player->damagecount--;
+
+		if (player->bonuscount)
+			player->bonuscount--;
+	}
+}
+
+void R_ResetResp(player_t* p)
+{
+	int j;
+	int pnum = p - players;
+	playerresp_t* resp = &playersresp[pnum];
+
+	D_memset(resp, 0, sizeof(playerresp_t));
+	resp->weapon = wp_pistol;
+	resp->health = MAXHEALTH;
+	resp->ammo[am_clip] = 50;
+	resp->weaponowned[wp_fist] = true;
+	resp->weaponowned[wp_pistol] = true;
+	for (j = 0; j < NUMAMMO; j++)
+		resp->maxammo[j] = maxammo[j];
+}
+
+void P_RestoreResp(player_t* p)
+{
+	int i;
+	int pnum = p - players;
+	playerresp_t* resp = &playersresp[pnum];
+
+	for (i = 0; i < NUMAMMO; i++)
+	{
+		p->ammo[i] = resp->ammo[i];
+		p->maxammo[i] = resp->maxammo[i];
+	}
+	for (i = 0; i < NUMWEAPONS; i++)
+	{
+		p->weaponowned[i] = resp->weaponowned[i];
+	}
+	p->health = resp->health;
+	p->readyweapon = p->pendingweapon = resp->weapon;
+	p->armorpoints = resp->armorpoints;
+	p->armortype = resp->armortype;
+	p->backpack = resp->backpack;
+	p->cheats = resp->cheats;
+}
+
+void P_UpdateResp(player_t* p)
+{
+	int i;
+	int pnum = p - players;
+	playerresp_t* resp = &playersresp[pnum];
+
+	for (i = 0; i < NUMAMMO; i++)
+	{
+		resp->ammo[i] = p->ammo[i];
+		resp->maxammo[i] = p->maxammo[i];
+	}
+	for (i = 0; i < NUMWEAPONS; i++)
+	{
+		resp->weaponowned[i] = p->weaponowned[i];
+	}
+	resp->health = p->health;
+	resp->weapon = p->readyweapon;
+	resp->armorpoints = p->armorpoints;
+	resp->armortype = p->armortype;
+	resp->backpack = p->backpack;
+	resp->cheats = p->cheats;
+}
+ns & BT_3) && player->weaponowned[wp_shotgun] )
 			player->pendingweapon = wp_shotgun;
 		if ( (buttons & BT_4) && player->weaponowned[wp_chaingun] )
 			player->pendingweapon = wp_chaingun;

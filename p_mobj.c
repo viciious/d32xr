@@ -428,6 +428,25 @@ y = 0xff500000;
 		for (i=0 ; i<NUMCARDS ; i++)
 			p->cards[i] = true;		/* give all cards in death match mode			 */
 
+#ifdef USECAMERA
+	camera_t *thiscam;
+	if (p == &players[consoleplayer])
+		thiscam = &camera;
+	else if (p == &players[consoleplayer ^ 1]) // splitscreen
+		thiscam = &camera2;
+
+	if (thiscam)
+	{
+		thiscam->x = mobj->x;
+		thiscam->y = mobj->y;
+		thiscam->z = mobj->z + mobj->height;
+		thiscam->angle = mobj->angle;
+		thiscam->subsector = mobj->subsector;
+		thiscam->floorz = thiscam->subsector->sector->floorheight;
+		thiscam->ceilingz = thiscam->subsector->sector->ceilingheight;
+	}
+#endif
+
 	if (!netgame)
 		return;
 
