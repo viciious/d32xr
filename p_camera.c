@@ -329,30 +329,28 @@ camwrapup:
 	{
    		thiscam->z += thiscam->momz;
 
-		// clip movement
-		if (thiscam->z <= thiscam->floorz) // hit the floor
+		// Don't go below the floor
+		if (thiscam->z <= thiscam->floorz)
 		{
 			thiscam->z = thiscam->floorz;
 			if (thiscam->z > player->viewz + CAM_HEIGHT + (16 << FRACBITS))
 			{
-				// Camera got stuck, so reset it
+				// Camera got stuck above the player
 				P_ResetCamera(player, thiscam);
 			}
 		}
 
+		// Don't go above the ceiling
 		if (thiscam->z + CAM_HEIGHT > thiscam->ceilingz)
 		{
 			if (thiscam->momz > 0)
-			{
-				// hit the ceiling
 				thiscam->momz = 0;
-			}
 
 			thiscam->z = thiscam->ceilingz - CAM_HEIGHT;
 
 			if (thiscam->z + CAM_HEIGHT < player->mo->z - player->mo->height)
 			{
-				// Camera got stuck, so reset it
+				// Camera got stuck below the player
 				P_ResetCamera(player, thiscam);
 			}
 		}
@@ -389,16 +387,17 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 
 	if (P_AproxDistance(thiscam->x - mo->x, thiscam->y - mo->y) > camdist * 2)
 	{
-		// Camera got stuck, so reset it
+		// Camera is stuck, and the player has gone over twice as far away from it, so let's reset
 		P_ResetCamera(player, thiscam);
 	}
 
 	dist = camdist;
 
-	// sets ideal cam pos
+	// If dead, camera is twice as close
 	if (player->health <= 0)
 		dist >>= 1;
 
+	// Destination XY
 	x = mo->x - FixedMul(finecosine((angle>>ANGLETOFINESHIFT) & FINEMASK), dist);
 	y = mo->y - FixedMul(finesine((angle>>ANGLETOFINESHIFT) & FINEMASK), dist);
 
@@ -406,34 +405,28 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 
 	z = mo->z + pviewheight + camheight;
 
-	// move camera down to move under lower ceilings
+	// Look at halfway between the camera and player. Is the ceiling lower? Then the camera should try to move down to fit under it
 	newsubsec = R_PointInSubsector(((mo->x>>FRACBITS) + (thiscam->x>>FRACBITS))<<(FRACBITS-1), ((mo->y>>FRACBITS) + (thiscam->y>>FRACBITS))<<(FRACBITS-1));
 
 	{
-		const fixed_t myfloorz = newsubsec->sector->floorheight;
-		const fixed_t myceilingz = newsubsec->sector->ceilingheight;
-
 		// camera fit?
-		if (myceilingz != myfloorz
-			&& myceilingz - height < z)
-		{
-			// no fit
-			z = myceilingz - height-(11<<FRACBITS);
-		}
+		if (newsubsec->sector->ceilingheight != newsubsec->sector->floorheight // Don't try to fit in sectors with equal floor and ceiling heights
+			&& newsubsec->sector->ceilingheight - height < z)
+			z = newsubsec->sector->ceilingheight - height-(11<<FRACBITS);
 	}
 
 	if (thiscam->z < thiscam->floorz)
 		thiscam->z = thiscam->floorz;
 
-	// point viewed by the camera
-	// this point is just 64 unit forward the player
+	// The camera actually focuses 64 units ahead of where the player is.
+	// This is more aesthetically pleasing.
 	dist = 64 << FRACBITS;
 	viewpointx = mo->x + FixedMul(finecosine((angle>>ANGLETOFINESHIFT) & FINEMASK), dist);
 	viewpointy = mo->y + FixedMul(finesine((angle>>ANGLETOFINESHIFT) & FINEMASK), dist);
 
 	thiscam->angle = R_PointToAngle2(thiscam->x, thiscam->y, viewpointx, viewpointy);
 
-	// follow the player
+	// Set the mom vector, cut by the camera speed, as it tries to move to the destination position
 	thiscam->momx = FixedMul(x - thiscam->x, camspeed);
 	thiscam->momy = FixedMul(y - thiscam->y, camspeed);
 	thiscam->momz = FixedMul(z - thiscam->z, camspeed);
