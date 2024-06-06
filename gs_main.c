@@ -45,6 +45,8 @@ void GS_Start(void)
     int n;
     char *buf;
 
+    I_SetPalette(W_POINTLUMPNUM(W_GetNumForName("PLAYPALS")));
+
     if (gs_menu == NULL)
         gs_menu = Z_Malloc(sizeof(*gs_menu), PU_STATIC);
     D_memset(gs_menu, 0, sizeof(*gs_menu));
