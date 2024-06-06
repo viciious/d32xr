@@ -743,29 +743,6 @@ start_music:
         bne.b   3b
 
 | FM setup
-        movea.l vgm_ptr,a6          /* lzss buffer */
-        lea     0x1C(a6),a6         /* loop offset */
-| get vgm loop offset
-        move.b  (a6)+,d0
-        move.b  (a6)+,d1
-        move.b  (a6)+,d2
-        move.b  (a6)+,d3
-        move.b  d3,-(sp)
-        move.w  (sp)+,d3            /* shift left 8 */
-        move.b  d2,d3
-        swap    d3
-        move.b  d1,-(sp)
-        move.w  (sp)+,d3            /* shift left 8 */
-        move.b  d0,d3
-        tst.l   d3
-        beq.b   0f                  /* no loop offset, use default song start */
-        addi.l  #0x1C,d3
-        bra.b   1f
-0:
-        moveq   #0x40,d3
-1:
-        move.l  d3,fm_loop          /* loop offset */
-
         movea.l vgm_ptr,a6
         lea     8(a6),a6            /* version */
         move.b  (a6)+,d0
@@ -780,7 +757,8 @@ start_music:
         move.w  (sp)+,d3            /* shift left 8 */
         move.b  d0,d3
         cmpi.l  #0x150,d3           /* >= v1.50? */
-        bcs     2f                  /* no, default to song start of offset 0x40 */
+        bcs     2f                  /* no, default to song start of
+offset 0x40 */
 
         movea.l vgm_ptr,a6
         lea     0x34(a6),a6         /* VGM data offset */
@@ -803,6 +781,30 @@ start_music:
         moveq   #0x40,d3
 3:
         move.l  d3,fm_start         /* start of song data */
+
+        movea.l vgm_ptr,a6
+        lea     0x1C(a6),a6         /* loop offset */
+| get vgm loop offset
+        move.b  (a6)+,d0
+        move.b  (a6)+,d1
+        move.b  (a6)+,d2
+        move.b  (a6)+,d3
+        move.b  d3,-(sp)
+        move.w  (sp)+,d3            /* shift left 8 */
+        move.b  d2,d3
+        swap    d3
+        move.b  d1,-(sp)
+        move.w  (sp)+,d3            /* shift left 8 */
+        move.b  d0,d3
+        tst.l   d3
+        beq.b   0f                  /* no loop offset, use default song start */
+        addi.l  #0x1C,d3
+        bra.b   1f
+0:
+        move.l  fm_start,d3
+1:
+        move.l  d3,fm_loop          /* loop offset */
+
         z80wr   FM_START,d3         /* start song => FX_START = start offset */
         lsr.w   #8,d3
         z80wr   FM_START+1,d3
