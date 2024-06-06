@@ -344,16 +344,22 @@ int EV_DoFloor(line_t *line,floor_e floortype)
 						if (getSide(secnum,i,0)->sector == secnum)
 						{
 							sec = getSector(secnum,i,1);
-							floor->texture = sec->floorpic;
-							floor->newspecial = sec->special;
-							break;
+							if (sec->floorheight == floor->floordestheight)
+							{
+								floor->texture = sec->floorpic;
+								floor->newspecial = sec->special;
+								break;
+							}
 						}
 						else
 						{
 							sec = getSector(secnum,i,0);
-							floor->texture = sec->floorpic;
-							floor->newspecial = sec->special;
-							break;
+							if (sec->floorheight == floor->floordestheight)
+							{
+								floor->texture = sec->floorpic;
+								floor->newspecial = sec->special;
+								break;
+							}
 						}
 					}
 			default:
