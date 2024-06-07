@@ -667,7 +667,7 @@ startnew:
 		MiniLoop (IN_Start, IN_Stop, IN_Ticker, IN_Drawer, UpdateBuffer);
 
 	/* run a text screen */
-		if (gamemapinfo.interText && *gamemapinfo.interText)
+		if (gamemapinfo.interText && *gamemapinfo.interText && netgame != gt_deathmatch)
 		{
 #ifdef MARS
 			MiniLoop(F_Start, F_Stop, F_Ticker, F_Drawer, I_Update);
