@@ -1,6 +1,10 @@
 #include <stdint.h>
 #include <string.h>
 #include "lzss.h"
+#include "scd_pcm.h"
+
+#define VGM_MCD_BUFFER_ID   127
+#define VGM_MCD_SOURCE_ID   8
 
 #define VGM_WORDRAM_OFS     0x3000
 #define VGM_READAHEAD       0x200
@@ -30,6 +34,7 @@ int vgm_read(void) __attribute__((section(".data"), aligned(16)));
 
 extern int64_t scd_open_file(const char *name);
 extern void scd_read_sectors(void *ptr, int lba, int len, void (*wait)(void));
+extern void scd_switch_to_bank(int bank);
 
 int vgm_setup(void* fm_ptr)
 {
@@ -48,6 +53,30 @@ int vgm_setup(void* fm_ptr)
 
     s = lzss_compressed_size(&vgm_lzss);
     pcm_baseoffs = s+1 < vgm_size ? s + 1 : 0;
+
+    // pre-convert unsigned 8-bit PCM samples to signed PCM format for the SegaCD
+    if ((fm_ptr >= MD_WORDRAM_VGM_PTR && fm_ptr < MD_WORDRAM+0x20000) && pcm_baseoffs) {
+#if 0
+        int i;
+        volatile uint8_t *start = (uint8_t*)fm_ptr + pcm_baseoffs;
+        volatile uint8_t *end = (uint8_t*)fm_ptr + vgm_size;
+
+        for (i = 0; i < 2; i++)
+        {
+            volatile uint8_t *pcm = start;
+
+            scd_switch_to_bank(i);
+
+            while (pcm < end)
+            {
+                int s = (int)*pcm - 128;
+                s *= 3; // amplify
+                *pcm++ = s < 0 ? (s < -127 ? 127 : -s) : (s > 126 ? 126 : s|128);
+            }
+        }
+#endif
+        pcm_baseoffs += (fm_ptr - MD_WORDRAM_VGM_PTR);
+    }
 
     vgm_ptr = vgm_lzss_buf;
 
@@ -87,4 +116,21 @@ void *vgm_cache_scd(const char *name, int offset, int length)
     scd_read_sectors(MCD_WORDRAM_VGM_PTR, blk + foffset, blks, NULL);
 
     return MD_WORDRAM_VGM_PTR + (offset & 0x7FF);
+}
+
+void vgm_play_scd_samples(int offset, int length, int freq)
+{
+    void *ptr = (char *)MCD_WORDRAM_VGM_PTR + pcm_baseoffs + offset;
+    scd_queue_setptr_buf(VGM_MCD_BUFFER_ID, ptr, length);
+    scd_queue_play_src(VGM_MCD_SOURCE_ID, VGM_MCD_BUFFER_ID, freq, 128, 255, 0);
+}
+
+void vgm_play_samples(int offset, int length, int freq)
+{
+    vgm_play_scd_samples(offset, length, freq);
+}
+
+void vgm_stop_samples(void)
+{
+    scd_queue_stop_src(VGM_MCD_SOURCE_ID);
 }

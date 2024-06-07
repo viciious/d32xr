@@ -23,6 +23,23 @@
 
         .equ REQ_ACT,   0xFFEF      /* Request 68000 Action */
 
+        .equ STRM_KON,    0xFFF0
+        .equ STRM_ID,     0xFFF1
+        .equ STRM_CHIP,   0xFFF2
+        .equ STRM_LMODE,  0xFFF3
+        .equ STRM_SSIZE,  0xFFF4
+        .equ STRM_SBASE,  0xFFF5
+        .equ STRM_FREQH,  0xFFF6
+        .equ STRM_FREQL,  0xFFF7
+        .equ STRM_OFFHH,  0xFFF8
+        .equ STRM_OFFHL,  0xFFF9
+        .equ STRM_OFFLH,  0xFFFA
+        .equ STRM_OFFLL,  0xFFFB
+        .equ STRM_LENHH,  0xFFFC
+        .equ STRM_LENHL,  0xFFFD
+        .equ STRM_LENLH,  0xFFFE
+        .equ STRM_LENLL,  0xFFFF
+
         .equ MARS_FRAMEBUFFER, 0x840200 /* 32X frame buffer */
 
         .equ COL_STORE, 0x600800    /* WORD RAM + 2K */
@@ -388,10 +405,17 @@ main_loop:
         beq.b   30b
 
 main_loop_bump_fm:
+        move.b  REQ_ACT.w,d0
+        cmpi.b  #0x03,d0
+        beq.b   0f                 /* stream start */
+        cmpi.b  #0x04,d0
+        beq.b   0f                 /* stream stop */
         tst.b   need_bump_fm
         beq.b   main_loop_handle_req
+0:
         move.b  #0,need_bump_fm
         bsr     bump_fm
+        jsr     scd_flush_cmd_queue
 
 main_loop_handle_req:
         moveq   #0,d0
@@ -2489,6 +2513,11 @@ bump_fm:
         bra.b   7f
 
 5:
+        cmpi.b  #0x03,d0
+        beq.b   51f                 /* stream start */
+        cmpi.b  #0x04,d0
+        beq.b   51f                 /* stream stop */
+
         cmpi.b  #0x02,d0
         bne.b   6f                  /* unknown request, ignore */
 
@@ -2503,6 +2532,13 @@ bump_fm:
         move.w  fm_idx,d0
         z80wr   FM_IDX,d0           /* set FM_IDX to start music */
         bra.w   11b                 /* try to load a block */
+
+51:
+        move.b  d0,fm_stream
+        move.w  STRM_FREQH.w,fm_stream_freq
+        move.l  STRM_OFFHH.w,fm_stream_ofs
+        move.l  STRM_LENHH.w,fm_stream_len
+        bra.b   7f
 
 6:
         /* check if need to preread a block */
@@ -2520,6 +2556,29 @@ bump_fm:
         move.w  #0x0000,0xA11100    /* Z80 deassert bus request */
 9:
         movem.l (sp)+,d0-d7/a0-a6
+
+        /* handle PCM data stream */
+        tst.w   fm_stream
+        beq.b   18f
+
+        btst    #0,fm_stream
+        beq.b   17f
+16:
+        /* set the stream pointer and start playback on the SegaCD */
+        clr.w   fm_stream
+        moveq   #0,d1
+        move.w  fm_stream_freq,d1
+        move.l  d1,-(sp)
+        move.l  fm_stream_len,-(sp)
+        move.l  fm_stream_ofs,-(sp)
+        jsr     vgm_play_samples
+        lea     12(sp),sp
+        bra.w   18f
+17:
+        /* stop playback */
+        clr.w   fm_stream
+        jsr     vgm_stop_samples
+18:
         move.w  (sp)+,sr            /* restore int level */
         rts
 
@@ -2965,6 +3024,10 @@ fm_rep:
         .global    fm_idx
 fm_idx:
         dc.w    0
+fm_stream:
+        dc.w    0
+fm_stream_freq:
+        dc.w    0
 offs68k:
         dc.w    0
 offsz80:
@@ -2973,6 +3036,11 @@ preread_cnt:
         dc.w    0
 
         .align  4
+
+fm_stream_ofs:
+        dc.l    0
+fm_stream_len:
+        dc.l    0
 
 fg_color:
         dc.l    0x11111111      /* default to color 1 for fg color */
