@@ -17,7 +17,7 @@
 #define SPCM_LEFT_CHANNEL_ID   (S_MAX_CHANNELS)
 
 #define SPCM_BUF_NUM_SECTORS   5
-#define SPCM_BUF_SIZE          (SPCM_BUF_NUM_SECTORS*2048)  /* 5*2048/21500*1000 = ~476ms */
+#define SPCM_BUF_SIZE          (SPCM_BUF_NUM_SECTORS*2048)  /* 5*2048*1000/20378 = ~502ms */
 #define SPCM_NUM_BUFFERS       5
 
 // start at 12KiB offset in PCM RAM
