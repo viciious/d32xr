@@ -66,6 +66,18 @@ void scd_init_pcm(void)
     write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
 }
 
+/* data must be pointing to a memory area in SCD WORD RAM (0x0Cxxxx in 1M mode)*/
+void scd_setptr_buf(uint16_t buf_id, const uint8_t *data, uint32_t data_len)
+{
+    write_word(0xA12010, buf_id); /* buf_id */
+    write_word(0xA12012, 1); /* set pointer mode */
+    write_long(0xA12014, (intptr_t)data); /* word ram on CD side */
+    write_long(0xA12018, data_len); /* sample length */
+    wait_do_cmd('B'); // SfxCopyBuffer command
+    wait_cmd_ack();
+    write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
+}
+
 void scd_upload_buf(uint16_t buf_id, const uint8_t *data, uint32_t data_len)
 {
     uint8_t *scdWordRam = (uint8_t *)0x600000;
@@ -73,6 +85,7 @@ void scd_upload_buf(uint16_t buf_id, const uint8_t *data, uint32_t data_len)
     memcpy(scdWordRam, data, data_len);
 
     write_word(0xA12010, buf_id); /* buf_id */
+    write_word(0xA12012, 0); /* copy data mode */
     write_long(0xA12014, 0x0C0000); /* word ram on CD side (in 1M mode) */
     write_long(0xA12018, data_len); /* sample length */
     wait_do_cmd('B'); // SfxCopyBuffer command
@@ -202,6 +215,21 @@ void scd_queue_update_src(uint8_t src_id, uint16_t freq, uint8_t pan, uint8_t vo
     num_scd_cmds++;
 }
 
+void scd_queue_setptr_buf(uint16_t buf_id, const uint8_t *data, int len)
+{
+    scd_cmd_t *cmd = scd_cmds + num_scd_cmds;
+    intptr_t offset = (intptr_t)data;
+    if (num_scd_cmds >= MAX_SCD_CMDS)
+        return;
+    cmd->cmd = 'B';
+    cmd->arg[0] = buf_id;
+    cmd->arg[1] = offset>>16;
+    cmd->arg[2] = offset&0xffff;
+    cmd->arg[3] = len>>16;
+    cmd->arg[4] = len&0xffff;
+    num_scd_cmds++;
+}
+
 void scd_queue_stop_src(uint8_t src_id)
 {
     scd_cmd_t *cmd = scd_cmds + num_scd_cmds;
@@ -248,6 +276,9 @@ int scd_flush_cmd_queue(void)
                 break;
             case 'L':
                 scd_clear_pcm();
+                break;
+            case 'B':
+                scd_setptr_buf(cmd->arg[0], (void*)((cmd->arg[1]<<16)|cmd->arg[2]), (cmd->arg[3]<<16)|cmd->arg[4]);
                 break;
             default:
                 break;
