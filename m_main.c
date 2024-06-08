@@ -675,15 +675,15 @@ void M_Drawer (void)
 
 				leveltens = saveslotmap / 10, levelones = saveslotmap % 10;
 
-				print(item->x + 10, y + 40 + 2, "Level");
+				print(item->x + 10, y + ITEMSPACE*2 + 2, "Level");
 
 				if (leveltens)
 				{
-					DrawJagobjLump(numslump + leveltens, item->x + 86, y + ITEMSPACE*2, NULL, NULL);
-					DrawJagobjLump(numslump + levelones, item->x + 100, y + ITEMSPACE*2, NULL, NULL);
+					DrawJagobjLump(numslump + leveltens, item->x + 86, y + ITEMSPACE*2 + 3, NULL, NULL);
+					DrawJagobjLump(numslump + levelones, item->x + 100, y + ITEMSPACE*2 + 3, NULL, NULL);
 				}
 				else
-					DrawJagobjLump(numslump + levelones, item->x + 86, y + ITEMSPACE*2, NULL, NULL);
+					DrawJagobjLump(numslump + levelones, item->x + 86, y + ITEMSPACE*2 + 3, NULL, NULL);
 
 				print((320 - (mapnamelen * 14)) >> 1, y + ITEMSPACE*3 + 3, mapname);
 
