@@ -83,7 +83,16 @@ uint16_t S_Buf_LoadMonoSamples(sfx_source_t *src, uint16_t *pos, uint16_t len)
             pcm_load_samples_u8(*pos, buf->data + src->data_pos, len);
             src->data_pos += len;
             return len;
-
+        case S_FORMAT_RAW_SPCM:
+            if (src->data_pos + len > buf->data_len) {
+                len = buf->data_len - src->data_pos;
+                if (len == 0) {
+                    return 0;
+                }
+            }
+            pcm_load_samples(*pos, buf->data + src->data_pos, len);
+            src->data_pos += len;
+            return len;
         case S_FORMAT_WAV_ADPCM:
             return adpcm_load_samples(&src->adpcm, *pos, len);
     }
@@ -106,7 +115,6 @@ uint16_t S_Buf_LoadStereoSamples(sfx_source_t *src, uint16_t *pos, uint16_t len)
             pcm_load_stereo_samples_u8(pos[0], pos[1], buf->data + src->data_pos, len);
             src->data_pos += len*2;
             return len;
-
         case S_FORMAT_WAV_ADPCM:
             return 0;
     }

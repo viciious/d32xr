@@ -213,7 +213,7 @@ SfxClear:
         bra     WaitAck
 
 SfxCopyBuffer:
-        jsr     switch_banks
+        move.b  0x8013.w,d1             /* flags */
         move.l  0x8018.w,d0             /* length */
         move.l  d0,-(sp)
         move.l  0x8014.w,d0             /* address in RAM */
@@ -226,7 +226,16 @@ SfxCopyBufferWaitAck:
         tst.b   0x800E.w
         bne.b   SfxCopyBufferWaitAck    /* wait for result acknowledged */
         move.b  #0,0x800F.w             /* sub comm port = READY */
+
+        btst.b  #0,d1
+        bne.b   SfxSetBufferPtr
+
+        jsr     switch_banks
         jsr     S_CopyBufferData        /* copy the buffer data in the background */
+        lea     12(sp),sp               /* clear the stack */
+        bra.w   WaitCmd
+SfxSetBufferPtr:
+        jsr     S_SetBufferData         /* update the buffer data pointer in the background */
         lea     12(sp),sp               /* clear the stack */
         bra.w   WaitCmd
 

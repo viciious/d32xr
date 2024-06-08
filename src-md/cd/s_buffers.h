@@ -11,6 +11,7 @@ enum
     S_FORMAT_NONE,
     S_FORMAT_RAW_U8,
     S_FORMAT_WAV_ADPCM,
+    S_FORMAT_RAW_SPCM
 };
 
 typedef struct
