@@ -93,6 +93,21 @@ void print (int x, int y, const char *string)
 			DrawJagobjLump(snums + c - 48, x, y, &w, NULL);
 			x = (x + (w + 2)) & ~1;
 		}
+		else if (c == '.')
+		{
+			DrawJagobjLump(uchar + 'z' - 'a' + 27, x, y + 4, &w, NULL);
+			x = (x + (w + 1)) & ~1;
+		}
+		else if (c == '!')
+		{
+			DrawJagobjLump(uchar + 'z' - 'a' + 28, x, y + 4, &w, NULL);
+			x = (x + (w + 1)) & ~1;
+		}
+		else if (c == '-')
+		{
+			DrawJagobjLump(uchar + 'z' - 'a' + 29, x, y + 4, &w, NULL);
+			x = (x + (w + 1)) & ~1;
+		}
 		else
 		{
 			x = (x + 7) & ~1;
