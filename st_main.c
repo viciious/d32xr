@@ -576,6 +576,7 @@ static void ST_Drawer_ (stbar_t* sb)
 	int x, y, ind;
 	boolean have_cards[NUMCARDS];
 	char ammochars[NUMAMMO] = { 14, 12, 16, 15 };
+	char ammoorder[NUMAMMO] = { 0, 1, 3, 2 };
 
 	if (!sbar || !sbobj[0])
 		return;
@@ -612,7 +613,7 @@ static void ST_Drawer_ (stbar_t* sb)
 			ind = cmd->ind;
 
 			x = STATSX - 32;
-			y = STATSY + ind * 7;
+			y = STATSY + ammoorder[ind] * 7;
 			ST_EraseBlock(x, y, 38, 7);
 
 			DrawJagobjLump(micronums + ammochars[ind], x, stbar_y + y, NULL, NULL);
