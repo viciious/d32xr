@@ -134,7 +134,6 @@ void ST_InitEveryLevel(void)
 		sb->gibdelay = GIBTIME;
 		sb->specialFace = f_none;
 		sb->flashInitialDraw = true;
-		sb->flashSecrets.doDraw = true;
 
 		for (i = 0; i < NUMCARDS; i++)
 		{
@@ -142,6 +141,11 @@ void ST_InitEveryLevel(void)
 			sb->flashCards[i].y = card_y[i];
 			sb->flashCards[i].w = KEYW;
 			sb->flashCards[i].h = KEYH;
+		}
+
+		for (i = 0; i < NUMAMMO; i++)
+		{
+			sb->ammocount[i] = sb->maxammocount[i] = -1;
 		}
 	}
 	stbar_tics = 0;
@@ -221,14 +225,6 @@ static void ST_Ticker_(stbar_t* sb)
 			sb->yourFrags.active = false;
 		if (sb->yourFrags.doDraw && sb->yourFrags.active && !splitscreen)
 			S_StartSound(NULL,sfx_itemup);
-	}
-
-	if (sb->flashSecrets.active && --sb->flashSecrets.delay <= 0)
-	{
-		sb->yourFrags.delay = FLASHDELAY;
-		sb->flashSecrets.doDraw ^= 1;
-		if (!--sb->flashSecrets.times)
-			sb->flashSecrets.active = false;
 	}
 	
 	/* */
@@ -379,33 +375,16 @@ static void ST_Ticker_(stbar_t* sb)
 	/* */
 	if (netgame != gt_deathmatch)
 	{
-		if (sb->secretcount != p->secretcount)
+		for (ind = 0; ind < NUMAMMO; ind++)
 		{
-			sb->secretcount = p->secretcount;
-
-			/* SIGNAL THE FLASHING SECRETS! */
-			sb->flashSecrets.active = true;
-			sb->flashSecrets.delay = FLASHDELAY;
-			sb->flashSecrets.times = FLASHTIMES;
-			sb->flashSecrets.doDraw = false;
-		}
-
-		if (sb->killcount != p->killcount || 
-			sb->itemcount != p->itemcount || 
-			sb->forcedraw)
-		{
-			cmd = &sb->stbarcmds[sb->numstbarcmds++];
-			cmd->id = stc_drawstats;
-
-			sb->killcount = p->killcount;
-			sb->itemcount = p->itemcount;
-		}
-
-		if (sb->flashSecrets.active || sb->forcedraw)
-		{
-			cmd = &sb->stbarcmds[sb->numstbarcmds++];
-			cmd->id = stc_drawsecrets;
-			cmd->ind = sb->flashSecrets.active ? sb->flashSecrets.doDraw : sb->forcedraw;
+			if (sb->ammocount[ind] != p->ammo[ind] || sb->maxammocount[ind] != p->maxammo[ind] || sb->forcedraw)
+			{
+				cmd = &sb->stbarcmds[sb->numstbarcmds++];
+				cmd->id = stc_drawammocount;
+				cmd->ind = ind;
+				sb->ammocount[ind] = p->ammo[ind];
+				sb->maxammocount[ind] = p->maxammo[ind];
+			}
 		}
 	}
 	/* */
@@ -594,8 +573,9 @@ void ST_Ticker(void)
 static void ST_Drawer_ (stbar_t* sb)
 {
 	int i;
-	int x, ind;
+	int x, y, ind;
 	boolean have_cards[NUMCARDS];
+	char ammochars[NUMAMMO] = { 14, 12, 16, 15 };
 
 	if (!sbar || !sbobj[0])
 		return;
@@ -625,34 +605,20 @@ static void ST_Drawer_ (stbar_t* sb)
 			break;
 		case stc_drawcard:
 			ind = cmd->ind;
-			ST_EraseBlock(KEYX, card_y[ind], KEYW, KEYH);
+			ST_EraseBlock(KEYX, card_y[ind], KEYW+3, KEYH);
 			have_cards[ind] = cmd->value;
 			break;
-		case stc_drawstats:
-			x = STATSX - 30;
-			ST_EraseBlock(x, STATSY, 34, 14);
+		case stc_drawammocount:
+			ind = cmd->ind;
 
-			DrawJagobjLump(micronums + 11, x, stbar_y + STATSY, NULL, NULL);
-			ST_DrawMicroValue(x + 17, STATSY, sb->killcount);
-			DrawJagobjLump(micronums + 13, x + 17, stbar_y + STATSY, NULL, NULL);
-			ST_DrawMicroValue(x + 17 + 16, STATSY, totalkills);
+			x = STATSX - 32;
+			y = STATSY + ind * 7;
+			ST_EraseBlock(x, y, 38, 7);
 
-			DrawJagobjLump(micronums + 10, x, stbar_y + STATSY + 7, NULL, NULL);
-			ST_DrawMicroValue(x + 17, STATSY + 7, sb->itemcount);
-			DrawJagobjLump(micronums + 13, x + 17, stbar_y + STATSY + 7, NULL, NULL);
-			ST_DrawMicroValue(x + 17 + 16, STATSY + 7, totalitems);
-			break;
-		case stc_drawsecrets:
-			x = STATSX - 30;
-			ST_EraseBlock(x, STATSY + 14, 34, 7);
-
-			if (cmd->ind)
-			{
-				DrawJagobjLump(micronums + 12, x, stbar_y + STATSY + 14, NULL, NULL);
-				ST_DrawMicroValue(x + 17, STATSY + 14, sb->secretcount);
-				DrawJagobjLump(micronums + 13, x + 17, stbar_y + STATSY + 14, NULL, NULL);
-				ST_DrawMicroValue(x + 17 + 16, STATSY + 14, totalsecret);
-			}
+			DrawJagobjLump(micronums + ammochars[ind], x, stbar_y + y, NULL, NULL);
+			ST_DrawMicroValue(x + 18, y, sb->ammocount[ind]);
+			DrawJagobjLump(micronums + 13, x + 20, stbar_y + y, NULL, NULL);
+			ST_DrawMicroValue(x + 20 + 18, y, sb->maxammocount[ind]);
 			break;
 		case stc_drawmicro:
 			if (micronums != -1)
