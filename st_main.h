@@ -28,7 +28,7 @@
 #define ARMORY		HEALTHY
 
 #define STATSX		308
-#define STATSY		12
+#define STATSY		4
 
 #define YOURFRAGX	(STATSX + 6)
 #define YOURFRAGY	(AMMOY)
@@ -104,8 +104,7 @@ typedef enum
 	stc_drawhealth,
 	stc_drawarmor,
 	stc_drawcard,
-	stc_drawstats,
-	stc_drawsecrets,
+	stc_drawammocount,
 	stc_drawmicro,
 	stc_drawyourfrags,
 	stc_drawhisfrags,
@@ -142,10 +141,10 @@ typedef struct
 	VINT	spclFaceType;
 
 	short numstbarcmds;
-	stbarcmd_t stbarcmds[STC_NUMCMDTYPES + NUMMICROS + NUMCARDS * 2];
+	stbarcmd_t stbarcmds[STC_NUMCMDTYPES + NUMMICROS + NUMCARDS * 2 + NUMAMMO];
 
-	int 	killcount, secretcount, itemcount;
-	sbflash_t flashSecrets;
+	VINT 	ammocount[NUMAMMO];
+	VINT 	maxammocount[NUMAMMO];
 
 	sbflash_t	yourFrags;			/* INFO FOR YOUR FRAG FLASHING */
 	sbflash_t	hisFrags;
