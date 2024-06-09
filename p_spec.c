@@ -758,6 +758,7 @@ void P_PlayerInSpecialSector (player_t *player)
 		case 9:		/* SECRET SECTOR */
 			player->secretcount++;
 			sector->special = 0;
+			S_StartSound(player->mo, sfx_getpow);
 			break;
 			
 		default:
