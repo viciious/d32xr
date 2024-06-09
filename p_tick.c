@@ -650,14 +650,5 @@ void P_Stop (void)
 
 void P_Update (void)
 {
-	int ticratebak;
-
-	ticratebak = ticsperframe;
-
-	if (viewportWidth >= 320 && ticsperframe < 3)
-		ticsperframe = 3;
-
 	I_Update();
-
-	ticsperframe = ticratebak;
 }
