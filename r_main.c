@@ -393,11 +393,19 @@ void R_SetupTextureCaches(void)
 		int w = textures[i].width, h = textures[i].height;
 		int mipcount = 1;
 		int lump = textures[i].lumpnum;
-		uint8_t *start = R_CheckPixels(lump);
-		uint8_t *data = R_SkipJagObjHeader(start, W_LumpLength(lump), w, h);
+		uint8_t *start, *data;
+
+		if (lump >= firstsprite && lump < firstsprite + numsprites) {
+			start = NULL;
+			data = W_POINTLUMPNUM(lump+1);
+		} else {
+			start = R_CheckPixels(lump);
+			data = R_SkipJagObjHeader(start, W_LumpLength(lump), w, h);
+		}
 
 #if MIPLEVELS > 1
-		mipcount = textures[i].mipcount;
+		if (!textures[i].masked)
+			mipcount = textures[i].mipcount;
 #endif
 		for (j = 0; j < mipcount; j++)
 		{

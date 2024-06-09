@@ -41,7 +41,7 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
 
    texture   = &textures[seg->m_texturenum];
    patch     = W_POINTLUMPNUM(texture->lumpnum);
-   pixels    = W_POINTLUMPNUM(texture->lumpnum+1);
+   pixels    = /*W_POINTLUMPNUM(texture->lumpnum+1)*/texture->data[0];
 
    if (texture->lumpnum < firstsprite || texture->lumpnum >= firstsprite + numsprites)
       return;
