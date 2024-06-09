@@ -535,7 +535,7 @@ void P_SpawnMapThing (mapthing_t *mthing, int thingid)
 		if (deathmatch_p < deathmatchstarts + MAXDMSTARTS)
 			D_memcpy (deathmatch_p, mthing, sizeof(*mthing));
 		deathmatch_p++;
-		return;
+		return NULL;
 	}
 	
 /* check for players specially */

@@ -276,8 +276,11 @@ void	R_InitData (void);
 void	R_SetViewportSize(int num);
 int		R_DefaultViewportSize(void); // returns the viewport id for fullscreen, low detail mode
 void	R_SetDrawFuncs(void);
-void	R_SetupLevel(void);
-void	R_SetupTextureCaches(void);
+void	R_SetupLevel(int gamezonemargin);
+
+// how much memory should be left free in the main zone after allocating the texture cache
+// can be increased for the Icon of Sin
+#define DEFAULT_GAME_ZONE_MARGIN 8*1024
 
 typedef void (*drawcol_t)(int, int, int, int, fixed_t, fixed_t, inpixel_t*, int);
 typedef void (*drawspan_t)(int, int, int, int, fixed_t, fixed_t, fixed_t, fixed_t, inpixel_t*, int);

@@ -358,7 +358,7 @@ static boolean PS_CheckSight2(mobj_t *t1, mobj_t *t2)
 static boolean P_MobjCanSightCheck(mobj_t *mobj)
 {
    // must be killable or be a monster spawner
-   if (!(mobj->flags & MF_COUNTKILL) && (mobj->type != MT_BOSSPIT))
+   if (!(mobj->flags & MF_COUNTKILL) && (mobj->type != MT_BOSSSPIT))
       return false;
 
    // must be about to change states
