@@ -99,6 +99,7 @@ void *vgm_cache_scd(const char *name, int offset, int length)
     int64_t lo;
     int blk, blks;
     int flength, foffset;
+    uint8_t *ptr;
 
     lo = scd_open_file(name);
     if (lo < 0)
@@ -110,12 +111,28 @@ void *vgm_cache_scd(const char *name, int offset, int length)
 
     blk = offset >> 11;
     blks = ((offset + length + 0x7FF) >> 11) - blk;
+    ptr = MD_WORDRAM_VGM_PTR + (offset & 0x7FF);
 
     // store a copy in both banks
-    scd_read_sectors(MCD_WORDRAM_VGM_PTR, blk + foffset, blks, NULL);
+    scd_switch_to_bank(0);
     scd_read_sectors(MCD_WORDRAM_VGM_PTR, blk + foffset, blks, NULL);
 
-    return MD_WORDRAM_VGM_PTR + (offset & 0x7FF);
+    // copy data from WORD RAM bank 0 to bank 1
+    for (offset = 0; offset < length; )
+    {
+        int chunk = VGM_LZSS_BUF_SIZE;
+        if (offset + chunk > length)
+            chunk = length - offset;
+
+        scd_switch_to_bank(1);
+        memcpy(vgm_lzss_buf, ptr + offset, chunk);
+        scd_switch_to_bank(0);
+        memcpy(ptr + offset, vgm_lzss_buf, chunk);
+
+        offset += chunk;
+    }
+
+    return ptr;
 }
 
 void vgm_play_scd_samples(int offset, int length, int freq)
