@@ -345,7 +345,7 @@ void P_LoadNodes (int lump)
 =================
 */
 
-void P_LoadThings (int lump)
+void P_LoadThings (int lump, boolean *havebossspit)
 {
 	byte			*data;
 	int				i;
@@ -357,6 +357,7 @@ void P_LoadThings (int lump)
 	numthings = W_LumpLength (lump) / sizeof(mapthing_t);
 	numthingsreal = 0;
 	numstaticthings = 0;
+	*havebossspit = false;
 
 	mt = (mapthing_t *)data;
 	for (i=0 ; i<numthings ; i++, mt++)
@@ -390,6 +391,8 @@ void P_LoadThings (int lump)
 			case 0:
 				break;
 			case 1:
+				if (mt->type == mobjinfo[MT_BOSSSPIT].doomednum)
+					*havebossspit = true;
 				numthingsreal++;
 				break;
 			case 2:
@@ -728,6 +731,8 @@ void P_SetupLevel (const char *lumpname, skill_t skill, int skytexture)
 	extern	int	cy;
 	VINT lumpnum, lumps[ML_BLOCKMAP+1];
 	lumpinfo_t li[ML_BLOCKMAP+1];
+	boolean havebossspit = false;
+	int gamezonemargin;
 
 	M_ClearRandom ();
 
@@ -787,7 +792,7 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 
 	bodyqueslot = 0;
 	deathmatch_p = deathmatchstarts;
-	P_LoadThings (lumpnum+ML_THINGS);
+	P_LoadThings (lumpnum+ML_THINGS, &havebossspit);
 
 	W_LoadPWAD(PWAD_NONE);
 
@@ -832,7 +837,10 @@ extern byte *debugscreen;
 	skytexturep = R_SkipJagObjHeader(skytexturep, W_LumpLength(skytexture), 256, 128);
 	skycolormaps = (col2sky > 0 && skytexture >= col2sky) ? dc_colormaps2 : dc_colormaps;
 
-	R_SetupLevel();
+	gamezonemargin = DEFAULT_GAME_ZONE_MARGIN;
+	if (havebossspit)
+		gamezonemargin *= 4;
+	R_SetupLevel(gamezonemargin);
 
 	I_SetThreadLocalVar(DOOMTLS_VALIDCOUNT, &validcount[0]);
 

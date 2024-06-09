@@ -378,13 +378,13 @@ D_printf ("Done\n");
 =
 ==============
 */
-void R_SetupTextureCaches(void)
+void R_SetupTextureCaches(int gamezonemargin)
 {
 	int i, j;
 	int zonefree;
 	int cachezonesize;
 	void *margin;
-	const int zonemargin = 8*1024;
+	const int zonemargin = gamezonemargin;
 	const int flatblocksize = sizeof(memblock_t) + ((sizeof(texcacheblock_t) + 15) & ~15) + 64*64 + 32;
 
 	// reset pointers from previous level
@@ -459,9 +459,9 @@ nocache:
 	R_InitTexCacheZone(&r_texcache, 0);
 }
 
-void R_SetupLevel(void)
+void R_SetupLevel(int gamezonemargin)
 {
-	R_SetupTextureCaches();
+	R_SetupTextureCaches(gamezonemargin);
 
 	R_SetViewportSize(viewportNum);
 
