@@ -18,6 +18,9 @@
 #define MCD_WORDRAM_VGM_PTR (MCD_WORDRAM+VGM_WORDRAM_OFS)
 
 static lzss_state_t vgm_lzss = { 0 };
+static int rf5c68_dataofs;
+static int rf5c68_datalen;
+
 extern void *vgm_ptr;
 extern int pcm_baseoffs;
 extern int vgm_size;
@@ -36,6 +39,28 @@ extern int64_t scd_open_file(const char *name);
 extern void scd_read_sectors(void *ptr, int lba, int len, void (*wait)(void));
 extern void scd_switch_to_bank(int bank);
 
+static int vmg_find_rf5c68_dataofs(const uint8_t* data, int *len)
+{
+    const uint8_t *data_start = data;
+
+    *len = 0;
+    if (!data)
+        return 0;
+
+    while (data[0] == 0x67) {
+        // data block
+        int data_len = (data[3] << 0) | (data[4] << 8) | (data[5] << 16) | (data[6] << 24);
+        if (data[2] == 0xC0) {
+            // RF5C68 RAM Data
+            *len = data_len;
+            return data + 7 - data_start;
+        }
+        data += 7 + data_len;
+    }
+
+    return 0;
+}
+
 int vgm_setup(void* fm_ptr)
 {
     int s;
@@ -52,14 +77,28 @@ int vgm_setup(void* fm_ptr)
     lzss_setup(&vgm_lzss, fm_ptr, vgm_lzss_buf, VGM_LZSS_BUF_SIZE);
 
     s = lzss_compressed_size(&vgm_lzss);
-    pcm_baseoffs = s+1 < vgm_size ? s + 1 : 0;
+    pcm_baseoffs = s < vgm_size ? s : 0;
+
+    rf5c68_dataofs = 0;
+    rf5c68_datalen = 0;
+    if (pcm_baseoffs)
+    {
+        rf5c68_dataofs = vmg_find_rf5c68_dataofs((uint8_t *)fm_ptr + pcm_baseoffs, &rf5c68_datalen);
+    }
 
     // pre-convert unsigned 8-bit PCM samples to signed PCM format for the SegaCD
     if ((fm_ptr >= MD_WORDRAM_VGM_PTR && fm_ptr < MD_WORDRAM+0x20000) && pcm_baseoffs) {
-#if 0
+        pcm_baseoffs += (fm_ptr - MD_WORDRAM_VGM_PTR);
+    }
+    if (rf5c68_dataofs)
+        rf5c68_dataofs += pcm_baseoffs;
+
+
+    // convert RF5C68's signed PCM samples to uchar because that's what the driver expects
+    if ((fm_ptr >= MD_WORDRAM_VGM_PTR && fm_ptr < MD_WORDRAM+0x20000) && rf5c68_dataofs) {
         int i;
-        volatile uint8_t *start = (uint8_t*)fm_ptr + pcm_baseoffs;
-        volatile uint8_t *end = (uint8_t*)fm_ptr + vgm_size;
+        volatile uint8_t *start = (uint8_t*)fm_ptr + rf5c68_dataofs;
+        volatile uint8_t *end = start + rf5c68_datalen;
 
         for (i = 0; i < 2; i++)
         {
@@ -67,15 +106,11 @@ int vgm_setup(void* fm_ptr)
 
             scd_switch_to_bank(i);
 
-            while (pcm < end)
-            {
-                int s = (int)*pcm - 128;
-                s *= 3; // amplify
-                *pcm++ = s < 0 ? (s < -127 ? 127 : -s) : (s > 126 ? 126 : s|128);
+            while (pcm < end) {
+                int s = *pcm;
+                *pcm++ = (s & 128 ? s & ~128 : -s) + 128;
             }
         }
-#endif
-        pcm_baseoffs += (fm_ptr - MD_WORDRAM_VGM_PTR);
     }
 
     vgm_ptr = vgm_lzss_buf;
@@ -138,16 +173,33 @@ void *vgm_cache_scd(const char *name, int offset, int length)
 void vgm_play_scd_samples(int offset, int length, int freq)
 {
     void *ptr = (char *)MCD_WORDRAM_VGM_PTR + pcm_baseoffs + offset;
+
     scd_queue_setptr_buf(VGM_MCD_BUFFER_ID, ptr, length);
     scd_queue_play_src(VGM_MCD_SOURCE_ID, VGM_MCD_BUFFER_ID, freq, 128, 255, 0);
 }
 
 void vgm_play_samples(int offset, int length, int freq)
 {
-    vgm_play_scd_samples(offset, length, freq);
+    if (cd_ok)
+        vgm_play_scd_samples(offset, length, freq);
 }
 
 void vgm_stop_samples(void)
 {
-    scd_queue_stop_src(VGM_MCD_SOURCE_ID);
+    if (cd_ok)
+        scd_queue_stop_src(VGM_MCD_SOURCE_ID);
+}
+
+void vgm_play_rf5c68_samples(int offset, int loopstart, int incr, int vol)
+{
+    //int freq = ((uint16_t)incr * 32604) >> 11;
+    int freq = incr << 4; // good enough
+    int length = loopstart - offset;
+    void *ptr = (char *)MCD_WORDRAM_VGM_PTR + rf5c68_dataofs + offset;
+
+    if (!cd_ok || !incr)
+        return;
+
+    scd_queue_setptr_buf(VGM_MCD_BUFFER_ID, ptr, length);
+    scd_queue_play_src(VGM_MCD_SOURCE_ID, VGM_MCD_BUFFER_ID, freq, 128, vol, 0);
 }

@@ -34,6 +34,18 @@ FM_START    EQU $0C     ; start offset in sram (for starting/looping vgm)
 
 CRITICAL    EQU $0F     ; Z80 critical section flag
 
+RF5C68_ENV  EQU 0x10
+RF5C68_PAN  EQU 0x11
+RF5C68_FSL  EQU 0x12
+RF5C68_FSH  EQU 0x13
+RF5C68_LAL  EQU 0x14
+RF5C68_LAH  EQU 0x15
+RF5C68_STA  EQU 0x16
+RF5C68_CTL  EQU 0x17
+RF5C68_CHN  EQU 0x18
+
+HLBACKUP    EQU $1A     ; backup space for HL register
+
 VGMBUF      EQU $1000   ; last 4KB of sram holds VGM data (eight banks of 512 bytes)
 VGMTOP      EQU $2000   ;
 
@@ -69,6 +81,16 @@ STRM_LENHH  EQU $FFFC
 STRM_LENHL  EQU $FFFD
 STRM_LENLH  EQU $FFFE
 STRM_LENLL  EQU $FFFF
+
+MD_RF5C68_ENV  EQU 0xFFE0
+MD_RF5C68_PAN  EQU 0xFFE1
+MD_RF5C68_FSH  EQU 0xFFE2
+MD_RF5C68_FSL  EQU 0xFFE3
+MD_RF5C68_LAH  EQU 0xFFE4
+MD_RF5C68_LAL  EQU 0xFFE5
+MD_RF5C68_STA  EQU 0xFFE6
+MD_RF5C68_CTL  EQU 0xFFE7
+MD_RF5C68_CHN  EQU 0xFFE8
 
 ; ########################### Code starts here ##############################
 
@@ -157,6 +179,8 @@ dispatch
     JP      Z,strm_stop         ; stream stop
     CP      $66
     JP      Z,end_data          ; end of sound data
+    CP      $B0
+    JP      Z,rf5c68_regwr      ; RF5C68 register write
 ; unsupported command
     JP      end_data
 
@@ -686,5 +710,66 @@ set_bank
     LD      (BC),A              ; #9 = BA23
 
     RET
+
+; rf5c68 register
+rf5c68_regwr
+    LD      A,(IX+FM_RQPND)
+    OR      A
+    JR      NZ,rf5c68_regwr     ; request still pending
+
+    CALL    strm_get            ; parameter
+    PUSH    AF
+    CALL    strm_get            ; parameter value
+    PUSH    AF
+
+    LD      (HLBACKUP),HL
+    LD      HL,RF5C68_ENV
+
+    POP     AF                  ; parameter value
+    LD      B,A
+    POP     AF                  ; parameter
+    LD      C,A
+    LD      A,B
+    LD      B,0
+    ADD     HL,BC
+    LD      (HL),A
+    LD      HL,(HLBACKUP)
+
+    LD      A,(HL)
+    CP      $B0
+    JP      Z,play_loop
+
+    LD      A,$FF
+    LD      (REQ_ACT),A         ; request action - locked
+    LD      (IX+FM_RQPND),A     ; request pending
+
+    LD      A,(RF5C68_ENV)
+    LD      (MD_RF5C68_ENV),A
+
+    LD      A,(RF5C68_PAN)
+    LD      (MD_RF5C68_PAN),A
+
+    LD      A,(RF5C68_FSH)
+    LD      (MD_RF5C68_FSH),A
+    LD      A,(RF5C68_FSL)
+    LD      (MD_RF5C68_FSL),A
+
+    LD      A,(RF5C68_LAH)
+    LD      (MD_RF5C68_LAH),A
+    LD      A,(RF5C68_LAL)
+    LD      (MD_RF5C68_LAL),A
+
+    LD      A,(RF5C68_STA)
+    LD      (MD_RF5C68_STA),A
+
+    LD      A,(RF5C68_CTL)
+    LD      (MD_RF5C68_CTL),A
+
+    LD      A,(RF5C68_CHN)
+    LD      (MD_RF5C68_CHN),A
+
+    LD      A,$06
+    LD      (REQ_ACT),A         ; request action - stream start
+    JP      play_loop
 
 #end
