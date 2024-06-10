@@ -73,7 +73,7 @@ fixed_t	*finecosine_ = &finesine_[FINEANGLES/4];
 #endif
 
 fixed_t *yslope/*[SCREENHEIGHT]*/;
-fixed_t *distscale/*[SCREENWIDTH]*/;
+uint16_t *distscale/*[SCREENWIDTH]*/;
 
 VINT *viewangletox/*[FINEANGLES/2]*/;
 
