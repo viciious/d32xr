@@ -40,6 +40,32 @@
         .equ STRM_LENLH,  0xFFFE
         .equ STRM_LENLL,  0xFFFF
 
+        .equ RF5C68_ENV,  0xFFE0
+        .equ RF5C68_PAN,  0xFFE1
+        .equ RF5C68_FSH,  0xFFE2
+        .equ RF5C68_FSL,  0xFFE3
+        .equ RF5C68_LAH,  0xFFE4
+        .equ RF5C68_LAL,  0xFFE5
+        .equ RF5C68_STA,  0xFFE6
+        .equ RF5C68_CTL,  0xFFE7
+        .equ RF5C68_CHN,  0xFFE8
+
+        .equ STRM_ID,     0xFFF1
+        .equ STRM_CHIP,   0xFFF2
+        .equ STRM_LMODE,  0xFFF3
+        .equ STRM_SSIZE,  0xFFF4
+        .equ STRM_SBASE,  0xFFF5
+        .equ STRM_FREQH,  0xFFF6
+        .equ STRM_FREQL,  0xFFF7
+        .equ STRM_OFFHH,  0xFFF8
+        .equ STRM_OFFHL,  0xFFF9
+        .equ STRM_OFFLH,  0xFFFA
+        .equ STRM_OFFLL,  0xFFFB
+        .equ STRM_LENHH,  0xFFFC
+        .equ STRM_LENHL,  0xFFFD
+        .equ STRM_LENLH,  0xFFFE
+        .equ STRM_LENLL,  0xFFFF
+
         .equ MARS_FRAMEBUFFER, 0x840200 /* 32X frame buffer */
 
         .equ COL_STORE, 0x600800    /* WORD RAM + 2K */
@@ -410,6 +436,8 @@ main_loop_bump_fm:
         beq.b   0f                 /* stream start */
         cmpi.b  #0x04,d0
         beq.b   0f                 /* stream stop */
+        cmpi.b  #0x06,d0
+        beq.b   0f                 /* RF5C68 register write */
         tst.b   need_bump_fm
         beq.b   main_loop_handle_req
 0:
@@ -2401,10 +2429,11 @@ load_font:
         lea     0xC00000,a1         /* VDP data reg */
         move.w  #0x8F02,(a0)        /* INC = 2 */
         move.l  #0x40000000,(a0)    /* write VRAM address 0 */
-        lea     font_data,a2
+|        lea     font_data,a2
         move.w  #0x6B*8-1,d2
-0:
-        move.l  (a2)+,d0            /* font fg mask */
+|0:
+        move.l  #0,d0
+|        move.l  (a2)+,d0            /* font fg mask */
         move.l  d0,d1
         not.l   d1                  /* font bg mask */
         and.l   fg_color,d0         /* set font fg color */
@@ -2508,36 +2537,29 @@ bump_fm:
 
         /* reset */
         jsr     vgm_reset           /* restart at start of compressed data */
-        move.l  fm_loop,d2
-        andi.l  #0xFFFFFE00,d2
-        beq.b   14f
-        move.l  d2,-(sp)
-        jsr     vgm_read2
-        addq.l  #4,sp
-        move.w  d0,d2
-        andi.w  #0x7FFF,d2          /* amount data pre-read (with wrap around) */
+        move.w  #0,offs68k
+        move.w  d3,offsz80
+        move.w  #7,preread_cnt      /* refill buffer if room */
+        bra.w   7f
 14:
         move.w  d2,offs68k
         move.w  d3,offsz80
-        move.w  #7,preread_cnt      /* refill buffer if room */
-        bra.b   7f
+        bra.w   7f
 
 5:
         cmpi.b  #0x03,d0
         beq.b   51f                 /* stream start */
         cmpi.b  #0x04,d0
         beq.b   51f                 /* stream stop */
+        cmpi.b  #0x06,d0
+        beq.b   52f                 /* rf5c68 */
 
         cmpi.b  #0x02,d0
-        bne.b   6f                  /* unknown request, ignore */
+        bne.w   6f                  /* unknown request, ignore */
 
         /* music ended, check for loop */
         tst.w   fm_rep
-        bne.b   50f                 /* repeat, loop vgm */
-        /* no repeat, reset FM */
-        jsr     rst_ym2612
-        bra.b   7f
-
+        beq.w   7f                  /* no repeat, leave FM_IDX as 0 */
 50:
         move.w  fm_loop2,d0
         z80wr   FM_START,d0
@@ -2552,6 +2574,15 @@ bump_fm:
         move.w  STRM_FREQH.w,fm_stream_freq
         move.l  STRM_OFFHH.w,fm_stream_ofs
         move.l  STRM_LENHH.w,fm_stream_len
+        bra.b   7f
+
+52:
+        move.b  d0,fm_stream
+        move.w  RF5C68_FSH.w,rf5c68_freq_incr
+        move.b  RF5C68_STA.w,rf5c68_start
+        move.w  RF5C68_LAH.w,rf5c68_loop_ofs
+        move.b  RF5C68_ENV.w,rf5c68_envelope
+        move.b  RF5C68_CHN.w,rf5c68_chanmask
         bra.b   7f
 
 6:
@@ -2575,6 +2606,9 @@ bump_fm:
         tst.w   fm_stream
         beq.b   18f
 
+        cmpi.b  #0x06,fm_stream
+        beq.b   19f
+
         btst    #0,fm_stream
         beq.b   17f
 16:
@@ -2587,7 +2621,7 @@ bump_fm:
         move.l  fm_stream_ofs,-(sp)
         jsr     vgm_play_samples
         lea     12(sp),sp
-        bra.w   18f
+        bra.b   18f
 17:
         /* stop playback */
         clr.w   fm_stream
@@ -2595,7 +2629,27 @@ bump_fm:
 18:
         move.w  (sp)+,sr            /* restore int level */
         rts
+19:
+        clr.w   fm_stream
+        moveq   #0,d1
 
+        move.b  rf5c68_chanmask,d1
+        cmp.b   #0xFF,d1            /* 0xFF -- all channels disabled */
+        beq.b   20f
+
+        move.b  rf5c68_envelope,d1
+        move.l  d1,-(sp)
+        move.w  rf5c68_freq_incr,d1
+        move.l  d1,-(sp)
+        move.w  rf5c68_loop_ofs,d1
+        move.l  d1,-(sp)
+        move.w  rf5c68_start,d1
+        move.l  d1,-(sp)
+        jsr     vgm_play_rf5c68_samples
+        lea     16(sp),sp
+20:
+        move.w  (sp)+,sr            /* restore int level */
+        rts
 
 | reset YM2612
 rst_ym2612:
@@ -3042,6 +3096,18 @@ fm_stream:
         dc.w    0
 fm_stream_freq:
         dc.w    0
+
+rf5c68_start:
+        dc.w    0
+rf5c68_freq_incr:
+        dc.w    0
+rf5c68_loop_ofs:
+        dc.w    0
+rf5c68_envelope:
+        dc.b    0
+rf5c68_chanmask:
+        dc.b    255
+
 offs68k:
         dc.w    0
 offsz80:
