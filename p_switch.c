@@ -48,7 +48,11 @@ static const switchlist_t alphSwitchList[] =
 	{"SW1TEK", 		"SW2TEK"},
 	{"SW1WDMET", 	"SW2WDMET"},
 	{"SW1WUD", 		"SW2WUD"},
-	{"SW1ZIM", 		"SW2ZIM"}
+	{"SW1ZIM", 		"SW2ZIM"},
+	{"SW1S0", 		"SW1S1"},
+	{"SW2S0", 		"SW2S1"},
+	{"SW3S0", 		"SW3S1"},
+	{"SW4S0", 		"SW4S1"}
 };
 
 uint8_t		*switchlist/*[MAXSWITCHES * 2]*/ = NULL;
