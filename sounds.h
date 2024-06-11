@@ -114,6 +114,7 @@ typedef enum
   sfx_getpow,
   sfx_bospit,
   sfx_boscub,
+  sfx_secret,
   NUMSFX 
 } sfxenum_t; 
  
