@@ -328,6 +328,46 @@ typedef struct
 
 void P_SlideMove (pslidemove_t *sm);
 
+typedef struct
+{
+	// input
+	mobj_t *tmthing;
+	fixed_t  tmx, tmy;
+
+	fixed_t  tmfloorz;   // current floor z for P_TryMove2
+	fixed_t  tmceilingz; // current ceiling z for P_TryMove2
+	line_t *blockline;  // possibly a special to activate
+
+	fixed_t tmbbox[4];
+	int     tmflags;
+	fixed_t tmdropoffz; // lowest point contacted
+
+	int    	numspechit;
+	line_t **spechit;
+
+	subsector_t *newsubsec; // destination subsector
+} pmovework_t;
+
+typedef struct
+{
+	mobj_t *slidething;
+	fixed_t slidex, slidey;     // the final position
+	fixed_t slidedx, slidedy;   // current move for completable frac
+	fixed_t blockfrac;          // the fraction of the move that gets completed
+	fixed_t blocknvx, blocknvy; // the vector of the line that blocks move
+	fixed_t endbox[4];          // final proposed position
+	fixed_t nvx, nvy;           // normalized line vector
+
+	vertex_t *p1, *p2; // p1, p2 are line endpoints
+	fixed_t p3x, p3y, p4x, p4y; // p3, p4 are move endpoints
+
+	int numspechit;
+	line_t **spechit;
+} pslidework_t;
+
+boolean PM_BoxCrossLine(line_t *ld, pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
+fixed_t P_CompletableFrac(pslidework_t *sw, fixed_t dx, fixed_t dy);
+
 #endif	/* __P_LOCAL__ */
 
 

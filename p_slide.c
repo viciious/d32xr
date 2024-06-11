@@ -29,23 +29,6 @@
 #include "doomdef.h"
 #include "p_local.h"
 
-typedef struct
-{
-   mobj_t *slidething;
-   fixed_t slidex, slidey;     // the final position
-   fixed_t slidedx, slidedy;   // current move for completable frac
-   fixed_t blockfrac;          // the fraction of the move that gets completed
-   fixed_t blocknvx, blocknvy; // the vector of the line that blocks move
-   fixed_t endbox[4];          // final proposed position
-   fixed_t nvx, nvy;           // normalized line vector
-
-   vertex_t *p1, *p2; // p1, p2 are line endpoints
-   fixed_t p3x, p3y, p4x, p4y; // p3, p4 are move endpoints
-
-	int numspechit;
-	line_t **spechit;
-} pslidework_t;
-
 #define CLIPRADIUS 23
 
 enum
@@ -512,6 +495,68 @@ void P_SlideMove(pslidemove_t *sm)
    sm->slidey = slidething->y;
    sm->slidething->momx = slidething->momy = 0;
    sm->numspechit = sw.numspechit;
+}
+
+//
+// Try to slide the player against walls by finding the closest move available.
+//
+void P_CameraSlideMove(pslidemove_t *sm)
+{
+    int i;
+    fixed_t dx, dy, rx, ry;
+    fixed_t frac, slide;
+    pslidework_t sw;
+    mobj_t *slidething = sm->slidething;
+
+    dx = slidething->momx;
+    dy = slidething->momy;
+    sw.slidex = slidething->x;
+    sw.slidey = slidething->y;
+    sw.slidething = slidething;
+    sw.numspechit = 0;
+    sw.spechit = &sm->spechit[0];
+
+    // perform a maximum of three bumps
+    for (i = 0; i < 3; i++)
+    {
+        frac = P_CompletableFrac(&sw, dx, dy);
+        if (frac != FRACUNIT)
+            frac -= 0x1000;
+        if (frac < 0)
+            frac = 0;
+
+        rx = FixedMul(frac, dx);
+        ry = FixedMul(frac, dy);
+
+        sw.slidex += rx;
+        sw.slidey += ry;
+
+        // made it the entire way
+        if (frac == FRACUNIT)
+        {
+            slidething->momx = dx;
+            slidething->momy = dy;
+            //         SL_CheckSpecialLines(&sw); // Camera doesn't trip lines
+            sm->slidex = sw.slidex;
+            sm->slidey = sw.slidey;
+            return;
+        }
+
+        // project the remaining move along the line that blocked movement
+        dx -= rx;
+        dy -= ry;
+        dx = FixedMul(dx, sw.blocknvx);
+        dy = FixedMul(dy, sw.blocknvy);
+        slide = dx + dy;
+
+        dx = FixedMul(slide, sw.blocknvx);
+        dy = FixedMul(slide, sw.blocknvy);
+    }
+
+    // some hideous situation has happened that won't let the camera slide
+    sm->slidex = slidething->x;
+    sm->slidey = slidething->y;
+    sm->slidething->momx = slidething->momy = 0;
 }
 
 // EOF

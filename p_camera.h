@@ -4,7 +4,6 @@
 #include "doomdef.h"
 #include "p_local.h"
 
-#ifdef USECAMERA
 typedef struct camera_s
 {
 	// Info for drawing: position.
@@ -24,8 +23,6 @@ typedef struct camera_s
 #define CAM_RADIUS (20<<FRACBITS)
 #define CAM_DIST (128<<FRACBITS)
 
-extern camera_t camera, camera2;
+extern camera_t camera;
 void P_MoveChaseCamera(player_t *player, camera_t *thiscam);
-#endif
-
 #endif

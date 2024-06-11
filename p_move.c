@@ -29,29 +29,7 @@
 #include "doomdef.h"
 #include "p_local.h"
 
-// CALICO_TODO: these ought to be in headers.
-typedef struct
-{
-   // input
-   mobj_t  *tmthing;
-   fixed_t  tmx, tmy;
-
-   fixed_t  tmfloorz;   // current floor z for P_TryMove2
-   fixed_t  tmceilingz; // current ceiling z for P_TryMove2
-   line_t  *blockline;  // possibly a special to activate
-
-   fixed_t tmbbox[4];
-   int     tmflags;
-   fixed_t tmdropoffz; // lowest point contacted
-
-	int    	numspechit;
- 	line_t	**spechit;
-
-   subsector_t *newsubsec; // destination subsector
-} pmovework_t;
-
 boolean PIT_CheckThing(mobj_t* thing, pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
-static boolean PM_BoxCrossLine(line_t* ld, pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
 static boolean PIT_CheckLine(line_t* ld, pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
 static boolean PM_CrossCheck(line_t* ld, pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
 static boolean PM_CheckPosition(pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
@@ -138,7 +116,7 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
 //
 // Check if the thing intersects a linedef
 //
-static boolean PM_BoxCrossLine(line_t *ld, pmovework_t *mw)
+boolean PM_BoxCrossLine(line_t *ld, pmovework_t *mw)
 {
    fixed_t x1, x2, y1, y2;
    fixed_t lx, ly, ldx, ldy;

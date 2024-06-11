@@ -1,7 +1,6 @@
 #include "p_camera.h"
 
-#ifdef USECAMERA
-camera_t camera, camera2;
+camera_t camera;
 //#define NOCLIPCAMERA
 
 static boolean PIT_CameraCheckLine(line_t *ld, pmovework_t *mw)
@@ -431,5 +430,3 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 	thiscam->momy = FixedMul(y - thiscam->y, camspeed);
 	thiscam->momz = FixedMul(z - thiscam->z, camspeed);
 }
-
-#endif
