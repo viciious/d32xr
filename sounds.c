@@ -206,6 +206,7 @@ sfxinfo_t S_sfx[NUMSFX] =
   SOUND( false, bosdth, 70 ),
   SOUND( false, getpow, 60 ),
   SOUND( false, bospit, 70 ),
-  SOUND( false, boscub, 70 )
+  SOUND( false, boscub, 70 ),
+  SOUND( false, secret, 60 )
 }; 
  
