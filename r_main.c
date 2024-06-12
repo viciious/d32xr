@@ -40,10 +40,6 @@ short fuzzoffset[FUZZTABLE] =
 
 /*===================================== */
 
-const uint16_t visplane0open[SCREENWIDTH+2] = { 0 };
-
-/*===================================== */
-
 #ifndef MARS
 boolean		phase1completed;
 
@@ -665,11 +661,9 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 /* */
 /* plane filling */
 /*	 */
-	vd->visplanes[0].open = (uint16_t *)visplane0open + 1;
-
 	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
 	tempbuf += 2; // padding
-	for (i = 1; i < MAXVISPLANES; i++) {
+	for (i = 0; i < MAXVISPLANES; i++) {
 		vd->visplanes[i].open = tempbuf;
 		tempbuf += SCREENWIDTH+2;
 	}
