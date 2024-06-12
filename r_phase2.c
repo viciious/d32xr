@@ -296,12 +296,19 @@ static void R_SegLoop(viswall_t* segl, unsigned short * restrict clipbounds,
 
 void Mars_Sec_R_WallPrep(void)
 {
+    int i;
+    uint16_t *vp0open;
     viswall_t *segl;
     viswallextra_t *seglex;
     viswall_t *first, *last, *verylast;
     uint32_t clipbounds_[SCREENWIDTH/2+1];
     uint16_t *clipbounds = (uint16_t *)clipbounds_;
     mapvertex_t *verts;
+
+    // clear visplane 0
+    vp0open = vd->visplanes[0].open - 1;
+    for (i = 0; i < SCREENWIDTH+2; i++)
+        vp0open[i] = 0;
 
     R_InitClipBounds(clipbounds_);
 
