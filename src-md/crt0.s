@@ -1009,6 +1009,7 @@ stop_music:
         bne.b   0b                  /* wait for bus acquired */
 
         jsr     rst_ym2612          /* reset FM chip */
+        jsr     vgm_stop_samples
 
         moveq   #0,d0
         lea     0x00FFFFE0,a0       /* top of stack */
