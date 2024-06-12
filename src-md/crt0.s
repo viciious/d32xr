@@ -2613,6 +2613,7 @@ bump_fm:
         move.w  RF5C68_LAH.w,rf5c68_loop_ofs
         move.b  RF5C68_ENV.w,rf5c68_envelope
         move.b  RF5C68_CHN.w,rf5c68_chanmask
+        move.b  RF5C68_CTL.w,rf5c68_chanctl
         bra.b   7f
 
 6:
@@ -2649,7 +2650,7 @@ bump_fm:
         move.l  d1,-(sp)
         move.l  fm_stream_len,-(sp)
         move.l  fm_stream_ofs,-(sp)
-        jsr     vgm_play_samples
+        jsr     vgm_play_dac_samples
         lea     12(sp),sp
         bra.b   18f
 17:
@@ -2675,8 +2676,12 @@ bump_fm:
         move.l  d1,-(sp)
         move.w  rf5c68_start,d1
         move.l  d1,-(sp)
+        moveq   #0,d1
+        move.b  rf5c68_chanctl,d1
+        andi.b  #0x7,d1
+        move.l  d1,-(sp)
         jsr     vgm_play_rf5c68_samples
-        lea     16(sp),sp
+        lea     20(sp),sp
 20:
         move.w  (sp)+,sr            /* restore int level */
         rts
@@ -3175,6 +3180,8 @@ crsr_y:
         dc.w    0
 dbug_color:
         dc.w    0
+rf5c68_chanctl:
+        dc.b    0
 
         .text
         .align  4
