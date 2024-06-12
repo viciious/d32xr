@@ -198,7 +198,7 @@ void vgm_play_samples(int offset, int length, int freq)
     if (dac_freq != freq)
     {
         int cycle;
-        int ntsc = 1;
+        int ntsc = (*(volatile uint16_t *)0xC00004 & 1) == 0; // check VDP control port value
 
         dac_freq = freq;
         if (ntsc)
