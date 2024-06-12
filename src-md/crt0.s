@@ -67,6 +67,9 @@
         .equ STRM_LENLL,  0xFFFF
 
         .equ MARS_FRAMEBUFFER, 0x840200 /* 32X frame buffer */
+        .equ MARS_PWM_CTRL,    0xA15130
+        .equ MARS_PWM_CYCLE,   0xA15132
+        .equ MARS_PWM_MONO,    0xA15138
 
         .equ COL_STORE, 0x600800    /* WORD RAM + 2K */
 
@@ -403,6 +406,32 @@ main_loop_start:
         move.l  #0,0xA15120         /* let Master SH2 run */
 
 main_loop:
+        tst.w   dac_len
+        beq.b   main_loop_chk_ctrl  /* done/none, silence */
+
+        move.l  dac_samples,a0
+        move.w  dac_center,d1
+        move.w  dac_len,d2
+0:
+        tst.w   MARS_PWM_MONO       /* check mono reg status */
+        bmi.b   01f                 /* full */
+
+        move.b  (a0)+,d0            /* fetch dac sample */
+        eori.b  #0x80,d0            /* unsigned to signed */
+        ext.w   d0                  /* sign extend to word */
+        add.w   d0,d0               /* *2 */
+|       add.w   d0,d0               /* *4 */
+        add.w   d1,d0
+        move.w  d0,MARS_PWM_MONO
+
+        subq.w  #1,d2
+        bne.b   0b                  /* not done */
+        move.w  dac_center,MARS_PWM_MONO /* silence */
+01:
+        move.w  d2,dac_len
+        move.l  a0,dac_samples
+
+main_loop_chk_ctrl:
         tst.b   need_ctrl_int
         beq.b   main_loop_bump_fm
         move.b  #0,need_ctrl_int
@@ -3087,6 +3116,9 @@ vgm_ptr:
 vgm_size:
         dc.l    0
         .global    fm_rep
+dac_samples:
+        .global    dac_samples
+        dc.l    0
 fm_rep:
         dc.w    0
         .global    fm_idx
@@ -3095,6 +3127,16 @@ fm_idx:
 fm_stream:
         dc.w    0
 fm_stream_freq:
+        dc.w    0
+
+dac_freq:
+        .global    dac_freq
+        dc.w    0
+dac_len:
+        .global    dac_len
+        dc.w    0
+dac_center:
+        .global    dac_center
         dc.w    0
 
 rf5c68_start:

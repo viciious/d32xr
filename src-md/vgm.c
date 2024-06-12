@@ -11,11 +11,17 @@
 #define VGM_LZSS_BUF_SIZE   0x8000
 #define VGM_MAX_SIZE        0x18000
 
+#define VGM_USE_PWM_FOR_DAC
+
 #define MD_WORDRAM          (void*)0x600000
 #define MCD_WORDRAM         (void*)0x0C0000
 
 #define MD_WORDRAM_VGM_PTR  (MD_WORDRAM+VGM_WORDRAM_OFS)
 #define MCD_WORDRAM_VGM_PTR (MCD_WORDRAM+VGM_WORDRAM_OFS)
+
+#define MARS_PWM_CTRL       (*(volatile unsigned short *)0xA15130)
+#define MARS_PWM_CYCLE      (*(volatile unsigned short *)0xA15132)
+#define MARS_PWM_MONO       (*(volatile unsigned short *)0xA15138)
 
 static lzss_state_t vgm_lzss = { 0 };
 static int rf5c68_dataofs;
@@ -90,9 +96,9 @@ int vgm_setup(void* fm_ptr)
     if ((fm_ptr >= MD_WORDRAM_VGM_PTR && fm_ptr < MD_WORDRAM+0x20000) && pcm_baseoffs) {
         pcm_baseoffs += (fm_ptr - MD_WORDRAM_VGM_PTR);
     }
-    if (rf5c68_dataofs)
+    if (rf5c68_dataofs) {
         rf5c68_dataofs += pcm_baseoffs;
-
+    }
 
     // convert RF5C68's signed PCM samples to uchar because that's what the driver expects
     if ((fm_ptr >= MD_WORDRAM_VGM_PTR && fm_ptr < MD_WORDRAM+0x20000) && rf5c68_dataofs) {
@@ -175,6 +181,7 @@ void *vgm_cache_scd(const char *name, int offset, int length)
     return ptr;
 }
 
+#ifndef VGM_USE_PWM_FOR_DAC
 void vgm_play_scd_samples(int offset, int length, int freq)
 {
     void *ptr = (char *)MCD_WORDRAM_VGM_PTR + pcm_baseoffs + offset;
@@ -182,17 +189,57 @@ void vgm_play_scd_samples(int offset, int length, int freq)
     scd_queue_setptr_buf(VGM_MCD_BUFFER_ID, ptr, length);
     scd_queue_play_src(VGM_MCD_SOURCE_ID, VGM_MCD_BUFFER_ID, freq, 128, 255, 0);
 }
+#endif
 
 void vgm_play_samples(int offset, int length, int freq)
 {
+#ifdef VGM_USE_PWM_FOR_DAC
+    extern uint16_t dac_freq, dac_len, dac_center;
+    extern void *dac_samples;
+
+    if (!cd_ok)
+        return;
+
+    if (dac_freq != freq)
+    {
+        int cycle;
+        int ntsc = 1;
+
+        dac_freq = freq;
+        if (ntsc)
+            cycle = (((23011361 << 1)/dac_freq + 1) >> 1) + 1; // for NTSC clock
+        else
+            cycle = (((22801467 << 1)/dac_freq + 1) >> 1) + 1; // for PAL clock
+        dac_center = cycle >> 1;
+
+        MARS_PWM_CTRL = 0x05; // left and right
+        MARS_PWM_CYCLE = cycle;
+        MARS_PWM_MONO = dac_center;
+        MARS_PWM_MONO = dac_center;
+        MARS_PWM_MONO = dac_center;
+    }
+
+    dac_samples = (char *)MD_WORDRAM_VGM_PTR + pcm_baseoffs + offset;
+    dac_len = length;
+#else
     if (cd_ok)
         vgm_play_scd_samples(offset, length, freq);
+#endif
 }
 
 void vgm_stop_samples(void)
 {
+#ifdef VGM_USE_PWM_FOR_DAC
+    extern uint16_t dac_len, dac_center;
+
+    dac_len = 0;
+    MARS_PWM_MONO = dac_center;
+    MARS_PWM_MONO = dac_center;
+    MARS_PWM_MONO = dac_center;
+#else
     if (cd_ok)
         scd_queue_stop_src(VGM_MCD_SOURCE_ID);
+#endif
 }
 
 void vgm_play_rf5c68_samples(int offset, int loopstart, int incr, int vol)
