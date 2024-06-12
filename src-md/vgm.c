@@ -3,8 +3,11 @@
 #include "lzss.h"
 #include "scd_pcm.h"
 
-#define VGM_MCD_BUFFER_ID   127
-#define VGM_MCD_SOURCE_ID   8
+#define VGM_MCD_BUFFER_ID   126
+#define VGM_MCD_SOURCE_ID   7
+
+#define VGM_MCD_BUFFER_ID2  127
+#define VGM_MCD_SOURCE_ID2  8
 
 #define VGM_WORDRAM_OFS     0x3000
 #define VGM_READAHEAD       0x200
@@ -176,7 +179,6 @@ void *vgm_cache_scd(const char *name, int offset, int length)
     return ptr;
 }
 
-#ifndef VGM_USE_PWM_FOR_DAC
 void vgm_play_scd_samples(int offset, int length, int freq)
 {
     void *ptr = (char *)MCD_WORDRAM_VGM_PTR + pcm_baseoffs + offset;
@@ -184,16 +186,11 @@ void vgm_play_scd_samples(int offset, int length, int freq)
     scd_queue_setptr_buf(VGM_MCD_BUFFER_ID, ptr, length);
     scd_queue_play_src(VGM_MCD_SOURCE_ID, VGM_MCD_BUFFER_ID, freq, 128, 255, 0);
 }
-#endif
 
-void vgm_play_samples(int offset, int length, int freq)
+void vgm_play_dac_samples(int offset, int length, int freq)
 {
-#ifdef VGM_USE_PWM_FOR_DAC
     extern uint16_t dac_freq, dac_len, dac_center;
     extern void *dac_samples;
-
-    if (!cd_ok)
-        return;
 
     if (dac_freq != freq)
     {
@@ -216,37 +213,56 @@ void vgm_play_samples(int offset, int length, int freq)
 
     dac_samples = (char *)MD_WORDRAM_VGM_PTR + pcm_baseoffs + offset;
     dac_len = length;
-#else
-    if (cd_ok)
-        vgm_play_scd_samples(offset, length, freq);
-#endif
 }
 
-void vgm_stop_samples(void)
+void vgm_stop_dac_samples(void)
 {
-#ifdef VGM_USE_PWM_FOR_DAC
     extern uint16_t dac_len, dac_center;
 
     dac_len = 0;
     MARS_PWM_MONO = dac_center;
     MARS_PWM_MONO = dac_center;
     MARS_PWM_MONO = dac_center;
-#else
-    if (cd_ok)
-        scd_queue_stop_src(VGM_MCD_SOURCE_ID);
-#endif
 }
 
-void vgm_play_rf5c68_samples(int offset, int loopstart, int incr, int vol)
+void vgm_stop_rf5c68_samples(int chan)
+{
+    if (!cd_ok)
+        return;
+    if (chan != 0 && chan != 1)
+        return;
+    scd_queue_stop_src(VGM_MCD_SOURCE_ID+chan);
+}
+
+void vgm_play_rf5c68_samples(int chan, int offset, int loopstart, int incr, int vol)
 {
     //int freq = ((uint16_t)incr * 32604) >> 11;
     int freq = incr << 4; // good enough
     int length = loopstart - offset;
     void *ptr = (char *)MCD_WORDRAM_VGM_PTR + rf5c68_dataofs + offset;
 
-    if (!cd_ok || !incr)
+    if (!cd_ok)
+        return;
+    if (chan != 0 && chan != 1)
         return;
 
-    scd_queue_setptr_buf(VGM_MCD_BUFFER_ID, ptr, length);
-    scd_queue_play_src(VGM_MCD_SOURCE_ID, VGM_MCD_BUFFER_ID, freq, 128, vol, 0);
+    if (loopstart == 0)
+    {
+        // hacky hack
+        scd_queue_update_src(VGM_MCD_SOURCE_ID+chan, freq, 128, vol, 0);
+        return;
+    }
+
+    if (!freq)
+        return;
+
+    scd_queue_setptr_buf(VGM_MCD_BUFFER_ID+chan, ptr, length);
+    scd_queue_play_src(VGM_MCD_SOURCE_ID+chan, VGM_MCD_BUFFER_ID+chan, freq, 128, vol, 0);
+}
+
+void vgm_stop_samples(void)
+{
+    vgm_stop_rf5c68_samples(0);
+    vgm_stop_rf5c68_samples(1);
+    vgm_stop_dac_samples();
 }
