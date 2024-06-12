@@ -419,7 +419,7 @@ main_loop:
         move.b  (a0)+,d0            /* fetch dac sample */
         eori.b  #0x80,d0            /* unsigned to signed */
         ext.w   d0                  /* sign extend to word */
-        add.w   d0,d0               /* *2 */
+|       add.w   d0,d0               /* *2 */
 |       add.w   d0,d0               /* *4 */
         add.w   d1,d0
         move.w  d0,MARS_PWM_MONO
