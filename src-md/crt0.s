@@ -886,6 +886,8 @@ offset 0x40 */
 1:
         move.l  d3,fm_loop          /* loop offset */
 
+        move.l  fm_start, d3
+
         z80wr   FM_START,d3         /* start song => FX_START = start offset */
         lsr.w   #8,d3
         z80wr   FM_START+1,d3
