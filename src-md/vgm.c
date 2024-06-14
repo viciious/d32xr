@@ -219,6 +219,9 @@ void vgm_stop_dac_samples(void)
 {
     extern uint16_t dac_len, dac_center;
 
+    if (dac_len == 0)
+        return;
+
     dac_len = 0;
     MARS_PWM_MONO = dac_center;
     MARS_PWM_MONO = dac_center;
@@ -264,5 +267,6 @@ void vgm_stop_samples(void)
 {
     vgm_stop_rf5c68_samples(0);
     vgm_stop_rf5c68_samples(1);
+    scd_flush_cmd_queue();
     vgm_stop_dac_samples();
 }
