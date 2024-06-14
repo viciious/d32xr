@@ -195,9 +195,9 @@ void S_Init(void)
 
 #ifndef DISABLE_DMA_SOUND
 	Mars_RB_ResetAll(&soundcmds);
+#endif
 
 	Mars_InitSoundDMA(1);
-#endif
 }
 
 /*
@@ -1304,6 +1304,8 @@ void Mars_Sec_ReadSoundCmds(void)
 	}
 }
 
+#endif
+
 void Mars_Sec_InitSoundDMA(int initfull)
 {
 	uint16_t sample, ix;
@@ -1312,12 +1314,14 @@ void Mars_Sec_InitSoundDMA(int initfull)
 
 	if (initfull)
 	{
+#ifndef DISABLE_DMA_SOUND
 		// init DMA
 		SH2_DMA_SAR1 = 0;
 		SH2_DMA_DAR1 = (uint32_t)&MARS_PWM_STEREO; // storing a long here will set the left and right channels
 		SH2_DMA_TCR1 = 0;
 		SH2_DMA_CHCR1 = 0;
 		SH2_DMA_DRCR1 = 0;
+#endif
 
 		// init the sound hardware
 		MARS_PWM_MONO = 1;
@@ -1343,6 +1347,7 @@ void Mars_Sec_InitSoundDMA(int initfull)
 		}
 	}
 
+#ifndef DISABLE_DMA_SOUND
 	Mars_RB_ResetRead(&soundcmds);
 
 	Mars_SetSecDMA1Callback(&S_Sec_DMA1Handler);
@@ -1359,16 +1364,10 @@ void Mars_Sec_InitSoundDMA(int initfull)
 
 	// start DMA
 	S_Sec_DMA1Handler();
-}
+#endif
 
-#else
-
-void Mars_Sec_InitSoundDMA(int initfull)
-{
 	snd_init = 1;
 }
-
-#endif
 
 static void S_Pri_CmdHandler(void)
 {
