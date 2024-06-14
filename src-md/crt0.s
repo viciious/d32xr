@@ -112,6 +112,18 @@
         bclr    #0,0xA15107         /* clear RV */
         .endm
 
+        .macro  mute_pcm
+        clr.w   pcm_env             /* mute PCM samples */
+        clr.w   dac_len
+        |tst.w   dac_len             /* drain the PCM buffer */
+        |bne.w   main_loop
+        |jsr     vgm_stop_samples
+        .endm
+
+        .macro  unmute_pcm
+        move.w  #0xFFFF,pcm_env
+        .endm
+
 | 0x880800 - entry point for reset/cold-start
 
         .global _start
@@ -412,6 +424,7 @@ main_loop:
         move.l  dac_samples,a0
         move.w  dac_center,d1
         move.w  dac_len,d2
+        move.w  pcm_env,d3
 0:
         tst.w   MARS_PWM_MONO       /* check mono reg status */
         bmi.b   01f                 /* full */
@@ -421,6 +434,7 @@ main_loop:
         ext.w   d0                  /* sign extend to word */
 |       add.w   d0,d0               /* *2 */
 |       add.w   d0,d0               /* *4 */
+        and.w   d3,d0
         add.w   d1,d0
         move.w  d0,MARS_PWM_MONO
 
@@ -888,6 +902,8 @@ offset 0x40 */
 
         move.l  fm_start, d3
 
+        unmute_pcm
+
         z80wr   FM_START,d3         /* start song => FX_START = start offset */
         lsr.w   #8,d3
         z80wr   FM_START+1,d3
@@ -1044,6 +1060,7 @@ stop_music:
 
         clr.w   fm_idx              /* stop music */
         clr.w   fm_rep
+        clr.w   fm_stream
 
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -1686,6 +1703,8 @@ ctl_md_vdp:
         bra     main_loop
 
 cpy_md_vram:
+        mute_pcm
+
         move.w  0xA15100,d1
         eor.w   #0x8000,d1
         move.w  d1,0xA15100         /* unset FM - disallow SH2 access to FB */
@@ -1770,6 +1789,8 @@ cpy_md_vram:
         move.w  0xA15100,d0
         or.w    #0x8000,d0
         move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        unmute_pcm
 
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -1892,6 +1913,8 @@ cpy_md_vram:
         move.w  0xA15100,d0
         or.w    #0x8000,d0
         move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        unmute_pcm
 
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -2029,6 +2052,8 @@ cpy_md_vram:
         move.w  0xA15100,d0
         or.w    #0x8000,d0
         move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        unmute_pcm
 
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -2226,6 +2251,9 @@ load_bytes:
         bra     main_loop
 
 open_cd_file_by_name:
+        mute_pcm
+        jsr vgm_stop_samples
+
         move.w  0xA15100,d0
         eor.w   #0x8000,d0
         move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
@@ -2240,6 +2268,8 @@ open_cd_file_by_name:
         move.w  0xA15100,d0
         or.w    #0x8000,d0
         move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        unmute_pcm
 
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -2257,6 +2287,9 @@ open_cd_file_by_handle:
         bra     main_loop
 
 read_cd_file:
+        mute_pcm
+        jsr vgm_stop_samples
+
         move.w  0xA15100,d0
         eor.w   #0x8000,d0
         move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
@@ -2272,6 +2305,8 @@ read_cd_file:
         move.w  0xA15100,d0
         or.w    #0x8000,d0
         move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        unmute_pcm
 
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -2647,6 +2682,10 @@ bump_fm:
 16:
         /* set the stream pointer and start playback on the SegaCD */
         clr.w   fm_stream
+
+        tst.w   pcm_env
+        beq.b   18f                 /* PCM muted */
+
         moveq   #0,d1
         move.w  fm_stream_freq,d1
         move.l  d1,-(sp)
@@ -2664,11 +2703,12 @@ bump_fm:
         rts
 19:
         clr.w   fm_stream
-        moveq   #0,d1
 
-        move.b  rf5c68_chanmask,d1
-        cmp.b   #0xFF,d1            /* 0xFF -- all channels disabled */
+        cmpi.b  #0xFF,rf5c68_chanmask /* 0xFF -- all channels disabled */
         beq.b   20f
+
+        tst.w   pcm_env
+        beq.b   20f                 /* PCM muted */
 
         move.b  rf5c68_envelope,d1
         move.l  d1,-(sp)
@@ -3145,7 +3185,10 @@ dac_len:
         dc.w    0
 dac_center:
         .global    dac_center
-        dc.w    0
+        dc.w    1
+pcm_env:
+        .global pcm_env
+        dc.w    0xFFFF
 
 rf5c68_start:
         dc.w    0
