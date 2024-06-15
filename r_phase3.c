@@ -91,7 +91,11 @@ static void R_PrepMobj(mobj_t *thing)
    gzt = thing->z - vd.viewz;
 
    // calculate edges of the shape
-   tx -= ((fixed_t)BIGSHORT(patch->leftoffset)) << FRACBITS;
+   if (flip)
+      tx -= ((fixed_t)BIGSHORT(patch->width)-(fixed_t)BIGSHORT(patch->leftoffset)) << FRACBITS;
+   else
+      tx -= ((fixed_t)BIGSHORT(patch->leftoffset)) << FRACBITS;
+
    x1 = FixedMul(tx, xscale);
    x1 = (centerXFrac + x1) / FRACUNIT;
 
@@ -130,16 +134,22 @@ static void R_PrepMobj(mobj_t *thing)
 #endif
    vis->x1       = x1 < 0 ? 0 : x1;
    vis->x2       = x2 >= viewportWidth ? viewportWidth - 1 : x2;
-   vis->gx       = thing->x / FRACUNIT;
-   vis->gy       = thing->y / FRACUNIT;
+   vis->gx       = thing->x >> FRACBITS;
+   vis->gy       = thing->y >> FRACBITS;
    vis->xscale   = xscale;
-   vis->xiscale  = FixedDiv(FRACUNIT, xscale);
    vis->yscale   = FixedMul(xscale, stretch);
    vis->texturemid = texmid;
-   vis->startfrac = 0;
 
    if(flip)
-      vis->xiscale = -vis->xiscale;
+   {
+      vis->xiscale = -FixedDiv(FRACUNIT, xscale);
+      vis->startfrac = ((fixed_t)BIGSHORT(patch->width) << FRACBITS) - 1;
+   }
+   else
+   {
+      vis->xiscale = FixedDiv(FRACUNIT, xscale);
+      vis->startfrac = 0;
+   }
 
    if (vis->xiscale < 0)
        vis->startfrac = ((fixed_t)BIGSHORT(patch->width) << FRACBITS) - 1;
