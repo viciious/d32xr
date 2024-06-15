@@ -831,6 +831,8 @@ void RunTitle (void)
 	startmap = 1;
 	starttype = gt_single;
 	consoleplayer = 0;
+	startsave = -1;
+	startsplitscreen = 0;
 	canwipe = false;
 
 	exit = MiniLoop (START_Title, STOP_Title, TIC_Abortable, DRAW_Title, UpdateBuffer);
