@@ -62,7 +62,7 @@ void ST_Init (void)
 
 	faces = W_CheckNumForName("FACE00");
 
-	l = W_CheckNumForName("MINUS");
+	l = W_CheckNumForName("STTMINUS");
 	if (l != -1)
 	{
 		for (i = 0; i < NUMSBOBJ; i++)
@@ -273,20 +273,6 @@ static void ST_Ticker_(stbar_t* sb)
 			if (sb->flashCards[ind].doDraw && sb->flashCards[ind].active)
 				S_StartSound(NULL,sfx_itemup);
 		}
-	}
-
-	/* */
-	/* Ammo */
-	/* */
-	if (p->readyweapon == wp_nochange)
-		i = 0;
-	else
-	{
-		i = weaponinfo[p->readyweapon].ammo;
-		if (i == am_noammo)
-			i = 0;
-		else
-			i = p->ammo[i];
 	}
 	
 	if (sb->ammo != i || sb->forcedraw)
@@ -662,6 +648,8 @@ void ST_Drawer(void)
 	int y[MAXPLAYERS];
 
 	if (debugmode == DEBUGMODE_NODRAW)
+		return;
+
 		return;
 
 	y[consoleplayer] = I_FrameBufferHeight() - sbar_height;

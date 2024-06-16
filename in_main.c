@@ -401,9 +401,9 @@ void IN_Start (void)
 		interm->interpic = NULL;
 #endif
 
-	snums = W_CheckNumForName("NUM_0");
+	snums = W_CheckNumForName("STTNUM0");
 
-	uchar = W_CheckNumForName("CHAR_065");
+	uchar = W_CheckNumForName("STCFN065");
 
 #ifndef MARS
 	DoubleBufferSetup ();

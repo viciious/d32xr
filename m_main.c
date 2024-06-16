@@ -1,13 +1,14 @@
 /* m_main.c -- main menu */
 
 #include "doomdef.h"
+#include <stdio.h>
 
 #define MOVEWAIT		(I_IsPAL() ? TICVBLS*5 : TICVBLS*6)
-#define CURSORX		(80)
+#define CURSORX		(96)
 #define CURSORWIDTH	24
 #define ITEMX		(CURSORX+CURSORWIDTH)
 #define STARTY			48
-#define ITEMSPACE	20
+#define ITEMSPACE	12
 #define CURSORY(y)	(STARTY+ITEMSPACE*(y))
 #define	NUMLCHARS 64	
 
@@ -67,9 +68,11 @@ static mainscreen_t mainscreen[NUMMAINSCREENS];
 static const char* playmodes[NUMMODES] = { "Single", "Coop", "Deathmatch" };
 jagobj_t* m_doom;
 
-static VINT m_skull1lump, m_skull2lump;
+static VINT m_skull1lump;
 static VINT m_skilllump;
 static VINT numslump;
+#define NUMHANDFRAMES 5
+static VINT m_hand[NUMHANDFRAMES];
 
 static VINT	cursorframe;
 static VINT cursordelay;
@@ -105,7 +108,7 @@ void M_Start2 (boolean startup_)
 	startup = startup_;
 	if (startup)
 	{
-		i = W_CheckNumForName("M_DOOM");
+		i = W_CheckNumForName("M_TITLE");
 		m_doom = i != -1 ? W_CacheLumpNum(i, PU_STATIC) : NULL;
 	}
 	else
@@ -113,14 +116,20 @@ void M_Start2 (boolean startup_)
 		m_doom = NULL;
 	}
 
-	m_skull1lump = W_CheckNumForName("M_SKULL1");
-	m_skull2lump = W_CheckNumForName("M_SKULL2");
+	m_skull1lump = W_CheckNumForName("M_CURSOR");
+
+	for (i = 0; i < NUMHANDFRAMES; i++)
+	{
+		char entry[8];
+		sprintf(entry, "M_HAND%d", i+1);
+		m_hand[i] = W_CheckNumForName(entry);
+	}
 
 	m_skilllump = W_CheckNumForName("SKILL0");
 
-	numslump = W_CheckNumForName("NUM_0");
+	numslump = W_CheckNumForName("STTNUM0");
 
-	uchar = W_CheckNumForName("CHAR_065");
+	uchar = W_CheckNumForName("STCFN065");
 
 	cursorframe = -1;
 	cursorpos = 0;
@@ -157,24 +166,24 @@ void M_Start2 (boolean startup_)
 	mainscreen[ms_gametype].firstitem = mi_singleplayer;
 	mainscreen[ms_gametype].numitems = 3;
 
-	D_memcpy(mainitem[mi_newgame].name, "New Game", 9);
+	D_memcpy(mainitem[mi_newgame].name, "START GAME", 11);
 	mainitem[mi_newgame].x = ITEMX;
 	mainitem[mi_newgame].y = CURSORY(0);
 	mainitem[mi_newgame].screen = ms_gametype;
 
-	D_memcpy(mainitem[mi_loadgame].name, "Load Game", 10);
+	D_memcpy(mainitem[mi_loadgame].name, "MULTIPLAYER", 12);
 	mainitem[mi_loadgame].x = ITEMX;
 	mainitem[mi_loadgame].y = CURSORY(1);
 	mainitem[mi_loadgame].screen = ms_load;
 	mainscreen[ms_main].numitems++;
 
-	D_memcpy(mainitem[mi_savegame].name, "Save Game", 10);
+	D_memcpy(mainitem[mi_savegame].name, "OPTIONS", 8);
 	mainitem[mi_savegame].x = ITEMX;
 	mainitem[mi_savegame].y = CURSORY(2);
 	mainitem[mi_savegame].screen = ms_save;
 	mainscreen[ms_main].numitems++;
 
-	D_memcpy(mainitem[mi_joingame].name, "Join Game", 10);
+	D_memcpy(mainitem[mi_joingame].name, "ABOUT", 6);
 	mainitem[mi_joingame].x = ITEMX;
 	mainitem[mi_joingame].y = CURSORY(3);
 	mainitem[mi_joingame].screen = ms_none;
@@ -300,7 +309,7 @@ int M_Ticker (void)
 	if (cursorframe == -1)
 	{
 		cursorframe = 0;
-		cursordelay = MOVEWAIT+MOVEWAIT/2;
+		cursordelay = MOVEWAIT;
 	}
 
 	if (screenpos == ms_none)
@@ -315,9 +324,10 @@ int M_Ticker (void)
 		return ga_startnew;
 
 /* animate skull */
-	if (gametic != prevgametic && (gametic&3) == 0)
+	if (gametic != prevgametic && (gametic & 1))
 	{
-		cursorframe ^= 1;
+		cursorframe++;
+		cursorframe %= NUMHANDFRAMES;
 	}
 
 	M_UpdateSaveInfo();
@@ -594,8 +604,10 @@ void M_Drawer (void)
 /* Draw main menu */
 	if (m_doom && (scrpos == ms_main || scrpos == ms_gametype))
 	{
-		DrawJagobj(m_doom, 100, 4);
-		y_offset = m_doom->height + 4 - STARTY;
+		DrawJagobj(m_doom, 160 - (m_doom->width / 2), 16);
+		y_offset = m_doom->height + 16 - STARTY;
+
+		DrawJagobjLump(m_hand[cursorframe], 160 + 3, 48, NULL, NULL);
 	}
 
 /* erase old skulls */
@@ -604,9 +616,6 @@ void M_Drawer (void)
 #endif
 
 /* draw new skull */
-	if (cursorframe)
-		DrawJagobjLump(m_skull2lump, CURSORX, y_offset+items[cursorpos].y - 2, NULL, NULL);
-	else
 		DrawJagobjLump(m_skull1lump, CURSORX, y_offset+items[cursorpos].y - 2, NULL, NULL);
 
 /* draw menu items */

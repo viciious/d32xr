@@ -765,22 +765,15 @@ void RunCredits(void);
 
 void RunTitle (void)
 {
-	int		exit;
-
 	startskill = sk_medium;
 	startmap = 1;
 	starttype = gt_single;
 	consoleplayer = 0;
 	canwipe = false;
 
-	exit = MiniLoop (START_Title, STOP_Title, TIC_Abortable, DRAW_Title, UpdateBuffer);
+	MiniLoop (START_Title, STOP_Title, TIC_Abortable, DRAW_Title, UpdateBuffer);
 
-#ifdef MARS
-	if (exit == ga_exitdemo)
-		RunMenu ();
-	else
-#endif
-		RunCredits();
+	RunMenu();
 }
 
 void RunCredits (void)

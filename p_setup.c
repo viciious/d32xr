@@ -383,36 +383,6 @@ void P_LoadLineDefs (int lump)
 
 		ld->sidenum[0] = LITTLESHORT(mld->sidenum[0]);
 		ld->sidenum[1] = LITTLESHORT(mld->sidenum[1]);
-
-		// HACK HACK HACK
-		// backwards compatibility with JagDoom specials
-		// that use values typically reserved for Doom2 maps
-		if (ld->tag)
-			continue;
-
-		switch (ld->special)
-		{
-		case 99:
-			/* Blue Skull Door Open */
-			ld->special = 32;
-			break;
-		case 100:
-			/* Red Skull Door Open */
-			ld->special = 33;
-			break;
-		case 105:
-			/* Yellow Skull Door Open */
-			ld->special = 34;
-			break;
-		case 106:
-			/* Blue Skull Door Raise */
-		case 107:
-			/* Red Skull Door Raise */
-		case 108:
-			/* Yellow Skull Door Raise */
-			ld->special = ld->special - 80;
-			break;
-		}
 	}
 }
 
@@ -658,6 +628,8 @@ void P_SetupLevel (int lumpnum, skill_t skill)
 	M_ClearRandom ();
 
 	P_LoadingPlaque ();
+
+	leveltime = 0;
 	
 D_printf ("P_SetupLevel(%i,%i)\n",lumpnum,skill);
 

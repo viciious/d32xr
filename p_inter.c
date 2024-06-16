@@ -116,21 +116,12 @@ boolean P_GiveWeapon (player_t *player, weapontype_t weapon, boolean dropped)
 		if (player->weaponowned[weapon])
 			return false;
 		player->weaponowned[weapon] = true;
-		P_GiveAmmo (player, weaponinfo[weapon].ammo, 2);
 		player->pendingweapon = weapon;
 		S_StartSound (player->mo, sfx_wpnup);
 		return false;
 	}
 	
-	if (weaponinfo[weapon].ammo != am_noammo)
-	{	/* give one clip with a dropped weapon, two clips with a found weapon */
-		if (dropped)
-			gaveammo = P_GiveAmmo (player, weaponinfo[weapon].ammo, 1);
-		else
-			gaveammo = P_GiveAmmo (player, weaponinfo[weapon].ammo, 2);
-	}
-	else
-		gaveammo = false;
+	gaveammo = false;
 	
 	if (player->weaponowned[weapon])
 		gaveweapon = false;
@@ -277,77 +268,13 @@ boolean P_GivePower (player_t *player, powertype_t power)
 */
 
 int P_TouchSpecialThing2 (mobj_t *special, mobj_t *toucher)
-{
+{/*
 	player_t *player;
 	
 	player = toucher->player ? &players[toucher->player-1] : NULL;
-
+*/
 	switch (special->sprite)
 	{
-/* */
-/* armor */
-/* */
-	case SPR_ARM1:
-		if (!P_GiveArmor (player, 1))
-			return -1;
-		player->message = "You pick up the armor.";
-		break;
-		
-	case SPR_ARM2:
-		if (!P_GiveArmor (player, 2))
-			return -1;
-		player->message = "You got the MegaArmor!";
-		break;
-
-/* */
-/* heals */
-/* */
-	case SPR_STIM:
-		if (!P_GiveBody (player, 10))
-			return -1;
-		player->message = "You pick up a stimpack.";
-		break;
-	case SPR_MEDI:
-		if (!P_GiveBody (player, 25))
-			return -1;
-		if (player->health < 25)
-			player->message = "You pick up a medikit that you REALLY need!";
-		else
-			player->message = "You pick up a medikit.";
-		break;
-	
-/* */
-/* power ups */
-/* */
-	case SPR_PINV:
-		if (!P_GivePower (player, pw_invulnerability))
-			return -1;
-		player->message = "Invulnerability!";
-		break;
-	case SPR_PSTR:
-		if (!P_GivePower (player, pw_strength))
-			return -1;
-		player->message = "Berserk!";
-		if (player->readyweapon != wp_fist)
-			player->pendingweapon = wp_fist;
-		break;
-	case SPR_PINS:
-		break;
-	case SPR_SUIT:
-		if (!P_GivePower (player, pw_ironfeet))
-			return -1;
-		player->message = "Radiation Shielding Suit";
-		break;
-	case SPR_PMAP:
-		if (!P_GivePower (player, pw_allmap))
-			return -1;
-		player->message = "Computer Area Map";
-		break;
-	case SPR_PVIS:
-		if (!P_GivePower (player, pw_infrared))
-			return -1;
-		player->message = "Light Amplification Visor";
-		break;
 	default:
 		I_Error ("P_SpecialThing: Unknown gettable thing");
 	}
@@ -367,7 +294,6 @@ int P_TouchSpecialThing2 (mobj_t *special, mobj_t *toucher)
 void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 {
 	player_t	*player;
-	int			i;
 	fixed_t		delta;
 	int			sound;
 		
@@ -384,185 +310,12 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 /* */
 /* bonus items */
 /* */
-	case SPR_BON1:
+	case SPR_RING:
 		player->health+=2;		/* can go over 100% */
 		if (player->health > 200)
 			player->health = 200;
 		player->mo->health = player->health;
 		player->message = "You pick up a health bonus.";
-		break;
-	case SPR_BON2:
-		player->armorpoints+=2;		/* can go over 100% */
-		if (player->armorpoints > 200)
-			player->armorpoints = 200;
-		if (!player->armortype)
-			player->armortype = 1;
-		player->message = "You pick up an armor bonus.";
-		break;
-	case SPR_SOUL:
-		player->health += 100;
-		if (player->health > 200)
-			player->health = 200;
-		player->mo->health = player->health;
-		player->message = "Supercharge!";
-		break;
-				
-
-		
-/* */
-/* ammo */
-/* */
-	case SPR_CLIP:
-		if (special->flags & MF_DROPPED)
-		{
-			if (!P_GiveAmmo (player,am_clip,0))
-				return;
-		}
-		else
-		{
-			if (!P_GiveAmmo (player,am_clip,1))
-				return;
-		}
-		player->message = "Picked up a clip.";
-		break;
-	case SPR_AMMO:
-		if (!P_GiveAmmo (player, am_clip,5))
-			return;
-		player->message = "Picked up a box of bullets.";
-		break;
-	case SPR_ROCK:
-		if (!P_GiveAmmo (player, am_misl,1))
-			return;
-		player->message = "Picked up a rocket.";
-		break;	
-	case SPR_BROK:
-		if (!P_GiveAmmo (player, am_misl,5))
-			return;
-		player->message = "Picked up a box of rockets.";
-		break;
-	case SPR_CELL:
-		if (!P_GiveAmmo (player, am_cell,1))
-			return;
-		player->message = "Picked up an energy cell.";
-		break;
-	case SPR_CELP:
-		if (!P_GiveAmmo (player, am_cell,5))
-			return;
-		player->message = "Picked up an energy cell pack.";
-		break;
-	case SPR_SHEL:
-		if (!P_GiveAmmo (player, am_shell,1))
-			return;
-		player->message = "Picked up 4 shotgun shells.";
-		break;
-	case SPR_SBOX:
-		if (!P_GiveAmmo (player, am_shell,5))
-			return;
-		player->message = "Picked up a box of shotgun shells.";
-		break;		
-	case SPR_BPAK:
-		if (!player->backpack)
-		{
-			for (i=0 ; i<NUMAMMO ; i++)
-				player->maxammo[i] *= 2;
-			player->backpack = true;
-		}
-		for (i=0 ; i<NUMAMMO ; i++)
-			P_GiveAmmo (player, i, 1);
-		player->message = "Picked up a backpack full of ammo!";
-		break;
-
-		
-/* */
-/* weapons */
-/* */
-	case SPR_BFUG:
-		if (!P_GiveWeapon (player, wp_bfg, false) )
-			return;
-		player->message = "You got the BFG9000!  Oh, yes.";
-		sound = sfx_wpnup;	
-		break;
-	case SPR_MGUN:
-		if (!P_GiveWeapon (player, wp_chaingun, false) )
-			return;
-		player->message = "You got the chaingun!";
-		sound = sfx_wpnup;	
-		break;
-	case SPR_CSAW:
-		if (!P_GiveWeapon (player, wp_chainsaw, false) )
-			return;
-		player->message = "A chainsaw!  Find some meat!";
-		sound = sfx_wpnup;	
-		break;
-	case SPR_LAUN:
-		if (!P_GiveWeapon (player, wp_missile, false) )
-			return;
-		player->message = "You got the rocket launcher!";
-		sound = sfx_wpnup;	
-		break;
-	case SPR_PLAS:
-		if (!P_GiveWeapon (player, wp_plasma, false) )
-			return;
-		player->message = "You got the plasma gun!";
-		sound = sfx_wpnup;	
-		break;
-	case SPR_SHOT:
-		if (!P_GiveWeapon (player, wp_shotgun, special->flags&MF_DROPPED ) )
-			return;
-		player->message = "You got the shotgun!";
-		sound = sfx_wpnup;	
-		break;
-
-	/* */
-	/* cards */
-	/* leave cards for everyone */
-	case SPR_BKEY:
-		if (!player->cards[it_bluecard])
-			player->message = "You pick up a blue keycard.";
-		P_GiveCard(player, it_bluecard);
-		sound = sfx_None;
-		if (netgame)
-			return;
-		break;
-	case SPR_YKEY:
-		if (!player->cards[it_yellowcard])
-			player->message = "You pick up a yellow keycard.";
-		P_GiveCard(player, it_yellowcard);
-		sound = sfx_None;
-		if (netgame)
-			return;
-		break;
-	case SPR_RKEY:
-		if (!player->cards[it_redcard])
-			player->message = "You pick up a red keycard.";
-		P_GiveCard(player, it_redcard);
-		sound = sfx_None;
-		if (netgame)
-			return;
-		break;
-	case SPR_BSKU:
-		if (!player->cards[it_blueskull])
-			player->message = "You pick up a blue skull key.";
-		P_GiveCard(player, it_blueskull);
-		sound = sfx_None;
-		if (netgame)
-			return;
-		break;
-	case SPR_YSKU:
-		if (!player->cards[it_yellowskull])
-			player->message = "You pick up a yellow skull key.";
-		P_GiveCard(player, it_yellowskull);
-		sound = sfx_None;
-		if (netgame)
-			return;
-		break;
-	case SPR_RSKU:
-		if (!player->cards[it_redskull])
-			player->message = "You pick up a red skull key.";
-		P_GiveCard(player, it_redskull);
-		sound = sfx_None;
-		if (netgame)
-			return;
 		break;
 
 	default:
@@ -594,13 +347,9 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 
 void P_KillMobj (mobj_t *source, mobj_t *target)
 {
-	mobjtype_t		item;
-	mobj_t			*mo;
 	const mobjinfo_t* targinfo = &mobjinfo[target->type];
 
 	target->flags &= ~(MF_SHOOTABLE|MF_FLOAT|MF_SKULLFLY);
-	if (target->type != MT_SKULL)
-		target->flags &= ~MF_NOGRAVITY;
 	target->flags |= MF_CORPSE|MF_DROPOFF;
 	target->height >>= 2;
 	
@@ -653,24 +402,8 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 	target->tics -= P_Random()&1;
 	if (target->tics < 1)
 		target->tics = 1;
-		
-/* */
-/* drop stuff */
-/* */
-	switch (target->type)
-	{
-	case MT_POSSESSED:
-		item = MT_CLIP;
-		break;
-	case MT_SHOTGUY:
-		item = MT_SHOTGUN;
-		break;
-	default:
-		return;
-	}
 
-	mo = P_SpawnMobj (target->x,target->y,ONFLOORZ, item);
-	mo->flags |= MF_DROPPED;		/* special versions of items */
+	// TODO: 'Pop!' sprite?		
 }
 
 

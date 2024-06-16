@@ -79,19 +79,8 @@ boolean P_ThingHeightClip (mobj_t *thing)
 
 boolean PIT_ChangeSector (mobj_t *thing, changetest_t *ct)
 {
-	mobj_t		*mo;
-	
 	if (P_ThingHeightClip (thing))
 		return true;		/* keep checking */
-
-	/* crunch bodies to giblets */
-	if (thing->health <= 0)
-	{
-		P_SetMobjState (thing, S_GIBS);
-		thing->height = 0;
-		thing->radius = 0;
-		return true;		/* keep checking */
-	}
 
 	/* crunch dropped items */
 	if (thing->flags & MF_DROPPED)
@@ -107,10 +96,6 @@ boolean PIT_ChangeSector (mobj_t *thing, changetest_t *ct)
 	if (ct->crushchange && !(gametic&3) && (gametic!=prevgametic) )
 	{
 		P_DamageMobj(thing,NULL,NULL,10);
-		/* spray blood in a random direction */
-		mo = P_SpawnMobj (thing->x, thing->y, thing->z + thing->height/2, MT_BLOOD);
-		mo->momx = (P_Random() - P_Random ())<<12;
-		mo->momy = (P_Random() - P_Random ())<<12;
 	}
 		
 	return true;		/* keep checking (crush other things)	 */

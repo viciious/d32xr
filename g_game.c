@@ -487,13 +487,13 @@ void G_Init(void)
 	if (G_FindGameinfo(&gameinfo))
 	{
 		if (gameinfo.borderFlat <= 0)
-			gameinfo.borderFlat = W_CheckNumForName("ROCKS");
+			gameinfo.borderFlat = W_CheckNumForName("SRB2TILE");
 		if (gameinfo.endFlat <= 0)
 			gameinfo.endFlat = gameinfo.borderFlat;
 		return;
 	}
 
-	gameinfo.borderFlat = W_CheckNumForName("ROCKS");
+	gameinfo.borderFlat = W_CheckNumForName("SRB2TILE");
 	gameinfo.titlePage = W_CheckNumForName("title");
 	gameinfo.titleTime = 540;
 	gameinfo.endFlat = gameinfo.borderFlat;

@@ -683,7 +683,7 @@ void R_InitSpriteDefs(const char** namelist)
 
 	// scan all the lump names for each of the names,
 	//  noting the highest frame letter.
-	maxframe = 29;
+	maxframe = 40;
 	totalframes = 0;
 	totallumps = 0;
 
@@ -693,7 +693,7 @@ void R_InitSpriteDefs(const char** namelist)
 	{
 		const char* spritename = namelist[i];
 
-		D_memset(sprtemp, -1, sizeof(tempspriteframe_t) * 29);
+		D_memset(sprtemp, -1, sizeof(tempspriteframe_t) * 40);
 		maxframe = -1;
 
 		// scan the lumps,
@@ -718,7 +718,7 @@ void R_InitSpriteDefs(const char** namelist)
 				rotation = framename[1] - '0';
 				if (frame > maxframe)
 					maxframe = frame;
-				if (frame >= 29 || rotation > 8)
+				if (frame >= 40 || rotation > 8)
 					I_Error("Bad frame characters in lump %i", l);
 
 				R_InstallSpriteLump(spritename, framename[0], sprtemp + frame, 

@@ -11,15 +11,6 @@ typedef struct
 
 static const castinfo_t castorder[] = {
 {"zombieman", MT_POSSESSED},
-{"shotgun guy", MT_SHOTGUY},
-{"imp", MT_TROOP},
-{"demon", MT_SERGEANT},
-{"spectre", MT_SERGEANT},
-{"lost soul", MT_SKULL},
-{"cacodemon", MT_HEAD},
-{"baron of hell", MT_BRUISER},
-{"cyberdemon", MT_CYBORG},
-{"spider mastermind", MT_SPIDER},
 {"our hero", MT_PLAYER},
 
 {NULL,0}
@@ -320,7 +311,7 @@ void F_Start (void)
 	fin->drawbg = 3;
 	fin->endobj = Z_Malloc(sizeof(*fin->endobj) * NUMENDOBJ, PU_STATIC);
 
-	l = W_GetNumForName ("CHAR_097");
+	l = W_GetNumForName ("STCFN_097");
 	for (i = 0; i < NUMENDOBJ; i++)
 		fin->endobj[i] = W_CacheLumpNum(l+i, PU_STATIC);
 
@@ -470,31 +461,6 @@ int F_Ticker (void)
 		switch (st)
 		{
 		case S_PLAY_ATK2: sfx = sfx_shotgn; break;
-		case S_POSS_ATK2: sfx = sfx_pistol; break;
-		case S_SPOS_ATK2: sfx = sfx_shotgn; break;
-		//case S_VILE_ATK2: sfx = sfx_vilatk; break;
-		//case S_SKEL_FIST2: sfx = sfx_skeswg; break;
-		//case S_SKEL_FIST4: sfx = sfx_skepch; break;
-		//case S_SKEL_MISS2: sfx = sfx_skeatk; break;
-		//case S_FATT_ATK8:
-		//case S_FATT_ATK5:
-		//case S_FATT_ATK2: sfx = sfx_firsht; break;
-		//case S_CPOS_ATK2:
-		//case S_CPOS_ATK3:
-		//case S_CPOS_ATK4: sfx = sfx_shotgn; break;
-		case S_TROO_ATK3: sfx = sfx_claw; break;
-		case S_SARG_ATK2: sfx = sfx_sgtatk; break;
-		case S_BOSS_ATK2: 
-		//case S_BOS2_ATK2:
-		case S_HEAD_ATK2: sfx = sfx_firsht; break;
-		case S_SKULL_ATK2: sfx = sfx_sklatk; break;
-		case S_SPID_ATK4:
-		case S_SPID_ATK3: sfx = sfx_shotgn; break;
-		//case S_BSPI_ATK2: sfx = sfx_plasma; break;
-		case S_CYBER_ATK2:
-		case S_CYBER_ATK4:
-		case S_CYBER_ATK6: sfx = sfx_rlaunc; break;
-		//case S_PAIN_ATK3: sfx = sfx_sklatk; break;
 		default: sfx = 0; break;
 		}
 		
@@ -600,14 +566,6 @@ void F_Drawer (void)
 		case fin_charcast:
 			fin->drawbg = 2;
 			switch (castorder[fin->castnum].type) {
-				case MT_CYBORG:
-					top = 115;
-					left = 80;
-					break;
-				case MT_SPIDER:
-					top = 110;
-					left = 90;
-					break;
 				default:
 					top = 90;
 					left = 80;

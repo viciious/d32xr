@@ -12,7 +12,7 @@
 
 static const animdef_t	animdefs[] =
 {
-	{false,	"NUKAGE3",	"NUKAGE1"},
+	{false,	"BWATER08",	"BWATER01"},
 	{false,	"FWATER4",	"FWATER1"},
 	{false,	"LAVA4",	"LAVA1"},
 
@@ -767,7 +767,7 @@ void P_PlayerInSpecialSector (player_t *player)
 			
 		default:
 			I_Error ("P_PlayerInSpecialSector: "
-					"unknown special %i",sector->special);
+					" %i",sector->special);
 	};
 }
 
@@ -790,7 +790,7 @@ void P_UpdateSpecials (void)
 	/* */
 	/*	ANIMATE FLATS AND TEXTURES GLOBALY */
 	/* */
-	if (! (gametic&3) )
+	if (! (gametic&1) )
 	{
 		for (anim = anims ; anim < lastanim ; anim++)
 		{

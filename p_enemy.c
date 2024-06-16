@@ -82,16 +82,8 @@ boolean P_CheckMissileRange (mobj_t *actor)
 
 	dist >>= 16;
 
-	if (actor->type == MT_SKULL
-		|| actor->type == MT_CYBORG
-		|| actor->type == MT_SPIDER)
-		dist >>= 1;
-
 	if (dist > 200)
 		dist = 200;
-
-	if (actor->type == MT_CYBORG && dist > 160)
-		dist = 160;
 
 	if (P_Random () < dist)
 		return false;
@@ -452,14 +444,7 @@ seeyou:
 			break;
 		}
 
-		if (actor->type == MT_SPIDER
-			|| actor->type == MT_CYBORG)
-		{
-			// full volume
-			S_StartSound (NULL, sound);
-		}
-		else
-			S_StartSound (actor, sound);
+		S_StartSound (actor, sound);
 	}
 
 	P_SetMobjState (actor, ainfo->seestate);
@@ -579,157 +564,14 @@ void A_FaceTarget (mobj_t *actor)
 	, actor->target->x, actor->target->y);
 }
 
-
-/*
-==============
-=
-= A_PosAttack
-=
-==============
-*/
-
-void A_PosAttack (mobj_t *actor)
-{
-	int		angle, damage;
-	lineattack_t la;
-	
-	if (!actor->target)
-		return;
-		
-	A_FaceTarget (actor);
-	angle = actor->angle;
-
-	S_StartSound (actor, sfx_pistol);
-	angle += (P_Random()-P_Random())<<20;
-	damage = ((P_Random()&7)+1)*3;
-	P_LineAttack (&la, actor, angle, MISSILERANGE, D_MAXINT, damage);
-}
-
-void A_SPosAttack (mobj_t *actor)
-{
-	int		i;
-	int		angle, bangle, damage;
-	lineattack_t la;
-
-	if (!actor->target)
-		return;
-
-	S_StartSound (actor, sfx_shotgn);
-	A_FaceTarget (actor);
-	bangle = actor->angle;
-
-	for (i=0 ; i<3 ; i++)
-	{
-		angle = bangle + ((P_Random()-P_Random())<<20);
-		damage = ((P_Random()&7)+1)*3;
-		P_LineAttack (&la, actor, angle, MISSILERANGE, D_MAXINT, damage);
-	}
-}
-
-void A_SpidRefire (mobj_t *actor)
-{	
-/* keep firing unless target got out of sight */
-	A_FaceTarget (actor);
-	if (P_Random () < 10)
-		return;
-	if (!actor->target || actor->target->health <= 0 || !(actor->flags&MF_SEETARGET) )
-		P_SetMobjState (actor, mobjinfo[actor->type].seestate);
-}
-
-
-/*
-==============
-=
-= A_TroopAttack
-=
-==============
-*/
-
-void A_TroopAttack (mobj_t *actor)
-{
-	int		damage;
-	
-	if (!actor->target)
-		return;
-		
-	A_FaceTarget (actor);
-	if (P_CheckMeleeRange (actor))
-	{
-		S_StartSound (actor, sfx_claw);
-		damage = ((P_Random()&7)+1)*3;
-		P_DamageMobj (actor->target, actor, actor, damage);
-		return;
-	}
-/* */
-/* launch a missile */
-/* */
-	P_SpawnMissile (actor, actor->target, MT_TROOPSHOT);
-}
-
-
-void A_SargAttack (mobj_t *actor)
-{
-	int		damage;
-	lineattack_t la;
-
-	if (!actor->target)
-		return;
-		
-	A_FaceTarget (actor);
-	damage = ((P_Random()&7)+1)*4;
-	P_LineAttack (&la, actor, actor->angle, MELEERANGE, 0, damage);
-}
-
-void A_HeadAttack (mobj_t *actor)
-{
-	int		damage;
-	
-	if (!actor->target)
-		return;
-		
-	A_FaceTarget (actor);
-	if (P_CheckMeleeRange (actor))
-	{
-		damage = ((P_Random()&7)+1)*8;
-		P_DamageMobj (actor->target, actor, actor, damage);
-		return;
-	}
-/* */
-/* launch a missile */
-/* */
-	P_SpawnMissile (actor, actor->target, MT_HEADSHOT);
-}
-
 void A_CyberAttack (mobj_t *actor)
 {	
 	if (!actor->target)
 		return;
 		
 	A_FaceTarget (actor);
-	P_SpawnMissile (actor, actor->target, MT_ROCKET);
+//	P_SpawnMissile (actor, actor->target, MT_ROCKET);
 }
-
-void A_BruisAttack (mobj_t *actor)
-{
-	int		damage;
-	
-	if (!actor->target)
-		return;
-		
-	if (P_CheckMeleeRange (actor))
-	{
-		S_StartSound (actor, sfx_claw);
-		damage = ((P_Random()&7)+1)*11;
-		P_DamageMobj (actor->target, actor, actor, damage);
-		return;
-	}
-/* */
-/* launch a missile */
-/* */
-	P_SpawnMissile (actor, actor->target, MT_BRUISERSHOT);
-}
-
-
 
 
 /*
@@ -800,14 +642,7 @@ void A_Scream (mobj_t *actor)
 		break;
 	}
 
-	if (actor->type == MT_SPIDER
-		|| actor->type == MT_CYBORG)
-	{
-		// full volume
-		S_StartSound (NULL, sound);
-	}
-	else
-		S_StartSound (actor, sound);
+	S_StartSound (actor, sound);
 }
 
 void A_XScream (mobj_t *actor)
@@ -856,14 +691,6 @@ void A_BossDeath (mobj_t *mo)
 {
 	int 		i;
 	mobj_t		*mo2;
-	line_t		junk;
-		
-	if (mo->type == MT_BRUISER && !gamemapinfo.baronSpecial)
-		return;			/* bruisers apear on other levels */
-	if (mo->type == MT_CYBORG && !gamemapinfo.cyberSpecial)
-		return;
-	if (mo->type == MT_SPIDER && !gamemapinfo.spiderSpecial)
-		return;
 
     // make sure there is a player alive for victory
     for (i=0 ; i<MAXPLAYERS ; i++)
@@ -886,16 +713,7 @@ void A_BossDeath (mobj_t *mo)
 /* */
 /* victory! */
 /* */
-	switch (mo->type) {
-		case MT_BRUISER:
-			junk.tag = 666;
-			EV_DoFloor (&junk, lowerFloorToLowest);
-			break;
-		case MT_CYBORG:
-		case MT_SPIDER:
-			G_ExitLevel();
-			return;
-	}
+
 }
 
 

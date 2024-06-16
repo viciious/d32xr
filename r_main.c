@@ -504,7 +504,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 
 	player = &players[displayplayer];
 
-	if (demoplayback)
+	if (!demoplayback)
 	{
 		const camera_t *thiscam = NULL;
 
@@ -597,66 +597,25 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 #endif
 
 #ifdef MARS
-	vd.extralight = player->extralight << 4;
-
-	if (player->powers[pw_invulnerability] > 0)
-	{
-		if (player->powers[pw_invulnerability] > 60
-			|| (player->powers[pw_invulnerability] & 4))
-			vd.fixedcolormap = INVERSECOLORMAP;
-	}
-    else if (player->powers[pw_infrared] > 0)
-    {
-		if (player->powers[pw_infrared] > 4*32
-			|| (player->powers[pw_infrared]&8) )
-		{
-			// almost full bright
-			vd.fixedcolormap = 1*256;
-		}
-	}
+	vd.extralight = 0;
 
 	viewportbuffer = (pixel_t*)I_ViewportBuffer();
 
 	palette = 0;
 
 	i = 0;
-	if (player->powers[pw_strength] > 0)
-		i = 12 - player->powers[pw_strength] / 64;
-	if (i < damagecount)
-		i = damagecount;
 
 	if (gamepaused)
-		palette = 14;
-	else if (!splitscreen)
-	{
-		if (i)
-		{
-			palette = (i + 7) / 8;
-			if (palette > 7)
-				palette = 7;
-			palette += 1;
-		}
-		else if (bonuscount)
-		{
-			palette = (bonuscount + 7) / 8;
-			if (palette > 3)
-				palette = 3;
-			palette += 9;
-		}
-		else if (player->powers[pw_ironfeet] > 60
-			|| (player->powers[pw_ironfeet] & 4))
-			palette = 13;
-	}
+		palette = 12;
+	else if (demoplayback && gamemapinfo.mapNumber == 30 && leveltime < 15)
+		palette = 5 - (leveltime / 3);
 	
 	if (palette != curpalette) {
 		curpalette = palette;
 		I_SetPalette(dc_playpals+palette*768);
 	}
 
-	if (vd.fixedcolormap == INVERSECOLORMAP)
-		vd.fuzzcolormap = INVERSECOLORMAP;
-	else
-		vd.fuzzcolormap = 12 * 256;
+	vd.fuzzcolormap = 12 * 256;
 #endif
 
 	vd.visplanes = visplanes_;

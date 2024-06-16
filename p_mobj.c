@@ -43,29 +43,6 @@ static void P_RemoveMobjFromCurrList (mobj_t *mobj_)
 
 void P_RemoveMobj (mobj_t *mobj)
 {
-	int		spot;
-	
-/* add to the respawnque for altdeath mode */
-	if (netgame == gt_deathmatch)
-	{
-		if ((mobj->flags & MF_SPECIAL) &&
-			!(mobj->flags & MF_DROPPED) &&
-			(mobj->type != MT_INV) &&
-			(mobj->type != MT_INS))
-		{
-			spawnthing_t* st = &spawnthings[mobj->thingid - 1];
-			spot = iquehead & (ITEMQUESIZE - 1);
-
-			itemrespawnque[spot].x = st->x;
-			itemrespawnque[spot].y = st->y;
-			itemrespawnque[spot].type = st->type;
-			itemrespawnque[spot].angle = st->angle;
-			itemrespawnque[spot].options = mobj->thingid;
-			itemrespawntime[spot] = ticon;
-			iquehead++;
-		}
-	}
-
 /* unlink from sector and block lists */
 	P_UnsetThingPosition (mobj);
 
@@ -106,7 +83,6 @@ void P_FreeMobj(mobj_t* mobj)
 void P_RespawnSpecials (void)
 {
 	fixed_t         x,y,z; 
-	subsector_t 	*ss; 
 	mobj_t			*mo;
 	mapthing_t		*mthing;
 	int				i;
@@ -130,12 +106,6 @@ void P_RespawnSpecials (void)
 	
 	x = mthing->x << FRACBITS; 
 	y = mthing->y << FRACBITS; 
-
-/* spawn a teleport fog at the new spot */
-	ss = R_PointInSubsector (x,y); 
-	mo = P_SpawnMobj (x, y, ss->sector->floorheight , MT_IFOG); 
-
-	S_StartSound (mo, sfx_itmbk);
 
 /* find which type to spawn */
 	for (i=0 ; i< NUMMOBJTYPES ; i++)
@@ -184,19 +154,6 @@ boolean P_SetMobjState (mobj_t *mobj, statenum_t state)
 		mobj->tics = st->tics;
 		mobj->sprite = st->sprite;
 		mobj->frame = st->frame;
-
-		if (gameskill == sk_nightmare)
-		{
-			switch (state) {
-			case S_SARG_ATK1:
-			case S_SARG_ATK2:
-			case S_SARG_ATK3:
-				mobj->tics /= 2;
-				break;
-			default:
-				break;
-			}
-		}
 
 		if (st->action)		/* call action functions when the state is set */
 			st->action(mobj);
@@ -294,31 +251,6 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 	mobj->sprite = st->sprite;
 	mobj->frame = st->frame;
 
-	if (gameskill == sk_nightmare)
-	{
-		switch (info->spawnstate) {
-		case S_SARG_ATK1:
-		case S_SARG_ATK2:
-		case S_SARG_ATK3:
-			mobj->tics /= 2;
-			break;
-		default:
-			break;
-		}
-
-		switch (type) {
-		case MT_SERGEANT:
-		case MT_SHADOWS:
-		case MT_BRUISERSHOT:
-		case MT_HEADSHOT:
-		case MT_TROOPSHOT:
-			mobj->speed += mobj->speed / 2;
-			break;
-		default:
-			break;
-		}
-	}
-
 /* set subsector and/or block links */
 	P_SetThingPosition (mobj);
 	
@@ -387,8 +319,6 @@ void P_SpawnPlayer (mapthing_t *mthing)
 	fixed_t		x,y,z;
 	mobj_t		*mobj;
 	int	i;
-	subsector_t* ss;
-	int                     an;
 
 	if (!playeringame[mthing->type-1])
 		return;						/* not playing */
@@ -430,14 +360,6 @@ y = 0xff500000;
 
 	if (!netgame)
 		return;
-
-	ss = R_PointInSubsector(x, y);
-	an = (ANG45 * ((unsigned)mthing->angle / 45)) >> ANGLETOFINESHIFT;
-
-	/* spawn a teleport fog  */
-	mobj = P_SpawnMobj(x + 20 * finecosine(an), y + 20 * finesine(an), ss->sector->floorheight
-		, MT_TFOG);
-	S_StartSound(mobj, sfx_telept);
 }
 
 
@@ -611,18 +533,7 @@ return;	/*DEBUG */
 
 void P_SpawnPuff (fixed_t x, fixed_t y, fixed_t z, fixed_t attackrange)
 {
-	mobj_t	*th;
-	
-	z += ((P_Random()-P_Random())<<10);
-	th = P_SpawnMobj (x,y,z, MT_PUFF);
-	th->momz = FRACUNIT;
-	th->tics -= P_Random()&1;
-	if (th->tics < 1)
-		th->tics = 1;
-		
-/* don't make punches spark on the wall */
-	if (attackrange == MELEERANGE)
-		P_SetMobjState (th, S_PUFF3);
+	// TODO: Umm.. no.
 }
 
 
@@ -636,18 +547,7 @@ void P_SpawnPuff (fixed_t x, fixed_t y, fixed_t z, fixed_t attackrange)
 
 void P_SpawnBlood (fixed_t x, fixed_t y, fixed_t z, int damage)
 {
-	mobj_t	*th;
-	
-	z += ((P_Random()-P_Random())<<10);
-	th = P_SpawnMobj (x,y,z, MT_BLOOD);
-	th->momz = FRACUNIT*2;
-	th->tics -= P_Random()&1;
-	if (th->tics<1)
-		th->tics = 1;
-	if (damage <= 12 && damage >= 9)
-		P_SetMobjState (th,S_BLOOD2);
-	else if (damage < 9)
-		P_SetMobjState (th,S_BLOOD3);
+	// TODO: Umm.. no.
 }
 
 /*

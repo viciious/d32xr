@@ -51,8 +51,8 @@ typedef struct {
 	int  *fuzzpos;
 } mars_tls_t __attribute__((aligned(16))); // thread local storage
 
-VINT COLOR_WHITE = 0x04;
-VINT COLOR_BLACK = 0xF7;
+VINT COLOR_WHITE = 0x00;
+VINT COLOR_BLACK = 0x1F;
 
 int8_t	*dc_colormaps;
 int8_t	*dc_colormaps2;
@@ -398,7 +398,7 @@ void I_Init (void)
 	Mars_SetBrightness(1);
 
 	doompalette = W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
-	I_SetPalette(doompalette);
+	I_SetPalette(doompalette+(10*768));
 
 	// look up palette indices for black and white colors
 	// if the black color isn't present, use the darkest one
@@ -700,7 +700,7 @@ void I_ClearFrameBuffer (void)
 	int* p = (int*)framebuffer;
 	int* p_end = (int*)(framebuffer + 320 / 2 * (I_FrameBufferHeight()+1));
 	while (p < p_end)
-		*p++ = 0;
+		*p++ = 0x1F1F1F1F; // Four bytes of black palette index
 }
 
 void I_DebugScreen(void)

@@ -561,14 +561,7 @@ boolean P_CanSelecteWeapon(player_t* player, int weaponnum)
 //
 boolean P_CanFireWeapon(player_t* player, int weaponnum)
 {
-	if (!P_CanSelecteWeapon(player, weaponnum))
-		return false;
-
-	if (weaponinfo[weaponnum].ammo == am_noammo)
-		return true;
-
-	int neededAmmo = (weaponnum == wp_bfg) ? 40 : 1;
-	return player->ammo[weaponinfo[weaponnum].ammo] >= neededAmmo;
+	return false;
 }
 
 /*
@@ -607,11 +600,8 @@ ticphase = 21;
 	
 	if (player->playerstate == PST_DEAD)
 	{
-		if (demoplayback)
-		{
-			if (player == &players[consoleplayer])
-				P_MoveChaseCamera(player, &camera);
-		}
+		if (player == &players[consoleplayer])
+			P_MoveChaseCamera(player, &camera);
 		P_DeathThink (player);
 		return;
 	}
@@ -626,11 +616,8 @@ ticphase = 22;
 		P_MovePlayer (player);
 	P_CalcHeight (player);
 
-	if (demoplayback)
-	{
-		if (player == &players[consoleplayer])
-				P_MoveChaseCamera(player, &camera);
-	}
+	if (player == &players[consoleplayer])
+		P_MoveChaseCamera(player, &camera);
 
 	if (player->mo->subsector->sector->special)
 		P_PlayerInSpecialSector (player);

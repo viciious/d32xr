@@ -266,8 +266,9 @@ typedef struct degenmobj_s
 /* */
 /* frame flags */
 /* */
-#define	FF_FULLBRIGHT	0x8000		/* flag in thing->frame */
-#define FF_FRAMEMASK	0x7fff
+#define	FF_FULLBRIGHT	0x8000		/* flag in thing->frame to render full light */
+#define FF_FLIPPED      0x4000      /* flag in thing->frame to flip a 0-sprite */
+#define FF_FRAMEMASK	0x3fff
 
 /* */
 /* mobj flags */
@@ -510,7 +511,7 @@ void G_LoadGame(int saveslot);
 
 extern	gameaction_t	gameaction;
 
-#define	SBARHEIGHT	40			/* status bar height at bottom of screen */
+#define	SBARHEIGHT	0			/* status bar height at bottom of screen */
 
 typedef enum
 {
@@ -541,6 +542,7 @@ extern 	VINT 		gamemapcount;
 
 extern 	int 		gametic;
 extern 	int 		prevgametic;
+extern  int         leveltime;
 
 #define MAXDMSTARTS		10
 extern	mapthing_t	*deathmatchstarts, *deathmatch_p;

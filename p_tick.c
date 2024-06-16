@@ -7,6 +7,8 @@
 int	playertics, thinkertics, sighttics, basetics, latetics;
 int	tictics, drawtics;
 
+int leveltime;
+
 boolean		gamepaused;
 jagobj_t	*pausepic;
 char		clearscreen = 0;
@@ -423,6 +425,7 @@ int P_Ticker (void)
 		ST_Ticker();			/* update status bar */
 
 		tictics = frtc - ticstart;
+		leveltime += 2;
 	}
 
 	return gameaction;		/* may have been set to ga_died, ga_completed, */

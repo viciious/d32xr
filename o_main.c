@@ -79,7 +79,7 @@ static VINT	movecount;
 
 static VINT	uchar;
 
-static VINT	o_cursor1, o_cursor2;
+static VINT	o_cursor1;
 static VINT	o_slider, o_slidertrack;
 
 static VINT m_help;
@@ -141,15 +141,14 @@ void O_Init (void)
 	int cd_avail;
 
 /* cache all needed graphics */
-	o_cursor1 = W_CheckNumForName("M_SKULL1");
-	o_cursor2 = W_CheckNumForName("M_SKULL2");
+	o_cursor1 = W_CheckNumForName("M_CURSOR");
 	o_slider = W_CheckNumForName("O_SLIDER");
 	o_slidertrack = W_CheckNumForName("O_STRACK");
 
 	o_musictype = musictype;
 	o_sfxdriver = sfxdriver;
 
-	uchar = W_CheckNumForName("CHAR_065");
+	uchar = W_CheckNumForName("STCFN065");
 
 	m_help = W_CheckNumForName("M_HELP");
 
@@ -661,10 +660,7 @@ void O_Drawer (void)
 	//EraseBlock(56, 40, o_cursor1->width, 200);
 	if (screenpos != ms_help)
 	{
-		if(cursorframe)
-			DrawJagobjLump(o_cursor1, CURSORX, items[cursorpos].y - 2, NULL, NULL);
-		else
-			DrawJagobjLump(o_cursor2, CURSORX, items[cursorpos].y - 2, NULL, NULL);
+		DrawJagobjLump(o_cursor1, CURSORX, items[cursorpos].y - 2, NULL, NULL);
 	}
 
 /* Draw menu */
