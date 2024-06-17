@@ -431,7 +431,7 @@ void I_Init (void)
 	else
 	{
 		jo_stbar = NULL;
-		jo_stbar_height = 0;
+		jo_stbar_height = 20;
 	}
 
 	Mars_CommSlaveClearCache();

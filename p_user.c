@@ -332,11 +332,9 @@ void P_BuildMove (player_t *player)
 	if (!mo->momx && !mo->momy
 	&& player->forwardmove== 0 && player->sidemove == 0 )
 	{	/* if in a walking frame, stop moving */
-		if (mo->state == S_PLAY_RUN1 
-		|| mo->state == S_PLAY_RUN2
-		|| mo->state == S_PLAY_RUN3
-		|| mo->state == S_PLAY_RUN4)
-			P_SetMobjState (mo, S_PLAY);
+		if (mo->state >= S_PLAY_RUN1 
+			&& mo->state <= S_PLAY_RUN8)
+			P_SetMobjState (mo, S_PLAY_STND);
 	}
 	
 } 
@@ -481,7 +479,7 @@ void P_MovePlayer (player_t *player)
 		P_Thrust (player, player->mo->angle-ANG90, player->sidemove);
 
 	if ( (player->forwardmove || player->sidemove) 
-	&& player->mo->state == S_PLAY )
+	&& (player->mo->state >= S_PLAY_STND && player->mo->state <= S_PLAY_TAP2) )
 		P_SetMobjState (player->mo, S_PLAY_RUN1);
 
 }	

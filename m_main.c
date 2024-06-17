@@ -2,6 +2,7 @@
 
 #include "doomdef.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 #define MOVEWAIT		(I_IsPAL() ? TICVBLS*5 : TICVBLS*6)
 #define CURSORX		(96)
@@ -72,7 +73,21 @@ static VINT m_skull1lump;
 static VINT m_skilllump;
 static VINT numslump;
 #define NUMHANDFRAMES 5
+#define NUMKFISTFRAMES 7
+#define NUMSBLINKFRAMES 3
+#define NUMTBLINKFRAMES 3
+#define NUMKBLINKFRAMES 3
+#define NUMTAILWAGFRAMES 6
 static VINT m_hand[NUMHANDFRAMES];
+static VINT m_kfist[NUMKFISTFRAMES];
+static VINT m_sblink[NUMSBLINKFRAMES];
+static VINT m_tblink[NUMTBLINKFRAMES];
+static VINT m_kblink[NUMKBLINKFRAMES];
+static VINT m_tailwag[NUMTAILWAGFRAMES];
+static char fistCounter = 5;
+static char sBlinkCounter = 110;
+static char tBlinkCounter = 25;
+static char kBlinkCounter = 76;
 
 static VINT	cursorframe;
 static VINT cursordelay;
@@ -120,9 +135,46 @@ void M_Start2 (boolean startup_)
 
 	for (i = 0; i < NUMHANDFRAMES; i++)
 	{
-		char entry[8];
-		sprintf(entry, "M_HAND%d", i+1);
+		char entry[9];
+		sprintf(entry, "M_HAND%d", i + 1);
 		m_hand[i] = W_CheckNumForName(entry);
+	}
+
+	for (int i = 0; i < NUMKFISTFRAMES; i++)
+	{
+		char entry[9];
+		sprintf(entry, "KFIST%d", i + 1);
+		m_kfist[i] = W_CheckNumForName(entry);
+	}
+
+	for (int i = 0; i < NUMSBLINKFRAMES; i++)
+	{
+		char entry[9];
+		sprintf(entry, "SBLINK%d", i + 1);
+		m_sblink[i] = W_CheckNumForName(entry);
+	}
+
+	for (int i = 0; i < NUMKBLINKFRAMES-1; i++)
+	{
+		char entry[9];
+		sprintf(entry, "KBLINK%d", i + 1);
+		m_kblink[i] = W_CheckNumForName(entry);
+	}
+	m_kblink[2] = W_CheckNumForName("KBLINK1");
+
+	for (int i = 0; i < NUMTBLINKFRAMES-1; i++)
+	{
+		char entry[9];
+		sprintf(entry, "TBLINK%d", i + 1);
+		m_tblink[i] = W_CheckNumForName(entry);
+	}
+	m_tblink[2] = W_CheckNumForName("TBLINK1");
+
+	for (int i = 0; i < NUMTAILWAGFRAMES; i++)
+	{
+		char entry[9];
+		sprintf(entry, "TAILWAG%d", i + 1);
+		m_tailwag[i] = W_CheckNumForName(entry);
 	}
 
 	m_skilllump = W_CheckNumForName("SKILL0");
@@ -327,7 +379,6 @@ int M_Ticker (void)
 	if (gametic != prevgametic && (gametic & 1))
 	{
 		cursorframe++;
-		cursorframe %= NUMHANDFRAMES;
 	}
 
 	M_UpdateSaveInfo();
@@ -590,7 +641,6 @@ int M_Ticker (void)
 =
 =================
 */
-
 void M_Drawer (void)
 {
 	int i;
@@ -604,10 +654,45 @@ void M_Drawer (void)
 /* Draw main menu */
 	if (m_doom && (scrpos == ms_main || scrpos == ms_gametype))
 	{
-		DrawJagobj(m_doom, 160 - (m_doom->width / 2), 16);
+		VINT logoPos = 160 - (m_doom->width / 2);
+		DrawJagobj(m_doom, logoPos, 16);
 		y_offset = m_doom->height + 16 - STARTY;
 
-		DrawJagobjLump(m_hand[cursorframe], 160 + 3, 48, NULL, NULL);
+		DrawJagobjLump(m_hand[cursorframe % NUMHANDFRAMES], 160 + 3, 16 + 32, NULL, NULL);
+
+		DrawJagobjLump(m_tailwag[cursorframe % NUMTAILWAGFRAMES], logoPos + 5, 16 + 2, NULL, NULL);
+
+		if (gametic & 1)
+		{
+			fistCounter--;
+
+			if (fistCounter <= -NUMKFISTFRAMES)
+				fistCounter = 15 + (M_Random() & 7);
+		}
+
+		if (fistCounter < 0)
+			DrawJagobjLump(m_kfist[abs(fistCounter)], logoPos + 188, 16 + 43, NULL, NULL);
+		else
+			DrawJagobjLump(m_kfist[0], logoPos + 188, 16 + 43, NULL, NULL);
+
+		sBlinkCounter--;
+		if (sBlinkCounter <= -NUMSBLINKFRAMES)
+			sBlinkCounter = M_Random() & 127;
+		tBlinkCounter--;
+		if (tBlinkCounter <= -NUMTBLINKFRAMES)
+			tBlinkCounter = M_Random() & 127;
+		kBlinkCounter--;
+		if (kBlinkCounter <= -NUMKBLINKFRAMES)
+			kBlinkCounter = M_Random() & 127;
+
+		if (sBlinkCounter < 0)
+			DrawJagobjLump(m_sblink[abs(sBlinkCounter)], logoPos + 93, 16 + 27, NULL, NULL);
+
+		if (tBlinkCounter < 0)
+			DrawJagobjLump(m_tblink[abs(tBlinkCounter)], logoPos + 54, 16 + 40, NULL, NULL);
+
+		if (kBlinkCounter < 0)
+			DrawJagobjLump(m_kblink[abs(kBlinkCounter)], logoPos + 158, 16 + 37, NULL, NULL);
 	}
 
 /* erase old skulls */
@@ -616,7 +701,7 @@ void M_Drawer (void)
 #endif
 
 /* draw new skull */
-		DrawJagobjLump(m_skull1lump, CURSORX, y_offset+items[cursorpos].y - 2, NULL, NULL);
+	DrawJagobjLump(m_skull1lump, CURSORX, y_offset+items[cursorpos].y - 2, NULL, NULL);
 
 /* draw menu items */
 	for (i = 0; i < menuscr->numitems; i++)
