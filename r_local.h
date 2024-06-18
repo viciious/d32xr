@@ -540,7 +540,7 @@ typedef struct vissprite_s
 
 #define	MAXVISSPRITES	MAXWALLCMDS
 
-#define	MAXOPENINGS		SCREENWIDTH*16
+#define	MAXOPENINGS		SCREENWIDTH*20
 
 #define	MAXVISSSEC		128
 
