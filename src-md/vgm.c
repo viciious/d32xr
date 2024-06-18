@@ -267,6 +267,6 @@ void vgm_stop_samples(void)
 {
     vgm_stop_rf5c68_samples(0);
     vgm_stop_rf5c68_samples(1);
-    scd_flush_cmd_queue();
+    //scd_flush_cmd_queue();
     vgm_stop_dac_samples();
 }
