@@ -535,7 +535,7 @@ void P_SpawnMapThing (mapthing_t *mthing, int thingid)
 		if (deathmatch_p < deathmatchstarts + MAXDMSTARTS)
 			D_memcpy (deathmatch_p, mthing, sizeof(*mthing));
 		deathmatch_p++;
-		return NULL;
+		return;
 	}
 	
 /* check for players specially */
@@ -704,7 +704,7 @@ mobj_t *P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type)
 	if (thinfo->seesound)
 		S_StartSound (source, thinfo->seesound);
 	th->target = source;		/* where it came from */
-	an = R_PointToAngle2 (source->x, source->y, dest->x, dest->y);	
+	an = R_PointToAngle (source->x, source->y, dest->x, dest->y);	
 	th->angle = an;
 	an >>= ANGLETOFINESHIFT;
 	speed = th->speed >> 16;

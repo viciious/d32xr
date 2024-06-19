@@ -334,7 +334,7 @@ static void S_SpatializeAt(fixed_t* origin, mobj_t* listener, int* pvol, int* ps
 	else
 	{
 		// angle of source to listener
-		angle = R_PointToAngle2(listener->x, listener->y,
+		angle = R_PointToAngle(listener->x, listener->y,
 			origin[0], origin[1]);
 
 		if (angle > listener->angle)

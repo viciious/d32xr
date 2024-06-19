@@ -156,8 +156,8 @@ static boolean R_CheckBBox(rbspWork_t *rbsp, int16_t bspcoord_[4])
    y2 = bspcoord[checkcoord[boxpos][3]];
 
    // check clip list for an open space
-   angle1 = R_PointToAngle(x1, y1);
-   angle2 = R_PointToAngle(x2, y2);
+   angle1 = R_PointToAngle(vd->viewx, vd->viewy, x1, y1);
+   angle2 = R_PointToAngle(vd->viewx, vd->viewy, x2, y2);
 
    sx1 = R_ClipToViewEdges(angle1, angle2);
    if (sx1 == 0)
@@ -569,8 +569,8 @@ static void R_AddLine(rbspWork_t *rbsp, sector_t *frontsector, seg_t *line)
    v2.x = vertexes[line->v2].x << FRACBITS;
    v2.y = vertexes[line->v2].y << FRACBITS;
 
-   angle1 = R_PointToAngle(v1.x, v1.y);
-   angle2 = R_PointToAngle(v2.x, v2.y);
+   angle1 = R_PointToAngle(vd->viewx, vd->viewy, v1.x, v1.y);
+   angle2 = R_PointToAngle(vd->viewx, vd->viewy, v2.x, v2.y);
 
    x1 = R_ClipToViewEdges(angle1, angle2);
    if (x1 <= 0)

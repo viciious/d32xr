@@ -946,7 +946,7 @@ void R_Init (void);
 int	R_FlatNumForName (const char *name);
 int	R_TextureNumForName (const char *name);
 int	R_CheckTextureNumForName (const char *name);
-angle_t R_PointToAngle2 (fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2) ATTR_DATA_CACHE_ALIGN;
+angle_t R_PointToAngle (fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2) ATTR_DATA_CACHE_ALIGN;
 struct subsector_s *R_PointInSubsector (fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
 
 
