@@ -630,7 +630,5 @@ __attribute__((aligned(16)))
 
 extern	viewdef_t	*vd;
 
-extern texture_t *testtex;
-
 #endif		/* __R_LOCAL__ */
 

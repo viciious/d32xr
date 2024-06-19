@@ -83,8 +83,6 @@ int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sprites[4
 
 r_texcache_t r_texcache;
 
-texture_t *testtex;
-
 /*
 ===============================================================================
 =
@@ -363,8 +361,6 @@ D_printf ("Done\n");
 	R_SetDrawFuncs();
 
 	R_InitTexCache(&r_texcache);
-
-	testtex = &textures[R_TextureNumForName("SLADWALL")];
 }
 
 /*
