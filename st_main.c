@@ -633,7 +633,7 @@ static void ST_Drawer_ (stbar_t* sb)
 			}
 			break;
 		case stc_drawyourfrags:
-			ST_EraseBlock(STATSX - 30, STATSY, 14 * 3 + 4, 21);
+			ST_EraseBlock(STATSX - 30, STATSY, 14 * 3 + 4, 28);
 			ST_DrawValue(sb->yourFrags.x, sb->yourFrags.y, cmd->value);
 #ifndef MARS
 			break;
