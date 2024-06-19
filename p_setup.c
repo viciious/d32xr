@@ -774,6 +774,8 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 	validcount[0] = 1; // cpu 0
 	validcount[numlines] = 1; // cpu 1
 
+	// G_DeathMatchSpawnPlayer is going to need this
+	I_SetThreadLocalVar(DOOMTLS_VALIDCOUNT, &validcount[0]);
 
 	P_GroupLines ();
 
@@ -807,9 +809,11 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 			{	/* must give a player spot before deathmatchspawn */
 				mobj_t *mobj = P_SpawnMobj (deathmatchstarts[0].x<<16
 				,deathmatchstarts[0].y<<16,0, MT_PLAYER);
+				mobj->player = i + 1;
 				players[i].mo = mobj;
 				G_DeathMatchSpawnPlayer (i);
 				P_RemoveMobj (mobj);
+				bodyqueslot = 0; // bodyque shouldn't he holding a reference to removed mobj
 			}
 	}
 
@@ -841,8 +845,6 @@ extern byte *debugscreen;
 	if (havebossspit)
 		gamezonemargin *= 4;
 	R_SetupLevel(gamezonemargin);
-
-	I_SetThreadLocalVar(DOOMTLS_VALIDCOUNT, &validcount[0]);
 
 #ifdef MARS
 	Mars_CommSlaveClearCache();
