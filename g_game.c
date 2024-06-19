@@ -98,6 +98,8 @@ void G_DoLoadLevel (void)
 	int			music;
 	dmapinfo_t  *mi;
 
+	S_Clear();
+
 	for (i=0 ; i<MAXPLAYERS ; i++) 
 	{ 
 		if (playeringame[i]/* && players[i].playerstate == PST_DEAD*/)

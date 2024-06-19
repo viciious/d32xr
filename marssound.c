@@ -817,7 +817,6 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 		return;
 
 	Mars_StopTrack(); // stop the playback before flipping pages
-	S_Clear();
 
 	if (musictype == mustype_spcm)
 	{
