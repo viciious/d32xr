@@ -740,7 +740,7 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 	if (inflictor && (!source || !source->player 
 		|| players[source->player - 1].readyweapon != wp_chainsaw))
 	{
-		ang = R_PointToAngle2 ( inflictor->x, inflictor->y
+		ang = R_PointToAngle ( inflictor->x, inflictor->y
 			,target->x, target->y);
 		
 		thrust = damage*(FRACUNIT>>2)*100/targinfo->mass;
@@ -777,7 +777,7 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 			if (source && source != player->mo)
 			{
 				int right;
-				ang = R_PointToAngle2 ( target->x, target->y,
+				ang = R_PointToAngle ( target->x, target->y,
 					source->x, source->y );
 
 				if (ang > target->angle)

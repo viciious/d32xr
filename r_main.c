@@ -55,7 +55,6 @@ pixel_t* viewportbuffer;
 __attribute__((aligned(16)))
 #endif
 viewdef_t       *vd;
-player_t	*viewplayer;
 
 VINT			framecount;		/* incremented every frame */
 
@@ -127,7 +126,7 @@ static int SlopeAngle (unsigned num, unsigned den)
 	return t2a[ans];
 }
 
-angle_t R_PointToAngle2 (fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
+angle_t R_PointToAngle (fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 {	
 	int		x;
 	int		y;
@@ -356,7 +355,6 @@ D_printf ("Done\n");
 	R_SetViewportSize(viewportNum);
 
 	framecount = 0;
-	viewplayer = &players[0];
 
 	R_SetDrawFuncs();
 
@@ -511,7 +509,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 
 	player = &players[displayplayer];
 
-	vd->viewplayer = player;
+	vd->psprites = player->psprites;
 	vd->viewx = player->mo->x;
 	vd->viewy = player->mo->y;
 	vd->viewz = player->viewz;

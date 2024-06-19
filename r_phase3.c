@@ -69,7 +69,7 @@ static void R_PrepMobj(mobj_t *thing)
    if(sprlump[1] != -1)
    {
       // select proper rotation depending on player's view point
-      ang  = R_PointToAngle2(vd->viewx, vd->viewy, thing->x, thing->y);
+      ang  = R_PointToAngle(vd->viewx, vd->viewy, thing->x, thing->y);
       rot  = (ang - thing->angle + (unsigned int)(ANG45 / 2)*9) >> 29;
       lump = sprlump[rot];
    }
@@ -300,7 +300,7 @@ void R_SpritePrep(void)
    vd->lastsprite_p = vd->vissprite_p;
 
    // draw player weapon sprites
-   for(i = 0, psp = vd->viewplayer->psprites; i < NUMPSPRITES; i++, psp++)
+   for(i = 0, psp = vd->psprites; i < NUMPSPRITES; i++, psp++)
    {
       if(psp->state)
          R_PrepPSprite(psp);

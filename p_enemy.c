@@ -374,7 +374,7 @@ newtarget:
 		
 	if (!allaround)
 	{
-		an = R_PointToAngle2 (actor->x, actor->y, 
+		an = R_PointToAngle (actor->x, actor->y, 
 		mo->x, mo->y) - actor->angle;
 		if (an > ANG90 && an < ANG270)
 		{
@@ -589,7 +589,7 @@ void A_FaceTarget (mobj_t *actor)
 		return;
 	actor->flags &= ~MF_AMBUSH;
 	
-	actor->angle = R_PointToAngle2 (actor->x, actor->y
+	actor->angle = R_PointToAngle (actor->x, actor->y
 	, actor->target->x, actor->target->y);
 }
 
@@ -834,7 +834,7 @@ void A_Tracer (mobj_t *actor)
 		return;
 
 	// change angle	
-	exact = R_PointToAngle2 (actor->x, actor->y, dest->x, dest->y);
+	exact = R_PointToAngle (actor->x, actor->y, dest->x, dest->y);
 
 	if (exact != actor->angle)
 	{

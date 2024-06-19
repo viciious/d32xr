@@ -110,7 +110,7 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
 
     hyp = R_PointToDist(x1, y1);
 
-    normalangle = R_PointToAngle2(x1, y1, x2, y2);
+    normalangle = R_PointToAngle(x1, y1, x2, y2);
     normalangle += ANG90;
     offsetangle = normalangle - angle1;
 

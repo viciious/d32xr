@@ -563,7 +563,7 @@ void A_Punch (player_t *player, pspdef_t *psp)
 	if (linetarget)
 	{
 		S_StartSound (player->mo, sfx_punch);
-		player->mo->angle = R_PointToAngle2 (player->mo->x, player->mo->y,
+		player->mo->angle = R_PointToAngle (player->mo->x, player->mo->y,
 		linetarget->x, linetarget->y);
 	}
 }
@@ -597,7 +597,7 @@ void A_Saw (player_t *player, pspdef_t *psp)
 	S_StartSound (player->mo, sfx_sawhit);
 	
 /* turn to face target */
-	angle = R_PointToAngle2 (player->mo->x, player->mo->y,
+	angle = R_PointToAngle (player->mo->x, player->mo->y,
 		linetarget->x, linetarget->y);
 	if (angle - player->mo->angle > ANG180)
 	{
