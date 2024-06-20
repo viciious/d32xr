@@ -185,6 +185,8 @@ dispatch
     JP      Z,end_data          ; end of sound data
     CP      $B0
     JP      Z,rf5c68_regwr      ; RF5C68 register write
+    CP      $B1
+    JP      Z,rf5c68_regwr      ; RF5C164 register write
 ; unsupported command
     JP      end_data
 
@@ -802,6 +804,8 @@ rf5c68_regwr_2:
 
     LD      A,(HL)
     CP      $B0
+    JP      Z,play_loop
+    CP      $B1
     JP      Z,play_loop
 
     CALL    rf5c68_action

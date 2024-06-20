@@ -59,8 +59,8 @@ static int vmg_find_rf5c68_dataofs(const uint8_t* data, int *len)
     while (data[0] == 0x67) {
         // data block
         int data_len = (data[3] << 0) | (data[4] << 8) | (data[5] << 16) | (data[6] << 24);
-        if (data[2] == 0xC0) {
-            // RF5C68 RAM Data
+        if (data[2] == 0xC0 || data[2] == 0xC1) {
+            // RF5C68 or RF5C164 RAM Data
             *len = data_len;
             return data + 7 - data_start;
         }
