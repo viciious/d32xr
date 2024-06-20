@@ -1579,7 +1579,7 @@ S_NULL,		// missilestate
 S_ARACH_PLEX,		// deathstate
 S_NULL,		// xdeathstate
 sfx_firxpl,		// deathsound
-50*FRACUNIT,		// speed
+25*FRACUNIT,		// speed
 13*FRACUNIT,		// radius
 8*FRACUNIT,		// height
 100,		// mass
