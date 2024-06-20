@@ -79,6 +79,7 @@ static void R_UpdateCache(void)
             maxplanemip = maxmip;
       }
 
+#ifndef POTATO_MODE
       {
         flattex_t *flat = &flatpixels[wall->floorpicnum];
 
@@ -104,6 +105,7 @@ static void R_UpdateCache(void)
             }
         }
       }
+#endif
    }
 
    for (i = 0; i < MIPLEVELS; i++) {

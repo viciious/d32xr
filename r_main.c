@@ -307,7 +307,11 @@ void R_SetDrawMode(void)
 		drawcolnpo2 = I_DrawColumnNPo2Low;
 		drawfuzzcol = I_DrawFuzzColumnLow;
 		drawcollow = I_DrawColumnLow;
+		#ifdef POTATO_MODE
+		drawspan = I_DrawSpanPotatoLow;
+		#else
 		drawspan = I_DrawSpanLow;
+		#endif
 	}
 	else
 	{
@@ -316,7 +320,11 @@ void R_SetDrawMode(void)
 		drawfuzzcol = I_DrawFuzzColumn;
 		drawspan = I_DrawSpan;
 		drawcollow = I_DrawColumnLow;
+		#ifdef POTATO_MODE
+		drawspan = I_DrawSpanPotato;
+		#else
 		drawspan = I_DrawSpan;
+		#endif
 	}
 
 #ifdef MARS

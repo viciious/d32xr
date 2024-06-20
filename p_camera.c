@@ -384,7 +384,7 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 	camdist = CAM_DIST;
 	camheight = 20 << FRACBITS;
 
-	if (P_AproxDistance(thiscam->x - mo->x, thiscam->y - mo->y) > camdist * 2)
+	if (P_AproxDistance(thiscam->x - mo->x, thiscam->y - mo->y) > camdist * 4)
 	{
 		// Camera is stuck, and the player has gone over twice as far away from it, so let's reset
 		P_ResetCamera(player, thiscam);

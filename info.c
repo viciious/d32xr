@@ -45,6 +45,9 @@ const char * const sprnames[NUMSPRITES] = {
 "TVRI",
 "TVSS",
 "YSPR",
+"GFZF",
+"GFZG",
+"GFZR",
 };
 
 void A_Chase(mobj_t *actor);

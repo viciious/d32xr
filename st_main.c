@@ -650,7 +650,7 @@ void ST_Drawer(void)
 	if (debugmode == DEBUGMODE_NODRAW)
 		return;
 
-		return;
+	return;
 
 	y[consoleplayer] = I_FrameBufferHeight() - sbar_height;
 	y[consoleplayer^1] = 0;

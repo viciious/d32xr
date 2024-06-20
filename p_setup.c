@@ -560,10 +560,6 @@ void P_GroupLines (void)
 			M_AddToBox (bbox, vertexes[li->v2].x, vertexes[li->v2].y);
 		}
 
-		/* set the degenmobj_t to the middle of the bounding box */
-		sector->soundorg[0] = ((bbox[BOXRIGHT]+bbox[BOXLEFT])/2) >> FRACBITS;
-		sector->soundorg[1] = ((bbox[BOXTOP]+bbox[BOXBOTTOM])/2) >> FRACBITS;
-		
 		/* adjust bounding box to map blocks */
 		block = (bbox[BOXTOP]-bmaporgy+MAXRADIUS)>>MAPBLOCKSHIFT;
 		block = block >= bmapheight ? bmapheight-1 : block;

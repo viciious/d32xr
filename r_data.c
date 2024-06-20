@@ -7,8 +7,6 @@
 #include "mars.h"
 #endif
 
-boolean	spr_rotations;
-
 VINT		firstflat, numflats, col2flat;
 
 VINT		firstsprite, numsprites;
@@ -665,8 +663,6 @@ void R_InitSpriteDefs(const char** namelist)
 	int 	totallumps;
 	VINT 	*lumps;
 
-	spr_rotations = false;
-
 	if (firstsprite < 0)
 	{
 		start = 0;
@@ -754,7 +750,6 @@ void R_InitSpriteDefs(const char** namelist)
 							"is missing rotations",
 							spritename, frame + 'A');
 				totallumps += 8;
-				spr_rotations = true;
 				break;
 			}
 		}

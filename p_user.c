@@ -473,10 +473,10 @@ void P_MovePlayer (player_t *player)
 	/* don't let the player control movement if not onground */
 	onground = (player->mo->z <= player->mo->floorz);
 	
-	if (player->forwardmove && onground)
-		P_Thrust (player, player->mo->angle, player->forwardmove);
-	if (player->sidemove && onground)
-		P_Thrust (player, player->mo->angle-ANG90, player->sidemove);
+	if (player->forwardmove)
+		P_Thrust (player, player->mo->angle, player->forwardmove*2);
+	if (player->sidemove)
+		P_Thrust (player, player->mo->angle-ANG90, player->sidemove*2);
 
 	if ( (player->forwardmove || player->sidemove) 
 	&& (player->mo->state >= S_PLAY_STND && player->mo->state <= S_PLAY_TAP2) )
@@ -715,6 +715,7 @@ ticphase = 23;
 		{
 			P_UseLines (player);
 			player->usedown = true;
+			player->mo->momz = 16 << FRACBITS;
 		}
 	}
 	else

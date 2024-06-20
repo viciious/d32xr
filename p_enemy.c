@@ -396,23 +396,6 @@ void A_Look (mobj_t *actor)
 
 /* if the sector has a living soundtarget, make that the new target */
 	actor->threshold = 0;		/* any shot will wake up */
-	targ = actor->subsector->sector->soundtarget;
-	if (targ && (targ->flags & MF_SHOOTABLE))
-	{
-		/* ambush guys will turn around on a shot */
-		if ((actor->flags & (MF_AMBUSH|MF_SEETARGET)) == MF_AMBUSH)
-		{
-			if (actor->target != targ)
-			{
-				actor->target = targ;
-				return;
-			}
-		}
-		else
-		{
-			goto seeyou;
-		}
-	}
 
 	if (!P_LookForPlayers (actor, false) )
 		return;
@@ -489,8 +472,7 @@ void A_Chase (mobj_t *actor)
 	}
 
 	if (!actor->target || !(actor->target->flags&MF_SHOOTABLE)
-		|| (netgame && !actor->threshold && !(actor->flags & MF_SEETARGET) 
-			&& actor->target != actor->subsector->sector->soundtarget))
+		|| (netgame && !actor->threshold && !(actor->flags & MF_SEETARGET)))
 	{	/* look for a new target */
 		if (P_LookForPlayers(actor,true))
 			return;		/* got a new target */

@@ -108,7 +108,6 @@ void P_StartButton(line_t *line,bwhere_e w,int texture,int time,mobj_t *soundord
 			buttonlist[i].where = w;
 			buttonlist[i].btexture = texture;
 			buttonlist[i].btimer = time;
-			buttonlist[i].soundorg = soundord;
 			return;
 		}
 
@@ -127,8 +126,6 @@ void P_ChangeSwitchTexture(line_t *line,int useAgain)
 	int	texMid;
 	int	texBot;
 	int	i;
-	int	sound;
-	mobj_t *soundorg = (void *)LD_FRONTSECTOR(line);
 
 	if (!useAgain)
 		line->special = 0;
@@ -137,35 +134,22 @@ void P_ChangeSwitchTexture(line_t *line,int useAgain)
 	texMid = sides[line->sidenum[0]].midtexture;
 	texBot = sides[line->sidenum[0]].bottomtexture;
 	
-	sound = sfx_swtchn;
-	if (line->special == 11)		/* EXIT SWITCH? */
-		sound = sfx_swtchx;
-	
 	for (i = 0;i < numswitches*2;i++)
 		if (switchlist[i] == texTop)
 		{
-			S_StartPositionedSound(soundorg,sound,&P_SectorOrg);
 			sides[line->sidenum[0]].toptexture = switchlist[i^1];
-			if (useAgain)
-				P_StartButton(line,top,switchlist[i],BUTTONTIME,soundorg);
 			return;
 		}
 		else
 		if (switchlist[i] == texMid)
 		{
-			S_StartPositionedSound(soundorg,sound,&P_SectorOrg);
 			sides[line->sidenum[0]].midtexture = switchlist[i^1];
-			if (useAgain)
-				P_StartButton(line, middle,switchlist[i],BUTTONTIME,soundorg);
 			return;
 		}
 		else
 		if (switchlist[i] == texBot)
 		{
-			S_StartPositionedSound(soundorg,sound,&P_SectorOrg);
 			sides[line->sidenum[0]].bottomtexture = switchlist[i^1];
-			if (useAgain)
-				P_StartButton(line, bottom,switchlist[i],BUTTONTIME,soundorg);
 			return;
 		}
 }

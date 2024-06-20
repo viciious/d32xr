@@ -166,7 +166,6 @@ typedef enum
 typedef struct
 {
 	line_t		*line;
-	mobj_t* soundorg;
 	VINT		btexture;
 	VINT		btimer;
 	bwhere_e	where;
