@@ -930,7 +930,7 @@ S_NULL,		// missilestate
 S_TRACEEXP1,		// deathstate
 S_NULL,		// xdeathstate
 sfx_barexp,		// deathsound
-10*FRACUNIT,		// speed
+15*FRACUNIT,		// speed
 11*FRACUNIT,		// radius
 8*FRACUNIT,		// height
 100,		// mass
