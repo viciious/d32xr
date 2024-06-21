@@ -126,7 +126,7 @@ static void R_UpdateCache(void)
    for (i = 0; i < MIPLEVELS; i++) {
       int id;
       void **data, **pdata;
-      unsigned w, h, m, pixels;
+      unsigned w = 64, h = 64, m, pixels;
       boolean masked = false;
 
       id = bestmips[i];
@@ -140,7 +140,6 @@ static void R_UpdateCache(void)
         flattex_t *flat = &flatpixels[id - numtextures];
         data = (void **)flat->data;
         pdata = (void**)&data[i];
-        w = h = 64;
         pixels = w * h;
       } else {
         texture_t* tex = &textures[id];
