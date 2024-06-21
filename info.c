@@ -1554,7 +1554,7 @@ S_NULL,		/* missilestate */
 S_BFGLAND,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_rxplod,		/* deathsound */
-30*FRACUNIT,		/* speed */
+35*FRACUNIT,		/* speed */
 13*FRACUNIT,		/* radius */
 8*FRACUNIT,		/* height */
 100,		/* mass */
