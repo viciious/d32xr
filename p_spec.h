@@ -222,7 +222,7 @@ typedef struct
 	VINT		type;
 } plat_t;
 
-#define	PLATWAIT	3*2/THINKERS_TICS			/* seconds */
+#define	PLATWAIT	3/THINKERS_TICS			/* seconds */
 #define	PLATSPEED	(FRACUNIT*THINKERS_TICS)
 #define	MAXPLATS	30
 
@@ -267,8 +267,8 @@ typedef struct
 	VINT		topcountdown;	/* when it reaches 0, start going down */
 } vldoor_t;
 	
-#define	VDOORSPEED	FRACUNIT*3*THINKERS_TICS
-#define	VDOORWAIT		140/THINKERS_TICS
+#define	VDOORSPEED	FRACUNIT*2*THINKERS_TICS
+#define	VDOORWAIT		150/THINKERS_TICS
 
 void	EV_VerticalDoor (line_t *line, mobj_t *thing);
 int		EV_DoLockedDoor(line_t* line, vldoor_e type, mobj_t* thing);

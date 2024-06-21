@@ -106,9 +106,9 @@ typedef int fixed_t;
 #endif
 
 #ifdef THINKERS_30HZ
-#define THINKERS_TICS 1
-#else
 #define THINKERS_TICS 2
+#else
+#define THINKERS_TICS 4
 #endif
 
 #define	ANG45	0x20000000
