@@ -217,7 +217,7 @@ static boolean PA_ShootThing(shootWork_t *sw, mobj_t *th, fixed_t interceptfrac)
    // check angles to see if the thing can be aimed at
    dist = FixedMul(sw->attackrange, interceptfrac);
    
-   thingaimtopslope = FixedDiv(th->z + th->height - sw->shootz, dist);
+   thingaimtopslope = FixedDiv(th->z + (th->theight << FRACBITS) - sw->shootz, dist);
    if(thingaimtopslope < sw->aimbottomslope)
       return true; // shot over the thing
 
@@ -298,17 +298,19 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
       // check a corner to corner cross-section for hit
       if(sw->shootdivpositive)
       {
-         tv1.x = thing->x - thing->radius;
-         tv1.y = thing->y + thing->radius;
-         tv2.x = thing->x + thing->radius;
-         tv2.y = thing->y - thing->radius;
+         const fixed_t radius = mobjinfo[thing->type].radius;
+         tv1.x = thing->x - radius;
+         tv1.y = thing->y + radius;
+         tv2.x = thing->x + radius;
+         tv2.y = thing->y - radius;
       }
       else
       {
-         tv1.x = thing->x - thing->radius;
-         tv1.y = thing->y - thing->radius;
-         tv2.x = thing->x + thing->radius;
-         tv2.y = thing->y + thing->radius;
+         const fixed_t radius = mobjinfo[thing->type].radius;
+         tv1.x = thing->x - radius;
+         tv1.y = thing->y - radius;
+         tv2.x = thing->x + radius;
+         tv2.y = thing->y + radius;
       }
 
       frac = PA_SightCrossLine(sw, &tv1, &tv2);
@@ -436,7 +438,7 @@ void P_Shoot2(lineattack_t *la)
    sw.shooty2     = t1->y + (la->attackrange >> FRACBITS) * finesine(angle);
    sw.shootdiv.dx = sw.shootx2 - sw.shootdiv.x;
    sw.shootdiv.dy = sw.shooty2 - sw.shootdiv.y;
-   sw.shootz      = t1->z + (t1->height >> 1) + 8*FRACUNIT;
+   sw.shootz      = t1->z + ((t1->theight >> 1) << FRACBITS) + 8*FRACUNIT;
 
    sw.shootdivpositive = (sw.shootdiv.dx ^ sw.shootdiv.dy) > 0;
 

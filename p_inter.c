@@ -142,7 +142,7 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 	int			sound;
 		
 	delta = special->z - toucher->z;
-	if (delta > toucher->height || delta < -8*FRACUNIT)
+	if (delta > (toucher->theight << FRACBITS) || delta < -8*FRACUNIT)
 		return;			/* out of reach */
 	
 	sound = sfx_itemup;	
@@ -194,7 +194,6 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 	const mobjinfo_t* targinfo = &mobjinfo[target->type];
 
 	target->flags &= ~(MF_SHOOTABLE|MF_FLOAT);
-	target->height >>= 2;
 	
 	if (target->player)
 	{

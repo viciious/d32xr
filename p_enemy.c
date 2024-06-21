@@ -566,7 +566,7 @@ void A_SkullAttack (mobj_t *actor)
 	dist = dist / SKULLSPEED;
 	if (dist < 1)
 		dist = 1;
-	actor->momz = (dest->z+(dest->height>>1) - actor->z) / dist;
+	actor->momz = (dest->z+(dest->theight<<(FRACBITS-1)) - actor->z) / dist;
 }
 
 void A_Scream (mobj_t *actor)

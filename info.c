@@ -148,6 +148,31 @@ sfx_None,		/* activesound */
 MF_SOLID|MF_SHOOTABLE		/* flags */
  },
 
+ {		/* MT_CAMERA */
+-1,		/* doomednum */
+S_NULL,		/* spawnstate */
+20,		/* spawnhealth */
+S_NULL,		/* seestate */
+sfx_None,		/* seesound */
+8,		/* reactiontime */
+sfx_None,		/* attacksound */
+S_NULL,		/* painstate */
+200,		/* painchance */
+sfx_None,		/* painsound */
+0,		/* meleestate */
+S_NULL,		/* missilestate */
+S_NULL,		/* deathstate */
+S_NULL,		/* xdeathstate */
+sfx_None,		/* deathsound */
+8,		/* speed */
+20*FRACUNIT,		/* radius */
+16*FRACUNIT,		/* height */
+100,		/* mass */
+0,		/* damage */
+sfx_None,		/* activesound */
+0		/* flags */
+ },
+
 {		/* MT_POSSESSED */
 100,		/* doomednum */
 S_POSS_STND,		/* spawnstate */
@@ -195,7 +220,7 @@ MF_SOLID|MF_SHOOTABLE		/* flags */
 	100,            // mass
 	0,              // damage
 	sfx_None,       // activesound
-	MF_SPECIAL|MF_NOGRAVITY, // flags
+	MF_SPECIAL|MF_NOGRAVITY|MF_STATIC, // flags
 }
 };
 

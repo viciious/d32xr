@@ -218,7 +218,7 @@ typedef struct mobj_s
 	fixed_t			floorz, ceilingz;	/* closest together of contacted secs */
 
 	VINT		flags;
-	fixed_t			radius, height;		/* for movement checking */
+	VINT        theight;
 
 	/* STATIC OBJECTS END HERE */
 	unsigned char	movedir;		/* 0-7 */
@@ -240,7 +240,7 @@ typedef struct degenmobj_s
 	void 			*prev, *next;
 } degenmobj_t;
 
-#define static_mobj_size (offsetof(mobj_t,momx))
+#define static_mobj_size (offsetof(mobj_t,movedir))
 
 /* */
 /* frame flags */

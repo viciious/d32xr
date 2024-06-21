@@ -67,7 +67,7 @@ static boolean PB_CheckThing(mobj_t *thing, pmovetest_t *mt)
       return true; // not blocking
 
    mo = mt->checkthing;
-   blockdist = thing->radius + mo->radius;
+   blockdist = mobjinfo[thing->type].radius + mobjinfo[mo->type].radius;
 
    delta = thing->x - mt->testx;
    if(delta < 0)
@@ -94,9 +94,9 @@ static boolean PB_CheckThing(mobj_t *thing, pmovetest_t *mt)
    // missiles can hit other things
    if(mt->testflags & MF_MISSILE)
    {
-      if(mo->z > thing->z + thing->height)
+      if(mo->z > thing->z + (thing->theight << FRACBITS))
          return true; // went over
-      if(mo->z + mo->height < thing->z)
+      if(mo->z + (mo->theight << FRACBITS) < thing->z)
          return true; // went underneath
       if(mo->target->type == thing->type) // don't hit same species as originator
       {
@@ -240,10 +240,10 @@ static boolean PB_CheckPosition(pmovetest_t *mt)
 
    mt->testflags = mo->flags;
 
-   mt->testbbox[BOXTOP   ] = mt->testy + mo->radius;
-   mt->testbbox[BOXBOTTOM] = mt->testy - mo->radius;
-   mt->testbbox[BOXRIGHT ] = mt->testx + mo->radius;
-   mt->testbbox[BOXLEFT  ] = mt->testx - mo->radius;
+   mt->testbbox[BOXTOP   ] = mt->testy + mobjinfo[mo->type].radius;
+   mt->testbbox[BOXBOTTOM] = mt->testy - mobjinfo[mo->type].radius;
+   mt->testbbox[BOXRIGHT ] = mt->testx + mobjinfo[mo->type].radius;
+   mt->testbbox[BOXLEFT  ] = mt->testx - mobjinfo[mo->type].radius;
 
    // the base floor / ceiling is from the subsector that contains the point.
    // Any contacted lines the step closer together will adjust them.
@@ -313,14 +313,12 @@ static boolean PB_TryMove(pmovetest_t *mt, mobj_t *mo, fixed_t tryx, fixed_t try
    if(!PB_CheckPosition(mt))
       return false; // solid wall or thing
 
-   if(mt->testceilingz - mt->testfloorz < mo->height)
+   if(mt->testceilingz - mt->testfloorz < (mo->theight << FRACBITS))
       return false; // doesn't fit
-   if(mt->testceilingz - mo->z < mo->height)
+   if(mt->testceilingz - mo->z < (mo->theight << FRACBITS))
       return false; // mobj must lower itself to fit
    if(mt->testfloorz - mo->z > 24*FRACUNIT)
       return false; // too big a step up
-   if(!(mt->testflags & MF_FLOAT) && mt->testfloorz - mt->testdropoffz > 24*FRACUNIT)
-      return false; // don't stand over a dropoff
 
    // the move is ok, so link the thing into its new position
    P_UnsetThingPosition(mo);
@@ -419,7 +417,7 @@ static void P_FloatChange(mobj_t *mo)
    fixed_t dist, delta;
 
    target = mo->target;                              // get the target object
-   delta  = (target->z + (mo->height >> 1)) - mo->z; // get the height difference
+   delta  = (target->z + (mo->theight >> (FRACBITS-1))) - mo->z; // get the height difference
    
    dist   = P_AproxDistance(target->x - mo->x, target->y - mo->y);
    delta *= 3;
@@ -468,11 +466,11 @@ void P_ZMovement(mobj_t *mo)
          mo->momz -= gravity/2;
    }
 
-   if(mo->z + mo->height > mo->ceilingz)
+   if(mo->z + (mo->theight << FRACBITS) > mo->ceilingz)
    {
       if(mo->momz > 0)
          mo->momz = 0;
-      mo->z = mo->ceilingz - mo->height; // hit the ceiling
+      mo->z = mo->ceilingz - (mo->theight << FRACBITS); // hit the ceiling
 
       if(mo->flags & MF_MISSILE)
          mo->latecall = P_ExplodeMissile;

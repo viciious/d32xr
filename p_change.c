@@ -58,11 +58,11 @@ boolean P_ThingHeightClip (mobj_t *thing)
 		thing->z = thing->floorz;
 	else
 	{	/* don't adjust a floating monster unless forced to */
-		if (thing->z+thing->height > thing->ceilingz)
-			thing->z = thing->ceilingz - thing->height;
+		if (thing->z+(thing->theight<<FRACBITS) > thing->ceilingz)
+			thing->z = thing->ceilingz - (thing->theight<<FRACBITS);
 	}
 	
-	if (thing->ceilingz - thing->floorz < thing->height)
+	if (thing->ceilingz - thing->floorz < (thing->theight<<FRACBITS))
 		return false;
 		
 	return true;

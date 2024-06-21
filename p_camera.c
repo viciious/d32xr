@@ -71,10 +71,11 @@ static boolean PM_CameraCheckPosition(pmovework_t *mw)
 
    mw->tmflags = tmthing->flags;
 
-   mw->tmbbox[BOXTOP   ] = mw->tmy + tmthing->radius;
-   mw->tmbbox[BOXBOTTOM] = mw->tmy - tmthing->radius;
-   mw->tmbbox[BOXRIGHT ] = mw->tmx + tmthing->radius;
-   mw->tmbbox[BOXLEFT  ] = mw->tmx - tmthing->radius;
+   const fixed_t tradius = mobjinfo[tmthing->type].radius;
+   mw->tmbbox[BOXTOP   ] = mw->tmy + tradius;
+   mw->tmbbox[BOXBOTTOM] = mw->tmy - tradius;
+   mw->tmbbox[BOXRIGHT ] = mw->tmx + tradius;
+   mw->tmbbox[BOXLEFT  ] = mw->tmx - tradius;
 
    mw->newsubsec = R_PointInSubsector(mw->tmx, mw->tmy);
 
@@ -156,10 +157,10 @@ static boolean P_CameraTryMove2(ptrymove_t *tm, boolean checkposonly)
 
    if(!(tmthing->flags & MF_NOCLIP))
    {
-      if(mw.tmceilingz - mw.tmfloorz < tmthing->height)
+      if(mw.tmceilingz - mw.tmfloorz < (tmthing->theight << FRACBITS))
          return false; // doesn't fit
       tm->floatok = true;
-      if(mw.tmceilingz - tmthing->z < tmthing->height)
+      if(mw.tmceilingz - tmthing->z < (tmthing->theight << FRACBITS))
          return false; // mobj must lower itself to fit
       if(mw.tmfloorz - tmthing->z > 24*FRACUNIT)
          return false; // too big a step up
@@ -280,8 +281,8 @@ static void P_CameraThinker(player_t *player, camera_t *thiscam)
 		mo.momx = thiscam->momx;
 		mo.momy = thiscam->momy;
 		mo.momz = thiscam->momz;
-		mo.radius = CAM_RADIUS;
-		mo.height = CAM_HEIGHT;
+		mo.theight = CAM_HEIGHT >> FRACBITS;
+      mo.type = MT_CAMERA;
 		sm.slidething = &mo;
 
 		P_CameraSlideMove(&sm);
@@ -345,7 +346,7 @@ camwrapup:
 
 			thiscam->z = thiscam->ceilingz - CAM_HEIGHT;
 
-			if (thiscam->z + CAM_HEIGHT < player->mo->z - player->mo->height)
+			if (thiscam->z + CAM_HEIGHT < player->mo->z - (player->mo->theight << FRACBITS))
 			{
 				// Camera got stuck below the player
 				P_ResetCamera(player, thiscam);

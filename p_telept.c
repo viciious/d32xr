@@ -22,7 +22,7 @@ void P_Telefrag (mobj_t *thing, fixed_t x, fixed_t y)
 	{
 		if (!(m->flags & MF_SHOOTABLE) )
 			continue;		/* not shootable */
-		size = m->radius + thing->radius + 4*FRACUNIT;
+		size = mobjinfo[m->type].radius + mobjinfo[thing->type].radius + 4*FRACUNIT;
 		delta = m->x - x;
 		if (delta < - size || delta > size)
 			continue;

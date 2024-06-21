@@ -51,7 +51,7 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
    if(!(thing->flags & (MF_SOLID|MF_SPECIAL|MF_SHOOTABLE)))
       return true;
 
-   blockdist = thing->radius + tmthing->radius;
+   blockdist = mobjinfo[thing->type].radius + mobjinfo[tmthing->type].radius;
    
    delta = thing->x - mw->tmx;
    if(delta < 0)
@@ -82,9 +82,9 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
    // missiles can hit other things
    if(tmthing->flags & MF_MISSILE)
    {
-      if(tmthing->z > thing->z + thing->height)
+      if(tmthing->z > thing->z + (thing->theight << FRACBITS))
          return true; // went overhead
-      if(tmthing->z + tmthing->height < thing->z)
+      if(tmthing->z + (tmthing->theight << FRACBITS) < thing->z)
          return true; // went underneath
       if(tmthing->target->type == thing->type) // don't hit same species as originator
       {
@@ -252,10 +252,10 @@ static boolean PM_CheckPosition(pmovework_t *mw)
 
    mw->tmflags = tmthing->flags;
 
-   mw->tmbbox[BOXTOP   ] = mw->tmy + tmthing->radius;
-   mw->tmbbox[BOXBOTTOM] = mw->tmy - tmthing->radius;
-   mw->tmbbox[BOXRIGHT ] = mw->tmx + tmthing->radius;
-   mw->tmbbox[BOXLEFT  ] = mw->tmx - tmthing->radius;
+   mw->tmbbox[BOXTOP   ] = mw->tmy + mobjinfo[tmthing->type].radius;
+   mw->tmbbox[BOXBOTTOM] = mw->tmy - mobjinfo[tmthing->type].radius;
+   mw->tmbbox[BOXRIGHT ] = mw->tmx + mobjinfo[tmthing->type].radius;
+   mw->tmbbox[BOXLEFT  ] = mw->tmx - mobjinfo[tmthing->type].radius;
 
    mw->newsubsec = R_PointInSubsector(mw->tmx, mw->tmy);
 
@@ -382,15 +382,13 @@ boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly)
 
    if(!(tmthing->flags & MF_NOCLIP))
    {
-      if(mw.tmceilingz - mw.tmfloorz < tmthing->height)
+      if(mw.tmceilingz - mw.tmfloorz < (tmthing->theight << FRACBITS))
          return false; // doesn't fit
       tm->floatok = true;
-      if(!(tmthing->flags & MF_TELEPORT) && mw.tmceilingz - tmthing->z < tmthing->height)
+      if(!(tmthing->flags & MF_TELEPORT) && mw.tmceilingz - tmthing->z < (tmthing->theight << FRACBITS))
          return false; // mobj must lower itself to fit
       if(!(tmthing->flags & MF_TELEPORT) && mw.tmfloorz - tmthing->z > 24*FRACUNIT)
          return false; // too big a step up
-      if(!(tmthing->flags & MF_FLOAT) && mw.tmfloorz - mw.tmdropoffz > 24*FRACUNIT)
-         return false; // don't stand over a dropoff
    }
 
    // the move is ok, so link the thing into its new position.

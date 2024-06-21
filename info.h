@@ -126,6 +126,7 @@ extern const char * const sprnames[NUMSPRITES];
 
 typedef enum {
 MT_PLAYER,
+MT_CAMERA,
 MT_POSSESSED,
 MT_RING,
 NUMMOBJTYPES
