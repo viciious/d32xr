@@ -929,7 +929,7 @@ static void Player0Setup (void)
 
 	idbyte[0] = 0xFF;
 	idbyte[1] = startmap;
-	idbyte[2] = startskill + 8*starttype;
+	idbyte[2] = 8*starttype;
 
 	stage = 0;
 	start = Mars_GetTicCount();
@@ -1009,7 +1009,6 @@ static void Player1Setup (void)
 
 	startmap = idbyte[1];
 	starttype = idbyte[2] / 8;
-	startskill = idbyte[2] & 7;
 
 	Mars_PutNetByte(CONN_MAGIC ^ 0xFF);	/* send an acknowledge byte */
 	Mars_PutNetByte(CONN_MAGIC ^ 0xFF);	/* send another acknowledge byte */

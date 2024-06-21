@@ -187,47 +187,6 @@ int EV_DoDoor (line_t *line, vldoor_e  type)
 /*================================================================== */
 int EV_DoLockedDoor(line_t* line, vldoor_e type, mobj_t* thing)
 {
-	player_t* player;
-	int			pnum;
-
-/* */
-/*	Check for locks */
-/* */
-	player = thing->player ? &players[thing->player - 1] : NULL;
-	pnum = player ? player - players : 0;
-	if (!player)
-		return 0;
-
-	switch (line->special)
-	{
-	case 99:		/* Blue Skull Lock */
-	case 133:
-		if (!player->cards[it_bluecard] && !player->cards[it_blueskull])
-		{
-			S_StartSound(thing, sfx_oof);
-			stbar[pnum].tryopen[it_bluecard] = true;
-			return 0;
-		}
-		break;
-	case 134:		/* Red Card Lock */
-	case 135:
-		if (!player->cards[it_redcard] && !player->cards[it_redskull])
-		{
-			S_StartSound(thing, sfx_oof);
-			stbar[pnum].tryopen[it_redcard] = true;
-			return 0;
-		}
-		break;
-	case 136:		/* Yellow Card Lock */
-	case 137:
-		if (!player->cards[it_yellowcard] && !player->cards[it_yellowskull])
-		{
-			S_StartSound(thing, sfx_oof);
-			stbar[pnum].tryopen[it_yellowcard] = true;
-			return 0;
-		}
-		break;
-	}
 	return EV_DoDoor(line, type);
 }
 
@@ -238,8 +197,6 @@ int EV_DoLockedDoor(line_t* line, vldoor_e type, mobj_t* thing)
 /*================================================================== */
 void EV_VerticalDoor (line_t *line, mobj_t *thing)
 {
-	player_t		*player;
-	int				pnum = 0;
 	int				secnum;
 	sector_t		*sec;
 	vldoor_t		*door;
@@ -249,46 +206,6 @@ void EV_VerticalDoor (line_t *line, mobj_t *thing)
 /* */
 /*	Check for locks */
 /* */
-	player = thing->player ? &players[thing->player - 1] : NULL;
-	pnum = player ? player - players : 0;
-
-	switch(line->special)
-	{
-		case 26:		/* Blue Card Lock */
-		case 32:
-			if (!player)
-				return;
-			if (!player->cards[it_bluecard] && !player->cards[it_blueskull])
-			{
-				S_StartSound(thing,sfx_oof);
-				stbar[pnum].tryopen[it_bluecard] = true;
-				return;
-			}
-			break;
-		case 27:		/* Yellow Card Lock */
-		case 34:
-			if (!player)
-				return;
-			if (!player->cards[it_yellowcard] && !player->cards[it_yellowskull])
-			{
-				S_StartSound(thing,sfx_oof);
-				stbar[pnum].tryopen[it_yellowcard] = true;
-				return;
-			}
-			break;
-		case 28:		/* Red Card Lock */
-		case 33:
-			if (!player)
-				return;
-			if (!player->cards[it_redcard] && !player->cards[it_redskull])
-			{
-				S_StartSound(thing,sfx_oof);
-				stbar[pnum].tryopen[it_redcard] = true;
-				return;
-			}
-			break;
-	}
-	
 	if (line->sidenum[side ^ 1] < 0)
 	{
 		I_Error("EV_VerticalDoor: DR special type on 1-sided linedef");

@@ -7,11 +7,6 @@
 
 #define	BONUSADD		4
 
-/* a weapon is found with two clip loads, a big item has five clip loads */
-VINT		maxammo[NUMAMMO] = {200, 50, 300, 50};
-VINT		clipammo[NUMAMMO] = {10, 4, 20, 1};
-
-
 /*
 ===============================================================================
 
@@ -19,125 +14,6 @@ VINT		clipammo[NUMAMMO] = {10, 4, 20, 1};
 
 ===============================================================================
 */
-
-/* 
-=================== 
-= 
-= P_GiveAmmo
-=
-= Num is the number of clip loads, not the individual count (0= 1/2 clip)
-= Returns false if the ammo can't be picked up at all
-=================== 
-*/ 
-
-boolean P_GiveAmmo (player_t *player, ammotype_t ammo, int num)
-{
-	int		oldammo;
-	
-	if (ammo == am_noammo)
-		return false;
-		
-	if (ammo > NUMAMMO)
-		I_Error ("P_GiveAmmo: bad type %i", ammo);
-		
-	if ( player->ammo[ammo] == player->maxammo[ammo]  )
-		return false;
-			
-	if (num)
-		num *= clipammo[ammo];
-	else
-		num = clipammo[ammo]/2;
-	if (gameskill == sk_baby)
-		num <<= 1;			/* give double ammo in trainer mode */
-		
-	oldammo = player->ammo[ammo];
-	player->ammo[ammo] += num;
-	if (player->ammo[ammo] > player->maxammo[ammo])
-		player->ammo[ammo] = player->maxammo[ammo];
-	
-	if (oldammo)
-		return true;		/* don't change up weapons, player was lower on */
-							/* purpose */
-
-	switch (ammo)
-	{
-	case am_clip:
-		if (player->readyweapon == wp_fist)
-		{
-			if (player->weaponowned[wp_chaingun])
-				player->pendingweapon = wp_chaingun;
-			else
-				player->pendingweapon = wp_pistol;
-		}
-		break;
-	case am_shell:
-		if (player->readyweapon == wp_fist || player->readyweapon == wp_pistol)
-		{
-			if (player->weaponowned[wp_shotgun])
-				player->pendingweapon = wp_shotgun;
-		}
-		break;
-	case am_cell:
-		if (player->readyweapon == wp_fist || player->readyweapon == wp_pistol)
-		{
-			if (player->weaponowned[wp_plasma])
-				player->pendingweapon = wp_plasma;
-		}
-		break;
-	case am_misl:
-		if (player->readyweapon == wp_fist)
-		{
-			if (player->weaponowned[wp_missile])
-				player->pendingweapon = wp_missile;
-		}
-	default:
-		break;
-	}
-	
-	return true;
-}
-
-
-/* 
-=================== 
-= 
-= P_GiveWeapon
-=
-= The weapon name may have a MF_DROPPED flag ored in
-=================== 
-*/ 
-
-boolean P_GiveWeapon (player_t *player, weapontype_t weapon, boolean dropped)
-{
-	boolean		gaveammo, gaveweapon;
-	
-	if (netgame == gt_coop && !dropped)
-	{	/* leave placed weapons forever on cooperative net games */
-		if (player->weaponowned[weapon])
-			return false;
-		player->weaponowned[weapon] = true;
-		player->pendingweapon = weapon;
-		S_StartSound (player->mo, sfx_wpnup);
-		return false;
-	}
-	
-	gaveammo = false;
-	
-	if (player->weaponowned[weapon])
-		gaveweapon = false;
-	else
-	{
-		int pnum = player - players;
-		gaveweapon = true;
-		player->weaponowned[weapon] = true;
-		player->pendingweapon = weapon;
-		stbar[pnum].specialFace = f_gotgat;
-	}
-	
-	return gaveweapon || gaveammo;
-}
-
- 
  
 /* 
 =================== 
@@ -184,38 +60,6 @@ boolean P_GiveArmor (player_t *player, int armortype)
 	
 	return true;
 }
-
- 
-/* 
-=================== 
-= 
-= P_GiveCard
-=
-=================== 
-*/ 
-
-void P_GiveCard (player_t *player, card_t card)
-{
-	boolean allowkeysounds;
-	mobj_t* toucher = player->mo;
-
-	if (player->cards[card])
-		return;
-
-	/* allow keycard pickup sounds in single and splitscreen coop modes */
-	allowkeysounds = !netgame || (netgame == gt_coop && splitscreen);
-
-	if (player == &players[consoleplayer] ||
-		(splitscreen && player == &players[consoleplayer ^ 1]))
-		toucher = NULL;
-
-	if (allowkeysounds)
-		S_StartSound(toucher, sfx_itemup);
-
-	player->bonuscount = BONUSADD;
-	player->cards[card] = 1;
-}
-
  
 /* 
 =================== 
@@ -354,19 +198,7 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 	target->height >>= 2;
 	
 	if (target->player)
-	{	/* a frag of one sort or another */
-		if (!source || !source->player || source->player == target->player)
-		{	/* killed self somehow */
-			player_t* player = &players[target->player - 1];
-			player->frags--;
-			if (player->frags < 0)
-				player->frags = 0;
-		}
-		else 
-		{	/* killed by other player */
-			players[source->player - 1].frags++;
-		}
-		
+	{		
 		/* else just killed by a monster */
 	}
 	else if (source && source->player && (target->flags & MF_COUNTKILL) )
@@ -382,7 +214,7 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 		player_t* player = &players[target->player - 1];
 		target->flags &= ~MF_SOLID;
 		player->playerstate = PST_DEAD;
-		P_DropWeapon (player);
+
 		if (target->health < -50)
 		{
 			stbar[target->player - 1].gotgibbed = true;
@@ -446,14 +278,11 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 	player = target->player ? &players[target->player - 1] : NULL;
 	if (player)
 		pnum = player - players;
-	if (player && gameskill == sk_baby)
-		damage >>= 1;				/* take half damage in trainer mode */
 	
 /* */
 /* kick away unless using the chainsaw */
 /* */
-	if (inflictor && (!source || !source->player 
-		|| players[source->player - 1].readyweapon != wp_chainsaw))
+	if (inflictor && (!source || !source->player))
 	{
 		ang = R_PointToAngle2 ( inflictor->x, inflictor->y
 			,target->x, target->y);

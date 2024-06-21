@@ -11,15 +11,8 @@ extern boolean lowResMode;
 extern fixed_t centerXFrac, centerYFrac;
 extern fixed_t stretch;
 extern fixed_t stretchX;
-extern VINT weaponYpos;
-extern fixed_t weaponXScale;
 
 #define	PROJECTION			centerXFrac
-
-#define	PSPRITEXSCALE		FRACUNIT	
-#define	PSPRITEYSCALE		FRACUNIT
-#define	PSPRITEXISCALE		FRACUNIT
-#define	PSPRITEYISCALE		FRACUNIT
 
 #define	ANGLETOSKYSHIFT		22		/* sky map is 256*128*4 maps */
 
@@ -534,7 +527,7 @@ typedef struct vissprite_s
 
 #define	MAXVISSPRITES	MAXWALLCMDS
 
-#define	MAXOPENINGS		SCREENWIDTH*16
+#define	MAXOPENINGS		SCREENWIDTH*20
 
 #define	MAXVISSSEC		128
 

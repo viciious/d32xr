@@ -13,8 +13,6 @@ int16_t centerX, centerY;
 fixed_t centerXFrac, centerYFrac;
 fixed_t stretch;
 fixed_t stretchX;
-VINT weaponYpos;
-fixed_t weaponXScale;
 
 VINT anamorphicview = 0;
 VINT initmathtables = 2;
@@ -258,23 +256,14 @@ void R_SetViewportSize(int num)
 	if (anamorphicview)
 	{
 		stretch = ((FRACUNIT * 16 * height) / 180 * 28) / width;
-		//weaponXScale = 1050 * (lowResMode ? 1 : 2) * FRACUNIT / 1100;
-		weaponXScale = FRACUNIT * (lowResMode ? 1 : 2);
 	}
 	else
 	{
 		/* proper screen size would be 160*100, stretched to 224 is 2.2 scale */
 		//stretch = (fixed_t)((160.0f / width) * ((float)height / 180.0f) * 2.2f * FRACUNIT);
 		stretch = ((FRACUNIT * 16 * height) / 180 * 22) / width;
-		weaponXScale = FRACUNIT * (lowResMode ? 1 : 2);
 	}
 	stretchX = stretch * centerX;
-
-	weaponYpos = 180;
-	if (viewportHeight <= 128) {
-		weaponYpos = 144;
-	}
-	weaponYpos = (viewportHeight - weaponYpos) / 2;
 
 	initmathtables = 2;
 	clearscreen = 2;

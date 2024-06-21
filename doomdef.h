@@ -136,16 +136,6 @@ extern	const fixed_t		*finecosine_;
 
 #endif
 
-typedef enum
-{
-	sk_baby,
-	sk_easy,
-	sk_medium,
-	sk_hard,
-	sk_nightmare
-} skill_t;
-
-
 typedef enum 
 {
 	ga_nothing, 
@@ -320,71 +310,6 @@ typedef enum
 	PST_REBORN			/* ready to restart */
 } playerstate_t;
 
-
-/* psprites are scaled shapes directly on the view screen */
-/* coordinates are given for a 320*200 view screen */
-typedef enum
-{
-	ps_weapon,
-	ps_flash,
-	NUMPSPRITES
-} psprnum_t;
-
-typedef struct
-{
-	VINT	state;		/* a S_NULL state means not active */
-	VINT	tics;
-	fixed_t	sx, sy;
-} pspdef_t;
-
-typedef enum
-{
-	it_bluecard,
-	it_yellowcard,
-	it_redcard,
-	it_blueskull,
-	it_yellowskull,
-	it_redskull,
-	NUMCARDS
-} card_t;
-
-typedef enum
-{
-	wp_fist,
-	wp_pistol,
-	wp_shotgun,
-	wp_chaingun,
-	wp_missile,
-	wp_plasma,
-	wp_bfg,
-	wp_chainsaw,
-	NUMWEAPONS,
-	wp_nochange
-} weapontype_t;
-
-typedef enum
-{
-	am_clip,		/* pistol / chaingun */
-	am_shell,		/* shotgun */
-	am_cell,		/* BFG */
-	am_misl,		/* missile launcher */
-	NUMAMMO,
-	am_noammo		/* chainsaw / fist */
-} ammotype_t;
-
-
-typedef struct
-{
-	ammotype_t	ammo;
-	int			upstate;
-	int			downstate;
-	int			readystate;
-	int			atkstate;
-	int			flashstate;
-} weaponinfo_t;
-
-extern	const weaponinfo_t	weaponinfo[NUMWEAPONS];
-
 typedef enum
 {
 	pw_invulnerability,
@@ -426,18 +351,8 @@ typedef struct player_s
 	VINT		armorpoints, armortype;	/* armor type is 0-2 */
 	
 	VINT		powers[NUMPOWERS];		/* invinc and invis are tic counters	 */
-	char		cards[NUMCARDS];
-	char		backpack;
-	VINT		frags;					/* kills of other player */
-	VINT		readyweapon;
-	VINT		pendingweapon;		/* wp_nochange if not changing */
-	char		weaponowned[NUMWEAPONS];
-	VINT		ammo[NUMAMMO];
-	VINT		maxammo[NUMAMMO];
 	VINT		attackdown, usedown;	/* true if button down last tic */
 	VINT		cheats;					/* bit flags */
-	
-	VINT		refire;					/* refired shots are less accurate */
 	
 	VINT		killcount, itemcount, secretcount;		/* for intermission */
 	char		*message;				/* hint messages */
@@ -445,7 +360,6 @@ typedef struct player_s
 	mobj_t		*attacker;				/* who did damage (NULL for floors) */
 	VINT		extralight;				/* so gun flashes light up areas */
 	VINT		colormap;				/* 0-3 for which color to draw player */
-	pspdef_t	psprites[NUMPSPRITES];	/* view sprites (gun, etc) */
 	boolean		didsecret;				/* true if secret level has been done */
 	void		*lastsoundsector;		/* don't flood noise every time */
 	
@@ -458,11 +372,8 @@ typedef struct
 {
 	VINT		health;
 	VINT		armorpoints, armortype;
-	VINT		ammo[NUMAMMO];
-	VINT		maxammo[NUMAMMO];
 	VINT		cheats;
 	VINT		weapon;
-	char		weaponowned[NUMWEAPONS];
 	char		backpack;
 } playerresp_t;
 
@@ -527,10 +438,6 @@ extern	int			consoleplayer;		/* player taking events and displaying */
 extern	player_t	players[MAXPLAYERS];
 extern	playerresp_t	playersresp[MAXPLAYERS];
 
-extern	VINT		maxammo[NUMAMMO];
-
-
-extern	skill_t		gameskill;
 extern	int			totalkills, totalitems, totalsecret;	/* for intermission */
 extern	int			gamemaplump;
 extern	dmapinfo_t	gamemapinfo;
@@ -705,7 +612,6 @@ void D_DoomLoop (void);
 extern	boolean	demoplayback, demorecording;
 extern	unsigned *demo_p, *demobuffer;
 
-extern	skill_t		startskill;
 extern	int			startmap;
 extern	gametype_t	starttype;
 extern	int			startsave;
@@ -847,7 +753,7 @@ void I_DebugScreen (void);
 
 void G_DeathMatchSpawnPlayer (int playernum);
 void G_Init(void);
-void G_InitNew (skill_t skill, int map, gametype_t gametype, boolean splitscreen);
+void G_InitNew (int map, gametype_t gametype, boolean splitscreen);
 void G_ExitLevel (void);
 void G_SecretExitLevel (void);
 void G_WorldDone (void);
@@ -861,7 +767,7 @@ int G_LumpNumForMapNum(int map);
 /*PLAY */
 /*----- */
 
-void P_SetupLevel (int lumpnum, skill_t skill);
+void P_SetupLevel (int lumpnum);
 void P_Init (void);
 
 void P_Start (void);

@@ -21,7 +21,6 @@ typedef enum
 	mi_joingame,
 	mi_level,
 	mi_gamemode,
-	mi_difficulty,
 	mi_savelist,
 	mi_singleplayer,
 	mi_splitscreen,
@@ -98,7 +97,6 @@ static VINT currentplaymode = gt_single;
 static VINT currentgametype = mi_singleplayer;
 static VINT	cursorpos;
 static VINT screenpos;
-static VINT playerskill;
 
 static VINT saveslot;
 static VINT savecount;
@@ -190,7 +188,6 @@ void M_Start2 (boolean startup_)
 	/* HACK: dunno why but the pistol sound comes out muffled if played from M_Start */
 	/* so defer the playback until M_Ticker is called */
 	screenpos = startup ? ms_main : ms_none;
-	playerskill = startskill;
 	if (startup)
 		playermap = 1;
 
@@ -204,7 +201,7 @@ void M_Start2 (boolean startup_)
 	D_memset(mainitem, 0, sizeof(mainitem));
 
 	mainscreen[ms_new].firstitem = mi_level;
-	mainscreen[ms_new].numitems = mi_difficulty - mainscreen[ms_new].firstitem + 1;
+	mainscreen[ms_new].numitems = mi_gamemode - mainscreen[ms_new].firstitem + 1;
 
 	mainscreen[ms_load].firstitem = mi_savelist;
 	mainscreen[ms_load].numitems = 1;
@@ -250,11 +247,6 @@ void M_Start2 (boolean startup_)
 	mainitem[mi_gamemode].x = ITEMX;
 	mainitem[mi_gamemode].y = CURSORY((mainscreen[ms_new].numitems - 2) * 2);
 	mainitem[mi_gamemode].screen = ms_none;
-
-	D_memcpy(mainitem[mi_difficulty].name, "Difficulty", 11);
-	mainitem[mi_difficulty].x = ITEMX;
-	mainitem[mi_difficulty].y = CURSORY((mainscreen[ms_new].numitems - 1)*2);
-	mainitem[mi_difficulty].screen = ms_none;
 
 	D_memcpy(mainitem[mi_savelist].name, "Checkpoints", 12);
 	mainitem[mi_savelist].x = ITEMX;
@@ -354,7 +346,6 @@ int M_Ticker (void)
 {
 	int		buttons, oldbuttons;
 	mainscreen_t* menuscr;
-	int		oldplayermap;
 	boolean newcursor = false;
 	int sound = sfx_None;
 
@@ -466,7 +457,6 @@ int M_Ticker (void)
 			consoleplayer = 0;
 			startsave = -1;
 			startmap = gamemapnumbers[playermap - 1]; /*set map number */
-			startskill = playerskill;	/* set skill level */
 			starttype = currentplaymode;	/* set play type */
 			startsplitscreen = currentgametype == mi_splitscreen;
 			return ga_startnew;		/* done with menu */
@@ -518,7 +508,6 @@ int M_Ticker (void)
 	cursordelay = MOVEWAIT;
 
 /* check for movement */
-	oldplayermap = playermap;
 	if (! (buttons & (BT_UP|BT_DOWN|BT_LEFT|BT_RIGHT) ) )
 		movecount = 0;		/* move immediately on next press */
 	else
@@ -529,10 +518,7 @@ int M_Ticker (void)
 
 		if (++movecount == 1)
 		{
-			int oldplayerskill = playerskill;
-			int oldsaveslot = saveslot;
 			int oldcursorpos = cursorpos;
-			int oldplayermode = currentplaymode;
 
 			if (buttons & BT_DOWN)
 			{
@@ -579,18 +565,6 @@ int M_Ticker (void)
 							playermap = gamemapcount;
 					}
 					break;
-				case mi_difficulty:
-					if (buttons & BT_RIGHT)
-					{
-						if (++playerskill > sk_nightmare)
-							playerskill--;
-					}
-					if (buttons & BT_LEFT)
-					{
-						if (--playerskill == -1)
-							playerskill++;
-					}
-					break;
 				case mi_savelist:
 					if (buttons & BT_RIGHT)
 					{
@@ -613,11 +587,6 @@ int M_Ticker (void)
 
 			if (newcursor)
 				sound = sfx_pistol;
-			else if (oldplayerskill != playerskill ||
-				oldsaveslot != saveslot ||
-				oldplayermap != playermap ||
-				oldplayermode != currentplaymode)
-				sound = sfx_stnmov;
 		}
 	}
 
@@ -628,7 +597,6 @@ int M_Ticker (void)
 	{
 		/* long menu item names can spill onto the screen border */
 		clearscreen = 2;
-		oldplayermap = playermap;
 	}
 
 	return ga_nothing;
@@ -741,15 +709,6 @@ void M_Drawer (void)
 			DrawJagobjLump(numslump + levelones, item->x + 70, y + 2, NULL, NULL);
 
 		print((320 - (tmplen * 14)) >> 1, y + ITEMSPACE + 2, tmp);
-
-		item = &mainitem[mi_difficulty];
-		y = y_offset + item->y;
-
-#ifndef MARS
-		EraseBlock(82, m_doom_height + CURSORY(NUMMAINITEMS - 1) + ITEMSPACE + 2, 320 - 72, m_skill[playerskill]->height + 10);
-#endif
-		/* draw difficulty information */
-		DrawJagobjLump(m_skilllump + playerskill, item->x + 10, y + ITEMSPACE + 2, NULL, NULL);
 	}
 	else if (scrpos == ms_load || scrpos == ms_save)
 	{

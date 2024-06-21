@@ -11,7 +11,6 @@ void G_DoLoadLevel (void);
  
  
 gameaction_t    gameaction; 
-skill_t         gameskill; 
 int				gamemaplump;
 dmapinfo_t		gamemapinfo;
 dgameinfo_t		gameinfo;
@@ -98,7 +97,6 @@ void G_DoLoadLevel (void)
 	{ 
 		if (playeringame[i]/* && players[i].playerstate == PST_DEAD*/)
 			players[i].playerstate = PST_REBORN; 
-		players[i].frags = 0;
 	} 
 
 	totalkills = totalitems = totalsecret = 0;
@@ -184,7 +182,7 @@ void G_DoLoadLevel (void)
 	skytexturel = R_TextureNumForName(gamemapinfo.sky);
  	skytexturep = &textures[skytexturel];
 
-	P_SetupLevel (gamemaplump, gameskill);
+	P_SetupLevel (gamemaplump);
 	gameaction = ga_nothing; 
 
 	music = gamemapinfo.musicLump;
@@ -223,7 +221,6 @@ void G_PlayerFinishLevel (int player)
 	p = &players[player]; 
 	 
 	D_memset (p->powers, 0, sizeof (p->powers)); 
-	D_memset (p->cards, 0, sizeof (p->cards)); 
 	p->mo->flags &= ~MF_SHADOW;             /* cancel invisibility  */
 	p->extralight = 0;                      /* cancel gun flashes  */
 	p->damagecount = 0;                     /* no palette changes  */
@@ -252,18 +249,15 @@ void G_PlayerFinishLevel (int player)
 void G_PlayerReborn (int player) 
 { 
 	player_t        *p; 
-	int             frags; 
 	int             killcount;
 	int             itemcount;
 	int             secretcount;
 
 	p = &players[player]; 
-	frags = p->frags;
 	killcount = p->killcount;
 	itemcount = p->itemcount;
 	secretcount = p->secretcount;
 	D_memset (p, 0, sizeof(*p)); 
-	p->frags = frags;
 	p->killcount = killcount;
 	p->itemcount = itemcount;
 	p->secretcount = secretcount;
@@ -510,7 +504,7 @@ void G_Init(void)
  
 extern mobj_t emptymobj;
  
-void G_InitNew (skill_t skill, int map, gametype_t gametype, boolean splitscr)
+void G_InitNew (int map, gametype_t gametype, boolean splitscr)
 { 
 	int             i; 
 
@@ -524,7 +518,6 @@ void G_InitNew (skill_t skill, int map, gametype_t gametype, boolean splitscr)
 
 	/* these may be reset by I_NetSetup */
 	gamemaplump = G_LumpNumForMapNum(map);
-	gameskill = skill;
 
 	if (gamemaplump < 0)
 		I_Error("Lump MAP%02d not found!", map);
@@ -565,7 +558,7 @@ void G_LoadGame(int saveslot)
 
 	D_memcpy(backup, playersresp, sizeof(playersresp));
 
-	G_InitNew(startskill, startmap, starttype, startsplitscreen);
+	G_InitNew(startmap, starttype, startsplitscreen);
 
 	D_memcpy(playersresp, backup, sizeof(playersresp));
 }
@@ -605,7 +598,7 @@ startnew:
 			if (startsave != -1)
 				G_LoadGame(startsave);
 			else
-				G_InitNew(startskill, startmap, starttype, startsplitscreen);
+				G_InitNew(startmap, starttype, startsplitscreen);
 			continue;
 		}
 
@@ -620,7 +613,7 @@ startnew:
 
 		if (gameaction == ga_warped)
 		{
-			if (starttype != netgame || startskill != gameskill || startmap != gamemapinfo.mapNumber)
+			if (starttype != netgame || startmap != gamemapinfo.mapNumber)
 			{
 				gameaction = ga_startnew;
 				goto startnew;
@@ -692,16 +685,16 @@ startnew:
 int G_PlayDemoPtr (unsigned *demo)
 {
 	int		exit;
-	int		skill, map;
+	int		map;
 
 	demobuffer = demo;
 	
-	skill = *demo++;
+	demo++; // skill
 	map = *demo++;
 
 	demo_p = demo;
 	
-	G_InitNew (skill, map, gt_single, false);
+	G_InitNew (map, gt_single, false);
 	demoplayback = true;
 	exit = MiniLoop (P_Start, P_Stop, P_Ticker, P_Drawer, P_Update);
 	demoplayback = false;
@@ -721,10 +714,10 @@ void G_RecordDemo (void)
 {
 	demo_p = demobuffer = Z_Malloc (0x8000, PU_STATIC);
 	
-	*demo_p++ = startskill;
+	*demo_p++ = 0; // startskill
 	*demo_p++ = startmap;
 	
-	G_InitNew (startskill, startmap, gt_single, false);
+	G_InitNew (startmap, gt_single, false);
 	demorecording = true; 
 	MiniLoop (P_Start, P_Stop, P_Ticker, P_Drawer, P_Update);
 	demorecording = false;

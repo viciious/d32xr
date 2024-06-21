@@ -765,7 +765,6 @@ void RunCredits(void);
 
 void RunTitle (void)
 {
-	startskill = sk_medium;
 	startmap = 1;
 	starttype = gt_single;
 	consoleplayer = 0;
@@ -867,7 +866,7 @@ reselect:
 	if (startsave != -1)
 		G_LoadGame(startsave);
 	else
-		G_InitNew(startskill, startmap, starttype, startsplitscreen);
+		G_InitNew(startmap, starttype, startsplitscreen);
 
 	G_RunGame ();
 }
@@ -884,7 +883,6 @@ reselect:
 ============= 
 */ 
  
-skill_t		startskill = sk_medium;
 int			startmap = 1;
 gametype_t	starttype = gt_single;
 int			startsave = -1;
@@ -923,22 +921,22 @@ D_printf ("DM_Main\n");
 
 /*	MiniLoop (F_Start, F_Stop, F_Ticker, F_Drawer, UpdateBuffer); */
 
-/*G_InitNew (startskill, startmap, gt_deathmatch, false); */
+/*G_InitNew (startmap, gt_deathmatch, false); */
 /*G_RunGame (); */
 
 #ifdef NeXT
 	if (M_CheckParm ("-dm") )
 	{
 		I_NetSetup ();
-		G_InitNew (startskill, startmap, gt_deathmatch, false);
+		G_InitNew (startmap, gt_deathmatch, false);
 	}
 	else if (M_CheckParm ("-dial") || M_CheckParm ("-answer") )
 	{
 		I_NetSetup ();
-		G_InitNew (startskill, startmap, gt_coop, false);
+		G_InitNew (startmap, gt_coop, false);
 	}
 	else
-		G_InitNew (startskill, startmap, gt_single, false);
+		G_InitNew (startmap, gt_single, false);
 	G_RunGame ();
 #endif
 

@@ -546,7 +546,6 @@ static void AM_DrawMapStats(void)
 		{
 			if (!playeringame[i])
 				continue;
-			D_snprintf(buf, sizeof(buf), "P%d Frags: %d", i + 1, players[i].frags);
 			I_Print8(12, 20 - MAXPLAYERS + 1 + i, buf);
 		}
 		break;

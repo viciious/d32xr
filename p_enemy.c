@@ -389,7 +389,6 @@ newtarget:
 
 void A_Look (mobj_t *actor)
 {
-	mobj_t		*targ;
 	const mobjinfo_t* ainfo = &mobjinfo[actor->type];
 	
 /* if current target is visible, start attacking */
@@ -504,12 +503,11 @@ void A_Chase (mobj_t *actor)
 /* */
 /* check for missile attack */
 /* */
-	if ( (gameskill == sk_nightmare || !actor->movecount) && ainfo->missilestate
+	if ( !actor->movecount && ainfo->missilestate
 	&& P_CheckMissileRange (actor))
 	{
 		P_SetMobjState (actor, ainfo->missilestate);
-		if (gameskill != sk_nightmare)
-			actor->flags |= MF_JUSTATTACKED;
+		actor->flags |= MF_JUSTATTACKED;
 		return;
 	}
 	

@@ -16,33 +16,7 @@ static const animdef_t	animdefs[] =
 	{false,	"FWATER4",	"FWATER1"},
 	{false,	"LAVA4",	"LAVA1"},
 
-	{false,	"NUKAGE3",	"NUKAGE1"},
-	{false,	"FWATER4",	"FWATER1"},
-	{false,	"SWATER4",	"SWATER1"},
-	{false,	"LAVA4",	"LAVA1"},
-	{false,	"BLOOD3",	"BLOOD1"},
-
-	// DOOM II flat animations.
-	{false,	"RROCK08",	"RROCK05"},
-	{false,	"SLIME04",	"SLIME01"},
-	{false,	"SLIME08",	"SLIME05"},
-	{false,	"SLIME12",	"SLIME09"},
-
-	{true,	"BLODGR4",	"BLODGR1"},
-	{true,	"SLADRIP3",	"SLADRIP1"},
-
-	{true,	"BLODRIP4",	"BLODRIP1"},
-	{true,	"FIREWALL",	"FIREWALA"},
-	{true,	"GSTFONT3",	"GSTFONT1"},
-	{true,	"FIRELAVA",	"FIRELAV3"},
-	{true,	"FIREMAG3",	"FIREMAG1"},
-	{true,	"FIREBLU2",	"FIREBLU1"},
-	{true,	"ROCKRED3",	"ROCKRED1"},
-
-	{true,	"BFALL4",	"BFALL1"},
-	{true,	"SFALL4",	"SFALL1"},
-	{true,	"WFALL4",	"WFALL1"},
-	{true,	"DBRAIN4",	"DBRAIN1"},
+	{true,	"GFALL4",	"GFALL1"},
 
 	{-1}
 };

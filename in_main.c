@@ -166,8 +166,6 @@ void IN_NetgameDrawer(void)
 			interm->killvalue[i] = interm->pstats[i].killpercent;
 			interm->itemvalue[i] = interm->pstats[i].itempercent;
 			interm->secretvalue[i] = interm->pstats[i].secretpercent;
-			interm->fragvalue[i] = 
-				players[i].frags;
 		}
 
 #ifndef MARS
@@ -351,7 +349,7 @@ void IN_Start (void)
 			pstats[i].secretpercent = 100;
 			
 		if(netgame)
-			pstats[i].fragcount = players[i].frags;
+			pstats[i].fragcount = 0;
 	}	
 
 	interm->timevalue = stbar_tics/TICRATE;

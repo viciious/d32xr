@@ -15,7 +15,6 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx) ATTR_DATA_CACHE_ALIG
 void R_DrawVisSprite(vissprite_t* vis, unsigned short* spropening, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
 void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreenhalf, int16_t *walls) ATTR_DATA_CACHE_ALIGN;
 static void R_DrawSortedSprites(int* sortedsprites, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
-static void R_DrawPSprites(int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
 void R_Sprites(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 
 void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
@@ -459,39 +458,6 @@ static void R_DrawSortedSprites(int* sortedsprites, int sprscreenhalf)
    } while (*pwalls != -1);
 }
 
-static void R_DrawPSprites(int sprscreenhalf)
-{
-    unsigned i;
-    unsigned short spropening[SCREENWIDTH];
-    viswall_t *spr;
-    unsigned vph = viewportHeight;
-
-    I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
-
-    if (demoplayback)
-      return; // No psprites in camera view
-
-    // draw psprites
-    for (spr = vd.lastsprite_p; spr < vd.vissprite_p; spr++)
-    {
-        vissprite_t *vis = (vissprite_t *)spr;
-        unsigned stopx = vis->x2 + 1;
-        i = vis->x1;
-
-        if (vis->patchnum < 0)
-            continue;
-
-        // clear out the clipping array across the range of the psprite
-        while (i < stopx)
-        {
-            spropening[i] = vph;
-            ++i;
-        }
-
-        R_DrawVisSprite(vis, spropening, sprscreenhalf);
-    }
-}
-
 #ifdef MARS
 void Mars_Sec_R_DrawSprites(int sprscreenhalf)
 {  
@@ -505,7 +471,7 @@ void Mars_Sec_R_DrawSprites(int sprscreenhalf)
 
     R_DrawSortedSprites(vd.gsortedsprites, -sprscreenhalf);
 
-    R_DrawPSprites(-sprscreenhalf);
+//    I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps); // This was in DrawPSprites()... unneeded now?
 }
 
 #endif
@@ -609,8 +575,6 @@ void R_Sprites(void)
 #endif
 
    R_DrawSortedSprites(sortedsprites, half);
-
-   R_DrawPSprites(half);
 
 #ifdef MARS
    Mars_R_EndDrawSprites();

@@ -87,7 +87,6 @@ void ReadGame(int slotnumber)
 	if (sg.version != SRAM_VERSION)
 		return;
 
-	startskill = sg.skill;
 	starttype = sg.netgame;
 	startmap = sg.mapnumber;
 	starttype = sg.netgame;
@@ -103,7 +102,7 @@ static void SaveGameExt(int slotnumber, int mapnum)
 		return;
 
 	sg.version = SRAM_VERSION;
-	sg.skill = gameskill;
+	sg.skill = 0;
 	sg.netgame = netgame;
 	sg.mapnumber = mapnum & 0xFF;
 	D_memcpy(sg.resp, playersresp, sizeof(playersresp));

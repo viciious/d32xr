@@ -74,26 +74,11 @@ void P_RemoveThinker (thinker_t *thinker);
 /*
 ===============================================================================
 
-							P_PSPR
-
-===============================================================================
-*/
-
-void P_SetupPsprites (player_t *curplayer);
-void P_MovePsprites (player_t *curplayer);
-
-void P_DropWeapon (player_t *player);
-
-/*
-===============================================================================
-
 							P_USER
 
 ===============================================================================
 */
 
-boolean P_CanSelecteWeapon(player_t* player, int weaponnum);
-boolean P_CanFireWeapon(player_t* player, int weaponnum);
 void	P_PlayerThink (player_t *player);
 void	P_RestoreResp(player_t* p);
 void	P_UpdateResp(player_t* p);
@@ -253,9 +238,6 @@ extern	VINT		*validcount;		/* (0 - increment every time a check is made, [1..num
 
 ===============================================================================
 */
-
-extern	VINT	maxammo[NUMAMMO];
-extern	VINT	clipammo[NUMAMMO];
 
 void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher) __attribute__((noinline));
 

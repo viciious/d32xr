@@ -103,7 +103,6 @@ typedef enum
 	stc_drawammo,
 	stc_drawhealth,
 	stc_drawarmor,
-	stc_drawcard,
 	stc_drawmap,
 	stc_drawmicro,
 	stc_drawyourfrags,
@@ -121,9 +120,6 @@ typedef struct
 	VINT	ammo, health, armor;
 	VINT	godmode;
 	VINT	face;
-	char	cards[NUMCARDS];
-
-	sbflash_t	flashCards[NUMCARDS];	/* INFO FOR FLASHING CARDS & SKULLS */
 
 	VINT	yourFragsCount;
 	VINT	hisFragsCount;
@@ -142,7 +138,7 @@ typedef struct
 	VINT	spclFaceType;
 
 	short numstbarcmds;
-	stbarcmd_t stbarcmds[STC_NUMCMDTYPES + NUMMICROS + NUMCARDS * 2];
+	stbarcmd_t stbarcmds[STC_NUMCMDTYPES + NUMMICROS];
 
 	sbflash_t	yourFrags;			/* INFO FOR YOUR FRAG FLASHING */
 	sbflash_t	hisFrags;
@@ -151,7 +147,6 @@ typedef struct
 	/* Messaging */
 	char	specialFace;	/* Which type of special face to make */
 	char	gotgibbed;			/* Got gibbed */
-	char	tryopen[NUMCARDS];	/* Tried to open a card or skull door */
 	char	forcedraw;
 } stbar_t;
 

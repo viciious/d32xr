@@ -12,9 +12,6 @@ static short micronums;
 static short	micronums_x[NUMMICROS] = {249,261,272,249,261,272};
 static short	micronums_y[NUMMICROS] = {15,15,15,25,25,25};
 
-static short	card_x[NUMCARDS] = {KEYX,KEYX,KEYX,KEYX+3, KEYX+3, KEYX+3};
-static short	card_y[NUMCARDS] = {BLUKEYY,YELKEYY,REDKEYY,BLUKEYY,YELKEYY,REDKEYY};
-
 static short	spclfaceSprite[NUMSPCLFACES] =
 		{0,sbf_facelft,sbf_facergt,sbf_ouch,sbf_gotgat,sbf_mowdown};
 
@@ -129,19 +126,9 @@ void ST_InitEveryLevel(void)
 			sb->hisFrags.w = 30;
 			sb->hisFrags.h = 8;
 			sb->flashInitialDraw = true;
-			sb->yourFragsCount = players[p].frags;
-			sb->hisFragsCount = players[!p].frags;
 		}
 		sb->gibdelay = GIBTIME;
 		sb->specialFace = f_none;
-
-		for (i = 0; i < NUMCARDS; i++)
-		{
-			sb->flashCards[i].x = KEYX + (i > 2 ? 3 : 0);
-			sb->flashCards[i].y = card_y[i];
-			sb->flashCards[i].w = KEYW;
-			sb->flashCards[i].h = KEYH;
-		}
 	}
 	stbar_tics = 0;
 }
@@ -158,7 +145,6 @@ static void ST_Ticker_(stbar_t* sb)
 {
 	int			i;
 	player_t* p;
-	int			ind;
 	int			pnum = sb - &stbar[0];
 	short		drawface;
 	stbarcmd_t* cmd;
@@ -170,12 +156,6 @@ static void ST_Ticker_(stbar_t* sb)
 		--sb->facetics;
 		--sb->yourFrags.delay;
 		--sb->hisFrags.delay;
-		for (ind = 0; ind < NUMCARDS; ind++)
-		{
-			if (!sb->flashCards[ind].active)
-				continue;
-			--sb->flashCards[ind].delay;
-		}
 		if (sb->gibdraw)
 			--sb->gibdelay;
 		return;
@@ -245,36 +225,7 @@ static void ST_Ticker_(stbar_t* sb)
 		sb->gibdelay = GIBTIME;
 		sb->gotgibbed = false;
 	}
-	
-	/* */
-	/* Tried to open a CARD or SKULL door? */
-	/* */
-	for (ind = 0; ind < NUMCARDS; ind++)
-	{
-		/* CHECK FOR INITIALIZATION */
-		if (sb->tryopen[ind])
-		{
-			sb->tryopen[ind] = false;
-			sb->flashCards[ind].active = true;
-			sb->flashCards[ind].delay = FLASHDELAY;
-			sb->flashCards[ind].times = FLASHTIMES+1;
-			sb->flashCards[ind].doDraw = false;
-		}
-		
-		/* MIGHT AS WELL DO TICKING IN THE SAME LOOP! */
-		if (!sb->flashCards[ind].active)
-			continue;
-		if (--sb->flashCards[ind].delay <= 0)
-		{
-			sb->flashCards[ind].delay = FLASHDELAY;
-			sb->flashCards[ind].doDraw ^= 1;
-			if (!--sb->flashCards[ind].times)
-				sb->flashCards[ind].active = false;
-			if (sb->flashCards[ind].doDraw && sb->flashCards[ind].active)
-				S_StartSound(NULL,sfx_itemup);
-		}
-	}
-	
+
 	if (sb->ammo != i || sb->forcedraw)
 	{
 		sb->ammo = i;
@@ -316,39 +267,6 @@ static void ST_Ticker_(stbar_t* sb)
 	}
 
 	/* */
-	/* Cards & skulls */
-	/* */
-	for (ind = 0; ind < NUMCARDS; ind++)
-	{
-		i = p->cards[ind];
-		if (sb->cards[ind] != i || sb->forcedraw)
-		{
-			cmd = &sb->stbarcmds[sb->numstbarcmds++];
-			cmd->id = stc_drawcard;
-			cmd->ind = ind;
-			cmd->value = i;
-
-			sb->cards[ind] = i;
-		}
-	}
-
-	/* */
-	/* Weapons */
-	/* */
-	for (ind = 0; ind < NUMMICROS; ind++)
-	{
-		if (p->weaponowned[ind + 1] != sb->weaponowned[ind] || sb->forcedraw)
-		{
-			cmd = &sb->stbarcmds[sb->numstbarcmds++];
-			cmd->id = stc_drawmicro;
-			cmd->ind = ind;
-			cmd->value = p->weaponowned[ind + 1];
-
-			sb->weaponowned[ind] = p->weaponowned[ind + 1];
-		}
-	}
-
-	/* */
 	/* Level */
 	/* */
 	if (netgame != gt_deathmatch)
@@ -363,61 +281,6 @@ static void ST_Ticker_(stbar_t* sb)
 			sb->currentMap = i;
 		}
 	}
-	/* */
-	/* Or, frag counts! */
-	/* */
-	else
-	{
-		int		yours;
-		int		his;
-
-		yours = players[pnum].frags;
-		his = players[!pnum].frags;
-		
-		if (yours != sb->yourFragsCount || sb->forcedraw)
-		{
-			sb->yourFragsCount = yours;
-			
-			/* SIGNAL THE FLASHING FRAGS! */
-			sb->yourFrags.active = true;
-			sb->yourFrags.delay = FLASHDELAY;
-			sb->yourFrags.times = FLASHTIMES;
-			sb->yourFrags.doDraw = false;
-		}
-		
-		if (his != sb->hisFragsCount || sb->forcedraw)
-		{
-			sb->hisFragsCount = his;
-			
-			/* SIGNAL THE FLASHING FRAGS! */
-			sb->hisFrags.active = true;
-			sb->hisFrags.delay = FLASHDELAY;
-			sb->hisFrags.times = FLASHTIMES;
-			sb->hisFrags.doDraw = false;
-		}
-	}
-	
-	/* */
-	/* Draw YOUR FRAGS if it's time */
-	/* */
-	if (sb->yourFrags.active)
-	{
-		cmd = &sb->stbarcmds[sb->numstbarcmds++];
-		cmd->id = stc_drawyourfrags;
-		cmd->ind = sb->yourFrags.doDraw;
-		cmd->value = sb->yourFragsCount;
-	}
-
-	/* */
-	/* Draw HIS FRAGS if it's time */
-	/* */
-	if (sb->hisFrags.active)
-	{
-		cmd = &sb->stbarcmds[sb->numstbarcmds++];
-		cmd->id = stc_drawhisfrags;
-		cmd->ind = sb->hisFrags.doDraw;
-		cmd->value = sb->hisFragsCount;
-	}
 
 	if (sb->flashInitialDraw)
 	{
@@ -425,18 +288,6 @@ static void ST_Ticker_(stbar_t* sb)
 		cmd->id = stc_flashinitial;
 		sb->flashInitialDraw = false;
 	}
-
-	/* */
-	/* Flash CARDS or SKULLS if no key for door */
-	/* */
-	for (ind = 0; ind < NUMCARDS; ind++)
-		if (sb->flashCards[ind].active)
-		{
-			cmd = &sb->stbarcmds[sb->numstbarcmds++];
-			cmd->id = stc_drawcard;
-			cmd->ind = ind;
-			cmd->value = sb->flashCards[ind].doDraw;
-		}
 
 	/* */
 	/* Draw gibbed head */
@@ -550,12 +401,9 @@ static void ST_Drawer_ (stbar_t* sb)
 {
 	int i;
 	int x, ind;
-	boolean have_cards[NUMCARDS];
 
 	if (!sbar || !sbobj[0])
 		return;
-
-	D_memset(have_cards, 0, sizeof(have_cards));
 
 	for (i = 0; i < sb->numstbarcmds; i++) {
 		stbarcmd_t* cmd = &sb->stbarcmds[i];
@@ -577,11 +425,6 @@ static void ST_Drawer_ (stbar_t* sb)
 			ST_EraseBlock(ARMORX - 14 * 3 - 4, ARMORY, 14 * 3 + 4, BIGSHORT(sbobj[0]->height));
 			DrawJagobj(sbobj[sb_percent], ARMORX, stbar_y + ARMORY);
 			ST_DrawValue(ARMORX, ARMORY, cmd->value);
-			break;
-		case stc_drawcard:
-			ind = cmd->ind;
-			ST_EraseBlock(KEYX, card_y[ind], KEYW, KEYH);
-			have_cards[ind] = cmd->value;
 			break;
 		case stc_drawmap:
 			x = MAPX;
@@ -629,14 +472,6 @@ static void ST_Drawer_ (stbar_t* sb)
 				DrawJagobjLump(faces + cmd->value, FACEX, stbar_y + FACEY, NULL, NULL);
 			break;
 		}
-	}
-
-	// indicators for keys can erase one other via ST_EraseBlock
-	// so draw indicators for keys in posession separately
-	for (i = 0; i < NUMCARDS; i++) {
-		ind = i;
-		if (have_cards[ind])
-			DrawJagobj(sbobj[sb_card_b + ind], card_x[ind], stbar_y + card_y[ind]);
 	}
 }
 

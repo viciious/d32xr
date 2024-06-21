@@ -406,16 +406,9 @@ void P_CalcHeight (player_t *player)
 	player->bob >>= 4;
 
 	maxbob = MAXBOB;
-	if (weaponYpos < -20)
-	{
-		maxbob >>= 1;
-		player->bob >>= 1;
-	}
 
-	if (player->bob>maxbob)
-	{
+	if (player->bob > maxbob)
 		player->bob = maxbob;
-	}
 
 	if (!onground)
 	{
@@ -499,8 +492,6 @@ void P_DeathThink (player_t *player)
 {
 	angle_t		angle, delta;
 
-	P_MovePsprites (player);
-	
 /* fall to the ground */
 	if (player->viewheight > 8*FRACUNIT)
 		player->viewheight -= FRACUNIT;
@@ -529,37 +520,6 @@ void P_DeathThink (player_t *player)
 
 	if ( (ticbuttons[playernum] & BT_USE) && player->viewheight <= 8*FRACUNIT)
 		player->playerstate = PST_REBORN;
-}
-
-//
-// CALICO: Returns false if:
-// * player doesn't own the weapon in question -or-
-// * the weapon is the fist and the player also has the chainsaw,
-// * unless the player also has the berserk pack.
-// Returns true otherwise.
-//
-boolean P_CanSelecteWeapon(player_t* player, int weaponnum)
-{
-	if (!player->weaponowned[weaponnum])
-		return false;
-
-	if (weaponnum == wp_fist
-		&& player->weaponowned[wp_chainsaw]
-		&& !player->powers[pw_strength])
-		return false;
-
-	return true;
-}
-
-//
-// CALICO: Returns false if:
-// * player can not select the weapon in question -or-
-// * the weapon uses ammo and does not have sufficient ammo
-// Returns true otherwise.
-//
-boolean P_CanFireWeapon(player_t* player, int weaponnum)
-{
-	return false;
 }
 
 /*
@@ -624,54 +584,7 @@ ticphase = 22;
 /* check for weapon change */
 /* */
 ticphase = 23;
-	if (player->pendingweapon == wp_nochange)
-	{
-		int oldbuttons = oldticbuttons[playernum];
-
-#ifdef JAGUAR
-		if ( buttons & BT_1 )
-		{
-			if (player->weaponowned[wp_chainsaw] &&
-			!(player->readyweapon == wp_chainsaw && player->powers[pw_strength]))
-				player->pendingweapon = wp_chainsaw;
-			else
-				player->pendingweapon = wp_fist;
-		}
-		if ( buttons & BT_2 )
-			player->pendingweapon = wp_pistol;
-		if ( (buttons & BT_3) && player->weaponowned[wp_shotgun] )
-			player->pendingweapon = wp_shotgun;
-		if ( (buttons & BT_4) && player->weaponowned[wp_chaingun] )
-			player->pendingweapon = wp_chaingun;
-		if ( (buttons & BT_5) && player->weaponowned[wp_missile] )
-			player->pendingweapon = wp_missile;
-		if ( (buttons & BT_6) && player->weaponowned[wp_plasma] )
-			player->pendingweapon = wp_plasma;
-		if ( (buttons & BT_7) && player->weaponowned[wp_bfg] )
-			player->pendingweapon = wp_bfg;
-#elif defined(MARS)
-		if ((buttons & (BT_MODE | BT_START)) == (BT_MODE | BT_START))
-		{
-			if (P_CanSelecteWeapon(player, wp_fist))
-				player->pendingweapon = wp_fist;
-			else/* if (player->weaponowned[wp_chainsaw])*/
-				player->pendingweapon = wp_chainsaw;
-		}
-		if ((buttons & (BT_MODE | BT_A)) == (BT_MODE | BT_A))
-			player->pendingweapon = wp_pistol;
-		if ((buttons & (BT_MODE | BT_B)) == (BT_MODE | BT_B) && player->weaponowned[wp_shotgun])
-			player->pendingweapon = wp_shotgun;
-		if ((buttons & (BT_MODE | BT_C)) == (BT_MODE | BT_C) && player->weaponowned[wp_chaingun])
-			player->pendingweapon = wp_chaingun;
-		if ((buttons & (BT_MODE | BT_X)) == (BT_MODE | BT_X) && player->weaponowned[wp_missile])
-			player->pendingweapon = wp_missile;
-		if ((buttons & (BT_MODE | BT_Y)) == (BT_MODE | BT_Y) && player->weaponowned[wp_plasma])
-			player->pendingweapon = wp_plasma;
-		if ((buttons & (BT_MODE | BT_Z)) == (BT_MODE | BT_Z) && player->weaponowned[wp_bfg])
-			player->pendingweapon = wp_bfg;
-#endif
-
-		if ((buttons & BT_RMBTN) && (oldbuttons & BT_RMBTN))
+		if ((buttons & BT_RMBTN))
 		{
 			// holding the RMB - swap the next and previous weapon actions
 			if (buttons & BT_NWEAPN)
@@ -683,28 +596,12 @@ ticphase = 23;
 		// CALICO: added support for explicit next weapon and previous weapon actions
 		if (buttons & BT_PWEAPN)
 		{
-			int wp = player->readyweapon;
-			do
-			{
-				if (--wp < 0)
-					wp = NUMWEAPONS - 1;
-			} while (wp != player->readyweapon && !P_CanFireWeapon(player, wp));
-			player->pendingweapon = wp;
+			// previous weapon
 		}
 		else if (buttons & BT_NWEAPN)
 		{
-			int wp = player->readyweapon;
-			do
-			{
-				if (++wp == NUMWEAPONS)
-					wp = 0;
-			} while (wp != player->readyweapon && !P_CanFireWeapon(player, wp));
-			player->pendingweapon = wp;
+			// Next weapon
 		}
-
-		if (player->pendingweapon == player->readyweapon)
-			player->pendingweapon = wp_nochange;
-	}
 	
 /* */
 /* check for use */
@@ -725,21 +622,13 @@ ticphase = 24;
 	if (buttons & BT_ATTACK)
 	{
 		player->attackdown++;
-		if (player->attackdown > 30 &&
-		(player->readyweapon == wp_chaingun || player->readyweapon == wp_plasma) )
-			stbar[playernum].specialFace = f_mowdown;
 	}
 	else
 		player->attackdown = 0;
 			
-/* */
-/* cycle psprites */
-/* */
 ticphase = 25;
-	P_MovePsprites (player);
 ticphase = 26;
-	
-	
+		
 /* */
 /* counters */
 /* */
@@ -772,57 +661,27 @@ void R_ResetResp(player_t* p)
 	playerresp_t* resp = &playersresp[pnum];
 
 	D_memset(resp, 0, sizeof(playerresp_t));
-	resp->weapon = wp_pistol;
 	resp->health = MAXHEALTH;
-	resp->ammo[am_clip] = 50;
-	resp->weaponowned[wp_fist] = true;
-	resp->weaponowned[wp_pistol] = true;
-	for (j = 0; j < NUMAMMO; j++)
-		resp->maxammo[j] = maxammo[j];
 }
 
 void P_RestoreResp(player_t* p)
 {
-	int i;
 	int pnum = p - players;
 	playerresp_t* resp = &playersresp[pnum];
 
-	for (i = 0; i < NUMAMMO; i++)
-	{
-		p->ammo[i] = resp->ammo[i];
-		p->maxammo[i] = resp->maxammo[i];
-	}
-	for (i = 0; i < NUMWEAPONS; i++)
-	{
-		p->weaponowned[i] = resp->weaponowned[i];
-	}
 	p->health = resp->health;
-	p->readyweapon = p->pendingweapon = resp->weapon;
 	p->armorpoints = resp->armorpoints;
 	p->armortype = resp->armortype;
-	p->backpack = resp->backpack;
 	p->cheats = resp->cheats;
 }
 
 void P_UpdateResp(player_t* p)
 {
-	int i;
 	int pnum = p - players;
 	playerresp_t* resp = &playersresp[pnum];
 
-	for (i = 0; i < NUMAMMO; i++)
-	{
-		resp->ammo[i] = p->ammo[i];
-		resp->maxammo[i] = p->maxammo[i];
-	}
-	for (i = 0; i < NUMWEAPONS; i++)
-	{
-		resp->weaponowned[i] = p->weaponowned[i];
-	}
 	resp->health = p->health;
-	resp->weapon = p->readyweapon;
 	resp->armorpoints = p->armorpoints;
 	resp->armortype = p->armortype;
-	resp->backpack = p->backpack;
 	resp->cheats = p->cheats;
 }

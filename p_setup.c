@@ -614,7 +614,7 @@ void P_LoadingPlaque (void)
 =================
 */
 
-void P_SetupLevel (int lumpnum, skill_t skill)
+void P_SetupLevel (int lumpnum)
 {
 #ifndef MARS
 	mobj_t	*mobj;
@@ -627,7 +627,7 @@ void P_SetupLevel (int lumpnum, skill_t skill)
 
 	leveltime = 0;
 	
-D_printf ("P_SetupLevel(%i,%i)\n",lumpnum,skill);
+D_printf ("P_SetupLevel(%i)\n",lumpnum);
 
 	P_InitThinkers ();
 	

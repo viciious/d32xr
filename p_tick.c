@@ -256,7 +256,6 @@ void P_CheckCheats (void)
 		gameaction = ga_warped;
 	}
 #elif defined(MARS)
-	int i;
 	int buttons;
 	int oldbuttons;
 	const int stuff_combo = BT_A | BT_B | BT_C | BT_UP;
@@ -284,12 +283,8 @@ void P_CheckCheats (void)
 		}
 		/* free stuff */
 		p = &players[0];
-		for (i = 0; i < NUMCARDS; i++)
-			p->cards[i] = true;
 		p->armorpoints = 200;
 		p->armortype = 2;
-		for (i = 0; i < NUMWEAPONS; i++) p->weaponowned[i] = true;
-		for (i = 0; i < NUMAMMO; i++) p->ammo[i] = p->maxammo[i] = 500;
 	}
 
 	if ((buttons & godmode_combo) == godmode_combo 
@@ -613,9 +608,6 @@ void P_Drawer (void)
 	/* assume part of the refresh is now running parallel with main code */
 #endif
 }
- 
- 
-extern	 VINT		ticremainder[MAXPLAYERS];
 
 void P_Start (void)
 {
@@ -630,7 +622,6 @@ void P_Start (void)
 #endif
 	players[0].automapflags = 0;
 	players[1].automapflags = 0;
-	ticremainder[0] = ticremainder[1] = 0;
 	M_ClearRandom ();
 
 	if (!demoplayback && !demorecording)

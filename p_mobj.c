@@ -318,7 +318,6 @@ void P_SpawnPlayer (mapthing_t *mthing)
 	player_t	*p;
 	fixed_t		x,y,z;
 	mobj_t		*mobj;
-	int	i;
 
 	if (!playeringame[mthing->type-1])
 		return;						/* not playing */
@@ -346,18 +345,12 @@ y = 0xff500000;
 	mobj->health = p->health;
 	p->mo = mobj;
 	p->playerstate = PST_LIVE;	
-	p->refire = 0;
 	p->message = NULL;
 	p->damagecount = 0;
 	p->bonuscount = 0;
 	p->extralight = 0;
 	p->viewheight = VIEWHEIGHT;
-	P_SetupPsprites (p);		/* setup gun psprite	 */
 	
-	if (netgame == gt_deathmatch)
-		for (i=0 ; i<NUMCARDS ; i++)
-			p->cards[i] = true;		/* give all cards in death match mode			 */
-
 	if (!netgame)
 		return;
 }
@@ -373,7 +366,7 @@ y = 0xff500000;
 */
 int P_MapThingSpawnsMobj (mapthing_t* mthing)
 {
-	int			i, bit;
+	int			i;
 
 /* count deathmatch start positions */
 	if (mthing->type == 11)
@@ -390,15 +383,6 @@ int P_MapThingSpawnsMobj (mapthing_t* mthing)
 
 /* check for apropriate skill level */
 	if ((netgame != gt_deathmatch) && (mthing->options & 16))
-		return 0;
-
-	if (gameskill == sk_baby)
-		bit = 1;
-	else if (gameskill == sk_nightmare)
-		bit = 4;
-	else
-		bit = 1 << (gameskill - 1);
-	if (!(mthing->options & bit))
 		return 0;
 
 /* find which type to spawn */
