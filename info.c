@@ -105,6 +105,18 @@ STATE(SPR_POSS,2,2,A_Chase,S_POSS_RUN6),	/* S_POSS_RUN5 */
 STATE(SPR_POSS,2,2,A_Chase,S_POSS_RUN7),	/* S_POSS_RUN6 */
 STATE(SPR_POSS,3,2,A_Chase,S_POSS_RUN8),	/* S_POSS_RUN7 */
 STATE(SPR_POSS,3,2,A_Chase,S_POSS_RUN1),	/* S_POSS_RUN8 */
+STATE(SPR_RING,0,2,NULL,S_RING2), // S_RING1
+STATE(SPR_RING,1,2,NULL,S_RING3), // S_RING2
+STATE(SPR_RING,2,2,NULL,S_RING4), // S_RING3
+STATE(SPR_RING,3,2,NULL,S_RING5), // S_RING4
+STATE(SPR_RING,4,2,NULL,S_RING6), // S_RING5
+STATE(SPR_RING,5,2,NULL,S_RING7), // S_RING6
+STATE(SPR_RING,6,2,NULL,S_RING8), // S_RING7
+STATE(SPR_RING,5,2,NULL,S_RING9), // S_RING8
+STATE(SPR_RING,4,2,NULL,S_RING10), // S_RING9
+STATE(SPR_RING,3,2,NULL,S_RING11), // S_RING10
+STATE(SPR_RING,2,2,NULL,S_RING12), // S_RING11
+STATE(SPR_RING,1,2,NULL,S_RING1), // S_RING12
 };
 
 #undef STATE
@@ -133,11 +145,11 @@ sfx_pldeth,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-MF_SOLID|MF_SHOOTABLE|MF_DROPOFF|MF_PICKUP|MF_NOTDMATCH		/* flags */
+MF_SOLID|MF_SHOOTABLE		/* flags */
  },
 
 {		/* MT_POSSESSED */
-3004,		/* doomednum */
+100,		/* doomednum */
 S_POSS_STND,		/* spawnstate */
 20,		/* spawnhealth */
 S_POSS_RUN1,		/* seestate */
@@ -158,8 +170,32 @@ sfx_podth1,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_posact,		/* activesound */
-MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL		/* flags */
+MF_SOLID|MF_SHOOTABLE		/* flags */
  },
 
+{           // MT_RING
+	300,            // doomednum
+	S_RING1,         // spawnstate
+	1000,           // spawnhealth
+	S_NULL,         // seestate
+	sfx_None,       // seesound
+	0,//MT_FLINGRING,   // reactiontime
+	sfx_None,       // attacksound
+	S_NULL,         // painstate
+	0,              // painchance
+	sfx_None,       // painsound
+	S_NULL,         // meleestate
+	S_NULL,         // missilestate
+	S_NULL,//S_SPRK1,        // deathstate
+	S_NULL,         // xdeathstate
+	sfx_itemup,     // deathsound
+	38,    // speed
+	16*FRACUNIT,    // radius
+	24*FRACUNIT,    // height
+	100,            // mass
+	0,              // damage
+	sfx_None,       // activesound
+	MF_SPECIAL|MF_NOGRAVITY, // flags
+}
 };
 

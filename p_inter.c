@@ -168,7 +168,7 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 			return;
 	}
 	
-	if (special->flags & MF_COUNTITEM)
+	if (special->type == MT_RING)
 		player->itemcount++;
 	P_RemoveMobj (special);
 	player->bonuscount += BONUSADD;
@@ -193,21 +193,8 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 {
 	const mobjinfo_t* targinfo = &mobjinfo[target->type];
 
-	target->flags &= ~(MF_SHOOTABLE|MF_FLOAT|MF_SKULLFLY);
-	target->flags |= MF_CORPSE|MF_DROPOFF;
+	target->flags &= ~(MF_SHOOTABLE|MF_FLOAT);
 	target->height >>= 2;
-	
-	if (target->player)
-	{		
-		/* else just killed by a monster */
-	}
-	else if (source && source->player && (target->flags & MF_COUNTKILL) )
-	{	/* a deliberate kill by a player */
-		players[source->player - 1].killcount++;		/* count for intermission */
-	}
-	else if (!netgame && (target->flags & MF_COUNTKILL) )
-		players[0].killcount++;			/* count all monster deaths, even */
-										/* those caused by other monsters */
 	
 	if (target->player)
 	{
@@ -269,11 +256,6 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 		
 	if (target->health <= 0)
 		return;
-
-	if ( target->flags & MF_SKULLFLY )
-	{
-		target->momx = target->momy = target->momz = 0;
-	}
 	
 	player = target->player ? &players[target->player - 1] : NULL;
 	if (player)
@@ -370,14 +352,7 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 		P_KillMobj (source, target);
 		return;
 	}
-
-	if ( (P_Random () < targinfo->painchance) && !(target->flags&MF_SKULLFLY) )
-	{
-		target->flags |= MF_JUSTHIT;		/* fight back! */
-		P_SetMobjState (target, targinfo->painstate);
-	}
 			
-	target->reactiontime = 0;		/* we're awake now...	 */
 	if (!target->threshold && source)
 	{	/* if not intent on another player, chase after this one */
 		target->target = source;

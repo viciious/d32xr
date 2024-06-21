@@ -96,6 +96,18 @@ S_POSS_RUN5,
 S_POSS_RUN6,
 S_POSS_RUN7,
 S_POSS_RUN8,
+S_RING1,
+S_RING2,
+S_RING3,
+S_RING4,
+S_RING5,
+S_RING6,
+S_RING7,
+S_RING8,
+S_RING9,
+S_RING10,
+S_RING11,
+S_RING12,
 NUMSTATES
 } statenum_t;
 
@@ -115,6 +127,7 @@ extern const char * const sprnames[NUMSPRITES];
 typedef enum {
 MT_PLAYER,
 MT_POSSESSED,
+MT_RING,
 NUMMOBJTYPES
 } mobjtype_t;
 

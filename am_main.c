@@ -516,15 +516,13 @@ static void AM_DrawMapStats(void)
 			ic += players[i].itemcount;
 		}
 
-		if (kc == totalkills)
-			kcol = CRY_AQUA;
 		if (sc == totalsecret)
 			scol = CRY_AQUA;
 		if (ic == totalitems)
 			icol = CRY_AQUA;
 
-		D_snprintf(buf, sizeof(buf), "^%02xK:%d/%d ^%02xI:%d/%d ^%02xS:%d/%d",
-			kcol, kc, totalkills,
+		D_snprintf(buf, sizeof(buf), "^%02xK:%d ^%02xI:%d/%d ^%02xS:%d/%d",
+			kcol, kc,
 			icol, ic, totalitems,
 			scol, sc, totalsecret);
 		I_Print8(12, 20, buf);
@@ -534,8 +532,8 @@ static void AM_DrawMapStats(void)
 		{
 			if (!playeringame[i])
 				continue;
-			D_snprintf(buf, sizeof(buf), "P%d K:%d/%d I:%d/%d S:%d/%d", i + 1, 
-				players[i].killcount, totalkills, 
+			D_snprintf(buf, sizeof(buf), "P%d K:%d I:%d/%d S:%d/%d", i + 1, 
+				players[i].killcount,
 				players[i].itemcount, totalitems,
 				players[i].secretcount, totalsecret);
 			I_Print8(12, 20 - MAXPLAYERS + 1 + i, buf);

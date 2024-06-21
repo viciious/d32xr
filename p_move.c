@@ -45,7 +45,7 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
    int     damage;
    boolean solid;
    mobj_t  *tmthing = mw->tmthing;
-   int     tmflags = mw->tmflags;
+//   int     tmflags = mw->tmflags;
    const mobjinfo_t* thinfo = &mobjinfo[tmthing->type];
 
    if(!(thing->flags & (MF_SOLID|MF_SPECIAL|MF_SHOOTABLE)))
@@ -69,7 +69,7 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
       return true; // don't clip against self
 
    // check for skulls slamming into things
-   if(tmthing->flags & MF_SKULLFLY)
+   /*if(tmthing->flags & MF_SKULLFLY)
    {
 		damage = ((P_Random()&7)+1)* thinfo->damage;
 		P_DamageMobj (thing, tmthing, tmthing, damage);
@@ -77,7 +77,7 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
 		tmthing->momx = tmthing->momy = tmthing->momz = 0;
 		P_SetMobjState (tmthing, thinfo->spawnstate);
       return false; // stop moving
-   }
+   }*/
 
    // missiles can hit other things
    if(tmthing->flags & MF_MISSILE)
@@ -105,7 +105,7 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
    solid = (thing->flags & MF_SOLID) != 0;
 
    // check for special pickup
-   if((thing->flags & MF_SPECIAL) && (tmflags & MF_PICKUP))
+   if((thing->flags & MF_SPECIAL) && tmthing->player)
    {
       P_TouchSpecialThing (thing,tmthing);
    }
@@ -389,7 +389,7 @@ boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly)
          return false; // mobj must lower itself to fit
       if(!(tmthing->flags & MF_TELEPORT) && mw.tmfloorz - tmthing->z > 24*FRACUNIT)
          return false; // too big a step up
-      if(!(tmthing->flags & (MF_DROPOFF|MF_FLOAT)) && mw.tmfloorz - mw.tmdropoffz > 24*FRACUNIT)
+      if(!(tmthing->flags & MF_FLOAT) && mw.tmfloorz - mw.tmdropoffz > 24*FRACUNIT)
          return false; // don't stand over a dropoff
    }
 

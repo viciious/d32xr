@@ -335,10 +335,7 @@ void IN_Start (void)
 	{
 		pstats_t *pstats = interm->pstats;
 
-		if (totalkills)
-			pstats[i].killpercent = (players[i].killcount * 100) / totalkills;
-		else
-			pstats[i].killpercent = 100;
+		pstats[i].killpercent = 100;
 		if (totalitems)
 			pstats[i].itempercent = (players[i].itemcount * 100) / totalitems;
 		else

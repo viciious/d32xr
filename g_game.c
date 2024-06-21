@@ -28,13 +28,10 @@ playerresp_t	playersresp[MAXPLAYERS];
 int             consoleplayer = 0;          /* player taking events and displaying  */
 int             gametic;
 int             prevgametic;
-int             totalkills, totalitems, totalsecret;    /* for intermission  */
+VINT           totalitems, totalsecret;    /* for intermission  */
  
 boolean         demorecording; 
 boolean         demoplayback; 
-
-mobj_t*         bodyque[BODYQUESIZE];
-int             bodyqueslot;
 
 /* 
 ============== 
@@ -99,7 +96,7 @@ void G_DoLoadLevel (void)
 			players[i].playerstate = PST_REBORN; 
 	} 
 
-	totalkills = totalitems = totalsecret = 0;
+	totalitems = totalsecret = 0;
 	for (i=0 ; i<MAXPLAYERS ; i++)
 	{
 		players[i].killcount = players[i].secretcount
@@ -249,16 +246,13 @@ void G_PlayerFinishLevel (int player)
 void G_PlayerReborn (int player) 
 { 
 	player_t        *p; 
-	int             killcount;
 	int             itemcount;
 	int             secretcount;
 
 	p = &players[player]; 
-	killcount = p->killcount;
 	itemcount = p->itemcount;
 	secretcount = p->secretcount;
 	D_memset (p, 0, sizeof(*p)); 
-	p->killcount = killcount;
 	p->itemcount = itemcount;
 	p->secretcount = secretcount;
 	p->usedown = p->attackdown = true;		/* don't do anything immediately */
@@ -296,12 +290,6 @@ boolean G_CheckSpot (int playernum, mapthing_t *mthing)
 	players[playernum].mo->flags &= ~MF_SOLID;
 	if (!an ) 
 		return false; 
-
-	// flush an old corpse if needed
-	if (bodyqueslot >= BODYQUESIZE)
-		P_RemoveMobj(bodyque[bodyqueslot%BODYQUESIZE]);
-	bodyque[bodyqueslot%BODYQUESIZE] = players[playernum].mo;
-	bodyqueslot++;
 
 	return true; 
 } 

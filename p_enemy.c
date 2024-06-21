@@ -66,16 +66,7 @@ boolean P_CheckMissileRange (mobj_t *actor)
 
 	if (! (actor->flags & MF_SEETARGET) )
 		return false;
-
-	if (actor->flags & MF_JUSTHIT)
-	{	/* the target just hit the enemy, so fight back! */
-		actor->flags &= ~MF_JUSTHIT;
-		return true;
-	}
 	
-	if (actor->reactiontime)
-		return false;		/* don't attack yet */
-		
 	dist = P_AproxDistance ( actor->x-actor->target->x, actor->y-actor->target->y) - 64*FRACUNIT;
 	if (!ainfo->meleestate)
 		dist -= 128*FRACUNIT;		/* no melee attack, so fire more */
@@ -118,8 +109,9 @@ boolean P_Move (mobj_t *actor)
 		
 	oldx = actor->x;
 	oldy = actor->y;
-	tryx = actor->x + actor->speed*xspeed[actor->movedir];
-	tryy = actor->y + actor->speed*yspeed[actor->movedir];
+	
+	tryx = actor->x + mobjinfo[actor->type].speed*xspeed[actor->movedir];
+	tryy = actor->y + mobjinfo[actor->type].speed*yspeed[actor->movedir];
 	
 	if (!P_TryMove (&tm, actor, tryx, tryy) )
 	{	/* open any specials */
@@ -448,9 +440,6 @@ void A_Chase (mobj_t *actor)
 	int		delta;
 	const mobjinfo_t* ainfo = &mobjinfo[actor->type];
 	
-	if (actor->reactiontime)
-		actor->reactiontime--;
-				
 /* */
 /* modify target threshold */
 /* */
@@ -480,16 +469,6 @@ void A_Chase (mobj_t *actor)
 	}
 
 /* */
-/* don't attack twice in a row */
-/* */
-	if (actor->flags & MF_JUSTATTACKED)
-	{
-		actor->flags &= ~MF_JUSTATTACKED;
-		P_NewChaseDir (actor);
-		return;
-	}
-	
-/* */
 /* check for melee attack */
 /*	 */
 	if (ainfo->meleestate && P_CheckMeleeRange (actor))
@@ -507,7 +486,6 @@ void A_Chase (mobj_t *actor)
 	&& P_CheckMissileRange (actor))
 	{
 		P_SetMobjState (actor, ainfo->missilestate);
-		actor->flags |= MF_JUSTATTACKED;
 		return;
 	}
 	
@@ -577,7 +555,7 @@ void A_SkullAttack (mobj_t *actor)
 		return;
 		
 	dest = actor->target;	
-	actor->flags |= MF_SKULLFLY;
+//	actor->flags |= MF_SKULLFLY;
 
 	S_StartSound (actor, ainfo->attacksound);
 	A_FaceTarget (actor);
@@ -754,7 +732,7 @@ void L_SkullBash (mobj_t *mo)
 		P_DamageMobj (skullthing, mo, mo, damage);
 	}
 	
-	mo->flags &= ~MF_SKULLFLY;
+//	mo->flags &= ~MF_SKULLFLY;
 	mo->momx = mo->momy = mo->momz = 0;
 	P_SetMobjState (mo, moinfo->spawnstate);
 }

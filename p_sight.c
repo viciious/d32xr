@@ -374,8 +374,7 @@ static boolean PS_CheckSight2(mobj_t *t1, mobj_t *t2)
 
 static boolean P_MobjCanSightCheck(mobj_t *mobj)
 {
-   // must be killable
-   if (!(mobj->flags & MF_COUNTKILL))
+   if (mobj->flags & MF_STATIC)
       return false;
 
    // must be about to change states

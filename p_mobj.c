@@ -119,7 +119,6 @@ void P_RespawnSpecials (void)
 		z = ONFLOORZ;
 	mo = P_SpawnMobj (x,y,z, i);
 	mo->angle = ANG45 * (mthing->angle/45);
-	mo->thingid = mthing->options;
 
 /* pull it from the que */
 	iquetail++;
@@ -230,7 +229,6 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 			mobj = Z_Malloc (sizeof(*mobj), PU_LEVEL);
 		}
 		D_memset (mobj, 0, sizeof (*mobj));
-		mobj->speed = info->speed;
 	}
 
 	mobj->type = type;
@@ -240,7 +238,6 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 	mobj->height = info->height;
 	mobj->flags = info->flags;
 	mobj->health = info->spawnhealth;
-	mobj->reactiontime = info->reactiontime;
 
 /* do not set the state with P_SetMobjState, because action routines can't */
 /* be called yet */
@@ -386,22 +383,6 @@ int P_MapThingSpawnsMobj (mapthing_t* mthing)
 		return 0;
 
 /* find which type to spawn */
-	if (netgame == gt_deathmatch)
-	{
-		for (i = 0; i < NUMMOBJTYPES; i++)
-		{
-			/* don't spawn keycards and players in deathmatch */
-			if (mthing->type == mobjinfo[i].doomednum)
-			{
-				if (mobjinfo[i].flags & (MF_NOTDMATCH | MF_COUNTKILL))
-					return 0;
-				if (mobjinfo[i].flags & MF_STATIC)
-					return 2;
-				return 1;
-			}
-		}
-	}
-	else
 	{
 		for (i = 0; i < NUMMOBJTYPES; i++)
 		{
@@ -483,9 +464,7 @@ return;	/*DEBUG */
 	mobj = P_SpawnMobj (x,y,z, i);
 	if (mobj->tics > 0)
 		mobj->tics = 1 + (P_Random () % mobj->tics);
-	if (mobj->flags & MF_COUNTKILL)
-		totalkills++;
-	if (mobj->flags & MF_COUNTITEM)
+	if (mobj->type == MT_RING)
 		totalitems++;
 		
 	mobj->angle = ANG45 * (mthing->angle/45);
@@ -494,8 +473,6 @@ return;	/*DEBUG */
 
 	if (mthing->options & MTF_AMBUSH)
 		mobj->flags |= MF_AMBUSH;
-	if (mobj->flags & MF_SPECIAL)
-		mobj->thingid = thingid + 1;
 }
 
 
@@ -579,12 +556,12 @@ void P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type)
 	an = R_PointToAngle2 (source->x, source->y, dest->x, dest->y);	
 	th->angle = an;
 	an >>= ANGLETOFINESHIFT;
-	speed = th->speed >> 16;
+	speed = mobjinfo[th->type].speed >> 16;
 	th->momx = speed * finecosine(an);
 	th->momy = speed * finesine(an);
 	
 	dist = P_AproxDistance (dest->x - source->x, dest->y - source->y);
-	dist = dist / th->speed;
+	dist = dist / mobjinfo[th->type].speed;
 	if (dist < 1)
 		dist = 1;
 	th->momz = (dest->z - source->z) / dist;
@@ -645,7 +622,7 @@ void P_SpawnPlayerMissile (mobj_t *source, mobjtype_t type)
 	th->target = source;
 	th->angle = an;
 	
-	speed = th->speed >> 16;
+	speed = mobjinfo[th->type].speed >> 16;
 	
 	th->momx = speed * finecosine(an>>ANGLETOFINESHIFT);
 	th->momy = speed * finesine(an>>ANGLETOFINESHIFT);

@@ -163,8 +163,6 @@ static boolean P_CameraTryMove2(ptrymove_t *tm, boolean checkposonly)
          return false; // mobj must lower itself to fit
       if(mw.tmfloorz - tmthing->z > 24*FRACUNIT)
          return false; // too big a step up
-      if(!(tmthing->flags & (MF_DROPOFF|MF_FLOAT)) && mw.tmfloorz - mw.tmdropoffz > 24*FRACUNIT)
-         return false; // don't stand over a dropoff
    }
 
    // the move is ok, so link the thing into its new position.

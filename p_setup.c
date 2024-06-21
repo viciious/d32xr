@@ -321,7 +321,7 @@ void P_LoadThings (int lump)
 	}
 
 	// preallocate a few mobjs for puffs and projectiles
-	numthingsreal += 40;
+	numthingsreal += 10;
 	P_PreSpawnMobjs(numthingsreal, numstaticthings);
 
 	mt = (mapthing_t *)data;
@@ -667,7 +667,6 @@ D_printf ("P_SetupLevel(%i)\n",lumpnum);
 		deathmatchstarts = NULL;
 	}
 
-	bodyqueslot = 0;
 	deathmatch_p = deathmatchstarts;
 	P_LoadThings (lumpnum+ML_THINGS);
 

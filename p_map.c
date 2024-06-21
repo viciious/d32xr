@@ -490,11 +490,6 @@ void P_LineAttack (lineattack_t *la, mobj_t *t1, angle_t angle, fixed_t distance
 /* */
 	if (linetarget)
 	{		
-		if (linetarget->flags & MF_NOBLOOD)
-			P_SpawnPuff (shootx2,shooty2,shootz2, distance);
-		else
-			P_SpawnBlood (shootx2,shooty2,shootz2, damage);
-	
 		P_DamageMobj (linetarget, t1, t1, damage);
 		return;
 	}

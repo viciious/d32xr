@@ -170,7 +170,7 @@ backtostart:
 			if (base == start)	/* scaned all the way around the list */
 			{
 				if (err)
-					I_Error("Z_Malloc: failed on %i", size);
+					I_Error("Z_Malloc: failed on %i (LFB:%i)", size, Z_LargestFreeBlock(mainzone));
 				return NULL;
 			}
 			continue;

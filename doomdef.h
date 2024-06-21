@@ -217,39 +217,28 @@ typedef struct mobj_s
 	struct subsector_s	*subsector;
 	fixed_t			floorz, ceilingz;	/* closest together of contacted secs */
 
-	int			flags;
+	VINT		flags;
 	fixed_t			radius, height;		/* for movement checking */
 
 	/* STATIC OBJECTS END HERE */
-	union {
-		struct {
-			unsigned char	movedir;		/* 0-7 */
-			char			movecount;		/* when 0, select a new dir */
-		};
-		unsigned short		thingid;		/* thing id for respawning specials */
-	};
+	unsigned char	movedir;		/* 0-7 */
+	char			movecount;		/* when 0, select a new dir */
 	unsigned char		reactiontime;	/* if non 0, don't attack yet */
-									/* used by player to freeze a bit after */
-									/* teleporting */
 	unsigned char		threshold;		/* if >0, the target will be chased */
-									/* no matter what (even if shot) */
 
 	fixed_t			momx, momy, momz;	/* momentums */
 
-	unsigned 		speed;			/* mobjinfo[mobj->type].speed */
 	struct mobj_s	*target;		/* thing being chased/attacked (or NULL) */
 									/* also the originator for missiles */
 	latecall_t		latecall;		/* set in p_base if more work needed */
 	intptr_t		extradata;		/* for latecall functions */
-} mobj_t
-;
+} mobj_t;
 
 typedef struct degenmobj_s
 {
 	fixed_t			x, y, z;
 	void 			*prev, *next;
-} degenmobj_t
-;
+} degenmobj_t;
 
 #define static_mobj_size (offsetof(mobj_t,momx))
 
@@ -271,36 +260,22 @@ typedef struct degenmobj_s
 #define	MF_NOBLOCKMAP	16			/* don't use the blocklinks  */
 									/* (inert but displayable) */
 #define	MF_AMBUSH		32
-#define	MF_JUSTHIT		64			/* try to attack right back */
-#define	MF_JUSTATTACKED	128			/* take at least one step before attacking */
-#define	MF_SPAWNCEILING	256			/* hang from ceiling instead of floor */
-#define	MF_NOGRAVITY	512			/* don't apply gravity every tic */
+#define	MF_SPAWNCEILING	64			/* hang from ceiling instead of floor */
+#define	MF_NOGRAVITY	0x80		/* don't apply gravity every tic */
 
 /* movement flags */
-#define	MF_DROPOFF		0x400		/* allow jumps from high places */
-#define	MF_PICKUP		0x800		/* for players to pick up items */
-#define	MF_NOCLIP		0x1000		/* player cheat */
-#define	MF_SLIDE		0x2000		/* keep info about sliding along walls */
-#define	MF_FLOAT		0x4000		/* allow moves to any height, no gravity */
-#define	MF_TELEPORT		0x8000		/* don't cross lines or look at heights */
-#define MF_MISSILE		0x10000		/* don't hit same species, explode on block */
+#define	MF_NOCLIP		0x100		/* player cheat */
+#define	MF_FLOAT		0x200		/* allow moves to any height, no gravity */
+#define	MF_TELEPORT		0x400		/* don't cross lines or look at heights */
+#define MF_MISSILE		0x800		/* don't hit same species, explode on block */
 
-#define	MF_DROPPED		0x20000		/* dropped by a demon, not level spawned */
-#define	MF_SHADOW		0x40000		/* use fuzzy draw (shadow demons / invis) */
-#define	MF_NOBLOOD		0x80000		/* don't bleed when shot (use puff) */
-#define	MF_CORPSE		0x100000	/* don't stop moving halfway off a step */
-#define	MF_INFLOAT		0x200000	/* floating to a height for a move, don't */
+#define	MF_SHADOW		0x1000		/* use fuzzy draw (shadow demons / invis) */
+#define	MF_INFLOAT		0x2000	/* floating to a height for a move, don't */
 									/* auto float to target's height */
 
-#define	MF_COUNTKILL	0x400000	/* count towards intermission kill total */
-#define	MF_COUNTITEM	0x800000	/* count towards intermission item total */
+#define	MF_SEETARGET	0x4000	/* is target visible? */
 
-#define	MF_SKULLFLY		0x1000000	/* skull in flight */
-#define	MF_NOTDMATCH	0x2000000	/* don't spawn in death match (key cards) */
-
-#define	MF_SEETARGET	0x4000000	/* is target visible? */
-
-#define	MF_STATIC		0x8000000	/* can't move or think */
+#define	MF_STATIC		0x8000	/* can't move or think */
 
 /*============================================================================= */
 typedef enum
@@ -438,7 +413,7 @@ extern	int			consoleplayer;		/* player taking events and displaying */
 extern	player_t	players[MAXPLAYERS];
 extern	playerresp_t	playersresp[MAXPLAYERS];
 
-extern	int			totalkills, totalitems, totalsecret;	/* for intermission */
+extern	VINT		totalitems, totalsecret;	/* for intermission */
 extern	int			gamemaplump;
 extern	dmapinfo_t	gamemapinfo;
 extern	dgameinfo_t	gameinfo;
@@ -454,9 +429,6 @@ extern  int         leveltime;
 #define MAXDMSTARTS		10
 extern	mapthing_t	*deathmatchstarts, *deathmatch_p;
 extern	mapthing_t	playerstarts[MAXPLAYERS];
-
-#define	BODYQUESIZE		4
-extern	int			bodyqueslot;
 
 /*
 ===============================================================================

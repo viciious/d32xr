@@ -79,7 +79,7 @@ static void R_PrepMobj(mobj_t *thing)
    }
 
    flip = false;
-   if (lump < 0)
+   if (lump < 0 || (thing->frame & FF_FLIPPED))
    {
       lump = -(lump + 1);
       flip = true;

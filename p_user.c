@@ -94,10 +94,6 @@ void P_PlayerXYMovement (mobj_t *mo)
 	if (mo->z > mo->floorz)
 		return;		/* no friction when airborne */
 
-	if (mo->flags & MF_CORPSE)
-		if (mo->floorz != mo->subsector->sector->floorheight)
-			return;			/* don't stop halfway off a step */
-
 	if (mo->momx > -STOPSPEED && mo->momx < STOPSPEED
 	&& mo->momy > -STOPSPEED && mo->momy < STOPSPEED)
 	{	
@@ -543,19 +539,7 @@ ticphase = 20;
 	
 ticphase = 21;
 	P_BuildMove (player);
-	
-/* */
-/* chain saw run forward */
-/* */
-	if (player->mo->flags & MF_JUSTATTACKED)
-	{
-		player->angleturn = 0;
-		player->forwardmove = 25 * FRACUNIT / 32;
-		player->sidemove = 0;
-		player->mo->flags &= ~MF_JUSTATTACKED;
-	}
-			
-	
+
 	if (player->playerstate == PST_DEAD)
 	{
 		if (player == &players[consoleplayer])
@@ -566,12 +550,8 @@ ticphase = 21;
 		
 /* */
 /* move around */
-/* reactiontime is used to prevent movement for a bit after a teleport */
 ticphase = 22;
-	if (player->mo->reactiontime)
-		player->mo->reactiontime--;
-	else
-		P_MovePlayer (player);
+	P_MovePlayer (player);
 	P_CalcHeight (player);
 
 	if (player == &players[consoleplayer])
@@ -656,7 +636,6 @@ ticphase = 26;
 
 void R_ResetResp(player_t* p)
 {
-	int j;
 	int pnum = p - players;
 	playerresp_t* resp = &playersresp[pnum];
 

@@ -85,11 +85,11 @@ static boolean PB_CheckThing(mobj_t *thing, pmovetest_t *mt)
       return true; // don't clip against self
 
    // check for skulls slamming into things
-   if(mt->testflags & MF_SKULLFLY)
+   /*if(mt->testflags & MF_SKULLFLY)
    {
       mt->hitthing = thing;
       return false;
-   }
+   }*/
 
    // missiles can hit other things
    if(mt->testflags & MF_MISSILE)
@@ -319,7 +319,7 @@ static boolean PB_TryMove(pmovetest_t *mt, mobj_t *mo, fixed_t tryx, fixed_t try
       return false; // mobj must lower itself to fit
    if(mt->testfloorz - mo->z > 24*FRACUNIT)
       return false; // too big a step up
-   if(!(mt->testflags & (MF_DROPOFF|MF_FLOAT)) && mt->testfloorz - mt->testdropoffz > 24*FRACUNIT)
+   if(!(mt->testflags & MF_FLOAT) && mt->testfloorz - mt->testdropoffz > 24*FRACUNIT)
       return false; // don't stand over a dropoff
 
    // the move is ok, so link the thing into its new position
@@ -364,12 +364,12 @@ void P_XYMovement(mobj_t *mo)
          // blocked move
 
          // flying skull?
-         if(mo->flags & MF_SKULLFLY)
+/*         if(mo->flags & MF_SKULLFLY)
          {
             mo->extradata = (intptr_t)mt.hitthing;
             mo->latecall = L_SkullBash;
             return;
-         }
+         }*/
 
          // explode a missile?
          if(mo->flags & MF_MISSILE)
@@ -391,14 +391,11 @@ void P_XYMovement(mobj_t *mo)
 
    // slow down
 
-   if(mo->flags & (MF_MISSILE|MF_SKULLFLY))
+   if(mo->flags & MF_MISSILE)
       return; // no friction for missiles or flying skulls ever
 
    if(mo->z > mo->floorz)
       return; // no friction when airborne
-
-   if(mo->flags & MF_CORPSE && mo->floorz != mo->subsector->sector->floorheight)
-      return; // sliding corpse: don't stop halfway off a step
 
    if(mo->momx > -STOPSPEED && mo->momx < STOPSPEED &&
       mo->momy > -STOPSPEED && mo->momy < STOPSPEED)
@@ -452,12 +449,6 @@ void P_ZMovement(mobj_t *mo)
    // clip movement
    if(mo->z <= mo->floorz)
    {
-      if (mo->flags & MF_SKULLFLY)
-      {
-          // the skull slammed into something
-          mo->momz = -mo->momz;
-      }
-
       if(mo->momz < 0)
          mo->momz = 0;
       mo->z = mo->floorz; // hit the floor
@@ -482,12 +473,6 @@ void P_ZMovement(mobj_t *mo)
       if(mo->momz > 0)
          mo->momz = 0;
       mo->z = mo->ceilingz - mo->height; // hit the ceiling
-
-      if (mo->flags & MF_SKULLFLY)
-      {
-          // the skull slammed into something
-          mo->momz = -mo->momz;
-      }
 
       if(mo->flags & MF_MISSILE)
          mo->latecall = P_ExplodeMissile;
