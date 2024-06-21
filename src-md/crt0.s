@@ -2646,6 +2646,7 @@ bump_fm:
         move.b  RF5C68_ENV.w,rf5c68_envelope
         move.b  RF5C68_CHN.w,rf5c68_chanmask
         move.b  RF5C68_CTL.w,rf5c68_chanctl
+        move.b  RF5C68_PAN.w,rf5c68_pan
         bra.b   7f
 
 6:
@@ -2705,8 +2706,12 @@ bump_fm:
         tst.w   pcm_env
         beq.b   20f                 /* PCM muted */
 
+        moveq   #0,d1
         move.b  rf5c68_envelope,d1
+        swap.w  d1
+        move.b  rf5c68_pan,d1
         move.l  d1,-(sp)
+        moveq   #0,d1
         move.w  rf5c68_freq_incr,d1
         move.l  d1,-(sp)
         move.w  rf5c68_loop_ofs,d1
@@ -3195,7 +3200,10 @@ rf5c68_envelope:
         dc.b    0
 rf5c68_chanmask:
         dc.b    255
+rf5c68_pan:
+        dc.b    128
 
+        .align  2
 offs68k:
         dc.w    0
 offsz80:

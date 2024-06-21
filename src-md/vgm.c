@@ -237,12 +237,26 @@ void vgm_stop_rf5c68_samples(int chan)
     scd_queue_stop_src(VGM_MCD_SOURCE_ID+chan);
 }
 
-void vgm_play_rf5c68_samples(int chan, int offset, int loopstart, int incr, int vol)
+static uint8_t vgm_midipan2lcf(uint8_t pan)
+{
+    if (pan == 0b00001111) {
+        return 0; // full left
+    } else if (pan == 255) {
+        // no panning
+        return pan;
+    } else {
+        return (pan & 0xf0) | ((256 - pan) >> 4);
+    }
+}
+
+void vgm_play_rf5c68_samples(int chan, int offset, int loopstart, int incr, int volpan)
 {
     //int freq = ((uint16_t)incr * 32604) >> 11;
     int freq = incr << 4; // good enough
     int length = loopstart - offset;
     void *ptr = (char *)MCD_WORDRAM_VGM_PTR + rf5c68_dataofs + offset;
+    int vol = (volpan >> 16) & 0xff;
+    int pan = vgm_midipan2lcf(volpan & 0xff);
 
     if (!cd_ok)
         return;
@@ -252,7 +266,7 @@ void vgm_play_rf5c68_samples(int chan, int offset, int loopstart, int incr, int 
     if (loopstart == 0)
     {
         // hacky hack
-        scd_queue_update_src(VGM_MCD_SOURCE_ID+chan, freq, 128, vol, 0);
+        scd_queue_update_src(VGM_MCD_SOURCE_ID+chan, freq, pan, vol, 0);
         return;
     }
 
@@ -260,7 +274,7 @@ void vgm_play_rf5c68_samples(int chan, int offset, int loopstart, int incr, int 
         return;
 
     scd_queue_setptr_buf(VGM_MCD_BUFFER_ID+chan, ptr, length);
-    scd_queue_play_src(VGM_MCD_SOURCE_ID+chan, VGM_MCD_BUFFER_ID+chan, freq, 128, vol, 0);
+    scd_queue_play_src(VGM_MCD_SOURCE_ID+chan, VGM_MCD_BUFFER_ID+chan, freq, pan, vol, 0);
 }
 
 void vgm_stop_samples(void)
