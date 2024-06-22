@@ -78,8 +78,8 @@ static void R_PrepMobj(mobj_t *thing)
       lump = sprlump[0];
    }
 
-   flip = false;
-   if (lump < 0 || (thing->frame & FF_FLIPPED))
+   flip = (thing->frame & FF_FLIPPED);
+   if (lump < 0)
    {
       lump = -(lump + 1);
       flip = true;

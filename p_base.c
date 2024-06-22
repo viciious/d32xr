@@ -319,6 +319,8 @@ static boolean PB_TryMove(pmovetest_t *mt, mobj_t *mo, fixed_t tryx, fixed_t try
       return false; // mobj must lower itself to fit
    if(mt->testfloorz - mo->z > 24*FRACUNIT)
       return false; // too big a step up
+   if (!(mt->testflags & MF_FLOAT) && mt->testfloorz - mt->testdropoffz > 24*FRACUNIT)
+      return false; // don't stand over a dropoff
 
    // the move is ok, so link the thing into its new position
    P_UnsetThingPosition(mo);

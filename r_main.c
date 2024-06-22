@@ -328,7 +328,7 @@ int R_DefaultViewportSize(void)
 	for (i = 0; i < numViewports; i++)
 	{
 		const VINT* vp = viewports[i][0];
-		if (vp[0] == 320 && vp[2] == false)
+		if (vp[0] == 160 && vp[2] == true)
 			return i;
 	}
 
