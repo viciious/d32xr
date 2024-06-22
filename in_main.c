@@ -460,6 +460,7 @@ int IN_Ticker (void)
 	int		buttons;
 	int		oldbuttons;		
 	int 		i;
+	boolean ticking = false;
 
 	if (!interm->i_secret)
 		return 1;
@@ -500,25 +501,43 @@ int IN_Ticker (void)
 		if (interm->valsdrawn == true)
 		{
 			if (killvalue[i] < pstats[i].killpercent )
+			{
 				killvalue[i]+=2;
+				ticking = true;
+			}
 			if (killvalue[i] > pstats[i].killpercent)
 				killvalue[i] = pstats[i].killpercent;
 
 			if (itemvalue[i] < pstats[i].itempercent )
+			{
 				itemvalue[i]+=2;
+				ticking = true;
+			}
 			if (itemvalue[i] > pstats[i].itempercent)
 				itemvalue[i] = pstats[i].itempercent;
 
 			if (secretvalue[i] < pstats[i].secretpercent )
+			{
 				secretvalue[i]+=2;
+				ticking = true;
+			}
 			if (secretvalue[i] > pstats[i].secretpercent)
 				secretvalue[i] = pstats[i].secretpercent;
 
 			if (fragvalue[i] < pstats[i].fragcount)
+			{
 				fragvalue[i]+=2;
+				ticking = true;
+			}
 			if (fragvalue[i] > pstats[i].fragcount)
 				fragvalue[i] = pstats[i].fragcount;
 		}
+	}
+
+	if (ticking)
+	{
+		if (!(ticon & 3))
+			S_StartSound(0, sfx_pistol);
 	}
 
 	return 0;
