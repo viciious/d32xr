@@ -197,24 +197,25 @@ typedef struct mobj_s
 {
 	fixed_t			x, y, z;
 	struct	mobj_s* prev, * next;
+	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
+	struct mobj_s	*bnext, *bprev;		/* links in blocks (if needed) */
+	struct subsector_s	*subsector;
 
+	unsigned short		type;
 	unsigned char		sprite;				/* used to find patch_t and flip value */
 	unsigned char		player;		/* only valid if type == MT_PLAYER */
+
+	// RING OBJECTS END HERE
 
 	VINT			health;
 	VINT			tics;				/* state tic counter	 */
 	VINT 			state;
 	VINT			frame;				/* might be ord with FF_FULLBRIGHT */
 
-	unsigned short		type;
-
 /* info for drawing */
-	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
 	angle_t			angle;
 
 /* interaction info */
-	struct mobj_s	*bnext, *bprev;		/* links in blocks (if needed) */
-	struct subsector_s	*subsector;
 	fixed_t			floorz, ceilingz;	/* closest together of contacted secs */
 
 	VINT		flags;
@@ -241,6 +242,7 @@ typedef struct degenmobj_s
 } degenmobj_t;
 
 #define static_mobj_size (offsetof(mobj_t,movedir))
+#define ring_mobj_size (offsetof(mobj_t,health))
 
 /* */
 /* frame flags */

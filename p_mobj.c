@@ -6,10 +6,6 @@
 
 void G_PlayerReborn (int player);
 
-mapthing_t	*itemrespawnque;
-int			*itemrespawntime;
-int			iquehead, iquetail;
-
 /*
 ===============
 =
@@ -46,7 +42,15 @@ void P_RemoveMobj (mobj_t *mobj)
 /* unlink from sector and block lists */
 	P_UnsetThingPosition (mobj);
 
-	if (mobj->flags & MF_STATIC)
+	if (mobj->type == MT_RING)
+	{
+		// unlink from mobj list
+		P_RemoveMobjFromCurrList(mobj);
+		P_AddMobjToList(mobj, (void*)&freeringmobjhead);
+		return;
+
+	}
+	else if (mobj->flags & MF_STATIC)
 	{
 		/* unlink from mobj list */
 		P_RemoveMobjFromCurrList(mobj);
@@ -71,59 +75,6 @@ void P_FreeMobj(mobj_t* mobj)
 /* link to limbo mobj list */
 	P_AddMobjToList(mobj, (void*)&freemobjhead);
 }
-
-/*
-===============
-=
-= P_RespawnSpecials
-=
-===============
-*/
-
-void P_RespawnSpecials (void)
-{
-	fixed_t         x,y,z; 
-	mobj_t			*mo;
-	mapthing_t		*mthing;
-	int				i;
-	int				spot;
-
-	if (netgame != gt_deathmatch)
-		return;
-		
-	if (iquehead == iquetail)
-		return;			/* nothing left to respawn */
-
-	if (iquehead - iquetail > ITEMQUESIZE)
-		iquetail = iquehead - ITEMQUESIZE;	/* loose some off the que */
-		
-	spot = iquetail&(ITEMQUESIZE-1);
-	
-	if (ticon - itemrespawntime[spot] < 30*TICRATE*2)
-		return;			/* wait at least 30 seconds */
-
-	mthing = &itemrespawnque[spot];
-	
-	x = mthing->x << FRACBITS; 
-	y = mthing->y << FRACBITS; 
-
-/* find which type to spawn */
-	for (i=0 ; i< NUMMOBJTYPES ; i++)
-		if (mthing->type == mobjinfo[i].doomednum)
-			break;
-
-/* spawn it */
-	if (mobjinfo[i].flags & MF_SPAWNCEILING)
-		z = ONCEILINGZ;
-	else
-		z = ONFLOORZ;
-	mo = P_SpawnMobj (x,y,z, i);
-	mo->angle = ANG45 * (mthing->angle/45);
-
-/* pull it from the que */
-	iquetail++;
-}
-	
 
 /*
 ================
@@ -157,7 +108,7 @@ boolean P_SetMobjState (mobj_t *mobj, statenum_t state)
 		if (st->action)		/* call action functions when the state is set */
 			st->action(mobj);
 
-		if (!(mobj->flags & MF_STATIC))
+		if (!(mobj->type == MT_RING || (mobj->flags & MF_STATIC)))
 			mobj->latecall = NULL;	/* make sure it doesn't come back to life... */
 
 		state = st->nextstate;
@@ -204,7 +155,44 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 	const mobjinfo_t *info = &mobjinfo[type];
 
 /* try to reuse a previous mobj first */
-	if (info->flags & MF_STATIC)
+	if (type == MT_RING)
+	{
+		if (freeringmobjhead.next != (void*)&freeringmobjhead)
+		{
+			mobj = freeringmobjhead.next;
+			P_RemoveMobjFromCurrList(mobj);
+		}
+		else
+			mobj = Z_Malloc(ring_mobj_size, PU_LEVEL);
+		
+		D_memset(mobj, 0, ring_mobj_size);
+
+		mobj->type = type;
+		mobj->x = x;
+		mobj->y = y;
+
+		/* do not set the state with P_SetMobjState, because action routines can't */
+		/* be called yet */
+		st = &states[info->spawnstate];
+		mobj->sprite = st->sprite;
+
+		/* set subsector and/or block links */
+		P_SetThingPosition2 (mobj, R_PointInSubsector(x, y), true);
+		
+		const fixed_t floorz = mobj->subsector->sector->floorheight;
+		const fixed_t ceilingz = mobj->subsector->sector->ceilingheight;
+		if (z == ONFLOORZ)
+			mobj->z = floorz;
+		else if (z == ONCEILINGZ)
+			mobj->z = ceilingz - info->height;
+		else 
+			mobj->z = z;
+			
+		P_AddMobjToList(mobj, (void *)&mobjhead);
+
+		return mobj;
+	}
+	else if (info->flags & MF_STATIC)
 	{
 		if (freestaticmobjhead.next != (void *)&freestaticmobjhead)
 		{
@@ -275,7 +263,7 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 =
 ================
 */
-void P_PreSpawnMobjs(int count, int staticcount)
+void P_PreSpawnMobjs(int count, int staticcount, int ringcount)
 {
 	if (count > 0)
 	{
@@ -292,6 +280,15 @@ void P_PreSpawnMobjs(int count, int staticcount)
 		for (; staticcount > 0; staticcount--) {
 			P_AddMobjToList((void *)mobj, (void *)&freestaticmobjhead);
 			mobj += static_mobj_size;
+		}
+	}
+
+	if (ringcount > 0)
+	{
+		uint8_t *mobj = Z_Malloc (ring_mobj_size*ringcount, PU_LEVEL);
+		for (; ringcount > 0; ringcount--) {
+			P_AddMobjToList((void*)mobj, (void*)&freeringmobjhead);
+			mobj += ring_mobj_size;
 		}
 	}
 }
@@ -387,6 +384,8 @@ int P_MapThingSpawnsMobj (mapthing_t* mthing)
 		{
 			if (mthing->type == mobjinfo[i].doomednum)
 			{
+				if (i == MT_RING)
+					return 3;
 				if (mobjinfo[i].flags & MF_STATIC)
 					return 2;
 				return 1;
@@ -461,10 +460,14 @@ return;	/*DEBUG */
 	else
 		z = ONFLOORZ;
 	mobj = P_SpawnMobj (x,y,z, i);
+	if (mobj->type == MT_RING)
+	{
+		totalitems++;
+		return;
+	}
+
 	if (mobj->tics > 0)
 		mobj->tics = 1 + (P_Random () % mobj->tics);
-	if (mobj->type == MT_RING)
-		totalitems++;
 		
 	mobj->angle = ANG45 * (mthing->angle/45);
 	if (mobj->flags & MF_STATIC)

@@ -510,7 +510,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 
 		vd.viewx = thiscam->x;
 		vd.viewy = thiscam->y;
-		vd.viewz = thiscam->z;
+		vd.viewz = thiscam->z + (20 << FRACBITS);
 		vd.viewangle = thiscam->angle;
 		vd.lightlevel = thiscam->subsector->sector->lightlevel;
 	}

@@ -62,8 +62,8 @@ void A_Pain(mobj_t *actor);
 const state_t	states[NUMSTATES] = {
 STATE(SPR_PLAY,0,-1,NULL,S_NULL),	// S_NULL
 STATE(SPR_PLAY,0,45,NULL,S_PLAY_TAP1),	// S_PLAY_STND
-STATE(SPR_PLAY,1,7,NULL,S_PLAY_TAP2), // S_PLAY_TAP1
-STATE(SPR_PLAY,2,7,NULL,S_PLAY_TAP1), // S_PLAY_TAP2
+STATE(SPR_PLAY,1,4,NULL,S_PLAY_TAP2), // S_PLAY_TAP1
+STATE(SPR_PLAY,2,4,NULL,S_PLAY_TAP1), // S_PLAY_TAP2
 STATE(SPR_PLAY,3,1,NULL,S_PLAY_RUN2),	// S_PLAY_RUN1
 STATE(SPR_PLAY,4,1,NULL,S_PLAY_RUN3),	// S_PLAY_RUN2
 STATE(SPR_PLAY,5,1,NULL,S_PLAY_RUN4),	// S_PLAY_RUN3
@@ -105,18 +105,27 @@ STATE(SPR_POSS,2,2,A_Chase,S_POSS_RUN6),	/* S_POSS_RUN5 */
 STATE(SPR_POSS,2,2,A_Chase,S_POSS_RUN7),	/* S_POSS_RUN6 */
 STATE(SPR_POSS,3,2,A_Chase,S_POSS_RUN8),	/* S_POSS_RUN7 */
 STATE(SPR_POSS,3,2,A_Chase,S_POSS_RUN1),	/* S_POSS_RUN8 */
-STATE(SPR_RING,0,2,NULL,S_RING2), // S_RING1
-STATE(SPR_RING,1,2,NULL,S_RING3), // S_RING2
-STATE(SPR_RING,2,2,NULL,S_RING4), // S_RING3
-STATE(SPR_RING,3,2,NULL,S_RING5), // S_RING4
-STATE(SPR_RING,4,2,NULL,S_RING6), // S_RING5
-STATE(SPR_RING,5,2,NULL,S_RING7), // S_RING6
-STATE(SPR_RING,6,2,NULL,S_RING8), // S_RING7
-STATE(SPR_RING,5|FF_FLIPPED,2,NULL,S_RING9), // S_RING8
-STATE(SPR_RING,4|FF_FLIPPED,2,NULL,S_RING10), // S_RING9
-STATE(SPR_RING,3|FF_FLIPPED,2,NULL,S_RING11), // S_RING10
-STATE(SPR_RING,2|FF_FLIPPED,2,NULL,S_RING12), // S_RING11
-STATE(SPR_RING,1|FF_FLIPPED,2,NULL,S_RING1), // S_RING12
+STATE(SPR_RING,0,1,NULL,S_RING2), // S_RING1
+STATE(SPR_RING,1,1,NULL,S_RING3), // S_RING2
+STATE(SPR_RING,2,1,NULL,S_RING4), // S_RING3
+STATE(SPR_RING,3,1,NULL,S_RING5), // S_RING4
+STATE(SPR_RING,4,1,NULL,S_RING6), // S_RING5
+STATE(SPR_RING,5,1,NULL,S_RING7), // S_RING6
+STATE(SPR_RING,6,1,NULL,S_RING8), // S_RING7
+STATE(SPR_RING,5|FF_FLIPPED,1,NULL,S_RING9), // S_RING8
+STATE(SPR_RING,4|FF_FLIPPED,1,NULL,S_RING10), // S_RING9
+STATE(SPR_RING,3|FF_FLIPPED,1,NULL,S_RING11), // S_RING10
+STATE(SPR_RING,2|FF_FLIPPED,1,NULL,S_RING12), // S_RING11
+STATE(SPR_RING,1|FF_FLIPPED,1,NULL,S_RING1), // S_RING12
+STATE(SPR_SPRK,0,1,NULL,S_SPARK2), // S_SPARK1
+STATE(SPR_SPRK,1,1,NULL,S_SPARK3), // S_SPARK2
+STATE(SPR_SPRK,2,1,NULL,S_SPARK4), // S_SPARK3
+STATE(SPR_SPRK,3,1,NULL,S_SPARK5), // S_SPARK4
+STATE(SPR_SPRK,4,1,NULL,S_SPARK6), // S_SPARK5
+STATE(SPR_SPRK,5,1,NULL,S_SPARK7), // S_SPARK6
+STATE(SPR_SPRK,6,1,NULL,S_SPARK8), // S_SPARK7
+STATE(SPR_SPRK,7,1,NULL,S_SPARK9), // S_SPARK8
+STATE(SPR_SPRK,8,1,NULL,S_NULL), // S_SPARK9
 };
 
 #undef STATE
@@ -221,6 +230,54 @@ MF_SOLID|MF_SHOOTABLE		/* flags */
 	0,              // damage
 	sfx_None,       // activesound
 	MF_SPECIAL|MF_NOGRAVITY|MF_STATIC, // flags
+},
+{           // MT_SPARK
+	-1,            // doomednum
+	S_SPARK1,         // spawnstate
+	1000,           // spawnhealth
+	S_NULL,         // seestate
+	sfx_None,       // seesound
+	0,//MT_FLINGRING,   // reactiontime
+	sfx_None,       // attacksound
+	S_NULL,         // painstate
+	0,              // painchance
+	sfx_None,       // painsound
+	S_NULL,         // meleestate
+	S_NULL,         // missilestate
+	S_NULL,//S_SPRK1,        // deathstate
+	S_NULL,         // xdeathstate
+	sfx_itemup,     // deathsound
+	38,    // speed
+	16*FRACUNIT,    // radius
+	24*FRACUNIT,    // height
+	100,            // mass
+	0,              // damage
+	sfx_None,       // activesound
+	MF_NOGRAVITY|MF_STATIC|MF_NOBLOCKMAP, // flags
+},
+{           // MT_FLINGRING
+	-1,            // doomednum
+	S_RING1,         // spawnstate
+	4*TICRATE,           // spawnhealth
+	S_NULL,         // seestate
+	sfx_None,       // seesound
+	0,//MT_FLINGRING,   // reactiontime
+	sfx_None,       // attacksound
+	S_NULL,         // painstate
+	0,              // painchance
+	sfx_None,       // painsound
+	S_NULL,         // meleestate
+	S_NULL,         // missilestate
+	S_NULL,//S_SPRK1,        // deathstate
+	S_NULL,         // xdeathstate
+	sfx_itemup,     // deathsound
+	38,    // speed
+	16*FRACUNIT,    // radius
+	24*FRACUNIT,    // height
+	100,            // mass
+	0,              // damage
+	sfx_None,       // activesound
+	MF_FLOAT, // flags
 }
 };
 

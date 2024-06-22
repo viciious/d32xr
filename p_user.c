@@ -447,6 +447,31 @@ void P_CalcHeight (player_t *player)
 		player->viewz = player->mo->ceilingz-4*FRACUNIT;
 }
 
+static void P_DoTeeter(player_t *player)
+{
+	boolean teeter = false;
+	const fixed_t tiptop = 24*FRACUNIT; // Gotta be farther than the step height
+
+	subsector_t *a = R_PointInSubsector(player->mo->x + 5*FRACUNIT, player->mo->y + 5*FRACUNIT);
+	subsector_t *b = R_PointInSubsector(player->mo->x - 5*FRACUNIT, player->mo->y + 5*FRACUNIT);
+	subsector_t *c = R_PointInSubsector(player->mo->x + 5*FRACUNIT, player->mo->y - 5*FRACUNIT);
+	subsector_t *d = R_PointInSubsector(player->mo->x - 5*FRACUNIT, player->mo->y - 5*FRACUNIT);
+
+	if (a->sector->floorheight < player->mo->floorz - tiptop
+			|| b->sector->floorheight < player->mo->floorz - tiptop
+			|| c->sector->floorheight < player->mo->floorz - tiptop
+			|| d->sector->floorheight < player->mo->floorz - tiptop)
+		teeter = true;
+
+	if (teeter)
+	{
+		if (player->mo->state >= S_PLAY_STND && player->mo->state <= S_PLAY_TAP2)
+			P_SetMobjState(player->mo, S_PLAY_TEETER1);
+	}
+	else if (player->mo->state == S_PLAY_TEETER1 || player->mo->state == S_PLAY_TEETER2)
+		P_SetMobjState(player->mo, S_PLAY_STND);
+}
+
 /*
 =================
 =
@@ -471,6 +496,16 @@ void P_MovePlayer (player_t *player)
 	&& (player->mo->state >= S_PLAY_STND && player->mo->state <= S_PLAY_TAP2) )
 		P_SetMobjState (player->mo, S_PLAY_RUN1);
 
+	// Make sure you're not teetering when you shouldn't be.
+	if ((player->mo->state == S_PLAY_TEETER1 || player->mo->state == S_PLAY_TEETER2)
+		&& (player->mo->momx || player->mo->momy || player->mo->momz))
+		P_SetMobjState(player->mo, S_PLAY_STND);
+
+	if (!player->mo->momz &&
+	((!(player->mo->momx || player->mo->momy) && (player->mo->state == S_PLAY_STND
+	|| player->mo->state == S_PLAY_TAP1 || player->mo->state == S_PLAY_TAP2
+	|| player->mo->state == S_PLAY_TEETER1 || player->mo->state == S_PLAY_TEETER2))))
+		P_DoTeeter(player);
 }	
 
 

@@ -48,6 +48,31 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
 //   int     tmflags = mw->tmflags;
    const mobjinfo_t* thinfo = &mobjinfo[tmthing->type];
 
+   if (thing->type == MT_RING)
+   {
+      if (!tmthing->player)
+         return true;
+
+      if (thing == tmthing)
+         return true;
+
+      blockdist = mobjinfo[thing->type].radius + mobjinfo[tmthing->type].radius;
+
+      delta = thing->x - mw->tmx;
+      if(delta < 0)
+         delta = -delta;
+      if(delta >= blockdist)
+         return true; // didn't hit it
+
+      delta = thing->y - mw->tmy;
+      if(delta < 0)
+         delta = -delta;
+      if(delta >= blockdist)
+         return true; // didn't hit it
+
+      P_TouchSpecialThing (thing,tmthing);
+   }
+
    if(!(thing->flags & (MF_SOLID|MF_SPECIAL|MF_SHOOTABLE)))
       return true;
 
@@ -399,7 +424,7 @@ boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly)
    tmthing->ceilingz = mw.tmceilingz;
    tmthing->x        = mw.tmx;
    tmthing->y        = mw.tmy;
-   P_SetThingPosition2(tmthing, mw.newsubsec);
+   P_SetThingPosition2(tmthing, mw.newsubsec, false);
 
    return true;
 }

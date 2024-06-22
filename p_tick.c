@@ -28,7 +28,7 @@ processing
 
 thinker_t	thinkercap;	/* both the head and tail of the thinker list */
 degenmobj_t		mobjhead;	/* head and tail of mobj list */
-degenmobj_t		freemobjhead, freestaticmobjhead;	/* head and tail of free mobj list */
+degenmobj_t		freemobjhead, freestaticmobjhead, freeringmobjhead;	/* head and tail of free mobj list */
 degenmobj_t		limbomobjhead;
 
 //int			activethinkers;	/* debug count */
@@ -48,6 +48,7 @@ void P_InitThinkers (void)
 	mobjhead.next = mobjhead.prev = (void *)&mobjhead;
 	freemobjhead.next = freemobjhead.prev = (void *)&freemobjhead;
 	freestaticmobjhead.next = freestaticmobjhead.prev = (void *)&freestaticmobjhead;
+	freeringmobjhead.next = freeringmobjhead.prev = (void*)&freeringmobjhead;
 	limbomobjhead.next = limbomobjhead.prev = (void*)&limbomobjhead;
 }
 
@@ -414,8 +415,6 @@ int P_Ticker (void)
 		latetics = frtc - start;
 
 		P_UpdateSpecials();
-
-		P_RespawnSpecials();
 
 		ST_Ticker();			/* update status bar */
 

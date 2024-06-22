@@ -141,30 +141,27 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 	fixed_t		delta;
 	int			sound;
 		
-	delta = special->z - toucher->z;
-	if (delta > (toucher->theight << FRACBITS) || delta < -8*FRACUNIT)
-		return;			/* out of reach */
+	if (toucher->z > (special->z + (special->theight << FRACBITS)))
+		return;
+	if (special->z > (toucher->z + (toucher->theight << FRACBITS)))
+		return;
 	
 	sound = sfx_itemup;	
 	player = toucher->player ? &players[toucher->player - 1] : NULL;
 	if (toucher->health <= 0)
 		return;						/* can happen with a sliding player corpse */
-	switch (special->sprite)
+
+	switch(special->type)
 	{
-/* */
-/* bonus items */
-/* */
-	case SPR_RING:
-		player->health+=2;		/* can go over 100% */
-		if (player->health > 200)
-			player->health = 200;
-		player->mo->health = player->health;
-		player->message = "You pick up a health bonus.";
+		case MT_RING:
+			player->health++;
+			player->mo->health = player->health;
+			P_SpawnMobj(special->x, special->y, special->z, MT_SPARK);
 		break;
 
-	default:
-		sound = P_TouchSpecialThing2 (special, toucher);
-		if (sound == -1)
+		default:
+			sound = P_TouchSpecialThing2 (special, toucher);
+			if (sound == -1)
 			return;
 	}
 	

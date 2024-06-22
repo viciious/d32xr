@@ -272,13 +272,14 @@ void P_LoadThings (int lump)
 	int				i;
 	mapthing_t		*mt;
 	spawnthing_t	*st;
-	int 			numthingsreal, numstaticthings;
+	short			numthingsreal, numstaticthings, numringthings;
 
 	data = I_TempBuffer ();
 	W_ReadLump (lump,data);
 	numthings = W_LumpLength (lump) / sizeof(mapthing_t);
 	numthingsreal = 0;
 	numstaticthings = 0;
+	numringthings = 0;
 
 	mt = (mapthing_t *)data;
 	for (i=0 ; i<numthings ; i++, mt++)
@@ -317,12 +318,15 @@ void P_LoadThings (int lump)
 			case 2:
 				numstaticthings++;
 				break;
+			case 3:
+				numringthings++;
+				break;
 		}
 	}
 
 	// preallocate a few mobjs for puffs and projectiles
 	numthingsreal += 10;
-	P_PreSpawnMobjs(numthingsreal, numstaticthings);
+	P_PreSpawnMobjs(numthingsreal, numstaticthings, numringthings);
 
 	mt = (mapthing_t *)data;
 	for (i=0 ; i<numthings ; i++, mt++)
@@ -656,14 +660,10 @@ D_printf ("P_SetupLevel(%i)\n",lumpnum);
 
 	if (netgame == gt_deathmatch)
 	{
-		itemrespawnque = Z_Malloc(sizeof(*itemrespawnque) * ITEMQUESIZE, PU_LEVEL);
-		itemrespawntime = Z_Malloc(sizeof(*itemrespawntime) * ITEMQUESIZE, PU_LEVEL);
 		deathmatchstarts = Z_Malloc(sizeof(*deathmatchstarts) * MAXDMSTARTS, PU_LEVEL);
 	}
 	else
 	{
-		itemrespawnque = NULL;
-		itemrespawntime = NULL;
 		deathmatchstarts = NULL;
 	}
 
@@ -704,7 +704,6 @@ extern byte *debugscreen;
 }
 #endif
 
-	iquehead = iquetail = 0;
 	gamepaused = false;
 
 	R_SetupLevel();

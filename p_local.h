@@ -93,7 +93,7 @@ void	R_ResetResp(player_t* p);
 */
 
 extern	degenmobj_t	mobjhead;
-extern	degenmobj_t	freemobjhead, freestaticmobjhead;
+extern	degenmobj_t	freemobjhead, freestaticmobjhead, freeringmobjhead;
 extern	degenmobj_t	limbomobjhead;
 
 extern	int			activethinkers;	/* debug count */
@@ -102,17 +102,13 @@ extern	int			activemobjs;	/* debug count */
 #define ONFLOORZ	D_MININT
 #define	ONCEILINGZ	D_MAXINT
 
-#define		ITEMQUESIZE	32
-extern	mapthing_t	*itemrespawnque;
-extern	int			*itemrespawntime;
-
 mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
 
 void 	P_RemoveMobj (mobj_t *th);
 void	P_FreeMobj(mobj_t* mobj);
 boolean	P_SetMobjState (mobj_t *mobj, statenum_t state) ATTR_DATA_CACHE_ALIGN;
 void 	P_MobjThinker (mobj_t *mobj);
-void 	P_PreSpawnMobjs(int count, int staticcount);
+void 	P_PreSpawnMobjs(int count, int staticcount, int ringcount);
 
 void	P_SpawnPuff (fixed_t x, fixed_t y, fixed_t z, fixed_t attackrange);
 void 	P_SpawnBlood (fixed_t x, fixed_t y, fixed_t z, int damage);
@@ -173,7 +169,7 @@ boolean P_BlockThingsIterator (int x, int y, blockthingsiter_t, void *userp );
 
 void 	P_UnsetThingPosition (mobj_t *thing);
 void	P_SetThingPosition (mobj_t *thing);
-void	P_SetThingPosition2 (mobj_t *thing, subsector_t *ss);
+void	P_SetThingPosition2 (mobj_t *thing, subsector_t *ss, boolean forceblockmap);
 
 void	P_PlayerLand (mobj_t *mo);
 
@@ -245,12 +241,7 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 
 #include "p_spec.h"
 
-extern	int			iquehead, iquetail;
-
 extern	int playernum;
-
-void P_RespawnSpecials (void);
-
 
 /*
 ===============================================================================

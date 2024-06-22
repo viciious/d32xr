@@ -239,6 +239,8 @@ static boolean PB_CheckPosition(pmovetest_t *mt)
    mobj_t *mo = mt->checkthing;
 
    mt->testflags = mo->flags;
+   if (mo->player)
+      mt->testflags |= 0x80000000;
 
    mt->testbbox[BOXTOP   ] = mt->testy + mobjinfo[mo->type].radius;
    mt->testbbox[BOXBOTTOM] = mt->testy - mobjinfo[mo->type].radius;
@@ -319,7 +321,7 @@ static boolean PB_TryMove(pmovetest_t *mt, mobj_t *mo, fixed_t tryx, fixed_t try
       return false; // mobj must lower itself to fit
    if(mt->testfloorz - mo->z > 24*FRACUNIT)
       return false; // too big a step up
-   if (!(mt->testflags & MF_FLOAT) && mt->testfloorz - mt->testdropoffz > 24*FRACUNIT)
+   if (!(mt->testflags & MF_FLOAT|0x80000000) && mt->testfloorz - mt->testdropoffz > 24*FRACUNIT)
       return false; // don't stand over a dropoff
 
    // the move is ok, so link the thing into its new position
@@ -328,7 +330,7 @@ static boolean PB_TryMove(pmovetest_t *mt, mobj_t *mo, fixed_t tryx, fixed_t try
    mo->ceilingz = mt->testceilingz;
    mo->x        = tryx;
    mo->y        = tryy;
-   P_SetThingPosition2(mo, mt->testsubsec);
+   P_SetThingPosition2(mo, mt->testsubsec, false);
 
    return true;
 }
@@ -484,6 +486,9 @@ void P_ZMovement(mobj_t *mo)
 //
 void P_MobjThinker(mobj_t *mobj)
 {
+   if (mobj->type == MT_RING)
+      return;
+
    if (!(mobj->flags & MF_STATIC))
    {
       // momentum movement
@@ -552,7 +557,7 @@ void P_RunMobjLate(void)
     for (mo = mobjhead.next; mo != (void*)&mobjhead; mo = next)
     {
         next = mo->next;	/* in case mo is removed this time */
-        if (mo->flags & MF_STATIC)
+        if (mo->type == MT_RING || (mo->flags & MF_STATIC))
             continue;
         if (mo->latecall)
         {

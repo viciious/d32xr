@@ -11,7 +11,7 @@ fixed_t P_LineOpening(line_t* linedef) ATTR_DATA_CACHE_ALIGN;
 void P_LineBBox(line_t* ld, fixed_t* bbox) ATTR_DATA_CACHE_ALIGN;
 void P_UnsetThingPosition(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
 void P_SetThingPosition(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
-void P_SetThingPosition2(mobj_t* thing, subsector_t *ss) ATTR_DATA_CACHE_ALIGN;
+void P_SetThingPosition2(mobj_t* thing, subsector_t *ss, boolean forceblockmap) ATTR_DATA_CACHE_ALIGN;
 boolean P_BlockLinesIterator(int x, int y, boolean(*func)(line_t*, void*), void *userp) ATTR_DATA_CACHE_ALIGN;
 boolean P_BlockThingsIterator(int x, int y, boolean(*func)(mobj_t*, void*), void *userp) ATTR_DATA_CACHE_ALIGN;
 
@@ -226,7 +226,7 @@ void P_UnsetThingPosition (mobj_t *thing)
 =
 ===================
 */
-void P_SetThingPosition2 (mobj_t *thing, subsector_t *ss)
+void P_SetThingPosition2 (mobj_t *thing, subsector_t *ss, boolean forceblockmap)
 {
 	sector_t		*sec;
 	int				blockx, blocky;
@@ -250,7 +250,7 @@ void P_SetThingPosition2 (mobj_t *thing, subsector_t *ss)
 /* */
 /* link into blockmap */
 /* */
-	if ( ! (thing->flags & MF_NOBLOCKMAP) )
+	if (forceblockmap || !(thing->flags & MF_NOBLOCKMAP) )
 	{	/* inert things don't need to be in blockmap		 */
 		blockx = thing->x - bmaporgx;
 		blocky = thing->y - bmaporgy;
@@ -292,7 +292,7 @@ void P_SetThingPosition2 (mobj_t *thing, subsector_t *ss)
 
 void P_SetThingPosition (mobj_t *thing)
 {
-	P_SetThingPosition2(thing, R_PointInSubsector (thing->x,thing->y));
+	P_SetThingPosition2(thing, R_PointInSubsector (thing->x,thing->y), false);
 }
 
 
