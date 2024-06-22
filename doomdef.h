@@ -202,8 +202,7 @@ typedef struct mobj_s
 	struct subsector_s	*subsector;
 
 	unsigned short		type;
-	unsigned char		sprite;				/* used to find patch_t and flip value */
-	unsigned char		player;		/* only valid if type == MT_PLAYER */
+	VINT		flags;
 
 	// RING OBJECTS END HERE
 
@@ -218,8 +217,9 @@ typedef struct mobj_s
 /* interaction info */
 	fixed_t			floorz, ceilingz;	/* closest together of contacted secs */
 
-	VINT		flags;
 	VINT        theight;
+	unsigned char		sprite;				/* used to find patch_t and flip value */
+	unsigned char		player;		/* only valid if type == MT_PLAYER */
 
 	/* STATIC OBJECTS END HERE */
 	unsigned char	movedir;		/* 0-7 */

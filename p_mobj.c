@@ -170,11 +170,7 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 		mobj->type = type;
 		mobj->x = x;
 		mobj->y = y;
-
-		/* do not set the state with P_SetMobjState, because action routines can't */
-		/* be called yet */
-		st = &states[info->spawnstate];
-		mobj->sprite = st->sprite;
+		mobj->flags = info->flags;
 
 		/* set subsector and/or block links */
 		P_SetThingPosition2 (mobj, R_PointInSubsector(x, y), true);

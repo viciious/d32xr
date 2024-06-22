@@ -71,6 +71,7 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
          return true; // didn't hit it
 
       P_TouchSpecialThing (thing,tmthing);
+      return true;
    }
 
    if(!(thing->flags & (MF_SOLID|MF_SPECIAL|MF_SHOOTABLE)))

@@ -218,7 +218,7 @@ static void R_PrepRing(mobj_t *thing)
       return;
 
    // We can assume a lot of things here!
-   sprdef = &sprites[thing->sprite];
+   sprdef = &sprites[state->sprite];
 
    flip = thingframe & FF_FLIPPED;
    thingframe = thingframe & FF_FRAMEMASK;
