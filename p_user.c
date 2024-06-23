@@ -4,7 +4,6 @@
 #include "p_local.h"
 #include "st_main.h"
 
-
 fixed_t 		forwardmove[2] = {0x40000, 0x60000}; 
 fixed_t 		sidemove[2] = {0x38000, 0x58000}; 
 
@@ -40,8 +39,11 @@ void P_PlayerMove (mobj_t *mo)
 		
 	if ( P_TryMove (&tm, mo, sm.slidex, sm.slidey) )
 		goto dospecial;
-		
+
 stairstep:
+	momx = mo->momx;
+	momy = mo->momy;
+
 	if (momx > MAXMOVE)
 		momx = MAXMOVE;
 	if (momx < -MAXMOVE)
@@ -53,20 +55,19 @@ stairstep:
 		
 /* something fucked up in slidemove, so stairstep */
 
-	if (P_TryMove (&tm, mo, mo->x, mo->y + momy))
+	if (momy && P_TryMove (&tm, mo, mo->x, mo->y + momy))
 	{
 		mo->momx = 0;
 		mo->momy = momy;
 		goto dospecial;
 	}
-	
-	if (P_TryMove (&tm, mo, mo->x + momx, mo->y))
+
+	if (momx && P_TryMove (&tm, mo, mo->x + momx, mo->y))
 	{
 		mo->momx = momx;
 		mo->momy = 0;
 		goto dospecial;
 	}
-
 	mo->momx = mo->momy = 0;
 
 dospecial:
