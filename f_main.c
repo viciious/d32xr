@@ -42,7 +42,7 @@ typedef enum
 #define STARTY		8
 
 #define SPACEWIDTH	8
-#define NUMENDOBJ	29
+#define NUMENDOBJ	30
 
 typedef struct
 {
@@ -246,8 +246,11 @@ void F_PrintString1(const char *string)
 			case '-':
 				val = 28;
 				break;
+			case '?':
+				val = 29;
+				break;
 			case '*':
-				val = 30;
+				val = NUMENDOBJ;
 				fin->text_x = STARTX;
 				fin->text_y += fin->endobj[0]->height + 4;
 				break;
