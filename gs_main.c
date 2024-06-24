@@ -140,6 +140,8 @@ int GS_Ticker (void)
     boolean newcursor = false;
     int sound = sfx_None;
 
+	if (ticon < TICRATE)
+		return ga_nothing; /* ignore accidental keypresses */
     if (menuscr->numitems <= 1)
         return ga_startnew;
 
