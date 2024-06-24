@@ -186,8 +186,11 @@ static boolean SL_CheckLine(line_t *ld, pslidework_t *sw)
 findfrac:
    sw->p1  = &vertexes[ld->v1];
    sw->p2  = &vertexes[ld->v2];
-   sw->nvx = finesine(ld->fineangle);
-   sw->nvy = -finecosine(ld->fineangle);
+
+   VINT fineangle = R_PointToAngle2(0, 0, sw->p2->x - sw->p1->x, sw->p2->y - sw->p1->y) >> ANGLETOFINESHIFT;
+
+   sw->nvx = finesine(fineangle);
+   sw->nvy = -finecosine(fineangle);
    
    side1 = SL_PointOnSide(sw, sw->slidex, sw->slidey);
    switch(side1)
