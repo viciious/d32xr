@@ -698,10 +698,7 @@ pixel_t	*I_ViewportBuffer (void)
 	}
 	else
 	{
-		if (viewportWidth <= 160)
-			x = (320 - viewportWidth * 2) / 2;
-		else
-			x = (320 - viewportWidth) / 2;
+		x = (320 - viewportWidth) / 2;
 	}
 
 	vb += I_ViewportYPos() * 320 / 2 + x / 2;
