@@ -655,10 +655,12 @@ static void AM_Drawer_ (int c)
 	for (i=0 ; i<numlines ; i++,line++)
 	{
 		int flags;
+		int mapped;
 		mapvertex_t *v1, *v2;
 
 		flags = line->flags;
-		if ((!(flags & ML_MAPPED) ||		/* IF NOT MAPPED OR DON'T DRAW */
+		mapped = LD_MAPPED(line);
+		if ((!mapped ||		/* IF NOT MAPPED OR DON'T DRAW */
 			flags & ML_DONTDRAW) &&
 			(!(p->powers[pw_allmap] + showAllLines)))
 			continue;
@@ -708,7 +710,7 @@ static void AM_Drawer_ (int c)
 		color = CRY_BROWN;
 		if ((p->powers[pw_allmap] +
 			showAllLines) &&			/* IF COMPMAP && !MAPPED YET */
-			!(flags & ML_MAPPED))
+			!mapped)
 			color = CRY_GREY;
 		else
 		if (!(flags & ML_TWOSIDED))	/* ONE-SIDED LINE */

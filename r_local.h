@@ -109,15 +109,23 @@ typedef struct
 
 typedef struct line_s
 {
-	VINT		flags;
 	VINT		sidenum[2];			/* sidenum[1] will be -1 if one sided */
 	VINT 		v1, v2;
-	VINT		special, tag;
+	uint8_t		flags, special;
+	VINT		tag;
 	VINT		fineangle;			/* to get sine / eosine for sliding */
+									/* bit 15 is set if the slope is positive */
+									/* bit 14 is set if allready drawn in automap */
 } line_t;
 
 #define LD_FRONTSECTOR(ld) (&sectors[sides[(ld)->sidenum[0]].sector])
 #define LD_BACKSECTOR(ld) ((ld)->sidenum[1] != -1 ? &sectors[sides[ld->sidenum[1]].sector] : NULL)
+
+#define LD_SEEN 0x4000
+
+#define LD_MAPPED(ld) ((ld->fineangle & LD_SEEN) != 0)
+#define LD_SLOPE_POSITIVE(ld) (ld->fineangle < 0 ? true : false)
+#define LD_FINEANGLE(ld) (ld->fineangle & FINEMASK)
 
 typedef struct subsector_s
 {

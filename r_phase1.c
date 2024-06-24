@@ -202,7 +202,7 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *restrict floorheight,
    const short liflags = li->flags;
 
    {
-      li->flags |= ML_MAPPED; // mark as seen
+      li->fineangle |= LD_SEEN; // mark as seen
 
       textureoffset = si->textureoffset & 0xfff;
       textureoffset <<= 4; // sign extend

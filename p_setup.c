@@ -117,7 +117,7 @@ void P_LoadSegs (int lump)
 		li->sideoffset |= side;
 
 		if (ldef->v1 == li->v1)
-			ldef->fineangle = angle >> ANGLETOFINESHIFT;
+			ldef->fineangle |= (angle >> ANGLETOFINESHIFT);
 	}
 }
 
@@ -449,16 +449,10 @@ void P_LoadLineDefs (int lump)
 		v2 = &vertexes[ld->v2];
 		dx = (v2->x - v1->x) << FRACBITS;
 		dy = (v2->y - v1->y) << FRACBITS;
-		if (!dx)
-			ld->flags |= ML_ST_VERTICAL;
-		else if (!dy)
-			ld->flags |= ML_ST_HORIZONTAL;
-		else
+		if (dx && dy)
 		{
 			if (FixedDiv (dy , dx) > 0)
-				ld->flags |= ML_ST_POSITIVE;
-			else
-				ld->flags |= ML_ST_NEGATIVE;
+				ld->fineangle |= 0x8000;
 		}
 
 		ld->sidenum[0] = LITTLESHORT(mld->sidenum[0]);
