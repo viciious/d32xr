@@ -94,8 +94,8 @@ typedef struct line_s
 	VINT		flags;
 	VINT		sidenum[2];			/* sidenum[1] will be -1 if one sided */
 	VINT 		v1, v2;
-	VINT		special, tag;
 	VINT		fineangle;			/* to get sine / eosine for sliding */
+	uint8_t		special, tag;
 } line_t;
 
 #define LD_FRONTSECTOR(ld) (&sectors[sides[(ld)->sidenum[0]].sector])

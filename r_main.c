@@ -99,82 +99,28 @@ static int SlopeDiv(unsigned int num, unsigned int den) ATTR_DATA_CACHE_ALIGN;
 
 static int SlopeDiv (unsigned num, unsigned den)
 {
-	unsigned ans;
-	den >>= 8;
-	if (den < 2)
-		return SLOPERANGE;
-	ans = (num<<3)/den;
-	return ans <= SLOPERANGE ? ans : SLOPERANGE;
+  unsigned ans;
+
+  if (den < 512)
+    return SLOPERANGE;
+  ans = (num<<3)/(den>>8);
+  return ans <= SLOPERANGE ? ans : SLOPERANGE;
 }
 
-angle_t R_PointToAngle2 (fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
-{	
-	int		x;
-	int		y;
-	int 	base = 0;
-	int 	num = 0, den = 0, n = 1;
-	
-	x = x2 - x1;
-	y = y2 - y1;
-	
-	if ( (!x) && (!y) )
-		return 0;
-	if (x>= 0)
-	{	/* x >=0 */
-		if (y>= 0)
-		{	/* y>= 0 */
-			if (x>y)
-			{
-				/* octant 0 */
-				num = y, den = x;
-			}
-			else
-			{
-				/* octant 1 */
-				base = ANG90-1, n = -1,	num = x, den = y;
-			}
-		}
-		else
-		{	/* y<0 */
-			y = -y;
-			if (x>y)
-			{
-				n = -1, num = y, den = x; /* octant 8 */
-			}
-			else
-			{
-				base = ANG270, n = 1, num = x, den = y; /* octant 7 */
-			}
-		}
-	}
-	else
-	{	/* x<0 */
-		x = -x;
-		if (y>= 0)
-		{	/* y>= 0 */
-			if (x>y)
-			{
-				base = ANG180-1, n = -1, num = y, den = x; /* octant 3 */
-			}
-			else
-			{
-				base = ANG90, num = x, den = y; /* octant 2 */
-			}
-		}
-		else
-		{	/* y<0 */
-			y = -y;
-			if (x>y)
-			{
-				base = ANG180, num = y, den = x; /* octant 4 */
-			}
-			else
-			{
-				base = ANG270-1, n = -1, num = x, den = y; /* octant 5 */
-			}
-		}
-	}
-	return base + n * tantoangle[SlopeDiv(num, den)];
+angle_t R_PointToAngle2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
+{       
+  return (y2 -= y1, (x2 -= x1) || y2) ?
+    x2 >= 0 ?
+      y2 >= 0 ? 
+        (x2 > y2) ? tantoangle[SlopeDiv(y2,x2)] :                      // octant 0 
+                ANG90-1-tantoangle[SlopeDiv(x2,y2)] :                // octant 1
+        x2 > (y2 = -y2) ? -tantoangle[SlopeDiv(y2,x2)] :                // octant 8
+                       ANG270+tantoangle[SlopeDiv(x2,y2)] :          // octant 7
+      y2 >= 0 ? (x2 = -x2) > y2 ? ANG180-1-tantoangle[SlopeDiv(y2,x2)] : // octant 3
+                            ANG90 + tantoangle[SlopeDiv(x2,y2)] :    // octant 2
+        (x2 = -x2) > (y2 = -y2) ? ANG180+tantoangle[ SlopeDiv(y2,x2)] :  // octant 4
+                              ANG270-1-tantoangle[SlopeDiv(x2,y2)] : // octant 5
+    0;
 }
 
 /*

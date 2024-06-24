@@ -121,8 +121,8 @@ void P_LoadSegs (int lump)
 		li->sideoffset <<= 1;
 		li->sideoffset |= side;
 
-		if (ldef->v1 == li->v1)
-			ldef->fineangle = angle >> ANGLETOFINESHIFT;
+//		if (ldef->v1 == li->v1)
+//			ldef->fineangle = angle >> ANGLETOFINESHIFT;
 	}
 }
 
@@ -365,8 +365,8 @@ void P_LoadLineDefs (int lump)
 	{
 		fixed_t dx,dy;
 		ld->flags = LITTLESHORT(mld->flags);
-		ld->special = LITTLESHORT(mld->special);
-		ld->tag = LITTLESHORT(mld->tag);
+		ld->special = (uint8_t)LITTLESHORT(mld->special);
+		ld->tag = (uint8_t)LITTLESHORT(mld->tag);
 		ld->v1 = LITTLESHORT(mld->v1);
 		ld->v2 = LITTLESHORT(mld->v2);
 		v1 = &vertexes[ld->v1];
@@ -387,6 +387,8 @@ void P_LoadLineDefs (int lump)
 
 		ld->sidenum[0] = LITTLESHORT(mld->sidenum[0]);
 		ld->sidenum[1] = LITTLESHORT(mld->sidenum[1]);
+
+		ld->fineangle = R_PointToAngle2(0, 0, dx, dy) >> ANGLETOFINESHIFT;
 	}
 }
 
