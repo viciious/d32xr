@@ -162,6 +162,7 @@ static boolean SL_CheckLine(line_t *ld, pslidework_t *sw)
    fixed_t   opentop, openbottom;
    sector_t *front, *back;
    int       side1;
+   int      fineangle;
    vertex_t vtmp;
    fixed_t  ldbbox[4];
 
@@ -201,12 +202,13 @@ static boolean SL_CheckLine(line_t *ld, pslidework_t *sw)
 
    // the line is definitely blocking movement at this point
 findfrac:
+   fineangle = LD_FINEANGLE(ld);
    sw->p1.x = vertexes[ld->v1].x << FRACBITS;
    sw->p1.y = vertexes[ld->v1].y << FRACBITS;
    sw->p2.x = vertexes[ld->v2].x << FRACBITS;
    sw->p2.y = vertexes[ld->v2].y << FRACBITS;
-   sw->nvx = finesine(ld->fineangle);
-   sw->nvy = -finecosine(ld->fineangle);
+   sw->nvx = finesine(fineangle);
+   sw->nvy = -finecosine(fineangle);
    
    side1 = SL_PointOnSide(sw, sw->slidex, sw->slidey);
    switch(side1)
