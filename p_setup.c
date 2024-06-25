@@ -87,6 +87,10 @@ void P_LoadVertexes (int lump)
 
 void P_LoadSegs (int lump)
 {
+#ifdef MARS
+	numsegs = W_LumpLength (lump) / sizeof(seg_t);
+	segs = (seg_t *)W_GetLumpData(lump);
+#else
 	byte		*data;
 	int			i;
 	mapseg_t	*ml;
@@ -108,15 +112,15 @@ void P_LoadSegs (int lump)
 		li->v2 = LITTLESHORT(ml->v2);
 
 		li->sideoffset = LITTLESHORT(ml->offset);
-		linedef = LITTLESHORT(ml->linedef);
+		li->linedef = LITTLESHORT(ml->linedef);
 
-		li->linedef = linedef;
 		side = LITTLESHORT(ml->side);
 		side &= 1;
 
 		li->sideoffset <<= 1;
 		li->sideoffset |= side;
 	}
+#endif
 }
 
 
@@ -575,7 +579,6 @@ void P_GroupLines (void)
 		sector->blockbox[BOXLEFT]=block;
 
 	}
-	
 }
 
 /*============================================================================= */
