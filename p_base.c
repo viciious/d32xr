@@ -486,7 +486,7 @@ void P_ZMovement(mobj_t *mo)
 //
 void P_MobjThinker(mobj_t *mobj)
 {
-   if (mobj->type == MT_RING)
+   if (mobj->flags & MF_RINGMOBJ)
       return;
 
    if (!(mobj->flags & MF_STATIC))
@@ -526,6 +526,37 @@ void P_RunMobjBase2(void)
     mobj_t* mo;
     mobj_t* next;
 
+    // First, handle the ringmobj animations
+    for (int i = 0; i < NUMMOBJTYPES; i++)
+    {
+      const mobjinfo_t *info = &mobjinfo[i];
+
+      if (info->flags & MF_RINGMOBJ)
+      {
+            // cycle through states
+         if (ringmobjtics[i] != -1)
+         {
+            ringmobjtics[i]--;
+
+            // you can cycle through multiple states in a tic
+            if (!ringmobjtics[i])
+            {
+               do
+               {
+               const statenum_t nextstate = states[ringmobjstates[i]].nextstate;
+
+               const state_t *st = &states[nextstate];
+
+               ringmobjstates[i] = nextstate;
+               ringmobjtics[i] = st->tics;
+
+               // Sprite and frame can be derived
+               } while (!ringmobjtics[i]);
+            }
+         }
+      }
+    }
+
     for (mo = mobjhead.next; mo != (void*)&mobjhead; mo = next)
     {
 #ifdef MARS
@@ -557,7 +588,7 @@ void P_RunMobjLate(void)
     for (mo = mobjhead.next; mo != (void*)&mobjhead; mo = next)
     {
         next = mo->next;	/* in case mo is removed this time */
-        if (mo->type == MT_RING || (mo->flags & MF_STATIC))
+        if (mo->flags & (MF_RINGMOBJ|MF_STATIC))
             continue;
         if (mo->latecall)
         {

@@ -374,7 +374,7 @@ static boolean PS_CheckSight2(mobj_t *t1, mobj_t *t2)
 
 static boolean P_MobjCanSightCheck(mobj_t *mobj)
 {
-   if (mobj->type == MT_RING || (mobj->flags & MF_STATIC))
+   if (mobj->flags & (MF_RINGMOBJ|MF_STATIC))
       return false;
 
    // must be about to change states

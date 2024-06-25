@@ -5,7 +5,7 @@
 */
 
 #include "doomdef.h"
-#include "r_local.h"
+#include "p_local.h"
 
 static void R_PrepMobj(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
 static void R_PrepRing(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
@@ -192,7 +192,8 @@ static void R_PrepRing(mobj_t *thing)
    int          lump;
    patch_t      *patch;
    vissprite_t  *vis;
-   const state_t *state = &states[S_RING1 + (gametic % (S_RING12 - S_RING1))];
+
+   const state_t *state = &states[ringmobjstates[thing->type]];
    VINT thingframe = state->frame;
 
    // transform origin relative to viewpoint
@@ -319,7 +320,7 @@ void R_SpritePrep(void)
 
       while(thing) // walk sector thing list
       {
-         if (thing->type == MT_RING)
+         if (thing->flags & MF_RINGMOBJ)
             R_PrepRing(thing);
          else
             R_PrepMobj(thing);

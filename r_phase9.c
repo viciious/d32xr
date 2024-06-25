@@ -94,7 +94,7 @@ static void R_UpdateCache(void)
             }
         }
 
-        if (wall->ceilingpicnum == -1) {
+        if (wall->ceilingpicnum == 255) {
             continue;
         }
 

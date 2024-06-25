@@ -217,7 +217,7 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *floorheight,
       }
       else
       {
-          segl->ceilingpicnum = -1;
+          segl->ceilingpicnum = 255;
       }
       segl->m_texturenum = -1;
 

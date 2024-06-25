@@ -385,9 +385,9 @@ boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly)
       if(mw.tmceilingz - mw.tmfloorz < (tmthing->theight << FRACBITS))
          return false; // doesn't fit
       tm->floatok = true;
-      if(!(tmthing->flags & MF_TELEPORT) && mw.tmceilingz - tmthing->z < (tmthing->theight << FRACBITS))
+      if(mw.tmceilingz - tmthing->z < (tmthing->theight << FRACBITS))
          return false; // mobj must lower itself to fit
-      if(!(tmthing->flags & MF_TELEPORT) && mw.tmfloorz - tmthing->z > 24*FRACUNIT)
+      if(mw.tmfloorz - tmthing->z > 24*FRACUNIT)
          return false; // too big a step up
       if (!(tmthing->flags & MF_FLOAT) && !tmthing->player && mw.tmfloorz - mw.tmdropoffz > 24*FRACUNIT)
          return false; // don't stand over a dropoff
@@ -408,7 +408,7 @@ void P_MoveCrossSpecials(mobj_t *tmthing, int numspechit, line_t **spechit, fixe
 {
     int i;
 
-    if ((tmthing->flags&(MF_TELEPORT|MF_NOCLIP)) )
+    if ((tmthing->flags&MF_NOCLIP))
       return;
 
     for (i = 0; i < numspechit; i++)

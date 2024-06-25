@@ -99,6 +99,9 @@ extern	degenmobj_t	limbomobjhead;
 extern	int			activethinkers;	/* debug count */
 extern	int			activemobjs;	/* debug count */
 
+extern VINT ringmobjstates[NUMMOBJTYPES];
+extern VINT ringmobjtics[NUMMOBJTYPES];
+
 #define ONFLOORZ	D_MININT
 #define	ONCEILINGZ	D_MAXINT
 

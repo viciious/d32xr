@@ -42,7 +42,7 @@ void P_RemoveMobj (mobj_t *mobj)
 /* unlink from sector and block lists */
 	P_UnsetThingPosition (mobj);
 
-	if (mobj->type == MT_RING)
+	if (mobj->flags & MF_RINGMOBJ)
 	{
 		// unlink from mobj list
 		P_RemoveMobjFromCurrList(mobj);
@@ -108,7 +108,7 @@ boolean P_SetMobjState (mobj_t *mobj, statenum_t state)
 		if (st->action)		/* call action functions when the state is set */
 			st->action(mobj);
 
-		if (!(mobj->type == MT_RING || (mobj->flags & MF_STATIC)))
+		if (!(mobj->flags & MF_RINGMOBJ|MF_STATIC))
 			mobj->latecall = NULL;	/* make sure it doesn't come back to life... */
 
 		state = st->nextstate;
@@ -155,7 +155,7 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 	const mobjinfo_t *info = &mobjinfo[type];
 
 /* try to reuse a previous mobj first */
-	if (type == MT_RING)
+	if (info->flags & MF_RINGMOBJ)
 	{
 		if (freeringmobjhead.next != (void*)&freeringmobjhead)
 		{
@@ -380,7 +380,7 @@ int P_MapThingSpawnsMobj (mapthing_t* mthing)
 		{
 			if (mthing->type == mobjinfo[i].doomednum)
 			{
-				if (i == MT_RING)
+				if (mobjinfo[i].flags & MF_RINGMOBJ)
 					return 3;
 				if (mobjinfo[i].flags & MF_STATIC)
 					return 2;
@@ -446,6 +446,12 @@ return;	/*DEBUG */
 	if (i==NUMMOBJTYPES)
 		I_Error ("P_SpawnMapThing: Unknown type %i at (%i, %i)",mthing->type
 		, mthing->x, mthing->y);
+
+	if (mobjinfo[i].flags & MF_RINGMOBJ)
+	{
+		ringmobjstates[i] = mobjinfo[i].spawnstate;
+		ringmobjtics[i] = states[mobjinfo[i].spawnstate].tics;
+	}
 	
 /* spawn it */
 

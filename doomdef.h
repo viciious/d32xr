@@ -268,7 +268,7 @@ typedef struct degenmobj_s
 /* movement flags */
 #define	MF_NOCLIP		0x100		/* player cheat */
 #define	MF_FLOAT		0x200		/* allow moves to any height, no gravity */
-#define	MF_TELEPORT		0x400		/* don't cross lines or look at heights */
+#define	MF_RINGMOBJ		0x400		/* This mobj is in the ringmobj list, animation is controlled globally */
 #define MF_MISSILE		0x800		/* don't hit same species, explode on block */
 
 #define	MF_SHADOW		0x1000		/* use fuzzy draw (shadow demons / invis) */
