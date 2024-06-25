@@ -225,8 +225,8 @@ void R_Cache(void)
             wall->b_texture->data = R_LoadPixels(wall->b_texture->lumpnum);
       }
 
-      int floorpicnum = wall->floorpicnum;
-      int ceilingpicnum = wall->ceilingpicnum;
+      uint8_t floorpicnum = wall->floorpicnum;
+      uint8_t ceilingpicnum = wall->ceilingpicnum;
       
       // load floorpic
       if(flatpixels[floorpicnum] == NULL)

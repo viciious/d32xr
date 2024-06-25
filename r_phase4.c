@@ -59,8 +59,8 @@ static void R_FinishWall(viswall_t* wc)
             fw_texture->data = R_CheckPixels(fw_texture->lumpnum);
     }
 
-    int floorpicnum = wc->floorpicnum;
-    int ceilingpicnum = wc->ceilingpicnum;
+    uint8_t floorpicnum = wc->floorpicnum;
+    uint8_t ceilingpicnum = wc->ceilingpicnum;
 
     if (flatpixels[floorpicnum] == NULL)
         flatpixels[floorpicnum] = R_CheckPixels(firstflat + floorpicnum);

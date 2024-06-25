@@ -468,8 +468,8 @@ typedef struct
 	VINT		t_texturenum;
 	VINT		b_texturenum;
 
-	VINT        floorpicnum;
-	VINT        ceilingpicnum;
+	uint8_t        floorpicnum;
+	uint8_t        ceilingpicnum;
 
 	int			scalestep;		/* polar angle to start at phase1, then scalestep after phase2 */
 	unsigned	scalefrac;
