@@ -285,7 +285,9 @@ void R_SetViewportSize(int num)
 	stretchX = stretch * centerX;
 
 	weaponYpos = 180;
-	if (viewportHeight <= 128) {
+	if (viewportHeight < 128) {
+		weaponYpos = 120;
+	} else if (viewportHeight <= 128) {
 		weaponYpos = 144;
 	}
 	weaponYpos = (viewportHeight - weaponYpos) / 2;
