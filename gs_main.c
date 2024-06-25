@@ -87,7 +87,9 @@ void GS_Start(void)
         flags = (uint8_t)*buf;
         buf += 1;
 
-        if (flags & 2) // flags -- directory
+        // if a directory, then bit 1 is 1, bits 2,3 and 7 are zero
+        // see 9.1.6 at https://pismotec.com/cfs/iso9660-1999.html 
+        if ((flags & 0x8E) == 0x2)
             continue;
 
         if (namelen >= (int)sizeof(mi->name))
