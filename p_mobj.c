@@ -173,7 +173,7 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 		mobj->flags = info->flags;
 
 		/* set subsector and/or block links */
-		P_SetThingPosition2 (mobj, R_PointInSubsector(x, y), true);
+		P_SetThingPosition2 (mobj, R_PointInSubsector(x, y));
 		
 		const fixed_t floorz = mobj->subsector->sector->floorheight;
 		const fixed_t ceilingz = mobj->subsector->sector->ceilingheight;

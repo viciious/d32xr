@@ -194,7 +194,7 @@ static void R_PrepRing(mobj_t *thing)
    vissprite_t  *vis;
 
    const state_t *state = &states[ringmobjstates[thing->type]];
-   VINT thingframe = state->frame;
+   const VINT thingframe = state->frame;
 
    // transform origin relative to viewpoint
    tr_x = thing->x - vd.viewx;
@@ -207,6 +207,9 @@ static void R_PrepRing(mobj_t *thing)
 
    // thing is behind view plane?
    if(tz < MINZ)
+      return;
+
+   if (tz > 2048*FRACUNIT) // Cull draw distance
       return;
 
    gxt = FixedMul(tr_x, vd.viewsin);
@@ -222,9 +225,8 @@ static void R_PrepRing(mobj_t *thing)
    sprdef = &sprites[state->sprite];
 
    flip = thingframe & FF_FLIPPED;
-   thingframe = thingframe & FF_FRAMEMASK;
 
-   sprframe = &spriteframes[sprdef->firstframe + thingframe];
+   sprframe = &spriteframes[sprdef->firstframe + (thingframe & FF_FRAMEMASK)];
    sprlump = &spritelumps[sprframe->lump];
 
    // sprite has a single view for all rotations

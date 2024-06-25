@@ -399,7 +399,7 @@ boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly)
    tmthing->ceilingz = mw.tmceilingz;
    tmthing->x        = mw.tmx;
    tmthing->y        = mw.tmy;
-   P_SetThingPosition2(tmthing, mw.newsubsec, false);
+   P_SetThingPosition2(tmthing, mw.newsubsec);
 
    return true;
 }

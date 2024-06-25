@@ -330,7 +330,7 @@ static boolean PB_TryMove(pmovetest_t *mt, mobj_t *mo, fixed_t tryx, fixed_t try
    mo->ceilingz = mt->testceilingz;
    mo->x        = tryx;
    mo->y        = tryy;
-   P_SetThingPosition2(mo, mt->testsubsec, false);
+   P_SetThingPosition2(mo, mt->testsubsec);
 
    return true;
 }
