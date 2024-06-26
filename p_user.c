@@ -41,8 +41,8 @@ void P_PlayerMove (mobj_t *mo)
 		goto dospecial;
 
 stairstep:
-	momx = mo->momx;
-	momy = mo->momy;
+	//momx = mo->momx;
+	//momy = mo->momy;
 
 	if (momx > MAXMOVE)
 		momx = MAXMOVE;
