@@ -349,6 +349,7 @@ typedef struct player_s
 	fixed_t		deltaviewheight;		/* squat speed */
 	fixed_t		bob;					/* bounded/scaled total momentum */
 	
+	int			score;
 	VINT		health;					/* only used between levels, mo->health */
 										/* is used during levels	 */
 	VINT		armorpoints, armortype;	/* armor type is 0-2 */

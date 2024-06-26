@@ -121,6 +121,9 @@ typedef struct
 	VINT	godmode;
 	VINT	face;
 
+	int     score;
+	VINT    rings;
+
 	VINT	yourFragsCount;
 	VINT	hisFragsCount;
 	VINT	currentMap;

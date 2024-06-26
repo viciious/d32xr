@@ -750,7 +750,7 @@ void R_ResetResp(player_t* p)
 	playerresp_t* resp = &playersresp[pnum];
 
 	D_memset(resp, 0, sizeof(playerresp_t));
-	resp->health = MAXHEALTH;
+	resp->health = 1;
 }
 
 void P_RestoreResp(player_t* p)

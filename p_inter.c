@@ -198,13 +198,6 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 		target->flags &= ~MF_SOLID;
 		player->playerstate = PST_DEAD;
 
-		if (target->health < -50)
-		{
-			stbar[target->player - 1].gotgibbed = true;
-			S_StartSound (target, sfx_None);
-		}
-		else
-			S_StartSound (target, sfx_None);
 		if (netgame == gt_coop)
 			R_ResetResp(player);
 	}
@@ -242,7 +235,6 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 {
 	unsigned	ang, an;
 	int			saved;
-	int			pnum = 0;
 	player_t	*player;
 	fixed_t		thrust;
 	const mobjinfo_t* targinfo = &mobjinfo[target->type];
@@ -254,8 +246,6 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 		return;
 	
 	player = target->player ? &players[target->player - 1] : NULL;
-	if (player)
-		pnum = player - players;
 	
 /* */
 /* kick away unless using the chainsaw */
@@ -292,31 +282,6 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 				return;
 		}
 
-		if (damage > 0)
-		{
-			stbar[pnum].specialFace = damage > 20 ? f_hurtbad : f_mowdown;
-
-			if (source && source != player->mo)
-			{
-				int right;
-				ang = R_PointToAngle2 ( target->x, target->y,
-					source->x, source->y );
-
-				if (ang > target->angle)
-				{
-					an = ang - target->angle;
-					right = an > ANG180; 
-				}
-				else
-				{
-					an = target->angle - ang;
-					right = an <= ANG180; 
-				}
-
-				if (an >= ANG45)
-					stbar[pnum].specialFace = right ? f_faceright : f_faceleft;
-			}
-		}
 		if (player->armortype)
 		{
 			if (player->armortype == 1)

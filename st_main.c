@@ -12,6 +12,10 @@ static short micronums;
 static short	micronums_x[NUMMICROS] = {249,261,272,249,261,272};
 static short	micronums_y[NUMMICROS] = {15,15,15,25,25,25};
 
+static short score, time, rings, rrings;
+static short snums; // Numbers
+static short timecolon; // : for TIME
+
 static short	spclfaceSprite[NUMSPCLFACES] =
 		{0,sbf_facelft,sbf_facergt,sbf_ouch,sbf_gotgat,sbf_mowdown};
 
@@ -56,6 +60,13 @@ void ST_Init (void)
 		sbar = NULL;
 		sbar_height = 0;
 	}
+
+	score = W_CheckNumForName("STTSCORE");
+	time = W_CheckNumForName("STTTIME");
+	rings = W_CheckNumForName("STTRINGS");
+	rrings = W_CheckNumForName("STTRRING");
+	snums = W_CheckNumForName("STTNUM0");
+	timecolon = W_CheckNumForName("STTCOLON");
 
 	faces = W_CheckNumForName("FACE00");
 
@@ -165,6 +176,9 @@ static void ST_Ticker_(stbar_t* sb)
 	sb->numstbarcmds = 0;
 
 	p = &players[pnum];
+
+	sb->rings = p->mo->health - 1;
+	sb->score = p->score;
 
 	/* */
 	/* Animate face */
@@ -397,10 +411,71 @@ void ST_Ticker(void)
 ====================
 */
 
+/* */
+/* Draws 'value' at x, y  */
+/* */
+void ST_DrawValueRightAligned(int x,int y,int value)
+{
+	char	v[12];
+	int		j;
+	int		index;
+
+	const int charWidth = 8;
+
+	valtostr(v,value);
+	j = mystrlen(v) - 1;
+	while(j >= 0)
+	{
+		index = (v[j--] - '0');
+		x -= charWidth;
+		DrawJagobjLump(snums + index, x, y, NULL, NULL);
+	}
+}
+
+void ST_DrawValueRightAlignedPadded(int x,int y,int value,int pad)
+{
+	char	v[12];
+	int		j;
+	int		index;
+
+	const int charWidth = 8;
+
+	valtostr(v,value);
+	j = mystrlen(v) - 1;
+	while(j >= 0)
+	{
+		index = (v[j--] - '0');
+		x -= charWidth;
+		DrawJagobjLump(snums + index, x, y, NULL, NULL);
+		pad--;
+	}
+
+	while (pad > 0)
+	{
+		x -= charWidth;
+		DrawJagobjLump(snums + 0, x, y, NULL, NULL);
+
+		pad--;
+	}
+}
+
 static void ST_Drawer_ (stbar_t* sb)
 {
 	int i;
 	int x, ind;
+
+	DrawJagobjLump(score, 16, 10+20, NULL, NULL);
+	ST_DrawValueRightAligned(16 + 120, 10+20, sb->score);
+
+	const int minutes = stbar_tics/(60*TICRATE);
+	const int seconds = (stbar_tics/TICRATE)%60;
+	DrawJagobjLump(time, 16, 26+20, NULL, NULL);
+	ST_DrawValueRightAligned(72, 26+20, minutes);
+	DrawJagobjLump(timecolon, 72, 26+20, NULL, NULL);
+	ST_DrawValueRightAlignedPadded(72+8+16, 26+20, seconds, 2);
+
+	DrawJagobjLump(sb->rings <= 0 && (gametic / 4 & 1) ? rrings : rings, 16, 42+20, NULL, NULL);
+	ST_DrawValueRightAligned(96, 42+20, sb->rings);
 
 	if (!sbar || !sbobj[0])
 		return;
@@ -485,7 +560,8 @@ void ST_Drawer(void)
 	if (debugmode == DEBUGMODE_NODRAW)
 		return;
 
-	return;
+	if (demoplayback)
+		return;
 
 	y[consoleplayer] = I_FrameBufferHeight() - sbar_height;
 	y[consoleplayer^1] = 0;

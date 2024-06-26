@@ -42,10 +42,10 @@ sfxinfo_t S_sfx[NUMSFX] =
   SOUND( false, 64 ),
   SOUND( false, 64 ),
   SOUND( false, 64 ),
-  SOUND( false, 128 ),
   SOUND( false, 64 ),
   SOUND( false, 64 ),
   SOUND( false, 64 ),
+  SOUND( false, 32 ),
   SOUND( false, 64 ),
 }; 
  

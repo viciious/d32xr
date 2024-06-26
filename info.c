@@ -176,7 +176,7 @@ const mobjinfo_t mobjinfo[NUMMOBJTYPES] = {
 {		/* MT_PLAYER */
 -1,		/* doomednum */
 S_PLAY_STND,		/* spawnstate */
-100,		/* spawnhealth */
+1,		/* spawnhealth */
 S_PLAY_RUN1,		/* seestate */
 sfx_None,		/* seesound */
 0,		/* reactiontime */
