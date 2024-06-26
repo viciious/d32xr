@@ -315,6 +315,16 @@ typedef enum
 #define	INFRATICS		(120*15)
 #define	IRONTICS		(60*15)
 
+#define PF_ONGROUND 1
+#define PF_THOKKED  2
+#define PF_UNDERWATER 4
+#define PF_JUMPED 8
+#define PF_STARTJUMP 16
+#define PF_VERTICALFLIP 32 // May as well prepare...
+
+boolean P_IsObjectOnGround(mobj_t *mo);
+int8_t P_MobjFlip(mobj_t *mo);
+
 /*
 ================
 =
@@ -327,6 +337,9 @@ typedef struct player_s
 {
 	mobj_t		*mo;
 	playerstate_t	playerstate;
+
+	int         pflags;
+	fixed_t     speed;
 	
 	fixed_t		forwardmove, sidemove;	/* built from ticbuttons */
 	angle_t		angleturn;				/* built from ticbuttons */
@@ -356,6 +369,8 @@ typedef struct player_s
 	int			automapx, automapy, automapscale, automapflags;
 	int			turnheld;				/* for accelerative turning */
 } player_t;
+
+void P_PlayerHitFloor(player_t* player);
 
 // stuff player keeps between respawns in single player
 typedef struct

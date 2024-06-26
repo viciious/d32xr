@@ -271,7 +271,7 @@ void P_UseLines (player_t *player)
 		return;
 		
 	if (!lu.closeline->special)
-		S_StartSound (player->mo, sfx_noway);
+		S_StartSound (player->mo, sfx_None);
 	else
 		P_UseSpecialLine (player->mo, lu.closeline);
 }

@@ -199,7 +199,7 @@ static void ST_Ticker_(stbar_t* sb)
 		if (!--sb->yourFrags.times)
 			sb->yourFrags.active = false;
 		if (sb->yourFrags.doDraw && sb->yourFrags.active && !splitscreen)
-			S_StartSound(NULL,sfx_itemup);
+			S_StartSound(NULL,sfx_None);
 	}
 	
 	/* */
@@ -212,7 +212,7 @@ static void ST_Ticker_(stbar_t* sb)
 		if (!--sb->hisFrags.times)
 			sb->hisFrags.active = false;
 		if (sb->hisFrags.doDraw && sb->hisFrags.active && !splitscreen)
-			S_StartSound(NULL,sfx_itemup);
+			S_StartSound(NULL,sfx_None);
 	}
 
 	/* */

@@ -76,6 +76,33 @@ void P_FreeMobj(mobj_t* mobj)
 	P_AddMobjToList(mobj, (void*)&freemobjhead);
 }
 
+boolean P_IsObjectOnGround(mobj_t *mobj)
+{
+	if (mobj->player)
+	{
+		const player_t *player = &players[mobj->player - 1];
+		if (player->pflags & PF_VERTICALFLIP)
+		{
+			if (mobj->z + (mobj->theight << FRACBITS) >= mobj->ceilingz)
+				return true;
+		}
+		else if (mobj->z <= mobj->floorz)
+			return true;
+		else
+			return false;
+	}
+
+	return mobj->z <= mobj->floorz;
+}
+
+int8_t P_MobjFlip(mobj_t *mo)
+{
+	if (mo->player && players[mo->player-1].pflags & PF_VERTICALFLIP)
+		return -1;
+
+	return 1;
+}
+
 /*
 ================
 =

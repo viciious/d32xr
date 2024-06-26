@@ -183,12 +183,12 @@ sfx_None,		/* seesound */
 sfx_None,		/* attacksound */
 S_PLAY_PAIN,		/* painstate */
 255,		/* painchance */
-sfx_plpain,		/* painsound */
+sfx_None,		/* painsound */
 S_NULL,		/* meleestate */
 S_PLAY_ATK1,		/* missilestate */
 S_PLAY_DIE,		/* deathstate */
 S_PLAY_DIE,		/* xdeathstate */
-sfx_pldeth,		/* deathsound */
+sfx_None,		/* deathsound */
 0,		/* speed */
 16*FRACUNIT,		/* radius */
 56*FRACUNIT,		/* height */
@@ -228,23 +228,23 @@ sfx_None,		/* activesound */
 S_POSS_STND,		/* spawnstate */
 20,		/* spawnhealth */
 S_POSS_RUN1,		/* seestate */
-sfx_posit1,		/* seesound */
+sfx_None,		/* seesound */
 8,		/* reactiontime */
-sfx_pistol,		/* attacksound */
+sfx_None,		/* attacksound */
 S_POSS_STND,		/* painstate */
 200,		/* painchance */
-sfx_popain,		/* painsound */
+sfx_None,		/* painsound */
 0,		/* meleestate */
 S_NULL,		/* missilestate */
 S_POSS_STND,		/* deathstate */
 S_POSS_STND,		/* xdeathstate */
-sfx_podth1,		/* deathsound */
+sfx_None,		/* deathsound */
 8,		/* speed */
 20*FRACUNIT,		/* radius */
 56*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_posact,		/* activesound */
+sfx_None,		/* activesound */
 MF_SOLID|MF_SHOOTABLE		/* flags */
  },
 
@@ -263,7 +263,7 @@ MF_SOLID|MF_SHOOTABLE		/* flags */
 	S_NULL,         // missilestate
 	S_NULL,//S_SPRK1,        // deathstate
 	S_NULL,         // xdeathstate
-	sfx_itemup,     // deathsound
+	sfx_None,     // deathsound
 	38,    // speed
 	16*FRACUNIT,    // radius
 	24*FRACUNIT,    // height
@@ -287,7 +287,7 @@ MF_SOLID|MF_SHOOTABLE		/* flags */
 	S_NULL,         // missilestate
 	S_NULL,//S_SPRK1,        // deathstate
 	S_NULL,         // xdeathstate
-	sfx_itemup,     // deathsound
+	sfx_None,     // deathsound
 	38,    // speed
 	16*FRACUNIT,    // radius
 	24*FRACUNIT,    // height
@@ -311,7 +311,7 @@ MF_SOLID|MF_SHOOTABLE		/* flags */
 	S_NULL,         // missilestate
 	S_NULL,//S_SPRK1,        // deathstate
 	S_NULL,         // xdeathstate
-	sfx_itemup,     // deathsound
+	sfx_None,     // deathsound
 	38,    // speed
 	16*FRACUNIT,    // radius
 	24*FRACUNIT,    // height
@@ -335,7 +335,7 @@ MF_SOLID|MF_SHOOTABLE		/* flags */
 	S_NULL,         // missilestate
 	S_NULL,//S_SPRK1,        // deathstate
 	S_NULL,         // xdeathstate
-	sfx_itemup,     // deathsound
+	sfx_None,     // deathsound
 	38,    // speed
 	16*FRACUNIT,    // radius
 	40*FRACUNIT,    // height
@@ -359,7 +359,7 @@ MF_SOLID|MF_SHOOTABLE		/* flags */
 	S_NULL,         // missilestate
 	S_NULL,//S_SPRK1,        // deathstate
 	S_NULL,         // xdeathstate
-	sfx_itemup,     // deathsound
+	sfx_None,     // deathsound
 	38,    // speed
 	16*FRACUNIT,    // radius
 	96*FRACUNIT,    // height
@@ -383,7 +383,7 @@ MF_SOLID|MF_SHOOTABLE		/* flags */
 	S_NULL,         // missilestate
 	S_NULL,//S_SPRK1,        // deathstate
 	S_NULL,         // xdeathstate
-	sfx_itemup,     // deathsound
+	sfx_None,     // deathsound
 	38,    // speed
 	8*FRACUNIT,    // radius
 	32*FRACUNIT,    // height

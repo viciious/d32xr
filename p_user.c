@@ -145,11 +145,13 @@ void P_PlayerZMovement (mobj_t *mo)
 			{
 				player->deltaviewheight = mo->momz>>3;
 				if (player->playerstate != PST_DEAD)
-					S_StartSound (mo, sfx_oof);
+					S_StartSound (mo, sfx_None);
 			}
 			mo->momz = 0;
 		}
 		mo->z = mo->floorz;
+
+        P_PlayerHitFloor(player);
 	}
 	else
 	{
@@ -213,6 +215,20 @@ void P_PlayerMobjThink (mobj_t *mobj)
 	mobj->tics = st->tics;
 	mobj->sprite = st->sprite;
 	mobj->frame = st->frame;
+
+	if (P_IsObjectOnGround(mobj))
+	{
+		player_t *player = &players[mobj->player - 1];
+		if (mobj->state >= S_PLAY_RUN1 && mobj->state <= S_PLAY_RUN8)
+		{
+			if (player->speed > 12 << FRACBITS)
+				mobj->tics = 1;
+			else if (player->speed > 6 << FRACBITS)
+				mobj->tics = 2;
+			else
+				mobj->tics = 3;
+		}
+	}
 }
 
 /*============================================================================= */
@@ -472,6 +488,61 @@ static void P_DoTeeter(player_t *player)
 		P_SetMobjState(player->mo, S_PLAY_STND);
 }
 
+void P_PlayerHitFloor(player_t *player)
+{
+     player->pflags &= ~PF_JUMPED;
+     player->pflags &= ~PF_STARTJUMP;
+     P_SetMobjState(player->mo, S_PLAY_RUN1);
+}
+
+static void P_DoJump(player_t *player)
+{
+	if (player->mo->ceilingz-player->mo->floorz <= (player->mo->theight << FRACBITS)-1)
+		return;
+
+	fixed_t jumpStrength = FixedMul(39*(FRACUNIT/4), 1*FRACUNIT+(FRACUNIT / 2));
+
+	player->mo->momz = jumpStrength;
+
+	// Reduce jump strength when underwater
+	if (player->pflags & PF_UNDERWATER)
+		player->mo->momz = FixedMul(player->mo->momz, FixedDiv(117*FRACUNIT, 200*FRACUNIT));
+
+	player->mo->z++;
+
+	P_SetMobjState(player->mo, S_PLAY_ATK1);
+	player->pflags |= PF_JUMPED;
+	player->pflags |= PF_STARTJUMP;
+
+	S_StartSound(player->mo, sfx_s3k_62);
+}
+
+static void P_DoJumpStuff(player_t *player)
+{
+	int		buttons;
+	
+	buttons = ticbuttons[playernum];
+
+	if (buttons & BT_ATTACK)
+	{
+		if (player->mo->state != S_PLAY_PAIN && P_IsObjectOnGround(player->mo))
+		{
+			P_DoJump(player);
+			player->pflags &= ~PF_THOKKED;
+		}
+	}
+	else
+	{
+		// If letting go of the jump button while still on ascent, cut the jump height.
+		if ((player->pflags & (PF_JUMPED|PF_STARTJUMP)) == (PF_JUMPED|PF_STARTJUMP)
+			&& player->mo->momz > 0)
+		{
+			player->mo->momz >>= 1;
+			player->pflags &= ~PF_STARTJUMP;
+		}
+	}
+}
+
 /*
 =================
 =
@@ -483,6 +554,8 @@ static void P_DoTeeter(player_t *player)
 void P_MovePlayer (player_t *player)
 {	
 	player->mo->angle += player->angleturn;
+
+	P_DoJumpStuff(player);
 
 	/* don't let the player control movement if not onground */
 	onground = (player->mo->z <= player->mo->floorz);
@@ -506,6 +579,8 @@ void P_MovePlayer (player_t *player)
 	|| player->mo->state == S_PLAY_TAP1 || player->mo->state == S_PLAY_TAP2
 	|| player->mo->state == S_PLAY_TEETER1 || player->mo->state == S_PLAY_TEETER2))))
 		P_DoTeeter(player);
+
+	player->speed = P_AproxDistance(player->mo->momx, player->mo->momy);
 }	
 
 

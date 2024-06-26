@@ -117,13 +117,13 @@ int P_TouchSpecialThing2 (mobj_t *special, mobj_t *toucher)
 	
 	player = toucher->player ? &players[toucher->player-1] : NULL;
 */
-	switch (special->sprite)
+	switch (special->type)
 	{
 	default:
 		I_Error ("P_SpecialThing: Unknown gettable thing");
 	}
 	
-	return sfx_itemup;
+	return sfx_None;
 }
 
 
@@ -145,7 +145,7 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 	if (special->z > (toucher->z + (toucher->theight << FRACBITS)))
 		return;
 	
-	sound = sfx_itemup;	
+	sound = sfx_None;	
 	player = toucher->player ? &players[toucher->player - 1] : NULL;
 	if (toucher->health <= 0)
 		return;						/* can happen with a sliding player corpse */
@@ -156,6 +156,7 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 			player->health++;
 			player->mo->health = player->health;
 			P_SpawnMobj(special->x, special->y, special->z, MT_SPARK);
+			sound = sfx_s3k_33;
 		break;
 
 		default:
@@ -200,10 +201,10 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 		if (target->health < -50)
 		{
 			stbar[target->player - 1].gotgibbed = true;
-			S_StartSound (target, sfx_slop);
+			S_StartSound (target, sfx_None);
 		}
 		else
-			S_StartSound (target, sfx_pldeth);
+			S_StartSound (target, sfx_None);
 		if (netgame == gt_coop)
 			R_ResetResp(player);
 	}
@@ -330,7 +331,7 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 			player->armorpoints -= saved;
 			damage -= saved;
 		}
-		S_StartSound (target,sfx_plpain);
+		S_StartSound (target,sfx_None);
 		player->health -= damage;		/* mirror mobj health here for Dave */
 		if (player->health < 0)
 			player->health = 0;

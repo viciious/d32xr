@@ -314,7 +314,7 @@ void O_Control (player_t *player)
 			movecount = 0;
 			cursorpos = 0;
 			screenpos = ms_main;
-			S_StartSound(NULL, sfx_swtchn);
+			S_StartSound(NULL, sfx_None);
 			if (player->automapflags & AF_OPTIONSACTIVE)
 #ifndef MARS
 				DoubleBufferSetup();
@@ -349,7 +349,7 @@ void O_Control (player_t *player)
 			movecount = 0;
 			cursorpos = 0;
 			screenpos = ms_main;
-			S_StartSound(NULL, sfx_swtchn);
+			S_StartSound(NULL, sfx_None);
 			return;
 		case ga_startnew:
 			gameaction = ga_startnew;
@@ -384,7 +384,7 @@ void O_Control (player_t *player)
 			if (screenpos == ms_game)
 				M_Start2(false);
 			else
-				S_StartSound(NULL, sfx_pistol);
+				S_StartSound(NULL, sfx_None);
 			return;
 		}
 	}
@@ -407,7 +407,7 @@ void O_Control (player_t *player)
 			movecount = 0;
 			screenpos = ms_main;
 			clearscreen = 2;
-			S_StartSound(NULL, sfx_swtchn);
+			S_StartSound(NULL, sfx_None);
 			return;
 		}
 	}
@@ -475,7 +475,7 @@ void O_Control (player_t *player)
 
 				}
 
-				sound = sfx_stnmov;
+				sound = sfx_None;
 			}
 		}
 
@@ -543,7 +543,7 @@ void O_Control (player_t *player)
 				if (oldcontroltype != controltype ||
 					oldalwaysrun != alwaysrun ||
 					oldstrafebtns != strafebtns)
-					sound = sfx_stnmov;
+					sound = sfx_None;
 			}
 
 			if (screenpos == ms_audio)
@@ -584,7 +584,7 @@ void O_Control (player_t *player)
 				if (oldmusictype != o_musictype)
 				{
 					S_SetMusicType(o_musictype);
-					sound = sfx_stnmov;
+					sound = sfx_None;
 				}
 
 				if (oldsfxdriver != o_sfxdriver)
@@ -620,13 +620,13 @@ void O_Control (player_t *player)
 				if (oldanamorphicview != anamorphicview)
 				{
 					R_SetViewportSize(viewportNum);
-					sound = sfx_stnmov;
+					sound = sfx_None;
 				}
 			}
 
 			newcursor = cursorpos != oldcursorpos;
 			if (newcursor)
-				sound = sfx_pistol;
+				sound = sfx_None;
 		}
 
 		if (sound != sfx_None)

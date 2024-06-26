@@ -441,10 +441,6 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 	if (!vol)
 		return; /* too far away */
 
-	// HACK: boost volume for item pickups
-	if (sound_id == sfx_itemup)
-		vol <<= 1;
-
 	if (S_USE_MEGACD_DRV())
 	{
 		sfxchannel_t *ch;
@@ -454,8 +450,6 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 			return;
 
 		S_SEP_VOL_TO_MCD(sep, vol);
-		if (sound_id == sfx_itemup && sep == 128)
-			sep = 255; // full volume from both channels
 
 		Mars_MCDPlaySfx((ch - sfxchannels) + 1, sound_id, sep, vol);
 		return;

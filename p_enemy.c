@@ -399,20 +399,6 @@ seeyou:
 		
 		switch (ainfo->seesound)
 		{
-		case sfx_posit1:
-		case sfx_posit2:
-		case sfx_posit3:
-#ifdef MARS
-			if (S_sfx[sfx_posit3].lump > 0)
-				sound = sfx_posit1+(P_Random()%3);
-			else
-#endif
-				sound = sfx_posit1+(P_Random()&1);
-			break;
-		case sfx_bgsit1:
-		case sfx_bgsit2:
-			sound = sfx_bgsit1+(P_Random()&1);
-			break;
 		default:
 			sound = ainfo->seesound;
 			break;
@@ -578,22 +564,6 @@ void A_Scream (mobj_t *actor)
 	{
 	case 0:
 		return;
-		
-	case sfx_podth1:
-	case sfx_podth2:
-	case sfx_podth3:
-#ifdef MARS
-		if (S_sfx[sfx_podth3].lump > 0)
-			sound = sfx_podth1 + (P_Random()%3);
-		else
-#endif
-			sound = sfx_podth1 + (P_Random()&1);
-		break;
-		
-	case sfx_bgdth1:
-	case sfx_bgdth2:
-		sound = sfx_bgdth1 + (P_Random ()&1);
-		break;
 	
 	default:
 		sound = ainfo->deathsound;
@@ -605,7 +575,7 @@ void A_Scream (mobj_t *actor)
 
 void A_XScream (mobj_t *actor)
 {
-	S_StartSound (actor, sfx_slop);	
+	S_StartSound (actor, sfx_None);	
 }
 
 void A_Pain (mobj_t *actor)
@@ -677,13 +647,11 @@ void A_BossDeath (mobj_t *mo)
 
 void A_Hoof (mobj_t *mo)
 {
-	S_StartSound (mo, sfx_hoof);
 	A_Chase (mo);
 }
 
 void A_Metal (mobj_t *mo)
 {
-	S_StartSound (mo, sfx_metal);
 	A_Chase (mo);
 }
 

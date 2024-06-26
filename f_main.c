@@ -460,7 +460,7 @@ int F_Ticker (void)
 	
 		switch (st)
 		{
-		case S_PLAY_ATK2: sfx = sfx_shotgn; break;
+		case S_PLAY_ATK2: sfx = sfx_None; break;
 		default: sfx = 0; break;
 		}
 		
