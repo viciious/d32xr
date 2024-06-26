@@ -254,11 +254,14 @@ void S_Src_Play(sfx_source_t *src, sfx_buffer_t *buf, uint16_t freq, uint8_t pan
     src->buf = buf;
     src->pan[0] = S_Chan_MidiPan(pan);
     src->env = vol;
-    src->autoloop = autoloop;
+    src->autoloop = 0;
     src->freq = freq ? freq : buf->freq;
     src->paused = 0;
     src->eof = 0;
     src->painted = 0;
+    if (autoloop == 1) {
+        src->autoloop = 1;
+    }
     //src->backbuf = -1;
 
     if (!buf || !buf->num_channels || !buf->data || !src->freq) {
@@ -324,7 +327,9 @@ void S_Src_Update(sfx_source_t *src, uint16_t freq, uint8_t pan, uint8_t vol, ui
         src->pan[0] = S_Chan_MidiPan(pan);
     }
     src->env = vol;
-    src->autoloop = autoloop;
+    if (autoloop == 0 || autoloop == 1) {
+        src->autoloop = autoloop;
+    }
 }
 
 uint16_t S_Src_GetPosition(sfx_source_t *src)

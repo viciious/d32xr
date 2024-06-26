@@ -3206,7 +3206,7 @@ rf5c68_envelope:
 rf5c68_chanmask:
         dc.b    255
 rf5c68_pan:
-        dc.b    128
+        dc.b    255
 
         .align  2
 offs68k:

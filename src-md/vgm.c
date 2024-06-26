@@ -16,6 +16,8 @@
 
 #define VGM_USE_PWM_FOR_DAC
 
+#define VGM_MAX_RF5C68_LOOPS 10
+
 #define MD_WORDRAM          (void*)0x600000
 #define MCD_WORDRAM         (void*)0x0C0000
 
@@ -29,6 +31,8 @@
 static lzss_state_t vgm_lzss = { 0 };
 static int rf5c68_dataofs;
 static int rf5c68_datalen;
+static short rf5c68_num_loops;
+static uint16_t rf5c68_loops[VGM_MAX_RF5C68_LOOPS];
 
 extern void *vgm_ptr;
 extern int pcm_baseoffs;
@@ -88,6 +92,7 @@ int vgm_setup(void* fm_ptr)
     s = lzss_compressed_size(&vgm_lzss);
     pcm_baseoffs = s < vgm_size ? s : 0;
 
+    rf5c68_num_loops = 0;
     rf5c68_dataofs = 0;
     rf5c68_datalen = 0;
     if (pcm_baseoffs)
@@ -95,18 +100,11 @@ int vgm_setup(void* fm_ptr)
         rf5c68_dataofs = vmg_find_rf5c68_dataofs((uint8_t *)fm_ptr + pcm_baseoffs, &rf5c68_datalen);
     }
 
-    // pre-convert unsigned 8-bit PCM samples to signed PCM format for the SegaCD
-    if ((fm_ptr >= MD_WORDRAM_VGM_PTR && fm_ptr < MD_WORDRAM+0x20000) && pcm_baseoffs) {
-        pcm_baseoffs += (fm_ptr - MD_WORDRAM_VGM_PTR);
-    }
-    if (rf5c68_dataofs) {
-        rf5c68_dataofs += pcm_baseoffs;
-    }
-
     // convert RF5C68's signed PCM samples to uchar because that's what the driver expects
-    if ((fm_ptr >= MD_WORDRAM_VGM_PTR && fm_ptr < MD_WORDRAM+0x20000) && rf5c68_dataofs) {
+    if ((fm_ptr >= MD_WORDRAM_VGM_PTR && fm_ptr < MD_WORDRAM+0x20000) && rf5c68_datalen) {
         int i;
-        volatile uint8_t *start = (uint8_t*)fm_ptr + rf5c68_dataofs;
+        char is_loop = 1;
+        volatile uint8_t *start = (uint8_t*)fm_ptr + pcm_baseoffs + rf5c68_dataofs;
         volatile uint8_t *end = start + rf5c68_datalen;
 
         for (i = 0; i < 2; i++)
@@ -117,9 +115,30 @@ int vgm_setup(void* fm_ptr)
 
             while (pcm < end) {
                 int s = *pcm;
+                if (s == 255)
+                {
+                    // it's a loop point, so store the offset
+                    if (!i && !is_loop && rf5c68_num_loops < VGM_MAX_RF5C68_LOOPS)
+                    {
+                        is_loop = 1;
+                        rf5c68_loops[rf5c68_num_loops++] = pcm - start;
+                    }
+                }
+                else
+                {
+                    is_loop = 0;
+                }
                 *pcm++ = (s & 128 ? s & ~128 : -s) + 128;
             }
         }
+    }
+
+    // pre-convert unsigned 8-bit PCM samples to signed PCM format for the SegaCD
+    if ((fm_ptr >= MD_WORDRAM_VGM_PTR && fm_ptr < MD_WORDRAM+0x20000) && pcm_baseoffs) {
+        pcm_baseoffs += (fm_ptr - MD_WORDRAM_VGM_PTR);
+    }
+    if (rf5c68_dataofs) {
+        rf5c68_dataofs += pcm_baseoffs;
     }
 
     vgm_ptr = vgm_lzss_buf;
@@ -202,18 +221,22 @@ void vgm_play_dac_samples(int offset, int length, int freq)
         int cycle;
         int ntsc = (*(volatile uint16_t *)0xC00004 & 1) == 0; // check VDP control port value
 
-        dac_freq = freq;
         if (ntsc)
-            cycle = (((23011361 << 1)/dac_freq + 1) >> 1) + 1; // for NTSC clock
+            cycle = (((23011361 << 1)/freq + 1) >> 1) + 1; // for NTSC clock
         else
-            cycle = (((22801467 << 1)/dac_freq + 1) >> 1) + 1; // for PAL clock
+            cycle = (((22801467 << 1)/freq + 1) >> 1) + 1; // for PAL clock
         dac_center = cycle >> 1;
+        dac_freq = freq;
 
         MARS_PWM_CTRL = 0x05; // left and right
         MARS_PWM_CYCLE = cycle;
-        MARS_PWM_MONO = dac_center;
-        MARS_PWM_MONO = dac_center;
-        MARS_PWM_MONO = dac_center;
+
+        if (dac_len == 0)
+        {
+            MARS_PWM_MONO = dac_center;
+            MARS_PWM_MONO = dac_center;
+            MARS_PWM_MONO = dac_center;
+        }
     }
 
     dac_samples = (char *)MD_WORDRAM_VGM_PTR + pcm_baseoffs + offset;
@@ -239,6 +262,7 @@ void vgm_stop_rf5c68_samples(int chan)
         return;
     if (chan != 0 && chan != 1)
         return;
+
     scd_queue_stop_src(VGM_MCD_SOURCE_ID+chan);
 }
 
@@ -262,24 +286,43 @@ void vgm_play_rf5c68_samples(int chan, int offset, int loopstart, int incr, int 
     void *ptr = (char *)MCD_WORDRAM_VGM_PTR + rf5c68_dataofs + offset;
     int vol = (volpan >> 16) & 0xff;
     int pan = vgm_midipan2lcf(volpan & 0xff);
+    int autoloop = 0;
 
     if (!cd_ok)
         return;
     if (chan != 0 && chan != 1)
         return;
 
-    if (loopstart == 0)
+    // check if the channel is active
+    if (scd_get_playback_status() & (1<<(VGM_MCD_SOURCE_ID+chan-1)))
     {
         // hacky hack
-        scd_queue_update_src(VGM_MCD_SOURCE_ID+chan, freq, pan, vol, 0);
+        scd_queue_update_src(VGM_MCD_SOURCE_ID+chan, freq, pan, vol, 255);
         return;
     }
 
     if (!freq)
         return;
 
+    // find the actual length in loop offsets table
+    if (length == 0)
+    {
+        int i;
+        for (i = 0; i < rf5c68_num_loops; i++)
+        {
+            if (rf5c68_loops[i] > offset)
+            {
+                autoloop = 1;
+                length = rf5c68_loops[i] - offset;
+                break;
+            }
+        }
+        if (i == rf5c68_num_loops)
+            return;
+    }
+
     scd_queue_setptr_buf(VGM_MCD_BUFFER_ID+chan, ptr, length);
-    scd_queue_play_src(VGM_MCD_SOURCE_ID+chan, VGM_MCD_BUFFER_ID+chan, freq, pan, vol, 0);
+    scd_queue_play_src(VGM_MCD_SOURCE_ID+chan, VGM_MCD_BUFFER_ID+chan, freq, pan, vol, autoloop);
 }
 
 void vgm_stop_samples(void)
