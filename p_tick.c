@@ -31,6 +31,9 @@ degenmobj_t		mobjhead;	/* head and tail of mobj list */
 degenmobj_t		freemobjhead, freestaticmobjhead, freeringmobjhead;	/* head and tail of free mobj list */
 degenmobj_t		limbomobjhead;
 
+scenerymobj_t *scenerymobjlist;
+VINT numscenerymobjs = 0;
+
 //int			activethinkers;	/* debug count */
 //int			activemobjs;	/* debug count */
 
@@ -50,6 +53,7 @@ void P_InitThinkers (void)
 	freestaticmobjhead.next = freestaticmobjhead.prev = (void *)&freestaticmobjhead;
 	freeringmobjhead.next = freeringmobjhead.prev = (void*)&freeringmobjhead;
 	limbomobjhead.next = limbomobjhead.prev = (void*)&limbomobjhead;
+	scenerymobjlist = NULL;
 }
 
 

@@ -195,14 +195,14 @@ typedef struct
 
 typedef struct mobj_s
 {
-	fixed_t			x, y, z;
-	struct	mobj_s* prev, * next;
-	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
-	struct mobj_s	*bnext, *bprev;		/* links in blocks (if needed) */
-	struct subsector_s	*subsector;
-
 	unsigned short		type;
 	VINT		flags;
+	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
+	struct subsector_s	*subsector;
+	struct	mobj_s* prev, * next;
+
+	fixed_t			x, y, z;
+	struct mobj_s	*bnext, *bprev;		/* links in blocks (if needed) */
 
 	// RING OBJECTS END HERE
 
@@ -235,9 +235,22 @@ typedef struct mobj_s
 	intptr_t		extradata;		/* for latecall functions */
 } mobj_t;
 
+typedef struct scenerymobj_s
+{
+	unsigned short		type;
+	VINT		flags;
+	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
+	struct subsector_s	*subsector;
+	// SIMILARITIES END HERE
+	int16_t x, y, z;
+} scenerymobj_t;
+
 typedef struct degenmobj_s
 {
-	fixed_t			x, y, z;
+	unsigned short		type;
+	VINT		flags;
+	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
+	struct subsector_s	*subsector;
 	void 			*prev, *next;
 } degenmobj_t;
 

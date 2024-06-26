@@ -277,6 +277,7 @@ void P_LoadThings (int lump)
 	numthingsreal = 0;
 	numstaticthings = 0;
 	numringthings = 0;
+	numscenerymobjs = 0;
 
 	mt = (mapthing_t *)data;
 	for (i=0 ; i<numthings ; i++, mt++)
@@ -318,12 +319,15 @@ void P_LoadThings (int lump)
 			case 3:
 				numringthings++;
 				break;
+			case 4:
+				numscenerymobjs++;
+				break;
 		}
 	}
 
 	// preallocate a few mobjs for puffs and projectiles
 	numthingsreal += 10;
-	P_PreSpawnMobjs(numthingsreal, numstaticthings, numringthings);
+	P_PreSpawnMobjs(numthingsreal, numstaticthings, numringthings, numscenerymobjs);
 
 	mt = (mapthing_t *)data;
 	for (i=0 ; i<numthings ; i++, mt++)

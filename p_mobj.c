@@ -108,7 +108,7 @@ boolean P_SetMobjState (mobj_t *mobj, statenum_t state)
 		if (st->action)		/* call action functions when the state is set */
 			st->action(mobj);
 
-		if (!(mobj->flags & MF_RINGMOBJ|MF_STATIC))
+		if (!(mobj->flags & (MF_RINGMOBJ|MF_STATIC)))
 			mobj->latecall = NULL;	/* make sure it doesn't come back to life... */
 
 		state = st->nextstate;
@@ -157,6 +157,31 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 /* try to reuse a previous mobj first */
 	if (info->flags & MF_RINGMOBJ)
 	{
+		if (info->flags & MF_NOBLOCKMAP)
+		{
+			scenerymobj_t *scenerymobj = &scenerymobjlist[numscenerymobjs];
+			scenerymobj->type = type;
+			scenerymobj->x = x >> FRACBITS;
+			scenerymobj->y = y >> FRACBITS;
+			scenerymobj->flags = info->flags;
+
+			/* set subsector and/or block links */
+			P_SetThingPosition2 ((mobj_t*)scenerymobj, R_PointInSubsector(x, y));
+
+			const fixed_t floorz = scenerymobj->subsector->sector->floorheight;
+			const fixed_t ceilingz = scenerymobj->subsector->sector->ceilingheight;
+			if (z == ONFLOORZ)
+				scenerymobj->z = floorz >> FRACBITS;
+			else if (z == ONCEILINGZ)
+				scenerymobj->z = (ceilingz - info->height) >> FRACBITS;
+			else 
+				scenerymobj->z = z >> FRACBITS;
+
+			numscenerymobjs++;
+
+			return (mobj_t*)scenerymobj;
+		}
+
 		if (freeringmobjhead.next != (void*)&freeringmobjhead)
 		{
 			mobj = freeringmobjhead.next;
@@ -259,15 +284,12 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 =
 ================
 */
-void P_PreSpawnMobjs(int count, int staticcount, int ringcount)
+void P_PreSpawnMobjs(int count, int staticcount, int ringcount, int scenerycount)
 {
-	if (count > 0)
+	if (scenerycount > 0)
 	{
-		mobj_t *mobj = Z_Malloc (sizeof(*mobj)*count, PU_LEVEL);
-		for (; count > 0; count--) {
-			P_AddMobjToList(mobj, (void *)&freemobjhead);
-			mobj++;
-		}
+		scenerymobjlist = Z_Malloc(sizeof(scenerymobj_t)*scenerycount, PU_LEVEL);
+		numscenerymobjs = 0;
 	}
 
 	if (staticcount > 0)
@@ -276,6 +298,15 @@ void P_PreSpawnMobjs(int count, int staticcount, int ringcount)
 		for (; staticcount > 0; staticcount--) {
 			P_AddMobjToList((void *)mobj, (void *)&freestaticmobjhead);
 			mobj += static_mobj_size;
+		}
+	}
+
+	if (count > 0)
+	{
+		mobj_t *mobj = Z_Malloc (sizeof(*mobj)*count, PU_LEVEL);
+		for (; count > 0; count--) {
+			P_AddMobjToList(mobj, (void *)&freemobjhead);
+			mobj++;
 		}
 	}
 
@@ -381,7 +412,12 @@ int P_MapThingSpawnsMobj (mapthing_t* mthing)
 			if (mthing->type == mobjinfo[i].doomednum)
 			{
 				if (mobjinfo[i].flags & MF_RINGMOBJ)
+				{
+					if (mobjinfo[i].flags & MF_NOBLOCKMAP)
+						return 4;
+
 					return 3;
+				}
 				if (mobjinfo[i].flags & MF_STATIC)
 					return 2;
 				return 1;
@@ -467,6 +503,8 @@ return;	/*DEBUG */
 		totalitems++;
 		return;
 	}
+	if ((mobj->flags & MF_RINGMOBJ) && (mobj->flags & MF_NOBLOCKMAP))
+		return;
 
 	if (mobj->tics > 0)
 		mobj->tics = 1 + (P_Random () % mobj->tics);
