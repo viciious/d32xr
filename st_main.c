@@ -15,6 +15,7 @@ static short	micronums_y[NUMMICROS] = {15,15,15,25,25,25};
 static short score, time, rings, rrings;
 static short snums; // Numbers
 static short timecolon; // : for TIME
+static short face;
 
 static short	spclfaceSprite[NUMSPCLFACES] =
 		{0,sbf_facelft,sbf_facergt,sbf_ouch,sbf_gotgat,sbf_mowdown};
@@ -67,6 +68,7 @@ void ST_Init (void)
 	rrings = W_CheckNumForName("STTRRING");
 	snums = W_CheckNumForName("STTNUM0");
 	timecolon = W_CheckNumForName("STTCOLON");
+	face = W_CheckNumForName("STFACE");
 
 	faces = W_CheckNumForName("FACE00");
 
@@ -476,6 +478,8 @@ static void ST_Drawer_ (stbar_t* sb)
 
 	DrawJagobjLump(sb->rings <= 0 && (gametic / 4 & 1) ? rrings : rings, 16, 42+20, NULL, NULL);
 	ST_DrawValueRightAligned(96, 42+20, sb->rings);
+
+	DrawJagobjLump(face, 16, 176, NULL, NULL);
 
 	if (!sbar || !sbobj[0])
 		return;
