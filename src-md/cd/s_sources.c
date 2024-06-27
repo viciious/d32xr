@@ -204,10 +204,9 @@ paint:
         }
 
         if (src->eof) {
-            if (src->painted > 0 && src->autoloop) {
+            if ((painted > 0 || src->rem < S_PAINT_CHUNK) && src->autoloop) {
                 // auto-restart only if we have previously painted at least 1 sample
                 src->eof = 0;
-                src->painted = 0;
                 S_Src_Rewind(src);
                 goto paint;
             }
