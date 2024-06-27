@@ -671,6 +671,7 @@ int     I_GetFRTCounter (void);
 void I_Update (void);
 
 void I_Error (char *error, ...) __attribute__((noreturn));
+void CONS_Printf(char *msg, ...);
 
 void I_StoreScreenCopy(void);
 void I_RestoreScreenCopy(void);

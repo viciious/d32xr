@@ -577,7 +577,7 @@ static void AM_Drawer_ (int c)
 	int		color;
 	int		drawn;		/* HOW MANY LINES DRAWN? */
 	int		miny, maxy;
-	extern VINT sbar_height;
+	const VINT sbar_height = 0;
 	int		am_y;
 	int		am_height;
 	int		am_halfh;

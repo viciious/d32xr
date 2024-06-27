@@ -151,6 +151,8 @@ typedef struct
 	char	specialFace;	/* Which type of special face to make */
 	char	gotgibbed;			/* Got gibbed */
 	char	forcedraw;
+	char    msg[128];
+	VINT    msgTics;
 } stbar_t;
 
 extern	stbar_t	*stbar;

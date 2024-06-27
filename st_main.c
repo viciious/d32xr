@@ -3,6 +3,7 @@
 #include "doomdef.h"
 #include "st_main.h"
 #include "v_font.h"
+#include <stdio.h>
 
 stbar_t	*stbar;
 int stbar_tics;
@@ -13,7 +14,7 @@ static short   stbar_y;
 static short score, time, rings, rrings;
 static short snums; // Numbers
 static short timecolon; // : for TIME
-static short face;
+static short face, livex;
 
 #ifndef MARS
 byte		*sbartop;
@@ -47,6 +48,7 @@ void ST_Init (void)
 	snums = W_CheckNumForName("STTNUM0");
 	timecolon = W_CheckNumForName("STTCOLON");
 	face = W_CheckNumForName("STFACE");
+	livex = W_CheckNumForName("STLIVEX");
 }
 
 void ST_ForceDraw(void)
@@ -185,8 +187,23 @@ static void ST_Drawer_ (stbar_t* sb)
 
 	DrawJagobjLump(sb->rings <= 0 && (gametic / 4 & 1) ? rrings : rings, 16, 42+20, NULL, NULL);
 	V_DrawValuePaddedRight(&hudNumberFont, 96, 42+20, sb->rings, 0);
+
+	DrawJagobjLump(face, 16, 176, NULL, NULL);
+	V_DrawStringLeft(&menuFont, 16 + 20, 176, "SONIC");
+	DrawJagobjLump(livex, 16 + 22, 176 + 10, NULL, NULL);
+	V_DrawValuePaddedRight(&menuFont, 16 + 58, 176+8, 3, 0);
 }
 
+void CONS_Printf(char *msg, ...) 
+{
+	va_list argptr;
+
+	va_start(argptr, msg);
+	vsprintf(stbar->msg, msg, argptr);
+	va_end(argptr);
+
+	stbar->msgTics = 4 * TICRATE;
+} 
 
 void ST_Drawer(void)
 {
@@ -215,6 +232,12 @@ void ST_Drawer(void)
 		if (playeringame[p])
 			ST_Drawer_(&stbar[p]);
 		p++;
+	}
+
+	if (stbar->msgTics)
+	{
+		V_DrawStringLeft(&menuFont, 0, 24, stbar->msg);
+		stbar->msgTics--;
 	}
 }
 

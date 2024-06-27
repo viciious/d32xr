@@ -139,8 +139,17 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 {
 	player_t	*player;
 	int			sound;
+
+	if (!toucher->player)
+		return;
+
+	VINT sheight;
+	if (special->flags & MF_RINGMOBJ)
+		sheight = mobjinfo[special->type].height;
+	else
+		sheight = special->theight << FRACBITS;
 		
-	if (toucher->z > (special->z + (special->theight << FRACBITS)))
+	if (toucher->z > (special->z + sheight))
 		return;
 	if (special->z > (toucher->z + (toucher->theight << FRACBITS)))
 		return;
