@@ -103,6 +103,7 @@ OBJS = \
 	sh2_mixer.o \
 	r_cache.o \
 	m_fire.o \
+	v_font.o \
 	lzss.o
 
 release: $(TARGET).32x
