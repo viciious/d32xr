@@ -288,8 +288,7 @@ void vgm_play_rf5c68_samples(int chan, int offset, int loopstart, int incr, int 
     if (chan != 0 && chan != 1)
         return;
 
-    // check if the channel is active
-    if (scd_get_playback_status() & (1<<(VGM_MCD_SOURCE_ID+chan-1)))
+    if (loopstart == 0xffff)
     {
         // hacky hack
         scd_queue_update_src(VGM_MCD_SOURCE_ID+chan, freq, pan, vol, 255);

@@ -757,6 +757,7 @@ rf5c68_action:
     LD      (RF5C68_FSH),A      ; reset frequency
     LD      (RF5C68_FSL),A
 
+    LD      A,255
     LD      (RF5C68_LAH),A      ; reset loop address
     LD      (RF5C68_LAL),A
 
