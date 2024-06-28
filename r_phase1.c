@@ -64,6 +64,7 @@ static int R_ClipToViewEdges(angle_t angle1, angle_t angle2)
 {
    angle_t span, tspan;
    int x1, x2;
+   angle_t doubleclipangle;
 
    // clip to view edges
    span = angle1 - angle2;
@@ -72,11 +73,12 @@ static int R_ClipToViewEdges(angle_t angle1, angle_t angle2)
 
    angle1 -= vd->viewangle;
    angle2 -= vd->viewangle;
+   doubleclipangle = vd->clipangle * 2;
 
    tspan = angle1 + vd->clipangle;
-   if(tspan > vd->doubleclipangle)
+   if(tspan > doubleclipangle)
    {
-      tspan -= vd->doubleclipangle;
+      tspan -= doubleclipangle;
       // totally off the left edge?
       if(tspan >= span)
          return -1;
@@ -84,9 +86,9 @@ static int R_ClipToViewEdges(angle_t angle1, angle_t angle2)
    }
 
    tspan = vd->clipangle - angle2;
-   if(tspan > vd->doubleclipangle)
+   if(tspan > doubleclipangle)
    {
-      tspan -= vd->doubleclipangle;
+      tspan -= doubleclipangle;
       if(tspan >= span)
          return -1;
       angle2 = 0 - vd->clipangle;
