@@ -138,19 +138,13 @@ static boolean R_CheckBBox(rbspWork_t *rbsp, int16_t bspcoord_[4])
    bspcoord[3] = bspcoord_[3] << 16;
 
    // find the corners of the box that define the edges from current viewpoint
-   if(vd->viewx <= bspcoord[BOXLEFT])
-      boxx = 0;
-   else if(vd->viewx < bspcoord[BOXRIGHT])
-      boxx = 1;
-   else
-      boxx = 2;
+   boxx = 2;
+   boxx -= (vd->viewx < bspcoord[BOXRIGHT]);
+   boxx -= (vd->viewx <= bspcoord[BOXLEFT]);
 
-   if(vd->viewy >= bspcoord[BOXTOP])
-      boxy = 0;
-   else if(vd->viewy > bspcoord[BOXBOTTOM])
-      boxy = 1;
-   else
-      boxy = 2;
+   boxy = 2;
+   boxy -= (vd->viewy > bspcoord[BOXBOTTOM]);
+   boxy -= (vd->viewy >= bspcoord[BOXTOP]);
 
    boxpos = (boxy << 2) + boxx;
    if(boxpos == 5)
