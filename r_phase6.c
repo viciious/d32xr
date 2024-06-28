@@ -149,7 +149,11 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 {
     viswall_t* segl = lseg->segl;
 
+    #ifdef MDSKY
+    drawcol_t drawsky = (segl->actionbits & AC_ADDSKY) != 0 ? drawskycol : NULL;
+    #else
     drawcol_t drawsky = (segl->actionbits & AC_ADDSKY) != 0 ? drawcol : NULL;
+    #endif
 
     fixed_t scalefrac = segl->scalefrac;
     const fixed_t scalestep = segl->scalestep;

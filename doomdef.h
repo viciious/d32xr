@@ -683,11 +683,13 @@ void I_SwapScreenCopy(void);
 #ifdef USE_C_DRAW
 
 #define I_DrawColumnLow I_DrawColumnLowC
+#define I_DrawSkyColumnLow I_DrawSkyColumnLowC
 #define I_DrawFuzzColumnLow I_DrawFuzzColumnLowC
 #define I_DrawColumnNPo2Low I_DrawColumnNPo2LowC
 #define I_DrawSpanLow I_DrawSpanLowC
 
 #define I_DrawColumn I_DrawColumnC
+#define I_DrawSkyColumn I_DrawSkyColumnC
 #define I_DrawColumnNPo2 I_DrawColumnNPo2C
 #define I_DrawFuzzColumn I_DrawFuzzColumnC
 #define I_DrawSpan I_DrawSpanC
@@ -695,11 +697,13 @@ void I_SwapScreenCopy(void);
 #else
 
 #define I_DrawColumnLow I_DrawColumnLowA
+#define I_DrawSkyColumnLow I_DrawSkyColumnLowA
 #define I_DrawFuzzColumnLow I_DrawFuzzColumnLowA
 #define I_DrawColumnNPo2Low I_DrawColumnNPo2LowA
 #define I_DrawSpanLow I_DrawSpanLowA
 
 #define I_DrawColumn I_DrawColumnA
+#define I_DrawSkyColumn I_DrawSkyColumnA
 #define I_DrawColumnNPo2 I_DrawColumnNPo2A
 #define I_DrawFuzzColumn I_DrawFuzzColumnA
 #define I_DrawSpan I_DrawSpanA
@@ -719,6 +723,14 @@ void I_DrawSpanLow(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 
 void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
 	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
+
+#ifdef MDSKY
+void I_DrawSkyColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
+	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
+
+void I_DrawSkyColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
+	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
+#endif
 
 void I_DrawColumnNPo2(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
 	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);

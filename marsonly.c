@@ -159,7 +159,7 @@ void I_Print8(int x, int y, const char* string)
 {
 	int c;
 	int ckey = 0;
-	int color = COLOR_WHITE;
+	int color = COLOR_BLACK;
 	int16_t colortbl[4];
 	const uint8_t* source;
 	int16_t *dest;

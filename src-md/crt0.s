@@ -123,6 +123,7 @@ _start:
         beq.b   1f
         move.l  a0,-(sp)
         movea.l d0,a0
+
         jmp     (a0)
 1:
         move.l  (sp)+,d0
@@ -208,7 +209,7 @@ init_hardware:
         move.l  d0,(a1)
         dbra    d4,2b
 
-        jsr     load_font
+        || jsr     load_font /* DLG */
 
 | set the default palette for text
         move.l  #0xC0000000,(a0)        /* write CRAM address 0 */
@@ -433,42 +434,42 @@ no_cmd:
 
         .align  2
  prireqtbl:
-        dc.w    no_cmd - prireqtbl
-        dc.w    read_sram - prireqtbl
-        dc.w    write_sram - prireqtbl
-        dc.w    start_music - prireqtbl
-        dc.w    stop_music - prireqtbl
-        dc.w    read_mouse - prireqtbl
-        dc.w    read_cdstate - prireqtbl
-        dc.w    set_usecd - prireqtbl
-        dc.w    set_crsr - prireqtbl
-        dc.w    get_crsr - prireqtbl
-        dc.w    set_color - prireqtbl
-        dc.w    get_color - prireqtbl
-        dc.w    set_dbpal - prireqtbl
-        dc.w    put_chr - prireqtbl
-        dc.w    clear_a - prireqtbl
-        dc.w    no_cmd - prireqtbl
-        dc.w    no_cmd - prireqtbl
-        dc.w    no_cmd - prireqtbl
-        dc.w    net_getbyte - prireqtbl
-        dc.w    net_putbyte - prireqtbl
-        dc.w    net_setup - prireqtbl
-        dc.w    net_cleanup - prireqtbl
-        dc.w    set_bank_page - prireqtbl
-        dc.w    net_set_link_timeout - prireqtbl
-        dc.w    set_music_volume - prireqtbl
-        dc.w    ctl_md_vdp - prireqtbl
-        dc.w    cpy_md_vram - prireqtbl
-        dc.w    cpy_md_vram - prireqtbl
-        dc.w    cpy_md_vram - prireqtbl
-        dc.w    load_sfx - prireqtbl
-        dc.w    play_sfx - prireqtbl
-        dc.w    get_sfx_status - prireqtbl
-        dc.w    sfx_clear - prireqtbl
-        dc.w    update_sfx - prireqtbl
-        dc.w    stop_sfx - prireqtbl
-        dc.w    flush_sfx - prireqtbl
+        dc.w    no_cmd - prireqtbl                /* 0x00 */
+        dc.w    read_sram - prireqtbl             /* 0x01 */
+        dc.w    write_sram - prireqtbl            /* 0x02 */
+        dc.w    start_music - prireqtbl           /* 0x03 */
+        dc.w    stop_music - prireqtbl            /* 0x04 */
+        dc.w    read_mouse - prireqtbl            /* 0x05 */
+        dc.w    read_cdstate - prireqtbl          /* 0x06 */
+        dc.w    set_usecd - prireqtbl             /* 0x07 */
+        dc.w    set_crsr - prireqtbl              /* 0x08 */
+        dc.w    get_crsr - prireqtbl              /* 0x09 */
+        dc.w    set_color - prireqtbl             /* 0x0A */
+        dc.w    get_color - prireqtbl             /* 0x0B */
+        dc.w    set_dbpal - prireqtbl             /* 0x0C */
+        dc.w    put_chr - prireqtbl               /* 0x0D */
+        dc.w    clear_a - prireqtbl               /* 0x0E */
+        dc.w    load_md_sky - prireqtbl           /* 0x0F */
+        dc.w    no_cmd - prireqtbl                /* 0x10 */
+        dc.w    no_cmd - prireqtbl                /* 0x11 */
+        dc.w    net_getbyte - prireqtbl           /* 0x12 */
+        dc.w    net_putbyte - prireqtbl           /* 0x13 */
+        dc.w    net_setup - prireqtbl             /* 0x14 */
+        dc.w    net_cleanup - prireqtbl           /* 0x15 */
+        dc.w    set_bank_page - prireqtbl         /* 0x16 */
+        dc.w    net_set_link_timeout - prireqtbl  /* 0x17 */
+        dc.w    set_music_volume - prireqtbl      /* 0x18 */
+        dc.w    ctl_md_vdp - prireqtbl            /* 0x19 */
+        dc.w    /* cpy_md_vram */ no_cmd - prireqtbl           /* 0x1A */ /* DLG: */
+        dc.w    /* cpy_md_vram */ no_cmd - prireqtbl           /* 0x1B */ /* DLG: */
+        dc.w    /* cpy_md_vram */ no_cmd - prireqtbl           /* 0x1C */ /* DLG: */
+        dc.w    load_sfx - prireqtbl              /* 0x1D */
+        dc.w    play_sfx - prireqtbl              /* 0x1E */
+        dc.w    get_sfx_status - prireqtbl        /* 0x1F */
+        dc.w    sfx_clear - prireqtbl             /* 0x20 */
+        dc.w    update_sfx - prireqtbl            /* 0x21 */
+        dc.w    stop_sfx - prireqtbl              /* 0x22 */
+        dc.w    flush_sfx - prireqtbl             /* 0x23 */
 
 | process request from Secondary SH2
 handle_sec_req:
@@ -1376,7 +1377,7 @@ set_color:
         move.w  d0,d1
         move.l  d1,bg_color
 
-        bsr     load_font
+        || bsr     load_font /* DLG */
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
@@ -1515,6 +1516,136 @@ set_music_volume:
 4:
         move.w  #0,0xA15120         /* done */
         bra     main_loop
+
+
+
+get_lump_source_and_size:
+        /* fetch lump length */
+        lea     lump_size,a0
+        move.w  0xA15122,0(a0)
+        move.w  #0,0xA15120         /* done with upper word */
+21:
+        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
+        cmpi.b  #0x02,d0
+        bne.b   21b
+        move.w  0xA15122,2(a0)
+        move.w  #0,0xA15120         /* done with lower word */
+
+        /* fetch lump offset */
+        lea     lump_ptr,a0
+22:
+        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
+        cmpi.b  #0x03,d0
+        bne.b   22b
+        move.w  0xA15122,0(a0)
+        move.w  #0,0xA15120         /* done with upper word */
+23:
+        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
+        cmpi.b  #0x04,d0
+        bne.b   23b
+        move.w  0xA15122,2(a0)
+        move.w  #0,0xA15120         /* done with lower word */
+
+        rts
+
+
+load_md_sky:
+        move.w  #0x2700,sr          /* disable ints */
+
+        move.l  a0,-(sp)
+        move.l  a1,-(sp)
+        move.l  a2,-(sp)
+        move.l  d0,-(sp)
+        move.l  d1,-(sp)
+        move.l  d2,-(sp)
+        move.l  d3,-(sp)
+
+        move.w  0xA15104,d3             /* Set cart bank select */
+
+        lea     0xC00004,a0
+        lea     0xC00000,a1
+        ||move.w  #0x8230,(a0) /* reg 2 = Name Tbl A = 0xC000 */
+        ||move.w  #0x832C,(a0) /* reg 3 = Name Tbl W = 0xB000 */
+        ||move.w  #0x8407,(a0) /* reg 4 = Name Tbl B = 0xE000 */
+        ||move.w  #0x8554,(a0) /* reg 5 = Sprite Attr Tbl = 0xA800 */
+
+        move.w  #0x9000,(a0) /* reg 16 = Scroll Size = 32x32 */
+
+
+        /* Load pattern name table */
+        bsr     get_lump_source_and_size
+        lea     0xC00004,a0
+        lea     0xC00000,a1
+        move.w  #0x8F02,(a0)
+        move.l  #0x40000003,(a0)        /* Set destination offset to pattern name table B at position 0x0 */
+        move.l  lump_ptr,d0
+        move.w  lump_ptr,d1
+        andi.l  #0xFFFFF,d0
+        addi.l  #0x900000,d0
+        move.l  d0,a2
+        lsr.w   #4,d1
+        andi.w  #3,d1
+        move.w  d1,0xA15104             /* Set cart bank select */
+        move.w  #0x200-1,d2             /* Prepare to copy two pattern names, 256 times total */
+0:
+        move.w  (a2)+,(a1)              /* Write 0 to pattern name table B at position 0x0 */
+        dbra    d2,0b
+
+
+        /* Load palettes */
+        bsr     get_lump_source_and_size
+        lea     0xC00004,a0
+        lea     0xC00000,a1
+        move.w  #0x8F02,(a0)
+        move.l  #0xC0000000,(a0)        /* Write CRAM address 0 */
+        move.l  lump_ptr,d0
+        move.w  lump_ptr,d1
+        andi.l  #0xFFFFF,d0
+        addi.l  #0x900000,d0
+        move.l  d0,a2
+        lsr.w   #4,d1
+        andi.w  #3,d1
+        move.w  d1,0xA15104             /* Set cart bank select */
+        move.w  #0x40-1,d2              /* Prepare to copy two colors, 32 times total */
+1:
+        move.w  (a2)+,(a1)              /* Copy two colors from the source */
+        |add.l   #0x40000,a1             /* Advance the destination cursor */
+        dbra    d2,1b
+
+
+        /* Load patterns */
+        bsr     get_lump_source_and_size
+        lea     0xC00004,a0
+        lea     0xC00000,a1
+        move.w  #0x8F02,(a0)
+        move.l  #0x40000000,(a0)        /* Write VRAM address 0 */
+        move.l  lump_ptr,d0
+        move.w  lump_ptr,d1
+        andi.l  #0xFFFFF,d0
+        addi.l  #0x900000,d0
+        move.l  d0,a2
+        lsr.w   #4,d1
+        andi.w  #3,d1
+        move.w  d1,0xA15104             /* Set cart bank select */
+        move.w  #0x2000-1,d2            /* Prepare to copy eight pixels, 4096 times total */
+2:
+        move.w  (a2)+,(a1)             /* Copy eight pixels from the source */
+        dbra    d2,2b
+
+        move.w  d3,0xA15104             /* Set cart bank select */
+
+        move.l  (sp)+,d3
+        move.l  (sp)+,d2
+        move.l  (sp)+,d1
+        move.l  (sp)+,d0
+        move.l  (sp)+,a2
+        move.l  (sp)+,a1
+        move.l  (sp)+,a0
+
+        move.w  #0x2000,sr          /* enable ints */
+
+        bra     main_loop
+
 
 ctl_md_vdp:
         andi.w  #255, d0
@@ -2370,16 +2501,17 @@ vert_blank:
         beq.b   3f
         subq.b  #1,hotplug_cnt
 3:
-        move.w  init_vdp_latch,d0
-        move.w  #-1,init_vdp_latch
+        /* DLG: This code will erase our beautiful MD sky. */
+        ||move.w  init_vdp_latch,d0
+        ||move.w  #-1,init_vdp_latch
 
-        cmpi.w  #1,d0
-        bne.b   4f                  /* re-init vdp and vram */
+        ||cmpi.w  #1,d0
+        ||bne.b   4f                  /* re-init vdp and vram */
 
-        bsr     bump_fm
-        bsr     init_vdp
-        bsr     bump_fm
-        bsr     load_font
+        ||bsr     bump_fm
+        ||bsr     init_vdp
+        ||bsr     bump_fm
+        ||bsr     load_font    /* DLG */
         move.w  #0x8174,0xC00004    /* display on, vblank enabled, V28 mode */
 4:
         move.l  (sp)+,a2
@@ -2747,6 +2879,31 @@ crsr_y:
         dc.w    0
 dbug_color:
         dc.w    0
+
+lump_ptr:
+        dc.l    0
+lump_size:
+        dc.l    0
+
+/* DLG */
+/*
+test_word_1:
+        dc.w    0
+test_word_2:
+        dc.w    0
+test_word_3:
+        dc.w    0
+test_word_4:
+        dc.w    0
+test_word_5:
+        dc.w    0
+test_word_6:
+        dc.w    0
+test_word_7:
+        dc.w    0
+test_word_8:
+        dc.w    0
+*/
 
         .text
         .align  4

@@ -278,6 +278,10 @@ extern drawcol_t drawcolnpo2;
 extern drawcol_t drawcollow;
 extern drawspan_t drawspan;
 
+#ifdef MDSKY
+extern drawcol_t drawskycol;
+#endif
+
 #define FUZZTABLE		64
 #define FUZZMASK		(FUZZTABLE-1)
 extern short fuzzoffset[FUZZTABLE];

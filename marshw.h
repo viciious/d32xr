@@ -128,6 +128,10 @@ int Mars_ReadController(int port);
 
 int Mars_ROMSize(void);
 
+#ifdef MDSKY
+void Mars_LoadMDSky(void *sky_names_ptr, void *sky_palettes_ptr, void *sky_tiles_ptr);
+#endif
+
 void Mars_CtlMDVDP(int sel);
 
 void Mars_StoreWordColumnInMDVRAM(int c);

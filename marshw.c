@@ -149,6 +149,11 @@ char Mars_UploadPalette(const uint8_t* palette)
 		cram[i] = 0x8000 | r1 | g1 | b1;
 	}
 
+	#ifdef MDSKY
+	cram[255] &= 0x7FFF; //DLG: Allow MD VDP to show through color index 0.
+	//TODO: DLG: Use a different color. This color is used for shading.
+	#endif
+
 	return 1;
 }
 
@@ -239,7 +244,7 @@ void Mars_InitVideo(int lines)
 		Mars_FlipFrameBuffers(1);
 	}
 
-	Mars_SetMDColor(1, 0);
+	Mars_SetMDColor(3, 2);
 }
 
 void Mars_Init(void)
@@ -666,6 +671,57 @@ int Mars_ReadController(int ctrl)
 	mars_controlval[port] = 0;
 	return val;
 }
+
+#ifdef MDSKY
+/*
+Load the MD sky tiles, palettes, and pattern name table into the MD VDP.
+*/
+void Mars_LoadMDSky(void *sky_names_ptr, void *sky_palettes_ptr, void *sky_tiles_ptr)
+{
+	int i;
+	const int sky_names_size = 0x400; // TODO: //DLG: Make this dynamic.
+	const int sky_palettes_size = 0x80;	 // TODO: //DLG: Make this dynamic.
+	const int sky_tiles_size = 0x4000; // TODO: //DLG: Make this dynamic.
+
+	uint16_t s[4];
+
+
+	// Load pattern name table
+
+	s[0] = (uintptr_t)sky_names_size>>16, s[1] = (uintptr_t)sky_names_size&0xffff;
+	s[2] = ((uintptr_t)sky_names_ptr >>16), s[3] = (uintptr_t)sky_names_ptr &0xffff;
+
+	for (i = 0; i < 4; i++) {
+		MARS_SYS_COMM2 = s[i];
+		MARS_SYS_COMM0 = 0x0F01+i;
+		while (MARS_SYS_COMM0);
+	}
+
+
+	// Load palettes
+
+	s[0] = (uintptr_t)sky_palettes_size>>16, s[1] = (uintptr_t)sky_palettes_size&0xffff;
+	s[2] = ((uintptr_t)sky_palettes_ptr >>16), s[3] = (uintptr_t)sky_palettes_ptr &0xffff;
+
+	for (i = 0; i < 4; i++) {
+		MARS_SYS_COMM2 = s[i];
+		MARS_SYS_COMM0 = 0x0F01+i;
+		while (MARS_SYS_COMM0);
+	}
+
+
+	// Load tiles
+
+	s[0] = (uintptr_t)sky_tiles_size>>16, s[1] = (uintptr_t)sky_tiles_size&0xffff;
+	s[2] = ((uintptr_t)sky_tiles_ptr >>16), s[3] = (uintptr_t)sky_tiles_ptr &0xffff;
+
+	for (i = 0; i < 4; i++) {
+		MARS_SYS_COMM2 = s[i];
+		MARS_SYS_COMM0 = 0x0F01+i;
+		while (MARS_SYS_COMM0);
+	}
+}
+#endif
 
 void Mars_CtlMDVDP(int sel)
 {

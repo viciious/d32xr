@@ -313,6 +313,45 @@ static void D_Wipe(void)
 	}
 
 	wipe_ExitMelt();
+
+
+
+	// DLG: Retrieve lumps for drawing the sky on the MD.
+	// TODO: Is there a better place for this code to live?
+	
+	#ifdef MDSKY
+	unsigned *data;
+	uint8_t *sky_name_ptr;
+	uint8_t *sky_pal_ptr;
+	uint8_t *sky_pat_ptr;
+	int lump;
+
+	lump = W_CheckNumForName("SKY1NAM");
+	if (lump != -1) {
+		sky_name_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+	}
+	else {
+		return;
+	}
+
+	lump = W_CheckNumForName("SKY1PAL");
+	if (lump != -1) {
+		sky_pal_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+	}
+	else {
+		return;
+	}
+
+	lump = W_CheckNumForName("SKY1TIL");
+	if (lump != -1) {
+		sky_pat_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+	}
+	else {
+		return;
+	}
+
+	Mars_LoadMDSky(sky_name_ptr, sky_pal_ptr, sky_pat_ptr);
+	#endif
 }
 
 int MiniLoop ( void (*start)(void),  void (*stop)(void)
@@ -882,7 +921,7 @@ reselect:
 = 
 ============= 
 */ 
- 
+
 int			startmap = 1;
 gametype_t	starttype = gt_single;
 int			startsave = -1;

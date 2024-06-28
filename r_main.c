@@ -23,6 +23,10 @@ drawcol_t drawcolnpo2;
 drawcol_t drawcollow;
 drawspan_t drawspan;
 
+#ifdef MDSKY
+drawcol_t drawskycol;
+#endif
+
 short fuzzoffset[FUZZTABLE] =
 {
 	1,-1,1,-1,1,1,-1,
@@ -233,6 +237,11 @@ void R_SetDrawMode(void)
 		drawfuzzcol = I_DrawColumnNoDraw;
 		drawcollow = I_DrawColumnNoDraw;
 		drawspan = I_DrawSpanNoDraw;
+
+		#ifdef MDSKY
+		drawskycol = I_DrawColumnNoDraw;
+		#endif
+
 		return;
 	}
 
@@ -242,6 +251,11 @@ void R_SetDrawMode(void)
 		drawcolnpo2 = I_DrawColumnNPo2Low;
 		drawfuzzcol = I_DrawFuzzColumnLow;
 		drawcollow = I_DrawColumnLow;
+
+		#ifdef MDSKY
+		drawskycol = I_DrawSkyColumnLow;
+		#endif
+
 		#ifdef POTATO_MODE
 		drawspan = I_DrawSpanPotatoLow;
 		#else
@@ -255,6 +269,11 @@ void R_SetDrawMode(void)
 		drawfuzzcol = I_DrawFuzzColumn;
 		drawspan = I_DrawSpan;
 		drawcollow = I_DrawColumnLow;
+
+		#ifdef MDSKY
+		drawskycol = I_DrawSkyColumn;
+		#endif
+
 		#ifdef POTATO_MODE
 		drawspan = I_DrawSpanPotato;
 		#else
