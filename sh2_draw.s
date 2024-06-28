@@ -660,8 +660,7 @@ draw_fuzzoffset:
         .long   _fuzzoffset
 
 
-! Draw a vertical column of pixels from a sky texture.
-! Source is the top of the column to scale.
+! Clear a vertical column of pixels for the MD sky to show through.
 !
 !void I_DrawSkyColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
 !                  fixed_t fracstep, inpixel_t *dc_source, int dc_texheight)
@@ -682,8 +681,6 @@ _I_DrawSkyColumnA:
 1:
         mov.l   r8,@-r15
         mov.l   r9,@-r15
-        mov.l   @(DOOMTLS_COLORMAP, gbr),r0
-        add     r0,r7           /* dc_colormap = colormap + light */
         mov.l   draw_fb2,r8
         mov.l   @r8,r8          /* frame buffer start */
         add     r4,r8           /* fb += dc_x */
@@ -696,10 +693,6 @@ _I_DrawSkyColumnA:
         mov.l   @(16,r15),r5    /* dc_source */
         mov.l   @(20,r15),r4
         mov.l   draw_width2,r1
-        add     #-1,r4          /* heightmask = texheight - 1 */
-
-        swap.w  r2,r0           /* (frac >> 16) */
-        and     r4,r0           /* (frac >> 16) & heightmask */
 
         /* test if count & 1 */
         shlr    r6
@@ -709,20 +702,12 @@ _I_DrawSkyColumnA:
 
         .p2alignw 2, 0x0009
 do_sky_col_loop:
-        mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
-        add     r3,r2           /* frac += fracstep */
         mov     #255,r9     /* dpix = dc_colormap[pix] */
-        swap.w  r2,r0           /* (frac >> 16) */
         mov.w   r9,@r8          /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
         add     r1,r8           /* fb += SCREENWIDTH */
-        and     r4,r0           /* (frac >> 16) & heightmask */
 do_sky_col_loop_1px:
         dt      r6              /* count-- */
-        mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
-        add     r3,r2           /* frac += fracstep */
         mov     #255,r9     /* dpix = dc_colormap[pix] */
-        swap.w  r2,r0           /* (frac >> 16) */
-        and     r4,r0           /* (frac >> 16) & heightmask */
         mov.w   r9,@r8          /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
         bf/s    do_sky_col_loop
         add     r1,r8           /* fb += SCREENWIDTH */
@@ -732,8 +717,7 @@ do_sky_col_loop_1px:
         mov.l   @r15+,r8
 
 
-! Draw a vertical column of pixels from a projected wall texture.
-! Source is the top of the column to scale.
+! Clear a vertical column of pixels for the MD sky to show through.
 ! Low detail (doubl-wide pixels) mode.
 !
 !void I_DrawSkyColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
@@ -755,9 +739,6 @@ _I_DrawSkyColumnLowA:
 1:
         mov.l   r8,@-r15
         mov.l   r9,@-r15
-        mov.l   @(DOOMTLS_COLORMAP, gbr),r0
-        add     r7,r7
-        add     r0,r7           /* dc_colormap = colormap + light */
         mov.l   draw_fb2,r8
         mov.l   @r8,r8          /* frame buffer start */
         add     r4,r8
@@ -771,9 +752,6 @@ _I_DrawSkyColumnLowA:
         mov.l   @(16,r15),r5    /* dc_source */
         mov.l   @(20,r15),r4
         mov.l   draw_width2,r1
-        add     #-1,r4          /* heightmask = texheight - 1 */
-        swap.w  r2,r0           /* (frac >> 16) */
-        and     r4,r0           /* (frac >> 16) & heightmask */
 
         /* test if count & 1 */
         shlr    r6
@@ -783,23 +761,13 @@ _I_DrawSkyColumnLowA:
 
         .p2alignw 2, 0x0009
 do_sky_col_loop_low:
-        mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
-        add     r0,r0
         mov     #-1,r9     /* dpix = dc_colormap[pix] */
-        add     r3,r2           /* frac += fracstep */
-        swap.w  r2,r0           /* (frac >> 16) */
-        and     r4,r0           /* (frac >> 16) & heightmask */
         mov.w   r9,@r8          /* *fb = dpix */
         add     r1,r8           /* fb += SCREENWIDTH */
 do_sky_col_loop_low_1px:
-        mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
-        add     r0,r0
         mov     #-1,r9     /* dpix = dc_colormap[pix] */
-        add     r3,r2           /* frac += fracstep */
         dt      r6              /* count-- */
-        swap.w  r2,r0           /* (frac >> 16) */
         mov.w   r9,@r8          /* *fb = dpix */
-        and     r4,r0           /* (frac >> 16) & heightmask */
         bf/s    do_sky_col_loop_low
         add     r1,r8           /* fb += SCREENWIDTH */
 
