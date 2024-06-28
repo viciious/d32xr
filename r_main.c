@@ -526,7 +526,6 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	vd->fixedcolormap = 0;
 
 	vd->clipangle = xtoviewangle[0]<<FRACBITS;
-	vd->doubleclipangle = vd->clipangle * 2;
 	vd->viewangletox = viewangletox;
 
 	damagecount = player->damagecount;

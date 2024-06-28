@@ -599,7 +599,7 @@ __attribute__((aligned(16)))
 	VINT		displayplayer;
 	VINT		fixedcolormap;
 	VINT		fuzzcolormap;
-	angle_t		clipangle, doubleclipangle;
+	angle_t		clipangle;
 	VINT 		*viewangletox;
 
 	/* */
