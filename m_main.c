@@ -622,6 +622,8 @@ void M_Drawer (void)
 /* Draw main menu */
 	if (m_doom && (scrpos == ms_main || scrpos == ms_gametype))
 	{
+		DrawFillRect(0, 16, 320, 8, COLOR_BLACK); // Clear part of the top letterbox for overdraw.
+		
 		VINT logoPos = 160 - (m_doom->width / 2);
 		DrawJagobj(m_doom, logoPos, 16);
 		y_offset = m_doom->height + 16 - STARTY;

@@ -285,40 +285,9 @@ mobj_t	emptymobj;
 __attribute((noinline))
 static void D_Wipe(void)
 {
-	int b;
-	short y[2][WIPEWIDTH];
-	short yy[WIPEWIDTH];
-	int wipestart[2], done[2] = { 0, 0 };
-	int step = 0;
-
-	wipe_InitMelt(y[0]);
-	D_memcpy(y[1], y[0], sizeof(y[0])); // double buffered
-
-	wipestart[0] = I_GetTime() - 1;
-	wipestart[1] = wipestart[0];
-
-	b = 0;
-	step = 0;
-	do {
-		int nowtime = I_GetTime ();
-		done[b] = wipe_ScreenWipe(y[b], yy, nowtime - wipestart[b], step++);
-		wipestart[b] = nowtime;
-		b ^= 1;
-	} while (!done[0] || !done[1]);
-
-	if (step & 1)
-	{
-		// exit the wipe on the same framebuffer id 
-		UpdateBuffer();
-	}
-
-	wipe_ExitMelt();
-
-
-
 	// DLG: Retrieve lumps for drawing the sky on the MD.
 	// TODO: Is there a better place for this code to live?
-	
+
 	#ifdef MDSKY
 	unsigned *data;
 	uint8_t *sky_name_ptr;
