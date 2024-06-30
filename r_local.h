@@ -485,14 +485,12 @@ typedef struct
 
 	int 		m_texturemid;
 
-	uint8_t		m_texturenum;
-	uint8_t		t_texturenum;
-	uint8_t		b_texturenum;
+	VINT 		m_texturenum;
+	VINT		t_texturenum;
+	VINT		b_texturenum;
 
-	uint8_t     floorpicnum;
-	uint8_t     ceilingpicnum;
-
-	int8_t 		miplevels[2];
+	VINT        floorpicnum;
+	VINT        ceilingpicnum;
 
 	fixed_t		scalestep;		/* polar angle to start at phase1, then scalestep after phase2 */
 	fixed_t		scalefrac;
@@ -500,6 +498,7 @@ typedef struct
 
 	short	actionbits;
 	short	seglightlevel;
+	int16_t miplevels[2];
 
 /* */
 /* filled in by bsp */
