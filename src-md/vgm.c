@@ -290,7 +290,7 @@ void vgm_play_rf5c68_samples(int chan, int offset, int loopstart, int incr, int 
 
     if (!cd_ok)
         return;
-    //if (chan != 0 && chan != 1)
+    if (chan != 0 && chan != 1)
         return;
 
     if (loopstart == 0xffff)

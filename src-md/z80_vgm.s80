@@ -779,7 +779,7 @@ rf5c68_regwr
     CP      0
     JR      Z,rf5c68_regwr_2
 
-    ;CALL    rf5c68_action       ; send buffered commands to the 68000
+    CALL    rf5c68_action       ; send buffered commands to the 68000
     LD      A,0x07
 
 rf5c68_regwr_2:
@@ -809,6 +809,6 @@ rf5c68_regwr_2:
     CP      $B1
     JP      Z,play_loop
 
-    ;CALL    rf5c68_action
+    CALL    rf5c68_action
     JP      play_loop
 #end
