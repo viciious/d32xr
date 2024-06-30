@@ -2,6 +2,7 @@
 
 #include "doomdef.h"
 #include "r_local.h"
+#include "p_camera.h"
 #ifdef MARS
 #include "mars.h"
 #include "marshw.h"
@@ -503,17 +504,34 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 
 	player = &players[displayplayer];
 
+	if (demoplayback)
+	{
+		const camera_t *thiscam = NULL;
+
+		if (displayplayer == consoleplayer)
+			thiscam = &camera;
+
+		vd.viewx = thiscam->x;
+		vd.viewy = thiscam->y;
+		vd.viewz = thiscam->z;
+		vd.viewangle = thiscam->angle;
+		vd.lightlevel = thiscam->subsector->sector->lightlevel;
+	}
+	else
+	{
+		vd.viewx = player->mo->x;
+		vd.viewy = player->mo->y;
+		vd.viewz = player->viewz;
+		vd.viewangle = player->mo->angle;
+		vd.lightlevel = player->mo->subsector->sector->lightlevel;
+	}
+
 	vd.viewplayer = player;
-	vd.viewx = player->mo->x;
-	vd.viewy = player->mo->y;
-	vd.viewz = player->viewz;
-	vd.viewangle = player->mo->angle;
 
 	vd.viewsin = finesine(vd.viewangle>>ANGLETOFINESHIFT);
 	vd.viewcos = finecosine(vd.viewangle>>ANGLETOFINESHIFT);
 
 	vd.displayplayer = displayplayer;
-	vd.lightlevel = player->mo->subsector->sector->lightlevel;
 	vd.fixedcolormap = 0;
 
 	vd.clipangle = xtoviewangle[0]<<FRACBITS;
