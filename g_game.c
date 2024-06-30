@@ -669,7 +669,7 @@ startnew:
 #endif
 
 	/* run a stats intermission */
-		MiniLoop (IN_Start, IN_Stop, IN_Ticker, IN_Drawer, UpdateBuffer);
+		MiniLoop (IN_Start, IN_Stop, IN_Ticker, IN_Drawer, I_Update);
 
 	/* run a text screen */
 		if (gamemapinfo.interText && *gamemapinfo.interText && netgame != gt_deathmatch)
