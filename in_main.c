@@ -47,6 +47,7 @@ typedef struct
 {
 	pstats_t	pstats[MAXPLAYERS];
 	faces_t		facenum;
+	boolean 	ticking;
 
 	boolean		earlyexit;
 	boolean		statsdrawn;
@@ -534,10 +535,13 @@ int IN_Ticker (void)
 		}
 	}
 
-	if (ticking)
+	if (!(ticon & 3))
 	{
-		if (!(ticon & 3))
+		if (ticking)
 			S_StartSound(0, sfx_pistol);
+		else if (interm->ticking)
+			S_StartSound(0, sfx_barexp);
+		interm->ticking = ticking;
 	}
 
 	return 0;
