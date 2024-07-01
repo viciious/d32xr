@@ -659,7 +659,7 @@ static void AM_Drawer_ (int c)
 		mapvertex_t *v1, *v2;
 
 		flags = line->flags;
-		mapped = LD_MAPPED(line);
+		mapped = (line->moreflags & LD_MFLAG_SEEN) != 0;
 		if ((!mapped ||		/* IF NOT MAPPED OR DON'T DRAW */
 			flags & ML_DONTDRAW) &&
 			(!(p->powers[pw_allmap] + showAllLines)))

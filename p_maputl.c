@@ -88,7 +88,7 @@ boolean P_BoxCrossLine(line_t *ld, fixed_t testbbox[4])
       return false;
    }
 
-   if(LD_SLOPE_POSITIVE(ld))
+   if(ld->moreflags & LD_MFLAG_POSITIVE)
    {
       x1 = testbbox[BOXLEFT ];
       x2 = testbbox[BOXRIGHT];
