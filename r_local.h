@@ -7,7 +7,6 @@
 
 extern int16_t viewportWidth, viewportHeight;
 extern int16_t centerX, centerY;
-extern boolean lowResMode;
 extern fixed_t centerXFrac, centerYFrac;
 extern fixed_t stretch;
 extern fixed_t stretchX;
@@ -49,6 +48,15 @@ extern fixed_t weaponXScale;
 
 #define MINLIGHT 0
 
+typedef enum
+{
+	detmode_potato = -1,
+	detmode_normal,
+
+	MAXDETAILMODES
+} detailmode_t;
+
+extern VINT detailmode;
 extern VINT viewportnum;
 extern VINT anamorphicview;
 
@@ -101,15 +109,18 @@ typedef struct
 
 typedef struct line_s
 {
-	VINT		flags;
 	VINT		sidenum[2];			/* sidenum[1] will be -1 if one sided */
 	VINT 		v1, v2;
-	VINT		special, tag;
-	VINT		fineangle;			/* to get sine / eosine for sliding */
+	uint8_t		flags, special;
+	uint16_t	tag:14;
+	uint16_t	moreflags:2;
 } line_t;
 
 #define LD_FRONTSECTOR(ld) (&sectors[sides[(ld)->sidenum[0]].sector])
 #define LD_BACKSECTOR(ld) ((ld)->sidenum[1] != -1 ? &sectors[sides[ld->sidenum[1]].sector] : NULL)
+
+#define LD_MFLAG_SEEN 		0x01
+#define LD_MFLAG_POSITIVE 	0x02
 
 typedef struct subsector_s
 {
@@ -128,12 +139,12 @@ typedef struct seg_s
 
 typedef struct
 {
-	fixed_t		x,y,dx,dy;			/* partition line */
-	fixed_t		bbox[2][4];			/* bounding box for each child */
-	int			children[2];		/* if NF_SUBSECTOR its a subsector */
+	int16_t		x,y,dx,dy;			/* partition line */
+	uint16_t	children[2];		/* if NF_SUBSECTOR its a subsector */
+	uint16_t 	encbbox[2]; 		/* encoded bounding box for each child */
 } node_t;
 
-#define MIPLEVELS 4
+#define MIPLEVELS 1
 
 typedef struct
 {
@@ -213,7 +224,7 @@ extern	spritedef_t		sprites[NUMSPRITES];
 */
 
 extern	int			numvertexes;
-extern	vertex_t	*vertexes;
+extern	mapvertex_t	*vertexes;
 
 extern	int			numsegs;
 extern	seg_t		*segs;
@@ -233,6 +244,8 @@ extern	line_t		*lines;
 extern	int			numsides;
 extern	side_t		*sides;
 
+extern 	int16_t 	worldbbox[4];
+
 /*============================================================================= */
 
 extern VINT viewportNum;
@@ -249,21 +262,10 @@ extern const VINT numViewports;
 ATTR_DATA_CACHE_ALIGN
 static inline int R_PointOnSide (int x, int y, node_t *node)
 {
-	fixed_t	dx,dy;
-	fixed_t	left, right;
-
-	dx = (x - node->x);
-	dy = (y - node->y);
-
-#ifdef MARS
-   left = ((int64_t)node->dy*dx) >> 32;
-   right = ((int64_t)dy*node->dx) >> 32;
-#else
-   left  = (node->dy>>FRACBITS) * (dx>>FRACBITS);
-   right = (dy>>FRACBITS) * (node->dx>>FRACBITS);
-#endif
-
-   return (left <= right);
+	int16_t	dx,dy;
+	dx = (x - ((fixed_t)node->x << FRACBITS)) >> FRACBITS;
+	dy = (y - ((fixed_t)node->y << FRACBITS)) >> FRACBITS;
+    return (node->dy * dx <= dy * node->dx);
 }
 
 //
@@ -272,13 +274,15 @@ static inline int R_PointOnSide (int x, int y, node_t *node)
 // then the y (<= x) is scaled and divided by x to get a tangent (slope)
 // value which is looked up in the tantoangle table.
 //
-#define R_PointToAngle(x,y) R_PointToAngle2(vd.viewx,vd.viewy,x,y)
 void	R_InitData (void);
 void	R_SetViewportSize(int num);
 int		R_DefaultViewportSize(void); // returns the viewport id for fullscreen, low detail mode
-void	R_SetDrawMode(void);
-void	R_SetupLevel(void);
-void	R_SetupTextureCaches(void);
+void	R_SetDrawFuncs(void);
+void	R_SetupLevel(int gamezonemargin);
+
+// how much memory should be left free in the main zone after allocating the texture cache
+// can be increased for the Icon of Sin
+#define DEFAULT_GAME_ZONE_MARGIN 8*1024
 
 typedef void (*drawcol_t)(int, int, int, int, fixed_t, fixed_t, inpixel_t*, int);
 typedef void (*drawspan_t)(int, int, int, int, fixed_t, fixed_t, fixed_t, fixed_t, inpixel_t*, int);
@@ -286,7 +290,6 @@ typedef void (*drawspan_t)(int, int, int, int, fixed_t, fixed_t, fixed_t, fixed_
 extern drawcol_t drawcol;
 extern drawcol_t drawfuzzcol;
 extern drawcol_t drawcolnpo2;
-extern drawcol_t drawcollow;
 extern drawspan_t drawspan;
 
 #define FUZZTABLE		64
@@ -309,7 +312,7 @@ extern const angle_t tantoangle[SLOPERANGE + 1];
 #endif
 
 extern	fixed_t *yslope/*[SCREENHEIGHT]*/;
-extern	fixed_t *distscale/*[SCREENWIDTH]*/;
+extern	uint16_t *distscale/*[SCREENWIDTH]*/;
 
 #define OPENMARK 0xff00
 #ifdef MARS
@@ -354,7 +357,9 @@ extern	int		phasetime[9];
 /* */
 /* R_data.c */
 /* */
-extern	texture_t	*skytexturep;
+extern	inpixel_t	*skytexturep;
+extern 	int8_t 		*skycolormaps;
+extern 	VINT 		col2sky;
 
 extern	VINT		numtextures;
 extern	texture_t	*textures;
@@ -389,7 +394,7 @@ int	R_FlatNumForName(const char* name);
 int	R_CheckTextureNumForName(const char* name);
 void	R_InitMathTables(void);
 void	R_InitSpriteDefs(const char** namelist);
-void R_InitColormap(boolean doublepix);
+void R_InitColormap(void);
 boolean R_CompositeColumn(int colnum, int numdecals, texdecal_t *decals, inpixel_t *src, inpixel_t *dst, int height, int miplevel) ATTR_DATA_CACHE_ALIGN;
 
 /*
@@ -458,7 +463,7 @@ typedef struct
 	/* !!! TO ACCOMODATE VISSPRITE_T STRUCTURE, GETS */
 	/* !!! OVERWRITTEN AFTER PHASE 7 - BEGIN */
 	unsigned	centerangle;
-	unsigned	offset;
+	fixed_t 	offset;
 	unsigned	distance;
 
 	int			t_topheight;
@@ -482,9 +487,9 @@ typedef struct
 	VINT        floorpicnum;
 	VINT        ceilingpicnum;
 
-	int			scalestep;		/* polar angle to start at phase1, then scalestep after phase2 */
-	unsigned	scalefrac;
-	unsigned	scale2;
+	fixed_t		scalestep;		/* polar angle to start at phase1, then scalestep after phase2 */
+	fixed_t		scalefrac;
+	fixed_t		scale2;
 
 	short	actionbits;
 	short	seglightlevel;
@@ -537,7 +542,7 @@ typedef struct vissprite_s
 
 #define	MAXVISSPRITES	MAXWALLCMDS
 
-#define	MAXOPENINGS		SCREENWIDTH*16
+#define	MAXOPENINGS		SCREENWIDTH*20
 
 #define	MAXVISSSEC		128
 
@@ -582,13 +587,13 @@ __attribute__((aligned(16)))
 	fixed_t		viewx, viewy, viewz;
 	angle_t		viewangle;
 	fixed_t		viewcos, viewsin;
-	player_t	*viewplayer;
+	pspdef_t	*psprites;
 	VINT		lightlevel;
 	VINT		extralight;
 	VINT		displayplayer;
 	VINT		fixedcolormap;
 	VINT		fuzzcolormap;
-	angle_t		clipangle, doubleclipangle;
+	angle_t		clipangle;
 	VINT 		*viewangletox;
 
 	/* */
@@ -625,9 +630,7 @@ __attribute__((aligned(16)))
 	uint8_t *columncache[2]; // composite column cache for both CPUs
 } viewdef_t;
 
-extern	viewdef_t	vd;
-
-extern texture_t *testtex;
+extern	viewdef_t	*vd;
 
 #endif		/* __R_LOCAL__ */
 

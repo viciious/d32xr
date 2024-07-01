@@ -153,7 +153,7 @@ int	EV_DoPlat(line_t *line,plattype_e type,int amount)
 				if (plat->low > sec->floorheight)
 					plat->low = sec->floorheight;
 				plat->high = sec->floorheight;
-				plat->wait = 15*PLATWAIT;
+				plat->wait = 35*PLATWAIT;
 				plat->status = down;
 				S_StartPositionedSound((void *)sec,sfx_pstart,&P_SectorOrg);
 				break;
@@ -165,7 +165,7 @@ int	EV_DoPlat(line_t *line,plattype_e type,int amount)
 				plat->high = P_FindHighestFloorSurrounding(sec);
 				if (plat->high < sec->floorheight)
 					plat->high = sec->floorheight;
-				plat->wait = 15*PLATWAIT;
+				plat->wait = 35*PLATWAIT;
 				plat->status = P_Random()&1;
 				S_StartPositionedSound((void *)sec,sfx_pstart,&P_SectorOrg);
 				break;

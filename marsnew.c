@@ -83,7 +83,12 @@ extern int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sp
 static volatile mars_tls_t mars_tls_pri, mars_tls_sec;
 static uint32_t mars_rom_bsw_start = 0;
 
-void I_ClearFrameBuffer(void) ATTR_DATA_CACHE_ALIGN;
+// disable compiler optimizations as these functions deal with
+// the framebuffer and we don't want GCC to use the builtins on
+// such as memset or memcpy that
+void I_ClearWorkBuffer(void) __attribute__((optimize("O1")));
+void I_ClearFrameBuffer(void) __attribute__((optimize("O1")));
+byte *I_TempBuffer (void) __attribute__((optimize("O1")));
 
 static int Mars_ConvGamepadButtons(int ctrl)
 {
@@ -519,7 +524,15 @@ void* I_RemapLumpPtr(void *ptr)
 ==================== 
 */ 
  
-static char zone[0x33000] __attribute__((aligned(16)));
+#define BASE_ZONE_SIZE 0x34000
+
+#ifdef DISABLE_DMA_SOUND
+#define ZONE_SIZE (BASE_ZONE_SIZE+0x1000)
+#else
+#define ZONE_SIZE BASE_ZONE_SIZE
+#endif
+
+static char zone[ZONE_SIZE] __attribute__((aligned(16)));
 byte *I_ZoneBase (int *size)
 {
 	*size = sizeof(zone);
@@ -669,7 +682,7 @@ int I_ViewportYPos(void)
 
 	if (viewportWidth < 160)
 		return (fbh - jo_stbar_height - viewportHeight) / 2;
-	if ((viewportWidth == 160 && lowResMode) || viewportWidth == 320)
+	if (viewportWidth == 320)
 		return (fbh - jo_stbar_height - viewportHeight);
 	return (fbh - jo_stbar_height - viewportHeight) / 2;
 }
@@ -681,14 +694,11 @@ pixel_t	*I_ViewportBuffer (void)
 	
 	if (splitscreen)
 	{
-		x = vd.displayplayer ? 160 : 0;
+		x = vd->displayplayer ? 160 : 0;
 	}
 	else
 	{
-		if (viewportWidth <= 160)
-			x = (320 - viewportWidth * 2) / 2;
-		else
-			x = (320 - viewportWidth) / 2;
+		x = (320 - viewportWidth) / 2;
 	}
 
 	vb += I_ViewportYPos() * 320 / 2 + x / 2;
@@ -708,7 +718,7 @@ void I_DebugScreen(void)
 	int i;
 	int x = 200;
 	int line = 5;
-	static char buf[10][16];
+	static char buf[10][10];
 
 	if (debugmode == DEBUGMODE_FPSCOUNT)
 	{
@@ -743,9 +753,9 @@ void I_DebugScreen(void)
 			D_snprintf(buf[1], sizeof(buf[0]), "tcs:%d", lasttics);
 			D_snprintf(buf[2], sizeof(buf[0]), "g:%2d", Mars_FRTCounter2Msec(tictics));
 			D_snprintf(buf[3], sizeof(buf[0]), "b:%2d", Mars_FRTCounter2Msec(t_ref_bsp_avg));
-			D_snprintf(buf[4], sizeof(buf[0]), "w:%2d %2d", Mars_FRTCounter2Msec(t_ref_segs_avg), vd.lastwallcmd - vd.viswalls);
-			D_snprintf(buf[5], sizeof(buf[0]), "p:%2d %2d", Mars_FRTCounter2Msec(t_ref_planes_avg), vd.lastvisplane - vd.visplanes - 1);
-			D_snprintf(buf[6], sizeof(buf[0]), "s:%2d %2d", Mars_FRTCounter2Msec(t_ref_sprites_avg), vd.vissprite_p - vd.vissprites);
+			D_snprintf(buf[4], sizeof(buf[0]), "w:%2d %2d", Mars_FRTCounter2Msec(t_ref_segs_avg), vd->lastwallcmd - vd->viswalls);
+			D_snprintf(buf[5], sizeof(buf[0]), "p:%2d %2d", Mars_FRTCounter2Msec(t_ref_planes_avg), vd->lastvisplane - vd->visplanes - 1);
+			D_snprintf(buf[6], sizeof(buf[0]), "s:%2d %2d", Mars_FRTCounter2Msec(t_ref_sprites_avg), vd->vissprite_p - vd->vissprites);
 			D_snprintf(buf[7], sizeof(buf[0]), "r:%2d", Mars_FRTCounter2Msec(t_ref_total_avg));
 			D_snprintf(buf[8], sizeof(buf[0]), "d:%2d", Mars_FRTCounter2Msec(drawtics));
 			D_snprintf(buf[9], sizeof(buf[0]), "t:%2d", Mars_FRTCounter2Msec(I_GetFRTCounter() - ticstart));
@@ -819,7 +829,7 @@ void I_Update(void)
 				R_ClearTexCache(&r_texcache);
 			}
 
-			R_SetDrawMode();
+			R_SetDrawFuncs();
 
 			if (!prevdebugmode)
 			{
@@ -1120,7 +1130,11 @@ reconnect:
 	G_PlayerReborn(0);
 	G_PlayerReborn(1);
 	gameaction = starttype == gt_single ? ga_startnew : ga_warped;
-	ticbuttons[0] = ticbuttons[1] = oldticbuttons[0] = oldticbuttons[1] = 0;
+	for (i = 0; i < MAXPLAYERS; i++)
+	{
+		players[i].ticbuttons = players[i].oldticbuttons = 0;
+		players[i].ticmousex = players[i].ticmousey = 0;
+	}
 	return 0;
 }
 
@@ -1170,4 +1184,44 @@ void I_SwapScreenCopy(void)
         Mars_SwapWordColumnWithMDVRAM(i);
     }
     Mars_Finish();
+}
+
+int I_OpenCDFileByName(const char *name, int *poffset)
+{
+	return Mars_OpenCDFileByName(name, poffset);
+}
+
+void I_OpenCDFileByOffset(int length, int offset)
+{
+	Mars_OpenCDFileByOffset(length, offset);
+}
+
+void *I_GetCDFileBuffer(void)
+{
+	return Mars_GetCDFileBuffer();
+}
+
+int I_SeekCDFile(int offset, int whence)
+{
+	return Mars_SeekCDFile(offset, whence);
+}
+
+int I_ReadCDFile(int length)
+{
+	return Mars_ReadCDFile(length);
+}
+
+void I_SetCDFileCache(int length)
+{
+	Mars_StoreAuxBytes((length + 3) & ~3);
+}
+
+void *I_GetCDFileCache(int length)
+{
+	return Mars_LoadAuxBytes((length + 3) & ~3);
+}
+
+int I_ReadCDDirectory(const char *path)
+{
+	return Mars_MCDReadDirectory(path);
 }

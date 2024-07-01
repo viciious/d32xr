@@ -4,7 +4,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#define S_MAX_CHANNELS 8
+#ifndef S_MAX_CHANNELS
+#define S_MAX_CHANNELS 6
+#endif
 
 #define CHBUF_SHIFT 9
 #define CHBUF_SIZE (1<<CHBUF_SHIFT)

@@ -6,23 +6,29 @@
 typedef struct
 {
 	char		*name;
-	mobjtype_t	type;
+	VINT		type;
+	VINT 		castType;
 } castinfo_t;
 
 static const castinfo_t castorder[] = {
-{"zombieman", MT_POSSESSED},
-{"shotgun guy", MT_SHOTGUY},
-{"imp", MT_TROOP},
-{"demon", MT_SERGEANT},
-{"spectre", MT_SERGEANT},
-{"lost soul", MT_SKULL},
-{"cacodemon", MT_HEAD},
+{"zombieman", MT_POSSESSED, 1},
+{"shotgun guy", MT_SHOTGUY, 1},
+{"heavy weapon dude", MT_CHAINGUY, 2},
+{"imp", MT_TROOP, 1},
+{"demon", MT_SERGEANT, 1},
+{"spectre", MT_SHADOWS, 1},
+{"lost soul", MT_SKULL, 1},
+{"cacodemon", MT_HEAD, 1},
+{"hell knight", MT_KNIGHT, 2},
 {"baron of hell", MT_BRUISER},
-{"cyberdemon", MT_CYBORG},
-{"spider mastermind", MT_SPIDER},
-{"our hero", MT_PLAYER},
+{"arachnotron", MT_BABY, 2},
+{"revenant", MT_UNDEAD, 2},
+{"mancubus", MT_FATSO, 2},
+{"cyberdemon", MT_CYBORG, 1},
+{"spider mastermind", MT_SPIDER, 1},
+{"our hero", MT_PLAYER, 1},
 
-{NULL,0}
+{NULL,0,0}
 };
 
 typedef enum
@@ -36,7 +42,7 @@ typedef enum
 #define STARTY		8
 
 #define SPACEWIDTH	8
-#define NUMENDOBJ	28
+#define NUMENDOBJ	30
 
 typedef struct
 {
@@ -56,6 +62,8 @@ typedef struct
 	VINT		drawbg;
 	jagobj_t	**endobj;
 	drawcol_t	drcol;
+	void 		*drcolormaps;
+	int 		endFlat;
 } finale_t;
 
 finale_t *fin;
@@ -80,7 +88,6 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 	byte		*pixels, *src;
 	int			x, sprleft, sprtop, spryscale;
 	fixed_t 	spriscale;
-	column_t	*column;
 	int			lump;
 	boolean		flip;
 	int			texturecolumn;
@@ -128,11 +135,16 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 	sprtop -= patch->topoffset;
 	sprleft -= patch->leftoffset;
 
+	I_SetThreadLocalVar(DOOMTLS_COLORMAP, fin->drcolormaps);
+
 /* */
 /* draw it by hand */
 /* */
 	for (x=0 ; x<patch->width ; x++)
 	{
+		int 	colx;
+		byte	*columnptr;
+
 		if (sprleft+x < 0)
 			continue;
 		if (sprleft+x >= 160)
@@ -143,26 +155,32 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 		else
 			texturecolumn = x;
 			
-		column = (column_t *) ((byte *)patch +
-		 BIGSHORT(patch->columnofs[texturecolumn]));
+		columnptr = (byte *)patch + BIGSHORT(patch->columnofs[texturecolumn]);
 
 /* */
 /* draw a masked column */
 /* */
-		for ( ; column->topdelta != 0xff ; column++) 
+		for ( ; *columnptr != 0xff ; columnptr += sizeof(column_t)) 
 		{
+			column_t *column = (column_t *)columnptr;
 			int top    = column->topdelta + sprtop;
 			int bottom = top + column->length - 1;
+			byte *dataofsofs = columnptr + offsetof(column_t, dataofs);
+			int dataofs = (dataofsofs[0] << 8) | dataofsofs[1];
 
 			top *= spryscale;
 			bottom *= spryscale;
-			src = pixels + BIGSHORT(column->dataofs);
+			src = pixels + dataofs;
 
 			if (top < 0) top = 0;
 			if (bottom >= height) bottom = height - 1;
 			if (top > bottom) continue;
 
-			fin->drcol(sprleft+x, top, bottom, light, 0, spriscale, src, 128);
+			colx = sprleft + x;
+			colx += colx;
+
+			fin->drcol(colx, top, bottom, light, 0, spriscale, src, 128);
+			fin->drcol(colx+1, top, bottom, light, 0, spriscale, src, 128);
 		}
 	}
 }
@@ -211,11 +229,10 @@ void F_PrintString1(const char *string)
 	int		val;
 
 	index = 0;
-	while(1)
+	while(string[index])
 	{
 		switch(string[index])
 		{
-			case 0: return;
 			case ' ':
 				fin->text_x += SPACEWIDTH;
 				val = 30;
@@ -226,20 +243,26 @@ void F_PrintString1(const char *string)
 			case '!':
 				val = 27;
 				break;
+			case '-':
+				val = 28;
+				break;
+			case '?':
+				val = 29;
+				break;
 			case '*':
-				val = 30;
+				val = NUMENDOBJ;
 				fin->text_x = STARTX;
 				fin->text_y += fin->endobj[0]->height + 4;
 				break;
 			default:
-				val = string[index] - 'a';
+				val = string[index] >= 'a' ? string[index] - 'a' : string[index] - 'A';			
 				break;
 		}
 		if (val < NUMENDOBJ)
 		{
 			DrawJagobj(fin->endobj[val],fin->text_x,fin->text_y);
 			fin->text_x += fin->endobj[val]->width;
-			if (fin->text_x > 316)
+			if (fin->text_x > 316 && string[index+1] != '*')
 			{
 				fin->text_x = STARTX;
 				fin->text_y += fin->endobj[val]->height + 4;
@@ -250,7 +273,7 @@ void F_PrintString1(const char *string)
 }
 
 // Prints to both framebuffers, if needed.
-void F_PrintString2(const char* string)
+static void F_PrintString2(const char* string)
 {
 #ifdef MARS
 	int		btext_x, btext_y;
@@ -272,17 +295,21 @@ void F_PrintString2(const char* string)
 /* Print character cast strings */
 /* */
 /*=============================================== */
-void F_CastPrint(char *string)
+static void F_CastPrint(const char *string)
 {
-	int		i,width,slen;
+	int		i,width,chr;
 	
 	width = 0;
-	slen = mystrlen(string);
-	for (i = 0;i < slen; i++)
+	for (i = 0; string[i]; i++)
 		switch(string[i])
 		{
-			case ' ': width += SPACEWIDTH; break;
-			default : width += fin->endobj[string[i] - 'a']->width;
+			case ' ':
+				width += SPACEWIDTH;
+				break;
+			default:
+				chr = string[i] > 'a' ? string[i] - 'a' : string[i] - 'A';
+				width += fin->endobj[chr]->width;
+				break;
 		}
 
 	fin->text_x = 160 - (width >> 1);
@@ -302,18 +329,17 @@ void F_Start (void)
 {
 	int	i;
 	int	l;
+	extern boolean canwipe;
 
-	if (gameinfo.endMus <= 0)
-		S_StartSong(gameinfo.victoryMus, 1, cdtrack_end);
+	if (!gameinfo.endMus || !*gameinfo.endMus)
+		S_StartSongByName(gameinfo.victoryMus, 1, cdtrack_end);
 	else
-		S_StartSong(gameinfo.endMus, 1, cdtrack_end);
+		S_StartSongByName(gameinfo.endMus, 1, cdtrack_end);
 
 	fin = Z_Malloc(sizeof(*fin), PU_STATIC);
 	D_memset(fin, 0, sizeof(*fin));
 
 	fin->status = fin_endtext;		/* END TEXT PRINTS FIRST */
-	fin->textprint = false;
-	fin->textindex = 0;
 	fin->textdelay = TEXTTIME;
 	fin->text_x = STARTX;
 	fin->text_y = STARTY;
@@ -324,13 +350,12 @@ void F_Start (void)
 	for (i = 0; i < NUMENDOBJ; i++)
 		fin->endobj[i] = W_CacheLumpNum(l+i, PU_STATIC);
 
-	fin->castnum = 0;
 	fin->caststate = &states[mobjinfo[castorder[fin->castnum].type].seestate];
 	fin->casttics = fin->caststate->tics;
-	fin->castdeath = false;
-	fin->castframes = 0;
-	fin->castonmelee = 0;
-	fin->castattacking = false;
+
+	fin->endFlat = -1;
+	if (gameinfo.endFlat && *gameinfo.endFlat)
+		fin->endFlat = W_CheckNumForName(gameinfo.endFlat);
 
 #ifndef MARS
 	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
@@ -339,15 +364,13 @@ void F_Start (void)
 
 	I_SetPalette(W_POINTLUMPNUM(W_GetNumForName("PLAYPALS")));
 
-	R_InitColormap(true);
+	canwipe = true;
 }
 
 void F_Stop (void)
 {
 	int	i;
 
-	R_InitColormap(lowResMode);
-	
 	for (i = 0;i < NUMENDOBJ; i++)
 		Z_Free(fin->endobj[i]);
 	Z_Free(fin->endobj);
@@ -374,8 +397,8 @@ int F_Ticker (void)
 /* */
 /* check for press a key to kill actor */
 /* */
-	buttons = ticbuttons[consoleplayer];
-	oldbuttons = oldticbuttons[consoleplayer];
+	buttons = players[consoleplayer].ticbuttons;
+	oldbuttons = players[consoleplayer].oldticbuttons;
 
 	if (ticon <= 10)
 		return 0;
@@ -390,19 +413,26 @@ int F_Ticker (void)
 		if (( ((buttons & BT_ATTACK) && !(oldbuttons & BT_ATTACK) )
 		|| ((buttons & BT_SPEED) && !(oldbuttons & BT_SPEED) )
 		|| ((buttons & BT_USE) && !(oldbuttons & BT_USE) ) ) &&
-		fin->textprint == true && gameinfo.endShowCast)
+		fin->textprint == true)
 		{
-			fin->status = fin_charcast;
+			if (finale && gameinfo.endShowCast)
+			{
+				fin->status = fin_charcast;
 
-			if (gameinfo.victoryMus <= 0)
-				S_StartSong(gameinfo.endMus, 1, cdtrack_victory);
-			else
-				S_StartSong(gameinfo.victoryMus, 1, cdtrack_victory);
+				if (!gameinfo.victoryMus || !*gameinfo.victoryMus)
+					S_StartSongByName(gameinfo.endMus, 1, cdtrack_victory);
+				else
+					S_StartSongByName(gameinfo.victoryMus, 1, cdtrack_victory);
 
 #ifndef JAGUAR
-			if (mobjinfo[castorder[fin->castnum].type].seesound)
-				S_StartSound (NULL, mobjinfo[castorder[fin->castnum].type].seesound); 
+				if (mobjinfo[castorder[fin->castnum].type].seesound)
+					S_StartSound (NULL, mobjinfo[castorder[fin->castnum].type].seesound); 
 #endif
+			}
+			else
+			{
+				return 1;
+			}
 		}
 		return 0;
 	}
@@ -444,6 +474,8 @@ int F_Ticker (void)
 				fin->castnum = 0;
 			if (sprites[states[mobjinfo[castorder[fin->castnum].type].seestate].sprite].numframes == 0)
 				continue;
+			if (castorder[fin->castnum].castType > gameinfo.endShowCast)
+				continue;
 			break;
 		} while (fin->castnum != oldnum);
 		fin->castdeath = false;
@@ -473,24 +505,23 @@ int F_Ticker (void)
 		case S_POSS_ATK2: sfx = sfx_pistol; break;
 		case S_SPOS_ATK2: sfx = sfx_shotgn; break;
 		//case S_VILE_ATK2: sfx = sfx_vilatk; break;
-		//case S_SKEL_FIST2: sfx = sfx_skeswg; break;
-		//case S_SKEL_FIST4: sfx = sfx_skepch; break;
-		//case S_SKEL_MISS2: sfx = sfx_skeatk; break;
-		//case S_FATT_ATK8:
-		//case S_FATT_ATK5:
-		//case S_FATT_ATK2: sfx = sfx_firsht; break;
-		//case S_CPOS_ATK2:
-		//case S_CPOS_ATK3:
-		//case S_CPOS_ATK4: sfx = sfx_shotgn; break;
+		case S_SKEL_FIST2: sfx = sfx_skeswg; break;
+		case S_SKEL_FIST4: sfx = sfx_skepch; break;
+		case S_SKEL_MISS2: sfx = sfx_skeatk; break;
+		case S_FATT_ATK8:
+		case S_FATT_ATK5:
+		case S_FATT_ATK2: sfx = sfx_firsht; break;
+		case S_CPOS_ATK2:
+		case S_CPOS_ATK3:
+		case S_CPOS_ATK4: sfx = sfx_shotgn; break;
 		case S_TROO_ATK3: sfx = sfx_claw; break;
 		case S_SARG_ATK2: sfx = sfx_sgtatk; break;
 		case S_BOSS_ATK2: 
-		//case S_BOS2_ATK2:
 		case S_HEAD_ATK2: sfx = sfx_firsht; break;
 		case S_SKULL_ATK2: sfx = sfx_sklatk; break;
 		case S_SPID_ATK4:
 		case S_SPID_ATK3: sfx = sfx_shotgn; break;
-		//case S_BSPI_ATK2: sfx = sfx_plasma; break;
+		case S_BSPI_ATK2: sfx = sfx_plasma; break;
 		case S_CYBER_ATK2:
 		case S_CYBER_ATK4:
 		case S_CYBER_ATK6: sfx = sfx_rlaunc; break;
@@ -546,7 +577,7 @@ stopattack:
 static void F_DrawBackground(void)
 {
 #ifdef MARS
-	DrawTiledBackground2(gameinfo.endFlat);
+	DrawTiledBackground2(fin->endFlat);
 #else
 	EraseBlock(0, 0, 320, 200);
 #endif
@@ -564,14 +595,21 @@ void F_Drawer (void)
 {
 	int	top, left;
 
-	fin->drcol = I_DrawColumnLow;
-	if (D_strcasecmp(castorder[fin->castnum].name, "spectre") == 0)
-		fin->drcol = I_DrawFuzzColumnLow;
+	fin->drcol = I_DrawColumn;
+	if (mobjinfo[castorder[fin->castnum].type].flags & MF_SHADOW)
+		fin->drcol = I_DrawFuzzColumn;
+
+	fin->drcolormaps = dc_colormaps;
+	if (mobjinfo[castorder[fin->castnum].type].flags & MF_KNIGHT_CMAP)
+		fin->drcolormaps = dc_colormaps2;
 
 	// HACK
-	viewportWidth = 320;
-	viewportHeight = I_FrameBufferHeight();
-	viewportbuffer = (pixel_t*)I_FrameBuffer();
+	if (finale)
+	{
+		viewportWidth = 320;
+		viewportHeight = I_FrameBufferHeight();
+		viewportbuffer = (pixel_t*)I_FrameBuffer();
+	}
 
 	if (fin->drawbg) {
 		fin->drawbg--;
@@ -584,11 +622,12 @@ void F_Drawer (void)
 			if (!--fin->textdelay)
 			{
 				char	str[2];
-				
-				if (!gameinfo.endText)
+				const char *text = finale ? gameinfo.endText : gamemapinfo.interText;
+
+				if (!text)
 					return;
 				str[1] = 0;
-				str[0] = gameinfo.endText[fin->textindex];
+				str[0] = text[fin->textindex];
 				if (!str[0])
 					return;
 				F_PrintString2(str);
@@ -607,6 +646,10 @@ void F_Drawer (void)
 				case MT_SPIDER:
 					top = 110;
 					left = 90;
+					break;
+				case MT_UNDEAD:
+					top = 100;
+					left = 80;
 					break;
 				default:
 					top = 90;
