@@ -87,9 +87,7 @@ void P_LoadSegs (int lump)
 	int			i;
 	mapseg_t	*ml;
 	seg_t		*li;
-	line_t	*ldef;
 	int			linedef, side;
-	angle_t angle;
 
 	numsegs = W_LumpLength (lump) / sizeof(mapseg_t);
 	segs = Z_Malloc (numsegs*sizeof(seg_t)+16,PU_LEVEL);
@@ -104,20 +102,16 @@ void P_LoadSegs (int lump)
 		li->v1 = LITTLESHORT(ml->v1);
 		li->v2 = LITTLESHORT(ml->v2);
 
-		angle = LITTLESHORT(ml->angle)<<16;
 		li->sideoffset = LITTLESHORT(ml->offset);
 		linedef = LITTLESHORT(ml->linedef);
 
 		li->linedef = linedef;
-		ldef = &lines[linedef];
+
 		side = LITTLESHORT(ml->side);
 		side &= 1;
 
 		li->sideoffset <<= 1;
 		li->sideoffset |= side;
-
-		if (ldef->v1 == li->v1)
-			ldef->fineangle |= (angle >> ANGLETOFINESHIFT);
 	}
 }
 
@@ -452,7 +446,7 @@ void P_LoadLineDefs (int lump)
 		if (dx && dy)
 		{
 			if (FixedDiv (dy , dx) > 0)
-				ld->fineangle |= 0x8000;
+				ld->moreflags |= LD_MFLAG_POSITIVE;
 		}
 
 		ld->sidenum[0] = LITTLESHORT(mld->sidenum[0]);
