@@ -420,11 +420,10 @@ int P_Ticker (void)
 
 		P_UpdateSpecials();
 
-		ST_Ticker();			/* update status bar */
-
 		tictics = frtc - ticstart;
-		leveltime += 2;
 	}
+
+	ST_Ticker();			/* update status bar */
 
 	return gameaction;		/* may have been set to ga_died, ga_completed, */
 							/* or ga_secretexit */

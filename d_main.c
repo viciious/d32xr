@@ -352,6 +352,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 	frameon = 0;
 	
 	gametic = 0;
+	gametic30 = 0;
 	prevgametic = 0;
 
 	gameaction = 0;

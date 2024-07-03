@@ -455,7 +455,7 @@ extern 	VINT 		gamemapcount;
 
 extern 	int 		gametic;
 extern 	int 		prevgametic;
-extern  int         leveltime;
+extern  int         gametic30;
 
 #define MAXDMSTARTS		10
 extern	mapthing_t	*deathmatchstarts, *deathmatch_p;

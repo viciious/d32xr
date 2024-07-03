@@ -349,7 +349,7 @@ void IN_Start (void)
 			pstats[i].fragcount = 0;
 	}	
 
-	interm->timevalue = stbar_tics/TICRATE;
+	interm->timevalue = stbar_tics/(2*TICRATE);
 
 	infaces = interm->infaces;
 

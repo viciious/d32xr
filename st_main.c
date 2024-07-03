@@ -129,14 +129,7 @@ static void ST_Ticker_(stbar_t* sb)
 #ifdef MARS
 	// double-buffered renderer on MARS
 	if ((stbarframe & 1) == 1)
-	{
-		--sb->facetics;
-		--sb->yourFrags.delay;
-		--sb->hisFrags.delay;
-		if (sb->gibdraw)
-			--sb->gibdelay;
 		return;
-	}
 #endif
 
 	sb->numstbarcmds = 0;
@@ -178,8 +171,8 @@ static void ST_Drawer_ (stbar_t* sb)
 	DrawJagobjLump(score, 16, 10+20, NULL, NULL);
 	V_DrawValuePaddedRight(&hudNumberFont, 16 + 120, 10+20, sb->score, 0);
 
-	const int minutes = stbar_tics/(60*TICRATE);
-	const int seconds = (stbar_tics/TICRATE)%60;
+	const int minutes = stbar_tics/(60*2*TICRATE);
+	const int seconds = (stbar_tics/(2*TICRATE))%60;
 	DrawJagobjLump(time, 16, 26+20, NULL, NULL);
 	V_DrawValuePaddedRight(&hudNumberFont, 72, 26+20, minutes, 0);
 	DrawJagobjLump(timecolon, 72, 26+20, NULL, NULL);

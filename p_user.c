@@ -194,8 +194,8 @@ void P_PlayerMobjThink (mobj_t *mobj)
 	if ( (mobj->z != mobj->floorz) || mobj->momz)
 		P_PlayerZMovement (mobj);
 	
-	if (gametic == prevgametic)
-		return;
+//	if (gametic == prevgametic)
+//		return;
 
 /* */
 /* cycle through states, calling action functions at transitions */
@@ -216,18 +216,40 @@ void P_PlayerMobjThink (mobj_t *mobj)
 	mobj->sprite = st->sprite;
 	mobj->frame = st->frame;
 
-	if (P_IsObjectOnGround(mobj))
+	player_t *player = &players[mobj->player - 1];
+
+	if (mobj->state >= S_PLAY_ATK1 && mobj->state <= S_PLAY_ATK5)
 	{
-		player_t *player = &players[mobj->player - 1];
+		if (player->speed > (13 << FRACBITS))
+			mobj->tics = 1;
+		else
+			mobj->tics = 2;
+	}
+	else if (P_IsObjectOnGround(mobj))
+	{
+		if (player->speed >= (24 << FRACBITS) && mobj->state >= S_PLAY_RUN1 && mobj->state <= S_PLAY_RUN8
+			&& !(mobj->state >= S_PLAY_SPD1 && mobj->state <= S_PLAY_SPD4))
+			P_SetMobjState(mobj, S_PLAY_SPD1);
+
 		if (mobj->state >= S_PLAY_RUN1 && mobj->state <= S_PLAY_RUN8)
 		{
-			if (player->speed > 12 << FRACBITS)
-				mobj->tics = 1;
-			else if (player->speed > 6 << FRACBITS)
+			if (player->speed > (11 << FRACBITS))
 				mobj->tics = 2;
-			else
+			else if (player->speed > (5 << FRACBITS))
 				mobj->tics = 3;
+			else
+				mobj->tics = 4;
 		}
+		else if (mobj->state >= S_PLAY_SPD1 && mobj->state <= S_PLAY_SPD4)
+		{
+			if (player->speed > (44 << FRACBITS))
+				mobj->tics = 1;
+			else
+				mobj->tics = 2;
+		}
+		
+		if (mobj->state >= S_PLAY_SPD1 && mobj->state <= S_PLAY_SPD4 && player->speed < (24 << FRACBITS))
+			P_SetMobjState(mobj, S_PLAY_RUN1);
 	}
 }
 
