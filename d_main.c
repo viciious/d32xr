@@ -2,6 +2,10 @@
  
 #include "doomdef.h" 
 
+#ifdef MARS
+#include "marshw.h"
+#endif
+
 boolean		splitscreen = false;
 VINT		controltype = 0;		/* determine settings for BT_* */
 VINT		alwaysrun = 0;
@@ -289,7 +293,6 @@ static void D_Wipe(void)
 	// TODO: Is there a better place for this code to live?
 
 	#ifdef MDSKY
-	unsigned *data;
 	uint8_t *sky_name_ptr;
 	uint8_t *sky_pal_ptr;
 	uint8_t *sky_pat_ptr;

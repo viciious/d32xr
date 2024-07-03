@@ -225,7 +225,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
             if (top < bottom)
             {
 #ifdef MDSKY
-                drawsky(x, top, --bottom, 0, NULL, NULL, NULL, 128);
+                drawsky(x, top, --bottom, 0, 0, 0, NULL, 128);
 #else
                 // CALICO: draw sky column
                 int colnum = ((vd.viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;

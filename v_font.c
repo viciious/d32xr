@@ -15,11 +15,11 @@ void V_FontInit()
     menuFont.fixedWidth = true;
     menuFont.fixedWidthSize = 8;
 
-    titleFont.lumpStart = W_GetNumForName("LTFNT048");
-    titleFont.lumpStartChar = 48;
-    titleFont.minChar = 48;
+    titleFont.lumpStart = W_GetNumForName("LTFNT065");
+    titleFont.lumpStartChar = 65;
+    titleFont.minChar = 65;
     titleFont.maxChar = 122;
-    titleFont.fixedWidth = true;
+    titleFont.fixedWidth = false;
     titleFont.fixedWidth = 16;
 
     creditFont.lumpStart = W_GetNumForName("CRFNT065");
