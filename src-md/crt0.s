@@ -1581,7 +1581,7 @@ load_md_sky:
         move.l  lump_ptr,d0
         move.w  lump_ptr,d1
         andi.l  #0xFFFFF,d0
-        addi.l  #0x900000,d0
+        ori.l   #0x900000,d0
         move.l  d0,a2
         lsr.w   #4,d1
         andi.w  #3,d1
@@ -1601,7 +1601,7 @@ load_md_sky:
         move.l  lump_ptr,d0
         move.w  lump_ptr,d1
         andi.l  #0xFFFFF,d0
-        addi.l  #0x900000,d0
+        ori.l   #0x900000,d0
         move.l  d0,a2
         lsr.w   #4,d1
         andi.w  #3,d1
@@ -1622,7 +1622,7 @@ load_md_sky:
         move.l  lump_ptr,d0
         move.w  lump_ptr,d1
         andi.l  #0xFFFFF,d0
-        addi.l  #0x900000,d0
+        ori.l   #0x900000,d0
         move.l  d0,a2
         lsr.w   #4,d1
         andi.w  #3,d1
