@@ -375,7 +375,8 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 //	const fixed_t radius = CAM_RADIUS;
 	const fixed_t height = CAM_HEIGHT;
 
-	angle = focusangle = mo->angle;
+   // TODO: If there is a boss, should focus on the boss
+	angle = focusangle = R_PointToAngle2(thiscam->x, thiscam->y, mo->x, mo->y);//mo->angle;
 
 	P_CameraThinker(player, thiscam);
 

@@ -21,7 +21,7 @@ typedef struct camera_s
 
 #define CAM_HEIGHT (16<<FRACBITS)
 #define CAM_RADIUS (20<<FRACBITS)
-#define CAM_DIST (128<<FRACBITS)
+#define CAM_DIST (160<<FRACBITS)
 
 extern camera_t camera;
 void P_MoveChaseCamera(player_t *player, camera_t *thiscam);
