@@ -134,12 +134,10 @@ void P_PlayerXYMovement(mobj_t *mo)
 	/* slow down */
 	/* */
 	{
-		fixed_t frc = FRACUNIT * 2;
-		fixed_t top = 30 * FRACUNIT;
-		angle_t speedDir = R_PointToAngle2(0, 0, mo->momx, mo->momy);
+		const fixed_t frc = FRACUNIT * 1;
+		const fixed_t top = 30 * FRACUNIT;
+		const angle_t speedDir = R_PointToAngle2(0, 0, mo->momx, mo->momy);
 		fixed_t speed = P_AproxDistance(mo->momx, mo->momy);
-
-		CONS_Printf("%d", speed >> FRACBITS);
 
 		if (speed > STOPSPEED)
 		{
@@ -158,13 +156,18 @@ void P_PlayerXYMovement(mobj_t *mo)
 					player->mo->momx += newSpeedX;
 					player->mo->momy += newSpeedY;
 				}
+				else
+				{
+					player->mo->momx = FixedMul(player->mo->momx, FRACUNIT - (STOPSPEED*2));
+					player->mo->momy = FixedMul(player->mo->momy, FRACUNIT - (STOPSPEED*2));
+				}
 			}
 
 			speed = P_AproxDistance(mo->momx, mo->momy);
 			if (speed > top)
 			{
-				fixed_t diff = speed - top;
-				angle_t opposite = speedDir - ANG180;
+				const fixed_t diff = speed - top;
+				const angle_t opposite = speedDir - ANG180;
 
 				P_ThrustNoVBLS(player->mo, opposite, diff);
 			}
@@ -548,6 +551,12 @@ void P_PlayerHitFloor(player_t *player)
 	player->pflags &= ~PF_JUMPED;
 	player->pflags &= ~PF_STARTJUMP;
 	P_SetMobjState(player->mo, S_PLAY_RUN1);
+
+	if (!(player->forwardmove || player->sidemove))
+	{
+		player->mo->momx >>= 1;
+		player->mo->momy >>= 1;
+	}
 }
 
 static void P_DoJump(player_t *player)
@@ -679,8 +688,8 @@ void P_MovePlayer(player_t *player)
 
 				player->mo->angle = R_PointToAngle2(player->mo->x, player->mo->y, player->mo->x + player->mo->momx, player->mo->y + player->mo->momy);*/
 
-		fixed_t acc = FRACUNIT;
-		angle_t speedDir = R_PointToAngle2(0, 0, player->mo->momx, player->mo->momy);
+		fixed_t acc = 2*FRACUNIT;
+//		angle_t speedDir = R_PointToAngle2(0, 0, player->mo->momx, player->mo->momy);
 		fixed_t speed = P_AproxDistance(player->mo->momx, player->mo->momy);
 
 		//		VINT controlDirection = ControlDirection(player);
@@ -689,14 +698,10 @@ void P_MovePlayer(player_t *player)
 
 		//		CONS_Printf("Controldirection is %d", controlDirection);
 
-		acc *= 2;
 		if (onground && speed > 0)
 		{
 			// Here we take your current mom and influence it to slowly change to the direction you wish to travel
 			// This avoids the feeling of sliding on ice
-			fixed_t oldmomx = player->mo->momx;
-			fixed_t oldmomy = player->mo->momy;
-
 			fixed_t moveVecX = 0;
 			fixed_t moveVecY = 0;
 			P_ThrustValuesNoVBLS(controlAngle, speed, &moveVecX, &moveVecY);
