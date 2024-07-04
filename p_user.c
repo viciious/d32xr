@@ -305,9 +305,11 @@ void P_PlayerMobjThink(mobj_t *mobj)
 
 		if (mobj->state >= S_PLAY_RUN1 && mobj->state <= S_PLAY_RUN8)
 		{
-			if (player->speed > (11 << FRACBITS))
+			if (player->speed > (20 << FRACBITS))
+				mobj->tics = 1;
+			else if (player->speed > (10 << FRACBITS))
 				mobj->tics = 2;
-			else if (player->speed > (5 << FRACBITS))
+			else if (player->speed > (4 << FRACBITS))
 				mobj->tics = 3;
 			else
 				mobj->tics = 4;

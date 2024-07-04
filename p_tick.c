@@ -24,13 +24,14 @@ processing
 ===============================================================================
 */
 
-thinker_t	thinkercap;	/* both the head and tail of the thinker list */
+thinker_t	thinkercap, thinkercap2;	/* both the head and tail of the thinker list */
 degenmobj_t		mobjhead;	/* head and tail of mobj list */
 degenmobj_t		freemobjhead, freestaticmobjhead, freeringmobjhead;	/* head and tail of free mobj list */
 degenmobj_t		limbomobjhead;
 
 scenerymobj_t *scenerymobjlist;
 VINT numscenerymobjs = 0;
+VINT thinkercount = 0;
 
 //int			activethinkers;	/* debug count */
 //int			activemobjs;	/* debug count */
@@ -46,12 +47,14 @@ VINT numscenerymobjs = 0;
 void P_InitThinkers (void)
 {
 	thinkercap.prev = thinkercap.next  = &thinkercap;
+	thinkercap2.prev = thinkercap2.next = &thinkercap2;
 	mobjhead.next = mobjhead.prev = (void *)&mobjhead;
 	freemobjhead.next = freemobjhead.prev = (void *)&freemobjhead;
 	freestaticmobjhead.next = freestaticmobjhead.prev = (void *)&freestaticmobjhead;
 	freeringmobjhead.next = freeringmobjhead.prev = (void*)&freeringmobjhead;
 	limbomobjhead.next = limbomobjhead.prev = (void*)&limbomobjhead;
 	scenerymobjlist = NULL;
+	thinkercount = 0;
 }
 
 
@@ -67,10 +70,21 @@ void P_InitThinkers (void)
 
 void P_AddThinker (thinker_t *thinker)
 {
-	thinkercap.prev->next = thinker;
-	thinker->next = &thinkercap;
-	thinker->prev = thinkercap.prev;
-	thinkercap.prev = thinker;
+	if (++thinkercount & 1)
+	{
+		thinkercap.prev->next = thinker;
+		thinker->next = &thinkercap;
+		thinker->prev = thinkercap.prev;
+		thinkercap.prev = thinker;
+	}
+	else
+	{
+		thinkercap2.prev->next = thinker;
+		thinker->next = &thinkercap2;
+		thinker->prev = thinkercap2.prev;
+		thinkercap2.prev = thinker;
+	}
+	
 }
 
 
@@ -104,24 +118,49 @@ void P_RunThinkers (void)
 	
 	//activethinkers = 0;
 	
-	currentthinker = thinkercap.next;
-	while (currentthinker != &thinkercap)
+	if (gametic30 & 1)
 	{
-		if (currentthinker->function == (think_t)-1)
-		{	/* time to remove it */
-			currentthinker->next->prev = currentthinker->prev;
-			currentthinker->prev->next = currentthinker->next;
-			Z_Free (currentthinker);
-		}
-		else
+		currentthinker = thinkercap.next;
+		while (currentthinker != &thinkercap)
 		{
-			if (currentthinker->function)
-			{
-				currentthinker->function (currentthinker);
+			if (currentthinker->function == (think_t)-1)
+			{	/* time to remove it */
+				currentthinker->next->prev = currentthinker->prev;
+				currentthinker->prev->next = currentthinker->next;
+				Z_Free (currentthinker);
 			}
-			//activethinkers++;
+			else
+			{
+				if (currentthinker->function)
+				{
+					currentthinker->function (currentthinker);
+				}
+				//activethinkers++;
+			}
+			currentthinker = currentthinker->next;
 		}
-		currentthinker = currentthinker->next;
+	}
+	else
+	{
+		currentthinker = thinkercap2.next;
+		while (currentthinker != &thinkercap2)
+		{
+			if (currentthinker->function == (think_t)-1)
+			{	/* time to remove it */
+				currentthinker->next->prev = currentthinker->prev;
+				currentthinker->prev->next = currentthinker->next;
+				Z_Free (currentthinker);
+			}
+			else
+			{
+				if (currentthinker->function)
+				{
+					currentthinker->function (currentthinker);
+				}
+				//activethinkers++;
+			}
+			currentthinker = currentthinker->next;
+		}
 	}
 }
 
@@ -388,22 +427,22 @@ int P_Ticker (void)
 		}
 	playertics = frtc - start;
 
-#ifdef THINKERS_30HZ
+//#ifdef THINKERS_30HZ
 	start = frtc;
 	P_RunThinkers();
 	thinkertics = frtc - start;
-#endif
+//#endif
 
 	if (gametic != prevgametic)
 	{
 		ticstart = frtc;
-
+/*
 #ifndef THINKERS_30HZ
 		start = frtc;
 		P_RunThinkers();
 		thinkertics = frtc - start;
 #endif
-
+*/
 		start = frtc;
 		P_CheckSights();
 		sighttics = frtc - start;

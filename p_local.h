@@ -65,6 +65,7 @@ typedef enum
 */
 
 extern	thinker_t	thinkercap;	/* both the head and tail of the thinker list */
+extern  thinker_t   thinkercap2;
 
 
 void P_InitThinkers (void);
