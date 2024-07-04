@@ -102,7 +102,7 @@ void D_isort(int* a, int len) __attribute__((nonnull)) ATTR_DATA_CACHE_ALIGN;
 typedef int fixed_t;
 
 #ifdef MARS
-#define THINKERS_30HZ
+//#define THINKERS_30HZ
 #endif
 
 #ifdef THINKERS_30HZ
