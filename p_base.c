@@ -486,9 +486,6 @@ void P_ZMovement(mobj_t *mo)
 //
 void P_MobjThinker(mobj_t *mobj)
 {
-   if (mobj->flags & MF_RINGMOBJ)
-      return;
-
    if (!(mobj->flags & MF_STATIC))
    {
       // momentum movement

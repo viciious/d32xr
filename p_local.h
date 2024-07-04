@@ -65,7 +65,6 @@ typedef enum
 */
 
 extern	thinker_t	thinkercap;	/* both the head and tail of the thinker list */
-extern  thinker_t   thinkercap2;
 
 
 void P_InitThinkers (void);
@@ -94,6 +93,7 @@ void	R_ResetResp(player_t* p);
 */
 
 extern	degenmobj_t	mobjhead;
+extern  degenmobj_t ringmobjhead;
 extern	degenmobj_t	freemobjhead, freestaticmobjhead, freeringmobjhead;
 extern	degenmobj_t	limbomobjhead;
 extern scenerymobj_t *scenerymobjlist;
