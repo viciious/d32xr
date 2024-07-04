@@ -37,6 +37,8 @@ void P_ThrustValues(angle_t angle, fixed_t move, fixed_t *outX, fixed_t *outY)
 
 void P_ThrustValuesNoVBLS(angle_t angle, fixed_t move, fixed_t *outX, fixed_t *outY)
 {
+	move *= vblsinframe;
+	move /= TICVBLS;
 	angle >>= ANGLETOFINESHIFT;
 	*outX += FixedMul(move, finecosine(angle));
 	*outY += FixedMul(move, finesine(angle));
@@ -44,6 +46,8 @@ void P_ThrustValuesNoVBLS(angle_t angle, fixed_t move, fixed_t *outX, fixed_t *o
 
 void P_ThrustNoVBLS(mobj_t *mo, angle_t angle, fixed_t move)
 {
+	move *= vblsinframe;
+	move /= TICVBLS;
 	angle >>= ANGLETOFINESHIFT;
 	mo->momx += FixedMul(move, finecosine(angle));
 	mo->momy += FixedMul(move, finesine(angle));
@@ -129,13 +133,8 @@ void P_PlayerXYMovement(mobj_t *mo)
 	/* */
 	/* slow down */
 	/* */
-	if (mo->z > mo->floorz)
-		return; /* no friction when airborne */
-
-	
-	else
 	{
-		fixed_t frc = FRACUNIT * 3;
+		fixed_t frc = FRACUNIT * 2;
 		fixed_t top = 30 * FRACUNIT;
 		angle_t speedDir = R_PointToAngle2(0, 0, mo->momx, mo->momy);
 		fixed_t speed = P_AproxDistance(mo->momx, mo->momy);
@@ -150,22 +149,15 @@ void P_PlayerXYMovement(mobj_t *mo)
 				{
 					fixed_t newSpeedX = 0;
 					fixed_t newSpeedY = 0;
-					P_ThrustValuesNoVBLS(speedDir, -frc, &newSpeedX, &newSpeedY);
+					
+					if (mo->z > mo->floorz)
+						P_ThrustValuesNoVBLS(speedDir, -frc / 2, &newSpeedX, &newSpeedY);
+					else
+						P_ThrustValuesNoVBLS(speedDir, -frc, &newSpeedX, &newSpeedY);
 
 					player->mo->momx += newSpeedX;
 					player->mo->momy += newSpeedY;
 				}
-			}
-			else
-			{
-				fixed_t controlX = 0;
-				fixed_t controlY = 0;
-				camera_t *thiscam = &camera;
-
-				P_ThrustValuesNoVBLS(thiscam->angle, player->forwardmove, &controlX, &controlY);
-				P_ThrustValuesNoVBLS(thiscam->angle - ANG90, player->sidemove, &controlX, &controlY);
-
-//				angle_t controlAngle = R_PointToAngle2(0, 0, controlX, controlY);
 			}
 
 			speed = P_AproxDistance(mo->momx, mo->momy);
@@ -305,7 +297,7 @@ void P_PlayerMobjThink(mobj_t *mobj)
 	}
 	else if (P_IsObjectOnGround(mobj))
 	{
-		if (player->speed >= (24 << FRACBITS) && mobj->state >= S_PLAY_RUN1 && mobj->state <= S_PLAY_RUN8 && !(mobj->state >= S_PLAY_SPD1 && mobj->state <= S_PLAY_SPD4))
+		if (player->speed >= (25 << FRACBITS) && mobj->state >= S_PLAY_RUN1 && mobj->state <= S_PLAY_RUN8 && !(mobj->state >= S_PLAY_SPD1 && mobj->state <= S_PLAY_SPD4))
 			P_SetMobjState(mobj, S_PLAY_SPD1);
 
 		if (mobj->state >= S_PLAY_RUN1 && mobj->state <= S_PLAY_RUN8)
@@ -325,7 +317,7 @@ void P_PlayerMobjThink(mobj_t *mobj)
 				mobj->tics = 2;
 		}
 
-		if (mobj->state >= S_PLAY_SPD1 && mobj->state <= S_PLAY_SPD4 && player->speed < (24 << FRACBITS))
+		if (mobj->state >= S_PLAY_SPD1 && mobj->state <= S_PLAY_SPD4 && player->speed < (25 << FRACBITS))
 			P_SetMobjState(mobj, S_PLAY_RUN1);
 	}
 }
