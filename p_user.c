@@ -17,6 +17,47 @@ fixed_t fastangleturn[] =
 #define FRICTION 0xd240
 #define MAXBOB 16 * FRACUNIT /* 16 pixels of bob */
 
+/*
+==================
+=
+= P_Thrust
+=
+= moves the given origin along a given angle
+=
+==================
+*/
+
+void P_ThrustValues(angle_t angle, fixed_t move, fixed_t *outX, fixed_t *outY)
+{
+	angle >>= ANGLETOFINESHIFT;
+	move >>= 8;
+	*outX += move * (finecosine(angle)>>8);
+	*outY += move * (finesine(angle)>>8);
+}
+
+void P_ThrustValuesNoVBLS(angle_t angle, fixed_t move, fixed_t *outX, fixed_t *outY)
+{
+	angle >>= ANGLETOFINESHIFT;
+	*outX += FixedMul(move, finecosine(angle));
+	*outY += FixedMul(move, finesine(angle));
+}
+
+void P_ThrustNoVBLS(mobj_t *mo, angle_t angle, fixed_t move)
+{
+	angle >>= ANGLETOFINESHIFT;
+	mo->momx += FixedMul(move, finecosine(angle));
+	mo->momy += FixedMul(move, finesine(angle));
+
+}
+
+void P_Thrust(player_t *player, angle_t angle, fixed_t move)
+{
+	angle >>= ANGLETOFINESHIFT;
+	move >>= 8;
+	player->mo->momx += move * (finecosine(angle) >> 8);
+	player->mo->momy += move * (finesine(angle) >> 8);
+}
+
 /*============================================================================= */
 
 void P_PlayerMove(mobj_t *mo)
@@ -82,6 +123,7 @@ dospecial:
 
 void P_PlayerXYMovement(mobj_t *mo)
 {
+	player_t *player = &players[mo->player - 1];
 	P_PlayerMove(mo);
 
 	/* */
@@ -90,16 +132,60 @@ void P_PlayerXYMovement(mobj_t *mo)
 	if (mo->z > mo->floorz)
 		return; /* no friction when airborne */
 
-	if (mo->momx > -STOPSPEED && mo->momx < STOPSPEED && mo->momy > -STOPSPEED && mo->momy < STOPSPEED)
+	
+	else
 	{
-		mo->momx = 0;
-		mo->momy = 0;
+		fixed_t frc = FRACUNIT * 3;
+		fixed_t top = 30 * FRACUNIT;
+		angle_t speedDir = R_PointToAngle2(0, 0, mo->momx, mo->momy);
+		fixed_t speed = P_AproxDistance(mo->momx, mo->momy);
+
+		CONS_Printf("%d", speed >> FRACBITS);
+
+		if (speed > STOPSPEED)
+		{
+			if (!(player->forwardmove || player->sidemove))
+			{
+				if (speed >= frc)
+				{
+					fixed_t newSpeedX = 0;
+					fixed_t newSpeedY = 0;
+					P_ThrustValuesNoVBLS(speedDir, -frc, &newSpeedX, &newSpeedY);
+
+					player->mo->momx += newSpeedX;
+					player->mo->momy += newSpeedY;
+				}
+			}
+			else
+			{
+				fixed_t controlX = 0;
+				fixed_t controlY = 0;
+				camera_t *thiscam = &camera;
+
+				P_ThrustValuesNoVBLS(thiscam->angle, player->forwardmove, &controlX, &controlY);
+				P_ThrustValuesNoVBLS(thiscam->angle - ANG90, player->sidemove, &controlX, &controlY);
+
+//				angle_t controlAngle = R_PointToAngle2(0, 0, controlX, controlY);
+			}
+
+			speed = P_AproxDistance(mo->momx, mo->momy);
+			if (speed > top)
+			{
+				fixed_t diff = speed - top;
+				angle_t opposite = speedDir - ANG180;
+
+				P_ThrustNoVBLS(player->mo, opposite, diff);
+			}
+		}
+		else if (!(player->forwardmove || player->sidemove))
+		{
+			if (speed < STOPSPEED)
+			{
+				mo->momx = 0;
+				mo->momy = 0;
+			}
+		}
 	}
-//	else
-//	{
-//		mo->momx = (mo->momx >> 8) * (FRICTION >> 8);
-//		mo->momy = (mo->momy >> 8) * (FRICTION >> 8);
-//	}
 }
 
 /*
@@ -367,39 +453,6 @@ boolean onground;
 /*
 ==================
 =
-= P_Thrust
-=
-= moves the given origin along a given angle
-=
-==================
-*/
-
-void P_ThrustValues(angle_t angle, fixed_t move, fixed_t *outX, fixed_t *outY)
-{
-	angle >>= ANGLETOFINESHIFT;
-	move >>= 8;
-	*outX += move * (finecosine(angle)>>8);
-	*outY += move * (finesine(angle)>>8);
-}
-
-void P_ThrustValuesNoVBLS(angle_t angle, fixed_t move, fixed_t *outX, fixed_t *outY)
-{
-	angle >>= ANGLETOFINESHIFT;
-	*outX += FixedMul(move, finecosine(angle));
-	*outY += FixedMul(move, finesine(angle));
-}
-
-void P_Thrust(player_t *player, angle_t angle, fixed_t move)
-{
-	angle >>= ANGLETOFINESHIFT;
-	move >>= 8;
-	player->mo->momx += move * (finecosine(angle) >> 8);
-	player->mo->momy += move * (finesine(angle) >> 8);
-}
-
-/*
-==================
-=
 = P_CalcHeight
 =
 = Calculate the walking / running height adjustment
@@ -662,8 +715,6 @@ void P_MovePlayer(player_t *player)
 			player->mo->momy += moveVecY;
 			player->mo->momx = FixedDiv(player->mo->momx, 29*FRACUNIT);
 			player->mo->momy = FixedDiv(player->mo->momy, 29*FRACUNIT);
-
-			CONS_Printf("%d, %d", P_AproxDistance(oldmomx, oldmomy), P_AproxDistance(player->mo->momx, player->mo->momy));
 
 			player->mo->angle = R_PointToAngle2(0, 0, player->mo->momx, player->mo->momy);
 		}

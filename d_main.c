@@ -354,6 +354,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 	gametic = 0;
 	gametic30 = 0;
 	prevgametic = 0;
+	leveltime = 0;
 
 	gameaction = 0;
 	gamevbls = 0;

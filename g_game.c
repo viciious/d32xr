@@ -29,6 +29,7 @@ int             consoleplayer = 0;          /* player taking events and displayi
 int             gametic;
 int             prevgametic;
 int             gametic30;
+int             leveltime;
 VINT           totalitems, totalsecret;    /* for intermission  */
  
 boolean         demorecording; 
