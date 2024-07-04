@@ -304,7 +304,10 @@ static void R_PrepRing(mobj_t *thing)
    if (vis->x1 > x1)
       vis->startfrac += vis->xiscale*(vis->x1 - x1);
 
-   vis->colormap = HWLIGHT(thing->subsector->sector->lightlevel);
+   if (vd.fixedcolormap)
+       vis->colormap = vd.fixedcolormap;
+   else
+      vis->colormap = HWLIGHT(thing->subsector->sector->lightlevel);
  
    vis->colormaps = dc_colormaps;
 }
@@ -434,7 +437,10 @@ static void R_PrepScenery(scenerymobj_t *thing)
    if (vis->x1 > x1)
       vis->startfrac += vis->xiscale*(vis->x1 - x1);
 
-   vis->colormap = HWLIGHT(thing->subsector->sector->lightlevel);
+   if (vd.fixedcolormap)
+       vis->colormap = vd.fixedcolormap;
+   else
+      vis->colormap = HWLIGHT(thing->subsector->sector->lightlevel);
  
    vis->colormaps = dc_colormaps;
 }

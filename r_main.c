@@ -503,6 +503,11 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	damagecount = player->damagecount;
 	bonuscount = player->bonuscount;
 
+	if (gamemapinfo.mapNumber != 30 && leveltime < 32)
+	{
+		vd.fixedcolormap = HWLIGHT(leveltime*8);
+	}
+
 #ifdef JAGUAR
 	vd.extralight = player->extralight << 6;
 
