@@ -615,7 +615,7 @@ int I_GetFRTCounter(void)
 =
 = I_TempBuffer
 =
-= return a pointer to a 64k or so temp work buffer for level setup uses
+= return a pointer to a 128K or so temp work buffer for level setup uses
 = (non-displayed frame buffer)
 =
 ====================
