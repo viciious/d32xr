@@ -702,12 +702,12 @@ _I_DrawSkyColumnA:
 
         .p2alignw 2, 0x0009
 do_sky_col_loop:
-        mov     #255,r9     /* dpix = dc_colormap[pix] */
+        mov.w   thru_pal_index_double,r9     /* dpix = dc_colormap[pix] */
         mov.w   r9,@r8          /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
         add     r1,r8           /* fb += SCREENWIDTH */
 do_sky_col_loop_1px:
         dt      r6              /* count-- */
-        mov     #255,r9     /* dpix = dc_colormap[pix] */
+        mov.w   thru_pal_index_double,r9     /* dpix = dc_colormap[pix] */
         mov.w   r9,@r8          /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
         bf/s    do_sky_col_loop
         add     r1,r8           /* fb += SCREENWIDTH */
@@ -761,11 +761,11 @@ _I_DrawSkyColumnLowA:
 
         .p2alignw 2, 0x0009
 do_sky_col_loop_low:
-        mov     #-1,r9     /* dpix = dc_colormap[pix] */
+        mov.w   thru_pal_index_double,r9     /* dpix = dc_colormap[pix] */
         mov.w   r9,@r8          /* *fb = dpix */
         add     r1,r8           /* fb += SCREENWIDTH */
 do_sky_col_loop_low_1px:
-        mov     #-1,r9     /* dpix = dc_colormap[pix] */
+        mov.w   thru_pal_index_double,r9     /* dpix = dc_colormap[pix] */
         dt      r6              /* count-- */
         mov.w   r9,@r8          /* *fb = dpix */
         bf/s    do_sky_col_loop_low
@@ -781,3 +781,5 @@ draw_fb2:
         .long   _viewportbuffer
 draw_width2:
         .long   320
+thru_pal_index_double:
+        .short  0xFCFC
