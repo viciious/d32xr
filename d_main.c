@@ -298,7 +298,11 @@ static void D_Wipe(void)
 	uint8_t *sky_pat_ptr;
 	int lump;
 
-	lump = W_CheckNumForName("SKY1NAM");
+	char lumpname[9];
+
+	D_strncpy(lumpname, gamemapinfo.sky, 5);
+	strcat(lumpname, "NAM");
+	lump = W_CheckNumForName(lumpname);
 	if (lump != -1) {
 		sky_name_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
 	}
@@ -306,7 +310,9 @@ static void D_Wipe(void)
 		return;
 	}
 
-	lump = W_CheckNumForName("SKY1PAL");
+	D_strncpy(lumpname, gamemapinfo.sky, 5);
+	strcat(lumpname, "PAL");
+	lump = W_CheckNumForName(lumpname);
 	if (lump != -1) {
 		sky_pal_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
 	}
@@ -314,7 +320,9 @@ static void D_Wipe(void)
 		return;
 	}
 
-	lump = W_CheckNumForName("SKY1TIL");
+	D_strncpy(lumpname, gamemapinfo.sky, 5);
+	strcat(lumpname, "TIL");
+	lump = W_CheckNumForName(lumpname);
 	if (lump != -1) {
 		sky_pat_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
 	}
