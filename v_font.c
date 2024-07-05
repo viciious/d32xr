@@ -14,13 +14,17 @@ void V_FontInit()
     menuFont.maxChar = 126;
     menuFont.fixedWidth = true;
     menuFont.fixedWidthSize = 8;
+    menuFont.spaceWidthSize = 4;
+    menuFont.verticalOffset = 8;
 
     titleFont.lumpStart = W_GetNumForName("LTFNT065");
     titleFont.lumpStartChar = 65;
     titleFont.minChar = 65;
     titleFont.maxChar = 122;
     titleFont.fixedWidth = false;
-    titleFont.fixedWidth = 16;
+    titleFont.fixedWidth = 0;
+    titleFont.spaceWidthSize = 16;
+    titleFont.verticalOffset = 16;
 
     creditFont.lumpStart = W_GetNumForName("CRFNT065");
     creditFont.lumpStartChar = 65;
@@ -28,6 +32,8 @@ void V_FontInit()
     creditFont.maxChar = 90;
     creditFont.fixedWidth = true;
     creditFont.fixedWidthSize = 16;
+    creditFont.spaceWidthSize = 8;
+    creditFont.verticalOffset = 16;
 
     titleNumberFont.lumpStart = W_GetNumForName("TTL01");
     titleNumberFont.lumpStartChar = '1';
@@ -35,6 +41,7 @@ void V_FontInit()
     titleNumberFont.maxChar = '3';
     titleNumberFont.fixedWidth = false;
     titleNumberFont.fixedWidthSize = 0;
+    titleNumberFont.verticalOffset = 29;
 
     hudNumberFont.lumpStart = W_GetNumForName("STTNUM0");
     hudNumberFont.lumpStartChar = '0';
@@ -42,23 +49,40 @@ void V_FontInit()
     hudNumberFont.maxChar = '9';
     hudNumberFont.fixedWidth = true;
     hudNumberFont.fixedWidthSize = 8;
+    hudNumberFont.spaceWidthSize = 4;
+    hudNumberFont.spaceWidthSize = 11;
 }
 
 int V_DrawStringLeft(const font_t *font, int x, int y, const char *string)
 {
 	int i,c;
-	int w;
+    byte *lump;
+    jagobj_t *jo;
 
 	for (i = 0; i < mystrlen(string); i++)
 	{
 		c = string[i];
 	
         if (c == 0x20) // Space
-            x += font->fixedWidth ? font->fixedWidthSize / 2 : w;
+            x += font->spaceWidthSize;
 		else if (c >= font->minChar && c <= font->maxChar)
 		{
-			DrawJagobjLump(font->lumpStart + (c - font->lumpStartChar), x, y, &w, NULL);
-			x += font->fixedWidth ? font->fixedWidthSize : w;
+			if (font->fixedWidth)
+            {
+			    DrawJagobjLump(font->lumpStart + (c - font->lumpStartChar), x, y, NULL, NULL);
+			    x += font->fixedWidthSize;
+            }
+            else
+            {
+                int lumpnum = font->lumpStart + (c - font->lumpStartChar);
+                lump = W_POINTLUMPNUM(lumpnum);
+	            if (!(lumpinfo[lumpnum].name[0] & 0x80))
+	            {
+    		        jo = (jagobj_t*)lump;
+                    DrawJagobj(jo, x, y + font->verticalOffset - jo->height);
+		            x += jo->width;
+	            }
+            }
 		}
 	}
 
@@ -68,18 +92,33 @@ int V_DrawStringLeft(const font_t *font, int x, int y, const char *string)
 int V_DrawStringRight(const font_t *font, int x, int y, const char *string)
 {
     int i,c;
-	int w;
+    byte *lump;
+    jagobj_t *jo;
 
 	for (i = mystrlen(string)-1; i >= 0; i--)
 	{
 		c = string[i];
 	
         if (c == 0x20) // Space
-            x -= font->fixedWidth ? font->fixedWidthSize / 2 : w;
+            x -= font->spaceWidthSize;
 		else if (c >= font->minChar && c <= font->maxChar)
 		{
-			DrawJagobjLump(font->lumpStart + (c - font->lumpStartChar), x, y, &w, NULL);
-			x -= font->fixedWidth ? font->fixedWidthSize : w;
+            if (font->fixedWidth)
+            {
+			    DrawJagobjLump(font->lumpStart + (c - font->lumpStartChar), x, y, NULL, NULL);
+			    x -= font->fixedWidthSize;
+            }
+            else
+            {
+                int lumpnum = font->lumpStart + (c - font->lumpStartChar);
+                lump = W_POINTLUMPNUM(lumpnum);
+	            if (!(lumpinfo[lumpnum].name[0] & 0x80))
+	            {
+    		        jo = (jagobj_t*)lump;
+		            x -= jo->width;
+                    DrawJagobj(jo, x, y + font->verticalOffset - jo->height);
+	            }
+            }
 		}
 	}
 
@@ -89,7 +128,8 @@ int V_DrawStringRight(const font_t *font, int x, int y, const char *string)
 int V_DrawStringCenter(const font_t *font, int x, int y, const char *string)
 {
     int c;
-	int w;
+    byte *lump;
+    jagobj_t *jo;
 
     // Slow, difficult...
     for (int i = 0; i < mystrlen(string); i++)
@@ -97,20 +137,54 @@ int V_DrawStringCenter(const font_t *font, int x, int y, const char *string)
         c = string[i];
         
         if (c == 0x20) // Space
-            x -= (font->fixedWidth ? font->fixedWidthSize / 2 : w) / 2;
-        else if (c >= font->minChar && c <= font->maxChar)
-        {
+            x -= font->spaceWidthSize / 2;
+		else if (c >= font->minChar && c <= font->maxChar)
+		{
             if (font->fixedWidth)
-                x -= font->fixedWidth / 2;
+            {
+                x -= font->fixedWidthSize / 2;
+            }
             else
             {
-                DrawJagobjLump(font->lumpStart + (c - font->lumpStartChar), x, y, &w, NULL);
-                x -= w / 2;
+                int lumpnum = font->lumpStart + (c - font->lumpStartChar);
+                lump = W_POINTLUMPNUM(lumpnum);
+	            if (!(lumpinfo[lumpnum].name[0] & 0x80))
+	            {
+    		        jo = (jagobj_t*)lump;
+		            x -= jo->width / 2;
+	            }
             }
-        }
+		}
     }
 
     return V_DrawStringLeft(font, x, y, string);
+}
+
+int V_DrawValueLeft(const font_t *font, int x, int y, int value)
+{
+	char	v[12];
+
+	valtostr(v,value);
+
+    V_DrawStringLeft(font, x, y, v);
+}
+
+int V_DrawValueRight(const font_t *font, int x, int y, int value)
+{
+	char	v[12];
+
+	valtostr(v,value);
+
+    V_DrawStringRight(font, x, y, v);
+}
+
+int V_DrawValueCenter(const font_t *font, int x, int y, int value)
+{
+	char	v[12];
+
+	valtostr(v,value);
+
+    V_DrawStringCenter(font, x, y, v);
 }
 
 // Font MUST be fixedWidth = true
@@ -128,7 +202,7 @@ int V_DrawValuePaddedRight(const font_t *font, int x, int y, int value, int pad)
         x -= font->fixedWidthSize;
 	
         if (c == 0x20) // Space
-            x -= font->fixedWidthSize / 2;
+            x -= font->spaceWidthSize;
 		else if (c >= font->minChar && c <= font->maxChar)
 			DrawJagobjLump(font->lumpStart + (c - font->lumpStartChar), x, y, NULL, NULL);
 

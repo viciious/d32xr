@@ -1,16 +1,16 @@
 /* G_game.c  */
- 
-#include "doomdef.h" 
-#include "p_local.h" 
 
-void G_PlayerReborn (int player); 
- 
-void G_DoReborn (int playernum); 
- 
-void G_DoLoadLevel (void); 
- 
- 
-gameaction_t    gameaction; 
+#include "doomdef.h"
+#include "p_local.h"
+
+void G_PlayerReborn (int player);
+
+void G_DoReborn (int playernum);
+
+void G_DoLoadLevel (void);
+
+
+gameaction_t    gameaction;
 int				gamemaplump;
 dmapinfo_t		gamemapinfo;
 dgameinfo_t		gameinfo;
@@ -31,19 +31,19 @@ int             prevgametic;
 int             gametic30;
 int             leveltime;
 VINT           totalitems, totalsecret;    /* for intermission  */
- 
-boolean         demorecording; 
-boolean         demoplayback; 
 
-/* 
-============== 
-= 
-= G_DoLoadLevel 
-= 
-============== 
-*/ 
-  
-extern int              skytexture; 
+boolean         demorecording;
+boolean         demoplayback;
+
+/*
+==============
+=
+= G_DoLoadLevel
+=
+==============
+*/
+
+extern int              skytexture;
 extern texture_t		*skytexturep;
 extern texture_t		*textures;
 

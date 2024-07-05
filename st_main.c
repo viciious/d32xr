@@ -161,6 +161,39 @@ void ST_Ticker(void)
 /*
 ====================
 =
+= ST_DrawTitleCard
+=
+====================
+*/
+
+static void ST_DrawTitleCard()
+{
+	if (stbar_tics < 16) {
+		V_DrawStringRight(&titleFont, 160+68 - ((16 - stbar_tics) << 5), 100, gamemapinfo.name);
+		V_DrawStringLeft(&titleFont, 160 + ((16 - stbar_tics) << 5), 124, "Zone");
+		if (gamemapinfo.act >= 1 && gamemapinfo.act <= 3) {
+			V_DrawValueLeft(&titleNumberFont, 160+68 + ((16 - stbar_tics) << 5), 124-4, gamemapinfo.act);
+		}
+	}
+	else if (stbar_tics < 60) {
+		V_DrawStringRight(&titleFont, 160+68, 100, gamemapinfo.name);
+		V_DrawStringLeft(&titleFont, 160, 124, "Zone");
+		if (gamemapinfo.act >= 1 && gamemapinfo.act <= 3) {
+			V_DrawValueLeft(&titleNumberFont, 160+68, 124-4, gamemapinfo.act);
+		}
+	}
+	else {
+		V_DrawStringRight(&titleFont, 160+68 + ((stbar_tics - 60) << 5), 100, gamemapinfo.name);
+		V_DrawStringLeft(&titleFont, 160 - ((stbar_tics - 60) << 5), 124, "Zone");
+		if (gamemapinfo.act >= 1 && gamemapinfo.act <= 3) {
+			V_DrawValueLeft(&titleNumberFont, 160+68 - ((stbar_tics - 60) << 5), 124-4, gamemapinfo.act);
+		}
+	}
+}
+
+/*
+====================
+=
 = ST_Drawer
 =
 ====================
@@ -185,6 +218,10 @@ static void ST_Drawer_ (stbar_t* sb)
 	V_DrawStringLeft(&menuFont, 16 + 20, 176, "SONIC");
 	DrawJagobjLump(livex, 16 + 22, 176 + 10, NULL, NULL);
 	V_DrawValuePaddedRight(&menuFont, 16 + 58, 176+8, 3, 0);
+
+	if (stbar_tics < 80) {
+		ST_DrawTitleCard();
+	}
 }
 
 void CONS_Printf(char *msg, ...) 

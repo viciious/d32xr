@@ -32,6 +32,7 @@ typedef struct
 	VINT cyberSpecial;
 	VINT spiderSpecial;
 	char *name;
+	VINT act;
 	char *sky;
 	VINT next;
 	VINT secretNext;
