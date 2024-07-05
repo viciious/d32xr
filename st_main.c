@@ -169,25 +169,41 @@ void ST_Ticker(void)
 static void ST_DrawTitleCard()
 {
 	if (stbar_tics < 16) {
-		V_DrawStringRight(&titleFont, 160+68 - ((16 - stbar_tics) << 5), 100, gamemapinfo.name);
-		V_DrawStringLeft(&titleFont, 160 + ((16 - stbar_tics) << 5), 124, "Zone");
 		if (gamemapinfo.act >= 1 && gamemapinfo.act <= 3) {
+			short lt_lump = W_CheckNumForName("LTACTBLU");
+			DrawJagobjLump(lt_lump, 160+68-24 + ((16 - stbar_tics) << 5), 100 - ((16 - stbar_tics) << 5), NULL, NULL);
+			DrawFillRect(316, 20, 4, 4, COLOR_BLACK); // Clear lt_lump letterbox overdraw.
+			
 			V_DrawValueLeft(&titleNumberFont, 160+68 + ((16 - stbar_tics) << 5), 124-4, gamemapinfo.act);
 		}
+		V_DrawStringRight(&titleFont, 160+68 - ((16 - stbar_tics) << 5), 100, gamemapinfo.name);
+		V_DrawStringLeft(&titleFont, 160 + ((16 - stbar_tics) << 5), 124, "Zone");
 	}
 	else if (stbar_tics < 60) {
-		V_DrawStringRight(&titleFont, 160+68, 100, gamemapinfo.name);
-		V_DrawStringLeft(&titleFont, 160, 124, "Zone");
 		if (gamemapinfo.act >= 1 && gamemapinfo.act <= 3) {
+			short lt_lump = W_CheckNumForName("LTACTBLU");
+			DrawJagobjLump(lt_lump, 160+68-24, 100, NULL, NULL);
+
 			V_DrawValueLeft(&titleNumberFont, 160+68, 124-4, gamemapinfo.act);
 		}
+		V_DrawStringRight(&titleFont, 160+68, 100, gamemapinfo.name);
+		V_DrawStringLeft(&titleFont, 160, 124, "Zone");
 	}
 	else {
-		V_DrawStringRight(&titleFont, 160+68 + ((stbar_tics - 60) << 5), 100, gamemapinfo.name);
-		V_DrawStringLeft(&titleFont, 160 - ((stbar_tics - 60) << 5), 124, "Zone");
 		if (gamemapinfo.act >= 1 && gamemapinfo.act <= 3) {
+			short lt_lump = W_CheckNumForName("LTACTBLU");
+			jagobj_t *lt_obj = (jagobj_t*)W_POINTLUMPNUM(lt_lump);
+			short lt_y = 100 + ((stbar_tics - 60) << 5);
+			short lt_height = lt_y + lt_obj->height > 204
+					? lt_obj->height - ((lt_y + lt_obj->height) - 204)
+					: lt_obj->height;
+			DrawJagobj2(lt_obj, 160+68-24 - ((stbar_tics - 60) << 5), lt_y, 0, 0,
+					lt_obj->width, lt_height, I_OverwriteBuffer());
+			
 			V_DrawValueLeft(&titleNumberFont, 160+68 - ((stbar_tics - 60) << 5), 124-4, gamemapinfo.act);
 		}
+		V_DrawStringRight(&titleFont, 160+68 + ((stbar_tics - 60) << 5), 100, gamemapinfo.name);
+		V_DrawStringLeft(&titleFont, 160 - ((stbar_tics - 60) << 5), 124, "Zone");
 	}
 }
 

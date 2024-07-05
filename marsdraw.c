@@ -876,7 +876,7 @@ void DrawJagobj2(jagobj_t* jo, int x, int y,
 		return;
 	}
 
-	if ((x & 1) == 0 && (width & 1) == 0)
+	if ((x & 1) == 0 && (width & 1) == 0 && (rowsize & 1) == 0)
 	{
 		pixel_t* dest2 = (pixel_t*)dest, * source2 = (pixel_t*)source;
 
