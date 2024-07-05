@@ -143,6 +143,10 @@ clean:
 	make clean -C src-md
 	$(RM) *.o mr8k.bin $(TARGET).32x $(TARGET).elf output.map temp.bin temp2.bin
 
+optwad:
+	mkdir -p iso
+	find iso -type f -name "*.WAD" -exec ./wadptr -nomerge -nosquash -nostack -c {} \;
+
 iso: $(TARGET).32x
 	mkdir -p iso
 	genisoimage -sysid "SEGA SEGACD" -volid "DOOM32X" -full-iso9660-filenames -l -o $(TARGET).iso iso
