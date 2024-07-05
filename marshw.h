@@ -37,6 +37,10 @@
 
 #define MARS_MAX_CONTROLLERS 2
 
+#ifdef MDSKY
+#define MARS_MD_PIXEL_THRU_INDEX	252
+#endif
+
 void Mars_FlipFrameBuffers(char wait);
 void Mars_WaitFrameBuffersFlip(void);
 char Mars_FramebuffersFlipped(void);

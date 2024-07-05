@@ -150,8 +150,7 @@ char Mars_UploadPalette(const uint8_t* palette)
 	}
 
 	#ifdef MDSKY
-	cram[255] &= 0x7FFF; //DLG: Allow MD VDP to show through color index 0.
-	//TODO: DLG: Use a different color. This color is used for shading.
+	cram[MARS_MD_PIXEL_THRU_INDEX] &= 0x7FFF; // Allow MD VDP to show through for this palette index.
 	#endif
 
 	return 1;
