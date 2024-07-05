@@ -144,7 +144,8 @@ static boolean SL_CheckLine(line_t *ld, pslidework_t *sw)
 {
    fixed_t   opentop, openbottom;
    sector_t *front, *back;
-   int       side1;
+   int       side1, dx, dy;
+   angle_t fineangle;
    vertex_t *vtmp;
    fixed_t  ldbbox[4];
 
@@ -187,7 +188,12 @@ findfrac:
    sw->p1  = &vertexes[ld->v1];
    sw->p2  = &vertexes[ld->v2];
 
-   VINT fineangle = R_PointToAngle2(0, 0, sw->p2->x - sw->p1->x, sw->p2->y - sw->p1->y) >> ANGLETOFINESHIFT;
+   dx = sw->p2->x - sw->p1->x;
+   dy = sw->p2->y - sw->p1->y;
+   fineangle = ( dy == 0 ) ? (( dx < 0 ) ? ANG180 : 0 ) :
+               ( dx == 0 ) ? (( dy < 0 ) ? ANG270 : ANG90 ) :
+               R_PointToAngle2(0, 0, dx, dy);
+   fineangle >>= ANGLETOFINESHIFT;
 
    sw->nvx = finesine(fineangle);
    sw->nvy = -finecosine(fineangle);
