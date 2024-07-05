@@ -30,7 +30,7 @@ void V_FontInit()
     creditFont.lumpStartChar = 65;
     creditFont.minChar = 46;
     creditFont.maxChar = 90;
-    creditFont.fixedWidth = true;
+    creditFont.fixedWidth = false;
     creditFont.fixedWidthSize = 16;
     creditFont.spaceWidthSize = 8;
     creditFont.verticalOffset = 16;
@@ -58,12 +58,18 @@ int V_DrawStringLeft(const font_t *font, int x, int y, const char *string)
 	int i,c;
     byte *lump;
     jagobj_t *jo;
+    int startX = x;
 
 	for (i = 0; i < mystrlen(string); i++)
 	{
 		c = string[i];
 	
-        if (c == 0x20) // Space
+        if (c == '\n') // Basic newline support
+        {
+            x = startX;
+            y += font->verticalOffset;
+        }
+        else if (c == 0x20) // Space
             x += font->spaceWidthSize;
 		else if (c >= font->minChar && c <= font->maxChar)
 		{
@@ -160,7 +166,7 @@ int V_DrawStringCenter(const font_t *font, int x, int y, const char *string)
     return V_DrawStringLeft(font, x, y, string);
 }
 
-int V_DrawValueLeft(const font_t *font, int x, int y, int value)
+void V_DrawValueLeft(const font_t *font, int x, int y, int value)
 {
 	char	v[12];
 
@@ -169,7 +175,7 @@ int V_DrawValueLeft(const font_t *font, int x, int y, int value)
     V_DrawStringLeft(font, x, y, v);
 }
 
-int V_DrawValueRight(const font_t *font, int x, int y, int value)
+void V_DrawValueRight(const font_t *font, int x, int y, int value)
 {
 	char	v[12];
 
@@ -178,7 +184,7 @@ int V_DrawValueRight(const font_t *font, int x, int y, int value)
     V_DrawStringRight(font, x, y, v);
 }
 
-int V_DrawValueCenter(const font_t *font, int x, int y, int value)
+void V_DrawValueCenter(const font_t *font, int x, int y, int value)
 {
 	char	v[12];
 
@@ -188,7 +194,7 @@ int V_DrawValueCenter(const font_t *font, int x, int y, int value)
 }
 
 // Font MUST be fixedWidth = true
-int V_DrawValuePaddedRight(const font_t *font, int x, int y, int value, int pad)
+void V_DrawValuePaddedRight(const font_t *font, int x, int y, int value, int pad)
 {
 	char	v[12];
 	int		i;
@@ -215,8 +221,6 @@ int V_DrawValuePaddedRight(const font_t *font, int x, int y, int value, int pad)
 		DrawJagobjLump(font->lumpStart + ('0' - font->lumpStartChar), x, y, NULL, NULL);
 		pad--;
 	}
-
-    return x;
 }
 
 /*================================================= */

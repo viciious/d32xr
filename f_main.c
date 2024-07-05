@@ -10,8 +10,8 @@ typedef struct
 {
 	const char *piclumpName;
 	const char *title;
-	const char *didWhat;
 	const char *name;
+	const char *didWhat;
 	const char *links;
 } creditcard_t; // tap, chip, or swipe?
 
@@ -28,7 +28,7 @@ creditcard_t creditCards[] = {
 	{0, NULL, NULL, NULL, NULL },
 };
 
-#define CARDTIME (10*TICRATE)
+#define CARDTIME (20*TICRATE)
 
 static VINT cardPFP = 0;
 static VINT cardTimer = 0;
@@ -37,7 +37,7 @@ static VINT curCard = 0;
 static void F_DrawBackground(void)
 {
 	// Black background like Sonic 1 & 2
-	DrawFillRect(0, 0, 320, 224, 255);
+	DrawFillRect(0, 0, 320, 224, 31);
 }
 
 /*
@@ -187,11 +187,13 @@ void F_Start (void)
 
 void F_Stop (void)
 {
-	int	i;
+	const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
+	I_SetPalette(dc_playpals);
 
 	R_InitColormap(lowResMode);
 	
 	// Cleanup
+	// TODO: Get the game to go back to title
 }
 
 /*
@@ -209,6 +211,8 @@ int F_Ticker (void)
 	if (cardTimer < 0)
 		F_NextCard();
 
+	const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
+
 	if (cardTimer > CARDTIME - 20)
 	{
 		int palIndex = cardTimer - (CARDTIME - 20);
@@ -216,16 +220,16 @@ int F_Ticker (void)
 		if (palIndex > 5)
 			palIndex = 5;
 
-		const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
+		palIndex += 6;
 		I_SetPalette(dc_playpals+palIndex*768);
 	}
 	else if (cardTimer < 20)
 	{
-		int palIndex = (cardTimer / 4);
-
-		const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
+		int palIndex = 10 - (cardTimer / 4);
 		I_SetPalette(dc_playpals+palIndex*768);
 	}
+	else
+		I_SetPalette(dc_playpals);
 
 	return 0;
 }
@@ -247,13 +251,14 @@ void F_Drawer (void)
 
 	F_DrawBackground();
 
-	creditcard_t *card = &creditCards[curCard];
-	DrawJagobjLump(cardPFP, 32, 96, NULL, NULL);
+	const creditcard_t *card = &creditCards[curCard];
 
-	V_DrawStringCenter(&menuFont, 64, 96+100, card->name);
+	V_DrawStringCenter(&creditFont, 160, 32, card->title);
 
-	V_DrawStringCenter(&creditFont, 160, 64, card->title);
-	V_DrawStringLeft(&titleFont, 160, 128, card->didWhat);
-	V_DrawStringLeft(&menuFont, 160, 144, card->links);
+	DrawJagobjLump(cardPFP, 32, 64, NULL, NULL);
+	V_DrawStringCenter(&menuFont, 80, 64+100, card->name);
+
+	V_DrawStringLeft(&menuFont, 160, 64, card->didWhat);
+	V_DrawStringLeft(&menuFont, 160, 96, card->links);
 }
 
