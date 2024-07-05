@@ -2,56 +2,43 @@
 
 #include "doomdef.h"
 #include "r_local.h"
-
-typedef struct
-{
-	char		*name;
-	mobjtype_t	type;
-} castinfo_t;
-
-static const castinfo_t castorder[] = {
-{"zombieman", MT_POSSESSED},
-{"our hero", MT_PLAYER},
-
-{NULL,0}
-};
-
-typedef enum
-{
-	fin_endtext,
-	fin_charcast
-} final_e;
-
-#define TEXTTIME	4
-#define STARTX		8
-#define STARTY		8
-
-#define SPACEWIDTH	8
-#define NUMENDOBJ	28
-
-typedef struct
-{
-	int			castnum;
-	int			casttics;
-	const state_t		*caststate;
-	boolean		castdeath;
-	int			castframes;
-	int			castonmelee;
-	boolean		castattacking;
-	final_e		status;
-	boolean 	textprint;	/* is endtext done printing? */
-	int			textindex;
-	VINT		textdelay;
-	VINT		text_x;
-	VINT		text_y;
-	VINT		drawbg;
-	jagobj_t	**endobj;
-	drawcol_t	drcol;
-} finale_t;
-
-finale_t *fin;
+#include "v_font.h"
 
 static void F_DrawBackground(void);
+
+typedef struct
+{
+	const char *piclumpName;
+	const char *title;
+	const char *didWhat;
+	const char *name;
+	const char *links;
+} creditcard_t; // tap, chip, or swipe?
+
+creditcard_t creditCards[] = {
+	{"C_STJR", "BASED ON THE WORK BY", "Sonic Team Jr.", "www.srb2.org" },
+	{"C_WSQUID", "MUSIC", "Wesquiid", "GFZ2", "x.com/@wessquiid\nwessquiid.carrd.co" },
+	{"C_JXCHIP", "MUSIC", "JX Chip", "GFZ1\nERZ1\nERZ2", "youtube.com/@JXChip\nko-fi.com/jx85638" },
+	{"C_JOYTAY", "MUSIC", "John \"Joy\" Tay", "Deep Sea 1", "x.com/@johntayjinf\nyoutube.com/@johntayjinf" },
+	{"C_CRYPTK", "MUSIC", "Cryptik", "Miscellaneous", "x.com/@LunarCryptik\nyoutube.com/c/LunarCryptik\npatreon.com/LunarCryptik" },
+	{"C_SAXMAN", "PROGRAMMING", "Saxman", "MegaDrive & 32X\nAdditional tooling", "rumble.com/user/ymtx81z" },
+	{"C_SSN", "PROGRAMMING", "SSNTails", "Gameplay\nAdditional Art", "x.com/@SSNTails\nyoutube.com/@ssntails" },
+	{"C_SPCTHX", "SPECIAL THANKS", "Viciious", "Doom 32X: Resurrection" },
+	{"C_SPCTHX", "SPECIAL THANKS", "Muffin", "Mapping support" },
+	{0, NULL, NULL, NULL, NULL },
+};
+
+#define CARDTIME (10*TICRATE)
+
+static VINT cardPFP = 0;
+static VINT cardTimer = 0;
+static VINT curCard = 0;
+
+static void F_DrawBackground(void)
+{
+	// Black background like Sonic 1 & 2
+	DrawFillRect(0, 0, 320, 224, 255);
+}
 
 /*
 ==================
@@ -153,133 +140,13 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 			if (bottom >= height) bottom = height - 1;
 			if (top > bottom) continue;
 
-			fin->drcol(sprleft+x, top, bottom, light, 0, spriscale, src, 128);
+//			fin->drcol(sprleft+x, top, bottom, light, 0, spriscale, src, 128);
 		}
 	}
 }
 
 
 /*============================================================================ */
-
-#if 0
-/* '*' = newline */
-static const char	endtextstring[] =
-	"you did it! by turning*"
-	"the evil of the horrors*"
-	"of hell in upon itself*"
-	"you have destroyed the*"
-	"power of the demons.**"
-	"their dreadful invasion*"
-	"has been stopped cold!*"
-	"now you can retire to*"
-	"a lifetime of frivolity.**"
-	"  congratulations!";
-
-/* '*' = newline */
-static const char	endtextstring[] =
-	"     id software*"
-	"     salutes you!*"
-	"*"
-	"  the horrors of hell*"
-	"  could not kill you.*"
-	"  their most cunning*"
-	"  traps were no match*"
-	"  for you. you have*"
-	"  proven yourself the*"
-	"  best of all!*"
-	"*"
-	"  congratulations!";
-#endif
-
-/*=============================================== */
-/* */
-/* Print a string in big font - LOWERCASE INPUT ONLY! */
-/* */
-/*=============================================== */
-void F_PrintString1(const char *string)
-{
-	int		index;
-	int		val;
-
-	index = 0;
-	while(1)
-	{
-		switch(string[index])
-		{
-			case 0: return;
-			case ' ':
-				fin->text_x += SPACEWIDTH;
-				val = 30;
-				break;
-			case '.':
-				val = 26;
-				break;
-			case '!':
-				val = 27;
-				break;
-			case '*':
-				val = 30;
-				fin->text_x = STARTX;
-				fin->text_y += fin->endobj[0]->height + 4;
-				break;
-			default:
-				val = string[index] - 'a';
-				break;
-		}
-		if (val < NUMENDOBJ)
-		{
-			DrawJagobj(fin->endobj[val],fin->text_x,fin->text_y);
-			fin->text_x += fin->endobj[val]->width;
-			if (fin->text_x > 316)
-			{
-				fin->text_x = STARTX;
-				fin->text_y += fin->endobj[val]->height + 4;
-			}
-		}
-		index++;
-	}
-}
-
-// Prints to both framebuffers, if needed.
-void F_PrintString2(const char* string)
-{
-#ifdef MARS
-	int		btext_x, btext_y;
-
-	btext_x = fin->text_x;
-	btext_y = fin->text_y;
-	F_PrintString1(string);
-
-	UpdateBuffer();
-
-	fin->text_x = btext_x;
-	fin->text_y = btext_y;
-#endif
-	F_PrintString1(string);
-}
-
-/*=============================================== */
-/* */
-/* Print character cast strings */
-/* */
-/*=============================================== */
-void F_CastPrint(char *string)
-{
-	int		i,width,slen;
-	
-	width = 0;
-	slen = mystrlen(string);
-	for (i = 0;i < slen; i++)
-		switch(string[i])
-		{
-			case ' ': width += SPACEWIDTH; break;
-			default : width += fin->endobj[string[i] - 'a']->width;
-		}
-
-	fin->text_x = 160 - (width >> 1);
-	fin->text_y = 10;
-	F_PrintString1(string);
-}
 
 /*
 =======================
@@ -289,48 +156,33 @@ void F_CastPrint(char *string)
 =======================
 */
 
+static void F_NextCard()
+{
+	curCard++;
+
+	if (!creditCards[curCard].title)
+	{
+		// We are done
+		F_Stop();
+		return;
+	}
+
+	cardTimer = CARDTIME;
+	cardPFP = W_GetNumForName(creditCards[curCard].piclumpName);
+}
+
 void F_Start (void)
 {
-	int	i;
-	int	l;
+	S_StartSong(gameinfo.endMus, 1, cdtrack_end);
 
-	if (gameinfo.endMus <= 0)
-		S_StartSong(gameinfo.victoryMus, 1, cdtrack_end);
-	else
-		S_StartSong(gameinfo.endMus, 1, cdtrack_end);
-
-	fin = Z_Malloc(sizeof(*fin), PU_STATIC);
-	D_memset(fin, 0, sizeof(*fin));
-
-	fin->status = fin_endtext;		/* END TEXT PRINTS FIRST */
-	fin->textprint = false;
-	fin->textindex = 0;
-	fin->textdelay = TEXTTIME;
-	fin->text_x = STARTX;
-	fin->text_y = STARTY;
-	fin->drawbg = 3;
-	fin->endobj = Z_Malloc(sizeof(*fin->endobj) * NUMENDOBJ, PU_STATIC);
-
-	l = W_GetNumForName ("STCFN_097");
-	for (i = 0; i < NUMENDOBJ; i++)
-		fin->endobj[i] = W_CacheLumpNum(l+i, PU_STATIC);
-
-	fin->castnum = 0;
-	fin->caststate = &states[mobjinfo[castorder[fin->castnum].type].seestate];
-	fin->casttics = fin->caststate->tics;
-	fin->castdeath = false;
-	fin->castframes = 0;
-	fin->castonmelee = 0;
-	fin->castattacking = false;
-
-#ifndef MARS
-	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
-	DoubleBufferSetup ();
-#endif
-
-	I_SetPalette(W_POINTLUMPNUM(W_GetNumForName("PLAYPALS")));
+	// Set this to black, prep for fade-in.
+	const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
+	I_SetPalette(dc_playpals+5*768);
 
 	R_InitColormap(true);
+
+	curCard = -1;
+	F_NextCard();
 }
 
 void F_Stop (void)
@@ -339,14 +191,8 @@ void F_Stop (void)
 
 	R_InitColormap(lowResMode);
 	
-	for (i = 0;i < NUMENDOBJ; i++)
-		Z_Free(fin->endobj[i]);
-	Z_Free(fin->endobj);
-	Z_Free(fin);
+	// Cleanup
 }
-
-
-
 
 /*
 =======================
@@ -358,164 +204,30 @@ void F_Stop (void)
 
 int F_Ticker (void)
 {
-	int		st;
-	int		buttons, oldbuttons;
+	cardTimer--;
 
-	
-/* */
-/* check for press a key to kill actor */
-/* */
-	buttons = ticbuttons[consoleplayer];
-	oldbuttons = oldticbuttons[consoleplayer];
+	if (cardTimer < 0)
+		F_NextCard();
 
-	if (ticon <= 10)
-		return 0;
-	if ((buttons & BT_START) && !(oldbuttons & BT_START))
-		return 1;
-
-	if (fin->status == fin_endtext)
+	if (cardTimer > CARDTIME - 20)
 	{
-		if (fin->textindex == (3*15)/TEXTTIME)
-			fin->textprint = true;
-			
-		if (( ((buttons & BT_ATTACK) && !(oldbuttons & BT_ATTACK) )
-		|| ((buttons & BT_SPEED) && !(oldbuttons & BT_SPEED) )
-		|| ((buttons & BT_USE) && !(oldbuttons & BT_USE) ) ) &&
-		fin->textprint == true && gameinfo.endShowCast)
-		{
-			fin->status = fin_charcast;
+		int palIndex = cardTimer - (CARDTIME - 20);
+		palIndex /= 4;
+		if (palIndex > 5)
+			palIndex = 5;
 
-			if (gameinfo.victoryMus <= 0)
-				S_StartSong(gameinfo.endMus, 1, cdtrack_victory);
-			else
-				S_StartSong(gameinfo.victoryMus, 1, cdtrack_victory);
-
-#ifndef JAGUAR
-			if (mobjinfo[castorder[fin->castnum].type].seesound)
-				S_StartSound (NULL, mobjinfo[castorder[fin->castnum].type].seesound); 
-#endif
-		}
-		return 0;
+		const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
+		I_SetPalette(dc_playpals+palIndex*768);
 	}
-	
-	if (!fin->castdeath)
+	else if (cardTimer < 20)
 	{
-		if ( ((buttons & BT_ATTACK) && !(oldbuttons & BT_ATTACK) )
-		|| ((buttons & BT_SPEED) && !(oldbuttons & BT_SPEED) )
-		|| ((buttons & BT_USE) && !(oldbuttons & BT_USE) ) )
-		{
-		/* go into death frame */
-#ifndef JAGUAR
-			if (mobjinfo[castorder[fin->castnum].type].deathsound)
-				S_StartSound(NULL, mobjinfo[castorder[fin->castnum].type].deathsound);
-#endif
-			fin->castdeath = true;
-			fin->caststate = &states[mobjinfo[castorder[fin->castnum].type].deathstate];
-			fin->casttics = fin->caststate->tics;
-			fin->castframes = 0;
-			fin->castattacking = false;
-		}
+		int palIndex = (cardTimer / 4);
+
+		const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
+		I_SetPalette(dc_playpals+palIndex*768);
 	}
 
-	if (ticon & 1)
-		return 0;
-
-/* */
-/* advance state */
-/* */
-	if (--fin->casttics > 0)
-		return 0;			/* not time to change state yet */
-
-	if (fin->caststate->tics == -1 || fin->caststate->nextstate == S_NULL)
-	{	/* switch from deathstate to next monster */
-		int oldnum = fin->castnum;
-		do {
-			fin->castnum++;
-			if (castorder[fin->castnum].name == NULL)
-				fin->castnum = 0;
-			if (sprites[states[mobjinfo[castorder[fin->castnum].type].seestate].sprite].numframes == 0)
-				continue;
-			break;
-		} while (fin->castnum != oldnum);
-		fin->castdeath = false;
-#ifndef JAGUAR
-		if (mobjinfo[castorder[fin->castnum].type].seesound)
-			S_StartSound (NULL, mobjinfo[castorder[fin->castnum].type].seesound);
-#endif
-		fin->caststate = &states[mobjinfo[castorder[fin->castnum].type].seestate];
-		fin->castframes = 0;
-	}
-	else
-	{	/* just advance to next state in animation */
-		if (fin->caststate == &states[S_PLAY_ATK2])
-			goto stopattack;	/* Oh, gross hack! */
-		st = fin->caststate->nextstate;
-		fin->caststate = &states[st];
-		fin->castframes++;
-#if 1
-/*============================================== */
-/* sound hacks.... */
-{
-	int sfx;
-	
-		switch (st)
-		{
-		case S_PLAY_ATK2: sfx = sfx_None; break;
-		default: sfx = 0; break;
-		}
-		
-		if (sfx)
-			S_StartSound (NULL, sfx);
-}
-#endif
-/*============================================== */
-	}
-	
-	if (fin->castframes == 12)
-	{	/* go into attack frame */
-		fin->castattacking = true;
-		if (fin->castonmelee)
-			fin->caststate=&states[mobjinfo[castorder[fin->castnum].type].meleestate];
-		else
-			fin->caststate=&states[mobjinfo[castorder[fin->castnum].type].missilestate];
-		fin->castonmelee ^= 1;
-		if (fin->caststate == &states[S_NULL])
-		{
-			if (fin->castonmelee)
-				fin->caststate=
-				&states[mobjinfo[castorder[fin->castnum].type].meleestate];
-			else
-				fin->caststate=
-				&states[mobjinfo[castorder[fin->castnum].type].missilestate];
-		}
-	}
-	
-	if (fin->castattacking)
-	{
-		if (fin->castframes == 24 
-		||	fin->caststate == &states[mobjinfo[castorder[fin->castnum].type].seestate] )
-		{
-stopattack:
-			fin->castattacking = false;
-			fin->castframes = 0;
-			fin->caststate = &states[mobjinfo[castorder[fin->castnum].type].seestate];
-		}
-	}
-	
-	fin->casttics = fin->caststate->tics;
-	if (fin->casttics == -1)
-		fin->casttics = 15;
-		
 	return 0;
-}
-
-static void F_DrawBackground(void)
-{
-#ifdef MARS
-	DrawTiledBackground2(gameinfo.endFlat);
-#else
-	EraseBlock(0, 0, 320, 200);
-#endif
 }
 
 /*
@@ -528,53 +240,20 @@ static void F_DrawBackground(void)
 
 void F_Drawer (void)
 {
-	int	top, left;
-
-	fin->drcol = I_DrawColumnLow;
-	if (D_strcasecmp(castorder[fin->castnum].name, "spectre") == 0)
-		fin->drcol = I_DrawFuzzColumnLow;
-
 	// HACK
 	viewportWidth = 320;
 	viewportHeight = I_FrameBufferHeight();
 	viewportbuffer = (pixel_t*)I_FrameBuffer();
 
-	if (fin->drawbg) {
-		fin->drawbg--;
-		F_DrawBackground();
-	}
+	F_DrawBackground();
 
-	switch(fin->status)
-	{
-		case fin_endtext:
-			if (!--fin->textdelay)
-			{
-				char	str[2];
-				
-				if (!gameinfo.endText)
-					return;
-				str[1] = 0;
-				str[0] = gameinfo.endText[fin->textindex];
-				if (!str[0])
-					return;
-				F_PrintString2(str);
-				fin->textdelay = TEXTTIME;
-				fin->textindex++;
-			}
-			break;
-			
-		case fin_charcast:
-			fin->drawbg = 2;
-			switch (castorder[fin->castnum].type) {
-				default:
-					top = 90;
-					left = 80;
-					break;
-			}
-			BufferedDrawSprite (fin->caststate->sprite,
-					fin->caststate->frame&FF_FRAMEMASK,0,top,left);
-			F_CastPrint (castorder[fin->castnum].name);
-			break;
-	}
+	creditcard_t *card = &creditCards[curCard];
+	DrawJagobjLump(cardPFP, 32, 96, NULL, NULL);
+
+	V_DrawStringCenter(&menuFont, 64, 96+100, card->name);
+
+	V_DrawStringCenter(&creditFont, 160, 64, card->title);
+	V_DrawStringLeft(&titleFont, 160, 128, card->didWhat);
+	V_DrawStringLeft(&menuFont, 160, 144, card->links);
 }
 
