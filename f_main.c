@@ -23,8 +23,8 @@ creditcard_t creditCards[] = {
 	{"C_CRYPTK", "MUSIC", "Cryptik", "Miscellaneous", "x.com/@LunarCryptik\nyoutube.com/c/LunarCryptik\npatreon.com/LunarCryptik" },
 	{"C_SAXMAN", "PROGRAMMING", "Saxman", "MegaDrive & 32X\nAdditional tooling", "rumble.com/user/ymtx81z" },
 	{"C_SSN", "PROGRAMMING", "SSNTails", "Gameplay\nAdditional Art", "x.com/@SSNTails\nyoutube.com/@ssntails" },
-	{"C_SPCTHX", "SPECIAL THANKS", "Viciious", "Doom 32X: Resurrection" },
-	{"C_SPCTHX", "SPECIAL THANKS", "Muffin", "Mapping support" },
+	{"C_SPCTHX", "SPECIAL THANKS", "Viciious", "Doom 32X:\nResurrection", "github.com/viciious" },
+	{"C_SPCTHX", "SPECIAL THANKS", "Muffin", "Mapping support", "youtube.com/@Mittens0407\ntwitch.tv/mittens0407" },
 	{0, NULL, NULL, NULL, NULL },
 };
 
@@ -213,12 +213,12 @@ int F_Ticker (void)
 
 	const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
 
-	if (cardTimer > CARDTIME - 20)
+	if (cardTimer >= CARDTIME - 16)
 	{
-		int palIndex = cardTimer - (CARDTIME - 20);
+		int palIndex = cardTimer - (CARDTIME - 16);
 		palIndex /= 4;
-		if (palIndex > 5)
-			palIndex = 5;
+		if (palIndex > 4)
+			palIndex = 4;
 
 		palIndex += 6;
 		I_SetPalette(dc_playpals+palIndex*768);
@@ -258,7 +258,7 @@ void F_Drawer (void)
 	DrawJagobjLump(cardPFP, 32, 64, NULL, NULL);
 	V_DrawStringCenter(&menuFont, 80, 64+100, card->name);
 
-	V_DrawStringLeft(&menuFont, 160, 64, card->didWhat);
-	V_DrawStringLeft(&menuFont, 160, 96, card->links);
+	V_DrawStringLeft(&menuFont, 160-16, 64, card->didWhat);
+	V_DrawStringLeft(&menuFont, 160-16, 96, card->links);
 }
 
