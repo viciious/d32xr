@@ -169,6 +169,12 @@ void ST_Ticker(void)
 static void ST_DrawTitleCard()
 {
 	if (stbar_tics < 16) {
+		// Title card moving into the frame.
+
+		short ltzz_lump = W_CheckNumForName("LTZZTEXT");
+		jagobj_t *ltzz_obj = (jagobj_t*)W_POINTLUMPNUM(ltzz_lump);
+		DrawScrollingBanner(ltzz_obj, (stbar_tics-16) << 3, -stbar_tics << 1);
+
 		if (gamemapinfo.act >= 1 && gamemapinfo.act <= 3) {
 			short lt_lump = W_CheckNumForName("LTACTBLU");
 			DrawJagobjLump(lt_lump, 160+68-24 + ((16 - stbar_tics) << 5), 100 - ((16 - stbar_tics) << 5), NULL, NULL);
@@ -180,6 +186,12 @@ static void ST_DrawTitleCard()
 		V_DrawStringLeft(&titleFont, 160 + ((16 - stbar_tics) << 5), 124, "Zone");
 	}
 	else if (stbar_tics < 60) {
+		// Title card at rest in the frame.
+
+		short ltzz_lump = W_CheckNumForName("LTZZTEXT");
+		jagobj_t *ltzz_obj = (jagobj_t*)W_POINTLUMPNUM(ltzz_lump);
+		DrawScrollingBanner(ltzz_obj, 0, -stbar_tics << 1);
+
 		if (gamemapinfo.act >= 1 && gamemapinfo.act <= 3) {
 			short lt_lump = W_CheckNumForName("LTACTBLU");
 			DrawJagobjLump(lt_lump, 160+68-24, 100, NULL, NULL);
@@ -190,6 +202,12 @@ static void ST_DrawTitleCard()
 		V_DrawStringLeft(&titleFont, 160, 124, "Zone");
 	}
 	else {
+		// Title card moving out of the frame.
+
+		short ltzz_lump = W_CheckNumForName("LTZZTEXT");
+		jagobj_t *ltzz_obj = (jagobj_t*)W_POINTLUMPNUM(ltzz_lump);
+		DrawScrollingBanner(ltzz_obj, (60 - stbar_tics) << 3, -stbar_tics << 1);
+
 		if (gamemapinfo.act >= 1 && gamemapinfo.act <= 3) {
 			short lt_lump = W_CheckNumForName("LTACTBLU");
 			jagobj_t *lt_obj = (jagobj_t*)W_POINTLUMPNUM(lt_lump);

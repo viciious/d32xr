@@ -705,6 +705,55 @@ void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh)
 }
 
 /*
+Draw the text banner on the left side of the screen. Used for the title card.
+*/
+void DrawScrollingBanner(jagobj_t* jo, int x, int y_shift)
+{
+	pixel_t *fb = I_FrameBuffer();
+	pixel_t *dest = fb + ((320*24) / 2);	// Don't draw over the top letterbox.
+	pixel_t *source;
+	short height = jo->height;
+
+	x &= 0xFFFFFFFE;	// No odd positions allowed!
+	short source_offset;
+	if (y_shift < 0) {
+		source_offset = ((height - (-y_shift % height)) << 4) - x;
+	}
+	else {
+		source_offset = ((y_shift % height) << 4) - x;
+	}
+
+	for (int dest_row=0; dest_row < 224-44; dest_row++)
+	{
+		source = jo->data + source_offset;
+
+		switch(x) {
+			case 0:
+				*dest++ = *source++;
+			case -2:
+				*dest++ = *source++;
+			case -4:
+				*dest++ = *source++;
+			case -6:
+				*dest++ = *source++;
+			case -8:
+				*dest++ = *source++;
+			case -10:
+				*dest++ = *source++;
+			case -12:
+				*dest++ = *source++;
+			case -14:
+				*dest = *source;
+		}
+
+		dest += (320 - 16 - x + 2) / 2;
+
+		source_offset += 16;
+		source_offset %= (height*16);
+	}
+}
+
+/*
 =============
 =
 = DrawTiledBackground
