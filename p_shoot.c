@@ -78,7 +78,39 @@ void P_Shoot2(lineattack_t *la) ATTR_DATA_CACHE_ALIGN;
 //
 // Returns side 0 (front or on), 1 (back)
 //
-#define PA_NodeSide(xx,yy,n) (!((((xx) - (n)->x * FRACUNIT)>>FRACBITS) * ((n)->dy) > (((yy) - (n)->y * FRACUNIT)>>FRACBITS) * ((n)->dx)))
+//#define PA_NodeSide(xx,yy,n) (!((((xx) - (n)->x * FRACUNIT)>>FRACBITS) * ((n)->dy) > (((yy) - (n)->y * FRACUNIT)>>FRACBITS) * ((n)->dx)))
+ATTR_DATA_CACHE_ALIGN
+static inline int PA_NodeSide(int x, int y, node_t *node)
+{
+	int32_t	dx,dy;
+	int32_t r1, r2;
+
+	dx = x - ((fixed_t)node->x << FRACBITS);
+#ifdef MARS
+	dx = (unsigned)dx >> FRACBITS;
+	__asm volatile(
+		"muls.w %0,%1\n\t"
+		: : "r"(node->dy), "r"(dx) : "macl", "mach");
+#else
+	dx >>= FRACBITS;
+	r1 = node->dy * dx;
+#endif
+
+	dy = y - ((fixed_t)node->y << FRACBITS);
+#ifdef MARS
+	dy = (unsigned)dy >> FRACBITS;
+	__asm volatile(
+		"sts macl, %0\n\t"
+		"muls.w %2,%3\n\t"
+		"sts macl, %1\n\t"
+		: "=&r"(r1), "=&r"(r2) : "r"(dy), "r"(node->dx) : "macl", "mach");
+#else
+	dy >>= FRACBITS;
+	r2 = dy * node->dx;
+#endif
+
+    return (r1 <= r2);
+}
 
 //
 // First checks the endpoints of the line to make sure that they cross the
