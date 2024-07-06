@@ -209,7 +209,8 @@ void P_PlayerZMovement(mobj_t *mo)
 		}
 		mo->z = mo->floorz;
 
-		P_PlayerHitFloor(player);
+		if (mo->momz <= 0)
+			P_PlayerHitFloor(player);
 	}
 	else
 	{
