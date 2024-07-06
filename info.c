@@ -167,6 +167,8 @@ STATE(SPR_FWR3,2|FF_FLIPPED,2,NULL,S_GFZFLOWERC10), // S_GFZFLOWERC9
 STATE(SPR_FWR3,3|FF_FLIPPED,2,NULL,S_GFZFLOWERC11), // S_GFZFLOWERC10
 STATE(SPR_FWR3,1|FF_FLIPPED,2,NULL,S_GFZFLOWERC12), // S_GFZFLOWERC11
 STATE(SPR_FWR3,4|FF_FLIPPED,2,NULL,S_GFZFLOWERC1), // S_GFZFLOWERC12
+STATE(SPR_BUS1,0,-1,NULL,S_NULL), // S_BERRYBUSH
+STATE(SPR_BUS2,0,-1,NULL,S_NULL), // S_BUSH
 };
 
 #undef STATE
@@ -387,6 +389,54 @@ MF_SOLID|MF_SHOOTABLE		/* flags */
 	38,    // speed
 	8*FRACUNIT,    // radius
 	32*FRACUNIT,    // height
+	100,            // mass
+	0,              // damage
+	sfx_None,       // activesound
+	MF_NOGRAVITY|MF_STATIC|MF_NOBLOCKMAP|MF_RINGMOBJ, // flags
+},
+{           // MT_BERRYBUSH
+	804,            // doomednum
+	S_BERRYBUSH,         // spawnstate
+	1000,           // spawnhealth
+	S_NULL,         // seestate
+	sfx_None,       // seesound
+	0,//MT_FLINGRING,   // reactiontime
+	sfx_None,       // attacksound
+	S_NULL,         // painstate
+	0,              // painchance
+	sfx_None,       // painsound
+	S_NULL,         // meleestate
+	S_NULL,         // missilestate
+	S_NULL,//S_SPRK1,        // deathstate
+	S_NULL,         // xdeathstate
+	sfx_None,     // deathsound
+	38,    // speed
+	16*FRACUNIT,    // radius
+	16*FRACUNIT,    // height
+	100,            // mass
+	0,              // damage
+	sfx_None,       // activesound
+	MF_NOGRAVITY|MF_STATIC|MF_NOBLOCKMAP|MF_RINGMOBJ, // flags
+},
+{           // MT_BUSH
+	805,            // doomednum
+	S_BUSH,         // spawnstate
+	1000,           // spawnhealth
+	S_NULL,         // seestate
+	sfx_None,       // seesound
+	0,//MT_FLINGRING,   // reactiontime
+	sfx_None,       // attacksound
+	S_NULL,         // painstate
+	0,              // painchance
+	sfx_None,       // painsound
+	S_NULL,         // meleestate
+	S_NULL,         // missilestate
+	S_NULL,//S_SPRK1,        // deathstate
+	S_NULL,         // xdeathstate
+	sfx_None,     // deathsound
+	38,    // speed
+	16*FRACUNIT,    // radius
+	16*FRACUNIT,    // height
 	100,            // mass
 	0,              // damage
 	sfx_None,       // activesound
