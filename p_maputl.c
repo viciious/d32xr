@@ -56,9 +56,26 @@ int P_PointOnLineSide (fixed_t x, fixed_t y, line_t *line)
 
 	dx = x - (vertexes[line->v1].x << FRACBITS);
 	dy = y - (vertexes[line->v1].y << FRACBITS);
-	
+
+#ifdef MARS
+	dx = (unsigned)dx >> FRACBITS;
+	__asm volatile(
+		"muls.w %0,%1\n\t"
+		: : "r"(ldy), "r"(dx) : "macl", "mach");
+#else
 	left = (ldy) * (dx>>16);
+#endif
+
+#ifdef MARS
+	dy = (unsigned)dy >> FRACBITS;
+	__asm volatile(
+		"sts macl, %0\n\t"
+		"muls.w %2,%3\n\t"
+		"sts macl, %1\n\t"
+		: "=&r"(left), "=&r"(right) : "r"(dy), "r"(ldx) : "macl", "mach");
+#else
 	right = (dy>>16) * (ldx);
+#endif
 
 	if (right < left)
 		return 0;		/* front side */
