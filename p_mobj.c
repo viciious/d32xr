@@ -2,6 +2,7 @@
 
 #include "doomdef.h"
 #include "p_local.h"
+#include "p_camera.h"
 #include "sounds.h"
 
 void G_PlayerReborn (int player);
@@ -400,6 +401,13 @@ y = 0xff500000;
 	p->bonuscount = 0;
 	p->extralight = 0;
 	p->viewheight = VIEWHEIGHT;
+
+	// Set camera position
+	camera.x = mobj->x;
+	camera.y = mobj->y;
+	P_ThrustValues(mobj->angle, -CAM_DIST, &camera.x, &camera.y);
+	camera.x = (camera.x >> FRACBITS) << FRACBITS;
+	camera.y = (camera.y >> FRACBITS) << FRACBITS;
 	
 	if (!netgame)
 		return;

@@ -1,10 +1,7 @@
 /* f_main.c -- finale */
 
-#include "doomdef.h"
 #include "r_local.h"
 #include "v_font.h"
-
-static void F_DrawBackground(void);
 
 typedef struct
 {
@@ -16,16 +13,18 @@ typedef struct
 } creditcard_t; // tap, chip, or swipe?
 
 creditcard_t creditCards[] = {
-	{"C_STJR", "BASED ON THE WORK BY", "Sonic Team Jr.", "www.srb2.org" },
-	{"C_WSQUID", "MUSIC", "Wesquiid", "GFZ2", "x.com/@wessquiid\nwessquiid.carrd.co" },
-	{"C_JXCHIP", "MUSIC", "JX Chip", "GFZ1\nERZ1\nERZ2", "youtube.com/@JXChip\nko-fi.com/jx85638" },
-	{"C_JOYTAY", "MUSIC", "John \"Joy\" Tay", "Deep Sea 1", "x.com/@johntayjinf\nyoutube.com/@johntayjinf" },
-	{"C_CRYPTK", "MUSIC", "Cryptik", "Miscellaneous", "x.com/@LunarCryptik\nyoutube.com/c/LunarCryptik\npatreon.com/LunarCryptik" },
-	{"C_SAXMAN", "PROGRAMMING", "Saxman", "MegaDrive & 32X\nAdditional tooling", "rumble.com/user/ymtx81z" },
-	{"C_SSN", "PROGRAMMING", "SSNTails", "Gameplay\nAdditional Art", "x.com/@SSNTails\nyoutube.com/@ssntails" },
-	{"C_SPCTHX", "SPECIAL THANKS", "Viciious", "Doom 32X:\nResurrection", "github.com/viciious" },
-	{"C_SPCTHX", "SPECIAL THANKS", "Muffin", "Mapping support", "youtube.com/@Mittens0407\ntwitch.tv/mittens0407" },
-	{0, NULL, NULL, NULL, NULL },
+	{"C_STJR",   "SONIC ROBO BLAST",     "32X",              "STAFF", "" },
+	{"C_WSQUID", "MUSIC",                "Wesquiid",         "Greenflower 2",                       "x.com/@wessquiid\nwessquiid.carrd.co" },
+	{"C_JXCHIP", "MUSIC",                "JX Chip",          "Greenflower 1\nEgg Rock 1 & 2",       "youtube.com/@JXChip\nko-fi.com/jx85638" },
+	{"C_JOYTAY", "MUSIC",                "John \"Joy\" Tay", "Deep Sea 1",                          "x.com/@johntayjinf\nyoutube.com\n/@johntayjinf" },
+	{"C_CRYPTK", "MUSIC",                "Cryptik",          "Miscellaneous",                       "x.com/@LunarCryptik\nyoutube.com/c\n/LunarCryptik\npatreon.com\n/LunarCryptik" },
+	{"C_SAXMAN", "PROGRAMMING",          "Saxman",           "MegaDrive & 32X\nAdditional tooling", "rumble.com/user\n/ymtx81z" },
+	{"C_SSN",    "PROGRAMMING",          "SSNTails",         "Gameplay\nAdditional Art",            "x.com/@SSNTails\nyoutube.com\n/@ssntails" },
+	{"C_SPCTHX", "SPECIAL THANKS",       "Viciious",         "Doom 32X:\nResurrection",             "github.com/viciious" },
+	{"C_SPCTHX", "SPECIAL THANKS",       "Mittens",          "Mapping support",                     "youtube.com\n/@Mittens0407\ntwitch.tv\n/mittens0407" },
+	{"C_STJR",   "BASED ON THE WORK BY", "Sonic Team Jr.",   "www.srb2.org",                        "Alice Alacroix\nMotor Roach\nGuyWithThePie\nAnd so many more!" },
+	{NULL,       "THANKS FOR PLAYING!", "", "", "" },
+	{NULL, NULL, NULL, NULL, NULL },
 };
 
 #define CARDTIME (20*TICRATE)
@@ -168,7 +167,10 @@ static void F_NextCard()
 	}
 
 	cardTimer = CARDTIME;
-	cardPFP = W_GetNumForName(creditCards[curCard].piclumpName);
+	if (creditCards[curCard].piclumpName)
+		cardPFP = W_GetNumForName(creditCards[curCard].piclumpName);
+	else
+		cardPFP = 0;
 }
 
 void F_Start (void)
@@ -253,12 +255,27 @@ void F_Drawer (void)
 
 	const creditcard_t *card = &creditCards[curCard];
 
-	V_DrawStringCenter(&creditFont, 160, 32, card->title);
+	if (curCard == 0)
+	{
+		V_DrawStringCenter(&creditFont, 160, 112-8-24, card->title); // SONIC ROBO BLAST
+		V_DrawStringCenter(&creditFont, 160, 112-8, card->name); // 32X
+		V_DrawStringCenter(&creditFont, 160, 112-8+16+8, card->didWhat); // STAFF
+	}
+	else
+	{
+		V_DrawStringCenter(&creditFont, 160, cardPFP ? 32 : 112-8, card->title);
 
-	DrawJagobjLump(cardPFP, 32, 64, NULL, NULL);
-	V_DrawStringCenter(&menuFont, 80, 64+100, card->name);
+		if (cardPFP)
+			DrawJagobjLump(cardPFP, 32, 64, NULL, NULL);
 
-	V_DrawStringLeft(&menuFont, 160-16, 64, card->didWhat);
-	V_DrawStringLeft(&menuFont, 160-16, 96, card->links);
+		if (card->name)
+			V_DrawStringCenter(&menuFont, 80, 64+100, card->name);
+
+		if (card->didWhat)
+			V_DrawStringLeft(&menuFont, 160-16, 64, card->didWhat);
+
+		if (card->links)
+			V_DrawStringLeft(&menuFont, 160-16, 96, card->links);
+	}
 }
 

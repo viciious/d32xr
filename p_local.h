@@ -79,6 +79,7 @@ void P_RemoveThinker (thinker_t *thinker);
 ===============================================================================
 */
 
+void P_ThrustValues(angle_t angle, fixed_t move, fixed_t *outX, fixed_t *outY);
 void	P_PlayerThink (player_t *player);
 void	P_RestoreResp(player_t* p);
 void	P_UpdateResp(player_t* p);

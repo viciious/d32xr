@@ -322,6 +322,9 @@ typedef enum
 #define PF_STARTJUMP 16
 #define PF_VERTICALFLIP 32 // May as well prepare...
 
+#define DB_JUMPDOWN 1
+#define DB_SPINDOWN 2
+
 boolean P_IsObjectOnGround(mobj_t *mo);
 int8_t P_MobjFlip(mobj_t *mo);
 
@@ -355,7 +358,7 @@ typedef struct player_s
 	VINT		armorpoints, armortype;	/* armor type is 0-2 */
 	
 	VINT		powers[NUMPOWERS];		/* invinc and invis are tic counters	 */
-	VINT		attackdown, usedown;	/* true if button down last tic */
+	VINT        downbits;
 	VINT		cheats;					/* bit flags */
 	
 	VINT		killcount, itemcount, secretcount;		/* for intermission */

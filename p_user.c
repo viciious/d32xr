@@ -29,14 +29,6 @@ fixed_t fastangleturn[] =
 
 void P_ThrustValues(angle_t angle, fixed_t move, fixed_t *outX, fixed_t *outY)
 {
-	angle >>= ANGLETOFINESHIFT;
-	move >>= 8;
-	*outX += move * (finecosine(angle)>>8);
-	*outY += move * (finesine(angle)>>8);
-}
-
-void P_ThrustValuesNoVBLS(angle_t angle, fixed_t move, fixed_t *outX, fixed_t *outY)
-{
 	move *= vblsinframe;
 	move /= TICVBLS;
 	angle >>= ANGLETOFINESHIFT;
@@ -44,22 +36,13 @@ void P_ThrustValuesNoVBLS(angle_t angle, fixed_t move, fixed_t *outX, fixed_t *o
 	*outY += FixedMul(move, finesine(angle));
 }
 
-void P_ThrustNoVBLS(mobj_t *mo, angle_t angle, fixed_t move)
+void P_Thrust(mobj_t *mo, angle_t angle, fixed_t move)
 {
 	move *= vblsinframe;
 	move /= TICVBLS;
 	angle >>= ANGLETOFINESHIFT;
 	mo->momx += FixedMul(move, finecosine(angle));
 	mo->momy += FixedMul(move, finesine(angle));
-
-}
-
-void P_Thrust(player_t *player, angle_t angle, fixed_t move)
-{
-	angle >>= ANGLETOFINESHIFT;
-	move >>= 8;
-	player->mo->momx += move * (finecosine(angle) >> 8);
-	player->mo->momy += move * (finesine(angle) >> 8);
 }
 
 /*============================================================================= */
@@ -149,9 +132,9 @@ void P_PlayerXYMovement(mobj_t *mo)
 					fixed_t newSpeedY = 0;
 					
 					if (mo->z > mo->floorz)
-						P_ThrustValuesNoVBLS(speedDir, -frc / 2, &newSpeedX, &newSpeedY);
+						P_ThrustValues(speedDir, -frc / 2, &newSpeedX, &newSpeedY);
 					else
-						P_ThrustValuesNoVBLS(speedDir, -frc, &newSpeedX, &newSpeedY);
+						P_ThrustValues(speedDir, -frc, &newSpeedX, &newSpeedY);
 
 					player->mo->momx += newSpeedX;
 					player->mo->momy += newSpeedY;
@@ -169,7 +152,7 @@ void P_PlayerXYMovement(mobj_t *mo)
 				const fixed_t diff = speed - top;
 				const angle_t opposite = speedDir - ANG180;
 
-				P_ThrustNoVBLS(player->mo, opposite, diff);
+				P_Thrust(player->mo, opposite, diff);
 			}
 		}
 		else if (!(player->forwardmove || player->sidemove))
@@ -591,11 +574,12 @@ static void P_DoJumpStuff(player_t *player)
 
 	if (buttons & BT_ATTACK)
 	{
-		if (player->mo->state != S_PLAY_PAIN && P_IsObjectOnGround(player->mo))
+		if (!(player->downbits & DB_JUMPDOWN) && player->mo->state != S_PLAY_PAIN && P_IsObjectOnGround(player->mo))
 		{
 			P_DoJump(player);
 			player->pflags &= ~PF_THOKKED;
 		}
+		player->downbits |= DB_JUMPDOWN;
 	}
 	else
 	{
@@ -605,6 +589,8 @@ static void P_DoJumpStuff(player_t *player)
 			player->mo->momz >>= 1;
 			player->pflags &= ~PF_STARTJUMP;
 		}
+
+		player->downbits &= ~DB_JUMPDOWN;
 	}
 }
 
@@ -676,8 +662,8 @@ void P_MovePlayer(player_t *player)
 		fixed_t controlX = 0;
 		fixed_t controlY = 0;
 
-		P_ThrustValuesNoVBLS(thiscam->angle, player->forwardmove, &controlX, &controlY);
-		P_ThrustValuesNoVBLS(thiscam->angle - ANG90, player->sidemove, &controlX, &controlY);
+		P_ThrustValues(thiscam->angle, player->forwardmove, &controlX, &controlY);
+		P_ThrustValues(thiscam->angle - ANG90, player->sidemove, &controlX, &controlY);
 
 		angle_t controlAngle = R_PointToAngle2(0, 0, controlX, controlY);
 		//		controlX = controlY = 0;
@@ -706,7 +692,7 @@ void P_MovePlayer(player_t *player)
 			// This avoids the feeling of sliding on ice
 			fixed_t moveVecX = 0;
 			fixed_t moveVecY = 0;
-			P_ThrustValuesNoVBLS(controlAngle, speed, &moveVecX, &moveVecY);
+			P_ThrustValues(controlAngle, speed, &moveVecX, &moveVecY);
 
 			player->mo->momx = FixedMul(player->mo->momx, 28*FRACUNIT);
 			player->mo->momy = FixedMul(player->mo->momy, 28*FRACUNIT);
@@ -727,7 +713,7 @@ void P_MovePlayer(player_t *player)
 
 		fixed_t moveVecX = 0;
 		fixed_t moveVecY = 0;
-		P_ThrustValuesNoVBLS(controlAngle, acc, &moveVecX, &moveVecY);
+		P_ThrustValues(controlAngle, acc, &moveVecX, &moveVecY);
 		player->mo->momx += moveVecX;
 		player->mo->momy += moveVecY;
 
@@ -858,24 +844,16 @@ void P_PlayerThink(player_t *player)
 	/* */
 	if (buttons & BT_USE)
 	{
-		if (!player->usedown)
+		if (!(player->downbits & DB_SPINDOWN))
 		{
 			P_UseLines(player);
-			player->usedown = true;
 			player->mo->momz = 16 << FRACBITS;
 		}
 	}
 	else
-		player->usedown = false;
+		player->downbits &= ~DB_SPINDOWN;
 
 	ticphase = 24;
-	if (buttons & BT_ATTACK)
-	{
-		player->attackdown++;
-	}
-	else
-		player->attackdown = 0;
-
 	ticphase = 25;
 	ticphase = 26;
 
