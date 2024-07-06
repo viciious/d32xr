@@ -167,10 +167,10 @@ void ST_Ticker(void)
 */
 
 static void ST_DrawTitleCard()
-{
+{return;
 	if (stbar_tics < 16) {
 		if (gamemapinfo.act >= 1 && gamemapinfo.act <= 3) {
-			short lt_lump = W_CheckNumForName("LTACTBLU");
+			VINT lt_lump = W_CheckNumForName("LTACTBLU");
 			DrawJagobjLump(lt_lump, 160+68-24 + ((16 - stbar_tics) << 5), 100 - ((16 - stbar_tics) << 5), NULL, NULL);
 			DrawFillRect(316, 20, 4, 4, COLOR_BLACK); // Clear lt_lump letterbox overdraw.
 			
@@ -181,7 +181,7 @@ static void ST_DrawTitleCard()
 	}
 	else if (stbar_tics < 60) {
 		if (gamemapinfo.act >= 1 && gamemapinfo.act <= 3) {
-			short lt_lump = W_CheckNumForName("LTACTBLU");
+			VINT lt_lump = W_CheckNumForName("LTACTBLU");
 			DrawJagobjLump(lt_lump, 160+68-24, 100, NULL, NULL);
 
 			V_DrawValueLeft(&titleNumberFont, 160+68, 124-4, gamemapinfo.act);
@@ -191,10 +191,10 @@ static void ST_DrawTitleCard()
 	}
 	else {
 		if (gamemapinfo.act >= 1 && gamemapinfo.act <= 3) {
-			short lt_lump = W_CheckNumForName("LTACTBLU");
+			VINT lt_lump = W_CheckNumForName("LTACTBLU");
 			jagobj_t *lt_obj = (jagobj_t*)W_POINTLUMPNUM(lt_lump);
-			short lt_y = 100 + ((stbar_tics - 60) << 5);
-			short lt_height = lt_y + lt_obj->height > 204
+			VINT lt_y = 100 + ((stbar_tics - 60) << 5);
+			VINT lt_height = lt_y + lt_obj->height > 204
 					? lt_obj->height - ((lt_y + lt_obj->height) - 204)
 					: lt_obj->height;
 			DrawJagobj2(lt_obj, 160+68-24 - ((stbar_tics - 60) << 5), lt_y, 0, 0,

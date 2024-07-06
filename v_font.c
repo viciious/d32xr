@@ -96,7 +96,7 @@ int V_DrawStringLeft(const font_t *font, int x, int y, const char *string)
 }
 
 int V_DrawStringRight(const font_t *font, int x, int y, const char *string)
-{
+{return;
     int i,c;
     byte *lump;
     jagobj_t *jo;
@@ -132,7 +132,7 @@ int V_DrawStringRight(const font_t *font, int x, int y, const char *string)
 }
 
 int V_DrawStringCenter(const font_t *font, int x, int y, const char *string)
-{
+{return;
     int c;
     byte *lump;
     jagobj_t *jo;
