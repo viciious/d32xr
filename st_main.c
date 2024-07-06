@@ -167,7 +167,7 @@ void ST_Ticker(void)
 */
 
 static void ST_DrawTitleCard()
-{return;
+{
 	if (stbar_tics < 16) {
 		// Title card moving into the frame.
 
