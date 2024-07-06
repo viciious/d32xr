@@ -237,7 +237,7 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 		else 
 			mobj->z = z;
 			
-		P_AddMobjToList(mobj, (void *)&mobjhead);
+		P_AddMobjToList(mobj, (void *)&ringmobjhead);
 
 		return mobj;
 	}
@@ -299,10 +299,7 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 /* */
 /* link into the mobj list */
 /* */
-	if (mobj->flags & MF_RINGMOBJ)
-		P_AddMobjToList(mobj, (void *)&ringmobjhead);
-	else
-		P_AddMobjToList(mobj, (void *)&mobjhead);
+	P_AddMobjToList(mobj, (void *)&mobjhead);
 
 	return mobj;
 }
