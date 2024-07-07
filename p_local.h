@@ -122,8 +122,6 @@ boolean	P_SetMobjState (mobj_t *mobj, statenum_t state) ATTR_DATA_CACHE_ALIGN;
 void 	P_MobjThinker (mobj_t *mobj);
 void 	P_PreSpawnMobjs(int count, int staticcount, int ringcount, int scenerycount);
 
-void	P_SpawnPuff (fixed_t x, fixed_t y, fixed_t z, fixed_t attackrange);
-void 	P_SpawnBlood (fixed_t x, fixed_t y, fixed_t z, int damage);
 void	P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type);
 void	P_SpawnPlayerMissile (mobj_t *source, mobjtype_t type);
 

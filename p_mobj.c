@@ -577,33 +577,6 @@ return;	/*DEBUG */
 /*
 ================
 =
-= P_SpawnPuff
-=
-================
-*/
-
-void P_SpawnPuff (fixed_t x, fixed_t y, fixed_t z, fixed_t attackrange)
-{
-	// TODO: Umm.. no.
-}
-
-
-/*
-================
-=
-= P_SpawnBlood
-=
-================
-*/
-
-void P_SpawnBlood (fixed_t x, fixed_t y, fixed_t z, int damage)
-{
-	// TODO: Umm.. no.
-}
-
-/*
-================
-=
 = P_CheckMissileSpawn
 =
 = Moves the missile forward a bit and possibly explodes it right there

@@ -515,8 +515,6 @@ void P_LineAttack (lineattack_t *la, mobj_t *t1, angle_t angle, fixed_t distance
 				if (backsector->ceilingheight < shootz2)
 					return;		/* it's a sky hack wall */
 		}
-				
-		P_SpawnPuff (shootx2,shooty2,shootz2,distance);
 	}
 	
 	

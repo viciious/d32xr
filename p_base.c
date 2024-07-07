@@ -546,7 +546,7 @@ void P_RunMobjBase2(void)
 
       if (info->flags & MF_RINGMOBJ)
       {
-            // cycle through states
+         // cycle through states
          if (ringmobjtics[i] != -1)
          {
             ringmobjtics[i]--;
@@ -556,14 +556,14 @@ void P_RunMobjBase2(void)
             {
                do
                {
-               const statenum_t nextstate = states[ringmobjstates[i]].nextstate;
+                  const statenum_t nextstate = states[ringmobjstates[i]].nextstate;
 
-               const state_t *st = &states[nextstate];
+                  const state_t *st = &states[nextstate];
 
-               ringmobjstates[i] = nextstate;
-               ringmobjtics[i] = st->tics;
+                  ringmobjstates[i] = nextstate;
+                  ringmobjtics[i] = st->tics;
 
-               // Sprite and frame can be derived
+                  // Sprite and frame can be derived
                } while (!ringmobjtics[i]);
             }
          }
