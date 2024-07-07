@@ -569,8 +569,19 @@ static void R_AddLine(rbspWork_t *rbsp, sector_t *frontsector, seg_t *line)
    v2.x = vertexes[line->v2].x << FRACBITS;
    v2.y = vertexes[line->v2].y << FRACBITS;
 
-   angle1 = R_PointToAngle(vd->viewx, vd->viewy, v1.x, v1.y);
-   angle2 = R_PointToAngle(vd->viewx, vd->viewy, v2.x, v2.y);
+   if (line->v1 == rbsp->lastv2)
+      angle1 = rbsp->lastangle2;
+   else
+      angle1 = R_PointToAngle(vd->viewx, vd->viewy, v1.x, v1.y);
+   if (line->v2 == rbsp->lastv1)
+      angle2 = rbsp->lastangle1;
+   else
+      angle2 = R_PointToAngle(vd->viewx, vd->viewy, v2.x, v2.y);
+
+   rbsp->lastv1 = line->v1;
+   rbsp->lastv2 = line->v2;
+   rbsp->lastangle1 = angle1;
+   rbsp->lastangle2 = angle2;
 
    x1 = R_ClipToViewEdges(angle1, angle2);
    if (x1 <= 0)
