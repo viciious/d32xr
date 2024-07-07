@@ -23,8 +23,11 @@ __attribute__((aligned(4)))
 typedef struct
 {
    cliprange_t *newend;
-   cliprange_t solidsegs[MAXSEGS];
+   cliprange_t *solidsegs;
    seg_t       *curline;
+   sector_t    *curfsector, *curbsector;
+   side_t      *curside;
+   line_t      *curldef;
    angle_t    lineangle1;
    int        splitspans; /* generate wall splits until this reaches 0 */
    VINT       lastv1;
@@ -34,14 +37,15 @@ typedef struct
 } rbspWork_t;
 
 static int R_ClipToViewEdges(angle_t angle1, angle_t angle2) ATTR_DATA_CACHE_ALIGN;
-static void R_AddLine(rbspWork_t *rbsp, sector_t *frontsector, seg_t* line) ATTR_DATA_CACHE_ALIGN;
+static void R_AddLine(rbspWork_t *rbsp, seg_t* line) ATTR_DATA_CACHE_ALIGN;
 static void R_ClipWallSegment(rbspWork_t *rbsp, fixed_t first, fixed_t last, boolean solid) ATTR_DATA_CACHE_ALIGN;
 static boolean R_CheckBBox(rbspWork_t *rbsp, int16_t bspcoord[4]) ATTR_DATA_CACHE_ALIGN;
 static void R_Subsector(rbspWork_t *rbsp, int num) ATTR_DATA_CACHE_ALIGN;
 static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop) ATTR_DATA_CACHE_ALIGN;
 static void R_RenderBSPNode(rbspWork_t *rbsp, int bspnum, int16_t *outerbbox) ATTR_DATA_CACHE_ALIGN;
-static void R_WallEarlyPrep(viswall_t* segl, fixed_t *restrict floorheight, 
-    fixed_t *restrict floornewheight, fixed_t *restrict ceilingnewheight) ATTR_DATA_CACHE_ALIGN  __attribute__((noinline));
+static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
+   fixed_t *restrict floorheight, fixed_t *restrict floornewheight, 
+   fixed_t *restrict ceilingnewheight) ATTR_DATA_CACHE_ALIGN  __attribute__((noinline));
 
 #ifdef MARS
 __attribute__((aligned(4)))
@@ -178,15 +182,14 @@ static boolean R_CheckBBox(rbspWork_t *rbsp, int16_t bspcoord_[4])
    return true;
 }
 
-static void R_WallEarlyPrep(viswall_t* segl, fixed_t *restrict floorheight, 
-    fixed_t *restrict  floornewheight, fixed_t *restrict  ceilingnewheight)
+static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
+   fixed_t *restrict floorheight, fixed_t *restrict  floornewheight, fixed_t *restrict ceilingnewheight)
 {
    seg_t     *seg  = segl->seg;
-   line_t    *li   = &lines[seg->linedef];
-   short      side = seg->sideoffset & 1;
+   line_t    *li   = rbsp->curldef;
    short      offset = seg->sideoffset >> 1;
-   side_t    *si   = &sides[li->sidenum[side]];
-   sector_t  *front_sector, *back_sector;
+   side_t    *si   = rbsp->curside;
+   sector_t  *front_sector = rbsp->curfsector, *back_sector = rbsp->curbsector;
    fixed_t    f_floorheight, f_ceilingheight;
    fixed_t    b_floorheight, b_ceilingheight;
    int        f_lightlevel, b_lightlevel, lightshift;
@@ -206,8 +209,6 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *restrict floorheight,
       rowoffset = (si->textureoffset & 0xf000) | ((unsigned)si->rowoffset << 4);
       rowoffset >>= 4; // sign extend
 
-      front_sector    = &sectors[sides[li->sidenum[side]].sector];
-
       f_ceilingpic    = front_sector->ceilingpic;
       f_lightlevel    = front_sector->lightlevel;
       f_floorheight   = front_sector->floorheight   - vd->viewz;
@@ -224,9 +225,8 @@ static void R_WallEarlyPrep(viswall_t* segl, fixed_t *restrict floorheight,
       }
       segl->m_texturenum = -1;
 
-      back_sector = &emptysector;
-      if (liflags & ML_TWOSIDED)
-         back_sector = &sectors[sides[li->sidenum[side^1]].sector];
+      if (!back_sector)
+         back_sector = &emptysector;
 
       b_ceilingpic    = back_sector->ceilingpic;
       b_lightlevel    = back_sector->lightlevel;
@@ -426,7 +426,7 @@ static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop)
       rw->actionbits = 0;
       ++vd->lastwallcmd;
 
-      R_WallEarlyPrep(rw, &rwex->floorheight, &rwex->floornewheight, &rwex->ceilnewheight);
+      R_WallEarlyPrep(rbsp, rw, &rwex->floorheight, &rwex->floornewheight, &rwex->ceilnewheight);
 
 #ifdef MARS
       Mars_R_WallNext();
@@ -553,10 +553,11 @@ crunch:
 //
 // Clips the given segment and adds any visible pieces to the line list.
 //
-static void R_AddLine(rbspWork_t *rbsp, sector_t *frontsector, seg_t *line)
+static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
 {
    angle_t angle1, angle2;
    fixed_t x1, x2;
+   sector_t *frontsector;
    sector_t *backsector;
    vertex_t v1, v2;
    int side;
@@ -592,6 +593,7 @@ static void R_AddLine(rbspWork_t *rbsp, sector_t *frontsector, seg_t *line)
    // decide which clip routine to use
    side = line->sideoffset & 1;
    ldef = &lines[line->linedef];
+   frontsector = rbsp->curfsector;
    backsector = (ldef->flags & ML_TWOSIDED) ? &sectors[sides[ldef->sidenum[side^1]].sector] : 0;
    sidedef = &sides[ldef->sidenum[side]];
    solid = false;
@@ -613,7 +615,10 @@ static void R_AddLine(rbspWork_t *rbsp, sector_t *frontsector, seg_t *line)
            return;
    }
 
-   rbsp->curline = line;
+   rbsp->curline    = line;
+   rbsp->curside    = sidedef;
+   rbsp->curldef    = ldef;
+   rbsp->curbsector = backsector;
    rbsp->lineangle1 = angle1;
    R_ClipWallSegment(rbsp, x1, x2, solid);
 }
@@ -645,8 +650,9 @@ static void R_Subsector(rbspWork_t *rbsp, int num)
    count    = sub->numlines;
    stopline = line + count;
 
+   rbsp->curfsector = frontsector;
    while(line != stopline)
-      R_AddLine(rbsp, frontsector, line++);
+      R_AddLine(rbsp, line++);
 }
 
 //
@@ -708,12 +714,13 @@ static void R_RenderBSPNode(rbspWork_t *rbsp, int bspnum, int16_t *outerbbox)
 void R_BSP(void)
 {
    rbspWork_t rbsp;
-   cliprange_t *solidsegs = rbsp.solidsegs;
+   cliprange_t solidsegs[MAXSEGS];
 
    solidsegs[0].first = -2;
    solidsegs[0].last  = -1;
    solidsegs[1].first = viewportWidth;
    solidsegs[1].last  = viewportWidth+1;
+   rbsp.solidsegs = solidsegs;
    rbsp.newend = &solidsegs[2];
    rbsp.splitspans = viewportWidth + viewportWidth/2;
    rbsp.lastv1 = -1;
