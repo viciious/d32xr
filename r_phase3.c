@@ -112,14 +112,14 @@ static void R_PrepMobj(mobj_t *thing)
        return;
 
    // killough 4/9/98: clip things which are out of view due to height
-   tz = FixedMul(gzt, xscale);
-   if (tz > centerYFrac)
-       return;
+//   tz = FixedMul(gzt, xscale);
+//   if (tz > centerYFrac)
+//       return;
 
    texmid = gzt + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
-   tz = FixedMul(texmid, xscale);
-   if (tz < viewportHeight - centerYFrac)
-       return;
+//   tz = FixedMul(texmid, xscale);
+//   if (tz < viewportHeight - centerYFrac)
+//       return;
 
    // get a new vissprite
    if(vd.vissprite_p >= vd.vissprites + MAXVISSPRITES)
@@ -258,14 +258,14 @@ static void R_PrepRing(mobj_t *thing)
        return;
 
    // killough 4/9/98: clip things which are out of view due to height
-   tz = FixedMul(gzt, xscale);
-   if (tz > centerYFrac)
-       return;
+//   tz = FixedMul(gzt, xscale);
+//   if (tz > centerYFrac)
+//       return;
 
    texmid = gzt + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
-   tz = FixedMul(texmid, xscale);
-   if (tz < viewportHeight - centerYFrac)
-       return;
+//   tz = FixedMul(texmid, xscale);
+//   if (tz < viewportHeight - centerYFrac)
+//       return;
 
    // get a new vissprite
    if(vd.vissprite_p >= vd.vissprites + MAXVISSPRITES)
@@ -391,14 +391,14 @@ static void R_PrepScenery(scenerymobj_t *thing)
        return;
 
    // killough 4/9/98: clip things which are out of view due to height
-   tz = FixedMul(gzt, xscale);
-   if (tz > centerYFrac)
-       return;
+//   tz = FixedMul(gzt, xscale);
+//   if (tz > centerYFrac)
+//       return;
 
    texmid = gzt + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
-   tz = FixedMul(texmid, xscale);
-   if (tz < viewportHeight - centerYFrac)
-       return;
+//   tz = FixedMul(texmid, xscale);
+//   if (tz < viewportHeight - centerYFrac)
+//       return;
 
    // get a new vissprite
    if(vd.vissprite_p >= vd.vissprites + MAXVISSPRITES)

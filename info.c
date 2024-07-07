@@ -200,7 +200,7 @@ S_PLAY_DIE,		/* xdeathstate */
 sfx_None,		/* deathsound */
 0,		/* speed */
 16*FRACUNIT,		/* radius */
-56*FRACUNIT,		/* height */
+48*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */

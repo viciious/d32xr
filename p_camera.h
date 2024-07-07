@@ -19,7 +19,7 @@ typedef struct camera_s
 	fixed_t momx, momy, momz;
 } camera_t;
 
-#define CAM_HEIGHT (16<<FRACBITS)
+#define CAM_HEIGHT (20<<FRACBITS)
 #define CAM_RADIUS (20<<FRACBITS)
 #define CAM_DIST (192<<FRACBITS)
 

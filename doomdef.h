@@ -382,6 +382,7 @@ typedef struct player_s
 	int			turnheld;				/* for accelerative turning */
 	VINT        exiting;
 	VINT        lossCount;
+	VINT        stillTimer;
 } player_t;
 
 void P_PlayerHitFloor(player_t* player);

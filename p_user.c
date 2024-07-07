@@ -482,6 +482,16 @@ void P_BuildMove(player_t *player)
 			P_SetMobjState(mo, S_PLAY_STND);
 	}
 
+	if (!(player->forwardmove || player->sidemove))
+	{
+		if (!(player->mo->momx > STOPSPEED || player->mo->momx < -STOPSPEED || player->mo->momy > STOPSPEED || player->mo->momy < -STOPSPEED || player->mo->momz > STOPSPEED || player->mo->momz < -STOPSPEED))
+			player->stillTimer++;
+		else
+			player->stillTimer = 0;
+	}
+	else
+		player->stillTimer = 0;
+
 	if (P_IsReeling(player))
 		player->forwardmove = player->sidemove = 0;
 }

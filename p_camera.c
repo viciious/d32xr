@@ -250,6 +250,9 @@ static void P_ResetCamera(player_t *player, camera_t *thiscam)
 	thiscam->x = player->mo->x;
 	thiscam->y = player->mo->y;
 	thiscam->z = player->mo->z + VIEWHEIGHT;
+   thiscam->angle = player->mo->angle;
+   thiscam->aiming = 0;
+   thiscam->subsector = R_PointInSubsector(thiscam->x, thiscam->y);
 }
 
 // Process the mobj-ish required functions of the camera
@@ -370,19 +373,24 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 	fixed_t dist;
 	mobj_t *mo;
 	subsector_t *newsubsec;
+   const mobjinfo_t *caminfo = &mobjinfo[MT_CAMERA];
 
 	mo = player->mo;
-//	const fixed_t radius = CAM_RADIUS;
-	const fixed_t height = CAM_HEIGHT;
 
    // TODO: If there is a boss, should focus on the boss
-	angle = focusangle = R_PointToAngle2(thiscam->x, thiscam->y, mo->x, mo->y);//mo->angle;
+   if (player->stillTimer > TICRATE * 2)
+      angle = focusangle = mo->angle;
+   else
+	   angle = focusangle = R_PointToAngle2(thiscam->x, thiscam->y, mo->x, mo->y);
 
 	P_CameraThinker(player, thiscam);
 
 	camspeed = FRACUNIT / 4;
 	camdist = CAM_DIST;
 	camheight = 20 << FRACBITS;
+
+   if (player->stillTimer > 2*TICRATE)
+      camspeed >>= 2;
 
 	if (P_AproxDistance(thiscam->x - mo->x, thiscam->y - mo->y) > camdist * 4)
 	{
@@ -402,7 +410,12 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 
 	pviewheight = VIEWHEIGHT;
 
-	z = mo->z + pviewheight + camheight;
+	if (player->pflags & PF_VERTICALFLIP)
+		z = mo->z + FixedDiv(FixedMul(mobjinfo[mo->type].height,3),4) -
+			(((mo->theight << FRACBITS) != mobjinfo[mo->type].height) ? mobjinfo[mo->type].height - (mo->theight << FRACBITS) : 0)
+         - pviewheight - camheight;
+	else
+		z = mo->z + pviewheight + camheight;
 
 	// Look at halfway between the camera and player. Is the ceiling lower? Then the camera should try to move down to fit under it
 	newsubsec = R_PointInSubsector(((mo->x>>FRACBITS) + (thiscam->x>>FRACBITS))<<(FRACBITS-1), ((mo->y>>FRACBITS) + (thiscam->y>>FRACBITS))<<(FRACBITS-1));
@@ -410,8 +423,8 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 	{
 		// camera fit?
 		if (newsubsec->sector->ceilingheight != newsubsec->sector->floorheight // Don't try to fit in sectors with equal floor and ceiling heights
-			&& newsubsec->sector->ceilingheight - height < z)
-			z = newsubsec->sector->ceilingheight - height-(11<<FRACBITS);
+			&& newsubsec->sector->ceilingheight - caminfo->height < z)
+			z = newsubsec->sector->ceilingheight - caminfo->height-(11<<FRACBITS);
 	}
 
 	if (thiscam->z < thiscam->floorz)
@@ -423,15 +436,31 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 	viewpointx = mo->x + FixedMul(finecosine((angle>>ANGLETOFINESHIFT) & FINEMASK), dist);
 	viewpointy = mo->y + FixedMul(finesine((angle>>ANGLETOFINESHIFT) & FINEMASK), dist);
 
-	thiscam->angle = R_PointToAngle2(thiscam->x, thiscam->y, viewpointx, viewpointy);
+  	thiscam->angle = R_PointToAngle2(thiscam->x, thiscam->y, viewpointx, viewpointy);
 
 	// Set the mom vector, cut by the camera speed, as it tries to move to the destination position
 	thiscam->momx = FixedMul(x - thiscam->x, camspeed);
 	thiscam->momy = FixedMul(y - thiscam->y, camspeed);
 	thiscam->momz = FixedMul(z - thiscam->z, camspeed);
 
-   angle = R_PointToAngle2(0, thiscam->z, dist, mo->z + (mo->theight<<(FRACBITS-1)));
-   G_ClipAimingPitch(&angle);
+   dist = P_AproxDistance(viewpointx - thiscam->x, viewpointy - thiscam->y);
+
+   if (player->pflags & PF_VERTICALFLIP)
+		angle = R_PointToAngle2(0, thiscam->z, dist,mo->z + (FixedDiv(FixedMul(mobjinfo[mo->type].height,3),4) >> 1)
+			- (((mo->theight << FRACBITS) != mobjinfo[mo->type].height) ? (mobjinfo[mo->type].height - (mo->theight << FRACBITS)) >> 1 : 0));
+	else
+		angle = R_PointToAngle2(0, thiscam->z, dist, mo->z + (mobjinfo[mo->type].height >> 1));
+
+   G_ClipAimingPitch((int*)&angle);
    dist = thiscam->aiming - angle;
-   thiscam->aiming -= dist >> 4;
+	thiscam->aiming -= (dist>>3);
+
+   if (player->playerstate == PST_DEAD || player->playerstate == PST_REBORN)
+	{
+		thiscam->momz = 0;
+
+		if (player->mo && ((((player->pflags & PF_VERTICALFLIP) && player->mo->momz >= 0 && (thiscam->aiming>>ANGLETOFINESHIFT) < 4096))
+			|| ((!(player->pflags & PF_VERTICALFLIP) && player->mo->momz <= 0 && (thiscam->aiming>>ANGLETOFINESHIFT) > 2048))))
+			thiscam->aiming = 0;
+	}
 }
