@@ -162,11 +162,12 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 	switch(special->type)
 	{
 		case MT_RING:
+			player->lossCount = 0;
 		case MT_FLINGRING:
 			player->health++;
 			player->mo->health = player->health;
 			P_SpawnMobj(special->x, special->y, special->z, MT_SPARK);
-			sound = sfx_s3k_33;
+			sound = mobjinfo[special->type].deathsound;
 		break;
 
 		default:
@@ -211,7 +212,7 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 	}
 
 	if (target->health < -targinfo->spawnhealth
-	&& targinfo->xdeathstate)
+		&& targinfo->xdeathstate)
 		P_SetMobjState (target, targinfo->xdeathstate);
 	else
 		P_SetMobjState (target, targinfo->deathstate);
@@ -220,6 +221,7 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 		target->tics = 1;
 
 	// TODO: 'Pop!' sprite?		
+	S_StartSound(target, targinfo->deathsound);
 }
 
 
@@ -250,9 +252,11 @@ static void P_DoPlayerPain(player_t *player, mobj_t *source, mobj_t *inflictor)
 	else
 		player->mo->momz = FixedDiv(69*FRACUNIT, 10*FRACUNIT) * P_MobjFlip(player->mo);
 
+	player->mo->momz = FixedMul(player->mo->momz, FRACUNIT + FRACUNIT/3);
+
 	ang = ((player->mo->momx || player->mo->momy) ? R_PointToAngle2(player->mo->momx, player->mo->momy, 0, 0) : player->mo->angle);
 
-	P_InstaThrust(player->mo, ang, 4*FRACUNIT);
+	P_InstaThrust(player->mo, ang, 7*FRACUNIT);
 
 	P_ResetPlayer(player);
 	P_SetMobjState(player->mo, mobjinfo[player->mo->type].painstate);
@@ -316,6 +320,8 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 		P_KillMobj (source, target);
 		return;
 	}
+
+	S_StartSound(target, targinfo->painsound);
 			
 	if (!target->threshold && source)
 	{	/* if not intent on another player, chase after this one */

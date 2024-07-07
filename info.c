@@ -272,7 +272,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 	S_NULL,         // missilestate
 	S_NULL,//S_SPRK1,        // deathstate
 	S_NULL,         // xdeathstate
-	sfx_None,     // deathsound
+	sfx_s3k_33,     // deathsound
 	38,    // speed
 	16*FRACUNIT,    // radius
 	24*FRACUNIT,    // height
@@ -320,7 +320,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 	S_NULL,         // missilestate
 	S_NULL,//S_SPRK1,        // deathstate
 	S_NULL,         // xdeathstate
-	sfx_None,     // deathsound
+	sfx_s3k_33,     // deathsound
 	38,    // speed
 	16*FRACUNIT,    // radius
 	24*FRACUNIT,    // height

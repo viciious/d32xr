@@ -292,7 +292,7 @@ static boolean PB_CheckPosition(pmovetest_t *mt)
    {
       for(by = yl; by <= yh; by++)
       {
-         if(!P_BlockThingsIterator(bx, by, (blockthingsiter_t)PB_CheckThing, mt))
+         if(((mo->flags & MF_SOLID) || (mo->flags & MF_MISSILE)) && !P_BlockThingsIterator(bx, by, (blockthingsiter_t)PB_CheckThing, mt))
             return false;
          if(!P_BlockLinesIterator(bx, by, (blocklinesiter_t)PB_CrossCheck, mt))
             return false;
@@ -335,6 +335,13 @@ static boolean PB_TryMove(pmovetest_t *mt, mobj_t *mo, fixed_t tryx, fixed_t try
    return true;
 }
 
+static void P_BounceMove(mobj_t *mo)
+{
+   // For now, instead of finding the line we hit, just reverse momentum.
+   mo->momx = -mo->momx;
+   mo->momy = -mo->momy;
+}
+
 #define STOPSPEED 0x1000
 #define FRICTION  0xd240
 
@@ -373,6 +380,12 @@ void P_XYMovement(mobj_t *mo)
             return;
          }*/
 
+        if (mo->type == MT_FLINGRING)
+        {
+            P_BounceMove(mo);
+            xleft = yleft = 0;
+        }
+
          // explode a missile?
          if(mo->flags & MF_MISSILE)
          {
@@ -395,6 +408,9 @@ void P_XYMovement(mobj_t *mo)
 
    if(mo->flags & MF_MISSILE)
       return; // no friction for missiles or flying skulls ever
+
+   if (mo->type == MT_FLINGRING)
+      return;
 
    if(mo->z > mo->floorz)
       return; // no friction when airborne
@@ -518,6 +534,23 @@ void P_MobjThinker(mobj_t *mobj)
       // removed or has a special action to perform?
       if(mobj->latecall)
          return;
+
+      switch(mobj->type)
+      {
+         case MT_FLINGRING:
+            mobj->threshold--;
+            if (mobj->threshold < 3*TICRATE && (mobj->threshold & 1))
+               mobj->flags2 |= MF2_DONTDRAW;
+            else
+               mobj->flags2 &= ~MF2_DONTDRAW;
+
+            if (mobj->threshold == 0)
+            {
+               P_RemoveMobj(mobj);
+               return;
+            }
+            break;
+      }
    }
 
    // cycle through states

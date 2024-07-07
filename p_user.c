@@ -69,8 +69,8 @@ void P_PlayerRingBurst(player_t *player, int damage)
 
 	for (i = 0; i < num_rings; i++)
 	{
-		int randomangle = P_Random();
-		angle_t fa = (randomangle+(i)*FINEANGLES/16) & FINEMASK;
+		angle_t fa = (P_Random() << 5) & FINEMASK;
+		fa <<= ANGLETOFINESHIFT;
 		mobj_t *mo = P_SpawnMobj(player->mo->x, player->mo->y, player->mo->z, MT_FLINGRING);
 
 		mo->threshold = (8-player->lossCount)*TICRATE;
@@ -81,25 +81,30 @@ void P_PlayerRingBurst(player_t *player, int damage)
 		fixed_t spd;
 		if (i > 15)
 		{
-			spd = 3*FRACUNIT*2;
+			spd = 3*FRACUNIT;
 
-			P_SetObjectMomZ(mo, 4*FRACUNIT*2, false);
+			P_SetObjectMomZ(mo, 4*FRACUNIT, false);
 
 			if (i & 1)
-				P_SetObjectMomZ(mo, 4*FRACUNIT*2, true);
+				P_SetObjectMomZ(mo, 4*FRACUNIT, true);
 		}
 		else
 		{
-			spd = 2*FRACUNIT*2;
+			spd = 2*FRACUNIT;
 
-			P_SetObjectMomZ(mo, 3*FRACUNIT*2, false);
+			P_SetObjectMomZ(mo, 3*FRACUNIT, false);
 
 			if (i & 1)
-				P_SetObjectMomZ(mo, 3*FRACUNIT*2, true);
+				P_SetObjectMomZ(mo, 3*FRACUNIT, true);
 		}
 
 		P_Thrust(mo, fa, spd);
 	}
+
+	player->lossCount += 2;
+
+	if (player->lossCount > 6)
+		player->lossCount = 6;
 }
 
 /*============================================================================= */
@@ -173,6 +178,7 @@ void P_PlayerXYMovement(mobj_t *mo)
 	/* */
 	/* slow down */
 	/* */
+	if (player->powers[pw_flashing] != FLASHINGTICS)
 	{
 		const fixed_t frc = FRACUNIT * 1;
 		const fixed_t top = 30 * FRACUNIT;
