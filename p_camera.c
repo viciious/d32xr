@@ -429,4 +429,9 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 	thiscam->momx = FixedMul(x - thiscam->x, camspeed);
 	thiscam->momy = FixedMul(y - thiscam->y, camspeed);
 	thiscam->momz = FixedMul(z - thiscam->z, camspeed);
+
+   angle = R_PointToAngle2(0, thiscam->z, dist, mo->z + (mo->theight<<(FRACBITS-1)));
+   G_ClipAimingPitch(&angle);
+   dist = thiscam->aiming - angle;
+   thiscam->aiming -= dist >> 4;
 }

@@ -74,7 +74,15 @@ VINT		extralight;			/* bumped light from gun blasts */
 fixed_t	*finecosine_ = &finesine_[FINEANGLES/4];
 #endif
 
-fixed_t *yslope/*[SCREENHEIGHT]*/;
+//added:10-02-98: yslopetab is what yslope used to be,
+//                yslope points somewhere into yslopetab,
+//                now (viewheight/2) slopes are calculated above and
+//                below the original viewheight for mouselook
+//                (this is to calculate yslopes only when really needed)
+//                (when mouselookin', yslope is moving into yslopetab)
+//                Check R_SetupFrame, R_SetViewSize for more...
+fixed_t*                 yslopetab;
+fixed_t*                yslope;
 fixed_t *distscale/*[SCREENWIDTH]*/;
 
 VINT *viewangletox/*[FINEANGLES/2]*/;
@@ -432,6 +440,7 @@ extern	pixel_t	*screens[2];	/* [viewportWidth*viewportHeight];  */
 =
 ==================
 */
+#define AIMINGTODY(a) ((finetangent((2048+(((int)a)>>ANGLETOFINESHIFT)) & FINEMASK)*160)>>FRACBITS)
 
 static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	visplane_t **visplanes_hash_, sector_t **vissectors_, viswallextra_t *viswallex_)
@@ -465,6 +474,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	validcount[0]++;
 
 	player = &players[displayplayer];
+	int aimingangle = 0;
 
 	if (!demoplayback)
 	{
@@ -478,6 +488,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		vd.viewz = thiscam->z + (20 << FRACBITS);
 		vd.viewangle = thiscam->angle;
 		vd.lightlevel = thiscam->subsector->sector->lightlevel;
+		aimingangle = thiscam->aiming;
 	}
 	else
 	{
@@ -492,6 +503,14 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 
 	vd.viewsin = finesine(vd.viewangle>>ANGLETOFINESHIFT);
 	vd.viewcos = finecosine(vd.viewangle>>ANGLETOFINESHIFT);
+
+	// look up/down
+	aimingangle = 0;
+	G_ClipAimingPitch(&aimingangle);
+	int dy = AIMINGTODY(aimingangle)* viewportHeight;
+	yslope = &yslopetab[(3*viewportHeight/2) - dy];
+	centerY = (viewportHeight / 2) + dy;
+	centerYFrac = centerY << FRACBITS;
 
 	vd.displayplayer = displayplayer;
 	vd.fixedcolormap = 0;

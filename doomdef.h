@@ -136,6 +136,8 @@ extern	const fixed_t		*finecosine_;
 
 #endif
 
+short G_ClipAimingPitch(int* aiming);
+
 typedef enum 
 {
 	ga_nothing, 

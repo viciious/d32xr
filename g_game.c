@@ -203,6 +203,25 @@ void G_DoLoadLevel (void)
 also see P_SpawnPlayer in P_Mobj 
 ============================================================================== 
 */ 
+
+//
+//  Clip the console player mouse aiming to the current view,
+//  also returns a signed char for the player ticcmd if needed.
+//  Used whenever the player view pitch is changed manually
+//
+//added:22-02-98:
+//changed:3-3-98: do a angle limitation now
+short G_ClipAimingPitch (int* aiming)
+{
+    int limitangle = ANG45;
+
+    if (*aiming > limitangle)
+        *aiming = limitangle;
+    else if (*aiming < -limitangle)
+        *aiming = -limitangle;
+
+    return (*aiming) >> 16;
+}
  
 /* 
 ==================== 

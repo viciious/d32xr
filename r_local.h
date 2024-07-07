@@ -301,6 +301,7 @@ extern angle_t* const tantoangle;
 extern const angle_t tantoangle[SLOPERANGE + 1];
 #endif
 
+extern  fixed_t *yslopetab;
 extern	fixed_t *yslope/*[SCREENHEIGHT]*/;
 extern	fixed_t *distscale/*[SCREENWIDTH]*/;
 

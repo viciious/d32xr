@@ -486,7 +486,7 @@ void R_InitMathTables(void)
 
 	viewangletox = (VINT *)I_AllocWorkBuffer(sizeof(*viewangletox) * (FINEANGLES / 2));
 	distscale = (fixed_t *)I_AllocWorkBuffer(sizeof(*distscale) * SCREENWIDTH);
-	yslope = (fixed_t *)I_AllocWorkBuffer(sizeof(*yslope) * SCREENHEIGHT);
+	yslopetab = (fixed_t *)I_AllocWorkBuffer(sizeof(*yslopetab) * SCREENHEIGHT * 4);
 	xtoviewangle = (uint16_t *)I_AllocWorkBuffer(sizeof(*xtoviewangle) * (SCREENWIDTH+1));
 	tempviewangletox = (VINT *)I_WorkBuffer();
 
@@ -545,12 +545,12 @@ void R_InitMathTables(void)
 
 	// Make the yslope table for floor and ceiling textures
 	stretchWidth = viewportWidth / 2 * stretch;
-	for (i = 0; i < viewportHeight; i++)
+	for (i = 0; i < viewportHeight * 4; i++)
 	{
-		fixed_t y = ((i - viewportHeight / 2) << FRACBITS) + FRACUNIT / 2;
+		fixed_t y = ((i - viewportHeight*2) << FRACBITS) + FRACUNIT / 2;
 		y = D_abs(y);
 		y = FixedDiv(stretchWidth, y);
-		yslope[i] = y;
+		yslopetab[i] = y;
 	}
 
 	// Create the distance scale table for floor and ceiling textures
@@ -570,7 +570,7 @@ void R_InitMathTables(void)
 	// enable caching for LUTs
 	viewangletox = (void *)(((intptr_t)viewangletox) & ~0x20000000);
 	distscale = (void *)(((intptr_t)distscale) & ~0x20000000);
-	yslope = (void *)(((intptr_t)yslope) & ~0x20000000);
+	yslopetab = (void *)(((intptr_t)yslopetab) & ~0x20000000);
 	xtoviewangle = (void *)(((intptr_t)xtoviewangle) & ~0x20000000);
 }
 
