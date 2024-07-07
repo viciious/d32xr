@@ -270,26 +270,28 @@ static void ST_DrawTitleCard()
 
 static void ST_Drawer_ (stbar_t* sb)
 {
-	DrawJagobjLump(score, 16, 10+20, NULL, NULL);
-	V_DrawValuePaddedRight(&hudNumberFont, 16 + 120, 10+20, sb->score, 0);
-
-	const int minutes = stbar_tics/(60*2*TICRATE);
-	const int seconds = (stbar_tics/(2*TICRATE))%60;
-	DrawJagobjLump(time, 16, 26+20, NULL, NULL);
-	V_DrawValuePaddedRight(&hudNumberFont, 72, 26+20, minutes, 0);
-	DrawJagobjLump(timecolon, 72, 26+20, NULL, NULL);
-	V_DrawValuePaddedRight(&hudNumberFont, 72+8+16, 26+20, seconds, 2);
-
-	DrawJagobjLump(sb->rings <= 0 && (gametic / 4 & 1) ? rrings : rings, 16, 42+20, NULL, NULL);
-	V_DrawValuePaddedRight(&hudNumberFont, 96, 42+20, sb->rings, 0);
-
-	DrawJagobjLump(face, 16, 176, NULL, NULL);
-	V_DrawStringLeft(&menuFont, 16 + 20, 176, "SONIC");
-	DrawJagobjLump(livex, 16 + 22, 176 + 10, NULL, NULL);
-	V_DrawValuePaddedRight(&menuFont, 16 + 58, 176+8, 3, 0);
-
 	if (stbar_tics < 96) {
 		ST_DrawTitleCard();
+	}
+	else
+	{
+		DrawJagobjLump(score, 16, 10+20, NULL, NULL);
+		V_DrawValuePaddedRight(&hudNumberFont, 16 + 120, 10+20, sb->score, 0);
+
+		const int minutes = stbar_tics/(60*2*TICRATE);
+		const int seconds = (stbar_tics/(2*TICRATE))%60;
+		DrawJagobjLump(time, 16, 26+20, NULL, NULL);
+		V_DrawValuePaddedRight(&hudNumberFont, 72, 26+20, minutes, 0);
+		DrawJagobjLump(timecolon, 72, 26+20, NULL, NULL);
+		V_DrawValuePaddedRight(&hudNumberFont, 72+8+16, 26+20, seconds, 2);
+
+		DrawJagobjLump(sb->rings <= 0 && (gametic / 4 & 1) ? rrings : rings, 16, 42+20, NULL, NULL);
+		V_DrawValuePaddedRight(&hudNumberFont, 96, 42+20, sb->rings, 0);
+
+		DrawJagobjLump(face, 16, 176, NULL, NULL);
+		V_DrawStringLeft(&menuFont, 16 + 20, 176, "SONIC");
+		DrawJagobjLump(livex, 16 + 22, 176 + 10, NULL, NULL);
+		V_DrawValuePaddedRight(&menuFont, 16 + 58, 176+8, 3, 0);
 	}
 }
 
