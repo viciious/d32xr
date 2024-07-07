@@ -173,7 +173,11 @@ static void ST_DrawTitleCard()
 
 		short ltzz_lump = W_CheckNumForName("LTZZTEXT");
 		jagobj_t *ltzz_obj = (jagobj_t*)W_POINTLUMPNUM(ltzz_lump);
-		DrawScrollingBanner(ltzz_obj, (stbar_tics-16) << 3, -stbar_tics << 1);
+		DrawScrollingBanner(ltzz_obj, (stbar_tics-16) << 4, stbar_tics << 1);
+
+		short chev_lump = W_CheckNumForName("CHEVBLUE");
+		jagobj_t *chev_obj = (jagobj_t*)W_POINTLUMPNUM(chev_lump);
+		DrawScrollingChevrons(chev_obj, 16 + ((stbar_tics-16) << 4), -stbar_tics << 1);
 
 		if (gamemapinfo.act >= 1 && gamemapinfo.act <= 3) {
 			VINT lt_lump = W_CheckNumForName("LTACTBLU");
@@ -190,7 +194,11 @@ static void ST_DrawTitleCard()
 
 		short ltzz_lump = W_CheckNumForName("LTZZTEXT");
 		jagobj_t *ltzz_obj = (jagobj_t*)W_POINTLUMPNUM(ltzz_lump);
-		DrawScrollingBanner(ltzz_obj, 0, -stbar_tics << 1);
+		DrawScrollingBanner(ltzz_obj, 0, stbar_tics << 1);
+
+		short chev_lump = W_CheckNumForName("CHEVBLUE");
+		jagobj_t *chev_obj = (jagobj_t*)W_POINTLUMPNUM(chev_lump);
+		DrawScrollingChevrons(chev_obj, 16, -stbar_tics << 1);
 
 		if (gamemapinfo.act >= 1 && gamemapinfo.act <= 3) {
 			VINT lt_lump = W_CheckNumForName("LTACTBLU");
@@ -206,7 +214,11 @@ static void ST_DrawTitleCard()
 
 		short ltzz_lump = W_CheckNumForName("LTZZTEXT");
 		jagobj_t *ltzz_obj = (jagobj_t*)W_POINTLUMPNUM(ltzz_lump);
-		DrawScrollingBanner(ltzz_obj, (60 - stbar_tics) << 3, -stbar_tics << 1);
+		DrawScrollingBanner(ltzz_obj, (60-stbar_tics) << 4, stbar_tics << 1);
+
+		short chev_lump = W_CheckNumForName("CHEVBLUE");
+		jagobj_t *chev_obj = (jagobj_t*)W_POINTLUMPNUM(chev_lump);
+		DrawScrollingChevrons(chev_obj, 16 + ((60-stbar_tics) << 4), -stbar_tics << 1);
 
 		if (gamemapinfo.act >= 1 && gamemapinfo.act <= 3) {
 			VINT lt_lump = W_CheckNumForName("LTACTBLU");

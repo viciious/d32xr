@@ -704,23 +704,24 @@ void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh)
 	}
 }
 
+
 /*
 Draw the text banner on the left side of the screen. Used for the title card.
 */
 void DrawScrollingBanner(jagobj_t* jo, int x, int y_shift)
 {
-	pixel_t *fb = I_FrameBuffer();
+	pixel_t *fb = I_OverwriteBuffer();
 	pixel_t *dest = fb + ((320*24) / 2);	// Don't draw over the top letterbox.
 	pixel_t *source;
 	short height = jo->height;
 
 	x &= 0xFFFFFFFE;	// No odd positions allowed!
 	short source_offset;
-	if (y_shift < 0) {
-		source_offset = ((height - (-y_shift % height)) << 4) - x;
+	if (y_shift >= 0) {
+		source_offset = ((height - (y_shift % height)) << 4) - x;
 	}
 	else {
-		source_offset = ((y_shift % height) << 4) - x;
+		source_offset = ((-y_shift % height) << 4) - x;
 	}
 
 	for (int dest_row=0; dest_row < 224-44; dest_row++)
@@ -750,6 +751,74 @@ void DrawScrollingBanner(jagobj_t* jo, int x, int y_shift)
 
 		source_offset += 16;
 		source_offset %= (height*16);
+	}
+}
+
+
+/*
+Draw the chevrons on the left side of the screen. Used for the title card.
+*/
+void DrawScrollingChevrons(jagobj_t* jo, int x, int y_shift)
+{
+	pixel_t *fb = I_OverwriteBuffer();
+	pixel_t *dest = fb + ((320*24) / 2);	// Don't draw over the top letterbox.
+	pixel_t *source;
+	short height = 32;
+
+	x &= 0xFFFFFFFE;	// No odd positions allowed!
+	short source_offset;
+	if (y_shift >= 0) {
+		source_offset = ((height - (y_shift % height)) * 26);
+	}
+	else {
+		source_offset = ((-y_shift % height) * 26);
+	}
+
+	if (x < 0) {
+		source_offset -= x;
+	}
+	else if (x > 0) {
+		dest += (x >> 1);
+		x = 0;
+	}
+
+	for (int dest_row=0; dest_row < 224-44; dest_row++)
+	{
+		source = jo->data + source_offset;
+
+		switch(x) {
+			case 0:
+				*dest++ = *source++;
+			case -2:
+				*dest++ = *source++;
+			case -4:
+				*dest++ = *source++;
+			case -6:
+				*dest++ = *source++;
+			case -8:
+				*dest++ = *source++;
+			case -10:
+				*dest++ = *source++;
+			case -12:
+				*dest++ = *source++;
+			case -14:
+				*dest++ = *source++;
+			case -16:
+				*dest++ = *source++;
+			case -18:
+				*dest++ = *source++;
+			case -20:
+				*dest++ = *source++;
+			case -22:
+				*dest++ = *source++;
+			case -24:
+				*dest = *source;
+		}
+
+		dest += (320 - 26 - x + 2) / 2;
+
+		source_offset += 26;
+		source_offset %= (height*26);
 	}
 }
 
