@@ -169,6 +169,13 @@ STATE(SPR_FWR3,1|FF_FLIPPED,2,NULL,S_GFZFLOWERC12), // S_GFZFLOWERC11
 STATE(SPR_FWR3,4|FF_FLIPPED,2,NULL,S_GFZFLOWERC1), // S_GFZFLOWERC12
 STATE(SPR_BUS1,0,-1,NULL,S_NULL), // S_BERRYBUSH
 STATE(SPR_BUS2,0,-1,NULL,S_NULL), // S_BUSH
+STATE(SPR_BOM1,0,0,NULL,S_XPLD1), // S_XPLD_FLICKY
+STATE(SPR_BOM1,0,1,NULL,S_XPLD2), // S_XPLD1
+STATE(SPR_BOM1,1,1,NULL,S_XPLD3), // S_XPLD2
+STATE(SPR_BOM1,2,1,NULL,S_XPLD4), // S_XPLD3
+STATE(SPR_BOM1,3,1,NULL,S_XPLD5), // S_XPLD4
+STATE(SPR_BOM1,4,1,NULL,S_XPLD6), // S_XPLD5
+STATE(SPR_BOM1,5,1,NULL,S_NULL), // S_XPLD6
 };
 
 #undef STATE
@@ -185,7 +192,7 @@ sfx_None,		/* seesound */
 sfx_None,		/* attacksound */
 S_PLAY_PAIN,		/* painstate */
 255,		/* painchance */
-sfx_None,		/* painsound */
+sfx_s3k_b9,		/* painsound */
 S_NULL,		/* meleestate */
 S_PLAY_ATK1,		/* missilestate */
 S_PLAY_DIE,		/* deathstate */
@@ -228,26 +235,26 @@ sfx_None,		/* activesound */
 {		/* MT_POSSESSED */
 100,		/* doomednum */
 S_POSS_STND,		/* spawnstate */
-20,		/* spawnhealth */
+1,		/* spawnhealth */
 S_POSS_RUN1,		/* seestate */
 sfx_None,		/* seesound */
-8,		/* reactiontime */
+16,		/* reactiontime */
 sfx_None,		/* attacksound */
-S_POSS_STND,		/* painstate */
+S_NULL,		/* painstate */
 200,		/* painchance */
 sfx_None,		/* painsound */
 0,		/* meleestate */
 S_NULL,		/* missilestate */
-S_POSS_STND,		/* deathstate */
-S_POSS_STND,		/* xdeathstate */
-sfx_None,		/* deathsound */
-8,		/* speed */
-20*FRACUNIT,		/* radius */
-56*FRACUNIT,		/* height */
+S_XPLD_FLICKY,		/* deathstate */
+S_NULL,		/* xdeathstate */
+sfx_s3k_3d,		/* deathsound */
+2,		/* speed */
+24*FRACUNIT,		/* radius */
+32*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-MF_SOLID|MF_SHOOTABLE		/* flags */
+MF_SHOOTABLE|MF_ENEMY		/* flags */
  },
 
 {           // MT_RING
@@ -320,7 +327,7 @@ MF_SOLID|MF_SHOOTABLE		/* flags */
 	100,            // mass
 	0,              // damage
 	sfx_None,       // activesound
-	MF_FLOAT, // flags
+	MF_FLOAT|MF_SPECIAL, // flags
 },
 {           // MT_GFZFLOWERA
 	800,            // doomednum

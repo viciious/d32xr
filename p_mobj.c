@@ -77,6 +77,17 @@ void P_FreeMobj(mobj_t* mobj)
 	P_AddMobjToList(mobj, (void*)&freemobjhead);
 }
 
+void P_SetObjectMomZ(mobj_t *mo, fixed_t value, boolean relative)
+{
+//	if (player->pflags & PF_VERTICALFLIP)
+//		value = -value;
+
+	if (relative)
+		mo->momz += value;
+	else
+		mo->momz = value;
+}
+
 boolean P_IsObjectOnGround(mobj_t *mobj)
 {
 	if (mobj->player)
@@ -117,6 +128,13 @@ boolean P_SetMobjState (mobj_t *mobj, statenum_t state)
 {
 	uint16_t changes = 0xffff;
 
+	if (mobj->player)
+	{
+		player_t *player = &players[mobj->player - 1];
+		if (P_IsReeling(player) && state != mobjinfo[mobj->type].painstate)
+			player->powers[pw_flashing] = FLASHINGTICS-1;
+	}
+
 	do {
 		const state_t* st;
 
@@ -130,7 +148,6 @@ boolean P_SetMobjState (mobj_t *mobj, statenum_t state)
 		st = &states[state];
 		mobj->state = state;
 		mobj->tics = st->tics;
-		mobj->sprite = st->sprite;
 		mobj->frame = st->frame;
 
 		if (st->action)		/* call action functions when the state is set */
@@ -281,7 +298,6 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 
 	mobj->state = info->spawnstate;
 	mobj->tics = st->tics;
-	mobj->sprite = st->sprite;
 	mobj->frame = st->frame;
 
 /* set subsector and/or block links */
@@ -528,10 +544,7 @@ return;	/*DEBUG */
 
 	x = mthing->x << FRACBITS;
 	y = mthing->y << FRACBITS;
-	if (mobjinfo[i].flags & MF_SPAWNCEILING)
-		z = ONCEILINGZ;
-	else
-		z = ONFLOORZ;
+	z = ONFLOORZ;
 	mobj = P_SpawnMobj (x,y,z, i);
 	if (mobj->type == MT_RING)
 	{

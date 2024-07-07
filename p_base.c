@@ -451,13 +451,21 @@ void P_ZMovement(mobj_t *mo)
    // clip movement
    if(mo->z <= mo->floorz)
    {
-      if(mo->momz < 0)
-         mo->momz = 0;
       mo->z = mo->floorz; // hit the floor
-      if(mo->flags & MF_MISSILE)
+
+      if (mo->type == MT_FLINGRING)
       {
-         mo->latecall = P_ExplodeMissile;
-         return;
+         mo->momz = -FixedMul(mo->momz, FixedDiv(17*FRACUNIT, 20*FRACUNIT));
+      }
+      else
+      {
+         if(mo->momz < 0)
+            mo->momz = 0;
+         if(mo->flags & MF_MISSILE)
+         {
+            mo->latecall = P_ExplodeMissile;
+            return;
+         }
       }
    }
    else if(!(mo->flags & MF_NOGRAVITY))
@@ -472,12 +480,20 @@ void P_ZMovement(mobj_t *mo)
 
    if(mo->z + (mo->theight << FRACBITS) > mo->ceilingz)
    {
-      if(mo->momz > 0)
-         mo->momz = 0;
       mo->z = mo->ceilingz - (mo->theight << FRACBITS); // hit the ceiling
 
-      if(mo->flags & MF_MISSILE)
-         mo->latecall = P_ExplodeMissile;
+      if (mo->type == MT_FLINGRING && false) // TODO: MF_VERTICALFLIP
+      {
+         mo->momz = -FixedMul(mo->momz, FixedDiv(17*FRACUNIT, 20*FRACUNIT));
+      }
+      else
+      {
+         if(mo->momz > 0)
+            mo->momz = 0;
+
+         if(mo->flags & MF_MISSILE)
+            mo->latecall = P_ExplodeMissile;
+      }
    }
 }
 

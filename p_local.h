@@ -80,6 +80,10 @@ void P_RemoveThinker (thinker_t *thinker);
 */
 
 void P_ThrustValues(angle_t angle, fixed_t move, fixed_t *outX, fixed_t *outY);
+void P_InstaThrust(mobj_t *mo, angle_t angle, fixed_t move);
+boolean P_IsReeling(player_t *player);
+void    P_ResetPlayer(player_t *player);
+void    P_PlayerRingBurst(player_t *player, int damage);
 void	P_PlayerThink (player_t *player);
 void	P_RestoreResp(player_t* p);
 void	P_UpdateResp(player_t* p);
@@ -109,6 +113,7 @@ extern VINT ringmobjtics[NUMMOBJTYPES];
 #define ONFLOORZ	D_MININT
 #define	ONCEILINGZ	D_MAXINT
 
+void P_SetObjectMomZ(mobj_t *mo, fixed_t value, boolean relative);
 mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
 
 void 	P_RemoveMobj (mobj_t *th);

@@ -480,12 +480,6 @@ void A_Chase (mobj_t *actor)
 /* */
 	if (--actor->movecount<0 || !P_Move (actor))
 		P_NewChaseDir (actor);
-		
-/* */
-/* make active sound */
-/* */
-	if (ainfo->activesound && P_Random () < 3)
-		S_StartSound (actor, ainfo->activesound);
 }
 
 /*============================================================================= */

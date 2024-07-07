@@ -206,20 +206,20 @@ typedef struct mobj_s
 
 	// RING OBJECTS END HERE
 
-	VINT			health;
+	/* info for drawing */
+	angle_t			angle;
+
+	/* interaction info */
+	fixed_t			floorz, ceilingz;	/* closest together of contacted secs */
+
 	VINT			tics;				/* state tic counter	 */
 	VINT 			state;
 	VINT			frame;				/* might be ord with FF_FULLBRIGHT */
+	VINT        	theight;			// 'tiny' height: << FRACBITS to get real height
 
-/* info for drawing */
-	angle_t			angle;
-
-/* interaction info */
-	fixed_t			floorz, ceilingz;	/* closest together of contacted secs */
-
-	VINT        theight;
-	unsigned char		sprite;				/* used to find patch_t and flip value */
+	int8_t			health;
 	unsigned char		player;		/* only valid if type == MT_PLAYER */
+	VINT            flags2;
 
 	/* STATIC OBJECTS END HERE */
 	unsigned char	movedir;		/* 0-7 */
@@ -275,8 +275,11 @@ typedef struct degenmobj_s
 #define	MF_NOBLOCKMAP	16			/* don't use the blocklinks  */
 									/* (inert but displayable) */
 #define	MF_AMBUSH		32
-#define	MF_SPAWNCEILING	64			/* hang from ceiling instead of floor */
+#define	MF_ENEMY    	64			/* hang from ceiling instead of floor */
 #define	MF_NOGRAVITY	0x80		/* don't apply gravity every tic */
+
+#define MF2_DONTDRAW    1
+#define MF2_FRET        2           // Multi-hit enemy is reeling from a hit
 
 /* movement flags */
 #define	MF_NOCLIP		0x100		/* player cheat */
@@ -303,6 +306,7 @@ typedef enum
 typedef enum
 {
 	pw_invulnerability,
+	pw_flashing,
 	pw_strength,
 	pw_ironfeet,
 	pw_allmap,
@@ -314,6 +318,7 @@ typedef enum
 #define	INVISTICS		(60*15)
 #define	INFRATICS		(120*15)
 #define	IRONTICS		(60*15)
+#define FLASHINGTICS    (3*TICRATE)
 
 #define PF_ONGROUND 1
 #define PF_THOKKED  2
@@ -321,6 +326,7 @@ typedef enum
 #define PF_JUMPED 8
 #define PF_STARTJUMP 16
 #define PF_VERTICALFLIP 32 // May as well prepare...
+#define PF_SPINNING 64
 
 #define DB_JUMPDOWN 1
 #define DB_SPINDOWN 2
@@ -372,6 +378,8 @@ typedef struct player_s
 	
 	int			automapx, automapy, automapscale, automapflags;
 	int			turnheld;				/* for accelerative turning */
+	VINT        exiting;
+	VINT        lossCount;
 } player_t;
 
 void P_PlayerHitFloor(player_t* player);

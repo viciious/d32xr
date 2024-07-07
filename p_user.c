@@ -36,13 +36,70 @@ void P_ThrustValues(angle_t angle, fixed_t move, fixed_t *outX, fixed_t *outY)
 	*outY += FixedMul(move, finesine(angle));
 }
 
-void P_Thrust(mobj_t *mo, angle_t angle, fixed_t move)
+#define P_Thrust(mo, angle, move) P_ThrustValues(angle, move, &mo->momx, &mo->momy)
+
+void P_InstaThrust(mobj_t *mo, angle_t angle, fixed_t move)
 {
-	move *= vblsinframe;
-	move /= TICVBLS;
-	angle >>= ANGLETOFINESHIFT;
-	mo->momx += FixedMul(move, finecosine(angle));
-	mo->momy += FixedMul(move, finesine(angle));
+	mo->momx = 0;
+	mo->momy = 0;
+	P_ThrustValues(angle, move, &mo->momx, &mo->momy);
+}
+
+boolean P_IsReeling(player_t *player)
+{
+	return player->mo->state == mobjinfo[player->mo->type].painstate && player->powers[pw_flashing];
+}
+
+void P_ResetPlayer(player_t *player)
+{
+	player->pflags &= ~PF_ONGROUND;
+	player->pflags &= ~PF_SPINNING;
+	player->pflags &= ~PF_STARTJUMP;
+	player->pflags &= ~PF_JUMPED;
+	player->pflags &= ~PF_THOKKED;
+}
+
+void P_PlayerRingBurst(player_t *player, int damage)
+{
+	int i;
+	uint8_t num_rings = player->health - 1;
+
+	if (num_rings > 32) // Cap # of rings at 32
+		num_rings = 32;
+
+	for (i = 0; i < num_rings; i++)
+	{
+		int randomangle = P_Random();
+		angle_t fa = (randomangle+(i)*FINEANGLES/16) & FINEMASK;
+		mobj_t *mo = P_SpawnMobj(player->mo->x, player->mo->y, player->mo->z, MT_FLINGRING);
+
+		mo->threshold = (8-player->lossCount)*TICRATE;
+		mo->target = player->mo;
+
+		// Make rings spill out around the player in 16 directions like SA, but spill like Sonic 2.
+		// Technically a non-SA way of spilling rings. They just so happen to be a little similar.
+		fixed_t spd;
+		if (i > 15)
+		{
+			spd = 3*FRACUNIT*2;
+
+			P_SetObjectMomZ(mo, 4*FRACUNIT*2, false);
+
+			if (i & 1)
+				P_SetObjectMomZ(mo, 4*FRACUNIT*2, true);
+		}
+		else
+		{
+			spd = 2*FRACUNIT*2;
+
+			P_SetObjectMomZ(mo, 3*FRACUNIT*2, false);
+
+			if (i & 1)
+				P_SetObjectMomZ(mo, 3*FRACUNIT*2, true);
+		}
+
+		P_Thrust(mo, fa, spd);
+	}
 }
 
 /*============================================================================= */
@@ -270,7 +327,6 @@ void P_PlayerMobjThink(mobj_t *mobj)
 
 	mobj->state = state;
 	mobj->tics = st->tics;
-	mobj->sprite = st->sprite;
 	mobj->frame = st->frame;
 
 	player_t *player = &players[mobj->player - 1];
@@ -419,6 +475,9 @@ void P_BuildMove(player_t *player)
 		if (mo->state >= S_PLAY_RUN1 && mo->state <= S_PLAY_RUN8)
 			P_SetMobjState(mo, S_PLAY_STND);
 	}
+
+	if (P_IsReeling(player))
+		player->forwardmove = player->sidemove = 0;
 }
 
 /*
@@ -575,7 +634,7 @@ static void P_DoJumpStuff(player_t *player)
 
 	if (buttons & BT_ATTACK)
 	{
-		if (!(player->downbits & DB_JUMPDOWN) && player->mo->state != S_PLAY_PAIN && P_IsObjectOnGround(player->mo))
+		if (!(player->downbits & DB_JUMPDOWN) && player->mo->state != S_PLAY_PAIN && P_IsObjectOnGround(player->mo) && !P_IsReeling(player))
 		{
 			P_DoJump(player);
 			player->pflags &= ~PF_THOKKED;
@@ -857,6 +916,14 @@ void P_PlayerThink(player_t *player)
 	ticphase = 24;
 	ticphase = 25;
 	ticphase = 26;
+
+	if (player->powers[pw_flashing] && player->powers[pw_flashing] < FLASHINGTICS)
+		player->powers[pw_flashing]--;
+
+	if (player->powers[pw_flashing] < FLASHINGTICS && (player->powers[pw_flashing] & 1))
+		player->mo->flags2 |= MF2_DONTDRAW;
+	else
+		player->mo->flags2 &= ~MF2_DONTDRAW;
 
 	/* */
 	/* counters */

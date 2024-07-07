@@ -57,11 +57,7 @@ static void R_PrepMobj(mobj_t *thing)
    if(tx > (tz << 2) || tx < -(tz<<2))
       return;
 
-   // check sprite for validity
-   if(/*thing->sprite < 0 || */thing->sprite >= NUMSPRITES)
-      return;
-
-   sprdef = &sprites[thing->sprite];
+   sprdef = &sprites[states[thing->state].sprite];
 
    // check frame for validity
    if ((thing->frame & FF_FRAMEMASK) >= sprdef->numframes)
@@ -469,7 +465,7 @@ void R_SpritePrep(void)
             else
                R_PrepRing(thing);
          }
-         else
+         else if (!(thing->flags2 & MF2_DONTDRAW))
             R_PrepMobj(thing);
 
          thing = thing->snext;

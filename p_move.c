@@ -51,6 +51,9 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
    if(!(thing->flags & (MF_SOLID|MF_SPECIAL|MF_SHOOTABLE)))
       return true;
 
+   if (thing->type == MT_PLAYER && (tmthing->flags & MF_SHOOTABLE))
+      return true;
+
    blockdist = mobjinfo[thing->type].radius + thinfo->radius;
    
    delta = thing->x - mw->tmx;
@@ -105,9 +108,13 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
    solid = (thing->flags & MF_SOLID) != 0;
 
    // check for special pickup
-   if((thing->flags & MF_SPECIAL) && tmthing->player)
+   if(tmthing->player)
    {
-      P_TouchSpecialThing (thing,tmthing);
+      P_TouchSpecialThing(thing,tmthing);
+   }
+   if (thing->player)
+   {
+      P_TouchSpecialThing(tmthing,thing);
    }
 
    return !solid;

@@ -100,33 +100,6 @@ boolean P_GivePower (player_t *player, powertype_t power)
 	return true;
 }
 
- 
-/*
-==================
-=
-= P_TouchSpecialThing2
-=
-= Everything didn't fit in one function on the dsp, so half were moved here
-= Returns sound to play, or -1 if no sound
-==================
-*/
-
-int P_TouchSpecialThing2 (mobj_t *special, mobj_t *toucher)
-{/*
-	player_t *player;
-	
-	player = toucher->player ? &players[toucher->player-1] : NULL;
-*/
-	switch (special->type)
-	{
-	default:
-		I_Error ("P_SpecialThing: Unknown gettable thing");
-	}
-	
-	return sfx_None;
-}
-
-
 /*
 ==================
 =
@@ -134,6 +107,14 @@ int P_TouchSpecialThing2 (mobj_t *special, mobj_t *toucher)
 =
 ==================
 */
+
+boolean P_CanPickupItem(player_t *player)
+{
+	if (player->powers[pw_flashing] > (FLASHINGTICS/4)*3 && player->powers[pw_flashing] <= FLASHINGTICS)
+		return false;
+
+	return true;
+}
 
 void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 {
@@ -143,7 +124,7 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 	if (!toucher->player)
 		return;
 
-	VINT sheight;
+	fixed_t sheight;
 	if (special->flags & MF_RINGMOBJ)
 		sheight = mobjinfo[special->type].height;
 	else
@@ -153,15 +134,35 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 		return;
 	if (special->z > (toucher->z + (toucher->theight << FRACBITS)))
 		return;
-	
+
 	sound = sfx_None;	
-	player = toucher->player ? &players[toucher->player - 1] : NULL;
+	player = &players[toucher->player - 1];
 	if (toucher->health <= 0)
 		return;						/* can happen with a sliding player corpse */
+
+	if ((special->flags & MF_ENEMY) && !(special->flags & MF_MISSILE))
+	{
+		if ((player->pflags & PF_JUMPED) || (player->pflags & PF_SPINNING))
+		{
+			if (((player->pflags & PF_VERTICALFLIP) && toucher->momz > 0)
+				|| (!(player->pflags & PF_VERTICALFLIP) && toucher->momz < 0))
+				toucher->momz = -toucher->momz;
+
+			P_DamageMobj(special, toucher, toucher, 1);
+		}
+		else
+			P_DamageMobj(toucher, special, special, 1);
+
+		return;
+	}
+
+	if (!P_CanPickupItem(player))
+		return;
 
 	switch(special->type)
 	{
 		case MT_RING:
+		case MT_FLINGRING:
 			player->health++;
 			player->mo->health = player->health;
 			P_SpawnMobj(special->x, special->y, special->z, MT_SPARK);
@@ -169,9 +170,7 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 		break;
 
 		default:
-			sound = P_TouchSpecialThing2 (special, toucher);
-			if (sound == -1)
-			return;
+			break;
 	}
 	
 	if (special->type == MT_RING)
@@ -240,12 +239,37 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 ==================
 */
 
+static void P_DoPlayerPain(player_t *player, mobj_t *source, mobj_t *inflictor)
+{
+	angle_t ang;
+
+	player->mo->z++; // Lift off the ground a little
+
+	if (player->pflags & PF_UNDERWATER)
+		player->mo->momz = FixedDiv(10511*FRACUNIT, 2600*FRACUNIT) * P_MobjFlip(player->mo);
+	else
+		player->mo->momz = FixedDiv(69*FRACUNIT, 10*FRACUNIT) * P_MobjFlip(player->mo);
+
+	ang = ((player->mo->momx || player->mo->momy) ? R_PointToAngle2(player->mo->momx, player->mo->momy, 0, 0) : player->mo->angle);
+
+	P_InstaThrust(player->mo, ang, 4*FRACUNIT);
+
+	P_ResetPlayer(player);
+	P_SetMobjState(player->mo, mobjinfo[player->mo->type].painstate);
+	player->powers[pw_flashing] = FLASHINGTICS;
+}
+
+static void P_RingDamage(player_t *player, mobj_t *inflictor, mobj_t *source, int damage)
+{
+	P_PlayerRingBurst(player, damage);
+	P_DoPlayerPain(player, source, inflictor);
+	S_StartSound(player->mo, mobjinfo[player->mo->type].painsound);
+	player->mo->health = player->health = 1;
+}
+
 void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage)
 {
-	unsigned	ang, an;
-	int			saved;
 	player_t	*player;
-	fixed_t		thrust;
 	const mobjinfo_t* targinfo = &mobjinfo[target->type];
 
 	if ( !(target->flags & MF_SHOOTABLE) )
@@ -257,66 +281,36 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 	player = target->player ? &players[target->player - 1] : NULL;
 	
 /* */
-/* kick away unless using the chainsaw */
-/* */
-	if (inflictor && (!source || !source->player))
-	{
-		ang = R_PointToAngle2 ( inflictor->x, inflictor->y
-			,target->x, target->y);
-		
-		thrust = damage*(FRACUNIT>>2)*100/targinfo->mass;
-
-		/* make fall forwards sometimes */
-		if ( damage < 40 && damage > target->health && target->z - inflictor->z > 64*FRACUNIT && (P_Random ()&1) )
-		{
-			ang += ANG180;
-			thrust *= 4;
-		}
-		
-		an = ang >> ANGLETOFINESHIFT;
-		thrust >>= 16;
-		target->momx += thrust * finecosine(an);
-		target->momy += thrust * finesine(an);
-	}
-
-/* */
 /* player specific */
 /* */
 	if (player)
 	{
-		// telefrags ignore the godmode cheat and invulnerability
-		if ( damage < 1000 )
-		{
-			if ( (player->cheats&CF_GODMODE)||player->powers[pw_invulnerability] )
-				return;
-		}
+		if (player->exiting)
+			return;
 
-		if (player->armortype)
+		if (damage == 10000) // magic number for instant death
+			P_KillMobj(source, target);
+		else if ( damage < 10000 )
 		{
-			if (player->armortype == 1)
-				saved = damage/3;
-			else
-				saved = damage/2;
-			if (player->armorpoints <= saved)
-			{	/* armor is used up */
-				saved = player->armorpoints;
-				player->armortype = 0;
-			}
-			player->armorpoints -= saved;
-			damage -= saved;
+			if ( (player->cheats&CF_GODMODE)|| player->powers[pw_invulnerability] || player->powers[pw_flashing] )
+				return;
+
+			if (player->mo->health > 1) // Rings without shield
+				P_RingDamage(player, inflictor, source, damage);
 		}
-		S_StartSound (target,sfx_None);
-		player->health -= damage;		/* mirror mobj health here for Dave */
+		else
+			return;
+
 		if (player->health < 0)
 			player->health = 0;
-		player->attacker = source;
-		player->damagecount += (damage>>1);	/* add damage after armor / invuln */
+
+		return;	
 	}
 
 /* */
 /* do the damage */
 /*		 */
-	target->health -= damage;	
+	target->health -= damage;
 	if (target->health <= 0)
 	{
 		P_KillMobj (source, target);
@@ -331,6 +325,5 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 		&& targinfo->seestate != S_NULL)
 			P_SetMobjState (target, targinfo->seestate);
 	}
-			
 }
 
