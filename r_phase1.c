@@ -27,6 +27,10 @@ typedef struct
    seg_t       *curline;
    angle_t    lineangle1;
    int        splitspans; /* generate wall splits until this reaches 0 */
+   VINT       lastv1;
+   VINT       lastv2;
+   angle_t    lastangle1;
+   angle_t    lastangle2;
 } rbspWork_t;
 
 static int R_ClipToViewEdges(angle_t angle1, angle_t angle2) ATTR_DATA_CACHE_ALIGN;
@@ -565,8 +569,19 @@ static void R_AddLine(rbspWork_t *rbsp, sector_t *frontsector, seg_t *line)
    v2.x = vertexes[line->v2].x << FRACBITS;
    v2.y = vertexes[line->v2].y << FRACBITS;
 
-   angle1 = R_PointToAngle(vd->viewx, vd->viewy, v1.x, v1.y);
-   angle2 = R_PointToAngle(vd->viewx, vd->viewy, v2.x, v2.y);
+   if (line->v1 == rbsp->lastv2)
+      angle1 = rbsp->lastangle2;
+   else
+      angle1 = R_PointToAngle(vd->viewx, vd->viewy, v1.x, v1.y);
+   if (line->v2 == rbsp->lastv1)
+      angle2 = rbsp->lastangle1;
+   else
+      angle2 = R_PointToAngle(vd->viewx, vd->viewy, v2.x, v2.y);
+
+   rbsp->lastv1 = line->v1;
+   rbsp->lastv2 = line->v2;
+   rbsp->lastangle1 = angle1;
+   rbsp->lastangle2 = angle2;
 
    x1 = R_ClipToViewEdges(angle1, angle2);
    if (x1 <= 0)
@@ -701,6 +716,8 @@ void R_BSP(void)
    solidsegs[1].last  = viewportWidth+1;
    rbsp.newend = &solidsegs[2];
    rbsp.splitspans = viewportWidth + viewportWidth/2;
+   rbsp.lastv1 = -1;
+   rbsp.lastv2 = -1;
 
    R_RenderBSPNode(&rbsp, numnodes-1, worldbbox);
 }
