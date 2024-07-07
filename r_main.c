@@ -505,9 +505,8 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	vd.viewcos = finecosine(vd.viewangle>>ANGLETOFINESHIFT);
 
 	// look up/down
-	aimingangle = 0;
 	G_ClipAimingPitch(&aimingangle);
-	int dy = AIMINGTODY(aimingangle)* viewportHeight;
+	int dy = AIMINGTODY(aimingangle);
 	yslope = &yslopetab[(3*viewportHeight/2) - dy];
 	centerY = (viewportHeight / 2) + dy;
 	centerYFrac = centerY << FRACBITS;
