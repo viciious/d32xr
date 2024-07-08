@@ -673,6 +673,16 @@ int Mars_ReadController(int ctrl)
 
 #ifdef MDSKY
 /*
+Fade the MD palette
+*/
+void Mars_FadeMDPaletteFromBlack(int fade_degree)
+{
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM2 = fade_degree;
+	MARS_SYS_COMM0 = 0x1001;
+}
+
+/*
 Load the MD sky tiles, palettes, and pattern name table into the MD VDP.
 */
 void Mars_LoadMDSky(void *sky_names_ptr, void *sky_palettes_ptr, void *sky_tiles_ptr)
@@ -691,9 +701,9 @@ void Mars_LoadMDSky(void *sky_names_ptr, void *sky_palettes_ptr, void *sky_tiles
 	s[2] = ((uintptr_t)sky_names_ptr >>16), s[3] = (uintptr_t)sky_names_ptr &0xffff;
 
 	for (i = 0; i < 4; i++) {
+		while (MARS_SYS_COMM0);
 		MARS_SYS_COMM2 = s[i];
 		MARS_SYS_COMM0 = 0x0F01+i;
-		while (MARS_SYS_COMM0);
 	}
 
 
@@ -703,9 +713,9 @@ void Mars_LoadMDSky(void *sky_names_ptr, void *sky_palettes_ptr, void *sky_tiles
 	s[2] = ((uintptr_t)sky_palettes_ptr >>16), s[3] = (uintptr_t)sky_palettes_ptr &0xffff;
 
 	for (i = 0; i < 4; i++) {
+		while (MARS_SYS_COMM0);
 		MARS_SYS_COMM2 = s[i];
 		MARS_SYS_COMM0 = 0x0F01+i;
-		while (MARS_SYS_COMM0);
 	}
 
 
@@ -715,9 +725,9 @@ void Mars_LoadMDSky(void *sky_names_ptr, void *sky_palettes_ptr, void *sky_tiles
 	s[2] = ((uintptr_t)sky_tiles_ptr >>16), s[3] = (uintptr_t)sky_tiles_ptr &0xffff;
 
 	for (i = 0; i < 4; i++) {
+		while (MARS_SYS_COMM0);
 		MARS_SYS_COMM2 = s[i];
 		MARS_SYS_COMM0 = 0x0F01+i;
-		while (MARS_SYS_COMM0);
 	}
 }
 #endif
