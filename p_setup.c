@@ -4,6 +4,8 @@
 #include "p_local.h"
 #include "mars.h"
 
+#define MAX_AUX_TEXTURES 32
+
 int			numvertexes;
 mapvertex_t	*vertexes;
 
@@ -709,7 +711,6 @@ void P_LoadingPlaque (void)
 =
 =================
 */
-
 void P_SetupLevel (const char *lumpname, skill_t skill, int skytexture)
 {
 	int i;
@@ -717,8 +718,9 @@ void P_SetupLevel (const char *lumpname, skill_t skill, int skytexture)
 	mobj_t	*mobj;
 #endif
 	extern	int	cy;
-	VINT lumpnum, lumps[ML_BLOCKMAP+1];
-	lumpinfo_t li[ML_BLOCKMAP+1];
+	VINT lumpnum, lumps[ML_BLOCKMAP+1+MAX_AUX_TEXTURES];
+	lumpinfo_t li[ML_BLOCKMAP+1+MAX_AUX_TEXTURES];
+	char skyname[9];
 	boolean havebossspit = false;
 	int gamezonemargin;
 
@@ -730,6 +732,21 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 
 	P_InitThinkers ();
 
+	R_ResetTextures();
+
+	if (skytexture >= 0)
+	{
+		const char *name;
+		
+		name = W_GetNameForNum(skytexture);
+		D_snprintf(skyname, sizeof(skyname), "%s", name);
+		skyname[8] = 0;
+
+		skytexturep = R_CheckPixels(skytexture);
+		skytexturep = R_SkipJagObjHeader(skytexturep, W_LumpLength(skytexture), 256, 128);
+		skycolormaps = (col2sky > 0 && skytexture >= col2sky) ? dc_colormaps2 : dc_colormaps;
+	}
+
 	W_LoadPWAD(PWAD_CD);
 
 	lumpnum = W_CheckNumForName(lumpname);
@@ -737,10 +754,10 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 		I_Error("Map %s not found!", lumpname);
 
 	/* build a temp in-memory PWAD */
-	for (i = 0; i < ML_BLOCKMAP+1; i++)
+	for (i = 0; i < ML_BLOCKMAP+1+MAX_AUX_TEXTURES; i++)
 		lumps[i] = lumpnum+i;
 
-	W_CacheWADLumps(li, ML_BLOCKMAP+1, lumps, true);
+	W_CacheWADLumps(li, ML_BLOCKMAP+1+MAX_AUX_TEXTURES, lumps, true);
 
 	lumpnum = W_GetNumForName(lumpname);
 
@@ -784,6 +801,67 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 	deathmatch_p = deathmatchstarts;
 	P_LoadThings (lumpnum+ML_THINGS, &havebossspit);
 
+	// load custom replacement textures from ROM/CD to RAM
+	{
+		boolean istexture = false;
+		boolean isflat = false;
+
+		for (i = 0; i < MAX_AUX_TEXTURES; i++)
+		{
+			int j, k;
+			uint8_t *data;
+			lumpinfo_t *l;
+
+			k = ML_BLOCKMAP + 1 + i;
+			l = &li[k];
+			if (!l->size)
+			{
+				if (!istexture && !D_strcasecmp(l->name, "T_START"))
+					istexture = true;
+				else if (istexture && !!D_strcasecmp(l->name, "T_END"))
+					istexture = false;
+				else if (!istexture && !D_strcasecmp(l->name, "F_START"))
+					isflat = true;
+				else if (isflat && !D_strcasecmp(l->name, "T_END"))
+					isflat = false;
+				else
+					break;
+				continue;
+			}
+
+			// check if it's a texture
+			if (istexture) {
+				j = R_CheckTextureNumForName (l->name);
+				if (j >= 0)
+				{
+					data = Z_Malloc (l->size, PU_LEVEL);
+					W_ReadLump(lumpnum+k, data);
+					R_SetTextureData(&textures[j], data, l->size, true);
+				}
+				continue;
+			}
+
+			// a flat?
+			if (isflat) {
+				j = R_FlatNumForName(l->name);
+				if (j >= 0) {
+					data = Z_Malloc (l->size, PU_LEVEL);
+					W_ReadLump(lumpnum + k, data);
+					R_SetFlatData(j, data, l->size);
+					continue;
+				}
+			}
+
+			// a sky?
+			if (!D_strcasecmp(l->name, skyname)) {
+				data = Z_Malloc (l->size, PU_LEVEL);
+				W_ReadLump(lumpnum + k, data);
+				skytexturep = R_SkipJagObjHeader(data, l->size, 256, 128);
+				continue;
+			}
+		}
+	}
+
 	W_LoadPWAD(PWAD_NONE);
 
 /* */
@@ -824,10 +902,6 @@ extern byte *debugscreen;
 
 	iquehead = iquetail = 0;
 	gamepaused = false;
-
-	skytexturep = R_CheckPixels(skytexture);
-	skytexturep = R_SkipJagObjHeader(skytexturep, W_LumpLength(skytexture), 256, 128);
-	skycolormaps = (col2sky > 0 && skytexture >= col2sky) ? dc_colormaps2 : dc_colormaps;
 
 	gamezonemargin = DEFAULT_GAME_ZONE_MARGIN;
 	if (havebossspit)

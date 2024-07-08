@@ -302,6 +302,9 @@ void	R_InitData (void);
 void	R_SetViewportSize(int num);
 int		R_DefaultViewportSize(void); // returns the viewport id for fullscreen, low detail mode
 void	R_SetDrawFuncs(void);
+void 	R_SetTextureData(texture_t *tex, uint8_t *start, int size, boolean skipheader);
+void 	R_SetFlatData(int f, uint8_t *start, int size);
+void	R_ResetTextures(void);
 void	R_SetupLevel(int gamezonemargin);
 
 // how much memory should be left free in the main zone after allocating the texture cache
@@ -453,7 +456,7 @@ void R_InitTexCache(r_texcache_t* c);
 void R_InitTexCacheZone(r_texcache_t* c, int zonesize);
 void R_AddToTexCache(r_texcache_t* c, int id, int pixels, void **userp);
 void R_ClearTexCache(r_texcache_t* c);
-boolean R_InTexCache(r_texcache_t* c, void *p) ATTR_DATA_CACHE_ALIGN;
+int R_InTexCache(r_texcache_t* c, void *p) ATTR_DATA_CACHE_ALIGN;
 boolean R_TouchIfInTexCache(r_texcache_t* c, void *p);
 void R_PostTexCacheFrame(r_texcache_t* c);
 
