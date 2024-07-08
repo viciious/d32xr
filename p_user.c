@@ -172,18 +172,19 @@ dospecial:
 
 void P_PlayerXYMovement(mobj_t *mo)
 {
+	fixed_t speed;
+	const angle_t speedDir = R_PointToAngle2(0, 0, mo->momx, mo->momy);
+	const fixed_t top = 30 * FRACUNIT;
 	player_t *player = &players[mo->player - 1];
 	P_PlayerMove(mo);
 
 	/* */
 	/* slow down */
 	/* */
-	if (player->powers[pw_flashing] != FLASHINGTICS)
+	if (player->powers[pw_flashing] != FLASHINGTICS && player->mo->z <= player->mo->floorz)
 	{
 		const fixed_t frc = FRACUNIT * 1;
-		const fixed_t top = 30 * FRACUNIT;
-		const angle_t speedDir = R_PointToAngle2(0, 0, mo->momx, mo->momy);
-		fixed_t speed = P_AproxDistance(mo->momx, mo->momy);
+		speed = P_AproxDistance(mo->momx, mo->momy);
 
 		if (speed > STOPSPEED)
 		{
@@ -208,15 +209,6 @@ void P_PlayerXYMovement(mobj_t *mo)
 					player->mo->momy = FixedMul(player->mo->momy, FRACUNIT - (STOPSPEED*2));
 				}
 			}
-
-			speed = P_AproxDistance(mo->momx, mo->momy);
-			if (speed > top)
-			{
-				const fixed_t diff = speed - top;
-				const angle_t opposite = speedDir - ANG180;
-
-				P_Thrust(player->mo, opposite, diff);
-			}
 		}
 		else if (!(player->forwardmove || player->sidemove))
 		{
@@ -226,6 +218,15 @@ void P_PlayerXYMovement(mobj_t *mo)
 				mo->momy = 0;
 			}
 		}
+	}
+
+	speed = P_AproxDistance(mo->momx, mo->momy);
+	if (speed > top)
+	{
+		const fixed_t diff = speed - top;
+		const angle_t opposite = speedDir - ANG180;
+
+		P_Thrust(player->mo, opposite, diff);
 	}
 }
 
