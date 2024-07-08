@@ -726,6 +726,9 @@ void DrawScrollingBanner(jagobj_t* jo, int x, int y_shift)
 
 	for (int dest_row=0; dest_row < 224-44; dest_row++)
 	{
+		source_offset += 16;
+		source_offset %= (height*16);
+
 		source = jo->data + source_offset;
 
 		switch(x) {
@@ -748,9 +751,6 @@ void DrawScrollingBanner(jagobj_t* jo, int x, int y_shift)
 		}
 
 		dest += (320 - 16 - x + 2) / 2;
-
-		source_offset += 16;
-		source_offset %= (height*16);
 	}
 }
 

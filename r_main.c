@@ -40,6 +40,22 @@ short fuzzoffset[FUZZTABLE] =
 	1,-1,1,-1,-1,1,1
 };
 
+// Classic Sonic fade
+const short md_palette_fade_table[32] =
+{
+	// Fade blue
+	0x000, 0x200, 0x200, 0x400, 0x600, 0x600,
+	0x800, 0xA00, 0xA00, 0xC00, 0xE00,
+
+	// Fade green with blue at max brightness
+	0xE00, 0xE20, 0xE20, 0xE40, 0xE60, 0xE60,
+	0xE80, 0xEA0, 0xEA0, 0xEC0, 0xEE0,
+
+	// Fade red with blue and green at max brightness
+	0xEE0, 0xEE2, 0xEE2, 0xEE4, 0xEE6, 0xEE6,
+	0xEE8, 0xEEA, 0xEEA, 0xEEC, 0xEEE
+};
+
 /*===================================== */
 
 const uint16_t visplane0open[SCREENWIDTH+2] = { 0 };
@@ -523,10 +539,18 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 
 	if (gamemapinfo.mapNumber != 30 && leveltime < 62)
 	{
-		if (leveltime < 30)
-			vd.fixedcolormap = HWLIGHT(0);
-		else
-			vd.fixedcolormap = HWLIGHT((leveltime-30)*8);
+		if (leveltime < 30) {
+			// Set the fade degree to black.
+			vd.fixedcolormap = HWLIGHT(0);	// 32X VDP
+			if (leveltime == 0) {
+				Mars_FadeMDPaletteFromBlack(0);	// MD VDP
+			}
+		}
+		else {
+			// Set the fade degree based on leveltime.
+			vd.fixedcolormap = HWLIGHT((leveltime-30)*8);	// 32X VDP
+			Mars_FadeMDPaletteFromBlack(md_palette_fade_table[leveltime-30]);	// MD VDP
+		}
 	}
 
 #ifdef JAGUAR
