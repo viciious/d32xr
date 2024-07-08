@@ -22,7 +22,7 @@ creditcard_t creditCards[] = {
 	{"C_SSN",    "PROGRAMMING",          "SSNTails",         "Gameplay\nAdditional Art",            "x.com/@SSNTails\nyoutube.com\n/@ssntails" },
 	{"C_SPCTHX", "SPECIAL THANKS",       "Viciious",         "Doom 32X:\nResurrection",             "github.com/viciious" },
 	{"C_SPCTHX", "SPECIAL THANKS",       "Mittens",          "Mapping support",                     "youtube.com\n/@Mittens0407\ntwitch.tv\n/mittens0407" },
-	{"C_STJR",   "BASED ON THE WORK BY", "Sonic Team Jr.",   "www.srb2.org",                        "Alice Alacroix\nMotor Roach\nGuyWithThePie\nAnd so many more!" },
+	{"C_STJR",   "BASED ON THE WORK BY", "Sonic Team Jr.",   "www.srb2.org",                        "Shout-outs to:\nAlice Alacroix\nMotor Roach\nNev3r\nGuyWithThePie\nAnd so many more!" },
 	{NULL,       "THANKS FOR PLAYING!", "", "", "" },
 	{NULL, NULL, NULL, NULL, NULL },
 };
