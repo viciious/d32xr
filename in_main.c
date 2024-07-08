@@ -476,16 +476,22 @@ int IN_Ticker (void)
 	/* exit menu if button press */
 		if ( (buttons & BT_ATTACK) && !(oldbuttons & BT_ATTACK) )
 		{
+			if (!interm->earlyexit)
+				S_StartSound(0, sfx_barexp);
 			interm->earlyexit = true;
 			return 1;		/* done with intermission */
 		}
 		if ( (buttons & BT_SPEED) && !(oldbuttons & BT_SPEED) )
 		{
+			if (!interm->earlyexit)
+				S_StartSound(0, sfx_barexp);
 			interm->earlyexit = true;
 			return 1;		/* done with intermission */
 		}
 		if ( (buttons & BT_USE) && !(oldbuttons & BT_USE) )
 		{
+			if (!interm->earlyexit)
+				S_StartSound(0, sfx_barexp);
 			interm->earlyexit = true;
 			return 1;		/* done with intermission */
 		}
