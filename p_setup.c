@@ -326,7 +326,7 @@ void P_LoadThings (int lump)
 	}
 
 	// preallocate a few mobjs for puffs and projectiles
-	numthingsreal += 10;
+	numthingsreal += 40; // 32 rings, plus other items
 	P_PreSpawnMobjs(numthingsreal, numstaticthings, numringthings, numscenerymobjs);
 
 	mt = (mapthing_t *)data;
