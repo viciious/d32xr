@@ -729,6 +729,8 @@ void Mars_LoadMDSky(void *sky_names_ptr, void *sky_palettes_ptr, void *sky_tiles
 		MARS_SYS_COMM2 = s[i];
 		MARS_SYS_COMM0 = 0x0F01+i;
 	}
+
+	while (MARS_SYS_COMM0);
 }
 #endif
 
