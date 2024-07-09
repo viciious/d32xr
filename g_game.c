@@ -673,6 +673,7 @@ startnew:
 		MiniLoop (IN_Start, IN_Stop, IN_Ticker, IN_Drawer, I_Update);
 
 	/* run a text screen */
+		finale = false;
 		if (netgame != gt_deathmatch)
 			if (*gamemapinfo.secretInterText || *gamemapinfo.interText)
 			{
