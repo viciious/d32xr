@@ -64,6 +64,7 @@ typedef struct
 	drawcol_t	drcol;
 	void 		*drcolormaps;
 	int 		endFlat;
+	jagobj_t	*bossback;
 } finale_t;
 
 finale_t *fin;
@@ -331,13 +332,25 @@ void F_Start (void)
 	int	l;
 	extern boolean canwipe;
 
+	fin = Z_Malloc(sizeof(*fin), PU_STATIC);
+	D_memset(fin, 0, sizeof(*fin));
+
+#ifdef MARS
+	Z_FreeTags (mainzone);
+
+	W_LoadPWAD(PWAD_CD);
+
+	l = W_CheckNumForName("BOSSBACK");
+	if (l >= 0)
+		fin->bossback = W_CacheLumpNum(l, PU_STATIC);
+
+	W_LoadPWAD(PWAD_NONE);
+#endif
+
 	if (!gameinfo.endMus || !*gameinfo.endMus)
 		S_StartSongByName(gameinfo.victoryMus, 1, cdtrack_end);
 	else
 		S_StartSongByName(gameinfo.endMus, 1, cdtrack_end);
-
-	fin = Z_Malloc(sizeof(*fin), PU_STATIC);
-	D_memset(fin, 0, sizeof(*fin));
 
 	fin->status = fin_endtext;		/* END TEXT PRINTS FIRST */
 	fin->textdelay = TEXTTIME;
@@ -370,10 +383,11 @@ void F_Start (void)
 void F_Stop (void)
 {
 	int	i;
-
 	for (i = 0;i < NUMENDOBJ; i++)
 		Z_Free(fin->endobj[i]);
 	Z_Free(fin->endobj);
+	if (fin->bossback != NULL)
+		Z_Free(fin->bossback);
 	Z_Free(fin);
 }
 
@@ -577,7 +591,10 @@ stopattack:
 static void F_DrawBackground(void)
 {
 #ifdef MARS
-	DrawTiledBackground2(fin->endFlat);
+	if (fin->bossback && fin->status == fin_charcast)
+		DrawJagobj(fin->bossback, 0, 0);
+	else
+		DrawTiledBackground2(fin->endFlat);
 #else
 	EraseBlock(0, 0, 320, 200);
 #endif
