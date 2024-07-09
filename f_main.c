@@ -643,7 +643,7 @@ void F_Drawer (void)
 
 				if (finale)
 					text = gameinfo.endText;
-				else if (gameaction == ga_secretexit && *gamemapinfo.secretInterText)
+				else if (secretexit && *gamemapinfo.secretInterText)
 					text = gamemapinfo.secretInterText;
 				else
 					text = gamemapinfo.interText;

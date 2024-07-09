@@ -36,7 +36,7 @@ boolean         demoplayback;
 mobj_t*         bodyque[BODYQUESIZE];
 int             bodyqueslot;
 
-boolean			finale;
+boolean			finale, secretexit;
 
 /* 
 ============== 
@@ -579,7 +579,7 @@ void G_RunGame (void)
 #ifdef JAGUAR
 		int			nextmap;
 #endif
-		boolean 	finale_ = false, secretexit;
+		boolean 	finale_ = false;
 
 		/* run a level until death or completion */
 		MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer, P_Update);
@@ -675,7 +675,7 @@ startnew:
 	/* run a text screen */
 		finale = false;
 		if (netgame != gt_deathmatch)
-			if (*gamemapinfo.secretInterText || *gamemapinfo.interText)
+			if ((secretexit && *gamemapinfo.secretInterText) || *gamemapinfo.interText)
 			{
 #ifdef MARS
 				MiniLoop(F_Start, F_Stop, F_Ticker, F_Drawer, I_Update);
