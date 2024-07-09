@@ -235,7 +235,9 @@ void P_SetThingPosition2 (mobj_t *thing, subsector_t *ss)
 /* */
 /* link into subsector */
 /* */
-	thing->subsector = ss;
+	if (!(thing->flags & MF_RINGMOBJ && thing->flags & MF_NOBLOCKMAP))
+		thing->subsector = ss;
+
 	if ( ! (thing->flags & MF_NOSECTOR) )
 	{	/* invisible things don't go into the sector links */
 		sec = ss->sector;

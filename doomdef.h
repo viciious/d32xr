@@ -242,8 +242,8 @@ typedef struct scenerymobj_s
 	unsigned short		type;
 	VINT		flags;
 	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
-	struct subsector_s	*subsector;
 	// SIMILARITIES END HERE
+	VINT subsector;
 	int16_t x, y, z;
 } scenerymobj_t;
 

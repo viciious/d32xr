@@ -439,7 +439,7 @@ static void R_PrepScenery(scenerymobj_t *thing)
    if (vd.fixedcolormap)
        vis->colormap = vd.fixedcolormap;
    else
-      vis->colormap = HWLIGHT(thing->subsector->sector->lightlevel);
+      vis->colormap = HWLIGHT(subsectors[thing->subsector].sector->lightlevel);
  
    vis->colormaps = dc_colormaps;
 }

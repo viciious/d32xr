@@ -176,9 +176,9 @@ static void ST_DrawTitleCard()
 	const char chev_red_lump_name[] = "CHEVRED";
 	const char lt_red_lump_name[] = "LTACTRED";
 
-	char *ltzz_lump_name;
-	char *chev_lump_name;
-	char *lt_lump_name;
+	const char *ltzz_lump_name;
+	const char *chev_lump_name;
+	const char *lt_lump_name;
 
 	if (gamemapinfo.act == 3) {
 		ltzz_lump_name = ltzz_red_lump_name;

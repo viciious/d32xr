@@ -211,10 +211,12 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 			scenerymobj->flags = info->flags;
 
 			/* set subsector and/or block links */
-			P_SetThingPosition2 ((mobj_t*)scenerymobj, R_PointInSubsector(x, y));
+			subsector_t *mobjSubsec = R_PointInSubsector(x, y);
+			P_SetThingPosition2 ((mobj_t*)scenerymobj, mobjSubsec);
+			scenerymobj->subsector = mobjSubsec - subsectors;
 
-			const fixed_t floorz = scenerymobj->subsector->sector->floorheight;
-			const fixed_t ceilingz = scenerymobj->subsector->sector->ceilingheight;
+			const fixed_t floorz = mobjSubsec->sector->floorheight;
+			const fixed_t ceilingz = mobjSubsec->sector->ceilingheight;
 			if (z == ONFLOORZ)
 				scenerymobj->z = floorz >> FRACBITS;
 			else if (z == ONCEILINGZ)
