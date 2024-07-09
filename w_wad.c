@@ -191,6 +191,8 @@ int W_CacheWADLumps (lumpinfo_t *li, int numlumps, VINT *lumps, boolean setpwad)
 	int n;
 	wadfile_t *wad;
 
+	D_memset(li, 0, numlumps*sizeof(*li));
+
 	n = 0;
 	if (numlumps > 0)
 	{
@@ -200,6 +202,8 @@ int W_CacheWADLumps (lumpinfo_t *li, int numlumps, VINT *lumps, boolean setpwad)
 			if (l < 0)
 				continue;
 			wad = W_GetWadForLump(lumps[i]);
+			if (setpwad && (wad - wadfile != wadnum))
+				break; // only allow lumps from the same WAD
 			D_memcpy(&li[n], &wad->lumpinfo[l - wad->firstlump], sizeof(lumpinfo_t));
 			n++;
 		}
