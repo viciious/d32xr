@@ -821,11 +821,11 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 			{
 				if (!istexture && !D_strcasecmp(l->name, "T_START"))
 					istexture = true;
-				else if (istexture && !!D_strcasecmp(l->name, "T_END"))
+				else if (istexture && !D_strcasecmp(l->name, "T_END"))
 					istexture = false;
 				else if (!istexture && !D_strcasecmp(l->name, "F_START"))
 					isflat = true;
-				else if (isflat && !D_strcasecmp(l->name, "T_END"))
+				else if (isflat && !D_strcasecmp(l->name, "F_END"))
 					isflat = false;
 				else
 					break;
