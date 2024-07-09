@@ -450,7 +450,7 @@ no_cmd:
         dc.w    put_chr - prireqtbl               /* 0x0D */
         dc.w    clear_a - prireqtbl               /* 0x0E */
         dc.w    load_md_sky - prireqtbl           /* 0x0F */
-        dc.w    no_cmd - prireqtbl                /* 0x10 */
+        dc.w    fade_md_palette - prireqtbl       /* 0x10 */
         dc.w    no_cmd - prireqtbl                /* 0x11 */
         dc.w    net_getbyte - prireqtbl           /* 0x12 */
         dc.w    net_putbyte - prireqtbl           /* 0x13 */
@@ -1555,6 +1555,7 @@ load_md_sky:
         move.l  a0,-(sp)
         move.l  a1,-(sp)
         move.l  a2,-(sp)
+        move.l  a3,-(sp)
         move.l  d0,-(sp)
         move.l  d1,-(sp)
         move.l  d2,-(sp)
@@ -1603,13 +1604,15 @@ load_md_sky:
         andi.l  #0xFFFFF,d0
         ori.l   #0x900000,d0
         move.l  d0,a2
+        lea     base_palette_1,a3
         lsr.w   #4,d1
         andi.w  #3,d1
         move.w  d1,0xA15104             /* Set cart bank select */
         move.w  #0x40-1,d2              /* Prepare to copy two colors, 32 times total */
 1:
-        move.w  (a2)+,(a1)              /* Copy two colors from the source */
-        |add.l   #0x40000,a1             /* Advance the destination cursor */
+        move.w  (a2)+,(a3)+             /* Save color to DRAM */
+        move.w  #0,(a1)                 /* Set color to black in CRAM */
+        |add.l   #0x40000,a1            /* Advance the destination cursor */
         dbra    d2,1b
 
 
@@ -1638,13 +1641,109 @@ load_md_sky:
         move.l  (sp)+,d2
         move.l  (sp)+,d1
         move.l  (sp)+,d0
+        move.l  (sp)+,a3
         move.l  (sp)+,a2
         move.l  (sp)+,a1
         move.l  (sp)+,a0
 
+        move.w  #0,0xA15120         /* done */
+
         move.w  #0x2000,sr          /* enable ints */
 
         bra     main_loop
+
+
+fade_md_palette:
+        move.w  #0x2700,sr          /* disable ints */
+
+        move.l  a0,-(sp)
+        move.l  a1,-(sp)
+        move.l  a3,-(sp)
+        move.l  d0,-(sp)
+        move.l  d1,-(sp)
+        move.l  d2,-(sp)
+        move.l  d3,-(sp)
+        move.l  d4,-(sp)
+
+        /* Fade palette */
+        lea     0xC00004,a0
+        lea     0xC00000,a1
+        move.w  #0x8F02,(a0)
+        move.l  #0xC0000000,(a0)        /* Write CRAM address 0 */
+
+        lea     base_palette_1,a3       /* Point A3 to DRAM palette */
+        move.w  0xA15122,d1             /* Get fade degree */
+
+        move.w  #0x40-1,d4              /* Prepare to copy all 64 colors */
+
+
+        | D0 = CRAM value
+        | D1 = Fade value
+
+        | D2 = CRAM color channel
+        | D3 = Fade color channel
+
+        | A1 = CRAM palette
+        | A3 = DRAM palette
+
+fade_color:
+        move.w  (a3)+,d0        /* Copy color from DRAM to D0 */
+
+fade_red:
+        /* RED */
+        move.b  d0,d2           /* Get CRAM red */
+        andi.b  #0xE,d2         /* Remove CRAM green from this copy */
+        move.b  d1,d3           /* Get fade red */
+        andi.b  #0xE,d3         /* Remove fade green from this copy */
+
+        cmp.b   d3,d2           /* Compare the two reds */
+        bls     fade_green      /* Branch if fade red is less than or equal to CRAM red */
+        andi.b  #0xE0,d0        /* Remove the current red */
+        or.b    d3,d0           /* Replace with the new red */
+
+fade_green:
+        /* GREEN */
+        move.b  d0,d2           /* Get CRAM green */
+        andi.b  #0xE0,d2        /* Remove CRAM red from this copy */
+        move.b  d1,d3           /* Get fade green */
+        andi.b  #0xE0,d3        /* Remove fade red from this copy */
+
+        cmp.b   d3,d2           /* Compare the two greens */
+        bls     fade_blue       /* Branch if fade green is less than or equal to CRAM green */
+        andi.b  #0x0E,d0        /* Remove the current green */
+        or.b    d3,d0           /* Replace with the new green */
+
+fade_blue:
+        /* BLUE */
+        move.w  d0,d2           /* Get CRAM blue */
+        andi.w  #0xE00,d2       /* Remove CRAM red and green from this copy */
+        move.w  d1,d3           /* Get fade blue */
+        andi.w  #0xE00,d3       /* Remove fade red and green from this copy */
+
+        cmp.w   d3,d2           /* Compare the two blues */
+        bls     update_color    /* Branch if fade blue is less than or equal to CRAM blue */
+        andi.w  #0x0EE,d0       /* Remove the current blue */
+        or.w    d3,d0           /* Replace with the new blue */
+
+update_color:
+        move.w  d0,(a1)         /* Copy new color in D0 to CRAM */
+        dbra    d4,fade_color   /* Continue the loop if more colors need to be updated. */
+
+        move.l  (sp)+,d4
+        move.l  (sp)+,d3
+        move.l  (sp)+,d2
+        move.l  (sp)+,d1
+        move.l  (sp)+,d0
+        move.l  (sp)+,a3
+        move.l  (sp)+,a1
+        move.l  (sp)+,a0
+
+        move.w  #0,0xA15120         /* done */
+
+        move.w  #0x2000,sr          /* enable ints */
+
+        bra     main_loop
+
 
 
 ctl_md_vdp:
@@ -2884,6 +2983,15 @@ lump_ptr:
         dc.l    0
 lump_size:
         dc.l    0
+
+base_palette_1:
+        .space  32
+base_palette_2:
+        .space  32
+base_palette_3:
+        .space  32
+base_palette_4:
+        .space  32
 
 /* DLG */
 /*
