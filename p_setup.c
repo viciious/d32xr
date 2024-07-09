@@ -423,8 +423,7 @@ void P_LoadLineDefs (int lump)
 	int				i;
 	maplinedef_t	*mld;
 	line_t			*ld;
-	mapvertex_t		*v1, *v2;
-	
+
 	numlines = W_LumpLength (lump) / sizeof(maplinedef_t);
 	lines = Z_Malloc (numlines*sizeof(line_t)+16,PU_LEVEL);
 	lines = (void*)(((uintptr_t)lines + 15) & ~15); // aline on cacheline boundary
@@ -435,21 +434,11 @@ void P_LoadLineDefs (int lump)
 	ld = lines;
 	for (i=0 ; i<numlines ; i++, mld++, ld++)
 	{
-		fixed_t dx,dy;
 		ld->flags = LITTLESHORT(mld->flags);
 		ld->special = LITTLESHORT(mld->special);
 		ld->tag = LITTLESHORT(mld->tag);
 		ld->v1 = LITTLESHORT(mld->v1);
 		ld->v2 = LITTLESHORT(mld->v2);
-		v1 = &vertexes[ld->v1];
-		v2 = &vertexes[ld->v2];
-		dx = (v2->x - v1->x) << FRACBITS;
-		dy = (v2->y - v1->y) << FRACBITS;
-		if (dx && dy)
-		{
-			if (FixedDiv (dy , dx) > 0)
-				ld->moreflags |= LD_MFLAG_POSITIVE;
-		}
 
 		ld->sidenum[0] = LITTLESHORT(mld->sidenum[0]);
 		ld->sidenum[1] = LITTLESHORT(mld->sidenum[1]);
@@ -534,6 +523,19 @@ void P_LoadSideDefs (int lump)
 }
 
 
+/*
+=================
+=
+= P_LoadRejectMatrix
+=
+=================
+*/
+
+void P_LoadRejectMatrix (int lump)
+{
+	rejectmatrix = Z_Malloc (W_LumpLength (lump),PU_LEVEL);
+	W_ReadLump (lump,rejectmatrix);
+}
 
 /*
 =================
@@ -588,6 +590,21 @@ void P_GroupLines (void)
 	int			block;
 	line_t		*li;
 	fixed_t		bbox[4];
+
+/* set line flags */
+	li = lines;
+	for (i=0 ; i<numlines ; i++, li++)
+	{
+		mapvertex_t *v1 = &vertexes[li->v1];
+		mapvertex_t *v2 = &vertexes[li->v2];
+		fixed_t dx = (v2->x - v1->x) << FRACBITS;
+		fixed_t dy = (v2->y - v1->y) << FRACBITS;
+		if (dx && dy)
+		{
+			if (FixedDiv (dy , dx) > 0)
+				li->moreflags |= LD_MFLAG_POSITIVE;
+		}
+	}
 
 /* look up sector number for each subsector */
 	ss = subsectors;
@@ -703,7 +720,6 @@ void P_LoadingPlaque (void)
 
 /*============================================================================= */
 
-
 /*
 =================
 =
@@ -762,17 +778,15 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 	lumpnum = W_GetNumForName(lumpname);
 
 /* note: most of this ordering is important	 */
-	P_LoadBlockMap (lumpnum+ML_BLOCKMAP);
-	P_LoadVertexes (lumpnum+ML_VERTEXES);
-	P_LoadSectors (lumpnum+ML_SECTORS);
-	P_LoadSideDefs (lumpnum+ML_SIDEDEFS);
 	P_LoadLineDefs (lumpnum+ML_LINEDEFS);
+	P_LoadSideDefs (lumpnum+ML_SIDEDEFS);
+	P_LoadVertexes (lumpnum+ML_VERTEXES);
+	P_LoadSegs (lumpnum+ML_SEGS);
 	P_LoadSubsectors (lumpnum+ML_SSECTORS);
 	P_LoadNodes (lumpnum+ML_NODES);
-	P_LoadSegs (lumpnum+ML_SEGS);
-
-	rejectmatrix = Z_Malloc (W_LumpLength (lumpnum+ML_REJECT),PU_LEVEL);
-	W_ReadLump (lumpnum+ML_REJECT,rejectmatrix);
+	P_LoadSectors (lumpnum+ML_SECTORS);
+	P_LoadRejectMatrix (lumpnum+ML_REJECT);
+	P_LoadBlockMap (lumpnum+ML_BLOCKMAP);
 
 	validcount = Z_Malloc((numlines + 1) * sizeof(*validcount) * 2, PU_LEVEL);
 	D_memset(validcount, 0, (numlines + 1) * sizeof(*validcount) * 2);
