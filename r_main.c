@@ -542,14 +542,18 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		if (leveltime < 30) {
 			// Set the fade degree to black.
 			vd.fixedcolormap = HWLIGHT(0);	// 32X VDP
+			#ifdef MDSKY
 			if (leveltime == 0) {
 				Mars_FadeMDPaletteFromBlack(0);	// MD VDP
 			}
+			#endif
 		}
 		else {
 			// Set the fade degree based on leveltime.
 			vd.fixedcolormap = HWLIGHT((leveltime-30)*8);	// 32X VDP
+			#ifdef MDSKY
 			Mars_FadeMDPaletteFromBlack(md_palette_fade_table[leveltime-30]);	// MD VDP
+			#endif
 		}
 	}
 
