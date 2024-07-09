@@ -449,7 +449,7 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 		angle = R_PointToAngle2(0, thiscam->z, dist,mo->z + (FixedDiv(FixedMul(mobjinfo[mo->type].height,3),4) >> 1)
 			- (((mo->theight << FRACBITS) != mobjinfo[mo->type].height) ? (mobjinfo[mo->type].height - (mo->theight << FRACBITS)) >> 1 : 0));
 	else
-		angle = R_PointToAngle2(0, thiscam->z, dist, mo->z + (mobjinfo[mo->type].height >> 1));
+		angle = R_PointToAngle2(0, thiscam->z, dist, mo->z + (mobjinfo[mo->type].height >> 2));
 
    G_ClipAimingPitch((int*)&angle);
    dist = thiscam->aiming - angle;

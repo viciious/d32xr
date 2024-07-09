@@ -69,7 +69,6 @@ static const char* playmodes[NUMMODES] = { "Single", "Coop", "Deathmatch" };
 jagobj_t* m_doom;
 
 static VINT m_skull1lump;
-static VINT m_skilllump;
 static VINT numslump;
 #define NUMHANDFRAMES 5
 #define NUMKFISTFRAMES 7
@@ -174,8 +173,6 @@ void M_Start2 (boolean startup_)
 		sprintf(entry, "TAILWAG%d", i + 1);
 		m_tailwag[i] = W_CheckNumForName(entry);
 	}
-
-	m_skilllump = W_CheckNumForName("SKILL0");
 
 	numslump = W_CheckNumForName("STTNUM0");
 
@@ -757,12 +754,6 @@ void M_Drawer (void)
 			else
 			{
 				print(item->x + 10, y + ITEMSPACE*2 + 2, "Empty");
-			}
-			if (saveslotskill != -1)
-			{
-				/* draw difficulty information */
-				print(item->x + 10, y + ITEMSPACE*4 + 2, playmodes[saveslotmode]);
-				DrawJagobjLump(m_skilllump + saveslotskill, item->x + 10, y + ITEMSPACE*5 + 2, NULL, NULL);
 			}
 		}
 		else

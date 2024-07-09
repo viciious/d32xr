@@ -58,7 +58,6 @@ typedef struct
 	VINT		i_secret, i_percent, i_level, i_kills,
 					i_items, i_finish, i_frags, i_par, i_time;
 
-	VINT		infaces[10];
 	jagobj_t 	*interpic;
 
 	dmapinfo_t	*nextmapinfo;
@@ -309,7 +308,6 @@ void IN_SingleDrawer(void)
 void IN_Start (void)
 {	
 	int	i,l;
-	VINT *infaces;
 
 	interm = Z_Malloc(sizeof(*interm), PU_STATIC);
 	D_memset(interm, 0, sizeof(*interm));
@@ -351,8 +349,6 @@ void IN_Start (void)
 
 	interm->timevalue = stbar_tics/(2*TICRATE);
 
-	infaces = interm->infaces;
-
 /* cache all needed graphics */
 #ifndef MARS
 	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
@@ -366,16 +362,6 @@ void IN_Start (void)
 #ifndef MARS
 	i_frags = W_CheckNumForName("I_FRAGS");
 #endif
-	infaces[0] = W_CheckNumForName("FACE00");
-	infaces[1]	= W_CheckNumForName("FACE01");
-	infaces[2] = W_CheckNumForName("FACE02");
-	infaces[3] = W_CheckNumForName("FACE05");
-	infaces[4] = W_CheckNumForName("STSPLAT0");
-	infaces[5] = W_CheckNumForName("STSPLAT1");
-	infaces[6] = W_CheckNumForName("STSPLAT2");
-	infaces[7] = W_CheckNumForName("STSPLAT3");
-	infaces[8] = W_CheckNumForName("STSPLAT4");
-	infaces[9] = W_CheckNumForName("STSPLAT5");
 	
 #ifdef MARS
 	Z_FreeTags (mainzone);

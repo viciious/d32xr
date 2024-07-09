@@ -342,7 +342,7 @@ static void R_PrepScenery(scenerymobj_t *thing)
    if(tz < MINZ)
       return;
 
-   if (tz > 2048*FRACUNIT) // Cull draw distance
+   if (tz > 1536*FRACUNIT) // Cull draw distance
       return;
 
    gxt = FixedMul(tr_x, vd.viewsin);
