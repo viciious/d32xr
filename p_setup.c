@@ -814,6 +814,9 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 
 			k = ML_BLOCKMAP + 1 + i;
 			l = &li[k];
+			if (!l->name[0])
+				break;
+
 			if (!l->size)
 			{
 				if (!istexture && !D_strcasecmp(l->name, "T_START"))
