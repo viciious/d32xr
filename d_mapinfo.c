@@ -286,6 +286,8 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 		mi->songNum = S_SongForName(value);
 	else if (!D_strcasecmp(key, "intermissionText"))
 		mi->interText = value;
+	else if (!D_strcasecmp(key, "secretIntermissionText"))
+		mi->secretInterText = value;
 }
 
 static void G_FixSPCMDirList(dgameinfo_t *gi)
@@ -484,6 +486,8 @@ dmapinfo_t **G_LoadMaplist(int *pmapcount, dgameinfo_t* gi)
 		D_memset(mi, 0, sizeof(*mi));
 		mi->skyTexture = -1;
 		mi->songNum = mus_none;
+		mi->interText = "";
+		mi->secretInterText = "";
 
 		linecount = G_ParseMapinfo(zsection, (kvcall_t)&G_AddMapinfoKey, mi);
 		if (linecount < 2 || mi->mapNumber <= 0)

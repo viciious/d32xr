@@ -579,7 +579,7 @@ void G_RunGame (void)
 #ifdef JAGUAR
 		int			nextmap;
 #endif
-		boolean 	finale_ = false;
+		boolean 	finale_ = false, secretexit;
 
 		/* run a level until death or completion */
 		MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer, P_Update);
@@ -626,7 +626,8 @@ startnew:
 			continue;			/* skip intermission */
 		}
 
-		if (gameaction == ga_secretexit && gamemapinfo.secretNext)
+		secretexit = gameaction == ga_secretexit && gamemapinfo.secretNext;
+		if (secretexit)
 			nextmapl = gamemapinfo.secretNext;
 		else
 			nextmapl = gamemapinfo.next;
@@ -672,14 +673,15 @@ startnew:
 		MiniLoop (IN_Start, IN_Stop, IN_Ticker, IN_Drawer, I_Update);
 
 	/* run a text screen */
-		if (gamemapinfo.interText && *gamemapinfo.interText && netgame != gt_deathmatch)
-		{
+		if (netgame != gt_deathmatch)
+			if (*gamemapinfo.secretInterText || *gamemapinfo.interText)
+			{
 #ifdef MARS
-			MiniLoop(F_Start, F_Stop, F_Ticker, F_Drawer, I_Update);
+				MiniLoop(F_Start, F_Stop, F_Ticker, F_Drawer, I_Update);
 #else
-			MiniLoop(F_Start, F_Stop, F_Ticker, F_Drawer, UpdateBuffer);
+				MiniLoop(F_Start, F_Stop, F_Ticker, F_Drawer, UpdateBuffer);
 #endif
-		}
+			}
 
 	/* run the finale if needed */
 		finale = finale_;
