@@ -389,6 +389,7 @@ static dmapinfo_t *G_CompressMapInfo(dmapinfo_t *mi)
 	ALLOC_STR_FIELD(secretNext);
 	ALLOC_STR_FIELD(lumpName);
 	ALLOC_STR_FIELD(interText);
+	ALLOC_STR_FIELD(secretInterText);
 
 	buf = Z_Malloc(size, PU_STATIC);
 
@@ -409,6 +410,7 @@ static dmapinfo_t *G_CompressMapInfo(dmapinfo_t *mi)
 	COPY_STR_FIELD(secretNext);
 	COPY_STR_FIELD(lumpName);
 	COPY_STR_FIELD(interText);
+	COPY_STR_FIELD(secretInterText);
 
 	return nmi;
 }
