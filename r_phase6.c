@@ -45,7 +45,7 @@ typedef struct
     drawtex_t tex[2];
     drawtex_t *first, *last;
 
-    int lightmin, lightmax, lightsub, lightcoef;
+    int lightsub, lightcoef, lightmax, lightmin;
 #if MIPLEVELS > 1   
     unsigned minmip, maxmip;
 #endif
@@ -161,7 +161,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds)
     const fixed_t ceilingheight = segl->ceilingheight;
 
     int texturelight = lseg->lightmax;
-    int lightmax = lseg->lightmax, lightmin = lseg->lightmin,
+    int lightmax = lseg->lightmax,
         lightcoef = lseg->lightcoef, lightsub = lseg->lightsub;
 
     const VINT start = segl->start;
@@ -212,9 +212,9 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds)
         {
             // calc light level
             texturelight = lightsub - FixedMul(scale2, lightcoef);
-            if (texturelight < lightmin)
-                texturelight = lightmin;
-            if (texturelight > lightmax)
+            if (texturelight < 0)
+                texturelight = 0;
+            else if (texturelight > lightmax)
                 texturelight = lightmax;
             texturelight = (unsigned)texturelight >> FRACBITS;
             texturelight <<= 8;
@@ -373,8 +373,6 @@ void R_SegCommands(void)
     D_memset(toptex, 0, sizeof(*toptex));
     D_memset(bottomtex, 0, sizeof(*bottomtex));
 
-    I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
-
     I_GetThreadLocalVar(DOOMTLS_COLUMNCACHE, toptex->columncache);
     bottomtex->columncache = toptex->columncache + COLUMN_CACHE_SIZE;
 
@@ -416,10 +414,13 @@ void R_SegCommands(void)
         lseg.maxmip = 0;
 #endif
 
+        I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
+
         if (vd->fixedcolormap)
         {
             lseg.lightmin = lseg.lightmax = vd->fixedcolormap;
             lseg.lightcoef = 0;
+            segl->seglightlevel = 0;
         }
         else
         {
@@ -476,6 +477,7 @@ void R_SegCommands(void)
                 {
                     lseg.lightcoef = 0;
                     lseg.lightmax = HWLIGHT((unsigned)light1>>FRACBITS);
+                    segl->seglightlevel = 0;
                 }
                 else
                 {
@@ -499,6 +501,11 @@ void R_SegCommands(void)
                     lseg.lightsub = (unsigned)lseg.lightsub >> 3;
                     lseg.lightmax = (unsigned)lseg.lightmax >> 3;
                     lseg.lightmin = (unsigned)lseg.lightmin >> 3;
+
+                    I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps + ((lseg.lightmin >> FRACBITS) << 8));
+
+                    lseg.lightsub -= lseg.lightmin;
+                    lseg.lightmax -= lseg.lightmin;
                 }
             }
             else
@@ -506,6 +513,12 @@ void R_SegCommands(void)
                 lseg.lightmax = HWLIGHT((unsigned)lseg.lightmax);
             }
         }
+
+        // seglightlevel will be later reused for masked segments during phase 8
+        if (lseg.lightcoef != 0)
+            segl->seglightlevel = (lseg.lightmin >> FRACBITS) << 8;
+        else
+            segl->seglightlevel = 0;
 
         if (actionbits & AC_TOPTEXTURE)
         {

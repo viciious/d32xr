@@ -53,7 +53,7 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
    fracstep  = seg->scalestep;
    scalefrac = seg->scalefrac + (x - seg->realstart) * fracstep;
 
-   I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
+   I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps + seg->seglightlevel);
 
    for(; x <= stopx; x++)
    {
