@@ -622,9 +622,16 @@ void F_Drawer (void)
 			if (!--fin->textdelay)
 			{
 				char	str[2];
-				const char *text = finale ? gameinfo.endText : gamemapinfo.interText;
+				const char *text;
 
-				if (!text)
+				if (finale)
+					text = gameinfo.endText;
+				else if (gameaction == ga_secretexit && *gamemapinfo.secretInterText)
+					text = gamemapinfo.secretInterText;
+				else
+					text = gamemapinfo.interText;
+
+				if (!text || !*text)
 					return;
 				str[1] = 0;
 				str[0] = text[fin->textindex];
