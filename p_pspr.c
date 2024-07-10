@@ -14,7 +14,7 @@
 
 #define MAXSOUNDSECS	2048
 
-static void P_RecursiveSound(int secnum, int soundblocks, uint8_t* soundtraversed);
+static void P_RecursiveSound(mobj_t *soundtarget, int secnum, int soundblocks, uint8_t* soundtraversed);
 
 /*
 =================
@@ -26,9 +26,7 @@ static void P_RecursiveSound(int secnum, int soundblocks, uint8_t* soundtraverse
 =================
 */
 
-mobj_t *soundtarget;
-
-static void P_RecursiveSound (int secnum, int soundblocks, uint8_t *soundtraversed)
+static void P_RecursiveSound (mobj_t *soundtarget, int secnum, int soundblocks, uint8_t *soundtraversed)
 {
 	int			i;
 	line_t		*check;
@@ -84,10 +82,10 @@ static void P_RecursiveSound (int secnum, int soundblocks, uint8_t *soundtravers
 		if (check->flags & ML_SOUNDBLOCK)
 		{
 			if (!soundblocks)
-				P_RecursiveSound (othernum, 1, soundtraversed);
+				P_RecursiveSound (soundtarget, othernum, 1, soundtraversed);
 		}
 		else
-			P_RecursiveSound (othernum, soundblocks, soundtraversed);
+			P_RecursiveSound (soundtarget, othernum, soundblocks, soundtraversed);
 	}
 }
 
@@ -112,9 +110,8 @@ void P_NoiseAlert (player_t *player)
 
 	player->lastsoundsector = (void *)sec;
 	
-	soundtarget = player->mo;
 	validcount[0]++;
-	P_RecursiveSound (sec - sectors, 0, soundtraversed);
+	P_RecursiveSound (player->mo, sec - sectors, 0, soundtraversed);
 }
 
 
