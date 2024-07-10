@@ -840,6 +840,9 @@ void R_RenderPlayerView(int displayplayer)
 	sector_t *vissectors_[MAXVISSSEC];
 	viswallextra_t viswallex_[MAXWALLCMDS + 1] __attribute__((aligned(16)));
 
+	if (leveltime < 30) // Whole screen is black right now anyway
+		return;
+
 	/* make sure its done now */
 #if defined(JAGUAR)
 	while (!I_RefreshCompleted())

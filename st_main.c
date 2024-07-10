@@ -16,6 +16,9 @@ static short snums; // Numbers
 static short timecolon; // : for TIME
 static short face, livex;
 
+static short ltzz_blue_lump, chev_blue_lump, lt_blue_lump;
+static short ltzz_red_lump, chev_red_lump, lt_red_lump;
+
 #ifndef MARS
 byte		*sbartop;
 #endif
@@ -49,6 +52,13 @@ void ST_Init (void)
 	timecolon = W_CheckNumForName("STTCOLON");
 	face = W_CheckNumForName("STFACE");
 	livex = W_CheckNumForName("STLIVEX");
+
+	ltzz_blue_lump = W_CheckNumForName("LTZZTEXT");
+	chev_blue_lump = W_CheckNumForName("CHEVBLUE");
+	lt_blue_lump = W_CheckNumForName("LTACTBLU");
+	ltzz_red_lump = W_CheckNumForName("LTZZWARN");
+	chev_red_lump = W_CheckNumForName("CHEVRED");
+	lt_red_lump	= W_CheckNumForName("LTACTRED");
 }
 
 void ST_ForceDraw(void)
@@ -168,42 +178,34 @@ void ST_Ticker(void)
 
 static void ST_DrawTitleCard()
 {
-	const char ltzz_blue_lump_name[] = "LTZZTEXT";
-	const char chev_blue_lump_name[] = "CHEVBLUE";
-	const char lt_blue_lump_name[] = "LTACTBLU";
-
-	const char ltzz_red_lump_name[] = "LTZZWARN";
-	const char chev_red_lump_name[] = "CHEVRED";
-	const char lt_red_lump_name[] = "LTACTRED";
-
-	const char *ltzz_lump_name;
-	const char *chev_lump_name;
-	const char *lt_lump_name;
+	short ltzz_lump;
+	short chev_lump;
+	short lt_lump;
 
 	if (gamemapinfo.act == 3) {
-		ltzz_lump_name = ltzz_red_lump_name;
-		chev_lump_name = chev_red_lump_name;
-		lt_lump_name = lt_red_lump_name;
+		ltzz_lump = ltzz_red_lump;
+		chev_lump = chev_red_lump;
+		lt_lump = lt_red_lump;
 	}
 	else {
-		ltzz_lump_name = ltzz_blue_lump_name;
-		chev_lump_name = chev_blue_lump_name;
-		lt_lump_name = lt_blue_lump_name;
+		ltzz_lump = ltzz_blue_lump;
+		chev_lump = chev_blue_lump;
+		lt_lump = lt_blue_lump;
 	}
+
+	if (leveltime < 30)
+		DrawFillRect(0, 0, 320, 200, COLOR_BLACK);
 
 	if (stbar_tics < 16) {
 		// Title card moving into the frame.
 
-		short ltzz_lump = W_CheckNumForName(ltzz_lump_name);
 		jagobj_t *ltzz_obj = (jagobj_t*)W_POINTLUMPNUM(ltzz_lump);
 		DrawScrollingBanner(ltzz_obj, (stbar_tics-16) << 4, stbar_tics << 1);
 
-		short chev_lump = W_CheckNumForName(chev_lump_name);
 		jagobj_t *chev_obj = (jagobj_t*)W_POINTLUMPNUM(chev_lump);
 		DrawScrollingChevrons(chev_obj, 16 + ((stbar_tics-16) << 4), -stbar_tics << 1);
 
 		if (gamemapinfo.act >= 1 && gamemapinfo.act <= 3) {
-			VINT lt_lump = W_CheckNumForName(lt_lump_name);
 			DrawJagobjLump(lt_lump, 160+68-24 + ((16 - stbar_tics) << 5), 100 - ((16 - stbar_tics) << 5), NULL, NULL);
 			DrawFillRect(316, 20, 4, 4, COLOR_BLACK); // Clear lt_lump letterbox overdraw.
 			
@@ -215,16 +217,13 @@ static void ST_DrawTitleCard()
 	else if (stbar_tics < 80) {
 		// Title card at rest in the frame.
 
-		short ltzz_lump = W_CheckNumForName(ltzz_lump_name);
 		jagobj_t *ltzz_obj = (jagobj_t*)W_POINTLUMPNUM(ltzz_lump);
 		DrawScrollingBanner(ltzz_obj, 0, stbar_tics << 1);
 
-		short chev_lump = W_CheckNumForName(chev_lump_name);
 		jagobj_t *chev_obj = (jagobj_t*)W_POINTLUMPNUM(chev_lump);
 		DrawScrollingChevrons(chev_obj, 16, -stbar_tics << 1);
 
 		if (gamemapinfo.act >= 1 && gamemapinfo.act <= 3) {
-			VINT lt_lump = W_CheckNumForName(lt_lump_name);
 			DrawJagobjLump(lt_lump, 160+68-24, 100, NULL, NULL);
 
 			V_DrawValueLeft(&titleNumberFont, 160+68, 124-4, gamemapinfo.act);
@@ -234,17 +233,13 @@ static void ST_DrawTitleCard()
 	}
 	else {
 		// Title card moving out of the frame.
-
-		short ltzz_lump = W_CheckNumForName(ltzz_lump_name);
 		jagobj_t *ltzz_obj = (jagobj_t*)W_POINTLUMPNUM(ltzz_lump);
 		DrawScrollingBanner(ltzz_obj, (80-stbar_tics) << 4, stbar_tics << 1);
 
-		short chev_lump = W_CheckNumForName(chev_lump_name);
 		jagobj_t *chev_obj = (jagobj_t*)W_POINTLUMPNUM(chev_lump);
 		DrawScrollingChevrons(chev_obj, 16 + ((80-stbar_tics) << 4), -stbar_tics << 1);
 
 		if (gamemapinfo.act >= 1 && gamemapinfo.act <= 3) {
-			VINT lt_lump = W_CheckNumForName(lt_lump_name);
 			jagobj_t *lt_obj = (jagobj_t*)W_POINTLUMPNUM(lt_lump);
 			VINT lt_y = 100 + ((stbar_tics - 80) << 5);
 			VINT lt_height = lt_y + lt_obj->height > 204
