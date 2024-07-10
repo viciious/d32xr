@@ -179,7 +179,7 @@ static boolean PA_ShootLine(shootWork_t *sw, line_t *li, fixed_t interceptfrac)
    sector_t *front, *back;
    fixed_t   opentop, openbottom;
 
-   if(!(li->flags & ML_TWOSIDED))
+   if(li->sidenum[1] == -1)
    {
       if(!sw->shootline)
       {
@@ -191,8 +191,8 @@ static boolean PA_ShootLine(shootWork_t *sw, line_t *li, fixed_t interceptfrac)
    }
 
    // crosses a two-sided line
-   front = &sectors[sides[li->sidenum[0]].sector];
-   back  = &sectors[sides[li->sidenum[1]].sector];
+   front = LD_FRONTSECTOR(li);
+   back  = LD_BACKSECTOR(li);
 
    if(front->ceilingheight < back->ceilingheight)
       opentop = front->ceilingheight;
