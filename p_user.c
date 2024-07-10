@@ -741,6 +741,8 @@ ticphase = 24;
 	if (buttons & BT_ATTACK)
 	{
 		player->attackdown++;
+		if (player->attackdown > 30)
+			player->attackdown = 31;
 		if (player->attackdown > 30 &&
 		(player->readyweapon == wp_chaingun || player->readyweapon == wp_plasma) )
 			stbar[playernum].specialFace = f_mowdown;
