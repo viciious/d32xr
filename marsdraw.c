@@ -704,18 +704,18 @@ void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh)
 	}
 }
 
-
 /*
 Draw the text banner on the left side of the screen. Used for the title card.
 */
-void DrawScrollingBanner(jagobj_t* jo, int x, int y_shift)
+void DrawScrollingBanner(short ltzz_lump, int x, int y_shift)
 {
+	const jagobj_t *jo = (jagobj_t*)W_POINTLUMPNUM(ltzz_lump);
 	pixel_t *fb = I_OverwriteBuffer();
 	pixel_t *dest = fb + ((320*24) / 2);	// Don't draw over the top letterbox.
-	pixel_t *source;
-	short height = jo->height;
+	const pixel_t *source;
+	const short height = jo->height;
 
-	x &= 0xFFFFFFFE;	// No odd positions allowed!
+	x &= ~0x01;	// No odd positions allowed!
 	short source_offset;
 	if (y_shift >= 0) {
 		source_offset = ((height - (y_shift % height)) << 4) - x;
@@ -754,18 +754,18 @@ void DrawScrollingBanner(jagobj_t* jo, int x, int y_shift)
 	}
 }
 
-
 /*
 Draw the chevrons on the left side of the screen. Used for the title card.
 */
-void DrawScrollingChevrons(jagobj_t* jo, int x, int y_shift)
+void DrawScrollingChevrons(short chev_lump, int x, int y_shift)
 {
+	const jagobj_t *jo = (jagobj_t*)W_POINTLUMPNUM(chev_lump);
 	pixel_t *fb = I_OverwriteBuffer();
 	pixel_t *dest = fb + ((320*24) / 2);	// Don't draw over the top letterbox.
-	pixel_t *source;
-	short height = 32;
+	const pixel_t *source;
+	const short height = 32;
 
-	x &= 0xFFFFFFFE;	// No odd positions allowed!
+	x &= ~0x01;	// No odd positions allowed!
 	short source_offset;
 	if (y_shift >= 0) {
 		source_offset = ((height - (y_shift % height)) * 26);

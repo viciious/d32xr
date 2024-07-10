@@ -1110,8 +1110,8 @@ void PrintHex (int x, int y, unsigned num);
 void DrawPlaque (jagobj_t *pl);
 void DrawTiledBackground2(int flat);
 void DrawTiledBackground(void);
-void DrawScrollingBanner(jagobj_t* jo, int x, int y_shift);
-void DrawScrollingChevrons(jagobj_t* jo, int x, int y_shift);
+void DrawScrollingBanner(short ltzz_lump, int x, int y_shift);
+void DrawScrollingChevrons(short chev_lump, int x, int y_shift);
 extern	int		maxlevel;			/* highest level selectable in menu (1-25) */
 
 extern	int		gamevbls;			/* may not really be vbls in multiplayer */

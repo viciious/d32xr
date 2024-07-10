@@ -199,11 +199,9 @@ static void ST_DrawTitleCard()
 	if (stbar_tics < 16) {
 		// Title card moving into the frame.
 
-		jagobj_t *ltzz_obj = (jagobj_t*)W_POINTLUMPNUM(ltzz_lump);
-		DrawScrollingBanner(ltzz_obj, (stbar_tics-16) << 4, stbar_tics << 1);
+		DrawScrollingBanner(ltzz_lump, (stbar_tics-16) << 4, stbar_tics << 1);
 
-		jagobj_t *chev_obj = (jagobj_t*)W_POINTLUMPNUM(chev_lump);
-		DrawScrollingChevrons(chev_obj, 16 + ((stbar_tics-16) << 4), -stbar_tics << 1);
+		DrawScrollingChevrons(chev_lump, 16 + ((stbar_tics-16) << 4), -stbar_tics << 1);
 
 		if (gamemapinfo.act >= 1 && gamemapinfo.act <= 3) {
 			DrawJagobjLump(lt_lump, 160+68-24 + ((16 - stbar_tics) << 5), 100 - ((16 - stbar_tics) << 5), NULL, NULL);
@@ -217,11 +215,9 @@ static void ST_DrawTitleCard()
 	else if (stbar_tics < 80) {
 		// Title card at rest in the frame.
 
-		jagobj_t *ltzz_obj = (jagobj_t*)W_POINTLUMPNUM(ltzz_lump);
-		DrawScrollingBanner(ltzz_obj, 0, stbar_tics << 1);
+		DrawScrollingBanner(ltzz_lump, 0, stbar_tics << 1);
 
-		jagobj_t *chev_obj = (jagobj_t*)W_POINTLUMPNUM(chev_lump);
-		DrawScrollingChevrons(chev_obj, 16, -stbar_tics << 1);
+		DrawScrollingChevrons(chev_lump, 16, -stbar_tics << 1);
 
 		if (gamemapinfo.act >= 1 && gamemapinfo.act <= 3) {
 			DrawJagobjLump(lt_lump, 160+68-24, 100, NULL, NULL);
@@ -233,11 +229,9 @@ static void ST_DrawTitleCard()
 	}
 	else {
 		// Title card moving out of the frame.
-		jagobj_t *ltzz_obj = (jagobj_t*)W_POINTLUMPNUM(ltzz_lump);
-		DrawScrollingBanner(ltzz_obj, (80-stbar_tics) << 4, stbar_tics << 1);
+		DrawScrollingBanner(ltzz_lump, (80-stbar_tics) << 4, stbar_tics << 1);
 
-		jagobj_t *chev_obj = (jagobj_t*)W_POINTLUMPNUM(chev_lump);
-		DrawScrollingChevrons(chev_obj, 16 + ((80-stbar_tics) << 4), -stbar_tics << 1);
+		DrawScrollingChevrons(chev_lump, 16 + ((80-stbar_tics) << 4), -stbar_tics << 1);
 
 		if (gamemapinfo.act >= 1 && gamemapinfo.act <= 3) {
 			jagobj_t *lt_obj = (jagobj_t*)W_POINTLUMPNUM(lt_lump);
