@@ -601,7 +601,7 @@ void P_GroupLines (void)
 		fixed_t dy = (v2->y - v1->y) << FRACBITS;
 		if (dx && dy)
 		{
-			if (FixedDiv (dy , dx) > 0)
+			if ( ( (dx ^ dy) & 0x80000000 ) == 0 )
 				li->moreflags |= LD_MFLAG_POSITIVE;
 		}
 	}
