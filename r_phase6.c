@@ -384,7 +384,9 @@ void R_SegCommands(void)
         viswall_t* segl = vd->viswalls + i;
 
 #ifdef MARS
-        while ((MARS_SYS_COMM6 & 0xff) <= i)
+        if (*(int8_t *)&MARS_SYS_COMM6 == -1)
+            return; // the other cpu is done drawing segments, so should we
+         while ((MARS_SYS_COMM6 & 0xff) <= i)
             continue;
 #endif
         if (segl->start > segl->stop)
@@ -556,6 +558,11 @@ post_draw:
             }
         }
     }
+
+#ifdef MARS
+    // mark all segments as rendered
+    *(int8_t *)&MARS_SYS_COMM6 = -1;
+#endif
 }
 
 #ifdef MARS

@@ -99,7 +99,7 @@ static inline void Mars_R_WallNext(void)
 
 static inline void Mars_R_EndWallPrep(void)
 {
-	MARS_SYS_COMM6 = 0xff00;
+	MARS_SYS_COMM6 = 0xfe00;
 }
 
 // r_phase7
