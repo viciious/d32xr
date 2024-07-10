@@ -133,6 +133,7 @@ int Mars_ReadController(int port);
 int Mars_ROMSize(void);
 
 #ifdef MDSKY
+void Mars_FadeMDPaletteFromBlack(int fade_degree);
 void Mars_LoadMDSky(void *sky_names_ptr, void *sky_palettes_ptr, void *sky_tiles_ptr);
 #endif
 
