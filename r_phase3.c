@@ -45,7 +45,7 @@ static void R_PrepMobj(mobj_t *thing)
    if(tz < MINZ)
       return;
 
-   if (tz > 3072*FRACUNIT) // Cull draw distance
+   if (tz > 2048*FRACUNIT) // Cull draw distance
       return;
 
    gxt = FixedMul(tr_x, vd.viewsin);
