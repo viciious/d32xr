@@ -438,7 +438,7 @@ void A_ReFire (player_t *player, pspdef_t *psp)
 	if ( (player->ticbuttons & BT_ATTACK) 
 	&& player->pendingweapon == wp_nochange && player->health)
 	{
-		player->refire++;
+		player->refire = 1;
 		P_FireWeapon (player);
 	}
 	else

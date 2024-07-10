@@ -438,22 +438,20 @@ typedef struct player_s
 	VINT		frags;					/* kills of other player */
 	VINT		readyweapon;
 	VINT		pendingweapon;		/* wp_nochange if not changing */
+	char		refire;					/* refired shots are less accurate */
 	char		weaponowned[NUMWEAPONS];
 	VINT		ammo[NUMAMMO];
 	VINT		maxammo[NUMAMMO];
-	VINT		attackdown, usedown;	/* true if button down last tic */
+	char		attackdown, usedown;	/* true if button down last tic */
 	VINT		cheats;					/* bit flags */
 	
-	VINT		refire;					/* refired shots are less accurate */
-
 	VINT		ticremainder;
 	
 	VINT		killcount, itemcount, secretcount;		/* for intermission */
 	char		*message;				/* hint messages */
 	VINT		damagecount, bonuscount;/* for screen flashing */
-	mobj_t		*attacker;				/* who did damage (NULL for floors) */
 	VINT		extralight;				/* so gun flashes light up areas */
-	VINT		colormap;				/* 0-3 for which color to draw player */
+	mobj_t		*attacker;				/* who did damage (NULL for floors) */
 	pspdef_t	psprites[NUMPSPRITES];	/* view sprites (gun, etc) */
 	void		*lastsoundsector;		/* don't flood noise every time */
 	
