@@ -231,7 +231,6 @@ typedef struct mobj_s
 	int			flags;
 	fixed_t			radius, height;		/* for movement checking */
 
-	/* STATIC OBJECTS END HERE */
 	union {
 		struct {
 			unsigned char	movedir;		/* 0-7 */
@@ -245,6 +244,7 @@ typedef struct mobj_s
 	unsigned char		threshold;		/* if >0, the target will be chased */
 									/* no matter what (even if shot) */
 
+	/* STATIC OBJECTS END HERE */
 	fixed_t			momx, momy, momz;	/* momentums */
 
 	unsigned 		speed;			/* mobjinfo[mobj->type].speed */
