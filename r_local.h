@@ -469,14 +469,12 @@ typedef struct
 
 	int 		m_texturemid;
 
-	uint8_t 	m_texturenum;
-	uint8_t		t_texturenum;
-	uint8_t		b_texturenum;
+	VINT 	m_texturenum;
+	VINT		t_texturenum;
+	VINT		b_texturenum;
 
-	uint8_t     floorpicnum;
-	uint8_t     ceilingpicnum;
-
-	int8_t		miplevels[2];
+	VINT     floorpicnum;
+	VINT     ceilingpicnum;
 
 	int			scalestep;		/* polar angle to start at phase1, then scalestep after phase2 */
 	unsigned	scalefrac;
@@ -484,6 +482,7 @@ typedef struct
 
 	short	actionbits;
 	short	seglightlevel;
+	int16_t		miplevels[2];
 
 /* */
 /* filled in by bsp */
@@ -510,7 +509,7 @@ typedef struct
 	fixed_t 	floorheight, floornewheight, ceilnewheight, pad;
 } viswallextra_t;
 
-#define	MAXWALLCMDS		150
+#define	MAXWALLCMDS		130
 
 /* A vissprite_t is a thing that will be drawn during a refresh */
 typedef struct vissprite_s
