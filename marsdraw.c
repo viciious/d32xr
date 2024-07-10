@@ -729,7 +729,7 @@ void DrawScrollingBanner(jagobj_t* jo, int x, int y_shift)
 		source_offset += 16;
 		source_offset %= (height*16);
 
-		source = jo->data + source_offset;
+		source = (pixel_t *)(jo->data + source_offset);
 
 		switch(x) {
 			case 0:
@@ -784,7 +784,7 @@ void DrawScrollingChevrons(jagobj_t* jo, int x, int y_shift)
 
 	for (int dest_row=0; dest_row < 224-44; dest_row++)
 	{
-		source = jo->data + source_offset;
+		source = (pixel_t *)(jo->data + source_offset);
 
 		switch(x) {
 			case 0:

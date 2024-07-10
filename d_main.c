@@ -6,6 +6,8 @@
 #include "marshw.h"
 #endif
 
+#include <string.h>
+
 boolean		splitscreen = false;
 VINT		controltype = 0;		/* determine settings for BT_* */
 VINT		alwaysrun = 0;
