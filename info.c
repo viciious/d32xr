@@ -54,8 +54,6 @@ const char * const sprnames[NUMSPRITES] = {
 };
 
 void A_Chase(mobj_t *actor);
-void A_Scream(mobj_t *actor);
-void A_XScream(mobj_t *actor);
 void A_Fall(mobj_t *actor);
 void A_Look(mobj_t *actor);
 void A_Pain(mobj_t *actor);
