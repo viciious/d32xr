@@ -502,16 +502,6 @@ void A_FaceTarget (mobj_t *actor)
 	, actor->target->x, actor->target->y);
 }
 
-void A_CyberAttack (mobj_t *actor)
-{	
-	if (!actor->target)
-		return;
-		
-	A_FaceTarget (actor);
-//	P_SpawnMissile (actor, actor->target, MT_ROCKET);
-}
-
-
 /*
 ==================
 =
@@ -547,29 +537,6 @@ void A_SkullAttack (mobj_t *actor)
 	if (dist < 1)
 		dist = 1;
 	actor->momz = (dest->z+(dest->theight<<(FRACBITS-1)) - actor->z) / dist;
-}
-
-void A_Scream (mobj_t *actor)
-{
-	int		sound;
-	const mobjinfo_t* ainfo = &mobjinfo[actor->type];
-
-	switch (ainfo->deathsound)
-	{
-	case 0:
-		return;
-	
-	default:
-		sound = ainfo->deathsound;
-		break;
-	}
-
-	S_StartSound (actor, sound);
-}
-
-void A_XScream (mobj_t *actor)
-{
-	S_StartSound (actor, sfx_None);	
 }
 
 void A_Pain (mobj_t *actor)
