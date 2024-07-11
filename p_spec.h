@@ -222,7 +222,7 @@ typedef struct
 	VINT		type;
 } plat_t;
 
-#define	PLATWAIT	3/THINKERS_TICS			/* seconds */
+#define	PLATWAIT	4/THINKERS_TICS			/* seconds */
 #define	PLATSPEED	(FRACUNIT*THINKERS_TICS)
 #define	MAXPLATS	30
 
