@@ -649,6 +649,8 @@ void A_FishJump(mobj_t *mo)
 		else
 			jumpval = 44 << (FRACBITS - 2);
 
+		jumpval = FixedMul(jumpval, FixedDiv(30 << FRACBITS, 35 << FRACBITS));
+
 		mo->momz = jumpval;
 		P_SetMobjState(mo, mobjinfo[mo->type].seestate);
 	}
