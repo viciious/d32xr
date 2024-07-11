@@ -194,7 +194,7 @@ static void ST_DrawTitleCard()
 	}
 
 	if (leveltime < 30)
-		DrawFillRect(0, 0, 320, 200, COLOR_BLACK);
+		DrawFillRect(0, 20, 320, 180, COLOR_BLACK);
 
 	if (stbar_tics < 16) {
 		// Title card moving into the frame.
