@@ -352,8 +352,8 @@ void P_XYMovement(mobj_t *mo)
 {
    fixed_t xleft, yleft, xuse, yuse;
 
-   xleft = xuse = mo->momx & ~7;
-   yleft = yuse = mo->momy & ~7;
+   xleft = xuse = (mo->momx*2) & ~7;
+   yleft = yuse = (mo->momy*2) & ~7;
 
    while(xuse > MAXMOVE || xuse < -MAXMOVE || yuse > MAXMOVE || yuse < -MAXMOVE)
    {
@@ -456,7 +456,7 @@ static void P_FloatChange(mobj_t *mo)
 //
 void P_ZMovement(mobj_t *mo)
 {
-   mo->z += mo->momz;
+   mo->z += mo->momz * 2;
 
    if((mo->flags & MF_FLOAT) && mo->target)
    {

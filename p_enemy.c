@@ -638,17 +638,25 @@ void A_BossDeath (mobj_t *mo)
 
 }
 
-
-void A_Hoof (mobj_t *mo)
+void A_FishJump(mobj_t *mo)
 {
-	A_Chase (mo);
-}
+	if ((mo->z <= mo->floorz))// || (mo->z <= mo->watertop - (64 << FRACBITS)))
+	{
+		fixed_t jumpval;
 
-void A_Metal (mobj_t *mo)
-{
-	A_Chase (mo);
-}
+		if (mo->angle)
+			jumpval = (mo->angle / ANGLE_1)>>2;
+		else
+			jumpval = 44 << (FRACBITS - 2);
 
+		mo->momz = jumpval;
+		P_SetMobjState(mo, mobjinfo[mo->type].seestate);
+	}
+
+	if (mo->momz < 0
+		&& (mo->state < mobjinfo[mo->type].meleestate || mo->state > mobjinfo[mo->type].xdeathstate))
+		P_SetMobjState(mo, mobjinfo[mo->type].meleestate );
+}
 
 /*============================================================================= */
 

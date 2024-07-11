@@ -559,7 +559,7 @@ return;	/*DEBUG */
 	if (mobj->tics > 0)
 		mobj->tics = 1 + (P_Random () % mobj->tics);
 		
-	mobj->angle = ANG45 * (mthing->angle/45);
+	mobj->angle = mthing->angle * ANGLE_1;
 	if (mobj->flags & MF_STATIC)
 		return;
 

@@ -111,6 +111,7 @@ typedef int fixed_t;
 #define THINKERS_TICS 2
 #endif
 
+#define ANGLE_1 0x00B60B61 // Not exact, so rounded up
 #define	ANG45	0x20000000
 #define	ANG90	0x40000000
 #define	ANG180	0x80000000

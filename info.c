@@ -59,6 +59,7 @@ void A_XScream(mobj_t *actor);
 void A_Fall(mobj_t *actor);
 void A_Look(mobj_t *actor);
 void A_Pain(mobj_t *actor);
+void A_FishJump(mobj_t *actor);
 
 #define STATE(sprite,frame,tics,action,nextstate) {sprite,frame,tics,nextstate,action}
 
@@ -108,6 +109,10 @@ STATE(SPR_POSS,2,2,A_Chase,S_POSS_RUN6),	/* S_POSS_RUN5 */
 STATE(SPR_POSS,2,2,A_Chase,S_POSS_RUN7),	/* S_POSS_RUN6 */
 STATE(SPR_POSS,3,2,A_Chase,S_POSS_RUN8),	/* S_POSS_RUN7 */
 STATE(SPR_POSS,3,2,A_Chase,S_POSS_RUN1),	/* S_POSS_RUN8 */
+STATE(SPR_FISH,1,1,NULL,S_FISH2), // S_FISH1
+STATE(SPR_FISH,1,1,A_FishJump,S_FISH1), // S_FISH2
+STATE(SPR_FISH,0,1,NULL,S_FISH4), // S_FISH3
+STATE(SPR_FISH,0,1,A_FishJump,S_FISH3), // S_FISH4
 STATE(SPR_RING,0,1,NULL,S_RING2), // S_RING1
 STATE(SPR_RING,1,1,NULL,S_RING3), // S_RING2
 STATE(SPR_RING,2,1,NULL,S_RING4), // S_RING3
@@ -256,6 +261,32 @@ sfx_s3k_3d,		/* deathsound */
 sfx_None,		/* activesound */
 MF_SHOOTABLE|MF_ENEMY		/* flags */
  },
+
+ 	{           // MT_GFZFISH
+		102,            // doomednum
+		S_FISH2,        // spawnstate
+		1,              // spawnhealth
+		S_FISH1,        // seestate
+		sfx_None,       // seesound
+		8,              // reactiontime
+		sfx_None,       // attacksound
+		S_NULL,         // painstate
+		0,              // painchance
+		sfx_None,       // painsound
+		S_FISH3,        // meleestate
+		S_NULL,         // missilestate
+		S_XPLD_FLICKY,  // deathstate
+		S_FISH4,        // xdeathstate
+		sfx_s3k_3d,     // deathsound
+		0,              // speed
+		8*FRACUNIT,     // radius
+		28*FRACUNIT,    // height
+		0,              // display offset
+		100,            // mass
+		1,              // damage
+		sfx_None,       // activesound
+		MF_ENEMY|MF_SHOOTABLE, // flags
+	},
 
 {           // MT_RING
 	300,            // doomednum
