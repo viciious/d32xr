@@ -794,15 +794,15 @@ void Mars_Sec_R_Setup(void)
 
 void R_MarkOpenPlane(visplane_t* pl)
 {
-	int i;
-	int longs = (viewportWidth + 1) / 2;
+	unsigned longs = (unsigned)(viewportWidth + 1) / 2;
 	uint32_t * open = (uint32_t *)pl->open;
 	const uint32_t v = ((uint32_t)OPENMARK << 16) | OPENMARK;
-	for (i = 0; i < longs/2; i++)
-	{
+	unsigned longlongs = longs / 2;
+
+	do {
 		*open++ = v;
 		*open++ = v;
-	}
+	} while (--longlongs > 0);
 }
 
 void R_InitClipBounds(uint32_t *clipbounds)
