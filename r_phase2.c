@@ -160,7 +160,7 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
     if (wc->actionbits & AC_MIDTEXTURE)
     {
         // lighting + column
-        D_memset(vd->lastsegclip, 255, sizeof(*vd->lastsegclip)*width);
+        //D_memset(vd->lastsegclip, 255, sizeof(*vd->lastsegclip)*width);
         vd->lastsegclip += width;
     }
 
