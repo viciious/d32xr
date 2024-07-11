@@ -1558,10 +1558,6 @@ load_md_sky:
         move.l  a3,-(sp)
         move.l  d0,-(sp)
         move.l  d1,-(sp)
-        move.l  d2,-(sp)
-        move.l  d3,-(sp)
-
-        move.w  0xA15104,d3             /* Set cart bank select */
 
         lea     0xC00004,a0
         lea     0xC00000,a1
@@ -1580,17 +1576,13 @@ load_md_sky:
         move.w  #0x8F02,(a0)
         move.l  #0x40000003,(a0)        /* Set destination offset to pattern name table B at position 0x0 */
         move.l  lump_ptr,d0
-        move.w  lump_ptr,d1
-        andi.l  #0xFFFFF,d0
-        ori.l   #0x900000,d0
+        andi.l  #0x7FFFF,d0
+        addi.l  #0x880000,d0
         move.l  d0,a2
-        lsr.w   #4,d1
-        andi.w  #3,d1
-        move.w  d1,0xA15104             /* Set cart bank select */
-        move.w  #0x200-1,d2             /* Prepare to copy two pattern names, 256 times total */
+        move.w  #0x200-1,d1             /* Prepare to copy two pattern names, 256 times total */
 0:
         move.w  (a2)+,(a1)              /* Write 0 to pattern name table B at position 0x0 */
-        dbra    d2,0b
+        dbra    d1,0b
 
 
         /* Load palettes */
@@ -1600,20 +1592,16 @@ load_md_sky:
         move.w  #0x8F02,(a0)
         move.l  #0xC0000000,(a0)        /* Write CRAM address 0 */
         move.l  lump_ptr,d0
-        move.w  lump_ptr,d1
-        andi.l  #0xFFFFF,d0
-        ori.l   #0x900000,d0
+        andi.l  #0x7FFFF,d0
+        addi.l  #0x880000,d0
         move.l  d0,a2
         lea     base_palette_1,a3
-        lsr.w   #4,d1
-        andi.w  #3,d1
-        move.w  d1,0xA15104             /* Set cart bank select */
-        move.w  #0x40-1,d2              /* Prepare to copy two colors, 32 times total */
+        move.w  #0x40-1,d1              /* Prepare to copy two colors, 32 times total */
 1:
         move.w  (a2)+,(a3)+             /* Save color to DRAM */
         move.w  #0,(a1)                 /* Set color to black in CRAM */
         |add.l   #0x40000,a1            /* Advance the destination cursor */
-        dbra    d2,1b
+        dbra    d1,1b
 
 
         /* Load patterns */
@@ -1623,22 +1611,14 @@ load_md_sky:
         move.w  #0x8F02,(a0)
         move.l  #0x40000000,(a0)        /* Write VRAM address 0 */
         move.l  lump_ptr,d0
-        move.w  lump_ptr,d1
-        andi.l  #0xFFFFF,d0
-        ori.l   #0x900000,d0
+        andi.l  #0x7FFFF,d0
+        addi.l  #0x880000,d0
         move.l  d0,a2
-        lsr.w   #4,d1
-        andi.w  #3,d1
-        move.w  d1,0xA15104             /* Set cart bank select */
-        move.w  #0x2000-1,d2            /* Prepare to copy eight pixels, 4096 times total */
+        move.w  #0x2000-1,d1            /* Prepare to copy eight pixels, 4096 times total */
 2:
-        move.w  (a2)+,(a1)             /* Copy eight pixels from the source */
-        dbra    d2,2b
+        move.w  (a2)+,(a1)              /* Copy eight pixels from the source */
+        dbra    d1,2b
 
-        move.w  d3,0xA15104             /* Set cart bank select */
-
-        move.l  (sp)+,d3
-        move.l  (sp)+,d2
         move.l  (sp)+,d1
         move.l  (sp)+,d0
         move.l  (sp)+,a3

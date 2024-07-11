@@ -243,7 +243,7 @@ void Mars_InitVideo(int lines)
 		Mars_FlipFrameBuffers(1);
 	}
 
-	Mars_SetMDColor(3, 2);
+	Mars_SetMDColor(1, 0);
 }
 
 void Mars_Init(void)
