@@ -199,6 +199,9 @@ static void R_SegLoop(viswall_t* segl, unsigned short * restrict clipbounds,
     const int cy = centerY;
     const int vh = viewportHeight;
 
+    if (!(actionbits & (AC_ADDFLOOR|AC_ADDCEILING)) && !newclipbounds)
+        return;
+
     for (x = start; x <= stop; x++)
     {
         fixed_t floorclipx, ceilingclipx;
