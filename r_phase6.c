@@ -357,6 +357,10 @@ void R_SegCommands(void)
     int extralight;
     uint32_t clipbounds_[SCREENWIDTH / 2 + 1];
     uint16_t *clipbounds = (uint16_t *)clipbounds_;
+#ifdef MARS
+    volatile int8_t *addedsegs = (volatile int8_t *)&MARS_SYS_COMM6;
+    volatile uint8_t *readysegs = (volatile uint8_t *)addedsegs + 1;
+#endif
 
     // initialize the clipbounds array
     R_InitClipBounds(clipbounds_);
@@ -384,9 +388,9 @@ void R_SegCommands(void)
         viswall_t* segl = vd->viswalls + i;
 
 #ifdef MARS
-        if (*(int8_t *)&MARS_SYS_COMM6 == -1)
+        if (*addedsegs == -1)
             return; // the other cpu is done drawing segments, so should we
-         while ((MARS_SYS_COMM6 & 0xff) <= i)
+        while (*readysegs <= i)
             continue;
 #endif
         if (segl->start > segl->stop)
@@ -561,7 +565,7 @@ post_draw:
 
 #ifdef MARS
     // mark all segments as rendered
-    *(int8_t *)&MARS_SYS_COMM6 = -1;
+    *addedsegs = -1;
 #endif
 }
 

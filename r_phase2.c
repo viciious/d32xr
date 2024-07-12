@@ -307,6 +307,8 @@ void Mars_Sec_R_WallPrep(void)
     uint32_t clipbounds_[SCREENWIDTH/2+1];
     uint16_t *clipbounds = (uint16_t *)clipbounds_;
     mapvertex_t *verts;
+    volatile uint8_t *addedsegs = (volatile uint8_t *)&MARS_SYS_COMM6;
+    volatile uint8_t *readysegs = addedsegs + 1;
 
     // clear visplane 0
     vp0open = vd->visplanes[0].open - 1;
@@ -322,21 +324,18 @@ void Mars_Sec_R_WallPrep(void)
 
     for (segl = first; segl != verylast; )
     {
-        unsigned nextsegs;
-
-        nextsegs = MARS_SYS_COMM6 >> 8;
+        int8_t nextsegs = *addedsegs;
 
         // check if master CPU finished exec'ing R_BSP()
-        if (nextsegs == 0xfe)
+        if (nextsegs == -2)
         {
-            MARS_SYS_COMM6 = 0xfe00 | (last - first);
             Mars_ClearCacheLine(&vd->lastwallcmd);
             verylast = vd->lastwallcmd;
             last = verylast;
         }
         else
         {
-            last = first + nextsegs;
+            last = first + (uint8_t)nextsegs;
         }
 
         for (; segl < last; segl++)
@@ -349,8 +348,7 @@ void Mars_Sec_R_WallPrep(void)
             R_SegLoop(segl, clipbounds, seglex->floorheight, seglex->floornewheight, seglex->ceilnewheight);
 
             seglex++;
-            if (last == verylast)
-                MARS_SYS_COMM6++;
+            *readysegs = *readysegs + 1;
         }
     }
 }
