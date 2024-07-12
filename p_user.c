@@ -485,7 +485,7 @@ void P_BuildMove(player_t *player)
 
 	if (!(player->forwardmove || player->sidemove))
 	{
-		if (!(player->mo->momx > STOPSPEED || player->mo->momx < -STOPSPEED || player->mo->momy > STOPSPEED || player->mo->momy < -STOPSPEED || player->mo->momz > STOPSPEED || player->mo->momz < -STOPSPEED))
+		if (leveltime > 3*TICRATE && !(player->mo->momx > STOPSPEED || player->mo->momx < -STOPSPEED || player->mo->momy > STOPSPEED || player->mo->momy < -STOPSPEED || player->mo->momz > STOPSPEED || player->mo->momz < -STOPSPEED))
 			player->stillTimer++;
 		else
 			player->stillTimer = 0;

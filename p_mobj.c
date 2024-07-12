@@ -420,9 +420,14 @@ y = 0xff500000;
 	// Set camera position
 	camera.x = mobj->x;
 	camera.y = mobj->y;
-	P_ThrustValues(mobj->angle, -CAM_DIST, &camera.x, &camera.y);
+	if (gamemapinfo.act == 3)
+		P_ThrustValues(mobj->angle, -CAM_DIST, &camera.x, &camera.y);
+	else
+		P_ThrustValues(mobj->angle + (ANG45 * 3), -CAM_DIST, &camera.x, &camera.y);
 	camera.x = (camera.x >> FRACBITS) << FRACBITS;
 	camera.y = (camera.y >> FRACBITS) << FRACBITS;
+
+	camera.z = mobj->z + (mobj->theight << FRACBITS);
 	
 	if (!netgame)
 		return;

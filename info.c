@@ -504,7 +504,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 	0,              // speed
 	20*FRACUNIT,    // radius
 	16*FRACUNIT,    // height
-	17,    // mass
+	23,    // mass
 	0,              // damage
 	sfx_None,       // activesound
 	MF_SPECIAL|MF_STATIC, // flags
@@ -529,7 +529,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 	0,              // speed
 	20*FRACUNIT,    // radius
 	16*FRACUNIT,    // height
-	27,    // mass
+	37,    // mass
 	0,              // damage
 	sfx_None,       // activesound
 	MF_SPECIAL|MF_STATIC, // flags
@@ -553,8 +553,8 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 	0,              // speed
 	16*FRACUNIT,    // radius
 	16*FRACUNIT,    // height
-	17,    // mass
-	17,    // damage
+	23,    // mass
+	23,    // damage
 	sfx_None,       // activesound
 	MF_SPECIAL|MF_STATIC, // flags
 },
@@ -578,8 +578,8 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 	0,              // speed
 	16*FRACUNIT,    // radius
 	16*FRACUNIT,    // height
-	27,    // mass
-	27,    // damage
+	37,    // mass
+	37,    // damage
 	sfx_None,       // activesound
 	MF_SPECIAL|MF_STATIC, // flags
 },
@@ -603,7 +603,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 	16*FRACUNIT,    // radius
 	32*FRACUNIT,    // height
 	0,              // mass
-	32,    // damage
+	42,    // damage
 	sfx_None,       // activesound
 	MF_SPECIAL|MF_STATIC, // flags
 },
@@ -628,7 +628,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 	16*FRACUNIT,    // radius
 	32*FRACUNIT,    // height
 	0,              // mass
-	62,    // damage
+	84,    // damage
 	sfx_None,       // activesound
 	MF_SPECIAL|MF_STATIC, // flags
 },
