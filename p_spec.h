@@ -341,12 +341,4 @@ int		EV_BuildStairs(line_t *line, int type);
 int		EV_DoFloor(line_t *line,floor_e floortype);
 void	T_MoveFloor(floormove_t *floor);
 
-/*
-===============================================================================
-
-							P_TELEPT
-
-===============================================================================
-*/
-int		EV_Teleport( line_t *line,mobj_t *thing );
 

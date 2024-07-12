@@ -413,10 +413,6 @@ void P_CrossSpecialLine (line_t *line,mobj_t *thing)
 			EV_DoFloor( line, lowerFloorToLowest );
 			line->special = 0;
 			break;
-		case 39:		/* TELEPORT! */
-			EV_Teleport( line, thing );
-			line->special = 0;
-			break;
 		case 40:		/* RaiseCeilingLowerFloor */
 			EV_DoCeiling( line, raiseToHighest );
 			EV_DoFloor( line, lowerFloorToLowest );
@@ -487,15 +483,6 @@ void P_CrossSpecialLine (line_t *line,mobj_t *thing)
 		case 124:
 			// Secret EXIT
 			G_SecretExitLevel();
-			break;
-
-		case 125:
-			// TELEPORT MonsterONLY
-			if (!thing->player)
-			{
-				EV_Teleport(line, thing);
-				line->special = 0;
-			}
 			break;
 
 		case 130:
@@ -573,9 +560,6 @@ void P_CrossSpecialLine (line_t *line,mobj_t *thing)
 						/* on either side of lines */
 			EV_DoFloor(line,raiseToTexture);
 			break;
-		case 97:		/* TELEPORT! */
-			EV_Teleport( line, thing );
-			break;
 		case 98:		/* Lower Floor (TURBO) */
 			EV_DoFloor(line,turboLower);
 			break;
@@ -598,12 +582,6 @@ void P_CrossSpecialLine (line_t *line,mobj_t *thing)
 		case 120:
 			/* Blazing PlatDownWaitUpStay. */
 			EV_DoPlat(line, blazeDWUS, 0);
-			break;
-
-		case 126:
-			/* TELEPORT MonsterONLY. */
-			if (!thing->player)
-				EV_Teleport(line, thing);
 			break;
 
 		case 128:

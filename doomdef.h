@@ -385,6 +385,7 @@ typedef struct player_s
 	VINT        lossCount;
 	VINT        stillTimer;
 	VINT        homing;
+	VINT        justSprung;
 } player_t;
 
 void P_PlayerHitFloor(player_t* player);

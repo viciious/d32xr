@@ -82,13 +82,25 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
       return false; // stop moving
    }*/
 
+   // Z-checking
+   fixed_t theight, tmheight;
+	if (thing->flags & MF_RINGMOBJ)
+		theight = mobjinfo[thing->type].height;
+	else
+		theight = thing->theight << FRACBITS;
+   if (tmthing->flags & MF_RINGMOBJ)
+      tmheight = mobjinfo[tmthing->type].height;
+   else
+      tmheight = tmthing->theight << FRACBITS;
+
+   if(tmthing->z > thing->z + theight)
+      return true; // went overhead
+   if(tmthing->z + tmheight < thing->z)
+      return true; // went underneath
+         
    // missiles can hit other things
    if(tmthing->flags & MF_MISSILE)
    {
-      if(tmthing->z > thing->z + (thing->theight << FRACBITS))
-         return true; // went overhead
-      if(tmthing->z + (tmthing->theight << FRACBITS) < thing->z)
-         return true; // went underneath
       if(tmthing->target->type == thing->type) // don't hit same species as originator
       {
          if(thing == tmthing->target) // don't hit originator

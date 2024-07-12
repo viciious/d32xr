@@ -14,25 +14,6 @@
 boolean P_UseSpecialLine ( mobj_t *thing, line_t *line)
 {		
 	/* */
-	/*	Switches that other things can activate */
-	/* */
-	if (!thing->player)
-	{
-		if (line->flags & ML_SECRET)
-			return false;		/* never open secret doors */
-		switch(line->special)
-		{
-			case 1:		/* MANUAL DOOR RAISE */
-			case 32:	/* MANUAL BLUE */
-			case 33:	/* MANUAL RED */
-			case 34:	/* MANUAL YELLOW */
-				break;
-			default:
-				return false;
-		}
-	}
-	
-	/* */
 	/* do something */
 	/*	 */
 	switch (line->special)

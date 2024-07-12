@@ -291,6 +291,9 @@ void P_PlayerZMovement(mobj_t *mo)
 			mo->momz = 0;
 		mo->z = mo->ceilingz - (mo->theight << FRACBITS);
 	}
+
+	if (mo->state == S_PLAY_SPRING && mo->momz < 0)
+		P_SetMobjState(mo, S_PLAY_FALL1);
 }
 
 /*
@@ -338,7 +341,17 @@ void P_PlayerMobjThink(mobj_t *mobj)
 
 	player_t *player = &players[mobj->player - 1];
 
-	if (mobj->state >= S_PLAY_ATK1 && mobj->state <= S_PLAY_ATK5)
+	if (mobj->state >= S_PLAY_FALL1 && mobj->state <= S_PLAY_FALL2)
+	{
+		const fixed_t absmomz = D_abs(mobj->momz);
+		if (absmomz < (20 << FRACBITS))
+			mobj->tics = 3;
+		else if (absmomz < (30 << FRACBITS))
+			mobj->tics = 2;
+		else
+			mobj->tics = 1;
+	}
+	else if (mobj->state >= S_PLAY_ATK1 && mobj->state <= S_PLAY_ATK5)
 	{
 		if (player->speed > (13 << FRACBITS))
 			mobj->tics = 1;
@@ -495,6 +508,12 @@ void P_BuildMove(player_t *player)
 
 	if (P_IsReeling(player))
 		player->forwardmove = player->sidemove = 0;
+
+	if (player->justSprung)
+	{
+		player->justSprung--;
+		player->forwardmove = player->sidemove = 0;
+	}
 }
 
 /*

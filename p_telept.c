@@ -33,15 +33,3 @@ void P_Telefrag (mobj_t *thing, fixed_t x, fixed_t y)
 		m->flags &= ~(MF_SOLID|MF_SHOOTABLE);
 	}
 }
-
-
-/*================================================================== */
-/* */
-/*						TELEPORTATION */
-/* */
-/*================================================================== */
-int	EV_Teleport( line_t *line,mobj_t *thing )
-{
-	return 0;
-}
-

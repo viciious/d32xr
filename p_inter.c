@@ -48,7 +48,7 @@ static boolean P_DoSpring(mobj_t *spring, player_t *player)
 */
 	if ((horizspeed && vertispeed) || (player && player->homing)) // Mimic SA
 	{
-		player->mo->momx = player->mo->momy = 0;
+		player->mo->momx = player->mo->momy = player->mo->momz = 0;
 		P_UnsetThingPosition(player->mo);
 		player->mo->x = spring->x;
 		player->mo->y = spring->y;
@@ -109,7 +109,7 @@ static boolean P_DoSpring(mobj_t *spring, player_t *player)
 		{
 			boolean wasSpindashing = false;//player->dashspeed > 0;
 
-			pflags = player->pflags & (PF_STARTJUMP | PF_JUMPED | PF_SPINNING | PF_THOKKED); // I still need these.
+			pflags = player->pflags & (PF_STARTJUMP | PF_JUMPED | PF_SPINNING | PF_THOKKED); // Save these to restore later.
 
 			if (wasSpindashing) // Ensure we're in the rolling state, and not spindash.
 				P_SetMobjState(player->mo, S_PLAY_ATK1);
@@ -137,6 +137,7 @@ static boolean P_DoSpring(mobj_t *spring, player_t *player)
 	}
 
 	S_StartSound(player->mo, springinfo->painsound);
+	player->justSprung = 2*TICRATE;
 	return true;
 }
 
@@ -146,18 +147,7 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 	int			sound;
 
 	if (!toucher->player)
-		return;
-
-	fixed_t sheight;
-	if (special->flags & MF_RINGMOBJ)
-		sheight = mobjinfo[special->type].height;
-	else
-		sheight = special->theight << FRACBITS;
-		
-	if (toucher->z > (special->z + sheight))
-		return;
-	if (special->z > (toucher->z + (toucher->theight << FRACBITS)))
-		return;
+		return;		
 
 	sound = sfx_None;	
 	player = &players[toucher->player - 1];

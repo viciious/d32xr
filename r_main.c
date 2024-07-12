@@ -862,8 +862,6 @@ void R_RenderPlayerView(int displayplayer)
 
 	R_WallPrep();
 	/* the rest of the refresh can be run in parallel with the next game tic */
-	if (R_LatePrep())
-		R_Cache();
 
 	R_SegCommands();
 
@@ -922,8 +920,6 @@ void R_RenderPlayerView(int displayplayer)
 		return;
 	}
 
-	t_prep = I_GetFRTCounter();
-	R_Cache();
 	t_prep = I_GetFRTCounter() - t_prep;
 
 	t_segs = I_GetFRTCounter();

@@ -14,7 +14,7 @@
 
 void R_Cache(void)
 {
-
+// Not used, not called
 }
 
 #endif

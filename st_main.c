@@ -98,27 +98,8 @@ void ST_InitEveryLevel(void)
 
 		/* force everything to be updated on next ST_Update */
 		sb->forcedraw = true;
-		sb->drawface = -1;
 
 		sb->score = 0;
-		sb->health = 0;
-
-		/* DRAW FRAG COUNTS INITIALLY */
-		{
-			sb->yourFrags.active = false;
-			sb->yourFrags.x = YOURFRAGX;
-			sb->yourFrags.y = YOURFRAGY;
-			sb->yourFrags.w = 30;
-			sb->yourFrags.h = 8;
-			sb->hisFrags.active = false;
-			sb->hisFrags.x = HISFRAGX;
-			sb->hisFrags.y = HISFRAGY;
-			sb->hisFrags.w = 30;
-			sb->hisFrags.h = 8;
-			sb->flashInitialDraw = true;
-		}
-		sb->gibdelay = GIBTIME;
-		sb->specialFace = f_none;
 	}
 	stbar_tics = 0;
 }
@@ -141,8 +122,6 @@ static void ST_Ticker_(stbar_t* sb)
 	if ((stbarframe & 1) == 1)
 		return;
 #endif
-
-	sb->numstbarcmds = 0;
 
 	p = &players[pnum];
 
