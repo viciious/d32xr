@@ -93,23 +93,17 @@ static inline void Mars_R_BeginWallPrep(boolean draw)
 	if (!draw)
 		return;
 	MARS_SYS_COMM6 = 0; // next seg
-	MARS_SYS_COMM8 = 0; // last unready seg
 	MARS_SYS_COMM4 = draw ? MARS_SECCMD_R_WALL_PREP : MARS_SECCMD_R_WALL_PREP_NODRAW;
 }
 
 static inline void Mars_R_WallNext(void)
 {
-	MARS_SYS_COMM6++;
+	*(volatile uint8_t *)&MARS_SYS_COMM6 = *(volatile uint8_t *)&MARS_SYS_COMM6 + 1;
 }
 
 static inline void Mars_R_EndWallPrep(void)
 {
-	MARS_SYS_COMM6 = 0xffff;
-}
-
-static inline void Mars_R_WaitSecWallPrep(void)
-{
-	while (MARS_SYS_COMM6 != 0xfffe);
+	*(volatile int8_t *)&MARS_SYS_COMM6 = -2;
 }
 
 // r_phase7
