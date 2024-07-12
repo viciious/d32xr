@@ -727,14 +727,11 @@ extern byte *debugscreen;
 void P_Init (void)
 {
 	anims = Z_Malloc(sizeof(*anims) * MAXANIMS, PU_STATIC);
-	switchlist = Z_Malloc(sizeof(*switchlist)* MAXSWITCHES * 2, PU_STATIC);
-	buttonlist = Z_Malloc(sizeof(*buttonlist) * MAXBUTTONS, PU_STATIC);
 	linespeciallist = Z_Malloc(sizeof(*linespeciallist) * MAXLINEANIMS, PU_STATIC);
 
 	activeplats = Z_Malloc(sizeof(*activeplats) * MAXPLATS, PU_STATIC);
 	activeceilings = Z_Malloc(sizeof(*activeceilings) * MAXCEILINGS, PU_STATIC);
 
-	P_InitSwitchList ();
 	P_InitPicAnims ();
 #ifndef MARS
 	pausepic = W_CacheLumpName ("PAUSED",PU_STATIC);

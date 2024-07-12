@@ -117,39 +117,13 @@ typedef enum
 
 typedef struct
 {
-	VINT	ammo, health, armor;
-	VINT	godmode;
 	VINT	face;
 
 	int     score;
 	VINT    rings;
 
-	VINT	yourFragsCount;
-	VINT	hisFragsCount;
 	VINT	currentMap;
-	VINT	drawface;
-	char	weaponowned[NUMMICROS];
 
-	VINT	facetics;
-	VINT	newface;
-
-	VINT	gibframe;
-	VINT	gibdelay;
-	char	gibdraw;
-
-	char	doSpclFace;
-	VINT	spclFaceType;
-
-	short numstbarcmds;
-	stbarcmd_t stbarcmds[STC_NUMCMDTYPES + NUMMICROS];
-
-	sbflash_t	yourFrags;			/* INFO FOR YOUR FRAG FLASHING */
-	sbflash_t	hisFrags;
-	char flashInitialDraw;		/* INITIALLY DRAW FRAG AMOUNTS (flag) */
-
-	/* Messaging */
-	char	specialFace;	/* Which type of special face to make */
-	char	gotgibbed;			/* Got gibbed */
 	char	forcedraw;
 	char    msg[128];
 	VINT    msgTics;

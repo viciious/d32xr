@@ -28,9 +28,6 @@
 
 typedef struct
 {
-	VINT baronSpecial;
-	VINT cyberSpecial;
-	VINT spiderSpecial;
 	char *name;
 	VINT act;
 	char *sky;

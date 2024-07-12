@@ -132,17 +132,6 @@ typedef struct
 #define	FASTDARK		8
 #define	SLOWDARK		15
 
-void	T_LightFlash (lightflash_t *flash);
-void	P_SpawnLightFlash (sector_t *sector);
-void	T_StrobeFlash (strobe_t *flash);
-void 	P_SpawnStrobeFlash (sector_t *sector, int fastOrSlow, int inSync);
-void	EV_StartLightStrobing(line_t *line);
-void	EV_TurnTagLightsOff(line_t	*line);
-void	EV_LightTurnOn(line_t *line, int bright);
-void	T_Glow(glow_t *g);
-void	P_SpawnGlowingLight(sector_t *sector);
-void 	P_SpawnFireFlicker (sector_t *sector);
-
 /*
 ===============================================================================
 
@@ -150,36 +139,10 @@ void 	P_SpawnFireFlicker (sector_t *sector);
 
 ===============================================================================
 */
-typedef struct
-{
-	char	name1[9];
-	char	name2[9];
-} switchlist_t;
-
-typedef enum
-{
-	top,
-	middle,
-	bottom
-} bwhere_e;
-
-typedef struct
-{
-	line_t		*line;
-	VINT		btexture;
-	VINT		btimer;
-	bwhere_e	where;
-} button_t;
 
 #define	MAXSWITCHES	50		/* max # of wall switches in a level */
 #define	MAXBUTTONS	16		/* 4 players, 4 buttons each at once, max. */
 #define BUTTONTIME	15		/* 1 second */
-
-extern	VINT		*switchlist/*[MAXSWITCHES * 2]*/;
-extern	button_t* buttonlist/*[MAXBUTTONS]*/;
-
-void	P_ChangeSwitchTexture(line_t *line,int useAgain);
-void 	P_InitSwitchList(void);
 
 /*
 ===============================================================================

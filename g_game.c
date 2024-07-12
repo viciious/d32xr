@@ -133,7 +133,6 @@ void G_DoLoadLevel (void)
 		gamemapinfo.sky = NULL;
 		gamemapinfo.mapNumber = gamemap;
 		gamemapinfo.lumpNum = gamemaplump;
-		gamemapinfo.baronSpecial = (gamemap == 8);
 		gamemapinfo.secretNext = G_LumpNumForMapNum(24);
 
 		/* decide which level to go to next */

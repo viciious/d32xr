@@ -380,20 +380,8 @@ void P_CrossSpecialLine (line_t *line,mobj_t *thing)
 			EV_DoPlat(line,downWaitUpStay,0);
 			line->special = 0;
 			break;
-		case 12:		/* Light Turn On - brightest near */
-			EV_LightTurnOn(line,0);
-			line->special = 0;
-			break;
-		case 13:		/* Light Turn On 255 */
-			EV_LightTurnOn(line,255);
-			line->special = 0;
-			break;
 		case 16:		/* Close Door 30 */
 			EV_DoDoor(line,close30ThenOpen);
-			line->special = 0;
-			break;
-		case 17:		/* Start Light Strobing */
-			EV_StartLightStrobing(line);
 			line->special = 0;
 			break;
 		case 19:		/* Lower Floor */
@@ -411,10 +399,6 @@ void P_CrossSpecialLine (line_t *line,mobj_t *thing)
 		case 30:		/* Raise floor to shortest texture height */
 						/* on either side of lines */
 			EV_DoFloor(line,raiseToTexture);
-			line->special = 0;
-			break;
-		case 35:		/* Lights Very Dark */
-			EV_LightTurnOn(line,35);
 			line->special = 0;
 			break;
 		case 36:		/* Lower Floor (TURBO) */
@@ -468,10 +452,6 @@ void P_CrossSpecialLine (line_t *line,mobj_t *thing)
 			break;
 		case 59:		/* Raise Floor 24 And Change */
 			EV_DoFloor(line,raiseFloor24AndChange);
-			line->special = 0;
-			break;
-		case 104:		/* Turn lights off in sector(tag) */
-			EV_TurnTagLightsOff(line);
 			line->special = 0;
 			break;
 		case 108:
@@ -549,15 +529,6 @@ void P_CrossSpecialLine (line_t *line,mobj_t *thing)
 			break;
 		case 77:			/* Fast Ceiling Crush & Raise */
 			EV_DoCeiling(line,fastCrushAndRaise);
-			break;
-		case 79:		/* Lights Very Dark */
-			EV_LightTurnOn(line,35);
-			break;
-		case 80:		/* Light Turn On - brightest near */
-			EV_LightTurnOn(line,0);
-			break;
-		case 81:		/* Light Turn On 255 */
-			EV_LightTurnOn(line,255);
 			break;
 		case 82:		/* Lower Floor To Lowest */
 			EV_DoFloor( line, lowerFloorToLowest );
@@ -683,15 +654,12 @@ void	P_ShootSpecialLine ( mobj_t *thing, line_t *line)
 	{
 		case 24:		/* RAISE FLOOR */
 			EV_DoFloor(line,raiseFloor);
-			P_ChangeSwitchTexture(line,0);
 			break;
 		case 46:		/* OPEN DOOR */
 			EV_DoDoor(line,open);
-			P_ChangeSwitchTexture(line,1);
 			break;
 		case 47:		/* RAISE FLOOR NEAR AND CHANGE */
 			EV_DoPlat(line,raiseToNearestAndChange,0);
-			P_ChangeSwitchTexture(line,0);
 			break;
 	}
 }
@@ -822,36 +790,7 @@ void P_UpdateSpecials (void)
 				side->textureoffset = (textureoffset & 0xfff) | (rowoffset & 0xf00);
 				break;
 		}
-	}
-	
-	/* */
-	/*	DO BUTTONS */
-	/* */
-	for (i = 0; i < MAXBUTTONS; i++)
-		if (buttonlist[i].btimer)
-		{
-			buttonlist[i].btimer--;
-			if (!buttonlist[i].btimer)
-			{
-				switch(buttonlist[i].where)
-				{
-					case top:
-						sides[buttonlist[i].line->sidenum[0]].toptexture =
-							buttonlist[i].btexture;
-						break;
-					case middle:
-						sides[buttonlist[i].line->sidenum[0]].midtexture =
-							buttonlist[i].btexture;
-						break;
-					case bottom:
-						sides[buttonlist[i].line->sidenum[0]].bottomtexture =
-							buttonlist[i].btexture;
-						break;
-				}
-				D_memset(&buttonlist[i],0,sizeof(button_t));
-			}
-		}
-	
+	}	
 }
 
 /*============================================================ */
@@ -965,16 +904,16 @@ void P_SpawnSpecials (void)
 		switch (sector->special)
 		{
 			case 1:		/* FLICKERING LIGHTS */
-				P_SpawnLightFlash (sector);
+//				P_SpawnLightFlash (sector);
 				break;
 			case 2:		/* STROBE FAST */
-				P_SpawnStrobeFlash(sector,FASTDARK,0);
+//				P_SpawnStrobeFlash(sector,FASTDARK,0);
 				break;
 			case 3:		/* STROBE SLOW */
-				P_SpawnStrobeFlash(sector,SLOWDARK,0);
+//				P_SpawnStrobeFlash(sector,SLOWDARK,0);
 				break;
 			case 8:		/* GLOWING LIGHT */
-				P_SpawnGlowingLight(sector);
+//				P_SpawnGlowingLight(sector);
 				break;
 			case 9:		/* SECRET SECTOR */
 				totalsecret++;
@@ -983,16 +922,16 @@ void P_SpawnSpecials (void)
 				P_SpawnDoorCloseIn30 (sector);
 				break;
 			case 12:	/* SYNC STROBE SLOW */
-				P_SpawnStrobeFlash (sector, SLOWDARK, 1);
+//				P_SpawnStrobeFlash (sector, SLOWDARK, 1);
 				break;
 			case 13:	/* SYNC STROBE FAST */
-				P_SpawnStrobeFlash (sector, FASTDARK, 1);
+//				P_SpawnStrobeFlash (sector, FASTDARK, 1);
 				break;
 			case 14:	/* DOOR RAISE IN 5 MINUTES */
 				P_SpawnDoorRaiseIn5Mins (sector, i);
 				break;
 			case 17:
-				P_SpawnFireFlicker(sector);
+//				P_SpawnFireFlicker(sector);
 				break;
 		}
 	}
@@ -1022,6 +961,4 @@ done_speciallist:
 	/* */
 	D_memset(activeceilings, 0, sizeof(*activeceilings)*MAXCEILINGS);
 	D_memset(activeplats, 0, sizeof(*activeplats)*MAXCEILINGS);
-	for (i = 0;i < MAXBUTTONS;i++)
-		D_memset(&buttonlist[i],0,sizeof(button_t));
 }
