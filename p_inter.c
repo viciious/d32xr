@@ -5,8 +5,6 @@
 #include "p_local.h"
 #include "st_main.h"
 
-#define	BONUSADD		4
-
 /*
 ===============================================================================
 
@@ -14,91 +12,6 @@
 
 ===============================================================================
 */
- 
-/* 
-=================== 
-= 
-= P_GiveBody
-=
-= Returns false if the body isn't needed at all
-=================== 
-*/ 
-
-boolean P_GiveBody (player_t *player, int num)
-{
-	if (player->health >= MAXHEALTH)
-		return false;
-		
-	player->health += num;
-	if (player->health > MAXHEALTH)
-		player->health = MAXHEALTH;
-	player->mo->health = player->health;
-	
-	return true;
-}
-
- 
-/* 
-=================== 
-= 
-= P_GiveArmor
-=
-= Returns false if the armor is worse than the current armor
-=================== 
-*/ 
-
-boolean P_GiveArmor (player_t *player, int armortype)
-{
-	int		hits;
-	
-	hits = armortype*100;
-	if (player->armorpoints >= hits)
-		return false;		/* don't pick up */
-		
-	player->armortype = armortype;
-	player->armorpoints = hits;
-	
-	return true;
-}
- 
-/* 
-=================== 
-= 
-= P_GivePower
-=
-=================== 
-*/ 
-
-boolean P_GivePower (player_t *player, powertype_t power)
-{
-	if (power == pw_invulnerability)
-	{
-		player->powers[power] = INVULNTICS;
-		return true;
-	}
-	if (power == pw_ironfeet)
-	{
-		player->powers[power] = IRONTICS;
-		return true;
-	}
-	if (power == pw_strength)
-	{
-		P_GiveBody (player, 100);
-		player->powers[power] = 1;
-		return true;
-	}
-	if (power == pw_infrared)
-	{
-		player->powers[power] = INFRATICS;
-		return true;
-	}
-
-	if (player->powers[power])
-		return false;		/* already got it */
-		
-	player->powers[power] = 1;
-	return true;
-}
 
 /*
 ==================
@@ -113,6 +26,117 @@ boolean P_CanPickupItem(player_t *player)
 	if (player->powers[pw_flashing] > (FLASHINGTICS/4)*3 && player->powers[pw_flashing] <= FLASHINGTICS)
 		return false;
 
+	return true;
+}
+
+static boolean P_DoSpring(mobj_t *spring, player_t *player)
+{
+	const mobjinfo_t *playerinfo = &mobjinfo[player->mo->type];
+	const mobjinfo_t *springinfo = &mobjinfo[spring->type];
+	fixed_t vertispeed = springinfo->mass << FRACBITS;
+	fixed_t horizspeed = springinfo->damage << FRACBITS;
+
+	if (player->pflags & PF_VERTICALFLIP)
+		vertispeed *= -1;
+
+	/*
+	player->powers[pw_justsprung] = 5;
+	if (horizspeed)
+		player->powers[pw_noautobrake] = ((horizspeed*TICRATE)>>(FRACBITS+3))/9; // TICRATE at 72*FRACUNIT
+	else if (P_MobjFlip(player->mo) == P_MobjFlip(spring))
+		player->powers[pw_justsprung] |= (1<<15);
+*/
+	if ((horizspeed && vertispeed) || (player && player->homing)) // Mimic SA
+	{
+		player->mo->momx = player->mo->momy = 0;
+		P_UnsetThingPosition(player->mo);
+		player->mo->x = spring->x;
+		player->mo->y = spring->y;
+		P_SetThingPosition(player->mo);
+	}
+
+	if (vertispeed > 0)
+		player->mo->z = spring->z + (spring->theight << FRACBITS) + 1;
+	else if (vertispeed < 0)
+		player->mo->z = spring->z - (player->mo->theight << FRACBITS) - 1;
+	else
+	{
+		fixed_t offx = 0;
+		fixed_t offy = 0;
+		// Horizontal springs teleport you in FRONT of them.
+		player->mo->momx = player->mo->momy = 0;
+
+		// Overestimate the distance to position you at
+		P_ThrustValues(spring->angle, (springinfo->radius + playerinfo->radius + 1) * 2, &offx, &offy);
+
+		// Make it square by clipping
+		if (offx > (springinfo->radius + playerinfo->radius + 1))
+			offx = springinfo->radius + playerinfo->radius + 1;
+		else if (offx < -(springinfo->radius + playerinfo->radius + 1))
+			offx = -(springinfo->radius + playerinfo->radius + 1);
+
+		if (offy > (springinfo->radius + playerinfo->radius + 1))
+			offy = springinfo->radius + playerinfo->radius + 1;
+		else if (offy < -(springinfo->radius + playerinfo->radius + 1))
+			offy = -(springinfo->radius + playerinfo->radius + 1);
+
+		// Set position!
+		P_UnsetThingPosition(player->mo);
+		player->mo->x = spring->x + offx;
+		player->mo->y = spring->y + offy;
+		P_SetThingPosition(player->mo);
+	}
+
+	if (vertispeed)
+		player->mo->momz = vertispeed;
+
+	if (horizspeed)
+		P_InstaThrust(player->mo, spring->angle, horizspeed);
+
+	if (player)
+	{
+		int pflags;
+		uint8_t secondjump;
+		boolean washoming;
+
+// TODO: Lots of stuff to update here in the future
+//		if (spring->flags & MF_ENEMY) // Spring shells
+//			P_SetTarget(&spring->target, object);
+
+		if (horizspeed)
+			player->mo->angle = spring->angle;
+
+		{
+			boolean wasSpindashing = false;//player->dashspeed > 0;
+
+			pflags = player->pflags & (PF_STARTJUMP | PF_JUMPED | PF_SPINNING | PF_THOKKED); // I still need these.
+
+			if (wasSpindashing) // Ensure we're in the rolling state, and not spindash.
+				P_SetMobjState(player->mo, S_PLAY_ATK1);
+		}
+//		secondjump = player->secondjump;
+		washoming = player->homing;
+		P_ResetPlayer(player);
+
+		if (!vertispeed)
+		{
+			if (pflags & (PF_JUMPED|PF_SPINNING))
+			{
+				player->pflags |= pflags;
+//				player->secondjump = secondjump;
+			}
+			else if (P_IsObjectOnGround(player->mo))
+				P_SetMobjState(player->mo, S_PLAY_RUN1); // We'll break into a run on the next tic
+			else
+				P_SetMobjState(player->mo, (player->mo->momz > 0) ? S_PLAY_SPRING : S_PLAY_FALL1);
+		}
+		else if (P_MobjFlip(player->mo)*vertispeed > 0)
+			P_SetMobjState(player->mo, S_PLAY_SPRING);
+		else
+			P_SetMobjState(player->mo, S_PLAY_FALL1);
+	}
+
+	S_StartSound(player->mo, springinfo->painsound);
 	return true;
 }
 
@@ -155,6 +179,13 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 
 		return;
 	}
+	
+	if (special->type == MT_YELLOWSPRING || special->type == MT_YELLOWDIAG || special->type == MT_YELLOWHORIZ
+		|| special->type == MT_REDSPRING || special->type == MT_REDDIAG || special->type == MT_REDDIAG)
+	{
+		P_DoSpring(special, player);
+		return;
+	}
 
 	if (!P_CanPickupItem(player))
 		return;
@@ -177,7 +208,6 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 	if (special->type == MT_RING)
 		player->itemcount++;
 	P_RemoveMobj (special);
-	player->bonuscount += BONUSADD;
 
 	if (sound <= sfx_None)
 		return;
