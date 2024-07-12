@@ -93,12 +93,12 @@ static inline void Mars_R_BeginWallPrep(boolean draw)
 
 static inline void Mars_R_WallNext(void)
 {
-	MARS_SYS_COMM6 = MARS_SYS_COMM6 + 0x100;
+	*(volatile uint8_t *)&MARS_SYS_COMM6 = *(volatile uint8_t *)&MARS_SYS_COMM6 + 1;
 }
 
 static inline void Mars_R_EndWallPrep(void)
 {
-	MARS_SYS_COMM6 = 0xff00;
+	*(volatile int8_t *)&MARS_SYS_COMM6 = -2;
 }
 
 // r_phase7
