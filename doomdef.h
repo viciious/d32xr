@@ -314,6 +314,8 @@ typedef struct degenmobj_s
 
 #define	MF_KNIGHT_CMAP	0x10000000	/* hell knight colormap */
 
+#define MF_COUNTCUBE    0x20000000
+
 /*============================================================================= */
 typedef enum
 {

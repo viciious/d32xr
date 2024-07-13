@@ -1270,10 +1270,34 @@ void A_BrainSpit(mobj_t *mo)
 	mobj_t *targ;
 	mobj_t *newmobj;
 	int tics, vanillatics;
+	int alivecnt;
+	mobj_t *corpse;
 	static VINT easy = 0;
 
 	easy ^= 1;
 	if (gameskill <= sk_easy && (!easy))
+		return;
+
+	alivecnt = 0;
+	corpse = NULL;
+
+	{
+		
+		mobj_t *m;
+		for (m=mobjhead.next ; m != (void *)&mobjhead ; m=m->next)
+		{
+			if (m->flags & MF_COUNTCUBE)
+			{
+				if (m->health <= 0)
+					corpse = m;
+				else
+					alivecnt++;
+			}
+		}
+	}
+
+	// stop spawning if there's too many monsters alive
+	if (alivecnt >= numbraintargets*2)
 		return;
 
 	// shoot a cube at current target
@@ -1282,22 +1306,9 @@ void A_BrainSpit(mobj_t *mo)
 		I_Error("A_BrainSpit: numbraintargets == 0");
 	braintargeton = (braintargeton + 1) % numbraintargets;
 
-	{
-		// remove some old monster corpse
-		mobj_t *m;
-		for (m=mobjhead.prev ; m != (void *)&mobjhead ; m=m->prev)
-		{
-			if ((m->tics <= 0) &&
-				(m->state >= mobjinfo[m->type].deathstate) &&
-				(mobjinfo[m->type].deathstate != S_NULL) &&
-				(mobjinfo[m->type].painstate != S_NULL)
-				)
-			{
-				P_RemoveMobj(m);
-				break;
-			}
-		}
-	}
+	// remove the oldest monster corpse
+	if (corpse)
+		P_RemoveMobj(corpse);
 
 	// spawn brain missile
 	newmobj = P_SpawnMissile(mo, targ, MT_SPAWNSHOT);
@@ -1369,6 +1380,7 @@ void A_SpawnFly(mobj_t *mo)
 	}
 
 	// telefrag anything in this spot
+	newmobj->flags |= MF_COUNTCUBE;
 	newmobj->flags = (newmobj->flags & ~MF_SHOOTABLE) | MF_TELEPORT;
 	P_Telefrag (newmobj, targ->x, targ->y);
 	newmobj->flags = (newmobj->flags & ~MF_TELEPORT) | MF_SHOOTABLE;
