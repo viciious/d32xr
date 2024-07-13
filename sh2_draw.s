@@ -5,6 +5,20 @@
 .equ DOOMTLS_COLORMAP, 16
 .equ DOOMTLS_FUZZPOS,  20
 
+!=======================================================================
+!Standard column draw functions use the following data sources:
+!
+! r4 = dc_x
+! r5 = dc_yl
+! r6 = dc_yh
+! r7 = light
+! @(0,r15) = frac
+! @(4,r15) = fracstep
+! @(8,r15) = dc_source
+! @(12,r15) = dc_texheight
+!=======================================================================
+
+
 ! Draw a vertical column of pixels from a projected wall texture.
 ! Source is the top of the column to scale.
 ! Low detail (doubl-wide pixels) mode.
@@ -662,8 +676,7 @@ draw_fuzzoffset:
 
 ! Clear a vertical column of pixels for the MD sky to show through.
 !
-!void I_DrawSkyColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
-!                  fixed_t fracstep, inpixel_t *dc_source, int dc_texheight)
+!void I_DrawSkyColumn(int dc_x, int dc_yl, int dc_yh)
 
         .align  4
         .global _I_DrawSkyColumnA
@@ -688,11 +701,8 @@ _I_DrawSkyColumnA:
         add     r5,r8
         shlr2   r5
         add     r5,r8           /* fb += (dc_yl*256 + dc_yl*64) */
-        mov.l   @(8,r15),r2     /* frac */
-        mov.l   @(12,r15),r3    /* fracstep */
-        mov.l   @(16,r15),r5    /* dc_source */
-        mov.l   @(20,r15),r4
         mov.l   draw_width2,r1
+        mov.w   thru_pal_index_double,r7     /* dpix = dc_colormap[pix] */
 
         /* test if count & 1 */
         shlr    r6
@@ -702,13 +712,11 @@ _I_DrawSkyColumnA:
 
         .p2alignw 2, 0x0009
 do_sky_col_loop:
-        mov.w   thru_pal_index_double,r9     /* dpix = dc_colormap[pix] */
-        mov.w   r9,@r8          /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
+        mov.w   r7,@r8          /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
         add     r1,r8           /* fb += SCREENWIDTH */
 do_sky_col_loop_1px:
         dt      r6              /* count-- */
-        mov.w   thru_pal_index_double,r9     /* dpix = dc_colormap[pix] */
-        mov.w   r9,@r8          /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
+        mov.w   r7,@r8          /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
         bf/s    do_sky_col_loop
         add     r1,r8           /* fb += SCREENWIDTH */
 
@@ -718,10 +726,9 @@ do_sky_col_loop_1px:
 
 
 ! Clear a vertical column of pixels for the MD sky to show through.
-! Low detail (doubl-wide pixels) mode.
+! Low detail (double-wide pixels) mode.
 !
-!void I_DrawSkyColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
-!                  fixed_t fracstep, inpixel_t *dc_source, int dc_texheight)
+!void I_DrawSkyColumnLow(int dc_x, int dc_yl, int dc_yh)
 
         .align  4
         .global _I_DrawSkyColumnLowA
@@ -747,11 +754,8 @@ _I_DrawSkyColumnLowA:
         add     r5,r8
         shlr2   r5
         add     r5,r8           /* fb += (dc_yl*256 + dc_yl*64) */
-        mov.l   @(8,r15),r2     /* frac */
-        mov.l   @(12,r15),r3    /* fracstep */
-        mov.l   @(16,r15),r5    /* dc_source */
-        mov.l   @(20,r15),r4
         mov.l   draw_width2,r1
+        mov.w   thru_pal_index_double,r7     /* dpix = dc_colormap[pix] */
 
         /* test if count & 1 */
         shlr    r6
@@ -761,13 +765,11 @@ _I_DrawSkyColumnLowA:
 
         .p2alignw 2, 0x0009
 do_sky_col_loop_low:
-        mov.w   thru_pal_index_double,r9     /* dpix = dc_colormap[pix] */
-        mov.w   r9,@r8          /* *fb = dpix */
+        mov.w   r7,@r8          /* *fb = dpix */
         add     r1,r8           /* fb += SCREENWIDTH */
 do_sky_col_loop_low_1px:
-        mov.w   thru_pal_index_double,r9     /* dpix = dc_colormap[pix] */
         dt      r6              /* count-- */
-        mov.w   r9,@r8          /* *fb = dpix */
+        mov.w   r7,@r8          /* *fb = dpix */
         bf/s    do_sky_col_loop_low
         add     r1,r8           /* fb += SCREENWIDTH */
 
