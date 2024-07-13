@@ -922,7 +922,7 @@ extern byte *debugscreen;
 
 	gamezonemargin = DEFAULT_GAME_ZONE_MARGIN;
 	if (havebossspit)
-		gamezonemargin *= 3;
+		gamezonemargin *= 2;
 	R_SetupLevel(gamezonemargin);
 
 #ifdef MARS
