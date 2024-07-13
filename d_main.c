@@ -333,6 +333,7 @@ static void D_Wipe(void)
 	#endif
 }
 
+#define FRAMESKIP
 int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		,  int (*ticker)(void), void (*drawer)(void)
 		,  void (*update)(void) )
@@ -371,7 +372,13 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 
 	do
 	{
+		int oldstart = ticstart;
 		ticstart = I_GetFRTCounter();
+
+		CONS_Printf("Oldstart: %d", oldstart);
+
+//		if (ticstart - oldstart < 1/30th)
+//			continue;
 
 /* */
 /* get buttons for next tic */
@@ -414,7 +421,11 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 			ticbuttons[consoleplayer ^ 1]
 				= NetToLocal(I_NetTransfer(LocalToNet(ticbuttons[consoleplayer])));
 
-		gametic30++;
+#ifdef FRAMESKIP
+int numloops = lasttics - 1;
+if (numloops <= 0)
+	numloops = 1;
+#endif
 
 		if (demorecording)
 			*demo_p++ = buttons;
@@ -437,12 +448,22 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 
 		S_PreUpdateSounds();
 
+#ifdef FRAMESKIP
+		for (int i = 0; i < numloops; i++)
+		{
+#endif
+		gametic30++;
 		ticon++;
 		
 		if (!(gametic30 & 1))
 			gametic++;
 
 		exit = ticker();
+#ifdef FRAMESKIP
+		if (exit)
+			break;
+		}
+#endif
 
 		S_UpdateSounds();
 
