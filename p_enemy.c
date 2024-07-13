@@ -1282,6 +1282,23 @@ void A_BrainSpit(mobj_t *mo)
 		I_Error("A_BrainSpit: numbraintargets == 0");
 	braintargeton = (braintargeton + 1) % numbraintargets;
 
+	{
+		// remove some old monster corpse
+		mobj_t *m;
+		for (m=mobjhead.prev ; m != (void *)&mobjhead ; m=m->prev)
+		{
+			if ((m->tics <= 0) &&
+				(m->state >= mobjinfo[m->type].deathstate) &&
+				(mobjinfo[m->type].deathstate != S_NULL) &&
+				(mobjinfo[m->type].painstate != S_NULL)
+				)
+			{
+				P_RemoveMobj(m);
+				break;
+			}
+		}
+	}
+
 	// spawn brain missile
 	newmobj = P_SpawnMissile(mo, targ, MT_SPAWNSHOT);
 	if (!(newmobj->flags & MF_MISSILE))
