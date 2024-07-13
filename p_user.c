@@ -114,8 +114,8 @@ void P_PlayerMove(mobj_t *mo)
 	pslidemove_t sm;
 	ptrymove_t tm;
 
-	momx = vblsinframe * (mo->momx >> 2);
-	momy = vblsinframe * (mo->momy >> 2);
+	momx = (mo->momx >> 2);
+	momy = (mo->momy >> 2);
 
 	sm.slidething = mo;
 
@@ -403,7 +403,6 @@ void P_BuildMove(player_t *player)
 
 	buttons = ticbuttons[playernum];
 	oldbuttons = oldticbuttons[playernum];
-	vbls = vblsinframe;
 
 	if (mousepresent && !demoplayback)
 	{
@@ -413,14 +412,14 @@ void P_BuildMove(player_t *player)
 		if ((buttons & BT_RMBTN) && (oldbuttons & BT_RMBTN))
 		{
 			// holding RMB - mouse dodge mode
-			player->sidemove = (mx * 0x1000 * vbls) / TICVBLS;
-			player->forwardmove = (my * 0x1000 * vbls) / TICVBLS;
+			player->sidemove = (mx * 0x1000);
+			player->forwardmove = (my * 0x1000);
 			player->angleturn = 0;
 		}
 		else
 		{
 			// normal mouse mode - mouse turns, dpad moves forward/back/sideways
-			player->angleturn = (-mx * 0x200000 * vbls) / TICVBLS;
+			player->angleturn = (-mx * 0x200000);
 
 			player->forwardmove = player->sidemove = 0;
 

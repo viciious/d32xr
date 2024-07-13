@@ -340,7 +340,6 @@ int P_Ticker (void)
 			return ga_exitdemo;
 	}
 
-
 	while (!I_RefreshLatched () )
 	;		/* wait for refresh to latch all needed data before */
 			/* running the next tick */

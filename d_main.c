@@ -12,9 +12,6 @@ boolean		splitscreen = false;
 VINT		controltype = 0;		/* determine settings for BT_* */
 VINT		alwaysrun = 0;
 
-int			gamevbls;		/* may not really be vbls in multiplayer */
-int			vblsinframe;		/* range from ticrate to ticrate*2 */
-
 VINT		ticsperframe = MINTICSPERFRAME;
 
 int			maxlevel;			/* highest level selectable in menu (1-25) */
@@ -367,8 +364,6 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 	leveltime = 0;
 
 	gameaction = 0;
-	gamevbls = 0;
-	vblsinframe = 0;
 	lasttics = 0;
 
 	ticbuttons[0] = ticbuttons[1] = oldticbuttons[0] = oldticbuttons[1] = 0;
@@ -377,8 +372,6 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 	do
 	{
 		ticstart = I_GetFRTCounter();
-
-		vblsinframe = TICVBLS;
 
 /* */
 /* get buttons for next tic */
@@ -421,8 +414,6 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 			ticbuttons[consoleplayer ^ 1]
 				= NetToLocal(I_NetTransfer(LocalToNet(ticbuttons[consoleplayer])));
 
-		gamevbls += vblsinframe;
-
 		if (demorecording)
 			*demo_p++ = buttons;
 		
@@ -445,8 +436,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		S_PreUpdateSounds();
 
 		ticon++;
-		if (gamevbls / TICVBLS > gametic)
-			gametic++;
+		gametic++;
 		exit = ticker();
 
 		S_UpdateSounds();
