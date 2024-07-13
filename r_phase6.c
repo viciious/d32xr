@@ -150,7 +150,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
     viswall_t* segl = lseg->segl;
 
     #ifdef MDSKY
-    drawcol_t drawsky = (segl->actionbits & AC_ADDSKY) != 0 ? drawskycol : NULL;
+    drawskycol_t drawsky = (segl->actionbits & AC_ADDSKY) != 0 ? drawskycol : NULL;
     #else
     drawcol_t drawsky = (segl->actionbits & AC_ADDSKY) != 0 ? drawcol : NULL;
     #endif
@@ -225,7 +225,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
             if (top < bottom)
             {
 #ifdef MDSKY
-                drawsky(x, top, --bottom, 0, 0, 0, NULL, 128);
+                drawsky(x, top, --bottom);
 #else
                 // CALICO: draw sky column
                 int colnum = ((vd.viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;

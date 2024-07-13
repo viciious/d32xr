@@ -24,7 +24,7 @@ drawcol_t drawcollow;
 drawspan_t drawspan;
 
 #ifdef MDSKY
-drawcol_t drawskycol;
+drawskycol_t drawskycol;
 #endif
 
 short fuzzoffset[FUZZTABLE] =

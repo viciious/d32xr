@@ -25,6 +25,8 @@
 #ifndef __32X_H__
 #define __32X_H__
 
+#define MARS_CART_ROM       (*(volatile unsigned char *)0x2000000)
+
 #define MARS_CRAM           (*(volatile unsigned short *)0x20004200)
 #define MARS_FRAMEBUFFER    (*(volatile unsigned short *)0x24000000)
 #define MARS_OVERWRITE_IMG  (*(volatile unsigned short *)0x24020000)
