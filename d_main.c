@@ -378,21 +378,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 	{
 		ticstart = I_GetFRTCounter();
 
-/* */
-/* adaptive timing based on previous frame */
-/* */
-		if (demoplayback || demorecording)
-			vblsinframe = TICVBLS;
-		else
-		{
-			vblsinframe = lasttics;
-			if (vblsinframe > TICVBLS*2)
-				vblsinframe = TICVBLS*2;
-#if 0
-			else if (vblsinframe < TICVBLS)
-				vblsinframe = TICVBLS;
-#endif
-		}
+		vblsinframe = TICVBLS;
 
 /* */
 /* get buttons for next tic */

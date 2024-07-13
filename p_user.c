@@ -29,8 +29,6 @@ fixed_t fastangleturn[] =
 
 void P_ThrustValues(angle_t angle, fixed_t move, fixed_t *outX, fixed_t *outY)
 {
-	move *= vblsinframe;
-	move /= TICVBLS;
 	angle >>= ANGLETOFINESHIFT;
 	*outX += FixedMul(move, finecosine(angle));
 	*outY += FixedMul(move, finesine(angle));
