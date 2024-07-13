@@ -395,7 +395,7 @@ int P_Ticker (void)
 	thinkertics = frtc - start;
 //#endif
 
-	if (gametic != prevgametic)
+	if (!(gametic30 & 1))
 	{
 		ticstart = frtc;
 /*

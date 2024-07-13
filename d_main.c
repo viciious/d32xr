@@ -414,6 +414,8 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 			ticbuttons[consoleplayer ^ 1]
 				= NetToLocal(I_NetTransfer(LocalToNet(ticbuttons[consoleplayer])));
 
+		gametic30++;
+
 		if (demorecording)
 			*demo_p++ = buttons;
 		
@@ -436,7 +438,10 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		S_PreUpdateSounds();
 
 		ticon++;
-		gametic++;
+		
+		if (!(gametic30 & 1))
+			gametic++;
+
 		exit = ticker();
 
 		S_UpdateSounds();
