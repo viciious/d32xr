@@ -743,11 +743,9 @@ void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
 	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
 
 #ifdef MDSKY
-void I_DrawSkyColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
-	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
+void I_DrawSkyColumn(int dc_x, int dc_yl, int dc_yh);
 
-void I_DrawSkyColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
-	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
+void I_DrawSkyColumnLow(int dc_x, int dc_yl, int dc_yh);
 #endif
 
 void I_DrawColumnNPo2(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,

@@ -1,5 +1,6 @@
 /* W_wad.c */
 
+#include "32x.h"
 #include "doomdef.h"
 #include "lzss.h"
 #include "mars.h"
@@ -92,6 +93,34 @@ void decode(unsigned char* input, unsigned char* output)
 void W_Init (void)
 {
 	int				infotableofs;
+
+	wadfileptr = 0;
+
+	// Search for the WAD contents inside the ROM at 1024 byte intervals,
+	// from 0x30000 to 0x80000.
+	long *romptr = (unsigned long *)&MARS_CART_ROM;
+	for (int i=0x30000/4; i < 0x80000/4; i += 0x400) {
+		if (romptr[i] == ('I'<<24) | ('W'<<16) | ('A'<<8) | ('D')) {
+			numlumps = romptr[i+1];
+			infotableofs = romptr[i+2];
+
+			if (infotableofs == 0xC && numlumps > 0 && numlumps < 0x7FFF) {
+				wadfileptr = ((byte *)&MARS_CART_ROM) + (i<<2);
+				lumpinfo = (lumpinfo_t *) (wadfileptr + infotableofs);
+				break;
+			}
+		}
+	}
+
+	if (wadfileptr == 0) {
+		I_Error ("Wad file not found.\n");
+	}
+}
+
+/*
+void W_Init (void)
+{
+	int				infotableofs;
 	
 	wadfileptr = I_WadBase ();
 
@@ -103,6 +132,7 @@ void W_Init (void)
 	infotableofs = BIGLONG(((wadinfo_t*)wadfileptr)->infotableofs);
 	lumpinfo = (lumpinfo_t *) (wadfileptr + infotableofs);
 }
+*/
 
 
 /*
