@@ -125,6 +125,8 @@ boolean P_Move (mobj_t *actor)
 
 	if (actor->movedir == DI_NODIR)
 		return false;
+	if (actor->movedir == DI_NODIRWAIT)
+		return true;
 		
 	oldx = actor->x;
 	oldy = actor->y;
@@ -228,6 +230,8 @@ void P_NewChaseDir (mobj_t *actor)
 		I_Error ("P_NewChaseDir: called with no target");
 		
 	olddir = actor->movedir;
+	if (olddir == DI_NODIRWAIT)
+		olddir = DI_NODIR;
 	turnaround=opposite[olddir];
 
 	deltax = actor->target->x - actor->x;
@@ -322,7 +326,8 @@ void P_NewChaseDir (mobj_t *actor)
 			return;
 	}
 
-	actor->movedir = DI_NODIR;		/* can't move */
+	actor->movedir = DI_NODIRWAIT;		/* can't move for a period of time */
+	actor->movecount = P_Random()&31;
 }
 
 

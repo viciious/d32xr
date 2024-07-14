@@ -49,6 +49,7 @@ typedef enum
 	DI_SOUTH,
 	DI_SOUTHEAST,
 	DI_NODIR,
+	DI_NODIRWAIT,
 	NUMDIRS
 } dirtype_t;
 
