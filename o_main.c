@@ -242,7 +242,7 @@ void O_Init (void)
 	menuitem[mi_anamorphic].x = ITEMX;
 	menuitem[mi_anamorphic].y = STARTY + ITEMSPACE * 2;
 
-	D_memcpy(menuitem[mi_detailmode].name, "Potato mode", 12);
+	D_memcpy(menuitem[mi_detailmode].name, "Simple flats", 13);
 	menuitem[mi_detailmode].x = ITEMX;
 	menuitem[mi_detailmode].y = STARTY + ITEMSPACE * 3;
 
