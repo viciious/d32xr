@@ -71,6 +71,8 @@ VINT	strafebtns = 0;
 extern int 	cy;
 extern int tictics, drawtics, ticstart;
 
+int frames_to_skip = 0;
+
 // framebuffer start is after line table AND a single blank line
 static volatile pixel_t* framebuffer = &MARS_FRAMEBUFFER + 0x100;
 static volatile pixel_t *framebufferend = &MARS_FRAMEBUFFER + 0x10000;
@@ -835,12 +837,24 @@ void I_Update(void)
 			clearscreen = 2;
 		}
 
-	Mars_FlipFrameBuffers(false);
-
 	/* */
 	/* wait until on the third tic after last display */
 	/* */
 	const int ticwait = (demoplayback || demorecording ? 4 : ticsperframe); // demos were recorded at 15-20fps
+
+	//DLG: FPS = 30 * 180 / (I_GetFRTCounter() - ticstart)
+	//DLG: FPS = 90 / (I_GetFRTCounter() - ticstart) * 60
+	ticcount = I_GetTime();
+	if (frames_to_skip == 0) {
+		if (ticcount - lastticcount > 2) {
+			frames_to_skip = ticcount - lastticcount;
+		}
+		Mars_FlipFrameBuffers(false);
+	}
+	else {
+		frames_to_skip -= 1;
+	}
+
 	do
 	{
 		ticcount = I_GetTime();

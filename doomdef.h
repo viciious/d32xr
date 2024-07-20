@@ -1118,7 +1118,9 @@ extern	int		maxlevel;			/* highest level selectable in menu (1-25) */
 extern	int		gamevbls;			/* may not really be vbls in multiplayer */
 extern	int		vblsinframe;			/* range from 4 to 8 */
 
-#define MINTICSPERFRAME		2
+extern  int     frames_to_skip;
+
+#define MINTICSPERFRAME		1
 #define MAXTICSPERFRAME		4
 extern	VINT	ticsperframe;		/* 2 - 4 */
 
