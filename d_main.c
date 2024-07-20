@@ -388,45 +388,47 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 /* */
 /* get buttons for next tic */
 /* */
-		for (i = 0; i < MAXPLAYERS; i++)
-		{
-			players[i].oldticbuttons = players[i].ticbuttons;
-		}
-		oldticrealbuttons = ticrealbuttons;
-
-		buttons = I_ReadControls();
-		buttons |= I_ReadMouse(&mx, &my);
-		if (demoplayback)
-		{
-			players[consoleplayer].ticmousex = 0;
-			players[consoleplayer].ticmousey = 0;
-		}
-		else
-		{
-			players[consoleplayer].ticmousex = mx;
-			players[consoleplayer].ticmousey = my;
-		}
-
-		players[consoleplayer].ticbuttons = buttons;
-		ticrealbuttons = buttons;
-
-		if (demoplayback)
-		{
-	#ifndef MARS
-			if (buttons & (BT_ATTACK|BT_SPEED|BT_USE) )
+		if (frames_to_skip == 0) {
+			for (i = 0; i < MAXPLAYERS; i++)
 			{
-				exit = ga_exitdemo;
-				break;
+				players[i].oldticbuttons = players[i].ticbuttons;
 			}
-	#endif
-			players[consoleplayer].ticbuttons = buttons = *demo_p++;
-		}
+			oldticrealbuttons = ticrealbuttons;
 
-		if (splitscreen && !demoplayback)
-			players[consoleplayer ^ 1].ticbuttons = I_ReadControls2();
-		else if (netgame)	/* may also change vblsinframe */
-			players[consoleplayer ^ 1].ticbuttons
-				= NetToLocal(I_NetTransfer(LocalToNet(players[consoleplayer].ticbuttons)));
+			buttons = I_ReadControls();
+			buttons |= I_ReadMouse(&mx, &my);
+			if (demoplayback)
+			{
+				players[consoleplayer].ticmousex = 0;
+				players[consoleplayer].ticmousey = 0;
+			}
+			else
+			{
+				players[consoleplayer].ticmousex = mx;
+				players[consoleplayer].ticmousey = my;
+			}
+
+			players[consoleplayer].ticbuttons = buttons;
+			ticrealbuttons = buttons;
+
+			if (demoplayback)
+			{
+		#ifndef MARS
+				if (buttons & (BT_ATTACK|BT_SPEED|BT_USE) )
+				{
+					exit = ga_exitdemo;
+					break;
+				}
+		#endif
+				players[consoleplayer].ticbuttons = buttons = *demo_p++;
+			}
+
+			if (splitscreen && !demoplayback)
+				players[consoleplayer ^ 1].ticbuttons = I_ReadControls2();
+			else if (netgame)	/* may also change vblsinframe */
+				players[consoleplayer ^ 1].ticbuttons
+					= NetToLocal(I_NetTransfer(LocalToNet(players[consoleplayer].ticbuttons)));
+		}
 
 		gamevbls += vblsinframe;
 
@@ -461,13 +463,15 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 
 		S_UpdateSounds();
 
-		/* */
-		/* sync up with the refresh */
-		/* */
-		while (!I_RefreshCompleted())
-			;
+		if (frames_to_skip == 0) {
+			/* */
+			/* sync up with the refresh */
+			/* */
+			while (!I_RefreshCompleted())
+				;
 
-		drawer();
+			drawer();
+		}
 
 		if (!exit && wipe)
 		{
