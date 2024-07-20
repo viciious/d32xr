@@ -846,7 +846,7 @@ void I_Update(void)
 	//DLG: FPS = 90 / (I_GetFRTCounter() - ticstart) * 60
 	ticcount = I_GetTime();
 	if (frames_to_skip == 0) {
-		if (ticcount - lastticcount > 2) {
+		if (ticcount - lastticcount > 1) {
 			frames_to_skip = ticcount - lastticcount;
 		}
 		Mars_FlipFrameBuffers(false);

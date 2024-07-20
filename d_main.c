@@ -471,7 +471,9 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		while (!I_RefreshCompleted())
 			;
 
-		drawer();
+		if (frames_to_skip == 0) {
+			drawer();
+		}
 
 		if (!exit && wipe)
 		{
