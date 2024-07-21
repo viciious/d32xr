@@ -61,9 +61,15 @@ const byte	*new_palette = NULL;
 boolean	debugscreenactive = false;
 boolean	debugscreenupdate = false;
 
+int     ticcount = 0;
 int		lastticcount = 0;
 int		lasttics = 0;
 static int fpscount = 0;
+
+int accum_time_target = 0;
+int accum_time = 0;
+int last_vbl_count = 0;
+int last_frt_count = 0;
 
 VINT 	debugmode = DEBUGMODE_NONE;
 VINT	strafebtns = 0;
@@ -745,12 +751,19 @@ void I_DebugScreen(void)
 			D_snprintf(buf[1], sizeof(buf[0]), "tcs:%d", lasttics);
 			D_snprintf(buf[2], sizeof(buf[0]), "g:%2d", Mars_FRTCounter2Msec(tictics));
 			D_snprintf(buf[3], sizeof(buf[0]), "b:%2d", Mars_FRTCounter2Msec(t_ref_bsp_avg));
-			D_snprintf(buf[4], sizeof(buf[0]), "w:%2d %2d", Mars_FRTCounter2Msec(t_ref_segs_avg), vd.lastwallcmd - vd.viswalls);
-			D_snprintf(buf[5], sizeof(buf[0]), "p:%2d %2d", Mars_FRTCounter2Msec(t_ref_planes_avg), vd.lastvisplane - vd.visplanes - 1);
-			D_snprintf(buf[6], sizeof(buf[0]), "s:%2d %2d", Mars_FRTCounter2Msec(t_ref_sprites_avg), vd.vissprite_p - vd.vissprites);
-			D_snprintf(buf[7], sizeof(buf[0]), "r:%2d", Mars_FRTCounter2Msec(t_ref_total_avg));
-			D_snprintf(buf[8], sizeof(buf[0]), "d:%2d", Mars_FRTCounter2Msec(drawtics));
-			D_snprintf(buf[9], sizeof(buf[0]), "t:%2d", Mars_FRTCounter2Msec(I_GetFRTCounter() - ticstart));
+			//D_snprintf(buf[4], sizeof(buf[0]), "w:%2d %2d", Mars_FRTCounter2Msec(t_ref_segs_avg), vd.lastwallcmd - vd.viswalls);
+			//D_snprintf(buf[5], sizeof(buf[0]), "p:%2d %2d", Mars_FRTCounter2Msec(t_ref_planes_avg), vd.lastvisplane - vd.visplanes - 1);
+			//D_snprintf(buf[6], sizeof(buf[0]), "s:%2d %2d", Mars_FRTCounter2Msec(t_ref_sprites_avg), vd.vissprite_p - vd.vissprites);
+			//D_snprintf(buf[7], sizeof(buf[0]), "r:%2d", Mars_FRTCounter2Msec(t_ref_total_avg));
+			//D_snprintf(buf[8], sizeof(buf[0]), "d:%2d", Mars_FRTCounter2Msec(drawtics));
+			//D_snprintf(buf[9], sizeof(buf[0]), "t:%2d", Mars_FRTCounter2Msec(I_GetFRTCounter() - ticstart));
+			
+			D_snprintf(buf[4], sizeof(buf[0]), "t:%d", last_frt_count);
+			D_snprintf(buf[5], sizeof(buf[0]), "t:%d", last_vbl_count);
+			D_snprintf(buf[6], sizeof(buf[0]), "t:%d", ticcount);
+			D_snprintf(buf[7], sizeof(buf[0]), "t:%d", lastticcount);
+			D_snprintf(buf[8], sizeof(buf[0]), "t:%d", accum_time);
+			D_snprintf(buf[9], sizeof(buf[0]), "t:%d", accum_time_target);
 		}
 
         I_Print8(x, line++, buf[0]);
@@ -794,7 +807,7 @@ void I_ResetLineTable(void)
 */
 void I_Update(void)
 {
-	int ticcount;
+	//int ticcount;
 	static int prevsecticcount = 0;
 	static int framenum = 0;
 	const int refreshHZ = Mars_RefreshHZ();
@@ -844,7 +857,45 @@ void I_Update(void)
 
 	//DLG: FPS = 30 * 180 / (I_GetFRTCounter() - ticstart)
 	//DLG: FPS = 90 / (I_GetFRTCounter() - ticstart) * 60
+
 	ticcount = I_GetTime();
+
+	int vbl_count = Mars_GetTicCount();
+	int frt_count = I_GetFRTCounter();
+
+	if (last_vbl_count == 0 || last_frt_count == 0) {
+		last_vbl_count = vbl_count;
+		last_frt_count = frt_count;
+	}
+
+	accum_time += (frt_count - last_frt_count);
+	accum_time_target += (float)(vbl_count - last_vbl_count) * 94.5f;
+
+	last_vbl_count = vbl_count;
+	last_frt_count = frt_count;
+
+	//*
+	if (accum_time >= accum_time_target) {
+		// We're behind where we want to be.
+
+		if (frames_to_skip == 0) {
+			// We already have this frame prepared, so just show it.
+			Mars_FlipFrameBuffers(false);
+		}
+		// Avoid drawing the next frame so the logic can catch up.
+		frames_to_skip = 1;
+	}
+	else {
+		// We're ahead of where we want to be.
+		
+		if (frames_to_skip == 0) {
+			Mars_FlipFrameBuffers(false);
+		}
+		frames_to_skip = 0;
+	}
+
+
+	/*/
 	if (frames_to_skip == 0) {
 		if (ticcount - lastticcount > 1) {
 			frames_to_skip = ticcount - lastticcount;
@@ -854,6 +905,7 @@ void I_Update(void)
 	else {
 		frames_to_skip -= 1;
 	}
+	//*/
 
 	do
 	{
