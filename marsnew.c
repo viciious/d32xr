@@ -849,7 +849,7 @@ void I_Update(void)
 		if (ticcount - lastticcount > 1) {
 			frames_to_skip = ticcount - lastticcount;
 		}
-		Mars_FlipFrameBuffers(false);
+		Mars_FlipFrameBuffers(frames_to_skip > 0);
 	}
 	else {
 		frames_to_skip -= 1;
