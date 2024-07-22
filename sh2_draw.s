@@ -131,24 +131,23 @@ _I_DrawColumnNPo2A:
         bt      4b
 5:
         mov.l   draw_width,r1
-        sub     r1,r8           /* fb -= SCREENWIDTH */
 
         .p2alignw 2, 0x0009
 do_cnp_loop:
         mov     r2,r0
         shlr16  r0              /* frac >> 16 */
         mov.b   @(r0,r5),r0     /* pix = dc_source[frac >> 16] */
-        add     r3,r2           /* frac += fracstep */
         cmp/ge  r4,r2
-        bf/s    1f
         mov.b   @(r0,r7),r0     /* dpix = dc_colormap[pix] */
+        bf/s    1f
+        add     r3,r2           /* frac += fracstep */
         /* if (frac >= heightmask) */
         sub     r4,r2           /* frac -= heightmask */
 1:
-        add     r1,r8           /* fb += SCREENWIDTH */
+        mov.b   r0,@r8          /* *fb = dpix */
         dt      r6              /* count-- */
         bf/s    do_cnp_loop
-        mov.b   r0,@r8          /* *fb = dpix */
+        add     r1,r8           /* fb += SCREENWIDTH */
 
         rts
         mov.l   @r15+,r8
