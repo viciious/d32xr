@@ -77,7 +77,8 @@ VINT	strafebtns = 0;
 extern int 	cy;
 extern int tictics, drawtics, ticstart;
 
-int frames_to_skip = 0;
+int skip_frame = 0;
+int	frames_skipped = 0;
 
 // framebuffer start is after line table AND a single blank line
 static volatile pixel_t* framebuffer = &MARS_FRAMEBUFFER + 0x100;
@@ -858,59 +859,47 @@ void I_Update(void)
 	//DLG: FPS = 30 * 180 / (I_GetFRTCounter() - ticstart)
 	//DLG: FPS = 90 / (I_GetFRTCounter() - ticstart) * 60
 
-	ticcount = I_GetTime();
-
-	int vbl_count = Mars_GetTicCount();
 	int frt_count = I_GetFRTCounter();
+	int vbl_count = Mars_GetTicCount();
 
 	if (last_vbl_count == 0 || last_frt_count == 0) {
 		last_vbl_count = vbl_count;
 		last_frt_count = frt_count;
 	}
 
-	accum_time += (frt_count - last_frt_count);
-	accum_time_target += (float)(vbl_count - last_vbl_count) * 94.5f;
+	// Frame skipping based on FRT count (debug must be active)
+	//accum_time += (frt_count - last_frt_count) * 100;
+	//accum_time_target += 9263; //92.62841530054645f; //94.5f; // 92.6284153 * 16 = 1482.0546448
+
+	// Frame skipping based on VBL count
+	accum_time += (vbl_count - last_vbl_count);
+	accum_time_target += 1;
 
 	last_vbl_count = vbl_count;
 	last_frt_count = frt_count;
+		
+	if (skip_frame == 0) {
+		Mars_FlipFrameBuffers(false);
+		do
+		{
+			ticcount = I_GetTime() + frames_skipped;
+		} while (ticcount - lastticcount < ticwait);
+	}
+	else {
+		// Advance ticcount beyond what I_GetTime() will get us.
+		frames_skipped += 1;
+		ticcount += 1;
+	}
 
-	//*
-	if (accum_time >= accum_time_target) {
+	if (accum_time > accum_time_target) {
 		// We're behind where we want to be.
-
-		if (frames_to_skip == 0) {
-			// We already have this frame prepared, so just show it.
-			Mars_FlipFrameBuffers(false);
-		}
 		// Avoid drawing the next frame so the logic can catch up.
-		frames_to_skip = 1;
+		skip_frame = 1;
 	}
 	else {
 		// We're ahead of where we want to be.
-		
-		if (frames_to_skip == 0) {
-			Mars_FlipFrameBuffers(false);
-		}
-		frames_to_skip = 0;
+		skip_frame = 0;
 	}
-
-
-	/*/
-	if (frames_to_skip == 0) {
-		if (ticcount - lastticcount > 1) {
-			frames_to_skip = ticcount - lastticcount;
-		}
-		Mars_FlipFrameBuffers(frames_to_skip > 0);
-	}
-	else {
-		frames_to_skip -= 1;
-	}
-	//*/
-
-	do
-	{
-		ticcount = I_GetTime();
-	} while (ticcount - lastticcount < ticwait);
 
 	lasttics = ticcount - lastticcount;
 	lastticcount = ticcount;

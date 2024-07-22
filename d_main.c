@@ -465,13 +465,13 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 
 		S_UpdateSounds();
 
-		/* */
-		/* sync up with the refresh */
-		/* */
-		while (!I_RefreshCompleted())
-			;
+		if (skip_frame == 0) {
+			/* */
+			/* sync up with the refresh */
+			/* */
+			while (!I_RefreshCompleted())
+				;
 
-		if (frames_to_skip == 0) {
 			drawer();
 		}
 
