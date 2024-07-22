@@ -29,59 +29,37 @@
 #include "doomdef.h"
 #include "p_local.h"
 
-// CALICO_TODO: these ought to be in headers.
-typedef struct
-{
-   // input
-   mobj_t  *tmthing;
-   fixed_t  tmx, tmy;
+static boolean PIT_CheckThing(mobj_t* thing, pmovework_t *w) ATTR_DATA_CACHE_ALIGN;
+static boolean PIT_CheckLine(line_t* ld, pmovework_t *w) ATTR_DATA_CACHE_ALIGN;
+static boolean PIT_CheckPosition(pmovework_t *w) ATTR_DATA_CACHE_ALIGN;
 
-   fixed_t  tmfloorz;   // current floor z for P_TryMove2
-   fixed_t  tmceilingz; // current ceiling z for P_TryMove2
-   line_t  *blockline;  // possibly a special to activate
+static boolean P_TryMove2(pmovework_t *tm, boolean checkposonly) ATTR_DATA_CACHE_ALIGN;
 
-   fixed_t tmbbox[4];
-   int     tmflags;
-   fixed_t tmdropoffz; // lowest point contacted
-
-	int    	numspechit;
- 	line_t	**spechit;
-
-   subsector_t *newsubsec; // destination subsector
-} pmovework_t;
-
-boolean PIT_CheckThing(mobj_t* thing, pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
-static boolean PM_BoxCrossLine(line_t* ld, pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
-static boolean PIT_CheckLine(line_t* ld, pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
-static boolean PM_CrossCheck(line_t* ld, pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
-static boolean PM_CheckPosition(pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
-boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly) ATTR_DATA_CACHE_ALIGN;
+boolean P_CheckPosition (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
+boolean P_TryMove (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
 
 //
 // Check a single mobj in one of the contacted blockmap cells.
 //
-boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
+boolean PIT_CheckThing(mobj_t *thing, pmovework_t *w)
 {
    fixed_t blockdist;
    int     delta;
-   int     damage;
-   boolean solid;
-   mobj_t  *tmthing = mw->tmthing;
-   int     tmflags = mw->tmflags;
-   const mobjinfo_t* thinfo = &mobjinfo[tmthing->type];
+   mobj_t  *tmthing = w->tmthing;
+   int     tmflags = tmthing->flags;
 
    if(!(thing->flags & (MF_SOLID|MF_SPECIAL|MF_SHOOTABLE)))
       return true;
 
    blockdist = thing->radius + tmthing->radius;
    
-   delta = thing->x - mw->tmx;
+   delta = thing->x - w->tmx;
    if(delta < 0)
       delta = -delta;
    if(delta >= blockdist)
       return true; // didn't hit it
 
-   delta = thing->y - mw->tmy;
+   delta = thing->y - w->tmy;
    if(delta < 0)
       delta = -delta;
    if(delta >= blockdist)
@@ -93,11 +71,7 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
    // check for skulls slamming into things
    if(tmthing->flags & MF_SKULLFLY)
    {
-		damage = ((P_Random()&7)+1)* thinfo->damage;
-		P_DamageMobj (thing, tmthing, tmthing, damage);
-		tmthing->flags &= ~MF_SKULLFLY;
-		tmthing->momx = tmthing->momy = tmthing->momz = 0;
-		P_SetMobjState (tmthing, thinfo->spawnstate);
+	  w->hitthing = thing;
       return false; // stop moving
    }
 
@@ -108,23 +82,21 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
          return true; // went overhead
       if(tmthing->z + tmthing->height < thing->z)
          return true; // went underneath
-      if(tmthing->target->type == thing->type) // don't hit same species as originator
+      if(thing == tmthing->target) // don't hit originator
+         return true;
+      if((tmthing->target->type == thing->type) ||
+	    (tmthing->target->type == MT_KNIGHT && thing->type == MT_BRUISER) ||
+	    (tmthing->target->type == MT_BRUISER && thing->type == MT_KNIGHT)
+      ) // don't hit same species as originator
       {
-         if(thing == tmthing->target) // don't hit originator
-            return true;
          if(thing->type != MT_PLAYER) // let players missile each other
             return false; // explode, but do no damage
       }
       if(!(thing->flags & MF_SHOOTABLE))
          return !(thing->flags & MF_SOLID); // didn't do any damage
-
-      // damage/explode
-		damage = ((P_Random()&7)+1)* thinfo->damage;
-		P_DamageMobj (thing, tmthing, tmthing->target, damage);
+	  w->hitthing = thing;
       return false; // don't traverse any more
    }
-
-   solid = (thing->flags & MF_SOLID) != 0;
 
    // check for special pickup
    if((thing->flags & MF_SPECIAL) && (tmflags & MF_PICKUP))
@@ -132,68 +104,22 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
       P_TouchSpecialThing (thing,tmthing);
    }
 
-   return !solid;
+   return !(thing->flags & MF_SOLID);
 }
 
 //
-// Check if the thing intersects a linedef
-//
-static boolean PM_BoxCrossLine(line_t *ld, pmovework_t *mw)
-{
-   fixed_t x1, x2, y1, y2;
-   fixed_t lx, ly, ldx, ldy;
-   fixed_t dx1, dx2, dy1, dy2;
-   boolean side1, side2;
-   fixed_t ldbbox[4];
-
-   P_LineBBox(ld, ldbbox);
-
-   if(mw->tmbbox[BOXRIGHT ] <= ldbbox[BOXLEFT  ] ||
-      mw->tmbbox[BOXLEFT  ] >= ldbbox[BOXRIGHT ] ||
-      mw->tmbbox[BOXTOP   ] <= ldbbox[BOXBOTTOM] ||
-      mw->tmbbox[BOXBOTTOM] >= ldbbox[BOXTOP   ])
-   {
-      return false; // bounding boxes don't intersect
-   }
-
-   y1 = mw->tmbbox[BOXTOP   ];
-   y2 = mw->tmbbox[BOXBOTTOM];
-
-   if(ld->flags & ML_ST_POSITIVE)
-   {
-      x1 = mw->tmbbox[BOXLEFT ];
-      x2 = mw->tmbbox[BOXRIGHT];
-   }
-   else
-   {
-      x1 = mw->tmbbox[BOXRIGHT];
-      x2 = mw->tmbbox[BOXLEFT ];
-   }
-
-   lx  = vertexes[ld->v1].x;
-   ly  = vertexes[ld->v1].y;
-   ldx = (vertexes[ld->v2].x - lx) >> FRACBITS;
-   ldy = (vertexes[ld->v2].y - ly) >> FRACBITS;
-
-   dx1 = (x1 - lx) >> FRACBITS;
-   dy1 = (y1 - ly) >> FRACBITS;
-   dx2 = (x2 - lx) >> FRACBITS;
-   dy2 = (y2 - ly) >> FRACBITS;
-
-   side1 = (ldy * dx1 < dy1 * ldx);
-   side2 = (ldy * dx2 < dy2 * ldx);
-
-   return (side1 != side2);
-}
-
+// Check a single linedef in a blockmap cell.
 //
 // Adjusts tmfloorz and tmceilingz as lines are contacted.
 //
-static boolean PIT_CheckLine(line_t *ld, pmovework_t *mw)
+boolean PIT_CheckLine(line_t *ld, pmovework_t *w)
 {
    fixed_t   opentop, openbottom, lowfloor;
    sector_t *front, *back;
-   mobj_t   *tmthing = mw->tmthing;
+   mobj_t   *tmthing = w->tmthing;
+
+   if(!P_BoxCrossLine(ld, w->tmbbox))
+	return true;
 
    // The moving thing's destination positoin will cross the given line.
    // If this should not be allowed, return false.
@@ -210,13 +136,6 @@ static boolean PIT_CheckLine(line_t *ld, pmovework_t *mw)
 
    front = LD_FRONTSECTOR(ld);
    back  = LD_BACKSECTOR(ld);
-
-   if(front->ceilingheight == front->floorheight ||
-      back->ceilingheight == back->floorheight)
-   {
-      mw->blockline = ld;
-      return false; // probably a closed door
-   }
 
    if(front->ceilingheight < back->ceilingheight)
       opentop = front->ceilingheight;
@@ -235,30 +154,20 @@ static boolean PIT_CheckLine(line_t *ld, pmovework_t *mw)
    }
 
    // adjust floor/ceiling heights
-   if(opentop < mw->tmceilingz)
-      mw->tmceilingz = opentop;
-   if(openbottom >mw->tmfloorz)
-      mw->tmfloorz = openbottom;
-   if(lowfloor < mw->tmdropoffz)
-      mw->tmdropoffz = lowfloor;
+   if(opentop < w->tmceilingz)
+   {
+      w->tmceilingz = opentop;
+	  w->ceilingline = ld;
+   }
+   if(openbottom > w->tmfloorz)
+      w->tmfloorz = openbottom;
+   if(lowfloor < w->tmdropoffz)
+      w->tmdropoffz = lowfloor;
 
    if (ld->special)
    {
-       if (mw->numspechit < MAXSPECIALCROSS)
-        mw->spechit[mw->numspechit++] = ld;
-   }
-   return true;
-}
-
-//
-// Check a single linedef in a blockmap cell.
-//
-static boolean PM_CrossCheck(line_t *ld, pmovework_t *mw)
-{
-   if(PM_BoxCrossLine(ld, mw))
-   {
-      if(!PIT_CheckLine(ld, mw))
-         return false;
+       if (w->numspechit < MAXSPECIALCROSS)
+        w->spechit[w->numspechit++] = ld;
    }
    return true;
 }
@@ -266,45 +175,47 @@ static boolean PM_CrossCheck(line_t *ld, pmovework_t *mw)
 //
 // This is purely informative, nothing is modified (except things picked up)
 //
-static boolean PM_CheckPosition(pmovework_t *mw)
+boolean PIT_CheckPosition(pmovework_t *w)
 {
    int xl, xh, yl, yh, bx, by;
-   mobj_t *tmthing = mw->tmthing;
+   mobj_t *tmthing = w->tmthing;
+   int tmflags = tmthing->flags;
    VINT *lvalidcount;
+   subsector_t *newsubsec;
 
-   mw->tmflags = tmthing->flags;
+   newsubsec = R_PointInSubsector(w->tmx, w->tmy);
+   w->newsubsec = newsubsec;
 
-   mw->tmbbox[BOXTOP   ] = mw->tmy + tmthing->radius;
-   mw->tmbbox[BOXBOTTOM] = mw->tmy - tmthing->radius;
-   mw->tmbbox[BOXRIGHT ] = mw->tmx + tmthing->radius;
-   mw->tmbbox[BOXLEFT  ] = mw->tmx - tmthing->radius;
-
-   mw->newsubsec = R_PointInSubsector(mw->tmx, mw->tmy);
+   w->tmbbox[BOXTOP   ] = w->tmy + tmthing->radius;
+   w->tmbbox[BOXBOTTOM] = w->tmy - tmthing->radius;
+   w->tmbbox[BOXRIGHT ] = w->tmx + tmthing->radius;
+   w->tmbbox[BOXLEFT  ] = w->tmx - tmthing->radius;
 
    // the base floor/ceiling is from the subsector that contains the point.
    // Any contacted lines the step closer together will adjust them.
-   mw->tmfloorz   = mw->tmdropoffz = mw->newsubsec->sector->floorheight;
-   mw->tmceilingz = mw->newsubsec->sector->ceilingheight;
+   w->tmfloorz   = w->tmdropoffz = newsubsec->sector->floorheight;
+   w->tmceilingz = newsubsec->sector->ceilingheight;
+
+   w->numspechit = 0;
+   w->hitthing = NULL;
+   w->ceilingline = NULL;
+
+   if(tmflags & MF_NOCLIP) // thing has no clipping?
+      return true;
 
    I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
    *lvalidcount = *lvalidcount + 1;
    if (*lvalidcount == 0)
       *lvalidcount = 1;
 
-   mw->blockline = NULL;
-   mw->numspechit = 0;
-
-   if(mw->tmflags & MF_NOCLIP) // thing has no clipping?
-      return true;
-
    // Check things first, possibly picking things up.
    // The bounding box is extended by MAXRADIUS because mobj_ts are grouped
    // into mapblocks based on their origin point, and can overlap into adjacent
    // blocks by up to MAXRADIUS units.
-   xl = mw->tmbbox[BOXLEFT  ] - bmaporgx - MAXRADIUS;
-   xh = mw->tmbbox[BOXRIGHT ] - bmaporgx + MAXRADIUS;
-   yl = mw->tmbbox[BOXBOTTOM] - bmaporgy - MAXRADIUS;
-   yh = mw->tmbbox[BOXTOP   ] - bmaporgy + MAXRADIUS;
+   xl = w->tmbbox[BOXLEFT  ] - bmaporgx - MAXRADIUS;
+   xh = w->tmbbox[BOXRIGHT ] - bmaporgx + MAXRADIUS;
+   yl = w->tmbbox[BOXBOTTOM] - bmaporgy - MAXRADIUS;
+   yh = w->tmbbox[BOXTOP   ] - bmaporgy + MAXRADIUS;
 
 	if(xl < 0)
 		xl = 0;
@@ -330,16 +241,16 @@ static boolean PM_CheckPosition(pmovework_t *mw)
    {
       for(by = yl; by <= yh; by++)
       {
-         if(!P_BlockThingsIterator(bx, by, (blockthingsiter_t)PIT_CheckThing, mw))
+         if(!P_BlockThingsIterator(bx, by, (blockthingsiter_t)PIT_CheckThing, w))
             return false;
       }
    }
 
    // check lines
-   xl = mw->tmbbox[BOXLEFT  ] - bmaporgx;
-   xh = mw->tmbbox[BOXRIGHT ] - bmaporgx;
-   yl = mw->tmbbox[BOXBOTTOM] - bmaporgy;
-   yh = mw->tmbbox[BOXTOP   ] - bmaporgy;
+   xl = w->tmbbox[BOXLEFT  ] - bmaporgx;
+   xh = w->tmbbox[BOXRIGHT ] - bmaporgx;
+   yl = w->tmbbox[BOXBOTTOM] - bmaporgy;
+   yh = w->tmbbox[BOXTOP   ] - bmaporgy;
 
    if(xl < 0)
       xl = 0;
@@ -364,7 +275,7 @@ static boolean PM_CheckPosition(pmovework_t *mw)
    {
       for(by = yl; by <= yh; by++)
       {
-         if(!P_BlockLinesIterator(bx, by, (blocklinesiter_t)PM_CrossCheck, mw))
+         if(!P_BlockLinesIterator(bx, by, (blocklinesiter_t)PIT_CheckLine, w))
             return false;
       }
    }
@@ -376,25 +287,13 @@ static boolean PM_CheckPosition(pmovework_t *mw)
 // Attempt to move to a new position, crossing special lines unless MF_TELEPORT
 // is set.
 //
-boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly)
+static boolean P_TryMove2(pmovework_t *w, boolean checkposonly)
 {
-   pmovework_t mw;
-   boolean trymove2; // result from P_TryMove2
-   mobj_t *tmthing = tm->tmthing;
+   boolean trymove2; // result from PIT_CheckPosition
+   mobj_t *tmthing = w->tmthing;
 
-   mw.tmx = tm->tmx;
-   mw.tmy = tm->tmy;
-   mw.tmthing = tm->tmthing;
-   mw.spechit = &tm->spechit[0];
-
-   trymove2 = PM_CheckPosition(&mw);
-
-   tm->floatok = false;
-   tm->blockline = mw.blockline;
-   tm->tmfloorz = mw.tmfloorz;
-   tm->tmceilingz = mw.tmceilingz;
-   tm->tmdropoffz = mw.tmdropoffz;
-   tm->numspechit = mw.numspechit;
+   trymove2 = PIT_CheckPosition(w);
+   w->floatok = false;
 
    if(checkposonly)
       return trymove2;
@@ -404,24 +303,24 @@ boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly)
 
    if(!(tmthing->flags & MF_NOCLIP))
    {
-      if(mw.tmceilingz - mw.tmfloorz < tmthing->height)
+      if(w->tmceilingz - w->tmfloorz < tmthing->height)
          return false; // doesn't fit
-      tm->floatok = true;
-      if(!(tmthing->flags & MF_TELEPORT) && mw.tmceilingz - tmthing->z < tmthing->height)
+      w->floatok = true;
+      if(!(tmthing->flags & MF_TELEPORT) && w->tmceilingz - tmthing->z < tmthing->height)
          return false; // mobj must lower itself to fit
-      if(!(tmthing->flags & MF_TELEPORT) && mw.tmfloorz - tmthing->z > 24*FRACUNIT)
+      if(!(tmthing->flags & MF_TELEPORT) && w->tmfloorz - tmthing->z > 24*FRACUNIT)
          return false; // too big a step up
-      if(!(tmthing->flags & (MF_DROPOFF|MF_FLOAT)) && mw.tmfloorz - mw.tmdropoffz > 24*FRACUNIT)
+      if(!(tmthing->flags & (MF_DROPOFF|MF_FLOAT)) && w->tmfloorz - w->tmdropoffz > 24*FRACUNIT)
          return false; // don't stand over a dropoff
    }
 
    // the move is ok, so link the thing into its new position.
    P_UnsetThingPosition(tmthing);
-   tmthing->floorz   = mw.tmfloorz;
-   tmthing->ceilingz = mw.tmceilingz;
-   tmthing->x        = mw.tmx;
-   tmthing->y        = mw.tmy;
-   P_SetThingPosition2(tmthing, mw.newsubsec);
+   tmthing->floorz   = w->tmfloorz;
+   tmthing->ceilingz = w->tmceilingz;
+   tmthing->x        = w->tmx;
+   tmthing->y        = w->tmy;
+   P_SetThingPosition2(tmthing, w->newsubsec);
 
    return true;
 }
@@ -445,5 +344,51 @@ void P_MoveCrossSpecials(mobj_t *tmthing, int numspechit, line_t **spechit, fixe
     }
 }
 
-// EOF
 
+/*============================================================================= */
+
+/*
+===================
+=
+= P_TryMove
+=
+in:
+tmthing		a mobj_t (can be valid or invalid)
+tmx,tmy		a position to be checked (doesn't need relate to the mobj_t->x,y)
+
+out:
+
+newsubsec
+floatok			if true, move would be ok if within tmfloorz - tmceilingz
+floorz
+ceilingz
+tmdropoffz		the lowest point contacted (monsters won't move to a dropoff)
+
+movething
+
+==================
+*/
+
+boolean P_CheckPosition (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y)
+{
+   pmovework_t tm2;
+   if (tm == NULL)
+      tm = &tm2;
+	tm->tmthing = thing;
+	tm->tmx = x;
+	tm->tmy = y;
+	return P_TryMove2 (tm, true);
+}
+
+boolean P_TryMove (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y)
+{
+   pmovework_t tm2;
+   if (tm == NULL)
+      tm = &tm2;
+	tm->tmthing = thing;
+	tm->tmx = x;
+	tm->tmy = y;
+	return P_TryMove2 (tm, false);
+}
+
+// EOF

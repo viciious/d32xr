@@ -142,6 +142,9 @@ void P_RespawnSpecials (void)
 		if (mthing->type == mobjinfo[i].doomednum)
 			break;
 
+	if (i == NUMMOBJTYPES)
+		return;
+
 /* spawn it */
 	if (mobjinfo[i].flags & MF_SPAWNCEILING)
 		z = ONCEILINGZ;
@@ -412,7 +415,7 @@ y = 0xff500000;
 	
 	mobj->angle = ANG45 * (mthing->angle/45);
 
-	mobj->player = p - players + 1;
+	mobj->player = mthing->type;
 	mobj->health = p->health;
 	p->mo = mobj;
 	p->playerstate = PST_LIVE;	
@@ -530,8 +533,10 @@ void P_SpawnMapThing (mapthing_t *mthing, int thingid)
 	if (mthing->type == 11)
 	{
 		if (deathmatch_p < deathmatchstarts + MAXDMSTARTS)
+		{
 			D_memcpy (deathmatch_p, mthing, sizeof(*mthing));
-		deathmatch_p++;
+			deathmatch_p++;
+		}
 		return;
 	}
 	
@@ -662,14 +667,23 @@ void P_SpawnBlood (fixed_t x, fixed_t y, fixed_t z, int damage)
 
 void P_CheckMissileSpawn (mobj_t *th)
 {
-	ptrymove_t tm;
+	pmovework_t tm;
 
 	th->x += (th->momx>>1);
 	th->y += (th->momy>>1);	/* move a little forward so an angle can */
 							/* be computed if it immediately explodes */
 	th->z += (th->momz>>1);
 	if (!P_TryMove (&tm, th, th->x, th->y))
-		P_ExplodeMissile (th);
+	{
+		th->momx = th->momy = th->momz = 0;
+		if(tm.ceilingline && tm.ceilingline->sidenum[1] != -1 && LD_BACKSECTOR(tm.ceilingline)->ceilingpic == -1)
+		{
+			th->latecall = P_RemoveMobj;
+			return;
+		}
+		th->extradata = (intptr_t)tm.hitthing;
+		th->latecall = L_MissileHit;
+	}
 }
 
 /*
@@ -680,7 +694,7 @@ void P_CheckMissileSpawn (mobj_t *th)
 ================
 */
 
-void P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type)
+mobj_t *P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type)
 {
 	mobj_t		*th;
 	angle_t		an;
@@ -692,7 +706,7 @@ void P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type)
 	if (thinfo->seesound)
 		S_StartSound (source, thinfo->seesound);
 	th->target = source;		/* where it came from */
-	an = R_PointToAngle2 (source->x, source->y, dest->x, dest->y);	
+	an = R_PointToAngle (source->x, source->y, dest->x, dest->y);	
 	th->angle = an;
 	an >>= ANGLETOFINESHIFT;
 	speed = th->speed >> 16;
@@ -705,6 +719,8 @@ void P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type)
 		dist = 1;
 	th->momz = (dest->z - source->z) / dist;
 	P_CheckMissileSpawn (th);
+
+	return th;
 }
 
 

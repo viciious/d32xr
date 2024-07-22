@@ -69,7 +69,7 @@ void Mars_Sec_P_CheckSights(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_wipe_doMelt(void);
 
 void Mars_Sec_M_AnimateFire(void) ATTR_OPTIMIZE_EXTREME;
-void Mars_Sec_InitSoundDMA(int initfull);
+void Mars_Sec_InitSoundDMA(int initfull) __attribute__((noinline));
 void Mars_Sec_ReadSoundCmds(void) ATTR_DATA_OPTIMIZE_NONE;
 
 void Mars_Sec_AM_Drawer(void);
@@ -94,12 +94,12 @@ static inline void Mars_R_BeginWallPrep(boolean draw)
 
 static inline void Mars_R_WallNext(void)
 {
-	MARS_SYS_COMM6 = MARS_SYS_COMM6 + 0x100;
+	*(volatile uint8_t *)&MARS_SYS_COMM6 = *(volatile uint8_t *)&MARS_SYS_COMM6 + 1;
 }
 
 static inline void Mars_R_EndWallPrep(void)
 {
-	MARS_SYS_COMM6 = 0xff00;
+	*(volatile int8_t *)&MARS_SYS_COMM6 = -2;
 }
 
 // r_phase7

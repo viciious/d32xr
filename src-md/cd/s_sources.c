@@ -83,7 +83,18 @@ uint16_t S_Buf_LoadMonoSamples(sfx_source_t *src, uint16_t *pos, uint16_t len)
             pcm_load_samples_u8(*pos, buf->data + src->data_pos, len);
             src->data_pos += len;
             return len;
-
+#if 0
+        case S_FORMAT_RAW_SPCM:
+            if (src->data_pos + len > buf->data_len) {
+                len = buf->data_len - src->data_pos;
+                if (len == 0) {
+                    return 0;
+                }
+            }
+            pcm_load_samples(*pos, buf->data + src->data_pos, len);
+            src->data_pos += len;
+            return len;
+#endif
         case S_FORMAT_WAV_ADPCM:
             return adpcm_load_samples(&src->adpcm, *pos, len);
     }
@@ -106,7 +117,6 @@ uint16_t S_Buf_LoadStereoSamples(sfx_source_t *src, uint16_t *pos, uint16_t len)
             pcm_load_stereo_samples_u8(pos[0], pos[1], buf->data + src->data_pos, len);
             src->data_pos += len*2;
             return len;
-
         case S_FORMAT_WAV_ADPCM:
             return 0;
     }
@@ -156,7 +166,7 @@ void S_Src_Paint(sfx_source_t *src)
             S_Src_Stop(src);
             return;
         }
-        
+
         src->backbuf = backbuf;
         src->rem = CHBUF_SIZE;
         if (src->eof)
@@ -194,10 +204,9 @@ paint:
         }
 
         if (src->eof) {
-            if (src->painted > 0 && src->autoloop) {
+            if ((painted > 0 || src->rem < S_PAINT_CHUNK) && src->autoloop) {
                 // auto-restart only if we have previously painted at least 1 sample
                 src->eof = 0;
-                src->painted = 0;
                 S_Src_Rewind(src);
                 goto paint;
             }
@@ -244,11 +253,14 @@ void S_Src_Play(sfx_source_t *src, sfx_buffer_t *buf, uint16_t freq, uint8_t pan
     src->buf = buf;
     src->pan[0] = S_Chan_MidiPan(pan);
     src->env = vol;
-    src->autoloop = autoloop;
+    src->autoloop = 0;
     src->freq = freq ? freq : buf->freq;
     src->paused = 0;
     src->eof = 0;
     src->painted = 0;
+    if (autoloop == 1) {
+        src->autoloop = 1;
+    }
     //src->backbuf = -1;
 
     if (!buf || !buf->num_channels || !buf->data || !src->freq) {
@@ -314,7 +326,9 @@ void S_Src_Update(sfx_source_t *src, uint16_t freq, uint8_t pan, uint8_t vol, ui
         src->pan[0] = S_Chan_MidiPan(pan);
     }
     src->env = vol;
-    src->autoloop = autoloop;
+    if (autoloop == 0 || autoloop == 1) {
+        src->autoloop = autoloop;
+    }
 }
 
 uint16_t S_Src_GetPosition(sfx_source_t *src)

@@ -29,7 +29,9 @@ uint8_t			*texturetranslation;	/* for global animation */
 
 flattex_t		*flatpixels;
 
-texture_t	*skytexturep;
+inpixel_t	*skytexturep;
+int8_t 		*skycolormaps;
+VINT 		col2sky;
 
 uint8_t		*dc_playpals;
 
@@ -113,7 +115,6 @@ void R_InitTextures (void)
 
 		offset = LITTLELONG(*directory);
 		mtexture = (maptexture_t*)((byte*)maptex + offset);
-		patchcount = LITTLESHORT(mtexture->patchcount);
 		masked = *((byte *)&mtexture->masked);
 
 		texture = &textures[i];
@@ -209,6 +210,13 @@ void R_InitTextures (void)
 		if (texture->lumpnum < 0)
 			texture->lumpnum = 0;
 	}
+
+	// remap the dummy texture to the first valid texture
+	textures[0].lumpnum = textures[1].lumpnum;
+	textures[0].width = textures[1].width;
+	textures[0].height = textures[1].height;
+	textures[0].decals = textures[1].decals;
+	D_memcpy(textures[0].data, textures[1].data, sizeof(textures[0].data));
 
 	texmips = false;
 #if MIPLEVELS > 1
@@ -366,9 +374,12 @@ void R_InitData (void)
 	firstsprite = W_GetNumForName ("S_START") + 1;
 	numsprites = W_GetNumForName ("S_END") - firstsprite;
 
+	col2sky = W_CheckNumForName ("S_STCOL2");
+
 	R_InitTextures ();
 	R_InitFlats ();
 	R_InitSpriteDefs((const char **)sprnames);
+	R_InitColormap();
 
 #if MIPLEVELS > 1
 	if (!texmips) {
@@ -487,7 +498,7 @@ void R_InitMathTables(void)
 	I_FreeWorkBuffer();
 
 	viewangletox = (VINT *)I_AllocWorkBuffer(sizeof(*viewangletox) * (FINEANGLES / 2));
-	distscale = (fixed_t *)I_AllocWorkBuffer(sizeof(*distscale) * SCREENWIDTH);
+	distscale = (uint16_t *)I_AllocWorkBuffer(sizeof(*distscale) * SCREENWIDTH);
 	yslope = (fixed_t *)I_AllocWorkBuffer(sizeof(*yslope) * SCREENHEIGHT);
 	xtoviewangle = (uint16_t *)I_AllocWorkBuffer(sizeof(*xtoviewangle) * (SCREENWIDTH+1));
 	tempviewangletox = (VINT *)I_WorkBuffer();
@@ -560,7 +571,7 @@ void R_InitMathTables(void)
 	{
 		fixed_t cosang = finecosine(xtoviewangle[i] >> (ANGLETOFINESHIFT-FRACBITS));
 		cosang = D_abs(cosang);
-		distscale[i] = FixedDiv(FRACUNIT, cosang);
+		distscale[i] = FixedDiv(FRACUNIT, cosang)>>1;
 	}
 
 	fuzzunit = 320;
@@ -841,32 +852,23 @@ void R_InitSpriteDefs(const char** namelist)
 	}
 }
 
-static void *R_LoadColormap(int l, boolean doublepix)
+static void *R_LoadColormap(int l)
 {
 	void *doomcolormap;
 
-	l -= (int)!doublepix;
-
 	doomcolormap = W_GetLumpData(l);
-
-	if (doublepix)
-		return (void *)((short *)doomcolormap + 128);
 	return (void *)((int8_t*)doomcolormap + 128);
 }
 
-void R_InitColormap(boolean doublepix)
+void R_InitColormap(void)
 {
 	int l;
 
 	l = W_CheckNumForName("COLORMAP");
-	dc_colormaps = R_LoadColormap(l, doublepix);
+	dc_colormaps = R_LoadColormap(l);
 
-	l -= 2;
-	dc_colormaps2 = R_LoadColormap(l, doublepix);
-
-#ifdef MARS
-	Mars_CommSlaveClearCache();
-#endif
+	l -= 1;
+	dc_colormaps2 = R_LoadColormap(l);
 }
 
 boolean R_CompositeColumn(int colnum, int numdecals, texdecal_t *decals, inpixel_t *src, inpixel_t *dst, int height, int miplevel)
