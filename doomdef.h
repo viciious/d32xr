@@ -631,7 +631,9 @@ void D_DoomMain (void);
 void D_DoomLoop (void);
 
 extern	boolean	demoplayback, demorecording;
-extern	unsigned *demo_p, *demobuffer;
+extern	unsigned char *demo_p, *demobuffer;
+
+extern  fixed_t prev_rec_values[4];
 
 extern	int			startmap;
 extern	gametype_t	starttype;
@@ -790,8 +792,10 @@ void G_ExitLevel (void);
 void G_SecretExitLevel (void);
 void G_WorldDone (void);
 
-void G_RecordDemo (void);
-int G_PlayDemoPtr (unsigned *demo);
+void G_RecordInputDemo  (void);
+void G_RecordPositionDemo (void);
+int G_PlayInputDemoPtr (unsigned char *demo);
+int G_PlayPositionDemoPtr (unsigned char *demo);
 
 int G_LumpNumForMapNum(int map);
 

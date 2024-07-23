@@ -752,19 +752,12 @@ void I_DebugScreen(void)
 			D_snprintf(buf[1], sizeof(buf[0]), "tcs:%d", lasttics);
 			D_snprintf(buf[2], sizeof(buf[0]), "g:%2d", Mars_FRTCounter2Msec(tictics));
 			D_snprintf(buf[3], sizeof(buf[0]), "b:%2d", Mars_FRTCounter2Msec(t_ref_bsp_avg));
-			//D_snprintf(buf[4], sizeof(buf[0]), "w:%2d %2d", Mars_FRTCounter2Msec(t_ref_segs_avg), vd.lastwallcmd - vd.viswalls);
-			//D_snprintf(buf[5], sizeof(buf[0]), "p:%2d %2d", Mars_FRTCounter2Msec(t_ref_planes_avg), vd.lastvisplane - vd.visplanes - 1);
-			//D_snprintf(buf[6], sizeof(buf[0]), "s:%2d %2d", Mars_FRTCounter2Msec(t_ref_sprites_avg), vd.vissprite_p - vd.vissprites);
-			//D_snprintf(buf[7], sizeof(buf[0]), "r:%2d", Mars_FRTCounter2Msec(t_ref_total_avg));
-			//D_snprintf(buf[8], sizeof(buf[0]), "d:%2d", Mars_FRTCounter2Msec(drawtics));
-			//D_snprintf(buf[9], sizeof(buf[0]), "t:%2d", Mars_FRTCounter2Msec(I_GetFRTCounter() - ticstart));
-			
-			D_snprintf(buf[4], sizeof(buf[0]), "t:%d", last_frt_count);
-			D_snprintf(buf[5], sizeof(buf[0]), "t:%d", last_vbl_count);
-			D_snprintf(buf[6], sizeof(buf[0]), "t:%d", ticcount);
-			D_snprintf(buf[7], sizeof(buf[0]), "t:%d", lastticcount);
-			D_snprintf(buf[8], sizeof(buf[0]), "t:%d", accum_time);
-			D_snprintf(buf[9], sizeof(buf[0]), "t:%d", accum_time_target);
+			D_snprintf(buf[4], sizeof(buf[0]), "w:%2d %2d", Mars_FRTCounter2Msec(t_ref_segs_avg), vd.lastwallcmd - vd.viswalls);
+			D_snprintf(buf[5], sizeof(buf[0]), "p:%2d %2d", Mars_FRTCounter2Msec(t_ref_planes_avg), vd.lastvisplane - vd.visplanes - 1);
+			D_snprintf(buf[6], sizeof(buf[0]), "s:%2d %2d", Mars_FRTCounter2Msec(t_ref_sprites_avg), vd.vissprite_p - vd.vissprites);
+			D_snprintf(buf[7], sizeof(buf[0]), "r:%2d", Mars_FRTCounter2Msec(t_ref_total_avg));
+			D_snprintf(buf[8], sizeof(buf[0]), "d:%2d", Mars_FRTCounter2Msec(drawtics));
+			D_snprintf(buf[9], sizeof(buf[0]), "t:%2d", Mars_FRTCounter2Msec(I_GetFRTCounter() - ticstart));
 		}
 
         I_Print8(x, line++, buf[0]);
@@ -856,9 +849,6 @@ void I_Update(void)
 	/* */
 	const int ticwait = (demoplayback || demorecording ? 4 : ticsperframe); // demos were recorded at 15-20fps
 
-	//DLG: FPS = 30 * 180 / (I_GetFRTCounter() - ticstart)
-	//DLG: FPS = 90 / (I_GetFRTCounter() - ticstart) * 60
-
 	int frt_count = I_GetFRTCounter();
 	int vbl_count = Mars_GetTicCount();
 
@@ -869,9 +859,9 @@ void I_Update(void)
 
 	// Frame skipping based on FRT count (debug must be active)
 	//accum_time += (frt_count - last_frt_count) * 100;
-	//accum_time_target += 9263; //92.62841530054645f; //94.5f; // 92.6284153 * 16 = 1482.0546448
+	//accum_time_target += 9263;
 
-	// Frame skipping based on VBL count
+	// Frame skipping based on VBL count (debug must be active)
 	accum_time += (vbl_count - last_vbl_count);
 	accum_time_target += 1;
 
