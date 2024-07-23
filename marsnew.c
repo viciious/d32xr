@@ -891,14 +891,18 @@ void I_Update(void)
 		ticcount += 1;
 	}
 
-	if (accum_time > accum_time_target) {
+	if (accum_time > accum_time_target+2 && skip_frame == 0) {
 		// We're behind where we want to be.
 		// Avoid drawing the next frame so the logic can catch up.
-		skip_frame = 1;
+		skip_frame = (accum_time - accum_time_target) - 2;
+		if (skip_frame > 3) {
+			skip_frame = 3;
+		}
 	}
-	else {
+	else if (skip_frame > 0) {
 		// We're ahead of where we want to be.
-		skip_frame = 0;
+		skip_frame -= 1;
+		accum_time = accum_time_target;
 	}
 
 	lasttics = ticcount - lastticcount;
