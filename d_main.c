@@ -408,10 +408,11 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 /* */
 /* get buttons for next tic */
 /* */
+		oldticbuttons[0] = ticbuttons[0];
+		oldticbuttons[1] = ticbuttons[1];
+		oldticrealbuttons = ticrealbuttons;
+
 		if (skip_frame == 0) {
-			oldticbuttons[0] = ticbuttons[0];
-			oldticbuttons[1] = ticbuttons[1];
-			oldticrealbuttons = ticrealbuttons;
 
 			buttons = I_ReadControls();
 			buttons |= I_ReadMouse(&mx, &my);

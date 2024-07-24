@@ -255,7 +255,10 @@ void Mars_Init(void)
 		mars_gamepadport[i] = -1;
 	mars_mouseport = -1;
 
-	SH2_WDT_WTCSR_TCNT = 0xA518; /* WDT TCSR = clr OVF, IT mode, timer off, clksel = Fs/2 */
+	//SH2_WDT_WTCSR_TCNT = 0xA518; /* WDT TCSR = clr OVF, IT mode, timer off, clksel = Fs/2 */
+	
+	SH2_WDT_WTCSR_TCNT = 0x5A00; /* WDT TCNT = 0 */
+	SH2_WDT_WTCSR_TCNT = 0xA53E; /* WDT TCSR = clr OVF, IT mode, timer on, clksel = Fs/4096 */
 
 	/* init hires timer system */
 	SH2_WDT_VCR = (65<<8) | (SH2_WDT_VCR & 0x00FF); // set exception vector for WDT

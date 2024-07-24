@@ -830,17 +830,6 @@ void I_Update(void)
 
 			R_SetDrawMode();
 
-			if (!prevdebugmode)
-			{
-				SH2_WDT_WTCSR_TCNT = 0x5A00; /* WDT TCNT = 0 */
-				SH2_WDT_WTCSR_TCNT = 0xA53E; /* WDT TCSR = clr OVF, IT mode, timer on, clksel = Fs/4096 */
-			}
-			else if (!debugmode)
-			{
-				Mars_ClearNTA();
-				SH2_WDT_WTCSR_TCNT = 0xA518; /* WDT TCSR = clr OVF, IT mode, timer off, clksel = Fs/2 */
-			}
-
 			clearscreen = 2;
 		}
 
@@ -857,11 +846,11 @@ void I_Update(void)
 		last_frt_count = frt_count;
 	}
 
-	// Frame skipping based on FRT count (debug must be active)
+	// Frame skipping based on FRT count
 	//accum_time += (frt_count - last_frt_count) * 100;
 	//accum_time_target += 9263;
 
-	// Frame skipping based on VBL count (debug must be active)
+	// Frame skipping based on VBL count
 	accum_time += (vbl_count - last_vbl_count);
 	accum_time_target += 1;
 
