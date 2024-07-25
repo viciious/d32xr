@@ -77,8 +77,8 @@ VINT	strafebtns = 0;
 extern int 	cy;
 extern int tictics, drawtics, ticstart;
 
-int skip_frame = 0;
-int	frames_skipped = 0;
+int frames_to_skip = 0;
+int	total_frames_skipped = 0;
 
 // framebuffer start is after line table AND a single blank line
 static volatile pixel_t* framebuffer = &MARS_FRAMEBUFFER + 0x100;
@@ -857,30 +857,30 @@ void I_Update(void)
 	last_vbl_count = vbl_count;
 	last_frt_count = frt_count;
 		
-	if (skip_frame == 0) {
+	if (frames_to_skip == 0) {
 		Mars_FlipFrameBuffers(false);
 		do
 		{
-			ticcount = I_GetTime() + frames_skipped;
+			ticcount = I_GetTime() + total_frames_skipped;
 		} while (ticcount - lastticcount < ticwait);
 	}
 	else {
 		// Advance ticcount beyond what I_GetTime() will get us.
-		frames_skipped += 1;
+		total_frames_skipped += 1;
 		ticcount += 1;
 	}
 
-	if (accum_time > accum_time_target+2 && skip_frame == 0) {
+	if (accum_time > accum_time_target+2 && frames_to_skip == 0) {
 		// We're behind where we want to be.
 		// Avoid drawing the next frame so the logic can catch up.
-		skip_frame = (accum_time - accum_time_target) - 2;
-		if (skip_frame > 3) {
-			skip_frame = 3;
+		frames_to_skip = (accum_time - accum_time_target) - 2;
+		if (frames_to_skip > MAX_FRAME_SKIP) {
+			frames_to_skip = MAX_FRAME_SKIP;
 		}
 	}
-	else if (skip_frame > 0) {
+	else if (frames_to_skip > 0) {
 		// We're ahead of where we want to be.
-		skip_frame -= 1;
+		frames_to_skip -= 1;
 		accum_time = accum_time_target;
 	}
 

@@ -122,6 +122,10 @@ typedef unsigned angle_t;
 #define	FINEMASK			(FINEANGLES-1)
 #define	ANGLETOFINESHIFT	19	/* 0x100000000 to 0x2000 */
 
+#define TITLE_ANGLE_INC		0xC00000
+
+#define TITLE_MAP_NUMBER	30
+
 #ifdef MARS
 
 fixed_t finesine(angle_t angle) ATTR_DATA_CACHE_ALIGN;
@@ -1122,7 +1126,9 @@ extern	int		maxlevel;			/* highest level selectable in menu (1-25) */
 extern	int		gamevbls;			/* may not really be vbls in multiplayer */
 extern	int		vblsinframe;			/* range from 4 to 8 */
 
-extern  int     skip_frame;
+extern  int     frames_to_skip;
+
+#define MAX_FRAME_SKIP		3
 
 #define MINTICSPERFRAME		1
 #define MAXTICSPERFRAME		4

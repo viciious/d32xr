@@ -412,7 +412,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		oldticbuttons[1] = ticbuttons[1];
 		oldticrealbuttons = ticrealbuttons;
 
-		if (skip_frame == 0) {
+		if (frames_to_skip == 0) {
 
 			buttons = I_ReadControls();
 			buttons |= I_ReadMouse(&mx, &my);
@@ -504,9 +504,16 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 				#endif
 
 				#ifndef PLAY_POS_DEMO
-				// This is for reading convention input-based demos.
-				ticbuttons[consoleplayer] = buttons = *((long *)demobuffer);
-				demobuffer += 4;
+				if (gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
+					// Rotate on the title screen.
+					ticbuttons[consoleplayer] = buttons = 0;
+					players[0].mo->angle += TITLE_ANGLE_INC;
+				}
+				else {
+					// This is for reading conventional input-based demos.
+					ticbuttons[consoleplayer] = buttons = *((long *)demobuffer);
+					demobuffer += 4;
+				}
 				#endif
 			}
 
@@ -660,7 +667,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 
 		S_UpdateSounds();
 
-		if (skip_frame == 0) {
+		if (frames_to_skip == 0) {
 			/* */
 			/* sync up with the refresh */
 			/* */
