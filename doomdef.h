@@ -1122,6 +1122,7 @@ extern  int     skip_frame;
 
 #define MINTICSPERFRAME		1
 #define MAXTICSPERFRAME		4
+
 extern	VINT	ticsperframe;		/* 2 - 4 */
 
 typedef enum

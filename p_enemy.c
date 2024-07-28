@@ -101,7 +101,6 @@ boolean P_Move (mobj_t *actor)
 	fixed_t	tryx, tryy;
 	fixed_t oldx, oldy;
 	boolean		good;
-	line_t		*blkline;
 	ptrymove_t	tm;
 
 	if (actor->movedir == DI_NODIR)
@@ -125,7 +124,7 @@ boolean P_Move (mobj_t *actor)
 			return true;
 		}
 
-		blkline = tm.blockline;
+//		blkline = tm.blockline;
 		good = false;
 
 		return good;
