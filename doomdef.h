@@ -1115,8 +1115,14 @@ void DrawScrollingBanner(short ltzz_lump, int x, int y_shift);
 void DrawScrollingChevrons(short chev_lump, int x, int y_shift);
 extern	int		maxlevel;			/* highest level selectable in menu (1-25) */
 
-#define MINTICSPERFRAME		2
-#define MAXTICSPERFRAME		8
+extern	int		gamevbls;			/* may not really be vbls in multiplayer */
+extern	int		vblsinframe;			/* range from 4 to 8 */
+
+extern  int     skip_frame;
+
+#define MINTICSPERFRAME		1
+#define MAXTICSPERFRAME		4
+
 extern	VINT	ticsperframe;		/* 2 - 4 */
 
 typedef enum

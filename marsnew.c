@@ -61,15 +61,24 @@ const byte	*new_palette = NULL;
 boolean	debugscreenactive = false;
 boolean	debugscreenupdate = false;
 
+int     ticcount = 0;
 int		lastticcount = 0;
 int		lasttics = 0;
 static int fpscount = 0;
+
+int accum_time_target = 0;
+int accum_time = 0;
+int last_vbl_count = 0;
+int last_frt_count = 0;
 
 VINT 	debugmode = DEBUGMODE_NONE;
 VINT	strafebtns = 0;
 
 extern int 	cy;
 extern int tictics, drawtics, ticstart;
+
+int skip_frame = 0;
+int	frames_skipped = 0;
 
 // framebuffer start is after line table AND a single blank line
 static volatile pixel_t* framebuffer = &MARS_FRAMEBUFFER + 0x100;
@@ -743,12 +752,19 @@ void I_DebugScreen(void)
 			D_snprintf(buf[1], sizeof(buf[0]), "tcs:%d", lasttics);
 			D_snprintf(buf[2], sizeof(buf[0]), "g:%2d", Mars_FRTCounter2Msec(tictics));
 			D_snprintf(buf[3], sizeof(buf[0]), "b:%2d", Mars_FRTCounter2Msec(t_ref_bsp_avg));
-			D_snprintf(buf[4], sizeof(buf[0]), "w:%2d %2d", Mars_FRTCounter2Msec(t_ref_segs_avg), vd.lastwallcmd - vd.viswalls);
-			D_snprintf(buf[5], sizeof(buf[0]), "p:%2d %2d", Mars_FRTCounter2Msec(t_ref_planes_avg), vd.lastvisplane - vd.visplanes - 1);
-			D_snprintf(buf[6], sizeof(buf[0]), "s:%2d %2d", Mars_FRTCounter2Msec(t_ref_sprites_avg), vd.vissprite_p - vd.vissprites);
-			D_snprintf(buf[7], sizeof(buf[0]), "r:%2d", Mars_FRTCounter2Msec(t_ref_total_avg));
-			D_snprintf(buf[8], sizeof(buf[0]), "d:%2d", Mars_FRTCounter2Msec(drawtics));
-			D_snprintf(buf[9], sizeof(buf[0]), "t:%2d", Mars_FRTCounter2Msec(I_GetFRTCounter() - ticstart));
+			//D_snprintf(buf[4], sizeof(buf[0]), "w:%2d %2d", Mars_FRTCounter2Msec(t_ref_segs_avg), vd.lastwallcmd - vd.viswalls);
+			//D_snprintf(buf[5], sizeof(buf[0]), "p:%2d %2d", Mars_FRTCounter2Msec(t_ref_planes_avg), vd.lastvisplane - vd.visplanes - 1);
+			//D_snprintf(buf[6], sizeof(buf[0]), "s:%2d %2d", Mars_FRTCounter2Msec(t_ref_sprites_avg), vd.vissprite_p - vd.vissprites);
+			//D_snprintf(buf[7], sizeof(buf[0]), "r:%2d", Mars_FRTCounter2Msec(t_ref_total_avg));
+			//D_snprintf(buf[8], sizeof(buf[0]), "d:%2d", Mars_FRTCounter2Msec(drawtics));
+			//D_snprintf(buf[9], sizeof(buf[0]), "t:%2d", Mars_FRTCounter2Msec(I_GetFRTCounter() - ticstart));
+			
+			D_snprintf(buf[4], sizeof(buf[0]), "t:%d", last_frt_count);
+			D_snprintf(buf[5], sizeof(buf[0]), "t:%d", last_vbl_count);
+			D_snprintf(buf[6], sizeof(buf[0]), "t:%d", ticcount);
+			D_snprintf(buf[7], sizeof(buf[0]), "t:%d", lastticcount);
+			D_snprintf(buf[8], sizeof(buf[0]), "t:%d", accum_time);
+			D_snprintf(buf[9], sizeof(buf[0]), "t:%d", accum_time_target);
 		}
 
         I_Print8(x, line++, buf[0]);
@@ -792,7 +808,7 @@ void I_ResetLineTable(void)
 */
 void I_Update(void)
 {
-	int ticcount;
+	//int ticcount;
 	static int prevsecticcount = 0;
 	static int framenum = 0;
 	const int refreshHZ = Mars_RefreshHZ();
@@ -835,16 +851,59 @@ void I_Update(void)
 			clearscreen = 2;
 		}
 
-	Mars_FlipFrameBuffers(false);
-
 	/* */
 	/* wait until on the third tic after last display */
 	/* */
 	const int ticwait = (demoplayback || demorecording ? 4 : ticsperframe); // demos were recorded at 15-20fps
-	do
-	{
-		ticcount = I_GetTime();
-	} while (ticcount - lastticcount < ticwait);
+
+	//DLG: FPS = 30 * 180 / (I_GetFRTCounter() - ticstart)
+	//DLG: FPS = 90 / (I_GetFRTCounter() - ticstart) * 60
+
+	int frt_count = I_GetFRTCounter();
+	int vbl_count = Mars_GetTicCount();
+
+	if (last_vbl_count == 0 || last_frt_count == 0) {
+		last_vbl_count = vbl_count;
+		last_frt_count = frt_count;
+	}
+
+	// Frame skipping based on FRT count (debug must be active)
+	//accum_time += (frt_count - last_frt_count) * 100;
+	//accum_time_target += 9263; //92.62841530054645f; //94.5f; // 92.6284153 * 16 = 1482.0546448
+
+	// Frame skipping based on VBL count
+	accum_time += (vbl_count - last_vbl_count);
+	accum_time_target += 1;
+
+	last_vbl_count = vbl_count;
+	last_frt_count = frt_count;
+		
+	if (skip_frame == 0) {
+		Mars_FlipFrameBuffers(false);
+		do
+		{
+			ticcount = I_GetTime() + frames_skipped;
+		} while (ticcount - lastticcount < ticwait);
+	}
+	else {
+		// Advance ticcount beyond what I_GetTime() will get us.
+		frames_skipped += 1;
+		ticcount += 1;
+	}
+
+	if (accum_time > accum_time_target+2 && skip_frame == 0) {
+		// We're behind where we want to be.
+		// Avoid drawing the next frame so the logic can catch up.
+		skip_frame = (accum_time - accum_time_target) - 2;
+		if (skip_frame > 3) {
+			skip_frame = 3;
+		}
+	}
+	else if (skip_frame > 0) {
+		// We're ahead of where we want to be.
+		skip_frame -= 1;
+		accum_time = accum_time_target;
+	}
 
 	lasttics = ticcount - lastticcount;
 	lastticcount = ticcount;
