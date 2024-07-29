@@ -768,13 +768,13 @@ void P_MovePlayer(player_t *player)
 
 				player->mo->angle = R_PointToAngle2(player->mo->x, player->mo->y, player->mo->x + player->mo->momx, player->mo->y + player->mo->momy);*/
 
-		fixed_t acc = FRACUNIT / 2;
+		fixed_t acc = 6144 * 4;//FRACUNIT / 2;
 //		angle_t speedDir = R_PointToAngle2(0, 0, player->mo->momx, player->mo->momy);
 		fixed_t speed = P_AproxDistance(player->mo->momx, player->mo->momy);
 
-		//		VINT controlDirection = ControlDirection(player);
-		//		if (controlDirection == 2)
-		//			acc *= 2;
+		VINT controlDirection = ControlDirection(player);
+		if (controlDirection == 2)
+			acc *= 2;
 
 		//		CONS_Printf("Controldirection is %d", controlDirection);
 
