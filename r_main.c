@@ -524,8 +524,21 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	vd.viewcos = finecosine(vd.viewangle>>ANGLETOFINESHIFT);
 
 	// look up/down
-	G_ClipAimingPitch(&aimingangle);
+#ifdef MDSKY
+	int dy;
+	if (demoplayback && gamemapinfo.mapNumber == 30) {
+		// The viewport for the title screen is aligned with the bottom of
+		// the screen. Therefore we shift the angle to center the horizon.
+		dy = -32;
+	}
+	else {
+		G_ClipAimingPitch(&aimingangle);
+		dy = AIMINGTODY(aimingangle);
+	}
+#else
 	int dy = AIMINGTODY(aimingangle);
+#endif
+
 	yslope = &yslopetab[(3*viewportHeight/2) - dy];
 	centerY = (viewportHeight / 2) + dy;
 	centerYFrac = centerY << FRACBITS;
@@ -620,14 +633,25 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 
 	viewportbuffer = (pixel_t*)I_ViewportBuffer();
 
+	#ifdef MDSKY
+	if (demoplayback && gamemapinfo.mapNumber == 30) {
+		viewportbuffer += (160*20);
+	}
+	#endif
+
 	palette = 0;
 
 	i = 0;
 
 	if (gamepaused)
 		palette = 12;
-	else if (demoplayback && gamemapinfo.mapNumber == 30 && leveltime < 15)
+	else if (demoplayback && gamemapinfo.mapNumber == 30 && leveltime < 15) {
 		palette = 5 - (leveltime / 3);
+
+		#ifdef MDSKY
+		Mars_FadeMDPaletteFromBlack(0xEEE); //TODO: Replace with Mars_FadeMDPaletteFromWhite()
+		#endif
+	}
 	
 	if (palette != curpalette) {
 		curpalette = palette;
