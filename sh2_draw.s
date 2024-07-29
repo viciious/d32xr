@@ -681,9 +681,6 @@ draw_fuzzoffset:
         .align  4
         .global _I_DrawSkyColumnA
 _I_DrawSkyColumnA:
-	add	#1,r6
-
-0:
         cmp/ge  r6,r5
         bf/s    1f
         sub     r5,r6           /* count = dc_yh - dc_yl */
@@ -733,9 +730,6 @@ do_sky_col_loop_1px:
         .align  4
         .global _I_DrawSkyColumnLowA
 _I_DrawSkyColumnLowA:
-	add	#1,r6
-
-0:
         cmp/ge  r6,r5
         bf/s    1f
         sub     r5,r6           /* count = dc_yh - dc_yl */

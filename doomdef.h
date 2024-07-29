@@ -122,6 +122,10 @@ typedef unsigned angle_t;
 #define	FINEMASK			(FINEANGLES-1)
 #define	ANGLETOFINESHIFT	19	/* 0x100000000 to 0x2000 */
 
+#define TITLE_ANGLE_INC		0xC00000
+
+#define TITLE_MAP_NUMBER	30
+
 #ifdef MARS
 
 fixed_t finesine(angle_t angle) ATTR_DATA_CACHE_ALIGN;
@@ -631,7 +635,9 @@ void D_DoomMain (void);
 void D_DoomLoop (void);
 
 extern	boolean	demoplayback, demorecording;
-extern	unsigned *demo_p, *demobuffer;
+extern	unsigned char *demo_p, *demobuffer;
+
+extern  fixed_t prev_rec_values[4];
 
 extern	int			startmap;
 extern	gametype_t	starttype;
@@ -790,8 +796,10 @@ void G_ExitLevel (void);
 void G_SecretExitLevel (void);
 void G_WorldDone (void);
 
-void G_RecordDemo (void);
-int G_PlayDemoPtr (unsigned *demo);
+void G_RecordInputDemo  (void);
+void G_RecordPositionDemo (void);
+int G_PlayInputDemoPtr (unsigned char *demo);
+int G_PlayPositionDemoPtr (unsigned char *demo);
 
 int G_LumpNumForMapNum(int map);
 
@@ -1118,7 +1126,9 @@ extern	int		maxlevel;			/* highest level selectable in menu (1-25) */
 extern	int		gamevbls;			/* may not really be vbls in multiplayer */
 extern	int		vblsinframe;			/* range from 4 to 8 */
 
-extern  int     skip_frame;
+extern  int     frames_to_skip;
+
+#define MAX_FRAME_SKIP		3
 
 #define MINTICSPERFRAME		1
 #define MAXTICSPERFRAME		4

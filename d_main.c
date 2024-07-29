@@ -1,6 +1,10 @@
 /* D_main.c  */
  
-#include "doomdef.h" 
+#include "doomdef.h"
+
+#ifdef PLAY_POS_DEMO
+#include "v_font.h"
+#endif
 
 #ifdef MARS
 #include "marshw.h"
@@ -17,11 +21,18 @@ VINT		ticsperframe = MINTICSPERFRAME;
 int			maxlevel;			/* highest level selectable in menu (1-25) */
 jagobj_t	*backgroundpic;
 
-unsigned	*demo_p, *demobuffer;
-
 boolean canwipe = false;
 
 int 		ticstart;
+
+#ifdef PLAY_POS_DEMO
+	int			realtic;
+	fixed_t prev_rec_values[4];
+#else 
+#ifdef REC_POS_DEMO
+	fixed_t prev_rec_values[4];
+#endif
+#endif
 
 unsigned configuration[NUMCONTROLOPTIONS][3] =
 {
@@ -383,10 +394,11 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 /* */
 /* get buttons for next tic */
 /* */
-		if (skip_frame == 0) {
-			oldticbuttons[0] = ticbuttons[0];
-			oldticbuttons[1] = ticbuttons[1];
-			oldticrealbuttons = ticrealbuttons;
+		oldticbuttons[0] = ticbuttons[0];
+		oldticbuttons[1] = ticbuttons[1];
+		oldticrealbuttons = ticrealbuttons;
+
+		if (frames_to_skip == 0) {
 
 			buttons = I_ReadControls();
 			buttons |= I_ReadMouse(&mx, &my);
@@ -413,7 +425,82 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 					break;
 				}
 #endif
-				ticbuttons[consoleplayer] = buttons = *demo_p++;
+
+				#ifdef PLAY_POS_DEMO
+				if (demo_p == demobuffer + 0xA) {
+					// This is the first frame, so grab the initial values.
+					prev_rec_values[0] = players[0].mo->x;
+					prev_rec_values[1] = players[0].mo->y;
+					prev_rec_values[2] = players[0].mo->z;
+					prev_rec_values[3] = players[0].mo->angle >> ANGLETOFINESHIFT;
+
+					demo_p += 16;
+				}
+				else {
+					// Beyond the first frame, we update only the values that
+					// have changed.
+					unsigned char key = *demo_p++;
+
+					int rec_value;
+					unsigned char *prev_rec_values_bytes;
+
+					for (int i=0; i < 4; i++) {
+						// Check to see which values have changed and save them
+						// in 'prev_rec_values' so the next frame's comparisons
+						// can be done against the current frame.
+						prev_rec_values_bytes = &prev_rec_values[i];
+						rec_value = 0;
+
+						switch (key&3) {
+							case 3: // Long -- update the value as recorded (i.e. no delta).
+								rec_value = *demo_p++;
+								rec_value <<= 8;
+								rec_value |= *demo_p++;
+								rec_value <<= 8;
+								rec_value |= *demo_p++;
+								rec_value <<= 8;
+								rec_value |= *demo_p++;
+								prev_rec_values[i] = rec_value;
+								break;
+
+							case 2: // Short -- add the difference to the current value.
+								rec_value = *demo_p++;
+								rec_value <<= 8;
+								rec_value |= *demo_p++;
+								prev_rec_values[i] += (signed short)rec_value;
+								break;
+
+							case 1: // Byte -- add the difference to the current value.
+								rec_value = *demo_p++;
+								prev_rec_values[i] += (signed char)rec_value;
+						}
+
+						// Advance the key so the next two bits can be read to
+						// check for updates.
+						key >>= 2;
+					}
+
+					// Update the player variables with the newly updated
+					// frame values.
+					players[0].mo->x = prev_rec_values[0];
+					players[0].mo->y = prev_rec_values[1];
+					players[0].mo->z = prev_rec_values[2];
+					players[0].mo->angle = prev_rec_values[3] << ANGLETOFINESHIFT;
+				}
+				#endif
+
+				#ifndef PLAY_POS_DEMO
+				if (gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
+					// Rotate on the title screen.
+					ticbuttons[consoleplayer] = buttons = 0;
+					players[0].mo->angle += TITLE_ANGLE_INC;
+				}
+				else {
+					// This is for reading conventional input-based demos.
+					ticbuttons[consoleplayer] = buttons = *((long *)demobuffer);
+					demobuffer += 4;
+				}
+				#endif
 			}
 
 			if (splitscreen && !demoplayback)
@@ -423,14 +510,123 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 					= NetToLocal(I_NetTransfer(LocalToNet(ticbuttons[consoleplayer])));
 		}
 
-#ifdef FRAMESKIP
-int numloops = lasttics - 1;
-if (numloops <= 0)
-	numloops = 1;
-#endif
+		#ifdef PLAY_POS_DEMO
+		if (demoplayback) {
+			players[0].mo->momx = 0;
+			players[0].mo->momy = 0;
+			players[0].mo->momz = 0;
+		}
+		#endif
 
-		if (demorecording)
-			*demo_p++ = buttons;
+		gamevbls += vblsinframe;
+
+		if (demorecording) {
+			#ifdef REC_POS_DEMO
+			if (((short *)demobuffer)[3] == -1) {
+				// This is the first frame, so record the initial values in full.
+				prev_rec_values[0] = players[0].mo->x;
+				prev_rec_values[1] = players[0].mo->y;
+				prev_rec_values[2] = players[0].mo->z;
+				prev_rec_values[3] = players[0].mo->angle >> ANGLETOFINESHIFT;
+
+				char *values_p = prev_rec_values;
+				for (int i=0; i < 4; i++) {
+					*demo_p++ = *values_p++;
+					*demo_p++ = *values_p++;
+					*demo_p++ = *values_p++;
+					*demo_p++ = *values_p++;
+				}
+
+				((short *)demobuffer)[2] += 16; // 16 bytes written.
+			}
+			else {
+				// Beyond the first frame, we record only the values that
+				// have changed.
+				unsigned char frame_bytes = 1; // At least one byte will be written.
+
+				// Calculate the difference between values in the current
+				// frame and previous frame.
+				fixed_t delta[4];
+				delta[0] = players[0].mo->x - prev_rec_values[0];
+				delta[1] = players[0].mo->y - prev_rec_values[1];
+				delta[2] = players[0].mo->z - prev_rec_values[2];
+				delta[3] = (players[0].mo->angle >> ANGLETOFINESHIFT) - prev_rec_values[3];
+
+				// Save the current frame's values in 'prev_rec_values' so
+				// the next frame's comparisons can be done against the
+				// current frame.
+				prev_rec_values[0] = players[0].mo->x;
+				prev_rec_values[1] = players[0].mo->y;
+				prev_rec_values[2] = players[0].mo->z;
+				prev_rec_values[3] = players[0].mo->angle >> ANGLETOFINESHIFT;
+
+				unsigned char key = 0;
+
+				// Record the values that have changed and the minimum number
+				// of bytes needed to represent the deltas.
+				for (int i=0; i < 4; i++) {
+					key >>= 2;
+
+					fixed_t d = delta[i];
+					if (d != 0) {
+						if (d <= 0x7F && d >= -0x80) {
+							key |= 0x40; // Byte
+							frame_bytes++;
+						}
+						else if (d <= 0x7FFF && d >= -0x8000) {
+							key |= 0x80; // Short
+							frame_bytes += 2;
+						}
+						else {
+							key |= 0xC0; // Long
+							frame_bytes += 4;
+						}
+					}
+				}
+
+				unsigned char *delta_bytes;
+				unsigned char *prev_rec_values_bytes;
+
+				*demo_p++ = key;
+
+				// Based on the sizes put into the key, we record either the
+				// deltas (in the case of char and short) or the full value.
+				// Values with no difference will not be recorded.
+				for (int i=0; i < 4; i++) {
+					delta_bytes = &delta[i];
+					prev_rec_values_bytes = &prev_rec_values[i];
+					switch (key & 3) {
+						case 3: // Long
+							*demo_p++ = *prev_rec_values_bytes++;
+							*demo_p++ = *prev_rec_values_bytes++;
+							*demo_p++ = *prev_rec_values_bytes++;
+							*demo_p++ = *prev_rec_values_bytes++;
+							break;
+
+						case 2: // Short
+							*demo_p++ = delta_bytes[2];
+							// fall-thru
+
+						case 1: // Byte
+							*demo_p++ = delta_bytes[3];
+					}
+
+					// Advance the key so the next two bits can be read to
+					// check for updated values.
+					key >>= 2;
+				}
+
+				((short *)demobuffer)[2] += frame_bytes;	// Increase data length.
+			}
+
+			((short *)demobuffer)[3] += 1;	// Increase frame count.
+			#endif
+
+			#ifdef REC_INPUT_DEMO
+			*((long *)demo_p) = buttons;
+			demo_p += 4;
+			#endif
+		}
 		
 		if ((demorecording || demoplayback) && (buttons & BT_PAUSE) )
 			exit = ga_completed;
@@ -469,7 +665,7 @@ if (numloops <= 0)
 
 		S_UpdateSounds();
 
-		if (skip_frame == 0) {
+		if (frames_to_skip == 0) {
 			/* */
 			/* sync up with the refresh */
 			/* */
@@ -477,6 +673,16 @@ if (numloops <= 0)
 				;
 
 			drawer();
+
+			#ifdef PLAY_POS_DEMO
+			if (leveltime > 30) {
+				V_DrawValueCenter(&menuFont, 160, 40, I_GetTime() - realtic);
+				V_DrawValueCenter(&menuFont, 160, 50, I_GetFRTCounter());
+			}
+			else {
+				realtic = I_GetTime();
+			}
+			#endif
 		}
 
 		if (!exit && wipe)
@@ -819,7 +1025,35 @@ void RunCredits (void)
 		RunMenu ();
 }
 
-int  RunDemo (char *demoname)
+int RunInputDemo (char *demoname)
+{
+	unsigned char *demo;
+	int	exit;
+	int lump;
+
+	lump = W_CheckNumForName(demoname);
+	if (lump == -1)
+		return ga_exitdemo;
+
+	// avoid zone memory fragmentation which is due to happen
+	// if the demo lump cache is tucked after the level zone.
+	// this will cause shrinking of the zone area available
+	// for the level data after each demo playback and eventual
+	// Z_Malloc failure
+	Z_FreeTags(mainzone);
+
+	demo = W_CacheLumpNum(lump, PU_STATIC);
+	exit = G_PlayInputDemoPtr (demo);
+	Z_Free(demo);
+
+#ifndef MARS
+	if (exit == ga_exitdemo)
+		RunMenu ();
+#endif
+	return exit;
+}
+
+int RunPositionDemo (char *demoname)
 {
 	unsigned *demo;
 	int	exit;
@@ -837,7 +1071,7 @@ int  RunDemo (char *demoname)
 	Z_FreeTags(mainzone);
 
 	demo = W_CacheLumpNum(lump, PU_STATIC);
-	exit = G_PlayDemoPtr (demo);
+	exit = G_PlayPositionDemoPtr  (demo);
 	Z_Free(demo);
 
 #ifndef MARS
@@ -868,7 +1102,7 @@ void RunMenu (void)
 				if (lump == -1)
 					break;
 
-				exit = RunDemo(demo);
+				exit = RunInputDemo(demo);
 				if (exit == ga_exitdemo)
 					break;
 			}
@@ -944,9 +1178,23 @@ D_printf("G_Init\n");
 
 D_printf ("DM_Main\n");
 
-/*	while (1)	RunDemo ("DEMO1"); */
+#ifdef PLAY_INPUT_DEMO
+	while(1) {
+		RunInputDemo("DEMO1");
+	}
+#endif
+#ifdef PLAY_POS_DEMO
+	while(1) {
+		RunPositionDemo("DEMO9");
+	}
+#endif
 
-/*G_RecordDemo ();	// set startmap and startskill */
+#ifdef REC_INPUT_DEMO
+	G_RecordInputDemo();	// set startmap and startskill
+#endif
+#ifdef REC_POS_DEMO
+	G_RecordPositionDemo();
+#endif
 
 /*	MiniLoop (F_Start, F_Stop, F_Ticker, F_Drawer, UpdateBuffer); */
 
@@ -979,9 +1227,9 @@ D_printf ("DM_Main\n");
 	while (1)
 	{
 		RunTitle();
-		RunDemo("DEMO1");
+		RunInputDemo("DEMO1");
 		RunCredits ();
-		RunDemo("DEMO2");
+		RunInputDemo("DEMO2");
 	}
 #endif
 }

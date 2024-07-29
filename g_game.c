@@ -35,6 +35,9 @@ VINT           totalitems, totalsecret;    /* for intermission  */
 boolean         demorecording;
 boolean         demoplayback;
 
+unsigned char *demo_p = 0;
+unsigned char *demobuffer = 0;
+
 /*
 ==============
 =
@@ -690,17 +693,16 @@ startnew:
 }
 
 
-int G_PlayDemoPtr (unsigned *demo)
+int G_PlayInputDemoPtr (unsigned char *demo)
 {
 	int		exit;
 	int		map;
 
 	demobuffer = demo;
-	
-	demo++; // skill
-	map = *demo++;
 
-	demo_p = demo;
+	map = demo[7];
+	
+	demo_p = demo + 8;
 	
 	G_InitNew (map, gt_single, false);
 	demoplayback = true;
@@ -710,6 +712,27 @@ int G_PlayDemoPtr (unsigned *demo)
 	return exit;
 }
 
+#ifdef PLAY_POS_DEMO
+int G_PlayPositionDemoPtr (unsigned char *demo)
+{
+	int		exit;
+	int		map;
+
+	demobuffer = demo;
+
+	map = demo[9];
+
+	demo_p = demo + 0xA;
+
+	G_InitNew (map, gt_single, false);
+	demoplayback = true;
+	exit = MiniLoop (P_Start, P_Stop, P_Ticker, P_Drawer, P_Update);
+	demoplayback = false;
+
+	return exit;
+}
+#endif
+
 /*
 =================
 =
@@ -718,15 +741,18 @@ int G_PlayDemoPtr (unsigned *demo)
 =================
 */
 
-void G_RecordDemo (void)
+#ifdef REC_INPUT_DEMO
+void G_RecordInputDemo (void)
 {
-	demo_p = demobuffer = Z_Malloc (0x8000, PU_STATIC);
+	demo_p = demobuffer = Z_Malloc (0x5000, PU_STATIC);
 	
-	*demo_p++ = 0; // startskill
-	*demo_p++ = startmap;
+	((long *)demo_p)[0] = 0; // startskill
+	((long *)demo_p)[1] = startmap;
+
+	demo_p += 8;
 	
 	G_InitNew (startmap, gt_single, false);
-	demorecording = true; 
+	demorecording = true;
 	MiniLoop (P_Start, P_Stop, P_Ticker, P_Drawer, P_Update);
 	demorecording = false;
 
@@ -738,9 +764,44 @@ void G_RecordDemo (void)
 	
 	while (1)
 	{
-		G_PlayDemoPtr (demobuffer);
+		G_PlayInputDemoPtr (demobuffer);
+	D_printf ("w %x,%x",demobuffer,demo_p);
+	}
+}
+#endif
+
+#ifdef REC_POS_DEMO
+void G_RecordPositionDemo (void)
+{
+	demo_p = demobuffer = Z_Malloc (0x5000, PU_STATIC);
+	
+	*demo_p++ = 'P';
+	*demo_p++ = 'D';
+	*demo_p++ = 'M';
+	*demo_p++ = 'O';
+	*demo_p++ = 0x00;		// short length
+	*demo_p++ = 0x0A;		// ...
+	*demo_p++ = 0xFF;		// short frames
+	*demo_p++ = 0xFF;		// ...
+	*demo_p++ = 0;			// char unused
+	*demo_p++ = startmap;	// char map
+	
+	G_InitNew (startmap, gt_single, false);
+	demorecording = true;
+	MiniLoop (P_Start, P_Stop, P_Ticker, P_Drawer, P_Update);
+	demorecording = false;
+
+#ifdef MARS
+	I_Error("%d %p", demo_p - demobuffer, demobuffer);
+#endif
+
+	D_printf ("w %x,%x",demobuffer,demo_p);
+	
+	while (1)
+	{
+		G_PlayPositionDemoPtr (demobuffer);
 	D_printf ("w %x,%x",demobuffer,demo_p);
 	}
 	
 }
-
+#endif
