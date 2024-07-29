@@ -1134,7 +1134,7 @@ void DrawFillRect(int x, int y, int w, int h, int c)
 	}
 }
 
-const int8_t water_filter[64] =
+const int8_t water_filter[128] =
 {
 	 0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,
 	 2,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,
@@ -1152,7 +1152,7 @@ void ApplyHorizontalDistortionFilter(int filter_offset)
 	short pixel_offset = (512/2);
 
 	for (int i=0; i < 224; i++) {
-		lines[i] = pixel_offset + water_filter[(filter_offset + i) & 63];
+		lines[i] = pixel_offset + water_filter[(filter_offset + i) & 127];
 		pixel_offset += (320/2);
 	}
 }
