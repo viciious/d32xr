@@ -271,8 +271,8 @@ static void P_CameraThinker(player_t *player, camera_t *thiscam)
       	pslidemove_t sm;
       	ptrymove_t tm;
 
-		momx = vblsinframe*(thiscam->momx>>2);
-		momy = vblsinframe*(thiscam->momy>>2);
+		momx = (thiscam->momx>>2);
+		momy = (thiscam->momy>>2);
 
 		mobj_t mo; // Our temporary dummy to pretend we are a mobj
 		mo.flags = MF_SOLID|MF_FLOAT;
