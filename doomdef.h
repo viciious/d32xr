@@ -334,6 +334,7 @@ typedef enum
 #define PF_STARTJUMP 16
 #define PF_VERTICALFLIP 32 // May as well prepare...
 #define PF_SPINNING 64
+#define PF_GASPEDAL 128
 
 #define DB_JUMPDOWN 1
 #define DB_SPINDOWN 2
@@ -390,7 +391,6 @@ typedef struct player_s
 	VINT        stillTimer;
 	VINT        homing;
 	VINT        justSprung;
-	boolean     gasPedal;
 } player_t;
 
 void P_PlayerHitFloor(player_t* player);

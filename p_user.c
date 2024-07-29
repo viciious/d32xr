@@ -186,7 +186,7 @@ void P_PlayerXYMovement(mobj_t *mo)
 
 		if (speed > STOPSPEED)
 		{
-			if (!(player->forwardmove || player->sidemove || player->gasPedal))
+			if (!(player->forwardmove || player->sidemove || (player->pflags & PF_GASPEDAL)))
 			{
 				if (speed >= frc)
 				{
@@ -208,7 +208,7 @@ void P_PlayerXYMovement(mobj_t *mo)
 				}
 			}
 		}
-		else if (!(player->forwardmove || player->sidemove || player->gasPedal))
+		else if (!(player->forwardmove || player->sidemove || (player->pflags & PF_GASPEDAL)))
 		{
 			if (speed < STOPSPEED)
 			{
@@ -476,9 +476,9 @@ void P_BuildMove(player_t *player)
 		}
 
 		if (buttons & BT_X)
-			player->gasPedal = true;
+			player->pflags |= PF_GASPEDAL;
 		else
-			player->gasPedal = false;
+			player->pflags &= ~PF_GASPEDAL;
 
 		if (buttons & BT_UP)
 			player->forwardmove += FRACUNIT;
@@ -491,13 +491,13 @@ void P_BuildMove(player_t *player)
 	/* */
 	mo = player->mo;
 
-	if (!mo->momx && !mo->momy && player->forwardmove == 0 && player->sidemove == 0 && !player->gasPedal)
+	if (!mo->momx && !mo->momy && player->forwardmove == 0 && player->sidemove == 0 && !(player->pflags & PF_GASPEDAL))
 	{ /* if in a walking frame, stop moving */
 		if (mo->state >= S_PLAY_RUN1 && mo->state <= S_PLAY_RUN8)
 			P_SetMobjState(mo, S_PLAY_STND);
 	}
 
-	if (!(player->forwardmove || player->sidemove || player->gasPedal))
+	if (!(player->forwardmove || player->sidemove || (player->pflags & PF_GASPEDAL)))
 	{
 		if (leveltime > 3*TICRATE && !(player->mo->momx > STOPSPEED || player->mo->momx < -STOPSPEED || player->mo->momy > STOPSPEED || player->mo->momy < -STOPSPEED || player->mo->momz > STOPSPEED || player->mo->momz < -STOPSPEED))
 			player->stillTimer++;
@@ -510,14 +510,14 @@ void P_BuildMove(player_t *player)
 	if (P_IsReeling(player))
 	{
 		player->forwardmove = player->sidemove = 0;
-		player->gasPedal = false;
+		player->pflags &= ~PF_GASPEDAL;
 	}
 
 	if (player->justSprung)
 	{
 		player->justSprung--;
 		player->forwardmove = player->sidemove = 0;
-		player->gasPedal = false;
+		player->pflags &= ~PF_GASPEDAL;
 	}
 }
 
@@ -638,7 +638,7 @@ void P_PlayerHitFloor(player_t *player)
 	player->pflags &= ~PF_STARTJUMP;
 	P_SetMobjState(player->mo, S_PLAY_RUN1);
 
-	if (!(player->forwardmove || player->sidemove || player->gasPedal))
+	if (!(player->forwardmove || player->sidemove || (player->pflags & PF_GASPEDAL)))
 	{
 		player->mo->momx >>= 1;
 		player->mo->momy >>= 1;
@@ -757,7 +757,7 @@ void P_MovePlayer(player_t *player)
 	/* don't let the player control movement if not onground */
 	onground = (player->mo->z <= player->mo->floorz);
 
-	if (player->forwardmove || player->sidemove || player->gasPedal)
+	if (player->forwardmove || player->sidemove || (player->pflags & PF_GASPEDAL))
 	{
 		camera_t *thiscam = &camera;
 		fixed_t controlX = 0;
@@ -768,7 +768,7 @@ void P_MovePlayer(player_t *player)
 
 		angle_t controlAngle = R_PointToAngle2(0, 0, controlX, controlY);
 
-		if (player->gasPedal)
+		if (player->pflags & PF_GASPEDAL)
 		{
 			// When pressing a directional control, the gas has quarter influence.
 			if (!(player->forwardmove || player->sidemove))
@@ -796,7 +796,7 @@ void P_MovePlayer(player_t *player)
 //		angle_t speedDir = R_PointToAngle2(0, 0, player->mo->momx, player->mo->momy);
 		fixed_t speed = P_AproxDistance(player->mo->momx, player->mo->momy);
 
-		if (!player->gasPedal)
+		if (!(player->pflags & PF_GASPEDAL))
 		{
 			VINT controlDirection = ControlDirection(player);
 			if (controlDirection == 2)
@@ -842,7 +842,7 @@ void P_MovePlayer(player_t *player)
 //		CONS_Printf("Acc: %d, MomX: %d, MomY: %d", acc, player->mo->momx >> FRACBITS, player->mo->momy >> FRACBITS);
 	}
 
-	if ((player->forwardmove || player->sidemove || player->gasPedal) && (player->mo->state >= S_PLAY_STND && player->mo->state <= S_PLAY_TAP2))
+	if ((player->forwardmove || player->sidemove || (player->pflags & PF_GASPEDAL)) && (player->mo->state >= S_PLAY_STND && player->mo->state <= S_PLAY_TAP2))
 		P_SetMobjState(player->mo, S_PLAY_RUN1);
 
 	// Make sure you're not teetering when you shouldn't be.
