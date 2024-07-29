@@ -1802,7 +1802,7 @@ unsigned I_NetTransfer (unsigned buttons)
 	consistancy = (consistancy>>8) ^ consistancy ^ (consistancy>>16);
 	
 	outbytes[4] = consistancy;
-//	outbytes[5] = vblsinframe;
+	outbytes[5] = vblsinframe;
 	
 	if (consoleplayer)
 	{
@@ -1816,7 +1816,7 @@ unsigned I_NetTransfer (unsigned buttons)
 			inbytes[i] = val;
 			PutSerialChar (outbytes[i]);
 		}
-//		vblsinframe = inbytes[5];		/* take gamevbls from other player */
+		vblsinframe = inbytes[5];		/* take gamevbls from other player */
 	}
 	else
 	{
@@ -1896,7 +1896,7 @@ void I_DebugScreen(void)
 #ifdef JAGUAR
 
 #if 1
-//	PrintNumber(15, 1, vblsinframe);
+	PrintNumber(15, 1, vblsinframe);
 
 	PrintNumber(15, 2, phasetime[8] - phasetime[0]);
 	PrintNumber(15, 3, tictics);

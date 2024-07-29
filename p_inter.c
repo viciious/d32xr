@@ -53,8 +53,6 @@ static boolean P_DoSpring(mobj_t *spring, player_t *player)
 		player->mo->x = spring->x;
 		player->mo->y = spring->y;
 		P_SetThingPosition(player->mo);
-		player->forwardmove = player->sidemove = 0;
-		player->justSprung = TICRATE;
 	}
 
 	if (vertispeed > 0)
@@ -106,10 +104,7 @@ static boolean P_DoSpring(mobj_t *spring, player_t *player)
 //			P_SetTarget(&spring->target, object);
 
 		if (horizspeed)
-		{
-			player->justSprung = 2*TICRATE;
 			player->mo->angle = spring->angle;
-		}
 
 		{
 			boolean wasSpindashing = false;//player->dashspeed > 0;
@@ -142,6 +137,7 @@ static boolean P_DoSpring(mobj_t *spring, player_t *player)
 	}
 
 	S_StartSound(player->mo, springinfo->painsound);
+	player->justSprung = 2*TICRATE;
 	return true;
 }
 

@@ -710,7 +710,7 @@ void P_UpdateSpecials (void)
 	/* */
 	/*	ANIMATE FLATS AND TEXTURES GLOBALY */
 	/* */
-//	if (! (gametic&1) )
+	if (! (gametic&1) )
 	{
 		for (anim = anims ; anim < lastanim ; anim++)
 		{
