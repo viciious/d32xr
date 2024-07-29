@@ -1,6 +1,11 @@
 /* m_main.c -- main menu */
 
 #include "doomdef.h"
+
+#ifdef MDSKY
+#include "marshw.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -619,7 +624,11 @@ void M_Drawer (void)
 /* Draw main menu */
 	if (m_doom && (scrpos == ms_main || scrpos == ms_gametype))
 	{
+		#ifdef MDSKY
+		DrawFillRect(0, 0, 320, 44, MARS_MD_PIXEL_THRU_INDEX);
+		#else
 		DrawFillRect(0, 16, 320, 8, COLOR_BLACK); // Clear part of the top letterbox for overdraw.
+		#endif
 		
 		VINT logoPos = 160 - (m_doom->width / 2);
 		DrawJagobj(m_doom, logoPos, 16);

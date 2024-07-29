@@ -300,10 +300,9 @@ mobj_t	emptymobj;
 ===============
 */
 __attribute((noinline))
-static void D_Wipe(void)
+static void D_LoadMDSky(void)
 {
-	// DLG: Retrieve lumps for drawing the sky on the MD.
-	// TODO: Is there a better place for this code to live?
+	// Retrieve lumps for drawing the sky on the MD.
 
 	#ifdef MDSKY
 	uint8_t *sky_name_ptr;
@@ -358,11 +357,6 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 	boolean wipe = canwipe;
 	boolean firstdraw = true;
 
-	if (wipe)
-	{
-		wipe_StartScreen();
-	}
-
 /* */
 /* setup (cache graphics, etc) */
 /* */
@@ -384,6 +378,13 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 
 	ticbuttons[0] = ticbuttons[1] = oldticbuttons[0] = oldticbuttons[1] = 0;
 	ticmousex[0] = ticmousex[1] = ticmousey[0] = ticmousey[1] = 0;
+
+	#ifdef MDSKY
+	if (wipe)
+	{
+		D_LoadMDSky();
+	}
+	#endif
 
 	do
 	{
@@ -690,7 +691,6 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		if (!exit && wipe)
 		{
 			wipe_EndScreen();
-			D_Wipe();
 			wipe = false;
 		}
 
@@ -1005,7 +1005,7 @@ void RunTitle (void)
 	startmap = 1;
 	starttype = gt_single;
 	consoleplayer = 0;
-	canwipe = false;
+	canwipe = true;
 
 	MiniLoop (START_Title, STOP_Title, TIC_Abortable, DRAW_Title, UpdateBuffer);
 
