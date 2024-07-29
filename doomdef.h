@@ -832,10 +832,6 @@ void F_Stop (void);
 int F_Ticker (void);
 void F_Drawer (void);
 
-void AM_Control (player_t *player);
-void AM_Drawer (void);
-void AM_Start (void);
-
 /*----- */
 /*OPTIONS */
 /*----- */

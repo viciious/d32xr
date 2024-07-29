@@ -266,9 +266,6 @@ void P_CheckCheats (void)
 	const int stuff_combo = BT_A | BT_B | BT_C | BT_UP;
 	const int godmode_combo = BT_X | BT_Y | BT_Z | BT_UP;
 	player_t* p;
-	boolean automap = (players[consoleplayer].automapflags & AF_ACTIVE) != 0;
-	extern VINT showAllThings;
-	extern VINT showAllLines;
 
 	if (netgame)
 		return;
@@ -281,11 +278,6 @@ void P_CheckCheats (void)
 	if ((buttons & stuff_combo) == stuff_combo 
 		&& (oldbuttons & stuff_combo) != stuff_combo)
 	{
-		if (automap)
-		{
-			showAllThings ^= 1;
-			return;
-		}
 		/* free stuff */
 		p = &players[0];
 		p->armorpoints = 200;
@@ -295,17 +287,11 @@ void P_CheckCheats (void)
 	if ((buttons & godmode_combo) == godmode_combo 
 		&& (oldbuttons & godmode_combo) != godmode_combo)
 	{
-		if (automap)
-		{
-			showAllLines ^= 1;
-			return;
-		}
 		/* godmode */
 		players[0].cheats ^= CF_GODMODE;
 	}
 #endif
 }
-  
 
 int playernum;
 
@@ -385,7 +371,7 @@ int P_Ticker (void)
 		{
 			if (pl->playerstate == PST_REBORN)
 				G_DoReborn(playernum);
-			AM_Control(pl);
+
 			P_PlayerThink(pl);
 		}
 	playertics = frtc - start;
@@ -527,16 +513,15 @@ void DrawSinglePlaque (jagobj_t *pl)
  
 void P_Drawer (void) 
 { 	
-	boolean automapactive = (players[consoleplayer].automapflags & AF_ACTIVE) != 0;
 	boolean optionsactive = (players[consoleplayer].automapflags & AF_OPTIONSACTIVE) != 0;
-	static boolean o_wasactive, am_wasactive = false;
+	static boolean o_wasactive = false;
 
 #ifdef MARS
 	extern	boolean	debugscreenactive;
 
 	drawtics = frtc;
 
-	if ((!optionsactive && o_wasactive) || (!automapactive && am_wasactive))
+	if (!optionsactive && o_wasactive)
 		clearscreen = 2;
 
 	if (clearscreen > 0) {
@@ -572,16 +557,12 @@ void P_Drawer (void)
 
 	Mars_R_SecWait();
 
-	if (automapactive)
-		AM_Drawer();
-
 	if (demoplayback)
 		M_Drawer();
 	if (optionsactive)
 		O_Drawer();
 
 	o_wasactive = optionsactive;
-	am_wasactive = automapactive;
 
 	drawtics = frtc - drawtics;
 
@@ -594,12 +575,6 @@ void P_Drawer (void)
 	}
 	else if (gamepaused && refreshdrawn)
 		DrawPlaque (pausepic);
-	else if (automapactive)
-	{
-		ST_Drawer ();
-		AM_Drawer ();
-		I_Update ();
-	}
 	else
 	{
 #ifdef JAGUAR
@@ -619,7 +594,6 @@ void P_Start (void)
 	/* load a level */
 	G_DoLoadLevel();
 
-	AM_Start ();
 #ifndef MARS
 	S_RestartSounds ();
 #endif

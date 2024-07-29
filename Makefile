@@ -45,7 +45,6 @@ OBJS = \
 	f_main.o \
 	f_wipe.o \
 	in_main.o \
-	am_main.o \
 	st_main.o \
 	m_main.o \
 	o_main.o \
