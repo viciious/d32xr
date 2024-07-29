@@ -825,6 +825,71 @@ void DrawScrollingChevrons(short chev_lump, int x, int y_shift)
 /*
 =============
 =
+= DrawTiledLetterbox
+=
+=============
+*/
+void DrawTiledLetterbox2(int flat)
+{
+	int			yt;
+	const int	w = 64, top_h = 24, bottom_h = 20;
+	const int	hw = w / 2;
+	const int xtiles = (320 + w - 1) / w;
+	pixel_t* bdest;
+	const pixel_t* bsrc;
+
+	if (debugmode == DEBUGMODE_NODRAW)
+		return;
+	if (flat <= 0)
+		return;
+
+
+	// Draw the top letterbox.
+	bsrc = (const pixel_t*)W_POINTLUMPNUM(flat);
+	bdest = I_FrameBuffer();
+	const pixel_t* source = bsrc + ((64-24)*hw);
+
+	for (yt = 0; yt < top_h; yt++)
+	{
+		for (int xt = 0; xt < xtiles; xt++)
+		{
+			for (int x = 0; x < hw; x++)
+				*bdest++ = source[x];
+		}
+
+		source += hw;
+	}
+
+
+	// Draw the bottom letterbox.
+	bdest += ((320*180)/2);
+	source -= (64*hw);
+
+	for (yt = 0; yt < bottom_h; yt++)
+	{
+		for (int xt = 0; xt < xtiles; xt++)
+		{
+			for (int x = 0; x < hw; x++)
+				*bdest++ = source[x];
+		}
+
+		source += hw;
+	}
+}
+
+void DrawTiledLetterbox(void)
+{
+	if (gamemapinfo.borderFlat <= 0)
+	{
+		I_ClearFrameBuffer();
+		return;
+	}
+	DrawTiledLetterbox2(gamemapinfo.borderFlat);
+}
+
+/*
+=============
+=
 = DrawTiledBackground
 =
 =============

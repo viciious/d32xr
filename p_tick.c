@@ -543,7 +543,7 @@ void P_Drawer (void)
 		I_ResetLineTable();
 
 		if ((viewportWidth == 160 && lowResMode) || viewportWidth == 320)
-			I_ClearFrameBuffer();
+			DrawTiledLetterbox();
 		else
 			DrawTiledBackground();
 
