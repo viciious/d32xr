@@ -30,6 +30,7 @@ typedef struct
 {
 	char *name;
 	VINT act;
+	VINT borderFlat;
 	char *sky;
 	VINT next;
 	VINT secretNext;
