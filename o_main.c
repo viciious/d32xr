@@ -418,7 +418,7 @@ void O_Control (player_t *player)
 		return;
 	}
 
-//	cursordelay -= vblsinframe;
+	cursordelay -= vblsinframe;
 	if (cursordelay > 0)
 		return;
 
