@@ -1134,7 +1134,7 @@ void DrawFillRect(int x, int y, int w, int h, int c)
 	}
 }
 
-short water_filter[64] =
+const int8_t water_filter[64] =
 {
 	 0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,
 	 2,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,
