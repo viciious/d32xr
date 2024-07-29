@@ -390,6 +390,7 @@ typedef struct player_s
 	VINT        stillTimer;
 	VINT        homing;
 	VINT        justSprung;
+	boolean     gasPedal;
 } player_t;
 
 void P_PlayerHitFloor(player_t* player);

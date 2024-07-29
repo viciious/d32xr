@@ -186,7 +186,7 @@ void P_PlayerXYMovement(mobj_t *mo)
 
 		if (speed > STOPSPEED)
 		{
-			if (!(player->forwardmove || player->sidemove))
+			if (!(player->forwardmove || player->sidemove || player->gasPedal))
 			{
 				if (speed >= frc)
 				{
@@ -208,7 +208,7 @@ void P_PlayerXYMovement(mobj_t *mo)
 				}
 			}
 		}
-		else if (!(player->forwardmove || player->sidemove))
+		else if (!(player->forwardmove || player->sidemove || player->gasPedal))
 		{
 			if (speed < STOPSPEED)
 			{
@@ -475,6 +475,11 @@ void P_BuildMove(player_t *player)
 				player->angleturn = (turnspeed[player->turnheld]) << 17;
 		}
 
+		if (buttons & BT_X)
+			player->gasPedal = true;
+		else
+			player->gasPedal = false;
+
 		if (buttons & BT_UP)
 			player->forwardmove += FRACUNIT;
 		if (buttons & BT_DOWN)
@@ -486,13 +491,13 @@ void P_BuildMove(player_t *player)
 	/* */
 	mo = player->mo;
 
-	if (!mo->momx && !mo->momy && player->forwardmove == 0 && player->sidemove == 0)
+	if (!mo->momx && !mo->momy && player->forwardmove == 0 && player->sidemove == 0 && !player->gasPedal)
 	{ /* if in a walking frame, stop moving */
 		if (mo->state >= S_PLAY_RUN1 && mo->state <= S_PLAY_RUN8)
 			P_SetMobjState(mo, S_PLAY_STND);
 	}
 
-	if (!(player->forwardmove || player->sidemove))
+	if (!(player->forwardmove || player->sidemove || player->gasPedal))
 	{
 		if (leveltime > 3*TICRATE && !(player->mo->momx > STOPSPEED || player->mo->momx < -STOPSPEED || player->mo->momy > STOPSPEED || player->mo->momy < -STOPSPEED || player->mo->momz > STOPSPEED || player->mo->momz < -STOPSPEED))
 			player->stillTimer++;
@@ -503,12 +508,16 @@ void P_BuildMove(player_t *player)
 		player->stillTimer = 0;
 
 	if (P_IsReeling(player))
+	{
 		player->forwardmove = player->sidemove = 0;
+		player->gasPedal = false;
+	}
 
 	if (player->justSprung)
 	{
 		player->justSprung--;
 		player->forwardmove = player->sidemove = 0;
+		player->gasPedal = false;
 	}
 }
 
@@ -629,7 +638,7 @@ void P_PlayerHitFloor(player_t *player)
 	player->pflags &= ~PF_STARTJUMP;
 	P_SetMobjState(player->mo, S_PLAY_RUN1);
 
-	if (!(player->forwardmove || player->sidemove))
+	if (!(player->forwardmove || player->sidemove || player->gasPedal))
 	{
 		player->mo->momx >>= 1;
 		player->mo->momy >>= 1;
@@ -748,7 +757,7 @@ void P_MovePlayer(player_t *player)
 	/* don't let the player control movement if not onground */
 	onground = (player->mo->z <= player->mo->floorz);
 
-	if (player->forwardmove || player->sidemove)
+	if (player->forwardmove || player->sidemove || player->gasPedal)
 	{
 		camera_t *thiscam = &camera;
 		fixed_t controlX = 0;
@@ -758,10 +767,25 @@ void P_MovePlayer(player_t *player)
 		P_ThrustValues(thiscam->angle - ANG90, player->sidemove, &controlX, &controlY);
 
 		angle_t controlAngle = R_PointToAngle2(0, 0, controlX, controlY);
-		//		controlX = controlY = 0;
-		//		P_ThrustValues(controlAngle, FRACUNIT, &controlX, &controlY);
 
-		// controlX and controlY are now a unit vector
+		if (player->gasPedal)
+		{
+			// When pressing a directional control, the gas has quarter influence.
+			if (!(player->forwardmove || player->sidemove))
+			{
+				P_ThrustValues(thiscam->angle/*player->mo->angle*/, FRACUNIT, &controlX, &controlY);
+				controlAngle = R_PointToAngle2(0, 0, controlX, controlY);
+			}
+			else
+			{
+				P_ThrustValues(thiscam->angle/*player->mo->angle*/, FRACUNIT / 4, &controlX, &controlY);
+				controlAngle = R_PointToAngle2(0, 0, controlX, controlY);
+			}
+		}
+
+		/*		controlX = controlY = 0;
+		P_ThrustValues(controlAngle, FRACUNIT, &controlX, &controlY);
+		controlX and controlY are now a unit vector */
 
 		/*		P_Thrust(player, thiscam->angle, player->forwardmove);
 				P_Thrust(player, thiscam->angle-ANG90, player->sidemove);
@@ -772,9 +796,15 @@ void P_MovePlayer(player_t *player)
 //		angle_t speedDir = R_PointToAngle2(0, 0, player->mo->momx, player->mo->momy);
 		fixed_t speed = P_AproxDistance(player->mo->momx, player->mo->momy);
 
-		VINT controlDirection = ControlDirection(player);
-		if (controlDirection == 2)
-			acc *= 2;
+		if (!player->gasPedal)
+		{
+			VINT controlDirection = ControlDirection(player);
+			if (controlDirection == 2)
+				acc *= 2;
+		}
+
+		if (player->pflags & PF_SPINNING)
+			acc >>= 5;
 
 		//		CONS_Printf("Controldirection is %d", controlDirection);
 
@@ -812,7 +842,7 @@ void P_MovePlayer(player_t *player)
 //		CONS_Printf("Acc: %d, MomX: %d, MomY: %d", acc, player->mo->momx >> FRACBITS, player->mo->momy >> FRACBITS);
 	}
 
-	if ((player->forwardmove || player->sidemove) && (player->mo->state >= S_PLAY_STND && player->mo->state <= S_PLAY_TAP2))
+	if ((player->forwardmove || player->sidemove || player->gasPedal) && (player->mo->state >= S_PLAY_STND && player->mo->state <= S_PLAY_TAP2))
 		P_SetMobjState(player->mo, S_PLAY_RUN1);
 
 	// Make sure you're not teetering when you shouldn't be.

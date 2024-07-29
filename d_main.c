@@ -39,7 +39,7 @@ int 		ticstart;
 
 unsigned configuration[NUMCONTROLOPTIONS][3] =
 {
-	{BT_SPEED, BT_ATTACK, BT_USE},
+	{BT_ATTACK, BT_SPEED, BT_USE},
 	{BT_SPEED, BT_USE, BT_ATTACK},
 	{BT_ATTACK, BT_SPEED, BT_USE},
 	{BT_ATTACK, BT_USE, BT_SPEED},
