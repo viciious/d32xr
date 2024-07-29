@@ -188,13 +188,20 @@ void P_NewChaseDir (mobj_t *actor)
 
 	if (!actor->target)
 		I_Error ("P_NewChaseDir: called with no target");
-		
-	olddir = actor->movedir;
-	turnaround=opposite[olddir];
 
 	deltax = actor->target->x - actor->x;
 	deltay = actor->target->y - actor->y;
 
+	if (P_AproxDistance(deltax, deltay) > 4096*FRACUNIT)
+	{
+//		actor->angle = R_PointToAngle2(actor->x, actor->y, actor->target->x, actor->target->y);
+		actor->target = NULL;
+		return;
+	}
+
+	olddir = actor->movedir;
+	turnaround=opposite[olddir];
+	
 	if (deltax>10*FRACUNIT)
 		d[1]= DI_EAST;
 	else if (deltax<-10*FRACUNIT)
