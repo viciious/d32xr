@@ -1133,3 +1133,26 @@ void DrawFillRect(int x, int y, int w, int h, int c)
 		dest += 160;
 	}
 }
+
+short water_filter[64] =
+{
+	 0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,
+	 2,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,
+	 3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  2,  2,
+	 2,  2,  2,  2,  2,  1,  1,  1,  1,  1,  0,  0,  0,  0,  0,  0,
+	-1, -1, -1, -1, -1, -2, -2, -2, -2, -2, -3, -3, -3, -3, -3, -3,
+	-3, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4,
+	-4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -3, -3,
+	-3, -3, -3, -3, -3, -2, -2, -2, -2, -2, -1, -1, -1, -1, -1, -1,
+};
+
+void ApplyHorizontalDistortionFilter(int filter_offset)
+{
+	uint16_t *lines = Mars_FrameBufferLines();
+	short pixel_offset = (512/2);
+
+	for (int i=0; i < 224; i++) {
+		lines[i] = pixel_offset + water_filter[(filter_offset + i) & 63];
+		pixel_offset += (320/2);
+	}
+}
