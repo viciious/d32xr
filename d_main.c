@@ -39,7 +39,7 @@ int 		ticstart;
 
 unsigned configuration[NUMCONTROLOPTIONS][3] =
 {
-	{BT_ATTACK, BT_SPEED, BT_USE},
+	{BT_ATTACK, BT_USE, BT_SPEED},
 	{BT_SPEED, BT_USE, BT_ATTACK},
 	{BT_ATTACK, BT_SPEED, BT_USE},
 	{BT_ATTACK, BT_USE, BT_SPEED},
@@ -1073,7 +1073,7 @@ int RunPositionDemo (char *demoname)
 	Z_FreeTags(mainzone);
 
 	demo = W_CacheLumpNum(lump, PU_STATIC);
-	exit = G_PlayPositionDemoPtr  (demo);
+	exit = G_PlayPositionDemoPtr ((unsigned char*)demo);
 	Z_Free(demo);
 
 #ifndef MARS

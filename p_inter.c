@@ -308,11 +308,9 @@ static void P_DoPlayerPain(player_t *player, mobj_t *source, mobj_t *inflictor)
 	else
 		player->mo->momz = FixedDiv(69*FRACUNIT, 10*FRACUNIT) * P_MobjFlip(player->mo);
 
-	player->mo->momz = FixedMul(player->mo->momz, FRACUNIT + FRACUNIT/3);
-
 	ang = ((player->mo->momx || player->mo->momy) ? R_PointToAngle2(player->mo->momx, player->mo->momy, 0, 0) : player->mo->angle);
 
-	P_InstaThrust(player->mo, ang, 7*FRACUNIT);
+	P_InstaThrust(player->mo, ang, 6*FRACUNIT);
 
 	P_ResetPlayer(player);
 	P_SetMobjState(player->mo, mobjinfo[player->mo->type].painstate);

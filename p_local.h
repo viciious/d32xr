@@ -9,7 +9,7 @@
 
 #define	FLOATSPEED		(FRACUNIT*8)
 
-#define	GRAVITY			(FRACUNIT*1 + (FRACUNIT/2))
+#define	GRAVITY			(FRACUNIT)
 #define	MAXMOVE			(16*FRACUNIT)
 
 

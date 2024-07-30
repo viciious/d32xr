@@ -181,7 +181,7 @@ void P_PlayerXYMovement(mobj_t *mo)
 	/* */
 	if (player->powers[pw_flashing] != FLASHINGTICS && player->mo->z <= player->mo->floorz)
 	{
-		const fixed_t frc = (player->pflags & PF_SPINNING) ? FRACUNIT >> 4 : FRACUNIT * 1;
+		const fixed_t frc = (player->pflags & PF_SPINNING) ? FRACUNIT >> 2 : FRACUNIT * 1;
 		speed = P_AproxDistance(mo->momx, mo->momy);
 
 		if (speed > STOPSPEED)
@@ -265,19 +265,13 @@ void P_PlayerZMovement(mobj_t *mo)
 				player->deltaviewheight = mo->momz >> 3;
 
 			mo->momz = 0;
+			P_PlayerHitFloor(player);
 		}
 		mo->z = mo->floorz;
-
-		if (mo->momz <= 0)
-			P_PlayerHitFloor(player);
 	}
 	else
 	{
-		fixed_t gravity = GRAVITY;
-		if (mo->momz == 0)
-			mo->momz = -gravity;
-		else
-			mo->momz -= gravity / 2;
+		mo->momz -= GRAVITY / 2;
 	}
 
 	if (mo->z + (mo->theight << FRACBITS) > mo->ceilingz)
@@ -773,15 +767,16 @@ void P_PlayerHitFloor(player_t *player)
 		player->pflags &= ~PF_SPINNING;
 
 	if (!((player->pflags & PF_SPINNING) && (player->pflags & PF_USEDOWN)))
+	{
 		P_ResetScore(player);
+		P_SetMobjState(player->mo, S_PLAY_RUN1);
+	}
 
 	player->pflags &= ~PF_JUMPED;
 	player->pflags &= ~PF_STARTJUMP;
 	player->pflags &= ~PF_THOKKED;
 
-	P_SetMobjState(player->mo, S_PLAY_RUN1);
-
-	if (!(player->forwardmove || player->sidemove || (player->pflags & PF_GASPEDAL)))
+	if (!(player->pflags & PF_SPINNING) && !(player->forwardmove || player->sidemove || (player->pflags & PF_GASPEDAL)))
 	{
 		player->mo->momx >>= 1;
 		player->mo->momy >>= 1;
@@ -796,7 +791,7 @@ static void P_DoJump(player_t *player)
 	if (!(player->pflags & PF_SPINNING))
 		P_ResetScore(player);
 
-	fixed_t jumpStrength = FixedMul(39 * (FRACUNIT / 4), 1 * FRACUNIT + (FRACUNIT / 2));
+	fixed_t jumpStrength = 12*FRACUNIT;
 
 	player->mo->momz = jumpStrength;
 
@@ -925,12 +920,7 @@ void P_MovePlayer(player_t *player)
 			// Gas pedal does not apply here
 			if (player->forwardmove || player->sidemove)
 			{
-				fixed_t acc = FRACUNIT >> 4;
-				VINT controlDirection = ControlDirection(player);
-				if (controlDirection == 2)
-					acc *= 2;
-
-				P_ThrustValues(thiscam->angle/*player->mo->angle*/, acc, &controlX, &controlY);
+				fixed_t acc = FRACUNIT >> 3;
 				controlAngle = R_PointToAngle2(0, 0, controlX, controlY);
 
 				fixed_t oldSpeed = P_AproxDistance(player->mo->momx, player->mo->momy);
@@ -943,7 +933,7 @@ void P_MovePlayer(player_t *player)
 				{
 					const fixed_t diff = P_AproxDistance(player->mo->momx, player->mo->momy) - oldSpeed;
 
-					P_ThrustValues(-moveAngle, diff, &player->mo->momx, &player->mo->momy);
+					P_ThrustValues(moveAngle - ANG180, diff, &player->mo->momx, &player->mo->momy);
 				}
 			}
 		}
@@ -1173,7 +1163,7 @@ void P_PlayerThink(player_t *player)
 
 	// Fly cheat
 	if (buttons & BT_SPEED)
-		player->mo->momz = 16 << FRACBITS;
+		player->mo->momz = 8 << FRACBITS;
 
 	ticphase = 24;
 	ticphase = 25;
