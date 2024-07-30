@@ -318,6 +318,7 @@ typedef enum
 	pw_ironfeet,
 	pw_allmap,
 	pw_infrared,
+	pw_extralife,
 	NUMPOWERS
 } powertype_t;
 
@@ -326,6 +327,7 @@ typedef enum
 #define	INFRATICS		(120*15)
 #define	IRONTICS		(60*15)
 #define FLASHINGTICS    (3*TICRATE)
+#define EXTRALIFETICS   (4*TICRATE)
 
 #define PF_ONGROUND 1
 #define PF_THOKKED  2
@@ -335,9 +337,9 @@ typedef enum
 #define PF_VERTICALFLIP 32 // May as well prepare...
 #define PF_SPINNING 64
 #define PF_GASPEDAL 128
-
-#define DB_JUMPDOWN 1
-#define DB_SPINDOWN 2
+#define PF_USEDOWN 256
+#define PF_STARTDASH 512
+#define PF_JUMPDOWN 1024
 
 boolean P_IsObjectOnGround(mobj_t *mo);
 int8_t P_MobjFlip(mobj_t *mo);
@@ -372,7 +374,6 @@ typedef struct player_s
 	VINT		armorpoints, armortype;	/* armor type is 0-2 */
 	
 	VINT		powers[NUMPOWERS];		/* invinc and invis are tic counters	 */
-	VINT        downbits;
 	VINT		cheats;					/* bit flags */
 	
 	VINT		killcount, itemcount, secretcount;		/* for intermission */
@@ -391,6 +392,9 @@ typedef struct player_s
 	VINT        stillTimer;
 	VINT        homing;
 	VINT        justSprung;
+	VINT        scoreAdd;
+	VINT        lives;
+	VINT		dashSpeed;
 } player_t;
 
 void P_PlayerHitFloor(player_t* player);

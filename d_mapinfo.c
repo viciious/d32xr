@@ -272,6 +272,14 @@ static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
 		gi->titleMus = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "intermissionMus"))
 		gi->intermissionMus = W_CheckNumForName(value);
+	else if (!D_strcasecmp(key, "xtlifeMus"))
+		gi->xtlifeMus = W_CheckNumForName(value);
+	else if (!D_strcasecmp(key, "invincMus"))
+		gi->invincMus = W_CheckNumForName(value);
+	else if (!D_strcasecmp(key, "sneakerMus"))
+		gi->sneakerMus = W_CheckNumForName(value);
+	else if (!D_strcasecmp(key, "gameoverMus"))
+		gi->gameoverMus = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "victoryMus"))
 		gi->victoryMus = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "endMus"))

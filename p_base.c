@@ -552,6 +552,15 @@ void P_MobjThinker(mobj_t *mobj)
             break;
       }
    }
+   else
+   {
+      switch(mobj->type)
+      {
+         case MT_SCORE:
+            mobj->z += mobjinfo[mobj->type].speed;
+               break;
+      }
+   }
 
    // cycle through states
    if (mobj->tics != -1)

@@ -278,7 +278,6 @@ void G_PlayerReborn (int player)
 	D_memset (p, 0, sizeof(*p)); 
 	p->itemcount = itemcount;
 	p->secretcount = secretcount;
-	p->downbits = 255; /* don't do anything immediately */
 	p->playerstate = PST_LIVE;
 
 	P_RestoreResp(p);

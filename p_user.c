@@ -262,11 +262,8 @@ void P_PlayerZMovement(mobj_t *mo)
 		if (mo->momz < 0)
 		{
 			if (mo->momz < -GRAVITY * 2) /* squat down */
-			{
 				player->deltaviewheight = mo->momz >> 3;
-				if (player->playerstate != PST_DEAD)
-					S_StartSound(mo, sfx_None);
-			}
+
 			mo->momz = 0;
 		}
 		mo->z = mo->floorz;
@@ -491,7 +488,7 @@ void P_BuildMove(player_t *player)
 	/* */
 	mo = player->mo;
 
-	if (!mo->momx && !mo->momy && player->forwardmove == 0 && player->sidemove == 0 && !(player->pflags & PF_GASPEDAL))
+	if (!mo->momx && !mo->momy && player->forwardmove == 0 && player->sidemove == 0 && !(player->pflags & PF_GASPEDAL) && !(player->pflags & PF_SPINNING))
 	{ /* if in a walking frame, stop moving */
 		if (mo->state >= S_PLAY_RUN1 && mo->state <= S_PLAY_RUN8)
 			P_SetMobjState(mo, S_PLAY_STND);
@@ -518,6 +515,12 @@ void P_BuildMove(player_t *player)
 		player->justSprung--;
 		player->forwardmove = player->sidemove = 0;
 		player->pflags &= ~PF_GASPEDAL;
+	}
+
+	if (leveltime < 2*TICRATE)
+	{
+		player->forwardmove = player->sidemove = 0;
+		ticbuttons[playernum] = 0;
 	}
 }
 
@@ -632,10 +635,148 @@ static void P_DoTeeter(player_t *player)
 		P_SetMobjState(player->mo, S_PLAY_STND);
 }
 
+void P_ResetScore(player_t *player)
+{
+	player->scoreAdd = 0;
+}
+
+static void P_GivePlayerLives(player_t *player, int lives)
+{
+	player->lives += lives;
+
+	if (player->lives > 99)
+		player->lives = 99;
+}
+
+void P_AddPlayerScore(player_t *player, int amount)
+{
+	int oldScore = player->score;
+
+	// check for extra lives every 50,000 points
+	if (player->score > oldScore && player->score % 50000 < amount)
+	{
+		P_GivePlayerLives(player, (player->score / 50000) - (oldScore / 50000));
+
+		// Start extra life music
+		S_StopSong();
+		S_StartSong(gameinfo.xtlifeMus, 0, cdtrack_xtlife);
+		player->powers[pw_extralife] = EXTRALIFETICS;
+	}
+}
+
+static inline fixed_t P_GetPlayerSpinHeight()
+{
+	return mobjinfo[MT_PLAYER].height / 3 * 1;
+}
+
+static inline fixed_t P_GetPlayerHeight()
+{
+	return mobjinfo[MT_PLAYER].height;
+}
+
+static void P_DoSpinDash(player_t *player)
+{
+	int buttons = ticbuttons[playernum];
+
+	if (!player->exiting && !(player->mo->state == mobjinfo[player->mo->type].painstate && player->powers[pw_flashing]))
+	{
+		if ((buttons & BT_USE) && player->speed < 5*FRACUNIT && !player->mo->momz && onground && !(player->pflags & PF_USEDOWN) && !(player->pflags & PF_SPINNING))
+		{
+			P_ResetScore(player);
+			player->mo->momx = 0; // TODO: cmomx/cmomy
+			player->mo->momy = 0;
+			player->pflags |= PF_STARTDASH;
+			player->pflags |= PF_SPINNING;
+			player->dashSpeed = 1;
+			P_SetMobjState(player->mo, S_PLAY_DASH1);
+			S_StartSound(player->mo, sfx_s3k_ab);
+			player->pflags |= PF_USEDOWN;
+			if (player->pflags & PF_VERTICALFLIP)
+				player->mo->z = player->mo->ceilingz - P_GetPlayerSpinHeight();
+		}
+		else if ((buttons & BT_USE) && (player->pflags & PF_STARTDASH))
+		{
+			if (player->speed > 5*FRACUNIT)
+			{
+				player->pflags &= ~PF_STARTDASH;
+				player->pflags |= PF_SPINNING;
+				P_SetMobjState(player->mo, S_PLAY_DASH1);
+				S_StartSound(player->mo, sfx_s3k_3c);
+				if (player->pflags & PF_VERTICALFLIP)
+					player->mo->z = player->mo->ceilingz - P_GetPlayerSpinHeight();
+
+				return;
+			}
+
+			int soundplay = (6*player->dashSpeed) / 60;
+			player->dashSpeed++;
+			if (player->dashSpeed > 60)
+				player->dashSpeed = 60;
+
+			if ((6*player->dashSpeed) / 60 != soundplay)
+				S_StartSound(player->mo, sfx_s3k_ab);
+		}
+		// If not moving up or down, and travelling faster than a speed of four while not holding
+		// down the spin button and not spinning.
+		// AKA Just go into a spin on the ground, you idiot. ;)
+		else if ((buttons & BT_USE) && !player->mo->momz && onground && player->speed > 5*FRACUNIT && !(player->pflags & PF_USEDOWN) && !(player->pflags & PF_SPINNING))
+		{
+			P_ResetScore(player);
+			player->pflags |= PF_SPINNING;
+			P_SetMobjState(player->mo, S_PLAY_ATK1);
+			S_StartSound(player->mo, sfx_s3k_3c);
+			player->pflags |= PF_USEDOWN;
+			if (player->pflags & PF_VERTICALFLIP)
+				player->mo->z = player->mo->ceilingz - P_GetPlayerSpinHeight();
+		}
+
+		if (onground && (player->pflags & PF_SPINNING) && !(player->pflags & PF_STARTDASH)
+			&& player->speed < 5*FRACUNIT)
+		{
+			if (player->mo->ceilingz - player->mo->floorz < P_GetPlayerHeight())
+				P_InstaThrust(player->mo, player->mo->angle, 8*FRACUNIT);
+			else
+			{
+				player->pflags &= ~PF_SPINNING;
+				P_SetMobjState(player->mo, S_PLAY_STND);
+//				player->mo->momx = 0; // TODO: cmomx/cmomy
+//				player->mo->momy = 0;
+				P_ResetScore(player);
+				if (player->pflags & PF_VERTICALFLIP)
+					player->mo->z = player->mo->ceilingz - P_GetPlayerHeight();
+			}
+		}
+
+		// Catapult the player from a spindash rev!
+		if (onground && !(player->pflags & PF_USEDOWN) && player->dashSpeed && (player->pflags & PF_STARTDASH) && (player->pflags & PF_SPINNING))
+		{
+			player->pflags &= ~PF_STARTDASH;
+			P_InstaThrust(player->mo, player->mo->angle, player->dashSpeed << FRACBITS); // catapult forward ho!!
+			S_StartSound(player->mo, sfx_s3k_b6);
+			player->dashSpeed = 0;
+		}
+
+		if (onground && (player->pflags & PF_SPINNING) && !(player->pflags & PF_STARTDASH)
+			&& !(player->mo->state >= S_PLAY_ATK1
+			&& player->mo->state <= S_PLAY_ATK5))
+			P_SetMobjState(player->mo, S_PLAY_ATK1);
+	}
+}
+
 void P_PlayerHitFloor(player_t *player)
 {
+	if (player->pflags & PF_JUMPED)
+		player->pflags &= ~PF_SPINNING;
+	else if (!(player->pflags & PF_USEDOWN))
+		player->pflags &= ~PF_SPINNING;
+
+	if (!((player->pflags & PF_SPINNING) && (player->pflags & PF_USEDOWN)))
+		P_ResetScore(player);
+
 	player->pflags &= ~PF_JUMPED;
 	player->pflags &= ~PF_STARTJUMP;
+	player->pflags &= ~PF_THOKKED;
+
 	P_SetMobjState(player->mo, S_PLAY_RUN1);
 
 	if (!(player->forwardmove || player->sidemove || (player->pflags & PF_GASPEDAL)))
@@ -649,6 +790,9 @@ static void P_DoJump(player_t *player)
 {
 	if (player->mo->ceilingz - player->mo->floorz <= (player->mo->theight << FRACBITS) - 1)
 		return;
+
+	if (!(player->pflags & PF_SPINNING))
+		P_ResetScore(player);
 
 	fixed_t jumpStrength = FixedMul(39 * (FRACUNIT / 4), 1 * FRACUNIT + (FRACUNIT / 2));
 
@@ -669,18 +813,16 @@ static void P_DoJump(player_t *player)
 
 static void P_DoJumpStuff(player_t *player)
 {
-	int buttons;
-
-	buttons = ticbuttons[playernum];
+	int buttons = ticbuttons[playernum];
 
 	if (buttons & BT_ATTACK)
 	{
-		if (!(player->downbits & DB_JUMPDOWN) && player->mo->state != S_PLAY_PAIN && P_IsObjectOnGround(player->mo) && !P_IsReeling(player))
+		if (!(player->pflags & PF_JUMPDOWN) && player->mo->state != S_PLAY_PAIN && P_IsObjectOnGround(player->mo) && !P_IsReeling(player))
 		{
 			P_DoJump(player);
 			player->pflags &= ~PF_THOKKED;
 		}
-		player->downbits |= DB_JUMPDOWN;
+		player->pflags |= PF_JUMPDOWN;
 	}
 	else
 	{
@@ -691,7 +833,7 @@ static void P_DoJumpStuff(player_t *player)
 			player->pflags &= ~PF_STARTJUMP;
 		}
 
-		player->downbits &= ~DB_JUMPDOWN;
+		player->pflags &= ~PF_JUMPDOWN;
 	}
 }
 
@@ -752,10 +894,14 @@ void P_MovePlayer(player_t *player)
 {
 	//	player->mo->angle += player->angleturn;
 
-	P_DoJumpStuff(player);
-
 	/* don't let the player control movement if not onground */
 	onground = (player->mo->z <= player->mo->floorz);
+
+	if (player->exiting)
+	{
+		player->forwardmove = player->sidemove = 0;
+		player->pflags &= ~PF_GASPEDAL;
+	}
 
 	if (player->forwardmove || player->sidemove || (player->pflags & PF_GASPEDAL))
 	{
@@ -853,6 +999,46 @@ void P_MovePlayer(player_t *player)
 		((!(player->mo->momx || player->mo->momy) && (player->mo->state == S_PLAY_STND || player->mo->state == S_PLAY_TAP1 || player->mo->state == S_PLAY_TAP2 || player->mo->state == S_PLAY_TEETER1 || player->mo->state == S_PLAY_TEETER2))))
 		P_DoTeeter(player);
 
+	////////////////////////////
+	//SPINNING AND SPINDASHING//
+	////////////////////////////
+
+	// If the player isn't on the ground, make sure they aren't in a "starting dash" position.
+	if (!onground)
+	{
+		player->pflags &= ~PF_STARTDASH;
+		player->dashSpeed = 0;
+	}
+
+	P_DoSpinDash(player);
+
+	P_DoJumpStuff(player);
+
+	// Less height while spinning. Good for spinning under things...?
+	if ((player->mo->state == mobjinfo[MT_PLAYER].painstate)
+		|| ((player->pflags & PF_SPINNING) || (player->pflags & PF_JUMPED)))
+		player->mo->theight = P_GetPlayerSpinHeight() >> FRACBITS;
+	else
+		player->mo->theight = P_GetPlayerHeight() >> FRACBITS;
+
+	// Check for crushing
+	if (player->mo->ceilingz - player->mo->floorz < player->mo->theight << FRACBITS)
+	{
+		if (!(player->pflags & PF_SPINNING))
+		{
+			P_ResetScore(player);
+			player->pflags |= PF_SPINNING;
+			P_SetMobjState(player->mo, S_PLAY_ATK1);
+		}
+		else
+		{
+			// TODO: Die!
+
+			if (player->playerstate == PST_DEAD)
+				return;
+		}
+	}
+
 	player->speed = P_AproxDistance(player->mo->momx, player->mo->momy);
 }
 
@@ -930,6 +1116,15 @@ void P_PlayerThink(player_t *player)
 	/* move around */
 	ticphase = 22;
 	P_MovePlayer(player);
+
+	if (buttons & BT_USE)
+	{
+		if (!(player->pflags & PF_USEDOWN))
+			player->pflags |= PF_USEDOWN;
+	}
+	else
+		player->pflags &= ~PF_USEDOWN;
+
 	P_CalcHeight(player);
 
 	if (player == &players[consoleplayer])
@@ -942,38 +1137,10 @@ void P_PlayerThink(player_t *player)
 	/* check for weapon change */
 	/* */
 	ticphase = 23;
-	if ((buttons & BT_RMBTN))
-	{
-		// holding the RMB - swap the next and previous weapon actions
-		if (buttons & BT_NWEAPN)
-		{
-			buttons = (buttons ^ BT_NWEAPN) | BT_PWEAPN;
-		}
-	}
 
-	// CALICO: added support for explicit next weapon and previous weapon actions
-	if (buttons & BT_PWEAPN)
-	{
-		// previous weapon
-	}
-	else if (buttons & BT_NWEAPN)
-	{
-		// Next weapon
-	}
-
-	/* */
-	/* check for use */
-	/* */
-	if (buttons & BT_USE)
-	{
-		if (!(player->downbits & DB_SPINDOWN))
-		{
-			P_UseLines(player);
-			player->mo->momz = 16 << FRACBITS;
-		}
-	}
-	else
-		player->downbits &= ~DB_SPINDOWN;
+	// Fly cheat
+	if (buttons & BT_SPEED)
+		player->mo->momz = 16 << FRACBITS;
 
 	ticphase = 24;
 	ticphase = 25;

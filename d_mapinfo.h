@@ -48,6 +48,10 @@ typedef struct
 	VINT titlePage;
 	VINT titleMus;
 	VINT intermissionMus;
+	VINT xtlifeMus;
+	VINT invincMus;
+	VINT sneakerMus;
+	VINT gameoverMus;
 	VINT victoryMus;
 	VINT endMus;
 	VINT creditsPage;

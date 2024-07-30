@@ -180,7 +180,7 @@ static boolean SL_CheckLine(line_t *ld, pslidework_t *sw)
    else
       opentop = back->ceilingheight;
 
-   if(opentop - openbottom >= 56*FRACUNIT)
+   if(opentop - openbottom >= sw->slidething->theight << FRACBITS)
       return true; // the line doesn't block movement
 
    // the line is definitely blocking movement at this point

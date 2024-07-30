@@ -127,6 +127,7 @@ static void ST_Ticker_(stbar_t* sb)
 
 	sb->rings = p->mo->health - 1;
 	sb->score = p->score;
+	sb->lives = p->lives;
 
 	sb->forcedraw = false;
 }
@@ -259,7 +260,7 @@ static void ST_Drawer_ (stbar_t* sb)
 		DrawJagobjLump(face, 16, 176, NULL, NULL);
 		V_DrawStringLeft(&menuFont, 16 + 20, 176, "SONIC");
 		DrawJagobjLump(livex, 16 + 22, 176 + 10, NULL, NULL);
-		V_DrawValuePaddedRight(&menuFont, 16 + 58, 176+8, 3, 0);
+		V_DrawValuePaddedRight(&menuFont, 16 + 58, 176+8, sb->lives, 0);
 	}
 }
 

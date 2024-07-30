@@ -121,6 +121,7 @@ typedef struct
 
 	int     score;
 	VINT    rings;
+	VINT    lives;
 
 	VINT	currentMap;
 

@@ -187,6 +187,10 @@ STATE(SPR_BOM1,2,1,NULL,S_XPLD4), // S_XPLD3
 STATE(SPR_BOM1,3,1,NULL,S_XPLD5), // S_XPLD4
 STATE(SPR_BOM1,4,1,NULL,S_XPLD6), // S_XPLD5
 STATE(SPR_BOM1,5,1,NULL,S_NULL), // S_XPLD6
+STATE(SPR_SCOR,0,TICRATE,NULL,S_NULL), // S_SCORE100
+STATE(SPR_SCOR,1,TICRATE,NULL,S_NULL), // S_SCORE200
+STATE(SPR_SCOR,2,TICRATE,NULL,S_NULL), // S_SCORE500
+STATE(SPR_SCOR,3,TICRATE,NULL,S_NULL), // S_SCORE1000
 };
 
 #undef STATE
@@ -631,6 +635,30 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 	84,    // damage
 	sfx_None,       // activesound
 	MF_SPECIAL|MF_STATIC, // flags
+},
+{           // MT_SCORE
+	-1,             // doomednum
+	S_SCORE100,         // spawnstate
+	1,              // spawnhealth
+	S_NULL,         // seestate
+	sfx_None,       // seesound
+	8,              // reactiontime
+	sfx_None,       // attacksound
+	S_NULL,         // painstate
+	0,              // painchance
+	sfx_None,       // painsound
+	S_NULL,         // meleestate
+	S_NULL,         // missilestate
+	S_NULL,         // deathstate
+	S_NULL,         // xdeathstate
+	sfx_None,       // deathsound
+	4*FRACUNIT,     // speed
+	8*FRACUNIT,     // radius
+	8*FRACUNIT,     // height
+	100,            // mass
+	0,              // damage
+	sfx_None,       // activesound
+	MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY|MF_STATIC, // flags
 },
 };
 

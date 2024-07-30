@@ -160,7 +160,7 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 
 	if ((special->flags & MF_ENEMY) && !(special->flags & MF_MISSILE))
 	{
-		if ((player->pflags & PF_JUMPED) || (player->pflags & PF_SPINNING))
+		if ((player->pflags & PF_JUMPED) || (player->pflags & PF_SPINNING) || player->powers[pw_invulnerability])
 		{
 			if (((player->pflags & PF_VERTICALFLIP) && toucher->momz > 0)
 				|| (!(player->pflags & PF_VERTICALFLIP) && toucher->momz < 0))
@@ -240,12 +240,44 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 		P_SetMobjState (target, targinfo->xdeathstate);
 	else
 		P_SetMobjState (target, targinfo->deathstate);
+
 	target->tics -= P_Random()&1;
 	if (target->tics < 1)
 		target->tics = 1;
 
-	// TODO: 'Pop!' sprite?		
 	S_StartSound(target, targinfo->deathsound);
+
+	if (source->player && (target->flags & MF_ENEMY))
+	{
+		VINT score = 100;
+		mobj_t *scoremobj = P_SpawnMobj(target->x, target->y, target->z + (target->theight << (FRACBITS-1)), MT_SCORE);
+		statenum_t scoreState = mobjinfo[MT_SCORE].spawnstate;
+		player_t* player = &players[source->player - 1];
+
+		player->scoreAdd++;
+		if (player->scoreAdd == 1)
+		{
+			score = 100; // Score! Tails 03-01-2000
+		}
+		else if (player->scoreAdd == 2)
+		{
+			score = 200; // Score! Tails 03-01-2000
+			scoreState += 1;
+		}
+		else if (player->scoreAdd == 3)
+		{
+			score = 500; // Score! Tails 03-01-2000
+			scoreState += 2;
+		}
+		else// if (player->scoreAdd >= 4)
+		{
+			score = 1000; // Score! Tails 03-01-2000
+			scoreState += 3;
+		}
+
+		P_SetMobjState(scoremobj, scoreState);
+		P_AddPlayerScore(player, score);
+	}
 }
 
 
