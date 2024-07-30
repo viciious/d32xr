@@ -914,78 +914,85 @@ void P_MovePlayer(player_t *player)
 
 		angle_t controlAngle = R_PointToAngle2(0, 0, controlX, controlY);
 
-		if (player->pflags & PF_GASPEDAL)
+		if (player->pflags & PF_STARTDASH)
 		{
-			// When pressing a directional control, the gas has quarter influence.
-			if (!(player->forwardmove || player->sidemove))
-			{
-				P_ThrustValues(thiscam->angle/*player->mo->angle*/, FRACUNIT, &controlX, &controlY);
-				controlAngle = R_PointToAngle2(0, 0, controlX, controlY);
-			}
-			else
-			{
-				P_ThrustValues(thiscam->angle/*player->mo->angle*/, FRACUNIT / 4, &controlX, &controlY);
-				controlAngle = R_PointToAngle2(0, 0, controlX, controlY);
-			}
+			player->mo->angle = controlAngle;
 		}
-
-		/*		controlX = controlY = 0;
-		P_ThrustValues(controlAngle, FRACUNIT, &controlX, &controlY);
-		controlX and controlY are now a unit vector */
-
-		/*		P_Thrust(player, thiscam->angle, player->forwardmove);
-				P_Thrust(player, thiscam->angle-ANG90, player->sidemove);
-
-				player->mo->angle = R_PointToAngle2(player->mo->x, player->mo->y, player->mo->x + player->mo->momx, player->mo->y + player->mo->momy);*/
-
-		fixed_t acc = 6144 * 4;//FRACUNIT / 2;
-//		angle_t speedDir = R_PointToAngle2(0, 0, player->mo->momx, player->mo->momy);
-		fixed_t speed = P_AproxDistance(player->mo->momx, player->mo->momy);
-
-		if (!(player->pflags & PF_GASPEDAL))
+		else
 		{
-			VINT controlDirection = ControlDirection(player);
-			if (controlDirection == 2)
-				acc *= 2;
-		}
+			if (player->pflags & PF_GASPEDAL)
+			{
+				// When pressing a directional control, the gas has quarter influence.
+				if (!(player->forwardmove || player->sidemove))
+				{
+					P_ThrustValues(thiscam->angle/*player->mo->angle*/, FRACUNIT, &controlX, &controlY);
+					controlAngle = R_PointToAngle2(0, 0, controlX, controlY);
+				}
+				else
+				{
+					P_ThrustValues(thiscam->angle/*player->mo->angle*/, FRACUNIT / 4, &controlX, &controlY);
+					controlAngle = R_PointToAngle2(0, 0, controlX, controlY);
+				}
+			}
 
-		if (player->pflags & PF_SPINNING)
-			acc >>= 5;
+			/*		controlX = controlY = 0;
+			P_ThrustValues(controlAngle, FRACUNIT, &controlX, &controlY);
+			controlX and controlY are now a unit vector */
 
-		//		CONS_Printf("Controldirection is %d", controlDirection);
+			/*		P_Thrust(player, thiscam->angle, player->forwardmove);
+					P_Thrust(player, thiscam->angle-ANG90, player->sidemove);
 
-		if (onground && speed > 0)
-		{
-			// Here we take your current mom and influence it to slowly change to the direction you wish to travel
-			// This avoids the feeling of sliding on ice
+					player->mo->angle = R_PointToAngle2(player->mo->x, player->mo->y, player->mo->x + player->mo->momx, player->mo->y + player->mo->momy);*/
+
+			fixed_t acc = 6144 * 4;//FRACUNIT / 2;
+	//		angle_t speedDir = R_PointToAngle2(0, 0, player->mo->momx, player->mo->momy);
+			fixed_t speed = P_AproxDistance(player->mo->momx, player->mo->momy);
+
+			if (!(player->pflags & PF_GASPEDAL))
+			{
+				VINT controlDirection = ControlDirection(player);
+				if (controlDirection == 2)
+					acc *= 2;
+			}
+
+			if (player->pflags & PF_SPINNING)
+				acc >>= 5;
+
+			//		CONS_Printf("Controldirection is %d", controlDirection);
+
+			if (onground && speed > 0)
+			{
+				// Here we take your current mom and influence it to slowly change to the direction you wish to travel
+				// This avoids the feeling of sliding on ice
+				fixed_t moveVecX = 0;
+				fixed_t moveVecY = 0;
+				P_ThrustValues(controlAngle, speed, &moveVecX, &moveVecY);
+
+				player->mo->momx = FixedMul(player->mo->momx, 28*FRACUNIT);
+				player->mo->momy = FixedMul(player->mo->momy, 28*FRACUNIT);
+				player->mo->momx += moveVecX;
+				player->mo->momy += moveVecY;
+				player->mo->momx = FixedDiv(player->mo->momx, 29*FRACUNIT);
+				player->mo->momy = FixedDiv(player->mo->momy, 29*FRACUNIT);
+
+				player->mo->angle = R_PointToAngle2(0, 0, player->mo->momx, player->mo->momy);
+			}
+
+			if (speed < 10*FRACUNIT)
+			{
+				fixed_t addAmt = FixedDiv(10*FRACUNIT - speed, 10*FRACUNIT);
+				acc = FixedMul(acc, FRACUNIT + addAmt);
+	//			CONS_Printf("AddAmt: %d, speed: %d", addAmt, speed >> FRACBITS);
+			}
+
 			fixed_t moveVecX = 0;
 			fixed_t moveVecY = 0;
-			P_ThrustValues(controlAngle, speed, &moveVecX, &moveVecY);
-
-			player->mo->momx = FixedMul(player->mo->momx, 28*FRACUNIT);
-			player->mo->momy = FixedMul(player->mo->momy, 28*FRACUNIT);
+			P_ThrustValues(controlAngle, acc, &moveVecX, &moveVecY);
 			player->mo->momx += moveVecX;
 			player->mo->momy += moveVecY;
-			player->mo->momx = FixedDiv(player->mo->momx, 29*FRACUNIT);
-			player->mo->momy = FixedDiv(player->mo->momy, 29*FRACUNIT);
 
-			player->mo->angle = R_PointToAngle2(0, 0, player->mo->momx, player->mo->momy);
+	//		CONS_Printf("Acc: %d, MomX: %d, MomY: %d", acc, player->mo->momx >> FRACBITS, player->mo->momy >> FRACBITS);
 		}
-
-		if (speed < 10*FRACUNIT)
-		{
-			fixed_t addAmt = FixedDiv(10*FRACUNIT - speed, 10*FRACUNIT);
-			acc = FixedMul(acc, FRACUNIT + addAmt);
-//			CONS_Printf("AddAmt: %d, speed: %d", addAmt, speed >> FRACBITS);
-		}
-
-		fixed_t moveVecX = 0;
-		fixed_t moveVecY = 0;
-		P_ThrustValues(controlAngle, acc, &moveVecX, &moveVecY);
-		player->mo->momx += moveVecX;
-		player->mo->momy += moveVecY;
-
-//		CONS_Printf("Acc: %d, MomX: %d, MomY: %d", acc, player->mo->momx >> FRACBITS, player->mo->momy >> FRACBITS);
 	}
 
 	if ((player->forwardmove || player->sidemove || (player->pflags & PF_GASPEDAL)) && (player->mo->state >= S_PLAY_STND && player->mo->state <= S_PLAY_TAP2))
