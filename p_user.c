@@ -170,10 +170,10 @@ dospecial:
 
 void P_PlayerXYMovement(mobj_t *mo)
 {
+	player_t *player = &players[mo->player - 1];
 	fixed_t speed;
 	const angle_t speedDir = R_PointToAngle2(0, 0, mo->momx, mo->momy);
-	const fixed_t top = 30 * FRACUNIT;
-	player_t *player = &players[mo->player - 1];
+	const fixed_t top = (player->pflags & PF_SPINNING) ? 60 * FRACUNIT : 30 *FRACUNIT;
 	P_PlayerMove(mo);
 
 	/* */
@@ -181,7 +181,7 @@ void P_PlayerXYMovement(mobj_t *mo)
 	/* */
 	if (player->powers[pw_flashing] != FLASHINGTICS && player->mo->z <= player->mo->floorz)
 	{
-		const fixed_t frc = FRACUNIT * 1;
+		const fixed_t frc = (player->pflags & PF_SPINNING) ? FRACUNIT >> 4 : FRACUNIT * 1;
 		speed = P_AproxDistance(mo->momx, mo->momy);
 
 		if (speed > STOPSPEED)
@@ -662,6 +662,8 @@ void P_AddPlayerScore(player_t *player, int amount)
 		S_StartSong(gameinfo.xtlifeMus, 0, cdtrack_xtlife);
 		player->powers[pw_extralife] = EXTRALIFETICS;
 	}
+
+	player->score += amount;
 }
 
 static inline fixed_t P_GetPlayerSpinHeight()
@@ -918,6 +920,33 @@ void P_MovePlayer(player_t *player)
 		{
 			player->mo->angle = controlAngle;
 		}
+		else if (player->pflags & PF_SPINNING)
+		{
+			// Gas pedal does not apply here
+			if (player->forwardmove || player->sidemove)
+			{
+				fixed_t acc = FRACUNIT >> 4;
+				VINT controlDirection = ControlDirection(player);
+				if (controlDirection == 2)
+					acc *= 2;
+
+				P_ThrustValues(thiscam->angle/*player->mo->angle*/, acc, &controlX, &controlY);
+				controlAngle = R_PointToAngle2(0, 0, controlX, controlY);
+
+				fixed_t oldSpeed = P_AproxDistance(player->mo->momx, player->mo->momy);
+
+				P_ThrustValues(controlAngle, acc, &player->mo->momx, &player->mo->momy);
+				angle_t moveAngle = R_PointToAngle2(0, 0, player->mo->momx, player->mo->momy);
+				
+				// Clip to current speed
+				if (P_AproxDistance(player->mo->momx, player->mo->momy) > oldSpeed)
+				{
+					const fixed_t diff = P_AproxDistance(player->mo->momx, player->mo->momy) - oldSpeed;
+
+					P_ThrustValues(-moveAngle, diff, &player->mo->momx, &player->mo->momy);
+				}
+			}
+		}
 		else
 		{
 			if (player->pflags & PF_GASPEDAL)
@@ -954,9 +983,6 @@ void P_MovePlayer(player_t *player)
 				if (controlDirection == 2)
 					acc *= 2;
 			}
-
-			if (player->pflags & PF_SPINNING)
-				acc >>= 5;
 
 			//		CONS_Printf("Controldirection is %d", controlDirection);
 
