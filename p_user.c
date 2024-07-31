@@ -756,6 +756,31 @@ static void P_DoSpinDash(player_t *player)
 			&& !(player->mo->state >= S_PLAY_ATK1
 			&& player->mo->state <= S_PLAY_ATK5))
 			P_SetMobjState(player->mo, S_PLAY_ATK1);
+
+		if (onground && (player->pflags & PF_STARTDASH) && (leveltime & 7))
+		{
+			fixed_t dustx = player->mo->x;
+			fixed_t dusty = player->mo->y;
+			P_ThrustValues(player->mo->angle + ANG90 + ANG45, mobjinfo[MT_PLAYER].radius, &dustx, &dusty);
+
+			mobj_t *dust = P_SpawnMobj(dustx, dusty, player->mo->z, MT_GHOST);
+			P_SetMobjState(dust, S_SPINDUST1);
+			P_Thrust(dust, player->mo->angle, -4*FRACUNIT);
+
+			if (player->pflags & PF_VERTICALFLIP)
+				dust->z = player->mo->z + (player->mo->theight << FRACBITS) - 8*FRACUNIT;
+
+			dustx = player->mo->x;
+			dusty = player->mo->y;
+			P_ThrustValues(player->mo->angle - ANG90 - ANG45, mobjinfo[MT_PLAYER].radius, &dustx, &dusty);
+
+			dust = P_SpawnMobj(dustx, dusty, player->mo->z, MT_GHOST);
+			P_SetMobjState(dust, S_SPINDUST1);
+			P_Thrust(dust, player->mo->angle, -4*FRACUNIT);
+
+			if (player->pflags & PF_VERTICALFLIP)
+				dust->z = player->mo->z + (player->mo->theight << FRACBITS) - 8*FRACUNIT;
+		}
 	}
 }
 

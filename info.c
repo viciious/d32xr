@@ -14,6 +14,7 @@ const char * const sprnames[NUMSPRITES] = {
 "BUS1",
 "BUS2",
 "DRWN",
+"DUST",
 "EGGM",
 "FISH",
 "FL01",
@@ -191,6 +192,10 @@ STATE(SPR_SCOR,0,TICRATE,NULL,S_NULL), // S_SCORE100
 STATE(SPR_SCOR,1,TICRATE,NULL,S_NULL), // S_SCORE200
 STATE(SPR_SCOR,2,TICRATE,NULL,S_NULL), // S_SCORE500
 STATE(SPR_SCOR,3,TICRATE,NULL,S_NULL), // S_SCORE1000
+STATE(SPR_DUST,0,3,NULL,S_SPINDUST2), // S_SPINDUST1
+STATE(SPR_DUST,1,2,NULL,S_SPINDUST3), // S_SPINDUST2
+STATE(SPR_DUST,2,1,NULL,S_SPINDUST4), // S_SPINDUST3
+STATE(SPR_DUST,3,1,NULL,S_NULL), // S_SPINDUST4
 };
 
 #undef STATE
@@ -660,5 +665,29 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 	sfx_None,       // activesound
 	MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY|MF_STATIC, // flags
 },
+	{           // MT_GHOST
+		-1,             // doomednum
+		S_SPINDUST1,         // spawnstate
+		1,              // spawnhealth
+		S_NULL,         // seestate
+		sfx_None,       // seesound
+		0,              // reactiontime
+		sfx_None,       // attacksound
+		S_NULL,         // painstate
+		0,              // painchance
+		sfx_None,       // painsound
+		S_NULL,         // meleestate
+		S_NULL,         // missilestate
+		S_NULL,         // deathstate
+		S_NULL,         // xdeathstate
+		sfx_None,       // deathsound
+		0,              // speed
+		16*FRACUNIT,    // radius
+		48*FRACUNIT,    // height
+		1000,           // mass
+		8,              // damage
+		sfx_None,       // activesound
+		MF_NOBLOCKMAP|MF_NOGRAVITY|MF_NOCLIP, // flags
+	},
 };
 
