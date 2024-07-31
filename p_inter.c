@@ -175,7 +175,7 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 	}
 	
 	if (special->type == MT_YELLOWSPRING || special->type == MT_YELLOWDIAG || special->type == MT_YELLOWHORIZ
-		|| special->type == MT_REDSPRING || special->type == MT_REDDIAG || special->type == MT_REDDIAG)
+		|| special->type == MT_REDSPRING || special->type == MT_REDDIAG || special->type == MT_REDHORIZ
 	{
 		P_DoSpring(special, player);
 		return;
