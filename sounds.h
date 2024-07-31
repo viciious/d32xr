@@ -23,7 +23,9 @@ enum
  
 typedef enum 
 { 
-  sfx_None, 
+  sfx_None,
+  sfx_ngskid,
+  sfx_telept,
   sfx_thok,
   sfx_steam1,
   sfx_steam2,

@@ -833,6 +833,95 @@ static void P_DoJump(player_t *player)
 	S_StartSound(player->mo, sfx_s3k_62);
 }
 
+boolean P_LookForTarget(player_t *player)
+{
+	const fixed_t targetMaxDist = 512*FRACUNIT;
+	const angle_t oldAngle = player->mo->angle;
+	mobj_t *node;
+	mobj_t *best = NULL;
+	fixed_t bestDist = D_MAXINT;
+
+	for (node = mobjhead.next; node != (void*)&mobjhead; node = node->next)
+    {
+		if (node->player)
+			continue;
+
+		if (node->flags & MF_STATIC)
+		{
+			if (!(node->type >= MT_YELLOWSPRING && node->type <= MT_REDHORIZ))
+				continue;
+		}
+		else
+		{
+			// Enemies and springs only (for now)
+			if (!(node->flags & MF_ENEMY))
+				continue;
+
+			// Ignore fretting bosses
+			if (node->flags2 & MF2_FRET)
+				continue;
+
+			if (node->health <= 0)
+				continue; // dead
+		}
+
+		if (node->z > player->mo->z + (player->mo->theight << FRACBITS))
+			continue;
+
+		fixed_t dist = P_AproxDistance(P_AproxDistance(node->x - player->mo->x, node->y - player->mo->y), node->z - player->mo->z);
+
+		if (dist > targetMaxDist)
+			continue;
+
+		if (dist > bestDist)
+			continue;
+
+		// Well, it's the closest, but is it in front of us?
+		angle_t ang = R_PointToAngle2(player->mo->x, player->mo->y, node->x, node->y) - player->mo->angle;
+
+		if (ang > ANG90 && ang < ANG270)
+			continue;
+
+		player->mo->angle = R_PointToAngle2(player->mo->x, player->mo->y, node->x, node->y);
+
+//		if (!P_CheckSight(player->mo, node))
+//			continue; // Can't see it
+
+		best = node;
+		bestDist = dist;
+    }
+
+	if (!best)
+	{
+		player->mo->angle = oldAngle;
+		return false;
+	}
+
+	player->mo->target = best;
+	return true;
+}
+
+static void P_HomingAttack(mobj_t *source, mobj_t *dest)
+{
+	if (!dest)
+		return;
+
+	if (dest->health <= 0)
+		return;
+
+	source->angle = R_PointToAngle2(source->x, source->y, dest->x, dest->y);
+
+	fixed_t dist = P_AproxDistance(P_AproxDistance(dest->x - source->x, dest->y - source->y), dest->z - source->z);
+
+	if (dist < 1) // Don't divide by zero
+		dist = 1;
+
+	const fixed_t ns = 30*FRACUNIT;
+	source->momx = FixedMul(FixedDiv(dest->x - source->x, dist), ns);
+	source->momy = FixedMul(FixedDiv(dest->y - source->y, dist), ns);
+	source->momz = FixedMul(FixedDiv(dest->z - source->z, dist), ns);
+}
+
 static void P_DoJumpStuff(player_t *player)
 {
 	int buttons = ticbuttons[playernum];
@@ -844,6 +933,21 @@ static void P_DoJumpStuff(player_t *player)
 			P_DoJump(player);
 			player->pflags &= ~PF_THOKKED;
 		}
+		else if (!(player->pflags & PF_JUMPDOWN) && player->pflags & PF_JUMPED)
+		{
+			// Find a nearby enemy.
+			if (P_LookForTarget(player))
+			{
+				player->homingTimer = 2*TICRATE;
+				S_StartSound(player->mo, sfx_thok);
+				player->pflags &= ~PF_SPINNING;
+				player->pflags &= ~PF_STARTDASH;
+				player->pflags |= PF_THOKKED;
+			}
+			else
+				S_StartSound(player->mo, sfx_ngskid);
+		}
+
 		player->pflags |= PF_JUMPDOWN;
 	}
 	else
@@ -992,7 +1096,7 @@ void P_MovePlayer(player_t *player)
 	//		angle_t speedDir = R_PointToAngle2(0, 0, player->mo->momx, player->mo->momy);
 			fixed_t speed = P_AproxDistance(player->mo->momx, player->mo->momy);
 
-			if (!(player->pflags & PF_GASPEDAL))
+			if (!(player->pflags & PF_GASPEDAL) && !(player->pflags & PF_JUMPED))
 			{
 				VINT controlDirection = ControlDirection(player);
 				if (controlDirection == 2)
@@ -1001,7 +1105,11 @@ void P_MovePlayer(player_t *player)
 
 			//		CONS_Printf("Controldirection is %d", controlDirection);
 
-			if (onground && speed > 0)
+			if (player->pflags & PF_JUMPED)
+			{
+				player->mo->angle = controlAngle;
+			}
+			else if (onground && speed > 0)
 			{
 				// Here we take your current mom and influence it to slowly change to the direction you wish to travel
 				// This avoids the feeling of sliding on ice
@@ -1085,6 +1193,28 @@ void P_MovePlayer(player_t *player)
 			if (player->playerstate == PST_DEAD)
 				return;
 		}
+	}
+
+	if ((player->pflags & PF_THOKKED) && player->homingTimer > 0)
+	{
+		if (player->mo->target)
+		{
+			if (player->mo->target->health <= 0)
+			{
+				player->mo->momx >>= 1;
+				player->mo->momy >>= 1;
+				player->mo->momz >>= 1;
+				player->homingTimer = 0;
+				player->pflags &= ~PF_THOKKED;
+
+				if (player->mo->momz < 8*FRACUNIT)
+					player->mo->momz = 8*FRACUNIT;
+			}
+			else
+				P_HomingAttack(player->mo, player->mo->target);
+		}
+		else
+			player->pflags &= ~PF_THOKKED;
 	}
 
 	player->speed = P_AproxDistance(player->mo->momx, player->mo->momy);
@@ -1224,6 +1354,9 @@ void P_PlayerThink(player_t *player)
 
 		if (player->bonuscount)
 			player->bonuscount--;
+
+		if (player->homingTimer)
+			player->homingTimer--;
 	}
 }
 

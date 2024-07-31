@@ -497,7 +497,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 {           // MT_YELLOWSPRING
 	550,            // doomednum
 	S_YELLOWSPRING, // spawnstate
-	1000,           // spawnhealth
+	1,           // spawnhealth
 	S_NULL,         // seestate
 	sfx_None,       // seesound
 	0,              // reactiontime
@@ -522,7 +522,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 {           // MT_REDSPRING
 	551,            // doomednum
 	S_REDSPRING,    // spawnstate
-	1000,           // spawnhealth
+	1,           // spawnhealth
 	S_NULL,         // seestate
 	sfx_None,       // seesound
 	0,              // reactiontime
