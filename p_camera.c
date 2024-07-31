@@ -2,6 +2,7 @@
 
 camera_t camera;
 //#define NOCLIPCAMERA
+#define CAM_PHYS_HEIGHT (12 << FRACBITS)
 
 static boolean PIT_CameraCheckLine(line_t *ld, pmovework_t *mw)
 {
@@ -284,7 +285,7 @@ static void P_CameraThinker(player_t *player, camera_t *thiscam)
 		mo.momx = thiscam->momx;
 		mo.momy = thiscam->momy;
 		mo.momz = thiscam->momz;
-		mo.theight = CAM_HEIGHT >> FRACBITS;
+		mo.theight = CAM_PHYS_HEIGHT >> FRACBITS;
       mo.type = MT_CAMERA;
 		sm.slidething = &mo;
 
@@ -334,7 +335,7 @@ camwrapup:
 		if (thiscam->z <= thiscam->floorz)
 		{
 			thiscam->z = thiscam->floorz;
-			if (thiscam->z > player->viewz + CAM_HEIGHT + (16 << FRACBITS))
+			if (thiscam->z > player->viewz + CAM_PHYS_HEIGHT + (16 << FRACBITS))
 			{
 				// Camera got stuck above the player
 				P_ResetCamera(player, thiscam);
@@ -342,14 +343,14 @@ camwrapup:
 		}
 
 		// Don't go above the ceiling
-		if (thiscam->z + CAM_HEIGHT > thiscam->ceilingz)
+		if (thiscam->z + CAM_PHYS_HEIGHT > thiscam->ceilingz)
 		{
 			if (thiscam->momz > 0)
 				thiscam->momz = 0;
 
-			thiscam->z = thiscam->ceilingz - CAM_HEIGHT;
+			thiscam->z = thiscam->ceilingz - CAM_PHYS_HEIGHT;
 
-			if (thiscam->z + CAM_HEIGHT < player->mo->z - (player->mo->theight << FRACBITS))
+			if (thiscam->z + CAM_PHYS_HEIGHT < player->mo->z - (player->mo->theight << FRACBITS))
 			{
 				// Camera got stuck below the player
 				P_ResetCamera(player, thiscam);
@@ -357,9 +358,9 @@ camwrapup:
 		}
 	}
 
-   	if (thiscam->ceilingz - thiscam->z < CAM_HEIGHT && thiscam->ceilingz >= thiscam->z)
+   if (thiscam->ceilingz - thiscam->z < CAM_PHYS_HEIGHT && thiscam->ceilingz >= thiscam->z)
 	{
-		thiscam->ceilingz = thiscam->z + CAM_HEIGHT;
+		thiscam->ceilingz = thiscam->z + CAM_PHYS_HEIGHT;
 		thiscam->floorz = thiscam->z;
 	}
 #endif
@@ -429,6 +430,9 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 
 	if (thiscam->z < thiscam->floorz)
 		thiscam->z = thiscam->floorz;
+
+   if (thiscam->z + caminfo->height > thiscam->ceilingz)
+      thiscam->z = thiscam->ceilingz - caminfo->height-(11<<FRACBITS);
 
 	// The camera actually focuses 64 units ahead of where the player is.
 	// This is more aesthetically pleasing.
