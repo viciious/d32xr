@@ -313,10 +313,7 @@ static void R_DrawPlanes2(void)
 
         flatnum = pl->flatandlight&0xffff;
 
-        if (flatnum >= col2flat)
-            I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps2);
-        else
-            I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
+        I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
 
         lpl.pl = pl;
         lpl.ds_source[0] = flatpixels[flatnum].data[0];

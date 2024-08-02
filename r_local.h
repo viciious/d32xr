@@ -283,6 +283,10 @@ extern drawspan_t drawspan;
 extern drawskycol_t drawskycol;
 #endif
 
+#ifdef HIGH_DETAIL_SPRITES
+extern drawcol_t drawspritecol;
+#endif
+
 #define FUZZTABLE		64
 #define FUZZMASK		(FUZZTABLE-1)
 extern short fuzzoffset[FUZZTABLE];
@@ -362,7 +366,7 @@ extern	uint8_t			*flattranslation;		/* for global animation */
 extern	uint8_t			*texturetranslation;	/* for global animation */
 extern	flattex_t		*flatpixels;
 
-extern	VINT		firstflat, numflats, col2flat;
+extern	VINT		firstflat, numflats;
 
 extern	VINT		firstsprite, numsprites;
 

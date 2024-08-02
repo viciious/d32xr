@@ -27,6 +27,10 @@ drawspan_t drawspan;
 drawskycol_t drawskycol;
 #endif
 
+#ifdef HIGH_DETAIL_SPRITES
+drawcol_t drawspritecol;
+#endif
+
 short fuzzoffset[FUZZTABLE] =
 {
 	1,-1,1,-1,1,1,-1,
@@ -269,6 +273,10 @@ void R_SetDrawMode(void)
 		drawskycol = I_DrawColumnNoDraw;
 		#endif
 
+		#ifdef HIGH_DETAIL_SPRITES
+		drawspritecol = I_DrawColumnNoDraw;
+		#endif
+
 		return;
 	}
 
@@ -281,6 +289,10 @@ void R_SetDrawMode(void)
 
 		#ifdef MDSKY
 		drawskycol = I_DrawSkyColumnLow;
+		#endif
+
+		#ifdef HIGH_DETAIL_SPRITES
+		drawspritecol = I_DrawColumn;
 		#endif
 
 		#ifdef POTATO_MODE
@@ -299,6 +311,10 @@ void R_SetDrawMode(void)
 
 		#ifdef MDSKY
 		drawskycol = I_DrawSkyColumn;
+		#endif
+
+		#ifdef HIGH_DETAIL_SPRITES
+		drawspritecol = I_DrawColumn;
 		#endif
 
 		#ifdef POTATO_MODE
