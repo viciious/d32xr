@@ -7,7 +7,7 @@
 #include "mars.h"
 #endif
 
-VINT		firstflat, numflats, col2flat;
+VINT		firstflat, numflats;
 
 VINT		firstsprite, numsprites;
 
@@ -308,10 +308,6 @@ void R_InitFlats (void)
 		flattranslation[i] = i;
 
 	flatpixels = Z_Malloc(numflats * sizeof(*flatpixels), PU_STATIC);
-
-	col2flat = R_FlatNumForName ("F_STCOL2");
-	if (col2flat < 0)
-		col2flat = numflats + 1;
 
 #if MIPLEVELS > 1
 	// detect mip-maps
@@ -854,10 +850,10 @@ void R_InitColormap(boolean doublepix)
 	int l;
 
 	l = W_CheckNumForName("COLORMAP");
-	dc_colormaps = R_LoadColormap(l, doublepix);
+	dc_colormaps = R_LoadColormap(l, true);
 
 	l -= 2;
-	dc_colormaps2 = R_LoadColormap(l, doublepix);
+	dc_colormaps2 = R_LoadColormap(l, false);
 
 #ifdef MARS
 	Mars_CommSlaveClearCache();

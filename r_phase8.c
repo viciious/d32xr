@@ -160,7 +160,12 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
    iscale    = FixedDiv(FRACUNIT, vis->yscale); // CALICO_FIXME: -1 in GAS... test w/o.
    xfrac     = vis->startfrac;
    spryscale = vis->yscale;
+
+#ifdef HIGH_DETAIL_SPRITES
+   dcol      = vis->colormap < 0 ? drawfuzzcol : drawspritecol;
+#else
    dcol      = vis->colormap < 0 ? drawfuzzcol : drawcol;
+#endif
 
    sprtop = FixedMul(vis->texturemid, spryscale);
    sprtop = centerYFrac - sprtop;
@@ -171,7 +176,11 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
    stopx    = vis->x2 + 1;
    fracstep = vis->xiscale;
 
+#ifdef HIGH_DETAIL_SPRITES
+   I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps2);
+#else
    I_SetThreadLocalVar(DOOMTLS_COLORMAP, vis->colormaps);
+#endif
 
 #ifdef MARS
    if (sprscreenhalf > 0)
@@ -190,11 +199,23 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
    }
 #endif
 
+#ifdef HIGH_DETAIL_SPRITES
+   x <<= 1;
+   stopx = (stopx << 1) - 1;
+   fracstep >>= 1;
+#endif
+
    for(; x < stopx; x++, xfrac += fracstep)
    {
       byte *columnptr  = ((byte *)patch + BIGSHORT(patch->columnofs[xfrac>>FRACBITS]));
+
+      #ifdef HIGH_DETAIL_SPRITES
+      int topclip      = (spropening[x>>1] >> 8);
+      int bottomclip   = (spropening[x>>1] & 0xff) - 1;
+      #else
       int topclip      = (spropening[x] >> 8);
       int bottomclip   = (spropening[x] & 0xff) - 1;
+      #endif
 
       // column loop
       // a post record has four bytes: topdelta length pixelofs*2
@@ -395,7 +416,11 @@ static void R_DrawSortedSprites(int* sortedsprites, int sprscreenhalf)
    int16_t walls[MAXWALLCMDS+1], *pwalls;
    viswall_t *ds;
 
+#ifdef HIGH_DETAIL_SPRITES
+    I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps2);
+#else
     I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
+#endif
 
 #ifdef MARS
    if (sprscreenhalf > 0)
@@ -439,6 +464,12 @@ static void R_DrawSortedSprites(int* sortedsprites, int sprscreenhalf)
 
       ds = (vissprite_t *)(vd.vissprites + (sortedsprites[i] & 0x7f));
 
+      #ifdef HIGH_DETAIL_SPRITES
+      if (sprscreenhalf > 0) {
+         sprscreenhalf += 1;
+      }
+      #endif
+
       R_ClipVisSprite(ds, spropening, sprscreenhalf, walls);
       R_DrawVisSprite(ds, spropening, sprscreenhalf);
    }
@@ -471,7 +502,7 @@ void Mars_Sec_R_DrawSprites(int sprscreenhalf)
 
     R_DrawSortedSprites(vd.gsortedsprites, -sprscreenhalf);
 
-//    I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps); // This was in DrawPSprites()... unneeded now?
+//    I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps2); // This was in DrawPSprites()... unneeded now?
 }
 
 #endif
@@ -519,20 +550,6 @@ void R_Sprites(void)
 
        // composite sort key: distance + id
        sortedsprites[1+sortedcount++] = (xscale << 7) + i;
-   }
-
-   // add the gun midpoint
-   for (spr = vd.lastsprite_p; spr < vd.vissprite_p; spr++) {
-        vissprite_t *pspr = (vissprite_t *)spr;
-        unsigned xscale;
-        unsigned pixcount = pspr->x2 + 1 - pspr->x1;
-
-        xscale = pspr->xscale;
-        if (pspr->patchnum < 0 || pspr->x2 < pspr->x1)
-            continue;
-
-        midcount += xscale;
-        half += (pspr->x1 + (pixcount >> 1)) * xscale;
    }
 
    // average the mid point
