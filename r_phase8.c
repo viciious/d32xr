@@ -52,7 +52,12 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
    fracstep  = seg->scalestep;
    scalefrac = seg->scalefrac + (x - seg->realstart) * fracstep;
 
-   I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
+   if (lowResMode) {
+      I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
+   }
+   else {
+      I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps2);
+   }
 
    for(; x <= stopx; x++)
    {
@@ -162,7 +167,12 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
    spryscale = vis->yscale;
 
 #ifdef HIGH_DETAIL_SPRITES
-   dcol      = vis->colormap < 0 ? drawfuzzcol : drawspritecol;
+   if (lowResMode) {
+      dcol      = vis->colormap < 0 ? drawfuzzcol : drawspritecol;
+   }
+   else {
+      dcol      = vis->colormap < 0 ? drawfuzzcol : drawcol;
+   }
 #else
    dcol      = vis->colormap < 0 ? drawfuzzcol : drawcol;
 #endif
@@ -179,7 +189,12 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
 #ifdef HIGH_DETAIL_SPRITES
    I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps2);
 #else
-   I_SetThreadLocalVar(DOOMTLS_COLORMAP, vis->colormaps);
+   if (lowResMode) {
+      I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
+   }
+   else {
+      I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps2);
+   }
 #endif
 
 #ifdef MARS
@@ -200,22 +215,33 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
 #endif
 
 #ifdef HIGH_DETAIL_SPRITES
-   x <<= 1;
-   stopx = (stopx << 1) - 1;
-   fracstep >>= 1;
+   if (lowResMode) {
+      x <<= 1;
+      stopx = (stopx << 1) - 1;
+      fracstep >>= 1;
+   }
 #endif
 
    for(; x < stopx; x++, xfrac += fracstep)
    {
       byte *columnptr  = ((byte *)patch + BIGSHORT(patch->columnofs[xfrac>>FRACBITS]));
 
-      #ifdef HIGH_DETAIL_SPRITES
-      int topclip      = (spropening[x>>1] >> 8);
-      int bottomclip   = (spropening[x>>1] & 0xff) - 1;
-      #else
+#ifdef HIGH_DETAIL_SPRITES
+      int topclip;
+      int bottomclip;
+
+      if (lowResMode) {
+         topclip      = (spropening[x>>1] >> 8);
+         bottomclip   = (spropening[x>>1] & 0xff) - 1;
+      }
+      else {
+         topclip      = (spropening[x] >> 8);
+         bottomclip   = (spropening[x] & 0xff) - 1;
+      }
+#else
       int topclip      = (spropening[x] >> 8);
       int bottomclip   = (spropening[x] & 0xff) - 1;
-      #endif
+#endif
 
       // column loop
       // a post record has four bytes: topdelta length pixelofs*2
@@ -419,7 +445,12 @@ static void R_DrawSortedSprites(int* sortedsprites, int sprscreenhalf)
 #ifdef HIGH_DETAIL_SPRITES
     I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps2);
 #else
-    I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
+    if (lowResMode) {
+      I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
+    }
+    else {
+      I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps2);
+    }
 #endif
 
 #ifdef MARS
@@ -465,7 +496,7 @@ static void R_DrawSortedSprites(int* sortedsprites, int sprscreenhalf)
       ds = (vissprite_t *)(vd.vissprites + (sortedsprites[i] & 0x7f));
 
       #ifdef HIGH_DETAIL_SPRITES
-      if (sprscreenhalf > 0) {
+      if (lowResMode && sprscreenhalf > 0) {
          sprscreenhalf += 1;
       }
       #endif

@@ -181,7 +181,7 @@ void F_Start (void)
 	const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
 	I_SetPalette(dc_playpals+5*768);
 
-	R_InitColormap(true);
+	R_InitColormap();
 
 	curCard = -1;
 	F_NextCard();
@@ -192,7 +192,7 @@ void F_Stop (void)
 	const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
 	I_SetPalette(dc_playpals);
 
-	R_InitColormap(lowResMode);
+	R_InitColormap();
 	
 	// Cleanup
 	// TODO: Get the game to go back to title
