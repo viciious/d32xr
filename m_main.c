@@ -627,7 +627,7 @@ void M_Drawer (void)
 		#ifdef MDSKY
 		DrawFillRect(0, 0, 320, 44, MARS_MD_PIXEL_THRU_INDEX);
 		#else
-		DrawFillRect(0, 16, 320, 8, COLOR_BLACK); // Clear part of the top letterbox for overdraw.
+		DrawFillRect(0, 16, 320, 6, COLOR_BLACK); // Clear part of the top letterbox for overdraw.
 		#endif
 		
 		VINT logoPos = 160 - (m_doom->width / 2);

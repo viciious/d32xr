@@ -845,14 +845,12 @@ static void *R_LoadColormap(int l, boolean doublepix)
 	return (void *)((int8_t*)doomcolormap + 128);
 }
 
-void R_InitColormap(boolean doublepix)
+void R_InitColormap()
 {
 	int l;
 
 	l = W_CheckNumForName("COLORMAP");
 	dc_colormaps = R_LoadColormap(l, true);
-
-	l -= 2;
 	dc_colormaps2 = R_LoadColormap(l, false);
 
 #ifdef MARS

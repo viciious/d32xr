@@ -252,7 +252,7 @@ void R_SetViewportSize(int num)
 	// refresh func pointers
 	R_SetDrawMode();
 
-	R_InitColormap(lowResMode);
+	R_InitColormap();
 
 #ifdef MARS
 	Mars_CommSlaveClearCache();
@@ -651,7 +651,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 
 	#ifdef MDSKY
 	if (demoplayback && gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
-		viewportbuffer += (160*20);
+		viewportbuffer += (160*22);
 	}
 	#endif
 

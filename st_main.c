@@ -174,7 +174,7 @@ static void ST_DrawTitleCard()
 	}
 
 	if (leveltime < 30)
-		DrawFillRect(0, 24, 320, 180, COLOR_BLACK);
+		DrawFillRect(0, 22, 320, 180, COLOR_BLACK);
 
 	if (stbar_tics < 16) {
 		// Title card moving into the frame.
@@ -184,10 +184,8 @@ static void ST_DrawTitleCard()
 		DrawScrollingChevrons(chev_lump, 16 + ((stbar_tics-16) << 4), -stbar_tics << 1);
 
 		if (gamemapinfo.act >= 1 && gamemapinfo.act <= 3) {
-			DrawJagobjLump(lt_lump, 160+68-24 + ((16 - stbar_tics) << 5), 100 - ((16 - stbar_tics) << 5), NULL, NULL);
-			DrawFillRect(316, 20, 4, 4, COLOR_BLACK); // Clear lt_lump letterbox overdraw.
-			
-			V_DrawValueLeft(&titleNumberFont, 160+68 + ((16 - stbar_tics) << 5), 124-4, gamemapinfo.act);
+			DrawJagobjLump(lt_lump, 160+70-24 + ((16 - stbar_tics) << 5), 100 - ((16 - stbar_tics) << 5), NULL, NULL);
+			V_DrawValueLeft(&titleNumberFont, 160+70 + ((16 - stbar_tics) << 5), 124-4, gamemapinfo.act);
 		}
 		V_DrawStringRight(&titleFont, 160+68 - ((16 - stbar_tics) << 5), 100, gamemapinfo.name);
 		V_DrawStringLeft(&titleFont, 160 + ((16 - stbar_tics) << 5), 124, "Zone");
@@ -216,8 +214,8 @@ static void ST_DrawTitleCard()
 		if (gamemapinfo.act >= 1 && gamemapinfo.act <= 3) {
 			jagobj_t *lt_obj = (jagobj_t*)W_POINTLUMPNUM(lt_lump);
 			VINT lt_y = 100 + ((stbar_tics - 80) << 5);
-			VINT lt_height = lt_y + lt_obj->height > 204
-					? lt_obj->height - ((lt_y + lt_obj->height) - 204)
+			VINT lt_height = lt_y + lt_obj->height > (180+22)
+					? lt_obj->height - ((lt_y + lt_obj->height) - (180+22))
 					: lt_obj->height;
 			DrawJagobj2(lt_obj, 160+68-24 - ((stbar_tics - 80) << 5), lt_y, 0, 0,
 					lt_obj->width, lt_height, I_OverwriteBuffer());
@@ -244,18 +242,18 @@ static void ST_Drawer_ (stbar_t* sb)
 	}
 	else
 	{
-		DrawJagobjLump(score, 16, 10+20, NULL, NULL);
-		V_DrawValuePaddedRight(&hudNumberFont, 16 + 120, 10+20, sb->score, 0);
+		DrawJagobjLump(score, 16, 10+22, NULL, NULL);
+		V_DrawValuePaddedRight(&hudNumberFont, 16 + 120, 10+22, sb->score, 0);
 
 		const int minutes = stbar_tics/(60*2*TICRATE);
 		const int seconds = (stbar_tics/(2*TICRATE))%60;
-		DrawJagobjLump(time, 16, 26+20, NULL, NULL);
-		V_DrawValuePaddedRight(&hudNumberFont, 72, 26+20, minutes, 0);
-		DrawJagobjLump(timecolon, 72, 26+20, NULL, NULL);
-		V_DrawValuePaddedRight(&hudNumberFont, 72+8+16, 26+20, seconds, 2);
+		DrawJagobjLump(time, 16, 26+22, NULL, NULL);
+		V_DrawValuePaddedRight(&hudNumberFont, 72, 26+22, minutes, 0);
+		DrawJagobjLump(timecolon, 72, 26+22, NULL, NULL);
+		V_DrawValuePaddedRight(&hudNumberFont, 72+8+16, 26+22, seconds, 2);
 
-		DrawJagobjLump(sb->rings <= 0 && (gametic / 4 & 1) ? rrings : rings, 16, 42+20, NULL, NULL);
-		V_DrawValuePaddedRight(&hudNumberFont, 96, 42+20, sb->rings, 0);
+		DrawJagobjLump(sb->rings <= 0 && (gametic / 4 & 1) ? rrings : rings, 16, 42+22, NULL, NULL);
+		V_DrawValuePaddedRight(&hudNumberFont, 96, 42+22, sb->rings, 0);
 
 		DrawJagobjLump(face, 16, 176, NULL, NULL);
 		V_DrawStringLeft(&menuFont, 16 + 20, 176, "SONIC");
