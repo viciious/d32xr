@@ -16,7 +16,7 @@ typedef struct
 {
 	VINT	x;
 	VINT 	y;
-	char 	name[16];
+	char 	name[64];
 } menuitem_t;
 
 typedef struct
