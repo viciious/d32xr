@@ -94,6 +94,33 @@ static int Mars_ConvGamepadButtons(int ctrl)
 {
 	unsigned newc = 0;
 	int alwrun;
+	int right, left, up, down;
+	int a, b, c, y;
+
+	if (yabcdpad)
+	{
+		up = SEGA_CTRL_Y;
+		left = SEGA_CTRL_A;
+		down = SEGA_CTRL_B;
+		right = SEGA_CTRL_C;
+
+		y = SEGA_CTRL_UP;
+		a = SEGA_CTRL_LEFT;
+		b = SEGA_CTRL_DOWN;
+		c = SEGA_CTRL_RIGHT;
+	}
+	else
+	{
+		up = SEGA_CTRL_UP;
+		left = SEGA_CTRL_LEFT;
+		down = SEGA_CTRL_DOWN;
+		right = SEGA_CTRL_RIGHT;
+
+		y = SEGA_CTRL_Y;
+		a = SEGA_CTRL_A;
+		b = SEGA_CTRL_B;
+		c = SEGA_CTRL_C;
+	}
 
 	if (ctrl & SEGA_CTRL_UP)
 		newc |= BT_UP;
@@ -116,6 +143,15 @@ static int Mars_ConvGamepadButtons(int ctrl)
 	if (ctrl & SEGA_CTRL_Z)
 		newc |= BT_Z;
 
+	if (ctrl & up)
+		newc |= BT_MOVEUP;
+	if (ctrl & down)
+		newc |= BT_MOVEDOWN;
+	if (ctrl & left)
+		newc |= BT_MOVELEFT;
+	if (ctrl & right)
+		newc |= BT_MOVERIGHT;
+
 	if (ctrl & SEGA_CTRL_MODE)
 	{
 		newc |= BT_MODE;
@@ -124,43 +160,43 @@ static int Mars_ConvGamepadButtons(int ctrl)
 	{
 		if (strafebtns)
 		{
-			if (ctrl & SEGA_CTRL_A)
+			if (ctrl & a)
 				newc |= configuration[controltype][0];
-			if (ctrl & SEGA_CTRL_B)
+			if (ctrl & b)
 				newc |= configuration[controltype][1];
 
 			switch (strafebtns)
 			{
 			default:
 			case 1:
-				if (ctrl & SEGA_CTRL_C)
+				if (ctrl & c)
 					newc |= configuration[controltype][2];
 
 				if (ctrl & SEGA_CTRL_X)
 					newc |= BT_NWEAPN;
-				if (ctrl & SEGA_CTRL_Y)
+				if (ctrl & y)
 					newc |= BT_STRAFELEFT;
 				if (ctrl & SEGA_CTRL_Z)
 					newc |= BT_STRAFERIGHT;
 				break;
 			case 2:
-				if (ctrl & SEGA_CTRL_C)
+				if (ctrl & c)
 					newc |= BT_STRAFERIGHT;
 
 				if (ctrl & SEGA_CTRL_X)
 					newc |= BT_NWEAPN;
-				if (ctrl & SEGA_CTRL_Y)
+				if (ctrl & y)
 					newc |= configuration[controltype][2];
 				if (ctrl & SEGA_CTRL_Z)
 					newc |= BT_STRAFELEFT;
 				break;
 			case 3:
-				if (ctrl & SEGA_CTRL_C)
+				if (ctrl & c)
 					newc |= configuration[controltype][2];
 
 				if (ctrl & SEGA_CTRL_X)
 					newc |= BT_STRAFELEFT;
-				if (ctrl & SEGA_CTRL_Y)
+				if (ctrl & y)
 					newc |= BT_NWEAPN;
 				if (ctrl & SEGA_CTRL_Z)
 					newc |= BT_STRAFERIGHT;
@@ -169,16 +205,16 @@ static int Mars_ConvGamepadButtons(int ctrl)
 		}
 		else
 		{
-			if (ctrl & SEGA_CTRL_A)
+			if (ctrl & a)
 				newc |= configuration[controltype][0];
-			if (ctrl & SEGA_CTRL_B)
+			if (ctrl & b)
 				newc |= configuration[controltype][1];
-			if (ctrl & SEGA_CTRL_C)
+			if (ctrl & c)
 				newc |= configuration[controltype][2];
 
 			if (ctrl & SEGA_CTRL_X)
 				newc |= BT_PWEAPN;
-			if (ctrl & SEGA_CTRL_Y)
+			if (ctrl & y)
 				newc |= BT_NWEAPN;
 			if (ctrl & SEGA_CTRL_Z)
 				newc |= BT_AUTOMAP;
@@ -198,7 +234,7 @@ static int Mars_ConvGamepadButtons(int ctrl)
 	}
 	else
 	{
-		if ((newc & (BT_UP | BT_DOWN | BT_SPEED)) == BT_SPEED)
+		if ((newc & (BT_MOVEUP | BT_MOVEDOWN | BT_SPEED)) == BT_SPEED)
 			newc |= BT_FASTTURN;
 	}
 

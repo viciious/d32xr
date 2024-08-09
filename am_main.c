@@ -461,15 +461,15 @@ void AM_Control (player_t *player)
 		return;
 	}
 
-	if (buttons & BT_RIGHT)
+	if (buttons & BT_MOVERIGHT)
 	{
 		player->automapx+=step;
 	}
-	if (buttons & BT_LEFT)
+	if (buttons & BT_MOVELEFT)
 	{
 		player->automapx-=step;
 	}
-	if (buttons & BT_UP)
+	if (buttons & BT_MOVEUP)
 	{
 		if (buttons & BT_B)
 		{
@@ -480,7 +480,7 @@ void AM_Control (player_t *player)
 		else
 			player->automapy+=step;
 	}
-	if (buttons & BT_DOWN)
+	if (buttons & BT_MOVEDOWN)
 	{
 		if (buttons & BT_B)
 		{
@@ -492,7 +492,7 @@ void AM_Control (player_t *player)
 			player->automapy-=step;
 	}
 	
-	player->ticbuttons &= ~(BT_B | BT_LEFT | BT_RIGHT | BT_UP | BT_DOWN);
+	player->ticbuttons &= ~(BT_B | BT_MOVELEFT | BT_MOVERIGHT | BT_MOVEUP | BT_MOVEDOWN);
 }
 
 static void AM_DrawMapStats(void)

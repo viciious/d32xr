@@ -1054,10 +1054,10 @@ enum
 	// hardware-agnostic game button actions
 	// transmitted over network
 	// should fit into a single word
-	BT_RIGHT		= 0x1,
-	BT_LEFT			= 0x2,
-	BT_UP			= 0x4,
-	BT_DOWN			= 0x8,
+	BT_MOVERIGHT	= 0x1,
+	BT_MOVELEFT		= 0x2,
+	BT_MOVEUP		= 0x4,
+	BT_MOVEDOWN		= 0x8,
 
 	BT_ATTACK		= 0x10,
 	BT_USE			= 0x20,
@@ -1085,7 +1085,12 @@ enum
 	BT_X			= 0x800000,
 	BT_Y			= 0x1000000,
 	BT_Z			= 0x2000000,
-	BT_FASTTURN     = 0x4000000
+	BT_FASTTURN     = 0x4000000,
+
+	BT_RIGHT		= 0x8000000,
+	BT_LEFT			= 0x10000000,
+	BT_UP			= 0x20000000,
+	BT_DOWN			= 0x40000000
 };
 
 #endif
@@ -1109,6 +1114,7 @@ extern unsigned configuration[NUMCONTROLOPTIONS][3];
 extern	VINT	controltype;				/* 0 to 5 */
 extern	VINT	strafebtns;
 extern	VINT	alwaysrun;
+extern 	VINT 	yabcdpad;
 extern	boolean	splitscreen;
 
 extern	VINT	sfxvolume, musicvolume;		/* range from 0 to 255 */

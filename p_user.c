@@ -262,14 +262,14 @@ void P_BuildMove (player_t *player)
  
 			player->forwardmove = player->sidemove = 0;
 	
-			if (buttons & BT_RIGHT) 
+			if (buttons & BT_MOVERIGHT) 
 				player->sidemove += (sidemove[speed] * vbls) / TICVBLS;
-			if (buttons & BT_LEFT) 
+			if (buttons & BT_MOVELEFT) 
 				player->sidemove += (-sidemove[speed] * vbls) / TICVBLS;
  
-			if (buttons & BT_UP) 
+			if (buttons & BT_MOVEUP) 
 				player->forwardmove += (forwardmove[speed] * vbls) / TICVBLS;
-			if (buttons & BT_DOWN) 
+			if (buttons & BT_MOVEDOWN) 
 				player->forwardmove += (-forwardmove[speed] * vbls) / TICVBLS;
 		}
 	}
@@ -280,10 +280,10 @@ void P_BuildMove (player_t *player)
 		/*  */
 		/* use two stage accelerative turning on the joypad  */
 		/*  */
-		if ((buttons & BT_LEFT) && (oldbuttons & BT_LEFT))
+		if ((buttons & BT_MOVELEFT) && (oldbuttons & BT_MOVELEFT))
 			player->turnheld++;
 		else
-			if ((buttons & BT_RIGHT) && (oldbuttons & BT_RIGHT))
+			if ((buttons & BT_MOVERIGHT) && (oldbuttons & BT_MOVERIGHT))
 				player->turnheld++;
 			else
 				player->turnheld = 0;
@@ -294,9 +294,9 @@ void P_BuildMove (player_t *player)
 
 		if (buttons & BT_STRAFE)
 		{
-			if (buttons & BT_RIGHT)
+			if (buttons & BT_MOVERIGHT)
 				player->sidemove += (sidemove[speed] * vbls) / TICVBLS;
-			if (buttons & BT_LEFT)
+			if (buttons & BT_MOVELEFT)
 				player->sidemove += (-sidemove[speed] * vbls) / TICVBLS;
 		}
 		else
@@ -312,15 +312,15 @@ void P_BuildMove (player_t *player)
 			if (buttons & BT_FASTTURN)
 				turnspeed = fastangleturn;
 
-			if (buttons & BT_RIGHT)
+			if (buttons & BT_MOVERIGHT)
 				player->angleturn = ((-turnspeed[player->turnheld] * vbls) / TICVBLS) << 17;
-			if (buttons & BT_LEFT)
+			if (buttons & BT_MOVELEFT)
 				player->angleturn = ((turnspeed[player->turnheld] * vbls) / TICVBLS) << 17;
 		}
 
-		if (buttons & BT_UP)
+		if (buttons & BT_MOVEUP)
 			player->forwardmove += (forwardmove[speed] * vbls) / TICVBLS;
-		if (buttons & BT_DOWN)
+		if (buttons & BT_MOVEDOWN)
 			player->forwardmove += (-forwardmove[speed] * vbls) / TICVBLS;
 	}
 
