@@ -41,6 +41,7 @@ typedef enum
 	mi_detailmode,
 
 	mi_controltype,
+	mi_yabcdpad,
 	mi_alwaysrun,
 	mi_strafebtns,
 
@@ -250,13 +251,17 @@ void O_Init (void)
 	menuitem[mi_controltype].x = ITEMX;
 	menuitem[mi_controltype].y = STARTY;
 
+	D_memcpy(menuitem[mi_yabcdpad].name, "YABC D-pad", 11);
+	menuitem[mi_yabcdpad].x = ITEMX;
+	menuitem[mi_yabcdpad].y = STARTY+ITEMSPACE*4;
+
 	D_memcpy(menuitem[mi_alwaysrun].name, "Always run", 11);
 	menuitem[mi_alwaysrun].x = ITEMX;
-	menuitem[mi_alwaysrun].y = STARTY+ITEMSPACE*4;
+	menuitem[mi_alwaysrun].y = STARTY+ITEMSPACE*5;
 
 	D_memcpy(menuitem[mi_strafebtns].name, "LR Strafe", 10);
 	menuitem[mi_strafebtns].x = ITEMX;
-	menuitem[mi_strafebtns].y = STARTY+ITEMSPACE*5;
+	menuitem[mi_strafebtns].y = STARTY+ITEMSPACE*6;
 
 
 	D_memcpy(menuitem[mi_quityes].name, "Yes", 4);
@@ -567,6 +572,7 @@ goback:
 				int oldcontroltype = controltype;
 				int oldalwaysrun = alwaysrun;
 				int oldstrafebtns = strafebtns;
+				int oldyabcdpad = yabcdpad;
 
 				if (buttons & BT_RIGHT)
 				{
@@ -583,7 +589,10 @@ goback:
 						if (++strafebtns > 3)
 							strafebtns = 3;
 						break;
-
+					case mi_yabcdpad:
+						if (++yabcdpad > 1)
+							yabcdpad = 1;
+						break;
 					}
 				}
 				if (buttons & BT_LEFT)
@@ -601,12 +610,17 @@ goback:
 						if (--strafebtns < 0)
 							strafebtns = 0;
 						break;
+					case mi_yabcdpad:
+						if (--yabcdpad < 0)
+							yabcdpad = 0;
+						break;
 					}
 				}
 
 				if (oldcontroltype != controltype ||
 					oldalwaysrun != alwaysrun ||
-					oldstrafebtns != strafebtns)
+					oldstrafebtns != strafebtns ||
+					oldyabcdpad != yabcdpad)
 					sound = sfx_stnmov;
 			}
 
@@ -824,6 +838,7 @@ void O_Drawer (void)
 
 		O_DrawControl();
 
+		print(menuitem[mi_alwaysrun].x + 150, menuitem[mi_yabcdpad].y, yabcdpad ? "ON" : "OFF");
 		print(menuitem[mi_alwaysrun].x + 150, menuitem[mi_alwaysrun].y, alwaysrun ? "ON" : "OFF");
 		print(menuitem[mi_strafebtns].x + 150, menuitem[mi_strafebtns].y, strabtnstr);
 	}

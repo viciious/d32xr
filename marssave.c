@@ -62,7 +62,7 @@ typedef struct __attribute((packed))
 	int8_t strafebtns;
 	uint8_t magic2;
 	int8_t anamorphic;
-	int8_t unused2;
+	int8_t yabcdpad;
 	int8_t sfxdriver;
 	char spcmDir[9];
 } saveopts_t;
@@ -189,6 +189,7 @@ static void SaveOptions(void)
 	so.strafebtns = strafebtns;
 	so.anamorphic = anamorphicview;
 	so.sfxdriver = sfxdriver;
+	so.yabcdpad = yabcdpad;
 	so.magic1 = SRAM_MAGIC1;
 	so.magic2 = SRAM_MAGIC2;
 	D_snprintf(so.spcmDir, sizeof(so.spcmDir), "%s", spcmDir);
@@ -231,6 +232,8 @@ static void ReadOptions(void)
 		so.anamorphic = 0;
 	if (so.sfxdriver < 0 || so.sfxdriver > 2)
 		so.sfxdriver = 0;
+	if (so.yabcdpad < 0 || so.yabcdpad > 1)
+		so.yabcdpad = 0;
 
 	detailmode = so.detailmode;
 	sfxvolume = so.sfxvolume;
@@ -243,6 +246,7 @@ static void ReadOptions(void)
 	strafebtns = so.strafebtns;
 	anamorphicview = so.anamorphic;
 	sfxdriver = so.sfxdriver;
+	yabcdpad = so.yabcdpad;
 
 	so.spcmDir[sizeof(so.spcmDir)-1] = '\0';
 	D_snprintf(spcmDir, sizeof(spcmDir), "%s", so.spcmDir);
