@@ -113,6 +113,9 @@ void GS_Start(void)
     }
 
     DoubleBufferSetup();
+
+    if (gs_menu->numitems == 0)
+        I_Error("No playable WADs found on the CD");
 }
 
 void GS_Stop(void)
