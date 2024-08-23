@@ -319,6 +319,7 @@ static int Mars_ConvMouseButtons(int mouse)
 	}
 	if (mouse & SEGA_CTRL_STARTMB)
 	{
+		ctrl |= BT_PWEAPN; // M -> Y
 		//ctrl |= BT_START;
 	}
 	return ctrl;
