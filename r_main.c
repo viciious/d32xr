@@ -533,7 +533,7 @@ extern	pixel_t	*screens[2];	/* [viewportWidth*viewportHeight];  */
 */
 
 static void R_Setup (int displayplayer, visplane_t *visplanes_,
-	visplane_t **visplanes_hash_, sector_t **vissectors_, viswallextra_t *viswallex_)
+	sector_t **vissectors_, viswallextra_t *viswallex_)
 {
 	int 		i;
 	int		damagecount, bonuscount;
@@ -735,7 +735,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	vd->lastsegclip = vd->segclip;
 
 	vd->lastvisplane = vd->visplanes + 1;		/* visplanes[0] is left empty */
-	vd->visplanes_hash = visplanes_hash_;
+	vd->visplanes_hash = NULL;
 
 	vd->gsortedvisplanes = NULL;
 
@@ -757,9 +757,6 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	vd->vissectors = vissectors_;
 	vd->lastvissector = vd->vissectors;	/* no subsectors visible yet */
 
-	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
-		vd->visplanes_hash[i] = NULL;
-
 #ifndef MARS
 	phasetime[0] = samplecount;
 #endif
@@ -769,16 +766,11 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 
 void Mars_Sec_R_Setup(void)
 {
-	int i;
-
 	Mars_ClearCacheLines(&vd, 1);
 	Mars_ClearCacheLines(vd, (sizeof(*vd) + 31) / 16);
 	Mars_ClearCacheLine(&viewportbuffer);
 
 	Mars_ClearCacheLines(vd->visplanes, (sizeof(visplane_t)*MAXVISPLANES+31)/16);
-
-	for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
-		vd->visplanes_hash[i] = NULL;
 
 	I_SetThreadLocalVar(DOOMTLS_COLUMNCACHE, vd->columncache[1]);
 }
@@ -900,7 +892,6 @@ extern	ref8_start;
 void R_RenderPlayerView(int displayplayer)
 {
 	visplane_t visplanes_[MAXVISPLANES];
-	visplane_t *visplanes_hash_[NUM_VISPLANES_BUCKETS];
 	sector_t *vissectors_[MAXVISSSEC];
 	viswallextra_t viswallex_[MAXWALLCMDS + 1] __attribute__((aligned(16)));
 
@@ -916,7 +907,7 @@ void R_RenderPlayerView(int displayplayer)
 	if (debugscreenactive)
 		I_DebugScreen();
 
-	R_Setup(displayplayer, visplanes_, visplanes_hash_, vissectors_, viswallex_);
+	R_Setup(displayplayer, visplanes_, vissectors_, viswallex_);
 
 #ifndef JAGUAR
 	R_BSP();
@@ -960,14 +951,12 @@ void R_RenderPlayerView(int displayplayer)
 	boolean drawworld = !(players[consoleplayer].automapflags & AF_ACTIVE);
 	__attribute__((aligned(16)))
 		visplane_t visplanes_[MAXVISPLANES];
-	__attribute__((aligned(16)))
-		visplane_t *visplanes_hash_[NUM_VISPLANES_BUCKETS];
 	sector_t *vissectors_[(MAXVISSSEC > MAXVISSPRITES ? MAXVISSSEC : MAXVISSPRITES) + 1];
 	viswallextra_t viswallex_[MAXWALLCMDS + 1] __attribute__((aligned(16)));
 
 	t_total = I_GetFRTCounter();
 
-	R_Setup(displayplayer, visplanes_, visplanes_hash_, vissectors_, viswallex_);
+	R_Setup(displayplayer, visplanes_, vissectors_, viswallex_);
 
 	Mars_R_BeginWallPrep(drawworld);
 
