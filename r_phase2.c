@@ -305,6 +305,8 @@ void Mars_Sec_R_WallPrep(void)
     viswallextra_t *seglex;
     viswall_t *first, *last, *verylast;
     uint32_t clipbounds_[SCREENWIDTH/2+1];
+    __attribute__((aligned(16)))
+		visplane_t *visplanes_hash_[NUM_VISPLANES_BUCKETS];
     uint16_t *clipbounds = (uint16_t *)clipbounds_;
     mapvertex_t *verts;
     volatile uint8_t *addedsegs = (volatile uint8_t *)&MARS_SYS_COMM6;
@@ -314,6 +316,10 @@ void Mars_Sec_R_WallPrep(void)
     vp0open = vd->visplanes[0].open - 1;
     for (i = 0; i < SCREENWIDTH+2; i++)
         vp0open[i] = 0;
+
+    vd->visplanes_hash = visplanes_hash_;
+    for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
+        vd->visplanes_hash[i] = NULL;
 
     R_InitClipBounds(clipbounds_);
 

@@ -645,7 +645,7 @@ __attribute__((aligned(16)))
 	/* */
 	visplane_t		* volatile visplanes/*[MAXVISPLANES]*/, * volatile lastvisplane;
 	int * volatile gsortedvisplanes;
-	visplane_t * volatile * visplanes_hash;
+	visplane_t **visplanes_hash; /* only accessible by the second SH2! */
 
 	/* */
 	/* openings / misc refresh memory */
