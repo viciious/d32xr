@@ -390,7 +390,7 @@ pri_start:
         mov     #0x80,r0
         mov.l   _pri_adapter,r1
         mov.b   r0,@r1                  /* set FM */
-        mov     #0x0A,r0                /* vbi and cmd enabled */
+        mov     #0x0E,r0                /* vbi, hbi and cmd enabled */
         mov.b   r0,@(1,r1)              /* set int enables */
         mov     #0x10,r0
         ldc     r0,sr                   /* allow ints */
@@ -509,6 +509,11 @@ pri_no_irq:
 !-----------------------------------------------------------------------
 
 pri_v_irq:
+        /* Clear H-blank count */
+        mov     #0,r0
+        mov.l   phi_line,r1
+        mov.l   r0,@r1
+
         ! bump ints if necessary
         mov.l   pvi_sh2_frtctl,r1
         mov     #0xE2,r0                /* TOCR = select OCRA, output 1 on compare match */
@@ -555,8 +560,30 @@ pvi_sh2_frtctl:
 !-----------------------------------------------------------------------
 ! Primary H Blank IRQ handler
 !-----------------------------------------------------------------------
-
+        
 pri_h_irq:
+        /* Set screen shift register for the current line */
+        mov.l   phi_line,r1
+        mov.l   @r1,r0
+        shlr2   r0
+        shlr2   r0
+        shlr    r0
+        shll2   r0
+        mov.l   phi_line_bit_shift,r1
+        add     r0,r1
+        mov.l   @r1,r0
+        rotl    r0
+        mov.l   r0,@r1
+        and     #1,r0
+        mov.l   phi_screen_shift_register,r1
+        mov.w   r0,@r1
+
+        /* Increase H-blank line count */
+        mov.l   phi_line,r1
+        mov.l   @r1,r0
+        add     #1,r0
+        mov.l   r0,@r1
+
         ! bump ints if necessary
         mov.l   phi_sh2_frtctl,r1
         mov     #0xE2,r0                /* TOCR = select OCRA, output 1 on compare match */
@@ -575,7 +602,15 @@ pri_h_irq:
         rts
         nop
 
-        .align  2
+        .align  4
+phi_line:
+        .long   _phi_line
+
+phi_line_bit_shift:
+        .long   _phi_line_bit_shift
+
+phi_screen_shift_register:
+        .long   0x20004102
 phi_mars_adapter:
         .long   0x20004000
 phi_sh2_frtctl:

@@ -320,6 +320,16 @@ extern	fixed_t *distscale/*[SCREENWIDTH]*/;
 extern	VINT		extralight;
 
 #ifdef MARS
+__attribute__((aligned(32)))
+#endif
+extern unsigned int phi_line_bit_shift[7];
+
+#ifdef MARS
+__attribute__((aligned(32)))
+#endif
+extern unsigned int phi_line;
+
+#ifdef MARS
 __attribute__((aligned(16)))
 #endif
 extern pixel_t* viewportbuffer;

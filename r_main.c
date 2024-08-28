@@ -78,6 +78,12 @@ pixel_t		*workingscreen;
 #ifdef MARS
 static int16_t	curpalette = -1;
 
+__attribute__((aligned(32)))
+unsigned int phi_line_bit_shift[7];
+
+__attribute__((aligned(32)))
+unsigned int phi_line;
+
 __attribute__((aligned(16)))
 pixel_t* viewportbuffer;
 
@@ -569,7 +575,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	damagecount = player->damagecount;
 	bonuscount = player->bonuscount;
 
-	if (gamemapinfo.mapNumber != 30 && leveltime < 62)
+	if (gamemapinfo.mapNumber != TITLE_MAP_NUMBER && leveltime < 62)
 	{
 		if (leveltime < 30) {
 			// Set the fade degree to black.
@@ -588,6 +594,11 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 			#endif
 		}
 	}
+
+	//DLG: Uncomment to test the horizontal distortion filter
+	/*if (gamemapinfo.mapNumber != 30) {
+		ApplyHorizontalDistortionFilter(leveltime << 1);
+	}*/
 
 #ifdef JAGUAR
 	vd.extralight = player->extralight << 6;
