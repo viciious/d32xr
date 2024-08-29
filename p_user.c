@@ -27,8 +27,8 @@ void P_PlayerMove (mobj_t *mo)
 	pslidemove_t sm;
 	pmovework_t tm;
 
-	momx = vblsinframe*(mo->momx>>2);
-	momy = vblsinframe*(mo->momy>>2);
+	momx = (mo->momx>>2);
+	momy = (mo->momy>>2);
 
 	sm.slidething = mo;
 	
@@ -157,7 +157,7 @@ void P_PlayerZMovement (mobj_t *mo)
 	}
 	else
 	{
-		fixed_t gravity = (GRAVITY * vblsinframe) / TICVBLS;
+		fixed_t gravity = GRAVITY;
 		if (mo->momz == 0)
 			mo->momz = -gravity;
 		else
@@ -239,7 +239,7 @@ void P_BuildMove (player_t *player)
 
 	buttons = player->ticbuttons;
 	oldbuttons = player->oldticbuttons;
-	vbls = vblsinframe;
+	vbls = TICVBLS;
 
 	if (mousepresent && !demoplayback)
 	{
@@ -396,11 +396,9 @@ void P_CalcHeight (player_t *player)
 	movx = player->mo->momx;
 	movy = player->mo->momy;
 
-	if (vblsinframe <= 2)
-	{
-		movx = FixedDiv(movx, FRICTION);
-		movy = FixedDiv(movy, FRICTION);
-	}
+	movx = FixedDiv(movx, FRICTION);
+	movy = FixedDiv(movy, FRICTION);
+
 	movx >>= 8;
 	movy >>= 8;
 

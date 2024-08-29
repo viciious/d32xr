@@ -372,6 +372,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 /* */
 /* adaptive timing based on previous frame */
 /* */
+#if 0
 		if (demoplayback || demorecording)
 			vblsinframe = TICVBLS;
 		else
@@ -384,6 +385,9 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 				vblsinframe = TICVBLS;
 #endif
 		}
+#else
+	vblsinframe = 1;
+#endif
 
 /* */
 /* get buttons for next tic */
