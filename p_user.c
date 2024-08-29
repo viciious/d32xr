@@ -4,14 +4,14 @@
 #include "p_local.h"
 #include "st_main.h"
 
-fixed_t 		forwardmove[2] = {0x40000, 0x60000}; 
-fixed_t 		sidemove[2] = {0x38000, 0x58000}; 
+fixed_t 		forwardmove[2] = {0x20000, 0x30000}; 
+fixed_t 		sidemove[2] = {0x1C000, 0x2C000}; 
 
 #define SLOWTURNTICS    10
 fixed_t			angleturn[] =
-	{300,300,500,500,600,700,800,900,900,1000};
+	{150,150,250,250,300,350,400,450,450,500};
 fixed_t			fastangleturn[] =
-	{800,800,900,1000,1000,1200,1200,1300,1300,1400};
+	{400,400,450,500,500,600,600,650,650,700};
 
 #define	STOPSPEED		FRACUNIT / 16
 #define	FRICTION		0xd240
@@ -214,7 +214,7 @@ void P_PlayerMobjThink (mobj_t *mobj)
 	st = &states[state];
 
 	mobj->state = state;
-	mobj->tics = st->tics;
+	mobj->tics = st->tics * 2;
 	mobj->sprite = st->sprite;
 	mobj->frame = st->frame;
 }

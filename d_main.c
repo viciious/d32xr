@@ -461,8 +461,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		S_PreUpdateSounds();
 
 		ticon++;
-		if (gamevbls / TICVBLS > gametic)
-			gametic++;
+		gametic++;
 		exit = ticker();
 
 		S_UpdateSounds();
