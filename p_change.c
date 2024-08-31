@@ -104,7 +104,7 @@ boolean PIT_ChangeSector (mobj_t *thing, changetest_t *ct)
 		return true;				/* assume it is bloody gibs or something */
 		
 	ct->nofit = true;
-	if (ct->crushchange && !(gametic&3) && (gametic!=prevgametic) )
+	if (ct->crushchange && !(gametic&7) && (gametic!=prevgametic) )
 	{
 		P_DamageMobj(thing,NULL,NULL,10);
 		/* spray blood in a random direction */
