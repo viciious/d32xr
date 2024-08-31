@@ -40,11 +40,6 @@ int main(void)
 
 	ticrate = Mars_RefreshHZ() / TICRATE;
 
-	Mars_UpdateCD();
-
-	if (!mars_cd_ok || mars_num_cd_tracks < 1)
-		I_Error("Please insert game CD");
-
 /* */
 /* load defaults */
 /* */
