@@ -4,14 +4,14 @@
 #include "p_local.h"
 #include "st_main.h"
 
-fixed_t 		forwardmove[2] = {0x17000, 0x24000};
-fixed_t 		sidemove[2] = {0x16000, 0x22000};
+fixed_t 		forwardmove[2] = {0x22800, 0x36000};
+fixed_t 		sidemove[2] = {0x21000, 0x33000};
 
 #define SLOWTURNTICS    10
 fixed_t			angleturn[] =
-	{75,75,150,150,250,250,300,300,400,400};
+	{100,100,150,200,200,250,250,300,300,350};
 fixed_t			fastangleturn[] =
-	{100,100,200,300,300,400,400,500,500,600};
+	{200,200,300,350,350,400,400,500,600,600};
 
 #define	STOPSPEED		FRACUNIT / 16
 #define	FRICTION		0xd240
