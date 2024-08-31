@@ -410,7 +410,7 @@ int P_Ticker (void)
 
 		P_RespawnSpecials();
 
-		if ((gametic & 1) == 0)
+		if ((gametic & 3) == 0)
 		{
 			ST_Ticker();			/* update status bar */
 		}
