@@ -3,8 +3,8 @@
 #include "doomdef.h"
 #include "p_local.h"
 
-#define	LOWERSPEED		FRACUNIT*18
-#define	RAISESPEED		FRACUNIT*18
+#define	LOWERSPEED		FRACUNIT*6
+#define	RAISESPEED		FRACUNIT*6
 
 #define	WEAPONX			FRACUNIT
 #define WEAPONBOTTOM	128 * FRACUNIT

@@ -403,7 +403,7 @@ void P_CalcHeight (player_t *player)
 	movy >>= 8;
 
 	player->bob += movx*movx + movy*movy;
-	player->bob >>= 4;
+	player->bob >>= 2;
 
 	maxbob = MAXBOB;
 	if (weaponYpos < -20)

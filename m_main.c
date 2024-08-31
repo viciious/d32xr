@@ -305,7 +305,7 @@ int M_Ticker (void)
 	menuscr = &mainscreen[screenpos];
 
 /* animate skull */
-	if (gametic != prevgametic && (gametic&3) == 0)
+	if (gametic != prevgametic && (gametic&7) == 0)
 	{
 		cursorframe ^= 1;
 	}

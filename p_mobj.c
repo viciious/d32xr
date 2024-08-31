@@ -227,7 +227,7 @@ void P_ExplodeMissile (mobj_t *mo)
 
 	mo->momx = mo->momy = mo->momz = 0;
 	P_SetMobjState (mo, mobjinfo[mo->type].deathstate);
-	mo->tics -= P_Random()&1;
+	mo->tics -= P_Random()&3;
 	if (mo->tics < 1)
 		mo->tics = 1;
 	mo->flags &= ~MF_MISSILE;
@@ -621,7 +621,7 @@ void P_SpawnPuff (fixed_t x, fixed_t y, fixed_t z, fixed_t attackrange)
 	z += ((P_Random()-P_Random())<<10);
 	th = P_SpawnMobj (x,y,z, MT_PUFF);
 	th->momz = FRACUNIT;
-	th->tics -= P_Random()&1;
+	th->tics -= P_Random()&3;
 	if (th->tics < 1)
 		th->tics = 1;
 		
@@ -646,7 +646,7 @@ void P_SpawnBlood (fixed_t x, fixed_t y, fixed_t z, int damage)
 	z += ((P_Random()-P_Random())<<10);
 	th = P_SpawnMobj (x,y,z, MT_BLOOD);
 	th->momz = FRACUNIT*2;
-	th->tics -= P_Random()&1;
+	th->tics -= P_Random()&3;
 	if (th->tics<1)
 		th->tics = 1;
 	if (damage <= 12 && damage >= 9)

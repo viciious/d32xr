@@ -1237,7 +1237,7 @@ void A_BrainScream (mobj_t*	mo)
 
 		P_SetMobjState (th, S_BRAINEXPLODE1);
 
-		th->tics -= P_Random()&3;
+		th->tics -= P_Random()&7;
 		if (th->tics < 1)
 			th->tics = 1;
 	}

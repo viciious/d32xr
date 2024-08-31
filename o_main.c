@@ -408,7 +408,7 @@ void O_Control (player_t *player)
 	}
 
 /* animate skull */
-	if (gametic != prevgametic && (gametic&3) == 0)
+	if (gametic != prevgametic && (gametic&7) == 0)
 	{
 		cursorframe ^= 1;
 	}

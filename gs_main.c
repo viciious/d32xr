@@ -158,7 +158,7 @@ int GS_Ticker (void)
     }
 
     /* animate skull */
-    if (gametic != prevgametic && (gametic & 3) == 0)
+    if (gametic != prevgametic && (gametic & 7) == 0)
     {
         gs_menu->cursorframe ^= 1;
     }

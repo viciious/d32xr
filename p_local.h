@@ -7,10 +7,10 @@
 #include "r_local.h"
 #endif
 
-#define	FLOATSPEED		(FRACUNIT*8)
+#define	FLOATSPEED		(FRACUNIT*4)
 
-#define	GRAVITY			(FRACUNIT*4)
-#define	MAXMOVE			(16*FRACUNIT)
+#define	GRAVITY			(FRACUNIT*2)
+#define	MAXMOVE			(30*FRACUNIT)
 
 
 #define	MAXHEALTH			100
