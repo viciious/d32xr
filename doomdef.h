@@ -1201,7 +1201,7 @@ extern  int     frames_to_skip;
 
 #define MAX_FRAME_SKIP		3
 
-#define MINTICSPERFRAME		1
+#define MINTICSPERFRAME		2
 #define MAXTICSPERFRAME		4
 extern	VINT	ticsperframe;		/* 2 - 4 */
 
