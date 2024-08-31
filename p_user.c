@@ -9,9 +9,9 @@ fixed_t 		sidemove[2] = {0x1C000, 0x2C000};
 
 #define SLOWTURNTICS    10
 fixed_t			angleturn[] =
-	{150,150,250,250,300,350,400,450,450,500};
+	{100,100,150,150,200,200,250,300,350,400};
 fixed_t			fastangleturn[] =
-	{400,400,450,500,500,600,600,650,650,700};
+	{200,200,300,350,400,500,600,600,650,700};
 
 #define	STOPSPEED		FRACUNIT / 16
 #define	FRICTION		0xd240
