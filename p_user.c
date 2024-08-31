@@ -4,8 +4,8 @@
 #include "p_local.h"
 #include "st_main.h"
 
-fixed_t 		forwardmove[2] = {0x17000, 0x22000};
-fixed_t 		sidemove[2] = {0x16000, 0x21000};
+fixed_t 		forwardmove[2] = {0x17000, 0x24000};
+fixed_t 		sidemove[2] = {0x16000, 0x22000};
 
 #define SLOWTURNTICS    10
 fixed_t			angleturn[] =
@@ -158,9 +158,9 @@ void P_PlayerZMovement (mobj_t *mo)
 	else
 	{
 		if (mo->momz == 0)
-			mo->momz = -GRAVITY*2;
+			mo->momz = -GRAVITY;
 		else
-			mo->momz -= GRAVITY;
+			mo->momz -= GRAVITY/2;
 	}
 	
 	if (mo->z + mo->height > mo->ceilingz)
