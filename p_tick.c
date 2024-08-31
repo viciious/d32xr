@@ -386,21 +386,13 @@ int P_Ticker (void)
 		}
 	playertics = frtc - start;
 
-#ifdef THINKERS_30HZ
-	start = frtc;
-	P_RunThinkers();
-	thinkertics = frtc - start;
-#endif
-
 	if (gametic != prevgametic)
 	{
 		ticstart = frtc;
 
-#ifndef THINKERS_30HZ
 		start = frtc;
 		P_RunThinkers();
 		thinkertics = frtc - start;
-#endif
 
 		start = frtc;
 		P_CheckSights();
@@ -418,7 +410,10 @@ int P_Ticker (void)
 
 		P_RespawnSpecials();
 
-		ST_Ticker();			/* update status bar */
+		if ((gametic & 1) == 0)
+		{
+			ST_Ticker();			/* update status bar */
+		}
 
 		tictics = frtc - ticstart;
 	}

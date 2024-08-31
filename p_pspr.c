@@ -139,7 +139,7 @@ void P_SetPsprite (player_t *player, int position, statenum_t stnum)
 		}
 		state = &states[stnum];
 		psp->state = stnum;
-		psp->tics = state->tics * 2;  /* could be 0 */
+		psp->tics = state->tics;  /* could be 0 */
 
 		/* call action routine */
 		if (state->action)
@@ -931,19 +931,19 @@ void P_MovePsprites (player_t *player)
 	pspdef_t	*psp;
 	statenum_t	state;
 
-		psp = &player->psprites[0];
-		for (i=0 ; i<NUMPSPRITES ; i++, psp++)
-			if ( (state = psp->state) != S_NULL)		/* a null state means not active */
+	psp = &player->psprites[0];
+	for (i=0 ; i<NUMPSPRITES ; i++, psp++)
+		if ( (state = psp->state) != S_NULL)		/* a null state means not active */
+		{
+		/* drop tic count and possibly change state */
+			if (psp->tics != -1)	/* a -1 tic count never changes */
 			{
-			/* drop tic count and possibly change state */
-				if (psp->tics != -1)	/* a -1 tic count never changes */
-				{
-					psp->tics--;
-					if (!psp->tics)
-						P_SetPsprite (player, i, states[state].nextstate);
-				}				
-			}
-	
+				psp->tics--;
+				if (!psp->tics)
+					P_SetPsprite (player, i, states[state].nextstate);
+			}				
+		}
+
 	player->psprites[ps_flash].sx = player->psprites[ps_weapon].sx;
 	player->psprites[ps_flash].sy = player->psprites[ps_weapon].sy;
 }

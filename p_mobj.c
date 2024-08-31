@@ -184,7 +184,7 @@ boolean P_SetMobjState (mobj_t *mobj, statenum_t state)
 
 		st = &states[state];
 		mobj->state = state;
-		mobj->tics = st->tics * 2;
+		mobj->tics = st->tics;
 		mobj->sprite = st->sprite;
 		mobj->frame = st->frame;
 
@@ -293,7 +293,7 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 	st = &states[info->spawnstate];
 
 	mobj->state = info->spawnstate;
-	mobj->tics = st->tics * 2;
+	mobj->tics = st->tics;
 	mobj->sprite = st->sprite;
 	mobj->frame = st->frame;
 
@@ -582,7 +582,6 @@ return;	/*DEBUG */
 	mobj = P_SpawnMobj (x,y,z, i);
 	if (mobj->tics > 0)
 		mobj->tics = 1 + (P_Random () % mobj->tics);
-	mobj->tics *= 2;
 	if (mobj->flags & MF_COUNTKILL)
 		totalkills++;
 	if (mobj->flags & MF_COUNTITEM)
