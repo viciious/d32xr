@@ -145,7 +145,7 @@ void P_PlayerZMovement (mobj_t *mo)
 	{	/* hit the floor */
 		if (mo->momz < 0)
 		{
-			if (mo->momz < -GRAVITY*2)	/* squat down */
+			if (mo->momz < -GRAVITY*8)	/* squat down */
 			{
 				player->deltaviewheight = mo->momz>>3;
 				if (player->playerstate != PST_DEAD)
@@ -157,11 +157,10 @@ void P_PlayerZMovement (mobj_t *mo)
 	}
 	else
 	{
-		fixed_t gravity = GRAVITY;
 		if (mo->momz == 0)
-			mo->momz = -gravity;
+			mo->momz = -GRAVITY*2;
 		else
-			mo->momz -= gravity/2;
+			mo->momz -= GRAVITY;
 	}
 	
 	if (mo->z + mo->height > mo->ceilingz)
