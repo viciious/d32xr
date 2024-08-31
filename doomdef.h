@@ -101,8 +101,6 @@ void D_isort(int* a, int len) __attribute__((nonnull)) ATTR_DATA_CACHE_ALIGN;
 #define	FRACUNIT		(1<<FRACBITS)
 typedef int fixed_t;
 
-#define THINKERS_TICS 2
-
 #define	ANG45	0x20000000
 #define	ANG90	0x40000000
 #define	ANG180	0x80000000

@@ -222,8 +222,8 @@ typedef struct
 	VINT		type;
 } plat_t;
 
-#define	PLATWAIT	4/THINKERS_TICS			/* seconds */
-#define	PLATSPEED	(FRACUNIT*THINKERS_TICS)
+#define	PLATWAIT	3			/* seconds */
+#define	PLATSPEED	FRACUNIT
 #define	MAXPLATS	30
 
 extern	plat_t	**activeplats/*[MAXPLATS]*/;
@@ -267,8 +267,8 @@ typedef struct
 	VINT		topcountdown;	/* when it reaches 0, start going down */
 } vldoor_t;
 	
-#define	VDOORSPEED	FRACUNIT*2*THINKERS_TICS
-#define	VDOORWAIT		150/THINKERS_TICS
+#define	VDOORSPEED	FRACUNIT*2
+#define	VDOORWAIT		150
 
 void	EV_VerticalDoor (line_t *line, mobj_t *thing);
 int		EV_DoLockedDoor(line_t* line, vldoor_e type, mobj_t* thing);
@@ -307,7 +307,7 @@ typedef struct
 	VINT		tag;			/* ID */
 } ceiling_t;
 
-#define	CEILSPEED		FRACUNIT*THINKERS_TICS
+#define	CEILSPEED		FRACUNIT
 #define MAXCEILINGS		30
 
 extern	ceiling_t	**activeceilings/*[MAXCEILINGS]*/;
@@ -363,7 +363,7 @@ typedef enum
 	turbo16	// quickly build by 16
 } stair_e;
 
-#define	FLOORSPEED	((FRACUNIT+(FRACUNIT>>1))*THINKERS_TICS)
+#define	FLOORSPEED	(FRACUNIT)
 
 typedef enum
 {
