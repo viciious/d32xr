@@ -61,24 +61,15 @@ const byte	*new_palette = NULL;
 boolean	debugscreenactive = false;
 boolean	debugscreenupdate = false;
 
-int     ticcount = 0;
 int		lastticcount = 0;
 int		lasttics = 0;
 static int fpscount = 0;
-
-int accum_time_target = 0;
-int accum_time = 0;
-int last_vbl_count = 0;
-int last_frt_count = 0;
 
 VINT 	debugmode = DEBUGMODE_NONE;
 VINT	strafebtns = 0;
 
 extern int 	cy;
 extern int tictics, drawtics, ticstart;
-
-int frames_to_skip = 0;
-int	total_frames_skipped = 0;
 
 // framebuffer start is after line table AND a single blank line
 static volatile pixel_t* framebuffer = &MARS_FRAMEBUFFER + 0x100;
@@ -848,7 +839,7 @@ void I_ResetLineTable(void)
 */
 void I_Update(void)
 {
-	//int ticcount;
+	int ticcount;
 	static int prevsecticcount = 0;
 	static int framenum = 0;
 	const int refreshHZ = Mars_RefreshHZ();
@@ -877,62 +868,30 @@ void I_Update(void)
 
 			R_SetDrawFuncs();
 
+			if (!prevdebugmode)
+			{
+				SH2_WDT_WTCSR_TCNT = 0x5A00; /* WDT TCNT = 0 */
+				SH2_WDT_WTCSR_TCNT = 0xA53E; /* WDT TCSR = clr OVF, IT mode, timer on, clksel = Fs/4096 */
+			}
+			else if (!debugmode)
+			{
+				Mars_ClearNTA();
+				SH2_WDT_WTCSR_TCNT = 0xA518; /* WDT TCSR = clr OVF, IT mode, timer off, clksel = Fs/2 */
+			}
+
 			clearscreen = 2;
 		}
+
+	Mars_FlipFrameBuffers(false);
 
 	/* */
 	/* wait until on the third tic after last display */
 	/* */
 	const int ticwait = (demoplayback || demorecording ? 4 : ticsperframe); // demos were recorded at 15-20fps
-
-	//DLG: FPS = 30 * 180 / (I_GetFRTCounter() - ticstart)
-	//DLG: FPS = 90 / (I_GetFRTCounter() - ticstart) * 60
-
-	int frt_count = I_GetFRTCounter();
-	int vbl_count = Mars_GetTicCount();
-
-	if (last_vbl_count == 0 || last_frt_count == 0) {
-		last_vbl_count = vbl_count;
-		last_frt_count = frt_count;
-	}
-
-	// Frame skipping based on FRT count
-	//accum_time += (frt_count - last_frt_count) * 100;
-	//accum_time_target += 9263; //92.62841530054645f; //94.5f; // 92.6284153 * 16 = 1482.0546448
-
-	// Frame skipping based on VBL count
-	accum_time += (vbl_count - last_vbl_count);
-	accum_time_target += 1;
-
-	last_vbl_count = vbl_count;
-	last_frt_count = frt_count;
-		
-	if (frames_to_skip == 0) {
-		Mars_FlipFrameBuffers(false);
-		do
-		{
-			ticcount = I_GetTime() + total_frames_skipped;
-		} while (ticcount - lastticcount < ticwait);
-	}
-	else {
-		// Advance ticcount beyond what I_GetTime() will get us.
-		total_frames_skipped += 1;
-		ticcount += 1;
-	}
-
-	if (accum_time > accum_time_target+2 && frames_to_skip == 0) {
-		// We're behind where we want to be.
-		// Avoid drawing the next frame so the logic can catch up.
-		frames_to_skip = (accum_time - accum_time_target) - 2;
-		if (frames_to_skip > MAX_FRAME_SKIP) {
-			frames_to_skip = MAX_FRAME_SKIP;
-		}
-	}
-	else if (frames_to_skip > 0) {
-		// We're ahead of where we want to be.
-		frames_to_skip -= 1;
-		accum_time = accum_time_target;
-	}
+	do
+	{
+		ticcount = I_GetTime();
+	} while (ticcount - lastticcount < ticwait);
 
 	lasttics = ticcount - lastticcount;
 	lastticcount = ticcount;
