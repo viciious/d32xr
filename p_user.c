@@ -4,7 +4,7 @@
 #include "p_local.h"
 #include "st_main.h"
 
-fixed_t 		forwardmove[2] = {0x20000, 0x30000}; 
+fixed_t 		forwardmove[2] = {0x1E000, 0x33000}; 
 fixed_t 		sidemove[2] = {0x1C000, 0x2C000}; 
 
 #define SLOWTURNTICS    10
@@ -235,11 +235,9 @@ void P_BuildMove (player_t *player)
 	int         speed;
 	int			buttons, oldbuttons;
 	mobj_t		*mo;
-	int			vbls;
 
 	buttons = player->ticbuttons;
 	oldbuttons = player->oldticbuttons;
-	vbls = TICVBLS;
 
 	if (mousepresent && !demoplayback)
 	{
@@ -249,28 +247,28 @@ void P_BuildMove (player_t *player)
 		if ((buttons & BT_RMBTN) && (oldbuttons & BT_RMBTN))
 		{
 			// holding RMB - mouse dodge mode
-			player->sidemove = (mx * 0x1000 * vbls) / TICVBLS;
-			player->forwardmove = (my * 0x1000 * vbls) / TICVBLS;
+			player->sidemove = mx * 0x1000;
+			player->forwardmove = my * 0x1000;
 			player->angleturn = 0;
 		}
 		else
 		{
 			// normal mouse mode - mouse turns, dpad moves forward/back/sideways
-			player->angleturn = (-mx * 0x200000 * vbls) / TICVBLS;
+			player->angleturn = -mx * 0x200000;
 
 			speed = (buttons & BT_SPEED) > 0;
  
 			player->forwardmove = player->sidemove = 0;
 	
 			if (buttons & BT_MOVERIGHT) 
-				player->sidemove += (sidemove[speed] * vbls) / TICVBLS;
+				player->sidemove += sidemove[speed];
 			if (buttons & BT_MOVELEFT) 
-				player->sidemove += (-sidemove[speed] * vbls) / TICVBLS;
+				player->sidemove += -sidemove[speed];
  
 			if (buttons & BT_MOVEUP) 
-				player->forwardmove += (forwardmove[speed] * vbls) / TICVBLS;
+				player->forwardmove += forwardmove[speed];
 			if (buttons & BT_MOVEDOWN) 
-				player->forwardmove += (-forwardmove[speed] * vbls) / TICVBLS;
+				player->forwardmove += -forwardmove[speed];
 		}
 	}
 	else
@@ -295,33 +293,33 @@ void P_BuildMove (player_t *player)
 		if (buttons & BT_STRAFE)
 		{
 			if (buttons & BT_MOVERIGHT)
-				player->sidemove += (sidemove[speed] * vbls) / TICVBLS;
+				player->sidemove += sidemove[speed];
 			if (buttons & BT_MOVELEFT)
-				player->sidemove += (-sidemove[speed] * vbls) / TICVBLS;
+				player->sidemove += -sidemove[speed];
 		}
 		else
 		{
 			fixed_t *turnspeed;
 
 			if (buttons & BT_STRAFERIGHT)
-				player->sidemove += (sidemove[speed] * vbls) / TICVBLS;
+				player->sidemove += sidemove[speed];
 			if (buttons & BT_STRAFELEFT)
-				player->sidemove += (-sidemove[speed] * vbls) / TICVBLS;
+				player->sidemove += -sidemove[speed];
 
 			turnspeed = angleturn;
 			if (buttons & BT_FASTTURN)
 				turnspeed = fastangleturn;
 
 			if (buttons & BT_MOVERIGHT)
-				player->angleturn = ((-turnspeed[player->turnheld] * vbls) / TICVBLS) << 17;
+				player->angleturn = (-turnspeed[player->turnheld]) << 17;
 			if (buttons & BT_MOVELEFT)
-				player->angleturn = ((turnspeed[player->turnheld] * vbls) / TICVBLS) << 17;
+				player->angleturn = (turnspeed[player->turnheld]) << 17;
 		}
 
 		if (buttons & BT_MOVEUP)
-			player->forwardmove += (forwardmove[speed] * vbls) / TICVBLS;
+			player->forwardmove += forwardmove[speed];
 		if (buttons & BT_MOVEDOWN)
-			player->forwardmove += (-forwardmove[speed] * vbls) / TICVBLS;
+			player->forwardmove += -forwardmove[speed];
 	}
 
 /* */
