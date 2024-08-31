@@ -346,6 +346,9 @@ static void D_LoadMDSky(void)
 	#endif
 }
 
+int last_frt_count = 0;
+int total_frt_count = 0;
+
 int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		,  int (*ticker)(void), void (*drawer)(void)
 		,  void (*update)(void) )
@@ -375,6 +378,8 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 	gamevbls = 0;
 	vblsinframe = 0;
 	lasttics = 0;
+	last_frt_count = 0;
+	total_frt_count = 0;
 
 	ticbuttons[0] = ticbuttons[1] = oldticbuttons[0] = oldticbuttons[1] = 0;
 	ticmousex[0] = ticmousex[1] = ticmousey[0] = ticmousey[1] = 0;
@@ -393,18 +398,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 /* */
 /* adaptive timing based on previous frame */
 /* */
-		if (demoplayback || demorecording)
-			vblsinframe = TICVBLS;
-		else
-		{
-			vblsinframe = lasttics;
-			if (vblsinframe > TICVBLS*2)
-				vblsinframe = TICVBLS*2;
-#if 0
-			else if (vblsinframe < TICVBLS)
-				vblsinframe = TICVBLS;
-#endif
-		}
+	vblsinframe = TICVBLS;
 
 /* */
 /* get buttons for next tic */
@@ -412,8 +406,6 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		oldticbuttons[0] = ticbuttons[0];
 		oldticbuttons[1] = ticbuttons[1];
 		oldticrealbuttons = ticrealbuttons;
-
-		if (frames_to_skip == 0) {
 
 			buttons = I_ReadControls();
 			buttons |= I_ReadMouse(&mx, &my);
@@ -523,7 +515,6 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 			else if (netgame)	/* may also change vblsinframe */
 				ticbuttons[consoleplayer ^ 1]
 					= NetToLocal(I_NetTransfer(LocalToNet(ticbuttons[consoleplayer])));
-		}
 
 		#ifdef PLAY_POS_DEMO
 		if (demoplayback) {
@@ -660,15 +651,37 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		firstdraw = false;
 
 		S_PreUpdateSounds();
+		
+		int frt_count = I_GetFRTCounter();
 
-		ticon++;
-		if (gamevbls / TICVBLS > gametic)
+	if (last_frt_count == 0) {
+		last_frt_count = frt_count;
+	}
+
+	int accum_time = 0;
+	// Frame skipping based on FRT count
+	total_frt_count += Mars_FRTCounter2Msec(frt_count - last_frt_count);
+	const int frametime = I_IsPAL() ? 1000/25 : 1000/30;
+
+	while (total_frt_count > frametime)
+	{
+		accum_time++;
+		total_frt_count -= frametime;
+	}
+
+	last_frt_count = frt_count;
+
+	for (int i = 0; i < accum_time; i++)
+	{
+		if (ticon & 1)
 			gametic++;
+			
+		ticon++;
 		exit = ticker();
+	}
 
 		S_UpdateSounds();
 
-		if (frames_to_skip == 0) {
 			/* */
 			/* sync up with the refresh */
 			/* */
@@ -686,7 +699,6 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 				realtic = I_GetTime();
 			}
 			#endif
-		}
 
 		if (!exit && wipe)
 		{
