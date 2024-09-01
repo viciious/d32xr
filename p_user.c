@@ -422,7 +422,7 @@ void P_CalcHeight (player_t *player)
 		return;
 	}
 		
-	angle = (FINEANGLES/20*gamevbls)&(FINEANGLES-1);
+	angle = (FINEANGLES/20*gametic)&(FINEANGLES-1);
 	bob = FixedMul(player->bob/2, finesine(angle));
 	
 /* */

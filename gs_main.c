@@ -145,10 +145,12 @@ int GS_Ticker (void)
     boolean newcursor = false;
     int sound = sfx_None;
 
-	if (ticon < TICRATE)
-		return ga_nothing; /* ignore accidental keypresses */
+    if (ticon < TICRATE)
+        return ga_nothing; /* ignore accidental keypresses */
     if (menuscr->numitems <= 1)
         return ga_startnew;
+    if (gamevbls == prevgamevbls)
+        return ga_nothing;
 
     if (gs_menu->cursorframe == -1)
     {

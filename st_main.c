@@ -551,6 +551,9 @@ void ST_Ticker(void)
 	int	p = splitscreen ? 0 : consoleplayer;
 	int e = splitscreen ? MAXPLAYERS : consoleplayer + 1;
 
+	if (gamevbls == prevgamevbls)
+		return;
+
 	while (p < e)
 	{
 		if (playeringame[p])

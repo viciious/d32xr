@@ -290,6 +290,9 @@ int M_Ticker (void)
 	boolean newcursor = false;
 	int sound = sfx_None;
 
+	if (gamevbls == prevgamevbls)
+		return ga_nothing;
+
 	if (cursorframe == -1)
 	{
 		cursorframe = 0;

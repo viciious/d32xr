@@ -325,6 +325,8 @@ void O_Control (player_t *player)
 	int playernum = player - players;
 	int curplayer = consoleplayer;
 
+	if (gamevbls == prevgamevbls)
+		return;
 	if (splitscreen && playernum != curplayer)
 		return;
 

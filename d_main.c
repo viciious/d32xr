@@ -12,6 +12,7 @@ VINT 		yabcdpad = 0;
 
 int			gamevbls;		/* may not really be vbls in multiplayer */
 int			vblsinframe;		/* range from ticrate to ticrate*2 */
+int 		prevgamevbls;
 
 VINT		ticsperframe = MINTICSPERFRAME;
 
@@ -328,7 +329,6 @@ static void D_Wipe(void)
 
 int last_frt_count = 0;
 int total_frt_count = 0;
-int frames_to_skip = 0;
 
 int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		,  int (*ticker)(void), void (*drawer)(void)
@@ -360,6 +360,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 
 	gameaction = 0;
 	gamevbls = 0;
+	prevgamevbls = 0;
 	vblsinframe = 0;
 	lasttics = 0;
 
@@ -396,47 +397,45 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 /* */
 /* get buttons for next tic */
 /* */
-		if (frames_to_skip == 0) {
-			for (i = 0; i < MAXPLAYERS; i++)
-			{
-				players[i].oldticbuttons = players[i].ticbuttons;
-			}
-			oldticrealbuttons = ticrealbuttons;
-
-			buttons = I_ReadControls();
-			buttons |= I_ReadMouse(&mx, &my);
-			if (demoplayback)
-			{
-				players[consoleplayer].ticmousex = 0;
-				players[consoleplayer].ticmousey = 0;
-			}
-			else
-			{
-				players[consoleplayer].ticmousex = mx;
-				players[consoleplayer].ticmousey = my;
-			}
-
-			players[consoleplayer].ticbuttons = buttons;
-			ticrealbuttons = buttons;
-
-			if (demoplayback)
-			{
-		#ifndef MARS
-				if (buttons & (BT_ATTACK|BT_SPEED|BT_USE) )
-				{
-					exit = ga_exitdemo;
-					break;
-				}
-		#endif
-				players[consoleplayer].ticbuttons = buttons = *demo_p++;
-			}
-
-			if (splitscreen && !demoplayback)
-				players[consoleplayer ^ 1].ticbuttons = I_ReadControls2();
-			else if (netgame)	/* may also change vblsinframe */
-				players[consoleplayer ^ 1].ticbuttons
-					= NetToLocal(I_NetTransfer(LocalToNet(players[consoleplayer].ticbuttons)));
+		for (i = 0; i < MAXPLAYERS; i++)
+		{
+			players[i].oldticbuttons = players[i].ticbuttons;
 		}
+		oldticrealbuttons = ticrealbuttons;
+
+		buttons = I_ReadControls();
+		buttons |= I_ReadMouse(&mx, &my);
+		if (demoplayback)
+		{
+			players[consoleplayer].ticmousex = 0;
+			players[consoleplayer].ticmousey = 0;
+		}
+		else
+		{
+			players[consoleplayer].ticmousex = mx;
+			players[consoleplayer].ticmousey = my;
+		}
+
+		players[consoleplayer].ticbuttons = buttons;
+		ticrealbuttons = buttons;
+
+		if (demoplayback)
+		{
+	#ifndef MARS
+			if (buttons & (BT_ATTACK|BT_SPEED|BT_USE) )
+			{
+				exit = ga_exitdemo;
+				break;
+			}
+	#endif
+			players[consoleplayer].ticbuttons = buttons = *demo_p++;
+		}
+
+		if (splitscreen && !demoplayback)
+			players[consoleplayer ^ 1].ticbuttons = I_ReadControls2();
+		else if (netgame)	/* may also change vblsinframe */
+			players[consoleplayer ^ 1].ticbuttons
+				= NetToLocal(I_NetTransfer(LocalToNet(players[consoleplayer].ticbuttons)));
 
 		gamevbls += vblsinframe;
 
@@ -487,20 +486,23 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		{
 			ticon++;
 			gametic++;
+
 			exit = ticker();
+			prevgamevbls = gamevbls;
+
+			if (exit)
+				break;
 		}
 
 		S_UpdateSounds();
 
-		if (frames_to_skip == 0) {
-			/* */
-			/* sync up with the refresh */
-			/* */
-			while (!I_RefreshCompleted())
-				;
+		/* */
+		/* sync up with the refresh */
+		/* */
+		while (!I_RefreshCompleted())
+			;
 
-			drawer();
-		}
+		drawer();
 
 		if (!exit && wipe)
 		{
