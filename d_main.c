@@ -364,6 +364,9 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 	vblsinframe = 0;
 	lasttics = 0;
 
+	last_frt_count = 0;
+	total_frt_count = 0;
+
 	for (i = 0; i < MAXPLAYERS; i++)
 	{
 		players[i].ticbuttons = players[i].oldticbuttons = 0;
@@ -377,22 +380,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 /* */
 /* adaptive timing based on previous frame */
 /* */
-#if 0
-		if (demoplayback || demorecording)
-			vblsinframe = TICVBLS;
-		else
-		{
-			vblsinframe = lasttics;
-			if (vblsinframe > TICVBLS*2)
-				vblsinframe = TICVBLS*2;
-#if 0
-			else if (vblsinframe < TICVBLS)
-				vblsinframe = TICVBLS;
-#endif
-		}
-#else
-	vblsinframe = 1;
-#endif
+		vblsinframe = 1;
 
 /* */
 /* get buttons for next tic */
@@ -437,7 +425,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 			players[consoleplayer ^ 1].ticbuttons
 				= NetToLocal(I_NetTransfer(LocalToNet(players[consoleplayer].ticbuttons)));
 
-		gamevbls += vblsinframe;
+		gamevbls++;
 
 		if (demorecording)
 			*demo_p++ = buttons;
@@ -552,12 +540,12 @@ int TIC_Abortable (void)
 
 	if (titlepic == NULL)
 		return 1;
-	if (ticon < TICVBLS)
-		return 0;
-	if (gamevbls == prevgamevbls)
+	if (ticon < 1)
 		return 0;
 	if (ticon >= gameinfo.titleTime)
 		return 1;		/* go on to next demo */
+	if (gamevbls == prevgamevbls)
+		return 0;
 
 #ifdef JAGUAR	
 	if (ticbuttons[0] == (BT_OPTION|BT_STAR|BT_HASH) )
@@ -738,10 +726,10 @@ static int TIC_Credits (void)
 	int buttons = players[consoleplayer].ticbuttons;
 	int oldbuttons = players[consoleplayer].oldticbuttons;
 
-	if (gamevbls == prevgamevbls)
-		return 0;
 	if (!*gameinfo.creditsPage)
 		return ga_exitdemo;
+	if (gamevbls == prevgamevbls)
+		return 0;
 	if (ticon >= gameinfo.creditsTime)
 		return 1;		/* go on to next demo */
 
