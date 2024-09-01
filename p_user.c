@@ -4,8 +4,8 @@
 #include "p_local.h"
 #include "st_main.h"
 
-fixed_t 		forwardmove[2] = {0x20000, 0x30000};
-fixed_t 		sidemove[2] = {0x19000, 0x26000};
+fixed_t 		forwardmove[2] = {0x19800, 0x28000};
+fixed_t 		sidemove[2] = {0x18000, 0x26000};
 
 #define SLOWTURNTICS    10
 fixed_t			angleturn[] =

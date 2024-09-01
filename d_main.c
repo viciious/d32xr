@@ -554,6 +554,8 @@ int TIC_Abortable (void)
 		return 1;
 	if (ticon < TICVBLS)
 		return 0;
+	if (gamevbls == prevgamevbls)
+		return 0;
 	if (ticon >= gameinfo.titleTime)
 		return 1;		/* go on to next demo */
 
@@ -736,6 +738,8 @@ static int TIC_Credits (void)
 	int buttons = players[consoleplayer].ticbuttons;
 	int oldbuttons = players[consoleplayer].oldticbuttons;
 
+	if (gamevbls == prevgamevbls)
+		return 0;
 	if (!*gameinfo.creditsPage)
 		return ga_exitdemo;
 	if (ticon >= gameinfo.creditsTime)

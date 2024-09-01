@@ -414,6 +414,8 @@ int F_Ticker (void)
 	buttons = players[consoleplayer].ticbuttons;
 	oldbuttons = players[consoleplayer].oldticbuttons;
 
+	if (gamevbls == prevgamevbls)
+		return 0;
 	if (ticon <= 10)
 		return 0;
 	if ((buttons & BT_START) && !(oldbuttons & BT_START))

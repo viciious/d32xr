@@ -465,6 +465,8 @@ int IN_Ticker (void)
 
 	if (!interm->i_secret)
 		return 1;
+	if (gamevbls == prevgamevbls)
+		return 0;
 	if (ticon < 5)
 		return 0;		/* don't exit immediately */
 	
