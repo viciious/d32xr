@@ -158,19 +158,33 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 	if (toucher->health <= 0)
 		return;						/* can happen with a sliding player corpse */
 
-	if ((special->flags & MF_ENEMY) && !(special->flags & MF_MISSILE))
+	if ((special->flags & MF_SHOOTABLE) && !(special->flags & MF_MISSILE))
 	{
-		if ((player->pflags & PF_JUMPED) || (player->pflags & PF_SPINNING) || player->powers[pw_invulnerability])
+		if (special->flags & MF_ENEMY) // enemy rules
 		{
-			if (((player->pflags & PF_VERTICALFLIP) && toucher->momz > 0)
-				|| (!(player->pflags & PF_VERTICALFLIP) && toucher->momz < 0))
-				toucher->momz = -toucher->momz;
+			if ((player->pflags & PF_JUMPED) || (player->pflags & PF_SPINNING) || player->powers[pw_invulnerability])
+			{
+				if (((player->pflags & PF_VERTICALFLIP) && toucher->momz > 0)
+					|| (!(player->pflags & PF_VERTICALFLIP) && toucher->momz < 0))
+					toucher->momz = -toucher->momz;
 
-			P_DamageMobj(special, toucher, toucher, 1);
+				P_DamageMobj(special, toucher, toucher, 1);
+			}
+			else
+				P_DamageMobj(toucher, special, special, 1);
 		}
-		else
-			P_DamageMobj(toucher, special, special, 1);
+		else // A monitor or something else we can pop
+		{
+			if ((player->pflags & PF_JUMPED) || (player->pflags & PF_SPINNING))
+			{
+				if (((player->pflags & PF_VERTICALFLIP) && toucher->momz > 0)
+					|| (!(player->pflags & PF_VERTICALFLIP) && toucher->momz < 0))
+					toucher->momz = -toucher->momz;
 
+				P_DamageMobj(special, toucher, toucher, 1);
+			}
+		}
+		
 		return;
 	}
 	
@@ -189,9 +203,8 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 		case MT_RING:
 			player->lossCount = 0;
 		case MT_FLINGRING:
-			player->health++;
-			player->mo->health = player->health;
 			P_SpawnMobj(special->x, special->y, special->z, MT_SPARK);
+			P_GivePlayerRings(player, 1);
 			sound = mobjinfo[special->type].deathsound;
 		break;
 
@@ -233,6 +246,12 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 
 		if (netgame == gt_coop)
 			R_ResetResp(player);
+	}
+
+	if (source->player)
+	{
+		// Monitors need to know who killed them
+		target->target = source;
 	}
 
 	if (target->health < -targinfo->spawnhealth
@@ -377,7 +396,7 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 
 	S_StartSound(target, targinfo->painsound);
 			
-	if (!target->threshold && source)
+	if (source && source != target)
 	{	/* if not intent on another player, chase after this one */
 		target->target = source;
 		target->threshold = BASETHRESHOLD;

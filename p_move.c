@@ -117,8 +117,6 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
       return false; // don't traverse any more
    }
 
-   solid = (thing->flags & MF_SOLID) != 0;
-
    // check for special pickup
    if(tmthing->player)
    {
@@ -128,6 +126,8 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
    {
       P_TouchSpecialThing(tmthing,thing);
    }
+
+   solid = (thing->flags & MF_SOLID) != 0;
 
    return !solid;
 }

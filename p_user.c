@@ -105,6 +105,18 @@ void P_PlayerRingBurst(player_t *player, int damage)
 		player->lossCount = 6;
 }
 
+void P_GivePlayerRings(player_t *player, int num_rings)
+{
+	player->health += num_rings;
+
+	if (player->health > 9999)
+		player->health = 9999;
+
+	player->mo->health = player->health;
+
+	// TODO: Handle extra life bonuses
+}
+
 /*============================================================================= */
 
 void P_PlayerMove(mobj_t *mo)
@@ -854,7 +866,7 @@ boolean P_LookForTarget(player_t *player)
 		else
 		{
 			// Enemies and springs only (for now)
-			if (!(node->flags & MF_ENEMY))
+			if (!((node->flags & MF_ENEMY) || (node->flags & MF_SHOOTABLE)))
 				continue;
 
 			// Ignore fretting bosses
@@ -933,7 +945,7 @@ static void P_DoJumpStuff(player_t *player)
 			P_DoJump(player);
 			player->pflags &= ~PF_THOKKED;
 		}
-		else if (!(player->pflags & PF_JUMPDOWN) && player->pflags & PF_JUMPED)
+		else if (!(player->pflags & PF_JUMPDOWN) && (player->pflags & PF_JUMPED) && !(player->pflags & PF_THOKKED))
 		{
 			// Find a nearby enemy.
 			if (P_LookForTarget(player))

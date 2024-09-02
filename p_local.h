@@ -85,6 +85,7 @@ boolean P_IsReeling(player_t *player);
 void    P_AddPlayerScore(player_t *player, int amount);
 void    P_ResetPlayer(player_t *player);
 void    P_PlayerRingBurst(player_t *player, int damage);
+void    P_GivePlayerRings(player_t *player, int num_rings);
 void	P_PlayerThink (player_t *player);
 void	P_RestoreResp(player_t* p);
 void	P_UpdateResp(player_t* p);

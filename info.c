@@ -56,16 +56,20 @@ const char * const sprnames[NUMSPRITES] = {
 "GFZR",
 };
 
+void A_SpawnState(mobj_t *actor);
 void A_Chase(mobj_t *actor);
 void A_Fall(mobj_t *actor);
 void A_Look(mobj_t *actor);
 void A_Pain(mobj_t *actor);
 void A_FishJump(mobj_t *actor);
+void A_MonitorPop(mobj_t *actor);
+void A_AwardBox(mobj_t *actor);
 
 #define STATE(sprite,frame,tics,action,nextstate) {sprite,frame,tics,nextstate,action}
 
 const state_t	states[NUMSTATES] = {
 STATE(SPR_PLAY,0,-1,NULL,S_NULL),	// S_NULL
+STATE(SPR_PLAY,0,-1,A_SpawnState,S_NULL), // S_SPAWNSTATE
 STATE(SPR_PLAY,0,90,NULL,S_PLAY_TAP1),	// S_PLAY_STND
 STATE(SPR_PLAY,1,8,NULL,S_PLAY_TAP2), // S_PLAY_TAP1
 STATE(SPR_PLAY,2,8,NULL,S_PLAY_TAP1), // S_PLAY_TAP2
@@ -196,6 +200,13 @@ STATE(SPR_DUST,0,3,NULL,S_SPINDUST2), // S_SPINDUST1
 STATE(SPR_DUST,1,2,NULL,S_SPINDUST3), // S_SPINDUST2
 STATE(SPR_DUST,2,1,NULL,S_SPINDUST4), // S_SPINDUST3
 STATE(SPR_DUST,3,1,NULL,S_NULL), // S_SPINDUST4
+STATE(SPR_MSTV,0,1,NULL,S_SPAWNSTATE), // S_BOX_FLICKER
+STATE(SPR_MSTV,0,2,A_MonitorPop,S_BOX_POP2), // S_BOX_POP1
+STATE(SPR_MSTV,1,-1,NULL,S_NULL), // S_BOX_POP2
+STATE(SPR_TVRI,0,2,NULL,S_BOX_FLICKER), // S_RING_BOX
+STATE(SPR_TVRI,2,8,NULL,S_RING_ICON2), // S_RING_ICON1
+STATE(SPR_TVRI,2,8,A_AwardBox,S_NULL), // S_RING_ICON2
+
 };
 
 #undef STATE
@@ -251,6 +262,32 @@ sfx_None,		/* deathsound */
 sfx_None,		/* activesound */
 0		/* flags */
  },
+
+ {           // MT_EXPLODE
+	-1,             // doomednum
+	S_XPLD1,        // spawnstate
+	1,              // spawnhealth
+	S_NULL,         // seestate
+	sfx_None,       // seesound
+	32,             // reactiontime
+	sfx_None,       // attacksound
+	S_NULL,         // painstate
+	200,            // painchance
+	sfx_None,       // painsound
+	S_NULL,         // meleestate
+	S_NULL,         // missilestate
+	S_NULL,         // deathstate
+	S_NULL,         // xdeathstate
+	sfx_None,       // deathsound
+	1*FRACUNIT,     // speed
+	8*FRACUNIT,     // radius
+	16*FRACUNIT,    // height
+	100,            // mass
+	0,              // damage
+	sfx_None,       // activesound
+	MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
+	S_NULL          // raisestate
+},
 
 {		/* MT_POSSESSED */
 100,		/* doomednum */
@@ -688,6 +725,56 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		8,              // damage
 		sfx_None,       // activesound
 		MF_NOBLOCKMAP|MF_NOGRAVITY|MF_NOCLIP, // flags
+	},
+	{           // MT_RING_BOX
+		400,            // doomednum
+		S_RING_BOX,     // spawnstate
+		1,              // spawnhealth
+		S_NULL,         // seestate
+		sfx_None,       // seesound
+		8,              // reactiontime
+		sfx_None,       // attacksound
+		S_RING_BOX,     // painstate
+		0,              // painchance
+		sfx_None,       // painsound
+		S_NULL,         // meleestate
+		S_NULL,         // missilestate
+		S_BOX_POP1,     // deathstate
+		S_NULL,         // xdeathstate
+		sfx_s3k_3d,     // deathsound
+		1,              // speed
+		18*FRACUNIT,    // radius
+		40*FRACUNIT,    // height
+		100,            // mass
+		MT_RING_ICON,   // damage
+		sfx_None,       // activesound
+		MF_SOLID|MF_SHOOTABLE, // flags
+		S_NULL          // raisestate
+	},
+	{           // MT_RING_ICON
+		-1,              // doomednum
+		S_RING_ICON1,    // spawnstate
+		1,               // spawnhealth
+		S_NULL,          // seestate
+		sfx_s3k_33,      // seesound
+		10,              // reactiontime
+		sfx_None,        // attacksound
+		S_NULL,          // painstate
+		0,               // painchance
+		sfx_None,        // painsound
+		S_NULL,          // meleestate
+		S_NULL,          // missilestate
+		S_NULL,          // deathstate
+		S_NULL,          // xdeathstate
+		sfx_None,        // deathsound
+		4*FRACUNIT,      // speed
+		8*FRACUNIT,      // radius
+		14*FRACUNIT,     // height
+		100,             // mass
+		62,     // damage
+		sfx_None,        // activesound
+		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
+		S_NULL           // raisestate
 	},
 };
 

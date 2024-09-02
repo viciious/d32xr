@@ -546,6 +546,12 @@ void P_MobjThinker(mobj_t *mobj)
                return;
             }
             break;
+         case MT_RING_ICON:
+            if (mobj->z < mobj->floorz + (mobjinfo[mobj->type].damage << FRACBITS))
+               mobj->momz = mobjinfo[mobj->type].speed;
+            else
+               mobj->momz = 0;
+            break;
       }
    }
    else

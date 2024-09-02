@@ -409,6 +409,11 @@ seeyou:
 	P_SetMobjState (actor, ainfo->seestate);
 }
 
+void A_SpawnState(mobj_t *actor)
+{
+	if (actor->state != &states[mobjinfo[actor->type].spawnstate])
+		P_SetMobjState(actor, mobjinfo[actor->type].spawnstate);
+}
 
 /*
 ==============
@@ -624,6 +629,63 @@ void A_FishJump(mobj_t *mo)
 	if (mo->momz < 0
 		&& (mo->state < mobjinfo[mo->type].meleestate || mo->state > mobjinfo[mo->type].xdeathstate))
 		P_SetMobjState(mo, mobjinfo[mo->type].meleestate );
+}
+
+void A_MonitorPop(mobj_t *actor)
+{
+	mobjtype_t iconItem = 0;
+	mobj_t *newmobj;
+
+	// Spawn the "pop" explosion.
+	if (mobjinfo[actor->type].deathsound)
+		S_StartSound(actor, mobjinfo[actor->type].deathsound);
+	P_SpawnMobj(actor->x, actor->y, actor->z + (actor->theight << FRACBITS)/4, MT_EXPLODE);
+
+	// We're dead now. De-solidify.
+	actor->health = 0;
+	P_UnsetThingPosition(actor);
+	actor->flags &= ~MF_SOLID;
+	actor->flags &= ~MF_SHOOTABLE;
+	actor->flags |= MF_NOCLIP;
+	P_SetThingPosition(actor);
+
+	iconItem = mobjinfo[actor->type].damage;
+
+	if (iconItem == 0)
+	{
+		CONS_Printf("A_MonitorPop(): 'damage' field missing powerup item definition.\n");
+		return;
+	}
+
+	newmobj = P_SpawnMobj(actor->x, actor->y, actor->z + 13*FRACUNIT, iconItem);
+	newmobj->target = actor->target; // transfer the target
+}
+
+// Having one function for all box awarding cuts down ROM size
+void A_AwardBox(mobj_t *actor)
+{
+	player_t *player;
+
+	if (!actor->target || !actor->target->player)
+	{
+		CONS_Printf("A_AwardBox(): Monitor has no target.\n");
+		return;
+	}
+
+	player = &players[actor->target->player - 1];
+
+	switch(actor->type)
+	{
+		case MT_RING_ICON:
+			P_GivePlayerRings(player, mobjinfo[actor->type].reactiontime);
+			break;
+		default:
+			// Dunno what kind of monitor this is, but we fail gracefully.
+			break;
+	}
+
+	if (mobjinfo[actor->type].seesound)
+		S_StartSound(player->mo, mobjinfo[actor->type].seesound);
 }
 
 /*============================================================================= */
