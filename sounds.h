@@ -24,6 +24,11 @@ enum
 typedef enum 
 { 
   sfx_None,
+  sfx_armasg,
+  sfx_attrsg,
+  sfx_elemsg,
+  sfx_forcsg,
+  sfx_frcssg,
   sfx_ngskid,
   sfx_telept,
   sfx_thok,
@@ -34,6 +39,7 @@ typedef enum
   sfx_trpowr,
   sfx_turhit,
   sfx_wdjump,
+  sfx_wirlsg,
   sfx_wslap,
   sfx_s3k_33,
   sfx_s3k_35,

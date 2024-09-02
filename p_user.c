@@ -860,7 +860,8 @@ boolean P_LookForTarget(player_t *player)
 
 		if (node->flags & MF_STATIC)
 		{
-			if (!(node->type >= MT_YELLOWSPRING && node->type <= MT_REDHORIZ))
+			if (!(node->type >= MT_YELLOWSPRING && node->type <= MT_REDHORIZ)
+				&& !(node->flags & MF_SHOOTABLE))
 				continue;
 		}
 		else

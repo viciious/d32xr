@@ -14,6 +14,11 @@ const VINT		mus_none = 0;
 const char * const S_sfxnames[NUMSFX] =
 {
   0,
+  "dsarmasg",
+  "dsattrsg",
+  "dselemsg",
+  "dsforcsg",
+  "dsfrcssg",
   "dsngskid",
   "dstelept",
   "dsthok",
@@ -24,6 +29,7 @@ const char * const S_sfxnames[NUMSFX] =
   "dstrpowr",
   "dsturhit",
   "dswdjump",
+  "dswirlsg",
   "dswslap",
   "s3k_33",
   "s3k_35",

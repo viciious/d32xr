@@ -547,6 +547,14 @@ void P_MobjThinker(mobj_t *mobj)
             }
             break;
          case MT_RING_ICON:
+         case MT_ATTRACT_ICON:
+         case MT_FORCE_ICON:
+         case MT_ARMAGEDDON_ICON:
+         case MT_WHIRLWIND_ICON:
+         case MT_ELEMENTAL_ICON:
+         case MT_SNEAKERS_ICON:
+         case MT_INVULN_ICON:
+         case MT_1UP_ICON:
             if (mobj->z < mobj->floorz + (mobjinfo[mobj->type].damage << FRACBITS))
                mobj->momz = mobjinfo[mobj->type].speed;
             else

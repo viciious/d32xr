@@ -411,7 +411,7 @@ seeyou:
 
 void A_SpawnState(mobj_t *actor)
 {
-	if (actor->state != &states[mobjinfo[actor->type].spawnstate])
+	if (actor->state != mobjinfo[actor->type].spawnstate)
 		P_SetMobjState(actor, mobjinfo[actor->type].spawnstate);
 }
 
@@ -679,6 +679,15 @@ void A_AwardBox(mobj_t *actor)
 		case MT_RING_ICON:
 			P_GivePlayerRings(player, mobjinfo[actor->type].reactiontime);
 			break;
+			/*
+			MT_ATTRACT_ICON,
+MT_FORCE_ICON,
+MT_ARMAGEDDON_ICON,
+MT_WHIRLWIND_ICON,
+MT_ELEMENTAL_ICON,
+MT_SNEAKERS_ICON,
+MT_INVULN_ICON,
+MT_1UP_ICON,*/
 		default:
 			// Dunno what kind of monitor this is, but we fail gracefully.
 			break;
