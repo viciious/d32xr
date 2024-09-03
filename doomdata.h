@@ -111,11 +111,6 @@ typedef struct
 	short		options;
 } mapthing_t;
 
-#define	MTF_EASY		1
-#define	MTF_NORMAL		2
-#define	MTF_HARD		4
-#define	MTF_AMBUSH		8
-
 /*
 ===============================================================================
 

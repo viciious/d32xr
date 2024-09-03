@@ -495,6 +495,55 @@ int P_MapThingSpawnsMobj (mapthing_t* mthing)
 ==================
 */
 
+inline fixed_t P_GetMapThingSpawnHeight(const mobjtype_t mobjtype, const mapthing_t* mthing, const fixed_t x, const fixed_t y, const fixed_t z)
+{
+	fixed_t dz = z; // Base offset from the floor.
+
+	if (dz == 0)
+	{
+		switch (mobjtype)
+		{
+		// Objects with a non-zero default height.
+	/*	case MT_CRAWLACOMMANDER:
+		case MT_DETON:
+		case MT_JETTBOMBER:
+		case MT_JETTGUNNER:
+		case MT_EGGMOBILE2:
+			if (!dz)
+				dz = 33*FRACUNIT;
+			break;
+		case MT_EGGMOBILE:
+			if (!dz)
+				dz = 128*FRACUNIT;
+			break;
+		case MT_GOLDBUZZ:
+		case MT_REDBUZZ:
+			if (!dz)
+				dz = 288*FRACUNIT;
+			break;
+	*/
+		// Ring-like items, float additional units unless args[0] is set.
+		case MT_RING:
+			dz += 24*FRACUNIT;
+			break;
+		default:
+			break;
+		}	
+	}
+
+	if (!dz) // Snap to the surfaces when there's no offset set.
+	{
+//		if (flip)
+//			return ONCEILINGZ;
+//		else
+			return ONFLOORZ;
+	}
+
+	const subsector_t *ss = R_PointInSubsector(x, y);
+
+	return ss->sector->floorheight + dz;
+}
+
 void P_SpawnMapThing (mapthing_t *mthing, int thingid)
 {
 	int			i;
@@ -551,7 +600,10 @@ return;	/*DEBUG */
 
 	x = mthing->x << FRACBITS;
 	y = mthing->y << FRACBITS;
-	z = ONFLOORZ;
+
+	z = (mthing->options >> 4) << FRACBITS;
+	z = P_GetMapThingSpawnHeight(i, mthing, x, y, z);
+
 	mobj = P_SpawnMobj (x,y,z, i);
 	if (mobj->type == MT_RING)
 	{
@@ -567,9 +619,6 @@ return;	/*DEBUG */
 	mobj->angle = mthing->angle * ANGLE_1;
 	if (mobj->flags & MF_STATIC)
 		return;
-
-	if (mthing->options & MTF_AMBUSH)
-		mobj->flags |= MF_AMBUSH;
 }
 
 
