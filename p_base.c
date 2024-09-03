@@ -458,7 +458,7 @@ void P_ZMovement(mobj_t *mo)
 {
    mo->z += mo->momz * 2;
 
-   if((mo->flags & MF_FLOAT) && mo->target)
+   if((mo->flags & MF_FLOAT) && (mo->flags & MF_ENEMY) && mo->target)
    {
       // float toward target if too close
       P_FloatChange(mo);

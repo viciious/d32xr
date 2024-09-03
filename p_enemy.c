@@ -114,7 +114,7 @@ boolean P_Move (mobj_t *actor)
 	
 	if (!P_TryMove (&tm, actor, tryx, tryy) )
 	{	/* open any specials */
-		if (actor->flags & MF_FLOAT && tm.floatok)
+		if ((actor->flags & MF_FLOAT) && (actor->flags & MF_ENEMY) && tm.floatok)
 		{	/* must adjust height */
 			if (actor->z < tm.tmfloorz)
 				actor->z += FLOATSPEED;
@@ -695,6 +695,39 @@ MT_1UP_ICON,*/
 
 	if (mobjinfo[actor->type].seesound)
 		S_StartSound(player->mo, mobjinfo[actor->type].seesound);
+}
+
+void A_FlickyCheck(mobj_t *actor)
+{
+	if (actor->target && actor->z <= actor->floorz)
+	{
+		P_SetMobjState(actor, mobjinfo[actor->type].seestate);
+		actor->reactiontime = P_Random();
+		if (actor->reactiontime < 90)
+			actor->reactiontime = 90;
+	}
+}
+
+void A_FlickyFly(mobj_t *actor)
+{
+	if (actor->z <= actor->floorz)
+	{
+		A_FaceTarget(actor);
+		actor->momz = mobjinfo[actor->type].mass << FRACBITS;
+
+		if (mobjinfo[actor->type].painchance != 0)
+		{
+			P_InstaThrust(actor, actor->angle, mobjinfo[actor->type].speed);
+			P_SetMobjState(actor, mobjinfo[actor->type].meleestate);
+		}
+	}
+	
+	if (mobjinfo[actor->type].painchance == 0)
+		P_InstaThrust(actor, actor->angle, mobjinfo[actor->type].speed);
+
+	actor->reactiontime--;
+	if (actor->reactiontime == 0)
+		P_RemoveMobj(actor);
 }
 
 /*============================================================================= */

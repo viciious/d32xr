@@ -65,13 +65,15 @@ void A_Pain(mobj_t *actor);
 void A_FishJump(mobj_t *actor);
 void A_MonitorPop(mobj_t *actor);
 void A_AwardBox(mobj_t *actor);
+void A_FlickyCheck(mobj_t *actor);
+void A_FlickyFly(mobj_t *actor);
 
 #define STATE(sprite,frame,tics,action,nextstate) {sprite,frame,tics,nextstate,action}
 
 const state_t	states[NUMSTATES] = {
 STATE(SPR_PLAY,0,-1,NULL,S_NULL),	// S_NULL
 STATE(SPR_PLAY,0,-1,A_SpawnState,S_NULL), // S_SPAWNSTATE
-STATE(SPR_PLAY,0,90,NULL,S_PLAY_TAP1),	// S_PLAY_STND
+STATE(SPR_PLAY,0,120,NULL,S_PLAY_TAP1),	// S_PLAY_STND
 STATE(SPR_PLAY,1,8,NULL,S_PLAY_TAP2), // S_PLAY_TAP1
 STATE(SPR_PLAY,2,8,NULL,S_PLAY_TAP1), // S_PLAY_TAP2
 STATE(SPR_PLAY,3,1,NULL,S_PLAY_RUN2),	// S_PLAY_RUN1
@@ -232,6 +234,23 @@ STATE(SPR_TVIV,2,8,NULL,S_INVULN_ICON2), // S_INVULN_ICON1
 STATE(SPR_TVIV,2,8,A_AwardBox,S_NULL), // S_INVULN_ICON2
 STATE(SPR_TV1U,2,8,NULL,S_1UP_ICON2), // S_1UP_ICON1
 STATE(SPR_TV1U,2,8,A_AwardBox,S_NULL), // S_1UP_ICON2
+
+// Bluebird
+STATE(SPR_FL01,0,1,A_FlickyCheck,S_FLICKY_01_OUT), // S_FLICKY_01_OUT
+STATE(SPR_FL01,1,2,A_FlickyFly,S_FLICKY_01_FLAP2), // S_FLICKY_01_FLAP1
+STATE(SPR_FL01,2,2,A_FlickyFly,S_FLICKY_01_FLAP3), // S_FLICKY_01_FLAP2
+STATE(SPR_FL01,3,2,A_FlickyFly,S_FLICKY_01_FLAP1), // S_FLICKY_01_FLAP3
+
+// Rabbit
+STATE(SPR_FL02,0,2,A_FlickyCheck,S_FLICKY_02_OUT), // S_FLICKY_02_OUT
+STATE(SPR_FL02,2,8,NULL,S_FLICKY_02_DOWN), // S_FLICKY_02_UP
+STATE(SPR_FL02,3,2,A_FlickyFly,S_FLICKY_02_DOWN), // S_FLICKY_02_DOWN
+
+// Chicken
+STATE(SPR_FL03,0,2,A_FlickyCheck,S_FLICKY_03_OUT), // S_FLICKY_03_OUT
+STATE(SPR_FL03,2,2,A_FlickyFly,S_FLICKY_03_FLAP2), // S_FLICKY_03_FLAP1
+STATE(SPR_FL03,3,2,A_FlickyFly,S_FLICKY_03_FLAP1), // S_FLICKY_03_FLAP2
+
 };
 
 #undef STATE
@@ -311,7 +330,6 @@ sfx_None,		/* activesound */
 	0,              // damage
 	sfx_None,       // activesound
 	MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
-	S_NULL          // raisestate
 },
 
 {		/* MT_POSSESSED */
@@ -1188,6 +1206,81 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		62,             // damage
 		sfx_None,       // activesound
 		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
+	},
+	// Bluebird
+	{           // MT_FLICKY_01
+		-1,             // doomednum
+		S_FLICKY_01_OUT, // spawnstate
+		1000,           // spawnhealth
+		S_FLICKY_01_FLAP1, // seestate
+		sfx_None,       // seesound
+		8,              // reactiontime
+		sfx_None,       // attacksound
+		S_NULL,         // painstate
+		0,              // painchance
+		sfx_None,       // painsound
+		S_NULL,         // meleestate
+		S_NULL,         // missilestate
+		S_NULL,         // deathstate
+		S_NULL,         // xdeathstate
+		sfx_None,       // deathsound
+		4*FRACUNIT,     // speed
+		8*FRACUNIT,     // radius
+		20*FRACUNIT,    // height
+		4,              // mass
+		0,              // damage
+		sfx_None,       // activesound
+		MF_FLOAT, // flags
+	},
+
+	{           // MT_FLICKY_02
+		-1,             // doomednum
+		S_FLICKY_02_OUT, // spawnstate
+		1000,           // spawnhealth
+		S_FLICKY_02_DOWN, // seestate
+		sfx_None,       // seesound
+		8,              // reactiontime
+		sfx_None,       // attacksound
+		S_NULL,         // painstate
+		1,              // painchance
+		sfx_None,       // painsound
+		S_FLICKY_02_UP, // meleestate
+		S_NULL,         // missilestate
+		S_NULL,         // deathstate
+		S_NULL,         // xdeathstate
+		sfx_None,       // deathsound
+		4*FRACUNIT,     // speed
+		8*FRACUNIT,     // radius
+		20*FRACUNIT,    // height
+		4,             // mass
+		0,              // damage
+		sfx_None,       // activesound
+		MF_FLOAT, // flags
+	},
+
+	{           // MT_FLICKY_03
+		-1,             // doomednum
+		S_FLICKY_03_OUT, // spawnstate
+		1000,           // spawnhealth
+		S_FLICKY_03_FLAP1, // seestate
+		sfx_None,       // seesound
+		8,              // reactiontime
+		sfx_None,       // attacksound
+		S_NULL,         // painstate
+		0,              // painchance
+		sfx_None,       // painsound
+		S_NULL,         // meleestate
+		S_NULL,         // missilestate
+		S_NULL,         // deathstate
+		S_NULL,         // xdeathstate
+		sfx_None,       // deathsound
+		3*FRACUNIT,     // speed
+		8*FRACUNIT,     // radius
+		20*FRACUNIT,    // height
+		2,             // mass
+		0,              // damage
+		sfx_None,       // activesound
+		MF_FLOAT, // flags
 	},
 };
 
