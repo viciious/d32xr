@@ -210,6 +210,43 @@ fixed_t	P_FindNextHighestFloor(sector_t *sec,int currentheight)
 	return min;
 }
 
+fixed_t	P_FindNextLowestFloor(sector_t *sec,int currentheight)
+{
+	int			i;
+	int			h;
+	int			min;
+	line_t		*check;
+	sector_t	*other;
+	fixed_t		height = currentheight;
+	fixed_t		heightlist[20];		/* 20 adjoining sectors max! */
+	
+	heightlist[0] = 0;
+	for (i =0,h = 0 ;i < sec->linecount ; i++)
+	{
+		check = lines + sec->lines[i];
+		other = getNextSector(check,sec);
+		if (!other)
+			continue;
+		if (other->floorheight < height)
+			heightlist[h++] = other->floorheight;
+		if (h == sizeof(heightlist) / sizeof(heightlist[0]))
+			break;
+	}
+	
+	if (h == 0)
+		return currentheight;
+
+	/* */
+	/* Find lowest height in list */
+	/* */
+	min = heightlist[0];
+	for (i = 1;i < h;i++)
+		if (heightlist[i] > min)
+			min = heightlist[i];
+			
+	return min;
+}
+
 /*================================================================== */
 /* */
 /*	FIND LOWEST CEILING IN THE SURROUNDING SECTORS */
@@ -912,6 +949,9 @@ void P_SpawnSpecials (void)
 			numlinespecials++;
 			if (numlinespecials == MAXLINEANIMS)
 				goto done_speciallist;
+			break;
+		case 60: // Moving platform
+			EV_DoFloor(&lines[i], floorContinuous);
 			break;
 		}
 	}

@@ -164,36 +164,91 @@ result_e	T_MovePlane(sector_t *sector,fixed_t speed,
 /*	MOVE A FLOOR TO IT'S DESTINATION (UP OR DOWN) */
 /* */
 /*================================================================== */
+#define ELEVATORSPEED (FRACUNIT / 4)
 void T_MoveFloor(floormove_t *floor)
 {
 	result_e	res;
-	
-	res = T_MovePlane(floor->sector,floor->speed,
-			floor->floordestheight,floor->crush,0,floor->direction);
-	if (res == pastdest)
+
+	if (floor->crush)
 	{
-		floor->sector->specialdata = NULL;
-		if (floor->direction == 1)
-			switch(floor->type)
-			{
-				case donutRaise:
-					floor->sector->special = floor->newspecial;
-					floor->sector->floorpic = floor->texture;
-				default:
-					break;
-			}
-		else if (floor->direction == -1)
-			switch(floor->type)
-			{
-				case lowerAndChange:
-					floor->sector->special = floor->newspecial;
-					floor->sector->floorpic = floor->texture;
-				default:
-					break;
-			}
-		P_RemoveThinker(&floor->thinker);
+		floor->crush--;
+		return;
 	}
 
+	if (floor->type == floorContinuous)
+	{
+		const fixed_t wh = D_abs(floor->sector->floorheight - (floor->floorwasheight << FRACBITS));
+		const fixed_t dh = D_abs(floor->sector->floorheight - (floor->floordestheight << FRACBITS));
+
+		// Slow down when reaching destination Tails 12-06-2000
+		if (wh < dh)
+			floor->speed = FixedDiv(wh, 25*FRACUNIT) + FRACUNIT/4;
+		else
+			floor->speed = FixedDiv(dh, 25*FRACUNIT) + FRACUNIT/4;
+
+		if (floor->origSpeed)
+		{
+			floor->speed = FixedMul(floor->speed, floor->origSpeed);
+			if (floor->speed > floor->origSpeed)
+				floor->speed = (floor->origSpeed);
+			if (floor->speed < 1)
+				floor->speed = 1;
+		}
+		else
+		{
+			if (floor->speed > 3*FRACUNIT)
+				floor->speed = 3*FRACUNIT;
+			if (floor->speed < 1)
+				floor->speed = 1;
+		}
+
+		res = T_MovePlane(floor->sector,floor->speed,
+				floor->floordestheight << FRACBITS,0,0,floor->direction);
+	}
+
+	if (res == pastdest)
+	{
+		if (floor->type == floorContinuous)
+		{
+			if (floor->direction > 0)
+			{
+				floor->direction = -1;
+				floor->speed = floor->origSpeed;
+				floor->floorwasheight = floor->floordestheight;
+				floor->floordestheight = P_FindNextLowestFloor(floor->controlSector, floor->sector->floorheight) >> FRACBITS;
+			}
+			else
+			{
+				floor->direction = 1;
+				floor->speed = floor->origSpeed;
+				floor->floorwasheight = floor->floordestheight;
+				floor->floordestheight = P_FindNextHighestFloor(floor->controlSector, floor->sector->floorheight) >> FRACBITS;
+			}
+		}
+		else
+		{
+			floor->sector->specialdata = NULL;
+			if (floor->direction == 1)
+				switch(floor->type)
+				{
+					case donutRaise:
+						floor->sector->special = floor->newspecial;
+						floor->sector->floorpic = floor->texture;
+					default:
+						break;
+				}
+			else if (floor->direction == -1)
+				switch(floor->type)
+				{
+					case lowerAndChange:
+						floor->sector->special = floor->newspecial;
+						floor->sector->floorpic = floor->texture;
+					default:
+						break;
+				}
+			P_RemoveThinker(&floor->thinker);
+		}
+	}
 }
 
 /*================================================================== */
@@ -231,6 +286,26 @@ int EV_DoFloor(line_t *line,floor_e floortype)
 		floor->crush = false;
 		switch(floortype)
 		{
+			case floorContinuous:
+				floor->sector = sec;
+				floor->controlSector = &sectors[sides[line->sidenum[0]].sector];
+				floor->origSpeed = P_AproxDistance(vertexes[line->v1].x - vertexes[line->v2].x,
+												vertexes[line->v1].y - vertexes[line->v2].y) / 4;
+				floor->speed = floor->origSpeed;
+				if (line->flags & ML_SOUNDBLOCK)
+				{
+					floor->direction = 1;
+					floor->floordestheight = P_FindNextHighestFloor(floor->controlSector, sec->floorheight) >> FRACBITS;
+				}
+				else
+				{
+					floor->direction = -1;
+					floor->floordestheight = P_FindNextLowestFloor(floor->controlSector, sec->floorheight) >> FRACBITS;
+				}
+
+				floor->floorwasheight = sec->floorheight >> FRACBITS;
+				floor->crush = sides[line->sidenum[0]].rowoffset; // initial delay
+				break;
 			case lowerFloor:
 				floor->direction = -1;
 				floor->sector = sec;

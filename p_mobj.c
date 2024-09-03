@@ -427,7 +427,7 @@ y = 0xff500000;
 	camera.x = (camera.x >> FRACBITS) << FRACBITS;
 	camera.y = (camera.y >> FRACBITS) << FRACBITS;
 
-	camera.z = mobj->z + (mobj->theight << FRACBITS);
+	camera.z = mobj->floorz + (mobj->theight << FRACBITS);
 	
 	if (!netgame)
 		return;

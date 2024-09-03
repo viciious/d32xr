@@ -69,6 +69,7 @@ side_t	*getSide(int currentSector,int line, int side);
 fixed_t	P_FindLowestFloorSurrounding(sector_t *sec);
 fixed_t	P_FindHighestFloorSurrounding(sector_t *sec);
 fixed_t	P_FindNextHighestFloor(sector_t *sec,int currentheight);
+fixed_t	P_FindNextLowestFloor(sector_t *sec,int currentheight);
 fixed_t	P_FindLowestCeilingSurrounding(sector_t *sec);
 fixed_t	P_FindHighestCeilingSurrounding(sector_t *sec);
 int		P_FindSectorFromLineTag(line_t	*line,int start);
@@ -303,7 +304,8 @@ typedef enum
 	raiseFloorCrush,
 	raiseFloorTurbo,	/* raise to next highest floor, turbo-speed */
 	donutRaise,
-	raiseFloor512
+	raiseFloor512,
+	floorContinuous,
 } floor_e;
 
 typedef struct
@@ -312,10 +314,13 @@ typedef struct
 	VINT		type;
 	VINT		crush;
 	sector_t	*sector;
+	sector_t    *controlSector;
 	int			newspecial;
 	VINT		direction;
 	VINT		texture;
-	fixed_t		floordestheight;
+	VINT        floorwasheight;
+	VINT		floordestheight;
+	fixed_t     origSpeed;
 	fixed_t		speed;
 } floormove_t;
 
