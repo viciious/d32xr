@@ -10,7 +10,7 @@
 #define	FLOATSPEED		(FRACUNIT*8)
 
 #define	GRAVITY			(FRACUNIT)
-#define	MAXMOVE			(16*FRACUNIT)
+#define	MAXMOVE			(24*FRACUNIT)
 
 
 #define	MAXHEALTH			100

@@ -379,7 +379,7 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 	mo = player->mo;
 
    // TODO: If there is a boss, should focus on the boss
-   if (player->stillTimer > TICRATE)
+   if (player->stillTimer > TICRATE/2)
       angle = focusangle = mo->angle;
    else
 	   angle = focusangle = R_PointToAngle2(thiscam->x, thiscam->y, mo->x, mo->y);
@@ -390,7 +390,7 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 	camdist = CAM_DIST;
 	camheight = 20 << FRACBITS;
 
-   if (player->stillTimer > TICRATE)
+   if (player->stillTimer > TICRATE/2)
       camspeed >>= 2;
 
 	if (P_AproxDistance(thiscam->x - mo->x, thiscam->y - mo->y) > camdist * 4)

@@ -663,23 +663,6 @@ void P_PlayerInSpecialSector (player_t *player)
 		
 	switch (sector->special)
 	{
-		case 5:		/* HELLSLIME DAMAGE */
-			if (!player->powers[pw_ironfeet])
-				if ((gametic != prevgametic) && !(gametic&0xf))
-					P_DamageMobj (player->mo, NULL, NULL, 10);
-			break;
-		case 7:		/* NUKAGE DAMAGE */
-			if (!player->powers[pw_ironfeet])
-				if ((gametic != prevgametic) && !(gametic&0xf))
-					P_DamageMobj (player->mo, NULL, NULL, 5);
-			break;
-		case 16:	/* SUPER HELLSLIME DAMAGE */
-		case 4:		/* STROBE HURT */
-			if (!player->powers[pw_ironfeet] || (P_Random()<5) )
-				if ((gametic != prevgametic) && !(gametic&0xf))
-					P_DamageMobj (player->mo, NULL, NULL, 20);
-			break;
-			
 		case 9:		/* SECRET SECTOR */
 			player->secretcount++;
 			sector->special = 0;

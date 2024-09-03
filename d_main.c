@@ -370,8 +370,6 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 	frameon = 0;
 	
 	gametic = 0;
-	gametic30 = 0;
-	prevgametic = 0;
 	leveltime = 0;
 
 	gameaction = 0;
@@ -724,8 +722,6 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 			wipe_EndScreen();
 			wipe = false;
 		}
-
-		prevgametic = gametic;
 
 #if 0
 while (!I_RefreshCompleted ())

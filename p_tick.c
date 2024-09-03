@@ -376,25 +376,21 @@ int P_Ticker (void)
 		}
 	playertics = frtc - start;
 
-//#ifdef THINKERS_30HZ
 	start = frtc;
 	P_RunThinkers();
 	thinkertics = frtc - start;
-//#endif
 
-	if (gametic != prevgametic)
 	{
 		ticstart = frtc;
-/*
-#ifndef THINKERS_30HZ
-		start = frtc;
-		P_RunThinkers();
-		thinkertics = frtc - start;
-#endif
-*/
-		start = frtc;
-		P_CheckSights();
-		sighttics = frtc - start;
+
+//		if (gametic != prevgametic)
+		{
+			start = frtc;
+			// If we don't do this every tic, it seems sight checking is broken.
+			// Is there a way we can do this infrequently? Even every half second would be fine.
+			P_CheckSights();
+			sighttics = frtc - start;
+		}
 
 		start = frtc;
 		P_RunMobjBase();

@@ -27,8 +27,6 @@ playerresp_t	playersresp[MAXPLAYERS];
 
 int             consoleplayer = 0;          /* player taking events and displaying  */
 int             gametic;
-int             prevgametic;
-int             gametic30;
 int             leveltime;
 VINT           totalitems, totalsecret;    /* for intermission  */
 

@@ -55,6 +55,7 @@ void P_ResetPlayer(player_t *player)
 	player->pflags &= ~PF_STARTJUMP;
 	player->pflags &= ~PF_JUMPED;
 	player->pflags &= ~PF_THOKKED;
+	player->homingTimer = 0;
 }
 
 void P_PlayerRingBurst(player_t *player, int damage)
@@ -79,21 +80,21 @@ void P_PlayerRingBurst(player_t *player, int damage)
 		fixed_t spd;
 		if (i > 15)
 		{
-			spd = 3*FRACUNIT;
-
-			P_SetObjectMomZ(mo, 4*FRACUNIT, false);
-
-			if (i & 1)
-				P_SetObjectMomZ(mo, 4*FRACUNIT, true);
-		}
-		else
-		{
-			spd = 2*FRACUNIT;
+			spd = 1*FRACUNIT + (FRACUNIT/2);
 
 			P_SetObjectMomZ(mo, 3*FRACUNIT, false);
 
 			if (i & 1)
 				P_SetObjectMomZ(mo, 3*FRACUNIT, true);
+		}
+		else
+		{
+			spd = 1*FRACUNIT;
+
+			P_SetObjectMomZ(mo, 2*FRACUNIT, false);
+
+			if (i & 1)
+				P_SetObjectMomZ(mo, 2*FRACUNIT, true);
 		}
 
 		P_Thrust(mo, fa, spd);
@@ -502,7 +503,7 @@ void P_BuildMove(player_t *player)
 
 	if (!(player->forwardmove || player->sidemove || (player->pflags & PF_GASPEDAL)))
 	{
-		if (leveltime > 3*TICRATE && !(player->mo->momx > STOPSPEED || player->mo->momx < -STOPSPEED || player->mo->momy > STOPSPEED || player->mo->momy < -STOPSPEED || player->mo->momz > STOPSPEED || player->mo->momz < -STOPSPEED))
+		if (leveltime > 2*TICRATE && !(player->mo->momx > STOPSPEED || player->mo->momx < -STOPSPEED || player->mo->momy > STOPSPEED || player->mo->momy < -STOPSPEED || player->mo->momz > STOPSPEED || player->mo->momz < -STOPSPEED))
 			player->stillTimer++;
 		else
 			player->stillTimer = 0;
@@ -583,7 +584,7 @@ void P_CalcHeight(player_t *player)
 		return;
 	}
 
-	angle = (FINEANGLES / 20 * gametic30) & FINEMASK;
+	angle = (FINEANGLES / 20 * gametic) & FINEMASK;
 	bob = FixedMul(player->bob / 2, finesine(angle));
 
 	// move viewheight
@@ -951,7 +952,7 @@ static void P_DoJumpStuff(player_t *player)
 			// Find a nearby enemy.
 			if (P_LookForTarget(player))
 			{
-				player->homingTimer = 2*TICRATE;
+				player->homingTimer = 2*TICRATE * 2;
 				S_StartSound(player->mo, sfx_thok);
 				player->pflags &= ~PF_SPINNING;
 				player->pflags &= ~PF_STARTDASH;
@@ -1032,6 +1033,15 @@ VINT ControlDirection(player_t *player)
 void P_MovePlayer(player_t *player)
 {
 	//	player->mo->angle += player->angleturn;
+	fixed_t speed = P_AproxDistance(player->mo->momx, player->mo->momy);
+
+	if (player->homingTimer || (player->powers[pw_sneakers] && speed > 20*FRACUNIT))
+	{
+		mobj_t *ghost = P_SpawnMobj(player->mo->x, player->mo->y, player->mo->z, MT_GHOST);
+		P_SetMobjState(ghost, player->mo->state);
+		ghost->angle = player->mo->angle;
+		ghost->reactiontime = 6;
+	}
 
 	/* don't let the player control movement if not onground */
 	onground = (player->mo->z <= player->mo->floorz);
@@ -1063,17 +1073,17 @@ void P_MovePlayer(player_t *player)
 			if (player->forwardmove || player->sidemove)
 			{
 				fixed_t acc = FRACUNIT >> 3;
+				if (player->powers[pw_sneakers])
+					acc <<= 1;
 				controlAngle = R_PointToAngle2(0, 0, controlX, controlY);
-
-				fixed_t oldSpeed = P_AproxDistance(player->mo->momx, player->mo->momy);
 
 				P_ThrustValues(controlAngle, acc, &player->mo->momx, &player->mo->momy);
 				angle_t moveAngle = R_PointToAngle2(0, 0, player->mo->momx, player->mo->momy);
 				
 				// Clip to current speed
-				if (P_AproxDistance(player->mo->momx, player->mo->momy) > oldSpeed)
+				if (P_AproxDistance(player->mo->momx, player->mo->momy) > speed)
 				{
-					const fixed_t diff = P_AproxDistance(player->mo->momx, player->mo->momy) - oldSpeed;
+					const fixed_t diff = P_AproxDistance(player->mo->momx, player->mo->momy) - speed;
 
 					P_ThrustValues(moveAngle - ANG180, diff, &player->mo->momx, &player->mo->momy);
 				}
@@ -1106,8 +1116,9 @@ void P_MovePlayer(player_t *player)
 					player->mo->angle = R_PointToAngle2(player->mo->x, player->mo->y, player->mo->x + player->mo->momx, player->mo->y + player->mo->momy);*/
 
 			fixed_t acc = 6144 * 4;//FRACUNIT / 2;
+			if (player->powers[pw_sneakers])
+				acc <<= 1;
 	//		angle_t speedDir = R_PointToAngle2(0, 0, player->mo->momx, player->mo->momy);
-			fixed_t speed = P_AproxDistance(player->mo->momx, player->mo->momy);
 
 			if (!(player->pflags & PF_GASPEDAL) && !(player->pflags & PF_JUMPED))
 			{
@@ -1348,29 +1359,26 @@ void P_PlayerThink(player_t *player)
 	/* */
 	/* counters */
 	/* */
-	if (gametic != prevgametic)
-	{
-		if (player->powers[pw_strength])
-			player->powers[pw_strength]++; /* strength counts up to diminish fade */
+	if (player->powers[pw_sneakers])
+		player->powers[pw_sneakers]--;
 
-		if (player->powers[pw_invulnerability])
-			player->powers[pw_invulnerability]--;
+	if (player->powers[pw_invulnerability])
+		player->powers[pw_invulnerability]--;
 
-		if (player->powers[pw_ironfeet])
-			player->powers[pw_ironfeet]--;
+	if (player->powers[pw_ironfeet])
+		player->powers[pw_ironfeet]--;
 
-		if (player->powers[pw_infrared])
-			player->powers[pw_infrared]--;
+	if (player->powers[pw_infrared])
+		player->powers[pw_infrared]--;
 
-		if (player->damagecount)
-			player->damagecount--;
+	if (player->damagecount)
+		player->damagecount--;
 
-		if (player->bonuscount)
-			player->bonuscount--;
+	if (player->bonuscount)
+		player->bonuscount--;
 
-		if (player->homingTimer)
-			player->homingTimer--;
-	}
+	if (player->homingTimer)
+		player->homingTimer--;
 }
 
 void R_ResetResp(player_t *p)

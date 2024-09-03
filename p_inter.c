@@ -46,7 +46,7 @@ static boolean P_DoSpring(mobj_t *spring, player_t *player)
 	else if (P_MobjFlip(player->mo) == P_MobjFlip(spring))
 		player->powers[pw_justsprung] |= (1<<15);
 */
-	if ((horizspeed && vertispeed) || (player && player->homing)) // Mimic SA
+	if ((horizspeed && vertispeed) || (player && player->homingTimer > 0)) // Mimic SA
 	{
 		player->mo->momx = player->mo->momy = player->mo->momz = 0;
 		P_UnsetThingPosition(player->mo);
@@ -107,7 +107,7 @@ static boolean P_DoSpring(mobj_t *spring, player_t *player)
 
 		if (horizspeed)
 		{
-			player->justSprung = 2*TICRATE;
+			player->justSprung = TICRATE;
 			player->mo->angle = spring->angle;
 		}
 
@@ -120,7 +120,7 @@ static boolean P_DoSpring(mobj_t *spring, player_t *player)
 				P_SetMobjState(player->mo, S_PLAY_ATK1);
 		}
 //		secondjump = player->secondjump;
-		washoming = player->homing;
+		washoming = player->homingTimer > 0;
 		P_ResetPlayer(player);
 
 		if (!vertispeed)

@@ -685,9 +685,11 @@ MT_FORCE_ICON,
 MT_ARMAGEDDON_ICON,
 MT_WHIRLWIND_ICON,
 MT_ELEMENTAL_ICON,
-MT_SNEAKERS_ICON,
 MT_INVULN_ICON,
 MT_1UP_ICON,*/
+		case MT_SNEAKERS_ICON:
+			player->powers[pw_sneakers] = 20*TICRATE;
+			break;
 		default:
 			// Dunno what kind of monitor this is, but we fail gracefully.
 			break;

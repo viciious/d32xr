@@ -369,7 +369,7 @@ int M_Ticker (void)
 		return ga_startnew;
 
 /* animate skull */
-	if (gametic != prevgametic && (gametic & 1))
+	if (gametic & 1)
 	{
 		cursorframe++;
 	}

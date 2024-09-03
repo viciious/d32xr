@@ -471,7 +471,7 @@ void P_ZMovement(mobj_t *mo)
 
       if (mo->type == MT_FLINGRING)
       {
-         mo->momz = -FixedMul(mo->momz, FixedDiv(17*FRACUNIT, 20*FRACUNIT));
+         mo->momz = -FixedMul(mo->momz, FixedDiv(19*FRACUNIT, 20*FRACUNIT));
       }
       else
       {
@@ -559,6 +559,17 @@ void P_MobjThinker(mobj_t *mobj)
                mobj->momz = mobjinfo[mobj->type].speed;
             else
                mobj->momz = 0;
+            break;
+         case MT_GHOST:
+            if (mobj->reactiontime)
+            {
+               mobj->reactiontime--;
+               if (mobj->reactiontime == 0)
+               {
+                  P_RemoveMobj(mobj);
+                  return;
+               }
+            }
             break;
       }
    }

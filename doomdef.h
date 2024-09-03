@@ -92,7 +92,7 @@ void D_isort(int* a, int len) __attribute__((nonnull)) ATTR_DATA_CACHE_ALIGN;
 
 #define MAXPLAYERS	2
 
-#define TICRATE		15				/* number of tics / second */
+#define TICRATE		30				/* number of tics / second */
 #define TICVBLS		(60/TICRATE)	/* vblanks per tic */
 									/* change this to 'ticrate' if you want */
 									/* to use a different rate on PAL */
@@ -314,7 +314,7 @@ typedef enum
 {
 	pw_invulnerability,
 	pw_flashing,
-	pw_strength,
+	pw_sneakers,
 	pw_ironfeet,
 	pw_allmap,
 	pw_infrared,
@@ -390,7 +390,6 @@ typedef struct player_s
 	VINT        exiting;
 	VINT        lossCount;
 	VINT        stillTimer;
-	VINT        homing;
 	VINT        justSprung;
 	VINT        scoreAdd;
 	VINT        lives;
@@ -481,8 +480,6 @@ extern 	VINT 		*gamemaplumps;
 extern 	VINT 		gamemapcount;
 
 extern 	int 		gametic;
-extern 	int 		prevgametic;
-extern  int         gametic30;
 extern  int         leveltime;
 
 #define MAXDMSTARTS		10
