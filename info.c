@@ -251,6 +251,12 @@ STATE(SPR_FL03,0,2,A_FlickyCheck,S_FLICKY_03_OUT), // S_FLICKY_03_OUT
 STATE(SPR_FL03,2,2,A_FlickyFly,S_FLICKY_03_FLAP2), // S_FLICKY_03_FLAP1
 STATE(SPR_FL03,3,2,A_FlickyFly,S_FLICKY_03_FLAP1), // S_FLICKY_03_FLAP2
 
+// Rat
+STATE(SPR_FL12,0,2,A_FlickyCheck,S_FLICKY_12_OUT), // S_FLICKY_12_OUT
+STATE(SPR_FL12,1,1,A_FlickyFly,S_FLICKY_12_RUN2), // S_FLICKY_12_RUN1
+STATE(SPR_FL12,2,1,NULL,S_FLICKY_12_RUN3), // S_FLICKY_12_RUN2
+STATE(SPR_FL12,3,1,NULL,S_FLICKY_12_RUN1), // S_FLICKY_12_RUN2
+
 };
 
 #undef STATE
@@ -1277,7 +1283,32 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		3*FRACUNIT,     // speed
 		8*FRACUNIT,     // radius
 		20*FRACUNIT,    // height
-		2,             // mass
+		2,              // mass
+		0,              // damage
+		sfx_None,       // activesound
+		MF_FLOAT, // flags
+	},
+
+	{           // MT_FLICKY_12
+		-1,             // doomednum
+		S_FLICKY_12_OUT, // spawnstate
+		1000,           // spawnhealth
+		S_FLICKY_12_RUN1, // seestate
+		sfx_None,       // seesound
+		8,              // reactiontime
+		sfx_None,       // attacksound
+		S_NULL,         // painstate
+		0,              // painchance
+		sfx_None,       // painsound
+		S_NULL,         // meleestate
+		S_NULL,         // missilestate
+		S_NULL,         // deathstate
+		S_NULL,         // xdeathstate
+		sfx_None,       // deathsound
+		6*FRACUNIT,     // speed
+		8*FRACUNIT,     // radius
+		20*FRACUNIT,    // height
+		1,              // mass
 		0,              // damage
 		sfx_None,       // activesound
 		MF_FLOAT, // flags

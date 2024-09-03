@@ -298,8 +298,8 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 		P_AddPlayerScore(player, score);
 
 		// Spawn a flicky
-		const mobjtype_t flickies[3] = { MT_FLICKY_01, MT_FLICKY_02, MT_FLICKY_03 };
-		mobj_t *flicky = P_SpawnMobj(target->x, target->y, target->z + (target->theight << (FRACBITS-1)), flickies[P_Random() % 3]);
+		const mobjtype_t flickies[4] = { MT_FLICKY_01, MT_FLICKY_02, MT_FLICKY_03, MT_FLICKY_12 };
+		mobj_t *flicky = P_SpawnMobj(target->x, target->y, target->z + (target->theight << (FRACBITS-1)), flickies[P_Random() % 4]);
 		flicky->momz = 4*FRACUNIT;
 		flicky->target = player->mo;
 	}
