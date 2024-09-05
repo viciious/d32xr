@@ -239,7 +239,7 @@ void vgm_play_dac_samples(int offset, int length, int freq)
         }
     }
 
-    dac_samples = (char *)MD_WORDRAM_VGM_PTR + pcm_baseoffs + offset;
+    dac_samples = vgm_lzss.base + pcm_baseoffs + offset;
     dac_len = length;
 }
 
