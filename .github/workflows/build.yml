@@ -66,13 +66,13 @@ jobs:
           grep 'bss_end =' output.map | grep -o '0x[0-9a-f]\+' | \
           xargs -I{} echo "{} 0x603C000" | awk --non-decimal-data '{print($2-$1); exit($1>=$2)}'
       - name: 32X ROM
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: 32X ROM File
           path: |
             D32XR.32x
       - name: temp.bin
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: temp.bin
           path: |
