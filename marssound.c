@@ -782,7 +782,9 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 	}
 	else if (musictype == mustype_spcm)
 	{
-		if (cdtrack == cdtrack_none)
+		playtrack = musiclump;
+
+		if (musiclump == mus_none || playtrack == 0)
 		{
 			S_StopSong();
 			return;
@@ -790,18 +792,9 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 		if (*spcmDir == '\0')
 			return;
 
-		playtrack = cdtrack;
-		if (playtrack < 0)
-		{
-			playtrack = -playtrack;
-			D_snprintf(filename, sizeof(filename), "%s/_%02d.PCM", spcmDir, playtrack);
-		}
-		else
-		{
-			D_snprintf(filename, sizeof(filename), "%s/%02d.PCM", spcmDir, playtrack);
-		}
+		D_snprintf(filename, sizeof(filename), "%s/%02d.PCM", spcmDir, playtrack);
 
-		if (curcdtrack == cdtrack && muslooping == looping)
+		if (curmusic == musiclump && muslooping == looping)
 		{
 			Mars_MCDResumeSPCMTrack();
 			return;
