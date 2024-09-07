@@ -73,6 +73,11 @@ typedef	struct
 	VINT		linecount;
 
 	VINT		tag;
+	// killough 3/7/98: support flat heights drawn at another sector's heights
+  	VINT        heightsec;    // other sector, or -1 if no other sector
+
+	// killough 4/11/98: support for lightlevels coming from another sector
+	VINT floorlightsec, ceilinglightsec;
 
 	VINT		blockbox[4];		/* mapblock bounding box for height changes */
 
@@ -268,6 +273,8 @@ int		R_DefaultViewportSize(void); // returns the viewport id for fullscreen, low
 void	R_SetDrawMode(void);
 void	R_SetupLevel(void);
 void	R_SetupTextureCaches(void);
+// killough 4/13/98: fake floors/ceilings for deep water / fake ceilings:
+sector_t *R_FakeFlat(sector_t *, sector_t *, uint8_t *, uint8_t *, boolean);
 
 typedef void (*drawcol_t)(int, int, int, int, fixed_t, fixed_t, inpixel_t*, int);
 typedef void (*drawskycol_t)(int, int, int);
@@ -590,6 +597,7 @@ __attribute__((aligned(16)))
 {
 	fixed_t		viewx, viewy, viewz;
 	angle_t		viewangle;
+	subsector_t *viewsubsector;
 	fixed_t		viewcos, viewsin;
 	player_t	*viewplayer;
 	VINT		lightlevel;
