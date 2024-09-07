@@ -42,7 +42,8 @@ typedef struct
 	VINT specials;
 	VINT mapNumber;
 	VINT skyTexture;
-	VINT songNum;
+	uint8_t songNum;
+	uint8_t cdaNum;
 	char *name;
 	char *next;
 	char *secretNext;

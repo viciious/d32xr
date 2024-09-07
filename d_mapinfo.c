@@ -284,6 +284,8 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 		mi->mapNumber = D_atoi(value);
 	else if (!D_strcasecmp(key, "music"))
 		mi->songNum = S_SongForName(value);
+	else if (!D_strcasecmp(key, "cdTrack"))
+		mi->cdaNum = D_atoi(value);
 	else if (!D_strcasecmp(key, "intermissionText"))
 		mi->interText = value;
 	else if (!D_strcasecmp(key, "secretIntermissionText"))

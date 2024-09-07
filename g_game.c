@@ -143,7 +143,7 @@ void G_DoLoadLevel (void)
 
 	if (netgame != gt_single && !splitscreen)
 		S_StopSong();
-	S_StartSong(music, 1, gamemap);
+	S_StartSong(music, 1, gamemapinfo.cdaNum ? gamemapinfo.cdaNum : gamemap);
 
 	//Z_CheckHeap (mainzone);  		/* DEBUG */
 } 
