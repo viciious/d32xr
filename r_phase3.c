@@ -116,14 +116,34 @@ static void R_PrepMobj(mobj_t *thing)
 //   if (tz > centerYFrac)
 //       return;
 
-   texmid = gzt + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
 //   tz = FixedMul(texmid, xscale);
 //   if (tz < viewportHeight - centerYFrac)
 //       return;
 
+   // killough 3/27/98: exclude things totally separated
+   // from the viewer, by either water or fake ceilings
+   // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
+   int heightsec = thing->subsector->sector->heightsec;
+
+   if (heightsec != -1)   // only clip things which are in special sectors
+   {
+      int phs = vd.viewsubsector->sector->heightsec;
+      if (phs != -1 && vd.viewz < sectors[phs].floorheight ?
+         thing->z >= sectors[heightsec].floorheight :
+         gzt < sectors[heightsec].floorheight)
+         return;
+      if (phs != -1 && vd.viewz > sectors[phs].ceilingheight ?
+         gzt < sectors[heightsec].ceilingheight &&
+         vd.viewz >= sectors[heightsec].ceilingheight :
+         thing->z >= sectors[heightsec].ceilingheight)
+         return;
+   }
+
    // get a new vissprite
    if(vd.vissprite_p >= vd.vissprites + MAXVISSPRITES)
       return; // too many visible sprites already, leave room for psprites
+
+   texmid = gzt + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
 
    vis = (vissprite_t *)vd.vissprite_p;
    vd.vissprite_p++;
@@ -262,14 +282,34 @@ static void R_PrepRing(mobj_t *thing)
 //   if (tz > centerYFrac)
 //       return;
 
-   texmid = gzt + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
 //   tz = FixedMul(texmid, xscale);
 //   if (tz < viewportHeight - centerYFrac)
 //       return;
 
+   // killough 3/27/98: exclude things totally separated
+   // from the viewer, by either water or fake ceilings
+   // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
+   int heightsec = thing->subsector->sector->heightsec;
+
+   if (heightsec != -1)   // only clip things which are in special sectors
+   {
+      int phs = vd.viewsubsector->sector->heightsec;
+      if (phs != -1 && vd.viewz < sectors[phs].floorheight ?
+         thing->z >= sectors[heightsec].floorheight :
+         gzt < sectors[heightsec].floorheight)
+         return;
+      if (phs != -1 && vd.viewz > sectors[phs].ceilingheight ?
+         gzt < sectors[heightsec].ceilingheight &&
+         vd.viewz >= sectors[heightsec].ceilingheight :
+         thing->z >= sectors[heightsec].ceilingheight)
+         return;
+   }
+
    // get a new vissprite
    if(vd.vissprite_p >= vd.vissprites + MAXVISSPRITES)
       return; // too many visible sprites already, leave room for psprites
+
+   texmid = gzt + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
 
    vis = (vissprite_t *)vd.vissprite_p;
    vd.vissprite_p++;
@@ -395,14 +435,34 @@ static void R_PrepScenery(scenerymobj_t *thing)
 //   if (tz > centerYFrac)
 //       return;
 
-   texmid = gzt + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
 //   tz = FixedMul(texmid, xscale);
 //   if (tz < viewportHeight - centerYFrac)
 //       return;
 
+   // killough 3/27/98: exclude things totally separated
+   // from the viewer, by either water or fake ceilings
+   // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
+   int heightsec = subsectors[thing->subsector].sector->heightsec;
+
+   if (heightsec != -1)   // only clip things which are in special sectors
+   {
+      int phs = vd.viewsubsector->sector->heightsec;
+      if (phs != -1 && vd.viewz < sectors[phs].floorheight ?
+         thing->z >= sectors[heightsec].floorheight :
+         gzt < sectors[heightsec].floorheight)
+         return;
+      if (phs != -1 && vd.viewz > sectors[phs].ceilingheight ?
+         gzt < sectors[heightsec].ceilingheight &&
+         vd.viewz >= sectors[heightsec].ceilingheight :
+         thing->z >= sectors[heightsec].ceilingheight)
+         return;
+   }
+
    // get a new vissprite
    if(vd.vissprite_p >= vd.vissprites + MAXVISSPRITES)
       return; // too many visible sprites already, leave room for psprites
+
+   texmid = gzt + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
 
    vis = (vissprite_t *)vd.vissprite_p;
    vd.vissprite_p++;
