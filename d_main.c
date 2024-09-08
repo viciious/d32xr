@@ -507,6 +507,9 @@ void DrawSinglePlaque (jagobj_t *pl);
 
 jagobj_t	*titlepic;
 
+static char* credits[2];
+static short creditspage;
+
 int TIC_Abortable (void)
 {
 #ifdef JAGUAR
@@ -519,10 +522,12 @@ int TIC_Abortable (void)
 		return 1;
 	if (ticon < TICVBLS)
 		return 0;
-	if (ticon >= gameinfo.titleTime)
+	if (ticon >= (gameinfo.titleTime + gameinfo.creditsTime))
 		return 1;		/* go on to next demo */
+	if (ticon >= gameinfo.titleTime && creditspage != 0 && !credits[creditspage-1])
+		return 1;
 
-#ifdef JAGUAR	
+#ifdef JAGUAR
 	if (ticbuttons[0] == (BT_OPTION|BT_STAR|BT_HASH) )
 	{	/* reset eeprom memory */
 		void Jag68k_main (void);
@@ -567,8 +572,6 @@ int TIC_Abortable (void)
 
 void START_Title(void)
 {
-	const char *l;
-
 #ifdef MARS
 	int		i;
 
@@ -583,161 +586,90 @@ void START_Title(void)
 #endif
 
 	titlepic = NULL;
+	credits[0] = credits[1] = NULL;
+	creditspage = 0;
 
-	if (!gameinfo.titleTime)
+	if (!(gameinfo.titleTime + gameinfo.creditsTime))
 		return;
 
-	l = gameinfo.titlePage;
-	if (*l) {
+	if (*gameinfo.titlePage || *gameinfo.creditsPage) {
+		int l, numl;
+		VINT lumps[3];
+		lumpinfo_t li[3];
+
 		W_LoadPWAD(PWAD_CD);
 
-		int lump = W_CheckNumForName(l);
-		if (lump >= 0)
-			titlepic = W_CacheLumpNum(lump, PU_STATIC);
+		numl = 0;
+		if (*gameinfo.titlePage)
+		{
+			lumps[numl++] = W_CheckNumForName(gameinfo.titlePage);
+		}
+
+		if (*gameinfo.creditsPage)
+		{
+			/* build a temp in-memory PWAD */
+			for (i = 0; i < 2; i++)
+			{
+				char name[9];
+				D_strncpy(name, gameinfo.creditsPage, 8);
+				name[7]+= i;
+				name[8] = '\0';
+
+				lumps[numl++] = W_CheckNumForName(name);
+			}
+
+			W_CacheWADLumps(li, numl, lumps, true);
+		}
+
+		l = 0;
+		if (*gameinfo.titlePage)
+		{
+			if (li[l].name[0])
+				titlepic = W_CacheLumpName(li[l++].name, PU_STATIC);
+		}
+
+		if (*gameinfo.creditsPage)
+		{
+			for (i = 0; i < 2; i++)
+			{
+				if (!li[l].name[0])
+					break;
+				credits[i] = W_CacheLumpName(li[l++].name, PU_STATIC);
+			}
+		}
 
 		W_LoadPWAD(PWAD_NONE);
 	}
 
-#ifdef MARS
-	I_InitMenuFire(titlepic);
-#else
 	S_StartSongByName(gameinfo.titleMus, 0, cdtrack_title);
-#endif
+
+	I_InitMenuFire(titlepic);
 }
 
 void STOP_Title (void)
 {
-	if (!gameinfo.titleTime)
-		return;
+	int i;
+
 	if (titlepic != NULL)
 	{
 		Z_Free (titlepic);
 		titlepic = NULL;
 	}
-#ifdef MARS
-	I_StopMenuFire();
-#else
-	S_StopSong();
-#endif
-}
-
-void DRAW_Title (void)
-{
-#ifdef MARS
-	I_DrawMenuFire();
-#endif
-}
-
-/*============================================================================= */
-
-#ifdef MARS
-static char* credits[2];
-static short creditspage;
-#endif
-
-static void START_Credits (void)
-{
-#ifdef MARS
-	int i;
-	VINT lumps[2];
-	lumpinfo_t li[2];
-
-	if (!gameinfo.creditsTime)
-		return;
-
-	credits[0] = credits[1] = NULL;
-	titlepic = NULL;
-	creditspage = 1;
-	if (!*gameinfo.creditsPage)
-		return;
-
-	W_LoadPWAD(PWAD_CD);
-
-	/* build a temp in-memory PWAD */
-	for (i = 0; i < 2; i++)
-	{
-		char name[9];
-		D_strncpy(name, gameinfo.creditsPage, 8);
-		name[7]+= i;
-		name[8] = '\0';
-
-		lumps[i] = W_CheckNumForName(name);
-	}
-
-	W_CacheWADLumps(li, i, lumps, true);
-
-	for (i = 0; i < 2; i++)
-		credits[i] = W_CacheLumpName(li[i].name, PU_STATIC);
-
-	W_LoadPWAD(PWAD_NONE);
-
-	if (!credits[0])
-		return;
-#else
-	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
-	titlepic = W_CacheLumpName("credits", PU_STATIC);
-#endif
-	DoubleBufferSetup();
-}
-
-void STOP_Credits (void)
-{
-#ifdef MARS
-	int i;
 	for (i = 0; i < 2; i++)
 	{
 		if (credits[i])
 			Z_Free(credits[i]);
+		credits[i] = NULL;
 	}
-	D_memset(credits, 0, sizeof(credits));
-#endif
 
-	if (titlepic)
-		Z_Free(titlepic);
-}
-
-static int TIC_Credits (void)
-{
-	int buttons = players[consoleplayer].ticbuttons;
-	int oldbuttons = players[consoleplayer].oldticbuttons;
-
-	if (!*gameinfo.creditsPage)
-		return ga_exitdemo;
-	if (ticon >= gameinfo.creditsTime)
-		return 1;		/* go on to next demo */
+	if (!gameinfo.titleTime)
+		return;
 
 #ifdef MARS
-	if ( (buttons & BT_A) && !(oldbuttons & BT_A) )
-		return ga_exitdemo;
-	if ( (buttons & BT_B) && !(oldbuttons & BT_B) )
-		return ga_exitdemo;
-	if ( (buttons & BT_C) && !(oldbuttons & BT_C) )
-		return ga_exitdemo;
-	if ( (buttons & BT_START) && !(oldbuttons & BT_START) )
-		return ga_exitdemo;
-#else
-	if ( (buttons & BT_ATTACK) && !(oldbuttons & BT_ATTACK) )
-		return ga_exitdemo;
-	if ( (buttons & BT_SPEED) && !(oldbuttons & BT_SPEED) )
-		return ga_exitdemo;
-	if ( (buttons & BT_USE) && !(oldbuttons & BT_USE) )
-		return ga_exitdemo;
-	if ( (buttons & BT_START) && !(oldbuttons & BT_START) )
-		return ga_exitdemo;
+	I_StopMenuFire();
 #endif
 
-	if (ticon >= gameinfo.creditsTime/2)
-	{
-		if (!credits[1])
-			return 1;
-		if (creditspage != 2)
-		{
-			creditspage = 2;
-			DoubleBufferSetup();
-		}
-	}
-
-	return 0;
+	S_StopSong();
 }
 
 static void DRAW_RightString(int x, int y, const char* str)
@@ -811,23 +743,37 @@ static void DRAW_LineCmds(char *lines)
 	}
 }
 
-static void DRAW_Credits(void)
+void DRAW_Title (void)
 {
+	int tic = ticon;
+	int page;
+
 #ifdef MARS
-	DRAW_LineCmds(credits[creditspage-1]);
-#else
-	DrawJagobj(titlepic, 0, 0);
+	if (gameinfo.titleTime && tic < gameinfo.titleTime)
+	{
+		I_DrawMenuFire();
+		return;
+	}
 #endif
+
+	tic -= gameinfo.titleTime;
+	page = tic >= gameinfo.creditsTime/2 ? 2 : 1;
+	if (page != creditspage)
+	{
+		creditspage = page;
+		if (credits[page-1])
+			DoubleBufferSetup();
+	}
+
+	if (credits[creditspage-1])
+		DRAW_LineCmds(credits[creditspage-1]);
 }
 
 /*============================================================================ */
 void RunMenu (void);
-void RunCredits(void);
 
 void RunTitle (void)
 {
-	int		exit;
-
 	startskill = sk_medium;
 	startmap = 1;
 	starttype = gt_single;
@@ -835,19 +781,7 @@ void RunTitle (void)
 	startsave = -1;
 	startsplitscreen = 0;
 	canwipe = false;
-
-	exit = MiniLoop (START_Title, STOP_Title, TIC_Abortable, DRAW_Title, UpdateBuffer);
-
-#ifdef MARS
-	if (exit != ga_exitdemo)
-		RunCredits();
-#endif
-}
-
-void RunCredits (void)
-{
-	if (*gameinfo.creditsPage)
-		MiniLoop(START_Credits, STOP_Credits, TIC_Credits, DRAW_Credits, UpdateBuffer);
+	MiniLoop (START_Title, STOP_Title, TIC_Abortable, DRAW_Title, UpdateBuffer);
 }
 
 #define MAX_ATTRACT_DEMOS 10

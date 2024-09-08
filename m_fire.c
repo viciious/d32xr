@@ -265,8 +265,6 @@ void I_InitMenuFire(jagobj_t *titlepic)
 	for (i = 0; i < 256; i++)
 		m_fire->rndtable[i] = M_Random() & 3;
 
-	S_StartSongByName(gameinfo.titleMus, 0, cdtrack_title);
-
 	if (titlepic != NULL)
 	{
 		int lastline = m_fire->bottom_pos - FIRE_HEIGHT;
@@ -302,8 +300,6 @@ void I_InitMenuFire(jagobj_t *titlepic)
 */
 void I_StopMenuFire(void)
 {
-	S_StopSong();
-
 	Mars_M_EndDrawFire();
 
 	Z_Free(m_fire->rndtable);
