@@ -96,6 +96,7 @@ void G_DoLoadLevel (void)
 	int             i; 
 	int 		gamemap;
 	int			music;
+	int 		cdtrack;
 	dmapinfo_t  *mi;
 
 	S_Clear();
@@ -141,9 +142,12 @@ void G_DoLoadLevel (void)
 	if (music <= mus_none)
 		music = S_SongForMapnum(gamemap);
 
+	cdtrack = gamemapinfo.cdaNum ? gamemapinfo.cdaNum : gamemap;
+	cdtrack += gameinfo.firstCdaNum;
+
 	if (netgame != gt_single && !splitscreen)
 		S_StopSong();
-	S_StartSong(music, 1, gamemapinfo.cdaNum ? gamemapinfo.cdaNum : gamemap);
+	S_StartSong(music, 1, cdtrack);
 
 	//Z_CheckHeap (mainzone);  		/* DEBUG */
 } 

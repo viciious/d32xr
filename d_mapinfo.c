@@ -349,6 +349,8 @@ static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
 		gi->stopFireTime = D_atoi(value);
 	else if (!D_strcasecmp(key, "titleStartPos"))
 		gi->titleStartPos = D_atoi(value);
+	else if (!D_strcasecmp(key, "firstCdTrack"))
+		gi->firstCdaNum = D_atoi(value);
 	else if (!D_strcasecmp(key, "spcmDirs"))
 	{
 		char *p = &gi->spcmDirList[0][0];
@@ -372,9 +374,6 @@ static void G_ClearGameInfo(dgameinfo_t* gi)
 	gi->endMus = "";
 	gi->creditsPage = "";
 	gi->endText = "";
-	D_memset(gi->spcmDirList, 0, sizeof(gi->spcmDirList));
-	gi->stopFireTime = 0;
-	gi->titleStartPos = 0;
 }
 
 static dmapinfo_t *G_CompressMapInfo(dmapinfo_t *mi)

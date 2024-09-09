@@ -70,6 +70,7 @@ typedef struct
 	VINT noAttractDemo;
 	VINT stopFireTime;
 	VINT titleStartPos;
+	VINT firstCdaNum;
 	char* endText;
 	void* data;
 } dgameinfo_t;
