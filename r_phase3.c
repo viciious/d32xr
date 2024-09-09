@@ -200,7 +200,7 @@ static void R_PrepMobj(mobj_t *thing)
        vis->colormap = HWLIGHT(vis->colormap);
    }
 
-   vis->colormaps = dc_colormaps;
+//   vis->colormaps = dc_colormaps;
 }
 
 static void R_PrepRing(mobj_t *thing)
@@ -358,7 +358,7 @@ static void R_PrepRing(mobj_t *thing)
    else
       vis->colormap = HWLIGHT(thing->subsector->sector->lightlevel);
  
-   vis->colormaps = dc_colormaps;
+//   vis->colormaps = dc_colormaps;
 }
 
 static void R_PrepScenery(scenerymobj_t *thing)
@@ -490,7 +490,7 @@ static void R_PrepScenery(scenerymobj_t *thing)
    else
       vis->colormap = HWLIGHT(subsectors[thing->subsector].sector->lightlevel);
  
-   vis->colormaps = dc_colormaps;
+//   vis->colormaps = dc_colormaps;
 }
 
 //

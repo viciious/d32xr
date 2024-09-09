@@ -168,20 +168,20 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
 
 #ifdef HIGH_DETAIL_SPRITES
    if (lowResMode) {
-      dcol      = vis->colormap < 0 ? drawfuzzcol : drawspritecol;
+      dcol      = drawspritecol;
    }
    else {
-      dcol      = vis->colormap < 0 ? drawfuzzcol : drawcol;
+      dcol      = drawcol;
    }
 #else
-   dcol      = vis->colormap < 0 ? drawfuzzcol : drawcol;
+   dcol      = drawcol;
 #endif
 
    sprtop = FixedMul(vis->texturemid, spryscale);
    sprtop = centerYFrac - sprtop;
 
    // blitter iinc
-   light    = vis->colormap < 0 ? -vis->colormap : vis->colormap;
+   light    = vis->colormap;
    x        = vis->x1;
    stopx    = vis->x2 + 1;
    fracstep = vis->xiscale;

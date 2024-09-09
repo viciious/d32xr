@@ -274,7 +274,7 @@ void	R_SetDrawMode(void);
 void	R_SetupLevel(void);
 void	R_SetupTextureCaches(void);
 // killough 4/13/98: fake floors/ceilings for deep water / fake ceilings:
-sector_t *R_FakeFlat(sector_t *, sector_t *, uint8_t *, uint8_t *, boolean);
+sector_t *R_FakeFlat(sector_t *, sector_t *, boolean);
 
 typedef void (*drawcol_t)(int, int, int, int, fixed_t, fixed_t, inpixel_t*, int);
 typedef void (*drawskycol_t)(int, int, int);
@@ -545,7 +545,8 @@ typedef struct vissprite_s
 	VINT 		patchnum;
 	VINT		colormap;		/* < 0 = shadow draw */
 	short		gx,gy;	/* global coordinates */
-	void 		*colormaps;
+	VINT        heightsec;
+//	void 		*colormaps;
 #ifndef MARS
 	pixel_t		*pixels;		/* data patch header references */
 #endif

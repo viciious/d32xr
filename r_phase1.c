@@ -196,6 +196,10 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
    short      actionbits;
    int16_t    rowoffset, textureoffset;
    const short liflags = li->flags;
+   static sector_t ftempsec;
+   static sector_t btempsec;
+
+   front_sector = R_FakeFlat(front_sector, &ftempsec, false);
 
    {
       li->flags |= ML_MAPPED; // mark as seen
@@ -224,6 +228,8 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
 
       if (!back_sector)
          back_sector = &emptysector;
+      else
+         back_sector = R_FakeFlat(back_sector, &btempsec, true);
 
       b_ceilingpic    = back_sector->ceilingpic;
       b_lightlevel    = back_sector->lightlevel;
@@ -560,17 +566,8 @@ crunch:
 // killough 4/11/98, 4/13/98: fix bugs, add 'back' parameter
 //
 sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
-                     uint8_t *floorlightlevel, uint8_t *ceilinglightlevel,
                      boolean back)
 {
-  if (floorlightlevel)
-    *floorlightlevel = sec->floorlightsec == -1 ?
-      sec->lightlevel : sectors[sec->floorlightsec].lightlevel;
-
-  if (ceilinglightlevel)
-    *ceilinglightlevel = sec->ceilinglightsec == -1 ? // killough 4/11/98
-      sec->lightlevel : sectors[sec->ceilinglightsec].lightlevel;
-
   if (sec->heightsec != -1)
     {
       const sector_t *s = &sectors[sec->heightsec];
@@ -610,14 +607,6 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
           }
 
           tempsec->lightlevel  = s->lightlevel;
-
-          if (floorlightlevel)
-            *floorlightlevel = s->floorlightsec == -1 ? s->lightlevel :
-            sectors[s->floorlightsec].lightlevel; // killough 3/16/98
-
-          if (ceilinglightlevel)
-            *ceilinglightlevel = s->ceilinglightsec == -1 ? s->lightlevel :
-            sectors[s->ceilinglightsec].lightlevel; // killough 4/11/98
         }
       else
         if (heightsec != -1 && vd.viewz >= sectors[heightsec].ceilingheight &&
@@ -639,14 +628,6 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
               }
 
             tempsec->lightlevel  = s->lightlevel;
-
-            if (floorlightlevel)
-              *floorlightlevel = s->floorlightsec == -1 ? s->lightlevel :
-              sectors[s->floorlightsec].lightlevel; // killough 3/16/98
-
-            if (ceilinglightlevel)
-              *ceilinglightlevel = s->ceilinglightsec == -1 ? s->lightlevel :
-              sectors[s->ceilinglightsec].lightlevel; // killough 4/11/98
           }
       sec = tempsec;               // Use other sector
     }
@@ -667,7 +648,8 @@ static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
    line_t *ldef;
    side_t *sidedef;
    boolean solid;
-   static sector_t tempsec;     // killough 3/8/98: ceiling/water hack
+   static sector_t ftempsec;     // killough 3/8/98: ceiling/water hack
+   static sector_t btempsec;
 
    if (line->v1 == rbsp->lastv2)
       angle1 = rbsp->lastangle2;
@@ -692,18 +674,17 @@ static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
    // decide which clip routine to use
    side = line->sideoffset & 1;
    ldef = &lines[line->linedef];
-   frontsector = R_FakeFlat(rbsp->curfsector, &tempsec, NULL, NULL, false);
+   frontsector = R_FakeFlat(rbsp->curfsector, &ftempsec, false);
    backsector = (ldef->flags & ML_TWOSIDED) ? &sectors[sides[ldef->sidenum[side^1]].sector] : 0;
    sidedef = &sides[ldef->sidenum[side]];
    solid = false;
+   sector_t *oldbsector = backsector;
 
    if (!backsector)
       solid = true;
    else
    {
-      // killough 3/8/98, 4/4/98: hack for invisible ceilings / deep water
-      backsector = R_FakeFlat(backsector, &tempsec, NULL, NULL, true);
-
+      backsector = R_FakeFlat(backsector, &btempsec, true);
       if (backsector->ceilingheight <= frontsector->floorheight ||
          backsector->floorheight >= frontsector->ceilingheight)
       {
@@ -724,7 +705,7 @@ static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
    rbsp->curline = line;
    rbsp->curside = sidedef;
    rbsp->curldef = ldef;
-   rbsp->curbsector = backsector;
+   rbsp->curbsector = oldbsector;
    rbsp->lineangle1 = angle1;
    R_ClipWallSegment(rbsp, x1, x2, solid);
 }
@@ -740,9 +721,6 @@ static void R_Subsector(rbspWork_t *rbsp, int num)
    seg_t       *line, *stopline;
    int          count;
    sector_t    *frontsector = sub->sector;
-   sector_t tempsec; // killough 3/7/98: deep water hack
-   uint8_t floorlightlevel; // killough 3/16/98: set floor lightlevel
-   uint8_t ceilinglightlevel; // killough 4/11/98
       
    if (frontsector->thinglist)
    {
@@ -761,12 +739,12 @@ static void R_Subsector(rbspWork_t *rbsp, int num)
    stopline = line + count;
 
    // killough 3/8/98, 4/4/98: Deep water / fake ceiling effect
-   frontsector = R_FakeFlat(frontsector, &tempsec, &floorlightlevel, &ceilinglightlevel, false);
+//   frontsector = R_FakeFlat(frontsector, &tempsec, false);
 
    // killough 3/7/98: Add (x,y) offsets to flats, add deep water check
    // killough 3/16/98: add floorlightlevel
-   const int floorandlight = ((floorlightlevel & 0xff) << 16) | frontsector->floorpic;
-   const int ceilandlight = ((ceilinglightlevel & 0xff) << 16) | frontsector->ceilingpic;
+//   const int floorandlight = ((floorlightlevel & 0xff) << 16) | frontsector->floorpic;
+//   const int ceilandlight = ((ceilinglightlevel & 0xff) << 16) | frontsector->ceilingpic;
 /*
   floorplane = frontsector->floorheight < vd.viewz || // killough 3/7/98
     (frontsector->heightsec != -1 &&

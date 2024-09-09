@@ -954,9 +954,9 @@ void P_SpawnSpecials (void)
 			EV_DoFloor(&lines[i], floorContinuous);
 			break;
 		case 242: // Boom water
-			sector_t *sec = &sectors[sides[*lines[i].sidenum].sector];
+			VINT sec = sides[*lines[i].sidenum].sector;
 			for (int s = -1; (s = P_FindSectorFromLineTag(lines+i,s)) >= 0;)
-			sectors[s].heightsec = sec;
+				sectors[s].heightsec = sec;
 			break;
 		}
 	}
