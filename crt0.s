@@ -562,6 +562,11 @@ pvi_sh2_frtctl:
 !-----------------------------------------------------------------------
         
 pri_h_irq:
+        mov.l   phi_effects,r1
+        mov.l   @r1,r0
+        cmp/pl  r0
+        bf      0f                      /* If effects are disabled, skip to 0f. */
+
         /* Set screen shift register for the current line */
         mov.l   phi_line,r1
         mov.l   @r1,r0
@@ -583,7 +588,7 @@ pri_h_irq:
         mov.l   @r1,r0
         add     #1,r0
         mov.l   r0,@r1
-
+0:
         ! bump ints if necessary
         mov.l   phi_sh2_frtctl,r1
         mov     #0xE2,r0                /* TOCR = select OCRA, output 1 on compare match */
@@ -603,6 +608,9 @@ pri_h_irq:
         nop
 
         .align  4
+phi_effects:
+        .long  _phi_effects
+
 phi_line:
         .long   _phi_line
 
