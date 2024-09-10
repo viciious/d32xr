@@ -604,9 +604,8 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
 //             tempsec->ceiling_xoffs = s->ceiling_xoffs;
 //             tempsec->ceiling_yoffs = s->ceiling_yoffs;
             }
+            tempsec->lightlevel = s->lightlevel;
          }
-
-         tempsec->lightlevel = s->lightlevel;
       }
       else if (heightsec != -1 && vd.viewz >= sectors[heightsec].ceilingheight &&
             sec->ceilingheight > s->ceilingheight)
