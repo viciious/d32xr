@@ -84,6 +84,11 @@ unsigned int phi_line_bit_shift[7];
 __attribute__((aligned(32)))
 unsigned int phi_line;
 
+#ifdef MARS
+__attribute__((aligned(32)))
+#endif
+boolean phi_effects;
+
 __attribute__((aligned(16)))
 pixel_t* viewportbuffer;
 
@@ -597,7 +602,10 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 
 	//DLG: Uncomment to test the horizontal distortion filter
 	/*if (gamemapinfo.mapNumber != 30) {
-		ApplyHorizontalDistortionFilter(leveltime << 1);
+		if (leveltime < (30*15))
+			ApplyHorizontalDistortionFilter(leveltime << 1);
+		else if (leveltime >= (30*15) || leveltime < (30*19))
+			RemoveDistortionFilters();
 	}*/
 
 #ifdef JAGUAR

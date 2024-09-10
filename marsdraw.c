@@ -1181,4 +1181,21 @@ void ApplyHorizontalDistortionFilter(int filter_offset)
 
 		pixel_offset += (320/2);
 	}
+
+	phi_effects = true;
+}
+
+void RemoveDistortionFilters()
+{
+	phi_effects = false;
+
+	uint16_t *lines = Mars_FrameBufferLines();
+	short pixel_offset = (512/2);
+
+	for (int i=0; i < 224; i++) {
+		lines[i] = pixel_offset;
+		pixel_offset += (320/2);
+	}
+
+	MARS_VDP_SCRSHFT = 0;
 }

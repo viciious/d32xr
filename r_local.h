@@ -325,9 +325,14 @@ __attribute__((aligned(32)))
 extern unsigned int phi_line_bit_shift[7];
 
 #ifdef MARS
-__attribute__((aligned(32)))
+__attribute__((aligned(16)))
 #endif
 extern unsigned int phi_line;
+
+#ifdef MARS
+__attribute__((aligned(32)))
+#endif
+extern boolean phi_effects;
 
 #ifdef MARS
 __attribute__((aligned(16)))

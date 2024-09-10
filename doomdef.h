@@ -1124,6 +1124,7 @@ void DrawScrollingBanner(short ltzz_lump, int x, int y_shift);
 void DrawScrollingChevrons(short chev_lump, int x, int y_shift);
 
 void ApplyHorizontalDistortionFilter(int filter_offset);
+void RemoveDistortionFilters();
 
 extern	int		maxlevel;			/* highest level selectable in menu (1-25) */
 
