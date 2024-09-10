@@ -215,14 +215,15 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
       f_floorheight   = front_sector->floorheight   - vd.viewz;
       f_ceilingheight = front_sector->ceilingheight - vd.viewz;
 
-      segl->floorpicnum   = flattranslation[front_sector->floorpic];
+      SETLOWER8(segl->floorceilpicnum, flattranslation[front_sector->floorpic]);
+
       if (f_ceilingpic != -1)
       {
-          segl->ceilingpicnum = flattranslation[f_ceilingpic];
+          SETUPPER8(segl->floorceilpicnum, flattranslation[f_ceilingpic]);
       }
       else
       {
-          segl->ceilingpicnum = -1;
+          SETUPPER8(segl->floorceilpicnum, (uint8_t)-1);
       }
       segl->m_texturenum = -1;
 
@@ -277,11 +278,11 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
          // single-sided line
 //         if (si->midtexture > 0)
          {
-            segl->t_texturenum = texturetranslation[si->midtexture];
+            SETUPPER8(segl->tb_texturenum, texturetranslation[si->midtexture]);
 
             // handle unpegging (bottom of texture at bottom, or top of texture at top)
             if(liflags & ML_DONTPEGBOTTOM)
-               t_texturemid = f_floorheight + (textures[segl->t_texturenum].height << FRACBITS);
+               t_texturemid = f_floorheight + (textures[UPPER8(segl->tb_texturenum)].height << FRACBITS);
             else
                t_texturemid = f_ceilingheight;
 
@@ -320,7 +321,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
          {
 //            if (si->bottomtexture > 0)
             {
-               segl->b_texturenum = texturetranslation[si->bottomtexture];
+               SETLOWER8(segl->tb_texturenum, texturetranslation[si->bottomtexture]);
                if(liflags & ML_DONTPEGBOTTOM)
                   b_texturemid = f_ceilingheight;
                else
@@ -339,11 +340,11 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
          {
 //            if (si->toptexture > 0)
             {
-               segl->t_texturenum = texturetranslation[si->toptexture];
+               SETUPPER8(segl->tb_texturenum, texturetranslation[si->toptexture]);
                if(liflags & ML_DONTPEGTOP)
                   t_texturemid = f_ceilingheight;
                else
-                  t_texturemid = b_ceilingheight + (textures[segl->t_texturenum].height << FRACBITS);
+                  t_texturemid = b_ceilingheight + (textures[UPPER8(segl->tb_texturenum)].height << FRACBITS);
 
                t_texturemid += rowoffset<<FRACBITS; // add in sidedef texture offset
 
@@ -648,8 +649,8 @@ static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
    line_t *ldef;
    side_t *sidedef;
    boolean solid;
-   static sector_t ftempsec;     // killough 3/8/98: ceiling/water hack
-   static sector_t btempsec;
+//   static sector_t ftempsec;     // killough 3/8/98: ceiling/water hack
+//   static sector_t btempsec;
 
    if (line->v1 == rbsp->lastv2)
       angle1 = rbsp->lastangle2;

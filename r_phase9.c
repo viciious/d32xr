@@ -38,7 +38,7 @@ static void R_UpdateCache(void)
       {
         if (wall->actionbits & AC_TOPTEXTURE)
         {
-            texture_t* tex = &textures[wall->t_texturenum];
+            texture_t* tex = &textures[UPPER8(wall->tb_texturenum)];
 #if MIPLEVELS > 1
             int mipcount = tex->mipcount;
 #else
@@ -48,14 +48,14 @@ static void R_UpdateCache(void)
                 if (i >= mipcount)
                   break;
                 if (!R_TouchIfInTexCache(&r_texcache, tex->data[i]) && (bestmips[i] < 0)) {
-                    bestmips[i] = wall->t_texturenum;
+                    bestmips[i] = UPPER8(wall->tb_texturenum);
                 }
             }
         }
 
         if (wall->actionbits & AC_BOTTOMTEXTURE)
         {
-            texture_t* tex = &textures[wall->b_texturenum];
+            texture_t* tex = &textures[LOWER8(wall->tb_texturenum)];
 #if MIPLEVELS > 1
             int mipcount = tex->mipcount;
 #else
@@ -65,7 +65,7 @@ static void R_UpdateCache(void)
                 if (i >= mipcount)
                   break;
                 if (!R_TouchIfInTexCache(&r_texcache, tex->data[i]) && (bestmips[i] < 0)) {
-                    bestmips[i] = wall->b_texturenum;
+                    bestmips[i] = LOWER8(wall->tb_texturenum);
                 }
             }
         }
@@ -81,7 +81,7 @@ static void R_UpdateCache(void)
 
 #ifndef POTATO_MODE
       {
-        flattex_t *flat = &flatpixels[wall->floorpicnum];
+        flattex_t *flat = &flatpixels[LOWER8(wall->floorceilpicnum)];
 
         if (minplanemip < 0)
           minplanemip = 0;
@@ -90,18 +90,18 @@ static void R_UpdateCache(void)
 
         for (i = minplanemip; i <= maxplanemip; i++) {
             if (!R_TouchIfInTexCache(&r_texcache, flat->data[i]) && (bestmips[i] < 0)) {
-                bestmips[i] = numtextures+wall->floorpicnum;
+                bestmips[i] = numtextures+LOWER8(wall->floorceilpicnum);
             }
         }
 
-        if (wall->ceilingpicnum == -1) {
+        if (UPPER8(wall->floorceilpicnum) == -1) {
             continue;
         }
 
-        flat = &flatpixels[wall->ceilingpicnum];
+        flat = &flatpixels[UPPER8(wall->floorceilpicnum)];
         for (i = minplanemip; i <= maxplanemip; i++) {
             if (!R_TouchIfInTexCache(&r_texcache, flat->data[i]) && (bestmips[i] < 0)) {
-                bestmips[i] = numtextures+wall->ceilingpicnum;
+                bestmips[i] = numtextures+UPPER8(wall->floorceilpicnum);
             }
         }
       }
