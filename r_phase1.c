@@ -66,7 +66,7 @@ static VINT checkcoord[12][4] =
    { 0, 0, 0, 0 }
 };
 
-static sector_t emptysector = { 0, 0, -2, -2, -2 };
+static sector_t emptysector = { 0, 0, -2, -2, -2, 0, 0, 0, 0, -1 };
 
 static int R_ClipToViewEdges(angle_t angle1, angle_t angle2)
 {
@@ -199,7 +199,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
    static sector_t ftempsec;
    static sector_t btempsec;
 
-//   front_sector = R_FakeFlat(front_sector, &ftempsec, false);
+   front_sector = R_FakeFlat(front_sector, &ftempsec, false);
 
    {
       li->flags |= ML_MAPPED; // mark as seen
@@ -228,8 +228,8 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
 
       if (!back_sector)
          back_sector = &emptysector;
-//      else
-//         back_sector = R_FakeFlat(back_sector, &btempsec, true);
+      else
+         back_sector = R_FakeFlat(back_sector, &btempsec, true);
 
       b_ceilingpic    = back_sector->ceilingpic;
       b_lightlevel    = back_sector->lightlevel;
@@ -568,8 +568,8 @@ crunch:
 sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
                      boolean back)
 {
-  if (sec->heightsec != -1)
-    {
+   if (sec->heightsec != -1)
+   {
       const sector_t *s = &sectors[sec->heightsec];
       int heightsec = vd.viewsubsector->sector->heightsec;
       int underwater = heightsec!=-1 && vd.viewz<=sectors[heightsec].floorheight;
@@ -581,57 +581,58 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
       tempsec->floorheight   = s->floorheight;
       tempsec->ceilingheight = s->ceilingheight;
 
-      if ((underwater && (tempsec->  floorheight = sec->floorheight,
+      if ((underwater && (tempsec-> floorheight = sec->floorheight,
                           tempsec->ceilingheight = s->floorheight-1,
                           !back)) || vd.viewz <= s->floorheight)
-        {                   // head-below-floor hack
-          tempsec->floorpic    = s->floorpic;
-//          tempsec->floor_xoffs = s->floor_xoffs;
-//          tempsec->floor_yoffs = s->floor_yoffs;
+      { // head-below-floor hack
+         tempsec->floorpic    = s->floorpic;
+//       tempsec->floor_xoffs = s->floor_xoffs;
+//       tempsec->floor_yoffs = s->floor_yoffs;
 
-          if (underwater)
-          {
+         if (underwater)
+         {
             if (s->ceilingpic == -1)
-              {
-                tempsec->floorheight   = tempsec->ceilingheight+1;
-                tempsec->ceilingpic    = tempsec->floorpic;
-//                tempsec->ceiling_xoffs = tempsec->floor_xoffs;
-//                tempsec->ceiling_yoffs = tempsec->floor_yoffs;
-              }
+            {
+               tempsec->floorheight   = tempsec->ceilingheight+1;
+               tempsec->ceilingpic    = tempsec->floorpic;
+//             tempsec->ceiling_xoffs = tempsec->floor_xoffs;
+//             tempsec->ceiling_yoffs = tempsec->floor_yoffs;
+            }
             else
-              {
-                tempsec->ceilingpic    = s->ceilingpic;
-//                tempsec->ceiling_xoffs = s->ceiling_xoffs;
-//                tempsec->ceiling_yoffs = s->ceiling_yoffs;
-              }
-          }
+            {
+               tempsec->ceilingpic    = s->ceilingpic;
+//             tempsec->ceiling_xoffs = s->ceiling_xoffs;
+//             tempsec->ceiling_yoffs = s->ceiling_yoffs;
+            }
+         }
 
-          tempsec->lightlevel  = s->lightlevel;
-        }
-      else
-        if (heightsec != -1 && vd.viewz >= sectors[heightsec].ceilingheight &&
+         tempsec->lightlevel = s->lightlevel;
+      }
+      else if (heightsec != -1 && vd.viewz >= sectors[heightsec].ceilingheight &&
             sec->ceilingheight > s->ceilingheight)
-          {   // Above-ceiling hack
-            tempsec->ceilingheight = s->ceilingheight;
-            tempsec->floorheight   = s->ceilingheight + 1;
+      {   // Above-ceiling hack
+         tempsec->ceilingheight = s->ceilingheight;
+         tempsec->floorheight   = s->ceilingheight + 1;
 
-            tempsec->floorpic    = tempsec->ceilingpic    = s->ceilingpic;
-//            tempsec->floor_xoffs = tempsec->ceiling_xoffs = s->ceiling_xoffs;
-//            tempsec->floor_yoffs = tempsec->ceiling_yoffs = s->ceiling_yoffs;
+         tempsec->floorpic    = tempsec->ceilingpic    = s->ceilingpic;
+//       tempsec->floor_xoffs = tempsec->ceiling_xoffs = s->ceiling_xoffs;
+//       tempsec->floor_yoffs = tempsec->ceiling_yoffs = s->ceiling_yoffs;
 
-            if (s->floorpic != -1)
-              {
-                tempsec->ceilingheight = sec->ceilingheight;
-                tempsec->floorpic      = s->floorpic;
-//                tempsec->floor_xoffs   = s->floor_xoffs;
-//                tempsec->floor_yoffs   = s->floor_yoffs;
-              }
+         if (s->floorpic != -1)
+         {
+            tempsec->ceilingheight = sec->ceilingheight;
+            tempsec->floorpic      = s->floorpic;
+//          tempsec->floor_xoffs   = s->floor_xoffs;
+//          tempsec->floor_yoffs   = s->floor_yoffs;
+         }
 
-            tempsec->lightlevel  = s->lightlevel;
-          }
+         tempsec->lightlevel  = s->lightlevel;
+      }
+
       sec = tempsec;               // Use other sector
-    }
-  return sec;
+   }
+
+   return sec;
 }
 
 //
