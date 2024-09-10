@@ -641,7 +641,7 @@ void START_Title(void)
 		W_LoadPWAD(PWAD_NONE);
 	}
 
-	S_StartSongByName(gameinfo.titleMus, 0, cdtrack_title);
+	S_StartSongByName(gameinfo.titleMus, 0, gameinfo.titleCdTrack);
 
 	I_InitMenuFire(titlepic);
 }

@@ -142,8 +142,7 @@ void G_DoLoadLevel (void)
 	if (music <= mus_none)
 		music = S_SongForMapnum(gamemap);
 
-	cdtrack = gamemapinfo.cdaNum ? gamemapinfo.cdaNum : gamemap;
-	cdtrack += gameinfo.firstCdaNum;
+	cdtrack = gamemapinfo.cdaNum ? gamemapinfo.cdaNum : gameinfo.cdTrackOffset + music;
 
 	if (netgame != gt_single && !splitscreen)
 		S_StopSong();

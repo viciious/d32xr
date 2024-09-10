@@ -331,12 +331,20 @@ static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
 		gi->creditsPage = value;
 	else if (!D_strcasecmp(key, "titleMus"))
 		gi->titleMus = value;
+	else if (!D_strcasecmp(key, "titleCdTrack"))
+		gi->titleCdTrack = D_atoi(value);
 	else if (!D_strcasecmp(key, "intermissionMus"))
 		gi->intermissionMus = value;
+	else if (!D_strcasecmp(key, "intermissionCdTrack"))
+		gi->intermissionCdTrack = D_atoi(value);
 	else if (!D_strcasecmp(key, "victoryMus"))
 		gi->victoryMus = value;
+	else if (!D_strcasecmp(key, "victoryCdTrack"))
+		gi->victoryCdTrack = D_atoi(value);
 	else if (!D_strcasecmp(key, "endMus"))
 		gi->endMus = value;
+	else if (!D_strcasecmp(key, "endCdTrack"))
+		gi->endCdTrack = D_atoi(value);
 	else if (!D_strcasecmp(key, "endText"))
 		gi->endText = value;
 	else if (!D_strcasecmp(key, "endFlat"))
@@ -349,8 +357,8 @@ static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
 		gi->stopFireTime = D_atoi(value);
 	else if (!D_strcasecmp(key, "titleStartPos"))
 		gi->titleStartPos = D_atoi(value);
-	else if (!D_strcasecmp(key, "firstCdTrack"))
-		gi->firstCdaNum = D_atoi(value);
+	else if (!D_strcasecmp(key, "cdTrackOffset"))
+		gi->cdTrackOffset = D_atoi(value);
 	else if (!D_strcasecmp(key, "spcmDirs"))
 	{
 		char *p = &gi->spcmDirList[0][0];

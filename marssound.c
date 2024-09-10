@@ -689,7 +689,7 @@ int S_CDAvailable(void)
 int S_SongForMapnum(int mapnum)
 {
 	int numsongs;
-	numsongs = num_music + cdtrack_lastmap;
+	numsongs = num_music;
 	if (numsongs <= 0)
 		return mus_none;
 	return (mapnum - 1) % numsongs + 1;
@@ -740,7 +740,7 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 		// ignore the first data track
 		int num_cd_tracks = (int)mars_num_cd_tracks - 1;
 
-		if (cdtrack == cdtrack_none)
+		if (cdtrack == cdtrack_none || num_cd_tracks == 0)
 		{
 			S_StopSong();
 			return;
@@ -748,16 +748,12 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 
 		if (S_CDAvailable())
 		{
-			int num_map_tracks = num_cd_tracks + cdtrack_lastmap;
-
 			/* there is a disc with at least enough tracks */
-			if (cdtrack <= cdtrack_title)
-				playtrack = cdtrack + num_cd_tracks;
-			else if (num_map_tracks > 0)
-				playtrack = 1 + (cdtrack - 1) % num_map_tracks;
+			if (cdtrack < 0)
+				playtrack = num_cd_tracks + cdtrack;
 			else
-				playtrack = cdtrack_intermission + num_cd_tracks;
-			playtrack++;
+				playtrack = 1 + (cdtrack - 1) % num_cd_tracks;
+			playtrack++; // track no 1 is the data track
 		}
 
 		if (playtrack < 0)
@@ -823,7 +819,11 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 void S_StartSongByName(const char *name, int looping, int cdtrack)
 {
 	int song;
+
 	song = S_SongForName(name);
+	if (cdtrack == cdtrack_none)
+		cdtrack = song;
+
 	S_StartSong(song, looping, cdtrack);
 }
 

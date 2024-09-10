@@ -70,7 +70,11 @@ typedef struct
 	VINT noAttractDemo;
 	VINT stopFireTime;
 	VINT titleStartPos;
-	VINT firstCdaNum;
+	VINT cdTrackOffset;
+	VINT titleCdTrack;
+	VINT intermissionCdTrack;
+	VINT victoryCdTrack;
+	VINT endCdTrack;
 	char* endText;
 	void* data;
 } dgameinfo_t;

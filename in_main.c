@@ -430,7 +430,7 @@ void IN_Start (void)
 
 	I_SetPalette(W_POINTLUMPNUM(W_GetNumForName("PLAYPALS")));
 
-	S_StartSongByName(gameinfo.intermissionMus, 1, cdtrack_intermission);
+	S_StartSongByName(gameinfo.intermissionMus, 1, gameinfo.intermissionCdTrack);
 }
 
 void IN_Stop (void)
