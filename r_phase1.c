@@ -199,7 +199,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
    static sector_t ftempsec;
    static sector_t btempsec;
 
-   front_sector = R_FakeFlat(front_sector, &ftempsec, false);
+//   front_sector = R_FakeFlat(front_sector, &ftempsec, false);
 
    {
       li->flags |= ML_MAPPED; // mark as seen
@@ -228,8 +228,8 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
 
       if (!back_sector)
          back_sector = &emptysector;
-      else
-         back_sector = R_FakeFlat(back_sector, &btempsec, true);
+//      else
+//         back_sector = R_FakeFlat(back_sector, &btempsec, true);
 
       b_ceilingpic    = back_sector->ceilingpic;
       b_lightlevel    = back_sector->lightlevel;
@@ -674,7 +674,7 @@ static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
    // decide which clip routine to use
    side = line->sideoffset & 1;
    ldef = &lines[line->linedef];
-   frontsector = R_FakeFlat(rbsp->curfsector, &ftempsec, false);
+   frontsector = rbsp->curfsector;//R_FakeFlat(rbsp->curfsector, &ftempsec, false);
    backsector = (ldef->flags & ML_TWOSIDED) ? &sectors[sides[ldef->sidenum[side^1]].sector] : 0;
    sidedef = &sides[ldef->sidenum[side]];
    solid = false;
@@ -684,7 +684,7 @@ static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
       solid = true;
    else
    {
-      backsector = R_FakeFlat(backsector, &btempsec, true);
+//      backsector = R_FakeFlat(backsector, &btempsec, true);
       if (backsector->ceilingheight <= frontsector->floorheight ||
          backsector->floorheight >= frontsector->ceilingheight)
       {

@@ -546,6 +546,7 @@ typedef struct vissprite_s
 	VINT		colormap;		/* < 0 = shadow draw */
 	short		gx,gy;	/* global coordinates */
 	VINT        heightsec;
+	VINT		patchheight;
 //	void 		*colormaps;
 #ifndef MARS
 	pixel_t		*pixels;		/* data patch header references */

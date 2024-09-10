@@ -165,6 +165,7 @@ static void R_PrepMobj(mobj_t *thing)
    vis->yscale   = FixedMul(xscale, stretch);
    vis->texturemid = texmid;
    vis->startfrac = 0;
+   vis->heightsec = thing->subsector->sector->heightsec;
 
    if(flip)
    {
@@ -216,6 +217,7 @@ static void R_PrepRing(mobj_t *thing)
    int          lump;
    patch_t      *patch;
    vissprite_t  *vis;
+   return;
 
    const state_t *state = &states[ringmobjstates[thing->type]];
    const VINT thingframe = state->frame;
@@ -336,6 +338,7 @@ static void R_PrepRing(mobj_t *thing)
    vis->yscale   = FixedMul(xscale, stretch);
    vis->texturemid = texmid;
    vis->startfrac = 0;
+   vis->heightsec = thing->subsector->sector->heightsec;
 
    if(flip)
    {
@@ -374,6 +377,7 @@ static void R_PrepScenery(scenerymobj_t *thing)
    int          lump;
    patch_t      *patch;
    vissprite_t  *vis;
+   return;
 
    const state_t *state = &states[ringmobjstates[thing->type]];
    const VINT thingframe = state->frame;
@@ -466,8 +470,10 @@ static void R_PrepScenery(scenerymobj_t *thing)
    vis->gy       = thing->y;
    vis->xscale   = xscale;
    vis->yscale   = FixedMul(xscale, stretch);
+   vis->patchheight = BIGSHORT(patch->height);
    vis->texturemid = texmid;
    vis->startfrac = 0;
+   vis->heightsec = -1;
 
    if(flip)
    {

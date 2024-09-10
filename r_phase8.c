@@ -431,6 +431,61 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
          } while (--x);
       }
    } while (*walls != -1);
+
+   // killough 3/27/98:
+  // Clip the sprite against deep water and/or fake ceilings.
+  // killough 4/9/98: optimize by adding mh
+  // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
+
+  if (vis->heightsec != -1)  // only things in specially marked sectors
+    {
+      fixed_t h,mh;
+      int phs = vd.viewsubsector->sector->heightsec;
+      // Recalculate these lost values from phase3
+      const fixed_t gzt = vis->texturemid + vd.viewz;
+      const fixed_t gz = gzt - (vis->patchheight << FRACBITS);
+
+      if ((mh = sectors[vis->heightsec].floorheight) > gz &&
+          (h = centerYFrac - FixedMul(mh-=vd.viewz, vis->yscale)) >= 0 &&
+          (h >>= FRACBITS) < viewportHeight)
+        if (mh <= 0 || (phs != -1 && vd.viewz > sectors[phs].floorheight))
+          {                          // clip bottom
+            for (x=vis->x1 ; x<=vis->x2 ; x++)
+            {
+               const int bottomclip   = (spropening[x] & 0xff) - 1;
+               if (bottomclip == viewportHeight || h < bottomclip)
+                  spropening[x] = (spropening[x] & 0xff00) + h;
+            }
+          }
+        else                        // clip top
+          for (x=vis->x1 ; x<=vis->x2 ; x++)
+          {
+            const int topclip      = (spropening[x] >> 8);
+            if (topclip == 0 || h > topclip)
+               spropening[x] = (spropening[x] & 0x00ff) + (h << 8);
+          }
+
+      if ((mh = sectors[vis->heightsec].ceilingheight) < gzt &&
+          (h = centerYFrac - FixedMul(mh-vd.viewz, vis->yscale)) >= 0 &&
+          (h >>= FRACBITS) < viewportHeight)
+        if (phs != -1 && vd.viewz >= sectors[phs].ceilingheight)
+          {                         // clip bottom
+            for (x=vis->x1 ; x<=vis->x2 ; x++)
+            {
+               const int bottomclip   = (spropening[x] & 0xff) - 1;
+              if (bottomclip == viewportHeight || h < bottomclip)
+                spropening[x] = (spropening[x] & 0xff00) + h;
+            }
+          }
+        else                       // clip top
+          for (x=vis->x1 ; x<=vis->x2 ; x++)
+          {
+            const int topclip      = (spropening[x] >> 8);
+            if (topclip == 0 || h > topclip)
+              spropening[x] = (spropening[x] & 0x00ff) + (h << 8);
+          }
+    }
+  // killough 3/27/98: end special clipping for deep water / fake ceilings
 }
 
 static void R_DrawSortedSprites(int* sortedsprites, int sprscreenhalf)
@@ -546,7 +601,6 @@ void R_Sprites(void)
    int i = 0, count;
    int half, sortedcount;
    unsigned midcount;
-   viswall_t *spr;
    int *sortedsprites = (void *)vd.vissectors;
    viswall_t *wc;
    vertex_t *verts;
