@@ -207,6 +207,10 @@ void P_LoadSectors (int lump)
 		ss->special = special;
 
 		ss->tag = LITTLESHORT(ms->tag);
+		ss->heightsec = -1; // sector used to get floor and ceiling height
+		ss->floorlightsec = -1;   // sector used to get floor lighting
+		// killough 4/11/98 sector used to get ceiling lighting:
+		ss->ceilinglightsec = -1;
 	}
 }
 

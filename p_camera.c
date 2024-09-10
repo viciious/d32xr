@@ -172,6 +172,7 @@ static boolean P_CameraTryMove2(ptrymove_t *tm, boolean checkposonly)
    tmthing->ceilingz = mw.tmceilingz;
    tmthing->x = mw.tmx;
    tmthing->y = mw.tmy;
+   tmthing->subsector = mw.newsubsec;
 
    return true;
 }
@@ -324,6 +325,7 @@ camwrapup:
 		thiscam->momx = mo.momx;
 		thiscam->momy = mo.momy;
 		thiscam->momz = mo.momz;
+      thiscam->subsector = mo.subsector;
    }
 
 	// P_CameraZMovement()

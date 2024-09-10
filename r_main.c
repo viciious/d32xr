@@ -535,6 +535,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		vd.viewangle = thiscam->angle;
 		vd.lightlevel = thiscam->subsector->sector->lightlevel;
 		aimingangle = thiscam->aiming;
+		vd.viewsubsector = thiscam->subsector;
 	}
 	else
 	{
@@ -543,6 +544,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		vd.viewz = player->viewz;
 		vd.viewangle = player->mo->angle;
 		vd.lightlevel = player->mo->subsector->sector->lightlevel;
+		vd.viewsubsector = player->mo->subsector;
 	}
 
 	vd.viewplayer = player;
@@ -851,6 +853,42 @@ visplane_t* R_FindPlane(fixed_t height,
 	check->flatandlight = flatandlight;
 	check->minx = start;
 	check->maxx = stop;
+
+	R_MarkOpenPlane(check);
+
+	check->next = tail;
+	vd.visplanes_hash[hash] = check;
+
+	return check;
+}
+
+visplane_t* R_FindPlane2(fixed_t height, 
+	int flatandlight)
+{
+	visplane_t *check, *tail, *next;
+	int hash = R_PlaneHash(height, flatandlight);
+
+	tail = vd.visplanes_hash[hash];
+	for (check = tail; check; check = next)
+	{
+		next = check->next;
+
+		if (height == check->height && // same plane as before?
+			flatandlight == check->flatandlight)
+			return check; // use the same one as before
+	}
+
+	if (vd.lastvisplane == vd.visplanes + MAXVISPLANES)
+		return vd.visplanes;
+
+	// make a new plane
+	check = vd.lastvisplane;
+	++vd.lastvisplane;
+
+	check->height = height;
+	check->flatandlight = flatandlight;
+	check->minx = 320;
+	check->maxx = -1;
 
 	R_MarkOpenPlane(check);
 
