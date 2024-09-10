@@ -17,7 +17,7 @@ CCFLAGS += -D__32X__ -DMARS
 #CCFLAGS += -DMDSKY
 #CCFLAGS += -DREC_POS_DEMO
 #CCFLAGS += -DPLAY_POS_DEMO
-#CCFLAGS += -DHIGH_DETAIL_SPRITES
+CCFLAGS += -DHIGH_DETAIL_SPRITES
 LDFLAGS = -T mars-ssf.ld -Wl,-Map=output.map -nostdlib -Wl,--gc-sections --specs=nosys.specs
 ASFLAGS = --big
 
