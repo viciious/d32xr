@@ -592,7 +592,10 @@ static void F_DrawBackground(void)
 {
 #ifdef MARS
 	if (fin->bossback && fin->status == fin_charcast)
+	{
 		DrawJagobj(fin->bossback, 0, 0);
+		DrawFillRect(0, BIGSHORT(fin->bossback->height), 320, 224-BIGSHORT(fin->bossback->height), 0);
+	}
 	else
 		DrawTiledBackground2(fin->endFlat);
 #else
