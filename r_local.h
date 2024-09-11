@@ -76,10 +76,10 @@ typedef	struct
 	// killough 3/7/98: support flat heights drawn at another sector's heights
   	VINT        heightsec;    // other sector, or -1 if no other sector
 
+	// Extra 16-bits right here (for floor/ceiling offsets?)
+
 	// killough 4/11/98: support for lightlevels coming from another sector
 	VINT floorlightsec, ceilinglightsec;
-
-	VINT		blockbox[4];		/* mapblock bounding box for height changes */
 
 	mobj_t		*thinglist;			/* list of mobjs in sector */
 	void		*specialdata;		/* thinker_t for reversable actions */

@@ -94,6 +94,38 @@ boolean PIT_ChangeSector (mobj_t *thing, changetest_t *ct)
 	return true;		/* keep checking (crush other things)	 */
 }
 
+void CalculateSectorBlockBox(sector_t *sector, VINT blockbox[4])
+{
+	fixed_t		bbox[4];
+	int         block;
+
+	M_ClearBox(bbox);
+
+	for (int j = 0; j < sector->linecount; j++)
+	{
+		const line_t *li = lines + sector->lines[j];
+		M_AddToBox(bbox, vertexes[li->v1].x, vertexes[li->v1].y);
+		M_AddToBox(bbox, vertexes[li->v2].x, vertexes[li->v2].y);
+	}
+
+	/* adjust bounding box to map blocks */
+	block = (bbox[BOXTOP]-bmaporgy+MAXRADIUS)>>MAPBLOCKSHIFT;
+	block = block >= bmapheight ? bmapheight-1 : block;
+	blockbox[BOXTOP]=block;
+
+	block = (bbox[BOXBOTTOM]-bmaporgy-MAXRADIUS)>>MAPBLOCKSHIFT;
+	block = block < 0 ? 0 : block;
+	blockbox[BOXBOTTOM]=block;
+
+	block = (bbox[BOXRIGHT]-bmaporgx+MAXRADIUS)>>MAPBLOCKSHIFT;
+	block = block >= bmapwidth ? bmapwidth-1 : block;
+	blockbox[BOXRIGHT]=block;
+
+	block = (bbox[BOXLEFT]-bmaporgx-MAXRADIUS)>>MAPBLOCKSHIFT;
+	block = block < 0 ? 0 : block;
+	blockbox[BOXLEFT]=block;
+}
+
 /*
 ===============
 =
@@ -116,13 +148,13 @@ boolean P_ChangeSector (sector_t *sector, boolean crunch)
 	ct.crushchange = crunch;
 	
 /* recheck heights for all things near the moving sector */
+	VINT blockbox[4];
+	CalculateSectorBlockBox(sector, blockbox);
 
-	for (x=sector->blockbox[BOXLEFT] ; x<= sector->blockbox[BOXRIGHT] ; x++)
-		for (y=sector->blockbox[BOXBOTTOM];y<= sector->blockbox[BOXTOP] ; y++)
+	for (x=blockbox[BOXLEFT]; x<=blockbox[BOXRIGHT]; x++)
+		for (y=blockbox[BOXBOTTOM]; y<=blockbox[BOXTOP]; y++)
 			P_BlockThingsIterator (x, y, (blockthingsiter_t)PIT_ChangeSector, &ct);
-	
 	
 	return ct.nofit;
 }
-
 

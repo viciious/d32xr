@@ -475,7 +475,6 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	visplane_t **visplanes_hash_, sector_t **vissectors_, viswallextra_t *viswallex_)
 {
 	int 		i;
-	int		damagecount, bonuscount;
 	player_t *player;
 #ifdef JAGUAR
 	int		shadex, shadey, shadei;
@@ -561,9 +560,6 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	vd.clipangle = xtoviewangle[0]<<FRACBITS;
 	vd.doubleclipangle = vd.clipangle * 2;
 	vd.viewangletox = viewangletox;
-
-	damagecount = player->damagecount;
-	bonuscount = player->bonuscount;
 
 	if (gamemapinfo.mapNumber != TITLE_MAP_NUMBER && leveltime < 62)
 	{
