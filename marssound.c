@@ -655,7 +655,7 @@ void S_SetSPCMDir(const char *dir)
 
 void S_SetMusicType(int newtype)
 {
-	int savemus, savecd;
+	int savemus, savecd, saveloop;
 
 	if (newtype < mustype_none || newtype > mustype_spcmhack)
 		return;
@@ -669,14 +669,17 @@ void S_SetMusicType(int newtype)
 	// restart the current track
 	savemus = curmusic;
 	savecd = curcdtrack;
+	saveloop = muslooping;
 
 	if (musictype != mustype_none)
 		S_StopSong();
 
 	curmusic = mus_none;
 	musictype = newtype;
+	muslooping = -1;
 	curcdtrack = cdtrack_none;
-	S_StartSong(savemus, muslooping, savecd);
+
+	S_StartSong(savemus, saveloop, savecd);
 }
 
 int S_CDAvailable(void)
@@ -730,7 +733,7 @@ int S_SongForName(const char *str)
 void S_StartSong(int musiclump, int looping, int cdtrack)
 {
 	int playtrack = 0;
-	char filename[32];
+	char filename[64];
 
 	if (musiclump < 0)
 		musiclump = mus_none;
@@ -740,16 +743,12 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 		// ignore the first data track
 		int num_cd_tracks = (int)mars_num_cd_tracks - 1;
 
-		if (cdtrack == cdtrack_none || num_cd_tracks == 0)
-		{
-			S_StopSong();
-			return;
-		}
-
 		if (S_CDAvailable())
 		{
 			/* there is a disc with at least enough tracks */
-			if (cdtrack < 0)
+			if (num_cd_tracks == 0)
+				playtrack = -1;
+			else if (cdtrack < 0)
 				playtrack = num_cd_tracks + cdtrack;
 			else
 				playtrack = 1 + (cdtrack - 1) % num_cd_tracks;
@@ -767,7 +766,7 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 		if (musiclump <= num_music)
 			playtrack = musiclump;
 
-		if (musiclump == mus_none || playtrack == 0)
+		if (musiclump == mus_none)
 		{
 			S_StopSong();
 			return;
@@ -778,9 +777,12 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 	}
 	else if (musictype == mustype_spcm)
 	{
-		playtrack = musiclump;
+		char name[9];
 
-		if (musiclump == mus_none || playtrack == 0)
+		if (musiclump <= num_music)
+			playtrack = musiclump;
+
+		if (musiclump == mus_none)
 		{
 			S_StopSong();
 			return;
@@ -788,7 +790,9 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 		if (*spcmDir == '\0')
 			return;
 
-		D_snprintf(filename, sizeof(filename), "%s/%02d.PCM", spcmDir, playtrack);
+		D_memcpy(name, vgm_tracks[playtrack-1].name, 8);
+		name[8] = 0;
+		D_snprintf(filename, sizeof(filename), "%s/%s.PCM", spcmDir, name);
 
 		if (curmusic == musiclump && muslooping == looping)
 		{
@@ -802,14 +806,20 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 	muslooping = looping;
 	oldmusvol = -1; // force-update music volume
 
-	if (musictype == mustype_none)
+	if (musictype == mustype_none || playtrack == 0)
 		return;
 
-	Mars_StopTrack(); // stop the playback before flipping pages
+	Mars_StopTrack();
 
 	if (musictype == mustype_spcm)
 	{
 		Mars_PlayTrack(0, playtrack, filename, -1, 0, looping);
+		return;
+	}
+
+	if (musictype == mustype_cd)
+	{
+		Mars_PlayTrack(1, playtrack, cd_pwad_name, -1, 0, looping);
 		return;
 	}
 

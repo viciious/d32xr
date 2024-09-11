@@ -704,6 +704,7 @@ goback:
 					S_SetSPCMDir(gameinfo.spcmDirList[curpack]);
 					if (musictype == mustype_spcm)
 						S_SetMusicType(mustype_spcmhack); // force refresh of the current dir
+					clearscreen = 2;
 				}
 			}
 
