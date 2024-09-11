@@ -274,7 +274,7 @@ void	R_SetDrawMode(void);
 void	R_SetupLevel(void);
 void	R_SetupTextureCaches(void);
 // killough 4/13/98: fake floors/ceilings for deep water / fake ceilings:
-sector_t *R_FakeFlat(sector_t *, sector_t *, boolean);
+sector_t *R_FakeFlat(sector_t *, sector_t *, boolean) ATTR_DATA_CACHE_ALIGN;
 
 typedef void (*drawcol_t)(int, int, int, int, fixed_t, fixed_t, inpixel_t*, int);
 typedef void (*drawskycol_t)(int, int, int);
