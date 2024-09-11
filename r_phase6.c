@@ -493,14 +493,13 @@ void R_SegCommands(void)
         {
             if (lseg.maxmip >= MIPLEVELS)
                 lseg.maxmip = MIPLEVELS-1;
-            segl->miplevels[0] = lseg.minmip;
-            segl->miplevels[1] = lseg.maxmip;
+            SETLOWER8(segl->newmiplevels, lseg.minmip);
+            SETUPPER8(segl->newmiplevels, lseg.maxmip);
         }
         else
 #endif
         {
-            segl->miplevels[0] = 0;
-            segl->miplevels[1] = 0;
+            segl->newmiplevels = 0;
         }
 
 post_draw:

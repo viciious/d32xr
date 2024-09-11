@@ -496,13 +496,14 @@ typedef struct
 
 	VINT     floorceilpicnum; // ceilingpicnum top word, floorpicnum bottom word (just like a ceiling and floor!)
 
+	VINT	newmiplevels; // 0 is lower, 1 is upper
+
 	int			scalestep;		/* polar angle to start at phase1, then scalestep after phase2 */
 	unsigned	scalefrac;
 	unsigned	scale2;
 
 	short	actionbits;
 	short	seglightlevel;
-	int16_t		miplevels[2];
 
 /* */
 /* filled in by bsp */
