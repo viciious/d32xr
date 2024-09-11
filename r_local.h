@@ -541,7 +541,7 @@ typedef struct
 	fixed_t 	floorheight, floornewheight, ceilnewheight, pad;
 } viswallextra_t;
 
-#define	MAXWALLCMDS		130
+#define	MAXWALLCMDS		140
 
 /* A vissprite_t is a thing that will be drawn during a refresh */
 typedef struct vissprite_s
