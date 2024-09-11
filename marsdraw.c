@@ -38,11 +38,6 @@
 ==============================================================================
 */
 
-void I_DrawFuzzColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
-void I_DrawFuzzColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
-
 #ifdef USE_C_DRAW
 
 void I_DrawColumnLowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
@@ -389,127 +384,8 @@ void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 #undef DO_PIXEL
 }
 
-
 #endif
 
-//
-// Spectre/Invisibility.
-//
-
-void I_DrawFuzzColumnLowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight)
-{
-	int16_t *dest;
-	int16_t *dc_colormap;
-	unsigned	frac;
-	unsigned    count, n;
-	int8_t *bfuzzoffset;
-	int fuzzpos;
-	int deststep;
-
-	I_GetThreadLocalVar(DOOMTLS_FUZZPOS, fuzzpos);
-	fuzzpos = fuzzpos * 2;
-
-	if (!dc_yl)
-		dc_yl = 1;
-	if (dc_yh == viewportHeight - 1)
-		dc_yh = viewportHeight - 2;
-
-#ifdef RANGECHECK
-	if (dc_x >= viewportWidth || dc_yl < 0 || dc_yh >= viewportHeight)
-		I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
-#endif
-
-	if (dc_yl > dc_yh)
-		return;
-
-	frac = frac_;
-	dest = (int16_t *)(viewportbuffer + dc_yl * 320 / 2 + dc_x);
-	dc_colormap = (int16_t *)dc_colormaps + light;
-	bfuzzoffset = (int8_t *)fuzzoffset;
-	__asm volatile("mov %1,%0\n\t" : "=&r" (deststep) : "r"(320/2));
-
-#define DO_PIXEL() do { \
-		int offset = *(int16_t *)(bfuzzoffset + (fuzzpos & FUZZMASK*2)); \
-		*dest = dc_colormap[*((int8_t *)dest + offset)]; \
-		fuzzpos += 2; \
-		dest += deststep; \
-		frac += fracstep; \
-	} while (0)
-
-	count = dc_yh - dc_yl + 1;
-	n = (count + 3) >> 2;
-
-	switch (count & 3)
-	{
-	case 0: do { DO_PIXEL();
-	case 3:      DO_PIXEL();
-	case 2:      DO_PIXEL();
-	case 1:      DO_PIXEL();
-	} while (--n > 0);
-	}
-
-#undef DO_PIXEL
-
-	I_SetThreadLocalVar(DOOMTLS_FUZZPOS, fuzzpos / 2);
-}
-
-void I_DrawFuzzColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight)
-{
-	int8_t * dest;
-	int8_t* dc_colormap;
-	unsigned	frac;
-	unsigned    count, n;
-	int8_t *bfuzzoffset;
-	int	fuzzpos;
-	int deststep;
-
-	I_GetThreadLocalVar(DOOMTLS_FUZZPOS, fuzzpos); 
-	fuzzpos = fuzzpos * 2;
-
-	if (!dc_yl)
-		dc_yl = 1;
-	if (dc_yh == viewportHeight - 1)
-		dc_yh = viewportHeight - 2;
-
-#ifdef RANGECHECK
-	if (dc_x >= viewportWidth || dc_yl < 0 || dc_yh >= viewportHeight)
-		I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
-#endif
-
-	if (dc_yl > dc_yh)
-		return;
-
-	frac = frac_;
-	dest = (int8_t *)viewportbuffer + dc_yl * 320 + dc_x;
-	dc_colormap = (int8_t *)(dc_colormaps + light);
-	bfuzzoffset = (int8_t *)fuzzoffset;
-	__asm volatile("mov %1,%0\n\t" : "=&r" (deststep) : "r"(320));
-
-#define DO_PIXEL() do { \
-		int offset = *(int16_t *)(bfuzzoffset + (fuzzpos & FUZZMASK*2)); \
-		*dest = dc_colormap[dest[offset]]; \
-		dest += deststep; \
-		frac += fracstep; \
-	} while (0)
-
-	count = dc_yh - dc_yl + 1;
-	n = (count + 3) >> 2;
-
-	switch (count & 3)
-	{
-	case 0: do { DO_PIXEL();
-	case 3:      DO_PIXEL();
-	case 2:      DO_PIXEL();
-	case 1:      DO_PIXEL();
-	} while (--n > 0);
-	}
-
-#undef DO_PIXEL
-
-	I_SetThreadLocalVar(DOOMTLS_FUZZPOS, fuzzpos / 2);
-}
 #ifdef POTATO_MODE
 /*
 ================

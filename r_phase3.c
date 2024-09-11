@@ -185,11 +185,7 @@ static void R_PrepMobj(mobj_t *thing)
    if (vis->x1 > x1)
       vis->startfrac += vis->xiscale*(vis->x1 - x1);
 
-   if (thing->flags & MF_SHADOW)
-   {
-      vis->colormap = -vd.fuzzcolormap;
-   }
-   else if (vd.fixedcolormap)
+   if (vd.fixedcolormap)
    {
        vis->colormap = vd.fixedcolormap;
    }
