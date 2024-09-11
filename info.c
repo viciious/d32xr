@@ -24,7 +24,7 @@ const char * const sprnames[NUMSPRITES] = {
 "FWR1",
 "FWR2",
 "FWR3",
-"GFZD",
+"GFZC",
 "JETF",
 "MISL",
 "MSTV",
@@ -52,9 +52,12 @@ const char * const sprnames[NUMSPRITES] = {
 "TVSS",
 "TVWW",
 "YSPR",
+"GFZD"
 "GFZF",
 "GFZG",
+"GFZQ",
 "GFZR",
+"GFZW",
 };
 
 void A_SpawnState(mobj_t *actor);
