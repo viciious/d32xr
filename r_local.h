@@ -492,11 +492,11 @@ typedef struct
 	int 		m_texturemid;
 
 	VINT 	m_texturenum;
-	VINT     tb_texturenum; // t_texturenum top word, b_texturenum bottom word
+	uint16_t     tb_texturenum; // t_texturenum top word, b_texturenum bottom word
 
-	VINT     floorceilpicnum; // ceilingpicnum top word, floorpicnum bottom word (just like a ceiling and floor!)
+	uint16_t     floorceilpicnum; // ceilingpicnum top word, floorpicnum bottom word (just like a ceiling and floor!)
 
-	VINT	newmiplevels; // 0 is lower, 1 is upper
+	uint16_t	newmiplevels; // 0 is lower, 1 is upper
 
 	int			scalestep;		/* polar angle to start at phase1, then scalestep after phase2 */
 	unsigned	scalefrac;
@@ -525,15 +525,15 @@ typedef struct
 	uint16_t 		*clipbounds;
 } viswall_t;
 
-#define UPPER8(x) (x >> 8)
-#define LOWER8(x) (x & 0xff)
+#define UPPER8(x) ((uint8_t)((uint16_t)x >> 8))
+#define LOWER8(x) ((uint8_t)((uint16_t)x & 0xff))
 #define SETUPPER8(x, y) {\
 x &= 0x00ff; \
-x |= (y << 8); \
+x |= ((uint16_t)y << 8); \
 }
 #define SETLOWER8(x, y) {\
 x &= 0xff00; \
-x |= (y & 0xff); \
+x |= ((uint16_t)y & 0xff); \
 }
 
 typedef struct

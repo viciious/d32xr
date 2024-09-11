@@ -94,7 +94,7 @@ static void R_UpdateCache(void)
             }
         }
 
-        if (UPPER8(wall->floorceilpicnum) == -1) {
+        if (UPPER8(wall->floorceilpicnum) == (uint8_t)-1) {
             continue;
         }
 
