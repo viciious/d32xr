@@ -475,7 +475,6 @@ void R_InitMathTables(void)
 	int i;
 	fixed_t focalLength;
 	fixed_t stretchWidth;
-	int fuzzunit;
 	VINT *tempviewangletox;
 
 	I_FreeWorkBuffer();
@@ -555,12 +554,6 @@ void R_InitMathTables(void)
 		fixed_t cosang = finecosine(xtoviewangle[i] >> (ANGLETOFINESHIFT-FRACBITS));
 		cosang = D_abs(cosang);
 		distscale[i] = FixedDiv(FRACUNIT, cosang);
-	}
-
-	fuzzunit = 320;
-	for (i = 0; i < FUZZTABLE; i++)
-	{
-		fuzzoffset[i] = fuzzoffset[i] < 0 ? -fuzzunit : fuzzunit;
 	}
 
 	// enable caching for LUTs

@@ -18,7 +18,6 @@ VINT anamorphicview = 0;
 VINT initmathtables = 2;
 
 drawcol_t drawcol;
-drawcol_t drawfuzzcol;
 drawcol_t drawcolnpo2;
 drawcol_t drawcollow;
 drawspan_t drawspan;
@@ -30,19 +29,6 @@ drawskycol_t drawskycol;
 #ifdef HIGH_DETAIL_SPRITES
 drawcol_t drawspritecol;
 #endif
-
-short fuzzoffset[FUZZTABLE] =
-{
-	1,-1,1,-1,1,1,-1,
-	1,1,-1,1,1,1,-1,
-	1,1,1,-1,-1,-1,-1,
-	1,-1,-1,1,1,1,1,-1,
-	1,-1,1,1,-1,-1,1,
-	1,-1,-1,-1,-1,1,1,
-	1,1,-1,1,1,-1,1,
-	-1,-1,1,-1,1,1,1,
-	1,-1,1,-1,-1,1,1
-};
 
 // Classic Sonic fade
 const short md_palette_fade_table[32] =
@@ -276,7 +262,6 @@ void R_SetDrawMode(void)
 	{
 		drawcol = I_DrawColumnNoDraw;
 		drawcolnpo2 = I_DrawColumnNoDraw;
-		drawfuzzcol = I_DrawColumnNoDraw;
 		drawcollow = I_DrawColumnNoDraw;
 		drawspan = I_DrawSpanNoDraw;
 
@@ -295,7 +280,6 @@ void R_SetDrawMode(void)
 	{
 		drawcol = I_DrawColumnLow;
 		drawcolnpo2 = I_DrawColumnNPo2Low;
-		drawfuzzcol = I_DrawFuzzColumnLow;
 		drawcollow = I_DrawColumnLow;
 
 		#ifdef MDSKY
@@ -316,7 +300,6 @@ void R_SetDrawMode(void)
 	{
 		drawcol = I_DrawColumn;
 		drawcolnpo2 = I_DrawColumnNPo2;
-		drawfuzzcol = I_DrawFuzzColumn;
 		drawspan = I_DrawSpan;
 		drawcollow = I_DrawColumnLow;
 
@@ -694,8 +677,6 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		curpalette = palette;
 		I_SetPalette(dc_playpals+palette*768);
 	}
-
-	vd.fuzzcolormap = 12 * 256;
 #endif
 
 	vd.visplanes = visplanes_;

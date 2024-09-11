@@ -281,7 +281,6 @@ typedef void (*drawskycol_t)(int, int, int);
 typedef void (*drawspan_t)(int, int, int, int, fixed_t, fixed_t, fixed_t, fixed_t, inpixel_t*, int);
 
 extern drawcol_t drawcol;
-extern drawcol_t drawfuzzcol;
 extern drawcol_t drawcolnpo2;
 extern drawcol_t drawcollow;
 extern drawspan_t drawspan;
@@ -293,10 +292,6 @@ extern drawskycol_t drawskycol;
 #ifdef HIGH_DETAIL_SPRITES
 extern drawcol_t drawspritecol;
 #endif
-
-#define FUZZTABLE		64
-#define FUZZMASK		(FUZZTABLE-1)
-extern short fuzzoffset[FUZZTABLE];
 
 /* to get a global angle from cartesian coordinates, the coordinates are */
 /* flipped until they are in the first octant of the coordinate system, then */
@@ -620,7 +615,6 @@ __attribute__((aligned(16)))
 	VINT		extralight;
 	VINT		displayplayer;
 	VINT		fixedcolormap;
-	VINT		fuzzcolormap;
 	angle_t		clipangle, doubleclipangle;
 	VINT 		*viewangletox;
 
