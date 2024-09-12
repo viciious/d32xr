@@ -34,7 +34,8 @@ static const castinfo_t castorder[] = {
 typedef enum
 {
 	fin_endtext,
-	fin_charcast
+	fin_charcast,
+	fin_bossback
 } final_e;
 
 #define TEXTTIME	4
@@ -443,6 +444,15 @@ int F_Ticker (void)
 					S_StartSound (NULL, mobjinfo[castorder[fin->castnum].type].seesound); 
 #endif
 			}
+			else if (finale && !gameinfo.endShowCast && fin->bossback)
+			{
+				fin->status = fin_bossback;
+
+				if (!gameinfo.victoryMus || !*gameinfo.victoryMus)
+					S_StartSongByName(gameinfo.endMus, 1, gameinfo.victoryCdTrack);
+				else
+					S_StartSongByName(gameinfo.victoryMus, 1, gameinfo.victoryCdTrack);
+			}
 			else
 			{
 				return 1;
@@ -451,6 +461,9 @@ int F_Ticker (void)
 		return 0;
 	}
 	
+	if (fin->status == fin_bossback)
+		return 0;
+
 	if (!fin->castdeath)
 	{
 		if ( ((buttons & BT_ATTACK) && !(oldbuttons & BT_ATTACK) )
@@ -591,7 +604,7 @@ stopattack:
 static void F_DrawBackground(void)
 {
 #ifdef MARS
-	if (fin->bossback && fin->status == fin_charcast)
+	if (fin->bossback && (fin->status == fin_charcast || fin->status == fin_bossback))
 	{
 		DrawJagobj(fin->bossback, 0, 0);
 		DrawFillRect(0, BIGSHORT(fin->bossback->height), 320, 224-BIGSHORT(fin->bossback->height), 0);
@@ -686,6 +699,10 @@ void F_Drawer (void)
 			BufferedDrawSprite (fin->caststate->sprite,
 					fin->caststate->frame&FF_FRAMEMASK,0,top,left);
 			F_CastPrint (castorder[fin->castnum].name);
+			break;
+
+		case fin_bossback:
+			fin->drawbg = 2;
 			break;
 	}
 }
