@@ -137,6 +137,30 @@ blockmove:
    }
 }
 
+void GetSectorAABB(sector_t *sector, fixed_t bbox[4]);
+void P_SpawnBustables(sector_t *sec, mobj_t *playermo)
+{
+   fixed_t blockbox[4];
+   GetSectorAABB(sec, blockbox);
+   const fixed_t spawnInterval = 64<<FRACBITS;
+
+   for (fixed_t z = sec->ceilingheight - spawnInterval/2; z >= sec->floorheight + spawnInterval/2; z -= spawnInterval/2)
+   {
+      for (fixed_t x = blockbox[BOXLEFT]; x <= blockbox[BOXRIGHT]; x += spawnInterval)
+      {
+         for (fixed_t y = blockbox[BOXBOTTOM]; y <= blockbox[BOXTOP]; y += spawnInterval)
+         {
+            if (R_PointInSubsector(x, y)->sector == sec)
+            {
+               mobj_t *mo = P_SpawnMobj(x, y, z, MT_GFZDEBRIS);
+               const angle_t playerMoveAngle = R_PointToAngle2(0, 0, playermo->momx, playermo->momy);
+               P_ThrustValues(playerMoveAngle, P_AproxDistance(playermo->momx, playermo->momy) >> 4, &mo->momx, &mo->momy);
+            }
+         }
+      }
+   }
+}
+
 //
 // Check a linedef during wall sliding motion.
 //
@@ -166,6 +190,15 @@ static boolean SL_CheckLine(line_t *ld, pslidework_t *sw)
 
    front = LD_FRONTSECTOR(ld);
    back  = LD_BACKSECTOR(ld);
+
+   if (ld->special == 254 && ld->tag > 0 && sw->slidething->player
+      && (players[sw->slidething->player-1].pflags & PF_SPINNING)) // Bustable block
+   {
+      back->floorheight = P_FindNextLowestFloor(back, back->floorheight);
+      ld->tag = 0;
+      S_StartSound(sw->slidething, sfx_s3k_59);
+      P_SpawnBustables(back, sw->slidething);
+   }
 
    if(front->floorheight > back->floorheight)
       openbottom = front->floorheight;

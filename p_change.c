@@ -94,11 +94,8 @@ boolean PIT_ChangeSector (mobj_t *thing, changetest_t *ct)
 	return true;		/* keep checking (crush other things)	 */
 }
 
-void CalculateSectorBlockBox(sector_t *sector, VINT blockbox[4])
+void GetSectorAABB(sector_t *sector, fixed_t bbox[4])
 {
-	fixed_t		bbox[4];
-	int         block;
-
 	M_ClearBox(bbox);
 
 	for (int j = 0; j < sector->linecount; j++)
@@ -107,6 +104,14 @@ void CalculateSectorBlockBox(sector_t *sector, VINT blockbox[4])
 		M_AddToBox(bbox, vertexes[li->v1].x, vertexes[li->v1].y);
 		M_AddToBox(bbox, vertexes[li->v2].x, vertexes[li->v2].y);
 	}
+}
+
+void CalculateSectorBlockBox(sector_t *sector, VINT blockbox[4])
+{
+	fixed_t		bbox[4];
+	int         block;
+
+	GetSectorAABB(sector, bbox);
 
 	/* adjust bounding box to map blocks */
 	block = (bbox[BOXTOP]-bmaporgy+MAXRADIUS)>>MAPBLOCKSHIFT;

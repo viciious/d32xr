@@ -82,19 +82,19 @@ void P_PlayerRingBurst(player_t *player, int damage)
 		{
 			spd = 1*FRACUNIT + (FRACUNIT/2);
 
-			P_SetObjectMomZ(mo, 3*FRACUNIT, false);
+			P_SetObjectMomZ(mo, 5*FRACUNIT, false);
 
 			if (i & 1)
-				P_SetObjectMomZ(mo, 3*FRACUNIT, true);
+				P_SetObjectMomZ(mo, 5*FRACUNIT, true);
 		}
 		else
 		{
 			spd = 1*FRACUNIT;
 
-			P_SetObjectMomZ(mo, 2*FRACUNIT, false);
+			P_SetObjectMomZ(mo, 4*FRACUNIT, false);
 
 			if (i & 1)
-				P_SetObjectMomZ(mo, 2*FRACUNIT, true);
+				P_SetObjectMomZ(mo, 4*FRACUNIT, true);
 		}
 
 		P_Thrust(mo, fa, spd);

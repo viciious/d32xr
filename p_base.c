@@ -456,7 +456,7 @@ static void P_FloatChange(mobj_t *mo)
 //
 void P_ZMovement(mobj_t *mo)
 {
-   mo->z += mo->momz * 2;
+   mo->z += mo->momz;
 
    if((mo->flags & MF_FLOAT) && (mo->flags & MF_ENEMY) && mo->target)
    {
@@ -471,7 +471,11 @@ void P_ZMovement(mobj_t *mo)
 
       if (mo->type == MT_FLINGRING)
       {
-         mo->momz = -FixedMul(mo->momz, FixedDiv(19*FRACUNIT, 20*FRACUNIT));
+         mo->momz = -FixedMul(mo->momz, FixedDiv(17*FRACUNIT, 20*FRACUNIT));
+      }
+      else if (mo->type == MT_GFZDEBRIS)
+      {
+         P_RemoveMobj(mo);
       }
       else
       {

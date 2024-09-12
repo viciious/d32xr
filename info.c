@@ -260,6 +260,15 @@ STATE(SPR_FL12,1,2,A_FlickyFly,S_FLICKY_12_RUN2), // S_FLICKY_12_RUN1
 STATE(SPR_FL12,2,2,NULL,S_FLICKY_12_RUN3), // S_FLICKY_12_RUN2
 STATE(SPR_FL12,3,2,NULL,S_FLICKY_12_RUN1), // S_FLICKY_12_RUN2
 
+STATE(SPR_GFZC,0,1,NULL,S_GFZDEBRIS2), // S_GFZDEBRIS1
+STATE(SPR_GFZC,1,1,NULL,S_GFZDEBRIS3), // S_GFZDEBRIS2
+STATE(SPR_GFZC,2,1,NULL,S_GFZDEBRIS4), // S_GFZDEBRIS3
+STATE(SPR_GFZC,3,1,NULL,S_GFZDEBRIS5), // S_GFZDEBRIS4
+STATE(SPR_GFZC,4,1,NULL,S_GFZDEBRIS6), // S_GFZDEBRIS5
+STATE(SPR_GFZC,5,1,NULL,S_GFZDEBRIS7), // S_GFZDEBRIS6
+STATE(SPR_GFZC,6,1,NULL,S_GFZDEBRIS8), // S_GFZDEBRIS7
+STATE(SPR_GFZC,7,1,NULL,S_GFZDEBRIS1), // S_GFZDEBRIS8
+
 };
 
 #undef STATE
@@ -1315,6 +1324,31 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		0,              // damage
 		sfx_None,       // activesound
 		MF_FLOAT, // flags
+	},
+
+	{           // MT_GFZDEBRIS
+		-1,             // doomednum
+		S_GFZDEBRIS1,    // spawnstate
+		1,              // spawnhealth
+		S_NULL,         // seestate
+		sfx_None,       // seesound
+		0,              // reactiontime
+		sfx_None,       // attacksound
+		S_NULL,         // painstate
+		0,              // painchance
+		sfx_None,       // painsound
+		S_NULL,         // meleestate
+		S_NULL,         // missilestate
+		S_NULL,         // deathstate
+		S_NULL,         // xdeathstate
+		sfx_None,       // deathsound
+		0,              // speed
+		32*FRACUNIT,    // radius
+		64*FRACUNIT,    // height
+		100,            // mass
+		0,              // damage
+		sfx_None,       // activesound
+		MF_NOBLOCKMAP,  // flags
 	},
 };
 
