@@ -133,10 +133,6 @@ int vgm_setup(void* fm_ptr)
         }
     }
 
-    // pre-convert unsigned 8-bit PCM samples to signed PCM format for the SegaCD
-    if ((fm_ptr >= MD_WORDRAM_VGM_PTR && fm_ptr < MD_WORDRAM+0x20000) && pcm_baseoffs) {
-        pcm_baseoffs += (fm_ptr - MD_WORDRAM_VGM_PTR);
-    }
     if (rf5c68_dataofs) {
         rf5c68_dataofs += pcm_baseoffs;
     }
@@ -205,7 +201,7 @@ void *vgm_cache_scd(const char *name, int offset, int length)
 
 void vgm_play_scd_samples(int offset, int length, int freq)
 {
-    void *ptr = (char *)MCD_WORDRAM_VGM_PTR + pcm_baseoffs + offset;
+    void *ptr = (char *)MCD_WORDRAM_VGM_PTR + VGM_WORDRAM_OFS + pcm_baseoffs + offset;
 
     scd_queue_setptr_buf(VGM_MCD_BUFFER_ID, ptr, length);
     scd_queue_play_src(VGM_MCD_SOURCE_ID, VGM_MCD_BUFFER_ID, freq, 128, 255, 0);
@@ -283,7 +279,7 @@ void vgm_play_rf5c68_samples(int chan, int offset, int loopstart, int incr, int 
     //int freq = ((uint16_t)incr * 32604) >> 11;
     int freq = incr << 4; // good enough
     int length = loopstart - offset;
-    void *ptr = (char *)MCD_WORDRAM_VGM_PTR + rf5c68_dataofs + offset;
+    void *ptr = (char *)MCD_WORDRAM_VGM_PTR + VGM_WORDRAM_OFS + rf5c68_dataofs + offset;
     int vol = (volpan >> 16) & 0xff;
     int pan = vgm_midipan2lcf(volpan & 0xff);
     int autoloop = 0;
