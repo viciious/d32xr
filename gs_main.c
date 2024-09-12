@@ -45,6 +45,8 @@ void GS_Start(void)
     int n;
     char *buf;
 
+    S_StopSong();
+
     I_SetPalette(W_POINTLUMPNUM(W_GetNumForName("PLAYPALS")));
 
     if (gs_menu == NULL)
