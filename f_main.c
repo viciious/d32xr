@@ -348,10 +348,10 @@ void F_Start (void)
 	W_LoadPWAD(PWAD_NONE);
 #endif
 
-	if (!gameinfo.endMus || !*gameinfo.endMus)
-		S_StartSongByName(gameinfo.victoryMus, 1, gameinfo.endCdTrack);
+	if (!gameinfo.victoryMus || !*gameinfo.victoryMus)
+		S_StartSongByName(gameinfo.endMus, 1, gameinfo.victoryCdTrack);
 	else
-		S_StartSongByName(gameinfo.endMus, 1, gameinfo.endCdTrack);
+		S_StartSongByName(gameinfo.victoryMus, 1, gameinfo.victoryCdTrack);
 
 	fin->status = fin_endtext;		/* END TEXT PRINTS FIRST */
 	fin->textdelay = TEXTTIME;
@@ -433,12 +433,6 @@ int F_Ticker (void)
 			if (finale && gameinfo.endShowCast)
 			{
 				fin->status = fin_charcast;
-
-				if (!gameinfo.victoryMus || !*gameinfo.victoryMus)
-					S_StartSongByName(gameinfo.endMus, 1, gameinfo.victoryCdTrack);
-				else
-					S_StartSongByName(gameinfo.victoryMus, 1, gameinfo.victoryCdTrack);
-
 #ifndef JAGUAR
 				if (mobjinfo[castorder[fin->castnum].type].seesound)
 					S_StartSound (NULL, mobjinfo[castorder[fin->castnum].type].seesound); 
@@ -447,11 +441,7 @@ int F_Ticker (void)
 			else if (finale && !gameinfo.endShowCast && fin->bossback)
 			{
 				fin->status = fin_bossback;
-
-				if (!gameinfo.victoryMus || !*gameinfo.victoryMus)
-					S_StartSongByName(gameinfo.endMus, 1, gameinfo.victoryCdTrack);
-				else
-					S_StartSongByName(gameinfo.victoryMus, 1, gameinfo.victoryCdTrack);
+				S_StartSound (NULL, sfx_barexp);
 			}
 			else
 			{
