@@ -1372,7 +1372,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		100,            // mass
 		0,              // damage
 		sfx_None,       // activesound
-		MF_NOBLOCKMAP,  // flags
+		MF_NOBLOCKMAP|MF_FLOAT,  // flags
 	},
 
 	{           // MT_SMALLBUBBLE
