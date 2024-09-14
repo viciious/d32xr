@@ -33,6 +33,7 @@ static int rf5c68_dataofs;
 static int rf5c68_datalen;
 static short rf5c68_num_loops;
 static uint16_t rf5c68_loops[VGM_MAX_RF5C68_LOOPS];
+static int vgm_word_ram_offs;
 
 extern void *vgm_ptr;
 extern int pcm_baseoffs;
@@ -85,6 +86,13 @@ int vgm_setup(void* fm_ptr)
             memcpy(MD_WORDRAM_VGM_PTR, fm_ptr, vgm_size);
             fm_ptr = MD_WORDRAM_VGM_PTR;
         }
+    }
+
+    vgm_word_ram_offs = VGM_WORDRAM_OFS;
+    if ((fm_ptr >= MD_WORDRAM_VGM_PTR && fm_ptr < MD_WORDRAM+0x20000)) {
+        // this is needed because fm_ptr may not exactly align with MD_WORDRAM_VGM_PTR
+        // due to how vgm_cache_scd works (reads on sector offset)
+        vgm_word_ram_offs += (fm_ptr - MD_WORDRAM_VGM_PTR);
     }
 
     lzss_setup(&vgm_lzss, fm_ptr, vgm_lzss_buf, VGM_LZSS_BUF_SIZE);
@@ -201,7 +209,7 @@ void *vgm_cache_scd(const char *name, int offset, int length)
 
 void vgm_play_scd_samples(int offset, int length, int freq)
 {
-    void *ptr = (char *)MCD_WORDRAM_VGM_PTR + VGM_WORDRAM_OFS + pcm_baseoffs + offset;
+    void *ptr = (char *)MCD_WORDRAM + vgm_word_ram_offs + pcm_baseoffs + offset;
 
     scd_queue_setptr_buf(VGM_MCD_BUFFER_ID, ptr, length);
     scd_queue_play_src(VGM_MCD_SOURCE_ID, VGM_MCD_BUFFER_ID, freq, 128, 255, 0);
@@ -279,7 +287,7 @@ void vgm_play_rf5c68_samples(int chan, int offset, int loopstart, int incr, int 
     //int freq = ((uint16_t)incr * 32604) >> 11;
     int freq = incr << 4; // good enough
     int length = loopstart - offset;
-    void *ptr = (char *)MCD_WORDRAM_VGM_PTR + VGM_WORDRAM_OFS + rf5c68_dataofs + offset;
+    void *ptr = (char *)MCD_WORDRAM + vgm_word_ram_offs + rf5c68_dataofs + offset;
     int vol = (volpan >> 16) & 0xff;
     int pan = vgm_midipan2lcf(volpan & 0xff);
     int autoloop = 0;
