@@ -154,7 +154,7 @@ void P_SpawnBustables(sector_t *sec, mobj_t *playermo)
             {
                mobj_t *mo = P_SpawnMobj(x, y, z, MT_GFZDEBRIS);
                const angle_t playerMoveAngle = R_PointToAngle2(0, 0, playermo->momx, playermo->momy);
-               P_ThrustValues(playerMoveAngle, P_AproxDistance(playermo->momx, playermo->momy) >> 4, &mo->momx, &mo->momy);
+               P_ThrustValues(playerMoveAngle, P_AproxDistance(playermo->momx, playermo->momy) >> 1, &mo->momx, &mo->momy);
             }
          }
       }
