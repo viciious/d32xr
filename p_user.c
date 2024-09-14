@@ -1247,6 +1247,19 @@ void P_MovePlayer(player_t *player)
 	}
 
 	player->speed = P_AproxDistance(player->mo->momx, player->mo->momy);
+
+	// If you're running fast enough, you can create splashes as you run in shallow water.
+	if (player->mo->subsector->sector->heightsec != -1)
+	{
+		const fixed_t watertop = sectors[player->mo->subsector->sector->heightsec].floorheight;
+
+		if (player->mo->z + (player->mo->theight << FRACBITS) >= watertop && player->mo->z <= watertop && (player->speed > (25<<FRACBITS) || (player->pflags & PF_STARTDASH))
+			&& leveltime % (TICRATE/6) == 0 && player->mo->momz == 0)
+		{
+			mobj_t *water = P_SpawnMobj(player->mo->x, player->mo->y, watertop, MT_SPLISH);
+			S_StartSound(water, sfx_wslap);
+		}
+	}
 }
 
 /*
