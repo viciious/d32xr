@@ -253,6 +253,26 @@ S_GFZDEBRIS6,
 S_GFZDEBRIS7,
 S_GFZDEBRIS8,
 
+// Bubbles
+S_SMALLBUBBLE,
+S_MEDIUMBUBBLE,
+S_LARGEBUBBLE1,
+S_LARGEBUBBLE2,
+S_EXTRALARGEBUBBLE, // breathable
+
+S_POP1, // Extra Large bubble goes POP!
+
+// Water Splish
+S_SPLISH1,
+S_SPLISH2,
+S_SPLISH3,
+S_SPLISH4,
+S_SPLISH5,
+S_SPLISH6,
+S_SPLISH7,
+S_SPLISH8,
+S_SPLISH9,
+
 NUMSTATES
 } statenum_t;
 
@@ -317,6 +337,11 @@ MT_FLICKY_03, // Chicken
 MT_FLICKY_12, // Rat
 
 MT_GFZDEBRIS,
+
+MT_SMALLBUBBLE, // small bubble
+MT_MEDIUMBUBBLE, // medium bubble
+MT_EXTRALARGEBUBBLE, // extra large bubble
+MT_SPLISH,
 
 NUMMOBJTYPES
 } mobjtype_t;

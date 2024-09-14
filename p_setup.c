@@ -497,7 +497,7 @@ void P_LoadBlockMap (int lump)
 void P_GroupLines (void)
 {
 	VINT		*linebuffer;
-	int			i, j, total;
+	int			i, total;
 	sector_t	*sector;
 	subsector_t	*ss;
 	seg_t		*seg;

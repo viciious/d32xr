@@ -284,7 +284,10 @@ void P_PlayerZMovement(mobj_t *mo)
 	}
 	else
 	{
-		mo->momz -= GRAVITY / 2;
+		if (player->pflags & PF_UNDERWATER)
+			mo->momz -= GRAVITY / 2 / 3;
+		else
+			mo->momz -= GRAVITY / 2;
 	}
 
 	if (mo->z + (mo->theight << FRACBITS) > mo->ceilingz)
@@ -319,6 +322,8 @@ void P_PlayerMobjThink(mobj_t *mobj)
 
 	if ((mobj->z != mobj->floorz) || mobj->momz)
 		P_PlayerZMovement(mobj);
+
+	P_MobjCheckWater(mobj);
 
 	//	if (gametic == prevgametic)
 	//		return;
@@ -1364,12 +1369,6 @@ void P_PlayerThink(player_t *player)
 
 	if (player->powers[pw_invulnerability])
 		player->powers[pw_invulnerability]--;
-
-	if (player->powers[pw_ironfeet])
-		player->powers[pw_ironfeet]--;
-
-	if (player->powers[pw_infrared])
-		player->powers[pw_infrared]--;
 
 	if (player->damagecount)
 		player->damagecount--;

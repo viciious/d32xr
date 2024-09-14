@@ -70,6 +70,7 @@ void A_MonitorPop(mobj_t *actor);
 void A_AwardBox(mobj_t *actor);
 void A_FlickyCheck(mobj_t *actor);
 void A_FlickyFly(mobj_t *actor);
+void A_BubbleRise(mobj_t *actor);
 
 #define STATE(sprite,frame,tics,action,nextstate) {sprite,frame,tics,nextstate,action}
 
@@ -268,6 +269,29 @@ STATE(SPR_GFZC,4,1,NULL,S_GFZDEBRIS6), // S_GFZDEBRIS5
 STATE(SPR_GFZC,5,1,NULL,S_GFZDEBRIS7), // S_GFZDEBRIS6
 STATE(SPR_GFZC,6,1,NULL,S_GFZDEBRIS8), // S_GFZDEBRIS7
 STATE(SPR_GFZC,7,1,NULL,S_GFZDEBRIS1), // S_GFZDEBRIS8
+
+// Bubbles
+STATE(SPR_BUBL,0,1,A_BubbleRise,S_SMALLBUBBLE), // S_SMALLBUBBLE
+STATE(SPR_BUBL,1,1,A_BubbleRise,S_MEDIUMBUBBLE), // S_MEDIUMBUBBLE
+
+// Extra Large Bubble (breathable)
+STATE(SPR_BUBL,2,8,A_BubbleRise,S_LARGEBUBBLE2), // S_LARGEBUBBLE1
+STATE(SPR_BUBL,3,8,A_BubbleRise,S_EXTRALARGEBUBBLE), // S_LARGEBUBBLE2
+STATE(SPR_BUBL,4,16,A_BubbleRise,S_EXTRALARGEBUBBLE), // S_EXTRALARGEBUBBLE
+
+// Extra Large Bubble goes POP!
+STATE(SPR_BUBL,5,16,NULL,S_NULL), // S_POP1
+
+// Water Splish
+STATE(SPR_SPLH,0,2,NULL,S_SPLISH2), // S_SPLISH1
+STATE(SPR_SPLH,1,2,NULL,S_SPLISH3), // S_SPLISH2
+STATE(SPR_SPLH,2,2,NULL,S_SPLISH4), // S_SPLISH3
+STATE(SPR_SPLH,3,2,NULL,S_SPLISH5), // S_SPLISH4
+STATE(SPR_SPLH,4,2,NULL,S_SPLISH6), // S_SPLISH5
+STATE(SPR_SPLH,5,2,NULL,S_SPLISH7), // S_SPLISH6
+STATE(SPR_SPLH,6,2,NULL,S_SPLISH8), // S_SPLISH7
+STATE(SPR_SPLH,7,2,NULL,S_SPLISH9), // S_SPLISH8
+STATE(SPR_SPLH,8,2,NULL,S_NULL),    // S_SPLISH9
 
 };
 
@@ -1349,6 +1373,106 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		0,              // damage
 		sfx_None,       // activesound
 		MF_NOBLOCKMAP,  // flags
+	},
+
+	{           // MT_SMALLBUBBLE
+		-1,             // doomednum
+		S_SMALLBUBBLE,  // spawnstate
+		1000,           // spawnhealth
+		S_NULL,         // seestate
+		sfx_None,       // seesound
+		8,              // reactiontime
+		sfx_None,       // attacksound
+		S_NULL,         // painstate
+		0,              // painchance
+		sfx_None,       // painsound
+		S_NULL,         // meleestate
+		S_NULL,         // missilestate
+		S_NULL,         // deathstate
+		S_NULL,         // xdeathstate
+		sfx_None,       // deathsound
+		8,              // speed
+		4*FRACUNIT,     // radius
+		4*FRACUNIT,     // height
+		16,             // mass
+		0,              // damage
+		sfx_None,       // activesound
+		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY|MF_FLOAT, // flags
+	},
+
+	{           // MT_MEDIUMBUBBLE
+		-1,             // doomednum
+		S_MEDIUMBUBBLE, // spawnstate
+		1000,           // spawnhealth
+		S_NULL,         // seestate
+		sfx_None,       // seesound
+		8,              // reactiontime
+		sfx_None,       // attacksound
+		S_NULL,         // painstate
+		0,              // painchance
+		sfx_None,       // painsound
+		S_NULL,         // meleestate
+		S_NULL,         // missilestate
+		S_NULL,         // deathstate
+		S_NULL,         // xdeathstate
+		sfx_None,       // deathsound
+		8,              // speed
+		8*FRACUNIT,     // radius
+		8*FRACUNIT,     // height
+		16,             // mass
+		0,              // damage
+		sfx_None,       // activesound
+		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY|MF_FLOAT, // flags
+	},
+
+	{           // MT_EXTRALARGEBUBBLE
+		-1,             // doomednum
+		S_LARGEBUBBLE1, // spawnstate
+		1000,           // spawnhealth
+		S_NULL,         // seestate
+		sfx_None,       // seesound
+		8,              // reactiontime
+		sfx_None,       // attacksound
+		S_NULL,         // painstate
+		0,              // painchance
+		sfx_None,       // painsound
+		S_NULL,         // meleestate
+		S_NULL,         // missilestate
+		S_POP1,         // deathstate
+		S_NULL,         // xdeathstate
+		sfx_s3k_38,     // deathsound
+		8,              // speed
+		23*FRACUNIT,    // radius
+		43*FRACUNIT,    // height
+		16,             // mass
+		0,              // damage
+		sfx_None,       // activesound
+		MF_SPECIAL|MF_NOGRAVITY|MF_FLOAT, // flags
+	},
+
+	{           // MT_SPLISH
+		-1,             // doomednum
+		S_SPLISH1,      // spawnstate
+		1000,           // spawnhealth
+		S_NULL,         // seestate
+		sfx_None,       // seesound
+		8,              // reactiontime
+		sfx_None,       // attacksound
+		S_NULL,         // painstate
+		0,              // painchance
+		sfx_None,       // painsound
+		S_NULL,         // meleestate
+		S_NULL,         // missilestate
+		S_NULL,         // deathstate
+		S_NULL,         // xdeathstate
+		sfx_None,       // deathsound
+		0,              // speed
+		6*FRACUNIT,     // radius
+		1*FRACUNIT,     // height
+		100,            // mass
+		1,              // damage
+		sfx_None,       // activesound
+		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY|MF_STATIC, // flags
 	},
 };
 

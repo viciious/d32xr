@@ -477,6 +477,30 @@ void P_ZMovement(mobj_t *mo)
       {
          P_RemoveMobj(mo);
       }
+      else if (mo->type == MT_MEDIUMBUBBLE)
+      {
+         // Hit the floor, so split!
+         mobj_t *explodemo;
+         explodemo = P_SpawnMobj(mo->x, mo->y, mo->z, MT_SMALLBUBBLE);
+         explodemo->momx += (P_Random() % 32) * FRACUNIT/8;
+         explodemo->momy += (P_Random() % 32) * FRACUNIT/8;
+         explodemo = P_SpawnMobj(mo->x, mo->y, mo->z, MT_SMALLBUBBLE);
+         explodemo->momx += (P_Random() % 64) * FRACUNIT/8;
+         explodemo->momy -= (P_Random() % 64) * FRACUNIT/8;
+         explodemo = P_SpawnMobj(mo->x, mo->y, mo->z, MT_SMALLBUBBLE);
+         explodemo->momx -= (P_Random() % 128) * FRACUNIT/8;
+         explodemo->momy += (P_Random() % 128) * FRACUNIT/8;
+         explodemo = P_SpawnMobj(mo->x, mo->y, mo->z, MT_SMALLBUBBLE);
+         explodemo->momx -= (P_Random() % 96) * FRACUNIT/8;
+         explodemo->momy -= (P_Random() % 96) * FRACUNIT/8;
+
+         P_RemoveMobj(mo);
+      }
+      else if (mo->type == MT_SMALLBUBBLE)
+      {
+         // Hit the floor, so POP!
+         P_RemoveMobj(mo);
+      }
       else
       {
          if(mo->momz < 0)
@@ -491,7 +515,11 @@ void P_ZMovement(mobj_t *mo)
    else if(!(mo->flags & MF_NOGRAVITY))
    {
       // apply gravity
-      mo->momz -= GRAVITY/2;
+      if (mo->subsector->sector->heightsec != -1
+         && sectors[mo->subsector->sector->heightsec].floorheight < mo->z + (mo->theight << FRACBITS-1))
+         mo->momz -= GRAVITY/2/3; // Less gravity underwater.
+      else
+         mo->momz -= GRAVITY/2;
    }
 
    if(mo->z + (mo->theight << FRACBITS) > mo->ceilingz)
@@ -501,6 +529,11 @@ void P_ZMovement(mobj_t *mo)
       if (mo->type == MT_FLINGRING && false) // TODO: MF_VERTICALFLIP
       {
          mo->momz = -FixedMul(mo->momz, FixedDiv(17*FRACUNIT, 20*FRACUNIT));
+      }
+      else if (mo->type == MT_SMALLBUBBLE || mo->type == MT_MEDIUMBUBBLE
+         || mo->type == MT_EXTRALARGEBUBBLE)
+      {
+         P_RemoveMobj(mo);
       }
       else
       {

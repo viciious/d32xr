@@ -474,6 +474,7 @@ extern	pixel_t	*screens[2];	/* [viewportWidth*viewportHeight];  */
 static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	visplane_t **visplanes_hash_, sector_t **vissectors_, viswallextra_t *viswallex_)
 {
+	boolean waterpal = false;
 	int 		i;
 	player_t *player;
 #ifdef JAGUAR
@@ -518,6 +519,10 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		vd.lightlevel = thiscam->subsector->sector->lightlevel;
 		aimingangle = thiscam->aiming;
 		vd.viewsubsector = thiscam->subsector;
+
+		if (thiscam->subsector->sector->heightsec != -1
+			&& sectors[thiscam->subsector->sector->heightsec].floorheight > vd.viewz)
+			waterpal = true;
 	}
 	else
 	{
@@ -668,6 +673,8 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		Mars_FadeMDPaletteFromBlack(0xEEE); //TODO: Replace with Mars_FadeMDPaletteFromWhite()
 		#endif
 	}
+	else if (waterpal)
+		palette= 11;
 	
 	if (palette != curpalette) {
 		curpalette = palette;

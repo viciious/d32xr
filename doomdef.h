@@ -315,19 +315,20 @@ typedef enum
 	pw_invulnerability,
 	pw_flashing,
 	pw_sneakers,
-	pw_ironfeet,
-	pw_allmap,
-	pw_infrared,
 	pw_extralife,
+	pw_underwater,
+	pw_ringshield,
+	pw_watershield,
 	NUMPOWERS
 } powertype_t;
 
-#define	INVULNTICS		(30*15)
-#define	INVISTICS		(60*15)
-#define	INFRATICS		(120*15)
-#define	IRONTICS		(60*15)
+#define	INVULNTICS		(20*TICRATE)
+#define SNEAKERTICS		(20*TICRATE)
+#define	UNDERWATERTICS	(30*TICRATE)
 #define FLASHINGTICS    (3*TICRATE)
 #define EXTRALIFETICS   (4*TICRATE)
+#define SPACETIMETICS   (11*TICRATE + (TICRATE/2))
+#define GRAVBOOTSTICS   (20*TICRATE)
 
 #define PF_ONGROUND 1
 #define PF_THOKKED  2
@@ -340,6 +341,7 @@ typedef enum
 #define PF_USEDOWN 256
 #define PF_STARTDASH 512
 #define PF_JUMPDOWN 1024
+#define PF_TOUCHWATER 2048
 
 boolean P_IsObjectOnGround(mobj_t *mo);
 int8_t P_MobjFlip(mobj_t *mo);

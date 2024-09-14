@@ -732,6 +732,25 @@ void A_FlickyFly(mobj_t *actor)
 		P_RemoveMobj(actor);
 }
 
+void A_BubbleRise(mobj_t *actor)
+{
+	if (actor->type == MT_EXTRALARGEBUBBLE)
+		actor->momz = FixedDiv(6*FRACUNIT, 5*FRACUNIT);
+	else
+		actor->momz += FRACUNIT / 32;
+
+	if (P_Random() < 32)
+		P_InstaThrust(actor, P_Random() & 1 ? actor->angle + ANG90 : actor->angle,
+			(P_Random() & 1) ? FRACUNIT / 2 : -FRACUNIT/2);
+	else if (P_Random() < 32)
+		P_InstaThrust(actor, P_Random() & 1 ? actor->angle - ANG90 : actor->angle - ANG180,
+			(P_Random() & 1) ? FRACUNIT/2 : -FRACUNIT/2);
+
+	if (actor->subsector->sector->heightsec == -1
+		|| actor->z + (actor->theight << FRACBITS-1) > sectors[actor->subsector->sector->heightsec].floorheight)
+		P_RemoveMobj(actor);
+}
+
 /*============================================================================= */
 
 /* a move in p_base.c crossed a special line */

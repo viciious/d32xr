@@ -750,3 +750,110 @@ void P_SpawnPlayerMissile (mobj_t *source, mobjtype_t type)
 	P_CheckMissileSpawn (th);
 }
 
+void P_MobjCheckWater(mobj_t *mo)
+{
+	if (mo->player)
+	{
+		player_t *player = &players[mo->player-1];
+		VINT wasinwater = player->pflags & PF_UNDERWATER;
+		player->pflags &= ~(PF_TOUCHWATER|PF_UNDERWATER);
+		fixed_t watertop = mo->subsector->sector->floorheight - 512*FRACUNIT;
+
+		if (mo->subsector->sector->heightsec != -1)
+		{
+			watertop = sectors[mo->subsector->sector->heightsec].floorheight;
+
+			if (mo->z + mobjinfo[MT_PLAYER].height/2 < watertop)
+			{
+				player->pflags |= PF_UNDERWATER;
+
+				if (!(player->powers[pw_invulnerability]))
+				{
+/*					if (player->powers[pw_ringshield])
+					{
+						player->powers[pw_ringshield] = false;
+						player->bonuscount = 1;
+					}*/
+				}
+				if (player->powers[pw_underwater] <= 0
+					&& !player->powers[pw_watershield]
+					&& !player->exiting
+					&& player->powers[pw_underwater] < UNDERWATERTICS + 1)
+					player->powers[pw_underwater] = UNDERWATERTICS + 1;
+			}
+		}
+
+		if (player->playerstate != PST_DEAD
+			&& ((player->pflags & PF_UNDERWATER) != wasinwater))
+		{
+			// Check to make sure you didn't just cross into a sector to jump out of
+			// that has shallower water than the block you were originally in.
+			if (watertop - mo->floorz <= mobjinfo[MT_PLAYER].height / 2)
+				return;
+
+			if (wasinwater && mo->momz > 0)
+				mo->momz = FixedMul(mo->momz, FixedDiv(780*FRACUNIT, 457*FRACUNIT)); // Give the mobj a little out-of-water boost.
+
+			if (mo->momz < 0)
+			{
+				if (mo->z + mobjinfo[MT_PLAYER].height / 2 - mo->momz >= watertop)
+				{
+					// Spawn a splash
+					P_SpawnMobj(mo->x, mo->y, watertop, MT_SPLISH);
+				}
+
+				// skipping stone!
+				if (!(player->pflags & PF_JUMPED) && player->speed/2 > D_abs(mo->momz)
+					&& (player->pflags & PF_SPINNING) && mo->z + mobjinfo[MT_PLAYER].height - mo->momz > watertop)
+				{
+					mo->momz = -mo->momz/2;
+
+					if (mo->momz > 6*FRACUNIT)
+						mo->momz = 6*FRACUNIT;
+				}
+
+				int bubbleCount = D_abs(mo->momz >> FRACBITS);
+
+				// Let's not get too crazy here
+				if (bubbleCount > 8)
+					bubbleCount = 8;
+
+				for (int i = 0; i < bubbleCount; i++)
+				{
+					mobj_t *bubble;
+					uint8_t prandom[6];
+					prandom[0] = P_Random();
+					prandom[1] = P_Random();
+					prandom[2] = P_Random();
+					prandom[3] = P_Random();
+					prandom[4] = P_Random();
+					prandom[5] = P_Random();
+
+					if (prandom[0] < 32)
+						bubble =
+						P_SpawnMobj(mo->x + (prandom[1]<<(FRACBITS-3)) * (prandom[2]&1 ? 1 : -1),
+							mo->y + (prandom[3]<<(FRACBITS-3)) * (prandom[4]&1 ? 1 : -1),
+							mo->z + (prandom[5]<<(FRACBITS-2)), MT_MEDIUMBUBBLE);
+					else
+						bubble =
+						P_SpawnMobj(mo->x + (prandom[1]<<(FRACBITS-3)) * (prandom[2]&1 ? 1 : -1),
+							mo->y + (prandom[3]<<(FRACBITS-3)) * (prandom[4]&1 ? 1 : -1),
+							mo->z + (prandom[5]<<(FRACBITS-2)), MT_SMALLBUBBLE);
+
+					if (bubble)
+						bubble->momz = mo->momz >> 4;
+				}
+			}
+			else if (mo->momz > 0)
+			{
+				if (mo->z + mobjinfo[MT_PLAYER].height / 2 - mo->momz < watertop)
+				{
+					// Spawn a splash
+					P_SpawnMobj(mo->x, mo->y, watertop, MT_SPLISH);
+				}
+			}
+
+			S_StartSound(mo, sfx_s3k_6c);
+		}
+	}
+}
