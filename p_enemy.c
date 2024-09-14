@@ -623,7 +623,7 @@ void A_FishJump(mobj_t *mo)
 		if (mo->angle)
 			jumpval = (mo->angle / ANGLE_1)>>2;
 		else
-			jumpval = 32 << (FRACBITS - 1);
+			jumpval = 16 << FRACBITS;
 
 		jumpval = FixedMul(jumpval, FixedDiv(30 << FRACBITS, 35 << FRACBITS));
 
@@ -752,7 +752,7 @@ void A_BubbleRise(mobj_t *actor)
 			(P_Random() & 1) ? FRACUNIT/2 : -FRACUNIT/2);
 
 	if (actor->subsector->sector->heightsec == -1
-		|| actor->z + (actor->theight << FRACBITS-1) > sectors[actor->subsector->sector->heightsec].floorheight)
+		|| actor->z + (actor->theight << (FRACBITS-1)) > sectors[actor->subsector->sector->heightsec].floorheight)
 		P_RemoveMobj(actor);
 }
 

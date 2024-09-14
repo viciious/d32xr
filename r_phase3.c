@@ -370,7 +370,6 @@ static void R_PrepScenery(scenerymobj_t *thing)
    spritedef_t   *sprdef;
    spriteframe_t *sprframe;
    VINT         *sprlump;
-   boolean      flip;
    int          lump;
    patch_t      *patch;
    vissprite_t  *vis;
@@ -406,7 +405,7 @@ static void R_PrepScenery(scenerymobj_t *thing)
    // We can assume a lot of things here!
    sprdef = &sprites[state->sprite];
 
-   flip = thingframe & FF_FLIPPED;
+   const boolean flip = thingframe & FF_FLIPPED;
 
    sprframe = &spriteframes[sprdef->firstframe + (thingframe & FF_FRAMEMASK)];
    sprlump = &spritelumps[sprframe->lump];
@@ -475,8 +474,6 @@ static void R_PrepScenery(scenerymobj_t *thing)
    {
       vis->xiscale = -FixedDiv(FRACUNIT, xscale);
       vis->startfrac = ((fixed_t)BIGSHORT(patch->width) << FRACBITS) - 1;
-
-      // Adjust offset
    }
    else
    {
@@ -491,8 +488,6 @@ static void R_PrepScenery(scenerymobj_t *thing)
        vis->colormap = vd.fixedcolormap;
    else
       vis->colormap = HWLIGHT(subsectors[thing->subsector].sector->lightlevel);
- 
-//   vis->colormaps = dc_colormaps;
 }
 
 //

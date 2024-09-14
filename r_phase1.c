@@ -649,8 +649,6 @@ static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
    line_t *ldef;
    side_t *sidedef;
    boolean solid;
-//   static sector_t ftempsec;     // killough 3/8/98: ceiling/water hack
-//   static sector_t btempsec;
 
    if (line->v1 == rbsp->lastv2)
       angle1 = rbsp->lastangle2;
@@ -675,9 +673,13 @@ static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
    // decide which clip routine to use
    side = line->sideoffset & 1;
    ldef = &lines[line->linedef];
+   if ((ldef->flags & ML_SECRET) && P_AproxDistance(vd.viewx - v1->x, vd.viewy - v1->y) > 2048*FRACUNIT)
+      return;
+
    frontsector = rbsp->curfsector;//R_FakeFlat(rbsp->curfsector, &ftempsec, false);
    backsector = (ldef->flags & ML_TWOSIDED) ? &sectors[sides[ldef->sidenum[side^1]].sector] : 0;
    sidedef = &sides[ldef->sidenum[side]];
+
    solid = false;
    sector_t *oldbsector = backsector;
 
@@ -739,29 +741,6 @@ static void R_Subsector(rbspWork_t *rbsp, int num)
    count    = sub->numlines;
    stopline = line + count;
 
-   // killough 3/8/98, 4/4/98: Deep water / fake ceiling effect
-//   frontsector = R_FakeFlat(frontsector, &tempsec, false);
-
-   // killough 3/7/98: Add (x,y) offsets to flats, add deep water check
-   // killough 3/16/98: add floorlightlevel
-//   const int floorandlight = ((floorlightlevel & 0xff) << 16) | frontsector->floorpic;
-//   const int ceilandlight = ((ceilinglightlevel & 0xff) << 16) | frontsector->ceilingpic;
-/*
-  floorplane = frontsector->floorheight < vd.viewz || // killough 3/7/98
-    (frontsector->heightsec != -1 &&
-     sectors[frontsector->heightsec].ceilingpic == -1) ?
-    R_FindPlane(frontsector->floorheight,
-                floorandlight,                // killough 3/16/98
-                320, -1) : NULL;
-
-  ceilingplane = frontsector->ceilingheight > vd.viewz ||
-    frontsector->ceilingpic == -1 ||
-    (frontsector->heightsec != -1 &&
-     sectors[frontsector->heightsec].floorpic == -1) ?
-    R_FindPlane(frontsector->ceilingheight,     // killough 3/8/98
-                ceilandlight,              // killough 4/11/98
-                320, -1) : NULL;
-*/
    rbsp->curfsector = frontsector;
    while(line != stopline)
       R_AddLine(rbsp, line++);
