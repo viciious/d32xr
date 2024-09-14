@@ -611,14 +611,19 @@ void A_BossDeath (mobj_t *mo)
 
 void A_FishJump(mobj_t *mo)
 {
-	if ((mo->z <= mo->floorz))// || (mo->z <= mo->watertop - (64 << FRACBITS)))
+	fixed_t watertop = mo->floorz;
+
+	if (mo->subsector->sector->heightsec != -1)
+		watertop = sectors[mo->subsector->sector->heightsec].floorheight - (64<<FRACBITS);
+
+	if ((mo->z <= mo->floorz) || (mo->z <= watertop))
 	{
 		fixed_t jumpval;
 
 		if (mo->angle)
 			jumpval = (mo->angle / ANGLE_1)>>2;
 		else
-			jumpval = 44 << (FRACBITS - 2);
+			jumpval = 32 << (FRACBITS - 1);
 
 		jumpval = FixedMul(jumpval, FixedDiv(30 << FRACBITS, 35 << FRACBITS));
 
@@ -628,7 +633,7 @@ void A_FishJump(mobj_t *mo)
 
 	if (mo->momz < 0
 		&& (mo->state < mobjinfo[mo->type].meleestate || mo->state > mobjinfo[mo->type].xdeathstate))
-		P_SetMobjState(mo, mobjinfo[mo->type].meleestate );
+		P_SetMobjState(mo, mobjinfo[mo->type].meleestate);
 }
 
 void A_MonitorPop(mobj_t *actor)
