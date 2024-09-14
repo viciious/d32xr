@@ -10,6 +10,7 @@ int	tictics, drawtics;
 boolean		gamepaused;
 jagobj_t	*pausepic;
 char		clearscreen = 0;
+char		remove_distortion = 0;
 
 /*
 ===============================================================================
@@ -533,6 +534,13 @@ void P_Drawer (void)
 		if (clearscreen == 2 || optionsactive)
 			ST_ForceDraw();
 		clearscreen--;
+	}
+
+	if (remove_distortion) {
+		// The other frame buffer has already been normalized.
+		// Now normalize the current frame buffer.
+		RemoveDistortionFilters();
+		remove_distortion = 0;
 	}
 
 	if (initmathtables)

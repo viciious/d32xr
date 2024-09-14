@@ -586,14 +586,6 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		}
 	}
 
-	//DLG: Uncomment to test the horizontal distortion filter
-	/*if (gamemapinfo.mapNumber != 30) {
-		if (leveltime < (30*15))
-			ApplyHorizontalDistortionFilter(leveltime << 1);
-		else if (leveltime >= (30*15) || leveltime < (30*19))
-			RemoveDistortionFilters();
-	}*/
-
 #ifdef JAGUAR
 	vd.extralight = player->extralight << 6;
 
@@ -673,12 +665,20 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		Mars_FadeMDPaletteFromBlack(0xEEE); //TODO: Replace with Mars_FadeMDPaletteFromWhite()
 		#endif
 	}
-	else if (waterpal)
+	else if (waterpal) {
 		palette= 11;
+
+		ApplyHorizontalDistortionFilter(leveltime << 1);
+	}
 	
 	if (palette != curpalette) {
 		curpalette = palette;
 		I_SetPalette(dc_playpals+palette*768);
+
+		if (!waterpal) {
+			RemoveDistortionFilters();
+			remove_distortion = 1;	// Necessary to normalize the next frame buffer.
+		}
 	}
 #endif
 
