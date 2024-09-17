@@ -3,6 +3,7 @@
 #include "doomdef.h"
 #include "p_local.h"
 #include "mars.h"
+#include "p_camera.h"
 
 int			numvertexes;
 vertex_t	*vertexes;
@@ -337,6 +338,8 @@ void P_LoadThings (int lump)
 	mt = (mapthing_t *)data;
 	for (i=0 ; i<numthings ; i++, mt++)
 		P_SpawnMapThing (mt, i);
+
+	camBossMobj = P_FindFirstMobjOfType(MT_EGGMOBILE);
 }
 
 

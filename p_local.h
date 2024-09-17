@@ -81,6 +81,8 @@ void P_RemoveThinker (thinker_t *thinker);
 
 void P_ThrustValues(angle_t angle, fixed_t move, fixed_t *outX, fixed_t *outY);
 void P_InstaThrust(mobj_t *mo, angle_t angle, fixed_t move);
+fixed_t P_ReturnThrustX(angle_t angle, fixed_t move);
+fixed_t P_ReturnThrustY(angle_t angle, fixed_t move);
 boolean P_IsReeling(player_t *player);
 void    P_AddPlayerScore(player_t *player, int amount);
 void    P_ResetPlayer(player_t *player);
@@ -115,6 +117,8 @@ extern VINT ringmobjtics[NUMMOBJTYPES];
 #define ONFLOORZ	D_MININT
 #define	ONCEILINGZ	D_MAXINT
 
+mobj_t *P_FindFirstMobjOfType(uint16_t type);
+
 void P_SetObjectMomZ(mobj_t *mo, fixed_t value, boolean relative);
 mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
 
@@ -130,6 +134,7 @@ void	P_SpawnPlayerMissile (mobj_t *source, mobjtype_t type);
 void	P_RunMobjBase2 (void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 void	P_RunMobjLate(void) ATTR_DATA_CACHE_ALIGN;
 
+boolean P_CheckMove(mobj_t *mo, fixed_t x, fixed_t y);
 void P_MobjCheckWater(mobj_t *mo);
 void L_SkullBash (mobj_t *mo);
 void L_MissileHit (mobj_t *mo);
@@ -150,6 +155,7 @@ void	P_SpawnMapThing(mapthing_t* mthing, int thingid);
 
 void A_MissileExplode (mobj_t *mo);
 void A_SkullBash (mobj_t *mo);
+boolean P_LookForPlayers (mobj_t *actor, boolean allaround, boolean nothreshold) ATTR_DATA_CACHE_ALIGN;
 
 /*
 ===============================================================================
@@ -220,6 +226,8 @@ fixed_t P_AimLineAttack (lineattack_t *la, mobj_t *t1, angle_t angle, fixed_t di
 void P_LineAttack (lineattack_t *la, mobj_t *t1, angle_t angle, fixed_t distance, fixed_t slope, int damage) ATTR_DATA_CACHE_ALIGN;
 
 void P_RadiusAttack (mobj_t *spot, mobj_t *source, int damage) ATTR_DATA_CACHE_ALIGN;
+void P_XYMovement(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
+void P_ZMovement(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
 
 /*
 ===============================================================================

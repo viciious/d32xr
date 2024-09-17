@@ -20,9 +20,8 @@ boolean P_CheckMissileRange (mobj_t *actor) ATTR_DATA_CACHE_ALIGN;
 boolean P_Move (mobj_t *actor) ATTR_DATA_CACHE_ALIGN;
 boolean P_TryWalk (mobj_t *actor) ATTR_DATA_CACHE_ALIGN;
 void P_NewChaseDir (mobj_t *actor) ATTR_DATA_CACHE_ALIGN;
-boolean P_LookForPlayers (mobj_t *actor, boolean allaround) ATTR_DATA_CACHE_ALIGN;
-void A_Look (mobj_t *actor) ATTR_DATA_CACHE_ALIGN;
-void A_Chase (mobj_t *actor) ATTR_DATA_CACHE_ALIGN;
+void A_Look (mobj_t *actor, int16_t var1, int16_t var2) ATTR_DATA_CACHE_ALIGN;
+void A_Chase (mobj_t *actor, int16_t var1, int16_t var2) ATTR_DATA_CACHE_ALIGN;
 
 /*
 ================
@@ -305,7 +304,7 @@ void P_NewChaseDir (mobj_t *actor)
 ================
 */
 
-boolean P_LookForPlayers (mobj_t *actor, boolean allaround)
+boolean P_LookForPlayers (mobj_t *actor, boolean allaround, boolean nothreshold)
 {
 	int 		i, j;
 	angle_t		an;
@@ -355,7 +354,9 @@ newtarget:
 		}
 	}
 	
-	actor->threshold = 60;
+	if (!nothreshold)
+		actor->threshold = 60;
+
 	return true;
 }
 
@@ -378,7 +379,7 @@ newtarget:
 ==============
 */
 
-void A_Look (mobj_t *actor)
+void A_Look (mobj_t *actor, int16_t var1, int16_t var2)
 {
 	const mobjinfo_t* ainfo = &mobjinfo[actor->type];
 	
@@ -387,7 +388,7 @@ void A_Look (mobj_t *actor)
 /* if the sector has a living soundtarget, make that the new target */
 	actor->threshold = 0;		/* any shot will wake up */
 
-	if (!P_LookForPlayers (actor, false) )
+	if (!P_LookForPlayers (actor, false, false) )
 		return;
 	
 seeyou:
@@ -409,7 +410,7 @@ seeyou:
 	P_SetMobjState (actor, ainfo->seestate);
 }
 
-void A_SpawnState(mobj_t *actor)
+void A_SpawnState(mobj_t *actor, int16_t var1, int16_t var2)
 {
 	if (actor->state != mobjinfo[actor->type].spawnstate)
 		P_SetMobjState(actor, mobjinfo[actor->type].spawnstate);
@@ -425,7 +426,7 @@ void A_SpawnState(mobj_t *actor)
 ==============
 */
 
-void A_Chase (mobj_t *actor)
+void A_Chase (mobj_t *actor, int16_t var1, int16_t var2)
 {
 	int		delta;
 	const mobjinfo_t* ainfo = &mobjinfo[actor->type];
@@ -452,7 +453,7 @@ void A_Chase (mobj_t *actor)
 	if (!actor->target || !(actor->target->flags&MF_SHOOTABLE)
 		|| (netgame && !actor->threshold && !(actor->flags & MF_SEETARGET)))
 	{	/* look for a new target */
-		if (P_LookForPlayers(actor,true))
+		if (P_LookForPlayers(actor,true,false))
 			return;		/* got a new target */
 		P_SetMobjState (actor, ainfo->spawnstate);
 		return;
@@ -496,11 +497,10 @@ void A_Chase (mobj_t *actor)
 ==============
 */
 
-void A_FaceTarget (mobj_t *actor)
+void A_FaceTarget (mobj_t *actor, int16_t var1, int16_t var2)
 {	
 	if (!actor->target)
 		return;
-	actor->flags &= ~MF_AMBUSH;
 	
 	actor->angle = R_PointToAngle2 (actor->x, actor->y
 	, actor->target->x, actor->target->y);
@@ -516,44 +516,108 @@ void A_FaceTarget (mobj_t *actor)
 ==================
 */
 
-#define	SKULLSPEED		(40*FRACUNIT)
+#define	SKULLSPEED		(24*FRACUNIT)
 
-void A_SkullAttack (mobj_t *actor)
+void A_SkullAttack (mobj_t *actor, int16_t var1, int16_t var2)
 {
 	mobj_t			*dest;
 	angle_t			an;
 	int				dist;
-	const mobjinfo_t* ainfo = &mobjinfo[actor->type];
+	const mobjinfo_t* mobjInfo = &mobjinfo[actor->type];
 
 	if (!actor->target)
 		return;
 		
 	dest = actor->target;	
-//	actor->flags |= MF_SKULLFLY;
+	actor->flags2 |= MF2_SKULLFLY;
 
-	S_StartSound (actor, ainfo->attacksound);
-	A_FaceTarget (actor);
+	S_StartSound (actor, mobjInfo->activesound);
+	A_FaceTarget (actor, 0, 0);
+
+	dist = P_AproxDistance (dest->x - actor->x, dest->y - actor->y);
+
+	{
+		static int k = 0;
+		int i, j;
+		angle_t testang = 0;
+
+		mobj_t *testmobj = P_SpawnMobj(actor->x, actor->y, actor->z, actor->type);
+
+		if (P_Random() & 1) // Imaginary 50% chance
+		{
+			i = 9;
+			j = 27;
+		}
+		else
+		{
+			i = 27;
+			j = 9;
+		}
+
+#define dostuff(q) \
+			testang = actor->angle + ((i+(q))*(ANG90/9));\
+			if (P_CheckMove(actor,\
+				P_ReturnThrustX(testang, dist + 2*mobjInfo->radius),\
+				P_ReturnThrustY(testang, dist + 2*mobjInfo->radius)\
+				)) break;
+
+		if (P_Random() & 1) // imaginary 50% chance
+		{
+			for (k = 0; k < 9; k++)
+			{
+				dostuff(i+k)
+				dostuff(i-k)
+				dostuff(j+k)
+				dostuff(j-k)
+			}
+		}
+		else
+		{
+			for (int k = 0; k < 9; k++)
+			{
+				dostuff(i-k)
+				dostuff(i+k)
+				dostuff(j-k)
+				dostuff(j+k)
+			}
+		}
+		actor->angle = testang;
+
+#undef dostuff
+
+		P_RemoveMobj(testmobj);
+	}
+
 	an = actor->angle >> ANGLETOFINESHIFT;
 	actor->momx = FixedMul (SKULLSPEED, finecosine(an));
 	actor->momy = FixedMul (SKULLSPEED, finesine(an));
-	dist = P_AproxDistance (dest->x - actor->x, dest->y - actor->y);
 	dist = dist / SKULLSPEED;
 	if (dist < 1)
 		dist = 1;
 	actor->momz = (dest->z+(dest->theight<<(FRACBITS-1)) - actor->z) / dist;
+
+	actor->momz = 0; // Horizontal only
 }
 
-void A_Pain (mobj_t *actor)
+void A_Pain (mobj_t *actor, int16_t var1, int16_t var2)
 {
 	const mobjinfo_t* ainfo = &mobjinfo[actor->type];
 	if (ainfo->painsound)
 		S_StartSound (actor, ainfo->painsound);	
 }
 
-void A_Fall (mobj_t *actor)
+void A_Fall (mobj_t *actor, int16_t var1, int16_t var2)
 {
 /* actor is on ground, it can be walked over */
 	actor->flags &= ~MF_SOLID;
+
+	// Also want to set these
+	P_UnsetThingPosition(actor);
+	actor->flags |= MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY;
+	P_SetThingPosition(actor);
+
+	if (var1)
+		actor->extradata = var1;
 }
 
 
@@ -565,11 +629,34 @@ void A_Fall (mobj_t *actor)
 ================
 */
 
-void A_Explode (mobj_t *thingy)
+void A_Explode (mobj_t *thingy, int16_t var1, int16_t var2)
 {
 	P_RadiusAttack ( thingy, thingy->target, 128 );
 }
 
+//
+// A_BossScream
+//
+// Spawns explosions and plays appropriate sounds around the defeated boss.
+//
+// var1: unused
+// var2 = Object to spawn, if not specified, uses MT_SONIC3KBOSSEXPLODE
+//
+void A_BossScream(mobj_t *actor, int16_t var1, int16_t var2)
+{
+	const mobjtype_t explodetype = var2 > 0 ? var2 : MT_SONIC3KBOSSEXPLODE;
+	
+	const angle_t fa = ((leveltime*(ANG45/9))>>ANGLETOFINESHIFT) & FINEMASK;
+
+	const fixed_t x = actor->x + FixedMul(finecosine(fa),mobjinfo[actor->type].radius);
+	const fixed_t y = actor->y + FixedMul(finesine(fa),mobjinfo[actor->type].radius);
+	const fixed_t z = actor->z + (P_Random()<<(FRACBITS-2)) - 8*FRACUNIT;
+
+	mobj_t *mo = P_SpawnMobj(x, y, z, explodetype);
+
+	if (mobjinfo[actor->type].deathsound)
+		S_StartSound(mo, mobjinfo[actor->type].deathsound);
+}
 
 /*
 ================
@@ -580,10 +667,60 @@ void A_Explode (mobj_t *thingy)
 ================
 */
 
-void A_BossDeath (mobj_t *mo)
+void P_DoBossVictory(mobj_t *mo)
+{
+	// Trigger the egg capsule (if it exists)
+
+
+}
+
+static void P_SpawnBoss1Junk(mobj_t *mo)
+{
+	mobj_t *mo2 = P_SpawnMobj(
+		mo->x + P_ReturnThrustX(mo->angle - ANG90, 32<<FRACBITS),
+		mo->y + P_ReturnThrustY(mo->angle - ANG90, 32<<FRACBITS),
+		mo->z + (32<<FRACBITS), MT_BOSSJUNK);
+
+	mo2->angle = mo->angle;
+	P_InstaThrust(mo2, mo2->angle - ANG90, 4*FRACUNIT);
+	P_SetObjectMomZ(mo2, 4*FRACUNIT, false);
+	P_SetMobjState(mo2, S_BOSSEGLZ1);
+
+	mo2 = P_SpawnMobj(
+		mo->x + P_ReturnThrustX(mo->angle + ANG90, 32<<FRACBITS),
+		mo->y + P_ReturnThrustY(mo->angle + ANG90, 32<<FRACBITS),
+		mo->z + (32<<FRACBITS), MT_BOSSJUNK);
+
+	mo2->angle = mo->angle;
+	P_InstaThrust(mo2, mo2->angle + ANG90, 4*FRACUNIT);
+	P_SetObjectMomZ(mo2, 4*FRACUNIT, false);
+	P_SetMobjState(mo2, S_BOSSEGLZ2);
+}
+
+angle_t InvAngle(angle_t a)
+{
+	return (0xffffffff-a) + 1;
+}
+
+static void P_DoBossDefaultDeath(mobj_t *mo)
+{
+	// Stop exploding and prepare to run.
+	P_SetMobjState(mo, mobjinfo[mo->type].xdeathstate);
+	mo->target = P_FindFirstMobjOfType(MT_BOSSFLYPOINT);
+
+	P_UnsetThingPosition(mo);
+	mo->flags |= MF_NOBLOCKMAP|MF_NOGRAVITY|MF_NOCLIP|MF_FLOAT;
+	P_SetThingPosition(mo);
+
+	mo->movedir = 0;
+	mo->extradata = 2*TICRATE;
+	mo->flags2 |= MF2_BOSSFLEE;
+	mo->momz = P_MobjFlip(mo)*(1 << (FRACBITS-1));
+}
+
+void A_BossDeath (mobj_t *mo, int16_t var1, int16_t var2)
 {
 	int 		i;
-	mobj_t		*mo2;
 
     // make sure there is a player alive for victory
     for (i=0 ; i<MAXPLAYERS ; i++)
@@ -592,24 +729,21 @@ void A_BossDeath (mobj_t *mo)
     if (i == MAXPLAYERS)
 		return;
 
-/* */
-/* scan the remaining thinkers to see if all bosses are dead */
-/*	 */
+	P_DoBossVictory(mo);
 
-/* FIXME */
-	for (mo2=mobjhead.next ; mo2 != (void *)&mobjhead ; mo2=mo2->next)
+	switch (mo->type)
 	{
-		if (mo2 != mo && mo2->type == mo->type && mo2->health > 0)
-			return;		/* other boss not dead */
+		case MT_EGGMOBILE:
+			P_SpawnBoss1Junk(mo);
+			break;
+		default:
+			break;
 	}
-	
-/* */
-/* victory! */
-/* */
 
+	P_DoBossDefaultDeath(mo);
 }
 
-void A_FishJump(mobj_t *mo)
+void A_FishJump(mobj_t *mo, int16_t var1, int16_t var2)
 {
 	fixed_t watertop = mo->floorz;
 
@@ -636,7 +770,7 @@ void A_FishJump(mobj_t *mo)
 		P_SetMobjState(mo, mobjinfo[mo->type].meleestate);
 }
 
-void A_MonitorPop(mobj_t *actor)
+void A_MonitorPop(mobj_t *actor, int16_t var1, int16_t var2)
 {
 	mobjtype_t iconItem = 0;
 	mobj_t *newmobj;
@@ -658,7 +792,7 @@ void A_MonitorPop(mobj_t *actor)
 
 	if (iconItem == 0)
 	{
-		CONS_Printf("A_MonitorPop(): 'damage' field missing powerup item definition.\n");
+//		CONS_Printf("A_MonitorPop(): 'damage' field missing powerup item definition.\n");
 		return;
 	}
 
@@ -667,13 +801,13 @@ void A_MonitorPop(mobj_t *actor)
 }
 
 // Having one function for all box awarding cuts down ROM size
-void A_AwardBox(mobj_t *actor)
+void A_AwardBox(mobj_t *actor, int16_t var1, int16_t var2)
 {
 	player_t *player;
 
 	if (!actor->target || !actor->target->player)
 	{
-		CONS_Printf("A_AwardBox(): Monitor has no target.\n");
+//		CONS_Printf("A_AwardBox(): Monitor has no target.\n");
 		return;
 	}
 
@@ -704,7 +838,7 @@ MT_1UP_ICON,*/
 		S_StartSound(player->mo, mobjinfo[actor->type].seesound);
 }
 
-void A_FlickyCheck(mobj_t *actor)
+void A_FlickyCheck(mobj_t *actor, int16_t var1, int16_t var2)
 {
 	if (actor->target && actor->z <= actor->floorz)
 	{
@@ -715,11 +849,11 @@ void A_FlickyCheck(mobj_t *actor)
 	}
 }
 
-void A_FlickyFly(mobj_t *actor)
+void A_FlickyFly(mobj_t *actor, int16_t var1, int16_t var2)
 {
 	if (actor->z <= actor->floorz)
 	{
-		A_FaceTarget(actor);
+		A_FaceTarget(actor, 0, 0);
 		actor->momz = mobjinfo[actor->type].mass << FRACBITS;
 
 		if (mobjinfo[actor->type].painchance != 0)
@@ -737,7 +871,7 @@ void A_FlickyFly(mobj_t *actor)
 		P_RemoveMobj(actor);
 }
 
-void A_BubbleRise(mobj_t *actor)
+void A_BubbleRise(mobj_t *actor, int16_t var1, int16_t var2)
 {
 	if (actor->type == MT_EXTRALARGEBUBBLE)
 		actor->momz = FixedDiv(6*FRACUNIT, 5*FRACUNIT);
@@ -754,6 +888,320 @@ void A_BubbleRise(mobj_t *actor)
 	if (actor->subsector->sector->heightsec == -1
 		|| actor->z + (actor->theight << (FRACBITS-1)) > sectors[actor->subsector->sector->heightsec].floorheight)
 		P_RemoveMobj(actor);
+}
+
+// Boss 1 Stuff
+void A_FocusTarget(mobj_t *actor, int16_t var1, int16_t var2)
+{
+	if (actor->target)
+	{
+		fixed_t speed = mobjinfo[actor->type].speed;
+		angle_t hangle = actor->angle;
+		angle_t vangle = ANG90;
+
+		actor->momx -= actor->momx>>4, actor->momy -= actor->momy>>4, actor->momz -= actor->momz>>4;
+		actor->momz += FixedMul(finecosine(vangle>>ANGLETOFINESHIFT), speed);
+		actor->momx += FixedMul(finesine(vangle>>ANGLETOFINESHIFT), FixedMul(finecosine(hangle>>ANGLETOFINESHIFT), speed));
+		actor->momy += FixedMul(finesine(vangle>>ANGLETOFINESHIFT), FixedMul(finesine(hangle>>ANGLETOFINESHIFT), speed));
+	}
+}
+
+// mobj->target getting set to NULL is our hint that the mobj was removed.
+boolean P_RailThinker(mobj_t *mobj)
+{
+	fixed_t x, y, z;
+	x = mobj->x, y = mobj->y, z = mobj->z;
+
+	if (mobj->momx || mobj->momy)
+	{
+		P_XYMovement(mobj);
+		if (mobj->target == NULL)
+			return true; // was removed
+	}
+
+	if (mobj->momz)
+	{
+		P_ZMovement(mobj);
+		if (mobj->target == NULL)
+			return true; // was removed
+	}
+
+	return mobj->target == NULL || (x == mobj->x && y == mobj->y && z == mobj->z);
+}
+
+void A_Boss1Chase(mobj_t *actor, int16_t var1, int16_t var2)
+{
+	int delta;
+
+	if (actor->reactiontime)
+		actor->reactiontime--;
+
+	if (actor->z < actor->floorz+33*FRACUNIT)
+		actor->z = actor->floorz+33*FRACUNIT;
+
+	// turn towards movement direction if not there yet
+	if (actor->movedir < NUMDIRS)
+	{
+		actor->angle &= (7<<29);
+		delta = actor->angle - (actor->movedir << 29);
+
+		if (delta > 0)
+			actor->angle -= ANG45;
+		else if (delta < 0)
+			actor->angle += ANG45;
+	}
+
+	// do not attack twice in a row
+	if (actor->flags2 & MF2_JUSTATTACKED)
+	{
+		actor->flags2 &= ~MF2_JUSTATTACKED;
+		P_NewChaseDir(actor);
+		return;
+	}
+
+	if (actor->movecount)
+		goto nomissile;
+
+	if (!P_CheckMissileRange(actor))
+		goto nomissile;
+
+	if (actor->reactiontime <= 0)
+	{
+		if (actor->health > mobjinfo[actor->type].damage)
+		{
+			if (P_Random() & 1)
+				P_SetMobjState(actor, mobjinfo[actor->type].missilestate);
+			else
+				P_SetMobjState(actor, mobjinfo[actor->type].meleestate);
+		}
+		else
+			P_SetMobjState(actor, mobjinfo[actor->type].mass);
+
+		actor->flags2 |= MF2_JUSTATTACKED;
+		actor->reactiontime = 2*TICRATE;
+		return;
+	}
+
+	// ?
+nomissile:
+	// possibly choose another target
+	if ((splitscreen || netgame) && P_Random() < 2)
+	{
+		if (P_LookForPlayers(actor, true, true))
+			return; // got a new target
+	}
+
+	// chase towards player
+	if (--actor->movecount < 0 || !P_Move(actor))
+		P_NewChaseDir(actor);
+}
+
+void A_Boss1Laser(mobj_t *actor, int16_t var1, int16_t var2)
+{
+	fixed_t x, y, z, floorz, speed;
+	int upperend = (var2>>8);
+	int i;
+	angle_t angle;
+	mobj_t *point;
+	int dur;
+
+	if (!actor->target)
+		return;
+
+	if (states[actor->state].tics > 1)
+		dur = actor->tics;
+	else
+	{
+		if ((upperend & 1) && ((int32_t)actor->extradata > 1))
+			actor->extradata = ((int32_t)actor->extradata) - 1;
+
+		dur = (int32_t)actor->extradata;
+	}
+
+	switch (var2)
+	{
+		case 0:
+			x = actor->x + P_ReturnThrustX(actor->angle+ANG90, 44*FRACUNIT);
+			y = actor->y + P_ReturnThrustY(actor->angle+ANG90, 44*FRACUNIT);
+			z = actor->z + 56*FRACUNIT;
+			break;
+		case 1:
+			x = actor->x + P_ReturnThrustX(actor->angle-ANG90, 44*FRACUNIT);
+			y = actor->y + P_ReturnThrustY(actor->angle-ANG90, 44*FRACUNIT);
+			z = actor->z + 56*FRACUNIT;
+			break;
+		case 2:
+			A_Boss1Laser(actor, var1, 3); // middle laser
+			A_Boss1Laser(actor, var1, 0); // left laser
+			A_Boss1Laser(actor, var1, 1); // right laser
+			return;
+			break;
+		case 3:
+			x = actor->x + P_ReturnThrustX(actor->angle, 42*FRACUNIT);
+			y = actor->y + P_ReturnThrustY(actor->angle, 42*FRACUNIT);
+			z = actor->z + (actor->theight << (FRACBITS-1));
+			break;
+		default:
+			x = actor->x;
+			y = actor->y;
+			z = actor->z + (actor->theight << (FRACBITS-1));
+			break;
+	}
+return;
+	if (!(actor->flags2 & MF2_FIRING) && dur > 1)
+	{
+		actor->angle = R_PointToAngle2(x, y, actor->target->x, actor->target->y);
+		if (mobjinfo[var1].seesound)
+			S_StartSound(actor, mobjinfo[var1].seesound);
+
+		point = P_SpawnMobj(x + P_ReturnThrustX(actor->angle, mobjinfo[actor->type].radius), y + P_ReturnThrustY(actor->angle, mobjinfo[actor->type].radius), actor->z - (actor->theight << (FRACBITS-1)) / 2, MT_EGGMOBILE_TARGET);
+		point->angle = actor->angle;
+		point->reactiontime = dur+1;
+		point->target = actor->target;
+		actor->target = point;
+	}
+
+	angle = R_PointToAngle2(z + (mobjinfo[var1].height>>1), 0, actor->target->z, P_AproxDistance(x - actor->target->x, y - actor->target->y));
+
+	point = P_SpawnMobj(x, y, z, var1);
+
+	point->target = actor;
+	point->angle = actor->angle;
+	speed = mobjinfo[point->type].radius;
+	point->momz = FixedMul(finecosine(angle>>ANGLETOFINESHIFT), speed);
+	point->momx = FixedMul(finesine(angle>>ANGLETOFINESHIFT), FixedMul(finecosine(point->angle>>ANGLETOFINESHIFT), speed));
+	point->momy = FixedMul(finesine(angle>>ANGLETOFINESHIFT), FixedMul(finesine(point->angle>>ANGLETOFINESHIFT), speed));
+
+	const mobjinfo_t *pointInfo = &mobjinfo[point->type];
+	for (i = 0; i < 256; i++)
+	{
+		mobj_t *mo = P_SpawnMobj(point->x, point->y, point->z, point->type);
+		mo->target = actor;
+
+		mo->angle = point->angle;
+		P_UnsetThingPosition(mo);
+		mo->flags = MF_NOCLIP|MF_NOGRAVITY;
+		P_SetThingPosition(mo);
+
+		if (dur & 1 && pointInfo->missilestate)
+		{
+			P_SetMobjState(mo, pointInfo->missilestate);
+			if (pointInfo->meleestate)
+			{
+				mobj_t *mo2 = P_SpawnMobj(mo->x, mo->y, mo->z, MT_PARTICLE);
+				mo2->flags2 |= MF2_FORWARDOFFSET;
+				mo2->target = actor;
+				P_SetMobjState(mo2, pointInfo->meleestate);
+			}
+		}
+
+		if (dur == 1)
+		{
+			mobj_t *ghost = P_SpawnMobj(mo->x, mo->y, mo->z, MT_GHOST);
+			P_SetMobjState(ghost, mo->state);
+		}
+
+		x = point->x, y = point->y, z = point->z;
+		if (P_RailThinker(point))
+			break;
+	}
+
+	x += point->momx;
+	y += point->momy;
+	floorz = R_PointInSubsector(x, y)->sector->floorheight;
+	if (z - floorz < mobjinfo[MT_EGGMOBILE_FIRE].height>>1 && dur & 1)
+	{
+		point = P_SpawnMobj(x, y, floorz, MT_EGGMOBILE_FIRE);
+
+		point->angle = actor->angle;
+		point->target = actor;
+
+		if (point->subsector->sector->heightsec != -1 && point->z <= sectors[point->subsector->sector->heightsec].floorheight)
+		{
+			for (i = 0; i < 2; i++)
+			{
+				mobj_t *steam = P_SpawnMobj(x, y, sectors[point->subsector->sector->heightsec].floorheight - mobjinfo[MT_DUST].height, MT_DUST);
+				steam->momz += FRACUNIT + 2*P_RandomFixed();
+				P_InstaThrust(steam, P_RandomKey(360)*ANGLE_1, 2*P_RandomFixed());
+				if (mobjinfo[point->type].painsound)
+					S_StartSound(steam, mobjinfo[point->type].painsound);
+			}
+		}
+		else
+		{
+//			fixed_t distx = P_ReturnThrustX(point, point->angle, mobjinfo[point->type].radius);
+//			fixed_t disty = P_ReturnThrustY(point, point->angle, mobjinfo[point->type].radius);
+//			if (P_TryMove(point, point->x + distx, point->y + disty, false) // prevents the sprite from clipping into the wall or dangling off ledges
+//				&& P_TryMove(point, point->x - 2*distx, point->y - 2*disty, false)
+//				&& P_TryMove(point, point->x + distx, point->y + disty, false))
+			{
+				if (mobjinfo[point->type].seesound)
+					S_StartSound(point, mobjinfo[point->type].seesound);
+			}
+//			else
+//				P_RemoveMobj(point);
+		}
+	}
+
+	if (dur > 1)
+		actor->flags2 |= MF2_FIRING;
+	else
+		actor->flags2 &= ~MF2_FIRING;
+}
+
+void A_PrepareRepeat(mobj_t *actor, int16_t var1, int16_t var2)
+{
+	actor->extradata = var1;
+}
+
+void A_Repeat(mobj_t *actor, int16_t var1, int16_t var2)
+{
+	if (var1 && (!actor->extradata || (int32_t)actor->extradata > var1))
+		actor->extradata = var1;
+
+	actor->extradata = (int)actor->extradata - 1;
+	if (actor->extradata > 0)
+		P_SetMobjState(actor, var2);
+}
+
+//
+// var1 = height
+// var2 = unused
+//
+void A_ChangeHeight(mobj_t *actor, int16_t var1, int16_t var2)
+{
+	P_UnsetThingPosition(actor);
+	actor->theight = var1;
+	P_SetThingPosition(actor);
+}
+
+void A_UnidusBall(mobj_t *actor)
+{
+	actor->angle += ANG180 / 16;
+
+	if (actor->movecount)
+	{
+		if (P_AproxDistance(actor->momx, actor->momy) < (mobjinfo[actor->type].damage << (FRACBITS-1)))
+			P_ExplodeMissile(actor);
+		return;
+	}
+
+	if (!actor->target || !actor->target->health)
+	{
+		P_RemoveMobj(actor);
+		return;
+	}
+
+	P_UnsetThingPosition(actor);
+	{
+		const angle_t angle = actor->movedir + ANGLE_1 * (mobjinfo[actor->type].speed*(leveltime%360));
+		const uint16_t fa = angle>>ANGLETOFINESHIFT;
+
+		actor->x = actor->target->x + FixedMul(finecosine(fa),actor->threshold);
+		actor->y = actor->target->y + FixedMul(  finesine(fa),actor->threshold);
+		actor->z = actor->target->z + (actor->target->theight << (FRACBITS-1)) - (actor->theight << (FRACBITS-1));
+	}
+	P_SetThingPosition(actor);
 }
 
 /*============================================================================= */

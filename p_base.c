@@ -50,9 +50,7 @@ static boolean PB_CrossCheck(line_t* ld, pmovetest_t *mt) ATTR_DATA_CACHE_ALIGN;
 static boolean PB_CheckPosition(pmovetest_t *mt) ATTR_DATA_CACHE_ALIGN;
 static boolean PB_TryMove(pmovetest_t *mt, mobj_t* mo, fixed_t tryx, fixed_t tryy) ATTR_DATA_CACHE_ALIGN;
 static void P_FloatChange(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
-void P_ZMovement(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
 void P_MobjThinker(mobj_t* mobj) ATTR_DATA_CACHE_ALIGN;
-void P_XYMovement(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
 
 //
 // Check for collision against another mobj in one of the blockmap cells.
@@ -261,6 +259,9 @@ static boolean PB_CheckPosition(pmovetest_t *mt)
    mt->ceilingline = NULL;
    mt->hitthing    = NULL;
 
+   if (mt->checkthing->flags & MF_NOCLIP)
+      return true;
+
    // the bounding box is extended by MAXRADIUS because mobj_ts are grouped into
    // mapblocks based on their origin point, and can overlap into adjacent blocks
    // by up to MAXRADIUS units
@@ -315,14 +316,17 @@ static boolean PB_TryMove(pmovetest_t *mt, mobj_t *mo, fixed_t tryx, fixed_t try
    if(!PB_CheckPosition(mt))
       return false; // solid wall or thing
 
-   if(mt->testceilingz - mt->testfloorz < (mo->theight << FRACBITS))
-      return false; // doesn't fit
-   if(mt->testceilingz - mo->z < (mo->theight << FRACBITS))
-      return false; // mobj must lower itself to fit
-   if(mt->testfloorz - mo->z > 24*FRACUNIT)
-      return false; // too big a step up
-   if (!(mt->testflags & (MF_FLOAT|0x80000000)) && mt->testfloorz - mt->testdropoffz > 24*FRACUNIT)
-      return false; // don't stand over a dropoff
+   if (!(mo->flags & MF_NOCLIP))
+   {
+      if(mt->testceilingz - mt->testfloorz < (mo->theight << FRACBITS))
+         return false; // doesn't fit
+      if(mt->testceilingz - mo->z < (mo->theight << FRACBITS))
+         return false; // mobj must lower itself to fit
+      if(mt->testfloorz - mo->z > 24*FRACUNIT)
+         return false; // too big a step up
+      if (!(mt->testflags & (MF_FLOAT|0x80000000)) && mt->testfloorz - mt->testdropoffz > 24*FRACUNIT)
+         return false; // don't stand over a dropoff
+   }
 
    // the move is ok, so link the thing into its new position
    P_UnsetThingPosition(mo);
@@ -344,6 +348,30 @@ static void P_BounceMove(mobj_t *mo)
 
 #define STOPSPEED 0x1000
 #define FRICTION  0xd240
+
+boolean P_CheckMove(mobj_t *mo, fixed_t x, fixed_t y)
+{
+   fixed_t xleft = x;
+   fixed_t yleft = y;
+   fixed_t stepx = (x - mo->x) / mobjinfo[mo->type].radius;
+   fixed_t stepy = (y - mo->y) / mobjinfo[mo->type].radius;
+
+   while(xleft || yleft)
+   {
+      pmovetest_t mt;
+
+      xleft -= stepx;
+      yleft -= stepy;
+
+      if(!PB_TryMove(&mt, mo, mo->x + stepx, mo->y + stepy))
+      {
+         // blocked move
+         return true;
+      }
+   }
+
+   return false;
+}
 
 //
 // Do horizontal movement.
@@ -516,7 +544,7 @@ void P_ZMovement(mobj_t *mo)
    {
       // apply gravity
       if (mo->subsector->sector->heightsec != -1
-         && sectors[mo->subsector->sector->heightsec].floorheight > mo->z + (mo->theight << FRACBITS-1))
+         && sectors[mo->subsector->sector->heightsec].floorheight > mo->z + (mo->theight << (FRACBITS-1)))
          mo->momz -= GRAVITY/2/3; // Less gravity underwater.
       else
          mo->momz -= GRAVITY/2;
@@ -544,6 +572,58 @@ void P_ZMovement(mobj_t *mo)
             mo->latecall = P_ExplodeMissile;
       }
    }
+}
+
+static void P_Boss1Thinker(mobj_t *mobj)
+{
+   const mobjinfo_t *mobjInfo = &mobjinfo[MT_EGGMOBILE]; // Always MT_EGGMOBILE
+   const state_t *stateInfo = &states[mobj->state];
+
+   if (mobj->flags2 & MF2_FRET)
+      CONS_Printf("Fretting! %d", leveltime);
+
+	if (mobj->flags2 & MF2_FRET && stateInfo->nextstate == mobjInfo->spawnstate && mobj->tics == 1)
+   {
+      CONS_Printf("De-fret: %d", leveltime);
+		mobj->flags2 &= ~(MF2_FRET|MF2_SKULLFLY);
+		mobj->momx = mobj->momy = mobj->momz = 0;
+	}
+
+//	if (!mobj->tracer) // TODO: Need new way to handle jet fumes
+//	{
+//		var1 = 0;
+//		A_BossJetFume(mobj);
+//	}
+
+	if (!mobj->target || !(mobj->target->flags & MF_SHOOTABLE))
+	{
+		if (mobj->target && mobj->target->health
+         && mobj->target->type == MT_EGGMOBILE_TARGET) // Oh, we're just firing our laser.
+            return; // It's okay, then.
+
+		if (mobj->health <= 0)
+			return;
+
+		// look for a new target
+		if (P_LookForPlayers(mobj, false, true) && mobjInfo->seesound)
+			S_StartSound(mobj, mobjInfo->seesound);
+
+		return;
+	}
+
+	if (mobj->flags2 & MF2_SKULLFLY)
+	{
+		fixed_t dist = mobj->z - (mobj->floorz + (2*(mobj->theight<<FRACBITS)));
+		if (dist > 0 && mobj->momz > 0)
+			mobj->momz = FixedMul(mobj->momz, FRACUNIT - (dist>>12));
+	}
+	else if (mobj->state != mobjInfo->spawnstate && mobj->health > 0 && mobj->flags & MF_FLOAT)
+		mobj->momz = FixedMul(mobj->momz,7*FRACUNIT/8);
+
+	if (mobj->state == mobjInfo->meleestate
+		|| (mobj->state == mobjInfo->missilestate
+		&& mobj->health > mobjInfo->damage))
+		mobj->angle = R_PointToAngle2(mobj->x, mobj->y, mobj->target->x, mobj->target->y);
 }
 
 //
@@ -598,6 +678,7 @@ void P_MobjThinker(mobj_t *mobj)
                mobj->momz = 0;
             break;
          case MT_GHOST:
+         case MT_EGGMOBILE_TARGET:
             if (mobj->reactiontime)
             {
                mobj->reactiontime--;
@@ -607,6 +688,30 @@ void P_MobjThinker(mobj_t *mobj)
                   return;
                }
             }
+            break;
+         case MT_EGGMOBILE:
+            P_Boss1Thinker(mobj);
+            if (mobj->flags2 & MF2_BOSSFLEE)
+            {
+               if (mobj->extradata)
+               {
+                  mobj->extradata = (int)mobj->extradata - 1;
+                  if (!mobj->extradata)
+                  {
+                     if (mobj->target)
+                     {
+                        mobj->momz = FixedMul(FixedDiv(mobj->target->z - mobj->z, P_AproxDistance(mobj->x - mobj->target->x, mobj->y - mobj->target->y)), FRACUNIT << 1);
+                        mobj->angle = R_PointToAngle2(mobj->x, mobj->y, mobj->target->x, mobj->target->y);
+                     }
+                     else
+                        mobj->momz = 8*FRACUNIT;
+                  }
+               }
+               else if (mobj->target)
+                  P_InstaThrust(mobj, mobj->angle, 12*FRACUNIT);
+            }
+            break;
+         default:
             break;
       }
    }

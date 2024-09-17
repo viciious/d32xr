@@ -227,6 +227,16 @@ int P_Random (void)
 	return rndtable[prndindex];
 }
 
+fixed_t P_RandomFixed(void)
+{
+	return (P_Random() << 8 | P_Random());
+}
+
+int P_RandomKey(int max)
+{
+	return (P_RandomFixed() * max) >> FRACBITS;
+}
+
 int M_Random (void)
 {
 	rndindex = (rndindex+1)&0xff;

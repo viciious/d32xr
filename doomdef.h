@@ -285,8 +285,13 @@ typedef struct degenmobj_s
 #define	MF_ENEMY    	0x0040			/* hang from ceiling instead of floor */
 #define	MF_NOGRAVITY	0x0080		/* don't apply gravity every tic */
 
-#define MF2_DONTDRAW    1
-#define MF2_FRET        2           // Multi-hit enemy is reeling from a hit
+#define MF2_DONTDRAW       1
+#define MF2_FRET           2           // Multi-hit enemy is reeling from a hit
+#define MF2_FIRING         4           // Boss currently firing
+#define MF2_FORWARDOFFSET  8         // Offset the Z position of this object to be closer when rendering (shields, etc.)
+#define MF2_SKULLFLY      16          // Doom will never die. Only the players.
+#define MF2_JUSTATTACKED  32
+#define MF2_BOSSFLEE      64
 
 /* movement flags */
 #define	MF_NOCLIP		0x0100		/* player cheat */
@@ -342,6 +347,7 @@ typedef enum
 #define PF_STARTDASH 512
 #define PF_JUMPDOWN 1024
 #define PF_TOUCHWATER 2048
+#define PF_DROWNED 4096
 
 boolean P_IsObjectOnGround(mobj_t *mo);
 int8_t P_MobjFlip(mobj_t *mo);
@@ -869,6 +875,8 @@ struct subsector_s *R_PointInSubsector (fixed_t x, fixed_t y) ATTR_DATA_CACHE_AL
 /*---- */
 int M_Random (void) ATTR_DATA_CACHE_ALIGN;
 int P_Random (void) ATTR_DATA_CACHE_ALIGN;
+fixed_t P_RandomFixed (void);
+int P_RandomKey (int max);
 void M_ClearRandom (void);
 void P_RandomSeed(int seed);
 void M_ClearBox (fixed_t *box);

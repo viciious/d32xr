@@ -30,6 +30,17 @@ static void P_RemoveMobjFromCurrList (mobj_t *mobj_)
 	((degenmobj_t *)mobj->prev)->next = mobj->next;
 }
 
+mobj_t *P_FindFirstMobjOfType(uint16_t type)
+{
+	for (mobj_t *node = mobjhead.next; node != (void*)&mobjhead; node = node->next)
+    {
+		if (node->type == type)
+			return node;
+    }
+
+	return NULL;
+}
+
 /*
 ===============
 =
@@ -151,7 +162,7 @@ boolean P_SetMobjState (mobj_t *mobj, statenum_t state)
 		mobj->frame = st->frame;
 
 		if (st->action)		/* call action functions when the state is set */
-			st->action(mobj);
+			st->action(mobj, st->var1, st->var2);
 
 		if (!(mobj->flags & (MF_RINGMOBJ|MF_STATIC)))
 			mobj->latecall = NULL;	/* make sure it doesn't come back to life... */

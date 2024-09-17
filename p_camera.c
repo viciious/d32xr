@@ -368,6 +368,8 @@ camwrapup:
 #endif
 }
 
+mobj_t *camBossMobj = NULL;
+
 void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 {
 	angle_t angle = 0;
@@ -380,11 +382,21 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 
 	mo = player->mo;
 
-   // TODO: If there is a boss, should focus on the boss
-   if (player->stillTimer > TICRATE/2)
-      angle = focusangle = mo->angle;
+   // If there is a boss, should focus on the boss
+   if (camBossMobj)
+   {
+      if (camBossMobj->health > 0)
+         angle = focusangle = R_PointToAngle2(thiscam->x, thiscam->y, camBossMobj->x, camBossMobj->y);
+      else
+         angle = focusangle = R_PointToAngle2(thiscam->x, thiscam->y, 0, 0);
+   }
    else
-	   angle = focusangle = R_PointToAngle2(thiscam->x, thiscam->y, mo->x, mo->y);
+   {
+      if (player->stillTimer > TICRATE/2)
+         angle = focusangle = mo->angle;
+      else
+         angle = focusangle = R_PointToAngle2(thiscam->x, thiscam->y, mo->x, mo->y);
+   }
 
 	P_CameraThinker(player, thiscam);
 

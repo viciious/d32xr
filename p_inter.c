@@ -172,6 +172,12 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 			}
 			else
 				P_DamageMobj(toucher, special, special, 1);
+
+			if (mobjinfo[special->type].spawnhealth > 1) // Multi-hit? Bounce back!
+			{
+				toucher->momx = -toucher->momx;
+				toucher->momy = -toucher->momy;
+			}
 		}
 		else // A monitor or something else we can pop
 		{
@@ -254,9 +260,8 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 		target->target = source;
 	}
 
-	if (target->health < -targinfo->spawnhealth
-		&& targinfo->xdeathstate)
-		P_SetMobjState (target, targinfo->xdeathstate);
+	if (target->player && (players[target->player-1].pflags & PF_DROWNED))
+		P_SetMobjState(target, targinfo->xdeathstate);
 	else
 		P_SetMobjState (target, targinfo->deathstate);
 
@@ -294,14 +299,25 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 			scoreState += 3;
 		}
 
+		if (target->type == MT_EGGMOBILE)
+		{
+			score = 1000;
+			scoreState = mobjinfo[MT_SCORE].spawnstate + 3;
+		}
+
 		P_SetMobjState(scoremobj, scoreState);
 		P_AddPlayerScore(player, score);
 
-		// Spawn a flicky
-		const mobjtype_t flickies[4] = { MT_FLICKY_01, MT_FLICKY_02, MT_FLICKY_03, MT_FLICKY_12 };
-		mobj_t *flicky = P_SpawnMobj(target->x, target->y, target->z + (target->theight << (FRACBITS-1)), flickies[P_Random() % 4]);
-		flicky->momz = 4*FRACUNIT;
-		flicky->target = player->mo;
+		target->momx = target->momy = target->momz = 0;
+
+		if (target->type != MT_EGGMOBILE)
+		{
+			// Spawn a flicky
+			const mobjtype_t flickies[4] = { MT_FLICKY_01, MT_FLICKY_02, MT_FLICKY_03, MT_FLICKY_12 };
+			mobj_t *flicky = P_SpawnMobj(target->x, target->y, target->z + (target->theight << (FRACBITS-1)), flickies[P_Random() % 4]);
+			flicky->momz = 4*FRACUNIT;
+			flicky->target = player->mo;
+		}
 	}
 }
 
@@ -360,6 +376,14 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 		
 	if (target->health <= 0)
 		return;
+
+	if (target->type == MT_EGGMOBILE)
+	{
+		if (target->flags2 & MF2_FRET) // Currently flashing from being hit
+			return;
+
+		target->flags2 |= MF2_FRET;
+	}
 	
 	player = target->player ? &players[target->player - 1] : NULL;
 	

@@ -85,6 +85,9 @@ static void R_PrepMobj(mobj_t *thing)
       flip = true;
    }
 
+   if (thing->flags2 & MF2_FORWARDOFFSET)
+      tz -= 1024; // Make sure this sprite is drawn on top of sprites with the same distance to the camera
+
    patch = W_POINTLUMPNUM(lump);
    xscale = FixedDiv(PROJECTION, tz);
 

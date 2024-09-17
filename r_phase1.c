@@ -6,6 +6,7 @@
 
 #include "doomdef.h"
 #include "r_local.h"
+#include "p_local.h"
 #ifdef MARS
 #include "mars.h"
 #endif

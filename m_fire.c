@@ -29,7 +29,7 @@
 
 // based on work by Samuel Villarreal and Fabien Sanglard
 
-#define FIRE_STOP_TICON 60
+#define FIRE_STOP_TICON 90
 
 static jagobj_t *intro_titlepic;
 
@@ -45,6 +45,7 @@ void Mars_Sec_M_AnimateFire(void)
 		int duration = I_GetTime() - start;
 		if (duration > FIRE_STOP_TICON - 20)
 		{
+			// Fade to white
 			int palIndex = duration - (FIRE_STOP_TICON - 20);
 			palIndex /= 4;
 			if (palIndex > 5)
@@ -53,14 +54,15 @@ void Mars_Sec_M_AnimateFire(void)
 			const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
 			I_SetPalette(dc_playpals+palIndex*768);
 		}
-		else if (duration < 20)
+		else if (duration < 20 && start >= 0)
 		{
+			// Fade in from black
 			int palIndex = 10 - (duration / 4);
 
 			const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
 			I_SetPalette(dc_playpals+palIndex*768);
 		}
-		else if (duration < 22)
+		else if (duration < 22 && start >= 0)
 		{
 			const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
 			I_SetPalette(dc_playpals);
@@ -93,7 +95,11 @@ void I_InitMenuFire(jagobj_t *titlepic)
 		}
 	}
 
+	const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
+	I_SetPalette(dc_playpals+10*768);
+
 	Mars_M_BeginDrawFire();
+	S_StartSong(gameinfo.titleMus, 0, cdtrack_title);
 }
 
 /*
@@ -124,13 +130,6 @@ void I_DrawMenuFire(void)
 	const int titlepic_pos_x = (320 - titlepic->width) / 2;
 
 	// scroll the title pic from bottom to top
-/*
-	if (m_fire->start_song)
-	{
-		m_fire->start_song = 0;
-		S_StartSong(gameinfo.titleMus, 0, cdtrack_title);
-	}
-*/
 	if (titlepic != NULL)
 	{
 		DrawJagobj2(titlepic, titlepic_pos_x, y, 0, 0, 0, titlepic->height, I_FrameBuffer());

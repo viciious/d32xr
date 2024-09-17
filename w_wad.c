@@ -98,9 +98,9 @@ void W_Init (void)
 
 	// Search for the WAD contents inside the ROM at 1024 byte intervals,
 	// from 0x30000 to 0x80000.
-	long *romptr = (unsigned long *)&MARS_CART_ROM;
+	unsigned long *romptr = (unsigned long *)&MARS_CART_ROM;
 	for (int i=0x30000/4; i < 0x80000/4; i += 0x400) {
-		if (romptr[i] == ('I'<<24) | ('W'<<16) | ('A'<<8) | ('D')) {
+		if (romptr[i] == (('I'<<24) | ('W'<<16) | ('A'<<8) | ('D'))) {
 			numlumps = romptr[i+1];
 			infotableofs = romptr[i+2];
 

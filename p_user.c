@@ -1257,6 +1257,7 @@ void P_MovePlayer(player_t *player)
 			&& leveltime % (TICRATE/6) == 0 && player->mo->momz == 0)
 		{
 			mobj_t *water = P_SpawnMobj(player->mo->x, player->mo->y, watertop, MT_SPLISH);
+			water->flags2 |= MF2_FORWARDOFFSET;
 			S_StartSound(water, sfx_wslap);
 		}
 	}
