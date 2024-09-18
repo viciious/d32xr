@@ -385,7 +385,7 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
    // If there is a boss, should focus on the boss
    if (camBossMobj)
    {
-      if (camBossMobj->health > 0)
+      if (camBossMobj->health > 0 || (camBossMobj->flags2 & MF2_BOSSFLEE))
          angle = focusangle = R_PointToAngle2(thiscam->x, thiscam->y, camBossMobj->x, camBossMobj->y);
       else
          angle = focusangle = R_PointToAngle2(thiscam->x, thiscam->y, 0, 0);

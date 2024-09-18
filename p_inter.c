@@ -158,6 +158,10 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 	if (toucher->health <= 0)
 		return;						/* can happen with a sliding player corpse */
 
+	// Ignore eggman in "ouchie" mode
+	if ((special->type == MT_EGGMOBILE) && (special->flags2 & MF2_FRET))
+		return;
+
 	if ((special->flags & MF_SHOOTABLE) && !(special->flags & MF_MISSILE))
 	{
 		if (special->flags & MF_ENEMY) // enemy rules
@@ -366,7 +370,7 @@ static void P_RingDamage(player_t *player, mobj_t *inflictor, mobj_t *source, in
 	player->mo->health = player->health = 1;
 }
 
-void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage)
+void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage)
 {
 	player_t	*player;
 	const mobjinfo_t* targinfo = &mobjinfo[target->type];
@@ -382,7 +386,14 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 		if (target->flags2 & MF2_FRET) // Currently flashing from being hit
 			return;
 
-		target->flags2 |= MF2_FRET;
+		if (target->health > 1)
+			target->flags2 |= MF2_FRET;
+	}
+
+	if (inflictor && inflictor->player)
+	{
+		if (players[inflictor->player - 1].homingTimer)
+			players[inflictor->player - 1].homingTimer = 0;
 	}
 	
 	player = target->player ? &players[target->player - 1] : NULL;
@@ -394,6 +405,8 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 	{
 		if (player->exiting)
 			return;
+
+		P_ResetPlayer(player);
 
 		if (damage == 10000) // magic number for instant death
 			P_KillMobj(source, target);
@@ -413,6 +426,8 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 
 		return;	
 	}
+	else if (targinfo->painstate)
+		P_SetMobjState(target, targinfo->painstate);
 
 /* */
 /* do the damage */
@@ -424,15 +439,14 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 		return;
 	}
 
-	S_StartSound(target, targinfo->painsound);
+//	S_StartSound(target, targinfo->painsound);
 			
 	if (source && source != target)
 	{	/* if not intent on another player, chase after this one */
+
 		target->target = source;
-		target->threshold = BASETHRESHOLD;
-		if (target->state == targinfo->spawnstate
-		&& targinfo->seestate != S_NULL)
-			P_SetMobjState (target, targinfo->seestate);
+		if (target->state == targinfo->spawnstate && targinfo->seestate != S_NULL)
+			P_SetMobjState(target, targinfo->seestate);
 	}
 }
 

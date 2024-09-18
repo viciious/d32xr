@@ -134,7 +134,6 @@ void	P_SpawnPlayerMissile (mobj_t *source, mobjtype_t type);
 void	P_RunMobjBase2 (void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 void	P_RunMobjLate(void) ATTR_DATA_CACHE_ALIGN;
 
-boolean P_CheckMove(mobj_t *mo, fixed_t x, fixed_t y);
 void P_MobjCheckWater(mobj_t *mo);
 void L_SkullBash (mobj_t *mo);
 void L_MissileHit (mobj_t *mo);

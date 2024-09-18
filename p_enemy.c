@@ -517,6 +517,7 @@ void A_FaceTarget (mobj_t *actor, int16_t var1, int16_t var2)
 */
 
 #define	SKULLSPEED		(24*FRACUNIT)
+void P_Shoot2 (lineattack_t *la);
 
 void A_SkullAttack (mobj_t *actor, int16_t var1, int16_t var2)
 {
@@ -540,8 +541,11 @@ void A_SkullAttack (mobj_t *actor, int16_t var1, int16_t var2)
 		static int k = 0;
 		int i, j;
 		angle_t testang = 0;
-
-		mobj_t *testmobj = P_SpawnMobj(actor->x, actor->y, actor->z, actor->type);
+		lineattack_t la;
+		la.shooter = actor;
+		la.attackrange = dist;
+		la.aimtopslope = 100*FRACUNIT/160;
+		la.aimbottomslope = 100*FRACUNIT/160;
 
 		if (P_Random() & 1) // Imaginary 50% chance
 		{
@@ -556,10 +560,10 @@ void A_SkullAttack (mobj_t *actor, int16_t var1, int16_t var2)
 
 #define dostuff(q) \
 			testang = actor->angle + ((i+(q))*(ANG90/9));\
-			if (P_CheckMove(actor,\
-				P_ReturnThrustX(testang, dist + 2*mobjInfo->radius),\
-				P_ReturnThrustY(testang, dist + 2*mobjInfo->radius)\
-				)) break;
+			la.attackangle = testang;\
+			P_Shoot2(&la);\
+			if (P_AproxDistance(la.shootx - actor->x, la.shooty - actor->y) > dist + 2*mobjInfo->radius)\
+				break;
 
 		if (P_Random() & 1) // imaginary 50% chance
 		{
@@ -584,8 +588,6 @@ void A_SkullAttack (mobj_t *actor, int16_t var1, int16_t var2)
 		actor->angle = testang;
 
 #undef dostuff
-
-		P_RemoveMobj(testmobj);
 	}
 
 	an = actor->angle >> ANGLETOFINESHIFT;
@@ -603,7 +605,9 @@ void A_Pain (mobj_t *actor, int16_t var1, int16_t var2)
 {
 	const mobjinfo_t* ainfo = &mobjinfo[actor->type];
 	if (ainfo->painsound)
-		S_StartSound (actor, ainfo->painsound);	
+		S_StartSound (actor, ainfo->painsound);
+
+	actor->flags2 &= ~MF2_FIRING;
 }
 
 void A_Fall (mobj_t *actor, int16_t var1, int16_t var2)

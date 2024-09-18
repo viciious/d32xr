@@ -349,30 +349,6 @@ static void P_BounceMove(mobj_t *mo)
 #define STOPSPEED 0x1000
 #define FRICTION  0xd240
 
-boolean P_CheckMove(mobj_t *mo, fixed_t x, fixed_t y)
-{
-   fixed_t xleft = x;
-   fixed_t yleft = y;
-   fixed_t stepx = (x - mo->x) / mobjinfo[mo->type].radius;
-   fixed_t stepy = (y - mo->y) / mobjinfo[mo->type].radius;
-
-   while(xleft || yleft)
-   {
-      pmovetest_t mt;
-
-      xleft -= stepx;
-      yleft -= stepy;
-
-      if(!PB_TryMove(&mt, mo, mo->x + stepx, mo->y + stepy))
-      {
-         // blocked move
-         return true;
-      }
-   }
-
-   return false;
-}
-
 //
 // Do horizontal movement.
 //
@@ -579,15 +555,17 @@ static void P_Boss1Thinker(mobj_t *mobj)
    const mobjinfo_t *mobjInfo = &mobjinfo[MT_EGGMOBILE]; // Always MT_EGGMOBILE
    const state_t *stateInfo = &states[mobj->state];
 
-   if (mobj->flags2 & MF2_FRET)
-      CONS_Printf("Fretting! %d", leveltime);
+   if (mobj->health <= 0 && !(mobj->flags2 & MF2_BOSSFLEE))
+      return; // Just sleeping, out of bounds...
 
-	if (mobj->flags2 & MF2_FRET && stateInfo->nextstate == mobjInfo->spawnstate && mobj->tics == 1)
+	if ((mobj->flags2 & MF2_FRET) && stateInfo->nextstate == mobjInfo->spawnstate && mobj->tics == 1)
    {
-      CONS_Printf("De-fret: %d", leveltime);
 		mobj->flags2 &= ~(MF2_FRET|MF2_SKULLFLY);
 		mobj->momx = mobj->momy = mobj->momz = 0;
 	}
+
+   if (mobj->flags2 & MF2_FRET)
+      return;
 
 //	if (!mobj->tracer) // TODO: Need new way to handle jet fumes
 //	{
@@ -700,7 +678,7 @@ void P_MobjThinker(mobj_t *mobj)
                   {
                      if (mobj->target)
                      {
-                        mobj->momz = FixedMul(FixedDiv(mobj->target->z - mobj->z, P_AproxDistance(mobj->x - mobj->target->x, mobj->y - mobj->target->y)), FRACUNIT << 1);
+                        mobj->momz = FixedMul(FixedDiv(mobj->target->z - mobj->z, P_AproxDistance(mobj->x - mobj->target->x, mobj->y - mobj->target->y)), FRACUNIT >> 8);
                         mobj->angle = R_PointToAngle2(mobj->x, mobj->y, mobj->target->x, mobj->target->y);
                      }
                      else
@@ -708,7 +686,15 @@ void P_MobjThinker(mobj_t *mobj)
                   }
                }
                else if (mobj->target)
+               {
                   P_InstaThrust(mobj, mobj->angle, 12*FRACUNIT);
+                  if (P_AproxDistance(mobj->x - mobj->target->x, mobj->y - mobj->target->y) < 32*FRACUNIT)
+                  {
+                     mobj->flags2 &= ~MF2_BOSSFLEE;
+                     mobj->tics = -1;
+                     mobj->momx = mobj->momy = mobj->momz = 0;
+                  }
+               }
             }
             break;
          default:
