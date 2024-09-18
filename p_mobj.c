@@ -428,6 +428,9 @@ y = 0xff500000;
 	p->extralight = 0;
 	p->viewheight = VIEWHEIGHT;
 
+	if (gamemapinfo.act == 3)
+		p->health = mobj->health = 11;
+
 	// Set camera position
 	camera.x = mobj->x;
 	camera.y = mobj->y;

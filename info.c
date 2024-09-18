@@ -32,7 +32,6 @@ const char * const sprnames[NUMSPRITES] = {
 "MISL",
 "MSTV",
 "POSS",
-"PRTL",
 "RING",
 "ROIA",
 "RSPR",
@@ -385,15 +384,12 @@ STATE(SPR_EGLZ,1,TICRATE,NULL,S_NULL), // S_BOSSEGLZ2
 
 STATE(SPR_LASR,FF_FULLBRIGHT|0,2,NULL,S_NULL), // S_LASER
 STATE(SPR_LASR,FF_FULLBRIGHT|1,2,NULL,S_NULL), // S_LASER2
-STATE(SPR_LASR,FF_FULLBRIGHT|2,2,NULL,S_NULL), // S_LASERFLASH
 
 STATE(SPR_LASF,FF_FULLBRIGHT|0,2,NULL,S_LASERFLAME2), // S_LASERFLAME1
 STATE2(SPR_LASF,FF_FULLBRIGHT|1,1,A_ChangeHeight,156,3,S_LASERFLAME3), // S_LASERFLAME2
 STATE2(SPR_LASF,FF_FULLBRIGHT|2,0,A_ChangeHeight,32,3,S_LASERFLAME4), // S_LASERFLAME3
 STATE(SPR_LASF,FF_FULLBRIGHT|2,4,NULL,S_LASERFLAME4A), // S_LASERFLAME4
 STATE(SPR_LASF,FF_FULLBRIGHT|3,2,NULL,S_NULL), // S_LASERFLAME4A
-
-STATE(SPR_PRTL,0,2*TICRATE,NULL,S_NULL), // S_PARTICLE
 
 STATE(SPR_DUST,0,4,NULL,S_DUST2), // S_DUST1
 STATE(SPR_DUST,1,5,NULL,S_DUST3), // S_DUST2
@@ -1780,7 +1776,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		0,              // mass
 		0,              // damage
 		sfx_None,       // activesound
-		MF_NOCLIP|MF_NOGRAVITY, // flags
+		MF_NOCLIP|MF_NOGRAVITY|MF_NOBLOCKMAP|MF_NOSECTOR, // flags
 	},
 
 	{           // MT_EGGMOBILE_FIRE
@@ -1805,7 +1801,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		0,       // mass
 		1,              // damage
 		sfx_None,       // activesound
-		MF_NOGRAVITY|MF_MISSILE, // flags
+		MF_NOGRAVITY|MF_MISSILE|MF_FLOAT, // flags
 	},
 
 	{           // MT_LASER
@@ -1819,7 +1815,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		S_NULL,         // painstate
 		0,              // painchance
 		sfx_None,       // painsound
-		S_LASERFLASH,   // meleestate
+		S_NULL,         // meleestate
 		S_LASER2,       // missilestate
 		S_NULL,         // deathstate
 		S_NULL,         // xdeathstate
@@ -1830,32 +1826,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		0,              // mass
 		20,             // damage
 		sfx_None,       // activesound
-		MF_MISSILE|MF_NOGRAVITY, // flags
-	},
-
-	{           // MT_PARTICLE
-		-1,             // doomednum
-		S_PARTICLE,     // spawnstate
-		1000,           // spawnhealth
-		S_NULL,         // seestate
-		sfx_None,       // seesound
-		8,              // reactiontime
-		sfx_None,       // attacksound
-		S_NULL,         // painstate
-		0,              // painchance
-		sfx_None,       // painsound
-		S_NULL,         // meleestate
-		S_NULL,         // missilestate
-		S_NULL,         // deathstate
-		S_NULL,         // xdeathstate
-		sfx_None,       // deathsound
-		4*FRACUNIT,     // speed
-		4*FRACUNIT,     // radius
-		4*FRACUNIT,     // height
-		4,              // mass
-		0,              // damage
-		sfx_None,       // activesound
-		MF_NOBLOCKMAP|MF_NOGRAVITY|MF_NOCLIP|MF_STATIC, // flags
+		MF_MISSILE|MF_NOGRAVITY|MF_FLOAT, // flags
 	},
 
 	{           // MT_DUST

@@ -471,7 +471,8 @@ void P_ZMovement(mobj_t *mo)
    // clip movement
    if(mo->z <= mo->floorz)
    {
-      mo->z = mo->floorz; // hit the floor
+      if (mo->type != MT_EGGMOBILE_TARGET)
+         mo->z = mo->floorz; // hit the floor
 
       if (mo->type == MT_FLINGRING)
       {
@@ -564,8 +565,17 @@ static void P_Boss1Thinker(mobj_t *mobj)
 		mobj->momx = mobj->momy = mobj->momz = 0;
 	}
 
-   if (mobj->flags2 & MF2_FRET)
-      return;
+   if (mobj->flags2 & MF2_SKULLFLY)
+	{
+		fixed_t dist = mobj->z - (mobj->floorz + (2*(mobj->theight<<FRACBITS)));
+		if (dist > 0 && mobj->momz > 0)
+			mobj->momz = FixedMul(mobj->momz, FRACUNIT - (dist>>12));
+
+      mobj_t *ghost = P_SpawnMobj(mobj->x, mobj->y, mobj->z, MT_GHOST);
+      P_SetMobjState(ghost, mobj->state);
+      ghost->angle = mobj->angle;
+		ghost->reactiontime = 12;
+	}
 
 //	if (!mobj->tracer) // TODO: Need new way to handle jet fumes
 //	{
@@ -589,13 +599,7 @@ static void P_Boss1Thinker(mobj_t *mobj)
 		return;
 	}
 
-	if (mobj->flags2 & MF2_SKULLFLY)
-	{
-		fixed_t dist = mobj->z - (mobj->floorz + (2*(mobj->theight<<FRACBITS)));
-		if (dist > 0 && mobj->momz > 0)
-			mobj->momz = FixedMul(mobj->momz, FRACUNIT - (dist>>12));
-	}
-	else if (mobj->state != mobjInfo->spawnstate && mobj->health > 0 && mobj->flags & MF_FLOAT)
+	if (mobj->state != mobjInfo->spawnstate && mobj->health > 0 && mobj->flags & MF_FLOAT)
 		mobj->momz = FixedMul(mobj->momz,7*FRACUNIT/8);
 
 	if (mobj->state == mobjInfo->meleestate
@@ -662,6 +666,15 @@ void P_MobjThinker(mobj_t *mobj)
                mobj->reactiontime--;
                if (mobj->reactiontime == 0)
                {
+                  if (mobj->type == MT_EGGMOBILE_TARGET)
+                  {
+                     for (mobj_t *node = mobjhead.next; node != (void*)&mobjhead; node = node->next)
+                     {
+                        if (node->target == mobj)
+                           node->target = NULL;
+                     }
+                  }
+
                   P_RemoveMobj(mobj);
                   return;
                }

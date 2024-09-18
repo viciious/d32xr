@@ -937,6 +937,9 @@ void A_Boss1Chase(mobj_t *actor, int16_t var1, int16_t var2)
 {
 	int delta;
 
+	if (leveltime < 5)
+		actor->movecount = 2*TICRATE;
+
 	if (actor->reactiontime)
 		actor->reactiontime--;
 
@@ -966,7 +969,7 @@ void A_Boss1Chase(mobj_t *actor, int16_t var1, int16_t var2)
 	if (actor->movecount)
 		goto nomissile;
 
-	if (!P_CheckMissileRange(actor))
+	if (actor->target && P_AproxDistance(actor->x - actor->target->x, actor->y - actor->target->y) > 768*FRACUNIT)
 		goto nomissile;
 
 	if (actor->reactiontime <= 0)
@@ -1004,6 +1007,7 @@ void A_Boss1Laser(mobj_t *actor, int16_t var1, int16_t var2)
 {
 	fixed_t x, y, z, floorz, speed;
 	int upperend = (var2>>8);
+	var2 &= 0xff;
 	int i;
 	angle_t angle;
 	mobj_t *point;
@@ -1051,7 +1055,7 @@ void A_Boss1Laser(mobj_t *actor, int16_t var1, int16_t var2)
 			z = actor->z + (actor->theight << (FRACBITS-1));
 			break;
 	}
-return;
+
 	if (!(actor->flags2 & MF2_FIRING) && dur > 1)
 	{
 		actor->angle = R_PointToAngle2(x, y, actor->target->x, actor->target->y);
@@ -1069,15 +1073,16 @@ return;
 
 	point = P_SpawnMobj(x, y, z, var1);
 
+	const int iterations = 24;
 	point->target = actor;
 	point->angle = actor->angle;
-	speed = mobjinfo[point->type].radius;
+	speed = mobjinfo[point->type].radius + (mobjinfo[point->type].radius / 2);
 	point->momz = FixedMul(finecosine(angle>>ANGLETOFINESHIFT), speed);
 	point->momx = FixedMul(finesine(angle>>ANGLETOFINESHIFT), FixedMul(finecosine(point->angle>>ANGLETOFINESHIFT), speed));
 	point->momy = FixedMul(finesine(angle>>ANGLETOFINESHIFT), FixedMul(finesine(point->angle>>ANGLETOFINESHIFT), speed));
 
 	const mobjinfo_t *pointInfo = &mobjinfo[point->type];
-	for (i = 0; i < 256; i++)
+	for (i = 0; i < iterations; i++)
 	{
 		mobj_t *mo = P_SpawnMobj(point->x, point->y, point->z, point->type);
 		mo->target = actor;
@@ -1087,23 +1092,8 @@ return;
 		mo->flags = MF_NOCLIP|MF_NOGRAVITY;
 		P_SetThingPosition(mo);
 
-		if (dur & 1 && pointInfo->missilestate)
-		{
+		if ((dur & 1) && pointInfo->missilestate)
 			P_SetMobjState(mo, pointInfo->missilestate);
-			if (pointInfo->meleestate)
-			{
-				mobj_t *mo2 = P_SpawnMobj(mo->x, mo->y, mo->z, MT_PARTICLE);
-				mo2->flags2 |= MF2_FORWARDOFFSET;
-				mo2->target = actor;
-				P_SetMobjState(mo2, pointInfo->meleestate);
-			}
-		}
-
-		if (dur == 1)
-		{
-			mobj_t *ghost = P_SpawnMobj(mo->x, mo->y, mo->z, MT_GHOST);
-			P_SetMobjState(ghost, mo->state);
-		}
 
 		x = point->x, y = point->y, z = point->z;
 		if (P_RailThinker(point))
@@ -1113,7 +1103,7 @@ return;
 	x += point->momx;
 	y += point->momy;
 	floorz = R_PointInSubsector(x, y)->sector->floorheight;
-	if (z - floorz < mobjinfo[MT_EGGMOBILE_FIRE].height>>1 && dur & 1)
+	if (z - floorz < (mobjinfo[MT_EGGMOBILE_FIRE].height>>1) && (dur & 1))
 	{
 		point = P_SpawnMobj(x, y, floorz, MT_EGGMOBILE_FIRE);
 
