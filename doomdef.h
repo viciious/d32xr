@@ -292,6 +292,7 @@ typedef struct degenmobj_s
 #define MF2_SKULLFLY      16          // Doom will never die. Only the players.
 #define MF2_JUSTATTACKED  32
 #define MF2_BOSSFLEE      64
+#define MF2_SPAWNEDJETS  128
 
 /* movement flags */
 #define	MF_NOCLIP		0x0100		/* player cheat */

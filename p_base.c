@@ -551,6 +551,8 @@ void P_ZMovement(mobj_t *mo)
    }
 }
 
+void A_BossJetFume(mobj_t *, int16_t, int16_t);
+
 static void P_Boss1Thinker(mobj_t *mobj)
 {
    const mobjinfo_t *mobjInfo = &mobjinfo[MT_EGGMOBILE]; // Always MT_EGGMOBILE
@@ -577,11 +579,8 @@ static void P_Boss1Thinker(mobj_t *mobj)
 		ghost->reactiontime = 12;
 	}
 
-//	if (!mobj->tracer) // TODO: Need new way to handle jet fumes
-//	{
-//		var1 = 0;
-//		A_BossJetFume(mobj);
-//	}
+   if (!(mobj->flags2 & MF2_SPAWNEDJETS))
+      A_BossJetFume(mobj, 0, 0);
 
 	if (!mobj->target || !(mobj->target->flags & MF_SHOOTABLE))
 	{
@@ -606,6 +605,50 @@ static void P_Boss1Thinker(mobj_t *mobj)
 		|| (mobj->state == mobjInfo->missilestate
 		&& mobj->health > mobjInfo->damage))
 		mobj->angle = R_PointToAngle2(mobj->x, mobj->y, mobj->target->x, mobj->target->y);
+}
+
+static boolean P_JetFume1Think(mobj_t *mobj)
+{
+	fixed_t jetx, jety;
+
+	if (!mobj->target) // if you have no target
+	{
+		P_RemoveMobj(mobj); // then remove yourself as well!
+		return false;
+	}
+
+   if (leveltime & 1)
+      mobj->flags2 |= MF2_DONTDRAW;
+   else
+      mobj->flags2 &= ~MF2_DONTDRAW;
+
+	jetx = mobj->target->x + P_ReturnThrustX(mobj->target->angle, -64*FRACUNIT);
+	jety = mobj->target->y + P_ReturnThrustY(mobj->target->angle, -64*FRACUNIT);
+
+	P_UnsetThingPosition(mobj);
+	if (mobj->movecount == 1) // First one
+	{
+		mobj->x = jetx;
+		mobj->y = jety;
+		mobj->z = mobj->target->z + 38*FRACUNIT;
+	}
+	else if (mobj->movecount == 2) // Second
+	{
+		mobj->x = jetx + P_ReturnThrustX(mobj->target->angle - ANG90, 24*FRACUNIT);
+		mobj->y = jety + P_ReturnThrustY(mobj->target->angle - ANG90, 24*FRACUNIT);
+		mobj->z = mobj->target->z + 12*FRACUNIT;
+	}
+	else if (mobj->movecount == 3) // Third
+	{
+		mobj->x = jetx + P_ReturnThrustX(mobj->target->angle + ANG90, 24*FRACUNIT);
+		mobj->y = jety + P_ReturnThrustY(mobj->target->angle + ANG90, 24*FRACUNIT);
+		mobj->z = mobj->target->z + 12*FRACUNIT;
+	}
+	mobj->floorz = mobj->z;
+	mobj->ceilingz = mobj->z + (mobj->theight << FRACBITS);
+	P_SetThingPosition(mobj);
+	
+	return true;
 }
 
 //
@@ -709,6 +752,10 @@ void P_MobjThinker(mobj_t *mobj)
                   }
                }
             }
+            break;
+         case MT_JETFUME1:
+            if (!P_JetFume1Think(mobj))
+               return;
             break;
          default:
             break;

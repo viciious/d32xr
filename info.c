@@ -1726,7 +1726,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		4,              // mass
 		0,              // damage
 		sfx_None,       // activesound
-		MF_NOBLOCKMAP|MF_NOGRAVITY|MF_NOCLIP|MF_STATIC, // flags
+		MF_NOBLOCKMAP|MF_NOGRAVITY|MF_NOCLIP, // flags
 	},
 
 	{           // MT_EGGMOBILE_BALL

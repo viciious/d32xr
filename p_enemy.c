@@ -678,6 +678,54 @@ void P_DoBossVictory(mobj_t *mo)
 
 }
 
+//
+// A_BossJetFume
+//
+// Description: Spawns jet fumes/other attachment miscellany for the boss. To only be used when he is spawned.
+//
+// var1:
+//		0 - Triple jet fume pattern
+// var2 = unused
+//
+void A_BossJetFume(mobj_t *actor, int16_t var1, int16_t var2)
+{
+	mobj_t *filler;
+
+	if (var1 == 0) // Boss1 jet fumes
+	{
+		fixed_t jetx = actor->x;
+		fixed_t jety = actor->y;
+		fixed_t jetz = actor->z;
+
+		// One
+		P_ThrustValues(actor->angle, -64*FRACUNIT, &jetx, &jety);
+		jetz += 38*FRACUNIT;
+
+		filler = P_SpawnMobj(jetx, jety, jetz, MT_JETFUME1);
+		filler->target = actor;
+		filler->movecount = 1; // This tells it which one it is
+
+		// Two
+		jetz = actor->z + 12*FRACUNIT;
+		jetx = actor->x;
+		jety = actor->y;
+		P_ThrustValues(actor->angle-ANG90, 24*FRACUNIT, &jetx, &jety);
+		filler = P_SpawnMobj(jetx, jety, jetz, MT_JETFUME1);
+		filler->target = actor;
+		filler->movecount = 2; // This tells it which one it is
+
+		// Three
+		jetx = actor->x;
+		jety = actor->y;
+		P_ThrustValues(actor->angle+ANG90, 24*FRACUNIT, &jetx, &jety);
+		filler = P_SpawnMobj(jetx, jety, jetz, MT_JETFUME1);
+		filler->target = actor;
+		filler->movecount = 3; // This tells it which one it is
+	}
+
+	actor->flags2 |= MF2_SPAWNEDJETS;
+}
+
 static void P_SpawnBoss1Junk(mobj_t *mo)
 {
 	mobj_t *mo2 = P_SpawnMobj(
