@@ -51,6 +51,7 @@ PSGPORT     EQU $7F11   ; PSG port
 
 MD_BANK     EQU $8000   ; base address of MD space bank in Z80 map
 
+REQ_ATTR    EQU $FFEE
 REQ_ACT     EQU $FFEF   ; request action by 68000
 
 STRM_KON    EQU $FFF0
@@ -499,6 +500,7 @@ strm_data
     CALL    strm_get            ; stream ID
     PUSH    AF
     CALL    strm_get            ; data bank ID
+    PUSH    AF
     CALL    strm_get            ; step size
     PUSH    AF
     CALL    strm_get            ; step base
@@ -511,6 +513,8 @@ strm_data
     LD      (STRM_SBASE),A
     POP     AF
     LD      (STRM_SSIZE),A
+    POP     AF
+    LD      (REQ_ATTR),A
     POP     AF
     LD      (STRM_ID),A
 

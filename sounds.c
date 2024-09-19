@@ -61,6 +61,23 @@ const char * const S_sfxnames[NUMSFX] =
   "s3k_b6",
   "s3k_b8",
   "s3k_b9",
+  "drcymcr1",   // Drums: Cymbal crash 1
+  "drkick1",    // Drums: Kick 1
+  "drsnare1",   // Drums: Snare 1
+  "drtom1",     // Drums: Tom 1
+  "drtom2",     // Drums: Tom 2
+  "drtom3",     // Drums: Tom 3
+};
+
+const unsigned char drumsfxmap[] =
+{
+  sfx_None,     // 0
+  sfx_drcymcr1, // 1
+  sfx_drkick1,  // 2
+  sfx_drsnare1, // 3
+  sfx_drtom1,   // 4
+  sfx_drtom2,   // 5
+  sfx_drtom3,   // 6
 };
 
 #ifdef MARS
@@ -72,6 +89,12 @@ const char * const S_sfxnames[NUMSFX] =
 sfxinfo_t S_sfx[NUMSFX] =
 { 
   SOUND( 0, 0 ),
+  SOUND( false, 64 ),
+  SOUND( false, 64 ),
+  SOUND( false, 64 ),
+  SOUND( false, 64 ),
+  SOUND( false, 64 ),
+  SOUND( false, 64 ),
   SOUND( false, 64 ),
   SOUND( false, 64 ),
   SOUND( false, 64 ),

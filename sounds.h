@@ -1,11 +1,11 @@
-#ifndef __SOUNDSH__ 
-#define __SOUNDSH__ 
- 
-#include "soundst.h" 
- 
-/* 
- *  Identifiers for all music in game. 
- */ 
+#ifndef __SOUNDSH__
+#define __SOUNDSH__
+
+#include "soundst.h"
+
+/*
+ *  Identifiers for all music in game.
+ */
 enum
 {
 	cdtrack_none = -100,
@@ -17,12 +17,12 @@ enum
   cdtrack_xtlife = -5,
 };
 
-/* 
- *  Identifiers for all sfx in game. 
- */ 
- 
-typedef enum 
-{ 
+/*
+ *  Identifiers for all sfx in game.
+ */
+
+typedef enum
+{
   sfx_None,
   sfx_armasg,
   sfx_attrsg,
@@ -71,15 +71,22 @@ typedef enum
   sfx_s3k_b6,
   sfx_s3k_b8,
   sfx_s3k_b9,
-  NUMSFX 
-} sfxenum_t; 
- 
-extern musicinfo_t *S_music; 
+  sfx_drcymcr1,
+  sfx_drkick1,
+  sfx_drsnare1,
+  sfx_drtom1,
+  sfx_drtom2,
+  sfx_drtom3,
+  NUMSFX
+} sfxenum_t;
+
+extern const unsigned char drumsfxmap[];
+
+extern musicinfo_t *S_music;
 extern const VINT mus_none;
 extern VINT num_music;
 
-extern sfxinfo_t   S_sfx[]; 
+extern sfxinfo_t   S_sfx[];
 extern const char* const S_sfxnames[];
 
-#endif 
- 
+#endif

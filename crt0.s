@@ -635,15 +635,73 @@ pri_cmd_irq:
         mov.b   r0,@(0x07,r1)           /* write TOCR */
         mov.b   @(0x07,r1),r0           /* read TOCR */
 
-        mov.l   pci_mars_adapter,r1
-        mov.w   r0,@(0x1A,r1)           /* clear CMD IRQ */
+        mov.l   pci_cmd_comm0,r1
+        mov.b   @(12,r1),r0
+        cmp/eq  #0,r0
+        bt      70f
 
         ! handle wait in sdram
         mov.l   pci_cmd_comm0,r1
+
+        ! read sound queue
+        mov.b   @(15,r1),r0             /* high priority sound queue COMM15 */
+        mov     #0,r2
+        cmp/eq  r0,r2
+        bt      70f                     /* branch if no sound is in the queue */
+
+        ! handle V IRQ - save registers
+        sts.l   pr,@-r15
+        mov.l   r3,@-r15
+        mov.l   r4,@-r15
+        mov.l   r5,@-r15
+        mov.l   r6,@-r15
+        mov.l   r7,@-r15
+        sts.l   mach,@-r15
+        sts.l   macl,@-r15
+
+        mov.l   S_StartDrumId,r1
+        mov     r0,r4                   /* pass in the drum ID */
+        jsr     @r1                     /* call S_StartDrumId() */
+        nop
+
+        ! restore registers
+        lds.l   @r15+,macl
+        lds.l   @r15+,mach
+        mov.l   @r15+,r7
+        mov.l   @r15+,r6
+        mov.l   @r15+,r5
+        mov.l   @r15+,r4
+        mov.l   @r15+,r3
+        lds.l   @r15+,pr
+
+        !mov.l   pci_mars_adapter,r1
+        !mov.w   r0,@(0x1A,r1)           /* clear CMD IRQ */
+        
+        mov.l   cmd_int_clr,r1          /* Write to CMD interrupt clear register */
+        mov     #0,r0
+        mov.w   r0,@r1
+
+        mov.l   pci_cmd_comm0,r1
+        mov.b   @(12,r1),r0
+        cmp/eq  #0,r0
+        bt      77f
+        mov     #0,r0                   /* remove COMM12 value */
+        mov.b   r0,@(12,r1)
+        mov     #0,r0                   /* remove COMM15 value */
+        mov.b   r0,@(15,r1)
+77:
+        rts
+        nop
+        nop
+        nop
+        nop
+70:
+        ! mov.l   pci_cmd_comm0,r1
         mov.w   @r1,r0
         mov.l   r0,@-r15                /* save COMM0 reg */
         mov.w   @(2,r1),r0
         mov.l   r0,@-r15                /* save COMM2 regs */
+
         mov.w   pci_cmd_resp,r0
         mov.w   r0,@r1                  /* respond to m68k */
 0:
@@ -663,7 +721,26 @@ pri_cmd_irq:
         mov.l   @r15+,r0
         mov.w   r0,@r1                  /* restore COMM0 reg */
 
+        !mov.l   pci_mars_adapter,r1
+        !mov.w   r0,@(0x1A,r1)           /* clear CMD IRQ */
+        
+        mov.l   cmd_int_clr,r1          /* Write to CMD interrupt clear register */
+        mov     #0,r0
+        mov.w   r0,@r1
+
+        mov.l   pci_cmd_comm0,r1
+        mov.b   @(12,r1),r0
+        cmp/eq  #0,r0
+        bt      88f
+        mov     #0,r0                   /* remove COMM12 value */
+        mov.b   r0,@(12,r1)
+        mov     #0,r0                   /* remove COMM15 value */
+        mov.b   r0,@(15,r1)
+88:
         rts
+        nop
+        nop
+        nop
         nop
 3:
         ! handle general CMD IRQ
@@ -703,7 +780,26 @@ pri_cmd_irq:
         mov.l   @r15+,r0
         mov.w   r0,@r1                  /* restore COMM0 reg */
 
+        !mov.l   pci_mars_adapter,r1
+        !mov.w   r0,@(0x1A,r1)           /* clear CMD IRQ */
+        
+        mov.l   cmd_int_clr,r1          /* Write to CMD interrupt clear register */
+        mov     #0,r0
+        mov.w   r0,@r1
+
+        mov.l   pci_cmd_comm0,r1
+        mov.b   @(12,r1),r0
+        cmp/eq  #0,r0
+        bt      99f
+        mov     #0,r0                   /* remove COMM12 value */
+        mov.b   r0,@(12,r1)
+        mov     #0,r0                   /* remove COMM15 value */
+        mov.b   r0,@(15,r1)
+99:
         rts
+        nop
+        nop
+        nop
         nop
 
         .align  2
@@ -713,6 +809,10 @@ pci_sh2_frtctl:
         .long   0xfffffe10
 pci_cmd_handler:
         .long   _pri_cmd_handler
+S_StartDrumId:
+        .long   _S_StartDrumId
+cmd_int_clr:
+        .long   0x2000401A              /* one word passed last int clr reg */
 
 pci_cmd_comm0:
         .long   0x20004020
