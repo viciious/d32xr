@@ -388,12 +388,12 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage)
 
 		if (target->health > 1)
 			target->flags2 |= MF2_FRET;
-	}
 
-	if (inflictor && inflictor->player)
-	{
-		if (players[inflictor->player - 1].homingTimer)
-			players[inflictor->player - 1].homingTimer = 0;
+		if (inflictor && inflictor->player)
+		{
+			if (players[inflictor->player - 1].homingTimer)
+				players[inflictor->player - 1].homingTimer = 0;
+		}
 	}
 	
 	player = target->player ? &players[target->player - 1] : NULL;
