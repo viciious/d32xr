@@ -428,7 +428,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 
 		last_frt_count = frt_count;
 
-		if (gamemapinfo.mapNumber == 30 || leveltime < TICRATE / 4) // Don't include map loading times into frameskip calculation
+		if ((players[consoleplayer].automapflags & AF_OPTIONSACTIVE) || gamemapinfo.mapNumber == 30 || leveltime < TICRATE / 4) // Don't include map loading times into frameskip calculation
 		{
 			accum_time = 1;
 			total_frt_count = 0;
