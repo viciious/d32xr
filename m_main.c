@@ -709,7 +709,7 @@ void M_Drawer (void)
 #endif
 		sprintf(mapNum, "%d", mapnumber);
 
-		V_DrawStringLeft(&titleFont, item->x + 70, y + 2, mapNum);
+		V_DrawStringLeft(&titleNumberFont, item->x + 70, y + 2, mapNum);
 
 		V_DrawStringLeft(&menuFont, (320 - (tmplen * 14)) >> 1, y + ITEMSPACE + 2, tmp);
 	}
