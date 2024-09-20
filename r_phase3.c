@@ -218,9 +218,6 @@ static void R_PrepRing(mobj_t *thing)
    patch_t      *patch;
    vissprite_t  *vis;
 
-   const state_t *state = &states[ringmobjstates[thing->type]];
-   const VINT thingframe = state->frame;
-
    // transform origin relative to viewpoint
    tr_x = thing->x - vd.viewx;
    tr_y = thing->y - vd.viewy;
@@ -245,6 +242,9 @@ static void R_PrepRing(mobj_t *thing)
    // too far off the side?
    if(tx > (tz << 2) || tx < -(tz<<2))
       return;
+
+   const state_t *state = &states[ringmobjstates[thing->type]];
+   const VINT thingframe = state->frame;
 
    // We can assume a lot of things here!
    sprdef = &sprites[state->sprite];
@@ -377,9 +377,6 @@ static void R_PrepScenery(scenerymobj_t *thing)
    patch_t      *patch;
    vissprite_t  *vis;
 
-   const state_t *state = &states[ringmobjstates[thing->type]];
-   const VINT thingframe = state->frame;
-
    // transform origin relative to viewpoint
    tr_x = (thing->x << FRACBITS) - vd.viewx;
    tr_y = (thing->y << FRACBITS) - vd.viewy;
@@ -404,6 +401,9 @@ static void R_PrepScenery(scenerymobj_t *thing)
    // too far off the side?
    if(tx > (tz << 2) || tx < -(tz<<2))
       return;
+
+   const state_t *state = &states[ringmobjstates[thing->type]];
+   const VINT thingframe = state->frame;
 
    // We can assume a lot of things here!
    sprdef = &sprites[state->sprite];

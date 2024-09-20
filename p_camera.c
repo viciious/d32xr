@@ -161,7 +161,7 @@ static boolean P_CameraTryMove2(ptrymove_t *tm, boolean checkposonly)
       if(mw.tmceilingz - mw.tmfloorz < (tmthing->theight << FRACBITS))
          return false; // doesn't fit
       tm->floatok = true;
-      if(mw.tmceilingz - tmthing->z < (tmthing->theight << FRACBITS))
+      if((fixed_t)tm->tmthing->angle <= CAM_DIST && mw.tmceilingz - tmthing->z < (tmthing->theight << FRACBITS))
          return false; // mobj must lower itself to fit
       if(mw.tmfloorz - tmthing->z > 24*FRACUNIT)
          return false; // too big a step up
@@ -287,6 +287,7 @@ static void P_CameraThinker(player_t *player, camera_t *thiscam)
 		mo.momy = thiscam->momy;
 		mo.momz = thiscam->momz;
 		mo.theight = CAM_PHYS_HEIGHT >> FRACBITS;
+      mo.angle = (angle_t)thiscam->distFromPlayer;
       mo.type = MT_CAMERA;
 		sm.slidething = &mo;
 
@@ -381,6 +382,7 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
    const mobjinfo_t *caminfo = &mobjinfo[MT_CAMERA];
 
 	mo = player->mo;
+   thiscam->distFromPlayer = P_AproxDistance(thiscam->x - mo->x, thiscam->y - mo->y);
 
    // If there is a boss, should focus on the boss
    if (camBossMobj)
@@ -407,7 +409,7 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
    if (player->stillTimer > TICRATE/2)
       camspeed >>= 2;
 
-	if (P_AproxDistance(thiscam->x - mo->x, thiscam->y - mo->y) > camdist * 4)
+	if (thiscam->distFromPlayer > camdist * 3)
 	{
 		// Camera is stuck, and the player has gone over twice as far away from it, so let's reset
 		P_ResetCamera(player, thiscam);

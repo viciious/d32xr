@@ -17,6 +17,7 @@ typedef struct camera_s
 
 	// Momentums used to update position
 	fixed_t momx, momy, momz;
+	fixed_t distFromPlayer;
 } camera_t;
 
 #define CAM_HEIGHT (20<<FRACBITS)
