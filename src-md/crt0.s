@@ -40,6 +40,10 @@
         .equ STRM_LENLH, 0xFFFE
         .equ STRM_LENLL, 0xFFFF
 
+        .equ STRM_FLAGS, 0xFFF9
+        .equ STRM_BLCKH, 0xFFFA
+        .equ STRM_BLCKL, 0xFFFB
+
         .macro  z80rd adr, dst
         move.b  0xA00000+\adr,\dst
         .endm
@@ -2409,52 +2413,16 @@ bump_fm:
 
 10:
         move.b  REQ_ACT.w,d0
-        cmpi.b  #0x03,d0
-        beq.s   11f
-        cmpi.b  #0x05,d0
-        beq.s   11f
+        cmpi.b  #0x05,d0            /* Check for 0x95 command */
+        beq.s   play_drum_sound
         cmpi.b  #0x01,d0
         bne.w   5f                  /* not read buffer block */
+
+play_drum_sound:
 11:
         /* check for space in Z80 sram buffer */
-        move.l  #0,d0
-        move.l  STRM_OFFHH.w,d1
-        move.l  #0xFFFFFF,STRM_OFFHH.w
-
-12:
-        cmpi.l  #0x0000,d1
-        bne.s   13f
-        move.l  #2,d0          /* Kick */
-        bra.s   19f
-13:
-        cmpi.l  #0x096B,d1
-        bne.s   14f
-        move.l  #3,d0          /* Snare */
-        bra.s   19f
-14:
-        cmpi.l  #0x228A,d1
-        bne.s   15f
-        move.l  #4,d0          /* Tom */
-        bra.s   19f
-15:
-        bra.s   20f
-        
-        |cmpi.l  #0x70E5,d1
-        |bne.s   16f
-        |move.l  #48,d0
-        |bra.s   19f
-16:
-        |cmpi.l  #0x9FB9,d1
-        |bne.s   17f
-        |move.l  #52,d0
-        |bra.s   19f
-17:
-        |cmpi.l  #0xC2D8,d1
-        |bne.s   20f
-        |move.l  #53,d0
-        |bra.s   19f
-
-        nop
+        move.b  STRM_BLCKL.w,d0
+        move.w  #0,STRM_BLCKH.w
 19:
         cmpi.   #0,d0
         beq.s   20f
@@ -2548,7 +2516,7 @@ bump_fm:
         z80wr   FM_START+1,d0       /* music start = loop offset */
         move.w  fm_idx,d0
         z80wr   FM_IDX,d0           /* set FM_IDX to start music */
-        bra.w   11b                 /* try to load a block */
+        bra.w   20b                 /* try to load a block */
 
 6:
         /* check if need to preread a block */
@@ -2557,7 +2525,7 @@ bump_fm:
         subq.w  #1,preread_cnt
 
         /* read a buffer */
-        bra.w   11b
+        bra.w   20b
 
 7:
         z80wr   FM_RQPND,#0         /* request handled */

@@ -67,6 +67,14 @@ const char * const S_sfxnames[NUMSFX] =
   "drtom1",     // Drums: Tom 1
   "drtom2",     // Drums: Tom 2
   "drtom3",     // Drums: Tom 3
+  "drtom4",     // Drums: Tom 4
+  "drtom5",     // Drums: Tom 5
+  "drtom6",     // Drums: Tom 6
+  "drtimb1",    // Drums: Timbale 1
+  "drconga1",   // Drums: Conga 1
+  "drconga2",   // Drums: Conga 2
+  "drbongo1",   // Drums: Bongo 1
+  "drbongo2",   // Drums: Bongo 2
 };
 
 const unsigned char drumsfxmap[] =
@@ -78,6 +86,14 @@ const unsigned char drumsfxmap[] =
   sfx_drtom1,   // 4
   sfx_drtom2,   // 5
   sfx_drtom3,   // 6
+  sfx_drtom4,   // 7
+  sfx_drtom5,   // 8
+  sfx_drtom6,   // 9
+  sfx_drtimb1,  // 10
+  sfx_drconga1, // 11
+  sfx_drconga2, // 12
+  sfx_drbongo1, // 13
+  sfx_drbongo2, // 14
 };
 
 #ifdef MARS

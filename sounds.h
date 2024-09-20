@@ -77,6 +77,14 @@ typedef enum
   sfx_drtom1,
   sfx_drtom2,
   sfx_drtom3,
+  sfx_drtom4,
+  sfx_drtom5,
+  sfx_drtom6,
+  sfx_drtimb1,
+  sfx_drconga1,
+  sfx_drconga2,
+  sfx_drbongo1,
+  sfx_drbongo2,
   NUMSFX
 } sfxenum_t;
 

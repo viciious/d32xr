@@ -650,13 +650,13 @@ strm_fast
     LD      (IX+FM_RQPND),A     ; request pending
 
     POP     AF
-    LD      (STRM_OFFHL),A
+    LD      (STRM_OFFHL),A      ; flags
     POP     AF
-    LD      (STRM_OFFLH),A
+    LD      (STRM_OFFLH),A      ; block ID high
     POP     AF
-    LD      (STRM_OFFLL),A
+    LD      (STRM_OFFLL),A      ; block ID low
     POP     AF
-    LD      (STRM_ID),A
+    LD      (STRM_ID),A         ; stream ID
 
     LD      A,$05
     LD      (REQ_ACT),A         ; request action - stream fast start
