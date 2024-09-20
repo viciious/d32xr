@@ -315,7 +315,6 @@ int		ticphase;
 
 int P_Ticker (void)
 {
-	int		start;
 	int		ticstart;
 	player_t	*pl;
 
@@ -364,9 +363,11 @@ int P_Ticker (void)
 	if (gamepaused)
 		return 0;
 
+	playertics = 0;
+	thinkertics = 0;
+	ticstart = frtc;
 	for (int skipCount = 0; skipCount < accum_time; skipCount++)
 	{
-		start = frtc;
 		for (playernum = 0, pl = players; playernum < MAXPLAYERS; playernum++, pl++)
 			if (playeringame[playernum])
 			{
@@ -375,39 +376,33 @@ int P_Ticker (void)
 
 				P_PlayerThink(pl);
 			}
-		playertics = frtc - start;
 
-		start = frtc;
 		P_RunThinkers();
-		thinkertics = frtc - start;
 
 		{
-			ticstart = frtc;
-
 	//		if (gametic != prevgametic)
 			{
-				start = frtc;
 				// If we don't do this every tic, it seems sight checking is broken.
 				// Is there a way we can do this infrequently? Even every half second would be fine.
 				P_CheckSights();
-				sighttics = frtc - start;
+//				sighttics = frtc - start;
 			}
 
-			start = frtc;
+//			start = frtc;
 			P_RunMobjBase();
-			basetics = frtc - start;
+//			basetics = frtc - start;
 
-			start = frtc;
+//			start = frtc;
 			P_RunMobjLate();
-			latetics = frtc - start;
+//			latetics = frtc - start;
 
 			P_UpdateSpecials();
 
-			tictics = frtc - ticstart;
 			leveltime++;
 		}
 	}
 
+	tictics = frtc - ticstart;
 	ST_Ticker();			/* update status bar */
 
 	return gameaction;		/* may have been set to ga_died, ga_completed, */
