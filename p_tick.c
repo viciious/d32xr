@@ -400,9 +400,11 @@ int P_Ticker (void)
 
 			leveltime++;
 		}
+
+		if (skipCount == 0)
+			tictics = frtc - ticstart;
 	}
 
-	tictics = frtc - ticstart;
 	ST_Ticker();			/* update status bar */
 
 	return gameaction;		/* may have been set to ga_died, ga_completed, */

@@ -848,9 +848,20 @@ void P_RunMobjBase2(void)
         if (mo->tics == 1)
             Mars_ClearCacheLine(&mo->flags);
 #endif
-        next = mo->next;	/* in case mo is removed this time */
+        next = mo->next;	// in case mo is removed this time
         if (!mo->player)
+        {
             P_MobjThinker(mo);
+
+            if (!(mo->flags & (MF_RINGMOBJ|MF_STATIC)))
+            {
+               if (mo->latecall && mo->latecall != (latecall_t)-1)
+               {
+                     mo->latecall(mo);
+                     mo->latecall = NULL;
+               }
+            }
+        }
     }
 }
 
@@ -867,18 +878,6 @@ void P_RunMobjLate(void)
 {
     mobj_t* mo;
     mobj_t* next;
-
-    for (mo = mobjhead.next; mo != (void*)&mobjhead; mo = next)
-    {
-        next = mo->next;	/* in case mo is removed this time */
-        if (mo->flags & (MF_RINGMOBJ|MF_STATIC))
-            continue;
-        if (mo->latecall)
-        {
-            mo->latecall(mo);
-            mo->latecall = NULL;
-        }
-    }
 
     /* move entities, removed this frame, from limbo to free list */
     for (mo = limbomobjhead.next; mo != (void*)&limbomobjhead; mo = next)
