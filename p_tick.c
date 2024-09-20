@@ -281,8 +281,6 @@ void P_CheckCheats (void)
 	{
 		/* free stuff */
 		p = &players[0];
-		p->armorpoints = 200;
-		p->armortype = 2;
 	}
 
 	if ((buttons & godmode_combo) == godmode_combo 

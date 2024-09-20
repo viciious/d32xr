@@ -323,8 +323,6 @@ typedef enum
 	pw_sneakers,
 	pw_extralife,
 	pw_underwater,
-	pw_ringshield,
-	pw_watershield,
 	NUMPOWERS
 } powertype_t;
 
@@ -390,7 +388,7 @@ typedef struct player_s
 	int			score;
 	VINT		health;					/* only used between levels, mo->health */
 										/* is used during levels	 */
-	VINT		armorpoints, armortype;	/* armor type is 0-2 */
+	VINT		shield;
 	
 	VINT		powers[NUMPOWERS];		/* invinc and invis are tic counters	 */
 	VINT		cheats;					/* bit flags */

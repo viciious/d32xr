@@ -643,7 +643,7 @@ void A_Explode (mobj_t *thingy, int16_t var1, int16_t var2)
 //
 // Spawns explosions and plays appropriate sounds around the defeated boss.
 //
-// var1: unused
+// var1: If nonzero, will spawn S_FRET at this height
 // var2 = Object to spawn, if not specified, uses MT_SONIC3KBOSSEXPLODE
 //
 void A_BossScream(mobj_t *actor, int16_t var1, int16_t var2)
@@ -660,6 +660,13 @@ void A_BossScream(mobj_t *actor, int16_t var1, int16_t var2)
 
 	if (mobjinfo[actor->type].deathsound)
 		S_StartSound(mo, mobjinfo[actor->type].deathsound);
+
+	if (var1 > 0)
+	{
+		mo = P_SpawnMobj(actor->x, actor->y, actor->z + (var1 << FRACBITS), MT_GHOST);
+		mo->reactiontime = 2;
+		P_SetMobjState(mo, S_FRET);
+	}
 }
 
 /*
@@ -856,6 +863,7 @@ void A_MonitorPop(mobj_t *actor, int16_t var1, int16_t var2)
 void A_AwardBox(mobj_t *actor, int16_t var1, int16_t var2)
 {
 	player_t *player;
+	mobj_t *orb;
 
 	if (!actor->target || !actor->target->player)
 	{
@@ -870,16 +878,28 @@ void A_AwardBox(mobj_t *actor, int16_t var1, int16_t var2)
 		case MT_RING_ICON:
 			P_GivePlayerRings(player, mobjinfo[actor->type].reactiontime);
 			break;
+		case MT_ARMAGEDDON_ICON:
+		case MT_ATTRACT_ICON:
+		case MT_ELEMENTAL_ICON:
+		case MT_FORCE_ICON:
+		case MT_WHIRLWIND_ICON:
+			orb = P_SpawnMobj(player->mo->x, player->mo->y, player->mo->z, mobjinfo[actor->type].painchance);
+			orb->target = player->mo;
+			player->shield = mobjinfo[orb->type].painchance;
+			break;
+		case MT_1UP_ICON:
+			player->lives++;
+			S_StopSong();
+			S_StartSong(gameinfo.xtlifeMus, 0, cdtrack_xtlife);
+			player->powers[pw_extralife] = EXTRALIFETICS;
+			break;
 			/*
-			MT_ATTRACT_ICON,
-MT_FORCE_ICON,
-MT_ARMAGEDDON_ICON,
-MT_WHIRLWIND_ICON,
-MT_ELEMENTAL_ICON,
 MT_INVULN_ICON,
-MT_1UP_ICON,*/
+*/
 		case MT_SNEAKERS_ICON:
 			player->powers[pw_sneakers] = 20*TICRATE;
+			S_StopSong();
+			S_StartSong(gameinfo.sneakerMus, 0, cdtrack_sneakers);
 			break;
 		default:
 			// Dunno what kind of monitor this is, but we fail gracefully.

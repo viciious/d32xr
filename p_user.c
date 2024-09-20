@@ -824,6 +824,8 @@ void P_PlayerHitFloor(player_t *player)
 		player->mo->momx >>= 1;
 		player->mo->momy >>= 1;
 	}
+
+	player->homingTimer = 0;
 }
 
 static void P_DoJump(player_t *player)
@@ -1375,14 +1377,29 @@ void P_PlayerThink(player_t *player)
 	else
 		player->mo->flags2 &= ~MF2_DONTDRAW;
 
+	if (player->powers[pw_extralife] > 0)
+	{
+		player->powers[pw_extralife]--;
+		if (player->powers[pw_extralife] == 1)
+			S_StartSong(gamemapinfo.musicLump, 1, gamemapinfo.mapNumber);
+	}
+
 	/* */
 	/* counters */
 	/* */
 	if (player->powers[pw_sneakers])
+	{
 		player->powers[pw_sneakers]--;
+		if (player->powers[pw_sneakers] == 1)
+			S_StartSong(gamemapinfo.musicLump, 1, gamemapinfo.mapNumber);
+	}
 
 	if (player->powers[pw_invulnerability])
+	{
 		player->powers[pw_invulnerability]--;
+		if (player->powers[pw_invulnerability] == 1)
+			S_StartSong(gamemapinfo.musicLump, 1, gamemapinfo.mapNumber);
+	}
 
 	if (player->damagecount)
 		player->damagecount--;
@@ -1409,8 +1426,6 @@ void P_RestoreResp(player_t *p)
 	playerresp_t *resp = &playersresp[pnum];
 
 	p->health = resp->health;
-	p->armorpoints = resp->armorpoints;
-	p->armortype = resp->armortype;
 	p->cheats = resp->cheats;
 }
 
@@ -1420,7 +1435,5 @@ void P_UpdateResp(player_t *p)
 	playerresp_t *resp = &playersresp[pnum];
 
 	resp->health = p->health;
-	resp->armorpoints = p->armorpoints;
-	resp->armortype = p->armortype;
 	resp->cheats = p->cheats;
 }

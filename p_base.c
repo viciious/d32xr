@@ -702,6 +702,25 @@ void P_MobjThinker(mobj_t *mobj)
             else
                mobj->momz = 0;
             break;
+         case MT_ARMAGEDDON_ORB:
+         case MT_ATTRACT_ORB:
+         case MT_ELEMENTAL_ORB:
+         case MT_FORCE_ORB:
+         case MT_WHIRLWIND_ORB:
+            {
+               player_t *player = &players[mobj->target->player - 1];
+               if (player->shield != mobjinfo[mobj->type].painchance)
+               {
+                  P_RemoveMobj(mobj);
+                  return;
+               }
+               P_UnsetThingPosition(mobj);
+               mobj->x = mobj->target->x;
+               mobj->y = mobj->target->y;
+               mobj->z = mobj->target->z;
+               P_SetThingPosition(mobj);
+            }
+            break;
          case MT_GHOST:
          case MT_EGGMOBILE_TARGET:
             if (mobj->reactiontime)

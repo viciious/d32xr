@@ -25,6 +25,7 @@ const char * const sprnames[NUMSPRITES] = {
 "FL03",
 "FL12",
 "FORC",
+"FRET",
 "FWR1",
 "FWR2",
 "FWR3",
@@ -279,12 +280,12 @@ STATE(SPR_WIND,3,1,NULL,S_WIND1), // S_WIND4
 
 // Attraction shield
 STATE(SPR_MAGN,0,1,NULL,S_MAGN2), // S_MAGN1
-STATE(SPR_MAGN,1,1,NULL,S_MAGN2), // S_MAGN2
-STATE(SPR_MAGN,2,1,NULL,S_MAGN2), // S_MAGN3
-STATE(SPR_MAGN,3,1,NULL,S_MAGN2), // S_MAGN4
-STATE(SPR_MAGN,4,1,NULL,S_MAGN2), // S_MAGN5
-STATE(SPR_MAGN,5,1,NULL,S_MAGN2), // S_MAGN6
-STATE(SPR_MAGN,6,1,NULL,S_MAGN2), // S_MAGN7
+STATE(SPR_MAGN,1,1,NULL,S_MAGN3), // S_MAGN2
+STATE(SPR_MAGN,2,1,NULL,S_MAGN4), // S_MAGN3
+STATE(SPR_MAGN,3,1,NULL,S_MAGN5), // S_MAGN4
+STATE(SPR_MAGN,4,1,NULL,S_MAGN6), // S_MAGN5
+STATE(SPR_MAGN,5,1,NULL,S_MAGN7), // S_MAGN6
+STATE(SPR_MAGN,6,1,NULL,S_MAGN1), // S_MAGN7
 
 // Force shield
 STATE(SPR_FORC,0,1,NULL,S_FORCA2), // S_FORCA1
@@ -367,6 +368,7 @@ STATE(SPR_BOM3,FF_FULLBRIGHT|4,3,NULL,S_SONIC3KBOSSEXPLOSION6), // S_SONIC3KBOSS
 STATE(SPR_BOM3,FF_FULLBRIGHT|5,4,NULL,S_NULL), // S_SONIC3KBOSSEXPLOSION6
 
 STATE(SPR_JETF,FF_FULLBRIGHT,-1,NULL,S_NULL), // S_JETFUME1
+STATE(SPR_FRET,0,2,NULL,S_NULL), // S_FRET
 
 // Boss 1
 STATE(SPR_EGGM,0,1,A_Boss1Chase,S_EGGMOBILE_STND),   // S_EGGMOBILE_STND
@@ -421,8 +423,8 @@ STATE2(SPR_EGGM,20,2,A_Fall,17,0,S_EGGMOBILE_DIE2),   // S_EGGMOBILE_DIE1
 STATE(SPR_EGGM,20,2,A_BossScream,S_EGGMOBILE_DIE3),   // S_EGGMOBILE_DIE2
 STATE2(SPR_EGGM,20,0,A_Repeat,17,S_EGGMOBILE_DIE2,S_EGGMOBILE_DIE4),   // S_EGGMOBILE_DIE3
 STATE(SPR_EGGM,20,-1,A_BossDeath,S_NULL),             // S_EGGMOBILE_DIE4
-STATE(SPR_EGGM,21,2,A_BossScream,S_EGGMOBILE_FLEE2),  // S_EGGMOBILE_FLEE1
-STATE(SPR_EGGM,22,2,A_BossScream,S_EGGMOBILE_FLEE1),  // S_EGGMOBILE_FLEE2
+STATE2(SPR_EGGM,21,2,A_BossScream,90,2,S_EGGMOBILE_FLEE2),  // S_EGGMOBILE_FLEE1
+STATE(SPR_EGGM,21,2,A_BossScream,S_EGGMOBILE_FLEE1),  // S_EGGMOBILE_FLEE2
 
 STATE(SPR_PLAY,0,1,A_FocusTarget,S_EGGMOBILE_TARGET), // S_EGGMOBILE_TARGET
 
@@ -1217,7 +1219,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		8,              // reactiontime
 		sfx_None,       // attacksound
 		S_NULL,         // painstate
-		0,              // painchance
+		MT_ATTRACT_ORB, // painchance
 		sfx_None,       // painsound
 		S_NULL,         // meleestate
 		S_NULL,         // missilestate
@@ -1241,7 +1243,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		8,              // reactiontime
 		sfx_None,       // attacksound
 		S_NULL,         // painstate
-		0,              // painchance
+		MT_FORCE_ORB,   // painchance
 		sfx_None,       // painsound
 		S_NULL,         // meleestate
 		S_NULL,         // missilestate
@@ -1265,7 +1267,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		8,              // reactiontime
 		sfx_None,       // attacksound
 		S_NULL,         // painstate
-		0,              // painchance
+		MT_ARMAGEDDON_ORB, // painchance
 		sfx_None,       // painsound
 		S_NULL,         // meleestate
 		S_NULL,         // missilestate
@@ -1289,7 +1291,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		8,              // reactiontime
 		sfx_None,       // attacksound
 		S_NULL,         // painstate
-		0,              // painchance
+		MT_WHIRLWIND_ORB, // painchance
 		sfx_None,       // painsound
 		S_NULL,         // meleestate
 		S_NULL,         // missilestate
@@ -1313,7 +1315,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		8,              // reactiontime
 		sfx_None,       // attacksound
 		S_NULL,         // painstate
-		0,              // painchance
+		MT_ELEMENTAL_ORB, // painchance
 		sfx_None,       // painsound
 		S_NULL,         // meleestate
 		S_NULL,         // missilestate
@@ -1503,7 +1505,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 
 	{           // MT_ARMAGEDDON_ORB
 		-1,             // doomednum
-		S_MAGN1,        // spawnstate
+		S_ARMA1,        // spawnstate
 		1000,           // spawnhealth
 		S_NULL,         // seestate
 		sfx_None,       // seesound
@@ -1528,7 +1530,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 
 	{           // MT_WHIRLWIND_ORB
 		-1,             // doomednum
-		S_MAGN1,        // spawnstate
+		S_WIND1,        // spawnstate
 		1000,           // spawnhealth
 		S_NULL,         // seestate
 		sfx_None,       // seesound
