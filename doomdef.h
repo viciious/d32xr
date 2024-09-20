@@ -361,6 +361,16 @@ int8_t P_MobjFlip(mobj_t *mo);
 ================
 */
 
+typedef enum
+{
+	SH_ARMAGEDDON = 1,
+	SH_ATTRACT,
+	SH_ELEMENTAL,
+	SH_FORCE1,
+	SH_FORCE2,
+	SH_WHIRLWIND,
+} shieldpower_t;
+
 typedef struct player_s
 {
 	mobj_t		*mo;

@@ -3,6 +3,7 @@
 #include "doomdef.h"
 #include "p_local.h"
 #include "st_main.h"
+#include "v_font.h"
 #ifdef MARS
 #include "mars.h"
 #endif
@@ -15,9 +16,6 @@
 #define ITEMSPACE	20
 #define CURSORY(y)	(STARTY+ITEMSPACE*(y))
 #define SLIDEWIDTH 90
-
-extern void print (int x, int y, const char *string);
-extern void IN_DrawValue(int x,int y,int value);
 
 typedef enum
 {
@@ -122,9 +120,9 @@ static VINT screenpos;
 void O_DrawControl(void)
 {
 	//EraseBlock(menuitem[mi_controltype].x + 40, menuitem[mi_controltype].y + 20, 90, 80);
-	print(menuitem[mi_controltype].x + 40, menuitem[mi_controltype].y + 20, buttona[controltype]);
-	print(menuitem[mi_controltype].x + 40, menuitem[mi_controltype].y + 40, buttonb[controltype]);
-	print(menuitem[mi_controltype].x + 40, menuitem[mi_controltype].y + 60, buttonc[controltype]);
+	V_DrawStringLeft(&menuFont, menuitem[mi_controltype].x + 40, menuitem[mi_controltype].y + 20, buttona[controltype]);
+	V_DrawStringLeft(&menuFont, menuitem[mi_controltype].x + 40, menuitem[mi_controltype].y + 40, buttonb[controltype]);
+	V_DrawStringLeft(&menuFont, menuitem[mi_controltype].x + 40, menuitem[mi_controltype].y + 60, buttonc[controltype]);
 /*	IN_DrawValue(30, 20, controltype); */
 }
 
@@ -666,12 +664,12 @@ void O_Drawer (void)
 /* Draw menu */
 
 	y = 10;
-	print(104, y, menuscr->name);
+	V_DrawStringLeft(&menuFont, 104, y, menuscr->name);
 	
 	for (i = 0; i < menuscr->numitems; i++)
 	{
 		y = items[i].y;
-		print(items[i].x, y, items[i].name);
+		V_DrawStringLeft(&menuFont, items[i].x, y, items[i].name);
 
 		if(items[i].slider)
 		{
@@ -701,27 +699,27 @@ void O_Drawer (void)
 			break;
 		}
 
-		print(items[0].x + 10, items[0].y + ITEMSPACE, "A");
-		print(items[0].x + 10, items[0].y + ITEMSPACE*2, "B");
-		print(items[0].x + 10, items[0].y + ITEMSPACE*3, "C");
+		V_DrawStringLeft(&menuFont, items[0].x + 10, items[0].y + ITEMSPACE, "A");
+		V_DrawStringLeft(&menuFont, items[0].x + 10, items[0].y + ITEMSPACE*2, "B");
+		V_DrawStringLeft(&menuFont, items[0].x + 10, items[0].y + ITEMSPACE*3, "C");
 
 		O_DrawControl();
 
-		print(menuitem[mi_alwaysrun].x + 150, menuitem[mi_alwaysrun].y, alwaysrun ? "ON" : "OFF");
-		print(menuitem[mi_strafebtns].x + 150, menuitem[mi_strafebtns].y, strabtnstr);
+		V_DrawStringLeft(&menuFont, menuitem[mi_alwaysrun].x + 150, menuitem[mi_alwaysrun].y, alwaysrun ? "ON" : "OFF");
+		V_DrawStringLeft(&menuFont, menuitem[mi_strafebtns].x + 150, menuitem[mi_strafebtns].y, strabtnstr);
 	}
 
 	if (screenpos == ms_audio)
 	{
 		switch (o_musictype) {
 		case mustype_none:
-			print(menuitem[mi_music].x + 85, menuitem[mi_music].y, "off");
+			V_DrawStringLeft(&menuFont, menuitem[mi_music].x + 85, menuitem[mi_music].y, "off");
 			break;
 		case mustype_fm:
-			print(menuitem[mi_music].x + 85, menuitem[mi_music].y, "fm");
+			V_DrawStringLeft(&menuFont, menuitem[mi_music].x + 85, menuitem[mi_music].y, "fm");
 			break;
 		case mustype_cd:
-			print(menuitem[mi_music].x + 85, menuitem[mi_music].y, "cd");
+			V_DrawStringLeft(&menuFont, menuitem[mi_music].x + 85, menuitem[mi_music].y, "cd");
 			break;
 		}
 
@@ -729,13 +727,13 @@ void O_Drawer (void)
 		{
 			switch (o_sfxdriver) {
 			case sfxdriver_auto:
-				print(menuitem[mi_sfxdriver].x + 150, menuitem[mi_sfxdriver].y, "auto");
+				V_DrawStringLeft(&menuFont, menuitem[mi_sfxdriver].x + 150, menuitem[mi_sfxdriver].y, "auto");
 				break;
 			case sfxdriver_mcd:
-				print(menuitem[mi_sfxdriver].x + 150, menuitem[mi_sfxdriver].y, "mcd");
+				V_DrawStringLeft(&menuFont, menuitem[mi_sfxdriver].x + 150, menuitem[mi_sfxdriver].y, "mcd");
 				break;
 			case sfxdriver_pwm:
-				print(menuitem[mi_sfxdriver].x + 150, menuitem[mi_sfxdriver].y, "pwm");
+				V_DrawStringLeft(&menuFont, menuitem[mi_sfxdriver].x + 150, menuitem[mi_sfxdriver].y, "pwm");
 				break;
 			}
 		}
@@ -749,10 +747,10 @@ void O_Drawer (void)
 
 		switch (anamorphicview) {
 		case 0:
-			print(menuitem[mi_anamorphic].x + 150, menuitem[mi_anamorphic].y, "off");
+			V_DrawStringLeft(&menuFont, menuitem[mi_anamorphic].x + 150, menuitem[mi_anamorphic].y, "off");
 			break;
 		case 1:
-			print(menuitem[mi_anamorphic].x + 150, menuitem[mi_anamorphic].y, "on");
+			V_DrawStringLeft(&menuFont, menuitem[mi_anamorphic].x + 150, menuitem[mi_anamorphic].y, "on");
 			break;
 		}
 	}

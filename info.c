@@ -6,6 +6,7 @@ VINT ringmobjtics[NUMMOBJTYPES];
 
 const char * const sprnames[NUMSPRITES] = {
 "PLAY",
+"ARMA",
 "BBLS",
 "BOM1",
 "BOM2",
@@ -17,18 +18,22 @@ const char * const sprnames[NUMSPRITES] = {
 "DUST",
 "EGGM",
 "EGLZ",
+"ELEM",
 "FISH",
 "FL01",
 "FL02",
 "FL03",
 "FL12",
+"FORC",
 "FWR1",
 "FWR2",
 "FWR3",
 "GFZC",
+"IVSP",
 "JETF",
 "LASF",
 "LASR",
+"MAGN",
 "MISL",
 "MSTV",
 "POSS",
@@ -54,6 +59,7 @@ const char * const sprnames[NUMSPRITES] = {
 "TVRI",
 "TVSS",
 "TVWW",
+"WIND",
 "YSPR",
 "GFZD"
 "GFZF",
@@ -254,6 +260,49 @@ STATE(SPR_TVIV,2,16,NULL,S_INVULN_ICON2), // S_INVULN_ICON1
 STATE(SPR_TVIV,2,16,A_AwardBox,S_NULL), // S_INVULN_ICON2
 STATE(SPR_TV1U,2,16,NULL,S_1UP_ICON2), // S_1UP_ICON1
 STATE(SPR_TV1U,2,16,A_AwardBox,S_NULL), // S_1UP_ICON2
+
+// Armageddon shield
+STATE(SPR_ARMA,0,1,NULL,S_ARMA2), // S_ARMA1
+STATE(SPR_ARMA,1,1,NULL,S_ARMA3), // S_ARMA2
+STATE(SPR_ARMA,2,1,NULL,S_ARMA4), // S_ARMA3
+STATE(SPR_ARMA,3,1,NULL,S_ARMA5), // S_ARMA4
+STATE(SPR_ARMA,4,1,NULL,S_ARMA6), // S_ARMA5
+STATE(SPR_ARMA,5,1,NULL,S_ARMA7), // S_ARMA6
+STATE(SPR_ARMA,6,1,NULL,S_ARMA8), // S_ARMA7
+STATE(SPR_ARMA,7,1,NULL,S_ARMA1), // S_ARMA8
+
+// Whirlwind shield
+STATE(SPR_WIND,0,1,NULL,S_WIND2), // S_WIND1
+STATE(SPR_WIND,1,1,NULL,S_WIND3), // S_WIND2
+STATE(SPR_WIND,2,1,NULL,S_WIND4), // S_WIND3
+STATE(SPR_WIND,3,1,NULL,S_WIND1), // S_WIND4
+
+// Attraction shield
+STATE(SPR_MAGN,0,1,NULL,S_MAGN2), // S_MAGN1
+STATE(SPR_MAGN,1,1,NULL,S_MAGN2), // S_MAGN2
+STATE(SPR_MAGN,2,1,NULL,S_MAGN2), // S_MAGN3
+STATE(SPR_MAGN,3,1,NULL,S_MAGN2), // S_MAGN4
+STATE(SPR_MAGN,4,1,NULL,S_MAGN2), // S_MAGN5
+STATE(SPR_MAGN,5,1,NULL,S_MAGN2), // S_MAGN6
+STATE(SPR_MAGN,6,1,NULL,S_MAGN2), // S_MAGN7
+
+// Force shield
+STATE(SPR_FORC,0,1,NULL,S_FORCA2), // S_FORCA1
+STATE(SPR_FORC,1,1,NULL,S_FORCA3), // S_FORCA2,
+STATE(SPR_FORC,2,1,NULL,S_FORCA4), // S_FORCA3,
+STATE(SPR_FORC,3,1,NULL,S_FORCA1), // S_FORCA4,
+STATE(SPR_FORC,4,1,NULL,S_FORCB2), // S_FORCB1,
+STATE(SPR_FORC,5,1,NULL,S_FORCB3), // S_FORCB2,
+STATE(SPR_FORC,6,1,NULL,S_FORCB4), // S_FORCB3,
+STATE(SPR_FORC,7,1,NULL,S_FORCB1), // S_FORCB4,
+STATE(SPR_FORC,8,TICRATE/2,NULL,S_NULL), // S_FORCESTOP,
+
+// Elemental shield
+STATE(SPR_ELEM,0,1,NULL,S_ELEM2), // S_ELEM1,
+STATE(SPR_ELEM,1,1,NULL,S_ELEM3), // S_ELEM2,
+STATE(SPR_ELEM,2,1,NULL,S_ELEM4), // S_ELEM3,
+STATE(SPR_ELEM,3,1,NULL,S_ELEM1), // S_ELEM4,
+STATE(SPR_ELEM,4,TICRATE/2,NULL,S_NULL), // S_ELEMDOWN,
 
 // Bluebird
 STATE(SPR_FL01,0,2,A_FlickyCheck,S_FLICKY_01_OUT), // S_FLICKY_01_OUT
@@ -1351,6 +1400,157 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		sfx_None,       // activesound
 		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
 	},
+
+	{           // MT_ELEMENTAL_ORB
+		-1,             // doomednum
+		S_ELEM1,        // spawnstate
+		1000,           // spawnhealth
+		S_NULL,         // seestate
+		sfx_None,       // seesound
+		0,              // reactiontime
+		sfx_None,       // attacksound
+		S_NULL,         // painstate
+		SH_ELEMENTAL,   // painchance
+		sfx_None,       // painsound
+		S_NULL,         // meleestate
+		S_NULL,         // missilestate
+		S_NULL,         // deathstate
+		S_NULL,         // xdeathstate
+		sfx_None,       // deathsound
+		0,              // speed
+		4*FRACUNIT,     // radius
+		4*FRACUNIT,     // height
+		16,             // mass
+		0,              // damage
+		sfx_None,       // activesound
+		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
+	},
+
+	{           // MT_ELEMENTAL_DOWN
+		-1,             // doomednum
+		S_ELEMDOWN,        // spawnstate
+		1000,           // spawnhealth
+		S_NULL,         // seestate
+		sfx_None,       // seesound
+		0,              // reactiontime
+		sfx_None,       // attacksound
+		S_NULL,         // painstate
+		0,              // painchance
+		sfx_None,       // painsound
+		S_NULL,         // meleestate
+		S_NULL,         // missilestate
+		S_NULL,         // deathstate
+		S_NULL,         // xdeathstate
+		sfx_None,       // deathsound
+		0,              // speed
+		4*FRACUNIT,     // radius
+		4*FRACUNIT,     // height
+		16,             // mass
+		0,              // damage
+		sfx_None,       // activesound
+		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
+	},
+
+	{           // MT_ATTRACT_ORB
+		-1,             // doomednum
+		S_MAGN1,        // spawnstate
+		1000,           // spawnhealth
+		S_NULL,         // seestate
+		sfx_None,       // seesound
+		0,              // reactiontime
+		sfx_None,       // attacksound
+		S_NULL,         // painstate
+		SH_ATTRACT,   // painchance
+		sfx_None,       // painsound
+		S_NULL,         // meleestate
+		S_NULL,         // missilestate
+		S_NULL,         // deathstate
+		S_NULL,         // xdeathstate
+		sfx_None,       // deathsound
+		0,              // speed
+		4*FRACUNIT,     // radius
+		4*FRACUNIT,     // height
+		16,             // mass
+		0,              // damage
+		sfx_None,       // activesound
+		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
+	},
+
+	{           // MT_FORCE_ORB
+		-1,             // doomednum
+		S_FORCA1,       // spawnstate
+		1000,           // spawnhealth
+		S_NULL,         // seestate
+		sfx_None,       // seesound
+		0,              // reactiontime
+		sfx_None,       // attacksound
+		S_FORCB1,       // painstate
+		SH_FORCE2,      // painchance
+		sfx_None,       // painsound
+		S_NULL,         // meleestate
+		S_NULL,         // missilestate
+		S_NULL,         // deathstate
+		S_NULL,         // xdeathstate
+		sfx_None,       // deathsound
+		0,              // speed
+		4*FRACUNIT,     // radius
+		4*FRACUNIT,     // height
+		16,             // mass
+		SH_FORCE1,      // damage
+		sfx_None,       // activesound
+		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
+	},
+
+	{           // MT_ARMAGEDDON_ORB
+		-1,             // doomednum
+		S_MAGN1,        // spawnstate
+		1000,           // spawnhealth
+		S_NULL,         // seestate
+		sfx_None,       // seesound
+		0,              // reactiontime
+		sfx_None,       // attacksound
+		S_NULL,         // painstate
+		SH_ARMAGEDDON,  // painchance
+		sfx_None,       // painsound
+		S_NULL,         // meleestate
+		S_NULL,         // missilestate
+		S_NULL,         // deathstate
+		S_NULL,         // xdeathstate
+		sfx_None,       // deathsound
+		0,              // speed
+		4*FRACUNIT,     // radius
+		4*FRACUNIT,     // height
+		16,             // mass
+		0,              // damage
+		sfx_None,       // activesound
+		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
+	},
+
+	{           // MT_WHIRLWIND_ORB
+		-1,             // doomednum
+		S_MAGN1,        // spawnstate
+		1000,           // spawnhealth
+		S_NULL,         // seestate
+		sfx_None,       // seesound
+		0,              // reactiontime
+		sfx_None,       // attacksound
+		S_NULL,         // painstate
+		SH_WHIRLWIND,   // painchance
+		sfx_None,       // painsound
+		S_NULL,         // meleestate
+		S_NULL,         // missilestate
+		S_NULL,         // deathstate
+		S_NULL,         // xdeathstate
+		sfx_None,       // deathsound
+		0,              // speed
+		4*FRACUNIT,     // radius
+		4*FRACUNIT,     // height
+		16,             // mass
+		0,              // damage
+		sfx_None,       // activesound
+		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
+	},
+
 	// Bluebird
 	{           // MT_FLICKY_01
 		-1,             // doomednum

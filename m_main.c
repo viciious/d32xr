@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "v_font.h"
 
 #define MOVEWAIT		(I_IsPAL() ? TICVBLS*5 : TICVBLS*6)
 #define CURSORX		(96)
@@ -113,9 +114,7 @@ static char displaymapname[32];
 static VINT displaymapnum;
 
 static boolean startup;
-
-extern VINT	uchar;
-extern void print(int x, int y, const char* string);
+VINT	uchar;
 
 void M_Start2 (boolean startup_)
 {
@@ -683,11 +682,12 @@ void M_Drawer (void)
 	for (i = 0; i < menuscr->numitems; i++)
 	{
 		int y = y_offset + items[i].y;
-		print(items[i].x, y, items[i].name);
+		V_DrawStringLeft(&menuFont, items[i].x, y, items[i].name);
 	}
 
 	if (scrpos == ms_new)
 	{
+		char mapNum[8];
 		mainitem_t* item;
 		char *tmp;
 		int tmplen;
@@ -695,7 +695,7 @@ void M_Drawer (void)
 		/* draw game mode information */
 		item = &mainitem[mi_gamemode];
 		y = y_offset + item->y;
-		print(item->x + 10, y + ITEMSPACE + 2, playmodes[currentplaymode]);
+		V_DrawStringLeft(&menuFont, item->x + 10, y + ITEMSPACE + 2, playmodes[currentplaymode]);
 
 		/* draw start level information */
 		item = &mainitem[mi_level];
@@ -707,16 +707,11 @@ void M_Drawer (void)
 #ifndef MARS
 		EraseBlock(80, m_doom_height + CURSORY(NUMMAINITEMS - 2) + ITEMSPACE + 2, 320, nums[0]->height);
 #endif
-		if (leveltens)
-		{
-			DrawJagobjLump(numslump + leveltens,
-				item->x + 70, y + 2, NULL, NULL);
-			DrawJagobjLump(numslump + levelones, item->x + 84, y + 2, NULL, NULL);
-		}
-		else
-			DrawJagobjLump(numslump + levelones, item->x + 70, y + 2, NULL, NULL);
+		sprintf(mapNum, "%d", mapnumber);
 
-		print((320 - (tmplen * 14)) >> 1, y + ITEMSPACE + 2, tmp);
+		V_DrawStringLeft(&titleFont, item->x + 70, y + 2, mapNum);
+
+		V_DrawStringLeft(&menuFont, (320 - (tmplen * 14)) >> 1, y + ITEMSPACE + 2, tmp);
 	}
 	else if (scrpos == ms_load || scrpos == ms_save)
 	{
@@ -730,10 +725,10 @@ void M_Drawer (void)
 		if (savecount > 0)
 		{
 			if (saveslot == 0)
-				print(item->x + 10, y + 20 + 2, "Last autosave.");
+				V_DrawStringLeft(&menuFont, item->x + 10, y + 20 + 2, "Last autosave.");
 			else
 			{
-				print(item->x + 10, y + 20, "Slot ");
+				V_DrawStringLeft(&menuFont, item->x + 10, y + 20, "Slot ");
 				DrawJagobjLump(numslump + saveslot % 10, item->x + 70, y + ITEMSPACE + 1, NULL, NULL);
 			}
 
@@ -747,7 +742,7 @@ void M_Drawer (void)
 
 				leveltens = saveslotmap / 10, levelones = saveslotmap % 10;
 
-				print(item->x + 10, y + 40 + 2, "Area");
+				V_DrawStringLeft(&menuFont, item->x + 10, y + 40 + 2, "Area");
 
 				if (leveltens)
 				{
@@ -758,18 +753,18 @@ void M_Drawer (void)
 				else
 					DrawJagobjLump(numslump + levelones, item->x + 80, y + ITEMSPACE*2 + 3, NULL, NULL);
 
-				print((320 - (mapnamelen * 14)) >> 1, y + ITEMSPACE*3 + 3, mapname);
+				V_DrawStringLeft(&menuFont, (320 - (mapnamelen * 14)) >> 1, y + ITEMSPACE*3 + 3, mapname);
 			}
 			else
 			{
-				print(item->x + 10, y + ITEMSPACE*2 + 2, "Empty");
+				V_DrawStringLeft(&menuFont, item->x + 10, y + ITEMSPACE*2 + 2, "Empty");
 			}
 		}
 		else
 		{
-			print(CURSORX, y + ITEMSPACE+10 + 2, "Reach your first");
-			print(CURSORX, y + ITEMSPACE*2+10 + 2, "checkpoint after");
-			print(CURSORX, y + ITEMSPACE*3+10 + 2, "the first area.");
+			V_DrawStringLeft(&menuFont, CURSORX, y + ITEMSPACE+10 + 2, "Reach your first");
+			V_DrawStringLeft(&menuFont, CURSORX, y + ITEMSPACE*2+10 + 2, "checkpoint after");
+			V_DrawStringLeft(&menuFont, CURSORX, y + ITEMSPACE*3+10 + 2, "the first area.");
 		}
 	}
 }
