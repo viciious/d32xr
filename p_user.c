@@ -325,9 +325,6 @@ void P_PlayerMobjThink(mobj_t *mobj)
 
 	P_MobjCheckWater(mobj);
 
-	//	if (gametic == prevgametic)
-	//		return;
-
 	/* */
 	/* cycle through states, calling action functions at transitions */
 	/* */

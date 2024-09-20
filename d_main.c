@@ -680,34 +680,9 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 
 		S_PreUpdateSounds();
 
-		/*int tempticbuttons[2];
-		int tempticmousex[2];
-		int tempticmousey[2];
-		int tempticrealbuttons = ticrealbuttons;
-		tempticbuttons[0] = ticbuttons[0];
-		tempticbuttons[1] = ticbuttons[1];*/
-		for (int i = 0; i < accum_time; i++)
-		{
-			/*ticbuttons[0] = tempticbuttons[0];
-			ticbuttons[1] = tempticbuttons[1];
-			ticmousex[0] = tempticmousex[0];
-			ticmousex[1] = tempticmousex[1];
-			ticmousey[0] = tempticmousey[0];
-			ticmousey[1] = tempticmousey[1];
-			ticrealbuttons = tempticrealbuttons;*/
-
-			//if (splitscreen && !demoplayback)
-			//	ticbuttons[consoleplayer ^ 1] = I_ReadControls2();
-			//else if (netgame)	/* may also change vblsinframe */
-			//	ticbuttons[consoleplayer ^ 1]
-			//		= NetToLocal(I_NetTransfer(LocalToNet(ticbuttons[consoleplayer])));
-
-			if (ticon & 1)
-				gametic++;
-
-			ticon++;
-			exit = ticker();
-		}
+		gametic++;
+		ticon++;
+		exit = ticker();
 
 		S_UpdateSounds();
 

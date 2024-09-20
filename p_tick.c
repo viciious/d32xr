@@ -364,45 +364,48 @@ int P_Ticker (void)
 	if (gamepaused)
 		return 0;
 
-	start = frtc;
-	for (playernum = 0, pl = players; playernum < MAXPLAYERS; playernum++, pl++)
-		if (playeringame[playernum])
-		{
-			if (pl->playerstate == PST_REBORN)
-				G_DoReborn(playernum);
-
-			P_PlayerThink(pl);
-		}
-	playertics = frtc - start;
-
-	start = frtc;
-	P_RunThinkers();
-	thinkertics = frtc - start;
-
+	for (int skipCount = 0; skipCount < accum_time; skipCount++)
 	{
-		ticstart = frtc;
+		start = frtc;
+		for (playernum = 0, pl = players; playernum < MAXPLAYERS; playernum++, pl++)
+			if (playeringame[playernum])
+			{
+				if (pl->playerstate == PST_REBORN)
+					G_DoReborn(playernum);
 
-//		if (gametic != prevgametic)
+				P_PlayerThink(pl);
+			}
+		playertics = frtc - start;
+
+		start = frtc;
+		P_RunThinkers();
+		thinkertics = frtc - start;
+
 		{
+			ticstart = frtc;
+
+	//		if (gametic != prevgametic)
+			{
+				start = frtc;
+				// If we don't do this every tic, it seems sight checking is broken.
+				// Is there a way we can do this infrequently? Even every half second would be fine.
+				P_CheckSights();
+				sighttics = frtc - start;
+			}
+
 			start = frtc;
-			// If we don't do this every tic, it seems sight checking is broken.
-			// Is there a way we can do this infrequently? Even every half second would be fine.
-			P_CheckSights();
-			sighttics = frtc - start;
+			P_RunMobjBase();
+			basetics = frtc - start;
+
+			start = frtc;
+			P_RunMobjLate();
+			latetics = frtc - start;
+
+			P_UpdateSpecials();
+
+			tictics = frtc - ticstart;
+			leveltime++;
 		}
-
-		start = frtc;
-		P_RunMobjBase();
-		basetics = frtc - start;
-
-		start = frtc;
-		P_RunMobjLate();
-		latetics = frtc - start;
-
-		P_UpdateSpecials();
-
-		tictics = frtc - ticstart;
-		leveltime++;
 	}
 
 	ST_Ticker();			/* update status bar */

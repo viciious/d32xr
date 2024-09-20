@@ -822,6 +822,7 @@ void P_Init (void);
 
 void P_Start (void);
 void P_Stop (void);
+extern int accum_time;
 int P_Ticker (void);
 void P_Drawer (void);
 void P_Update (void);
