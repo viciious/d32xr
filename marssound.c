@@ -304,7 +304,7 @@ static void S_SpatializeAt(fixed_t* origin, mobj_t* listener, int* pvol, int* ps
 		else
 		{
 			vol = sfxvolume * (S_CLIPPING_DIST - dist_approx);
-			vol = (unsigned)vol / S_ATTENUATOR;
+			vol = (unsigned)vol / (S_ATTENUATOR / 3);
 			if (vol > sfxvolume)
 				vol = sfxvolume;
 		}
