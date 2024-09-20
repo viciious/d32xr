@@ -21,29 +21,28 @@
         .equ FM_START,  0x4C        /* start offset in sram (for starting/looping vgm) */
         .equ CRITICAL,  0x4F        /* Z80 critical section flag */
 
-        .equ REQ_ACT,   0xFFEF      /* Request 68000 Action */
+        .equ REQ_ATTR,   0xFFEE
+        .equ REQ_ACT,    0xFFEF      /* Request 68000 Action */
+        .equ STRM_KON,   0xFFF0
+        .equ STRM_ID,    0xFFF1
+        .equ STRM_CHIP,  0xFFF2
+        .equ STRM_LMODE, 0xFFF3
+        .equ STRM_SSIZE, 0xFFF4
+        .equ STRM_SBASE, 0xFFF5
+        .equ STRM_FREQH, 0xFFF6
+        .equ STRM_FREQL, 0xFFF7
+        .equ STRM_OFFHH, 0xFFF8
+        .equ STRM_OFFHL, 0xFFF9
+        .equ STRM_OFFLH, 0xFFFA
+        .equ STRM_OFFLL, 0xFFFB
+        .equ STRM_LENHH, 0xFFFC
+        .equ STRM_LENHL, 0xFFFD
+        .equ STRM_LENLH, 0xFFFE
+        .equ STRM_LENLL, 0xFFFF
 
-        .equ STRM_KON,    0xFFF0
-        .equ STRM_ID,     0xFFF1
-        .equ STRM_CHIP,   0xFFF2
-        .equ STRM_LMODE,  0xFFF3
-        .equ STRM_SSIZE,  0xFFF4
-        .equ STRM_SBASE,  0xFFF5
-        .equ STRM_FREQH,  0xFFF6
-        .equ STRM_FREQL,  0xFFF7
-        .equ STRM_OFFHH,  0xFFF8
-        .equ STRM_OFFHL,  0xFFF9
-        .equ STRM_OFFLH,  0xFFFA
-        .equ STRM_OFFLL,  0xFFFB
-        .equ STRM_LENHH,  0xFFFC
-        .equ STRM_LENHL,  0xFFFD
-        .equ STRM_LENLH,  0xFFFE
-        .equ STRM_LENLL,  0xFFFF
-
-        .equ MARS_FRAMEBUFFER, 0x840200 /* 32X frame buffer */
-        .equ MARS_PWM_CTRL,    0xA15130
-        .equ MARS_PWM_CYCLE,   0xA15132
-        .equ MARS_PWM_MONO,    0xA15138
+        .equ STRM_FLAGS, 0xFFF9
+        .equ STRM_BLCKH, 0xFFFA
+        .equ STRM_BLCKL, 0xFFFB
 
         .macro  z80rd adr, dst
         move.b  0xA00000+\adr,\dst
@@ -82,18 +81,6 @@
 
         .macro  clr_rv
         bclr    #0,0xA15107         /* clear RV */
-        .endm
-
-        .macro  mute_pcm
-        clr.w   pcm_env             /* mute PCM samples */
-        clr.w   dac_len
-        |tst.w   dac_len             /* drain the PCM buffer */
-        |bne.w   main_loop
-        |jsr     vgm_stop_samples
-        .endm
-
-        .macro  unmute_pcm
-        move.w  #0xFFFF,pcm_env
         .endm
 
 | 0x880800 - entry point for reset/cold-start
@@ -391,34 +378,6 @@ main_loop_start:
         move.l  #0,0xA15120         /* let Master SH2 run */
 
 main_loop:
-        tst.w   dac_len
-        beq.b   main_loop_chk_ctrl  /* done/none, silence */
-
-        move.l  dac_samples,a0
-        move.w  dac_center,d1
-        move.w  dac_len,d2
-        move.w  pcm_env,d3
-0:
-        tst.w   MARS_PWM_MONO       /* check mono reg status */
-        bmi.b   01f                 /* full */
-
-        move.b  (a0)+,d0            /* fetch dac sample */
-        eori.b  #0x80,d0            /* unsigned to signed */
-        ext.w   d0                  /* sign extend to word */
-|       add.w   d0,d0               /* *2 */
-|       add.w   d0,d0               /* *4 */
-        and.w   d3,d0
-        add.w   d1,d0
-        move.w  d0,MARS_PWM_MONO
-
-        subq.w  #1,d2
-        bne.b   0b                  /* not done */
-        move.w  dac_center,MARS_PWM_MONO /* silence */
-01:
-        move.w  d2,dac_len
-        move.l  a0,dac_samples
-
-main_loop_chk_ctrl:
         tst.b   need_ctrl_int
         beq.b   main_loop_bump_fm
         move.b  #0,need_ctrl_int
@@ -447,20 +406,12 @@ main_loop_chk_ctrl:
         beq.b   30b
 
 main_loop_bump_fm:
-        move.b  REQ_ACT.w,d0
-        cmpi.b  #0x03,d0
-        beq.b   0f                 /* stream start */
-        cmpi.b  #0x04,d0
-        beq.b   0f                 /* stream stop */
-        cmpi.b  #0x06,d0
         tst.b   need_bump_fm
         beq.b   main_loop_handle_req
-0:
         move.b  #0,need_bump_fm
         bsr     bump_fm
 
 main_loop_handle_req:
-        moveq   #0,d0
         move.w  0xA15120,d0         /* get COMM0 */
         bne.b   handle_req
 
@@ -581,7 +532,6 @@ rd_msd_sram:
         bra.w   exit_rd_sram
 
 rd_med_sram:
-        add.l   d0,d0
         tst.b   everdrive_ok
         bne.b   1f                  /* v1 or v2a MED */
         lea     0x040000,a0         /* use the upper 256K of page 31 */
@@ -638,7 +588,6 @@ wr_msd_sram:
         bra.w   exit_wr_sram
 
 wr_med_sram:
-        add.l   d1,d1
         tst.b   everdrive_ok
         bne.b   1f                  /* v1 or v2a MED */
         lea     0x040000,a0         /* use the upper 256K of page 31 */
@@ -676,7 +625,6 @@ set_rom_bank:
         rts
 
 start_music:
-        
         tst.w   use_cd
         bne     start_cd
         
@@ -731,8 +679,6 @@ start_music:
 
         move.l  d0,a0
         bsr     set_rom_bank
-02:
-        move.w  #0,0xA15120         /* done */
 
         move.l  a1,-(sp)            /* MD lump ptr */
         jsr     vgm_setup           /* setup lzss, set pcm_baseoffs, set vgm_ptr, read first block */
@@ -764,6 +710,29 @@ start_music:
         bne.b   3b
 
 | FM setup
+        movea.l vgm_ptr,a6          /* lzss buffer */
+        lea     0x1C(a6),a6         /* loop offset */
+| get vgm loop offset
+        move.b  (a6)+,d0
+        move.b  (a6)+,d1
+        move.b  (a6)+,d2
+        move.b  (a6)+,d3
+        move.b  d3,-(sp)
+        move.w  (sp)+,d3            /* shift left 8 */
+        move.b  d2,d3
+        swap    d3
+        move.b  d1,-(sp)
+        move.w  (sp)+,d3            /* shift left 8 */
+        move.b  d0,d3
+        tst.l   d3
+        beq.b   0f                  /* no loop offset, use default song start */
+        addi.l  #0x1C,d3
+        bra.b   1f
+0:
+        moveq   #0x40,d3
+1:
+        move.l  d3,fm_loop          /* loop offset */
+
         movea.l vgm_ptr,a6
         lea     8(a6),a6            /* version */
         move.b  (a6)+,d0
@@ -801,34 +770,6 @@ start_music:
         moveq   #0x40,d3
 3:
         move.l  d3,fm_start         /* start of song data */
-
-        movea.l vgm_ptr,a6
-        lea     0x1C(a6),a6         /* loop offset */
-| get vgm loop offset
-        move.b  (a6)+,d0
-        move.b  (a6)+,d1
-        move.b  (a6)+,d2
-        move.b  (a6)+,d3
-        move.b  d3,-(sp)
-        move.w  (sp)+,d3            /* shift left 8 */
-        move.b  d2,d3
-        swap    d3
-        move.b  d1,-(sp)
-        move.w  (sp)+,d3            /* shift left 8 */
-        move.b  d0,d3
-        tst.l   d3
-        beq.b   0f                  /* no loop offset, use default song start */
-        addi.l  #0x1C,d3
-        bra.b   1f
-0:
-        move.l  fm_start,d3
-1:
-        move.l  d3,fm_start         /* loop offset */
-
-        move.l fm_start, d3
-
-        unmute_pcm
-
         z80wr   FM_START,d3         /* start song => FX_START = start offset */
         lsr.w   #8,d3
         z80wr   FM_START+1,d3
@@ -857,10 +798,12 @@ start_music:
         move.w  #0x0000,0xA11100    /* Z80 deassert bus request */
         move.w  #0x0100,0xA11200    /* Z80 deassert reset - run driver */
 
+        move.w  #0,0xA15120         /* done */
         bra     main_loop
 9:
         clr.w   fm_idx              /* not playing VGM */
 
+        move.w  #0,0xA15120         /* done */
         bra     main_loop
 
 start_cd:
@@ -937,7 +880,7 @@ start_cd:
 
 stop_music:
         tst.w    use_cd
-        bne.w    stop_cd
+        bne.b    stop_cd
 
         /* stop VGM */
         move.w  #0x0100,0xA11100    /* Z80 assert bus request */
@@ -948,7 +891,6 @@ stop_music:
         bne.b   0b                  /* wait for bus acquired */
 
         jsr     rst_ym2612          /* reset FM chip */
-        jsr     vgm_stop_samples
 
         moveq   #0,d0
         lea     0x00FFFFE0,a0       /* top of stack */
@@ -981,7 +923,6 @@ stop_music:
 
         clr.w   fm_idx              /* stop music */
         clr.w   fm_rep
-        clr.w   fm_stream
 
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -1833,8 +1774,6 @@ ctl_md_vdp:
         bra     main_loop
 
 cpy_md_vram:
-        mute_pcm
-
         move.w  0xA15100,d1
         eor.w   #0x8000,d1
         move.w  d1,0xA15100         /* unset FM - disallow SH2 access to FB */
@@ -1845,7 +1784,7 @@ cpy_md_vram:
         move.b  d0,d1               /* column number */
         add.w   d1,d1
 
-        lea     MARS_FRAMEBUFFER,a2         /* 32X frame buffer */
+        lea     0x840200,a2         /* frame buffer */
         lea     0(a2,d1.l),a2
 
         cmpi.w  #0x1C00,d0
@@ -1914,8 +1853,6 @@ cpy_md_vram:
         move.w  0xA15100,d0
         or.w    #0x8000,d0
         move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
-
-        unmute_pcm
 
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -2033,8 +1970,6 @@ cpy_md_vram:
         move.w  0xA15100,d0
         or.w    #0x8000,d0
         move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
-
-        unmute_pcm
 
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -2167,8 +2102,6 @@ cpy_md_vram:
         move.w  0xA15100,d0
         or.w    #0x8000,d0
         move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
-
-        unmute_pcm
 
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -2480,10 +2413,30 @@ bump_fm:
 
 10:
         move.b  REQ_ACT.w,d0
+        cmpi.b  #0x05,d0            /* Check for 0x95 command */
+        beq.s   play_drum_sound
         cmpi.b  #0x01,d0
         bne.w   5f                  /* not read buffer block */
+
+play_drum_sound:
 11:
         /* check for space in Z80 sram buffer */
+        move.b  STRM_BLCKL.w,d0
+        move.w  #0,STRM_BLCKH.w
+19:
+        cmpi.   #0,d0
+        beq.s   20f
+191:
+        cmpi.b  #0,0xA1512C
+        bne.s   191b                 /* wait for CMD interrupt to finish */
+192:
+        move.b  #1,0xA1512C         /* queue sound playback on COMM12 */
+        move.b  d0,0xA1512F         /* pass sound ID to COMM15 */
+        move.b  #1,0xA15103         /* call CMD interrupt on master SH-2 */
+193:
+        cmpi.b  #0,0xA1512C
+        bne.s   193b                 /* wait for CMD interrupt to finish */
+20:
         moveq   #0,d0
         z80rd   FM_BUFGEN,d0
         moveq   #0,d1
@@ -2550,11 +2503,6 @@ bump_fm:
         bra.b   7f
 
 5:
-        cmpi.b  #0x03,d0
-        beq.b   51f                 /* stream start */
-        cmpi.b  #0x04,d0
-        beq.b   51f                 /* stream stop */
-
         cmpi.b  #0x02,d0
         bne.b   6f                  /* unknown request, ignore */
 
@@ -2568,14 +2516,7 @@ bump_fm:
         z80wr   FM_START+1,d0       /* music start = loop offset */
         move.w  fm_idx,d0
         z80wr   FM_IDX,d0           /* set FM_IDX to start music */
-        bra.w   11b                 /* try to load a block */
-
-51:
-        move.b  d0,fm_stream
-        move.w  STRM_FREQH.w,fm_stream_freq
-        move.l  STRM_OFFHH.w,fm_stream_ofs
-        move.l  STRM_LENHH.w,fm_stream_len
-        bra.b   7f
+        bra.w   20b                 /* try to load a block */
 
 6:
         /* check if need to preread a block */
@@ -2584,7 +2525,7 @@ bump_fm:
         subq.w  #1,preread_cnt
 
         /* read a buffer */
-        bra.w   11b
+        bra.w   20b
 
 7:
         z80wr   FM_RQPND,#0         /* request handled */
@@ -2593,33 +2534,6 @@ bump_fm:
         move.w  #0x0000,0xA11100    /* Z80 deassert bus request */
 9:
         movem.l (sp)+,d0-d7/a0-a6
-
-        /* handle PCM data stream */
-        tst.w   fm_stream
-        beq.b   18f
-
-        btst    #0,fm_stream
-        beq.b   17f
-16:
-        /* set the stream pointer and start playback on the SegaCD */
-        clr.w   fm_stream
-
-        tst.w   pcm_env
-        beq.b   18f                 /* PCM muted */
-
-        moveq   #0,d1
-        move.w  fm_stream_freq,d1
-        move.l  d1,-(sp)
-        move.l  fm_stream_len,-(sp)
-        move.l  fm_stream_ofs,-(sp)
-        jsr     vgm_play_dac_samples
-        lea     12(sp),sp
-        bra.b   18f
-17:
-        /* stop playback */
-        clr.w   fm_stream
-        jsr     vgm_stop_samples
-18:
         move.w  (sp)+,sr            /* restore int level */
         rts
 
@@ -3060,40 +2974,12 @@ vgm_ptr:
         .global    vgm_size
 vgm_size:
         dc.l    0
-        .global    dac_samples
-dac_samples:
-        dc.l    0
-        .global    test_a
-test_a:
-        dc.l    0x11223344
-        dc.l    0x99887766
-        .global    fm_ptr
-fm_ptr:
-        dc.l    0
         .global    fm_rep
 fm_rep:
         dc.w    0
         .global    fm_idx
 fm_idx:
         dc.w    0
-fm_stream:
-        dc.w    0
-fm_stream_freq:
-        dc.w    0
-
-dac_freq:
-        .global    dac_freq
-        dc.w    0
-dac_len:
-        .global    dac_len
-        dc.w    0
-dac_center:
-        .global    dac_center
-        dc.w    0
-pcm_env:
-        .global pcm_env
-        dc.w    0xFFFF
-
 offs68k:
         dc.w    0
 offsz80:
@@ -3102,11 +2988,6 @@ preread_cnt:
         dc.w    0
 
         .align  4
-
-fm_stream_ofs:
-        dc.l    0
-fm_stream_len:
-        dc.l    0
 
 fg_color:
         dc.l    0x11111111      /* default to color 1 for fg color */
@@ -3132,29 +3013,6 @@ base_palette_3:
         .space  32
 base_palette_4:
         .space  32
-
-/* DLG */
-/*
-test_word_1:
-        dc.w    0
-test_word_2:
-        dc.w    0
-test_word_3:
-        dc.w    0
-test_word_4:
-        dc.w    0
-test_word_5:
-        dc.w    0
-test_word_6:
-        dc.w    0
-test_word_7:
-        dc.w    0
-test_word_8:
-        dc.w    0
-*/
-
-        .text
-        .align  4
 
 FMReset:
         /* block settings */

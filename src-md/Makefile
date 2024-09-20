@@ -11,7 +11,6 @@ INCPATH = -I$. -I$(ROOTDIR)/m68k-elf/include -I$(ROOTDIR)/m68k-elf/m68k-elf/incl
 
 HWCCFLAGS = -m68000 -Wall -O1 -c -fomit-frame-pointer -fno-lto
 CCFLAGS = -m68000 -Wall -Os -c -fomit-frame-pointer -flto -DUSE_SCD_IN_RAM
-#CCFLAGS += -DDAC_STREAMING_ENABLED
 ASFLAGS = -m68000 --register-prefix-optional
 LINKFLAGS = -T $(LDSCRIPTSDIR)/mars-md.ld -Wl,-Map=output.map -nostdlib -flto
 

@@ -58,6 +58,8 @@ enum
 	SNDCMD_STARTORGSND
 };
 
+extern const unsigned char drumsfxmap[];
+
 static uint8_t snd_bufidx = 0;
 int16_t __attribute__((aligned(16))) snd_buffer[2][MAX_SAMPLES * 2];
 static uint8_t	snd_init = 0;
@@ -441,7 +443,7 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 	if (!vol)
 		return; /* too far away */
 
-	if (S_USE_MEGACD_DRV())
+	/*if (S_USE_MEGACD_DRV())
 	{
 		sfxchannel_t *ch;
 
@@ -453,7 +455,7 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 
 		Mars_MCDPlaySfx((ch - sfxchannels) + 1, sound_id, sep, vol);
 		return;
-	}
+	}*/
 
 	uint16_t* p = (uint16_t*)Mars_RB_GetWriteBuf(&soundcmds, 8, false);
 	if (!p)
@@ -476,6 +478,16 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 	}
 
 	Mars_RB_CommitWrite(&soundcmds);
+}
+
+void S_StartDrumId(int drum_id)
+{
+	S_StartSoundEx(NULL, drumsfxmap[drum_id], NULL);
+}
+
+void S_StartSoundId(int sound_id)
+{
+	S_StartSoundEx(NULL, sound_id, NULL);
 }
 
 void S_StartSound(mobj_t* mobj, int sound_id)
