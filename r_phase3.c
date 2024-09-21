@@ -124,7 +124,7 @@ static void R_PrepMobj(mobj_t *thing)
    // killough 3/27/98: exclude things totally separated
    // from the viewer, by either water or fake ceilings
    // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
-   int heightsec = thing->subsector->sector->heightsec;
+   const int heightsec = thing->subsector->sector->heightsec;
 
    if (heightsec != -1)   // only clip things which are in special sectors
    {
@@ -169,7 +169,7 @@ static void R_PrepMobj(mobj_t *thing)
    vis->patchheight = BIGSHORT(patch->height);
    vis->texturemid = texmid;
    vis->startfrac = 0;
-   vis->heightsec = thing->subsector->sector->heightsec;
+   vis->heightsec = heightsec;
 
    if(flip)
    {
@@ -293,7 +293,7 @@ static void R_PrepRing(mobj_t *thing)
    // killough 3/27/98: exclude things totally separated
    // from the viewer, by either water or fake ceilings
    // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
-   int heightsec = thing->subsector->sector->heightsec;
+   const int heightsec = thing->subsector->sector->heightsec;
 
    if (heightsec != -1)   // only clip things which are in special sectors
    {
@@ -338,7 +338,7 @@ static void R_PrepRing(mobj_t *thing)
    vis->patchheight = BIGSHORT(patch->height);
    vis->texturemid = texmid;
    vis->startfrac = 0;
-   vis->heightsec = thing->subsector->sector->heightsec;
+   vis->heightsec = heightsec;
 
    if(flip)
    {
@@ -449,6 +449,32 @@ static void R_PrepScenery(scenerymobj_t *thing)
 //   if (tz < viewportHeight - centerYFrac)
 //       return;
 
+   // killough 3/27/98: exclude things totally separated
+   // from the viewer, by either water or fake ceilings
+   // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
+   const int heightsec = subsectors[thing->subsector].sector->heightsec;
+
+   if (heightsec != -1)   // only clip things which are in special sectors
+   {
+      const sector_t *heightsector = &sectors[heightsec];
+      const int phs = vd.viewsubsector->sector->heightsec;
+
+      if (phs != -1)
+      {
+         const fixed_t localgzt = thing->z + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
+
+         if (vd.viewz < sectors[phs].floorheight ?
+            thing->z >= heightsector->floorheight :
+            localgzt < heightsector->floorheight)
+            return;
+         if (vd.viewz > sectors[phs].ceilingheight ?
+            localgzt < heightsector->ceilingheight &&
+            vd.viewz >= heightsector->ceilingheight :
+            thing->z >= heightsector->ceilingheight)
+            return;
+      }
+   }
+
    // get a new vissprite
    if(vd.vissprite_p >= vd.vissprites + MAXVISSPRITES)
       return; // too many visible sprites already, leave room for psprites
@@ -471,7 +497,7 @@ static void R_PrepScenery(scenerymobj_t *thing)
    vis->patchheight = BIGSHORT(patch->height);
    vis->texturemid = texmid;
    vis->startfrac = 0;
-   vis->heightsec = -1;
+   vis->heightsec = heightsec;
 
    if(flip)
    {
