@@ -18,6 +18,7 @@ CCFLAGS += -D__32X__ -DMARS
 #CCFLAGS += -DREC_POS_DEMO
 #CCFLAGS += -DPLAY_POS_DEMO
 #CCFLAGS += -DHIGH_DETAIL_SPRITES
+CCFLAGS += -DFLATDRAW2X
 LDFLAGS = -T mars-ssf.ld -Wl,-Map=output.map -nostdlib -Wl,--gc-sections --specs=nosys.specs
 ASFLAGS = --big
 
@@ -47,6 +48,7 @@ OBJS = \
 	f_wipe.o \
 	in_main.o \
 	st_main.o \
+	st_inter.o \
 	m_main.o \
 	o_main.o \
 	comnjag.o \

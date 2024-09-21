@@ -286,8 +286,13 @@ static void R_DrawPlanes2(void)
     if (vd.gsortedvisplanes == NULL)
         return;
 
+#ifdef FLATDRAW2X
+    lpl.x = vd.viewx/2;
+    lpl.y = -vd.viewy/2;
+#else
     lpl.x = vd.viewx;
     lpl.y = -vd.viewy;
+#endif
 
     lpl.angle = vd.viewangle;
     angle = (lpl.angle - ANG90) >> ANGLETOFINESHIFT;
@@ -338,7 +343,11 @@ static void R_DrawPlanes2(void)
             }
         }
 #endif
+#ifdef FLATDRAW2X
+        lpl.height = (unsigned)D_abs(pl->height) >> 1;
+#else
         lpl.height = (unsigned)D_abs(pl->height);
+#endif
 
         if (vd.fixedcolormap)
         {
