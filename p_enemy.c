@@ -683,8 +683,8 @@ void A_BossScream(mobj_t *actor, int16_t var1, int16_t var2)
 void P_DoBossVictory(mobj_t *mo)
 {
 	// Trigger the egg capsule (if it exists)
-
-
+	if (gamemapinfo.afterBossMusic)
+		S_StartSong(gamemapinfo.afterBossMusic, 1, gamemapinfo.mapNumber);
 }
 
 //

@@ -37,6 +37,7 @@ typedef struct
 	VINT lumpNum;
 	VINT mapNumber;
 	VINT musicLump;
+	VINT afterBossMusic;
 	char lumpName[9];
 	void *data;
 } dmapinfo_t;
