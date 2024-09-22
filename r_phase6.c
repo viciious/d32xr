@@ -273,17 +273,22 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
             segcolmask[x] = texturelight | (colnum & 0xff);
 
 #ifdef MARS
+#ifdef WALLDRAW2X
+        __asm volatile (
+            "mov #-128, r0\n\t"
+            "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
+            "mov.l @(20, r0), %0 /* get 32-bit quotient */ \n\t"
+            "shar %0\n\t"
+            : "=r" (iscale) : : "r0");
+#else
         __asm volatile (
             "mov #-128, r0\n\t"
             "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
             "mov.l @(20, r0), %0 /* get 32-bit quotient */ \n\t"
             : "=r" (iscale) : : "r0");
+#endif
 #else
         iscale = 0xffffffffu / scale;
-#endif
-
-#ifdef WALLDRAW2X
-    iscale >>= 1;
 #endif
 
 #if MIPLEVELS > 1
