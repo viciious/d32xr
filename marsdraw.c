@@ -707,23 +707,22 @@ void DrawScrollingChevrons(short chev_lump, int x, int y_shift)
 */
 void DrawTiledLetterbox2(int flat)
 {
-	int			yt;
-	const int	w = 64, top_h = 21, bottom_h = 21;
-	const int	hw = w / 2;
-	const int xtiles = (320 + w - 1) / w;
-	pixel_t* bdest;
-	const pixel_t* bsrc;
-
 	if (debugmode == DEBUGMODE_NODRAW)
 		return;
 	if (flat <= 0)
 		return;
 
+	int			yt;
+	const int	w = CalcFlatSize(W_LumpLength(flat)), top_h = 21, bottom_h = 21;
+	const int	hw = w / 2;
+	const int xtiles = (320 + w - 1) / w;
+	pixel_t* bdest;
+	const pixel_t* bsrc;
 
 	// Draw the top letterbox.
 	bsrc = (const pixel_t*)W_POINTLUMPNUM(flat);
 	bdest = I_FrameBuffer();
-	const pixel_t* source = bsrc + ((64-21)*hw);
+	const pixel_t* source = bsrc + ((w-21)*hw);
 	const short two_black_pixels = (COLOR_BLACK<<8)|COLOR_BLACK;
 
 	for (yt = 0; yt < top_h; yt++)
@@ -743,7 +742,7 @@ void DrawTiledLetterbox2(int flat)
 
 	// Draw the bottom letterbox.
 	bdest += ((320*180)/2);
-	source -= (64*hw);
+	source -= (w*hw);
 	
 	for (int xt = 0; xt < 320/2; xt++)
 		*bdest++ = two_black_pixels;

@@ -121,7 +121,8 @@ static void R_UpdateCache(void)
       if (id >= numtextures) {
         flattex_t *flat = &flatpixels[id - numtextures];
         data = (void **)flat->data;
-        w = h = 64;
+        w = flat->size;
+        h = flat->size;
       } else {
         texture_t* tex = &textures[id];
         data = (void **)tex->data;
