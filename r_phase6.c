@@ -159,14 +159,21 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
     const fixed_t scalestep = segl->scalestep;
 
     const unsigned centerangle = segl->centerangle;
+#ifdef WALLDRAW2X
+    unsigned offset = segl->offset >> 1;
+    fixed_t distance = segl->distance >> 1;
+#else
     unsigned offset = segl->offset;
     fixed_t distance = segl->distance;
+#endif
 
     const int ceilingheight = segl->ceilingheight;
 
     int texturelight = lseg->lightmax;
+#ifndef SIMPLELIGHT
     int lightmax = lseg->lightmax, lightmin = lseg->lightmin,
         lightcoef = lseg->lightcoef, lightsub = lseg->lightsub;
+#endif
 
     const int start = segl->start;
     const int stop = segl->stop;
@@ -242,6 +249,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
         //
         // texture only stuff
         //
+#ifndef SIMPLELIGHT
         if (lightcoef != 0)
         {
             // calc light level
@@ -253,6 +261,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
             // convert to a hardware value
             texturelight = HWLIGHT((unsigned)texturelight>>FRACBITS);
         }
+#endif
 
         // calculate texture offset
         r = finetangent((centerangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOFINESHIFT);
@@ -264,11 +273,20 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
             segcolmask[x] = texturelight | (colnum & 0xff);
 
 #ifdef MARS
+#ifdef WALLDRAW2X
+        __asm volatile (
+            "mov #-128, r0\n\t"
+            "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
+            "mov.l @(20, r0), %0 /* get 32-bit quotient */ \n\t"
+            "shar %0\n\t"
+            : "=r" (iscale) : : "r0");
+#else
         __asm volatile (
             "mov #-128, r0\n\t"
             "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
             "mov.l @(20, r0), %0 /* get 32-bit quotient */ \n\t"
             : "=r" (iscale) : : "r0");
+#endif
 #else
         iscale = 0xffffffffu / scale;
 #endif
@@ -424,6 +442,16 @@ void R_SegCommands(void)
         lseg.maxmip = 0;
 #endif
 
+#ifdef SIMPLELIGHT
+        lseg.lightcoef = 0;
+        if (vd.fixedcolormap)
+            lseg.lightmin = lseg.lightmax = vd.fixedcolormap;
+        else
+        {
+            seglight = (segl->seglightlevel + extralight) & 0xff;
+            lseg.lightmin = lseg.lightmax = HWLIGHT((unsigned)seglight);
+        }
+#else
         if (vd.fixedcolormap)
         {
             lseg.lightmin = lseg.lightmax = vd.fixedcolormap;
@@ -471,6 +499,7 @@ void R_SegCommands(void)
                 lseg.lightmin = lseg.lightmax = HWLIGHT((unsigned)lseg.lightmax);
             }
         }
+#endif
 
         if (actionbits & AC_TOPTEXTURE)
         {
