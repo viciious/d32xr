@@ -356,11 +356,15 @@ static void R_DrawPlanes2(void)
         }
         else
         {
+#ifdef SIMPLELIGHT
             light = ((unsigned)pl->flatandlight>>16);
-            lpl.lightmax = light;
-            lpl.lightmax += extralight;
-            if (lpl.lightmax > 255)
-                lpl.lightmax = 255;
+//            light = light - ((255 - light - light/2) << 1);
+            lpl.lightmin = lpl.lightmax = HWLIGHT((unsigned)((light + extralight) & 0xff));
+            lpl.lightsub = 0;
+            lpl.lightcoef = 0;
+#else
+            light = ((unsigned)pl->flatandlight>>16);
+            lpl.lightmax = (light + extralight) & 0xff;
 
 #ifdef MARS
             light = light - ((255 - light - light/2) << 1);
@@ -391,6 +395,7 @@ static void R_DrawPlanes2(void)
                 lpl.lightcoef = 0;
                 lpl.lightmin = lpl.lightmax = HWLIGHT((unsigned)lpl.lightmax);
             }
+#endif
         }
 
         R_PlaneLoop(&lpl);

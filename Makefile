@@ -20,6 +20,7 @@ CCFLAGS += -D__32X__ -DMARS
 #CCFLAGS += -DHIGH_DETAIL_SPRITES
 CCFLAGS += -DFLATDRAW2X
 CCFLAGS += -DWALLDRAW2X
+CCFLAGS += -DSIMPLELIGHT
 LDFLAGS = -T mars-ssf.ld -Wl,-Map=output.map -nostdlib -Wl,--gc-sections --specs=nosys.specs
 ASFLAGS = --big
 

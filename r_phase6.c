@@ -170,8 +170,10 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
     const int ceilingheight = segl->ceilingheight;
 
     int texturelight = lseg->lightmax;
+#ifndef SIMPLELIGHT
     int lightmax = lseg->lightmax, lightmin = lseg->lightmin,
         lightcoef = lseg->lightcoef, lightsub = lseg->lightsub;
+#endif
 
     const int start = segl->start;
     const int stop = segl->stop;
@@ -247,6 +249,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
         //
         // texture only stuff
         //
+#ifndef SIMPLELIGHT
         if (lightcoef != 0)
         {
             // calc light level
@@ -258,6 +261,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
             // convert to a hardware value
             texturelight = HWLIGHT((unsigned)texturelight>>FRACBITS);
         }
+#endif
 
         // calculate texture offset
         r = finetangent((centerangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOFINESHIFT);
@@ -433,6 +437,16 @@ void R_SegCommands(void)
         lseg.maxmip = 0;
 #endif
 
+#ifdef SIMPLELIGHT
+        lseg.lightcoef = 0;
+        if (vd.fixedcolormap)
+            lseg.lightmin = lseg.lightmax = vd.fixedcolormap;
+        else
+        {
+            seglight = (segl->seglightlevel + extralight) & 0xff;
+            lseg.lightmin = lseg.lightmax = HWLIGHT((unsigned)seglight);
+        }
+#else
         if (vd.fixedcolormap)
         {
             lseg.lightmin = lseg.lightmax = vd.fixedcolormap;
@@ -480,6 +494,7 @@ void R_SegCommands(void)
                 lseg.lightmin = lseg.lightmax = HWLIGHT((unsigned)lseg.lightmax);
             }
         }
+#endif
 
         if (actionbits & AC_TOPTEXTURE)
         {
