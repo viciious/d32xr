@@ -410,8 +410,16 @@ void R_SetupTextureCaches(void)
 
 	for (i=0 ; i<numflats ; i++)
 	{
-		int size = 64;
+		int size;
 		uint8_t *data = R_CheckPixels(firstflat + i);
+		int length = W_LumpLength(firstflat + i);
+
+		if (length == 4096)
+			size = 64;
+		else if (length == 1024)
+			size = 32;
+		else if (length == 256)
+			size = 16;
 
 		for (j = 0; j < MIPLEVELS; j++)
 		{
@@ -419,6 +427,9 @@ void R_SetupTextureCaches(void)
 			if (texmips) {
 				data += size * size;
 				size >>= 1;
+
+				if (size < 1)
+					size = 1;
 			}
 		}
 	}

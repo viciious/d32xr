@@ -35,6 +35,19 @@ static void *R_CheckPixels(int lumpnum)
    return lumpdata;
 }
 
+static VINT CalcFlatSize(int lumplength)
+{
+    switch(lumplength)
+    {
+        case 256:
+            return 16;
+        case 1024:
+            return 32;
+        default:
+            return 64;
+    }
+}
+
 //
 // Late prep for viswalls
 //
@@ -63,7 +76,10 @@ static void R_FinishWall(viswall_t* wc)
     uint8_t ceilingpicnum = wc->ceilingpicnum;
 
     if (flatpixels[floorpicnum] == NULL)
-        flatpixels[floorpicnum] = R_CheckPixels(firstflat + floorpicnum);
+    {
+        flatpixels[floorpicnum].data = R_CheckPixels(firstflat + floorpicnum);
+        flatpixels[floorpicnum].size = CalcFlatSize(W_LumpLength(firstflat + floorpicnum));
+    }
 
     // is there sky at this wall?
     if (ceilingpicnum == -1)
@@ -75,7 +91,10 @@ static void R_FinishWall(viswall_t* wc)
     {
         // normal ceilingpic
         if (flatpixels[ceilingpicnum] == NULL)
-            flatpixels[ceilingpicnum] = R_CheckPixels(firstflat + ceilingpicnum);
+        {
+            flatpixels[ceilingpicnum].data = R_CheckPixels(firstflat + ceilingpicnum);
+            flatpixels[ceilingpicnum].size = CalcFlatSize(W_LumpLength(firstflat + ceilingpicnum));
+        }
     }
 }
 #endif
