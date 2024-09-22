@@ -419,13 +419,45 @@ static void S_SpatializeAll(void)
 /*
 ==================
 =
+= S_StartSoundAtVolume
+=
+==================
+*/
+static void S_StartSoundAtVolume(mobj_t *mobj, int sound_id, getsoundpos_t getpos, int volume)
+{
+	uint16_t* p = (uint16_t*)Mars_RB_GetWriteBuf(&soundcmds, 8, false);
+	if (!p)
+		return;
+
+	if (getpos)
+	{
+		*p++ = SNDCMD_STARTORGSND;
+		*p++ = sound_id;
+		*(int*)p = (intptr_t)mobj, p += 2;
+		*(int*)p = (intptr_t)getpos, p += 2;
+		*p++ = volume;
+	}
+	else
+	{
+		*p++ = SNDCMD_STARTSND;
+		*p++ = sound_id;
+		*(int*)p = (intptr_t)mobj, p += 2;
+		*p++ = volume;
+	}
+
+	Mars_RB_CommitWrite(&soundcmds);
+}
+
+/*
+==================
+=
 = S_StartSoundEx
 =
 ==================
 */
 static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 {
-	int vol, sep;
+	int volume, sep;
 	sfxinfo_t *sfx;
 
 	/* Get sound effect data pointer */
@@ -439,8 +471,8 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 	/* */
 	/* spatialize */
 	/* */
-	S_Spatialize(mobj, &vol, &sep, getpos);
-	if (!vol)
+	S_Spatialize(mobj, &volume, &sep, getpos);
+	if (!volume)
 		return; /* too far away */
 
 	/*if (S_USE_MEGACD_DRV())
@@ -457,32 +489,12 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 		return;
 	}*/
 
-	uint16_t* p = (uint16_t*)Mars_RB_GetWriteBuf(&soundcmds, 8, false);
-	if (!p)
-		return;
-
-	if (getpos)
-	{
-		*p++ = SNDCMD_STARTORGSND;
-		*p++ = sound_id;
-		*(int*)p = (intptr_t)mobj, p += 2;
-		*(int*)p = (intptr_t)getpos, p += 2;
-		*p++ = vol;
-	}
-	else
-	{
-		*p++ = SNDCMD_STARTSND;
-		*p++ = sound_id;
-		*(int*)p = (intptr_t)mobj, p += 2;
-		*p++ = vol;
-	}
-
-	Mars_RB_CommitWrite(&soundcmds);
+	S_StartSoundAtVolume(mobj, sound_id, getpos, volume);
 }
 
-void S_StartDrumId(int drum_id)
+void S_StartDrumId(int drum_id, int volume)
 {
-	S_StartSoundEx(NULL, drumsfxmap[drum_id], NULL);
+	S_StartSoundAtVolume(NULL, drumsfxmap[drum_id], NULL, volume);
 }
 
 void S_StartSoundId(int sound_id)

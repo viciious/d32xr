@@ -661,6 +661,7 @@ pri_cmd_irq:
 
         mov.l   S_StartDrumId,r1
         mov     r0,r4                   /* pass in the drum ID */
+        mov     #64,r5                   /* pass in the volume */
         jsr     @r1                     /* call S_StartDrumId() */
         nop
 
