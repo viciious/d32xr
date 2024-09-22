@@ -11,7 +11,6 @@
 
 #define LIGHTCOEF (0x7ffffu << SLOPEBITS)
 #define MIPSCALE (1<<24)
-#define FLATSIZE 64
 
 struct localplane_s;
 
@@ -91,6 +90,8 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     xstep = FixedMul(distance, lpl->basexscale);
     ystep = FixedMul(distance, lpl->baseyscale);
 
+    const int flatnum = lpl->pl->flatandlight&0xffff;
+
 #if MIPLEVELS > 1
     miplevel = (unsigned)distance / MIPSCALE;
     if (miplevel > lpl->maxmip)
@@ -98,7 +99,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     mipsize = lpl->mipsize[miplevel];
 #else
     miplevel = 0;
-    mipsize = FLATSIZE;
+    mipsize = flatpixels[flatnum].size;
 #endif
 
     angle = (lpl->angle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOFINESHIFT;
@@ -108,7 +109,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     yfrac = FixedMul(finesine(angle), length);
     yfrac = lpl->y - yfrac;
 #ifdef MARS
-    yfrac *= FLATSIZE;
+    yfrac *= flatpixels[flatnum].size;
 #endif
 
     if (miplevel > 0) {
@@ -300,14 +301,13 @@ static void R_DrawPlanes2(void)
     lpl.basexscale = FixedDiv(finecosine(angle), centerXFrac);
     lpl.baseyscale = -FixedDiv(finesine(angle), centerXFrac);
 #ifdef MARS
-    lpl.baseyscale *= FLATSIZE;
+    fixed_t baseyscale = lpl.baseyscale;
 #endif
     extralight = vd.extralight;
 
     while ((pl = R_GetNextPlane((uint16_t *)vd.gsortedvisplanes)) != NULL)
     {
         int light;
-        int flatnum;
 
 #ifdef MARS
         Mars_ClearCacheLines(pl, (sizeof(visplane_t) + 31) / 16);
@@ -316,7 +316,11 @@ static void R_DrawPlanes2(void)
         if (pl->minx > pl->maxx)
             continue;
 
-        flatnum = pl->flatandlight&0xffff;
+        const int flatnum = pl->flatandlight&0xffff;
+
+#ifdef MARS
+        lpl.baseyscale = baseyscale * flatpixels[flatnum].size;
+#endif
 
         if (lowResMode) {
             I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
@@ -329,12 +333,12 @@ static void R_DrawPlanes2(void)
         lpl.ds_source[0] = flatpixels[flatnum].data[0];
 
 #if MIPLEVELS > 1
-        lpl.mipsize[0] = FLATSIZE;
+        lpl.mipsize[0] = flatpixels[flatnum].size;
         lpl.maxmip = texmips ? MIPLEVELS-1 : 0;
         if (lpl.maxmip > 0)
         {
             int j;
-            int mipsize = FLATSIZE>>1;
+            int mipsize = flatpixels[flatnum].size>>1;
             for (j = 1; j <= (int)lpl.maxmip; j++)
             {
                 lpl.ds_source[j] = flatpixels[flatnum].data[j];

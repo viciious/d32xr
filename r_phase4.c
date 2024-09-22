@@ -35,19 +35,6 @@ static void *R_CheckPixels(int lumpnum)
    return lumpdata;
 }
 
-static VINT CalcFlatSize(int lumplength)
-{
-    switch(lumplength)
-    {
-        case 256:
-            return 16;
-        case 1024:
-            return 32;
-        default:
-            return 64;
-    }
-}
-
 //
 // Late prep for viswalls
 //

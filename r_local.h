@@ -382,6 +382,7 @@ extern 	texdecal_t  *decals;
 extern	uint8_t			*flattranslation;		/* for global animation */
 extern	uint8_t			*texturetranslation;	/* for global animation */
 extern	flattex_t		*flatpixels;
+VINT CalcFlatSize(int lumplength);
 
 extern	VINT		firstflat, numflats;
 

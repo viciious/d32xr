@@ -363,6 +363,19 @@ D_printf ("Done\n");
 	testtex = &textures[R_TextureNumForName("SLADWALL")];
 }
 
+VINT CalcFlatSize(int lumplength)
+{
+    switch(lumplength)
+    {
+        case 256:
+            return 16;
+        case 1024:
+            return 32;
+        default:
+            return 64;
+    }
+}
+
 /*
 ==============
 =
@@ -410,20 +423,14 @@ void R_SetupTextureCaches(void)
 
 	for (i=0 ; i<numflats ; i++)
 	{
-		int size;
 		uint8_t *data = R_CheckPixels(firstflat + i);
-		int length = W_LumpLength(firstflat + i);
-
-		if (length == 4096)
-			size = 64;
-		else if (length == 1024)
-			size = 32;
-		else if (length == 256)
-			size = 16;
+		const int length = W_LumpLength(firstflat + i);
+		int size = CalcFlatSize(length);
 
 		for (j = 0; j < MIPLEVELS; j++)
 		{
 			flatpixels[i].data[j] = data;
+			flatpixels[i].size = size;
 			if (texmips) {
 				data += size * size;
 				size >>= 1;
