@@ -64,7 +64,11 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
       int light          = maskedcol[x] & OPENMARK;
       int colnum         = maskedcol[x] & widthmask;
 
+#ifdef WALLDRAW2X
+      spryscale = scalefrac << 1;
+#else
       spryscale = scalefrac;
+#endif
       scalefrac += fracstep;  
 
       if (light == OPENMARK)
@@ -102,6 +106,10 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
          : "=r" (iscale) : : "r0");
 #else
       iscale = 0xffffffffu / scalefrac;
+#endif
+
+#ifdef WALLDRAW2X
+    iscale >>= 1;
 #endif
 
       // column loop

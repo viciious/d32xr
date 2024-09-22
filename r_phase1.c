@@ -283,11 +283,19 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
 
             // handle unpegging (bottom of texture at bottom, or top of texture at top)
             if(liflags & ML_DONTPEGBOTTOM)
+#ifdef WALLDRAW2X
+               t_texturemid = f_floorheight + (textures[UPPER8(segl->tb_texturenum)].height << (FRACBITS+1));
+#else
                t_texturemid = f_floorheight + (textures[UPPER8(segl->tb_texturenum)].height << FRACBITS);
+#endif
             else
                t_texturemid = f_ceilingheight;
 
             t_texturemid += rowoffset<<FRACBITS;                               // add in sidedef texture offset
+
+#ifdef WALLDRAW2X
+            t_texturemid >>= 1;
+#endif
             segl->t_bottomheight = f_floorheight; // set bottom height
             actionbits |= (AC_SOLIDSIL|AC_TOPTEXTURE);                   // solid line; draw middle texture only
          }
@@ -304,7 +312,11 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
                   m_texturemid = f_floorheight;
                else
                   m_texturemid = b_floorheight;
+#ifdef WALLDRAW2X
+               m_texturemid += (textures[segl->m_texturenum].height << (FRACBITS+1));
+#else
                m_texturemid += (textures[segl->m_texturenum].height << FRACBITS);
+#endif
             }
             else
             {
@@ -314,6 +326,9 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
                   m_texturemid = b_ceilingheight;
             }
             m_texturemid += rowoffset<<FRACBITS; // add in sidedef texture offset
+#ifdef WALLDRAW2X
+            m_texturemid >>= 1;
+#endif
             actionbits |= AC_MIDTEXTURE; // set bottom and top masks
          }
 
@@ -329,6 +344,9 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
                   b_texturemid = b_floorheight;
 
                b_texturemid += rowoffset<<FRACBITS; // add in sidedef texture offset
+#ifdef WALLDRAW2X
+               b_texturemid >>= 1;
+#endif
 
                segl->b_topheight = *floornewheight = b_floorheight;
                segl->b_bottomheight = f_floorheight;
@@ -345,9 +363,17 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
                if(liflags & ML_DONTPEGTOP)
                   t_texturemid = f_ceilingheight;
                else
+#ifdef WALLDRAW2X
+                  t_texturemid = b_ceilingheight + (textures[UPPER8(segl->tb_texturenum)].height << (FRACBITS+1));
+#else
                   t_texturemid = b_ceilingheight + (textures[UPPER8(segl->tb_texturenum)].height << FRACBITS);
+#endif
 
                t_texturemid += rowoffset<<FRACBITS; // add in sidedef texture offset
+
+#ifdef WALLDRAW2X
+               t_texturemid >>= 1;
+#endif
 
                segl->t_bottomheight = *ceilingnewheight = b_ceilingheight;
                actionbits |= (AC_NEWCEILING|AC_TOPTEXTURE); // draw top texture and ceiling

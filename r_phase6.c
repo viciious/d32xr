@@ -159,8 +159,13 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
     const fixed_t scalestep = segl->scalestep;
 
     const unsigned centerangle = segl->centerangle;
+#ifdef WALLDRAW2X
+    unsigned offset = segl->offset >> 1;
+    fixed_t distance = segl->distance >> 1;
+#else
     unsigned offset = segl->offset;
     fixed_t distance = segl->distance;
+#endif
 
     const int ceilingheight = segl->ceilingheight;
 
@@ -271,6 +276,10 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
             : "=r" (iscale) : : "r0");
 #else
         iscale = 0xffffffffu / scale;
+#endif
+
+#ifdef WALLDRAW2X
+    iscale >>= 1;
 #endif
 
 #if MIPLEVELS > 1
