@@ -2433,7 +2433,7 @@ play_drum_sound:
         move.w  STRM_DRUMV.w,d1     /* move both volume and panning to D1 */
         move.b  #1,0xA1512C         /* queue sound playback on COMM12 */
         move.b  d0,0xA1512D         /* pass drum sample ID to COMM13 */
-        move.w  d1,0xA1512F         /* pass drum sample volume and panning to COMM14 and COMM15 */
+        move.w  d1,0xA1512E         /* pass drum sample volume and panning to COMM14 and COMM15 */
         move.b  #1,0xA15103         /* call CMD interrupt on master SH-2 */
 193:
         cmpi.b  #0,0xA1512C
