@@ -110,6 +110,7 @@ extern VINT numscenerymobjs;
 
 extern	int			activethinkers;	/* debug count */
 extern	int			activemobjs;	/* debug count */
+extern  int         thingmem; // bytes in use for things (at spawn)
 
 extern VINT ringmobjstates[NUMMOBJTYPES];
 extern VINT ringmobjtics[NUMMOBJTYPES];

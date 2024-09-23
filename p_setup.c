@@ -567,29 +567,6 @@ void P_GroupLines (void)
 
 /*============================================================================= */
 
-
-/*
-=================
-=
-= P_LoadingPlaque
-=
-=================
-*/
-
-void P_LoadingPlaque (void)
-{
-#ifndef MARS
-	jagobj_t	*pl;
-
-	pl = W_CacheLumpName ("loading", PU_STATIC);	
-	DrawPlaque (pl);
-	Z_Free (pl);
-#endif
-}	
-
-/*============================================================================= */
-
-
 /*
 =================
 =
@@ -606,8 +583,6 @@ void P_SetupLevel (int lumpnum)
 	extern	int	cy;
 	
 	M_ClearRandom ();
-
-	P_LoadingPlaque ();
 
 	leveltime = 0;
 	

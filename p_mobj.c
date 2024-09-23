@@ -333,7 +333,7 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 	return mobj;
 }
 
-
+int thingmem = 0;
 /*
 ================
 =
@@ -343,6 +343,8 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 */
 void P_PreSpawnMobjs(int count, int staticcount, int ringcount, int scenerycount)
 {
+	thingmem = count * sizeof(mobj_t) + staticcount * static_mobj_size + ringcount * ring_mobj_size + scenerycount * sizeof(scenerymobj_t);
+
 	if (scenerycount > 0)
 	{
 		scenerymobjlist = Z_Malloc(sizeof(scenerymobj_t)*scenerycount, PU_LEVEL);

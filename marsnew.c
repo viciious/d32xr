@@ -29,6 +29,7 @@
 #include "doomdef.h"
 #include "mars.h"
 #include "r_local.h"
+#include "p_local.h"
 #include "wadbase.h"
 
 #define LINK_TIMEOUT_SHORT 		0x3FF
@@ -705,7 +706,7 @@ void I_DebugScreen(void)
 	int i;
 	int x = 200;
 	int line = 5;
-	static char buf[10][16];
+	static char buf[16][16];
 
 	if (debugmode == DEBUGMODE_FPSCOUNT)
 	{
@@ -746,12 +747,18 @@ void I_DebugScreen(void)
 			D_snprintf(buf[7], sizeof(buf[0]), "r:%2d", Mars_FRTCounter2Msec(t_ref_total_avg));
 			D_snprintf(buf[8], sizeof(buf[0]), "d:%2d", Mars_FRTCounter2Msec(drawtics));
 			D_snprintf(buf[9], sizeof(buf[0]), "t:%2d", Mars_FRTCounter2Msec(I_GetFRTCounter() - ticstart));
+			D_snprintf(buf[10], sizeof(buf[0]), "mt:%2d", thingmem);
+			D_snprintf(buf[11], sizeof(buf[0]), "ml:%2d", numlines * sizeof(line_t));
+			D_snprintf(buf[12], sizeof(buf[0]), "msd:%2d", numsides * sizeof(side_t));
+			D_snprintf(buf[13], sizeof(buf[0]), "mss:%2d", numsubsectors *sizeof(subsector_t));
+			D_snprintf(buf[14], sizeof(buf[0]), "ms:%2d", numsectors *sizeof(sector_t));
+
 		}
 
         I_Print8(x, line++, buf[0]);
         I_Print8(x, line++, buf[1]);
         line++;
-		for (i = 2; i < 10; i++)
+		for (i = 2; i < 15; i++)
 	        I_Print8(x, line++, buf[i]);
 	}
 
