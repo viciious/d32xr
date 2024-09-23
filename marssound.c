@@ -55,7 +55,8 @@ enum
 	SNDCMD_NONE,
 	SNDCMD_CLEAR,
 	SNDCMD_STARTSND,
-	SNDCMD_STARTORGSND
+	SNDCMD_STARTORGSND,
+	SNDCMD_STARTPANSND
 };
 
 extern const unsigned char drumsfxmap[];
@@ -86,7 +87,7 @@ static marsrb_t	soundcmds = { 0 };
 
 VINT 			sfxdriver = sfxdriver_auto, mcd_avail = 0; // 0 - auto, 2 - megacd, 2 - 32x
 
-static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol, getsoundpos_t getpos);
+static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol, getsoundpos_t getpos, unsigned pan);
 static void S_SetChannelData(sfxchannel_t* channel);
 int S_PaintChannel4IMA(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
 int S_PaintChannel4IMA2x(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
@@ -423,7 +424,7 @@ static void S_SpatializeAll(void)
 =
 ==================
 */
-static void S_StartSoundAtVolume(mobj_t *mobj, int sound_id, getsoundpos_t getpos, int volume)
+static void S_StartSoundAtVolume(mobj_t *mobj, int sound_id, getsoundpos_t getpos, int volume, int pan)
 {
 	uint16_t* p = (uint16_t*)Mars_RB_GetWriteBuf(&soundcmds, 8, false);
 	if (!p)
@@ -437,12 +438,19 @@ static void S_StartSoundAtVolume(mobj_t *mobj, int sound_id, getsoundpos_t getpo
 		*(int*)p = (intptr_t)getpos, p += 2;
 		*p++ = volume;
 	}
-	else
+	else if (mobj != NULL)
 	{
 		*p++ = SNDCMD_STARTSND;
 		*p++ = sound_id;
 		*(int*)p = (intptr_t)mobj, p += 2;
 		*p++ = volume;
+	}
+	else
+	{
+		*p++ = SNDCMD_STARTPANSND;
+		*p++ = sound_id;
+		*p++ = volume;
+		*p++ = pan;
 	}
 
 	Mars_RB_CommitWrite(&soundcmds);
@@ -489,12 +497,12 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 		return;
 	}*/
 
-	S_StartSoundAtVolume(mobj, sound_id, getpos, volume);
+	S_StartSoundAtVolume(mobj, sound_id, getpos, volume, sep);
 }
 
-void S_StartDrumId(int drum_id, int volume)
+void S_StartDrumId(int drum_id, int volume, int pan)
 {
-	S_StartSoundAtVolume(NULL, drumsfxmap[drum_id], NULL, volume);
+	S_StartSoundAtVolume(NULL, drumsfxmap[drum_id], NULL, volume, pan);
 }
 
 void S_StartSoundId(int sound_id)
@@ -973,7 +981,7 @@ static void S_Sec_DMA1Handler(void)
 =
 ==================
 */
-static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol, getsoundpos_t getpos)
+static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol, getsoundpos_t getpos, unsigned pan)
 {
 	sfxchannel_t* channel, * newchannel;
 	int i;
@@ -1048,7 +1056,15 @@ gotchannel:
 
 	// volume and panning will be updated later in S_Spatialize
 	newchannel->volume = vol;
-	newchannel->pan = 128;
+
+	if (mobj != NULL)
+	{
+		newchannel->pan = 128;
+	}
+	else
+	{
+		newchannel->pan = pan;
+	}
 
 	return newchannel;
 }
@@ -1145,10 +1161,13 @@ void Mars_Sec_ReadSoundCmds(void)
 			S_ClearPCM();
 			break;
 		case SNDCMD_STARTSND:
-			ch = S_AllocateChannel((void*)(*(intptr_t*)&p[2]), p[1], p[4], NULL);
+			ch = S_AllocateChannel((void*)(*(intptr_t*)&p[2]), p[1], p[4], NULL, NULL);
 			break;
 		case SNDCMD_STARTORGSND:
-			ch = S_AllocateChannel((void*)(*(intptr_t*)&p[2]), p[1], p[6], (getsoundpos_t)(*(intptr_t*)&p[4]));
+			ch = S_AllocateChannel((void*)(*(intptr_t*)&p[2]), p[1], p[6], (getsoundpos_t)(*(intptr_t*)&p[4]), NULL);
+			break;
+		case SNDCMD_STARTPANSND:
+			ch = S_AllocateChannel(NULL, p[1], p[2], NULL, p[3]);
 			break;
 		}
 
