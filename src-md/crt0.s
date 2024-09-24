@@ -22,7 +22,7 @@
         .equ CRITICAL,  0x4F        /* Z80 critical section flag */
 
         .equ REQ_ATTR,   0xFFEE
-        .equ REQ_ACT,    0xFFEF      /* Request 68000 Action */
+        .equ REQ_ACT,    0xFFEF     /* Request 68000 Action */
         .equ STRM_KON,   0xFFF0
         .equ STRM_ID,    0xFFF1
         .equ STRM_CHIP,  0xFFF2
@@ -40,9 +40,9 @@
         .equ STRM_LENLH, 0xFFFE
         .equ STRM_LENLL, 0xFFFF
 
-        .equ STRM_FLAGS, 0xFFF9
-        .equ STRM_BLCKH, 0xFFFA
-        .equ STRM_BLCKL, 0xFFFB
+        .equ STRM_DRUMI, 0xFFF9     /* Drum sample ID */
+        .equ STRM_DRUMV, 0xFFFA     /* Drum sample volume */
+        .equ STRM_DRUMP, 0xFFFB     /* Drum sample panning */
 
         .macro  z80rd adr, dst
         move.b  0xA00000+\adr,\dst
@@ -2421,8 +2421,8 @@ bump_fm:
 play_drum_sound:
 11:
         /* check for space in Z80 sram buffer */
-        move.b  STRM_BLCKL.w,d0
-        move.w  #0,STRM_BLCKH.w
+        move.b  STRM_DRUMI.w,d0
+        move.b  #0,STRM_DRUMI.w
 19:
         cmpi.   #0,d0
         beq.s   20f
@@ -2430,8 +2430,10 @@ play_drum_sound:
         cmpi.b  #0,0xA1512C
         bne.s   191b                 /* wait for CMD interrupt to finish */
 192:
+        move.w  STRM_DRUMV.w,d1     /* move both volume and panning to D1 */
         move.b  #1,0xA1512C         /* queue sound playback on COMM12 */
-        move.b  d0,0xA1512F         /* pass sound ID to COMM15 */
+        move.b  d0,0xA1512D         /* pass drum sample ID to COMM13 */
+        move.w  d1,0xA1512E         /* pass drum sample volume and panning to COMM14 and COMM15 */
         move.b  #1,0xA15103         /* call CMD interrupt on master SH-2 */
 193:
         cmpi.b  #0,0xA1512C

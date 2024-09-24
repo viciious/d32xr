@@ -71,6 +71,10 @@ STRM_LENHL  EQU $FFFD
 STRM_LENLH  EQU $FFFE
 STRM_LENLL  EQU $FFFF
 
+STRM_DRUMI  EQU $FFF9
+STRM_DRUMV  EQU $FFFA
+STRM_DRUMP  EQU $FFFB
+
 ; ########################### Code starts here ##############################
 
 ;   ORG $0000
@@ -650,11 +654,11 @@ strm_fast
     LD      (IX+FM_RQPND),A     ; request pending
 
     POP     AF
-    LD      (STRM_OFFHL),A      ; flags
+    LD      (STRM_DRUMP),A      ; flags
     POP     AF
-    LD      (STRM_OFFLH),A      ; block ID high
+    LD      (STRM_DRUMV),A      ; block ID high
     POP     AF
-    LD      (STRM_OFFLL),A      ; block ID low
+    LD      (STRM_DRUMI),A      ; block ID low
     POP     AF
     LD      (STRM_ID),A         ; stream ID
 

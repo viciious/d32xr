@@ -638,13 +638,13 @@ pri_cmd_irq:
         mov.l   pci_cmd_comm0,r1
         mov.b   @(12,r1),r0
         cmp/eq  #0,r0
-        bt      70f
+        bt      70f                     /* if we're not playing a drum sample, branch. */
 
         ! handle wait in sdram
         mov.l   pci_cmd_comm0,r1
 
         ! read sound queue
-        mov.b   @(15,r1),r0             /* high priority sound queue COMM15 */
+        mov.b   @(13,r1),r0             /* high priority sound queue COMM13 */
         mov     #0,r2
         cmp/eq  r0,r2
         bt      70f                     /* branch if no sound is in the queue */
@@ -659,8 +659,12 @@ pri_cmd_irq:
         sts.l   mach,@-r15
         sts.l   macl,@-r15
 
+        mov     r0,r4                   /* pass in the drum sample ID */
+        mov.b   @(14,r1),r0
+        mov     r0,r5                   /* pass in the drum sample volume from COMM14 */
+        mov.b   @(15,r1),r0
+        mov     r0,r6                   /* pass in the drum sample panning from COMM15 */
         mov.l   S_StartDrumId,r1
-        mov     r0,r4                   /* pass in the drum ID */
         jsr     @r1                     /* call S_StartDrumId() */
         nop
 
@@ -687,8 +691,8 @@ pri_cmd_irq:
         bt      77f
         mov     #0,r0                   /* remove COMM12 value */
         mov.b   r0,@(12,r1)
-        mov     #0,r0                   /* remove COMM15 value */
-        mov.b   r0,@(15,r1)
+        mov     #0,r0                   /* remove COMM13 value */
+        mov.b   r0,@(13,r1)
 77:
         rts
         nop
@@ -734,8 +738,8 @@ pri_cmd_irq:
         bt      88f
         mov     #0,r0                   /* remove COMM12 value */
         mov.b   r0,@(12,r1)
-        mov     #0,r0                   /* remove COMM15 value */
-        mov.b   r0,@(15,r1)
+        mov     #0,r0                   /* remove COMM13 value */
+        mov.b   r0,@(13,r1)
 88:
         rts
         nop
@@ -793,8 +797,8 @@ pri_cmd_irq:
         bt      99f
         mov     #0,r0                   /* remove COMM12 value */
         mov.b   r0,@(12,r1)
-        mov     #0,r0                   /* remove COMM15 value */
-        mov.b   r0,@(15,r1)
+        mov     #0,r0                   /* remove COMM13 value */
+        mov.b   r0,@(13,r1)
 99:
         rts
         nop
