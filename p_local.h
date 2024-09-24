@@ -145,6 +145,9 @@ void P_ExplodeMissile (mobj_t *mo);
 int 	P_MapThingSpawnsMobj(mapthing_t* mthing); /* 0 -- skip, 1 -- real thing, 2 -- static */
 void	P_SpawnMapThing(mapthing_t* mthing, int thingid);
 
+fixed_t Mobj_GetHeight(mobj_t *mo);
+fixed_t Mobj_GetHalfHeight(mobj_t *mo);
+
 /*
 ===============================================================================
 

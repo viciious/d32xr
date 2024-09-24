@@ -221,12 +221,12 @@ typedef struct mobj_s
 
 	VINT			tics;				/* state tic counter	 */
 	VINT 			state;
-	VINT			frame;				/* might be ord with FF_FULLBRIGHT */
 	VINT        	theight;			// 'tiny' height: << FRACBITS to get real height
 
-	int8_t			health;
-	unsigned char		player;		/* only valid if type == MT_PLAYER */
+	uint8_t			health;
+	unsigned char	player;		/* only valid if type == MT_PLAYER */
 	VINT            flags2;
+	VINT            unused;
 
 	/* STATIC OBJECTS END HERE */
 	unsigned char	movedir;		/* 0-7 */
@@ -262,7 +262,7 @@ typedef struct degenmobj_s
 } degenmobj_t;
 
 #define static_mobj_size (offsetof(mobj_t,movedir))
-#define ring_mobj_size (offsetof(mobj_t,health))
+#define ring_mobj_size (offsetof(mobj_t,floorz))
 
 /* */
 /* frame flags */

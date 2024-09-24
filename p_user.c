@@ -341,7 +341,6 @@ void P_PlayerMobjThink(mobj_t *mobj)
 
 	mobj->state = state;
 	mobj->tics = st->tics;
-	mobj->frame = st->frame;
 
 	player_t *player = &players[mobj->player - 1];
 
@@ -860,7 +859,10 @@ boolean P_LookForTarget(player_t *player)
 
 	for (node = mobjhead.next; node != (void*)&mobjhead; node = node->next)
     {
-		if (node->player)
+		if (node->flags & MF_RINGMOBJ)
+			continue;
+
+		if (node->type == MT_PLAYER)
 			continue;
 
 		if (node->flags & MF_STATIC)

@@ -92,9 +92,9 @@ static boolean PB_CheckThing(mobj_t *thing, pmovetest_t *mt)
    // missiles can hit other things
    if(mt->testflags & MF_MISSILE)
    {
-      if(mo->z > thing->z + (thing->theight << FRACBITS))
+      if(mo->z > thing->z + Mobj_GetHeight(thing))
          return true; // went over
-      if(mo->z + (mo->theight << FRACBITS) < thing->z)
+      if(mo->z + Mobj_GetHeight(mo) < thing->z)
          return true; // went underneath
       if(mo->target->type == thing->type) // don't hit same species as originator
       {
@@ -318,9 +318,9 @@ static boolean PB_TryMove(pmovetest_t *mt, mobj_t *mo, fixed_t tryx, fixed_t try
 
    if (!(mo->flags & MF_NOCLIP))
    {
-      if(mt->testceilingz - mt->testfloorz < (mo->theight << FRACBITS))
+      if(mt->testceilingz - mt->testfloorz < Mobj_GetHeight(mo))
          return false; // doesn't fit
-      if(mt->testceilingz - mo->z < (mo->theight << FRACBITS))
+      if(mt->testceilingz - mo->z < Mobj_GetHeight(mo))
          return false; // mobj must lower itself to fit
       if(mt->testfloorz - mo->z > 24*FRACUNIT)
          return false; // too big a step up
@@ -329,6 +329,8 @@ static boolean PB_TryMove(pmovetest_t *mt, mobj_t *mo, fixed_t tryx, fixed_t try
    }
 
    // the move is ok, so link the thing into its new position
+   if (mo->flags & MF_RINGMOBJ)
+      I_Error("Hi there");
    P_UnsetThingPosition(mo);
    mo->floorz   = mt->testfloorz;
    mo->ceilingz = mt->testceilingz;
@@ -654,6 +656,8 @@ static boolean P_JetFume1Think(mobj_t *mobj)
 //
 // Perform main thinking logic for a single mobj per tic.
 //
+// Never, EVER call this for MF_RINGMOBJ
+//
 void P_MobjThinker(mobj_t *mobj)
 {
    if (!(mobj->flags & MF_STATIC))
@@ -732,6 +736,9 @@ void P_MobjThinker(mobj_t *mobj)
                   {
                      for (mobj_t *node = mobjhead.next; node != (void*)&mobjhead; node = node->next)
                      {
+                        if (node->flags & MF_RINGMOBJ)
+                           continue;
+                           
                         if (node->target == mobj)
                            node->target = NULL;
                      }
@@ -842,24 +849,25 @@ void P_RunMobjBase2(void)
 
     for (mo = mobjhead.next; mo != (void*)&mobjhead; mo = next)
     {
+        next = mo->next;	// in case mo is removed this time
+
+         if (mo->flags & MF_RINGMOBJ) // rings or scenery (they don't think, they don't uniquely animate)
+            continue;
+
+        if (!mo->player)
+        {
 #ifdef MARS
         // clear cache for mobj flags following the sight check as 
         // the other CPU might have modified the MF_SEETARGET state
         if (mo->tics == 1)
             Mars_ClearCacheLine(&mo->flags);
 #endif
-        next = mo->next;	// in case mo is removed this time
-        if (!mo->player)
-        {
             P_MobjThinker(mo);
 
-            if (!(mo->flags & (MF_RINGMOBJ|MF_STATIC)))
+            if (!(mo->flags & MF_STATIC) && mo->latecall && mo->latecall != (latecall_t)-1)
             {
-               if (mo->latecall && mo->latecall != (latecall_t)-1)
-               {
-                     mo->latecall(mo);
-                     mo->latecall = NULL;
-               }
+                  mo->latecall(mo);
+                  mo->latecall = NULL;
             }
         }
     }

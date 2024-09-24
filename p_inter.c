@@ -158,6 +158,33 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 	if (toucher->health <= 0)
 		return;						/* can happen with a sliding player corpse */
 
+	if (special->flags & MF_RINGMOBJ)
+	{
+		if (!P_CanPickupItem(player))
+			return;
+
+		if (special->type == MT_RING)
+		{
+			player->lossCount = 0;
+			P_SpawnMobj(special->x, special->y, special->z, MT_SPARK);
+			P_GivePlayerRings(player, 1);
+			sound = mobjinfo[special->type].deathsound;
+
+			player->itemcount++;
+		}
+		
+		special->flags &= ~MF_SPECIAL;
+		P_RemoveMobj (special);
+
+		if (sound <= sfx_None)
+			return;
+
+		if (player == &players[consoleplayer] || (splitscreen && player == &players[consoleplayer^1]))
+			toucher = NULL;
+		S_StartSound (toucher, sound);
+		return;
+	}
+
 	// Ignore eggman in "ouchie" mode
 	if ((special->type == MT_EGGMOBILE) && (special->flags2 & MF2_FRET))
 		return;
@@ -210,8 +237,6 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 
 	switch(special->type)
 	{
-		case MT_RING:
-			player->lossCount = 0;
 		case MT_FLINGRING:
 			P_SpawnMobj(special->x, special->y, special->z, MT_SPARK);
 			P_GivePlayerRings(player, 1);
@@ -221,9 +246,7 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 		default:
 			break;
 	}
-	
-	if (special->type == MT_RING)
-		player->itemcount++;
+
 	P_RemoveMobj (special);
 
 	if (sound <= sfx_None)
@@ -247,6 +270,9 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 	const mobjinfo_t* targinfo = &mobjinfo[target->type];
 
 	target->flags &= ~(MF_SHOOTABLE|MF_FLOAT);
+
+	if (target->flags & MF_RINGMOBJ)
+		I_Error("Hello there...");
 	
 	if (target->player)
 	{
@@ -261,7 +287,8 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 	if (source->player)
 	{
 		// Monitors need to know who killed them
-		target->target = source;
+		// TODO: Not multiplayer compatible. I don't care right now
+//		target->target = source;
 	}
 
 	if (target->player && (players[target->player-1].pflags & PF_DROWNED))
@@ -377,7 +404,7 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage)
 
 	if ( !(target->flags & MF_SHOOTABLE) )
 		return;						/* shouldn't happen... */
-		
+
 	if (target->health <= 0)
 		return;
 
@@ -397,7 +424,7 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage)
 	}
 	
 	player = target->player ? &players[target->player - 1] : NULL;
-	
+
 /* */
 /* player specific */
 /* */
@@ -432,11 +459,15 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage)
 /* */
 /* do the damage */
 /*		 */
-	target->health -= damage;
-	if (target->health <= 0)
+	while (damage > 0)
 	{
-		P_KillMobj (source, target);
-		return;
+		target->health--;
+		damage--;
+		if (target->health == 0)
+		{
+			P_KillMobj (source, target);
+			return;
+		}
 	}
 
 //	S_StartSound(target, targinfo->painsound);

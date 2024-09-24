@@ -858,7 +858,8 @@ void A_MonitorPop(mobj_t *actor, int16_t var1, int16_t var2)
 	}
 
 	newmobj = P_SpawnMobj(actor->x, actor->y, actor->z + 13*FRACUNIT, iconItem);
-	newmobj->target = actor->target; // transfer the target
+	newmobj->target = players[0].mo; // TODO: Not multiplayer compatible, but don't care right now
+	//actor->target; // transfer the target
 }
 
 // Having one function for all box awarding cuts down ROM size

@@ -44,6 +44,9 @@ boolean P_ThingHeightClip (mobj_t *thing)
 {
 	boolean		onfloor;
 	ptrymove_t	tm;
+
+	if (thing->flags & MF_RINGMOBJ)
+		return true;
 	
 	onfloor = (thing->z == thing->floorz);
 	
@@ -88,7 +91,7 @@ boolean PIT_ChangeSector (mobj_t *thing, changetest_t *ct)
 	ct->nofit = true;
 	if (ct->crushchange && !(gametic&3))
 	{
-		P_DamageMobj(thing,NULL,NULL,10);
+		P_DamageMobj(thing,NULL,NULL,1);
 	}
 		
 	return true;		/* keep checking (crush other things)	 */

@@ -217,7 +217,7 @@ static boolean PA_ShootThing(shootWork_t *sw, mobj_t *th, fixed_t interceptfrac)
    // check angles to see if the thing can be aimed at
    dist = FixedMul(sw->attackrange, interceptfrac);
    
-   thingaimtopslope = FixedDiv(th->z + (th->theight << FRACBITS) - sw->shootz, dist);
+   thingaimtopslope = FixedDiv(th->z + Mobj_GetHeight(th) - sw->shootz, dist);
    if(thingaimtopslope < sw->aimbottomslope)
       return true; // shot over the thing
 
@@ -438,7 +438,7 @@ void P_Shoot2(lineattack_t *la)
    sw.shooty2     = t1->y + (la->attackrange >> FRACBITS) * finesine(angle);
    sw.shootdiv.dx = sw.shootx2 - sw.shootdiv.x;
    sw.shootdiv.dy = sw.shooty2 - sw.shootdiv.y;
-   sw.shootz      = t1->z + ((t1->theight >> 1) << FRACBITS) + 8*FRACUNIT;
+   sw.shootz      = t1->z + Mobj_GetHalfHeight(t1) + 8*FRACUNIT;
 
    sw.shootdivpositive = (sw.shootdiv.dx ^ sw.shootdiv.dy) > 0;
 

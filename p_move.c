@@ -83,15 +83,8 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
    }*/
 
    // Z-checking
-   fixed_t theight, tmheight;
-	if (thing->flags & MF_RINGMOBJ)
-		theight = mobjinfo[thing->type].height;
-	else
-		theight = thing->theight << FRACBITS;
-   if (tmthing->flags & MF_RINGMOBJ)
-      tmheight = mobjinfo[tmthing->type].height;
-   else
-      tmheight = tmthing->theight << FRACBITS;
+   const fixed_t theight = Mobj_GetHeight(thing);
+   const fixed_t tmheight = Mobj_GetHeight(tmthing);
 
    if(tmthing->z > thing->z + theight)
       return true; // went overhead
@@ -118,11 +111,11 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
    }
 
    // check for special pickup
-   if(tmthing->player)
+   if(tmthing->type == MT_PLAYER)
    {
       P_TouchSpecialThing(thing,tmthing);
    }
-   if (thing->player)
+   if (thing->type == MT_PLAYER)
    {
       P_TouchSpecialThing(tmthing,thing);
    }
@@ -401,10 +394,10 @@ boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly)
 
    if(!(tmthing->flags & MF_NOCLIP))
    {
-      if(mw.tmceilingz - mw.tmfloorz < (tmthing->theight << FRACBITS))
+      if(mw.tmceilingz - mw.tmfloorz < Mobj_GetHeight(tmthing))
          return false; // doesn't fit
       tm->floatok = true;
-      if(mw.tmceilingz - tmthing->z < (tmthing->theight << FRACBITS))
+      if(mw.tmceilingz - tmthing->z < Mobj_GetHeight(tmthing))
          return false; // mobj must lower itself to fit
       if(mw.tmfloorz - tmthing->z > 24*FRACUNIT)
          return false; // too big a step up

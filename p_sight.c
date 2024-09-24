@@ -357,8 +357,8 @@ static boolean PS_CheckSight2(mobj_t *t1, mobj_t *t2)
       *lvalidcount = 1;
 
    // look from eyes of t1 to any part of t2
-   sw.sightzstart = t1->z + (t1->theight << FRACBITS) - (t1->theight >> (FRACBITS-2));
-   sw.topslope    = (t2->z + (t2->theight << FRACBITS)) - sw.sightzstart;
+   sw.sightzstart = t1->z + Mobj_GetHeight(t1) - Mobj_GetHeight(t1);
+   sw.topslope    = (t2->z + Mobj_GetHeight(t2)) - sw.sightzstart;
    sw.bottomslope = (t2->z) - sw.sightzstart;
 
    // make sure it never lies exactly on a vertex coordinate
@@ -374,9 +374,6 @@ static boolean PS_CheckSight2(mobj_t *t1, mobj_t *t2)
 
 static boolean P_MobjCanSightCheck(mobj_t *mobj)
 {
-//   if (mobj->flags & (MF_RINGMOBJ|MF_STATIC))
-//      return false;
-
    if (!(mobj->type == MT_POSSESSED || mobj->type == MT_EGGMOBILE))
       return false;
 
@@ -499,6 +496,9 @@ void P_CheckSights2(void)
 
     for (mobj = mobjhead.next; ; mobj = P_NextSightMobj(mobj))
     {
+        if (mobj->flags & MF_RINGMOBJ)
+            continue;
+            
         if ((mobj = P_GetSightMobj(mobj, c, &cnt)) == (void*)&mobjhead)
             return;
 

@@ -58,11 +58,13 @@ static void R_PrepMobj(mobj_t *thing)
 
    sprdef = &sprites[states[thing->state].sprite];
 
+   const uint16_t frame = states[thing->state].frame;
+
    // check frame for validity
-   if ((thing->frame & FF_FRAMEMASK) >= sprdef->numframes)
+   if ((frame & FF_FRAMEMASK) >= sprdef->numframes)
        return;
 
-   sprframe = &spriteframes[sprdef->firstframe + (thing->frame & FF_FRAMEMASK)];
+   sprframe = &spriteframes[sprdef->firstframe + (frame & FF_FRAMEMASK)];
    sprlump = &spritelumps[sprframe->lump];
 
    if(sprlump[1] != -1)
@@ -78,7 +80,7 @@ static void R_PrepMobj(mobj_t *thing)
       lump = sprlump[0];
    }
 
-   flip = (thing->frame & FF_FLIPPED);
+   flip = (frame & FF_FLIPPED);
    if (lump < 0)
    {
       lump = -(lump + 1);
@@ -194,7 +196,7 @@ static void R_PrepMobj(mobj_t *thing)
    }
    else
    {
-       if (thing->frame & FF_FULLBRIGHT)
+       if (frame & FF_FULLBRIGHT)
            vis->colormap = 255;
        else
            vis->colormap = thing->subsector->sector->lightlevel;

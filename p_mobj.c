@@ -101,12 +101,15 @@ void P_SetObjectMomZ(mobj_t *mo, fixed_t value, boolean relative)
 
 boolean P_IsObjectOnGround(mobj_t *mobj)
 {
+	if (mobj->flags & MF_RINGMOBJ)
+		return true;
+		
 	if (mobj->player)
 	{
 		const player_t *player = &players[mobj->player - 1];
 		if (player->pflags & PF_VERTICALFLIP)
 		{
-			if (mobj->z + (mobj->theight << FRACBITS) >= mobj->ceilingz)
+			if (mobj->z + Mobj_GetHeight(mobj) >= mobj->ceilingz)
 				return true;
 		}
 		else if (mobj->z <= mobj->floorz)
@@ -139,6 +142,9 @@ boolean P_SetMobjState (mobj_t *mobj, statenum_t state)
 {
 	uint16_t changes = 0xffff;
 
+	if (mobj->flags & MF_RINGMOBJ)
+		return true; // silently fail
+
 	if (mobj->player)
 	{
 		player_t *player = &players[mobj->player - 1];
@@ -159,12 +165,11 @@ boolean P_SetMobjState (mobj_t *mobj, statenum_t state)
 		st = &states[state];
 		mobj->state = state;
 		mobj->tics = st->tics;
-		mobj->frame = st->frame;
 
 		if (st->action)		/* call action functions when the state is set */
 			st->action(mobj, st->var1, st->var2);
 
-		if (!(mobj->flags & (MF_RINGMOBJ|MF_STATIC)))
+		if (!(mobj->flags & (MF_STATIC)))
 			mobj->latecall = NULL;	/* make sure it doesn't come back to life... */
 
 		state = st->nextstate;
@@ -311,7 +316,6 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 
 	mobj->state = info->spawnstate;
 	mobj->tics = st->tics;
-	mobj->frame = st->frame;
 
 /* set subsector and/or block links */
 	P_SetThingPosition (mobj);
@@ -626,15 +630,29 @@ return;	/*DEBUG */
 		totalitems++;
 		return;
 	}
-	if ((mobj->flags & MF_RINGMOBJ) && (mobj->flags & MF_NOBLOCKMAP))
+	if (mobj->flags & MF_RINGMOBJ)
 		return;
 
 	if (mobj->tics > 0)
 		mobj->tics = 1 + (P_Random () % mobj->tics);
 		
 	mobj->angle = mthing->angle * ANGLE_1;
-	if (mobj->flags & MF_STATIC)
-		return;
+}
+
+fixed_t Mobj_GetHeight(mobj_t *mo)
+{
+	if (mo->flags & MF_RINGMOBJ)
+		return mobjinfo[mo->type].height;
+
+	return mo->theight << FRACBITS;
+}
+
+fixed_t Mobj_GetHalfHeight(mobj_t *mo)
+{
+	if (mo->flags & MF_RINGMOBJ)
+		return mobjinfo[mo->type].height >> 1;
+
+	return mo->theight << (FRACBITS-1);
 }
 
 
