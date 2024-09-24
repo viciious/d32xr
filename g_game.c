@@ -242,7 +242,6 @@ void G_PlayerFinishLevel (int player)
 	p = &players[player]; 
 	 
 	D_memset (p->powers, 0, sizeof (p->powers)); 
-	p->mo->flags &= ~MF_SHADOW;             /* cancel invisibility  */
 	p->extralight = 0;                      /* cancel gun flashes  */
 	p->damagecount = 0;                     /* no palette changes  */
 	p->bonuscount = 0; 

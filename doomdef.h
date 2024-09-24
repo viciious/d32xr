@@ -275,14 +275,15 @@ typedef struct degenmobj_s
 /* mobj flags */
 /* */
 #define	MF_SPECIAL		0x0001			/* call P_SpecialThing when touched */
-#define	MF_SOLID		0x0002
-#define	MF_SHOOTABLE	0x0004
-#define	MF_NOSECTOR		0x0008			/* don't use the sector links */
+#define	MF_NOCLIP		0x0002          /* player cheat */
+#define	MF_SOLID		0x0004
+#define	MF_NOBLOCKMAP	0x0008			/* don't use the sector links */
 									/* (invisible but touchable)  */
-#define	MF_NOBLOCKMAP	0x0010			/* don't use the blocklinks  */
+#define	MF_NOSECTOR 	0x0010			/* don't use the blocklinks  */
 									/* (inert but displayable) */
-#define	MF_AMBUSH		0x0020
-#define	MF_ENEMY    	0x0040			/* hang from ceiling instead of floor */
+
+#define	MF_RINGMOBJ		0x0020      /* This mobj is in the ringmobj list, animation is controlled globally */
+#define	MF_STATIC    	0x0040		/* can't move or think */
 #define	MF_NOGRAVITY	0x0080		/* don't apply gravity every tic */
 
 #define MF2_DONTDRAW       1
@@ -295,18 +296,18 @@ typedef struct degenmobj_s
 #define MF2_SPAWNEDJETS  128
 
 /* movement flags */
-#define	MF_NOCLIP		0x0100		/* player cheat */
+#define	MF_UNUSED1		0x0100		
 #define	MF_FLOAT		0x0200		/* allow moves to any height, no gravity */
-#define	MF_RINGMOBJ		0x0400		/* This mobj is in the ringmobj list, animation is controlled globally */
+#define	MF_SHOOTABLE	0x0400
 #define MF_MISSILE		0x0800		/* don't hit same species, explode on block */
 
-#define	MF_SHADOW		0x1000		/* use fuzzy draw (shadow demons / invis) */
+#define	MF_UNUSED2		0x1000		/* Unused */
 #define	MF_INFLOAT		0x2000	/* floating to a height for a move, don't */
 									/* auto float to target's height */
 
 #define	MF_SEETARGET	0x4000	/* is target visible? */
 
-#define	MF_STATIC		0x8000	/* can't move or think */
+#define	MF_ENEMY		0x8000	
 
 /*============================================================================= */
 typedef enum
