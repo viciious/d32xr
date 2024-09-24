@@ -262,7 +262,7 @@ typedef struct degenmobj_s
 } degenmobj_t;
 
 #define static_mobj_size (offsetof(mobj_t,movedir))
-#define ring_mobj_size (offsetof(mobj_t,floorz))
+#define ring_mobj_size (offsetof(mobj_t,angle))
 
 /* */
 /* frame flags */
