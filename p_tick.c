@@ -33,6 +33,9 @@ degenmobj_t		limbomobjhead;
 
 scenerymobj_t *scenerymobjlist;
 VINT numscenerymobjs = 0;
+VINT numringmobjs = 0;
+VINT numstaticmobjs = 0;
+VINT numregmobjs = 0;
 
 //int			activethinkers;	/* debug count */
 //int			activemobjs;	/* debug count */

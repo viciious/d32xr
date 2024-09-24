@@ -273,7 +273,6 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 			mobj->z = z;
 			
 		P_AddMobjToList(mobj, (void *)&ringmobjhead);
-
 		return mobj;
 	}
 	else if (info->flags & MF_STATIC)
@@ -355,6 +354,7 @@ void P_PreSpawnMobjs(int count, int staticcount, int ringcount, int scenerycount
 		numscenerymobjs = 0;
 	}
 
+	numstaticmobjs = staticcount;
 	if (staticcount > 0)
 	{
 		uint8_t *mobj = Z_Malloc (static_mobj_size*staticcount, PU_LEVEL);
@@ -364,6 +364,7 @@ void P_PreSpawnMobjs(int count, int staticcount, int ringcount, int scenerycount
 		}
 	}
 
+	numregmobjs = count;
 	if (count > 0)
 	{
 		mobj_t *mobj = Z_Malloc (sizeof(*mobj)*count, PU_LEVEL);
@@ -373,6 +374,7 @@ void P_PreSpawnMobjs(int count, int staticcount, int ringcount, int scenerycount
 		}
 	}
 
+	numringmobjs = ringcount;
 	if (ringcount > 0)
 	{
 		uint8_t *mobj = Z_Malloc (ring_mobj_size*ringcount, PU_LEVEL);

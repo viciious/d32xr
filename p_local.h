@@ -107,6 +107,9 @@ extern	degenmobj_t	freemobjhead, freestaticmobjhead, freeringmobjhead;
 extern	degenmobj_t	limbomobjhead;
 extern scenerymobj_t *scenerymobjlist;
 extern VINT numscenerymobjs;
+extern VINT numringmobjs;
+extern VINT numstaticmobjs;
+extern VINT numregmobjs;
 
 extern	int			activethinkers;	/* debug count */
 extern	int			activemobjs;	/* debug count */
