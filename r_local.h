@@ -65,12 +65,11 @@ struct line_s;
 typedef	struct
 {
 	fixed_t		floorheight, ceilingheight;
-	VINT		floorpic, ceilingpic;	/* if ceilingpic == -1,draw sky */
-
-	uint8_t		lightlevel, special;
-
 	VINT		validcount;			/* if == validcount, already checked */
 	VINT		linecount;
+	uint8_t		floorpic, ceilingpic;	/* if ceilingpic == (uint8_t)-1,draw sky */
+
+	uint8_t		lightlevel, special;
 
 	VINT		tag;
 	// killough 3/7/98: support flat heights drawn at another sector's heights
@@ -94,9 +93,9 @@ typedef struct
 
 typedef struct line_s
 {
-	VINT		flags;
-	VINT		sidenum[2];			/* sidenum[1] will be -1 if one sided */
 	VINT 		v1, v2;
+	VINT		sidenum[2];			/* sidenum[1] will be -1 if one sided */
+	VINT		flags;
 	uint8_t		special, tag;
 } line_t;
 
@@ -116,7 +115,6 @@ typedef struct seg_s
 	VINT		sideoffset;
 	VINT		linedef;
 } seg_t;
-
 
 typedef struct
 {

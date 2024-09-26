@@ -242,7 +242,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
       actionbits = 0;
 
       // deal with sky ceilings (also missing in 3DO)
-      if(f_ceilingpic == -1 && b_ceilingpic == -1)
+      if(f_ceilingpic == (uint8_t)-1 && b_ceilingpic == (uint8_t)-1)
          skyhack = true;
       else 
          skyhack = false;
@@ -259,13 +259,13 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
       *floorheight = *floornewheight = f_floorheight;
 
       if(!skyhack                                         && // not a sky hack wall
-         (f_ceilingheight > 0 || f_ceilingpic == -1)      && // ceiling below camera, or sky
+         (f_ceilingheight > 0 || f_ceilingpic == (uint8_t)-1)      && // ceiling below camera, or sky
          (f_ceilingpic    != b_ceilingpic                 || // ceiling texture changes across line?
           f_ceilingheight != b_ceilingheight              || // height changes across line?              
           f_lightlevel    != b_lightlevel                 || // light level changes across line?
           b_ceilingheight == b_floorheight))                 // backsector is closed?
       {
-         if(f_ceilingpic == -1)
+         if(f_ceilingpic == (uint8_t)-1)
             actionbits |= (AC_ADDSKY|AC_NEWCEILING);
          else
             actionbits |= (AC_ADDCEILING|AC_NEWCEILING);
@@ -619,7 +619,7 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
 
          if (underwater)
          {
-            if (s->ceilingpic == -1)
+            if (s->ceilingpic == (uint8_t)-1)
             {
                tempsec->floorheight   = tempsec->ceilingheight+1;
                tempsec->ceilingpic    = tempsec->floorpic;
