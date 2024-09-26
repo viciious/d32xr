@@ -316,8 +316,8 @@ static boolean PS_RejectCheckSight(mobj_t *t1, mobj_t *t2)
    unsigned pnum, bytenum, bitnum;
 
    // First check for trivial rejection
-   s1 = ((uintptr_t)t1->subsector->sector - (uintptr_t)sectors);
-   s2 = ((uintptr_t)t2->subsector->sector - (uintptr_t)sectors);
+   s1 = ((uintptr_t)subsectors[t1->isubsector].sector - (uintptr_t)sectors);
+   s2 = ((uintptr_t)subsectors[t2->isubsector].sector - (uintptr_t)sectors);
    pnum = (s1*numsectors + s2) / sizeof(sector_t);
    bytenum = pnum >> 3;
 
@@ -381,7 +381,7 @@ static boolean P_MobjCanSightCheck(mobj_t *mobj)
    if (mobj->tics != 1)
       return false;
 
-   mobj->flags &= ~MF_SEETARGET;
+   mobj->flags2 &= ~MF2_SEETARGET;
 
    // must have a target
    if (!mobj->target)
@@ -498,7 +498,7 @@ void P_CheckSights2(void)
     {
         if (mobj->flags & MF_RINGMOBJ)
             continue;
-            
+
         if ((mobj = P_GetSightMobj(mobj, c, &cnt)) == (void*)&mobjhead)
             return;
 
@@ -511,7 +511,7 @@ void P_CheckSights2(void)
 #endif
 
         if (PS_CheckSight2(mobj, mobj->target))
-           mobj->flags |= MF_SEETARGET;
+           mobj->flags2 |= MF2_SEETARGET;
     }
 }
 

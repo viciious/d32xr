@@ -211,7 +211,10 @@ static boolean PA_ShootThing(shootWork_t *sw, mobj_t *th, fixed_t interceptfrac)
    if(th == sw->shooter)
       return true; // can't shoot self
 
-   if(!(th->flags & MF_SHOOTABLE))
+   if (th->flags & MF_RINGMOBJ)
+      return true;
+
+   if(!(th->flags2 & MF2_SHOOTABLE))
       return true; // corpse or something
 
    // check angles to see if the thing can be aimed at
@@ -282,17 +285,20 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
    int      count;
    fixed_t  frac;
    mobj_t  *thing;
-   subsector_t *sub = &subsectors[bspnum];
    intercept_t  in;
    vertex_t tv1, tv2;
    VINT     *lvalidcount, vc;
 
    // check things
-   for(thing = sub->sector->thinglist; thing; thing = thing->snext)
+   for(thing = subsectors[bspnum].sector->thinglist; thing; thing = thing->snext)
    {
-      if(thing->subsector != sub)
+      if(thing->isubsector != bspnum)
          continue;
-      if(!(thing->flags & MF_SHOOTABLE))
+
+      if (thing->flags & MF_RINGMOBJ)
+         continue;
+
+      if(!(thing->flags2 & MF2_SHOOTABLE))
          continue; // corpse or something
 
       // check a corner to corner cross-section for hit
@@ -326,6 +332,7 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
    }
 
    // check lines
+   const subsector_t *sub = &subsectors[bspnum];
    count = sub->numlines;
    seg   = &segs[sub->firstline];
 

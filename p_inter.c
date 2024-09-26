@@ -151,7 +151,7 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 	int			sound;
 
 	if (!toucher->player)
-		return;		
+		return;
 
 	sound = sfx_None;	
 	player = &players[toucher->player - 1];
@@ -189,9 +189,9 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 	if ((special->type == MT_EGGMOBILE) && (special->flags2 & MF2_FRET))
 		return;
 
-	if ((special->flags & MF_SHOOTABLE) && !(special->flags & MF_MISSILE))
+	if ((special->flags2 & MF2_SHOOTABLE) && !(special->flags2 & MF2_MISSILE))
 	{
-		if (special->flags & MF_ENEMY) // enemy rules
+		if (special->flags2 & MF2_ENEMY) // enemy rules
 		{
 			if ((player->pflags & PF_JUMPED) || (player->pflags & PF_SPINNING) || player->powers[pw_invulnerability])
 			{
@@ -269,10 +269,7 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 {
 	const mobjinfo_t* targinfo = &mobjinfo[target->type];
 
-	target->flags &= ~(MF_SHOOTABLE|MF_FLOAT);
-
-	if (target->flags & MF_RINGMOBJ)
-		I_Error("Hello there...");
+	target->flags2 &= ~(MF2_SHOOTABLE|MF2_FLOAT);
 	
 	if (target->player)
 	{
@@ -302,7 +299,7 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 
 	S_StartSound(target, targinfo->deathsound);
 
-	if (source->player && (target->flags & MF_ENEMY))
+	if (source->player && (target->flags2 & MF2_ENEMY))
 	{
 		VINT score = 100;
 		mobj_t *scoremobj = P_SpawnMobj(target->x, target->y, target->z + (target->theight << (FRACBITS-1)), MT_SCORE);
@@ -402,7 +399,10 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage)
 	player_t	*player;
 	const mobjinfo_t* targinfo = &mobjinfo[target->type];
 
-	if ( !(target->flags & MF_SHOOTABLE) )
+	if (target->flags & MF_RINGMOBJ)
+		return;
+
+	if ( !(target->flags2 & MF2_SHOOTABLE) )
 		return;						/* shouldn't happen... */
 
 	if (target->health <= 0)

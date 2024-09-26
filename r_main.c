@@ -549,8 +549,8 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		vd.viewy = player->mo->y;
 		vd.viewz = player->viewz;
 		vd.viewangle = player->mo->angle;
-		vd.lightlevel = player->mo->subsector->sector->lightlevel;
-		vd.viewsubsector = player->mo->subsector;
+		vd.lightlevel = subsectors[player->mo->isubsector].sector->lightlevel;
+		vd.viewsubsector = &subsectors[player->mo->isubsector];
 	}
 
 	vd.viewplayer = player;

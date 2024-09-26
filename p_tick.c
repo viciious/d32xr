@@ -269,7 +269,7 @@ void P_CheckCheats (void)
 	int oldbuttons;
 	const int stuff_combo = BT_A | BT_B | BT_C | BT_UP;
 	const int godmode_combo = BT_X | BT_Y | BT_Z | BT_UP;
-	player_t* p;
+//	player_t* p;
 
 	if (netgame)
 		return;
@@ -283,7 +283,7 @@ void P_CheckCheats (void)
 		&& (oldbuttons & stuff_combo) != stuff_combo)
 	{
 		/* free stuff */
-		p = &players[0];
+//		p = &players[0];
 	}
 
 	if ((buttons & godmode_combo) == godmode_combo 

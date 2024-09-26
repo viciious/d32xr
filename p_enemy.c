@@ -38,7 +38,7 @@ boolean P_CheckMeleeRange (mobj_t *actor)
 	mobj_t		*pl;
 	fixed_t		dist;
 	
-	if (! (actor->flags&MF_SEETARGET) )
+	if (!Mobj_HasFlags2(actor, MF2_SEETARGET))
 		return false;
 							
 	if (!actor->target)
@@ -65,7 +65,7 @@ boolean P_CheckMissileRange (mobj_t *actor)
 	fixed_t		dist;
 	const mobjinfo_t* ainfo = &mobjinfo[actor->type];
 
-	if (! (actor->flags & MF_SEETARGET) )
+	if (!Mobj_HasFlags2(actor, MF2_SEETARGET))
 		return false;
 	
 	dist = P_AproxDistance ( actor->x-actor->target->x, actor->y-actor->target->y) - 64*FRACUNIT;
@@ -115,13 +115,13 @@ boolean P_Move (mobj_t *actor)
 	
 	if (!P_TryMove (&tm, actor, tryx, tryy) )
 	{	/* open any specials */
-		if ((actor->flags & MF_FLOAT) && (actor->flags & MF_ENEMY) && tm.floatok)
+		if ((actor->flags2 & MF2_FLOAT) && (actor->flags2 & MF2_ENEMY) && tm.floatok)
 		{	/* must adjust height */
 			if (actor->z < tm.tmfloorz)
 				actor->z += FLOATSPEED;
 			else
 				actor->z -= FLOATSPEED;
-			actor->flags |= MF_INFLOAT;
+			actor->flags2 |= MF2_INFLOAT;
 			return true;
 		}
 
@@ -133,10 +133,10 @@ boolean P_Move (mobj_t *actor)
 	else
 	{
 		P_MoveCrossSpecials(actor, tm.numspechit, tm.spechit, oldx, oldy);
-		actor->flags &= ~MF_INFLOAT;
+		actor->flags2 &= ~MF2_INFLOAT;
 	}
 
-	if (! (actor->flags & MF_FLOAT) )	
+	if (! (actor->flags2 & MF2_FLOAT) )	
 		actor->z = actor->floorz;
 	return true; 
 }
@@ -313,7 +313,7 @@ boolean P_LookForPlayers (mobj_t *actor, boolean allaround, boolean nothreshold)
 	fixed_t		dist;
 	mobj_t		*mo;
 	
-	if (! (actor->flags & MF_SEETARGET) )
+	if (! (actor->flags2 & MF2_SEETARGET) )
 	{	/* pick another player as target if possible */
 newtarget:
 		for (i = 0; i < MAXPLAYERS; i++)
@@ -393,7 +393,7 @@ void A_Look (mobj_t *actor, int16_t var1, int16_t var2)
 	if (!P_LookForPlayers (actor, false, false) )
 		return;
 	
-seeyou:
+//seeyou:
 /* go into chase state */
 	if (ainfo->seesound)
 	{
@@ -452,8 +452,8 @@ void A_Chase (mobj_t *actor, int16_t var1, int16_t var2)
 			actor->angle += ANG90/2;
 	}
 
-	if (!actor->target || !(actor->target->flags&MF_SHOOTABLE)
-		|| (netgame && !actor->threshold && !(actor->flags & MF_SEETARGET)))
+	if (!actor->target || !(actor->target->flags2&MF2_SHOOTABLE)
+		|| (netgame && !actor->threshold && !(actor->flags2 & MF2_SEETARGET)))
 	{	/* look for a new target */
 		if (P_LookForPlayers(actor,true,false))
 			return;		/* got a new target */
@@ -770,7 +770,8 @@ static void P_DoBossDefaultDeath(mobj_t *mo)
 	mo->target = P_FindFirstMobjOfType(MT_BOSSFLYPOINT);
 
 	P_UnsetThingPosition(mo);
-	mo->flags |= MF_NOBLOCKMAP|MF_NOGRAVITY|MF_NOCLIP|MF_FLOAT;
+	mo->flags |= MF_NOBLOCKMAP|MF_NOGRAVITY|MF_NOCLIP;
+	mo->flags2 |= MF2_FLOAT;
 	P_SetThingPosition(mo);
 
 	mo->movedir = 0;
@@ -808,8 +809,8 @@ void A_FishJump(mobj_t *mo, int16_t var1, int16_t var2)
 {
 	fixed_t watertop = mo->floorz;
 
-	if (mo->subsector->sector->heightsec != -1)
-		watertop = sectors[mo->subsector->sector->heightsec].floorheight - (64<<FRACBITS);
+	if (subsectors[mo->isubsector].sector->heightsec != -1)
+		watertop = sectors[subsectors[mo->isubsector].sector->heightsec].floorheight - (64<<FRACBITS);
 
 	if ((mo->z <= mo->floorz) || (mo->z <= watertop))
 	{
@@ -845,7 +846,7 @@ void A_MonitorPop(mobj_t *actor, int16_t var1, int16_t var2)
 	actor->health = 0;
 	P_UnsetThingPosition(actor);
 	actor->flags &= ~MF_SOLID;
-	actor->flags &= ~MF_SHOOTABLE;
+	actor->flags2 &= ~MF2_SHOOTABLE;
 	actor->flags |= MF_NOCLIP;
 	P_SetThingPosition(actor);
 
@@ -960,8 +961,8 @@ void A_BubbleRise(mobj_t *actor, int16_t var1, int16_t var2)
 		P_InstaThrust(actor, P_Random() & 1 ? actor->angle - ANG90 : actor->angle - ANG180,
 			(P_Random() & 1) ? FRACUNIT/2 : -FRACUNIT/2);
 
-	if (actor->subsector->sector->heightsec == -1
-		|| actor->z + (actor->theight << (FRACBITS-1)) > sectors[actor->subsector->sector->heightsec].floorheight)
+	if (subsectors[actor->isubsector].sector->heightsec == -1
+		|| actor->z + (actor->theight << (FRACBITS-1)) > sectors[subsectors[actor->isubsector].sector->heightsec].floorheight)
 		P_RemoveMobj(actor);
 }
 
@@ -1181,13 +1182,13 @@ void A_Boss1Laser(mobj_t *actor, int16_t var1, int16_t var2)
 		point->angle = actor->angle;
 		point->target = actor;
 
-		if (point->subsector->sector->heightsec != -1 && point->z <= sectors[point->subsector->sector->heightsec].floorheight)
+		const sector_t *pointSector = subsectors[point->isubsector].sector;
+
+		if (pointSector->heightsec != -1 && point->z <= sectors[pointSector->heightsec].floorheight)
 		{
-			for (i = 0; i < 2; i++)
+//			for (i = 0; i < 2; i++)
 			{
-				mobj_t *steam = P_SpawnMobj(x, y, sectors[point->subsector->sector->heightsec].floorheight - mobjinfo[MT_DUST].height, MT_DUST);
-				steam->momz += FRACUNIT + 2*P_RandomFixed();
-				P_InstaThrust(steam, P_RandomKey(360)*ANGLE_1, 2*P_RandomFixed());
+				mobj_t *steam = P_SpawnMobj(x, y, sectors[pointSector->heightsec].floorheight - mobjinfo[MT_DUST].height/2, MT_DUST);
 				if (mobjinfo[point->type].painsound)
 					S_StartSound(steam, mobjinfo[point->type].painsound);
 			}

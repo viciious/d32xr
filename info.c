@@ -115,7 +115,7 @@ STATE(SPR_PLAY,11,1,NULL,S_PLAY_SPD2), // S_PLAY_SPD1
 STATE(SPR_PLAY,12,1,NULL,S_PLAY_SPD3), // S_PLAY_SPD2
 STATE(SPR_PLAY,13,1,NULL,S_PLAY_SPD4), // S_PLAY_SPD3
 STATE(SPR_PLAY,14,1,NULL,S_PLAY_SPD1), // S_PLAY_SPD4
-STATE(SPR_PLAY,15,350,NULL,S_PLAY_FALL1),	// S_PLAY_PAIN
+STATE(SPR_PLAY,15,127,NULL,S_PLAY_FALL1),	// S_PLAY_PAIN
 STATE(SPR_PLAY,16,-1,A_Fall,S_NULL),	// S_PLAY_DIE
 STATE(SPR_PLAY,17,-1,A_Fall,S_NULL),	// S_PLAY_DROWN
 STATE(SPR_PLAY,18,1,NULL,S_PLAY_ATK2), // S_PLAY_ATK1
@@ -474,7 +474,8 @@ sfx_None,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-MF_SOLID|MF_SHOOTABLE		/* flags */
+MF_SOLID,		/* flags */
+MF2_SHOOTABLE, // flags2
  },
 
  {		/* MT_CAMERA */
@@ -499,7 +500,8 @@ sfx_None,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-0		/* flags */
+0,		/* flags */
+0,	// flags2
  },
 
  {           // MT_EXPLODE
@@ -525,6 +527,7 @@ sfx_None,		/* activesound */
 	0,              // damage
 	sfx_None,       // activesound
 	MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
+	0, // flags2
 },
 
 {		/* MT_POSSESSED */
@@ -549,7 +552,8 @@ sfx_s3k_3d,		/* deathsound */
 100,		/* mass */
 0,		/* damage */
 sfx_None,		/* activesound */
-MF_SHOOTABLE|MF_ENEMY		/* flags */
+0,		/* flags */
+MF2_SHOOTABLE|MF2_ENEMY,	// flags2
  },
 
  	{           // MT_GFZFISH
@@ -574,7 +578,8 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		100,            // mass
 		1,              // damage
 		sfx_None,       // activesound
-		MF_ENEMY|MF_SHOOTABLE, // flags
+		0, // flags
+		MF2_ENEMY|MF2_SHOOTABLE, // flags2
 	},
 
 {           // MT_RING
@@ -600,6 +605,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 	0,              // damage
 	sfx_None,       // activesound
 	MF_SPECIAL|MF_NOGRAVITY|MF_STATIC|MF_RINGMOBJ, // flags
+	0, // flags2
 },
 {           // MT_SPARK
 	-1,            // doomednum
@@ -624,6 +630,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 	0,              // damage
 	sfx_None,       // activesound
 	MF_NOGRAVITY|MF_STATIC|MF_NOBLOCKMAP, // flags
+	0, // flags2
 },
 {           // MT_FLINGRING
 	-1,            // doomednum
@@ -647,7 +654,8 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 	100,            // mass
 	0,              // damage
 	sfx_None,       // activesound
-	MF_FLOAT|MF_SPECIAL, // flags
+	MF_SPECIAL, // flags
+	MF2_FLOAT, // flags2
 },
 {           // MT_GFZFLOWERA
 	800,            // doomednum
@@ -672,6 +680,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 	0,              // damage
 	sfx_None,       // activesound
 	MF_NOGRAVITY|MF_STATIC|MF_NOBLOCKMAP|MF_RINGMOBJ, // flags
+	0, // flags2
 },
 {           // MT_GFZFLOWERB
 	801,            // doomednum
@@ -696,6 +705,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 	0,              // damage
 	sfx_None,       // activesound
 	MF_NOGRAVITY|MF_STATIC|MF_NOBLOCKMAP|MF_RINGMOBJ, // flags
+	0, // flags2
 },
 {           // MT_GFZFLOWERC
 	802,            // doomednum
@@ -720,6 +730,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 	0,              // damage
 	sfx_None,       // activesound
 	MF_NOGRAVITY|MF_STATIC|MF_NOBLOCKMAP|MF_RINGMOBJ, // flags
+	0, // flags2
 },
 {           // MT_BERRYBUSH
 	804,            // doomednum
@@ -744,6 +755,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 	0,              // damage
 	sfx_None,       // activesound
 	MF_NOGRAVITY|MF_STATIC|MF_NOBLOCKMAP|MF_RINGMOBJ, // flags
+	0, // flags2
 },
 {           // MT_BUSH
 	805,            // doomednum
@@ -768,6 +780,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 	0,              // damage
 	sfx_None,       // activesound
 	MF_NOGRAVITY|MF_STATIC|MF_NOBLOCKMAP|MF_RINGMOBJ, // flags
+	0, // flags2
 },
 {           // MT_YELLOWSPRING
 	550,            // doomednum
@@ -792,6 +805,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 	0,              // damage
 	sfx_None,       // activesound
 	MF_SPECIAL|MF_STATIC, // flags
+	0, // flags2
 },
 
 {           // MT_REDSPRING
@@ -817,6 +831,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 	0,              // damage
 	sfx_None,       // activesound
 	MF_SPECIAL|MF_STATIC, // flags
+	0, // flags2
 },
 {           // MT_YELLOWDIAG
 	555,            // doomednum
@@ -841,6 +856,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 	20,    // damage
 	sfx_None,       // activesound
 	MF_SPECIAL|MF_STATIC, // flags
+	0, // flags2
 },
 
 {           // MT_REDDIAG
@@ -866,6 +882,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 	32,    // damage
 	sfx_None,       // activesound
 	MF_SPECIAL|MF_STATIC, // flags
+	0, // flags2
 },
 {           // MT_YELLOWHORIZ
 	558,            // doomednum
@@ -890,6 +907,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 	40,    // damage
 	sfx_None,       // activesound
 	MF_SPECIAL|MF_STATIC, // flags
+	0, // flags2
 },
 
 {           // MT_REDHORIZ
@@ -915,6 +933,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 	80,    // damage
 	sfx_None,       // activesound
 	MF_SPECIAL|MF_STATIC, // flags
+	0, // flags2
 },
 {           // MT_SCORE
 	-1,             // doomednum
@@ -939,6 +958,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 	0,              // damage
 	sfx_None,       // activesound
 	MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY|MF_STATIC, // flags
+	0, // flags2
 },
 	{           // MT_GHOST
 		-1,             // doomednum
@@ -963,6 +983,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		8,              // damage
 		sfx_None,       // activesound
 		MF_NOBLOCKMAP|MF_NOGRAVITY|MF_NOCLIP, // flags
+		0, // flags2
 	},
 	{           // MT_RING_BOX
 		400,            // doomednum
@@ -986,7 +1007,8 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		100,            // mass
 		MT_RING_ICON,   // damage
 		sfx_None,       // activesound
-		MF_SOLID|MF_SHOOTABLE|MF_STATIC, // flags
+		MF_SOLID|MF_STATIC, // flags
+		MF2_SHOOTABLE, // flags2
 	},
 	{           // MT_ATTRACT_BOX
 		402,            // doomednum
@@ -1010,7 +1032,8 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		100,            // mass
 		MT_ATTRACT_ICON,// damage
 		sfx_None,       // activesound
-		MF_SOLID|MF_SHOOTABLE|MF_STATIC, // flags
+		MF_SOLID|MF_STATIC, // flags
+		MF2_SHOOTABLE, // flags2
 	},
 
 	{           // MT_FORCE_BOX
@@ -1035,7 +1058,8 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		100,            // mass
 		MT_FORCE_ICON,  // damage
 		sfx_None,       // activesound
-		MF_SOLID|MF_SHOOTABLE|MF_STATIC, // flags
+		MF_SOLID|MF_STATIC, // flags
+		MF2_SHOOTABLE, // flags2
 	},
 
 	{           // MT_ARMAGEDDON_BOX
@@ -1060,7 +1084,8 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		100,            // mass
 		MT_ARMAGEDDON_ICON, // damage
 		sfx_None,       // activesound
-		MF_SOLID|MF_SHOOTABLE|MF_STATIC, // flags
+		MF_SOLID|MF_STATIC, // flags
+		MF2_SHOOTABLE, // flags2
 	},
 
 	{           // MT_WHIRLWIND_BOX
@@ -1085,7 +1110,8 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		100,            // mass
 		MT_WHIRLWIND_ICON, // damage
 		sfx_None,       // activesound
-		MF_SOLID|MF_SHOOTABLE|MF_STATIC, // flags
+		MF_SOLID|MF_STATIC, // flags
+		MF2_SHOOTABLE, // flags2
 	},
 
 	{           // MT_ELEMENTAL_BOX
@@ -1110,7 +1136,8 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		100,            // mass
 		MT_ELEMENTAL_ICON, // damage
 		sfx_None,       // activesound
-		MF_SOLID|MF_SHOOTABLE|MF_STATIC, // flags
+		MF_SOLID|MF_STATIC, // flags
+		MF2_SHOOTABLE, // flags2
 	},
 
 	{           // MT_SNEAKERS_BOX
@@ -1135,7 +1162,8 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		100,            // mass
 		MT_SNEAKERS_ICON, // damage
 		sfx_None,       // activesound
-		MF_SOLID|MF_SHOOTABLE|MF_STATIC, // flags
+		MF_SOLID|MF_STATIC, // flags
+		MF2_SHOOTABLE, // flags2
 	},
 
 	{           // MT_INVULN_BOX
@@ -1160,7 +1188,8 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		100,            // mass
 		MT_INVULN_ICON, // damage
 		sfx_None,       // activesound
-		MF_SOLID|MF_SHOOTABLE|MF_STATIC, // flags
+		MF_SOLID|MF_STATIC, // flags
+		MF2_SHOOTABLE, // flags2
 	},
 	{           // MT_1UP_BOX
 		409,            // doomednum
@@ -1184,7 +1213,8 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		100,            // mass
 		MT_1UP_ICON,    // damage
 		sfx_None,       // activesound
-		MF_SOLID|MF_SHOOTABLE|MF_STATIC, // flags
+		MF_SOLID|MF_STATIC, // flags
+		MF2_SHOOTABLE, // flags2
 	},
 	{           // MT_RING_ICON
 		-1,              // doomednum
@@ -1209,6 +1239,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		62,     // damage
 		sfx_None,        // activesound
 		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
+		0, // flags2
 	},
 	{           // MT_ATTRACT_ICON
 		-1,             // doomednum
@@ -1233,6 +1264,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		62,    // damage
 		sfx_None,       // activesound
 		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
+		0, // flags2
 	},
 	{           // MT_FORCE_ICON
 		-1,             // doomednum
@@ -1257,6 +1289,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		62,    // damage
 		sfx_None,       // activesound
 		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
+		0, // flags2
 	},
 	{           // MT_ARMAGEDDON_ICON
 		-1,             // doomednum
@@ -1281,6 +1314,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		62,    // damage
 		sfx_None,       // activesound
 		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
+		0, // flags2
 	},
 	{           // MT_WHIRLWIND_ICON
 		-1,             // doomednum
@@ -1305,6 +1339,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		62,    // damage
 		sfx_None,       // activesound
 		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
+		0, // flags2
 	},
 	{           // MT_ELEMENTAL_ICON
 		-1,             // doomednum
@@ -1329,6 +1364,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		62,    // damage
 		sfx_None,       // activesound
 		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
+		0, // flags2
 	},
 	{           // MT_SNEAKERS_ICON
 		-1,             // doomednum
@@ -1353,6 +1389,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		62,    // damage
 		sfx_None,       // activesound
 		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
+		0, // flags2
 	},
 	{           // MT_INVULN_ICON
 		-1,             // doomednum
@@ -1377,6 +1414,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		62,             // damage
 		sfx_None,       // activesound
 		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
+		0, // flags2
 	},
 	{           // MT_1UP_ICON
 		-1,             // doomednum
@@ -1401,6 +1439,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		62,             // damage
 		sfx_None,       // activesound
 		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
+		0, // flags2
 	},
 
 	{           // MT_ELEMENTAL_ORB
@@ -1426,6 +1465,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		0,              // damage
 		sfx_None,       // activesound
 		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
+		0, // flags2
 	},
 
 	{           // MT_ELEMENTAL_DOWN
@@ -1451,6 +1491,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		0,              // damage
 		sfx_None,       // activesound
 		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
+		0, // flags2
 	},
 
 	{           // MT_ATTRACT_ORB
@@ -1476,6 +1517,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		0,              // damage
 		sfx_None,       // activesound
 		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
+		0, // flags2
 	},
 
 	{           // MT_FORCE_ORB
@@ -1501,6 +1543,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		SH_FORCE1,      // damage
 		sfx_None,       // activesound
 		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
+		0, // flags2
 	},
 
 	{           // MT_ARMAGEDDON_ORB
@@ -1526,6 +1569,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		0,              // damage
 		sfx_None,       // activesound
 		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
+		0, // flags2
 	},
 
 	{           // MT_WHIRLWIND_ORB
@@ -1551,6 +1595,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		0,              // damage
 		sfx_None,       // activesound
 		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
+		0, // flags2
 	},
 
 	// Bluebird
@@ -1576,7 +1621,8 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		4,              // mass
 		0,              // damage
 		sfx_None,       // activesound
-		MF_FLOAT, // flags
+		0, // flags
+		MF2_FLOAT, // flags2
 	},
 
 	{           // MT_FLICKY_02
@@ -1601,7 +1647,8 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		4,             // mass
 		0,              // damage
 		sfx_None,       // activesound
-		MF_FLOAT, // flags
+		0, // flags
+		MF2_FLOAT, // flags2
 	},
 
 	{           // MT_FLICKY_03
@@ -1626,7 +1673,8 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		3,              // mass
 		0,              // damage
 		sfx_None,       // activesound
-		MF_FLOAT, // flags
+		0, // flags
+		MF2_FLOAT, // flags2
 	},
 
 	{           // MT_FLICKY_12
@@ -1651,7 +1699,8 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		2,              // mass
 		0,              // damage
 		sfx_None,       // activesound
-		MF_FLOAT, // flags
+		0, // flags
+		MF2_FLOAT, // flags2
 	},
 
 	{           // MT_GFZDEBRIS
@@ -1676,7 +1725,8 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		100,            // mass
 		0,              // damage
 		sfx_None,       // activesound
-		MF_NOBLOCKMAP|MF_FLOAT,  // flags
+		MF_NOBLOCKMAP,  // flags
+		MF2_FLOAT, // flags2
 	},
 
 	{           // MT_SMALLBUBBLE
@@ -1701,7 +1751,8 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		16,             // mass
 		0,              // damage
 		sfx_None,       // activesound
-		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY|MF_FLOAT, // flags
+		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
+		MF2_FLOAT, // flags2
 	},
 
 	{           // MT_MEDIUMBUBBLE
@@ -1726,7 +1777,8 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		16,             // mass
 		0,              // damage
 		sfx_None,       // activesound
-		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY|MF_FLOAT, // flags
+		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
+		MF2_FLOAT, // flags2
 	},
 
 	{           // MT_EXTRALARGEBUBBLE
@@ -1751,7 +1803,8 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		16,             // mass
 		0,              // damage
 		sfx_None,       // activesound
-		MF_SPECIAL|MF_NOGRAVITY|MF_FLOAT, // flags
+		MF_SPECIAL|MF_NOGRAVITY, // flags
+		MF2_FLOAT, // flags2
 	},
 
 	{           // MT_SPLISH
@@ -1777,6 +1830,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		1,              // damage
 		sfx_None,       // activesound
 		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY|MF_STATIC, // flags
+		0, // flags2
 	},
 
 	{           // MT_SONIC3KBOSSEXPLODE
@@ -1802,6 +1856,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		0,                       // damage
 		sfx_None,                // activesound
 		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY|MF_STATIC, // flags
+		0, // flags2
 	},
 
 	{           // MT_BOSSFLYPOINT
@@ -1827,6 +1882,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		0,              // damage
 		sfx_None,       // activesound
 		MF_NOBLOCKMAP|MF_NOSECTOR|MF_NOGRAVITY, // flags
+		0, // flags2
 	},
 
 	{           // MT_EGGTRAP
@@ -1852,6 +1908,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		0,              // damage
 		sfx_None,       // activesound
 		MF_NOBLOCKMAP|MF_NOSECTOR|MF_STATIC, // flags
+		0, // flags2
 	},
 
 	{           // MT_BOSSJUNK
@@ -1877,6 +1934,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		1,              // damage
 		sfx_None,       // activesound
 		MF_NOBLOCKMAP|MF_NOCLIP, // flags
+		0, // flags2
 	},
 
 	{           // MT_EGGMOBILE
@@ -1901,7 +1959,8 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		S_EGGMOBILE_PANIC1,// mass
 		3,                 // damage
 		sfx_telept,        // activesound
-		MF_SPECIAL|MF_SHOOTABLE|MF_FLOAT|MF_NOGRAVITY|MF_ENEMY, // flags
+		MF_SPECIAL|MF_NOGRAVITY, // flags
+		MF2_SHOOTABLE|MF2_FLOAT|MF2_ENEMY, // flags2
 	},
 
 	{           // MT_JETFUME1
@@ -1927,6 +1986,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		0,              // damage
 		sfx_None,       // activesound
 		MF_NOBLOCKMAP|MF_NOGRAVITY|MF_NOCLIP, // flags
+		0, // flags2
 	},
 
 	{           // MT_EGGMOBILE_TARGET
@@ -1952,6 +2012,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		0,              // damage
 		sfx_None,       // activesound
 		MF_NOCLIP|MF_NOGRAVITY|MF_NOBLOCKMAP|MF_NOSECTOR, // flags
+		0, // flags2
 	},
 
 	{           // MT_EGGMOBILE_FIRE
@@ -1976,7 +2037,8 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		0,       // mass
 		1,              // damage
 		sfx_None,       // activesound
-		MF_NOGRAVITY|MF_MISSILE|MF_FLOAT, // flags
+		MF_NOGRAVITY, // flags
+		MF2_MISSILE|MF2_FLOAT, // flags2
 	},
 
 	{           // MT_LASER
@@ -2001,7 +2063,8 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		0,              // mass
 		20,             // damage
 		sfx_None,       // activesound
-		MF_MISSILE|MF_NOGRAVITY|MF_FLOAT, // flags
+		MF_NOGRAVITY, // flags
+		MF2_MISSILE|MF2_FLOAT, // flags
 	},
 
 	{           // MT_DUST
@@ -2027,6 +2090,7 @@ MF_SHOOTABLE|MF_ENEMY		/* flags */
 		0,              // damage
 		sfx_None,       // activesound
 		MF_NOBLOCKMAP|MF_NOGRAVITY|MF_NOCLIP|MF_STATIC, // flags
+		0, // flags2
 	},
 };
 

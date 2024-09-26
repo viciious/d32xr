@@ -85,12 +85,13 @@ boolean PIT_ChangeSector (mobj_t *thing, changetest_t *ct)
 	if (P_ThingHeightClip (thing))
 		return true;		/* keep checking */
 
-	if (! (thing->flags & MF_SHOOTABLE) )
+	if (! (thing->flags2 & MF2_SHOOTABLE) )
 		return true;				/* assume it is bloody gibs or something */
 		
 	ct->nofit = true;
 	if (ct->crushchange && !(gametic&3))
 	{
+		// TODO: Crush player
 		P_DamageMobj(thing,NULL,NULL,1);
 	}
 		

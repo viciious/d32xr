@@ -48,10 +48,10 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
 //   int     tmflags = mw->tmflags;
    const mobjinfo_t* thinfo = &mobjinfo[tmthing->type];
 
-   if(!(thing->flags & (MF_SOLID|MF_SPECIAL|MF_SHOOTABLE)))
+   if(!((thing->flags & (MF_SOLID|MF_SPECIAL)) || Mobj_HasFlags2(thing, MF2_SHOOTABLE)))
       return true;
 
-   if (thing->type == MT_PLAYER && (tmthing->flags & MF_SHOOTABLE))
+   if (thing->type == MT_PLAYER && Mobj_HasFlags2(tmthing, MF2_SHOOTABLE))
       return true;
 
    blockdist = mobjinfo[thing->type].radius + thinfo->radius;
@@ -92,7 +92,7 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
       return true; // went underneath
          
    // missiles can hit other things
-   if(tmthing->flags & MF_MISSILE)
+   if(Mobj_HasFlags2(tmthing, MF2_MISSILE))
    {
       if(tmthing->target->type == thing->type) // don't hit same species as originator
       {
@@ -101,7 +101,7 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
          if(thing->type != MT_PLAYER) // let players missile each other
             return false; // explode, but do no damage
       }
-      if(!(thing->flags & MF_SHOOTABLE))
+      if(!Mobj_HasFlags2(thing, MF2_SHOOTABLE))
          return !(thing->flags & MF_SOLID); // didn't do any damage
 
       // damage/explode
@@ -190,7 +190,7 @@ static boolean PIT_CheckLine(line_t *ld, pmovework_t *mw)
    if(ld->sidenum[1] == -1)
       return false; // one-sided line
 
-   if(!(tmthing->flags & MF_MISSILE))
+   if(!(tmthing->flags2 & MF2_MISSILE))
    {
       if(ld->flags & ML_BLOCKING)
          return false; // explicitly blocking everything
@@ -401,7 +401,7 @@ boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly)
          return false; // mobj must lower itself to fit
       if(mw.tmfloorz - tmthing->z > 24*FRACUNIT)
          return false; // too big a step up
-      if (!(tmthing->flags & MF_FLOAT) && !tmthing->player && mw.tmfloorz - mw.tmdropoffz > 24*FRACUNIT)
+      if (!((tmthing->flags2 & MF2_FLOAT) || tmthing->player) && mw.tmfloorz - mw.tmdropoffz > 24*FRACUNIT)
          return false; // don't stand over a dropoff
    }
 

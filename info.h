@@ -532,7 +532,8 @@ typedef struct {
 	uint16_t	mass;
 	uint16_t	damage;
 	uint16_t	activesound;
-	int		flags;
+	VINT		flags;
+	VINT		flags2;
 } mobjinfo_t;
 
 extern const mobjinfo_t mobjinfo[NUMMOBJTYPES];

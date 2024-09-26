@@ -40,7 +40,6 @@ typedef struct
    subsector_t *testsubsec;
    line_t      *ceilingline;
    fixed_t      testbbox[4];
-   int          testflags;
 } pmovetest_t;
 
 static boolean PB_CheckThing(mobj_t* thing, pmovetest_t *mt) ATTR_DATA_CACHE_ALIGN;
@@ -82,15 +81,8 @@ static boolean PB_CheckThing(mobj_t *thing, pmovetest_t *mt)
    if(thing == mo)
       return true; // don't clip against self
 
-   // check for skulls slamming into things
-   /*if(mt->testflags & MF_SKULLFLY)
-   {
-      mt->hitthing = thing;
-      return false;
-   }*/
-
    // missiles can hit other things
-   if(mt->testflags & MF_MISSILE)
+   if(mt->checkthing->flags2 & MF2_MISSILE)
    {
       if(mo->z > thing->z + Mobj_GetHeight(thing))
          return true; // went over
@@ -104,7 +96,7 @@ static boolean PB_CheckThing(mobj_t *thing, pmovetest_t *mt)
             return false; // explode but do no damage
       }
 
-      if(!(thing->flags & MF_SHOOTABLE))
+      if(!(thing->flags2 & MF2_SHOOTABLE))
          return !(thing->flags & MF_SOLID); // didn't do any damage
 
       // damage/explode
@@ -178,7 +170,7 @@ static boolean PB_CheckLine(line_t *ld, pmovetest_t *mt)
    if(ld->sidenum[1] == -1)
       return false; // one-sided line
 
-   if(!(mt->testflags & MF_MISSILE) && (ld->flags & (ML_BLOCKING|ML_BLOCKMONSTERS)))
+   if(!(mt->checkthing->flags2 & MF2_MISSILE) && (ld->flags & (ML_BLOCKING|ML_BLOCKMONSTERS)))
       return false; // explicitly blocking
 
    front = LD_FRONTSECTOR(ld);
@@ -236,10 +228,6 @@ static boolean PB_CheckPosition(pmovetest_t *mt)
    VINT *lvalidcount;
    mobj_t *mo = mt->checkthing;
 
-   mt->testflags = mo->flags;
-   if (mo->player)
-      mt->testflags |= 0x80000000;
-
    mt->testbbox[BOXTOP   ] = mt->testy + mobjinfo[mo->type].radius;
    mt->testbbox[BOXBOTTOM] = mt->testy - mobjinfo[mo->type].radius;
    mt->testbbox[BOXRIGHT ] = mt->testx + mobjinfo[mo->type].radius;
@@ -293,7 +281,7 @@ static boolean PB_CheckPosition(pmovetest_t *mt)
    {
       for(by = yl; by <= yh; by++)
       {
-         if(((mo->flags & MF_SOLID) || (mo->flags & MF_MISSILE)) && !P_BlockThingsIterator(bx, by, (blockthingsiter_t)PB_CheckThing, mt))
+         if(((mo->flags & MF_SOLID) || (mo->flags2 & MF2_MISSILE)) && !P_BlockThingsIterator(bx, by, (blockthingsiter_t)PB_CheckThing, mt))
             return false;
          if(!P_BlockLinesIterator(bx, by, (blocklinesiter_t)PB_CrossCheck, mt))
             return false;
@@ -324,13 +312,11 @@ static boolean PB_TryMove(pmovetest_t *mt, mobj_t *mo, fixed_t tryx, fixed_t try
          return false; // mobj must lower itself to fit
       if(mt->testfloorz - mo->z > 24*FRACUNIT)
          return false; // too big a step up
-      if (!(mt->testflags & (MF_FLOAT|0x80000000)) && mt->testfloorz - mt->testdropoffz > 24*FRACUNIT)
+      if (!((mt->checkthing->flags2 & MF2_FLOAT) || mt->checkthing->type == MT_PLAYER) && mt->testfloorz - mt->testdropoffz > 24*FRACUNIT)
          return false; // don't stand over a dropoff
    }
 
    // the move is ok, so link the thing into its new position
-   if (mo->flags & MF_RINGMOBJ)
-      I_Error("Hi there");
    P_UnsetThingPosition(mo);
    mo->floorz   = mt->testfloorz;
    mo->ceilingz = mt->testceilingz;
@@ -393,7 +379,7 @@ void P_XYMovement(mobj_t *mo)
         }
 
          // explode a missile?
-         if(mo->flags & MF_MISSILE)
+         if(mo->flags2 & MF2_MISSILE)
          {
             if(mt.ceilingline && mt.ceilingline->sidenum[1] != -1 && LD_BACKSECTOR(mt.ceilingline)->ceilingpic == -1)
             {
@@ -412,7 +398,7 @@ void P_XYMovement(mobj_t *mo)
 
    // slow down
 
-   if(mo->flags & MF_MISSILE)
+   if(mo->flags2 & MF2_MISSILE)
       return; // no friction for missiles or flying skulls ever
 
    if (mo->type == MT_FLINGRING)
@@ -464,7 +450,7 @@ void P_ZMovement(mobj_t *mo)
 {
    mo->z += mo->momz;
 
-   if((mo->flags & MF_FLOAT) && (mo->flags & MF_ENEMY) && mo->target)
+   if((mo->flags2 & MF2_FLOAT) && (mo->flags2 & MF2_ENEMY) && mo->target)
    {
       // float toward target if too close
       P_FloatChange(mo);
@@ -512,7 +498,7 @@ void P_ZMovement(mobj_t *mo)
       {
          if(mo->momz < 0)
             mo->momz = 0;
-         if(mo->flags & MF_MISSILE)
+         if(mo->flags2 & MF2_MISSILE)
          {
             mo->latecall = P_ExplodeMissile;
             return;
@@ -522,8 +508,8 @@ void P_ZMovement(mobj_t *mo)
    else if(!(mo->flags & MF_NOGRAVITY))
    {
       // apply gravity
-      if (mo->subsector->sector->heightsec != -1
-         && sectors[mo->subsector->sector->heightsec].floorheight > mo->z + (mo->theight << (FRACBITS-1)))
+      if (subsectors[mo->isubsector].sector->heightsec != -1
+         && sectors[subsectors[mo->isubsector].sector->heightsec].floorheight > mo->z + (mo->theight << (FRACBITS-1)))
          mo->momz -= GRAVITY/2/3; // Less gravity underwater.
       else
          mo->momz -= GRAVITY/2;
@@ -547,7 +533,7 @@ void P_ZMovement(mobj_t *mo)
          if(mo->momz > 0)
             mo->momz = 0;
 
-         if(mo->flags & MF_MISSILE)
+         if(mo->flags2 & MF2_MISSILE)
             mo->latecall = P_ExplodeMissile;
       }
    }
@@ -584,7 +570,7 @@ static void P_Boss1Thinker(mobj_t *mobj)
    if (!(mobj->flags2 & MF2_SPAWNEDJETS))
       A_BossJetFume(mobj, 0, 0);
 
-	if (!mobj->target || !(mobj->target->flags & MF_SHOOTABLE))
+	if (!mobj->target || !(mobj->target->flags2 & MF2_SHOOTABLE))
 	{
 		if (mobj->target && mobj->target->health
          && mobj->target->type == MT_EGGMOBILE_TARGET) // Oh, we're just firing our laser.
@@ -600,7 +586,7 @@ static void P_Boss1Thinker(mobj_t *mobj)
 		return;
 	}
 
-	if (mobj->state != mobjInfo->spawnstate && mobj->health > 0 && mobj->flags & MF_FLOAT)
+	if (mobj->state != mobjInfo->spawnstate && mobj->health > 0 && mobj->flags2 & MF2_FLOAT)
 		mobj->momz = FixedMul(mobj->momz,7*FRACUNIT/8);
 
 	if (mobj->state == mobjInfo->meleestate

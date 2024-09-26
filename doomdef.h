@@ -202,10 +202,10 @@ typedef struct
 
 typedef struct mobj_s
 {
-	unsigned short		type;
-	VINT		flags;
+	uint8_t		type;
+	uint8_t		flags;
+	VINT        isubsector;
 	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
-	struct subsector_s	*subsector;
 	struct	mobj_s* prev, * next;
 
 	fixed_t			x, y, z;
@@ -219,14 +219,14 @@ typedef struct mobj_s
 	/* interaction info */
 	fixed_t			floorz, ceilingz;	/* closest together of contacted secs */
 
-	VINT			tics;				/* state tic counter	 */
-	VINT 			state;
-	VINT        	theight;			// 'tiny' height: << FRACBITS to get real height
-
 	uint8_t			health;
 	unsigned char	player;		/* only valid if type == MT_PLAYER */
+	int8_t			tics;				/* state tic counter	 */
+	uint8_t        	theight;			// 'tiny' height: << FRACBITS to get real height
+
+	VINT 			state;
+
 	VINT            flags2;
-	VINT            unused;
 
 	/* STATIC OBJECTS END HERE */
 	unsigned char	movedir;		/* 0-7 */
@@ -244,20 +244,20 @@ typedef struct mobj_s
 
 typedef struct scenerymobj_s
 {
-	unsigned short		type;
-	VINT		flags;
+	uint8_t		type;
+	uint8_t		flags;
+	VINT isubsector;
 	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
 	// SIMILARITIES END HERE
-	VINT subsector;
-	int16_t x, y, z;
+	int16_t x, y;
 } scenerymobj_t;
 
 typedef struct degenmobj_s
 {
-	unsigned short		type;
-	VINT		flags;
+	uint8_t		type;
+	uint8_t		flags;
+	VINT isubsector;
 	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
-	struct subsector_s	*subsector;
 	void 			*prev, *next;
 } degenmobj_t;
 
@@ -294,20 +294,13 @@ typedef struct degenmobj_s
 #define MF2_JUSTATTACKED  32
 #define MF2_BOSSFLEE      64
 #define MF2_SPAWNEDJETS  128
-
-/* movement flags */
-#define	MF_UNUSED1		0x0100		
-#define	MF_FLOAT		0x0200		/* allow moves to any height, no gravity */
-#define	MF_SHOOTABLE	0x0400
-#define MF_MISSILE		0x0800		/* don't hit same species, explode on block */
-
-#define	MF_UNUSED2		0x1000		/* Unused */
-#define	MF_INFLOAT		0x2000	/* floating to a height for a move, don't */
+#define	MF2_FLOAT		 256		/* allow moves to any height, no gravity */
+#define	MF2_SHOOTABLE	 512
+#define MF2_MISSILE		1024		/* don't hit same species, explode on block */
+#define	MF2_INFLOAT		2048	/* floating to a height for a move, don't */
 									/* auto float to target's height */
-
-#define	MF_SEETARGET	0x4000	/* is target visible? */
-
-#define	MF_ENEMY		0x8000	
+#define	MF2_SEETARGET	4096	/* is target visible? */
+#define MF2_ENEMY		8192
 
 /*============================================================================= */
 typedef enum

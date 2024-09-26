@@ -694,7 +694,7 @@ void P_PlayerInSpecialSector (player_t *player)
 {
 	sector_t	*sector;
 	
-	sector = player->mo->subsector->sector;
+	sector = subsectors[player->mo->isubsector].sector;
 	if (player->mo->z != sector->floorheight)
 		return;		/* not all the way down yet */
 		

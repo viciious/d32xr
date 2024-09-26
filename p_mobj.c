@@ -195,7 +195,7 @@ void P_ExplodeMissile (mobj_t *mo)
 	mo->tics -= P_Random()&1;
 	if (mo->tics < 1)
 		mo->tics = 1;
-	mo->flags &= ~MF_MISSILE;
+	mo->flags2 &= ~MF2_MISSILE;
 	if (info->deathsound)
 		S_StartSound (mo, info->deathsound);
 }
@@ -227,18 +227,7 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 			scenerymobj->flags = info->flags;
 
 			/* set subsector and/or block links */
-			subsector_t *mobjSubsec = R_PointInSubsector(x, y);
-			P_SetThingPosition2 ((mobj_t*)scenerymobj, mobjSubsec);
-			scenerymobj->subsector = mobjSubsec - subsectors;
-
-			const fixed_t floorz = mobjSubsec->sector->floorheight;
-			const fixed_t ceilingz = mobjSubsec->sector->ceilingheight;
-			if (z == ONFLOORZ)
-				scenerymobj->z = floorz >> FRACBITS;
-			else if (z == ONCEILINGZ)
-				scenerymobj->z = (ceilingz - info->height) >> FRACBITS;
-			else 
-				scenerymobj->z = z >> FRACBITS;
+			P_SetThingPosition2 ((mobj_t*)scenerymobj, R_PointInSubsector(x, y));
 
 			numscenerymobjs++;
 
@@ -263,8 +252,8 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 		/* set subsector and/or block links */
 		P_SetThingPosition2 (mobj, R_PointInSubsector(x, y));
 		
-		const fixed_t floorz = mobj->subsector->sector->floorheight;
-		const fixed_t ceilingz = mobj->subsector->sector->ceilingheight;
+		const fixed_t floorz = subsectors[mobj->isubsector].sector->floorheight;
+		const fixed_t ceilingz = subsectors[mobj->isubsector].sector->ceilingheight;
 		if (z == ONFLOORZ)
 			mobj->z = floorz;
 		else if (z == ONCEILINGZ)
@@ -307,6 +296,7 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 	mobj->y = y;
 	mobj->theight = info->height >> FRACBITS;
 	mobj->flags = info->flags;
+	mobj->flags2 = info->flags2;
 	mobj->health = info->spawnhealth;
 
 /* do not set the state with P_SetMobjState, because action routines can't */
@@ -319,8 +309,8 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 /* set subsector and/or block links */
 	P_SetThingPosition (mobj);
 	
-	mobj->floorz = mobj->subsector->sector->floorheight;
-	mobj->ceilingz = mobj->subsector->sector->ceilingheight;
+	mobj->floorz = subsectors[mobj->isubsector].sector->floorheight;
+	mobj->ceilingz = subsectors[mobj->isubsector].sector->ceilingheight;
 	if (z == ONFLOORZ)
 		mobj->z = mobj->floorz;
 	else if (z == ONCEILINGZ)
@@ -641,6 +631,14 @@ return;	/*DEBUG */
 	mobj->angle = mthing->angle * ANGLE_1;
 }
 
+boolean Mobj_HasFlags2(mobj_t *mo, VINT value)
+{
+   if (mo->flags & MF_RINGMOBJ)
+      return false;
+
+   return (mo->flags2 & value);
+}
+
 fixed_t Mobj_GetHeight(mobj_t *mo)
 {
 	if (mo->flags & MF_RINGMOBJ)
@@ -793,11 +791,11 @@ void P_MobjCheckWater(mobj_t *mo)
 		player_t *player = &players[mo->player-1];
 		VINT wasinwater = player->pflags & PF_UNDERWATER;
 		player->pflags &= ~(PF_TOUCHWATER|PF_UNDERWATER);
-		fixed_t watertop = mo->subsector->sector->floorheight - 512*FRACUNIT;
+		fixed_t watertop = subsectors[mo->isubsector].sector->floorheight - 512*FRACUNIT;
 
-		if (mo->subsector->sector->heightsec != -1)
+		if (subsectors[mo->isubsector].sector->heightsec != -1)
 		{
-			watertop = sectors[mo->subsector->sector->heightsec].floorheight;
+			watertop = sectors[subsectors[mo->isubsector].sector->heightsec].floorheight;
 
 			if (mo->z + mobjinfo[MT_PLAYER].height/2 < watertop)
 			{

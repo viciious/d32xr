@@ -126,7 +126,7 @@ static void R_PrepMobj(mobj_t *thing)
    // killough 3/27/98: exclude things totally separated
    // from the viewer, by either water or fake ceilings
    // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
-   const int heightsec = thing->subsector->sector->heightsec;
+   const int heightsec = subsectors[thing->isubsector].sector->heightsec;
 
    if (heightsec != -1)   // only clip things which are in special sectors
    {
@@ -199,7 +199,7 @@ static void R_PrepMobj(mobj_t *thing)
        if (frame & FF_FULLBRIGHT)
            vis->colormap = 255;
        else
-           vis->colormap = thing->subsector->sector->lightlevel;
+           vis->colormap = subsectors[thing->isubsector].sector->lightlevel;
        vis->colormap = HWLIGHT(vis->colormap);
    }
 
@@ -295,7 +295,7 @@ static void R_PrepRing(mobj_t *thing)
    // killough 3/27/98: exclude things totally separated
    // from the viewer, by either water or fake ceilings
    // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
-   const int heightsec = thing->subsector->sector->heightsec;
+   const int heightsec = subsectors[thing->isubsector].sector->heightsec;
 
    if (heightsec != -1)   // only clip things which are in special sectors
    {
@@ -361,7 +361,7 @@ static void R_PrepRing(mobj_t *thing)
    if (vd.fixedcolormap)
        vis->colormap = vd.fixedcolormap;
    else
-      vis->colormap = HWLIGHT(thing->subsector->sector->lightlevel);
+      vis->colormap = HWLIGHT(subsectors[thing->isubsector].sector->lightlevel);
  
 //   vis->colormaps = dc_colormaps;
 }
@@ -442,6 +442,8 @@ static void R_PrepScenery(scenerymobj_t *thing)
    if (x2 < 0)
        return;
 
+   const fixed_t thingz = subsectors[thing->isubsector].sector->floorheight;
+
    // killough 4/9/98: clip things which are out of view due to height
 //   tz = FixedMul(gzt, xscale);
 //   if (tz > centerYFrac)
@@ -454,7 +456,7 @@ static void R_PrepScenery(scenerymobj_t *thing)
    // killough 3/27/98: exclude things totally separated
    // from the viewer, by either water or fake ceilings
    // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
-   const int heightsec = subsectors[thing->subsector].sector->heightsec;
+   const int heightsec = subsectors[thing->isubsector].sector->heightsec;
 
    if (heightsec != -1)   // only clip things which are in special sectors
    {
@@ -463,16 +465,16 @@ static void R_PrepScenery(scenerymobj_t *thing)
 
       if (phs != -1)
       {
-         const fixed_t localgzt = thing->z + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
+         const fixed_t localgzt = thingz + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
 
          if (vd.viewz < sectors[phs].floorheight ?
-            thing->z >= heightsector->floorheight :
+            thingz >= heightsector->floorheight :
             localgzt < heightsector->floorheight)
             return;
          if (vd.viewz > sectors[phs].ceilingheight ?
             localgzt < heightsector->ceilingheight &&
             vd.viewz >= heightsector->ceilingheight :
-            thing->z >= heightsector->ceilingheight)
+            thingz >= heightsector->ceilingheight)
             return;
       }
    }
@@ -481,7 +483,7 @@ static void R_PrepScenery(scenerymobj_t *thing)
    if(vd.vissprite_p >= vd.vissprites + MAXVISSPRITES)
       return; // too many visible sprites already, leave room for psprites
 
-   const fixed_t texmid = ((thing->z << FRACBITS) - vd.viewz) + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
+   const fixed_t texmid = (thingz - vd.viewz) + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
 
    vis = (vissprite_t *)vd.vissprite_p;
    vd.vissprite_p++;
@@ -518,7 +520,7 @@ static void R_PrepScenery(scenerymobj_t *thing)
    if (vd.fixedcolormap)
        vis->colormap = vd.fixedcolormap;
    else
-      vis->colormap = HWLIGHT(subsectors[thing->subsector].sector->lightlevel);
+      vis->colormap = HWLIGHT(subsectors[thing->isubsector].sector->lightlevel);
 }
 
 //

@@ -299,7 +299,7 @@ boolean PIT_RadiusAttack (mobj_t *thing, pradiusattack_t *ra)
 {
 	fixed_t		dx, dy, dist;
 	
-	if (!(thing->flags & MF_SHOOTABLE) )
+	if (!Mobj_HasFlags2(thing, MF2_SHOOTABLE))
 		return true;
 
 	dx = D_abs(thing->x - ra->bombspot->x);

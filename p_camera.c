@@ -172,7 +172,7 @@ static boolean P_CameraTryMove2(ptrymove_t *tm, boolean checkposonly)
    tmthing->ceilingz = mw.tmceilingz;
    tmthing->x = mw.tmx;
    tmthing->y = mw.tmy;
-   tmthing->subsector = mw.newsubsec;
+   tmthing->isubsector = mw.newsubsec - subsectors;
 
    return true;
 }
@@ -277,7 +277,8 @@ static void P_CameraThinker(player_t *player, camera_t *thiscam)
 		momy = (thiscam->momy>>2);
 
 		mobj_t mo; // Our temporary dummy to pretend we are a mobj
-		mo.flags = MF_SOLID|MF_FLOAT;
+		mo.flags = MF_SOLID;
+      mo.flags2 = MF2_FLOAT;
 		mo.x = thiscam->x;
 		mo.y = thiscam->y;
 		mo.z = thiscam->z;
@@ -326,7 +327,7 @@ camwrapup:
 		thiscam->momx = mo.momx;
 		thiscam->momy = mo.momy;
 		thiscam->momz = mo.momz;
-      thiscam->subsector = mo.subsector;
+      thiscam->subsector = &subsectors[mo.isubsector];
    }
 
 	// P_CameraZMovement()

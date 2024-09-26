@@ -868,13 +868,13 @@ boolean P_LookForTarget(player_t *player)
 		if (node->flags & MF_STATIC)
 		{
 			if (!(node->type >= MT_YELLOWSPRING && node->type <= MT_REDHORIZ)
-				&& !(node->flags & MF_SHOOTABLE))
+				&& !(node->flags2 & MF2_SHOOTABLE))
 				continue;
 		}
 		else
 		{
 			// Enemies and springs only (for now)
-			if (!((node->flags & MF_ENEMY) || (node->flags & MF_SHOOTABLE)))
+			if (!((node->flags2 & MF2_ENEMY) || (node->flags2 & MF2_SHOOTABLE)))
 				continue;
 
 			// Ignore fretting bosses
@@ -1250,9 +1250,9 @@ void P_MovePlayer(player_t *player)
 	player->speed = P_AproxDistance(player->mo->momx, player->mo->momy);
 
 	// If you're running fast enough, you can create splashes as you run in shallow water.
-	if (player->mo->subsector->sector->heightsec != -1)
+	if (subsectors[player->mo->isubsector].sector->heightsec != -1)
 	{
-		const fixed_t watertop = sectors[player->mo->subsector->sector->heightsec].floorheight;
+		const fixed_t watertop = sectors[subsectors[player->mo->isubsector].sector->heightsec].floorheight;
 
 		if (player->mo->z + (player->mo->theight << FRACBITS) >= watertop && player->mo->z <= watertop && (player->speed > (25<<FRACBITS) || (player->pflags & PF_STARTDASH))
 			&& leveltime % (TICRATE/6) == 0 && player->mo->momz == 0)
@@ -1352,7 +1352,7 @@ void P_PlayerThink(player_t *player)
 	if (player == &players[consoleplayer])
 		P_MoveChaseCamera(player, &camera);
 
-	if (player->mo->subsector->sector->special)
+	if (subsectors[player->mo->isubsector].sector->special)
 		P_PlayerInSpecialSector(player);
 
 	/* */
