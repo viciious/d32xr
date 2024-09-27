@@ -13,6 +13,34 @@
 ===============================================================================
 */
 
+
+
+void P_TouchStarPost(mobj_t *starpost, player_t *player)
+{
+	if (player->starpostnum >= starpost->health)
+		return; // Already hit
+
+	player->starpostnum = starpost->health;
+	player->starpostx = player->mo->x >> FRACBITS;
+	player->starposty = player->mo->y >> FRACBITS;
+	player->starpostz = starpost->z;
+	player->starpostangle = starpost->angle >> ANGLETOFINESHIFT;
+
+	for (mobj_t *node = mobjhead.next; node != (void*)&mobjhead; node = node->next)
+    {
+		if (node->type != MT_STARPOST)
+			continue;
+
+		if (node->health > player->starpostnum)
+			continue;
+
+		P_SetMobjState(node, mobjinfo[MT_STARPOST].seestate);
+    }
+
+	P_SetMobjState(starpost, mobjinfo[starpost->type].painstate);
+	S_StartSound(starpost, mobjinfo[starpost->type].painsound);
+}
+
 /*
 ==================
 =
@@ -230,6 +258,12 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 		|| special->type == MT_REDSPRING || special->type == MT_REDDIAG || special->type == MT_REDHORIZ)
 	{
 		P_DoSpring(special, player);
+		return;
+	}
+
+	if (special->type == MT_STARPOST)
+	{
+		P_TouchStarPost(special, player);
 		return;
 	}
 

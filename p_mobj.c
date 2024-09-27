@@ -605,13 +605,20 @@ return;	/*DEBUG */
 		totalitems++;
 		return;
 	}
+
 	if (mobj->flags & MF_RINGMOBJ)
 		return;
 
+	if (mobj->type == MT_STARPOST)
+	{
+		mobj->health = (mthing->angle >> 8) + 1;
+		mobj->angle = (mthing->angle & 0xff) * ANGLE_1;
+	}
+	else
+		mobj->angle = mthing->angle * ANGLE_1;
+
 	if (mobj->tics > 0)
 		mobj->tics = 1 + (P_Random () % mobj->tics);
-		
-	mobj->angle = mthing->angle * ANGLE_1;
 }
 
 boolean Mobj_HasFlags2(mobj_t *mo, VINT value)

@@ -97,6 +97,8 @@ void G_DoLoadLevel (void)
 	{ 
 		if (playeringame[i]/* && players[i].playerstate == PST_DEAD*/)
 			players[i].playerstate = PST_REBORN; 
+
+		players[i].starpostnum = 0;
 	} 
 
 	totalitems = totalsecret = 0;

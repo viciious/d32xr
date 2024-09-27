@@ -411,6 +411,11 @@ typedef struct player_s
 	int			automapx, automapy, automapscale, automapflags;
 	int			turnheld;				/* for accelerative turning */
 	VINT        exiting;
+
+	VINT        starpostnum;
+	VINT        starpostx, starposty, starpostz;
+	VINT        starpostangle;
+
 	VINT        lossCount;
 	VINT        stillTimer;
 	VINT        justSprung;
