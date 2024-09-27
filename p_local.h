@@ -102,10 +102,10 @@ void	R_ResetResp(player_t* p);
 */
 
 extern	degenmobj_t	mobjhead;
-extern  degenmobj_t ringmobjhead;
-extern	degenmobj_t	freemobjhead, freestaticmobjhead, freeringmobjhead;
+extern	degenmobj_t	freemobjhead, freestaticmobjhead;
 extern	degenmobj_t	limbomobjhead;
 extern scenerymobj_t *scenerymobjlist;
+extern ringmobj_t *ringmobjlist;
 extern VINT numscenerymobjs;
 extern VINT numringmobjs;
 extern VINT numstaticmobjs;

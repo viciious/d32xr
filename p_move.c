@@ -56,13 +56,28 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
 
    blockdist = mobjinfo[thing->type].radius + thinfo->radius;
    
-   delta = thing->x - mw->tmx;
-   if(delta < 0)
-      delta = -delta;
-   if(delta >= blockdist)
-      return true; // didn't hit it
+   if (thing->flags & MF_RINGMOBJ)
+   {
+      ringmobj_t *ring = (ringmobj_t*)thing;
+      delta = (ring->x << FRACBITS) - mw->tmx;
+      if(delta < 0)
+         delta = -delta;
+      if(delta >= blockdist)
+         return true; // didn't hit it
 
-   delta = thing->y - mw->tmy;
+      delta = (ring->y << FRACBITS) - mw->tmy;
+   }
+   else
+   {
+      delta = thing->x - mw->tmx;
+      if(delta < 0)
+         delta = -delta;
+      if(delta >= blockdist)
+         return true; // didn't hit it
+
+      delta = thing->y - mw->tmy;
+   }
+
    if(delta < 0)
       delta = -delta;
    if(delta >= blockdist)
@@ -70,26 +85,26 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
 
    if(thing == tmthing)
       return true; // don't clip against self
-
-   // check for skulls slamming into things
-   /*if(tmthing->flags & MF_SKULLFLY)
-   {
-		damage = ((P_Random()&7)+1)* thinfo->damage;
-		P_DamageMobj (thing, tmthing, tmthing, damage);
-		tmthing->flags &= ~MF_SKULLFLY;
-		tmthing->momx = tmthing->momy = tmthing->momz = 0;
-		P_SetMobjState (tmthing, thinfo->spawnstate);
-      return false; // stop moving
-   }*/
-
+      
    // Z-checking
    const fixed_t theight = Mobj_GetHeight(thing);
    const fixed_t tmheight = Mobj_GetHeight(tmthing);
 
-   if(tmthing->z > thing->z + theight)
-      return true; // went overhead
-   if(tmthing->z + tmheight < thing->z)
-      return true; // went underneath
+   if (thing->flags & MF_RINGMOBJ)
+   {
+      ringmobj_t *ring = (ringmobj_t*)thing;
+      if(tmthing->z > (ring->z << FRACBITS) + theight)
+         return true; // went overhead
+      if(tmthing->z + tmheight < (ring->z << FRACBITS))
+         return true; // went underneath
+   }
+   else
+   {
+      if(tmthing->z > thing->z + theight)
+         return true; // went overhead
+      if(tmthing->z + tmheight < thing->z)
+         return true; // went underneath
+   }
          
    // missiles can hit other things
    if(Mobj_HasFlags2(tmthing, MF2_MISSILE))

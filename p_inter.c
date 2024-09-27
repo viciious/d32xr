@@ -165,8 +165,9 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 
 		if (special->type == MT_RING)
 		{
+			ringmobj_t *ring = (ringmobj_t*)special;
 			player->lossCount = 0;
-			P_SpawnMobj(special->x, special->y, special->z, MT_SPARK);
+			P_SpawnMobj(ring->x << FRACBITS, ring->y << FRACBITS, ring->z << FRACBITS, MT_SPARK);
 			P_GivePlayerRings(player, 1);
 			sound = mobjinfo[special->type].deathsound;
 

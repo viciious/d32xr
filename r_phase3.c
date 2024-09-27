@@ -8,7 +8,7 @@
 #include "p_local.h"
 
 static void R_PrepMobj(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
-static void R_PrepRing(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
+static void R_PrepRing(ringmobj_t* thing) ATTR_DATA_CACHE_ALIGN;
 static void R_PrepScenery(scenerymobj_t* thing) ATTR_DATA_CACHE_ALIGN;
 void R_SpritePrep(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 
@@ -206,7 +206,7 @@ static void R_PrepMobj(mobj_t *thing)
 //   vis->colormaps = dc_colormaps;
 }
 
-static void R_PrepRing(mobj_t *thing)
+static void R_PrepRing(ringmobj_t *thing)
 {
    fixed_t tr_x, tr_y;
    fixed_t gxt, gyt;
@@ -221,8 +221,8 @@ static void R_PrepRing(mobj_t *thing)
    vissprite_t  *vis;
 
    // transform origin relative to viewpoint
-   tr_x = thing->x - vd.viewx;
-   tr_y = thing->y - vd.viewy;
+   tr_x = (thing->x<<FRACBITS) - vd.viewx;
+   tr_y = (thing->y<<FRACBITS) - vd.viewy;
 
    gxt = FixedMul(tr_x, vd.viewcos);
    gyt = FixedMul(tr_y, vd.viewsin);
@@ -304,16 +304,16 @@ static void R_PrepRing(mobj_t *thing)
 
       if (phs != -1)
       {
-         const fixed_t localgzt = thing->z + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
+         const fixed_t localgzt = (thing->z << FRACBITS) + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
 
          if (vd.viewz < sectors[phs].floorheight ?
-            thing->z >= heightsector->floorheight :
+            (thing->z << FRACBITS) >= heightsector->floorheight :
             localgzt < heightsector->floorheight)
             return;
          if (vd.viewz > sectors[phs].ceilingheight ?
             localgzt < heightsector->ceilingheight &&
             vd.viewz >= heightsector->ceilingheight :
-            thing->z >= heightsector->ceilingheight)
+            (thing->z << FRACBITS) >= heightsector->ceilingheight)
             return;
       }
    }
@@ -322,7 +322,7 @@ static void R_PrepRing(mobj_t *thing)
    if(vd.vissprite_p >= vd.vissprites + MAXVISSPRITES)
       return; // too many visible sprites already, leave room for psprites
 
-   const fixed_t texmid = (thing->z - vd.viewz) + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
+   const fixed_t texmid = ((thing->z << FRACBITS) - vd.viewz) + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
 
    vis = (vissprite_t *)vd.vissprite_p;
    vd.vissprite_p++;
@@ -333,8 +333,8 @@ static void R_PrepRing(mobj_t *thing)
 #endif
    vis->x1       = x1 < 0 ? 0 : x1;
    vis->x2       = x2 >= viewportWidth ? viewportWidth - 1 : x2;
-   vis->gx       = thing->x >> FRACBITS;
-   vis->gy       = thing->y >> FRACBITS;
+   vis->gx       = thing->x;
+   vis->gy       = thing->y;
    vis->xscale   = xscale;
    vis->yscale   = FixedMul(xscale, stretch);
    vis->patchheight = BIGSHORT(patch->height);
@@ -542,7 +542,7 @@ void R_SpritePrep(void)
             if (thing->flags & MF_NOBLOCKMAP)
                R_PrepScenery((scenerymobj_t*)thing);
             else
-               R_PrepRing(thing);
+               R_PrepRing((ringmobj_t*)thing);
          }
          else if (!(thing->flags2 & MF2_DONTDRAW))
             R_PrepMobj(thing);

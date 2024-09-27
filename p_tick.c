@@ -27,11 +27,11 @@ processing
 
 thinker_t	thinkercap;	/* both the head and tail of the thinker list */
 degenmobj_t		mobjhead;	/* head and tail of mobj list */
-degenmobj_t     ringmobjhead;
-degenmobj_t		freemobjhead, freestaticmobjhead, freeringmobjhead;	/* head and tail of free mobj list */
+degenmobj_t		freemobjhead, freestaticmobjhead;	/* head and tail of free mobj list */
 degenmobj_t		limbomobjhead;
 
 scenerymobj_t *scenerymobjlist;
+ringmobj_t *ringmobjlist;
 VINT numscenerymobjs = 0;
 VINT numringmobjs = 0;
 VINT numstaticmobjs = 0;
@@ -52,12 +52,11 @@ void P_InitThinkers (void)
 {
 	thinkercap.prev = thinkercap.next  = &thinkercap;
 	mobjhead.next = mobjhead.prev = (void *)&mobjhead;
-	ringmobjhead.next = ringmobjhead.prev = (void *)&ringmobjhead;
 	freemobjhead.next = freemobjhead.prev = (void *)&freemobjhead;
 	freestaticmobjhead.next = freestaticmobjhead.prev = (void *)&freestaticmobjhead;
-	freeringmobjhead.next = freeringmobjhead.prev = (void*)&freeringmobjhead;
 	limbomobjhead.next = limbomobjhead.prev = (void*)&limbomobjhead;
 	scenerymobjlist = NULL;
+	ringmobjlist = NULL;
 }
 
 

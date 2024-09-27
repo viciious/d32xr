@@ -206,10 +206,10 @@ typedef struct mobj_s
 	uint8_t		flags;
 	VINT        isubsector;
 	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
+	struct mobj_s	*bnext, *bprev;		/* links in blocks (if needed) */
 	struct	mobj_s* prev, * next;
 
 	fixed_t			x, y, z;
-	struct mobj_s	*bnext, *bprev;		/* links in blocks (if needed) */
 
 	// RING OBJECTS END HERE
 
@@ -220,7 +220,7 @@ typedef struct mobj_s
 	fixed_t			floorz, ceilingz;	/* closest together of contacted secs */
 
 	uint8_t			health;
-	unsigned char	player;		/* only valid if type == MT_PLAYER */
+	uint8_t			player;		/* only valid if type == MT_PLAYER */
 	int8_t			tics;				/* state tic counter	 */
 	uint8_t        	theight;			// 'tiny' height: << FRACBITS to get real height
 
@@ -252,17 +252,29 @@ typedef struct scenerymobj_s
 	int16_t x, y;
 } scenerymobj_t;
 
+typedef struct ringmobj_s
+{
+	uint8_t		type;
+	uint8_t		flags;
+	VINT        isubsector;
+	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
+	struct mobj_s	*bnext, *bprev;		/* links in blocks (if needed) */
+	// SIMILARITIES END HERE
+	VINT			x, y, z;
+	VINT alive;
+} ringmobj_t;
+
 typedef struct degenmobj_s
 {
 	uint8_t		type;
 	uint8_t		flags;
 	VINT isubsector;
 	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
+	struct mobj_s	*bnext, *bprev;		/* links in blocks (if needed) */
 	void 			*prev, *next;
 } degenmobj_t;
 
 #define static_mobj_size (offsetof(mobj_t,movedir))
-#define ring_mobj_size (offsetof(mobj_t,angle))
 
 /* */
 /* frame flags */

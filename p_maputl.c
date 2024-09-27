@@ -204,8 +204,17 @@ void P_UnsetThingPosition (mobj_t *thing)
 			thing->bprev->bnext = thing->bnext;
 		else
 		{
-			blockx = thing->x - bmaporgx;
-			blocky = thing->y - bmaporgy;
+			if (thing->flags & MF_RINGMOBJ)
+			{
+				ringmobj_t *ring = (ringmobj_t*)thing;
+				blockx = (ring->x << FRACBITS) - bmaporgx;
+				blocky = (ring->y << FRACBITS) - bmaporgy;
+			}
+			else
+			{
+				blockx = thing->x - bmaporgx;
+				blocky = thing->y - bmaporgy;
+			}
 			if (blockx >= 0 && blocky >= 0)
 			{
 				blockx = (unsigned)blockx >> MAPBLOCKSHIFT;
@@ -253,8 +262,18 @@ void P_SetThingPosition2 (mobj_t *thing, subsector_t *ss)
 /* */
 	if (!(thing->flags & MF_NOBLOCKMAP) )
 	{	/* inert things don't need to be in blockmap		 */
-		blockx = thing->x - bmaporgx;
-		blocky = thing->y - bmaporgy;
+
+		if (thing->flags & MF_RINGMOBJ)
+		{
+			ringmobj_t *ring = (ringmobj_t*)thing;
+			blockx = (ring->x << FRACBITS) - bmaporgx;
+			blocky = (ring->y << FRACBITS) - bmaporgy;
+		}
+		else
+		{
+			blockx = thing->x - bmaporgx;
+			blocky = thing->y - bmaporgy;
+		}
 		if (blockx>=0 && blocky>=0)
 		{
 			blockx = (unsigned)blockx >> MAPBLOCKSHIFT;

@@ -56,9 +56,9 @@ void P_RemoveMobj (mobj_t *mobj)
 
 	if (mobj->flags & MF_RINGMOBJ)
 	{
-		// unlink from mobj list
-		P_RemoveMobjFromCurrList(mobj);
-		P_AddMobjToList(mobj, (void*)&freeringmobjhead);
+		ringmobj_t *ring = (ringmobj_t*)mobj;
+		ring->flags = 0;
+		ring->alive = 0;
 		return;
 
 	}
@@ -218,7 +218,7 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 /* try to reuse a previous mobj first */
 	if (info->flags & MF_RINGMOBJ)
 	{
-		if (info->flags & MF_NOBLOCKMAP)
+		if (info->flags & MF_NOBLOCKMAP) // It's scenery
 		{
 			scenerymobj_t *scenerymobj = &scenerymobjlist[numscenerymobjs];
 			scenerymobj->type = type;
@@ -233,36 +233,23 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 
 			return (mobj_t*)scenerymobj;
 		}
-
-		if (freeringmobjhead.next != (void*)&freeringmobjhead)
+		else // It's a ring
 		{
-			mobj = freeringmobjhead.next;
-			P_RemoveMobjFromCurrList(mobj);
+			ringmobj_t *ringmobj = &ringmobjlist[numringmobjs];
+			ringmobj->type = type;
+			ringmobj->x = x >> FRACBITS;
+			ringmobj->y = y >> FRACBITS;
+			ringmobj->z = z >> FRACBITS;
+			ringmobj->flags = info->flags;
+			ringmobj->alive = 1;
+
+			/* set subsector and/or block links */
+			P_SetThingPosition2 ((mobj_t*)ringmobj, R_PointInSubsector(x, y));
+
+			numringmobjs++;
+
+			return (mobj_t*)ringmobj;
 		}
-		else
-			mobj = Z_Malloc(ring_mobj_size, PU_LEVEL);
-		
-		D_memset(mobj, 0, ring_mobj_size);
-
-		mobj->type = type;
-		mobj->x = x;
-		mobj->y = y;
-		mobj->flags = info->flags;
-
-		/* set subsector and/or block links */
-		P_SetThingPosition2 (mobj, R_PointInSubsector(x, y));
-		
-		const fixed_t floorz = subsectors[mobj->isubsector].sector->floorheight;
-		const fixed_t ceilingz = subsectors[mobj->isubsector].sector->ceilingheight;
-		if (z == ONFLOORZ)
-			mobj->z = floorz;
-		else if (z == ONCEILINGZ)
-			mobj->z = ceilingz - info->height;
-		else 
-			mobj->z = z;
-			
-		P_AddMobjToList(mobj, (void *)&ringmobjhead);
-		return mobj;
 	}
 	else if (info->flags & MF_STATIC)
 	{
@@ -336,12 +323,18 @@ int thingmem = 0;
 */
 void P_PreSpawnMobjs(int count, int staticcount, int ringcount, int scenerycount)
 {
-	thingmem = count * sizeof(mobj_t) + staticcount * static_mobj_size + ringcount * ring_mobj_size + scenerycount * sizeof(scenerymobj_t);
+	thingmem = count * sizeof(mobj_t) + staticcount * static_mobj_size + ringcount * sizeof(ringmobj_t) + scenerycount * sizeof(scenerymobj_t);
 
 	if (scenerycount > 0)
 	{
 		scenerymobjlist = Z_Malloc(sizeof(scenerymobj_t)*scenerycount, PU_LEVEL);
 		numscenerymobjs = 0;
+	}
+
+	if (ringcount > 0)
+	{
+		ringmobjlist = Z_Malloc(sizeof(ringmobj_t)*ringcount, PU_LEVEL);
+		numringmobjs = 0;
 	}
 
 	numstaticmobjs = staticcount;
@@ -361,16 +354,6 @@ void P_PreSpawnMobjs(int count, int staticcount, int ringcount, int scenerycount
 		for (; count > 0; count--) {
 			P_AddMobjToList(mobj, (void *)&freemobjhead);
 			mobj++;
-		}
-	}
-
-	numringmobjs = ringcount;
-	if (ringcount > 0)
-	{
-		uint8_t *mobj = Z_Malloc (ring_mobj_size*ringcount, PU_LEVEL);
-		for (; ringcount > 0; ringcount--) {
-			P_AddMobjToList((void*)mobj, (void*)&freeringmobjhead);
-			mobj += ring_mobj_size;
 		}
 	}
 }

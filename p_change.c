@@ -82,6 +82,9 @@ boolean P_ThingHeightClip (mobj_t *thing)
 
 boolean PIT_ChangeSector (mobj_t *thing, changetest_t *ct)
 {
+	if (thing->flags & MF_RINGMOBJ) // Rings and scenery either ignore sector changes (rings), or auto-adjust (scenery)
+		return true;
+
 	if (P_ThingHeightClip (thing))
 		return true;		/* keep checking */
 

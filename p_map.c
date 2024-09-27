@@ -298,6 +298,9 @@ void P_UseLines (player_t *player)
 boolean PIT_RadiusAttack (mobj_t *thing, pradiusattack_t *ra)
 {
 	fixed_t		dx, dy, dist;
+
+	if (thing->flags & MF_RINGMOBJ)
+		return true;
 	
 	if (!Mobj_HasFlags2(thing, MF2_SHOOTABLE))
 		return true;
