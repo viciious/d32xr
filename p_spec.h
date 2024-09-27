@@ -30,7 +30,7 @@ typedef struct
 	char	startname[9];
 } animdef_t;
 
-#define	MAXANIMS		32
+#define	MAXANIMS		16
 
 extern	anim_t	*anims/*[MAXANIMS]*/, * lastanim;
 
@@ -38,7 +38,7 @@ extern	anim_t	*anims/*[MAXANIMS]*/, * lastanim;
 /* */
 /*	Animating line specials */
 /* */
-#define	MAXLINEANIMS		128
+#define	MAXLINEANIMS		64
 extern	int		numlinespecials;
 extern	line_t	**linespeciallist/*[MAXLINEANIMS]*/;
 
@@ -187,7 +187,7 @@ typedef struct
 
 #define	PLATWAIT	3*2/THINKERS_TICS			/* seconds */
 #define	PLATSPEED	(FRACUNIT*THINKERS_TICS)
-#define	MAXPLATS	30
+#define	MAXPLATS	16
 
 extern	plat_t	**activeplats/*[MAXPLATS]*/;
 
@@ -271,7 +271,7 @@ typedef struct
 } ceiling_t;
 
 #define	CEILSPEED		FRACUNIT*THINKERS_TICS
-#define MAXCEILINGS		30
+#define MAXCEILINGS		16
 
 extern	ceiling_t	**activeceilings/*[MAXCEILINGS]*/;
 
