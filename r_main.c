@@ -379,8 +379,9 @@ void R_SetTextureData(texture_t *tex, uint8_t *start, int size, boolean skiphead
 	uint8_t *data = skipheader ? R_SkipJagObjHeader(start, size, w, h) : start;
 #if MIPLEVELS > 1
 	uint8_t *end = start + size;
+	boolean masked = tex->lumpnum >= firstsprite && tex->numnum < firstsprite + numsprites;
 
-	if (!tex->masked && texmips)
+	if (texmips && !masked)
 		mipcount = MIPLEVELS;
 #endif
 
@@ -427,7 +428,7 @@ void R_SetFlatData(int f, uint8_t *start, int size)
 		flatpixels[f].data[j] = data;
 		if (texmips) {
 			data += w * w;
-			size >>= 1;
+			w >>= 1;
 		}
 	}
 }
