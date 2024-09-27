@@ -317,7 +317,7 @@ void R_InitFlats (void)
 	for (i=0 ; i<numflats ; i++)
 	{
 		int j;
-		int w = 64;
+		int w = CalcFlatSize(W_LumpLength(firstflat + i));
 		uint8_t *start = R_CheckPixels(firstflat + i);
 		uint8_t *end = start + W_LumpLength(firstflat + i);
 		uint8_t *data = start;

@@ -5,6 +5,8 @@
 #include "mars.h"
 #include "p_camera.h"
 
+#define DEFAULT_GAME_ZONE_MARGIN (4*1024)
+
 int			numvertexes;
 vertex_t	*vertexes;
 
@@ -581,6 +583,7 @@ void P_SetupLevel (int lumpnum)
 	mobj_t	*mobj;
 #endif
 	extern	int	cy;
+	int gamezonemargin;
 	
 	M_ClearRandom ();
 
@@ -589,6 +592,8 @@ void P_SetupLevel (int lumpnum)
 D_printf ("P_SetupLevel(%i)\n",lumpnum);
 
 	P_InitThinkers ();
+
+	R_ResetTextures();
 	
 /* note: most of this ordering is important	 */
 	P_LoadBlockMap (lumpnum+ML_BLOCKMAP);
@@ -661,7 +666,8 @@ extern byte *debugscreen;
 
 	gamepaused = false;
 
-	R_SetupLevel();
+	gamezonemargin = DEFAULT_GAME_ZONE_MARGIN;
+	R_SetupLevel(gamezonemargin);
 
 	I_SetThreadLocalVar(DOOMTLS_VALIDCOUNT, &validcount[0]);
 

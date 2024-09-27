@@ -580,6 +580,11 @@ void Mars_Sec_R_SegCommands(void)
             texture_t* tex = &textures[LOWER8(segl->tb_texturenum)];
             Mars_ClearCacheLines(tex->data, (sizeof(tex->data)+31)/16);
         }
+        if (segl->actionbits & AC_MIDTEXTURE)
+        {
+            texture_t* tex = &textures[segl->m_texturenum];
+            Mars_ClearCacheLines(tex->data, (sizeof(tex->data)+31)/16);
+        }
 
         if (segl->actionbits & AC_ADDFLOOR)
         {

@@ -376,6 +376,119 @@ VINT CalcFlatSize(int lumplength)
     }
 }
 
+
+/*
+==============
+=
+= R_SetTextureData
+=
+==============
+*/
+void R_SetTextureData(texture_t *tex, uint8_t *start, int size, boolean skipheader)
+{
+	int j;
+	int mipcount = 1;
+	int w = tex->width, h = tex->height;
+	uint8_t *data = skipheader ? R_SkipJagObjHeader(start, size, w, h) : start;
+#if MIPLEVELS > 1
+	uint8_t *end = start + size;
+
+	boolean masked = tex->lumpnum >= firstsprite && tex->lumpnum < firstsprite + numsprites;
+
+    if (!masked && texmips)
+		mipcount = MIPLEVELS;
+#endif
+
+	for (j = 0; j < mipcount; j++)
+	{
+		int size = w * h;
+
+#if MIPLEVELS > 1
+		if (j && data+size > end) {
+			// no mipmaps
+			tex->mipcount = 1;
+			break;
+		}
+#endif
+
+		tex->data[j] = data;
+		data += size;
+
+		w >>= 1;
+		if (w < 1)
+			w = 1;
+
+		h >>= 1;
+		if (h < 1)
+			h = 1;
+	}
+}
+
+/*
+==============
+=
+= R_SetFlatData
+=
+==============
+*/
+void R_SetFlatData(int f, uint8_t *start, int size)
+{
+	int j;
+	int w = CalcFlatSize(size);
+	uint8_t *data = start;
+
+	for (j = 0; j < MIPLEVELS; j++)
+	{
+		flatpixels[f].data[j] = data;
+		flatpixels[f].size = w;
+		if (texmips) {
+			data += w * w;
+			w >>= 1;
+
+			if (w < 1)
+				w = 1;
+		}
+	}
+}
+
+void R_ResetTextures(void)
+{
+	int i;
+
+	// reset pointers from previous level
+	for (i = 0; i < numtextures; i++)
+	{
+		int length;
+		boolean skipheader;
+		uint8_t *data;
+		int lump = textures[i].lumpnum;
+
+		if (lump >= firstsprite && lump < firstsprite + numsprites) {
+			data = W_POINTLUMPNUM(lump+1);
+			length = W_LumpLength(lump+1);
+			skipheader = false;
+		} else {
+			data = R_CheckPixels(lump);
+			length = W_LumpLength(lump);
+			skipheader = true;
+		}
+
+		R_SetTextureData(&textures[i], data, length, skipheader);
+	}
+
+	for (i=0 ; i<numflats ; i++)
+	{
+		int length;
+		uint8_t *data;
+		int lump = firstflat + i;
+
+		data = R_CheckPixels(lump);
+		length = W_LumpLength(lump);
+
+		R_SetFlatData(i, data, length);
+	}
+}
+
 /*
 ==============
 =
@@ -383,63 +496,13 @@ VINT CalcFlatSize(int lumplength)
 =
 ==============
 */
-void R_SetupTextureCaches(void)
+void R_SetupTextureCaches(int gamezonemargin)
 {
-	int i, j;
 	int zonefree;
 	int cachezonesize;
 	void *margin;
-	const int zonemargin = 8*1024;
+	const int zonemargin = gamezonemargin;
 	const int flatblocksize = sizeof(memblock_t) + ((sizeof(texcacheblock_t) + 15) & ~15) + 64*64 + 32;
-
-	// reset pointers from previous level
-	for (i = 0; i < numtextures; i++)
-	{
-		int w = textures[i].width, h = textures[i].height;
-		int mipcount = 1;
-		int lump = textures[i].lumpnum;
-		uint8_t *start = R_CheckPixels(lump);
-		uint8_t *data = R_SkipJagObjHeader(start, W_LumpLength(lump), w, h);
-
-#if MIPLEVELS > 1
-		mipcount = textures[i].mipcount;
-#endif
-		for (j = 0; j < mipcount; j++)
-		{
-			int size = w * h;
-
-			textures[i].data[j] = data;
-			data += size;
-
-			w >>= 1;
-			if (w < 1)
-				w = 1;
-
-			h >>= 1;
-			if (h < 1)
-				h = 1;
-		}
-	}
-
-	for (i=0 ; i<numflats ; i++)
-	{
-		uint8_t *data = R_CheckPixels(firstflat + i);
-		const int length = W_LumpLength(firstflat + i);
-		int size = CalcFlatSize(length);
-
-		for (j = 0; j < MIPLEVELS; j++)
-		{
-			flatpixels[i].data[j] = data;
-			flatpixels[i].size = size;
-			if (texmips) {
-				data += size * size;
-				size >>= 1;
-
-				if (size < 1)
-					size = 1;
-			}
-		}
-	}
 
 	// functioning texture cache requires at least 8kb of ram
 	zonefree = Z_LargestFreeBlock(mainzone);
@@ -462,9 +525,9 @@ nocache:
 	R_InitTexCacheZone(&r_texcache, 0);
 }
 
-void R_SetupLevel(void)
+void R_SetupLevel(int gamezonemargin)
 {
-	R_SetupTextureCaches();
+	R_SetupTextureCaches(gamezonemargin);
 
 	R_SetViewportSize(viewportNum);
 

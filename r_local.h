@@ -269,8 +269,10 @@ void	R_InitData (void);
 void	R_SetViewportSize(int num);
 int		R_DefaultViewportSize(void); // returns the viewport id for fullscreen, low detail mode
 void	R_SetDrawMode(void);
-void	R_SetupLevel(void);
-void	R_SetupTextureCaches(void);
+void    R_SetFlatData(int f, uint8_t *start, int size);
+void    R_ResetTextures(void);
+void	R_SetupLevel(int gamezonemargin);
+void	R_SetupTextureCaches(int gamezonemargin);
 // killough 4/13/98: fake floors/ceilings for deep water / fake ceilings:
 sector_t *R_FakeFlat(sector_t *, sector_t *, boolean) ATTR_DATA_CACHE_ALIGN;
 

@@ -645,7 +645,7 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
 //       tempsec->floor_xoffs = tempsec->ceiling_xoffs = s->ceiling_xoffs;
 //       tempsec->floor_yoffs = tempsec->ceiling_yoffs = s->ceiling_yoffs;
 
-         if (s->floorpic != -1)
+         if (s->floorpic != (uint8_t)-1)
          {
             tempsec->ceilingheight = sec->ceilingheight;
             tempsec->floorpic      = s->floorpic;
