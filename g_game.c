@@ -605,6 +605,8 @@ startnew:
 				I_NetStop();
 			if (startsave != -1)
 				G_LoadGame(startsave);
+			else if (demorecording)
+				G_RecordDemo();	// set startmap and startskill
 			else
 				G_InitNew(startskill, startmap, starttype, startsplitscreen);
 			continue;
@@ -736,18 +738,28 @@ int G_PlayDemoPtr (unsigned *demo)
 
 void G_RecordDemo (void)
 {
+#ifdef MARS_USE_SRAM_DEMO
+	demo_p = demobuffer = (void *)MARS_SRAM_DEMO_OFS;
+
+	I_WriteU32SRAM((intptr_t)demo_p, startskill);
+	demo_p++;
+
+	I_WriteU32SRAM((intptr_t)demo_p, startmap);
+	demo_p++;
+#else
 	demo_p = demobuffer = Z_Malloc (0x8000, PU_STATIC);
-	
+
 	*demo_p++ = startskill;
 	*demo_p++ = startmap;
-	
+#endif
+
 	G_InitNew (startskill, startmap, gt_single, false);
 	demorecording = true; 
 	MiniLoop (P_Start, P_Stop, P_Ticker, P_Drawer, P_Update);
 	demorecording = false;
 
 #ifdef MARS
-	I_Error("%d %p", demo_p - demobuffer, demobuffer);
+	I_Error("%d %p", (intptr_t)demo_p - (intptr_t)demobuffer, demobuffer);
 #endif
 
 	D_printf ("w %x,%x",demobuffer,demo_p);

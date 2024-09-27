@@ -398,6 +398,11 @@ int M_Ticker (void)
 			startskill = playerskill;	/* set skill level */
 			starttype = currentplaymode;	/* set play type */
 			startsplitscreen = currentgametype == mi_splitscreen;
+			if ((ticrealbuttons & (BT_Y|BT_MODE)) == (BT_Y|BT_MODE))
+			{
+				// hold Y and MODE to begin recording a demo
+				demorecording = true;
+			}
 			return ga_startnew;		/* done with menu */
 		}
 

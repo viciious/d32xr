@@ -431,7 +431,14 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		gamevbls += vblsinframe;
 
 		if (demorecording)
-			*demo_p++ = buttons;
+		{
+#ifdef MARS_USE_SRAM_DEMO
+			I_WriteU32SRAM((intptr_t)demo_p, buttons);
+#else
+			*demo_p = buttons;
+#endif
+			demo_p++;
+		}
 		
 		if ((demorecording || demoplayback) && (buttons & BT_PAUSE) )
 		{
@@ -949,8 +956,6 @@ D_printf("G_Init\n");
 D_printf ("DM_Main\n");
 
 /*	while (1)	RunDemo ("DEMO1"); */
-
-/*G_RecordDemo ();	// set startmap and startskill */
 
 /*	MiniLoop (F_Start, F_Stop, F_Ticker, F_Drawer, UpdateBuffer); */
 

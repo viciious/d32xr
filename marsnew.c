@@ -1262,3 +1262,33 @@ int I_ReadCDDirectory(const char *path)
 {
 	return Mars_MCDReadDirectory(path);
 }
+
+uint8_t I_ReadU8SRAM(int offset)
+{
+	uint8_t c;
+	Mars_ReadSRAM(&c, offset, 1);
+	return c;
+}
+
+void I_WriteU8SRAM(int offset, int val)
+{
+	uint8_t c = val & 0xff;
+	Mars_WriteSRAM(&c, offset, 1);
+}
+
+uint32_t I_ReadU32SRAM(int offset)
+{
+	uint8_t c[4];
+	Mars_ReadSRAM(c, offset, 4);
+	return (c[0] << 24) | (c[1] << 16) | (c[2] << 8) | c[3];
+}
+
+void I_WriteU32SRAM(int offset, uint32_t val)
+{
+	uint8_t c[4];
+	c[0] = (val >> 24) & 0xff;
+	c[1] = (val >> 16) & 0xff;
+	c[2] = (val >>  8) & 0xff;
+	c[3] = (val >>  0) & 0xff;
+	Mars_WriteSRAM(c, offset, 4);
+}

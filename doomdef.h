@@ -26,6 +26,12 @@
 #endif
 #endif
 
+#define MARS_USE_SRAM_DEMO
+#define MARS_SRAM_DEMO_OFS 0x800
+#if defined(MARS_USE_SRAM_DEMO) && !defined(MARS)
+#undef MARS_USE_SRAM_DEMO
+#endif
+
 typedef unsigned short pixel_t;
 
 #ifdef MARS
@@ -1253,6 +1259,11 @@ int I_ReadCDFile(int length);
 void I_SetCDFileCache(int length);
 void *I_GetCDFileCache(int length);
 int I_ReadCDDirectory(const char *path);
+
+uint8_t I_ReadSRAM(int offset);
+void I_WriteSRAM(int offset, int val);
+uint32_t I_ReadU32SRAM(int offset);
+void I_WriteU32SRAM(int offset, uint32_t val);
 
 /*================= */
 /*TLS */
