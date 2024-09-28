@@ -266,6 +266,7 @@ extern	VINT		*validcount;		/* (0 - increment every time a check is made, [1..num
 ===============================================================================
 */
 
+void P_SetStarPosts(uint8_t starpostnum);
 void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher) __attribute__((noinline));
 
 void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage);

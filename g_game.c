@@ -96,9 +96,8 @@ void G_DoLoadLevel (void)
 	for (i=0 ; i<MAXPLAYERS ; i++) 
 	{ 
 		if (playeringame[i]/* && players[i].playerstate == PST_DEAD*/)
-			players[i].playerstate = PST_REBORN; 
+			players[i].playerstate = PST_REBORN;
 
-		players[i].starpostnum = 0;
 		players[i].xtralife = 0;
 	} 
 
@@ -274,13 +273,34 @@ void G_PlayerReborn (int player)
 	player_t        *p; 
 	int             itemcount;
 	int             secretcount;
+	int             starpostnum;
+	VINT            starpostx;
+	VINT            starposty;
+	VINT            starpostz;
+	VINT            starpostangle;
+	VINT            lives;
 
 	p = &players[player]; 
 	itemcount = p->itemcount;
 	secretcount = p->secretcount;
+	starpostnum = p->starpostnum;
+	starpostx = p->starpostx;
+	starposty = p->starposty;
+	starpostz = p->starpostz;
+	starpostangle = p->starpostangle;
+	lives = p->lives;
+
 	D_memset (p, 0, sizeof(*p)); 
+
 	p->itemcount = itemcount;
 	p->secretcount = secretcount;
+	p->starpostnum = starpostnum;
+	p->starpostx = starpostx;
+	p->starposty = starposty;
+	p->starpostz = starpostz;
+	p->starpostangle = starpostangle;
+	p->lives = lives;
+
 	p->playerstate = PST_LIVE;
 
 	P_RestoreResp(p);
@@ -543,7 +563,11 @@ void G_InitNew (int map, gametype_t gametype, boolean splitscr)
 
 /* force players to be initialized upon first level load          */
 	for (i=0 ; i<MAXPLAYERS ; i++) 
+	{
+		players[i].lives = 3;
+		players[i].starpostnum = 0;
 		players[i].playerstate = PST_REBORN;
+	}
 
 	for (i=0 ; i<MAXPLAYERS ; i++)
 		players[i].mo = &emptymobj;	/* for net consistency checks */

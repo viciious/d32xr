@@ -506,7 +506,7 @@ void R_SetupTextureCaches(int gamezonemargin)
 
 	// functioning texture cache requires at least 8kb of ram
 	zonefree = Z_LargestFreeBlock(mainzone);
-	CONS_Printf("Free memory: %d", zonefree);
+//	CONS_Printf("Free memory: %d", zonefree);
 	if (zonefree < zonemargin+flatblocksize)
 		goto nocache;
 

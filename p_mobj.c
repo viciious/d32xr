@@ -419,6 +419,7 @@ void P_SpawnPlayer (mapthing_t *mthing)
 {
 	player_t	*p;
 	fixed_t		x,y,z;
+	angle_t     angle;
 	mobj_t		*mobj;
 
 	if (!playeringame[mthing->type-1])
@@ -429,19 +430,23 @@ void P_SpawnPlayer (mapthing_t *mthing)
 	if (p->playerstate == PST_REBORN)
 		G_PlayerReborn (mthing->type-1);
 
-	x = mthing->x << FRACBITS;
-	y = mthing->y << FRACBITS;
-#if 0
-if (mthing->type==1)
-{
-x = 0xffb00000;
-y = 0xff500000;
-}
-#endif
-	z = ONFLOORZ;
+	if (p->starpostnum)
+	{
+		x = p->starpostx << FRACBITS;
+		y = p->starposty << FRACBITS;
+		z = p->starpostz << FRACBITS;
+		angle = p->starpostangle << ANGLETOFINESHIFT;
+	}
+	else
+	{
+		x = mthing->x << FRACBITS;
+		y = mthing->y << FRACBITS;
+		z = ONFLOORZ;
+		angle = ANG45 * (mthing->angle/45);
+	}
 	mobj = P_SpawnMobj (x,y,z, MT_PLAYER);
 	
-	mobj->angle = ANG45 * (mthing->angle/45);
+	mobj->angle = angle;
 
 	mobj->player = p - players + 1;
 	mobj->health = p->health;
