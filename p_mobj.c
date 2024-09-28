@@ -104,6 +104,11 @@ void P_Attract(mobj_t *source, mobj_t *dest)
 
 	if (dist < 1)
 		dist = 1;
+	
+	if (dist > 32 * FRACUNIT)
+		source->flags |= MF_NOCLIP;
+	else
+		source->flags &= ~MF_NOCLIP;
 
 	speedmul = P_AproxDistance(dest->momx, dest->momy) + (mobjinfo[source->type].speed << FRACBITS);
 	source->momx = FixedMul(FixedDiv(tx - source->x, dist), speedmul);

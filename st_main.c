@@ -125,7 +125,7 @@ static void ST_Ticker_(stbar_t* sb)
 
 	p = &players[pnum];
 
-	sb->rings = p->mo->health - 1;
+	sb->rings = p->health - 1;
 	sb->score = p->score;
 	sb->lives = p->lives;
 

@@ -99,6 +99,7 @@ void G_DoLoadLevel (void)
 			players[i].playerstate = PST_REBORN; 
 
 		players[i].starpostnum = 0;
+		players[i].xtralife = 0;
 	} 
 
 	totalitems = totalsecret = 0;

@@ -901,7 +901,7 @@ void A_AwardBox(mobj_t *actor, int16_t var1, int16_t var2)
 			player->lives++;
 			S_StopSong();
 			S_StartSong(gameinfo.xtlifeMus, 0, cdtrack_xtlife);
-			player->powers[pw_extralife] = EXTRALIFETICS;
+			player->powers[pw_extralife] = EXTRALIFETICS + 1;
 			break;
 			/*
 MT_INVULN_ICON,

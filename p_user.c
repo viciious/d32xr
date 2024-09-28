@@ -124,19 +124,23 @@ void P_GivePlayerRings(player_t *player, int num_rings)
 {
 	player->health += num_rings;
 
-	if (player->health > 255) // We are limited to mobj_t byte size... FOR NOW.
-		player->health = 255;
+	if (player->health > 999)
+		player->health = 999;
 
-	if ((player->mo->health < 100 && player->health >= 100)
-		|| (player->mo->health < 200 && player->health >= 200))
+	if ((player->mo->health < 100 && player->health >= 100 && !player->xtralife)
+		|| (player->mo->health < 200 && player->health >= 200 && player->xtralife < 2))
 	{
 		player->lives++;
 		S_StopSong();
 		S_StartSong(gameinfo.xtlifeMus, 0, cdtrack_xtlife);
-		player->powers[pw_extralife] = EXTRALIFETICS;
+		player->powers[pw_extralife] = EXTRALIFETICS + 1;
+		player->xtralife++;
 	}
 	
-	player->mo->health = player->health;
+	if (player->health >= 256)
+		player->mo->health = 255;
+	else
+		player->mo->health = player->health; // We are limited to mobj_t byte size
 }
 
 /*============================================================================= */
@@ -689,7 +693,7 @@ void P_AddPlayerScore(player_t *player, int amount)
 		// Start extra life music
 		S_StopSong();
 		S_StartSong(gameinfo.xtlifeMus, 0, cdtrack_xtlife);
-		player->powers[pw_extralife] = EXTRALIFETICS;
+		player->powers[pw_extralife] = EXTRALIFETICS + 1;
 	}
 
 	player->score += amount;
