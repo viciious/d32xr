@@ -16,6 +16,7 @@ enum
 	cdtrack_title = 0,
   cdtrack_xtlife = -5,
   cdtrack_sneakers = -6,
+  cdtrack_invincibility = -7,
 };
 
 /*

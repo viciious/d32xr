@@ -83,6 +83,7 @@ void P_ThrustValues(angle_t angle, fixed_t move, fixed_t *outX, fixed_t *outY);
 void P_InstaThrust(mobj_t *mo, angle_t angle, fixed_t move);
 fixed_t P_ReturnThrustX(angle_t angle, fixed_t move);
 fixed_t P_ReturnThrustY(angle_t angle, fixed_t move);
+void P_RestoreMusic(player_t *player);
 boolean P_IsReeling(player_t *player);
 void    P_AddPlayerScore(player_t *player, int amount);
 void    P_ResetPlayer(player_t *player);

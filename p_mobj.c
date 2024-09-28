@@ -444,7 +444,7 @@ y = 0xff500000;
 	p->playerstate = PST_LIVE;	
 	p->message = NULL;
 	p->damagecount = 0;
-	p->bonuscount = 0;
+	p->whiteFlash = 0;
 	p->extralight = 0;
 	p->viewheight = VIEWHEIGHT;
 
@@ -832,7 +832,7 @@ void P_MobjCheckWater(mobj_t *mo)
 
 				if (player->shield == SH_ATTRACT)
 				{
-					player->bonuscount = 4;
+					player->whiteFlash = 4;
 					player->shield = 0;
 				}
 

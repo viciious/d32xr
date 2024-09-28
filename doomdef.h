@@ -401,7 +401,7 @@ typedef struct player_s
 	
 	VINT		killcount, itemcount, secretcount;		/* for intermission */
 	char		*message;				/* hint messages */
-	VINT		damagecount, bonuscount;/* for screen flashing */
+	VINT		damagecount, whiteFlash;/* for screen flashing */
 	mobj_t		*attacker;				/* who did damage (NULL for floors) */
 	VINT		extralight;				/* so gun flashes light up areas */
 	VINT		colormap;				/* 0-3 for which color to draw player */

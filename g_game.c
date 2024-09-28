@@ -246,7 +246,7 @@ void G_PlayerFinishLevel (int player)
 	D_memset (p->powers, 0, sizeof (p->powers)); 
 	p->extralight = 0;                      /* cancel gun flashes  */
 	p->damagecount = 0;                     /* no palette changes  */
-	p->bonuscount = 0; 
+	p->whiteFlash = 0; 
 
 	if (netgame == gt_deathmatch)
 		return;

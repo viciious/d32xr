@@ -43,6 +43,21 @@ void P_InstaThrust(mobj_t *mo, angle_t angle, fixed_t move)
 	P_ThrustValues(angle, move, &mo->momx, &mo->momy);
 }
 
+void P_RestoreMusic(player_t *player)
+{
+	if (player->powers[pw_invulnerability] > 1 && player->powers[pw_extralife] <= 1)
+		S_StartSong(gameinfo.invincMus, 0, cdtrack_invincibility);
+	else if (player->powers[pw_sneakers] > 1)
+		S_StartSong(gameinfo.sneakerMus, 0, cdtrack_sneakers);
+	else if (!(player->powers[pw_extralife] > 1))
+	{
+		int music = gamemapinfo.musicLump;
+		if (music <= 0)
+			music = S_SongForMapnum(gamemapinfo.mapNumber);
+		S_StartSong(music, 1, gamemapinfo.mapNumber);
+	}
+}
+
 boolean P_IsReeling(player_t *player)
 {
 	return player->mo->state == mobjinfo[player->mo->type].painstate && player->powers[pw_flashing];
@@ -109,12 +124,19 @@ void P_GivePlayerRings(player_t *player, int num_rings)
 {
 	player->health += num_rings;
 
-	if (player->health > 9999)
-		player->health = 9999;
+	if (player->health > 255) // We are limited to mobj_t byte size... FOR NOW.
+		player->health = 255;
 
+	if ((player->mo->health < 100 && player->health >= 100)
+		|| (player->mo->health < 200 && player->health >= 200))
+	{
+		player->lives++;
+		S_StopSong();
+		S_StartSong(gameinfo.xtlifeMus, 0, cdtrack_xtlife);
+		player->powers[pw_extralife] = EXTRALIFETICS;
+	}
+	
 	player->mo->health = player->health;
-
-	// TODO: Handle extra life bonuses
 }
 
 /*============================================================================= */
@@ -1395,7 +1417,7 @@ void P_PlayerThink(player_t *player)
 	{
 		player->powers[pw_extralife]--;
 		if (player->powers[pw_extralife] == 1)
-			S_StartSong(gamemapinfo.musicLump, 1, gamemapinfo.mapNumber);
+			P_RestoreMusic(player);
 	}
 
 	/* */
@@ -1405,14 +1427,14 @@ void P_PlayerThink(player_t *player)
 	{
 		player->powers[pw_sneakers]--;
 		if (player->powers[pw_sneakers] == 1)
-			S_StartSong(gamemapinfo.musicLump, 1, gamemapinfo.mapNumber);
+			P_RestoreMusic(player);
 	}
 
 	if (player->powers[pw_invulnerability])
 	{
 		player->powers[pw_invulnerability]--;
 		if (player->powers[pw_invulnerability] == 1)
-			S_StartSong(gamemapinfo.musicLump, 1, gamemapinfo.mapNumber);
+			P_RestoreMusic(player);
 	}
 
 	if (player->powers[pw_underwater])
@@ -1421,8 +1443,8 @@ void P_PlayerThink(player_t *player)
 	if (player->damagecount)
 		player->damagecount--;
 
-	if (player->bonuscount && (leveltime & 1))
-		player->bonuscount--;
+	if (player->whiteFlash && (leveltime & 1))
+		player->whiteFlash--;
 
 	if (player->homingTimer)
 		player->homingTimer--;

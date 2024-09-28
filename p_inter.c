@@ -438,7 +438,7 @@ void P_BlackOw(player_t *player)
 	{
 		if (playeringame[i] && P_AproxDistance(player->mo->x - players[i].mo->x,
 			player->mo->y - players[i].mo->y) < 1536*FRACUNIT)
-			players[i].bonuscount = 4;
+			players[i].whiteFlash = 4;
 	}
 
 	for (mobj_t *node = mobjhead.next; node != (void*)&mobjhead; node = node->next)
