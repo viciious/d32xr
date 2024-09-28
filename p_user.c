@@ -73,7 +73,6 @@ void P_PlayerRingBurst(player_t *player, int damage)
 		mobj_t *mo = P_SpawnMobj(player->mo->x, player->mo->y, player->mo->z, MT_FLINGRING);
 
 		mo->threshold = (8-player->lossCount)*TICRATE;
-		mo->target = player->mo;
 
 		// Make rings spill out around the player in 16 directions like SA, but spill like Sonic 2.
 		// Technically a non-SA way of spilling rings. They just so happen to be a little similar.
@@ -1313,6 +1312,7 @@ void P_DeathThink(player_t *player)
 */
 
 extern int ticphase;
+void P_RingMagnet(mobj_t *spot);
 
 void P_PlayerThink(player_t *player)
 {
@@ -1423,6 +1423,9 @@ void P_PlayerThink(player_t *player)
 
 	if (player->homingTimer)
 		player->homingTimer--;
+
+	if (player->shield == SH_ATTRACT)
+		P_RingMagnet(player->mo);
 }
 
 void R_ResetResp(player_t *p)

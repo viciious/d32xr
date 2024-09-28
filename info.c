@@ -687,6 +687,31 @@ MF2_SHOOTABLE|MF2_ENEMY,	// flags2
 	MF_SPECIAL, // flags
 	MF2_FLOAT, // flags2
 },
+{           // MT_ATTRACTRING
+	-1,            // doomednum
+	S_RING1,         // spawnstate
+	1,      		// spawnhealth
+	S_NULL,         // seestate
+	sfx_None,       // seesound
+	0,//MT_FLINGRING,   // reactiontime
+	sfx_None,       // attacksound
+	S_NULL,         // painstate
+	0,              // painchance
+	sfx_None,       // painsound
+	S_NULL,         // meleestate
+	S_NULL,         // missilestate
+	S_NULL,//S_SPRK1,        // deathstate
+	S_NULL,         // xdeathstate
+	sfx_s3k_33,     // deathsound
+	10,    // speed
+	16*FRACUNIT,    // radius
+	24*FRACUNIT,    // height
+	100,            // mass
+	0,              // damage
+	sfx_None,       // activesound
+	MF_SPECIAL, // flags
+	MF2_FLOAT, // flags2
+},
 {           // MT_GFZFLOWERA
 	800,            // doomednum
 	S_GFZFLOWERA1,         // spawnstate

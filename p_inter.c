@@ -272,6 +272,7 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 
 	switch(special->type)
 	{
+		case MT_ATTRACTRING:
 		case MT_FLINGRING:
 			P_SpawnMobj(special->x, special->y, special->z, MT_SPARK);
 			P_GivePlayerRings(player, 1);

@@ -779,6 +779,20 @@ void P_MobjThinker(mobj_t *mobj)
             if (!P_JetFume1Think(mobj))
                return;
             break;
+         case MT_ATTRACTRING:
+            if (mobj->target->health <= 0)
+            {
+               mobj_t *flingring = P_SpawnMobj(mobj->x, mobj->y, mobj->z, MT_FLINGRING);
+               flingring->momx = mobj->momx;
+               flingring->momy = mobj->momy;
+               flingring->momz = mobj->momz;
+               flingring->threshold = 8*TICRATE;
+               P_RemoveMobj(mobj);
+               return;
+            }
+            else
+               P_Attract(mobj, mobj->target);
+            break;
          default:
             break;
       }

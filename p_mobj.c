@@ -88,6 +88,45 @@ void P_FreeMobj(mobj_t* mobj)
 	P_AddMobjToList(mobj, (void*)&freemobjhead);
 }
 
+void P_Attract(mobj_t *source, mobj_t *dest)
+{
+	fixed_t dist, ndist, speedmul;
+	fixed_t tx = dest->x;
+	fixed_t ty = dest->y;
+	fixed_t tz = dest->z + (dest->theight << (FRACBITS-1)); // Aim for center
+	fixed_t xydist = P_AproxDistance(tx - source->x, ty - source->y);
+
+	// change angle
+	source->angle = R_PointToAngle2(source->x, source->y, tx, ty);
+
+	// change slope
+	dist = P_AproxDistance(xydist, tz - source->z);
+
+	if (dist < 1)
+		dist = 1;
+
+	speedmul = P_AproxDistance(dest->momx, dest->momy) + (mobjinfo[source->type].speed << FRACBITS);
+	source->momx = FixedMul(FixedDiv(tx - source->x, dist), speedmul);
+	source->momy = FixedMul(FixedDiv(ty - source->y, dist), speedmul);
+	source->momz = FixedMul(FixedDiv(tz - source->z, dist), speedmul);
+
+	// Instead of just unsetting NOCLIP like an idiot, let's check the distance to our target.
+	ndist = P_AproxDistance(P_AproxDistance(tx - (source->x+source->momx),
+											ty - (source->y+source->momy)),
+											tz - (source->z+source->momz));
+
+	if (ndist > dist) // gone past our target
+	{
+		// place us on top of them then.
+		source->momx = source->momy = source->momz = 0;
+		P_UnsetThingPosition(source);
+		source->x = tx;
+		source->y = ty;
+		source->z = tz;
+		P_SetThingPosition(source);
+	}
+}
+
 void P_SetObjectMomZ(mobj_t *mo, fixed_t value, boolean relative)
 {
 //	if (player->pflags & PF_VERTICALFLIP)
@@ -790,6 +829,12 @@ void P_MobjCheckWater(mobj_t *mo)
 			if (mo->z + mobjinfo[MT_PLAYER].height/2 < watertop)
 			{
 				player->pflags |= PF_UNDERWATER;
+
+				if (player->shield == SH_ATTRACT)
+				{
+					player->bonuscount = 4;
+					player->shield = 0;
+				}
 
 				if (!(player->powers[pw_invulnerability]))
 				{

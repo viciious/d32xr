@@ -368,6 +368,61 @@ void P_RadiusAttack (mobj_t *spot, mobj_t *source, int damage)
 			P_BlockThingsIterator (x, y, (blockthingsiter_t)PIT_RadiusAttack, &ra );
 }
 
+#define RING_DIST (512*FRACUNIT)
+
+boolean PIT_RingMagnet(mobj_t *thing, mobj_t *spot)
+{
+	if (!(thing->type == MT_RING || thing->type == MT_FLINGRING))
+		return true;
+
+	ringmobj_t *ring = (ringmobj_t*)thing;
+
+	const fixed_t dist = P_AproxDistance(P_AproxDistance((ring->x << FRACBITS) - spot->x, (ring->y << FRACBITS) - spot->y), (ring->z << FRACBITS) - spot->z);
+
+	if (dist > RING_DIST)
+		return true;
+
+	// Replace object with an attraction ring
+	mobj_t *attractring = P_SpawnMobj(ring->x << FRACBITS, ring->y << FRACBITS, ring->z << FRACBITS, MT_ATTRACTRING);
+	attractring->target = spot;
+	P_RemoveMobj(thing);
+	return true;
+}
+
+void P_RingMagnet(mobj_t *spot)
+{
+	const fixed_t		dist = RING_DIST;
+	int			x,y, xl, xh, yl, yh;
+	
+	yh = spot->y + dist - bmaporgy;
+	yl = spot->y - dist - bmaporgy;
+	xh = spot->x + dist - bmaporgx;
+	xl = spot->x - dist - bmaporgx;
+
+	if(xl < 0)
+		xl = 0;
+	if(yl < 0)
+		yl = 0;
+	if(yh < 0)
+		return;
+	if(xh < 0)
+		return;
+
+    xl = (unsigned)xl >> MAPBLOCKSHIFT;
+    xh = (unsigned)xh >> MAPBLOCKSHIFT;
+    yl = (unsigned)yl >> MAPBLOCKSHIFT;
+    yh = (unsigned)yh >> MAPBLOCKSHIFT;
+
+   if(xh >= bmapwidth)
+      xh = bmapwidth - 1;
+   if(yh >= bmapheight)
+      yh = bmapheight - 1;
+	
+	for (y=yl ; y<=yh ; y++)
+		for (x=xl ; x<=xh ; x++)
+			P_BlockThingsIterator(x, y, (blockthingsiter_t)PIT_RingMagnet, spot);
+}
+
 
 /*============================================================================ */
 
