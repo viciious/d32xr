@@ -473,15 +473,12 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 		angle = R_PointToAngle2(0, thiscam->z, dist, mo->z + (mobjinfo[mo->type].height >> 2));
 
    G_ClipAimingPitch((int*)&angle);
-   dist = thiscam->aiming - angle;
-	thiscam->aiming -= (dist>>3);
 
    if (player->playerstate == PST_DEAD || player->playerstate == PST_REBORN)
-	{
 		thiscam->momz = 0;
-
-		if (player->mo && ((((player->pflags & PF_VERTICALFLIP) && player->mo->momz >= 0 && (thiscam->aiming>>ANGLETOFINESHIFT) < 4096))
-			|| ((!(player->pflags & PF_VERTICALFLIP) && player->mo->momz <= 0 && (thiscam->aiming>>ANGLETOFINESHIFT) > 2048))))
-			thiscam->aiming = 0;
-	}
+   else
+   {
+      dist = thiscam->aiming - angle;
+      thiscam->aiming -= (dist>>3);
+   }
 }

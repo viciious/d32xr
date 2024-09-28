@@ -17,6 +17,8 @@ fixed_t fastangleturn[] =
 #define FRICTION 0xd240
 #define MAXBOB 16 * FRACUNIT /* 16 pixels of bob */
 
+void P_KillMobj(mobj_t *source, mobj_t *target);
+
 /*
 ==================
 =
@@ -292,6 +294,15 @@ void P_PlayerZMovement(mobj_t *mo)
 	/* */
 	mo->z += mo->momz;
 
+	if (player->playerstate == PST_DEAD)
+	{
+		if (player->pflags & PF_UNDERWATER)
+			mo->momz -= GRAVITY / 2 / 3;
+		else
+			mo->momz -= GRAVITY / 2;
+		return;
+	}
+
 	/* */
 	/* clip movement */
 	/* */
@@ -336,8 +347,24 @@ void P_PlayerZMovement(mobj_t *mo)
 
 void P_PlayerMobjThink(mobj_t *mobj)
 {
+	player_t *player = &players[mobj->player - 1];
 	const state_t *st;
 	int state;
+
+	// Make sure player shows dead
+	if (mobj->health == 0)
+	{
+		if (player->pflags & PF_DROWNED)
+			P_SetMobjState(mobj, S_PLAY_DROWN);
+		else
+			P_SetMobjState(mobj, S_PLAY_DIE);
+
+		mobj->flags2 &= ~MF2_DONTDRAW;
+		P_PlayerZMovement(mobj);
+		if (mobj->z < mobj->floorz - 1024*FRACUNIT)
+			mobj->flags2 |= MF2_DONTDRAW;
+		return;
+	}
 
 	/* */
 	/* momentum movement */
@@ -366,8 +393,6 @@ void P_PlayerMobjThink(mobj_t *mobj)
 
 	mobj->state = state;
 	mobj->tics = st->tics;
-
-	player_t *player = &players[mobj->player - 1];
 
 	if (mobj->state >= S_PLAY_FALL1 && mobj->state <= S_PLAY_FALL2)
 	{
@@ -1287,6 +1312,17 @@ void P_MovePlayer(player_t *player)
 			S_StartSound(water, sfx_wslap);
 		}
 	}
+
+	// Underwater bubbles
+	if (player->pflags & PF_UNDERWATER)
+	{
+		const fixed_t zh = player->mo->z + FixedDiv(player->mo->theight << FRACBITS, 5*(FRACUNIT/4));
+
+		if (!(P_Random() % 16))
+			P_SpawnMobj(player->mo->x, player->mo->y, zh, MT_SMALLBUBBLE);
+		else if (!(P_Random() % 96))
+			P_SpawnMobj(player->mo->x, player->mo->y, zh, MT_MEDIUMBUBBLE);
+	}
 }
 
 /*
@@ -1442,7 +1478,15 @@ void P_PlayerThink(player_t *player)
 	}
 
 	if (player->powers[pw_underwater])
+	{
+		if (player->powers[pw_underwater] == 1)
+		{
+			player->pflags |= PF_DROWNED;
+			P_KillMobj(NULL, player->mo);
+		}
+
 		player->powers[pw_underwater]--;
+	}
 
 	if (player->damagecount)
 		player->damagecount--;
@@ -1458,7 +1502,7 @@ void P_PlayerThink(player_t *player)
 		if (player->powers[pw_underwater] <= 12*TICRATE + 1)
 		{
 			player->powers[pw_underwater] = 0;
-//			P_RestoreMusic(player);
+			P_RestoreMusic(player);
 		}
 		else
 			player->powers[pw_underwater] = 0;

@@ -315,9 +315,16 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 
 		if (netgame == gt_coop)
 			R_ResetResp(player);
+
+		target->momx = target->momy = 0;
+
+		if (!(player->pflags & PF_DROWNED))
+			P_SetObjectMomZ(target, 14*FRACUNIT, false);
+		else
+			P_SetObjectMomZ(target, FRACUNIT/8, false);
 	}
 
-	if (source->player)
+	if (source && source->player)
 	{
 		// Monitors need to know who killed them
 		// TODO: Not multiplayer compatible. I don't care right now
@@ -325,17 +332,17 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 	}
 
 	if (target->player && (players[target->player-1].pflags & PF_DROWNED))
+	{
 		P_SetMobjState(target, targinfo->xdeathstate);
+		S_StartSound(target, targinfo->attacksound);
+	}
 	else
+	{
 		P_SetMobjState (target, targinfo->deathstate);
+		S_StartSound(target, targinfo->deathsound);
+	}
 
-	target->tics -= P_Random()&1;
-	if (target->tics < 1)
-		target->tics = 1;
-
-	S_StartSound(target, targinfo->deathsound);
-
-	if (source->player && (target->flags2 & MF2_ENEMY))
+	if (source && source->player && (target->flags2 & MF2_ENEMY))
 	{
 		VINT score = 100;
 		mobj_t *scoremobj = P_SpawnMobj(target->x, target->y, target->z + (target->theight << (FRACBITS-1)), MT_SCORE);
@@ -520,6 +527,8 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage)
 				P_ShieldDamage(player, inflictor, source, damage);
 			else if (player->mo->health > 1) // Rings without shield
 				P_RingDamage(player, inflictor, source, damage);
+			else
+				P_KillMobj(source, player->mo);
 		}
 		else
 			return;

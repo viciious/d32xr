@@ -489,14 +489,14 @@ S_PLAY_STND,		/* spawnstate */
 S_PLAY_RUN1,		/* seestate */
 sfx_None,		/* seesound */
 0,		/* reactiontime */
-sfx_None,		/* attacksound */
+sfx_s3k_3b,		/* attacksound */
 S_PLAY_PAIN,		/* painstate */
 255,		/* painchance */
 sfx_s3k_b9,		/* painsound */
 S_NULL,		/* meleestate */
 S_PLAY_ATK1,		/* missilestate */
 S_PLAY_DIE,		/* deathstate */
-S_PLAY_DIE,		/* xdeathstate */
+S_PLAY_DROWN,		/* xdeathstate */
 sfx_s3k_35,		/* deathsound */
 0,		/* speed */
 16*FRACUNIT,		/* radius */
