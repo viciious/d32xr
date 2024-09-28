@@ -122,6 +122,7 @@ extern VINT ringmobjtics[NUMMOBJTYPES];
 #define	ONCEILINGZ	D_MAXINT
 
 mobj_t *P_FindFirstMobjOfType(uint16_t type);
+void P_BlackOw(player_t *player);
 
 boolean Mobj_HasFlags2(mobj_t *mo, VINT value) ATTR_DATA_CACHE_ALIGN;
 void P_SetObjectMomZ(mobj_t *mo, fixed_t value, boolean relative);

@@ -1342,7 +1342,22 @@ void P_PlayerThink(player_t *player)
 	if (buttons & BT_USE)
 	{
 		if (!(player->pflags & PF_USEDOWN))
+		{
 			player->pflags |= PF_USEDOWN;
+
+			if (player->pflags & PF_JUMPED)
+			{
+				if (player->shield == SH_ARMAGEDDON)
+					P_BlackOw(player);
+				else if (player->shield == SH_FORCE2 || player->shield == SH_FORCE1)
+				{
+					player->mo->momx = player->mo->momy = 0;
+					S_StartSound(player->mo, sfx_ngskid);
+					mobj_t *ghost = P_SpawnMobj(player->mo->x, player->mo->y, player->mo->z, MT_GHOST);
+					P_SetMobjState(ghost, S_FORCESTOP);
+				}
+			}
+		}
 	}
 	else
 		player->pflags &= ~PF_USEDOWN;
@@ -1403,7 +1418,7 @@ void P_PlayerThink(player_t *player)
 	if (player->damagecount)
 		player->damagecount--;
 
-	if (player->bonuscount)
+	if (player->bonuscount && (leveltime & 1))
 		player->bonuscount--;
 
 	if (player->homingTimer)

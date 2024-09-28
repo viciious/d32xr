@@ -747,6 +747,8 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		Mars_FadeMDPaletteFromBlack(0xEEE); //TODO: Replace with Mars_FadeMDPaletteFromWhite()
 		#endif
 	}
+	else if (player->bonuscount)
+		palette = player->bonuscount + 1;
 	else if (waterpal) {
 		palette= 11;
 

@@ -497,7 +497,7 @@ S_NULL,		/* meleestate */
 S_PLAY_ATK1,		/* missilestate */
 S_PLAY_DIE,		/* deathstate */
 S_PLAY_DIE,		/* xdeathstate */
-sfx_None,		/* deathsound */
+sfx_s3k_35,		/* deathsound */
 0,		/* speed */
 16*FRACUNIT,		/* radius */
 48*FRACUNIT,		/* height */

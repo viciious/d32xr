@@ -699,7 +699,17 @@ void P_MobjThinker(mobj_t *mobj)
          case MT_WHIRLWIND_ORB:
             {
                player_t *player = &players[mobj->target->player - 1];
-               if (player->shield != mobjinfo[mobj->type].painchance)
+               if (mobj->type == MT_FORCE_ORB)
+               {
+                  if (player->shield == SH_FORCE1 && mobj->state == S_FORCA1)
+                     P_SetMobjState(mobj, S_FORCB1);
+                  else if (!(player->shield == SH_FORCE1 || player->shield == SH_FORCE2))
+                  {
+                     P_RemoveMobj(mobj);
+                     return;
+                  }
+               }
+               else if (player->shield != mobjinfo[mobj->type].painchance)
                {
                   P_RemoveMobj(mobj);
                   return;

@@ -429,6 +429,44 @@ static void P_RingDamage(player_t *player, mobj_t *inflictor, mobj_t *source, in
 	player->mo->health = player->health = 1;
 }
 
+void P_BlackOw(player_t *player)
+{
+	S_StartSound(player->mo, sfx_s3k_4e);
+
+	for (int i = 0; i < MAXPLAYERS; i++)
+	{
+		if (playeringame[i] && P_AproxDistance(player->mo->x - players[i].mo->x,
+			player->mo->y - players[i].mo->y) < 1536*FRACUNIT)
+			players[i].bonuscount = 4;
+	}
+
+	for (mobj_t *node = mobjhead.next; node != (void*)&mobjhead; node = node->next)
+    {
+		if ((node->flags2 & MF2_ENEMY) && P_AproxDistance(node->x - player->mo->x, node->y - player->mo->y) < 1536*FRACUNIT)
+			P_DamageMobj(node, player->mo, player->mo, 1);
+    }
+
+	player->shield = 0;
+}
+
+static void P_ShieldDamage(player_t *player, mobj_t *inflictor, mobj_t *source, int damage)
+{
+	P_DoPlayerPain(player, source, inflictor);
+
+	if (player->shield == SH_FORCE2)
+		player->shield = SH_FORCE1;
+	else if (player->shield == SH_ARMAGEDDON)
+	{
+		P_BlackOw(player);
+		player->shield = 0;
+		return;
+	}
+	else
+		player->shield = 0;
+
+	S_StartSound(player->mo, mobjinfo[player->mo->type].deathsound);
+}
+
 void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage)
 {
 	player_t	*player;
@@ -477,7 +515,9 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage)
 			if ( (player->cheats&CF_GODMODE)|| player->powers[pw_invulnerability] || player->powers[pw_flashing] )
 				return;
 
-			if (player->mo->health > 1) // Rings without shield
+			if (player->shield)
+				P_ShieldDamage(player, inflictor, source, damage);
+			else if (player->mo->health > 1) // Rings without shield
 				P_RingDamage(player, inflictor, source, damage);
 		}
 		else
