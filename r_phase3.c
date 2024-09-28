@@ -183,6 +183,8 @@ static void R_PrepPSprite(pspdef_t *psp)
    state = &states[psp->state];
    sprdef = &sprites[state->sprite];
    sprframe = &spriteframes[sprdef->firstframe + (state->frame & FF_FRAMEMASK)];
+   if (sprframe->lump < 0)
+      return;
    sprlump  = &spritelumps[sprframe->lump];
    lump     = sprlump[0];
    patch    = W_POINTLUMPNUM(lump);
