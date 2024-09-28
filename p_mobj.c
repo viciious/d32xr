@@ -846,8 +846,7 @@ void P_MobjCheckWater(mobj_t *mo)
 				}
 				if (player->powers[pw_underwater] <= 0
 					&& player->shield != SH_ELEMENTAL
-					&& !player->exiting
-					&& player->powers[pw_underwater] < UNDERWATERTICS + 1)
+					&& !player->exiting)
 					player->powers[pw_underwater] = UNDERWATERTICS + 1;
 			}
 		}

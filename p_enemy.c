@@ -882,9 +882,15 @@ void A_AwardBox(mobj_t *actor, int16_t var1, int16_t var2)
 		case MT_RING_ICON:
 			P_GivePlayerRings(player, mobjinfo[actor->type].reactiontime);
 			break;
+		case MT_ELEMENTAL_ICON:
+			if (player->powers[pw_underwater] <= 11*TICRATE + 1)
+			{
+				int music = gamemapinfo.musicLump;
+				if (music <= 0)
+					music = S_SongForMapnum(gamemapinfo.mapNumber);
+			}
 		case MT_ARMAGEDDON_ICON:
 		case MT_ATTRACT_ICON:
-		case MT_ELEMENTAL_ICON:
 		case MT_FORCE_ICON:
 		case MT_WHIRLWIND_ICON:
 			orb = P_SpawnMobj(player->mo->x, player->mo->y, player->mo->z, mobjinfo[actor->type].painchance);

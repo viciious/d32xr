@@ -1415,6 +1415,9 @@ void P_PlayerThink(player_t *player)
 			S_StartSong(gamemapinfo.musicLump, 1, gamemapinfo.mapNumber);
 	}
 
+	if (player->powers[pw_underwater])
+		player->powers[pw_underwater]--;
+
 	if (player->damagecount)
 		player->damagecount--;
 
@@ -1424,8 +1427,32 @@ void P_PlayerThink(player_t *player)
 	if (player->homingTimer)
 		player->homingTimer--;
 
+	if (!(player->pflags & PF_UNDERWATER) && player->powers[pw_underwater])
+	{
+		if (player->powers[pw_underwater] <= 12*TICRATE + 1)
+		{
+			player->powers[pw_underwater] = 0;
+//			P_RestoreMusic(player);
+		}
+		else
+			player->powers[pw_underwater] = 0;
+	}
+
+	if ((player->powers[pw_underwater] == 25*TICRATE + 1)
+		|| (player->powers[pw_underwater] == 20*TICRATE + 1)
+		|| (player->powers[pw_underwater] == 15*TICRATE + 1))
+			S_StartSound(NULL, sfx_s3k_a9);
+
+/*	if (player->powers[pw_underwater] == 11*TICRATE + 1
+		&& player == &players[consoleplayer])
+	{
+		P_PlayJingle(player, JT_DROWN);
+	}*/
+
 	if (player->shield == SH_ATTRACT)
 		P_RingMagnet(player->mo);
+	else if (player->shield == SH_ELEMENTAL)
+		player->powers[pw_underwater] = UNDERWATERTICS + 1;
 }
 
 void R_ResetResp(player_t *p)
