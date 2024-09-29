@@ -108,6 +108,10 @@ static void GS_PathChange(const char *dir, int newmode)
     menuitem_t *mi;
     char realpath[sizeof(gs_menu->path)];
 
+#ifdef MARS
+    Mars_StopTrack();
+#endif
+
     /* a directory */
     if (!D_strcasecmp(dir, ".."))
     {
@@ -189,6 +193,8 @@ static void GS_PathChange(const char *dir, int newmode)
             buf += 1;
 
             if (namelen >= (int)sizeof(mi->name))
+                continue;
+            if (!D_strcasecmp(name, "..") && !D_strcasecmp(gs_menu->path, "/"))
                 continue;
 
             mi = &gs_menu->items[gs_menu->numitems];
@@ -313,9 +319,9 @@ int GS_Ticker (void)
                 int len = mystrlen(mi->name);
 
 #ifdef MARS
-                Mars_UpdateCD();
-
                 Mars_StopTrack();
+
+                Mars_UpdateCD();
 
                 if (len > 4 && !D_strcasecmp(mi->name + len - 4, ".pcm"))
                 {
@@ -334,9 +340,9 @@ int GS_Ticker (void)
                 if (len > 4 && !D_strcasecmp(mi->name + len - 4, ".zgm"))
                 {
 #ifdef MARS
-                    Mars_UpdateCD();
-
                     Mars_StopTrack();
+
+                    Mars_UpdateCD();
 
                     D_snprintf(newpath, sizeof(newpath), "%s/%s", gs_menu->path, mi->name);
                     Mars_PlayTrack(0, 1, newpath, 0, mi->size, 1);
@@ -511,6 +517,6 @@ void GS_Drawer (void)
 
     I_Print8(14, 23, "Press A to select an item");
     if (gs_menu->mode && gs_menu->path[0] != '\0')
-        I_Print8(14, 24, "Press B to go to parent directory");
+        I_Print8(14, 24, "Press B to return to parent directory");
     I_Print8(14, 25, "Press C to toggle the file browser");
 }
