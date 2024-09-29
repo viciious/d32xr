@@ -92,6 +92,7 @@ void A_PrepareRepeat();
 void A_Repeat();
 void A_ChangeHeight();
 void A_UnidusBall();
+void A_BubbleSpawn();
 
 #define STATE(sprite,frame,tics,action,nextstate) {sprite,frame,tics,0,0,nextstate,action}
 #define STATE2(sprite,frame,tics,action,var1,var2,nextstate) {sprite,frame,tics,var1,var2,nextstate,action}
@@ -369,6 +370,12 @@ STATE(SPR_GFZC,4,1,NULL,S_GFZDEBRIS6), // S_GFZDEBRIS5
 STATE(SPR_GFZC,5,1,NULL,S_GFZDEBRIS7), // S_GFZDEBRIS6
 STATE(SPR_GFZC,6,1,NULL,S_GFZDEBRIS8), // S_GFZDEBRIS7
 STATE(SPR_GFZC,7,1,NULL,S_GFZDEBRIS1), // S_GFZDEBRIS8
+
+// Bubble patch
+STATE(SPR_BBLS,0,7,A_BubbleSpawn,S_BUBBLES2), // S_BUBBLES1
+STATE(SPR_BBLS,1,7,NULL,S_BUBBLES3), // S_BUBBLES2
+STATE(SPR_BBLS,2,7,A_BubbleSpawn,S_BUBBLES4), // S_BUBBLES3
+STATE(SPR_BBLS,3,7,NULL,S_BUBBLES1), // S_BUBBLES4
 
 // Bubbles
 STATE(SPR_BUBL,0,1,A_BubbleRise,S_SMALLBUBBLE), // S_SMALLBUBBLE
@@ -1823,6 +1830,32 @@ MF2_SHOOTABLE|MF2_ENEMY,	// flags2
 		sfx_None,       // activesound
 		MF_NOBLOCKMAP,  // flags
 		MF2_FLOAT, // flags2
+	},
+
+	{           // MT_BUBBLES
+		500,            // doomednum
+		S_BUBBLES1,     // spawnstate
+		1000,           // spawnhealth
+		S_NULL,         // seestate
+		sfx_None,       // seesound
+		8,              // reactiontime
+		sfx_None,       // attacksound
+		S_NULL,         // painstate
+		0,              // painchance
+		sfx_None,       // painsound
+		S_NULL,         // meleestate
+		S_NULL,         // missilestate
+		S_NULL,         // deathstate
+		S_NULL,         // xdeathstate
+		sfx_None,       // deathsound
+		0,              // speed
+		8*FRACUNIT,     // radius
+		8*FRACUNIT,     // height
+		100,            // mass
+		0,              // damage
+		sfx_None,       // activesound
+		MF_NOBLOCKMAP|MF_NOCLIP, // flags
+		0          // flags2
 	},
 
 	{           // MT_SMALLBUBBLE

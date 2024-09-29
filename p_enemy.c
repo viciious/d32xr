@@ -1278,6 +1278,44 @@ void A_UnidusBall(mobj_t *actor)
 	P_SetThingPosition(actor);
 }
 
+// Function: A_BubbleSpawn
+//
+// Description: Spawns a randomly sized bubble from the object's location. Only works underwater.
+//
+void A_BubbleSpawn(mobj_t *actor, int16_t var1, int16_t var2)
+{
+	if (subsectors[actor->isubsector].sector->heightsec != -1
+		&& actor->z < sectors[subsectors[actor->isubsector].sector->heightsec].floorheight - 32*FRACUNIT)
+	{
+		int i;
+		uint8_t prandom;
+		actor->flags2 &= ~MF2_DONTDRAW;
+
+		// Quick! Look through players!
+		// Don't spawn bubbles unless a player is relatively close by (var1).
+		for (i = 0; i < MAXPLAYERS; ++i)
+			if (playeringame[i] && players[i].mo
+			 && P_AproxDistance(actor->x - players[i].mo->x, actor->y - players[i].mo->y) < (1024<<FRACBITS))
+				break; // Stop looking.
+		if (i == MAXPLAYERS)
+			return; // don't make bubble!
+
+		prandom = P_Random();
+
+		if (leveltime % (3*TICRATE) < 8)
+			P_SpawnMobj(actor->x, actor->y, actor->z + (actor->theight << (FRACBITS-1)), MT_EXTRALARGEBUBBLE);
+		else if (prandom > 128)
+			P_SpawnMobj(actor->x, actor->y, actor->z + (actor->theight << (FRACBITS-1)), MT_SMALLBUBBLE);
+		else if (prandom < 128 && prandom > 96)
+			P_SpawnMobj(actor->x, actor->y, actor->z + (actor->theight << (FRACBITS-1)), MT_MEDIUMBUBBLE);
+	}
+	else
+	{
+		actor->flags2 |= MF2_DONTDRAW;
+		return;
+	}
+}
+
 /*============================================================================= */
 
 /* a move in p_base.c crossed a special line */

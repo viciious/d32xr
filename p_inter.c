@@ -281,6 +281,26 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 			P_GivePlayerRings(player, 1);
 			sound = mobjinfo[special->type].deathsound;
 		break;
+		case MT_EXTRALARGEBUBBLE:
+			if (player->shield == SH_ELEMENTAL)
+				return;
+			
+			if (special->state != S_EXTRALARGEBUBBLE)
+				return;
+
+			if (special->z < toucher->z
+				|| special->z > toucher->z + ((toucher->theight << FRACBITS)*2/3))
+				return; // Only go in the mouth
+
+			if (player->powers[pw_underwater] < UNDERWATERTICS + 1)
+				player->powers[pw_underwater] = UNDERWATERTICS + 1;
+
+			P_SetMobjState(special, S_POP1);
+			P_SetMobjState(toucher, S_PLAY_GASP);
+			S_StartSound(toucher, sfx_s3k_38);
+			P_ResetPlayer(player);
+			toucher->momx = toucher->momy = toucher->momz = 0;
+			return;
 
 		default:
 			break;

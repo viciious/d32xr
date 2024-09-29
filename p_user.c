@@ -553,7 +553,8 @@ void P_BuildMove(player_t *player)
 			P_SetMobjState(mo, S_PLAY_STND);
 	}
 
-	if (leveltime > 3*TICRATE)
+	const int delaytime = gamemapinfo.act == 3 ? 2*TICRATE : 3*TICRATE;
+	if (leveltime > delaytime)
 	{
 		if (!(player->forwardmove || player->sidemove || (player->pflags & PF_GASPEDAL)))
 		{
@@ -565,7 +566,7 @@ void P_BuildMove(player_t *player)
 		else
 			player->stillTimer = 0;
 	}
-	else if (leveltime > 2*TICRATE)
+	else if (leveltime > delaytime - TICRATE)
 		player->stillTimer++;
 
 	if (P_IsReeling(player))
@@ -581,7 +582,7 @@ void P_BuildMove(player_t *player)
 		player->pflags &= ~PF_GASPEDAL;
 	}
 
-	if (leveltime < 4*TICRATE)
+	if (leveltime < delaytime + TICRATE)
 	{
 		player->pflags &= ~PF_GASPEDAL;
 		player->forwardmove = player->sidemove = 0;

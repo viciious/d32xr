@@ -242,7 +242,8 @@ static void ST_Drawer_ (stbar_t* sb)
 	}
 	else
 	{
-		int worldTime = leveltime - 4*TICRATE;
+		const int delaytime = gamemapinfo.act == 3 ? 2*TICRATE : 3*TICRATE;
+		int worldTime = leveltime - delaytime + TICRATE;
 		if (worldTime < 0)
 			worldTime = 0;
 		DrawJagobjLump(score, 16, 10+22, NULL, NULL);
