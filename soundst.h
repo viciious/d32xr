@@ -123,3 +123,4 @@ void S_PreUpdateSounds(void);
 int S_CDAvailable(void);
 void S_SetMusicType(int t);
 void S_SetSPCMDir(const char *dir);
+void S_DeInitMusic(void);

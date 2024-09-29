@@ -772,3 +772,22 @@ void G_RecordDemo (void)
 	
 }
 
+void G_DeInit (void)
+{
+	if (gamemaplist)
+	{
+		int i;
+		for (i = 0; gamemaplist[i]; i++)
+			Z_Free(gamemaplist[i]);
+		Z_Free(gamemaplist);
+		gamemaplist = NULL;
+	}
+
+	if (gameinfo.data)
+	{
+		Z_Free(gameinfo.data);
+	}
+	D_memset(&gameinfo, 0, sizeof(gameinfo));
+
+	gamemapcount = 0;
+}

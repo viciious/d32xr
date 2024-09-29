@@ -22,7 +22,7 @@ unsigned	*demo_p, *demobuffer;
 
 boolean canwipe = false;
 
-char 		cd_pwad_name[16];
+char 		cd_pwad_name[64];
 
 int 		ticstart;
 
@@ -908,7 +908,7 @@ int			startsave = -1;
 boolean 	startsplitscreen = 0;
 
 void D_DoomMain (void) 
-{    
+{
 D_printf ("C_Init\n");
 	C_Init ();		/* set up object list / etc	  */
 D_printf ("Z_Init\n");
@@ -929,15 +929,10 @@ D_printf("O_Init\n");
 	O_Init ();
 
 gameselect:
-	if (gamemaplist)
-	{
-		int i;
-		for (i = 0; gamemaplist[i]; i++)
-			Z_Free(gamemaplist[i]);
-		Z_Free(gamemaplist);
-		gamemaplist = NULL;
-	}
-	gamemapcount = 0;
+D_printf ("G_DeInit\n");
+	G_DeInit();
+D_printf ("S_DeInitMusic\n");
+	S_DeInitMusic();
 
 #ifdef MARS
 	canwipe = false;

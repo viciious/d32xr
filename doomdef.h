@@ -682,7 +682,7 @@ enum
 	MAXWADS,
 };
 
-extern char cd_pwad_name[16];
+extern char cd_pwad_name[64];
 #define SOUNDS_PWAD_NAME "SOUNDS.WAD"
 #define MAPDEV_PWAD_NAME "MAPDEV.WAD"
 
@@ -880,6 +880,7 @@ int G_PlayDemoPtr (unsigned *demo);
 dmapinfo_t *G_MapInfoForLumpName(const char *lumpName);
 char *G_LumpNameForMapNum(int map);
 char *G_MapNameForMapNum(int map);
+void G_DeInit (void);
 
 /*----- */
 /*PLAY */

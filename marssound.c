@@ -220,9 +220,7 @@ void S_InitMusic(void)
 	muslooping = 0;
 	S_StopSong();
 
-	if (vgm_tracks)
-		Z_Free(vgm_tracks);
-	vgm_tracks = NULL;
+	S_DeInitMusic();
 
 	W_LoadPWAD(PWAD_CD);
 
@@ -252,6 +250,12 @@ void S_InitMusic(void)
 	S_SetMusicType(initmusictype);
 }
 
+void S_DeInitMusic(void)
+{
+	if (vgm_tracks)
+		Z_Free(vgm_tracks);
+	vgm_tracks = NULL;
+}
 
 /*
 ==================
