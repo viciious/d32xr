@@ -72,6 +72,7 @@ void P_ResetPlayer(player_t *player)
 	player->pflags &= ~PF_STARTJUMP;
 	player->pflags &= ~PF_JUMPED;
 	player->pflags &= ~PF_THOKKED;
+	player->pflags &= ~PF_ELEMENTALBOUNCE;
 	player->homingTimer = 0;
 }
 
@@ -552,15 +553,20 @@ void P_BuildMove(player_t *player)
 			P_SetMobjState(mo, S_PLAY_STND);
 	}
 
-	if (!(player->forwardmove || player->sidemove || (player->pflags & PF_GASPEDAL)))
+	if (leveltime > 3*TICRATE)
 	{
-		if (leveltime > 2*TICRATE && !(player->mo->momx > STOPSPEED || player->mo->momx < -STOPSPEED || player->mo->momy > STOPSPEED || player->mo->momy < -STOPSPEED || player->mo->momz > STOPSPEED || player->mo->momz < -STOPSPEED))
-			player->stillTimer++;
+		if (!(player->forwardmove || player->sidemove || (player->pflags & PF_GASPEDAL)))
+		{
+			if (!(player->mo->momx > STOPSPEED || player->mo->momx < -STOPSPEED || player->mo->momy > STOPSPEED || player->mo->momy < -STOPSPEED || player->mo->momz > STOPSPEED || player->mo->momz < -STOPSPEED))
+				player->stillTimer++;
+			else
+				player->stillTimer = 0;
+		}
 		else
 			player->stillTimer = 0;
 	}
-	else
-		player->stillTimer = 0;
+	else if (leveltime > 2*TICRATE)
+		player->stillTimer++;
 
 	if (P_IsReeling(player))
 	{
@@ -575,8 +581,9 @@ void P_BuildMove(player_t *player)
 		player->pflags &= ~PF_GASPEDAL;
 	}
 
-	if (leveltime < 2*TICRATE)
+	if (leveltime < 4*TICRATE)
 	{
+		player->pflags &= ~PF_GASPEDAL;
 		player->forwardmove = player->sidemove = 0;
 		ticbuttons[playernum] = 0;
 	}
@@ -864,6 +871,7 @@ void P_PlayerHitFloor(player_t *player)
 	player->pflags &= ~PF_JUMPED;
 	player->pflags &= ~PF_STARTJUMP;
 	player->pflags &= ~PF_THOKKED;
+	player->pflags &= ~PF_ELEMENTALBOUNCE;
 
 	if (!(player->pflags & PF_SPINNING) && !(player->forwardmove || player->sidemove || (player->pflags & PF_GASPEDAL)))
 	{
@@ -1002,6 +1010,7 @@ static void P_DoJumpStuff(player_t *player)
 		{
 			P_DoJump(player);
 			player->pflags &= ~PF_THOKKED;
+			player->pflags &= ~PF_ELEMENTALBOUNCE;
 		}
 		else if (!(player->pflags & PF_JUMPDOWN) && (player->pflags & PF_JUMPED) && !(player->pflags & PF_THOKKED))
 		{
@@ -1286,6 +1295,7 @@ void P_MovePlayer(player_t *player)
 				player->mo->momz >>= 1;
 				player->homingTimer = 0;
 				player->pflags &= ~PF_THOKKED;
+				player->pflags &= ~PF_ELEMENTALBOUNCE;
 
 				if (player->mo->momz < 8*FRACUNIT)
 					player->mo->momz = 8*FRACUNIT;
@@ -1372,6 +1382,24 @@ void P_DeathThink(player_t *player)
 =
 =================
 */
+
+//
+// P_CheckInvincibilityTimer
+//
+// Restores music from invincibility, and handles invincibility sparkles
+//
+static void P_CheckInvincibilityTimer(player_t *player)
+{
+	if (!player->powers[pw_invulnerability])
+		return;
+
+	if (leveltime % (TICRATE/6) == 0)
+		P_SpawnMobj(player->mo->x, player->mo->y, player->mo->z, MT_IVSP);
+
+	// Resume normal music stuff.
+	if (player->powers[pw_invulnerability] == 1)
+		P_RestoreMusic(player);
+}
 
 //
 // P_CheckUnderwaterAndSpaceTimer
@@ -1478,12 +1506,23 @@ void P_PlayerThink(player_t *player)
 			{
 				if (player->shield == SH_ARMAGEDDON)
 					P_BlackOw(player);
-				else if (player->shield == SH_FORCE2 || player->shield == SH_FORCE1)
+				else if (!(player->pflags & PF_THOKKED) && (player->shield == SH_FORCE2 || player->shield == SH_FORCE1))
 				{
+					player->pflags |= PF_THOKKED;
 					player->mo->momx = player->mo->momy = 0;
 					S_StartSound(player->mo, sfx_ngskid);
 					mobj_t *ghost = P_SpawnMobj(player->mo->x, player->mo->y, player->mo->z, MT_GHOST);
 					P_SetMobjState(ghost, S_FORCESTOP);
+				}
+				else if (!(player->pflags & PF_ELEMENTALBOUNCE) && player->shield == SH_ELEMENTAL)
+				{
+					player->pflags |= PF_THOKKED;
+					player->pflags |= PF_ELEMENTALBOUNCE;
+					player->pflags &= ~PF_SPINNING;
+					player->mo->momx = player->mo->momy = 0;
+					P_SetObjectMomZ(player->mo, -28*FRACUNIT, false);
+
+					S_StartSound(player->mo, sfx_s3k_43);
 				}
 			}
 		}
@@ -1538,11 +1577,7 @@ void P_PlayerThink(player_t *player)
 	}
 
 	if (player->powers[pw_invulnerability])
-	{
 		player->powers[pw_invulnerability]--;
-		if (player->powers[pw_invulnerability] == 1)
-			P_RestoreMusic(player);
-	}
 
 	if (player->powers[pw_underwater])
 		player->powers[pw_underwater]--;
@@ -1568,6 +1603,7 @@ void P_PlayerThink(player_t *player)
 		player->powers[pw_underwater] = UNDERWATERTICS + 1;
 
 	P_CheckUnderwaterAndSpaceTimer(player);
+	P_CheckInvincibilityTimer(player);
 }
 
 void R_ResetResp(player_t *p)

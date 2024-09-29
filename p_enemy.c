@@ -903,11 +903,13 @@ void A_AwardBox(mobj_t *actor, int16_t var1, int16_t var2)
 			S_StartSong(gameinfo.xtlifeMus, 0, cdtrack_xtlife);
 			player->powers[pw_extralife] = EXTRALIFETICS + 1;
 			break;
-			/*
-MT_INVULN_ICON,
-*/
+		case MT_INVULN_ICON:
+			player->powers[pw_invulnerability] = INVULNTICS + 1;
+			S_StopSong();
+			S_StartSong(gameinfo.invincMus, 0, cdtrack_invincibility);
+			break;
 		case MT_SNEAKERS_ICON:
-			player->powers[pw_sneakers] = 20*TICRATE;
+			player->powers[pw_sneakers] = SNEAKERTICS + 1;
 			S_StopSong();
 			S_StartSong(gameinfo.sneakerMus, 0, cdtrack_sneakers);
 			break;

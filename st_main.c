@@ -173,29 +173,29 @@ static void ST_DrawTitleCard()
 		lt_lump = lt_blue_lump;
 	}
 
-	if (leveltime < 30)
+	if (gametic < 30)
 		DrawFillRect(0, 22, 320, 180, COLOR_BLACK);
 
-	if (stbar_tics < 16) {
+	if (gametic < 16) {
 		// Title card moving into the frame.
 
-		DrawScrollingBanner(ltzz_lump, (stbar_tics-16) << 4, stbar_tics << 1);
+		DrawScrollingBanner(ltzz_lump, (gametic-16) << 4, gametic << 1);
 
-		DrawScrollingChevrons(chev_lump, 16 + ((stbar_tics-16) << 4), -stbar_tics << 1);
+		DrawScrollingChevrons(chev_lump, 16 + ((gametic-16) << 4), -gametic << 1);
 
 		if (gamemapinfo.act >= 1 && gamemapinfo.act <= 3) {
-			DrawJagobjLump(lt_lump, 160+70-24 + ((16 - stbar_tics) << 5), 100 - ((16 - stbar_tics) << 5), NULL, NULL);
-			V_DrawValueLeft(&titleNumberFont, 160+70 + ((16 - stbar_tics) << 5), 124-4, gamemapinfo.act);
+			DrawJagobjLump(lt_lump, 160+70-24 + ((16 - gametic) << 5), 100 - ((16 - gametic) << 5), NULL, NULL);
+			V_DrawValueLeft(&titleNumberFont, 160+70 + ((16 - gametic) << 5), 124-4, gamemapinfo.act);
 		}
-		V_DrawStringRight(&titleFont, 160+68 - ((16 - stbar_tics) << 5), 100, gamemapinfo.name);
-		V_DrawStringLeft(&titleFont, 160 + ((16 - stbar_tics) << 5), 124, "Zone");
+		V_DrawStringRight(&titleFont, 160+68 - ((16 - gametic) << 5), 100, gamemapinfo.name);
+		V_DrawStringLeft(&titleFont, 160 + ((16 - gametic) << 5), 124, "Zone");
 	}
-	else if (stbar_tics < 80) {
+	else if (gametic < 80) {
 		// Title card at rest in the frame.
 
-		DrawScrollingBanner(ltzz_lump, 0, stbar_tics << 1);
+		DrawScrollingBanner(ltzz_lump, 0, gametic << 1);
 
-		DrawScrollingChevrons(chev_lump, 16, -stbar_tics << 1);
+		DrawScrollingChevrons(chev_lump, 16, -gametic << 1);
 
 		if (gamemapinfo.act >= 1 && gamemapinfo.act <= 3) {
 			DrawJagobjLump(lt_lump, 160+68-24, 100, NULL, NULL);
@@ -207,23 +207,23 @@ static void ST_DrawTitleCard()
 	}
 	else {
 		// Title card moving out of the frame.
-		DrawScrollingBanner(ltzz_lump, (80-stbar_tics) << 4, stbar_tics << 1);
+		DrawScrollingBanner(ltzz_lump, (80-gametic) << 4, gametic << 1);
 
-		DrawScrollingChevrons(chev_lump, 16 + ((80-stbar_tics) << 4), -stbar_tics << 1);
+		DrawScrollingChevrons(chev_lump, 16 + ((80-gametic) << 4), -gametic << 1);
 
 		if (gamemapinfo.act >= 1 && gamemapinfo.act <= 3) {
 			jagobj_t *lt_obj = (jagobj_t*)W_POINTLUMPNUM(lt_lump);
-			VINT lt_y = 100 + ((stbar_tics - 80) << 5);
+			VINT lt_y = 100 + ((gametic - 80) << 5);
 			VINT lt_height = lt_y + lt_obj->height > (180+22)
 					? lt_obj->height - ((lt_y + lt_obj->height) - (180+22))
 					: lt_obj->height;
-			DrawJagobj2(lt_obj, 160+68-24 - ((stbar_tics - 80) << 5), lt_y, 0, 0,
+			DrawJagobj2(lt_obj, 160+68-24 - ((gametic - 80) << 5), lt_y, 0, 0,
 					lt_obj->width, lt_height, I_OverwriteBuffer());
 			
-			V_DrawValueLeft(&titleNumberFont, 160+68 - ((stbar_tics - 80) << 5), 124-4, gamemapinfo.act);
+			V_DrawValueLeft(&titleNumberFont, 160+68 - ((gametic - 80) << 5), 124-4, gamemapinfo.act);
 		}
-		V_DrawStringRight(&titleFont, 160+68 + ((stbar_tics - 80) << 5), 100, gamemapinfo.name);
-		V_DrawStringLeft(&titleFont, 160 - ((stbar_tics - 80) << 5), 124, "Zone");
+		V_DrawStringRight(&titleFont, 160+68 + ((gametic - 80) << 5), 100, gamemapinfo.name);
+		V_DrawStringLeft(&titleFont, 160 - ((gametic - 80) << 5), 124, "Zone");
 	}
 }
 
@@ -237,16 +237,19 @@ static void ST_DrawTitleCard()
 
 static void ST_Drawer_ (stbar_t* sb)
 {
-	if (stbar_tics < 96) {
+	if (gametic < 96) {
 		ST_DrawTitleCard();
 	}
 	else
 	{
+		int worldTime = leveltime - 4*TICRATE;
+		if (worldTime < 0)
+			worldTime = 0;
 		DrawJagobjLump(score, 16, 10+22, NULL, NULL);
 		V_DrawValuePaddedRight(&hudNumberFont, 16 + 120, 10+22, sb->score, 0);
 
-		const int minutes = stbar_tics/(60*TICRATE);
-		const int seconds = (stbar_tics/(TICRATE))%60;
+		const int minutes = worldTime/(60*TICRATE);
+		const int seconds = (worldTime/(TICRATE))%60;
 		DrawJagobjLump(time, 16, 26+22, NULL, NULL);
 		V_DrawValuePaddedRight(&hudNumberFont, 72, 26+22, minutes, 0);
 		DrawJagobjLump(timecolon, 72, 26+22, NULL, NULL);

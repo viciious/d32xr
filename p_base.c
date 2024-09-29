@@ -30,6 +30,7 @@
 
 #include "doomdef.h"
 #include "p_local.h"
+#include "p_camera.h"
 #include "mars.h"
 
 typedef struct
@@ -647,8 +648,11 @@ static boolean P_DrownNumbersThink(mobj_t *mobj)
       P_RemoveMobj(mobj);
       return false;
    }
+
+   P_UnsetThingPosition(mobj);
    mobj->x = mobj->target->x;
    mobj->y = mobj->target->y;
+   P_SetThingPosition(mobj);
 
    if (player->pflags & PF_VERTICALFLIP)
       mobj->z = mobj->target->z - 16*FRACUNIT - (mobj->theight << FRACBITS);
@@ -725,6 +729,12 @@ void P_MobjThinker(mobj_t *mobj)
          case MT_WHIRLWIND_ORB:
             {
                player_t *player = &players[mobj->target->player - 1];
+
+               if (player->powers[pw_invulnerability])
+                  mobj->flags2 |= MF2_DONTDRAW;
+               else
+                  mobj->flags2 &= ~MF2_DONTDRAW;
+
                if (mobj->type == MT_FORCE_ORB)
                {
                   if (player->shield == SH_FORCE1 && mobj->state == S_FORCA1)
@@ -735,11 +745,21 @@ void P_MobjThinker(mobj_t *mobj)
                      return;
                   }
                }
-               else if (player->shield != mobjinfo[mobj->type].painchance)
+               else
                {
-                  P_RemoveMobj(mobj);
-                  return;
+                   if (mobj->type == MT_ELEMENTAL_ORB)
+                   {
+                       if ((player->pflags & PF_ELEMENTALBOUNCE) && player->mo->momz < 0)
+                         P_SetMobjState(mobj, S_ELEMDOWN);
+                   }
+                  
+                   if (player->shield != mobjinfo[mobj->type].painchance)
+                   {
+                       P_RemoveMobj(mobj);
+                       return;
+                   }
                }
+
                P_UnsetThingPosition(mobj);
                mobj->x = mobj->target->x;
                mobj->y = mobj->target->y;

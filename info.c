@@ -303,7 +303,41 @@ STATE(SPR_ELEM,0,1,NULL,S_ELEM2), // S_ELEM1,
 STATE(SPR_ELEM,1,1,NULL,S_ELEM3), // S_ELEM2,
 STATE(SPR_ELEM,2,1,NULL,S_ELEM4), // S_ELEM3,
 STATE(SPR_ELEM,3,1,NULL,S_ELEM1), // S_ELEM4,
-STATE(SPR_ELEM,4,TICRATE/2,NULL,S_NULL), // S_ELEMDOWN,
+STATE(SPR_ELEM,4,2,NULL,S_ELEM1), // S_ELEMDOWN,
+
+// Invincibility sparkles
+STATE(SPR_IVSP,0,1,NULL,S_IVSP2), // S_IVSP1
+STATE(SPR_IVSP,1,1,NULL,S_IVSP3), // S_IVSP2
+STATE(SPR_IVSP,2,1,NULL,S_IVSP4), // S_IVSP3
+STATE(SPR_IVSP,3,1,NULL,S_IVSP5), // S_IVSP4
+STATE(SPR_IVSP,4,1,NULL,S_IVSP6), // S_IVSP5
+STATE(SPR_IVSP,5,1,NULL,S_IVSP7), // S_IVSP6
+STATE(SPR_IVSP,6,1,NULL,S_IVSP8), // S_IVSP7
+STATE(SPR_IVSP,7,1,NULL,S_IVSP9), // S_IVSP8
+STATE(SPR_IVSP,8,1,NULL,S_IVSP10), // S_IVSP9
+STATE(SPR_IVSP,9,1,NULL,S_IVSP11), // S_IVSP10
+STATE(SPR_IVSP,10,1,NULL,S_IVSP12), // S_IVSP11
+STATE(SPR_IVSP,11,1,NULL,S_IVSP13), // S_IVSP12
+STATE(SPR_IVSP,12,1,NULL,S_IVSP14), // S_IVSP13
+STATE(SPR_IVSP,13,1,NULL,S_IVSP15), // S_IVSP14
+STATE(SPR_IVSP,14,1,NULL,S_IVSP16), // S_IVSP15
+STATE(SPR_IVSP,15,1,NULL,S_IVSP17), // S_IVSP16
+STATE(SPR_IVSP,16,1,NULL,S_IVSP18), // S_IVSP17
+STATE(SPR_IVSP,17,1,NULL,S_IVSP19), // S_IVSP18
+STATE(SPR_IVSP,18,1,NULL,S_IVSP20), // S_IVSP19
+STATE(SPR_IVSP,19,1,NULL,S_IVSP21), // S_IVSP20
+STATE(SPR_IVSP,20,1,NULL,S_IVSP22), // S_IVSP21
+STATE(SPR_IVSP,21,1,NULL,S_IVSP23), // S_IVSP22
+STATE(SPR_IVSP,22,1,NULL,S_IVSP24), // S_IVSP23
+STATE(SPR_IVSP,23,1,NULL,S_IVSP25), // S_IVSP24
+STATE(SPR_IVSP,24,1,NULL,S_IVSP26), // S_IVSP25
+STATE(SPR_IVSP,25,1,NULL,S_IVSP27), // S_IVSP26
+STATE(SPR_IVSP,26,1,NULL,S_IVSP28), // S_IVSP27
+STATE(SPR_IVSP,27,1,NULL,S_IVSP29), // S_IVSP28
+STATE(SPR_IVSP,28,1,NULL,S_IVSP30), // S_IVSP29
+STATE(SPR_IVSP,29,1,NULL,S_IVSP31), // S_IVSP30
+STATE(SPR_IVSP,30,1,NULL,S_IVSP32), // S_IVSP31
+STATE(SPR_IVSP,31,1,NULL,S_NULL), // S_IVSP32
 
 // Bluebird
 STATE(SPR_FL01,0,2,A_FlickyCheck,S_FLICKY_01_OUT), // S_FLICKY_01_OUT
@@ -1530,32 +1564,6 @@ MF2_SHOOTABLE|MF2_ENEMY,	// flags2
 		0, // flags2
 	},
 
-	{           // MT_ELEMENTAL_DOWN
-		-1,             // doomednum
-		S_ELEMDOWN,        // spawnstate
-		1000,           // spawnhealth
-		S_NULL,         // seestate
-		sfx_None,       // seesound
-		0,              // reactiontime
-		sfx_None,       // attacksound
-		S_NULL,         // painstate
-		0,              // painchance
-		sfx_None,       // painsound
-		S_NULL,         // meleestate
-		S_NULL,         // missilestate
-		S_NULL,         // deathstate
-		S_NULL,         // xdeathstate
-		sfx_None,       // deathsound
-		0,              // speed
-		4*FRACUNIT,     // radius
-		4*FRACUNIT,     // height
-		16,             // mass
-		0,              // damage
-		sfx_None,       // activesound
-		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
-		0, // flags2
-	},
-
 	{           // MT_ATTRACT_ORB
 		-1,             // doomednum
 		S_MAGN1,        // spawnstate
@@ -1658,6 +1666,32 @@ MF2_SHOOTABLE|MF2_ENEMY,	// flags2
 		sfx_None,       // activesound
 		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
 		0, // flags2
+	},
+
+	{           // MT_IVSP
+		-1,             // doomednum
+		S_IVSP1,         // spawnstate
+		1000,           // spawnhealth
+		S_NULL,         // seestate
+		sfx_None,       // seesound
+		8,              // reactiontime
+		sfx_None,       // attacksound
+		S_NULL,         // painstate
+		0,              // painchance
+		sfx_None,       // painsound
+		S_NULL,         // meleestate
+		S_NULL,         // missilestate
+		S_NULL,         // deathstate
+		S_NULL,         // xdeathstate
+		sfx_None,       // deathsound
+		8,              // speed
+		4*FRACUNIT,     // radius
+		8*FRACUNIT,     // height
+		16,             // mass
+		0,              // damage
+		sfx_None,       // activesound
+		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY|MF_STATIC, // flags
+		MF2_FORWARDOFFSET,              // flags2
 	},
 
 	// Bluebird
