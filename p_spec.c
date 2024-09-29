@@ -695,11 +695,12 @@ void P_PlayerInSpecialSector (player_t *player)
 	sector_t	*sector;
 	
 	sector = subsectors[player->mo->isubsector].sector;
-	if (player->mo->z != sector->floorheight)
-		return;		/* not all the way down yet */
 		
 	switch (sector->special)
 	{
+		case 1: // Clear the map
+			P_DoPlayerExit(player);
+			break;
 		case 9:		/* SECRET SECTOR */
 			player->secretcount++;
 			sector->special = 0;

@@ -21,6 +21,7 @@ const char * const S_sfxnames[NUMSFX] =
   "dselemsg",
   "dsforcsg",
   "dsfrcssg",
+  "dslvpass",
   "dsngskid",
   "dsrlaunc",
   "dstelept",
@@ -62,7 +63,6 @@ const char * const S_sfxnames[NUMSFX] =
   "s3k_b1",
   "s3k_b4",
   "s3k_b6",
-  "s3k_b8",
   "s3k_b9",
   "drcymcr1",   // Drums: Cymbal crash 1
   "drkick1",    // Drums: Kick 1
@@ -116,6 +116,7 @@ sfxinfo_t S_sfx[NUMSFX] =
   SOUND( false, 64 ),
   SOUND( false, 64 ),
   SOUND( false, 64 ),
+  SOUND( false, 96 ),
   SOUND( false, 64 ),
   SOUND( false, 64 ),
   SOUND( false, 64 ),
@@ -145,7 +146,7 @@ sfxinfo_t S_sfx[NUMSFX] =
   SOUND( false, 64 ),
   SOUND( false, 64 ),
   SOUND( false, 64 ),
-  SOUND( false, 64 ),
+  SOUND( false, 100 ),
   SOUND( false, 64 ),
   SOUND( false, 64 ),
   SOUND( false, 64 ),

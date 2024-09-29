@@ -1043,6 +1043,18 @@ static void P_DoJumpStuff(player_t *player)
 	}
 }
 
+void P_DoPlayerExit(player_t *player)
+{
+	CONS_Printf("A winner is you!");
+
+	// Find the MT_SIGN
+	// Chuck it up into the air
+	// Begin the exiting timer so the player doesn't move around
+	// Act clear should be monitored by the HUD and executed separately.
+
+	// Should camera focus on sign??
+}
+
 fixed_t P_ReturnThrustX(angle_t angle, fixed_t move)
 {
 	angle >>= ANGLETOFINESHIFT;
