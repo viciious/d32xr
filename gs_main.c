@@ -23,6 +23,7 @@ typedef struct
 {
 	VINT	x;
 	VINT 	y;
+    int     size;
 	char 	name[64];
 } menuitem_t;
 
@@ -76,7 +77,7 @@ void GS_Start(void)
     gs_menu->cursorpos = 0;
     gs_menu->cursordelay = MOVEWAIT;
 
-    GS_PathChange("", 0);
+    GS_PathChange("/", 0);
 
     DoubleBufferSetup();
 
@@ -99,32 +100,79 @@ void GS_Stop(void)
     S_Clear();
 }
 
-static void GS_PathChange(const char *newpath, int newmode)
+static void GS_PathChange(const char *dir, int newmode)
 {
     int i;
     int n;
     char *buf;
     menuitem_t *mi;
+    char realpath[sizeof(gs_menu->path)];
+
+    /* a directory */
+    if (!D_strcasecmp(dir, ".."))
+    {
+        // parent directory
+        int i;
+        int len = mystrlen(gs_menu->path);
+
+        D_memcpy(realpath, gs_menu->path, len);
+
+        if (len == 0)
+            return;
+
+        for (i = len - 1; i > 0; i--)
+        {
+            if (realpath[i] == '/')
+                break;
+        }
+
+        if (i == 0)
+            D_memcpy(realpath, "/", 2);
+        else
+            realpath[i] = '\0';
+    }
+    else if (dir[0] == '/')
+        D_strncpy(realpath, dir, sizeof(realpath));
+    else
+    {
+        int len = mystrlen(gs_menu->path);
+        int rem = sizeof(gs_menu->path) - len - 1;
+        int alen = mystrlen(dir);
+
+        if (rem <= alen+2)
+            return;
+
+        D_memcpy(realpath, gs_menu->path, len);
+
+        if (len > 1)
+        {
+            D_memcpy(realpath + len, "/", 1);
+            len++;
+        }
+
+        D_memcpy(realpath + len, dir, alen);
+        realpath[len + alen] = '\0';
+    }
 
     gs_menu->cursorframe = -1;
     gs_menu->cursorpos = 0;
     gs_menu->cursordelay = MOVEWAIT;
     gs_menu->mode = newmode;
-    D_strncpy(gs_menu->path, newpath, sizeof(gs_menu->path));
+    D_strncpy(gs_menu->path, realpath, sizeof(gs_menu->path));
     gs_menu->numitems = 0;
 
-    newpath = gs_menu->path[0] ? gs_menu->path : "/";
+    dir = gs_menu->path[0] ? gs_menu->path : "/";
     if (newmode)
     {
         // file browser
-        n = I_ReadCDDirectory(newpath);
+        n = I_ReadCDDirectory(dir);
         buf = I_GetCDFileBuffer();
 
         for (i = 0; i < n; i++)
         {
             char *name;
             int flags;
-            int namelen;
+            int namelen, size;
 
             if (gs_menu->numitems == MAXITEMS)
                 break;
@@ -133,7 +181,10 @@ static void GS_PathChange(const char *newpath, int newmode)
 
             name = buf;
             buf += namelen + 1;
-            buf += 4; // length
+
+            size = ((uint8_t)buf[0] << 24) | ((uint8_t)buf[1] << 16) | ((uint8_t)buf[2] << 8) | ((uint8_t)buf[3] << 0);
+            buf += 4; // size
+
             flags = (uint8_t)*buf;
             buf += 1;
 
@@ -144,13 +195,14 @@ static void GS_PathChange(const char *newpath, int newmode)
             D_memcpy(mi->name, name, namelen+1);
             mi->x = 0;
             mi->y = (flags & 0x8E) == 0x2; // is a directory
+            mi->size = size;
             gs_menu->numitems++;
         }
 
         return;
     }
 
-    n = I_ReadCDDirectory(newpath);
+    n = I_ReadCDDirectory(dir);
     buf = I_GetCDFileBuffer();
     for (i = 0; i < n; i++)
     {
@@ -237,7 +289,7 @@ int GS_Ticker (void)
 
     if ((buttons & (BT_C)) && !(oldbuttons & (BT_C)))
     {
-        GS_PathChange("", gs_menu->mode^1);
+        GS_PathChange("/", gs_menu->mode^1);
         return ga_nothing;
     }
 
@@ -252,49 +304,8 @@ int GS_Ticker (void)
             if (mi->y)
             {
                 /* a directory */
-                if (!D_strcasecmp(mi->name, ".."))
-                {
-parent:
-                    // parent directory
-                    ;
-                    int i;
-                    int len = mystrlen(gs_menu->path);
-
-                    D_memcpy(newpath, gs_menu->path, len);
-
-                    if (len == 0)
-                        return ga_nothing;
-
-                    for (i = len - 1; i > 0; i--)
-                    {
-                        if (newpath[i] == '/')
-                            break;
-                    }
-
-                    newpath[i] = '\0';
-                }
-                else
-                {
-                    int len = mystrlen(gs_menu->path);
-                    int rem = sizeof(gs_menu->path) - len - 1;
-                    int alen = mystrlen(mi->name);
-
-                    if (rem <= alen+2)
-                        return ga_nothing;
-
-                    D_memcpy(newpath, gs_menu->path, len);
-
-                    if (len)
-                    {
-                        D_memcpy(newpath + len, "/", 1);
-                        len++;
-                    }
-
-                    D_memcpy(newpath + len, mi->name, alen);
-                    newpath[len + alen] = '\0';
-                }
-
-                GS_PathChange(newpath, 1);
+                GS_PathChange(mi->name, 1);
+                return ga_nothing;
             }
             else
             {
@@ -319,6 +330,19 @@ parent:
                 {
                     return ga_startnew;
                 }
+
+                if (len > 4 && !D_strcasecmp(mi->name + len - 4, ".zgm"))
+                {
+#ifdef MARS
+                    Mars_UpdateCD();
+
+                    Mars_StopTrack();
+
+                    D_snprintf(newpath, sizeof(newpath), "%s/%s", gs_menu->path, mi->name);
+                    Mars_PlayTrack(0, 1, newpath, 0, mi->size, 1);
+#endif
+                    return ga_nothing;
+                }
             }
 
             return ga_nothing;
@@ -331,7 +355,8 @@ parent:
     {
         if (gs_menu->mode)
         {
-            goto parent;
+            if (D_strcasecmp(gs_menu->path, "/"))
+                GS_PathChange("..", 1);
         }
         return ga_nothing;
     }
