@@ -265,6 +265,8 @@ void Mars_Init(void)
 		/* if the CD is present, give it seconds to init */
 		Mars_WaitTicks(180);
 	}
+
+	Mars_SetMusicVolume(255);
 }
 
 uint16_t* Mars_FrameBufferLines(void)
