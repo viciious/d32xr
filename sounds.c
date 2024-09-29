@@ -17,6 +17,7 @@ const char * const S_sfxnames[NUMSFX] =
   "dsarmasg",
   "dsattrsg",
   "dscannon",
+  "dsdwnind",
   "dselemsg",
   "dsforcsg",
   "dsfrcssg",
@@ -106,6 +107,7 @@ const unsigned char drumsfxmap[] =
 sfxinfo_t S_sfx[NUMSFX] =
 { 
   SOUND( 0, 0 ),
+  SOUND( false, 64 ),
   SOUND( false, 64 ),
   SOUND( false, 64 ),
   SOUND( false, 64 ),

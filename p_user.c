@@ -1373,6 +1373,73 @@ void P_DeathThink(player_t *player)
 =================
 */
 
+//
+// P_CheckUnderwaterAndSpaceTimer
+//
+// Restores music from underwater and space warnings, and handles number generation
+//
+static void P_CheckUnderwaterAndSpaceTimer(player_t *player)
+{
+	VINT timeleft = ((player->powers[pw_spacetime]) ? player->powers[pw_spacetime] : player->powers[pw_underwater]) - 1;
+
+	if (player->exiting)
+		player->powers[pw_underwater] = player->powers[pw_spacetime] = 0;
+
+	if ((timeleft == 11*TICRATE) // 5
+	 || (timeleft ==  9*TICRATE) // 4
+	 || (timeleft ==  7*TICRATE) // 3
+	 || (timeleft ==  5*TICRATE) // 2
+	 || (timeleft ==  3*TICRATE) // 1
+	 || (timeleft ==  1*TICRATE)) // 0
+	 {
+		fixed_t height = (player->pflags & PF_VERTICALFLIP)
+		? player->mo->z - 8*FRACUNIT + mobjinfo[MT_DROWNNUMBERS].height
+		: player->mo->z + (player->mo->theight << FRACBITS) + 8*FRACUNIT;
+
+		mobj_t *numbermobj = P_SpawnMobj(player->mo->x, player->mo->y, height, MT_DROWNNUMBERS);
+		
+		timeleft /= (2*TICRATE);
+
+		S_StartSound(player->mo, sfx_dwnind);
+
+		if (timeleft) // Don't waste time setting the state if the time is 0.
+			P_SetMobjState(numbermobj, mobjinfo[numbermobj->type].spawnstate+timeleft);
+
+		numbermobj->target = player->mo;
+		numbermobj->threshold = 40;
+	}
+	// Underwater timer runs out
+	else if (timeleft == 1)
+	{
+		player->pflags |= PF_DROWNED;
+		P_KillMobj(NULL, player->mo);
+	}
+
+	if (!(player->pflags & PF_UNDERWATER) && player->powers[pw_underwater])
+	{
+		if (player->powers[pw_underwater] <= 12*TICRATE + 1)
+		{
+			player->powers[pw_underwater] = 0;
+			P_RestoreMusic(player);
+		}
+		else
+			player->powers[pw_underwater] = 0;
+	}
+
+//	if (player->powers[pw_spacetime] > 1 && !P_InSpaceSector(player->mo))
+//		player->powers[pw_spacetime] = 0;
+
+	// Underwater audio cues
+	if ((player->powers[pw_underwater] == 25*TICRATE + 1)
+		|| (player->powers[pw_underwater] == 20*TICRATE + 1)
+		|| (player->powers[pw_underwater] == 15*TICRATE + 1))
+		S_StartSound(NULL, sfx_s3k_a9);
+
+// TODO: Drowning music
+//	if (player->powers[pw_underwater] == 11*TICRATE + 1)
+//		P_PlayJingle(player, JT_DROWN);
+}
+
 extern int ticphase;
 void P_RingMagnet(mobj_t *spot);
 
@@ -1478,15 +1545,7 @@ void P_PlayerThink(player_t *player)
 	}
 
 	if (player->powers[pw_underwater])
-	{
-		if (player->powers[pw_underwater] == 1)
-		{
-			player->pflags |= PF_DROWNED;
-			P_KillMobj(NULL, player->mo);
-		}
-
 		player->powers[pw_underwater]--;
-	}
 
 	if (player->damagecount)
 		player->damagecount--;
@@ -1496,22 +1555,6 @@ void P_PlayerThink(player_t *player)
 
 	if (player->homingTimer)
 		player->homingTimer--;
-
-	if (!(player->pflags & PF_UNDERWATER) && player->powers[pw_underwater])
-	{
-		if (player->powers[pw_underwater] <= 12*TICRATE + 1)
-		{
-			player->powers[pw_underwater] = 0;
-			P_RestoreMusic(player);
-		}
-		else
-			player->powers[pw_underwater] = 0;
-	}
-
-	if ((player->powers[pw_underwater] == 25*TICRATE + 1)
-		|| (player->powers[pw_underwater] == 20*TICRATE + 1)
-		|| (player->powers[pw_underwater] == 15*TICRATE + 1))
-			S_StartSound(NULL, sfx_s3k_a9);
 
 /*	if (player->powers[pw_underwater] == 11*TICRATE + 1
 		&& player == &players[consoleplayer])
@@ -1523,6 +1566,8 @@ void P_PlayerThink(player_t *player)
 		P_RingMagnet(player->mo);
 	else if (player->shield == SH_ELEMENTAL)
 		player->powers[pw_underwater] = UNDERWATERTICS + 1;
+
+	P_CheckUnderwaterAndSpaceTimer(player);
 }
 
 void R_ResetResp(player_t *p)

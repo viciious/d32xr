@@ -329,6 +329,7 @@ typedef enum
 	pw_sneakers,
 	pw_extralife,
 	pw_underwater,
+	pw_spacetime,
 	NUMPOWERS
 } powertype_t;
 

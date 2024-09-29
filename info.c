@@ -475,6 +475,13 @@ STATE(SPR_STPT,FF_FLIPPED|3,1,NULL,S_STARPOST_SPIN22), // S_STARPOST_SPIN21
 STATE(SPR_STPT,FF_FLIPPED|2,1,NULL,S_STARPOST_SPIN23), // S_STARPOST_SPIN22
 STATE(SPR_STPT,FF_FLIPPED|1,1,NULL,S_STARPOST_FLASH1), // S_STARPOST_SPIN23
 
+STATE(SPR_DRWN,0,40,NULL,S_NULL), // S_ZERO
+STATE(SPR_DRWN,1,40,NULL,S_NULL), // S_ONE
+STATE(SPR_DRWN,2,40,NULL,S_NULL), // S_TWO
+STATE(SPR_DRWN,3,40,NULL,S_NULL), // S_THREE
+STATE(SPR_DRWN,4,40,NULL,S_NULL), // S_FOUR
+STATE(SPR_DRWN,5,40,NULL,S_NULL), // S_FIVE
+
 };
 
 #undef STATE
@@ -2172,6 +2179,31 @@ MF2_SHOOTABLE|MF2_ENEMY,	// flags2
 		sfx_None,       // activesound
 		MF_SPECIAL|MF_STATIC,     // flags
 		0, // flags2
+	},
+	{           // MT_DROWNNUMBERS
+		-1,             // doomednum
+		S_ZERO,         // spawnstate
+		1000,           // spawnhealth
+		S_NULL,         // seestate
+		sfx_None,       // seesound
+		8,              // reactiontime
+		sfx_None,       // attacksound
+		S_NULL,         // painstate
+		0,              // painchance
+		sfx_None,       // painsound
+		S_NULL,         // meleestate
+		S_NULL,         // missilestate
+		S_NULL,         // deathstate
+		S_NULL,         // xdeathstate
+		sfx_None,       // deathsound
+		8,              // speed
+		8*FRACUNIT,     // radius
+		8*FRACUNIT,     // height
+		16,             // mass
+		0,              // damage
+		sfx_None,       // activesound
+		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
+		MF2_FORWARDOFFSET, // flags2
 	},
 };
 

@@ -639,6 +639,32 @@ static boolean P_JetFume1Think(mobj_t *mobj)
 	return true;
 }
 
+static boolean P_DrownNumbersThink(mobj_t *mobj)
+{
+   player_t *player = &players[mobj->target->player - 1];
+   if (!(player->powers[pw_underwater]) || player->powers[pw_spacetime])
+   {
+      P_RemoveMobj(mobj);
+      return false;
+   }
+   mobj->x = mobj->target->x;
+   mobj->y = mobj->target->y;
+
+   if (player->pflags & PF_VERTICALFLIP)
+      mobj->z = mobj->target->z - 16*FRACUNIT - (mobj->theight << FRACBITS);
+   else
+      mobj->z = mobj->target->z + (mobj->target->theight << FRACBITS) + 8*FRACUNIT; // Adjust height for height changes
+
+   if (mobj->threshold <= 35)
+      mobj->flags2 |= MF2_DONTDRAW;
+   else
+      mobj->flags2 &= ~MF2_DONTDRAW;
+   if (mobj->threshold <= 30)
+      mobj->threshold = 40;
+   mobj->threshold--;
+   return true;
+}
+
 //
 // Perform main thinking logic for a single mobj per tic.
 //
@@ -792,6 +818,10 @@ void P_MobjThinker(mobj_t *mobj)
             }
             else
                P_Attract(mobj, mobj->target);
+            break;
+         case MT_DROWNNUMBERS:
+            if (!P_DrownNumbersThink(mobj))
+               return;
             break;
          default:
             break;
