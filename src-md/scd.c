@@ -77,6 +77,7 @@ int64_t scd_open_file(const char *name)
 
 int64_t scd_read_directory(char *buf)
 {
+    int i, numwords;
     char *scdWordRam = (char *)0x600000; /* word ram on MD side (in 1M mode) */
     union {
         int32_t ln[2]; /* length, num entries */
@@ -95,7 +96,16 @@ int64_t scd_read_directory(char *buf)
     if (res.value < 0)
         return res.value;
 
+    // use word copy so that zero-byte writes aren't ignored for the fb
+#if 1
+    numwords = (res.ln[0] + 1)/2;
+    for (i = 0; i < numwords; i++) {
+        ((volatile int16_t *)buf)[i] = ((volatile int16_t *)scdWordRam)[i];
+    }
+#else
     memcpy(buf, scdWordRam, res.ln[0]);
+#endif
+
     return res.value;
 }
 
