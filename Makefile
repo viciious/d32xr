@@ -117,7 +117,7 @@ m68k.bin:
 
 $(TARGET).32x: $(TARGET).elf
 	$(OBJC) -O binary $< temp2.bin
-	$(DD) if=temp2.bin of=temp.bin bs=196K conv=sync
+	$(DD) if=temp2.bin of=temp.bin bs=198K conv=sync
 	rm -f temp3.bin
 	cat temp.bin $(WAD) >>temp3.bin
 	$(DD) if=temp3.bin of=$@ bs=512K conv=sync
