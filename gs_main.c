@@ -16,7 +16,7 @@
 #define MAXITEMS    128
 
 #define SMALL_STARTX    20
-#define SMALL_PAGEWDTH  140
+#define SMALL_PAGEWDTH  160
 #define SMALL_PAGEITMS  20
 
 typedef struct
@@ -474,12 +474,20 @@ void GS_Drawer (void)
             {
                 // a directory
                 D_snprintf(name, sizeof(name), "^%02X%s", 161, items[i].name);
-                I_Print8(x, y, name);
             }
             else
             {
-                I_Print8(x, y, items[i].name);
+                // a file
+                D_snprintf(name, sizeof(name), "%s", items[i].name);
             }
+
+            // truncate if too long
+            if (mystrlen(name) > 17)
+            {
+                D_memcpy(&name[14], "...", 4);
+            }
+
+            I_Print8(x, y, name);
 
             y++;
         }
