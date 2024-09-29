@@ -304,10 +304,10 @@ void Mars_WriteSRAM(const uint8_t* buffer, int offset, int len)
 
 static char *Mars_StringToFramebuffer(const char *str)
 {
-	char *fb = (char *)(&MARS_FRAMEBUFFER + 0x100);
+	volatile char *fb = (volatile char *)(&MARS_FRAMEBUFFER + 0x100);
 
 	if (!*str)
-		return fb;
+		return (char *)fb;
 
 	do {
 		*fb++ = *str++;
@@ -315,7 +315,7 @@ static char *Mars_StringToFramebuffer(const char *str)
 
 	*(int16_t *)((uintptr_t)fb & ~1) = 0;
 	*(fb-1) = *(str-1);
-	return fb;
+	return (char *)fb;
 }
 
 void Mars_UpdateCD(void)
