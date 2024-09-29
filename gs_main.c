@@ -1,6 +1,9 @@
 /* m_main.c -- main menu */
 
 #include "doomdef.h"
+#ifdef MARS
+#include "mars.h"
+#endif
 
 #define MOVEWAIT		(I_IsPAL() ? TICVBLS*5 : TICVBLS*6)
 #define CURSORX		(80)
@@ -10,7 +13,11 @@
 #define ITEMSPACE	20
 #define CURSORY(y)	(STARTY+ITEMSPACE*(y))
 #define	NUMLCHARS 64
-#define MAXITEMS    8
+#define MAXITEMS    128
+
+#define SMALL_STARTX    20
+#define SMALL_PAGEWDTH  140
+#define SMALL_PAGEITMS  20
 
 typedef struct
 {
@@ -21,6 +28,7 @@ typedef struct
 
 typedef struct
 {
+    VINT mode;
 	VINT numitems;
     menuitem_t items[MAXITEMS];
 
@@ -32,19 +40,18 @@ typedef struct
     VINT cursordelay;
     VINT cursorpos;
     VINT movecount;
+
+    char path[256];
 } menuscreen_t;
 
 static menuscreen_t *gs_menu = NULL;
 
 extern VINT	uchar, snums;
 extern void print(int x, int y, const char* string);
+static void GS_PathChange(const char *newpath, int newmode);
 
 void GS_Start(void)
 {
-    int i;
-    int n;
-    char *buf;
-
     S_StopSong();
 
     I_SetPalette(W_POINTLUMPNUM(W_GetNumForName("PLAYPALS")));
@@ -69,14 +76,87 @@ void GS_Start(void)
     gs_menu->cursorpos = 0;
     gs_menu->cursordelay = MOVEWAIT;
 
-    n = I_ReadCDDirectory("/");
+    GS_PathChange("", 0);
+
+    DoubleBufferSetup();
+
+    if (gs_menu->numitems == 0)
+        I_Error("No playable WADs found on the CD");
+}
+
+void GS_Stop(void)
+{
+    if (gs_menu == NULL)
+        return;
+
+    if (gs_menu->path[0])
+        D_snprintf(cd_pwad_name, sizeof(cd_pwad_name), "%s/%s", gs_menu->path, gs_menu->items[gs_menu->cursorpos].name);
+    else
+        D_snprintf(cd_pwad_name, sizeof(cd_pwad_name), "%s", gs_menu->items[gs_menu->cursorpos].name);
+    Z_Free(gs_menu);
+    gs_menu = NULL;
+
+    S_Clear();
+}
+
+static void GS_PathChange(const char *newpath, int newmode)
+{
+    int i;
+    int n;
+    char *buf;
+    menuitem_t *mi;
+
+    gs_menu->cursorframe = -1;
+    gs_menu->cursorpos = 0;
+    gs_menu->cursordelay = MOVEWAIT;
+    gs_menu->mode = newmode;
+    D_strncpy(gs_menu->path, newpath, sizeof(gs_menu->path));
+    gs_menu->numitems = 0;
+
+    newpath = gs_menu->path[0] ? gs_menu->path : "/";
+    if (newmode)
+    {
+        // file browser
+        n = I_ReadCDDirectory(newpath);
+        buf = I_GetCDFileBuffer();
+
+        for (i = 0; i < n; i++)
+        {
+            char *name;
+            int flags;
+            int namelen;
+
+            if (gs_menu->numitems == MAXITEMS)
+                break;
+
+            namelen = mystrlen(buf);
+
+            name = buf;
+            buf += namelen + 1;
+            buf += 4; // length
+            flags = (uint8_t)*buf;
+            buf += 1;
+
+            if (namelen >= (int)sizeof(mi->name))
+                continue;
+
+            mi = &gs_menu->items[gs_menu->numitems];
+            D_memcpy(mi->name, name, namelen+1);
+            mi->x = 0;
+            mi->y = (flags & 0x8E) == 0x2; // is a directory
+            gs_menu->numitems++;
+        }
+
+        return;
+    }
+
+    n = I_ReadCDDirectory(newpath);
     buf = I_GetCDFileBuffer();
     for (i = 0; i < n; i++)
     {
         char *name;
         int flags;
         int namelen;
-        menuitem_t *mi;
 
         if (gs_menu->numitems == MAXITEMS)
             break;
@@ -113,23 +193,6 @@ void GS_Start(void)
         mi->y = CURSORY(gs_menu->numitems);
         gs_menu->numitems++;
     }
-
-    DoubleBufferSetup();
-
-    if (gs_menu->numitems == 0)
-        I_Error("No playable WADs found on the CD");
-}
-
-void GS_Stop(void)
-{
-    if (gs_menu == NULL)
-        return;
-
-    D_snprintf(cd_pwad_name, sizeof(cd_pwad_name), "%s", gs_menu->items[gs_menu->cursorpos].name);
-    Z_Free(gs_menu);
-    gs_menu = NULL;
-
-    S_Clear();
 }
 
 /*
@@ -149,8 +212,12 @@ int GS_Ticker (void)
 
 	if (ticon < TICRATE)
 		return ga_nothing; /* ignore accidental keypresses */
-    if (menuscr->numitems <= 1)
-        return ga_startnew;
+
+    if (!menuscr->mode)
+    {
+        if (menuscr->numitems <= 1)
+            return ga_startnew;
+    }
 
     if (gs_menu->cursorframe == -1)
     {
@@ -168,9 +235,106 @@ int GS_Ticker (void)
     buttons = ticrealbuttons & MENU_BTNMASK;
     oldbuttons = oldticrealbuttons & MENU_BTNMASK;
 
+    if ((buttons & (BT_C)) && !(oldbuttons & (BT_C)))
+    {
+        GS_PathChange("", gs_menu->mode^1);
+        return ga_nothing;
+    }
+
     /* exit menu if button press */
     if ((buttons & (BT_A | BT_LMBTN | BT_START)) && !(oldbuttons & (BT_A | BT_LMBTN | BT_START)))
+    {
+        if (gs_menu->mode)
+        {
+            menuitem_t *mi = &gs_menu->items[gs_menu->cursorpos];
+            char newpath[sizeof(gs_menu->path)];
+
+            if (mi->y)
+            {
+                /* a directory */
+                if (!D_strcasecmp(mi->name, ".."))
+                {
+parent:
+                    // parent directory
+                    ;
+                    int i;
+                    int len = mystrlen(gs_menu->path);
+
+                    D_memcpy(newpath, gs_menu->path, len);
+
+                    if (len == 0)
+                        return ga_nothing;
+
+                    for (i = len - 1; i > 0; i--)
+                    {
+                        if (newpath[i] == '/')
+                            break;
+                    }
+
+                    newpath[i] = '\0';
+                }
+                else
+                {
+                    int len = mystrlen(gs_menu->path);
+                    int rem = sizeof(gs_menu->path) - len - 1;
+                    int alen = mystrlen(mi->name);
+
+                    if (rem <= alen+2)
+                        return ga_nothing;
+
+                    D_memcpy(newpath, gs_menu->path, len);
+
+                    if (len)
+                    {
+                        D_memcpy(newpath + len, "/", 1);
+                        len++;
+                    }
+
+                    D_memcpy(newpath + len, mi->name, alen);
+                    newpath[len + alen] = '\0';
+                }
+
+                GS_PathChange(newpath, 1);
+            }
+            else
+            {
+                /* a file */
+                int len = mystrlen(mi->name);
+
+#ifdef MARS
+                Mars_UpdateCD();
+
+                Mars_StopTrack();
+
+                if (len > 4 && !D_strcasecmp(mi->name + len - 4, ".pcm"))
+                {
+                    // start SPCM playback
+                    D_snprintf(newpath, sizeof(newpath), "%s/%s", gs_menu->path, mi->name);
+                    Mars_SetMusicVolume(255);
+                    Mars_PlayTrack(0, 1, newpath, -1, 0, 0);
+                    return ga_nothing;
+                }
+#endif
+                if (len > 4 && !D_strcasecmp(mi->name + len - 4, ".wad"))
+                {
+                    return ga_startnew;
+                }
+            }
+
+            return ga_nothing;
+        }
+
         return ga_startnew;
+    }
+
+    if ((buttons & (BT_B | BT_RMBTN)) && !(oldbuttons & (BT_B | BT_RMBTN)))
+    {
+        if (gs_menu->mode)
+        {
+            goto parent;
+        }
+        return ga_nothing;
+    }
 
     if (buttons == 0)
     {
@@ -207,6 +371,22 @@ int GS_Ticker (void)
                     gs_menu->cursorpos = menuscr->numitems - 1;
             }
 
+            if (buttons & BT_LEFT)
+            {
+                if (gs_menu->mode)
+                    gs_menu->cursorpos -= SMALL_PAGEITMS;
+                if (gs_menu->cursorpos < 0)
+                    gs_menu->cursorpos = 0;
+            }
+
+            if (buttons & BT_RIGHT)
+            {
+                if (gs_menu->mode)
+                    gs_menu->cursorpos += SMALL_PAGEITMS;
+                if (gs_menu->cursorpos >= gs_menu->numitems)
+                    gs_menu->cursorpos = gs_menu->numitems-1;
+            }
+
             newcursor = gs_menu->cursorpos != oldcursorpos;
 
             if (newcursor)
@@ -214,7 +394,7 @@ int GS_Ticker (void)
         }
     }
 
-    if (sound != sfx_None)
+    if (sound != sfx_None && !gs_menu->mode)
         S_StartSound(NULL, sound);
 
     return ga_nothing;
@@ -230,33 +410,82 @@ int GS_Ticker (void)
 
 void GS_Drawer (void)
 {
-    int i;
+    int i, y;
     menuitem_t *items = gs_menu->items;
     int y_offset = 4;
 
     I_ClearFrameBuffer();
 
-    /* Draw main menu */
-    print(84, 4, "SELECT GAME");
-    y_offset += ITEMSPACE + 4;
-
-    /* draw new skull */
-    if (gs_menu->cursorframe)
-        DrawJagobjLump(gs_menu->m_skull2lump, CURSORX, y_offset + items[gs_menu->cursorpos].y - 2, NULL, NULL);
-    else
-        DrawJagobjLump(gs_menu->m_skull1lump, CURSORX, y_offset + items[gs_menu->cursorpos].y - 2, NULL, NULL);
-
-    /* draw menu items */
-    for (i = 0; i < gs_menu->numitems; i++)
+    if (gs_menu->mode)
     {
-        int len;
-        char name[16];
-        int y = y_offset + items[i].y;
+        // file browser
+        int oldpage = -1;
 
-        len = mystrlen(items[i].name);
-        D_memcpy(name, items[i].name, len-4);
-        name[len-4] = 0; // strip file extension
+        /* draw menu items */
+        for (i = 0; i < gs_menu->numitems; i++)
+        {
+            int page = i >= SMALL_PAGEITMS ? 1 : 0;
+            int x = SMALL_STARTX + page * SMALL_PAGEWDTH;
+            char name[72];
 
-        print(items[i].x, y, name);
+            if (page != oldpage)
+            {
+                oldpage = page;
+                y = 2;
+            }
+
+            if (gs_menu->cursorpos == i)
+            {
+                I_Print8(x-10, y, ">");
+            }
+
+            if (items[i].y)
+            {
+                // a directory
+                D_snprintf(name, sizeof(name), "^%02X%s", 161, items[i].name);
+                I_Print8(x, y, name);
+            }
+            else
+            {
+                I_Print8(x, y, items[i].name);
+            }
+
+            y++;
+        }
     }
+    else
+    {
+        /* Draw main menu */
+        print(84, 4, "SELECT GAME");
+        y_offset += ITEMSPACE + 4;
+
+        /* draw new skull */
+        if (gs_menu->cursorframe)
+            DrawJagobjLump(gs_menu->m_skull2lump, CURSORX, y_offset + items[gs_menu->cursorpos].y - 2, NULL, NULL);
+        else
+            DrawJagobjLump(gs_menu->m_skull1lump, CURSORX, y_offset + items[gs_menu->cursorpos].y - 2, NULL, NULL);
+
+        /* draw menu items */
+        y = y_offset;
+        for (i = 0; i < gs_menu->numitems; i++)
+        {
+            int len;
+            char name[72];
+
+            y = y_offset + items[i].y;
+            len = mystrlen(items[i].name);
+            if (len <= 4)
+                continue;
+
+            D_memcpy(name, items[i].name, len-4);
+            name[len-4] = 0; // strip file extension
+
+            print(items[i].x, y, name);
+        }
+    }
+
+    I_Print8(14, 23, "Press A to select an item");
+    if (gs_menu->mode && gs_menu->path[0] != '\0')
+        I_Print8(14, 24, "Press B to go to parent directory");
+    I_Print8(14, 25, "Press C to toggle the file browser");
 }
