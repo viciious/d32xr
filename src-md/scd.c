@@ -23,10 +23,11 @@ char wait_cmd_ack(void) __attribute__((section(".data"), aligned(16)));
 void wait_do_cmd(char cmd) __attribute__((section(".data"), aligned(16)));
 
 extern void scd_init_pcm(void);
+extern void bump_fm(void);
 
 void scd_delay(void)
 {
-    int cnt = 5;
+    int cnt = 50;
     do {
         asm __volatile("nop");
     } while (--cnt);
@@ -38,6 +39,7 @@ char wait_cmd_ack(void)
 
     do {
         scd_delay();
+        bump_fm();
         ack = read_byte(0xA1200F); // wait for acknowledge byte in sub comm port
     } while (!ack);
 
@@ -48,6 +50,7 @@ void wait_do_cmd(char cmd)
 {
     while (read_byte(0xA1200F)) {
         scd_delay(); // wait until Sub-CPU is ready to receive command
+        bump_fm();
     }
     write_byte(0xA1200E, cmd); // set main comm port to command
 }

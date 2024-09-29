@@ -296,7 +296,7 @@ int scd_flush_cmd_queue(void)
 
 static void scd_delay(void)
 {
-    int cnt = 5;
+    int cnt = 50;
     do {
         asm __volatile("nop");
     } while (--cnt);
