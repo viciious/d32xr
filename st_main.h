@@ -117,14 +117,12 @@ typedef enum
 
 typedef struct
 {
-	VINT	face;
-
 	int     score;
 	int     exiting;
 	VINT    rings;
 	VINT    lives;
 
-	VINT	currentMap;
+	boolean intermission;
 
 	char	forcedraw;
 	char    msg[128];

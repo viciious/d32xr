@@ -3,6 +3,7 @@
 #include "doomdef.h"
 #include "st_main.h"
 #include "v_font.h"
+#include "st_inter.h"
 #include <stdio.h>
 
 stbar_t	*stbar;
@@ -131,6 +132,18 @@ static void ST_Ticker_(stbar_t* sb)
 	sb->exiting = p->exiting;
 
 	sb->forcedraw = false;
+
+	if (sb->intermission)
+	{
+		Y_Ticker();
+		return;
+	}
+
+	if (sb->exiting == 4*TICRATE)
+	{
+		Y_StartIntermission(p);
+		sb->intermission = true;
+	}
 }
 
 void ST_Ticker(void)
@@ -265,6 +278,9 @@ static void ST_Drawer_ (stbar_t* sb)
 		DrawJagobjLump(livex, 16 + 22, 176 + 10, NULL, NULL);
 		V_DrawValuePaddedRight(&menuFont, 16 + 58, 176+8, sb->lives, 0);
 	}
+
+	if (sb->intermission)
+		Y_IntermissionDrawer();
 }
 
 void CONS_Printf(char *msg, ...) 

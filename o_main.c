@@ -486,13 +486,19 @@ void O_Control (player_t *player)
 				if (buttons & BT_DOWN)
 				{
 					if (++cursorpos == menuscr->numitems)
+					{
 						cursorpos = 0;
+						S_StartSound(NULL, sfx_s3k_5b);
+					}
 				}
 
 				if (buttons & BT_UP)
 				{
 					if (--cursorpos == -1)
+					{
 						cursorpos = menuscr->numitems-1;
+						S_StartSound(NULL, sfx_s3k_5b);
+					}
 				}
 			}
 
