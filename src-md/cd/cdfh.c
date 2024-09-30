@@ -156,6 +156,11 @@ int64_t read_directory(char *buf)
             buf += 1;
             count++;
         }
+
+        if (r)
+        {
+            r = next_dir_sec();
+        }
     } while (!r);
 
     buf++;
