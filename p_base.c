@@ -495,6 +495,12 @@ void P_ZMovement(mobj_t *mo)
          // Hit the floor, so POP!
          P_RemoveMobj(mo);
       }
+      else if (mo->type == MT_SIGN)
+      {
+         mo->momz = 0;
+         P_SetMobjState(mo, mobjinfo[mo->type].deathstate);
+         S_StartSound(mo, mobjinfo[mo->type].deathsound);
+      }
       else
       {
          if(mo->momz < 0)

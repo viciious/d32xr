@@ -1047,9 +1047,24 @@ void P_DoPlayerExit(player_t *player)
 {
 	CONS_Printf("A winner is you!");
 
-	// Find the MT_SIGN
-	// Chuck it up into the air
 	// Begin the exiting timer so the player doesn't move around
+	player->exiting = 1;
+
+	// Find the MT_SIGN
+	mobj_t *sign = P_FindFirstMobjOfType(MT_SIGN);
+	if (!sign)
+		return;
+
+	if (sign->state != mobjinfo[sign->type].spawnstate)
+		return;
+
+	sign->target = player->mo;
+	
+	// Chuck it up into the air
+	P_SetObjectMomZ(sign, 12*FRACUNIT, false);
+	P_SetMobjState(sign, mobjinfo[sign->type].seestate);
+	S_StartSound(sign, mobjinfo[sign->type].seesound);
+
 	// Act clear should be monitored by the HUD and executed separately.
 
 	// Should camera focus on sign??
