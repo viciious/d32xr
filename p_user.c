@@ -569,24 +569,16 @@ void P_BuildMove(player_t *player)
 	else if (leveltime > delaytime - TICRATE)
 		player->stillTimer++;
 
-	if (P_IsReeling(player))
-	{
-		player->forwardmove = player->sidemove = 0;
-		player->pflags &= ~PF_GASPEDAL;
-	}
+	player->buttons = buttons;
 
-	if (player->justSprung)
-	{
-		player->justSprung--;
-		player->forwardmove = player->sidemove = 0;
-		player->pflags &= ~PF_GASPEDAL;
-	}
+	boolean killControls = P_IsReeling(player) || player->justSprung
+		|| player->exiting || leveltime < delaytime + TICRATE;
 
-	if (leveltime < delaytime + TICRATE)
+	if (killControls)
 	{
-		player->pflags &= ~PF_GASPEDAL;
 		player->forwardmove = player->sidemove = 0;
-		ticbuttons[playernum] = 0;
+		player->pflags &= ~PF_GASPEDAL;
+		player->buttons = 0;
 	}
 }
 
@@ -744,7 +736,7 @@ static inline fixed_t P_GetPlayerHeight()
 
 static void P_DoSpinDash(player_t *player)
 {
-	int buttons = ticbuttons[playernum];
+	const int buttons = player->buttons;
 
 	if (!player->exiting && !(player->mo->state == mobjinfo[player->mo->type].painstate && player->powers[pw_flashing]))
 	{
@@ -1003,7 +995,7 @@ static void P_HomingAttack(mobj_t *source, mobj_t *dest)
 
 static void P_DoJumpStuff(player_t *player)
 {
-	int buttons = ticbuttons[playernum];
+	const int buttons = player->buttons;
 
 	if (buttons & BT_ATTACK)
 	{
@@ -1045,6 +1037,9 @@ static void P_DoJumpStuff(player_t *player)
 
 void P_DoPlayerExit(player_t *player)
 {
+	if (player->exiting)
+		return;
+		
 	// Begin the exiting timer so the player doesn't move around
 	player->exiting = 1;
 
@@ -1062,10 +1057,6 @@ void P_DoPlayerExit(player_t *player)
 	P_SetObjectMomZ(sign, 12*FRACUNIT, false);
 	P_SetMobjState(sign, mobjinfo[sign->type].seestate);
 	S_StartSound(sign, mobjinfo[sign->type].seesound);
-
-	// Act clear should be monitored by the HUD and executed separately.
-
-	// Should camera focus on sign??
 }
 
 fixed_t P_ReturnThrustX(angle_t angle, fixed_t move)
@@ -1136,12 +1127,6 @@ void P_MovePlayer(player_t *player)
 
 	/* don't let the player control movement if not onground */
 	onground = (player->mo->z <= player->mo->floorz);
-
-	if (player->exiting)
-	{
-		player->forwardmove = player->sidemove = 0;
-		player->pflags &= ~PF_GASPEDAL;
-	}
 
 	if (player->forwardmove || player->sidemove || (player->pflags & PF_GASPEDAL))
 	{
@@ -1359,6 +1344,44 @@ void P_MovePlayer(player_t *player)
 		else if (!(P_Random() % 96))
 			P_SpawnMobj(player->mo->x, player->mo->y, zh, MT_MEDIUMBUBBLE);
 	}
+
+	if (player->buttons & BT_USE)
+	{
+		if (!(player->pflags & PF_USEDOWN))
+		{
+			player->pflags |= PF_USEDOWN;
+
+			if (player->pflags & PF_JUMPED)
+			{
+				if (player->shield == SH_ARMAGEDDON)
+					P_BlackOw(player);
+				else if (!(player->pflags & PF_THOKKED) && (player->shield == SH_FORCE2 || player->shield == SH_FORCE1))
+				{
+					player->pflags |= PF_THOKKED;
+					player->mo->momx = player->mo->momy = 0;
+					S_StartSound(player->mo, sfx_ngskid);
+					mobj_t *ghost = P_SpawnMobj(player->mo->x, player->mo->y, player->mo->z, MT_GHOST);
+					P_SetMobjState(ghost, S_FORCESTOP);
+				}
+				else if (!(player->pflags & PF_ELEMENTALBOUNCE) && player->shield == SH_ELEMENTAL)
+				{
+					player->pflags |= PF_THOKKED;
+					player->pflags |= PF_ELEMENTALBOUNCE;
+					player->pflags &= ~PF_SPINNING;
+					player->mo->momx = player->mo->momy = 0;
+					P_SetObjectMomZ(player->mo, -28*FRACUNIT, false);
+
+					S_StartSound(player->mo, sfx_s3k_43);
+				}
+			}
+		}
+	}
+	else
+		player->pflags &= ~PF_USEDOWN;
+
+	// Fly cheat
+	if (player->buttons & BT_SPEED)
+		player->mo->momz = 8 << FRACBITS;
 }
 
 /*
@@ -1397,7 +1420,7 @@ void P_DeathThink(player_t *player)
 	else if (player->damagecount)
 		player->damagecount--;
 
-	if ((ticbuttons[playernum] & BT_USE) && player->viewheight <= 8 * FRACUNIT)
+	if ((player->buttons & BT_ATTACK) && player->mo->z < player->mo->floorz)
 		player->playerstate = PST_REBORN;
 }
 
@@ -1499,10 +1522,6 @@ void P_RingMagnet(mobj_t *spot);
 
 void P_PlayerThink(player_t *player)
 {
-	int buttons;
-
-	buttons = ticbuttons[playernum];
-
 	ticphase = 20;
 	P_PlayerMobjThink(player->mo);
 
@@ -1522,40 +1541,6 @@ void P_PlayerThink(player_t *player)
 	ticphase = 22;
 	P_MovePlayer(player);
 
-	if (buttons & BT_USE)
-	{
-		if (!(player->pflags & PF_USEDOWN))
-		{
-			player->pflags |= PF_USEDOWN;
-
-			if (player->pflags & PF_JUMPED)
-			{
-				if (player->shield == SH_ARMAGEDDON)
-					P_BlackOw(player);
-				else if (!(player->pflags & PF_THOKKED) && (player->shield == SH_FORCE2 || player->shield == SH_FORCE1))
-				{
-					player->pflags |= PF_THOKKED;
-					player->mo->momx = player->mo->momy = 0;
-					S_StartSound(player->mo, sfx_ngskid);
-					mobj_t *ghost = P_SpawnMobj(player->mo->x, player->mo->y, player->mo->z, MT_GHOST);
-					P_SetMobjState(ghost, S_FORCESTOP);
-				}
-				else if (!(player->pflags & PF_ELEMENTALBOUNCE) && player->shield == SH_ELEMENTAL)
-				{
-					player->pflags |= PF_THOKKED;
-					player->pflags |= PF_ELEMENTALBOUNCE;
-					player->pflags &= ~PF_SPINNING;
-					player->mo->momx = player->mo->momy = 0;
-					P_SetObjectMomZ(player->mo, -28*FRACUNIT, false);
-
-					S_StartSound(player->mo, sfx_s3k_43);
-				}
-			}
-		}
-	}
-	else
-		player->pflags &= ~PF_USEDOWN;
-
 	P_CalcHeight(player);
 
 	if (player == &players[consoleplayer])
@@ -1564,15 +1549,7 @@ void P_PlayerThink(player_t *player)
 	if (subsectors[player->mo->isubsector].sector->special)
 		P_PlayerInSpecialSector(player);
 
-	/* */
-	/* check for weapon change */
-	/* */
 	ticphase = 23;
-
-	// Fly cheat
-	if (buttons & BT_SPEED)
-		player->mo->momz = 8 << FRACBITS;
-
 	ticphase = 24;
 	ticphase = 25;
 	ticphase = 26;
@@ -1614,14 +1591,14 @@ void P_PlayerThink(player_t *player)
 	if (player->whiteFlash && (leveltime & 1))
 		player->whiteFlash--;
 
+	if (player->justSprung)
+		player->justSprung--;
+
 	if (player->homingTimer)
 		player->homingTimer--;
 
-/*	if (player->powers[pw_underwater] == 11*TICRATE + 1
-		&& player == &players[consoleplayer])
-	{
-		P_PlayJingle(player, JT_DROWN);
-	}*/
+	if (player->exiting)
+		player->exiting++;
 
 	if (player->shield == SH_ATTRACT)
 		P_RingMagnet(player->mo);

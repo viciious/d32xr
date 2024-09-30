@@ -387,6 +387,7 @@ typedef struct player_s
 	
 	fixed_t		forwardmove, sidemove;	/* built from ticbuttons */
 	angle_t		angleturn;				/* built from ticbuttons */
+	int         buttons;
 	
 	fixed_t		viewz;					/* focal origin above r.z */
 	fixed_t		viewheight;				/* base height above floor for viewz */

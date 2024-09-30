@@ -128,6 +128,7 @@ static void ST_Ticker_(stbar_t* sb)
 	sb->rings = p->health - 1;
 	sb->score = p->score;
 	sb->lives = p->lives;
+	sb->exiting = p->exiting;
 
 	sb->forcedraw = false;
 }
@@ -243,7 +244,7 @@ static void ST_Drawer_ (stbar_t* sb)
 	else
 	{
 		const int delaytime = gamemapinfo.act == 3 ? 2*TICRATE : 3*TICRATE;
-		int worldTime = leveltime - delaytime + TICRATE;
+		int worldTime = leveltime - delaytime + TICRATE - sb->exiting;
 		if (worldTime < 0)
 			worldTime = 0;
 		DrawJagobjLump(score, 16, 10+22, NULL, NULL);

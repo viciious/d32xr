@@ -1318,7 +1318,7 @@ void A_BubbleSpawn(mobj_t *actor, int16_t var1, int16_t var2)
 
 // Function: A_SignSpin
 //
-// Description: Spawns MT_SPARK around the signpost as long as it's up in the air.
+// Description: Spawns MT_SPARK around the signpost.
 //
 void A_SignSpin(mobj_t *actor, int16_t var1, int16_t var2)
 {

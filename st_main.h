@@ -120,6 +120,7 @@ typedef struct
 	VINT	face;
 
 	int     score;
+	int     exiting;
 	VINT    rings;
 	VINT    lives;
 
