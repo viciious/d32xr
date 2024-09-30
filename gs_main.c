@@ -334,6 +334,10 @@ int GS_Ticker (void)
 #endif
                 if (len > 4 && !D_strcasecmp(mi->name + len - 4, ".wad"))
                 {
+                    if (!D_strcasecmp(mi->name, SOUNDS_PWAD_NAME))
+                        return ga_nothing;
+                    if (!D_strcasecmp(mi->name, MAPDEV_PWAD_NAME))
+                        return ga_nothing;
                     return ga_startnew;
                 }
 
