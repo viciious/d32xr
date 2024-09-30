@@ -1316,6 +1316,25 @@ void A_BubbleSpawn(mobj_t *actor, int16_t var1, int16_t var2)
 	}
 }
 
+// Function: A_SignSpin
+//
+// Description: Spawns MT_SPARK around the signpost as long as it's up in the air.
+//
+void A_SignSpin(mobj_t *actor, int16_t var1, int16_t var2)
+{
+	fixed_t radius = mobjinfo[actor->type].radius;
+
+	actor->angle += ANG45 / 9;
+	for (int i = -1; i < 2; i += 2)
+	{
+		P_SpawnMobj(
+			actor->x + P_ReturnThrustX(actor->angle, i * radius),
+			actor->y + P_ReturnThrustY(actor->angle, i * radius),
+			actor->z + (actor->theight << FRACBITS),
+			mobjinfo[actor->type].painchance);
+	}
+}
+
 /*============================================================================= */
 
 /* a move in p_base.c crossed a special line */

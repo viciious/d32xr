@@ -1045,8 +1045,6 @@ static void P_DoJumpStuff(player_t *player)
 
 void P_DoPlayerExit(player_t *player)
 {
-	CONS_Printf("A winner is you!");
-
 	// Begin the exiting timer so the player doesn't move around
 	player->exiting = 1;
 

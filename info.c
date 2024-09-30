@@ -93,6 +93,7 @@ void A_Repeat();
 void A_ChangeHeight();
 void A_UnidusBall();
 void A_BubbleSpawn();
+void A_SignSpin();
 
 #define STATE(sprite,frame,tics,action,nextstate) {sprite,frame,tics,0,0,nextstate,action}
 #define STATE2(sprite,frame,tics,action,var1,var2,nextstate) {sprite,frame,tics,var1,var2,nextstate,action}
@@ -524,14 +525,13 @@ STATE(SPR_DRWN,4,40,NULL,S_NULL), // S_FOUR
 STATE(SPR_DRWN,5,40,NULL,S_NULL), // S_FIVE
 
 STATE(SPR_SIGN,0,-1,NULL,S_NULL), // S_SIGN
-STATE(SPR_SIGN,1,1,NULL,S_SIGN2), // S_SIGN1
+STATE(SPR_SIGN,1,1,A_SignSpin,S_SIGN2), // S_SIGN1
 STATE(SPR_SIGN,2,1,NULL,S_SIGN3), // S_SIGN2
 STATE(SPR_SIGN,FF_FLIPPED|1,1,NULL,S_SIGN4), // S_SIGN3
 STATE(SPR_SIGN,3,1,NULL,S_SIGN5), // S_SIGN4
 STATE(SPR_SIGN,1,1,NULL,S_SIGN6), // S_SIGN5
 STATE(SPR_SIGN,2,1,NULL,S_SIGN7), // S_SIGN6
 STATE(SPR_SIGN,FF_FLIPPED|1,1,NULL,S_SIGN1), // S_SIGN7
-STATE(SPR_SIGN,0,1,NULL,S_SIGN1), // S_SIGN8
 STATE(SPR_SIGN,3,-1,NULL,S_NULL), // S_SIGNSTOP
 
 };
