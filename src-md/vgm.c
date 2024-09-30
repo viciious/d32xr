@@ -12,7 +12,7 @@
 #define VGM_WORDRAM_OFS     0x3000
 #define VGM_READAHEAD       0x200
 #define VGM_LZSS_BUF_SIZE   0x8000
-#define VGM_MAX_SIZE        0x18000
+#define VGM_MAX_SIZE        0x18800
 
 #define VGM_USE_PWM_FOR_DAC
 
@@ -48,6 +48,7 @@ void lzss_reset(lzss_state_t* lzss) __attribute__((section(".data"), aligned(16)
 
 int vgm_setup(void* fm_ptr) __attribute__((section(".data"), aligned(16)));
 int vgm_read(void) __attribute__((section(".data"), aligned(16)));
+int vgm_read2(int length) __attribute__((section(".data"), aligned(16)));
 
 extern int64_t scd_open_file(const char *name);
 extern void scd_read_sectors(void *ptr, int lba, int len, void (*wait)(void));
@@ -161,9 +162,9 @@ int vgm_read(void)
     return lzss_read(&vgm_lzss, VGM_READAHEAD);
 }
 
-int vgm_read2(int cnt)
+int vgm_read2(int length)
 {
-    return lzss_read(&vgm_lzss, cnt);
+    return lzss_read(&vgm_lzss, length);
 }
 
 void *vgm_cache_scd(const char *name, int offset, int length)

@@ -11,8 +11,9 @@
 #define CHUNK_BLOCKS (1<<CHUNK_SHIFT) 
 #define CHUNK_SIZE (CHUNK_BLOCKS*BLOCK_SIZE)
 
-#define MCD_DISC_BUFFER (void*)(MCD_WORDRAM + 0x20000 - CHUNK_SIZE)
-#define MD_DISC_BUFFER (void*)(MD_WORDRAM + 0x20000 - CHUNK_SIZE)
+#define DISC_BUFFER_WORDRAM_OFS (0x20000 - CHUNK_SIZE)
+#define MCD_DISC_BUFFER (void*)(MCD_WORDRAM + DISC_BUFFER_WORDRAM_OFS)
+#define MD_DISC_BUFFER (void*)(MD_WORDRAM + DISC_BUFFER_WORDRAM_OFS)
 
 extern int64_t scd_open_file(const char *name);
 extern void scd_read_sectors(void *ptr, int lba, int len, void (*wait)(void));
