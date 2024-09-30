@@ -246,7 +246,7 @@ static void GS_PathChange(const char *dir, int newmode)
             continue;
 
         mi = &gs_menu->items[gs_menu->numitems];
-        D_memcpy(mi->name, name, namelen);
+        D_memcpy(mi->name, name, namelen+1);
         mi->x = ITEMX;
         mi->y = CURSORY(gs_menu->numitems);
         gs_menu->numitems++;
