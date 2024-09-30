@@ -139,7 +139,7 @@ static void ST_Ticker_(stbar_t* sb)
 		return;
 	}
 
-	if (sb->exiting == 4*TICRATE)
+	if (sb->exiting >= 4*TICRATE && !sb->intermission)
 	{
 		Y_StartIntermission(p);
 		sb->intermission = true;

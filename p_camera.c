@@ -422,7 +422,7 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 	if (player->health <= 0)
 		dist >>= 1;
    else if (player->exiting)
-      dist <<= 1; // Twice as far away when exiting
+      dist <<= 2; // Even farther away when exiting
 
 	// Destination XY
 	x = mo->x - FixedMul(finecosine((angle>>ANGLETOFINESHIFT) & FINEMASK), dist);

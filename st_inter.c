@@ -155,17 +155,20 @@ void Y_IntermissionDrawer(void)
 
 	if (inttype == int_coop)
 	{
+		const int offset = 24;
+		const int squeeze = 12;
+
 		// draw the "got through act" lines and act number
-		V_DrawStringCenter(&titleFont, data.coop.passedx1, 49, data.coop.passed1);
-		V_DrawStringCenter(&titleFont, data.coop.passedx2, 49+16+2, data.coop.passed2);
+		V_DrawStringCenter(&titleFont, data.coop.passedx1, 112-56+offset, data.coop.passed1);
+		V_DrawStringCenter(&titleFont, data.coop.passedx2, 112-56+16+2+offset, data.coop.passed2);
 
-		V_DrawValueLeft(&titleNumberFont, BASEVIDWIDTH-64, 49+16+2, gamemapinfo.act);
+		V_DrawValueLeft(&titleNumberFont, BASEVIDWIDTH-72, 112-56+6+offset, gamemapinfo.act);
 
-		DrawJagobjLump(data.coop.ptimebonus, 68, 84 + 3*8, NULL, NULL);
-		V_DrawValueRight(&hudNumberFont, BASEVIDWIDTH - 68, 85 + 3*8, data.coop.timebonus);
+		DrawJagobjLump(data.coop.ptimebonus, 68, 112+offset-squeeze, NULL, NULL);
+		V_DrawValueRight(&hudNumberFont, BASEVIDWIDTH - 68, 112+1+offset-squeeze, data.coop.timebonus);
 
-		DrawJagobjLump(data.coop.pringbonus, 68, 84 + 3*16, NULL, NULL);
-		V_DrawValueRight(&hudNumberFont, BASEVIDWIDTH - 68, 85 + 3*16, data.coop.ringbonus);
+		DrawJagobjLump(data.coop.pringbonus, 68, 112+16+offset-squeeze, NULL, NULL);
+		V_DrawValueRight(&hudNumberFont, BASEVIDWIDTH - 68, 112+16+1+offset-squeeze, data.coop.ringbonus);
 /*
 		//PERFECT BONUS
 		if (data.coop.gotperfbonus)
@@ -174,8 +177,8 @@ void Y_IntermissionDrawer(void)
 			Y_DrawNum(BASEVIDWIDTH - 68, 85 + ((9*SHORT(tallnum[0]->height))+1)/2, data.coop.perfbonus);
 		}*/
 
-		DrawJagobjLump(data.coop.ptotal, 88, 84 + 6*16, NULL, NULL);
-		V_DrawValueRight(&hudNumberFont, BASEVIDWIDTH - 68, 85 + 6*16, data.coop.total);
+		DrawJagobjLump(data.coop.ptotal, 88, 112+16+16+16+offset-squeeze, NULL, NULL);
+		V_DrawValueRight(&hudNumberFont, BASEVIDWIDTH - 68, 112+16+16+16+1+offset-squeeze, data.coop.total);
 	}
 }
 
@@ -357,8 +360,8 @@ void Y_StartIntermission(void)
 			data.coop.pringbonus = W_CheckNumForName("YB_RING");
 //			data.coop.pperfbonus = W_CheckNumForName("YPFBONUS");
 
-			strcpy(data.coop.passed1, "SONIC GOT");
-			strcpy(data.coop.passed2, "THROUGH ACT");
+			strcpy(data.coop.passed1, "sonic got");
+			strcpy(data.coop.passed2, "through act");
 			
 			data.coop.passedx1 = 150;
 			data.coop.passedx2 = 150;
