@@ -205,6 +205,12 @@ void T_MoveFloor(floormove_t *floor)
 		res = T_MovePlane(floor->sector,floor->speed,
 				floor->floordestheight << FRACBITS,0,0,floor->direction);
 	}
+	else if (floor->type == eggCapsuleInner || floor->type == eggCapsuleOuter
+		|| floor->type == eggCapsuleOuterPop || floor->type == eggCapsuleInnerPop)
+	{
+		res = T_MovePlane(floor->sector,floor->speed,
+				floor->floordestheight << FRACBITS,floor->crush,0,floor->direction);
+	}
 
 	if (res == pastdest)
 	{
@@ -234,6 +240,10 @@ void T_MoveFloor(floormove_t *floor)
 					case donutRaise:
 						floor->sector->special = floor->newspecial;
 						floor->sector->floorpic = floor->texture;
+						break;
+					case eggCapsuleInner:
+						floor->sector->special = 2;
+						break;
 					default:
 						break;
 				}

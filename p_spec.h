@@ -72,6 +72,7 @@ fixed_t	P_FindNextHighestFloor(sector_t *sec,int currentheight);
 fixed_t	P_FindNextLowestFloor(sector_t *sec,int currentheight);
 fixed_t	P_FindLowestCeilingSurrounding(sector_t *sec);
 fixed_t	P_FindHighestCeilingSurrounding(sector_t *sec);
+VINT P_FindSectorWithTag(VINT tag, int start);
 int		P_FindSectorFromLineTag(line_t	*line,int start);
 int		P_FindMinSurroundingLight(sector_t *sector,int max);
 sector_t *getNextSector(line_t *line,sector_t *sec);
@@ -306,6 +307,10 @@ typedef enum
 	donutRaise,
 	raiseFloor512,
 	floorContinuous,
+	eggCapsuleOuter,
+	eggCapsuleInner,
+	eggCapsuleOuterPop,
+	eggCapsuleInnerPop,
 } floor_e;
 
 typedef struct

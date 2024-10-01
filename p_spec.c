@@ -300,14 +300,20 @@ fixed_t	P_FindHighestCeilingSurrounding(sector_t *sec)
 /*	RETURN NEXT SECTOR # THAT LINE TAG REFERS TO */
 /* */
 /*================================================================== */
-int	P_FindSectorFromLineTag(line_t	*line,int start)
+
+VINT P_FindSectorWithTag(VINT tag, int start)
 {
 	int	i;
 	
 	for (i=start+1;i<numsectors;i++)
-		if (sectors[i].tag == line->tag)
+		if (sectors[i].tag == tag)
 			return i;
 	return -1;
+}
+
+int	P_FindSectorFromLineTag(line_t	*line, int start)
+{
+	return P_FindSectorWithTag(line->tag, start);
 }
 
 /*================================================================== */
@@ -698,12 +704,18 @@ void P_PlayerInSpecialSector (player_t *player)
 		
 	switch (sector->special)
 	{
+		case 255: // ignore
+			break;
 		case 1: // Clear the map
 			P_DoPlayerExit(player);
 			break;
+		case 2:
+			if (player->mo->z <= sector->floorheight)
+				P_DoPlayerExit(player);
+			break;
 		case 9:		/* SECRET SECTOR */
 			player->secretcount++;
-			sector->special = 0;
+			sector->special = 255;
 			break;
 			
 		default:

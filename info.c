@@ -615,7 +615,7 @@ sfx_None,		/* activesound */
 	100,            // mass
 	0,              // damage
 	sfx_None,       // activesound
-	MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
+	MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY|MF_STATIC, // flags
 	0, // flags2
 },
 
@@ -2047,7 +2047,7 @@ MF2_SHOOTABLE|MF2_ENEMY,	// flags2
 		4,              // mass
 		0,              // damage
 		sfx_None,       // activesound
-		MF_NOBLOCKMAP|MF_NOSECTOR|MF_STATIC, // flags
+		MF_NOBLOCKMAP|MF_NOSECTOR, // flags
 		0, // flags2
 	},
 

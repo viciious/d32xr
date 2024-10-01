@@ -1010,6 +1010,60 @@ void P_DoPlayerExit(player_t *player)
 	// Begin the exiting timer so the player doesn't move around
 	player->exiting = 1;
 
+	if (gamemapinfo.act == 3)
+	{
+		// Find the egg capsule, and pop it
+		VINT outerNum = P_FindSectorWithTag(254, -1);
+		VINT innerNum = P_FindSectorWithTag(255, -1);
+		mobj_t *spawnPoint = P_FindFirstMobjOfType(MT_EGGTRAP);
+
+		if (innerNum == -1 || outerNum == -1 || !spawnPoint)
+			return;
+
+		sector_t *inner = &sectors[innerNum];
+		sector_t *outer = &sectors[outerNum];
+		spawnPoint->movecount = 1;
+		
+		floormove_t *floor = Z_Malloc (sizeof(*floor), PU_LEVSPEC);
+		P_AddThinker (&floor->thinker);
+		inner->specialdata = floor;
+		floor->thinker.function = T_MoveFloor;
+		floor->type = eggCapsuleInnerPop;
+		floor->crush = false;
+		floor->direction = -1;
+		floor->sector = inner;
+		floor->speed = 2*FRACUNIT;
+		floor->floordestheight = 
+			(inner->floorheight>>FRACBITS) - 8;
+
+		outer->floorheight -= 64*FRACUNIT;
+
+		for (int i = 0; i < numsides; i++)
+		{
+			if (sides[i].sector != outer-sectors)
+				continue;
+
+			// Found a sidedef for outer.
+			// Find a linedef so we can also get the back sidedef,
+			// which is what we need to change.
+			for (int j = 0; j < numlines; j++)
+			{
+				if (lines[j].sidenum[0] != i)
+					continue;
+
+				if (lines[j].sidenum[1] == -1)
+					continue;
+
+				// Get the other side
+				lines[j].flags &= ~ML_DONTPEGTOP;
+				lines[j].flags |= ML_DONTPEGBOTTOM;
+				sides[lines[j].sidenum[1]].rowoffset = 96;
+			}
+		}
+
+		return;		
+	}
+
 	// Find the MT_SIGN
 	mobj_t *sign = P_FindFirstMobjOfType(MT_SIGN);
 	if (!sign)

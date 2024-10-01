@@ -685,6 +685,47 @@ void P_DoBossVictory(mobj_t *mo)
 	// Trigger the egg capsule (if it exists)
 	if (gamemapinfo.afterBossMusic)
 		S_StartSong(gamemapinfo.afterBossMusic, 1, gamemapinfo.mapNumber);
+
+	VINT outerNum = P_FindSectorWithTag(254, -1);
+	VINT innerNum = P_FindSectorWithTag(255, -1);
+
+	if (outerNum == -1 || innerNum == -1)
+		return;
+
+	sector_t *outer = &sectors[outerNum];
+	sector_t *inner = &sectors[innerNum];
+
+	inner->floorheight += 16*FRACUNIT; // OK to just insta-set this
+	inner->floorpic = R_FlatNumForName("YELFLR");
+	outer->floorpic = R_FlatNumForName("TRAPFLR");
+	outer->heightsec = -1;
+	inner->heightsec = -1;
+
+	// Move the outer
+	floormove_t *floor = Z_Malloc (sizeof(*floor), PU_LEVSPEC);
+	P_AddThinker (&floor->thinker);
+	outer->specialdata = floor;
+	floor->thinker.function = T_MoveFloor;
+	floor->type = eggCapsuleOuter;
+	floor->crush = false;
+	floor->direction = 1;
+	floor->sector = outer;
+	floor->speed = 2*FRACUNIT;
+	floor->floordestheight = 
+		(outer->floorheight>>FRACBITS) + 128;
+
+	// Move the inner
+	floor = Z_Malloc (sizeof(*floor), PU_LEVSPEC);
+	P_AddThinker (&floor->thinker);
+	inner->specialdata = floor;
+	floor->thinker.function = T_MoveFloor;
+	floor->type = eggCapsuleInner;
+	floor->crush = false;
+	floor->direction = 1;
+	floor->sector = inner;
+	floor->speed = 2*FRACUNIT;
+	floor->floordestheight = 
+		(inner->floorheight>>FRACBITS) + 128;
 }
 
 //
