@@ -860,7 +860,7 @@ void P_MobjThinker(mobj_t *mobj)
                {
                   fixed_t radius = 48*FRACUNIT + ((P_Random() & 63)*FRACUNIT);
 
-                  mobj->angle += ANG180 + (ANG45/5);
+                  mobj->angle += P_Random() * ANGLE_1;
                   for (int i = -1; i < 2; i += 2)
                   {
                      const mobjtype_t flickies[4] = { MT_FLICKY_01, MT_FLICKY_02, MT_FLICKY_03, MT_FLICKY_12 };

@@ -1025,8 +1025,6 @@ void RunTitle (void)
 	canwipe = true;
 
 	MiniLoop (START_Title, STOP_Title, TIC_Abortable, DRAW_Title, UpdateBuffer);
-
-	RunMenu();
 }
 
 void RunCredits (void)
@@ -1241,7 +1239,6 @@ D_printf ("DM_Main\n");
 	{
 		RunTitle();
 		RunMenu();
-		I_Error("I'm here!");
 	}
 #else
 	while (1)

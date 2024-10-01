@@ -14,10 +14,10 @@ typedef struct
 
 creditcard_t creditCards[] = {
 	{"C_STJR",   "SONIC ROBO BLAST",     "32X",              "STAFF", "" },
-	{"C_WSQUID", "MUSIC",                "Wesquiid",         "Greenflower 2",                       "x.com/@wessquiid\nwessquiid.carrd.co" },
-	{"C_JXCHIP", "MUSIC",                "JX Chip",          "Greenflower 1\nEgg Rock 1 & 2",       "youtube.com/@JXChip\nko-fi.com/jx85638" },
-	{"C_JOYTAY", "MUSIC",                "John \"Joy\" Tay", "Deep Sea 1",                          "x.com/@johntayjinf\nyoutube.com\n/@johntayjinf" },
-	{"C_CRYPTK", "MUSIC",                "Cryptik",          "Miscellaneous",                       "x.com/@LunarCryptik\nyoutube.com/c\n/LunarCryptik\npatreon.com\n/LunarCryptik" },
+	{"C_WSQUID", "TRACKING",                "Wesquiid",         "Title Theme\nGreenflower 1 & 2\nSpeed Shoes\nExtra Life",                       "x.com/@wessquiid\nwessquiid.carrd.co" },
+	{"C_JXCHIP", "TRACKING",                "JX Chip",          "Egg Rock 1 & 2",       "youtube.com/@JXChip\nko-fi.com/jx85638" },
+	{"C_JOYTAY", "TRACKING",                "John \"Joy\" Tay", "Deep Sea 1",                          "x.com/@johntayjinf\nyoutube.com\n/@johntayjinf" },
+	{"C_CRYPTK", "TRACKING",                "Cryptik",          "Miscellaneous",                       "x.com/@LunarCryptik\nyoutube.com/c\n/LunarCryptik\npatreon.com\n/LunarCryptik" },
 	{"C_SAXMAN", "PROGRAMMING",          "Saxman",           "MegaDrive & 32X\nAdditional tooling", "rumble.com/user\n/ymtx81z" },
 	{"C_SSN",    "PROGRAMMING",          "SSNTails",         "Gameplay\nAdditional Art",            "x.com/@SSNTails\nyoutube.com\n/@ssntails" },
 	{"C_VIC",    "SPECIAL THANKS",       "Viciious",         "Doom 32X:\nResurrection",             "github.com/viciious" },
@@ -27,7 +27,7 @@ creditcard_t creditCards[] = {
 	{NULL, NULL, NULL, NULL, NULL },
 };
 
-#define CARDTIME (20*TICRATE)
+#define CARDTIME (2*TICRATE)
 
 static VINT cardPFP = 0;
 static VINT cardTimer = 0;
