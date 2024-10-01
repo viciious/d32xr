@@ -486,7 +486,7 @@ void GS_Drawer (void)
             }
 
             // truncate if too long
-            if (mystrlen(name) > 17)
+            if (mystrlen(name) > 17 && gs_menu->numitems > SMALL_PAGEITMS)
             {
                 D_memcpy(&name[14], "...", 4);
             }
