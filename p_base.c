@@ -856,27 +856,31 @@ void P_MobjThinker(mobj_t *mobj)
                if (mobj->movecount > 2*TICRATE)
                   mobj->movecount = 0;
 
-               fixed_t radius = 64*FRACUNIT + ((P_Random() & 7) * ((P_Random() & 1) ? 1 : -1)*FRACUNIT);
-
-               mobj->angle += ANG45 / 5;
-               for (int i = -1; i < 2; i += 2)
+               if (mobj->movecount & 3)
                {
-                  const mobjtype_t flickies[4] = { MT_FLICKY_01, MT_FLICKY_02, MT_FLICKY_03, MT_FLICKY_12 };
-                  mobjtype_t chosen = flickies[P_Random() % 4];
+                  fixed_t radius = 48*FRACUNIT + ((P_Random() & 63)*FRACUNIT);
 
-                  if (i == -1)
-                     chosen = MT_EXPLODE;
+                  mobj->angle += ANG180 + (ANG45/5);
+                  for (int i = -1; i < 2; i += 2)
+                  {
+                     const mobjtype_t flickies[4] = { MT_FLICKY_01, MT_FLICKY_02, MT_FLICKY_03, MT_FLICKY_12 };
+                     mobjtype_t chosen = flickies[P_Random() % 4];
 
-                  fixed_t z = subsectors[mobj->isubsector].sector->floorheight - 80*FRACUNIT;
-                  z += (P_Random() & 31) << FRACBITS;
+                     if (i == -1)
+                        chosen = MT_EXPLODE;
 
-                  P_SpawnMobj(
-                     mobj->x + P_ReturnThrustX(mobj->angle, i * radius),
-                     mobj->y + P_ReturnThrustY(mobj->angle, i * radius),
-                     z,
-                     chosen);
+                     fixed_t z = subsectors[mobj->isubsector].sector->floorheight - 80*FRACUNIT;
+                     z += (P_Random() & 31) << FRACBITS;
+
+                     mobj_t *flicky = P_SpawnMobj(
+                        mobj->x + P_ReturnThrustX(mobj->angle, i * radius),
+                        mobj->y + P_ReturnThrustY(mobj->angle, i * radius),
+                        z,
+                        chosen);
+                     flicky->target = players[consoleplayer].mo;
+                  }
+                  S_StartSound(mobj, sfx_s3k_3d);
                }
-               S_StartSound(mobj, sfx_s3k_3d);
             }
             break;
          default:

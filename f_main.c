@@ -49,7 +49,7 @@ static void F_DrawBackground(void)
 =======================
 */
 
-static void F_NextCard()
+static boolean F_NextCard()
 {
 	curCard++;
 
@@ -57,7 +57,7 @@ static void F_NextCard()
 	{
 		// We are done
 		F_Stop();
-		return;
+		return false;
 	}
 
 	cardTimer = CARDTIME;
@@ -65,6 +65,8 @@ static void F_NextCard()
 		cardPFP = W_GetNumForName(creditCards[curCard].piclumpName);
 	else
 		cardPFP = 0;
+
+	return true;
 }
 
 void F_Start (void)
@@ -105,7 +107,10 @@ int F_Ticker (void)
 	cardTimer--;
 
 	if (cardTimer < 0)
-		F_NextCard();
+	{
+		if (!F_NextCard())
+			return 1;
+	}
 
 	const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
 

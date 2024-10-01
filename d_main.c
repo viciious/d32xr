@@ -818,6 +818,8 @@ void START_Title(void)
 	l = gameinfo.titlePage;
 	titlepic = l != -1 ? W_CacheLumpNum(l, PU_STATIC) : NULL;
 
+	ticon = 0;
+
 #ifdef MARS
 	I_InitMenuFire(titlepic);
 #else
@@ -1239,6 +1241,7 @@ D_printf ("DM_Main\n");
 	{
 		RunTitle();
 		RunMenu();
+		I_Error("I'm here!");
 	}
 #else
 	while (1)
