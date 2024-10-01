@@ -445,7 +445,7 @@ int GS_Ticker (void)
 
 void GS_Drawer (void)
 {
-    int i, y;
+    int i, y = 0;
     menuitem_t *items = gs_menu->items;
     int y_offset = 4;
 
