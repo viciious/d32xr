@@ -384,7 +384,6 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 	
 	gametic = 0;
 	leveltime = 0;
-	fadetime = 0;
 
 	gameaction = 0;
 	gamevbls = 0;

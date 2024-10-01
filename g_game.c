@@ -2,6 +2,7 @@
 
 #include "doomdef.h"
 #include "p_local.h"
+#include <string.h>
 
 void G_PlayerReborn (int player);
 
@@ -602,7 +603,6 @@ void G_InitNew (int map, gametype_t gametype, boolean splitscr)
 
 	gamepaused = false;
 	gametic = 0;
-	fadetime = 0;
 } 
 
 void G_LoadGame(int saveslot)

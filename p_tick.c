@@ -326,6 +326,9 @@ int P_Ticker (void)
 			return ga_exitdemo;
 	}
 
+	// This is needed so the fade isn't removed until the new world is drawn at least once
+	if (gametic >= 2 && gametic < 10)
+		fadetime = 0;
 
 	while (!I_RefreshLatched () )
 	;		/* wait for refresh to latch all needed data before */
