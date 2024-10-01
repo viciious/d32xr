@@ -491,45 +491,12 @@ void P_BuildMove(player_t *player)
 	}
 	else
 	{
-		/*  */
-		/* use two stage accelerative turning on the joypad  */
-		/*  */
-		if ((buttons & BT_LEFT) && (oldbuttons & BT_LEFT))
-			player->turnheld++;
-		else if ((buttons & BT_RIGHT) && (oldbuttons & BT_RIGHT))
-			player->turnheld++;
-		else
-			player->turnheld = 0;
-		if (player->turnheld >= SLOWTURNTICS)
-			player->turnheld = SLOWTURNTICS - 1;
-
 		player->forwardmove = player->sidemove = player->angleturn = 0;
 
-		if (true) // buttons & BT_STRAFE)
-		{
-			if (buttons & BT_RIGHT)
-				player->sidemove += FRACUNIT;
-			if (buttons & BT_LEFT)
-				player->sidemove -= FRACUNIT;
-		}
-		else
-		{
-			fixed_t *turnspeed;
-
-			if (buttons & BT_STRAFERIGHT)
-				player->sidemove += FRACUNIT;
-			if (buttons & BT_STRAFELEFT)
-				player->sidemove -= FRACUNIT;
-
-			turnspeed = angleturn;
-			if (buttons & BT_FASTTURN)
-				turnspeed = fastangleturn;
-
-			if (buttons & BT_RIGHT)
-				player->angleturn = (-turnspeed[player->turnheld]) << 17;
-			if (buttons & BT_LEFT)
-				player->angleturn = (turnspeed[player->turnheld]) << 17;
-		}
+		if (buttons & BT_RIGHT)
+			player->sidemove += FRACUNIT;
+		if (buttons & BT_LEFT)
+			player->sidemove -= FRACUNIT;
 
 		if (buttons & BT_X)
 			player->pflags |= PF_GASPEDAL;
@@ -1039,7 +1006,7 @@ void P_DoPlayerExit(player_t *player)
 {
 	if (player->exiting)
 		return;
-		
+
 	// Begin the exiting timer so the player doesn't move around
 	player->exiting = 1;
 

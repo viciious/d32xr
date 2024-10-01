@@ -510,7 +510,6 @@ void DrawSinglePlaque (jagobj_t *pl)
  
 void P_Drawer (void) 
 { 	
-	boolean optionsactive = (players[consoleplayer].automapflags & AF_OPTIONSACTIVE) != 0;
 	static boolean o_wasactive = false;
 
 #ifdef MARS
@@ -518,7 +517,7 @@ void P_Drawer (void)
 
 	drawtics = frtc;
 
-	if (!optionsactive && o_wasactive)
+	if (!optionsMenuOn && o_wasactive)
 		clearscreen = 2;
 
 	if (clearscreen > 0) {
@@ -531,7 +530,7 @@ void P_Drawer (void)
 
 		I_DrawSbar();
 		
-		if (clearscreen == 2 || optionsactive)
+		if (clearscreen == 2 || optionsMenuOn)
 			ST_ForceDraw();
 		clearscreen--;
 	}
@@ -563,17 +562,17 @@ void P_Drawer (void)
 
 	if (demoplayback)
 		M_Drawer();
-	if (optionsactive)
+	if (optionsMenuOn)
 		O_Drawer();
 
-	o_wasactive = optionsactive;
+	o_wasactive = optionsMenuOn;
 
 	drawtics = frtc - drawtics;
 
 	if (debugscreenactive)
 		I_DebugScreen();
 #else
-	if (optionsactive)
+	if (optionsMenuOn)
 	{
 		O_Drawer ();
 	}
@@ -601,8 +600,7 @@ void P_Start (void)
 #ifndef MARS
 	S_RestartSounds ();
 #endif
-	players[0].automapflags = 0;
-	players[1].automapflags = 0;
+	optionsMenuOn = false;
 	M_ClearRandom ();
 
 	if (!demoplayback && !demorecording)

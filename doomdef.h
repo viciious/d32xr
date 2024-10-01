@@ -407,12 +407,9 @@ typedef struct player_s
 	VINT		damagecount, whiteFlash;/* for screen flashing */
 	mobj_t		*attacker;				/* who did damage (NULL for floors) */
 	VINT		extralight;				/* so gun flashes light up areas */
-	VINT		colormap;				/* 0-3 for which color to draw player */
 	boolean		didsecret;				/* true if secret level has been done */
 	void		*lastsoundsector;		/* don't flood noise every time */
-	
-	int			automapx, automapy, automapscale, automapflags;
-	int			turnheld;				/* for accelerative turning */
+
 	VINT        exiting;
 
 	VINT        starpostnum;
@@ -449,7 +446,7 @@ typedef struct
 #define	AF_ALLLINES		4
 #define	AF_ALLMOBJ		8
 
-#define	AF_OPTIONSACTIVE	128			/* options screen running */
+extern boolean optionsMenuOn; /* options screen running */
 
 /*
 ===============================================================================
@@ -513,6 +510,7 @@ extern 	VINT 		gamemapcount;
 
 extern 	int 		gametic;
 extern  int         leveltime;
+extern  VINT        fadetime;
 
 #define MAXDMSTARTS		10
 extern	mapthing_t	*deathmatchstarts, *deathmatch_p;

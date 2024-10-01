@@ -648,22 +648,33 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	vd.doubleclipangle = vd.clipangle * 2;
 	vd.viewangletox = viewangletox;
 
-	if (gamemapinfo.mapNumber != TITLE_MAP_NUMBER && leveltime < 62)
+	if (gamemapinfo.mapNumber != TITLE_MAP_NUMBER)
 	{
-		if (leveltime < 30) {
-			// Set the fade degree to black.
-			vd.fixedcolormap = HWLIGHT(0);	// 32X VDP
-			#ifdef MDSKY
-			if (leveltime == 0) {
-				Mars_FadeMDPaletteFromBlack(0);	// MD VDP
+		if (leveltime < 62)
+		{
+			if (leveltime < 30) {
+				// Set the fade degree to black.
+				vd.fixedcolormap = HWLIGHT(0);	// 32X VDP
+				#ifdef MDSKY
+				if (leveltime == 0) {
+					Mars_FadeMDPaletteFromBlack(0);	// MD VDP
+				}
+				#endif
 			}
-			#endif
+			else {
+				// Set the fade degree based on leveltime.
+				vd.fixedcolormap = HWLIGHT((leveltime-30)*8);	// 32X VDP
+				#ifdef MDSKY
+				Mars_FadeMDPaletteFromBlack(md_palette_fade_table[leveltime-30]);	// MD VDP
+				#endif
+			}
 		}
-		else {
+		else if (fadetime > 0)
+		{
 			// Set the fade degree based on leveltime.
-			vd.fixedcolormap = HWLIGHT((leveltime-30)*8);	// 32X VDP
+//			vd.fixedcolormap = HWLIGHT((TICRATE-fadetime)*8);	// 32X VDP
 			#ifdef MDSKY
-			Mars_FadeMDPaletteFromBlack(md_palette_fade_table[leveltime-30]);	// MD VDP
+			Mars_FadeMDPaletteFromBlack(md_palette_fade_table[TICRATE-fadetime]);	// MD VDP
 			#endif
 		}
 	}
@@ -740,6 +751,12 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 
 	if (gamepaused)
 		palette = 12;
+	else if (fadetime > 0)
+	{
+		palette = 6 + (fadetime / 2);
+		if (palette > 10)
+			palette = 10;
+	}
 	else if (demoplayback && gamemapinfo.mapNumber == TITLE_MAP_NUMBER && leveltime < 15) {
 		palette = 5 - (leveltime / 3);
 
@@ -752,7 +769,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	else if (waterpal) {
 		palette= 11;
 
-		ApplyHorizontalDistortionFilter(leveltime << 1);
+		ApplyHorizontalDistortionFilter(gametic << 1);
 	}
 	
 	if (palette != curpalette) {
@@ -1059,7 +1076,7 @@ void R_RenderPlayerView(int displayplayer)
 void R_RenderPlayerView(int displayplayer)
 {
 	int t_bsp, t_prep, t_segs, t_planes, t_sprites, t_total;
-	boolean drawworld = !(players[consoleplayer].automapflags & AF_ACTIVE);
+	boolean drawworld = true;//!(optionsMenuOn);
 	__attribute__((aligned(16)))
 		visplane_t visplanes_[MAXVISPLANES];
 	__attribute__((aligned(16)))

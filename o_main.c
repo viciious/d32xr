@@ -301,7 +301,7 @@ void O_Control (player_t *player)
 #endif
 		)
 	{
-		player->automapflags ^= AF_OPTIONSACTIVE;
+		optionsMenuOn = !optionsMenuOn;
 
 		if (playernum == curplayer)
 		{
@@ -313,7 +313,7 @@ void O_Control (player_t *player)
 			cursorpos = 0;
 			screenpos = ms_main;
 			S_StartSound(NULL, sfx_None);
-			if (player->automapflags & AF_OPTIONSACTIVE)
+			if (optionsMenuOn)
 #ifndef MARS
 				DoubleBufferSetup();
 #else
@@ -324,7 +324,7 @@ void O_Control (player_t *player)
 		}
 	}
 
-	if (!(player->automapflags & AF_OPTIONSACTIVE))
+	if (!optionsMenuOn)
 		return;
 
 /* clear buttons so player isn't moving aroung */

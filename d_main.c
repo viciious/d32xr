@@ -360,6 +360,7 @@ static void D_LoadMDSky(void)
 
 int last_frt_count = 0;
 int total_frt_count = 0;
+boolean optionsMenuOn = false;
 
 int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		,  int (*ticker)(void), void (*drawer)(void)
@@ -383,6 +384,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 	
 	gametic = 0;
 	leveltime = 0;
+	fadetime = 0;
 
 	gameaction = 0;
 	gamevbls = 0;
@@ -428,7 +430,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 
 		last_frt_count = frt_count;
 
-		if ((players[consoleplayer].automapflags & AF_OPTIONSACTIVE) || gamemapinfo.mapNumber == 30 || leveltime < TICRATE / 4) // Don't include map loading times into frameskip calculation
+		if (optionsMenuOn || gamemapinfo.mapNumber == 30 || leveltime < TICRATE / 4) // Don't include map loading times into frameskip calculation
 		{
 			accum_time = 1;
 			total_frt_count = 0;

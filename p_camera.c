@@ -333,7 +333,7 @@ camwrapup:
 	// P_CameraZMovement()
 	if (thiscam->momz)
 	{
-   		thiscam->z += thiscam->momz;
+   	thiscam->z += thiscam->momz;
 
 		// Don't go below the floor
 		if (thiscam->z <= thiscam->floorz)
@@ -395,7 +395,7 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
    }
    else
    {
-      if (player->stillTimer > TICRATE/2)
+      if (!player->exiting && player->stillTimer > TICRATE/2)
          angle = focusangle = mo->angle;
       else
          angle = focusangle = R_PointToAngle2(thiscam->x, thiscam->y, mo->x, mo->y);
@@ -407,10 +407,10 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 	camdist = CAM_DIST;
 	camheight = 20 << FRACBITS;
 
-   if (player->stillTimer > TICRATE/2)
+   if (!player->exiting && player->stillTimer > TICRATE/2)
       camspeed >>= 2;
 
-	if (thiscam->distFromPlayer > camdist * 3)
+	if (!player->exiting && thiscam->distFromPlayer > camdist * 3)
 	{
 		// Camera is stuck, and the player has gone over twice as far away from it, so let's reset
 		P_ResetCamera(player, thiscam);
@@ -422,7 +422,7 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 	if (player->health <= 0)
 		dist >>= 1;
    else if (player->exiting)
-      dist <<= 2; // Even farther away when exiting
+      dist <<= 1; // Even farther away when exiting
 
 	// Destination XY
 	x = mo->x - FixedMul(finecosine((angle>>ANGLETOFINESHIFT) & FINEMASK), dist);

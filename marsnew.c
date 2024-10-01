@@ -809,7 +809,7 @@ void I_Update(void)
 	else if (ticsperframe > MAXTICSPERFRAME)
 		ticsperframe = MAXTICSPERFRAME;
 
-	if (players[consoleplayer].automapflags & AF_OPTIONSACTIVE)
+	if (optionsMenuOn)
 		if ((ticrealbuttons & BT_MODE) && !(oldticrealbuttons & BT_MODE))
 		{
 			int prevdebugmode;

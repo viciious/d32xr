@@ -70,7 +70,7 @@ static void Y_AwardCoopBonuses(void)
 	// with that out of the way, go back to calculating bonuses like usual
 	for (i = 0; i < MAXPLAYERS; i++)
 	{
-		int secs, bonus, oldscore;
+		int secs, bonus;
 
 		if (!playeringame[i])
 			continue;
@@ -117,28 +117,6 @@ static void Y_AwardCoopBonuses(void)
 				data.coop.gotperfbonus = false;
 			}
 		}
-
-		oldscore = players[i].score;
-
-		players[i].score += bonus;
-		if (players[i].health)
-			players[i].score += (players[i].health-1) * 100; // ring bonus
-
-		//todo: more conditions where we shouldn't award a perfect bonus?
-/*		if (sharedringtotal && sharedringtotal >= nummaprings)
-		{
-			players[i].score += 50000; //perfect bonus
-		}*/
-
-		// grant extra lives right away since tally is faked
-		// TODO: No, we will have a true tally!
-		players[i].lives++;
-//		P_GivePlayerLives(&players[i], (players[i].score/50000) - (oldscore/50000));
-
-		if ((players[i].score/50000) - (oldscore/50000) > 0)
-			data.coop.gotlife = i;
-		else
-			data.coop.gotlife = -1;
 	}
 }
 
@@ -220,7 +198,8 @@ void Y_EndGame(void)
 //
 static void Y_FollowIntermission(void)
 {
-	CONS_Printf("Y_FollowIntermission");
+//	CONS_Printf("Y_FollowIntermission");
+	gameaction = ga_completed;
 /*	if (nextmap < 1100-1)
 	{
 		// normal level
@@ -228,7 +207,7 @@ static void Y_FollowIntermission(void)
 		return;
 	}*/
 
-	Y_EndGame();
+//	Y_EndGame();
 }
 
 //
@@ -251,6 +230,9 @@ void Y_Ticker(void)
 		return;
 	}
 
+	if (endtic != -1 && endtic - intertic < TICRATE/3) // fade out
+		fadetime = TICRATE/3 - (endtic - intertic);
+
 	if (endtic != -1)
 		return; // tally is done
 
@@ -264,15 +246,14 @@ void Y_Ticker(void)
 
 		if (data.coop.ringbonus || data.coop.timebonus || data.coop.perfbonus)
 		{
-			if (!(intertic & 1))
-				S_StartSound(NULL, sfx_s3k_5b); // tally sound effect
+			S_StartSound(NULL, sfx_s3k_5b); // tally sound effect
 
-			// ring and time bonuses count down by 333 each tic
+			// ring and time bonuses count down by 777 each tic
 			if (data.coop.ringbonus)
 			{
-				data.coop.ringbonus -= 333;
-				data.coop.total += 333;
-				data.coop.score += 333;
+				data.coop.ringbonus -= 777;
+				data.coop.total += 777;
+				data.coop.score += 777;
 				if (data.coop.ringbonus < 0) // went too far
 				{
 					data.coop.score += data.coop.ringbonus;
@@ -282,9 +263,9 @@ void Y_Ticker(void)
 			}
 			if (data.coop.timebonus)
 			{
-				data.coop.timebonus -= 333;
-				data.coop.total += 333;
-				data.coop.score += 333;
+				data.coop.timebonus -= 777;
+				data.coop.total += 777;
+				data.coop.score += 777;
 				if (data.coop.timebonus < 0)
 				{
 					data.coop.score += data.coop.timebonus;
@@ -294,9 +275,9 @@ void Y_Ticker(void)
 			}
 			if (data.coop.perfbonus)
 			{
-				data.coop.perfbonus -= 333;
-				data.coop.total += 333;
-				data.coop.score += 333;
+				data.coop.perfbonus -= 777;
+				data.coop.total += 777;
+				data.coop.score += 777;
 				if (data.coop.perfbonus < 0)
 				{
 					data.coop.score += data.coop.perfbonus;
@@ -310,10 +291,11 @@ void Y_Ticker(void)
 				S_StartSound(NULL, sfx_s3k_b0); // cha-ching!
 			}
 
-			if (data.coop.score % 50000 < 333) // just passed a 50000 point mark
+			if (data.coop.score % 50000 < 777) // just passed a 50000 point mark
 			{
 				S_StopSong();
 				S_StartSong(gameinfo.xtlifeMus, 0, cdtrack_xtlife);
+				players[consoleplayer].lives++;
 			}
 		}
 		else
@@ -321,6 +303,8 @@ void Y_Ticker(void)
 			endtic = intertic + 3*TICRATE; // 3 second pause after end of tally
 			S_StartSound(NULL, sfx_s3k_b0); // cha-ching!
 		}
+
+		players[consoleplayer].score = data.coop.total;
 	}
 }
 
@@ -335,6 +319,7 @@ void Y_StartIntermission(void)
 	int worldTime = leveltime - delaytime + TICRATE - players[consoleplayer].exiting;
 
 	intertic = -1;
+	endtic = -1;
 
 	inttype = int_coop;
 

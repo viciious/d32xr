@@ -28,6 +28,7 @@ playerresp_t	playersresp[MAXPLAYERS];
 int             consoleplayer = 0;          /* player taking events and displaying  */
 int             gametic;
 int             leveltime;
+VINT            fadetime;
 VINT           totalitems, totalsecret;    /* for intermission  */
 
 boolean         demorecording;
@@ -93,19 +94,32 @@ void G_DoLoadLevel (void)
 	int 		gamemap;
 	int			music;
 
-	for (i=0 ; i<MAXPLAYERS ; i++) 
-	{ 
-		if (playeringame[i]/* && players[i].playerstate == PST_DEAD*/)
-			players[i].playerstate = PST_REBORN;
-
-		players[i].xtralife = 0;
-	} 
-
 	totalitems = totalsecret = 0;
 	for (i=0 ; i<MAXPLAYERS ; i++)
 	{
+		if (playeringame[i]/* && players[i].playerstate == PST_DEAD*/)
+			players[i].playerstate = PST_REBORN;
+
 		players[i].killcount = players[i].secretcount
 			= players[i].itemcount = 0;
+		players[i].starpostnum = 0;
+		players[i].pflags = 0;
+		players[i].health = 1;
+		players[i].shield = 0;
+		memset(players[i].powers, 0, sizeof(players[i].powers));
+		players[i].damagecount = 0;
+		players[i].whiteFlash = 0;
+		players[i].attacker = NULL;
+		players[i].extralight = 0;
+		players[i].didsecret = false;
+		players[i].lastsoundsector = NULL;
+		players[i].lossCount = 0;
+		players[i].stillTimer = 0;
+		players[i].justSprung = 0;
+		players[i].scoreAdd = 0;
+		players[i].dashSpeed = 0;
+		players[i].homingTimer = 0;
+		players[i].xtralife = 0;
 	}
 
 	Z_CheckHeap (mainzone);
@@ -279,6 +293,7 @@ void G_PlayerReborn (int player)
 	VINT            starpostz;
 	VINT            starpostangle;
 	VINT            lives;
+	int             score;
 
 	p = &players[player]; 
 	itemcount = p->itemcount;
@@ -289,6 +304,7 @@ void G_PlayerReborn (int player)
 	starpostz = p->starpostz;
 	starpostangle = p->starpostangle;
 	lives = p->lives;
+	score = p->score;
 
 	D_memset (p, 0, sizeof(*p)); 
 
@@ -300,6 +316,7 @@ void G_PlayerReborn (int player)
 	p->starpostz = starpostz;
 	p->starpostangle = starpostangle;
 	p->lives = lives;
+	p->score = score;
 
 	p->playerstate = PST_LIVE;
 
@@ -584,7 +601,8 @@ void G_InitNew (int map, gametype_t gametype, boolean splitscr)
 	demoplayback = false;
 
 	gamepaused = false;
-	gametic = 0; 
+	gametic = 0;
+	fadetime = 0;
 } 
 
 void G_LoadGame(int saveslot)
@@ -700,7 +718,7 @@ startnew:
 #endif
 
 	/* run a stats intermission */
-		MiniLoop (IN_Start, IN_Stop, IN_Ticker, IN_Drawer, UpdateBuffer);
+//		MiniLoop (IN_Start, IN_Stop, IN_Ticker, IN_Drawer, UpdateBuffer);
 	
 	/* run the finale if needed */
 		if (finale)

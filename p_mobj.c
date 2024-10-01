@@ -460,6 +460,8 @@ void P_SpawnPlayer (mapthing_t *mthing)
 
 	if (gamemapinfo.act == 3)
 		p->health = mobj->health = 11;
+	else
+		p->health = mobj->health = 1;
 
 	// Set camera position
 	camera.x = mobj->x;
@@ -472,6 +474,7 @@ void P_SpawnPlayer (mapthing_t *mthing)
 	camera.y = (camera.y >> FRACBITS) << FRACBITS;
 
 	camera.z = mobj->floorz + (mobj->theight << FRACBITS);
+	camera.subsector = R_PointInSubsector(camera.x, camera.y);
 	
 	if (!netgame)
 		return;
