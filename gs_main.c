@@ -9,9 +9,9 @@
 #define CURSORX		(80)
 #define CURSORWIDTH	24
 #define ITEMX		(CURSORX+CURSORWIDTH)
-#define STARTY			24
-#define ITEMSPACE	20
-#define CURSORY(y)	(STARTY+ITEMSPACE*(y))
+#define STARTY			4
+#define ITEMSPACE	19
+#define CURSORY(y)	(STARTY+ITEMSPACE/2+ITEMSPACE*((y)+1))
 #define	NUMLCHARS 64
 #define MAXITEMS    128
 
@@ -217,6 +217,8 @@ static void GS_PathChange(const char *dir, int newmode)
         int namelen;
 
         if (gs_menu->numitems == MAXITEMS)
+            break;
+        if (CURSORY(gs_menu->numitems+1) > 200)
             break;
 
         namelen = mystrlen(buf);
@@ -447,7 +449,7 @@ void GS_Drawer (void)
 {
     int i, y = 0;
     menuitem_t *items = gs_menu->items;
-    int y_offset = 4;
+    int y_offset = STARTY;
 
     I_ClearFrameBuffer();
 
@@ -499,8 +501,7 @@ void GS_Drawer (void)
     else
     {
         /* Draw main menu */
-        print(84, 4, "SELECT GAME");
-        y_offset += ITEMSPACE + 4;
+        print(84, y_offset, "SELECT GAME");
 
         /* draw new skull */
         if (gs_menu->cursorframe)
@@ -509,7 +510,6 @@ void GS_Drawer (void)
             DrawJagobjLump(gs_menu->m_skull1lump, CURSORX, y_offset + items[gs_menu->cursorpos].y - 2, NULL, NULL);
 
         /* draw menu items */
-        y = y_offset;
         for (i = 0; i < gs_menu->numitems; i++)
         {
             int len;
@@ -527,8 +527,8 @@ void GS_Drawer (void)
         }
     }
 
-    I_Print8(14, 23, "Press A to select an item");
+    I_Print8(14, 24, "Press A to select an item");
     if (gs_menu->mode && gs_menu->path[0] != '\0')
-        I_Print8(14, 24, "Press B to return to parent directory");
-    I_Print8(14, 25, "Press C to toggle the file browser");
+        I_Print8(14, 25, "Press B to return to parent directory");
+    I_Print8(14, 26, "Press C to toggle the file browser");
 }
