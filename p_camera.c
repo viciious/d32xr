@@ -295,7 +295,10 @@ static void P_CameraThinker(player_t *player, camera_t *thiscam)
 		P_CameraSlideMove(&sm);
 
 		if (sm.slidex == mo.x && sm.slidey == mo.y)
+      {
+         mo.isubsector = R_PointInSubsector(mo.x, mo.y) - subsectors;
 			goto camstairstep;
+      }
 
 		if (P_CameraTryMove(&tm, &mo, sm.slidex, sm.slidey))
 			goto camwrapup;
