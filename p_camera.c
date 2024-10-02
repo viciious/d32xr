@@ -441,7 +441,7 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 		z = mo->z + pviewheight + camheight;
 
 	// Look at halfway between the camera and player. Is the ceiling lower? Then the camera should try to move down to fit under it
-/*	newsubsec = R_PointInSubsector(((mo->x>>FRACBITS) + (thiscam->x>>FRACBITS))<<(FRACBITS-1), ((mo->y>>FRACBITS) + (thiscam->y>>FRACBITS))<<(FRACBITS-1));
+	newsubsec = R_PointInSubsector(((mo->x>>FRACBITS) + (thiscam->x>>FRACBITS))<<(FRACBITS-1), ((mo->y>>FRACBITS) + (thiscam->y>>FRACBITS))<<(FRACBITS-1));
 
 	{
 		// camera fit?
@@ -452,9 +452,9 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 
 	if (thiscam->z < thiscam->floorz)
 		thiscam->z = thiscam->floorz;
-*/
-//   if (thiscam->z + caminfo->height > thiscam->ceilingz)
-//      thiscam->z = thiscam->ceilingz - caminfo->height-(11<<FRACBITS);
+
+   if (thiscam->z + caminfo->height > thiscam->ceilingz)
+      thiscam->z = thiscam->ceilingz - caminfo->height-(11<<FRACBITS);
 
 	// The camera actually focuses 64 units ahead of where the player is.
 	// This is more aesthetically pleasing.
