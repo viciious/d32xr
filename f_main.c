@@ -174,7 +174,7 @@ void F_Drawer (void)
 			V_DrawStringLeft(&menuFont, 160-16, 64, card->didWhat);
 
 		if (card->links)
-			V_DrawStringLeft(&menuFont, 160-16, 96, card->links);
+			V_DrawStringLeft(&menuFont, 160-16, 112, card->links);
 	}
 }
 

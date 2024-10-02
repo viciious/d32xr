@@ -29,7 +29,7 @@ static y_data data;
 static boolean gottimebonus;
 static boolean gotemblem;
 
-static int32_t intertic;
+static int32_t interstart;
 static int32_t endtic = -1;
 
 static enum
@@ -172,42 +172,11 @@ void Y_EndIntermission(void)
 }
 
 //
-// Y_EndGame
-//
-// Why end the game?
-// Because Y_FollowIntermission and F_EndCutscene would
-// both do this exact same thing *in different ways* otherwise,
-// which made it so that you could only unlock Ultimate mode
-// if you had a cutscene after the final level and crap like that.
-// This function simplifies it so only one place has to be updated
-// when something new is added.
-void Y_EndGame(void)
-{
-	CONS_Printf("Y_EndGame()");
-/*	if (nextmap == 1102-1) // end game with credits
-		F_StartCredits();
-	else if (nextmap == 1101-1) // end game with evaluation
-		F_StartGameEvaluation();
-    else
-	    D_StartTitle();	// 1100 or competitive multiplayer, so go back to title screen.
-		*/
-}
-
-//
 // Y_FollowIntermission
 //
 static void Y_FollowIntermission(void)
 {
-//	CONS_Printf("Y_FollowIntermission");
 	gameaction = ga_completed;
-/*	if (nextmap < 1100-1)
-	{
-		// normal level
-		G_AfterIntermission();
-		return;
-	}*/
-
-//	Y_EndGame();
 }
 
 //
@@ -220,10 +189,10 @@ void Y_Ticker(void)
 	if (inttype == int_none)
 		return;
 
-	intertic++;
+	int intertic = gametic - interstart;
 
 	// single player is hardcoded to go away after awhile
-	if (intertic == endtic)
+	if (endtic != -1 && intertic >= endtic)
 	{
 		Y_EndIntermission();
 		Y_FollowIntermission();
@@ -238,9 +207,6 @@ void Y_Ticker(void)
 
 	if (inttype == int_coop) // coop or single player, normal level
 	{
-		if (!intertic) // first time only
-			S_StartSong(gameinfo.intermissionMus, 0, cdtrack_intermission);
-
 		if (intertic < TICRATE) // one second pause before tally begins
 			return;
 
@@ -318,7 +284,7 @@ void Y_StartIntermission(void)
 	const int delaytime = gamemapinfo.act == 3 ? 2*TICRATE : 3*TICRATE;
 	int worldTime = leveltime - delaytime + TICRATE - players[consoleplayer].exiting;
 
-	intertic = -1;
+	interstart = gametic;
 	endtic = -1;
 
 	inttype = int_coop;
@@ -350,6 +316,7 @@ void Y_StartIntermission(void)
 			
 			data.coop.passedx1 = 150;
 			data.coop.passedx2 = 150;
+			S_StartSong(gameinfo.intermissionMus, 0, cdtrack_intermission);
 			break;
 		}
 
