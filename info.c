@@ -1098,6 +1098,31 @@ MF2_SHOOTABLE, // flags2
 		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
 		MF2_FORWARDOFFSET, // flags2
 	},
+{           // MT_SCORE
+	-1,             // doomednum
+	S_SCORE100,         // spawnstate
+	1,              // spawnhealth
+	S_NULL,         // seestate
+	sfx_None,       // seesound
+	8,              // reactiontime
+	sfx_None,       // attacksound
+	S_NULL,         // painstate
+	0,              // painchance
+	sfx_None,       // painsound
+	S_NULL,         // meleestate
+	S_NULL,         // missilestate
+	S_NULL,         // deathstate
+	S_NULL,         // xdeathstate
+	sfx_None,       // deathsound
+	4*FRACUNIT,     // speed
+	8*FRACUNIT,     // radius
+	8*FRACUNIT,     // height
+	100,            // mass
+	0,              // damage
+	sfx_None,       // activesound
+	MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY|MF_STATIC, // flags
+	0, // flags2
+},
 	{           // MT_SIGN
 		501,            // doomednum
 		S_SIGN,         // spawnstate
@@ -1604,31 +1629,6 @@ MF2_SHOOTABLE|MF2_ENEMY,	// flags2
 	80,    // damage
 	sfx_None,       // activesound
 	MF_SPECIAL|MF_STATIC, // flags
-	0, // flags2
-},
-{           // MT_SCORE
-	-1,             // doomednum
-	S_SCORE100,         // spawnstate
-	1,              // spawnhealth
-	S_NULL,         // seestate
-	sfx_None,       // seesound
-	8,              // reactiontime
-	sfx_None,       // attacksound
-	S_NULL,         // painstate
-	0,              // painchance
-	sfx_None,       // painsound
-	S_NULL,         // meleestate
-	S_NULL,         // missilestate
-	S_NULL,         // deathstate
-	S_NULL,         // xdeathstate
-	sfx_None,       // deathsound
-	4*FRACUNIT,     // speed
-	8*FRACUNIT,     // radius
-	8*FRACUNIT,     // height
-	100,            // mass
-	0,              // damage
-	sfx_None,       // activesound
-	MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY|MF_STATIC, // flags
 	0, // flags2
 },
 	{           // MT_GHOST
