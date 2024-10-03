@@ -15,11 +15,6 @@ static const animdef_t	animdefs[] =
 	{false,	"NUKAGE3",	"NUKAGE1"},
 	{false,	"FWATER4",	"FWATER1"},
 	{false,	"LAVA4",	"LAVA1"},
-
-	{false,	"NUKAGE3",	"NUKAGE1"},
-	{false,	"FWATER4",	"FWATER1"},
-	{false,	"SWATER4",	"SWATER1"},
-	{false,	"LAVA4",	"LAVA1"},
 	{false,	"BLOOD3",	"BLOOD1"},
 
 	// DOOM II flat animations.
@@ -763,6 +758,7 @@ void P_PlayerInSpecialSector (player_t *player)
 		case 9:		/* SECRET SECTOR */
 			player->secretcount++;
 			sector->special = 0;
+			S_StartSound(player->mo, sfx_secret);
 			break;
 			
 		default:

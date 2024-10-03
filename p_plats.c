@@ -131,7 +131,7 @@ int	EV_DoPlat(line_t *line,plattype_e type,int amount)
 		{
 			case raiseToNearestAndChange:
 				plat->speed = PLATSPEED/2;
-				sec->floorpic = sectors[sides[line->sidenum[0]].sector].floorpic;
+				sec->floorpic = LD_FRONTSECTOR(line)->floorpic;
 				plat->high = P_FindNextHighestFloor(sec,sec->floorheight);
 				plat->wait = 0;
 				plat->status = up;
@@ -140,7 +140,7 @@ int	EV_DoPlat(line_t *line,plattype_e type,int amount)
 				break;
 			case raiseAndChange:
 				plat->speed = PLATSPEED/2;
-				sec->floorpic = sectors[sides[line->sidenum[0]].sector].floorpic;
+				sec->floorpic = LD_FRONTSECTOR(line)->floorpic;
 				plat->high = sec->floorheight + amount*FRACUNIT;
 				plat->wait = 0;
 				plat->status = up;
@@ -153,7 +153,7 @@ int	EV_DoPlat(line_t *line,plattype_e type,int amount)
 				if (plat->low > sec->floorheight)
 					plat->low = sec->floorheight;
 				plat->high = sec->floorheight;
-				plat->wait = 15*PLATWAIT;
+				plat->wait = 35*PLATWAIT;
 				plat->status = down;
 				S_StartPositionedSound((void *)sec,sfx_pstart,&P_SectorOrg);
 				break;
@@ -165,7 +165,7 @@ int	EV_DoPlat(line_t *line,plattype_e type,int amount)
 				plat->high = P_FindHighestFloorSurrounding(sec);
 				if (plat->high < sec->floorheight)
 					plat->high = sec->floorheight;
-				plat->wait = 15*PLATWAIT;
+				plat->wait = 35*PLATWAIT;
 				plat->status = P_Random()&1;
 				S_StartPositionedSound((void *)sec,sfx_pstart,&P_SectorOrg);
 				break;

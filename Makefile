@@ -14,6 +14,7 @@ INCPATH = -I. -I$(ROOTDIR)/sh-elf/include -I$(ROOTDIR)/sh-elf/sh-elf/include -I.
 CCFLAGS = -c -std=c11 -m2 -mb
 CCFLAGS += -Wall -Wextra -pedantic -Wno-unused-parameter -Wimplicit-fallthrough=0 -Wno-missing-field-initializers -Wnonnull
 CCFLAGS += -D__32X__ -DMARS
+CCFLAGS += -DDISABLE_DMA_SOUND
 LDFLAGS = -T mars-ssf.ld -Wl,-Map=output.map -nostdlib -Wl,--gc-sections --specs=nosys.specs
 ASFLAGS = --big
 
@@ -102,7 +103,8 @@ OBJS = \
 	sh2_mixer.o \
 	r_cache.o \
 	m_fire.o \
-	lzss.o
+	lzss.o \
+	gs_main.o
 
 release: $(TARGET).32x
 
@@ -115,7 +117,7 @@ m68k.bin:
 
 $(TARGET).32x: $(TARGET).elf
 	$(OBJC) -O binary $< temp2.bin
-	$(DD) if=temp2.bin of=temp.bin bs=180K conv=sync
+	$(DD) if=temp2.bin of=temp.bin bs=198K conv=sync
 	rm -f temp3.bin
 	cat temp.bin $(WAD) >>temp3.bin
 	$(DD) if=temp3.bin of=$@ bs=512K conv=sync
@@ -140,3 +142,11 @@ marshw.o: marshw.c
 clean:
 	make clean -C src-md
 	$(RM) *.o mr8k.bin $(TARGET).32x $(TARGET).elf output.map temp.bin temp2.bin
+
+optwad:
+	mkdir -p iso
+	find iso -type f -name "*.WAD" -exec ./wadptr -nomerge -nosquash -nostack -c {} \;
+
+iso: $(TARGET).32x
+	mkdir -p iso
+	genisoimage -sysid "SEGA SEGACD" -volid "DOOM CD32X" -full-iso9660-filenames -l -o $(TARGET).iso iso

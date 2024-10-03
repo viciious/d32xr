@@ -48,10 +48,6 @@ typedef struct
 #ifdef MARS
 	uint8_t		*data;
 	int			position;
-	int			increment;
-	int			length;
-	int			loop_length;
-	int			prev_pos;			/* for adpcm decoding */
 	uint8_t		volume;
 	uint8_t		pan;
 #else
@@ -60,9 +56,16 @@ typedef struct
 	int			stopquad;
 	int			volume;				/* range from 0-32k */
 #endif
+#if defined(MARS) && !defined(DISABLE_DMA_SOUND)
 	uint16_t	width;
 	uint16_t	block_size; 		/* size of data block in bytes */
+	int			length;
+	int			loop_length;
 	int			remaining_bytes; 	/* WAV chunk */
+	int			prev_pos;			/* for adpcm decoding */
+	int			increment;
+#endif
+	int			freq;
 
 	sfxinfo_t	*sfx;
 	mobj_t		*mobj;
@@ -74,6 +77,8 @@ enum
 	mustype_none,
 	mustype_fm,
 	mustype_cd,
+	mustype_spcm,
+	mustype_spcmhack, 				/* forces refresh of the current SPCM dir */
 };
 
 enum
@@ -104,9 +109,12 @@ extern	int		samplecount;		/* 22khz sample counter in DSP memory */
 
 extern	VINT	musictype;
 
+extern 	char 	spcmDir[9];
+
 /*============================================================================ */
 
 void S_Init(void);
+void S_InitMusic(void);
 void S_Clear (void);
 void S_StartSound(mobj_t *mobj, int sound_id);
 void S_StartPositionedSound(mobj_t* mobj, int sound_id, getsoundpos_t getpos);
@@ -114,4 +122,5 @@ void S_UpdateSounds(void);
 void S_PreUpdateSounds(void);
 int S_CDAvailable(void);
 void S_SetMusicType(int t);
-
+void S_SetSPCMDir(const char *dir);
+void S_DeInitMusic(void);
