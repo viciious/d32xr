@@ -513,17 +513,6 @@ static void R_DrawSortedSprites(int* sortedsprites, int sprscreenhalf)
    int16_t walls[MAXWALLCMDS+1], *pwalls;
    viswall_t *ds;
 
-#ifdef HIGH_DETAIL_SPRITES
-    I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps2);
-#else
-    if (lowResMode) {
-      I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
-    }
-    else {
-      I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps2);
-    }
-#endif
-
 #ifdef MARS
    if (sprscreenhalf > 0)
    {
