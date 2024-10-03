@@ -1376,6 +1376,14 @@ void P_MovePlayer(player_t *player)
 			{
 				if (player->shield == SH_ARMAGEDDON)
 					P_BlackOw(player);
+				else if (!(player->pflags & PF_THOKKED) && player->shield == SH_WHIRLWIND)
+				{
+					player->pflags |= PF_THOKKED;
+					player->pflags &= ~(PF_JUMPED|PF_SPINNING|PF_STARTJUMP);
+					player->mo->momz = 12*FRACUNIT;
+					P_SetMobjState(player->mo, S_PLAY_FALL1);
+					S_StartSound(player->mo, sfx_wdjump);
+				}
 				else if (!(player->pflags & PF_THOKKED) && (player->shield == SH_FORCE2 || player->shield == SH_FORCE1))
 				{
 					player->pflags |= PF_THOKKED;
