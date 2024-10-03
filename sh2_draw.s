@@ -319,7 +319,7 @@ _I_DrawColumnA:
         /* test if count & 1 */
         shlr    r6
         movt    r9              /* 1 if count was odd */
-        bt/s    do_col_loop_low_1px
+        bt/s    do_col_loop_1px
         add     r9,r6
 
         .p2alignw 2, 0x0009
@@ -330,7 +330,7 @@ do_col_loop:
         add     r3,r2           /* frac += fracstep */
         swap.w  r2,r0           /* (frac >> 16) */
         and     r4,r0           /* (frac >> 16) & heightmask */
-        mov.w   r9,@r8          /* *fb = dpix */
+        mov.b   r9,@r8          /* *fb = dpix */
         add     r1,r8           /* fb += SCREENWIDTH */
 do_col_loop_1px:
         mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
@@ -339,9 +339,9 @@ do_col_loop_1px:
         add     r3,r2           /* frac += fracstep */
         dt      r6              /* count-- */
         swap.w  r2,r0           /* (frac >> 16) */
-        mov.w   r9,@r8          /* *fb = dpix */
+        mov.b   r9,@r8          /* *fb = dpix */
         and     r4,r0           /* (frac >> 16) & heightmask */
-        bf/s    do_col_loop_low
+        bf/s    do_col_loop
         add     r1,r8           /* fb += SCREENWIDTH */
 
         mov.l   @r15+,r9
@@ -421,8 +421,8 @@ do_cnp_loop:
         sub     r4,r2           /* frac -= heightmask */
 1:
         dt      r6              /* count-- */
-        bf/s    do_cnp_loop_low
-        mov.w   r0,@r8          /* *fb = dpix */
+        bf/s    do_cnp_loop
+        mov.b   r0,@r8          /* *fb = dpix */
 
         rts
         mov.l   @r15+,r8
