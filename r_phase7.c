@@ -28,7 +28,7 @@ typedef struct localplane_s
 #else
     pixel_t* ds_source[MIPLEVELS];
 #endif
-#if MIPLEVELS > 1
+#if MIPLEVELS > 1 && FLATMIPS
     unsigned maxmip;
     int mipsize[MIPLEVELS];
 #endif
@@ -92,7 +92,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
 
     const int flatnum = lpl->pl->flatandlight&0xffff;
 
-#if MIPLEVELS > 1
+#if MIPLEVELS > 1 && FLATMIPS
     miplevel = (unsigned)distance / MIPSCALE;
     if (miplevel > lpl->maxmip)
         miplevel = lpl->maxmip;
@@ -332,7 +332,7 @@ static void R_DrawPlanes2(void)
         lpl.pl = pl;
         lpl.ds_source[0] = flatpixels[flatnum].data[0];
 
-#if MIPLEVELS > 1
+#if MIPLEVELS > 1 && FLATMIPS
         lpl.mipsize[0] = flatpixels[flatnum].size;
         lpl.maxmip = texmips ? MIPLEVELS-1 : 0;
         if (lpl.maxmip > 0)

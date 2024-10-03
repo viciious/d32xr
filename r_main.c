@@ -365,15 +365,25 @@ D_printf ("Done\n");
 
 VINT CalcFlatSize(int lumplength)
 {
-    switch(lumplength)
-    {
-        case 256:
-            return 16;
-        case 1024:
-            return 32;
-        default:
-            return 64;
-    }
+	if (lumplength < 2*2)
+		return 1;
+	
+	if (lumplength < 4*4)
+		return 2;
+
+	if (lumplength < 8*8)
+		return 4;
+
+	if (lumplength < 16*16)
+		return 8;
+
+	if (lumplength < 32*32)
+		return 16;
+	
+	if (lumplength < 64*64)
+		return 32;
+
+	return 64;
 }
 
 
@@ -437,6 +447,7 @@ void R_SetFlatData(int f, uint8_t *start, int size)
 	int w = CalcFlatSize(size);
 	uint8_t *data = start;
 
+#ifdef FLATMIPS
 	for (j = 0; j < MIPLEVELS; j++)
 	{
 		flatpixels[f].data[j] = data;
@@ -449,6 +460,20 @@ void R_SetFlatData(int f, uint8_t *start, int size)
 				w = 1;
 		}
 	}
+#else
+	for (j = 0; j < 1; j++)
+	{
+		flatpixels[f].data[j] = data;
+		flatpixels[f].size = w;
+		if (texmips) {
+			data += w * w;
+			w >>= 1;
+
+			if (w < 1)
+				w = 1;
+		}
+	}
+#endif
 }
 
 void R_ResetTextures(void)

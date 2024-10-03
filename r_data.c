@@ -309,7 +309,7 @@ void R_InitFlats (void)
 
 	flatpixels = Z_Malloc(numflats * sizeof(*flatpixels), PU_STATIC);
 
-#if MIPLEVELS > 1
+#if MIPLEVELS > 1 && FLATMIPS
 	// detect mip-maps
 	if (!texmips)
 		return;

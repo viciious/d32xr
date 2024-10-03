@@ -102,8 +102,12 @@ static void R_UpdateCache(void)
 
         if (minplanemip < 0)
           minplanemip = 0;
+#ifdef FLATMIPS
         if (maxplanemip >= MIPLEVELS)
           maxplanemip = MIPLEVELS-1;
+#else
+          maxplanemip = minplanemip;
+#endif
 
         for (i = minplanemip; i <= maxplanemip; i++) {
             if (!R_TouchIfInTexCache(&r_texcache, flat->data[i]) && (bestmips[i] < 0)) {
@@ -138,6 +142,10 @@ static void R_UpdateCache(void)
       masked = false;
 
       if (id >= numtextures) {
+#ifndef FLATMIPS
+        if (i > 0)
+          continue;
+#endif
         flattex_t *flat = &flatpixels[id - numtextures];
         data = (void **)flat->data;
         pdata = (void**)&data[i];
