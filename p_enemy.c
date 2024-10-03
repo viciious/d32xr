@@ -651,6 +651,8 @@ void A_Explode (mobj_t *thingy, int16_t var1, int16_t var2)
 void A_BossScream(mobj_t *actor, int16_t var1, int16_t var2)
 {
 	const mobjtype_t explodetype = var2 > 0 ? var2 : MT_SONIC3KBOSSEXPLODE;
+
+	CONS_Printf("Explodetype: %d", explodetype);
 	
 	const angle_t fa = ((leveltime*(ANG45/9))>>ANGLETOFINESHIFT) & FINEMASK;
 

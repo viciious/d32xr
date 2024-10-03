@@ -203,6 +203,10 @@ static void R_PrepMobj(mobj_t *thing)
        vis->colormap = HWLIGHT(vis->colormap);
    }
 
+   // Draw these in high detail
+   if (thing->type <= MT_SIGN)
+      vis->patchnum |= 32768;
+
 //   vis->colormaps = dc_colormaps;
 }
 

@@ -169,9 +169,9 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
 	pixel_t		*pixels;		/* data patch header references */
 #endif
 
-   patch     = W_POINTLUMPNUM(vis->patchnum);
+   patch     = W_POINTLUMPNUM(vis->patchnum & 0x7FFF);
 #ifdef MARS
-   pixels    = W_POINTLUMPNUM(vis->patchnum+1);
+   pixels    = W_POINTLUMPNUM((vis->patchnum & 0x7FFF)+1);
 #else
    pixels    = vis->pixels;
 #endif
@@ -180,7 +180,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
    spryscale = vis->yscale;
 
 #ifdef HIGH_DETAIL_SPRITES
-   if (lowResMode) {
+   if (lowResMode && (vis->patchnum & 32768)) {
       dcol      = drawspritecol;
    }
    else {
@@ -200,7 +200,10 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
    fracstep = vis->xiscale;
 
 #ifdef HIGH_DETAIL_SPRITES
-   I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps2);
+   if (vis->patchnum & 32768)
+      I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps2);
+   else
+      I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
 #else
    if (lowResMode) {
       I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
@@ -228,7 +231,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
 #endif
 
 #ifdef HIGH_DETAIL_SPRITES
-   if (lowResMode) {
+   if (lowResMode && (vis->patchnum & 32768)) {
       x <<= 1;
       stopx = (stopx << 1) - 1;
       fracstep >>= 1;
@@ -243,7 +246,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
       int topclip;
       int bottomclip;
 
-      if (lowResMode) {
+      if (lowResMode && (vis->patchnum & 32768)) {
          topclip      = (spropening[x>>1] >> 8);
          bottomclip   = (spropening[x>>1] & 0xff) - 1;
       }
@@ -564,8 +567,11 @@ static void R_DrawSortedSprites(int* sortedsprites, int sprscreenhalf)
       ds = (vissprite_t *)(vd.vissprites + (sortedsprites[i] & 0x7f));
 
       #ifdef HIGH_DETAIL_SPRITES
-      if (lowResMode && sprscreenhalf > 0) {
-         sprscreenhalf += 1;
+      if (ds->patchnum & 32878)
+      {
+         if (lowResMode && sprscreenhalf > 0) {
+            sprscreenhalf += 1;
+         }
       }
       #endif
 
@@ -632,7 +638,7 @@ void R_Sprites(void)
    for (i = 0; i < count; i++)
    {
        vissprite_t* ds = (vissprite_t *)(vd.vissprites + i);
-       if (ds->patchnum < 0)
+       if ((ds->patchnum & 0x7FFF) < 0)
            continue;
        if (ds->x1 > ds->x2)
            continue;

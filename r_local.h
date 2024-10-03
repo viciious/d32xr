@@ -123,7 +123,7 @@ typedef struct
 	int			children[2];		/* if NF_SUBSECTOR its a subsector */
 } node_t;
 
-#define MIPLEVELS 4
+#define MIPLEVELS 1
 
 typedef struct
 {
@@ -553,8 +553,8 @@ typedef struct vissprite_s
 	fixed_t		xiscale;		/* negative if flipped */
 	fixed_t		yscale;
 	fixed_t		texturemid;
-	VINT 		patchnum;
-	VINT		colormap;		/* < 0 = shadow draw */
+	uint16_t 	patchnum;		// upper byte indicates high detail draw
+	uint16_t	colormap;
 	short		gx,gy;	/* global coordinates */
 	VINT        heightsec;
 	VINT		patchheight;
