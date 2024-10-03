@@ -52,12 +52,7 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
    fracstep  = seg->scalestep;
    scalefrac = seg->scalefrac + (x - seg->realstart) * fracstep;
 
-   if (lowResMode) {
-      I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
-   }
-   else {
-      I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps2);
-   }
+   I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
 
    for(; x <= stopx; x++)
    {
@@ -199,19 +194,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
    stopx    = vis->x2 + 1;
    fracstep = vis->xiscale;
 
-#ifdef HIGH_DETAIL_SPRITES
-   if (vis->patchnum & 32768)
-      I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps2);
-   else
-      I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
-#else
-   if (lowResMode) {
-      I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
-   }
-   else {
-      I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps2);
-   }
-#endif
+   I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
 
 #ifdef MARS
    if (sprscreenhalf > 0)

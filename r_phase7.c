@@ -322,12 +322,7 @@ static void R_DrawPlanes2(void)
         lpl.baseyscale = baseyscale * flatpixels[flatnum].size;
 #endif
 
-        if (lowResMode) {
-            I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
-        }
-        else {
-            I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps2);
-        }
+        I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
 
         lpl.pl = pl;
         lpl.ds_source[0] = flatpixels[flatnum].data[0];

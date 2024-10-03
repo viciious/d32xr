@@ -298,10 +298,11 @@ _I_DrawColumnA:
         mov.l   r8,@-r15
         mov.l   r9,@-r15
         mov.l   @(DOOMTLS_COLORMAP, gbr),r0
+        add     r7,r7
         add     r0,r7           /* dc_colormap = colormap + light */
         mov.l   draw_fb,r8
         mov.l   @r8,r8          /* frame buffer start */
-        add     r4,r8           /* fb += dc_x */
+        add     r4,r8           /* fb += dc_x*2 */
         shll8   r5
         add     r5,r8
         shlr2   r5
@@ -312,34 +313,35 @@ _I_DrawColumnA:
         mov.l   @(20,r15),r4
         mov.l   draw_width,r1
         add     #-1,r4          /* heightmask = texheight - 1 */
-
         swap.w  r2,r0           /* (frac >> 16) */
         and     r4,r0           /* (frac >> 16) & heightmask */
 
         /* test if count & 1 */
         shlr    r6
         movt    r9              /* 1 if count was odd */
-        bt/s    do_col_loop_1px
+        bt/s    do_col_loop_low_1px
         add     r9,r6
 
         .p2alignw 2, 0x0009
 do_col_loop:
         mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
+        add     r0,r0
+        mov.w   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
         add     r3,r2           /* frac += fracstep */
-        mov.b   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
         swap.w  r2,r0           /* (frac >> 16) */
-        mov.b   r9,@r8          /* *fb = dpix */
+        and     r4,r0           /* (frac >> 16) & heightmask */
+        mov.w   r9,@r8          /* *fb = dpix */
         add     r1,r8           /* fb += SCREENWIDTH */
-        and     r4,r0           /* (frac >> 16) & heightmask */
 do_col_loop_1px:
-        dt      r6              /* count-- */
         mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
+        add     r0,r0
+        mov.w   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
         add     r3,r2           /* frac += fracstep */
-        mov.b   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
+        dt      r6              /* count-- */
         swap.w  r2,r0           /* (frac >> 16) */
-        mov.b   r9,@r8          /* *fb = dpix */
+        mov.w   r9,@r8          /* *fb = dpix */
         and     r4,r0           /* (frac >> 16) & heightmask */
-        bf/s    do_col_loop
+        bf/s    do_col_loop_low
         add     r1,r8           /* fb += SCREENWIDTH */
 
         mov.l   @r15+,r9
@@ -352,7 +354,7 @@ do_col_loop_1px:
 !void I_DrawColumnNPO2(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
 !                      fixed_t fracstep, inpixel_t *dc_source, int dc_texheight)
 
-        .align  4
+         .align  4
         .global _I_DrawColumnNPo2A
 _I_DrawColumnNPo2A:
 	add	#1,r6
@@ -368,10 +370,11 @@ _I_DrawColumnNPo2A:
 1:
         mov.l   r8,@-r15
         mov.l   @(DOOMTLS_COLORMAP, gbr),r0
+        add     r7,r7
         add     r0,r7           /* dc_colormap = colormap + light */
         mov.l   draw_fb,r8
         mov.l   @r8,r8          /* frame buffer start */
-        add     r4,r8           /* fb += dc_x */
+        add     r4,r8           /* fb += dc_x*2 */
         shll8   r5
         add     r5,r8
         shlr2   r5
@@ -408,17 +411,18 @@ do_cnp_loop:
         mov     r2,r0
         shlr16  r0              /* frac >> 16 */
         mov.b   @(r0,r5),r0     /* pix = dc_source[frac >> 16] */
+        add     r1,r8           /* fb += SCREENWIDTH */
         add     r3,r2           /* frac += fracstep */
         cmp/ge  r4,r2
+        add     r0,r0
         bf/s    1f
-        mov.b   @(r0,r7),r0     /* dpix = dc_colormap[pix] */
+        mov.w   @(r0,r7),r0     /* dpix = dc_colormap[pix] */
         /* if (frac >= heightmask) */
         sub     r4,r2           /* frac -= heightmask */
 1:
-        add     r1,r8           /* fb += SCREENWIDTH */
         dt      r6              /* count-- */
-        bf/s    do_cnp_loop
-        mov.b   r0,@r8          /* *fb = dpix */
+        bf/s    do_cnp_loop_low
+        mov.w   r0,@r8          /* *fb = dpix */
 
         rts
         mov.l   @r15+,r8

@@ -844,7 +844,6 @@ void R_InitColormap()
 
 	l = W_CheckNumForName("COLORMAP");
 	dc_colormaps = R_LoadColormap(l, true);
-	dc_colormaps2 = R_LoadColormap(l, false);
 
 #ifdef MARS
 	Mars_CommSlaveClearCache();
