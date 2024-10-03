@@ -1253,7 +1253,7 @@ ext_link:
         nop
         btst    #6,0xA10005         /* check TH deasserted */
         bne.b   1f                  /* handshake */
-        dbra    d2,0b
+        dbra    d1,0b
         bra.b   3f                  /* timeout err */
 1:
         move.b  #0x20,0xA10005      /* deassert handshake (TR high) */
