@@ -555,17 +555,29 @@ static void R_DrawSortedSprites(int* sortedsprites, int sprscreenhalf)
 
       ds = (vissprite_t *)(vd.vissprites + (sortedsprites[i] & 0x7f));
 
-      #ifdef HIGH_DETAIL_SPRITES
+#ifdef HIGH_DETAIL_SPRITES
       if (ds->patchnum & 32878)
       {
          if (lowResMode && sprscreenhalf > 0) {
             sprscreenhalf += 1;
+
+            R_ClipVisSprite(ds, spropening, sprscreenhalf, walls);
+            R_DrawVisSprite(ds, spropening, sprscreenhalf);
+
+            sprscreenhalf -= 1;
+         }
+         else
+         {
+            R_ClipVisSprite(ds, spropening, sprscreenhalf, walls);
+            R_DrawVisSprite(ds, spropening, sprscreenhalf);
          }
       }
-      #endif
-
-      R_ClipVisSprite(ds, spropening, sprscreenhalf, walls);
-      R_DrawVisSprite(ds, spropening, sprscreenhalf);
+      else
+#endif
+      {
+         R_ClipVisSprite(ds, spropening, sprscreenhalf, walls);
+         R_DrawVisSprite(ds, spropening, sprscreenhalf);
+      }
    }
 
    // draw masked segments
