@@ -27,7 +27,7 @@ creditcard_t creditCards[] = {
 	{NULL, NULL, NULL, NULL, NULL },
 };
 
-#define CARDTIME (2*TICRATE)
+#define CARDTIME (10*TICRATE)
 
 static VINT cardPFP = 0;
 static VINT cardTimer = 0;
