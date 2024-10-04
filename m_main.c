@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "v_font.h"
+#include "r_local.h"
 
 #define MOVEWAIT		(I_IsPAL() ? TICVBLS*5 : TICVBLS*6)
 #define CURSORX		(96)
@@ -684,7 +685,11 @@ void M_Drawer (void)
 	for (i = 0; i < menuscr->numitems; i++)
 	{
 		int y = y_offset + items[i].y;
-		V_DrawStringLeft(&menuFont, items[i].x, y, items[i].name);
+
+		if (i == cursorpos)
+			V_DrawStringLeftWithColormap(&menuFont, items[i].x, y, items[i].name, YELLOWTEXTCOLORMAP);
+		else
+			V_DrawStringLeft(&menuFont, items[i].x, y, items[i].name);
 	}
 
 	if (scrpos == ms_new)

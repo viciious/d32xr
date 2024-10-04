@@ -675,7 +675,10 @@ void O_Drawer (void)
 	for (i = 0; i < menuscr->numitems; i++)
 	{
 		y = items[i].y;
-		V_DrawStringLeft(&menuFont, items[i].x, y, items[i].name);
+		if (i == cursorpos)
+			V_DrawStringLeftWithColormap(&menuFont, items[i].x, y, items[i].name, YELLOWTEXTCOLORMAP);
+		else
+			V_DrawStringLeft(&menuFont, items[i].x, y, items[i].name);
 
 		if(items[i].slider)
 		{

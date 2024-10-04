@@ -580,6 +580,185 @@ void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh)
 	}
 }
 
+// NOTE: Using a colormap is slower because it must
+// draw only one byte at a time, not two.
+void DrawJagobjWithColormap(jagobj_t* jo, int x, int y, 
+	int src_x, int src_y, int src_w, int src_h, pixel_t *fb, int colormap)
+{
+	int16_t *dc_colormap = (int16_t*)dc_colormaps + colormap;
+	int		srcx, srcy;
+	int		width, height, depth, flags, index;
+	int		rowsize, inc;
+	byte	*dest, *source;
+
+	rowsize = BIGSHORT(jo->width);
+	width = BIGSHORT(jo->width);
+	height = BIGSHORT(jo->height);
+	depth = BIGSHORT(jo->depth);
+	flags = BIGSHORT(jo->flags);
+	index = BIGSHORT(jo->index);
+
+	if (src_w > 0)
+		width = src_w;
+	else if (src_w < 0)
+		width += src_w;
+
+	if (src_h > 0)
+		height = src_h;
+	else if (src_h < 0)
+		height += src_h;
+
+	srcx = 0;
+	srcy = 0;
+
+	if (x < 0)
+	{
+		width += x;
+		srcx = -x;
+		x = 0;
+	}
+	srcx += src_x;
+
+	if (y < 0)
+	{
+		srcy = -y;
+		height += y;
+		y = 0;
+	}
+	srcy += src_y;
+
+	if (x + width > 320)
+		width = 320 - x;
+	if (y + height > mars_framebuffer_height)
+		height = mars_framebuffer_height - y;
+	inc = rowsize - width;
+
+	if (width < 1 || height < 1)
+		return;
+
+	if (depth == 2)
+	{
+		inc >>= 1;
+		srcx >>= 1;
+		rowsize >>= 1;
+		index = (index << 1) + (flags & 2 ? 1 : 0);
+	}
+
+	dest = (byte*)fb + y * 320 + x;
+	source = jo->data + srcx + srcy * rowsize;
+
+	if (depth == 2)
+	{
+		for (; height; height--)
+		{
+			int n = (width + 3) >> 2;
+			switch (width & 3)
+			{
+			case 0: do { *dest++ = dc_colormap[index + (((*source >> 4) & 0xF) << 1)];
+			case 3:      *dest++ = dc_colormap[index + (((*source >> 0) & 0xF) << 1)], source++;
+			case 2:      *dest++ = dc_colormap[index + (((*source >> 4) & 0xF) << 1)];
+			case 1:      *dest++ = dc_colormap[index + (((*source >> 0) & 0xF) << 1)], source++;
+			} while (--n > 0);
+			}
+			source += inc;
+			dest += 320 - width;
+		}
+		return;
+	}
+
+	for (; height; height--)
+	{
+		int n = (width + 3) >> 2;
+		switch (width & 3)
+		{
+		case 0: do { *dest++ = dc_colormap[*source++];
+		case 3:      *dest++ = dc_colormap[*source++];
+		case 2:      *dest++ = dc_colormap[*source++];
+		case 1:      *dest++ = dc_colormap[*source++];
+		} while (--n > 0);
+		}
+		source += rowsize - width;
+		dest += 320 - width;
+	}
+}
+
+// NOTE: Using a colormap is slower because it must
+// draw only one byte at a time, not two.
+void DrawJagobjLumpWithColormap(int lumpnum, int x, int y, int* ow, int* oh, int colormap)
+{
+	int16_t *dc_colormap = (int16_t*)dc_colormaps + colormap;
+	lzss_state_t gfx_lzss;
+	uint8_t lzss_buf[LZSS_BUF_SIZE];
+	byte* lump;
+	jagobj_t* jo;
+	int width, height;
+
+	if (lumpnum < 0)
+		return;
+
+	lump = W_POINTLUMPNUM(lumpnum);
+	if (!(lumpinfo[lumpnum].name[0] & 0x80))
+	{
+		// uncompressed
+		jo = (jagobj_t*)lump;
+		if (ow) *ow = BIGSHORT(jo->width);
+		if (oh) *oh = BIGSHORT(jo->height);
+		DrawJagobjWithColormap((void*)lump, x, y, 0, 0, 0, 0, I_OverwriteBuffer(), colormap);
+		return;
+	}
+
+	lzss_setup(&gfx_lzss, lump, lzss_buf, LZSS_BUF_SIZE);
+	if (lzss_read(&gfx_lzss, 16) != 16)
+		return;
+
+	jo = (jagobj_t*)gfx_lzss.buf;
+	width = BIGSHORT(jo->width);
+	height = BIGSHORT(jo->height);
+
+	if (ow) *ow = width;
+	if (oh) *oh = height;
+
+	if (x + width > 320)
+		width = 320 - x;
+	if (y + height > mars_framebuffer_height)
+		height = mars_framebuffer_height - y;
+
+	if (width < 1 || height < 1)
+		return;
+	{
+		byte* dest;
+		byte* source;
+		byte* fb;
+		unsigned p;
+
+		source = gfx_lzss.buf;
+		p = 16;
+
+		fb = (byte*)I_FrameBuffer();
+
+		dest = fb + y * 320 + x;
+		for (; height; height--)
+		{
+			int i;
+
+			lzss_read(&gfx_lzss, width);
+
+			i = 0;
+			if (p + width > LZSS_BUF_SIZE) {
+				int rem = LZSS_BUF_SIZE - p;
+				for (; i < rem; i++)
+					dest[i] = dc_colormap[source[p++]];
+				p = 0;
+			}
+
+			for (; i < width; i++)
+				dest[i] = dc_colormap[source[p++]];
+
+			dest += 320;
+		}
+	}
+}
+
 /*
 Draw the text banner on the left side of the screen. Used for the title card.
 */

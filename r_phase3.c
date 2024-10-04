@@ -196,11 +196,18 @@ static void R_PrepMobj(mobj_t *thing)
    }
    else
    {
-       if (frame & FF_FULLBRIGHT)
-           vis->colormap = 255;
-       else
-           vis->colormap = subsectors[thing->isubsector].sector->lightlevel;
-       vis->colormap = HWLIGHT(vis->colormap);
+      if (thing->type == MT_EGGMOBILE && (thing->flags2 & MF2_FRET) && (gametic & 1))
+      {
+         vis->colormap = BOSSFLASHCOLORMAP;
+      }
+      else
+      {
+         if (frame & FF_FULLBRIGHT)
+            vis->colormap = 255;
+         else
+            vis->colormap = subsectors[thing->isubsector].sector->lightlevel;
+         vis->colormap = HWLIGHT(vis->colormap);
+      }
    }
 
    // Draw these in high detail

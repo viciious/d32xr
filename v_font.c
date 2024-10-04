@@ -95,6 +95,48 @@ int V_DrawStringLeft(const font_t *font, int x, int y, const char *string)
     return x;
 }
 
+int V_DrawStringLeftWithColormap(const font_t *font, int x, int y, const char *string, int colormap)
+{
+	int i,c;
+    byte *lump;
+    jagobj_t *jo;
+    int startX = x;
+
+	for (i = 0; i < mystrlen(string); i++)
+	{
+		c = string[i];
+	
+        if (c == '\n') // Basic newline support
+        {
+            x = startX;
+            y += font->verticalOffset;
+        }
+        else if (c == 0x20) // Space
+            x += font->spaceWidthSize;
+		else if (c >= font->minChar && c <= font->maxChar)
+		{
+			if (font->fixedWidth)
+            {
+			    DrawJagobjLumpWithColormap(font->lumpStart + (c - font->lumpStartChar), x, y, NULL, NULL, colormap);
+			    x += font->fixedWidthSize;
+            }
+            else
+            {
+                int lumpnum = font->lumpStart + (c - font->lumpStartChar);
+                lump = W_POINTLUMPNUM(lumpnum);
+	            if (!(lumpinfo[lumpnum].name[0] & 0x80))
+	            {
+    		        jo = (jagobj_t*)lump;
+                    DrawJagobjWithColormap(jo, x, y + font->verticalOffset - jo->height, 0, 0, 0, 0, I_OverwriteBuffer(), colormap);
+		            x += jo->width;
+	            }
+            }
+		}
+	}
+
+    return x;
+}
+
 int V_DrawStringRight(const font_t *font, int x, int y, const char *string)
 {
     int i,c;

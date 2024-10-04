@@ -31,7 +31,8 @@ extern fixed_t stretchX;
 #define	LIGHTLEVELS			256		/* number of diminishing */
 #define	INVERSECOLORMAP		255
 #else
-#define	INVERSECOLORMAP		32*256
+#define	BOSSFLASHCOLORMAP		33*256
+#define YELLOWTEXTCOLORMAP      34*256
 #endif
 
 #ifdef MARS
