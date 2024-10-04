@@ -119,6 +119,7 @@ typedef struct
 {
 	int     score;
 	int     exiting;
+	VINT    deadTimer;
 	VINT    rings;
 	VINT    lives;
 

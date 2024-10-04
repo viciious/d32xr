@@ -16,6 +16,7 @@ static short score, time, rings, rrings;
 static short snums; // Numbers
 static short timecolon; // : for TIME
 static short face, livex;
+static short go_game, go_over;
 
 static short ltzz_blue_lump, chev_blue_lump, lt_blue_lump;
 static short ltzz_red_lump, chev_red_lump, lt_red_lump;
@@ -53,6 +54,8 @@ void ST_Init (void)
 	timecolon = W_CheckNumForName("STTCOLON");
 	face = W_CheckNumForName("STFACE");
 	livex = W_CheckNumForName("STLIVEX");
+	go_game = W_CheckNumForName("SLIDGAME");
+	go_over = W_CheckNumForName("SLIDOVER");
 
 	ltzz_blue_lump = W_CheckNumForName("LTZZTEXT");
 	chev_blue_lump = W_CheckNumForName("CHEVBLUE");
@@ -130,6 +133,7 @@ static void ST_Ticker_(stbar_t* sb)
 	sb->score = p->score;
 	sb->lives = p->lives;
 	sb->exiting = p->exiting;
+	sb->deadTimer = p->deadTimer;
 
 	sb->forcedraw = false;
 
@@ -257,7 +261,7 @@ static void ST_Drawer_ (stbar_t* sb)
 	else
 	{
 		const int delaytime = gamemapinfo.act == 3 ? 2*TICRATE : 3*TICRATE;
-		int worldTime = leveltime - delaytime + TICRATE - sb->exiting;
+		int worldTime = leveltime - delaytime + TICRATE - sb->exiting - sb->deadTimer;
 		if (worldTime < 0)
 			worldTime = 0;
 		DrawJagobjLump(score, 16, 10+22, NULL, NULL);
@@ -277,6 +281,26 @@ static void ST_Drawer_ (stbar_t* sb)
 		V_DrawStringLeft(&menuFont, 16 + 20, 176, "SONIC");
 		DrawJagobjLump(livex, 16 + 22, 176 + 10, NULL, NULL);
 		V_DrawValuePaddedRight(&menuFont, 16 + 58, 176+8, sb->lives, 0);
+	}
+
+	if (sb->lives == 0 && sb->deadTimer > 3*TICRATE)
+	{
+		int gameStartX = -85;
+		int overStartX = 320;
+		int gameX = 160 - 85 - 8;
+		int overX = 160 + 8;
+		int timelength = 3*TICRATE + TICRATE/2;
+		int timesize = timelength - 3*TICRATE;
+
+		if (sb->deadTimer < timelength)
+		{
+			int timepassed = timesize - (timelength - sb->deadTimer);
+			gameX = gameStartX + (((gameX - gameStartX)/timesize) * timepassed);
+			overX = overStartX + (((overX - overStartX)/timesize) * timepassed);
+		}
+
+		DrawJagobjLump(go_game, gameX, 102, NULL, NULL);
+		DrawJagobjLump(go_over, overX, 102, NULL, NULL);
 	}
 
 	if (sb->intermission)

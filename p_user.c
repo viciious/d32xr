@@ -1449,8 +1449,36 @@ void P_DeathThink(player_t *player)
 	else if (player->damagecount)
 		player->damagecount--;
 
-	if ((player->buttons & BT_ATTACK) && player->mo->z < player->mo->floorz)
+	if (player->deadTimer == 2*TICRATE)
+	{
+		player->lives--;
+
+		if (player->lives == 0)
+			S_StartSong(gameinfo.gameoverMus, false, cdtrack_gameover);
+	}
+
+	if (player->lives == 0 && player->deadTimer > 15*TICRATE - (TICRATE/3))
+	{
+		fadetime = (TICRATE/3) - (15*TICRATE - player->deadTimer);
+		if (fadetime > TICRATE/3)
+			fadetime = TICRATE/3;
+	}
+
+	if (player->lives > 0 && player->deadTimer > 5*TICRATE - (TICRATE/3))
+	{
+		fadetime = (TICRATE/3) - (5*TICRATE - player->deadTimer);
+		if (fadetime > TICRATE/3)
+			fadetime = TICRATE/3;
+	}
+
+	if (player->deadTimer > 5*TICRATE && player->lives > 0 && player->mo->z < player->mo->floorz)
 		player->playerstate = PST_REBORN;
+	else if (player->deadTimer > 15*TICRATE && player->lives == 0)
+	{
+		gameaction = ga_backtotitle;
+	}
+
+	player->deadTimer++;
 }
 
 /*

@@ -680,7 +680,15 @@ startnew:
 			nextmapl = gamemapinfo.secretNext;
 		else
 			nextmapl = gamemapinfo.next;
+
 		finale = nextmapl == 0;
+
+		if (gameaction == ga_backtotitle)
+		{
+			finale = false;
+			nextmapl = 0;
+			break;
+		}
 
 #ifdef JAGUAR
 		if (finale)

@@ -151,7 +151,8 @@ typedef enum
 	ga_secretexit,
 	ga_warped,
 	ga_exitdemo,
-	ga_startnew
+	ga_startnew,
+	ga_backtotitle,
 } gameaction_t;
 
 
@@ -411,6 +412,7 @@ typedef struct player_s
 	void		*lastsoundsector;		/* don't flood noise every time */
 
 	VINT        exiting;
+	VINT        deadTimer;
 
 	VINT        starpostnum;
 	VINT        starpostx, starposty, starpostz;

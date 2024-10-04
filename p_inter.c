@@ -335,6 +335,7 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 		player_t* player = &players[target->player - 1];
 		target->flags &= ~MF_SOLID;
 		player->playerstate = PST_DEAD;
+		player->deadTimer = 1;
 
 		if (netgame == gt_coop)
 			R_ResetResp(player);
