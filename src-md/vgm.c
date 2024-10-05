@@ -58,10 +58,3 @@ int vgm_read2(int cnt)
 {
     return lzss_read(&vgm_lzss, cnt);
 }
-
-int vgm_fixup(int cnt, int cnt2)
-{
-    vgm_lzss.outpos = VGM_READAHEAD - ((cnt + cnt2) & (VGM_READAHEAD-1));
-    lzss_read(&vgm_lzss, cnt);
-    return vgm_lzss.outpos;
-}
