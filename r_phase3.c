@@ -86,6 +86,9 @@ static void R_PrepMobj(mobj_t *thing)
       flip = true;
    }
 
+   if (lump < firstsprite || lump >= firstsprite + numsprites)
+      return;
+
    patch = W_POINTLUMPNUM(lump);
    xscale = FixedDiv(PROJECTION, tz);
    gzt = thing->z - vd.viewz;
@@ -200,6 +203,9 @@ static void R_PrepPSprite(pspdef_t *psp)
    sprlump  = &spritelumps[sprframe->lump];
    lump     = sprlump[0];
    patch    = W_POINTLUMPNUM(lump);
+
+   if (lump < firstsprite || lump >= firstsprite + numsprites)
+      return;
 
    xscale = weaponXScale;
    center = centerXFrac - 80 * weaponXScale;
