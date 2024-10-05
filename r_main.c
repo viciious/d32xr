@@ -360,7 +360,7 @@ D_printf ("Done\n");
 
 	R_InitTexCache(&r_texcache);
 
-	testtex = &textures[R_TextureNumForName("SLADWALL")];
+	testtex = &textures[R_TextureNumForName("GFZROCK")];
 }
 
 VINT CalcFlatSize(int lumplength)
@@ -1012,7 +1012,6 @@ visplane_t* R_FindPlane2(fixed_t height,
 void R_BSP (void) __attribute__((noinline));
 void R_WallPrep (void) __attribute__((noinline));
 void R_SpritePrep (void) __attribute__((noinline));
-boolean R_LatePrep (void) __attribute__((noinline));
 void R_Cache (void) __attribute__((noinline));
 void R_SegCommands (void) __attribute__((noinline));
 void R_DrawPlanes (void) __attribute__((noinline));
