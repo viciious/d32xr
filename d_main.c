@@ -835,6 +835,7 @@ void RunMenu (void)
 #ifdef MARS
 	M_Start();
 	if (!gameinfo.noAttractDemo) {
+		int exit = ga_nothing;
 		do {
 			int i;
 			char demo[9];
@@ -843,14 +844,17 @@ void RunMenu (void)
 			{
 				int lump;
 
+				if (exit == ga_exitdemo)
+					break;
+
 				D_snprintf(demo, sizeof(demo), "DEMO%1d", i);
 				lump = W_CheckNumForName(demo);
 				if (lump == -1)
 					break;
 
-				RunDemo(demo);
+				exit = RunDemo(demo);
 			}
-		} while (true);
+		} while (exit != ga_exitdemo);
 	}
 	M_Stop();
 #else
