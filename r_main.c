@@ -794,7 +794,8 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	else if (waterpal) {
 		palette= 11;
 
-		ApplyHorizontalDistortionFilter(gametic << 1);
+		add_distortion = 1;
+		remove_distortion = 0;
 	}
 	
 	if (palette != curpalette) {
@@ -802,8 +803,8 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		I_SetPalette(dc_playpals+palette*768);
 
 		if (!waterpal) {
-			RemoveDistortionFilters();
 			remove_distortion = 1;	// Necessary to normalize the next frame buffer.
+			add_distortion = 0;
 		}
 	}
 #endif

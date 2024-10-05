@@ -1180,7 +1180,8 @@ typedef enum
 
 extern VINT debugmode;
 extern char clearscreen;
-extern char remove_distortion;
+extern VINT remove_distortion;
+extern VINT add_distortion;
 extern VINT initmathtables;
 
 extern VINT COLOR_BLACK;
@@ -1189,7 +1190,6 @@ extern VINT COLOR_WHITE;
 void I_InitMenuFire(jagobj_t* titlepic);
 void I_StopMenuFire(void);
 void I_DrawMenuFire(void);
-void I_DrawSbar(void);
 void S_StartSong(int musiclump, int looping, int cdtrack);
 int S_SongForMapnum(int mapnum);
 void S_StopSong(void);

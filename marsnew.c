@@ -74,8 +74,7 @@ extern int tictics, drawtics, ticstart;
 static volatile pixel_t* framebuffer = &MARS_FRAMEBUFFER + 0x100;
 static volatile pixel_t *framebufferend = &MARS_FRAMEBUFFER + 0x10000;
 
-static jagobj_t* jo_stbar;
-static VINT jo_stbar_height;
+#define jo_stbar_height 22
 
 extern int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sprites[4], t_ref_total[4];
 
@@ -416,18 +415,6 @@ void I_Init (void)
 			maxr = r;
 			COLOR_WHITE = i;
 		}
-	}
-
-	i = W_CheckNumForName("STBAR");
-	if (i != -1)
-	{
-		jo_stbar = (jagobj_t*)W_POINTLUMPNUM(i);
-		jo_stbar_height = BIGSHORT(jo_stbar->height);
-	}
-	else
-	{
-		jo_stbar = NULL;
-		jo_stbar_height = 22;
 	}
 
 	Mars_CommSlaveClearCache();
@@ -1115,27 +1102,6 @@ reconnect:
 	gameaction = starttype == gt_single ? ga_startnew : ga_warped;
 	ticbuttons[0] = ticbuttons[1] = oldticbuttons[0] = oldticbuttons[1] = 0;
 	return 0;
-}
-
-
-void I_DrawSbar(void)
-{
-	int i, p;
-	int y[MAXPLAYERS];
-
-	if (!jo_stbar)
-		return;
-
-	int height = BIGSHORT(jo_stbar->height);
-
-	y[0] = I_FrameBufferHeight() - height;
-	y[1] = 0;
-
-	p = 1;
-	p += splitscreen ? 1 : 0;
-	for (i = 0; i < p; i++) {
-		DrawJagobj2(jo_stbar, 0, y[i], 0, 0, 0, 0, I_FrameBuffer());
-	}
 }
 
 void I_StoreScreenCopy(void)
