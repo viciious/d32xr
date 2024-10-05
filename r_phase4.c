@@ -8,8 +8,6 @@
 #include "r_local.h"
 #include "mars.h"
 
-boolean R_LatePrep(void) ATTR_DATA_CACHE_ALIGN;
-
 //
 // Check if texture is loaded; return if so, flag for cache if not
 //
@@ -85,18 +83,6 @@ static void R_FinishWall(viswall_t* wc)
     }
 }
 #endif
-
-//
-// Start late prep rendering stage
-//
-boolean R_LatePrep(void)
-{
-#ifdef MARS
-    return true;
-#else
-   return cacheneeded;
-#endif
-}
 
 // EOF
 
