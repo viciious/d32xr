@@ -580,11 +580,13 @@ void R_InitMathTables(void)
 		fuzzoffset[i] = fuzzoffset[i] < 0 ? -fuzzunit : fuzzunit;
 	}
 
+#ifdef MARS
 	// enable caching for LUTs
 	viewangletox = (void *)(((intptr_t)viewangletox) & ~0x20000000);
 	distscale = (void *)(((intptr_t)distscale) & ~0x20000000);
 	yslope = (void *)(((intptr_t)yslope) & ~0x20000000);
 	xtoviewangle = (void *)(((intptr_t)xtoviewangle) & ~0x20000000);
+#endif
 }
 
 
