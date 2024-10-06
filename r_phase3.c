@@ -67,25 +67,21 @@ static void R_PrepMobj(mobj_t *thing)
    sprframe = &spriteframes[sprdef->firstframe + (frame & FF_FRAMEMASK)];
    sprlump = &spritelumps[sprframe->lump];
 
-   if(sprlump[1] != -1)
+   lump = sprlump[0];
+   if(!(lump & SL_SINGLESIDED))
    {
       // select proper rotation depending on player's view point
       ang  = R_PointToAngle2(vd.viewx, vd.viewy, thing->x, thing->y);
       rot  = (ang - thing->angle + (unsigned int)(ANG45 / 2)*9) >> 29;
       lump = sprlump[rot];
    }
-   else
-   {
-      // sprite has a single view for all rotations
-      lump = sprlump[0];
-   }
+   // else // sprite has a single view for all rotations
 
    flip = (frame & FF_FLIPPED);
-   if (lump < 0)
-   {
-      lump = -(lump + 1);
+   if (lump & SL_FLIPPED)
       flip = true;
-   }
+
+   lump &= SL_LUMPMASK;
 
    if (thing->flags2 & MF2_FORWARDOFFSET)
       tz -= 1024; // Make sure this sprite is drawn on top of sprites with the same distance to the camera
@@ -269,6 +265,7 @@ static void R_PrepRing(ringmobj_t *thing)
 
    // sprite has a single view for all rotations
    lump = sprlump[0];
+   lump &= SL_LUMPMASK;
 
    patch = W_POINTLUMPNUM(lump);
    xscale = FixedDiv(PROJECTION, tz);
@@ -428,6 +425,7 @@ static void R_PrepScenery(scenerymobj_t *thing)
 
    // sprite has a single view for all rotations
    lump = sprlump[0];
+   lump &= SL_LUMPMASK;
 
    patch = W_POINTLUMPNUM(lump);
    xscale = FixedDiv(PROJECTION, tz);
