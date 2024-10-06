@@ -268,6 +268,62 @@ static boolean PM_CrossCheck(line_t *ld, pmovework_t *mw)
    return true;
 }
 
+// This way, we check for collisions even when standing.
+void P_PlayerCheckForStillPickups(mobj_t *mobj)
+{
+	int xl, xh, yl, yh, bx, by;
+	pmovework_t mw;
+	mw.newsubsec = &subsectors[mobj->isubsector];
+	mw.numspechit = 0;
+	mw.spechit = NULL;
+	mw.tmfloorz = mw.tmdropoffz = mw.newsubsec->sector->floorheight;
+	mw.tmceilingz = mw.newsubsec->sector->ceilingheight;
+	mw.blockline = NULL;
+	mw.tmflags = mobj->flags;
+	mw.tmx = mobj->x;
+	mw.tmy = mobj->y;
+	mw.tmthing = mobj;
+
+	mw.tmbbox[BOXTOP   ] = mw.tmy + mobjinfo[MT_PLAYER].radius;
+	mw.tmbbox[BOXBOTTOM] = mw.tmy - mobjinfo[MT_PLAYER].radius;
+	mw.tmbbox[BOXRIGHT ] = mw.tmx + mobjinfo[MT_PLAYER].radius;
+	mw.tmbbox[BOXLEFT  ] = mw.tmx - mobjinfo[MT_PLAYER].radius;
+
+	xl = mw.tmbbox[BOXLEFT  ] - bmaporgx - MAXRADIUS;
+	xh = mw.tmbbox[BOXRIGHT ] - bmaporgx + MAXRADIUS;
+	yl = mw.tmbbox[BOXBOTTOM] - bmaporgy - MAXRADIUS;
+	yh = mw.tmbbox[BOXTOP   ] - bmaporgy + MAXRADIUS;
+
+	if(xl < 0)
+		xl = 0;
+	if(yl < 0)
+		yl = 0;
+	if(yh < 0)
+		return true;
+	if(xh < 0)
+		return true;
+
+   xl = (unsigned)xl >> MAPBLOCKSHIFT;
+   xh = (unsigned)xh >> MAPBLOCKSHIFT;
+   yl = (unsigned)yl >> MAPBLOCKSHIFT;
+   yh = (unsigned)yh >> MAPBLOCKSHIFT;
+
+   if(xh >= bmapwidth)
+      xh = bmapwidth - 1;
+   if(yh >= bmapheight)
+      yh = bmapheight - 1;
+
+   // check things
+   for(bx = xl; bx <= xh; bx++)
+   {
+      for(by = yl; by <= yh; by++)
+      {
+         if(!P_BlockThingsIterator(bx, by, (blockthingsiter_t)PIT_CheckThing, &mw))
+            return false;
+      }
+   }
+}
+
 //
 // This is purely informative, nothing is modified (except things picked up)
 //

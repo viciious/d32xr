@@ -372,6 +372,8 @@ void P_PlayerMobjThink(mobj_t *mobj)
 	/* */
 	if (mobj->momx || mobj->momy)
 		P_PlayerXYMovement(mobj);
+	else if (!(mobj->flags & MF_NOCLIP))
+ 		P_PlayerCheckForStillPickups(mobj);
 
 	if ((mobj->z != mobj->floorz) || mobj->momz)
 		P_PlayerZMovement(mobj);

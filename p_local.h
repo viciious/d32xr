@@ -315,6 +315,7 @@ typedef struct
 	line_t		*blockline;
 } ptrymove_t;
 
+void P_PlayerCheckForStillPickups(mobj_t *mobj);
 boolean P_CheckPosition (ptrymove_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
 boolean P_TryMove (ptrymove_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
 void P_MoveCrossSpecials(mobj_t *tmthing, int numspechit, line_t **spechit, fixed_t oldx, fixed_t oldy);
