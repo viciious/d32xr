@@ -401,7 +401,7 @@ extern	flattex_t		*flatpixels;
 
 extern	VINT		firstflat, numflats, col2flat;
 
-extern	VINT		firstsprite, numsprites;
+extern	VINT		firstsprite, numsprites, numspriteframes;
 
 extern int8_t* dc_colormaps;
 extern int8_t* dc_colormaps2;

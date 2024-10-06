@@ -11,7 +11,7 @@ boolean	spr_rotations;
 
 VINT		firstflat, numflats, col2flat;
 
-VINT		firstsprite, numsprites;
+VINT		firstsprite, numsprites, numspriteframes;
 
 VINT		numtextures = 0;
 texture_t	*textures = NULL;
@@ -777,6 +777,7 @@ void R_InitSpriteDefs(const char** namelist)
 		totalframes += maxframe;
 	}
 
+	numspriteframes = totalframes;
 	spriteframes = Z_Malloc(totalframes * sizeof(spriteframe_t), PU_STATIC);
 	sprtemp = (void*)tempbuf;
 	lumps = Z_Malloc(totallumps * sizeof(*lumps), PU_STATIC);

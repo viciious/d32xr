@@ -27,7 +27,7 @@ static void R_PrepMobj(mobj_t *thing)
    angle_t      ang;
    unsigned int rot;
    boolean      flip;
-   int          lump;
+   int          lump, framenum;
    patch_t      *patch;
    vissprite_t  *vis;
 
@@ -63,7 +63,11 @@ static void R_PrepMobj(mobj_t *thing)
    if ((thing->frame & FF_FRAMEMASK) >= sprdef->numframes)
        return;
 
-   sprframe = &spriteframes[sprdef->firstframe + (thing->frame & FF_FRAMEMASK)];
+   framenum = sprdef->firstframe + (thing->frame & FF_FRAMEMASK);
+   if (framenum < 0 || framenum >= numspriteframes)
+      return;
+
+   sprframe = &spriteframes[framenum];
    sprlump = &spritelumps[sprframe->lump];
 
    if(sprlump[1] != -1)
@@ -190,7 +194,7 @@ static void R_PrepPSprite(pspdef_t *psp)
    spritedef_t   *sprdef;
    spriteframe_t *sprframe;
    VINT         *sprlump;
-   int          lump;
+   int          lump, framenum;
    patch_t      *patch;
    vissprite_t  *vis;
    fixed_t      center, xscale;
@@ -200,7 +204,11 @@ static void R_PrepPSprite(pspdef_t *psp)
 
    state = &states[psp->state];
    sprdef = &sprites[state->sprite];
-   sprframe = &spriteframes[sprdef->firstframe + (state->frame & FF_FRAMEMASK)];
+   framenum = sprdef->firstframe + (state->frame & FF_FRAMEMASK);
+   if (framenum < 0 || framenum >= numspriteframes)
+      return;
+
+   sprframe = &spriteframes[framenum];
    if (sprframe->lump < 0)
       return;
    sprlump  = &spritelumps[sprframe->lump];
