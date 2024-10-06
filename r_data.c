@@ -621,7 +621,7 @@ R_InstallSpriteLump(const char* spritename, char letter, tempspriteframe_t* fram
 		frame->rotate = 0;
 		for (r = 0; r < 8; r++)
 		{
-			frame->lump[r] = flipped ? (lump + 1) * -1 : lump;
+			frame->lump[r] = flipped ? lump|SL_FLIPPED : lump;
 		}
 		return;
 	}
@@ -640,7 +640,7 @@ R_InstallSpriteLump(const char* spritename, char letter, tempspriteframe_t* fram
 			"has two lumps mapped to it",
 			spritename, letter, '1' + rotation);
 
-	frame->lump[rotation] = flipped ? (lump + 1) * -1 : lump;
+	frame->lump[rotation] = flipped ? lump|SL_FLIPPED : lump;
 }
 
 
@@ -755,7 +755,7 @@ void R_InitSpriteDefs(const char** namelist)
 				sprtemp[frame].rotate = 0;
 			case 0:
 				// only the first rotation is needed
-				totallumps += 2;
+				totallumps++;
 				break;
 			case 1:
 				// must have all 8 frames
@@ -788,9 +788,8 @@ void R_InitSpriteDefs(const char** namelist)
 		spriteframes[i].lump = lumps - spritelumps;
 		if (!sprtemp[i].rotate)
 		{
-			lumps[0] = sprtemp[i].lump[0];
-			lumps[1] = -1;
-			lumps += 2;
+			lumps[0] = sprtemp[i].lump[0]|SL_SINGLESIDED;
+			lumps++;
 		}
 		else
 		{

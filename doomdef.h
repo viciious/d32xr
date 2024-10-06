@@ -277,6 +277,13 @@ typedef struct degenmobj_s
 #define FF_FRAMEMASK	0x7fff
 
 /* */
+/* sprite lump flags */
+/* */
+#define	SL_SINGLESIDED	0x8000
+#define	SL_FLIPPED 		0x4000
+#define SL_LUMPMASK		0x3fff
+
+/* */
 /* mobj flags */
 /* */
 #define	MF_SPECIAL		1			/* call P_SpecialThing when touched */

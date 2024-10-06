@@ -70,7 +70,8 @@ static void R_PrepMobj(mobj_t *thing)
    sprframe = &spriteframes[framenum];
    sprlump = &spritelumps[sprframe->lump];
 
-   if(sprlump[1] != -1)
+   lump = sprlump[0];
+   if(!(lump & SL_SINGLESIDED))
    {
       // select proper rotation depending on player's view point
       ang  = R_PointToAngle(vd->viewx, vd->viewy, thing->x, thing->y);
@@ -80,16 +81,13 @@ static void R_PrepMobj(mobj_t *thing)
    else
    {
       // sprite has a single view for all rotations
-      lump = sprlump[0];
    }
 
    flip = false;
-   if (lump < 0)
-   {
-      lump = -(lump + 1);
+   if (lump & SL_FLIPPED)
       flip = true;
-   }
 
+   lump &= SL_LUMPMASK;
    if (lump < firstsprite || lump >= firstsprite + numsprites)
       return;
 
@@ -212,7 +210,7 @@ static void R_PrepPSprite(pspdef_t *psp)
    if (sprframe->lump < 0)
       return;
    sprlump  = &spritelumps[sprframe->lump];
-   lump     = sprlump[0];
+   lump     = sprlump[0] & SL_LUMPMASK;
    patch    = W_POINTLUMPNUM(lump);
 
    if (lump < firstsprite || lump >= firstsprite + numsprites)
