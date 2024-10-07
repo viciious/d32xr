@@ -1154,7 +1154,7 @@ unsigned I_NetTransfer (unsigned buttons)
 		I_Print8(108,23,"Connecting...");
 		I_Update();
 		while (Mars_GetNetByte(0) != -2); /* flush network buffer */
-		Mars_CleanupNet();
+		//Mars_CleanupNet();
 		Mars_WaitTicks(32+(Mars_GetTicCount()&31));
 		goto reconnect;
 	}

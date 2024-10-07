@@ -1254,6 +1254,7 @@ ext_link:
         btst    #6,0xA10005         /* check TH deasserted */
         bne.b   1f                  /* handshake */
         dbra    d1,0b
+        move.b  #0x20,0xA10005      /* deassert handshake (TR high) */
         bra.b   3f                  /* timeout err */
 1:
         move.b  #0x20,0xA10005      /* deassert handshake (TR high) */
@@ -1263,14 +1264,9 @@ ext_link:
         move.l  (sp)+,d0
         rte
 3:
-        /* timeout during handshake - shut down link net */
-        clr.b   net_type
-        clr.l   extint
-        move.w  #0x8B00,0xC00004    /* reg 11 = /IE2 (no EXT INT), full scroll */
-        move.b  #0x40,0xA1000B      /* port 2 to neutral setting */
-        nop
-        nop
-        move.b  #0x40,0xA10005
+        /* timeout during handshake - clear buffer */
+        clr.w   net_rbix
+        clr.w   net_wbix
         move.l  (sp)+,d1
         movea.l (sp)+,a0
         move.l  (sp)+,d0
@@ -2411,7 +2407,6 @@ init_vdp:
         move.w  #0x8800,(a0) /* reg 8 = always 0 */
         move.w  #0x8900,(a0) /* reg 9 = always 0 */
         move.w  #0x8A00,(a0) /* reg 10 = HINT = 0 */
-        move.w  #0x8B00,(a0) /* reg 11 = /IE2 (no EXT INT), full scroll */
         move.w  #0x8C81,(a0) /* reg 12 = H40 mode, no lace, no shadow/hilite */
         move.w  #0x8D2B,(a0) /* reg 13 = HScroll Tbl = 0xAC00 */
         move.w  #0x8E00,(a0) /* reg 14 = always 0 */
