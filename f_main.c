@@ -106,20 +106,17 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 	sprframe = &spriteframes[sprdef->firstframe + (frame & FF_FRAMEMASK)];
 	sprlump = &spritelumps[sprframe->lump];
 
-	if (sprlump[rotation] != -1)
+	lump = sprlump[0];
+	if(!(lump & SL_SINGLESIDED))
 		lump = sprlump[rotation];
-	else
-		lump = sprlump[0];
 
 	flip = false;
-	if (lump < 0)
-	{
-		lump = -(lump + 1);
+	if (lump & SL_FLIPPED)
 		flip = true;
-	}
 
-	if (lump <= 0)
-		return;
+   lump &= SL_LUMPMASK;
+   if (lump < firstsprite || lump >= firstsprite + numsprites)
+      return;
 
 	patch = (patch_t *)W_POINTLUMPNUM(lump);
 	pixels = R_CheckPixels(lump + 1);
