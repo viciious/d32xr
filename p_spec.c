@@ -710,7 +710,7 @@ void P_PlayerInSpecialSector (player_t *player)
 			P_DoPlayerExit(player);
 			break;
 		case 2:
-			if (player->mo->z <= sector->floorheight)
+			if (player->mo->z <= sector->floorheight && !sector->specialdata)
 				P_DoPlayerExit(player);
 			break;
 		case 9:		/* SECRET SECTOR */

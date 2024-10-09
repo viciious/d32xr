@@ -856,7 +856,7 @@ void P_MobjThinker(mobj_t *mobj)
                if (mobj->movecount > 2*TICRATE)
                   mobj->movecount = 0;
 
-               if (mobj->movecount & 3)
+               if (!(mobj->movecount & 3))
                {
                   fixed_t radius = 48*FRACUNIT + ((P_Random() & 63)*FRACUNIT);
 
