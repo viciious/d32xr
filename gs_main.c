@@ -5,7 +5,9 @@
 #include "mars.h"
 #endif
 
-#define MOVEWAIT		(I_IsPAL() ? TICVBLS*5 : TICVBLS*6)
+#define MOVEWAIT_LONG		(I_IsPAL() ? TICVBLS*5 : TICVBLS*6)
+#define MOVEWAIT_SHORT		(I_IsPAL() ? TICVBLS*2 : TICVBLS*3)
+#define MOVEWAIT(m) ((m) ? MOVEWAIT_SHORT : MOVEWAIT_LONG)
 #define CURSORX		(80)
 #define CURSORWIDTH	24
 #define ITEMX		(CURSORX+CURSORWIDTH)
@@ -75,7 +77,7 @@ void GS_Start(void)
 
     gs_menu->cursorframe = -1;
     gs_menu->cursorpos = 0;
-    gs_menu->cursordelay = MOVEWAIT;
+    gs_menu->cursordelay = MOVEWAIT(gs_menu->mode);
 
     GS_PathChange("/", 0);
 
@@ -160,7 +162,7 @@ static void GS_PathChange(const char *dir, int newmode)
 
     gs_menu->cursorframe = -1;
     gs_menu->cursorpos = 0;
-    gs_menu->cursordelay = MOVEWAIT;
+    gs_menu->cursordelay = MOVEWAIT(newmode);
     gs_menu->mode = newmode;
     D_strncpy(gs_menu->path, realpath, sizeof(gs_menu->path));
     gs_menu->numitems = 0;
@@ -282,7 +284,8 @@ int GS_Ticker (void)
     if (gs_menu->cursorframe == -1)
     {
         gs_menu->cursorframe = 0;
-        gs_menu->cursordelay = MOVEWAIT + MOVEWAIT / 2;
+        gs_menu->cursordelay = MOVEWAIT(menuscr->mode);
+        gs_menu->cursordelay += gs_menu->cursordelay/2;
         S_StartSound(NULL, sfx_swtchn);
     }
 
@@ -383,7 +386,7 @@ int GS_Ticker (void)
     if (gs_menu->cursordelay > 0)
         return ga_nothing;
 
-    gs_menu->cursordelay = MOVEWAIT;
+    gs_menu->cursordelay = MOVEWAIT(gs_menu->mode);
 
     /* check for movement */
     if (!(buttons & (BT_UP | BT_DOWN | BT_LEFT | BT_RIGHT)))
