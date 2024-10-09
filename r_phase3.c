@@ -374,6 +374,8 @@ static void R_PrepRing(ringmobj_t *thing)
 //   vis->colormaps = dc_colormaps;
 }
 
+#define NARROW_SCENERY
+
 static void R_PrepScenery(scenerymobj_t *thing)
 {
    fixed_t tr_x, tr_y;
@@ -431,10 +433,17 @@ static void R_PrepScenery(scenerymobj_t *thing)
    xscale = FixedDiv(PROJECTION, tz);
 
    // calculate edges of the shape
+#ifdef NARROW_SCENERY
    if (flip)
+      tx -= ((fixed_t)BIGSHORT(patch->width*2)-(fixed_t)BIGSHORT(patch->leftoffset*2)) << FRACBITS;
+   else
+      tx -= ((fixed_t)BIGSHORT(patch->leftoffset*2)) << FRACBITS;
+#else
+  if (flip)
       tx -= ((fixed_t)BIGSHORT(patch->width)-(fixed_t)BIGSHORT(patch->leftoffset)) << FRACBITS;
    else
       tx -= ((fixed_t)BIGSHORT(patch->leftoffset)) << FRACBITS;
+#endif
 
    x1 = FixedMul(tx, xscale);
    x1 = (centerXFrac + x1) / FRACUNIT;
@@ -443,7 +452,11 @@ static void R_PrepScenery(scenerymobj_t *thing)
    if (x1 > viewportWidth)
        return;
 
+#ifdef NARROW_SCENERY
+   tx += ((fixed_t)BIGSHORT(patch->width*2) << FRACBITS);
+#else
    tx += ((fixed_t)BIGSHORT(patch->width) << FRACBITS);
+#endif
    x2 = FixedMul(tx, xscale);
    x2 = ((centerXFrac + x2) / FRACUNIT) - 1;
 
@@ -522,6 +535,10 @@ static void R_PrepScenery(scenerymobj_t *thing)
       vis->startfrac = 0;
       vis->xiscale = FixedDiv(FRACUNIT, xscale);
    }
+
+#ifdef NARROW_SCENERY
+   vis->xiscale >>= 1;
+#endif
 
    if (vis->x1 > x1)
       vis->startfrac += vis->xiscale*(vis->x1 - x1);

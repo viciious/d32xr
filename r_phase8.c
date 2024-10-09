@@ -164,9 +164,9 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
 	pixel_t		*pixels;		/* data patch header references */
 #endif
 
-   patch     = W_POINTLUMPNUM(vis->patchnum & 0x7FFF);
+   patch     = W_POINTLUMPNUM(vis->patchnum & 0x3FFF);
 #ifdef MARS
-   pixels    = W_POINTLUMPNUM((vis->patchnum & 0x7FFF)+1);
+   pixels    = W_POINTLUMPNUM((vis->patchnum & 0x3FFF)+1);
 #else
    pixels    = vis->pixels;
 #endif
@@ -622,7 +622,7 @@ void R_Sprites(void)
    for (i = 0; i < count; i++)
    {
        vissprite_t* ds = (vissprite_t *)(vd.vissprites + i);
-       if ((ds->patchnum & 0x7FFF) < 0)
+       if ((ds->patchnum & 0x3FFF) < 0)
            continue;
        if (ds->x1 > ds->x2)
            continue;
