@@ -2599,9 +2599,11 @@ bump_fm:
 
         /* reset */
         jsr     vgm_reset           /* restart at start of compressed data */
+
         move.l  fm_loop,d2
         andi.l  #0xFFFFFE00,d2
         beq.b   14f
+
         move.l  d2,-(sp)
         jsr     vgm_read2
         addq.l  #4,sp
@@ -2611,7 +2613,7 @@ bump_fm:
         move.w  d2,offs68k
         move.w  d3,offsz80
         move.w  #7,preread_cnt      /* refill buffer if room */
-        bra.w   7f
+        bra.w   11b
 
 5:
         cmpi.b  #0x03,d0
