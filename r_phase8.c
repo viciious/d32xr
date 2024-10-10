@@ -468,6 +468,9 @@ static void R_DrawPSprites(int sprscreenhalf)
 
     I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
 
+    if (demoplayback)
+      return; // No psprites in camera view
+
     // draw psprites
     for (spr = vd.lastsprite_p; spr < vd.vissprite_p; spr++)
     {

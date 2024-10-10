@@ -3,6 +3,7 @@
 #include "doomdef.h"
 #include "p_local.h"
 #include "st_main.h"
+#include "p_camera.h"
 
 
 fixed_t 		forwardmove[2] = {0x40000, 0x60000}; 
@@ -606,6 +607,11 @@ ticphase = 21;
 	
 	if (player->playerstate == PST_DEAD)
 	{
+		if (demoplayback)
+		{
+			if (player == &players[consoleplayer])
+				P_MoveChaseCamera(player, &camera);
+		}
 		P_DeathThink (player);
 		return;
 	}
@@ -619,6 +625,13 @@ ticphase = 22;
 	else
 		P_MovePlayer (player);
 	P_CalcHeight (player);
+
+	if (demoplayback)
+	{
+		if (player == &players[consoleplayer])
+				P_MoveChaseCamera(player, &camera);
+	}
+
 	if (player->mo->subsector->sector->special)
 		P_PlayerInSpecialSector (player);
 		

@@ -195,6 +195,9 @@ static void R_PrepPSprite(pspdef_t *psp)
    fixed_t      tx, x1, x2;
    const state_t* state;
 
+   if (demoplayback)
+      return; // No psprites in camera view
+
    state = &states[psp->state];
    sprdef = &sprites[state->sprite];
    sprframe = &spriteframes[sprdef->firstframe + (state->frame & FF_FRAMEMASK)];
