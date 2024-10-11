@@ -700,7 +700,7 @@ static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
    // decide which clip routine to use
    side = line->sideoffset & 1;
    ldef = &lines[line->linedef];
-   if ((ldef->flags & ML_SECRET) && P_AproxDistance(vd.viewx - v1->x, vd.viewy - v1->y) > 2048*FRACUNIT)
+   if ((ldef->flags & ML_CULLING) && P_AproxDistance(vd.viewx - v1->x, vd.viewy - v1->y) > 2048*FRACUNIT)
       return;
 
    frontsector = rbsp->curfsector;//R_FakeFlat(rbsp->curfsector, &ftempsec, false);

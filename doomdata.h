@@ -59,9 +59,9 @@ typedef struct
 #define	ML_DONTPEGTOP		8
 #define	ML_DONTPEGBOTTOM	16
 
-#define ML_SECRET			32	/* don't map as two sided: IT'S A SECRET! */
+#define ML_CULLING			32	/* Cull this line by distance */
 #define ML_SOUNDBLOCK		64	/* don't let sound cross two of these */
-#define	ML_DONTDRAW			128	/* don't draw on the automap */
+#define	ML_MIDTEXTUREBLOCK 128	/* Collide with midtexture (fences, etc.) */
 #define	ML_MAPPED			256	/* set if allready drawn in automap */
 
 

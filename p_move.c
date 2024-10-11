@@ -239,6 +239,43 @@ static boolean PIT_CheckLine(line_t *ld, pmovework_t *mw)
       lowfloor   = front->floorheight;
    }
 
+   if (ld->flags & ML_MIDTEXTUREBLOCK)
+   {
+      side_t *side = &sides[ld->sidenum[0]];
+      fixed_t textop, texbottom, texheight;
+      fixed_t texmid, delta1, delta2;
+
+      texture_t *tex = &textures[side->midtexture];
+      texheight = tex->height << (FRACBITS+1);
+
+      if (ld->flags & ML_DONTPEGBOTTOM)
+      {
+         texbottom = openbottom + (side->rowoffset << (FRACBITS+1));
+         textop = texbottom + texheight;
+      }
+      else
+      {
+         textop = opentop + (side->rowoffset << (FRACBITS+1));
+         texbottom = textop - texheight;
+      }
+
+      texmid = texbottom + (textop - texbottom) / 2;
+
+      delta1 = D_abs(mw->tmthing->z - texmid);
+      delta2 = D_abs(mw->tmthing->z + (mw->tmthing->theight << FRACBITS) - texmid);
+
+      if (delta1 > delta2)
+      {
+         if (opentop > texbottom)
+            opentop = texbottom;
+      }
+      else
+      {
+         if (openbottom < textop)
+            openbottom = textop;
+      }
+   }
+
    // adjust floor/ceiling heights
    if(opentop < mw->tmceilingz)
       mw->tmceilingz = opentop;
