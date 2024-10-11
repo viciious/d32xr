@@ -1174,6 +1174,10 @@ void P_MovePlayer(player_t *player)
 				fixed_t acc = FRACUNIT >> 3;
 				if (player->powers[pw_sneakers])
 					acc <<= 1;
+
+				if (player->powers[pw_underwater])
+					acc >>= 2;
+
 				controlAngle = R_PointToAngle2(0, 0, controlX, controlY);
 
 				P_ThrustValues(controlAngle, acc, &player->mo->momx, &player->mo->momy);
@@ -1217,6 +1221,8 @@ void P_MovePlayer(player_t *player)
 			fixed_t acc = 6144 * 4;//FRACUNIT / 2;
 			if (player->powers[pw_sneakers])
 				acc <<= 1;
+			if (player->powers[pw_underwater])
+				acc >>= 2;
 	//		angle_t speedDir = R_PointToAngle2(0, 0, player->mo->momx, player->mo->momy);
 
 			if (!(player->pflags & PF_GASPEDAL) && !(player->pflags & PF_JUMPED))
@@ -1554,12 +1560,9 @@ static void P_CheckUnderwaterAndSpaceTimer(player_t *player)
 	if (!(player->pflags & PF_UNDERWATER) && player->powers[pw_underwater])
 	{
 		if (player->powers[pw_underwater] <= 12*TICRATE + 1)
-		{
-			player->powers[pw_underwater] = 0;
 			P_RestoreMusic(player);
-		}
-		else
-			player->powers[pw_underwater] = 0;
+
+		player->powers[pw_underwater] = 0;
 	}
 
 //	if (player->powers[pw_spacetime] > 1 && !P_InSpaceSector(player->mo))
@@ -1571,9 +1574,12 @@ static void P_CheckUnderwaterAndSpaceTimer(player_t *player)
 		|| (player->powers[pw_underwater] == 15*TICRATE + 1))
 		S_StartSound(NULL, sfx_s3k_a9);
 
-// TODO: Drowning music
-//	if (player->powers[pw_underwater] == 11*TICRATE + 1)
-//		P_PlayJingle(player, JT_DROWN);
+	// Drowning music
+	if (player->powers[pw_underwater] == 12*TICRATE + 1)
+	{
+		S_StopSong();
+		S_StartSong(gameinfo.drowningMus, 0, cdtrack_drowning);
+	}
 }
 
 extern int ticphase;

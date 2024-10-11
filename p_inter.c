@@ -292,6 +292,9 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 				|| special->z > toucher->z + ((toucher->theight << FRACBITS)*2/3))
 				return; // Only go in the mouth
 
+			if (player->powers[pw_underwater] <= 12*TICRATE + 1)
+				P_RestoreMusic(player);
+
 			if (player->powers[pw_underwater] < UNDERWATERTICS + 1)
 				player->powers[pw_underwater] = UNDERWATERTICS + 1;
 

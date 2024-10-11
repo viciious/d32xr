@@ -52,6 +52,7 @@ typedef struct
 	VINT xtlifeMus;
 	VINT invincMus;
 	VINT sneakerMus;
+	VINT drowningMus;
 	VINT gameoverMus;
 	VINT victoryMus;
 	VINT endMus;

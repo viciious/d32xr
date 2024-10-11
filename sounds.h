@@ -17,7 +17,8 @@ enum
   cdtrack_xtlife = -5,
   cdtrack_sneakers = -6,
   cdtrack_invincibility = -7,
-  cdtrack_gameover = -8,
+  cdtrack_drowning = -8,
+  cdtrack_gameover = -9,
 };
 
 /*
