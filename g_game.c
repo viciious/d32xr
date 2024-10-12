@@ -599,7 +599,10 @@ void G_RunGame (void)
 		{
 startnew:
 			if (starttype != gt_single && !startsplitscreen)
-				I_NetSetup();
+			{
+				if (consoleplayer == 0)
+					I_NetSetup();
+			}
 			else
 				I_NetStop();
 			if (startsave != -1)
