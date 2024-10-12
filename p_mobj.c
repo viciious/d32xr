@@ -472,9 +472,8 @@ void P_SpawnPlayer (mapthing_t *mthing)
 		P_ThrustValues(mobj->angle + (ANG45 * 3), -CAM_DIST, &camera.x, &camera.y);
 	camera.x = (camera.x >> FRACBITS) << FRACBITS;
 	camera.y = (camera.y >> FRACBITS) << FRACBITS;
-
-	camera.z = mobj->floorz + (mobj->theight << FRACBITS);
 	camera.subsector = R_PointInSubsector(camera.x, camera.y);
+	camera.z = camera.subsector->sector->floorheight + (mobj->theight << FRACBITS);
 	
 	if (!netgame)
 		return;

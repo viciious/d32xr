@@ -537,6 +537,16 @@ x |= ((uint16_t)y << 8); \
 x &= 0xff00; \
 x |= ((uint16_t)y & 0xff); \
 }
+#define UPPER16(x) ((uint16_t)((uint32_t)x >> 16))
+#define LOWER16(x) ((uint16_t)((uint32_t)x & 0xffff))
+#define SETUPPER16(x, y) {\
+x &= 0x0000ffff; \
+x |= ((uint32_t)y << 16); \
+}
+#define SETLOWER16(x, y) {\
+x &= 0xffff0000; \
+x |= ((uint32_t)y & 0xffff); \
+}
 
 typedef struct
 {

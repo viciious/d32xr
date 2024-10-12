@@ -383,7 +383,7 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
    const mobjinfo_t *caminfo = &mobjinfo[MT_CAMERA];
 
 	mo = player->mo;
-   thiscam->distFromPlayer = P_AproxDistance(thiscam->x - mo->x, thiscam->y - mo->y);
+   thiscam->distFromPlayer = P_AproxDistance(P_AproxDistance(thiscam->x - mo->x, thiscam->y - mo->y), thiscam->z - mo->z);
 
    // If there is a boss, should focus on the boss
    if (camBossMobj)
@@ -486,4 +486,9 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
       dist = thiscam->aiming - angle;
       thiscam->aiming -= (dist>>3);
    }
+
+   if (thiscam->z < thiscam->subsector->sector->floorheight)
+      thiscam->z = thiscam->subsector->sector->floorheight;
+   else if (thiscam->z + CAM_PHYS_HEIGHT > thiscam->subsector->sector->ceilingheight)
+      thiscam->z = thiscam->subsector->sector->ceilingheight - CAM_PHYS_HEIGHT;
 }

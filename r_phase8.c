@@ -194,7 +194,8 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
    stopx    = vis->x2 + 1;
    fracstep = vis->xiscale;
 
-   I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
+   // NOTE: Probably not needed?
+//   I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
 
 #ifdef MARS
    if (sprscreenhalf > 0)
@@ -590,8 +591,6 @@ void Mars_Sec_R_DrawSprites(int sprscreenhalf)
     //Mars_ClearCacheLines(vd.gsortedsprites, ((lastsprite_p - vissprites + 1) * sizeof(*vd.gsortedsprites) + 31) / 16);
 
     R_DrawSortedSprites(vd.gsortedsprites, -sprscreenhalf);
-
-//    I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps2); // This was in DrawPSprites()... unneeded now?
 }
 
 #endif
