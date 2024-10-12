@@ -244,7 +244,7 @@ static boolean PIT_CheckLine(line_t *ld, pmovework_t *mw)
       const side_t *side = &sides[ld->sidenum[0]];
       const texture_t *tex = &textures[side->midtexture];
       const fixed_t texheight = tex->height << (FRACBITS+1);
-      fixed_t textop, texbottom, texheight;
+      fixed_t textop, texbottom;
       fixed_t texmid, delta1, delta2;
 
       if (ld->flags & ML_DONTPEGBOTTOM)
@@ -335,9 +335,9 @@ void P_PlayerCheckForStillPickups(mobj_t *mobj)
 	if(yl < 0)
 		yl = 0;
 	if(yh < 0)
-		return true;
+		return;
 	if(xh < 0)
-		return true;
+		return;
 
    xl = (unsigned)xl >> MAPBLOCKSHIFT;
    xh = (unsigned)xh >> MAPBLOCKSHIFT;
@@ -355,7 +355,7 @@ void P_PlayerCheckForStillPickups(mobj_t *mobj)
       for(by = yl; by <= yh; by++)
       {
          if(!P_BlockThingsIterator(bx, by, (blockthingsiter_t)PIT_CheckThing, &mw))
-            return false;
+            return;
       }
    }
 }
