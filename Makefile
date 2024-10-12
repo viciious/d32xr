@@ -149,4 +149,4 @@ optwad:
 
 iso: $(TARGET).32x
 	mkdir -p iso
-	genisoimage -sysid "SEGA SEGACD" -volid "DOOM CD32X" -full-iso9660-filenames -l -o $(TARGET).iso iso
+	genisoimage -sysid "SEGA SEGACD" -volid "DOOM CD32X UTOPIA" -full-iso9660-filenames -l -o $(TARGET).iso iso
