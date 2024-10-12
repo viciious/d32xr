@@ -245,7 +245,6 @@ static boolean PIT_CheckLine(line_t *ld, pmovework_t *mw)
       const texture_t *tex = &textures[side->midtexture];
       const fixed_t texheight = tex->height << (FRACBITS+1);
       fixed_t textop, texbottom;
-      fixed_t texmid, delta1, delta2;
 
       if (ld->flags & ML_DONTPEGBOTTOM)
       {
@@ -258,12 +257,12 @@ static boolean PIT_CheckLine(line_t *ld, pmovework_t *mw)
          texbottom = textop - texheight;
       }
 
-      texmid = texbottom + (textop - texbottom) / 2;
+      const fixed_t texmid = texbottom + (textop - texbottom) / 2;
 
-      delta1 = D_abs(mw->tmthing->z - texmid);
-      delta2 = D_abs(mw->tmthing->z + (mw->tmthing->theight << FRACBITS) - texmid);
+      const fixed_t thingBottomToMid = D_abs(mw->tmthing->z - texmid);
+      const fixed_t thingTopToMid = D_abs(mw->tmthing->z + (mw->tmthing->theight << FRACBITS) - texmid);
 
-      if (delta1 > delta2)
+      if (thingBottomToMid > thingTopToMid)
       {
          if (opentop > texbottom)
             opentop = texbottom;

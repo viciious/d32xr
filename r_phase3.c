@@ -30,6 +30,7 @@ static void R_PrepMobj(mobj_t *thing)
    int          lump;
    patch_t      *patch;
    vissprite_t  *vis;
+   const boolean doubleWide = (thing->flags2 & MF2_NARROWGFX); // Sprites have half the horizontal resolution (like scenery)
 
    // transform origin relative to viewpoint
    tr_x = thing->x - vd.viewx;
@@ -90,10 +91,20 @@ static void R_PrepMobj(mobj_t *thing)
    xscale = FixedDiv(PROJECTION, tz);
 
    // calculate edges of the shape
-   if (flip)
-      tx -= ((fixed_t)BIGSHORT(patch->width)-(fixed_t)BIGSHORT(patch->leftoffset)) << FRACBITS;
+   if (doubleWide)
+   {
+      if (flip)
+         tx -= ((fixed_t)BIGSHORT(patch->width*2)-(fixed_t)BIGSHORT(patch->leftoffset*2)) << FRACBITS;
+      else
+         tx -= ((fixed_t)BIGSHORT(patch->leftoffset*2)) << FRACBITS;
+   }
    else
-      tx -= ((fixed_t)BIGSHORT(patch->leftoffset)) << FRACBITS;
+   {
+      if (flip)
+         tx -= ((fixed_t)BIGSHORT(patch->width)-(fixed_t)BIGSHORT(patch->leftoffset)) << FRACBITS;
+      else
+         tx -= ((fixed_t)BIGSHORT(patch->leftoffset)) << FRACBITS;
+   }
 
    x1 = FixedMul(tx, xscale);
    x1 = (centerXFrac + x1) / FRACUNIT;
@@ -102,7 +113,11 @@ static void R_PrepMobj(mobj_t *thing)
    if (x1 > viewportWidth)
        return;
 
-   tx += ((fixed_t)BIGSHORT(patch->width) << FRACBITS);
+   if (doubleWide)
+      tx += ((fixed_t)BIGSHORT(patch->width*2) << FRACBITS);
+   else
+      tx += ((fixed_t)BIGSHORT(patch->width) << FRACBITS);
+
    x2 = FixedMul(tx, xscale);
    x2 = ((centerXFrac + x2) / FRACUNIT) - 1;
 
@@ -182,6 +197,9 @@ static void R_PrepMobj(mobj_t *thing)
       vis->startfrac = 0;
       vis->xiscale = FixedDiv(FRACUNIT, xscale);
    }
+
+   if (doubleWide)
+      vis->xiscale >>= 1;
 
    if (vis->x1 > x1)
       vis->startfrac += vis->xiscale*(vis->x1 - x1);
@@ -271,7 +289,7 @@ static void R_PrepRing(ringmobj_t *thing)
    xscale = FixedDiv(PROJECTION, tz);
 
    // calculate edges of the shape
-   if (flip)
+  if (flip)
       tx -= ((fixed_t)BIGSHORT(patch->width)-(fixed_t)BIGSHORT(patch->leftoffset)) << FRACBITS;
    else
       tx -= ((fixed_t)BIGSHORT(patch->leftoffset)) << FRACBITS;
@@ -373,8 +391,6 @@ static void R_PrepRing(ringmobj_t *thing)
  
 //   vis->colormaps = dc_colormaps;
 }
-
-#define NARROW_SCENERY
 
 static void R_PrepScenery(scenerymobj_t *thing)
 {

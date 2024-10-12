@@ -321,6 +321,7 @@ typedef struct degenmobj_s
 									/* auto float to target's height */
 #define	MF2_SEETARGET	4096	/* is target visible? */
 #define MF2_ENEMY		8192
+#define MF2_NARROWGFX  16384    // Narrow graphic
 
 /*============================================================================= */
 typedef enum

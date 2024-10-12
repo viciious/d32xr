@@ -797,6 +797,7 @@ static void P_DoSpinDash(player_t *player)
 			P_ThrustValues(player->mo->angle + ANG90 + ANG45, mobjinfo[MT_PLAYER].radius, &dustx, &dusty);
 
 			mobj_t *dust = P_SpawnMobj(dustx, dusty, player->mo->z, MT_GHOST);
+			dust->flags2 |= MF2_NARROWGFX;
 			P_SetMobjState(dust, S_SPINDUST1);
 			P_Thrust(dust, player->mo->angle, -4*FRACUNIT);
 
@@ -808,6 +809,7 @@ static void P_DoSpinDash(player_t *player)
 			P_ThrustValues(player->mo->angle - ANG90 - ANG45, mobjinfo[MT_PLAYER].radius, &dustx, &dusty);
 
 			dust = P_SpawnMobj(dustx, dusty, player->mo->z, MT_GHOST);
+			dust->flags2 |= MF2_NARROWGFX;
 			P_SetMobjState(dust, S_SPINDUST1);
 			P_Thrust(dust, player->mo->angle, -4*FRACUNIT);
 
@@ -1398,6 +1400,7 @@ void P_MovePlayer(player_t *player)
 					player->mo->momx = player->mo->momy = 0;
 					S_StartSound(player->mo, sfx_ngskid);
 					mobj_t *ghost = P_SpawnMobj(player->mo->x, player->mo->y, player->mo->z, MT_GHOST);
+					ghost->flags2 |= MF2_NARROWGFX;
 					P_SetMobjState(ghost, S_FORCESTOP);
 				}
 				else if (!(player->pflags & PF_ELEMENTALBOUNCE) && player->shield == SH_ELEMENTAL)
