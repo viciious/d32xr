@@ -137,7 +137,7 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
         return;
     }
 
-    spcm->env = (CDA_VOLUME > 1020 ? 1020 : CDA_VOLUME) / 4;
+    spcm->env = (CDA_VOLUME >= 1020 ? 255 : CDA_VOLUME / 4);
     S_SPCM_UpdateChannel(spcm);
 
     switch (spcm->state)
