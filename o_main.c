@@ -922,10 +922,10 @@ void O_Drawer (void)
 		x2 = 88;
 		l2 = l;
 		x3 = x2+7*8+4;
-		I_Print8(x, l, "Next weap");
+		I_Print8(x, l, "Prev weap");
 		I_Print8(x2, l, "START+A");
 		l++;
-		I_Print8(x, l, "Prev weap");
+		I_Print8(x, l, "Next weap");
 		I_Print8(x2, l, "START+B");
 		l++;
 		I_Print8(x, l, "Automap");
