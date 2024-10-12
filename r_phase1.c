@@ -598,8 +598,16 @@ static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
    sidedef = &sides[ldef->sidenum[side]];
    solid = false;
 
-   if (!backsector ||
-       backsector->ceilingheight <= frontsector->floorheight ||
+   if (!backsector)
+   {
+       solid = true;
+   }
+   else if (backsector->ceilingpic == -1 && frontsector->ceilingpic == -1)
+   {
+       // when both ceilings are skies, consider them always "open" to prevent HOM
+       solid = false;
+   }
+   else if (backsector->ceilingheight <= frontsector->floorheight ||
        backsector->floorheight >= frontsector->ceilingheight)
    {
        solid = true;
