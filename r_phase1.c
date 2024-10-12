@@ -715,7 +715,12 @@ static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
    else
    {
 //      backsector = R_FakeFlat(backsector, &btempsec, true);
-      if (backsector->ceilingheight <= frontsector->floorheight ||
+      if (backsector->ceilingpic == (uint8_t)-1 && frontsector->ceilingpic == (uint8_t)-1)
+      {
+         // When both ceilings are skies, consider them always "open" to prevent HOM
+         solid = false;
+      }
+      else if (backsector->ceilingheight <= frontsector->floorheight ||
          backsector->floorheight >= frontsector->ceilingheight)
       {
          solid = true;
