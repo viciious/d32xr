@@ -130,8 +130,8 @@ void P_GivePlayerRings(player_t *player, int num_rings)
 	if (player->health > 999)
 		player->health = 999;
 
-	if ((player->mo->health < 100 && player->health >= 100 && !player->xtralife)
-		|| (player->mo->health < 200 && player->health >= 200 && player->xtralife < 2))
+	if ((player->mo->health < 101 && player->health >= 101 && !player->xtralife)
+		|| (player->mo->health < 201 && player->health >= 201 && player->xtralife < 2))
 	{
 		player->lives++;
 		S_StopSong();

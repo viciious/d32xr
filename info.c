@@ -62,12 +62,6 @@ const char * const sprnames[NUMSPRITES] = {
 "TVWW",
 "WIND",
 "YSPR",
-"GFZD"
-"GFZF",
-"GFZG",
-"GFZQ",
-"GFZR",
-"GFZW",
 };
 
 void A_SpawnState();
