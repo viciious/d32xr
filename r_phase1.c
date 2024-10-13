@@ -203,8 +203,6 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
    front_sector = R_FakeFlat(front_sector, &ftempsec, false);
 
    {
-      li->flags |= ML_MAPPED; // mark as seen
-
       textureoffset = si->textureoffset & 0xfff;
       textureoffset <<= 4; // sign extend
       textureoffset >>= 4; // sign extend

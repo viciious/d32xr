@@ -302,7 +302,7 @@ int EV_DoFloor(line_t *line,floor_e floortype)
 				floor->origSpeed = P_AproxDistance(vertexes[line->v1].x - vertexes[line->v2].x,
 												vertexes[line->v1].y - vertexes[line->v2].y) / 4;
 				floor->speed = floor->origSpeed;
-				if (line->flags & ML_SOUNDBLOCK)
+				if (line->flags & ML_NOCLIMB)
 				{
 					floor->direction = 1;
 					floor->floordestheight = P_FindNextHighestFloor(floor->controlSector, sec->floorheight) >> FRACBITS;

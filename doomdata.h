@@ -58,18 +58,16 @@ typedef struct
 /* pixel of the line for both top and bottom textures (windows) */
 #define	ML_DONTPEGTOP		8
 #define	ML_DONTPEGBOTTOM	16
-
 #define ML_CULLING			32	/* Cull this line by distance */
-#define ML_SOUNDBLOCK		64	/* don't let sound cross two of these */
-#define	ML_MIDTEXTUREBLOCK 128	/* Collide with midtexture (fences, etc.) */
-#define	ML_MAPPED			256	/* set if allready drawn in automap */
+#define ML_NOCLIMB			64
+#define	ML_MIDTEXTUREBLOCK  512	/* Collide with midtexture (fences, etc.) */
 
 
 /* to aid move clipping */
-#define ML_ST_HORIZONTAL 	512
-#define ML_ST_VERTICAL	 	1024
-#define ML_ST_POSITIVE	 	2048
-#define ML_ST_NEGATIVE	 	4096
+#define ML_ST_HORIZONTAL 	4096
+#define ML_ST_VERTICAL	 	8192
+#define ML_ST_POSITIVE	 	16384
+#define ML_ST_NEGATIVE	 	32768
 
 typedef	struct
 {
