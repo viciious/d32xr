@@ -223,19 +223,19 @@ void IN_NetgameDrawer(void)
 			else
 			{
 				print(30, FVALY, "Your Frags");
-				print(54, FVALY + 40, "His Frags");
+				print(54, FVALY + 40, "Their Frags");
 			}
 		}
 		else
 		{
 			print (28, 50, "Player");
-			print (KVALX - 18, 50, "1");
-			print (KVALX + 66, 50, "2");
-			DrawJagobj(interm->i_kills, 57, 80);
+			print (KVALX - 14, 50, "1");
+			print (KVALX + 80 - 14, 50, "2");
+			DrawJagobj(interm->i_kills, 57, KVALY);
 	 
-			DrawJagobj(interm->i_items, 51, 110);
+			DrawJagobj(interm->i_items, 51, IVALY);
 	 	
-			DrawJagobj(interm->i_secret, 13, 140);
+			DrawJagobj(interm->i_secret, 13, SVALY);
 		}
 	}			
 	
