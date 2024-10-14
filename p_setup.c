@@ -211,6 +211,7 @@ void P_LoadSectors (int lump)
 
 		ss->tag = LITTLESHORT(ms->tag);
 		ss->heightsec = -1; // sector used to get floor and ceiling height
+		ss->fofsec = -1;
 
 		// killough 3/7/98:
 //		ss->floor_xoffs = 0;

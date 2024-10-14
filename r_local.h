@@ -76,6 +76,8 @@ typedef	struct
 	// killough 3/7/98: support flat heights drawn at another sector's heights
   	VINT        heightsec;    // other sector, or -1 if no other sector
 
+	VINT        fofsec;
+
 //	uint8_t     floor_xoffs;
 //	uint8_t     floor_yoffs;
 
@@ -498,7 +500,11 @@ typedef struct
 
 	uint16_t     floorceilpicnum; // ceilingpicnum top word, floorpicnum bottom word (just like a ceiling and floor!)
 
+#ifdef FLOOR_OVER_FLOOR
+	int16_t     fofSector;
+#else
 	uint16_t	newmiplevels; // 0 is lower, 1 is upper
+#endif
 
 	int			scalestep;		/* polar angle to start at phase1, then scalestep after phase2 */
 	unsigned	scalefrac;
@@ -550,7 +556,8 @@ x |= ((uint32_t)y & 0xffff); \
 
 typedef struct
 {
-	fixed_t 	floorheight, floornewheight, ceilnewheight, pad;
+	fixed_t 	floorheight, floornewheight, ceilnewheight;
+	uint32_t    fofInfo;
 } viswallextra_t;
 
 #define	MAXWALLCMDS		140

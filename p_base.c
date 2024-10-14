@@ -52,6 +52,44 @@ static boolean PB_TryMove(pmovetest_t *mt, mobj_t* mo, fixed_t tryx, fixed_t try
 static void P_FloatChange(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
 void P_MobjThinker(mobj_t* mobj) ATTR_DATA_CACHE_ALIGN;
 
+// P_FloorzAtPos
+// Returns the floorz of the XYZ position
+// Tails 05-26-2003
+fixed_t FloorZAtPos(sector_t *sec, fixed_t z, fixed_t height)
+{
+   fixed_t floorz = sec->floorheight;
+   const fixed_t thingtop = z + height;
+
+   if (sec->fofsec != -1)
+   {
+      sector_t *fof = &sectors[sec->fofsec];
+
+      fixed_t delta1 = z - (fof->floorheight + ((fof->ceilingheight - fof->floorheight)/2));
+      fixed_t delta2 = thingtop - (fof->floorheight + ((fof->ceilingheight - fof->floorheight)/2));
+      if (fof->ceilingheight > floorz && D_abs(delta1) < D_abs(delta2))
+         floorz = fof->ceilingheight;
+   }
+
+   return floorz;
+}
+fixed_t CeilingZAtPos(sector_t *sec, fixed_t z, fixed_t height)
+{
+   fixed_t ceilingz = sec->ceilingheight;
+   const fixed_t thingtop = z + height;
+
+   if (sec->fofsec != -1)
+   {
+      sector_t *fof = &sectors[sec->fofsec];
+
+      fixed_t delta1 = z - (fof->floorheight + ((fof->ceilingheight - fof->floorheight)/2));
+      fixed_t delta2 = thingtop - (fof->floorheight + ((fof->ceilingheight - fof->floorheight)/2));
+      if (fof->floorheight < ceilingz && D_abs(delta1) > D_abs(delta2))
+         ceilingz = fof->floorheight;
+   }
+
+   return ceilingz;
+}
+
 //
 // Check for collision against another mobj in one of the blockmap cells.
 //
@@ -176,21 +214,25 @@ static boolean PB_CheckLine(line_t *ld, pmovetest_t *mt)
 
    front = LD_FRONTSECTOR(ld);
    back  = LD_BACKSECTOR(ld);
+   fixed_t frontFloor = FloorZAtPos(front, mt->checkthing->z, mt->checkthing->theight << FRACBITS);
+   fixed_t frontCeiling = CeilingZAtPos(front, mt->checkthing->z, mt->checkthing->theight << FRACBITS);
+   fixed_t backFloor = FloorZAtPos(back, mt->checkthing->z, mt->checkthing->theight << FRACBITS);
+   fixed_t backCeiling = CeilingZAtPos(back, mt->checkthing->z, mt->checkthing->theight << FRACBITS);
 
-   if(front->ceilingheight < back->ceilingheight)
-      opentop = front->ceilingheight;
+   if(frontCeiling < backCeiling)
+      opentop = frontCeiling;
    else
-      opentop = back->ceilingheight;
+      opentop = backCeiling;
 
-   if(front->floorheight > back->floorheight)
+   if(frontFloor > backFloor)
    {
-      openbottom = front->floorheight;
-      lowfloor   = back->floorheight;
+      openbottom = frontFloor;
+      lowfloor   = backFloor;
    }
    else
    {
-      openbottom = back->floorheight;
-      lowfloor   = front->floorheight;
+      openbottom = backFloor;
+      lowfloor   = frontFloor;
    }
 
    // adjust floor/ceiling heights
@@ -237,8 +279,8 @@ static boolean PB_CheckPosition(pmovetest_t *mt)
    // the base floor / ceiling is from the subsector that contains the point.
    // Any contacted lines the step closer together will adjust them.
    mt->testsubsec   = R_PointInSubsector(mt->testx, mt->testy);
-   mt->testfloorz   = mt->testdropoffz = mt->testsubsec->sector->floorheight;
-   mt->testceilingz = mt->testsubsec->sector->ceilingheight;
+   mt->testfloorz   = mt->testdropoffz = FloorZAtPos(mt->testsubsec->sector, mt->checkthing->z, mt->checkthing->theight << FRACBITS);
+   mt->testceilingz = CeilingZAtPos(mt->testsubsec->sector, mt->checkthing->z, mt->checkthing->theight << FRACBITS);
 
    I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
    *lvalidcount = *lvalidcount + 1;

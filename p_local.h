@@ -123,6 +123,9 @@ extern VINT ringmobjtics[NUMMOBJTYPES];
 #define ONFLOORZ	D_MININT
 #define	ONCEILINGZ	D_MAXINT
 
+fixed_t FloorZAtPos(sector_t *sec, fixed_t z, fixed_t height);
+fixed_t CeilingZAtPos(sector_t *sec, fixed_t z, fixed_t height);
+
 mobj_t *P_FindFirstMobjOfType(uint16_t type);
 void P_BlackOw(player_t *player);
 void P_Attract(mobj_t *source, mobj_t *dest);

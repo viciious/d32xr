@@ -649,8 +649,12 @@ static void P_DoTeeter(player_t *player)
 	subsector_t *b = R_PointInSubsector(player->mo->x - 5 * FRACUNIT, player->mo->y + 5 * FRACUNIT);
 	subsector_t *c = R_PointInSubsector(player->mo->x + 5 * FRACUNIT, player->mo->y - 5 * FRACUNIT);
 	subsector_t *d = R_PointInSubsector(player->mo->x - 5 * FRACUNIT, player->mo->y - 5 * FRACUNIT);
+	fixed_t aFloorZ = FloorZAtPos(a->sector, player->mo->z, player->mo->theight << FRACBITS);
+	fixed_t bFloorZ = FloorZAtPos(b->sector, player->mo->z, player->mo->theight << FRACBITS);
+	fixed_t cFloorZ = FloorZAtPos(c->sector, player->mo->z, player->mo->theight << FRACBITS);
+	fixed_t dFloorZ = FloorZAtPos(d->sector, player->mo->z, player->mo->theight << FRACBITS);
 
-	if (a->sector->floorheight < player->mo->floorz - tiptop || b->sector->floorheight < player->mo->floorz - tiptop || c->sector->floorheight < player->mo->floorz - tiptop || d->sector->floorheight < player->mo->floorz - tiptop)
+	if (aFloorZ < player->mo->floorz - tiptop || bFloorZ < player->mo->floorz - tiptop || cFloorZ < player->mo->floorz - tiptop || dFloorZ < player->mo->floorz - tiptop)
 		teeter = true;
 
 	if (teeter)
