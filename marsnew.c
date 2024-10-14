@@ -31,8 +31,8 @@
 #include "r_local.h"
 #include "wadbase.h"
 
-#define LINK_TIMEOUT_SHORT 		0x3FF
-#define LINK_TIMEOUT_LONG	 	0x3FFF
+#define LINK_TIMEOUT_SHORT 		0x7FF
+#define LINK_TIMEOUT_LONG	 	0x7FFF
 
 typedef struct {
 	VINT repeat;
