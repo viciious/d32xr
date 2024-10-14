@@ -393,7 +393,7 @@ int	R_FlatNumForName (const char *name)
 {
 	int f = W_CheckRangeForName (name, firstflat, firstflat + numflats);
 	if (f < 0)
-		return f;
+		return 0;
 	return f - firstflat;
 }
 
