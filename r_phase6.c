@@ -341,7 +341,7 @@ static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex,
         columncache += mipheight;
 
         mip->numdecals = tex->decals & 0x3;
-        if (mip->numdecals && R_InTexCache(&r_texcache, mip->data)) {
+        if (mip->numdecals && R_InTexCache(&r_texcache, mip->data) == 1) {
             mip->numdecals = 0;
             continue;
         }

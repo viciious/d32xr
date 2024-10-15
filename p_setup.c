@@ -851,9 +851,15 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 				j = R_CheckTextureNumForName (l->name);
 				if (j >= 0)
 				{
+					int n;
+					int lumpnum2 = textures[j].lumpnum;
 					data = Z_Malloc (l->size, PU_LEVEL);
 					W_ReadLump(lumpnum+k, data);
-					R_SetTextureData(&textures[j], data, l->size, true);
+					for (n = 0; n < numtextures; n++)
+					{
+						if (textures[n].lumpnum == lumpnum2)
+							R_SetTextureData(&textures[n], data, l->size, true);
+					}
 				}
 				continue;
 			}
