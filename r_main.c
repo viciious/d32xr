@@ -287,8 +287,10 @@ void R_SetViewportSize(int num)
 	weaponYpos = 180;
 	if (viewportHeight < 128) {
 		weaponYpos = 120;
-	} else if (viewportHeight <= 128) {
+	} else if (viewportHeight == 128) {
 		weaponYpos = 144;
+	} else if (viewportHeight <= 144) {
+		weaponYpos = 162;
 	}
 	weaponYpos = (viewportHeight - weaponYpos) / 2;
 
