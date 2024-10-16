@@ -363,7 +363,7 @@ typedef enum
 	turbo16	// quickly build by 16
 } stair_e;
 
-#define	FLOORSPEED	((FRACUNIT+(FRACUNIT>>1))*THINKERS_TICS)
+#define	FLOORSPEED	(FRACUNIT*THINKERS_TICS)
 
 typedef enum
 {
