@@ -345,7 +345,7 @@ void F_Start (void)
 	W_LoadPWAD(PWAD_NONE);
 #endif
 
-	if (!gameinfo.victoryMus || !*gameinfo.victoryMus)
+	if (!finale || !gameinfo.victoryMus || !*gameinfo.victoryMus)
 		S_StartSongByName(gameinfo.endMus, 1, gameinfo.victoryCdTrack);
 	else
 		S_StartSongByName(gameinfo.victoryMus, 1, gameinfo.victoryCdTrack);
