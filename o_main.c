@@ -39,6 +39,7 @@ typedef enum
 	mi_resolution,
 	mi_anamorphic,
 	mi_detailmode,
+	mi_lowres,
 
 	mi_controltype,
 	mi_yabcdpad,
@@ -247,6 +248,10 @@ void O_Init (void)
 	menuitem[mi_detailmode].x = ITEMX;
 	menuitem[mi_detailmode].y = STARTY + ITEMSPACE * 3;
 
+	D_memcpy(menuitem[mi_lowres].name, "Low detail", 11);
+	menuitem[mi_lowres].x = ITEMX;
+	menuitem[mi_lowres].y = STARTY + ITEMSPACE * 4;
+
 	D_memcpy(menuitem[mi_controltype].name, "Gamepad", 8);
 	menuitem[mi_controltype].x = ITEMX;
 	menuitem[mi_controltype].y = STARTY;
@@ -293,7 +298,7 @@ void O_Init (void)
 
 	D_memcpy(menuscreen[ms_video].name, "Video", 6);
 	menuscreen[ms_video].firstitem = mi_resolution;
-	menuscreen[ms_video].numitems = mi_detailmode - mi_resolution + 1;
+	menuscreen[ms_video].numitems = mi_lowres - mi_resolution + 1;
 
 	D_memcpy(menuscreen[ms_controls].name, "Controls", 9);
 	menuscreen[ms_controls].firstitem = mi_controltype;
@@ -724,6 +729,13 @@ goback:
 						if (detailmode != detmode_potato)
 							detailmode = detmode_potato;
 						break;
+					case mi_lowres:
+						if (!lowres)
+						{
+							lowres = true;
+							R_SetViewportSize(viewportNum);
+						}
+						break;
 					}
 				}
 
@@ -737,6 +749,13 @@ goback:
 					case mi_detailmode:
 						if (detailmode != detmode_normal)
 							detailmode = detmode_normal;
+						break;
+					case mi_lowres:
+						if (lowres)
+						{
+							lowres = false;
+							R_SetViewportSize(viewportNum);
+						}
 						break;
 					}
 				}
@@ -906,6 +925,15 @@ void O_Drawer (void)
 			break;
 		default:
 			print(menuitem[mi_detailmode].x + 160, menuitem[mi_detailmode].y, "off");
+			break;
+		}
+
+		switch (lowres) {
+		case true:
+			print(menuitem[mi_lowres].x + 160, menuitem[mi_lowres].y, "on");
+			break;
+		default:
+			print(menuitem[mi_lowres].x + 160, menuitem[mi_lowres].y, "off");
 			break;
 		}
 	}

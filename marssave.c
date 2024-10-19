@@ -65,6 +65,7 @@ typedef struct __attribute((packed))
 	int8_t yabcdpad;
 	int8_t sfxdriver;
 	char spcmDir[9];
+	int8_t lowres;
 } saveopts_t;
 
 static char saveslotguard[SRAM_SLOTSIZE - sizeof(savegame_t)] __attribute__((unused));
@@ -192,6 +193,7 @@ static void SaveOptions(void)
 	so.yabcdpad = yabcdpad;
 	so.magic1 = SRAM_MAGIC1;
 	so.magic2 = SRAM_MAGIC2;
+	so.lowres = lowres;
 	D_snprintf(so.spcmDir, sizeof(so.spcmDir), "%s", spcmDir);
 
 	Mars_WriteSRAM((void*)&so, optslotoffset, sizeof(saveopts_t));
@@ -247,6 +249,7 @@ static void ReadOptions(void)
 	anamorphicview = so.anamorphic;
 	sfxdriver = so.sfxdriver;
 	yabcdpad = so.yabcdpad;
+	lowres = so.lowres;
 
 	so.spcmDir[sizeof(so.spcmDir)-1] = '\0';
 	D_snprintf(spcmDir, sizeof(spcmDir), "%s", so.spcmDir);
@@ -274,6 +277,7 @@ void ReadEEProm(void)
 	anamorphicview = 0;
 	sfxdriver = 0;
 	detailmode = detmode_normal;
+	lowres = false;
 
 	ReadOptions();
 }

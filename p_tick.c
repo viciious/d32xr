@@ -540,9 +540,11 @@ void P_Drawer (void)
 		clearscreen = 2;
 
 	if (clearscreen > 0) {
+		int width = viewportWidth * (lowres ? 2 : 1);
+
 		I_ResetLineTable();
 
-		if (viewportWidth == 320)
+		if (width == 320)
 			I_ClearFrameBuffer();
 		else
 			DrawTiledBackground();

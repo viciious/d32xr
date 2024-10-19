@@ -100,6 +100,7 @@ OBJS = \
 	d_mapinfo.o \
 	sh2_fixed.o \
 	sh2_draw.o \
+	sh2_drawlow.o \
 	sh2_mixer.o \
 	r_cache.o \
 	m_fire.o \
@@ -117,7 +118,7 @@ m68k.bin:
 
 $(TARGET).32x: $(TARGET).elf
 	$(OBJC) -O binary $< temp2.bin
-	$(DD) if=temp2.bin of=temp.bin bs=198K conv=sync
+	$(DD) if=temp2.bin of=temp.bin bs=200K conv=sync
 	rm -f temp3.bin
 	cat temp.bin $(WAD) >>temp3.bin
 	$(DD) if=temp3.bin of=$@ bs=512K conv=sync
