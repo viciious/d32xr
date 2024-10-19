@@ -102,7 +102,7 @@ void R_InitTextures (void)
 		mtexture = (maptexture_t*)((byte*)maptex + offset);
 		patchcount = LITTLESHORT(mtexture->patchcount);
 		if (patchcount > 1)
-			numdecals += patchcount - 1;
+			numdecals += patchcount;
 	}
 
 	decals = Z_Malloc (numdecals * sizeof(*decals), PU_STATIC);
@@ -161,14 +161,14 @@ void R_InitTextures (void)
 
 		texture->lumpnum = textures[texnum].lumpnum;
 
-		if (patchcount > 1)
+		if (patchcount > 0)
 		{
 			int j;
 			texture_t *texture2;
 			int firstdecal = decal - decals;
 			int numdecals = 0;
 
-			for (j = 1; j < patchcount; j++) {
+			for (j = 0; j < patchcount; j++) {
 				mappatch_t *mp = &mtexture->patches[j];
 
 				texnum = LITTLESHORT(mp->patch);
@@ -884,6 +884,7 @@ boolean R_CompositeColumn(int colnum, int numdecals, texdecal_t *decals, inpixel
 	i = 0;
 	do
 	{
+		int j;
 		int count;
 		texdecal_t *decal = &decals[i];
 		texture_t *decaltex = &textures[decal->texturenum];
@@ -891,18 +892,11 @@ boolean R_CompositeColumn(int colnum, int numdecals, texdecal_t *decals, inpixel
 		if (colnum < decal->mincol || colnum > decal->maxcol)
 			continue;
 
-		if (!decaled)
-		{
-			decaled = true;
-			D_memcpy(dst, src, sizeof(inpixel_t) * height);
-		}
-
 		src = (inpixel_t *)decaltex->data[0];
 		count = (colnum - decal->mincol) * decaltex->height;
 
 #if MIPLEVEL > 1
 		// FIXME
-		int j;
 		for (j = 0; j < miplevel; j++)
 			count >>= 1;
 		src = (inpixel_t *)decaltex->data[miplevel];
@@ -911,10 +905,29 @@ boolean R_CompositeColumn(int colnum, int numdecals, texdecal_t *decals, inpixel
 		count = decal->maxrow - decal->minrow + 1;
 
 #ifdef MARS
-		dst = (void *)((intptr_t)dst | 0x20000); // overwrite area of VRAM
+		if (decaled)
+			dst = (void *)((intptr_t)dst | 0x20000); // overwrite area of VRAM
 #endif
-		D_memcpy(dst + decal->minrow, src, sizeof(inpixel_t) * count);
-		src = dst;
+
+		if (!decaled)
+		{
+			decaled = true;
+			count = height;
+			for (j = 0; j < height; )
+			{
+				int p = count;
+				if (j + p > height)
+					p = height - j;
+				if (p > decaltex->height)
+					p = decaltex->height;
+				D_memcpy(dst + j, src, sizeof(inpixel_t) * p);
+				j += p;
+			}
+		}
+		else
+		{
+			D_memcpy(dst + decal->minrow, src, sizeof(inpixel_t) * count);
+		}
 	} while (++i < numdecals);
 
 	return decaled;
