@@ -713,13 +713,14 @@ pixel_t* I_OverwriteBuffer(void)
 int I_ViewportYPos(void)
 {
 	const int fbh = I_FrameBufferHeight();
+	int width = viewportWidth * (lowres ? 2 : 1);
 
 	if (splitscreen)
 		return (fbh - viewportHeight) / 2;
 
-	if (viewportWidth < 160)
+	if (width < 160)
 		return (fbh - jo_stbar_height - viewportHeight) / 2;
-	if (viewportWidth == 320)
+	if (width == 320)
 		return (fbh - jo_stbar_height - viewportHeight);
 	return (fbh - jo_stbar_height - viewportHeight) / 2;
 }
@@ -728,14 +729,15 @@ pixel_t	*I_ViewportBuffer (void)
 {
 	int x = 0;
 	pixel_t *vb = (pixel_t * )framebuffer;
-	
+	int width = viewportWidth * (lowres ? 2 : 1);
+
 	if (splitscreen)
 	{
 		x = vd->displayplayer ? 160 : 0;
 	}
 	else
 	{
-		x = (320 - viewportWidth) / 2;
+		x = (320 - width) / 2;
 	}
 
 	vb += I_ViewportYPos() * 320 / 2 + x / 2;

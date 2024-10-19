@@ -14,6 +14,7 @@ fixed_t stretch;
 fixed_t stretchX;
 VINT weaponYpos;
 fixed_t weaponXScale;
+boolean lowres = false;
 
 VINT detailmode;
 
@@ -260,6 +261,8 @@ void R_SetViewportSize(int num)
 
 	width = viewports[num][splitscreen][0];
 	height = viewports[num][splitscreen][1];
+	if (lowres)
+		width /= 2;
 
 	viewportNum = num;
 	viewportWidth = width;
@@ -281,7 +284,7 @@ void R_SetViewportSize(int num)
 		//stretch = (fixed_t)((160.0f / width) * ((float)height / 180.0f) * 2.2f * FRACUNIT);
 		stretch = ((FRACUNIT * 16 * height) / 180 * 22) / width;
 	}
-	weaponXScale = FRACUNIT;
+	weaponXScale = FRACUNIT / (lowres ? 2 : 1);
 	stretchX = stretch * centerX;
 
 	weaponYpos = 180;
@@ -319,11 +322,22 @@ void R_SetDrawFuncs(void)
 	if (detailmode < detmode_potato || detailmode >= MAXDETAILMODES)
 		detailmode = detmode_normal;
 
-	drawcol = I_DrawColumn;
-	drawcolnpo2 = I_DrawColumnNPo2;
-	drawfuzzcol = I_DrawFuzzColumn;
-	drawspan = detailmode == detmode_potato ? I_DrawSpanPotato : I_DrawSpan;
+	if (lowres)
+	{
+		drawcol = I_DrawColumnLow;
+		drawcolnpo2 = I_DrawColumnNPo2Low;
+		drawfuzzcol = I_DrawFuzzColumnLow;
+		drawspan = detailmode == detmode_potato ? I_DrawSpanPotatoLow : I_DrawSpanLow;
+	}
+	else
+	{
+		drawcol = I_DrawColumn;
+		drawcolnpo2 = I_DrawColumnNPo2;
+		drawfuzzcol = I_DrawFuzzColumn;
+		drawspan = detailmode == detmode_potato ? I_DrawSpanPotato : I_DrawSpan;
+	}
 
+	Mars_ClearCache();
 #ifdef MARS
 	Mars_CommSlaveClearCache();
 #endif
