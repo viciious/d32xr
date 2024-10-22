@@ -214,7 +214,7 @@ typedef struct
 
 extern	spriteframe_t	*spriteframes;
 extern	VINT 			*spritelumps;
-extern	spritedef_t		sprites[NUMSPRITES];
+extern	spritedef_t		*sprites;
 
 /*
 ===============================================================================

@@ -20,7 +20,7 @@ boolean 	texmips = false;
 VINT 		numdecals = 0;
 texdecal_t  *decals = NULL;
 
-spritedef_t sprites[NUMSPRITES];
+spritedef_t *sprites;
 spriteframe_t* spriteframes;
 VINT 			*spritelumps;
 
@@ -369,6 +369,7 @@ void R_InitData (void)
 	int i;
 #endif
 
+	sprites = Z_Malloc(sizeof(*sprites)*NUMSPRITES, PU_STATIC);
 	dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
 
 	firstsprite = W_GetNumForName ("S_START") + 1;
