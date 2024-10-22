@@ -291,6 +291,8 @@ static void R_DrawPlanes2(void)
     localplane_t lpl;
     visplane_t* pl;
     int extralight;
+    fixed_t basexscale, baseyscale;
+    fixed_t basexscale2, baseyscale2;
 
 #ifdef MARS
     Mars_ClearCacheLine(&vd->lastvisplane);
@@ -301,17 +303,14 @@ static void R_DrawPlanes2(void)
     if (vd->gsortedvisplanes == NULL)
         return;
 
-    lpl.x = vd->viewx;
-    lpl.y = -vd->viewy;
+    angle = (vd->viewangle - ANG90) >> ANGLETOFINESHIFT;
+    basexscale = FixedDiv(finecosine(angle), centerXFrac);
+    baseyscale = FixedDiv(finesine(angle), centerXFrac);
 
-    lpl.angle = vd->viewangle;
-    angle = (lpl.angle - ANG90) >> ANGLETOFINESHIFT;
+    angle = (vd->viewangle        ) >> ANGLETOFINESHIFT;
+    basexscale2 = FixedDiv(finecosine(angle), centerXFrac);
+    baseyscale2 = FixedDiv(finesine(angle), centerXFrac);
 
-    lpl.basexscale = FixedDiv(finecosine(angle), centerXFrac);
-    lpl.baseyscale = -FixedDiv(finesine(angle), centerXFrac);
-#ifdef MARS
-    lpl.baseyscale *= FLATSIZE;
-#endif
     lpl.mapplane = detailmode == detmode_potato ? R_MapPotatoPlane : R_MapPlane;
     extralight = vd->extralight;
 
@@ -319,6 +318,7 @@ static void R_DrawPlanes2(void)
     {
         int light;
         int flatnum;
+        boolean rotated = false;
 
 #ifdef MARS
         Mars_ClearCacheLines(pl, (sizeof(visplane_t) + 31) / 16);
@@ -336,6 +336,25 @@ static void R_DrawPlanes2(void)
 
         lpl.pl = pl;
         lpl.ds_source[0] = flatpixels[flatnum].data[0];
+        if (rotated)
+        {
+            lpl.x = -vd->viewy;
+            lpl.y = -vd->viewx;
+            lpl.angle = vd->viewangle + ANG90;
+            lpl.basexscale =  basexscale2;
+            lpl.baseyscale = -baseyscale2;
+        }
+        else
+        {
+            lpl.x =  vd->viewx;
+            lpl.y = -vd->viewy;
+            lpl.angle = vd->viewangle;
+            lpl.basexscale =  basexscale;
+            lpl.baseyscale = -baseyscale;
+        }
+#ifdef MARS
+        lpl.baseyscale *= FLATSIZE;
+#endif
 
 #if MIPLEVELS > 1
         lpl.mipsize[0] = FLATSIZE;
