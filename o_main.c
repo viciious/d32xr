@@ -81,7 +81,7 @@ typedef struct
 	char 	name[16];
 } menuitem_t;
 
-static menuitem_t menuitem[NUMMENUITEMS];
+static menuitem_t *menuitem;
 
 static VINT	cursorframe;
 static VINT cursordelay;
@@ -165,6 +165,8 @@ void O_Init (void)
 	m_help = W_CheckNumForName("M_HELP");
 
 /*	initialize variables */
+
+	menuitem = Z_Malloc(sizeof(*menuitem)*NUMMENUITEMS, PU_STATIC);
 
 	cursorframe = -1;
 	cursordelay = MOVEWAIT;
