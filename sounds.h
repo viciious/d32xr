@@ -70,6 +70,7 @@ typedef enum
   sfx_s3k_65,
   sfx_s3k_6a,
   sfx_s3k_6c,
+  sfx_s3k_6d,
   sfx_s3k_6e,
   sfx_s3k_a9,
   sfx_s3k_ab,

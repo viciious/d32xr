@@ -596,64 +596,33 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
 {
    if (sec->heightsec != -1)
    {
-      const sector_t *s = &sectors[sec->heightsec];
-      int heightsec = vd.viewsubsector->sector->heightsec;
-      int underwater = heightsec!=-1 && vd.viewz<=sectors[heightsec].floorheight;
+      const sector_t *watersec = &sectors[sec->heightsec];
+      boolean underwater = vd.viewz<=sectors[vd.viewsubsector->sector->heightsec].ceilingheight;
 
       // Replace sector being drawn, with a copy to be hacked
       *tempsec = *sec;
 
       // Replace floor and ceiling height with other sector's heights.
-      tempsec->floorheight   = s->floorheight;
-      tempsec->ceilingheight = s->ceilingheight;
+      tempsec->floorheight = watersec->ceilingheight-1;
+      tempsec->floorpic = watersec->ceilingpic;
 
-      if ((underwater && (tempsec-> floorheight = sec->floorheight,
-                          tempsec->ceilingheight = s->floorheight-1,
-                          !back)) || vd.viewz <= s->floorheight)
+      if ((underwater && (tempsec->floorheight = sec->floorheight,
+                          tempsec->ceilingheight = watersec->ceilingheight-1,
+                          !back)) || vd.viewz <= watersec->floorheight)
       { // head-below-floor hack
-         tempsec->floorpic    = s->floorpic;
+         tempsec->floorpic    = sec->floorpic;
 //       tempsec->floor_xoffs = s->floor_xoffs;
 //       tempsec->floor_yoffs = s->floor_yoffs;
-
-         if (underwater)
-         {
-            if (s->ceilingpic == (uint8_t)-1)
-            {
-               tempsec->floorheight   = tempsec->ceilingheight+1;
-               tempsec->ceilingpic    = tempsec->floorpic;
-//             tempsec->ceiling_xoffs = tempsec->floor_xoffs;
-//             tempsec->ceiling_yoffs = tempsec->floor_yoffs;
-            }
-            else
-            {
-               tempsec->ceilingpic    = s->ceilingpic;
-//             tempsec->ceiling_xoffs = s->ceiling_xoffs;
-//             tempsec->ceiling_yoffs = s->ceiling_yoffs;
-            }
-            tempsec->lightlevel = s->lightlevel;
-         }
-      }
-      else if (heightsec != -1 && vd.viewz >= sectors[heightsec].ceilingheight &&
-            sec->ceilingheight > s->ceilingheight)
-      {   // Above-ceiling hack
-         tempsec->ceilingheight = s->ceilingheight;
-         tempsec->floorheight   = s->ceilingheight + 1;
-
-         tempsec->floorpic    = tempsec->ceilingpic    = s->ceilingpic;
-//       tempsec->floor_xoffs = tempsec->ceiling_xoffs = s->ceiling_xoffs;
-//       tempsec->floor_yoffs = tempsec->ceiling_yoffs = s->ceiling_yoffs;
-
-         if (s->floorpic != (uint8_t)-1)
-         {
-            tempsec->ceilingheight = sec->ceilingheight;
-            tempsec->floorpic      = s->floorpic;
-//          tempsec->floor_xoffs   = s->floor_xoffs;
-//          tempsec->floor_yoffs   = s->floor_yoffs;
-         }
-
-         tempsec->lightlevel  = s->lightlevel;
+         tempsec->ceilingpic = watersec->ceilingpic; 
+         tempsec->lightlevel = watersec->lightlevel;
       }
 
+      if (sec->ceilingheight < watersec->ceilingheight)
+      {
+         tempsec->ceilingpic = sec->ceilingpic;
+         tempsec->ceilingheight = sec->ceilingheight;
+         tempsec->lightlevel = sec->lightlevel;
+      }
       sec = tempsec;               // Use other sector
    }
 

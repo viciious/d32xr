@@ -516,7 +516,7 @@ void P_ZMovement(mobj_t *mo)
    {
       // apply gravity
       if (subsectors[mo->isubsector].sector->heightsec != -1
-         && sectors[subsectors[mo->isubsector].sector->heightsec].floorheight > mo->z + (mo->theight << (FRACBITS-1)))
+         && GetWatertopMo(mo) > mo->z + (mo->theight << (FRACBITS-1)))
          mo->momz -= GRAVITY/2/3; // Less gravity underwater.
       else
          mo->momz -= GRAVITY/2;

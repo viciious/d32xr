@@ -85,7 +85,11 @@ static boolean P_DoSpring(mobj_t *spring, player_t *player)
 		player->mo->y = spring->y;
 		P_SetThingPosition(player->mo);
 		player->forwardmove = player->sidemove = 0;
-		player->justSprung = TICRATE;
+
+		if (player->homingTimer > 0 && spring->type == MT_SPRINGSHELL)
+			player->justSprung = TICRATE / 4;
+		else
+			player->justSprung = TICRATE;
 	}
 
 	if (vertispeed > 0)
@@ -225,6 +229,22 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 	{
 		if (special->flags2 & MF2_ENEMY) // enemy rules
 		{
+			if (special->type == MT_SPRINGSHELL && special->health > 0)
+			{
+				fixed_t tmz = toucher->z - toucher->momz;
+				fixed_t tmznext = toucher->z;
+				fixed_t shelltop = special->z + (special->theight << FRACBITS);
+				fixed_t sprarea = 12*FRACUNIT;
+
+				if ((tmznext <= shelltop && tmz > shelltop) || (tmznext > shelltop - sprarea && tmznext < shelltop))
+				{
+					P_DoSpring(special, player);
+					return;
+				}
+				else if (tmz > shelltop - sprarea && tmz < shelltop) // Don't damage people springing up / down
+					return;
+			}
+
 			if ((player->pflags & PF_JUMPED) || (player->pflags & PF_SPINNING) || player->powers[pw_invulnerability])
 			{
 				if (((player->pflags & PF_VERTICALFLIP) && toucher->momz > 0)

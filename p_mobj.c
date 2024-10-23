@@ -132,6 +132,20 @@ void P_Attract(mobj_t *source, mobj_t *dest)
 	}
 }
 
+fixed_t GetWatertopSec(sector_t *sec)
+{
+	if (sec->heightsec == -1)
+		return sec->floorheight - 512*FRACUNIT;
+
+	return sectors[sec->heightsec].ceilingheight;
+}
+
+fixed_t GetWatertopMo(mobj_t *mo)
+{
+	sector_t *sec = subsectors[mo->isubsector].sector;
+	return GetWatertopSec(sec);
+}
+
 void P_SetObjectMomZ(mobj_t *mo, fixed_t value, boolean relative)
 {
 //	if (player->pflags & PF_VERTICALFLIP)
@@ -836,7 +850,7 @@ void P_MobjCheckWater(mobj_t *mo)
 
 		if (subsectors[mo->isubsector].sector->heightsec != -1)
 		{
-			watertop = sectors[subsectors[mo->isubsector].sector->heightsec].floorheight;
+			watertop = GetWatertopMo(mo);
 
 			if (mo->z + mobjinfo[MT_PLAYER].height/2 < watertop)
 			{

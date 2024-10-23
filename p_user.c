@@ -1354,7 +1354,7 @@ void P_MovePlayer(player_t *player)
 	// If you're running fast enough, you can create splashes as you run in shallow water.
 	if (subsectors[player->mo->isubsector].sector->heightsec != -1)
 	{
-		const fixed_t watertop = sectors[subsectors[player->mo->isubsector].sector->heightsec].floorheight;
+		const fixed_t watertop = GetWatertopMo(player->mo);
 
 		if (player->mo->z + (player->mo->theight << FRACBITS) >= watertop && player->mo->z <= watertop && (player->speed > (25<<FRACBITS) || (player->pflags & PF_STARTDASH))
 			&& leveltime % (TICRATE/6) == 0 && player->mo->momz == 0)

@@ -628,7 +628,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		vd.viewsubsector = thiscam->subsector;
 
 		if (thiscam->subsector->sector->heightsec != -1
-			&& sectors[thiscam->subsector->sector->heightsec].floorheight > vd.viewz)
+			&& GetWatertopSec(thiscam->subsector->sector) > vd.viewz)
 			waterpal = true;
 	}
 	else

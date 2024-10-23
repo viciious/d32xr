@@ -374,7 +374,7 @@ static boolean PS_CheckSight2(mobj_t *t1, mobj_t *t2)
 
 static boolean P_MobjCanSightCheck(mobj_t *mobj)
 {
-   if (!(mobj->type == MT_POSSESSED || mobj->type == MT_EGGMOBILE))
+   if (!(mobj->flags2 & MF2_ENEMY))
       return false;
 
    // must be about to change states
@@ -496,7 +496,7 @@ void P_CheckSights2(void)
 
     for (mobj = mobjhead.next; ; mobj = P_NextSightMobj(mobj))
     {
-        if (mobj->flags & MF_RINGMOBJ)
+        if ((mobj->flags & MF_RINGMOBJ))
             continue;
 
         if ((mobj = P_GetSightMobj(mobj, c, &cnt)) == (void*)&mobjhead)

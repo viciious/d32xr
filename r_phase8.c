@@ -445,10 +445,10 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
       const fixed_t gzt = vis->texturemid + vd.viewz;
       const fixed_t gz = gzt - (vis->patchheight << FRACBITS);
 
-      if ((mh = sectors[vis->heightsec].floorheight) > gz &&
+      if ((mh = sectors[vis->heightsec].ceilingheight) > gz &&
           (h = centerYFrac - FixedMul(mh-=vd.viewz, vis->yscale)) >= 0 &&
           (h >>= FRACBITS) < viewportHeight)
-        if (mh <= 0 || (phs != -1 && vd.viewz > sectors[phs].floorheight))
+        if (mh <= 0 || (phs != -1 && vd.viewz > sectors[phs].ceilingheight))
           {                          // clip bottom
             for (x=vis->x1 ; x<=vis->x2 ; x++)
             {
@@ -463,26 +463,6 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
             const int topclip      = (spropening[x] >> 8);
             if (topclip == 0 || h > topclip)
                spropening[x] = (spropening[x] & 0x00ff) + (h << 8);
-          }
-
-      if ((mh = sectors[vis->heightsec].ceilingheight) < gzt &&
-          (h = centerYFrac - FixedMul(mh-vd.viewz, vis->yscale)) >= 0 &&
-          (h >>= FRACBITS) < viewportHeight)
-        if (phs != -1 && vd.viewz >= sectors[phs].ceilingheight)
-          {                         // clip bottom
-            for (x=vis->x1 ; x<=vis->x2 ; x++)
-            {
-               const int bottomclip   = (spropening[x] & 0xff) - 1;
-              if (bottomclip == viewportHeight || h < bottomclip)
-                spropening[x] = (spropening[x] & 0xff00) + h;
-            }
-          }
-        else                       // clip top
-          for (x=vis->x1 ; x<=vis->x2 ; x++)
-          {
-            const int topclip      = (spropening[x] >> 8);
-            if (topclip == 0 || h > topclip)
-              spropening[x] = (spropening[x] & 0x00ff) + (h << 8);
           }
     }
   // killough 3/27/98: end special clipping for deep water / fake ceilings
@@ -682,6 +662,11 @@ void R_Sprites(void)
 
 #ifdef MARS
    Mars_R_EndDrawSprites();
+   W_GetLumpData(gamemaplump+ML_SEGS);
+   W_GetLumpData(gamemaplump+ML_VERTEXES);
+   W_GetLumpData(gamemaplump+ML_NODES);
+   W_GetLumpData(gamemaplump+ML_BLOCKMAP);
+   W_GetLumpData(gamemaplump+ML_REJECT);
 #endif
 }
 

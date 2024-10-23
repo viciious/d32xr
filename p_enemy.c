@@ -390,7 +390,7 @@ void A_Look (mobj_t *actor, int16_t var1, int16_t var2)
 /* if the sector has a living soundtarget, make that the new target */
 	actor->threshold = 0;		/* any shot will wake up */
 
-	if (!P_LookForPlayers (actor, false, false) )
+	if (!P_LookForPlayers (actor, false, true) )
 		return;
 	
 //seeyou:
@@ -490,6 +490,107 @@ void A_Chase (mobj_t *actor, int16_t var1, int16_t var2)
 }
 
 /*============================================================================= */
+
+void A_BuzzFly(mobj_t *actor, int16_t var1, int16_t var2)
+{
+	if (actor->reactiontime)
+		actor->reactiontime--;
+
+	// modify target threshold
+	if (actor->threshold)
+		actor->threshold--;
+
+	if (!actor->target || actor->target->health <= 0 || (netgame && !actor->threshold && !(actor->flags2 & MF2_SEETARGET)))
+	{
+		actor->momx = actor->momy = actor->momz = 0;
+		P_SetMobjState(actor, mobjinfo[actor->type].spawnstate); // Go back to looking around
+		return;
+	}
+
+	// turn towards movement direction if not there yet
+	actor->angle = R_PointToAngle2(actor->x, actor->y, actor->target->x, actor->target->y);
+
+	// chase towards player
+	{
+		int dist, realspeed;
+		const fixed_t mf = 5*(FRACUNIT/4);
+
+		realspeed = mobjinfo[actor->type].speed;
+
+		dist = P_AproxDistance(P_AproxDistance(actor->target->x - actor->x,
+			actor->target->y - actor->y), actor->target->z - actor->z);
+
+		if (dist < 1)
+			dist = 1;
+
+		actor->momx = FixedMul(FixedDiv(actor->target->x - actor->x, dist), realspeed);
+		actor->momy = FixedMul(FixedDiv(actor->target->y - actor->y, dist), realspeed);
+		actor->momz = FixedMul(FixedDiv(actor->target->z - actor->z, dist), realspeed);
+
+		fixed_t watertop = GetWatertopMo(actor);
+		if (actor->z + actor->momz < watertop)
+		{
+			actor->z = watertop;
+			actor->momz = 0;
+		}
+	}
+}
+
+void A_JetJawRoam(mobj_t *actor, int16_t var1, int16_t var2)
+{
+	if (actor->reactiontime)
+	{
+		actor->reactiontime--;
+		P_InstaThrust(actor, actor->angle, mobjinfo[actor->type].speed*FRACUNIT/4);
+	}
+	else
+	{
+		actor->reactiontime = mobjinfo[actor->type].reactiontime;
+		actor->angle += ANG180;
+	}
+
+	if (P_LookForPlayers (actor, false, false))
+		P_SetMobjState(actor, mobjinfo[actor->type].seestate);
+}
+
+void A_JetJawChomp(mobj_t *actor, int16_t var1, int16_t var2)
+{
+	const mobjinfo_t *ainfo = &mobjinfo[actor->type];
+	int delta;
+
+	if (!(leveltime & 7))
+		S_StartSound(actor, ainfo->attacksound);
+
+/* */
+/* turn towards movement direction if not there yet */
+/* */
+	if (actor->movedir < 8)
+	{
+		actor->angle &= (7<<29);
+		delta = actor->angle - (actor->movedir << 29);
+		if (delta > 0)
+			actor->angle -= ANG90/2;
+		else if (delta < 0)
+			actor->angle += ANG90/2;
+	}
+
+	if (!actor->target || !(actor->target->flags2&MF2_SHOOTABLE)
+		|| !actor->target->health || !(actor->flags2 & MF2_SEETARGET))
+	{
+		P_SetMobjState(actor, ainfo->spawnstate);
+		return;
+	}
+	
+/* */
+/* chase towards player */
+/* */
+	if (--actor->movecount<0 || !P_Move(actor))
+		P_NewChaseDir(actor);
+
+	fixed_t watertop = GetWatertopMo(actor);
+	if (actor->z > watertop - (actor->theight << FRACBITS))
+		actor->z = watertop - (actor->theight << FRACBITS);
+}
 
 /*
 ==============
@@ -851,7 +952,7 @@ void A_FishJump(mobj_t *mo, int16_t var1, int16_t var2)
 	fixed_t watertop = mo->floorz;
 
 	if (subsectors[mo->isubsector].sector->heightsec != -1)
-		watertop = sectors[subsectors[mo->isubsector].sector->heightsec].floorheight - (64<<FRACBITS);
+		watertop = GetWatertopMo(mo) - (64<<FRACBITS);
 
 	if ((mo->z <= mo->floorz) || (mo->z <= watertop))
 	{
@@ -1007,7 +1108,7 @@ void A_BubbleRise(mobj_t *actor, int16_t var1, int16_t var2)
 			(P_Random() & 1) ? FRACUNIT/2 : -FRACUNIT/2);
 
 	if (subsectors[actor->isubsector].sector->heightsec == -1
-		|| actor->z + (actor->theight << (FRACBITS-1)) > sectors[subsectors[actor->isubsector].sector->heightsec].floorheight)
+		|| actor->z + (actor->theight << (FRACBITS-1)) > GetWatertopMo(actor))
 		P_RemoveMobj(actor);
 }
 
@@ -1205,9 +1306,9 @@ void A_Boss1Laser(mobj_t *actor, int16_t var1, int16_t var2)
 		mo->target = actor;
 
 		mo->angle = point->angle;
-		P_UnsetThingPosition(mo);
-		mo->flags = MF_NOCLIP|MF_NOGRAVITY;
-		P_SetThingPosition(mo);
+//		P_UnsetThingPosition(mo);
+//		mo->flags = MF_NOCLIP|MF_NOGRAVITY;
+//		P_SetThingPosition(mo);
 
 		if ((dur & 1) && pointInfo->missilestate)
 			P_SetMobjState(mo, pointInfo->missilestate);
@@ -1229,11 +1330,11 @@ void A_Boss1Laser(mobj_t *actor, int16_t var1, int16_t var2)
 
 		const sector_t *pointSector = subsectors[point->isubsector].sector;
 
-		if (pointSector->heightsec != -1 && point->z <= sectors[pointSector->heightsec].floorheight)
+		if (pointSector->heightsec != -1 && point->z <= GetWatertopSec(pointSector))
 		{
 //			for (i = 0; i < 2; i++)
 			{
-				mobj_t *steam = P_SpawnMobj(x, y, sectors[pointSector->heightsec].floorheight - mobjinfo[MT_DUST].height/2, MT_DUST);
+				mobj_t *steam = P_SpawnMobj(x, y, GetWatertopSec(pointSector) - mobjinfo[MT_DUST].height/2, MT_DUST);
 				if (mobjinfo[point->type].painsound)
 					S_StartSound(steam, mobjinfo[point->type].painsound);
 			}
@@ -1322,7 +1423,7 @@ void A_UnidusBall(mobj_t *actor)
 void A_BubbleSpawn(mobj_t *actor, int16_t var1, int16_t var2)
 {
 	if (subsectors[actor->isubsector].sector->heightsec != -1
-		&& actor->z < sectors[subsectors[actor->isubsector].sector->heightsec].floorheight - 32*FRACUNIT)
+		&& actor->z < GetWatertopMo(actor) - 32*FRACUNIT)
 	{
 		int i;
 		uint8_t prandom;

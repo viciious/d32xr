@@ -138,24 +138,28 @@ static void R_PrepMobj(mobj_t *thing)
    // from the viewer, by either water or fake ceilings
    // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
    const int heightsec = subsectors[thing->isubsector].sector->heightsec;
-
-   if (heightsec != -1)   // only clip things which are in special sectors
+   const int phs = vd.viewsubsector->sector->heightsec;
+   if (heightsec != -1 && phs != -1)   // only clip things which are in special sectors
    {
       const sector_t *heightsector = &sectors[heightsec];
-      const int phs = vd.viewsubsector->sector->heightsec;
+      const fixed_t localgzt = thing->z + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
 
-      if (phs != -1)
+      if (vd.viewz < sectors[phs].ceilingheight) // camera is currently underwater
       {
-         const fixed_t localgzt = thing->z + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
-
-         if (vd.viewz < sectors[phs].floorheight ?
-            thing->z >= heightsector->floorheight :
-            localgzt < heightsector->floorheight)
+         if (thing->z >= heightsector->ceilingheight) // thing is above water
             return;
-         if (vd.viewz > sectors[phs].ceilingheight ?
-            localgzt < heightsector->ceilingheight &&
-            vd.viewz >= heightsector->ceilingheight :
-            thing->z >= heightsector->ceilingheight)
+      }
+      else // camera is out of water
+      {
+         if (localgzt < heightsector->ceilingheight) // thing is underwater
+            return;
+      }
+   }
+   else if (phs != -1)
+   {
+      if (vd.viewz < sectors[phs].ceilingheight) // camera is currently underwater
+      {
+         if (thing->z >= sectors[phs].ceilingheight) // thing is above water
             return;
       }
    }
@@ -322,24 +326,28 @@ static void R_PrepRing(ringmobj_t *thing)
    // from the viewer, by either water or fake ceilings
    // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
    const int heightsec = subsectors[thing->isubsector].sector->heightsec;
-
-   if (heightsec != -1)   // only clip things which are in special sectors
+   const int phs = vd.viewsubsector->sector->heightsec;
+   if (heightsec != -1 && phs != -1)   // only clip things which are in special sectors
    {
       const sector_t *heightsector = &sectors[heightsec];
-      const int phs = vd.viewsubsector->sector->heightsec;
+      const fixed_t localgzt = (thing->z<<FRACBITS) + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
 
-      if (phs != -1)
+      if (vd.viewz < sectors[phs].ceilingheight) // camera is currently underwater
       {
-         const fixed_t localgzt = (thing->z << FRACBITS) + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
-
-         if (vd.viewz < sectors[phs].floorheight ?
-            (thing->z << FRACBITS) >= heightsector->floorheight :
-            localgzt < heightsector->floorheight)
+         if ((thing->z<<FRACBITS) >= heightsector->ceilingheight) // thing is above water
             return;
-         if (vd.viewz > sectors[phs].ceilingheight ?
-            localgzt < heightsector->ceilingheight &&
-            vd.viewz >= heightsector->ceilingheight :
-            (thing->z << FRACBITS) >= heightsector->ceilingheight)
+      }
+      else // camera is out of water
+      {
+         if (localgzt < heightsector->ceilingheight) // thing is underwater
+            return;
+      }
+   }
+   else if (phs != -1)
+   {
+      if (vd.viewz < sectors[phs].ceilingheight) // camera is currently underwater
+      {
+         if ((thing->z<<FRACBITS) >= sectors[phs].ceilingheight) // thing is above water
             return;
       }
    }
@@ -495,24 +503,28 @@ static void R_PrepScenery(scenerymobj_t *thing)
    // from the viewer, by either water or fake ceilings
    // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
    const int heightsec = subsectors[thing->isubsector].sector->heightsec;
-
-   if (heightsec != -1)   // only clip things which are in special sectors
+   const int phs = vd.viewsubsector->sector->heightsec;
+   if (heightsec != -1 && phs != -1)   // only clip things which are in special sectors
    {
       const sector_t *heightsector = &sectors[heightsec];
-      const int phs = vd.viewsubsector->sector->heightsec;
+      const fixed_t localgzt = thingz + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
 
-      if (phs != -1)
+      if (vd.viewz < sectors[phs].ceilingheight) // camera is currently underwater
       {
-         const fixed_t localgzt = thingz + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
-
-         if (vd.viewz < sectors[phs].floorheight ?
-            thingz >= heightsector->floorheight :
-            localgzt < heightsector->floorheight)
+         if (thingz >= heightsector->ceilingheight) // thing is above water
             return;
-         if (vd.viewz > sectors[phs].ceilingheight ?
-            localgzt < heightsector->ceilingheight &&
-            vd.viewz >= heightsector->ceilingheight :
-            thingz >= heightsector->ceilingheight)
+      }
+      else // camera is out of water
+      {
+         if (localgzt < heightsector->ceilingheight) // thing is underwater
+            return;
+      }
+   }
+   else if (phs != -1)
+   {
+      if (vd.viewz < sectors[phs].ceilingheight) // camera is currently underwater
+      {
+         if (thingz >= sectors[phs].ceilingheight) // thing is above water
             return;
       }
    }

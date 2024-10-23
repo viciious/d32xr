@@ -13,6 +13,7 @@
 static const animdef_t	animdefs[] =
 {
 	{false,	"BWATER08",	"BWATER01"},
+	{false, "DWATER08", "DWATER01"},
 	{false,	"FWATER4",	"FWATER1"},
 	{false,	"LAVA4",	"LAVA1"},
 
@@ -965,7 +966,7 @@ void P_SpawnSpecials (void)
 		case 60: // Moving platform
 			EV_DoFloor(&lines[i], floorContinuous);
 			break;
-		case 63: // Boom water
+		case 120: // Water, but kind of boom-style
 		{
 			VINT sec = sides[*lines[i].sidenum].sector;
 			for (int s = -1; (s = P_FindSectorFromLineTag(lines+i,s)) >= 0;)
