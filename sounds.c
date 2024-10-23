@@ -105,9 +105,9 @@ const unsigned char drumsfxmap[] =
   sfx_drbongo2, // 14
   sfx_drkick2,  // 15
   sfx_drsnare2, // 16
-  sfx_ohat1,    // 17
-  sfx_hit1,     // 18
-  sfx_hit2,     // 19
+  sfx_drohat1,  // 17
+  sfx_drhit1,   // 18
+  sfx_drhit2,   // 19
 };
 
 #ifdef MARS

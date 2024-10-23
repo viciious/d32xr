@@ -95,9 +95,9 @@ typedef enum
   sfx_drbongo2,
   sfx_drkick2,
   sfx_drsnare2,
-  sfx_ohat1,
-  sfx_hit1,
-  sfx_hit2,
+  sfx_drohat1,
+  sfx_drhit1,
+  sfx_drhit2,
   NUMSFX
 } sfxenum_t;
 
