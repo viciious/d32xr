@@ -17,6 +17,7 @@
 #define	NUMLCHARS 64
 #define MAXITEMS    128
 
+#define SMALL_STARTXLOW 12
 #define SMALL_STARTX    20
 #define SMALL_PAGEWDTH  160
 #define SMALL_PAGEITMS  20
@@ -373,6 +374,15 @@ int GS_Ticker (void)
             if (D_strcasecmp(gs_menu->path, "/"))
                 GS_PathChange("..", 1);
         }
+        else
+        {
+#ifdef MARS
+            if (buttons & BT_RIGHT)
+            {
+                Mars_MCDOpenTray();
+            }
+#endif
+        }
         return ga_nothing;
     }
 
@@ -530,8 +540,10 @@ void GS_Drawer (void)
         }
     }
 
-    I_Print8(14, 24, "Press A to select an item");
+    I_Print8(SMALL_STARTXLOW, 24, "Press A to select an item");
     if (gs_menu->mode && gs_menu->path[0] != '\0')
-        I_Print8(14, 25, "Press B to return to parent directory");
-    I_Print8(14, 26, "Press C to toggle the file browser");
+        I_Print8(SMALL_STARTXLOW, 25, "Press B to return to parent directory");
+    else if (!gs_menu->mode)
+        I_Print8(SMALL_STARTXLOW, 25, "Hold RIGHT and press B to open CD tray");
+    I_Print8(SMALL_STARTXLOW, 26, "Press C to toggle file browser");
 }

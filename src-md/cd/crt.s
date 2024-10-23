@@ -99,7 +99,7 @@ RequestTable:
         dc.w    SetVolume - RequestTable
         dc.w    SfxRewindSource - RequestTable
         dc.w    ResumeSPCMTrack - RequestTable
-        dc.w    UknownCmd - RequestTable
+        dc.w    OpenTray - RequestTable
         dc.w    PauseResume - RequestTable
 
 UknownCmd:
@@ -289,6 +289,13 @@ StopSPCMTrack:
 
 ResumeSPCMTrack:
         jsr     S_UnpauseSPCMTrack
+
+        move.b  #'D,0x800F.w            /* sub comm port = DONE */
+        bra     WaitAck
+
+OpenTray:
+        move.w  #0x000A,d0              /* DRVOPEN */
+        jsr     0x5F22.w                /* call CDBIOS function */
 
         move.b  #'D,0x800F.w            /* sub comm port = DONE */
         bra     WaitAck

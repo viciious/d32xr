@@ -578,6 +578,7 @@ no_cmd:
         dc.w    load_sfx_cd_fileofs - prireqtbl
         dc.w    read_cd_directory - prireqtbl
         dc.w    resume_spcm_track - prireqtbl
+        dc.w    open_cd_tray - prireqtbl
 
 | process request from Secondary SH2
 handle_sec_req:
@@ -2369,6 +2370,13 @@ read_cd_directory:
 resume_spcm_track:
         move.w  #0x2700,sr          /* disable ints */
         jsr     scd_resume_spcm_track
+        move.w  #0x2000,sr          /* enable ints */
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+open_cd_tray:
+        move.w  #0x2700,sr          /* disable ints */
+        jsr     scd_open_tray
         move.w  #0x2000,sr          /* enable ints */
         move.w  #0,0xA15120         /* done */
         bra     main_loop

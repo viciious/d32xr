@@ -164,6 +164,13 @@ void scd_resume_spcm_track(void)
     write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
 }
 
+void scd_open_tray(void)
+{
+    wait_do_cmd('Y'); // OpenTray command
+    wait_cmd_ack();
+    write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
+}
+
 uint16_t InitCD(void)
 {
     char *bios;
