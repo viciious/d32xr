@@ -323,17 +323,17 @@ extern	fixed_t *distscale/*[SCREENWIDTH]*/;
 extern	VINT		extralight;
 
 #ifdef MARS
-__attribute__((aligned(32)))
+__attribute__((aligned(4)))
 #endif
-extern unsigned int phi_line_bit_shift[7];
+extern unsigned int phi_line_bit_shift[8];	// Last index unused; only for making the compiler happy.
 
 #ifdef MARS
-__attribute__((aligned(16)))
+__attribute__((aligned(4)))
 #endif
 extern unsigned int phi_line;
 
 #ifdef MARS
-__attribute__((aligned(32)))
+__attribute__((aligned(4)))
 #endif
 extern boolean phi_effects;
 

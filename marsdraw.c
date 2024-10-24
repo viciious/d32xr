@@ -1209,7 +1209,6 @@ const int8_t water_filter[128] =
 
 void ApplyHorizontalDistortionFilter(int filter_offset)
 {
-	return;
 	uint16_t *lines = Mars_FrameBufferLines();
 	short pixel_offset = (512/2);
 
@@ -1242,7 +1241,6 @@ void ApplyHorizontalDistortionFilter(int filter_offset)
 
 void RemoveDistortionFilters()
 {
-	return;
 	phi_effects = false;
 
 	uint16_t *lines = Mars_FrameBufferLines();
