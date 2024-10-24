@@ -150,9 +150,9 @@ STATE(SPR_POSS,0,4,A_Chase,S_POSS_RUN2),	/* S_POSS_RUN1 */
 STATE(SPR_POSS,1,4,A_Chase,S_POSS_RUN3),	/* S_POSS_RUN2 */
 STATE(SPR_POSS,2,4,A_Chase,S_POSS_RUN1),	/* S_POSS_RUN3 */
 STATE(SPR_SPOS,0,TICRATE/2,A_Look,S_SPOS_STND),	/* S_SPOS_STND */
-STATE(SPR_SPOS,0,4,A_Chase,S_SPOS_RUN2),	/* S_SPOS_RUN1 */
-STATE(SPR_SPOS,1,4,A_Chase,S_SPOS_RUN3),	/* S_SPOS_RUN2 */
-STATE(SPR_SPOS,2,4,A_Chase,S_SPOS_RUN1),	/* S_SPOS_RUN3 */
+STATE(SPR_SPOS,0,1,A_Chase,S_SPOS_RUN2),	/* S_SPOS_RUN1 */
+STATE(SPR_SPOS,1,1,A_Chase,S_SPOS_RUN3),	/* S_SPOS_RUN2 */
+STATE(SPR_SPOS,2,1,A_Chase,S_SPOS_RUN1),	/* S_SPOS_RUN3 */
 STATE(SPR_FISH,1,1,NULL,S_FISH2), // S_FISH1
 STATE(SPR_FISH,1,2,A_FishJump,S_FISH1), // S_FISH2
 STATE(SPR_FISH,0,1,NULL,S_FISH4), // S_FISH3
@@ -1303,10 +1303,9 @@ MF2_SHOOTABLE|MF2_ENEMY,	// flags2
 		S_XPLD_FLICKY,  // deathstate
 		S_NULL,         // xdeathstate
 		sfx_s3k_3d,     // deathsound
-		2,              // speed
+		4,              // speed
 		24*FRACUNIT,    // radius
 		32*FRACUNIT,    // height
-		0,              // display offset
 		100,            // mass
 		0,              // damage
 		sfx_None,       // activesound
