@@ -803,6 +803,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		I_SetPalette(dc_playpals+palette*768);
 
 		if (!waterpal) {
+			RemoveDistortionFilters();
 			remove_distortion = 1;	// Necessary to normalize the next frame buffer.
 			add_distortion = 0;
 		}
