@@ -62,16 +62,34 @@ void R_InitTexCacheZone(r_texcache_t* c, int zonesize)
 /*
 ================
 =
+= R_InRam
+=
+=================
+*/
+static boolean R_InRam(void *p)
+{
+	if (((uintptr_t)p >= (uintptr_t)mainzone && (uintptr_t)p < (uintptr_t)mainzone + mainzone->size)) {
+		return true;
+	}
+	return false;
+}
+
+/*
+================
+=
 = R_InTexCache
 =
 =================
 */
-boolean R_InTexCache(r_texcache_t* c, void *p)
+int R_InTexCache(r_texcache_t* c, void *p)
 {
 	if (((uintptr_t)p >= (uintptr_t)c->zone && (uintptr_t)p < (uintptr_t)c->zone + c->zonesize)) {
-		return true;
+		return 1;
 	}
-	return false;
+	if (R_InRam(p)) {
+		return 2;
+	}
+	return 0;
 }
 
 /*
@@ -83,11 +101,19 @@ boolean R_InTexCache(r_texcache_t* c, void *p)
 */
 boolean R_TouchIfInTexCache(r_texcache_t* c, void *p)
 {
-	if (R_InTexCache(c, p)) {
+	int s = R_InTexCache(c, p);
+
+	if (s == 2) {
+		// in ram
+		return true;
+	}
+	if (s == 1) {
+		// in texture cache
 		texcacheblock_t *e = *(texcacheblock_t **)(((uintptr_t)p - 4) & ~3);
 		e->lifecount = CACHE_FRAMES_DEFAULT;
 		return true;
 	}
+
 	return false;
 }
 

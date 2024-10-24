@@ -69,7 +69,7 @@ void T_VerticalDoor (vldoor_t *door)
 						break;
 					case close30ThenOpen:
 						door->direction = 0;
-						door->topcountdown = 15*30*THINKERS_TICS;
+						door->topcountdown = 35*30*THINKERS_TICS;
 						break;
 					default:
 						break;
@@ -206,8 +206,8 @@ int EV_DoLockedDoor(line_t* line, vldoor_e type, mobj_t* thing)
 /* */
 /*	Check for locks */
 /* */
-	player = thing->player ? &players[thing->player - 1] : NULL;
-	pnum = player ? player - players : 0;
+	pnum = thing->player ? thing->player -1 : 0;
+	player = thing->player ? &players[pnum] : NULL;
 	if (!player)
 		return 0;
 
@@ -262,8 +262,8 @@ void EV_VerticalDoor (line_t *line, mobj_t *thing)
 /* */
 /*	Check for locks */
 /* */
-	player = thing->player ? &players[thing->player - 1] : NULL;
-	pnum = player ? player - players : 0;
+	pnum = thing->player ? thing->player - 1 : 0;
+	player = thing->player ? &players[pnum] : NULL;
 
 	switch(line->special)
 	{
@@ -411,7 +411,7 @@ void P_SpawnDoorCloseIn30 (sector_t *sec)
 	door->direction = 0;
 	door->type = normal;
 	door->speed = VDOORSPEED;
-	door->topcountdown = 30 * 15 * THINKERS_TICS;
+	door->topcountdown = 30 * 35 * THINKERS_TICS;
 }
 
 /*================================================================== */
@@ -435,6 +435,6 @@ void P_SpawnDoorRaiseIn5Mins (sector_t *sec, int secnum)
 	door->topheight = P_FindLowestCeilingSurrounding(sec);
 	door->topheight -= 4*FRACUNIT;
 	door->topwait = VDOORWAIT;
-	door->topcountdown = 5 * 60 * 15 * THINKERS_TICS;
+	door->topcountdown = 5 * 60 * 35 * THINKERS_TICS;
 }
 

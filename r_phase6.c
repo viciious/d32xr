@@ -53,8 +53,8 @@ typedef struct
 
 static char seg_lock = 0;
 
-static void R_DrawTexture(int x, unsigned iscale, int colnum, fixed_t scale2, int floorclipx, int ceilingclipx, unsigned light, drawtex_t *tex, int miplevel) ATTR_DATA_CACHE_ALIGN;
-static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
+static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, int floorclipx, int ceilingclipx, unsigned light, drawtex_t *tex, int miplevel) ATTR_DATA_CACHE_ALIGN;
+static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex, fixed_t texturemid, fixed_t topheight, fixed_t bottomheight) ATTR_DATA_CACHE_ALIGN;
 
 static void R_LockSeg(void) ATTR_DATA_CACHE_ALIGN;
@@ -64,7 +64,7 @@ void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 //
 // Render a wall texture as columns
 //
-static void R_DrawTexture(int x, unsigned iscale, int colnum, fixed_t scale2, int floorclipx, int ceilingclipx, unsigned light, drawtex_t *tex, int miplevel)
+static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, int floorclipx, int ceilingclipx, unsigned light, drawtex_t *tex, int miplevel)
 {
     fixed_t top, bottom;
 
@@ -86,7 +86,7 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum, fixed_t scale2, in
     // column has no length?
     if (top < bottom)
     {
-        int mipcolnum;
+        VINT colnum, mipcolnum;
         drawmip_t *mip;
         fixed_t frac;
 #ifdef MARS
@@ -95,7 +95,7 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum, fixed_t scale2, in
         pixel_t* src;
 #endif
 
-        colnum &= tex->widthmask;
+        colnum = colnum_ & tex->widthmask;
         mipcolnum = colnum;
         frac = tex->texturemid - (centerY - top) * iscale;
 
@@ -145,7 +145,7 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum, fixed_t scale2, in
 //
 // Main seg drawing loop
 //
-static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
+static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds)
 {
     viswall_t* segl = lseg->segl;
 
@@ -155,23 +155,23 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
     const fixed_t scalestep = segl->scalestep;
 
     const unsigned centerangle = segl->centerangle;
-    unsigned offset = segl->offset;
+    fixed_t offset = segl->offset;
     fixed_t distance = segl->distance;
 
-    const int ceilingheight = segl->ceilingheight;
+    const fixed_t ceilingheight = segl->ceilingheight;
 
     int texturelight = lseg->lightmax;
     int lightmax = lseg->lightmax, lightmin = lseg->lightmin,
         lightcoef = lseg->lightcoef, lightsub = lseg->lightsub;
 
-    const int start = segl->start;
-    const int stop = segl->stop;
-    int x;
+    const VINT start = segl->start;
+    const VINT stop = segl->stop;
+    VINT x;
     unsigned miplevel = 0;
 
     drawtex_t *tex;
 
-    uint16_t *segcolmask = (segl->actionbits & AC_MIDTEXTURE) ? segl->clipbounds + (stop - start + 1) : NULL;
+    uint16_t *restrict segcolmask = (segl->actionbits & AC_MIDTEXTURE) ? segl->clipbounds + (stop - start + 1) : NULL;
 
     for (x = start; x <= stop; x++)
     {
@@ -181,16 +181,16 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
        unsigned colnum, iscale;
 
 #ifdef MARS
-        volatile int32_t t;
+        int32_t t, divunit;
         __asm volatile (
-           "mov #-128, r0\n\t"
-           "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
+           "mov #-128, %1\n\t"
+           "add %1, %1 /* %1 is now 0xFFFFFF00 */ \n\t"
+           "mov.l %2, @(0, %1) /* set 32-bit divisor */ \n\t"
            "mov #0, %0\n\t"
-           "mov.l %0, @(16, r0) /* set high bits of the 64-bit dividend */ \n\t"
-           "mov.l %1, @(0, r0) /* set 32-bit divisor */ \n\t"
+           "mov.l %0, @(16, %1) /* set high bits of the 64-bit dividend */ \n\t"
            "mov #-1, %0\n\t"
-           "mov.l %0, @(20, r0) /* set low  bits of the 64-bit dividend, start divide */\n\t"
-           : "=&r" (t) : "r" (scalefrac) : "r0");
+           "mov.l %0, @(20, %1) /* set low  bits of the 64-bit dividend, start divide */\n\t"
+           : "=&r" (t), "=&r" (divunit) : "r" (scalefrac));
 #else
         fixed_t scale = scalefrac;
 #endif
@@ -204,6 +204,53 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
         ceilingclipx = clipbounds[x];
         floorclipx = ceilingclipx & 0x00ff;
         ceilingclipx = (unsigned)ceilingclipx >> 8;
+
+        //
+        // texture only stuff
+        //
+        if (lightcoef != 0)
+        {
+            // calc light level
+            texturelight = lightsub - FixedMul(scale2, lightcoef);
+            if (texturelight < lightmin)
+                texturelight = lightmin;
+            if (texturelight > lightmax)
+                texturelight = lightmax;
+            texturelight = (unsigned)texturelight >> FRACBITS;
+            texturelight <<= 8;
+        }
+
+        // calculate texture offset
+        r = finetangent((centerangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOFINESHIFT);
+        r = FixedMul(distance, r);
+
+        colnum = ((unsigned)(offset - r)) >> FRACBITS;
+        colnum = (uint8_t)colnum;
+
+        if (segcolmask)
+            segcolmask[x] = texturelight | colnum;
+
+#ifdef MARS
+        __asm volatile (
+            "mov #-128, %0\n\t"
+            "add %0, %0 /* %0 is now 0xFFFFFF00 */ \n\t"
+            "mov.l @(20, %0), %0 /* get 32-bit quotient */ \n\t"
+            : "=r" (iscale));
+#else
+        iscale = 0xffffffffu / scale;
+#endif
+
+#if MIPLEVELS > 1
+        // other texture drawing info
+        miplevel = iscale / MIPSCALE;
+        if (miplevel > lseg->maxmip)
+            lseg->maxmip = miplevel;
+        if (miplevel < lseg->minmip)
+            lseg->minmip = miplevel;
+#endif
+
+        for (tex = lseg->first; tex < lseg->last; tex++)
+            R_DrawTexture(x, iscale, colnum, scale2, floorclipx, ceilingclipx, texturelight, tex, miplevel);
 
         //
         // sky mapping
@@ -221,61 +268,19 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
             if (top < bottom)
             {
                 // CALICO: draw sky column
-                int colnum = ((vd.viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
+                unsigned colnum = ((vd->viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
 #ifdef MARS
-                inpixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
+                inpixel_t* data = skytexturep + colnum * 128;
 #else
-                pixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
+                pixel_t* data = skytexturep + colnum * 128;
 #endif
+                I_SetThreadLocalVar(DOOMTLS_COLORMAP, skycolormaps);
+
                 drawsky(x, top, --bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, 128);
+
+                I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
             }
         }
-
-        //
-        // texture only stuff
-        //
-        if (lightcoef != 0)
-        {
-            // calc light level
-            texturelight = FixedMul(scale2, lightcoef) - lightsub;
-            if (texturelight < lightmin)
-                texturelight = lightmin;
-            else if (texturelight > lightmax)
-                texturelight = lightmax;
-            // convert to a hardware value
-            texturelight = HWLIGHT((unsigned)texturelight>>FRACBITS);
-        }
-
-        // calculate texture offset
-        r = finetangent((centerangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOFINESHIFT);
-        r = FixedMul(distance, r);
-
-        colnum = (offset - r) >> FRACBITS;
-
-        if (segcolmask)
-            segcolmask[x] = texturelight | (colnum & 0xff);
-
-#ifdef MARS
-        __asm volatile (
-            "mov #-128, r0\n\t"
-            "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
-            "mov.l @(20, r0), %0 /* get 32-bit quotient */ \n\t"
-            : "=r" (iscale) : : "r0");
-#else
-        iscale = 0xffffffffu / scale;
-#endif
-
-#if MIPLEVELS > 1
-        // other texture drawing info
-        miplevel = iscale / MIPSCALE;
-        if (miplevel > lseg->maxmip)
-            lseg->maxmip = miplevel;
-        if (miplevel < lseg->minmip)
-            lseg->minmip = miplevel;
-#endif
-
-        for (tex = lseg->first; tex < lseg->last; tex++)
-            R_DrawTexture(x, iscale, colnum, scale2, floorclipx, ceilingclipx, texturelight, tex, miplevel);
     }
 }
 
@@ -336,7 +341,7 @@ static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex,
         columncache += mipheight;
 
         mip->numdecals = tex->decals & 0x3;
-        if (mip->numdecals && R_InTexCache(&r_texcache, mip->data)) {
+        if (mip->numdecals && R_InTexCache(&r_texcache, mip->data) == 1) {
             mip->numdecals = 0;
             continue;
         }
@@ -373,14 +378,14 @@ void R_SegCommands(void)
     I_GetThreadLocalVar(DOOMTLS_COLUMNCACHE, toptex->columncache);
     bottomtex->columncache = toptex->columncache + COLUMN_CACHE_SIZE;
 
-    extralight = vd.extralight;
+    extralight = vd->extralight;
 
-    segcount = vd.lastwallcmd - vd.viswalls;
+    segcount = vd->lastwallcmd - vd->viswalls;
     for (i = 0; i < segcount; i++)
     {
         int seglight;
-        unsigned actionbits;
-        viswall_t* segl = vd.viswalls + i;
+        int actionbits;
+        viswall_t* segl = vd->viswalls + i;
 
 #ifdef MARS
         if (*addedsegs == -1)
@@ -411,9 +416,9 @@ void R_SegCommands(void)
         lseg.maxmip = 0;
 #endif
 
-        if (vd.fixedcolormap)
+        if (vd->fixedcolormap)
         {
-            lseg.lightmin = lseg.lightmax = vd.fixedcolormap;
+            lseg.lightmin = lseg.lightmax = vd->fixedcolormap;
             lseg.lightcoef = 0;
         }
         else
@@ -440,22 +445,65 @@ void R_SegCommands(void)
             if (seglight > lseg.lightmax)
                 seglight = lseg.lightmax;
             lseg.lightmin = seglight;
-
             lseg.lightcoef = 0;
-            if (lseg.lightmin != lseg.lightmax)
-                lseg.lightcoef = ((unsigned)(lseg.lightmax - lseg.lightmin) << FRACBITS) / (800 - 160);
 
-            if (lseg.lightcoef != 0)
+            if (lseg.lightmin != lseg.lightmax)
             {
-                lseg.lightsub = 160 * lseg.lightcoef;
-                lseg.lightcoef <<= LIGHTZSHIFT;
+                int light1, light2;
+
                 lseg.lightmin <<= FRACBITS;
                 lseg.lightmax <<= FRACBITS;
+                lseg.lightcoef = (unsigned)(lseg.lightmax - lseg.lightmin) / (800 - 160);
+                lseg.lightsub = 160 * lseg.lightcoef;
+                lseg.lightcoef <<= LIGHTZSHIFT;
+
+                // calculate lighting values at both end points
+                // if they are the same, disable gradient lighting
+
+                light1 = FixedMul(segl->scalefrac, lseg.lightcoef) - lseg.lightsub;
+                if (light1 < lseg.lightmin)
+                    light1 = lseg.lightmin;
+                else if (light1 > lseg.lightmax)
+                    light1 = lseg.lightmax;
+
+                light2 = FixedMul(segl->scale2, lseg.lightcoef) - lseg.lightsub;
+                if (light2 < lseg.lightmin)
+                    light2 = lseg.lightmin;
+                else if (light2 > lseg.lightmax)
+                    light2 = lseg.lightmax;
+
+                if (light1 == light2)
+                {
+                    lseg.lightcoef = 0;
+                    lseg.lightmax = HWLIGHT((unsigned)light1>>FRACBITS);
+                }
+                else
+                {
+                    int t;
+
+                    // perform HWLIGHT calculations on the coefficients
+                    // to reduce the number of calculations we will do
+                    // later per column
+                    t = lseg.lightmax;
+                    lseg.lightmax = -lseg.lightmin;
+                    lseg.lightmin = -t;
+
+                    if (lseg.lightmax > 0)
+                        lseg.lightmax = 0;
+
+                    lseg.lightsub += 255 * FRACUNIT;
+                    lseg.lightmax += 255 * FRACUNIT;
+                    lseg.lightmin += 255 * FRACUNIT;
+
+                    lseg.lightcoef = (unsigned)lseg.lightcoef >> 3;
+                    lseg.lightsub = (unsigned)lseg.lightsub >> 3;
+                    lseg.lightmax = (unsigned)lseg.lightmax >> 3;
+                    lseg.lightmin = (unsigned)lseg.lightmin >> 3;
+                }
             }
             else
             {
-                lseg.lightcoef = 0;
-                lseg.lightmin = lseg.lightmax = HWLIGHT((unsigned)lseg.lightmax);
+                lseg.lightmax = HWLIGHT((unsigned)lseg.lightmax);
             }
         }
 
@@ -494,7 +542,7 @@ post_draw:
         if(actionbits & (AC_NEWFLOOR|AC_NEWCEILING))
         {
             unsigned w = segl->stop - segl->start + 1;
-            unsigned short *src = segl->clipbounds + segl->start, *dst = clipbounds + segl->start;
+            unsigned short *restrict src = segl->clipbounds + segl->start, *restrict dst = clipbounds + segl->start;
 
             if ((actionbits & (AC_NEWFLOOR|AC_NEWCEILING)) == (AC_NEWFLOOR|AC_NEWCEILING)) {
                 --src;
@@ -527,7 +575,7 @@ void Mars_Sec_R_SegCommands(void)
 {
     viswall_t *segl;
 
-    for (segl = vd.viswalls; segl < vd.lastwallcmd; segl++)
+    for (segl = vd->viswalls; segl < vd->lastwallcmd; segl++)
     {
         if (segl->actionbits & AC_TOPTEXTURE)
         {
@@ -537,6 +585,11 @@ void Mars_Sec_R_SegCommands(void)
         if (segl->actionbits & AC_BOTTOMTEXTURE)
         {
             texture_t* tex = &textures[segl->b_texturenum];
+            Mars_ClearCacheLines(tex->data, (sizeof(tex->data)+31)/16);
+        }
+        if (segl->actionbits & AC_MIDTEXTURE)
+        {
+            texture_t* tex = &textures[segl->m_texturenum];
             Mars_ClearCacheLines(tex->data, (sizeof(tex->data)+31)/16);
         }
 

@@ -39,7 +39,7 @@ typedef struct
    fixed_t endbox[4];          // final proposed position
    fixed_t nvx, nvy;           // normalized line vector
 
-   vertex_t *p1, *p2; // p1, p2 are line endpoints
+   vertex_t p1, p2; // p1, p2 are line endpoints
    fixed_t p3x, p3y, p4x, p4y; // p3, p4 are move endpoints
 
 	int numspechit;
@@ -62,8 +62,8 @@ static int SL_PointOnSide(pslidework_t *sw, fixed_t x, fixed_t y)
 {
    fixed_t dx, dy, dist;
 
-   dx = x - sw->p1->x;
-   dy = y - sw->p1->y;
+   dx = x - sw->p1.x;
+   dy = y - sw->p1.y;
 
    dx = FixedMul(dx, sw->nvx);
    dy = FixedMul(dy, sw->nvy);
@@ -85,14 +85,14 @@ static fixed_t SL_CrossFrac(pslidework_t *sw)
    fixed_t dx, dy, dist1, dist2;
 
    // project move start and end points onto line normal
-   dx = sw->p3x - sw->p1->x;
-   dy = sw->p3y - sw->p1->y;
+   dx = sw->p3x - sw->p1.x;
+   dy = sw->p3y - sw->p1.y;
    dx = FixedMul(dx, sw->nvx);
    dy = FixedMul(dy, sw->nvy);
    dist1 = dx + dy;
 
-   dx = sw->p4x - sw->p1->x;
-   dy = sw->p4y - sw->p1->y;
+   dx = sw->p4x - sw->p1.x;
+   dy = sw->p4y - sw->p1.y;
    dx = FixedMul(dx, sw->nvx);
    dy = FixedMul(dy, sw->nvy);
    dist2 = dx + dy;
@@ -161,8 +161,9 @@ static boolean SL_CheckLine(line_t *ld, pslidework_t *sw)
 {
    fixed_t   opentop, openbottom;
    sector_t *front, *back;
-   int       side1;
-   vertex_t *vtmp;
+   int       side1, dx, dy;
+   angle_t   fineangle;
+   vertex_t vtmp;
    fixed_t  ldbbox[4];
 
    P_LineBBox(ld, ldbbox);
@@ -201,10 +202,20 @@ static boolean SL_CheckLine(line_t *ld, pslidework_t *sw)
 
    // the line is definitely blocking movement at this point
 findfrac:
-   sw->p1  = &vertexes[ld->v1];
-   sw->p2  = &vertexes[ld->v2];
-   sw->nvx = finesine(ld->fineangle);
-   sw->nvy = -finecosine(ld->fineangle);
+   sw->p1.x = vertexes[ld->v1].x << FRACBITS;
+   sw->p1.y = vertexes[ld->v1].y << FRACBITS;
+   sw->p2.x = vertexes[ld->v2].x << FRACBITS;
+   sw->p2.y = vertexes[ld->v2].y << FRACBITS;
+
+   dx = sw->p2.x - sw->p1.x;
+   dy = sw->p2.y - sw->p1.y;
+   fineangle = ( dy == 0 ) ? (( dx < 0 ) ? ANG180 : 0 ) :
+               ( dx == 0 ) ? (( dy < 0 ) ? ANG270 : ANG90 ) :
+               R_PointToAngle(0, 0, dx, dy);
+   fineangle >>= ANGLETOFINESHIFT;
+
+   sw->nvx = finesine(fineangle);
+   sw->nvy = -finecosine(fineangle);
    
    side1 = SL_PointOnSide(sw, sw->slidex, sw->slidey);
    switch(side1)
@@ -215,9 +226,12 @@ findfrac:
       if(ld->sidenum[1] == -1)
          return true; // don't clip to backs of one-sided lines
       // reverse coordinates and angle
-      vtmp = sw->p1;
-      sw->p1   = sw->p2;
-      sw->p2   = vtmp;
+      vtmp.x = sw->p1.x;
+      vtmp.y = sw->p1.y;
+      sw->p1.x = sw->p2.x;
+      sw->p1.y = sw->p2.y;
+      sw->p2.x = vtmp.x;
+      sw->p2.y = vtmp.y;
       sw->nvx  = -sw->nvx;
       sw->nvy  = -sw->nvy;
       break;
@@ -424,10 +438,10 @@ static void SL_CheckSpecialLines(pslidework_t *sw)
                continue;
             }
 
-            x3 = vertexes[ld->v1].x;
-            y3 = vertexes[ld->v1].y;
-            x4 = vertexes[ld->v2].x;
-            y4 = vertexes[ld->v2].y;
+            x3 = vertexes[ld->v1].x << FRACBITS;
+            y3 = vertexes[ld->v1].y << FRACBITS;
+            x4 = vertexes[ld->v2].x << FRACBITS;
+            y4 = vertexes[ld->v2].y << FRACBITS;
 
             side1 = SL_PointOnSide2(x1, y1, x3, y3, x4, y4);
             side2 = SL_PointOnSide2(x2, y2, x3, y3, x4, y4);
