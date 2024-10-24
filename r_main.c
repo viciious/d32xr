@@ -64,14 +64,14 @@ pixel_t		*workingscreen;
 #ifdef MARS
 static int16_t	curpalette = -1;
 
-__attribute__((aligned(32)))
-unsigned int phi_line_bit_shift[7];
+__attribute__((aligned(4)))
+unsigned int phi_line_bit_shift[8];	// Last index unused; only for making the compiler happy.
 
-__attribute__((aligned(32)))
+__attribute__((aligned(4)))
 unsigned int phi_line;
 
 #ifdef MARS
-__attribute__((aligned(32)))
+__attribute__((aligned(4)))
 #endif
 boolean phi_effects;
 
