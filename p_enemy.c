@@ -500,8 +500,9 @@ void A_BuzzFly(mobj_t *actor, int16_t var1, int16_t var2)
 	if (actor->threshold)
 		actor->threshold--;
 
-	if (!actor->target || actor->target->health <= 0 || (netgame && !actor->threshold && !(actor->flags2 & MF2_SEETARGET)))
+	if (!actor->target || !(actor->target->flags2&MF2_SHOOTABLE) || (netgame && !actor->threshold && !(actor->flags2 & MF2_SEETARGET)))
 	{
+		actor->target = NULL;
 		actor->momx = actor->momy = actor->momz = 0;
 		P_SetMobjState(actor, mobjinfo[actor->type].spawnstate); // Go back to looking around
 		return;
@@ -513,7 +514,7 @@ void A_BuzzFly(mobj_t *actor, int16_t var1, int16_t var2)
 	// chase towards player
 	{
 		int dist, realspeed;
-		const fixed_t mf = 5*(FRACUNIT/4);
+//		const fixed_t mf = 5*(FRACUNIT/4);
 
 		realspeed = mobjinfo[actor->type].speed;
 
@@ -549,8 +550,10 @@ void A_JetJawRoam(mobj_t *actor, int16_t var1, int16_t var2)
 		actor->angle += ANG180;
 	}
 
-	if (P_LookForPlayers (actor, false, false))
-		P_SetMobjState(actor, mobjinfo[actor->type].seestate);
+	if (!P_LookForPlayers (actor, false, true))
+		return;
+
+	P_SetMobjState(actor, mobjinfo[actor->type].seestate);
 }
 
 void A_JetJawChomp(mobj_t *actor, int16_t var1, int16_t var2)
@@ -577,6 +580,7 @@ void A_JetJawChomp(mobj_t *actor, int16_t var1, int16_t var2)
 	if (!actor->target || !(actor->target->flags2&MF2_SHOOTABLE)
 		|| !actor->target->health || !(actor->flags2 & MF2_SEETARGET))
 	{
+		actor->target = NULL;
 		P_SetMobjState(actor, ainfo->spawnstate);
 		return;
 	}
@@ -1500,26 +1504,6 @@ void L_MissileHit (mobj_t *mo)
 		P_DamageMobj (missilething, mo, mo->target, damage);
 	}
 	P_ExplodeMissile (mo);
-}
-
-/* a move in p_base.c caused a flying skull to hit another thing or a wall */
-void L_SkullBash (mobj_t *mo)
-{
-	int	damage;
-	mobj_t	*skullthing;
-	const mobjinfo_t* moinfo = &mobjinfo[mo->type];
-
-	skullthing = (mobj_t *)mo->extradata;
-	if (skullthing)
-	{
-		mo->extradata = 0;
-		damage = ((P_Random()&7)+1)* moinfo->damage;
-		P_DamageMobj (skullthing, mo, mo, damage);
-	}
-	
-//	mo->flags &= ~MF_SKULLFLY;
-	mo->momx = mo->momy = mo->momz = 0;
-	P_SetMobjState (mo, moinfo->spawnstate);
 }
 
 /*  */

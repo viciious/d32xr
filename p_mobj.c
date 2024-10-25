@@ -132,7 +132,7 @@ void P_Attract(mobj_t *source, mobj_t *dest)
 	}
 }
 
-fixed_t GetWatertopSec(sector_t *sec)
+fixed_t GetWatertopSec(const sector_t *sec)
 {
 	if (sec->heightsec == -1)
 		return sec->floorheight - 512*FRACUNIT;
@@ -140,9 +140,9 @@ fixed_t GetWatertopSec(sector_t *sec)
 	return sectors[sec->heightsec].ceilingheight;
 }
 
-fixed_t GetWatertopMo(mobj_t *mo)
+fixed_t GetWatertopMo(const mobj_t *mo)
 {
-	sector_t *sec = subsectors[mo->isubsector].sector;
+	const sector_t *sec = subsectors[mo->isubsector].sector;
 	return GetWatertopSec(sec);
 }
 
