@@ -16,7 +16,7 @@ Most monsters are spawned unaware of all players, but some can be made preaware
 */
 
 boolean P_RailThinker(mobj_t *mobj) ATTR_DATA_CACHE_ALIGN;
-boolean P_CheckMeleeRange (mobj_t *actor) ATTR_DATA_CACHE_ALIGN;
+boolean P_CheckMeleeRange (mobj_t *actor, fixed_t range) ATTR_DATA_CACHE_ALIGN;
 boolean P_CheckMissileRange (mobj_t *actor) ATTR_DATA_CACHE_ALIGN;
 boolean P_Move (mobj_t *actor) ATTR_DATA_CACHE_ALIGN;
 boolean P_TryWalk (mobj_t *actor) ATTR_DATA_CACHE_ALIGN;
@@ -33,7 +33,7 @@ void A_Boss1Laser(mobj_t *actor, int16_t var1, int16_t var2) ATTR_DATA_CACHE_ALI
 ================
 */
 
-boolean P_CheckMeleeRange (mobj_t *actor)
+boolean P_CheckMeleeRange (mobj_t *actor, fixed_t range)
 {
 	mobj_t		*pl;
 	fixed_t		dist;
@@ -46,7 +46,7 @@ boolean P_CheckMeleeRange (mobj_t *actor)
 		
 	pl = actor->target;
 	dist = P_AproxDistance (pl->x-actor->x, pl->y-actor->y);
-	if (dist >= MELEERANGE)
+	if (dist >= range)
 		return false;
 	
 	return true;		
@@ -115,7 +115,7 @@ boolean P_Move (mobj_t *actor)
 	
 	if (!P_TryMove (&tm, actor, tryx, tryy) )
 	{	/* open any specials */
-		if ((actor->flags2 & MF2_FLOAT) && (actor->flags2 & MF2_ENEMY) && tm.floatok)
+		if (actor->type != MT_SKIM && (actor->flags2 & MF2_FLOAT) && (actor->flags2 & MF2_ENEMY) && tm.floatok)
 		{	/* must adjust height */
 			if (actor->z < tm.tmfloorz)
 				actor->z += FLOATSPEED;
@@ -464,7 +464,7 @@ void A_Chase (mobj_t *actor, int16_t var1, int16_t var2)
 /* */
 /* check for melee attack */
 /*	 */
-	if (ainfo->meleestate && P_CheckMeleeRange (actor))
+	if (ainfo->meleestate && P_CheckMeleeRange (actor, actor->type == MT_SKIM ? 8*FRACUNIT : 0))
 	{
 		if (ainfo->attacksound)
 			S_StartSound (actor, ainfo->attacksound);
@@ -594,6 +594,20 @@ void A_JetJawChomp(mobj_t *actor, int16_t var1, int16_t var2)
 	fixed_t watertop = GetWatertopMo(actor);
 	if (actor->z > watertop - (actor->theight << FRACBITS))
 		actor->z = watertop - (actor->theight << FRACBITS);
+}
+
+void A_SkimChase(mobj_t *actor, int16_t var1, int16_t var2)
+{
+	A_Chase(actor, var1, var2);
+	actor->z = GetWatertopMo(actor);
+}
+
+// var1: type of object to drop
+void A_DropMine(mobj_t *actor, int16_t var1, int16_t var2)
+{
+	mobj_t *mine = P_SpawnMobj(actor->x, actor->y, actor->z - 12*FRACUNIT, var1);
+	mine->momx = FRACUNIT >> 8; // This causes missile collision to occur
+	S_StartSound(mine, mobjinfo[actor->type].attacksound);
 }
 
 /*

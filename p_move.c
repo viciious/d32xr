@@ -509,6 +509,8 @@ boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly)
          return false; // too big a step up
       if (!((tmthing->flags2 & MF2_FLOAT) || tmthing->player) && mw.tmfloorz - mw.tmdropoffz > 24*FRACUNIT)
          return false; // don't stand over a dropoff
+      if (tmthing->type == MT_SKIM && mw.newsubsec->sector->heightsec == -1)
+         return false; // Skim can't go out of water
    }
 
    // the move is ok, so link the thing into its new position.

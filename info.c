@@ -8,6 +8,8 @@ const char * const sprnames[NUMSPRITES] = {
 "PLAY",
 "ARMA",
 "BBLS",
+"BMNB",
+"BMNE",
 "BOM1",
 "BOM2",
 "BOM3",
@@ -19,6 +21,7 @@ const char * const sprnames[NUMSPRITES] = {
 "DRWN",
 "DUST",
 "EGGM",
+"EGGN",
 "EGLZ",
 "ELEM",
 "FISH",
@@ -34,6 +37,7 @@ const char * const sprnames[NUMSPRITES] = {
 "FWR5",
 "FWR6",
 "GFZC",
+"GOOP",
 "IVSP",
 "JETF",
 "JJAW",
@@ -41,6 +45,7 @@ const char * const sprnames[NUMSPRITES] = {
 "LASF",
 "LASR",
 "MAGN",
+"MINE",
 "MISL",
 "MSTV",
 "POSS",
@@ -51,6 +56,7 @@ const char * const sprnames[NUMSPRITES] = {
 "SCOR",
 "SEWE",
 "SIGN",
+"SKIM",
 "SPLH",
 "SPOS",
 "SPRK",
@@ -60,6 +66,7 @@ const char * const sprnames[NUMSPRITES] = {
 "SSWY",
 "SSWR",
 "STPT",
+"TANK",
 "THZP",
 "THZT",
 "TOKE",
@@ -81,6 +88,8 @@ void A_Chase();
 void A_BuzzFly();
 void A_JetJawRoam();
 void A_JetJawChomp();
+void A_SkimChase();
+void A_DropMine();
 void A_FaceTarget();
 void A_SkullAttack();
 void A_Fall();
@@ -172,6 +181,10 @@ STATE(SPR_JJAW,0,2,A_JetJawRoam,S_JETJAW_ROAM2), // S_JETJAW_ROAM1
 STATE(SPR_JJAW,1,2,A_JetJawRoam,S_JETJAW_ROAM1), // S_JETJAW_ROAM2
 STATE(SPR_JJAW,2,2,A_JetJawChomp,S_JETJAW_CHOMP2), // S_JETJAW_CHOMP1
 STATE(SPR_JJAW,1,2,A_JetJawChomp,S_JETJAW_CHOMP1), // S_JETJAW_CHOMP2
+STATE(SPR_SKIM,0,TICRATE/2,A_Look,S_SKIM_LOOK), // S_SKIM_LOOK
+STATE(SPR_SKIM,0,2,A_SkimChase,S_SKIM_ACTIVE), // S_SKIM_ACTIVE
+STATE(SPR_SKIM,0,TICRATE/2,NULL,S_SKIM_DROP2), // S_SKIM_DROP1
+STATE2(SPR_SKIM,0,TICRATE/2,A_DropMine,MT_MINE,0,S_SKIM_ACTIVE), // S_SKIM_DROP2
 
 STATE(SPR_RING,0,2,NULL,S_RING2), // S_RING1
 STATE(SPR_RING,1,2,NULL,S_RING3), // S_RING2
@@ -462,6 +475,13 @@ STATE(SPR_SPLH,6,2,NULL,S_SPLISH8), // S_SPLISH7
 STATE(SPR_SPLH,7,2,NULL,S_SPLISH9), // S_SPLISH8
 STATE(SPR_SPLH,8,2,NULL,S_NULL),    // S_SPLISH9
 
+STATE(SPR_BOM2,FF_FULLBRIGHT,1,NULL,S_BOSSEXPLODE2), // S_BOSSEXPLODE1
+STATE(SPR_BOM2,FF_FULLBRIGHT|1,1,NULL,S_BOSSEXPLODE3), // S_BOSSEXPLODE2
+STATE(SPR_BOM2,FF_FULLBRIGHT|2,1,NULL,S_BOSSEXPLODE4), // S_BOSSEXPLODE3
+STATE(SPR_BOM2,FF_FULLBRIGHT|3,1,NULL,S_BOSSEXPLODE5), // S_BOSSEXPLODE4
+STATE(SPR_BOM2,FF_FULLBRIGHT|4,1,NULL,S_BOSSEXPLODE6), // S_BOSSEXPLODE5
+STATE(SPR_BOM2,FF_FULLBRIGHT|5,1,NULL,S_NULL), // S_BOSSEXPLODE6
+
 // S3&K Boss Explosion
 STATE(SPR_BOM3,FF_FULLBRIGHT,1,NULL,S_SONIC3KBOSSEXPLOSION2), // S_SONIC3KBOSSEXPLOSION1
 STATE(SPR_BOM3,FF_FULLBRIGHT|1,1,NULL,S_SONIC3KBOSSEXPLOSION3), // S_SONIC3KBOSSEXPLOSION2
@@ -547,6 +567,8 @@ STATE(SPR_DUST,0,4,NULL,S_DUST2), // S_DUST1
 STATE(SPR_DUST,1,5,NULL,S_DUST3), // S_DUST2
 STATE(SPR_DUST,2,3,NULL,S_DUST4), // S_DUST3
 STATE(SPR_DUST,3,2,NULL,S_NULL),  // S_DUST4
+
+STATE(SPR_MINE,0,-1,NULL,NULL), // S_MINE
 
 // Starpost
 STATE(SPR_STPT,0,-1,NULL,S_STARPOST_IDLE), // S_STARPOST_IDLE
@@ -1413,6 +1435,31 @@ MF2_SHOOTABLE|MF2_ENEMY,	// flags2
 		sfx_None,       // activesound
 		MF_NOGRAVITY, // flags
 		MF2_ENEMY|MF2_SHOOTABLE|MF2_FLOAT          // flags2
+	},
+	{           // MT_SKIM
+		109,            // doomednum
+		S_SKIM_LOOK,        // spawnstate
+		1,              // spawnhealth
+		S_SKIM_ACTIVE,         // seestate
+		sfx_None,       // seesound
+		8,              // reactiontime
+		sfx_s3k_51,      // attacksound
+		S_NULL,         // painstate
+		0,              // painchance
+		sfx_None,       // painsound
+		S_SKIM_DROP1,        // meleestate
+		S_NULL,         // missilestate
+		S_XPLD_FLICKY,  // deathstate
+		S_NULL,         // xdeathstate
+		sfx_s3k_3d,        // deathsound
+		8,              // speed
+		16*FRACUNIT,    // radius
+		24*FRACUNIT,    // height
+		100,            // mass
+		0,              // damage
+		sfx_None,       // activesound
+		MF_SPECIAL|MF_NOGRAVITY, // flags
+		MF2_ENEMY|MF2_SHOOTABLE|MF2_FLOAT // flags2
 	},
 	{           // MT_JETJAW
 		113,            // doomednum
@@ -2544,6 +2591,32 @@ MF2_SHOOTABLE|MF2_ENEMY,	// flags2
 		0, // flags2
 	},
 
+	{           // MT_BOSSEXPLODE
+		-1,             // doomednum
+		S_BOSSEXPLODE1,  // spawnstate
+		1000,           // spawnhealth
+		S_NULL,         // seestate
+		sfx_None,       // seesound
+		8,              // reactiontime
+		sfx_None,       // attacksound
+		S_NULL,         // painstate
+		0,              // painchance
+		sfx_None,       // painsound
+		S_NULL,         // meleestate
+		S_NULL,         // missilestate
+		S_NULL,         // deathstate
+		S_NULL,         // xdeathstate
+		sfx_None,       // deathsound
+		1,              // speed
+		8*FRACUNIT,     // radius
+		16*FRACUNIT,    // height
+		4,              // mass
+		0,              // damage
+		sfx_None,       // activesound
+		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY|MF_STATIC, // flags
+		MF2_NARROWGFX          // flags2
+	},
+
 	{           // MT_SONIC3KBOSSEXPLODE
 		-1,                      // doomednum
 		S_SONIC3KBOSSEXPLOSION1, // spawnstate
@@ -2776,6 +2849,31 @@ MF2_SHOOTABLE|MF2_ENEMY,	// flags2
 		sfx_None,       // activesound
 		MF_NOBLOCKMAP|MF_NOGRAVITY|MF_NOCLIP|MF_STATIC, // flags
 		MF2_NARROWGFX, // flags2
+	},
+	{           // MT_MINE
+		-1,             // doomednum
+		S_MINE,        // spawnstate
+		1,              // spawnhealth
+		S_NULL,         // seestate
+		sfx_None,       // seesound
+		8,              // reactiontime
+		sfx_None,       // attacksound
+		S_NULL,         // painstate
+		0,              // painchance
+		sfx_None,       // painsound
+		S_NULL,         // meleestate
+		S_NULL,         // missilestate
+		S_XPLD1,        // deathstate
+		S_XPLD1,        // xdeathstate
+		sfx_s3k_b4,     // deathsound
+		0,              // speed
+		8*FRACUNIT,     // radius
+		10*FRACUNIT,    // height
+		0,              // mass
+		64,             // damage
+		sfx_None,       // activesound
+		MF_NOBLOCKMAP,  // flags
+		MF2_MISSILE     // flags2
 	},
 
 };
