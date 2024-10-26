@@ -763,7 +763,10 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 			return;
 
 		if (curcdtrack == cdtrack && muslooping == looping)
+		{
+			Mars_PlayTrack(1, playtrack, cd_pwad_name, -1, 0, looping);
 			return;
+		}
 	}
 	else if (musictype == mustype_fm)
 	{

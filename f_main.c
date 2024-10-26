@@ -336,13 +336,16 @@ void F_Start (void)
 #ifdef MARS
 	Z_FreeTags (mainzone);
 
-	W_LoadPWAD(PWAD_CD);
+	if (finale)
+	{
+		W_LoadPWAD(PWAD_CD);
 
-	l = W_CheckNumForName("BOSSBACK");
-	if (l >= 0)
-		fin->bossback = W_CacheLumpNum(l, PU_STATIC);
+		l = W_CheckNumForName("BOSSBACK");
+		if (l >= 0)
+			fin->bossback = W_CacheLumpNum(l, PU_STATIC);
 
-	W_LoadPWAD(PWAD_NONE);
+		W_LoadPWAD(PWAD_NONE);
+	}
 #endif
 
 	if (!finale || !gameinfo.victoryMus || !*gameinfo.victoryMus)
