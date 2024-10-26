@@ -10,7 +10,8 @@ static const switchlist_t alphSwitchList[] =
 {
 	{"SW1BRN1", 	"SW2BRN1"},
 	{"SW1BRMET",    "SW2BRMET"},
-	{"SW1CMT2",     "SW2CMT2"},
+	{"SW1CMT",      "SW2CMT"},
+	{"SW1CMTQ",     "SW2CMTQ"},
 	{"SW1DBLU",     "SW2DBLU"},
 	{"SW1DRED",     "SW2DRED"},
 	{"SW1DYEL",     "SW2DYEL"},
