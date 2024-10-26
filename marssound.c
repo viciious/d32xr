@@ -746,12 +746,10 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 
 	if (musictype == mustype_cd)
 	{
-		// ignore the first data track
-		int num_cd_tracks = (int)mars_num_cd_tracks - 1;
-
 		if (S_CDAvailable())
 		{
-			/* there is a disc with at least enough tracks */
+			int num_cd_tracks = (int)mars_num_cd_tracks - 1;
+			/* there is a disc with enough tracks */
 			if (num_cd_tracks == 0)
 				playtrack = -1;
 			else if (cdtrack < 0)
