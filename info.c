@@ -90,6 +90,9 @@ void A_JetJawRoam();
 void A_JetJawChomp();
 void A_SkimChase();
 void A_DropMine();
+void A_MineRange();
+void A_MineExplode();
+void A_SetObjectFlags2();
 void A_FaceTarget();
 void A_SkullAttack();
 void A_Fall();
@@ -184,7 +187,17 @@ STATE(SPR_JJAW,1,2,A_JetJawChomp,S_JETJAW_CHOMP1), // S_JETJAW_CHOMP2
 STATE(SPR_SKIM,0,TICRATE/2,A_Look,S_SKIM_LOOK), // S_SKIM_LOOK
 STATE(SPR_SKIM,0,2,A_SkimChase,S_SKIM_ACTIVE), // S_SKIM_ACTIVE
 STATE(SPR_SKIM,0,TICRATE/2,NULL,S_SKIM_DROP2), // S_SKIM_DROP1
-STATE2(SPR_SKIM,0,TICRATE/2,A_DropMine,MT_MINE,0,S_SKIM_ACTIVE), // S_SKIM_DROP2
+STATE2(SPR_SKIM,0,TICRATE,A_DropMine,MT_MINE,0,S_SKIM_ACTIVE), // S_SKIM_DROP2
+
+STATE2(SPR_BMNE,0,2,A_Look,224,1,S_BIGMINE_IDLE), // S_BIGMINE_IDLE
+STATE2(SPR_BMNE,1,2,A_MineRange,112,0,S_BIGMINE_ALERT), // S_BIGMINE_ALERT
+STATE(SPR_BMNE,1,TICRATE,A_Pain,S_BIGMINE_SET2), // S_BIGMINE_SET1
+STATE2(SPR_BMNE,1,TICRATE/3,A_SetObjectFlags2,MF2_SHOOTABLE,1,S_BIGMINE_SET3), // S_BIGMINE_SET2
+STATE(SPR_BMNE,1,1,A_MineExplode,S_BIGMINE_BLAST1), // S_BIGMINE_SET3
+STATE(SPR_BMNB,FF_FULLBRIGHT,2,NULL,S_BIGMINE_BLAST2), // S_BIGMINE_BLAST1
+STATE(SPR_BMNB,FF_FULLBRIGHT|1,2,NULL,S_BIGMINE_BLAST3), // S_BIGMINE_BLAST2
+STATE(SPR_BMNB,FF_FULLBRIGHT|2,1,NULL,S_BIGMINE_BLAST4), // S_BIGMINE_BLAST3
+STATE(SPR_BMNB,FF_FULLBRIGHT|3,1,NULL,S_NULL), // S_BIGMINE_BLAST4
 
 STATE(SPR_RING,0,2,NULL,S_RING2), // S_RING1
 STATE(SPR_RING,1,2,NULL,S_RING3), // S_RING2
@@ -1485,6 +1498,31 @@ MF2_SHOOTABLE|MF2_ENEMY,	// flags2
 		sfx_None,       // activesound
 		MF_NOGRAVITY, // flags
 		MF2_ENEMY|MF2_SHOOTABLE|MF2_FLOAT         // flags2
+	},
+	{           // MT_BIGMINE
+		1012,           // doomednum
+		S_BIGMINE_IDLE, // spawnstate
+		1,              // spawnhealth
+		S_BIGMINE_ALERT, // seestate
+		sfx_s3k_5c,      // seesound
+		8,              // reactiontime
+		sfx_None,       // attacksound
+		S_NULL,         // painstate
+		0,              // painchance
+		sfx_s3k_86,      // painsound
+		S_BIGMINE_SET1, // meleestate
+		S_NULL,         // missilestate
+		S_BIGMINE_SET2, // deathstate
+		S_NULL,         // xdeathstate
+		sfx_None,       // deathsound
+		2*FRACUNIT,     // speed
+		28*FRACUNIT,    // radius
+		56*FRACUNIT,    // height
+		MT_SONIC3KBOSSEXPLODE,   // mass
+		0,              // damage
+		sfx_s3k_9e,      // activesound
+		MF_SPECIAL|MF_NOGRAVITY, // flags
+		MF2_SHOOTABLE|MF2_ENEMY          // flags2
 	},
 
 {           // MT_RING

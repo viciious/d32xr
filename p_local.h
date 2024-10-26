@@ -168,7 +168,7 @@ fixed_t Mobj_GetHalfHeight(mobj_t *mo);
 
 void A_MissileExplode (mobj_t *mo);
 void A_SkullBash (mobj_t *mo);
-boolean P_LookForPlayers (mobj_t *actor, boolean allaround, boolean nothreshold) ATTR_DATA_CACHE_ALIGN;
+boolean P_LookForPlayers (mobj_t *actor, fixed_t distLimit, boolean allaround, boolean nothreshold) ATTR_DATA_CACHE_ALIGN;
 
 /*
 ===============================================================================

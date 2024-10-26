@@ -17,6 +17,7 @@ typedef struct
 	mobj_t		*bombsource;
 	mobj_t		*bombspot;
 	int			bombdamage;
+	fixed_t     dist;
 } pradiusattack_t;
 
 static fixed_t P_InterceptVector(divline_t* v2, divline_t* v1) ATTR_DATA_CACHE_ALIGN;
@@ -297,7 +298,7 @@ void P_UseLines (player_t *player)
 
 boolean PIT_RadiusAttack (mobj_t *thing, pradiusattack_t *ra)
 {
-	fixed_t		dx, dy, dist;
+	fixed_t		dx, dy, dz, dist;
 
 	if (thing->flags & MF_RINGMOBJ)
 		return true;
@@ -307,14 +308,15 @@ boolean PIT_RadiusAttack (mobj_t *thing, pradiusattack_t *ra)
 
 	dx = D_abs(thing->x - ra->bombspot->x);
 	dy = D_abs(thing->y - ra->bombspot->y);
+	dz = D_abs(thing->z - ra->bombspot->z);
 	dist = dx>dy ? dx : dy;
-	dist = (dist - mobjinfo[thing->type].radius) >> FRACBITS;
+	dist = (dist - mobjinfo[thing->type].radius);
 	if (dist < 0)
 		dist = 0;
-	if (dist >= ra->bombdamage)
+	if (dist >= ra->dist || dz >= ra->dist)
 		return true;		/* out of range */
 /* FIXME?	if ( P_CheckSight (thing, bombspot) )	// must be in direct path */
-		P_DamageMobj (thing, ra->bombspot, ra->bombsource, ra->bombdamage - dist);
+		P_DamageMobj (thing, ra->bombspot, ra->bombsource, (ra->bombdamage - dist) >> FRACBITS);
 	return true;
 }
 
@@ -331,14 +333,13 @@ boolean PIT_RadiusAttack (mobj_t *thing, pradiusattack_t *ra)
 void P_RadiusAttack (mobj_t *spot, mobj_t *source, int damage)
 {
 	int			x,y, xl, xh, yl, yh;
-	fixed_t		dist;
 	pradiusattack_t ra;
 	
-	dist = (damage+MAXRADIUS)<<FRACBITS;
-	yh = spot->y + dist - bmaporgy;
-	yl = spot->y - dist - bmaporgy;
-	xh = spot->x + dist - bmaporgx;
-	xl = spot->x - dist - bmaporgx;
+	ra.dist = (damage+MAXRADIUS)<<FRACBITS;
+	yh = spot->y + ra.dist - bmaporgy;
+	yl = spot->y - ra.dist - bmaporgy;
+	xh = spot->x + ra.dist - bmaporgx;
+	xl = spot->x - ra.dist - bmaporgx;
 
 	if(xl < 0)
 		xl = 0;

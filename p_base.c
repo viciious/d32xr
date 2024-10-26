@@ -592,7 +592,7 @@ static void P_Boss1Thinker(mobj_t *mobj)
 			return;
 
 		// look for a new target
-		if (P_LookForPlayers(mobj, false, true) && mobjInfo->seesound)
+		if (P_LookForPlayers(mobj, 0, false, true) && mobjInfo->seesound)
 			S_StartSound(mobj, mobjInfo->seesound);
 
 		return;

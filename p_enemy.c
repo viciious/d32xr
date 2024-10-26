@@ -306,7 +306,7 @@ void P_NewChaseDir (mobj_t *actor)
 ================
 */
 
-boolean P_LookForPlayers (mobj_t *actor, boolean allaround, boolean nothreshold)
+boolean P_LookForPlayers (mobj_t *actor, fixed_t distLimit, boolean allaround, boolean nothreshold)
 {
 	int 		i, j;
 	angle_t		an;
@@ -341,6 +341,9 @@ newtarget:
 	mo = actor->target;
 	if (!mo || mo->health <= 0)
 		goto newtarget;
+
+	if (distLimit > 0 && P_AproxDistance(P_AproxDistance(actor->x - mo->x, actor->y - mo->y), actor->z - mo->z) > distLimit)
+		return false;
 		
 	if (!allaround)
 	{
@@ -378,6 +381,8 @@ newtarget:
 =
 = Stay in state until a player is sighted
 =
+= var1: distance limit
+= var2: allaround if nonzero
 ==============
 */
 
@@ -390,7 +395,7 @@ void A_Look (mobj_t *actor, int16_t var1, int16_t var2)
 /* if the sector has a living soundtarget, make that the new target */
 	actor->threshold = 0;		/* any shot will wake up */
 
-	if (!P_LookForPlayers (actor, false, true) )
+	if (!P_LookForPlayers (actor, var1 << FRACBITS, var2, true) )
 		return;
 	
 //seeyou:
@@ -455,7 +460,7 @@ void A_Chase (mobj_t *actor, int16_t var1, int16_t var2)
 	if (!actor->target || !(actor->target->flags2&MF2_SHOOTABLE)
 		|| (netgame && !actor->threshold && !(actor->flags2 & MF2_SEETARGET)))
 	{	/* look for a new target */
-		if (P_LookForPlayers(actor,true,false))
+		if (P_LookForPlayers(actor,2048 << FRACBITS,true,false))
 			return;		/* got a new target */
 		P_SetMobjState (actor, ainfo->spawnstate);
 		return;
@@ -550,7 +555,7 @@ void A_JetJawRoam(mobj_t *actor, int16_t var1, int16_t var2)
 		actor->angle += ANG180;
 	}
 
-	if (!P_LookForPlayers (actor, false, true))
+	if (!P_LookForPlayers (actor, 2048 << FRACBITS, false, true))
 		return;
 
 	P_SetMobjState(actor, mobjinfo[actor->type].seestate);
@@ -608,6 +613,47 @@ void A_DropMine(mobj_t *actor, int16_t var1, int16_t var2)
 	mobj_t *mine = P_SpawnMobj(actor->x, actor->y, actor->z - 12*FRACUNIT, var1);
 	mine->momx = FRACUNIT >> 8; // This causes missile collision to occur
 	S_StartSound(mine, mobjinfo[actor->type].attacksound);
+}
+
+// var1: distance to change to  meleestate
+void A_MineRange(mobj_t *actor, int16_t var1, int16_t var2)
+{
+	if (!actor->target)
+		return;
+
+	if (P_AproxDistance(P_AproxDistance(actor->x - actor->target->x, actor->y - actor->target->y), actor->z - actor->target->z)>>FRACBITS < var1)
+		P_SetMobjState(actor, mobjinfo[actor->type].meleestate);
+}
+
+void A_MineExplode(mobj_t *actor, int16_t var1, int16_t var2)
+{
+	S_StartSound(actor, mobjinfo[actor->type].deathsound);
+
+	P_RadiusAttack(actor, actor, 128);
+	actor->flags |= MF_NOGRAVITY|MF_NOCLIP;
+	P_SpawnMobj(actor->x, actor->y, actor->z, mobjinfo[actor->type].mass);
+	S_StartSound(actor, sfx_s3k_6c);
+
+	const int dist = 4; // 64
+	#define RandomValue ((P_Random() & 1) ? P_Random() / dist : P_Random() / -dist)
+	for (int i = 0; i < 8; i++)
+	{
+		mobj_t *b = P_SpawnMobj(actor->x+RandomValue*FRACUNIT,
+			actor->y+RandomValue*FRACUNIT,
+			actor->z+RandomValue*FRACUNIT,
+			mobjinfo[actor->type].mass);
+	}
+	#undef RandomValue
+}
+
+void A_SetObjectFlags2(mobj_t *actor, int16_t var1, int16_t var2)
+{
+	if (var2 == 2)
+		actor->flags2 |= var1;
+	else if (var2 == 1)
+		actor->flags2 &= ~var1;
+	else
+		actor->flags2 = var1;
 }
 
 /*
@@ -1230,7 +1276,7 @@ nomissile:
 	// possibly choose another target
 	if ((splitscreen || netgame) && P_Random() < 2)
 	{
-		if (P_LookForPlayers(actor, true, true))
+		if (P_LookForPlayers(actor, 0, true, true))
 			return; // got a new target
 	}
 
