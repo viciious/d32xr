@@ -189,8 +189,7 @@ typedef struct
 
 typedef struct
 {
-	short			numframes;
-	short			firstframe; /* index in the spriteframes array */
+	short firstFrame;
 } spritedef_t;
 
 extern	spriteframe_t	*spriteframes;

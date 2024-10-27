@@ -62,10 +62,10 @@ static void R_PrepMobj(mobj_t *thing)
    const uint16_t frame = states[thing->state].frame;
 
    // check frame for validity
-   if ((frame & FF_FRAMEMASK) >= sprdef->numframes)
-       return;
+//   if ((frame & FF_FRAMEMASK) >= UPPER5(sprdef->frameInfo)+1)
+//       return;
 
-   sprframe = &spriteframes[sprdef->firstframe + (frame & FF_FRAMEMASK)];
+   sprframe = &spriteframes[sprdef->firstFrame + (frame & FF_FRAMEMASK)];
    sprlump = &spritelumps[sprframe->lump];
 
    lump = sprlump[0];
@@ -282,7 +282,7 @@ static void R_PrepRing(ringmobj_t *thing)
 
    flip = thingframe & FF_FLIPPED;
 
-   sprframe = &spriteframes[sprdef->firstframe + (thingframe & FF_FRAMEMASK)];
+   sprframe = &spriteframes[sprdef->firstFrame + (thingframe & FF_FRAMEMASK)];
    sprlump = &spritelumps[sprframe->lump];
 
    // sprite has a single view for all rotations
@@ -446,7 +446,7 @@ static void R_PrepScenery(scenerymobj_t *thing)
 
    const boolean flip = thingframe & FF_FLIPPED;
 
-   sprframe = &spriteframes[sprdef->firstframe + (thingframe & FF_FRAMEMASK)];
+   sprframe = &spriteframes[sprdef->firstFrame + (thingframe & FF_FRAMEMASK)];
    sprlump = &spritelumps[sprframe->lump];
 
    // sprite has a single view for all rotations

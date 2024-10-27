@@ -651,6 +651,7 @@ void R_InitSpriteDefs(const char** namelist)
 	int		totalframes;
 	int 	totallumps;
 	VINT 	*lumps;
+	uint8_t numFrames[NUMSPRITES];
 
 	if (firstsprite < 0)
 	{
@@ -715,7 +716,7 @@ void R_InitSpriteDefs(const char** namelist)
 		// check the frames that were found for completeness
 		if (maxframe == -1)
 		{
-			sprites[i].numframes = 0;
+			numFrames[i] = 0;
 			continue;
 		}
 
@@ -744,7 +745,7 @@ void R_InitSpriteDefs(const char** namelist)
 		}
 
 		// allocate space for the frames present and copy sprtemp to it
-		sprites[i].numframes = maxframe;
+		numFrames[i] = maxframe;
 
 		sprtemp += maxframe;
 		totalframes += maxframe;
@@ -815,10 +816,8 @@ void R_InitSpriteDefs(const char** namelist)
 	l = 0;
 	for (i = 0; i < NUMSPRITES; i++)
 	{
-		int numframes;
-
-		numframes = sprites[i].numframes;
-		sprites[i].firstframe = l;
+		const int numframes = numFrames[i];
+		sprites[i].firstFrame = l;
 
 		l += numframes;
 	}
