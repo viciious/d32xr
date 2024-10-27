@@ -108,12 +108,7 @@ void G_DoLoadLevel (void)
 		players[i].health = 1;
 		players[i].shield = 0;
 		memset(players[i].powers, 0, sizeof(players[i].powers));
-		players[i].damagecount = 0;
 		players[i].whiteFlash = 0;
-		players[i].attacker = NULL;
-		players[i].extralight = 0;
-		players[i].didsecret = false;
-		players[i].lastsoundsector = NULL;
 		players[i].lossCount = 0;
 		players[i].stillTimer = 0;
 		players[i].justSprung = 0;
@@ -259,8 +254,6 @@ void G_PlayerFinishLevel (int player)
 	p = &players[player]; 
 	 
 	D_memset (p->powers, 0, sizeof (p->powers)); 
-	p->extralight = 0;                      /* cancel gun flashes  */
-	p->damagecount = 0;                     /* no palette changes  */
 	p->whiteFlash = 0; 
 
 	if (netgame == gt_deathmatch)

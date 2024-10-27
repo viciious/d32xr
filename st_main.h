@@ -123,11 +123,10 @@ typedef struct
 	VINT    rings;
 	VINT    lives;
 
-	boolean intermission;
-
-	char	forcedraw;
-	char    msg[128];
 	VINT    msgTics;
+	char    msg[128];
+
+	boolean intermission;
 } stbar_t;
 
 extern	stbar_t	*stbar;

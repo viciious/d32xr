@@ -48,7 +48,6 @@ LIBS = $(LIBPATH) -lc -lgcc -lgcc-Os-4-200 -lnosys
 OBJS = \
 	crt0.o \
 	f_main.o \
-	f_wipe.o \
 	in_main.o \
 	st_main.o \
 	st_inter.o \
@@ -61,7 +60,6 @@ OBJS = \
 	info.o \
 	p_camera.o \
 	p_ceilng.o \
-	p_doors.o \
 	p_enemy.o \
 	p_floor.o \
 	p_inter.o \
@@ -70,10 +68,8 @@ OBJS = \
 	p_maputl.o \
 	p_mobj.o \
 	p_plats.o \
-	p_pspr.o \
 	p_setup.o \
 	p_spec.o \
-	p_switch.o \
 	p_telept.o \
 	p_tick.o \
 	p_base.o \

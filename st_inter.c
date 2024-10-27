@@ -11,15 +11,13 @@ typedef union
 		VINT min, sec;
 		int tics;
 		boolean gotperfbonus; // true if we should show the perfect bonus line
-		VINT ttlnum; // act number being displayed
 		VINT ptimebonus; // TIME BONUS
 		VINT pringbonus; // RING BONUS
 		VINT pperfbonus; // PERFECT BONUS
 		VINT ptotal; // TOTAL
-		char passed1[13]; // KNUCKLES GOT
-		char passed2[16]; // THROUGH THE ACT
+		const char *passed1; // KNUCKLES GOT
+		const char *passed2; // THROUGH THE ACT
 		VINT passedx1, passedx2;
-		VINT gotlife; // Player # that got an extra life
 	} coop;
 } y_data;
 
@@ -311,8 +309,8 @@ void Y_StartIntermission(void)
 			data.coop.pringbonus = W_CheckNumForName("YB_RING");
 //			data.coop.pperfbonus = W_CheckNumForName("YPFBONUS");
 
-			strcpy(data.coop.passed1, "sonic got");
-			strcpy(data.coop.passed2, "through act");
+			data.coop.passed1 = "sonic got";
+			data.coop.passed2 = "through act";
 			
 			data.coop.passedx1 = 150;
 			data.coop.passedx2 = 150;

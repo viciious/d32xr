@@ -481,7 +481,6 @@ boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly)
    mw.tmx = tm->tmx;
    mw.tmy = tm->tmy;
    mw.tmthing = tm->tmthing;
-   mw.spechit = &tm->spechit[0];
 
    trymove2 = PM_CheckPosition(&mw);
 
@@ -490,7 +489,6 @@ boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly)
    tm->tmfloorz = mw.tmfloorz;
    tm->tmceilingz = mw.tmceilingz;
    tm->tmdropoffz = mw.tmdropoffz;
-   tm->numspechit = mw.numspechit;
 
    if(checkposonly)
       return trymove2;
@@ -522,25 +520,6 @@ boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly)
    P_SetThingPosition2(tmthing, mw.newsubsec);
 
    return true;
-}
-
-void P_MoveCrossSpecials(mobj_t *tmthing, int numspechit, line_t **spechit, fixed_t oldx, fixed_t oldy)
-{
-    int i;
-
-    if ((tmthing->flags&MF_NOCLIP))
-      return;
-
-    for (i = 0; i < numspechit; i++)
-    {
-      line_t *ld = spechit[i];
-      int side, oldside;
-      // see if the line was crossed
-      side = P_PointOnLineSide (tmthing->x, tmthing->y, ld);
-      oldside = P_PointOnLineSide (oldx, oldy, ld);
-      if (side != oldside)
-         P_CrossSpecialLine(ld, tmthing);
-    }
 }
 
 // EOF

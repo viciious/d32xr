@@ -321,7 +321,6 @@ fixed_t P_CompletableFrac(pslidework_t *sw, fixed_t dx, fixed_t dy)
    if(sw->blockfrac < 0x1000)
    {
       sw->blockfrac   = 0;
-      sw->numspechit = 0;     // can't cross anything on a bad move
       return 0;           // solid wall
    }
 
@@ -351,130 +350,6 @@ static int SL_PointOnSide2(fixed_t x1, fixed_t y1,
    return ((dist < 0) ? SIDE_BACK : SIDE_FRONT);
 }
 
-static void SL_CheckSpecialLines(pslidework_t *sw)
-{
-   fixed_t x1 = sw->slidething->x;
-   fixed_t y1 = sw->slidething->y;
-   fixed_t x2 = sw->slidex;
-   fixed_t y2 = sw->slidey;
-
-   fixed_t bx, by, xl, xh, yl, yh;
-   fixed_t bxl, bxh, byl, byh;
-   fixed_t x3, y3, x4, y4;
-   int side1, side2;
-
-   VINT *lvalidcount, vc;
-
-   if(x1 < x2)
-   {
-      xl = x1;
-      xh = x2;
-   }
-   else
-   {
-      xl = x2;
-      xh = x1;
-   }
-
-   if(y1 < y2)
-   {
-      yl = y1;
-      yh = y2;
-   }
-   else
-   {
-      yl = y2;
-      yh = y1;
-   }
-
-   bxl = xl - bmaporgx;
-   bxh = xh - bmaporgx;
-   byl = yl - bmaporgy;
-   byh = yh - bmaporgy;
-
-   if(bxl < 0)
-      bxl = 0;
-   if(byl < 0)
-      byl = 0;
-   if(byh < 0)
-      return;
-   if(bxh < 0)
-      return;
-
-   bxl = (unsigned)bxl >> MAPBLOCKSHIFT;
-   bxh = (unsigned)bxh >> MAPBLOCKSHIFT;
-   byl = (unsigned)byl >> MAPBLOCKSHIFT;
-   byh = (unsigned)byh >> MAPBLOCKSHIFT;
-
-   if(bxh >= bmapwidth)
-      bxh = bmapwidth - 1;
-   if(byh >= bmapheight)
-      byh = bmapheight - 1;
-
-   sw->numspechit = 0;
-
-   I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
-   vc = *lvalidcount + 1;
-   if (vc == 0)
-      vc = 0;
-   *lvalidcount = vc;
-   ++lvalidcount;
-
-   for(bx = bxl; bx <= bxh; bx++)
-   {
-      for(by = byl; by <= byh; by++)
-      {
-         short  *list;
-         line_t *ld;
-         int offset = by * bmapwidth + bx;
-         offset = *(blockmaplump+4 + offset);
-	      fixed_t ldbbox[4];
-         
-         for(list = blockmaplump + offset; *list != -1; list++)
-         {
-            ld = &lines[*list];
-            if(!ld->special)
-               continue;
-            if(lvalidcount[*list] == vc)
-               continue; // already checked
-            
-            lvalidcount[*list] = vc;
-
-	         P_LineBBox(ld, ldbbox);
-            if(xh < ldbbox[BOXLEFT  ] ||
-               xl > ldbbox[BOXRIGHT ] ||
-               yh < ldbbox[BOXBOTTOM] ||
-               yl > ldbbox[BOXTOP   ])
-            {
-               continue;
-            }
-
-            x3 = vertexes[ld->v1].x;
-            y3 = vertexes[ld->v1].y;
-            x4 = vertexes[ld->v2].x;
-            y4 = vertexes[ld->v2].y;
-
-            side1 = SL_PointOnSide2(x1, y1, x3, y3, x4, y4);
-            side2 = SL_PointOnSide2(x2, y2, x3, y3, x4, y4);
-
-            if(side1 == side2)
-               continue; // move doesn't cross line
-
-            side1 = SL_PointOnSide2(x3, y3, x1, y1, x2, y2);
-            side2 = SL_PointOnSide2(x4, y4, x1, y1, x2, y2);
-
-            if(side1 == side2)
-               continue; // line doesn't cross move
-
-            if (sw->numspechit < MAXSPECIALCROSS)
-               sw->spechit[sw->numspechit++] = ld;
-            if (sw->numspechit == MAXSPECIALCROSS)
-               return;
-         }
-      }
-   }
-}
-
 //
 // Try to slide the player against walls by finding the closest move available.
 //
@@ -491,8 +366,6 @@ void P_SlideMove(pslidemove_t *sm)
    sw.slidex = slidething->x;
    sw.slidey = slidething->y;
    sw.slidething = slidething;
-   sw.numspechit = 0;
-   sw.spechit = &sm->spechit[0];
 
    // perform a maximum of three bumps
    for(i = 0; i < 3; i++)
@@ -514,10 +387,8 @@ void P_SlideMove(pslidemove_t *sm)
       {
          slidething->momx = dx;
          slidething->momy = dy;
-         SL_CheckSpecialLines(&sw);
          sm->slidex = sw.slidex;
          sm->slidey = sw.slidey;
-         sm->numspechit = sw.numspechit;
          return;
       }
 
@@ -536,69 +407,6 @@ void P_SlideMove(pslidemove_t *sm)
    sm->slidex = slidething->x;
    sm->slidey = slidething->y;
    sm->slidething->momx = slidething->momy = 0;
-   sm->numspechit = sw.numspechit;
-}
-
-//
-// Try to slide the player against walls by finding the closest move available.
-//
-void P_CameraSlideMove(pslidemove_t *sm)
-{
-    int i;
-    fixed_t dx, dy, rx, ry;
-    fixed_t frac, slide;
-    pslidework_t sw;
-    mobj_t *slidething = sm->slidething;
-
-    dx = slidething->momx;
-    dy = slidething->momy;
-    sw.slidex = slidething->x;
-    sw.slidey = slidething->y;
-    sw.slidething = slidething;
-    sw.numspechit = 0;
-    sw.spechit = &sm->spechit[0];
-
-    // perform a maximum of three bumps
-    for (i = 0; i < 3; i++)
-    {
-        frac = P_CompletableFrac(&sw, dx, dy);
-        if (frac != FRACUNIT)
-            frac -= 0x1000;
-        if (frac < 0)
-            frac = 0;
-
-        rx = FixedMul(frac, dx);
-        ry = FixedMul(frac, dy);
-
-        sw.slidex += rx;
-        sw.slidey += ry;
-
-        // made it the entire way
-        if (frac == FRACUNIT)
-        {
-            slidething->momx = dx;
-            slidething->momy = dy;
-            //         SL_CheckSpecialLines(&sw); // Camera doesn't trip lines
-            sm->slidex = sw.slidex;
-            sm->slidey = sw.slidey;
-            return;
-        }
-
-        // project the remaining move along the line that blocked movement
-        dx -= rx;
-        dy -= ry;
-        dx = FixedMul(dx, sw.blocknvx);
-        dy = FixedMul(dy, sw.blocknvy);
-        slide = dx + dy;
-
-        dx = FixedMul(slide, sw.blocknvx);
-        dy = FixedMul(slide, sw.blocknvy);
-    }
-
-    // some hideous situation has happened that won't let the camera slide
-    sm->slidex = slidething->x;
-    sm->slidey = slidething->y;
-    sm->slidething->momx = slidething->momy = 0;
 }
 
 // EOF

@@ -132,7 +132,6 @@ boolean P_Move (mobj_t *actor)
 	}
 	else
 	{
-		P_MoveCrossSpecials(actor, tm.numspechit, tm.spechit, oldx, oldy);
 		actor->flags2 &= ~MF2_INFLOAT;
 	}
 
@@ -638,7 +637,7 @@ void A_MineExplode(mobj_t *actor, int16_t var1, int16_t var2)
 	#define RandomValue ((P_Random() & 1) ? P_Random() / dist : P_Random() / -dist)
 	for (int i = 0; i < 8; i++)
 	{
-		mobj_t *b = P_SpawnMobj(actor->x+RandomValue*FRACUNIT,
+		P_SpawnMobj(actor->x+RandomValue*FRACUNIT,
 			actor->y+RandomValue*FRACUNIT,
 			actor->z+RandomValue*FRACUNIT,
 			mobjinfo[actor->type].mass);
@@ -1425,6 +1424,140 @@ void A_Boss1Laser(mobj_t *actor, int16_t var1, int16_t var2)
 		actor->flags2 &= ~MF2_FIRING;
 }
 
+static void A_GooSpray(mobj_t *actor, int speedvar)
+{
+	if (leveltime % (speedvar*15/10)-1 == 0)
+	{
+		const fixed_t ns = 3 * FRACUNIT;
+		mobj_t *goop;
+		fixed_t fz = actor->z+(actor->theight<<FRACBITS)+56*FRACUNIT;
+		angle_t fa = 0;
+		// actor->movedir is used to determine the last
+		// direction goo was sprayed in. There are 8 possible
+		// directions to spray. (45-degree increments)
+
+		actor->movedir++;
+		actor->movedir &= 7;
+//		fa = (actor->movedir*FINEANGLES/8) & FINEMASK;
+
+		goop = P_SpawnMobj(actor->x, actor->y, fz, mobjinfo[actor->type].painchance);
+		P_ThrustValues(fa, ns, &goop->momx, &goop->momy);
+		goop->momz = 4*FRACUNIT;
+		goop->reactiontime = TICRATE;
+//		goop->reactiontime = 30+(P_Random()/32);
+
+		S_StartSound(actor, mobjinfo[actor->type].attacksound);
+
+		if (P_Random() & 1)
+		{
+			goop->momx *= 2;
+			goop->momy *= 2;
+		}
+		else if (P_Random() > 128)
+		{
+			goop->momx *= 3;
+			goop->momy *= 3;
+		}
+
+		actor->flags2 |= MF2_JUSTATTACKED;
+	}
+}
+
+void A_Boss2Chase(mobj_t *actor, int16_t var1, int16_t var2)
+{
+	const mobjinfo_t *aInfo = &mobjinfo[actor->type];
+
+	if (actor->health <= 0)
+		return;
+
+	// When reactiontime hits zero, he will go the other way
+	if (--actor->reactiontime == 0)
+	{
+		actor->reactiontime = P_Random();
+		if (actor->reactiontime < 2*TICRATE) // 2-second floor
+			actor->reactiontime = 2*TICRATE;
+
+		actor->movecount = -actor->movecount;
+	}
+
+	actor->target = P_FindFirstMobjOfType(MT_AXIS);
+
+	if (actor->movecount >= 1)
+		actor->movecount = 1;
+	else
+		actor->movecount = -1;
+	
+	const int speedvar = actor->health;
+
+	if (!actor->target)
+		return;
+
+	const fixed_t radius = mobjinfo[actor->target->type].radius;
+	actor->target->angle += FixedDiv(FixedMul(ANG45/15,actor->movecount*actor->health), speedvar);
+
+	P_UnsetThingPosition(actor);
+	{
+		fixed_t fx = 0;
+		fixed_t fy = 0;
+		P_ThrustValues(actor->target->angle, radius, &fx, &fy);
+		actor->angle = R_PointToAngle2(actor->x, actor->y, actor->target->x + fx, actor->target->y + fy);
+		actor->x = actor->target->x + fx;
+		actor->y = actor->target->y + fy;
+	}
+	P_SetThingPosition(actor);
+
+	// Spray goo once every second
+	A_GooSpray(actor, speedvar);
+}
+
+void A_Boss2Pogo(mobj_t *actor, int16_t var1, int16_t var2)
+{
+	const mobjinfo_t *aInfo = &mobjinfo[actor->type];
+
+	if (actor->z <= actor->floorz + 8*FRACUNIT && actor->momz <= 0)
+	{
+		if (actor->state != S_EGGMOBILE2_POGO1)
+			P_SetMobjState(actor, S_EGGMOBILE2_POGO1);
+		// Pogo Mode
+	}
+	else if (actor->momz < 0 && actor->reactiontime)
+	{
+		const fixed_t ns = 3 * FRACUNIT;
+		mobj_t *goop;
+		fixed_t fz = actor->z+(actor->theight << FRACBITS)+24*FRACUNIT;
+		angle_t fa;
+
+		// spray in all 8 directions!
+		for (int i = 0; i < 8; i++)
+		{
+			actor->movedir++;
+			actor->movedir %= NUMDIRS;
+			fa = (actor->movedir*FINEANGLES/8) & FINEMASK;
+
+			goop = P_SpawnMobj(actor->x, actor->y, fz, aInfo->painchance);
+			goop->momx = FixedMul(finecosine(fa),ns);
+			goop->momy = FixedMul(finesine(fa),ns);
+			goop->momz = 4*FRACUNIT;
+
+			goop->reactiontime = 30+(P_Random()/32);
+		}
+		actor->reactiontime = 0; // we already shot goop, so don't do it again!
+		if (aInfo->attacksound)
+			S_StartSound(actor, aInfo->attacksound);
+		actor->flags2 |= MF2_JUSTATTACKED;
+	}
+}
+
+void A_Boss2PogoTarget(mobj_t *actor, int16_t var1, int16_t var2)
+{
+
+}
+
+void A_Boss2TakeDamage(mobj_t *actor, int16_t var1, int16_t var2)
+{
+
+}
+
 void A_PrepareRepeat(mobj_t *actor, int16_t var1, int16_t var2)
 {
 	actor->extradata = var1;
@@ -1538,16 +1671,6 @@ void A_SignSpin(mobj_t *actor, int16_t var1, int16_t var2)
 }
 
 /*============================================================================= */
-
-/* a move in p_base.c crossed a special line */
-void L_CrossSpecial (mobj_t *mo)
-{
-	line_t	*line;
-	
-	line = (line_t *)(mo->extradata & ~1);
-	
-	P_CrossSpecialLine (line, mo);
-}
 
 /* a move in p_base.c caused a missile to hit another thing or wall */
 void L_MissileHit (mobj_t *mo)

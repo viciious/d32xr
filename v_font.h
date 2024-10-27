@@ -4,12 +4,12 @@ typedef struct
 {
     short lumpStart;
     char lumpStartChar;
-    boolean fixedWidth;
     int8_t fixedWidthSize;
     int8_t spaceWidthSize;
     int8_t verticalOffset;
     char minChar;
     char maxChar;
+    boolean fixedWidth;
 } font_t;
 
 extern font_t menuFont;

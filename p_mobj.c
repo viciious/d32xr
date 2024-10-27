@@ -466,10 +466,7 @@ void P_SpawnPlayer (mapthing_t *mthing)
 	mobj->health = p->health;
 	p->mo = mobj;
 	p->playerstate = PST_LIVE;	
-	p->message = NULL;
-	p->damagecount = 0;
 	p->whiteFlash = 0;
-	p->extralight = 0;
 	p->viewheight = VIEWHEIGHT;
 
 	if (gamemapinfo.act == 3)

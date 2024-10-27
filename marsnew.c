@@ -86,7 +86,6 @@ void I_ClearFrameBuffer(void) ATTR_DATA_CACHE_ALIGN;
 static int Mars_ConvGamepadButtons(int ctrl)
 {
 	unsigned newc = 0;
-	int alwrun;
 
 	if (ctrl & SEGA_CTRL_UP)
 		newc |= BT_UP;
@@ -181,15 +180,6 @@ static int Mars_ConvGamepadButtons(int ctrl)
 		}
 	}
 
-	alwrun = alwaysrun;
-	if (demoplayback || demorecording)
-		alwrun = 0;
-
-	if (alwrun)
-	{
-		newc ^= BT_SPEED;
-	}
-	else
 	{
 		if ((newc & (BT_UP | BT_DOWN | BT_SPEED)) == BT_SPEED)
 			newc |= BT_FASTTURN;
@@ -342,9 +332,6 @@ void Mars_Secondary(void)
 			break;
 		case MARS_SECCMD_P_SIGHT_CHECKS:
 			Mars_Sec_P_CheckSights();
-			break;
-		case MARS_SECCMD_MELT_DO_WIPE:
-			Mars_Sec_wipe_doMelt();
 			break;
 		default:
 			break;

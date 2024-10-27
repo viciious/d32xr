@@ -71,11 +71,6 @@ void ST_ForceDraw(void)
 	int p;
 
 	stbarframe = 0;
-	for (p = 0; p < MAXPLAYERS; p++)
-	{
-		if (playeringame[p])
-			stbar[p].forcedraw = true;
-	}
 	ST_Ticker();
 }
 
@@ -100,10 +95,6 @@ void ST_InitEveryLevel(void)
 	for (p = 0; p < numplayers; p++)
 	{
 		stbar_t* sb = &stbar[p];
-
-		/* force everything to be updated on next ST_Update */
-		sb->forcedraw = true;
-
 		sb->score = 0;
 	}
 	stbar_tics = 0;
@@ -135,8 +126,6 @@ static void ST_Ticker_(stbar_t* sb)
 	sb->lives = p->lives;
 	sb->exiting = p->exiting;
 	sb->deadTimer = p->deadTimer;
-
-	sb->forcedraw = false;
 
 	if (sb->intermission)
 	{

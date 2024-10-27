@@ -34,7 +34,6 @@ typedef enum
 	mi_anamorphic,
 
 	mi_controltype,
-	mi_alwaysrun,
 	mi_strafebtns,
 
 	NUMMENUITEMS
@@ -223,10 +222,6 @@ void O_Init (void)
 	D_memcpy(menuitem[mi_controltype].name, "Gamepad", 8);
 	menuitem[mi_controltype].x = ITEMX;
 	menuitem[mi_controltype].y = STARTY;
-
-	D_memcpy(menuitem[mi_alwaysrun].name, "Always run", 11);
-	menuitem[mi_alwaysrun].x = ITEMX;
-	menuitem[mi_alwaysrun].y = STARTY+ITEMSPACE*4;
 
 	D_memcpy(menuitem[mi_strafebtns].name, "LR Strafe", 11);
 	menuitem[mi_strafebtns].x = ITEMX;
@@ -505,7 +500,6 @@ void O_Control (player_t *player)
 			if (screenpos == ms_controls)
 			{
 				int oldcontroltype = controltype;
-				int oldalwaysrun = alwaysrun;
 				int oldstrafebtns = strafebtns;
 
 				if (buttons & BT_RIGHT)
@@ -514,10 +508,6 @@ void O_Control (player_t *player)
 					case mi_controltype:
 						if (++controltype == NUMCONTROLOPTIONS)
 							controltype = (NUMCONTROLOPTIONS - 1);
-						break;
-					case mi_alwaysrun:
-						if (++alwaysrun > 1)
-							alwaysrun = 1;
 						break;
 					case mi_strafebtns:
 						if (++strafebtns > 3)
@@ -533,10 +523,6 @@ void O_Control (player_t *player)
 						if (--controltype == -1)
 							controltype = 0;
 						break;
-					case mi_alwaysrun:
-						if (--alwaysrun < 0)
-							alwaysrun = 0;
-						break;
 					case mi_strafebtns:
 						if (--strafebtns < 0)
 							strafebtns = 0;
@@ -545,7 +531,6 @@ void O_Control (player_t *player)
 				}
 
 				if (oldcontroltype != controltype ||
-					oldalwaysrun != alwaysrun ||
 					oldstrafebtns != strafebtns)
 					sound = sfx_None;
 			}
@@ -714,7 +699,6 @@ void O_Drawer (void)
 
 		O_DrawControl();
 
-		V_DrawStringLeft(&menuFont, menuitem[mi_alwaysrun].x + 150, menuitem[mi_alwaysrun].y, alwaysrun ? "ON" : "OFF");
 		V_DrawStringLeft(&menuFont, menuitem[mi_strafebtns].x + 150, menuitem[mi_strafebtns].y, strabtnstr);
 	}
 

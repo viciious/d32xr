@@ -63,7 +63,6 @@ void Mars_Sec_R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_PreDrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_DrawSprites(int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_P_CheckSights(void) ATTR_DATA_CACHE_ALIGN;
-void Mars_Sec_wipe_doMelt(void);
 
 void Mars_Sec_M_AnimateFire(void) ATTR_OPTIMIZE_EXTREME;
 void Mars_Sec_InitSoundDMA(int initfull);

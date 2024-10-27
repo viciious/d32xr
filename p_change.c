@@ -149,13 +149,8 @@ void CalculateSectorBlockBox(sector_t *sector, VINT blockbox[4])
 boolean P_ChangeSector (sector_t *sector, boolean crunch)
 {
 	int			x,y;
-	int			i;
 	changetest_t ct;
 	
-/* force next sound to reflood */
-	for (i=0 ; i<MAXPLAYERS ; i++)
-		players[i].lastsoundsector = NULL;
-		
 	ct.nofit = false;
 	ct.crushchange = crunch;
 	

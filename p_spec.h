@@ -56,11 +56,6 @@ void	P_SpawnSpecials (void);
 /* every tic */
 void 	P_UpdateSpecials (void);
 
-/* when needed */
-boolean	P_UseSpecialLine ( mobj_t *thing, line_t *line);
-void	P_ShootSpecialLine ( mobj_t *thing, line_t *line);
-void P_CrossSpecialLine (line_t *line,mobj_t *thing) __attribute((noinline));
-
 void 	P_PlayerInSpecialSector (player_t *player);
 
 int		twoSided(int sector,int line);
@@ -198,48 +193,6 @@ void	P_AddActivePlat(plat_t *plat);
 void	P_RemoveActivePlat(plat_t *plat);
 void	EV_StopPlat(line_t *line);
 void	P_ActivateInStasis(int tag);
-
-/*
-===============================================================================
-
-							P_DOORS
-
-===============================================================================
-*/
-typedef enum
-{
-	normal,
-	close30ThenOpen,
-	close,
-	open,
-	raiseIn5Mins,
-	blazeRaise,
-	blazeOpen,
-	blazeClose
-} vldoor_e;
-
-typedef struct
-{
-	thinker_t	thinker;
-	sector_t	*sector;
-	fixed_t		topheight;
-	fixed_t		speed;
-	VINT		direction;		/* 1 = up, 0 = waiting at top, -1 = down */
-	VINT		topwait;		/* tics to wait at the top */
-								/* (keep in case a door going down is reset) */
-	VINT		type;
-	VINT		topcountdown;	/* when it reaches 0, start going down */
-} vldoor_t;
-	
-#define	VDOORSPEED	FRACUNIT*3*THINKERS_TICS
-#define	VDOORWAIT		140/THINKERS_TICS
-
-void	EV_VerticalDoor (line_t *line, mobj_t *thing);
-int		EV_DoLockedDoor(line_t* line, vldoor_e type, mobj_t* thing);
-int		EV_DoDoor (line_t *line, vldoor_e  type);
-void	T_VerticalDoor (vldoor_t *door);
-void	P_SpawnDoorCloseIn30 (sector_t *sec);
-void	P_SpawnDoorRaiseIn5Mins (sector_t *sec, int secnum);
 
 /*
 ===============================================================================

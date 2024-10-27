@@ -140,7 +140,6 @@ static boolean P_CameraTryMove2(ptrymove_t *tm, boolean checkposonly)
    mw.tmx = tm->tmx;
    mw.tmy = tm->tmy;
    mw.tmthing = tm->tmthing;
-   mw.spechit = &tm->spechit[0];
 
    trymove2 = PM_CameraCheckPosition(&mw);
 
@@ -183,68 +182,6 @@ static boolean P_CameraTryMove (ptrymove_t *tm, mobj_t *thing, fixed_t x, fixed_
 	tm->tmx = x;
 	tm->tmy = y;
 	return P_CameraTryMove2 (tm, false);
-}
-
-//
-// Try to slide the player against walls by finding the closest move available.
-//
-static void P_CameraSlideMove(pslidemove_t *sm)
-{
-   int i;
-   fixed_t dx, dy, rx, ry;
-   fixed_t frac, slide;
-   pslidework_t sw;
-   mobj_t *slidething = sm->slidething;
-
-   dx = slidething->momx;
-   dy = slidething->momy;
-   sw.slidex = slidething->x;
-   sw.slidey = slidething->y;
-   sw.slidething = slidething;
-   sw.numspechit = 0;
-   sw.spechit = &sm->spechit[0];
-
-   // perform a maximum of three bumps
-   for(i = 0; i < 3; i++)
-   {
-      frac = P_CompletableFrac(&sw, dx, dy);
-      if(frac != FRACUNIT)
-         frac -= 0x1000;
-      if(frac < 0)
-         frac = 0;
-
-      rx = FixedMul(frac, dx);
-      ry = FixedMul(frac, dy);
-
-      sw.slidex += rx;
-      sw.slidey += ry;
-
-      // made it the entire way
-      if(frac == FRACUNIT)
-      {
-         slidething->momx = dx;
-         slidething->momy = dy;
-//         SL_CheckSpecialLines(&sw); // Camera doesn't trip lines
-         sm->slidex = sw.slidex;
-         sm->slidey = sw.slidey;
-         return;
-      }
-
-      // project the remaining move along the line that blocked movement
-      dx -= rx;
-      dy -= ry;
-      dx = FixedMul(dx, sw.blocknvx);
-      dy = FixedMul(dy, sw.blocknvy);
-      slide = dx + dy;
-
-      dx = FixedMul(slide, sw.blocknvx);
-      dy = FixedMul(slide, sw.blocknvy);
-   }
-
-   // some hideous situation has happened that won't let the camera slide
-   sm->slidex = slidething->x;
-   sm->slidey = slidething->y;
-   sm->slidething->momx = slidething->momy = 0;
 }
 
 static void P_ResetCamera(player_t *player, camera_t *thiscam)
@@ -292,7 +229,7 @@ static void P_CameraThinker(player_t *player, camera_t *thiscam)
       mo.type = MT_CAMERA;
 		sm.slidething = &mo;
 
-		P_CameraSlideMove(&sm);
+		P_SlideMove(&sm);
 
 		if (sm.slidex == mo.x && sm.slidey == mo.y)
 			goto camstairstep;

@@ -311,16 +311,12 @@ typedef struct
 										/* within tmfloorz - tmceilingz */
 	fixed_t		tmfloorz, tmceilingz, tmdropoffz;
 
-	int    		numspechit;
- 	line_t		*spechit[MAXSPECIALCROSS];
-
 	line_t		*blockline;
 } ptrymove_t;
 
 void P_PlayerCheckForStillPickups(mobj_t *mobj);
 boolean P_CheckPosition (ptrymove_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
 boolean P_TryMove (ptrymove_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
-void P_MoveCrossSpecials(mobj_t *tmthing, int numspechit, line_t **spechit, fixed_t oldx, fixed_t oldy);
 
 typedef struct
 {
@@ -367,9 +363,6 @@ typedef struct
 
 	vertex_t *p1, *p2; // p1, p2 are line endpoints
 	fixed_t p3x, p3y, p4x, p4y; // p3, p4 are move endpoints
-
-	int numspechit;
-	line_t **spechit;
 } pslidework_t;
 
 boolean PM_BoxCrossLine(line_t *ld, pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
