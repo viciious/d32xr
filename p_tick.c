@@ -195,106 +195,6 @@ void	P_RunMobjBase (void)
 
 /*============================================================================= */
 
-/*
-==============
-=
-= P_CheckCheats
-=
-==============
-*/
- 
-void P_CheckCheats (void)
-{
-#ifdef JAGUAR
-	int		buttons, oldbuttons;
-	int 	warpmap;
-	int		i;
-	player_t	*p;
-
-	for (i=0 ; i<MAXPLAYERS ; i++)
-	{
-		if (!playeringame[i])
-			continue;
-		buttons = ticbuttons[i];
-		oldbuttons = oldticbuttons[i];
-	
-		if ( (buttons & BT_PAUSE) && !(oldbuttons&BT_PAUSE) )
-			gamepaused ^= 1;
-	}
-
-	if (netgame)
-		return;
-
-	buttons = ticbuttons[0];
-	oldbuttons = oldticbuttons[0];
-
-	if ( (oldbuttons&BT_PAUSE) || !(buttons & BT_PAUSE ) )
-		return;
-
-	if (buttons&JP_NUM)
-	{	/* free stuff */
-		p=&players[0];
-		for (i=0 ; i<NUMCARDS ; i++)
-			p->cards[i] = true;			
-		p->armorpoints = 200;
-		p->armortype = 2;
-		for (i=0;i<NUMWEAPONS;i++) p->weaponowned[i] = true;
-		for (i=0;i<NUMAMMO;i++) p->ammo[i] = p->maxammo[i] = 500;
-	}
-
-	if (buttons&JP_STAR)
-	{	/* godmode */
-		players[0].cheats ^= CF_GODMODE;
-	}
-	warpmap = 0;
-	if (buttons&JP_1) warpmap = 1;
-	if (buttons&JP_2) warpmap = 2;
-	if (buttons&JP_3) warpmap = 3;
-	if (buttons&JP_4) warpmap = 4;
-	if (buttons&JP_5) warpmap = 5;
-	if (buttons&JP_6) warpmap = 6;
-	if (buttons&JP_7) warpmap = 7;
-	if (buttons&JP_8) warpmap = 8;
-	if (buttons&JP_9) warpmap = 9;
-	if (buttons&JP_A) warpmap += 10;
-	else if (buttons&JP_B) warpmap += 20;
-	
-	if (warpmap>0 && warpmap < 27)
-	{
-		gamemaplump = G_LumpNumForMapNum(warpmap);
-		gameaction = ga_warped;
-	}
-#elif defined(MARS)
-	int buttons;
-	int oldbuttons;
-	const int stuff_combo = BT_A | BT_B | BT_C | BT_UP;
-	const int godmode_combo = BT_X | BT_Y | BT_Z | BT_UP;
-//	player_t* p;
-
-	if (netgame)
-		return;
-	if (!gamepaused)
-		return;
-
-	buttons = ticrealbuttons;
-	oldbuttons = oldticrealbuttons;
-
-	if ((buttons & stuff_combo) == stuff_combo 
-		&& (oldbuttons & stuff_combo) != stuff_combo)
-	{
-		/* free stuff */
-//		p = &players[0];
-	}
-
-	if ((buttons & godmode_combo) == godmode_combo 
-		&& (oldbuttons & godmode_combo) != godmode_combo)
-	{
-		/* godmode */
-		players[0].cheats ^= CF_GODMODE;
-	}
-#endif
-}
-
 int playernum;
 
 void G_DoReborn (int playernum); 
@@ -347,11 +247,6 @@ int P_Ticker (void)
 
 	gameaction = ga_nothing;
 
-/* */
-/* check for pause and cheats */
-/* */
-	P_CheckCheats ();
-	
 /* */
 /* do option screen processing */
 /* */

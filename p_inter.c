@@ -222,7 +222,7 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 	}
 
 	// Ignore eggman in "ouchie" mode
-	if ((special->type == MT_EGGMOBILE) && (special->flags2 & MF2_FRET))
+	if ((special->type == MT_EGGMOBILE || special->type == MT_EGGMOBILE2) && (special->flags2 & MF2_FRET))
 		return;
 
 	if ((special->flags2 & MF2_SHOOTABLE) && !(special->flags2 & MF2_MISSILE))
@@ -417,7 +417,7 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 			scoreState += 3;
 		}
 
-		if (target->type == MT_EGGMOBILE)
+		if (target->type == MT_EGGMOBILE || target->type == MT_EGGMOBILE2)
 		{
 			score = 1000;
 			scoreState = mobjinfo[MT_SCORE].spawnstate + 3;
@@ -428,7 +428,7 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 
 		target->momx = target->momy = target->momz = 0;
 
-		if (target->type != MT_EGGMOBILE)
+		if (!(target->type == MT_EGGMOBILE || target->type == MT_EGGMOBILE2))
 		{
 			// Spawn a flicky
 			const mobjtype_t flickies[4] = { MT_FLICKY_01, MT_FLICKY_02, MT_FLICKY_03, MT_FLICKY_12 };
@@ -536,7 +536,7 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage)
 	if (target->health <= 0)
 		return;
 
-	if (target->type == MT_EGGMOBILE)
+	if (target->type == MT_EGGMOBILE || target->type == MT_EGGMOBILE2)
 	{
 		if (target->flags2 & MF2_FRET) // Currently flashing from being hit
 			return;
@@ -567,7 +567,7 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage)
 			P_KillMobj(source, target);
 		else if ( damage < 10000 )
 		{
-			if ( (player->cheats&CF_GODMODE)|| player->powers[pw_invulnerability] || player->powers[pw_flashing] )
+			if (player->powers[pw_invulnerability] || player->powers[pw_flashing] )
 				return;
 
 			if (player->shield)

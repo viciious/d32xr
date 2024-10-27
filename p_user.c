@@ -8,11 +8,6 @@
 #define ANG5 (ANG90 / 18)
 
 #define SLOWTURNTICS 10
-fixed_t angleturn[] =
-	{300, 300, 500, 500, 600, 700, 800, 900, 900, 1000};
-fixed_t fastangleturn[] =
-	{800, 800, 900, 1000, 1000, 1200, 1200, 1300, 1300, 1400};
-
 #define STOPSPEED FRACUNIT / 16
 #define FRICTION 0xd240
 #define MAXBOB 16 * FRACUNIT /* 16 pixels of bob */
@@ -197,8 +192,6 @@ stairstep:
 	mo->momx = mo->momy = 0;
 
 dospecial:
-	for (i = 0; i < sm.numspechit; i++)
-		P_CrossSpecialLine(sm.spechit[i], mo);
 }
 
 /*
@@ -471,12 +464,12 @@ void P_BuildMove(player_t *player)
 			// holding RMB - mouse dodge mode
 			player->sidemove = (mx * 0x1000);
 			player->forwardmove = (my * 0x1000);
-			player->angleturn = 0;
+//			player->angleturn = 0;
 		}
 		else
 		{
 			// normal mouse mode - mouse turns, dpad moves forward/back/sideways
-			player->angleturn = (-mx * 0x200000);
+//			player->angleturn = (-mx * 0x200000);
 
 			player->forwardmove = player->sidemove = 0;
 
@@ -493,7 +486,7 @@ void P_BuildMove(player_t *player)
 	}
 	else
 	{
-		player->forwardmove = player->sidemove = player->angleturn = 0;
+		player->forwardmove = player->sidemove = 0;
 
 		if (buttons & BT_RIGHT)
 			player->sidemove += FRACUNIT;
@@ -1442,24 +1435,6 @@ void P_DeathThink(player_t *player)
 	onground = (player->mo->z <= player->mo->floorz);
 	P_CalcHeight(player);
 
-	if (player->attacker && player->attacker != player->mo)
-	{
-		angle = R_PointToAngle2(player->mo->x, player->mo->y, player->attacker->x, player->attacker->y);
-		delta = angle - player->mo->angle;
-		if (delta < ANG5 || delta > (unsigned)-ANG5)
-		{ /* looking at killer, so fade damage flash down */
-			player->mo->angle = angle;
-			if (player->damagecount)
-				player->damagecount--;
-		}
-		else if (delta < ANG180)
-			player->mo->angle += ANG5;
-		else
-			player->mo->angle -= ANG5;
-	}
-	else if (player->damagecount)
-		player->damagecount--;
-
 	if (player->deadTimer == 2*TICRATE)
 	{
 		player->lives--;
@@ -1653,9 +1628,6 @@ void P_PlayerThink(player_t *player)
 	if (player->powers[pw_underwater])
 		player->powers[pw_underwater]--;
 
-	if (player->damagecount)
-		player->damagecount--;
-
 	if (player->whiteFlash && (leveltime & 1))
 		player->whiteFlash--;
 
@@ -1692,7 +1664,6 @@ void P_RestoreResp(player_t *p)
 	playerresp_t *resp = &playersresp[pnum];
 
 	p->health = resp->health;
-	p->cheats = resp->cheats;
 }
 
 void P_UpdateResp(player_t *p)
@@ -1701,5 +1672,4 @@ void P_UpdateResp(player_t *p)
 	playerresp_t *resp = &playersresp[pnum];
 
 	resp->health = p->health;
-	resp->cheats = p->cheats;
 }

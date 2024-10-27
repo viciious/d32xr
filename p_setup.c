@@ -349,6 +349,8 @@ void P_LoadThings (int lump)
 		P_SpawnMapThing (mt, i);
 
 	camBossMobj = P_FindFirstMobjOfType(MT_EGGMOBILE);
+	if (!camBossMobj)
+		camBossMobj = P_FindFirstMobjOfType(MT_EGGMOBILE2);
 
 	if (players[0].starpostnum)
 		P_SetStarPosts(players[0].starpostnum + 1);

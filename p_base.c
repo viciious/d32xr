@@ -431,7 +431,7 @@ static void P_FloatChange(mobj_t *mo)
    mobj_t *target;
    fixed_t dist, delta;
 
-   if (mo->type == MT_SKIM)
+   if (mo->type == MT_SKIM || mo->type == MT_EGGMOBILE2)
       return;
 
    target = mo->target;                              // get the target object
@@ -558,6 +558,35 @@ static void P_Boss1Thinker(mobj_t *mobj)
    const mobjinfo_t *mobjInfo = &mobjinfo[MT_EGGMOBILE]; // Always MT_EGGMOBILE
    const state_t *stateInfo = &states[mobj->state];
 
+   if (mobj->flags2 & MF2_BOSSFLEE)
+   {
+      if (mobj->extradata)
+      {
+         mobj->extradata = (int)mobj->extradata - 1;
+         if (!mobj->extradata)
+         {
+            if (mobj->target)
+            {
+               mobj->momz = FixedMul(FixedDiv(mobj->target->z - mobj->z, P_AproxDistance(mobj->x - mobj->target->x, mobj->y - mobj->target->y)), FRACUNIT >> 8);
+               mobj->angle = R_PointToAngle2(mobj->x, mobj->y, mobj->target->x, mobj->target->y);
+            }
+            else
+               mobj->momz = 8*FRACUNIT;
+         }
+      }
+      else if (mobj->target)
+      {
+         P_InstaThrust(mobj, mobj->angle, 12*FRACUNIT);
+         if (P_AproxDistance(mobj->x - mobj->target->x, mobj->y - mobj->target->y) < 32*FRACUNIT)
+         {
+            mobj->flags2 &= ~MF2_BOSSFLEE;
+            mobj->tics = -1;
+            mobj->momx = mobj->momy = mobj->momz = 0;
+         }
+      }
+      return;
+   }
+
    if (mobj->health <= 0 && !(mobj->flags2 & MF2_BOSSFLEE))
       return; // Just sleeping, out of bounds...
 
@@ -605,6 +634,80 @@ static void P_Boss1Thinker(mobj_t *mobj)
 		|| (mobj->state == mobjInfo->missilestate
 		&& mobj->health > mobjInfo->damage))
 		mobj->angle = R_PointToAngle2(mobj->x, mobj->y, mobj->target->x, mobj->target->y);
+}
+
+void A_Boss2Chase(mobj_t *, int16_t, int16_t);
+void A_Boss2Pogo(mobj_t *, int16_t, int16_t);
+
+static void P_Boss2Thinker(mobj_t *mobj)
+{
+   const mobjinfo_t *mobjInfo = &mobjinfo[MT_EGGMOBILE2]; // Always MT_EGGMOBILE2
+   const state_t *stateInfo = &states[mobj->state];
+
+   if (mobj->flags2 & MF2_BOSSFLEE)
+   {
+      if (mobj->extradata)
+      {
+         mobj->extradata = (int)mobj->extradata - 1;
+         if (!mobj->extradata)
+         {
+            if (mobj->target)
+            {
+               mobj->momz = FixedMul(FixedDiv(mobj->target->z - mobj->z, P_AproxDistance(mobj->x - mobj->target->x, mobj->y - mobj->target->y)), FRACUNIT >> 8);
+               mobj->angle = R_PointToAngle2(mobj->x, mobj->y, mobj->target->x, mobj->target->y);
+            }
+            else
+               mobj->momz = 8*FRACUNIT;
+         }
+      }
+      else if (mobj->target)
+      {
+         P_InstaThrust(mobj, mobj->angle, 12*FRACUNIT);
+         if (P_AproxDistance(mobj->x - mobj->target->x, mobj->y - mobj->target->y) < 32*FRACUNIT)
+         {
+            mobj->flags2 &= ~MF2_BOSSFLEE;
+            mobj->tics = -1;
+            mobj->momx = mobj->momy = mobj->momz = 0;
+         }
+      }
+      return;
+   }
+
+   if (mobj->health <= 0 && !(mobj->flags2 & MF2_BOSSFLEE))
+      return; // Just sleeping, out of bounds...
+
+   if ((mobj->flags2 & MF2_FRET) && stateInfo->nextstate == mobjInfo->spawnstate && mobj->tics == 1)
+   {
+		mobj->flags2 &= ~(MF2_FRET|MF2_SKULLFLY);
+		mobj->momx = mobj->momy = mobj->momz = 0;
+	}
+
+   if (!(mobj->flags2 & MF2_SPAWNEDJETS))
+      A_BossJetFume(mobj, 0, 0);
+
+   if (mobj->health <= mobjinfo[mobj->type].damage && (!mobj->target || !(mobj->target->flags2 & MF2_SHOOTABLE)))
+	{
+		if (mobj->health <= 0)
+			return;
+
+		// look for a new target
+		if (P_LookForPlayers(mobj, 0, false, true) && mobjInfo->seesound)
+			S_StartSound(mobj, mobjInfo->seesound);
+
+		return;
+	}
+
+   if (mobj->state == mobjInfo->spawnstate && mobj->health > mobjInfo->damage)
+	   A_Boss2Chase(mobj, 0, 0);
+ /*  else if (mobj->state == S_EGGMOBILE2_POGO1
+      || mobj->state == S_EGGMOBILE2_POGO2
+      || mobj->state == S_EGGMOBILE2_POGO3
+      || mobj->state == S_EGGMOBILE2_POGO4
+      || mobj->state == mobjInfo->spawnstate)
+   {
+      mobj->flags &= ~MF_NOGRAVITY;
+      A_Boss2Pogo(mobj, 0, 0);
+   }*/
 }
 
 static boolean P_JetFume1Think(mobj_t *mobj)
@@ -778,6 +881,7 @@ void P_MobjThinker(mobj_t *mobj)
                P_SetThingPosition(mobj);
             }
             break;
+         case MT_GOOP:
          case MT_GHOST:
          case MT_EGGMOBILE_TARGET:
             if (mobj->reactiontime)
@@ -804,33 +908,9 @@ void P_MobjThinker(mobj_t *mobj)
             break;
          case MT_EGGMOBILE:
             P_Boss1Thinker(mobj);
-            if (mobj->flags2 & MF2_BOSSFLEE)
-            {
-               if (mobj->extradata)
-               {
-                  mobj->extradata = (int)mobj->extradata - 1;
-                  if (!mobj->extradata)
-                  {
-                     if (mobj->target)
-                     {
-                        mobj->momz = FixedMul(FixedDiv(mobj->target->z - mobj->z, P_AproxDistance(mobj->x - mobj->target->x, mobj->y - mobj->target->y)), FRACUNIT >> 8);
-                        mobj->angle = R_PointToAngle2(mobj->x, mobj->y, mobj->target->x, mobj->target->y);
-                     }
-                     else
-                        mobj->momz = 8*FRACUNIT;
-                  }
-               }
-               else if (mobj->target)
-               {
-                  P_InstaThrust(mobj, mobj->angle, 12*FRACUNIT);
-                  if (P_AproxDistance(mobj->x - mobj->target->x, mobj->y - mobj->target->y) < 32*FRACUNIT)
-                  {
-                     mobj->flags2 &= ~MF2_BOSSFLEE;
-                     mobj->tics = -1;
-                     mobj->momx = mobj->momy = mobj->momz = 0;
-                  }
-               }
-            }
+            break;
+         case MT_EGGMOBILE2:
+            P_Boss2Thinker(mobj);
             break;
          case MT_JETFUME1:
             if (!P_JetFume1Think(mobj))
