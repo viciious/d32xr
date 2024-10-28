@@ -8,7 +8,6 @@
 #ifdef MARS
 #include "mars.h"
 #endif
-#include <stdlib.h>
 
 static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy) ATTR_DATA_CACHE_ALIGN;
 void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx) ATTR_DATA_CACHE_ALIGN;

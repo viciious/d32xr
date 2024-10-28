@@ -6,6 +6,7 @@
 #include "st_inter.h"
 #include <stdio.h>
 #include "r_local.h"
+#include "mars.h"
 
 stbar_t	*stbar;
 int stbar_tics;
@@ -299,13 +300,16 @@ static void ST_Drawer_ (stbar_t* sb)
 
 void CONS_Printf(char *msg, ...) 
 {
-	va_list argptr;
+	if (stbar)
+	{
+		va_list ap;
 
-	va_start(argptr, msg);
-	vsprintf(stbar->msg, msg, argptr);
-	va_end(argptr);
+		va_start(ap, msg);
+		D_vsnprintf(stbar->msg, sizeof(stbar->msg), msg, ap);
+		va_end(ap);
 
-	stbar->msgTics = 4 * TICRATE;
+		stbar->msgTics = 4 * TICRATE;
+	}
 } 
 
 void ST_Drawer(void)

@@ -107,7 +107,7 @@ void G_DoLoadLevel (void)
 		players[i].pflags = 0;
 		players[i].health = 1;
 		players[i].shield = 0;
-		memset(players[i].powers, 0, sizeof(players[i].powers));
+		D_memset(players[i].powers, 0, sizeof(players[i].powers));
 		players[i].whiteFlash = 0;
 		players[i].lossCount = 0;
 		players[i].stillTimer = 0;

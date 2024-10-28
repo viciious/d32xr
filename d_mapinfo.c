@@ -24,8 +24,6 @@
   SOFTWARE.
 */
 #include "doomdef.h"
-#include <string.h>
-#include <stdlib.h>
 
 typedef void (*kvcall_t) (char *key, char *value, void *ptr);
 

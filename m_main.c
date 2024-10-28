@@ -6,8 +6,6 @@
 #include "marshw.h"
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
 #include "v_font.h"
 #include "r_local.h"
 
@@ -138,28 +136,28 @@ void M_Start2 (boolean startup_)
 	for (i = 0; i < NUMHANDFRAMES; i++)
 	{
 		char entry[9];
-		sprintf(entry, "M_HAND%d", i + 1);
+		D_snprintf(entry, 8, "M_HAND%d", i + 1);
 		m_hand[i] = W_CheckNumForName(entry);
 	}
 
 	for (int i = 0; i < NUMKFISTFRAMES; i++)
 	{
 		char entry[9];
-		sprintf(entry, "KFIST%d", i + 1);
+		D_snprintf(entry, sizeof(entry), "KFIST%d", i + 1);
 		m_kfist[i] = W_CheckNumForName(entry);
 	}
 
 	for (int i = 0; i < NUMSBLINKFRAMES; i++)
 	{
 		char entry[9];
-		sprintf(entry, "SBLINK%d", i + 1);
+		D_snprintf(entry, sizeof(entry), "SBLINK%d", i + 1);
 		m_sblink[i] = W_CheckNumForName(entry);
 	}
 
 	for (int i = 0; i < NUMKBLINKFRAMES-1; i++)
 	{
 		char entry[9];
-		sprintf(entry, "KBLINK%d", i + 1);
+		D_snprintf(entry, sizeof(entry), "KBLINK%d", i + 1);
 		m_kblink[i] = W_CheckNumForName(entry);
 	}
 	m_kblink[2] = W_CheckNumForName("KBLINK1");
@@ -167,7 +165,7 @@ void M_Start2 (boolean startup_)
 	for (int i = 0; i < NUMTBLINKFRAMES-1; i++)
 	{
 		char entry[9];
-		sprintf(entry, "TBLINK%d", i + 1);
+		D_snprintf(entry, sizeof(entry), "TBLINK%d", i + 1);
 		m_tblink[i] = W_CheckNumForName(entry);
 	}
 	m_tblink[2] = W_CheckNumForName("TBLINK1");
@@ -175,7 +173,7 @@ void M_Start2 (boolean startup_)
 	for (int i = 0; i < NUMTAILWAGFRAMES; i++)
 	{
 		char entry[9];
-		sprintf(entry, "TAILWAG%d", i + 1);
+		D_snprintf(entry, sizeof(entry), "TAILWAG%d", i + 1);
 		m_tailwag[i] = W_CheckNumForName(entry);
 	}
 
@@ -714,7 +712,7 @@ void M_Drawer (void)
 #ifndef MARS
 		EraseBlock(80, m_doom_height + CURSORY(NUMMAINITEMS - 2) + ITEMSPACE + 2, 320, nums[0]->height);
 #endif
-		sprintf(mapNum, "%d", mapnumber);
+		D_snprintf(mapNum, sizeof(mapNum), "%d", mapnumber);
 
 		V_DrawStringLeft(&titleNumberFont, item->x + 70, y + 2, mapNum);
 

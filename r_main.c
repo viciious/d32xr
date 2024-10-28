@@ -615,9 +615,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	if (!demoplayback)
 	{
 		const camera_t *thiscam = NULL;
-
-		if (displayplayer == consoleplayer)
-			thiscam = &camera;
+		thiscam = &camera;
 
 		vd.viewx = thiscam->x;
 		vd.viewy = thiscam->y;
