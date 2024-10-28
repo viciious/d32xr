@@ -84,10 +84,10 @@ void I_InitMenuFire(jagobj_t *titlepic)
 	int i;
 
 	intro_titlepic = titlepic;
-	const int titlepic_pos_x = (320 - titlepic->width) / 2;
 
 	if (titlepic != NULL)
 	{
+		const int titlepic_pos_x = (320 - titlepic->width) / 2;
 		for (i = 0; i < 2; i++)
 		{
 			DrawJagobj2(titlepic, titlepic_pos_x, 16, 0, 0, titlepic->width, titlepic->height, I_FrameBuffer());
@@ -127,11 +127,11 @@ void I_DrawMenuFire(void)
 {
 	const int y = 16;
 	jagobj_t* titlepic = intro_titlepic;
-	const int titlepic_pos_x = (320 - titlepic->width) / 2;
 
 	// scroll the title pic from bottom to top
 	if (titlepic != NULL)
 	{
+		const int titlepic_pos_x = (320 - titlepic->width) / 2;
 		DrawJagobj2(titlepic, titlepic_pos_x, y, 0, 0, 0, titlepic->height, I_FrameBuffer());
 	}
 
