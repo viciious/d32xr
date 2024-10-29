@@ -67,14 +67,14 @@ typedef struct
    fixed_t  shootx, shooty, shootz; // location for puff/blood
 } shootWork_t;
 
-static fixed_t PA_SightCrossLine(shootWork_t *sw, vertex_t *v1, vertex_t *v2) ATTR_DATA_CACHE_ALIGN;
-static boolean PA_ShootLine(shootWork_t *sw, line_t* li, fixed_t interceptfrac) ATTR_DATA_CACHE_ALIGN;
-static boolean PA_ShootThing(shootWork_t *sw, mobj_t* th, fixed_t interceptfrac) ATTR_DATA_CACHE_ALIGN;
-static boolean PA_DoIntercept(shootWork_t *sw, intercept_t* in) ATTR_DATA_CACHE_ALIGN;
-static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum) ATTR_DATA_CACHE_ALIGN;
-static int PA_DivlineSide(fixed_t x, fixed_t y, divline_t* line) ATTR_DATA_CACHE_ALIGN;
-static boolean PA_CrossBSPNode(shootWork_t *sw, int bspnum) ATTR_DATA_CACHE_ALIGN;
-void P_Shoot2(lineattack_t *la) ATTR_DATA_CACHE_ALIGN;
+static fixed_t PA_SightCrossLine(shootWork_t *sw, vertex_t *v1, vertex_t *v2);
+static boolean PA_ShootLine(shootWork_t *sw, line_t* li, fixed_t interceptfrac);
+static boolean PA_ShootThing(shootWork_t *sw, mobj_t* th, fixed_t interceptfrac);
+static boolean PA_DoIntercept(shootWork_t *sw, intercept_t* in);
+static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum);
+static int PA_DivlineSide(fixed_t x, fixed_t y, divline_t* line);
+static boolean PA_CrossBSPNode(shootWork_t *sw, int bspnum);
+void P_Shoot2(lineattack_t *la);
 
 //
 // First checks the endpoints of the line to make sure that they cross the
