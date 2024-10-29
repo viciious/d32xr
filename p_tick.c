@@ -424,7 +424,7 @@ void P_Drawer (void)
 		RemoveDistortionFilters();
 		distortion_action = DISTORTION_NONE;
 	}
-	else if (distortion_action = DISTORTION_ADD) {
+	else if (distortion_action == DISTORTION_ADD) {
 		ApplyHorizontalDistortionFilter(gametic << 1);
 		distortion_action = DISTORTION_NONE;
 	}

@@ -620,7 +620,7 @@ R_InstallSpriteLump(const char* spritename, char letter, tempspriteframe_t* fram
 }
 
 
-
+#define MAXSPRITEFRAMES 35
 
 //
 // R_InitSpriteDefs
@@ -651,7 +651,6 @@ void R_InitSpriteDefs(const char** namelist)
 	int		totalframes;
 	int 	totallumps;
 	VINT 	*lumps;
-	uint8_t numFrames[NUMSPRITES];
 
 	if (firstsprite < 0)
 	{
@@ -669,7 +668,7 @@ void R_InitSpriteDefs(const char** namelist)
 
 	// scan all the lump names for each of the names,
 	//  noting the highest frame letter.
-	maxframe = 40;
+	maxframe = MAXSPRITEFRAMES;
 	totalframes = 0;
 	totallumps = 0;
 
@@ -679,7 +678,7 @@ void R_InitSpriteDefs(const char** namelist)
 	{
 		const char* spritename = namelist[i];
 
-		D_memset(sprtemp, -1, sizeof(tempspriteframe_t) * 40);
+		D_memset(sprtemp, -1, sizeof(tempspriteframe_t) * MAXSPRITEFRAMES);
 		maxframe = -1;
 
 		// scan the lumps,
@@ -704,8 +703,8 @@ void R_InitSpriteDefs(const char** namelist)
 				rotation = framename[1] - '0';
 				if (frame > maxframe)
 					maxframe = frame;
-				if (frame >= 40 || rotation > 8)
-					I_Error("Bad frame characters in lump %i", l);
+				if (frame >= MAXSPRITEFRAMES || rotation > 8)
+					I_Error("Bad frame chars in lump %i (%s %d)", l, spritename, frame);
 
 				R_InstallSpriteLump(spritename, framename[0], sprtemp + frame, 
 					l, rotation, flip);
@@ -716,7 +715,7 @@ void R_InitSpriteDefs(const char** namelist)
 		// check the frames that were found for completeness
 		if (maxframe == -1)
 		{
-			numFrames[i] = 0;
+			sprites[i].numframes = 0;
 			continue;
 		}
 
@@ -745,7 +744,7 @@ void R_InitSpriteDefs(const char** namelist)
 		}
 
 		// allocate space for the frames present and copy sprtemp to it
-		numFrames[i] = maxframe;
+		sprites[i].numframes = maxframe;
 
 		sprtemp += maxframe;
 		totalframes += maxframe;
@@ -816,8 +815,8 @@ void R_InitSpriteDefs(const char** namelist)
 	l = 0;
 	for (i = 0; i < NUMSPRITES; i++)
 	{
-		const int numframes = numFrames[i];
-		sprites[i].firstFrame = l;
+		const int numframes = sprites[i].numframes;
+		sprites[i].firstframe = l;
 
 		l += numframes;
 	}
@@ -825,7 +824,7 @@ void R_InitSpriteDefs(const char** namelist)
 
 static void *R_LoadColormap(int l)
 {
-	void *doomcolormap = W_GetLumpData(l);
+	void *doomcolormap = W_POINTLUMPNUM(l);
 
 	return (void *)((short *)doomcolormap + 128);
 }

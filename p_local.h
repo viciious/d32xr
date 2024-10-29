@@ -118,7 +118,7 @@ extern	int			activemobjs;	/* debug count */
 extern  int         thingmem; // bytes in use for things (at spawn)
 
 extern VINT ringmobjstates[NUMMOBJTYPES];
-extern int8_t ringmobjtics[NUMMOBJTYPES];
+extern VINT ringmobjtics[NUMMOBJTYPES];
 
 #define ONFLOORZ	D_MININT
 #define	ONCEILINGZ	D_MAXINT
@@ -234,6 +234,10 @@ typedef struct
    fixed_t  shootx, shooty, shootz; // location for puff/blood
 } lineattack_t;
 
+fixed_t P_AimLineAttack (lineattack_t *la, mobj_t *t1, angle_t angle, fixed_t distance) ATTR_DATA_CACHE_ALIGN;
+
+void P_LineAttack (lineattack_t *la, mobj_t *t1, angle_t angle, fixed_t distance, fixed_t slope, int damage) ATTR_DATA_CACHE_ALIGN;
+
 void P_RadiusAttack (mobj_t *spot, mobj_t *source, int damage) ATTR_DATA_CACHE_ALIGN;
 void P_XYMovement(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
 void P_ZMovement(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
@@ -248,10 +252,11 @@ void P_ZMovement(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
 
 extern	byte		*rejectmatrix;			/* for fast sight rejection */
 extern	short		*blockmaplump;		/* offsets in blockmap are from here */
-extern	uint16_t	bmapwidth, bmapheight;	/* in mapblocks */
+extern	int			bmapwidth, bmapheight;	/* in mapblocks */
 extern	fixed_t		bmaporgx, bmaporgy;		/* origin of block map */
 extern	mobj_t		**blocklinks;			/* for thing chains */
 
+extern	int			numthings;
 extern	spawnthing_t* spawnthings;
 
 extern	VINT		*validcount;		/* (0 - increment every time a check is made, [1..numlines]) x 2 */
@@ -364,5 +369,3 @@ boolean PM_BoxCrossLine(line_t *ld, pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
 fixed_t P_CompletableFrac(pslidework_t *sw, fixed_t dx, fixed_t dy);
 
 #endif	/* __P_LOCAL__ */
-
-

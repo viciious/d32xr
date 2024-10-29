@@ -189,7 +189,8 @@ typedef struct
 
 typedef struct
 {
-	short firstFrame;
+	short			numframes;
+	short			firstframe; /* index in the spriteframes array */
 } spritedef_t;
 
 extern	spriteframe_t	*spriteframes;
@@ -204,20 +205,25 @@ extern	spritedef_t		sprites[NUMSPRITES];
 ===============================================================================
 */
 
-extern	uint16_t			numvertexes;
-extern	uint16_t			numsegs;
-extern	uint16_t			numsectors;
-extern	uint16_t			numsubsectors;
-extern	uint16_t			numnodes;
-extern	uint16_t			numlines;
-extern	uint16_t			numsides;
-extern	uint16_t	        numthings;
+extern	int			numvertexes;
 extern	vertex_t	*vertexes;
+
+extern	int			numsegs;
 extern	seg_t		*segs;
+
+extern	int			numsectors;
 extern	sector_t	*sectors;
+
+extern	int			numsubsectors;
 extern	subsector_t	*subsectors;
+
+extern	int			numnodes;
 extern	node_t		*nodes;
+
+extern	int			numlines;
 extern	line_t		*lines;
+
+extern	int			numsides;
 extern	side_t		*sides;
 
 /*============================================================================= */
@@ -402,7 +408,7 @@ int	R_CheckTextureNumForName(const char* name);
 void	R_InitMathTables(void);
 void	R_InitSpriteDefs(const char** namelist);
 void R_InitColormap();
-boolean R_CompositeColumn(int colnum, int numdecals, texdecal_t *decals, inpixel_t *src, inpixel_t *dst, int height, int miplevel);// ATTR_DATA_CACHE_ALIGN;
+boolean R_CompositeColumn(int colnum, int numdecals, texdecal_t *decals, inpixel_t *src, inpixel_t *dst, int height, int miplevel) ATTR_DATA_CACHE_ALIGN;
 
 /*
 ==============================================================================
@@ -664,4 +670,3 @@ extern	viewdef_t	vd;
 extern texture_t *testtex;
 
 #endif		/* __R_LOCAL__ */
-

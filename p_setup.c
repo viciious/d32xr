@@ -7,29 +7,29 @@
 
 #define DEFAULT_GAME_ZONE_MARGIN (4*1024)
 
-uint16_t			numvertexes;
-uint16_t			numsegs;
-uint16_t			numsectors;
-uint16_t			numsubsectors;
-uint16_t			numnodes;
-uint16_t			numlines;
-uint16_t			numsides;
+int			numvertexes;
 vertex_t	*vertexes;
 
+int			numsegs;
 seg_t		*segs;
 
+int			numsectors;
 sector_t	*sectors;
 
+int			numsubsectors;
 subsector_t	*subsectors;
 
+int			numnodes;
 node_t		*nodes;
 
+int			numlines;
 line_t		*lines;
 
+int			numsides;
 side_t		*sides;
 
 short		*blockmaplump;			/* offsets in blockmap are from here */
-uint16_t	bmapwidth, bmapheight;	/* in mapblocks */
+int			bmapwidth, bmapheight;	/* in mapblocks */
 fixed_t		bmaporgx, bmaporgy;		/* origin of block map */
 mobj_t		**blocklinks;			/* for thing chains */
 
@@ -41,7 +41,7 @@ VINT		*validcount;			/* increment every time a check is made */
 
 mapthing_t	playerstarts[MAXPLAYERS];
 
-uint16_t			numthings;
+int			numthings;
 spawnthing_t* spawnthings;
 
 /*
@@ -703,6 +703,3 @@ void P_Init (void)
 	pausepic = W_CacheLumpName ("PAUSED",PU_STATIC);
 #endif
 }
-
-
-

@@ -2,7 +2,7 @@
 
 // These are used to track a global animation state for MF_RINGMOBJ
 VINT ringmobjstates[NUMMOBJTYPES];
-int8_t ringmobjtics[NUMMOBJTYPES];
+VINT ringmobjtics[NUMMOBJTYPES];
 
 const char * const sprnames[NUMSPRITES] = {
 "PLAY",

@@ -358,7 +358,7 @@ void * W_GetLumpData(int lump, const char *file, int line)
 	lumpinfo_t* l = lumpinfo + lump;
 
 	if (lump >= numlumps)
-		I_Error("W_GetLumpData: %i >= numlumps %s %d", lump, file, line);
+		I_Error("W_GLD: %i >= numlumps %s %d", lump, file, line);
 
 	return I_RemapLumpPtr((void*)(wadfileptr + BIGLONG(l->filepos)));
 }
