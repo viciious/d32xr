@@ -10,8 +10,7 @@ int	tictics, drawtics;
 boolean		gamepaused;
 jagobj_t	*pausepic;
 char		clearscreen = 0;
-VINT		remove_distortion = 0;
-VINT        add_distortion = 0;
+VINT        distortion_action = DISTORTION_NONE;
 
 /*
 ===============================================================================
@@ -419,17 +418,15 @@ void P_Drawer (void)
 	if (!optionsMenuOn && o_wasactive)
 		clearscreen = 2;
 
-	if (remove_distortion) {
+	if (distortion_action == DISTORTION_REMOVE) {
 		// The other frame buffer has already been normalized.
 		// Now normalize the current frame buffer.
 		RemoveDistortionFilters();
-		remove_distortion = 0;
-		add_distortion = 0;
+		distortion_action = DISTORTION_NONE;
 	}
-	else if (add_distortion) {
+	else if (distortion_action = DISTORTION_ADD) {
 		ApplyHorizontalDistortionFilter(gametic << 1);
-		add_distortion = 0;
-		remove_distortion = 0;
+		distortion_action = DISTORTION_NONE;
 	}
 
 	if (clearscreen > 0) {
@@ -495,8 +492,6 @@ void P_Drawer (void)
 
 void P_Start (void)
 {
-	extern boolean canwipe;
-
 	/* load a level */
 	G_DoLoadLevel();
 
@@ -511,7 +506,6 @@ void P_Start (void)
 			P_RandomSeed(I_GetTime());
 
 	clearscreen = 2;
-	canwipe = true;
 }
 
 void P_Stop (void)

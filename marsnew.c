@@ -62,7 +62,7 @@ boolean	debugscreenupdate = false;
 int     ticcount = 0;
 int		lastticcount = 0;
 int		lasttics = 0;
-static int fpscount = 0;
+static int8_t fpscount = 0;
 
 VINT 	debugmode = DEBUGMODE_NONE;
 VINT	strafebtns = 0;

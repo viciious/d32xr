@@ -23,8 +23,6 @@ VINT		ticsperframe = MINTICSPERFRAME;
 int			maxlevel;			/* highest level selectable in menu (1-25) */
 jagobj_t	*backgroundpic;
 
-boolean canwipe = false;
-
 int 		ticstart;
 
 #ifdef PLAY_POS_DEMO
@@ -369,7 +367,6 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 	int		exit;
 	int		buttons;
 	int		mx, my;
-	boolean wipe = canwipe;
 	boolean firstdraw = true;
 
 /* */
@@ -1020,7 +1017,6 @@ void RunTitle (void)
 	startmap = 1;
 	starttype = gt_single;
 	consoleplayer = 0;
-	canwipe = true;
 
 	MiniLoop (START_Title, STOP_Title, TIC_Abortable, DRAW_Title, UpdateBuffer);
 }

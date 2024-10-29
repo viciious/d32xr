@@ -118,7 +118,7 @@ extern	int			activemobjs;	/* debug count */
 extern  int         thingmem; // bytes in use for things (at spawn)
 
 extern VINT ringmobjstates[NUMMOBJTYPES];
-extern VINT ringmobjtics[NUMMOBJTYPES];
+extern int8_t ringmobjtics[NUMMOBJTYPES];
 
 #define ONFLOORZ	D_MININT
 #define	ONCEILINGZ	D_MAXINT

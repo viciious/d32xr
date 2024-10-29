@@ -1167,8 +1167,14 @@ typedef enum
 
 extern VINT debugmode;
 extern char clearscreen;
-extern VINT remove_distortion;
-extern VINT add_distortion;
+
+typedef enum
+{
+	DISTORTION_NONE,
+	DISTORTION_ADD,
+	DISTORTION_REMOVE,
+} distortion_e;
+extern VINT distortion_action;
 extern VINT initmathtables;
 
 extern VINT COLOR_BLACK;
