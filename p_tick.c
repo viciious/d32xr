@@ -241,7 +241,7 @@ int P_Ticker (void)
 
 #ifdef MARS
     // bank-switch to the page with map data
-    W_GetLumpData(gamemaplump);
+    W_POINTLUMPNUM(gamemaplump);
 #endif
 
 	gameaction = ga_nothing;

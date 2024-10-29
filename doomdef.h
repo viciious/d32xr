@@ -660,9 +660,9 @@ void	*W_CacheLumpNum (int lump, int tag);
 void	*W_CacheLumpName (const char *name, int tag);
 
 const char *W_GetNameForNum (int lump);
-void* W_GetLumpData(int lump) ATTR_DATA_CACHE_ALIGN;
+void* W_GetLumpData(int lump, const char *file, int line) ATTR_DATA_CACHE_ALIGN;
 
-#define W_POINTLUMPNUM(x) W_GetLumpData(x)
+#define W_POINTLUMPNUM(x) W_GetLumpData(x, __FILE__, __LINE__)
 
 
 /*---------- */

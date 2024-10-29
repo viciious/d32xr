@@ -791,7 +791,7 @@ void R_BSP(void)
    cliprange_t solidsegs[MAXSEGS];
 
 #ifdef MARS
-   W_GetLumpData(gamemaplump);
+   W_POINTLUMPNUM(gamemaplump);
 #endif
 
    solidsegs[0].first = -2;

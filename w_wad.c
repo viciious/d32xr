@@ -258,11 +258,11 @@ int W_ReadLump (int lump, void *dest)
 	l = lumpinfo+lump;
 	if (l->name[0] & 0x80) /* compressed */
 	{
-		 decode((unsigned char *)W_GetLumpData(lump),
+		 decode((unsigned char *)W_POINTLUMPNUM(lump),
 		(unsigned char *) dest);
 	}
 	else
-	  D_memcpy (dest, W_GetLumpData(lump), BIGLONG(l->size));
+	  D_memcpy (dest, W_POINTLUMPNUM(lump), BIGLONG(l->size));
 	return BIGLONG(l->size);
 }
 
@@ -353,12 +353,12 @@ const char *W_GetNameForNum (int lump)
 ====================
 */
 
-void * W_GetLumpData(int lump)
+void * W_GetLumpData(int lump, const char *file, int line)
 {
 	lumpinfo_t* l = lumpinfo + lump;
 
 	if (lump >= numlumps)
-		I_Error("W_GetLumpData: %i >= numlumps", lump);
+		I_Error("W_GetLumpData: %i >= numlumps %s %d", lump, file, line);
 
 	return I_RemapLumpPtr((void*)(wadfileptr + BIGLONG(l->filepos)));
 }

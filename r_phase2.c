@@ -306,7 +306,7 @@ void Mars_Sec_R_WallPrep(void)
     first = last = vd.viswalls;
     verylast = NULL;
     seglex = vd.viswallextras;
-    verts = W_GetLumpData(gamemaplump+ML_VERTEXES);
+    verts = W_POINTLUMPNUM(gamemaplump+ML_VERTEXES);
 
     for (segl = first; segl != verylast; )
     {

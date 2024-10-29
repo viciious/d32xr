@@ -632,7 +632,7 @@ void R_Sprites(void)
 
 #ifdef MARS
    // bank switching
-   verts = W_GetLumpData(gamemaplump+ML_VERTEXES);
+   verts = W_POINTLUMPNUM(gamemaplump+ML_VERTEXES);
 #else
    verts = vertexes;
 #endif
@@ -661,11 +661,6 @@ void R_Sprites(void)
 
 #ifdef MARS
    Mars_R_EndDrawSprites();
-   W_GetLumpData(gamemaplump+ML_SEGS);
-   W_GetLumpData(gamemaplump+ML_VERTEXES);
-   W_GetLumpData(gamemaplump+ML_NODES);
-   W_GetLumpData(gamemaplump+ML_BLOCKMAP);
-   W_GetLumpData(gamemaplump+ML_REJECT);
 #endif
 }
 
