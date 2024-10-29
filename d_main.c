@@ -701,11 +701,6 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		}
 		#endif
 
-		if (!exit && wipe)
-		{
-			wipe = false;
-		}
-
 #if 0
 while (!I_RefreshCompleted ())
 ;	/* DEBUG */
