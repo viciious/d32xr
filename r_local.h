@@ -204,25 +204,20 @@ extern	spritedef_t		sprites[NUMSPRITES];
 ===============================================================================
 */
 
-extern	int			numvertexes;
+extern	uint16_t			numvertexes;
+extern	uint16_t			numsegs;
+extern	uint16_t			numsectors;
+extern	uint16_t			numsubsectors;
+extern	uint16_t			numnodes;
+extern	uint16_t			numlines;
+extern	uint16_t			numsides;
+extern	uint16_t	        numthings;
 extern	vertex_t	*vertexes;
-
-extern	int			numsegs;
 extern	seg_t		*segs;
-
-extern	int			numsectors;
 extern	sector_t	*sectors;
-
-extern	int			numsubsectors;
 extern	subsector_t	*subsectors;
-
-extern	int			numnodes;
 extern	node_t		*nodes;
-
-extern	int			numlines;
 extern	line_t		*lines;
-
-extern	int			numsides;
 extern	side_t		*sides;
 
 /*============================================================================= */
