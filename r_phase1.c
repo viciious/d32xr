@@ -216,14 +216,13 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
 
       SETLOWER8(segl->floorceilpicnum, flattranslation[front_sector->floorpic]);
 
-      if (f_ceilingpic != -1)
+      if (f_ceilingpic != 0xff)
       {
           SETUPPER8(segl->floorceilpicnum, flattranslation[f_ceilingpic]);
       }
       else
-      {
           SETUPPER8(segl->floorceilpicnum, (uint8_t)-1);
-      }
+
       segl->m_texturenum = -1;
 
       if (!back_sector)
