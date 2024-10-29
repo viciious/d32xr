@@ -453,9 +453,7 @@ void R_SpritePrep(void)
       while(thing) // walk sector thing list
       {
          if (thing->flags & MF_RINGMOBJ)
-         {
             R_PrepRing((ringmobj_t*)thing, thing->flags & MF_NOBLOCKMAP);
-         }
          else if (!(thing->flags2 & MF2_DONTDRAW))
             R_PrepMobj(thing);
 

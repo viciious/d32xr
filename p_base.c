@@ -783,31 +783,10 @@ static boolean P_DrownNumbersThink(mobj_t *mobj)
    return true;
 }
 
-//
-// Perform main thinking logic for a single mobj per tic.
-//
-// Never, EVER call this for MF_RINGMOBJ
-//
-void P_MobjThinker(mobj_t *mobj)
+__attribute((noinline))
+boolean P_MobjSpecificActions(mobj_t *mobj)
 {
-   if (!(mobj->flags & MF_STATIC))
-   {
-      // momentum movement
-      if(mobj->momx || mobj->momy)
-         P_XYMovement(mobj);
-
-      // removed or has a special action to perform?
-      if(mobj->latecall)
-         return;
-
-      if(mobj->z != mobj->floorz || mobj->momz)
-         P_ZMovement(mobj);
-
-      // removed or has a special action to perform?
-      if(mobj->latecall)
-         return;
-
-      switch(mobj->type)
+   switch(mobj->type)
       {
          case MT_FLINGRING:
             mobj->threshold--;
@@ -819,7 +798,7 @@ void P_MobjThinker(mobj_t *mobj)
             if (mobj->threshold == 0)
             {
                P_RemoveMobj(mobj);
-               return;
+               return false;
             }
             break;
          case MT_RING_ICON:
@@ -856,7 +835,7 @@ void P_MobjThinker(mobj_t *mobj)
                   else if (!(player->shield == SH_FORCE1 || player->shield == SH_FORCE2))
                   {
                      P_RemoveMobj(mobj);
-                     return;
+                     return false;
                   }
                }
                else
@@ -870,7 +849,7 @@ void P_MobjThinker(mobj_t *mobj)
                    if (player->shield != mobjinfo[mobj->type].painchance)
                    {
                        P_RemoveMobj(mobj);
-                       return;
+                       return false;
                    }
                }
 
@@ -902,7 +881,7 @@ void P_MobjThinker(mobj_t *mobj)
                   }
 
                   P_RemoveMobj(mobj);
-                  return;
+                  return false;
                }
             }
             break;
@@ -914,7 +893,7 @@ void P_MobjThinker(mobj_t *mobj)
             break;
          case MT_JETFUME1:
             if (!P_JetFume1Think(mobj))
-               return;
+               return false;
             break;
          case MT_ATTRACTRING:
             if (mobj->target->health <= 0)
@@ -925,14 +904,14 @@ void P_MobjThinker(mobj_t *mobj)
                flingring->momz = mobj->momz;
                flingring->threshold = 8*TICRATE;
                P_RemoveMobj(mobj);
-               return;
+               return false;
             }
             else
                P_Attract(mobj, mobj->target);
             break;
          case MT_DROWNNUMBERS:
             if (!P_DrownNumbersThink(mobj))
-               return;
+               return false;
             break;
          case MT_EGGTRAP:
             if (mobj->movecount > 0)
@@ -971,6 +950,36 @@ void P_MobjThinker(mobj_t *mobj)
          default:
             break;
       }
+
+      return true;
+}
+
+//
+// Perform main thinking logic for a single mobj per tic.
+//
+// Never, EVER call this for MF_RINGMOBJ
+//
+void P_MobjThinker(mobj_t *mobj)
+{
+   if (!(mobj->flags & MF_STATIC))
+   {
+      // momentum movement
+      if(mobj->momx || mobj->momy)
+         P_XYMovement(mobj);
+
+      // removed or has a special action to perform?
+      if(mobj->latecall)
+         return;
+
+      if(mobj->z != mobj->floorz || mobj->momz)
+         P_ZMovement(mobj);
+
+      // removed or has a special action to perform?
+      if(mobj->latecall)
+         return;
+
+      if (!P_MobjSpecificActions(mobj))
+         return;
    }
    else
    {
