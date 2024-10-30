@@ -330,7 +330,7 @@ void Mars_Sec_R_WallPrep(void)
             Mars_ClearCacheLine(seglex);
 #endif
             R_WallLatePrep(segl, verts);
-
+#ifdef FLOOR_OVER_FLOOR
             if (segl->fofSector != -1)
             {
                 sector_t *fofSector = &sectors[segl->fofSector];
@@ -355,6 +355,7 @@ void Mars_Sec_R_WallPrep(void)
                     segl->floorceilpicnum = oldpicnum;
                 }
             }
+#endif
 
             R_SegLoop(segl, clipbounds, seglex->floorheight, seglex->floornewheight, segl->ceilingheight, seglex->ceilnewheight);
 

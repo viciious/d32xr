@@ -256,12 +256,14 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
          actionbits |= (AC_ADDFLOOR|AC_NEWFLOOR);
       }
       *floorheight = *floornewheight = f_floorheight;
+#ifdef FLOOR_OVER_FLOOR
       if (front_sector->fofsec != -1)
       {
          SETLOWER16(*fofInfo, (sectors[front_sector->fofsec].ceilingheight) >> FRACBITS);
          SETUPPER16(*fofInfo, (sectors[front_sector->fofsec].floorheight) >> FRACBITS);
          segl->fofSector = front_sector->fofsec;
       }
+#endif
 
       if(!skyhack                                         && // not a sky hack wall
          (f_ceilingheight > 0 || f_ceilingpic == (uint8_t)-1)      && // ceiling below camera, or sky
