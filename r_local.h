@@ -325,16 +325,6 @@ extern	VINT		extralight;
 #ifdef MARS
 __attribute__((aligned(4)))
 #endif
-extern unsigned int phi_line_bit_shift[8];	// Last index unused; only for making the compiler happy.
-
-#ifdef MARS
-__attribute__((aligned(4)))
-#endif
-extern unsigned int phi_line;
-
-#ifdef MARS
-__attribute__((aligned(4)))
-#endif
 extern boolean phi_effects;
 
 #ifdef MARS
