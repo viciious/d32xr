@@ -610,6 +610,13 @@ void P_SpawnSpecials (void)
 				sectors[s].heightsec = sec;
 			break;
 		}
+		case 100: // 'FOF' sector
+		{
+			VINT sec = sides[*lines[i].sidenum].sector;
+			for (int s = -1; (s = P_FindSectorFromLineTag(lines+i,s)) >= 0;)
+				sectors[s].fofsec = sec;
+			break;
+		}
 		}
 	}
 done_speciallist:

@@ -523,7 +523,9 @@ void R_SegCommands(void)
         else
 #endif
         {
+#ifndef FLOOR_OVER_FLOOR
             segl->newmiplevels = 0;
+#endif
         }
 
 post_draw:

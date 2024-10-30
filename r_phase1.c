@@ -46,7 +46,7 @@ static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop) ATTR_DATA_CA
 static void R_RenderBSPNode(rbspWork_t *rbsp, int bspnum) ATTR_DATA_CACHE_ALIGN;
 static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
    fixed_t *restrict floorheight, fixed_t *restrict floornewheight, 
-   fixed_t *restrict ceilingnewheight) ATTR_DATA_CACHE_ALIGN  __attribute__((noinline));
+   fixed_t *restrict ceilingnewheight, uint32_t *restrict fofInfo) ATTR_DATA_CACHE_ALIGN  __attribute__((noinline));
 
 #ifdef MARS
 __attribute__((aligned(4)))
@@ -181,7 +181,7 @@ static boolean R_CheckBBox(rbspWork_t *rbsp, fixed_t bspcoord[4])
 }
 
 static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
-   fixed_t *restrict floorheight, fixed_t *restrict  floornewheight, fixed_t *restrict ceilingnewheight)
+   fixed_t *restrict floorheight, fixed_t *restrict  floornewheight, fixed_t *restrict ceilingnewheight, uint32_t *restrict fofInfo)
 {
    seg_t     *seg  = segl->seg;
    line_t    *li   = rbsp->curldef;
@@ -199,6 +199,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
    const short liflags = li->flags;
    static sector_t ftempsec;
    static sector_t btempsec;
+   segl->fofSector = -1;
 
    front_sector = R_FakeFlat(front_sector, &ftempsec, false);
 
@@ -254,6 +255,14 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
          actionbits |= (AC_ADDFLOOR|AC_NEWFLOOR);
       }
       *floorheight = *floornewheight = f_floorheight;
+#ifdef FLOOR_OVER_FLOOR
+      if (front_sector->fofsec != -1)
+      {
+         SETLOWER16(*fofInfo, (sectors[front_sector->fofsec].ceilingheight) >> FRACBITS);
+         SETUPPER16(*fofInfo, (sectors[front_sector->fofsec].floorheight) >> FRACBITS);
+         segl->fofSector = front_sector->fofsec;
+      }
+#endif
 
       if(!skyhack                                         && // not a sky hack wall
          (f_ceilingheight > 0 || f_ceilingpic == (uint8_t)-1)      && // ceiling below camera, or sky
@@ -454,7 +463,7 @@ static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop)
       rw->actionbits = 0;
       ++vd.lastwallcmd;
 
-      R_WallEarlyPrep(rbsp, rw, &rwex->floorheight, &rwex->floornewheight, &rwex->ceilnewheight);
+      R_WallEarlyPrep(rbsp, rw, &rwex->floorheight, &rwex->floornewheight, &rwex->ceilnewheight, &rwex->fofInfo);
 
 #ifdef MARS
       Mars_R_WallNext();

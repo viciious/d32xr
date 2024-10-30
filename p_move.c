@@ -215,28 +215,32 @@ static boolean PIT_CheckLine(line_t *ld, pmovework_t *mw)
 
    front = LD_FRONTSECTOR(ld);
    back  = LD_BACKSECTOR(ld);
+   fixed_t frontFloor = FloorZAtPos(front, tmthing->z, tmthing->theight << FRACBITS);
+   fixed_t frontCeiling = CeilingZAtPos(front, tmthing->z, tmthing->theight << FRACBITS);
+   fixed_t backFloor = FloorZAtPos(back, tmthing->z, tmthing->theight << FRACBITS);
+   fixed_t backCeiling = CeilingZAtPos(back, tmthing->z, tmthing->theight << FRACBITS);
 
-   if(front->ceilingheight == front->floorheight ||
-      back->ceilingheight == back->floorheight)
+   if(frontCeiling == frontFloor ||
+      backCeiling == backFloor)
    {
       mw->blockline = ld;
       return false; // probably a closed door
    }
 
-   if(front->ceilingheight < back->ceilingheight)
-      opentop = front->ceilingheight;
+   if(frontCeiling < backCeiling)
+      opentop = frontCeiling;
    else
-      opentop = back->ceilingheight;
+      opentop = backCeiling;
 
-   if(front->floorheight > back->floorheight)
+   if(frontFloor > backFloor)
    {
-      openbottom = front->floorheight;
-      lowfloor   = back->floorheight;
+      openbottom = frontFloor;
+      lowfloor   = backFloor;
    }
    else
    {
-      openbottom = back->floorheight;
-      lowfloor   = front->floorheight;
+      openbottom = backFloor;
+      lowfloor   = frontFloor;
    }
 
    if (ld->flags & ML_MIDTEXTUREBLOCK)
@@ -379,8 +383,8 @@ static boolean PM_CheckPosition(pmovework_t *mw)
 
    // the base floor/ceiling is from the subsector that contains the point.
    // Any contacted lines the step closer together will adjust them.
-   mw->tmfloorz   = mw->tmdropoffz = mw->newsubsec->sector->floorheight;
-   mw->tmceilingz = mw->newsubsec->sector->ceilingheight;
+   mw->tmfloorz   = mw->tmdropoffz = FloorZAtPos(mw->newsubsec->sector, mw->tmthing->z, mw->tmthing->theight << FRACBITS);
+   mw->tmceilingz = CeilingZAtPos(mw->newsubsec->sector, mw->tmthing->z, mw->tmthing->theight << FRACBITS);
 
    I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
    *lvalidcount = *lvalidcount + 1;

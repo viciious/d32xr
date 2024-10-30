@@ -13,7 +13,7 @@ static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, ang
 static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle, int angle1) ATTR_DATA_CACHE_ALIGN;
 void R_WallLatePrep(viswall_t* wc, vertex_t *verts) ATTR_DATA_CACHE_ALIGN;
 static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floorheight, 
-    fixed_t floornewheight, fixed_t ceilingnewheight) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
+    fixed_t floornewheight, fixed_t ceilingheight, fixed_t ceilingnewheight) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 void R_WallPrep(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 
 //
@@ -167,7 +167,7 @@ void R_WallLatePrep(viswall_t* wc, vertex_t *verts)
 // Main seg clipping loop
 //
 static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, 
-    fixed_t floorheight, fixed_t floornewheight, fixed_t ceilingnewheight)
+    fixed_t floorheight, fixed_t floornewheight, fixed_t ceilingheight, fixed_t ceilingnewheight)
 {
     const volatile int actionbits = segl->actionbits;
 
@@ -177,7 +177,7 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
     int x, start = segl->start;
     const int stop = segl->stop;
 
-    const fixed_t ceilingheight = segl->ceilingheight;
+//    const fixed_t ceilingheight = segl->ceilingheight;
 
     const int floorandlight = ((segl->seglightlevel & 0xff) << 16) | (VINT)LOWER8(segl->floorceilpicnum);
     const int ceilandlight = ((segl->seglightlevel & 0xff) << 16) | (VINT)UPPER8(segl->floorceilpicnum);
@@ -330,8 +330,34 @@ void Mars_Sec_R_WallPrep(void)
             Mars_ClearCacheLine(seglex);
 #endif
             R_WallLatePrep(segl, verts);
+#ifdef FLOOR_OVER_FLOOR
+            if (segl->fofSector != -1)
+            {
+                sector_t *fofSector = &sectors[segl->fofSector];
+                if (fofSector->ceilingheight < vd.viewz)
+                {
+                    uint16_t oldpicnum = segl->floorceilpicnum;
+                    short oldbits = segl->actionbits;
+                    segl->actionbits |= AC_ADDFLOOR|AC_NEWFLOOR;
+                    SETLOWER8(segl->floorceilpicnum, fofSector->ceilingpic);
+                    R_SegLoop(segl, clipbounds, fofSector->ceilingheight - vd.viewz, fofSector->ceilingheight - vd.viewz, segl->ceilingheight, seglex->ceilnewheight);
+                    segl->actionbits = oldbits;
+                    segl->floorceilpicnum = oldpicnum;
+                }
+                else if (fofSector->floorheight > vd.viewz)
+                {
+                    uint16_t oldpicnum = segl->floorceilpicnum;
+                    short oldbits = segl->actionbits;
+                    segl->actionbits |= AC_ADDCEILING|AC_NEWCEILING;
+                    SETUPPER8(segl->floorceilpicnum, fofSector->floorpic);
+                    R_SegLoop(segl, clipbounds, seglex->floorheight, seglex->floornewheight, fofSector->floorheight - vd.viewz, fofSector->floorheight - vd.viewz);
+                    segl->actionbits = oldbits;
+                    segl->floorceilpicnum = oldpicnum;
+                }
+            }
+#endif
 
-            R_SegLoop(segl, clipbounds, seglex->floorheight, seglex->floornewheight, seglex->ceilnewheight);
+            R_SegLoop(segl, clipbounds, seglex->floorheight, seglex->floornewheight, segl->ceilingheight, seglex->ceilnewheight);
 
             seglex++;
             *readysegs = *readysegs + 1;
