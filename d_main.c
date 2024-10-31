@@ -1,10 +1,7 @@
 /* D_main.c  */
  
 #include "doomdef.h"
-
-#ifdef PLAY_POS_DEMO
 #include "v_font.h"
-#endif
 
 #ifdef MARS
 #include "marshw.h"
@@ -785,6 +782,56 @@ int TIC_Abortable (void)
 	return 0;
 }
 
+/*============================================================================= */
+
+#ifdef SHOW_DISCLAIMER
+VINT disclaimerCount = 0;
+int TIC_Disclaimer(void)
+{
+	if (++disclaimerCount > 240)
+		return 1;
+
+	if (disclaimerCount == 180)
+	{
+		// Set to totally black
+		const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
+		I_SetPalette(dc_playpals+10*768);
+	}
+
+	return 0;
+}
+
+void START_Disclaimer(void)
+{
+	int		i;
+
+	for (i = 0; i < 2; i++)
+	{
+		I_ClearFrameBuffer();
+		UpdateBuffer();
+	}
+
+	disclaimerCount = 0;
+
+	UpdateBuffer();
+
+	const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
+	I_SetPalette(dc_playpals);
+}
+
+void STOP_Disclaimer (void)
+{
+}
+
+void DRAW_Disclaimer (void)
+{
+	V_DrawStringCenter(&creditFont, 160, 64, "THIS GAME SHOULD");
+	V_DrawStringCenter(&creditFont, 160, 88, "NOT BE SOLD");
+
+	V_DrawStringCenter(&menuFont, 160, 128, "https://ssntails.srb2.org/srb32x");
+	Mars_ClearCache();
+}
+#endif
 
 /*============================================================================= */
 
@@ -837,175 +884,7 @@ void DRAW_Title (void)
 
 /*============================================================================= */
 
-#ifdef MARS
-static char* credits;
-static short creditspage;
-#endif
-
-static void START_Credits (void)
-{
-#ifdef MARS
-	credits = NULL;
-	titlepic = NULL;
-	creditspage = 1;
-	if (gameinfo.creditsPage < 0)
-		return;
-	credits = W_CacheLumpNum(gameinfo.creditsPage, PU_STATIC);
-#else
-	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
-	titlepic = W_CacheLumpName("credits", PU_STATIC);
-#endif
-	DoubleBufferSetup();
-}
-
-void STOP_Credits (void)
-{
-#ifdef MARS
-	if (credits)
-		Z_Free(credits);
-#endif
-	if (titlepic)
-		Z_Free(titlepic);
-}
-
-static int TIC_Credits (void)
-{
-	int buttons = ticbuttons[0];
-	int oldbuttons = oldticbuttons[0];
-
-	if (gameinfo.creditsPage < 0)
-		return ga_exitdemo;
-	if (ticon >= gameinfo.creditsTime)
-		return 1;		/* go on to next demo */
-
-#ifdef MARS
-	if ( (buttons & BT_A) && !(oldbuttons & BT_A) )
-		return ga_exitdemo;
-	if ( (buttons & BT_B) && !(oldbuttons & BT_B) )
-		return ga_exitdemo;
-	if ( (buttons & BT_C) && !(oldbuttons & BT_C) )
-		return ga_exitdemo;
-	if ( (buttons & BT_START) && !(oldbuttons & BT_START) )
-		return ga_exitdemo;
-#else
-	if ( (buttons & BT_ATTACK) && !(oldbuttons & BT_ATTACK) )
-		return ga_exitdemo;
-	if ( (buttons & BT_SPEED) && !(oldbuttons & BT_SPEED) )
-		return ga_exitdemo;
-	if ( (buttons & BT_USE) && !(oldbuttons & BT_USE) )
-		return ga_exitdemo;
-	if ( (buttons & BT_START) && !(oldbuttons & BT_START) )
-		return ga_exitdemo;
-#endif
-
-	if (ticon * 2 >= gameinfo.creditsTime)
-	{
-		if (creditspage != 2)
-		{
-			char name[9];
-
-			D_memcpy(name, W_GetNameForNum(gameinfo.creditsPage), 8);
-			name[7]+= creditspage;
-			name[8] = '\0';
-
-			int l = W_CheckNumForName(name);
-			if (l >= 0)
-			{
-				Z_Free(credits);
-				credits = W_CacheLumpNum(l, PU_STATIC);
-			}
-			creditspage = 2;
-
-			DoubleBufferSetup();
-		}
-	}
-
-	return 0;
-}
-
-static void DRAW_RightString(int x, int y, const char* str)
-{
-	int len = I_Print8Len(str);
-	I_Print8(x - len * 8, y, str);
-}
-
-static void DRAW_CenterString(int y, const char* str)
-{
-	int len = I_Print8Len(str);
-	I_Print8((320 - len * 8) / 2, y, str);
-}
-
-static void DRAW_LineCmds(char *lines)
-{
-	int y;
-	static const char* dots = "...";
-	int dots_len = mystrlen(dots);
-	int x_right = (320 - dots_len*8) / 2 - 2;
-	int x_left = (320 + dots_len*8) / 2;
-	char* p = lines;
-
-	y = 0;
-	while (1) {
-		char *end = D_strchr(p, '\n');
-		char* str = p, *nextl;
-		char cmd = str[0];
-		char inc = str[1];
-		char bak = 0;
-
-		if (!cmd || !inc)
-			break;
-
-		str += 3;
-		if (end)
-		{
-			nextl = end + 1;
-			if (*(end - 1) == '\r')
-				--end;
-			bak = *end;
-			*end = '\0';
-		}
-		else
-		{
-			nextl = NULL;
-		}
-
-		switch (cmd) {
-		case 'c':
-			DRAW_CenterString(y, str);
-			break;
-		case 'r':
-			DRAW_RightString(x_right, y, str);
-			break;
-		case 'l':
-			I_Print8(x_left, y, str);
-			break;
-		}
-
-		if (inc == 'i')
-		{
-			y++;
-		}
-
-		if (nextl)
-			*end = bak;
-		else
-			break;
-		p = nextl;
-	}
-}
-
-static void DRAW_Credits(void)
-{
-#ifdef MARS
-	DRAW_LineCmds(credits);
-#else
-	DrawJagobj(titlepic, 0, 0);
-#endif
-}
-
-/*============================================================================ */
 void RunMenu (void);
-void RunCredits(void);
 
 void RunTitle (void)
 {
@@ -1013,22 +892,10 @@ void RunTitle (void)
 	starttype = gt_single;
 	consoleplayer = 0;
 
+#ifdef SHOW_DISCLAIMER
+	MiniLoop (START_Disclaimer, STOP_Disclaimer, TIC_Disclaimer, DRAW_Disclaimer, UpdateBuffer);
+#endif
 	MiniLoop (START_Title, STOP_Title, TIC_Abortable, DRAW_Title, UpdateBuffer);
-}
-
-void RunCredits (void)
-{
-	int		l;
-	int		exit;
-	
-	l = gameinfo.creditsPage;
-	if (l > 0)
-		exit = MiniLoop(START_Credits, STOP_Credits, TIC_Credits, DRAW_Credits, UpdateBuffer);
-	else
-		exit = ga_exitdemo;
-
-	if (exit == ga_exitdemo)
-		RunMenu ();
 }
 
 int RunInputDemo (char *demoname)

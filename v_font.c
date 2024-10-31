@@ -1,4 +1,5 @@
 #include "v_font.h"
+#include "lzss.h"
 
 font_t menuFont;
 font_t titleFont;
@@ -88,6 +89,20 @@ int V_DrawStringLeft(const font_t *font, int x, int y, const char *string)
                     DrawJagobj(jo, x, y + font->verticalOffset - jo->height);
 		            x += jo->width;
 	            }
+                else
+                {
+                    // Can draw compressed characters,
+                    // BUT ONLY IF THEY FIT INTO THE LZSS_BUF_SIZE!
+                    lzss_state_t gfx_lzss;
+	                uint8_t lzss_buf[LZSS_BUF_SIZE];
+                    lzss_setup(&gfx_lzss, lump, lzss_buf, LZSS_BUF_SIZE);
+                    if (lzss_read(&gfx_lzss, sizeof(lzss_buf)) == 0)
+                        return;
+
+                    jo = (jagobj_t*)gfx_lzss.buf;
+                    DrawJagobj(jo, x, y + font->verticalOffset - jo->height);
+		            x += jo->width;
+                }
             }
 		}
 	}
@@ -201,6 +216,19 @@ int V_DrawStringCenter(const font_t *font, int x, int y, const char *string)
     		        jo = (jagobj_t*)lump;
 		            x -= jo->width / 2;
 	            }
+                else
+                {
+                    // Can draw compressed characters,
+                    // BUT ONLY IF THEY FIT INTO THE LZSS_BUF_SIZE!
+                    lzss_state_t gfx_lzss;
+	                uint8_t lzss_buf[LZSS_BUF_SIZE];
+                    lzss_setup(&gfx_lzss, lump, lzss_buf, LZSS_BUF_SIZE);
+                    if (lzss_read(&gfx_lzss, 16) != 16)
+                        continue;
+
+                    jo = (jagobj_t*)gfx_lzss.buf;
+		            x -= jo->width / 2;
+                }
             }
 		}
     }
