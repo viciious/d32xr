@@ -20,8 +20,10 @@ extern font_t hudNumberFont;
 
 void V_FontInit();
 
-int V_DrawStringLeft(const font_t *font, int x, int y, const char *string);
 int V_DrawStringLeftWithColormap(const font_t *font, int x, int y, const char *string, int colormap);
+int V_DrawStringRightWithColormap(const font_t *font, int x, int y, const char *string, int colormap);
+int V_DrawStringCenterWithColormap(const font_t *font, int x, int y, const char *string, int colormap);
+int V_DrawStringLeft(const font_t *font, int x, int y, const char *string);
 int V_DrawStringRight(const font_t *font, int x, int y, const char *string);
 int V_DrawStringCenter(const font_t *font, int x, int y, const char *string);
 

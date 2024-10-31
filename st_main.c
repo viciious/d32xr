@@ -14,7 +14,7 @@ int stbar_tics;
 static short stbarframe;
 static short   stbar_y;
 
-static short score, time, rings, rrings;
+static short score, time, rings;
 static short snums; // Numbers
 static short timecolon; // : for TIME
 static short face, livex;
@@ -51,7 +51,6 @@ void ST_Init (void)
 	score = W_CheckNumForName("STTSCORE");
 	time = W_CheckNumForName("STTTIME");
 	rings = W_CheckNumForName("STTRINGS");
-	rrings = W_CheckNumForName("STTRRING");
 	snums = W_CheckNumForName("STTNUM0");
 	timecolon = W_CheckNumForName("STTCOLON");
 	face = W_CheckNumForName("STFACE");
@@ -263,7 +262,10 @@ static void ST_Drawer_ (stbar_t* sb)
 		DrawJagobjLump(timecolon, 72, 26+22, NULL, NULL);
 		V_DrawValuePaddedRight(&hudNumberFont, 72+8+16, 26+22, seconds, 2);
 
-		DrawJagobjLump(sb->rings <= 0 && (gametic / 4 & 1) ? rrings : rings, 16, 42+22, NULL, NULL);
+		if (sb->rings <= 0 && (gametic / 4 & 1))
+			DrawJagobjLumpWithColormap(rings, 16, 42+22, NULL, NULL, YELLOWTEXTCOLORMAP);
+		else
+			DrawJagobjLump(rings, 16, 42+22, NULL, NULL);
 		V_DrawValuePaddedRight(&hudNumberFont, 96, 42+22, sb->rings, 0);
 
 		DrawJagobjLump(face, 16, 176, NULL, NULL);
