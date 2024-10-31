@@ -146,7 +146,6 @@ void P_GivePlayerRings(player_t *player, int num_rings)
 void P_PlayerMove(mobj_t *mo)
 {
 	fixed_t momx, momy;
-	int i;
 	pslidemove_t sm;
 	ptrymove_t tm;
 
@@ -1431,8 +1430,6 @@ void P_MovePlayer(player_t *player)
 
 void P_DeathThink(player_t *player)
 {
-	angle_t angle, delta;
-
 	/* fall to the ground */
 	if (player->viewheight > 8 * FRACUNIT)
 		player->viewheight -= FRACUNIT;
