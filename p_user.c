@@ -160,7 +160,7 @@ void P_PlayerMove(mobj_t *mo)
 		goto stairstep;
 
 	if (P_TryMove(&tm, mo, sm.slidex, sm.slidey))
-		goto dospecial;
+		return;
 
 stairstep:
 	if (momx > MAXMOVE)
@@ -178,19 +178,17 @@ stairstep:
 	{
 		mo->momx = 0;
 		mo->momy = momy;
-		goto dospecial;
+		return;
 	}
 
 	if (P_TryMove(&tm, mo, mo->x + momx, mo->y))
 	{
 		mo->momx = momx;
 		mo->momy = 0;
-		goto dospecial;
+		return;
 	}
 
 	mo->momx = mo->momy = 0;
-
-dospecial:
 }
 
 /*

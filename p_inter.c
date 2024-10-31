@@ -133,12 +133,6 @@ static boolean P_DoSpring(mobj_t *spring, player_t *player)
 	if (player)
 	{
 		int pflags;
-		uint8_t secondjump;
-		boolean washoming;
-
-// TODO: Lots of stuff to update here in the future
-//		if (spring->flags & MF_ENEMY) // Spring shells
-//			P_SetTarget(&spring->target, object);
 
 		if (horizspeed)
 		{
@@ -154,8 +148,7 @@ static boolean P_DoSpring(mobj_t *spring, player_t *player)
 			if (wasSpindashing) // Ensure we're in the rolling state, and not spindash.
 				P_SetMobjState(player->mo, S_PLAY_ATK1);
 		}
-//		secondjump = player->secondjump;
-		washoming = player->homingTimer > 0;
+
 		P_ResetPlayer(player);
 
 		if (!vertispeed)

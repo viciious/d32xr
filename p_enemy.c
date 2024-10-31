@@ -98,15 +98,11 @@ fixed_t yspeed[8] = {0,47000,FRACUNIT,47000,0,-47000,-FRACUNIT,-47000};
 boolean P_Move (mobj_t *actor)
 {
 	fixed_t	tryx, tryy;
-	fixed_t oldx, oldy;
 	boolean		good;
 	ptrymove_t	tm;
 
 	if (actor->movedir == DI_NODIR)
 		return false;
-		
-	oldx = actor->x;
-	oldy = actor->y;
 	
 	tryx = actor->x + mobjinfo[actor->type].speed*xspeed[actor->movedir];
 	tryy = actor->y + mobjinfo[actor->type].speed*yspeed[actor->movedir];

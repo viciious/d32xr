@@ -1161,10 +1161,10 @@ void Mars_Sec_ReadSoundCmds(void)
 			S_ClearPCM();
 			break;
 		case SNDCMD_STARTSND:
-			ch = S_AllocateChannel((void*)(*(intptr_t*)&p[2]), p[1], p[4], NULL, NULL);
+			ch = S_AllocateChannel((void*)(*(intptr_t*)&p[2]), p[1], p[4], NULL, 0);
 			break;
 		case SNDCMD_STARTORGSND:
-			ch = S_AllocateChannel((void*)(*(intptr_t*)&p[2]), p[1], p[6], (getsoundpos_t)(*(intptr_t*)&p[4]), NULL);
+			ch = S_AllocateChannel((void*)(*(intptr_t*)&p[2]), p[1], p[6], (getsoundpos_t)(*(intptr_t*)&p[4]), 0);
 			break;
 		case SNDCMD_STARTPANSND:
 			ch = S_AllocateChannel(NULL, p[1], p[2], NULL, p[3]);

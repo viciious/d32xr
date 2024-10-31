@@ -447,6 +447,7 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
       if ((mh = sectors[vis->heightsec].ceilingheight) > gz &&
           (h = centerYFrac - FixedMul(mh-=vd.viewz, vis->yscale)) >= 0 &&
           (h >>= FRACBITS) < viewportHeight)
+      {
         if (mh <= 0 || (phs != -1 && vd.viewz > sectors[phs].ceilingheight))
           {                          // clip bottom
             for (x=vis->x1 ; x<=vis->x2 ; x++)
@@ -463,6 +464,7 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
             if (topclip == 0 || h > topclip)
                spropening[x] = (spropening[x] & 0x00ff) + (h << 8);
           }
+      }
     }
   // killough 3/27/98: end special clipping for deep water / fake ceilings
 }

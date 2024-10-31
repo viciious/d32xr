@@ -647,7 +647,7 @@ void M_Drawer (void)
 		}
 
 		if (fistCounter < 0)
-			DrawJagobjLump(m_kfist[abs(fistCounter)], logoPos + 188, 16 + 43, NULL, NULL);
+			DrawJagobjLump(m_kfist[D_abs(fistCounter)], logoPos + 188, 16 + 43, NULL, NULL);
 		else
 			DrawJagobjLump(m_kfist[0], logoPos + 188, 16 + 43, NULL, NULL);
 
@@ -662,13 +662,13 @@ void M_Drawer (void)
 			kBlinkCounter = M_Random() & 127;
 
 		if (sBlinkCounter < 0)
-			DrawJagobjLump(m_sblink[abs(sBlinkCounter)], logoPos + 93, 16 + 27, NULL, NULL);
+			DrawJagobjLump(m_sblink[D_abs(sBlinkCounter)], logoPos + 93, 16 + 27, NULL, NULL);
 
 		if (tBlinkCounter < 0)
-			DrawJagobjLump(m_tblink[abs(tBlinkCounter)], logoPos + 54, 16 + 40, NULL, NULL);
+			DrawJagobjLump(m_tblink[D_abs(tBlinkCounter)], logoPos + 54, 16 + 40, NULL, NULL);
 
 		if (kBlinkCounter < 0)
-			DrawJagobjLump(m_kblink[abs(kBlinkCounter)], logoPos + 158, 16 + 37, NULL, NULL);
+			DrawJagobjLump(m_kblink[D_abs(kBlinkCounter)], logoPos + 158, 16 + 37, NULL, NULL);
 	}
 
 /* erase old skulls */

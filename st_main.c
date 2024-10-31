@@ -69,8 +69,6 @@ void ST_Init (void)
 
 void ST_ForceDraw(void)
 {
-	int p;
-
 	stbarframe = 0;
 	ST_Ticker();
 }

@@ -305,12 +305,11 @@ mobj_t	emptymobj;
 =
 ===============
 */
+#ifdef MDSKY
 __attribute((noinline))
 static void D_LoadMDSky(void)
 {
 	// Retrieve lumps for drawing the sky on the MD.
-
-	#ifdef MDSKY
 	uint8_t *sky_name_ptr;
 	uint8_t *sky_pal_ptr;
 	uint8_t *sky_pat_ptr;
@@ -349,12 +348,13 @@ static void D_LoadMDSky(void)
 	}
 
 	Mars_LoadMDSky(sky_name_ptr, sky_pal_ptr, sky_pat_ptr);
-	#endif
 }
+#endif
 
 int last_frt_count = 0;
 int total_frt_count = 0;
 boolean optionsMenuOn = false;
+int Mars_FRTCounter2Msec(int c);
 
 int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		,  int (*ticker)(void), void (*drawer)(void)
@@ -729,55 +729,8 @@ jagobj_t	*titlepic;
 
 int TIC_Abortable (void)
 {
-#ifdef JAGUAR
-	jagobj_t	*pl;
-#endif
-	int buttons = ticbuttons[0];
-	int oldbuttons = oldticbuttons[0];
-
-	if (titlepic == NULL)
-		return 1;
-	if (ticon < TICVBLS)
-		return 0;
 	if (ticon >= gameinfo.titleTime)
 		return 1;		/* go on to next demo */
-
-#ifdef JAGUAR	
-	if (ticbuttons[0] == (BT_OPTION|BT_STAR|BT_HASH) )
-	{	/* reset eeprom memory */
-		void Jag68k_main (void);
-
-		ClearEEProm ();
-		pl = W_CacheLumpName ("defaults", PU_STATIC);	
-		DrawSinglePlaque (pl);
-		Z_Free (pl);
-		S_Clear ();
-		ticcount = 0;
-		while ( (junk = ticcount) < 240)
-		;
-		Jag68k_main ();
-	}
-#endif
-
-#ifdef MARS
-	if ( (buttons & BT_A) && !(oldbuttons & BT_A) )
-		return ga_exitdemo;
-	if ( (buttons & BT_B) && !(oldbuttons & BT_B) )
-		return ga_exitdemo;
-	if ( (buttons & BT_C) && !(oldbuttons & BT_C) )
-		return ga_exitdemo;
-	if ( (buttons & BT_START) && !(oldbuttons & BT_START) )
-		return ga_exitdemo;
-#else
-	if ( (buttons & BT_ATTACK) && !(oldbuttons & BT_ATTACK) )
-		return ga_exitdemo;
-	if ( (buttons & BT_USE) && !(oldbuttons & BT_USE) )
-		return ga_exitdemo;
-	if ( (buttons & BT_OPTION) && !(oldbuttons & BT_OPTION) )
-		return ga_exitdemo;
-	if ( (buttons & BT_START) && !(oldbuttons & BT_START) )
-		return ga_exitdemo;
-#endif
 
 	return 0;
 }
@@ -788,10 +741,10 @@ int TIC_Abortable (void)
 VINT disclaimerCount = 0;
 int TIC_Disclaimer(void)
 {
-	if (++disclaimerCount > 240)
+	if (++disclaimerCount > 360)
 		return 1;
 
-	if (disclaimerCount == 180)
+	if (disclaimerCount == 320)
 	{
 		// Set to totally black
 		const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
@@ -823,12 +776,44 @@ void STOP_Disclaimer (void)
 {
 }
 
+const unsigned char key[] = { 0x78, 0x11, 0xB6, 0x2A, 0x48, 0x6A, 0x30, 0xA7 };
+const int keyValue = 3043;
+void parse_data(unsigned char *data, size_t dataLen)
+{
+	size_t startPos = 0;
+	size_t i;
+	for (i = 0; i < dataLen; i++, startPos++)
+		data[i] = data[i] ^ key[startPos & 7];
+}
+
 void DRAW_Disclaimer (void)
 {
-	V_DrawStringCenter(&creditFont, 160, 64, "THIS GAME SHOULD");
-	V_DrawStringCenter(&creditFont, 160, 88, "NOT BE SOLD");
+	unsigned char text1[] = { 0x2C, 0x59, 0xFF, 0x79, 0x68, 0x2D, 0x71, 0xEA, 0x3D, 0x31, 0xE5, 0x62, 0x07, 0x3F, 0x7C, 0xE3, 0x78};
+	unsigned char text2[] = { 0x36, 0x5E, 0xE2, 0x0A, 0x0A, 0x2F, 0x10, 0xF4, 0x37, 0x5D, 0xF2, 0x2A};
+	unsigned char text3[] = { 0x10, 0x65, 0xC2, 0x5A, 0x3B, 0x50, 0x1F, 0x88, 0x0B, 0x62, 0xD8, 0x5E, 0x29, 0x03, 0x5C, 0xD4, 0x56, 0x62, 0xC4, 0x48, 0x7A, 0x44, 0x5F, 0xD5, 0x1F, 0x3E, 0xC5, 0x58, 0x2A, 0x59, 0x02, 0xDF, 0x78 };
+	const VINT stext1 = 16;
+	const VINT stext2 = 11;
+	const VINT stext3 = 32;
 
-	V_DrawStringCenter(&menuFont, 160, 128, "https://ssntails.srb2.org/srb32x");
+	int sum = 0;
+	for (int i = 0; i < stext1; i++)
+		sum += text1[i] / 2;
+	for (int i = 0; i < stext2; i++)
+		sum += text2[i] / 2;
+	for (int i = 0; i < stext3; i++)
+		sum += text3[i] / 2;
+
+	if (sum != keyValue)
+		I_Error("");
+
+	parse_data(text1, stext1+1);
+	parse_data(text2, stext2+1);
+	parse_data(text3, stext3+1);
+
+	V_DrawStringCenter(&creditFont, 160, 64, (const char*)text1);
+	V_DrawStringCenter(&creditFont, 160, 88, (const char*)text2);
+
+	V_DrawStringCenter(&menuFont, 160, 128, (const char*)text3);
 	Mars_ClearCache();
 }
 #endif
@@ -837,8 +822,6 @@ void DRAW_Disclaimer (void)
 
 void START_Title(void)
 {
-	int l;
-
 #ifdef MARS
 	int		i;
 
@@ -852,8 +835,7 @@ void START_Title(void)
 	DoubleBufferSetup();
 #endif
 
-	l = gameinfo.titlePage;
-	titlepic = l != -1 ? W_CacheLumpNum(l, PU_STATIC) : NULL;
+	titlepic = gameinfo.titlePage != -1 ? W_CacheLumpNum(gameinfo.titlePage, PU_STATIC) : NULL;
 
 	ticon = 0;
 

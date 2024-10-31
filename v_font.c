@@ -97,7 +97,7 @@ int V_DrawStringLeft(const font_t *font, int x, int y, const char *string)
 	                uint8_t lzss_buf[LZSS_BUF_SIZE];
                     lzss_setup(&gfx_lzss, lump, lzss_buf, LZSS_BUF_SIZE);
                     if (lzss_read(&gfx_lzss, sizeof(lzss_buf)) == 0)
-                        return;
+                        return x;
 
                     jo = (jagobj_t*)gfx_lzss.buf;
                     DrawJagobj(jo, x, y + font->verticalOffset - jo->height);

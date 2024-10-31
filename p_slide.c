@@ -328,29 +328,6 @@ fixed_t P_CompletableFrac(pslidework_t *sw, fixed_t dx, fixed_t dy)
 }
 
 //
-// Point on side check for special crosses.
-//
-static int SL_PointOnSide2(fixed_t x1, fixed_t y1, 
-                           fixed_t x2, fixed_t y2, 
-                           fixed_t x3, fixed_t y3)
-{
-   fixed_t nx, ny;
-   fixed_t dist;
-
-   x1 = (x1 - x2);
-   y1 = (y1 - y2);
-
-   nx = (y3 - y2);
-   ny = (x2 - x3);
-
-   nx = FixedMul(x1, nx);
-   ny = FixedMul(y1, ny);
-   dist = nx + ny;
-
-   return ((dist < 0) ? SIDE_BACK : SIDE_FRONT);
-}
-
-//
 // Try to slide the player against walls by finding the closest move available.
 //
 void P_SlideMove(pslidemove_t *sm)
