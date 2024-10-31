@@ -220,22 +220,10 @@ void M_Start2 (boolean startup_)
 	mainitem[mi_newgame].y = CURSORY(0);
 	mainitem[mi_newgame].screen = ms_gametype;
 
-	D_memcpy(mainitem[mi_loadgame].name, "MULTIPLAYER", 12);
+	D_memcpy(mainitem[mi_loadgame].name, "ABOUT", 12);
 	mainitem[mi_loadgame].x = ITEMX;
 	mainitem[mi_loadgame].y = CURSORY(1);
 	mainitem[mi_loadgame].screen = ms_load;
-	mainscreen[ms_main].numitems++;
-
-	D_memcpy(mainitem[mi_savegame].name, "OPTIONS", 8);
-	mainitem[mi_savegame].x = ITEMX;
-	mainitem[mi_savegame].y = CURSORY(2);
-	mainitem[mi_savegame].screen = ms_save;
-	mainscreen[ms_main].numitems++;
-
-	D_memcpy(mainitem[mi_joingame].name, "ABOUT", 6);
-	mainitem[mi_joingame].x = ITEMX;
-	mainitem[mi_joingame].y = CURSORY(3);
-	mainitem[mi_joingame].screen = ms_none;
 	mainscreen[ms_main].numitems++;
 
 	D_memcpy(mainitem[mi_level].name, "Area", 5);
@@ -676,19 +664,30 @@ void M_Drawer (void)
 	EraseBlock (CURSORX, m_doom_height,m_skull1->width, CURSORY(menuscr->numitems)- CURSORY(0));
 #endif
 
-/* draw new skull */
-	DrawJagobjLump(m_skull1lump, CURSORX, y_offset+items[cursorpos].y - 2, NULL, NULL);
-
 /* draw menu items */
+	int selectedPos = 0;
 	for (i = 0; i < menuscr->numitems; i++)
 	{
 		int y = y_offset + items[i].y;
 
-		if (i == cursorpos)
-			V_DrawStringLeftWithColormap(&menuFont, items[i].x, y, items[i].name, YELLOWTEXTCOLORMAP);
+		if (scrpos == ms_main)
+		{
+			if (i == cursorpos)
+				selectedPos = V_DrawStringCenterWithColormap(&menuFont, 160, y, items[i].name, YELLOWTEXTCOLORMAP);
+			else
+				V_DrawStringCenter(&menuFont, 160, y, items[i].name);
+		}
 		else
-			V_DrawStringLeft(&menuFont, items[i].x, y, items[i].name);
+		{
+			if (i == cursorpos)
+				selectedPos = V_DrawStringLeftWithColormap(&menuFont, items[i].x, y, items[i].name, YELLOWTEXTCOLORMAP);
+			else
+				V_DrawStringLeft(&menuFont, items[i].x, y, items[i].name);
+		}
 	}
+
+	/* draw new skull */
+	DrawJagobjLump(m_skull1lump, scrpos == ms_main ? 160 - (selectedPos - 160) - 20 : CURSORX, y_offset+items[cursorpos].y, NULL, NULL);
 
 	if (scrpos == ms_new)
 	{

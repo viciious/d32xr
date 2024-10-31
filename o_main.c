@@ -79,8 +79,6 @@ static VINT	uchar;
 static VINT	o_cursor1;
 static VINT	o_slider, o_slidertrack;
 
-static VINT m_help;
-
 VINT	o_musictype, o_sfxdriver;
 
 static const char buttona[NUMCONTROLOPTIONS][8] =
@@ -146,8 +144,6 @@ void O_Init (void)
 	o_sfxdriver = sfxdriver;
 
 	uchar = W_CheckNumForName("STCFN065");
-
-	m_help = W_CheckNumForName("M_HELP");
 
 /*	initialize variables */
 
@@ -823,15 +819,6 @@ void O_Drawer (void)
 		I_Print8(x2, l++, "Hold B+UP/DOWN");
 		I_Print8(x, l, "Lock");
 		I_Print8(x2, l++, "Hold C");
-
-		if (m_help >= 0)
-		{
-			x = 182;
-			l = y/8;
-			I_Print8(x, l, "^E5Scan the QR code");
-			I_Print8(x, l+1, "^E5for more info");
-			DrawJagobjLump(m_help, x, y+16, NULL, NULL);
-		}
 	}
 }
 
