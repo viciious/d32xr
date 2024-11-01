@@ -340,7 +340,7 @@ static void R_PrepRing(ringmobj_t *thing, boolean scenery)
    if (x2 < 0)
        return;
 
-   const fixed_t thingz = scenery ? subsectors[scenerymobj->isubsector].sector->floorheight : thing->z << FRACBITS;
+   const fixed_t thingz = scenery ? (thing->type < MT_STALAGMITE0 || thing->type > MT_STALAGMITE7 ? subsectors[scenerymobj->isubsector].sector->floorheight : subsectors[scenerymobj->isubsector].sector->ceilingheight - mobjinfo[thing->type].height) : thing->z << FRACBITS;
 
    // killough 4/9/98: clip things which are out of view due to height
 //   tz = FixedMul(gzt, xscale);
