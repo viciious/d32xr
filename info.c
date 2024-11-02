@@ -58,6 +58,7 @@ const char * const sprnames[NUMSPRITES] = {
 "SEWE",
 "SIGN",
 "SKIM",
+"SPHR",
 "SPLH",
 "SPOS",
 "SPRK",
@@ -204,6 +205,7 @@ STATE(SPR_BMNB,FF_FULLBRIGHT|1,2,NULL,S_BIGMINE_BLAST3), // S_BIGMINE_BLAST2
 STATE(SPR_BMNB,FF_FULLBRIGHT|2,1,NULL,S_BIGMINE_BLAST4), // S_BIGMINE_BLAST3
 STATE(SPR_BMNB,FF_FULLBRIGHT|3,1,NULL,S_NULL), // S_BIGMINE_BLAST4
 
+STATE(SPR_SPHR,0,-1,NULL,S_NULL), // S_BLUESPHERE
 STATE(SPR_RING,0,2,NULL,S_RING2), // S_RING1
 STATE(SPR_RING,1,2,NULL,S_RING3), // S_RING2
 STATE(SPR_RING,2,2,NULL,S_RING4), // S_RING3
@@ -1594,6 +1596,31 @@ MF2_SHOOTABLE|MF2_ENEMY,	// flags2
 		MF2_SHOOTABLE|MF2_ENEMY          // flags2
 	},
 
+	{           // MT_BLUESPHERE
+		1706,           // doomednum
+		S_BLUESPHERE,   // spawnstate
+		1000,           // spawnhealth
+		S_NULL,         // seestate
+		sfx_None,       // seesound
+		0,              // reactiontime
+		sfx_None,       // attacksound
+		S_NULL,         // painstate
+		0,              // painchance
+		sfx_None,       // painsound
+		S_NULL,         // meleestate
+		S_NULL,         // missilestate
+		S_NULL,         // deathstate
+		S_NULL,         // xdeathstate
+		sfx_s3k_65,     // deathsound
+		38*FRACUNIT,    // speed
+		16*FRACUNIT,    // radius
+		24*FRACUNIT,    // height
+		100,            // mass
+		0,              // damage
+		sfx_None,       // activesound
+		MF_SPECIAL|MF_NOGRAVITY|MF_STATIC|MF_RINGMOBJ, // flags
+		0 // flags2
+	},
 {           // MT_RING
 	300,            // doomednum
 	S_RING1,         // spawnstate

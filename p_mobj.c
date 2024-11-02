@@ -581,6 +581,7 @@ inline fixed_t P_GetMapThingSpawnHeight(const mobjtype_t mobjtype, const mapthin
 	*/
 		// Ring-like items, float additional units unless args[0] is set.
 		case MT_RING:
+		case MT_BLUESPHERE:
 			dz += 24*FRACUNIT;
 			break;
 		default:

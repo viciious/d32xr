@@ -201,6 +201,11 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 
 			player->itemcount++;
 		}
+		else if (special->type == MT_BLUESPHERE)
+		{
+			// TODO: Add to sphere count
+			sound = mobjinfo[special->type].deathsound;
+		}
 		
 		special->flags &= ~MF_SPECIAL;
 		P_RemoveMobj (special);
