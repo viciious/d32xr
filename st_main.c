@@ -20,6 +20,13 @@ static short timecolon; // : for TIME
 static short face, livex;
 static short go_game, go_over;
 
+// Special stage
+static short narrow1;
+static short nbracket;
+static short nrng1;
+static short nsshud;
+static short chaos;
+
 static short ltzz_blue_lump, chev_blue_lump, lt_blue_lump;
 static short ltzz_red_lump, chev_red_lump, lt_red_lump;
 
@@ -57,6 +64,13 @@ void ST_Init (void)
 	livex = W_CheckNumForName("STLIVEX");
 	go_game = W_CheckNumForName("SLIDGAME");
 	go_over = W_CheckNumForName("SLIDOVER");
+
+	// Special stage
+	narrow1 = W_CheckNumForName("NARROW1");
+	nbracket = W_CheckNumForName("NBRACKET");
+	nrng1 = W_CheckNumForName("NRNG1");
+	nsshud = W_CheckNumForName("NSSHUD");
+	chaos = W_CheckNumForName("CHAOS1");
 
 	ltzz_blue_lump = W_CheckNumForName("LTZZTEXT");
 	chev_blue_lump = W_CheckNumForName("CHEVBLUE");
@@ -245,6 +259,21 @@ static void ST_Drawer_ (stbar_t* sb)
 {
 	if (gametic < 96) {
 		ST_DrawTitleCard();
+	}
+	else if (gamemapinfo.mapNumber >= 60 && gamemapinfo.mapNumber <= 66)
+	{
+		// Special stage HUD
+		DrawJagobjLump(nbracket, 16, 8, NULL, NULL);
+		DrawJagobjLump(nbracket, 72, 8, NULL, NULL);
+		DrawJagobjLump(nbracket, 272, 8, NULL, NULL);
+
+		DrawJagobjLump(nsshud, 24, 16, NULL, NULL);
+		DrawJagobjLump(nrng1, 280, 17, NULL, NULL);
+		DrawJagobjLump(chaos+(gamemapinfo.mapNumber - 60), 77, 13, NULL, NULL);
+
+		DrawJagobjLump(narrow1 + ((gametic/2) & 3), 40, 13, NULL, NULL);
+
+		V_DrawValueCenter(&hudNumberFont, 272+16, 8+12, sb->rings);
 	}
 	else
 	{
