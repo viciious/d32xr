@@ -57,8 +57,6 @@ void V_FontInit()
 int V_DrawStringLeftWithColormap(const font_t *font, int x, int y, const char *string, int colormap)
 {
 	int i,c;
-    byte *lump;
-    jagobj_t *jo;
     int startX = x;
 
 	for (i = 0; i < mystrlen(string); i++)
@@ -86,7 +84,9 @@ int V_DrawStringLeftWithColormap(const font_t *font, int x, int y, const char *s
             else
             {
                 int lumpnum = font->lumpStart + (c - font->lumpStartChar);
-                lump = W_POINTLUMPNUM(lumpnum);
+                byte *lump = W_POINTLUMPNUM(lumpnum);
+                jagobj_t *jo;
+
 	            if (!(lumpinfo[lumpnum].name[0] & 0x80))
 	            {
     		        jo = (jagobj_t*)lump;
@@ -94,9 +94,24 @@ int V_DrawStringLeftWithColormap(const font_t *font, int x, int y, const char *s
                         DrawJagobjWithColormap(jo, x, y + font->verticalOffset - jo->height, 0, 0, 0, 0, I_OverwriteBuffer(), colormap);
                     else
                         DrawJagobj(jo, x, y + font->verticalOffset - jo->height);
-
-		            x += jo->width;
 	            }
+                else
+                {
+                    // Can draw compressed characters
+                    lzss_state_t gfx_lzss;
+	                uint8_t lzss_buf[32];
+                    lzss_setup(&gfx_lzss, lump, lzss_buf, 32);
+                    if (lzss_read(&gfx_lzss, 16) != 16)
+                        continue;
+
+                    jo = (jagobj_t*)gfx_lzss.buf;
+                    if (colormap)
+                        DrawJagobjLumpWithColormap(lumpnum, x, y + font->verticalOffset - jo->height, NULL, NULL, colormap);
+                    else
+                        DrawJagobjLump(lumpnum, x, y + font->verticalOffset - jo->height, NULL, NULL);
+                }
+
+                x += jo->width;
             }
 		}
 	}
@@ -161,8 +176,6 @@ int V_DrawStringRight(const font_t *font, int x, int y, const char *string)
 int V_DrawStringCenterWithColormap(const font_t *font, int x, int y, const char *string, int colormap)
 {
     int c;
-    byte *lump;
-    jagobj_t *jo;
 
     // Slow, difficult...
     for (int i = 0; i < mystrlen(string); i++)
@@ -180,7 +193,9 @@ int V_DrawStringCenterWithColormap(const font_t *font, int x, int y, const char 
             else
             {
                 int lumpnum = font->lumpStart + (c - font->lumpStartChar);
-                lump = W_POINTLUMPNUM(lumpnum);
+                byte *lump = W_POINTLUMPNUM(lumpnum);
+                jagobj_t *jo;
+
 	            if (!(lumpinfo[lumpnum].name[0] & 0x80))
 	            {
     		        jo = (jagobj_t*)lump;
@@ -188,11 +203,10 @@ int V_DrawStringCenterWithColormap(const font_t *font, int x, int y, const char 
 	            }
                 else
                 {
-                    // Can draw compressed characters,
-                    // BUT ONLY IF THEY FIT INTO THE LZSS_BUF_SIZE!
+                    // Can draw compressed characters
                     lzss_state_t gfx_lzss;
-	                uint8_t lzss_buf[LZSS_BUF_SIZE];
-                    lzss_setup(&gfx_lzss, lump, lzss_buf, LZSS_BUF_SIZE);
+	                uint8_t lzss_buf[32];
+                    lzss_setup(&gfx_lzss, lump, lzss_buf, 32);
                     if (lzss_read(&gfx_lzss, 16) != 16)
                         continue;
 

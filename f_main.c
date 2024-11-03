@@ -91,7 +91,6 @@ void F_Stop (void)
 	R_InitColormap();
 	
 	// Cleanup
-	// TODO: Get the game to go back to title
 }
 
 /*
