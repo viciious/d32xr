@@ -22,6 +22,7 @@ static short go_game, go_over;
 
 // Special stage
 static short narrow1;
+static short narrow9;
 static short nbracket;
 static short nrng1;
 static short nsshud;
@@ -67,6 +68,7 @@ void ST_Init (void)
 
 	// Special stage
 	narrow1 = W_CheckNumForName("NARROW1");
+	narrow9 = W_CheckNumForName("NARROW9");
 	nbracket = W_CheckNumForName("NBRACKET");
 	nrng1 = W_CheckNumForName("NRNG1");
 	nsshud = W_CheckNumForName("NSSHUD");
@@ -287,8 +289,9 @@ static void ST_Drawer_ (stbar_t* sb)
 		DrawJagobjLump(chaos+(gamemapinfo.mapNumber - 60), 77, 13+16, NULL, NULL);
 
 		DrawJagobjLump(narrow1 + ((gametic/2) & 3), 40, 13+16, NULL, NULL);
+		DrawJagobjLump(narrow9, 240, 13+16, NULL, NULL);
 
-		V_DrawValueCenter(&hudNumberFont, 272+16, 8+12+16, totalitems - sb->rings);
+		V_DrawValueCenter(&hudNumberFont, 260, 8+12+16, totalitems - sb->rings);
 		V_DrawValueCenter(&hudNumberFont, 60, 13+6+16, gamemapinfo.spheresNeeded);
 
 		V_DrawStringCenter(&menuFont, 160, 12+16, "TIME LEFT");
