@@ -1600,7 +1600,10 @@ load_md_sky:
         andi.l  #0x7FFFF,d0
         addi.l  #0x880000,d0
         move.l  d0,a2
-        move.w  #0x200-1,d1             /* Prepare to copy two pattern names, 256 times total */
+        move.l  lump_size,d1
+        lsr.l   #1,d1
+        sub.l   #1,d1
+        |move.w  #0x400-1,d1             /* Prepare to copy two pattern names, 256 times total */
 0:
         move.w  (a2)+,(a1)              /* Write 0 to pattern name table B at position 0x0 */
         dbra    d1,0b
@@ -1617,7 +1620,10 @@ load_md_sky:
         addi.l  #0x880000,d0
         move.l  d0,a2
         lea     base_palette_1,a3
-        move.w  #0x40-1,d1              /* Prepare to copy two colors, 32 times total */
+        move.l  lump_size,d1
+        lsr.l   #1,d1
+        sub.l   #1,d1
+        |move.w  #0x40-1,d1              /* Prepare to copy two colors, 32 times total */
 1:
         move.w  (a2)+,(a3)+             /* Save color to DRAM */
         move.w  #0,(a1)                 /* Set color to black in CRAM */
@@ -1635,7 +1641,10 @@ load_md_sky:
         andi.l  #0x7FFFF,d0
         addi.l  #0x880000,d0
         move.l  d0,a2
-        move.w  #0x2000-1,d1            /* Prepare to copy eight pixels, 4096 times total */
+        move.l  lump_size,d1
+        lsr.l   #1,d1
+        sub.l   #1,d1
+        |move.w  #0x1000-1,d1            /* Prepare to copy eight pixels, 4096 times total */
 2:
         move.w  (a2)+,(a1)              /* Copy eight pixels from the source */
         dbra    d1,2b

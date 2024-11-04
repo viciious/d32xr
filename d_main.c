@@ -313,6 +313,9 @@ static void D_LoadMDSky(void)
 	uint8_t *sky_name_ptr;
 	uint8_t *sky_pal_ptr;
 	uint8_t *sky_pat_ptr;
+	uint32_t sky_name_size;
+	uint32_t sky_pal_size;
+	uint32_t sky_pat_size;
 	int lump;
 
 	char lumpname[9];
@@ -322,6 +325,7 @@ static void D_LoadMDSky(void)
 	lump = W_CheckNumForName(lumpname);
 	if (lump != -1) {
 		sky_name_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		sky_name_size = W_LumpLength(lump);
 	}
 	else {
 		return;
@@ -332,6 +336,7 @@ static void D_LoadMDSky(void)
 	lump = W_CheckNumForName(lumpname);
 	if (lump != -1) {
 		sky_pal_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		sky_pal_size = W_LumpLength(lump);
 	}
 	else {
 		return;
@@ -342,12 +347,13 @@ static void D_LoadMDSky(void)
 	lump = W_CheckNumForName(lumpname);
 	if (lump != -1) {
 		sky_pat_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		sky_pat_size = W_LumpLength(lump);
 	}
 	else {
 		return;
 	}
 
-	Mars_LoadMDSky(sky_name_ptr, sky_pal_ptr, sky_pat_ptr);
+	Mars_LoadMDSky(sky_name_ptr, sky_name_size, sky_pal_ptr, sky_pal_size, sky_pat_ptr, sky_pat_size);
 }
 #endif
 
@@ -389,7 +395,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 	ticmousex[0] = ticmousex[1] = ticmousey[0] = ticmousey[1] = 0;
 
 	#ifdef MDSKY
-	if (wipe)
+	if (leveltime == 0)
 	{
 		D_LoadMDSky();
 	}

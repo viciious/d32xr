@@ -37,6 +37,7 @@ volatile unsigned mars_pwdt_ovf_count = 0;
 volatile unsigned mars_swdt_ovf_count = 0;
 unsigned mars_frtc2msec_frac = 0;
 const uint8_t* mars_newpalette = NULL;
+uint16_t mars_thru_rgb_reference = 0;
 
 int16_t mars_requested_lines = 224;
 uint16_t mars_framebuffer_height = 224;
@@ -150,7 +151,8 @@ char Mars_UploadPalette(const uint8_t* palette)
 	}
 
 	#ifdef MDSKY
-	cram[MARS_MD_PIXEL_THRU_INDEX] &= 0x7FFF; // Allow MD VDP to show through for this palette index.
+	// Allow MD VDP to show through for this palette index.
+	cram[MARS_MD_PIXEL_THRU_INDEX] = cram[mars_thru_rgb_reference] & 0x7FFF;
 	#endif
 
 	return 1;
@@ -688,12 +690,11 @@ void Mars_FadeMDPaletteFromBlack(int fade_degree)
 /*
 Load the MD sky tiles, palettes, and pattern name table into the MD VDP.
 */
-void Mars_LoadMDSky(void *sky_names_ptr, void *sky_palettes_ptr, void *sky_tiles_ptr)
+void Mars_LoadMDSky(void *sky_names_ptr, int sky_names_size,
+		void *sky_palettes_ptr, int sky_palettes_size,
+		void *sky_tiles_ptr, int sky_tiles_size)
 {
 	int i;
-	const int sky_names_size = 0x400; // TODO: //DLG: Make this dynamic.
-	const int sky_palettes_size = 0x80;	 // TODO: //DLG: Make this dynamic.
-	const int sky_tiles_size = 0x4000; // TODO: //DLG: Make this dynamic.
 
 	uint16_t s[4];
 
