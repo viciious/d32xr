@@ -19,6 +19,7 @@ enum
   cdtrack_invincibility = -7,
   cdtrack_drowning = -8,
   cdtrack_gameover = -9,
+  cdtrack_emerald = -10,
 };
 
 /*

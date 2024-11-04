@@ -665,7 +665,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	vd.doubleclipangle = vd.clipangle * 2;
 	vd.viewangletox = viewangletox;
 
-	if (gamemapinfo.mapNumber != TITLE_MAP_NUMBER)
+	if (gamemapinfo.mapNumber != TITLE_MAP_NUMBER && (gamemapinfo.mapNumber < SSTAGE_START || gamemapinfo.mapNumber > SSTAGE_END))
 	{
 		if (leveltime < 62)
 		{
@@ -770,9 +770,25 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		palette = 12;
 	else if (fadetime > 0)
 	{
-		palette = 6 + (fadetime / 2);
-		if (palette > 10)
-			palette = 10;
+		if (gamemapinfo.mapNumber >= SSTAGE_START && gamemapinfo.mapNumber <= SSTAGE_END)
+		{
+			palette = 1 + (fadetime / 2);
+			if (palette > 5)
+				palette = 5;
+		}
+		else
+		{
+			palette = 6 + (fadetime / 2);
+			if (palette > 10)
+				palette = 10;
+		}
+	}
+	else if (gamemapinfo.mapNumber >= SSTAGE_START && gamemapinfo.mapNumber <= SSTAGE_END
+		&& gametic < 15)
+	{
+		palette = 5 - (gametic / 3);
+		if (palette < 0)
+			palette = 0;
 	}
 	else if (demoplayback && gamemapinfo.mapNumber == TITLE_MAP_NUMBER && leveltime < 15) {
 		palette = 5 - (leveltime / 3);

@@ -1638,6 +1638,13 @@ void P_PlayerThink(player_t *player)
 
 	if (player->exiting)
 		player->exiting++;
+	else if (gamemapinfo.mapNumber >= SSTAGE_START && gamemapinfo.mapNumber <= SSTAGE_END
+		&& (player->pflags & PF_UNDERWATER))
+	{
+		gamemapinfo.timeLimit--;
+		if (gamemapinfo.timeLimit < 0)
+			gamemapinfo.timeLimit = 0;
+	}
 
 	if (player->shield == SH_ATTRACT)
 		P_RingMagnet(player->mo);

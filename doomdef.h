@@ -126,6 +126,8 @@ typedef unsigned angle_t;
 #define TITLE_ANGLE_INC		0x800000
 
 #define TITLE_MAP_NUMBER	30
+#define SSTAGE_START        60
+#define SSTAGE_END          66
 
 #ifdef MARS
 

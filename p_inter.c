@@ -203,8 +203,18 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 		}
 		else if (special->type == MT_BLUESPHERE)
 		{
-			// TODO: Add to sphere count
+			gamemapinfo.spheresNeeded--;
 			sound = mobjinfo[special->type].deathsound;
+
+			if (gamemapinfo.spheresNeeded <= 0)
+			{
+				gamemapinfo.spheresNeeded = 0;
+				for (int p = 0; p < MAXPLAYERS; p++)
+					players[p].exiting = 1;
+
+				// Change music to chaos emerald get
+				S_StartSong(gameinfo.emeraldMus, 0, cdtrack_emerald);
+			}
 		}
 		
 		special->flags &= ~MF_SPECIAL;
