@@ -310,22 +310,37 @@ __attribute((noinline))
 static void D_LoadMDSky(void)
 {
 	// Retrieve lumps for drawing the sky on the MD.
-	uint8_t *sky_name_ptr;
-	uint8_t *sky_pal_ptr;
-	uint8_t *sky_pat_ptr;
-	uint32_t sky_name_size;
-	uint32_t sky_pal_size;
-	uint32_t sky_pat_size;
+	uint8_t *sky_names_a_ptr;
+	uint8_t *sky_names_b_ptr;
+	uint8_t *sky_palettes_ptr;
+	uint8_t *sky_tiles_ptr;
+
+	uint32_t sky_names_a_size;
+	uint32_t sky_names_b_size;
+	uint32_t sky_palettes_size;
+	uint32_t sky_tiles_size;
+	
 	int lump;
 
 	char lumpname[9];
 
 	D_strncpy(lumpname, gamemapinfo.sky, 5);
-	strcat(lumpname, "NAM");
+	strcat(lumpname, "NTA");
 	lump = W_CheckNumForName(lumpname);
 	if (lump != -1) {
-		sky_name_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
-		sky_name_size = W_LumpLength(lump);
+		sky_names_a_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		sky_names_a_size = W_LumpLength(lump);
+	}
+	else {
+		return;
+	}
+
+	D_strncpy(lumpname, gamemapinfo.sky, 5);
+	strcat(lumpname, "NTB");
+	lump = W_CheckNumForName(lumpname);
+	if (lump != -1) {
+		sky_names_b_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		sky_names_b_size = W_LumpLength(lump);
 	}
 	else {
 		return;
@@ -335,8 +350,8 @@ static void D_LoadMDSky(void)
 	strcat(lumpname, "PAL");
 	lump = W_CheckNumForName(lumpname);
 	if (lump != -1) {
-		sky_pal_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
-		sky_pal_size = W_LumpLength(lump);
+		sky_palettes_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		sky_palettes_size = W_LumpLength(lump);
 	}
 	else {
 		return;
@@ -346,14 +361,17 @@ static void D_LoadMDSky(void)
 	strcat(lumpname, "TIL");
 	lump = W_CheckNumForName(lumpname);
 	if (lump != -1) {
-		sky_pat_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
-		sky_pat_size = W_LumpLength(lump);
+		sky_tiles_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		sky_tiles_size = W_LumpLength(lump);
 	}
 	else {
 		return;
 	}
 
-	Mars_LoadMDSky(sky_name_ptr, sky_name_size, sky_pal_ptr, sky_pal_size, sky_pat_ptr, sky_pat_size);
+	Mars_LoadMDSky(sky_names_a_ptr, sky_names_a_size, 
+			sky_names_b_ptr, sky_names_b_size, 
+			sky_palettes_ptr, sky_palettes_size, 
+			sky_tiles_ptr, sky_tiles_size);
 }
 #endif
 

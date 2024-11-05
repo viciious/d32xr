@@ -472,7 +472,7 @@ no_cmd:
         dc.w    clear_a - prireqtbl               /* 0x0E */
         dc.w    load_md_sky - prireqtbl           /* 0x0F */
         dc.w    fade_md_palette - prireqtbl       /* 0x10 */
-        dc.w    no_cmd - prireqtbl                /* 0x11 */
+        dc.w    scroll_md_sky - prireqtbl         /* 0x11 */
         dc.w    net_getbyte - prireqtbl           /* 0x12 */
         dc.w    net_putbyte - prireqtbl           /* 0x13 */
         dc.w    net_setup - prireqtbl             /* 0x14 */
@@ -1586,16 +1586,17 @@ load_md_sky:
         ||move.w  #0x832C,(a0) /* reg 3 = Name Tbl W = 0xB000 */
         ||move.w  #0x8407,(a0) /* reg 4 = Name Tbl B = 0xE000 */
         ||move.w  #0x8554,(a0) /* reg 5 = Sprite Attr Tbl = 0xA800 */
+        ||move.w  #0x8D2B,(a0) /* reg 13 = HScroll Tbl = 0xAC00 */
 
         move.w  #0x9000,(a0) /* reg 16 = Scroll Size = 32x32 */
 
 
-        /* Load pattern name table */
+        /* Load pattern name table A */
         bsr     get_lump_source_and_size
         lea     0xC00004,a0
         lea     0xC00000,a1
         move.w  #0x8F02,(a0)
-        move.l  #0x40000003,(a0)        /* Set destination offset to pattern name table B at position 0x0 */
+        move.l  #0x40000003,(a0)        /* Set destination offset to pattern name table A at position 0x0 */
         move.l  lump_ptr,d0
         andi.l  #0x7FFFF,d0
         addi.l  #0x880000,d0
@@ -1603,10 +1604,27 @@ load_md_sky:
         move.l  lump_size,d1
         lsr.l   #1,d1
         sub.l   #1,d1
-        |move.w  #0x400-1,d1             /* Prepare to copy two pattern names, 256 times total */
 0:
-        move.w  (a2)+,(a1)              /* Write 0 to pattern name table B at position 0x0 */
+        move.w  (a2)+,(a1)              /* Write 0 to pattern name table A at position 0x0 */
         dbra    d1,0b
+
+
+        /* Load pattern name table B */
+        bsr     get_lump_source_and_size
+        lea     0xC00004,a0
+        lea     0xC00000,a1
+        move.w  #0x8F02,(a0)
+        move.l  #0x60000003,(a0)        /* Set destination offset to pattern name table B at position 0x0 */
+        move.l  lump_ptr,d0
+        andi.l  #0x7FFFF,d0
+        addi.l  #0x880000,d0
+        move.l  d0,a2
+        move.l  lump_size,d1
+        lsr.l   #1,d1
+        sub.l   #1,d1
+1:
+        move.w  (a2)+,(a1)              /* Write 0 to pattern name table B at position 0x0 */
+        dbra    d1,1b
 
 
         /* Load palettes */
@@ -1623,12 +1641,11 @@ load_md_sky:
         move.l  lump_size,d1
         lsr.l   #1,d1
         sub.l   #1,d1
-        |move.w  #0x40-1,d1              /* Prepare to copy two colors, 32 times total */
-1:
+2:
         move.w  (a2)+,(a3)+             /* Save color to DRAM */
         move.w  #0,(a1)                 /* Set color to black in CRAM */
         |add.l   #0x40000,a1            /* Advance the destination cursor */
-        dbra    d1,1b
+        dbra    d1,2b
 
 
         /* Load patterns */
@@ -1644,15 +1661,40 @@ load_md_sky:
         move.l  lump_size,d1
         lsr.l   #1,d1
         sub.l   #1,d1
-        |move.w  #0x1000-1,d1            /* Prepare to copy eight pixels, 4096 times total */
-2:
+3:
         move.w  (a2)+,(a1)              /* Copy eight pixels from the source */
-        dbra    d1,2b
+        dbra    d1,3b
 
         move.l  (sp)+,d1
         move.l  (sp)+,d0
         move.l  (sp)+,a3
         move.l  (sp)+,a2
+        move.l  (sp)+,a1
+        move.l  (sp)+,a0
+
+        move.w  #0,0xA15120         /* done */
+
+        move.w  #0x2000,sr          /* enable ints */
+
+        bra     main_loop
+
+
+scroll_md_sky:
+        move.w  #0x2700,sr          /* disable ints */
+
+        move.l  a0,-(sp)
+        move.l  a1,-(sp)
+        move.l  d0,-(sp)
+
+        lea     0xC00004,a0
+        lea     0xC00000,a1
+        move.l  #0x6C000002,(a0)
+        move.w  0xA15122,d0         /* Scroll A */
+        swap    d0
+        add.w   0xA15122,d0         /* Scroll B */
+        move.l  d0,(a1)
+
+        move.l  (sp)+,d0
         move.l  (sp)+,a1
         move.l  (sp)+,a0
 

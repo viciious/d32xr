@@ -687,10 +687,22 @@ void Mars_FadeMDPaletteFromBlack(int fade_degree)
 	MARS_SYS_COMM0 = 0x1001;
 }
 
+void Mars_ScrollMDSKy(short x, short y) {
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM2 = x;
+	MARS_SYS_COMM0 = 0x1101;
+
+	//TODO: Finish me!
+	/*while (MARS_SYS_COMM0);
+	MARS_SYS_COMM2 = y;
+	MARS_SYS_COMM0 = 0x1101;*/
+}
+
 /*
 Load the MD sky tiles, palettes, and pattern name table into the MD VDP.
 */
-void Mars_LoadMDSky(void *sky_names_ptr, int sky_names_size,
+void Mars_LoadMDSky(void *sky_names_a_ptr, int sky_names_a_size,
+		void *sky_names_b_ptr, int sky_names_b_size,
 		void *sky_palettes_ptr, int sky_palettes_size,
 		void *sky_tiles_ptr, int sky_tiles_size)
 {
@@ -699,10 +711,22 @@ void Mars_LoadMDSky(void *sky_names_ptr, int sky_names_size,
 	uint16_t s[4];
 
 
-	// Load pattern name table
+	// Load pattern name table A
 
-	s[0] = (uintptr_t)sky_names_size>>16, s[1] = (uintptr_t)sky_names_size&0xffff;
-	s[2] = ((uintptr_t)sky_names_ptr >>16), s[3] = (uintptr_t)sky_names_ptr &0xffff;
+	s[0] = (uintptr_t)sky_names_a_size>>16, s[1] = (uintptr_t)sky_names_a_size&0xffff;
+	s[2] = ((uintptr_t)sky_names_a_ptr >>16), s[3] = (uintptr_t)sky_names_a_ptr &0xffff;
+
+	for (i = 0; i < 4; i++) {
+		while (MARS_SYS_COMM0);
+		MARS_SYS_COMM2 = s[i];
+		MARS_SYS_COMM0 = 0x0F01+i;
+	}
+
+
+	// Load pattern name table B
+
+	s[0] = (uintptr_t)sky_names_b_size>>16, s[1] = (uintptr_t)sky_names_b_size&0xffff;
+	s[2] = ((uintptr_t)sky_names_b_ptr >>16), s[3] = (uintptr_t)sky_names_b_ptr &0xffff;
 
 	for (i = 0; i < 4; i++) {
 		while (MARS_SYS_COMM0);
