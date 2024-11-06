@@ -73,6 +73,12 @@
 
         .equ COL_STORE, 0x600800    /* WORD RAM + 2K */
 
+        .equ NET_PORT,  0xA10005    /* port 2 data    (use 0xA10007 for EXT port) */
+        .equ NET_CTRL,  0xA1000B    /* port 2 control (use 0xA1000D for EXT port) */
+        .equ NET_SSND,  0xA10015    /* port 2 serial transmit (use 0xA1001B for EXT port) */
+        .equ NET_SRCV,  0xA10017    /* port 2 serial recieve  (use 0xA1001D for EXT port) */
+        .equ NET_SCTL,  0xA10019    /* port 2 serial  (use 0xA1001F for EXT port) */
+
         .macro  z80rd adr, dst
         move.b  0xA00000+\adr,\dst
         .endm
@@ -1212,12 +1218,12 @@ ext_serial:
         lea     net_rdbuf,a0
         move.w  net_wbix,d1
 
-        btst    #2,0xA10019         /* check RERR on serial control register of joypad port 2 */
+        btst    #2,NET_SCTL         /* check RERR on serial control register of joypad port 2 */
         bne.b   1f                  /* error */        
-        btst    #1,0xA10019         /* check RRDY on serial control register of joypad port 2 */
+        btst    #1,NET_SCTL         /* check RRDY on serial control register of joypad port 2 */
         beq.b   3f                  /* no byte available, ignore int */
         moveq   #0,d0               /* clear serial status byte */
-        move.b  0xA10017,d0         /* received byte */
+        move.b  NET_SRCV,d0         /* received byte */
         bra.b   2f
 1:
         move.w  #0xFF04,d0          /* serial status and received byte = 0xFF04 (serial read error) */
@@ -1234,15 +1240,15 @@ ext_serial:
 
 ext_link:
         move.w  #0x2700,sr          /* disable ints */
-        btst    #6,0xA10005         /* check TH asserted */
+        btst    #6,NET_PORT         /* check TH asserted */
         bne.b   2f                  /* no, extraneous ext int */
 
         move.l  d1,-(sp)
         lea     net_rdbuf,a0
         move.w  net_wbix,d1
 
-        move.b  0xA10005,d0         /* read nibble from other console */
-        move.b  #0x00,0xA10005      /* assert handshake (TR low) */
+        move.b  NET_PORT,d0         /* read nibble from other console */
+        move.b  #0x00,NET_PORT      /* assert handshake (TR low) */
 
         move.b  d0,0(a0,d1.w)       /* write port byte to buffer - one nibble of data */
         addq.w  #1,d1
@@ -1252,13 +1258,13 @@ ext_link:
 0:
         nop
         nop
-        btst    #6,0xA10005         /* check TH deasserted */
+        btst    #6,NET_PORT         /* check TH deasserted */
         bne.b   1f                  /* handshake */
         dbra    d1,0b
-        move.b  #0x20,0xA10005      /* deassert handshake (TR high) */
+        move.b  #0x20,NET_PORT      /* deassert handshake (TR high) */
         bra.b   3f                  /* timeout err */
 1:
-        move.b  #0x20,0xA10005      /* deassert handshake (TR high) */
+        move.b  #0x20,NET_PORT      /* deassert handshake (TR high) */
         move.l  (sp)+,d1
 2:
         movea.l (sp)+,a0
@@ -1274,11 +1280,11 @@ ext_link:
         rte
 
 init_serial:
-        move.w  #0xF000,ctrl2_val    /* port 1 ID = SEGA_CTRL_NONE */
-        move.b  #0x10,0xA1000B      /* all pins inputs except TL (Pin 6) */
+        move.w  #0xF000,ctrl2_val   /* port 1 ID = SEGA_CTRL_NONE */
+        move.b  #0x10,NET_CTRL      /* all pins inputs except TL (Pin 6) */
         nop
         nop
-        move.b  #0x38,0xA10019      /* 4800 Baud 8-N-1, RDRDY INT allowed */
+        move.b  #0x38,NET_SCTL      /* 4800 Baud 8-N-1, RDRDY INT allowed */
         clr.w   net_rbix
         clr.w   net_wbix
         move.l  #ext_serial,extint  /* serial read data ready handler */
@@ -1287,14 +1293,14 @@ init_serial:
         bra     main_loop
 
 init_link:
-        move.w  #0xF000,ctrl2_val    /* port 1 ID = SEGA_CTRL_NONE */
-        move.b  #0x00,0xA10019      /* no serial */
+        move.w  #0xF000,ctrl2_val   /* port 1 ID = SEGA_CTRL_NONE */
+        move.b  #0x00,NET_SCTL      /* no serial */
         nop
         nop
-        move.b  #0xA0,0xA1000B      /* all pins inputs except TR, TH INT allowed */
+        move.b  #0xA0,NET_CTRL      /* all pins inputs except TR, TH INT allowed */
         nop
         nop
-        move.b  #0x20,0xA10005      /* TR set */
+        move.b  #0x20,NET_PORT      /* TR set */
         clr.w   net_rbix
         clr.w   net_wbix
         move.l  #ext_link,extint    /* TH INT handler */
@@ -1353,12 +1359,12 @@ write_serial:
         move.w  net_link_timeout,d1
 0:
         bsr     bump_fm
-        btst    #0,0xA10019         /* ok to transmit? */
+        btst    #0,NET_SCTL         /* ok to transmit? */
         beq.b   1f                  /* yes */
         dbra    d1,0b               /* wait until ok to transmit */
         bra.b   2f                  /* timeout err */
 1:
-        move.b  d0,0xA10015         /* Send byte */
+        move.b  d0,NET_SSND         /* Send byte */
         move.w  #0,0xA15122         /* okay */
         move.w  #0,0xA15120         /* done */
         move.w  #0x2000,sr          /* enable ints */
@@ -1371,33 +1377,33 @@ write_serial:
 
 write_link:
         move.w  #0x2700,sr          /* disable ints */
-        move.b  #0x2F,0xA1000B      /* only TL and TH in, TH INT not allowed */
+        move.b  #0x2F,NET_CTRL      /* only TL and TH in, TH INT not allowed */
 
         move.b  d0,d1               /* save lsn */
         lsr.b   #4,d0               /* msn */
         ori.b   #0x20,d0            /* set TR line */
-        move.b  d0,0xA10005         /* set nibble out */
+        move.b  d0,NET_PORT         /* set nibble out */
         nop
         nop
         andi.b  #0x0F,d0            /* clr TR line */
-        move.b  d0,0xA10005         /* assert TH of other console */
+        move.b  d0,NET_PORT         /* assert TH of other console */
 
         /* wait on handshake */
         move.w  net_link_timeout,d2
 0:
         bsr     bump_fm
-        btst    #6,0xA10005         /* check for TH low (handshake) */
+        btst    #6,NET_PORT         /* check for TH low (handshake) */
         beq.b   1f                  /* handshake */
         dbra    d2,0b
         bra.w   9f                  /* timeout err */
 1:
         ori.b   #0x20,d0            /* set TR line */
-        move.b  d0,0xA10005         /* deassert TH of other console */
+        move.b  d0,NET_PORT         /* deassert TH of other console */
         move.w  net_link_timeout,d2
 2:
         nop
         nop
-        btst    #6,0xA10005         /* wait for TH high (handshake done) */
+        btst    #6,NET_PORT         /* wait for TH high (handshake done) */
         bne.b   3f                  /* handshake */
         dbra    d2,2b
         bra.w   9f                  /* timeout err */
@@ -1405,39 +1411,39 @@ write_link:
         moveq   #0x0F,d0
         and.b   d1,d0               /* lsn */
         ori.b   #0x20,d0            /* set TR line */
-        move.b  d0,0xA10005         /* set nibble out */
+        move.b  d0,NET_PORT         /* set nibble out */
         nop
         nop
         andi.b  #0x0F,d0            /* clr TR line */
-        move.b  d0,0xA10005         /* assert TH of other console */
+        move.b  d0,NET_PORT         /* assert TH of other console */
 
         /* wait on handshake */
 4:
         bsr     bump_fm
-        btst    #6,0xA10005         /* check for TH low (handshake) */
+        btst    #6,NET_PORT         /* check for TH low (handshake) */
         bne.b   4b
 
         ori.b   #0x20,d0            /* set TR line */
-        move.b  d0,0xA10005         /* deassert TH of other console */
+        move.b  d0,NET_PORT         /* deassert TH of other console */
 5:
         nop
         nop
-        btst    #6,0xA10005         /* wait for TH high (handshake done) */
+        btst    #6,NET_PORT         /* wait for TH high (handshake done) */
         beq.b   5b
 
-        move.b  #0x20,0xA10005      /* TR set */
+        move.b  #0x20,NET_PORT      /* TR set */
         nop
         nop
-        move.b  #0xA0,0xA1000B      /* all pins inputs except TR, TH INT allowed */
+        move.b  #0xA0,NET_CTRL      /* all pins inputs except TR, TH INT allowed */
         move.w  #0,0xA15122         /* okay */
         move.w  #0,0xA15120         /* done */
         move.w  #0x2000,sr          /* enable ints */
         bra     main_loop
 9:
-        move.b  #0x20,0xA10005      /* TR set */
+        move.b  #0x20,NET_PORT      /* TR set */
         nop
         nop
-        move.b  #0xA0,0xA1000B      /* all pins inputs except TR, TH INT allowed */
+        move.b  #0xA0,NET_CTRL      /* all pins inputs except TR, TH INT allowed */
         move.w  #0xFFFF,0xA15122    /* timeout */
         move.w  #0,0xA15120         /* done */
         move.w  #0x2000,sr          /* enable ints */
@@ -1472,13 +1478,13 @@ net_cleanup:
         clr.b   net_type
         clr.l   extint
         move.w  #0x8B00,0xC00004    /* reg 11 = /IE2 (no EXT INT), full scroll */
-        move.b  #0x00,0xA10019      /* no serial */
+        move.b  #0x00,NET_SCTL      /* no serial */
         nop
         nop
-        move.b  #0x40,0xA1000B      /* port 2 to neutral setting */
+        move.b  #0x40,NET_CTRL      /* port 2 to neutral setting */
         nop
         nop
-        move.b  #0x40,0xA10005
+        move.b  #0x40,NET_PORT
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
