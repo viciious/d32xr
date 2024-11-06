@@ -135,7 +135,7 @@ int Mars_ROMSize(void);
 
 #ifdef MDSKY
 void Mars_FadeMDPaletteFromBlack(int fade_degree);
-void Mars_ScrollMDSKy(short x, short y);
+void Mars_ScrollMDSky(short x, short ya, short yb);
 void Mars_LoadMDSky(void *sky_names_a_ptr, int sky_names_a_size,
 		void *sky_names_b_ptr, int sky_names_b_size,
 		void *sky_palettes_ptr, int sky_palettes_size,

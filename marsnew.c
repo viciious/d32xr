@@ -811,7 +811,12 @@ void I_Update(void)
 	// Adjust MD sky position.
 	unsigned short scroll_x = (*((unsigned short *)&vd.viewangle) >> 6);
 	scroll_x += (scroll_x >> 2);	// The MD sky scrolls to 1280 pixels.
-	Mars_ScrollMDSKy(scroll_x, 0);
+
+	unsigned short scroll_ya = (16 - (vd.viewz >> 21)) & 0x3FF;
+
+	unsigned short scroll_yb = (56 - (vd.viewz >> 22)) & 0x3FF;
+
+	Mars_ScrollMDSky(scroll_x, scroll_ya, scroll_yb);
 
 	Mars_FlipFrameBuffers(false);
 	do

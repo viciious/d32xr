@@ -1685,15 +1685,40 @@ scroll_md_sky:
         move.l  a0,-(sp)
         move.l  a1,-(sp)
         move.l  d0,-(sp)
+        move.l  d1,-(sp)
 
         lea     0xC00004,a0
         lea     0xC00000,a1
+
+        /* Horizontal */
         move.l  #0x6C000002,(a0)
         move.w  0xA15122,d0         /* Scroll A */
         swap    d0
         add.w   0xA15122,d0         /* Scroll B */
         move.l  d0,(a1)
 
+        /* Vertical */
+        move.l  #0x40000010,(a0)
+
+        moveq   #0,d1
+        move.w  #0,0xA15120         /* done with horizontal scroll */
+0:
+        move.b  0xA15121,d0         /* wait on handshake in COMM0 */
+        cmpi.b  #0x02,d0
+        bne.b   0b
+        move.w  0xA15122,d1         /* Scroll A */
+
+        move.w  #0,0xA15120         /* done with horizontal scroll */
+1:
+        move.b  0xA15121,d0         /* wait on handshake in COMM0 */
+        cmpi.b  #0x03,d0
+        bne.b   1b
+        swap    d1
+        add.w   0xA15122,d1         /* Scroll B */
+
+        move.l  d1,(a1)
+
+        move.l  (sp)+,d1
         move.l  (sp)+,d0
         move.l  (sp)+,a1
         move.l  (sp)+,a0
