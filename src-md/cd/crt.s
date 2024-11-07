@@ -61,8 +61,6 @@ WaitCmd:
         jsr     S_Update
         
 WaitCmdPostUpdate:
-        jsr     S_UpdateSPCM
-
         tst.b   0x800E.w
         beq.b   WaitCmd
 
@@ -497,6 +495,7 @@ switch_banks:
 | Sub-CPU Program VBlank (INT02) Service Handler
 
 SPInt2:
+        jsr S_SPCM_Update
         rts
 
 | Sub-CPU program Reserved Function

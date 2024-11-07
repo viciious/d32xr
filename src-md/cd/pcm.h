@@ -33,6 +33,7 @@ uint16_t pcm_load_stereo_samples_u8(uint16_t start, uint16_t start2, uint8_t *sa
 extern void pcm_load_zero(uint16_t start, uint16_t length);
 extern void pcm_reset(void);
 extern void pcm_set_ctrl(uint8_t val);
+extern uint8_t pcm_get_ctrl(void);
 extern void pcm_set_off(uint8_t index);
 extern void pcm_set_on(uint8_t index);
 extern uint8_t pcm_is_off(uint8_t index);

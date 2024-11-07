@@ -326,8 +326,7 @@ uint16_t adpcm_load_samples(sfx_adpcm_t *adpcm, uint16_t doff, uint16_t len)
         uint16_t wblen = 0x1000 - woff;
         wptr += (woff << 1);
 
-        PCM_CTRL = 0x80 + (doff >> 12); // make sure PCM chip is ON to write wave memory, and set wave bank
-        pcm_delay();
+        pcm_set_ctrl(0x80 + (doff >> 12)); // make sure PCM chip is ON to write wave memory, and set wave bank
 
         if (wblen > len)
             wblen = len;

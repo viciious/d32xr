@@ -15,6 +15,7 @@ static uint8_t loop_markers[32] = {
 };
 
 static uint8_t ChanOff;
+static uint8_t PcmCtrl;
 
 static void pcm_cpy_mono(uint16_t doff, void *src, uint16_t len, uint8_t *conv)
 {
@@ -27,8 +28,7 @@ static void pcm_cpy_mono(uint16_t doff, void *src, uint16_t len, uint8_t *conv)
         uint16_t wblen = 0x1000 - woff;
         wptr += (woff << 1);
 
-        PCM_CTRL = 0x80 + (doff >> 12); // make sure PCM chip is ON to write wave memory, and set wave bank
-        pcm_delay();
+        pcm_set_ctrl(0x80 + (doff >> 12)); // make sure PCM chip is ON to write wave memory, and set wave bank
 
         if (wblen > len)
             wblen = len;
@@ -60,8 +60,7 @@ static void pcm_cpy_stereo(uint16_t doff, void *src, uint16_t len, uint8_t *conv
         uint16_t wblen = 0x1000 - woff;
         wptr += (woff << 1);
 
-        PCM_CTRL = 0x80 + (doff >> 12); // make sure PCM chip is ON to write wave memory, and set wave bank
-        pcm_delay();
+        pcm_set_ctrl(0x80 + (doff >> 12)); // make sure PCM chip is ON to write wave memory, and set wave bank
 
         if (wblen > len)
             wblen = len;
@@ -118,8 +117,7 @@ void pcm_load_zero(uint16_t start, uint16_t len)
         uint16_t wblen = 0x1000 - woff;
         wptr += (woff << 1);
 
-        PCM_CTRL = 0x80 + (doff >> 12); // make sure PCM chip is ON to write wave memory, and set wave bank
-        pcm_delay();
+        pcm_set_ctrl(0x80 + (doff >> 12)); // make sure PCM chip is ON to write wave memory, and set wave bank
 
         if (wblen > len)
             wblen = len;
@@ -157,8 +155,8 @@ void pcm_reset(void)
 
     for (i=0; i<8; i++)
     {
-        PCM_CTRL = 0xC0 + i; // turn on pcm chip and select channel
-        pcm_delay();
+        pcm_set_ctrl(0xC0 + i); // turn on pcm chip and select channel
+
         PCM_ENV = 0x00; // channel env off
         pcm_delay();
         PCM_PAN = 0x00;
@@ -178,8 +176,14 @@ void pcm_reset(void)
 
 void pcm_set_ctrl(uint8_t val)
 {
+    PcmCtrl = val;
     PCM_CTRL = val;
     pcm_delay();
+}
+
+uint8_t pcm_get_ctrl(void)
+{
+    return PcmCtrl;
 }
 
 void pcm_set_off(uint8_t index)

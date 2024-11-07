@@ -16,19 +16,24 @@
 
 #define SPCM_LEFT_CHANNEL_ID   (S_MAX_CHANNELS)
 
-#define SPCM_BUF_NUM_SECTORS   5
-#define SPCM_BUF_SIZE          (SPCM_BUF_NUM_SECTORS*2048)  /* 5*2048*1000/20378 = ~502ms */
-#define SPCM_NUM_BUFFERS       5
+#define SPCM_BUF_NUM_SECTORS   12
+#define SPCM_BUF_SIZE          (SPCM_BUF_NUM_SECTORS*2048)  /* 12*2048*1000/20378 = ~1206ms */
+#define SPCM_NUM_BUFFERS       2
 
 // start at 12KiB offset in PCM RAM
 #define SPCM_LEFT_CHAN_SOFFSET 0x3000
 
 enum
 {
-    SPCM_STATE_PLAYING,
-    SPCM_STATE_WAIT_BUF,
+    SPCM_STATE_INIT,
+    SPCM_STATE_PREPAINT,
+    SPCM_STATE_START,
+
     SPCM_STATE_PAINT,
+    SPCM_STATE_PLAYING,
+
     SPCM_STATE_STOPPED,
+    SPCM_STATE_RESUME
 };
 
 typedef struct
@@ -42,9 +47,9 @@ typedef struct
     uint8_t env;
     uint8_t frontbuf;
     uint8_t chan_id;
-    uint8_t playing;
+    volatile uint8_t playing;
     uint8_t sector_num, sector_cnt;
-    uint8_t state;
+    volatile uint8_t state;
     uint8_t repeat;
 } s_spcm_t;
 
@@ -131,71 +136,95 @@ static int S_SPCM_DMA(s_spcm_t *spcm)
 
 void S_SPCM_UpdateTrack(s_spcm_t *spcm)
 {
-    extern uint16_t CDA_VOLUME;
+    extern volatile uint16_t CDA_VOLUME;
 
     if (spcm->num_channels == 0) {
         return;
     }
 
     spcm->env = (CDA_VOLUME >= 1020 ? 255 : CDA_VOLUME / 4);
+ 
     S_SPCM_UpdateChannel(spcm);
 
+swstate:
     switch (spcm->state)
     {
+    case SPCM_STATE_INIT:
+        S_SPCM_BeginRead(spcm);
+        spcm->state = SPCM_STATE_PREPAINT;
+        break;
+
+    case SPCM_STATE_START:
+        spcm->playing = 1;
+        S_SPCM_UpdateChannel(spcm);
+
+        pcm_loop_markers(SPCM_LEFT_CHAN_SOFFSET + SPCM_BUF_SIZE*SPCM_NUM_BUFFERS);
+        pcm_set_on(spcm->chan_id);
+        spcm->state = SPCM_STATE_PLAYING;
+        break;
+
     case SPCM_STATE_PLAYING:
         if (!spcm->playing) {
-            pcm_load_zero(SPCM_LEFT_CHAN_SOFFSET, SPCM_BUF_SIZE*SPCM_NUM_BUFFERS);
             pcm_set_off(spcm->chan_id);
             spcm->state = SPCM_STATE_STOPPED;
-            return;
+            break;
+        }
+    case SPCM_STATE_RESUME:
+        // start the playback, otherwise DMA won't work
+        if (pcm_is_off(spcm->chan_id)) {
+            pcm_load_zero(SPCM_LEFT_CHAN_SOFFSET, SPCM_BUF_SIZE*SPCM_NUM_BUFFERS);
+            pcm_loop_markers(SPCM_LEFT_CHAN_SOFFSET + SPCM_BUF_SIZE*SPCM_NUM_BUFFERS);
+            pcm_set_on(spcm->chan_id);
+        }
+
+        if (S_SPCM_FrontBuffer(spcm) == spcm->frontbuf) {
+            break;
         }
 
         S_SPCM_BeginRead(spcm);
-        spcm->frontbuf++;
-        spcm->frontbuf %= SPCM_NUM_BUFFERS;
-        spcm->state = SPCM_STATE_WAIT_BUF;
-        break;
-
-    case SPCM_STATE_WAIT_BUF:
-        if (spcm->playing) {
-            // start the playback, otherwise DMA won't work
-            if (pcm_is_off(spcm->chan_id)) {
-                pcm_load_zero(SPCM_LEFT_CHAN_SOFFSET, SPCM_BUF_SIZE*SPCM_NUM_BUFFERS);
-                pcm_loop_markers(SPCM_LEFT_CHAN_SOFFSET + SPCM_BUF_SIZE*SPCM_NUM_BUFFERS);
-                pcm_set_on(spcm->chan_id);
-            }
-
-            if (S_SPCM_FrontBuffer(spcm) == spcm->frontbuf) {
-                break;
-            }
-        }
-
         spcm->state = SPCM_STATE_PAINT;
         break;
 
     case SPCM_STATE_PAINT:
-        if (!S_SPCM_DMA(spcm))
-            break;
+    case SPCM_STATE_PREPAINT:
+        if (S_SPCM_DMA(spcm))
+        {
+            int next_state = spcm->state;
 
-        spcm->block++;
-        if (spcm->block > spcm->final_block)
-        {
-            if (spcm->repeat)
-            {
-                spcm->block = spcm->start_block;
-                spcm->state = SPCM_STATE_PLAYING;
+            switch (spcm->state) {
+                case SPCM_STATE_PREPAINT:
+                    next_state = SPCM_STATE_START;
+                    break;
+                case SPCM_STATE_PAINT:
+                    next_state =  SPCM_STATE_PLAYING;
+                    break;
             }
-            else
+
+            spcm->block++;
+            if (spcm->block > spcm->final_block)
             {
-                spcm->playing = 0;
+                if (spcm->repeat)
+                {
+                    spcm->block = spcm->start_block;
+                    spcm->state = next_state;
+                    goto swstate;
+                }
+                else
+                {
+                    spcm->playing = 0;
+                    spcm->state = SPCM_STATE_PLAYING;
+                    goto swstate;
+                }
             }
-        }
-        else if (++spcm->sector_num == spcm->sector_cnt)
-        {
-            spcm->state = SPCM_STATE_PLAYING;
+            else if (++spcm->sector_num == spcm->sector_cnt)
+            {
+                spcm->frontbuf++;
+                spcm->frontbuf %= SPCM_NUM_BUFFERS;
+                spcm->state = next_state;
+                goto swstate;
+            }
         }
         break;
-
     default:
         break;
     }
@@ -236,14 +265,27 @@ void S_SPCM_Unsuspend(void)
     }
 
     spcm->playing = 1;
-    spcm->state = SPCM_STATE_PLAYING;
-
-    S_SPCM_UpdateTrack(spcm);
+    spcm->state = SPCM_STATE_RESUME;
 }
 
 void S_SPCM_Update(void)
 {
-    S_SPCM_UpdateTrack(&track);
+    int oldctl;
+    s_spcm_t *spcm = &track;
+
+    if (spcm->num_channels == 0) {
+        return;
+    }
+    if (!spcm->playing) {
+        return;
+    }
+
+    // preserve and restore global PCM control state
+    oldctl = pcm_get_ctrl();
+
+    S_SPCM_UpdateTrack(spcm);
+
+    pcm_set_ctrl(oldctl);
 }
 
 int S_SCM_PlayTrack(const char *name, int repeat)
@@ -268,16 +310,18 @@ int S_SCM_PlayTrack(const char *name, int repeat)
     spcm->start_block = offset + 1;
     spcm->block = spcm->start_block;
     spcm->final_block = spcm->start_block + (length>>11) - 2;
-    spcm->frontbuf = 0xff;
+    spcm->frontbuf = 0;
     spcm->sector_cnt = 0;
     spcm->sector_num = 0;
     spcm->playing = 0;
-    spcm->state = SPCM_STATE_STOPPED;
     spcm->startpos = SPCM_LEFT_CHAN_SOFFSET;
     spcm->looppos = SPCM_LEFT_CHAN_SOFFSET;
     spcm->repeat = repeat;
+    spcm->state = SPCM_STATE_INIT;
 
-    S_SPCM_Unsuspend();
+    while (spcm->state != SPCM_STATE_PLAYING) {
+        S_SPCM_UpdateTrack(spcm);
+    }
 
     return spcm->num_channels;
 }

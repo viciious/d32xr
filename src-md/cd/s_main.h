@@ -25,7 +25,6 @@ uint16_t S_GetSourcePosition(uint8_t src_id);
 
 int S_PlaySPCMTrack(const char *name, int repeat);
 void S_StopSPCMTrack(void);
-void S_UpdateSPCM(void);
 
 #ifdef __cplusplus
 }

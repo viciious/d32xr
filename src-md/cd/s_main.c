@@ -167,11 +167,6 @@ int S_LoadCDBuffers(uint16_t buf_id, int numsfx, const uint8_t *data)
     return 1;
 }
 
-void S_UpdateSPCM(void)
-{
-    S_SPCM_Update();
-}
-
 int S_PlaySPCMTrack(const char *name, int repeat)
 {
     return S_SCM_PlayTrack(name, repeat);
