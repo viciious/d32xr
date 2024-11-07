@@ -492,6 +492,35 @@ void I_DrawSpanNoDraw(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfra
 =============
 */
 
+void GetJagobjSize(int lumpnum, int* ow, int *oh)
+{
+	lzss_state_t gfx_lzss;
+	uint8_t lzss_buf[LZSS_BUF_SIZE];
+	byte* lump;
+	jagobj_t* jo;
+
+	if (lumpnum < 0)
+		return;
+
+	lump = W_POINTLUMPNUM(lumpnum);
+	if (!(lumpinfo[lumpnum].name[0] & 0x80))
+	{
+		// uncompressed
+		jo = (jagobj_t*)lump;
+	}
+	else // decompress
+	{
+		lzss_setup(&gfx_lzss, lump, lzss_buf, LZSS_BUF_SIZE);
+		if (lzss_read(&gfx_lzss, 16) != 16)
+			return;
+
+		jo = (jagobj_t*)gfx_lzss.buf;
+	}
+
+	if (ow) *ow = BIGSHORT(jo->width);
+	if (oh) *oh = BIGSHORT(jo->height);
+}
+
 void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh)
 {
 	lzss_state_t gfx_lzss;
@@ -958,7 +987,8 @@ void DrawTiledLetterbox(void)
 void DrawTiledBackground2(int flat)
 {
 	int			y, yt;
-	const int	w = 64, h = 64;
+	const int	w = CalcFlatSize(flat);
+	const int 	h = CalcFlatSize(flat);
 	const int	hw = w / 2;
 	const int xtiles = (320 + w - 1) / w;
 	const int ytiles = (224 + h - 1) / h;
@@ -979,7 +1009,7 @@ void DrawTiledBackground2(int flat)
 		int y1;
 		const pixel_t* source = bsrc;
 
-		for (y1 = 0; y1 < 64; y1++)
+		for (y1 = 0; y1 < w; y1++)
 		{
 			int xt;
 

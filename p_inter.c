@@ -4,6 +4,7 @@
 #include "doomdef.h"
 #include "p_local.h"
 #include "st_main.h"
+#include "st_inter.h"
 
 /*
 ===============================================================================
@@ -211,6 +212,10 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 				gamemapinfo.spheresNeeded = 0;
 				for (int p = 0; p < MAXPLAYERS; p++)
 					players[p].exiting = 1;
+
+				toucher->momx = toucher->momy = toucher->momz = 0;
+
+				stagefailed = false;
 
 				// Change music to chaos emerald get
 				S_StartSong(gameinfo.emeraldMus, 0, cdtrack_emerald);

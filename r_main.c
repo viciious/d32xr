@@ -804,6 +804,12 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 
 		distortion_action = DISTORTION_ADD;
 	}
+
+	if (gametic <= 1)
+	{
+		curpalette = palette = 10;
+		I_SetPalette(dc_playpals+10*768);
+	}
 	
 	if (palette != curpalette) {
 		curpalette = palette;

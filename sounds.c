@@ -31,6 +31,7 @@ const char * const S_sfxnames[NUMSFX] =
   "dsthok",
   "dssteam1",
   "dssteam2",
+  "dstink",
   "dstoken",
   "dstrfire",
   "dstrpowr",
@@ -70,6 +71,7 @@ const char * const S_sfxnames[NUMSFX] =
   "s3k_af",
   "s3k_b0",
   "s3k_b1",
+  "s3k_b2",
   "s3k_b4",
   "s3k_b6",
   "s3k_b9",
@@ -151,6 +153,7 @@ sfxinfo_t S_sfx[NUMSFX] =
   SOUND( false, 64 ),
   SOUND( false, 64 ),
   SOUND( false, 64 ),
+  SOUND( false, 64 ),
   SOUND( false, 32 ), // sfx_s3k_33
   SOUND( false, 64 ),
   SOUND( false, 64 ),
@@ -171,6 +174,7 @@ sfxinfo_t S_sfx[NUMSFX] =
   SOUND( false, 64 ),
   SOUND( false, 64 ),
   SOUND( false, 100 ), // sfx_s3k_64
+  SOUND( false, 64 ),
   SOUND( false, 64 ),
   SOUND( false, 64 ),
   SOUND( false, 64 ),

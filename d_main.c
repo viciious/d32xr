@@ -422,7 +422,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 
 		last_frt_count = frt_count;
 
-		if (optionsMenuOn || gamemapinfo.mapNumber == 30 || leveltime < TICRATE / 4) // Don't include map loading times into frameskip calculation
+		if (optionsMenuOn || gamemapinfo.mapNumber == TITLE_MAP_NUMBER || leveltime < TICRATE / 4) // Don't include map loading times into frameskip calculation
 		{
 			accum_time = 1;
 			total_frt_count = 0;

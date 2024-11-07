@@ -156,6 +156,7 @@ typedef enum
 	ga_exitdemo,
 	ga_startnew,
 	ga_backtotitle,
+	ga_specialstageexit,
 } gameaction_t;
 
 
@@ -517,6 +518,8 @@ extern 	VINT 		gamemapcount;
 extern 	int 		gametic;
 extern  int         leveltime;
 extern  VINT        fadetime;
+extern uint16_t     emeralds;
+extern uint16_t     token;
 
 #define MAXDMSTARTS		10
 extern	mapthing_t	*deathmatchstarts, *deathmatch_p;
@@ -1079,6 +1082,7 @@ typedef struct
 
 void DoubleBufferSetup (void);
 void EraseBlock (int x, int y, int width, int height);
+void GetJagobjSize(int lumpnum, int* ow, int* oh);
 void DrawJagobj (jagobj_t *jo, int x, int y);
 void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh);
 void DrawJagobjLumpWithColormap(int lumpnum, int x, int y, int* ow, int* oh, int colormap);

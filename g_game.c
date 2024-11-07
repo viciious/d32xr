@@ -31,6 +31,8 @@ int             gametic;
 int             leveltime;
 VINT            fadetime;
 VINT           totalitems, totalsecret;    /* for intermission  */
+uint16_t        emeralds;
+uint16_t        token;
 
 boolean         demorecording;
 boolean         demoplayback;
@@ -95,6 +97,7 @@ void G_DoLoadLevel (void)
 	int 		gamemap;
 	int			music;
 
+	token = 0; // TODO: Make sure this isn't reset upon death
 	totalitems = totalsecret = 0;
 	for (i=0 ; i<MAXPLAYERS ; i++)
 	{
@@ -146,7 +149,6 @@ void G_DoLoadLevel (void)
 		gamemapinfo.sky = NULL;
 		gamemapinfo.mapNumber = gamemap;
 		gamemapinfo.lumpNum = gamemaplump;
-		gamemapinfo.secretNext = G_LumpNumForMapNum(24);
 
 		/* decide which level to go to next */
 #ifdef MARS
@@ -596,6 +598,8 @@ void G_InitNew (int map, gametype_t gametype, boolean splitscr)
 
 	gamepaused = false;
 	gametic = 0;
+	emeralds = 0;
+	token = 0;
 } 
 
 void G_LoadGame(int saveslot)
@@ -613,6 +617,8 @@ void G_LoadGame(int saveslot)
 
 /*============================================================================  */
  
+static int 		nextmapl = -1;
+
 /*
 =================
 =
@@ -627,11 +633,13 @@ void G_RunGame (void)
 
 	while (1)
 	{
-		int 		nextmapl;
 		boolean		finale;
 #ifdef JAGUAR
 		int			nextmap;
 #endif
+
+		if (nextmapl == -1)
+			nextmapl = G_LumpNumForMapNum(1);
 
 		/* run a level until death or completion */
 		MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer, P_Update);
@@ -669,10 +677,21 @@ startnew:
 			continue;			/* skip intermission */
 		}
 
-		if (gameaction == ga_secretexit && gamemapinfo.secretNext)
-			nextmapl = gamemapinfo.secretNext;
-		else
-			nextmapl = gamemapinfo.next;
+		if (token && emeralds < 127) // Got a token, and don't have any emeralds
+		{
+			token--;
+
+			for (i = 0; i < 7; i++)
+			{
+				if (!(emeralds & (1<<i)))
+				{
+					nextmapl = G_LumpNumForMapNum(SSTAGE_START + i - 1); // Going to the special stage
+					break;
+				}
+			}
+		}
+		else if (gamemapinfo.mapNumber < SSTAGE_START || gamemapinfo.mapNumber > SSTAGE_END)
+			nextmapl = G_LumpNumForMapNum(gamemapinfo.next);
 
 		finale = nextmapl == 0;
 
@@ -719,7 +738,8 @@ startnew:
 #endif
 
 	/* run a stats intermission */
-//		MiniLoop (IN_Start, IN_Stop, IN_Ticker, IN_Drawer, UpdateBuffer);
+	if (gameaction == ga_specialstageexit)
+		MiniLoop (IN_Start, IN_Stop, IN_Ticker, IN_Drawer, UpdateBuffer);
 	
 	/* run the finale if needed */
 		if (finale)

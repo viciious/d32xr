@@ -155,6 +155,10 @@ static void ST_Ticker_(stbar_t* sb)
 			sb->intermission = true;
 		}
 	}
+	else if (sb->exiting >= 4*TICRATE)
+	{
+		gameaction = ga_specialstageexit;
+	}
 }
 
 void ST_Ticker(void)
@@ -303,6 +307,17 @@ static void ST_Drawer_ (stbar_t* sb)
 		if (timeLeft > gamemapinfo.timeLimit/TICRATE)
 			timeLeft = gamemapinfo.timeLimit/TICRATE;
 		V_DrawValueCenter(&hudNumberFont, 160, 24+16, timeLeft);
+
+		// Not the best thing to do gamelogic inside of the draw routine,
+		// but trying to keep things simple.
+		if (timeLeft == 0 && !players[0].exiting && stagefailed)
+		{
+			// Time up!
+			S_StartSound(NULL, sfx_s3k_b2);
+
+			for (int p = 0; p < MAXPLAYERS; p++)
+				players[p].exiting = 1;
+		}
 
 		if (players[0].exiting > 3*TICRATE)
 		{

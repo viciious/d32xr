@@ -33,7 +33,6 @@ typedef struct
 	VINT borderFlat;
 	char *sky;
 	VINT next;
-	VINT secretNext;
 	VINT lumpNum;
 	VINT mapNumber;
 	VINT musicLump;

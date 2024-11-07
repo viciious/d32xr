@@ -4,6 +4,7 @@
 #include "p_local.h"
 #include "mars.h"
 #include "p_camera.h"
+#include "st_inter.h"
 
 #define DEFAULT_GAME_ZONE_MARGIN (4*1024)
 
@@ -593,6 +594,7 @@ void P_SetupLevel (int lumpnum)
 	
 	M_ClearRandom ();
 
+	stagefailed = true;
 	leveltime = 0;
 	
 D_printf ("P_SetupLevel(%i)\n",lumpnum);
