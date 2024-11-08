@@ -316,7 +316,12 @@ static void ST_Drawer_ (stbar_t* sb)
 			S_StartSound(NULL, sfx_s3k_b2);
 
 			for (int p = 0; p < MAXPLAYERS; p++)
+			{
 				players[p].exiting = 1;
+
+				if (playeringame[p])
+					players[p].mo->momx = players[p].mo->momy = players[p].mo->momz = 0;
+			}
 		}
 
 		if (players[0].exiting > 3*TICRATE)

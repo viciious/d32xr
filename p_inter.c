@@ -216,6 +216,7 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 				toucher->momx = toucher->momy = toucher->momz = 0;
 
 				stagefailed = false;
+				emeralds |= (1 << (gamemapinfo.mapNumber - SSTAGE_START));
 
 				// Change music to chaos emerald get
 				S_StartSong(gameinfo.emeraldMus, 0, cdtrack_emerald);

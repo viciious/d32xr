@@ -22,29 +22,21 @@ static void Y_SetPerfectBonus(y_bonus_t *bstruct)
 	D_memset(bstruct, 0, sizeof(y_bonus_t));
 	bstruct->patch = W_GetNumForName("YB_PERFE");
 
-	if (intertype != int_coop)
+	int sharedringtotal = 0;
+	for (i = 0; i < MAXPLAYERS; i++)
 	{
-		int sharedringtotal = 0;
-		for (i = 0; i < MAXPLAYERS; i++)
-		{
-			if (!playeringame[i])
-				continue;
+		if (!playeringame[i])
+			continue;
 			
-			sharedringtotal += (players[i].health - 1);
-		}
-		if (!sharedringtotal || totalitems == 0 || sharedringtotal < totalitems)
-			bstruct->display = false;
-		else
-		{
-			bstruct->display = true;
-			bstruct->points = 50000;
-		}
+		sharedringtotal += (players[i].health - 1);
 	}
-
-	if (intertype != int_coop)
-		return;
-
-	data.coop.gotperfbonus = (bstruct->display ? 1 : 0);
+	if (!sharedringtotal || totalitems == 0 || sharedringtotal < totalitems)
+		bstruct->display = false;
+	else
+	{
+		bstruct->display = true;
+		bstruct->points = 50000;
+	}
 }
 
 static void Y_SetSpecialRingBonus(y_bonus_t *bstruct)
@@ -214,13 +206,13 @@ int IN_Ticker (void)
 		}
 
 		// emerald bounce
-		if (intertic <= 1)
+		if (intertic <= TICRATE)
 		{
 			data.spec.emeraldbounces = 0;
 			data.spec.emeraldmomy = 20;
 			data.spec.emeraldy = -40;
 		}
-		else if (gamemapinfo.mapNumber - SSTAGE_START < 7)
+		else// if (gamemapinfo.mapNumber - SSTAGE_START < 7)
 		{
 			if (!stagefailed)
 			{
@@ -238,10 +230,8 @@ int IN_Ticker (void)
 			}
 			else
 			{
-				if (data.spec.emeraldy < 224+16)
-				{
-					data.spec.emeraldy += (++data.spec.emeraldmomy);
-				}
+				data.spec.emeraldy += (++data.spec.emeraldmomy);
+
 				if (data.spec.emeraldbounces < 1 && data.spec.emeraldy > 74)
 				{
 					S_StartSound(NULL, sfx_s3k_35); // nope
