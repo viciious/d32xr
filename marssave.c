@@ -31,7 +31,7 @@
 #define SRAM_MAGIC1		0xDE
 #define SRAM_MAGIC2		0xAD
 
-#define SRAM_VERSION	3
+#define SRAM_VERSION	4
 #define SRAM_OPTVERSION	4
 #define SRAM_MAXSLOTS	10
 #define SRAM_SLOTSIZE	200
@@ -42,7 +42,7 @@ typedef struct __attribute((packed))
 	uint8_t skill;
 	uint8_t netgame;
 	uint8_t mapnumber;
-	char wadname[16];
+	char wadname[32];
 	char mapname[32];
 
 	playerresp_t resp[MAXPLAYERS];
