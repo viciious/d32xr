@@ -347,7 +347,7 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
    if (!player->exiting && player->stillTimer > TICRATE/2)
       camspeed >>= 2;
 
-	if (!player->exiting && thiscam->distFromPlayer > camdist * 3)
+	if (!player->exiting && (mo->flags2 & MF2_SHOOTABLE) && thiscam->distFromPlayer > camdist * 3)
 	{
 		// Camera is stuck, and the player has gone over twice as far away from it, so let's reset
 		P_ResetCamera(player, thiscam);
@@ -356,7 +356,7 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 	dist = camdist;
 
 	// If dead, camera is twice as close
-	if (player->health <= 0)
+	if (!(mo->flags2 & MF2_SHOOTABLE))
 		dist >>= 1;
    else if (player->exiting)
    {
@@ -405,6 +405,9 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 	thiscam->momx = FixedMul(x - thiscam->x, camspeed);
 	thiscam->momy = FixedMul(y - thiscam->y, camspeed);
 	thiscam->momz = FixedMul(z - thiscam->z, camspeed);
+
+   if (!(mo->flags2 & MF2_SHOOTABLE))
+      thiscam->momx = thiscam->momy = thiscam->momz = 0;
 
    dist = P_AproxDistance(viewpointx - thiscam->x, viewpointy - thiscam->y);
 
