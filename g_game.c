@@ -33,6 +33,7 @@ VINT            fadetime;
 VINT           totalitems, totalsecret;    /* for intermission  */
 uint16_t        emeralds;
 uint16_t        token;
+uint16_t        tokenbits;
 
 boolean         demorecording;
 boolean         demoplayback;
@@ -97,7 +98,6 @@ void G_DoLoadLevel (void)
 	int 		gamemap;
 	int			music;
 
-	token = 0; // TODO: Make sure this isn't reset upon death
 	totalitems = totalsecret = 0;
 	for (i=0 ; i<MAXPLAYERS ; i++)
 	{
@@ -600,6 +600,7 @@ void G_InitNew (int map, gametype_t gametype, boolean splitscr)
 	gametic = 0;
 	emeralds = 0;
 	token = 0;
+	tokenbits = 0;
 } 
 
 void G_LoadGame(int saveslot)

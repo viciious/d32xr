@@ -205,6 +205,17 @@ STATE(SPR_BMNB,FF_FULLBRIGHT|1,2,NULL,S_BIGMINE_BLAST3), // S_BIGMINE_BLAST2
 STATE(SPR_BMNB,FF_FULLBRIGHT|2,1,NULL,S_BIGMINE_BLAST4), // S_BIGMINE_BLAST3
 STATE(SPR_BMNB,FF_FULLBRIGHT|3,1,NULL,S_NULL), // S_BIGMINE_BLAST4
 
+STATE(SPR_TOKE,0,-1,NULL,S_TOKEN1), // S_TOKEN1
+/*STATE(SPR_TOKE,1,2,NULL,S_TOKEN3), // S_TOKEN2
+STATE(SPR_TOKE,2,2,NULL,S_TOKEN4), // S_TOKEN3
+STATE(SPR_TOKE,3,2,NULL,S_TOKEN5), // S_TOKEN4
+STATE(SPR_TOKE,4,2,NULL,S_TOKEN6), // S_TOKEN5
+STATE(SPR_TOKE,5,2,NULL,S_TOKEN7), // S_TOKEN6
+STATE(SPR_TOKE,4|FF_FLIPPED,2,NULL,S_TOKEN8), // S_TOKEN7
+STATE(SPR_TOKE,3|FF_FLIPPED,2,NULL,S_TOKEN9), // S_TOKEN8
+STATE(SPR_TOKE,6,2,NULL,S_TOKEN10), // S_TOKEN9
+STATE(SPR_TOKE,7,2,NULL,S_TOKEN1), // S_TOKEN10
+*/
 STATE(SPR_SPHR,0,-1,NULL,S_NULL), // S_BLUESPHERE
 STATE(SPR_RING,0,2,NULL,S_RING2), // S_RING1
 STATE(SPR_RING,1,2,NULL,S_RING3), // S_RING2
@@ -1596,6 +1607,31 @@ MF2_SHOOTABLE|MF2_ENEMY,	// flags2
 		MF2_SHOOTABLE|MF2_ENEMY          // flags2
 	},
 
+	{           // MT_TOKEN
+		312,            // doomednum
+		S_TOKEN1,         // spawnstate
+		1000,           // spawnhealth
+		S_NULL,         // seestate
+		sfx_None,       // seesound
+		8,              // reactiontime
+		sfx_None,       // attacksound
+		S_NULL,         // painstate
+		0,              // painchance
+		sfx_None,       // painsound
+		S_NULL,         // meleestate
+		S_NULL,         // missilestate
+		S_SPARK1,        // deathstate
+		S_NULL,         // xdeathstate
+		sfx_None,       // deathsound
+		0,              // speed
+		16*FRACUNIT,     // radius
+		32*FRACUNIT,    // height
+		100,            // mass
+		1,              // damage
+		sfx_None,       // activesound
+		MF_SPECIAL|MF_NOGRAVITY|MF_STATIC|MF_RINGMOBJ, // flags
+		0          // flags2
+	},
 	{           // MT_BLUESPHERE
 		1706,           // doomednum
 		S_BLUESPHERE,   // spawnstate

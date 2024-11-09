@@ -520,6 +520,7 @@ extern  int         leveltime;
 extern  VINT        fadetime;
 extern uint16_t     emeralds;
 extern uint16_t     token;
+extern uint16_t     tokenbits;
 
 #define MAXDMSTARTS		10
 extern	mapthing_t	*deathmatchstarts, *deathmatch_p;
