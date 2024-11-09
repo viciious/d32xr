@@ -388,7 +388,6 @@ void A_Look (mobj_t *actor, int16_t var1, int16_t var2)
 /* if the sector has a living soundtarget, make that the new target */
 	actor->threshold = 0;		/* any shot will wake up */
 
-	actor->target = NULL;
 	if (!P_LookForPlayers (actor, var1 << FRACBITS, var2, true) )
 		return;
 	
@@ -454,9 +453,7 @@ void A_Chase (mobj_t *actor, int16_t var1, int16_t var2)
 	if (!actor->target || !(actor->target->flags2&MF2_SHOOTABLE)
 		|| (netgame && !actor->threshold && !(actor->flags2 & MF2_SEETARGET)))
 	{	/* look for a new target */
-		if (P_LookForPlayers(actor,2048 << FRACBITS,true,false))
-			return;		/* got a new target */
-
+		actor->target = NULL;
 		P_SetMobjState (actor, ainfo->spawnstate);
 		return;
 	}
