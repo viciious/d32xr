@@ -8,20 +8,22 @@
 
 /* page 9 of https://segaretro.org/images/2/2d/MCDHardware_Manual_PCM_Sound_Source.pdf */
 /* or page 55 of https://segaretro.org/images/2/2e/Sega-CD_Technical_Bulletins.pdf */
-#define SPCM_RF5C164_BASEFREQ  32604 /* should not be modified */
+#define SPCM_RF5C164_BASEFREQ   32604 /* should not be modified */
 
-#define SPCM_RF5C164_INCREMENT 0x0500 /* equivalent to the sample rate of 20378 Hz */
+#define SPCM_RF5C164_INCREMENT  0x0500 /* equivalent to the sample rate of 20378 Hz */
 
-//#define SPCM_SAMPLE_RATE       (SPCM_RF5C164_INCREMENT * SPCM_RF5C164_BASEFREQ / 2048) /* 20378 */
+//#define SPCM_SAMPLE_RATE      (SPCM_RF5C164_INCREMENT * SPCM_RF5C164_BASEFREQ / 2048) /* 20378 */
 
-#define SPCM_LEFT_CHANNEL_ID   (S_MAX_CHANNELS)
+#define SPCM_LEFT_CHANNEL_ID    (S_MAX_CHANNELS)
 
-#define SPCM_BUF_NUM_SECTORS   12
-#define SPCM_BUF_SIZE          (SPCM_BUF_NUM_SECTORS*2048)  /* 12*2048*1000/20378 = ~1206ms */
-#define SPCM_NUM_BUFFERS       2
+#define SPCM_BUF_NUM_SECTORS    12
+#define SPCM_BUF_SIZE           (SPCM_BUF_NUM_SECTORS*2048)  /* 12*2048*1000/20378 = ~1206ms */
+#define SPCM_NUM_BUFFERS        2
 
 // start at 12KiB offset in PCM RAM
-#define SPCM_LEFT_CHAN_SOFFSET 0x3000
+#define SPCM_LEFT_CHAN_SOFFSET  0x3000
+
+#define SPCM_MAX_WAIT_TICS      300 // 5s on NTSC, 6s on PAL
 
 enum
 {
@@ -41,6 +43,7 @@ typedef struct
     int block;
     int start_block;
     int final_block;
+    volatile uint32_t tics;
     uint16_t startpos;
     uint16_t looppos;
     uint8_t num_channels;
@@ -232,6 +235,7 @@ swstate:
 
 void S_SPCM_Suspend(void)
 {
+    uint32_t waitstart;
     s_spcm_t *spcm = &track;
 
     if (!spcm->playing) {
@@ -245,7 +249,12 @@ void S_SPCM_Suspend(void)
     }
 
     spcm->playing = 0;
+    waitstart = spcm->tics;
     while (spcm->state != SPCM_STATE_STOPPED) {
+        if (spcm->tics - waitstart > SPCM_MAX_WAIT_TICS) {
+            // don't wait indefinitely
+            break;
+        }
         S_SPCM_UpdateTrack(spcm);
     }
 }
@@ -276,6 +285,9 @@ void S_SPCM_Update(void)
     if (spcm->num_channels == 0) {
         return;
     }
+
+    spcm->tics++;
+
     if (!spcm->playing) {
         return;
     }
@@ -294,7 +306,8 @@ int S_SCM_PlayTrack(const char *name, int repeat)
     int64_t lo;
     extern uint8_t DISC_BUFFER[2048];
     uint8_t *header = DISC_BUFFER;
-    s_spcm_t *spcm = &track; 
+    s_spcm_t *spcm = &track;
+    uint32_t waitstart;
 
     lo = open_file(name);
     if (lo < 0)
@@ -317,9 +330,15 @@ int S_SCM_PlayTrack(const char *name, int repeat)
     spcm->startpos = SPCM_LEFT_CHAN_SOFFSET;
     spcm->looppos = SPCM_LEFT_CHAN_SOFFSET;
     spcm->repeat = repeat;
+    spcm->tics = 0;
     spcm->state = SPCM_STATE_INIT;
 
+    waitstart = spcm->tics;
     while (spcm->state != SPCM_STATE_PLAYING) {
+        if (spcm->tics - waitstart > SPCM_MAX_WAIT_TICS) {
+            // don't wait indefinitely
+            break;
+        }
         S_SPCM_UpdateTrack(spcm);
     }
 
