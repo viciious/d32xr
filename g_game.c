@@ -151,22 +151,8 @@ void G_DoLoadLevel (void)
 		gamemapinfo.lumpNum = gamemaplump;
 
 		/* decide which level to go to next */
-#ifdef MARS
-		switch (gamemap)
-		{
-			case 15: nextmap = 23; break;
-			case 23: nextmap = 0; break;
-			case 24: nextmap = 4; break;
-			default: nextmap = gamemap + 1; break;
-		}
-#else
-		switch (gamemap)
-		{
-			case 23: nextmap = 0; break;
-			case 24: nextmap = 4; break;
-			default: nextmap = gamemap + 1; break;
-		}
-#endif
+		nextmap = gamemap + 1;
+
 		if (nextmap)
 			gamemapinfo.next = G_LumpNumForMapNum(nextmap);
 		else
@@ -691,7 +677,7 @@ startnew:
 			}
 		}
 		else if (gamemapinfo.mapNumber < SSTAGE_START || gamemapinfo.mapNumber > SSTAGE_END)
-			nextmapl = G_LumpNumForMapNum(gamemapinfo.next);
+			nextmapl = gamemapinfo.next;
 
 		finale = nextmapl == 0;
 
