@@ -16,12 +16,12 @@
 
 #define SPCM_LEFT_CHANNEL_ID    (S_MAX_CHANNELS)
 
-#define SPCM_BUF_NUM_SECTORS    12
-#define SPCM_BUF_SIZE           (SPCM_BUF_NUM_SECTORS*2048)  /* 12*2048*1000/32604 = ~753ms */
+#define SPCM_BUF_NUM_SECTORS    13
+#define SPCM_BUF_SIZE           (SPCM_BUF_NUM_SECTORS*2048)  /* 13*2048*1000/32604 = ~816ms */
 #define SPCM_NUM_BUFFERS        2
 
-// start at 12KiB offset in PCM RAM
-#define SPCM_LEFT_CHAN_SOFFSET  0x3000
+// start at 10KiB offset in PCM RAM - must be changed if S_MAX_CHANNELS is greater than 6!
+#define SPCM_LEFT_CHAN_SOFFSET  0x2800
 
 #define SPCM_MAX_WAIT_TICS      300 // 5s on NTSC, 6s on PAL
 
@@ -57,6 +57,7 @@ typedef struct
 } s_spcm_t;
 
 static s_spcm_t track = { 0 };
+static uint8_t safeguard[0x10000 - (SPCM_LEFT_CHAN_SOFFSET+SPCM_NUM_BUFFERS*SPCM_BUF_SIZE+32)] __attribute__((unused));
 
 // buffer currently being played back by hardware
 int8_t S_SPCM_FrontBuffer(s_spcm_t *spcm) {
