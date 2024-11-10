@@ -36,7 +36,7 @@ OBJC = $(PREFIX)objcopy
 DD = dd
 RM = rm -f
 
-TARGET = D32XR
+TARGET ?= D32XR
 LIBS = $(LIBPATH) -lc -lgcc -lgcc-Os-4-200 -lnosys
 OBJS = \
 	crt0.o \
