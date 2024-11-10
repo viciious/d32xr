@@ -10,14 +10,14 @@
 /* or page 55 of https://segaretro.org/images/2/2e/Sega-CD_Technical_Bulletins.pdf */
 #define SPCM_RF5C164_BASEFREQ   32604 /* should not be modified */
 
-#define SPCM_RF5C164_INCREMENT  0x0500 /* equivalent to the sample rate of 20378 Hz */
+#define SPCM_RF5C164_INCREMENT  0x0800 /* equivalent to the sample rate of 32604 Hz */
 
-//#define SPCM_SAMPLE_RATE      (SPCM_RF5C164_INCREMENT * SPCM_RF5C164_BASEFREQ / 2048) /* 20378 */
+//#define SPCM_SAMPLE_RATE      (SPCM_RF5C164_INCREMENT * SPCM_RF5C164_BASEFREQ / 2048) /* 32604 */
 
 #define SPCM_LEFT_CHANNEL_ID    (S_MAX_CHANNELS)
 
 #define SPCM_BUF_NUM_SECTORS    12
-#define SPCM_BUF_SIZE           (SPCM_BUF_NUM_SECTORS*2048)  /* 12*2048*1000/20378 = ~1206ms */
+#define SPCM_BUF_SIZE           (SPCM_BUF_NUM_SECTORS*2048)  /* 12*2048*1000/32604 = ~753ms */
 #define SPCM_NUM_BUFFERS        2
 
 // start at 12KiB offset in PCM RAM
@@ -111,8 +111,8 @@ void S_SPCM_BeginRead(s_spcm_t *spcm)
     int cnt;
     
     cnt = SPCM_BUF_NUM_SECTORS;
-    if (cnt + spcm->block > spcm->final_block)
-        cnt = spcm->final_block - spcm->block;
+    if (cnt + spcm->block > spcm->final_block + 1)
+        cnt = spcm->final_block - spcm->block + 1;
 
     begin_read_cd(spcm->block, cnt);
     spcm->sector_num = 0;
@@ -139,6 +139,7 @@ static int S_SPCM_DMA(s_spcm_t *spcm)
 
 void S_SPCM_UpdateTrack(s_spcm_t *spcm)
 {
+    int next_state;
     extern volatile uint16_t CDA_VOLUME;
 
     if (spcm->num_channels == 0) {
@@ -190,37 +191,35 @@ swstate:
 
     case SPCM_STATE_PAINT:
     case SPCM_STATE_PREPAINT:
-        if (S_SPCM_DMA(spcm))
-        {
-            int next_state = spcm->state;
+        next_state = spcm->state;
+        switch (spcm->state) {
+            case SPCM_STATE_PREPAINT:
+                next_state = SPCM_STATE_START;
+                break;
+            case SPCM_STATE_PAINT:
+                next_state =  SPCM_STATE_PLAYING;
+                break;
+        }
 
-            switch (spcm->state) {
-                case SPCM_STATE_PREPAINT:
-                    next_state = SPCM_STATE_START;
-                    break;
-                case SPCM_STATE_PAINT:
-                    next_state =  SPCM_STATE_PLAYING;
-                    break;
-            }
+        if (!spcm->sector_cnt) {
+            goto done;
+        }
 
-            spcm->block++;
-            if (spcm->block > spcm->final_block)
-            {
-                if (spcm->repeat)
-                {
+        while (S_SPCM_DMA(spcm)) {
+            if (++spcm->block > spcm->final_block) {
+done:
+                if (spcm->repeat) {
                     spcm->block = spcm->start_block;
                     spcm->state = next_state;
                     goto swstate;
                 }
-                else
-                {
+                else {
                     spcm->playing = 0;
                     spcm->state = SPCM_STATE_PLAYING;
                     goto swstate;
                 }
             }
-            else if (++spcm->sector_num == spcm->sector_cnt)
-            {
+            else if (++spcm->sector_num >= spcm->sector_cnt) {
                 spcm->frontbuf++;
                 spcm->frontbuf %= SPCM_NUM_BUFFERS;
                 spcm->state = next_state;
@@ -322,7 +321,7 @@ int S_SCM_PlayTrack(const char *name, int repeat)
     spcm->env = 255;
     spcm->start_block = offset + 1;
     spcm->block = spcm->start_block;
-    spcm->final_block = spcm->start_block + (length>>11) - 2;
+    spcm->final_block = offset + (length>>11) - 2; // minus the header and last padding sector
     spcm->frontbuf = 0;
     spcm->sector_cnt = 0;
     spcm->sector_num = 0;
