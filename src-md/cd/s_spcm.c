@@ -44,6 +44,7 @@ typedef struct
     int start_block;
     int final_block;
     volatile uint32_t tics;
+    volatile uint32_t lastdmatic;
     uint16_t startpos;
     uint16_t looppos;
     uint8_t num_channels;
@@ -207,6 +208,8 @@ swstate:
         }
 
         while (S_SPCM_DMA(spcm)) {
+            spcm->lastdmatic = spcm->tics;
+skipblock:
             if (++spcm->block > spcm->final_block) {
 done:
                 if (spcm->repeat) {
@@ -226,6 +229,10 @@ done:
                 spcm->state = next_state;
                 goto swstate;
             }
+        }
+
+        if (spcm->tics - spcm->lastdmatic > SPCM_MAX_WAIT_TICS) {
+            goto skipblock;
         }
         break;
     default:
@@ -331,6 +338,7 @@ int S_SCM_PlayTrack(const char *name, int repeat)
     spcm->looppos = SPCM_LEFT_CHAN_SOFFSET;
     spcm->repeat = repeat;
     spcm->tics = 0;
+    spcm->lastdmatic = 0;
     spcm->state = SPCM_STATE_INIT;
 
     waitstart = spcm->tics;
