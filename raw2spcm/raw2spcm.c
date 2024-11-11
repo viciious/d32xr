@@ -81,8 +81,6 @@ int main(int argc, char **argv)
 
             outdata[leftoff  + bytenum] = rawu82spcm(data[i]);
             outdata[rightoff + bytenum] = rawu82spcm(data[i+1]);
-
-            printf("%d %d %d\n", i, leftoff + bytenum, rightoff + bytenum);
         }
     }
 
