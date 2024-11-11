@@ -151,11 +151,7 @@ void P_SpawnBustables(sector_t *sec, mobj_t *playermo)
          for (fixed_t y = blockbox[BOXBOTTOM]; y <= blockbox[BOXTOP]; y += spawnInterval)
          {
             if (R_PointInSubsector(x, y)->sector == sec)
-            {
-               mobj_t *mo = P_SpawnMobj(x, y, z, MT_GFZDEBRIS);
-               const angle_t playerMoveAngle = R_PointToAngle2(0, 0, playermo->momx, playermo->momy);
-               P_ThrustValues(playerMoveAngle, P_AproxDistance(playermo->momx, playermo->momy) >> 1, &mo->momx, &mo->momy);
-            }
+               P_SpawnMobj(x, y, z, MT_GFZDEBRIS);               
          }
       }
    }
@@ -195,6 +191,7 @@ static boolean SL_CheckLine(line_t *ld, pslidework_t *sw)
       && (players[sw->slidething->player-1].pflags & PF_SPINNING)) // Bustable block
    {
       back->floorheight = P_FindNextLowestFloor(back, back->floorheight);
+      ld->special = 0;
       ld->tag = 0;
       S_StartSound(sw->slidething, sfx_s3k_59);
       P_SpawnBustables(back, sw->slidething);
