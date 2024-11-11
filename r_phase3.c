@@ -230,6 +230,9 @@ static void R_PrepMobj(mobj_t *thing)
    // Draw these in high detail
    if (thing->type <= MT_SIGN)
       vis->patchnum |= 32768;
+   
+   if (thing->player && players[thing->player-1].pflags & PF_VERTICALFLIP)
+      vis->patchnum |= 16384;
 
 //   vis->colormaps = dc_colormaps;
 }

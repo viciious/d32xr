@@ -285,6 +285,7 @@ typedef void (*drawskycol_t)(int, int, int);
 typedef void (*drawspan_t)(int, int, int, int, fixed_t, fixed_t, fixed_t, fixed_t, inpixel_t*, int);
 
 extern drawcol_t drawcol;
+extern drawcol_t drawcolflipped;
 extern drawcol_t drawcolnpo2;
 extern drawcol_t drawcollow;
 extern drawspan_t drawspan;

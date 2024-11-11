@@ -18,6 +18,7 @@ VINT anamorphicview = 0;
 VINT initmathtables = 2;
 
 drawcol_t drawcol;
+drawcol_t drawcolflipped;
 drawcol_t drawcolnpo2;
 drawcol_t drawcollow;
 drawspan_t drawspan;
@@ -255,6 +256,7 @@ void R_SetDrawMode(void)
 	if (debugmode == DEBUGMODE_NODRAW)
 	{
 		drawcol = I_DrawColumnNoDraw;
+		drawcolflipped = I_DrawColumnNoDraw;
 		drawcolnpo2 = I_DrawColumnNoDraw;
 		drawcollow = I_DrawColumnNoDraw;
 		drawspan = I_DrawSpanNoDraw;
@@ -282,6 +284,7 @@ void R_SetDrawMode(void)
 
 		#ifdef HIGH_DETAIL_SPRITES
 		drawspritecol = I_DrawColumn;
+		drawcolflipped = I_DrawColumnFlipped;
 		#endif
 
 		#ifdef POTATO_MODE
@@ -293,6 +296,7 @@ void R_SetDrawMode(void)
 	else
 	{
 		drawcol = I_DrawColumn;
+		drawcolflipped = I_DrawColumnFlipped;
 		drawcolnpo2 = I_DrawColumnNPo2;
 		drawspan = I_DrawSpan;
 		drawcollow = I_DrawColumnLow;
