@@ -209,8 +209,8 @@ swstate:
         }
 
         while (S_SPCM_DMA(spcm)) {
-            spcm->lastdmatic = spcm->tics;
 skipblock:
+            spcm->lastdmatic = spcm->tics;
             if (++spcm->block > spcm->final_block) {
 done:
                 if (spcm->repeat) {
