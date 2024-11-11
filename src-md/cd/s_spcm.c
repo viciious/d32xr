@@ -23,7 +23,7 @@
 // start at 10KiB offset in PCM RAM - must be changed if S_MAX_CHANNELS is greater than 6!
 #define SPCM_LEFT_CHAN_SOFFSET  0x2800
 
-#define SPCM_MAX_WAIT_TICS      300 // 5s on NTSC, 6s on PAL
+#define SPCM_MAX_WAIT_TICS      200 // 3.3s on NTSC, 4s on PAL
 
 enum
 {
