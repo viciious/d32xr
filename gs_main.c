@@ -355,7 +355,7 @@ int GS_Ticker (void)
                     Mars_UpdateCD();
 
                     D_snprintf(newpath, sizeof(newpath), "%s/%s", gs_menu->path, mi->name);
-                    Mars_PlayTrack(0, 1, newpath, 0, mi->size, 1);
+                    Mars_PlayTrack(0, 1, newpath, 0, mi->size, 0);
 #endif
                     return ga_nothing;
                 }
