@@ -605,6 +605,7 @@ void G_LoadGame(int saveslot)
 /*============================================================================  */
  
 static int 		nextmapl = -1;
+static int      returnspecstagemapl = -1;
 
 /*
 =================
@@ -664,21 +665,26 @@ startnew:
 			continue;			/* skip intermission */
 		}
 
-		if (token && emeralds < 127) // Got a token, and don't have any emeralds
+		if (token && emeralds < 127) // Got a token, and missing at least one emerald
 		{
+			if (gamemapinfo.mapNumber < SSTAGE_START || gamemapinfo.mapNumber > SSTAGE_END)
+				returnspecstagemapl = gamemapinfo.next; // Save the 'next' regular stage to go to
+
 			token--;
 
 			for (i = 0; i < 7; i++)
 			{
 				if (!(emeralds & (1<<i)))
 				{
-					nextmapl = G_LumpNumForMapNum(SSTAGE_START + i - 1); // Going to the special stage
+					nextmapl = G_LumpNumForMapNum(SSTAGE_START + i); // Going to the special stage
 					break;
 				}
 			}
 		}
 		else if (gamemapinfo.mapNumber < SSTAGE_START || gamemapinfo.mapNumber > SSTAGE_END)
 			nextmapl = gamemapinfo.next;
+		else
+			nextmapl = returnspecstagemapl;
 
 		finale = nextmapl == 0;
 
