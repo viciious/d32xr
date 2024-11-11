@@ -18,7 +18,7 @@
 
 #define SPCM_BUF_NUM_SECTORS    13
 #define SPCM_BUF_SIZE           (SPCM_BUF_NUM_SECTORS*2048)  /* 13*2048*1000/32604 = ~816ms */
-#define SPCM_NUM_BUFFERS        2
+#define SPCM_NUM_BUFFERS        1
 
 // start at 10KiB offset in PCM RAM - must be changed if S_MAX_CHANNELS is greater than 6!
 #define SPCM_LEFT_CHAN_SOFFSET  0x2800
@@ -55,22 +55,26 @@ typedef struct
     uint8_t sector_num, sector_cnt;
     volatile uint8_t state;
     uint8_t repeat;
+    uint16_t lastmixpos;
 } s_spcm_t;
 
 static s_spcm_t track = { 0 };
 static uint8_t safeguard[0x10000 - (SPCM_LEFT_CHAN_SOFFSET+SPCM_NUM_BUFFERS*SPCM_BUF_SIZE+32)] __attribute__((unused));
 
-// buffer currently being played back by hardware
-int8_t S_SPCM_FrontBuffer(s_spcm_t *spcm) {
+// buffer position currently being played back by hardware
+static uint16_t S_SPCM_MixerPos(s_spcm_t *spcm, uint16_t start) {
     volatile uint8_t *ptr = PCM_RAMPTR + ((spcm->chan_id) << 2);
     uint16_t hi = *(ptr + 2); // MSB of PCM RAM location
     uint16_t lo = *(ptr + 0); // MSB of PCM RAM location
+    return ((hi << 8) | lo) - start;
+}
 
-    uint16_t pos = (hi << 8) | lo;
-    pos = (pos - SPCM_LEFT_CHAN_SOFFSET) / SPCM_BUF_SIZE;
+// buffer id currently being played back by hardware
+int8_t S_SPCM_FrontBuffer(s_spcm_t *spcm) {
+    uint16_t pos = S_SPCM_MixerPos(spcm, SPCM_LEFT_CHAN_SOFFSET);
+    pos = pos / SPCM_BUF_SIZE;
     if (pos > SPCM_NUM_BUFFERS-1)
         pos = SPCM_NUM_BUFFERS-1;
-
     return pos;
 }
 
@@ -184,8 +188,11 @@ swstate:
             pcm_set_on(spcm->chan_id);
         }
 
-        if (S_SPCM_FrontBuffer(spcm) == spcm->frontbuf) {
-            break;
+        if (!pcm_is_off(spcm->chan_id)) {
+            spcm->lastmixpos = S_SPCM_MixerPos(spcm, SPCM_LEFT_CHAN_SOFFSET);
+            if (spcm->lastmixpos < 5 * 2048) {
+                break;
+            }
         }
 
         S_SPCM_BeginRead(spcm);
@@ -208,7 +215,21 @@ swstate:
             goto done;
         }
 
-        while (S_SPCM_DMA(spcm)) {
+        while (1) {
+            if (spcm->state == SPCM_STATE_PAINT) {
+                uint16_t mixpos = S_SPCM_MixerPos(spcm, SPCM_LEFT_CHAN_SOFFSET);
+                if (mixpos > spcm->lastmixpos)
+                {
+                    spcm->lastmixpos = mixpos;
+                    if (mixpos - 2048 < spcm->sector_num * 2048) {
+                        break;
+                    }
+                }
+            }
+
+            if (!S_SPCM_DMA(spcm))
+                break;
+
 skipblock:
             spcm->lastdmatic = spcm->tics;
             if (++spcm->block > spcm->final_block) {
@@ -216,19 +237,19 @@ done:
                 if (spcm->repeat) {
                     spcm->block = spcm->start_block;
                     spcm->state = next_state;
-                    goto swstate;
+                    break;
                 }
                 else {
                     spcm->playing = 0;
                     spcm->state = SPCM_STATE_PLAYING;
-                    goto swstate;
+                    break;
                 }
             }
             else if (++spcm->sector_num >= spcm->sector_cnt) {
                 spcm->frontbuf++;
                 spcm->frontbuf %= SPCM_NUM_BUFFERS;
                 spcm->state = next_state;
-                goto swstate;
+                break;
             }
         }
 
@@ -341,6 +362,7 @@ int S_SCM_PlayTrack(const char *name, int repeat)
     spcm->tics = 0;
     spcm->lastdmatic = 0;
     spcm->state = SPCM_STATE_INIT;
+    spcm->lastmixpos = 0;
 
     waitstart = spcm->tics;
     while (spcm->state != SPCM_STATE_PLAYING) {
