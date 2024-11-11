@@ -119,6 +119,7 @@ void S_SPCM_BeginRead(s_spcm_t *spcm)
     begin_read_cd(spcm->block, cnt);
     spcm->sector_num = 0;
     spcm->sector_cnt = cnt;
+    spcm->lastdmatic = spcm->tics;
 }
 
 static int S_SPCM_DMA(s_spcm_t *spcm)
