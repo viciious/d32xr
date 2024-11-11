@@ -49,26 +49,57 @@ int main(int argc, char **argv)
     int i, len;
     uint8_t *data;
     uint8_t *outdata;
+    int num_channels = 2;
     uint8_t sector[2048];
 
     fseek(fin, 0, SEEK_END);
     len = ftell(fin);
     data = malloc(len);
-    outdata = malloc(len);
+    outdata = malloc(len + 4096);
     fseek(fin, 0, SEEK_SET);
     fread(data, 1, len, fin);
 
     memset(sector, 0, sizeof(sector));
+    memset(outdata, 0, len + 4096);
+
     fwrite(sector, 1, 2048, fout);
 
-    for (i = 0; i < len; i++) {
-        outdata[i] = rawu82spcm(data[i]);
+    if (num_channels == 1) {
+        for (i = 0; i < len; i++) {
+            outdata[i] = rawu82spcm(data[i]);
+        }
+    }
+    else {
+        int num_samples = len / 2;
+
+        for (i = 0; i < len; i += 2) {
+            int sectornum = i / 4096;
+            int bytenum = (i % 4096) / 2;
+
+            int leftoff = sectornum * 2 * 2048;
+            int rightoff = leftoff + 2048;
+
+            outdata[leftoff  + bytenum] = rawu82spcm(data[i]);
+            outdata[rightoff + bytenum] = rawu82spcm(data[i+1]);
+
+            printf("%d %d %d\n", i, leftoff + bytenum, rightoff + bytenum);
+        }
     }
 
-    fwrite(outdata, 1, len, fout);
-
-    if (len % 2048 != 0)
-        fwrite(sector, 1, 2048 - (len % 2048), fout);
+    if (num_channels == 1) {
+        int num_sectors = (len + 2047) / 2048;
+        for (i = 0; i < num_sectors; i++)
+        {
+            fwrite(&outdata[i*2048], 1, 2048, fout);
+        }
+    } else {
+        int num_sectors = (len/2 + 2047) / 2048;
+        num_sectors *= 2;
+        for (i = 0; i < num_sectors; i++)
+        {
+            fwrite(&outdata[i*2048], 1, 2048, fout);
+        }
+    }
     fwrite(sector, 1, 2048, fout);
 
     free(data);
