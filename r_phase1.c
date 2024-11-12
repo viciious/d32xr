@@ -314,10 +314,12 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
             segl->m_texturenum = texturetranslation[si->midtexture];
             if(liflags & ML_DONTPEGBOTTOM)
             {
-               if(f_floorheight > b_floorheight)
-                  m_texturemid = f_floorheight;
+               const fixed_t rf_floorheight = rbsp->curfsector->floorheight - vd.viewz;
+               const fixed_t rb_floorheight = rbsp->curbsector->floorheight - vd.viewz;
+               if(rf_floorheight > rb_floorheight)
+                  m_texturemid = rf_floorheight;
                else
-                  m_texturemid = b_floorheight;
+                  m_texturemid = rb_floorheight;
 #ifdef WALLDRAW2X
                m_texturemid += (textures[segl->m_texturenum].height << (FRACBITS+1));
 #else
@@ -326,10 +328,12 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
             }
             else
             {
-               if(b_ceilingheight > f_ceilingheight)
-                  m_texturemid = f_ceilingheight;
+               const fixed_t rf_ceilingheight = rbsp->curfsector->ceilingheight - vd.viewz;
+               const fixed_t rb_ceilingheight = rbsp->curbsector->ceilingheight - vd.viewz;
+               if(rb_ceilingheight > rf_ceilingheight)
+                  m_texturemid = rf_ceilingheight;
                else
-                  m_texturemid = b_ceilingheight;
+                  m_texturemid = rb_ceilingheight;
             }
             m_texturemid += rowoffset<<FRACBITS; // add in sidedef texture offset
 #ifdef WALLDRAW2X
