@@ -199,10 +199,9 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
         for (i = 0; i < 2; i++) {
             spcm->chan[i].lastmixpos = S_SPCM_MixerPos(spcm, i);
         }
-        for (i = 0; i < 2; i++) {
-            if (spcm->chan[i].lastmixpos < SPCM_BUF_MIN_SECTORS * 2048) {
-                return;
-            }
+
+        if (spcm->chan[0].lastmixpos < SPCM_BUF_MIN_SECTORS * 2048) {
+            return;
         }
 
         S_SPCM_BeginRead(spcm);
