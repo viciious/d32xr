@@ -10,13 +10,13 @@
 /* or page 55 of https://segaretro.org/images/2/2e/Sega-CD_Technical_Bulletins.pdf */
 #define SPCM_RF5C164_BASEFREQ   32604 /* should not be modified */
 
-#define SPCM_RF5C164_INCREMENT  0x0800 /* equivalent to the sample rate of 32604 Hz */
+#define SPCM_RF5C164_INCREMENT  0x0600 /* equivalent to the sample rate of 24453 Hz */
 
-//#define SPCM_SAMPLE_RATE      (SPCM_RF5C164_INCREMENT * SPCM_RF5C164_BASEFREQ / 2048) /* 32604 */
+//#define SPCM_SAMPLE_RATE      (SPCM_RF5C164_INCREMENT * SPCM_RF5C164_BASEFREQ / 2048) /* 24453 */
 
 #define SPCM_BUF_MIN_SECTORS    4 /* wait this many sectors in the playback buffer before starting a new read */
 #define SPCM_BUF_NUM_SECTORS    12
-#define SPCM_BUF_SIZE           (SPCM_BUF_NUM_SECTORS*2048)  /* 13*2048*1000/32604 = ~816ms */
+#define SPCM_BUF_SIZE           (SPCM_BUF_NUM_SECTORS*2048)  /* 12*2048*1000/24453 = ~1005ms */
 #define SPCM_NUM_BUFFERS        1
 
 // start at 10KiB offset in PCM RAM - must be changed if S_MAX_CHANNELS is greater than 6!
