@@ -10,7 +10,7 @@
 /* or page 55 of https://segaretro.org/images/2/2e/Sega-CD_Technical_Bulletins.pdf */
 #define SPCM_RF5C164_BASEFREQ   32604 /* should not be modified */
 
-#define SPCM_RF5C164_INCREMENT  0x0600 /* equivalent to the sample rate of 24453 Hz */
+#define SPCM_RF5C164_DEFAULT_INCREMENT  0x0800 /* equivalent to the sample rate of 32604 Hz */
 
 //#define SPCM_SAMPLE_RATE      (SPCM_RF5C164_INCREMENT * SPCM_RF5C164_BASEFREQ / 2048) /* 24453 */
 
@@ -49,6 +49,7 @@ typedef struct
     int final_block;
     volatile uint32_t tics;
     volatile uint32_t lastdmatic;
+    uint16_t increment;
     uint8_t num_channels;
     uint8_t env;
     struct {
@@ -96,9 +97,9 @@ void S_SPCM_UpdateChannel(s_spcm_t *spcm, int chan)
     }
 
     // kick off playback
-    PCM_FDL = (SPCM_RF5C164_INCREMENT >> 0) & 0xff;
+    PCM_FDL = (spcm->increment >> 0) & 0xff;
     pcm_delay();
-    PCM_FDH = (SPCM_RF5C164_INCREMENT >> 8) & 0xff;
+    PCM_FDH = (spcm->increment >> 8) & 0xff;
     pcm_delay();
 
     PCM_PAN = spcm->chan[chan].pan;
@@ -419,6 +420,9 @@ int S_SCM_PlayTrack(const char *name, int repeat)
     spcm->tics = 0;
     spcm->lastdmatic = 0;
     spcm->state = SPCM_STATE_INIT;
+    spcm->increment = (header[6] << 8) | header[7];
+    if (spcm->increment == 0)
+        spcm->increment = SPCM_RF5C164_DEFAULT_INCREMENT;
 
     waitstart = spcm->tics;
     while (spcm->state != SPCM_STATE_PLAYING) {

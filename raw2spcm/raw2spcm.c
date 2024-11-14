@@ -46,7 +46,9 @@ int main(int argc, char **argv)
 #else
     FILE *fin = fopen(argv[1], "rb");
     FILE *fout = fopen(argv[2], "wb");
-    int i, len;
+    int freq = argc > 3 ? atoi(argv[3]) : 0;
+    int incr = (freq * 2048 / 32604);
+    int i, len, test = 1;
     uint8_t *data;
     uint8_t *outdata;
     int num_channels = 2;
@@ -62,7 +64,19 @@ int main(int argc, char **argv)
     memset(sector, 0, sizeof(sector));
     memset(outdata, 0, len + 4096);
 
+    sector[0] = 'S';
+    sector[1] = 'P';
+    sector[2] = 'C';
+    sector[3] = 'M';
+
+    sector[4] = (freq >> 8) & 0xff;
+    sector[5] = (freq >> 0) & 0xff;
+    sector[6] = (incr >> 8) & 0xff;
+    sector[7] = (incr >> 0) & 0xff;
+    
     fwrite(sector, 1, 2048, fout);
+
+    memset(sector, 0, sizeof(sector));
 
     if (num_channels == 1) {
         for (i = 0; i < len; i++) {
