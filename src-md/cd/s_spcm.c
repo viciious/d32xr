@@ -56,6 +56,7 @@ typedef struct
         uint8_t id;
         uint8_t pan;
         uint16_t startpos;
+        uint16_t endpos;
         uint16_t looppos;
         uint16_t lastmixpos;
     } chan[2];
@@ -114,7 +115,9 @@ void S_SPCM_BeginRead(s_spcm_t *spcm)
 {
     int cnt;
     
-    cnt = SPCM_BUF_NUM_SECTORS*2;
+    cnt = SPCM_BUF_NUM_SECTORS;
+    if (spcm->num_channels == 2)
+        cnt += cnt;
     if (cnt + spcm->block > spcm->final_block + 1)
         cnt = spcm->final_block - spcm->block + 1;
 
@@ -152,7 +155,7 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
 
     spcm->env = (CDA_VOLUME >= 1020 ? 255 : CDA_VOLUME / 4);
  
-    for (i = 0; i < 2; i++) {
+    for (i = 0; i < spcm->num_channels; i++) {
         S_SPCM_UpdateChannel(spcm, i);
     }
 
@@ -166,14 +169,14 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
     case SPCM_STATE_START:
         spcm->playing = 1;
 
-        for (i = 0; i < 2; i++) {
+        for (i = 0; i < spcm->num_channels; i++) {
             S_SPCM_UpdateChannel(spcm, i);
         }
 
-        for (i = 0; i < 2; i++) {
-            pcm_loop_markers(spcm->chan[i].startpos + SPCM_CHAN_BUF_SIZE);
+        for (i = 0; i < spcm->num_channels; i++) {
+            pcm_loop_markers(spcm->chan[i].endpos);
         }
-        for (i = 0; i < 2; i++) {
+        for (i = 0; i < spcm->num_channels; i++) {
             pcm_set_on(spcm->chan[i].id);
         }
         spcm->state = SPCM_STATE_PLAYING;
@@ -181,7 +184,7 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
 
     case SPCM_STATE_PLAYING:
         if (!spcm->playing) {
-            for (i = 0; i < 2; i++) {
+            for (i = 0; i < spcm->num_channels; i++) {
                 pcm_set_off(spcm->chan[i].id);
             }
             spcm->state = SPCM_STATE_STOPPED;
@@ -190,17 +193,17 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
     case SPCM_STATE_RESUME:
         // start the playback, otherwise DMA won't work
         if (pcm_is_off(spcm->chan[0].id)) {
-            for (i = 0; i < 2; i++) {
-                pcm_load_zero(spcm->chan[i].startpos, SPCM_CHAN_BUF_SIZE);
-                pcm_loop_markers(spcm->chan[i].startpos + SPCM_CHAN_BUF_SIZE);
+            for (i = 0; i < spcm->num_channels; i++) {
+                pcm_load_zero(spcm->chan[i].startpos, spcm->chan[i].endpos - spcm->chan[i].startpos);
+                pcm_loop_markers(spcm->chan[i].endpos);
             }
 
-            for (i = 0; i < 2; i++) {
+            for (i = 0; i < spcm->num_channels; i++) {
                 pcm_set_on(spcm->chan[i].id);
             }
         }
 
-        for (i = 0; i < 2; i++) {
+        for (i = 0; i < spcm->num_channels; i++) {
             spcm->chan[i].lastmixpos = S_SPCM_MixerPos(spcm, i);
         }
 
@@ -228,8 +231,16 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
         }
 
         while (1) {
-            chan = spcm->sector_num & 1;
-            offset = (spcm->sector_num/2) * 2048;
+            if (spcm->num_channels == 2)
+            {
+                chan = spcm->sector_num & 1;
+                offset = (spcm->sector_num/2) * 2048;
+            }
+            else
+            {
+                chan = 0;
+                offset = spcm->sector_num * 2048;
+            }
 
             switch (spcm->state) {
             case SPCM_STATE_PAINT:
@@ -278,7 +289,7 @@ done:
         break;
 
     case SPCM_STATE_STOPPING:
-        for (i = 0; i < 2; i++) {
+        for (i = 0; i < spcm->num_channels; i++) {
             spcm->chan[i].lastmixpos = S_SPCM_MixerPos(spcm, i);
         }
 
@@ -296,12 +307,12 @@ done:
             }
         }
 
-        for (i = 0; i < 2; i++) {
+        for (i = 0; i < spcm->num_channels; i++) {
             pcm_load_zero(spcm->chan[i].startpos + offset, 2048);
         }
 
         if (++spcm->sector_num >= spcm->sector_cnt) {
-            for (i = 0; i < 2; i++) {
+            for (i = 0; i < spcm->num_channels; i++) {
                 pcm_set_off(spcm->chan[i].id);
             }
             spcm->playing = 0;
@@ -398,8 +409,6 @@ int S_SCM_PlayTrack(const char *name, int repeat)
 
     read_sectors(header, offset, 1);
 
-    spcm->num_channels = 1;
-    spcm->env = 255;
     spcm->start_block = offset + 1;
     spcm->block = spcm->start_block;
     spcm->final_block = offset + (length>>11) - 1; // ignore the last padding sector
@@ -408,12 +417,14 @@ int S_SCM_PlayTrack(const char *name, int repeat)
     spcm->playing = 0;
     spcm->chan[0].id = SPCM_LEFT_CHANNEL_ID;
     spcm->chan[0].startpos = SPCM_LEFT_CHAN_SOFFSET;
+    spcm->chan[0].endpos = SPCM_LEFT_CHAN_SOFFSET + SPCM_CHAN_BUF_SIZE;
     spcm->chan[0].looppos = SPCM_LEFT_CHAN_SOFFSET;
     spcm->chan[0].pan = 0b00001111;
     spcm->chan[0].lastmixpos = 0;
     spcm->chan[1].id = SPCM_RIGHT_CHANNEL_ID;
     spcm->chan[1].startpos = SPCM_RIGHT_CHAN_SOFFSET;
     spcm->chan[1].looppos = SPCM_RIGHT_CHAN_SOFFSET;
+    spcm->chan[1].endpos = SPCM_RIGHT_CHAN_SOFFSET + SPCM_CHAN_BUF_SIZE;
     spcm->chan[1].pan = 0b11110000;
     spcm->chan[1].lastmixpos = 0;
     spcm->repeat = repeat;
@@ -421,8 +432,18 @@ int S_SCM_PlayTrack(const char *name, int repeat)
     spcm->lastdmatic = 0;
     spcm->state = SPCM_STATE_INIT;
     spcm->increment = (header[6] << 8) | header[7];
-    if (spcm->increment == 0)
+    spcm->num_channels = header[8];
+    spcm->env = header[9];
+
+    if (spcm->increment == 0) {
         spcm->increment = SPCM_RF5C164_DEFAULT_INCREMENT;
+    }
+    if (spcm->num_channels == 0) {
+        spcm->num_channels = 2;
+    }
+    if (spcm->env == 0) {
+        spcm->env = 0xff;
+    }
 
     waitstart = spcm->tics;
     while (spcm->state != SPCM_STATE_PLAYING) {

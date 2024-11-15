@@ -47,11 +47,12 @@ int main(int argc, char **argv)
     FILE *fin = fopen(argv[1], "rb");
     FILE *fout = fopen(argv[2], "wb");
     int freq = argc > 3 ? atoi(argv[3]) : 0;
+    int numc = argc > 4 ? atoi(argv[4]) : 2;
     int incr = (freq * 2048 / 32604);
     int i, len, test = 1;
     uint8_t *data;
     uint8_t *outdata;
-    int num_channels = 2;
+    int num_channels = numc ? numc : 2;
     uint8_t sector[2048];
 
     fseek(fin, 0, SEEK_END);
@@ -73,6 +74,8 @@ int main(int argc, char **argv)
     sector[5] = (freq >> 0) & 0xff;
     sector[6] = (incr >> 8) & 0xff;
     sector[7] = (incr >> 0) & 0xff;
+
+    sector[8] = numc;
     
     fwrite(sector, 1, 2048, fout);
 
