@@ -557,6 +557,15 @@ read_cd:
         movem.l (sp)+,d2-d7/a2-a6
         rts
 
+| int seek_cd(int lba);
+        .global seek_cd
+seek_cd:
+        move.l  4(sp),d0                /* lba */
+        movem.l d2-d7/a2-a6,-(sp)
+        jsr     SeekCD
+        movem.l (sp)+,d2-d7/a2-a6
+        rts
+
 | int begin_read_cd(int lba, int len);
         .global begin_read_cd
 begin_read_cd:
@@ -864,6 +873,21 @@ SetCWD:
         movea.l (sp)+,a0
         beq.b   6b
         moveq   #ERR_NAME_NOT_FOUND,d0
+        rts
+
+| Seek to the designated logical sector
+
+SeekCD:
+        movem.l d0-d1/a0-a1,-(sp)
+0:
+        move.w  #0x0089,d0              /* CDCSTOP */
+        jsr     0x5F22.w                /* call CDBIOS function */
+
+        movea.l sp,a0                   /* ptr to 32 bit sector start */
+        move.w  #0x0018,d0              /* ROMSEEK */
+        jsr     0x5F22.w                /* call CDBIOS function */
+
+        lea     16(sp),sp               /* cleanup stack */
         rts
 
 | Begin reading d1 sectors starting at d0

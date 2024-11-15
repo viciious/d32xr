@@ -14,13 +14,11 @@
 
 //#define SPCM_SAMPLE_RATE      (SPCM_RF5C164_INCREMENT * SPCM_RF5C164_BASEFREQ / 2048) /* 24453 */
 
-#define SPCM_BUF_MIN_SECTORS    4 /* wait this many sectors in the playback buffer before starting a new read */
+#define SPCM_BUF_MIN_SECTORS    5 /* wait this many sectors in the playback buffer before starting a new read */
 #define SPCM_BUF_NUM_SECTORS    12
-#define SPCM_BUF_SIZE           (SPCM_BUF_NUM_SECTORS*2048)  /* 12*2048*1000/24453 = ~1005ms */
-#define SPCM_NUM_BUFFERS        1
 
 // start at 10KiB offset in PCM RAM - must be changed if S_MAX_CHANNELS is greater than 6!
-#define SPCM_CHAN_BUF_SIZE      (SPCM_NUM_BUFFERS*SPCM_BUF_SIZE)
+#define SPCM_CHAN_BUF_SIZE      (SPCM_BUF_NUM_SECTORS*2048)  /* 12*2048*1000/24453 = ~1005ms */
 #define SPCM_LEFT_CHANNEL_ID    (S_MAX_CHANNELS)
 #define SPCM_LEFT_CHAN_SOFFSET  0x2800
 #define SPCM_RIGHT_CHAN_SOFFSET (SPCM_LEFT_CHAN_SOFFSET+SPCM_CHAN_BUF_SIZE+2048)
@@ -47,6 +45,14 @@ typedef struct
     int block;
     int start_block;
     int final_block;
+    struct {
+        int next_paint_sector;
+        int painted_sectors_int;
+        uint16_t next_paint_offset;
+        uint16_t painted_sectors_frac;
+        uint16_t lastpos;
+        uint8_t next_paint_chan;
+    } mix;
     volatile uint32_t tics;
     volatile uint32_t lastdmatic;
     uint16_t increment;
@@ -58,7 +64,6 @@ typedef struct
         uint16_t startpos;
         uint16_t endpos;
         uint16_t looppos;
-        uint16_t lastmixpos;
     } chan[2];
     volatile uint8_t playing;
     uint8_t sector_num, sector_cnt;
@@ -75,6 +80,20 @@ static uint16_t S_SPCM_MixerPos(s_spcm_t *spcm, int chan) {
     uint16_t hi = *(ptr + 2); // MSB of PCM RAM location
     uint16_t lo = *(ptr + 0); // MSB of PCM RAM location
     return ((hi << 8) | lo) - spcm->chan[chan].startpos;
+}
+
+static int S_SPCM_PaintedSectors(s_spcm_t *spcm) {
+    uint16_t mixpos;
+
+    mixpos = S_SPCM_MixerPos(spcm, 0);
+    if (spcm->mix.lastpos > mixpos) {
+        // wrapped
+        spcm->mix.painted_sectors_int += SPCM_BUF_NUM_SECTORS;
+    }
+    spcm->mix.lastpos = mixpos;
+    spcm->mix.painted_sectors_frac = mixpos >> 11;
+
+    return spcm->mix.painted_sectors_int + spcm->mix.painted_sectors_frac;
 }
 
 void S_SPCM_UpdateChannel(s_spcm_t *spcm, int chan)
@@ -111,19 +130,27 @@ void S_SPCM_UpdateChannel(s_spcm_t *spcm, int chan)
     pcm_set_loop(spcm->chan[chan].looppos);
 }
 
-void S_SPCM_BeginRead(s_spcm_t *spcm)
+static void S_SPCM_BeginRead(s_spcm_t *spcm)
 {
     int cnt;
     
     cnt = SPCM_BUF_NUM_SECTORS;
     if (spcm->num_channels == 2)
         cnt += cnt;
-    if (cnt + spcm->block > spcm->final_block + 1)
-        cnt = spcm->final_block - spcm->block + 1;
+    if (cnt + spcm->block > spcm->final_block)
+        cnt = spcm->final_block - spcm->block;
 
-    begin_read_cd(spcm->block, cnt);
     spcm->sector_num = 0;
     spcm->sector_cnt = cnt;
+    spcm->lastdmatic = spcm->tics;
+
+    if (cnt > 0)
+        begin_read_cd(spcm->block, cnt);
+}
+
+static void S_SPCM_Preseek(s_spcm_t *spcm)
+{
+    seek_cd(spcm->block);
     spcm->lastdmatic = spcm->tics;
 }
 
@@ -146,8 +173,8 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
     int i;
     int next_state;
     extern volatile uint16_t CDA_VOLUME;
-    uint16_t mixpos;
     uint16_t chan, offset;
+    int painted_sectors;
 
     if (spcm->num_channels == 0) {
         return;
@@ -158,6 +185,7 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
     for (i = 0; i < spcm->num_channels; i++) {
         S_SPCM_UpdateChannel(spcm, i);
     }
+    painted_sectors = S_SPCM_PaintedSectors(spcm);
 
     switch (spcm->state)
     {
@@ -179,6 +207,8 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
         for (i = 0; i < spcm->num_channels; i++) {
             pcm_set_on(spcm->chan[i].id);
         }
+
+        memset(&spcm->mix, 0, sizeof(spcm->mix));
         spcm->state = SPCM_STATE_PLAYING;
         break;
 
@@ -191,7 +221,7 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
             break;
         }
     case SPCM_STATE_RESUME:
-        // start the playback, otherwise DMA won't work
+        // start the playback
         if (pcm_is_off(spcm->chan[0].id)) {
             for (i = 0; i < spcm->num_channels; i++) {
                 pcm_load_zero(spcm->chan[i].startpos, spcm->chan[i].endpos - spcm->chan[i].startpos);
@@ -203,11 +233,8 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
             }
         }
 
-        for (i = 0; i < spcm->num_channels; i++) {
-            spcm->chan[i].lastmixpos = S_SPCM_MixerPos(spcm, i);
-        }
-
-        if (spcm->chan[0].lastmixpos < SPCM_BUF_MIN_SECTORS * 2048) {
+        if (painted_sectors < spcm->mix.next_paint_sector + SPCM_BUF_MIN_SECTORS) {
+            S_SPCM_Preseek(spcm);
             return;
         }
 
@@ -231,35 +258,33 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
         }
 
         while (1) {
-            if (spcm->num_channels == 2)
-            {
-                chan = spcm->sector_num & 1;
-                offset = (spcm->sector_num/2) * 2048;
-            }
-            else
-            {
-                chan = 0;
-                offset = spcm->sector_num * 2048;
-            }
+            chan = spcm->mix.next_paint_chan;
+            offset = spcm->mix.next_paint_offset;
 
-            switch (spcm->state) {
-            case SPCM_STATE_PAINT:
-                mixpos = S_SPCM_MixerPos(spcm, 0);
-                if (spcm->chan[0].lastmixpos < mixpos)
-                {
-                    spcm->chan[0].lastmixpos = mixpos;
-                    if (mixpos < offset + 2048) {
+            if (chan == 0) {
+                switch (spcm->state) {
+                case SPCM_STATE_PAINT:
+                    painted_sectors = S_SPCM_PaintedSectors(spcm);
+                    if (painted_sectors <= spcm->mix.next_paint_sector) {
                         return;
                     }
                 }
-                else
-                {
-                    // playback buffer has wrapped around, it's safe to DMA
-                }
             }
 
-            if (!S_SPCM_DMA(spcm, spcm->chan[chan].startpos, offset))
+            if (!S_SPCM_DMA(spcm, spcm->chan[chan].startpos, offset)) {
                 break;
+            }
+
+            spcm->mix.next_paint_chan++;
+            spcm->mix.next_paint_chan &= (spcm->num_channels-1);
+
+            if (spcm->mix.next_paint_chan == 0) {
+                spcm->mix.next_paint_sector++;
+                spcm->mix.next_paint_offset += 2048;
+                if (spcm->mix.next_paint_offset >= SPCM_CHAN_BUF_SIZE) {
+                    spcm->mix.next_paint_offset = 0;
+                }
+            }
 
 skipblock:
             spcm->lastdmatic = spcm->tics;
@@ -289,26 +314,24 @@ done:
         break;
 
     case SPCM_STATE_STOPPING:
-        for (i = 0; i < spcm->num_channels; i++) {
-            spcm->chan[i].lastmixpos = S_SPCM_MixerPos(spcm, i);
-        }
-
-        if (spcm->chan[0].lastmixpos < SPCM_BUF_MIN_SECTORS * 2048) {
+        if (painted_sectors < spcm->mix.next_paint_sector + SPCM_BUF_MIN_SECTORS) {
             return;
         }
 
-        offset = spcm->sector_num * 2048;
-        mixpos = S_SPCM_MixerPos(spcm, 0);
-        if (spcm->chan[0].lastmixpos < mixpos)
-        {
-            spcm->chan[0].lastmixpos = mixpos;
-            if (mixpos < offset + 2048) {
-                return;
-            }
+        offset = spcm->mix.next_paint_offset;
+        painted_sectors = S_SPCM_PaintedSectors(spcm);
+        if (painted_sectors <= spcm->mix.next_paint_sector) {
+            return;
         }
 
         for (i = 0; i < spcm->num_channels; i++) {
             pcm_load_zero(spcm->chan[i].startpos + offset, 2048);
+        }
+
+        spcm->mix.next_paint_sector++;
+        spcm->mix.next_paint_offset += 2048;
+        if (spcm->mix.next_paint_offset >= SPCM_CHAN_BUF_SIZE) {
+            spcm->mix.next_paint_offset = 0;
         }
 
         if (++spcm->sector_num >= spcm->sector_cnt) {
@@ -327,7 +350,6 @@ done:
 
 void S_SPCM_Suspend(void)
 {
-    uint32_t waitstart;
     s_spcm_t *spcm = &track;
 
     if (!spcm->playing) {
@@ -341,12 +363,7 @@ void S_SPCM_Suspend(void)
     }
 
     spcm->playing = 0;
-    waitstart = spcm->tics;
     while (spcm->state != SPCM_STATE_STOPPED) {
-        if (spcm->tics - waitstart > SPCM_MAX_WAIT_TICS) {
-            // don't wait indefinitely
-            break;
-        }
         S_SPCM_UpdateTrack(spcm);
     }
 }
@@ -420,13 +437,11 @@ int S_SCM_PlayTrack(const char *name, int repeat)
     spcm->chan[0].endpos = SPCM_LEFT_CHAN_SOFFSET + SPCM_CHAN_BUF_SIZE;
     spcm->chan[0].looppos = SPCM_LEFT_CHAN_SOFFSET;
     spcm->chan[0].pan = 0b00001111;
-    spcm->chan[0].lastmixpos = 0;
     spcm->chan[1].id = SPCM_RIGHT_CHANNEL_ID;
     spcm->chan[1].startpos = SPCM_RIGHT_CHAN_SOFFSET;
     spcm->chan[1].looppos = SPCM_RIGHT_CHAN_SOFFSET;
     spcm->chan[1].endpos = SPCM_RIGHT_CHAN_SOFFSET + SPCM_CHAN_BUF_SIZE;
     spcm->chan[1].pan = 0b11110000;
-    spcm->chan[1].lastmixpos = 0;
     spcm->repeat = repeat;
     spcm->tics = 0;
     spcm->lastdmatic = 0;
@@ -440,6 +455,9 @@ int S_SCM_PlayTrack(const char *name, int repeat)
     }
     if (spcm->num_channels == 0) {
         spcm->num_channels = 2;
+    }
+    if (spcm->num_channels == 1) {
+        spcm->chan[0].pan = 0b11111111;
     }
     if (spcm->env == 0) {
         spcm->env = 0xff;
