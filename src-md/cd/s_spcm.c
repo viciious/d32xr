@@ -5,6 +5,7 @@
 #include "cdfh.h"
 #include "pcm.h"
 #include "s_channels.h"
+#include "s_spcm.h"
 
 /* page 9 of https://segaretro.org/images/2/2d/MCDHardware_Manual_PCM_Sound_Source.pdf */
 /* or page 55 of https://segaretro.org/images/2/2e/Sega-CD_Technical_Bulletins.pdf */
@@ -24,7 +25,7 @@
 #define SPCM_RIGHT_CHAN_SOFFSET (SPCM_LEFT_CHAN_SOFFSET+SPCM_CHAN_BUF_SIZE+2048)
 #define SPCM_RIGHT_CHANNEL_ID   (SPCM_LEFT_CHANNEL_ID+1)
 
-#define SPCM_MAX_WAIT_TICS      200 // 3.3s on NTSC, 4s on PAL
+#define SPCM_MAX_WAIT_TICS      400 // x7.8ms = ~3s seconds
 
 enum
 {
@@ -366,6 +367,8 @@ void S_SPCM_Suspend(void)
     while (spcm->state != SPCM_STATE_STOPPED) {
         S_SPCM_UpdateTrack(spcm);
     }
+
+    pcm_stop_timer();
 }
 
 void S_SPCM_Unsuspend(void)
@@ -384,6 +387,8 @@ void S_SPCM_Unsuspend(void)
 
     spcm->playing = 1;
     spcm->state = SPCM_STATE_RESUME;
+
+    pcm_start_timer(S_SPCM_Update);
 }
 
 void S_SPCM_Update(void)
@@ -462,6 +467,8 @@ int S_SCM_PlayTrack(const char *name, int repeat)
     if (spcm->env == 0) {
         spcm->env = 0xff;
     }
+
+    pcm_start_timer(S_SPCM_Update);
 
     waitstart = spcm->tics;
     while (spcm->state != SPCM_STATE_PLAYING) {
