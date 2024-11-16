@@ -15,7 +15,7 @@
 
 //#define SPCM_SAMPLE_RATE      (SPCM_RF5C164_INCREMENT * SPCM_RF5C164_BASEFREQ / 2048) /* 24453 */
 
-#define SPCM_BUF_MIN_SECTORS    5 /* wait this many sectors in the playback buffer before starting a new read */
+#define SPCM_BUF_MIN_SECTORS    4 /* the playback buffer needs to be this many sectors before a new CD read is started */
 #define SPCM_BUF_NUM_SECTORS    12
 
 // start at 10KiB offset in PCM RAM - must be changed if S_MAX_CHANNELS is greater than 6!
@@ -67,7 +67,7 @@ typedef struct
         uint16_t looppos;
     } chan[2];
     volatile uint8_t playing;
-    uint8_t sector_num, sector_cnt;
+    uint8_t sector_cnt;
     volatile uint8_t state;
     uint8_t repeat;
 } s_spcm_t;
@@ -141,7 +141,6 @@ static void S_SPCM_BeginRead(s_spcm_t *spcm)
     if (cnt + spcm->block > spcm->final_block)
         cnt = spcm->final_block - spcm->block;
 
-    spcm->sector_num = 0;
     spcm->sector_cnt = cnt;
     spcm->lastdmatic = spcm->tics;
 
@@ -297,13 +296,12 @@ done:
                     break;
                 }
                 else {
-                    spcm->sector_num = 0;
                     spcm->sector_cnt = SPCM_BUF_NUM_SECTORS;
                     spcm->state = SPCM_STATE_STOPPING;
                     break;
                 }
             }
-            else if (++spcm->sector_num >= spcm->sector_cnt) {
+            else if (--spcm->sector_cnt == 0) {
                 spcm->state = next_state;
                 break;
             }
@@ -335,7 +333,7 @@ done:
             spcm->mix.next_paint_offset = 0;
         }
 
-        if (++spcm->sector_num >= spcm->sector_cnt) {
+        if (--spcm->sector_cnt == 0) {
             for (i = 0; i < spcm->num_channels; i++) {
                 pcm_set_off(spcm->chan[i].id);
             }
@@ -421,7 +419,6 @@ int S_SCM_PlayTrack(const char *name, int repeat)
     extern uint8_t DISC_BUFFER[2048];
     uint8_t *header = DISC_BUFFER;
     s_spcm_t *spcm = &track;
-    uint32_t waitstart;
 
     lo = open_file(name);
     if (lo < 0)
@@ -435,7 +432,6 @@ int S_SCM_PlayTrack(const char *name, int repeat)
     spcm->block = spcm->start_block;
     spcm->final_block = offset + (length>>11) - 1; // ignore the last padding sector
     spcm->sector_cnt = 0;
-    spcm->sector_num = 0;
     spcm->playing = 0;
     spcm->chan[0].id = SPCM_LEFT_CHANNEL_ID;
     spcm->chan[0].startpos = SPCM_LEFT_CHAN_SOFFSET;
@@ -470,12 +466,7 @@ int S_SCM_PlayTrack(const char *name, int repeat)
 
     pcm_start_timer(S_SPCM_Update);
 
-    waitstart = spcm->tics;
     while (spcm->state != SPCM_STATE_PLAYING) {
-        if (spcm->tics - waitstart > SPCM_MAX_WAIT_TICS) {
-            // don't wait indefinitely
-            break;
-        }
         S_SPCM_UpdateTrack(spcm);
     }
 
