@@ -517,6 +517,9 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 				sound_id = sfx_swtchn;
 				freq = 16500;
 				break;
+			case sfx_skldth:
+				sound_id = sfx_oof;
+				break;
 		}
 		sfx = &S_sfx[sound_id];
 	}
