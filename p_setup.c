@@ -727,7 +727,7 @@ void P_LoadingPlaque (void)
 =
 =================
 */
-void P_SetupLevel (const char *lumpname, skill_t skill, int skytexture)
+void P_SetupLevel (const char *lumpname, skill_t skill, const char *sky)
 {
 	int i;
 #ifndef MARS
@@ -736,7 +736,7 @@ void P_SetupLevel (const char *lumpname, skill_t skill, int skytexture)
 	extern	int	cy;
 	VINT lumpnum, lumps[ML_BLOCKMAP+1+MAX_AUX_TEXTURES];
 	lumpinfo_t li[ML_BLOCKMAP+1+MAX_AUX_TEXTURES];
-	char skyname[9];
+	int skytexture;
 	boolean havebossspit = false;
 	int gamezonemargin;
 
@@ -750,18 +750,14 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 
 	R_ResetTextures();
 
-	if (skytexture >= 0)
-	{
-		const char *name;
-		
-		name = W_GetNameForNum(skytexture);
-		D_snprintf(skyname, sizeof(skyname), "%s", name);
-		skyname[8] = 0;
-
-		skytexturep = R_CheckPixels(skytexture);
-		skytexturep = R_SkipJagObjHeader(skytexturep, W_LumpLength(skytexture), 256, 128);
-		skycolormaps = (col2sky > 0 && skytexture >= col2sky) ? dc_colormaps2 : dc_colormaps;
+	if (!sky || !*sky) {
+		sky = "SKY1";
 	}
+
+	skytexture = W_GetNumForName(sky);
+	skytexturep = R_CheckPixels(skytexture);
+	skytexturep = R_SkipJagObjHeader(skytexturep, W_LumpLength(skytexture), 256, 128);
+	skycolormaps = (col2sky > 0 && skytexture >= col2sky) ? dc_colormaps2 : dc_colormaps;
 
 	W_LoadPWAD(PWAD_CD);
 
@@ -876,7 +872,7 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 			}
 
 			// a sky?
-			if (!D_strcasecmp(l->name, skyname)) {
+			if (!D_strcasecmp(l->name, sky)) {
 				data = Z_Malloc (l->size, PU_LEVEL);
 				W_ReadLump(lumpnum + k, data);
 				skytexturep = R_SkipJagObjHeader(data, l->size, 256, 128);

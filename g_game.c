@@ -135,7 +135,7 @@ void G_DoLoadLevel (void)
 	gamemap = gamemapinfo.mapNumber;
 	startmap = gamemap;
 
-	P_SetupLevel (gamemaplump, gameskill, gamemapinfo.skyTexture);
+	P_SetupLevel (gamemaplump, gameskill, gamemapinfo.sky);
 	gameaction = ga_nothing; 
 
 	music = gamemapinfo.songNum;
@@ -441,7 +441,7 @@ void G_Init(void)
 				sky = "SKY2";
 			else
 				sky = "SKY3";
-			maplist[i]->skyTexture = W_CheckNumForName(sky);
+			maplist[i]->sky = (char *)sky;
 
 			if (nextmap)
 				maplist[i]->next = maplist[nextmap-1]->name;

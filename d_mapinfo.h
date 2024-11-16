@@ -41,9 +41,9 @@ typedef struct
 {
 	VINT specials;
 	VINT mapNumber;
-	VINT skyTexture;
 	uint8_t songNum;
 	uint8_t cdaNum;
+	char *sky;
 	char *name;
 	char *next;
 	char *secretNext;

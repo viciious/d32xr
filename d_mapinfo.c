@@ -277,7 +277,7 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 	if (!D_strcasecmp(key, "next"))
 		mi->next = value;
 	else if (!D_strcasecmp(key, "sky"))
-		mi->skyTexture = W_CheckNumForName(value);
+		mi->sky = value;
 	else if (!D_strcasecmp(key, "secretnext"))
 		mi->secretNext = value;
 	else if (!D_strcasecmp(key, "mapnumber"))
@@ -399,6 +399,7 @@ static dmapinfo_t *G_CompressMapInfo(dmapinfo_t *mi)
 	ALLOC_STR_FIELD(lumpName);
 	ALLOC_STR_FIELD(interText);
 	ALLOC_STR_FIELD(secretInterText);
+	ALLOC_STR_FIELD(sky);
 
 	buf = Z_Malloc(size, PU_STATIC);
 
@@ -420,6 +421,7 @@ static dmapinfo_t *G_CompressMapInfo(dmapinfo_t *mi)
 	COPY_STR_FIELD(lumpName);
 	COPY_STR_FIELD(interText);
 	COPY_STR_FIELD(secretInterText);
+	COPY_STR_FIELD(sky);
 
 	return nmi;
 }
@@ -495,7 +497,7 @@ dmapinfo_t **G_LoadMaplist(int *pmapcount, dgameinfo_t* gi)
 		zsection[sectionlen] = '\0';
 
 		D_memset(mi, 0, sizeof(*mi));
-		mi->skyTexture = -1;
+		mi->sky = "";
 		mi->songNum = mus_none;
 		mi->interText = "";
 		mi->secretInterText = "";
@@ -503,8 +505,6 @@ dmapinfo_t **G_LoadMaplist(int *pmapcount, dgameinfo_t* gi)
 		linecount = G_ParseMapinfo(zsection, (kvcall_t)&G_AddMapinfoKey, mi);
 		if (linecount < 2 || mi->mapNumber <= 0)
 			continue;
-		if (mi->skyTexture < 0)
-			mi->skyTexture = W_CheckNumForName("SKY1");
 
 		maplist[i] = G_CompressMapInfo(mi);
 		i++;

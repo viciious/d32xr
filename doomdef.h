@@ -893,7 +893,7 @@ void G_DeInit (void);
 /*PLAY */
 /*----- */
 
-void P_SetupLevel (const char *lumpname, skill_t skill, int skytexture);
+void P_SetupLevel (const char *lumpname, skill_t skill, const char *sky);
 void P_Init (void);
 
 void P_Start (void);
