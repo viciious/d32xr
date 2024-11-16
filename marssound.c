@@ -672,6 +672,8 @@ void S_SetMusicType(int newtype)
 	if (newtype == mustype_spcm && *spcmDir == '\0')
 		return;
 
+	S_Clear();
+
 	// restart the current track
 	savemus = curmusic;
 	savecd = curcdtrack;
