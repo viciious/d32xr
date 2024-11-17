@@ -30,14 +30,16 @@
 enum
 {
     SPCM_STATE_INIT,
+
     SPCM_STATE_PREPAINT,
-    SPCM_STATE_START,
+    SPCM_STATE_START, // must be SPCM_STATE_PREPAINT+1
 
     SPCM_STATE_PAINT,
-    SPCM_STATE_PLAYING,
+    SPCM_STATE_PLAYING, // must be SPCM_STATE_PAINT+1
 
     SPCM_STATE_STOPPING,
     SPCM_STATE_STOPPED,
+
     SPCM_STATE_RESUME
 };
 
@@ -47,12 +49,12 @@ typedef struct
     int start_block;
     int final_block;
     struct {
-        int next_paint_sector;
+        int paint_sector;
         int painted_sectors_int;
-        uint16_t next_paint_offset;
+        uint16_t paint_offset;
         uint16_t painted_sectors_frac;
         uint16_t lastpos;
-        uint8_t next_paint_chan;
+        uint8_t paint_chan;
     } mix;
     volatile uint32_t tics;
     volatile uint32_t lastdmatic;
@@ -171,10 +173,9 @@ static int S_SPCM_DMA(s_spcm_t *spcm, uint16_t doff, uint16_t offset)
 void S_SPCM_UpdateTrack(s_spcm_t *spcm)
 {
     int i;
-    int next_state;
-    extern volatile uint16_t CDA_VOLUME;
     uint16_t chan, offset;
     int painted_sectors;
+    extern uint16_t CDA_VOLUME;
 
     if (spcm->num_channels == 0) {
         return;
@@ -185,6 +186,7 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
     for (i = 0; i < spcm->num_channels; i++) {
         S_SPCM_UpdateChannel(spcm, i);
     }
+
     painted_sectors = S_SPCM_PaintedSectors(spcm);
 
     switch (spcm->state)
@@ -233,7 +235,7 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
             }
         }
 
-        if (painted_sectors < spcm->mix.next_paint_sector + SPCM_BUF_MIN_SECTORS) {
+        if (painted_sectors < spcm->mix.paint_sector + SPCM_BUF_MIN_SECTORS) {
             S_SPCM_Preseek(spcm);
             return;
         }
@@ -244,28 +246,19 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
 
     case SPCM_STATE_PAINT:
     case SPCM_STATE_PREPAINT:
-        switch (spcm->state) {
-        case SPCM_STATE_PREPAINT:
-            next_state = SPCM_STATE_START;
-            break;
-        case SPCM_STATE_PAINT:
-            next_state = SPCM_STATE_PLAYING;
-            break;
-        }
-
         if (!spcm->sector_cnt) {
             goto done;
         }
 
         while (1) {
-            chan = spcm->mix.next_paint_chan;
-            offset = spcm->mix.next_paint_offset;
+            chan = spcm->mix.paint_chan;
+            offset = spcm->mix.paint_offset;
 
             if (chan == 0) {
                 switch (spcm->state) {
                 case SPCM_STATE_PAINT:
                     painted_sectors = S_SPCM_PaintedSectors(spcm);
-                    if (painted_sectors <= spcm->mix.next_paint_sector) {
+                    if (painted_sectors <= spcm->mix.paint_sector) {
                         return;
                     }
                 }
@@ -275,14 +268,14 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
                 break;
             }
 
-            spcm->mix.next_paint_chan++;
-            spcm->mix.next_paint_chan &= (spcm->num_channels-1);
+            spcm->mix.paint_chan++;
+            spcm->mix.paint_chan &= (spcm->num_channels-1);
 
-            if (spcm->mix.next_paint_chan == 0) {
-                spcm->mix.next_paint_sector++;
-                spcm->mix.next_paint_offset += 2048;
-                if (spcm->mix.next_paint_offset >= SPCM_CHAN_BUF_SIZE) {
-                    spcm->mix.next_paint_offset = 0;
+            if (spcm->mix.paint_chan == 0) {
+                spcm->mix.paint_sector++;
+                spcm->mix.paint_offset += 2048;
+                if (spcm->mix.paint_offset >= SPCM_CHAN_BUF_SIZE) {
+                    spcm->mix.paint_offset = 0;
                 }
             }
 
@@ -292,7 +285,7 @@ skipblock:
 done:
                 if (spcm->repeat) {
                     spcm->block = spcm->start_block;
-                    spcm->state = next_state;
+                    spcm->state++;
                     break;
                 }
                 else {
@@ -302,7 +295,7 @@ done:
                 }
             }
             else if (--spcm->sector_cnt == 0) {
-                spcm->state = next_state;
+                spcm->state++;
                 break;
             }
         }
@@ -313,13 +306,13 @@ done:
         break;
 
     case SPCM_STATE_STOPPING:
-        if (painted_sectors < spcm->mix.next_paint_sector + SPCM_BUF_MIN_SECTORS) {
+        if (painted_sectors < spcm->mix.paint_sector + SPCM_BUF_MIN_SECTORS) {
             return;
         }
 
-        offset = spcm->mix.next_paint_offset;
+        offset = spcm->mix.paint_offset;
         painted_sectors = S_SPCM_PaintedSectors(spcm);
-        if (painted_sectors <= spcm->mix.next_paint_sector) {
+        if (painted_sectors <= spcm->mix.paint_sector) {
             return;
         }
 
@@ -327,10 +320,10 @@ done:
             pcm_load_zero(spcm->chan[i].startpos + offset, 2048);
         }
 
-        spcm->mix.next_paint_sector++;
-        spcm->mix.next_paint_offset += 2048;
-        if (spcm->mix.next_paint_offset >= SPCM_CHAN_BUF_SIZE) {
-            spcm->mix.next_paint_offset = 0;
+        spcm->mix.paint_sector++;
+        spcm->mix.paint_offset += 2048;
+        if (spcm->mix.paint_offset >= SPCM_CHAN_BUF_SIZE) {
+            spcm->mix.paint_offset = 0;
         }
 
         if (--spcm->sector_cnt == 0) {
@@ -359,6 +352,12 @@ void S_SPCM_Suspend(void)
     }
     if (spcm->num_channels == 0) {
         return;
+    }
+
+    while (!spcm->playing) {
+        if (spcm->state == SPCM_STATE_STOPPED) {
+            return;
+        }
     }
 
     spcm->playing = 0;
@@ -428,11 +427,10 @@ int S_SCM_PlayTrack(const char *name, int repeat)
 
     read_sectors(header, offset, 1);
 
+    memset(spcm, 0, sizeof(*spcm));
     spcm->start_block = offset + 1;
     spcm->block = spcm->start_block;
     spcm->final_block = offset + (length>>11) - 1; // ignore the last padding sector
-    spcm->sector_cnt = 0;
-    spcm->playing = 0;
     spcm->chan[0].id = SPCM_LEFT_CHANNEL_ID;
     spcm->chan[0].startpos = SPCM_LEFT_CHAN_SOFFSET;
     spcm->chan[0].endpos = SPCM_LEFT_CHAN_SOFFSET + SPCM_CHAN_BUF_SIZE;
@@ -444,8 +442,6 @@ int S_SCM_PlayTrack(const char *name, int repeat)
     spcm->chan[1].endpos = SPCM_RIGHT_CHAN_SOFFSET + SPCM_CHAN_BUF_SIZE;
     spcm->chan[1].pan = 0b11110000;
     spcm->repeat = repeat;
-    spcm->tics = 0;
-    spcm->lastdmatic = 0;
     spcm->state = SPCM_STATE_INIT;
     spcm->increment = (header[6] << 8) | header[7];
     spcm->num_channels = header[8];
@@ -467,6 +463,9 @@ int S_SCM_PlayTrack(const char *name, int repeat)
     pcm_start_timer(S_SPCM_Update);
 
     while (spcm->state != SPCM_STATE_PLAYING) {
+        if (spcm->state == SPCM_STATE_STOPPED) {
+            break;
+        }
         S_SPCM_UpdateTrack(spcm);
     }
 
