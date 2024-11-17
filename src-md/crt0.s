@@ -1596,9 +1596,23 @@ load_md_sky:
         andi.l  #0x7FFFF,d0
         addi.l  #0x880001,d0    /* Plus 1 to skip the 32X thru color byte */
         move.l  d0,a2
+
         move.w  #0x9000, d0
         or.b    (a2)+,d0
         move.w  d0,(a0) /* reg 16 = Scroll Size = 32x64 */
+
+        move.w  (a2)+,d0
+        move.w  d0,scroll_b_vert_offset
+
+        move.w  (a2)+,d0
+        move.w  d0,scroll_a_vert_offset
+
+        move.b  (a2)+,d0
+        move.b  d0,scroll_b_vert_rate
+
+        move.b  (a2)+,d0
+        move.b  d0,scroll_a_vert_rate
+
 
 
         /* Load pattern name table A */
@@ -1696,6 +1710,8 @@ scroll_md_sky:
         move.l  a1,-(sp)
         move.l  d0,-(sp)
         move.l  d1,-(sp)
+        move.l  d2,-(sp)
+        move.l  d3,-(sp)
 
         lea     0xC00004,a0
         lea     0xC00000,a1
@@ -1717,17 +1733,45 @@ scroll_md_sky:
         cmpi.b  #0x02,d0
         bne.b   0b
         move.w  0xA15122,d1         /* Scroll A */
+        move.w  d1,d3
+
+        /*
+        //unsigned short scroll_yb = ((160+24) - (vd.viewz >> 22)) & 0x3FF;
+	//unsigned short scroll_ya = ((160+48) - (vd.viewz >> 22) - (vd.viewz >> 21)) & 0x3FF;
+        */
+
+        move.b  scroll_a_vert_rate,d0
+        lsr.w   d0,d1
+        move.w  scroll_a_vert_offset,d0
+        sub.w   d1,d0
+        andi.w  #0x3FF,d0
+
+        move.w  d0,d2
+        swap    d2
+
+        move.b  scroll_b_vert_rate,d0
+        lsr.w   d0,d3
+        move.w  scroll_b_vert_offset,d0
+        sub.w   d3,d0
+        andi.w  #0x3FF,d0
+
+        or.w    d0,d2
 
         move.w  #0,0xA15120         /* done with horizontal scroll */
 1:
         move.b  0xA15121,d0         /* wait on handshake in COMM0 */
         cmpi.b  #0x03,d0
         bne.b   1b
-        swap    d1
-        add.w   0xA15122,d1         /* Scroll B */
+        move.w  0xA15122,d0         /* Scroll B */
+        sub.w   d0,d2
+        swap    d2
+        sub.w   d0,d2
+        swap    d2
 
-        move.l  d1,(a1)
+        move.l  d2,(a1)
 
+        move.l  (sp)+,d3
+        move.l  (sp)+,d2
         move.l  (sp)+,d1
         move.l  (sp)+,d0
         move.l  (sp)+,a1
@@ -3087,6 +3131,16 @@ crsr_y:
         dc.w    0
 dbug_color:
         dc.w    0
+
+scroll_b_vert_offset:
+        dc.w    0
+scroll_a_vert_offset:
+        dc.w    0
+
+scroll_b_vert_rate:
+        dc.b    0
+scroll_a_vert_rate:
+        dc.b    0
 
 lump_ptr:
         dc.l    0

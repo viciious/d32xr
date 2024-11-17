@@ -28,8 +28,9 @@
 #include "32x.h"
 #include "doomdef.h"
 #include "mars.h"
-#include "r_local.h"
+#include "p_camera.h"
 #include "p_local.h"
+#include "r_local.h"
 #include "wadbase.h"
 
 #define LINK_TIMEOUT_SHORT 		0x3FF
@@ -812,11 +813,10 @@ void I_Update(void)
 	unsigned short scroll_x = (*((unsigned short *)&vd.viewangle) >> 6);
 	scroll_x += (scroll_x >> 2);	// The MD sky scrolls to 1280 pixels.
 
-	unsigned short scroll_yb = ((160+24) - (vd.viewz >> 22)) & 0x3FF;
+	unsigned short scroll_y = (vd.viewz >> 16);
+	unsigned short scroll_y_offset = (camera.aiming >> 22);
 
-	unsigned short scroll_ya = ((160+48) - (vd.viewz >> 22) - (vd.viewz >> 21)) & 0x3FF;
-
-	Mars_ScrollMDSky(scroll_x, scroll_ya, scroll_yb);
+	Mars_ScrollMDSky(scroll_x, scroll_y, scroll_y_offset);
 
 	Mars_FlipFrameBuffers(false);
 	do
