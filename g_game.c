@@ -50,8 +50,6 @@ extern int              skytexture;
 extern texture_t		*skytexturep;
 extern texture_t		*textures;
 
-extern uint16_t			mars_thru_rgb_reference;
-
 static int G_MapNumForLumpNum(int lump)
 {
 	int i;
@@ -146,7 +144,6 @@ void G_DoLoadLevel (void)
 			gamemap = gamemapinfo.mapNumber + 1;
 
 		gamemapinfo.sky = NULL;
-		gamemapinfo.skyColorIndex = 0;
 		gamemapinfo.mapNumber = gamemap;
 		gamemapinfo.lumpNum = gamemaplump;
 		gamemapinfo.secretNext = G_LumpNumForMapNum(24);
@@ -195,8 +192,6 @@ void G_DoLoadLevel (void)
 
 	skytexturel = R_TextureNumForName(gamemapinfo.sky);
  	skytexturep = &textures[skytexturel];
-
-	mars_thru_rgb_reference = gamemapinfo.skyColorIndex;
 
 	P_SetupLevel (gamemaplump);
 	gameaction = ga_nothing; 

@@ -32,7 +32,6 @@ typedef struct
 	VINT act;
 	VINT borderFlat;
 	char *sky;
-	unsigned char skyColorIndex;
 	VINT next;
 	VINT secretNext;
 	VINT lumpNum;

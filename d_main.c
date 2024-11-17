@@ -310,11 +310,13 @@ __attribute((noinline))
 static void D_LoadMDSky(void)
 {
 	// Retrieve lumps for drawing the sky on the MD.
+	uint8_t *sky_metadata_ptr;
 	uint8_t *sky_names_a_ptr;
 	uint8_t *sky_names_b_ptr;
 	uint8_t *sky_palettes_ptr;
 	uint8_t *sky_tiles_ptr;
 
+	//uint32_t sky_metadata_size;
 	uint32_t sky_names_a_size;
 	uint32_t sky_names_b_size;
 	uint32_t sky_palettes_size;
@@ -325,7 +327,17 @@ static void D_LoadMDSky(void)
 	char lumpname[9];
 
 	D_strncpy(lumpname, gamemapinfo.sky, 5);
-	strcat(lumpname, "NTA");
+	lump = W_CheckNumForName(lumpname);
+	if (lump != -1) {
+		sky_metadata_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		//sky_metadata_size = W_LumpLength(lump);
+	}
+	else {
+		return;
+	}
+
+	D_strncpy(lumpname, gamemapinfo.sky, 5);
+	strcat(lumpname, "A");
 	lump = W_CheckNumForName(lumpname);
 	if (lump != -1) {
 		sky_names_a_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
@@ -336,7 +348,7 @@ static void D_LoadMDSky(void)
 	}
 
 	D_strncpy(lumpname, gamemapinfo.sky, 5);
-	strcat(lumpname, "NTB");
+	strcat(lumpname, "B");
 	lump = W_CheckNumForName(lumpname);
 	if (lump != -1) {
 		sky_names_b_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
@@ -368,7 +380,11 @@ static void D_LoadMDSky(void)
 		return;
 	}
 
-	Mars_LoadMDSky(sky_names_a_ptr, sky_names_a_size, 
+	// Get the thru-pixel color from the metadata.
+	mars_thru_rgb_reference = sky_metadata_ptr[0];
+
+	Mars_LoadMDSky(sky_metadata_ptr,
+			sky_names_a_ptr, sky_names_a_size, 
 			sky_names_b_ptr, sky_names_b_size, 
 			sky_palettes_ptr, sky_palettes_size, 
 			sky_tiles_ptr, sky_tiles_size);

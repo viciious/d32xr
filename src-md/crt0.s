@@ -198,7 +198,7 @@ init_hardware:
         move.w  #0x8D2B,(a0) /* reg 13 = HScroll Tbl = 0xAC00 */
         move.w  #0x8E00,(a0) /* reg 14 = always 0 */
         move.w  #0x8F01,(a0) /* reg 15 = data INC = 1 */
-        move.w  #0x9001,(a0) /* reg 16 = Scroll Size = 64x32 */
+        move.w  #0x9010,(a0) /* reg 16 = Scroll Size = 32x64 */
         move.w  #0x9100,(a0) /* reg 17 = W Pos H = left */
         move.w  #0x9200,(a0) /* reg 18 = W Pos V = top */
 
@@ -1588,7 +1588,17 @@ load_md_sky:
         ||move.w  #0x8554,(a0) /* reg 5 = Sprite Attr Tbl = 0xA800 */
         ||move.w  #0x8D2B,(a0) /* reg 13 = HScroll Tbl = 0xAC00 */
 
-        move.w  #0x9000,(a0) /* reg 16 = Scroll Size = 32x32 */
+
+        /* Load metadata */
+        bsr     get_lump_source_and_size
+        lea     0xC00004,a0
+        move.l  lump_ptr,d0
+        andi.l  #0x7FFFF,d0
+        addi.l  #0x880001,d0    /* Plus 1 to skip the 32X thru color byte */
+        move.l  d0,a2
+        move.w  #0x9000, d0
+        or.b    (a2)+,d0
+        move.w  d0,(a0) /* reg 16 = Scroll Size = 32x64 */
 
 
         /* Load pattern name table A */
@@ -2367,7 +2377,7 @@ init_vdp:
         move.w  #0x8D2B,(a0) /* reg 13 = HScroll Tbl = 0xAC00 */
         move.w  #0x8E00,(a0) /* reg 14 = always 0 */
         move.w  #0x8F01,(a0) /* reg 15 = data INC = 1 */
-        move.w  #0x9001,(a0) /* reg 16 = Scroll Size = 64x32 */
+        move.w  #0x9010,(a0) /* reg 16 = Scroll Size = 32x64 */
         move.w  #0x9100,(a0) /* reg 17 = W Pos H = left */
         move.w  #0x9200,(a0) /* reg 18 = W Pos V = top */
 
