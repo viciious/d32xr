@@ -613,7 +613,12 @@ void M_Drawer (void)
 	if (m_doom && (scrpos == ms_main || scrpos == ms_gametype))
 	{
 		#ifdef MDSKY
-		DrawFillRect(0, 0, 320, 44, MARS_MD_PIXEL_THRU_INDEX);
+		if (sky_md_layer) {
+			DrawFillRect(0, 0, 320, 44, MARS_MD_PIXEL_THRU_INDEX);
+		}
+		else {
+			DrawFillRect(0, 16, 320, 6, COLOR_BLACK); // Clear part of the top letterbox for overdraw.
+		}
 		#else
 		DrawFillRect(0, 16, 320, 6, COLOR_BLACK); // Clear part of the top letterbox for overdraw.
 		#endif

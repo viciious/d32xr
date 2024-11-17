@@ -507,6 +507,7 @@ extern	VINT		totalitems, totalsecret;	/* for intermission */
 extern	int			gamemaplump;
 extern	dmapinfo_t	gamemapinfo;
 extern	dgameinfo_t	gameinfo;
+extern  boolean		sky_md_layer;
 
 extern 	VINT 		*gamemapnumbers;
 extern 	VINT 		*gamemaplumps;

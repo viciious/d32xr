@@ -809,14 +809,18 @@ void I_Update(void)
 	/* */
 	const int ticwait = (demoplayback || demorecording ? 4 : ticsperframe); // demos were recorded at 15-20fps
 
-	// Adjust MD sky position.
-	unsigned short scroll_x = (*((unsigned short *)&vd.viewangle) >> 6);
-	scroll_x += (scroll_x >> 2);	// The MD sky scrolls to 1280 pixels.
+#ifdef MDSKY
+	if (sky_md_layer) {
+		// Adjust MD sky position.
+		unsigned short scroll_x = (*((unsigned short *)&vd.viewangle) >> 6);
+		scroll_x += (scroll_x >> 2);	// The MD sky scrolls to 1280 pixels.
 
-	unsigned short scroll_y = (vd.viewz >> 16);
-	unsigned short scroll_y_offset = (camera.aiming >> 22);
+		unsigned short scroll_y = (vd.viewz >> 16);
+		unsigned short scroll_y_offset = (camera.aiming >> 22);
 
-	Mars_ScrollMDSky(scroll_x, scroll_y, scroll_y_offset);
+		Mars_ScrollMDSky(scroll_x, scroll_y, scroll_y_offset);
+	}
+#endif
 
 	Mars_FlipFrameBuffers(false);
 	do

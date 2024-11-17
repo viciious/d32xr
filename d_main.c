@@ -12,6 +12,8 @@
 boolean		splitscreen = false;
 VINT		controltype = 0;		/* determine settings for BT_* */
 
+boolean		sky_md_layer = false;
+
 int			gamevbls;		/* may not really be vbls in multiplayer */
 int			vblsinframe;		/* range from ticrate to ticrate*2 */
 
@@ -327,12 +329,17 @@ static void D_LoadMDSky(void)
 	char lumpname[9];
 
 	D_strncpy(lumpname, gamemapinfo.sky, 5);
+	strcat(lumpname, "MD");
 	lump = W_CheckNumForName(lumpname);
 	if (lump != -1) {
+		// This map uses an MD sky.
+		sky_md_layer = true;
 		sky_metadata_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
 		//sky_metadata_size = W_LumpLength(lump);
 	}
 	else {
+		// This map uses a 32X sky.
+		sky_md_layer = false;
 		return;
 	}
 

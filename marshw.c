@@ -687,19 +687,10 @@ void Mars_FadeMDPaletteFromBlack(int fade_degree)
 	MARS_SYS_COMM0 = 0x1001;
 }
 
-//void Mars_ScrollMDSky(short x, short ya, short yb) {
 void Mars_ScrollMDSky(short x, short y, short offset_y) {
 	while (MARS_SYS_COMM0);
 	MARS_SYS_COMM2 = x;
 	MARS_SYS_COMM0 = 0x1101;
-
-	/*while (MARS_SYS_COMM0);
-	MARS_SYS_COMM2 = ya;
-	MARS_SYS_COMM0 = 0x1102;
-
-	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM2 = yb;
-	MARS_SYS_COMM0 = 0x1103;*/
 
 	while (MARS_SYS_COMM0);
 	MARS_SYS_COMM2 = y;

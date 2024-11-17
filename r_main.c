@@ -641,7 +641,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	// look up/down
 #ifdef MDSKY
 	int dy;
-	if (demoplayback && gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
+	if (demoplayback && gamemapinfo.mapNumber == TITLE_MAP_NUMBER && sky_md_layer) {
 		// The viewport for the title screen is aligned with the bottom of
 		// the screen. Therefore we shift the angle to center the horizon.
 		dy = -32;
@@ -673,7 +673,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 				// Set the fade degree to black.
 				vd.fixedcolormap = HWLIGHT(0);	// 32X VDP
 				#ifdef MDSKY
-				if (leveltime == 0) {
+				if (leveltime == 0 && sky_md_layer) {
 					Mars_FadeMDPaletteFromBlack(0);	// MD VDP
 				}
 				#endif
@@ -682,7 +682,9 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 				// Set the fade degree based on leveltime.
 				vd.fixedcolormap = HWLIGHT((leveltime-30)*8);	// 32X VDP
 				#ifdef MDSKY
-				Mars_FadeMDPaletteFromBlack(md_palette_fade_table[leveltime-30]);	// MD VDP
+				if (sky_md_layer) {
+					Mars_FadeMDPaletteFromBlack(md_palette_fade_table[leveltime-30]);	// MD VDP
+				}
 				#endif
 			}
 		}
@@ -691,7 +693,9 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 			// Set the fade degree based on leveltime.
 //			vd.fixedcolormap = HWLIGHT((TICRATE-fadetime)*8);	// 32X VDP
 			#ifdef MDSKY
-			Mars_FadeMDPaletteFromBlack(md_palette_fade_table[TICRATE-fadetime]);	// MD VDP
+			if (sky_md_layer) {
+				Mars_FadeMDPaletteFromBlack(md_palette_fade_table[TICRATE-fadetime]);	// MD VDP
+			}
 			#endif
 		}
 	}
@@ -757,7 +761,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	viewportbuffer = (pixel_t*)I_ViewportBuffer();
 
 	#ifdef MDSKY
-	if (demoplayback && gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
+	if (demoplayback && gamemapinfo.mapNumber == TITLE_MAP_NUMBER && sky_md_layer) {
 		viewportbuffer += (160*22);
 	}
 	#endif
@@ -774,11 +778,13 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		if (palette > 10)
 			palette = 10;
 	}
-	else if (demoplayback && gamemapinfo.mapNumber == TITLE_MAP_NUMBER && leveltime < 15) {
+	else if (leveltime < 15 && demoplayback && gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
 		palette = 5 - (leveltime / 3);
 
 		#ifdef MDSKY
-		Mars_FadeMDPaletteFromBlack(0xEEE); //TODO: Replace with Mars_FadeMDPaletteFromWhite()
+		if (sky_md_layer) {
+			Mars_FadeMDPaletteFromBlack(0xEEE); //TODO: Replace with Mars_FadeMDPaletteFromWhite()
+		}
 		#endif
 	}
 	else if (player->whiteFlash)

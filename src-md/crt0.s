@@ -1735,11 +1735,6 @@ scroll_md_sky:
         move.w  0xA15122,d1         /* Scroll A */
         move.w  d1,d3
 
-        /*
-        //unsigned short scroll_yb = ((160+24) - (vd.viewz >> 22)) & 0x3FF;
-	//unsigned short scroll_ya = ((160+48) - (vd.viewz >> 22) - (vd.viewz >> 21)) & 0x3FF;
-        */
-
         move.b  scroll_a_vert_rate,d0
         lsr.w   d0,d1
         move.w  scroll_a_vert_offset,d0
