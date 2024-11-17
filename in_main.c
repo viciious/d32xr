@@ -497,6 +497,9 @@ int IN_Ticker (void)
 		}
 	}
 	
+	if (netgame == gt_deathmatch)
+		return;
+
 	for (i = 0; i < MAXPLAYERS; i++)
 	{
 		int *killvalue = interm->killvalue;
