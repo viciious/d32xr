@@ -32,6 +32,8 @@ typedef struct
 
 typedef struct
 {
+    jagobj_t *menuback;
+
     VINT mode;
 	VINT numitems;
     menuitem_t items[MAXITEMS];
@@ -56,13 +58,21 @@ static void GS_PathChange(const char *newpath, int newmode);
 
 void GS_Start(void)
 {
-    S_StopSong();
-
-    I_SetPalette(W_POINTLUMPNUM(W_GetNumForName("PLAYPALS")));
+    int fl, fo;
 
     if (gs_menu == NULL)
         gs_menu = Z_Malloc(sizeof(*gs_menu), PU_STATIC);
     D_memset(gs_menu, 0, sizeof(*gs_menu));
+
+    S_StopSong();
+
+    fl = I_OpenCDFileByName("MENUBACK.JMG", &fo);
+    if (fl > 0 && I_ReadCDFile(fl) >= 0) {
+        gs_menu->menuback = Z_Malloc(fl, PU_STATIC);
+        D_memcpy(gs_menu->menuback, I_GetCDFileBuffer(), fl);
+    }
+
+    I_SetPalette(W_POINTLUMPNUM(W_GetNumForName("PLAYPALS")));
 
     /* cache all needed graphics	 */
     gs_menu->m_skull1lump = W_CheckNumForName("M_SKULL1");
@@ -97,6 +107,8 @@ void GS_Stop(void)
         D_snprintf(cd_pwad_name, sizeof(cd_pwad_name), "%s/%s", gs_menu->path, gs_menu->items[gs_menu->cursorpos].name);
     else
         D_snprintf(cd_pwad_name, sizeof(cd_pwad_name), "%s", gs_menu->items[gs_menu->cursorpos].name);
+    if (gs_menu->menuback)
+        Z_Free(gs_menu->menuback);
     Z_Free(gs_menu);
     gs_menu = NULL;
 
@@ -464,7 +476,11 @@ void GS_Drawer (void)
     menuitem_t *items = gs_menu->items;
     int y_offset = STARTY;
 
-    I_ClearFrameBuffer();
+    if (gs_menu->menuback) {
+        DrawJagobj(gs_menu->menuback, 0, 0);
+    } else {
+        I_ClearFrameBuffer();
+    }
 
     if (gs_menu->mode)
     {
