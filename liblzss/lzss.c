@@ -331,3 +331,10 @@ uint32_t lzss_compressed_size(lzss_state_t* lzss)
 
 	return input - lzss->input;
 }
+
+int lzss_decompress(uint8_t* input, uint8_t* output, uint32_t size)
+{
+	lzss_state_t lzss;
+	lzss_setup(&lzss, input, output, size);
+	return lzss_read_all(&lzss);
+}
