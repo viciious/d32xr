@@ -92,6 +92,9 @@ void GS_Start(void)
 
     GS_PathChange("/", 0);
 
+    gs_menu->cursorframe = 0;
+    S_StartSound(NULL, sfx_swtchn);
+
     DoubleBufferSetup();
 
     if (gs_menu->numitems == 0)
