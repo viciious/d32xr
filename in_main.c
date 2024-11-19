@@ -498,7 +498,7 @@ int IN_Ticker (void)
 	}
 	
 	if (netgame == gt_deathmatch)
-		return;
+		return 0;
 
 	for (i = 0; i < MAXPLAYERS; i++)
 	{
