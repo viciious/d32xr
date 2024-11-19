@@ -431,6 +431,7 @@ typedef struct player_s
 	VINT		dashSpeed;
 	VINT        homingTimer;
 	VINT        xtralife;
+	VINT        skidTime;
 } player_t;
 
 void P_PlayerHitFloor(player_t* player);

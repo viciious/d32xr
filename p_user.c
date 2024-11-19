@@ -1097,30 +1097,59 @@ void P_ReturnThrust(angle_t angle, fixed_t move, fixed_t *thrustX, fixed_t *thru
 	*thrustY = FixedMul(move, finesine(angle));
 }
 
+static angle_t InvAngle(angle_t a)
+{
+	return (ANGLE_MAX-a)+1;
+}
+
 // 0 = no controls, or no movement
 // 1 = pressing in direction of movement
 // 2 = pressing opposite of movement
 VINT ControlDirection(player_t *player)
 {
-	if (!(player->forwardmove || player->sidemove) || !(player->mo->momx || player->mo->momy))
+	angle_t controllerdirection, controlplayerdirection;
+	angle_t dangle;
+	fixed_t tempx = 0, tempy = 0;
+
+	if (!(player->forwardmove || player->sidemove))
+		return 0;
+
+	if (!(player->mo->momx || player->mo->momy))
 		return 0;
 
 	camera_t *thiscam = &camera;
+	controlplayerdirection = R_PointToAngle2(0, 0, player->mo->momx, player->mo->momy);
 
-	angle_t camToPlayer = R_PointToAngle2(thiscam->x, thiscam->y, player->mo->x, player->mo->y);
-	fixed_t movedx, movedy;
-	P_ReturnThrust(camToPlayer, FRACUNIT, &movedx, &movedy);
+	// Calculate the angle at which the controls are pointing
+	// to figure out the proper mforward and mbackward.
+	P_ThrustValues(thiscam->angle, player->forwardmove, &tempx, &tempy);
+	P_ThrustValues(thiscam->angle-ANG90, player->sidemove, &tempx, &tempy);
 
-	angle_t controlAngle = R_PointToAngle2(player->mo->x, player->mo->y, player->mo->x + movedx, player->mo->y + movedy);
-	angle_t angleDiff = controlAngle - player->mo->angle;
+	controllerdirection = R_PointToAngle2(0, 0, tempx, tempy);
 
-	if (angleDiff > ANG180)
-		angleDiff = -angleDiff;
+	dangle = controllerdirection - controlplayerdirection;
 
-	if (angleDiff > ANG90)
-		return 2; // backwards
-	else
-		return 1; // forwards
+	if (dangle > ANG180) // flip to keep to one side
+		dangle = InvAngle(dangle);
+
+	if (dangle > ANG90)
+		return 2; // Controls pointing backwards from player
+
+	return 1; // Controls pointing in player's general direction
+}
+
+//
+// P_SpawnSkidDust
+//
+// Spawns spindash dust randomly around the player within a certain radius.
+//
+void P_SpawnSkidDust(player_t *player)
+{
+	mobj_t *mo = player->mo;
+	mobj_t *particle = P_SpawnMobj(mo->x, mo->y, mo->z, MT_DUST);
+	particle->tics = 8;
+
+	P_SetObjectMomZ(particle, FRACUNIT, false);
 }
 
 /*
@@ -1413,6 +1442,28 @@ void P_MovePlayer(player_t *player)
 	else
 		player->pflags &= ~PF_USEDOWN;
 
+	if (onground && !(player->pflags & (PF_JUMPED|PF_SPINNING)))
+	{
+		const VINT controlDir = ControlDirection(player);
+		
+		if (player->skidTime)
+		{
+			// Spawn dust every other tic
+			if (player->skidTime & 1)
+			{
+				P_SpawnSkidDust(player);
+			}
+		}
+		else if (player->skidTime <= 0 && P_AproxDistance(player->mo->momx, player->mo->momy) >= 25 << (FRACBITS-1)
+			&& ControlDirection(player) == 2)
+		{
+			// Should we start a skid?
+			angle_t mang = R_PointToAngle2(0, 0, player->mo->momx, player->mo->momy);
+			player->skidTime = TICRATE/2;
+			S_StartSound(player->mo, sfx_s3k_36);
+		}
+	}
+
 	// Fly cheat
 	if (player->buttons & BT_SPEED)
 	{
@@ -1640,6 +1691,9 @@ void P_PlayerThink(player_t *player)
 
 	if (player->homingTimer)
 		player->homingTimer--;
+
+	if (player->skidTime)
+		player->skidTime--;
 
 	if (player->exiting)
 		player->exiting++;
