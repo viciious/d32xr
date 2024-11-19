@@ -1141,11 +1141,11 @@ VINT ControlDirection(player_t *player)
 //
 // P_SpawnSkidDust
 //
-// Spawns spindash dust randomly around the player within a certain radius.
+// Spawns skid dust.
 //
 void P_SpawnSkidDust(player_t *player)
 {
-	mobj_t *mo = player->mo;
+	const mobj_t *mo = player->mo;
 	mobj_t *particle = P_SpawnMobj(mo->x, mo->y, mo->z, MT_DUST);
 	particle->tics = 8;
 
