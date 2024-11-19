@@ -929,15 +929,12 @@ D_printf("O_Init\n");
 	O_Init ();
 
 gameselect:
-D_printf ("G_DeInit\n");
 	G_DeInit();
-D_printf ("S_DeInitMusic\n");
 	S_DeInitMusic();
 
 #ifdef MARS
 	canwipe = false;
 	MiniLoop(GS_Start, GS_Stop, GS_Ticker, GS_Drawer, I_Update);
-D_printf ("W_Init2\n");
     W_InitCDPWAD(PWAD_CD, cd_pwad_name);
 #endif
 
