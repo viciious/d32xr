@@ -24,6 +24,7 @@ void wait_do_cmd(char cmd) __attribute__((section(".data"), aligned(16)));
 
 extern void scd_init_pcm(void);
 extern void bump_fm(void);
+extern int mystrlen(const char* string);
 
 void scd_delay(void)
 {
@@ -87,7 +88,7 @@ int64_t scd_read_directory(char *buf)
         int64_t value;
     } res;
 
-    memcpy(scdWordRam, buf, strlen(buf)+1);
+    memcpy(scdWordRam, buf, mystrlen(buf)+1);
 
     write_long(0xA12010, 0x0C0000); /* word ram on CD side (in 1M mode) */
     wait_do_cmd('M'); // ReadDir command
@@ -142,7 +143,7 @@ void scd_play_spcm_track(const char *name, int repeat)
 {
     char *scdWordRam = (char *)0x600000; /* word ram on MD side (in 1M mode) */
 
-    memcpy(scdWordRam, name, strlen(name)+1);
+    memcpy(scdWordRam, name, mystrlen(name)+1);
     write_long(0xA12010, 0x0C0000); /* word ram on CD side (in 1M mode) */
     write_long(0xA12014, repeat);
     wait_do_cmd('Q'); // PlaySPCMTrack command

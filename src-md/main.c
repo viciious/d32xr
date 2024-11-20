@@ -19,11 +19,9 @@ extern uint16_t InitCD(void);
 
 int mystrlen(const char* string)
 {
-	volatile int rc = 0;
-
+	int rc = 0;
 	while (*(string++))
 		rc++;
-
 	return rc;
 }
 

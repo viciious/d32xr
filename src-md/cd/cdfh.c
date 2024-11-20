@@ -16,7 +16,7 @@ extern int init_cd(void);
 
 int mystrlen(const char* string)
 {
-	volatile int rc = 0;
+	int rc = 0;
 
 	while (*(string++))
 		rc++;
@@ -147,7 +147,7 @@ int64_t read_directory(char *buf)
         r = next_dir_entry();
         if (!r && memcmp(DENTRY_NAME, ".", 2))
         {
-            int len = strlen(DENTRY_NAME);
+            int len = mystrlen(DENTRY_NAME);
             memcpy(buf, DENTRY_NAME, len+1);
             buf += len + 1;
             memcpy(buf, &DENTRY_LENGTH, sizeof(int));

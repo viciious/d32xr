@@ -28,7 +28,7 @@ static void wait_do_cmd(char cmd) SCD_CODE_ATTR;
 
 static int mystrlen(const char* string)
 {
-	volatile int rc = 0;
+	int rc = 0;
 
 	while (*(string++))
 		rc++;
