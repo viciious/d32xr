@@ -1440,7 +1440,10 @@ void P_MovePlayer(player_t *player)
 
 	// Fly cheat
 	if (player->buttons & BT_FLIP)
-		player->pflags |= PF_VERTICALFLIP;
+	{
+//		player->pflags |= PF_VERTICALFLIP;
+		player->mo->momz = 8 * FRACUNIT;
+	}
 	else
 		player->pflags &= ~PF_VERTICALFLIP;
 }

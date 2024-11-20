@@ -444,7 +444,7 @@ int M_Ticker (void)
 	}
 
 	/* exit menu if button press */
-	if ((buttons & (BT_A | BT_LMBTN | BT_START)) && !(oldbuttons & (BT_A | BT_LMBTN | BT_START)))
+	if ((buttons & (BT_B | BT_LMBTN | BT_START)) && !(oldbuttons & (BT_B | BT_LMBTN | BT_START)))
 	{
 		if (screenpos == ms_new)
 		{
