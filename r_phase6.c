@@ -157,13 +157,13 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
     drawcol_t draw32xsky;
 
     #ifdef MDSKY
-    if (sky_md_layer) {
-        drawmdsky = (segl->actionbits & AC_ADDSKY) != 0 ? drawskycol : NULL;
-        draw32xsky = NULL;
+    if (sky_32x_layer) {
+        draw32xsky = (segl->actionbits & AC_ADDSKY) != 0 ? drawcol : NULL;
+        drawmdsky = NULL;
     }
     else {
-        drawmdsky = NULL;
-        draw32xsky = (segl->actionbits & AC_ADDSKY) != 0 ? drawcol : NULL;
+        drawmdsky = (segl->actionbits & AC_ADDSKY) != 0 ? drawskycol : NULL;
+        draw32xsky = NULL;
     }
     #else
     draw32xsky = (segl->actionbits & AC_ADDSKY) != 0 ? drawcol : NULL;
@@ -250,13 +250,13 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
             if (top < bottom)
             {
 #ifdef MDSKY
-                if (drawmdsky) {
-                    drawmdsky(x, top, bottom);
-                }
-                else {
+                if (draw32xsky) {
                     int colnum = ((vd.viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
                     inpixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
                     draw32xsky(x, top, --bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, 128);
+                }
+                else {
+                    drawmdsky(x, top, bottom);
                 }
 #else
                 // CALICO: draw sky column

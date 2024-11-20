@@ -508,6 +508,7 @@ extern	int			gamemaplump;
 extern	dmapinfo_t	gamemapinfo;
 extern	dgameinfo_t	gameinfo;
 extern  boolean		sky_md_layer;
+extern	boolean		sky_32x_layer;
 
 extern 	VINT 		*gamemapnumbers;
 extern 	VINT 		*gamemaplumps;

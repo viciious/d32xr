@@ -1570,6 +1570,22 @@ get_lump_source_and_size:
         rts
 
 
+
+decompress_lump:
+        bsr     get_lump_source_and_size
+        move.l  lump_ptr,d0
+        andi.l  #0x7FFFF,d0
+        addi.l  #0x880000,d0
+        movea.l d0,a0
+        moveq   #0,d0
+        move.w  (a0)+,d0
+        move.l  d0,lump_size
+        lea     decomp_buffer,a1
+        jmp     Kos_Decomp_Main
+        |rts    /* Kos_Decomp_Main will do an 'rts' for us. */
+
+
+
 load_md_sky:
         move.w  #0x2700,sr          /* disable ints */
 
@@ -1616,15 +1632,12 @@ load_md_sky:
 
 
         /* Load pattern name table A */
-        bsr     get_lump_source_and_size
+        bsr     decompress_lump
         lea     0xC00004,a0
         lea     0xC00000,a1
         move.w  #0x8F02,(a0)
         move.l  #0x40000003,(a0)        /* Set destination offset to pattern name table A at position 0x0 */
-        move.l  lump_ptr,d0
-        andi.l  #0x7FFFF,d0
-        addi.l  #0x880000,d0
-        move.l  d0,a2
+        lea     decomp_buffer,a2
         move.l  lump_size,d1
         lsr.l   #1,d1
         sub.l   #1,d1
@@ -1634,15 +1647,12 @@ load_md_sky:
 
 
         /* Load pattern name table B */
-        bsr     get_lump_source_and_size
+        bsr     decompress_lump
         lea     0xC00004,a0
         lea     0xC00000,a1
         move.w  #0x8F02,(a0)
         move.l  #0x60000003,(a0)        /* Set destination offset to pattern name table B at position 0x0 */
-        move.l  lump_ptr,d0
-        andi.l  #0x7FFFF,d0
-        addi.l  #0x880000,d0
-        move.l  d0,a2
+        lea     decomp_buffer,a2
         move.l  lump_size,d1
         lsr.l   #1,d1
         sub.l   #1,d1
@@ -1673,15 +1683,12 @@ load_md_sky:
 
 
         /* Load patterns */
-        bsr     get_lump_source_and_size
+        bsr     decompress_lump
         lea     0xC00004,a0
         lea     0xC00000,a1
         move.w  #0x8F02,(a0)
         move.l  #0x40000000,(a0)        /* Write VRAM address 0 */
-        move.l  lump_ptr,d0
-        andi.l  #0x7FFFF,d0
-        addi.l  #0x880000,d0
-        move.l  d0,a2
+        lea     decomp_buffer,a2
         move.l  lump_size,d1
         lsr.l   #1,d1
         sub.l   #1,d1
@@ -1712,15 +1719,18 @@ scroll_md_sky:
         move.l  d1,-(sp)
         move.l  d2,-(sp)
         move.l  d3,-(sp)
+        move.l  d4,-(sp)
 
         lea     0xC00004,a0
         lea     0xC00000,a1
 
         /* Horizontal */
         move.l  #0x6C000002,(a0)
-        move.w  0xA15122,d0         /* Scroll A */
+        moveq   #0,d0
+        move.w  0xA15122,d0         /* scroll_x */
+        move.w  d0,d1
         swap    d0
-        add.w   0xA15122,d0         /* Scroll B */
+        or.w    d1,d0
         move.l  d0,(a1)
 
         /* Vertical */
@@ -1732,13 +1742,34 @@ scroll_md_sky:
         move.b  0xA15121,d0         /* wait on handshake in COMM0 */
         cmpi.b  #0x02,d0
         bne.b   0b
-        move.w  0xA15122,d1         /* Scroll A */
+        moveq   #0,d4
+        moveq   #0,d5
+        move.w  0xA15122,d4         /* scroll_y_base */
+        move.w  d4,d5
+        moveq   #0,d0
+        moveq   #0,d1
+        moveq   #0,d2
+        move.b  scroll_b_vert_rate,d0
+        move.b  scroll_a_vert_rate,d1
+        move.b  d0,d2
+        sub.l   d1,d2
+        lsl.w   d2,d5
+
+        moveq   #0,d1
+        move.w  #0,0xA15120         /* done with horizontal scroll */
+1:
+        move.b  0xA15121,d0         /* wait on handshake in COMM0 */
+        cmpi.b  #0x03,d0
+        bne.b   1b
+        move.w  0xA15122,d1         /* scroll_y_offset */
+        add.w   d4,d1
         move.w  d1,d3
 
         move.b  scroll_a_vert_rate,d0
         lsr.w   d0,d1
         move.w  scroll_a_vert_offset,d0
         sub.w   d1,d0
+        sub.w   d5,d0
         andi.w  #0x3FF,d0
 
         move.w  d0,d2
@@ -1748,16 +1779,17 @@ scroll_md_sky:
         lsr.w   d0,d3
         move.w  scroll_b_vert_offset,d0
         sub.w   d3,d0
+        sub.w   d4,d0
         andi.w  #0x3FF,d0
 
         or.w    d0,d2
 
         move.w  #0,0xA15120         /* done with horizontal scroll */
-1:
+2:
         move.b  0xA15121,d0         /* wait on handshake in COMM0 */
-        cmpi.b  #0x03,d0
-        bne.b   1b
-        move.w  0xA15122,d0         /* Scroll B */
+        cmpi.b  #0x04,d0
+        bne.b   2b
+        move.w  0xA15122,d0         /* scroll_y_pan */
         sub.w   d0,d2
         swap    d2
         sub.w   d0,d2
@@ -1765,6 +1797,7 @@ scroll_md_sky:
 
         move.l  d2,(a1)
 
+        move.l  (sp)+,d4
         move.l  (sp)+,d3
         move.l  (sp)+,d2
         move.l  (sp)+,d1
@@ -3200,5 +3233,7 @@ FMReset:
 
         .bss
         .align  2
-col_store:
-        .space  21*224*2        /* 140 double-columns in vram, 20 in wram, 1 in wram for swap */
+col_store:                      /* Is this label still needed? */
+decomp_buffer:
+        |.space  21*224*2        /* 140 double-columns in vram, 20 in wram, 1 in wram for swap */
+        .space  12288           /* 12 KB */

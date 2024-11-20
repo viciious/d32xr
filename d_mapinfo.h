@@ -32,6 +32,8 @@ typedef struct
 	VINT act;
 	VINT borderFlat;
 	char *sky;
+	VINT skyOffsetX;
+	VINT skyOffsetY;
 	VINT next;
 	VINT secretNext;
 	VINT lumpNum;

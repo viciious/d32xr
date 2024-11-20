@@ -12,6 +12,9 @@
 Kos_Decomp:
         movea.l 4(sp),a0
         movea.l 8(sp),a1
+
+        .global Kos_Decomp_Main
+Kos_Decomp_Main:
         movem.l d2-d6,-(sp)
         subq.l  #2,sp                   /* make space for two bytes on the stack */
         move.b  (a0)+,1(sp)

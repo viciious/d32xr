@@ -13,6 +13,9 @@ boolean		splitscreen = false;
 VINT		controltype = 0;		/* determine settings for BT_* */
 
 boolean		sky_md_layer = false;
+boolean		sky_32x_layer = false;
+
+unsigned int	phi_line;
 
 int			gamevbls;		/* may not really be vbls in multiplayer */
 int			vblsinframe;		/* range from ticrate to ticrate*2 */

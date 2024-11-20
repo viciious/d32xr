@@ -144,6 +144,8 @@ void G_DoLoadLevel (void)
 			gamemap = gamemapinfo.mapNumber + 1;
 
 		gamemapinfo.sky = NULL;
+		gamemapinfo.skyOffsetX = 0;
+		gamemapinfo.skyOffsetY = 0;
 		gamemapinfo.mapNumber = gamemap;
 		gamemapinfo.lumpNum = gamemaplump;
 		gamemapinfo.secretNext = G_LumpNumForMapNum(24);
@@ -180,18 +182,14 @@ void G_DoLoadLevel (void)
 	/*  */
 	/* set the sky map for the episode  */
 	/*  */
-	if (gamemapinfo.sky == NULL)
-	{
-		if (gamemap < 9)
-			gamemapinfo.sky = "SKY1";
-		else if (gamemap < 18)
-			gamemapinfo.sky = "SKY2";
-		else
-			gamemapinfo.sky = "SKY3";
+	if (gamemapinfo.sky == NULL) {
+		sky_32x_layer = false;
 	}
-
-	skytexturel = R_TextureNumForName(gamemapinfo.sky);
- 	skytexturep = &textures[skytexturel];
+	else {
+		skytexturel = R_TextureNumForName(gamemapinfo.sky);
+ 		skytexturep = &textures[skytexturel];
+		sky_32x_layer = (skytexturel > 0);
+	}
 
 	P_SetupLevel (gamemaplump);
 	gameaction = ga_nothing; 
