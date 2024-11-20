@@ -336,7 +336,8 @@ void P_LoadThings (int lump)
 	}
 
 	// preallocate a few mobjs for puffs and projectiles
-	numthingsreal += 40; // 32 rings, plus other items
+	numthingsreal += 48; // 32 rings, plus other items
+	numstaticthings += 8;
 
 	if (gamemapinfo.act == 3)
 	{

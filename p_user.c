@@ -1121,8 +1121,6 @@ void P_SpawnSkidDust(player_t *player)
 {
 	const mobj_t *mo = player->mo;
 	mobj_t *particle = P_SpawnMobj(mo->x, mo->y, mo->z, MT_DUST);
-	particle->tics = 8;
-
 	P_SetObjectMomZ(particle, FRACUNIT, false);
 }
 

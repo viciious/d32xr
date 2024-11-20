@@ -3346,12 +3346,12 @@ MF2_SHOOTABLE|MF2_ENEMY,	// flags2
 		S_NULL,         // xdeathstate
 		sfx_None,       // deathsound
 		3*FRACUNIT,     // speed
-		FRACUNIT,       // radius
-		FRACUNIT,       // height
+		2*FRACUNIT,       // radius
+		4*FRACUNIT,       // height
 		4,              // mass
 		0,              // damage
 		sfx_None,       // activesound
-		MF_NOBLOCKMAP|MF_NOGRAVITY|MF_NOCLIP|MF_STATIC, // flags
+		MF_NOBLOCKMAP|MF_NOGRAVITY|MF_NOCLIP, // flags
 		MF2_NARROWGFX, // flags2
 	},
 	{           // MT_MINE
