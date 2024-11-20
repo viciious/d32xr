@@ -1005,17 +1005,17 @@ enum
 	BT_UP			= 0x4,
 	BT_DOWN			= 0x8,
 
-	BT_ATTACK		= 0x10,
-	BT_USE			= 0x20,
-	BT_STRAFE		= 0x40,
-	BT_SPEED		= 0x80,
+	BT_JUMP		    = 0x10,
+	BT_SPIN			= 0x20,
+	BT_GASPEDAL		= 0x40,
+	BT_FLIP			= 0x80,
 
 	BT_START		= 0x100,
 	BT_AUTOMAP		= 0x200,
 	BT_MODE			= 0x400,
 
-	BT_PWEAPN		= 0x800,
-	BT_NWEAPN		= 0x1000,
+	BT_CAMLEFT		= 0x800,
+	BT_CAMRIGHT		= 0x1000,
 
 	BT_STRAFELEFT	= 0x2000,
 	BT_STRAFERIGHT	= 0x4000,
@@ -1041,19 +1041,13 @@ enum
 typedef enum
 {
 	SFU,
-	SUF,
-	FSU,
-	FUS,
-	USF,
-	UFS,
-	NUMCONTROLOPTIONS
+	NUMCONTROLOPTIONS,
 } control_t;
 
 /* action buttons can be set to BT_A, BT_B, or BT_C */
 /* strafe and use should be set to the same thing */
 extern unsigned configuration[NUMCONTROLOPTIONS][3];
 extern	VINT	controltype;				/* 0 to 5 */
-extern	VINT	strafebtns;
 extern	boolean	splitscreen;
 
 extern	VINT	sfxvolume, musicvolume;		/* range from 0 to 255 */

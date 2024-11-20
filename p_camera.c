@@ -332,7 +332,7 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
    }
    else
    {
-      if (!player->exiting && player->stillTimer > TICRATE/2)
+      if (!player->exiting && player->stillTimer > TICRATE/2 && !(player->buttons & (BT_CAMLEFT | BT_CAMRIGHT)))
          angle = focusangle = mo->angle;
       else
          angle = focusangle = R_PointToAngle2(thiscam->x, thiscam->y, mo->x, mo->y);
@@ -405,6 +405,11 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 	thiscam->momx = FixedMul(x - thiscam->x, camspeed);
 	thiscam->momy = FixedMul(y - thiscam->y, camspeed);
 	thiscam->momz = FixedMul(z - thiscam->z, camspeed);
+
+   if (player->buttons & BT_CAMLEFT)
+      P_ThrustValues(thiscam->angle - ANG90, -8*FRACUNIT, &thiscam->momx, &thiscam->momy);
+   if (player->buttons & BT_CAMRIGHT)
+      P_ThrustValues(thiscam->angle - ANG90, 8*FRACUNIT, &thiscam->momx, &thiscam->momy);
 
    if (!(mo->flags2 & MF2_SHOOTABLE))
       thiscam->momx = thiscam->momy = thiscam->momz = 0;

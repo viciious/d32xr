@@ -270,6 +270,7 @@ void P_PlayerXYMovement(mobj_t *mo)
 void P_PlayerZMovement(mobj_t *mo)
 {
 	player_t *player = &players[mo->player - 1];
+	const fixed_t gravity = (player->pflags & PF_VERTICALFLIP) ? -GRAVITY : GRAVITY;
 
 	/* */
 	/* check for smooth step up */
@@ -288,9 +289,9 @@ void P_PlayerZMovement(mobj_t *mo)
 	if (player->playerstate == PST_DEAD)
 	{
 		if (player->pflags & PF_UNDERWATER)
-			mo->momz -= GRAVITY / 2 / 3;
+			mo->momz -= gravity / 2 / 3;
 		else
-			mo->momz -= GRAVITY / 2;
+			mo->momz -= gravity / 2;
 		return;
 	}
 
@@ -301,26 +302,32 @@ void P_PlayerZMovement(mobj_t *mo)
 	{ /* hit the floor */
 		if (mo->momz < 0)
 		{
-			if (mo->momz < -GRAVITY * 2) /* squat down */
+			if (mo->momz < -gravity * 2) /* squat down */
 				player->deltaviewheight = mo->momz >> 3;
 
 			mo->momz = 0;
-			P_PlayerHitFloor(player);
+
+			if (!(player->pflags & PF_VERTICALFLIP))
+				P_PlayerHitFloor(player);
 		}
 		mo->z = mo->floorz;
 	}
 	else
 	{
 		if (player->pflags & PF_UNDERWATER)
-			mo->momz -= GRAVITY / 2 / 3;
+			mo->momz -= gravity / 2 / 3;
 		else
-			mo->momz -= GRAVITY / 2;
+			mo->momz -= gravity / 2;
 	}
 
 	if (mo->z + (mo->theight << FRACBITS) > mo->ceilingz)
 	{ /* hit the ceiling */
 		if (mo->momz > 0)
 			mo->momz = 0;
+
+		if (player->pflags & PF_VERTICALFLIP)
+			P_PlayerHitFloor(player);
+			
 		mo->z = mo->ceilingz - (mo->theight << FRACBITS);
 	}
 
@@ -445,43 +452,10 @@ void P_PlayerMobjThink(mobj_t *mobj)
 
 void P_BuildMove(player_t *player)
 {
-	int buttons, oldbuttons;
+	const int buttons = ticbuttons[playernum];
+//	const int oldbuttons = oldticbuttons[playernum];
 	mobj_t *mo;
 
-	buttons = ticbuttons[playernum];
-	oldbuttons = oldticbuttons[playernum];
-
-	if (mousepresent && !demoplayback)
-	{
-		int mx = ticmousex[playernum];
-		int my = ticmousey[playernum];
-
-		if ((buttons & BT_RMBTN) && (oldbuttons & BT_RMBTN))
-		{
-			// holding RMB - mouse dodge mode
-			player->sidemove = (mx * 0x1000);
-			player->forwardmove = (my * 0x1000);
-//			player->angleturn = 0;
-		}
-		else
-		{
-			// normal mouse mode - mouse turns, dpad moves forward/back/sideways
-//			player->angleturn = (-mx * 0x200000);
-
-			player->forwardmove = player->sidemove = 0;
-
-			if (buttons & BT_RIGHT)
-				player->sidemove += FRACUNIT;
-			if (buttons & BT_LEFT)
-				player->sidemove -= FRACUNIT;
-
-			if (buttons & BT_UP)
-				player->forwardmove += FRACUNIT;
-			if (buttons & BT_DOWN)
-				player->forwardmove += -FRACUNIT;
-		}
-	}
-	else
 	{
 		player->forwardmove = player->sidemove = 0;
 
@@ -490,7 +464,7 @@ void P_BuildMove(player_t *player)
 		if (buttons & BT_LEFT)
 			player->sidemove -= FRACUNIT;
 
-		if (buttons & BT_X)
+		if (buttons & BT_GASPEDAL)
 			player->pflags |= PF_GASPEDAL;
 		else
 			player->pflags &= ~PF_GASPEDAL;
@@ -703,7 +677,7 @@ static void P_DoSpinDash(player_t *player)
 
 	if (!player->exiting && !(player->mo->state == mobjinfo[player->mo->type].painstate && player->powers[pw_flashing]))
 	{
-		if ((buttons & BT_USE) && player->speed < 5*FRACUNIT && !player->mo->momz && onground && !(player->pflags & PF_USEDOWN) && !(player->pflags & PF_SPINNING))
+		if ((buttons & BT_SPIN) && player->speed < 5*FRACUNIT && !player->mo->momz && onground && !(player->pflags & PF_USEDOWN) && !(player->pflags & PF_SPINNING))
 		{
 			P_ResetScore(player);
 			player->mo->momx = 0; // TODO: cmomx/cmomy
@@ -717,7 +691,7 @@ static void P_DoSpinDash(player_t *player)
 			if (player->pflags & PF_VERTICALFLIP)
 				player->mo->z = player->mo->ceilingz - P_GetPlayerSpinHeight();
 		}
-		else if ((buttons & BT_USE) && (player->pflags & PF_STARTDASH))
+		else if ((buttons & BT_SPIN) && (player->pflags & PF_STARTDASH))
 		{
 			if (player->speed > 5*FRACUNIT)
 			{
@@ -742,7 +716,7 @@ static void P_DoSpinDash(player_t *player)
 		// If not moving up or down, and travelling faster than a speed of four while not holding
 		// down the spin button and not spinning.
 		// AKA Just go into a spin on the ground, you idiot. ;)
-		else if ((buttons & BT_USE) && !player->mo->momz && onground && player->speed > 5*FRACUNIT && !(player->pflags & PF_USEDOWN) && !(player->pflags & PF_SPINNING))
+		else if ((buttons & BT_SPIN) && !player->mo->momz && onground && player->speed > 5*FRACUNIT && !(player->pflags & PF_USEDOWN) && !(player->pflags & PF_SPINNING))
 		{
 			P_ResetScore(player);
 			player->pflags |= PF_SPINNING;
@@ -962,7 +936,7 @@ static void P_DoJumpStuff(player_t *player)
 {
 	const int buttons = player->buttons;
 
-	if (buttons & BT_ATTACK)
+	if (buttons & BT_JUMP)
 	{
 		if (!(player->pflags & PF_JUMPDOWN) && player->mo->state != S_PLAY_PAIN && P_IsObjectOnGround(player->mo) && !P_IsReeling(player))
 		{
@@ -1399,7 +1373,7 @@ void P_MovePlayer(player_t *player)
 			P_SpawnMobj(player->mo->x, player->mo->y, zh, MT_MEDIUMBUBBLE);
 	}
 
-	if (player->buttons & BT_USE)
+	if (player->buttons & BT_SPIN)
 	{
 		if (!(player->pflags & PF_USEDOWN))
 		{
@@ -1443,9 +1417,7 @@ void P_MovePlayer(player_t *player)
 		player->pflags &= ~PF_USEDOWN;
 
 	if (onground && !(player->pflags & (PF_JUMPED|PF_SPINNING)))
-	{
-		const VINT controlDir = ControlDirection(player);
-		
+	{		
 		if (player->skidTime)
 		{
 			// Spawn dust every other tic
@@ -1457,19 +1429,18 @@ void P_MovePlayer(player_t *player)
 		else if (player->skidTime <= 0 && P_AproxDistance(player->mo->momx, player->mo->momy) >= 25 << (FRACBITS-1)
 			&& ControlDirection(player) == 2)
 		{
-			// Should we start a skid?
-			angle_t mang = R_PointToAngle2(0, 0, player->mo->momx, player->mo->momy);
+			// start a skid
 			player->skidTime = TICRATE/2;
 			S_StartSound(player->mo, sfx_s3k_36);
 		}
 	}
 
+	if ((player->pflags & PF_ELEMENTALBOUNCE) && player->mo->momz > 0)
+		player->pflags &= ~PF_ELEMENTALBOUNCE;
+
 	// Fly cheat
-	if (player->buttons & BT_SPEED)
-	{
-		player->mo->momz = 8 << FRACBITS;
+	if (player->buttons & BT_FLIP)
 		player->pflags |= PF_VERTICALFLIP;
-	}
 	else
 		player->pflags &= ~PF_VERTICALFLIP;
 }
