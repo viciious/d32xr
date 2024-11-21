@@ -89,6 +89,9 @@ static int S_SPCM_PaintedSectors(s_spcm_t *spcm) {
     uint16_t mixpos;
 
     mixpos = S_SPCM_MixerPos(spcm, 0);
+    if (mixpos >= SPCM_CHAN_BUF_SIZE) {
+        mixpos = SPCM_CHAN_BUF_SIZE - 1;
+    }
     if (spcm->mix.lastpos > mixpos) {
         // wrapped
         spcm->mix.painted_sectors_int += SPCM_BUF_NUM_SECTORS;
