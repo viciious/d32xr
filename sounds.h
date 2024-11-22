@@ -109,6 +109,7 @@ typedef enum
   sfx_drohat1,
   sfx_drhit1,
   sfx_drhit2,
+  sfx_drclap1,
   NUMSFX
 } sfxenum_t;
 

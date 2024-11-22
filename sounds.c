@@ -93,7 +93,8 @@ const char * const S_sfxnames[NUMSFX] =
   "drsnare2",
   "drohat1",
   "drhit1",
-  "drhit2"
+  "drhit2",
+  "drclap1"
 };
 
 const unsigned char drumsfxmap[] =
@@ -118,6 +119,7 @@ const unsigned char drumsfxmap[] =
   sfx_drohat1,  // 17
   sfx_drhit1,   // 18
   sfx_drhit2,   // 19
+  sfx_drclap1,  // 20
 };
 
 #ifdef MARS
