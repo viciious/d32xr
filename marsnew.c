@@ -28,8 +28,9 @@
 #include "32x.h"
 #include "doomdef.h"
 #include "mars.h"
-#include "r_local.h"
+#include "p_camera.h"
 #include "p_local.h"
+#include "r_local.h"
 #include "wadbase.h"
 
 #define LINK_TIMEOUT_SHORT 		0x3FF
@@ -750,6 +751,21 @@ void I_Update(void)
 	/* wait until on the third tic after last display */
 	/* */
 	const int ticwait = (demoplayback || demorecording ? 4 : ticsperframe); // demos were recorded at 15-20fps
+
+#ifdef MDSKY
+	if (sky_md_layer) {
+		// Adjust MD sky position.
+		unsigned short scroll_x = (*((unsigned short *)&vd.viewangle) >> 6);
+		scroll_x += (scroll_x >> 2);	// The MD sky scrolls to 1280 pixels.
+		scroll_x += gamemapinfo.skyOffsetX;
+
+		unsigned short scroll_y_base = gamemapinfo.skyOffsetY;
+		unsigned short scroll_y_offset = (vd.viewz >> 16);
+		unsigned short scroll_y_pan = (camera.aiming >> 22);
+
+		Mars_ScrollMDSky(scroll_x, scroll_y_base, scroll_y_offset, scroll_y_pan);
+	}
+#endif
 
 	Mars_FlipFrameBuffers(false);
 	do

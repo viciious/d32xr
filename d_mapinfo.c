@@ -246,6 +246,12 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 		mi->borderFlat = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "sky"))
 		mi->sky = value;
+	else if (!D_strcasecmp(key, "skyOffsetX"))
+		mi->skyOffsetX = D_atoi(value);
+	else if (!D_strcasecmp(key, "skyOffsetY"))
+		mi->skyOffsetY = D_atoi(value);
+	else if (!D_strcasecmp(key, "secretnext"))
+		mi->secretNext = W_GetNumForName(value);
 	else if (!D_strcasecmp(key, "mapnumber"))
 		mi->mapNumber = D_atoi(value);
 	else if (!D_strcasecmp(key, "music"))

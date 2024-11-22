@@ -13,6 +13,11 @@
 boolean		splitscreen = false;
 VINT		controltype = 0;		/* determine settings for BT_* */
 
+boolean		sky_md_layer = false;
+boolean		sky_32x_layer = false;
+
+unsigned int	phi_line;
+
 int			gamevbls;		/* may not really be vbls in multiplayer */
 int			vblsinframe;		/* range from ticrate to ticrate*2 */
 
@@ -306,18 +311,54 @@ __attribute((noinline))
 static void D_LoadMDSky(void)
 {
 	// Retrieve lumps for drawing the sky on the MD.
-	uint8_t *sky_name_ptr;
-	uint8_t *sky_pal_ptr;
-	uint8_t *sky_pat_ptr;
+	uint8_t *sky_metadata_ptr;
+	uint8_t *sky_names_a_ptr;
+	uint8_t *sky_names_b_ptr;
+	uint8_t *sky_palettes_ptr;
+	uint8_t *sky_tiles_ptr;
+
+	//uint32_t sky_metadata_size;
+	uint32_t sky_names_a_size;
+	uint32_t sky_names_b_size;
+	uint32_t sky_palettes_size;
+	uint32_t sky_tiles_size;
+	
 	int lump;
 
 	char lumpname[9];
 
 	D_strncpy(lumpname, gamemapinfo.sky, 5);
-	strcat(lumpname, "NAM");
+	strcat(lumpname, "MD");
 	lump = W_CheckNumForName(lumpname);
 	if (lump != -1) {
-		sky_name_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		// This map uses an MD sky.
+		sky_md_layer = true;
+		sky_metadata_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		//sky_metadata_size = W_LumpLength(lump);
+	}
+	else {
+		// This map uses a 32X sky.
+		sky_md_layer = false;
+		return;
+	}
+
+	D_strncpy(lumpname, gamemapinfo.sky, 5);
+	strcat(lumpname, "A");
+	lump = W_CheckNumForName(lumpname);
+	if (lump != -1) {
+		sky_names_a_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		sky_names_a_size = W_LumpLength(lump);
+	}
+	else {
+		return;
+	}
+
+	D_strncpy(lumpname, gamemapinfo.sky, 5);
+	strcat(lumpname, "B");
+	lump = W_CheckNumForName(lumpname);
+	if (lump != -1) {
+		sky_names_b_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		sky_names_b_size = W_LumpLength(lump);
 	}
 	else {
 		return;
@@ -327,7 +368,8 @@ static void D_LoadMDSky(void)
 	strcat(lumpname, "PAL");
 	lump = W_CheckNumForName(lumpname);
 	if (lump != -1) {
-		sky_pal_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		sky_palettes_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		sky_palettes_size = W_LumpLength(lump);
 	}
 	else {
 		return;
@@ -337,13 +379,21 @@ static void D_LoadMDSky(void)
 	strcat(lumpname, "TIL");
 	lump = W_CheckNumForName(lumpname);
 	if (lump != -1) {
-		sky_pat_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		sky_tiles_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		sky_tiles_size = W_LumpLength(lump);
 	}
 	else {
 		return;
 	}
 
-	Mars_LoadMDSky(sky_name_ptr, sky_pal_ptr, sky_pat_ptr);
+	// Get the thru-pixel color from the metadata.
+	mars_thru_rgb_reference = sky_metadata_ptr[0];
+
+	Mars_LoadMDSky(sky_metadata_ptr,
+			sky_names_a_ptr, sky_names_a_size, 
+			sky_names_b_ptr, sky_names_b_size, 
+			sky_palettes_ptr, sky_palettes_size, 
+			sky_tiles_ptr, sky_tiles_size);
 }
 #endif
 
@@ -385,7 +435,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 	ticmousex[0] = ticmousex[1] = ticmousey[0] = ticmousey[1] = 0;
 
 	#ifdef MDSKY
-	if (wipe)
+	if (leveltime == 0)
 	{
 		D_LoadMDSky();
 	}

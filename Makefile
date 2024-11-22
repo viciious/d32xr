@@ -14,7 +14,7 @@ INCPATH = -I. -I$(ROOTDIR)/sh-elf/include -I$(ROOTDIR)/sh-elf/sh-elf/include -I.
 CCFLAGS = -c -std=c11 -m2 -mb
 CCFLAGS += -Wall -Wextra -pedantic -Wno-unused-parameter -Wimplicit-fallthrough=0 -Wno-missing-field-initializers -Wnonnull
 CCFLAGS += -D__32X__ -DMARS
-#CCFLAGS += -DMDSKY
+CCFLAGS += -DMDSKY
 #CCFLAGS += -DREC_POS_DEMO
 #CCFLAGS += -DPLAY_POS_DEMO
 CCFLAGS += -DHIGH_DETAIL_SPRITES

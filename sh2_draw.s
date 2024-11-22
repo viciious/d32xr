@@ -22,6 +22,53 @@
 ! Source is the top of the column to scale.
 ! Low detail (doubl-wide pixels) mode.
 !
+!void I_Draw32XSkyColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
+!                  fixed_t fracstep, inpixel_t *dc_source, int dc_y_offset)
+
+        .align  4
+        .global _I_Draw32XSkyColumnLowA
+_I_Draw32XSkyColumnLowA:
+	add	#1,r6
+
+0:
+        cmp/ge  r6,r5
+        bf/s    1f
+        sub     r5,r6           /* count = dc_yh - dc_yl */
+
+        /* dc_yl >= dc_yh, exit */
+        rts
+        nop
+1:
+        mov.l   r8,@-r15
+        mov.l   r9,@-r15
+        mov.l   @(DOOMTLS_COLORMAP, gbr),r0
+        add     r7,r7
+        add     r0,r7           /* dc_colormap = colormap + light */
+        mov.l   draw_fb,r8
+        mov.l   @r8,r8          /* frame buffer start */
+        add     r4,r8
+        add     r4,r8           /* fb += dc_x*2 */
+        shll8   r5
+        add     r5,r8
+        shlr2   r5
+        add     r5,r8           /* fb += (dc_yl*256 + dc_yl*64) */
+        mov.l   @(8,r15),r2     /* frac */
+        mov.l   @(12,r15),r3    /* fracstep */
+        mov.l   @(16,r15),r5    /* dc_source */
+        mov.l   @(20,r15),r1    /* y_offset */
+        add     r1,r5           /* adjust sky position */
+        mov     #127,r4         /* texheight */
+        mov.l   draw_width,r1
+        swap.w  r2,r0           /* (frac >> 16) */
+        and     r4,r0           /* (frac >> 16) & heightmask */
+        bra     do_col_pre_loop
+        nop
+
+
+! Draw a vertical column of pixels from a projected wall texture.
+! Source is the top of the column to scale.
+! Low detail (doubl-wide pixels) mode.
+!
 !void I_DrawColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
 !                  fixed_t fracstep, inpixel_t *dc_source, int dc_texheight)
 
@@ -61,6 +108,7 @@ _I_DrawColumnLowA:
         swap.w  r2,r0           /* (frac >> 16) */
         and     r4,r0           /* (frac >> 16) & heightmask */
 
+do_col_pre_loop:
         /* test if count & 1 */
         shlr    r6
         movt    r9              /* 1 if count was odd */
@@ -607,6 +655,7 @@ draw_height:
         .long   _viewportHeight
 draw_flat_ymask:
         .long   4032
+
 
 ! Clear a vertical column of pixels for the MD sky to show through.
 !

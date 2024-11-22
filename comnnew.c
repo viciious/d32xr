@@ -58,11 +58,21 @@ int D_strcasecmp (const char *s1, const char *s2)
 int D_atoi(const char* str)
 {
 	int i;
+	boolean digits_found = false;
+	boolean negative_number = false;
 
 	i = 0;
-	while (*str && (*str >= '0' && *str <= '9')) {
-		i = i * 10 + (*str - '0');
+	while (*str && (*str >= '0' && *str <= '9') || *str == '-') {
+		if (!digits_found && *str == '-') {
+			negative_number = true;
+		}
+		else {
+			i = i * 10 + (*str - '0');
+		}
 		str++;
+	}
+	if (negative_number) {
+		i = -i;
 	}
 	return i;
 }
