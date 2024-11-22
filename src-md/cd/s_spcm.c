@@ -71,7 +71,7 @@ typedef struct
     volatile uint8_t playing;
     uint8_t sector_cnt;
     volatile uint8_t state;
-    uint8_t repeat;
+    uint8_t repeat, quickrepeat;
 } s_spcm_t;
 
 static s_spcm_t track = { 0 };
@@ -286,7 +286,7 @@ skipblock:
             spcm->lastdmatic = spcm->tics;
             if (++spcm->block > spcm->final_block) {
 done:
-                if (spcm->repeat) {
+                if (spcm->repeat && spcm->quickrepeat) {
                     memset(&spcm->mix, 0, sizeof(spcm->mix));
                     spcm->block = spcm->start_block;
                     spcm->state++;
@@ -334,8 +334,15 @@ done:
             for (i = 0; i < spcm->num_channels; i++) {
                 pcm_set_off(spcm->chan[i].id);
             }
+            memset(&spcm->mix, 0, sizeof(spcm->mix));
+            if (spcm->repeat && spcm->playing)
+            {
+                spcm->block = spcm->start_block;
+                spcm->state = SPCM_STATE_INIT;
+                break;
+            }
             spcm->playing = 0;
-            spcm->state = SPCM_STATE_STOPPED;
+            spcm->state = spcm->repeat ? SPCM_STATE_INIT : SPCM_STATE_STOPPED;
             break;
         }
         break;
