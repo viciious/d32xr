@@ -258,6 +258,10 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 		mi->musicLump = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "afterBossMusic"))
 		mi->afterBossMusic = W_CheckNumForName(value);
+	else if (!D_strcasecmp(key, "spheresNeeded"))
+		mi->spheresNeeded = D_atoi(value);
+	else if (!D_strcasecmp(key, "timeLimit"))
+		mi->timeLimit = D_atoi(value) * TICRATE;
 }
 
 static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
@@ -276,6 +280,8 @@ static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
 		gi->titleMus = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "intermissionMus"))
 		gi->intermissionMus = W_CheckNumForName(value);
+	else if (!D_strcasecmp(key, "emeraldMus"))
+		gi->emeraldMus = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "xtlifeMus"))
 		gi->xtlifeMus = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "invincMus"))

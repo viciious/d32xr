@@ -17,9 +17,9 @@
 #define	VIEWHEIGHT			(41*FRACUNIT)
 
 /* mapblocks are used to check movement against lines and things */
-#define MAPBLOCKUNITS	128
+#define MAPBLOCKUNITS	256
 #define	MAPBLOCKSIZE	(MAPBLOCKUNITS*FRACUNIT)
-#define	MAPBLOCKSHIFT	(FRACBITS+7)
+#define	MAPBLOCKSHIFT	(FRACBITS+8)
 #define	MAPBMASK		(MAPBLOCKSIZE-1)
 #define	MAPBTOFRAC		(MAPBLOCKSHIFT-FRACBITS)
 

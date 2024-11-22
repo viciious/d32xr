@@ -430,7 +430,7 @@ void A_Chase (mobj_t *actor, int16_t var1, int16_t var2)
 {
 	int		delta;
 	const mobjinfo_t* ainfo = &mobjinfo[actor->type];
-	
+
 /* */
 /* modify target threshold */
 /* */
@@ -453,8 +453,7 @@ void A_Chase (mobj_t *actor, int16_t var1, int16_t var2)
 	if (!actor->target || !(actor->target->flags2&MF2_SHOOTABLE)
 		|| (netgame && !actor->threshold && !(actor->flags2 & MF2_SEETARGET)))
 	{	/* look for a new target */
-		if (P_LookForPlayers(actor,2048 << FRACBITS,true,false))
-			return;		/* got a new target */
+		actor->target = NULL;
 		P_SetMobjState (actor, ainfo->spawnstate);
 		return;
 	}

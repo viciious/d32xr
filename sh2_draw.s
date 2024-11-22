@@ -396,6 +396,79 @@ do_col_loop_1px:
         rts
         mov.l   @r15+,r8
 
+! Draw a vertical column of pixels from a projected wall texture UPSIDE DOWN.
+! Source is the top of the column to scale.
+!
+!void I_DrawColumnFlipped(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
+!                  fixed_t fracstep, inpixel_t *dc_source, int dc_texheight)
+
+        .align  4
+        .global _I_DrawColumnFlippedA
+_I_DrawColumnFlippedA:
+	add	#1,r6
+
+0:
+        cmp/ge  r6,r5
+        bf/s    1f
+        sub     r5,r6           /* count = dc_yh - dc_yl */
+
+        /* dc_yl >= dc_yh, exit */
+        rts
+        nop
+1:
+        mov.l   r8,@-r15
+        mov.l   r9,@-r15
+        mov.l   @(DOOMTLS_COLORMAP, gbr),r0
+        add     r7,r7
+        add     r0,r7           /* dc_colormap = colormap + light */
+        mov.l   draw_fb,r8
+        mov.l   @r8,r8          /* frame buffer start */
+        add     r4,r8           /* fb += dc_x*2 */
+        shll8   r5
+        add     r5,r8
+        shlr2   r5
+        add     r5,r8           /* fb += (dc_yl*256 + dc_yl*64) */
+        mov.l   @(8,r15),r2     /* frac */
+        mov.l   @(12,r15),r3    /* fracstep */
+        mov.l   @(16,r15),r5    /* dc_source */
+        mov.l   @(20,r15),r4
+        mov.l   draw_width,r1
+        add     #-1,r4          /* heightmask = texheight - 1 */
+        swap.w  r2,r0           /* (frac >> 16) */
+        and     r4,r0           /* (frac >> 16) & heightmask */
+
+        /* test if count & 1 */
+        shlr    r6
+        movt    r9              /* 1 if count was odd */
+        bt/s    do_col_flipped_loop_1px
+        add     r9,r6
+
+        .p2alignw 2, 0x0009
+do_col_flipped_loop:
+        mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
+        add     r0,r0
+        mov.w   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
+        add     r3,r2           /* frac += fracstep */
+        swap.w  r2,r0           /* (frac >> 16) */
+        and     r4,r0           /* (frac >> 16) & heightmask */
+        mov.b   r9,@r8          /* *fb = dpix */
+        sub     r1,r8           /* fb += SCREENWIDTH */
+do_col_flipped_loop_1px:
+        mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
+        add     r0,r0
+        mov.w   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
+        add     r3,r2           /* frac += fracstep */
+        dt      r6              /* count-- */
+        swap.w  r2,r0           /* (frac >> 16) */
+        mov.b   r9,@r8          /* *fb = dpix */
+        and     r4,r0           /* (frac >> 16) & heightmask */
+        bf/s    do_col_flipped_loop
+        sub     r1,r8           /* fb += SCREENWIDTH */
+
+        mov.l   @r15+,r9
+        rts
+        mov.l   @r15+,r8
+
 ! Draw a vertical column of pixels from a projected wall texture.
 ! Non-power of 2 texture height.
 !

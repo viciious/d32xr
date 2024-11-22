@@ -10,7 +10,7 @@
 
 #define MOVEWAIT		(I_IsPAL() ? TICVBLS*5 : TICVBLS*6)
 #define STARTY		48
-#define CURSORX		(80)
+#define CURSORX		(112)
 #define CURSORWIDTH	24
 #define ITEMX		(CURSORX+CURSORWIDTH)
 #define ITEMSPACE	20
@@ -22,7 +22,6 @@ typedef enum
 	mi_game, 
 	mi_audio,
 	mi_video,
-	mi_controls,
 	mi_help,
 
 	mi_soundvol,
@@ -81,13 +80,6 @@ static VINT	o_slider, o_slidertrack;
 
 VINT	o_musictype, o_sfxdriver;
 
-static const char buttona[NUMCONTROLOPTIONS][8] =
-		{"Speed","Speed","Fire","Fire","Use","Use"};
-static const char buttonb[NUMCONTROLOPTIONS][8] =
-		{"Fire","Use ","Speed","Use","Speed","Fire"};
-static const char buttonc[NUMCONTROLOPTIONS][8] =
-		{"Use","Fire","Use","Speed","Fire","Speed"};
-
 typedef struct
 {
 	VINT firstitem;
@@ -110,18 +102,6 @@ typedef enum
 
 static menuscreen_t menuscreen[NUMMENUSCREENS];
 static VINT screenpos;
-
-/* */
-/* Draw control value */
-/* */
-void O_DrawControl(void)
-{
-	//EraseBlock(menuitem[mi_controltype].x + 40, menuitem[mi_controltype].y + 20, 90, 80);
-	V_DrawStringLeft(&menuFont, menuitem[mi_controltype].x + 40, menuitem[mi_controltype].y + 20, buttona[controltype]);
-	V_DrawStringLeft(&menuFont, menuitem[mi_controltype].x + 40, menuitem[mi_controltype].y + 40, buttonb[controltype]);
-	V_DrawStringLeft(&menuFont, menuitem[mi_controltype].x + 40, menuitem[mi_controltype].y + 60, buttonc[controltype]);
-/*	IN_DrawValue(30, 20, controltype); */
-}
 
 /*
 ===============
@@ -155,45 +135,45 @@ void O_Init (void)
 	D_memset(menuitem, 0, sizeof(menuitem));
 	D_memset(sliders, 0, sizeof(sliders));
 
-	D_memcpy(menuitem[mi_game].name, "Game", 5);
+	D_memcpy(menuitem[mi_game].name, "GAME", 5);
 	menuitem[mi_game].x = ITEMX;
 	menuitem[mi_game].y = STARTY;
 	menuitem[mi_game].screen = ms_game;
 
-	D_memcpy(menuitem[mi_audio].name, "Audio", 7);
+	D_memcpy(menuitem[mi_audio].name, "AUDIO", 6);
 	menuitem[mi_audio].x = ITEMX;
 	menuitem[mi_audio].y = STARTY+ITEMSPACE;
 	menuitem[mi_audio].screen = ms_audio;
 
-	D_memcpy(menuitem[mi_video].name, "Video", 7);
+	D_memcpy(menuitem[mi_video].name, "VIDEO", 6);
 	menuitem[mi_video].x = ITEMX;
 	menuitem[mi_video].y = STARTY+ITEMSPACE*2;
 	menuitem[mi_video].slider = 0;
 	menuitem[mi_video].screen = ms_video;
-
+/*
 	D_memcpy(menuitem[mi_controls].name, "Controls", 9);
 	menuitem[mi_controls].x = ITEMX;
 	menuitem[mi_controls].y = STARTY+ITEMSPACE*3;
 	menuitem[mi_controls].screen = ms_controls;
-
-	D_memcpy(menuitem[mi_help].name, "Help", 4);
+*/
+	D_memcpy(menuitem[mi_help].name, "HELP / ABOUT", 13);
 	menuitem[mi_help].x = ITEMX;
-	menuitem[mi_help].y = STARTY+ITEMSPACE*4;
+	menuitem[mi_help].y = STARTY+ITEMSPACE*3;
 	menuitem[mi_help].screen = ms_help;
 
 	D_memcpy(menuitem[mi_soundvol].name, "Sfx volume", 11);
-	menuitem[mi_soundvol].x = ITEMX;
+	menuitem[mi_soundvol].x = ITEMX - 32;
 	menuitem[mi_soundvol].y = STARTY;
 	menuitem[mi_soundvol].slider = si_sfxvolume+1;
 	sliders[si_sfxvolume].maxval = 4;
 	sliders[si_sfxvolume].curval = 4*sfxvolume/64;
 
 	D_memcpy(menuitem[mi_music].name, "Music", 6);
-	menuitem[mi_music].x = ITEMX;
+	menuitem[mi_music].x = ITEMX - 32;
 	menuitem[mi_music].y = STARTY+ITEMSPACE*2;
 
 	D_memcpy(menuitem[mi_musicvol].name, "CDA volume", 11);
-	menuitem[mi_musicvol].x = ITEMX;
+	menuitem[mi_musicvol].x = ITEMX - 32;
 	menuitem[mi_musicvol].y = STARTY + ITEMSPACE * 3;
 	menuitem[mi_musicvol].slider = si_musvolume+1;
 	sliders[si_musvolume].maxval = 8;
@@ -210,8 +190,8 @@ void O_Init (void)
 	sliders[si_resolution].maxval = numViewports - 1;
 	sliders[si_resolution].curval = viewportNum;
 
-	D_memcpy(menuitem[mi_anamorphic].name, "Widescreen", 11);
-	menuitem[mi_anamorphic].x = ITEMX;
+	D_memcpy(menuitem[mi_anamorphic].name, "WIDESCREEN", 11);
+	menuitem[mi_anamorphic].x = ITEMX - 32;
 	menuitem[mi_anamorphic].y = STARTY + ITEMSPACE * 2;
 
 
@@ -219,16 +199,16 @@ void O_Init (void)
 	menuitem[mi_controltype].x = ITEMX;
 	menuitem[mi_controltype].y = STARTY;
 
-	D_memcpy(menuitem[mi_strafebtns].name, "LR Strafe", 11);
+	D_memcpy(menuitem[mi_strafebtns].name, "LR Strafe", 10);
 	menuitem[mi_strafebtns].x = ITEMX;
 	menuitem[mi_strafebtns].y = STARTY+ITEMSPACE*5;
 
 
-	D_memcpy(menuscreen[ms_main].name, "Options", 8);
+	D_memcpy(menuscreen[ms_main].name, "OPTIONS", 8);
 	menuscreen[ms_main].firstitem = mi_game;
 	menuscreen[ms_main].numitems = mi_help - mi_game + 1;
 
-	D_memcpy(menuscreen[ms_audio].name, "Audio", 7);
+	D_memcpy(menuscreen[ms_audio].name, "AUDIO", 6);
 	menuscreen[ms_audio].firstitem = mi_soundvol;
 	menuscreen[ms_audio].numitems = mi_music - mi_soundvol + 1;
 
@@ -240,15 +220,15 @@ void O_Init (void)
 			menuscreen[ms_audio].numitems++;
 	}
 
-	D_memcpy(menuscreen[ms_video].name, "Video", 7);
-	menuscreen[ms_video].firstitem = mi_resolution;
-	menuscreen[ms_video].numitems = mi_anamorphic - mi_resolution + 1;
+	D_memcpy(menuscreen[ms_video].name, "VIDEO", 6);
+	menuscreen[ms_video].firstitem = mi_anamorphic;
+	menuscreen[ms_video].numitems = mi_anamorphic - mi_anamorphic + 1;
 
-	D_memcpy(menuscreen[ms_controls].name, "Controls", 9);
+	D_memcpy(menuscreen[ms_controls].name, "CONTROLS", 9);
 	menuscreen[ms_controls].firstitem = mi_controltype;
 	menuscreen[ms_controls].numitems = mi_strafebtns - mi_controltype + 1;
 
-	D_memcpy(menuscreen[ms_help].name, "Help", 4);
+	D_memcpy(menuscreen[ms_help].name, "HELP / ABOUT", 13);
 	menuscreen[ms_help].firstitem = 0;
 	menuscreen[ms_help].numitems = 0;
 }
@@ -338,7 +318,6 @@ void O_Control (player_t *player)
 			movecount = 0;
 			cursorpos = 0;
 			screenpos = ms_main;
-			S_StartSound(NULL, sfx_None);
 			return;
 		case ga_startnew:
 			gameaction = ga_startnew;
@@ -360,7 +339,7 @@ void O_Control (player_t *player)
 	buttons = ticrealbuttons & MENU_BTNMASK;
 	oldbuttons = oldticrealbuttons & MENU_BTNMASK;
 
-	if (buttons & (BT_A | BT_LMBTN) && !(oldbuttons & (BT_A | BT_LMBTN)))
+	if (buttons & (BT_B | BT_LMBTN) && !(oldbuttons & (BT_B | BT_LMBTN)))
 	{
 		int itemno = menuscr->firstitem + cursorpos;
 		if (menuscr->numitems > 0 && menuitem[itemno].screen != ms_none)
@@ -378,7 +357,7 @@ void O_Control (player_t *player)
 		}
 	}
 
-	if (buttons & (BT_B | BT_RMBTN) && !(oldbuttons & (BT_B | BT_RMBTN)))
+	if (buttons & (BT_A | BT_RMBTN) && !(oldbuttons & (BT_A | BT_RMBTN)))
 	{
 		if (screenpos != ms_main)
 		{
@@ -493,44 +472,6 @@ void O_Control (player_t *player)
 				}
 			}
 
-			if (screenpos == ms_controls)
-			{
-				int oldcontroltype = controltype;
-				int oldstrafebtns = strafebtns;
-
-				if (buttons & BT_RIGHT)
-				{
-					switch (itemno) {
-					case mi_controltype:
-						if (++controltype == NUMCONTROLOPTIONS)
-							controltype = (NUMCONTROLOPTIONS - 1);
-						break;
-					case mi_strafebtns:
-						if (++strafebtns > 3)
-							strafebtns = 3;
-						break;
-
-					}
-				}
-				if (buttons & BT_LEFT)
-				{
-					switch (itemno) {
-					case mi_controltype:
-						if (--controltype == -1)
-							controltype = 0;
-						break;
-					case mi_strafebtns:
-						if (--strafebtns < 0)
-							strafebtns = 0;
-						break;
-					}
-				}
-
-				if (oldcontroltype != controltype ||
-					oldstrafebtns != strafebtns)
-					sound = sfx_None;
-			}
-
 			if (screenpos == ms_audio)
 			{
 				int oldmusictype = o_musictype;
@@ -625,6 +566,26 @@ void O_Control (player_t *player)
 		clearscreen = 2;
 }
 
+void O_DrawHelp (void)
+{
+	VINT yPos = 64;
+
+	V_DrawStringCenterWithColormap(&menuFont, 160, 32, "SONIC ROBO BLAST 32X", YELLOWTEXTCOLORMAP);
+	V_DrawStringCenterWithColormap(&menuFont, 160, 44, "v0.1 DEMO", YELLOWTEXTCOLORMAP);
+
+	V_DrawStringRight(&menuFont, 160-8, yPos, "JUMP ");
+	V_DrawStringLeft(&menuFont, 160, yPos, "= B");
+	V_DrawStringRight(&menuFont, 160-8, yPos + (16*1), "SPIN ");
+	V_DrawStringLeft(&menuFont, 160, yPos + (16*1), "= A or C");
+	V_DrawStringRight(&menuFont, 160-8, yPos + (16*2), "GAS PEDAL ");
+	V_DrawStringLeft(&menuFont, 160, yPos + (16*2), "= Y");
+	V_DrawStringRight(&menuFont, 160-8, yPos + (16*3), "MOVE CAMERA ");
+	V_DrawStringLeft(&menuFont, 160, yPos + (16*3), "= X and Z");
+
+	V_DrawStringCenter(&menuFont, 160, 148, "https://www.youtube.com/@SSNTails");
+	V_DrawStringCenter(&menuFont, 160, 160, "https://ssntails.srb2.org");
+}
+
 void O_Drawer (void)
 {
 	int		i;
@@ -645,13 +606,20 @@ void O_Drawer (void)
 	//EraseBlock(56, 40, o_cursor1->width, 200);
 	if (screenpos != ms_help)
 	{
-		DrawJagobjLump(o_cursor1, CURSORX, items[cursorpos].y - 2, NULL, NULL);
+		VINT cursorX = CURSORX;
+
+		if (screenpos == ms_audio)
+			cursorX -= 32;
+		else if (screenpos == ms_video)
+			cursorX -= 32;
+
+		DrawJagobjLump(o_cursor1, cursorX, items[cursorpos].y - 2, NULL, NULL);
 	}
 
 /* Draw menu */
 
 	y = 10;
-	V_DrawStringLeft(&menuFont, 104, y, menuscr->name);
+	V_DrawStringCenter(&menuFont, 160, y, menuscr->name);
 	
 	for (i = 0; i < menuscr->numitems; i++)
 	{
@@ -672,32 +640,6 @@ void O_Drawer (void)
 		}
 	}
 	
-/* Draw control info */
-	if (screenpos == ms_controls)
-	{
-		const char* strabtnstr = "OFF";
-
-		switch (strafebtns) {
-		case 1:
-			strabtnstr = "YZ";
-			break;
-		case 2:
-			strabtnstr = "ZC";
-			break;
-		case 3:
-			strabtnstr = "XZ";
-			break;
-		}
-
-		V_DrawStringLeft(&menuFont, items[0].x + 10, items[0].y + ITEMSPACE, "A");
-		V_DrawStringLeft(&menuFont, items[0].x + 10, items[0].y + ITEMSPACE*2, "B");
-		V_DrawStringLeft(&menuFont, items[0].x + 10, items[0].y + ITEMSPACE*3, "C");
-
-		O_DrawControl();
-
-		V_DrawStringLeft(&menuFont, menuitem[mi_strafebtns].x + 150, menuitem[mi_strafebtns].y, strabtnstr);
-	}
-
 	if (screenpos == ms_audio)
 	{
 		switch (o_musictype) {
@@ -730,10 +672,10 @@ void O_Drawer (void)
 
 	if (screenpos == ms_video)
 	{
-		char tmp[32];
+/*		char tmp[32];
 		D_snprintf(tmp, sizeof(tmp), "%dx%d", viewportWidth, viewportHeight);
 		I_Print8(menuitem[mi_resolution].x + 114, (unsigned)menuitem[mi_resolution].y/8 + 3, tmp);
-
+*/
 		switch (anamorphicview) {
 		case 0:
 			V_DrawStringLeft(&menuFont, menuitem[mi_anamorphic].x + 150, menuitem[mi_anamorphic].y, "off");
@@ -745,80 +687,6 @@ void O_Drawer (void)
 	}
 
 	if (screenpos == ms_help)
-	{
-		int x, x2, x3, l, l2;
-
-		x = 10;
-		y = CURSORY(0)-10;
-		l = y/8;
-		l += 1;
-
-		x2 = 88;
-		l2 = l;
-		x3 = x2+7*8+4;
-		I_Print8(x, l, "Next weap");
-		I_Print8(x2, l, "START+A");
-		l++;
-		I_Print8(x, l, "Prev weap");
-		I_Print8(x2, l, "START+B");
-		l++;
-		I_Print8(x, l, "Automap");
-		I_Print8(x2, l, "START+C");
-		if (strafebtns)
-		{
-			switch (strafebtns)
-			{
-			default:
-			case 1:
-			case 2:
-				I_Print8(x3, l2, "or");
-				I_Print8(x3+16+4, l2, "X");
-				break;
-			case 3:
-				I_Print8(x3, l2, "or");
-				I_Print8(x3+16+4, l2, "Y");
-				break;
-			}
-		}
-		else
-		{
-			I_Print8(x3, l2, "or");
-			I_Print8(x3+16+4, l2, "X");
-			I_Print8(x3, l2+1, "or");
-			I_Print8(x3+16+4, l2+1, "Y");
-			I_Print8(x3, l2+2, "or");
-			I_Print8(x3+16+4, l2+2, "Z");
-		}
-		l++;
-
-		l++;
-
-		x2 = 138;
-		I_Print8(x, l++, "^E5Hold MODE and press a");
-		I_Print8(x, l++, "^E5button to switch to:");
-		I_Print8(x, l, "Fists/Chainsaw");
-		I_Print8(x2, l++, "START");
-		I_Print8(x, l, "Pistol");
-		I_Print8(x2, l++, "A");
-		I_Print8(x, l, "Shotgun");
-		I_Print8(x2, l++, "B");
-		I_Print8(x, l, "Chaingun");
-		I_Print8(x2, l++, "C");
-		I_Print8(x, l, "Rocket launcher");
-		I_Print8(x2, l++, "X");
-		I_Print8(x, l, "Plasmagun");
-		I_Print8(x2, l++, "Y");
-		I_Print8(x, l, "BFG");
-		I_Print8(x2, l++, "Z");
-
-		l++;
-
-		x2 = 62;
-		I_Print8(x, l++, "^E5Automap");
-		I_Print8(x, l, "Scale");
-		I_Print8(x2, l++, "Hold B+UP/DOWN");
-		I_Print8(x, l, "Lock");
-		I_Print8(x2, l++, "Hold C");
-	}
+		O_DrawHelp();
 }
 

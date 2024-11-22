@@ -564,7 +564,7 @@ inline fixed_t P_GetMapThingSpawnHeight(const mobjtype_t mobjtype, const mapthin
 	/*	case MT_CRAWLACOMMANDER:
 		case MT_DETON:
 		case MT_JETTBOMBER:
-		case MT_JETTGUNNER:
+		case MT_JETTGUNNER:*/
 		case MT_EGGMOBILE2:
 			if (!dz)
 				dz = 33*FRACUNIT;
@@ -578,9 +578,10 @@ inline fixed_t P_GetMapThingSpawnHeight(const mobjtype_t mobjtype, const mapthin
 			if (!dz)
 				dz = 288*FRACUNIT;
 			break;
-	*/
 		// Ring-like items, float additional units unless args[0] is set.
+		case MT_TOKEN:
 		case MT_RING:
+		case MT_BLUESPHERE:
 			dz += 24*FRACUNIT;
 			break;
 		default:
@@ -661,11 +662,17 @@ return;	/*DEBUG */
 	z = (mthing->options >> 4) << FRACBITS;
 	z = P_GetMapThingSpawnHeight(i, mthing, x, y, z);
 
+	if (mthing->type == 312 && (tokenbits & (mthing->angle / 45))) // MT_TOKEN
+		return; // Player already has this token
+
 	mobj = P_SpawnMobj (x,y,z, i);
 	if (mobj->type == MT_RING)
 	{
 		totalitems++;
-		return;
+	}
+	else if (mobj->type == MT_TOKEN)
+	{
+		tokenbits |= (mthing->angle / 45);
 	}
 
 	if (mobj->flags & MF_RINGMOBJ)

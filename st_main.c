@@ -20,6 +20,14 @@ static short timecolon; // : for TIME
 static short face, livex;
 static short go_game, go_over;
 
+// Special stage
+static short narrow1;
+static short narrow9;
+static short nbracket;
+static short nrng1;
+static short nsshud;
+static short chaos;
+
 static short ltzz_blue_lump, chev_blue_lump, lt_blue_lump;
 static short ltzz_red_lump, chev_red_lump, lt_red_lump;
 
@@ -57,6 +65,14 @@ void ST_Init (void)
 	livex = W_CheckNumForName("STLIVEX");
 	go_game = W_CheckNumForName("SLIDGAME");
 	go_over = W_CheckNumForName("SLIDOVER");
+
+	// Special stage
+	narrow1 = W_CheckNumForName("NARROW1");
+	narrow9 = W_CheckNumForName("NARROW9");
+	nbracket = W_CheckNumForName("NBRACKET");
+	nrng1 = W_CheckNumForName("NRNG1");
+	nsshud = W_CheckNumForName("NSSHUD");
+	chaos = W_CheckNumForName("CHAOS1");
 
 	ltzz_blue_lump = W_CheckNumForName("LTZZTEXT");
 	chev_blue_lump = W_CheckNumForName("CHEVBLUE");
@@ -131,10 +147,17 @@ static void ST_Ticker_(stbar_t* sb)
 		return;
 	}
 
-	if (sb->exiting >= 4*TICRATE && !sb->intermission)
+	if (gamemapinfo.mapNumber < SSTAGE_START || gamemapinfo.mapNumber > SSTAGE_END)
 	{
-		Y_StartIntermission(p);
-		sb->intermission = true;
+		if (sb->exiting >= 4*TICRATE && !sb->intermission)
+		{
+			Y_StartIntermission(p);
+			sb->intermission = true;
+		}
+	}
+	else if (sb->exiting >= 4*TICRATE)
+	{
+		gameaction = ga_specialstageexit;
 	}
 }
 
@@ -180,7 +203,12 @@ static void ST_DrawTitleCard()
 	}
 
 	if (gametic < 30)
-		DrawFillRect(0, 22, 320, 180, COLOR_BLACK);
+	{
+		if (gamemapinfo.mapNumber >= SSTAGE_START && gamemapinfo.mapNumber <= SSTAGE_END)
+			DrawFillRect(0, 22, 320, 180, COLOR_WHITE);
+		else
+			DrawFillRect(0, 22, 320, 180, COLOR_BLACK);
+	}
 
 	if (gametic < 16) {
 		// Title card moving into the frame.
@@ -243,8 +271,65 @@ static void ST_DrawTitleCard()
 
 static void ST_Drawer_ (stbar_t* sb)
 {
-	if (gametic < 96) {
+	if (gametic < 96 && !(gamemapinfo.mapNumber >= SSTAGE_START && gamemapinfo.mapNumber <= SSTAGE_END)) {
 		ST_DrawTitleCard();
+	}
+	else if (gamemapinfo.mapNumber >= SSTAGE_START && gamemapinfo.mapNumber <= SSTAGE_END)
+	{
+		if (gametic < 120)
+		{
+			char getSpheres[16];
+			D_snprintf(getSpheres, sizeof(getSpheres), "GET %d SPHERES", gamemapinfo.spheresNeeded);
+			V_DrawStringCenterWithColormap(&menuFont, 160, 224/2, getSpheres, YELLOWTEXTCOLORMAP);
+		}
+
+		// Special stage HUD
+		DrawJagobjLump(nbracket, 16, 8+16, NULL, NULL);
+		DrawJagobjLump(nbracket, 72, 8+16, NULL, NULL);
+		DrawJagobjLump(nbracket, 272, 8+16, NULL, NULL);
+
+		DrawJagobjLump(nsshud, 24, 16+16, NULL, NULL);
+		DrawJagobjLump(nrng1, 280, 17+16, NULL, NULL);
+		DrawJagobjLump(chaos+(gamemapinfo.mapNumber - 60), 77, 13+16, NULL, NULL);
+
+		DrawJagobjLump(narrow1 + ((gametic/2) & 3), 40, 13+16, NULL, NULL);
+		DrawJagobjLump(narrow9, 240, 13+16, NULL, NULL);
+
+		V_DrawValueCenter(&hudNumberFont, 260, 8+12+16, totalitems - sb->rings);
+		V_DrawValueCenter(&hudNumberFont, 60, 13+6+16, gamemapinfo.spheresNeeded);
+
+		V_DrawStringCenter(&menuFont, 160, 12+16, "TIME LEFT");
+		const int delaytime = 3*TICRATE;
+		int worldTime = leveltime - delaytime + TICRATE - sb->exiting - sb->deadTimer;
+		int timeLeft = (gamemapinfo.timeLimit - worldTime)/TICRATE;
+		if (timeLeft < 0)
+			timeLeft = 0;
+		if (timeLeft > gamemapinfo.timeLimit/TICRATE)
+			timeLeft = gamemapinfo.timeLimit/TICRATE;
+		V_DrawValueCenter(&hudNumberFont, 160, 24+16, timeLeft);
+
+		// Not the best thing to do gamelogic inside of the draw routine,
+		// but trying to keep things simple.
+		if (timeLeft == 0 && !players[0].exiting && stagefailed)
+		{
+			// Time up!
+			S_StartSound(NULL, sfx_s3k_b2);
+
+			for (int p = 0; p < MAXPLAYERS; p++)
+			{
+				players[p].exiting = 1;
+
+				if (playeringame[p])
+					players[p].mo->momx = players[p].mo->momy = players[p].mo->momz = 0;
+			}
+		}
+
+		if (players[0].exiting > 3*TICRATE)
+		{
+			fadetime = (TICRATE/3) - (5*TICRATE - players[0].exiting);
+			if (fadetime > TICRATE/3)
+				fadetime = TICRATE/3;
+		}
 	}
 	else
 	{

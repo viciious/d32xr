@@ -19,6 +19,7 @@ enum
   cdtrack_invincibility = -7,
   cdtrack_drowning = -8,
   cdtrack_gameover = -9,
+  cdtrack_emerald = -10,
 };
 
 /*
@@ -45,6 +46,7 @@ typedef enum
   sfx_thok,
   sfx_steam1,
   sfx_steam2,
+  sfx_tink,
   sfx_token,
   sfx_trfire,
   sfx_trpowr,
@@ -84,6 +86,7 @@ typedef enum
   sfx_s3k_af,
   sfx_s3k_b0,
   sfx_s3k_b1,
+  sfx_s3k_b2,
   sfx_s3k_b4,
   sfx_s3k_b6,
   sfx_s3k_b9,

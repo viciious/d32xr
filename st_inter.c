@@ -2,26 +2,7 @@
 #include "v_font.h"
 #include <string.h>
 
-typedef union
-{
-	struct
-	{
-		uint32_t score; // fake score
-		int32_t timebonus, ringbonus, perfbonus, total;
-		VINT min, sec;
-		int tics;
-		boolean gotperfbonus; // true if we should show the perfect bonus line
-		VINT ptimebonus; // TIME BONUS
-		VINT pringbonus; // RING BONUS
-		VINT pperfbonus; // PERFECT BONUS
-		VINT ptotal; // TOTAL
-		const char *passed1; // KNUCKLES GOT
-		const char *passed2; // THROUGH THE ACT
-		VINT passedx1, passedx2;
-	} coop;
-} y_data;
-
-static y_data data;
+y_data data;
 
 // graphics
 static boolean gottimebonus;
@@ -30,11 +11,7 @@ static boolean gotemblem;
 static int32_t interstart;
 static int32_t endtic = -1;
 
-static enum
-{
-	int_none,
-	int_coop,     // Single Player/Cooperative
-} inttype = int_none;
+inttype_e intertype = int_none;
 
 #define BASEVIDWIDTH 320
 
@@ -126,10 +103,10 @@ static void Y_AwardCoopBonuses(void)
 //
 void Y_IntermissionDrawer(void)
 {
-	if (inttype == int_none)
+	if (intertype == int_none)
 		return;
 
-	if (inttype == int_coop)
+	if (intertype == int_coop)
 	{
 		const int offset = 24;
 		const int squeeze = 12;
@@ -166,7 +143,7 @@ void Y_EndIntermission(void)
 	Y_UnloadData();
 
 	endtic = -1;
-	inttype = int_none;
+	intertype = int_none;
 }
 
 //
@@ -184,7 +161,7 @@ static void Y_FollowIntermission(void)
 //
 void Y_Ticker(void)
 {
-	if (inttype == int_none)
+	if (intertype == int_none)
 		return;
 
 	int intertic = gametic - interstart;
@@ -203,7 +180,7 @@ void Y_Ticker(void)
 	if (endtic != -1)
 		return; // tally is done
 
-	if (inttype == int_coop) // coop or single player, normal level
+	if (intertype == int_coop) // coop or single player, normal level
 	{
 		if (intertic < TICRATE) // one second pause before tally begins
 			return;
@@ -285,9 +262,9 @@ void Y_StartIntermission(void)
 	interstart = gametic;
 	endtic = -1;
 
-	inttype = int_coop;
+	intertype = int_coop;
 
-	switch (inttype)
+	switch (intertype)
 	{
 		case int_coop: // coop or single player, normal level
 		{

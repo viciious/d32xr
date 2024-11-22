@@ -30,6 +30,7 @@ typedef enum
 	mi_singleplayer,
 	mi_splitscreen,
 	mi_network,
+	mi_help,
 	NUMMAINITEMS
 } menu_t;
 
@@ -64,13 +65,14 @@ typedef enum
 	ms_new,
 	ms_load,
 	ms_save,
+	ms_help,
 	NUMMAINSCREENS
 } screen_t;
 
 static mainitem_t mainitem[NUMMAINITEMS];
 static mainscreen_t mainscreen[NUMMAINSCREENS];
 
-static const char* playmodes[NUMMODES] = { "Single", "Coop", "Deathmatch" };
+//static const char* playmodes[NUMMODES] = { "Single", "Coop", "Deathmatch" };
 jagobj_t* m_doom;
 
 static VINT m_skull1lump;
@@ -201,7 +203,7 @@ void M_Start2 (boolean startup_)
 	D_memset(mainitem, 0, sizeof(mainitem));
 
 	mainscreen[ms_new].firstitem = mi_level;
-	mainscreen[ms_new].numitems = mi_gamemode - mainscreen[ms_new].firstitem + 1;
+	mainscreen[ms_new].numitems = mi_level - mainscreen[ms_new].firstitem + 1;
 
 	mainscreen[ms_load].firstitem = mi_savelist;
 	mainscreen[ms_load].numitems = 1;
@@ -213,7 +215,10 @@ void M_Start2 (boolean startup_)
 	mainscreen[ms_save].numitems = 1;
 
 	mainscreen[ms_gametype].firstitem = mi_singleplayer;
-	mainscreen[ms_gametype].numitems = 3;
+	mainscreen[ms_gametype].numitems = 1;
+
+	mainscreen[ms_help].firstitem = mi_help;
+	mainscreen[ms_help].numitems = 1;
 
 	D_memcpy(mainitem[mi_newgame].name, "START GAME", 11);
 	mainitem[mi_newgame].x = ITEMX;
@@ -223,10 +228,10 @@ void M_Start2 (boolean startup_)
 	D_memcpy(mainitem[mi_loadgame].name, "ABOUT", 12);
 	mainitem[mi_loadgame].x = ITEMX;
 	mainitem[mi_loadgame].y = CURSORY(1);
-	mainitem[mi_loadgame].screen = ms_load;
+	mainitem[mi_loadgame].screen = ms_help;
 	mainscreen[ms_main].numitems++;
 
-	D_memcpy(mainitem[mi_level].name, "Area", 5);
+	D_memcpy(mainitem[mi_level].name, "Select Act", 11);
 	mainitem[mi_level].x = ITEMX;
 	mainitem[mi_level].y = CURSORY(0);
 	mainitem[mi_level].screen = ms_none;
@@ -365,7 +370,8 @@ int M_Ticker (void)
 	buttons = ticrealbuttons & MENU_BTNMASK;
 	oldbuttons = oldticrealbuttons & MENU_BTNMASK;
 
-	if ((buttons & (BT_A | BT_LMBTN)) && !(oldbuttons & (BT_A | BT_LMBTN)))
+	if ((gamemapinfo.mapNumber == 30 && (buttons & (BT_B | BT_LMBTN | BT_START)) && !(oldbuttons & (BT_B | BT_LMBTN | BT_START)))
+		|| (gamemapinfo.mapNumber != 30 && (buttons & (BT_B | BT_LMBTN)) && !(oldbuttons & (BT_B | BT_LMBTN))))
 	{
 		int itemno = menuscr->firstitem + cursorpos;
 
@@ -399,7 +405,7 @@ int M_Ticker (void)
 		}
 	}
 
-	if ((buttons & (BT_B | BT_RMBTN)) && !(oldbuttons & (BT_B | BT_RMBTN)))
+	if ((buttons & (BT_A | BT_C | BT_RMBTN)) && !(oldbuttons & (BT_A | BT_C | BT_RMBTN)))
 	{
 		if (screenpos != ms_main)
 		{
@@ -438,7 +444,7 @@ int M_Ticker (void)
 	}
 
 	/* exit menu if button press */
-	if ((buttons & (BT_A | BT_LMBTN | BT_START)) && !(oldbuttons & (BT_A | BT_LMBTN | BT_START)))
+	if ((buttons & (BT_B | BT_LMBTN | BT_START)) && !(oldbuttons & (BT_B | BT_LMBTN | BT_START)))
 	{
 		if (screenpos == ms_new)
 		{
@@ -548,11 +554,23 @@ int M_Ticker (void)
 					{			
 						if (++playermap == gamemapcount + 1)
 							playermap = 1;
+
+						if (gamemapnumbers[playermap-1] == 30 || (gamemapnumbers[playermap-1] >= SSTAGE_START && gamemapnumbers[playermap-1] <= SSTAGE_END))
+						{
+							if (++playermap == gamemapcount + 1)
+								playermap = 1;
+						}
 					}
 					if (buttons & BT_LEFT)
 					{
 						if(--playermap == 0)
 							playermap = gamemapcount;
+
+						if (gamemapnumbers[playermap-1] == 30 || (gamemapnumbers[playermap-1] >= SSTAGE_START && gamemapnumbers[playermap-1] <= SSTAGE_END))
+						{
+							if(--playermap == 0)
+								playermap = gamemapcount;
+						}
 					}
 					break;
 				case mi_savelist:
@@ -592,6 +610,7 @@ int M_Ticker (void)
 	return ga_nothing;
 }
 
+void O_DrawHelp(void);
 /*
 =================
 =
@@ -669,6 +688,12 @@ void M_Drawer (void)
 	EraseBlock (CURSORX, m_doom_height,m_skull1->width, CURSORY(menuscr->numitems)- CURSORY(0));
 #endif
 
+	if (scrpos == ms_help)
+	{
+		O_DrawHelp();
+		return;
+	}
+
 /* draw menu items */
 	int selectedPos = 0;
 	for (i = 0; i < menuscr->numitems; i++)
@@ -704,7 +729,7 @@ void M_Drawer (void)
 		/* draw game mode information */
 		item = &mainitem[mi_gamemode];
 		y = y_offset + item->y;
-		V_DrawStringLeft(&menuFont, item->x + 10, y + ITEMSPACE + 2, playmodes[currentplaymode]);
+//		V_DrawStringLeft(&menuFont, item->x + 10, y + ITEMSPACE + 2, playmodes[currentplaymode]);
 
 		/* draw start level information */
 		item = &mainitem[mi_level];
@@ -718,7 +743,7 @@ void M_Drawer (void)
 #endif
 		D_snprintf(mapNum, sizeof(mapNum), "%d", mapnumber);
 
-		V_DrawStringLeft(&titleNumberFont, item->x + 70, y + 2, mapNum);
+		V_DrawStringLeft(&titleNumberFont, item->x + 96, y + 2, mapNum);
 
 		V_DrawStringLeft(&menuFont, (320 - (tmplen * 14)) >> 1, y + ITEMSPACE + 2, tmp);
 	}

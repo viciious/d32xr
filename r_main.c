@@ -18,6 +18,7 @@ VINT anamorphicview = 0;
 VINT initmathtables = 2;
 
 drawcol_t drawcol;
+drawcol_t drawcolflipped;
 drawcol_t drawcolnpo2;
 drawcol_t drawcollow;
 drawspan_t drawspan;
@@ -256,6 +257,7 @@ void R_SetDrawMode(void)
 	if (debugmode == DEBUGMODE_NODRAW)
 	{
 		drawcol = I_DrawColumnNoDraw;
+		drawcolflipped = I_DrawColumnNoDraw;
 		drawcolnpo2 = I_DrawColumnNoDraw;
 		drawcollow = I_DrawColumnNoDraw;
 		drawspan = I_DrawSpanNoDraw;
@@ -285,6 +287,7 @@ void R_SetDrawMode(void)
 
 		#ifdef HIGH_DETAIL_SPRITES
 		drawspritecol = I_DrawColumn;
+		drawcolflipped = I_DrawColumnFlipped;
 		#endif
 
 		#ifdef POTATO_MODE
@@ -296,6 +299,7 @@ void R_SetDrawMode(void)
 	else
 	{
 		drawcol = I_DrawColumn;
+		drawcolflipped = I_DrawColumnFlipped;
 		drawcolnpo2 = I_DrawColumnNPo2;
 		drawspan = I_DrawSpan;
 		drawcollow = I_DrawColumnLow;
@@ -527,6 +531,8 @@ void R_SetupTextureCaches(int gamezonemargin)
 	const int zonemargin = gamezonemargin;
 	const int flatblocksize = sizeof(memblock_t) + ((sizeof(texcacheblock_t) + 15) & ~15) + 64*64 + 32;
 
+	CONS_Printf("Free memory: %d (LFB: %d)", Z_FreeMemory(mainzone), Z_LargestFreeBlock(mainzone));
+
 	// functioning texture cache requires at least 8kb of ram
 	zonefree = Z_LargestFreeBlock(mainzone);
 //	CONS_Printf("Free memory: %d", zonefree);
@@ -669,7 +675,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	vd.doubleclipangle = vd.clipangle * 2;
 	vd.viewangletox = viewangletox;
 
-	if (gamemapinfo.mapNumber != TITLE_MAP_NUMBER)
+	if (gamemapinfo.mapNumber != TITLE_MAP_NUMBER && (gamemapinfo.mapNumber < SSTAGE_START || gamemapinfo.mapNumber > SSTAGE_END))
 	{
 		if (leveltime < 62)
 		{
@@ -778,9 +784,25 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		palette = 12;
 	else if (fadetime > 0)
 	{
-		palette = 6 + (fadetime / 2);
-		if (palette > 10)
-			palette = 10;
+		if (gamemapinfo.mapNumber >= SSTAGE_START && gamemapinfo.mapNumber <= SSTAGE_END)
+		{
+			palette = 1 + (fadetime / 2);
+			if (palette > 5)
+				palette = 5;
+		}
+		else
+		{
+			palette = 6 + (fadetime / 2);
+			if (palette > 10)
+				palette = 10;
+		}
+	}
+	else if (gamemapinfo.mapNumber >= SSTAGE_START && gamemapinfo.mapNumber <= SSTAGE_END
+		&& gametic < 15)
+	{
+		palette = 5 - (gametic / 3);
+		if (palette < 0)
+			palette = 0;
 	}
 	else if (leveltime < 15 && demoplayback && gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
 		palette = 5 - (leveltime / 3);
@@ -797,6 +819,12 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		palette= 11;
 
 		distortion_action = DISTORTION_ADD;
+	}
+
+	if (gametic <= 1 && gamemapinfo.mapNumber != 30)
+	{
+		curpalette = palette = 10;
+		I_SetPalette(dc_playpals+10*768);
 	}
 	
 	if (palette != curpalette) {

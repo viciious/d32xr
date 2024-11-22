@@ -617,6 +617,10 @@ void P_SpawnSpecials (void)
 				sectors[s].fofsec = sec;
 			break;
 		}
+		// A sector that has FOF collision, but for rendering it will swap the floor/ceiling
+		// heights depending on the camera height.
+		// Should that be the halfheight of the control sector?
+		// Or maybe even configurable somehow, by using the control sector's texture offset value...
 		}
 	}
 done_speciallist:

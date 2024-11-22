@@ -35,11 +35,12 @@ typedef struct
 	VINT skyOffsetX;
 	VINT skyOffsetY;
 	VINT next;
-	VINT secretNext;
 	VINT lumpNum;
 	VINT mapNumber;
 	VINT musicLump;
 	VINT afterBossMusic;
+	VINT spheresNeeded;
+	VINT timeLimit;
 	char lumpName[9];
 	void *data;
 } dmapinfo_t;
@@ -51,6 +52,7 @@ typedef struct
 	VINT titlePage;
 	VINT titleMus;
 	VINT intermissionMus;
+	VINT emeraldMus;
 	VINT xtlifeMus;
 	VINT invincMus;
 	VINT sneakerMus;

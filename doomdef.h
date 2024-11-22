@@ -126,6 +126,8 @@ typedef unsigned angle_t;
 #define TITLE_ANGLE_INC		0x800000
 
 #define TITLE_MAP_NUMBER	30
+#define SSTAGE_START        60
+#define SSTAGE_END          66
 
 #ifdef MARS
 
@@ -154,6 +156,7 @@ typedef enum
 	ga_exitdemo,
 	ga_startnew,
 	ga_backtotitle,
+	ga_specialstageexit,
 } gameaction_t;
 
 
@@ -428,6 +431,7 @@ typedef struct player_s
 	VINT		dashSpeed;
 	VINT        homingTimer;
 	VINT        xtralife;
+	VINT        skidTime;
 } player_t;
 
 void P_PlayerHitFloor(player_t* player);
@@ -517,6 +521,9 @@ extern 	VINT 		gamemapcount;
 extern 	int 		gametic;
 extern  int         leveltime;
 extern  VINT        fadetime;
+extern uint16_t     emeralds;
+extern uint16_t     token;
+extern uint16_t     tokenbits;
 
 #define MAXDMSTARTS		10
 extern	mapthing_t	*deathmatchstarts, *deathmatch_p;
@@ -766,6 +773,7 @@ void I_SwapScreenCopy(void);
 #define I_DrawSpanLow I_DrawSpanLowA
 
 #define I_DrawColumn I_DrawColumnA
+#define I_DrawColumnFlipped I_DrawColumnFlippedA
 #define I_DrawSkyColumn I_DrawSkyColumnA
 #define I_Draw32XSkyColumn I_Draw32XSkyColumnA
 #define I_DrawColumnNPo2 I_DrawColumnNPo2A
@@ -785,6 +793,9 @@ void I_DrawSpanLow(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int dc_texheight);
 
 void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
+	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
+
+void I_DrawColumnFlipped(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
 	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
 
 #ifdef MDSKY
@@ -1006,17 +1017,17 @@ enum
 	BT_UP			= 0x4,
 	BT_DOWN			= 0x8,
 
-	BT_ATTACK		= 0x10,
-	BT_USE			= 0x20,
-	BT_STRAFE		= 0x40,
-	BT_SPEED		= 0x80,
+	BT_JUMP		    = 0x10,
+	BT_SPIN			= 0x20,
+	BT_GASPEDAL		= 0x40,
+	BT_FLIP			= 0x80,
 
 	BT_START		= 0x100,
 	BT_AUTOMAP		= 0x200,
 	BT_MODE			= 0x400,
 
-	BT_PWEAPN		= 0x800,
-	BT_NWEAPN		= 0x1000,
+	BT_CAMLEFT		= 0x800,
+	BT_CAMRIGHT		= 0x1000,
 
 	BT_STRAFELEFT	= 0x2000,
 	BT_STRAFERIGHT	= 0x4000,
@@ -1042,19 +1053,13 @@ enum
 typedef enum
 {
 	SFU,
-	SUF,
-	FSU,
-	FUS,
-	USF,
-	UFS,
-	NUMCONTROLOPTIONS
+	NUMCONTROLOPTIONS,
 } control_t;
 
 /* action buttons can be set to BT_A, BT_B, or BT_C */
 /* strafe and use should be set to the same thing */
 extern unsigned configuration[NUMCONTROLOPTIONS][3];
 extern	VINT	controltype;				/* 0 to 5 */
-extern	VINT	strafebtns;
 extern	boolean	splitscreen;
 
 extern	VINT	sfxvolume, musicvolume;		/* range from 0 to 255 */
@@ -1089,6 +1094,7 @@ typedef struct
 
 void DoubleBufferSetup (void);
 void EraseBlock (int x, int y, int width, int height);
+void GetJagobjSize(int lumpnum, int* ow, int* oh);
 void DrawJagobj (jagobj_t *jo, int x, int y);
 void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh);
 void DrawJagobjLumpWithColormap(int lumpnum, int x, int y, int* ow, int* oh, int colormap);

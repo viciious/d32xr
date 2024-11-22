@@ -2,6 +2,7 @@
  
 #include "doomdef.h"
 #include "v_font.h"
+#include "r_local.h"
 
 #ifdef MARS
 #include "marshw.h"
@@ -38,12 +39,7 @@ int 		ticstart;
 
 unsigned configuration[NUMCONTROLOPTIONS][3] =
 {
-	{BT_ATTACK, BT_USE, BT_SPEED},
-	{BT_SPEED, BT_USE, BT_ATTACK},
-	{BT_ATTACK, BT_SPEED, BT_USE},
-	{BT_ATTACK, BT_USE, BT_SPEED},
-	{BT_USE, BT_SPEED, BT_ATTACK},
-	{BT_USE, BT_ATTACK, BT_SPEED}
+	{BT_FLIP, BT_JUMP, BT_SPIN},
 };
 
 /*============================================================================ */
@@ -472,7 +468,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 
 		last_frt_count = frt_count;
 
-		if (optionsMenuOn || gamemapinfo.mapNumber == 30 || leveltime < TICRATE / 4) // Don't include map loading times into frameskip calculation
+		if (optionsMenuOn || gamemapinfo.mapNumber == TITLE_MAP_NUMBER || leveltime < TICRATE / 4) // Don't include map loading times into frameskip calculation
 		{
 			accum_time = 1;
 			total_frt_count = 0;
@@ -791,10 +787,10 @@ int TIC_Abortable (void)
 VINT disclaimerCount = 0;
 int TIC_Disclaimer(void)
 {
-	if (++disclaimerCount > 360)
+	if (++disclaimerCount > 300)
 		return 1;
 
-	if (disclaimerCount == 320)
+	if (disclaimerCount == 270)
 	{
 		// Set to totally black
 		const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
@@ -820,6 +816,10 @@ void START_Disclaimer(void)
 
 	const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
 	I_SetPalette(dc_playpals);
+
+	S_StartSong(gameinfo.gameoverMus, 0, cdtrack_gameover);
+
+	R_InitColormap();
 }
 
 void STOP_Disclaimer (void)
@@ -834,6 +834,109 @@ void parse_data(unsigned char *data, size_t dataLen)
 	size_t i;
 	for (i = 0; i < dataLen; i++, startPos++)
 		data[i] = data[i] ^ key[startPos & 7];
+}
+
+/*
+==================
+=
+= BufferedDrawSprite
+=
+= Cache and draw a game sprite to the 8 bit buffered screen
+==================
+*/
+
+void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
+{
+	spritedef_t	*sprdef;
+	spriteframe_t	*sprframe;
+	VINT 		*sprlump;
+	patch_t		*patch;
+	byte		*pixels, *src;
+	int			x, sprleft, sprtop, spryscale;
+	fixed_t 	spriscale;
+	column_t	*column;
+	int			lump;
+	boolean		flip;
+	int			texturecolumn;
+	int			light = HWLIGHT(255);
+	int 		height = I_FrameBufferHeight();
+
+	if ((unsigned)sprite >= NUMSPRITES)
+		I_Error ("BufferedDrawSprite: invalid sprite number %i "
+		,sprite);
+	sprdef = &sprites[sprite];
+	if ( (frame&FF_FRAMEMASK) >= sprdef->numframes )
+		I_Error ("BufferedDrawSprite: invalid sprite frame %i : %i "
+		,sprite,frame);
+	sprframe = &spriteframes[sprdef->firstframe + (frame & FF_FRAMEMASK)];
+	sprlump = &spritelumps[sprframe->lump];
+
+	if (sprlump[rotation] != -1)
+		lump = sprlump[rotation];
+	else
+		lump = sprlump[0];
+
+	flip = false;
+	if (lump < 0)
+	{
+		lump = -(lump + 1);
+		flip = true;
+	}
+
+	if (lump <= 0)
+		return;
+
+	patch = (patch_t *)W_POINTLUMPNUM(lump);
+	pixels = R_CheckPixels(lump + 1);
+	 	
+/* */
+/* coordinates are in a 160*112 screen (doubled pixels) */
+/* */
+	sprtop = top;
+	sprleft = left;
+	spryscale = 1;
+	spriscale = FRACUNIT/spryscale;
+
+	sprtop -= patch->topoffset;
+	sprleft -= patch->leftoffset;
+
+/* */
+/* draw it by hand */
+/* */
+	for (x=0 ; x<patch->width ; x++)
+	{
+		if (sprleft+x < 0)
+			continue;
+		if (sprleft+x >= 320)
+			break;
+
+		if (flip)
+			texturecolumn = patch->width-1-x;
+		else
+			texturecolumn = x;
+			
+		column = (column_t *) ((byte *)patch +
+		BIGSHORT(patch->columnofs[texturecolumn]));
+
+/* */
+/* draw a masked column */
+/* */
+		for ( ; column->topdelta != 0xff ; column++) 
+		{
+			int top    = column->topdelta + sprtop;
+			int bottom = top + column->length - 1;
+
+			top *= spryscale;
+			bottom *= spryscale;
+			src = pixels + BIGSHORT(column->dataofs);
+
+			if (top < 0) top = 0;
+			if (bottom >= height) bottom = height - 1;
+			if (top > bottom) continue;
+
+			I_DrawColumn(sprleft+x, top, bottom, light, 0, spriscale, src, 128);
+		}
+	}
 }
 
 void DRAW_Disclaimer (void)
@@ -860,10 +963,16 @@ void DRAW_Disclaimer (void)
 	parse_data(text2, stext2+1);
 	parse_data(text3, stext3+1);
 
-	V_DrawStringCenter(&creditFont, 160, 64, (const char*)text1);
-	V_DrawStringCenter(&creditFont, 160, 88, (const char*)text2);
+	DrawFillRect(0, 0, viewportWidth, viewportHeight, COLOR_BLACK);
 
-	V_DrawStringCenter(&menuFont, 160, 128, (const char*)text3);
+	viewportbuffer = (pixel_t*)I_FrameBuffer();
+	I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
+	BufferedDrawSprite(SPR_PLAY, 1 + ((disclaimerCount / 8) & 1), 0, 80, 160);
+
+	V_DrawStringCenter(&creditFont, 160, 64+32, (const char*)text1);
+	V_DrawStringCenter(&creditFont, 160, 88+32, (const char*)text2);
+
+	V_DrawStringCenter(&menuFont, 160, 128+32, (const char*)text3);
 	Mars_ClearCache();
 }
 #endif
