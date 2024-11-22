@@ -287,6 +287,7 @@ skipblock:
             if (++spcm->block > spcm->final_block) {
 done:
                 if (spcm->repeat) {
+                    memset(&spcm->mix, 0, sizeof(spcm->mix));
                     spcm->block = spcm->start_block;
                     spcm->state++;
                     break;
