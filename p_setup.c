@@ -603,7 +603,7 @@ D_printf ("P_SetupLevel(%i)\n",lumpnum);
 	P_InitThinkers ();
 
 	R_ResetTextures();
-	
+
 /* note: most of this ordering is important	 */
 	P_LoadBlockMap (lumpnum+ML_BLOCKMAP);
 	P_LoadVertexes (lumpnum+ML_VERTEXES);

@@ -555,7 +555,7 @@ int M_Ticker (void)
 						if (++playermap == gamemapcount + 1)
 							playermap = 1;
 
-						if (gamemapnumbers[playermap-1] == 30)
+						if (gamemapnumbers[playermap-1] == 30 || (gamemapnumbers[playermap-1] >= SSTAGE_START && gamemapnumbers[playermap-1] <= SSTAGE_END))
 						{
 							if (++playermap == gamemapcount + 1)
 								playermap = 1;
@@ -566,7 +566,7 @@ int M_Ticker (void)
 						if(--playermap == 0)
 							playermap = gamemapcount;
 
-						if (gamemapnumbers[playermap-1] == 30)
+						if (gamemapnumbers[playermap-1] == 30 || (gamemapnumbers[playermap-1] >= SSTAGE_START && gamemapnumbers[playermap-1] <= SSTAGE_END))
 						{
 							if(--playermap == 0)
 								playermap = gamemapcount;
