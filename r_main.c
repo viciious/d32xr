@@ -25,6 +25,7 @@ drawspan_t drawspan;
 #ifdef MDSKY
 drawskycol_t drawskycol;
 #endif
+drawcol_t draw32xskycol;
 
 #ifdef HIGH_DETAIL_SPRITES
 drawcol_t drawspritecol;
@@ -262,6 +263,7 @@ void R_SetDrawMode(void)
 		#ifdef MDSKY
 		drawskycol = I_DrawColumnNoDraw;
 		#endif
+		draw32xskycol = I_DrawColumnNoDraw;
 
 		#ifdef HIGH_DETAIL_SPRITES
 		drawspritecol = I_DrawColumnNoDraw;
@@ -279,6 +281,7 @@ void R_SetDrawMode(void)
 		#ifdef MDSKY
 		drawskycol = I_DrawSkyColumnLow;
 		#endif
+		draw32xskycol = I_Draw32XSkyColumnLow;
 
 		#ifdef HIGH_DETAIL_SPRITES
 		drawspritecol = I_DrawColumn;
@@ -300,6 +303,7 @@ void R_SetDrawMode(void)
 		#ifdef MDSKY
 		drawskycol = I_DrawSkyColumn;
 		#endif
+		//draw32xskycol = I_Draw32XSkyColumn;	// This doesn't exist!
 
 		#ifdef HIGH_DETAIL_SPRITES
 		drawspritecol = I_DrawColumn;

@@ -291,6 +291,7 @@ extern drawspan_t drawspan;
 #ifdef MDSKY
 extern drawskycol_t drawskycol;
 #endif
+extern drawcol_t draw32xskycol;
 
 #ifdef HIGH_DETAIL_SPRITES
 extern drawcol_t drawspritecol;

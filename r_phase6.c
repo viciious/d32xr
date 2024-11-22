@@ -4,6 +4,7 @@
   Renderer phase 6 - Seg Loop 
 */
 
+#include "p_camera.h"
 #include "r_local.h"
 #include "mars.h"
 
@@ -158,7 +159,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 
     #ifdef MDSKY
     if (sky_32x_layer) {
-        draw32xsky = (segl->actionbits & AC_ADDSKY) != 0 ? drawcol : NULL;
+        draw32xsky = (segl->actionbits & AC_ADDSKY) != 0 ? draw32xskycol : NULL;
         drawmdsky = NULL;
     }
     else {
@@ -166,7 +167,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
         draw32xsky = NULL;
     }
     #else
-    draw32xsky = (segl->actionbits & AC_ADDSKY) != 0 ? drawcol : NULL;
+    draw32xsky = (segl->actionbits & AC_ADDSKY) != 0 ? draw32xskycol : NULL;
     #endif
 
     fixed_t scalefrac = segl->scalefrac;
@@ -253,7 +254,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
                 if (draw32xsky) {
                     int colnum = ((vd.viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
                     inpixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
-                    draw32xsky(x, top, --bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, 128);
+                    draw32xsky(x, top, --bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, -(camera.aiming >> 22));
                 }
                 else {
                     drawmdsky(x, top, bottom);
@@ -262,7 +263,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
                 // CALICO: draw sky column
                 int colnum = ((vd.viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
                 inpixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
-                draw32xsky(x, top, --bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, 128);
+                draw32xsky(x, top, --bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, -(camera.aiming >> 22));
 #endif
             }
         }
