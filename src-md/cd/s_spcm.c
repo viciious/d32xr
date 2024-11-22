@@ -257,7 +257,7 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
             chan = spcm->mix.paint_chan;
             offset = spcm->mix.paint_offset;
 
-            if (chan == 0) {
+            if (chan == 0 && spcm->playing) {
                 switch (spcm->state) {
                 case SPCM_STATE_PAINT:
                     painted_sectors = S_SPCM_PaintedSectors(spcm);
