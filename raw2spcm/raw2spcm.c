@@ -49,21 +49,31 @@ int main(int argc, char **argv)
     int freq = argc > 3 ? atoi(argv[3]) : 0;
     int numc = argc > 4 ? atoi(argv[4]) : 2;
     int incr = (freq * 2048 / 32604);
-    int i, len, test = 1;
+    int i, j, k, len, test = 1, outlen;
+    int loop_markers = 0;
+    int chunk_sectors = 1;
     uint8_t *data;
-    uint8_t *outdata;
+    uint8_t *outdata, *outend;
     int num_channels = numc ? numc : 2;
     uint8_t sector[2048];
 
     fseek(fin, 0, SEEK_END);
-    len = ftell(fin);
+
+    len = ftell(fin);   
     data = malloc(len);
-    outdata = malloc(len + 4096);
+
+    outlen = (len + 2047)/2048; // number of sectors
+    outlen = outlen*(2048+32); //  max 32 bytes of loop markers per sector
+    outlen = (outlen + 2047)/2048; // number of sectors
+    outlen += 2;
+    outlen *= 2048;
+    outdata = malloc(outlen);
+
     fseek(fin, 0, SEEK_SET);
     fread(data, 1, len, fin);
 
     memset(sector, 0, sizeof(sector));
-    memset(outdata, 0, len + 4096);
+    memset(outdata, 0, outlen);
 
     sector[0] = 'S';
     sector[1] = 'P';
@@ -82,39 +92,102 @@ int main(int argc, char **argv)
     memset(sector, 0, sizeof(sector));
 
     if (num_channels == 1) {
-        for (i = 0; i < len; i++) {
-            outdata[i] = rawu82spcm(data[i]);
+        uint8_t *left;
+        int num_samples = len;
+
+        left = outdata;
+
+        i = 0;
+        for (k = 0; k < len; ) {
+            int chunk = chunk_sectors*2048 - loop_markers;
+            if (k + chunk > num_samples)
+                chunk = num_samples - k;
+
+            for (j = 0; j < chunk; j++) {
+                left[j] = rawu82spcm(data[k++]);
+            }
+            left += j;
+
+            if ((chunk % 2048) + loop_markers > 0)
+            {
+                for (j = 0; j < chunk % 2048; j++)
+                {
+                    left[j] = rawu82spcm(data[k++]);
+                }
+                left += j;
+
+                for (j = 0; j < loop_markers; j++) {
+                    left[j] = 0xff;
+                }
+                left += j;
+
+                left += 2048;
+            }
         }
+
+        outend = left;
     }
     else {
+        uint8_t *left, *right;
         int num_samples = len / 2;
 
-        for (i = 0; i < len; i += 2) {
-            int sectornum = i / 4096;
-            int bytenum = (i % 4096) / 2;
+        left = outdata;
+        right = outdata + 2048;
 
-            int leftoff = sectornum * 2 * 2048;
-            int rightoff = leftoff + 2048;
+        i = 0;
+        for (k = 0; k < len; ) {
+            int c;
+            int chunk = chunk_sectors*2048 - loop_markers;
+            if (k/2 + chunk > num_samples)
+                chunk = num_samples - k/2;
 
-            outdata[leftoff  + bytenum] = rawu82spcm(data[i]);
-            outdata[rightoff + bytenum] = rawu82spcm(data[i+1]);
+            int num_sectors = chunk / 2048;
+
+            for (c = 0; c < num_sectors; c++)
+            {
+                for (j = 0; j < 2048; j++)
+                {
+                    left[j] = rawu82spcm(data[k++]);
+                    right[j] = rawu82spcm(data[k++]);
+                }
+                left += j;
+                right += j;
+
+                left += 2048;
+                right += 2048;
+            }
+
+            if ((chunk % 2048) + loop_markers > 0)
+            {
+                for (j = 0; j < chunk % 2048; j++)
+                {
+                    left[j] = rawu82spcm(data[k++]);
+                    right[j] = rawu82spcm(data[k++]);
+                }
+                left += j;
+                right += j;
+
+                for (j = 0; j < loop_markers; j++) {
+                    left[j] = 0xff;
+                    right[j] = 0xff;
+                }
+                left += j;
+                right += j;
+
+                left += 2048;
+                right += 2048;
+            }
         }
+
+        outend = right;
     }
 
-    if (num_channels == 1) {
-        int num_sectors = (len + 2047) / 2048;
-        for (i = 0; i < num_sectors; i++)
-        {
-            fwrite(&outdata[i*2048], 1, 2048, fout);
-        }
-    } else {
-        int num_sectors = (len/2 + 2047) / 2048;
-        num_sectors *= 2;
-        for (i = 0; i < num_sectors; i++)
-        {
-            fwrite(&outdata[i*2048], 1, 2048, fout);
-        }
+    int num_sectors = (outend - outdata + 2047) / 2048;
+    for (i = 0; i < num_sectors; i++)
+    {
+        fwrite(&outdata[i*2048], 1, 2048, fout);
     }
+
     fwrite(sector, 1, 2048, fout);
 
     free(data);
