@@ -1102,16 +1102,17 @@ void A_BossDeath (mobj_t *mo)
 	int 		i;
 	mobj_t		*mo2;
 	line_t		junk;
+	int			mapspecials = gamemapinfo->specials;
 		
-	if (mo->type == MT_BRUISER && !(gamemapinfo.specials & MI_BARON_SPECIAL))
+	if (mo->type == MT_BRUISER && !(mapspecials & MI_BARON_SPECIAL))
 		return;			/* bruisers apear on other levels */
-	if (mo->type == MT_CYBORG && !(gamemapinfo.specials & MI_CYBER_SPECIAL))
+	if (mo->type == MT_CYBORG && !(mapspecials & MI_CYBER_SPECIAL))
 		return;
-	if (mo->type == MT_SPIDER && !(gamemapinfo.specials & MI_SPIDER_SPECIAL))
+	if (mo->type == MT_SPIDER && !(mapspecials & MI_SPIDER_SPECIAL))
 		return;
-	if (mo->type == MT_FATSO && !(gamemapinfo.specials & MI_FATSO_SPECIAL))
+	if (mo->type == MT_FATSO && !(mapspecials & MI_FATSO_SPECIAL))
 		return;
-	if (mo->type == MT_BABY && !(gamemapinfo.specials & MI_BABY_SPECIAL))
+	if (mo->type == MT_BABY && !(mapspecials & MI_BABY_SPECIAL))
 		return;
 
     // make sure there is a player alive for victory
@@ -1146,7 +1147,7 @@ void A_BossDeath (mobj_t *mo)
 			EV_DoFloor (&junk, raiseToTexture);
 			break;
 		case MT_CYBORG:
-			if (gamemapinfo.specials & MI_CYBER_SPECIAL2)
+			if (mapspecials & MI_CYBER_SPECIAL2)
 			{
 				junk.tag = 666;
 				EV_DoDoor (&junk, blazeOpen);
@@ -1157,7 +1158,7 @@ void A_BossDeath (mobj_t *mo)
 			}
 			break;
 		case MT_SPIDER:
-			if (gamemapinfo.specials & MI_SPIDER_SPECIAL2)
+			if (mapspecials & MI_SPIDER_SPECIAL2)
 			{
 				junk.tag = 666;
 				EV_DoFloor (&junk, lowerFloorToLowest);

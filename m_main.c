@@ -257,7 +257,7 @@ void M_Stop (void)
 =================
 */
 
-static char* M_MapName(VINT mapnum)
+static const char* M_MapName(VINT mapnum)
 {
 	return G_MapNameForMapNum(mapnum);
 }
@@ -614,7 +614,7 @@ void M_Drawer (void)
 	if (scrpos == ms_new)
 	{
 		mainitem_t* item;
-		char *tmp;
+		const char *tmp;
 		int tmplen;
 
 		/* draw game mode information */

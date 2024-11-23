@@ -12,8 +12,8 @@ void G_DoLoadLevel (void);
  
 gameaction_t    gameaction; 
 skill_t         gameskill; 
-char			*gamemaplump;
-dmapinfo_t		gamemapinfo;
+const char		*gamemaplump;
+dmapinfo_t		*gamemapinfo;
 dgameinfo_t		gameinfo;
 
 dmapinfo_t		**gamemaplist = NULL;
@@ -50,10 +50,15 @@ dmapinfo_t *G_MapInfoForLumpName(const char *lumpName)
 {
 	int i;
 
+	if (!lumpName || !*lumpName) {
+		return NULL;
+	}
+
 	/* find the map by its lump */
 	for (i = 0; i < gamemapcount; i++)
 	{
-		if (!D_strcasecmp(gamemaplist[i]->lumpName, lumpName))
+		const char *l = DMAPINFO_STRFIELD(gamemaplist[i], lumpName); 
+		if (!D_strcasecmp(l, lumpName))
 		{
 			return gamemaplist[i];
 		}
@@ -61,32 +66,34 @@ dmapinfo_t *G_MapInfoForLumpName(const char *lumpName)
 	return NULL;
 }
 
-char *G_LumpNameForMapNum(int map)
+const char *G_LumpNameForMapNum(int map)
 {
 	int i;
 
  	/* find the map by its number */
 	for (i = 0; i < gamemapcount; i++)
 	{
+		const char *l = DMAPINFO_STRFIELD(gamemaplist[i], lumpName); 
 		if (gamemaplist[i]->mapNumber > map)
 			break;
 		if (gamemaplist[i]->mapNumber == map)
-			return gamemaplist[i]->lumpName;
+			return l;
 	}
 	return "";
 }
 
-char *G_MapNameForMapNum(int map)
+const char *G_MapNameForMapNum(int map)
 {
 	int i;
 
  	/* find the map by its number */
 	for (i = 0; i < gamemapcount; i++)
 	{
+		const char *n = DMAPINFO_STRFIELD(gamemaplist[i], name); 
 		if (gamemaplist[i]->mapNumber > map)
 			break;
 		if (gamemaplist[i]->mapNumber == map)
-			return gamemaplist[i]->name;
+			return n;
 	}
 	return "";
 }
@@ -129,20 +136,20 @@ void G_DoLoadLevel (void)
 	if (!mi)
 		I_Error("No mapinfo for lump %s", gamemaplump);
 
-	D_memcpy(&gamemapinfo, mi, sizeof(dmapinfo_t));
+	gamemapinfo = mi;
 
 	/* update the start map */
-	gamemap = gamemapinfo.mapNumber;
+	gamemap = gamemapinfo->mapNumber;
 	startmap = gamemap;
 
-	P_SetupLevel (gamemaplump, gameskill, gamemapinfo.sky);
+	P_SetupLevel (gamemaplump, gameskill, DMAPINFO_STRFIELD(gamemapinfo, sky));
 	gameaction = ga_nothing; 
 
-	music = gamemapinfo.songNum;
+	music = gamemapinfo->songNum;
 	if (music <= mus_none)
 		music = S_SongForMapnum(gamemap);
 
-	cdtrack = gamemapinfo.cdaNum ? gamemapinfo.cdaNum : gameinfo.cdTrackOffset + music;
+	cdtrack = gamemapinfo->cdaNum ? gamemapinfo->cdaNum : gameinfo.cdTrackOffset + music;
 
 	if (netgame != gt_single && !splitscreen)
 		S_StopSong();
@@ -223,7 +230,7 @@ void G_PlayerReborn (int player)
 	p->usedown = p->attackdown = true;		/* don't do anything immediately */
 	p->playerstate = PST_LIVE;
 
-	if (gamemapinfo.specials & MI_PISTOL_START)
+	if (gamemapinfo->specials & MI_PISTOL_START)
 		P_ResetResp(p);
 	P_RestoreResp(p);
 }
@@ -414,18 +421,19 @@ void G_Init(void)
 			D_snprintf(lumpname, sizeof(lumpname), "MAP%02d", i+1);
 			len = mystrlen(lumpname);
 
-			maplist[i] = Z_Malloc(sizeof(dmapinfo_t) + len + 1, PU_STATIC);
+			maplist[i] = Z_Malloc(sizeof(dmapinfo_t) + len + 1 + 5, PU_STATIC);
 			maplist[i]->mapNumber = i + 1;
-			maplist[i]->lumpName = (char*)maplist[i] + sizeof(dmapinfo_t);
+			maplist[i]->lumpName = sizeof(dmapinfo_t);
 			maplist[i]->name = maplist[i]->lumpName;
 			maplist[i]->specials |= (maplist[i]->mapNumber == 8 ? MI_BARON_SPECIAL : 0);
-			D_memcpy(maplist[i]->lumpName, lumpname, len + 1);
+			D_memcpy((char *)maplist[i] + maplist[i]->lumpName, lumpname, len + 1);
 		}
 
 		for (i = 0; i < mapcount; i++) {
 			int nextmap = 0;
 			int gamemap = maplist[i]->mapNumber;
 			const char *sky;
+			const char *lumpName = (char *)maplist[i] + maplist[i]->lumpName;
 
 			switch (gamemap)
 			{
@@ -441,7 +449,8 @@ void G_Init(void)
 				sky = "SKY2";
 			else
 				sky = "SKY3";
-			maplist[i]->sky = (char *)sky;
+			maplist[i]->sky = (sizeof(dmapinfo_t)) + mystrlen(lumpName) + 1;
+			D_memcpy((char *)maplist[i] + maplist[i]->sky, sky, 5);
 
 			if (nextmap)
 				maplist[i]->next = maplist[nextmap-1]->name;
@@ -506,13 +515,11 @@ extern mobj_t emptymobj;
  
 void G_InitNew (skill_t skill, int map, gametype_t gametype, boolean splitscr)
 { 
-	int             i; 
+	int             i;
 
 //D_printf ("G_InitNew\n");
 
 	M_ClearRandom (); 
-
-	D_memset(&gamemapinfo, 0, sizeof(gamemapinfo));
 
 	/* these may be reset by I_NetSetup */
 	gamemaplump = G_LumpNameForMapNum(map);
@@ -578,7 +585,7 @@ void G_RunGame (void)
 
 	while (1)
 	{
-		char		*nextmapl;
+		const char	*nextmapl;
 #ifdef JAGUAR
 		int			nextmap;
 #endif
@@ -623,7 +630,7 @@ startnew:
 
 		if (gameaction == ga_warped)
 		{
-			if (starttype != netgame || startskill != gameskill || startmap != gamemapinfo.mapNumber)
+			if (starttype != netgame || startskill != gameskill || startmap != gamemapinfo->mapNumber)
 			{
 				gameaction = ga_startnew;
 				goto startnew;
@@ -631,16 +638,16 @@ startnew:
 			continue;			/* skip intermission */
 		}
 
-		secretexit = gameaction == ga_secretexit && gamemapinfo.secretNext;
+		secretexit = gameaction == ga_secretexit && gamemapinfo->secretNext;
 		if (secretexit)
-			nextmapl = gamemapinfo.secretNext;
+			nextmapl = DMAPINFO_STRFIELD(gamemapinfo, secretNext);
 		else
-			nextmapl = gamemapinfo.next;
+			nextmapl = DMAPINFO_STRFIELD(gamemapinfo, next);
 		finale_ = nextmapl == NULL || *nextmapl == '\0';
 
 #ifdef JAGUAR
 		if (finale_)
-			nextmap = gamemapinfo.mapnumber; /* don't add secret level to eeprom */
+			nextmap = gamemapinfo->mapnumber; /* don't add secret level to eeprom */
 		else
 			nextmap = G_LumpNumForMapNum(nextmapl);
 
@@ -669,7 +676,7 @@ startnew:
 				/* quick save */
 				dmapinfo_t *mi = G_MapInfoForLumpName(nextmapl);
 				if (mi)
-					QuickSave(mi->mapNumber, mi->name);
+					QuickSave(mi->mapNumber, DMAPINFO_STRFIELD(mi, name));
 			}
 		}
 #endif
@@ -680,7 +687,10 @@ startnew:
 	/* run a text screen */
 		finale = false;
 		if (netgame != gt_deathmatch)
-			if ((secretexit && *gamemapinfo.secretInterText) || *gamemapinfo.interText)
+		{
+			const char *secretInterText = DMAPINFO_STRFIELD(gamemapinfo, secretInterText);
+			const char *interText = DMAPINFO_STRFIELD(gamemapinfo, interText);
+			if ((secretexit && *secretInterText) || *interText)
 			{
 #ifdef MARS
 				MiniLoop(F_Start, F_Stop, F_Ticker, F_Drawer, I_Update);
@@ -688,6 +698,7 @@ startnew:
 				MiniLoop(F_Start, F_Stop, F_Ticker, F_Drawer, UpdateBuffer);
 #endif
 			}
+		}
 
 	/* run the finale if needed */
 		finale = finale_;

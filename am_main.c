@@ -85,11 +85,11 @@ static void DrawLine(uint8_t *fb,pixel_t color, fixed_t x1, fixed_t y1, fixed_t 
 void AM_Start(void)
 {
 	linesdrawn = 0;
-	if (amcurmap != gamemapinfo.mapNumber)
+	if (amcurmap != gamemapinfo->mapNumber)
 	{
 		scale = DEFAULTSCALE;
 		oldscale = DEFAULTSCALE;
-		amcurmap = gamemapinfo.mapNumber;
+		amcurmap = gamemapinfo->mapNumber;
 	}
 
 #ifdef JAGUAR
@@ -552,7 +552,7 @@ static void AM_DrawMapStats(void)
 		break;
 	}
 
-	I_Print8(12, 21, gamemapinfo.name);
+	I_Print8(12, 21, DMAPINFO_STRFIELD(gamemapinfo, name));
 }
 
 /*

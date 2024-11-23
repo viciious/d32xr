@@ -199,18 +199,21 @@ void IN_NetgameDrawer(void)
 	if (statsdrawn == false)
 #endif
 	{
-		if (gamemapinfo.name != NULL)
+		const char *mapname = DMAPINFO_STRFIELD(gamemapinfo, name);
+		const char *nextmapname = interm->nextmapinfo ? DMAPINFO_STRFIELD(interm->nextmapinfo, name) : "";
+
+		if (*mapname != '\0')
 		{
-			length = mystrlen(gamemapinfo.name);
-			print((320 - (length * 14)) >> 1, 10, gamemapinfo.name);
+			length = mystrlen(mapname);
+			print((320 - (length * 14)) >> 1, 10, mapname);
 		}
 
-		if (interm->nextmapinfo && interm->nextmapinfo->name != NULL)
+		if (*nextmapname != '\0')
 		{
 			length = mystrlen("Entering");
 			print((320 - (length * 14)) >> 1, 162, "Entering");
-			length = mystrlen(interm->nextmapinfo->name);
-			print((320 - (length * 14)) >> 1, 182, interm->nextmapinfo->name);
+			length = mystrlen(nextmapname);
+			print((320 - (length * 14)) >> 1, 182, nextmapname);
 		}
 
 		if (netgame == gt_deathmatch)
@@ -292,20 +295,23 @@ void IN_SingleDrawer(void)
 	if (statsdrawn == false)
 #endif
 	{
-		if (gamemapinfo.name != NULL)
+		const char *mapname = DMAPINFO_STRFIELD(gamemapinfo, name);
+		const char *nextmapname = interm->nextmapinfo ? DMAPINFO_STRFIELD(interm->nextmapinfo, name) : "";
+
+		if (*mapname != '\0')
 		{
-			length = mystrlen(gamemapinfo.name);
-			print((320 - (length * 14)) >> 1, 10, gamemapinfo.name);
+			length = mystrlen(mapname);
+			print((320 - (length * 14)) >> 1, 10, mapname);
 			length = mystrlen("Finished");
 			print((320 - (length * 14)) >> 1, 34, "Finished");
 		}
 
-		if (interm->nextmapinfo && interm->nextmapinfo->name != NULL)
+		if (*nextmapname != '\0')
 		{
 			length = mystrlen("Entering");
 			print( (320 - (length * 14)) >> 1, 162, "Entering");	
-			length = mystrlen(interm->nextmapinfo->name);
-			print( (320 - (length*14)) >> 1, 182, interm->nextmapinfo->name);
+			length = mystrlen(nextmapname);
+			print( (320 - (length*14)) >> 1, 182, nextmapname);
 		}
 
 		DrawJagobj(interm->i_kills, 71, KVALY - 10);
@@ -346,10 +352,10 @@ void IN_Start (void)
 
 	interm->valsdrawn = false;
 
-	if (gameaction == ga_secretexit && gamemapinfo.secretNext)
-		interm->nextmapinfo = G_MapInfoForLumpName(gamemapinfo.secretNext);
-	else if (gamemapinfo.next)
-		interm->nextmapinfo = G_MapInfoForLumpName(gamemapinfo.next);
+	if (gameaction == ga_secretexit && gamemapinfo->secretNext)
+		interm->nextmapinfo = G_MapInfoForLumpName(DMAPINFO_STRFIELD(gamemapinfo, secretNext));
+	else if (gamemapinfo->next)
+		interm->nextmapinfo = G_MapInfoForLumpName(DMAPINFO_STRFIELD(gamemapinfo, next));
 
 	D_memset(interm->killvalue, 0, sizeof(*interm->killvalue)*MAXPLAYERS);
 	D_memset(interm->itemvalue, 0, sizeof(*interm->itemvalue)*MAXPLAYERS);

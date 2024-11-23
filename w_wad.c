@@ -356,7 +356,7 @@ int	W_CheckNumForName (const char *name)
 ====================
 */
 
-int	W_GetNumForName (const char *name)
+int	W_GetNumForName_ (const char *name, const char *func)
 {
 	int	i;
 
@@ -364,7 +364,7 @@ int	W_GetNumForName (const char *name)
 	if (i != -1)
 		return i;
 
-	I_Error ("W_GetNumForName: %s not found!",name);
+	I_Error ("%s: %s not found!", func, name);
 	return -1;
 }
 

@@ -118,7 +118,7 @@ static void SaveGameExt(int slotnumber, int mapnum, const char *mapname)
 
 void SaveGame(int slotnumber)
 {
-	SaveGameExt(slotnumber, gamemapinfo.mapNumber, gamemapinfo.name);
+	SaveGameExt(slotnumber, gamemapinfo->mapNumber, DMAPINFO_STRFIELD(gamemapinfo, name));
 }
 
 void QuickSave(int nextmap, const char *mapname)

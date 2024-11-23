@@ -27,6 +27,21 @@
 #include <string.h>
 #include <stdlib.h>
 
+typedef struct
+{
+	VINT specials;
+	VINT mapNumber;
+	uint8_t songNum;
+	uint8_t cdaNum;
+	char *sky;
+	char *name;
+	char *next;
+	char *secretNext;
+	char *lumpName;
+	char *interText;
+	char *secretInterText;
+} dworkmapinfo_t;
+
 typedef void (*kvcall_t) (char *key, char *value, void *ptr);
 
 int G_BuiltinMapNumForMapName(const char* map)
@@ -209,7 +224,7 @@ static int G_ParseMapinfo(char* buf, kvcall_t kvcall, void *ptr)
 	return linecount;
 }
 
-static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
+static void G_AddMapinfoKey(char* key, char* value, dworkmapinfo_t* mi)
 {
 	if (!value) {
 		char* p;
@@ -384,13 +399,13 @@ static void G_ClearGameInfo(dgameinfo_t* gi)
 	gi->endText = "";
 }
 
-static dmapinfo_t *G_CompressMapInfo(dmapinfo_t *mi)
+static dmapinfo_t *G_CompressMapInfo(dworkmapinfo_t *mi)
 {
 	int size = 0;
 	char *buf;
 	dmapinfo_t *nmi;
 
-#define ALLOC_STR_FIELD(fld) do { size += mystrlen(mi->fld) + 1; } while(0)
+#define ALLOC_STR_FIELD(fld) do { int l = mystrlen(mi->fld); size += (l > 0 ? l + 1 : 0); } while(0)
 
 	size = sizeof(dmapinfo_t);
 	ALLOC_STR_FIELD(name);
@@ -402,17 +417,24 @@ static dmapinfo_t *G_CompressMapInfo(dmapinfo_t *mi)
 	ALLOC_STR_FIELD(sky);
 
 	buf = Z_Malloc(size, PU_STATIC);
+	D_memset(buf, 0, size);
 
 	nmi = (void*)buf;
 	size = sizeof(dmapinfo_t);
-	D_memcpy(nmi, mi, sizeof(dmapinfo_t));
+	nmi->specials = mi->specials;
+	nmi->mapNumber = mi->mapNumber;
+	nmi->songNum = mi->songNum;
+	nmi->cdaNum = mi->cdaNum;
 	buf += size;
 
 #define COPY_STR_FIELD(fld) do { \
-		nmi->fld = buf; \
-		size = mystrlen(mi->fld) + 1; \
-		D_memcpy(nmi->fld, mi->fld, size); \
-		buf += size; \
+		int l = mystrlen(mi->fld); \
+		if (l > 0) { \
+			nmi->fld = buf - (char *)nmi; \
+			size = l + 1; \
+			D_memcpy(buf, mi->fld, size); \
+			buf += size; \
+		} \
 	} while (0)
 	
 	COPY_STR_FIELD(name);
@@ -465,7 +487,7 @@ dmapinfo_t **G_LoadMaplist(int *pmapcount, dgameinfo_t* gi)
 	section = NULL;
 	sectionlen = 0;
 	for (ptr = buf; ; ptr = section + sectionlen + 1) {
-		dmapinfo_t* mi;
+		dworkmapinfo_t* mi;
 		char* zsection;
 		int linecount;
 
@@ -492,7 +514,7 @@ dmapinfo_t **G_LoadMaplist(int *pmapcount, dgameinfo_t* gi)
 		}
 
 		mi = (void *)tmpbuf;
-		zsection = (char *)mi + sizeof(dmapinfo_t);
+		zsection = (char *)mi + sizeof(dworkmapinfo_t);
 		D_memcpy(zsection, section, sectionlen);
 		zsection[sectionlen] = '\0';
 

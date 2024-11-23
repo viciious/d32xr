@@ -646,13 +646,14 @@ void F_Drawer (void)
 			{
 				char	str[2];
 				const char *text;
+				const char *secretInterText = DMAPINFO_STRFIELD(gamemapinfo, secretInterText);
 
 				if (finale)
 					text = gameinfo.endText;
-				else if (secretexit && *gamemapinfo.secretInterText)
-					text = gamemapinfo.secretInterText;
+				else if (secretexit && *secretInterText)
+					text = secretInterText;
 				else
-					text = gamemapinfo.interText;
+					text = DMAPINFO_STRFIELD(gamemapinfo, interText);
 
 				if (!text || !*text)
 					return;

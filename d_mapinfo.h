@@ -43,14 +43,16 @@ typedef struct
 	VINT mapNumber;
 	uint8_t songNum;
 	uint8_t cdaNum;
-	char *sky;
-	char *name;
-	char *next;
-	char *secretNext;
-	char *lumpName;
-	char *interText;
-	char *secretInterText;
+	VINT sky;
+	VINT name;
+	VINT next;
+	VINT secretNext;
+	VINT lumpName;
+	VINT interText;
+	VINT secretInterText;
 } dmapinfo_t;
+
+#define DMAPINFO_STRFIELD(mi,field) ((mi)->field ? (char *)(mi) + (int)(mi)->field : "")
 
 typedef struct
 {

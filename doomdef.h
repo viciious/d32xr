@@ -550,11 +550,11 @@ extern	VINT		maxammo[NUMAMMO];
 
 extern	skill_t		gameskill;
 extern	int			totalkills, totalitems, totalsecret;	/* for intermission */
-extern	char		*gamemaplump;
+extern	const char	*gamemaplump;
 extern	dgameinfo_t	gameinfo;
 
 extern 	dmapinfo_t	**gamemaplist;
-extern	dmapinfo_t	gamemapinfo;
+extern	dmapinfo_t	*gamemapinfo;
 extern 	VINT 		gamemapcount;
 
 extern 	int 		gametic;
@@ -711,7 +711,8 @@ void 	W_LoadPWAD(int wadnum);
 int 	W_CacheWADLumps (lumpinfo_t *li, int numlumps, VINT *lumps, boolean setpwad);
 
 int		W_CheckNumForName (const char *name);
-int		W_GetNumForName (const char *name);
+#define W_GetNumForName(name) W_GetNumForName_(name,__func__)
+int		W_GetNumForName_ (const char *name, const char *func);
 int		W_CheckRangeForName (const char *name, int start, int end);
 
 int		W_LumpLength (int lump);
@@ -885,8 +886,8 @@ void G_RecordDemo (void);
 int G_PlayDemoPtr (unsigned *demo);
 
 dmapinfo_t *G_MapInfoForLumpName(const char *lumpName);
-char *G_LumpNameForMapNum(int map);
-char *G_MapNameForMapNum(int map);
+const char *G_LumpNameForMapNum(int map);
+const char *G_MapNameForMapNum(int map);
 void G_DeInit (void);
 
 /*----- */
