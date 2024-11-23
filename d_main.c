@@ -845,7 +845,7 @@ void parse_data(unsigned char *data, size_t dataLen)
 ==================
 */
 
-void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
+void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left, boolean flip)
 {
 	spritedef_t	*sprdef;
 	spriteframe_t	*sprframe;
@@ -856,7 +856,6 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 	fixed_t 	spriscale;
 	column_t	*column;
 	int			lump;
-	boolean		flip;
 	int			texturecolumn;
 	int			light = HWLIGHT(255);
 	int 		height = I_FrameBufferHeight();
@@ -876,7 +875,6 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 	else
 		lump = sprlump[0];
 
-	flip = false;
 	if (lump < 0)
 	{
 		lump = -(lump + 1);
@@ -963,11 +961,25 @@ void DRAW_Disclaimer (void)
 	parse_data(text2, stext2+1);
 	parse_data(text3, stext3+1);
 
-	DrawFillRect(0, 0, viewportWidth, viewportHeight, COLOR_BLACK);
+	DrawFillRect(0, 0, 320, viewportHeight, COLOR_BLACK);
 
-	viewportbuffer = (pixel_t*)I_FrameBuffer();
-	I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
-	BufferedDrawSprite(SPR_PLAY, 1 + ((disclaimerCount / 8) & 1), 0, 80, 160);
+	if (disclaimerCount < 240)
+	{
+		viewportbuffer = (pixel_t*)I_FrameBuffer();
+		I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
+		BufferedDrawSprite(SPR_PLAY, 1 + ((disclaimerCount / 8) & 1), 0, 80, 160, false);
+	}
+	else if (disclaimerCount < 250)
+	{
+		DrawJagobjLump(W_GetNumForName("ZOOM"), 136, 80-56, NULL, NULL);
+	}
+	else
+	{
+		VINT Xpos = disclaimerCount - 250;
+		viewportbuffer = (pixel_t*)I_FrameBuffer();
+		I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
+		BufferedDrawSprite(SPR_PLAY, 11 + ((disclaimerCount / 2) % 4), 2, 80, 160  + (Xpos * 16), true);
+	}
 
 	V_DrawStringCenter(&creditFont, 160, 64+32, (const char*)text1);
 	V_DrawStringCenter(&creditFont, 160, 88+32, (const char*)text2);
