@@ -13,7 +13,7 @@ void G_DoLoadLevel (void);
 gameaction_t    gameaction; 
 skill_t         gameskill; 
 const char		*gamemaplump;
-dmapinfo_t		*gamemapinfo;
+dmapinfo_t		*gamemapinfo = NULL;
 dgameinfo_t		gameinfo;
 
 dmapinfo_t		**gamemaplist = NULL;

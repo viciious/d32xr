@@ -366,9 +366,12 @@ void F_Start (void)
 
 	fin->caststate = &states[mobjinfo[castorder[fin->castnum].type].seestate];
 	fin->casttics = fin->caststate->tics;
-
 	fin->endFlat = -1;
-	if (gameinfo.endFlat && *gameinfo.endFlat)
+
+	if (!finale && gamemapinfo && gamemapinfo->interFlat)
+		fin->endFlat = W_CheckNumForName(DMAPINFO_STRFIELD(gamemapinfo, interFlat));
+
+	if (fin->endFlat < 0 && gameinfo.endFlat && *gameinfo.endFlat)
 		fin->endFlat = W_CheckNumForName(gameinfo.endFlat);
 
 #ifndef MARS

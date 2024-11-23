@@ -50,6 +50,7 @@ typedef struct
 	VINT lumpName;
 	VINT interText;
 	VINT secretInterText;
+	VINT interFlat;
 } dmapinfo_t;
 
 #define DMAPINFO_STRFIELD(mi,field) ((mi)->field ? (char *)(mi) + (int)(mi)->field : "")

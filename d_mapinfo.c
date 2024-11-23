@@ -40,6 +40,7 @@ typedef struct
 	char *lumpName;
 	char *interText;
 	char *secretInterText;
+	char *interFlat;
 } dworkmapinfo_t;
 
 typedef void (*kvcall_t) (char *key, char *value, void *ptr);
@@ -305,6 +306,8 @@ static void G_AddMapinfoKey(char* key, char* value, dworkmapinfo_t* mi)
 		mi->interText = value;
 	else if (!D_strcasecmp(key, "secretIntermissionText"))
 		mi->secretInterText = value;
+	else if (!D_strcasecmp(key, "intermissionFlat"))
+		mi->interFlat = value;
 }
 
 static void G_FixSPCMDirList(dgameinfo_t *gi)
@@ -405,7 +408,7 @@ static dmapinfo_t *G_CompressMapInfo(dworkmapinfo_t *mi)
 	char *buf;
 	dmapinfo_t *nmi;
 
-#define ALLOC_STR_FIELD(fld) do { int l = mystrlen(mi->fld); size += (l > 0 ? l + 1 : 0); } while(0)
+#define ALLOC_STR_FIELD(fld) do { int l = mi->fld ? mystrlen(mi->fld) : 0; size += (l > 0 ? l + 1 : 0); } while(0)
 
 	size = sizeof(dmapinfo_t);
 	ALLOC_STR_FIELD(name);
@@ -415,6 +418,7 @@ static dmapinfo_t *G_CompressMapInfo(dworkmapinfo_t *mi)
 	ALLOC_STR_FIELD(interText);
 	ALLOC_STR_FIELD(secretInterText);
 	ALLOC_STR_FIELD(sky);
+	ALLOC_STR_FIELD(interFlat);
 
 	buf = Z_Malloc(size, PU_STATIC);
 	D_memset(buf, 0, size);
@@ -444,6 +448,7 @@ static dmapinfo_t *G_CompressMapInfo(dworkmapinfo_t *mi)
 	COPY_STR_FIELD(interText);
 	COPY_STR_FIELD(secretInterText);
 	COPY_STR_FIELD(sky);
+	COPY_STR_FIELD(interFlat);
 
 	return nmi;
 }
@@ -519,11 +524,6 @@ dmapinfo_t **G_LoadMaplist(int *pmapcount, dgameinfo_t* gi)
 		zsection[sectionlen] = '\0';
 
 		D_memset(mi, 0, sizeof(*mi));
-		mi->sky = "";
-		mi->songNum = mus_none;
-		mi->interText = "";
-		mi->secretInterText = "";
-
 		linecount = G_ParseMapinfo(zsection, (kvcall_t)&G_AddMapinfoKey, mi);
 		if (linecount < 2 || mi->mapNumber <= 0)
 			continue;
