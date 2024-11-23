@@ -310,6 +310,11 @@ done:
         break;
 
     case SPCM_STATE_STOPPING:
+        if (!spcm->playing) {
+            spcm->state = SPCM_STATE_PLAYING;
+            break;
+        }
+
         if (painted_sectors < spcm->mix.paint_sector + SPCM_BUF_MIN_SECTORS) {
             return;
         }
