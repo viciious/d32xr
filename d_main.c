@@ -142,6 +142,29 @@ void D_strncpy (char *dest, const char *src, int maxcount)
 			return;
 }
 
+void D_strncat(char *dest, const char *src, int maxcount)
+{
+	int i = 0;
+	// The easy case.. when the first index is empty.
+	if (dest[i] == '\0')
+	{
+		D_strncpy(&dest[i], src, maxcount);
+		return;
+	}
+
+	i++;
+	while (maxcount--)
+	{
+		if (dest[i] == '\0')
+		{
+			D_strncpy(&dest[i], src, maxcount);
+			return;
+		}
+	}
+
+	// Ran out of maxcount, so nothing was copied.
+}
+
 int D_strncasecmp (const char *s1, const char *s2, int len)
 {
 	while (*s1 && *s2)
@@ -328,7 +351,7 @@ static void D_LoadMDSky(void)
 	char lumpname[9];
 
 	D_strncpy(lumpname, gamemapinfo.sky, 5);
-	strcat(lumpname, "MD");
+	D_strncat(lumpname, "MD", 8);
 	lump = W_CheckNumForName(lumpname);
 	if (lump != -1) {
 		// This map uses an MD sky.
@@ -343,7 +366,7 @@ static void D_LoadMDSky(void)
 	}
 
 	D_strncpy(lumpname, gamemapinfo.sky, 5);
-	strcat(lumpname, "A");
+	D_strncat(lumpname, "A", 8);
 	lump = W_CheckNumForName(lumpname);
 	if (lump != -1) {
 		sky_names_a_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
@@ -354,7 +377,7 @@ static void D_LoadMDSky(void)
 	}
 
 	D_strncpy(lumpname, gamemapinfo.sky, 5);
-	strcat(lumpname, "B");
+	D_strncat(lumpname, "B", 8);
 	lump = W_CheckNumForName(lumpname);
 	if (lump != -1) {
 		sky_names_b_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
@@ -365,7 +388,7 @@ static void D_LoadMDSky(void)
 	}
 
 	D_strncpy(lumpname, gamemapinfo.sky, 5);
-	strcat(lumpname, "PAL");
+	D_strncat(lumpname, "PAL", 8);
 	lump = W_CheckNumForName(lumpname);
 	if (lump != -1) {
 		sky_palettes_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
@@ -376,7 +399,7 @@ static void D_LoadMDSky(void)
 	}
 
 	D_strncpy(lumpname, gamemapinfo.sky, 5);
-	strcat(lumpname, "TIL");
+	D_strncat(lumpname, "TIL", 8);
 	lump = W_CheckNumForName(lumpname);
 	if (lump != -1) {
 		sky_tiles_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
