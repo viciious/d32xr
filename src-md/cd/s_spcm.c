@@ -25,7 +25,8 @@
 #define SPCM_RIGHT_CHAN_SOFFSET (SPCM_LEFT_CHAN_SOFFSET+SPCM_CHAN_BUF_SIZE+2048)
 #define SPCM_RIGHT_CHANNEL_ID   (SPCM_LEFT_CHANNEL_ID+1)
 
-#define SPCM_MAX_WAIT_TICS      400 // x7.8ms = ~3s seconds
+#define SPCM_MAX_INIT_WAIT_TICS 520 // x7.8ms = ~4s seconds
+#define SPCM_MAX_PLAY_WAIT_TICS 260 // x7.8ms = ~2s seconds
 
 enum
 {
@@ -72,6 +73,7 @@ typedef struct
     uint8_t sector_cnt;
     volatile uint8_t state;
     uint8_t repeat, quickrepeat;
+    int16_t maxwait;
 } s_spcm_t;
 
 static s_spcm_t track = { 0 };
@@ -222,6 +224,7 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
             for (i = 0; i < spcm->num_channels; i++) {
                 pcm_set_off(spcm->chan[i].id);
             }
+            begin_read_cd(spcm->block, 0); // clear CDC buffer?
             spcm->state = SPCM_STATE_STOPPED;
             break;
         }
@@ -288,6 +291,7 @@ skipblock:
 done:
                 if (spcm->repeat && spcm->quickrepeat) {
                     memset(&spcm->mix, 0, sizeof(spcm->mix));
+                    spcm->maxwait = SPCM_MAX_INIT_WAIT_TICS;
                     spcm->block = spcm->start_block;
                     spcm->state++;
                     break;
@@ -299,12 +303,13 @@ done:
                 }
             }
             else if (--spcm->sector_cnt == 0) {
+                spcm->maxwait = SPCM_MAX_PLAY_WAIT_TICS;
                 spcm->state++;
                 break;
             }
         }
 
-        if (spcm->tics - spcm->lastdmatic > SPCM_MAX_WAIT_TICS) {
+        if (spcm->tics - spcm->lastdmatic > spcm->maxwait) {
             goto skipblock;
         }
         break;
@@ -398,8 +403,10 @@ void S_SPCM_Unsuspend(void)
         return;
     }
 
-    spcm->playing = 1;
+    memset(&spcm->mix, 0, sizeof(spcm->mix));
+    spcm->maxwait = SPCM_MAX_INIT_WAIT_TICS;
     spcm->state = SPCM_STATE_RESUME;
+    spcm->playing = 1;
 
     pcm_start_timer(S_SPCM_Update);
 }
@@ -459,6 +466,7 @@ int S_SCM_PlayTrack(const char *name, int repeat)
     spcm->chan[1].pan = 0b11110000;
     spcm->repeat = repeat;
     spcm->state = SPCM_STATE_INIT;
+    spcm->maxwait = SPCM_MAX_INIT_WAIT_TICS;
     spcm->increment = (header[6] << 8) | header[7];
     spcm->num_channels = header[8];
     spcm->env = header[9];
