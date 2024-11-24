@@ -88,7 +88,7 @@ static VINT prevsaveslot;
 static VINT saveslotmap;
 static VINT saveslotskill;
 static VINT saveslotmode;
-static char savewadname[16];
+static char savewadname[32];
 static char savemapname[32];
 static char savewadmismatch;
 

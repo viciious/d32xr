@@ -106,7 +106,7 @@ void GS_Stop(void)
     if (gs_menu == NULL)
         return;
 
-    if (gs_menu->path[0])
+    if (gs_menu->path[0] && D_strcasecmp(gs_menu->path, "/"))
         D_snprintf(cd_pwad_name, sizeof(cd_pwad_name), "%s/%s", gs_menu->path, gs_menu->items[gs_menu->cursorpos].name);
     else
         D_snprintf(cd_pwad_name, sizeof(cd_pwad_name), "%s", gs_menu->items[gs_menu->cursorpos].name);

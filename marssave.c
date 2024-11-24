@@ -105,6 +105,7 @@ static void SaveGameExt(int slotnumber, int mapnum, const char *mapname)
 	if (slotnumber >= optslotnumber)
 		return;
 
+	D_memset(&sg, 0, sizeof(sg));
 	sg.version = SRAM_VERSION;
 	sg.skill = gameskill;
 	sg.netgame = netgame;
@@ -128,6 +129,7 @@ void QuickSave(int nextmap, const char *mapname)
 
 boolean GetSaveInfo(int slotnumber, VINT* mapnum, VINT* skill, VINT *mode, char *wadname, char *mapname)
 {
+	int i;
 	savegame_t sg;
 	const int offset = slotnumber * SRAM_SLOTSIZE;
 
@@ -146,8 +148,15 @@ boolean GetSaveInfo(int slotnumber, VINT* mapnum, VINT* skill, VINT *mode, char 
 	*mapnum = sg.mapnumber;
 	*skill = sg.skill;
 	*mode = sg.netgame;
-	D_strncpy(wadname, sg.wadname, sizeof(sg.wadname));
-	D_strncpy(mapname, sg.mapname, sizeof(sg.mapname));
+
+	// strip the leading /'s
+	for (i = 0; sg.wadname[i] == '/'; i++) {
+		;
+	}
+	D_snprintf(wadname, sizeof(sg.wadname) -  i, "%s", &sg.wadname[i]);
+
+	D_snprintf(mapname, sizeof(sg.mapname), "%s", sg.mapname);
+
 	return true;
 }
 
