@@ -25,7 +25,7 @@
 #define SPCM_RIGHT_CHAN_SOFFSET (SPCM_LEFT_CHAN_SOFFSET+SPCM_CHAN_BUF_SIZE+2048)
 #define SPCM_RIGHT_CHANNEL_ID   (SPCM_LEFT_CHANNEL_ID+1)
 
-#define SPCM_MAX_INIT_WAIT_TICS 520 // x7.8ms = ~4s seconds
+#define SPCM_MAX_INIT_WAIT_TICS 260 // x7.8ms = ~2s seconds
 #define SPCM_MAX_PLAY_WAIT_TICS 260 // x7.8ms = ~2s seconds
 
 enum
@@ -158,7 +158,7 @@ static void S_SPCM_BeginRead(s_spcm_t *spcm)
 static void S_SPCM_Preseek(s_spcm_t *spcm)
 {
     seek_cd(spcm->block);
-    spcm->lastdmatic = spcm->tics;
+    //spcm->lastdmatic = spcm->tics;
 }
 
 static int S_SPCM_DMA(s_spcm_t *spcm, uint16_t doff, uint16_t offset)
@@ -224,7 +224,6 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
             for (i = 0; i < spcm->num_channels; i++) {
                 pcm_set_off(spcm->chan[i].id);
             }
-            begin_read_cd(spcm->block, 0); // clear CDC buffer?
             spcm->state = SPCM_STATE_STOPPED;
             break;
         }
@@ -242,6 +241,11 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
         }
 
         if (painted_sectors < spcm->mix.paint_sector + SPCM_BUF_MIN_SECTORS) {
+            // not sure whether this safeguard is really needed, but better safe than sorry!
+            if (spcm->tics - spcm->lastdmatic > spcm->maxwait) {
+                spcm->playing = 0;
+                break;
+            }
             S_SPCM_Preseek(spcm);
             return;
         }
