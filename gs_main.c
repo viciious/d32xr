@@ -18,8 +18,9 @@
 #define MAXITEMS    128
 
 #define SMALL_STARTXLOW 12
-#define SMALL_STARTX    20
-#define SMALL_PAGEWDTH  160
+#define SMALL_STARTX    18
+#define SMALL_PAGEWDTH2 158 // page width if 2 pages
+#define SMALL_PAGEWDTH3 102 // page width if 3 pages
 #define SMALL_PAGEITMS  20
 
 typedef struct
@@ -489,12 +490,15 @@ void GS_Drawer (void)
     {
         // file browser
         int oldpage = -1;
+        int numpages = (gs_menu->numitems + SMALL_PAGEITMS - 1) / SMALL_PAGEITMS;
+        int page_width = numpages >= 3 ? SMALL_PAGEWDTH3 : SMALL_PAGEWDTH2;
+        int trunc_length = numpages >= 2 ? (numpages >= 3 ? 11 : 18) : 30;
 
         /* draw menu items */
         for (i = 0; i < gs_menu->numitems; i++)
         {
-            int page = i >= SMALL_PAGEITMS ? 1 : 0;
-            int x = SMALL_STARTX + page * SMALL_PAGEWDTH;
+            int page = i / SMALL_PAGEITMS;
+            int x = SMALL_STARTX + page * page_width;
             char name[72];
 
             if (page != oldpage)
@@ -520,9 +524,9 @@ void GS_Drawer (void)
             }
 
             // truncate if too long
-            if (mystrlen(name) > 17 && gs_menu->numitems > SMALL_PAGEITMS)
+            if (mystrlen(name) > trunc_length && numpages > 1)
             {
-                D_memcpy(&name[14], "...", 4);
+                D_memcpy(&name[trunc_length-4], "...", 4);
             }
 
             I_Print8(x, y, name);
