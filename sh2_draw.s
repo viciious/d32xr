@@ -54,19 +54,21 @@ _I_Draw32XSkyColumnLowA:
         add     r5,r8
         shlr2   r5
         add     r5,r8           /* fb += (dc_yl*256 + dc_yl*64) */
-        mov.l   @(16,r15),r2     /* frac */
+        mov.l   @(16,r15),r2    /* frac */
         mov.l   @(20,r15),r3    /* fracstep */
         mov.l   @(24,r15),r5    /* dc_source */
         mov.l   @(28,r15),r1    /* y_offset */
 
-        !add     r1,r5           /* adjust sky position */
+        mov     #80,r9
+        add     r1,r5           /* adjust sky position */
+        sub     r1,r9
         !mov     #127,r4         /* texheight */
         mov     #127,r4
 
         mov.l   draw_width,r1
         swap.w  r2,r0           /* (frac >> 16) */
 
-        and     r4,r0           /* (frac >> 16) & heightmask */
+        !and     r4,r0           /* (frac >> 16) & heightmask */
 
         /*
         r1 = screen width (320) (never changes)
@@ -82,7 +84,7 @@ _I_Draw32XSkyColumnLowA:
         r11 = end of seg
         */
 
-        mov     #80,r9
+        !mov     #80,r9
         mov     r6,r10
         sub     r9,r10          /* Subtract area above seg from r10 */
 
@@ -107,7 +109,7 @@ do_32xsky_col_loop_low:
         mov.w   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
         add     r3,r2           /* frac += fracstep */
         swap.w  r2,r0           /* (frac >> 16) */
-        and     r4,r0           /* (frac >> 16) & heightmask */
+        !and     r4,r0           /* (frac >> 16) & heightmask */
         mov.w   r9,@r8          /* *fb = dpix */
         add     r1,r8           /* fb += SCREENWIDTH */
 do_32xsky_col_loop_low_1px:
@@ -118,7 +120,7 @@ do_32xsky_col_loop_low_1px:
         dt      r6              /* count-- */
         swap.w  r2,r0           /* (frac >> 16) */
         mov.w   r9,@r8          /* *fb = dpix */
-        and     r4,r0           /* (frac >> 16) & heightmask */
+        !and     r4,r0           /* (frac >> 16) & heightmask */
         add     r1,r8           /* fb += SCREENWIDTH */
 
         mov     #0,r9
@@ -153,7 +155,8 @@ do_32xsky_done:
         mov.l   @r15+,r8
 
 bottom_fill_color:
-        .short  0x8E8E
+        !.short  0x8E8E
+        .short  0x8F8F
 
 
 ! Draw a vertical column of pixels from a projected wall texture.

@@ -62,7 +62,7 @@ int D_atoi(const char* str)
 	boolean negative_number = false;
 
 	i = 0;
-	while (*str && (*str >= '0' && *str <= '9') || *str == '-') {
+	while (*str && ((*str >= '0' && *str <= '9') || *str == '-')) {
 		if (!digits_found && *str == '-') {
 			negative_number = true;
 		}

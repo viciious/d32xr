@@ -484,6 +484,11 @@ void I_DrawSpanNoDraw(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfra
 
 }
 
+void I_DrawSkyColumnNoDraw(int dc_x, int dc_yl, int dc_yh)
+{
+
+}
+
 /*
 =============
 =

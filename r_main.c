@@ -263,7 +263,7 @@ void R_SetDrawMode(void)
 		drawspan = I_DrawSpanNoDraw;
 
 		#ifdef MDSKY
-		drawskycol = I_DrawColumnNoDraw;
+		drawskycol = I_DrawSkyColumnNoDraw;
 		#endif
 		draw32xskycol = I_DrawColumnNoDraw;
 
