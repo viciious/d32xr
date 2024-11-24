@@ -255,7 +255,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
          actionbits |= (AC_ADDFLOOR|AC_NEWFLOOR);
       }
       *floorheight = *floornewheight = f_floorheight;
-#ifdef FLOOR_OVER_FLOOR
+#ifdef FLOOR_OVER_FLOOR_CRAZY
       if (front_sector->fofsec != -1)
       {
          SETLOWER16(*fofInfo, (sectors[front_sector->fofsec].ceilingheight) >> FRACBITS);
@@ -606,7 +606,28 @@ crunch:
 sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
                      boolean back)
 {
-   if (sec->heightsec != -1)
+   if (sec->fofsec != -1 && (sec->flags & SF_FOF_SWAPHEIGHTS))
+   {
+      // Replace sector being drawn, with a copy to be hacked
+      *tempsec = *sec;
+
+      const sector_t *fofsec = &sectors[sec->fofsec];
+      const fixed_t midpoint = fofsec->floorheight + (fofsec->ceilingheight - fofsec->floorheight)/2;
+
+      if (vd.viewz <= midpoint)
+      {
+         tempsec->ceilingheight = fofsec->floorheight;
+         tempsec->ceilingpic = fofsec->floorpic;      
+      }
+      else if (vd.viewz > midpoint)
+      {
+         tempsec->floorheight = fofsec->ceilingheight;
+         tempsec->floorpic = fofsec->ceilingpic;
+      }
+
+      sec = tempsec;
+   }
+   else if (sec->heightsec != -1)
    {
       const sector_t *watersec = &sectors[sec->heightsec];
       boolean underwater = vd.viewsubsector->sector->heightsec != -1 && vd.viewz<=sectors[vd.viewsubsector->sector->heightsec].ceilingheight;

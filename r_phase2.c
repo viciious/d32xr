@@ -330,7 +330,7 @@ void Mars_Sec_R_WallPrep(void)
             Mars_ClearCacheLine(seglex);
 #endif
             R_WallLatePrep(segl, verts);
-#ifdef FLOOR_OVER_FLOOR
+#ifdef FLOOR_OVER_FLOOR_CRAZY
             if (segl->fofSector != -1)
             {
                 sector_t *fofSector = &sectors[segl->fofSector];

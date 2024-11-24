@@ -352,6 +352,28 @@ Events are operations triggered by using, crossing, or shooting special lines, o
 ==============================================================================
 */
 
+typedef enum
+{
+	CF_RETURN   = 1,    // Return after crumbling
+	CF_FLOATBOB = 2,    // Float on water
+	CF_REVERSE  = 4,    // Reverse gravity
+} crumbleflag_t;
+
+typedef struct
+{
+	thinker_t thinker;
+	line_t *sourceline;
+	sector_t *sector;
+	sector_t *actionsector; // The sector the rover action is taking place in.
+	player_t *player; // Player who initiated the thinker (used for airbob)
+	int16_t direction;
+	int16_t timer;
+	fixed_t speed;
+	fixed_t floorwasheight; // Height the floor WAS at
+	fixed_t ceilingwasheight; // Height the ceiling WAS at
+	uint8_t flags;
+} crumble_t;
+
 /*
 ===============================================================================
 =
@@ -614,13 +636,51 @@ void P_SpawnSpecials (void)
 		{
 			VINT sec = sides[*lines[i].sidenum].sector;
 			for (int s = -1; (s = P_FindSectorFromLineTag(lines+i,s)) >= 0;)
+			{
 				sectors[s].fofsec = sec;
+
+			// A sector that has FOF collision, but for rendering it will swap the floor/ceiling
+			// heights depending on the camera height.
+			// Should that be the halfheight of the control sector?
+			// Or maybe even configurable somehow, by using the control sector's texture offset value...
+				if (lines[i].flags & ML_BLOCKMONSTERS)
+					sectors[s].flags |= SF_FOF_SWAPHEIGHTS;
+			}
 			break;
 		}
-		// A sector that has FOF collision, but for rendering it will swap the floor/ceiling
-		// heights depending on the camera height.
-		// Should that be the halfheight of the control sector?
-		// Or maybe even configurable somehow, by using the control sector's texture offset value...
+		case 105: // FOF that is invisible but solid
+		{
+			VINT sec = sides[*lines[i].sidenum].sector;
+			for (int s = -1; (s = P_FindSectorFromLineTag(lines+i,s)) >= 0;)
+			{
+				sectors[s].fofsec = sec;
+				sectors[s].flags |= SF_FOF_INVISIBLE_TANGIBLE;
+			}
+			break;
+		}
+		case 178: // Crumbling, respawn, floating
+		{
+			VINT sec = sides[*lines[i].sidenum].sector;
+			for (int s = -1; (s = P_FindSectorFromLineTag(lines+i,s)) >= 0;)
+			{
+				sectors[s].flags |= SF_CRUMBLE;
+				sectors[s].flags |= SF_FLOATBOB;
+				sectors[s].flags |= SF_RESPAWN;
+			}
+
+			break;
+		}
+		case 179: // Crumbling, no-respawn, floating
+		{
+			VINT sec = sides[*lines[i].sidenum].sector;
+			for (int s = -1; (s = P_FindSectorFromLineTag(lines+i,s)) >= 0;)
+			{
+				sectors[s].flags |= SF_CRUMBLE;
+				sectors[s].flags |= SF_FLOATBOB;
+			}
+
+			break;
+		}
 		}
 	}
 done_speciallist:

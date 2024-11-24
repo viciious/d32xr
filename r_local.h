@@ -63,6 +63,13 @@ typedef struct
 
 struct line_s;
 
+#define SF_FOF_INVISIBLE_TANGIBLE    1
+#define SF_FOF_SWAPHEIGHTS           2
+#define SF_FLOATBOB                  4
+#define SF_AIRBOB                    8
+#define SF_CRUMBLE                  16
+#define SF_RESPAWN                  32
+
 typedef	struct
 {
 	fixed_t		floorheight, ceilingheight;
@@ -72,14 +79,14 @@ typedef	struct
 
 	uint8_t		lightlevel, special;
 
-	VINT		tag;
+	uint8_t		tag;
+	uint8_t     flags;
 	// killough 3/7/98: support flat heights drawn at another sector's heights
   	VINT        heightsec;    // other sector, or -1 if no other sector
 
 	VINT        fofsec;
 
-//	uint8_t     floor_xoffs;
-//	uint8_t     floor_yoffs;
+	VINT        floor_xoffs; // Upper X, Lower Y
 
 	mobj_t		*thinglist;			/* list of mobjs in sector */
 	void		*specialdata;		/* thinker_t for reversable actions */
