@@ -101,6 +101,8 @@ do_32xsky_top_col_pre_loop:
         
         /* test if count & 1 */
         neg     r4,r4
+        add     r4,r5
+        sub     r4,r6
         shlr    r4
         movt    r9              /* 1 if count was odd */
         bt/s    do_32xsky_fill_top_col_loop_low_1px
@@ -108,19 +110,15 @@ do_32xsky_top_col_pre_loop:
 
         .p2alignw 2, 0x0009
 do_32xsky_fill_top_col_loop_low:
-        !!!!add     #1,r5
-        !!!!dt      r6
         mov.w   r13,@r12         /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
         add     r1,r12          /* fb += SCREENWIDTH */
 do_32xsky_fill_top_col_loop_low_1px:
-        !!!!add     #1,r5
-        !!!!dt      r6
         dt      r4              /* count-- */
         mov.w   r13,@r12         /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
         bf/s    do_32xsky_fill_top_col_loop_low
         add     r1,r12          /* fb += SCREENWIDTH */
 
-        !!!!mov     r12,r8
+        mov     r12,r8
 
 
 do_32xsky_middle_col_pre_loop:
