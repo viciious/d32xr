@@ -274,6 +274,7 @@ static void ST_Drawer_ (stbar_t* sb)
 {
 	if (gametic < 96 && !(gamemapinfo.mapNumber >= SSTAGE_START && gamemapinfo.mapNumber <= SSTAGE_END)) {
 		ST_DrawTitleCard();
+		CONS_Printf("1024-(camera.aiming >> 22): %d", -(((signed int)camera.aiming) >> 22));	//DLG: Remove me!
 	}
 	else if (gamemapinfo.mapNumber >= SSTAGE_START && gamemapinfo.mapNumber <= SSTAGE_END)
 	{
@@ -334,7 +335,7 @@ static void ST_Drawer_ (stbar_t* sb)
 	}
 	else
 	{
-		CONS_Printf("1024-(camera.aiming >> 22): %d", 1024-(camera.aiming >> 22)-20);	//DLG: Remove me!
+		CONS_Printf("1024-(camera.aiming >> 22): %d", -(((signed int)camera.aiming) >> 22));	//DLG: Remove me!
 
 		const int delaytime = gamemapinfo.act == 3 ? 2*TICRATE : 3*TICRATE;
 		int worldTime = leveltime - delaytime + TICRATE - sb->exiting - sb->deadTimer;

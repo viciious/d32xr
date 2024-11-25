@@ -254,7 +254,12 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
                 if (draw32xsky) {
                     int colnum = ((vd.viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
                     inpixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
-                    draw32xsky(x, top, --bottom, 0, (top * 18204) << 2, FRACUNIT, data, (1024-(camera.aiming >> 22))-20);
+                    if (gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
+                        draw32xsky(x, top, --bottom, 0, (top * 18204) << 2, FRACUNIT, data, -16);
+                    }
+                    else {
+                        draw32xsky(x, top, --bottom, 0, (top * 18204) << 2, FRACUNIT, data, -(((signed int)camera.aiming) >> 22));
+                    }
                 }
                 else {
                     drawmdsky(x, top, bottom);

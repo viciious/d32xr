@@ -43,32 +43,33 @@ _I_Draw32XSkyColumnLowA:
         mov.l   r9,@-r15
         mov.l   r10,@-r15
         mov.l   r11,@-r15
+        mov.l   r12,@-r15
+        mov.l   r13,@-r15
+
         mov.l   @(DOOMTLS_COLORMAP, gbr),r0
         add     r7,r7
         add     r0,r7           /* dc_colormap = colormap + light */
-        mov.l   draw_fb,r8
+        mov.l   draw_fb_2,r8
         mov.l   @r8,r8          /* frame buffer start */
         add     r4,r8
         add     r4,r8           /* fb += dc_x*2 */
+        mov     r8,r12          /* store frame buffer offset without y offset */
         shll8   r5
         add     r5,r8
         shlr2   r5
         add     r5,r8           /* fb += (dc_yl*256 + dc_yl*64) */
-        mov.l   @(16,r15),r2    /* frac */
-        mov.l   @(20,r15),r3    /* fracstep */
-        mov.l   @(24,r15),r5    /* dc_source */
-        mov.l   @(28,r15),r1    /* y_offset */
+        mov.l   @(24,r15),r2    /* frac */
+        mov.l   @(28,r15),r3    /* fracstep */
+        mov.l   @(32,r15),r5    /* dc_source */
+        mov.l   @(36,r15),r4    /* y_offset */
+
+        mov.l   draw_width_2,r1
 
         mov     #80,r9
-        add     r1,r5           /* adjust sky position */
-        sub     r1,r9
-        !mov     #127,r4         /* texheight */
-        mov     #127,r4
+        add     r4,r5           /* adjust sky position */
+        sub     r4,r9
 
-        mov.l   draw_width,r1
         swap.w  r2,r0           /* (frac >> 16) */
-
-        !and     r4,r0           /* (frac >> 16) & heightmask */
 
         /*
         r1 = screen width (320) (never changes)
@@ -82,37 +83,67 @@ _I_Draw32XSkyColumnLowA:
         r6 = cursor
         r10 = start of bottom fill
         r11 = end of seg
+        r12 = frame buffer offset (without Y offset)
         */
 
-        !mov     #80,r9
         mov     r6,r10
         sub     r9,r10          /* Subtract area above seg from r10 */
 
-        !cmp/hi  r4,r6
-        !bf/s    do_32xsky_col_pre_loop
+        mov     #0,r9
+        cmp/ge  r9,r4           /* Skip the top fill if it's not needed */
+        bt/s    do_32xsky_middle_col_pre_loop
+        nop
 
-do_32xsky_col_pre_loop:
+
+
+do_32xsky_top_col_pre_loop:
+        mov.w   top_fill_color,r13
+        
+        /* test if count & 1 */
+        neg     r4,r4
+        shlr    r4
+        movt    r9              /* 1 if count was odd */
+        bt/s    do_32xsky_fill_top_col_loop_low_1px
+        add     r9,r4
+
+        .p2alignw 2, 0x0009
+do_32xsky_fill_top_col_loop_low:
+        !!!!add     #1,r5
+        !!!!dt      r6
+        mov.w   r13,@r12         /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
+        add     r1,r12          /* fb += SCREENWIDTH */
+do_32xsky_fill_top_col_loop_low_1px:
+        !!!!add     #1,r5
+        !!!!dt      r6
+        dt      r4              /* count-- */
+        mov.w   r13,@r12         /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
+        bf/s    do_32xsky_fill_top_col_loop_low
+        add     r1,r12          /* fb += SCREENWIDTH */
+
+        !!!!mov     r12,r8
+
+
+do_32xsky_middle_col_pre_loop:
         /* test if count & 1 */
         shlr    r10
         movt    r9
         add     r9,r10
         shlr    r6
         movt    r9              /* 1 if count was odd */
+        bt/s    do_32xsky_middle_col_loop_low_1px
         add     r9,r6
-        bt/s    do_32xsky_col_loop_low_1px
         nop
 
         .p2alignw 2, 0x0009
-do_32xsky_col_loop_low:
+do_32xsky_middle_col_loop_low:
         mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
         add     r0,r0
         mov.w   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
         add     r3,r2           /* frac += fracstep */
         swap.w  r2,r0           /* (frac >> 16) */
-        !and     r4,r0           /* (frac >> 16) & heightmask */
         mov.w   r9,@r8          /* *fb = dpix */
         add     r1,r8           /* fb += SCREENWIDTH */
-do_32xsky_col_loop_low_1px:
+do_32xsky_middle_col_loop_low_1px:
         mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
         add     r0,r0
         mov.w   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
@@ -120,43 +151,55 @@ do_32xsky_col_loop_low_1px:
         dt      r6              /* count-- */
         swap.w  r2,r0           /* (frac >> 16) */
         mov.w   r9,@r8          /* *fb = dpix */
-        !and     r4,r0           /* (frac >> 16) & heightmask */
         add     r1,r8           /* fb += SCREENWIDTH */
 
         mov     #0,r9
         cmp/eq  r9,r6
-        !bt/s    do_32xsky_col_loop_low
         bt/s    do_32xsky_done
         nop
         cmp/eq  r10,r6
-        bf/s    do_32xsky_col_loop_low
+        bf/s    do_32xsky_middle_col_loop_low
         nop
 
-!.p2alignw 2, 0x0009
-        mov.w   bottom_fill_color,r7
+
+
+do_32xsky_bottom_col_pre_loop:
+        mov.w   bottom_fill_color,r13
+
+        .p2alignw 2, 0x0009
 do_32xsky_fill_bottom_col_loop_low:
-        mov.w   r7,@r8          /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
+        mov.w   r13,@r8          /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
         add     r1,r8           /* fb += SCREENWIDTH */
 do_32xsky_fill_bottom_col_loop_low_1px:
         dt      r6              /* count-- */
-        mov.w   r7,@r8          /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
+        mov.w   r13,@r8          /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
         bf/s    do_32xsky_fill_bottom_col_loop_low
         add     r1,r8           /* fb += SCREENWIDTH */
 
 
-do_32xsky_done:
-        !cmp/eq  r9,r4
-        !bf/s    do_32xsky_col_loop_low
 
+do_32xsky_done:
+        mov.l   @r15+,r13
+        mov.l   @r15+,r12
         mov.l   @r15+,r11
         mov.l   @r15+,r10
         mov.l   @r15+,r9
         rts
         mov.l   @r15+,r8
 
+
+
+        .align  4
+top_fill_color:
+        !.short  0x8888
+        .short  0x8989
 bottom_fill_color:
         !.short  0x8E8E
         .short  0x8F8F
+draw_fb_2:
+        .long   _viewportbuffer
+draw_width_2:
+        .long   320
 
 
 ! Draw a vertical column of pixels from a projected wall texture.
