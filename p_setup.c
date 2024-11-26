@@ -9,7 +9,7 @@
 #define DEFAULT_GAME_ZONE_MARGIN (4*1024)
 
 int			numvertexes;
-vertex_t	*vertexes;
+mapvertex_t	*vertexes;
 
 int			numsegs;
 seg_t		*segs;
@@ -55,29 +55,24 @@ spawnthing_t* spawnthings;
 
 void P_LoadVertexes (int lump)
 {
-#ifdef MARS
-	numvertexes = W_LumpLength (lump) / sizeof(vertex_t);
-	vertexes = (vertex_t *)W_POINTLUMPNUM(lump);
-#else
 	byte		*data;
 	int			i;
 	mapvertex_t	*ml;
-	vertex_t	*li;
-	
+	mapvertex_t	*li;
+
 	numvertexes = W_LumpLength (lump) / sizeof(mapvertex_t);
-	vertexes = Z_Malloc (numvertexes*sizeof(vertex_t),PU_LEVEL);
-	data = I_TempBuffer ();	
-	W_ReadLump (lump,data);
-	
-	
+	vertexes = Z_Malloc (numvertexes*sizeof(mapvertex_t) + 16,PU_LEVEL);
+	vertexes = (void*)(((uintptr_t)vertexes + 15) & ~15); // aline on cacheline boundary
+	data = I_TempBuffer();
+	W_ReadLump(lump, data);
+
 	ml = (mapvertex_t *)data;
 	li = vertexes;
 	for (i=0 ; i<numvertexes ; i++, li++, ml++)
 	{
-		li->x = LITTLESHORT(ml->x)<<FRACBITS;
-		li->y = LITTLESHORT(ml->y)<<FRACBITS;
+		li->x = LITTLESHORT(ml->x);
+		li->y = LITTLESHORT(ml->y);
 	}
-#endif
 }
 
 
@@ -378,7 +373,7 @@ void P_LoadLineDefs (int lump)
 	int				i;
 	maplinedef_t	*mld;
 	line_t			*ld;
-	vertex_t		*v1, *v2;
+	mapvertex_t		*v1, *v2;
 	
 	numlines = W_LumpLength (lump) / sizeof(maplinedef_t);
 	lines = Z_Malloc (numlines*sizeof(line_t)+16,PU_LEVEL);
@@ -397,10 +392,11 @@ void P_LoadLineDefs (int lump)
 		ld->tag = (uint8_t)LITTLESHORT(mld->tag);
 		ld->v1 = LITTLESHORT(mld->v1);
 		ld->v2 = LITTLESHORT(mld->v2);
+		
 		v1 = &vertexes[ld->v1];
 		v2 = &vertexes[ld->v2];
-		dx = v2->x - v1->x;
-		dy = v2->y - v1->y;
+		dx = (v2->x - v1->x) << FRACBITS;
+		dy = (v2->y - v1->y) << FRACBITS;
 		if (!dx)
 			ld->flags |= ML_ST_VERTICAL;
 		else if (!dy)

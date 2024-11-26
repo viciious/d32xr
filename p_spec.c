@@ -660,7 +660,6 @@ void P_SpawnSpecials (void)
 		}
 		case 178: // Crumbling, respawn, floating
 		{
-			VINT sec = sides[*lines[i].sidenum].sector;
 			for (int s = -1; (s = P_FindSectorFromLineTag(lines+i,s)) >= 0;)
 			{
 				sectors[s].flags |= SF_CRUMBLE;
@@ -672,7 +671,6 @@ void P_SpawnSpecials (void)
 		}
 		case 179: // Crumbling, no-respawn, floating
 		{
-			VINT sec = sides[*lines[i].sidenum].sector;
 			for (int s = -1; (s = P_FindSectorFromLineTag(lines+i,s)) >= 0;)
 			{
 				sectors[s].flags |= SF_CRUMBLE;

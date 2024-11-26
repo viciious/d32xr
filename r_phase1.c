@@ -677,7 +677,7 @@ static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
    fixed_t x1, x2;
    sector_t *frontsector;
    sector_t *backsector;
-   vertex_t *v1 = &vertexes[line->v1], *v2 = &vertexes[line->v2];
+   mapvertex_t *v1 = &vertexes[line->v1], *v2 = &vertexes[line->v2];
    int side;
    line_t *ldef;
    side_t *sidedef;
@@ -686,11 +686,11 @@ static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
    if (line->v1 == rbsp->lastv2)
       angle1 = rbsp->lastangle2;
    else
-      angle1 = R_PointToAngle2(vd.viewx, vd.viewy, v1->x, v1->y);
+      angle1 = R_PointToAngle2(vd.viewx, vd.viewy, v1->x << FRACBITS, v1->y << FRACBITS);
    if (line->v2 == rbsp->lastv1)
       angle2 = rbsp->lastangle1;
    else
-      angle2 = R_PointToAngle2(vd.viewx, vd.viewy, v2->x, v2->y);
+      angle2 = R_PointToAngle2(vd.viewx, vd.viewy, v2->x << FRACBITS, v2->y << FRACBITS);
 
    rbsp->lastv1 = line->v1;
    rbsp->lastv2 = line->v2;
@@ -706,7 +706,7 @@ static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
    // decide which clip routine to use
    side = line->sideoffset & 1;
    ldef = &lines[line->linedef];
-   if ((ldef->flags & ML_CULLING) && P_AproxDistance(vd.viewx - v1->x, vd.viewy - v1->y) > 2048*FRACUNIT)
+   if ((ldef->flags & ML_CULLING) && P_AproxDistance(vd.viewx - (v1->x << FRACBITS), vd.viewy - (v1->y << FRACBITS)) > 2048*FRACUNIT)
       return;
 
    frontsector = rbsp->curfsector;//R_FakeFlat(rbsp->curfsector, &ftempsec, false);

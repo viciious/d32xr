@@ -180,10 +180,10 @@ static boolean PB_BoxCrossLine(line_t *ld, pmovetest_t *mt)
       x2 = mt->testbbox[BOXLEFT ];
    }
 
-   lx  = vertexes[ld->v1].x;
-   ly  = vertexes[ld->v1].y;
-   ldx = (vertexes[ld->v2].x - vertexes[ld->v1].x) >> FRACBITS;
-   ldy = (vertexes[ld->v2].y - vertexes[ld->v1].y) >> FRACBITS;
+   lx  = vertexes[ld->v1].x << FRACBITS;
+   ly  = vertexes[ld->v1].y << FRACBITS;
+   ldx = (vertexes[ld->v2].x - vertexes[ld->v1].x);
+   ldy = (vertexes[ld->v2].y - vertexes[ld->v1].y);
 
    dx1 = (x1 - lx) >> FRACBITS;
    dy1 = (mt->testbbox[BOXTOP] - ly) >> FRACBITS;

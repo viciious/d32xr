@@ -67,7 +67,7 @@ typedef struct
    fixed_t  shootx, shooty, shootz; // location for puff/blood
 } shootWork_t;
 
-static fixed_t PA_SightCrossLine(shootWork_t *sw, vertex_t *v1, vertex_t *v2);
+static fixed_t PA_SightCrossLine(shootWork_t *sw, mapvertex_t *v1, mapvertex_t *v2);
 static boolean PA_ShootLine(shootWork_t *sw, line_t* li, fixed_t interceptfrac);
 static boolean PA_ShootThing(shootWork_t *sw, mobj_t* th, fixed_t interceptfrac);
 static boolean PA_DoIntercept(shootWork_t *sw, intercept_t* in);
@@ -84,16 +84,16 @@ void P_Shoot2(lineattack_t *la);
 // the intersection occurs at.  If 0 < intercept < 1.0, the line will block
 // the sight.
 //
-static fixed_t PA_SightCrossLine(shootWork_t *sw, vertex_t *v1, vertex_t *v2)
+static fixed_t PA_SightCrossLine(shootWork_t *sw, mapvertex_t *v1, mapvertex_t *v2)
 {
    fixed_t s1, s2;
    fixed_t p1x, p1y, p2x, p2y, p3x, p3y, p4x, p4y, dx, dy, ndx, ndy;
 
    // p1, p2 are endpoints
-   p1x = v1->x >> FRACBITS;
-   p1y = v1->y >> FRACBITS;
-   p2x = v2->x >> FRACBITS;
-   p2y = v2->y >> FRACBITS;
+   p1x = v1->x;
+   p1y = v1->y;
+   p2x = v2->x;
+   p2y = v2->y;
 
    // p3, p4 are sight endpoints
    p3x = sw->ssx1;
@@ -286,7 +286,7 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
    fixed_t  frac;
    mobj_t  *thing;
    intercept_t  in;
-   vertex_t tv1, tv2;
+   mapvertex_t tv1, tv2;
    VINT     *lvalidcount, vc;
 
    // check things
@@ -305,18 +305,18 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
       if(sw->shootdivpositive)
       {
          const fixed_t radius = mobjinfo[thing->type].radius;
-         tv1.x = thing->x - radius;
-         tv1.y = thing->y + radius;
-         tv2.x = thing->x + radius;
-         tv2.y = thing->y - radius;
+         tv1.x = (thing->x - radius) >> FRACBITS;
+         tv1.y = (thing->y + radius) >> FRACBITS;
+         tv2.x = (thing->x + radius) >> FRACBITS;
+         tv2.y = (thing->y - radius) >> FRACBITS;
       }
       else
       {
          const fixed_t radius = mobjinfo[thing->type].radius;
-         tv1.x = thing->x - radius;
-         tv1.y = thing->y - radius;
-         tv2.x = thing->x + radius;
-         tv2.y = thing->y + radius;
+         tv1.x = (thing->x - radius) >> FRACBITS;
+         tv1.y = (thing->y - radius) >> FRACBITS;
+         tv2.x = (thing->x + radius) >> FRACBITS;
+         tv2.y = (thing->y + radius) >> FRACBITS;
       }
 
       frac = PA_SightCrossLine(sw, &tv1, &tv2);

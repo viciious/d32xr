@@ -364,7 +364,7 @@ typedef struct
 	fixed_t endbox[4];          // final proposed position
 	fixed_t nvx, nvy;           // normalized line vector
 
-	vertex_t *p1, *p2; // p1, p2 are line endpoints
+	vertex_t p1, p2; // p1, p2 are line endpoints
 	fixed_t p3x, p3y, p4x, p4y; // p3, p4 are move endpoints
 } pslidework_t;
 

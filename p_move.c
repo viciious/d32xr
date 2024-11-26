@@ -145,9 +145,10 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
 //
 boolean PM_BoxCrossLine(line_t *ld, pmovework_t *mw)
 {
-   fixed_t x1, x2, y1, y2;
-   fixed_t lx, ly, ldx, ldy;
-   fixed_t dx1, dx2, dy1, dy2;
+   fixed_t x1, x2;
+   fixed_t lx, ly;
+   fixed_t ldx, ldy;
+   fixed_t dx1, dy1, dx2, dy2;
    boolean side1, side2;
    fixed_t ldbbox[4];
 
@@ -161,9 +162,6 @@ boolean PM_BoxCrossLine(line_t *ld, pmovework_t *mw)
       return false; // bounding boxes don't intersect
    }
 
-   y1 = mw->tmbbox[BOXTOP   ];
-   y2 = mw->tmbbox[BOXBOTTOM];
-
    if(ld->flags & ML_ST_POSITIVE)
    {
       x1 = mw->tmbbox[BOXLEFT ];
@@ -175,15 +173,15 @@ boolean PM_BoxCrossLine(line_t *ld, pmovework_t *mw)
       x2 = mw->tmbbox[BOXLEFT ];
    }
 
-   lx  = vertexes[ld->v1].x;
-   ly  = vertexes[ld->v1].y;
-   ldx = (vertexes[ld->v2].x - lx) >> FRACBITS;
-   ldy = (vertexes[ld->v2].y - ly) >> FRACBITS;
+   lx  = vertexes[ld->v1].x << FRACBITS;
+   ly  = vertexes[ld->v1].y << FRACBITS;
+   ldx = vertexes[ld->v2].x - vertexes[ld->v1].x;
+   ldy = vertexes[ld->v2].y - vertexes[ld->v1].y;
 
    dx1 = (x1 - lx) >> FRACBITS;
-   dy1 = (y1 - ly) >> FRACBITS;
+   dy1 = (mw->tmbbox[BOXTOP] - ly) >> FRACBITS;
    dx2 = (x2 - lx) >> FRACBITS;
-   dy2 = (y2 - ly) >> FRACBITS;
+   dy2 = (mw->tmbbox[BOXBOTTOM] - ly) >> FRACBITS;
 
    side1 = (ldy * dx1 < dy1 * ldx);
    side2 = (ldy * dx2 < dy2 * ldx);

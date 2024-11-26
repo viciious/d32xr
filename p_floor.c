@@ -299,8 +299,8 @@ int EV_DoFloor(line_t *line,floor_e floortype)
 			case floorContinuous:
 				floor->sector = sec;
 				floor->controlSector = &sectors[sides[line->sidenum[0]].sector];
-				floor->origSpeed = P_AproxDistance(vertexes[line->v1].x - vertexes[line->v2].x,
-												vertexes[line->v1].y - vertexes[line->v2].y) / 4;
+				floor->origSpeed = P_AproxDistance((vertexes[line->v1].x - vertexes[line->v2].x) << FRACBITS,
+												(vertexes[line->v1].y - vertexes[line->v2].y) << FRACBITS) / 4;
 				floor->speed = floor->origSpeed;
 				if (line->flags & ML_NOCLIMB)
 				{
