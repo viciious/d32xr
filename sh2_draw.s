@@ -42,13 +42,14 @@ _I_Draw32XSkyColumnLowA:
         mov.l   r8,@-r15
         mov.l   r9,@-r15
         mov.l   r10,@-r15
-        mov.l   r11,@-r15
         mov.l   r12,@-r15
         mov.l   r13,@-r15
+!        mov.l   r14,@-r15       /* TESTING TESTING TESTING TESTING TESTING TESTING */
+
+!        mov     #0,r14          /* TESTING TESTING TESTING TESTING TESTING TESTING */
 
         mov.l   @(DOOMTLS_COLORMAP, gbr),r0
-        add     r7,r7
-        add     r0,r7           /* dc_colormap = colormap + light */
+        mov     r0,r7
         mov.l   draw_fb_2,r8
         mov.l   @r8,r8          /* frame buffer start */
         add     r4,r8
@@ -58,10 +59,10 @@ _I_Draw32XSkyColumnLowA:
         add     r5,r8
         shlr2   r5
         add     r5,r8           /* fb += (dc_yl*256 + dc_yl*64) */
-        mov.l   @(24,r15),r2    /* frac */
-        mov.l   @(28,r15),r3    /* fracstep */
-        mov.l   @(32,r15),r5    /* dc_source */
-        mov.l   @(36,r15),r4    /* y_offset */
+        mov.l   @(20,r15),r2    /* frac */
+        mov.l   @(24,r15),r3    /* fracstep */
+        mov.l   @(28,r15),r5    /* dc_source */
+        mov.l   @(32,r15),r4    /* y_offset */
 
         mov.l   draw_width_2,r1
 
@@ -103,6 +104,7 @@ do_32xsky_top_col_pre_loop:
         neg     r4,r4
         add     r4,r5
         sub     r4,r6
+!        mov     #1,r14          /* TESTING TESTING TESTING TESTING TESTING TESTING */
         shlr    r4
         movt    r9              /* 1 if count was odd */
         bt/s    do_32xsky_fill_top_col_loop_low_1px
@@ -161,8 +163,25 @@ do_32xsky_middle_col_loop_low_1px:
 
 
 
+!        mov     #0,r9
+!        cmp/eq  r9,r14
+!        bt/s    do_32xsky_done
+!        nop
+!        mov     #2,r14
+
+!        .p2alignw 2, 0x0009
+!test_01:
+!        nop
+!        nop
+!        bra     test_01
+!        nop
+
+
+
 do_32xsky_bottom_col_pre_loop:
         mov.w   bottom_fill_color,r13
+!        mov     r6,r9   /* TESTING TESTING TESTING TESTING TESTING TESTING */
+!        mov     r8,r10  /* TESTING TESTING TESTING TESTING TESTING TESTING */
 
         .p2alignw 2, 0x0009
 do_32xsky_fill_bottom_col_loop_low:
@@ -176,10 +195,11 @@ do_32xsky_fill_bottom_col_loop_low_1px:
 
 
 
+        .p2alignw 2, 0x0009
 do_32xsky_done:
+!        mov.l   @r15+,r14       /* TESTING TESTING TESTING TESTING TESTING TESTING */
         mov.l   @r15+,r13
         mov.l   @r15+,r12
-        mov.l   @r15+,r11
         mov.l   @r15+,r10
         mov.l   @r15+,r9
         rts
