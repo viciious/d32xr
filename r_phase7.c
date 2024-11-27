@@ -36,6 +36,7 @@ typedef struct localplane_s
     int mipsize[MIPLEVELS];
 #endif
     mapplane_fn mapplane;
+    boolean lowres;
 } localplane_t;
 
 static void R_MapPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
@@ -152,6 +153,12 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     else
     {
         light = lpl->lightmax;
+    }
+
+    if (lpl->lowres)
+    {
+        x >>= 1;
+        x2 >>= 1;
     }
 
     drawspan(y, x, x2, light, xfrac, yfrac, xstep, ystep, lpl->ds_source[miplevel], mipsize);
@@ -293,6 +300,7 @@ static void R_DrawPlanes2(void)
     int extralight;
     fixed_t basexscale, baseyscale;
     fixed_t basexscale2, baseyscale2;
+    fixed_t cXf = centerXFrac;
 
 #ifdef MARS
     Mars_ClearCacheLine(&vd->lastvisplane);
@@ -303,13 +311,21 @@ static void R_DrawPlanes2(void)
     if (vd->gsortedvisplanes == NULL)
         return;
 
+    cXf = centerXFrac;
+    lpl.lowres = false;
+    if (!lowres && detailmode == detmode_lowres)
+    {
+        cXf >>= 1;
+        lpl.lowres = true;
+    }
+
     angle = (vd->viewangle - ANG90) >> ANGLETOFINESHIFT;
-    basexscale = FixedDiv(finecosine(angle), centerXFrac);
-    baseyscale = FixedDiv(finesine(angle), centerXFrac);
+    basexscale = FixedDiv(finecosine(angle), cXf);
+    baseyscale = FixedDiv(finesine(angle), cXf);
 
     angle = (vd->viewangle        ) >> ANGLETOFINESHIFT;
-    basexscale2 = FixedDiv(finecosine(angle), centerXFrac);
-    baseyscale2 = FixedDiv(finesine(angle), centerXFrac);
+    basexscale2 = FixedDiv(finecosine(angle), cXf);
+    baseyscale2 = FixedDiv(finesine(angle), cXf);
 
     lpl.mapplane = detailmode == detmode_potato ? R_MapPotatoPlane : R_MapPlane;
     extralight = vd->extralight;

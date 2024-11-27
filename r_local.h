@@ -52,6 +52,7 @@ extern boolean lowres;
 typedef enum
 {
 	detmode_potato = -1,
+	detmode_lowres = 0,
 	detmode_normal,
 
 	MAXDETAILMODES

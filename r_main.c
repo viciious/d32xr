@@ -327,14 +327,31 @@ void R_SetDrawFuncs(void)
 		drawcol = I_DrawColumnLow;
 		drawcolnpo2 = I_DrawColumnNPo2Low;
 		drawfuzzcol = I_DrawFuzzColumnLow;
-		drawspan = detailmode == detmode_potato ? I_DrawSpanPotatoLow : I_DrawSpanLow;
+		switch (detailmode) {
+			case detmode_potato:
+				drawspan = I_DrawSpanPotatoLow;	
+				break;
+			default:
+				drawspan = I_DrawSpanLow;
+				break;
+		}
 	}
 	else
 	{
 		drawcol = I_DrawColumn;
 		drawcolnpo2 = I_DrawColumnNPo2;
 		drawfuzzcol = I_DrawFuzzColumn;
-		drawspan = detailmode == detmode_potato ? I_DrawSpanPotato : I_DrawSpan;
+		switch (detailmode) {
+			case detmode_potato:
+				drawspan = I_DrawSpanPotato;	
+				break;
+			case detmode_lowres:
+				drawspan = I_DrawSpanLow;
+				break;
+			default:
+				drawspan = I_DrawSpan;
+				break;
+		}
 	}
 
 	Mars_ClearCache();

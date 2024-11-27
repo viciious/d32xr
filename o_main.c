@@ -246,7 +246,7 @@ void O_Init (void)
 	menuitem[mi_anamorphic].x = ITEMX;
 	menuitem[mi_anamorphic].y = STARTY + ITEMSPACE * 2;
 
-	D_memcpy(menuitem[mi_detailmode].name, "Simple flats", 13);
+	D_memcpy(menuitem[mi_detailmode].name, "Flats", 6);
 	menuitem[mi_detailmode].x = ITEMX;
 	menuitem[mi_detailmode].y = STARTY + ITEMSPACE * 3;
 
@@ -728,8 +728,8 @@ goback:
 							anamorphicview = 1;
 						break;
 					case mi_detailmode:
-						if (detailmode != detmode_potato)
-							detailmode = detmode_potato;
+						if (++detailmode > detmode_normal)
+							detailmode = detmode_normal;
 						break;
 					case mi_lowres:
 						if (!lowres)
@@ -749,8 +749,8 @@ goback:
 							anamorphicview = 0;
 						break;
 					case mi_detailmode:
-						if (detailmode != detmode_normal)
-							detailmode = detmode_normal;
+						if (--detailmode < detmode_potato)
+							detailmode = detmode_potato;
 						break;
 					case mi_lowres:
 						if (lowres)
@@ -923,10 +923,13 @@ void O_Drawer (void)
 
 		switch (detailmode) {
 		case detmode_potato:
-			print(menuitem[mi_detailmode].x + 160, menuitem[mi_detailmode].y, "on");
+			print(menuitem[mi_detailmode].x + 90, menuitem[mi_detailmode].y, "simple");
+			break;
+		case detmode_lowres:
+			print(menuitem[mi_detailmode].x + 90, menuitem[mi_detailmode].y, "low-res");
 			break;
 		default:
-			print(menuitem[mi_detailmode].x + 160, menuitem[mi_detailmode].y, "off");
+			print(menuitem[mi_detailmode].x + 90, menuitem[mi_detailmode].y, "high-res");
 			break;
 		}
 
