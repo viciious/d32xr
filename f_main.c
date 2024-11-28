@@ -19,7 +19,7 @@ creditcard_t creditCards[] = {
 //	{"C_JOYTAY", "TRACKING",                "John \"Joy\" Tay", "Deep Sea 1\nCredits",                          "x.com/@johntayjinf\nyoutube.com\n/@johntayjinf" },
 	{"C_CRYPTK", "TRACKING",                "Cryptik",          "Boss Theme\nMiscellaneous",        "x.com/@LunarCryptik\nyoutube.com/c\n/LunarCryptik\npatreon.com\n/LunarCryptik" },
 	{"C_SAXMAN", "PROGRAMMING",          "Saxman",           "MegaDrive & 32X\nAdditional tooling", "rumble.com/user\n/ymtx81z" },
-	{"C_SSN",    "PROGRAMMING",          "SSNTails",         "Gameplay\nAdditional Art",            "x.com/@SSNTails\nyoutube.com\n/@ssntails" },
+	{"C_SSN",    "PROGRAMMING",          "SSNTails",         "Project Lead\nGameplay\nEngine Enhancements\nAdditional Art",            "x.com/@SSNTails\nyoutube.com\n/@ssntails" },
 	{"C_VIC",    "SPECIAL THANKS",       "Viciious",         "Doom 32X:\nResurrection",             "github.com/viciious" },
 	{"C_MITTEN", "SPECIAL THANKS",       "Mittens",          "Mapping support",                     "youtube.com\n/@Mittens0407\ntwitch.tv\n/mittens0407" },
 	{"C_STJR",   "BASED ON THE WORK BY", "Sonic Team Jr.",   "www.srb2.org",                        "Shout-outs to:\nAlice Alacroix\nMotor Roach\nNev3r\nGuyWithThePie\nAnd so many more!" },
@@ -168,7 +168,7 @@ void F_Drawer (void)
 		else
 		{
 			V_DrawStringCenterWithColormap(&menuFont, 160, 142, "Stay tuned for the full version!", YELLOWTEXTCOLORMAP);
-			V_DrawStringCenter(&menuFont, 160, 160, "https://www.youtube.com/@ssntails");
+			V_DrawStringCenter(&menuFont, 160, 160, "youtube.com/@ssntails");
 		}
 
 		if (card->name)

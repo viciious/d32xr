@@ -30,16 +30,21 @@
 #include "p_local.h"
 #include "mars.h"
 
+typedef struct 
+{
+   int16_t x, y, dx, dy;
+} i16divline_t;
+
 typedef struct
 {
     fixed_t sightzstart;           // eye z of looker
     fixed_t topslope, bottomslope; // slopes to top and bottom of target
 
-    divline_t strace;  // from t1 to t2
+    i16divline_t strace;  // from t1 to t2
     fixed_t t2x, t2y;
 } sightWork_t;
 
-static fixed_t P_InterceptVector2(divline_t* v2, divline_t* v1) ATTR_DATA_CACHE_ALIGN;
+static fixed_t PS_InterceptVector2(i16divline_t* v2, i16divline_t* v1) ATTR_DATA_CACHE_ALIGN;
 static boolean PS_CrossSubsector(sightWork_t* sw, int num) ATTR_DATA_CACHE_ALIGN;
 static boolean PS_CrossBSPNode(sightWork_t* sw, int bspnum) ATTR_DATA_CACHE_ALIGN;
 static boolean PS_RejectCheckSight(mobj_t* t1, mobj_t* t2) ATTR_DATA_CACHE_ALIGN;
@@ -52,76 +57,53 @@ void P_CheckSights2(int c) ATTR_DATA_CACHE_ALIGN;
 void P_CheckSights2(void) ATTR_DATA_CACHE_ALIGN;
 #endif
 
+// Returns side 0 (front), 1 (back)
+#define PS_DivlineSide(xx,yy,n) (((n)->dy * ((xx) - (n)->x)) <= (((yy) - (n)->y) * (n)->dx))
+
 //
 // Returns the fractional intercept point
 // along the first divline.
 // This is only called by the addthings and addlines traversers.
 //
-static fixed_t P_InterceptVector2(divline_t *v2, divline_t *v1)
+static fixed_t PS_InterceptVector2(i16divline_t *v2, i16divline_t *v1)
 {
-   fixed_t frac;
+   fixed_t frac, num, den;
  #ifdef MARS
- #if 1
-   union { int64_t i64; uint32_t i32[2]; } den, num;
+   fixed_t temp;
 
-   den.i64 =  (int64_t)v1->dy * v2->dx;
-   den.i64 -= (int64_t)v1->dx * v2->dy;
-   if (den.i32[0] == 0)
+   den =  (int32_t)v1->dy * v2->dx;
+   den -= (int32_t)v1->dx * v2->dy;
+   if (den == 0)
      return 0;
 
-   num.i64 =  (int64_t)(v1->x - v2->x) * v1->dy;
-   num.i64 -= (int64_t)(v1->y - v2->y) * v1->dx;
-   num.i64 >>= 16;
+   num =  (int32_t)(v1->x - v2->x) * v1->dy;
+   num -= (int32_t)(v1->y - v2->y) * v1->dx;
 
-   do {
-      __asm volatile (
-         "mov #-128, r0\n\t"
-         "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
-         "mov.l %3, @(0,r0) /* set 32-bit divisor */ \n\t"
-         "mov.l %1, @(16,r0)\n\t"
-         "mov.l %2, @(20,r0) /* start divide */\n\t"
-         "mov.l @(20,r0), %0 /* get 32-bit quotient */ \n\t"
-         : "=r" (frac)
-         : "r" (num.i32[0]), "r" (num.i32[1]), "r" (den.i32[0])
-         : "r0"
-      );
-   } while (0);
+   __asm volatile (
+      "mov #-128, %1\n\t"
+      "add %1, %1 /* %1 is now 0xFFFFFF00 */ \n\t"
+      "mov.l %3, @(0,%1) /* set 32-bit divisor */ \n\t"
+      "swap.w %2, %0\n\t"
+      "exts.w %0, %0\n\t"
+      "mov.l %0, @(16,%1)\n\t"
+      "shll16 %2\n\t"
+      "mov.l %2, @(20,%1) /* start divide */\n\t"
+      "mov.l @(20,%1), %0 /* get 32-bit quotient */ \n\t"
+      : "=&r" (frac), "=&r" (temp)
+      : "r" (num), "r" (den)
+   );
 #else
-   fixed_t num;
-   fixed_t den, temp;
+   fixed_t temp;
 
-   temp = FixedMul(v1->dy,FRACUNIT/256);
-   den = FixedMul(temp,v2->dx);
-
-   temp = FixedMul(v1->dx,FRACUNIT/256);
-   temp = FixedMul(temp, v2->dy);
+   den = FixedMul(v1->dy<<8,v2->dx<<8);
+   temp = FixedMul(v1->dx<<8, v2->dy<<8);
 
    den = den - temp;
    if(den == 0)
       return 0;
 
-   temp = FixedMul((v2->y - v1->y),FRACUNIT/256);
-   temp = FixedMul(temp, v1->dx);
-
-   num = FixedMul((v1->x - v2->x),FRACUNIT/256);
-   num = FixedMul(num, v1->dy);
-
-   num  = num + temp;
-   frac = FixedDiv(num, den);
-#endif
-#else
-   fixed_t num;
-   fixed_t den, temp;
-
-   den = FixedMul(v1->dy>>8,v2->dx);
-   temp = FixedMul(v1->dx >> 8, v2->dy);
-
-   den = den - temp;
-   if(den == 0)
-      return 0;
-
-   temp = FixedMul((v2->y - v1->y) >> 8, v1->dx);
-   num = FixedMul((v1->x - v2->x) >> 8, v1->dy);
+   temp = FixedMul((v2->y - v1->y)< 8, v1->dx<<8);
+   num = FixedMul((v1->x - v2->x)<<8, v1->dy<<8);
 
    num  = num + temp;
    frac = FixedDiv(num, den);
@@ -151,16 +133,15 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
    sector_t    *back;
    fixed_t      opentop;
    fixed_t      openbottom;
-   divline_t    divl;
-   mapvertex_t    *v1;
-   mapvertex_t    *v2;
+   i16divline_t divl;
+   mapvertex_t  *v1, *v2;
    fixed_t      frac;
    fixed_t      slope;
-   divline_t    *strace = &sw->strace;
+   i16divline_t *strace = &sw->strace;
    int16_t      t2x = sw->t2x, t2y = sw->t2y;
    fixed_t      sightzstart = sw->sightzstart;
    VINT         *lvalidcount, vc;
-   VINT side;
+   VINT         side;
 
    sub = &subsectors[num];
 
@@ -183,19 +164,20 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
 
       v1 = &vertexes[line->v1];
       v2 = &vertexes[line->v2];
-      s1 = P_DivlineSide(v1->x << FRACBITS, v1->y << FRACBITS, strace);
-      s2 = P_DivlineSide(v2->x << FRACBITS, v2->y << FRACBITS, strace);
+
+      s1 = PS_DivlineSide(v1->x, v1->y, strace);
+      s2 = PS_DivlineSide(v2->x, v2->y, strace);
 
       // line isn't crossed?
       if (s1 == s2)
          continue;
 
-      divl.x = v1->x << FRACBITS;
-      divl.y = v1->y << FRACBITS;
-      divl.dx = (v2->x - v1->x) << FRACBITS;
-      divl.dy = (v2->y - v1->y) << FRACBITS;
-      s1 = P_DivlineSide (strace->x, strace->y, &divl);
-      s2 = P_DivlineSide (t2x, t2y, &divl);
+      divl.x = v1->x;
+      divl.y = v1->y;
+      divl.dx = v2->x - v1->x;
+      divl.dy = v2->y - v1->y;
+      s1 = PS_DivlineSide (strace->x, strace->y, &divl);
+      s2 = PS_DivlineSide (t2x, t2y, &divl);
 
       // line isn't crossed?
       if (s1 == s2)
@@ -231,7 +213,7 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
       if(openbottom >= opentop)
          return false; // stop
 
-      frac = P_InterceptVector2(strace, &divl);
+      frac = PS_InterceptVector2(strace, &divl);
 
       if(front->floorheight != back->floorheight)
       {
@@ -261,8 +243,8 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
 static boolean PS_CrossBSPNode(sightWork_t* sw, int bspnum)
 {
    node_t *bsp;
-   int side;
-   divline_t* strace = &sw->strace;
+   int side, side2;
+   i16divline_t *strace = &sw->strace;
 
 #ifdef MARS
    while ((int16_t)bspnum >= 0)
@@ -270,23 +252,19 @@ static boolean PS_CrossBSPNode(sightWork_t* sw, int bspnum)
    while (!(bspnum & NF_SUBSECTOR))
 #endif
    {
-       bsp = &nodes[bspnum];
+      bsp = &nodes[bspnum];
 
-       // decide which side the start point is on
-       divline_t divlinetest;
-       divlinetest.dx = bsp->dx << FRACBITS;
-       divlinetest.dy = bsp->dy << FRACBITS;
-       divlinetest.x = bsp->x << FRACBITS;
-       divlinetest.y = bsp->y << FRACBITS;
-       side = P_DivlineSide(strace->x, strace->y, &divlinetest) & 1;
+      // decide which side the start point is on
+      side = PS_DivlineSide(strace->x, strace->y, (i16divline_t *)bsp);
+      side2 = PS_DivlineSide(sw->t2x, sw->t2y, (i16divline_t *)bsp);
 
-       // the partition plane is crossed here
-       if (side == P_DivlineSide(sw->t2x, sw->t2y, &divlinetest))
-           bspnum = bsp->children[side]; // the line doesn't touch the other side
-       else if (!PS_CrossBSPNode(sw, bsp->children[side]))
-           return false; // cross the starting side
-       else
-           bspnum = bsp->children[side ^ 1]; // cross the ending side
+      // the partition plane is crossed here
+      if (side == side2)
+         bspnum = bsp->children[side]; // the line doesn't touch the other side
+      else if (!PS_CrossBSPNode(sw, bsp->children[side]))
+         return false; // cross the starting side
+      else
+         bspnum = bsp->children[side ^ 1]; // cross the ending side
    }
 
    return PS_CrossSubsector(sw, bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR);
@@ -362,15 +340,15 @@ static boolean PS_CheckSight2(mobj_t *t1, mobj_t *t2)
       *lvalidcount = 1;
 
    // look from eyes of t1 to any part of t2
-   sw.sightzstart = t1->z + Mobj_GetHeight(t1) - Mobj_GetHeight(t1);
-   sw.topslope    = (t2->z + Mobj_GetHeight(t2)) - sw.sightzstart;
+   sw.sightzstart = t1->z + (t1->theight << FRACBITS) - (t1->theight << (FRACBITS-2));
+   sw.topslope    = (t2->z + (t2->theight << FRACBITS)) - sw.sightzstart;
    sw.bottomslope = (t2->z) - sw.sightzstart;
 
    // make sure it never lies exactly on a vertex coordinate
-   sw.strace.x = (t1->x & ~0x1ffff) | 0x10000;
-   sw.strace.y = (t1->y & ~0x1ffff) | 0x10000;
-   sw.t2x = (t2->x & ~0x1ffff) | 0x10000;
-   sw.t2y = (t2->y & ~0x1ffff) | 0x10000;
+   sw.strace.x = ((t1->x & ~0x1ffff) | 0x10000) >> FRACBITS;
+   sw.strace.y = ((t1->y & ~0x1ffff) | 0x10000) >> FRACBITS;
+   sw.t2x = ((t2->x & ~0x1ffff) | 0x10000) >> FRACBITS;
+   sw.t2y = ((t2->y & ~0x1ffff) | 0x10000) >> FRACBITS;
    sw.strace.dx = sw.t2x - sw.strace.x;
    sw.strace.dy = sw.t2y - sw.strace.y;
 
