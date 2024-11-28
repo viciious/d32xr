@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include "r_local.h"
 #include "mars.h"
+#include "p_camera.h"
 
 stbar_t	*stbar;
 int stbar_tics;
@@ -273,6 +274,7 @@ static void ST_Drawer_ (stbar_t* sb)
 {
 	if (gametic < 96 && !(gamemapinfo.mapNumber >= SSTAGE_START && gamemapinfo.mapNumber <= SSTAGE_END)) {
 		ST_DrawTitleCard();
+		CONS_Printf("skyOffsetY: %d", -(vd.viewz >> 16) - (((signed int)camera.aiming) >> 22));	//DLG: Remove me!
 	}
 	else if (gamemapinfo.mapNumber >= SSTAGE_START && gamemapinfo.mapNumber <= SSTAGE_END)
 	{
@@ -333,6 +335,8 @@ static void ST_Drawer_ (stbar_t* sb)
 	}
 	else
 	{
+		CONS_Printf("skyOffsetY: %d", -(vd.viewz >> 16) - (((signed int)camera.aiming) >> 22));	//DLG: Remove me!
+
 		const int delaytime = gamemapinfo.act == 3 ? 2*TICRATE : 3*TICRATE;
 		int worldTime = leveltime - delaytime + TICRATE - sb->exiting - sb->deadTimer;
 		if (worldTime < 0)

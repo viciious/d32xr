@@ -255,7 +255,29 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
                 if (draw32xsky) {
                     int colnum = ((vd.viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
                     inpixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
-                    draw32xsky(x, top, --bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, -(camera.aiming >> 22));
+                    if (gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
+                        draw32xsky(
+                            gamemapinfo.skyOffsetX + x,
+                            -gamemapinfo.skyOffsetY,
+                            top,
+                            bottom,
+                            gamemapinfo.skyTopColor,
+                            gamemapinfo.skyBottomColor,
+                            data,
+                            skytexturep->height);
+                    }
+                    else {
+                        draw32xsky(
+                            gamemapinfo.skyOffsetX + x,
+                            -gamemapinfo.skyOffsetY - (((signed int)camera.aiming) >> 22),
+                            top,
+                            bottom,
+                            gamemapinfo.skyTopColor,
+                            gamemapinfo.skyBottomColor,
+                            data,
+                            skytexturep->height
+                            );
+                    }
                 }
                 else {
                     drawmdsky(x, top, bottom);
@@ -264,7 +286,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
                 // CALICO: draw sky column
                 int colnum = ((vd.viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
                 inpixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
-                draw32xsky(x, top, --bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, -(camera.aiming >> 22));
+                draw32xsky(x, top, --bottom, 0, (top * 18204) << 2, FRACUNIT, data, (camera.aiming >> 22));
 #endif
             }
         }

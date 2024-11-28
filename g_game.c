@@ -1,6 +1,7 @@
 /* G_game.c  */
 
 #include "doomdef.h"
+#include "marshw.h"
 #include "p_local.h"
 #include <string.h>
 
@@ -149,6 +150,8 @@ void G_DoLoadLevel (void)
 		gamemapinfo.sky = NULL;
 		gamemapinfo.skyOffsetX = 0;
 		gamemapinfo.skyOffsetY = 0;
+		gamemapinfo.skyTopColor = MARS_MD_PIXEL_THRU_INDEX;
+		gamemapinfo.skyBottomColor = MARS_MD_PIXEL_THRU_INDEX;
 		gamemapinfo.mapNumber = gamemap;
 		gamemapinfo.lumpNum = gamemaplump;
 
