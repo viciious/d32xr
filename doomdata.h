@@ -32,10 +32,10 @@ typedef struct
 
 typedef struct
 {
-	short		textureoffset;
-	short		rowoffset;
-	char		toptexture[8], bottomtexture[8], midtexture[8];
-	short		sector;				/* on viewer's side */
+	int16_t sector;
+	uint8_t toptexture, bottomtexture, midtexture;
+	uint8_t rowoffset;     // add this to the calculated texture top
+	int16_t textureoffset; // 8.4, add this to the calculated texture col
 } mapsidedef_t;
 
 typedef struct

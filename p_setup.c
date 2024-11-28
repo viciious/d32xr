@@ -443,15 +443,13 @@ void P_LoadSideDefs (int lump)
 	sd = sides;
 	for (i=0 ; i<numsides ; i++, msd++, sd++)
 	{
-		int rowoffset, textureoffset;
-		textureoffset = LITTLESHORT(msd->textureoffset);
-		rowoffset = LITTLESHORT(msd->rowoffset);
-		sd->toptexture = R_TextureNumForName(msd->toptexture);
-		sd->bottomtexture = R_TextureNumForName(msd->bottomtexture);
-		sd->midtexture = R_TextureNumForName(msd->midtexture);
 		sd->sector = LITTLESHORT(msd->sector);
-		sd->rowoffset = rowoffset & 0xff;
-		sd->textureoffset = (textureoffset & 0xfff) | ((rowoffset & 0x0f00) << 4);
+		sd->rowoffset = msd->rowoffset;
+		sd->textureoffset = LITTLESHORT(msd->textureoffset);
+		sd->toptexture = msd->toptexture;
+		sd->midtexture = msd->midtexture;
+		sd->bottomtexture = msd->bottomtexture;
+
 #ifndef MARS
 		textures[sd->toptexture].usecount++;
 		textures[sd->bottomtexture].usecount++;
