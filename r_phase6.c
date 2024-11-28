@@ -198,8 +198,6 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
     drawtex_t *tex;
 
     uint16_t *segcolmask = (segl->actionbits & AC_MIDTEXTURE) ? segl->clipbounds + (stop - start + 1) : NULL;
-    
-    signed short skyOffsetY = -(((signed int)camera.aiming) >> 22);
 
     for (x = start; x <= stop; x++)
     {
@@ -257,10 +255,27 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
                     int colnum = ((vd.viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
                     inpixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
                     if (gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
-                        draw32xsky(gamemapinfo.skyOffsetX + x, gamemapinfo.skyOffsetY, top, bottom, (top * 18204) << 2, FRACUNIT, data, 80);
+                        draw32xsky(
+                            gamemapinfo.skyOffsetX + x,
+                            -gamemapinfo.skyOffsetY,
+                            top,
+                            bottom,
+                            gamemapinfo.skyTopColor,
+                            gamemapinfo.skyBottomColor,
+                            data,
+                            skytexturep->height);
                     }
                     else {
-                        draw32xsky(gamemapinfo.skyOffsetX + x, gamemapinfo.skyOffsetY + skyOffsetY, top, bottom, (top * 18204) << 2, FRACUNIT, data, 80);
+                        draw32xsky(
+                            gamemapinfo.skyOffsetX + x,
+                            -gamemapinfo.skyOffsetY - (((signed int)camera.aiming) >> 22),
+                            top,
+                            bottom,
+                            gamemapinfo.skyTopColor,
+                            gamemapinfo.skyBottomColor,
+                            data,
+                            skytexturep->height
+                            );
                     }
                 }
                 else {

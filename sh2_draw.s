@@ -18,21 +18,12 @@
 !=======================================================================
 
 
-! Draw a vertical column of pixels from a projected wall texture.
+! Draw a vertical column of pixels from a sky texture.
 ! Source is the top of the column to scale.
 ! Low detail (doubl-wide pixels) mode.
 !
-!void I_Draw32XSkyColumnLow(
-!               int dc_x_offset,        !  r4
-!               int dc_y_offset,        !  r5
-!               int dc_seg_top,         !  r6
-!               int dc_seg_bottom,      !  r7
-!               fixed_t frac,           !  
-!               fixed_t fracstep,       !  
-!               inpixel_t *dc_source,   !  r8
-!               int dc_source_height,   !
-!               int fill_colors         !  
-!               )
+!void I_Draw32XSkyColumnLow(int dc_x_offset, int dc_y_offset, int dc_seg_top, int dc_seg_bottom,
+!               int top_color, int bottom_color, inpixel_t *dc_source, int dc_source_height)
 
         .align  4
         .global _I_Draw32XSkyColumnLowA
@@ -51,12 +42,8 @@ _I_Draw32XSkyColumnLowA:
         mov.l   r10,@-r15
         mov.l   r11,@-r15
         mov.l   r12,@-r15
-        
-!!      mov.l   @(20,r15),r2    /* frac */
-!!      mov.l   @(24,r15),r3    /* fracstep */
-!!      mov.l   @(28,r15),r5    /* dc_source */
+
         mov.l   @(32,r15),r11    /* dc_source_height */
-        !!!!mov     r11,r3
 
         mov     #0,r9
 
@@ -115,8 +102,8 @@ _I_Draw32XSkyColumnLowA:
         cmp/gt  r2,r6
         bf/s    41f
         nop
-! { b_height -= (seg_start - b_height); b_start = seg_start; }
-        add     r12,r12
+! { b_height -= (seg_start - b_start); b_start = seg_start; }
+        add     r2,r12
         sub     r6,r12
         mov     r6,r2
         bra     5f
@@ -152,7 +139,10 @@ do_draw_top_fill_area:
         mov     #0,r2
         cmp/gt  r2,r10
         bf/s    do_draw_middle_fill_area
-        mov.w   top_fill_color,r7
+        mov.l   @(20,r15),r7    /* skyTopColor */
+        mov     r7,r2
+        shll8   r2
+        or      r2,r7
 
 do_sky_top_fill_low:
         /* test if count & 1 */
@@ -214,7 +204,10 @@ do_draw_bottom_fill_area:
         mov     #0,r2
         cmp/gt  r2,r12
         bf/s    do_32xsky_done
-        mov.w   bottom_fill_color,r7
+        mov.l   @(24,r15),r7    /* skyBottomColor */
+        mov     r7,r2
+        shll8   r2
+        or      r2,r7
 
 do_sky_bottom_fill_low:
         /* test if count & 1 */
@@ -246,20 +239,10 @@ do_32xsky_done:
 
 
         .align  4
-top_fill_color:
-        .short  0x8888
-
-        .align  4
-bottom_fill_color:
-        .short  0x8E8E
-
-        .align  4
 draw_fb_2:
         .long   _viewportbuffer
 draw_width_2:
         .long   320
-!viewport_height:
-!        .long   180
 
 
 ! Draw a vertical column of pixels from a projected wall texture.
