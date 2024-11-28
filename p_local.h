@@ -190,6 +190,7 @@ typedef struct
 fixed_t P_AproxDistance (fixed_t dx, fixed_t dy);
 int 	P_PointOnLineSide (fixed_t x, fixed_t y, line_t *line);
 int 	P_PointOnDivlineSide (fixed_t x, fixed_t y, divline_t *line);
+int     P_DivlineSide(fixed_t x, fixed_t y, divline_t *node);
 int 	P_BoxOnLineSide (fixed_t *tmbox, line_t *ld);
 
 fixed_t	P_LineOpening (line_t *linedef);

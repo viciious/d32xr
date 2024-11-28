@@ -59,6 +59,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
 {
     int remaining;
     fixed_t distance;
+    fixed_t ds;
     fixed_t length, xfrac, yfrac, xstep, ystep;
     angle_t angle;
     int light;
@@ -85,7 +86,9 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
         : "=&r" (t) : "r" (distance), "r"(lpl->lightcoef) : "r0");
 #endif
 
-    length = FixedMul(distance, distscale[x]);
+    ds = distscale[x];
+    ds <<= 1;
+    length = FixedMul(distance, ds);
 
     xstep = FixedMul(distance, lpl->basexscale);
     ystep = FixedMul(distance, lpl->baseyscale);

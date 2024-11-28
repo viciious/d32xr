@@ -7,6 +7,7 @@
 fixed_t P_AproxDistance(fixed_t dx, fixed_t dy) ATTR_DATA_CACHE_ALIGN;
 int P_PointOnLineSide(fixed_t x, fixed_t y, line_t* line) ATTR_DATA_CACHE_ALIGN;
 int P_PointOnDivlineSide(fixed_t x, fixed_t y, divline_t* line) ATTR_DATA_CACHE_ALIGN;
+int P_DivlineSide(fixed_t x, fixed_t y, divline_t *node) ATTR_DATA_CACHE_ALIGN;
 fixed_t P_LineOpening(line_t* linedef) ATTR_DATA_CACHE_ALIGN;
 void P_LineBBox(line_t* ld, fixed_t* bbox) ATTR_DATA_CACHE_ALIGN;
 void P_UnsetThingPosition(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
@@ -117,6 +118,21 @@ int P_PointOnDivlineSide (fixed_t x, fixed_t y, divline_t *line)
 	return 1;			/* back side */
 }
 
+//
+// Returns side 0 (front), 1 (back), or 2 (on).
+//
+int P_DivlineSide(fixed_t x, fixed_t y, divline_t *node)
+{
+   fixed_t dx;
+   fixed_t dy;
+   fixed_t left;
+   fixed_t right;
+   dx = x - node->x;
+   dy = y - node->y;
+   left  = (node->dy>>FRACBITS) * (dx>>FRACBITS);
+   right = (dy>>FRACBITS) * (node->dx>>FRACBITS);
+   return (left <= right) + (left == right);
+}
 
 /*
 ==================

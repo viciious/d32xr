@@ -388,7 +388,7 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
    int     x;          // r15
    int     x1;         // FP+5
    int     x2;         // r22
-   unsigned scalefrac; // FP+3
+   fixed_t scalefrac; // FP+3
    int     r1;         // FP+7
    int     r2;         // r18
    unsigned silhouette; // FP+4
@@ -653,8 +653,8 @@ void Mars_Sec_R_DrawSprites(int sprscreenhalf)
 //
 void R_Sprites(void)
 {
-   int i = 0, count;
-   int half, sortedcount;
+   int i = 0, count, sortedcount;
+   unsigned half;
    unsigned midcount;
    int *sortedsprites = (void *)vd.vissectors;
    viswall_t *wc;
@@ -682,21 +682,31 @@ void R_Sprites(void)
        // average mid point
        unsigned xscale = ds->xscale;
        unsigned pixcount = ds->x2 + 1 - ds->x1;
-       if (pixcount > 10) // FIXME: an arbitrary number
-       {
-           midcount += xscale;
-           half += (ds->x1 + (pixcount >> 1)) * xscale;
-       }
+
+       midcount += pixcount;
+       half += (ds->x1 + (pixcount >> 1)) * pixcount;
 
        // composite sort key: distance + id
        sortedsprites[1+sortedcount++] = (xscale << 7) + i;
+   }
+
+   // add masked segs
+   for (wc = vd.viswalls; wc < vd.lastwallcmd; wc++)
+   {
+      unsigned pixcount = wc->stop - wc->start + 1;
+      if (wc->start > wc->stop)
+         continue;
+      if (!(wc->actionbits & AC_MIDTEXTURE))
+         continue;
+      midcount += pixcount;
+      half += (wc->start + (pixcount >> 1)) * pixcount;
    }
 
    // average the mid point
    if (midcount > 0)
    {
       half /= midcount;
-      if (!half || half > viewportWidth)
+      if (!half || half > (unsigned)viewportWidth)
          half = viewportWidth / 2;
    }
 

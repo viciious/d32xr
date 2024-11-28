@@ -45,6 +45,8 @@ mapthing_t	playerstarts[MAXPLAYERS];
 int			numthings;
 spawnthing_t* spawnthings;
 
+int16_t worldbbox[4];
+
 /*
 =================
 =
@@ -228,39 +230,27 @@ void P_LoadSectors (int lump)
 
 void P_LoadNodes (int lump)
 {
-#ifdef MARS	
 	numnodes = W_LumpLength (lump) / sizeof(node_t);
 	nodes = (node_t *)W_POINTLUMPNUM(lump);
-#else
-	byte		*data;
-	int			i,j,k;
-	mapnode_t	*mn;
-	node_t		*no;
-	
-	numnodes = W_LumpLength (lump) / sizeof(mapnode_t);
-	nodes = Z_Malloc (numnodes*sizeof(node_t),PU_LEVEL);
-	data = I_TempBuffer ();
-	W_ReadLump (lump,data);
-	
-	mn = (mapnode_t *)data;
-	no = nodes;
-	for (i=0 ; i<numnodes ; i++, no++, mn++)
+
+	// Calculate worldbbox
+	worldbbox[BOXLEFT] = INT16_MAX;
+	worldbbox[BOXRIGHT] = INT16_MIN;
+	worldbbox[BOXBOTTOM] = INT16_MAX;
+	worldbbox[BOXTOP] = INT16_MIN;
+	for (int i = 0; i < numvertexes; i++)
 	{
-		no->x = LITTLESHORT(mn->x)<<FRACBITS;
-		no->y = LITTLESHORT(mn->y)<<FRACBITS;
-		no->dx = LITTLESHORT(mn->dx)<<FRACBITS;
-		no->dy = LITTLESHORT(mn->dy)<<FRACBITS;
-		for (j=0 ; j<2 ; j++)
-		{
-			no->children[j] = (unsigned short)LITTLESHORT(mn->children[j]);
-			for (k=0 ; k<4 ; k++)
-				no->bbox[j][k] = LITTLESHORT(mn->bbox[j][k])<<FRACBITS;
-		}
+		const mapvertex_t *v = &vertexes[i];
+		if (v->x < worldbbox[BOXLEFT])
+			worldbbox[BOXLEFT] = v->x;
+		if (v->x > worldbbox[BOXRIGHT])
+			worldbbox[BOXRIGHT] = v->x;
+		if (v->y < worldbbox[BOXBOTTOM])
+			worldbbox[BOXBOTTOM] = v->y;
+		if (v->y > worldbbox[BOXTOP])
+			worldbbox[BOXTOP] = v->y;
 	}
-#endif
 }
-
-
 
 /*
 =================

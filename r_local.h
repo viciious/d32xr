@@ -129,9 +129,9 @@ typedef struct seg_s
 
 typedef struct
 {
-	fixed_t		x,y,dx,dy;			/* partition line */
-	fixed_t		bbox[2][4];			/* bounding box for each child */
-	int			children[2];		/* if NF_SUBSECTOR its a subsector */
+	int16_t		x,y,dx,dy;			/* partition line */
+	uint16_t	children[2];		/* if NF_SUBSECTOR its a subsector */
+	uint16_t 	encbbox[2]; 		/* encoded bounding box for each child */
 } node_t;
 
 #define MIPLEVELS 1
@@ -236,6 +236,8 @@ extern	line_t		*lines;
 extern	int			numsides;
 extern	side_t		*sides;
 
+extern 	int16_t 	worldbbox[4];
+
 /*============================================================================= */
 
 extern VINT viewportNum;
@@ -252,21 +254,34 @@ extern const VINT numViewports;
 ATTR_DATA_CACHE_ALIGN
 static inline int R_PointOnSide (int x, int y, node_t *node)
 {
-	fixed_t	dx,dy;
-	fixed_t	left, right;
+	int32_t	dx,dy;
+	int32_t r1, r2;
 
-	dx = (x - node->x);
-	dy = (y - node->y);
-
+	dx = x - ((fixed_t)node->x << FRACBITS);
 #ifdef MARS
-   left = ((int64_t)node->dy*dx) >> 32;
-   right = ((int64_t)dy*node->dx) >> 32;
+	dx = (unsigned)dx >> FRACBITS;
+	__asm volatile(
+		"muls.w %0,%1\n\t"
+		: : "r"(node->dy), "r"(dx) : "macl", "mach");
 #else
-   left  = (node->dy>>FRACBITS) * (dx>>FRACBITS);
-   right = (dy>>FRACBITS) * (node->dx>>FRACBITS);
+	dx >>= FRACBITS;
+	r1 = node->dy * dx;
 #endif
 
-   return (left <= right);
+	dy = y - ((fixed_t)node->y << FRACBITS);
+#ifdef MARS
+	dy = (unsigned)dy >> FRACBITS;
+	__asm volatile(
+		"sts macl, %0\n\t"
+		"muls.w %2,%3\n\t"
+		"sts macl, %1\n\t"
+		: "=&r"(r1), "=&r"(r2) : "r"(dy), "r"(node->dx) : "macl", "mach");
+#else
+	dy >>= FRACBITS;
+	r2 = dy * node->dx;
+#endif
+
+    return (r1 <= r2);
 }
 
 //
@@ -323,7 +338,7 @@ extern const angle_t tantoangle[SLOPERANGE + 1];
 
 extern  fixed_t *yslopetab;
 extern	fixed_t *yslope/*[SCREENHEIGHT]*/;
-extern	fixed_t *distscale/*[SCREENWIDTH]*/;
+extern	uint16_t *distscale/*[SCREENWIDTH]*/;
 
 #define OPENMARK 0xff00
 #ifdef MARS
@@ -506,9 +521,9 @@ typedef struct
 	uint16_t	newmiplevels; // 0 is lower, 1 is upper
 #endif
 
-	int			scalestep;		/* polar angle to start at phase1, then scalestep after phase2 */
-	unsigned	scalefrac;
-	unsigned	scale2;
+	fixed_t			scalestep;		/* polar angle to start at phase1, then scalestep after phase2 */
+	fixed_t	scalefrac;
+	fixed_t	scale2;
 
 	short	actionbits;
 	short	seglightlevel;

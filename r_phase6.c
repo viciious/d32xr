@@ -89,7 +89,7 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum, fixed_t scale2, in
     // column has no length?
     if (top < bottom)
     {
-        int mipcolnum;
+        VINT mipcolnum;
         drawmip_t *mip;
         fixed_t frac;
 #ifdef MARS
@@ -100,6 +100,7 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum, fixed_t scale2, in
 
         colnum &= tex->widthmask;
         mipcolnum = colnum;
+        mipcolnum &= tex->widthmask;
         frac = tex->texturemid - (centerY - top) * iscale;
 
 #if MIPLEVELS > 1

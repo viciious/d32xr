@@ -39,7 +39,6 @@ typedef struct
     fixed_t t2x, t2y;
 } sightWork_t;
 
-static int P_DivlineSide(fixed_t x, fixed_t y, divline_t* node) ATTR_DATA_CACHE_ALIGN;
 static fixed_t P_InterceptVector2(divline_t* v2, divline_t* v1) ATTR_DATA_CACHE_ALIGN;
 static boolean PS_CrossSubsector(sightWork_t* sw, int num) ATTR_DATA_CACHE_ALIGN;
 static boolean PS_CrossBSPNode(sightWork_t* sw, int bspnum) ATTR_DATA_CACHE_ALIGN;
@@ -52,25 +51,6 @@ void P_CheckSights2(int c) ATTR_DATA_CACHE_ALIGN;
 #else
 void P_CheckSights2(void) ATTR_DATA_CACHE_ALIGN;
 #endif
-
-//
-// Returns side 0 (front), 1 (back), or 2 (on).
-//
-static int P_DivlineSide(fixed_t x, fixed_t y, divline_t *node)
-{
-   fixed_t dx;
-   fixed_t dy;
-   fixed_t left;
-   fixed_t right;
-
-   dx = x - node->x;
-   dy = y - node->y;
-
-   left  = (node->dy>>FRACBITS) * (dx>>FRACBITS);
-   right = (dy>>FRACBITS) * (node->dx>>FRACBITS);
-
-   return (left <= right) + (left == right);
-}
 
 //
 // Returns the fractional intercept point
@@ -163,8 +143,8 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
 {
    seg_t       *seg;
    line_t      *line;
-   int          s1;
-   int          s2;
+   VINT         s1;
+   VINT         s2;
    int          count;
    subsector_t *sub;
    sector_t    *front;
@@ -172,15 +152,15 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
    fixed_t      opentop;
    fixed_t      openbottom;
    divline_t    divl;
-   vertex_t    *v1;
-   vertex_t    *v2;
+   mapvertex_t    *v1;
+   mapvertex_t    *v2;
    fixed_t      frac;
    fixed_t      slope;
-   int          side;
    divline_t    *strace = &sw->strace;
-   fixed_t      t2x = sw->t2x, t2y = sw->t2y;
+   int16_t      t2x = sw->t2x, t2y = sw->t2y;
    fixed_t      sightzstart = sw->sightzstart;
    VINT         *lvalidcount, vc;
+   VINT side;
 
    sub = &subsectors[num];
 
@@ -203,17 +183,17 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
 
       v1 = &vertexes[line->v1];
       v2 = &vertexes[line->v2];
-      s1 = P_DivlineSide(v1->x, v1->y, strace);
-      s2 = P_DivlineSide(v2->x, v2->y, strace);
+      s1 = P_DivlineSide(v1->x << FRACBITS, v1->y << FRACBITS, strace);
+      s2 = P_DivlineSide(v2->x << FRACBITS, v2->y << FRACBITS, strace);
 
       // line isn't crossed?
       if (s1 == s2)
          continue;
 
-      divl.x = v1->x;
-      divl.y = v1->y;
-      divl.dx = v2->x - v1->x;
-      divl.dy = v2->y - v1->y;
+      divl.x = v1->x << FRACBITS;
+      divl.y = v1->y << FRACBITS;
+      divl.dx = (v2->x - v1->x) << FRACBITS;
+      divl.dy = (v2->y - v1->y) << FRACBITS;
       s1 = P_DivlineSide (strace->x, strace->y, &divl);
       s2 = P_DivlineSide (t2x, t2y, &divl);
 
@@ -293,10 +273,15 @@ static boolean PS_CrossBSPNode(sightWork_t* sw, int bspnum)
        bsp = &nodes[bspnum];
 
        // decide which side the start point is on
-       side = P_DivlineSide(strace->x, strace->y, (divline_t*)bsp) & 1;
+       divline_t divlinetest;
+       divlinetest.dx = bsp->dx << FRACBITS;
+       divlinetest.dy = bsp->dy << FRACBITS;
+       divlinetest.x = bsp->x << FRACBITS;
+       divlinetest.y = bsp->y << FRACBITS;
+       side = P_DivlineSide(strace->x, strace->y, &divlinetest) & 1;
 
        // the partition plane is crossed here
-       if (side == P_DivlineSide(sw->t2x, sw->t2y, (divline_t*)bsp))
+       if (side == P_DivlineSide(sw->t2x, sw->t2y, &divlinetest))
            bspnum = bsp->children[side]; // the line doesn't touch the other side
        else if (!PS_CrossBSPNode(sw, bsp->children[side]))
            return false; // cross the starting side
@@ -313,7 +298,8 @@ static boolean PS_CrossBSPNode(sightWork_t* sw, int bspnum)
 static boolean PS_RejectCheckSight(mobj_t *t1, mobj_t *t2)
 {
    unsigned s1, s2;
-   unsigned pnum, bytenum, bitnum;
+   unsigned pnum, bitnum;
+   int bytenum;
 
    // First check for trivial rejection
    s1 = ((uintptr_t)subsectors[t1->isubsector].sector - (uintptr_t)sectors);
@@ -321,21 +307,40 @@ static boolean PS_RejectCheckSight(mobj_t *t1, mobj_t *t2)
    pnum = (s1*numsectors + s2) / sizeof(sector_t);
    bytenum = pnum >> 3;
 
+#ifdef MARS
+   bitnum = pnum & 7;
+   __asm volatile(
+      "add #-7,%0\n\t"
+      "neg %0,%0\n\t"
+      "add %0,%0\n\t"
+      "braf %0\n\t"
+      "mov #1,%0\n\t"
+      "shll %0\n\t"
+      "shll %0\n\t"
+      "shll %0\n\t"
+      "shll %0\n\t"
+      "shll %0\n\t"
+      "shll %0\n\t"
+      "shll %0\n\t"
+      : "+r"(bitnum)
+   );
+#else
    bitnum = 1;
    switch (pnum & 7)
    {
-   case 7: do { bitnum <<= 1;
-   case 6:      bitnum <<= 1;
-   case 5:      bitnum <<= 1;
-   case 4:      bitnum <<= 1;
-   case 3:      bitnum <<= 1;
-   case 2:      bitnum <<= 1;
-   case 1:      bitnum <<= 1;
-   case 0:      break;
-   } while (0);
+      case 7: do { bitnum <<= 1;
+      case 6:      bitnum <<= 1;
+      case 5:      bitnum <<= 1;
+      case 4:      bitnum <<= 1;
+      case 3:      bitnum <<= 1;
+      case 2:      bitnum <<= 1;
+      case 1:      bitnum <<= 1;
+      case 0:      break;
+      } while (0);
    }
+#endif
 
-   if(rejectmatrix[bytenum] & bitnum) 
+   if((int8_t)rejectmatrix[bytenum] & bitnum) 
    {
       return false; // can't possibly be connected
    }
