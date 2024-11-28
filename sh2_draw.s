@@ -58,6 +58,8 @@ _I_Draw32XSkyColumnLowA:
         mov.l   @(32,r15),r11    /* dc_source_height */
         !!!!mov     r11,r3
 
+        mov     #0,r9
+
 
 
 ! int t_height = (-y_offset);
@@ -92,9 +94,10 @@ _I_Draw32XSkyColumnLowA:
         cmp/gt  r1,r6
         bf/s    31f
         nop
-! { m_height -= (seg_start - m_start); m_start = seg_start; }
-        add     r1,r11
-        sub     r6,r11
+! { source_offset = (seg_start - m_start); m_height -= source_offset; m_start = seg_start; }
+        mov     r6,r9
+        sub     r1,r9
+        sub     r9,r11
         mov     r6,r1
         bra     4f
         nop
@@ -128,6 +131,12 @@ _I_Draw32XSkyColumnLowA:
         sub     r2,r11
 
 5:
+        mov.l   @(DOOMTLS_COLORMAP, gbr),r0
+        mov     r0,r3
+
+        mov.l   @(28,r15),r0    /* dc_source */
+        add     r9,r0           /* adjust sky position */
+
         mov.l   draw_fb_2,r8
         mov.l   @r8,r8          /* frame buffer start */
         add     r4,r8
@@ -137,36 +146,26 @@ _I_Draw32XSkyColumnLowA:
         shlr2   r6
         add     r6,r8           /* fb += (dc_yl*256 + dc_yl*64) */
 
-
-
-        mov.l   @(DOOMTLS_COLORMAP, gbr),r0
-        mov     r0,r3
-
-!!!!        mov.l   @(20,r15),r0    /* frac */
-!!!!        mov.l   @(24,r15),r1    /* fracstep */
-        mov.l   @(28,r15),r0    /* dc_source */
-
         mov.l   draw_width_2,r6
 
 do_draw_top_fill_area:
         mov     #0,r2
         cmp/gt  r2,r10
         bf/s    do_draw_middle_fill_area
-        mov     r10,r9
         mov.w   top_fill_color,r7
 
 do_sky_top_fill_low:
         /* test if count & 1 */
-        shlr    r9
+        shlr    r10
         movt    r2              /* 1 if count was odd */
         bt/s    do_sky_top_fill_loop_low_1px
-        add     r2,r9
+        add     r2,r10
 
 do_sky_top_fill_loop_low:
         mov.w   r7,@r8         /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
         add     r6,r8          /* fb += SCREENWIDTH */
 do_sky_top_fill_loop_low_1px:
-        dt      r9              /* count-- */
+        dt      r10             /* count-- */
         mov.w   r7,@r8         /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
         bf/s    do_sky_top_fill_loop_low
         add     r6,r8          /* fb += SCREENWIDTH */
@@ -178,21 +177,15 @@ do_draw_middle_fill_area:
         mov     #0,r2
         cmp/gt  r2,r11
         bf/s    do_draw_bottom_fill_area
-        mov     r11,r9
-
-        cmp/gt  r2,r5
-        bf/s    do_sky_middle_fill_low
         nop
-        add     r5,r0           /* adjust sky position */
 
-        .p2alignw 2, 0x0009
 do_sky_middle_fill_low:
         mov     r0,r1
         /* test if count & 1 */
-        shlr    r9
+        shlr    r11
         movt    r2              /* 1 if count was odd */
         bt/s    do_sky_middle_fill_loop_low_1px
-        add     r2,r9
+        add     r2,r11
 
         .p2alignw 2, 0x0009
 do_sky_middle_fill_loop_low:
@@ -207,7 +200,7 @@ do_sky_middle_fill_loop_low_1px:
         mov.b   @r0,r0
         add     r0,r0
         mov.w   @(r0,r3),r7
-        dt      r9              /* count-- */
+        dt      r11             /* count-- */
         mov.w   r7,@r8         /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
         add     #1,r1
         mov     r1,r0
@@ -221,22 +214,21 @@ do_draw_bottom_fill_area:
         mov     #0,r2
         cmp/gt  r2,r12
         bf/s    do_32xsky_done
-        mov     r12,r9
         mov.w   bottom_fill_color,r7
 
 do_sky_bottom_fill_low:
         /* test if count & 1 */
-        shlr    r9
+        shlr    r12
         movt    r2              /* 1 if count was odd */
         bt/s    do_sky_bottom_fill_loop_low_1px
-        add     r2,r9
+        add     r2,r12
 
         .p2alignw 2, 0x0009
 do_sky_bottom_fill_loop_low:
         mov.w   r7,@r8         /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
         add     r6,r8          /* fb += SCREENWIDTH */
 do_sky_bottom_fill_loop_low_1px:
-        dt      r9              /* count-- */
+        dt      r12             /* count-- */
         mov.w   r7,@r8         /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
         bf/s    do_sky_bottom_fill_loop_low
         add     r6,r8          /* fb += SCREENWIDTH */

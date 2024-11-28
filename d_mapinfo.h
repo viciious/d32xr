@@ -34,6 +34,8 @@ typedef struct
 	char *sky;
 	VINT skyOffsetX;
 	VINT skyOffsetY;
+	VINT skyTopColor;
+	VINT skyBottomColor;
 	VINT next;
 	VINT lumpNum;
 	VINT mapNumber;

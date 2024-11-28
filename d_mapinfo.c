@@ -250,6 +250,10 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 		mi->skyOffsetX = D_atoi(value);
 	else if (!D_strcasecmp(key, "skyOffsetY"))
 		mi->skyOffsetY = D_atoi(value);
+	else if (!D_strcasecmp(key, "skyTopColor"))
+		mi->skyTopColor = D_atoi(value);
+	else if (!D_strcasecmp(key, "skyBottomColor"))
+		mi->skyBottomColor = D_atoi(value);
 	else if (!D_strcasecmp(key, "mapnumber"))
 		mi->mapNumber = D_atoi(value);
 	else if (!D_strcasecmp(key, "music"))
