@@ -41,9 +41,9 @@ typedef struct
 typedef struct
 {
 	short		v1, v2;
-	short		flags;
-	short		special, tag;
 	short		sidenum[2];			/* sidenum[1] will be -1 if one sided */
+	uint16_t	flags;
+	uint8_t		special, tag;
 } maplinedef_t;
 
 #define	ML_BLOCKING			1
@@ -79,7 +79,7 @@ typedef	struct
 
 typedef struct
 {
-	short		numsegs;
+//	short		numsegs;
 	short		firstseg;			/* segs are stored sequentially */
 } mapsubsector_t;
 

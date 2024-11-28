@@ -138,6 +138,7 @@ void P_LoadSubsectors (int lump)
 	byte			*data;
 	int				i;
 	mapsubsector_t	*ms;
+	mapsubsector_t  *msHead;
 	subsector_t		*ss;
 
 	numsubsectors = W_LumpLength (lump) / sizeof(mapsubsector_t);
@@ -145,13 +146,20 @@ void P_LoadSubsectors (int lump)
 	data = I_TempBuffer ();
 	W_ReadLump (lump,data);
 
-	ms = (mapsubsector_t *)data;
+	msHead = ms = (mapsubsector_t *)data;
 	D_memset (subsectors,0, numsubsectors*sizeof(subsector_t));
 	ss = subsectors;
 	for (i=0 ; i<numsubsectors ; i++, ss++, ms++)
 	{
-		ss->numlines = LITTLESHORT(ms->numsegs);
+		// The segments are already stored in sub sector order,
+		// so the number of segments in sub sector n is actually
+		// just subsector[n+1].firstseg - subsector[n].firsteg
 		ss->firstline = LITTLESHORT(ms->firstseg);
+
+		if (i < numsubsectors - 1)
+			ss->numlines = LITTLESHORT(msHead[i+1].firstseg) - ss->firstline;
+		else
+			ss->numlines = numsegs - ss->firstline;
 	}
 }
 
@@ -378,8 +386,8 @@ void P_LoadLineDefs (int lump)
 	{
 		fixed_t dx,dy;
 		ld->flags = LITTLESHORT(mld->flags);
-		ld->special = (uint8_t)LITTLESHORT(mld->special);
-		ld->tag = (uint8_t)LITTLESHORT(mld->tag);
+		ld->special = mld->special;
+		ld->tag = mld->tag;
 		ld->v1 = LITTLESHORT(mld->v1);
 		ld->v2 = LITTLESHORT(mld->v2);
 		
@@ -598,9 +606,9 @@ D_printf ("P_SetupLevel(%i)\n",lumpnum);
 	P_LoadSectors (lumpnum+ML_SECTORS);
 	P_LoadSideDefs (lumpnum+ML_SIDEDEFS);
 	P_LoadLineDefs (lumpnum+ML_LINEDEFS);
+	P_LoadSegs (lumpnum+ML_SEGS);
 	P_LoadSubsectors (lumpnum+ML_SSECTORS);
 	P_LoadNodes (lumpnum+ML_NODES);
-	P_LoadSegs (lumpnum+ML_SEGS);
 
 #ifdef MARS
 	rejectmatrix = (byte *)W_POINTLUMPNUM(lumpnum+ML_REJECT);
