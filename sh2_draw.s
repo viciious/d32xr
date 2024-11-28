@@ -22,202 +22,287 @@
 ! Source is the top of the column to scale.
 ! Low detail (doubl-wide pixels) mode.
 !
-!void I_Draw32XSkyColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
-!                  fixed_t fracstep, inpixel_t *dc_source, int dc_y_offset)
+!void I_Draw32XSkyColumnLow(
+!               int dc_x_offset,        !  r4
+!               int dc_y_offset,        !  r5
+!               int dc_seg_top,         !  r6
+!               int dc_seg_bottom,      !  r7
+!               fixed_t frac,           !  
+!               fixed_t fracstep,       !  
+!               inpixel_t *dc_source,   !  r8
+!               int dc_source_height,   !
+!               int fill_colors         !  
+!               )
 
         .align  4
         .global _I_Draw32XSkyColumnLowA
 _I_Draw32XSkyColumnLowA:
-	add	#1,r6
-
-0:
-        cmp/ge  r6,r5
+        cmp/ge  r7,r6
         bf/s    1f
-        sub     r5,r6           /* count = dc_yh - dc_yl */
+        !!sub     r6,r7           /* count = dc_seg_bottom - dc_seg_top */
+        nop
 
-        /* dc_yl >= dc_yh, exit */
+        /* dc_seg_top >= dc_seg_bottom, exit */
         rts
         nop
+
 1:
         mov.l   r8,@-r15
         mov.l   r9,@-r15
         mov.l   r10,@-r15
+        mov.l   r11,@-r15
         mov.l   r12,@-r15
-        mov.l   r13,@-r15
-!        mov.l   r14,@-r15       /* TESTING TESTING TESTING TESTING TESTING TESTING */
+        
+!!      mov.l   @(20,r15),r2    /* frac */
+!!      mov.l   @(24,r15),r3    /* fracstep */
+!!      mov.l   @(28,r15),r5    /* dc_source */
+        mov.l   @(32,r15),r11    /* dc_source_height */
+        mov     r11,r3
 
-!        mov     #0,r14          /* TESTING TESTING TESTING TESTING TESTING TESTING */
 
-        mov.l   @(DOOMTLS_COLORMAP, gbr),r0
-        mov     r0,r7
+
+! int t_height = (-y_offset);
+        mov     r5,r10
+        neg     r10,r10
+! int b_height = seg_end - t_height - m_height;
+        mov     r7,r12
+        sub     r10,r12
+        sub     r11,r12
+
+! int t_start = 0;
+        mov     #0,r0
+! int m_start = t_height;
+        mov     r10,r1
+! int b_start = t_height + m_height;
+        mov     r10,r2
+        add     r11,r2
+
+
+
+2:
+! if (t_start < seg_start)
+        cmp/gt  r0,r6
+        bf/s    3f
+        nop
+! { t_height -= seg_start; t_start = seg_start; }
+        sub     r6,r10
+        mov     r6,r0
+
+3:
+! if (m_start < seg_start)
+        cmp/gt  r1,r6
+        bf/s    31f
+        nop
+! { m_height -= (seg_start - m_start); m_start = seg_start; }
+        add     r1,r11
+        sub     r6,r11
+        mov     r6,r1
+        bra     4f
+        nop
+31:
+! else if (m_start > seg_end)
+        cmp/gt  r7,r1
+        bf/s    4f
+        nop
+! { t_height -= (m_start - seg_end); }
+        add     r7,r10
+        sub     r1,r10
+
+4:
+! if (b_start < seg_start)
+        cmp/gt  r2,r6
+        bf/s    41f
+        nop
+! { b_height -= (seg_start - b_height); b_start = seg_start; }
+        add     r12,r12
+        sub     r6,r12
+        mov     r6,r2
+        bra     5f
+        nop
+41:
+! else if (b_start > seg_end)
+        cmp/gt  r7,r2
+        bf/s    5f
+        nop
+! { m_height -= (b_start - seg_end); }
+        add     r7,r11
+        sub     r2,r11
+
+5:
         mov.l   draw_fb_2,r8
         mov.l   @r8,r8          /* frame buffer start */
         add     r4,r8
         add     r4,r8           /* fb += dc_x*2 */
-        mov     r8,r12          /* store frame buffer offset without y offset */
-        shll8   r5
-        add     r5,r8
-        shlr2   r5
-        add     r5,r8           /* fb += (dc_yl*256 + dc_yl*64) */
-        mov.l   @(20,r15),r2    /* frac */
-        mov.l   @(24,r15),r3    /* fracstep */
-        mov.l   @(28,r15),r5    /* dc_source */
-        mov.l   @(32,r15),r4    /* y_offset */
-
-        mov.l   draw_width_2,r1
-
-        mov     #80,r9
-        add     r4,r5           /* adjust sky position */
-        sub     r4,r9
-
-        swap.w  r2,r0           /* (frac >> 16) */
-
-        /*
-        r1 = screen width (320) (never changes)
-        r4 = height mask (127) (never changes)
-        r5 = starting y position for source (top of seg)
-        r6 = row count down to zero (zero = bottom of seg)
-        r8 = frame buffer offset
-        r9 = pixel fetched from source
-
-        r5 = start of seg
-        r6 = cursor
-        r10 = start of bottom fill
-        r11 = end of seg
-        r12 = frame buffer offset (without Y offset)
-        */
-
-        mov     r6,r10
-        sub     r9,r10          /* Subtract area above seg from r10 */
-
-        mov     #0,r9
-        cmp/ge  r9,r4           /* Skip the top fill if it's not needed */
-        bt/s    do_32xsky_middle_col_pre_loop
-        nop
+        shll8   r6
+        add     r6,r8
+        shlr2   r6
+        add     r6,r8           /* fb += (dc_yl*256 + dc_yl*64) */
 
 
 
-do_32xsky_top_col_pre_loop:
-        mov.w   top_fill_color,r13
-        
-        /* test if count & 1 */
-        neg     r4,r4
-        add     r4,r5
-        sub     r4,r6
-!        mov     #1,r14          /* TESTING TESTING TESTING TESTING TESTING TESTING */
-        shlr    r4
-        movt    r9              /* 1 if count was odd */
-        bt/s    do_32xsky_fill_top_col_loop_low_1px
-        add     r9,r4
 
-        .p2alignw 2, 0x0009
-do_32xsky_fill_top_col_loop_low:
-        mov.w   r13,@r12         /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
-        add     r1,r12          /* fb += SCREENWIDTH */
-do_32xsky_fill_top_col_loop_low_1px:
-        dt      r4              /* count-- */
-        mov.w   r13,@r12         /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
-        bf/s    do_32xsky_fill_top_col_loop_low
-        add     r1,r12          /* fb += SCREENWIDTH */
-
-        mov     r12,r8
-
-
-do_32xsky_middle_col_pre_loop:
-        /* test if count & 1 */
-        shlr    r10
-        movt    r9
-        add     r9,r10
-        shlr    r6
-        movt    r9              /* 1 if count was odd */
-        bt/s    do_32xsky_middle_col_loop_low_1px
-        add     r9,r6
-        nop
-
-        .p2alignw 2, 0x0009
-do_32xsky_middle_col_loop_low:
-        mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
-        add     r0,r0
-        mov.w   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
-        add     r3,r2           /* frac += fracstep */
-        swap.w  r2,r0           /* (frac >> 16) */
-        mov.w   r9,@r8          /* *fb = dpix */
-        add     r1,r8           /* fb += SCREENWIDTH */
-do_32xsky_middle_col_loop_low_1px:
-        mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
-        add     r0,r0
-        mov.w   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
-        add     r3,r2           /* frac += fracstep */
-        dt      r6              /* count-- */
-        swap.w  r2,r0           /* (frac >> 16) */
-        mov.w   r9,@r8          /* *fb = dpix */
-        add     r1,r8           /* fb += SCREENWIDTH */
-
-        mov     #0,r9
-        cmp/eq  r9,r6
-        bt/s    do_32xsky_done
-        nop
-        cmp/eq  r10,r6
-        bf/s    do_32xsky_middle_col_loop_low
-        nop
-
-
-
-!        mov     #0,r9
-!        cmp/eq  r9,r14
-!        bt/s    do_32xsky_done
-!        nop
-!        mov     #2,r14
 
 !        .p2alignw 2, 0x0009
-!test_01:
+!test_loop:
 !        nop
 !        nop
-!        bra     test_01
+!        bra     test_loop
 !        nop
 
 
 
-do_32xsky_bottom_col_pre_loop:
-        mov.w   bottom_fill_color,r13
-!        mov     r6,r9   /* TESTING TESTING TESTING TESTING TESTING TESTING */
-!        mov     r8,r10  /* TESTING TESTING TESTING TESTING TESTING TESTING */
+        mov.l   @(DOOMTLS_COLORMAP, gbr),r0
+        mov     r0,r3
+
+!!!!        mov.l   @(20,r15),r0    /* frac */
+!!!!        mov.l   @(24,r15),r1    /* fracstep */
+        mov.l   @(28,r15),r0    /* dc_source */
+
+        mov.l   draw_width_2,r6
+
+!!!!        swap.w  r0,r7           /* (frac >> 16) */
+
+do_draw_top_fill_area:
+        mov     #0,r2
+        cmp/gt  r2,r10
+        bf/s    do_draw_middle_fill_area
+        mov     r10,r9
+        mov.w   top_fill_color,r7
+
+do_sky_top_fill_low:
+        /* test if count & 1 */
+        shlr    r9
+        movt    r2              /* 1 if count was odd */
+        bt/s    do_sky_top_fill_loop_low_1px
+        add     r2,r9
+
+do_sky_top_fill_loop_low:
+        mov.w   r7,@r8         /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
+        add     r6,r8          /* fb += SCREENWIDTH */
+do_sky_top_fill_loop_low_1px:
+        dt      r9              /* count-- */
+        mov.w   r7,@r8         /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
+        bf/s    do_sky_top_fill_loop_low
+        add     r6,r8          /* fb += SCREENWIDTH */
+
+
 
         .p2alignw 2, 0x0009
-do_32xsky_fill_bottom_col_loop_low:
-        mov.w   r13,@r8          /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
-        add     r1,r8           /* fb += SCREENWIDTH */
-do_32xsky_fill_bottom_col_loop_low_1px:
-        dt      r6              /* count-- */
-        mov.w   r13,@r8          /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
-        bf/s    do_32xsky_fill_bottom_col_loop_low
-        add     r1,r8           /* fb += SCREENWIDTH */
+do_draw_middle_fill_area:
+        mov     #0,r2
+        cmp/gt  r2,r11
+        bf/s    do_draw_bottom_fill_area
+        mov     r11,r9
+        mov.w   test_fill_color,r7
+
+        cmp/gt  r2,r5
+        bf/s    do_sky_middle_fill_low
+        nop
+        add     r5,r0           /* adjust sky position */
+
+        .p2alignw 2, 0x0009
+do_sky_middle_fill_low:
+        /* test if count & 1 */
+        shlr    r9
+        movt    r2              /* 1 if count was odd */
+        bt/s    do_sky_middle_fill_loop_low_1px
+        add     r2,r9
+
+        .p2alignw 2, 0x0009
+do_sky_middle_fill_loop_low:
+        !!!!mov.b   @(r0,r2),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
+        !!!!add     r0,r0
+        !!!!mov.w   @(r0,r4),r9     /* dpix = dc_colormap[pix] */
+
+        mov.b   @r0,r7
+        add     r7,r7
+        mov.w   @r0,r7
+
+        !!!!add     r1,r2           /* frac += fracstep */
+        !!!!swap.w  r2,r7           /* (frac >> 16) */
+        mov.w   r7,@r8         /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
+        add     #1,r0
+        add     r6,r8          /* fb += SCREENWIDTH */
+do_sky_middle_fill_loop_low_1px:
+        !!!!mov.b   @(r0,r2),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
+        !!!!add     r0,r0
+        !!!!mov.w   @(r0,r4),r9     /* dpix = dc_colormap[pix] */
+
+        mov.b   @r0,r7
+        add     r7,r7
+        mov.w   @r0,r7
+
+        !!!!mov.b   @r0,r7
+        !!!!add     r7,r7
+
+        !!!!add     r1,r2           /* frac += fracstep */
+        dt      r9              /* count-- */
+        !!!!swap.w  r2,r7           /* (frac >> 16) */
+        mov.w   r7,@r8         /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
+        add     #1,r0
+        bf/s    do_sky_middle_fill_loop_low
+        add     r6,r8          /* fb += SCREENWIDTH */
+
+
+
+        .p2alignw 2, 0x0009
+do_draw_bottom_fill_area:
+        mov     #0,r2
+        cmp/gt  r2,r12
+        bf/s    do_32xsky_done
+        mov     r12,r9
+        mov.w   bottom_fill_color,r7
+
+do_sky_bottom_fill_low:
+        /* test if count & 1 */
+        shlr    r9
+        movt    r2              /* 1 if count was odd */
+        bt/s    do_sky_bottom_fill_loop_low_1px
+        add     r2,r9
+
+        .p2alignw 2, 0x0009
+do_sky_bottom_fill_loop_low:
+        mov.w   r7,@r8         /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
+        add     r6,r8          /* fb += SCREENWIDTH */
+do_sky_bottom_fill_loop_low_1px:
+        dt      r9              /* count-- */
+        mov.w   r7,@r8         /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
+        bf/s    do_sky_bottom_fill_loop_low
+        add     r6,r8          /* fb += SCREENWIDTH */
 
 
 
         .p2alignw 2, 0x0009
 do_32xsky_done:
-!        mov.l   @r15+,r14       /* TESTING TESTING TESTING TESTING TESTING TESTING */
-        mov.l   @r15+,r13
         mov.l   @r15+,r12
+        mov.l   @r15+,r11
         mov.l   @r15+,r10
         mov.l   @r15+,r9
         rts
         mov.l   @r15+,r8
 
 
-
         .align  4
 top_fill_color:
         !.short  0x8888
         .short  0x8989
+
+        .align  4
+test_fill_color:                /* TESTING TESTING TESTING TESTING TESTING TESTING */
+        .short  0x1111          /* TESTING TESTING TESTING TESTING TESTING TESTING */
+
+        .align  4
 bottom_fill_color:
         !.short  0x8E8E
         .short  0x8F8F
+
+        .align  4
 draw_fb_2:
         .long   _viewportbuffer
 draw_width_2:
         .long   320
+!viewport_height:
+!        .long   180
 
 
 ! Draw a vertical column of pixels from a projected wall texture.
