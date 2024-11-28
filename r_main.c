@@ -692,7 +692,6 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	validcount[0]++;
 
 	player = &players[displayplayer];
-	int aimingangle = 0;
 
 	if (!demoplayback)
 	{
@@ -704,7 +703,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		vd.viewz = thiscam->z + (20 << FRACBITS);
 		vd.viewangle = thiscam->angle;
 		vd.lightlevel = thiscam->subsector->sector->lightlevel;
-		aimingangle = thiscam->aiming;
+		vd.aimingangle = thiscam->aiming;
 		vd.viewsubsector = thiscam->subsector;
 
 		if (thiscam->subsector->sector->heightsec != -1
@@ -717,6 +716,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		vd.viewy = player->mo->y;
 		vd.viewz = player->viewz;
 		vd.viewangle = player->mo->angle;
+		vd.aimingangle = 0;
 		vd.lightlevel = subsectors[player->mo->isubsector].sector->lightlevel;
 		vd.viewsubsector = &subsectors[player->mo->isubsector];
 	}
@@ -735,11 +735,11 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		dy = -32;
 	}
 	else {
-		G_ClipAimingPitch(&aimingangle);
-		dy = AIMINGTODY(aimingangle);
+		G_ClipAimingPitch(&vd.aimingangle);
+		dy = AIMINGTODY(vd.aimingangle);
 	}
 #else
-	int dy = AIMINGTODY(aimingangle);
+	int dy = AIMINGTODY(vd.aimingangle);
 #endif
 
 	yslope = &yslopetab[(3*viewportHeight/2) - dy];

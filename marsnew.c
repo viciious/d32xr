@@ -761,7 +761,7 @@ void I_Update(void)
 
 		unsigned short scroll_y_base = gamemapinfo.skyOffsetY;
 		unsigned short scroll_y_offset = (vd.viewz >> 16);
-		unsigned short scroll_y_pan = (camera.aiming >> 22);
+		unsigned short scroll_y_pan = (vd.aimingangle >> 22);
 
 		Mars_ScrollMDSky(scroll_x, scroll_y_base, scroll_y_offset, scroll_y_pan);
 	}

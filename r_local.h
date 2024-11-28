@@ -642,7 +642,7 @@ __attribute__((aligned(16)))
 #endif
 {
 	fixed_t		viewx, viewy, viewz;
-	angle_t		viewangle;
+	angle_t		viewangle,aimingangle;
 	subsector_t *viewsubsector;
 	fixed_t		viewcos, viewsin;
 	player_t	*viewplayer;
