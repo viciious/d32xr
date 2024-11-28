@@ -117,13 +117,10 @@ static int SlopeAngle (unsigned num, unsigned den)
 	if (den < 2)
 		ans = SLOPERANGE;
 	else
-	{
 		ans = (num<<3)/den;
-		if (ans > SLOPERANGE)
-			ans = SLOPERANGE;
-	}
 	t2a = tantoangle;
 #endif
+	ans = ans <= SLOPERANGE ? ans : SLOPERANGE;
 	return t2a[ans];
 }
 
