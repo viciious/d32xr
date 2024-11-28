@@ -39,7 +39,6 @@
 _I_Draw32XSkyColumnLowA:
         cmp/ge  r7,r6
         bf/s    1f
-        !!sub     r6,r7           /* count = dc_seg_bottom - dc_seg_top */
         nop
 
         /* dc_seg_top >= dc_seg_bottom, exit */
@@ -57,7 +56,7 @@ _I_Draw32XSkyColumnLowA:
 !!      mov.l   @(24,r15),r3    /* fracstep */
 !!      mov.l   @(28,r15),r5    /* dc_source */
         mov.l   @(32,r15),r11    /* dc_source_height */
-        mov     r11,r3
+        !!!!mov     r11,r3
 
 
 
@@ -140,17 +139,6 @@ _I_Draw32XSkyColumnLowA:
 
 
 
-
-
-!        .p2alignw 2, 0x0009
-!test_loop:
-!        nop
-!        nop
-!        bra     test_loop
-!        nop
-
-
-
         mov.l   @(DOOMTLS_COLORMAP, gbr),r0
         mov     r0,r3
 
@@ -159,8 +147,6 @@ _I_Draw32XSkyColumnLowA:
         mov.l   @(28,r15),r0    /* dc_source */
 
         mov.l   draw_width_2,r6
-
-!!!!        swap.w  r0,r7           /* (frac >> 16) */
 
 do_draw_top_fill_area:
         mov     #0,r2
@@ -193,7 +179,6 @@ do_draw_middle_fill_area:
         cmp/gt  r2,r11
         bf/s    do_draw_bottom_fill_area
         mov     r11,r9
-        mov.w   test_fill_color,r7
 
         cmp/gt  r2,r5
         bf/s    do_sky_middle_fill_low
@@ -202,6 +187,7 @@ do_draw_middle_fill_area:
 
         .p2alignw 2, 0x0009
 do_sky_middle_fill_low:
+        mov     r0,r1
         /* test if count & 1 */
         shlr    r9
         movt    r2              /* 1 if count was odd */
@@ -210,36 +196,21 @@ do_sky_middle_fill_low:
 
         .p2alignw 2, 0x0009
 do_sky_middle_fill_loop_low:
-        !!!!mov.b   @(r0,r2),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
-        !!!!add     r0,r0
-        !!!!mov.w   @(r0,r4),r9     /* dpix = dc_colormap[pix] */
-
-        mov.b   @r0,r7
-        add     r7,r7
-        mov.w   @r0,r7
-
-        !!!!add     r1,r2           /* frac += fracstep */
-        !!!!swap.w  r2,r7           /* (frac >> 16) */
+        mov.b   @r0,r0
+        add     r0,r0
+        mov.w   @(r0,r3),r7
         mov.w   r7,@r8         /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
-        add     #1,r0
+        add     #1,r1
+        mov     r1,r0
         add     r6,r8          /* fb += SCREENWIDTH */
 do_sky_middle_fill_loop_low_1px:
-        !!!!mov.b   @(r0,r2),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
-        !!!!add     r0,r0
-        !!!!mov.w   @(r0,r4),r9     /* dpix = dc_colormap[pix] */
-
-        mov.b   @r0,r7
-        add     r7,r7
-        mov.w   @r0,r7
-
-        !!!!mov.b   @r0,r7
-        !!!!add     r7,r7
-
-        !!!!add     r1,r2           /* frac += fracstep */
+        mov.b   @r0,r0
+        add     r0,r0
+        mov.w   @(r0,r3),r7
         dt      r9              /* count-- */
-        !!!!swap.w  r2,r7           /* (frac >> 16) */
         mov.w   r7,@r8         /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
-        add     #1,r0
+        add     #1,r1
+        mov     r1,r0
         bf/s    do_sky_middle_fill_loop_low
         add     r6,r8          /* fb += SCREENWIDTH */
 
@@ -284,17 +255,11 @@ do_32xsky_done:
 
         .align  4
 top_fill_color:
-        !.short  0x8888
-        .short  0x8989
-
-        .align  4
-test_fill_color:                /* TESTING TESTING TESTING TESTING TESTING TESTING */
-        .short  0x1111          /* TESTING TESTING TESTING TESTING TESTING TESTING */
+        .short  0x8888
 
         .align  4
 bottom_fill_color:
-        !.short  0x8E8E
-        .short  0x8F8F
+        .short  0x8E8E
 
         .align  4
 draw_fb_2:
