@@ -251,7 +251,6 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 
             if (top < bottom)
             {
-#ifdef MDSKY
                 if (draw32xsky) {
                     int colnum = ((vd.viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
                     inpixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
@@ -267,14 +266,10 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
                         skytexturep->height
                         );
                 }
+#ifdef MDSKY
                 else {
                     drawmdsky(x, top, bottom);
                 }
-#else
-                // CALICO: draw sky column
-                int colnum = ((vd.viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
-                inpixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
-                draw32xsky(x, top, --bottom, 0, (top * 18204) << 2, FRACUNIT, data, (vd.aimingangle >> 22));
 #endif
             }
         }
