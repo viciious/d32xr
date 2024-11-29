@@ -49,7 +49,7 @@ static boolean PB_CheckLine(line_t* ld, pmovetest_t *mt) ATTR_DATA_CACHE_ALIGN;
 static boolean PB_CrossCheck(line_t* ld, pmovetest_t *mt) ATTR_DATA_CACHE_ALIGN;
 static boolean PB_CheckPosition(pmovetest_t *mt) ATTR_DATA_CACHE_ALIGN;
 static boolean PB_TryMove(pmovetest_t *mt, mobj_t* mo, fixed_t tryx, fixed_t tryy) ATTR_DATA_CACHE_ALIGN;
-static void P_FloatChange(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
+static void P_FloatChange(mobj_t* mo);
 void P_MobjThinker(mobj_t* mobj) ATTR_DATA_CACHE_ALIGN;
 
 // P_FloorzAtPos

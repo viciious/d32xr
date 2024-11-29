@@ -757,7 +757,6 @@ void I_Update(void)
 		// Adjust MD sky position.
 		unsigned short scroll_x = (*((unsigned short *)&vd.viewangle) >> 6);
 		scroll_x += (scroll_x >> 2);	// The MD sky scrolls to 1280 pixels.
-		scroll_x += gamemapinfo.skyOffsetX;
 
 		unsigned short scroll_y_base = gamemapinfo.skyOffsetY;
 		unsigned short scroll_y_offset = (vd.viewz >> 16);

@@ -15,8 +15,8 @@ Most monsters are spawned unaware of all players, but some can be made preaware
 ===============================================================================
 */
 
-boolean P_CheckMeleeRange (mobj_t *actor, fixed_t range) ATTR_DATA_CACHE_ALIGN;
-boolean P_CheckMissileRange (mobj_t *actor) ATTR_DATA_CACHE_ALIGN;
+boolean P_CheckMeleeRange (mobj_t *actor, fixed_t range);
+boolean P_CheckMissileRange (mobj_t *actor);
 boolean P_Move (mobj_t *actor) ATTR_DATA_CACHE_ALIGN;
 boolean P_TryWalk (mobj_t *actor) ATTR_DATA_CACHE_ALIGN;
 void P_NewChaseDir (mobj_t *actor) ATTR_DATA_CACHE_ALIGN;

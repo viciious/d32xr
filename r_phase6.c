@@ -256,7 +256,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
                     inpixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
                     
                     draw32xsky(
-                        gamemapinfo.skyOffsetX + x,
+                        x,
                         -gamemapinfo.skyOffsetY - (((signed int)vd.aimingangle) >> 22),
                         top,
                         bottom,

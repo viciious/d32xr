@@ -29,16 +29,15 @@
 typedef struct
 {
 	char *name;
-	VINT act;
-	VINT borderFlat;
 	char *sky;
-	VINT skyOffsetX;
-	VINT skyOffsetY;
-	VINT skyTopColor;
-	VINT skyBottomColor;
+	VINT act;
 	VINT next;
+	VINT skyOffsetY;
 	VINT lumpNum;
-	VINT mapNumber;
+	uint8_t borderFlat;
+	uint8_t skyTopColor;
+	uint8_t skyBottomColor;
+	uint8_t mapNumber;
 	VINT musicLump;
 	VINT afterBossMusic;
 	VINT spheresNeeded;
