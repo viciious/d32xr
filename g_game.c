@@ -147,6 +147,8 @@ void G_DoLoadLevel (void)
 		if (gamemap == 0)
 			gamemap = gamemapinfo.mapNumber + 1;
 
+		gamemapinfo.loadFlags = 0;
+
 		gamemapinfo.sky = NULL;
 		gamemapinfo.skyOffsetX = 0;
 		gamemapinfo.skyOffsetY = 0;

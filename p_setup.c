@@ -47,6 +47,12 @@ spawnthing_t* spawnthings;
 
 int16_t worldbbox[4];
 
+#define LOADFLAGS_VERTEXES 1
+#define LOADFLAGS_BLOCKMAP 2
+#define LOADFLAGS_REJECT 4
+#define LOADFLAGS_NODES 8
+#define LOADFLAGS_SEGS 16
+
 /*
 =================
 =
@@ -57,24 +63,16 @@ int16_t worldbbox[4];
 
 void P_LoadVertexes (int lump)
 {
-	byte		*data;
-	int			i;
-	mapvertex_t	*ml;
-	mapvertex_t	*li;
-
 	numvertexes = W_LumpLength (lump) / sizeof(mapvertex_t);
-	vertexes = Z_Malloc (numvertexes*sizeof(mapvertex_t) + 16,PU_LEVEL);
-	vertexes = (void*)(((uintptr_t)vertexes + 15) & ~15); // aline on cacheline boundary
-	data = I_TempBuffer();
-	W_ReadLump(lump, data);
 
-	ml = (mapvertex_t *)data;
-	li = vertexes;
-	for (i=0 ; i<numvertexes ; i++, li++, ml++)
+	if (gamemapinfo.loadFlags & LOADFLAGS_VERTEXES)
 	{
-		li->x = LITTLESHORT(ml->x);
-		li->y = LITTLESHORT(ml->y);
+		vertexes = Z_Malloc (numvertexes*sizeof(mapvertex_t) + 16,PU_LEVEL);
+		vertexes = (void*)(((uintptr_t)vertexes + 15) & ~15); // aline on cacheline boundary
+		W_ReadLump(lump, vertexes);
 	}
+	else
+		vertexes = (mapvertex_t*)W_POINTLUMPNUM(lump);
 }
 
 
@@ -88,40 +86,16 @@ void P_LoadVertexes (int lump)
 
 void P_LoadSegs (int lump)
 {
-#ifdef MARS
 	numsegs = W_LumpLength (lump) / sizeof(seg_t);
-	segs = (seg_t *)W_POINTLUMPNUM(lump);
-#else
-	byte		*data;
-	int			i;
-	mapseg_t	*ml;
-	seg_t		*li;
-	int			linedef, side;
 
-	numsegs = W_LumpLength (lump) / sizeof(mapseg_t);
-	segs = Z_Malloc (numsegs*sizeof(seg_t)+16,PU_LEVEL);
-	segs = (void*)(((uintptr_t)segs + 15) & ~15); // aline on cacheline boundary
-	D_memset (segs, 0, numsegs*sizeof(seg_t));
-	data = I_TempBuffer ();
-	W_ReadLump (lump,data);
-	
-	ml = (mapseg_t *)data;
-	li = segs;
-	for (i=0 ; i<numsegs ; i++, li++, ml++)
+	if (gamemapinfo.loadFlags & LOADFLAGS_SEGS)
 	{
-		li->v1 = LITTLESHORT(ml->v1);
-		li->v2 = LITTLESHORT(ml->v2);
-
-		li->sideoffset = LITTLESHORT(ml->offset);
-		li->linedef = LITTLESHORT(ml->linedef);
-
-		side = LITTLESHORT(ml->side);
-		side &= 1;
-
-		li->sideoffset <<= 1;
-		li->sideoffset |= side;
+		segs = Z_Malloc (numsegs*sizeof(seg_t) + 16,PU_LEVEL);
+		segs = (void*)(((uintptr_t)segs + 15) & ~15); // aline on cacheline boundary
+		W_ReadLump(lump, segs);
 	}
-#endif
+	else
+		segs = (seg_t *)W_POINTLUMPNUM(lump);
 }
 
 
@@ -223,7 +197,15 @@ void P_LoadSectors (int lump)
 void P_LoadNodes (int lump)
 {
 	numnodes = W_LumpLength (lump) / sizeof(node_t);
-	nodes = (node_t *)W_POINTLUMPNUM(lump);
+
+	if (gamemapinfo.loadFlags & LOADFLAGS_NODES)
+	{
+		nodes = Z_Malloc (numnodes*sizeof(node_t) + 16,PU_LEVEL);
+		nodes = (void*)(((uintptr_t)nodes + 15) & ~15); // aline on cacheline boundary
+		W_ReadLump(lump, nodes);
+	}
+	else
+		nodes = (node_t *)W_POINTLUMPNUM(lump);
 
 	// Calculate worldbbox
 	worldbbox[BOXLEFT] = INT16_MAX;
@@ -456,18 +438,15 @@ void P_LoadBlockMap (int lump)
 {
 	int		count;
 
-#ifdef MARS
-	blockmaplump = (short *)W_POINTLUMPNUM(lump);
-#else
-	int		i;
-	
-	blockmaplump = W_CacheLumpNum (lump,PU_LEVEL);
-	blockmap = blockmaplump+4;
-	count = W_LumpLength (lump)/2;
-	for (i=0 ; i<count ; i++)
-		blockmaplump[i] = LITTLESHORT(blockmaplump[i]);
-#endif
-		
+	if (gamemapinfo.loadFlags & LOADFLAGS_BLOCKMAP)
+	{
+		blockmaplump = Z_Malloc (W_LumpLength(lump) + 16,PU_LEVEL);
+		blockmaplump = (void*)(((uintptr_t)blockmaplump + 15) & ~15); // aline on cacheline boundary
+		W_ReadLump(lump, blockmaplump);
+	}
+	else
+		blockmaplump = (short *)W_POINTLUMPNUM(lump);
+
 	bmaporgx = blockmaplump[0]<<FRACBITS;
 	bmaporgy = blockmaplump[1]<<FRACBITS;
 	bmapwidth = blockmaplump[2];
@@ -479,7 +458,18 @@ void P_LoadBlockMap (int lump)
 	D_memset (blocklinks, 0, count);
 }
 
+void P_LoadReject (int lump)
+{
+	if (gamemapinfo.loadFlags & LOADFLAGS_REJECT)
+	{
+		rejectmatrix = Z_Malloc (W_LumpLength(lump) + 16,PU_LEVEL);
+		rejectmatrix = (void*)(((uintptr_t)rejectmatrix + 15) & ~15); // aline on cacheline boundary
+		W_ReadLump(lump, rejectmatrix);
+	}
+	else
+		rejectmatrix = (byte *)W_POINTLUMPNUM(lump);
 
+}
 
 
 /*
@@ -591,12 +581,7 @@ D_printf ("P_SetupLevel(%i)\n",lumpnum);
 	P_LoadSegs (lumpnum+ML_SEGS);
 	P_LoadSubsectors (lumpnum+ML_SSECTORS);
 	P_LoadNodes (lumpnum+ML_NODES);
-
-#ifdef MARS
-	rejectmatrix = (byte *)W_POINTLUMPNUM(lumpnum+ML_REJECT);
-#else
-	rejectmatrix = W_CacheLumpNum (lumpnum+ML_REJECT,PU_LEVEL);
-#endif
+	P_LoadReject(lumpnum+ML_REJECT);
 
 	validcount = Z_Malloc((numlines + 1) * sizeof(*validcount) * 2, PU_LEVEL);
 	D_memset(validcount, 0, (numlines + 1) * sizeof(*validcount) * 2);
