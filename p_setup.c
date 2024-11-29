@@ -190,32 +190,16 @@ void P_LoadSectors (int lump)
 	ss = sectors;
 	for (i=0 ; i<numsectors ; i++, ss++, ms++)
 	{
-		int lightlevel, special;
-
 		ss->floorheight = LITTLESHORT(ms->floorheight)<<FRACBITS;
 		ss->ceilingheight = LITTLESHORT(ms->ceilingheight)<<FRACBITS;
-		ss->floorpic = R_FlatNumForName(ms->floorpic);
-		if (!D_strncasecmp (ms->ceilingpic,"F_SKY1",6) )
-			ss->ceilingpic = -1;
-		else
-		{
-			ss->ceilingpic = R_FlatNumForName(ms->ceilingpic);
-		}
+		ss->floorpic = ms->floorpic;
+		ss->ceilingpic = ms->ceilingpic;
 		ss->thinglist = NULL;
 
-		lightlevel = LITTLESHORT(ms->lightlevel);
-		if (lightlevel < 0)
-			lightlevel = 0;
-		else if (lightlevel > 255)
-			lightlevel = 255;
-		ss->lightlevel = lightlevel;
+		ss->lightlevel = ms->lightlevel;
+		ss->special = ms->special;
 
-		special = LITTLESHORT(ms->special);
-		if (special < 0 || special > 255)
-			special = 0;
-		ss->special = special;
-
-		ss->tag = (uint8_t)LITTLESHORT(ms->tag);
+		ss->tag = ms->tag;
 		ss->heightsec = -1; // sector used to get floor and ceiling height
 		ss->fofsec = -1;
 		ss->floor_xoffs = 0;

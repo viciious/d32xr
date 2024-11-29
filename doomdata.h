@@ -71,10 +71,10 @@ typedef struct
 
 typedef	struct
 {
-	short		floorheight, ceilingheight;
-	char		floorpic[8], ceilingpic[8];
-	short		lightlevel;
-	short		special, tag;
+	int16_t		floorheight, ceilingheight;
+	uint8_t		floorpic, ceilingpic;
+	uint8_t     lightlevel;
+	uint8_t     special, tag;
 } mapsector_t;
 
 typedef struct
