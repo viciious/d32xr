@@ -631,16 +631,7 @@ void M_Drawer (void)
 /* Draw main menu */
 	if (m_doom && (scrpos == ms_main || scrpos == ms_gametype))
 	{
-		#ifdef MDSKY
-		if (sky_md_layer) {
-			DrawFillRect(0, 0, 320, 44, MARS_MD_PIXEL_THRU_INDEX);
-		}
-		else {
-			DrawFillRect(0, 16, 320, 6, COLOR_BLACK); // Clear part of the top letterbox for overdraw.
-		}
-		#else
-		DrawFillRect(0, 16, 320, 6, COLOR_BLACK); // Clear part of the top letterbox for overdraw.
-		#endif
+		DrawFillRect(0, 0, 320, 44, gamemapinfo.skyTopColor); // Fill the area above the viewport with the sky color.
 		
 		VINT logoPos = 160 - (m_doom->width / 2);
 		DrawJagobj(m_doom, logoPos, 16);

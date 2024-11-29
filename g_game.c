@@ -150,8 +150,13 @@ void G_DoLoadLevel (void)
 		gamemapinfo.sky = NULL;
 		gamemapinfo.skyOffsetX = 0;
 		gamemapinfo.skyOffsetY = 0;
+		#ifdef MDSKY
 		gamemapinfo.skyTopColor = MARS_MD_PIXEL_THRU_INDEX;
 		gamemapinfo.skyBottomColor = MARS_MD_PIXEL_THRU_INDEX;
+		#else
+		gamemapinfo.skyTopColor = 0;
+		gamemapinfo.skyBottomColor = 0;
+		#endif
 		gamemapinfo.mapNumber = gamemap;
 		gamemapinfo.lumpNum = gamemaplump;
 
