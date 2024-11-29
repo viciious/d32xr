@@ -566,12 +566,10 @@ void O_Control (player_t *player)
 		clearscreen = 2;
 }
 
-void O_DrawHelp (void)
+void O_DrawHelp (VINT yPos)
 {
-	VINT yPos = 64;
-
-	V_DrawStringCenterWithColormap(&menuFont, 160, 32, "SONIC ROBO BLAST 32X", YELLOWTEXTCOLORMAP);
-	V_DrawStringCenterWithColormap(&menuFont, 160, 44, "v0.1 DEMO", YELLOWTEXTCOLORMAP);
+	V_DrawStringCenterWithColormap(&menuFont, 160, yPos - 32, "SONIC ROBO BLAST 32X", YELLOWTEXTCOLORMAP);
+	V_DrawStringCenterWithColormap(&menuFont, 160, yPos - 20, "v0.1 DEMO", YELLOWTEXTCOLORMAP);
 
 	V_DrawStringRight(&menuFont, 160-8, yPos, "JUMP ");
 	V_DrawStringLeft(&menuFont, 160, yPos, "= B");
@@ -582,8 +580,7 @@ void O_DrawHelp (void)
 	V_DrawStringRight(&menuFont, 160-8, yPos + (16*3), "MOVE CAMERA ");
 	V_DrawStringLeft(&menuFont, 160, yPos + (16*3), "= X and Z");
 
-	V_DrawStringCenter(&menuFont, 160, 148, "https://www.youtube.com/@SSNTails");
-	V_DrawStringCenter(&menuFont, 160, 160, "https://ssntails.srb2.org");
+	V_DrawStringCenter(&menuFont, 160, yPos + 80, "ssntails.srb2.org/srb32x");
 }
 
 void O_Drawer (void)
@@ -687,6 +684,6 @@ void O_Drawer (void)
 	}
 
 	if (screenpos == ms_help)
-		O_DrawHelp();
+		O_DrawHelp(80);
 }
 

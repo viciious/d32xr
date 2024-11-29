@@ -610,7 +610,7 @@ int M_Ticker (void)
 	return ga_nothing;
 }
 
-void O_DrawHelp(void);
+void O_DrawHelp (VINT yPos);
 /*
 =================
 =
@@ -690,7 +690,7 @@ void M_Drawer (void)
 
 	if (scrpos == ms_help)
 	{
-		O_DrawHelp();
+		O_DrawHelp(80);
 		return;
 	}
 
@@ -746,6 +746,8 @@ void M_Drawer (void)
 		V_DrawStringLeft(&titleNumberFont, item->x + 96, y + 2, mapNum);
 
 		V_DrawStringLeft(&menuFont, (320 - (tmplen * 14)) >> 1, y + ITEMSPACE + 2, tmp);
+
+		O_DrawHelp(120);
 	}
 	else if (scrpos == ms_load || scrpos == ms_save)
 	{
