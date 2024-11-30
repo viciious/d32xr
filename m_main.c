@@ -628,11 +628,11 @@ void M_Drawer (void)
 	mainitem_t* items = &mainitem[menuscr->firstitem];
 	int y, y_offset = 0;
 
+	DrawFillRect(0, 0, 320, 44, gamemapinfo.skyTopColor); // Fill the area above the viewport with the sky color.
+
 /* Draw main menu */
 	if (m_doom && (scrpos == ms_main || scrpos == ms_gametype))
 	{
-		DrawFillRect(0, 0, 320, 44, gamemapinfo.skyTopColor); // Fill the area above the viewport with the sky color.
-		
 		VINT logoPos = 160 - (m_doom->width / 2);
 		DrawJagobj(m_doom, logoPos, 16);
 		y_offset = m_doom->height + 16 - STARTY;

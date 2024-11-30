@@ -731,7 +731,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	if (demoplayback && gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
 		// The viewport for the title screen is aligned with the bottom of
 		// the screen. Therefore we shift the angle to center the horizon.
-		dy = -32;
+		dy = -28;
 	}
 	else {
 		G_ClipAimingPitch(&vd.aimingangle);
