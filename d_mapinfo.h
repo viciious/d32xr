@@ -34,10 +34,10 @@ typedef struct
 	VINT next;
 	VINT skyOffsetY;
 	VINT lumpNum;
-	uint8_t borderFlat;
-	uint8_t skyTopColor;
-	uint8_t skyBottomColor;
-	uint8_t mapNumber;
+	VINT borderFlat;
+	VINT skyTopColor;
+	VINT skyBottomColor;
+	VINT mapNumber;
 	VINT musicLump;
 	VINT afterBossMusic;
 	VINT spheresNeeded;
