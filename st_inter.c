@@ -187,7 +187,7 @@ void Y_Ticker(void)
 
 		if (data.coop.ringbonus || data.coop.timebonus || data.coop.perfbonus)
 		{
-			S_StartSound(NULL, sfx_s3k_5b); // tally sound effect
+			//S_StartSound(NULL, sfx_s3k_5b); // tally sound effect
 
 			// ring and time bonuses count down by 777 each tic
 			if (data.coop.ringbonus)

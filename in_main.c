@@ -291,7 +291,7 @@ int IN_Ticker (void)
 			}
 		}
 		else if (!(intertic & 1))
-			S_StartSound(NULL, sfx_s3k_5b); // tally sound effect
+			//S_StartSound(NULL, sfx_s3k_5b); // tally sound effect
 
 		if (data.spec.gotlife > 0 && (data.spec.score % 50000 < oldscore % 50000)) // just passed a 50000 point mark
 		{

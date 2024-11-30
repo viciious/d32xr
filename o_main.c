@@ -458,7 +458,7 @@ void O_Control (player_t *player)
 					if (++cursorpos == menuscr->numitems)
 					{
 						cursorpos = 0;
-						S_StartSound(NULL, sfx_s3k_5b);
+//						S_StartSound(NULL, sfx_s3k_5b);
 					}
 				}
 
@@ -467,7 +467,7 @@ void O_Control (player_t *player)
 					if (--cursorpos == -1)
 					{
 						cursorpos = menuscr->numitems-1;
-						S_StartSound(NULL, sfx_s3k_5b);
+//						S_StartSound(NULL, sfx_s3k_5b);
 					}
 				}
 			}

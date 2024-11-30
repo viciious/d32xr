@@ -516,14 +516,14 @@ int M_Ticker (void)
 
 			if (buttons & BT_DOWN)
 			{
-				S_StartSound(NULL, sfx_s3k_5b);
+				//S_StartSound(NULL, sfx_s3k_5b);
 				if (++cursorpos == menuscr->numitems)
 					cursorpos = 0;
 			}
 		
 			if (buttons & BT_UP)
 			{
-				S_StartSound(NULL, sfx_s3k_5b);
+				//S_StartSound(NULL, sfx_s3k_5b);
 				if (--cursorpos == -1)
 					cursorpos = menuscr->numitems-1;
 			}
