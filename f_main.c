@@ -17,7 +17,7 @@ creditcard_t creditCards[] = {
 	{"C_WSQUID", "TRACKING",                "Wessquiid",         "Title Theme\nGreenflower 1 & 2\nSpeed Shoes\nMost Others", "x.com/@wessquiid\nwessquiid.carrd.co" },
 	{"C_NQUITE", "TRACKING",                "NotQuiteHere",      "Special Stage",       "x.com/NotQuiteHereTSM" },
 //	{"C_JOYTAY", "TRACKING",                "John \"Joy\" Tay", "Deep Sea 1\nCredits",                          "x.com/@johntayjinf\nyoutube.com\n/@johntayjinf" },
-	{"C_CRYPTK", "TRACKING",                "Cryptik",          "Boss Theme\nMiscellaneous",        "x.com/@LunarCryptik\nyoutube.com/c\n/LunarCryptik\npatreon.com\n/LunarCryptik" },
+	{"C_CRYPTK", "TRACKING",                "Cryptik",          "Boss Theme\nMiscellaneous",        "x.com/@LunarCryptik\nyoutube.com/c\n/LunarCryptik" },
 	{"C_SAXMAN", "PROGRAMMING",          "Saxman",           "MegaDrive & 32X\nAdditional tooling", "rumble.com/user\n/ymtx81z" },
 	{"C_SSN",    "PROGRAMMING",          "SSNTails",         "Project Lead\nGameplay\nEngine Enhancements\nAdditional Art",            "x.com/@SSNTails\nyoutube.com\n/@ssntails" },
 	{"C_VIC",    "SPECIAL THANKS",       "Viciious",         "Doom 32X:\nResurrection",             "github.com/viciious" },
@@ -113,19 +113,19 @@ int F_Ticker (void)
 
 	const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
 
-	if (cardTimer >= CARDTIME - 16)
+	if (cardTimer >= CARDTIME - 12)
 	{
-		int palIndex = cardTimer - (CARDTIME - 16);
-		palIndex /= 4;
+		int palIndex = cardTimer - (CARDTIME - 12);
+		palIndex /= 3;
 		if (palIndex > 4)
 			palIndex = 4;
 
 		palIndex += 6;
 		I_SetPalette(dc_playpals+palIndex*768);
 	}
-	else if (cardTimer < 20)
+	else if (cardTimer < 12)
 	{
-		int palIndex = 10 - (cardTimer / 4);
+		int palIndex = 10 - (cardTimer / 3);
 		I_SetPalette(dc_playpals+palIndex*768);
 	}
 	else

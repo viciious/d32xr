@@ -507,6 +507,9 @@ int P_MapThingSpawnsMobj (mapthing_t* mthing)
 	if (mthing->type == 11)
 		return 0;
 
+	if (mthing->type >= 600 && mthing->type <= 603)
+		return 3;
+
 /* check for players specially */
 #if 0
 	if (mthing->type > 4)
@@ -552,7 +555,7 @@ int P_MapThingSpawnsMobj (mapthing_t* mthing)
 ==================
 */
 
-inline fixed_t P_GetMapThingSpawnHeight(const mobjtype_t mobjtype, const mapthing_t* mthing, const fixed_t x, const fixed_t y, const fixed_t z)
+fixed_t P_GetMapThingSpawnHeight(const mobjtype_t mobjtype, const mapthing_t* mthing, const fixed_t x, const fixed_t y, const fixed_t z)
 {
 	fixed_t dz = z; // Base offset from the floor.
 
@@ -589,13 +592,13 @@ inline fixed_t P_GetMapThingSpawnHeight(const mobjtype_t mobjtype, const mapthin
 		}	
 	}
 
-	if (!dz) // Snap to the surfaces when there's no offset set.
+/*	if (!dz) // Snap to the surfaces when there's no offset set.
 	{
 //		if (flip)
 //			return ONCEILINGZ;
 //		else
 			return ONFLOORZ;
-	}
+	}*/
 
 	const subsector_t *ss = R_PointInSubsector(x, y);
 

@@ -233,6 +233,45 @@ void P_LoadNodes (int lump)
 =
 =================
 */
+fixed_t P_GetMapThingSpawnHeight(const mobjtype_t mobjtype, const mapthing_t* mthing, const fixed_t x, const fixed_t y, const fixed_t z);
+
+static void P_SpawnItemRow(mapthing_t *mt, VINT type, VINT count, VINT horizontalSpacing, VINT verticalSpacing)
+{
+	mapthing_t dummything = *mt;
+	dummything.type = type;
+
+	int mobjtype;
+	/* find which type to spawn */
+	for (mobjtype=0 ; mobjtype< NUMMOBJTYPES ; mobjtype++)
+		if (mt->type == mobjinfo[mobjtype].doomednum)
+			break;
+
+	fixed_t spawnX = dummything.x << FRACBITS;
+	fixed_t spawnY = dummything.y << FRACBITS;
+	fixed_t spawnZ = P_GetMapThingSpawnHeight(mobjtype, mt, spawnX, spawnY, mt->options >> 4);
+
+	angle_t spawnAngle = dummything.angle * ANGLE_1;
+
+	for (int i = 0; i < count ; i++)
+	{
+		P_ThrustValues(spawnAngle, horizontalSpacing << FRACBITS, &spawnX, &spawnY);
+
+		const subsector_t *ss = R_PointInSubsector(spawnX, spawnY);
+
+		fixed_t curZ = spawnZ + ((i+1) * (verticalSpacing<<FRACBITS)); // Literal height
+
+		// Now we have to work backwards and calculate the mapthing z
+		VINT mapthingZ = (curZ - ss->sector->floorheight) >> FRACBITS;
+		mapthingZ <<= 4;
+		dummything.options &= 15; // Clear the top 12 bits
+		dummything.options |= mapthingZ; // Insert our new value
+
+		dummything.x = spawnX >> FRACBITS;
+		dummything.y = spawnY >> FRACBITS;
+
+		P_SpawnMapThing(&dummything, mobjtype);
+	}
+}
 
 void P_LoadThings (int lump)
 {
@@ -288,7 +327,12 @@ void P_LoadThings (int lump)
 				numstaticthings++;
 				break;
 			case 3:
-				numringthings++;
+				if (mt->type >= 600 && mt->type <= 602)
+					numringthings += 5;
+				else if (mt->type == 603)
+					numringthings += 10;
+				else
+					numringthings++;
 				break;
 			case 4:
 				numscenerymobjs++;
@@ -310,7 +354,18 @@ void P_LoadThings (int lump)
 
 	mt = (mapthing_t *)data;
 	for (i=0 ; i<numthings ; i++, mt++)
-		P_SpawnMapThing (mt, i);
+	{
+		if (mt->type == 600) // 5 vertical rings (yellow spring)
+			P_SpawnItemRow(mt, mobjinfo[MT_RING].doomednum, 5, 0, 64);
+		else if (mt->type == 601) // 5 vertical rings (red spring)
+			P_SpawnItemRow(mt, mobjinfo[MT_RING].doomednum, 5, 0, 128);
+		else if (mt->type == 602) // 5 diagonal rings (yellow spring)
+			P_SpawnItemRow(mt, mobjinfo[MT_RING].doomednum, 5, 64, 64);
+		else if (mt->type == 603) // 10 diagonal rings (yellow spring)
+			P_SpawnItemRow(mt, mobjinfo[MT_RING].doomednum, 10, 64, 64);
+		else
+			P_SpawnMapThing(mt, i);
+	}
 
 	camBossMobj = P_FindFirstMobjOfType(MT_EGGMOBILE);
 	if (!camBossMobj)
