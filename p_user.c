@@ -42,6 +42,9 @@ void P_InstaThrust(mobj_t *mo, angle_t angle, fixed_t move)
 
 void P_RestoreMusic(player_t *player)
 {
+	if (player->exiting)
+		return;
+
 	if (player->powers[pw_invulnerability] > 1 && player->powers[pw_extralife] <= 1)
 		S_StartSong(gameinfo.invincMus, 0, cdtrack_invincibility);
 	else if (player->powers[pw_sneakers] > 1)
