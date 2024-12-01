@@ -628,7 +628,10 @@ void M_Drawer (void)
 	mainitem_t* items = &mainitem[menuscr->firstitem];
 	int y, y_offset = 0;
 
-	DrawFillRect(0, 0, 320, 44, gamemapinfo.skyTopColor); // Fill the area above the viewport with the sky color.
+	if (demoplayback && gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
+		// Fill the area above the viewport with the sky color.
+		DrawFillRect(0, 0, 320, 44, gamemapinfo.skyTopColor);
+	}
 
 /* Draw main menu */
 	if (m_doom && (scrpos == ms_main || scrpos == ms_gametype))
