@@ -233,8 +233,8 @@ struct subsector_s *R_PointInSubsector (fixed_t x, fixed_t y)
 const VINT viewports[][2][3] = {
 	{ { 160, 90, false }, { 160, 100, false } },
 	{ { 224, 128, false }, { 160, 100, false } },
-	{ { 256, 144, true }, { 160, 128, true } },
-	{ { 320, 180, false }, { 160, 144, false } },
+	{ { 256, 144, false }, { 160, 128, false } },
+	{ { 320, 180, true }, { 160, 144, true } },
 };
 
 VINT viewportNum;
