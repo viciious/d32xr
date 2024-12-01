@@ -363,6 +363,8 @@ void O_Control (player_t *player)
 				M_Stop();
 			if (netgame == gt_single)
 				gamepaused ^= 1;
+			o_musictype = musictype;
+			o_sfxdriver = sfxdriver;
 			movecount = 0;
 			cursorpos = 0;
 			screenpos = ms_main;
