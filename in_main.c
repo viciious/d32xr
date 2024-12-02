@@ -192,7 +192,12 @@ int IN_Ticker (void)
 	}
 
 	if (endtic != -1)
+	{
+		if (stagefailed)
+			data.spec.emeraldy += (++data.spec.emeraldmomy); // Might not be done falling
+
 		return 0; // tally is done
+	}
 
 	if (intertype == int_spec) // coop or single player, special stage
 	{
@@ -242,7 +247,7 @@ int IN_Ticker (void)
 			}
 		}
 
-		if (intertic < 2*TICRATE) // TWO second pause before tally begins, thank you mazmazz
+		if (intertic < 3*TICRATE) // 3 second pause before tally begins to give emeralds time to drop
 			return 0;
 
 		if (tallydonetic != -1 && (super && ALL7EMERALDS(emeralds)))

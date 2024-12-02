@@ -534,7 +534,7 @@ void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh)
 	jagobj_t* jo;
 	int width, height;
 
-	if (lumpnum < 0)
+	if (lumpnum < 0 || y < 0) // Drawing above the top of the screen is not supported.
 		return;
 
 	lump = W_POINTLUMPNUM(lumpnum);
@@ -727,7 +727,7 @@ void DrawJagobjLumpWithColormap(int lumpnum, int x, int y, int* ow, int* oh, int
 	jagobj_t* jo;
 	int width, height;
 
-	if (lumpnum < 0)
+	if (lumpnum < 0 || y < 0) // Drawing above the top of the screen is not supported.
 		return;
 
 	lump = W_POINTLUMPNUM(lumpnum);

@@ -71,7 +71,7 @@ static boolean F_NextCard()
 
 void F_Start (void)
 {
-	S_StartSong(gameinfo.endMus, 1, cdtrack_end);
+	S_StartSong(gameinfo.victoryMus, 1, cdtrack_end);
 
 	// Set this to black, prep for fade-in.
 	const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
