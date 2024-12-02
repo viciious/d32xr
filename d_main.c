@@ -987,7 +987,7 @@ void DRAW_Disclaimer (void)
 	V_DrawStringCenter(&creditFont, 160, 64+32, (const char*)text1);
 	V_DrawStringCenter(&creditFont, 160, 88+32, (const char*)text2);
 
-//	V_DrawStringCenter(&menuFont, 160, 128+32, (const char*)text3);
+	V_DrawStringCenter(&menuFont, 160, 128+32, (const char*)text3);
 	Mars_ClearCache();
 }
 #endif
