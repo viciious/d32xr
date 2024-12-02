@@ -35,7 +35,7 @@
         .ascii  "DOOM 32XCD Fusio"
         .ascii  "n v2.0          "
         .ascii  "                "
-        .ascii  "GM D-32XCDF-20"
+        .ascii  "GM DMF32XCD-20"
         .word   0x0000
         .ascii  "J6CM            "
         .long   0x00000000,0x003FFFFF   /* ROM start, end */

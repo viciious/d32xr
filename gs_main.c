@@ -13,7 +13,7 @@
 #define ITEMX		(CURSORX+CURSORWIDTH)
 #define STARTY			4
 #define ITEMSPACE	19
-#define CURSORY(y)	(STARTY+ITEMSPACE/2+ITEMSPACE*((y)+1))
+#define CURSORY(y)	(STARTY+ITEMSPACE+ITEMSPACE*((y)))
 #define	NUMLCHARS 64
 #define MAXITEMS    128
 
@@ -476,7 +476,7 @@ int GS_Ticker (void)
 
 void GS_Drawer (void)
 {
-    int i, y = 0;
+    int i, y = 0, x;
     menuitem_t *items = gs_menu->items;
     int y_offset = STARTY;
 
@@ -563,10 +563,21 @@ void GS_Drawer (void)
         }
     }
 
-    I_Print8(SMALL_STARTXLOW, 24, "Press A to select an item");
+    I_Print8(SMALL_STARTXLOW, 23, "Press A to select an item");
     if (gs_menu->mode && gs_menu->path[0] != '\0')
-        I_Print8(SMALL_STARTXLOW, 25, "Press B to return to parent directory");
+        I_Print8(SMALL_STARTXLOW, 24, "Press B to return to parent directory");
     else if (!gs_menu->mode)
-        I_Print8(SMALL_STARTXLOW, 25, "Hold RIGHT and press B to open CD tray");
-    I_Print8(SMALL_STARTXLOW, 26, "Press C to toggle file browser");
+        I_Print8(SMALL_STARTXLOW, 24, "Hold RIGHT + press B to open CD tray");
+    I_Print8(SMALL_STARTXLOW, 25, "Press C to toggle file browser");
+
+    if (gs_menu->mode)
+    {
+        char serial[12]; 
+
+        D_memcpy(serial, (void *)(0x02000180 + 3), 11);
+        serial[11] = 0;
+
+        x = 320 - 10 - mystrlen(serial) * 8;
+        I_Print8(x, 26, serial);
+    }
 }
