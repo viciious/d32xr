@@ -30,12 +30,12 @@
         .ascii  "SEGA 32X        "
         .ascii  "                "
         .ascii  "DOOM 32XCD Fusio"
-        .ascii  "n v1.0          "
+        .ascii  "n v2.0          "
         .ascii  "                "
         .ascii  "DOOM 32XCD Fusio"
-        .ascii  "n v1.0          "
+        .ascii  "n v2.0          "
         .ascii  "                "
-        .ascii  "GM 20241017-00"
+        .ascii  "GM D-32XCDF-20"
         .word   0x0000
         .ascii  "J6CM            "
         .long   0x00000000,0x003FFFFF   /* ROM start, end */
