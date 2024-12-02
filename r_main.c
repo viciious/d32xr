@@ -609,7 +609,9 @@ void R_SetupTextureCaches(int gamezonemargin)
 	const int zonemargin = gamezonemargin;
 	const int flatblocksize = sizeof(memblock_t) + ((sizeof(texcacheblock_t) + 15) & ~15) + 64*64 + 32;
 
+#ifndef SHOW_DISCLAIMER
 	CONS_Printf("Free memory: %d (LFB: %d)", Z_FreeMemory(mainzone), Z_LargestFreeBlock(mainzone));
+#endif
 
 	// functioning texture cache requires at least 8kb of ram
 	zonefree = Z_LargestFreeBlock(mainzone);
