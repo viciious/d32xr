@@ -15,7 +15,6 @@ static const animdef_t	animdefs[] =
 	{false,	"BWATER08",	"BWATER01"},
 	{false, "DWATER08", "DWATER01"},
 	{false,	"FWATER4",	"FWATER1"},
-	{false,	"LAVA4",	"LAVA1"},
 
 	{true,	"GFALL4",	"GFALL1"},
 

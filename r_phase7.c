@@ -20,6 +20,7 @@ typedef struct localplane_s
     fixed_t height;
     angle_t angle;
     fixed_t x, y;
+    boolean wavy;
 #ifndef SIMPLELIGHT
     int lightmin;
 #endif
@@ -152,6 +153,22 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     }
 #endif
 
+    if (lpl->wavy)
+    {
+        int wtofs = 75 * gametic;
+        int peck = (wtofs + (distance >> 10)) & 8191;
+        int bgofs = FixedDiv(finesine(peck), distance>>9)>>16;
+        
+        if (y + bgofs >= viewportHeight)
+            bgofs = viewportHeight - y - 1;
+        if (y + bgofs < 0)
+            bgofs = -y;
+
+        angle = ((vd.viewangle >> ANGLETOFINESHIFT) + 2048) & 8191; // 90 deg.
+        xfrac += FixedMul(finecosine(angle), bgofs << FRACBITS);
+        yfrac += FixedMul(finesine(angle), bgofs << FRACBITS);
+    }
+
     drawspan(y, x, x2, light, xfrac, yfrac, xstep, ystep, lpl->ds_source[miplevel], mipsize);
 }
 
@@ -275,6 +292,15 @@ static visplane_t *R_GetNextPlane(uint16_t *sortedvisplanes)
 #endif
 }
 
+static boolean IsWavyFlat(byte flatnum)
+{
+    return (flatnum >= 9 && flatnum <= 16) // BWATER
+        || (flatnum >= 24 && flatnum <= 27) // CHEMG
+        || (flatnum >= 43 && flatnum <= 50) // DWATER
+        || (flatnum == 74) // RLAVA1
+        ;
+}
+
 static void R_DrawPlanes2(void)
 {
     angle_t angle;
@@ -321,6 +347,8 @@ static void R_DrawPlanes2(void)
             continue;
 
         const int flatnum = pl->flatandlight&0xffff;
+
+        lpl.wavy = IsWavyFlat(flatnum);
 
 #ifdef MARS
         lpl.baseyscale = baseyscale * flatpixels[flatnum].size;
