@@ -46,7 +46,13 @@ typedef struct
     drawtex_t tex[2];
     drawtex_t *first, *last;
 
-    int lightmin, lightmax, lightsub, lightcoef;
+#ifndef SIMPLELIGHT
+    int lightmin;
+#endif
+    int lightmax;
+#ifndef SIMPLELIGHT
+    int lightsub, lightcoef;
+#endif
 #if MIPLEVELS > 1   
     unsigned minmip, maxmip;
 #endif
@@ -185,8 +191,10 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 
     const int ceilingheight = segl->ceilingheight;
 
+#ifdef SIMPLELIGHT
+    const int texturelight = lseg->lightmax;
+#else
     int texturelight = lseg->lightmax;
-#ifndef SIMPLELIGHT
     int lightmax = lseg->lightmax, lightmin = lseg->lightmin,
         lightcoef = lseg->lightcoef, lightsub = lseg->lightsub;
 #endif
@@ -466,13 +474,20 @@ void R_SegCommands(void)
 #endif
 
 #ifdef SIMPLELIGHT
-        lseg.lightcoef = 0;
         if (vd.fixedcolormap)
-            lseg.lightmin = lseg.lightmax = vd.fixedcolormap;
+        {
+#ifndef SIMPLELIGHT
+            lseg.lightmin = 
+#endif
+            lseg.lightmax = vd.fixedcolormap;
+        }
         else
         {
             seglight = (segl->seglightlevel + extralight) & 0xff;
-            lseg.lightmin = lseg.lightmax = HWLIGHT((unsigned)seglight);
+#ifndef SIMPLELIGHT
+            lseg.lightmin = 
+#endif
+            lseg.lightmax = HWLIGHT((unsigned)seglight);
         }
 #else
         if (vd.fixedcolormap)

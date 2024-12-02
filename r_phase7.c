@@ -20,7 +20,13 @@ typedef struct localplane_s
     fixed_t height;
     angle_t angle;
     fixed_t x, y;
-    int lightmin, lightmax, lightsub, lightcoef;
+#ifndef SIMPLELIGHT
+    int lightmin;
+#endif
+    int lightmax;
+#ifndef SIMPLELIGHT
+    int lightsub, lightcoef;
+#endif
     fixed_t basexscale, baseyscale;
 
 #ifdef MARS
@@ -62,8 +68,12 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     fixed_t ds;
     fixed_t length, xfrac, yfrac, xstep, ystep;
     angle_t angle;
+#ifdef SIMPLELIGHT
+    const int light = lpl->lightmax;
+#else
     int light;
     unsigned scale;
+#endif
     unsigned miplevel, mipsize;
 
     remaining = x2 - x + 1;
@@ -72,19 +82,6 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
         return; // nothing to draw (shouldn't happen)
 
     distance = FixedMul(lpl->height, yslope[y]);
-
-#ifdef MARS
-    volatile int32_t t;
-    __asm volatile (
-        "mov #-128, r0\n\t"
-        "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
-        "mov #0, %0\n\t"
-        "mov.l %2, @(16, r0) /* set high bits of the 64-bit dividend */ \n\t"
-        "mov.l %1, @(0, r0) /* set 32-bit divisor */ \n\t"
-        "mov #0, %0\n\t"
-        "mov.l %0, @(20, r0) /* set low  bits of the 64-bit dividend, start divide */\n\t"
-        : "=&r" (t) : "r" (distance), "r"(lpl->lightcoef) : "r0");
-#endif
 
     ds = distscale[x];
     ds <<= 1;
@@ -115,6 +112,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     yfrac *= flatpixels[flatnum].size;
 #endif
 
+#if MIPLEVELS > 1
     if (miplevel > 0) {
         unsigned m = miplevel;
         do {
@@ -122,7 +120,9 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
             yfrac >>= 2, ystep >>= 2;
         } while (--m);
     }
+#endif
 
+#ifndef SIMPLELIGHT
     if (lpl->lightcoef != 0)
     {
 #ifdef MARS
@@ -150,6 +150,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     {
         light = lpl->lightmax;
     }
+#endif
 
     drawspan(y, x, x2, light, xfrac, yfrac, xstep, ystep, lpl->ds_source[miplevel], mipsize);
 }
@@ -353,17 +354,17 @@ static void R_DrawPlanes2(void)
 
         if (vd.fixedcolormap)
         {
-            lpl.lightmin = lpl.lightmax = vd.fixedcolormap;
+#ifndef SIMPLELIGHT
             lpl.lightcoef = 0;
+            lpl.lightmin = 
+#endif
+            lpl.lightmax = vd.fixedcolormap;
         }
         else
         {
 #ifdef SIMPLELIGHT
             light = ((unsigned)pl->flatandlight>>16);
-//            light = light - ((255 - light - light/2) << 1);
-            lpl.lightmin = lpl.lightmax = HWLIGHT((unsigned)((light + extralight) & 0xff));
-            lpl.lightsub = 0;
-            lpl.lightcoef = 0;
+            lpl.lightmax = HWLIGHT((unsigned)((light + extralight) & 0xff));
 #else
             light = ((unsigned)pl->flatandlight>>16);
             lpl.lightmax = (light + extralight) & 0xff;

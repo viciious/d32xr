@@ -734,7 +734,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		dy = -27;
 	}
 	else {
-		G_ClipAimingPitch(&vd.aimingangle);
+		G_ClipAimingPitch((int*)&vd.aimingangle);
 		dy = AIMINGTODY(vd.aimingangle);
 	}
 
