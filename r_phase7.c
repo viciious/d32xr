@@ -155,16 +155,16 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
 
     if (lpl->wavy)
     {
-        int wtofs = 75 * gametic;
-        int peck = (wtofs + (distance >> 10)) & 8191;
-        int bgofs = FixedDiv(finesine(peck), distance>>9)>>16;
+        const int wtofs = 75 * gametic;
+        const int peck = (wtofs + (distance >> 10)) & 8191;
+        int bgofs = FixedDiv(finesine(peck), distance>>9) >> FRACBITS;
         
         if (y + bgofs >= viewportHeight)
             bgofs = viewportHeight - y - 1;
-        if (y + bgofs < 0)
+        else if (y + bgofs < 0)
             bgofs = -y;
 
-        angle = ((vd.viewangle >> ANGLETOFINESHIFT) + 2048) & 8191; // 90 deg.
+        angle = vd.viewangle >> ANGLETOFINESHIFT;
         xfrac += FixedMul(finecosine(angle), bgofs << FRACBITS);
         yfrac += FixedMul(finesine(angle), bgofs << FRACBITS);
     }
