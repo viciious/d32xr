@@ -1655,7 +1655,7 @@ void P_PlayerThink(player_t *player)
 	if (player->powers[pw_invulnerability])
 		player->powers[pw_invulnerability]--;
 
-	if (player->powers[pw_underwater])
+	if (player->powers[pw_underwater] && (gamemapinfo.mapNumber < SSTAGE_START || gamemapinfo.mapNumber > SSTAGE_END))
 		player->powers[pw_underwater]--;
 
 	if (player->whiteFlash && (leveltime & 1))
