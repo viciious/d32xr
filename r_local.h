@@ -305,12 +305,14 @@ sector_t *R_FakeFlat(sector_t *, sector_t *, boolean) ATTR_DATA_CACHE_ALIGN;
 typedef void (*drawcol_t)(int, int, int, int, fixed_t, fixed_t, inpixel_t*, int);
 typedef void (*drawskycol_t)(int, int, int);
 typedef void (*drawspan_t)(int, int, int, int, fixed_t, fixed_t, fixed_t, fixed_t, inpixel_t*, int);
+typedef void (*drawspancolor_t)(int, int, int, int, int);
 
 extern drawcol_t drawcol;
 extern drawcol_t drawcolflipped;
 extern drawcol_t drawcolnpo2;
 extern drawcol_t drawcollow;
 extern drawspan_t drawspan;
+extern drawspancolor_t drawspancolor;
 
 #ifdef MDSKY
 extern drawskycol_t drawskycol;
