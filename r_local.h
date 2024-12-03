@@ -167,7 +167,7 @@ typedef struct
 typedef struct
 {
 	VINT size;
-	VINT pad;
+	VINT wavy;
 #ifdef MARS
 	inpixel_t 	*data[MIPLEVELS];
 #else

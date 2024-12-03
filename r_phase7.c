@@ -153,7 +153,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     }
 #endif
 
-    if (lpl->wavy)
+    if (flatpixels[flatnum].wavy)
     {
         const int wtofs = 75 * gametic;
         const int peck = (wtofs + (distance >> 10)) & 8191;
@@ -292,15 +292,6 @@ static visplane_t *R_GetNextPlane(uint16_t *sortedvisplanes)
 #endif
 }
 
-static boolean IsWavyFlat(byte flatnum)
-{
-    return (flatnum >= 9 && flatnum <= 16) // BWATER
-        || (flatnum >= 24 && flatnum <= 27) // CHEMG
-        || (flatnum >= 43 && flatnum <= 50) // DWATER
-        || (flatnum == 74) // RLAVA1
-        ;
-}
-
 static void R_DrawPlanes2(void)
 {
     angle_t angle;
@@ -348,7 +339,7 @@ static void R_DrawPlanes2(void)
 
         const int flatnum = pl->flatandlight&0xffff;
 
-        lpl.wavy = IsWavyFlat(flatnum);
+        lpl.wavy = flatpixels[flatnum].wavy;
 
 #ifdef MARS
         lpl.baseyscale = baseyscale * flatpixels[flatnum].size;

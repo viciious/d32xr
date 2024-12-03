@@ -514,6 +514,15 @@ void R_SetTextureData(texture_t *tex, uint8_t *start, int size, boolean skiphead
 	}
 }
 
+static boolean IsWavyFlat(byte flatnum)
+{
+    return (flatnum >= 9 && flatnum <= 16) // BWATER
+        || (flatnum >= 24 && flatnum <= 27) // CHEMG
+        || (flatnum >= 43 && flatnum <= 50) // DWATER
+        || (flatnum == 74) // RLAVA1
+        ;
+}
+
 /*
 ==============
 =
@@ -532,6 +541,7 @@ void R_SetFlatData(int f, uint8_t *start, int size)
 	{
 		flatpixels[f].data[j] = data;
 		flatpixels[f].size = w;
+		flatpixels[f].wavy = IsWavyFlat(f);
 		if (texmips) {
 			data += w * w;
 			w >>= 1;
@@ -545,6 +555,7 @@ void R_SetFlatData(int f, uint8_t *start, int size)
 	{
 		flatpixels[f].data[j] = data;
 		flatpixels[f].size = w;
+		flatpixels[f].wavy = IsWavyFlat(f);
 		if (texmips) {
 			data += w * w;
 			w >>= 1;
