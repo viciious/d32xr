@@ -16,7 +16,7 @@ creditcard_t creditCards[] = {
 	{"C_STJR",   "SONIC ROBO BLAST",     "32X",              "STAFF", "" },
 	{"C_WSQUID", "TRACKING",                "Wessquiid",         "Title Theme\nGreenflower 1 & 2\nSpeed Shoes\nMost Others", "x.com/@wessquiid\nwessquiid.carrd.co" },
 	{"C_NQUITE", "TRACKING",                "NotQuiteHere",      "Special Stage",       "x.com/NotQuiteHereTSM" },
-//	{"C_JOYTAY", "TRACKING",                "John \"Joy\" Tay", "Deep Sea 1\nCredits",                          "x.com/@johntayjinf\nyoutube.com\n/@johntayjinf" },
+	{"C_JOYTAY", "TRACKING",                "John \"Joy\" Tay", "Credits Theme",                          "x.com/@johntayjinf\nyoutube.com\n/@johntayjinf" },
 	{"C_CRYPTK", "TRACKING",                "Cryptik",          "Boss Theme\nMiscellaneous",        "x.com/@LunarCryptik\nyoutube.com/c\n/LunarCryptik" },
 	{"C_SAXMAN", "PROGRAMMING",          "Saxman",           "MegaDrive & 32X\nAdditional tooling", "rumble.com/user\n/ymtx81z" },
 	{"C_SSN",    "PROGRAMMING",          "SSNTails",         "Project Lead\nGameplay\nEngine Enhancements\nAdditional Art",            "x.com/@SSNTails\nyoutube.com\n/@ssntails" },
@@ -27,7 +27,7 @@ creditcard_t creditCards[] = {
 	{NULL, NULL, NULL, NULL, NULL },
 };
 
-#define CARDTIME (10*TICRATE)
+#define CARDTIME (8*TICRATE)
 
 static VINT cardPFP = 0;
 static VINT cardTimer = 0;
