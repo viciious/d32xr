@@ -225,7 +225,7 @@ void M_Start2 (boolean startup_)
 	mainitem[mi_newgame].y = CURSORY(0);
 	mainitem[mi_newgame].screen = ms_gametype;
 
-	D_memcpy(mainitem[mi_loadgame].name, "ABOUT", 12);
+	D_memcpy(mainitem[mi_loadgame].name, "ABOUT", 6);
 	mainitem[mi_loadgame].x = ITEMX;
 	mainitem[mi_loadgame].y = CURSORY(1);
 	mainitem[mi_loadgame].screen = ms_help;
@@ -246,7 +246,7 @@ void M_Start2 (boolean startup_)
 	mainitem[mi_savelist].y = CURSORY(0);
 	mainitem[mi_savelist].screen = ms_none;
 
-	D_memcpy(mainitem[mi_singleplayer].name, "Single Player", 14);
+	D_memcpy(mainitem[mi_singleplayer].name, "SINGLE PLAYER", 14);
 	mainitem[mi_singleplayer].x = ITEMX;
 	mainitem[mi_singleplayer].y = CURSORY(0);
 	mainitem[mi_singleplayer].screen = ms_new;
