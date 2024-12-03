@@ -15,11 +15,11 @@
 
 //#define SPCM_SAMPLE_RATE      (SPCM_RF5C164_INCREMENT * SPCM_RF5C164_BASEFREQ / 2048) /* 24453 */
 
-#define SPCM_BUF_MIN_SECTORS    4 /* the playback buffer needs to be this many sectors before a new CD read is started */
+#define SPCM_BUF_MIN_SECTORS    3 /* the playback buffer needs to be this many sectors before a new CD read is started */
 #define SPCM_BUF_NUM_SECTORS    12
 
 // start at 10KiB offset in PCM RAM - must be changed if S_MAX_CHANNELS is greater than 6!
-#define SPCM_CHAN_BUF_SIZE      (SPCM_BUF_NUM_SECTORS*2048)  /* 12*2048*1000/24453 = ~1005ms */
+#define SPCM_CHAN_BUF_SIZE      (SPCM_BUF_NUM_SECTORS*2048)  /* 12*2048*1000/30000 = ~819ms */
 #define SPCM_LEFT_CHANNEL_ID    (S_MAX_CHANNELS)
 #define SPCM_LEFT_CHAN_SOFFSET  0x2800
 #define SPCM_RIGHT_CHAN_SOFFSET (SPCM_LEFT_CHAN_SOFFSET+SPCM_CHAN_BUF_SIZE+2048)
@@ -91,9 +91,11 @@ static int S_SPCM_PaintedSectors(s_spcm_t *spcm) {
     uint16_t mixpos;
 
     mixpos = S_SPCM_MixerPos(spcm, 0);
+    mixpos += 64; // assume the mixer is slightly ahead
     if (mixpos >= SPCM_CHAN_BUF_SIZE) {
-        mixpos = SPCM_CHAN_BUF_SIZE - 1;
+        mixpos = 0;
     }
+
     if (spcm->mix.lastpos > mixpos) {
         // wrapped
         spcm->mix.painted_sectors_int += SPCM_BUF_NUM_SECTORS;
@@ -153,12 +155,6 @@ static void S_SPCM_BeginRead(s_spcm_t *spcm)
 
     if (cnt > 0)
         begin_read_cd(spcm->block, cnt);
-}
-
-static void S_SPCM_Preseek(s_spcm_t *spcm)
-{
-    seek_cd(spcm->block);
-    //spcm->lastdmatic = spcm->tics;
 }
 
 static int S_SPCM_DMA(s_spcm_t *spcm, uint16_t doff, uint16_t offset)
@@ -224,6 +220,9 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
             for (i = 0; i < spcm->num_channels; i++) {
                 pcm_set_off(spcm->chan[i].id);
             }
+            while (S_SPCM_DMA(spcm, spcm->chan[chan].startpos, spcm->mix.paint_offset)) {
+                // FIXME: how is this possible?
+            }
             spcm->state = SPCM_STATE_STOPPED;
             break;
         }
@@ -241,12 +240,8 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
         }
 
         if (painted_sectors < spcm->mix.paint_sector + SPCM_BUF_MIN_SECTORS) {
-            // not sure whether this safeguard is really needed, but better safe than sorry!
-            if (spcm->tics - spcm->lastdmatic > spcm->maxwait) {
-                spcm->playing = 0;
-                break;
-            }
-            S_SPCM_Preseek(spcm);
+            seek_cd(spcm->block - 1);
+            spcm->lastdmatic = spcm->tics;
             return;
         }
 
@@ -289,7 +284,7 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
                 }
             }
 
-skipblock:
+post_paint:
             spcm->lastdmatic = spcm->tics;
             if (++spcm->block > spcm->final_block) {
 done:
@@ -314,7 +309,10 @@ done:
         }
 
         if (spcm->tics - spcm->lastdmatic > spcm->maxwait) {
-            goto skipblock;
+            spcm->block += spcm->sector_cnt - 1;
+            spcm->sector_cnt = 1;
+            begin_read_cd(spcm->block, 0); // FIXME
+            goto post_paint;
         }
         break;
 
