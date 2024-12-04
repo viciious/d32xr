@@ -164,7 +164,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
         else if (y + bgofs < 0)
             bgofs = -y;
 
-        angle = vd.viewangle >> ANGLETOFINESHIFT;
+        angle = (vd.viewangle + ANG90) >> ANGLETOFINESHIFT;
         xfrac += FixedMul(finecosine(angle), bgofs << FRACBITS);
         yfrac += FixedMul(finesine(angle), bgofs << FRACBITS);
     }
