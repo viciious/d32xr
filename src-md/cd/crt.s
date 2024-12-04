@@ -1034,21 +1034,22 @@ DENTRY_FLAGS:
         .global DENTRY_FLAGS
 
         .align  2
-DENTRY_NAME:
-        .space  256
-        .global DENTRY_NAME
-TEMP_NAME:
-        .space  256
-
-        .align  4
-        .global DISC_BUFFER
-DISC_BUFFER:
-        .space  2048
-
-        .align  2
 CDA_VOLUME:
         .global CDA_VOLUME
         .word   0
 
         .global _start
 _start:
+
+        .bss
+        .align  4
+        .global DISC_BUFFER
+DISC_BUFFER:
+        .skip  2048
+
+        .align  2
+DENTRY_NAME:
+        .skip  256
+        .global DENTRY_NAME
+TEMP_NAME:
+        .skip  256
