@@ -578,9 +578,20 @@ begin_read_cd:
 | int dma_cd_sector_pcm(void *buffer);
         .global dma_cd_sector_pcm
 dma_cd_sector_pcm:
+        move.w  #0x4,d0                 /* set CDC Mode destination device to PCM DMA */
         movea.l 4(sp),a0                /* buffer */
         movem.l d2-d7/a2-a6,-(sp)
-        jsr     ReadSectorPCM
+        jsr     ReadSectorDMA
+        movem.l (sp)+,d2-d7/a2-a6
+        rts
+
+| int dma_cd_sector_prg(void *buffer);
+        .global dma_cd_sector_prg
+dma_cd_sector_prg:
+        move.w  #0x5,d0                 /* set CDC Mode destination device to PRG RAM DMA */
+        movea.l 4(sp),a0                /* buffer */
+        movem.l d2-d7/a2-a6,-(sp)
+        jsr     ReadSectorDMA
         movem.l (sp)+,d2-d7/a2-a6
         rts
 
@@ -879,9 +890,6 @@ SetCWD:
 SeekCD:
         movem.l d0-d1/a0-a1,-(sp)
 0:
-        move.w  #0x0089,d0              /* CDCSTOP */
-        jsr     0x5F22.w                /* call CDBIOS function */
-
         movea.l sp,a0                   /* ptr to 32 bit sector start */
         move.w  #0x0018,d0              /* ROMSEEK */
         jsr     0x5F22.w                /* call CDBIOS function */
@@ -945,13 +953,12 @@ ReadSectorsSUB:
         lea     16(sp),sp               /* cleanup stack */
         rts
 
-| Read 1 sector into buffer in a0 (using PCM DMA)
+| Read 1 sector into buffer in a0 (using DMA mode specified pecified in d0)
 
-ReadSectorPCM:
+ReadSectorDMA:
         movem.l d0-d1/a0-a1,-(sp)
 
-        /* set CDC Mode destination device to PCM */
-        move.b  #0x4,0x8004.w
+        move.b  d0,0x8004.w
         move.l  8(sp),d0
         lsr.w   #3,d0
         move.w  d0,0x800A.w             /* DMA destination address */
@@ -1045,7 +1052,7 @@ _start:
         .align  4
         .global DISC_BUFFER
 DISC_BUFFER:
-        .skip  2048
+        .skip  2048*4
 
         .align  2
 DENTRY_NAME:

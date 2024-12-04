@@ -20,6 +20,7 @@ extern int read_cd(int lba, int len, void *buffer);
 extern int seek_cd(int lba);
 extern int begin_read_cd(int lba, int len);
 extern int dma_cd_sector_pcm(void *buffer);
+extern int dma_cd_sector_prg(void *buffer);
 extern int set_cwd(char *path);
 extern int first_dir_sec(void);
 extern int next_dir_sec(void);
