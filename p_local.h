@@ -10,7 +10,7 @@
 #define	FLOATSPEED		(FRACUNIT*8)
 
 #define	GRAVITY			(FRACUNIT)
-#define	MAXMOVE			(24*FRACUNIT)
+#define	MAXMOVE			(30*FRACUNIT)
 
 
 #define	MAXHEALTH			100
@@ -22,10 +22,6 @@
 #define	MAPBLOCKSHIFT	(FRACBITS+8)
 #define	MAPBMASK		(MAPBLOCKSIZE-1)
 #define	MAPBTOFRAC		(MAPBLOCKSHIFT-FRACBITS)
-
-
-/* player radius for movement checking */
-#define	PLAYERRADIUS	16*FRACUNIT
 
 /* MAXRADIUS is for precalculated sector block boxes */
 /* the spider demon is larger, but we don't have any moving sectors */

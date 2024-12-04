@@ -2595,7 +2595,7 @@ MF2_SHOOTABLE|MF2_ENEMY,	// flags2
 	16*FRACUNIT,    // radius
 	32*FRACUNIT,    // height
 	0,              // mass
-	80,    // damage
+	60,    // damage
 	sfx_None,       // activesound
 	MF_SPECIAL|MF_STATIC, // flags
 	0, // flags2

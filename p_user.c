@@ -205,19 +205,22 @@ stairstep:
 void P_PlayerXYMovement(mobj_t *mo)
 {
 	player_t *player = &players[mo->player - 1];
-	fixed_t speed;
+	fixed_t speed = P_AproxDistance(mo->momx, mo->momy);
 	const angle_t speedDir = R_PointToAngle2(0, 0, mo->momx, mo->momy);
-	const fixed_t top = (player->pflags & PF_SPINNING) ? 60 * FRACUNIT : 30 *FRACUNIT;
+	const fixed_t top = (player->pflags & PF_SPINNING) ? 80 * FRACUNIT : 30 *FRACUNIT;
 	P_PlayerMove(mo);
 
-	/* */
-	/* slow down */
-	/* */
-	if (player->powers[pw_flashing] != FLASHINGTICS && player->mo->z <= player->mo->floorz)
+	if (speed > top) // Speed cap
+	{
+		const fixed_t diff = speed - top;
+		const angle_t opposite = speedDir - ANG180;
+
+		P_Thrust(player->mo, opposite, diff);
+	}
+	else if (player->powers[pw_flashing] != FLASHINGTICS && player->mo->z <= player->mo->floorz) // Friction
 	{
 		const fixed_t frc = (player->pflags & PF_SPINNING) ? FRACUNIT >> 2 : FRACUNIT * 1;
-		speed = P_AproxDistance(mo->momx, mo->momy);
-
+		
 		if (speed > STOPSPEED)
 		{
 			if (!(player->forwardmove || player->sidemove || (player->pflags & PF_GASPEDAL)))
@@ -250,15 +253,6 @@ void P_PlayerXYMovement(mobj_t *mo)
 				mo->momy = 0;
 			}
 		}
-	}
-
-	speed = P_AproxDistance(mo->momx, mo->momy);
-	if (speed > top)
-	{
-		const fixed_t diff = speed - top;
-		const angle_t opposite = speedDir - ANG180;
-
-		P_Thrust(player->mo, opposite, diff);
 	}
 }
 
