@@ -39,7 +39,11 @@ int 		ticstart;
 
 unsigned configuration[NUMCONTROLOPTIONS][3] =
 {
+#ifdef SHOW_DISCLAIMER
+	{BT_SPIN, BT_JUMP, BT_SPIN},
+#else
 	{BT_FLIP, BT_JUMP, BT_SPIN},
+#endif
 };
 
 /*============================================================================ */
