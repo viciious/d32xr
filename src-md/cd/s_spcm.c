@@ -262,6 +262,14 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
         delay_sectors += (spcm->ramsector_wcnt > 4);
         if (delay_sectors > SPCM_AUX_BUFFER_SECTORS)
             delay_sectors = SPCM_AUX_BUFFER_SECTORS;
+
+        if (spcm->increment <= 0x600) // 24453 Hz
+            delay_sectors++;
+        if (spcm->increment <= 0x500) // 20378 Hz
+            delay_sectors++;
+        if (spcm->increment <= 0x400) // 16302 Hz
+            delay_sectors++;
+
         if (spcm->num_channels == 1)
             delay_sectors += SPCM_BUF_NUM_SECTORS; // wait 1/2 of playback time
 
