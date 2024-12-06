@@ -34,7 +34,10 @@ typedef struct localplane_s
 #endif
 } localplane_t;
 
-static void R_MapPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
+static void (*mapplane)(localplane_t*, int, int, int);
+
+static void R_MapFlatPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
+static void R_MapColorPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
 static void R_PlaneLoop(localplane_t* lpl) ATTR_DATA_CACHE_ALIGN;
 static void R_DrawPlanes2(void) ATTR_DATA_CACHE_ALIGN;
 
@@ -55,7 +58,7 @@ static int pl_next = 0;
 //
 // Render the horizontal spans determined by R_PlaneLoop
 //
-static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
+static void R_MapFlatPlane(localplane_t* lpl, int y, int x, int x2)
 {
     int remaining;
     fixed_t distance;
@@ -193,6 +196,14 @@ static void R_PlaneLoop(localplane_t *lpl)
     b1 = t1 & 0xff;
     t1 >>= 8;
     t2 = *pl_openptr;
+
+    unsigned short flatnum = lpl->pl->flatandlight;
+    if (flatpixels[flatnum].size == 1) {
+        mapplane = &R_MapColorPlane;
+    }
+    else {
+        mapplane = &R_MapFlatPlane;
+    }
   
     do
     {
@@ -206,36 +217,18 @@ static void R_PlaneLoop(localplane_t *lpl)
 
         x2 = pl_x - 1;
 
-        unsigned short flatnum = lpl->pl->flatandlight & 0xFFFF;
-
-        if (flatpixels[flatnum].size == 1) {
-            while (t1 < t2 && t1 <= b1)
-            {
-                R_MapColorPlane(lpl, t1, spanstart[t1], x2);
-                ++t1;
-            }
-
-            // bottom diffs
-            while (b1 > b2 && b1 >= t1)
-            {
-                R_MapColorPlane(lpl, b1, spanstart[b1], x2);
-                --b1;
-            }
+        // top diffs
+        while (t1 < t2 && t1 <= b1)
+        {
+            mapplane(lpl, t1, spanstart[t1], x2);
+            ++t1;
         }
-        else {
-            // top diffs
-            while (t1 < t2 && t1 <= b1)
-            {
-                R_MapPlane(lpl, t1, spanstart[t1], x2);
-                ++t1;
-            }
 
-            // bottom diffs
-            while (b1 > b2 && b1 >= t1)
-            {
-                R_MapPlane(lpl, b1, spanstart[b1], x2);
-                --b1;
-            }
+        // bottom diffs
+        while (b1 > b2 && b1 >= t1)
+        {
+            mapplane(lpl, b1, spanstart[b1], x2);
+            --b1;
         }
 
         if (pl_x == pl_stopx + 1)
