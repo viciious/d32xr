@@ -164,11 +164,9 @@ static void R_MapColorPlane(localplane_t* lpl, int y, int x, int x2)
     if (remaining <= 0)
         return; // nothing to draw (shouldn't happen)
 
-    //TODO: //DLG: These values are not correct!
-    const int color_index = lpl->ds_source[0];
-    const int light = (lpl->pl->flatandlight >> 16) & 0xFF;
+    const int color_index = lpl->ds_source[0][0];
 
-    drawspancolor(y, x, x2, light, color_index);
+    drawspancolor(y, x, x2, color_index);
 }
 
 //
@@ -208,9 +206,9 @@ static void R_PlaneLoop(localplane_t *lpl)
 
         x2 = pl_x - 1;
 
-        unsigned short flat_number = lpl->pl->flatandlight & 0xFFFF;
+        unsigned short flatnum = lpl->pl->flatandlight & 0xFFFF;
 
-        if (flat_number == 1) { // DLG: Should this condition be based on flat number, or something else?
+        if (flatpixels[flatnum].size == 1) {
             while (t1 < t2 && t1 <= b1)
             {
                 R_MapColorPlane(lpl, t1, spanstart[t1], x2);

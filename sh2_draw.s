@@ -405,7 +405,7 @@ do_cnp_loop_low:
 
 ! Draw a horizontal row of pixels of a specified color.
 ! Low detail (double-wide pixels) mode.
-!void I_DrawSpanColorLow(int ds_y, int ds_x1, int ds_x2, int light, int color_index)
+!void I_DrawSpanColorLow(int ds_y, int ds_x1, int ds_x2, int color_index)
 
         .align  4
         .global _I_DrawSpanColorLowA
@@ -421,9 +421,9 @@ _I_DrawSpanColorLowA:
         rts
         nop
 1:
-        mov.l   @(DOOMTLS_COLORMAP, gbr),r0
-        add     r7,r7
-        add     r0,r7           /* ds_colormap = colormap + light */
+        mov     r7,r0
+        shll8   r0
+        add     r7,r0
         mov.l   draw_fb,r2
         mov.l   @r2,r2          /* frame buffer start */
         add     r5,r2
@@ -432,9 +432,6 @@ _I_DrawSpanColorLowA:
         add     r4,r2
         shlr2   r4
         add     r4,r2           /* fb += (ds_y*256 + ds_y*64) */
-
-        mov.l   @r15,r0         /* color_index */
-        mov.w   @(r0,r7),r0     /* dpix = ds_colormap[pix] */
 
         /* test if count & 1 */
         shlr    r6

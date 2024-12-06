@@ -484,7 +484,7 @@ void I_DrawSpanNoDraw(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfra
 
 }
 
-void I_DrawSpanColorNoDraw(int ds_y, int ds_x1, int ds_x2, int light, int color_index)
+void I_DrawSpanColorNoDraw(int ds_y, int ds_x1, int ds_x2, int color_index)
 {
 
 }

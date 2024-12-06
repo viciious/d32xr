@@ -820,9 +820,9 @@ void I_DrawColumnNPo2(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_isca
 void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int dc_texheight);
 
-void I_DrawSpanColor(int ds_y, int ds_x1, int ds_x2, int light, int color_index);
+void I_DrawSpanColor(int ds_y, int ds_x1, int ds_x2, int color_index);
 
-void I_DrawSpanColorLow(int ds_y, int ds_x1, int ds_x2, int light, int color_index);
+void I_DrawSpanColorLow(int ds_y, int ds_x1, int ds_x2, int color_index);
 
 #ifdef POTATO_MODE
 void I_DrawSpanPotato(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
@@ -838,7 +838,7 @@ void I_DrawColumnNoDraw(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_
 void I_DrawSpanNoDraw(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int dc_texheight);
 
-void I_DrawSpanColorNoDraw(int ds_y, int ds_x1, int ds_x2, int light, int color_index);
+void I_DrawSpanColorNoDraw(int ds_y, int ds_x1, int ds_x2, int color_index);
 
 void I_DrawSkyColumnNoDraw(int dc_x, int dc_yl, int dc_yh);
 
