@@ -71,7 +71,7 @@ static void R_PrepMobj(mobj_t *thing)
    sprlump = &spritelumps[sprframe->lump];
 
    lump = sprlump[0];
-   if(!(lump & SL_SINGLESIDED))
+   if(!(lump & SL_SINGLESIDED) && !(thing->flags & MF_STATIC))
    {
       // select proper rotation depending on player's view point
       ang  = R_PointToAngle(vd->viewx, vd->viewy, thing->x, thing->y);

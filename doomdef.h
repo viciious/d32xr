@@ -227,7 +227,6 @@ typedef struct mobj_s
 
 /* info for drawing */
 	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
-	angle_t			angle;
 
 /* interaction info */
 	struct mobj_s	*bnext, *bprev;		/* links in blocks (if needed) */
@@ -251,6 +250,7 @@ typedef struct mobj_s
 									/* no matter what (even if shot) */
 
 	/* STATIC OBJECTS END HERE */
+	angle_t			angle;
 	fixed_t			momx, momy, momz;	/* momentums */
 
 	unsigned 		speed;			/* mobjinfo[mobj->type].speed */

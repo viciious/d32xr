@@ -587,10 +587,10 @@ return;	/*DEBUG */
 	if (mobj->flags & MF_COUNTITEM)
 		totalitems++;
 		
-	mobj->angle = ANG45 * (mthing->angle/45);
 	if (mobj->flags & MF_STATIC)
 		return;
 
+	mobj->angle = ANG45 * (mthing->angle/45);
 	if (mthing->options & MTF_AMBUSH)
 		mobj->flags |= MF_AMBUSH;
 	if (mobj->flags & MF_SPECIAL)
