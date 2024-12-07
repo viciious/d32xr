@@ -757,12 +757,14 @@ void I_SwapScreenCopy(void);
 #define I_Draw32XSkyColumnLow I_Draw32XSkyColumnLowC
 #define I_DrawColumnNPo2Low I_DrawColumnNPo2LowC
 #define I_DrawSpanLow I_DrawSpanLowC
+#define I_DrawSpanColorLow I_DrawSpanColorLowC
 
 #define I_DrawColumn I_DrawColumnC
 #define I_DrawSkyColumn I_DrawSkyColumnC
 #define I_Draw32XSkyColumn I_Draw32XSkyColumnC
 #define I_DrawColumnNPo2 I_DrawColumnNPo2C
 #define I_DrawSpan I_DrawSpanC
+#define I_DrawSpanColor I_DrawSpanColorC
 
 #else
 
@@ -771,6 +773,7 @@ void I_SwapScreenCopy(void);
 #define I_Draw32XSkyColumnLow I_Draw32XSkyColumnLowA
 #define I_DrawColumnNPo2Low I_DrawColumnNPo2LowA
 #define I_DrawSpanLow I_DrawSpanLowA
+#define I_DrawSpanColorLow I_DrawSpanColorLowA
 
 #define I_DrawColumn I_DrawColumnA
 #define I_DrawColumnFlipped I_DrawColumnFlippedA
@@ -778,6 +781,7 @@ void I_SwapScreenCopy(void);
 #define I_Draw32XSkyColumn I_Draw32XSkyColumnA
 #define I_DrawColumnNPo2 I_DrawColumnNPo2A
 #define I_DrawSpan I_DrawSpanA
+#define I_DrawSpanColor I_DrawSpanColorA
 
 #endif
 
@@ -816,6 +820,10 @@ void I_DrawColumnNPo2(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_isca
 void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int dc_texheight);
 
+void I_DrawSpanColor(int ds_y, int ds_x1, int ds_x2, int color_index);
+
+void I_DrawSpanColorLow(int ds_y, int ds_x1, int ds_x2, int color_index);
+
 #ifdef POTATO_MODE
 void I_DrawSpanPotato(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int dc_texheight);
@@ -829,6 +837,8 @@ void I_DrawColumnNoDraw(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_
 
 void I_DrawSpanNoDraw(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int dc_texheight);
+
+void I_DrawSpanColorNoDraw(int ds_y, int ds_x1, int ds_x2, int color_index);
 
 void I_DrawSkyColumnNoDraw(int dc_x, int dc_yl, int dc_yh);
 

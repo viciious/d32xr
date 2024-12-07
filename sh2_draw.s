@@ -20,7 +20,7 @@
 
 ! Draw a vertical column of pixels from a sky texture.
 ! Source is the top of the column to scale.
-! Low detail (doubl-wide pixels) mode.
+! Low detail (double-wide pixels) mode.
 !
 !void I_Draw32XSkyColumnLow(int dc_x_offset, int dc_y_offset, int dc_seg_top, int dc_seg_bottom,
 !               int top_color, int bottom_color, inpixel_t *dc_source, int dc_source_height)
@@ -247,7 +247,7 @@ draw_width_2:
 
 ! Draw a vertical column of pixels from a projected wall texture.
 ! Source is the top of the column to scale.
-! Low detail (doubl-wide pixels) mode.
+! Low detail (double-wide pixels) mode.
 !
 !void I_DrawColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
 !                  fixed_t fracstep, inpixel_t *dc_source, int dc_texheight)
@@ -323,7 +323,7 @@ do_col_loop_low_1px:
 
 ! Draw a vertical column of pixels from a projected wall texture.
 ! Non-power of 2 texture height.
-! Low detail (doubl-wide pixels) mode.
+! Low detail (double-wide pixels) mode.
 !
 !void I_DrawColumnNPO2Low(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
 !                      fixed_t fracstep, inpixel_t *dc_source, int dc_texheight)
@@ -402,8 +402,60 @@ do_cnp_loop_low:
         rts
         mov.l   @r15+,r8
 
+
+! Draw a horizontal row of pixels of a specified color.
+! Low detail (double-wide pixels) mode.
+!void I_DrawSpanColorLow(int ds_y, int ds_x1, int ds_x2, int color_index)
+
+        .align  4
+        .global _I_DrawSpanColorLowA
+_I_DrawSpanColorLowA:
+	add	#1,r6
+
+0:
+        cmp/ge  r6,r5
+        bf/s    1f
+        sub     r5,r6           /* count = ds_x2 - ds_x1 */
+
+        /* dc_x1 >= dc_x2, exit */
+        rts
+        nop
+1:
+        mov     r7,r0
+        shll8   r0
+        add     r7,r0
+        mov.l   draw_fb,r2
+        mov.l   @r2,r2          /* frame buffer start */
+        add     r5,r2
+        add     r5,r2           /* fb += ds_x1*2 */
+        shll8   r4
+        add     r4,r2
+        shlr2   r4
+        add     r4,r2           /* fb += (ds_y*256 + ds_y*64) */
+
+        /* test if count & 1 */
+        shlr    r6
+        movt    r1              /* 1 if count was odd */
+        bt/s    do_span_color_low_loop_1px
+        add     r1,r6
+
+        .p2alignw 2, 0x0009
+do_span_color_low_loop:
+        mov.w   r0,@r2          /* *fb = dpix */
+        add     #2,r2           /* fb++ */
+
+do_span_color_low_loop_1px:
+        mov.w   r0,@r2          /* *fb = dpix */
+        dt      r6              /* count-- */
+        bf/s    do_span_color_low_loop
+        add     #2,r2           /* fb++ */
+
+        rts
+        nop
+
+
 ! Draw a horizontal row of pixels from a projected flat (floor/ceiling) texture.
-! Low detail (doubl-wide pixels) mode.
+! Low detail (double-wide pixels) mode.
 !
 !void I_DrawSpanLow(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 !                fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep,

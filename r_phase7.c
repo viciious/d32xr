@@ -41,7 +41,10 @@ typedef struct localplane_s
 #endif
 } localplane_t;
 
-static void R_MapPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
+static void (*mapplane)(localplane_t*, int, int, int);
+
+static void R_MapFlatPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
+static void R_MapColorPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
 static void R_PlaneLoop(localplane_t* lpl) ATTR_DATA_CACHE_ALIGN;
 static void R_DrawPlanes2(void) ATTR_DATA_CACHE_ALIGN;
 
@@ -62,7 +65,7 @@ static int pl_next = 0;
 //
 // Render the horizontal spans determined by R_PlaneLoop
 //
-static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
+static void R_MapFlatPlane(localplane_t* lpl, int y, int x, int x2)
 {
     int remaining;
     fixed_t distance;
@@ -173,78 +176,101 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
 }
 
 //
+// Render the horizontal spans determined by R_PlaneLoop for a single color
+//
+static void R_MapColorPlane(localplane_t* lpl, int y, int x, int x2)
+{
+    int remaining = x2 - x + 1;
+
+    if (remaining <= 0)
+        return; // nothing to draw (shouldn't happen)
+
+    const int color_index = lpl->ds_source[0][0];
+
+    drawspancolor(y, x, x2, color_index);
+}
+
+//
 // Determine the horizontal spans of a single visplane
 //
 static void R_PlaneLoop(localplane_t *lpl)
 {
-   int pl_x, pl_stopx;
-   uint16_t *pl_openptr;
-   unsigned t1, t2, b1, b2, pl_oldtop, pl_oldbottom;
-   int16_t spanstart[SCREENHEIGHT];
-   visplane_t* pl = lpl->pl;
+    int pl_x, pl_stopx;
+    uint16_t *pl_openptr;
+    unsigned t1, t2, b1, b2, pl_oldtop, pl_oldbottom;
+    int16_t spanstart[SCREENHEIGHT];
+    visplane_t* pl = lpl->pl;
 
-   pl_x       = pl->minx;
-   pl_stopx   = pl->maxx;
+    pl_x       = pl->minx;
+    pl_stopx   = pl->maxx;
 
-   // see if there is any open space
-   if(pl_x > pl_stopx)
-      return; // nothing to map
+    // see if there is any open space
+    if(pl_x > pl_stopx)
+        return; // nothing to map
 
-   pl_openptr = &pl->open[pl_x];
+    pl_openptr = &pl->open[pl_x];
 
-   t1 = OPENMARK;
-   b1 = t1 & 0xff;
-   t1 >>= 8;
-   t2 = *pl_openptr;
+    t1 = OPENMARK;
+    b1 = t1 & 0xff;
+    t1 >>= 8;
+    t2 = *pl_openptr;
+
+    unsigned short flatnum = lpl->pl->flatandlight;
+    if (flatpixels[flatnum].size <= 2) {
+        mapplane = &R_MapColorPlane;
+    }
+    else {
+        mapplane = &R_MapFlatPlane;
+    }
   
-   do
-   {
-      int x2;
+    do
+    {
+        int x2;
 
-      b2 = t2 & 0xff;
-      t2 >>= 8;
+        b2 = t2 & 0xff;
+        t2 >>= 8;
 
-      pl_oldtop = t2;
-      pl_oldbottom = b2;
+        pl_oldtop = t2;
+        pl_oldbottom = b2;
 
-      x2 = pl_x - 1;
+        x2 = pl_x - 1;
 
-      // top diffs
-      while (t1 < t2 && t1 <= b1)
-      {
-          R_MapPlane(lpl, t1, spanstart[t1], x2);
-          ++t1;
-      }
+        // top diffs
+        while (t1 < t2 && t1 <= b1)
+        {
+            mapplane(lpl, t1, spanstart[t1], x2);
+            ++t1;
+        }
 
-      // bottom diffs
-      while (b1 > b2 && b1 >= t1)
-      {
-          R_MapPlane(lpl, b1, spanstart[b1], x2);
-          --b1;
-      }
+        // bottom diffs
+        while (b1 > b2 && b1 >= t1)
+        {
+            mapplane(lpl, b1, spanstart[b1], x2);
+            --b1;
+        }
 
-      if (pl_x == pl_stopx + 1)
-          break;
+        if (pl_x == pl_stopx + 1)
+            break;
 
-      while (t2 < t1 && t2 <= b2)
-      {
-          // top dif spanstarts
-          spanstart[t2] = pl_x;
-          ++t2;
-      }
+        while (t2 < t1 && t2 <= b2)
+        {
+            // top dif spanstarts
+            spanstart[t2] = pl_x;
+            ++t2;
+        }
 
-      while (b2 > b1 && b2 >= t2)
-      {
-          // bottom dif spanstarts
-          spanstart[b2] = pl_x;
-          --b2;
-      }
+        while (b2 > b1 && b2 >= t2)
+        {
+            // bottom dif spanstarts
+            spanstart[b2] = pl_x;
+            --b2;
+        }
 
-      b1 = pl_oldbottom;
-      t1 = pl_oldtop;
-      t2 = pl_x++ < pl_stopx ? *++pl_openptr : OPENMARK;
-   }
-   while(1);
+        b1 = pl_oldbottom;
+        t1 = pl_oldtop;
+        t2 = pl_x++ < pl_stopx ? *++pl_openptr : OPENMARK;
+    }
+    while(1);
 }
 
 static int R_TryLockPln(void)

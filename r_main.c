@@ -22,6 +22,7 @@ drawcol_t drawcolflipped;
 drawcol_t drawcolnpo2;
 drawcol_t drawcollow;
 drawspan_t drawspan;
+drawspancolor_t drawspancolor;
 
 #ifdef MDSKY
 drawskycol_t drawskycol;
@@ -339,6 +340,7 @@ void R_SetDrawMode(void)
 		drawcolnpo2 = I_DrawColumnNoDraw;
 		drawcollow = I_DrawColumnNoDraw;
 		drawspan = I_DrawSpanNoDraw;
+		drawspancolor = I_DrawSpanColorNoDraw;
 
 		#ifdef MDSKY
 		drawskycol = I_DrawSkyColumnNoDraw;
@@ -373,6 +375,8 @@ void R_SetDrawMode(void)
 		#else
 		drawspan = I_DrawSpanLow;
 		#endif
+
+		drawspancolor = I_DrawSpanColorLow;
 	}
 	else
 	{
@@ -396,6 +400,8 @@ void R_SetDrawMode(void)
 		#else
 		drawspan = I_DrawSpan;
 		#endif
+
+		//drawspancolor = I_DrawSpanColor;		// This doesn't exist!
 	}
 
 #ifdef MARS
