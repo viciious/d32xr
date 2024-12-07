@@ -236,6 +236,10 @@ typedef struct mobj_s
 	int			flags;
 	fixed_t			radius, height;		/* for movement checking */
 
+	/* STATIC OBJECTS END HERE */
+	angle_t			angle;
+	fixed_t			momx, momy, momz;	/* momentums */
+
 	union {
 		struct {
 			unsigned char	movedir;		/* 0-7 */
@@ -243,15 +247,12 @@ typedef struct mobj_s
 		};
 		unsigned short		thingid;		/* thing id for respawning specials */
 	};
+
 	unsigned char		reactiontime;	/* if non 0, don't attack yet */
 									/* used by player to freeze a bit after */
 									/* teleporting */
 	unsigned char		threshold;		/* if >0, the target will be chased */
 									/* no matter what (even if shot) */
-
-	/* STATIC OBJECTS END HERE */
-	angle_t			angle;
-	fixed_t			momx, momy, momz;	/* momentums */
 
 	unsigned 		speed;			/* mobjinfo[mobj->type].speed */
 	struct mobj_s	*target;		/* thing being chased/attacked (or NULL) */
