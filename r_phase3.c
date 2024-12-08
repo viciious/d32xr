@@ -30,6 +30,8 @@ static void R_PrepMobj(mobj_t *thing)
    int          lump, framenum;
    patch_t      *patch;
    vissprite_t  *vis;
+   const state_t* state;
+   boolean      fullbright;
 
    // transform origin relative to viewpoint
    tr_x = thing->x - vd->viewx;
@@ -58,12 +60,16 @@ static void R_PrepMobj(mobj_t *thing)
       return;
 
    sprdef = &sprites[thing->sprite];
+   state  = &states[thing->state];
+
+   fullbright = (state->frame & FF_FULLBRIGHT) != 0;
+   framenum = (state->frame & FF_FRAMEMASK);
 
    // check frame for validity
-   if ((thing->frame & FF_FRAMEMASK) >= sprdef->numframes)
+   if (framenum >= sprdef->numframes)
        return;
 
-   framenum = sprdef->firstframe + (thing->frame & FF_FRAMEMASK);
+   framenum = sprdef->firstframe + framenum;
    if (framenum < 0 || framenum >= numspriteframes)
       return;
 
@@ -171,7 +177,7 @@ static void R_PrepMobj(mobj_t *thing)
    }
    else
    {
-       if (thing->frame & FF_FULLBRIGHT)
+       if (fullbright)
            vis->colormap = 255;
        else
            vis->colormap = thing->subsector->sector->lightlevel;

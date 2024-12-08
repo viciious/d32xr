@@ -221,8 +221,7 @@ typedef struct mobj_s
 	VINT			health;
 	VINT			tics;				/* state tic counter	 */
 	VINT 			state;
-	VINT			frame;				/* might be ord with FF_FULLBRIGHT */
-
+	unsigned short	thingid;			/* thing id for respawning specials */
 	VINT			type;
 
 /* info for drawing */
@@ -245,7 +244,6 @@ typedef struct mobj_s
 			unsigned char	movedir;		/* 0-7 */
 			char			movecount;		/* when 0, select a new dir */
 		};
-		unsigned short		thingid;		/* thing id for respawning specials */
 	};
 
 	unsigned char		reactiontime;	/* if non 0, don't attack yet */

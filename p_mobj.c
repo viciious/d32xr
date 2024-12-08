@@ -186,7 +186,6 @@ boolean P_SetMobjState (mobj_t *mobj, statenum_t state)
 		mobj->state = state;
 		mobj->tics = st->tics;
 		mobj->sprite = st->sprite;
-		mobj->frame = st->frame;
 
 		if (gameskill == sk_nightmare)
 		{
@@ -295,7 +294,6 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 	mobj->state = info->spawnstate;
 	mobj->tics = st->tics;
 	mobj->sprite = st->sprite;
-	mobj->frame = st->frame;
 
 	if (gameskill == sk_nightmare)
 	{
@@ -586,6 +584,7 @@ return;	/*DEBUG */
 		totalkills++;
 	if (mobj->flags & MF_COUNTITEM)
 		totalitems++;
+	mobj->thingid = thingid + 1;
 		
 	if (mobj->flags & MF_STATIC)
 		return;
@@ -593,8 +592,6 @@ return;	/*DEBUG */
 	mobj->angle = ANG45 * (mthing->angle/45);
 	if (mthing->options & MTF_AMBUSH)
 		mobj->flags |= MF_AMBUSH;
-	if (mobj->flags & MF_SPECIAL)
-		mobj->thingid = thingid + 1;
 }
 
 
