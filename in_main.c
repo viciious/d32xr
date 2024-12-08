@@ -172,6 +172,11 @@ void IN_Start (void)
 	const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
 	I_SetPalette(dc_playpals+5*768); // Completely white
 
+	// Remove water distortion filter from both frame buffers.
+	RemoveDistortionFilters();
+	Mars_FlipFrameBuffers(true);
+	RemoveDistortionFilters();
+
 	S_StartSong(gameinfo.intermissionMus, 0, cdtrack_intermission);
 }
 

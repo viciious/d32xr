@@ -216,7 +216,7 @@ static void R_PlaneLoop(localplane_t *lpl)
     t2 = *pl_openptr;
 
     unsigned short flatnum = lpl->pl->flatandlight;
-    if (flatpixels[flatnum].size <= 4) {
+    if (flatpixels[flatnum].size <= 2) {
         mapplane = &R_MapColorPlane;
     }
     else {
