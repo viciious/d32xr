@@ -371,9 +371,6 @@ static boolean P_MobjCanSightCheck(mobj_t *mobj)
    if (!mobj->target)
       return false;
 
-   if (!PS_RejectCheckSight(mobj, mobj->target))
-      return false;
-
    return true;
 }
 
@@ -480,19 +477,22 @@ void P_CheckSights2(void)
 
     for (mobj = mobjhead.next; ; mobj = P_NextSightMobj(mobj))
     {
-        if ((mobj = P_GetSightMobj(mobj, c, &cnt)) == (void*)&mobjhead)
+         if ((mobj = P_GetSightMobj(mobj, c, &cnt)) == (void*)&mobjhead)
             return;
 
+         if (!PS_RejectCheckSight(mobj, mobj->target))
+            continue;
+
 #ifdef MARS
-        if (c == 1 && ctrgt != mobj->target)
-        {
-           Mars_ClearCacheLines(mobj->target, (sizeof(mobj_t)+31)/16);
-           ctrgt = mobj->target;
-        }
+         if (c == 1 && ctrgt != mobj->target)
+         {
+            Mars_ClearCacheLines(mobj->target, (sizeof(mobj_t)+31)/16);
+            ctrgt = mobj->target;
+         }
 #endif
 
-        if (PS_CheckSight2(mobj, mobj->target))
-           mobj->flags |= MF_SEETARGET;
+         if (PS_CheckSight2(mobj, mobj->target))
+            mobj->flags |= MF_SEETARGET;
     }
 }
 
