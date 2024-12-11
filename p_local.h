@@ -262,6 +262,18 @@ void P_LineAttack (lineattack_t *la, mobj_t *t1, angle_t angle, fixed_t distance
 
 void P_RadiusAttack (mobj_t *spot, mobj_t *source, int damage) ATTR_DATA_CACHE_ALIGN;
 
+
+/*
+===============================================================================
+
+							P_SIGHT
+
+===============================================================================
+*/
+
+void P_CheckSights (void);
+
+
 /*
 ===============================================================================
 
