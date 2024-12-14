@@ -316,15 +316,15 @@ void P_RadiusAttack (mobj_t *spot, mobj_t *source, int damage)
 	if(xh < 0)
 		return;
 
-    xl = (unsigned)xl >> MAPBLOCKSHIFT;
-    xh = (unsigned)xh >> MAPBLOCKSHIFT;
-    yl = (unsigned)yl >> MAPBLOCKSHIFT;
-    yh = (unsigned)yh >> MAPBLOCKSHIFT;
+    xl = (unsigned)xl >> THINGBLOCKSHIFT;
+    xh = (unsigned)xh >> THINGBLOCKSHIFT;
+    yl = (unsigned)yl >> THINGBLOCKSHIFT;
+    yh = (unsigned)yh >> THINGBLOCKSHIFT;
 
-   if(xh >= bmapwidth)
-      xh = bmapwidth - 1;
-   if(yh >= bmapheight)
-      yh = bmapheight - 1;
+   if(xh >= bthingwidth)
+      xh = bthingwidth - 1;
+   if(yh >= bthingheight)
+      yh = bthingheight - 1;
 
 	ra.bombspot = spot;
 	ra.bombsource = source;
