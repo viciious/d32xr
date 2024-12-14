@@ -505,6 +505,15 @@ main_loop_handle_req:
         move.w  0xA15124,d0         /* get COMM4 */
         bne.w   handle_sec_req
 
+        tst.w   fm_idx
+        beq.b   00f
+
+        moveq.l #32,d0
+        move.l  d0,-(sp)
+        jsr     vgm_preread
+        addq.l  #4,sp
+
+00:
         /* check hot-plug count */
         tst.b   hotplug_cnt
         bne.w   main_loop

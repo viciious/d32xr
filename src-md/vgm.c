@@ -11,6 +11,7 @@
 
 #define VGM_WORDRAM_OFS     0x3000
 #define VGM_READAHEAD       0x200
+#define VGM_MAX_READAHEAD   VGM_READAHEAD*8
 #define VGM_LZSS_BUF_SIZE   0x8000
 #define VGM_MAX_SIZE        0x18800
 
@@ -29,15 +30,17 @@
 #define MARS_PWM_MONO       (*(volatile unsigned short *)0xA15138)
 
 static lzss_state_t vgm_lzss = { 0 };
+static int vgm_word_ram_offs;
+static int vgm_preread_len = 0;
+extern void *vgm_ptr;
+extern int vgm_size;
+
 static int rf5c68_dataofs;
 static int rf5c68_datalen;
 static short rf5c68_num_loops;
 static uint16_t rf5c68_loops[VGM_MAX_RF5C68_LOOPS];
-static int vgm_word_ram_offs;
 
-extern void *vgm_ptr;
 extern int pcm_baseoffs;
-extern int vgm_size;
 extern uint16_t cd_ok;
 
 __attribute__((aligned(4))) uint8_t vgm_lzss_buf[VGM_LZSS_BUF_SIZE];
@@ -147,6 +150,7 @@ int vgm_setup(void* fm_ptr)
     }
 
     vgm_ptr = vgm_lzss_buf;
+    vgm_preread_len = 0;
 
     return vgm_read();
 }
@@ -154,17 +158,44 @@ int vgm_setup(void* fm_ptr)
 void vgm_reset(void)
 {
     lzss_reset(&vgm_lzss);
+    vgm_preread_len = 0;
     vgm_ptr = vgm_lzss_buf;
-}
-
-int vgm_read(void)
-{
-    return lzss_read(&vgm_lzss, VGM_READAHEAD);
 }
 
 int vgm_read2(int length)
 {
-    return lzss_read(&vgm_lzss, length);
+    int l, r;
+
+    if (length > vgm_preread_len)
+    {
+        l = vgm_preread_len;
+        r = lzss_read(&vgm_lzss, length - l);
+    }
+    else
+    {
+        l = length;
+        r = 0;
+    }
+    vgm_preread_len -= l;
+
+    return l + r;
+}
+
+int vgm_read(void)
+{
+    return vgm_read2(VGM_READAHEAD);
+}
+
+int vgm_preread(int length)
+{
+    int r;
+
+    if (vgm_preread_len + length > VGM_MAX_READAHEAD)
+        length = VGM_MAX_READAHEAD - vgm_preread_len;
+
+    r = lzss_read(&vgm_lzss, length);
+    vgm_preread_len += r;
+    return r;
 }
 
 void *vgm_cache_scd(const char *name, int offset, int length)
