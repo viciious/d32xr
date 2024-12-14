@@ -495,7 +495,6 @@ main_loop_bump_fm:
         move.b  #1,need_bump_fm
         bsr     bump_fm
         jsr     scd_flush_cmd_queue
-1:
 
 main_loop_handle_req:
         moveq   #0,d0
@@ -774,6 +773,7 @@ start_music:
         beq.b   01f
 
         /* we read SPCM from CD */
+        clr.w   fm_idx
         moveq   #0,d1
         tst.w   fm_rep
         beq.b   03f
