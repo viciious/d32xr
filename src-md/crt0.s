@@ -424,36 +424,10 @@ main_loop_start:
         move.l  #0,0xA15120         /* let Master SH2 run */
 
 main_loop:
-        tst.w   dac_len
-        beq.b   main_loop_chk_ctrl  /* done/none, silence */
-
-        move.l  dac_samples,a0
-        move.w  dac_center,d1
-        move.w  dac_len,d2
-        move.w  pcm_env,d3
-0:
-        tst.w   MARS_PWM_MONO       /* check mono reg status */
-        bmi.b   01f                 /* full */
-
-        move.b  (a0)+,d0            /* fetch dac sample */
-        eori.b  #0x80,d0            /* unsigned to signed */
-        ext.w   d0                  /* sign extend to word */
-|       add.w   d0,d0               /* *2 */
-|       add.w   d0,d0               /* *4 */
-        and.w   d3,d0
-        add.w   d1,d0
-        move.w  d0,MARS_PWM_MONO
-
-        subq.w  #1,d2
-        bne.b   0b                  /* not done */
-        move.w  dac_center,MARS_PWM_MONO /* silence */
-01:
-        move.w  d2,dac_len
-        move.l  a0,dac_samples
 
 main_loop_chk_ctrl:
         tst.b   need_ctrl_int
-        beq.b   main_loop_bump_fm
+        beq.b   main_loop_write_dac
         move.b  #0,need_ctrl_int
         /* send controller values to primary sh2 */
         move.w  #0x0001,0xA15102    /* assert CMD INT to primary SH2 */
@@ -479,6 +453,34 @@ main_loop_chk_ctrl:
         cmpi.w  #0x5AA5,0xA15120
         beq.b   30b
 
+main_loop_write_dac:
+        tst.w   dac_len
+        beq.b   main_loop_bump_fm  /* done/none, silence */
+
+        move.l  dac_samples,a0
+        move.w  dac_center,d1
+        move.w  dac_len,d2
+        move.w  pcm_env,d3
+0:
+        tst.w   MARS_PWM_MONO       /* check mono reg status */
+        bmi.b   1f                  /* full */
+
+        move.b  (a0)+,d0            /* fetch dac sample */
+        eori.b  #0x80,d0            /* unsigned to signed */
+        ext.w   d0                  /* sign extend to word */
+|       add.w   d0,d0               /* *2 */
+|       add.w   d0,d0               /* *4 */
+        and.w   d3,d0
+        add.w   d1,d0
+        move.w  d0,MARS_PWM_MONO
+
+        subq.w  #1,d2
+        bne.b   0b                  /* not done */
+        move.w  dac_center,MARS_PWM_MONO /* silence */
+1:
+        move.w  d2,dac_len
+        move.l  a0,dac_samples
+
 main_loop_bump_fm:
         move.b  REQ_ACT.w,d0
         cmpi.b  #0x03,d0
@@ -490,9 +492,10 @@ main_loop_bump_fm:
         tst.b   need_bump_fm
         beq.b   main_loop_handle_req
 0:
-        move.b  #0,need_bump_fm
+        move.b  #1,need_bump_fm
         bsr     bump_fm
         jsr     scd_flush_cmd_queue
+1:
 
 main_loop_handle_req:
         moveq   #0,d0
