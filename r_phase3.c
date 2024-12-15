@@ -271,7 +271,11 @@ static void R_PrepPSprite(pspdef_t *psp)
    if (x1 < 0)
        vis->startfrac = vis->xiscale * -x1;
 
-   if (vd->fixedcolormap)
+   if (vd->shadow)
+   {
+      vis->colormap = -vd->fuzzcolormap;
+   }
+   else if (vd->fixedcolormap)
    {
        vis->colormap = vd->fixedcolormap;
    }

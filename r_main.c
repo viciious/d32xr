@@ -682,11 +682,21 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
     else if (player->powers[pw_infrared] > 0)
     {
 		if (player->powers[pw_infrared] > 4*32
-			|| (player->powers[pw_infrared]&8) )
+			|| (player->powers[pw_infrared] & 4) )
 		{
 			// almost full bright
 			vd->fixedcolormap = 1*256;
 		}
+	}
+
+	if (player->powers[pw_invisibility] > 4*32
+		|| player->powers[pw_invisibility] & 4)
+	{
+		vd->shadow = true;
+	}
+	else
+	{
+		vd->shadow = false;
 	}
 
 	viewportbuffer = (pixel_t*)I_ViewportBuffer();

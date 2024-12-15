@@ -703,7 +703,10 @@ mobj_t *P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type)
 	if (thinfo->seesound)
 		S_StartSound (source, thinfo->seesound);
 	th->target = source;		/* where it came from */
-	an = R_PointToAngle (source->x, source->y, dest->x, dest->y);	
+	an = R_PointToAngle (source->x, source->y, dest->x, dest->y);
+    // fuzzy player
+    if (dest->flags & MF_SHADOW)
+		an += (P_Random()-P_Random()) << 20;
 	th->angle = an;
 	an >>= ANGLETOFINESHIFT;
 	speed = th->speed >> 16;

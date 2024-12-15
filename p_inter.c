@@ -259,6 +259,12 @@ boolean P_GivePower (player_t *player, powertype_t power)
 		player->powers[power] = INFRATICS;
 		return true;
 	}
+	if (power == pw_invisibility)
+	{
+		player->powers[power] = INVISTICS;
+		player->mo->flags |= MF_SHADOW;
+		return true;
+	}
 
 	if (player->powers[power])
 		return false;		/* already got it */
@@ -334,7 +340,10 @@ int P_TouchSpecialThing2 (mobj_t *special, mobj_t *toucher)
 			player->pendingweapon = wp_fist;
 		break;
 	case SPR_PINS:
-		break;
+		if (!P_GivePower (player, pw_invisibility))
+			return -1;
+		player->message = "Partial invisibility!";
+		return sfx_getpow;
 	case SPR_SUIT:
 		if (!P_GivePower (player, pw_ironfeet))
 			return -1;

@@ -624,6 +624,7 @@ __attribute__((aligned(16)))
 	VINT		fuzzcolormap;
 	angle_t		clipangle;
 	VINT 		*viewangletox;
+	VINT 		shadow;
 
 	/* */
 	/* walls */

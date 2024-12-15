@@ -596,6 +596,9 @@ void A_FaceTarget (mobj_t *actor)
 	
 	actor->angle = R_PointToAngle (actor->x, actor->y
 	, actor->target->x, actor->target->y);
+
+	if (actor->target->flags & MF_SHADOW)
+		actor->angle += (P_Random()-P_Random()) << 21;
 }
 
 

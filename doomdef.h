@@ -409,6 +409,7 @@ typedef enum
 	pw_ironfeet,
 	pw_allmap,
 	pw_infrared,
+	pw_invisibility,
 	NUMPOWERS
 } powertype_t;
 

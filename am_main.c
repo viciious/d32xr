@@ -771,6 +771,8 @@ static void AM_Drawer_ (int c)
 			y1 = (pl->mo->y - players[consoleplayer].automapy);
 			angle = pl->mo->angle;
 			color = !i ? CRY_GREEN : CRY_YELLOW;
+			if (pl->powers[pw_invisibility])
+				color = 246; // close to black
 			c = finecosine(angle >> ANGLETOFINESHIFT);
 			s = finesine(angle >> ANGLETOFINESHIFT);		
 			nx1 = FixedMul(c,NOSELENGTH) + x1;

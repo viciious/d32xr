@@ -774,6 +774,10 @@ ticphase = 26;
 		if (player->powers[pw_infrared])
 			player->powers[pw_infrared]--;
 
+		if (player->powers[pw_invisibility])
+			if (! --player->powers[pw_invisibility] )
+				player->mo->flags &= ~MF_SHADOW;
+
 		if (player->damagecount)
 			player->damagecount--;
 
