@@ -1288,7 +1288,6 @@ void A_BrainSpit(mobj_t *mo)
 	corpse = NULL;
 
 	{
-		
 		mobj_t *m;
 		for (m=mobjhead.next ; m != (void *)&mobjhead ; m=m->next)
 		{
@@ -1393,6 +1392,30 @@ void A_SpawnFly(mobj_t *mo)
 
 	// remove self (i.e., cube).
 	P_RemoveMobj(mo);
+}
+
+//
+// A_KeenDie
+// DOOM II special, map 32.
+// Uses special tag 666.
+//
+void A_KeenDie (mobj_t* mo)
+{
+    mobj_t*	mo2;
+    line_t	junk;
+
+    A_Fall (mo);
+
+    // scan the remaining thinkers
+    // to see if all Keens are dead
+	for (mo2=mobjhead.next ; mo2 != (void *)&mobjhead ; mo2=mo2->next)
+	{
+		if (mo2 != mo && mo2->type == mo->type && mo2->health > 0)
+			return;		/* other Keen not dead */
+	}
+
+    junk.tag = 666;
+    EV_DoDoor(&junk, open);
 }
 
 /*============================================================================= */

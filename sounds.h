@@ -110,6 +110,8 @@ typedef enum
   sfx_bospit,
   sfx_boscub,
   sfx_secret,
+  sfx_keenpn,
+  sfx_keendt,
   NUMSFX 
 } sfxenum_t; 
  

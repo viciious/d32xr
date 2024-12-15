@@ -6,7 +6,7 @@ const char * const sprnames[NUMSPRITES] = {
 "MISF","SAWG","PLSG","PLSF","BFGG","BFGF","BLUD","PUFF","BAL1","BAL2",
 "BAL7","PLSS","PLSE","MISL","BFS1","BFE1","BFE2","TFOG","IFOG","PLAY",
 "POSS","SPOS","FATB","FBXP","SKEL","MANF","FATT","CPOS","SARG","HEAD",
-"BOSS",/*"BOS2",*/"SKUL","SPID","BSPI","APLS","APBX","CYBR","BBRN","BOSF",
+"BOSS",/*"BOS2",*/"SKUL","SPID","BSPI","APLS","APBX","CYBR","KEEN","BBRN","BOSF",
 "ARM1","ARM2","BAR1","BEXP","FCAN","BON1","BON2","BKEY","RKEY","YKEY",
 "BSKU","RSKU","YSKU","STIM","MEDI","SOUL","PINV","PSTR","PINS","MEGA",
 "SUIT","PMAP","PVIS","CLIP","AMMO","ROCK","BROK","CELL","CELP","SHEL",
@@ -83,6 +83,7 @@ void A_BrainAwake();
 void A_BrainSpit();
 void A_SpawnSound();
 void A_SpawnFly();
+void A_KeenDie();
 
 #define STATE(sprite,frame,tics,action,nextstate) {sprite,frame,tics,nextstate,action}
 
@@ -628,6 +629,21 @@ STATE(SPR_CYBR,13,5,NULL,S_CYBER_DIE8),	// S_CYBER_DIE7
 STATE(SPR_CYBR,14,5,NULL,S_CYBER_DIE9),	// S_CYBER_DIE8
 STATE(SPR_CYBR,15,15,NULL,S_CYBER_DIE10),	// S_CYBER_DIE9
 STATE(SPR_CYBR,15,-1,A_BossDeath,S_NULL),	// S_CYBER_DIE10
+STATE(SPR_KEEN,0,-1,NULL,S_KEENSTND),	// S_KEENSTND
+STATE(SPR_KEEN,0,3,NULL,S_COMMKEEN2),	// S_COMMKEEN
+STATE(SPR_KEEN,1,3,NULL,S_COMMKEEN3),	// S_COMMKEEN2
+STATE(SPR_KEEN,2,3,A_Scream,S_COMMKEEN4),	// S_COMMKEEN3
+STATE(SPR_KEEN,3,3,NULL,S_COMMKEEN5),	// S_COMMKEEN4
+STATE(SPR_KEEN,4,3,NULL,S_COMMKEEN6),	// S_COMMKEEN5
+STATE(SPR_KEEN,5,3,NULL,S_COMMKEEN7),	// S_COMMKEEN6
+STATE(SPR_KEEN,6,3,NULL,S_COMMKEEN8),	// S_COMMKEEN7
+STATE(SPR_KEEN,7,3,NULL,S_COMMKEEN9),	// S_COMMKEEN8
+STATE(SPR_KEEN,8,3,NULL,S_COMMKEEN10),	// S_COMMKEEN9
+STATE(SPR_KEEN,9,3,NULL,S_COMMKEEN11),	// S_COMMKEEN10
+STATE(SPR_KEEN,10,3,A_KeenDie,S_COMMKEEN12),// S_COMMKEEN11
+STATE(SPR_KEEN,11,-1,NULL,S_NULL),		// S_COMMKEEN12
+STATE(SPR_KEEN,12,2,NULL,S_KEENPAIN2),	// S_KEENPAIN
+STATE(SPR_KEEN,12,4,A_Pain,S_KEENSTND),	// S_KEENPAIN2
 STATE(SPR_BBRN,0,-1,NULL,S_NULL),		// S_BRAIN
 STATE(SPR_BBRN,1,18,A_BrainPain,S_BRAIN),	// S_BRAIN_PAIN
 STATE(SPR_BBRN,0,50,A_BrainScream,S_BRAIN_DIE2),	// S_BRAIN_DIE1
@@ -1286,6 +1302,31 @@ sfx_cybdth,		// deathsound
 0,		// damage
 sfx_dmact,		// activesound
 MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL,		// flags
+},
+
+{		// MT_KEEN
+72,		// doomednum
+S_KEENSTND,		// spawnstate
+100,		// spawnhealth
+S_NULL,		// seestate
+sfx_None,		// seesound
+8,		// reactiontime
+sfx_None,		// attacksound
+S_KEENPAIN,		// painstate
+256,		// painchance
+sfx_keenpn,		// painsound
+S_NULL,		// meleestate
+S_NULL,		// missilestate
+S_COMMKEEN,		// deathstate
+S_NULL,		// xdeathstate
+sfx_keendt,		// deathsound
+0,		// speed
+16*FRACUNIT,		// radius
+72*FRACUNIT,		// height
+38528,		// mass
+0,		// damage
+sfx_None,		// activesound
+MF_SOLID|MF_SPAWNCEILING|MF_NOGRAVITY|MF_SHOOTABLE|MF_COUNTKILL,		// flags
 },
 
 {		// MT_BOSSBRAIN
