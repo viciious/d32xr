@@ -35,9 +35,6 @@ int vgm_setup(void* fm_ptr)
 
     lzss_setup(&vgm_lzss, fm_ptr, vgm_lzss_buf, VGM_LZSS_BUF_SIZE);
 
-    s = lzss_compressed_size(&vgm_lzss);
-    pcm_baseoffs = s+1 < vgm_size ? s + 1 : 0;
-
     vgm_ptr = vgm_lzss_buf;
 
     return vgm_read();
