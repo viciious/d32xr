@@ -23,8 +23,6 @@ int vgm_read2(int cnt) __attribute__((section(".data"), aligned(16)));
 
 int vgm_setup(void* fm_ptr)
 {
-    int s;
-
     if (cd_ok && vgm_size < 0x20000) {
         // precache the whole VGM file in word ram to reduce bus
         // contention when reading from ROM during the gameplay
