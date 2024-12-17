@@ -23,7 +23,7 @@ CCFLAGS += -DWALLDRAW2X
 CCFLAGS += -DSIMPLELIGHT
 CCFLAGS += -DNARROW_SCENERY
 CCFLAGS += -DFLOOR_OVER_FLOOR
-#CCFLAGS += -DSHOW_DISCLAIMER
+CCFLAGS += -DSHOW_DISCLAIMER
 LDFLAGS = -T mars-ssf.ld -Wl,-Map=output.map -nostdlib -Wl,--gc-sections --specs=nosys.specs
 ASFLAGS = --big
 

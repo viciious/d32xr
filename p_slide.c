@@ -196,6 +196,11 @@ static boolean SL_CheckLine(line_t *ld, pslidework_t *sw)
       S_StartSound(sw->slidething, sfx_s3k_59);
       P_SpawnBustables(back, sw->slidething);
    }
+   else if (ld->special == 200 && sw->slidething->player)
+   {
+      ld->special = 0;
+      CONS_Printf("Go away! Dave's not here. *B^D");
+   }
 
    if(front->floorheight > back->floorheight)
       openbottom = front->floorheight;
