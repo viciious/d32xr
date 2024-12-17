@@ -113,7 +113,10 @@ OBJS = \
 	r_cache.o \
 	m_fire.o \
 	lzss.o \
-	gs_main.o
+	gs_main.o \
+	roq_read.o \
+	marsroq.o \
+	mars_newrb.o
 
 release: $(TARGET).32x
 
@@ -126,7 +129,7 @@ m68k.bin:
 
 $(TARGET).32x: $(TARGET).elf
 	$(OBJC) -O binary $< temp2.bin
-	$(DD) if=temp2.bin of=temp.bin bs=200K conv=sync
+	$(DD) if=temp2.bin of=temp.bin bs=208K conv=sync
 	rm -f temp3.bin
 	cat temp.bin $(WAD) >>temp3.bin
 	$(DD) if=temp3.bin of=$@ bs=512K conv=sync

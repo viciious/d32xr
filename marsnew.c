@@ -392,6 +392,9 @@ void Mars_Secondary(void)
 		case MARS_SECCMD_MELT_DO_WIPE:
 			Mars_Sec_wipe_doMelt();
 			break;
+		case MARS_SECCMD_S_INIT_ROQ_DMA:
+			Mars_Sec_RoQ_InitSound(MARS_SYS_COMM6 != 0);
+			break;
 		default:
 			break;
 		}
@@ -403,6 +406,36 @@ void Mars_Secondary(void)
 int Mars_FRTCounter2Msec(int c)
 {
 	return (c * mars_frtc2msec_frac) >> FRACBITS;
+}
+
+
+void C_Init (void)
+{
+	int i;
+	volatile unsigned short* palette;
+
+	Mars_ClearCache();
+	Mars_CommSlaveClearCache();
+
+	ticrate = Mars_RefreshHZ() / TICRATE;
+
+/* clear screen */
+	if (Mars_IsPAL()) {
+		/* use letter-boxed 240p mode */
+		Mars_InitVideo(-240);
+	} else {
+		Mars_InitVideo(224);
+	}
+
+	/* set a two color palette */
+	Mars_FlipFrameBuffers(false);
+	palette = &MARS_CRAM;
+	for (i = 0; i < 256; i++)
+		palette[i] = 0;
+	palette[COLOR_WHITE] = 0x7fff;
+	Mars_WaitFrameBuffersFlip();
+
+	ticrate = Mars_RefreshHZ() / TICRATE;
 }
 
 /* 
@@ -1293,4 +1326,9 @@ void I_WriteU32SRAM(int offset, uint32_t val)
 	c[2] = (val >>  8) & 0xff;
 	c[3] = (val >>  0) & 0xff;
 	Mars_WriteSRAM(c, offset, 4);
+}
+
+int I_PlayCinematic(const char *fn, void *mem, size_t size, int allowpause)
+{
+	return Mars_PlayRoQ(cd_pwad_name, mem, size, allowpause, Mars_InitRoQSoundDMA);
 }

@@ -61,6 +61,8 @@ void GS_Start(void)
 {
     int fl, fo;
 
+    cd_pwad_name[0] = 0;
+
     if (gs_menu == NULL)
         gs_menu = Z_Malloc(sizeof(*gs_menu), PU_STATIC);
     D_memset(gs_menu, 0, sizeof(*gs_menu));
@@ -111,6 +113,7 @@ void GS_Stop(void)
         D_snprintf(cd_pwad_name, sizeof(cd_pwad_name), "%s/%s", gs_menu->path, gs_menu->items[gs_menu->cursorpos].name);
     else
         D_snprintf(cd_pwad_name, sizeof(cd_pwad_name), "%s", gs_menu->items[gs_menu->cursorpos].name);
+
     if (gs_menu->menuback)
         Z_Free(gs_menu->menuback);
     Z_Free(gs_menu);
@@ -375,6 +378,12 @@ int GS_Ticker (void)
 #endif
                     return ga_nothing;
                 }
+
+                if (len > 4 && !D_strcasecmp(mi->name + len - 4, ".roq"))
+                {
+                    // start RoQ playback
+                    return ga_cinematic;
+                }
             }
 
             return ga_nothing;
@@ -570,7 +579,7 @@ void GS_Drawer (void)
         I_Print8(SMALL_STARTXLOW, 24, "Hold RIGHT + press B to open CD tray");
     I_Print8(SMALL_STARTXLOW, 25, "Press C to toggle file browser");
 
-    if (gs_menu->mode)
+    if (gs_menu->mode && 0)
     {
         char serial[12]; 
 

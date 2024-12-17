@@ -22,7 +22,7 @@ unsigned	*demo_p, *demobuffer;
 
 boolean canwipe = false;
 
-char 		cd_pwad_name[64];
+char 		cd_pwad_name[64] = { '\0' };
 
 int 		ticstart;
 
@@ -354,7 +354,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 	gametic = 0;
 	prevgametic = 0;
 
-	gameaction = 0;
+	gameaction = ga_nothing;
 	gamevbls = 0;
 	vblsinframe = 0;
 	lasttics = 0;
@@ -907,8 +907,28 @@ gametype_t	starttype = gt_single;
 int			startsave = -1;
 boolean 	startsplitscreen = 0;
 
-void D_DoomMain (void) 
+void D_DoomMain (void)
 {
+	byte	*mem;
+	int		size;
+	int     cin_allowpause = 0;
+
+#ifdef CINEMATIC_INTRO
+	if (CINEMATIC_INTRO[0] != '\0') {
+		D_snprintf(cd_pwad_name, sizeof(cd_pwad_name), "%s", CINEMATIC_INTRO);
+	}
+#endif
+
+start:
+	mem = I_ZoneBase (&size);
+
+	if (cd_pwad_name[0] != '\0') {
+		gameaction = ga_cinematic;
+		I_PlayCinematic(cd_pwad_name, mem, size, cin_allowpause);
+		cd_pwad_name[0] = '\0';
+		gameaction = ga_nothing;
+	}
+
 D_printf ("C_Init\n");
 	C_Init ();		/* set up object list / etc	  */
 D_printf ("Z_Init\n");
@@ -930,13 +950,24 @@ D_printf("O_Init\n");
 
 gameselect:
 	G_DeInit();
+
 	S_DeInitMusic();
 
 #ifdef MARS
 	canwipe = false;
-	MiniLoop(GS_Start, GS_Stop, GS_Ticker, GS_Drawer, I_Update);
+	gameaction = MiniLoop(GS_Start, GS_Stop, GS_Ticker, GS_Drawer, I_Update);
+
+	if (gameaction == ga_cinematic)
+	{
+		cin_allowpause = 1;
+		Z_FreeMemory(mainzone);
+		goto start;
+	}
+
+	gameaction = ga_nothing;
     W_InitCDPWAD(PWAD_CD, cd_pwad_name);
 #endif
+
 
 D_printf ("S_InitMusic\n");
 	S_InitMusic();

@@ -12,6 +12,8 @@
 
 /*define	MARS */
 
+#define CINEMATIC_INTRO "VIDEO/IDLOGO.ROQ"
+
 #define LZSS_BUF_SIZE	0x1000
 
 /* if rangecheck is undefined, most parameter validation debugging code */
@@ -161,7 +163,8 @@ typedef enum
 	ga_warped,
 	ga_exitdemo,
 	ga_startnew,
-	ga_quit
+	ga_quit,
+	ga_cinematic
 } gameaction_t;
 
 
@@ -1279,6 +1282,8 @@ uint8_t I_ReadSRAM(int offset);
 void I_WriteSRAM(int offset, int val);
 uint32_t I_ReadU32SRAM(int offset);
 void I_WriteU32SRAM(int offset, uint32_t val);
+
+int I_PlayCinematic(const char *fn, void *mem, size_t size, int allowpause);
 
 /*================= */
 /*TLS */

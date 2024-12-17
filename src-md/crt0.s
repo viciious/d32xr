@@ -550,6 +550,7 @@ no_cmd:
         dc.w    read_cd_directory - prireqtbl
         dc.w    resume_spcm_track - prireqtbl
         dc.w    open_cd_tray - prireqtbl
+        dc.w    play_cd_roq_file - prireqtbl
 
 | process request from Secondary SH2
 handle_sec_req:
@@ -2261,7 +2262,7 @@ open_cd_file_by_handle:
 
 read_cd_file:
         mute_pcm
-        jsr vgm_stop_samples
+        jsr     vgm_stop_samples
 
         move.w  0xA15100,d0
         eor.w   #0x8000,d0
@@ -2298,6 +2299,8 @@ seek_cd_file:
         bra     main_loop
 
 load_sfx_cd_fileofs:
+        jsr     scd_init_pcm        /* FIXME: find a better place for it */
+
         lea     MARS_FRAMEBUFFER,a1 /* frame buffer */
         move.l  a1,-(sp)            /* file name + offsets */
 
@@ -2354,6 +2357,20 @@ open_cd_tray:
         move.w  #0x2700,sr          /* disable ints */
         jsr     scd_open_tray
         move.w  #0x2000,sr          /* enable ints */
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+play_cd_roq_file:
+        jsr     scd_gfile_length
+        move.l  d0,-(sp)            /* path and destination buffer */
+        jsr     scd_tell_gfile
+        move.l  d0,-(sp)            /* path and destination buffer */
+        lea.l   0xA15120,a0
+        move.l  a0,-(sp)            /* communication register address */
+
+        jsr     scd_play_roq
+        lea     12(sp),sp           /* clear the stack */
+
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
