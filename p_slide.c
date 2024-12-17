@@ -144,7 +144,7 @@ void P_SpawnBustables(sector_t *sec, mobj_t *playermo)
    GetSectorAABB(sec, blockbox);
    const fixed_t spawnInterval = 64<<FRACBITS;
 
-   for (fixed_t z = sec->ceilingheight - spawnInterval/2; z >= sec->floorheight + spawnInterval/2; z -= spawnInterval/2)
+   for (fixed_t z = sec->ceilingheight - spawnInterval/2; z >= sec->floorheight + spawnInterval/2; z -= spawnInterval)
    {
       for (fixed_t x = blockbox[BOXLEFT]; x <= blockbox[BOXRIGHT]; x += spawnInterval)
       {

@@ -556,7 +556,7 @@ int M_Ticker (void)
 							playermap = 1;
 
 #ifdef SHOW_DISCLAIMER
-						if (gamemapnumbers[playermap-1] == 30 || (gamemapnumbers[playermap-1] >= SSTAGE_START && gamemapnumbers[playermap-1] <= SSTAGE_END))
+						while (gamemapnumbers[playermap-1] == 30 || (gamemapnumbers[playermap-1] >= SSTAGE_START && gamemapnumbers[playermap-1] <= SSTAGE_END))
 						{
 							if (++playermap == gamemapcount + 1)
 								playermap = 1;
@@ -568,7 +568,7 @@ int M_Ticker (void)
 						if(--playermap == 0)
 							playermap = gamemapcount;
 #ifdef SHOW_DISCLAIMER
-						if (gamemapnumbers[playermap-1] == 30 || (gamemapnumbers[playermap-1] >= SSTAGE_START && gamemapnumbers[playermap-1] <= SSTAGE_END))
+						while (gamemapnumbers[playermap-1] == 30 || (gamemapnumbers[playermap-1] >= SSTAGE_START && gamemapnumbers[playermap-1] <= SSTAGE_END))
 						{
 							if(--playermap == 0)
 								playermap = gamemapcount;
