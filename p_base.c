@@ -468,6 +468,7 @@ void P_XYMovement(mobj_t *mo)
 //
 // Float a flying monster up or down.
 //
+__attribute((noinline))
 static void P_FloatChange(mobj_t *mo)
 {
    mobj_t *target;

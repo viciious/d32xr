@@ -138,6 +138,7 @@ blockmove:
 }
 
 void GetSectorAABB(sector_t *sector, fixed_t bbox[4]);
+__attribute((noinline))
 void P_SpawnBustables(sector_t *sec, mobj_t *playermo)
 {
    fixed_t blockbox[4];
