@@ -91,7 +91,6 @@ static boolean PM_CameraCheckPosition(pmovework_t *mw)
       *lvalidcount = 1;
 
    mw->blockline = NULL;
-   mw->numspechit = 0;
 
    if(mw->tmflags & MF_NOCLIP) // thing has no clipping?
       return true;

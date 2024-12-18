@@ -390,6 +390,7 @@ typedef enum
 	SH_WHIRLWIND,
 } shieldpower_t;
 
+#define MAX_TOUCHING_SECTORS 8
 typedef struct player_s
 {
 	mobj_t		*mo;
@@ -405,7 +406,7 @@ typedef struct player_s
 	fixed_t		viewheight;				/* base height above floor for viewz */
 	fixed_t		deltaviewheight;		/* squat speed */
 	fixed_t		bob;					/* bounded/scaled total momentum */
-	
+
 	int			score;
 	VINT		health;					/* only used between levels, mo->health */
 										/* is used during levels	 */
@@ -415,6 +416,9 @@ typedef struct player_s
 	
 	VINT		killcount, itemcount, secretcount;		/* for intermission */
 	VINT		whiteFlash;/* for screen flashing */
+
+	VINT        touching_sectorlist[MAX_TOUCHING_SECTORS]; // These can potentially be duplicates
+	VINT        num_touching_sectors;
 
 	VINT        exiting;
 	VINT        deadTimer;

@@ -205,6 +205,7 @@ void P_PlayerXYMovement(mobj_t *mo)
 {
 	player_t *player = &players[mo->player - 1];
 
+	player->num_touching_sectors = 0;
 	P_PlayerMove(mo);
 
 	fixed_t speed = P_AproxDistance(mo->momx, mo->momy);
@@ -607,6 +608,15 @@ static void P_DoTeeter(player_t *player)
 	boolean teeter = false;
 	const fixed_t tiptop = 24 * FRACUNIT; // Gotta be farther than the step height
 
+	for (int i = 0; i < player->num_touching_sectors; i++)
+	{
+		sector_t *sec = &sectors[player->touching_sectorlist[i]];
+		fixed_t floorz = FloorZAtPos(sec, player->mo->z, player->mo->theight << FRACBITS);
+
+		if (floorz < player->mo->floorz - tiptop)
+			teeter = true;
+	}
+/*
 	subsector_t *a = R_PointInSubsector(player->mo->x + 5 * FRACUNIT, player->mo->y + 5 * FRACUNIT);
 	subsector_t *b = R_PointInSubsector(player->mo->x - 5 * FRACUNIT, player->mo->y + 5 * FRACUNIT);
 	subsector_t *c = R_PointInSubsector(player->mo->x + 5 * FRACUNIT, player->mo->y - 5 * FRACUNIT);
@@ -618,7 +628,7 @@ static void P_DoTeeter(player_t *player)
 
 	if (aFloorZ < player->mo->floorz - tiptop || bFloorZ < player->mo->floorz - tiptop || cFloorZ < player->mo->floorz - tiptop || dFloorZ < player->mo->floorz - tiptop)
 		teeter = true;
-
+*/
 	if (teeter)
 	{
 		if (player->mo->state >= S_PLAY_STND && player->mo->state <= S_PLAY_TAP2)

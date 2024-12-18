@@ -286,10 +286,13 @@ static boolean PIT_CheckLine(line_t *ld, pmovework_t *mw)
    if(lowfloor < mw->tmdropoffz)
       mw->tmdropoffz = lowfloor;
 
-   if (ld->special)
+   if (tmthing->player)
    {
-       if (mw->numspechit < MAXSPECIALCROSS)
-        mw->spechit[mw->numspechit++] = ld;
+      player_t *player = &players[tmthing->player-1];
+      if (player->num_touching_sectors < MAX_TOUCHING_SECTORS)
+         player->touching_sectorlist[player->num_touching_sectors++] = front - sectors;
+      if (player->num_touching_sectors < MAX_TOUCHING_SECTORS)
+         player->touching_sectorlist[player->num_touching_sectors++] = back - sectors;
    }
    return true;
 }
@@ -313,8 +316,6 @@ void P_PlayerCheckForStillPickups(mobj_t *mobj)
 	int xl, xh, yl, yh, bx, by;
 	pmovework_t mw;
 	mw.newsubsec = &subsectors[mobj->isubsector];
-	mw.numspechit = 0;
-	mw.spechit = NULL;
 	mw.tmfloorz = mw.tmdropoffz = mw.newsubsec->sector->floorheight;
 	mw.tmceilingz = mw.newsubsec->sector->ceilingheight;
 	mw.blockline = NULL;
@@ -392,7 +393,6 @@ static boolean PM_CheckPosition(pmovework_t *mw)
       *lvalidcount = 1;
 
    mw->blockline = NULL;
-   mw->numspechit = 0;
 
    if(mw->tmflags & MF_NOCLIP) // thing has no clipping?
       return true;

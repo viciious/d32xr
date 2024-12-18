@@ -323,8 +323,6 @@ typedef struct
 	mobj_t *slidething;
 
 	// output
-	int numspechit;
-	line_t *spechit[MAXSPECIALCROSS];
 	fixed_t	slidex, slidey;
 } pslidemove_t;
 
@@ -343,9 +341,6 @@ typedef struct
 	fixed_t tmbbox[4];
 	int     tmflags;
 	fixed_t tmdropoffz; // lowest point contacted
-
-	int    	numspechit;
-	line_t **spechit;
 
 	subsector_t *newsubsec; // destination subsector
 } pmovework_t;
