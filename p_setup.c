@@ -248,7 +248,7 @@ static void P_SpawnItemRow(mapthing_t *mt, VINT type, VINT count, VINT horizonta
 
 	fixed_t spawnX = dummything.x << FRACBITS;
 	fixed_t spawnY = dummything.y << FRACBITS;
-	fixed_t spawnZ = P_GetMapThingSpawnHeight(mobjtype, mt, spawnX, spawnY, mt->options >> 4);
+	fixed_t spawnZ = P_GetMapThingSpawnHeight(mobjtype, mt, spawnX, spawnY, (mt->options >> 4) << FRACBITS);
 
 	angle_t spawnAngle = dummything.angle * ANGLE_1;
 
