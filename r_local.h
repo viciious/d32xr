@@ -136,12 +136,14 @@ typedef struct
 
 #define MIPLEVELS 1
 
+#ifdef USE_DECALS
 typedef struct
 {
 	VINT	mincol, maxcol;
 	VINT	minrow, maxrow;
 	VINT 	texturenum;
 } texdecal_t;
+#endif
 
 typedef struct
 {
@@ -149,7 +151,9 @@ typedef struct
 	VINT		width;
 	VINT		height;
 	VINT		lumpnum;
+#ifdef USE_DECALS
 	uint16_t	decals;
+#endif
 #if MIPLEVELS > 1
 	VINT		mipcount;
 #endif
@@ -396,8 +400,10 @@ extern	VINT		numtextures;
 extern	texture_t	*textures;
 extern 	boolean 	texmips;
 
+#ifdef USE_DECALS
 extern 	VINT 		numdecals;
 extern 	texdecal_t  *decals;
+#endif
 
 extern	uint8_t			*flattranslation;		/* for global animation */
 extern	uint8_t			*texturetranslation;	/* for global animation */
@@ -427,7 +433,9 @@ int	R_CheckTextureNumForName(const char* name);
 void	R_InitMathTables(void);
 void	R_InitSpriteDefs(const char** namelist);
 void R_InitColormap();
+#ifdef USE_DECALS
 boolean R_CompositeColumn(int colnum, int numdecals, texdecal_t *decals, inpixel_t *src, inpixel_t *dst, int height, int miplevel) ATTR_DATA_CACHE_ALIGN;
+#endif
 
 /*
 ==============================================================================

@@ -21,11 +21,13 @@ typedef struct
    VINT      height;
    drawcol_t drawcol;
 
+#ifdef USE_DECALS
    // decals stuff
    VINT       numdecals;
    VINT       lastcol;
    texdecal_t *decals;
    uint8_t   *columncache;
+#endif
 } drawmip_t;
 
 typedef struct drawtex_s
@@ -127,6 +129,7 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum, fixed_t scale2, in
         mip = &tex->mip[miplevel];
         src = mip->data + mipcolnum * mip->height;
 
+#ifdef USE_DECALS
         if (mip->numdecals > 0)
         {
             // decals/composite textures
@@ -147,6 +150,7 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum, fixed_t scale2, in
                 }
             }
         }
+#endif
 
         mip->drawcol(x, top, bottom-1, light, frac, iscale, src, mip->height);
     }
@@ -364,7 +368,9 @@ static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex,
 {
     int j;
     int width = tex->width, height = tex->height;
+#ifdef USE_DECALS
     uint8_t *columncache = drawtex->columncache;
+#endif
     int mipwidth, mipheight;
 
     drawtex->widthmask = width-1;
@@ -392,6 +398,7 @@ static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex,
         if (mipheight < 1)
             mipheight = 1;
 
+#ifdef USE_DECALS
         // decals stuff
         mip->lastcol = -1;
         mip->columncache = columncache;
@@ -403,6 +410,7 @@ static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex,
             continue;
         }
         mip->decals = &decals[tex->decals >> 2];
+#endif
     }
 }
 

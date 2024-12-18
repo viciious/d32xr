@@ -199,15 +199,19 @@ static void R_UpdateCache(void)
         uint8_t *dst;
 
         for (j = 0; j < tex->width; j++) {
+#ifdef USE_DECALS
           boolean decaled;
+#endif
 
           I_GetThreadLocalVar(DOOMTLS_COLUMNCACHE, dst);
 
+#ifdef USE_DECALS
           decaled = R_CompositeColumn(j, tex->decals & 0x3, &decals[tex->decals >> 2],
             src, dst, h, i);
           if (decaled) {
             D_memcpy(src, dst, h);
           }
+#endif
 
           src += h;
         }

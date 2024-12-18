@@ -5,6 +5,7 @@
 #include "st_main.h"
 #include "st_inter.h"
 #include "v_font.h"
+#include "marshw.h"
 
 #define BASEVIDWIDTH 320
 #define ALL7EMERALDS(x) (false)
