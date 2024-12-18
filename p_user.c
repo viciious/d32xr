@@ -145,7 +145,6 @@ void P_GivePlayerRings(player_t *player, int num_rings)
 }
 
 /*============================================================================= */
-
 void P_PlayerMove(mobj_t *mo)
 {
 	fixed_t momx, momy;
@@ -205,10 +204,12 @@ stairstep:
 void P_PlayerXYMovement(mobj_t *mo)
 {
 	player_t *player = &players[mo->player - 1];
+
+	P_PlayerMove(mo);
+
 	fixed_t speed = P_AproxDistance(mo->momx, mo->momy);
 	const angle_t speedDir = R_PointToAngle2(0, 0, mo->momx, mo->momy);
 	const fixed_t top = (player->pflags & PF_SPINNING) ? 80 * FRACUNIT : 30 *FRACUNIT;
-	P_PlayerMove(mo);
 
 	if (speed > top) // Speed cap
 	{
