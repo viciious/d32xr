@@ -11,7 +11,7 @@
 #define ALL7EMERALDS(x) (false)
 
 boolean stagefailed = false;
-VINT emeraldpics[1][8];
+static jagobj_t *emeraldpics[7];
 
 //
 // Y_SetPerfectBonus
@@ -155,14 +155,13 @@ void IN_Start (void)
 	tallydonetic = -1;
 	endtic = -1;
 
-	emeraldpics[0][0] = W_GetNumForName("CHAOS1");
-	emeraldpics[0][1] = W_GetNumForName("CHAOS2");
-	emeraldpics[0][2] = W_GetNumForName("CHAOS3");
-	emeraldpics[0][3] = W_GetNumForName("CHAOS4");
-	emeraldpics[0][4] = W_GetNumForName("CHAOS5");
-	emeraldpics[0][5] = W_GetNumForName("CHAOS6");
-	emeraldpics[0][6] = W_GetNumForName("CHAOS7");
-	emeraldpics[0][7] = emeraldpics[0][0]; // For completeness
+	emeraldpics[0] = W_CacheLumpName("CHAOS1", PU_STATIC);
+	emeraldpics[1] = W_CacheLumpName("CHAOS2", PU_STATIC);
+	emeraldpics[2] = W_CacheLumpName("CHAOS3", PU_STATIC);
+	emeraldpics[3] = W_CacheLumpName("CHAOS4", PU_STATIC);
+	emeraldpics[4] = W_CacheLumpName("CHAOS5", PU_STATIC);
+	emeraldpics[5] = W_CacheLumpName("CHAOS6", PU_STATIC);
+	emeraldpics[6] = W_CacheLumpName("CHAOS7", PU_STATIC);
 
 	data.spec.pscore = W_GetNumForName("YB_SCORE");
 
@@ -184,6 +183,13 @@ void IN_Start (void)
 void IN_Stop (void)
 {	
 	intertype = int_none;
+
+	int i;
+	for (i = 0; i < 8; i++)
+	{
+		if (emeraldpics[i])
+			Z_Free(emeraldpics[i]);
+	}
 }
 
 // Returning a '1' means to finish
@@ -482,7 +488,7 @@ void IN_Drawer (void)
 				if (!stagefailed)
 				{
 					fixed_t adjust = 2*finesine(((ANGLE_1 * (intertic + 1) >> 4) & FINEMASK));
-					DrawJagobjLump(emeraldpics[0][em], 152, 74 - adjust, NULL, NULL);
+					DrawJagobj(emeraldpics[em], 152, 74 - adjust);
 				}
 			}
 			else if (em < 7)
@@ -492,7 +498,7 @@ void IN_Drawer (void)
 					for (int i = 0; i < 7; ++i)
 					{
 						if ((i != em) && (emeralds & (1 << i)))
-							DrawJagobjLump(emeraldpics[0][i], emeraldx, 74, NULL, NULL);
+							DrawJagobj(emeraldpics[i], emeraldx, 74);
 						emeraldx += 28;
 					}
 				}
@@ -505,7 +511,7 @@ void IN_Drawer (void)
 						emeraldx += intertic - 6;
 
 					if (drawthistic)
-						DrawJagobjLump(emeraldpics[0][em], emeraldx, data.spec.emeraldy, NULL, NULL);
+						DrawJagobjLump(emeraldpics[em], emeraldx, data.spec.emeraldy);
 				}
 			}
 		}
