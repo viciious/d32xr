@@ -857,9 +857,6 @@ boolean P_LookForTarget(player_t *player)
 
 	for (node = mobjhead.next; node != (void*)&mobjhead; node = node->next)
     {
-		if (node->flags & MF_RINGMOBJ)
-			continue;
-
 		if (node->type == MT_PLAYER)
 			continue;
 

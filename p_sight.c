@@ -479,9 +479,6 @@ void P_CheckSights2(void)
 
     for (mobj = mobjhead.next; ; mobj = P_NextSightMobj(mobj))
     {
-        if ((mobj->flags & MF_RINGMOBJ))
-            continue;
-
         if ((mobj = P_GetSightMobj(mobj, c, &cnt)) == (void*)&mobjhead)
             return;
 

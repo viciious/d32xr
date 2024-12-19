@@ -915,9 +915,6 @@ boolean P_MobjSpecificActions(mobj_t *mobj)
                   {
                      for (mobj_t *node = mobjhead.next; node != (void*)&mobjhead; node = node->next)
                      {
-                        if (node->flags & MF_RINGMOBJ)
-                           continue;
-                           
                         if (node->target == mobj)
                            node->target = NULL;
                      }
