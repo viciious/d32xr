@@ -1056,41 +1056,35 @@ void P_RunMobjBase2(void)
     // First, handle the ringmobj animations
     for (int i = 0; i < NUMMOBJTYPES; i++)
     {
-      const mobjinfo_t *info = &mobjinfo[i];
+      if (ringmobjtics[i] == -1)
+         continue; // Early out
 
-      if (info->flags & MF_RINGMOBJ)
+      // cycle through states
+      ringmobjtics[i]--;
+
+      // you can cycle through multiple states in a tic
+      if (!ringmobjtics[i])
       {
-         // cycle through states
-         if (ringmobjtics[i] != -1)
+         do
          {
-            ringmobjtics[i]--;
+            const statenum_t nextstate = states[ringmobjstates[i]].nextstate;
+            const state_t *st = &states[nextstate];
 
-            // you can cycle through multiple states in a tic
-            if (!ringmobjtics[i])
-            {
-               do
-               {
-                  const statenum_t nextstate = states[ringmobjstates[i]].nextstate;
+            ringmobjstates[i] = nextstate;
+            ringmobjtics[i] = st->tics;
 
-                  const state_t *st = &states[nextstate];
-
-                  ringmobjstates[i] = nextstate;
-                  ringmobjtics[i] = st->tics;
-
-                  // Sprite and frame can be derived
-               } while (!ringmobjtics[i]);
-            }
-         }
+            // Sprite and frame can be derived
+         } while (!ringmobjtics[i]);
       }
     }
 
     for (mo = mobjhead.next; mo != (void*)&mobjhead; mo = next)
     {
         next = mo->next;	// in case mo is removed this time
-
+/*
          if (mo->flags & MF_RINGMOBJ) // rings or scenery (they don't think, they don't uniquely animate)
             continue;
-
+*/
         if (!mo->player)
         {
 #ifdef MARS

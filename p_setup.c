@@ -281,6 +281,9 @@ void P_LoadThings (int lump)
 	spawnthing_t	*st;
 	short			numthingsreal, numstaticthings, numringthings;
 
+	for (int i = 0; i < NUMMOBJTYPES; i++)
+		ringmobjtics[i] = -1;
+
 	data = I_TempBuffer ();
 	W_ReadLump (lump,data);
 	numthings = W_LumpLength (lump) / sizeof(mapthing_t);
