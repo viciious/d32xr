@@ -417,7 +417,7 @@ void IN_Drawer (void)
 		if (drawsection == 1)
 		{
 			const char *ringtext = "get 50 rings, then";
-			const char *tut1text = "press B";
+			const char *tut1text = "press A or C";
 			const char *tut2text = "to transform";
 			ttheight = 8;
 			V_DrawStringLeft(&titleFont, data.spec.passedx1 + xoffset1, ttheight, data.spec.passed1);
