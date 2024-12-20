@@ -83,12 +83,12 @@ static VINT numslump;
 #define NUMTBLINKFRAMES 3
 #define NUMKBLINKFRAMES 3
 #define NUMTAILWAGFRAMES 6
-static VINT m_hand[NUMHANDFRAMES];
-static VINT m_kfist[NUMKFISTFRAMES];
-static VINT m_sblink[NUMSBLINKFRAMES];
-static VINT m_tblink[NUMTBLINKFRAMES];
-static VINT m_kblink[NUMKBLINKFRAMES];
-static VINT m_tailwag[NUMTAILWAGFRAMES];
+jagobj_t *m_hand[NUMHANDFRAMES];
+jagobj_t *m_kfist[NUMKFISTFRAMES];
+jagobj_t *m_sblink[NUMSBLINKFRAMES];
+jagobj_t *m_tblink[NUMTBLINKFRAMES];
+jagobj_t *m_kblink[NUMKBLINKFRAMES];
+jagobj_t *m_tailwag[NUMTAILWAGFRAMES];
 static char fistCounter = 5;
 static char sBlinkCounter = 110;
 static char tBlinkCounter = 25;
@@ -122,61 +122,58 @@ void M_Start2 (boolean startup_)
 	int i;
 
 /* cache all needed graphics	 */
+	m_skull1lump = W_CheckNumForName("M_CURSOR");
+
 	startup = startup_;
+	m_doom = NULL;
 	if (startup)
 	{
 		i = W_CheckNumForName("M_TITLE");
 		m_doom = i != -1 ? W_CacheLumpNum(i, PU_STATIC) : NULL;
-	}
-	else
-	{
-		m_doom = NULL;
-	}
 
-	m_skull1lump = W_CheckNumForName("M_CURSOR");
+		for (i = 0; i < NUMHANDFRAMES; i++)
+		{
+			char entry[9];
+			D_snprintf(entry, 8, "M_HAND%d", i + 1);
+			m_hand[i] = W_CacheLumpName(entry, PU_STATIC);
+		}
 
-	for (i = 0; i < NUMHANDFRAMES; i++)
-	{
-		char entry[9];
-		D_snprintf(entry, 8, "M_HAND%d", i + 1);
-		m_hand[i] = W_CheckNumForName(entry);
-	}
+		for (int i = 0; i < NUMKFISTFRAMES; i++)
+		{
+			char entry[9];
+			D_snprintf(entry, sizeof(entry), "KFIST%d", i + 1);
+			m_kfist[i] = W_CacheLumpName(entry, PU_STATIC);
+		}
 
-	for (int i = 0; i < NUMKFISTFRAMES; i++)
-	{
-		char entry[9];
-		D_snprintf(entry, sizeof(entry), "KFIST%d", i + 1);
-		m_kfist[i] = W_CheckNumForName(entry);
-	}
+		for (int i = 0; i < NUMSBLINKFRAMES; i++)
+		{
+			char entry[9];
+			D_snprintf(entry, sizeof(entry), "SBLINK%d", i + 1);
+			m_sblink[i] = W_CacheLumpName(entry, PU_STATIC);
+		}
 
-	for (int i = 0; i < NUMSBLINKFRAMES; i++)
-	{
-		char entry[9];
-		D_snprintf(entry, sizeof(entry), "SBLINK%d", i + 1);
-		m_sblink[i] = W_CheckNumForName(entry);
-	}
+		for (int i = 0; i < NUMKBLINKFRAMES-1; i++)
+		{
+			char entry[9];
+			D_snprintf(entry, sizeof(entry), "KBLINK%d", i + 1);
+			m_kblink[i] = W_CacheLumpName(entry, PU_STATIC);
+		}
+		m_kblink[2] = W_CacheLumpName("KBLINK1", PU_STATIC);
 
-	for (int i = 0; i < NUMKBLINKFRAMES-1; i++)
-	{
-		char entry[9];
-		D_snprintf(entry, sizeof(entry), "KBLINK%d", i + 1);
-		m_kblink[i] = W_CheckNumForName(entry);
-	}
-	m_kblink[2] = W_CheckNumForName("KBLINK1");
+		for (int i = 0; i < NUMTBLINKFRAMES-1; i++)
+		{
+			char entry[9];
+			D_snprintf(entry, sizeof(entry), "TBLINK%d", i + 1);
+			m_tblink[i] = W_CacheLumpName(entry, PU_STATIC);
+		}
+		m_tblink[2] = W_CacheLumpName("TBLINK1", PU_STATIC);
 
-	for (int i = 0; i < NUMTBLINKFRAMES-1; i++)
-	{
-		char entry[9];
-		D_snprintf(entry, sizeof(entry), "TBLINK%d", i + 1);
-		m_tblink[i] = W_CheckNumForName(entry);
-	}
-	m_tblink[2] = W_CheckNumForName("TBLINK1");
-
-	for (int i = 0; i < NUMTAILWAGFRAMES; i++)
-	{
-		char entry[9];
-		D_snprintf(entry, sizeof(entry), "TAILWAG%d", i + 1);
-		m_tailwag[i] = W_CheckNumForName(entry);
+		for (int i = 0; i < NUMTAILWAGFRAMES; i++)
+		{
+			char entry[9];
+			D_snprintf(entry, sizeof(entry), "TAILWAG%d", i + 1);
+			m_tailwag[i] = W_CacheLumpName(entry, PU_STATIC);
+		}
 	}
 
 	numslump = W_CheckNumForName("STTNUM0");
@@ -285,6 +282,52 @@ void M_Stop (void)
 	{
 		Z_Free (m_doom);
 		m_doom = NULL;
+	}
+
+	if (startup)
+	{
+		int i;
+		for (i = 0; i < NUMHANDFRAMES; i++)
+		{
+			if (m_hand[i])
+				Z_Free(m_hand[i]);
+			m_hand[i] = NULL;
+		}
+
+		for (int i = 0; i < NUMKFISTFRAMES; i++)
+		{
+			if (m_kfist[i])
+				Z_Free(m_kfist[i]);
+			m_kfist[i] = NULL;
+		}
+
+		for (int i = 0; i < NUMSBLINKFRAMES; i++)
+		{
+			if (m_sblink[i])
+				Z_Free(m_sblink[i]);
+			m_sblink[i] = NULL;
+		}
+
+		for (int i = 0; i < NUMKBLINKFRAMES; i++)
+		{
+			if (m_kblink[i])
+				Z_Free(m_kblink[i]);
+			m_kblink[i] = NULL;
+		}
+
+		for (int i = 0; i < NUMTBLINKFRAMES; i++)
+		{
+			if (m_tblink[i])
+				Z_Free(m_tblink[i]);
+			m_tblink[i] = NULL;
+		}
+
+		for (int i = 0; i < NUMTAILWAGFRAMES; i++)
+		{
+			if (m_tailwag[i])
+				Z_Free(m_tailwag[i]);
+			m_tailwag[i] = NULL;
+		}
 	}
 
 #ifndef MARS
@@ -643,9 +686,9 @@ void M_Drawer (void)
 		DrawJagobj(m_doom, logoPos, 16);
 		y_offset = m_doom->height + 16 - STARTY;
 
-		DrawJagobjLump(m_hand[cursorframe % NUMHANDFRAMES], 160 + 3, 16 + 32, NULL, NULL);
+		DrawJagobj(m_hand[cursorframe % NUMHANDFRAMES], 160 + 3, 16 + 32);
 
-		DrawJagobjLump(m_tailwag[cursorframe % NUMTAILWAGFRAMES], logoPos + 5, 16 + 2, NULL, NULL);
+		DrawJagobj(m_tailwag[cursorframe % NUMTAILWAGFRAMES], logoPos + 5, 16 + 2);
 
 		if (gametic & 1)
 		{
@@ -656,9 +699,9 @@ void M_Drawer (void)
 		}
 
 		if (fistCounter < 0)
-			DrawJagobjLump(m_kfist[D_abs(fistCounter)], logoPos + 188, 16 + 43, NULL, NULL);
+			DrawJagobj(m_kfist[D_abs(fistCounter)], logoPos + 188, 16 + 43);
 		else
-			DrawJagobjLump(m_kfist[0], logoPos + 188, 16 + 43, NULL, NULL);
+			DrawJagobj(m_kfist[0], logoPos + 188, 16 + 43);
 
 		sBlinkCounter--;
 		if (sBlinkCounter <= -NUMSBLINKFRAMES)
@@ -671,13 +714,13 @@ void M_Drawer (void)
 			kBlinkCounter = M_Random() & 127;
 
 		if (sBlinkCounter < 0)
-			DrawJagobjLump(m_sblink[D_abs(sBlinkCounter)], logoPos + 93, 16 + 27, NULL, NULL);
+			DrawJagobj(m_sblink[D_abs(sBlinkCounter)], logoPos + 93, 16 + 27);
 
 		if (tBlinkCounter < 0)
-			DrawJagobjLump(m_tblink[D_abs(tBlinkCounter)], logoPos + 54, 16 + 40, NULL, NULL);
+			DrawJagobj(m_tblink[D_abs(tBlinkCounter)], logoPos + 54, 16 + 40);
 
 		if (kBlinkCounter < 0)
-			DrawJagobjLump(m_kblink[D_abs(kBlinkCounter)], logoPos + 158, 16 + 37, NULL, NULL);
+			DrawJagobj(m_kblink[D_abs(kBlinkCounter)], logoPos + 158, 16 + 37);
 	}
 
 /* erase old skulls */

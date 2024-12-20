@@ -185,7 +185,7 @@ void IN_Stop (void)
 	intertype = int_none;
 
 	int i;
-	for (i = 0; i < 8; i++)
+	for (i = 0; i < 7; i++)
 	{
 		if (emeraldpics[i])
 			Z_Free(emeraldpics[i]);
@@ -511,7 +511,7 @@ void IN_Drawer (void)
 						emeraldx += intertic - 6;
 
 					if (drawthistic)
-						DrawJagobjLump(emeraldpics[em], emeraldx, data.spec.emeraldy);
+						DrawJagobj(emeraldpics[em], emeraldx, data.spec.emeraldy);
 				}
 			}
 		}
