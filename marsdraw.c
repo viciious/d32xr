@@ -979,12 +979,11 @@ void DrawTiledLetterbox2(int flat)
 
 void DrawTiledLetterbox(void)
 {
-	if (gamemapinfo.borderFlat <= 0)
-	{
-		I_ClearFrameBuffer();
-		return;
+	I_ClearFrameBuffer();	// Needed for PAL and for stages without border flats.
+
+	if (gamemapinfo.borderFlat > 0) {
+		DrawTiledLetterbox2(gamemapinfo.borderFlat);
 	}
-	DrawTiledLetterbox2(gamemapinfo.borderFlat);
 }
 
 /*
