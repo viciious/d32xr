@@ -3,9 +3,11 @@
 #include "lzss.h"
 
 #define VGM_READAHEAD       0x200
+#define VGM_MAX_READAHEAD   VGM_READAHEAD*8
 #define VGM_LZSS_BUF_SIZE   0x8000
 
 static lzss_state_t vgm_lzss = { 0 };
+static int vgm_preread_len = 0;
 extern void *vgm_ptr;
 extern int pcm_baseoffs;
 extern int vgm_size;
@@ -34,6 +36,7 @@ int vgm_setup(void* fm_ptr)
     lzss_setup(&vgm_lzss, fm_ptr, vgm_lzss_buf, VGM_LZSS_BUF_SIZE);
 
     vgm_ptr = vgm_lzss_buf;
+    vgm_preread_len = 0;
 
     return vgm_read();
 }
@@ -41,15 +44,38 @@ int vgm_setup(void* fm_ptr)
 void vgm_reset(void)
 {
     lzss_reset(&vgm_lzss);
+    vgm_preread_len = 0;
     vgm_ptr = vgm_lzss_buf;
+}
+
+int vgm_read2(int length)
+{
+    int l, r;
+    if (length > vgm_preread_len)
+    {
+        l = vgm_preread_len;
+        r = lzss_read(&vgm_lzss, length - l);
+    }
+    else
+    {
+        l = length;
+        r = 0;
+    }
+    vgm_preread_len -= l;
+    return l + r;
 }
 
 int vgm_read(void)
 {
-    return lzss_read(&vgm_lzss, VGM_READAHEAD);
+    return vgm_read2(VGM_READAHEAD);
 }
 
-int vgm_read2(int cnt)
+int vgm_preread(int length)
 {
-    return lzss_read(&vgm_lzss, cnt);
+    int r;
+    if (vgm_preread_len + length > VGM_MAX_READAHEAD)
+        length = VGM_MAX_READAHEAD - vgm_preread_len;
+    r = lzss_read(&vgm_lzss, length);
+    vgm_preread_len += r;
+    return r;
 }

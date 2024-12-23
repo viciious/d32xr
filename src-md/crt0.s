@@ -234,12 +234,8 @@ init_hardware:
         || jsr     load_font /* DLG */
 
 | set the default palette for text
-        |move.l  #0xC0000000,(a0)        /* write CRAM address 0 */
-        |move.l  #0x00000CCC,(a1)        /* entry 0 (black) and 1 (lt gray) */
-        |move.l  #0xC0200000,(a0)        /* write CRAM address 32 */
-        |move.l  #0x000000A0,(a1)        /* entry 16 (black) and 17 (green) */
-        |move.l  #0xC0400000,(a0)        /* write CRAM address 64 */
-        |move.l  #0x0000000A,(a1)        /* entry 32 (black) and 33 (red) */
+        move.l  #0xC0000000,(a0)        /* write CRAM address 0 */
+        move.l  #0x00000000,(a1)        /* set background color to black */
 
 | init controllers
         jsr     chk_ports
@@ -418,6 +414,14 @@ main_loop_handle_req:
 
         move.w  0xA15124,d0         /* get COMM4 */
         bne.w   handle_sec_req
+
+        tst.w   fm_idx
+        beq.b   00f
+        moveq.l #32,d0
+        move.l  d0,-(sp)
+        jsr     vgm_preread
+        addq.l  #4,sp
+00:
 
         /* check hot-plug count */
         tst.b   hotplug_cnt
@@ -2577,12 +2581,8 @@ init_vdp:
         dbra    d1,2b
 
 | set the default palette for text
-        |move.l  #0xC0000000,(a0)        /* write CRAM address 0 */
-        |move.l  #0x00000CCC,(a1)        /* entry 0 (black) and 1 (lt gray) */
-        |move.l  #0xC0200000,(a0)        /* write CRAM address 32 */
-        |move.l  #0x000000A0,(a1)        /* entry 16 (black) and 17 (green) */
-        |move.l  #0xC0400000,(a0)        /* write CRAM address 64 */
-        |move.l  #0x0000000A,(a1)        /* entry 32 (black) and 33 (red) */
+        move.l  #0xC0000000,(a0)        /* write CRAM address 0 */
+        move.l  #0x00000000,(a1)        /* set background color to black */
 3:
         move.w  #0x8174,0xC00004        /* display on, vblank enabled, V28 mode */
         rts
