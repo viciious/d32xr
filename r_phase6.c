@@ -4,6 +4,7 @@
   Renderer phase 6 - Seg Loop 
 */
 
+#include "p_camera.h"
 #include "r_local.h"
 #include "mars.h"
 
@@ -20,11 +21,13 @@ typedef struct
    VINT      height;
    drawcol_t drawcol;
 
+#ifdef USE_DECALS
    // decals stuff
    VINT       numdecals;
    VINT       lastcol;
    texdecal_t *decals;
    uint8_t   *columncache;
+#endif
 } drawmip_t;
 
 typedef struct drawtex_s
@@ -45,11 +48,19 @@ typedef struct
     drawtex_t tex[2];
     drawtex_t *first, *last;
 
-    int lightmin, lightmax, lightsub, lightcoef;
+#ifndef SIMPLELIGHT
+    int lightmin;
+#endif
+    int lightmax;
+#ifndef SIMPLELIGHT
+    int lightsub, lightcoef;
+#endif
 #if MIPLEVELS > 1   
     unsigned minmip, maxmip;
 #endif
 } seglocal_t;
+
+extern boolean sky_md_layer;
 
 static char seg_lock = 0;
 
@@ -86,7 +97,7 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum, fixed_t scale2, in
     // column has no length?
     if (top < bottom)
     {
-        int mipcolnum;
+        VINT mipcolnum;
         drawmip_t *mip;
         fixed_t frac;
 #ifdef MARS
@@ -97,6 +108,7 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum, fixed_t scale2, in
 
         colnum &= tex->widthmask;
         mipcolnum = colnum;
+        mipcolnum &= tex->widthmask;
         frac = tex->texturemid - (centerY - top) * iscale;
 
 #if MIPLEVELS > 1
@@ -117,6 +129,7 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum, fixed_t scale2, in
         mip = &tex->mip[miplevel];
         src = mip->data + mipcolnum * mip->height;
 
+#ifdef USE_DECALS
         if (mip->numdecals > 0)
         {
             // decals/composite textures
@@ -137,6 +150,7 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum, fixed_t scale2, in
                 }
             }
         }
+#endif
 
         mip->drawcol(x, top, bottom-1, light, frac, iscale, src, mip->height);
     }
@@ -149,20 +163,45 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 {
     viswall_t* segl = lseg->segl;
 
-    drawcol_t drawsky = (segl->actionbits & AC_ADDSKY) != 0 ? drawcol : NULL;
+    #ifdef MDSKY
+    drawskycol_t drawmdsky;
+    #endif
+    drawcol_t draw32xsky;
+
+    #ifdef MDSKY
+    if (sky_32x_layer) {
+        draw32xsky = (segl->actionbits & AC_ADDSKY) != 0 ? draw32xskycol : NULL;
+        drawmdsky = NULL;
+    }
+    else {
+        drawmdsky = (segl->actionbits & AC_ADDSKY) != 0 ? drawskycol : NULL;
+        draw32xsky = NULL;
+    }
+    #else
+    draw32xsky = (segl->actionbits & AC_ADDSKY) != 0 ? draw32xskycol : NULL;
+    #endif
 
     fixed_t scalefrac = segl->scalefrac;
     const fixed_t scalestep = segl->scalestep;
 
     const unsigned centerangle = segl->centerangle;
+#ifdef WALLDRAW2X
+    unsigned offset = segl->offset >> 1;
+    fixed_t distance = segl->distance >> 1;
+#else
     unsigned offset = segl->offset;
     fixed_t distance = segl->distance;
+#endif
 
     const int ceilingheight = segl->ceilingheight;
 
+#ifdef SIMPLELIGHT
+    const int texturelight = lseg->lightmax;
+#else
     int texturelight = lseg->lightmax;
     int lightmax = lseg->lightmax, lightmin = lseg->lightmin,
         lightcoef = lseg->lightcoef, lightsub = lseg->lightsub;
+#endif
 
     const int start = segl->start;
     const int stop = segl->stop;
@@ -208,7 +247,11 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
         //
         // sky mapping
         //
-        if (drawsky)
+        #ifdef MDSKY
+        if (draw32xsky || drawmdsky)
+        #else
+        if (draw32xsky)
+        #endif
         {
             int top, bottom;
 
@@ -220,20 +263,33 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 
             if (top < bottom)
             {
-                // CALICO: draw sky column
-                int colnum = ((vd.viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
-#ifdef MARS
-                inpixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
-#else
-                pixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
+                if (draw32xsky) {
+                    int colnum = ((vd.viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
+                    inpixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
+                    
+                    draw32xsky(
+                        x,
+                        -gamemapinfo.skyOffsetY - (((signed int)vd.aimingangle) >> 22),
+                        top,
+                        bottom,
+                        gamemapinfo.skyTopColor,
+                        gamemapinfo.skyBottomColor,
+                        data,
+                        skytexturep->height
+                        );
+                }
+#ifdef MDSKY
+                else {
+                    drawmdsky(x, top, bottom);
+                }
 #endif
-                drawsky(x, top, --bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, 128);
             }
         }
 
         //
         // texture only stuff
         //
+#ifndef SIMPLELIGHT
         if (lightcoef != 0)
         {
             // calc light level
@@ -245,6 +301,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
             // convert to a hardware value
             texturelight = HWLIGHT((unsigned)texturelight>>FRACBITS);
         }
+#endif
 
         // calculate texture offset
         r = finetangent((centerangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOFINESHIFT);
@@ -256,11 +313,20 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
             segcolmask[x] = texturelight | (colnum & 0xff);
 
 #ifdef MARS
+#ifdef WALLDRAW2X
+        __asm volatile (
+            "mov #-128, r0\n\t"
+            "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
+            "mov.l @(20, r0), %0 /* get 32-bit quotient */ \n\t"
+            "shar %0\n\t"
+            : "=r" (iscale) : : "r0");
+#else
         __asm volatile (
             "mov #-128, r0\n\t"
             "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
             "mov.l @(20, r0), %0 /* get 32-bit quotient */ \n\t"
             : "=r" (iscale) : : "r0");
+#endif
 #else
         iscale = 0xffffffffu / scale;
 #endif
@@ -302,7 +368,9 @@ static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex,
 {
     int j;
     int width = tex->width, height = tex->height;
+#ifdef USE_DECALS
     uint8_t *columncache = drawtex->columncache;
+#endif
     int mipwidth, mipheight;
 
     drawtex->widthmask = width-1;
@@ -330,6 +398,7 @@ static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex,
         if (mipheight < 1)
             mipheight = 1;
 
+#ifdef USE_DECALS
         // decals stuff
         mip->lastcol = -1;
         mip->columncache = columncache;
@@ -341,6 +410,7 @@ static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex,
             continue;
         }
         mip->decals = &decals[tex->decals >> 2];
+#endif
     }
 }
 
@@ -352,6 +422,10 @@ void R_SegCommands(void)
     int extralight;
     uint32_t clipbounds_[SCREENWIDTH / 2 + 1];
     uint16_t *clipbounds = (uint16_t *)clipbounds_;
+#ifdef MARS
+    volatile int8_t *addedsegs = (volatile int8_t *)&MARS_SYS_COMM6;
+    volatile uint8_t *readysegs = (volatile uint8_t *)addedsegs + 1;
+#endif
 
     // initialize the clipbounds array
     R_InitClipBounds(clipbounds_);
@@ -379,7 +453,9 @@ void R_SegCommands(void)
         viswall_t* segl = vd.viswalls + i;
 
 #ifdef MARS
-        while ((MARS_SYS_COMM6 & 0xff) <= i)
+        if (*addedsegs == -1)
+            return; // the other cpu is done drawing segments, so should we
+        while (*readysegs <= i)
             continue;
 #endif
         if (segl->start > segl->stop)
@@ -405,6 +481,23 @@ void R_SegCommands(void)
         lseg.maxmip = 0;
 #endif
 
+#ifdef SIMPLELIGHT
+        if (vd.fixedcolormap)
+        {
+#ifndef SIMPLELIGHT
+            lseg.lightmin = 
+#endif
+            lseg.lightmax = vd.fixedcolormap;
+        }
+        else
+        {
+            seglight = (segl->seglightlevel + extralight) & 0xff;
+#ifndef SIMPLELIGHT
+            lseg.lightmin = 
+#endif
+            lseg.lightmax = HWLIGHT((unsigned)seglight);
+        }
+#else
         if (vd.fixedcolormap)
         {
             lseg.lightmin = lseg.lightmax = vd.fixedcolormap;
@@ -452,17 +545,18 @@ void R_SegCommands(void)
                 lseg.lightmin = lseg.lightmax = HWLIGHT((unsigned)lseg.lightmax);
             }
         }
+#endif
 
         if (actionbits & AC_TOPTEXTURE)
         {
-            R_SetupDrawTexture(toptex, &textures[segl->t_texturenum],
+            R_SetupDrawTexture(toptex, &textures[UPPER8(segl->tb_texturenum)],
                 segl->t_texturemid, segl->t_topheight, segl->t_bottomheight);
             lseg.first--;
         }
 
         if (actionbits & AC_BOTTOMTEXTURE)
         {
-            R_SetupDrawTexture(bottomtex, &textures[segl->b_texturenum],
+            R_SetupDrawTexture(bottomtex, &textures[LOWER8(segl->tb_texturenum)],
                 segl->b_texturemid, segl->b_topheight, segl->b_bottomheight);
             lseg.last++;
         }
@@ -474,14 +568,15 @@ void R_SegCommands(void)
         {
             if (lseg.maxmip >= MIPLEVELS)
                 lseg.maxmip = MIPLEVELS-1;
-            segl->miplevels[0] = lseg.minmip;
-            segl->miplevels[1] = lseg.maxmip;
+            SETLOWER8(segl->newmiplevels, lseg.minmip);
+            SETUPPER8(segl->newmiplevels, lseg.maxmip);
         }
         else
 #endif
         {
-            segl->miplevels[0] = 0;
-            segl->miplevels[1] = 0;
+#ifndef FLOOR_OVER_FLOOR
+            segl->newmiplevels = 0;
+#endif
         }
 
 post_draw:
@@ -508,6 +603,11 @@ post_draw:
             }
         }
     }
+
+#ifdef MARS
+    // mark all segments as rendered
+    *addedsegs = -1;
+#endif
 }
 
 #ifdef MARS
@@ -520,23 +620,28 @@ void Mars_Sec_R_SegCommands(void)
     {
         if (segl->actionbits & AC_TOPTEXTURE)
         {
-            texture_t* tex = &textures[segl->t_texturenum];
+            texture_t* tex = &textures[UPPER8(segl->tb_texturenum)];
             Mars_ClearCacheLines(tex->data, (sizeof(tex->data)+31)/16);
         }
         if (segl->actionbits & AC_BOTTOMTEXTURE)
         {
-            texture_t* tex = &textures[segl->b_texturenum];
+            texture_t* tex = &textures[LOWER8(segl->tb_texturenum)];
+            Mars_ClearCacheLines(tex->data, (sizeof(tex->data)+31)/16);
+        }
+        if (segl->actionbits & AC_MIDTEXTURE)
+        {
+            texture_t* tex = &textures[segl->m_texturenum];
             Mars_ClearCacheLines(tex->data, (sizeof(tex->data)+31)/16);
         }
 
         if (segl->actionbits & AC_ADDFLOOR)
         {
-            flattex_t *flat = &flatpixels[segl->floorpicnum];
+            flattex_t *flat = &flatpixels[LOWER8(segl->floorceilpicnum)];
             Mars_ClearCacheLines(flat->data, (sizeof(flat->data)+31)/16);
         }
         if (segl->actionbits & AC_ADDCEILING)
         {
-            flattex_t *flat = &flatpixels[segl->ceilingpicnum];
+            flattex_t *flat = &flatpixels[UPPER8(segl->floorceilpicnum)];
             Mars_ClearCacheLines(flat->data, (sizeof(flat->data)+31)/16);
         }
     }

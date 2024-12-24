@@ -29,29 +29,7 @@
 #include "doomdef.h"
 #include "p_local.h"
 
-// CALICO_TODO: these ought to be in headers.
-typedef struct
-{
-   // input
-   mobj_t  *tmthing;
-   fixed_t  tmx, tmy;
-
-   fixed_t  tmfloorz;   // current floor z for P_TryMove2
-   fixed_t  tmceilingz; // current ceiling z for P_TryMove2
-   line_t  *blockline;  // possibly a special to activate
-
-   fixed_t tmbbox[4];
-   int     tmflags;
-   fixed_t tmdropoffz; // lowest point contacted
-
-	int    	numspechit;
- 	line_t	**spechit;
-
-   subsector_t *newsubsec; // destination subsector
-} pmovework_t;
-
 boolean PIT_CheckThing(mobj_t* thing, pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
-static boolean PM_BoxCrossLine(line_t* ld, pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
 static boolean PIT_CheckLine(line_t* ld, pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
 static boolean PM_CrossCheck(line_t* ld, pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
 static boolean PM_CheckPosition(pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
@@ -67,21 +45,39 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
    int     damage;
    boolean solid;
    mobj_t  *tmthing = mw->tmthing;
-   int     tmflags = mw->tmflags;
+//   int     tmflags = mw->tmflags;
    const mobjinfo_t* thinfo = &mobjinfo[tmthing->type];
 
-   if(!(thing->flags & (MF_SOLID|MF_SPECIAL|MF_SHOOTABLE)))
+   if(!((thing->flags & (MF_SOLID|MF_SPECIAL)) || Mobj_HasFlags2(thing, MF2_SHOOTABLE)))
       return true;
 
-   blockdist = thing->radius + tmthing->radius;
-   
-   delta = thing->x - mw->tmx;
-   if(delta < 0)
-      delta = -delta;
-   if(delta >= blockdist)
-      return true; // didn't hit it
+   if (thing->type == MT_PLAYER && Mobj_HasFlags2(tmthing, MF2_SHOOTABLE))
+      return true;
 
-   delta = thing->y - mw->tmy;
+   blockdist = mobjinfo[thing->type].radius + thinfo->radius;
+   
+   if (thing->flags & MF_RINGMOBJ)
+   {
+      ringmobj_t *ring = (ringmobj_t*)thing;
+      delta = (ring->x << FRACBITS) - mw->tmx;
+      if(delta < 0)
+         delta = -delta;
+      if(delta >= blockdist)
+         return true; // didn't hit it
+
+      delta = (ring->y << FRACBITS) - mw->tmy;
+   }
+   else
+   {
+      delta = thing->x - mw->tmx;
+      if(delta < 0)
+         delta = -delta;
+      if(delta >= blockdist)
+         return true; // didn't hit it
+
+      delta = thing->y - mw->tmy;
+   }
+
    if(delta < 0)
       delta = -delta;
    if(delta >= blockdist)
@@ -89,25 +85,30 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
 
    if(thing == tmthing)
       return true; // don't clip against self
+      
+   // Z-checking
+   const fixed_t theight = Mobj_GetHeight(thing);
+   const fixed_t tmheight = Mobj_GetHeight(tmthing);
 
-   // check for skulls slamming into things
-   if(tmthing->flags & MF_SKULLFLY)
+   if (thing->flags & MF_RINGMOBJ)
    {
-		damage = ((P_Random()&7)+1)* thinfo->damage;
-		P_DamageMobj (thing, tmthing, tmthing, damage);
-		tmthing->flags &= ~MF_SKULLFLY;
-		tmthing->momx = tmthing->momy = tmthing->momz = 0;
-		P_SetMobjState (tmthing, thinfo->spawnstate);
-      return false; // stop moving
-   }
-
-   // missiles can hit other things
-   if(tmthing->flags & MF_MISSILE)
-   {
-      if(tmthing->z > thing->z + thing->height)
+      ringmobj_t *ring = (ringmobj_t*)thing;
+      if(tmthing->z > (ring->z << FRACBITS) + theight)
          return true; // went overhead
-      if(tmthing->z + tmthing->height < thing->z)
+      if(tmthing->z + tmheight < (ring->z << FRACBITS))
          return true; // went underneath
+   }
+   else
+   {
+      if(tmthing->z > thing->z + theight)
+         return true; // went overhead
+      if(tmthing->z + tmheight < thing->z)
+         return true; // went underneath
+   }
+         
+   // missiles can hit other things
+   if(Mobj_HasFlags2(tmthing, MF2_MISSILE))
+   {
       if(tmthing->target->type == thing->type) // don't hit same species as originator
       {
          if(thing == tmthing->target) // don't hit originator
@@ -115,7 +116,7 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
          if(thing->type != MT_PLAYER) // let players missile each other
             return false; // explode, but do no damage
       }
-      if(!(thing->flags & MF_SHOOTABLE))
+      if(!Mobj_HasFlags2(thing, MF2_SHOOTABLE))
          return !(thing->flags & MF_SOLID); // didn't do any damage
 
       // damage/explode
@@ -124,13 +125,17 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
       return false; // don't traverse any more
    }
 
-   solid = (thing->flags & MF_SOLID) != 0;
-
    // check for special pickup
-   if((thing->flags & MF_SPECIAL) && (tmflags & MF_PICKUP))
+   if(tmthing->type == MT_PLAYER)
    {
-      P_TouchSpecialThing (thing,tmthing);
+      P_TouchSpecialThing(thing,tmthing);
    }
+   if (thing->type == MT_PLAYER)
+   {
+      P_TouchSpecialThing(tmthing,thing);
+   }
+
+   solid = (thing->flags & MF_SOLID) != 0;
 
    return !solid;
 }
@@ -138,11 +143,12 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
 //
 // Check if the thing intersects a linedef
 //
-static boolean PM_BoxCrossLine(line_t *ld, pmovework_t *mw)
+boolean PM_BoxCrossLine(line_t *ld, pmovework_t *mw)
 {
-   fixed_t x1, x2, y1, y2;
-   fixed_t lx, ly, ldx, ldy;
-   fixed_t dx1, dx2, dy1, dy2;
+   fixed_t x1, x2;
+   fixed_t lx, ly;
+   fixed_t ldx, ldy;
+   fixed_t dx1, dy1, dx2, dy2;
    boolean side1, side2;
    fixed_t ldbbox[4];
 
@@ -156,9 +162,6 @@ static boolean PM_BoxCrossLine(line_t *ld, pmovework_t *mw)
       return false; // bounding boxes don't intersect
    }
 
-   y1 = mw->tmbbox[BOXTOP   ];
-   y2 = mw->tmbbox[BOXBOTTOM];
-
    if(ld->flags & ML_ST_POSITIVE)
    {
       x1 = mw->tmbbox[BOXLEFT ];
@@ -170,15 +173,15 @@ static boolean PM_BoxCrossLine(line_t *ld, pmovework_t *mw)
       x2 = mw->tmbbox[BOXLEFT ];
    }
 
-   lx  = vertexes[ld->v1].x;
-   ly  = vertexes[ld->v1].y;
-   ldx = (vertexes[ld->v2].x - lx) >> FRACBITS;
-   ldy = (vertexes[ld->v2].y - ly) >> FRACBITS;
+   lx  = vertexes[ld->v1].x << FRACBITS;
+   ly  = vertexes[ld->v1].y << FRACBITS;
+   ldx = vertexes[ld->v2].x - vertexes[ld->v1].x;
+   ldy = vertexes[ld->v2].y - vertexes[ld->v1].y;
 
    dx1 = (x1 - lx) >> FRACBITS;
-   dy1 = (y1 - ly) >> FRACBITS;
+   dy1 = (mw->tmbbox[BOXTOP] - ly) >> FRACBITS;
    dx2 = (x2 - lx) >> FRACBITS;
-   dy2 = (y2 - ly) >> FRACBITS;
+   dy2 = (mw->tmbbox[BOXBOTTOM] - ly) >> FRACBITS;
 
    side1 = (ldy * dx1 < dy1 * ldx);
    side2 = (ldy * dx2 < dy2 * ldx);
@@ -200,7 +203,7 @@ static boolean PIT_CheckLine(line_t *ld, pmovework_t *mw)
    if(ld->sidenum[1] == -1)
       return false; // one-sided line
 
-   if(!(tmthing->flags & MF_MISSILE))
+   if(!(tmthing->flags2 & MF2_MISSILE))
    {
       if(ld->flags & ML_BLOCKING)
          return false; // explicitly blocking everything
@@ -210,28 +213,69 @@ static boolean PIT_CheckLine(line_t *ld, pmovework_t *mw)
 
    front = LD_FRONTSECTOR(ld);
    back  = LD_BACKSECTOR(ld);
+   fixed_t frontFloor = FloorZAtPos(front, tmthing->z, tmthing->theight << FRACBITS);
+   fixed_t frontCeiling = CeilingZAtPos(front, tmthing->z, tmthing->theight << FRACBITS);
+   fixed_t backFloor = FloorZAtPos(back, tmthing->z, tmthing->theight << FRACBITS);
+   fixed_t backCeiling = CeilingZAtPos(back, tmthing->z, tmthing->theight << FRACBITS);
 
-   if(front->ceilingheight == front->floorheight ||
-      back->ceilingheight == back->floorheight)
+   if(frontCeiling == frontFloor ||
+      backCeiling == backFloor)
    {
       mw->blockline = ld;
       return false; // probably a closed door
    }
 
-   if(front->ceilingheight < back->ceilingheight)
-      opentop = front->ceilingheight;
+   if(frontCeiling < backCeiling)
+      opentop = frontCeiling;
    else
-      opentop = back->ceilingheight;
+      opentop = backCeiling;
 
-   if(front->floorheight > back->floorheight)
+   if(frontFloor > backFloor)
    {
-      openbottom = front->floorheight;
-      lowfloor   = back->floorheight;
+      openbottom = frontFloor;
+      lowfloor   = backFloor;
    }
    else
    {
-      openbottom = back->floorheight;
-      lowfloor   = front->floorheight;
+      openbottom = backFloor;
+      lowfloor   = frontFloor;
+   }
+
+   if (ld->flags & ML_MIDTEXTUREBLOCK)
+   {
+      const side_t *side = &sides[ld->sidenum[0]];
+      const texture_t *tex = &textures[side->midtexture];
+      const fixed_t texheight = tex->height << (FRACBITS+1);
+      int16_t rowoffset = (side->textureoffset & 0xf000) | ((unsigned)side->rowoffset << 4);
+      rowoffset >>= 4; // sign extend
+      fixed_t textop, texbottom;
+
+      if (ld->flags & ML_DONTPEGBOTTOM)
+      {
+         texbottom = openbottom + ((int)rowoffset << (FRACBITS));
+         textop = texbottom + texheight;
+      }
+      else
+      {
+         textop = opentop + ((int)rowoffset << (FRACBITS));
+         texbottom = textop - texheight;
+      }
+
+      const fixed_t texmid = texbottom + (textop - texbottom) / 2;
+
+      const fixed_t thingBottomToMid = D_abs(mw->tmthing->z - texmid);
+      const fixed_t thingTopToMid = D_abs(mw->tmthing->z + (mw->tmthing->theight << FRACBITS) - texmid);
+
+      if (thingBottomToMid > thingTopToMid)
+      {
+         if (opentop > texbottom)
+            opentop = texbottom;
+      }
+      else
+      {
+         if (openbottom < textop)
+            openbottom = textop;
+      }
    }
 
    // adjust floor/ceiling heights
@@ -242,10 +286,13 @@ static boolean PIT_CheckLine(line_t *ld, pmovework_t *mw)
    if(lowfloor < mw->tmdropoffz)
       mw->tmdropoffz = lowfloor;
 
-   if (ld->special)
+   if (tmthing->player)
    {
-       if (mw->numspechit < MAXSPECIALCROSS)
-        mw->spechit[mw->numspechit++] = ld;
+      player_t *player = &players[tmthing->player-1];
+      if (player->num_touching_sectors < MAX_TOUCHING_SECTORS)
+         player->touching_sectorlist[player->num_touching_sectors++] = front - sectors;
+      if (player->num_touching_sectors < MAX_TOUCHING_SECTORS)
+         player->touching_sectorlist[player->num_touching_sectors++] = back - sectors;
    }
    return true;
 }
@@ -263,6 +310,60 @@ static boolean PM_CrossCheck(line_t *ld, pmovework_t *mw)
    return true;
 }
 
+// This way, we check for collisions even when standing.
+void P_PlayerCheckForStillPickups(mobj_t *mobj)
+{
+	int xl, xh, yl, yh, bx, by;
+	pmovework_t mw;
+	mw.newsubsec = &subsectors[mobj->isubsector];
+	mw.tmfloorz = mw.tmdropoffz = mw.newsubsec->sector->floorheight;
+	mw.tmceilingz = mw.newsubsec->sector->ceilingheight;
+	mw.blockline = NULL;
+	mw.tmflags = mobj->flags;
+	mw.tmx = mobj->x;
+	mw.tmy = mobj->y;
+	mw.tmthing = mobj;
+
+	mw.tmbbox[BOXTOP   ] = mw.tmy + mobjinfo[MT_PLAYER].radius;
+	mw.tmbbox[BOXBOTTOM] = mw.tmy - mobjinfo[MT_PLAYER].radius;
+	mw.tmbbox[BOXRIGHT ] = mw.tmx + mobjinfo[MT_PLAYER].radius;
+	mw.tmbbox[BOXLEFT  ] = mw.tmx - mobjinfo[MT_PLAYER].radius;
+
+	xl = mw.tmbbox[BOXLEFT  ] - bmaporgx - MAXRADIUS;
+	xh = mw.tmbbox[BOXRIGHT ] - bmaporgx + MAXRADIUS;
+	yl = mw.tmbbox[BOXBOTTOM] - bmaporgy - MAXRADIUS;
+	yh = mw.tmbbox[BOXTOP   ] - bmaporgy + MAXRADIUS;
+
+	if(xl < 0)
+		xl = 0;
+	if(yl < 0)
+		yl = 0;
+	if(yh < 0)
+		return;
+	if(xh < 0)
+		return;
+
+   xl = (unsigned)xl >> MAPBLOCKSHIFT;
+   xh = (unsigned)xh >> MAPBLOCKSHIFT;
+   yl = (unsigned)yl >> MAPBLOCKSHIFT;
+   yh = (unsigned)yh >> MAPBLOCKSHIFT;
+
+   if(xh >= bmapwidth)
+      xh = bmapwidth - 1;
+   if(yh >= bmapheight)
+      yh = bmapheight - 1;
+
+   // check things
+   for(bx = xl; bx <= xh; bx++)
+   {
+      for(by = yl; by <= yh; by++)
+      {
+         if(!P_BlockThingsIterator(bx, by, (blockthingsiter_t)PIT_CheckThing, &mw))
+            return;
+      }
+   }
+}
+
 //
 // This is purely informative, nothing is modified (except things picked up)
 //
@@ -274,17 +375,17 @@ static boolean PM_CheckPosition(pmovework_t *mw)
 
    mw->tmflags = tmthing->flags;
 
-   mw->tmbbox[BOXTOP   ] = mw->tmy + tmthing->radius;
-   mw->tmbbox[BOXBOTTOM] = mw->tmy - tmthing->radius;
-   mw->tmbbox[BOXRIGHT ] = mw->tmx + tmthing->radius;
-   mw->tmbbox[BOXLEFT  ] = mw->tmx - tmthing->radius;
+   mw->tmbbox[BOXTOP   ] = mw->tmy + mobjinfo[tmthing->type].radius;
+   mw->tmbbox[BOXBOTTOM] = mw->tmy - mobjinfo[tmthing->type].radius;
+   mw->tmbbox[BOXRIGHT ] = mw->tmx + mobjinfo[tmthing->type].radius;
+   mw->tmbbox[BOXLEFT  ] = mw->tmx - mobjinfo[tmthing->type].radius;
 
    mw->newsubsec = R_PointInSubsector(mw->tmx, mw->tmy);
 
    // the base floor/ceiling is from the subsector that contains the point.
    // Any contacted lines the step closer together will adjust them.
-   mw->tmfloorz   = mw->tmdropoffz = mw->newsubsec->sector->floorheight;
-   mw->tmceilingz = mw->newsubsec->sector->ceilingheight;
+   mw->tmfloorz   = mw->tmdropoffz = FloorZAtPos(mw->newsubsec->sector, mw->tmthing->z, mw->tmthing->theight << FRACBITS);
+   mw->tmceilingz = CeilingZAtPos(mw->newsubsec->sector, mw->tmthing->z, mw->tmthing->theight << FRACBITS);
 
    I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
    *lvalidcount = *lvalidcount + 1;
@@ -292,7 +393,6 @@ static boolean PM_CheckPosition(pmovework_t *mw)
       *lvalidcount = 1;
 
    mw->blockline = NULL;
-   mw->numspechit = 0;
 
    if(mw->tmflags & MF_NOCLIP) // thing has no clipping?
       return true;
@@ -385,7 +485,6 @@ boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly)
    mw.tmx = tm->tmx;
    mw.tmy = tm->tmy;
    mw.tmthing = tm->tmthing;
-   mw.spechit = &tm->spechit[0];
 
    trymove2 = PM_CheckPosition(&mw);
 
@@ -394,7 +493,6 @@ boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly)
    tm->tmfloorz = mw.tmfloorz;
    tm->tmceilingz = mw.tmceilingz;
    tm->tmdropoffz = mw.tmdropoffz;
-   tm->numspechit = mw.numspechit;
 
    if(checkposonly)
       return trymove2;
@@ -404,15 +502,17 @@ boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly)
 
    if(!(tmthing->flags & MF_NOCLIP))
    {
-      if(mw.tmceilingz - mw.tmfloorz < tmthing->height)
+      if(mw.tmceilingz - mw.tmfloorz < Mobj_GetHeight(tmthing))
          return false; // doesn't fit
       tm->floatok = true;
-      if(!(tmthing->flags & MF_TELEPORT) && mw.tmceilingz - tmthing->z < tmthing->height)
+      if(mw.tmceilingz - tmthing->z < Mobj_GetHeight(tmthing))
          return false; // mobj must lower itself to fit
-      if(!(tmthing->flags & MF_TELEPORT) && mw.tmfloorz - tmthing->z > 24*FRACUNIT)
+      if(mw.tmfloorz - tmthing->z > 24*FRACUNIT)
          return false; // too big a step up
-      if(!(tmthing->flags & (MF_DROPOFF|MF_FLOAT)) && mw.tmfloorz - mw.tmdropoffz > 24*FRACUNIT)
+      if (!((tmthing->flags2 & MF2_FLOAT) || tmthing->player) && mw.tmfloorz - mw.tmdropoffz > 24*FRACUNIT)
          return false; // don't stand over a dropoff
+      if (tmthing->type == MT_SKIM && mw.newsubsec->sector->heightsec == -1)
+         return false; // Skim can't go out of water
    }
 
    // the move is ok, so link the thing into its new position.
@@ -424,25 +524,6 @@ boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly)
    P_SetThingPosition2(tmthing, mw.newsubsec);
 
    return true;
-}
-
-void P_MoveCrossSpecials(mobj_t *tmthing, int numspechit, line_t **spechit, fixed_t oldx, fixed_t oldy)
-{
-    int i;
-
-    if ((tmthing->flags&(MF_TELEPORT|MF_NOCLIP)) )
-      return;
-
-    for (i = 0; i < numspechit; i++)
-    {
-      line_t *ld = spechit[i];
-      int side, oldside;
-      // see if the line was crossed
-      side = P_PointOnLineSide (tmthing->x, tmthing->y, ld);
-      oldside = P_PointOnLineSide (oldx, oldy, ld);
-      if (side != oldside)
-         P_CrossSpecialLine(ld, tmthing);
-    }
 }
 
 // EOF

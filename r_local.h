@@ -11,15 +11,8 @@ extern boolean lowResMode;
 extern fixed_t centerXFrac, centerYFrac;
 extern fixed_t stretch;
 extern fixed_t stretchX;
-extern VINT weaponYpos;
-extern fixed_t weaponXScale;
 
 #define	PROJECTION			centerXFrac
-
-#define	PSPRITEXSCALE		FRACUNIT	
-#define	PSPRITEYSCALE		FRACUNIT
-#define	PSPRITEXISCALE		FRACUNIT
-#define	PSPRITEYISCALE		FRACUNIT
 
 #define	ANGLETOSKYSHIFT		22		/* sky map is 256*128*4 maps */
 
@@ -38,7 +31,8 @@ extern fixed_t weaponXScale;
 #define	LIGHTLEVELS			256		/* number of diminishing */
 #define	INVERSECOLORMAP		255
 #else
-#define	INVERSECOLORMAP		32*256
+#define	BOSSFLASHCOLORMAP		33*256
+#define YELLOWTEXTCOLORMAP      34*256
 #endif
 
 #ifdef MARS
@@ -69,22 +63,30 @@ typedef struct
 
 struct line_s;
 
+#define SF_FOF_INVISIBLE_TANGIBLE    1
+#define SF_FOF_SWAPHEIGHTS           2
+#define SF_FLOATBOB                  4
+#define SF_AIRBOB                    8
+#define SF_CRUMBLE                  16
+#define SF_RESPAWN                  32
+
 typedef	struct
 {
 	fixed_t		floorheight, ceilingheight;
-	VINT		floorpic, ceilingpic;	/* if ceilingpic == -1,draw sky */
+	VINT		validcount;			/* if == validcount, already checked */
+	VINT		linecount;
+	uint8_t		floorpic, ceilingpic;	/* if ceilingpic == (uint8_t)-1,draw sky */
 
 	uint8_t		lightlevel, special;
 
-	VINT		validcount;			/* if == validcount, already checked */
-	VINT		linecount;
+	uint8_t		tag;
+	uint8_t     flags;
+	// killough 3/7/98: support flat heights drawn at another sector's heights
+  	VINT        heightsec;    // other sector, or -1 if no other sector
 
-	VINT		tag;
+	VINT        fofsec;
 
-	mobj_t		*soundtarget;		/* thing that made a sound (or null) */
-	
-	VINT		blockbox[4];		/* mapblock bounding box for height changes */
-	VINT		soundorg[2];		/* for any sounds played by the sector */
+	VINT        floor_xoffs; // Upper X, Lower Y
 
 	mobj_t		*thinglist;			/* list of mobjs in sector */
 	void		*specialdata;		/* thinker_t for reversable actions */
@@ -101,11 +103,11 @@ typedef struct
 
 typedef struct line_s
 {
-	VINT		flags;
-	VINT		sidenum[2];			/* sidenum[1] will be -1 if one sided */
 	VINT 		v1, v2;
-	VINT		special, tag;
-	VINT		fineangle;			/* to get sine / eosine for sliding */
+	VINT		sidenum[2];			/* sidenum[1] will be -1 if one sided */
+	uint16_t	flags;
+	uint8_t		special;
+	uint8_t		tag;
 } line_t;
 
 #define LD_FRONTSECTOR(ld) (&sectors[sides[(ld)->sidenum[0]].sector])
@@ -125,22 +127,23 @@ typedef struct seg_s
 	VINT		linedef;
 } seg_t;
 
-
 typedef struct
 {
-	fixed_t		x,y,dx,dy;			/* partition line */
-	fixed_t		bbox[2][4];			/* bounding box for each child */
-	int			children[2];		/* if NF_SUBSECTOR its a subsector */
+	int16_t		x,y,dx,dy;			/* partition line */
+	uint16_t	children[2];		/* if NF_SUBSECTOR its a subsector */
+	uint16_t 	encbbox[2]; 		/* encoded bounding box for each child */
 } node_t;
 
-#define MIPLEVELS 4
+#define MIPLEVELS 1
 
+#ifdef USE_DECALS
 typedef struct
 {
 	VINT	mincol, maxcol;
 	VINT	minrow, maxrow;
 	VINT 	texturenum;
 } texdecal_t;
+#endif
 
 typedef struct
 {
@@ -148,7 +151,9 @@ typedef struct
 	VINT		width;
 	VINT		height;
 	VINT		lumpnum;
+#ifdef USE_DECALS
 	uint16_t	decals;
+#endif
 #if MIPLEVELS > 1
 	VINT		mipcount;
 #endif
@@ -165,6 +170,8 @@ typedef struct
 
 typedef struct
 {
+	VINT size;
+	VINT wavy;
 #ifdef MARS
 	inpixel_t 	*data[MIPLEVELS];
 #else
@@ -213,7 +220,7 @@ extern	spritedef_t		sprites[NUMSPRITES];
 */
 
 extern	int			numvertexes;
-extern	vertex_t	*vertexes;
+extern	mapvertex_t	*vertexes;
 
 extern	int			numsegs;
 extern	seg_t		*segs;
@@ -233,6 +240,8 @@ extern	line_t		*lines;
 extern	int			numsides;
 extern	side_t		*sides;
 
+extern 	int16_t 	worldbbox[4];
+
 /*============================================================================= */
 
 extern VINT viewportNum;
@@ -249,21 +258,34 @@ extern const VINT numViewports;
 ATTR_DATA_CACHE_ALIGN
 static inline int R_PointOnSide (int x, int y, node_t *node)
 {
-	fixed_t	dx,dy;
-	fixed_t	left, right;
+	int32_t	dx,dy;
+	int32_t r1, r2;
 
-	dx = (x - node->x);
-	dy = (y - node->y);
-
+	dx = x - ((fixed_t)node->x << FRACBITS);
 #ifdef MARS
-   left = ((int64_t)node->dy*dx) >> 32;
-   right = ((int64_t)dy*node->dx) >> 32;
+	dx = (unsigned)dx >> FRACBITS;
+	__asm volatile(
+		"muls.w %0,%1\n\t"
+		: : "r"(node->dy), "r"(dx) : "macl", "mach");
 #else
-   left  = (node->dy>>FRACBITS) * (dx>>FRACBITS);
-   right = (dy>>FRACBITS) * (node->dx>>FRACBITS);
+	dx >>= FRACBITS;
+	r1 = node->dy * dx;
 #endif
 
-   return (left <= right);
+	dy = y - ((fixed_t)node->y << FRACBITS);
+#ifdef MARS
+	dy = (unsigned)dy >> FRACBITS;
+	__asm volatile(
+		"sts macl, %0\n\t"
+		"muls.w %2,%3\n\t"
+		"sts macl, %1\n\t"
+		: "=&r"(r1), "=&r"(r2) : "r"(dy), "r"(node->dx) : "macl", "mach");
+#else
+	dy >>= FRACBITS;
+	r2 = dy * node->dx;
+#endif
+
+    return (r1 <= r2);
 }
 
 //
@@ -277,21 +299,33 @@ void	R_InitData (void);
 void	R_SetViewportSize(int num);
 int		R_DefaultViewportSize(void); // returns the viewport id for fullscreen, low detail mode
 void	R_SetDrawMode(void);
-void	R_SetupLevel(void);
-void	R_SetupTextureCaches(void);
+void    R_SetFlatData(int f, uint8_t *start, int size);
+void    R_ResetTextures(void);
+void	R_SetupLevel(int gamezonemargin);
+void	R_SetupTextureCaches(int gamezonemargin);
+// killough 4/13/98: fake floors/ceilings for deep water / fake ceilings:
+sector_t *R_FakeFlat(sector_t *, sector_t *, boolean) ATTR_DATA_CACHE_ALIGN;
 
 typedef void (*drawcol_t)(int, int, int, int, fixed_t, fixed_t, inpixel_t*, int);
+typedef void (*drawskycol_t)(int, int, int);
 typedef void (*drawspan_t)(int, int, int, int, fixed_t, fixed_t, fixed_t, fixed_t, inpixel_t*, int);
+typedef void (*drawspancolor_t)(int, int, int, int);
 
 extern drawcol_t drawcol;
-extern drawcol_t drawfuzzcol;
+extern drawcol_t drawcolflipped;
 extern drawcol_t drawcolnpo2;
 extern drawcol_t drawcollow;
 extern drawspan_t drawspan;
+extern drawspancolor_t drawspancolor;
 
-#define FUZZTABLE		64
-#define FUZZMASK		(FUZZTABLE-1)
-extern short fuzzoffset[FUZZTABLE];
+#ifdef MDSKY
+extern drawskycol_t drawskycol;
+#endif
+extern drawcol_t draw32xskycol;
+
+#ifdef HIGH_DETAIL_SPRITES
+extern drawcol_t drawspritecol;
+#endif
 
 /* to get a global angle from cartesian coordinates, the coordinates are */
 /* flipped until they are in the first octant of the coordinate system, then */
@@ -308,8 +342,9 @@ extern angle_t* const tantoangle;
 extern const angle_t tantoangle[SLOPERANGE + 1];
 #endif
 
+extern  fixed_t *yslopetab;
 extern	fixed_t *yslope/*[SCREENHEIGHT]*/;
-extern	fixed_t *distscale/*[SCREENWIDTH]*/;
+extern	uint16_t *distscale/*[SCREENWIDTH]*/;
 
 #define OPENMARK 0xff00
 #ifdef MARS
@@ -319,6 +354,11 @@ extern	fixed_t *distscale/*[SCREENWIDTH]*/;
 #endif
 
 extern	VINT		extralight;
+
+#ifdef MARS
+__attribute__((aligned(4)))
+#endif
+extern boolean phi_effects;
 
 #ifdef MARS
 __attribute__((aligned(16)))
@@ -360,14 +400,17 @@ extern	VINT		numtextures;
 extern	texture_t	*textures;
 extern 	boolean 	texmips;
 
+#ifdef USE_DECALS
 extern 	VINT 		numdecals;
 extern 	texdecal_t  *decals;
+#endif
 
 extern	uint8_t			*flattranslation;		/* for global animation */
 extern	uint8_t			*texturetranslation;	/* for global animation */
 extern	flattex_t		*flatpixels;
+VINT CalcFlatSize(int lumplength);
 
-extern	VINT		firstflat, numflats, col2flat;
+extern	VINT		firstflat, numflats;
 
 extern	VINT		firstsprite, numsprites;
 
@@ -389,8 +432,10 @@ int	R_FlatNumForName(const char* name);
 int	R_CheckTextureNumForName(const char* name);
 void	R_InitMathTables(void);
 void	R_InitSpriteDefs(const char** namelist);
-void R_InitColormap(boolean doublepix);
+void R_InitColormap();
+#ifdef USE_DECALS
 boolean R_CompositeColumn(int colnum, int numdecals, texdecal_t *decals, inpixel_t *src, inpixel_t *dst, int height, int miplevel) ATTR_DATA_CACHE_ALIGN;
+#endif
 
 /*
 ==============================================================================
@@ -475,20 +520,23 @@ typedef struct
 
 	int 		m_texturemid;
 
-	VINT 		m_texturenum;
-	VINT		t_texturenum;
-	VINT		b_texturenum;
+	VINT 	m_texturenum;
+	uint16_t     tb_texturenum; // t_texturenum top word, b_texturenum bottom word
 
-	VINT        floorpicnum;
-	VINT        ceilingpicnum;
+	uint16_t     floorceilpicnum; // ceilingpicnum top word, floorpicnum bottom word (just like a ceiling and floor!)
 
-	int			scalestep;		/* polar angle to start at phase1, then scalestep after phase2 */
-	unsigned	scalefrac;
-	unsigned	scale2;
+#ifdef FLOOR_OVER_FLOOR
+	int16_t     fofSector;
+#else
+	uint16_t	newmiplevels; // 0 is lower, 1 is upper
+#endif
+
+	fixed_t			scalestep;		/* polar angle to start at phase1, then scalestep after phase2 */
+	fixed_t	scalefrac;
+	fixed_t	scale2;
 
 	short	actionbits;
 	short	seglightlevel;
-	int16_t miplevels[2];
 
 /* */
 /* filled in by bsp */
@@ -510,9 +558,31 @@ typedef struct
 	uint16_t 		*clipbounds;
 } viswall_t;
 
+#define UPPER8(x) ((uint8_t)((uint16_t)x >> 8))
+#define LOWER8(x) ((uint8_t)((uint16_t)x & 0xff))
+#define SETUPPER8(x, y) {\
+x &= 0x00ff; \
+x |= ((uint16_t)y << 8); \
+}
+#define SETLOWER8(x, y) {\
+x &= 0xff00; \
+x |= ((uint16_t)y & 0xff); \
+}
+#define UPPER16(x) ((uint16_t)((uint32_t)x >> 16))
+#define LOWER16(x) ((uint16_t)((uint32_t)x & 0xffff))
+#define SETUPPER16(x, y) {\
+x &= 0x0000ffff; \
+x |= ((uint32_t)y << 16); \
+}
+#define SETLOWER16(x, y) {\
+x &= 0xffff0000; \
+x |= ((uint32_t)y & 0xffff); \
+}
+
 typedef struct
 {
-	fixed_t 	floorheight, floornewheight, ceilnewheight, pad;
+	fixed_t 	floorheight, floornewheight, ceilnewheight;
+	uint32_t    fofInfo;
 } viswallextra_t;
 
 #define	MAXWALLCMDS		150
@@ -526,10 +596,12 @@ typedef struct vissprite_s
 	fixed_t		xiscale;		/* negative if flipped */
 	fixed_t		yscale;
 	fixed_t		texturemid;
-	VINT 		patchnum;
-	VINT		colormap;		/* < 0 = shadow draw */
+	uint16_t 	patchnum;		// upper byte indicates high detail draw
+	uint16_t	colormap;
 	short		gx,gy;	/* global coordinates */
-	void 		*colormaps;
+	VINT        heightsec;
+	VINT		patchheight;
+//	void 		*colormaps;
 #ifndef MARS
 	pixel_t		*pixels;		/* data patch header references */
 #endif
@@ -537,7 +609,7 @@ typedef struct vissprite_s
 
 #define	MAXVISSPRITES	MAXWALLCMDS
 
-#define	MAXOPENINGS		SCREENWIDTH*16
+#define	MAXOPENINGS		SCREENWIDTH*20
 
 #define	MAXVISSSEC		128
 
@@ -580,14 +652,14 @@ __attribute__((aligned(16)))
 #endif
 {
 	fixed_t		viewx, viewy, viewz;
-	angle_t		viewangle;
+	angle_t		viewangle,aimingangle;
+	subsector_t *viewsubsector;
 	fixed_t		viewcos, viewsin;
 	player_t	*viewplayer;
 	VINT		lightlevel;
 	VINT		extralight;
 	VINT		displayplayer;
 	VINT		fixedcolormap;
-	VINT		fuzzcolormap;
 	angle_t		clipangle, doubleclipangle;
 	VINT 		*viewangletox;
 
@@ -630,4 +702,3 @@ extern	viewdef_t	vd;
 extern texture_t *testtex;
 
 #endif		/* __R_LOCAL__ */
-

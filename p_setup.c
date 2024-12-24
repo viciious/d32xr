@@ -3,9 +3,13 @@
 #include "doomdef.h"
 #include "p_local.h"
 #include "mars.h"
+#include "p_camera.h"
+#include "st_inter.h"
+
+#define DEFAULT_GAME_ZONE_MARGIN (4*1024)
 
 int			numvertexes;
-vertex_t	*vertexes;
+mapvertex_t	*vertexes;
 
 int			numsegs;
 seg_t		*segs;
@@ -41,6 +45,14 @@ mapthing_t	playerstarts[MAXPLAYERS];
 int			numthings;
 spawnthing_t* spawnthings;
 
+int16_t worldbbox[4];
+
+#define LOADFLAGS_VERTEXES 1
+#define LOADFLAGS_BLOCKMAP 2
+#define LOADFLAGS_REJECT 4
+#define LOADFLAGS_NODES 8
+#define LOADFLAGS_SEGS 16
+
 /*
 =================
 =
@@ -51,29 +63,16 @@ spawnthing_t* spawnthings;
 
 void P_LoadVertexes (int lump)
 {
-#ifdef MARS
-	numvertexes = W_LumpLength (lump) / sizeof(vertex_t);
-	vertexes = (vertex_t *)W_GetLumpData(lump);
-#else
-	byte		*data;
-	int			i;
-	mapvertex_t	*ml;
-	vertex_t	*li;
-	
 	numvertexes = W_LumpLength (lump) / sizeof(mapvertex_t);
-	vertexes = Z_Malloc (numvertexes*sizeof(vertex_t),PU_LEVEL);
-	data = I_TempBuffer ();	
-	W_ReadLump (lump,data);
-	
-	
-	ml = (mapvertex_t *)data;
-	li = vertexes;
-	for (i=0 ; i<numvertexes ; i++, li++, ml++)
+
+	if (gamemapinfo.loadFlags & LOADFLAGS_VERTEXES)
 	{
-		li->x = LITTLESHORT(ml->x)<<FRACBITS;
-		li->y = LITTLESHORT(ml->y)<<FRACBITS;
+		vertexes = Z_Malloc (numvertexes*sizeof(mapvertex_t) + 16,PU_LEVEL);
+		vertexes = (void*)(((uintptr_t)vertexes + 15) & ~15); // aline on cacheline boundary
+		W_ReadLump(lump, vertexes);
 	}
-#endif
+	else
+		vertexes = (mapvertex_t*)W_POINTLUMPNUM(lump);
 }
 
 
@@ -87,43 +86,16 @@ void P_LoadVertexes (int lump)
 
 void P_LoadSegs (int lump)
 {
-	byte		*data;
-	int			i;
-	mapseg_t	*ml;
-	seg_t		*li;
-	line_t	*ldef;
-	int			linedef, side;
-	angle_t angle;
+	numsegs = W_LumpLength (lump) / sizeof(seg_t);
 
-	numsegs = W_LumpLength (lump) / sizeof(mapseg_t);
-	segs = Z_Malloc (numsegs*sizeof(seg_t)+16,PU_LEVEL);
-	segs = (void*)(((uintptr_t)segs + 15) & ~15); // aline on cacheline boundary
-	D_memset (segs, 0, numsegs*sizeof(seg_t));
-	data = I_TempBuffer ();
-	W_ReadLump (lump,data);
-	
-	ml = (mapseg_t *)data;
-	li = segs;
-	for (i=0 ; i<numsegs ; i++, li++, ml++)
+	if (gamemapinfo.loadFlags & LOADFLAGS_SEGS)
 	{
-		li->v1 = LITTLESHORT(ml->v1);
-		li->v2 = LITTLESHORT(ml->v2);
-
-		angle = LITTLESHORT(ml->angle)<<16;
-		li->sideoffset = LITTLESHORT(ml->offset);
-		linedef = LITTLESHORT(ml->linedef);
-
-		li->linedef = linedef;
-		ldef = &lines[linedef];
-		side = LITTLESHORT(ml->side);
-		side &= 1;
-
-		li->sideoffset <<= 1;
-		li->sideoffset |= side;
-
-		if (ldef->v1 == li->v1)
-			ldef->fineangle = angle >> ANGLETOFINESHIFT;
+		segs = Z_Malloc (numsegs*sizeof(seg_t) + 16,PU_LEVEL);
+		segs = (void*)(((uintptr_t)segs + 15) & ~15); // aline on cacheline boundary
+		W_ReadLump(lump, segs);
 	}
+	else
+		segs = (seg_t *)W_POINTLUMPNUM(lump);
 }
 
 
@@ -140,6 +112,7 @@ void P_LoadSubsectors (int lump)
 	byte			*data;
 	int				i;
 	mapsubsector_t	*ms;
+	mapsubsector_t  *msHead;
 	subsector_t		*ss;
 
 	numsubsectors = W_LumpLength (lump) / sizeof(mapsubsector_t);
@@ -147,13 +120,20 @@ void P_LoadSubsectors (int lump)
 	data = I_TempBuffer ();
 	W_ReadLump (lump,data);
 
-	ms = (mapsubsector_t *)data;
+	msHead = ms = (mapsubsector_t *)data;
 	D_memset (subsectors,0, numsubsectors*sizeof(subsector_t));
 	ss = subsectors;
 	for (i=0 ; i<numsubsectors ; i++, ss++, ms++)
 	{
-		ss->numlines = LITTLESHORT(ms->numsegs);
+		// The segments are already stored in sub sector order,
+		// so the number of segments in sub sector n is actually
+		// just subsector[n+1].firstseg - subsector[n].firsteg
 		ss->firstline = LITTLESHORT(ms->firstseg);
+
+		if (i < numsubsectors - 1)
+			ss->numlines = LITTLESHORT(msHead[i+1].firstseg) - ss->firstline;
+		else
+			ss->numlines = numsegs - ss->firstline;
 	}
 }
 
@@ -184,32 +164,24 @@ void P_LoadSectors (int lump)
 	ss = sectors;
 	for (i=0 ; i<numsectors ; i++, ss++, ms++)
 	{
-		int lightlevel, special;
-
 		ss->floorheight = LITTLESHORT(ms->floorheight)<<FRACBITS;
 		ss->ceilingheight = LITTLESHORT(ms->ceilingheight)<<FRACBITS;
-		ss->floorpic = R_FlatNumForName(ms->floorpic);
-		if (!D_strncasecmp (ms->ceilingpic,"F_SKY1",6) )
-			ss->ceilingpic = -1;
-		else
-		{
-			ss->ceilingpic = R_FlatNumForName(ms->ceilingpic);
-		}
+		ss->floorpic = ms->floorpic;
+		ss->ceilingpic = ms->ceilingpic;
 		ss->thinglist = NULL;
 
-		lightlevel = LITTLESHORT(ms->lightlevel);
-		if (lightlevel < 0)
-			lightlevel = 0;
-		else if (lightlevel > 255)
-			lightlevel = 255;
-		ss->lightlevel = lightlevel;
+		ss->lightlevel = ms->lightlevel;
+		ss->special = ms->special;
 
-		special = LITTLESHORT(ms->special);
-		if (special < 0 || special > 255)
-			special = 0;
-		ss->special = special;
+		ss->tag = ms->tag;
+		ss->heightsec = -1; // sector used to get floor and ceiling height
+		ss->fofsec = -1;
+		ss->floor_xoffs = 0;
+		ss->flags = 0;
 
-		ss->tag = LITTLESHORT(ms->tag);
+		// killough 3/7/98:
+//		ss->floor_xoffs = 0;
+//		ss->floor_yoffs = 0;      // floor and ceiling flats offsets
 	}
 }
 
@@ -224,39 +196,35 @@ void P_LoadSectors (int lump)
 
 void P_LoadNodes (int lump)
 {
-#ifdef MARS
 	numnodes = W_LumpLength (lump) / sizeof(node_t);
-	nodes = (node_t *)W_GetLumpData(lump);
-#else
-	byte		*data;
-	int			i,j,k;
-	mapnode_t	*mn;
-	node_t		*no;
-	
-	numnodes = W_LumpLength (lump) / sizeof(mapnode_t);
-	nodes = Z_Malloc (numnodes*sizeof(node_t),PU_LEVEL);
-	data = I_TempBuffer ();
-	W_ReadLump (lump,data);
-	
-	mn = (mapnode_t *)data;
-	no = nodes;
-	for (i=0 ; i<numnodes ; i++, no++, mn++)
+
+	if (gamemapinfo.loadFlags & LOADFLAGS_NODES)
 	{
-		no->x = LITTLESHORT(mn->x)<<FRACBITS;
-		no->y = LITTLESHORT(mn->y)<<FRACBITS;
-		no->dx = LITTLESHORT(mn->dx)<<FRACBITS;
-		no->dy = LITTLESHORT(mn->dy)<<FRACBITS;
-		for (j=0 ; j<2 ; j++)
-		{
-			no->children[j] = (unsigned short)LITTLESHORT(mn->children[j]);
-			for (k=0 ; k<4 ; k++)
-				no->bbox[j][k] = LITTLESHORT(mn->bbox[j][k])<<FRACBITS;
-		}
+		nodes = Z_Malloc (numnodes*sizeof(node_t) + 16,PU_LEVEL);
+		nodes = (void*)(((uintptr_t)nodes + 15) & ~15); // aline on cacheline boundary
+		W_ReadLump(lump, nodes);
 	}
-#endif
+	else
+		nodes = (node_t *)W_POINTLUMPNUM(lump);
+
+	// Calculate worldbbox
+	worldbbox[BOXLEFT] = INT16_MAX;
+	worldbbox[BOXRIGHT] = INT16_MIN;
+	worldbbox[BOXBOTTOM] = INT16_MAX;
+	worldbbox[BOXTOP] = INT16_MIN;
+	for (int i = 0; i < numvertexes; i++)
+	{
+		const mapvertex_t *v = &vertexes[i];
+		if (v->x < worldbbox[BOXLEFT])
+			worldbbox[BOXLEFT] = v->x;
+		if (v->x > worldbbox[BOXRIGHT])
+			worldbbox[BOXRIGHT] = v->x;
+		if (v->y < worldbbox[BOXBOTTOM])
+			worldbbox[BOXBOTTOM] = v->y;
+		if (v->y > worldbbox[BOXTOP])
+			worldbbox[BOXTOP] = v->y;
+	}
 }
-
-
 
 /*
 =================
@@ -265,6 +233,45 @@ void P_LoadNodes (int lump)
 =
 =================
 */
+fixed_t P_GetMapThingSpawnHeight(const mobjtype_t mobjtype, const mapthing_t* mthing, const fixed_t x, const fixed_t y, const fixed_t z);
+
+static void P_SpawnItemRow(mapthing_t *mt, VINT type, VINT count, VINT horizontalSpacing, VINT verticalSpacing)
+{
+	mapthing_t dummything = *mt;
+	dummything.type = type;
+
+	int mobjtype;
+	/* find which type to spawn */
+	for (mobjtype=0 ; mobjtype< NUMMOBJTYPES ; mobjtype++)
+		if (mt->type == mobjinfo[mobjtype].doomednum)
+			break;
+
+	fixed_t spawnX = dummything.x << FRACBITS;
+	fixed_t spawnY = dummything.y << FRACBITS;
+	fixed_t spawnZ = P_GetMapThingSpawnHeight(mobjtype, mt, spawnX, spawnY, (mt->options >> 4) << FRACBITS);
+
+	angle_t spawnAngle = dummything.angle * ANGLE_1;
+
+	for (int i = 0; i < count ; i++)
+	{
+		P_ThrustValues(spawnAngle, horizontalSpacing << FRACBITS, &spawnX, &spawnY);
+
+		const subsector_t *ss = R_PointInSubsector(spawnX, spawnY);
+
+		fixed_t curZ = spawnZ + ((i+1) * (verticalSpacing<<FRACBITS)); // Literal height
+
+		// Now we have to work backwards and calculate the mapthing z
+		VINT mapthingZ = (curZ - ss->sector->floorheight) >> FRACBITS;
+		mapthingZ <<= 4;
+		dummything.options &= 15; // Clear the top 12 bits
+		dummything.options |= mapthingZ; // Insert our new value
+
+		dummything.x = spawnX >> FRACBITS;
+		dummything.y = spawnY >> FRACBITS;
+
+		P_SpawnMapThing(&dummything, mobjtype);
+	}
+}
 
 void P_LoadThings (int lump)
 {
@@ -272,13 +279,18 @@ void P_LoadThings (int lump)
 	int				i;
 	mapthing_t		*mt;
 	spawnthing_t	*st;
-	int 			numthingsreal, numstaticthings;
+	short			numthingsreal, numstaticthings, numringthings;
+
+	for (int i = 0; i < NUMMOBJTYPES; i++)
+		ringmobjtics[i] = -1;
 
 	data = I_TempBuffer ();
 	W_ReadLump (lump,data);
 	numthings = W_LumpLength (lump) / sizeof(mapthing_t);
 	numthingsreal = 0;
 	numstaticthings = 0;
+	numringthings = 0;
+	numscenerymobjs = 0;
 
 	mt = (mapthing_t *)data;
 	for (i=0 ; i<numthings ; i++, mt++)
@@ -317,16 +329,53 @@ void P_LoadThings (int lump)
 			case 2:
 				numstaticthings++;
 				break;
+			case 3:
+				if (mt->type >= 600 && mt->type <= 602)
+					numringthings += 5;
+				else if (mt->type == 603)
+					numringthings += 10;
+				else
+					numringthings++;
+				break;
+			case 4:
+				numscenerymobjs++;
+				break;
 		}
 	}
 
 	// preallocate a few mobjs for puffs and projectiles
-	numthingsreal += 40;
-	P_PreSpawnMobjs(numthingsreal, numstaticthings);
+	numthingsreal += 48; // 32 rings, plus other items
+	numstaticthings += 8;
+
+	if (gamemapinfo.act == 3)
+	{
+		// Bosses spawn lots of stuff, so preallocate more.
+		numthingsreal += 96;
+		numstaticthings += 64;
+	}
+	P_PreSpawnMobjs(numthingsreal, numstaticthings, numringthings, numscenerymobjs);
 
 	mt = (mapthing_t *)data;
 	for (i=0 ; i<numthings ; i++, mt++)
-		P_SpawnMapThing (mt, i);
+	{
+		if (mt->type == 600) // 5 vertical rings (yellow spring)
+			P_SpawnItemRow(mt, mobjinfo[MT_RING].doomednum, 5, 0, 64);
+		else if (mt->type == 601) // 5 vertical rings (red spring)
+			P_SpawnItemRow(mt, mobjinfo[MT_RING].doomednum, 5, 0, 128);
+		else if (mt->type == 602) // 5 diagonal rings (yellow spring)
+			P_SpawnItemRow(mt, mobjinfo[MT_RING].doomednum, 5, 64, 64);
+		else if (mt->type == 603) // 10 diagonal rings (yellow spring)
+			P_SpawnItemRow(mt, mobjinfo[MT_RING].doomednum, 10, 64, 64);
+		else
+			P_SpawnMapThing(mt, i);
+	}
+
+	camBossMobj = P_FindFirstMobjOfType(MT_EGGMOBILE);
+	if (!camBossMobj)
+		camBossMobj = P_FindFirstMobjOfType(MT_EGGMOBILE2);
+
+	if (players[0].starpostnum)
+		P_SetStarPosts(players[0].starpostnum + 1);
 }
 
 
@@ -346,7 +395,7 @@ void P_LoadLineDefs (int lump)
 	int				i;
 	maplinedef_t	*mld;
 	line_t			*ld;
-	vertex_t		*v1, *v2;
+	mapvertex_t		*v1, *v2;
 	
 	numlines = W_LumpLength (lump) / sizeof(maplinedef_t);
 	lines = Z_Malloc (numlines*sizeof(line_t)+16,PU_LEVEL);
@@ -361,14 +410,15 @@ void P_LoadLineDefs (int lump)
 	{
 		fixed_t dx,dy;
 		ld->flags = LITTLESHORT(mld->flags);
-		ld->special = LITTLESHORT(mld->special);
-		ld->tag = LITTLESHORT(mld->tag);
+		ld->special = mld->special;
+		ld->tag = mld->tag;
 		ld->v1 = LITTLESHORT(mld->v1);
 		ld->v2 = LITTLESHORT(mld->v2);
+		
 		v1 = &vertexes[ld->v1];
 		v2 = &vertexes[ld->v2];
-		dx = v2->x - v1->x;
-		dy = v2->y - v1->y;
+		dx = (v2->x - v1->x) << FRACBITS;
+		dy = (v2->y - v1->y) << FRACBITS;
 		if (!dx)
 			ld->flags |= ML_ST_VERTICAL;
 		else if (!dy)
@@ -383,36 +433,6 @@ void P_LoadLineDefs (int lump)
 
 		ld->sidenum[0] = LITTLESHORT(mld->sidenum[0]);
 		ld->sidenum[1] = LITTLESHORT(mld->sidenum[1]);
-
-		// HACK HACK HACK
-		// backwards compatibility with JagDoom specials
-		// that use values typically reserved for Doom2 maps
-		if (ld->tag)
-			continue;
-
-		switch (ld->special)
-		{
-		case 99:
-			/* Blue Skull Door Open */
-			ld->special = 32;
-			break;
-		case 100:
-			/* Red Skull Door Open */
-			ld->special = 33;
-			break;
-		case 105:
-			/* Yellow Skull Door Open */
-			ld->special = 34;
-			break;
-		case 106:
-			/* Blue Skull Door Raise */
-		case 107:
-			/* Red Skull Door Raise */
-		case 108:
-			/* Yellow Skull Door Raise */
-			ld->special = ld->special - 80;
-			break;
-		}
 	}
 }
 
@@ -447,15 +467,13 @@ void P_LoadSideDefs (int lump)
 	sd = sides;
 	for (i=0 ; i<numsides ; i++, msd++, sd++)
 	{
-		int rowoffset, textureoffset;
-		textureoffset = LITTLESHORT(msd->textureoffset);
-		rowoffset = LITTLESHORT(msd->rowoffset);
-		sd->toptexture = R_TextureNumForName(msd->toptexture);
-		sd->bottomtexture = R_TextureNumForName(msd->bottomtexture);
-		sd->midtexture = R_TextureNumForName(msd->midtexture);
 		sd->sector = LITTLESHORT(msd->sector);
-		sd->rowoffset = rowoffset & 0xff;
-		sd->textureoffset = (textureoffset & 0xfff) | ((rowoffset & 0x0f00) << 4);
+		sd->rowoffset = msd->rowoffset;
+		sd->textureoffset = LITTLESHORT(msd->textureoffset);
+		sd->toptexture = msd->toptexture;
+		sd->midtexture = msd->midtexture;
+		sd->bottomtexture = msd->bottomtexture;
+
 #ifndef MARS
 		textures[sd->toptexture].usecount++;
 		textures[sd->bottomtexture].usecount++;
@@ -478,18 +496,15 @@ void P_LoadBlockMap (int lump)
 {
 	int		count;
 
-#ifdef MARS
-	blockmaplump = (short *)W_GetLumpData(lump);
-#else
-	int		i;
-	
-	blockmaplump = W_CacheLumpNum (lump,PU_LEVEL);
-	blockmap = blockmaplump+4;
-	count = W_LumpLength (lump)/2;
-	for (i=0 ; i<count ; i++)
-		blockmaplump[i] = LITTLESHORT(blockmaplump[i]);
-#endif
-		
+	if (gamemapinfo.loadFlags & LOADFLAGS_BLOCKMAP)
+	{
+		blockmaplump = Z_Malloc (W_LumpLength(lump) + 16,PU_LEVEL);
+		blockmaplump = (void*)(((uintptr_t)blockmaplump + 15) & ~15); // aline on cacheline boundary
+		W_ReadLump(lump, blockmaplump);
+	}
+	else
+		blockmaplump = (short *)W_POINTLUMPNUM(lump);
+
 	bmaporgx = blockmaplump[0]<<FRACBITS;
 	bmaporgy = blockmaplump[1]<<FRACBITS;
 	bmapwidth = blockmaplump[2];
@@ -501,7 +516,18 @@ void P_LoadBlockMap (int lump)
 	D_memset (blocklinks, 0, count);
 }
 
+void P_LoadReject (int lump)
+{
+	if (gamemapinfo.loadFlags & LOADFLAGS_REJECT)
+	{
+		rejectmatrix = Z_Malloc (W_LumpLength(lump) + 16,PU_LEVEL);
+		rejectmatrix = (void*)(((uintptr_t)rejectmatrix + 15) & ~15); // aline on cacheline boundary
+		W_ReadLump(lump, rejectmatrix);
+	}
+	else
+		rejectmatrix = (byte *)W_POINTLUMPNUM(lump);
 
+}
 
 
 /*
@@ -517,13 +543,11 @@ void P_LoadBlockMap (int lump)
 void P_GroupLines (void)
 {
 	VINT		*linebuffer;
-	int			i, j, total;
+	int			i, total;
 	sector_t	*sector;
 	subsector_t	*ss;
 	seg_t		*seg;
-	int			block;
 	line_t		*li;
-	fixed_t		bbox[4];
 
 /* look up sector number for each subsector */
 	ss = subsectors;
@@ -573,72 +597,11 @@ void P_GroupLines (void)
 
 		front->lines[front->linecount++] = i;
 		if (back && back != front)
-		{
 			back->lines[back->linecount++] = i;
-		}
 	}
-
-	sector = sectors;
-	for (i=0 ; i<numsectors ; i++, sector++)
-	{
-		M_ClearBox (bbox);
-
-		for (j=0 ; j<sector->linecount ; j++)
-		{
-			li = lines + sector->lines[j];
-			M_AddToBox (bbox, vertexes[li->v1].x, vertexes[li->v1].y);
-			M_AddToBox (bbox, vertexes[li->v2].x, vertexes[li->v2].y);
-		}
-
-		/* set the degenmobj_t to the middle of the bounding box */
-		sector->soundorg[0] = ((bbox[BOXRIGHT]+bbox[BOXLEFT])/2) >> FRACBITS;
-		sector->soundorg[1] = ((bbox[BOXTOP]+bbox[BOXBOTTOM])/2) >> FRACBITS;
-		
-		/* adjust bounding box to map blocks */
-		block = (bbox[BOXTOP]-bmaporgy+MAXRADIUS)>>MAPBLOCKSHIFT;
-		block = block >= bmapheight ? bmapheight-1 : block;
-		sector->blockbox[BOXTOP]=block;
-
-		block = (bbox[BOXBOTTOM]-bmaporgy-MAXRADIUS)>>MAPBLOCKSHIFT;
-		block = block < 0 ? 0 : block;
-		sector->blockbox[BOXBOTTOM]=block;
-
-		block = (bbox[BOXRIGHT]-bmaporgx+MAXRADIUS)>>MAPBLOCKSHIFT;
-		block = block >= bmapwidth ? bmapwidth-1 : block;
-		sector->blockbox[BOXRIGHT]=block;
-
-		block = (bbox[BOXLEFT]-bmaporgx-MAXRADIUS)>>MAPBLOCKSHIFT;
-		block = block < 0 ? 0 : block;
-		sector->blockbox[BOXLEFT]=block;
-
-	}
-	
 }
 
 /*============================================================================= */
-
-
-/*
-=================
-=
-= P_LoadingPlaque
-=
-=================
-*/
-
-void P_LoadingPlaque (void)
-{
-#ifndef MARS
-	jagobj_t	*pl;
-
-	pl = W_CacheLumpName ("loading", PU_STATIC);	
-	DrawPlaque (pl);
-	Z_Free (pl);
-#endif
-}	
-
-/*============================================================================= */
-
 
 /*
 =================
@@ -648,36 +611,35 @@ void P_LoadingPlaque (void)
 =================
 */
 
-void P_SetupLevel (int lumpnum, skill_t skill)
+void P_SetupLevel (int lumpnum)
 {
 #ifndef MARS
 	mobj_t	*mobj;
 #endif
 	extern	int	cy;
+	int gamezonemargin;
 	
 	M_ClearRandom ();
 
-	P_LoadingPlaque ();
+	stagefailed = true;
+	leveltime = 0;
 	
-D_printf ("P_SetupLevel(%i,%i)\n",lumpnum,skill);
+D_printf ("P_SetupLevel(%i)\n",lumpnum);
 
 	P_InitThinkers ();
-	
+
+	R_ResetTextures();
+
 /* note: most of this ordering is important	 */
 	P_LoadBlockMap (lumpnum+ML_BLOCKMAP);
 	P_LoadVertexes (lumpnum+ML_VERTEXES);
 	P_LoadSectors (lumpnum+ML_SECTORS);
 	P_LoadSideDefs (lumpnum+ML_SIDEDEFS);
 	P_LoadLineDefs (lumpnum+ML_LINEDEFS);
+	P_LoadSegs (lumpnum+ML_SEGS);
 	P_LoadSubsectors (lumpnum+ML_SSECTORS);
 	P_LoadNodes (lumpnum+ML_NODES);
-	P_LoadSegs (lumpnum+ML_SEGS);
-
-#ifdef MARS
-	rejectmatrix = (byte *)W_GetLumpData(lumpnum+ML_REJECT);
-#else
-	rejectmatrix = W_CacheLumpNum (lumpnum+ML_REJECT,PU_LEVEL);
-#endif
+	P_LoadReject(lumpnum+ML_REJECT);
 
 	validcount = Z_Malloc((numlines + 1) * sizeof(*validcount) * 2, PU_LEVEL);
 	D_memset(validcount, 0, (numlines + 1) * sizeof(*validcount) * 2);
@@ -688,18 +650,13 @@ D_printf ("P_SetupLevel(%i,%i)\n",lumpnum,skill);
 
 	if (netgame == gt_deathmatch)
 	{
-		itemrespawnque = Z_Malloc(sizeof(*itemrespawnque) * ITEMQUESIZE, PU_LEVEL);
-		itemrespawntime = Z_Malloc(sizeof(*itemrespawntime) * ITEMQUESIZE, PU_LEVEL);
 		deathmatchstarts = Z_Malloc(sizeof(*deathmatchstarts) * MAXDMSTARTS, PU_LEVEL);
 	}
 	else
 	{
-		itemrespawnque = NULL;
-		itemrespawntime = NULL;
 		deathmatchstarts = NULL;
 	}
 
-	bodyqueslot = 0;
 	deathmatch_p = deathmatchstarts;
 	P_LoadThings (lumpnum+ML_THINGS);
 
@@ -737,10 +694,10 @@ extern byte *debugscreen;
 }
 #endif
 
-	iquehead = iquetail = 0;
 	gamepaused = false;
 
-	R_SetupLevel();
+	gamezonemargin = DEFAULT_GAME_ZONE_MARGIN;
+	R_SetupLevel(gamezonemargin);
 
 	I_SetThreadLocalVar(DOOMTLS_VALIDCOUNT, &validcount[0]);
 
@@ -761,19 +718,13 @@ extern byte *debugscreen;
 void P_Init (void)
 {
 	anims = Z_Malloc(sizeof(*anims) * MAXANIMS, PU_STATIC);
-	switchlist = Z_Malloc(sizeof(*switchlist)* MAXSWITCHES * 2, PU_STATIC);
-	buttonlist = Z_Malloc(sizeof(*buttonlist) * MAXBUTTONS, PU_STATIC);
 	linespeciallist = Z_Malloc(sizeof(*linespeciallist) * MAXLINEANIMS, PU_STATIC);
 
 	activeplats = Z_Malloc(sizeof(*activeplats) * MAXPLATS, PU_STATIC);
 	activeceilings = Z_Malloc(sizeof(*activeceilings) * MAXCEILINGS, PU_STATIC);
 
-	P_InitSwitchList ();
 	P_InitPicAnims ();
 #ifndef MARS
 	pausepic = W_CacheLumpName ("PAUSED",PU_STATIC);
 #endif
 }
-
-
-

@@ -14,6 +14,16 @@ INCPATH = -I. -I$(ROOTDIR)/sh-elf/include -I$(ROOTDIR)/sh-elf/sh-elf/include -I.
 CCFLAGS = -c -std=c11 -m2 -mb
 CCFLAGS += -Wall -Wextra -pedantic -Wno-unused-parameter -Wimplicit-fallthrough=0 -Wno-missing-field-initializers -Wnonnull
 CCFLAGS += -D__32X__ -DMARS
+CCFLAGS += -DMDSKY
+#CCFLAGS += -DREC_POS_DEMO
+#CCFLAGS += -DPLAY_POS_DEMO
+CCFLAGS += -DHIGH_DETAIL_SPRITES
+CCFLAGS += -DFLATDRAW2X
+CCFLAGS += -DWALLDRAW2X
+CCFLAGS += -DSIMPLELIGHT
+CCFLAGS += -DNARROW_SCENERY
+CCFLAGS += -DFLOOR_OVER_FLOOR
+CCFLAGS += -DSHOW_DISCLAIMER
 LDFLAGS = -T mars-ssf.ld -Wl,-Map=output.map -nostdlib -Wl,--gc-sections --specs=nosys.specs
 ASFLAGS = --big
 
@@ -40,10 +50,9 @@ LIBS = $(LIBPATH) -lc -lgcc -lgcc-Os-4-200 -lnosys
 OBJS = \
 	crt0.o \
 	f_main.o \
-	f_wipe.o \
 	in_main.o \
-	am_main.o \
 	st_main.o \
+	st_inter.o \
 	m_main.o \
 	o_main.o \
 	comnjag.o \
@@ -51,8 +60,8 @@ OBJS = \
 	d_main.o \
 	g_game.o \
 	info.o \
+	p_camera.o \
 	p_ceilng.o \
-	p_doors.o \
 	p_enemy.o \
 	p_floor.o \
 	p_inter.o \
@@ -61,10 +70,8 @@ OBJS = \
 	p_maputl.o \
 	p_mobj.o \
 	p_plats.o \
-	p_pspr.o \
 	p_setup.o \
 	p_spec.o \
-	p_switch.o \
 	p_telept.o \
 	p_tick.o \
 	p_base.o \
@@ -102,6 +109,7 @@ OBJS = \
 	sh2_mixer.o \
 	r_cache.o \
 	m_fire.o \
+	v_font.o \
 	lzss.o
 
 release: $(TARGET).32x
@@ -115,7 +123,7 @@ m68k.bin:
 
 $(TARGET).32x: $(TARGET).elf
 	$(OBJC) -O binary $< temp2.bin
-	$(DD) if=temp2.bin of=temp.bin bs=180K conv=sync
+	$(DD) if=temp2.bin of=temp.bin bs=236K conv=sync
 	rm -f temp3.bin
 	cat temp.bin $(WAD) >>temp3.bin
 	$(DD) if=temp3.bin of=$@ bs=512K conv=sync

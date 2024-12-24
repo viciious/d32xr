@@ -92,7 +92,7 @@ void D_isort(int* a, int len) __attribute__((nonnull)) ATTR_DATA_CACHE_ALIGN;
 
 #define MAXPLAYERS	2
 
-#define TICRATE		15				/* number of tics / second */
+#define TICRATE		30				/* number of tics / second */
 #define TICVBLS		(60/TICRATE)	/* vblanks per tic */
 									/* change this to 'ticrate' if you want */
 									/* to use a different rate on PAL */
@@ -102,7 +102,7 @@ void D_isort(int* a, int len) __attribute__((nonnull)) ATTR_DATA_CACHE_ALIGN;
 typedef int fixed_t;
 
 #ifdef MARS
-#define THINKERS_30HZ
+//#define THINKERS_30HZ
 #endif
 
 #ifdef THINKERS_30HZ
@@ -111,15 +111,23 @@ typedef int fixed_t;
 #define THINKERS_TICS 2
 #endif
 
+#define ANGLE_1 0x00B60B61 // Not exact, so rounded up
 #define	ANG45	0x20000000
 #define	ANG90	0x40000000
 #define	ANG180	0x80000000
 #define	ANG270	0xc0000000
+#define ANGLE_MAX  0xFFFFFFFF
 typedef unsigned angle_t;
 
 #define	FINEANGLES			8192
 #define	FINEMASK			(FINEANGLES-1)
 #define	ANGLETOFINESHIFT	19	/* 0x100000000 to 0x2000 */
+
+#define TITLE_ANGLE_INC		0x800000
+
+#define TITLE_MAP_NUMBER	30
+#define SSTAGE_START        60
+#define SSTAGE_END          66
 
 #ifdef MARS
 
@@ -136,15 +144,7 @@ extern	const fixed_t		*finecosine_;
 
 #endif
 
-typedef enum
-{
-	sk_baby,
-	sk_easy,
-	sk_medium,
-	sk_hard,
-	sk_nightmare
-} skill_t;
-
+short G_ClipAimingPitch(int* aiming);
 
 typedef enum 
 {
@@ -154,7 +154,9 @@ typedef enum
 	ga_secretexit,
 	ga_warped,
 	ga_exitdemo,
-	ga_startnew
+	ga_startnew,
+	ga_backtotitle,
+	ga_specialstageexit,
 } gameaction_t;
 
 
@@ -205,111 +207,125 @@ typedef struct
 
 typedef struct mobj_s
 {
-	fixed_t			x, y, z;
+	uint8_t		type;
+	uint8_t		flags;
+	VINT        isubsector;
+	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
+	struct mobj_s	*bnext, *bprev;		/* links in blocks (if needed) */
 	struct	mobj_s* prev, * next;
 
-	unsigned char		sprite;				/* used to find patch_t and flip value */
-	unsigned char		player;		/* only valid if type == MT_PLAYER */
+	fixed_t			x, y, z;
 
-	VINT			health;
-	VINT			tics;				/* state tic counter	 */
-	VINT 			state;
-	VINT			frame;				/* might be ord with FF_FULLBRIGHT */
+	// RING OBJECTS END HERE
 
-	unsigned short		type;
-
-/* info for drawing */
-	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
+	/* info for drawing */
 	angle_t			angle;
 
-/* interaction info */
-	struct mobj_s	*bnext, *bprev;		/* links in blocks (if needed) */
-	struct subsector_s	*subsector;
+	/* interaction info */
 	fixed_t			floorz, ceilingz;	/* closest together of contacted secs */
 
-	int			flags;
-	fixed_t			radius, height;		/* for movement checking */
+	uint8_t			health;
+	uint8_t			player;		/* only valid if type == MT_PLAYER */
+	int8_t			tics;				/* state tic counter	 */
+	uint8_t        	theight;			// 'tiny' height: << FRACBITS to get real height
+
+	VINT 			state;
+
+	VINT            flags2;
 
 	/* STATIC OBJECTS END HERE */
-	union {
-		struct {
-			unsigned char	movedir;		/* 0-7 */
-			char			movecount;		/* when 0, select a new dir */
-		};
-		unsigned short		thingid;		/* thing id for respawning specials */
-	};
+	unsigned char	movedir;		/* 0-7 */
+	char			movecount;		/* when 0, select a new dir */
 	unsigned char		reactiontime;	/* if non 0, don't attack yet */
-									/* used by player to freeze a bit after */
-									/* teleporting */
 	unsigned char		threshold;		/* if >0, the target will be chased */
-									/* no matter what (even if shot) */
 
 	fixed_t			momx, momy, momz;	/* momentums */
 
-	unsigned 		speed;			/* mobjinfo[mobj->type].speed */
 	struct mobj_s	*target;		/* thing being chased/attacked (or NULL) */
 									/* also the originator for missiles */
 	latecall_t		latecall;		/* set in p_base if more work needed */
 	intptr_t		extradata;		/* for latecall functions */
-} mobj_t
-;
+} mobj_t;
+
+typedef struct scenerymobj_s
+{
+	uint8_t		type;
+	uint8_t		flags;
+	VINT isubsector;
+	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
+	// SIMILARITIES END HERE
+	int16_t x, y;
+} scenerymobj_t;
+
+typedef struct ringmobj_s
+{
+	uint8_t		type;
+	uint8_t		flags;
+	VINT        isubsector;
+	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
+	struct mobj_s	*bnext, *bprev;		/* links in blocks (if needed) */
+	// SIMILARITIES END HERE
+	VINT			x, y, z;
+	VINT alive;
+} ringmobj_t;
 
 typedef struct degenmobj_s
 {
-	fixed_t			x, y, z;
+	uint8_t		type;
+	uint8_t		flags;
+	VINT isubsector;
+	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
+	struct mobj_s	*bnext, *bprev;		/* links in blocks (if needed) */
 	void 			*prev, *next;
-} degenmobj_t
-;
+} degenmobj_t;
 
-#define static_mobj_size (offsetof(mobj_t,momx))
+#define static_mobj_size (offsetof(mobj_t,movedir))
 
 /* */
 /* frame flags */
 /* */
-#define	FF_FULLBRIGHT	0x8000		/* flag in thing->frame */
-#define FF_FRAMEMASK	0x7fff
+#define	FF_FULLBRIGHT	0x8000		/* flag in thing->frame to render full light */
+#define FF_FLIPPED      0x4000      /* flag in thing->frame to flip a 0-sprite */
+#define FF_FRAMEMASK	0x3fff
+
+/* */
+/* sprite lump flags */
+/* */
+#define	SL_SINGLESIDED	0x8000
+#define	SL_FLIPPED 		0x4000
+#define SL_LUMPMASK		0x3fff
 
 /* */
 /* mobj flags */
 /* */
-#define	MF_SPECIAL		1			/* call P_SpecialThing when touched */
-#define	MF_SOLID		2
-#define	MF_SHOOTABLE	4
-#define	MF_NOSECTOR		8			/* don't use the sector links */
+#define	MF_SPECIAL		0x0001			/* call P_SpecialThing when touched */
+#define	MF_NOCLIP		0x0002          /* player cheat */
+#define	MF_SOLID		0x0004
+#define	MF_NOBLOCKMAP	0x0008			/* don't use the sector links */
 									/* (invisible but touchable)  */
-#define	MF_NOBLOCKMAP	16			/* don't use the blocklinks  */
+#define	MF_NOSECTOR 	0x0010			/* don't use the blocklinks  */
 									/* (inert but displayable) */
-#define	MF_AMBUSH		32
-#define	MF_JUSTHIT		64			/* try to attack right back */
-#define	MF_JUSTATTACKED	128			/* take at least one step before attacking */
-#define	MF_SPAWNCEILING	256			/* hang from ceiling instead of floor */
-#define	MF_NOGRAVITY	512			/* don't apply gravity every tic */
 
-/* movement flags */
-#define	MF_DROPOFF		0x400		/* allow jumps from high places */
-#define	MF_PICKUP		0x800		/* for players to pick up items */
-#define	MF_NOCLIP		0x1000		/* player cheat */
-#define	MF_SLIDE		0x2000		/* keep info about sliding along walls */
-#define	MF_FLOAT		0x4000		/* allow moves to any height, no gravity */
-#define	MF_TELEPORT		0x8000		/* don't cross lines or look at heights */
-#define MF_MISSILE		0x10000		/* don't hit same species, explode on block */
+#define	MF_RINGMOBJ		0x0020      /* This mobj is in the ringmobj list, animation is controlled globally */
+#define	MF_STATIC    	0x0040		/* can't move or think */
+#define	MF_NOGRAVITY	0x0080		/* don't apply gravity every tic */
 
-#define	MF_DROPPED		0x20000		/* dropped by a demon, not level spawned */
-#define	MF_SHADOW		0x40000		/* use fuzzy draw (shadow demons / invis) */
-#define	MF_NOBLOOD		0x80000		/* don't bleed when shot (use puff) */
-#define	MF_CORPSE		0x100000	/* don't stop moving halfway off a step */
-#define	MF_INFLOAT		0x200000	/* floating to a height for a move, don't */
+#define MF2_DONTDRAW       1
+#define MF2_FRET           2           // Multi-hit enemy is reeling from a hit
+#define MF2_FIRING         4           // Boss currently firing
+#define MF2_FORWARDOFFSET  8         // Offset the Z position of this object to be closer when rendering (shields, etc.)
+#define MF2_SKULLFLY      16          // Doom will never die. Only the players.
+#define MF2_JUSTATTACKED  32
+#define MF2_BOSSFLEE      64
+#define MF2_SPAWNEDJETS  128
+#define	MF2_FLOAT		 256		/* allow moves to any height, no gravity */
+#define	MF2_SHOOTABLE	 512
+#define MF2_MISSILE		1024		/* don't hit same species, explode on block */
+#define	MF2_INFLOAT		2048	/* floating to a height for a move, don't */
 									/* auto float to target's height */
-
-#define	MF_COUNTKILL	0x400000	/* count towards intermission kill total */
-#define	MF_COUNTITEM	0x800000	/* count towards intermission item total */
-
-#define	MF_SKULLFLY		0x1000000	/* skull in flight */
-#define	MF_NOTDMATCH	0x2000000	/* don't spawn in death match (key cards) */
-
-#define	MF_SEETARGET	0x4000000	/* is target visible? */
-
-#define	MF_STATIC		0x8000000	/* can't move or think */
+#define	MF2_SEETARGET	4096	/* is target visible? */
+#define MF2_ENEMY		8192
+#define MF2_NARROWGFX  16384    // Narrow graphic
 
 /*============================================================================= */
 typedef enum
@@ -319,85 +335,42 @@ typedef enum
 	PST_REBORN			/* ready to restart */
 } playerstate_t;
 
-
-/* psprites are scaled shapes directly on the view screen */
-/* coordinates are given for a 320*200 view screen */
-typedef enum
-{
-	ps_weapon,
-	ps_flash,
-	NUMPSPRITES
-} psprnum_t;
-
-typedef struct
-{
-	VINT	state;		/* a S_NULL state means not active */
-	VINT	tics;
-	fixed_t	sx, sy;
-} pspdef_t;
-
-typedef enum
-{
-	it_bluecard,
-	it_yellowcard,
-	it_redcard,
-	it_blueskull,
-	it_yellowskull,
-	it_redskull,
-	NUMCARDS
-} card_t;
-
-typedef enum
-{
-	wp_fist,
-	wp_pistol,
-	wp_shotgun,
-	wp_chaingun,
-	wp_missile,
-	wp_plasma,
-	wp_bfg,
-	wp_chainsaw,
-	NUMWEAPONS,
-	wp_nochange
-} weapontype_t;
-
-typedef enum
-{
-	am_clip,		/* pistol / chaingun */
-	am_shell,		/* shotgun */
-	am_cell,		/* BFG */
-	am_misl,		/* missile launcher */
-	NUMAMMO,
-	am_noammo		/* chainsaw / fist */
-} ammotype_t;
-
-
-typedef struct
-{
-	ammotype_t	ammo;
-	int			upstate;
-	int			downstate;
-	int			readystate;
-	int			atkstate;
-	int			flashstate;
-} weaponinfo_t;
-
-extern	const weaponinfo_t	weaponinfo[NUMWEAPONS];
-
 typedef enum
 {
 	pw_invulnerability,
-	pw_strength,
-	pw_ironfeet,
-	pw_allmap,
-	pw_infrared,
+	pw_flashing,
+	pw_sneakers,
+	pw_extralife,
+	pw_underwater,
+	pw_spacetime,
 	NUMPOWERS
 } powertype_t;
 
-#define	INVULNTICS		(30*15)
-#define	INVISTICS		(60*15)
-#define	INFRATICS		(120*15)
-#define	IRONTICS		(60*15)
+#define	INVULNTICS		(20*TICRATE)
+#define SNEAKERTICS		(20*TICRATE)
+#define	UNDERWATERTICS	(30*TICRATE)
+#define FLASHINGTICS    (3*TICRATE)
+#define EXTRALIFETICS   (4*TICRATE)
+#define SPACETIMETICS   (11*TICRATE + (TICRATE/2))
+#define GRAVBOOTSTICS   (20*TICRATE)
+
+#define PF_ONGROUND 1
+#define PF_THOKKED  2
+#define PF_UNDERWATER 4
+#define PF_JUMPED 8
+#define PF_STARTJUMP 16
+#define PF_VERTICALFLIP 32 // May as well prepare...
+#define PF_SPINNING 64
+#define PF_GASPEDAL 128
+#define PF_USEDOWN 256
+#define PF_STARTDASH 512
+#define PF_JUMPDOWN 1024
+#define PF_TOUCHWATER 2048
+#define PF_DROWNED 4096
+#define PF_ELEMENTALBOUNCE 8192
+
+boolean P_IsObjectOnGround(mobj_t *mo);
+int8_t P_MobjFlip(mobj_t *mo);
 
 /*
 ================
@@ -407,61 +380,73 @@ typedef enum
 ================
 */
 
+typedef enum
+{
+	SH_ARMAGEDDON = 1,
+	SH_ATTRACT,
+	SH_ELEMENTAL,
+	SH_FORCE1,
+	SH_FORCE2,
+	SH_WHIRLWIND,
+} shieldpower_t;
+
+#define MAX_TOUCHING_SECTORS 8
 typedef struct player_s
 {
 	mobj_t		*mo;
 	playerstate_t	playerstate;
+
+	int         pflags;
+	fixed_t     speed;
 	
 	fixed_t		forwardmove, sidemove;	/* built from ticbuttons */
-	angle_t		angleturn;				/* built from ticbuttons */
+	int         buttons;
 	
 	fixed_t		viewz;					/* focal origin above r.z */
 	fixed_t		viewheight;				/* base height above floor for viewz */
 	fixed_t		deltaviewheight;		/* squat speed */
 	fixed_t		bob;					/* bounded/scaled total momentum */
-	
+
+	int			score;
 	VINT		health;					/* only used between levels, mo->health */
 										/* is used during levels	 */
-	VINT		armorpoints, armortype;	/* armor type is 0-2 */
+	VINT		shield;
 	
 	VINT		powers[NUMPOWERS];		/* invinc and invis are tic counters	 */
-	char		cards[NUMCARDS];
-	char		backpack;
-	VINT		frags;					/* kills of other player */
-	VINT		readyweapon;
-	VINT		pendingweapon;		/* wp_nochange if not changing */
-	char		weaponowned[NUMWEAPONS];
-	VINT		ammo[NUMAMMO];
-	VINT		maxammo[NUMAMMO];
-	VINT		attackdown, usedown;	/* true if button down last tic */
-	VINT		cheats;					/* bit flags */
-	
-	VINT		refire;					/* refired shots are less accurate */
 	
 	VINT		killcount, itemcount, secretcount;		/* for intermission */
-	char		*message;				/* hint messages */
-	VINT		damagecount, bonuscount;/* for screen flashing */
-	mobj_t		*attacker;				/* who did damage (NULL for floors) */
-	VINT		extralight;				/* so gun flashes light up areas */
-	VINT		colormap;				/* 0-3 for which color to draw player */
-	pspdef_t	psprites[NUMPSPRITES];	/* view sprites (gun, etc) */
-	boolean		didsecret;				/* true if secret level has been done */
-	void		*lastsoundsector;		/* don't flood noise every time */
-	
-	int			automapx, automapy, automapscale, automapflags;
-	int			turnheld;				/* for accelerative turning */
+	VINT		whiteFlash;/* for screen flashing */
+
+	VINT        touching_sectorlist[MAX_TOUCHING_SECTORS]; // These can potentially be duplicates
+	VINT        num_touching_sectors;
+
+	VINT        exiting;
+	VINT        deadTimer;
+
+	VINT        starpostnum;
+	VINT        starpostx, starposty, starpostz;
+	VINT        starpostangle;
+
+	VINT        lossCount;
+	VINT        stillTimer;
+	VINT        justSprung;
+	VINT        scoreAdd;
+	VINT        lives;
+	VINT		dashSpeed;
+	VINT        homingTimer;
+	VINT        xtralife;
+	VINT        skidTime;
 } player_t;
+
+void P_PlayerHitFloor(player_t* player);
 
 // stuff player keeps between respawns in single player
 typedef struct
 {
 	VINT		health;
 	VINT		armorpoints, armortype;
-	VINT		ammo[NUMAMMO];
-	VINT		maxammo[NUMAMMO];
 	VINT		cheats;
 	VINT		weapon;
-	char		weaponowned[NUMWEAPONS];
 	char		backpack;
 } playerresp_t;
 
@@ -473,7 +458,7 @@ typedef struct
 #define	AF_ALLLINES		4
 #define	AF_ALLMOBJ		8
 
-#define	AF_OPTIONSACTIVE	128			/* options screen running */
+extern boolean optionsMenuOn; /* options screen running */
 
 /*
 ===============================================================================
@@ -510,7 +495,7 @@ void G_LoadGame(int saveslot);
 
 extern	gameaction_t	gameaction;
 
-#define	SBARHEIGHT	40			/* status bar height at bottom of screen */
+#define	SBARHEIGHT	0			/* status bar height at bottom of screen */
 
 typedef enum
 {
@@ -526,28 +511,27 @@ extern	int			consoleplayer;		/* player taking events and displaying */
 extern	player_t	players[MAXPLAYERS];
 extern	playerresp_t	playersresp[MAXPLAYERS];
 
-extern	VINT		maxammo[NUMAMMO];
-
-
-extern	skill_t		gameskill;
-extern	int			totalkills, totalitems, totalsecret;	/* for intermission */
+extern	VINT		totalitems, totalsecret;	/* for intermission */
 extern	int			gamemaplump;
 extern	dmapinfo_t	gamemapinfo;
 extern	dgameinfo_t	gameinfo;
+extern  boolean		sky_md_layer;
+extern	boolean		sky_32x_layer;
 
 extern 	VINT 		*gamemapnumbers;
 extern 	VINT 		*gamemaplumps;
 extern 	VINT 		gamemapcount;
 
 extern 	int 		gametic;
-extern 	int 		prevgametic;
+extern  int         leveltime;
+extern  VINT        fadetime;
+extern uint16_t     emeralds;
+extern uint16_t     token;
+extern uint16_t     tokenbits;
 
 #define MAXDMSTARTS		10
 extern	mapthing_t	*deathmatchstarts, *deathmatch_p;
 extern	mapthing_t	playerstarts[MAXPLAYERS];
-
-#define	BODYQUESIZE		4
-extern	int			bodyqueslot;
 
 /*
 ===============================================================================
@@ -689,9 +673,14 @@ void	*W_CacheLumpNum (int lump, int tag);
 void	*W_CacheLumpName (const char *name, int tag);
 
 const char *W_GetNameForNum (int lump);
+#ifdef SHOW_DISCLAIMER
 void* W_GetLumpData(int lump) ATTR_DATA_CACHE_ALIGN;
-
 #define W_POINTLUMPNUM(x) W_GetLumpData(x)
+#else
+void* W_GetLumpData(int lump, const char *file, int line) ATTR_DATA_CACHE_ALIGN;
+#define W_POINTLUMPNUM(x) W_GetLumpData(x, __FILE__, __LINE__)
+#endif
+
 
 
 /*---------- */
@@ -701,9 +690,10 @@ void D_DoomMain (void);
 void D_DoomLoop (void);
 
 extern	boolean	demoplayback, demorecording;
-extern	unsigned *demo_p, *demobuffer;
+extern	unsigned char *demo_p, *demobuffer;
 
-extern	skill_t		startskill;
+extern  fixed_t prev_rec_values[4];
+
 extern	int			startmap;
 extern	gametype_t	starttype;
 extern	int			startsave;
@@ -760,6 +750,7 @@ int     I_GetFRTCounter (void);
 void I_Update (void);
 
 void I_Error (char *error, ...) __attribute__((noreturn));
+void CONS_Printf(char *msg, ...);
 
 void I_StoreScreenCopy(void);
 void I_RestoreScreenCopy(void);
@@ -771,26 +762,35 @@ void I_SwapScreenCopy(void);
 #ifdef USE_C_DRAW
 
 #define I_DrawColumnLow I_DrawColumnLowC
-#define I_DrawFuzzColumnLow I_DrawFuzzColumnLowC
+#define I_DrawSkyColumnLow I_DrawSkyColumnLowC
+#define I_Draw32XSkyColumnLow I_Draw32XSkyColumnLowC
 #define I_DrawColumnNPo2Low I_DrawColumnNPo2LowC
 #define I_DrawSpanLow I_DrawSpanLowC
+#define I_DrawSpanColorLow I_DrawSpanColorLowC
 
 #define I_DrawColumn I_DrawColumnC
+#define I_DrawSkyColumn I_DrawSkyColumnC
+#define I_Draw32XSkyColumn I_Draw32XSkyColumnC
 #define I_DrawColumnNPo2 I_DrawColumnNPo2C
-#define I_DrawFuzzColumn I_DrawFuzzColumnC
 #define I_DrawSpan I_DrawSpanC
+#define I_DrawSpanColor I_DrawSpanColorC
 
 #else
 
 #define I_DrawColumnLow I_DrawColumnLowA
-#define I_DrawFuzzColumnLow I_DrawFuzzColumnLowA
+#define I_DrawSkyColumnLow I_DrawSkyColumnLowA
+#define I_Draw32XSkyColumnLow I_Draw32XSkyColumnLowA
 #define I_DrawColumnNPo2Low I_DrawColumnNPo2LowA
 #define I_DrawSpanLow I_DrawSpanLowA
+#define I_DrawSpanColorLow I_DrawSpanColorLowA
 
 #define I_DrawColumn I_DrawColumnA
+#define I_DrawColumnFlipped I_DrawColumnFlippedA
+#define I_DrawSkyColumn I_DrawSkyColumnA
+#define I_Draw32XSkyColumn I_Draw32XSkyColumnA
 #define I_DrawColumnNPo2 I_DrawColumnNPo2A
-#define I_DrawFuzzColumn I_DrawFuzzColumnA
 #define I_DrawSpan I_DrawSpanA
+#define I_DrawSpanColor I_DrawSpanColorA
 
 #endif
 
@@ -808,23 +808,48 @@ void I_DrawSpanLow(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
 	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
 
+void I_DrawColumnFlipped(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
+	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
+
+#ifdef MDSKY
+void I_DrawSkyColumn(int dc_x, int dc_yl, int dc_yh);
+
+void I_DrawSkyColumnLow(int dc_x, int dc_yl, int dc_yh);
+#endif
+
+void I_Draw32XSkyColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
+	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_y_offset);
+
+void I_Draw32XSkyColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
+	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_y_offset);
+
 void I_DrawColumnNPo2(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
 	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
 
 void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int dc_texheight);
 
-void I_DrawFuzzColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight);
+void I_DrawSpanColor(int ds_y, int ds_x1, int ds_x2, int color_index);
 
-void I_DrawFuzzColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight);
+void I_DrawSpanColorLow(int ds_y, int ds_x1, int ds_x2, int color_index);
+
+#ifdef POTATO_MODE
+void I_DrawSpanPotato(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
+	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int dc_texheight);
+
+void I_DrawSpanPotatoLow(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
+	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int dc_texheight);
+#endif
 
 void I_DrawColumnNoDraw(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight);
 
 void I_DrawSpanNoDraw(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int dc_texheight);
+
+void I_DrawSpanColorNoDraw(int ds_y, int ds_x1, int ds_x2, int color_index);
+
+void I_DrawSkyColumnNoDraw(int dc_x, int dc_yl, int dc_yh);
 
 void I_Print8 (int x, int y, const char *string);
 int I_Print8Len(const char* string);
@@ -837,13 +862,15 @@ void I_DebugScreen (void);
 
 void G_DeathMatchSpawnPlayer (int playernum);
 void G_Init(void);
-void G_InitNew (skill_t skill, int map, gametype_t gametype, boolean splitscreen);
+void G_InitNew (int map, gametype_t gametype, boolean splitscreen);
 void G_ExitLevel (void);
 void G_SecretExitLevel (void);
 void G_WorldDone (void);
 
-void G_RecordDemo (void);
-int G_PlayDemoPtr (unsigned *demo);
+void G_RecordInputDemo  (void);
+void G_RecordPositionDemo (void);
+int G_PlayInputDemoPtr (unsigned char *demo);
+int G_PlayPositionDemoPtr (unsigned char *demo);
 
 int G_LumpNumForMapNum(int map);
 
@@ -851,11 +878,12 @@ int G_LumpNumForMapNum(int map);
 /*PLAY */
 /*----- */
 
-void P_SetupLevel (int lumpnum, skill_t skill);
+void P_SetupLevel (int lumpnum);
 void P_Init (void);
 
 void P_Start (void);
 void P_Stop (void);
+extern int accum_time;
 int P_Ticker (void);
 void P_Drawer (void);
 void P_Update (void);
@@ -875,10 +903,6 @@ void F_Start (void);
 void F_Stop (void);
 int F_Ticker (void);
 void F_Drawer (void);
-
-void AM_Control (player_t *player);
-void AM_Drawer (void);
-void AM_Start (void);
 
 /*----- */
 /*OPTIONS */
@@ -922,24 +946,12 @@ struct subsector_s *R_PointInSubsector (fixed_t x, fixed_t y) ATTR_DATA_CACHE_AL
 /*---- */
 int M_Random (void) ATTR_DATA_CACHE_ALIGN;
 int P_Random (void) ATTR_DATA_CACHE_ALIGN;
+fixed_t P_RandomFixed (void);
+int P_RandomKey (int max);
 void M_ClearRandom (void);
 void P_RandomSeed(int seed);
 void M_ClearBox (fixed_t *box);
 void M_AddToBox (fixed_t *box, fixed_t x, fixed_t y);
-
-
-/*---- */
-/*WIPE */
-/*---- */
-
-#define WIPEWIDTH   160
-
-int wipe_InitMelt(short *y);
-int wipe_ExitMelt(void);
-int wipe_StartScreen(void);
-int wipe_EndScreen(void);
-int wipe_ScreenWipe(short *y, short *yy, int ticks, int step);
-
 
 /* header generated by Dave's sound utility */
 #include "sounds.h"
@@ -1026,17 +1038,17 @@ enum
 	BT_UP			= 0x4,
 	BT_DOWN			= 0x8,
 
-	BT_ATTACK		= 0x10,
-	BT_USE			= 0x20,
-	BT_STRAFE		= 0x40,
-	BT_SPEED		= 0x80,
+	BT_JUMP		    = 0x10,
+	BT_SPIN			= 0x20,
+	BT_GASPEDAL		= 0x40,
+	BT_FLIP			= 0x80,
 
 	BT_START		= 0x100,
 	BT_AUTOMAP		= 0x200,
 	BT_MODE			= 0x400,
 
-	BT_PWEAPN		= 0x800,
-	BT_NWEAPN		= 0x1000,
+	BT_CAMLEFT		= 0x800,
+	BT_CAMRIGHT		= 0x1000,
 
 	BT_STRAFELEFT	= 0x2000,
 	BT_STRAFERIGHT	= 0x4000,
@@ -1062,20 +1074,13 @@ enum
 typedef enum
 {
 	SFU,
-	SUF,
-	FSU,
-	FUS,
-	USF,
-	UFS,
-	NUMCONTROLOPTIONS
+	NUMCONTROLOPTIONS,
 } control_t;
 
 /* action buttons can be set to BT_A, BT_B, or BT_C */
 /* strafe and use should be set to the same thing */
 extern unsigned configuration[NUMCONTROLOPTIONS][3];
 extern	VINT	controltype;				/* 0 to 5 */
-extern	VINT	strafebtns;
-extern	VINT	alwaysrun;
 extern	boolean	splitscreen;
 
 extern	VINT	sfxvolume, musicvolume;		/* range from 0 to 255 */
@@ -1110,8 +1115,12 @@ typedef struct
 
 void DoubleBufferSetup (void);
 void EraseBlock (int x, int y, int width, int height);
+void GetJagobjSize(int lumpnum, int* ow, int* oh);
 void DrawJagobj (jagobj_t *jo, int x, int y);
 void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh);
+void DrawJagobjLumpWithColormap(int lumpnum, int x, int y, int* ow, int* oh, int colormap);
+void DrawJagobjWithColormap(jagobj_t* jo, int x, int y, 
+	int src_x, int src_y, int src_w, int src_h, pixel_t *fb, int colormap);
 void DrawJagobj2(jagobj_t* jo, int x, int y, 
 	int src_x, int src_y, int src_w, int src_h, pixel_t* fb);
 void DrawFillRect(int x, int y, int w, int h, int c);
@@ -1161,18 +1170,26 @@ boolean GetSaveInfo(int slotnumber, VINT* mapnum, VINT* skill, VINT *mode);
 
 void PrintHex (int x, int y, unsigned num);
 void DrawPlaque (jagobj_t *pl);
+void DrawTiledLetterbox2(int flat);
+void DrawTiledLetterbox(void);
 void DrawTiledBackground2(int flat);
 void DrawTiledBackground(void);
+void DrawScrollingBanner(short ltzz_lump, int x, int y_shift);
+void DrawScrollingChevrons(short chev_lump, int x, int y_shift);
+
+void ApplyHorizontalDistortionFilter(int filter_offset);
+void RemoveDistortionFilters();
+
 extern	int		maxlevel;			/* highest level selectable in menu (1-25) */
 
 extern	int		gamevbls;			/* may not really be vbls in multiplayer */
 extern	int		vblsinframe;			/* range from 4 to 8 */
 
-#define MINTICSPERFRAME		2
+#define MAX_FRAME_SKIP		3
+
+#define MINTICSPERFRAME		1
 #define MAXTICSPERFRAME		4
 extern	VINT	ticsperframe;		/* 2 - 4 */
-
-extern boolean	spr_rotations;
 
 typedef enum
 {
@@ -1189,6 +1206,14 @@ typedef enum
 
 extern VINT debugmode;
 extern char clearscreen;
+
+typedef enum
+{
+	DISTORTION_NONE,
+	DISTORTION_ADD,
+	DISTORTION_REMOVE,
+} distortion_e;
+extern VINT distortion_action;
 extern VINT initmathtables;
 
 extern VINT COLOR_BLACK;
@@ -1197,7 +1222,6 @@ extern VINT COLOR_WHITE;
 void I_InitMenuFire(jagobj_t* titlepic);
 void I_StopMenuFire(void);
 void I_DrawMenuFire(void);
-void I_DrawSbar(void);
 void S_StartSong(int musiclump, int looping, int cdtrack);
 int S_SongForMapnum(int mapnum);
 void S_StopSong(void);
@@ -1214,7 +1238,6 @@ void S_SetSoundDriver (int newdrv);
 #define DOOMTLS_VALIDCOUNT 		8
 #define DOOMTLS_COLUMNCACHE		12
 #define DOOMTLS_COLORMAP		16
-#define DOOMTLS_FUZZPOS			20
 // !!! if this is changed, it must be changed in mars_tls_t too!
 
 #ifdef MARS

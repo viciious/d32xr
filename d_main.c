@@ -1,10 +1,22 @@
 /* D_main.c  */
  
-#include "doomdef.h" 
+#include "doomdef.h"
+#include "v_font.h"
+#include "r_local.h"
+
+#ifdef MARS
+#include "marshw.h"
+#endif
+
+#include <string.h>
 
 boolean		splitscreen = false;
 VINT		controltype = 0;		/* determine settings for BT_* */
-VINT		alwaysrun = 0;
+
+boolean		sky_md_layer = false;
+boolean		sky_32x_layer = false;
+
+unsigned int	phi_line;
 
 int			gamevbls;		/* may not really be vbls in multiplayer */
 int			vblsinframe;		/* range from ticrate to ticrate*2 */
@@ -14,20 +26,24 @@ VINT		ticsperframe = MINTICSPERFRAME;
 int			maxlevel;			/* highest level selectable in menu (1-25) */
 jagobj_t	*backgroundpic;
 
-unsigned	*demo_p, *demobuffer;
-
-boolean canwipe = false;
-
 int 		ticstart;
+
+#ifdef PLAY_POS_DEMO
+	int			realtic;
+	fixed_t prev_rec_values[4];
+#else 
+#ifdef REC_POS_DEMO
+	fixed_t prev_rec_values[4];
+#endif
+#endif
 
 unsigned configuration[NUMCONTROLOPTIONS][3] =
 {
-	{BT_SPEED, BT_ATTACK, BT_USE},
-	{BT_SPEED, BT_USE, BT_ATTACK},
-	{BT_ATTACK, BT_SPEED, BT_USE},
-	{BT_ATTACK, BT_USE, BT_SPEED},
-	{BT_USE, BT_SPEED, BT_ATTACK},
-	{BT_USE, BT_ATTACK, BT_SPEED}
+#ifdef SHOW_DISCLAIMER
+	{BT_SPIN, BT_JUMP, BT_SPIN},
+#else
+	{BT_FLIP, BT_JUMP, BT_SPIN},
+#endif
 };
 
 /*============================================================================ */
@@ -210,6 +226,16 @@ int P_Random (void)
 	return rndtable[prndindex];
 }
 
+fixed_t P_RandomFixed(void)
+{
+	return (P_Random() << 8 | P_Random());
+}
+
+int P_RandomKey(int max)
+{
+	return (P_RandomFixed() * max) >> FRACBITS;
+}
+
 int M_Random (void)
 {
 	rndindex = (rndindex+1)&0xff;
@@ -261,6 +287,8 @@ static inline unsigned NetToLocal (unsigned cmd)
  
 /*=============================================================================  */
 
+int		accum_time;
+int		frames_to_skip = 0;
 int		ticrate = 4;
 int		ticsinframe;	/* how many tics since last drawer */
 int		ticon;
@@ -282,38 +310,96 @@ mobj_t	emptymobj;
 =
 ===============
 */
+#ifdef MDSKY
 __attribute((noinline))
-static void D_Wipe(void)
+static void D_LoadMDSky(void)
 {
-	int b;
-	short y[2][WIPEWIDTH];
-	short yy[WIPEWIDTH];
-	int wipestart[2], done[2] = { 0, 0 };
-	int step = 0;
+	// Retrieve lumps for drawing the sky on the MD.
+	uint8_t *sky_metadata_ptr;
+	uint8_t *sky_names_a_ptr;
+	uint8_t *sky_names_b_ptr;
+	uint8_t *sky_palettes_ptr;
+	uint8_t *sky_tiles_ptr;
 
-	wipe_InitMelt(y[0]);
-	D_memcpy(y[1], y[0], sizeof(y[0])); // double buffered
+	//uint32_t sky_metadata_size;
+	uint32_t sky_names_a_size;
+	uint32_t sky_names_b_size;
+	uint32_t sky_palettes_size;
+	uint32_t sky_tiles_size;
+	
+	int lump;
 
-	wipestart[0] = I_GetTime() - 1;
-	wipestart[1] = wipestart[0];
+	char lumpname[9];
 
-	b = 0;
-	step = 0;
-	do {
-		int nowtime = I_GetTime ();
-		done[b] = wipe_ScreenWipe(y[b], yy, nowtime - wipestart[b], step++);
-		wipestart[b] = nowtime;
-		b ^= 1;
-	} while (!done[0] || !done[1]);
-
-	if (step & 1)
-	{
-		// exit the wipe on the same framebuffer id 
-		UpdateBuffer();
+	D_snprintf(lumpname, 8, "%sMD", gamemapinfo.sky);
+	lump = W_CheckNumForName(lumpname);
+	if (lump != -1) {
+		// This map uses an MD sky.
+		sky_md_layer = true;
+		sky_metadata_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		//sky_metadata_size = W_LumpLength(lump);
+	}
+	else {
+		// This map uses a 32X sky.
+		sky_md_layer = false;
+		return;
 	}
 
-	wipe_ExitMelt();
+	D_snprintf(lumpname, 8, "%sA", gamemapinfo.sky);
+	lump = W_CheckNumForName(lumpname);
+	if (lump != -1) {
+		sky_names_a_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		sky_names_a_size = W_LumpLength(lump);
+	}
+	else {
+		return;
+	}
+
+	D_snprintf(lumpname, 8, "%sB", gamemapinfo.sky);
+	lump = W_CheckNumForName(lumpname);
+	if (lump != -1) {
+		sky_names_b_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		sky_names_b_size = W_LumpLength(lump);
+	}
+	else {
+		return;
+	}
+
+	D_snprintf(lumpname, 8, "%sPAL", gamemapinfo.sky);
+	lump = W_CheckNumForName(lumpname);
+	if (lump != -1) {
+		sky_palettes_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		sky_palettes_size = W_LumpLength(lump);
+	}
+	else {
+		return;
+	}
+
+	D_snprintf(lumpname, 8, "%sTIL", gamemapinfo.sky);
+	lump = W_CheckNumForName(lumpname);
+	if (lump != -1) {
+		sky_tiles_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		sky_tiles_size = W_LumpLength(lump);
+	}
+	else {
+		return;
+	}
+
+	// Get the thru-pixel color from the metadata.
+	mars_thru_rgb_reference = sky_metadata_ptr[0];
+
+	Mars_LoadMDSky(sky_metadata_ptr,
+			sky_names_a_ptr, sky_names_a_size, 
+			sky_names_b_ptr, sky_names_b_size, 
+			sky_palettes_ptr, sky_palettes_size, 
+			sky_tiles_ptr, sky_tiles_size);
 }
+#endif
+
+int last_frt_count = 0;
+int total_frt_count = 0;
+boolean optionsMenuOn = false;
+int Mars_FRTCounter2Msec(int c);
 
 int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		,  int (*ticker)(void), void (*drawer)(void)
@@ -323,13 +409,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 	int		exit;
 	int		buttons;
 	int		mx, my;
-	boolean wipe = canwipe;
 	boolean firstdraw = true;
-
-	if (wipe)
-	{
-		wipe_StartScreen();
-	}
 
 /* */
 /* setup (cache graphics, etc) */
@@ -341,15 +421,24 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 	frameon = 0;
 	
 	gametic = 0;
-	prevgametic = 0;
+	leveltime = 0;
 
 	gameaction = 0;
 	gamevbls = 0;
 	vblsinframe = 0;
 	lasttics = 0;
+	last_frt_count = 0;
+	total_frt_count = 0;
 
 	ticbuttons[0] = ticbuttons[1] = oldticbuttons[0] = oldticbuttons[1] = 0;
 	ticmousex[0] = ticmousex[1] = ticmousey[0] = ticmousey[1] = 0;
+
+	#ifdef MDSKY
+	if (leveltime == 0)
+	{
+		D_LoadMDSky();
+	}
+	#endif
 
 	do
 	{
@@ -358,22 +447,35 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 /* */
 /* adaptive timing based on previous frame */
 /* */
-		if (demoplayback || demorecording)
-			vblsinframe = TICVBLS;
-		else
+		vblsinframe = TICVBLS;
+
+		int frt_count = I_GetFRTCounter();
+
+		if (last_frt_count == 0)
+			last_frt_count = frt_count;
+
+		accum_time = 0;
+		// Frame skipping based on FRT count
+		total_frt_count += Mars_FRTCounter2Msec(frt_count - last_frt_count);
+		const int frametime = I_IsPAL() ? 1000/25 : 1000/30;
+
+		while (total_frt_count > frametime)
 		{
-			vblsinframe = lasttics;
-			if (vblsinframe > TICVBLS*2)
-				vblsinframe = TICVBLS*2;
-#if 0
-			else if (vblsinframe < TICVBLS)
-				vblsinframe = TICVBLS;
-#endif
+			accum_time++;
+			total_frt_count -= frametime;
 		}
 
-/* */
-/* get buttons for next tic */
-/* */
+		last_frt_count = frt_count;
+
+		if (optionsMenuOn || gamemapinfo.mapNumber == TITLE_MAP_NUMBER || leveltime < TICRATE / 4) // Don't include map loading times into frameskip calculation
+		{
+			accum_time = 1;
+			total_frt_count = 0;
+		}
+
+		/* */
+		/* get buttons for next tic */
+		/* */
 		oldticbuttons[0] = ticbuttons[0];
 		oldticbuttons[1] = ticbuttons[1];
 		oldticrealbuttons = ticrealbuttons;
@@ -396,32 +498,211 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 
 		if (demoplayback)
 		{
-#ifndef MARS
+	#ifndef MARS
 			if (buttons & (BT_ATTACK|BT_SPEED|BT_USE) )
 			{
 				exit = ga_exitdemo;
 				break;
 			}
-#endif
-			ticbuttons[consoleplayer] = buttons = *demo_p++;
+	#endif
+
+			#ifdef PLAY_POS_DEMO
+			if (demo_p == demobuffer + 0xA) {
+				// This is the first frame, so grab the initial values.
+				prev_rec_values[0] = players[0].mo->x;
+				prev_rec_values[1] = players[0].mo->y;
+				prev_rec_values[2] = players[0].mo->z;
+				prev_rec_values[3] = players[0].mo->angle >> ANGLETOFINESHIFT;
+
+				demo_p += 16;
+			}
+			else {
+				// Beyond the first frame, we update only the values that
+				// have changed.
+				unsigned char key = *demo_p++;
+
+				int rec_value;
+				unsigned char *prev_rec_values_bytes;
+
+				for (int i=0; i < 4; i++) {
+					// Check to see which values have changed and save them
+					// in 'prev_rec_values' so the next frame's comparisons
+					// can be done against the current frame.
+					prev_rec_values_bytes = &prev_rec_values[i];
+					rec_value = 0;
+
+					switch (key&3) {
+						case 3: // Long -- update the value as recorded (i.e. no delta).
+							rec_value = *demo_p++;
+							rec_value <<= 8;
+							rec_value |= *demo_p++;
+							rec_value <<= 8;
+							rec_value |= *demo_p++;
+							rec_value <<= 8;
+							rec_value |= *demo_p++;
+							prev_rec_values[i] = rec_value;
+							break;
+
+						case 2: // Short -- add the difference to the current value.
+							rec_value = *demo_p++;
+							rec_value <<= 8;
+							rec_value |= *demo_p++;
+							prev_rec_values[i] += (signed short)rec_value;
+							break;
+
+						case 1: // Byte -- add the difference to the current value.
+							rec_value = *demo_p++;
+							prev_rec_values[i] += (signed char)rec_value;
+					}
+
+					// Advance the key so the next two bits can be read to
+					// check for updates.
+					key >>= 2;
+				}
+
+				// Update the player variables with the newly updated
+				// frame values.
+				players[0].mo->x = prev_rec_values[0];
+				players[0].mo->y = prev_rec_values[1];
+				players[0].mo->z = prev_rec_values[2];
+				players[0].mo->angle = prev_rec_values[3] << ANGLETOFINESHIFT;
+			}
+	#endif
+
+	#ifndef PLAY_POS_DEMO
+			if (gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
+				// Rotate on the title screen.
+				ticbuttons[consoleplayer] = buttons = 0;
+				players[0].mo->angle += TITLE_ANGLE_INC;
+			}
+			else {
+				// This is for reading conventional input-based demos.
+				ticbuttons[consoleplayer] = buttons = *((long *)demobuffer);
+				demobuffer += 4;
+			}
+			#endif
 		}
 
-		if (splitscreen && !demoplayback)
-			ticbuttons[consoleplayer ^ 1] = I_ReadControls2();
-		else if (netgame)	/* may also change vblsinframe */
-			ticbuttons[consoleplayer ^ 1]
-				= NetToLocal(I_NetTransfer(LocalToNet(ticbuttons[consoleplayer])));
+		#ifdef PLAY_POS_DEMO
+		if (demoplayback) {
+			players[0].mo->momx = 0;
+			players[0].mo->momy = 0;
+			players[0].mo->momz = 0;
+		}
+		#endif
 
 		gamevbls += vblsinframe;
 
-		if (demorecording)
-			*demo_p++ = buttons;
-		
-		if ((demorecording || demoplayback) && (buttons & BT_PAUSE) )
-		{
-			exit = ga_exitdemo; // Demo finished by choice, not by death
-			break;
+		if (demorecording) {
+			#ifdef REC_POS_DEMO
+			if (((short *)demobuffer)[3] == -1) {
+				// This is the first frame, so record the initial values in full.
+				prev_rec_values[0] = players[0].mo->x;
+				prev_rec_values[1] = players[0].mo->y;
+				prev_rec_values[2] = players[0].mo->z;
+				prev_rec_values[3] = players[0].mo->angle >> ANGLETOFINESHIFT;
+
+				char *values_p = prev_rec_values;
+				for (int i=0; i < 4; i++) {
+					*demo_p++ = *values_p++;
+					*demo_p++ = *values_p++;
+					*demo_p++ = *values_p++;
+					*demo_p++ = *values_p++;
+				}
+
+				((short *)demobuffer)[2] += 16; // 16 bytes written.
+			}
+			else {
+				// Beyond the first frame, we record only the values that
+				// have changed.
+				unsigned char frame_bytes = 1; // At least one byte will be written.
+
+				// Calculate the difference between values in the current
+				// frame and previous frame.
+				fixed_t delta[4];
+				delta[0] = players[0].mo->x - prev_rec_values[0];
+				delta[1] = players[0].mo->y - prev_rec_values[1];
+				delta[2] = players[0].mo->z - prev_rec_values[2];
+				delta[3] = (players[0].mo->angle >> ANGLETOFINESHIFT) - prev_rec_values[3];
+
+				// Save the current frame's values in 'prev_rec_values' so
+				// the next frame's comparisons can be done against the
+				// current frame.
+				prev_rec_values[0] = players[0].mo->x;
+				prev_rec_values[1] = players[0].mo->y;
+				prev_rec_values[2] = players[0].mo->z;
+				prev_rec_values[3] = players[0].mo->angle >> ANGLETOFINESHIFT;
+
+				unsigned char key = 0;
+
+				// Record the values that have changed and the minimum number
+				// of bytes needed to represent the deltas.
+				for (int i=0; i < 4; i++) {
+					key >>= 2;
+
+					fixed_t d = delta[i];
+					if (d != 0) {
+						if (d <= 0x7F && d >= -0x80) {
+							key |= 0x40; // Byte
+							frame_bytes++;
+						}
+						else if (d <= 0x7FFF && d >= -0x8000) {
+							key |= 0x80; // Short
+							frame_bytes += 2;
+						}
+						else {
+							key |= 0xC0; // Long
+							frame_bytes += 4;
+						}
+					}
+				}
+
+				unsigned char *delta_bytes;
+				unsigned char *prev_rec_values_bytes;
+
+				*demo_p++ = key;
+
+				// Based on the sizes put into the key, we record either the
+				// deltas (in the case of char and short) or the full value.
+				// Values with no difference will not be recorded.
+				for (int i=0; i < 4; i++) {
+					delta_bytes = &delta[i];
+					prev_rec_values_bytes = &prev_rec_values[i];
+					switch (key & 3) {
+						case 3: // Long
+							*demo_p++ = *prev_rec_values_bytes++;
+							*demo_p++ = *prev_rec_values_bytes++;
+							*demo_p++ = *prev_rec_values_bytes++;
+							*demo_p++ = *prev_rec_values_bytes++;
+							break;
+
+						case 2: // Short
+							*demo_p++ = delta_bytes[2];
+							// fall-thru
+
+						case 1: // Byte
+							*demo_p++ = delta_bytes[3];
+					}
+
+					// Advance the key so the next two bits can be read to
+					// check for updated values.
+					key >>= 2;
+				}
+
+				((short *)demobuffer)[2] += frame_bytes;	// Increase data length.
+			}
+
+			((short *)demobuffer)[3] += 1;	// Increase frame count.
+#endif
+
+#ifdef REC_INPUT_DEMO
+			*((long *)demo_p) = buttons;
+			demo_p += 4;
+#endif
 		}
+			
+		if ((demorecording || demoplayback) && (buttons & BT_PAUSE) )
+			exit = ga_completed;
 
 		if (gameaction == ga_warped || gameaction == ga_startnew)
 		{
@@ -438,9 +719,8 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 
 		S_PreUpdateSounds();
 
+		gametic++;
 		ticon++;
-		if (gamevbls / TICVBLS > gametic)
-			gametic++;
 		exit = ticker();
 
 		S_UpdateSounds();
@@ -453,14 +733,15 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 
 		drawer();
 
-		if (!exit && wipe)
-		{
-			wipe_EndScreen();
-			D_Wipe();
-			wipe = false;
+		#ifdef PLAY_POS_DEMO
+		if (leveltime > 30) {
+			V_DrawValueCenter(&menuFont, 160, 40, I_GetTime() - realtic);
+			V_DrawValueCenter(&menuFont, 160, 50, I_GetFRTCounter());
 		}
-
-		prevgametic = gametic;
+		else {
+			realtic = I_GetTime();
+		}
+		#endif
 
 #if 0
 while (!I_RefreshCompleted ())
@@ -493,66 +774,232 @@ jagobj_t	*titlepic;
 
 int TIC_Abortable (void)
 {
-#ifdef JAGUAR
-	jagobj_t	*pl;
-#endif
-	int buttons = ticbuttons[0];
-	int oldbuttons = oldticbuttons[0];
-
-	if (titlepic == NULL)
-		return 1;
-	if (ticon < TICVBLS)
-		return 0;
 	if (ticon >= gameinfo.titleTime)
 		return 1;		/* go on to next demo */
-
-#ifdef JAGUAR	
-	if (ticbuttons[0] == (BT_OPTION|BT_STAR|BT_HASH) )
-	{	/* reset eeprom memory */
-		void Jag68k_main (void);
-
-		ClearEEProm ();
-		pl = W_CacheLumpName ("defaults", PU_STATIC);	
-		DrawSinglePlaque (pl);
-		Z_Free (pl);
-		S_Clear ();
-		ticcount = 0;
-		while ( (junk = ticcount) < 240)
-		;
-		Jag68k_main ();
-	}
-#endif
-
-#ifdef MARS
-	if ( (buttons & BT_A) && !(oldbuttons & BT_A) )
-		return ga_exitdemo;
-	if ( (buttons & BT_B) && !(oldbuttons & BT_B) )
-		return ga_exitdemo;
-	if ( (buttons & BT_C) && !(oldbuttons & BT_C) )
-		return ga_exitdemo;
-	if ( (buttons & BT_START) && !(oldbuttons & BT_START) )
-		return ga_exitdemo;
-#else
-	if ( (buttons & BT_ATTACK) && !(oldbuttons & BT_ATTACK) )
-		return ga_exitdemo;
-	if ( (buttons & BT_USE) && !(oldbuttons & BT_USE) )
-		return ga_exitdemo;
-	if ( (buttons & BT_OPTION) && !(oldbuttons & BT_OPTION) )
-		return ga_exitdemo;
-	if ( (buttons & BT_START) && !(oldbuttons & BT_START) )
-		return ga_exitdemo;
-#endif
 
 	return 0;
 }
 
+/*============================================================================= */
+
+#ifdef SHOW_DISCLAIMER
+VINT disclaimerCount = 0;
+int TIC_Disclaimer(void)
+{
+	if (++disclaimerCount > 300)
+		return 1;
+
+	if (disclaimerCount == 270)
+	{
+		// Set to totally black
+		const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
+		I_SetPalette(dc_playpals+10*768);
+	}
+
+	return 0;
+}
+
+void START_Disclaimer(void)
+{
+	int		i;
+
+	for (i = 0; i < 2; i++)
+	{
+		I_ClearFrameBuffer();
+		UpdateBuffer();
+	}
+
+	disclaimerCount = 0;
+
+	UpdateBuffer();
+
+	const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
+	I_SetPalette(dc_playpals);
+
+	S_StartSong(gameinfo.gameoverMus, 0, cdtrack_gameover);
+
+	R_InitColormap();
+}
+
+void STOP_Disclaimer (void)
+{
+}
+
+const unsigned char key[] = { 0x78, 0x11, 0xB6, 0x2A, 0x48, 0x6A, 0x30, 0xA7 };
+const int keyValue = 3043;
+void parse_data(unsigned char *data, size_t dataLen)
+{
+	size_t startPos = 0;
+	size_t i;
+	for (i = 0; i < dataLen; i++, startPos++)
+		data[i] = data[i] ^ key[startPos & 7];
+}
+
+/*
+==================
+=
+= BufferedDrawSprite
+=
+= Cache and draw a game sprite to the 8 bit buffered screen
+==================
+*/
+
+void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left, boolean flip)
+{
+	spritedef_t	*sprdef;
+	spriteframe_t	*sprframe;
+	VINT 		*sprlump;
+	patch_t		*patch;
+	byte		*pixels, *src;
+	int			x, sprleft, sprtop, spryscale;
+	fixed_t 	spriscale;
+	int			lump;
+	int			texturecolumn;
+	int			light = HWLIGHT(255);
+	int 		height = I_FrameBufferHeight();
+
+	if ((unsigned)sprite >= NUMSPRITES)
+		I_Error ("BufferedDrawSprite: invalid sprite number %i "
+		,sprite);
+	sprdef = &sprites[sprite];
+	if ( (frame&FF_FRAMEMASK) >= sprdef->numframes )
+		I_Error ("BufferedDrawSprite: invalid sprite frame %i : %i "
+		,sprite,frame);
+	sprframe = &spriteframes[sprdef->firstframe + (frame & FF_FRAMEMASK)];
+	sprlump = &spritelumps[sprframe->lump];
+
+	if (sprlump[rotation] != -1)
+		lump = sprlump[rotation];
+	else
+		lump = sprlump[0];
+
+	if (lump < 0)
+	{
+		lump = -(lump + 1);
+		flip = true;
+	}
+
+	if (lump <= 0)
+		return;
+
+	patch = (patch_t *)W_POINTLUMPNUM(lump);
+	pixels = R_CheckPixels(lump + 1);
+	 	
+/* */
+/* coordinates are in a 160*112 screen (doubled pixels) */
+/* */
+	sprtop = top;
+	sprleft = left;
+	spryscale = 1;
+	spriscale = FRACUNIT/spryscale;
+
+	sprtop -= patch->topoffset;
+	sprleft -= patch->leftoffset;
+
+/* */
+/* draw it by hand */
+/* */
+	for (x=0 ; x<patch->width ; x++)
+	{
+		int 	colx;
+		byte	*columnptr;
+
+		if (sprleft+x < 0)
+			continue;
+		if (sprleft+x >= 320)
+			break;
+
+		if (flip)
+			texturecolumn = patch->width-1-x;
+		else
+			texturecolumn = x;
+			
+		columnptr = (byte *)patch + BIGSHORT(patch->columnofs[texturecolumn]);
+
+/* */
+/* draw a masked column */
+/* */
+		for ( ; *columnptr != 0xff ; columnptr += sizeof(column_t)) 
+		{
+			column_t *column = (column_t *)columnptr;
+			int top    = column->topdelta + sprtop;
+			int bottom = top + column->length - 1;
+			byte *dataofsofs = columnptr + offsetof(column_t, dataofs);
+			int dataofs = (dataofsofs[0] << 8) | dataofsofs[1];
+
+			top *= spryscale;
+			bottom *= spryscale;
+			src = pixels + dataofs;
+
+			if (top < 0) top = 0;
+			if (bottom >= height) bottom = height - 1;
+			if (top > bottom) continue;
+
+			colx = sprleft + x;
+//			colx += colx;
+
+			I_DrawColumn(colx, top, bottom, light, 0, spriscale, src, 128);
+//			I_DrawColumn(colx+1, top, bottom, light, 0, spriscale, src, 128);
+		}
+	}
+}
+
+void DRAW_Disclaimer (void)
+{
+	unsigned char text1[] = { 0x2C, 0x59, 0xFF, 0x79, 0x68, 0x2D, 0x71, 0xEA, 0x3D, 0x31, 0xE5, 0x62, 0x07, 0x3F, 0x7C, 0xE3, 0x78};
+	unsigned char text2[] = { 0x36, 0x5E, 0xE2, 0x0A, 0x0A, 0x2F, 0x10, 0xF4, 0x37, 0x5D, 0xF2, 0x2A};
+	unsigned char text3[] = { 0x10, 0x65, 0xC2, 0x5A, 0x3B, 0x50, 0x1F, 0x88, 0x0B, 0x62, 0xD8, 0x5E, 0x29, 0x03, 0x5C, 0xD4, 0x56, 0x62, 0xC4, 0x48, 0x7A, 0x44, 0x5F, 0xD5, 0x1F, 0x3E, 0xC5, 0x58, 0x2A, 0x59, 0x02, 0xDF, 0x78 };
+	const VINT stext1 = 16;
+	const VINT stext2 = 11;
+	const VINT stext3 = 32;
+
+	int sum = 0;
+	for (int i = 0; i < stext1; i++)
+		sum += text1[i] / 2;
+	for (int i = 0; i < stext2; i++)
+		sum += text2[i] / 2;
+	for (int i = 0; i < stext3; i++)
+		sum += text3[i] / 2;
+
+	if (sum != keyValue)
+		I_Error("");
+
+	parse_data(text1, stext1+1);
+	parse_data(text2, stext2+1);
+	parse_data(text3, stext3+1);
+
+	DrawFillRect(0, 0, 320, viewportHeight, COLOR_BLACK);
+
+	if (disclaimerCount < 240)
+	{
+		viewportbuffer = (pixel_t*)I_FrameBuffer();
+		I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
+		BufferedDrawSprite(SPR_PLAY, 1 + ((disclaimerCount / 8) & 1), 0, 80, 160, false);
+	}
+	else if (disclaimerCount < 250)
+	{
+		DrawJagobjLump(W_GetNumForName("ZOOM"), 136, 80-56, NULL, NULL);
+	}
+	else
+	{
+		VINT Xpos = disclaimerCount - 250;
+		viewportbuffer = (pixel_t*)I_FrameBuffer();
+		I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
+		BufferedDrawSprite(SPR_PLAY, 11 + ((disclaimerCount / 2) % 4), 2, 80, 160  + (Xpos * 16), true);
+	}
+
+	V_DrawStringCenter(&creditFont, 160, 64+32, (const char*)text1);
+	V_DrawStringCenter(&creditFont, 160, 88+32, (const char*)text2);
+
+	V_DrawStringCenter(&menuFont, 160, 128+32, (const char*)text3);
+	Mars_ClearCache();
+}
+#endif
 
 /*============================================================================= */
 
 void START_Title(void)
 {
-	int l;
-
 #ifdef MARS
 	int		i;
 
@@ -566,8 +1013,9 @@ void START_Title(void)
 	DoubleBufferSetup();
 #endif
 
-	l = gameinfo.titlePage;
-	titlepic = l != -1 ? W_CacheLumpNum(l, PU_STATIC) : NULL;
+	titlepic = gameinfo.titlePage != -1 ? W_CacheLumpNum(gameinfo.titlePage, PU_STATIC) : NULL;
+
+	ticon = 0;
 
 #ifdef MARS
 	I_InitMenuFire(titlepic);
@@ -596,212 +1044,49 @@ void DRAW_Title (void)
 
 /*============================================================================= */
 
-#ifdef MARS
-static char* credits;
-static short creditspage;
-#endif
-
-static void START_Credits (void)
-{
-#ifdef MARS
-	credits = NULL;
-	titlepic = NULL;
-	creditspage = 1;
-	if (gameinfo.creditsPage < 0)
-		return;
-	credits = W_CacheLumpNum(gameinfo.creditsPage, PU_STATIC);
-#else
-	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
-	titlepic = W_CacheLumpName("credits", PU_STATIC);
-#endif
-	DoubleBufferSetup();
-}
-
-void STOP_Credits (void)
-{
-#ifdef MARS
-	if (credits)
-		Z_Free(credits);
-#endif
-	if (titlepic)
-		Z_Free(titlepic);
-}
-
-static int TIC_Credits (void)
-{
-	int buttons = ticbuttons[0];
-	int oldbuttons = oldticbuttons[0];
-
-	if (gameinfo.creditsPage < 0)
-		return ga_exitdemo;
-	if (ticon >= gameinfo.creditsTime)
-		return 1;		/* go on to next demo */
-
-#ifdef MARS
-	if ( (buttons & BT_A) && !(oldbuttons & BT_A) )
-		return ga_exitdemo;
-	if ( (buttons & BT_B) && !(oldbuttons & BT_B) )
-		return ga_exitdemo;
-	if ( (buttons & BT_C) && !(oldbuttons & BT_C) )
-		return ga_exitdemo;
-	if ( (buttons & BT_START) && !(oldbuttons & BT_START) )
-		return ga_exitdemo;
-#else
-	if ( (buttons & BT_ATTACK) && !(oldbuttons & BT_ATTACK) )
-		return ga_exitdemo;
-	if ( (buttons & BT_SPEED) && !(oldbuttons & BT_SPEED) )
-		return ga_exitdemo;
-	if ( (buttons & BT_USE) && !(oldbuttons & BT_USE) )
-		return ga_exitdemo;
-	if ( (buttons & BT_START) && !(oldbuttons & BT_START) )
-		return ga_exitdemo;
-#endif
-
-	if (ticon * 2 >= gameinfo.creditsTime)
-	{
-		if (creditspage != 2)
-		{
-			char name[9];
-
-			D_memcpy(name, W_GetNameForNum(gameinfo.creditsPage), 8);
-			name[7]+= creditspage;
-			name[8] = '\0';
-
-			int l = W_CheckNumForName(name);
-			if (l >= 0)
-			{
-				Z_Free(credits);
-				credits = W_CacheLumpNum(l, PU_STATIC);
-			}
-			creditspage = 2;
-
-			DoubleBufferSetup();
-		}
-	}
-
-	return 0;
-}
-
-static void DRAW_RightString(int x, int y, const char* str)
-{
-	int len = I_Print8Len(str);
-	I_Print8(x - len * 8, y, str);
-}
-
-static void DRAW_CenterString(int y, const char* str)
-{
-	int len = I_Print8Len(str);
-	I_Print8((320 - len * 8) / 2, y, str);
-}
-
-static void DRAW_LineCmds(char *lines)
-{
-	int y;
-	static const char* dots = "...";
-	int dots_len = mystrlen(dots);
-	int x_right = (320 - dots_len*8) / 2 - 2;
-	int x_left = (320 + dots_len*8) / 2;
-	char* p = lines;
-
-	y = 0;
-	while (1) {
-		char *end = D_strchr(p, '\n');
-		char* str = p, *nextl;
-		char cmd = str[0];
-		char inc = str[1];
-		char bak = 0;
-
-		if (!cmd || !inc)
-			break;
-
-		str += 3;
-		if (end)
-		{
-			nextl = end + 1;
-			if (*(end - 1) == '\r')
-				--end;
-			bak = *end;
-			*end = '\0';
-		}
-		else
-		{
-			nextl = NULL;
-		}
-
-		switch (cmd) {
-		case 'c':
-			DRAW_CenterString(y, str);
-			break;
-		case 'r':
-			DRAW_RightString(x_right, y, str);
-			break;
-		case 'l':
-			I_Print8(x_left, y, str);
-			break;
-		}
-
-		if (inc == 'i')
-		{
-			y++;
-		}
-
-		if (nextl)
-			*end = bak;
-		else
-			break;
-		p = nextl;
-	}
-}
-
-static void DRAW_Credits(void)
-{
-#ifdef MARS
-	DRAW_LineCmds(credits);
-#else
-	DrawJagobj(titlepic, 0, 0);
-#endif
-}
-
-/*============================================================================ */
 void RunMenu (void);
-void RunCredits(void);
 
 void RunTitle (void)
 {
-	int		exit;
-
-	startskill = sk_medium;
 	startmap = 1;
 	starttype = gt_single;
 	consoleplayer = 0;
-	canwipe = false;
 
-	exit = MiniLoop (START_Title, STOP_Title, TIC_Abortable, DRAW_Title, UpdateBuffer);
-
-#ifdef MARS
-	if (exit == ga_exitdemo)
-		RunMenu ();
-	else
+#ifdef SHOW_DISCLAIMER
+	MiniLoop (START_Disclaimer, STOP_Disclaimer, TIC_Disclaimer, DRAW_Disclaimer, UpdateBuffer);
 #endif
-		RunCredits();
+	MiniLoop (START_Title, STOP_Title, TIC_Abortable, DRAW_Title, UpdateBuffer);
 }
 
-void RunCredits (void)
+int RunInputDemo (char *demoname)
 {
-	int		l;
-	int		exit;
-	
-	l = gameinfo.creditsPage;
-	if (l > 0)
-		exit = MiniLoop(START_Credits, STOP_Credits, TIC_Credits, DRAW_Credits, UpdateBuffer);
-	else
-		exit = ga_exitdemo;
+	unsigned char *demo;
+	int	exit;
+	int lump;
 
+	lump = W_CheckNumForName(demoname);
+	if (lump == -1)
+		return ga_exitdemo;
+
+	// avoid zone memory fragmentation which is due to happen
+	// if the demo lump cache is tucked after the level zone.
+	// this will cause shrinking of the zone area available
+	// for the level data after each demo playback and eventual
+	// Z_Malloc failure
+	Z_FreeTags(mainzone);
+
+	demo = W_CacheLumpNum(lump, PU_STATIC);
+	exit = G_PlayInputDemoPtr (demo);
+	Z_Free(demo);
+
+#ifndef MARS
 	if (exit == ga_exitdemo)
 		RunMenu ();
+#endif
+	return exit;
 }
 
-int  RunDemo (char *demoname)
+int RunPositionDemo (char *demoname)
 {
 	unsigned *demo;
 	int	exit;
@@ -819,7 +1104,7 @@ int  RunDemo (char *demoname)
 	Z_FreeTags(mainzone);
 
 	demo = W_CacheLumpNum(lump, PU_STATIC);
-	exit = G_PlayDemoPtr (demo);
+	exit = G_PlayPositionDemoPtr ((unsigned char*)demo);
 	Z_Free(demo);
 
 #ifndef MARS
@@ -833,6 +1118,8 @@ int  RunDemo (char *demoname)
 void RunMenu (void)
 {
 #ifdef MARS
+	int exit = ga_exitdemo;
+
 	M_Start();
 	if (!gameinfo.noAttractDemo) {
 		do {
@@ -848,9 +1135,11 @@ void RunMenu (void)
 				if (lump == -1)
 					break;
 
-				RunDemo(demo);
+				exit = RunInputDemo(demo);
+				if (exit == ga_exitdemo)
+					break;
 			}
-		} while (true);
+		} while (exit != ga_exitdemo);
 	}
 	M_Stop();
 #else
@@ -873,7 +1162,7 @@ reselect:
 	if (startsave != -1)
 		G_LoadGame(startsave);
 	else
-		G_InitNew(startskill, startmap, starttype, startsplitscreen);
+		G_InitNew(startmap, starttype, startsplitscreen);
 
 	G_RunGame ();
 }
@@ -889,8 +1178,7 @@ reselect:
 = 
 ============= 
 */ 
- 
-skill_t		startskill = sk_medium;
+
 int			startmap = 1;
 gametype_t	starttype = gt_single;
 int			startsave = -1;
@@ -923,28 +1211,42 @@ D_printf("G_Init\n");
 
 D_printf ("DM_Main\n");
 
-/*	while (1)	RunDemo ("DEMO1"); */
+#ifdef PLAY_INPUT_DEMO
+	while(1) {
+		RunInputDemo("DEMO1");
+	}
+#endif
+#ifdef PLAY_POS_DEMO
+	while(1) {
+		RunPositionDemo("DEMO9");
+	}
+#endif
 
-/*G_RecordDemo ();	// set startmap and startskill */
+#ifdef REC_INPUT_DEMO
+	G_RecordInputDemo();	// set startmap and startskill
+#endif
+#ifdef REC_POS_DEMO
+	G_RecordPositionDemo();
+#endif
 
 /*	MiniLoop (F_Start, F_Stop, F_Ticker, F_Drawer, UpdateBuffer); */
 
-/*G_InitNew (startskill, startmap, gt_deathmatch, false); */
+/*G_InitNew (startmap, gt_deathmatch, false); */
 /*G_RunGame (); */
 
 #ifdef NeXT
 	if (M_CheckParm ("-dm") )
 	{
 		I_NetSetup ();
-		G_InitNew (startskill, startmap, gt_deathmatch, false);
+		G_InitNew (startmap, gt_deathmatch, false);
 	}
 	else if (M_CheckParm ("-dial") || M_CheckParm ("-answer") )
 	{
 		I_NetSetup ();
-		G_InitNew (startskill, startmap, gt_coop, false);
+		G_InitNew (startmap, gt_coop, false);
 	}
 	else
-		G_InitNew (startskill, startmap, gt_single, false);
+		G_InitNew (startmap, gt_single, false);
 	G_RunGame ();
 #endif
 
@@ -958,10 +1260,9 @@ D_printf ("DM_Main\n");
 	while (1)
 	{
 		RunTitle();
-		RunDemo("DEMO1");
+		RunInputDemo("DEMO1");
 		RunCredits ();
-		RunDemo("DEMO2");
+		RunInputDemo("DEMO2");
 	}
 #endif
 }
- 

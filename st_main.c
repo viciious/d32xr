@@ -2,36 +2,45 @@
 
 #include "doomdef.h"
 #include "st_main.h"
+#include "v_font.h"
+#include "st_inter.h"
+#include <stdio.h>
+#include "r_local.h"
+#include "mars.h"
+#include "p_camera.h"
 
 stbar_t	*stbar;
 int stbar_tics;
 
 static short stbarframe;
 static short   stbar_y;
-static short micronums;
-static short	micronums_x[NUMMICROS] = {249,261,272,249,261,272};
-static short	micronums_y[NUMMICROS] = {15,15,15,25,25,25};
 
-static short	card_x[NUMCARDS] = {KEYX,KEYX,KEYX,KEYX+3, KEYX+3, KEYX+3};
-static short	card_y[NUMCARDS] = {BLUKEYY,YELKEYY,REDKEYY,BLUKEYY,YELKEYY,REDKEYY};
+static short score, time, rings;
+static short snums; // Numbers
+static short timecolon; // : for TIME
+static short face, livex;
+static short go_game, go_over;
 
-static short	spclfaceSprite[NUMSPCLFACES] =
-		{0,sbf_facelft,sbf_facergt,sbf_ouch,sbf_gotgat,sbf_mowdown};
+// Special stage
+static short narrow1;
+static short narrow9;
+static short nbracket;
+static short nrng1;
+static short nsshud;
+static short chaos;
 
-jagobj_t	*sbar;
-VINT		sbar_height;
+static short ltzz_blue_lump, chev_blue_lump, lt_blue_lump;
+static short ltzz_red_lump, chev_red_lump, lt_red_lump;
 
 #ifndef MARS
 byte		*sbartop;
 #endif
-static short		faces;
-static jagobj_t	*sbobj[NUMSBOBJ];
 
 #ifndef MARS
-#define ST_EraseBlock EraseBlock
+//#define ST_EraseBlock EraseBlock
 #endif
 
-static void ST_EraseBlock(int x, int y, int width, int height);
+//static void ST_EraseBlock(int x, int y, int width, int height);
 
 /*
 ====================
@@ -44,49 +53,39 @@ static void ST_EraseBlock(int x, int y, int width, int height);
 
 void ST_Init (void)
 {
-	int i, l;
+	V_FontInit();
 
 	stbar = Z_Malloc(sizeof(*stbar)*MAXPLAYERS, PU_STATIC);
 
-	l = W_CheckNumForName("STBAR");
-	if (l != -1)
-	{
-		sbar = (jagobj_t*)W_POINTLUMPNUM(l);
-		sbar_height = BIGSHORT(sbar->height);
-	}
-	else
-	{
-		sbar = NULL;
-		sbar_height = 0;
-	}
+	score = W_CheckNumForName("STTSCORE");
+	time = W_CheckNumForName("STTTIME");
+	rings = W_CheckNumForName("STTRINGS");
+	snums = W_CheckNumForName("STTNUM0");
+	timecolon = W_CheckNumForName("STTCOLON");
+	face = W_CheckNumForName("STFACE");
+	livex = W_CheckNumForName("STLIVEX");
+	go_game = W_CheckNumForName("SLIDGAME");
+	go_over = W_CheckNumForName("SLIDOVER");
 
-	faces = W_CheckNumForName("FACE00");
+	// Special stage
+	narrow1 = W_CheckNumForName("NARROW1");
+	narrow9 = W_CheckNumForName("NARROW9");
+	nbracket = W_CheckNumForName("NBRACKET");
+	nrng1 = W_CheckNumForName("NRNG1");
+	nsshud = W_CheckNumForName("NSSHUD");
+	chaos = W_CheckNumForName("CHAOS1");
 
-	l = W_CheckNumForName("MINUS");
-	if (l != -1)
-	{
-		for (i = 0; i < NUMSBOBJ; i++)
-			sbobj[i] = W_CacheLumpNum(l + i, PU_STATIC);
-	}
-	else
-	{
-		D_memset(sbobj, 0, sizeof(sbobj[0]) * NUMSBOBJ);
-	}
-
-	l = W_CheckNumForName("MICRO_2");
-	micronums = l;
+	ltzz_blue_lump = W_CheckNumForName("LTZZTEXT");
+	chev_blue_lump = W_CheckNumForName("CHEVBLUE");
+	lt_blue_lump = W_CheckNumForName("LTACTBLU");
+	ltzz_red_lump = W_CheckNumForName("LTZZWARN");
+	chev_red_lump = W_CheckNumForName("CHEVRED");
+	lt_red_lump	= W_CheckNumForName("LTACTRED");
 }
 
 void ST_ForceDraw(void)
 {
-	int p;
-
 	stbarframe = 0;
-	for (p = 0; p < MAXPLAYERS; p++)
-	{
-		if (playeringame[p])
-			stbar[p].forcedraw = true;
-	}
 	ST_Ticker();
 }
 
@@ -111,37 +110,7 @@ void ST_InitEveryLevel(void)
 	for (p = 0; p < numplayers; p++)
 	{
 		stbar_t* sb = &stbar[p];
-
-		/* force everything to be updated on next ST_Update */
-		sb->forcedraw = true;
-		sb->drawface = -1;
-
-		/* DRAW FRAG COUNTS INITIALLY */
-		{
-			sb->yourFrags.active = false;
-			sb->yourFrags.x = YOURFRAGX;
-			sb->yourFrags.y = YOURFRAGY;
-			sb->yourFrags.w = 30;
-			sb->yourFrags.h = 8;
-			sb->hisFrags.active = false;
-			sb->hisFrags.x = HISFRAGX;
-			sb->hisFrags.y = HISFRAGY;
-			sb->hisFrags.w = 30;
-			sb->hisFrags.h = 8;
-			sb->flashInitialDraw = true;
-			sb->yourFragsCount = players[p].frags;
-			sb->hisFragsCount = players[!p].frags;
-		}
-		sb->gibdelay = GIBTIME;
-		sb->specialFace = f_none;
-
-		for (i = 0; i < NUMCARDS; i++)
-		{
-			sb->flashCards[i].x = KEYX + (i > 2 ? 3 : 0);
-			sb->flashCards[i].y = card_y[i];
-			sb->flashCards[i].w = KEYW;
-			sb->flashCards[i].h = KEYH;
-		}
+		sb->score = 0;
 	}
 	stbar_tics = 0;
 }
@@ -156,384 +125,41 @@ void ST_InitEveryLevel(void)
 
 static void ST_Ticker_(stbar_t* sb)
 {
-	int			i;
 	player_t* p;
-	int			ind;
 	int			pnum = sb - &stbar[0];
-	short		drawface;
-	stbarcmd_t* cmd;
 
 #ifdef MARS
 	// double-buffered renderer on MARS
 	if ((stbarframe & 1) == 1)
-	{
-		--sb->facetics;
-		--sb->yourFrags.delay;
-		--sb->hisFrags.delay;
-		for (ind = 0; ind < NUMCARDS; ind++)
-		{
-			if (!sb->flashCards[ind].active)
-				continue;
-			--sb->flashCards[ind].delay;
-		}
-		if (sb->gibdraw)
-			--sb->gibdelay;
 		return;
-	}
 #endif
-
-	sb->numstbarcmds = 0;
 
 	p = &players[pnum];
 
-	/* */
-	/* Animate face */
-	/* */
-	if (--sb->facetics <= 0)
+	sb->rings = p->health - 1;
+	sb->score = p->score;
+	sb->lives = p->lives;
+	sb->exiting = p->exiting;
+	sb->deadTimer = p->deadTimer;
+
+	if (sb->intermission)
 	{
-		sb->facetics = M_Random ()&15;
-		sb->newface = M_Random ()&3;
-		if (sb->newface == 3)
-			sb->newface = 1;
-		sb->doSpclFace = false;
-	}
-	
-	/* */
-	/* Draw special face? */
-	/* */
-	if (sb->specialFace)
-	{
-		sb->doSpclFace = true;
-		sb->spclFaceType = sb->specialFace;
-		sb->facetics = 15;
-		sb->specialFace = f_none;
-	}
-	
-	/* */
-	/* Flash YOUR FRAGS amount */
-	/* */
-	if (sb->yourFrags.active && --sb->yourFrags.delay <= 0)
-	{
-		sb->yourFrags.delay = FLASHDELAY;
-		sb->yourFrags.doDraw ^= 1;
-		if (!--sb->yourFrags.times)
-			sb->yourFrags.active = false;
-		if (sb->yourFrags.doDraw && sb->yourFrags.active && !splitscreen)
-			S_StartSound(NULL,sfx_itemup);
-	}
-	
-	/* */
-	/* Flash HIS FRAGS amount */
-	/* */
-	if (sb->hisFrags.active && --sb->hisFrags.delay <= 0)
-	{
-		sb->hisFrags.delay = FLASHDELAY;
-		sb->hisFrags.doDraw ^= 1;
-		if (!--sb->hisFrags.times)
-			sb->hisFrags.active = false;
-		if (sb->hisFrags.doDraw && sb->hisFrags.active && !splitscreen)
-			S_StartSound(NULL,sfx_itemup);
+		Y_Ticker();
+		return;
 	}
 
-	/* */
-	/* Did we get gibbed? */
-	/* */
-	if (sb->gotgibbed && !sb->gibdraw)
+	if (gamemapinfo.mapNumber < SSTAGE_START || gamemapinfo.mapNumber > SSTAGE_END)
 	{
-		sb->gibdraw = true;
-		sb->gibframe = 0;
-		sb->gibdelay = GIBTIME;
-		sb->gotgibbed = false;
-	}
-	
-	/* */
-	/* Tried to open a CARD or SKULL door? */
-	/* */
-	for (ind = 0; ind < NUMCARDS; ind++)
-	{
-		/* CHECK FOR INITIALIZATION */
-		if (sb->tryopen[ind])
+		if (sb->exiting >= 4*TICRATE && !sb->intermission)
 		{
-			sb->tryopen[ind] = false;
-			sb->flashCards[ind].active = true;
-			sb->flashCards[ind].delay = FLASHDELAY;
-			sb->flashCards[ind].times = FLASHTIMES+1;
-			sb->flashCards[ind].doDraw = false;
-		}
-		
-		/* MIGHT AS WELL DO TICKING IN THE SAME LOOP! */
-		if (!sb->flashCards[ind].active)
-			continue;
-		if (--sb->flashCards[ind].delay <= 0)
-		{
-			sb->flashCards[ind].delay = FLASHDELAY;
-			sb->flashCards[ind].doDraw ^= 1;
-			if (!--sb->flashCards[ind].times)
-				sb->flashCards[ind].active = false;
-			if (sb->flashCards[ind].doDraw && sb->flashCards[ind].active)
-				S_StartSound(NULL,sfx_itemup);
+			Y_StartIntermission(p);
+			sb->intermission = true;
 		}
 	}
-
-	/* */
-	/* Ammo */
-	/* */
-	if (p->readyweapon == wp_nochange)
-		i = 0;
-	else
+	else if (sb->exiting >= 4*TICRATE)
 	{
-		i = weaponinfo[p->readyweapon].ammo;
-		if (i == am_noammo)
-			i = 0;
-		else
-			i = p->ammo[i];
+		gameaction = ga_specialstageexit;
 	}
-	
-	if (sb->ammo != i || sb->forcedraw)
-	{
-		sb->ammo = i;
-		cmd = &sb->stbarcmds[sb->numstbarcmds++];
-		cmd->id = stc_drawammo;
-		cmd->value = i;
-	}
-	
-	/* */
-	/* Health */
-	/* */
-	i = p->health;
-	if (sb->health != i || sb->forcedraw)
-	{
-		if (i > sb->health)
-		{
-			sb->gibframe = 0;
-			sb->gibdraw = false;
-		}
-
-		sb->health = i;
-		cmd = &sb->stbarcmds[sb->numstbarcmds++];
-		cmd->id = stc_drawhealth;
-		cmd->value = i;
-
-		sb->face = -1;	/* update face immediately */
-	}
-
-	/* */
-	/* Armor */
-	/* */
-	i = p->armorpoints;
-	if (sb->armor != i || sb->forcedraw)
-	{
-		sb->armor = i;
-		cmd = &sb->stbarcmds[sb->numstbarcmds++];
-		cmd->id = stc_drawarmor;
-		cmd->value = i;
-	}
-
-	/* */
-	/* Cards & skulls */
-	/* */
-	for (ind = 0; ind < NUMCARDS; ind++)
-	{
-		i = p->cards[ind];
-		if (sb->cards[ind] != i || sb->forcedraw)
-		{
-			cmd = &sb->stbarcmds[sb->numstbarcmds++];
-			cmd->id = stc_drawcard;
-			cmd->ind = ind;
-			cmd->value = i;
-
-			sb->cards[ind] = i;
-		}
-	}
-
-	/* */
-	/* Weapons */
-	/* */
-	for (ind = 0; ind < NUMMICROS; ind++)
-	{
-		if (p->weaponowned[ind + 1] != sb->weaponowned[ind] || sb->forcedraw)
-		{
-			cmd = &sb->stbarcmds[sb->numstbarcmds++];
-			cmd->id = stc_drawmicro;
-			cmd->ind = ind;
-			cmd->value = p->weaponowned[ind + 1];
-
-			sb->weaponowned[ind] = p->weaponowned[ind + 1];
-		}
-	}
-
-	/* */
-	/* Level */
-	/* */
-	if (netgame != gt_deathmatch)
-	{
-		i = gamemapinfo.mapNumber;
-		if (sb->currentMap != i || sb->forcedraw)
-		{
-			cmd = &sb->stbarcmds[sb->numstbarcmds++];
-			cmd->id = stc_drawmap;
-			cmd->value = i;
-
-			sb->currentMap = i;
-		}
-	}
-	/* */
-	/* Or, frag counts! */
-	/* */
-	else
-	{
-		int		yours;
-		int		his;
-
-		yours = players[pnum].frags;
-		his = players[!pnum].frags;
-		
-		if (yours != sb->yourFragsCount || sb->forcedraw)
-		{
-			sb->yourFragsCount = yours;
-			
-			/* SIGNAL THE FLASHING FRAGS! */
-			sb->yourFrags.active = true;
-			sb->yourFrags.delay = FLASHDELAY;
-			sb->yourFrags.times = FLASHTIMES;
-			sb->yourFrags.doDraw = false;
-		}
-		
-		if (his != sb->hisFragsCount || sb->forcedraw)
-		{
-			sb->hisFragsCount = his;
-			
-			/* SIGNAL THE FLASHING FRAGS! */
-			sb->hisFrags.active = true;
-			sb->hisFrags.delay = FLASHDELAY;
-			sb->hisFrags.times = FLASHTIMES;
-			sb->hisFrags.doDraw = false;
-		}
-	}
-	
-	/* */
-	/* Draw YOUR FRAGS if it's time */
-	/* */
-	if (sb->yourFrags.active)
-	{
-		cmd = &sb->stbarcmds[sb->numstbarcmds++];
-		cmd->id = stc_drawyourfrags;
-		cmd->ind = sb->yourFrags.doDraw;
-		cmd->value = sb->yourFragsCount;
-	}
-
-	/* */
-	/* Draw HIS FRAGS if it's time */
-	/* */
-	if (sb->hisFrags.active)
-	{
-		cmd = &sb->stbarcmds[sb->numstbarcmds++];
-		cmd->id = stc_drawhisfrags;
-		cmd->ind = sb->hisFrags.doDraw;
-		cmd->value = sb->hisFragsCount;
-	}
-
-	if (sb->flashInitialDraw)
-	{
-		cmd = &sb->stbarcmds[sb->numstbarcmds++];
-		cmd->id = stc_flashinitial;
-		sb->flashInitialDraw = false;
-	}
-
-	/* */
-	/* Flash CARDS or SKULLS if no key for door */
-	/* */
-	for (ind = 0; ind < NUMCARDS; ind++)
-		if (sb->flashCards[ind].active)
-		{
-			cmd = &sb->stbarcmds[sb->numstbarcmds++];
-			cmd->id = stc_drawcard;
-			cmd->ind = ind;
-			cmd->value = sb->flashCards[ind].doDraw;
-		}
-
-	/* */
-	/* Draw gibbed head */
-	/* */
-	if (sb->gibdraw)
-	{
-		// CALICO: the original code performs out-of-bounds accesses on the faces
-		// array here, up to an unknown upper bound. This will crash the code
-		// when run on PC without bounds-checking added.
-		// NB: This is also all bugged anyway, to such a degree that it never shows up.
-		// Burger Becky (I assume, or maybe Dave Taylor?) fixed the code that is in
-		// the 3DO version so that it appears properly.
-		int gibframetodraw = sb->gibframe;
-		if (sb->gibdelay-- <= 0)
-		{
-			sb->gibframe++;
-			sb->gibdelay = GIBTIME;
-		}
-
-		if (sb->gibframe > 6)
-		{
-			sb->gibdraw = false;
-			sb->forcedraw = true;
-			return;
-		}
-
-		cmd = &sb->stbarcmds[sb->numstbarcmds++];
-		cmd->id = stc_drawgibhead;
-		cmd->value = FIRSTSPLAT + gibframetodraw < NUMFACES ? FIRSTSPLAT + gibframetodraw : NUMFACES - 1;
-	}
-		
-	/*                    */
-	/* God mode cheat */
-	/* */
-	i = (p->cheats & CF_GODMODE || p->powers[pw_invulnerability]) != 0;
-	if (sb->godmode != i)
-		sb->godmode = i;
-
-	/* */
-	/* face change */
-	/* */
-	drawface = -1;
-	if (sb->godmode)
-		drawface = GODFACE;
-	else
-	if (sb->gibframe > 6)
-		sb->drawface = -1;
-	else 
-	if (!sb->health)
-		drawface = DEADFACE;
-	else
-	if (sb->doSpclFace)
-	{
-		int	base = sb->health / 20;
-		base = base > 4 ? 4 : base;
-		base = 4 - base;
-		base *= 8;
-		drawface = base + spclfaceSprite[sb->spclFaceType];
-	}
-	else
-	if ((sb->face != sb->newface || sb->forcedraw) && !sb->gibdraw)
-	{
-		int	base = sb->health/20;
-		base = base > 4 ? 4 : base;
-		base = 4 - base;
-		base *= 8;
-		sb->face = sb->newface;
-		drawface = base + sb->newface;
-	}
-
-	if (drawface != -1)
-		if (drawface != sb->drawface) {
-			sb->drawface = drawface;
-			sb->forcedraw = true;
-		}
-
-	if (sb->forcedraw) {
-		cmd = &sb->stbarcmds[sb->numstbarcmds++];
-		cmd->id = stc_drawhead;
-		cmd->value = sb->drawface;
-	}
-
-	sb->forcedraw = false;
 }
 
 void ST_Ticker(void)
@@ -555,6 +181,90 @@ void ST_Ticker(void)
 /*
 ====================
 =
+= ST_DrawTitleCard
+=
+====================
+*/
+
+static void ST_DrawTitleCard()
+{
+	short ltzz_lump;
+	short chev_lump;
+	short lt_lump;
+
+	if (gamemapinfo.act == 3) {
+		ltzz_lump = ltzz_red_lump;
+		chev_lump = chev_red_lump;
+		lt_lump = lt_red_lump;
+	}
+	else {
+		ltzz_lump = ltzz_blue_lump;
+		chev_lump = chev_blue_lump;
+		lt_lump = lt_blue_lump;
+	}
+
+	if (gametic < 30)
+	{
+		if (gamemapinfo.mapNumber >= SSTAGE_START && gamemapinfo.mapNumber <= SSTAGE_END)
+			DrawFillRect(0, 22, 320, 180, COLOR_WHITE);
+		else
+			DrawFillRect(0, 22, 320, 180, COLOR_BLACK);
+	}
+
+	if (gametic < 16) {
+		// Title card moving into the frame.
+
+		DrawScrollingBanner(ltzz_lump, (gametic-16) << 4, gametic << 1);
+
+		DrawScrollingChevrons(chev_lump, 16 + ((gametic-16) << 4), -gametic << 1);
+
+		if (gamemapinfo.act >= 1 && gamemapinfo.act <= 3) {
+			DrawJagobjLump(lt_lump, 160+70-24 + ((16 - gametic) << 5), 100 - ((16 - gametic) << 5), NULL, NULL);
+			V_DrawValueLeft(&titleNumberFont, 160+70 + ((16 - gametic) << 5), 124-4, gamemapinfo.act);
+		}
+		V_DrawStringRight(&titleFont, 160+68 - ((16 - gametic) << 5), 100, gamemapinfo.name);
+		V_DrawStringLeft(&titleFont, 160 + ((16 - gametic) << 5), 124, "Zone");
+	}
+	else if (gametic < 80) {
+		// Title card at rest in the frame.
+
+		DrawScrollingBanner(ltzz_lump, 0, gametic << 1);
+
+		DrawScrollingChevrons(chev_lump, 16, -gametic << 1);
+
+		if (gamemapinfo.act >= 1 && gamemapinfo.act <= 3) {
+			DrawJagobjLump(lt_lump, 160+68-24, 100, NULL, NULL);
+
+			V_DrawValueLeft(&titleNumberFont, 160+68, 124-4, gamemapinfo.act);
+		}
+		V_DrawStringRight(&titleFont, 160+68, 100, gamemapinfo.name);
+		V_DrawStringLeft(&titleFont, 160, 124, "Zone");
+	}
+	else {
+		// Title card moving out of the frame.
+		DrawScrollingBanner(ltzz_lump, (80-gametic) << 4, gametic << 1);
+
+		DrawScrollingChevrons(chev_lump, 16 + ((80-gametic) << 4), -gametic << 1);
+
+		if (gamemapinfo.act >= 1 && gamemapinfo.act <= 3) {
+			jagobj_t *lt_obj = (jagobj_t*)W_POINTLUMPNUM(lt_lump);
+			VINT lt_y = 100 + ((gametic - 80) << 5);
+			VINT lt_height = lt_y + lt_obj->height > (180+22)
+					? lt_obj->height - ((lt_y + lt_obj->height) - (180+22))
+					: lt_obj->height;
+			DrawJagobj2(lt_obj, 160+68-24 - ((gametic - 80) << 5), lt_y, 0, 0,
+					lt_obj->width, lt_height, I_OverwriteBuffer());
+			
+			V_DrawValueLeft(&titleNumberFont, 160+68 - ((gametic - 80) << 5), 124-4, gamemapinfo.act);
+		}
+		V_DrawStringRight(&titleFont, 160+68 + ((gametic - 80) << 5), 100, gamemapinfo.name);
+		V_DrawStringLeft(&titleFont, 160 - ((gametic - 80) << 5), 124, "Zone");
+	}
+}
+
+/*
+====================
+=
 = ST_Drawer
 =
 ====================
@@ -562,98 +272,133 @@ void ST_Ticker(void)
 
 static void ST_Drawer_ (stbar_t* sb)
 {
-	int i;
-	int x, ind;
-	boolean have_cards[NUMCARDS];
+	if (gametic < 96 && !(gamemapinfo.mapNumber >= SSTAGE_START && gamemapinfo.mapNumber <= SSTAGE_END)) {
+		ST_DrawTitleCard();
+	}
+	else if (gamemapinfo.mapNumber >= SSTAGE_START && gamemapinfo.mapNumber <= SSTAGE_END)
+	{
+		if (gametic < 120)
+		{
+			char getSpheres[16];
+			D_snprintf(getSpheres, sizeof(getSpheres), "GET %d SPHERES", gamemapinfo.spheresNeeded);
+			V_DrawStringCenterWithColormap(&menuFont, 160, 224/2, getSpheres, YELLOWTEXTCOLORMAP);
+		}
 
-	if (!sbar || !sbobj[0])
-		return;
+		// Special stage HUD
+		DrawJagobjLump(nbracket, 16, 8+16, NULL, NULL);
+		DrawJagobjLump(nbracket, 72, 8+16, NULL, NULL);
+		DrawJagobjLump(nbracket, 272, 8+16, NULL, NULL);
 
-	D_memset(have_cards, 0, sizeof(have_cards));
+		DrawJagobjLump(nsshud, 24, 16+16, NULL, NULL);
+		DrawJagobjLump(nrng1, 280, 17+16, NULL, NULL);
+		DrawJagobjLump(chaos+(gamemapinfo.mapNumber - 60), 77, 13+16, NULL, NULL);
 
-	for (i = 0; i < sb->numstbarcmds; i++) {
-		stbarcmd_t* cmd = &sb->stbarcmds[i];
+		DrawJagobjLump(narrow1 + ((gametic/2) & 3), 40, 13+16, NULL, NULL);
+		DrawJagobjLump(narrow9, 240, 13+16, NULL, NULL);
 
-		switch (cmd->id) {
-		case stc_drawammo:
-			// CALICO: Fixed EraseBlock call to have proper x coord and width
-			ST_EraseBlock(AMMOX - 14 * 3 - 4, AMMOY, 14 * 3 + 4, 16);
-			ST_DrawValue(AMMOX, AMMOY, cmd->value);
-			break;
-		case stc_drawhealth:
-			// CALICO: Fixed EraseBlock call to have proper width
-			ST_EraseBlock(HEALTHX - 14 * 3 - 4, HEALTHY, 14 * 3 + 4, BIGSHORT(sbobj[0]->height));
-			DrawJagobj(sbobj[sb_percent], HEALTHX, stbar_y + HEALTHY);
-			ST_DrawValue(HEALTHX, HEALTHY, cmd->value);
-			break;
-		case stc_drawarmor:
-			// CALICO: Fixed EraseBlock call to have proper width
-			ST_EraseBlock(ARMORX - 14 * 3 - 4, ARMORY, 14 * 3 + 4, BIGSHORT(sbobj[0]->height));
-			DrawJagobj(sbobj[sb_percent], ARMORX, stbar_y + ARMORY);
-			ST_DrawValue(ARMORX, ARMORY, cmd->value);
-			break;
-		case stc_drawcard:
-			ind = cmd->ind;
-			ST_EraseBlock(KEYX, card_y[ind], KEYW, KEYH);
-			have_cards[ind] = cmd->value;
-			break;
-		case stc_drawmap:
-			x = MAPX;
-			/* CENTER THE LEVEL # IF < 10 */
-			if (cmd->value < 10)
-				x -= 6;
-			ST_EraseBlock(MAPX - 30, MAPY, 30, 16);
-			ST_DrawValue(x, MAPY, cmd->value);
-			break;
-		case stc_drawmicro:
-			if (micronums != -1)
+		V_DrawValueCenter(&hudNumberFont, 260, 8+12+16, totalitems - sb->rings);
+		V_DrawValueCenter(&hudNumberFont, 60, 13+6+16, gamemapinfo.spheresNeeded);
+
+		V_DrawStringCenter(&menuFont, 160, 12+16, "TIME LEFT");
+		const int delaytime = 3*TICRATE;
+		int worldTime = leveltime - delaytime + TICRATE - sb->exiting - sb->deadTimer;
+		int timeLeft = (gamemapinfo.timeLimit - worldTime)/TICRATE;
+		if (timeLeft < 0)
+			timeLeft = 0;
+		if (timeLeft > gamemapinfo.timeLimit/TICRATE)
+			timeLeft = gamemapinfo.timeLimit/TICRATE;
+		V_DrawValueCenter(&hudNumberFont, 160, 24+16, timeLeft);
+
+		// Not the best thing to do gamelogic inside of the draw routine,
+		// but trying to keep things simple.
+		if (timeLeft == 0 && !players[0].exiting && stagefailed)
+		{
+			// Time up!
+			S_StartSound(NULL, sfx_s3k_b2);
+
+			for (int p = 0; p < MAXPLAYERS; p++)
 			{
-				ind = cmd->ind;
-				if (cmd->value)
-					DrawJagobjLump(micronums + ind,
-						micronums_x[ind], stbar_y + micronums_y[ind], NULL, NULL);
-				else
-					ST_EraseBlock(micronums_x[ind], micronums_y[ind], 4, 6);
+				players[p].exiting = 1;
+
+				if (playeringame[p])
+					players[p].mo->momx = players[p].mo->momy = players[p].mo->momz = 0;
 			}
-			break;
-		case stc_drawyourfrags:
-			ST_EraseBlock(sb->yourFrags.x,
-				sb->yourFrags.y, sb->yourFrags.w, sb->yourFrags.h);
-			ST_Num(sb->yourFrags.x, sb->yourFrags.y, cmd->value);
-			break;
-		case stc_drawhisfrags:
-			ST_EraseBlock(sb->hisFrags.x,
-				sb->hisFrags.y, sb->hisFrags.w, sb->hisFrags.h);
-			ST_Num(sb->hisFrags.x, sb->hisFrags.y, cmd->value);
-			break;
-		case stc_flashinitial:
-#ifndef MARS
-			ST_EraseBlock(yourFrags.x - yourFrags.w, yourFrags.y,
-				yourFrags.w, yourFrags.h);
-			ST_EraseBlock(hisFrags.x - hisFrags.w, hisFrags.y,
-				hisFrags.w, hisFrags.h);
-			ST_DrawValue(yourFrags.x, yourFrags.y, sb->yourFragsCount);
-			ST_DrawValue(hisFrags.x, hisFrags.y, sb->hisFragsCount);
-#endif
-			break;
-		case stc_drawgibhead:
-		case stc_drawhead:
-			ST_EraseBlock(FACEX, FACEY, FACEW, FACEH);
-			if (cmd->value != -1)
-				DrawJagobjLump(faces + cmd->value, FACEX, stbar_y + FACEY, NULL, NULL);
-			break;
+		}
+
+		if (players[0].exiting > 3*TICRATE)
+		{
+			fadetime = (TICRATE/3) - (5*TICRATE - players[0].exiting);
+			if (fadetime > TICRATE/3)
+				fadetime = TICRATE/3;
 		}
 	}
+	else
+	{
+//		CONS_Printf("skyOffsetY: %d", -(vd.viewz >> 16) - (((signed int)vd.aimingangle) >> 22));	//DLG: Remove me!
 
-	// indicators for keys can erase one other via ST_EraseBlock
-	// so draw indicators for keys in posession separately
-	for (i = 0; i < NUMCARDS; i++) {
-		ind = i;
-		if (have_cards[ind])
-			DrawJagobj(sbobj[sb_card_b + ind], card_x[ind], stbar_y + card_y[ind]);
+		const int delaytime = gamemapinfo.act == 3 ? 2*TICRATE : 3*TICRATE;
+		int worldTime = leveltime - delaytime + TICRATE - sb->exiting - sb->deadTimer;
+		if (worldTime < 0)
+			worldTime = 0;
+		DrawJagobjLump(score, 16, 10+22, NULL, NULL);
+		V_DrawValuePaddedRight(&hudNumberFont, 16 + 120, 10+22, sb->score, 0);
+
+		const int minutes = worldTime/(60*TICRATE);
+		const int seconds = (worldTime/(TICRATE))%60;
+		DrawJagobjLump(time, 16, 26+22, NULL, NULL);
+		V_DrawValuePaddedRight(&hudNumberFont, 72, 26+22, minutes, 0);
+		DrawJagobjLump(timecolon, 72, 26+22, NULL, NULL);
+		V_DrawValuePaddedRight(&hudNumberFont, 72+8+16, 26+22, seconds, 2);
+
+		if (sb->rings <= 0 && (gametic / 4 & 1))
+			DrawJagobjLumpWithColormap(rings, 16, 42+22, NULL, NULL, YELLOWTEXTCOLORMAP);
+		else
+			DrawJagobjLump(rings, 16, 42+22, NULL, NULL);
+		V_DrawValuePaddedRight(&hudNumberFont, 96, 42+22, sb->rings, 0);
+
+		DrawJagobjLump(face, 16, 176, NULL, NULL);
+		V_DrawStringLeftWithColormap(&menuFont, 16 + 20, 176, "SONIC", YELLOWTEXTCOLORMAP);
+		DrawJagobjLump(livex, 16 + 22, 176 + 10, NULL, NULL);
+		V_DrawValuePaddedRight(&menuFont, 16 + 58, 176+8, sb->lives, 0);
 	}
+
+	if (sb->lives == 0 && sb->deadTimer > 3*TICRATE)
+	{
+		int gameStartX = -85;
+		int overStartX = 320;
+		int gameX = 160 - 85 - 8;
+		int overX = 160 + 8;
+		int timelength = 3*TICRATE + TICRATE/2;
+		int timesize = timelength - 3*TICRATE;
+
+		if (sb->deadTimer < timelength)
+		{
+			int timepassed = timesize - (timelength - sb->deadTimer);
+			gameX = gameStartX + (((gameX - gameStartX)/timesize) * timepassed);
+			overX = overStartX + (((overX - overStartX)/timesize) * timepassed);
+		}
+
+		DrawJagobjLump(go_game, gameX, 102, NULL, NULL);
+		DrawJagobjLump(go_over, overX, 102, NULL, NULL);
+	}
+
+	if (sb->intermission)
+		Y_IntermissionDrawer();
 }
 
+void CONS_Printf(char *msg, ...) 
+{
+	if (stbar)
+	{
+		va_list ap;
+
+		va_start(ap, msg);
+		D_vsnprintf(stbar->msg, sizeof(stbar->msg), msg, ap);
+		va_end(ap);
+
+		stbar->msgTics = 4 * TICRATE;
+	}
+} 
 
 void ST_Drawer(void)
 {
@@ -664,7 +409,10 @@ void ST_Drawer(void)
 	if (debugmode == DEBUGMODE_NODRAW)
 		return;
 
-	y[consoleplayer] = I_FrameBufferHeight() - sbar_height;
+	if (demoplayback)
+		return;
+
+	y[consoleplayer] = I_FrameBufferHeight();
 	y[consoleplayer^1] = 0;
 
 	while (p < e)
@@ -680,76 +428,16 @@ void ST_Drawer(void)
 			ST_Drawer_(&stbar[p]);
 		p++;
 	}
-}
 
-/*================================================= */
-/* */
-/* Debugging print */
-/* */
-/*================================================= */
-void ST_Num (int x, int y, int num)
-{
-	char	str[8];
-
-	y += stbar_y;
-	NumToStr (num, str);
-	I_Print8 (x,y/8,str+1);
-}
-
-/*================================================= */
-/* */
-/*	Convert an int to a string (my_itoa?) */
-/* */
-/*================================================= */
-void valtostr(char *string,int val)
-{
-	char temp[12];
-	int	index = 0, i, dindex = 0;
-	
-	do
+	if (stbar->msgTics)
 	{
-		temp[index++] = val%10 + '0';
-		val /= 10;
-	} while(val);
-	
-	string[index] = 0;
-	for (i = index - 1; i >= 0; i--)
-		string[dindex++] = temp[i];
-}
-
-/*================================================= */
-/* */
-/* Draws a number in the Status Bar # font */
-/* */
-/*================================================= */
-void ST_DrawValue(int x,int y,int value)
-{
-	char	v[4];
-	int		j;
-	int		index;
-
-	if (value < 0)
-		value = 0;
-	if (value > 999)
-		value = 999;
-
-	y += stbar_y;
-	valtostr(v,value);
-	v[sizeof(v)-1] = 0;
-
-	j = mystrlen(v) - 1;
-	while(j >= 0)
-	{
-		int w;
-		index = sb_0 + (v[j--] - '0');
-		w = sbobj[index]->width;
-		x -= w + 1;
-		DrawJagobj(sbobj[index], x, y);
+		V_DrawStringLeft(&menuFont, 0, 24, stbar->msg);
+		stbar->msgTics--;
 	}
 }
 
 #ifdef MARS
-
+/*
 void ST_EraseBlock(int x, int y, int width, int height)
 {
 	if (debugmode == DEBUGMODE_NODRAW)
@@ -761,6 +449,6 @@ void ST_EraseBlock(int x, int y, int width, int height)
 		width -= 1;
 
 	DrawJagobj2(sbar, x, stbar_y + y, x, y, width, height, I_FrameBuffer());
-}
+}*/
 
 #endif

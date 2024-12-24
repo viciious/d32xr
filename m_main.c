@@ -2,12 +2,19 @@
 
 #include "doomdef.h"
 
+#ifdef MDSKY
+#include "marshw.h"
+#endif
+
+#include "v_font.h"
+#include "r_local.h"
+
 #define MOVEWAIT		(I_IsPAL() ? TICVBLS*5 : TICVBLS*6)
-#define CURSORX		(80)
+#define CURSORX		(96)
 #define CURSORWIDTH	24
 #define ITEMX		(CURSORX+CURSORWIDTH)
 #define STARTY			48
-#define ITEMSPACE	20
+#define ITEMSPACE	12
 #define CURSORY(y)	(STARTY+ITEMSPACE*(y))
 #define	NUMLCHARS 64	
 
@@ -19,11 +26,11 @@ typedef enum
 	mi_joingame,
 	mi_level,
 	mi_gamemode,
-	mi_difficulty,
 	mi_savelist,
 	mi_singleplayer,
 	mi_splitscreen,
 	mi_network,
+	mi_help,
 	NUMMAINITEMS
 } menu_t;
 
@@ -58,18 +65,34 @@ typedef enum
 	ms_new,
 	ms_load,
 	ms_save,
+	ms_help,
 	NUMMAINSCREENS
 } screen_t;
 
 static mainitem_t mainitem[NUMMAINITEMS];
 static mainscreen_t mainscreen[NUMMAINSCREENS];
 
-static const char* playmodes[NUMMODES] = { "Single", "Coop", "Deathmatch" };
+//static const char* playmodes[NUMMODES] = { "Single", "Coop", "Deathmatch" };
 jagobj_t* m_doom;
 
-static VINT m_skull1lump, m_skull2lump;
-static VINT m_skilllump;
+static VINT m_skull1lump;
 static VINT numslump;
+#define NUMHANDFRAMES 5
+#define NUMKFISTFRAMES 7
+#define NUMSBLINKFRAMES 3
+#define NUMTBLINKFRAMES 3
+#define NUMKBLINKFRAMES 3
+#define NUMTAILWAGFRAMES 6
+jagobj_t *m_hand[NUMHANDFRAMES];
+jagobj_t *m_kfist[NUMKFISTFRAMES];
+jagobj_t *m_sblink[NUMSBLINKFRAMES];
+jagobj_t *m_tblink[NUMTBLINKFRAMES];
+jagobj_t *m_kblink[NUMKBLINKFRAMES];
+jagobj_t *m_tailwag[NUMTAILWAGFRAMES];
+static char fistCounter = 5;
+static char sBlinkCounter = 110;
+static char tBlinkCounter = 25;
+static char kBlinkCounter = 76;
 
 static VINT	cursorframe;
 static VINT cursordelay;
@@ -80,7 +103,6 @@ static VINT currentplaymode = gt_single;
 static VINT currentgametype = mi_singleplayer;
 static VINT	cursorpos;
 static VINT screenpos;
-static VINT playerskill;
 
 static VINT saveslot;
 static VINT savecount;
@@ -93,34 +115,70 @@ static char displaymapname[32];
 static VINT displaymapnum;
 
 static boolean startup;
-
-extern VINT	uchar;
-extern void print(int x, int y, const char* string);
+VINT	uchar;
 
 void M_Start2 (boolean startup_)
 {
 	int i;
 
 /* cache all needed graphics	 */
+	m_skull1lump = W_CheckNumForName("M_CURSOR");
+
 	startup = startup_;
+	m_doom = NULL;
 	if (startup)
 	{
-		i = W_CheckNumForName("M_DOOM");
+		i = W_CheckNumForName("M_TITLE");
 		m_doom = i != -1 ? W_CacheLumpNum(i, PU_STATIC) : NULL;
+
+		for (i = 0; i < NUMHANDFRAMES; i++)
+		{
+			char entry[9];
+			D_snprintf(entry, 8, "M_HAND%d", i + 1);
+			m_hand[i] = W_CacheLumpName(entry, PU_STATIC);
+		}
+
+		for (int i = 0; i < NUMKFISTFRAMES; i++)
+		{
+			char entry[9];
+			D_snprintf(entry, sizeof(entry), "KFIST%d", i + 1);
+			m_kfist[i] = W_CacheLumpName(entry, PU_STATIC);
+		}
+
+		for (int i = 0; i < NUMSBLINKFRAMES; i++)
+		{
+			char entry[9];
+			D_snprintf(entry, sizeof(entry), "SBLINK%d", i + 1);
+			m_sblink[i] = W_CacheLumpName(entry, PU_STATIC);
+		}
+
+		for (int i = 0; i < NUMKBLINKFRAMES-1; i++)
+		{
+			char entry[9];
+			D_snprintf(entry, sizeof(entry), "KBLINK%d", i + 1);
+			m_kblink[i] = W_CacheLumpName(entry, PU_STATIC);
+		}
+		m_kblink[2] = W_CacheLumpName("KBLINK1", PU_STATIC);
+
+		for (int i = 0; i < NUMTBLINKFRAMES-1; i++)
+		{
+			char entry[9];
+			D_snprintf(entry, sizeof(entry), "TBLINK%d", i + 1);
+			m_tblink[i] = W_CacheLumpName(entry, PU_STATIC);
+		}
+		m_tblink[2] = W_CacheLumpName("TBLINK1", PU_STATIC);
+
+		for (int i = 0; i < NUMTAILWAGFRAMES; i++)
+		{
+			char entry[9];
+			D_snprintf(entry, sizeof(entry), "TAILWAG%d", i + 1);
+			m_tailwag[i] = W_CacheLumpName(entry, PU_STATIC);
+		}
 	}
-	else
-	{
-		m_doom = NULL;
-	}
 
-	m_skull1lump = W_CheckNumForName("M_SKULL1");
-	m_skull2lump = W_CheckNumForName("M_SKULL2");
+	numslump = W_CheckNumForName("STTNUM0");
 
-	m_skilllump = W_CheckNumForName("SKILL0");
-
-	numslump = W_CheckNumForName("NUM_0");
-
-	uchar = W_CheckNumForName("CHAR_065");
+	uchar = W_CheckNumForName("STCFN065");
 
 	cursorframe = -1;
 	cursorpos = 0;
@@ -129,7 +187,6 @@ void M_Start2 (boolean startup_)
 	/* HACK: dunno why but the pistol sound comes out muffled if played from M_Start */
 	/* so defer the playback until M_Ticker is called */
 	screenpos = startup ? ms_main : ms_none;
-	playerskill = startskill;
 	if (startup)
 		playermap = 1;
 
@@ -143,7 +200,7 @@ void M_Start2 (boolean startup_)
 	D_memset(mainitem, 0, sizeof(mainitem));
 
 	mainscreen[ms_new].firstitem = mi_level;
-	mainscreen[ms_new].numitems = mi_difficulty - mainscreen[ms_new].firstitem + 1;
+	mainscreen[ms_new].numitems = mi_level - mainscreen[ms_new].firstitem + 1;
 
 	mainscreen[ms_load].firstitem = mi_savelist;
 	mainscreen[ms_load].numitems = 1;
@@ -155,32 +212,23 @@ void M_Start2 (boolean startup_)
 	mainscreen[ms_save].numitems = 1;
 
 	mainscreen[ms_gametype].firstitem = mi_singleplayer;
-	mainscreen[ms_gametype].numitems = 3;
+	mainscreen[ms_gametype].numitems = 1;
 
-	D_memcpy(mainitem[mi_newgame].name, "New Game", 9);
+	mainscreen[ms_help].firstitem = mi_help;
+	mainscreen[ms_help].numitems = 1;
+
+	D_memcpy(mainitem[mi_newgame].name, "START GAME", 11);
 	mainitem[mi_newgame].x = ITEMX;
 	mainitem[mi_newgame].y = CURSORY(0);
 	mainitem[mi_newgame].screen = ms_gametype;
 
-	D_memcpy(mainitem[mi_loadgame].name, "Load Game", 10);
+	D_memcpy(mainitem[mi_loadgame].name, "ABOUT", 6);
 	mainitem[mi_loadgame].x = ITEMX;
 	mainitem[mi_loadgame].y = CURSORY(1);
-	mainitem[mi_loadgame].screen = ms_load;
+	mainitem[mi_loadgame].screen = ms_help;
 	mainscreen[ms_main].numitems++;
 
-	D_memcpy(mainitem[mi_savegame].name, "Save Game", 10);
-	mainitem[mi_savegame].x = ITEMX;
-	mainitem[mi_savegame].y = CURSORY(2);
-	mainitem[mi_savegame].screen = ms_save;
-	mainscreen[ms_main].numitems++;
-
-	D_memcpy(mainitem[mi_joingame].name, "Join Game", 10);
-	mainitem[mi_joingame].x = ITEMX;
-	mainitem[mi_joingame].y = CURSORY(3);
-	mainitem[mi_joingame].screen = ms_none;
-	mainscreen[ms_main].numitems++;
-
-	D_memcpy(mainitem[mi_level].name, "Area", 5);
+	D_memcpy(mainitem[mi_level].name, "Select Act", 11);
 	mainitem[mi_level].x = ITEMX;
 	mainitem[mi_level].y = CURSORY(0);
 	mainitem[mi_level].screen = ms_none;
@@ -190,17 +238,12 @@ void M_Start2 (boolean startup_)
 	mainitem[mi_gamemode].y = CURSORY((mainscreen[ms_new].numitems - 2) * 2);
 	mainitem[mi_gamemode].screen = ms_none;
 
-	D_memcpy(mainitem[mi_difficulty].name, "Difficulty", 11);
-	mainitem[mi_difficulty].x = ITEMX;
-	mainitem[mi_difficulty].y = CURSORY((mainscreen[ms_new].numitems - 1)*2);
-	mainitem[mi_difficulty].screen = ms_none;
-
 	D_memcpy(mainitem[mi_savelist].name, "Checkpoints", 12);
 	mainitem[mi_savelist].x = ITEMX;
 	mainitem[mi_savelist].y = CURSORY(0);
 	mainitem[mi_savelist].screen = ms_none;
 
-	D_memcpy(mainitem[mi_singleplayer].name, "Single Player", 14);
+	D_memcpy(mainitem[mi_singleplayer].name, "SINGLE PLAYER", 14);
 	mainitem[mi_singleplayer].x = ITEMX;
 	mainitem[mi_singleplayer].y = CURSORY(0);
 	mainitem[mi_singleplayer].screen = ms_new;
@@ -239,6 +282,52 @@ void M_Stop (void)
 	{
 		Z_Free (m_doom);
 		m_doom = NULL;
+	}
+
+	if (startup)
+	{
+		int i;
+		for (i = 0; i < NUMHANDFRAMES; i++)
+		{
+			if (m_hand[i])
+				Z_Free(m_hand[i]);
+			m_hand[i] = NULL;
+		}
+
+		for (int i = 0; i < NUMKFISTFRAMES; i++)
+		{
+			if (m_kfist[i])
+				Z_Free(m_kfist[i]);
+			m_kfist[i] = NULL;
+		}
+
+		for (int i = 0; i < NUMSBLINKFRAMES; i++)
+		{
+			if (m_sblink[i])
+				Z_Free(m_sblink[i]);
+			m_sblink[i] = NULL;
+		}
+
+		for (int i = 0; i < NUMKBLINKFRAMES; i++)
+		{
+			if (m_kblink[i])
+				Z_Free(m_kblink[i]);
+			m_kblink[i] = NULL;
+		}
+
+		for (int i = 0; i < NUMTBLINKFRAMES; i++)
+		{
+			if (m_tblink[i])
+				Z_Free(m_tblink[i]);
+			m_tblink[i] = NULL;
+		}
+
+		for (int i = 0; i < NUMTAILWAGFRAMES; i++)
+		{
+			if (m_tailwag[i])
+				Z_Free(m_tailwag[i]);
+			m_tailwag[i] = NULL;
+		}
 	}
 
 #ifndef MARS
@@ -293,20 +382,19 @@ int M_Ticker (void)
 {
 	int		buttons, oldbuttons;
 	mainscreen_t* menuscr;
-	int		oldplayermap;
 	boolean newcursor = false;
 	int sound = sfx_None;
 
 	if (cursorframe == -1)
 	{
 		cursorframe = 0;
-		cursordelay = MOVEWAIT+MOVEWAIT/2;
+		cursordelay = MOVEWAIT;
 	}
 
 	if (screenpos == ms_none)
 	{
 		screenpos = ms_main;
-		S_StartSound(NULL, sfx_pistol);
+		S_StartSound(NULL, sfx_None);
 	}
 
 	menuscr = &mainscreen[screenpos];
@@ -315,9 +403,9 @@ int M_Ticker (void)
 		return ga_startnew;
 
 /* animate skull */
-	if (gametic != prevgametic && (gametic&3) == 0)
+	if (gametic & 1)
 	{
-		cursorframe ^= 1;
+		cursorframe++;
 	}
 
 	M_UpdateSaveInfo();
@@ -325,7 +413,8 @@ int M_Ticker (void)
 	buttons = ticrealbuttons & MENU_BTNMASK;
 	oldbuttons = oldticrealbuttons & MENU_BTNMASK;
 
-	if ((buttons & (BT_A | BT_LMBTN)) && !(oldbuttons & (BT_A | BT_LMBTN)))
+	if ((gamemapinfo.mapNumber == 30 && (buttons & (BT_B | BT_LMBTN | BT_START)) && !(oldbuttons & (BT_B | BT_LMBTN | BT_START)))
+		|| (gamemapinfo.mapNumber != 30 && (buttons & (BT_B | BT_LMBTN)) && !(oldbuttons & (BT_B | BT_LMBTN))))
 	{
 		int itemno = menuscr->firstitem + cursorpos;
 
@@ -354,12 +443,12 @@ int M_Ticker (void)
 			clearscreen = 2;
 			prevsaveslot = -1;
 			saveslot = screenpos == ms_save;
-			S_StartSound(NULL, sfx_pistol);
+			S_StartSound(NULL, sfx_None);
 			return ga_nothing;
 		}
 	}
 
-	if ((buttons & (BT_B | BT_RMBTN)) && !(oldbuttons & (BT_B | BT_RMBTN)))
+	if ((buttons & (BT_A | BT_C | BT_RMBTN)) && !(oldbuttons & (BT_A | BT_C | BT_RMBTN)))
 	{
 		if (screenpos != ms_main)
 		{
@@ -385,7 +474,7 @@ int M_Ticker (void)
 
 			movecount = 0;
 			clearscreen = 2;
-			S_StartSound(NULL, sfx_swtchn);
+			S_StartSound(NULL, sfx_None);
 			return 0;
 		}
 		else
@@ -398,14 +487,13 @@ int M_Ticker (void)
 	}
 
 	/* exit menu if button press */
-	if ((buttons & (BT_A | BT_LMBTN | BT_START)) && !(oldbuttons & (BT_A | BT_LMBTN | BT_START)))
+	if ((buttons & (BT_B | BT_LMBTN | BT_START)) && !(oldbuttons & (BT_B | BT_LMBTN | BT_START)))
 	{
 		if (screenpos == ms_new)
 		{
 			consoleplayer = 0;
 			startsave = -1;
 			startmap = gamemapnumbers[playermap - 1]; /*set map number */
-			startskill = playerskill;	/* set skill level */
 			starttype = currentplaymode;	/* set play type */
 			startsplitscreen = currentgametype == mi_splitscreen;
 			return ga_startnew;		/* done with menu */
@@ -437,7 +525,7 @@ int M_Ticker (void)
 
 		if (screenpos == ms_save)
 		{
-			S_StartSound(NULL, sfx_pistol);
+			S_StartSound(NULL, sfx_None);
 			SaveGame(saveslot);
 			prevsaveslot = -1;
 			return ga_died;
@@ -457,7 +545,6 @@ int M_Ticker (void)
 	cursordelay = MOVEWAIT;
 
 /* check for movement */
-	oldplayermap = playermap;
 	if (! (buttons & (BT_UP|BT_DOWN|BT_LEFT|BT_RIGHT) ) )
 		movecount = 0;		/* move immediately on next press */
 	else
@@ -468,19 +555,18 @@ int M_Ticker (void)
 
 		if (++movecount == 1)
 		{
-			int oldplayerskill = playerskill;
-			int oldsaveslot = saveslot;
 			int oldcursorpos = cursorpos;
-			int oldplayermode = currentplaymode;
 
 			if (buttons & BT_DOWN)
 			{
+				//S_StartSound(NULL, sfx_s3k_5b);
 				if (++cursorpos == menuscr->numitems)
 					cursorpos = 0;
 			}
 		
 			if (buttons & BT_UP)
 			{
+				//S_StartSound(NULL, sfx_s3k_5b);
 				if (--cursorpos == -1)
 					cursorpos = menuscr->numitems-1;
 			}
@@ -511,23 +597,26 @@ int M_Ticker (void)
 					{			
 						if (++playermap == gamemapcount + 1)
 							playermap = 1;
+
+#ifdef SHOW_DISCLAIMER
+						while (gamemapnumbers[playermap-1] == 30 || (gamemapnumbers[playermap-1] >= SSTAGE_START && gamemapnumbers[playermap-1] <= SSTAGE_END))
+						{
+							if (++playermap == gamemapcount + 1)
+								playermap = 1;
+						}
+#endif
 					}
 					if (buttons & BT_LEFT)
 					{
 						if(--playermap == 0)
 							playermap = gamemapcount;
-					}
-					break;
-				case mi_difficulty:
-					if (buttons & BT_RIGHT)
-					{
-						if (++playerskill > sk_nightmare)
-							playerskill--;
-					}
-					if (buttons & BT_LEFT)
-					{
-						if (--playerskill == -1)
-							playerskill++;
+#ifdef SHOW_DISCLAIMER
+						while (gamemapnumbers[playermap-1] == 30 || (gamemapnumbers[playermap-1] >= SSTAGE_START && gamemapnumbers[playermap-1] <= SSTAGE_END))
+						{
+							if(--playermap == 0)
+								playermap = gamemapcount;
+						}
+#endif
 					}
 					break;
 				case mi_savelist:
@@ -551,12 +640,7 @@ int M_Ticker (void)
 			newcursor = cursorpos != oldcursorpos;
 
 			if (newcursor)
-				sound = sfx_pistol;
-			else if (oldplayerskill != playerskill ||
-				oldsaveslot != saveslot ||
-				oldplayermap != playermap ||
-				oldplayermode != currentplaymode)
-				sound = sfx_stnmov;
+				sound = sfx_None;
 		}
 	}
 
@@ -567,12 +651,12 @@ int M_Ticker (void)
 	{
 		/* long menu item names can spill onto the screen border */
 		clearscreen = 2;
-		oldplayermap = playermap;
 	}
 
 	return ga_nothing;
 }
 
+void O_DrawHelp (VINT yPos);
 /*
 =================
 =
@@ -580,7 +664,6 @@ int M_Ticker (void)
 =
 =================
 */
-
 void M_Drawer (void)
 {
 	int i;
@@ -591,11 +674,53 @@ void M_Drawer (void)
 	mainitem_t* items = &mainitem[menuscr->firstitem];
 	int y, y_offset = 0;
 
+	if (demoplayback && gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
+		// Fill the area above the viewport with the sky color.
+		DrawFillRect(0, 0, 320, 44, gamemapinfo.skyTopColor);
+	}
+
 /* Draw main menu */
 	if (m_doom && (scrpos == ms_main || scrpos == ms_gametype))
 	{
-		DrawJagobj(m_doom, 100, 4);
-		y_offset = m_doom->height + 4 - STARTY;
+		VINT logoPos = 160 - (m_doom->width / 2);
+		DrawJagobj(m_doom, logoPos, 16);
+		y_offset = m_doom->height + 16 - STARTY;
+
+		DrawJagobj(m_hand[cursorframe % NUMHANDFRAMES], 160 + 3, 16 + 32);
+
+		DrawJagobj(m_tailwag[cursorframe % NUMTAILWAGFRAMES], logoPos + 5, 16 + 2);
+
+		if (gametic & 1)
+		{
+			fistCounter--;
+
+			if (fistCounter <= -NUMKFISTFRAMES)
+				fistCounter = 15 + (M_Random() & 7);
+		}
+
+		if (fistCounter < 0)
+			DrawJagobj(m_kfist[D_abs(fistCounter)], logoPos + 188, 16 + 43);
+		else
+			DrawJagobj(m_kfist[0], logoPos + 188, 16 + 43);
+
+		sBlinkCounter--;
+		if (sBlinkCounter <= -NUMSBLINKFRAMES)
+			sBlinkCounter = M_Random() & 127;
+		tBlinkCounter--;
+		if (tBlinkCounter <= -NUMTBLINKFRAMES)
+			tBlinkCounter = M_Random() & 127;
+		kBlinkCounter--;
+		if (kBlinkCounter <= -NUMKBLINKFRAMES)
+			kBlinkCounter = M_Random() & 127;
+
+		if (sBlinkCounter < 0)
+			DrawJagobj(m_sblink[D_abs(sBlinkCounter)], logoPos + 93, 16 + 27);
+
+		if (tBlinkCounter < 0)
+			DrawJagobj(m_tblink[D_abs(tBlinkCounter)], logoPos + 54, 16 + 40);
+
+		if (kBlinkCounter < 0)
+			DrawJagobj(m_kblink[D_abs(kBlinkCounter)], logoPos + 158, 16 + 37);
 	}
 
 /* erase old skulls */
@@ -603,21 +728,40 @@ void M_Drawer (void)
 	EraseBlock (CURSORX, m_doom_height,m_skull1->width, CURSORY(menuscr->numitems)- CURSORY(0));
 #endif
 
-/* draw new skull */
-	if (cursorframe)
-		DrawJagobjLump(m_skull2lump, CURSORX, y_offset+items[cursorpos].y - 2, NULL, NULL);
-	else
-		DrawJagobjLump(m_skull1lump, CURSORX, y_offset+items[cursorpos].y - 2, NULL, NULL);
+	if (scrpos == ms_help)
+	{
+		O_DrawHelp(80);
+		return;
+	}
 
 /* draw menu items */
+	int selectedPos = 0;
 	for (i = 0; i < menuscr->numitems; i++)
 	{
 		int y = y_offset + items[i].y;
-		print(items[i].x, y, items[i].name);
+
+		if (scrpos == ms_main)
+		{
+			if (i == cursorpos)
+				selectedPos = V_DrawStringCenterWithColormap(&menuFont, 160, y, items[i].name, YELLOWTEXTCOLORMAP);
+			else
+				V_DrawStringCenter(&menuFont, 160, y, items[i].name);
+		}
+		else
+		{
+			if (i == cursorpos)
+				selectedPos = V_DrawStringLeftWithColormap(&menuFont, items[i].x, y, items[i].name, YELLOWTEXTCOLORMAP);
+			else
+				V_DrawStringLeft(&menuFont, items[i].x, y, items[i].name);
+		}
 	}
+
+	/* draw new skull */
+	DrawJagobjLump(m_skull1lump, scrpos == ms_main ? 160 - (selectedPos - 160) - 20 : CURSORX, y_offset+items[cursorpos].y, NULL, NULL);
 
 	if (scrpos == ms_new)
 	{
+		char mapNum[8];
 		mainitem_t* item;
 		char *tmp;
 		int tmplen;
@@ -625,7 +769,7 @@ void M_Drawer (void)
 		/* draw game mode information */
 		item = &mainitem[mi_gamemode];
 		y = y_offset + item->y;
-		print(item->x + 10, y + ITEMSPACE + 2, playmodes[currentplaymode]);
+//		V_DrawStringLeft(&menuFont, item->x + 10, y + ITEMSPACE + 2, playmodes[currentplaymode]);
 
 		/* draw start level information */
 		item = &mainitem[mi_level];
@@ -637,25 +781,13 @@ void M_Drawer (void)
 #ifndef MARS
 		EraseBlock(80, m_doom_height + CURSORY(NUMMAINITEMS - 2) + ITEMSPACE + 2, 320, nums[0]->height);
 #endif
-		if (leveltens)
-		{
-			DrawJagobjLump(numslump + leveltens,
-				item->x + 70, y + 2, NULL, NULL);
-			DrawJagobjLump(numslump + levelones, item->x + 84, y + 2, NULL, NULL);
-		}
-		else
-			DrawJagobjLump(numslump + levelones, item->x + 70, y + 2, NULL, NULL);
+		D_snprintf(mapNum, sizeof(mapNum), "%d", mapnumber);
 
-		print((320 - (tmplen * 14)) >> 1, y + ITEMSPACE + 2, tmp);
+		V_DrawStringLeft(&titleNumberFont, item->x + 96, y + 2, mapNum);
 
-		item = &mainitem[mi_difficulty];
-		y = y_offset + item->y;
+		V_DrawStringLeft(&menuFont, (320 - (tmplen * 14)) >> 1, y + ITEMSPACE + 2, tmp);
 
-#ifndef MARS
-		EraseBlock(82, m_doom_height + CURSORY(NUMMAINITEMS - 1) + ITEMSPACE + 2, 320 - 72, m_skill[playerskill]->height + 10);
-#endif
-		/* draw difficulty information */
-		DrawJagobjLump(m_skilllump + playerskill, item->x + 10, y + ITEMSPACE + 2, NULL, NULL);
+		O_DrawHelp(120);
 	}
 	else if (scrpos == ms_load || scrpos == ms_save)
 	{
@@ -669,10 +801,10 @@ void M_Drawer (void)
 		if (savecount > 0)
 		{
 			if (saveslot == 0)
-				print(item->x + 10, y + 20 + 2, "Last autosave.");
+				V_DrawStringLeft(&menuFont, item->x + 10, y + 20 + 2, "Last autosave.");
 			else
 			{
-				print(item->x + 10, y + 20, "Slot ");
+				V_DrawStringLeft(&menuFont, item->x + 10, y + 20, "Slot ");
 				DrawJagobjLump(numslump + saveslot % 10, item->x + 70, y + ITEMSPACE + 1, NULL, NULL);
 			}
 
@@ -686,7 +818,7 @@ void M_Drawer (void)
 
 				leveltens = saveslotmap / 10, levelones = saveslotmap % 10;
 
-				print(item->x + 10, y + 40 + 2, "Area");
+				V_DrawStringLeft(&menuFont, item->x + 10, y + 40 + 2, "Area");
 
 				if (leveltens)
 				{
@@ -697,24 +829,18 @@ void M_Drawer (void)
 				else
 					DrawJagobjLump(numslump + levelones, item->x + 80, y + ITEMSPACE*2 + 3, NULL, NULL);
 
-				print((320 - (mapnamelen * 14)) >> 1, y + ITEMSPACE*3 + 3, mapname);
+				V_DrawStringLeft(&menuFont, (320 - (mapnamelen * 14)) >> 1, y + ITEMSPACE*3 + 3, mapname);
 			}
 			else
 			{
-				print(item->x + 10, y + ITEMSPACE*2 + 2, "Empty");
-			}
-			if (saveslotskill != -1)
-			{
-				/* draw difficulty information */
-				print(item->x + 10, y + ITEMSPACE*4 + 2, playmodes[saveslotmode]);
-				DrawJagobjLump(m_skilllump + saveslotskill, item->x + 10, y + ITEMSPACE*5 + 2, NULL, NULL);
+				V_DrawStringLeft(&menuFont, item->x + 10, y + ITEMSPACE*2 + 2, "Empty");
 			}
 		}
 		else
 		{
-			print(CURSORX, y + ITEMSPACE+10 + 2, "Reach your first");
-			print(CURSORX, y + ITEMSPACE*2+10 + 2, "checkpoint after");
-			print(CURSORX, y + ITEMSPACE*3+10 + 2, "the first area.");
+			V_DrawStringLeft(&menuFont, CURSORX, y + ITEMSPACE+10 + 2, "Reach your first");
+			V_DrawStringLeft(&menuFont, CURSORX, y + ITEMSPACE*2+10 + 2, "checkpoint after");
+			V_DrawStringLeft(&menuFont, CURSORX, y + ITEMSPACE*3+10 + 2, "the first area.");
 		}
 	}
 }

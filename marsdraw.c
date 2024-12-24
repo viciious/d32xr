@@ -38,11 +38,6 @@
 ==============================================================================
 */
 
-void I_DrawFuzzColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
-void I_DrawFuzzColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
-
 #ifdef USE_C_DRAW
 
 void I_DrawColumnLowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
@@ -389,127 +384,93 @@ void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 #undef DO_PIXEL
 }
 
-
 #endif
 
-//
-// Spectre/Invisibility.
-//
-
-void I_DrawFuzzColumnLowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight)
+#ifdef POTATO_MODE
+/*
+================
+=
+= I_DrawSpanPotatoLow
+=
+================
+*/
+void I_DrawSpanPotatoLow(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
+	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int dc_texheight)
 {
-	int16_t *dest;
-	int16_t *dc_colormap;
-	unsigned	frac;
-	unsigned    count, n;
-	int8_t *bfuzzoffset;
-	int fuzzpos;
-	int deststep;
-
-	I_GetThreadLocalVar(DOOMTLS_FUZZPOS, fuzzpos);
-	fuzzpos = fuzzpos * 2;
-
-	if (!dc_yl)
-		dc_yl = 1;
-	if (dc_yh == viewportHeight - 1)
-		dc_yh = viewportHeight - 2;
+	pixel_t* dest, pix;
+	unsigned count;
+	short* dc_colormap;
 
 #ifdef RANGECHECK
-	if (dc_x >= viewportWidth || dc_yl < 0 || dc_yh >= viewportHeight)
-		I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
+	if (ds_x2 < ds_x1 || ds_x1<0 || ds_x2 >= viewportWidth || ds_y>viewportHeight)
+		I_Error("R_DrawSpan: %i to %i at %i", ds_x1, ds_x2, ds_y);
 #endif
 
-	if (dc_yl > dc_yh)
+	if (ds_x2 < ds_x1)
 		return;
 
-	frac = frac_;
-	dest = (int16_t *)(viewportbuffer + dc_yl * 320 / 2 + dc_x);
+	count = ds_x2 - ds_x1 + 1;
+
+	dest = viewportbuffer + ds_y * 320 / 2 + ds_x1;
 	dc_colormap = (int16_t *)dc_colormaps + light;
-	bfuzzoffset = (int8_t *)fuzzoffset;
-	__asm volatile("mov %1,%0\n\t" : "=&r" (deststep) : "r"(320/2));
+	pix = dc_colormap[(int8_t)ds_source[513]];
 
-#define DO_PIXEL() do { \
-		int offset = *(int16_t *)(bfuzzoffset + (fuzzpos & FUZZMASK*2)); \
-		*dest = dc_colormap[*((int8_t *)dest + offset)]; \
-		fuzzpos += 2; \
-		dest += deststep; \
-		frac += fracstep; \
-	} while (0)
-
-	count = dc_yh - dc_yl + 1;
-	n = (count + 3) >> 2;
-
-	switch (count & 3)
-	{
-	case 0: do { DO_PIXEL();
-	case 3:      DO_PIXEL();
-	case 2:      DO_PIXEL();
-	case 1:      DO_PIXEL();
-	} while (--n > 0);
-	}
-
-#undef DO_PIXEL
-
-	I_SetThreadLocalVar(DOOMTLS_FUZZPOS, fuzzpos / 2);
+	do {
+		*dest++ = pix;
+	} while (--count > 0);
 }
 
-void I_DrawFuzzColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
-	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight)
+/*
+================
+=
+= I_DrawSpanPotato
+=
+================
+*/
+void I_DrawSpanPotato(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
+	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int dc_texheight)
 {
-	int8_t * dest;
+	byte *udest, upix;
+	unsigned count, scount;
 	int8_t* dc_colormap;
-	unsigned	frac;
-	unsigned    count, n;
-	int8_t *bfuzzoffset;
-	int	fuzzpos;
-	int deststep;
-
-	I_GetThreadLocalVar(DOOMTLS_FUZZPOS, fuzzpos); 
-	fuzzpos = fuzzpos * 2;
-
-	if (!dc_yl)
-		dc_yl = 1;
-	if (dc_yh == viewportHeight - 1)
-		dc_yh = viewportHeight - 2;
 
 #ifdef RANGECHECK
-	if (dc_x >= viewportWidth || dc_yl < 0 || dc_yh >= viewportHeight)
-		I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
+	if (ds_x2 < ds_x1 || ds_x1<0 || ds_x2 >= viewportWidth || ds_y>viewportHeight)
+		I_Error("R_DrawSpan: %i to %i at %i", ds_x1, ds_x2, ds_y);
 #endif
 
-	if (dc_yl > dc_yh)
+	if (ds_x2 < ds_x1)
 		return;
 
-	frac = frac_;
-	dest = (int8_t *)viewportbuffer + dc_yl * 320 + dc_x;
+	count = ds_x2 - ds_x1 + 1;
+
+	udest = (byte *)viewportbuffer + ds_y * 320 + ds_x1;
 	dc_colormap = (int8_t *)(dc_colormaps + light);
-	bfuzzoffset = (int8_t *)fuzzoffset;
-	__asm volatile("mov %1,%0\n\t" : "=&r" (deststep) : "r"(320));
+	upix = dc_colormap[ds_source[513]] & 0xff;
 
-#define DO_PIXEL() do { \
-		int offset = *(int16_t *)(bfuzzoffset + (fuzzpos & FUZZMASK*2)); \
-		*dest = dc_colormap[dest[offset]]; \
-		dest += deststep; \
-		frac += fracstep; \
-	} while (0)
-
-	count = dc_yh - dc_yl + 1;
-	n = (count + 3) >> 2;
-
-	switch (count & 3)
-	{
-	case 0: do { DO_PIXEL();
-	case 3:      DO_PIXEL();
-	case 2:      DO_PIXEL();
-	case 1:      DO_PIXEL();
-	} while (--n > 0);
+	if (ds_x1 & 1) {
+		*udest++ = upix;
+		count--;
 	}
 
-#undef DO_PIXEL
+	scount = count >> 1;
+	if (scount > 0)
+	{
+		pixel_t spix = (upix << 8) | upix;
+		pixel_t *sdest = (pixel_t*)udest;
 
-	I_SetThreadLocalVar(DOOMTLS_FUZZPOS, fuzzpos / 2);
+		do {
+			*sdest++ = spix;
+		} while (--scount > 0);
+
+		udest = (byte*)sdest;
+	}
+
+	if (count & 1) {
+		*udest = upix;
+	}
 }
+#endif
 
 void I_DrawColumnNoDraw(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight)
@@ -523,6 +484,16 @@ void I_DrawSpanNoDraw(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfra
 
 }
 
+void I_DrawSpanColorNoDraw(int ds_y, int ds_x1, int ds_x2, int color_index)
+{
+
+}
+
+void I_DrawSkyColumnNoDraw(int dc_x, int dc_yl, int dc_yh)
+{
+
+}
+
 /*
 =============
 =
@@ -530,6 +501,35 @@ void I_DrawSpanNoDraw(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfra
 =
 =============
 */
+
+void GetJagobjSize(int lumpnum, int* ow, int *oh)
+{
+	lzss_state_t gfx_lzss;
+	uint8_t lzss_buf[LZSS_BUF_SIZE];
+	byte* lump;
+	jagobj_t* jo;
+
+	if (lumpnum < 0)
+		return;
+
+	lump = W_POINTLUMPNUM(lumpnum);
+	if (!(lumpinfo[lumpnum].name[0] & 0x80))
+	{
+		// uncompressed
+		jo = (jagobj_t*)lump;
+	}
+	else // decompress
+	{
+		lzss_setup(&gfx_lzss, lump, lzss_buf, LZSS_BUF_SIZE);
+		if (lzss_read(&gfx_lzss, 16) != 16)
+			return;
+
+		jo = (jagobj_t*)gfx_lzss.buf;
+	}
+
+	if (ow) *ow = BIGSHORT(jo->width);
+	if (oh) *oh = BIGSHORT(jo->height);
+}
 
 void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh)
 {
@@ -539,7 +539,7 @@ void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh)
 	jagobj_t* jo;
 	int width, height;
 
-	if (lumpnum < 0)
+	if (lumpnum < 0 || y < 0) // Drawing above the top of the screen is not supported.
 		return;
 
 	lump = W_POINTLUMPNUM(lumpnum);
@@ -619,6 +619,373 @@ void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh)
 	}
 }
 
+// NOTE: Using a colormap is slower because it must
+// draw only one byte at a time, not two.
+void DrawJagobjWithColormap(jagobj_t* jo, int x, int y, 
+	int src_x, int src_y, int src_w, int src_h, pixel_t *fb, int colormap)
+{
+	int16_t *dc_colormap = (int16_t*)dc_colormaps + colormap;
+	int		srcx, srcy;
+	int		width, height, depth, flags, index;
+	int		rowsize, inc;
+	byte	*dest, *source;
+
+	rowsize = BIGSHORT(jo->width);
+	width = BIGSHORT(jo->width);
+	height = BIGSHORT(jo->height);
+	depth = BIGSHORT(jo->depth);
+	flags = BIGSHORT(jo->flags);
+	index = BIGSHORT(jo->index);
+
+	if (src_w > 0)
+		width = src_w;
+	else if (src_w < 0)
+		width += src_w;
+
+	if (src_h > 0)
+		height = src_h;
+	else if (src_h < 0)
+		height += src_h;
+
+	srcx = 0;
+	srcy = 0;
+
+	if (x < 0)
+	{
+		width += x;
+		srcx = -x;
+		x = 0;
+	}
+	srcx += src_x;
+
+	if (y < 0)
+	{
+		srcy = -y;
+		height += y;
+		y = 0;
+	}
+	srcy += src_y;
+
+	if (x + width > 320)
+		width = 320 - x;
+	if (y + height > mars_framebuffer_height)
+		height = mars_framebuffer_height - y;
+	inc = rowsize - width;
+
+	if (width < 1 || height < 1)
+		return;
+
+	if (depth == 2)
+	{
+		inc >>= 1;
+		srcx >>= 1;
+		rowsize >>= 1;
+		index = (index << 1) + (flags & 2 ? 1 : 0);
+	}
+
+	dest = (byte*)fb + y * 320 + x;
+	source = jo->data + srcx + srcy * rowsize;
+
+	if (depth == 2)
+	{
+		for (; height; height--)
+		{
+			int n = (width + 3) >> 2;
+			switch (width & 3)
+			{
+			case 0: do { *dest++ = dc_colormap[index + (((*source >> 4) & 0xF) << 1)];
+			case 3:      *dest++ = dc_colormap[index + (((*source >> 0) & 0xF) << 1)], source++;
+			case 2:      *dest++ = dc_colormap[index + (((*source >> 4) & 0xF) << 1)];
+			case 1:      *dest++ = dc_colormap[index + (((*source >> 0) & 0xF) << 1)], source++;
+			} while (--n > 0);
+			}
+			source += inc;
+			dest += 320 - width;
+		}
+		return;
+	}
+
+	for (; height; height--)
+	{
+		int n = (width + 3) >> 2;
+		switch (width & 3)
+		{
+		case 0: do { *dest++ = dc_colormap[*source++];
+		case 3:      *dest++ = dc_colormap[*source++];
+		case 2:      *dest++ = dc_colormap[*source++];
+		case 1:      *dest++ = dc_colormap[*source++];
+		} while (--n > 0);
+		}
+		source += rowsize - width;
+		dest += 320 - width;
+	}
+}
+
+// NOTE: Using a colormap is slower because it must
+// draw only one byte at a time, not two.
+void DrawJagobjLumpWithColormap(int lumpnum, int x, int y, int* ow, int* oh, int colormap)
+{
+	int16_t *dc_colormap = (int16_t*)dc_colormaps + colormap;
+	lzss_state_t gfx_lzss;
+	uint8_t lzss_buf[LZSS_BUF_SIZE];
+	byte* lump;
+	jagobj_t* jo;
+	int width, height;
+
+	if (lumpnum < 0 || y < 0) // Drawing above the top of the screen is not supported.
+		return;
+
+	lump = W_POINTLUMPNUM(lumpnum);
+	if (!(lumpinfo[lumpnum].name[0] & 0x80))
+	{
+		// uncompressed
+		jo = (jagobj_t*)lump;
+		if (ow) *ow = BIGSHORT(jo->width);
+		if (oh) *oh = BIGSHORT(jo->height);
+		DrawJagobjWithColormap((void*)lump, x, y, 0, 0, 0, 0, I_OverwriteBuffer(), colormap);
+		return;
+	}
+
+	lzss_setup(&gfx_lzss, lump, lzss_buf, LZSS_BUF_SIZE);
+	if (lzss_read(&gfx_lzss, 16) != 16)
+		return;
+
+	jo = (jagobj_t*)gfx_lzss.buf;
+	width = BIGSHORT(jo->width);
+	height = BIGSHORT(jo->height);
+
+	if (ow) *ow = width;
+	if (oh) *oh = height;
+
+	if (x + width > 320)
+		width = 320 - x;
+	if (y + height > mars_framebuffer_height)
+		height = mars_framebuffer_height - y;
+
+	if (width < 1 || height < 1)
+		return;
+	{
+		byte* dest;
+		byte* source;
+		byte* fb;
+		unsigned p;
+
+		source = gfx_lzss.buf;
+		p = 16;
+
+		fb = (byte*)I_FrameBuffer();
+
+		dest = fb + y * 320 + x;
+		for (; height; height--)
+		{
+			int i;
+
+			lzss_read(&gfx_lzss, width);
+
+			i = 0;
+			if (p + width > LZSS_BUF_SIZE) {
+				int rem = LZSS_BUF_SIZE - p;
+				for (; i < rem; i++)
+					dest[i] = dc_colormap[source[p++]];
+				p = 0;
+			}
+
+			for (; i < width; i++)
+				dest[i] = dc_colormap[source[p++]];
+
+			dest += 320;
+		}
+	}
+}
+
+/*
+Draw the text banner on the left side of the screen. Used for the title card.
+*/
+void DrawScrollingBanner(short ltzz_lump, int x, int y_shift)
+{
+	const jagobj_t *jo = (jagobj_t*)W_POINTLUMPNUM(ltzz_lump);
+	pixel_t *fb = I_OverwriteBuffer();
+	pixel_t *dest = fb + ((320*22) / 2);	// Don't draw over the top letterbox.
+	const pixel_t *source;
+	const short height = jo->height;
+
+	x &= ~0x01;	// No odd positions allowed!
+	short source_offset;
+	if (y_shift >= 0) {
+		source_offset = ((height - (y_shift % height)) << 4) - x;
+	}
+	else {
+		source_offset = ((-y_shift % height) << 4) - x;
+	}
+
+	for (int dest_row=0; dest_row < 224-44; dest_row++)
+	{
+		source_offset += 16;
+		source_offset %= (height*16);
+
+		source = (pixel_t *)(jo->data + source_offset);
+
+		switch(x) {
+			case 0:
+				*dest++ = *source++;
+			case -2:
+				*dest++ = *source++;
+			case -4:
+				*dest++ = *source++;
+			case -6:
+				*dest++ = *source++;
+			case -8:
+				*dest++ = *source++;
+			case -10:
+				*dest++ = *source++;
+			case -12:
+				*dest++ = *source++;
+			case -14:
+				*dest = *source;
+		}
+
+		dest += (320 - 16 - x + 2) / 2;
+	}
+}
+
+/*
+Draw the chevrons on the left side of the screen. Used for the title card.
+*/
+void DrawScrollingChevrons(short chev_lump, int x, int y_shift)
+{
+	const jagobj_t *jo = (jagobj_t*)W_POINTLUMPNUM(chev_lump);
+	pixel_t *fb = I_OverwriteBuffer();
+	pixel_t *dest = fb + ((320*22) / 2);	// Don't draw over the top letterbox.
+	const pixel_t *source;
+	const short height = 32;
+
+	x &= ~0x01;	// No odd positions allowed!
+	short source_offset;
+	if (y_shift >= 0) {
+		source_offset = ((height - (y_shift % height)) * 26);
+	}
+	else {
+		source_offset = ((-y_shift % height) * 26);
+	}
+
+	if (x < 0) {
+		source_offset -= x;
+	}
+	else if (x > 0) {
+		dest += (x >> 1);
+		x = 0;
+	}
+
+	for (int dest_row=0; dest_row < 224-44; dest_row++)
+	{
+		source = (pixel_t *)(jo->data + source_offset);
+
+		switch(x) {
+			case 0:
+				*dest++ = *source++;
+			case -2:
+				*dest++ = *source++;
+			case -4:
+				*dest++ = *source++;
+			case -6:
+				*dest++ = *source++;
+			case -8:
+				*dest++ = *source++;
+			case -10:
+				*dest++ = *source++;
+			case -12:
+				*dest++ = *source++;
+			case -14:
+				*dest++ = *source++;
+			case -16:
+				*dest++ = *source++;
+			case -18:
+				*dest++ = *source++;
+			case -20:
+				*dest++ = *source++;
+			case -22:
+				*dest++ = *source++;
+			case -24:
+				*dest = *source;
+		}
+
+		dest += (320 - 26 - x + 2) / 2;
+
+		source_offset += 26;
+		source_offset %= (height*26);
+	}
+}
+
+/*
+=============
+=
+= DrawTiledLetterbox
+=
+=============
+*/
+void DrawTiledLetterbox2(int flat)
+{
+	if (debugmode == DEBUGMODE_NODRAW)
+		return;
+	if (flat <= 0)
+		return;
+
+	int			yt;
+	const int	w = CalcFlatSize(W_LumpLength(flat)), top_h = 21, bottom_h = 21;
+	const int	hw = w / 2;
+	const int xtiles = (320 + w - 1) / w;
+	pixel_t* bdest;
+	const pixel_t* bsrc;
+
+	// Draw the top letterbox.
+	bsrc = (const pixel_t*)W_POINTLUMPNUM(flat);
+	bdest = I_FrameBuffer();
+	const pixel_t* source = bsrc + ((w-21)*hw);
+	const short two_black_pixels = (COLOR_BLACK<<8)|COLOR_BLACK;
+
+	for (yt = 0; yt < top_h; yt++)
+	{
+		for (int xt = 0; xt < xtiles; xt++)
+		{
+			for (int x = 0; x < hw; x++)
+				*bdest++ = source[x];
+		}
+
+		source += hw;
+	}
+	
+	for (int xt = 0; xt < 320/2; xt++)
+		*bdest++ = two_black_pixels;
+
+
+	// Draw the bottom letterbox.
+	bdest += ((320*180)/2);
+	source -= (w*hw);
+	
+	for (int xt = 0; xt < 320/2; xt++)
+		*bdest++ = two_black_pixels;
+
+	for (yt = 0; yt < bottom_h; yt++)
+	{
+		for (int xt = 0; xt < xtiles; xt++)
+		{
+			for (int x = 0; x < hw; x++)
+				*bdest++ = source[x];
+		}
+
+		source += hw;
+	}
+}
+
+void DrawTiledLetterbox(void)
+{
+	I_ClearFrameBuffer();	// Needed for PAL and for stages without border flats.
+
+	if (gamemapinfo.borderFlat > 0) {
+		DrawTiledLetterbox2(gamemapinfo.borderFlat);
+	}
+}
+
 /*
 =============
 =
@@ -629,7 +996,8 @@ void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh)
 void DrawTiledBackground2(int flat)
 {
 	int			y, yt;
-	const int	w = 64, h = 64;
+	const int	w = CalcFlatSize(flat);
+	const int 	h = CalcFlatSize(flat);
 	const int	hw = w / 2;
 	const int xtiles = (320 + w - 1) / w;
 	const int ytiles = (224 + h - 1) / h;
@@ -650,7 +1018,7 @@ void DrawTiledBackground2(int flat)
 		int y1;
 		const pixel_t* source = bsrc;
 
-		for (y1 = 0; y1 < 64; y1++)
+		for (y1 = 0; y1 < w; y1++)
 		{
 			int xt;
 
@@ -791,7 +1159,7 @@ void DrawJagobj2(jagobj_t* jo, int x, int y,
 		return;
 	}
 
-	if ((x & 1) == 0 && (width & 1) == 0)
+	if ((x & 1) == 0 && (width & 1) == 0 && (rowsize & 1) == 0)
 	{
 		pixel_t* dest2 = (pixel_t*)dest, * source2 = (pixel_t*)source;
 
@@ -864,4 +1232,56 @@ void DrawFillRect(int x, int y, int w, int h, int c)
 
 		dest += 160;
 	}
+}
+
+const int8_t water_filter[128] =
+{
+	 0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,
+	 2,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,
+	 3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  2,  2,
+	 2,  2,  2,  2,  2,  1,  1,  1,  1,  1,  0,  0,  0,  0,  0,  0,
+	-1, -1, -1, -1, -1, -2, -2, -2, -2, -2, -3, -3, -3, -3, -3, -3,
+	-3, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4,
+	-4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -3, -3,
+	-3, -3, -3, -3, -3, -2, -2, -2, -2, -2, -1, -1, -1, -1, -1, -1,
+};
+
+void ApplyHorizontalDistortionFilter(int filter_offset)
+{
+	uint16_t *lines = Mars_FrameBufferLines();
+	short pixel_offset = (512/2);
+
+	for (int i=0; i < 224; i++) {
+		signed char shift_value;
+
+		if (i >= 22 && i < 224-22) {
+			// Only shift lines within the viewport.
+			shift_value = water_filter[(filter_offset + i) & 127];
+		}
+		else {
+			// Letter box area should be left alone.
+			shift_value = 0;
+		}
+
+		lines[i] = pixel_offset + (shift_value >> 1);
+
+		pixel_offset += (320/2);
+	}
+
+	phi_effects = true;
+}
+
+void RemoveDistortionFilters()
+{
+	phi_effects = false;
+
+	uint16_t *lines = Mars_FrameBufferLines();
+	short pixel_offset = (512/2);
+
+	for (int i=0; i < 224; i++) {
+		lines[i] = pixel_offset;
+		pixel_offset += (320/2);
+	}
+
+	MARS_VDP_SCRSHFT = 0;
 }

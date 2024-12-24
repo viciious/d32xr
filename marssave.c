@@ -57,8 +57,7 @@ typedef struct __attribute((packed))
 	int8_t musicvolume;
 	int8_t musictype;
 	uint8_t magic1;
-	int8_t alwaysrun;
-	int8_t strafebtns;
+	int8_t unused3;
 	uint8_t magic2;
 	int8_t anamorphic;
 	int8_t unused2;
@@ -87,7 +86,6 @@ void ReadGame(int slotnumber)
 	if (sg.version != SRAM_VERSION)
 		return;
 
-	startskill = sg.skill;
 	starttype = sg.netgame;
 	startmap = sg.mapnumber;
 	starttype = sg.netgame;
@@ -103,7 +101,7 @@ static void SaveGameExt(int slotnumber, int mapnum)
 		return;
 
 	sg.version = SRAM_VERSION;
-	sg.skill = gameskill;
+	sg.skill = 0;
 	sg.netgame = netgame;
 	sg.mapnumber = mapnum & 0xFF;
 	D_memcpy(sg.resp, playersresp, sizeof(playersresp));
@@ -178,8 +176,6 @@ static void SaveOptions(void)
 	so.sfxvolume = sfxvolume;
 	so.musicvolume = musicvolume;
 	so.musictype = musictype;
-	so.alwaysrun = alwaysrun;
-	so.strafebtns = strafebtns;
 	so.anamorphic = anamorphicview;
 	so.sfxdriver = sfxdriver;
 	so.magic1 = SRAM_MAGIC1;
@@ -209,14 +205,8 @@ static void ReadOptions(void)
 		so.musictype = mustype_fm;
 	if (so.musictype == mustype_cd && !S_CDAvailable())
 		so.musictype = mustype_fm;
-	if (so.alwaysrun < 0 || so.alwaysrun > 1)
-		so.alwaysrun = 0;
-	if (so.strafebtns < 0 || so.strafebtns > 3)
-		so.strafebtns = 0;
 	if (so.viewport < 0 || so.viewport >= numViewports)
 		so.viewport = R_DefaultViewportSize();
-	if (so.strafebtns < 0 || so.strafebtns > 3)
-		so.strafebtns = 0;
 	if (so.anamorphic < 0 || so.anamorphic > 1)
 		so.anamorphic = 0;
 	if (so.sfxdriver < 0 || so.sfxdriver > 2)
@@ -228,8 +218,6 @@ static void ReadOptions(void)
 	viewportNum = so.viewport;
 	musictype = so.musictype;
 	ticsperframe = MINTICSPERFRAME;
-	alwaysrun = so.alwaysrun;
-	strafebtns = so.strafebtns;
 	anamorphicview = so.anamorphic;
 	sfxdriver = so.sfxdriver;
 }
@@ -250,8 +238,6 @@ void ReadEEProm(void)
 	musicvolume = 64;
 	viewportNum = R_DefaultViewportSize();
 	musictype = mustype_fm;
-	alwaysrun = 0;
-	strafebtns = 0;
 	ticsperframe = MINTICSPERFRAME;
 	anamorphicview = 0;
 	sfxdriver = 0;

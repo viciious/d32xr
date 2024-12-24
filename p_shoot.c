@@ -67,14 +67,13 @@ typedef struct
    fixed_t  shootx, shooty, shootz; // location for puff/blood
 } shootWork_t;
 
-static fixed_t PA_SightCrossLine(shootWork_t *sw, vertex_t *v1, vertex_t *v2) ATTR_DATA_CACHE_ALIGN;
-static boolean PA_ShootLine(shootWork_t *sw, line_t* li, fixed_t interceptfrac) ATTR_DATA_CACHE_ALIGN;
-static boolean PA_ShootThing(shootWork_t *sw, mobj_t* th, fixed_t interceptfrac) ATTR_DATA_CACHE_ALIGN;
-static boolean PA_DoIntercept(shootWork_t *sw, intercept_t* in) ATTR_DATA_CACHE_ALIGN;
-static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum) ATTR_DATA_CACHE_ALIGN;
-static int PA_DivlineSide(fixed_t x, fixed_t y, divline_t* line) ATTR_DATA_CACHE_ALIGN;
-static boolean PA_CrossBSPNode(shootWork_t *sw, int bspnum) ATTR_DATA_CACHE_ALIGN;
-void P_Shoot2(lineattack_t *la) ATTR_DATA_CACHE_ALIGN;
+static fixed_t PA_SightCrossLine(shootWork_t *sw, mapvertex_t *v1, mapvertex_t *v2);
+static boolean PA_ShootLine(shootWork_t *sw, line_t* li, fixed_t interceptfrac);
+static boolean PA_ShootThing(shootWork_t *sw, mobj_t* th, fixed_t interceptfrac);
+static boolean PA_DoIntercept(shootWork_t *sw, intercept_t* in);
+static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum);
+static boolean PA_CrossBSPNode(shootWork_t *sw, int bspnum);
+void P_Shoot2(lineattack_t *la);
 
 //
 // First checks the endpoints of the line to make sure that they cross the
@@ -84,16 +83,16 @@ void P_Shoot2(lineattack_t *la) ATTR_DATA_CACHE_ALIGN;
 // the intersection occurs at.  If 0 < intercept < 1.0, the line will block
 // the sight.
 //
-static fixed_t PA_SightCrossLine(shootWork_t *sw, vertex_t *v1, vertex_t *v2)
+static fixed_t PA_SightCrossLine(shootWork_t *sw, mapvertex_t *v1, mapvertex_t *v2)
 {
    fixed_t s1, s2;
    fixed_t p1x, p1y, p2x, p2y, p3x, p3y, p4x, p4y, dx, dy, ndx, ndy;
 
    // p1, p2 are endpoints
-   p1x = v1->x >> FRACBITS;
-   p1y = v1->y >> FRACBITS;
-   p2x = v2->x >> FRACBITS;
-   p2y = v2->y >> FRACBITS;
+   p1x = v1->x;
+   p1y = v1->y;
+   p2x = v2->x;
+   p2y = v2->y;
 
    // p3, p4 are sight endpoints
    p3x = sw->ssx1;
@@ -211,13 +210,16 @@ static boolean PA_ShootThing(shootWork_t *sw, mobj_t *th, fixed_t interceptfrac)
    if(th == sw->shooter)
       return true; // can't shoot self
 
-   if(!(th->flags & MF_SHOOTABLE))
+   if (th->flags & MF_RINGMOBJ)
+      return true;
+
+   if(!(th->flags2 & MF2_SHOOTABLE))
       return true; // corpse or something
 
    // check angles to see if the thing can be aimed at
    dist = FixedMul(sw->attackrange, interceptfrac);
    
-   thingaimtopslope = FixedDiv(th->z + th->height - sw->shootz, dist);
+   thingaimtopslope = FixedDiv(th->z + Mobj_GetHeight(th) - sw->shootz, dist);
    if(thingaimtopslope < sw->aimbottomslope)
       return true; // shot over the thing
 
@@ -282,33 +284,38 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
    int      count;
    fixed_t  frac;
    mobj_t  *thing;
-   subsector_t *sub = &subsectors[bspnum];
    intercept_t  in;
-   vertex_t tv1, tv2;
+   mapvertex_t tv1, tv2;
    VINT     *lvalidcount, vc;
 
    // check things
-   for(thing = sub->sector->thinglist; thing; thing = thing->snext)
+   for(thing = subsectors[bspnum].sector->thinglist; thing; thing = thing->snext)
    {
-      if(thing->subsector != sub)
+      if(thing->isubsector != bspnum)
          continue;
-      if(!(thing->flags & MF_SHOOTABLE))
+
+      if (thing->flags & MF_RINGMOBJ)
+         continue;
+
+      if(!(thing->flags2 & MF2_SHOOTABLE))
          continue; // corpse or something
 
       // check a corner to corner cross-section for hit
       if(sw->shootdivpositive)
       {
-         tv1.x = thing->x - thing->radius;
-         tv1.y = thing->y + thing->radius;
-         tv2.x = thing->x + thing->radius;
-         tv2.y = thing->y - thing->radius;
+         const fixed_t radius = mobjinfo[thing->type].radius;
+         tv1.x = (thing->x - radius) >> FRACBITS;
+         tv1.y = (thing->y + radius) >> FRACBITS;
+         tv2.x = (thing->x + radius) >> FRACBITS;
+         tv2.y = (thing->y - radius) >> FRACBITS;
       }
       else
       {
-         tv1.x = thing->x - thing->radius;
-         tv1.y = thing->y - thing->radius;
-         tv2.x = thing->x + thing->radius;
-         tv2.y = thing->y + thing->radius;
+         const fixed_t radius = mobjinfo[thing->type].radius;
+         tv1.x = (thing->x - radius) >> FRACBITS;
+         tv1.y = (thing->y - radius) >> FRACBITS;
+         tv2.x = (thing->x + radius) >> FRACBITS;
+         tv2.y = (thing->y + radius) >> FRACBITS;
       }
 
       frac = PA_SightCrossLine(sw, &tv1, &tv2);
@@ -324,6 +331,7 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
    }
 
    // check lines
+   const subsector_t *sub = &subsectors[bspnum];
    count = sub->numlines;
    seg   = &segs[sub->firstline];
 
@@ -359,26 +367,6 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
    return true; // passed the subsector ok
 }
 
-/*
-=====================
-=
-= PA_DivlineSide
-=
-=====================
-*/
-static int PA_DivlineSide(fixed_t x, fixed_t y, divline_t *line)
-{
-	fixed_t dx, dy;
-
-	x = (x - line->x) >> FRACBITS;
-	y = (y - line->y) >> FRACBITS;
-
-	dx = x * (line->dy >> FRACBITS);
-	dy = y * (line->dx >> FRACBITS);
-
-	return (dy < dx) ^ 1;
-}
-
 //
 // Walk the BSP tree to follow the trace.
 //
@@ -397,8 +385,13 @@ check:
    bsp = &nodes[bspnum];
 
    // decide which side the start point is on
-   side = PA_DivlineSide(sw->shootdiv.x, sw->shootdiv.y, (divline_t*)bsp);
-   side2 = PA_DivlineSide(sw->shootx2, sw->shooty2, (divline_t*)bsp);
+   divline_t divlinetest;
+   divlinetest.dx = bsp->dx << FRACBITS;
+   divlinetest.dy = bsp->dy << FRACBITS;
+   divlinetest.x = bsp->x << FRACBITS;
+   divlinetest.y = bsp->y << FRACBITS;
+   side = P_DivlineSide(sw->shootdiv.x, sw->shootdiv.y, &divlinetest) == 1;
+   side2 = P_DivlineSide(sw->shootx2, sw->shooty2, &divlinetest) == 1;
 
    // cross the starting side
    if(!PA_CrossBSPNode(sw, bsp->children[side]))
@@ -436,7 +429,7 @@ void P_Shoot2(lineattack_t *la)
    sw.shooty2     = t1->y + (la->attackrange >> FRACBITS) * finesine(angle);
    sw.shootdiv.dx = sw.shootx2 - sw.shootdiv.x;
    sw.shootdiv.dy = sw.shooty2 - sw.shootdiv.y;
-   sw.shootz      = t1->z + (t1->height >> 1) + 8*FRACUNIT;
+   sw.shootz      = t1->z + Mobj_GetHalfHeight(t1) + 8*FRACUNIT;
 
    sw.shootdivpositive = (sw.shootdiv.dx ^ sw.shootdiv.dy) > 0;
 

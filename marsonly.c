@@ -234,6 +234,9 @@ void I_Print8(int x, int y, const char* string)
 
 void I_Error (char *error, ...) 
 {
+	const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
+	I_SetPalette(dc_playpals);
+
 	va_list ap;
 	char errormessage[80];
 

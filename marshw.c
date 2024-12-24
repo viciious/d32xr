@@ -37,6 +37,7 @@ volatile unsigned mars_pwdt_ovf_count = 0;
 volatile unsigned mars_swdt_ovf_count = 0;
 unsigned mars_frtc2msec_frac = 0;
 const uint8_t* mars_newpalette = NULL;
+uint16_t mars_thru_rgb_reference = 0;
 
 int16_t mars_requested_lines = 224;
 uint16_t mars_framebuffer_height = 224;
@@ -149,6 +150,11 @@ char Mars_UploadPalette(const uint8_t* palette)
 		cram[i] = 0x8000 | r1 | g1 | b1;
 	}
 
+	#ifdef MDSKY
+	// Allow MD VDP to show through for this palette index.
+	cram[MARS_MD_PIXEL_THRU_INDEX] = cram[mars_thru_rgb_reference] & 0x7FFF;
+	#endif
+
 	return 1;
 }
 
@@ -251,7 +257,10 @@ void Mars_Init(void)
 		mars_gamepadport[i] = -1;
 	mars_mouseport = -1;
 
-	SH2_WDT_WTCSR_TCNT = 0xA518; /* WDT TCSR = clr OVF, IT mode, timer off, clksel = Fs/2 */
+	//SH2_WDT_WTCSR_TCNT = 0xA518; /* WDT TCSR = clr OVF, IT mode, timer off, clksel = Fs/2 */
+	
+	SH2_WDT_WTCSR_TCNT = 0x5A00; /* WDT TCNT = 0 */
+	SH2_WDT_WTCSR_TCNT = 0xA53E; /* WDT TCSR = clr OVF, IT mode, timer on, clksel = Fs/4096 */
 
 	/* init hires timer system */
 	SH2_WDT_VCR = (65<<8) | (SH2_WDT_VCR & 0x00FF); // set exception vector for WDT
@@ -666,6 +675,112 @@ int Mars_ReadController(int ctrl)
 	mars_controlval[port] = 0;
 	return val;
 }
+
+#ifdef MDSKY
+/*
+Fade the MD palette
+*/
+void Mars_FadeMDPaletteFromBlack(int fade_degree)
+{
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM2 = fade_degree;
+	MARS_SYS_COMM0 = 0x1001;
+}
+
+void Mars_ScrollMDSky(short scroll_x, short scroll_y_base, short scroll_y_offset, short scroll_y_pan) {
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM2 = scroll_y_base;
+	MARS_SYS_COMM0 = 0x1101;
+
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM2 = scroll_y_offset;
+	MARS_SYS_COMM0 = 0x1102;
+
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM2 = scroll_y_pan;
+	MARS_SYS_COMM0 = 0x1103;
+
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM2 = scroll_x;
+	MARS_SYS_COMM0 = 0x1104;
+}
+
+/*
+Load the MD sky tiles, palettes, and pattern name table into the MD VDP.
+*/
+void Mars_LoadMDSky(void *sky_metadata_ptr,
+		void *sky_names_a_ptr, int sky_names_a_size,
+		void *sky_names_b_ptr, int sky_names_b_size,
+		void *sky_palettes_ptr, int sky_palettes_size,
+		void *sky_tiles_ptr, int sky_tiles_size)
+{
+	int i;
+
+	uint16_t s[4];
+
+
+	// Load metadata
+
+	s[0] = 0, s[1] = 8;
+	s[2] = ((uintptr_t)sky_metadata_ptr >>16), s[3] = (uintptr_t)sky_metadata_ptr &0xffff;
+
+	for (i = 0; i < 4; i++) {
+		while (MARS_SYS_COMM0);
+		MARS_SYS_COMM2 = s[i];
+		MARS_SYS_COMM0 = 0x0F01+i;
+	}
+
+
+	// Load pattern name table A
+
+	s[0] = (uintptr_t)sky_names_a_size>>16, s[1] = (uintptr_t)sky_names_a_size&0xffff;
+	s[2] = ((uintptr_t)sky_names_a_ptr >>16), s[3] = (uintptr_t)sky_names_a_ptr &0xffff;
+
+	for (i = 0; i < 4; i++) {
+		while (MARS_SYS_COMM0);
+		MARS_SYS_COMM2 = s[i];
+		MARS_SYS_COMM0 = 0x0F01+i;
+	}
+
+
+	// Load pattern name table B
+
+	s[0] = (uintptr_t)sky_names_b_size>>16, s[1] = (uintptr_t)sky_names_b_size&0xffff;
+	s[2] = ((uintptr_t)sky_names_b_ptr >>16), s[3] = (uintptr_t)sky_names_b_ptr &0xffff;
+
+	for (i = 0; i < 4; i++) {
+		while (MARS_SYS_COMM0);
+		MARS_SYS_COMM2 = s[i];
+		MARS_SYS_COMM0 = 0x0F01+i;
+	}
+
+
+	// Load palettes
+
+	s[0] = (uintptr_t)sky_palettes_size>>16, s[1] = (uintptr_t)sky_palettes_size&0xffff;
+	s[2] = ((uintptr_t)sky_palettes_ptr >>16), s[3] = (uintptr_t)sky_palettes_ptr &0xffff;
+
+	for (i = 0; i < 4; i++) {
+		while (MARS_SYS_COMM0);
+		MARS_SYS_COMM2 = s[i];
+		MARS_SYS_COMM0 = 0x0F01+i;
+	}
+
+
+	// Load tiles
+
+	s[0] = (uintptr_t)sky_tiles_size>>16, s[1] = (uintptr_t)sky_tiles_size&0xffff;
+	s[2] = ((uintptr_t)sky_tiles_ptr >>16), s[3] = (uintptr_t)sky_tiles_ptr &0xffff;
+
+	for (i = 0; i < 4; i++) {
+		while (MARS_SYS_COMM0);
+		MARS_SYS_COMM2 = s[i];
+		MARS_SYS_COMM0 = 0x0F01+i;
+	}
+
+	while (MARS_SYS_COMM0);
+}
+#endif
 
 void Mars_CtlMDVDP(int sel)
 {

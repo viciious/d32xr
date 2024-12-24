@@ -24,8 +24,6 @@
   SOFTWARE.
 */
 #include "doomdef.h"
-#include <string.h>
-#include <stdlib.h>
 
 typedef void (*kvcall_t) (char *key, char *value, void *ptr);
 
@@ -236,32 +234,36 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 				mi->name = mi->lumpName;
 			}
 		}
-		else if (!D_strcasecmp(key, "baronspecial"))
-		{
-			mi->baronSpecial = true;
-		}
-		else if (!D_strcasecmp(key, "cyberdemonspecial"))
-		{
-			mi->cyberSpecial = true;
-		}
-		else if (!D_strcasecmp(key, "spidermastermindspecial"))
-		{
-			mi->spiderSpecial = true;
-		}
 
 		return;
 	}
 
 	if (!D_strcasecmp(key, "next"))
 		mi->next = W_GetNumForName(value);
+	else if (!D_strcasecmp(key, "act"))
+		mi->act = D_atoi(value);
+	else if (!D_strcasecmp(key, "borderFlat"))
+		mi->borderFlat = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "sky"))
 		mi->sky = value;
-	else if (!D_strcasecmp(key, "secretnext"))
-		mi->secretNext = W_GetNumForName(value);
+	else if (!D_strcasecmp(key, "skyOffsetY"))
+		mi->skyOffsetY = D_atoi(value);
+	else if (!D_strcasecmp(key, "skyTopColor"))
+		mi->skyTopColor = D_atoi(value);
+	else if (!D_strcasecmp(key, "skyBottomColor"))
+		mi->skyBottomColor = D_atoi(value);
 	else if (!D_strcasecmp(key, "mapnumber"))
 		mi->mapNumber = D_atoi(value);
 	else if (!D_strcasecmp(key, "music"))
 		mi->musicLump = W_CheckNumForName(value);
+	else if (!D_strcasecmp(key, "afterBossMusic"))
+		mi->afterBossMusic = W_CheckNumForName(value);
+	else if (!D_strcasecmp(key, "spheresNeeded"))
+		mi->spheresNeeded = D_atoi(value);
+	else if (!D_strcasecmp(key, "timeLimit"))
+		mi->timeLimit = D_atoi(value) * TICRATE;
+	else if (!D_strcasecmp(key, "loadFlags"))
+		mi->loadFlags = D_atoi(value);
 }
 
 static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
@@ -280,6 +282,18 @@ static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
 		gi->titleMus = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "intermissionMus"))
 		gi->intermissionMus = W_CheckNumForName(value);
+	else if (!D_strcasecmp(key, "emeraldMus"))
+		gi->emeraldMus = W_CheckNumForName(value);
+	else if (!D_strcasecmp(key, "xtlifeMus"))
+		gi->xtlifeMus = W_CheckNumForName(value);
+	else if (!D_strcasecmp(key, "invincMus"))
+		gi->invincMus = W_CheckNumForName(value);
+	else if (!D_strcasecmp(key, "sneakerMus"))
+		gi->sneakerMus = W_CheckNumForName(value);
+	else if (!D_strcasecmp(key, "drowningMus"))
+		gi->drowningMus = W_CheckNumForName(value);
+	else if (!D_strcasecmp(key, "gameoverMus"))
+		gi->gameoverMus = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "victoryMus"))
 		gi->victoryMus = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "endMus"))

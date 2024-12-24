@@ -1,4 +1,5 @@
-# DOOM 32X: Resurrection
+# Sonic Robo Blast 32X
+## Forked from Doom 32X: Resurrection / CD32X Fusion
 
 ![Build](https://github.com/viciious/d32xr/workflows/Build/badge.svg)
 
@@ -91,12 +92,6 @@ We recommend using the following VSCode settings.json for the project:
 https://www.doomworld.com/forum/topic/119202-32x-resurrection/
 
 https://github.com/team-eternity/calico-doom
-
-https://www.youtube.com/MatteusBeusRetroDev
-
-https://www.patreon.com/SpoonyBard
-
-https://www.retrorgb.com/
 
 ## License
 All original code, as well as code derived from the 3DO source code, is

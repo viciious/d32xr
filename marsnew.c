@@ -28,6 +28,8 @@
 #include "32x.h"
 #include "doomdef.h"
 #include "mars.h"
+#include "p_camera.h"
+#include "p_local.h"
 #include "r_local.h"
 #include "wadbase.h"
 
@@ -48,25 +50,22 @@ typedef struct {
 	VINT *validcount;
 	void *columncache;
 	void *colormaps;
-	int  *fuzzpos;
 } mars_tls_t __attribute__((aligned(16))); // thread local storage
 
-VINT COLOR_WHITE = 0x04;
-VINT COLOR_BLACK = 0xF7;
+VINT COLOR_WHITE = 0x00;
+VINT COLOR_BLACK = 0x1F;
 
 int8_t	*dc_colormaps;
-int8_t	*dc_colormaps2;
-const byte	*new_palette = NULL;
 
 boolean	debugscreenactive = false;
 boolean	debugscreenupdate = false;
 
+int     ticcount = 0;
 int		lastticcount = 0;
 int		lasttics = 0;
-static int fpscount = 0;
+static int8_t fpscount = 0;
 
 VINT 	debugmode = DEBUGMODE_NONE;
-VINT	strafebtns = 0;
 
 extern int 	cy;
 extern int tictics, drawtics, ticstart;
@@ -75,8 +74,7 @@ extern int tictics, drawtics, ticstart;
 static volatile pixel_t* framebuffer = &MARS_FRAMEBUFFER + 0x100;
 static volatile pixel_t *framebufferend = &MARS_FRAMEBUFFER + 0x10000;
 
-static jagobj_t* jo_stbar;
-static VINT jo_stbar_height;
+#define jo_stbar_height 22
 
 extern int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sprites[4], t_ref_total[4];
 
@@ -88,7 +86,6 @@ void I_ClearFrameBuffer(void) ATTR_DATA_CACHE_ALIGN;
 static int Mars_ConvGamepadButtons(int ctrl)
 {
 	unsigned newc = 0;
-	int alwrun;
 
 	if (ctrl & SEGA_CTRL_UP)
 		newc |= BT_UP;
@@ -117,84 +114,19 @@ static int Mars_ConvGamepadButtons(int ctrl)
 	}
 	else
 	{
-		if (strafebtns)
-		{
-			if (ctrl & SEGA_CTRL_A)
-				newc |= configuration[controltype][0];
-			if (ctrl & SEGA_CTRL_B)
-				newc |= configuration[controltype][1];
+		if (ctrl & SEGA_CTRL_A)
+			newc |= configuration[controltype][0];
+		if (ctrl & SEGA_CTRL_B)
+			newc |= configuration[controltype][1];
+		if (ctrl & SEGA_CTRL_C)
+			newc |= configuration[controltype][2];
 
-			switch (strafebtns)
-			{
-			default:
-			case 1:
-				if (ctrl & SEGA_CTRL_C)
-					newc |= configuration[controltype][2];
-
-				if (ctrl & SEGA_CTRL_X)
-					newc |= BT_NWEAPN;
-				if (ctrl & SEGA_CTRL_Y)
-					newc |= BT_STRAFELEFT;
-				if (ctrl & SEGA_CTRL_Z)
-					newc |= BT_STRAFERIGHT;
-				break;
-			case 2:
-				if (ctrl & SEGA_CTRL_C)
-					newc |= BT_STRAFERIGHT;
-
-				if (ctrl & SEGA_CTRL_X)
-					newc |= BT_NWEAPN;
-				if (ctrl & SEGA_CTRL_Y)
-					newc |= configuration[controltype][2];
-				if (ctrl & SEGA_CTRL_Z)
-					newc |= BT_STRAFELEFT;
-				break;
-			case 3:
-				if (ctrl & SEGA_CTRL_C)
-					newc |= configuration[controltype][2];
-
-				if (ctrl & SEGA_CTRL_X)
-					newc |= BT_STRAFELEFT;
-				if (ctrl & SEGA_CTRL_Y)
-					newc |= BT_NWEAPN;
-				if (ctrl & SEGA_CTRL_Z)
-					newc |= BT_STRAFERIGHT;
-				break;
-			}
-		}
-		else
-		{
-			if (ctrl & SEGA_CTRL_A)
-				newc |= configuration[controltype][0];
-			if (ctrl & SEGA_CTRL_B)
-				newc |= configuration[controltype][1];
-			if (ctrl & SEGA_CTRL_C)
-				newc |= configuration[controltype][2];
-
-			if (ctrl & SEGA_CTRL_X)
-				newc |= BT_PWEAPN;
-			if (ctrl & SEGA_CTRL_Y)
-				newc |= BT_NWEAPN;
-			if (ctrl & SEGA_CTRL_Z)
-				newc |= BT_AUTOMAP;
-
-			if (newc & BT_USE)
-				newc |= BT_STRAFE;
-		}
-	}
-
-	alwrun = alwaysrun;
-	if (demoplayback || demorecording)
-		alwrun = 0;
-
-	if (alwrun)
-	{
-		newc ^= BT_SPEED;
-	}
-	else
-	{
-		if ((newc & (BT_UP | BT_DOWN | BT_SPEED)) == BT_SPEED)
-			newc |= BT_FASTTURN;
+		if (ctrl & SEGA_CTRL_X)
+			newc |= BT_CAMLEFT;
+		if (ctrl & SEGA_CTRL_Y)
+			newc |= BT_GASPEDAL;
+		if (ctrl & SEGA_CTRL_Z)
+			newc |= BT_CAMRIGHT;
 	}
 
 	return newc;
@@ -239,15 +171,15 @@ static int Mars_HandleStartHeld(int *ctrl, const int ctrl_start, btnstate_t *sta
 
 	if (*ctrl & SEGA_CTRL_A) {
 		*ctrl = *ctrl & ~SEGA_CTRL_A;
-		morebuttons |= BT_PWEAPN;
+		morebuttons |= BT_CAMLEFT;
 	}
 	else if (*ctrl & SEGA_CTRL_B) {
 		*ctrl = *ctrl & ~SEGA_CTRL_B;
-		morebuttons |= BT_NWEAPN;
+		morebuttons |= BT_GASPEDAL;
 	}
 	if (*ctrl & SEGA_CTRL_C) {
 		*ctrl = *ctrl & ~SEGA_CTRL_C;
-		morebuttons |= BT_AUTOMAP;
+		morebuttons |= BT_CAMRIGHT;
 	}
 
 	if (morebuttons)
@@ -263,17 +195,17 @@ static int Mars_ConvMouseButtons(int mouse)
 	int ctrl = 0;
 	if (mouse & SEGA_CTRL_LMB)
 	{
-		ctrl |= BT_ATTACK; // L -> B
+		ctrl |= BT_JUMP; // L -> B
 		ctrl |= BT_LMBTN;
 	}
 	if (mouse & SEGA_CTRL_RMB)
 	{
-		ctrl |= BT_USE; // R -> C
+		ctrl |= BT_SPIN; // R -> C
 		ctrl |= BT_RMBTN;
 	}
 	if (mouse & SEGA_CTRL_MMB)
 	{
-		ctrl |= BT_NWEAPN; // M -> Y
+		ctrl |= BT_FLIP; // M -> Y
 		ctrl |= BT_MMBTN;
 	}
 	if (mouse & SEGA_CTRL_STARTMB)
@@ -342,14 +274,8 @@ void Mars_Secondary(void)
 		case MARS_SECCMD_S_INIT_DMA:
 			Mars_Sec_InitSoundDMA(MARS_SYS_COMM6);
 			break;
-		case MARS_SECCMD_AM_DRAW:
-			Mars_Sec_AM_Drawer();
-			break;
 		case MARS_SECCMD_P_SIGHT_CHECKS:
 			Mars_Sec_P_CheckSights();
-			break;
-		case MARS_SECCMD_MELT_DO_WIPE:
-			Mars_Sec_wipe_doMelt();
 			break;
 		default:
 			break;
@@ -398,7 +324,7 @@ void I_Init (void)
 	Mars_SetBrightness(1);
 
 	doompalette = W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
-	I_SetPalette(doompalette);
+	I_SetPalette(doompalette+(10*768));
 
 	// look up palette indices for black and white colors
 	// if the black color isn't present, use the darkest one
@@ -420,18 +346,6 @@ void I_Init (void)
 			maxr = r;
 			COLOR_WHITE = i;
 		}
-	}
-
-	i = W_CheckNumForName("STBAR");
-	if (i != -1)
-	{
-		jo_stbar = (jagobj_t*)W_POINTLUMPNUM(i);
-		jo_stbar_height = BIGSHORT(jo_stbar->height);
-	}
-	else
-	{
-		jo_stbar = NULL;
-		jo_stbar_height = 0;
 	}
 
 	Mars_CommSlaveClearCache();
@@ -700,15 +614,15 @@ void I_ClearFrameBuffer (void)
 	int* p = (int*)framebuffer;
 	int* p_end = (int*)(framebuffer + 320 / 2 * (I_FrameBufferHeight()+1));
 	while (p < p_end)
-		*p++ = 0;
+		*p++ = 0x1F1F1F1F; // Four bytes of black palette index
 }
 
 void I_DebugScreen(void)
 {
 	int i;
 	int x = 200;
-	int line = 5;
-	static char buf[10][16];
+	int line = 3;
+	static char buf[19][16];
 
 	if (debugmode == DEBUGMODE_FPSCOUNT)
 	{
@@ -749,12 +663,21 @@ void I_DebugScreen(void)
 			D_snprintf(buf[7], sizeof(buf[0]), "r:%2d", Mars_FRTCounter2Msec(t_ref_total_avg));
 			D_snprintf(buf[8], sizeof(buf[0]), "d:%2d", Mars_FRTCounter2Msec(drawtics));
 			D_snprintf(buf[9], sizeof(buf[0]), "t:%2d", Mars_FRTCounter2Msec(I_GetFRTCounter() - ticstart));
+			D_snprintf(buf[10], sizeof(buf[0]), "mt:%d", thingmem);
+			D_snprintf(buf[11], sizeof(buf[0]), "ml:%d", numlines * sizeof(line_t));
+			D_snprintf(buf[12], sizeof(buf[0]), "msd:%d", numsides * sizeof(side_t));
+			D_snprintf(buf[13], sizeof(buf[0]), "mss:%d", numsubsectors *sizeof(subsector_t));
+			D_snprintf(buf[14], sizeof(buf[0]), "ms:%d", numsectors *sizeof(sector_t));
+			D_snprintf(buf[15], sizeof(buf[0]), "scenm:%d", numscenerymobjs);
+			D_snprintf(buf[16], sizeof(buf[0]), "ringm:%d", numringmobjs);
+			D_snprintf(buf[17], sizeof(buf[0]), "statm:%d", numstaticmobjs);
+			D_snprintf(buf[18], sizeof(buf[0]), "regm:%d", numregmobjs);
 		}
 
         I_Print8(x, line++, buf[0]);
         I_Print8(x, line++, buf[1]);
         line++;
-		for (i = 2; i < 10; i++)
+		for (i = 2; i < 19; i++)
 	        I_Print8(x, line++, buf[i]);
 	}
 
@@ -792,7 +715,7 @@ void I_ResetLineTable(void)
 */
 void I_Update(void)
 {
-	int ticcount;
+	//int ticcount;
 	static int prevsecticcount = 0;
 	static int framenum = 0;
 	const int refreshHZ = Mars_RefreshHZ();
@@ -802,7 +725,7 @@ void I_Update(void)
 	else if (ticsperframe > MAXTICSPERFRAME)
 		ticsperframe = MAXTICSPERFRAME;
 
-	if (players[consoleplayer].automapflags & AF_OPTIONSACTIVE)
+	if (optionsMenuOn)
 		if ((ticrealbuttons & BT_MODE) && !(oldticrealbuttons & BT_MODE))
 		{
 			int prevdebugmode;
@@ -821,26 +744,29 @@ void I_Update(void)
 
 			R_SetDrawMode();
 
-			if (!prevdebugmode)
-			{
-				SH2_WDT_WTCSR_TCNT = 0x5A00; /* WDT TCNT = 0 */
-				SH2_WDT_WTCSR_TCNT = 0xA53E; /* WDT TCSR = clr OVF, IT mode, timer on, clksel = Fs/4096 */
-			}
-			else if (!debugmode)
-			{
-				Mars_ClearNTA();
-				SH2_WDT_WTCSR_TCNT = 0xA518; /* WDT TCSR = clr OVF, IT mode, timer off, clksel = Fs/2 */
-			}
-
 			clearscreen = 2;
 		}
-
-	Mars_FlipFrameBuffers(false);
 
 	/* */
 	/* wait until on the third tic after last display */
 	/* */
 	const int ticwait = (demoplayback || demorecording ? 4 : ticsperframe); // demos were recorded at 15-20fps
+
+#ifdef MDSKY
+	if (sky_md_layer) {
+		// Adjust MD sky position.
+		unsigned short scroll_x = (*((unsigned short *)&vd.viewangle) >> 6);
+		scroll_x += (scroll_x >> 2);	// The MD sky scrolls to 1280 pixels.
+
+		unsigned short scroll_y_base = gamemapinfo.skyOffsetY;
+		unsigned short scroll_y_offset = (vd.viewz >> 16);
+		unsigned short scroll_y_pan = (vd.aimingangle >> 22);
+
+		Mars_ScrollMDSky(scroll_x, scroll_y_base, scroll_y_offset, scroll_y_pan);
+	}
+#endif
+
+	Mars_FlipFrameBuffers(false);
 	do
 	{
 		ticcount = I_GetTime();
@@ -929,7 +855,7 @@ static void Player0Setup (void)
 
 	idbyte[0] = 0xFF;
 	idbyte[1] = startmap;
-	idbyte[2] = startskill + 8*starttype;
+	idbyte[2] = 8*starttype;
 
 	stage = 0;
 	start = Mars_GetTicCount();
@@ -1009,7 +935,6 @@ static void Player1Setup (void)
 
 	startmap = idbyte[1];
 	starttype = idbyte[2] / 8;
-	startskill = idbyte[2] & 7;
 
 	Mars_PutNetByte(CONN_MAGIC ^ 0xFF);	/* send an acknowledge byte */
 	Mars_PutNetByte(CONN_MAGIC ^ 0xFF);	/* send another acknowledge byte */
@@ -1122,27 +1047,6 @@ reconnect:
 	gameaction = starttype == gt_single ? ga_startnew : ga_warped;
 	ticbuttons[0] = ticbuttons[1] = oldticbuttons[0] = oldticbuttons[1] = 0;
 	return 0;
-}
-
-
-void I_DrawSbar(void)
-{
-	int i, p;
-	int y[MAXPLAYERS];
-
-	if (!jo_stbar)
-		return;
-
-	int height = BIGSHORT(jo_stbar->height);
-
-	y[0] = I_FrameBufferHeight() - height;
-	y[1] = 0;
-
-	p = 1;
-	p += splitscreen ? 1 : 0;
-	for (i = 0; i < p; i++) {
-		DrawJagobj2(jo_stbar, 0, y[i], 0, 0, 0, 0, I_FrameBuffer());
-	}
 }
 
 void I_StoreScreenCopy(void)

@@ -2,6 +2,7 @@
 
 #include "doomdef.h"
 #include "r_local.h"
+#include "p_camera.h"
 #ifdef MARS
 #include "mars.h"
 #include "marshw.h"
@@ -12,29 +13,43 @@ int16_t centerX, centerY;
 fixed_t centerXFrac, centerYFrac;
 fixed_t stretch;
 fixed_t stretchX;
-VINT weaponYpos;
-fixed_t weaponXScale;
 
 VINT anamorphicview = 0;
 VINT initmathtables = 2;
 
 drawcol_t drawcol;
-drawcol_t drawfuzzcol;
+drawcol_t drawcolflipped;
 drawcol_t drawcolnpo2;
 drawcol_t drawcollow;
 drawspan_t drawspan;
+drawspancolor_t drawspancolor;
 
-short fuzzoffset[FUZZTABLE] =
+#ifdef MDSKY
+drawskycol_t drawskycol;
+#endif
+drawcol_t draw32xskycol;
+
+#ifdef HIGH_DETAIL_SPRITES
+drawcol_t drawspritecol;
+#endif
+
+// Classic Sonic fade
+const short md_palette_fade_table[32] =
 {
-	1,-1,1,-1,1,1,-1,
-	1,1,-1,1,1,1,-1,
-	1,1,1,-1,-1,-1,-1,
-	1,-1,-1,1,1,1,1,-1,
-	1,-1,1,1,-1,-1,1,
-	1,-1,-1,-1,-1,1,1,
-	1,1,-1,1,1,-1,1,
-	-1,-1,1,-1,1,1,1,
-	1,-1,1,-1,-1,1,1
+	// Black
+	0x000,
+
+	// Fade in blue
+	0x200, 0x400, 0x400, 0x600, 0x800,
+	0x800, 0xA00, 0xC00, 0xC00, 0xE00,
+
+	// Fade in green with blue already at max brightness
+	0xE20, 0xE20, 0xE40, 0xE60, 0xE60,
+	0xE80, 0xEA0, 0xEA0, 0xEC0, 0xEE0, 0xEE0,
+
+	// Fade in red with blue and green already at max brightness
+	0xEE2, 0xEE4, 0xEE4, 0xEE6, 0xEE8,
+	0xEE8, 0xEEA, 0xEEC, 0xEEC, 0xEEE
 };
 
 /*===================================== */
@@ -51,6 +66,11 @@ pixel_t		*workingscreen;
 
 #ifdef MARS
 static int16_t	curpalette = -1;
+
+#ifdef MARS
+__attribute__((aligned(4)))
+#endif
+boolean phi_effects;
 
 __attribute__((aligned(16)))
 pixel_t* viewportbuffer;
@@ -71,8 +91,16 @@ VINT		extralight;			/* bumped light from gun blasts */
 fixed_t	*finecosine_ = &finesine_[FINEANGLES/4];
 #endif
 
-fixed_t *yslope/*[SCREENHEIGHT]*/;
-fixed_t *distscale/*[SCREENWIDTH]*/;
+//added:10-02-98: yslopetab is what yslope used to be,
+//                yslope points somewhere into yslopetab,
+//                now (viewheight/2) slopes are calculated above and
+//                below the original viewheight for mouselook
+//                (this is to calculate yslopes only when really needed)
+//                (when mouselookin', yslope is moving into yslopetab)
+//                Check R_SetupFrame, R_SetViewSize for more...
+fixed_t*                 yslopetab;
+fixed_t*                yslope;
+uint16_t *distscale/*[SCREENWIDTH]*/;
 
 VINT *viewangletox/*[FINEANGLES/2]*/;
 
@@ -96,16 +124,40 @@ texture_t *testtex;
 ===============================================================================
 */
 
-static int SlopeDiv(unsigned int num, unsigned int den) ATTR_DATA_CACHE_ALIGN;
+static int SlopeAngle (unsigned int num, unsigned int den) ATTR_DATA_CACHE_ALIGN;
 
-static int SlopeDiv (unsigned num, unsigned den)
+static int SlopeAngle (unsigned num, unsigned den)
 {
 	unsigned ans;
+	angle_t *t2a;
+
 	den >>= 8;
+#ifdef MARS
+	SH2_DIVU_DVSR = den;
+	SH2_DIVU_DVDNT = num << 3;
+
+    __asm volatile (
+      "mov.l %1, %0"
+      : "=r" (t2a)
+      : "m" (tantoangle)
+   );
+
+   if (den < 2)
+	  ans = SLOPERANGE;
+   else
+      ans = SH2_DIVU_DVDNT;
+#else
 	if (den < 2)
-		return SLOPERANGE;
-	ans = (num<<3)/den;
-	return ans <= SLOPERANGE ? ans : SLOPERANGE;
+		ans = SLOPERANGE;
+	else
+		ans = (num<<3)/den;
+
+	t2a = tantoangle;
+#endif
+
+	ans = ans <= SLOPERANGE ? ans : SLOPERANGE;
+
+	return t2a[ans];
 }
 
 angle_t R_PointToAngle2 (fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
@@ -175,7 +227,7 @@ angle_t R_PointToAngle2 (fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 			}
 		}
 	}
-	return base + n * tantoangle[SlopeDiv(num, den)];
+	return base + n * SlopeAngle(num, den);
 }
 
 /*
@@ -196,19 +248,19 @@ struct subsector_s *R_PointInSubsector (fixed_t x, fixed_t y)
 		
 	nodenum = numnodes-1;
 
-#ifdef MARS
-	while ( (int16_t)nodenum >= 0 )
-#else
-	while (! (nodenum & NF_SUBSECTOR) )
-#endif
+	do
 	{
 		node = &nodes[nodenum];
 		side = R_PointOnSide(x, y, node);
 		nodenum = node->children[side];
 	}
-	
-	return &subsectors[nodenum & ~NF_SUBSECTOR];
-	
+	#ifdef MARS
+	while ( (int16_t)nodenum >= 0 );
+#else
+	while (! (nodenum & NF_SUBSECTOR) );
+#endif
+
+	return &subsectors[nodenum & ~NF_SUBSECTOR];	
 }
 
 /*============================================================================= */
@@ -257,23 +309,14 @@ void R_SetViewportSize(int num)
 	if (anamorphicview)
 	{
 		stretch = ((FRACUNIT * 16 * height) / 180 * 28) / width;
-		//weaponXScale = 1050 * (lowResMode ? 1 : 2) * FRACUNIT / 1100;
-		weaponXScale = FRACUNIT * (lowResMode ? 1 : 2);
 	}
 	else
 	{
 		/* proper screen size would be 160*100, stretched to 224 is 2.2 scale */
 		//stretch = (fixed_t)((160.0f / width) * ((float)height / 180.0f) * 2.2f * FRACUNIT);
 		stretch = ((FRACUNIT * 16 * height) / 180 * 22) / width;
-		weaponXScale = FRACUNIT * (lowResMode ? 1 : 2);
 	}
 	stretchX = stretch * centerX;
-
-	weaponYpos = 180;
-	if (viewportHeight <= 128) {
-		weaponYpos = 144;
-	}
-	weaponYpos = (viewportHeight - weaponYpos) / 2;
 
 	initmathtables = 2;
 	clearscreen = 2;
@@ -281,7 +324,7 @@ void R_SetViewportSize(int num)
 	// refresh func pointers
 	R_SetDrawMode();
 
-	R_InitColormap(lowResMode);
+	R_InitColormap();
 
 #ifdef MARS
 	Mars_CommSlaveClearCache();
@@ -293,10 +336,21 @@ void R_SetDrawMode(void)
 	if (debugmode == DEBUGMODE_NODRAW)
 	{
 		drawcol = I_DrawColumnNoDraw;
+		drawcolflipped = I_DrawColumnNoDraw;
 		drawcolnpo2 = I_DrawColumnNoDraw;
-		drawfuzzcol = I_DrawColumnNoDraw;
 		drawcollow = I_DrawColumnNoDraw;
 		drawspan = I_DrawSpanNoDraw;
+		drawspancolor = I_DrawSpanColorNoDraw;
+
+		#ifdef MDSKY
+		drawskycol = I_DrawSkyColumnNoDraw;
+		#endif
+		draw32xskycol = I_DrawColumnNoDraw;
+
+		#ifdef HIGH_DETAIL_SPRITES
+		drawspritecol = I_DrawColumnNoDraw;
+		#endif
+
 		return;
 	}
 
@@ -304,18 +358,50 @@ void R_SetDrawMode(void)
 	{
 		drawcol = I_DrawColumnLow;
 		drawcolnpo2 = I_DrawColumnNPo2Low;
-		drawfuzzcol = I_DrawFuzzColumnLow;
 		drawcollow = I_DrawColumnLow;
+
+		#ifdef MDSKY
+		drawskycol = I_DrawSkyColumnLow;
+		#endif
+		draw32xskycol = I_Draw32XSkyColumnLow;
+
+		#ifdef HIGH_DETAIL_SPRITES
+		drawspritecol = I_DrawColumn;
+		drawcolflipped = I_DrawColumnFlipped;
+		#endif
+
+		#ifdef POTATO_MODE
+		drawspan = I_DrawSpanPotatoLow;
+		#else
 		drawspan = I_DrawSpanLow;
+		#endif
+
+		drawspancolor = I_DrawSpanColorLow;
 	}
 	else
 	{
 		drawcol = I_DrawColumn;
+		drawcolflipped = I_DrawColumnFlipped;
 		drawcolnpo2 = I_DrawColumnNPo2;
-		drawfuzzcol = I_DrawFuzzColumn;
 		drawspan = I_DrawSpan;
 		drawcollow = I_DrawColumnLow;
+
+		#ifdef MDSKY
+		drawskycol = I_DrawSkyColumn;
+		#endif
+		//draw32xskycol = I_Draw32XSkyColumn;	// This doesn't exist!
+
+		#ifdef HIGH_DETAIL_SPRITES
+		drawspritecol = I_DrawColumn;
+		#endif
+
+		#ifdef POTATO_MODE
+		drawspan = I_DrawSpanPotato;
+		#else
 		drawspan = I_DrawSpan;
+		#endif
+
+		//drawspancolor = I_DrawSpanColor;		// This doesn't exist!
 	}
 
 #ifdef MARS
@@ -360,7 +446,169 @@ D_printf ("Done\n");
 
 	R_InitTexCache(&r_texcache);
 
-	testtex = &textures[R_TextureNumForName("SLADWALL")];
+	testtex = &textures[R_TextureNumForName("GFZROCK")];
+}
+
+VINT CalcFlatSize(int lumplength)
+{
+	if (lumplength < 2*2)
+		return 1;
+	
+	if (lumplength < 4*4)
+		return 2;
+
+	if (lumplength < 8*8)
+		return 4;
+
+	if (lumplength < 16*16)
+		return 8;
+
+	if (lumplength < 32*32)
+		return 16;
+	
+	if (lumplength < 64*64)
+		return 32;
+
+	return 64;
+}
+
+
+/*
+==============
+=
+= R_SetTextureData
+=
+==============
+*/
+void R_SetTextureData(texture_t *tex, uint8_t *start, int size, boolean skipheader)
+{
+	int j;
+	int mipcount = 1;
+	int w = tex->width, h = tex->height;
+	uint8_t *data = skipheader ? R_SkipJagObjHeader(start, size, w, h) : start;
+#if MIPLEVELS > 1
+	uint8_t *end = start + size;
+
+	boolean masked = tex->lumpnum >= firstsprite && tex->lumpnum < firstsprite + numsprites;
+
+    if (!masked && texmips)
+		mipcount = MIPLEVELS;
+#endif
+
+	for (j = 0; j < mipcount; j++)
+	{
+		int size = w * h;
+
+#if MIPLEVELS > 1
+		if (j && data+size > end) {
+			// no mipmaps
+			tex->mipcount = 1;
+			break;
+		}
+#endif
+
+		tex->data[j] = data;
+		data += size;
+
+		w >>= 1;
+		if (w < 1)
+			w = 1;
+
+		h >>= 1;
+		if (h < 1)
+			h = 1;
+	}
+}
+
+static boolean IsWavyFlat(byte flatnum)
+{
+    return (flatnum >= 9 && flatnum <= 16) // BWATER
+        || (flatnum >= 24 && flatnum <= 27) // CHEMG
+        || (flatnum >= 43 && flatnum <= 50) // DWATER
+        || (flatnum == 74) // RLAVA1
+        ;
+}
+
+/*
+==============
+=
+= R_SetFlatData
+=
+==============
+*/
+void R_SetFlatData(int f, uint8_t *start, int size)
+{
+	int j;
+	int w = CalcFlatSize(size);
+	uint8_t *data = start;
+
+#ifdef FLATMIPS
+	for (j = 0; j < MIPLEVELS; j++)
+	{
+		flatpixels[f].data[j] = data;
+		flatpixels[f].size = w;
+		flatpixels[f].wavy = IsWavyFlat(f);
+		if (texmips) {
+			data += w * w;
+			w >>= 1;
+
+			if (w < 1)
+				w = 1;
+		}
+	}
+#else
+	for (j = 0; j < 1; j++)
+	{
+		flatpixels[f].data[j] = data;
+		flatpixels[f].size = w;
+		flatpixels[f].wavy = IsWavyFlat(f);
+		if (texmips) {
+			data += w * w;
+			w >>= 1;
+
+			if (w < 1)
+				w = 1;
+		}
+	}
+#endif
+}
+
+void R_ResetTextures(void)
+{
+	int i;
+
+	// reset pointers from previous level
+	for (i = 0; i < numtextures; i++)
+	{
+		int length;
+		boolean skipheader;
+		uint8_t *data;
+		int lump = textures[i].lumpnum;
+
+		if (lump >= firstsprite && lump < firstsprite + numsprites) {
+			data = W_POINTLUMPNUM(lump+1);
+			length = W_LumpLength(lump+1);
+			skipheader = false;
+		} else {
+			data = R_CheckPixels(lump);
+			length = W_LumpLength(lump);
+			skipheader = true;
+		}
+
+		R_SetTextureData(&textures[i], data, length, skipheader);
+	}
+
+	for (i=0 ; i<numflats ; i++)
+	{
+		int length;
+		uint8_t *data;
+		int lump = firstflat + i;
+
+		data = R_CheckPixels(lump);
+		length = W_LumpLength(lump);
+
+		R_SetFlatData(i, data, length);
+	}
 }
 
 /*
@@ -370,61 +618,21 @@ D_printf ("Done\n");
 =
 ==============
 */
-void R_SetupTextureCaches(void)
+void R_SetupTextureCaches(int gamezonemargin)
 {
-	int i, j;
 	int zonefree;
 	int cachezonesize;
 	void *margin;
-	const int zonemargin = 8*1024;
+	const int zonemargin = gamezonemargin;
 	const int flatblocksize = sizeof(memblock_t) + ((sizeof(texcacheblock_t) + 15) & ~15) + 64*64 + 32;
 
-	// reset pointers from previous level
-	for (i = 0; i < numtextures; i++)
-	{
-		int w = textures[i].width, h = textures[i].height;
-		int mipcount = 1;
-		int lump = textures[i].lumpnum;
-		uint8_t *start = R_CheckPixels(lump);
-		uint8_t *data = R_SkipJagObjHeader(start, W_LumpLength(lump), w, h);
-
-#if MIPLEVELS > 1
-		mipcount = textures[i].mipcount;
+#ifndef SHOW_DISCLAIMER
+	CONS_Printf("Free memory: %d (LFB: %d)", Z_FreeMemory(mainzone), Z_LargestFreeBlock(mainzone));
 #endif
-		for (j = 0; j < mipcount; j++)
-		{
-			int size = w * h;
-
-			textures[i].data[j] = data;
-			data += size;
-
-			w >>= 1;
-			if (w < 1)
-				w = 1;
-
-			h >>= 1;
-			if (h < 1)
-				h = 1;
-		}
-	}
-
-	for (i=0 ; i<numflats ; i++)
-	{
-		int size = 64;
-		uint8_t *data = R_CheckPixels(firstflat + i);
-
-		for (j = 0; j < MIPLEVELS; j++)
-		{
-			flatpixels[i].data[j] = data;
-			if (texmips) {
-				data += size * size;
-				size >>= 1;
-			}
-		}
-	}
 
 	// functioning texture cache requires at least 8kb of ram
 	zonefree = Z_LargestFreeBlock(mainzone);
+//	CONS_Printf("Free memory: %d", zonefree);
 	if (zonefree < zonemargin+flatblocksize)
 		goto nocache;
 
@@ -443,9 +651,9 @@ nocache:
 	R_InitTexCacheZone(&r_texcache, 0);
 }
 
-void R_SetupLevel(void)
+void R_SetupLevel(int gamezonemargin)
 {
-	R_SetupTextureCaches();
+	R_SetupTextureCaches(gamezonemargin);
 
 	R_SetViewportSize(viewportNum);
 
@@ -469,12 +677,13 @@ extern	pixel_t	*screens[2];	/* [viewportWidth*viewportHeight];  */
 =
 ==================
 */
+#define AIMINGTODY(a) ((finetangent((2048+(((int)a)>>ANGLETOFINESHIFT)) & FINEMASK)*160)>>FRACBITS)
 
 static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	visplane_t **visplanes_hash_, sector_t **vissectors_, viswallextra_t *viswallex_)
 {
+	boolean waterpal = false;
 	int 		i;
-	int		damagecount, bonuscount;
 	player_t *player;
 #ifdef JAGUAR
 	int		shadex, shadey, shadei;
@@ -503,25 +712,96 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 
 	player = &players[displayplayer];
 
+	if (!demoplayback)
+	{
+		const camera_t *thiscam = NULL;
+		thiscam = &camera;
+
+		vd.viewx = thiscam->x;
+		vd.viewy = thiscam->y;
+		vd.viewz = thiscam->z + (20 << FRACBITS);
+		vd.viewangle = thiscam->angle;
+		vd.lightlevel = thiscam->subsector->sector->lightlevel;
+		vd.aimingangle = thiscam->aiming;
+		vd.viewsubsector = thiscam->subsector;
+
+		if (thiscam->subsector->sector->heightsec != -1
+			&& GetWatertopSec(thiscam->subsector->sector) > vd.viewz)
+			waterpal = true;
+	}
+	else
+	{
+		vd.viewx = player->mo->x;
+		vd.viewy = player->mo->y;
+		vd.viewz = player->viewz;
+		vd.viewangle = player->mo->angle;
+		vd.aimingangle = 0;
+		vd.lightlevel = subsectors[player->mo->isubsector].sector->lightlevel;
+		vd.viewsubsector = &subsectors[player->mo->isubsector];
+	}
+
 	vd.viewplayer = player;
-	vd.viewx = player->mo->x;
-	vd.viewy = player->mo->y;
-	vd.viewz = player->viewz;
-	vd.viewangle = player->mo->angle;
 
 	vd.viewsin = finesine(vd.viewangle>>ANGLETOFINESHIFT);
 	vd.viewcos = finecosine(vd.viewangle>>ANGLETOFINESHIFT);
 
+	// look up/down
+	int dy;
+	if (demoplayback && gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
+		// The viewport for the title screen is aligned with the bottom of
+		// the screen. Therefore we shift the angle to center the horizon.
+		dy = -27;
+	}
+	else {
+		G_ClipAimingPitch((int*)&vd.aimingangle);
+		dy = AIMINGTODY(vd.aimingangle);
+	}
+
+	yslope = &yslopetab[(3*viewportHeight/2) - dy];
+	centerY = (viewportHeight / 2) + dy;
+	centerYFrac = centerY << FRACBITS;
+
 	vd.displayplayer = displayplayer;
-	vd.lightlevel = player->mo->subsector->sector->lightlevel;
 	vd.fixedcolormap = 0;
 
 	vd.clipangle = xtoviewangle[0]<<FRACBITS;
 	vd.doubleclipangle = vd.clipangle * 2;
 	vd.viewangletox = viewangletox;
 
-	damagecount = player->damagecount;
-	bonuscount = player->bonuscount;
+	if (gamemapinfo.mapNumber != TITLE_MAP_NUMBER && (gamemapinfo.mapNumber < SSTAGE_START || gamemapinfo.mapNumber > SSTAGE_END))
+	{
+		if (leveltime < 62)
+		{
+			if (leveltime < 30) {
+				// Set the fade degree to black.
+				vd.fixedcolormap = HWLIGHT(0);	// 32X VDP
+				#ifdef MDSKY
+				if (leveltime == 0 && sky_md_layer) {
+					Mars_FadeMDPaletteFromBlack(0);	// MD VDP
+				}
+				#endif
+			}
+			else {
+				// Set the fade degree based on leveltime.
+				vd.fixedcolormap = HWLIGHT((leveltime-30)*8);	// 32X VDP
+				#ifdef MDSKY
+				if (sky_md_layer) {
+					Mars_FadeMDPaletteFromBlack(md_palette_fade_table[leveltime-30]);	// MD VDP
+				}
+				#endif
+			}
+		}
+		else if (fadetime > 0)
+		{
+			// Set the fade degree based on leveltime.
+//			vd.fixedcolormap = HWLIGHT((TICRATE-fadetime)*8);	// 32X VDP
+			#ifdef MDSKY
+			if (sky_md_layer) {
+				Mars_FadeMDPaletteFromBlack(md_palette_fade_table[TICRATE-fadetime]);	// MD VDP
+			}
+			#endif
+		}
+	}
 
 #ifdef JAGUAR
 	vd.extralight = player->extralight << 6;
@@ -579,66 +859,74 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 #endif
 
 #ifdef MARS
-	vd.extralight = player->extralight << 4;
-
-	if (player->powers[pw_invulnerability] > 0)
-	{
-		if (player->powers[pw_invulnerability] > 60
-			|| (player->powers[pw_invulnerability] & 4))
-			vd.fixedcolormap = INVERSECOLORMAP;
-	}
-    else if (player->powers[pw_infrared] > 0)
-    {
-		if (player->powers[pw_infrared] > 4*32
-			|| (player->powers[pw_infrared]&8) )
-		{
-			// almost full bright
-			vd.fixedcolormap = 1*256;
-		}
-	}
+	vd.extralight = 0;
 
 	viewportbuffer = (pixel_t*)I_ViewportBuffer();
+
+	if (demoplayback && gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
+		viewportbuffer += (160*22);
+	}
 
 	palette = 0;
 
 	i = 0;
-	if (player->powers[pw_strength] > 0)
-		i = 12 - player->powers[pw_strength] / 64;
-	if (i < damagecount)
-		i = damagecount;
 
 	if (gamepaused)
-		palette = 14;
-	else if (!splitscreen)
+		palette = 12;
+	else if (fadetime > 0)
 	{
-		if (i)
+		if (gamemapinfo.mapNumber >= SSTAGE_START && gamemapinfo.mapNumber <= SSTAGE_END)
 		{
-			palette = (i + 7) / 8;
-			if (palette > 7)
-				palette = 7;
-			palette += 1;
+			palette = 1 + (fadetime / 2);
+			if (palette > 5)
+				palette = 5;
 		}
-		else if (bonuscount)
+		else
 		{
-			palette = (bonuscount + 7) / 8;
-			if (palette > 3)
-				palette = 3;
-			palette += 9;
+			palette = 6 + (fadetime / 2);
+			if (palette > 10)
+				palette = 10;
 		}
-		else if (player->powers[pw_ironfeet] > 60
-			|| (player->powers[pw_ironfeet] & 4))
-			palette = 13;
+	}
+	else if (gamemapinfo.mapNumber >= SSTAGE_START && gamemapinfo.mapNumber <= SSTAGE_END
+		&& gametic < 15)
+	{
+		palette = 5 - (gametic / 3);
+		if (palette < 0)
+			palette = 0;
+	}
+	else if (leveltime < 15 && demoplayback && gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
+		palette = 5 - (leveltime / 3);
+
+		#ifdef MDSKY
+		if (sky_md_layer) {
+			Mars_FadeMDPaletteFromBlack(0xEEE); //TODO: Replace with Mars_FadeMDPaletteFromWhite()
+		}
+		#endif
+	}
+	else if (player->whiteFlash)
+		palette = player->whiteFlash + 1;
+	else if (waterpal) {
+		palette= 11;
+
+		distortion_action = DISTORTION_ADD;
+	}
+
+	if (gametic <= 1 && gamemapinfo.mapNumber != 30)
+	{
+		curpalette = palette = 10;
+		I_SetPalette(dc_playpals+10*768);
 	}
 	
 	if (palette != curpalette) {
 		curpalette = palette;
 		I_SetPalette(dc_playpals+palette*768);
-	}
 
-	if (vd.fixedcolormap == INVERSECOLORMAP)
-		vd.fuzzcolormap = INVERSECOLORMAP;
-	else
-		vd.fuzzcolormap = 12 * 256;
+		if (!waterpal) {
+			RemoveDistortionFilters();
+			distortion_action = DISTORTION_REMOVE; // Necessary to normalize the next frame buffer.
+		}
+	}
 #endif
 
 	vd.visplanes = visplanes_;
@@ -805,10 +1093,45 @@ visplane_t* R_FindPlane(fixed_t height,
 	return check;
 }
 
+visplane_t* R_FindPlane2(fixed_t height, 
+	int flatandlight)
+{
+	visplane_t *check, *tail, *next;
+	int hash = R_PlaneHash(height, flatandlight);
+
+	tail = vd.visplanes_hash[hash];
+	for (check = tail; check; check = next)
+	{
+		next = check->next;
+
+		if (height == check->height && // same plane as before?
+			flatandlight == check->flatandlight)
+			return check; // use the same one as before
+	}
+
+	if (vd.lastvisplane == vd.visplanes + MAXVISPLANES)
+		return vd.visplanes;
+
+	// make a new plane
+	check = vd.lastvisplane;
+	++vd.lastvisplane;
+
+	check->height = height;
+	check->flatandlight = flatandlight;
+	check->minx = 320;
+	check->maxx = -1;
+
+	R_MarkOpenPlane(check);
+
+	check->next = tail;
+	vd.visplanes_hash[hash] = check;
+
+	return check;
+}
+
 void R_BSP (void) __attribute__((noinline));
 void R_WallPrep (void) __attribute__((noinline));
 void R_SpritePrep (void) __attribute__((noinline));
-boolean R_LatePrep (void) __attribute__((noinline));
 void R_Cache (void) __attribute__((noinline));
 void R_SegCommands (void) __attribute__((noinline));
 void R_DrawPlanes (void) __attribute__((noinline));
@@ -844,6 +1167,9 @@ void R_RenderPlayerView(int displayplayer)
 	sector_t *vissectors_[MAXVISSSEC];
 	viswallextra_t viswallex_[MAXWALLCMDS + 1] __attribute__((aligned(16)));
 
+	if (leveltime < 30) // Whole screen is black right now anyway
+		return;
+
 	/* make sure its done now */
 #if defined(JAGUAR)
 	while (!I_RefreshCompleted())
@@ -863,8 +1189,6 @@ void R_RenderPlayerView(int displayplayer)
 
 	R_WallPrep();
 	/* the rest of the refresh can be run in parallel with the next game tic */
-	if (R_LatePrep())
-		R_Cache();
 
 	R_SegCommands();
 
@@ -897,7 +1221,7 @@ void R_RenderPlayerView(int displayplayer)
 void R_RenderPlayerView(int displayplayer)
 {
 	int t_bsp, t_prep, t_segs, t_planes, t_sprites, t_total;
-	boolean drawworld = !(players[consoleplayer].automapflags & AF_ACTIVE);
+	boolean drawworld = true;//!(optionsMenuOn);
 	__attribute__((aligned(16)))
 		visplane_t visplanes_[MAXVISPLANES];
 	__attribute__((aligned(16)))
@@ -923,8 +1247,6 @@ void R_RenderPlayerView(int displayplayer)
 		return;
 	}
 
-	t_prep = I_GetFRTCounter();
-	R_Cache();
 	t_prep = I_GetFRTCounter() - t_prep;
 
 	t_segs = I_GetFRTCounter();

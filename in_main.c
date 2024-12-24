@@ -1,501 +1,320 @@
 
 /* in_main.c -- intermission */
+// This is now only used for special stage intermission
 #include "doomdef.h"
 #include "st_main.h"
+#include "st_inter.h"
+#include "v_font.h"
+#include "marshw.h"
 
-#define	KVALX			172
-#define	KVALY			80
-#define	IVALX			172
-#define	IVALY			100
-#define	SVALX			172
-#define	SVALY			120
-#define TVALX           172
-#define TVALY           140
-#define	FVALX			230
-#define	FVALY			74
+#define BASEVIDWIDTH 320
+#define ALL7EMERALDS(x) (false)
 
-#define	PLAYERONEFACEX		137
-#define	PLAYERONEFACEY		30
-#define	PLAYERTWOFACEX		217
-#define	PLAYERTWOFACEY		30
+boolean stagefailed = false;
+static jagobj_t *emeraldpics[7];
 
-extern int nextmap;
-
-typedef struct pstats_s
+//
+// Y_SetPerfectBonus
+//
+static void Y_SetPerfectBonus(y_bonus_t *bstruct)
 {
-	int		killpercent;
-	int		itempercent;
-	int		secretpercent;
-	int		fragcount;
-} pstats_t;
+	int i;
 
-typedef enum
-{
-	f_lookfront,
-	f_lookright,
-	f_lookleft,
-	f_ohshit,
-	f_splatone,
-	f_splattwo,
-	f_splatthree,
-	f_splatfour,
-	f_splatfive,
-	f_splatsix
-} faces_t;
+	D_memset(bstruct, 0, sizeof(y_bonus_t));
+	bstruct->patch = W_GetNumForName("YB_PERFE");
 
-typedef struct
-{
-	pstats_t	pstats[MAXPLAYERS];
-	faces_t		facenum;
-
-	boolean		earlyexit;
-	boolean		statsdrawn;
-	boolean		valsdrawn;
-	boolean		negativefrag[MAXPLAYERS];
-	int			killvalue[2], itemvalue[2], secretvalue[2], fragvalue[2];
-	int 		timevalue;
-
-	VINT		i_secret, i_percent, i_level, i_kills,
-					i_items, i_finish, i_frags, i_par, i_time;
-
-	VINT		infaces[10];
-	jagobj_t 	*interpic;
-
-	dmapinfo_t	*nextmapinfo;
-} intermission_t;
-
-VINT	uchar, snums;
-static intermission_t *interm;
-
-/* */
-/* Lame-o print routine */
-/* */
-void print (int x, int y, const char *string)
-{
-	int i,c;
-	int w;
-
-	for (i = 0; i < mystrlen(string); i++)
+	int sharedringtotal = 0;
+	for (i = 0; i < MAXPLAYERS; i++)
 	{
-		c = string[i];
-	
-		if (c >= 'A' && c <= 'Z')
-		{
-			DrawJagobjLump(uchar + c - 'A', x, y, &w, NULL);
-			x = (x + (w + 1)) & ~1;
-		}
-		else if (c >= 'a' && c <= 'z')
-		{
-			DrawJagobjLump(uchar + c - 'a' + 26, x, y + 4, &w, NULL);
-			x = (x + (w + 1)) & ~1;
-		}
-		else if (c >= '0' && c <= '9')
-		{
-			DrawJagobjLump(snums + c - 48, x, y, &w, NULL);
-			x = (x + (w + 2)) & ~1;
-		}
-		else
-		{
-			x = (x + 7) & ~1;
+		if (!playeringame[i])
 			continue;
-		}
+			
+		sharedringtotal += (players[i].health - 1);
 	}
-}
-
-/* */
-/* Draws 'value' at x, y  */
-/* */
-void IN_DrawValue(int x,int y,int value)
-{
-	char	v[4];
-	int		j;
-	int		index;
-	
-	valtostr(v,value);
-	j = mystrlen(v) - 1;
-	while(j >= 0)
-	{
-		int w;
-
-		index = (v[j--] - '0');
-		DrawJagobjLump(snums + index, 320, 200, &w, NULL);
-
-		x -= w+2;
-		DrawJagobjLump(snums + index, x, y, NULL, NULL);
-	}
-}
-
-/* */
-/* Draws 'value' at x, y  */
-/* */
-void IN_DrawPadValue(int x,int y,int value,int minl)
-{
-	char	v[4];
-	int		j;
-	int		index;
-
-	valtostr(v,value);
-	j = mystrlen(v) - 1;
-	while(j >= 0)
-	{
-		int w;
-
-		index = (v[j--] - '0');
-		DrawJagobjLump(snums + index, 320, 200, &w, NULL);
-
-		x -= w+2;
-		DrawJagobjLump(snums + index, x, y, NULL, NULL);
-
-		minl--;
-	}
-
-	while (minl > 0)
-	{
-		int w;
-
-		DrawJagobjLump(snums + 0, 320, 200, &w, NULL);
-
-		x -= w+2;
-		DrawJagobjLump(snums + 0, x, y, NULL, NULL);
-
-		minl--;
-	}
-}
-
-/* */
-/* Network intermission */
-/* */
-void IN_NetgameDrawer(void)
-{	
-	int		i;
-	int length;
-
-	if(interm->earlyexit == true)
-		for (i = 0; i < MAXPLAYERS; i++)
-		{
-			interm->killvalue[i] = interm->pstats[i].killpercent;
-			interm->itemvalue[i] = interm->pstats[i].itempercent;
-			interm->secretvalue[i] = interm->pstats[i].secretpercent;
-			interm->fragvalue[i] = 
-				players[i].frags;
-		}
-
-#ifndef MARS
-	if (statsdrawn == false)
-#endif
-	{
-		if (gamemapinfo.name != NULL)
-		{
-			length = mystrlen(gamemapinfo.name);
-			print((320 - (length * 14)) >> 1, 10, gamemapinfo.name);
-		}
-
-		if (interm->nextmapinfo && interm->nextmapinfo->name != NULL)
-		{
-			length = mystrlen("Entering");
-			print((320 - (length * 14)) >> 1, 162, "Entering");
-			length = mystrlen(interm->nextmapinfo->name);
-			print((320 - (length * 14)) >> 1, 182, interm->nextmapinfo->name);
-		}
-
-		if (netgame == gt_deathmatch)
-		{
-			if (splitscreen)
-			{
-				print(30, FVALY, "Player 1 Frags");
-				print(30, FVALY + 40, "Player 2 Frags");
-			}
-			else
-			{
-				print(30, FVALY, "Your Frags");
-				print(54, FVALY + 40, "His Frags");
-			}
-		}
-		else
-		{
-			print (28, 50, "Player");
-			print (KVALX - 18, 50, "1");
-			print (KVALX + 66, 50, "2");
-			DrawJagobjLump(interm->i_kills, 57, 80, NULL, NULL);
-	 
-			DrawJagobjLump(interm->i_items, 51, 110, NULL, NULL);
-	 	
-			DrawJagobjLump(interm->i_secret, 13, 140, NULL, NULL);
-		}
-	}			
-	
-	if (netgame == gt_deathmatch)
-	{
-		if (splitscreen)
-		{
-			EraseBlock(30 + (mystrlen("Player 1 Frags") * 15), FVALY, 80, 80);
-			IN_DrawValue(FVALX + 40, FVALY, interm->fragvalue[0]);
-			IN_DrawValue(FVALX + 40, FVALY + 40, interm->fragvalue[1]);
-		}
-		else
-		{
-			EraseBlock(30 + (mystrlen("Your Frags") * 15), FVALY, 80, 80);
-			IN_DrawValue(FVALX, FVALY, interm->fragvalue[consoleplayer]);
-			IN_DrawValue(FVALX, FVALY + 40, interm->fragvalue[!consoleplayer]);
-		}
-	}
+	if (!sharedringtotal || totalitems == 0 || sharedringtotal < totalitems)
+		bstruct->display = false;
 	else
 	{
-		EraseBlock(57 + (mystrlen("Kills") * 15), KVALY, 100, 100);
-		IN_DrawValue(KVALX, KVALY, interm->killvalue[consoleplayer]);
-		IN_DrawValue(KVALX + 80, KVALY, interm->killvalue[!consoleplayer]);
-		IN_DrawValue(IVALX, IVALY, interm->itemvalue[consoleplayer]);
-		IN_DrawValue(IVALX + 80, IVALY, interm->itemvalue[!consoleplayer]);
-		IN_DrawValue(SVALX, SVALY, interm->secretvalue[consoleplayer]);
-		IN_DrawValue(SVALX + 80, SVALY, interm->secretvalue[!consoleplayer]);
-		DrawJagobjLump(interm->i_percent, KVALX, KVALY, NULL, NULL);
-		DrawJagobjLump(interm->i_percent, KVALX + 80, KVALY, NULL, NULL);
-		DrawJagobjLump(interm->i_percent, IVALX, IVALY, NULL, NULL);
-		DrawJagobjLump(interm->i_percent, IVALX + 80, IVALY, NULL, NULL);
-		DrawJagobjLump(interm->i_percent, SVALX, SVALY, NULL, NULL);
-		DrawJagobjLump(interm->i_percent, SVALX + 80, SVALY, NULL, NULL);
+		bstruct->display = true;
+		bstruct->points = 50000;
 	}
 }
 
-/* */
-/* Single intermision */
-/* */
-void IN_SingleDrawer(void)
+static void Y_SetSpecialRingBonus(y_bonus_t *bstruct)
 {
-	int length;
-	
-	if(interm->earlyexit == true)
+	int i, sharedringtotal = 0;
+
+	bstruct->patch = W_GetNumForName("YB_RING");
+	bstruct->display = true;
+
+	for (i = 0; i < MAXPLAYERS; i++)
 	{
-		interm->killvalue[0] = interm->pstats[0].killpercent;
-		interm->itemvalue[0] = interm->pstats[0].itempercent;
-		interm->secretvalue[0] = interm->pstats[0].secretpercent;
+		if (!playeringame[i])
+			continue;
+
+		sharedringtotal += (players[i].health - 1);
 	}
-		
-	EraseBlock(71 + (mystrlen("Secrets") * 15), 70, 55, 80);
 
-#ifndef MARS
-	if (statsdrawn == false)
-#endif
-	{
-		if (gamemapinfo.name != NULL)
-		{
-			length = mystrlen(gamemapinfo.name);
-			print((320 - (length * 14)) >> 1, 10, gamemapinfo.name);
-			length = mystrlen("Finished");
-			print((320 - (length * 14)) >> 1, 34, "Finished");
-		}
-
-		if (interm->nextmapinfo && interm->nextmapinfo->name != NULL)
-		{
-			length = mystrlen("Entering");
-			print( (320 - (length * 14)) >> 1, 162, "Entering");	
-			length = mystrlen(interm->nextmapinfo->name);
-			print( (320 - (length*14)) >> 1, 182, interm->nextmapinfo->name);
-		}
-
-		DrawJagobjLump(interm->i_kills, 71, KVALY - 10, NULL, NULL);
-
-		DrawJagobjLump(interm->i_items, 65, IVALY - 10, NULL, NULL);
-
-		DrawJagobjLump(interm->i_secret, 27, SVALY - 10, NULL, NULL);
-
-		print(73, TVALY - 10, "Time");
-	}
-	
-	IN_DrawValue(KVALX + 60, KVALY - 10, interm->killvalue[0]);
-	DrawJagobjLump(interm->i_percent, KVALX + 60, KVALY - 10, NULL, NULL);
-	IN_DrawValue(IVALX + 60, IVALY - 10, interm->itemvalue[0]);		
-	DrawJagobjLump(interm->i_percent, IVALX + 60, IVALY - 10, NULL, NULL);
-	IN_DrawValue(SVALX + 60, SVALY - 10, interm->secretvalue[0]);
-	DrawJagobjLump(interm->i_percent, SVALX + 60, SVALY - 10, NULL, NULL);
-
-	if (interm->timevalue/60 > 0)
-	{
-		IN_DrawValue(TVALX + 8, TVALY - 10, interm->timevalue/60);
-		print(TVALX + 8, TVALY - 10 - 1, "m");
-	}
-	IN_DrawPadValue(TVALX + 58, TVALY - 10, interm->timevalue%60, 2);
-	print(TVALX + 58, TVALY - 10 - 1, "s");
+	if (sharedringtotal > 0)
+		bstruct->points = sharedringtotal * 100;
+	else
+		bstruct->points = 0;
 }
+
+//
+// Y_SetNullBonus
+// No bonus in this slot, so just clear the struct
+//
+static void Y_SetNullBonus(y_bonus_t *bstruct)
+{
+	D_memset(bstruct, 0, sizeof(y_bonus_t));
+}
+
+//
+// Y_AwardSpecialStageBonus
+//
+// Gives a ring bonus only.
+static void Y_AwardSpecialStageBonus(void)
+{
+	int i, oldscore, ptlives;
+	y_bonus_t localbonuses[2];
+
+	data.spec.score = players[consoleplayer].score;
+	D_memset(data.spec.bonuses, 0, sizeof(data.spec.bonuses));
+
+	for (i = 0; i < MAXPLAYERS; i++)
+	{
+		oldscore = players[i].score;
+
+		if (!playeringame[i] || players[i].lives < 1) // not active, or game over
+		{
+			Y_SetNullBonus(&localbonuses[0]);
+			Y_SetNullBonus(&localbonuses[1]);
+		}
+		else
+		{
+			Y_SetSpecialRingBonus(&localbonuses[0]);
+			Y_SetPerfectBonus(&localbonuses[1]);
+		}
+
+		players[i].score += localbonuses[0].points;
+		players[i].score += localbonuses[1].points;
+
+		// grant extra lives right away since tally is faked
+		ptlives = (players[i].score/50000) - (oldscore/50000);
+		players[i].lives++;
+		if (players[i].lives > 99)
+			players[i].lives = 99;
+
+		if (i == consoleplayer)
+		{
+			data.spec.gotlife = ptlives;
+			D_memcpy(&data.spec.bonuses, &localbonuses, sizeof(data.spec.bonuses));
+		}
+	}
+}
+
+static VINT intertic = 0;
+static VINT endtic = 0;
+static VINT tallydonetic = -1;
 
 void IN_Start (void)
-{	
-	int	i,l;
-	VINT *infaces;
+{
+	intertype = int_spec;
 
-	interm = Z_Malloc(sizeof(*interm), PU_STATIC);
-	D_memset(interm, 0, sizeof(*interm));
+	Y_AwardSpecialStageBonus();
 
-	interm->earlyexit = false;
+	// Super form stuff (normally blank)
+	data.spec.passed3 = "";
+	data.spec.passed4 = "";
 
-	interm->valsdrawn = false;
-
-	interm->nextmapinfo = Z_Malloc(sizeof(dmapinfo_t), PU_STATIC);
-	D_memset(interm->nextmapinfo, 0, sizeof(dmapinfo_t));
-
-	if (gameaction == ga_secretexit && gamemapinfo.secretNext)
-		G_FindMapinfo(gamemapinfo.secretNext, interm->nextmapinfo, NULL);
-	else if (gamemapinfo.next)
-		G_FindMapinfo(gamemapinfo.next, interm->nextmapinfo, NULL);
-
-	D_memset(interm->killvalue, 0, sizeof(*interm->killvalue)*MAXPLAYERS);
-	D_memset(interm->itemvalue, 0, sizeof(*interm->itemvalue)*MAXPLAYERS);
-	D_memset(interm->secretvalue, 0, sizeof(*interm->secretvalue)*MAXPLAYERS);
-	D_memset(interm->fragvalue, 0, sizeof(*interm->fragvalue)*MAXPLAYERS);
-
-	for (i = 0; i < MAXPLAYERS; i++) 
+	if (gamemapinfo.spheresNeeded > 0) // stagefailed
 	{
-		pstats_t *pstats = interm->pstats;
-
-		if (totalkills)
-			pstats[i].killpercent = (players[i].killcount * 100) / totalkills;
-		else
-			pstats[i].killpercent = 100;
-		if (totalitems)
-			pstats[i].itempercent = (players[i].itemcount * 100) / totalitems;
-		else
-			pstats[i].itempercent = 100;
-		if (totalsecret)
-			pstats[i].secretpercent = (players[i].secretcount * 100) / totalsecret;
-		else
-			pstats[i].secretpercent = 100;
-			
-		if(netgame)
-			pstats[i].fragcount = players[i].frags;
-	}	
-
-	interm->timevalue = stbar_tics/TICRATE;
-
-	infaces = interm->infaces;
-
-/* cache all needed graphics */
-#ifndef MARS
-	backgroundpic = W_POINTLUMPNUM(W_GetNumForName("M_TITLE"));
-#endif
-	interm->i_secret = W_CheckNumForName ("I_SECRET");
-	interm->i_percent = W_CheckNumForName("PERCENT");
-	interm->i_level = W_CheckNumForName("I_LEVEL");
-	interm->i_kills = W_CheckNumForName("I_KILLS");
-	interm->i_items = W_CheckNumForName("I_ITEMS");
-	interm->i_finish = W_CheckNumForName("I_FINISH");
-#ifndef MARS
-	i_frags = W_CheckNumForName("I_FRAGS");
-#endif
-	infaces[0] = W_CheckNumForName("FACE00");
-	infaces[1]	= W_CheckNumForName("FACE01");
-	infaces[2] = W_CheckNumForName("FACE02");
-	infaces[3] = W_CheckNumForName("FACE05");
-	infaces[4] = W_CheckNumForName("STSPLAT0");
-	infaces[5] = W_CheckNumForName("STSPLAT1");
-	infaces[6] = W_CheckNumForName("STSPLAT2");
-	infaces[7] = W_CheckNumForName("STSPLAT3");
-	infaces[8] = W_CheckNumForName("STSPLAT4");
-	infaces[9] = W_CheckNumForName("STSPLAT5");
-	
-#ifdef MARS
-	Z_FreeTags (mainzone);
-	l = W_CheckNumForName("INTERPIC");
-	if (l != -1)
-		interm->interpic = W_CacheLumpNum(l, PU_STATIC);
+		data.spec.passed2 = "Special Stage";
+		data.spec.passed1 = "";
+	}
+	else if (ALL7EMERALDS(emeralds))
+	{
+		data.spec.passed1 = "SONIC";
+		data.spec.passed2 = "got them all!";
+		data.spec.passed3 = "can now become";
+		data.spec.passed4 = "SUPER SONIC";
+	}
 	else
-		interm->interpic = NULL;
-#endif
+	{
+		data.spec.passed1 = "SONIC got";
+		data.spec.passed2 = "a Chaos Emerald";
+	}
 
-	snums = W_CheckNumForName("NUM_0");
+	data.spec.passedx1 = 160;
+	data.spec.passedx2 = 160;
+	data.spec.passedx3 = 160;
+	data.spec.passedx4 = 160;
 
-	uchar = W_CheckNumForName("CHAR_065");
+	intertic = 0;
+	tallydonetic = -1;
+	endtic = -1;
+
+	emeraldpics[0] = W_CacheLumpName("CHAOS1", PU_STATIC);
+	emeraldpics[1] = W_CacheLumpName("CHAOS2", PU_STATIC);
+	emeraldpics[2] = W_CacheLumpName("CHAOS3", PU_STATIC);
+	emeraldpics[3] = W_CacheLumpName("CHAOS4", PU_STATIC);
+	emeraldpics[4] = W_CacheLumpName("CHAOS5", PU_STATIC);
+	emeraldpics[5] = W_CacheLumpName("CHAOS6", PU_STATIC);
+	emeraldpics[6] = W_CacheLumpName("CHAOS7", PU_STATIC);
+
+	data.spec.pscore = W_GetNumForName("YB_SCORE");
 
 #ifndef MARS
 	DoubleBufferSetup ();
 #endif
 
-	I_SetPalette(W_POINTLUMPNUM(W_GetNumForName("PLAYPALS")));
+	const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
+	I_SetPalette(dc_playpals+5*768); // Completely white
 
-	S_StartSong(gameinfo.intermissionMus, 1, cdtrack_intermission);
+	// Remove water distortion filter from both frame buffers.
+	RemoveDistortionFilters();
+	Mars_FlipFrameBuffers(true);
+	RemoveDistortionFilters();
+
+	S_StartSong(gameinfo.intermissionMus, 0, cdtrack_intermission);
 }
 
 void IN_Stop (void)
 {	
-	if (interm->nextmapinfo)
-	{
-		if (interm->nextmapinfo->data)
-			Z_Free(interm->nextmapinfo->data);
-		Z_Free(interm->nextmapinfo);
-	}
-	if (interm->interpic)
-	{
-		Z_Free(interm->interpic);
-	}
+	intertype = int_none;
 
-	Z_Free(interm);
-	interm = NULL;
-
-	S_StopSong();
+	int i;
+	for (i = 0; i < 7; i++)
+	{
+		if (emeraldpics[i])
+			Z_Free(emeraldpics[i]);
+	}
 }
 
+// Returning a '1' means to finish
 int IN_Ticker (void)
 {
-	int		buttons;
-	int		oldbuttons;		
-	int 		i;
+	intertic++;
 
-	if (interm->i_secret < 0)
+	if (intertic == endtic)
+	{
+		gameaction = ga_completed;
 		return 1;
-	if (ticon < 5)
-		return 0;		/* don't exit immediately */
-	
-	for (i=0 ; i<= (netgame > gt_single) ; i++)
-	{
-		buttons = ticbuttons[i];
-		oldbuttons = oldticbuttons[i];
-		
-	/* exit menu if button press */
-		if ( (buttons & BT_ATTACK) && !(oldbuttons & BT_ATTACK) )
-		{
-			interm->earlyexit = true;
-			return 1;		/* done with intermission */
-		}
-		if ( (buttons & BT_SPEED) && !(oldbuttons & BT_SPEED) )
-		{
-			interm->earlyexit = true;
-			return 1;		/* done with intermission */
-		}
-		if ( (buttons & BT_USE) && !(oldbuttons & BT_USE) )
-		{
-			interm->earlyexit = true;
-			return 1;		/* done with intermission */
-		}
 	}
-	
-	for (i = 0; i < MAXPLAYERS; i++)
+
+	if (endtic != -1)
 	{
-		int *killvalue = interm->killvalue;
-		int *itemvalue = interm->itemvalue;
-		int *secretvalue = interm->secretvalue;
-		int *fragvalue = interm->fragvalue;
-		pstats_t *pstats = interm->pstats;
+		if (stagefailed)
+			data.spec.emeraldy += (++data.spec.emeraldmomy); // Might not be done falling
 
-		if (interm->valsdrawn == true)
+		return 0; // tally is done
+	}
+
+	if (intertype == int_spec) // coop or single player, special stage
+	{
+		int i;
+		uint32_t oldscore = data.spec.score;
+		boolean super = false, anybonuses = false;
+
+		if (intertic==1) // first time only
 		{
-			if (killvalue[i] < pstats[i].killpercent )
-				killvalue[i]+=2;
-			if (killvalue[i] > pstats[i].killpercent)
-				killvalue[i] = pstats[i].killpercent;
+			tallydonetic = -1;
+		}
 
-			if (itemvalue[i] < pstats[i].itempercent )
-				itemvalue[i]+=2;
-			if (itemvalue[i] > pstats[i].itempercent)
-				itemvalue[i] = pstats[i].itempercent;
+		// emerald bounce
+		if (intertic <= TICRATE)
+		{
+			data.spec.emeraldbounces = 0;
+			data.spec.emeraldmomy = 20;
+			data.spec.emeraldy = -40;
+		}
+		else// if (gamemapinfo.mapNumber - SSTAGE_START < 7)
+		{
+			if (!stagefailed)
+			{
+				if (data.spec.emeraldbounces < 3)
+				{
+					data.spec.emeraldy += (++data.spec.emeraldmomy);
+					if (data.spec.emeraldy > 74)
+					{
+						S_StartSound(NULL, sfx_tink); // tink
+						data.spec.emeraldbounces++;
+						data.spec.emeraldmomy = -(data.spec.emeraldmomy/2);
+						data.spec.emeraldy = 74;
+					}
+				}
+			}
+			else
+			{
+				data.spec.emeraldy += (++data.spec.emeraldmomy);
 
-			if (secretvalue[i] < pstats[i].secretpercent )
-				secretvalue[i]+=2;
-			if (secretvalue[i] > pstats[i].secretpercent)
-				secretvalue[i] = pstats[i].secretpercent;
+				if (data.spec.emeraldbounces < 1 && data.spec.emeraldy > 74)
+				{
+					S_StartSound(NULL, sfx_s3k_35); // nope
+					data.spec.emeraldbounces++;
+					data.spec.emeraldmomy = -(data.spec.emeraldmomy/2);
+					data.spec.emeraldy = 74;
+				}
+			}
+		}
 
-			if (fragvalue[i] < pstats[i].fragcount)
-				fragvalue[i]+=2;
-			if (fragvalue[i] > pstats[i].fragcount)
-				fragvalue[i] = pstats[i].fragcount;
+		if (intertic < 3*TICRATE) // 3 second pause before tally begins to give emeralds time to drop
+			return 0;
+
+		if (tallydonetic != -1 && (super && ALL7EMERALDS(emeralds)))
+		{
+			if ((intertic - tallydonetic) > (3*TICRATE)/2)
+				endtic = intertic + 4*TICRATE; // 4 second pause after end of tally
+
+			return 0;
+		}
+
+		// bonuses count down by 222 each tic
+		for (i = 0; i < 2; ++i)
+		{
+			if (!data.spec.bonuses[i].points)
+				continue;
+
+			data.spec.bonuses[i].points -= 222;
+			data.spec.score += 222;
+			if (data.spec.bonuses[i].points < 0) // too far?
+			{
+				data.spec.score += data.spec.bonuses[i].points;
+				data.spec.bonuses[i].points = 0;
+			}
+
+			if (data.spec.bonuses[i].points > 0)
+				anybonuses = true;
+		}
+
+		if (!anybonuses)
+		{
+			tallydonetic = intertic;
+			if (!(super && ALL7EMERALDS(emeralds))) // don't set endtic yet!
+				endtic = intertic + 4*TICRATE; // 4 second pause after end of tally
+
+			S_StartSound(NULL, sfx_s3k_b0); // cha-ching!
+
+			// Update when done with tally
+			if (!demoplayback)
+			{
+				//M_SilentUpdateUnlockablesAndEmblems(serverGamedata);
+
+				//if (M_UpdateUnlockablesAndExtraEmblems(clientGamedata))
+					//S_StartSound(NULL, sfx_s3k_68);
+
+				//G_SaveGameData(clientGamedata);
+			}
+		}
+		else if (!(intertic & 1))
+			//S_StartSound(NULL, sfx_s3k_5b); // tally sound effect
+
+		if (data.spec.gotlife > 0 && (data.spec.score % 50000 < oldscore % 50000)) // just passed a 50000 point mark
+		{
+			// lives are already added since tally is fake, but play the music
+			S_StartSong(gameinfo.xtlifeMus, 0, cdtrack_xtlife);
+			--data.spec.gotlife;
 		}
 	}
 
@@ -503,25 +322,199 @@ int IN_Ticker (void)
 }
 
 void IN_Drawer (void)
-{	
-#ifdef MARS
-	if (interm->interpic != NULL)
-		DrawJagobj(interm->interpic, 0, 0);
+{
+	if (intertic < TICRATE/2)
+	{
+		VINT palette = 5 - (intertic / 3);
+		if (palette < 0)
+			palette = 0;
+
+		const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
+		I_SetPalette(dc_playpals+palette*768); // Fade from white to normal
+	}
+	else if (endtic != -1 && endtic - intertic < TICRATE / 2)
+	{
+		VINT palette = 10 - (endtic - intertic) / 2;
+			if (palette < 6)
+				palette = 0;
+
+		if (endtic <= intertic)
+			palette = 10;
+
+		const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
+		I_SetPalette(dc_playpals+palette*768); // Fade from normal to black
+	}
 	else
-		DrawTiledBackground();
-#endif
+	{
+		const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
+		I_SetPalette(dc_playpals); // Normal
+	}
 
-	if (interm->i_secret < 0)
-		return;
+	DrawTiledBackground2(W_GetNumForName("SPECTILE"));
 
-	if (netgame != gt_single)
-		IN_NetgameDrawer();	
-	else
-		IN_SingleDrawer();
+	if (intertype == int_spec)
+	{
+		static VINT animatetic = 0;
+		VINT ttheight = 16;
+		VINT xoffset1 = 0; // Line 1 x offset
+		VINT xoffset2 = 0; // Line 2 x offset
+		VINT xoffset3 = 0; // Line 3 x offset
+		VINT xoffset4 = 0; // Line 4 x offset
+		VINT xoffset5 = 0; // Line 5 x offset
+		VINT xoffset6 = 0; // Line 6 x offset
+		VINT drawsection = 0;
 
-	if(interm->statsdrawn == false)
-		interm->statsdrawn = true;
-	if(interm->valsdrawn == false)
-		interm->valsdrawn = true;
+//		if (gottoken) // first to be behind everything else
+//			Y_IntermissionTokenDrawer();
+
+		// draw the header
+		if (intertic <= 2*TICRATE)
+			animatetic = 0;
+		else if (!animatetic && data.spec.bonuses[0].points == 0 && data.spec.bonuses[1].points == 0 && data.spec.passed3[0] != '\0')
+			animatetic = intertic + TICRATE;
+
+		if (animatetic && (int)intertic >= animatetic)
+		{
+			const VINT scradjust = BASEVIDWIDTH>>3; // 40 for BASEVIDWIDTH
+			VINT animatetimer = (intertic - animatetic);
+			if (animatetimer <= 16)
+			{
+				xoffset1 = -(animatetimer      * scradjust);
+				xoffset2 = -((animatetimer- 2) * scradjust);
+				xoffset3 = -((animatetimer- 4) * scradjust);
+				xoffset4 = -((animatetimer- 6) * scradjust);
+				xoffset5 = -((animatetimer- 8) * scradjust);
+				xoffset6 = -((animatetimer-10) * scradjust);
+				if (xoffset2 > 0) xoffset2 = 0;
+				if (xoffset3 > 0) xoffset3 = 0;
+				if (xoffset4 > 0) xoffset4 = 0;
+				if (xoffset5 > 0) xoffset5 = 0;
+				if (xoffset6 > 0) xoffset6 = 0;
+			}
+			else if (animatetimer < 34)
+			{
+				drawsection = 1;
+				xoffset1 = (24-animatetimer) * scradjust;
+				xoffset2 = (26-animatetimer) * scradjust;
+				xoffset3 = (28-animatetimer) * scradjust;
+				xoffset4 = (30-animatetimer) * scradjust;
+				xoffset5 = (32-animatetimer) * scradjust;
+				xoffset6 = (34-animatetimer) * scradjust;
+				if (xoffset1 < 0) xoffset1 = 0;
+				if (xoffset2 < 0) xoffset2 = 0;
+				if (xoffset3 < 0) xoffset3 = 0;
+				if (xoffset4 < 0) xoffset4 = 0;
+				if (xoffset5 < 0) xoffset5 = 0;
+			}
+			else
+			{
+				drawsection = 1;
+				//if (animatetimer == 32)
+					//S_StartSound(NULL, sfx_s3k_68);
+			}
+		}
+
+		if (drawsection == 1)
+		{
+			const char *ringtext = "get 50 rings, then";
+			const char *tut1text = "press A or C";
+			const char *tut2text = "to transform";
+			ttheight = 8;
+			V_DrawStringLeft(&titleFont, data.spec.passedx1 + xoffset1, ttheight, data.spec.passed1);
+			ttheight += 12;
+			V_DrawStringLeft(&titleFont, data.spec.passedx3 + xoffset2, ttheight, data.spec.passed3);
+			ttheight += 12;
+			V_DrawStringLeft(&titleFont, data.spec.passedx4 + xoffset3, ttheight, data.spec.passed4);
+
+			ttheight = 108;
+			V_DrawStringCenter(&titleFont, BASEVIDWIDTH/2 + xoffset4 , ttheight, ringtext);
+			ttheight += 12;
+			V_DrawStringCenter(&titleFont, BASEVIDWIDTH/2 + xoffset5, ttheight, tut1text);
+			ttheight += 12;
+			V_DrawStringCenter(&titleFont, BASEVIDWIDTH/2 + xoffset6, ttheight, tut2text);
+		}
+		else
+		{
+			int yoffset = 0;
+
+			if (data.spec.passed1[0] != '\0')
+			{
+				ttheight = 24;
+				V_DrawStringCenter(&titleFont, data.spec.passedx1 + xoffset1, ttheight, data.spec.passed1);
+
+				ttheight += 20;
+				V_DrawStringCenter(&titleFont, data.spec.passedx2 + xoffset2, ttheight, data.spec.passed2);
+			}
+			else
+			{
+				ttheight = 24 + 12;
+				V_DrawStringCenter(&titleFont, data.spec.passedx2 + xoffset1, ttheight, data.spec.passed2);
+			}
+
+			if (data.spec.bonuses[0].display)
+			{
+				int w;
+				GetJagobjSize(data.spec.bonuses[0].patch, &w, NULL);
+				DrawJagobjLump(data.spec.bonuses[0].patch, 152 - w + xoffset3, 108, NULL, NULL);
+				V_DrawValuePaddedRight(&hudNumberFont, BASEVIDWIDTH + xoffset3 - 68, 109, data.spec.bonuses[0].points, 0);
+			}
+
+			if (data.spec.bonuses[1].display)
+			{
+				int w;
+				GetJagobjSize(data.spec.bonuses[1].patch, &w, NULL);
+				DrawJagobjLump(data.spec.bonuses[1].patch, 152 - w + xoffset4, 124, NULL, NULL);
+				V_DrawValuePaddedRight(&hudNumberFont, BASEVIDWIDTH + xoffset4 - 68, 125, data.spec.bonuses[1].points, 0);
+				yoffset = 16;
+				// hack; pass the buck along...
+				xoffset4 = xoffset5;
+				xoffset5 = xoffset6;
+			}
+
+			int w;
+			GetJagobjSize(data.spec.pscore, &w, NULL);
+			DrawJagobjLump(data.spec.pscore, 152 - w + xoffset4, 124+yoffset, NULL, NULL);
+			V_DrawValuePaddedRight(&hudNumberFont, BASEVIDWIDTH + xoffset4 - 68, 125+yoffset, data.spec.score, 0);
+		}
+
+		// draw the emeralds
+		{
+			boolean drawthistic = !(ALL7EMERALDS(emeralds) && (intertic & 1));
+			VINT emeraldx = 152 - 3*28;
+			VINT em = gamemapinfo.mapNumber - SSTAGE_START;
+
+			if (em == 7)
+			{
+				if (!stagefailed)
+				{
+					fixed_t adjust = 2*finesine(((ANGLE_1 * (intertic + 1) >> 4) & FINEMASK));
+					DrawJagobj(emeraldpics[em], 152, 74 - adjust);
+				}
+			}
+			else if (em < 7)
+			{
+				if (drawthistic)
+				{
+					for (int i = 0; i < 7; ++i)
+					{
+						if ((i != em) && (emeralds & (1 << i)))
+							DrawJagobj(emeraldpics[i], emeraldx, 74);
+						emeraldx += 28;
+					}
+				}
+
+				emeraldx = 152 + (em-3)*28;
+
+				if (intertic > 1)
+				{
+					if (stagefailed && data.spec.emeraldy < 320+16)
+						emeraldx += intertic - 6;
+
+					if (drawthistic)
+						DrawJagobj(emeraldpics[em], emeraldx, data.spec.emeraldy);
+				}
+			}
+		}
+	}
 }
 

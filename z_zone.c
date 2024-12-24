@@ -142,8 +142,7 @@ Z_CheckHeap (mainzone);	/* DEBUG */
 /* of sufficient size, throwing out any purgable blocks along the way */
 /* */
 	size += sizeof(memblock_t);	/* account for size of block header */
-	size = (size+7)&~7;			/* phrase align everything */
-	
+	size = (size+3)&~3;			/* word align everything */
 	
 	start = base = mainzone->rover;
 	
@@ -170,7 +169,7 @@ backtostart:
 			if (base == start)	/* scaned all the way around the list */
 			{
 				if (err)
-					I_Error("Z_Malloc: failed on %i", size);
+					I_Error("Z_Malloc: failed on %i (LFB:%i)", size, Z_LargestFreeBlock(mainzone));
 				return NULL;
 			}
 			continue;

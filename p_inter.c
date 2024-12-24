@@ -4,13 +4,7 @@
 #include "doomdef.h"
 #include "p_local.h"
 #include "st_main.h"
-
-#define	BONUSADD		4
-
-/* a weapon is found with two clip loads, a big item has five clip loads */
-VINT		maxammo[NUMAMMO] = {200, 50, 300, 50};
-VINT		clipammo[NUMAMMO] = {10, 4, 20, 1};
-
+#include "st_inter.h"
 
 /*
 ===============================================================================
@@ -20,341 +14,36 @@ VINT		clipammo[NUMAMMO] = {10, 4, 20, 1};
 ===============================================================================
 */
 
-/* 
-=================== 
-= 
-= P_GiveAmmo
-=
-= Num is the number of clip loads, not the individual count (0= 1/2 clip)
-= Returns false if the ammo can't be picked up at all
-=================== 
-*/ 
-
-boolean P_GiveAmmo (player_t *player, ammotype_t ammo, int num)
+void P_SetStarPosts(uint8_t starpostnum)
 {
-	int		oldammo;
-	
-	if (ammo == am_noammo)
-		return false;
-		
-	if (ammo > NUMAMMO)
-		I_Error ("P_GiveAmmo: bad type %i", ammo);
-		
-	if ( player->ammo[ammo] == player->maxammo[ammo]  )
-		return false;
-			
-	if (num)
-		num *= clipammo[ammo];
-	else
-		num = clipammo[ammo]/2;
-	if (gameskill == sk_baby)
-		num <<= 1;			/* give double ammo in trainer mode */
-		
-	oldammo = player->ammo[ammo];
-	player->ammo[ammo] += num;
-	if (player->ammo[ammo] > player->maxammo[ammo])
-		player->ammo[ammo] = player->maxammo[ammo];
-	
-	if (oldammo)
-		return true;		/* don't change up weapons, player was lower on */
-							/* purpose */
+	for (mobj_t *node = mobjhead.next; node != (void*)&mobjhead; node = node->next)
+    {
+		if (node->type != MT_STARPOST)
+			continue;
 
-	switch (ammo)
-	{
-	case am_clip:
-		if (player->readyweapon == wp_fist)
-		{
-			if (player->weaponowned[wp_chaingun])
-				player->pendingweapon = wp_chaingun;
-			else
-				player->pendingweapon = wp_pistol;
-		}
-		break;
-	case am_shell:
-		if (player->readyweapon == wp_fist || player->readyweapon == wp_pistol)
-		{
-			if (player->weaponowned[wp_shotgun])
-				player->pendingweapon = wp_shotgun;
-		}
-		break;
-	case am_cell:
-		if (player->readyweapon == wp_fist || player->readyweapon == wp_pistol)
-		{
-			if (player->weaponowned[wp_plasma])
-				player->pendingweapon = wp_plasma;
-		}
-		break;
-	case am_misl:
-		if (player->readyweapon == wp_fist)
-		{
-			if (player->weaponowned[wp_missile])
-				player->pendingweapon = wp_missile;
-		}
-	default:
-		break;
-	}
-	
-	return true;
+		if (node->health >= starpostnum)
+			continue;
+
+		P_SetMobjState(node, mobjinfo[MT_STARPOST].seestate);
+    }
 }
 
-
-/* 
-=================== 
-= 
-= P_GiveWeapon
-=
-= The weapon name may have a MF_DROPPED flag ored in
-=================== 
-*/ 
-
-boolean P_GiveWeapon (player_t *player, weapontype_t weapon, boolean dropped)
+void P_TouchStarPost(mobj_t *starpost, player_t *player)
 {
-	boolean		gaveammo, gaveweapon;
-	
-	if (netgame == gt_coop && !dropped)
-	{	/* leave placed weapons forever on cooperative net games */
-		if (player->weaponowned[weapon])
-			return false;
-		player->weaponowned[weapon] = true;
-		P_GiveAmmo (player, weaponinfo[weapon].ammo, 2);
-		player->pendingweapon = weapon;
-		S_StartSound (player->mo, sfx_wpnup);
-		return false;
-	}
-	
-	if (weaponinfo[weapon].ammo != am_noammo)
-	{	/* give one clip with a dropped weapon, two clips with a found weapon */
-		if (dropped)
-			gaveammo = P_GiveAmmo (player, weaponinfo[weapon].ammo, 1);
-		else
-			gaveammo = P_GiveAmmo (player, weaponinfo[weapon].ammo, 2);
-	}
-	else
-		gaveammo = false;
-	
-	if (player->weaponowned[weapon])
-		gaveweapon = false;
-	else
-	{
-		int pnum = player - players;
-		gaveweapon = true;
-		player->weaponowned[weapon] = true;
-		player->pendingweapon = weapon;
-		stbar[pnum].specialFace = f_gotgat;
-	}
-	
-	return gaveweapon || gaveammo;
+	if (player->starpostnum >= starpost->health)
+		return; // Already hit
+
+	player->starpostnum = starpost->health;
+	player->starpostx = player->mo->x >> FRACBITS;
+	player->starposty = player->mo->y >> FRACBITS;
+	player->starpostz = starpost->z;
+	player->starpostangle = starpost->angle >> ANGLETOFINESHIFT;
+
+	P_SetStarPosts(starpost->health);
+
+	P_SetMobjState(starpost, mobjinfo[starpost->type].painstate);
+	S_StartSound(starpost, mobjinfo[starpost->type].painsound);
 }
-
- 
- 
-/* 
-=================== 
-= 
-= P_GiveBody
-=
-= Returns false if the body isn't needed at all
-=================== 
-*/ 
-
-boolean P_GiveBody (player_t *player, int num)
-{
-	if (player->health >= MAXHEALTH)
-		return false;
-		
-	player->health += num;
-	if (player->health > MAXHEALTH)
-		player->health = MAXHEALTH;
-	player->mo->health = player->health;
-	
-	return true;
-}
-
- 
-/* 
-=================== 
-= 
-= P_GiveArmor
-=
-= Returns false if the armor is worse than the current armor
-=================== 
-*/ 
-
-boolean P_GiveArmor (player_t *player, int armortype)
-{
-	int		hits;
-	
-	hits = armortype*100;
-	if (player->armorpoints >= hits)
-		return false;		/* don't pick up */
-		
-	player->armortype = armortype;
-	player->armorpoints = hits;
-	
-	return true;
-}
-
- 
-/* 
-=================== 
-= 
-= P_GiveCard
-=
-=================== 
-*/ 
-
-void P_GiveCard (player_t *player, card_t card)
-{
-	boolean allowkeysounds;
-	mobj_t* toucher = player->mo;
-
-	if (player->cards[card])
-		return;
-
-	/* allow keycard pickup sounds in single and splitscreen coop modes */
-	allowkeysounds = !netgame || (netgame == gt_coop && splitscreen);
-
-	if (player == &players[consoleplayer] ||
-		(splitscreen && player == &players[consoleplayer ^ 1]))
-		toucher = NULL;
-
-	if (allowkeysounds)
-		S_StartSound(toucher, sfx_itemup);
-
-	player->bonuscount = BONUSADD;
-	player->cards[card] = 1;
-}
-
- 
-/* 
-=================== 
-= 
-= P_GivePower
-=
-=================== 
-*/ 
-
-boolean P_GivePower (player_t *player, powertype_t power)
-{
-	if (power == pw_invulnerability)
-	{
-		player->powers[power] = INVULNTICS;
-		return true;
-	}
-	if (power == pw_ironfeet)
-	{
-		player->powers[power] = IRONTICS;
-		return true;
-	}
-	if (power == pw_strength)
-	{
-		P_GiveBody (player, 100);
-		player->powers[power] = 1;
-		return true;
-	}
-	if (power == pw_infrared)
-	{
-		player->powers[power] = INFRATICS;
-		return true;
-	}
-
-	if (player->powers[power])
-		return false;		/* already got it */
-		
-	player->powers[power] = 1;
-	return true;
-}
-
- 
-/*
-==================
-=
-= P_TouchSpecialThing2
-=
-= Everything didn't fit in one function on the dsp, so half were moved here
-= Returns sound to play, or -1 if no sound
-==================
-*/
-
-int P_TouchSpecialThing2 (mobj_t *special, mobj_t *toucher)
-{
-	player_t *player;
-	
-	player = toucher->player ? &players[toucher->player-1] : NULL;
-
-	switch (special->sprite)
-	{
-/* */
-/* armor */
-/* */
-	case SPR_ARM1:
-		if (!P_GiveArmor (player, 1))
-			return -1;
-		player->message = "You pick up the armor.";
-		break;
-		
-	case SPR_ARM2:
-		if (!P_GiveArmor (player, 2))
-			return -1;
-		player->message = "You got the MegaArmor!";
-		break;
-
-/* */
-/* heals */
-/* */
-	case SPR_STIM:
-		if (!P_GiveBody (player, 10))
-			return -1;
-		player->message = "You pick up a stimpack.";
-		break;
-	case SPR_MEDI:
-		if (!P_GiveBody (player, 25))
-			return -1;
-		if (player->health < 25)
-			player->message = "You pick up a medikit that you REALLY need!";
-		else
-			player->message = "You pick up a medikit.";
-		break;
-	
-/* */
-/* power ups */
-/* */
-	case SPR_PINV:
-		if (!P_GivePower (player, pw_invulnerability))
-			return -1;
-		player->message = "Invulnerability!";
-		break;
-	case SPR_PSTR:
-		if (!P_GivePower (player, pw_strength))
-			return -1;
-		player->message = "Berserk!";
-		if (player->readyweapon != wp_fist)
-			player->pendingweapon = wp_fist;
-		break;
-	case SPR_PINS:
-		break;
-	case SPR_SUIT:
-		if (!P_GivePower (player, pw_ironfeet))
-			return -1;
-		player->message = "Radiation Shielding Suit";
-		break;
-	case SPR_PMAP:
-		if (!P_GivePower (player, pw_allmap))
-			return -1;
-		player->message = "Computer Area Map";
-		break;
-	case SPR_PVIS:
-		if (!P_GivePower (player, pw_infrared))
-			return -1;
-		player->message = "Light Amplification Visor";
-		break;
-	default:
-		I_Error ("P_SpecialThing: Unknown gettable thing");
-	}
-	
-	return sfx_itemup;
-}
-
 
 /*
 ==================
@@ -364,217 +53,305 @@ int P_TouchSpecialThing2 (mobj_t *special, mobj_t *toucher)
 ==================
 */
 
+boolean P_CanPickupItem(player_t *player)
+{
+	if (player->powers[pw_flashing] > (FLASHINGTICS/4)*3 && player->powers[pw_flashing] <= FLASHINGTICS)
+		return false;
+
+	return true;
+}
+
+static boolean P_DoSpring(mobj_t *spring, player_t *player)
+{
+	const mobjinfo_t *playerinfo = &mobjinfo[player->mo->type];
+	const mobjinfo_t *springinfo = &mobjinfo[spring->type];
+	fixed_t vertispeed = springinfo->mass << FRACBITS;
+	fixed_t horizspeed = springinfo->damage << FRACBITS;
+
+	if (player->pflags & PF_VERTICALFLIP)
+		vertispeed *= -1;
+
+	/*
+	player->powers[pw_justsprung] = 5;
+	if (horizspeed)
+		player->powers[pw_noautobrake] = ((horizspeed*TICRATE)>>(FRACBITS+3))/9; // TICRATE at 72*FRACUNIT
+	else if (P_MobjFlip(player->mo) == P_MobjFlip(spring))
+		player->powers[pw_justsprung] |= (1<<15);
+*/
+	if ((horizspeed && vertispeed) || (player && player->homingTimer > 0)) // Mimic SA
+	{
+		player->mo->momx = player->mo->momy = player->mo->momz = 0;
+		P_UnsetThingPosition(player->mo);
+		player->mo->x = spring->x;
+		player->mo->y = spring->y;
+		P_SetThingPosition(player->mo);
+		player->forwardmove = player->sidemove = 0;
+
+		if (player->homingTimer > 0 && spring->type == MT_SPRINGSHELL)
+			player->justSprung = TICRATE / 4;
+		else
+			player->justSprung = TICRATE;
+	}
+
+	if (vertispeed > 0)
+		player->mo->z = spring->z + (spring->theight << FRACBITS) + 1;
+	else if (vertispeed < 0)
+		player->mo->z = spring->z - (player->mo->theight << FRACBITS) - 1;
+	else
+	{
+		fixed_t offx = 0;
+		fixed_t offy = 0;
+		// Horizontal springs teleport you in FRONT of them.
+		player->mo->momx = player->mo->momy = 0;
+
+		// Overestimate the distance to position you at
+		P_ThrustValues(spring->angle, (springinfo->radius + playerinfo->radius + 1) * 2, &offx, &offy);
+
+		// Make it square by clipping
+		if (offx > (springinfo->radius + playerinfo->radius + 1))
+			offx = springinfo->radius + playerinfo->radius + 1;
+		else if (offx < -(springinfo->radius + playerinfo->radius + 1))
+			offx = -(springinfo->radius + playerinfo->radius + 1);
+
+		if (offy > (springinfo->radius + playerinfo->radius + 1))
+			offy = springinfo->radius + playerinfo->radius + 1;
+		else if (offy < -(springinfo->radius + playerinfo->radius + 1))
+			offy = -(springinfo->radius + playerinfo->radius + 1);
+
+		// Set position!
+		P_UnsetThingPosition(player->mo);
+		player->mo->x = spring->x + offx;
+		player->mo->y = spring->y + offy;
+		P_SetThingPosition(player->mo);
+	}
+
+	if (vertispeed)
+		player->mo->momz = vertispeed;
+
+	if (horizspeed)
+		P_InstaThrust(player->mo, spring->angle, horizspeed);
+
+	if (player)
+	{
+		int pflags;
+
+		if (horizspeed)
+		{
+			player->justSprung = TICRATE;
+			player->mo->angle = spring->angle;
+		}
+
+		{
+			boolean wasSpindashing = false;//player->dashspeed > 0;
+
+			pflags = player->pflags & (PF_STARTJUMP | PF_JUMPED | PF_SPINNING | PF_THOKKED); // Save these to restore later.
+
+			if (wasSpindashing) // Ensure we're in the rolling state, and not spindash.
+				P_SetMobjState(player->mo, S_PLAY_ATK1);
+		}
+
+		P_ResetPlayer(player);
+
+		if (!vertispeed)
+		{
+			if (pflags & (PF_JUMPED|PF_SPINNING))
+			{
+				player->pflags |= pflags;
+//				player->secondjump = secondjump;
+			}
+			else if (P_IsObjectOnGround(player->mo))
+				P_SetMobjState(player->mo, S_PLAY_RUN1); // We'll break into a run on the next tic
+			else
+				P_SetMobjState(player->mo, (player->mo->momz > 0) ? S_PLAY_SPRING : S_PLAY_FALL1);
+		}
+		else if (P_MobjFlip(player->mo)*vertispeed > 0)
+			P_SetMobjState(player->mo, S_PLAY_SPRING);
+		else
+			P_SetMobjState(player->mo, S_PLAY_FALL1);
+	}
+
+	S_StartSound(player->mo, springinfo->painsound);
+	return true;
+}
+
 void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 {
 	player_t	*player;
-	int			i;
-	fixed_t		delta;
 	int			sound;
-		
-	delta = special->z - toucher->z;
-	if (delta > toucher->height || delta < -8*FRACUNIT)
-		return;			/* out of reach */
-	
-	sound = sfx_itemup;	
-	player = toucher->player ? &players[toucher->player - 1] : NULL;
+
+	if (!toucher->player)
+		return;
+
+	sound = sfx_None;	
+	player = &players[toucher->player - 1];
 	if (toucher->health <= 0)
 		return;						/* can happen with a sliding player corpse */
-	switch (special->sprite)
+
+	if (special->flags & MF_RINGMOBJ)
 	{
-/* */
-/* bonus items */
-/* */
-	case SPR_BON1:
-		player->health+=2;		/* can go over 100% */
-		if (player->health > 200)
-			player->health = 200;
-		player->mo->health = player->health;
-		player->message = "You pick up a health bonus.";
-		break;
-	case SPR_BON2:
-		player->armorpoints+=2;		/* can go over 100% */
-		if (player->armorpoints > 200)
-			player->armorpoints = 200;
-		if (!player->armortype)
-			player->armortype = 1;
-		player->message = "You pick up an armor bonus.";
-		break;
-	case SPR_SOUL:
-		player->health += 100;
-		if (player->health > 200)
-			player->health = 200;
-		player->mo->health = player->health;
-		player->message = "Supercharge!";
-		break;
-				
+		if (!P_CanPickupItem(player))
+			return;
 
+		if (special->type == MT_RING)
+		{
+			ringmobj_t *ring = (ringmobj_t*)special;
+			player->lossCount = 0;
+			P_SpawnMobj(ring->x << FRACBITS, ring->y << FRACBITS, ring->z << FRACBITS, MT_SPARK);
+			P_GivePlayerRings(player, 1);
+			sound = mobjinfo[special->type].deathsound;
+
+			player->itemcount++;
+		}
+		else if (special->type == MT_TOKEN)
+		{
+			ringmobj_t *ring = (ringmobj_t*)special;
+			token++;
+			tokenbits |= special->angle / ANG45;
+			P_SpawnMobj(ring->x << FRACBITS, ring->y << FRACBITS, ring->z << FRACBITS, MT_SPARK);
+			sound = mobjinfo[special->type].deathsound;
+		}
+		else if (special->type == MT_BLUESPHERE)
+		{
+			gamemapinfo.spheresNeeded--;
+			sound = mobjinfo[special->type].deathsound;
+
+			if (gamemapinfo.spheresNeeded <= 0)
+			{
+				gamemapinfo.spheresNeeded = 0;
+				for (int p = 0; p < MAXPLAYERS; p++)
+					players[p].exiting = 1;
+
+				toucher->momx = toucher->momy = toucher->momz = 0;
+
+				stagefailed = false;
+				emeralds |= (1 << (gamemapinfo.mapNumber - SSTAGE_START));
+
+				// Change music to chaos emerald get
+				S_StartSong(gameinfo.emeraldMus, 0, cdtrack_emerald);
+			}
+		}
 		
-/* */
-/* ammo */
-/* */
-	case SPR_CLIP:
-		if (special->flags & MF_DROPPED)
-		{
-			if (!P_GiveAmmo (player,am_clip,0))
-				return;
-		}
-		else
-		{
-			if (!P_GiveAmmo (player,am_clip,1))
-				return;
-		}
-		player->message = "Picked up a clip.";
-		break;
-	case SPR_AMMO:
-		if (!P_GiveAmmo (player, am_clip,5))
-			return;
-		player->message = "Picked up a box of bullets.";
-		break;
-	case SPR_ROCK:
-		if (!P_GiveAmmo (player, am_misl,1))
-			return;
-		player->message = "Picked up a rocket.";
-		break;	
-	case SPR_BROK:
-		if (!P_GiveAmmo (player, am_misl,5))
-			return;
-		player->message = "Picked up a box of rockets.";
-		break;
-	case SPR_CELL:
-		if (!P_GiveAmmo (player, am_cell,1))
-			return;
-		player->message = "Picked up an energy cell.";
-		break;
-	case SPR_CELP:
-		if (!P_GiveAmmo (player, am_cell,5))
-			return;
-		player->message = "Picked up an energy cell pack.";
-		break;
-	case SPR_SHEL:
-		if (!P_GiveAmmo (player, am_shell,1))
-			return;
-		player->message = "Picked up 4 shotgun shells.";
-		break;
-	case SPR_SBOX:
-		if (!P_GiveAmmo (player, am_shell,5))
-			return;
-		player->message = "Picked up a box of shotgun shells.";
-		break;		
-	case SPR_BPAK:
-		if (!player->backpack)
-		{
-			for (i=0 ; i<NUMAMMO ; i++)
-				player->maxammo[i] *= 2;
-			player->backpack = true;
-		}
-		for (i=0 ; i<NUMAMMO ; i++)
-			P_GiveAmmo (player, i, 1);
-		player->message = "Picked up a backpack full of ammo!";
-		break;
+		special->flags &= ~MF_SPECIAL;
+		P_RemoveMobj (special);
 
+		if (sound <= sfx_None)
+			return;
+
+		if (player == &players[consoleplayer] || (splitscreen && player == &players[consoleplayer^1]))
+			toucher = NULL;
+		S_StartSound (toucher, sound);
+		return;
+	}
+
+	// Ignore eggman in "ouchie" mode
+	if ((special->type == MT_EGGMOBILE || special->type == MT_EGGMOBILE2) && (special->flags2 & MF2_FRET))
+		return;
+
+	if ((special->flags2 & MF2_SHOOTABLE) && !(special->flags2 & MF2_MISSILE))
+	{
+		if (special->flags2 & MF2_ENEMY) // enemy rules
+		{
+			if (special->type == MT_SPRINGSHELL && special->health > 0)
+			{
+				fixed_t tmz = toucher->z - toucher->momz;
+				fixed_t tmznext = toucher->z;
+				fixed_t shelltop = special->z + (special->theight << FRACBITS);
+				fixed_t sprarea = 12*FRACUNIT;
+
+				if ((tmznext <= shelltop && tmz > shelltop) || (tmznext > shelltop - sprarea && tmznext < shelltop))
+				{
+					P_DoSpring(special, player);
+					return;
+				}
+				else if (tmz > shelltop - sprarea && tmz < shelltop) // Don't damage people springing up / down
+					return;
+			}
+
+			if ((player->pflags & PF_JUMPED) || (player->pflags & PF_SPINNING) || player->powers[pw_invulnerability])
+			{
+				if (((player->pflags & PF_VERTICALFLIP) && toucher->momz > 0)
+					|| (!(player->pflags & PF_VERTICALFLIP) && toucher->momz < 0))
+					toucher->momz = -toucher->momz;
+
+				P_DamageMobj(special, toucher, toucher, 1);
+			}
+			else
+				P_DamageMobj(toucher, special, special, 1);
+
+			if (mobjinfo[special->type].spawnhealth > 1) // Multi-hit? Bounce back!
+			{
+				toucher->momx = -toucher->momx;
+				toucher->momy = -toucher->momy;
+			}
+		}
+		else // A monitor or something else we can pop
+		{
+			if ((player->pflags & PF_JUMPED) || (player->pflags & PF_SPINNING))
+			{
+				if (((player->pflags & PF_VERTICALFLIP) && toucher->momz > 0)
+					|| (!(player->pflags & PF_VERTICALFLIP) && toucher->momz < 0))
+					toucher->momz = -toucher->momz;
+
+				P_DamageMobj(special, toucher, toucher, 1);
+			}
+		}
 		
-/* */
-/* weapons */
-/* */
-	case SPR_BFUG:
-		if (!P_GiveWeapon (player, wp_bfg, false) )
-			return;
-		player->message = "You got the BFG9000!  Oh, yes.";
-		sound = sfx_wpnup;	
-		break;
-	case SPR_MGUN:
-		if (!P_GiveWeapon (player, wp_chaingun, false) )
-			return;
-		player->message = "You got the chaingun!";
-		sound = sfx_wpnup;	
-		break;
-	case SPR_CSAW:
-		if (!P_GiveWeapon (player, wp_chainsaw, false) )
-			return;
-		player->message = "A chainsaw!  Find some meat!";
-		sound = sfx_wpnup;	
-		break;
-	case SPR_LAUN:
-		if (!P_GiveWeapon (player, wp_missile, false) )
-			return;
-		player->message = "You got the rocket launcher!";
-		sound = sfx_wpnup;	
-		break;
-	case SPR_PLAS:
-		if (!P_GiveWeapon (player, wp_plasma, false) )
-			return;
-		player->message = "You got the plasma gun!";
-		sound = sfx_wpnup;	
-		break;
-	case SPR_SHOT:
-		if (!P_GiveWeapon (player, wp_shotgun, special->flags&MF_DROPPED ) )
-			return;
-		player->message = "You got the shotgun!";
-		sound = sfx_wpnup;	
-		break;
-
-	/* */
-	/* cards */
-	/* leave cards for everyone */
-	case SPR_BKEY:
-		if (!player->cards[it_bluecard])
-			player->message = "You pick up a blue keycard.";
-		P_GiveCard(player, it_bluecard);
-		sound = sfx_None;
-		if (netgame)
-			return;
-		break;
-	case SPR_YKEY:
-		if (!player->cards[it_yellowcard])
-			player->message = "You pick up a yellow keycard.";
-		P_GiveCard(player, it_yellowcard);
-		sound = sfx_None;
-		if (netgame)
-			return;
-		break;
-	case SPR_RKEY:
-		if (!player->cards[it_redcard])
-			player->message = "You pick up a red keycard.";
-		P_GiveCard(player, it_redcard);
-		sound = sfx_None;
-		if (netgame)
-			return;
-		break;
-	case SPR_BSKU:
-		if (!player->cards[it_blueskull])
-			player->message = "You pick up a blue skull key.";
-		P_GiveCard(player, it_blueskull);
-		sound = sfx_None;
-		if (netgame)
-			return;
-		break;
-	case SPR_YSKU:
-		if (!player->cards[it_yellowskull])
-			player->message = "You pick up a yellow skull key.";
-		P_GiveCard(player, it_yellowskull);
-		sound = sfx_None;
-		if (netgame)
-			return;
-		break;
-	case SPR_RSKU:
-		if (!player->cards[it_redskull])
-			player->message = "You pick up a red skull key.";
-		P_GiveCard(player, it_redskull);
-		sound = sfx_None;
-		if (netgame)
-			return;
-		break;
-
-	default:
-		sound = P_TouchSpecialThing2 (special, toucher);
-		if (sound == -1)
-			return;
+		return;
 	}
 	
-	if (special->flags & MF_COUNTITEM)
-		player->itemcount++;
+	if (special->type == MT_YELLOWSPRING || special->type == MT_YELLOWDIAG || special->type == MT_YELLOWHORIZ
+		|| special->type == MT_REDSPRING || special->type == MT_REDDIAG || special->type == MT_REDHORIZ)
+	{
+		P_DoSpring(special, player);
+		return;
+	}
+
+	if (special->type == MT_STARPOST)
+	{
+		P_TouchStarPost(special, player);
+		return;
+	}
+
+	if (!P_CanPickupItem(player))
+		return;
+
+	switch(special->type)
+	{
+		case MT_ATTRACTRING:
+		case MT_FLINGRING:
+			P_SpawnMobj(special->x, special->y, special->z, MT_SPARK);
+			P_GivePlayerRings(player, 1);
+			sound = mobjinfo[special->type].deathsound;
+		break;
+		case MT_EXTRALARGEBUBBLE:
+			if (player->shield == SH_ELEMENTAL)
+				return;
+			
+			if (special->state != S_EXTRALARGEBUBBLE)
+				return;
+
+			if (special->z < toucher->z
+				|| special->z > toucher->z + ((toucher->theight << FRACBITS)*2/3))
+				return; // Only go in the mouth
+
+			if (player->powers[pw_underwater] <= 12*TICRATE + 1)
+				P_RestoreMusic(player);
+
+			if (player->powers[pw_underwater] < UNDERWATERTICS + 1)
+				player->powers[pw_underwater] = UNDERWATERTICS + 1;
+
+			P_SetMobjState(special, S_POP1);
+			P_SetMobjState(toucher, S_PLAY_GASP);
+			S_StartSound(toucher, sfx_s3k_38);
+			P_ResetPlayer(player);
+			toucher->momx = toucher->momy = toucher->momz = 0;
+			return;
+
+		default:
+			break;
+	}
+
 	P_RemoveMobj (special);
-	player->bonuscount += BONUSADD;
 
 	if (sound <= sfx_None)
 		return;
@@ -594,83 +371,94 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 
 void P_KillMobj (mobj_t *source, mobj_t *target)
 {
-	mobjtype_t		item;
-	mobj_t			*mo;
 	const mobjinfo_t* targinfo = &mobjinfo[target->type];
 
-	target->flags &= ~(MF_SHOOTABLE|MF_FLOAT|MF_SKULLFLY);
-	if (target->type != MT_SKULL)
-		target->flags &= ~MF_NOGRAVITY;
-	target->flags |= MF_CORPSE|MF_DROPOFF;
-	target->height >>= 2;
-	
-	if (target->player)
-	{	/* a frag of one sort or another */
-		if (!source || !source->player || source->player == target->player)
-		{	/* killed self somehow */
-			player_t* player = &players[target->player - 1];
-			player->frags--;
-			if (player->frags < 0)
-				player->frags = 0;
-		}
-		else 
-		{	/* killed by other player */
-			players[source->player - 1].frags++;
-		}
-		
-		/* else just killed by a monster */
-	}
-	else if (source && source->player && (target->flags & MF_COUNTKILL) )
-	{	/* a deliberate kill by a player */
-		players[source->player - 1].killcount++;		/* count for intermission */
-	}
-	else if (!netgame && (target->flags & MF_COUNTKILL) )
-		players[0].killcount++;			/* count all monster deaths, even */
-										/* those caused by other monsters */
+	target->flags2 &= ~(MF2_SHOOTABLE|MF2_FLOAT);
 	
 	if (target->player)
 	{
 		player_t* player = &players[target->player - 1];
 		target->flags &= ~MF_SOLID;
 		player->playerstate = PST_DEAD;
-		P_DropWeapon (player);
-		if (target->health < -50)
-		{
-			stbar[target->player - 1].gotgibbed = true;
-			S_StartSound (target, sfx_slop);
-		}
-		else
-			S_StartSound (target, sfx_pldeth);
+		player->deadTimer = 1;
+
 		if (netgame == gt_coop)
 			R_ResetResp(player);
+
+		target->momx = target->momy = 0;
+
+		if (!(player->pflags & PF_DROWNED))
+			P_SetObjectMomZ(target, 14*FRACUNIT, false);
+		else
+			P_SetObjectMomZ(target, FRACUNIT/8, false);
 	}
 
-	if (target->health < -targinfo->spawnhealth
-	&& targinfo->xdeathstate)
-		P_SetMobjState (target, targinfo->xdeathstate);
-	else
-		P_SetMobjState (target, targinfo->deathstate);
-	target->tics -= P_Random()&1;
-	if (target->tics < 1)
-		target->tics = 1;
-		
-/* */
-/* drop stuff */
-/* */
-	switch (target->type)
+	if (source && source->player)
 	{
-	case MT_POSSESSED:
-		item = MT_CLIP;
-		break;
-	case MT_SHOTGUY:
-		item = MT_SHOTGUN;
-		break;
-	default:
-		return;
+		// Monitors need to know who killed them
+		// TODO: Not multiplayer compatible. I don't care right now
+//		target->target = source;
 	}
 
-	mo = P_SpawnMobj (target->x,target->y,ONFLOORZ, item);
-	mo->flags |= MF_DROPPED;		/* special versions of items */
+	if (target->player && (players[target->player-1].pflags & PF_DROWNED))
+	{
+		P_SetMobjState(target, targinfo->xdeathstate);
+		S_StartSound(target, targinfo->attacksound);
+	}
+	else
+	{
+		P_SetMobjState (target, targinfo->deathstate);
+		S_StartSound(target, targinfo->deathsound);
+	}
+
+	if (source && source->player && (target->flags2 & MF2_ENEMY))
+	{
+		VINT score = 100;
+		mobj_t *scoremobj = P_SpawnMobj(target->x, target->y, target->z + (target->theight << (FRACBITS-1)), MT_SCORE);
+		statenum_t scoreState = mobjinfo[MT_SCORE].spawnstate;
+		player_t* player = &players[source->player - 1];
+
+		player->scoreAdd++;
+		if (player->scoreAdd == 1)
+		{
+			score = 100; // Score! Tails 03-01-2000
+		}
+		else if (player->scoreAdd == 2)
+		{
+			score = 200; // Score! Tails 03-01-2000
+			scoreState += 1;
+		}
+		else if (player->scoreAdd == 3)
+		{
+			score = 500; // Score! Tails 03-01-2000
+			scoreState += 2;
+		}
+		else// if (player->scoreAdd >= 4)
+		{
+			score = 1000; // Score! Tails 03-01-2000
+			scoreState += 3;
+		}
+
+		if (target->type == MT_EGGMOBILE || target->type == MT_EGGMOBILE2)
+		{
+			score = 1000;
+			scoreState = mobjinfo[MT_SCORE].spawnstate + 3;
+		}
+
+		P_SetMobjState(scoremobj, scoreState);
+		P_AddPlayerScore(player, score);
+
+		target->momx = target->momy = target->momz = 0;
+
+		if (!(target->type == MT_EGGMOBILE || target->type == MT_EGGMOBILE2))
+		{
+			// Spawn a flicky
+			const mobjtype_t flickies[4] = { MT_FLICKY_01, MT_FLICKY_02, MT_FLICKY_03, MT_FLICKY_12 };
+			mobj_t *flicky = P_SpawnMobj(target->x, target->y, target->z + (target->theight << (FRACBITS-1)), flickies[P_Random() % 4]);
+			flicky->momz = 4*FRACUNIT;
+			flicky->target = player->mo;
+		}
+	}
 }
 
 
@@ -690,142 +478,160 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 ==================
 */
 
-void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage)
+static void P_DoPlayerPain(player_t *player, mobj_t *source, mobj_t *inflictor)
 {
-	unsigned	ang, an;
-	int			saved;
-	int			pnum = 0;
+	angle_t ang;
+
+	player->mo->z++; // Lift off the ground a little
+
+	if (player->pflags & PF_UNDERWATER)
+		player->mo->momz = FixedDiv(10511*FRACUNIT, 2600*FRACUNIT) * P_MobjFlip(player->mo);
+	else
+		player->mo->momz = FixedDiv(69*FRACUNIT, 10*FRACUNIT) * P_MobjFlip(player->mo);
+
+	ang = ((player->mo->momx || player->mo->momy) ? R_PointToAngle2(0, 0, player->mo->momx, player->mo->momy) : player->mo->angle);
+
+	P_InstaThrust(player->mo, ang, -6*FRACUNIT);
+
+	P_ResetPlayer(player);
+	P_SetMobjState(player->mo, mobjinfo[player->mo->type].painstate);
+	player->powers[pw_flashing] = FLASHINGTICS;
+}
+
+static void P_RingDamage(player_t *player, mobj_t *inflictor, mobj_t *source, int damage)
+{
+	P_PlayerRingBurst(player, damage);
+	P_DoPlayerPain(player, source, inflictor);
+	S_StartSound(player->mo, mobjinfo[player->mo->type].painsound);
+	player->mo->health = player->health = 1;
+}
+
+void P_BlackOw(player_t *player)
+{
+	S_StartSound(player->mo, sfx_s3k_4e);
+
+	for (int i = 0; i < MAXPLAYERS; i++)
+	{
+		if (playeringame[i] && P_AproxDistance(player->mo->x - players[i].mo->x,
+			player->mo->y - players[i].mo->y) < 1536*FRACUNIT)
+			players[i].whiteFlash = 4;
+	}
+
+	for (mobj_t *node = mobjhead.next; node != (void*)&mobjhead; node = node->next)
+    {
+		if ((node->flags2 & MF2_ENEMY) && P_AproxDistance(node->x - player->mo->x, node->y - player->mo->y) < 1536*FRACUNIT)
+			P_DamageMobj(node, player->mo, player->mo, 1);
+    }
+
+	player->shield = 0;
+}
+
+static void P_ShieldDamage(player_t *player, mobj_t *inflictor, mobj_t *source, int damage)
+{
+	P_DoPlayerPain(player, source, inflictor);
+
+	if (player->shield == SH_FORCE2)
+		player->shield = SH_FORCE1;
+	else if (player->shield == SH_ARMAGEDDON)
+	{
+		P_BlackOw(player);
+		player->shield = 0;
+		return;
+	}
+	else
+		player->shield = 0;
+
+	S_StartSound(player->mo, mobjinfo[player->mo->type].deathsound);
+}
+
+void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage)
+{
 	player_t	*player;
-	fixed_t		thrust;
 	const mobjinfo_t* targinfo = &mobjinfo[target->type];
 
-	if ( !(target->flags & MF_SHOOTABLE) )
+	if (target->flags & MF_RINGMOBJ)
+		return;
+
+	if ( !(target->flags2 & MF2_SHOOTABLE) )
 		return;						/* shouldn't happen... */
-		
+
 	if (target->health <= 0)
 		return;
 
-	if ( target->flags & MF_SKULLFLY )
+	if (target->type == MT_EGGMOBILE || target->type == MT_EGGMOBILE2)
 	{
-		target->momx = target->momy = target->momz = 0;
+		if (target->flags2 & MF2_FRET) // Currently flashing from being hit
+			return;
+
+		if (target->health > 1)
+			target->flags2 |= MF2_FRET;
+
+		if (inflictor && inflictor->player)
+		{
+			if (players[inflictor->player - 1].homingTimer)
+				players[inflictor->player - 1].homingTimer = 0;
+		}
 	}
 	
 	player = target->player ? &players[target->player - 1] : NULL;
-	if (player)
-		pnum = player - players;
-	if (player && gameskill == sk_baby)
-		damage >>= 1;				/* take half damage in trainer mode */
-	
-/* */
-/* kick away unless using the chainsaw */
-/* */
-	if (inflictor && (!source || !source->player 
-		|| players[source->player - 1].readyweapon != wp_chainsaw))
-	{
-		ang = R_PointToAngle2 ( inflictor->x, inflictor->y
-			,target->x, target->y);
-		
-		thrust = damage*(FRACUNIT>>2)*100/targinfo->mass;
-
-		/* make fall forwards sometimes */
-		if ( damage < 40 && damage > target->health && target->z - inflictor->z > 64*FRACUNIT && (P_Random ()&1) )
-		{
-			ang += ANG180;
-			thrust *= 4;
-		}
-		
-		an = ang >> ANGLETOFINESHIFT;
-		thrust >>= 16;
-		target->momx += thrust * finecosine(an);
-		target->momy += thrust * finesine(an);
-	}
 
 /* */
 /* player specific */
 /* */
 	if (player)
 	{
-		// telefrags ignore the godmode cheat and invulnerability
-		if ( damage < 1000 )
+		if (player->exiting)
+			return;
+
+		P_ResetPlayer(player);
+
+		if (damage == 10000) // magic number for instant death
+			P_KillMobj(source, target);
+		else if ( damage < 10000 )
 		{
-			if ( (player->cheats&CF_GODMODE)||player->powers[pw_invulnerability] )
+			if (player->powers[pw_invulnerability] || player->powers[pw_flashing] )
 				return;
-		}
 
-		if (damage > 0)
-		{
-			stbar[pnum].specialFace = damage > 20 ? f_hurtbad : f_mowdown;
-
-			if (source && source != player->mo)
-			{
-				int right;
-				ang = R_PointToAngle2 ( target->x, target->y,
-					source->x, source->y );
-
-				if (ang > target->angle)
-				{
-					an = ang - target->angle;
-					right = an > ANG180; 
-				}
-				else
-				{
-					an = target->angle - ang;
-					right = an <= ANG180; 
-				}
-
-				if (an >= ANG45)
-					stbar[pnum].specialFace = right ? f_faceright : f_faceleft;
-			}
-		}
-		if (player->armortype)
-		{
-			if (player->armortype == 1)
-				saved = damage/3;
+			if (player->shield)
+				P_ShieldDamage(player, inflictor, source, damage);
+			else if (player->mo->health > 1) // Rings without shield
+				P_RingDamage(player, inflictor, source, damage);
 			else
-				saved = damage/2;
-			if (player->armorpoints <= saved)
-			{	/* armor is used up */
-				saved = player->armorpoints;
-				player->armortype = 0;
-			}
-			player->armorpoints -= saved;
-			damage -= saved;
+				P_KillMobj(source, player->mo);
 		}
-		S_StartSound (target,sfx_plpain);
-		player->health -= damage;		/* mirror mobj health here for Dave */
+		else
+			return;
+
 		if (player->health < 0)
 			player->health = 0;
-		player->attacker = source;
-		player->damagecount += (damage>>1);	/* add damage after armor / invuln */
+
+		return;	
 	}
+	else if (targinfo->painstate)
+		P_SetMobjState(target, targinfo->painstate);
 
 /* */
 /* do the damage */
 /*		 */
-	target->health -= damage;	
-	if (target->health <= 0)
+	while (damage > 0)
 	{
-		P_KillMobj (source, target);
-		return;
+		target->health--;
+		damage--;
+		if (target->health == 0)
+		{
+			P_KillMobj (source, target);
+			return;
+		}
 	}
 
-	if ( (P_Random () < targinfo->painchance) && !(target->flags&MF_SKULLFLY) )
-	{
-		target->flags |= MF_JUSTHIT;		/* fight back! */
-		P_SetMobjState (target, targinfo->painstate);
-	}
+//	S_StartSound(target, targinfo->painsound);
 			
-	target->reactiontime = 0;		/* we're awake now...	 */
-	if (!target->threshold && source
-	&& spr_rotations	/* don't fight amongst each other without rotations */
-	)
+	if (source && source != target)
 	{	/* if not intent on another player, chase after this one */
+
 		target->target = source;
-		target->threshold = BASETHRESHOLD;
-		if (target->state == targinfo->spawnstate
-		&& targinfo->seestate != S_NULL)
-			P_SetMobjState (target, targinfo->seestate);
+		if (target->state == targinfo->spawnstate && targinfo->seestate != S_NULL)
+			P_SetMobjState(target, targinfo->seestate);
 	}
-			
 }
 

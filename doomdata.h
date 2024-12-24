@@ -32,18 +32,18 @@ typedef struct
 
 typedef struct
 {
-	short		textureoffset;
-	short		rowoffset;
-	char		toptexture[8], bottomtexture[8], midtexture[8];
-	short		sector;				/* on viewer's side */
+	int16_t sector;
+	uint8_t toptexture, bottomtexture, midtexture;
+	uint8_t rowoffset;     // add this to the calculated texture top
+	int16_t textureoffset; // 8.4, add this to the calculated texture col
 } mapsidedef_t;
 
 typedef struct
 {
 	short		v1, v2;
-	short		flags;
-	short		special, tag;
 	short		sidenum[2];			/* sidenum[1] will be -1 if one sided */
+	uint16_t	flags;
+	uint8_t		special, tag;
 } maplinedef_t;
 
 #define	ML_BLOCKING			1
@@ -58,30 +58,28 @@ typedef struct
 /* pixel of the line for both top and bottom textures (windows) */
 #define	ML_DONTPEGTOP		8
 #define	ML_DONTPEGBOTTOM	16
-
-#define ML_SECRET			32	/* don't map as two sided: IT'S A SECRET! */
-#define ML_SOUNDBLOCK		64	/* don't let sound cross two of these */
-#define	ML_DONTDRAW			128	/* don't draw on the automap */
-#define	ML_MAPPED			256	/* set if allready drawn in automap */
+#define ML_CULLING			32	/* Cull this line by distance */
+#define ML_NOCLIMB			64
+#define	ML_MIDTEXTUREBLOCK  512	/* Collide with midtexture (fences, etc.) */
 
 
 /* to aid move clipping */
-#define ML_ST_HORIZONTAL 	512
-#define ML_ST_VERTICAL	 	1024
-#define ML_ST_POSITIVE	 	2048
-#define ML_ST_NEGATIVE	 	4096
+#define ML_ST_HORIZONTAL 	4096
+#define ML_ST_VERTICAL	 	8192
+#define ML_ST_POSITIVE	 	16384
+#define ML_ST_NEGATIVE	 	32768
 
 typedef	struct
 {
-	short		floorheight, ceilingheight;
-	char		floorpic[8], ceilingpic[8];
-	short		lightlevel;
-	short		special, tag;
+	int16_t		floorheight, ceilingheight;
+	uint8_t		floorpic, ceilingpic;
+	uint8_t     lightlevel;
+	uint8_t     special, tag;
 } mapsector_t;
 
 typedef struct
 {
-	short		numsegs;
+//	short		numsegs;
 	short		firstseg;			/* segs are stored sequentially */
 } mapsubsector_t;
 
@@ -110,11 +108,6 @@ typedef struct
 	short		type;
 	short		options;
 } mapthing_t;
-
-#define	MTF_EASY		1
-#define	MTF_NORMAL		2
-#define	MTF_HARD		4
-#define	MTF_AMBUSH		8
 
 /*
 ===============================================================================

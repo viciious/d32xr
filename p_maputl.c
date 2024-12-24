@@ -7,6 +7,7 @@
 fixed_t P_AproxDistance(fixed_t dx, fixed_t dy) ATTR_DATA_CACHE_ALIGN;
 int P_PointOnLineSide(fixed_t x, fixed_t y, line_t* line) ATTR_DATA_CACHE_ALIGN;
 int P_PointOnDivlineSide(fixed_t x, fixed_t y, divline_t* line) ATTR_DATA_CACHE_ALIGN;
+int P_DivlineSide(fixed_t x, fixed_t y, divline_t *node) ATTR_DATA_CACHE_ALIGN;
 fixed_t P_LineOpening(line_t* linedef) ATTR_DATA_CACHE_ALIGN;
 void P_LineBBox(line_t* ld, fixed_t* bbox) ATTR_DATA_CACHE_ALIGN;
 void P_UnsetThingPosition(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
@@ -53,11 +54,28 @@ int P_PointOnLineSide (fixed_t x, fixed_t y, line_t *line)
 	ldx = vertexes[line->v2].x - vertexes[line->v1].x;
 	ldy = vertexes[line->v2].y - vertexes[line->v1].y;
 
-	dx = (x - vertexes[line->v1].x);
-	dy = (y - vertexes[line->v1].y);
-	
-	left = (ldy>>16) * (dx>>16);
-	right = (dy>>16) * (ldx>>16);
+	dx = x - (vertexes[line->v1].x << FRACBITS);
+	dy = y - (vertexes[line->v1].y << FRACBITS);
+
+#ifdef MARS
+	dx = (unsigned)dx >> FRACBITS;
+	__asm volatile(
+		"muls.w %0,%1\n\t"
+		: : "r"(ldy), "r"(dx) : "macl", "mach");
+#else
+	left = (ldy) * (dx>>16);
+#endif
+
+#ifdef MARS
+	dy = (unsigned)dy >> FRACBITS;
+	__asm volatile(
+		"sts macl, %0\n\t"
+		"muls.w %2,%3\n\t"
+		"sts macl, %1\n\t"
+		: "=&r"(left), "=&r"(right) : "r"(dy), "r"(ldx) : "macl", "mach");
+#else
+	right = (dy>>16) * (ldx);
+#endif
 
 	if (right < left)
 		return 0;		/* front side */
@@ -100,6 +118,21 @@ int P_PointOnDivlineSide (fixed_t x, fixed_t y, divline_t *line)
 	return 1;			/* back side */
 }
 
+//
+// Returns side 0 (front), 1 (back), or 2 (on).
+//
+int P_DivlineSide(fixed_t x, fixed_t y, divline_t *node)
+{
+   fixed_t dx;
+   fixed_t dy;
+   fixed_t left;
+   fixed_t right;
+   dx = x - node->x;
+   dy = y - node->y;
+   left  = (node->dy>>FRACBITS) * (dx>>FRACBITS);
+   right = (dy>>FRACBITS) * (node->dx>>FRACBITS);
+   return (left <= right) + (left == right);
+}
 
 /*
 ==================
@@ -138,7 +171,7 @@ fixed_t P_LineOpening (line_t *linedef)
 
 void P_LineBBox(line_t* ld, fixed_t *bbox)
 {
-	vertex_t* v1 = &vertexes[ld->v1], * v2 = &vertexes[ld->v2];
+	mapvertex_t* v1 = &vertexes[ld->v1], * v2 = &vertexes[ld->v2];
 
 	if (v1->x < v2->x)
 	{
@@ -160,6 +193,11 @@ void P_LineBBox(line_t* ld, fixed_t *bbox)
 		bbox[BOXBOTTOM] = v2->y;
 		bbox[BOXTOP] = v1->y;
 	}
+
+	bbox[BOXTOP] <<= FRACBITS;
+	bbox[BOXBOTTOM] <<= FRACBITS;
+	bbox[BOXLEFT] <<= FRACBITS;
+	bbox[BOXRIGHT] <<= FRACBITS;
 }
 
 /*
@@ -192,7 +230,7 @@ void P_UnsetThingPosition (mobj_t *thing)
 		if (thing->sprev)
 			thing->sprev->snext = thing->snext;
 		else
-			thing->subsector->sector->thinglist = thing->snext;
+			subsectors[thing->isubsector].sector->thinglist = thing->snext;
 	}
 	
 	if ( ! (thing->flags & MF_NOBLOCKMAP) )
@@ -204,8 +242,17 @@ void P_UnsetThingPosition (mobj_t *thing)
 			thing->bprev->bnext = thing->bnext;
 		else
 		{
-			blockx = thing->x - bmaporgx;
-			blocky = thing->y - bmaporgy;
+			if (thing->flags & MF_RINGMOBJ)
+			{
+				ringmobj_t *ring = (ringmobj_t*)thing;
+				blockx = (ring->x << FRACBITS) - bmaporgx;
+				blocky = (ring->y << FRACBITS) - bmaporgy;
+			}
+			else
+			{
+				blockx = thing->x - bmaporgx;
+				blocky = thing->y - bmaporgy;
+			}
 			if (blockx >= 0 && blocky >= 0)
 			{
 				blockx = (unsigned)blockx >> MAPBLOCKSHIFT;
@@ -235,7 +282,8 @@ void P_SetThingPosition2 (mobj_t *thing, subsector_t *ss)
 /* */
 /* link into subsector */
 /* */
-	thing->subsector = ss;
+	thing->isubsector = ss - subsectors;
+
 	if ( ! (thing->flags & MF_NOSECTOR) )
 	{	/* invisible things don't go into the sector links */
 		sec = ss->sector;
@@ -250,10 +298,20 @@ void P_SetThingPosition2 (mobj_t *thing, subsector_t *ss)
 /* */
 /* link into blockmap */
 /* */
-	if ( ! (thing->flags & MF_NOBLOCKMAP) )
+	if (!(thing->flags & MF_NOBLOCKMAP) )
 	{	/* inert things don't need to be in blockmap		 */
-		blockx = thing->x - bmaporgx;
-		blocky = thing->y - bmaporgy;
+
+		if (thing->flags & MF_RINGMOBJ)
+		{
+			ringmobj_t *ring = (ringmobj_t*)thing;
+			blockx = (ring->x << FRACBITS) - bmaporgx;
+			blocky = (ring->y << FRACBITS) - bmaporgy;
+		}
+		else
+		{
+			blockx = thing->x - bmaporgx;
+			blocky = thing->y - bmaporgy;
+		}
 		if (blockx>=0 && blocky>=0)
 		{
 			blockx = (unsigned)blockx >> MAPBLOCKSHIFT;
@@ -373,11 +431,4 @@ boolean P_BlockThingsIterator (int x, int y, blockthingsiter_t func, void *userp
 			return false;	
 
 	return true;
-}
-
-void P_SectorOrg(mobj_t* sec_, fixed_t *org)
-{
-	sector_t *sec = (void *)sec_;
-	org[0] = sec->soundorg[0] << FRACBITS;
-	org[1] = sec->soundorg[1] << FRACBITS;
 }

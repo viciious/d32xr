@@ -7,9 +7,7 @@
 #include "mars.h"
 #endif
 
-boolean	spr_rotations;
-
-VINT		firstflat, numflats, col2flat;
+VINT		firstflat, numflats;
 
 VINT		firstsprite, numsprites;
 
@@ -17,8 +15,10 @@ VINT		numtextures = 0;
 texture_t	*textures = NULL;
 boolean 	texmips = false;
 
+#ifdef USE_DECALS
 VINT 		numdecals = 0;
 texdecal_t  *decals = NULL;
+#endif
 
 spritedef_t sprites[NUMSPRITES];
 spriteframe_t* spriteframes;
@@ -72,7 +72,9 @@ void R_InitTextures (void)
 {
 	maptexture_t	*mtexture;
 	texture_t		*texture;
+#ifdef USE_DECALS
 	texdecal_t		*decal;
+#endif
 	int			i,j,c;
 	int			offset;
 	int			*directory;
@@ -99,12 +101,16 @@ void R_InitTextures (void)
 		offset = LITTLELONG(*directory);
 		mtexture = (maptexture_t*)((byte*)maptex + offset);
 		patchcount = LITTLESHORT(mtexture->patchcount);
+#ifdef USE_DECALS
 		if (patchcount > 1)
 			numdecals += patchcount - 1;
+#endif
 	}
 
+#ifdef USE_DECALS
 	decals = Z_Malloc (numdecals * sizeof(*decals), PU_STATIC);
 	D_memset(decals, 0, numdecals * sizeof(*decals));
+#endif
 
 	directory = maptex+1;
 	for (i = 0; i < numtextures; i++, directory++)
@@ -119,7 +125,9 @@ void R_InitTextures (void)
 		texture = &textures[i];
 		texture->width = LITTLESHORT(mtexture->width);
 		texture->height = LITTLESHORT(mtexture->height);
+#ifdef USE_DECALS
 		texture->decals = 0;
+#endif
 		D_memcpy(texture->name, mtexture->name, 8);
 		for (j = 0; j < 8; j++)
 		{
@@ -138,7 +146,9 @@ void R_InitTextures (void)
 
 	// process patches/decals
 	directory = maptex+1;
+#ifdef USE_DECALS
 	decal = decals;
+#endif
 	for (i = 0; i < numtextures; i++, directory++)
 	{
 		int texnum;
@@ -160,6 +170,7 @@ void R_InitTextures (void)
 
 		texture->lumpnum = textures[texnum].lumpnum;
 
+#ifdef USE_DECALS
 		if (patchcount > 1)
 		{
 			int j;
@@ -201,6 +212,7 @@ void R_InitTextures (void)
 			if (texture->decals == 0)
 				texture->decals = (firstdecal << 2) | numdecals;
 		}
+#endif
 	}
 
 	for (i = 0; i < numtextures; i++)
@@ -311,11 +323,7 @@ void R_InitFlats (void)
 
 	flatpixels = Z_Malloc(numflats * sizeof(*flatpixels), PU_STATIC);
 
-	col2flat = R_FlatNumForName ("F_STCOL2");
-	if (col2flat < 0)
-		col2flat = numflats + 1;
-
-#if MIPLEVELS > 1
+#if MIPLEVELS > 1 && FLATMIPS
 	// detect mip-maps
 	if (!texmips)
 		return;
@@ -323,7 +331,7 @@ void R_InitFlats (void)
 	for (i=0 ; i<numflats ; i++)
 	{
 		int j;
-		int w = 64;
+		int w = CalcFlatSize(W_LumpLength(firstflat + i));
 		uint8_t *start = R_CheckPixels(firstflat + i);
 		uint8_t *end = start + W_LumpLength(firstflat + i);
 		uint8_t *data = start;
@@ -399,7 +407,7 @@ int	R_FlatNumForName (const char *name)
 {
 	int f = W_CheckRangeForName (name, firstflat, firstflat + numflats);
 	if (f < 0)
-		return f;
+		return 0;
 	return f - firstflat;
 }
 
@@ -481,14 +489,13 @@ void R_InitMathTables(void)
 	int i;
 	fixed_t focalLength;
 	fixed_t stretchWidth;
-	int fuzzunit;
 	VINT *tempviewangletox;
 
 	I_FreeWorkBuffer();
 
 	viewangletox = (VINT *)I_AllocWorkBuffer(sizeof(*viewangletox) * (FINEANGLES / 2));
-	distscale = (fixed_t *)I_AllocWorkBuffer(sizeof(*distscale) * SCREENWIDTH);
-	yslope = (fixed_t *)I_AllocWorkBuffer(sizeof(*yslope) * SCREENHEIGHT);
+	distscale = (uint16_t *)I_AllocWorkBuffer(sizeof(*distscale) * SCREENWIDTH);
+	yslopetab = (fixed_t *)I_AllocWorkBuffer(sizeof(*yslopetab) * SCREENHEIGHT * 4);
 	xtoviewangle = (uint16_t *)I_AllocWorkBuffer(sizeof(*xtoviewangle) * (SCREENWIDTH+1));
 	tempviewangletox = (VINT *)I_WorkBuffer();
 
@@ -547,12 +554,12 @@ void R_InitMathTables(void)
 
 	// Make the yslope table for floor and ceiling textures
 	stretchWidth = viewportWidth / 2 * stretch;
-	for (i = 0; i < viewportHeight; i++)
+	for (i = 0; i < viewportHeight * 4; i++)
 	{
-		fixed_t y = ((i - viewportHeight / 2) << FRACBITS) + FRACUNIT / 2;
+		fixed_t y = ((i - viewportHeight*2) << FRACBITS) + FRACUNIT / 2;
 		y = D_abs(y);
 		y = FixedDiv(stretchWidth, y);
-		yslope[i] = y;
+		yslopetab[i] = y;
 	}
 
 	// Create the distance scale table for floor and ceiling textures
@@ -560,19 +567,13 @@ void R_InitMathTables(void)
 	{
 		fixed_t cosang = finecosine(xtoviewangle[i] >> (ANGLETOFINESHIFT-FRACBITS));
 		cosang = D_abs(cosang);
-		distscale[i] = FixedDiv(FRACUNIT, cosang);
-	}
-
-	fuzzunit = 320;
-	for (i = 0; i < FUZZTABLE; i++)
-	{
-		fuzzoffset[i] = fuzzoffset[i] < 0 ? -fuzzunit : fuzzunit;
+		distscale[i] = FixedDiv(FRACUNIT, cosang)>>1;
 	}
 
 	// enable caching for LUTs
 	viewangletox = (void *)(((intptr_t)viewangletox) & ~0x20000000);
 	distscale = (void *)(((intptr_t)distscale) & ~0x20000000);
-	yslope = (void *)(((intptr_t)yslope) & ~0x20000000);
+	yslopetab = (void *)(((intptr_t)yslopetab) & ~0x20000000);
 	xtoviewangle = (void *)(((intptr_t)xtoviewangle) & ~0x20000000);
 }
 
@@ -610,7 +611,7 @@ R_InstallSpriteLump(const char* spritename, char letter, tempspriteframe_t* fram
 		frame->rotate = 0;
 		for (r = 0; r < 8; r++)
 		{
-			frame->lump[r] = flipped ? (lump + 1) * -1 : lump;
+			frame->lump[r] = flipped ? lump|SL_FLIPPED : lump;
 		}
 		return;
 	}
@@ -629,11 +630,11 @@ R_InstallSpriteLump(const char* spritename, char letter, tempspriteframe_t* fram
 			"has two lumps mapped to it",
 			spritename, letter, '1' + rotation);
 
-	frame->lump[rotation] = flipped ? (lump + 1) * -1 : lump;
+	frame->lump[rotation] = flipped ? lump|SL_FLIPPED : lump;
 }
 
 
-
+#define MAXSPRITEFRAMES 35
 
 //
 // R_InitSpriteDefs
@@ -665,8 +666,6 @@ void R_InitSpriteDefs(const char** namelist)
 	int 	totallumps;
 	VINT 	*lumps;
 
-	spr_rotations = false;
-
 	if (firstsprite < 0)
 	{
 		start = 0;
@@ -683,7 +682,7 @@ void R_InitSpriteDefs(const char** namelist)
 
 	// scan all the lump names for each of the names,
 	//  noting the highest frame letter.
-	maxframe = 29;
+	maxframe = MAXSPRITEFRAMES;
 	totalframes = 0;
 	totallumps = 0;
 
@@ -693,7 +692,7 @@ void R_InitSpriteDefs(const char** namelist)
 	{
 		const char* spritename = namelist[i];
 
-		D_memset(sprtemp, -1, sizeof(tempspriteframe_t) * 29);
+		D_memset(sprtemp, -1, sizeof(tempspriteframe_t) * MAXSPRITEFRAMES);
 		maxframe = -1;
 
 		// scan the lumps,
@@ -718,8 +717,8 @@ void R_InitSpriteDefs(const char** namelist)
 				rotation = framename[1] - '0';
 				if (frame > maxframe)
 					maxframe = frame;
-				if (frame >= 29 || rotation > 8)
-					I_Error("Bad frame characters in lump %i", l);
+				if (frame >= MAXSPRITEFRAMES || rotation > 8)
+					I_Error("Bad frame chars in lump %i (%s %d)", l, spritename, frame);
 
 				R_InstallSpriteLump(spritename, framename[0], sprtemp + frame, 
 					l, rotation, flip);
@@ -744,7 +743,7 @@ void R_InitSpriteDefs(const char** namelist)
 				sprtemp[frame].rotate = 0;
 			case 0:
 				// only the first rotation is needed
-				totallumps += 2;
+				totallumps++;
 				break;
 			case 1:
 				// must have all 8 frames
@@ -754,7 +753,6 @@ void R_InitSpriteDefs(const char** namelist)
 							"is missing rotations",
 							spritename, frame + 'A');
 				totallumps += 8;
-				spr_rotations = true;
 				break;
 			}
 		}
@@ -776,9 +774,8 @@ void R_InitSpriteDefs(const char** namelist)
 		spriteframes[i].lump = lumps - spritelumps;
 		if (!sprtemp[i].rotate)
 		{
-			lumps[0] = sprtemp[i].lump[0];
-			lumps[1] = -1;
-			lumps += 2;
+			lumps[0] = sprtemp[i].lump[0]|SL_SINGLESIDED;
+			lumps++;
 		}
 		else
 		{
@@ -832,43 +829,33 @@ void R_InitSpriteDefs(const char** namelist)
 	l = 0;
 	for (i = 0; i < NUMSPRITES; i++)
 	{
-		int numframes;
-
-		numframes = sprites[i].numframes;
+		const int numframes = sprites[i].numframes;
 		sprites[i].firstframe = l;
 
 		l += numframes;
 	}
 }
 
-static void *R_LoadColormap(int l, boolean doublepix)
+static void *R_LoadColormap(int l)
 {
-	void *doomcolormap;
+	void *doomcolormap = W_POINTLUMPNUM(l);
 
-	l -= (int)!doublepix;
-
-	doomcolormap = W_GetLumpData(l);
-
-	if (doublepix)
-		return (void *)((short *)doomcolormap + 128);
-	return (void *)((int8_t*)doomcolormap + 128);
+	return (void *)((short *)doomcolormap + 128);
 }
 
-void R_InitColormap(boolean doublepix)
+void R_InitColormap()
 {
 	int l;
 
 	l = W_CheckNumForName("COLORMAP");
-	dc_colormaps = R_LoadColormap(l, doublepix);
-
-	l -= 2;
-	dc_colormaps2 = R_LoadColormap(l, doublepix);
+	dc_colormaps = R_LoadColormap(l);
 
 #ifdef MARS
 	Mars_CommSlaveClearCache();
 #endif
 }
 
+#ifdef USE_DECALS
 boolean R_CompositeColumn(int colnum, int numdecals, texdecal_t *decals, inpixel_t *src, inpixel_t *dst, int height, int miplevel)
 {
 	int i;
@@ -915,3 +902,4 @@ boolean R_CompositeColumn(int colnum, int numdecals, texdecal_t *decals, inpixel
 
 	return decaled;
 }
+#endif

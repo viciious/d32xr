@@ -29,23 +29,6 @@
 #include "doomdef.h"
 #include "p_local.h"
 
-typedef struct
-{
-   mobj_t *slidething;
-   fixed_t slidex, slidey;     // the final position
-   fixed_t slidedx, slidedy;   // current move for completable frac
-   fixed_t blockfrac;          // the fraction of the move that gets completed
-   fixed_t blocknvx, blocknvy; // the vector of the line that blocks move
-   fixed_t endbox[4];          // final proposed position
-   fixed_t nvx, nvy;           // normalized line vector
-
-   vertex_t *p1, *p2; // p1, p2 are line endpoints
-   fixed_t p3x, p3y, p4x, p4y; // p3, p4 are move endpoints
-
-	int numspechit;
-	line_t **spechit;
-} pslidework_t;
-
 #define CLIPRADIUS 23
 
 enum
@@ -60,10 +43,10 @@ enum
 //
 static int SL_PointOnSide(pslidework_t *sw, fixed_t x, fixed_t y)
 {
-   fixed_t dx, dy, dist;
+fixed_t dx, dy, dist;
 
-   dx = x - sw->p1->x;
-   dy = y - sw->p1->y;
+   dx = x - sw->p1.x;
+   dy = y - sw->p1.y;
 
    dx = FixedMul(dx, sw->nvx);
    dy = FixedMul(dy, sw->nvy);
@@ -85,14 +68,14 @@ static fixed_t SL_CrossFrac(pslidework_t *sw)
    fixed_t dx, dy, dist1, dist2;
 
    // project move start and end points onto line normal
-   dx = sw->p3x - sw->p1->x;
-   dy = sw->p3y - sw->p1->y;
+   dx = sw->p3x - sw->p1.x;
+   dy = sw->p3y - sw->p1.y;
    dx = FixedMul(dx, sw->nvx);
    dy = FixedMul(dy, sw->nvy);
    dist1 = dx + dy;
 
-   dx = sw->p4x - sw->p1->x;
-   dy = sw->p4y - sw->p1->y;
+   dx = sw->p4x - sw->p1.x;
+   dy = sw->p4y - sw->p1.y;
    dx = FixedMul(dx, sw->nvx);
    dy = FixedMul(dy, sw->nvy);
    dist2 = dx + dy;
@@ -154,6 +137,27 @@ blockmove:
    }
 }
 
+void GetSectorAABB(sector_t *sector, fixed_t bbox[4]);
+__attribute((noinline))
+void P_SpawnBustables(sector_t *sec, mobj_t *playermo)
+{
+   fixed_t blockbox[4];
+   GetSectorAABB(sec, blockbox);
+   const fixed_t spawnInterval = 64<<FRACBITS;
+
+   for (fixed_t z = sec->ceilingheight - spawnInterval/2; z >= sec->floorheight + spawnInterval/2; z -= spawnInterval)
+   {
+      for (fixed_t x = blockbox[BOXLEFT]; x <= blockbox[BOXRIGHT]; x += spawnInterval)
+      {
+         for (fixed_t y = blockbox[BOXBOTTOM]; y <= blockbox[BOXTOP]; y += spawnInterval)
+         {
+            if (R_PointInSubsector(x, y)->sector == sec)
+               P_SpawnMobj(x, y, z, MT_GFZDEBRIS);               
+         }
+      }
+   }
+}
+
 //
 // Check a linedef during wall sliding motion.
 //
@@ -161,8 +165,9 @@ static boolean SL_CheckLine(line_t *ld, pslidework_t *sw)
 {
    fixed_t   opentop, openbottom;
    sector_t *front, *back;
-   int       side1;
-   vertex_t *vtmp;
+   int       side1, dx, dy;
+   angle_t fineangle;
+   vertex_t vtmp;
    fixed_t  ldbbox[4];
 
    P_LineBBox(ld, ldbbox);
@@ -183,6 +188,21 @@ static boolean SL_CheckLine(line_t *ld, pslidework_t *sw)
    front = LD_FRONTSECTOR(ld);
    back  = LD_BACKSECTOR(ld);
 
+   if (ld->special == 254 && ld->tag > 0 && sw->slidething->player
+      && (players[sw->slidething->player-1].pflags & PF_SPINNING)) // Bustable block
+   {
+      back->floorheight = P_FindNextLowestFloor(back, back->floorheight);
+      ld->special = 0;
+      ld->tag = 0;
+      S_StartSound(sw->slidething, sfx_s3k_59);
+      P_SpawnBustables(back, sw->slidething);
+   }
+   else if (ld->special == 200 && sw->slidething->player)
+   {
+      ld->special = 0;
+      CONS_Printf("Go away! Dave's not here. *B^D");
+   }
+
    if(front->floorheight > back->floorheight)
       openbottom = front->floorheight;
    else
@@ -196,15 +216,25 @@ static boolean SL_CheckLine(line_t *ld, pslidework_t *sw)
    else
       opentop = back->ceilingheight;
 
-   if(opentop - openbottom >= 56*FRACUNIT)
+   if(opentop - openbottom >= sw->slidething->theight << FRACBITS)
       return true; // the line doesn't block movement
 
    // the line is definitely blocking movement at this point
 findfrac:
-   sw->p1  = &vertexes[ld->v1];
-   sw->p2  = &vertexes[ld->v2];
-   sw->nvx = finesine(ld->fineangle);
-   sw->nvy = -finecosine(ld->fineangle);
+   sw->p1.x = vertexes[ld->v1].x << FRACBITS;
+   sw->p1.y = vertexes[ld->v1].y << FRACBITS;
+   sw->p2.x = vertexes[ld->v2].x << FRACBITS;
+   sw->p2.y = vertexes[ld->v2].y << FRACBITS;
+
+   dx = sw->p2.x - sw->p1.x;
+   dy = sw->p2.y - sw->p1.y;
+   fineangle = ( dy == 0 ) ? (( dx < 0 ) ? ANG180 : 0 ) :
+               ( dx == 0 ) ? (( dy < 0 ) ? ANG270 : ANG90 ) :
+               R_PointToAngle2(0, 0, dx, dy);
+   fineangle >>= ANGLETOFINESHIFT;
+
+   sw->nvx = finesine(fineangle);
+   sw->nvy = -finecosine(fineangle);
    
    side1 = SL_PointOnSide(sw, sw->slidex, sw->slidey);
    switch(side1)
@@ -215,9 +245,12 @@ findfrac:
       if(ld->sidenum[1] == -1)
          return true; // don't clip to backs of one-sided lines
       // reverse coordinates and angle
-      vtmp = sw->p1;
-      sw->p1   = sw->p2;
-      sw->p2   = vtmp;
+      vtmp.x = sw->p1.x;
+      vtmp.y = sw->p1.y;
+      sw->p1.x = sw->p2.x;
+      sw->p1.y = sw->p2.y;
+      sw->p2.x = vtmp.x;
+      sw->p2.y = vtmp.y;
       sw->nvx  = -sw->nvx;
       sw->nvy  = -sw->nvy;
       break;
@@ -296,158 +329,10 @@ fixed_t P_CompletableFrac(pslidework_t *sw, fixed_t dx, fixed_t dy)
    if(sw->blockfrac < 0x1000)
    {
       sw->blockfrac   = 0;
-      sw->numspechit = 0;     // can't cross anything on a bad move
       return 0;           // solid wall
    }
 
    return sw->blockfrac;
-}
-
-//
-// Point on side check for special crosses.
-//
-static int SL_PointOnSide2(fixed_t x1, fixed_t y1, 
-                           fixed_t x2, fixed_t y2, 
-                           fixed_t x3, fixed_t y3)
-{
-   fixed_t nx, ny;
-   fixed_t dist;
-
-   x1 = (x1 - x2);
-   y1 = (y1 - y2);
-
-   nx = (y3 - y2);
-   ny = (x2 - x3);
-
-   nx = FixedMul(x1, nx);
-   ny = FixedMul(y1, ny);
-   dist = nx + ny;
-
-   return ((dist < 0) ? SIDE_BACK : SIDE_FRONT);
-}
-
-static void SL_CheckSpecialLines(pslidework_t *sw)
-{
-   fixed_t x1 = sw->slidething->x;
-   fixed_t y1 = sw->slidething->y;
-   fixed_t x2 = sw->slidex;
-   fixed_t y2 = sw->slidey;
-
-   fixed_t bx, by, xl, xh, yl, yh;
-   fixed_t bxl, bxh, byl, byh;
-   fixed_t x3, y3, x4, y4;
-   int side1, side2;
-
-   VINT *lvalidcount, vc;
-
-   if(x1 < x2)
-   {
-      xl = x1;
-      xh = x2;
-   }
-   else
-   {
-      xl = x2;
-      xh = x1;
-   }
-
-   if(y1 < y2)
-   {
-      yl = y1;
-      yh = y2;
-   }
-   else
-   {
-      yl = y2;
-      yh = y1;
-   }
-
-   bxl = xl - bmaporgx;
-   bxh = xh - bmaporgx;
-   byl = yl - bmaporgy;
-   byh = yh - bmaporgy;
-
-   if(bxl < 0)
-      bxl = 0;
-   if(byl < 0)
-      byl = 0;
-   if(byh < 0)
-      return;
-   if(bxh < 0)
-      return;
-
-   bxl = (unsigned)bxl >> MAPBLOCKSHIFT;
-   bxh = (unsigned)bxh >> MAPBLOCKSHIFT;
-   byl = (unsigned)byl >> MAPBLOCKSHIFT;
-   byh = (unsigned)byh >> MAPBLOCKSHIFT;
-
-   if(bxh >= bmapwidth)
-      bxh = bmapwidth - 1;
-   if(byh >= bmapheight)
-      byh = bmapheight - 1;
-
-   sw->numspechit = 0;
-
-   I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
-   vc = *lvalidcount + 1;
-   if (vc == 0)
-      vc = 0;
-   *lvalidcount = vc;
-   ++lvalidcount;
-
-   for(bx = bxl; bx <= bxh; bx++)
-   {
-      for(by = byl; by <= byh; by++)
-      {
-         short  *list;
-         line_t *ld;
-         int offset = by * bmapwidth + bx;
-         offset = *(blockmaplump+4 + offset);
-	      fixed_t ldbbox[4];
-         
-         for(list = blockmaplump + offset; *list != -1; list++)
-         {
-            ld = &lines[*list];
-            if(!ld->special)
-               continue;
-            if(lvalidcount[*list] == vc)
-               continue; // already checked
-            
-            lvalidcount[*list] = vc;
-
-	         P_LineBBox(ld, ldbbox);
-            if(xh < ldbbox[BOXLEFT  ] ||
-               xl > ldbbox[BOXRIGHT ] ||
-               yh < ldbbox[BOXBOTTOM] ||
-               yl > ldbbox[BOXTOP   ])
-            {
-               continue;
-            }
-
-            x3 = vertexes[ld->v1].x;
-            y3 = vertexes[ld->v1].y;
-            x4 = vertexes[ld->v2].x;
-            y4 = vertexes[ld->v2].y;
-
-            side1 = SL_PointOnSide2(x1, y1, x3, y3, x4, y4);
-            side2 = SL_PointOnSide2(x2, y2, x3, y3, x4, y4);
-
-            if(side1 == side2)
-               continue; // move doesn't cross line
-
-            side1 = SL_PointOnSide2(x3, y3, x1, y1, x2, y2);
-            side2 = SL_PointOnSide2(x4, y4, x1, y1, x2, y2);
-
-            if(side1 == side2)
-               continue; // line doesn't cross move
-
-            if (sw->numspechit < MAXSPECIALCROSS)
-               sw->spechit[sw->numspechit++] = ld;
-            if (sw->numspechit == MAXSPECIALCROSS)
-               return;
-         }
-      }
-   }
 }
 
 //
@@ -466,8 +351,6 @@ void P_SlideMove(pslidemove_t *sm)
    sw.slidex = slidething->x;
    sw.slidey = slidething->y;
    sw.slidething = slidething;
-   sw.numspechit = 0;
-   sw.spechit = &sm->spechit[0];
 
    // perform a maximum of three bumps
    for(i = 0; i < 3; i++)
@@ -489,10 +372,8 @@ void P_SlideMove(pslidemove_t *sm)
       {
          slidething->momx = dx;
          slidething->momy = dy;
-         SL_CheckSpecialLines(&sw);
          sm->slidex = sw.slidex;
          sm->slidey = sw.slidey;
-         sm->numspechit = sw.numspechit;
          return;
       }
 
@@ -511,7 +392,6 @@ void P_SlideMove(pslidemove_t *sm)
    sm->slidex = slidething->x;
    sm->slidey = slidething->y;
    sm->slidething->momx = slidething->momy = 0;
-   sm->numspechit = sw.numspechit;
 }
 
 // EOF
