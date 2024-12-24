@@ -573,12 +573,15 @@ void O_DrawHelp (VINT yPos)
 
 	V_DrawStringRight(&menuFont, 160-8, yPos, "JUMP ");
 	V_DrawStringLeft(&menuFont, 160, yPos, "= B");
-	V_DrawStringRight(&menuFont, 160-8, yPos + (16*1), "SPIN ");
-	V_DrawStringLeft(&menuFont, 160, yPos + (16*1), "= A or C");
-	V_DrawStringRight(&menuFont, 160-8, yPos + (16*2), "GAS PEDAL ");
-	V_DrawStringLeft(&menuFont, 160, yPos + (16*2), "= Y");
-	V_DrawStringRight(&menuFont, 160-8, yPos + (16*3), "MOVE CAMERA ");
-	V_DrawStringLeft(&menuFont, 160, yPos + (16*3), "= X and Z");
+	V_DrawStringRight(&menuFont, 160-8, yPos + (12*1), "SPIN ");
+	V_DrawStringLeft(&menuFont, 160, yPos + (12*1), "= A or C");
+	V_DrawStringRight(&menuFont, 160-8, yPos + (12*2), "GAS PEDAL ");
+	V_DrawStringLeft(&menuFont, 160, yPos + (12*2), "= Y");
+	V_DrawStringRight(&menuFont, 160-8, yPos + (12*3), "MOVE CAMERA ");
+	V_DrawStringLeft(&menuFont, 160, yPos + (12*3), "= X and Z");
+
+	V_DrawStringCenterWithColormap(&menuFont, 160, yPos + (12*5), "INTENDED ONLY FOR NTSC SYSTEMS AND", YELLOWTEXTCOLORMAP);
+	V_DrawStringCenterWithColormap(&menuFont, 160, yPos + (12*5) + 8, "KEGA FUSION v3.64 AT THIS TIME", YELLOWTEXTCOLORMAP);
 
 	V_DrawStringCenter(&menuFont, 160, yPos + 80, "ssntails.srb2.org/srb32x");
 }
