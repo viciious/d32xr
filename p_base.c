@@ -49,7 +49,7 @@ static boolean PB_CheckLine(line_t* ld, pmovetest_t *mt) ATTR_DATA_CACHE_ALIGN;
 static boolean PB_CrossCheck(line_t* ld, pmovetest_t *mt) ATTR_DATA_CACHE_ALIGN;
 static boolean PB_CheckPosition(pmovetest_t *mt) ATTR_DATA_CACHE_ALIGN;
 static boolean PB_TryMove(pmovetest_t *mt, mobj_t* mo, fixed_t tryx, fixed_t tryy) ATTR_DATA_CACHE_ALIGN;
-static void P_FloatChange(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
+static void P_FloatChange(mobj_t* mo);
 void P_MobjThinker(mobj_t* mobj) ATTR_DATA_CACHE_ALIGN;
 
 // P_FloorzAtPos
@@ -180,10 +180,10 @@ static boolean PB_BoxCrossLine(line_t *ld, pmovetest_t *mt)
       x2 = mt->testbbox[BOXLEFT ];
    }
 
-   lx  = vertexes[ld->v1].x;
-   ly  = vertexes[ld->v1].y;
-   ldx = (vertexes[ld->v2].x - vertexes[ld->v1].x) >> FRACBITS;
-   ldy = (vertexes[ld->v2].y - vertexes[ld->v1].y) >> FRACBITS;
+   lx  = vertexes[ld->v1].x << FRACBITS;
+   ly  = vertexes[ld->v1].y << FRACBITS;
+   ldx = (vertexes[ld->v2].x - vertexes[ld->v1].x);
+   ldy = (vertexes[ld->v2].y - vertexes[ld->v1].y);
 
    dx1 = (x1 - lx) >> FRACBITS;
    dy1 = (mt->testbbox[BOXTOP] - ly) >> FRACBITS;
@@ -468,6 +468,7 @@ void P_XYMovement(mobj_t *mo)
 //
 // Float a flying monster up or down.
 //
+__attribute((noinline))
 static void P_FloatChange(mobj_t *mo)
 {
    mobj_t *target;
@@ -914,9 +915,6 @@ boolean P_MobjSpecificActions(mobj_t *mobj)
                   {
                      for (mobj_t *node = mobjhead.next; node != (void*)&mobjhead; node = node->next)
                      {
-                        if (node->flags & MF_RINGMOBJ)
-                           continue;
-                           
                         if (node->target == mobj)
                            node->target = NULL;
                      }
@@ -1055,41 +1053,35 @@ void P_RunMobjBase2(void)
     // First, handle the ringmobj animations
     for (int i = 0; i < NUMMOBJTYPES; i++)
     {
-      const mobjinfo_t *info = &mobjinfo[i];
+      if (ringmobjtics[i] == -1)
+         continue; // Early out
 
-      if (info->flags & MF_RINGMOBJ)
+      // cycle through states
+      ringmobjtics[i]--;
+
+      // you can cycle through multiple states in a tic
+      if (!ringmobjtics[i])
       {
-         // cycle through states
-         if (ringmobjtics[i] != -1)
+         do
          {
-            ringmobjtics[i]--;
+            const statenum_t nextstate = states[ringmobjstates[i]].nextstate;
+            const state_t *st = &states[nextstate];
 
-            // you can cycle through multiple states in a tic
-            if (!ringmobjtics[i])
-            {
-               do
-               {
-                  const statenum_t nextstate = states[ringmobjstates[i]].nextstate;
+            ringmobjstates[i] = nextstate;
+            ringmobjtics[i] = st->tics;
 
-                  const state_t *st = &states[nextstate];
-
-                  ringmobjstates[i] = nextstate;
-                  ringmobjtics[i] = st->tics;
-
-                  // Sprite and frame can be derived
-               } while (!ringmobjtics[i]);
-            }
-         }
+            // Sprite and frame can be derived
+         } while (!ringmobjtics[i]);
       }
     }
 
     for (mo = mobjhead.next; mo != (void*)&mobjhead; mo = next)
     {
         next = mo->next;	// in case mo is removed this time
-
+/*
          if (mo->flags & MF_RINGMOBJ) // rings or scenery (they don't think, they don't uniquely animate)
             continue;
-
+*/
         if (!mo->player)
         {
 #ifdef MARS

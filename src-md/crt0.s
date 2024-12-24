@@ -193,12 +193,13 @@ init_hardware:
         move.w  #0x8800,(a0) /* reg 8 = always 0 */
         move.w  #0x8900,(a0) /* reg 9 = always 0 */
         move.w  #0x8A00,(a0) /* reg 10 = HINT = 0 */
-        move.w  #0x8B00,(a0) /* reg 11 = /IE2 (no EXT INT), full scroll */
+        |move.w  #0x8B00,(a0) /* reg 11 = /IE2 (no EXT INT), full scroll */
+        move.w  #0x8B03,(a0) /* reg 11 = /IE2 (no EXT INT), line scroll */
         move.w  #0x8C81,(a0) /* reg 12 = H40 mode, no lace, no shadow/hilite */
         move.w  #0x8D2B,(a0) /* reg 13 = HScroll Tbl = 0xAC00 */
         move.w  #0x8E00,(a0) /* reg 14 = always 0 */
         move.w  #0x8F01,(a0) /* reg 15 = data INC = 1 */
-        move.w  #0x9001,(a0) /* reg 16 = Scroll Size = 64x32 */
+        move.w  #0x9010,(a0) /* reg 16 = Scroll Size = 32x64 */
         move.w  #0x9100,(a0) /* reg 17 = W Pos H = left */
         move.w  #0x9200,(a0) /* reg 18 = W Pos V = top */
 
@@ -234,11 +235,7 @@ init_hardware:
 
 | set the default palette for text
         move.l  #0xC0000000,(a0)        /* write CRAM address 0 */
-        move.l  #0x00000CCC,(a1)        /* entry 0 (black) and 1 (lt gray) */
-        move.l  #0xC0200000,(a0)        /* write CRAM address 32 */
-        move.l  #0x000000A0,(a1)        /* entry 16 (black) and 17 (green) */
-        move.l  #0xC0400000,(a0)        /* write CRAM address 64 */
-        move.l  #0x0000000A,(a1)        /* entry 32 (black) and 33 (red) */
+        move.l  #0x00000000,(a1)        /* set background color to black */
 
 | init controllers
         jsr     chk_ports
@@ -418,6 +415,14 @@ main_loop_handle_req:
         move.w  0xA15124,d0         /* get COMM4 */
         bne.w   handle_sec_req
 
+        tst.w   fm_idx
+        beq.b   00f
+        moveq.l #32,d0
+        move.l  d0,-(sp)
+        jsr     vgm_preread
+        addq.l  #4,sp
+00:
+
         /* check hot-plug count */
         tst.b   hotplug_cnt
         bne.w   main_loop
@@ -472,7 +477,7 @@ no_cmd:
         dc.w    clear_a - prireqtbl               /* 0x0E */
         dc.w    load_md_sky - prireqtbl           /* 0x0F */
         dc.w    fade_md_palette - prireqtbl       /* 0x10 */
-        dc.w    no_cmd - prireqtbl                /* 0x11 */
+        dc.w    scroll_md_sky - prireqtbl         /* 0x11 */
         dc.w    net_getbyte - prireqtbl           /* 0x12 */
         dc.w    net_putbyte - prireqtbl           /* 0x13 */
         dc.w    net_setup - prireqtbl             /* 0x14 */
@@ -1128,7 +1133,8 @@ ext_link:
         /* timeout during handshake - shut down link net */
         clr.b   net_type
         clr.l   extint
-        move.w  #0x8B00,0xC00004    /* reg 11 = /IE2 (no EXT INT), full scroll */
+        |move.w  #0x8B00,0xC00004    /* reg 11 = /IE2 (no EXT INT), full scroll */
+        move.w  #0x8B03,0xC00004    /* reg 11 = /IE2 (no EXT INT), line scroll */
         move.b  #0x40,0xA1000B      /* port 2 to neutral setting */
         nop
         nop
@@ -1147,7 +1153,8 @@ init_serial:
         clr.w   net_rbix
         clr.w   net_wbix
         move.l  #ext_serial,extint  /* serial read data ready handler */
-        move.w  #0x8B08,0xC00004    /* reg 11 = IE2 (enable EXT INT), full scroll */
+        |move.w  #0x8B08,0xC00004    /* reg 11 = IE2 (enable EXT INT), full scroll */
+        move.w  #0x8B0B,0xC00004    /* reg 11 = IE2 (enable EXT INT), line scroll */
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
@@ -1163,7 +1170,8 @@ init_link:
         clr.w   net_rbix
         clr.w   net_wbix
         move.l  #ext_link,extint    /* TH INT handler */
-        move.w  #0x8B08,0xC00004    /* reg 11 = IE2 (enable EXT INT), full scroll */
+        |move.w  #0x8B08,0xC00004    /* reg 11 = IE2 (enable EXT INT), full scroll */
+        move.w  #0x8B0B,0xC00004    /* reg 11 = IE2 (enable EXT INT), line scroll */
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
@@ -1336,7 +1344,8 @@ net_setup:
 net_cleanup:
         clr.b   net_type
         clr.l   extint
-        move.w  #0x8B00,0xC00004    /* reg 11 = /IE2 (no EXT INT), full scroll */
+        |move.w  #0x8B00,0xC00004    /* reg 11 = /IE2 (no EXT INT), full scroll */
+        move.w  #0x8B03,0xC00004    /* reg 11 = /IE2 (no EXT INT), line scroll */
         move.b  #0x00,0xA10019      /* no serial */
         nop
         nop
@@ -1570,6 +1579,22 @@ get_lump_source_and_size:
         rts
 
 
+
+decompress_lump:
+        bsr     get_lump_source_and_size
+        move.l  lump_ptr,d0
+        andi.l  #0x7FFFF,d0
+        addi.l  #0x880000,d0
+        movea.l d0,a0
+        moveq   #0,d0
+        move.w  (a0)+,d0
+        move.l  d0,lump_size
+        lea     decomp_buffer,a1
+        jmp     Kos_Decomp_Main
+        |rts    /* Kos_Decomp_Main will do an 'rts' for us. */
+
+
+
 load_md_sky:
         move.w  #0x2700,sr          /* disable ints */
 
@@ -1586,24 +1611,63 @@ load_md_sky:
         ||move.w  #0x832C,(a0) /* reg 3 = Name Tbl W = 0xB000 */
         ||move.w  #0x8407,(a0) /* reg 4 = Name Tbl B = 0xE000 */
         ||move.w  #0x8554,(a0) /* reg 5 = Sprite Attr Tbl = 0xA800 */
+        ||move.w  #0x8D2B,(a0) /* reg 13 = HScroll Tbl = 0xAC00 */
 
-        move.w  #0x9000,(a0) /* reg 16 = Scroll Size = 32x32 */
 
-
-        /* Load pattern name table */
+        /* Load metadata */
         bsr     get_lump_source_and_size
+        lea     0xC00004,a0
+        move.l  lump_ptr,d0
+        andi.l  #0x7FFFF,d0
+        addi.l  #0x880001,d0    /* Plus 1 to skip the 32X thru color byte */
+        move.l  d0,a2
+
+        move.w  #0x9000, d0
+        or.b    (a2)+,d0
+        move.w  d0,(a0) /* reg 16 = Scroll Size = 32x64 */
+
+        move.w  (a2)+,d0
+        move.w  d0,scroll_b_vert_offset
+
+        move.w  (a2)+,d0
+        move.w  d0,scroll_a_vert_offset
+
+        move.b  (a2)+,d0
+        move.b  d0,scroll_b_vert_rate
+
+        move.b  (a2)+,d0
+        move.b  d0,scroll_a_vert_rate
+
+
+
+        /* Load pattern name table A */
+        bsr     decompress_lump
         lea     0xC00004,a0
         lea     0xC00000,a1
         move.w  #0x8F02,(a0)
-        move.l  #0x40000003,(a0)        /* Set destination offset to pattern name table B at position 0x0 */
-        move.l  lump_ptr,d0
-        andi.l  #0x7FFFF,d0
-        addi.l  #0x880000,d0
-        move.l  d0,a2
-        move.w  #0x200-1,d1             /* Prepare to copy two pattern names, 256 times total */
+        move.l  #0x40000003,(a0)        /* Set destination offset to pattern name table A at position 0x0 */
+        lea     decomp_buffer,a2
+        move.l  lump_size,d1
+        lsr.l   #1,d1
+        sub.l   #1,d1
 0:
-        move.w  (a2)+,(a1)              /* Write 0 to pattern name table B at position 0x0 */
+        move.w  (a2)+,(a1)              /* Write 0 to pattern name table A at position 0x0 */
         dbra    d1,0b
+
+
+        /* Load pattern name table B */
+        bsr     decompress_lump
+        lea     0xC00004,a0
+        lea     0xC00000,a1
+        move.w  #0x8F02,(a0)
+        move.l  #0x60000003,(a0)        /* Set destination offset to pattern name table B at position 0x0 */
+        lea     decomp_buffer,a2
+        move.l  lump_size,d1
+        lsr.l   #1,d1
+        sub.l   #1,d1
+1:
+        move.w  (a2)+,(a1)              /* Write 0 to pattern name table B at position 0x0 */
+        dbra    d1,1b
 
 
         /* Load palettes */
@@ -1617,28 +1681,29 @@ load_md_sky:
         addi.l  #0x880000,d0
         move.l  d0,a2
         lea     base_palette_1,a3
-        move.w  #0x40-1,d1              /* Prepare to copy two colors, 32 times total */
-1:
+        move.l  lump_size,d1
+        lsr.l   #1,d1
+        sub.l   #1,d1
+2:
         move.w  (a2)+,(a3)+             /* Save color to DRAM */
         move.w  #0,(a1)                 /* Set color to black in CRAM */
         |add.l   #0x40000,a1            /* Advance the destination cursor */
-        dbra    d1,1b
+        dbra    d1,2b
 
 
         /* Load patterns */
-        bsr     get_lump_source_and_size
+        bsr     decompress_lump
         lea     0xC00004,a0
         lea     0xC00000,a1
         move.w  #0x8F02,(a0)
         move.l  #0x40000000,(a0)        /* Write VRAM address 0 */
-        move.l  lump_ptr,d0
-        andi.l  #0x7FFFF,d0
-        addi.l  #0x880000,d0
-        move.l  d0,a2
-        move.w  #0x2000-1,d1            /* Prepare to copy eight pixels, 4096 times total */
-2:
+        lea     decomp_buffer,a2
+        move.l  lump_size,d1
+        lsr.l   #1,d1
+        sub.l   #1,d1
+3:
         move.w  (a2)+,(a1)              /* Copy eight pixels from the source */
-        dbra    d1,2b
+        dbra    d1,3b
 
         move.l  (sp)+,d1
         move.l  (sp)+,d0
@@ -1652,6 +1717,168 @@ load_md_sky:
         move.w  #0x2000,sr          /* enable ints */
 
         bra     main_loop
+
+
+scroll_md_sky:
+        move.w  #0x2700,sr          /* disable ints */
+
+        move.l  a0,-(sp)
+        move.l  a1,-(sp)
+        move.l  d0,-(sp)
+        move.l  d1,-(sp)
+        move.l  d2,-(sp)
+        move.l  d3,-(sp)
+        move.l  d4,-(sp)
+        move.l  d5,-(sp)
+
+        lea     0xC00004,a0
+        lea     0xC00000,a1
+
+        /* Vertical */
+        move.l  #0x40000010,(a0)
+        moveq   #0,d4
+        moveq   #0,d5
+        move.w  0xA15122,d4         /* scroll_y_base */
+        move.w  d4,d5
+        moveq   #0,d0
+        moveq   #0,d1
+        moveq   #0,d2
+        move.b  scroll_b_vert_rate,d0
+        move.b  scroll_a_vert_rate,d1
+        move.b  d0,d2
+        sub.l   d1,d2
+        lsl.w   d2,d5
+
+        move.w  #0,0xA15120         /* done with horizontal scroll */
+2:
+        move.b  0xA15121,d0         /* wait on handshake in COMM0 */
+        cmpi.b  #0x02,d0
+        bne.b   2b
+        move.w  0xA15122,d1         /* scroll_y_offset */
+        add.w   d4,d1
+        move.w  d1,d3
+
+        move.b  scroll_a_vert_rate,d0
+        lsr.w   d0,d1
+        move.w  scroll_a_vert_offset,d0
+        sub.w   d1,d0
+        sub.w   d5,d0
+        andi.w  #0x3FF,d0
+
+        move.w  d0,d2
+        swap    d2
+
+        move.b  scroll_b_vert_rate,d0
+        lsr.w   d0,d3
+        move.w  scroll_b_vert_offset,d0
+        sub.w   d3,d0
+        sub.w   d4,d0
+        andi.w  #0x3FF,d0
+
+        or.w    d0,d2
+
+        move.w  #0,0xA15120         /* done with horizontal scroll */
+3:
+        move.b  0xA15121,d0         /* wait on handshake in COMM0 */
+        cmpi.b  #0x03,d0
+        bne.b   3b
+        move.w  0xA15122,d0         /* scroll_y_pan */
+        sub.w   d0,d2
+        swap    d2
+        sub.w   d0,d2
+        swap    d2
+
+        move.l  d2,(a1)
+
+        move.w  #0,0xA15120         /* done with horizontal scroll */
+4:
+        move.b  0xA15121,d0         /* wait on handshake in COMM0 */
+        cmpi.b  #0x04,d0
+        bne.b   4b
+
+        /* Horizontal */
+        move.l  #0x6C000002,d3
+        moveq   #0,d0
+        move.w  0xA15122,d0         /* scroll_x */
+        |move.w  d0,d1
+        |swap    d0
+        |or.w    d1,d0
+
+        move.l  #448,d2             /* Update each line, alternating between Scroll A and Scroll B */
+0:
+        move.l  d3,(a0)
+        |move.l  d0,(a1)
+        move.w  d0,(a1)
+        add.l   #0x20000,d3
+        subq    #1,d2
+        cmp.w   #0,d2
+        bne.b   0b
+
+        move.l  (sp)+,d5
+        move.l  (sp)+,d4
+        move.l  (sp)+,d3
+        move.l  (sp)+,d2
+        move.l  (sp)+,d1
+        move.l  (sp)+,d0
+        move.l  (sp)+,a1
+        move.l  (sp)+,a0
+
+        move.w  #0,0xA15120         /* done */
+
+        move.w  #0x2000,sr          /* enable ints */
+
+        bra     main_loop
+
+/*
+TestSine:
+        dc.w    0       |0
+        dc.w    0
+
+        dc.w    2       |22.5
+        dc.w    0
+
+        dc.w    4       |45
+        dc.w    0
+
+        dc.w    6       |67.5
+        dc.w    0
+
+        dc.w    6       |90
+        dc.w    0
+
+        dc.w    6       |112.5
+        dc.w    0
+
+        dc.w    4       |135
+        dc.w    0
+
+        dc.w    2      |157.5
+        dc.w    0
+
+        dc.w    0      |180
+        dc.w    0
+
+        dc.w    -2      |202.5
+        dc.w    0
+
+        dc.w    -4      |225
+        dc.w    0
+
+        dc.w    -6      |247.5
+        dc.w    0
+
+        dc.w    -6      |270
+        dc.w    0
+
+        dc.w    -6      |292.5
+        dc.w    0
+
+        dc.w    -4      |315
+        dc.w    0
+
+        dc.w    -2      |337.5
+        dc.w    0
+*/
 
 
 fade_md_palette:
@@ -2286,12 +2513,13 @@ init_vdp:
         move.w  #0x8800,(a0) /* reg 8 = always 0 */
         move.w  #0x8900,(a0) /* reg 9 = always 0 */
         move.w  #0x8A00,(a0) /* reg 10 = HINT = 0 */
-        move.w  #0x8B00,(a0) /* reg 11 = /IE2 (no EXT INT), full scroll */
+        |move.w  #0x8B00,(a0) /* reg 11 = /IE2 (no EXT INT), full scroll */
+        move.w  #0x8B03,(a0) /* reg 11 = /IE2 (no EXT INT), line scroll */
         move.w  #0x8C81,(a0) /* reg 12 = H40 mode, no lace, no shadow/hilite */
         move.w  #0x8D2B,(a0) /* reg 13 = HScroll Tbl = 0xAC00 */
         move.w  #0x8E00,(a0) /* reg 14 = always 0 */
         move.w  #0x8F01,(a0) /* reg 15 = data INC = 1 */
-        move.w  #0x9001,(a0) /* reg 16 = Scroll Size = 64x32 */
+        move.w  #0x9010,(a0) /* reg 16 = Scroll Size = 32x64 */
         move.w  #0x9100,(a0) /* reg 17 = W Pos H = left */
         move.w  #0x9200,(a0) /* reg 18 = W Pos V = top */
 
@@ -2354,11 +2582,7 @@ init_vdp:
 
 | set the default palette for text
         move.l  #0xC0000000,(a0)        /* write CRAM address 0 */
-        move.l  #0x00000CCC,(a1)        /* entry 0 (black) and 1 (lt gray) */
-        move.l  #0xC0200000,(a0)        /* write CRAM address 32 */
-        move.l  #0x000000A0,(a1)        /* entry 16 (black) and 17 (green) */
-        move.l  #0xC0400000,(a0)        /* write CRAM address 64 */
-        move.l  #0x0000000A,(a1)        /* entry 32 (black) and 33 (red) */
+        move.l  #0x00000000,(a1)        /* set background color to black */
 3:
         move.w  #0x8174,0xC00004        /* display on, vblank enabled, V28 mode */
         rts
@@ -2387,7 +2611,11 @@ load_font:
 
 | Bump the FM player to keep the music going
 
+        .global bump_fm
 bump_fm:
+        tst.w   fm_idx
+        beq.s   999f
+
         move.w  sr,-(sp)
         move.w  #0x2700,sr          /* disable ints */
         tst.b   REQ_ACT.w
@@ -2397,6 +2625,7 @@ bump_fm:
         bne.b   0f                  /* buffer preread pending */
 99:
         move.w  (sp)+,sr            /* restore int level */
+999:
         rts
 
 0:
@@ -2489,20 +2718,28 @@ play_drum_sound:
 13:
         /* EOF reached */
         move.l  fm_loop,d0
+        andi.w  #0x01FF,d0          /* 1 read buffer */
         add.w   d3,d0
         andi.w  #0x0FFF,d0          /* 4KB buffer */
-        move.l  d0,fm_loop2         /* offset to z80 loop start */
+        move.w  d0,fm_loop2         /* offset to z80 loop start */
 
         /* reset */
         jsr     vgm_reset           /* restart at start of compressed data */
-        move.w  #0,offs68k
-        move.w  d3,offsz80
-        move.w  #7,preread_cnt      /* refill buffer if room */
-        bra.b   7f
+
+        move.l  fm_loop,d2
+        andi.l  #0xFFFFFE00,d2
+        beq.b   14f
+
+        move.l  d2,-(sp)
+        jsr     vgm_read2
+        addq.l  #4,sp
+        move.w  d0,d2
+        andi.w  #0x7FFF,d2          /* amount data pre-read (with wrap around) */
 14:
         move.w  d2,offs68k
         move.w  d3,offsz80
-        bra.b   7f
+        move.w  #7,preread_cnt      /* refill buffer if room */
+        bra.w   20b
 
 5:
         cmpi.b  #0x02,d0
@@ -2510,9 +2747,12 @@ play_drum_sound:
 
         /* music ended, check for loop */
         tst.w   fm_rep
-        beq.b   7f                  /* no repeat, leave FM_IDX as 0 */
-
-        move.l  fm_loop2,d0
+        bne.b   50f                 /* repeat, loop vgm */
+        /* no repeat, reset FM */
+        jsr     rst_ym2612
+        bra.b   7f
+50:
+        move.w  fm_loop2,d0
         z80wr   FM_START,d0
         lsr.w   #8,d0
         z80wr   FM_START+1,d0       /* music start = loop offset */
@@ -3002,6 +3242,16 @@ crsr_y:
 dbug_color:
         dc.w    0
 
+scroll_b_vert_offset:
+        dc.w    0
+scroll_a_vert_offset:
+        dc.w    0
+
+scroll_b_vert_rate:
+        dc.b    0
+scroll_a_vert_rate:
+        dc.b    0
+
 lump_ptr:
         dc.l    0
 lump_size:
@@ -3065,5 +3315,7 @@ FMReset:
 
         .bss
         .align  2
-col_store:
-        .space  21*224*2        /* 140 double-columns in vram, 20 in wram, 1 in wram for swap */
+col_store:                      /* Is this label still needed? */
+decomp_buffer:
+        |.space  21*224*2        /* 140 double-columns in vram, 20 in wram, 1 in wram for swap */
+        .space  12288           /* 12 KB */

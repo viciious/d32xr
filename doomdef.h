@@ -126,6 +126,8 @@ typedef unsigned angle_t;
 #define TITLE_ANGLE_INC		0x800000
 
 #define TITLE_MAP_NUMBER	30
+#define SSTAGE_START        60
+#define SSTAGE_END          66
 
 #ifdef MARS
 
@@ -154,6 +156,7 @@ typedef enum
 	ga_exitdemo,
 	ga_startnew,
 	ga_backtotitle,
+	ga_specialstageexit,
 } gameaction_t;
 
 
@@ -387,6 +390,7 @@ typedef enum
 	SH_WHIRLWIND,
 } shieldpower_t;
 
+#define MAX_TOUCHING_SECTORS 8
 typedef struct player_s
 {
 	mobj_t		*mo;
@@ -402,7 +406,7 @@ typedef struct player_s
 	fixed_t		viewheight;				/* base height above floor for viewz */
 	fixed_t		deltaviewheight;		/* squat speed */
 	fixed_t		bob;					/* bounded/scaled total momentum */
-	
+
 	int			score;
 	VINT		health;					/* only used between levels, mo->health */
 										/* is used during levels	 */
@@ -412,6 +416,9 @@ typedef struct player_s
 	
 	VINT		killcount, itemcount, secretcount;		/* for intermission */
 	VINT		whiteFlash;/* for screen flashing */
+
+	VINT        touching_sectorlist[MAX_TOUCHING_SECTORS]; // These can potentially be duplicates
+	VINT        num_touching_sectors;
 
 	VINT        exiting;
 	VINT        deadTimer;
@@ -428,6 +435,7 @@ typedef struct player_s
 	VINT		dashSpeed;
 	VINT        homingTimer;
 	VINT        xtralife;
+	VINT        skidTime;
 } player_t;
 
 void P_PlayerHitFloor(player_t* player);
@@ -507,6 +515,8 @@ extern	VINT		totalitems, totalsecret;	/* for intermission */
 extern	int			gamemaplump;
 extern	dmapinfo_t	gamemapinfo;
 extern	dgameinfo_t	gameinfo;
+extern  boolean		sky_md_layer;
+extern	boolean		sky_32x_layer;
 
 extern 	VINT 		*gamemapnumbers;
 extern 	VINT 		*gamemaplumps;
@@ -515,6 +525,9 @@ extern 	VINT 		gamemapcount;
 extern 	int 		gametic;
 extern  int         leveltime;
 extern  VINT        fadetime;
+extern uint16_t     emeralds;
+extern uint16_t     token;
+extern uint16_t     tokenbits;
 
 #define MAXDMSTARTS		10
 extern	mapthing_t	*deathmatchstarts, *deathmatch_p;
@@ -660,9 +673,14 @@ void	*W_CacheLumpNum (int lump, int tag);
 void	*W_CacheLumpName (const char *name, int tag);
 
 const char *W_GetNameForNum (int lump);
+#ifdef SHOW_DISCLAIMER
+void* W_GetLumpData(int lump) ATTR_DATA_CACHE_ALIGN;
+#define W_POINTLUMPNUM(x) W_GetLumpData(x)
+#else
 void* W_GetLumpData(int lump, const char *file, int line) ATTR_DATA_CACHE_ALIGN;
-
 #define W_POINTLUMPNUM(x) W_GetLumpData(x, __FILE__, __LINE__)
+#endif
+
 
 
 /*---------- */
@@ -745,25 +763,34 @@ void I_SwapScreenCopy(void);
 
 #define I_DrawColumnLow I_DrawColumnLowC
 #define I_DrawSkyColumnLow I_DrawSkyColumnLowC
+#define I_Draw32XSkyColumnLow I_Draw32XSkyColumnLowC
 #define I_DrawColumnNPo2Low I_DrawColumnNPo2LowC
 #define I_DrawSpanLow I_DrawSpanLowC
+#define I_DrawSpanColorLow I_DrawSpanColorLowC
 
 #define I_DrawColumn I_DrawColumnC
 #define I_DrawSkyColumn I_DrawSkyColumnC
+#define I_Draw32XSkyColumn I_Draw32XSkyColumnC
 #define I_DrawColumnNPo2 I_DrawColumnNPo2C
 #define I_DrawSpan I_DrawSpanC
+#define I_DrawSpanColor I_DrawSpanColorC
 
 #else
 
 #define I_DrawColumnLow I_DrawColumnLowA
 #define I_DrawSkyColumnLow I_DrawSkyColumnLowA
+#define I_Draw32XSkyColumnLow I_Draw32XSkyColumnLowA
 #define I_DrawColumnNPo2Low I_DrawColumnNPo2LowA
 #define I_DrawSpanLow I_DrawSpanLowA
+#define I_DrawSpanColorLow I_DrawSpanColorLowA
 
 #define I_DrawColumn I_DrawColumnA
+#define I_DrawColumnFlipped I_DrawColumnFlippedA
 #define I_DrawSkyColumn I_DrawSkyColumnA
+#define I_Draw32XSkyColumn I_Draw32XSkyColumnA
 #define I_DrawColumnNPo2 I_DrawColumnNPo2A
 #define I_DrawSpan I_DrawSpanA
+#define I_DrawSpanColor I_DrawSpanColorA
 
 #endif
 
@@ -781,17 +808,30 @@ void I_DrawSpanLow(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
 	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
 
+void I_DrawColumnFlipped(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
+	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
+
 #ifdef MDSKY
 void I_DrawSkyColumn(int dc_x, int dc_yl, int dc_yh);
 
 void I_DrawSkyColumnLow(int dc_x, int dc_yl, int dc_yh);
 #endif
 
+void I_Draw32XSkyColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
+	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_y_offset);
+
+void I_Draw32XSkyColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
+	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_y_offset);
+
 void I_DrawColumnNPo2(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
 	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
 
 void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int dc_texheight);
+
+void I_DrawSpanColor(int ds_y, int ds_x1, int ds_x2, int color_index);
+
+void I_DrawSpanColorLow(int ds_y, int ds_x1, int ds_x2, int color_index);
 
 #ifdef POTATO_MODE
 void I_DrawSpanPotato(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
@@ -806,6 +846,10 @@ void I_DrawColumnNoDraw(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_
 
 void I_DrawSpanNoDraw(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int dc_texheight);
+
+void I_DrawSpanColorNoDraw(int ds_y, int ds_x1, int ds_x2, int color_index);
+
+void I_DrawSkyColumnNoDraw(int dc_x, int dc_yl, int dc_yh);
 
 void I_Print8 (int x, int y, const char *string);
 int I_Print8Len(const char* string);
@@ -994,17 +1038,17 @@ enum
 	BT_UP			= 0x4,
 	BT_DOWN			= 0x8,
 
-	BT_ATTACK		= 0x10,
-	BT_USE			= 0x20,
-	BT_STRAFE		= 0x40,
-	BT_SPEED		= 0x80,
+	BT_JUMP		    = 0x10,
+	BT_SPIN			= 0x20,
+	BT_GASPEDAL		= 0x40,
+	BT_FLIP			= 0x80,
 
 	BT_START		= 0x100,
 	BT_AUTOMAP		= 0x200,
 	BT_MODE			= 0x400,
 
-	BT_PWEAPN		= 0x800,
-	BT_NWEAPN		= 0x1000,
+	BT_CAMLEFT		= 0x800,
+	BT_CAMRIGHT		= 0x1000,
 
 	BT_STRAFELEFT	= 0x2000,
 	BT_STRAFERIGHT	= 0x4000,
@@ -1030,19 +1074,13 @@ enum
 typedef enum
 {
 	SFU,
-	SUF,
-	FSU,
-	FUS,
-	USF,
-	UFS,
-	NUMCONTROLOPTIONS
+	NUMCONTROLOPTIONS,
 } control_t;
 
 /* action buttons can be set to BT_A, BT_B, or BT_C */
 /* strafe and use should be set to the same thing */
 extern unsigned configuration[NUMCONTROLOPTIONS][3];
 extern	VINT	controltype;				/* 0 to 5 */
-extern	VINT	strafebtns;
 extern	boolean	splitscreen;
 
 extern	VINT	sfxvolume, musicvolume;		/* range from 0 to 255 */
@@ -1077,6 +1115,7 @@ typedef struct
 
 void DoubleBufferSetup (void);
 void EraseBlock (int x, int y, int width, int height);
+void GetJagobjSize(int lumpnum, int* ow, int* oh);
 void DrawJagobj (jagobj_t *jo, int x, int y);
 void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh);
 void DrawJagobjLumpWithColormap(int lumpnum, int x, int y, int* ow, int* oh, int colormap);

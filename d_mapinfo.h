@@ -29,15 +29,20 @@
 typedef struct
 {
 	char *name;
-	VINT act;
-	VINT borderFlat;
 	char *sky;
+	VINT act;
 	VINT next;
-	VINT secretNext;
+	VINT skyOffsetY;
 	VINT lumpNum;
+	VINT borderFlat;
+	VINT skyTopColor;
+	VINT skyBottomColor;
 	VINT mapNumber;
 	VINT musicLump;
 	VINT afterBossMusic;
+	VINT spheresNeeded;
+	VINT timeLimit;
+	VINT loadFlags;
 	char lumpName[9];
 	void *data;
 } dmapinfo_t;
@@ -49,6 +54,7 @@ typedef struct
 	VINT titlePage;
 	VINT titleMus;
 	VINT intermissionMus;
+	VINT emeraldMus;
 	VINT xtlifeMus;
 	VINT invincMus;
 	VINT sneakerMus;

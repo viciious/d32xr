@@ -507,6 +507,9 @@ int P_MapThingSpawnsMobj (mapthing_t* mthing)
 	if (mthing->type == 11)
 		return 0;
 
+	if (mthing->type >= 600 && mthing->type <= 603)
+		return 3;
+
 /* check for players specially */
 #if 0
 	if (mthing->type > 4)
@@ -552,7 +555,7 @@ int P_MapThingSpawnsMobj (mapthing_t* mthing)
 ==================
 */
 
-inline fixed_t P_GetMapThingSpawnHeight(const mobjtype_t mobjtype, const mapthing_t* mthing, const fixed_t x, const fixed_t y, const fixed_t z)
+fixed_t P_GetMapThingSpawnHeight(const mobjtype_t mobjtype, const mapthing_t* mthing, const fixed_t x, const fixed_t y, const fixed_t z)
 {
 	fixed_t dz = z; // Base offset from the floor.
 
@@ -564,7 +567,7 @@ inline fixed_t P_GetMapThingSpawnHeight(const mobjtype_t mobjtype, const mapthin
 	/*	case MT_CRAWLACOMMANDER:
 		case MT_DETON:
 		case MT_JETTBOMBER:
-		case MT_JETTGUNNER:
+		case MT_JETTGUNNER:*/
 		case MT_EGGMOBILE2:
 			if (!dz)
 				dz = 33*FRACUNIT;
@@ -578,9 +581,10 @@ inline fixed_t P_GetMapThingSpawnHeight(const mobjtype_t mobjtype, const mapthin
 			if (!dz)
 				dz = 288*FRACUNIT;
 			break;
-	*/
 		// Ring-like items, float additional units unless args[0] is set.
+		case MT_TOKEN:
 		case MT_RING:
+		case MT_BLUESPHERE:
 			dz += 24*FRACUNIT;
 			break;
 		default:
@@ -588,13 +592,13 @@ inline fixed_t P_GetMapThingSpawnHeight(const mobjtype_t mobjtype, const mapthin
 		}	
 	}
 
-	if (!dz) // Snap to the surfaces when there's no offset set.
+/*	if (!dz) // Snap to the surfaces when there's no offset set.
 	{
 //		if (flip)
 //			return ONCEILINGZ;
 //		else
 			return ONFLOORZ;
-	}
+	}*/
 
 	const subsector_t *ss = R_PointInSubsector(x, y);
 
@@ -661,11 +665,17 @@ return;	/*DEBUG */
 	z = (mthing->options >> 4) << FRACBITS;
 	z = P_GetMapThingSpawnHeight(i, mthing, x, y, z);
 
+	if (mthing->type == 312 && (tokenbits & (mthing->angle / 45))) // MT_TOKEN
+		return; // Player already has this token
+
 	mobj = P_SpawnMobj (x,y,z, i);
 	if (mobj->type == MT_RING)
 	{
 		totalitems++;
-		return;
+	}
+	else if (mobj->type == MT_TOKEN)
+	{
+		tokenbits |= (mthing->angle / 45);
 	}
 
 	if (mobj->flags & MF_RINGMOBJ)

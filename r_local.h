@@ -63,6 +63,13 @@ typedef struct
 
 struct line_s;
 
+#define SF_FOF_INVISIBLE_TANGIBLE    1
+#define SF_FOF_SWAPHEIGHTS           2
+#define SF_FLOATBOB                  4
+#define SF_AIRBOB                    8
+#define SF_CRUMBLE                  16
+#define SF_RESPAWN                  32
+
 typedef	struct
 {
 	fixed_t		floorheight, ceilingheight;
@@ -72,14 +79,14 @@ typedef	struct
 
 	uint8_t		lightlevel, special;
 
-	VINT		tag;
+	uint8_t		tag;
+	uint8_t     flags;
 	// killough 3/7/98: support flat heights drawn at another sector's heights
   	VINT        heightsec;    // other sector, or -1 if no other sector
 
 	VINT        fofsec;
 
-//	uint8_t     floor_xoffs;
-//	uint8_t     floor_yoffs;
+	VINT        floor_xoffs; // Upper X, Lower Y
 
 	mobj_t		*thinglist;			/* list of mobjs in sector */
 	void		*specialdata;		/* thinker_t for reversable actions */
@@ -99,7 +106,8 @@ typedef struct line_s
 	VINT 		v1, v2;
 	VINT		sidenum[2];			/* sidenum[1] will be -1 if one sided */
 	uint16_t	flags;
-	uint8_t		special, tag;
+	uint8_t		special;
+	uint8_t		tag;
 } line_t;
 
 #define LD_FRONTSECTOR(ld) (&sectors[sides[(ld)->sidenum[0]].sector])
@@ -121,19 +129,21 @@ typedef struct seg_s
 
 typedef struct
 {
-	fixed_t		x,y,dx,dy;			/* partition line */
-	fixed_t		bbox[2][4];			/* bounding box for each child */
-	int			children[2];		/* if NF_SUBSECTOR its a subsector */
+	int16_t		x,y,dx,dy;			/* partition line */
+	uint16_t	children[2];		/* if NF_SUBSECTOR its a subsector */
+	uint16_t 	encbbox[2]; 		/* encoded bounding box for each child */
 } node_t;
 
 #define MIPLEVELS 1
 
+#ifdef USE_DECALS
 typedef struct
 {
 	VINT	mincol, maxcol;
 	VINT	minrow, maxrow;
 	VINT 	texturenum;
 } texdecal_t;
+#endif
 
 typedef struct
 {
@@ -141,7 +151,9 @@ typedef struct
 	VINT		width;
 	VINT		height;
 	VINT		lumpnum;
+#ifdef USE_DECALS
 	uint16_t	decals;
+#endif
 #if MIPLEVELS > 1
 	VINT		mipcount;
 #endif
@@ -159,7 +171,7 @@ typedef struct
 typedef struct
 {
 	VINT size;
-	VINT pad;
+	VINT wavy;
 #ifdef MARS
 	inpixel_t 	*data[MIPLEVELS];
 #else
@@ -208,7 +220,7 @@ extern	spritedef_t		sprites[NUMSPRITES];
 */
 
 extern	int			numvertexes;
-extern	vertex_t	*vertexes;
+extern	mapvertex_t	*vertexes;
 
 extern	int			numsegs;
 extern	seg_t		*segs;
@@ -228,6 +240,8 @@ extern	line_t		*lines;
 extern	int			numsides;
 extern	side_t		*sides;
 
+extern 	int16_t 	worldbbox[4];
+
 /*============================================================================= */
 
 extern VINT viewportNum;
@@ -244,21 +258,34 @@ extern const VINT numViewports;
 ATTR_DATA_CACHE_ALIGN
 static inline int R_PointOnSide (int x, int y, node_t *node)
 {
-	fixed_t	dx,dy;
-	fixed_t	left, right;
+	int32_t	dx,dy;
+	int32_t r1, r2;
 
-	dx = (x - node->x);
-	dy = (y - node->y);
-
+	dx = x - ((fixed_t)node->x << FRACBITS);
 #ifdef MARS
-   left = ((int64_t)node->dy*dx) >> 32;
-   right = ((int64_t)dy*node->dx) >> 32;
+	dx = (unsigned)dx >> FRACBITS;
+	__asm volatile(
+		"muls.w %0,%1\n\t"
+		: : "r"(node->dy), "r"(dx) : "macl", "mach");
 #else
-   left  = (node->dy>>FRACBITS) * (dx>>FRACBITS);
-   right = (dy>>FRACBITS) * (node->dx>>FRACBITS);
+	dx >>= FRACBITS;
+	r1 = node->dy * dx;
 #endif
 
-   return (left <= right);
+	dy = y - ((fixed_t)node->y << FRACBITS);
+#ifdef MARS
+	dy = (unsigned)dy >> FRACBITS;
+	__asm volatile(
+		"sts macl, %0\n\t"
+		"muls.w %2,%3\n\t"
+		"sts macl, %1\n\t"
+		: "=&r"(r1), "=&r"(r2) : "r"(dy), "r"(node->dx) : "macl", "mach");
+#else
+	dy >>= FRACBITS;
+	r2 = dy * node->dx;
+#endif
+
+    return (r1 <= r2);
 }
 
 //
@@ -282,15 +309,19 @@ sector_t *R_FakeFlat(sector_t *, sector_t *, boolean) ATTR_DATA_CACHE_ALIGN;
 typedef void (*drawcol_t)(int, int, int, int, fixed_t, fixed_t, inpixel_t*, int);
 typedef void (*drawskycol_t)(int, int, int);
 typedef void (*drawspan_t)(int, int, int, int, fixed_t, fixed_t, fixed_t, fixed_t, inpixel_t*, int);
+typedef void (*drawspancolor_t)(int, int, int, int);
 
 extern drawcol_t drawcol;
+extern drawcol_t drawcolflipped;
 extern drawcol_t drawcolnpo2;
 extern drawcol_t drawcollow;
 extern drawspan_t drawspan;
+extern drawspancolor_t drawspancolor;
 
 #ifdef MDSKY
 extern drawskycol_t drawskycol;
 #endif
+extern drawcol_t draw32xskycol;
 
 #ifdef HIGH_DETAIL_SPRITES
 extern drawcol_t drawspritecol;
@@ -313,7 +344,7 @@ extern const angle_t tantoangle[SLOPERANGE + 1];
 
 extern  fixed_t *yslopetab;
 extern	fixed_t *yslope/*[SCREENHEIGHT]*/;
-extern	fixed_t *distscale/*[SCREENWIDTH]*/;
+extern	uint16_t *distscale/*[SCREENWIDTH]*/;
 
 #define OPENMARK 0xff00
 #ifdef MARS
@@ -369,8 +400,10 @@ extern	VINT		numtextures;
 extern	texture_t	*textures;
 extern 	boolean 	texmips;
 
+#ifdef USE_DECALS
 extern 	VINT 		numdecals;
 extern 	texdecal_t  *decals;
+#endif
 
 extern	uint8_t			*flattranslation;		/* for global animation */
 extern	uint8_t			*texturetranslation;	/* for global animation */
@@ -400,7 +433,9 @@ int	R_CheckTextureNumForName(const char* name);
 void	R_InitMathTables(void);
 void	R_InitSpriteDefs(const char** namelist);
 void R_InitColormap();
+#ifdef USE_DECALS
 boolean R_CompositeColumn(int colnum, int numdecals, texdecal_t *decals, inpixel_t *src, inpixel_t *dst, int height, int miplevel) ATTR_DATA_CACHE_ALIGN;
+#endif
 
 /*
 ==============================================================================
@@ -496,9 +531,9 @@ typedef struct
 	uint16_t	newmiplevels; // 0 is lower, 1 is upper
 #endif
 
-	int			scalestep;		/* polar angle to start at phase1, then scalestep after phase2 */
-	unsigned	scalefrac;
-	unsigned	scale2;
+	fixed_t			scalestep;		/* polar angle to start at phase1, then scalestep after phase2 */
+	fixed_t	scalefrac;
+	fixed_t	scale2;
 
 	short	actionbits;
 	short	seglightlevel;
@@ -550,7 +585,7 @@ typedef struct
 	uint32_t    fofInfo;
 } viswallextra_t;
 
-#define	MAXWALLCMDS		140
+#define	MAXWALLCMDS		150
 
 /* A vissprite_t is a thing that will be drawn during a refresh */
 typedef struct vissprite_s
@@ -617,7 +652,7 @@ __attribute__((aligned(16)))
 #endif
 {
 	fixed_t		viewx, viewy, viewz;
-	angle_t		viewangle;
+	angle_t		viewangle,aimingangle;
 	subsector_t *viewsubsector;
 	fixed_t		viewcos, viewsin;
 	player_t	*viewplayer;

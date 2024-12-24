@@ -32,18 +32,18 @@ typedef struct
 
 typedef struct
 {
-	short		textureoffset;
-	short		rowoffset;
-	char		toptexture[8], bottomtexture[8], midtexture[8];
-	short		sector;				/* on viewer's side */
+	int16_t sector;
+	uint8_t toptexture, bottomtexture, midtexture;
+	uint8_t rowoffset;     // add this to the calculated texture top
+	int16_t textureoffset; // 8.4, add this to the calculated texture col
 } mapsidedef_t;
 
 typedef struct
 {
 	short		v1, v2;
-	short		flags;
-	short		special, tag;
 	short		sidenum[2];			/* sidenum[1] will be -1 if one sided */
+	uint16_t	flags;
+	uint8_t		special, tag;
 } maplinedef_t;
 
 #define	ML_BLOCKING			1
@@ -71,15 +71,15 @@ typedef struct
 
 typedef	struct
 {
-	short		floorheight, ceilingheight;
-	char		floorpic[8], ceilingpic[8];
-	short		lightlevel;
-	short		special, tag;
+	int16_t		floorheight, ceilingheight;
+	uint8_t		floorpic, ceilingpic;
+	uint8_t     lightlevel;
+	uint8_t     special, tag;
 } mapsector_t;
 
 typedef struct
 {
-	short		numsegs;
+//	short		numsegs;
 	short		firstseg;			/* segs are stored sequentially */
 } mapsubsector_t;
 

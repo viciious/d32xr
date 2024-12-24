@@ -108,8 +108,8 @@ void GetSectorAABB(sector_t *sector, fixed_t bbox[4])
 	for (int j = 0; j < sector->linecount; j++)
 	{
 		const line_t *li = lines + sector->lines[j];
-		M_AddToBox(bbox, vertexes[li->v1].x, vertexes[li->v1].y);
-		M_AddToBox(bbox, vertexes[li->v2].x, vertexes[li->v2].y);
+		M_AddToBox(bbox, vertexes[li->v1].x << FRACBITS, vertexes[li->v1].y << FRACBITS);
+		M_AddToBox(bbox, vertexes[li->v2].x << FRACBITS, vertexes[li->v2].y << FRACBITS);
 	}
 }
 

@@ -105,7 +105,7 @@
 
 ! Standard Mars Header at 0x3C0
 
-        .ascii  "DOOM 32XR       "      /* module name */
+        .ascii  "SRB32X v0.1     "      /* module name */
         .long   0x00000000              /* version */
         .long   __text_end-0x02000000   /* Source (in ROM) */
         .long   0x00000000              /* Destination (in SDRAM) */
@@ -255,10 +255,10 @@ pri_vbr:
         .long   pri_irq         /* FRT interrupt (Level 1) */
         .long   pri_irq         /* WDT interrupt (Level 2 & 3) */
         .long   pri_irq         /* DMA interrupt (Level 4 & 5) */
-        .long   pri_irq         /* PWM interupt (Level 6 & 7) */
-        .long   pri_irq         /* Command interupt (Level 8 & 9) */
-        .long   pri_irq         /* H Blank interupt (Level 10 & 11) */
-        .long   pri_irq         /* V Blank interupt (Level 12 & 13) */
+        .long   pri_irq         /* PWM interrupt (Level 6 & 7) */
+        .long   pri_irq         /* Command interrupt (Level 8 & 9) */
+        .long   pri_irq         /* H Blank interrupt (Level 10 & 11) */
+        .long   pri_irq         /* V Blank interrupt (Level 12 & 13) */
         .long   pri_irq         /* Reset Button (Level 14 & 15) */
 
 !-----------------------------------------------------------------------
@@ -315,10 +315,10 @@ sec_vbr:
         .long   sec_irq         /* FRT interrupt (Level 1) */
         .long   sec_irq         /* WDT interrupt (Level 2 & 3) */
         .long   sec_irq         /* DMA interrupt (Level 4 & 5) */
-        .long   sec_irq         /* PWM interupt (Level 6 & 7) */
-        .long   sec_irq         /* Command interupt (Level 8 & 9) */
-        .long   sec_irq         /* H Blank interupt (Level 10 & 11 */
-        .long   sec_irq         /* V Blank interupt (Level 12 & 13) */
+        .long   sec_irq         /* PWM interrupt (Level 6 & 7) */
+        .long   sec_irq         /* Command interrupt (Level 8 & 9) */
+        .long   sec_irq         /* H Blank interrupt (Level 10 & 11 */
+        .long   sec_irq         /* V Blank interrupt (Level 12 & 13) */
         .long   sec_irq         /* Reset Button (Level 14 & 15) */
 
 !-----------------------------------------------------------------------
@@ -509,6 +509,27 @@ pri_no_irq:
 !-----------------------------------------------------------------------
 
 pri_v_irq:
+        /*
+        mov.l   r0,@-r15
+        mov.l   r1,@-r15
+
+        mov.l   mars_thru_rgb_reference,r0
+        mov.w   @r0,r1
+        mov.l   phi_mars_color_palette,r0
+        add     r1,r0
+        add     r1,r0
+        mov.w   @r0,r1
+
+        mov.w   phi_mars_color_mask,r0
+        and     r0,r1
+        
+        mov.l   phi_rgb,r0
+        mov.l   r1,@r0
+
+        mov.l   @r15+,r1
+        mov.l   @r15+,r0
+        */
+
         ! bump ints if necessary
         mov.l   pvi_sh2_frtctl,r1
         mov     #0xE2,r0                /* TOCR = select OCRA, output 1 on compare match */
@@ -557,6 +578,17 @@ pvi_sh2_frtctl:
 !-----------------------------------------------------------------------
         
 pri_h_irq:
+        /*
+        mov.l   phi_rgb,r1
+        mov.l   @r1,r0
+
+        mov.l   phi_mars_thru_color,r2
+        mov.w   r0,@r2
+
+        add     #1,r0
+        mov.l   r0,@r1
+        */
+
         ! bump ints if necessary
         mov.l   phi_sh2_frtctl,r1
         mov     #0xE2,r0                /* TOCR = select OCRA, output 1 on compare match */
@@ -576,10 +608,26 @@ pri_h_irq:
         nop
 
         .align  4
+phi_rgb:
+        .long   _phi_line
 phi_mars_adapter:
         .long   0x20004000
+phi_mars_color_palette:
+        .long   0x20004200
+phi_mars_thru_color:
+        .long   0x200043F8
+
 phi_sh2_frtctl:
         .long   0xfffffe10
+
+mars_thru_rgb_reference:
+        .long   _mars_thru_rgb_reference
+
+phi_mars_thru_bit_mask:
+        .word   0x8000
+phi_mars_color_mask:
+        .word   0x7FFF
+        .align  4
 
 !-----------------------------------------------------------------------
 ! Primary Command IRQ handler

@@ -4,6 +4,7 @@
   Renderer phase 6 - Seg Loop 
 */
 
+#include "p_camera.h"
 #include "r_local.h"
 #include "mars.h"
 
@@ -20,11 +21,13 @@ typedef struct
    VINT      height;
    drawcol_t drawcol;
 
+#ifdef USE_DECALS
    // decals stuff
    VINT       numdecals;
    VINT       lastcol;
    texdecal_t *decals;
    uint8_t   *columncache;
+#endif
 } drawmip_t;
 
 typedef struct drawtex_s
@@ -45,11 +48,19 @@ typedef struct
     drawtex_t tex[2];
     drawtex_t *first, *last;
 
-    int lightmin, lightmax, lightsub, lightcoef;
+#ifndef SIMPLELIGHT
+    int lightmin;
+#endif
+    int lightmax;
+#ifndef SIMPLELIGHT
+    int lightsub, lightcoef;
+#endif
 #if MIPLEVELS > 1   
     unsigned minmip, maxmip;
 #endif
 } seglocal_t;
+
+extern boolean sky_md_layer;
 
 static char seg_lock = 0;
 
@@ -86,7 +97,7 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum, fixed_t scale2, in
     // column has no length?
     if (top < bottom)
     {
-        int mipcolnum;
+        VINT mipcolnum;
         drawmip_t *mip;
         fixed_t frac;
 #ifdef MARS
@@ -97,6 +108,7 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum, fixed_t scale2, in
 
         colnum &= tex->widthmask;
         mipcolnum = colnum;
+        mipcolnum &= tex->widthmask;
         frac = tex->texturemid - (centerY - top) * iscale;
 
 #if MIPLEVELS > 1
@@ -117,6 +129,7 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum, fixed_t scale2, in
         mip = &tex->mip[miplevel];
         src = mip->data + mipcolnum * mip->height;
 
+#ifdef USE_DECALS
         if (mip->numdecals > 0)
         {
             // decals/composite textures
@@ -137,6 +150,7 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum, fixed_t scale2, in
                 }
             }
         }
+#endif
 
         mip->drawcol(x, top, bottom-1, light, frac, iscale, src, mip->height);
     }
@@ -150,9 +164,21 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
     viswall_t* segl = lseg->segl;
 
     #ifdef MDSKY
-    drawskycol_t drawsky = (segl->actionbits & AC_ADDSKY) != 0 ? drawskycol : NULL;
+    drawskycol_t drawmdsky;
+    #endif
+    drawcol_t draw32xsky;
+
+    #ifdef MDSKY
+    if (sky_32x_layer) {
+        draw32xsky = (segl->actionbits & AC_ADDSKY) != 0 ? draw32xskycol : NULL;
+        drawmdsky = NULL;
+    }
+    else {
+        drawmdsky = (segl->actionbits & AC_ADDSKY) != 0 ? drawskycol : NULL;
+        draw32xsky = NULL;
+    }
     #else
-    drawcol_t drawsky = (segl->actionbits & AC_ADDSKY) != 0 ? drawcol : NULL;
+    draw32xsky = (segl->actionbits & AC_ADDSKY) != 0 ? draw32xskycol : NULL;
     #endif
 
     fixed_t scalefrac = segl->scalefrac;
@@ -169,8 +195,10 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 
     const int ceilingheight = segl->ceilingheight;
 
+#ifdef SIMPLELIGHT
+    const int texturelight = lseg->lightmax;
+#else
     int texturelight = lseg->lightmax;
-#ifndef SIMPLELIGHT
     int lightmax = lseg->lightmax, lightmin = lseg->lightmin,
         lightcoef = lseg->lightcoef, lightsub = lseg->lightsub;
 #endif
@@ -219,7 +247,11 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
         //
         // sky mapping
         //
-        if (drawsky)
+        #ifdef MDSKY
+        if (draw32xsky || drawmdsky)
+        #else
+        if (draw32xsky)
+        #endif
         {
             int top, bottom;
 
@@ -231,17 +263,25 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 
             if (top < bottom)
             {
+                if (draw32xsky) {
+                    int colnum = ((vd.viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
+                    inpixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
+                    
+                    draw32xsky(
+                        x,
+                        -gamemapinfo.skyOffsetY - (((signed int)vd.aimingangle) >> 22),
+                        top,
+                        bottom,
+                        gamemapinfo.skyTopColor,
+                        gamemapinfo.skyBottomColor,
+                        data,
+                        skytexturep->height
+                        );
+                }
 #ifdef MDSKY
-                drawsky(x, top, bottom);
-#else
-                // CALICO: draw sky column
-                int colnum = ((vd.viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
-    #ifdef MARS
-                inpixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
-    #else
-                pixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
-    #endif
-                drawsky(x, top, --bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, 128);
+                else {
+                    drawmdsky(x, top, bottom);
+                }
 #endif
             }
         }
@@ -328,7 +368,9 @@ static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex,
 {
     int j;
     int width = tex->width, height = tex->height;
+#ifdef USE_DECALS
     uint8_t *columncache = drawtex->columncache;
+#endif
     int mipwidth, mipheight;
 
     drawtex->widthmask = width-1;
@@ -356,6 +398,7 @@ static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex,
         if (mipheight < 1)
             mipheight = 1;
 
+#ifdef USE_DECALS
         // decals stuff
         mip->lastcol = -1;
         mip->columncache = columncache;
@@ -367,6 +410,7 @@ static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex,
             continue;
         }
         mip->decals = &decals[tex->decals >> 2];
+#endif
     }
 }
 
@@ -438,13 +482,20 @@ void R_SegCommands(void)
 #endif
 
 #ifdef SIMPLELIGHT
-        lseg.lightcoef = 0;
         if (vd.fixedcolormap)
-            lseg.lightmin = lseg.lightmax = vd.fixedcolormap;
+        {
+#ifndef SIMPLELIGHT
+            lseg.lightmin = 
+#endif
+            lseg.lightmax = vd.fixedcolormap;
+        }
         else
         {
             seglight = (segl->seglightlevel + extralight) & 0xff;
-            lseg.lightmin = lseg.lightmax = HWLIGHT((unsigned)seglight);
+#ifndef SIMPLELIGHT
+            lseg.lightmin = 
+#endif
+            lseg.lightmax = HWLIGHT((unsigned)seglight);
         }
 #else
         if (vd.fixedcolormap)

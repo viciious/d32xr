@@ -142,14 +142,14 @@ dispatch
     JP      Z,write_fm0         ; write value dd to YM2612 Port 0 register aa
     CP      $53
     JP      Z,write_fm1         ; write value dd to YM2612 Port 1 register aa
+    CP      $95
+    JP      Z,strm_fast         ; stream fast start
     CP      $62
     JP      Z,wait_735          ; wait 735 sample periods (1/60th sec)
     CP      $63
     JP      Z,wait_nnnn         ; wait nnnn sample periods
-    CP      $95
-    JP      Z,strm_fast         ; stream fast start
-    CP      $66
-    JP      Z,end_data          ; end of sound data
+    ;CP      $66
+    ;JP      Z,end_data          ; end of sound data
 ; unsupported command
     JP      end_data
 

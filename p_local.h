@@ -10,22 +10,18 @@
 #define	FLOATSPEED		(FRACUNIT*8)
 
 #define	GRAVITY			(FRACUNIT)
-#define	MAXMOVE			(24*FRACUNIT)
+#define	MAXMOVE			(30*FRACUNIT)
 
 
 #define	MAXHEALTH			100
 #define	VIEWHEIGHT			(41*FRACUNIT)
 
 /* mapblocks are used to check movement against lines and things */
-#define MAPBLOCKUNITS	128
+#define MAPBLOCKUNITS	256
 #define	MAPBLOCKSIZE	(MAPBLOCKUNITS*FRACUNIT)
-#define	MAPBLOCKSHIFT	(FRACBITS+7)
+#define	MAPBLOCKSHIFT	(FRACBITS+8)
 #define	MAPBMASK		(MAPBLOCKSIZE-1)
 #define	MAPBTOFRAC		(MAPBLOCKSHIFT-FRACBITS)
-
-
-/* player radius for movement checking */
-#define	PLAYERRADIUS	16*FRACUNIT
 
 /* MAXRADIUS is for precalculated sector block boxes */
 /* the spider demon is larger, but we don't have any moving sectors */
@@ -190,6 +186,7 @@ typedef struct
 fixed_t P_AproxDistance (fixed_t dx, fixed_t dy);
 int 	P_PointOnLineSide (fixed_t x, fixed_t y, line_t *line);
 int 	P_PointOnDivlineSide (fixed_t x, fixed_t y, divline_t *line);
+int     P_DivlineSide(fixed_t x, fixed_t y, divline_t *node);
 int 	P_BoxOnLineSide (fixed_t *tmbox, line_t *ld);
 
 fixed_t	P_LineOpening (line_t *linedef);
@@ -237,9 +234,8 @@ typedef struct
    fixed_t  shootx, shooty, shootz; // location for puff/blood
 } lineattack_t;
 
-fixed_t P_AimLineAttack (lineattack_t *la, mobj_t *t1, angle_t angle, fixed_t distance) ATTR_DATA_CACHE_ALIGN;
-
-void P_LineAttack (lineattack_t *la, mobj_t *t1, angle_t angle, fixed_t distance, fixed_t slope, int damage) ATTR_DATA_CACHE_ALIGN;
+__attribute((noinline))
+fixed_t P_AimLineAttack (lineattack_t *la, mobj_t *t1, angle_t angle, fixed_t distance);
 
 void P_RadiusAttack (mobj_t *spot, mobj_t *source, int damage) ATTR_DATA_CACHE_ALIGN;
 void P_XYMovement(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
@@ -327,8 +323,6 @@ typedef struct
 	mobj_t *slidething;
 
 	// output
-	int numspechit;
-	line_t *spechit[MAXSPECIALCROSS];
 	fixed_t	slidex, slidey;
 } pslidemove_t;
 
@@ -348,9 +342,6 @@ typedef struct
 	int     tmflags;
 	fixed_t tmdropoffz; // lowest point contacted
 
-	int    	numspechit;
-	line_t **spechit;
-
 	subsector_t *newsubsec; // destination subsector
 } pmovework_t;
 
@@ -364,7 +355,7 @@ typedef struct
 	fixed_t endbox[4];          // final proposed position
 	fixed_t nvx, nvy;           // normalized line vector
 
-	vertex_t *p1, *p2; // p1, p2 are line endpoints
+	vertex_t p1, p2; // p1, p2 are line endpoints
 	fixed_t p3x, p3y, p4x, p4y; // p3, p4 are move endpoints
 } pslidework_t;
 

@@ -56,6 +56,7 @@ int Mars_ParseMousePacket(int mouse, int* pmx, int* pmy);
 extern volatile unsigned mars_vblank_count;
 extern unsigned mars_frtc2msec_frac;
 extern const uint8_t* mars_newpalette;
+extern uint16_t mars_thru_rgb_reference;
 extern uint16_t mars_cd_ok;
 extern uint16_t mars_num_cd_tracks;
 extern uint16_t mars_framebuffer_height;
@@ -134,7 +135,12 @@ int Mars_ROMSize(void);
 
 #ifdef MDSKY
 void Mars_FadeMDPaletteFromBlack(int fade_degree);
-void Mars_LoadMDSky(void *sky_names_ptr, void *sky_palettes_ptr, void *sky_tiles_ptr);
+void Mars_ScrollMDSky(short scroll_x, short scroll_y_base, short scroll_y_offset, short scroll_y_pan);
+void Mars_LoadMDSky(void *sky_metadata_ptr,
+		void *sky_names_a_ptr, int sky_names_a_size,
+		void *sky_names_b_ptr, int sky_names_b_size,
+		void *sky_palettes_ptr, int sky_palettes_size,
+		void *sky_tiles_ptr, int sky_tiles_size);
 #endif
 
 void Mars_CtlMDVDP(int sel);

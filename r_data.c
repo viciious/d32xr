@@ -15,8 +15,10 @@ VINT		numtextures = 0;
 texture_t	*textures = NULL;
 boolean 	texmips = false;
 
+#ifdef USE_DECALS
 VINT 		numdecals = 0;
 texdecal_t  *decals = NULL;
+#endif
 
 spritedef_t sprites[NUMSPRITES];
 spriteframe_t* spriteframes;
@@ -70,7 +72,9 @@ void R_InitTextures (void)
 {
 	maptexture_t	*mtexture;
 	texture_t		*texture;
+#ifdef USE_DECALS
 	texdecal_t		*decal;
+#endif
 	int			i,j,c;
 	int			offset;
 	int			*directory;
@@ -97,12 +101,16 @@ void R_InitTextures (void)
 		offset = LITTLELONG(*directory);
 		mtexture = (maptexture_t*)((byte*)maptex + offset);
 		patchcount = LITTLESHORT(mtexture->patchcount);
+#ifdef USE_DECALS
 		if (patchcount > 1)
 			numdecals += patchcount - 1;
+#endif
 	}
 
+#ifdef USE_DECALS
 	decals = Z_Malloc (numdecals * sizeof(*decals), PU_STATIC);
 	D_memset(decals, 0, numdecals * sizeof(*decals));
+#endif
 
 	directory = maptex+1;
 	for (i = 0; i < numtextures; i++, directory++)
@@ -117,7 +125,9 @@ void R_InitTextures (void)
 		texture = &textures[i];
 		texture->width = LITTLESHORT(mtexture->width);
 		texture->height = LITTLESHORT(mtexture->height);
+#ifdef USE_DECALS
 		texture->decals = 0;
+#endif
 		D_memcpy(texture->name, mtexture->name, 8);
 		for (j = 0; j < 8; j++)
 		{
@@ -136,7 +146,9 @@ void R_InitTextures (void)
 
 	// process patches/decals
 	directory = maptex+1;
+#ifdef USE_DECALS
 	decal = decals;
+#endif
 	for (i = 0; i < numtextures; i++, directory++)
 	{
 		int texnum;
@@ -158,6 +170,7 @@ void R_InitTextures (void)
 
 		texture->lumpnum = textures[texnum].lumpnum;
 
+#ifdef USE_DECALS
 		if (patchcount > 1)
 		{
 			int j;
@@ -199,6 +212,7 @@ void R_InitTextures (void)
 			if (texture->decals == 0)
 				texture->decals = (firstdecal << 2) | numdecals;
 		}
+#endif
 	}
 
 	for (i = 0; i < numtextures; i++)
@@ -480,7 +494,7 @@ void R_InitMathTables(void)
 	I_FreeWorkBuffer();
 
 	viewangletox = (VINT *)I_AllocWorkBuffer(sizeof(*viewangletox) * (FINEANGLES / 2));
-	distscale = (fixed_t *)I_AllocWorkBuffer(sizeof(*distscale) * SCREENWIDTH);
+	distscale = (uint16_t *)I_AllocWorkBuffer(sizeof(*distscale) * SCREENWIDTH);
 	yslopetab = (fixed_t *)I_AllocWorkBuffer(sizeof(*yslopetab) * SCREENHEIGHT * 4);
 	xtoviewangle = (uint16_t *)I_AllocWorkBuffer(sizeof(*xtoviewangle) * (SCREENWIDTH+1));
 	tempviewangletox = (VINT *)I_WorkBuffer();
@@ -553,7 +567,7 @@ void R_InitMathTables(void)
 	{
 		fixed_t cosang = finecosine(xtoviewangle[i] >> (ANGLETOFINESHIFT-FRACBITS));
 		cosang = D_abs(cosang);
-		distscale[i] = FixedDiv(FRACUNIT, cosang);
+		distscale[i] = FixedDiv(FRACUNIT, cosang)>>1;
 	}
 
 	// enable caching for LUTs
@@ -841,6 +855,7 @@ void R_InitColormap()
 #endif
 }
 
+#ifdef USE_DECALS
 boolean R_CompositeColumn(int colnum, int numdecals, texdecal_t *decals, inpixel_t *src, inpixel_t *dst, int height, int miplevel)
 {
 	int i;
@@ -887,3 +902,4 @@ boolean R_CompositeColumn(int colnum, int numdecals, texdecal_t *decals, inpixel
 
 	return decaled;
 }
+#endif

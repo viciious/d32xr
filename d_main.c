@@ -2,6 +2,7 @@
  
 #include "doomdef.h"
 #include "v_font.h"
+#include "r_local.h"
 
 #ifdef MARS
 #include "marshw.h"
@@ -11,6 +12,11 @@
 
 boolean		splitscreen = false;
 VINT		controltype = 0;		/* determine settings for BT_* */
+
+boolean		sky_md_layer = false;
+boolean		sky_32x_layer = false;
+
+unsigned int	phi_line;
 
 int			gamevbls;		/* may not really be vbls in multiplayer */
 int			vblsinframe;		/* range from ticrate to ticrate*2 */
@@ -33,12 +39,11 @@ int 		ticstart;
 
 unsigned configuration[NUMCONTROLOPTIONS][3] =
 {
-	{BT_ATTACK, BT_USE, BT_SPEED},
-	{BT_SPEED, BT_USE, BT_ATTACK},
-	{BT_ATTACK, BT_SPEED, BT_USE},
-	{BT_ATTACK, BT_USE, BT_SPEED},
-	{BT_USE, BT_SPEED, BT_ATTACK},
-	{BT_USE, BT_ATTACK, BT_SPEED}
+#ifdef SHOW_DISCLAIMER
+	{BT_SPIN, BT_JUMP, BT_SPIN},
+#else
+	{BT_FLIP, BT_JUMP, BT_SPIN},
+#endif
 };
 
 /*============================================================================ */
@@ -310,44 +315,84 @@ __attribute((noinline))
 static void D_LoadMDSky(void)
 {
 	// Retrieve lumps for drawing the sky on the MD.
-	uint8_t *sky_name_ptr;
-	uint8_t *sky_pal_ptr;
-	uint8_t *sky_pat_ptr;
+	uint8_t *sky_metadata_ptr;
+	uint8_t *sky_names_a_ptr;
+	uint8_t *sky_names_b_ptr;
+	uint8_t *sky_palettes_ptr;
+	uint8_t *sky_tiles_ptr;
+
+	//uint32_t sky_metadata_size;
+	uint32_t sky_names_a_size;
+	uint32_t sky_names_b_size;
+	uint32_t sky_palettes_size;
+	uint32_t sky_tiles_size;
+	
 	int lump;
 
 	char lumpname[9];
 
-	D_strncpy(lumpname, gamemapinfo.sky, 5);
-	strcat(lumpname, "NAM");
+	D_snprintf(lumpname, 8, "%sMD", gamemapinfo.sky);
 	lump = W_CheckNumForName(lumpname);
 	if (lump != -1) {
-		sky_name_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		// This map uses an MD sky.
+		sky_md_layer = true;
+		sky_metadata_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		//sky_metadata_size = W_LumpLength(lump);
+	}
+	else {
+		// This map uses a 32X sky.
+		sky_md_layer = false;
+		return;
+	}
+
+	D_snprintf(lumpname, 8, "%sA", gamemapinfo.sky);
+	lump = W_CheckNumForName(lumpname);
+	if (lump != -1) {
+		sky_names_a_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		sky_names_a_size = W_LumpLength(lump);
 	}
 	else {
 		return;
 	}
 
-	D_strncpy(lumpname, gamemapinfo.sky, 5);
-	strcat(lumpname, "PAL");
+	D_snprintf(lumpname, 8, "%sB", gamemapinfo.sky);
 	lump = W_CheckNumForName(lumpname);
 	if (lump != -1) {
-		sky_pal_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		sky_names_b_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		sky_names_b_size = W_LumpLength(lump);
 	}
 	else {
 		return;
 	}
 
-	D_strncpy(lumpname, gamemapinfo.sky, 5);
-	strcat(lumpname, "TIL");
+	D_snprintf(lumpname, 8, "%sPAL", gamemapinfo.sky);
 	lump = W_CheckNumForName(lumpname);
 	if (lump != -1) {
-		sky_pat_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		sky_palettes_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		sky_palettes_size = W_LumpLength(lump);
 	}
 	else {
 		return;
 	}
 
-	Mars_LoadMDSky(sky_name_ptr, sky_pal_ptr, sky_pat_ptr);
+	D_snprintf(lumpname, 8, "%sTIL", gamemapinfo.sky);
+	lump = W_CheckNumForName(lumpname);
+	if (lump != -1) {
+		sky_tiles_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		sky_tiles_size = W_LumpLength(lump);
+	}
+	else {
+		return;
+	}
+
+	// Get the thru-pixel color from the metadata.
+	mars_thru_rgb_reference = sky_metadata_ptr[0];
+
+	Mars_LoadMDSky(sky_metadata_ptr,
+			sky_names_a_ptr, sky_names_a_size, 
+			sky_names_b_ptr, sky_names_b_size, 
+			sky_palettes_ptr, sky_palettes_size, 
+			sky_tiles_ptr, sky_tiles_size);
 }
 #endif
 
@@ -389,7 +434,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 	ticmousex[0] = ticmousex[1] = ticmousey[0] = ticmousey[1] = 0;
 
 	#ifdef MDSKY
-	if (wipe)
+	if (leveltime == 0)
 	{
 		D_LoadMDSky();
 	}
@@ -422,7 +467,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 
 		last_frt_count = frt_count;
 
-		if (optionsMenuOn || gamemapinfo.mapNumber == 30 || leveltime < TICRATE / 4) // Don't include map loading times into frameskip calculation
+		if (optionsMenuOn || gamemapinfo.mapNumber == TITLE_MAP_NUMBER || leveltime < TICRATE / 4) // Don't include map loading times into frameskip calculation
 		{
 			accum_time = 1;
 			total_frt_count = 0;
@@ -741,10 +786,10 @@ int TIC_Abortable (void)
 VINT disclaimerCount = 0;
 int TIC_Disclaimer(void)
 {
-	if (++disclaimerCount > 360)
+	if (++disclaimerCount > 300)
 		return 1;
 
-	if (disclaimerCount == 320)
+	if (disclaimerCount == 270)
 	{
 		// Set to totally black
 		const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
@@ -770,6 +815,10 @@ void START_Disclaimer(void)
 
 	const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
 	I_SetPalette(dc_playpals);
+
+	S_StartSong(gameinfo.gameoverMus, 0, cdtrack_gameover);
+
+	R_InitColormap();
 }
 
 void STOP_Disclaimer (void)
@@ -784,6 +833,115 @@ void parse_data(unsigned char *data, size_t dataLen)
 	size_t i;
 	for (i = 0; i < dataLen; i++, startPos++)
 		data[i] = data[i] ^ key[startPos & 7];
+}
+
+/*
+==================
+=
+= BufferedDrawSprite
+=
+= Cache and draw a game sprite to the 8 bit buffered screen
+==================
+*/
+
+void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left, boolean flip)
+{
+	spritedef_t	*sprdef;
+	spriteframe_t	*sprframe;
+	VINT 		*sprlump;
+	patch_t		*patch;
+	byte		*pixels, *src;
+	int			x, sprleft, sprtop, spryscale;
+	fixed_t 	spriscale;
+	int			lump;
+	int			texturecolumn;
+	int			light = HWLIGHT(255);
+	int 		height = I_FrameBufferHeight();
+
+	if ((unsigned)sprite >= NUMSPRITES)
+		I_Error ("BufferedDrawSprite: invalid sprite number %i "
+		,sprite);
+	sprdef = &sprites[sprite];
+	if ( (frame&FF_FRAMEMASK) >= sprdef->numframes )
+		I_Error ("BufferedDrawSprite: invalid sprite frame %i : %i "
+		,sprite,frame);
+	sprframe = &spriteframes[sprdef->firstframe + (frame & FF_FRAMEMASK)];
+	sprlump = &spritelumps[sprframe->lump];
+
+	if (sprlump[rotation] != -1)
+		lump = sprlump[rotation];
+	else
+		lump = sprlump[0];
+
+	if (lump < 0)
+	{
+		lump = -(lump + 1);
+		flip = true;
+	}
+
+	if (lump <= 0)
+		return;
+
+	patch = (patch_t *)W_POINTLUMPNUM(lump);
+	pixels = R_CheckPixels(lump + 1);
+	 	
+/* */
+/* coordinates are in a 160*112 screen (doubled pixels) */
+/* */
+	sprtop = top;
+	sprleft = left;
+	spryscale = 1;
+	spriscale = FRACUNIT/spryscale;
+
+	sprtop -= patch->topoffset;
+	sprleft -= patch->leftoffset;
+
+/* */
+/* draw it by hand */
+/* */
+	for (x=0 ; x<patch->width ; x++)
+	{
+		int 	colx;
+		byte	*columnptr;
+
+		if (sprleft+x < 0)
+			continue;
+		if (sprleft+x >= 320)
+			break;
+
+		if (flip)
+			texturecolumn = patch->width-1-x;
+		else
+			texturecolumn = x;
+			
+		columnptr = (byte *)patch + BIGSHORT(patch->columnofs[texturecolumn]);
+
+/* */
+/* draw a masked column */
+/* */
+		for ( ; *columnptr != 0xff ; columnptr += sizeof(column_t)) 
+		{
+			column_t *column = (column_t *)columnptr;
+			int top    = column->topdelta + sprtop;
+			int bottom = top + column->length - 1;
+			byte *dataofsofs = columnptr + offsetof(column_t, dataofs);
+			int dataofs = (dataofsofs[0] << 8) | dataofsofs[1];
+
+			top *= spryscale;
+			bottom *= spryscale;
+			src = pixels + dataofs;
+
+			if (top < 0) top = 0;
+			if (bottom >= height) bottom = height - 1;
+			if (top > bottom) continue;
+
+			colx = sprleft + x;
+//			colx += colx;
+
+			I_DrawColumn(colx, top, bottom, light, 0, spriscale, src, 128);
+//			I_DrawColumn(colx+1, top, bottom, light, 0, spriscale, src, 128);
+		}
+	}
 }
 
 void DRAW_Disclaimer (void)
@@ -810,10 +968,30 @@ void DRAW_Disclaimer (void)
 	parse_data(text2, stext2+1);
 	parse_data(text3, stext3+1);
 
-	V_DrawStringCenter(&creditFont, 160, 64, (const char*)text1);
-	V_DrawStringCenter(&creditFont, 160, 88, (const char*)text2);
+	DrawFillRect(0, 0, 320, viewportHeight, COLOR_BLACK);
 
-	V_DrawStringCenter(&menuFont, 160, 128, (const char*)text3);
+	if (disclaimerCount < 240)
+	{
+		viewportbuffer = (pixel_t*)I_FrameBuffer();
+		I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
+		BufferedDrawSprite(SPR_PLAY, 1 + ((disclaimerCount / 8) & 1), 0, 80, 160, false);
+	}
+	else if (disclaimerCount < 250)
+	{
+		DrawJagobjLump(W_GetNumForName("ZOOM"), 136, 80-56, NULL, NULL);
+	}
+	else
+	{
+		VINT Xpos = disclaimerCount - 250;
+		viewportbuffer = (pixel_t*)I_FrameBuffer();
+		I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
+		BufferedDrawSprite(SPR_PLAY, 11 + ((disclaimerCount / 2) % 4), 2, 80, 160  + (Xpos * 16), true);
+	}
+
+	V_DrawStringCenter(&creditFont, 160, 64+32, (const char*)text1);
+	V_DrawStringCenter(&creditFont, 160, 88+32, (const char*)text2);
+
+	V_DrawStringCenter(&menuFont, 160, 128+32, (const char*)text3);
 	Mars_ClearCache();
 }
 #endif

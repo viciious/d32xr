@@ -353,6 +353,17 @@ const char *W_GetNameForNum (int lump)
 ====================
 */
 
+#ifdef SHOW_DISCLAIMER
+void * W_GetLumpData(int lump)
+{
+	lumpinfo_t* l = lumpinfo + lump;
+
+	if (lump >= numlumps)
+		I_Error("W_GLD: %i >= numlumps", lump);
+
+	return I_RemapLumpPtr((void*)(wadfileptr + BIGLONG(l->filepos)));
+}
+#else
 void * W_GetLumpData(int lump, const char *file, int line)
 {
 	lumpinfo_t* l = lumpinfo + lump;
@@ -362,4 +373,5 @@ void * W_GetLumpData(int lump, const char *file, int line)
 
 	return I_RemapLumpPtr((void*)(wadfileptr + BIGLONG(l->filepos)));
 }
+#endif
 

@@ -30,6 +30,7 @@ typedef enum
 	mi_singleplayer,
 	mi_splitscreen,
 	mi_network,
+	mi_help,
 	NUMMAINITEMS
 } menu_t;
 
@@ -64,13 +65,14 @@ typedef enum
 	ms_new,
 	ms_load,
 	ms_save,
+	ms_help,
 	NUMMAINSCREENS
 } screen_t;
 
 static mainitem_t mainitem[NUMMAINITEMS];
 static mainscreen_t mainscreen[NUMMAINSCREENS];
 
-static const char* playmodes[NUMMODES] = { "Single", "Coop", "Deathmatch" };
+//static const char* playmodes[NUMMODES] = { "Single", "Coop", "Deathmatch" };
 jagobj_t* m_doom;
 
 static VINT m_skull1lump;
@@ -81,12 +83,12 @@ static VINT numslump;
 #define NUMTBLINKFRAMES 3
 #define NUMKBLINKFRAMES 3
 #define NUMTAILWAGFRAMES 6
-static VINT m_hand[NUMHANDFRAMES];
-static VINT m_kfist[NUMKFISTFRAMES];
-static VINT m_sblink[NUMSBLINKFRAMES];
-static VINT m_tblink[NUMTBLINKFRAMES];
-static VINT m_kblink[NUMKBLINKFRAMES];
-static VINT m_tailwag[NUMTAILWAGFRAMES];
+jagobj_t *m_hand[NUMHANDFRAMES];
+jagobj_t *m_kfist[NUMKFISTFRAMES];
+jagobj_t *m_sblink[NUMSBLINKFRAMES];
+jagobj_t *m_tblink[NUMTBLINKFRAMES];
+jagobj_t *m_kblink[NUMKBLINKFRAMES];
+jagobj_t *m_tailwag[NUMTAILWAGFRAMES];
 static char fistCounter = 5;
 static char sBlinkCounter = 110;
 static char tBlinkCounter = 25;
@@ -120,61 +122,58 @@ void M_Start2 (boolean startup_)
 	int i;
 
 /* cache all needed graphics	 */
+	m_skull1lump = W_CheckNumForName("M_CURSOR");
+
 	startup = startup_;
+	m_doom = NULL;
 	if (startup)
 	{
 		i = W_CheckNumForName("M_TITLE");
 		m_doom = i != -1 ? W_CacheLumpNum(i, PU_STATIC) : NULL;
-	}
-	else
-	{
-		m_doom = NULL;
-	}
 
-	m_skull1lump = W_CheckNumForName("M_CURSOR");
+		for (i = 0; i < NUMHANDFRAMES; i++)
+		{
+			char entry[9];
+			D_snprintf(entry, 8, "M_HAND%d", i + 1);
+			m_hand[i] = W_CacheLumpName(entry, PU_STATIC);
+		}
 
-	for (i = 0; i < NUMHANDFRAMES; i++)
-	{
-		char entry[9];
-		D_snprintf(entry, 8, "M_HAND%d", i + 1);
-		m_hand[i] = W_CheckNumForName(entry);
-	}
+		for (int i = 0; i < NUMKFISTFRAMES; i++)
+		{
+			char entry[9];
+			D_snprintf(entry, sizeof(entry), "KFIST%d", i + 1);
+			m_kfist[i] = W_CacheLumpName(entry, PU_STATIC);
+		}
 
-	for (int i = 0; i < NUMKFISTFRAMES; i++)
-	{
-		char entry[9];
-		D_snprintf(entry, sizeof(entry), "KFIST%d", i + 1);
-		m_kfist[i] = W_CheckNumForName(entry);
-	}
+		for (int i = 0; i < NUMSBLINKFRAMES; i++)
+		{
+			char entry[9];
+			D_snprintf(entry, sizeof(entry), "SBLINK%d", i + 1);
+			m_sblink[i] = W_CacheLumpName(entry, PU_STATIC);
+		}
 
-	for (int i = 0; i < NUMSBLINKFRAMES; i++)
-	{
-		char entry[9];
-		D_snprintf(entry, sizeof(entry), "SBLINK%d", i + 1);
-		m_sblink[i] = W_CheckNumForName(entry);
-	}
+		for (int i = 0; i < NUMKBLINKFRAMES-1; i++)
+		{
+			char entry[9];
+			D_snprintf(entry, sizeof(entry), "KBLINK%d", i + 1);
+			m_kblink[i] = W_CacheLumpName(entry, PU_STATIC);
+		}
+		m_kblink[2] = W_CacheLumpName("KBLINK1", PU_STATIC);
 
-	for (int i = 0; i < NUMKBLINKFRAMES-1; i++)
-	{
-		char entry[9];
-		D_snprintf(entry, sizeof(entry), "KBLINK%d", i + 1);
-		m_kblink[i] = W_CheckNumForName(entry);
-	}
-	m_kblink[2] = W_CheckNumForName("KBLINK1");
+		for (int i = 0; i < NUMTBLINKFRAMES-1; i++)
+		{
+			char entry[9];
+			D_snprintf(entry, sizeof(entry), "TBLINK%d", i + 1);
+			m_tblink[i] = W_CacheLumpName(entry, PU_STATIC);
+		}
+		m_tblink[2] = W_CacheLumpName("TBLINK1", PU_STATIC);
 
-	for (int i = 0; i < NUMTBLINKFRAMES-1; i++)
-	{
-		char entry[9];
-		D_snprintf(entry, sizeof(entry), "TBLINK%d", i + 1);
-		m_tblink[i] = W_CheckNumForName(entry);
-	}
-	m_tblink[2] = W_CheckNumForName("TBLINK1");
-
-	for (int i = 0; i < NUMTAILWAGFRAMES; i++)
-	{
-		char entry[9];
-		D_snprintf(entry, sizeof(entry), "TAILWAG%d", i + 1);
-		m_tailwag[i] = W_CheckNumForName(entry);
+		for (int i = 0; i < NUMTAILWAGFRAMES; i++)
+		{
+			char entry[9];
+			D_snprintf(entry, sizeof(entry), "TAILWAG%d", i + 1);
+			m_tailwag[i] = W_CacheLumpName(entry, PU_STATIC);
+		}
 	}
 
 	numslump = W_CheckNumForName("STTNUM0");
@@ -201,7 +200,7 @@ void M_Start2 (boolean startup_)
 	D_memset(mainitem, 0, sizeof(mainitem));
 
 	mainscreen[ms_new].firstitem = mi_level;
-	mainscreen[ms_new].numitems = mi_gamemode - mainscreen[ms_new].firstitem + 1;
+	mainscreen[ms_new].numitems = mi_level - mainscreen[ms_new].firstitem + 1;
 
 	mainscreen[ms_load].firstitem = mi_savelist;
 	mainscreen[ms_load].numitems = 1;
@@ -213,20 +212,23 @@ void M_Start2 (boolean startup_)
 	mainscreen[ms_save].numitems = 1;
 
 	mainscreen[ms_gametype].firstitem = mi_singleplayer;
-	mainscreen[ms_gametype].numitems = 3;
+	mainscreen[ms_gametype].numitems = 1;
+
+	mainscreen[ms_help].firstitem = mi_help;
+	mainscreen[ms_help].numitems = 1;
 
 	D_memcpy(mainitem[mi_newgame].name, "START GAME", 11);
 	mainitem[mi_newgame].x = ITEMX;
 	mainitem[mi_newgame].y = CURSORY(0);
 	mainitem[mi_newgame].screen = ms_gametype;
 
-	D_memcpy(mainitem[mi_loadgame].name, "ABOUT", 12);
+	D_memcpy(mainitem[mi_loadgame].name, "ABOUT", 6);
 	mainitem[mi_loadgame].x = ITEMX;
 	mainitem[mi_loadgame].y = CURSORY(1);
-	mainitem[mi_loadgame].screen = ms_load;
+	mainitem[mi_loadgame].screen = ms_help;
 	mainscreen[ms_main].numitems++;
 
-	D_memcpy(mainitem[mi_level].name, "Area", 5);
+	D_memcpy(mainitem[mi_level].name, "Select Act", 11);
 	mainitem[mi_level].x = ITEMX;
 	mainitem[mi_level].y = CURSORY(0);
 	mainitem[mi_level].screen = ms_none;
@@ -241,7 +243,7 @@ void M_Start2 (boolean startup_)
 	mainitem[mi_savelist].y = CURSORY(0);
 	mainitem[mi_savelist].screen = ms_none;
 
-	D_memcpy(mainitem[mi_singleplayer].name, "Single Player", 14);
+	D_memcpy(mainitem[mi_singleplayer].name, "SINGLE PLAYER", 14);
 	mainitem[mi_singleplayer].x = ITEMX;
 	mainitem[mi_singleplayer].y = CURSORY(0);
 	mainitem[mi_singleplayer].screen = ms_new;
@@ -280,6 +282,52 @@ void M_Stop (void)
 	{
 		Z_Free (m_doom);
 		m_doom = NULL;
+	}
+
+	if (startup)
+	{
+		int i;
+		for (i = 0; i < NUMHANDFRAMES; i++)
+		{
+			if (m_hand[i])
+				Z_Free(m_hand[i]);
+			m_hand[i] = NULL;
+		}
+
+		for (int i = 0; i < NUMKFISTFRAMES; i++)
+		{
+			if (m_kfist[i])
+				Z_Free(m_kfist[i]);
+			m_kfist[i] = NULL;
+		}
+
+		for (int i = 0; i < NUMSBLINKFRAMES; i++)
+		{
+			if (m_sblink[i])
+				Z_Free(m_sblink[i]);
+			m_sblink[i] = NULL;
+		}
+
+		for (int i = 0; i < NUMKBLINKFRAMES; i++)
+		{
+			if (m_kblink[i])
+				Z_Free(m_kblink[i]);
+			m_kblink[i] = NULL;
+		}
+
+		for (int i = 0; i < NUMTBLINKFRAMES; i++)
+		{
+			if (m_tblink[i])
+				Z_Free(m_tblink[i]);
+			m_tblink[i] = NULL;
+		}
+
+		for (int i = 0; i < NUMTAILWAGFRAMES; i++)
+		{
+			if (m_tailwag[i])
+				Z_Free(m_tailwag[i]);
+			m_tailwag[i] = NULL;
+		}
 	}
 
 #ifndef MARS
@@ -365,7 +413,8 @@ int M_Ticker (void)
 	buttons = ticrealbuttons & MENU_BTNMASK;
 	oldbuttons = oldticrealbuttons & MENU_BTNMASK;
 
-	if ((buttons & (BT_A | BT_LMBTN)) && !(oldbuttons & (BT_A | BT_LMBTN)))
+	if ((gamemapinfo.mapNumber == 30 && (buttons & (BT_B | BT_LMBTN | BT_START)) && !(oldbuttons & (BT_B | BT_LMBTN | BT_START)))
+		|| (gamemapinfo.mapNumber != 30 && (buttons & (BT_B | BT_LMBTN)) && !(oldbuttons & (BT_B | BT_LMBTN))))
 	{
 		int itemno = menuscr->firstitem + cursorpos;
 
@@ -399,7 +448,7 @@ int M_Ticker (void)
 		}
 	}
 
-	if ((buttons & (BT_B | BT_RMBTN)) && !(oldbuttons & (BT_B | BT_RMBTN)))
+	if ((buttons & (BT_A | BT_C | BT_RMBTN)) && !(oldbuttons & (BT_A | BT_C | BT_RMBTN)))
 	{
 		if (screenpos != ms_main)
 		{
@@ -438,7 +487,7 @@ int M_Ticker (void)
 	}
 
 	/* exit menu if button press */
-	if ((buttons & (BT_A | BT_LMBTN | BT_START)) && !(oldbuttons & (BT_A | BT_LMBTN | BT_START)))
+	if ((buttons & (BT_B | BT_LMBTN | BT_START)) && !(oldbuttons & (BT_B | BT_LMBTN | BT_START)))
 	{
 		if (screenpos == ms_new)
 		{
@@ -510,14 +559,14 @@ int M_Ticker (void)
 
 			if (buttons & BT_DOWN)
 			{
-				S_StartSound(NULL, sfx_s3k_5b);
+				//S_StartSound(NULL, sfx_s3k_5b);
 				if (++cursorpos == menuscr->numitems)
 					cursorpos = 0;
 			}
 		
 			if (buttons & BT_UP)
 			{
-				S_StartSound(NULL, sfx_s3k_5b);
+				//S_StartSound(NULL, sfx_s3k_5b);
 				if (--cursorpos == -1)
 					cursorpos = menuscr->numitems-1;
 			}
@@ -548,11 +597,26 @@ int M_Ticker (void)
 					{			
 						if (++playermap == gamemapcount + 1)
 							playermap = 1;
+
+#ifdef SHOW_DISCLAIMER
+						while (gamemapnumbers[playermap-1] == 30 || (gamemapnumbers[playermap-1] >= SSTAGE_START && gamemapnumbers[playermap-1] <= SSTAGE_END))
+						{
+							if (++playermap == gamemapcount + 1)
+								playermap = 1;
+						}
+#endif
 					}
 					if (buttons & BT_LEFT)
 					{
 						if(--playermap == 0)
 							playermap = gamemapcount;
+#ifdef SHOW_DISCLAIMER
+						while (gamemapnumbers[playermap-1] == 30 || (gamemapnumbers[playermap-1] >= SSTAGE_START && gamemapnumbers[playermap-1] <= SSTAGE_END))
+						{
+							if(--playermap == 0)
+								playermap = gamemapcount;
+						}
+#endif
 					}
 					break;
 				case mi_savelist:
@@ -592,6 +656,7 @@ int M_Ticker (void)
 	return ga_nothing;
 }
 
+void O_DrawHelp (VINT yPos);
 /*
 =================
 =
@@ -609,22 +674,21 @@ void M_Drawer (void)
 	mainitem_t* items = &mainitem[menuscr->firstitem];
 	int y, y_offset = 0;
 
+	if (demoplayback && gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
+		// Fill the area above the viewport with the sky color.
+		DrawFillRect(0, 0, 320, 44, gamemapinfo.skyTopColor);
+	}
+
 /* Draw main menu */
 	if (m_doom && (scrpos == ms_main || scrpos == ms_gametype))
 	{
-		#ifdef MDSKY
-		DrawFillRect(0, 0, 320, 44, MARS_MD_PIXEL_THRU_INDEX);
-		#else
-		DrawFillRect(0, 16, 320, 6, COLOR_BLACK); // Clear part of the top letterbox for overdraw.
-		#endif
-		
 		VINT logoPos = 160 - (m_doom->width / 2);
 		DrawJagobj(m_doom, logoPos, 16);
 		y_offset = m_doom->height + 16 - STARTY;
 
-		DrawJagobjLump(m_hand[cursorframe % NUMHANDFRAMES], 160 + 3, 16 + 32, NULL, NULL);
+		DrawJagobj(m_hand[cursorframe % NUMHANDFRAMES], 160 + 3, 16 + 32);
 
-		DrawJagobjLump(m_tailwag[cursorframe % NUMTAILWAGFRAMES], logoPos + 5, 16 + 2, NULL, NULL);
+		DrawJagobj(m_tailwag[cursorframe % NUMTAILWAGFRAMES], logoPos + 5, 16 + 2);
 
 		if (gametic & 1)
 		{
@@ -635,9 +699,9 @@ void M_Drawer (void)
 		}
 
 		if (fistCounter < 0)
-			DrawJagobjLump(m_kfist[D_abs(fistCounter)], logoPos + 188, 16 + 43, NULL, NULL);
+			DrawJagobj(m_kfist[D_abs(fistCounter)], logoPos + 188, 16 + 43);
 		else
-			DrawJagobjLump(m_kfist[0], logoPos + 188, 16 + 43, NULL, NULL);
+			DrawJagobj(m_kfist[0], logoPos + 188, 16 + 43);
 
 		sBlinkCounter--;
 		if (sBlinkCounter <= -NUMSBLINKFRAMES)
@@ -650,19 +714,25 @@ void M_Drawer (void)
 			kBlinkCounter = M_Random() & 127;
 
 		if (sBlinkCounter < 0)
-			DrawJagobjLump(m_sblink[D_abs(sBlinkCounter)], logoPos + 93, 16 + 27, NULL, NULL);
+			DrawJagobj(m_sblink[D_abs(sBlinkCounter)], logoPos + 93, 16 + 27);
 
 		if (tBlinkCounter < 0)
-			DrawJagobjLump(m_tblink[D_abs(tBlinkCounter)], logoPos + 54, 16 + 40, NULL, NULL);
+			DrawJagobj(m_tblink[D_abs(tBlinkCounter)], logoPos + 54, 16 + 40);
 
 		if (kBlinkCounter < 0)
-			DrawJagobjLump(m_kblink[D_abs(kBlinkCounter)], logoPos + 158, 16 + 37, NULL, NULL);
+			DrawJagobj(m_kblink[D_abs(kBlinkCounter)], logoPos + 158, 16 + 37);
 	}
 
 /* erase old skulls */
 #ifndef MARS
 	EraseBlock (CURSORX, m_doom_height,m_skull1->width, CURSORY(menuscr->numitems)- CURSORY(0));
 #endif
+
+	if (scrpos == ms_help)
+	{
+		O_DrawHelp(80);
+		return;
+	}
 
 /* draw menu items */
 	int selectedPos = 0;
@@ -699,7 +769,7 @@ void M_Drawer (void)
 		/* draw game mode information */
 		item = &mainitem[mi_gamemode];
 		y = y_offset + item->y;
-		V_DrawStringLeft(&menuFont, item->x + 10, y + ITEMSPACE + 2, playmodes[currentplaymode]);
+//		V_DrawStringLeft(&menuFont, item->x + 10, y + ITEMSPACE + 2, playmodes[currentplaymode]);
 
 		/* draw start level information */
 		item = &mainitem[mi_level];
@@ -713,9 +783,11 @@ void M_Drawer (void)
 #endif
 		D_snprintf(mapNum, sizeof(mapNum), "%d", mapnumber);
 
-		V_DrawStringLeft(&titleNumberFont, item->x + 70, y + 2, mapNum);
+		V_DrawStringLeft(&titleNumberFont, item->x + 96, y + 2, mapNum);
 
 		V_DrawStringLeft(&menuFont, (320 - (tmplen * 14)) >> 1, y + ITEMSPACE + 2, tmp);
+
+		O_DrawHelp(120);
 	}
 	else if (scrpos == ms_load || scrpos == ms_save)
 	{

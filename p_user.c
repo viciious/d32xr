@@ -42,6 +42,9 @@ void P_InstaThrust(mobj_t *mo, angle_t angle, fixed_t move)
 
 void P_RestoreMusic(player_t *player)
 {
+	if (player->exiting)
+		return;
+
 	if (player->powers[pw_invulnerability] > 1 && player->powers[pw_extralife] <= 1)
 		S_StartSong(gameinfo.invincMus, 0, cdtrack_invincibility);
 	else if (player->powers[pw_sneakers] > 1)
@@ -142,7 +145,6 @@ void P_GivePlayerRings(player_t *player, int num_rings)
 }
 
 /*============================================================================= */
-
 void P_PlayerMove(mobj_t *mo)
 {
 	fixed_t momx, momy;
@@ -202,19 +204,25 @@ stairstep:
 void P_PlayerXYMovement(mobj_t *mo)
 {
 	player_t *player = &players[mo->player - 1];
-	fixed_t speed;
-	const angle_t speedDir = R_PointToAngle2(0, 0, mo->momx, mo->momy);
-	const fixed_t top = (player->pflags & PF_SPINNING) ? 60 * FRACUNIT : 30 *FRACUNIT;
+
+	player->num_touching_sectors = 0;
 	P_PlayerMove(mo);
 
-	/* */
-	/* slow down */
-	/* */
-	if (player->powers[pw_flashing] != FLASHINGTICS && player->mo->z <= player->mo->floorz)
+	fixed_t speed = P_AproxDistance(mo->momx, mo->momy);
+	const angle_t speedDir = R_PointToAngle2(0, 0, mo->momx, mo->momy);
+	const fixed_t top = (player->pflags & PF_SPINNING) ? 80 * FRACUNIT : 30 *FRACUNIT;
+
+	if (speed > top) // Speed cap
+	{
+		const fixed_t diff = speed - top;
+		const angle_t opposite = speedDir - ANG180;
+
+		P_Thrust(player->mo, opposite, diff);
+	}
+	else if (player->powers[pw_flashing] != FLASHINGTICS && player->mo->z <= player->mo->floorz) // Friction
 	{
 		const fixed_t frc = (player->pflags & PF_SPINNING) ? FRACUNIT >> 2 : FRACUNIT * 1;
-		speed = P_AproxDistance(mo->momx, mo->momy);
-
+		
 		if (speed > STOPSPEED)
 		{
 			if (!(player->forwardmove || player->sidemove || (player->pflags & PF_GASPEDAL)))
@@ -248,15 +256,6 @@ void P_PlayerXYMovement(mobj_t *mo)
 			}
 		}
 	}
-
-	speed = P_AproxDistance(mo->momx, mo->momy);
-	if (speed > top)
-	{
-		const fixed_t diff = speed - top;
-		const angle_t opposite = speedDir - ANG180;
-
-		P_Thrust(player->mo, opposite, diff);
-	}
 }
 
 /*
@@ -270,6 +269,7 @@ void P_PlayerXYMovement(mobj_t *mo)
 void P_PlayerZMovement(mobj_t *mo)
 {
 	player_t *player = &players[mo->player - 1];
+	const fixed_t gravity = (player->pflags & PF_VERTICALFLIP) ? -GRAVITY : GRAVITY;
 
 	/* */
 	/* check for smooth step up */
@@ -288,9 +288,9 @@ void P_PlayerZMovement(mobj_t *mo)
 	if (player->playerstate == PST_DEAD)
 	{
 		if (player->pflags & PF_UNDERWATER)
-			mo->momz -= GRAVITY / 2 / 3;
+			mo->momz -= gravity / 2 / 3;
 		else
-			mo->momz -= GRAVITY / 2;
+			mo->momz -= gravity / 2;
 		return;
 	}
 
@@ -301,26 +301,32 @@ void P_PlayerZMovement(mobj_t *mo)
 	{ /* hit the floor */
 		if (mo->momz < 0)
 		{
-			if (mo->momz < -GRAVITY * 2) /* squat down */
+			if (mo->momz < -gravity * 2) /* squat down */
 				player->deltaviewheight = mo->momz >> 3;
 
 			mo->momz = 0;
-			P_PlayerHitFloor(player);
+
+			if (!(player->pflags & PF_VERTICALFLIP))
+				P_PlayerHitFloor(player);
 		}
 		mo->z = mo->floorz;
 	}
 	else
 	{
 		if (player->pflags & PF_UNDERWATER)
-			mo->momz -= GRAVITY / 2 / 3;
+			mo->momz -= gravity / 2 / 3;
 		else
-			mo->momz -= GRAVITY / 2;
+			mo->momz -= gravity / 2;
 	}
 
 	if (mo->z + (mo->theight << FRACBITS) > mo->ceilingz)
 	{ /* hit the ceiling */
 		if (mo->momz > 0)
 			mo->momz = 0;
+
+		if (player->pflags & PF_VERTICALFLIP)
+			P_PlayerHitFloor(player);
+			
 		mo->z = mo->ceilingz - (mo->theight << FRACBITS);
 	}
 
@@ -445,43 +451,10 @@ void P_PlayerMobjThink(mobj_t *mobj)
 
 void P_BuildMove(player_t *player)
 {
-	int buttons, oldbuttons;
+	const int buttons = ticbuttons[playernum];
+//	const int oldbuttons = oldticbuttons[playernum];
 	mobj_t *mo;
 
-	buttons = ticbuttons[playernum];
-	oldbuttons = oldticbuttons[playernum];
-
-	if (mousepresent && !demoplayback)
-	{
-		int mx = ticmousex[playernum];
-		int my = ticmousey[playernum];
-
-		if ((buttons & BT_RMBTN) && (oldbuttons & BT_RMBTN))
-		{
-			// holding RMB - mouse dodge mode
-			player->sidemove = (mx * 0x1000);
-			player->forwardmove = (my * 0x1000);
-//			player->angleturn = 0;
-		}
-		else
-		{
-			// normal mouse mode - mouse turns, dpad moves forward/back/sideways
-//			player->angleturn = (-mx * 0x200000);
-
-			player->forwardmove = player->sidemove = 0;
-
-			if (buttons & BT_RIGHT)
-				player->sidemove += FRACUNIT;
-			if (buttons & BT_LEFT)
-				player->sidemove -= FRACUNIT;
-
-			if (buttons & BT_UP)
-				player->forwardmove += FRACUNIT;
-			if (buttons & BT_DOWN)
-				player->forwardmove += -FRACUNIT;
-		}
-	}
-	else
 	{
 		player->forwardmove = player->sidemove = 0;
 
@@ -490,7 +463,7 @@ void P_BuildMove(player_t *player)
 		if (buttons & BT_LEFT)
 			player->sidemove -= FRACUNIT;
 
-		if (buttons & BT_X)
+		if (buttons & BT_GASPEDAL)
 			player->pflags |= PF_GASPEDAL;
 		else
 			player->pflags &= ~PF_GASPEDAL;
@@ -515,7 +488,7 @@ void P_BuildMove(player_t *player)
 	const int delaytime = gamemapinfo.act == 3 ? 2*TICRATE : 3*TICRATE;
 	if (leveltime > delaytime)
 	{
-		if (!(player->forwardmove || player->sidemove || (player->pflags & PF_GASPEDAL)))
+		if (!(player->forwardmove || player->sidemove || (player->pflags & PF_GASPEDAL) || player->buttons & BT_CAMLEFT || player->buttons & BT_CAMRIGHT))
 		{
 			if (!(player->mo->momx > STOPSPEED || player->mo->momx < -STOPSPEED || player->mo->momy > STOPSPEED || player->mo->momy < -STOPSPEED || player->mo->momz > STOPSPEED || player->mo->momz < -STOPSPEED))
 				player->stillTimer++;
@@ -635,6 +608,15 @@ static void P_DoTeeter(player_t *player)
 	boolean teeter = false;
 	const fixed_t tiptop = 24 * FRACUNIT; // Gotta be farther than the step height
 
+	for (int i = 0; i < player->num_touching_sectors; i++)
+	{
+		sector_t *sec = &sectors[player->touching_sectorlist[i]];
+		fixed_t floorz = FloorZAtPos(sec, player->mo->z, player->mo->theight << FRACBITS);
+
+		if (floorz < player->mo->floorz - tiptop)
+			teeter = true;
+	}
+/*
 	subsector_t *a = R_PointInSubsector(player->mo->x + 5 * FRACUNIT, player->mo->y + 5 * FRACUNIT);
 	subsector_t *b = R_PointInSubsector(player->mo->x - 5 * FRACUNIT, player->mo->y + 5 * FRACUNIT);
 	subsector_t *c = R_PointInSubsector(player->mo->x + 5 * FRACUNIT, player->mo->y - 5 * FRACUNIT);
@@ -646,7 +628,7 @@ static void P_DoTeeter(player_t *player)
 
 	if (aFloorZ < player->mo->floorz - tiptop || bFloorZ < player->mo->floorz - tiptop || cFloorZ < player->mo->floorz - tiptop || dFloorZ < player->mo->floorz - tiptop)
 		teeter = true;
-
+*/
 	if (teeter)
 	{
 		if (player->mo->state >= S_PLAY_STND && player->mo->state <= S_PLAY_TAP2)
@@ -703,7 +685,7 @@ static void P_DoSpinDash(player_t *player)
 
 	if (!player->exiting && !(player->mo->state == mobjinfo[player->mo->type].painstate && player->powers[pw_flashing]))
 	{
-		if ((buttons & BT_USE) && player->speed < 5*FRACUNIT && !player->mo->momz && onground && !(player->pflags & PF_USEDOWN) && !(player->pflags & PF_SPINNING))
+		if ((buttons & BT_SPIN) && player->speed < 5*FRACUNIT && !player->mo->momz && onground && !(player->pflags & PF_USEDOWN) && !(player->pflags & PF_SPINNING))
 		{
 			P_ResetScore(player);
 			player->mo->momx = 0; // TODO: cmomx/cmomy
@@ -717,7 +699,7 @@ static void P_DoSpinDash(player_t *player)
 			if (player->pflags & PF_VERTICALFLIP)
 				player->mo->z = player->mo->ceilingz - P_GetPlayerSpinHeight();
 		}
-		else if ((buttons & BT_USE) && (player->pflags & PF_STARTDASH))
+		else if ((buttons & BT_SPIN) && (player->pflags & PF_STARTDASH))
 		{
 			if (player->speed > 5*FRACUNIT)
 			{
@@ -742,7 +724,7 @@ static void P_DoSpinDash(player_t *player)
 		// If not moving up or down, and travelling faster than a speed of four while not holding
 		// down the spin button and not spinning.
 		// AKA Just go into a spin on the ground, you idiot. ;)
-		else if ((buttons & BT_USE) && !player->mo->momz && onground && player->speed > 5*FRACUNIT && !(player->pflags & PF_USEDOWN) && !(player->pflags & PF_SPINNING))
+		else if ((buttons & BT_SPIN) && !player->mo->momz && onground && player->speed > 5*FRACUNIT && !(player->pflags & PF_USEDOWN) && !(player->pflags & PF_SPINNING))
 		{
 			P_ResetScore(player);
 			player->pflags |= PF_SPINNING;
@@ -875,9 +857,6 @@ boolean P_LookForTarget(player_t *player)
 
 	for (node = mobjhead.next; node != (void*)&mobjhead; node = node->next)
     {
-		if (node->flags & MF_RINGMOBJ)
-			continue;
-
 		if (node->type == MT_PLAYER)
 			continue;
 
@@ -962,7 +941,7 @@ static void P_DoJumpStuff(player_t *player)
 {
 	const int buttons = player->buttons;
 
-	if (buttons & BT_ATTACK)
+	if (buttons & BT_JUMP)
 	{
 		if (!(player->pflags & PF_JUMPDOWN) && player->mo->state != S_PLAY_PAIN && P_IsObjectOnGround(player->mo) && !P_IsReeling(player))
 		{
@@ -1097,30 +1076,57 @@ void P_ReturnThrust(angle_t angle, fixed_t move, fixed_t *thrustX, fixed_t *thru
 	*thrustY = FixedMul(move, finesine(angle));
 }
 
+static angle_t InvAngle(angle_t a)
+{
+	return (ANGLE_MAX-a)+1;
+}
+
 // 0 = no controls, or no movement
 // 1 = pressing in direction of movement
 // 2 = pressing opposite of movement
 VINT ControlDirection(player_t *player)
 {
-	if (!(player->forwardmove || player->sidemove) || !(player->mo->momx || player->mo->momy))
+	angle_t controllerdirection, controlplayerdirection;
+	angle_t dangle;
+	fixed_t tempx = 0, tempy = 0;
+
+	if (!(player->forwardmove || player->sidemove))
+		return 0;
+
+	if (!(player->mo->momx || player->mo->momy))
 		return 0;
 
 	camera_t *thiscam = &camera;
+	controlplayerdirection = R_PointToAngle2(0, 0, player->mo->momx, player->mo->momy);
 
-	angle_t camToPlayer = R_PointToAngle2(thiscam->x, thiscam->y, player->mo->x, player->mo->y);
-	fixed_t movedx, movedy;
-	P_ReturnThrust(camToPlayer, FRACUNIT, &movedx, &movedy);
+	// Calculate the angle at which the controls are pointing
+	// to figure out the proper mforward and mbackward.
+	P_ThrustValues(thiscam->angle, player->forwardmove, &tempx, &tempy);
+	P_ThrustValues(thiscam->angle-ANG90, player->sidemove, &tempx, &tempy);
 
-	angle_t controlAngle = R_PointToAngle2(player->mo->x, player->mo->y, player->mo->x + movedx, player->mo->y + movedy);
-	angle_t angleDiff = controlAngle - player->mo->angle;
+	controllerdirection = R_PointToAngle2(0, 0, tempx, tempy);
 
-	if (angleDiff > ANG180)
-		angleDiff = -angleDiff;
+	dangle = controllerdirection - controlplayerdirection;
 
-	if (angleDiff > ANG90)
-		return 2; // backwards
-	else
-		return 1; // forwards
+	if (dangle > ANG180) // flip to keep to one side
+		dangle = InvAngle(dangle);
+
+	if (dangle > ANG90)
+		return 2; // Controls pointing backwards from player
+
+	return 1; // Controls pointing in player's general direction
+}
+
+//
+// P_SpawnSkidDust
+//
+// Spawns skid dust.
+//
+void P_SpawnSkidDust(player_t *player)
+{
+	const mobj_t *mo = player->mo;
+	mobj_t *particle = P_SpawnMobj(mo->x, mo->y, mo->z, MT_DUST);
+	P_SetObjectMomZ(particle, FRACUNIT, false);
 }
 
 /*
@@ -1370,7 +1376,7 @@ void P_MovePlayer(player_t *player)
 			P_SpawnMobj(player->mo->x, player->mo->y, zh, MT_MEDIUMBUBBLE);
 	}
 
-	if (player->buttons & BT_USE)
+	if (player->buttons & BT_SPIN)
 	{
 		if (!(player->pflags & PF_USEDOWN))
 		{
@@ -1413,9 +1419,36 @@ void P_MovePlayer(player_t *player)
 	else
 		player->pflags &= ~PF_USEDOWN;
 
+	if (onground && !(player->pflags & (PF_JUMPED|PF_SPINNING)))
+	{		
+		if (player->skidTime)
+		{
+			// Spawn dust every other tic
+			if (player->skidTime & 1)
+			{
+				P_SpawnSkidDust(player);
+			}
+		}
+		else if (player->skidTime <= 0 && P_AproxDistance(player->mo->momx, player->mo->momy) >= 25 << (FRACBITS-1)
+			&& ControlDirection(player) == 2)
+		{
+			// start a skid
+			player->skidTime = TICRATE/2;
+			S_StartSound(player->mo, sfx_s3k_36);
+		}
+	}
+
+	if ((player->pflags & PF_ELEMENTALBOUNCE) && player->mo->momz > 0)
+		player->pflags &= ~PF_ELEMENTALBOUNCE;
+
 	// Fly cheat
-	if (player->buttons & BT_SPEED)
-		player->mo->momz = 8 << FRACBITS;
+	if (player->buttons & BT_FLIP)
+	{
+//		player->pflags |= PF_VERTICALFLIP;
+		player->mo->momz = 8 * FRACUNIT;
+	}
+	else
+		player->pflags &= ~PF_VERTICALFLIP;
 }
 
 /*
@@ -1624,7 +1657,7 @@ void P_PlayerThink(player_t *player)
 	if (player->powers[pw_invulnerability])
 		player->powers[pw_invulnerability]--;
 
-	if (player->powers[pw_underwater])
+	if (player->powers[pw_underwater] && (gamemapinfo.mapNumber < SSTAGE_START || gamemapinfo.mapNumber > SSTAGE_END))
 		player->powers[pw_underwater]--;
 
 	if (player->whiteFlash && (leveltime & 1))
@@ -1636,8 +1669,18 @@ void P_PlayerThink(player_t *player)
 	if (player->homingTimer)
 		player->homingTimer--;
 
+	if (player->skidTime)
+		player->skidTime--;
+
 	if (player->exiting)
 		player->exiting++;
+	else if (gamemapinfo.mapNumber >= SSTAGE_START && gamemapinfo.mapNumber <= SSTAGE_END
+		&& (player->pflags & PF_UNDERWATER))
+	{
+		gamemapinfo.timeLimit--;
+		if (gamemapinfo.timeLimit < 0)
+			gamemapinfo.timeLimit = 0;
+	}
 
 	if (player->shield == SH_ATTRACT)
 		P_RingMagnet(player->mo);

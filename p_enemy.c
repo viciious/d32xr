@@ -15,8 +15,8 @@ Most monsters are spawned unaware of all players, but some can be made preaware
 ===============================================================================
 */
 
-boolean P_CheckMeleeRange (mobj_t *actor, fixed_t range) ATTR_DATA_CACHE_ALIGN;
-boolean P_CheckMissileRange (mobj_t *actor) ATTR_DATA_CACHE_ALIGN;
+boolean P_CheckMeleeRange (mobj_t *actor, fixed_t range);
+boolean P_CheckMissileRange (mobj_t *actor);
 boolean P_Move (mobj_t *actor) ATTR_DATA_CACHE_ALIGN;
 boolean P_TryWalk (mobj_t *actor) ATTR_DATA_CACHE_ALIGN;
 void P_NewChaseDir (mobj_t *actor) ATTR_DATA_CACHE_ALIGN;
@@ -430,7 +430,7 @@ void A_Chase (mobj_t *actor, int16_t var1, int16_t var2)
 {
 	int		delta;
 	const mobjinfo_t* ainfo = &mobjinfo[actor->type];
-	
+
 /* */
 /* modify target threshold */
 /* */
@@ -453,8 +453,7 @@ void A_Chase (mobj_t *actor, int16_t var1, int16_t var2)
 	if (!actor->target || !(actor->target->flags2&MF2_SHOOTABLE)
 		|| (netgame && !actor->threshold && !(actor->flags2 & MF2_SEETARGET)))
 	{	/* look for a new target */
-		if (P_LookForPlayers(actor,2048 << FRACBITS,true,false))
-			return;		/* got a new target */
+		actor->target = NULL;
 		P_SetMobjState (actor, ainfo->spawnstate);
 		return;
 	}

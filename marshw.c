@@ -37,6 +37,7 @@ volatile unsigned mars_pwdt_ovf_count = 0;
 volatile unsigned mars_swdt_ovf_count = 0;
 unsigned mars_frtc2msec_frac = 0;
 const uint8_t* mars_newpalette = NULL;
+uint16_t mars_thru_rgb_reference = 0;
 
 int16_t mars_requested_lines = 224;
 uint16_t mars_framebuffer_height = 224;
@@ -150,7 +151,8 @@ char Mars_UploadPalette(const uint8_t* palette)
 	}
 
 	#ifdef MDSKY
-	cram[MARS_MD_PIXEL_THRU_INDEX] &= 0x7FFF; // Allow MD VDP to show through for this palette index.
+	// Allow MD VDP to show through for this palette index.
+	cram[MARS_MD_PIXEL_THRU_INDEX] = cram[mars_thru_rgb_reference] & 0x7FFF;
 	#endif
 
 	return 1;
@@ -685,23 +687,66 @@ void Mars_FadeMDPaletteFromBlack(int fade_degree)
 	MARS_SYS_COMM0 = 0x1001;
 }
 
+void Mars_ScrollMDSky(short scroll_x, short scroll_y_base, short scroll_y_offset, short scroll_y_pan) {
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM2 = scroll_y_base;
+	MARS_SYS_COMM0 = 0x1101;
+
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM2 = scroll_y_offset;
+	MARS_SYS_COMM0 = 0x1102;
+
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM2 = scroll_y_pan;
+	MARS_SYS_COMM0 = 0x1103;
+
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM2 = scroll_x;
+	MARS_SYS_COMM0 = 0x1104;
+}
+
 /*
 Load the MD sky tiles, palettes, and pattern name table into the MD VDP.
 */
-void Mars_LoadMDSky(void *sky_names_ptr, void *sky_palettes_ptr, void *sky_tiles_ptr)
+void Mars_LoadMDSky(void *sky_metadata_ptr,
+		void *sky_names_a_ptr, int sky_names_a_size,
+		void *sky_names_b_ptr, int sky_names_b_size,
+		void *sky_palettes_ptr, int sky_palettes_size,
+		void *sky_tiles_ptr, int sky_tiles_size)
 {
 	int i;
-	const int sky_names_size = 0x400; // TODO: //DLG: Make this dynamic.
-	const int sky_palettes_size = 0x80;	 // TODO: //DLG: Make this dynamic.
-	const int sky_tiles_size = 0x4000; // TODO: //DLG: Make this dynamic.
 
 	uint16_t s[4];
 
 
-	// Load pattern name table
+	// Load metadata
 
-	s[0] = (uintptr_t)sky_names_size>>16, s[1] = (uintptr_t)sky_names_size&0xffff;
-	s[2] = ((uintptr_t)sky_names_ptr >>16), s[3] = (uintptr_t)sky_names_ptr &0xffff;
+	s[0] = 0, s[1] = 8;
+	s[2] = ((uintptr_t)sky_metadata_ptr >>16), s[3] = (uintptr_t)sky_metadata_ptr &0xffff;
+
+	for (i = 0; i < 4; i++) {
+		while (MARS_SYS_COMM0);
+		MARS_SYS_COMM2 = s[i];
+		MARS_SYS_COMM0 = 0x0F01+i;
+	}
+
+
+	// Load pattern name table A
+
+	s[0] = (uintptr_t)sky_names_a_size>>16, s[1] = (uintptr_t)sky_names_a_size&0xffff;
+	s[2] = ((uintptr_t)sky_names_a_ptr >>16), s[3] = (uintptr_t)sky_names_a_ptr &0xffff;
+
+	for (i = 0; i < 4; i++) {
+		while (MARS_SYS_COMM0);
+		MARS_SYS_COMM2 = s[i];
+		MARS_SYS_COMM0 = 0x0F01+i;
+	}
+
+
+	// Load pattern name table B
+
+	s[0] = (uintptr_t)sky_names_b_size>>16, s[1] = (uintptr_t)sky_names_b_size&0xffff;
+	s[2] = ((uintptr_t)sky_names_b_ptr >>16), s[3] = (uintptr_t)sky_names_b_ptr &0xffff;
 
 	for (i = 0; i < 4; i++) {
 		while (MARS_SYS_COMM0);

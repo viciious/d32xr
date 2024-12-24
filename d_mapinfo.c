@@ -246,14 +246,24 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 		mi->borderFlat = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "sky"))
 		mi->sky = value;
-	else if (!D_strcasecmp(key, "secretnext"))
-		mi->secretNext = W_GetNumForName(value);
+	else if (!D_strcasecmp(key, "skyOffsetY"))
+		mi->skyOffsetY = D_atoi(value);
+	else if (!D_strcasecmp(key, "skyTopColor"))
+		mi->skyTopColor = D_atoi(value);
+	else if (!D_strcasecmp(key, "skyBottomColor"))
+		mi->skyBottomColor = D_atoi(value);
 	else if (!D_strcasecmp(key, "mapnumber"))
 		mi->mapNumber = D_atoi(value);
 	else if (!D_strcasecmp(key, "music"))
 		mi->musicLump = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "afterBossMusic"))
 		mi->afterBossMusic = W_CheckNumForName(value);
+	else if (!D_strcasecmp(key, "spheresNeeded"))
+		mi->spheresNeeded = D_atoi(value);
+	else if (!D_strcasecmp(key, "timeLimit"))
+		mi->timeLimit = D_atoi(value) * TICRATE;
+	else if (!D_strcasecmp(key, "loadFlags"))
+		mi->loadFlags = D_atoi(value);
 }
 
 static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
@@ -272,6 +282,8 @@ static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
 		gi->titleMus = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "intermissionMus"))
 		gi->intermissionMus = W_CheckNumForName(value);
+	else if (!D_strcasecmp(key, "emeraldMus"))
+		gi->emeraldMus = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "xtlifeMus"))
 		gi->xtlifeMus = W_CheckNumForName(value);
 	else if (!D_strcasecmp(key, "invincMus"))

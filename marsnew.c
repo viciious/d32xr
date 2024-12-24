@@ -28,8 +28,9 @@
 #include "32x.h"
 #include "doomdef.h"
 #include "mars.h"
-#include "r_local.h"
+#include "p_camera.h"
 #include "p_local.h"
+#include "r_local.h"
 #include "wadbase.h"
 
 #define LINK_TIMEOUT_SHORT 		0x3FF
@@ -65,7 +66,6 @@ int		lasttics = 0;
 static int8_t fpscount = 0;
 
 VINT 	debugmode = DEBUGMODE_NONE;
-VINT	strafebtns = 0;
 
 extern int 	cy;
 extern int tictics, drawtics, ticstart;
@@ -114,75 +114,19 @@ static int Mars_ConvGamepadButtons(int ctrl)
 	}
 	else
 	{
-		if (strafebtns)
-		{
-			if (ctrl & SEGA_CTRL_A)
-				newc |= configuration[controltype][0];
-			if (ctrl & SEGA_CTRL_B)
-				newc |= configuration[controltype][1];
+		if (ctrl & SEGA_CTRL_A)
+			newc |= configuration[controltype][0];
+		if (ctrl & SEGA_CTRL_B)
+			newc |= configuration[controltype][1];
+		if (ctrl & SEGA_CTRL_C)
+			newc |= configuration[controltype][2];
 
-			switch (strafebtns)
-			{
-			default:
-			case 1:
-				if (ctrl & SEGA_CTRL_C)
-					newc |= configuration[controltype][2];
-
-				if (ctrl & SEGA_CTRL_X)
-					newc |= BT_NWEAPN;
-				if (ctrl & SEGA_CTRL_Y)
-					newc |= BT_STRAFELEFT;
-				if (ctrl & SEGA_CTRL_Z)
-					newc |= BT_STRAFERIGHT;
-				break;
-			case 2:
-				if (ctrl & SEGA_CTRL_C)
-					newc |= BT_STRAFERIGHT;
-
-				if (ctrl & SEGA_CTRL_X)
-					newc |= BT_NWEAPN;
-				if (ctrl & SEGA_CTRL_Y)
-					newc |= configuration[controltype][2];
-				if (ctrl & SEGA_CTRL_Z)
-					newc |= BT_STRAFELEFT;
-				break;
-			case 3:
-				if (ctrl & SEGA_CTRL_C)
-					newc |= configuration[controltype][2];
-
-				if (ctrl & SEGA_CTRL_X)
-					newc |= BT_STRAFELEFT;
-				if (ctrl & SEGA_CTRL_Y)
-					newc |= BT_NWEAPN;
-				if (ctrl & SEGA_CTRL_Z)
-					newc |= BT_STRAFERIGHT;
-				break;
-			}
-		}
-		else
-		{
-			if (ctrl & SEGA_CTRL_A)
-				newc |= configuration[controltype][0];
-			if (ctrl & SEGA_CTRL_B)
-				newc |= configuration[controltype][1];
-			if (ctrl & SEGA_CTRL_C)
-				newc |= configuration[controltype][2];
-
-			if (ctrl & SEGA_CTRL_X)
-				newc |= BT_PWEAPN;
-			if (ctrl & SEGA_CTRL_Y)
-				newc |= BT_NWEAPN;
-			if (ctrl & SEGA_CTRL_Z)
-				newc |= BT_AUTOMAP;
-
-			if (newc & BT_USE)
-				newc |= BT_STRAFE;
-		}
-	}
-
-	{
-		if ((newc & (BT_UP | BT_DOWN | BT_SPEED)) == BT_SPEED)
-			newc |= BT_FASTTURN;
+		if (ctrl & SEGA_CTRL_X)
+			newc |= BT_CAMLEFT;
+		if (ctrl & SEGA_CTRL_Y)
+			newc |= BT_GASPEDAL;
+		if (ctrl & SEGA_CTRL_Z)
+			newc |= BT_CAMRIGHT;
 	}
 
 	return newc;
@@ -227,15 +171,15 @@ static int Mars_HandleStartHeld(int *ctrl, const int ctrl_start, btnstate_t *sta
 
 	if (*ctrl & SEGA_CTRL_A) {
 		*ctrl = *ctrl & ~SEGA_CTRL_A;
-		morebuttons |= BT_PWEAPN;
+		morebuttons |= BT_CAMLEFT;
 	}
 	else if (*ctrl & SEGA_CTRL_B) {
 		*ctrl = *ctrl & ~SEGA_CTRL_B;
-		morebuttons |= BT_NWEAPN;
+		morebuttons |= BT_GASPEDAL;
 	}
 	if (*ctrl & SEGA_CTRL_C) {
 		*ctrl = *ctrl & ~SEGA_CTRL_C;
-		morebuttons |= BT_AUTOMAP;
+		morebuttons |= BT_CAMRIGHT;
 	}
 
 	if (morebuttons)
@@ -251,17 +195,17 @@ static int Mars_ConvMouseButtons(int mouse)
 	int ctrl = 0;
 	if (mouse & SEGA_CTRL_LMB)
 	{
-		ctrl |= BT_ATTACK; // L -> B
+		ctrl |= BT_JUMP; // L -> B
 		ctrl |= BT_LMBTN;
 	}
 	if (mouse & SEGA_CTRL_RMB)
 	{
-		ctrl |= BT_USE; // R -> C
+		ctrl |= BT_SPIN; // R -> C
 		ctrl |= BT_RMBTN;
 	}
 	if (mouse & SEGA_CTRL_MMB)
 	{
-		ctrl |= BT_NWEAPN; // M -> Y
+		ctrl |= BT_FLIP; // M -> Y
 		ctrl |= BT_MMBTN;
 	}
 	if (mouse & SEGA_CTRL_STARTMB)
@@ -807,6 +751,20 @@ void I_Update(void)
 	/* wait until on the third tic after last display */
 	/* */
 	const int ticwait = (demoplayback || demorecording ? 4 : ticsperframe); // demos were recorded at 15-20fps
+
+#ifdef MDSKY
+	if (sky_md_layer) {
+		// Adjust MD sky position.
+		unsigned short scroll_x = (*((unsigned short *)&vd.viewangle) >> 6);
+		scroll_x += (scroll_x >> 2);	// The MD sky scrolls to 1280 pixels.
+
+		unsigned short scroll_y_base = gamemapinfo.skyOffsetY;
+		unsigned short scroll_y_offset = (vd.viewz >> 16);
+		unsigned short scroll_y_pan = (vd.aimingangle >> 22);
+
+		Mars_ScrollMDSky(scroll_x, scroll_y_base, scroll_y_offset, scroll_y_pan);
+	}
+#endif
 
 	Mars_FlipFrameBuffers(false);
 	do

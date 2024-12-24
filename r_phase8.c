@@ -162,10 +162,12 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
 #else
 	pixel_t		*pixels;		/* data patch header references */
 #endif
+   const boolean verticalFlip = vis->patchnum & 16384;
+   const boolean highres = vis->patchnum & 32768;
 
-   patch     = W_POINTLUMPNUM(vis->patchnum & 0x3FFF);
+   patch     = W_POINTLUMPNUM(vis->patchnum & 0x1FFF);
 #ifdef MARS
-   pixels    = W_POINTLUMPNUM((vis->patchnum & 0x3FFF)+1);
+   pixels    = W_POINTLUMPNUM((vis->patchnum & 0x1FFF)+1);
 #else
    pixels    = vis->pixels;
 #endif
@@ -174,8 +176,11 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
    spryscale = vis->yscale;
 
 #ifdef HIGH_DETAIL_SPRITES
-   if (lowResMode && (vis->patchnum & 32768)) {
-      dcol      = drawspritecol;
+   if (lowResMode && highres) {
+      if (verticalFlip)
+         dcol = drawcolflipped;
+      else
+         dcol      = drawspritecol;
    }
    else {
       dcol      = drawcol;
@@ -214,71 +219,138 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
 #endif
 
 #ifdef HIGH_DETAIL_SPRITES
-   if (lowResMode && (vis->patchnum & 32768)) {
+   if (lowResMode && highres) {
       x <<= 1;
       stopx = (stopx << 1) - 1;
       fracstep >>= 1;
    }
 #endif
 
-   for(; x < stopx; x++, xfrac += fracstep)
+   if (verticalFlip)
    {
-      byte *columnptr  = ((byte *)patch + BIGSHORT(patch->columnofs[xfrac>>FRACBITS]));
-
-#ifdef HIGH_DETAIL_SPRITES
-      int topclip;
-      int bottomclip;
-
-      if (lowResMode && (vis->patchnum & 32768)) {
-         topclip      = (spropening[x>>1] >> 8);
-         bottomclip   = (spropening[x>>1] & 0xff) - 1;
-      }
-      else {
-         topclip      = (spropening[x] >> 8);
-         bottomclip   = (spropening[x] & 0xff) - 1;
-      }
-#else
-      int topclip      = (spropening[x] >> 8);
-      int bottomclip   = (spropening[x] & 0xff) - 1;
-#endif
-
-      // column loop
-      // a post record has four bytes: topdelta length pixelofs*2
-      for(; *columnptr != 0xff; columnptr += sizeof(column_t))
+      // TODO: Properly clip sprite
+      for(; x < stopx; x++, xfrac += fracstep)
       {
-         column_t *column = (column_t *)columnptr;
-         int top    = column->topdelta * spryscale + sprtop;
-         int bottom = column->length   * spryscale + top;
-         byte *dataofsofs = columnptr + offsetof(column_t, dataofs);
-         int dataofs = (dataofsofs[0] << 8) | dataofsofs[1];
-         int count;
-         fixed_t frac;
+         byte *columnptr  = ((byte *)patch + BIGSHORT(patch->columnofs[xfrac>>FRACBITS]));
 
-         top += (FRACUNIT - 1);
-         top /= FRACUNIT;
-         bottom -= 1;
-         bottom /= FRACUNIT;
+   #ifdef HIGH_DETAIL_SPRITES
+         int topclip;
+         int bottomclip;
 
-         // clip to bottom
-         if(bottom > bottomclip)
-            bottom = bottomclip;
-
-         frac = 0;
-
-         // clip to top
-         if(topclip > top)
-         {
-            frac += (topclip - top) * iscale;
-            top = topclip;
+         if (lowResMode && (vis->patchnum & 32768)) {
+            topclip      = (spropening[x>>1] >> 8);
+            bottomclip   = (spropening[x>>1] & 0xff) - 1;
          }
+         else {
+            topclip      = (spropening[x] >> 8);
+            bottomclip   = (spropening[x] & 0xff) - 1;
+         }
+   #else
+         int topclip      = (spropening[x] >> 8);
+         int bottomclip   = (spropening[x] & 0xff) - 1;
+   #endif
 
-         // calc count
-         count = bottom - top + 1;
-         if(count <= 0)
-            continue;
+         // column loop
+         // a post record has four bytes: topdelta length pixelofs*2
+         for(; *columnptr != 0xff; columnptr += sizeof(column_t))
+         {
+            column_t *column = (column_t *)columnptr;
+            int top    = (vis->patchheight - column->topdelta) * spryscale + sprtop;
+            int bottom = column->length   * spryscale + top;
+            byte *dataofsofs = columnptr + offsetof(column_t, dataofs);
+            int dataofs = (dataofsofs[0] << 8) | dataofsofs[1];
+            int count;
+            fixed_t frac;
 
-         // CALICO: invoke column drawer
-         dcol(x, top, bottom, light, frac, iscale, pixels + BIGSHORT(dataofs), 128);
+            top += (FRACUNIT - 1);
+            top /= FRACUNIT;
+            bottom -= 1;
+            bottom /= FRACUNIT;
+
+            // clip to bottom
+            if(bottom > bottomclip)
+               bottom = bottomclip;
+
+            frac = 0;
+
+            // clip to top
+            if(topclip > top)
+            {
+               frac += (topclip - top) * iscale;
+               top = topclip;
+            }
+
+            // calc count
+            count = bottom - top + 1;
+            if(count <= 0)
+               continue;
+
+            // CALICO: invoke column drawer
+            dcol(x, top, bottom, light, frac, iscale, pixels + BIGSHORT(dataofs), 128);
+         }
+      }
+   }
+   else
+   {
+      for(; x < stopx; x++, xfrac += fracstep)
+      {
+         byte *columnptr  = ((byte *)patch + BIGSHORT(patch->columnofs[xfrac>>FRACBITS]));
+
+   #ifdef HIGH_DETAIL_SPRITES
+         int topclip;
+         int bottomclip;
+
+         if (lowResMode && (vis->patchnum & 32768)) {
+            topclip      = (spropening[x>>1] >> 8);
+            bottomclip   = (spropening[x>>1] & 0xff) - 1;
+         }
+         else {
+            topclip      = (spropening[x] >> 8);
+            bottomclip   = (spropening[x] & 0xff) - 1;
+         }
+   #else
+         int topclip      = (spropening[x] >> 8);
+         int bottomclip   = (spropening[x] & 0xff) - 1;
+   #endif
+
+         // column loop
+         // a post record has four bytes: topdelta length pixelofs*2
+         for(; *columnptr != 0xff; columnptr += sizeof(column_t))
+         {
+            column_t *column = (column_t *)columnptr;
+            int top    = column->topdelta * spryscale + sprtop;
+            int bottom = column->length   * spryscale + top;
+            byte *dataofsofs = columnptr + offsetof(column_t, dataofs);
+            int dataofs = (dataofsofs[0] << 8) | dataofsofs[1];
+            int count;
+            fixed_t frac;
+
+            top += (FRACUNIT - 1);
+            top /= FRACUNIT;
+            bottom -= 1;
+            bottom /= FRACUNIT;
+
+            // clip to bottom
+            if(bottom > bottomclip)
+               bottom = bottomclip;
+
+            frac = 0;
+
+            // clip to top
+            if(topclip > top)
+            {
+               frac += (topclip - top) * iscale;
+               top = topclip;
+            }
+
+            // calc count
+            count = bottom - top + 1;
+            if(count <= 0)
+               continue;
+
+            // CALICO: invoke column drawer
+            dcol(x, top, bottom, light, frac, iscale, pixels + BIGSHORT(dataofs), 128);
+         }
       }
    }
 }
@@ -316,7 +388,7 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
    int     x;          // r15
    int     x1;         // FP+5
    int     x2;         // r22
-   unsigned scalefrac; // FP+3
+   fixed_t scalefrac; // FP+3
    int     r1;         // FP+7
    int     r2;         // r18
    unsigned silhouette; // FP+4
@@ -581,12 +653,12 @@ void Mars_Sec_R_DrawSprites(int sprscreenhalf)
 //
 void R_Sprites(void)
 {
-   int i = 0, count;
-   int half, sortedcount;
+   int i = 0, count, sortedcount;
+   unsigned half;
    unsigned midcount;
    int *sortedsprites = (void *)vd.vissectors;
    viswall_t *wc;
-   vertex_t *verts;
+   mapvertex_t *verts;
 
    sortedcount = 0;
    count = vd.lastsprite_p - vd.vissprites;
@@ -610,21 +682,31 @@ void R_Sprites(void)
        // average mid point
        unsigned xscale = ds->xscale;
        unsigned pixcount = ds->x2 + 1 - ds->x1;
-       if (pixcount > 10) // FIXME: an arbitrary number
-       {
-           midcount += xscale;
-           half += (ds->x1 + (pixcount >> 1)) * xscale;
-       }
+
+       midcount += pixcount;
+       half += (ds->x1 + (pixcount >> 1)) * pixcount;
 
        // composite sort key: distance + id
        sortedsprites[1+sortedcount++] = (xscale << 7) + i;
+   }
+
+   // add masked segs
+   for (wc = vd.viswalls; wc < vd.lastwallcmd; wc++)
+   {
+      unsigned pixcount = wc->stop - wc->start + 1;
+      if (wc->start > wc->stop)
+         continue;
+      if (!(wc->actionbits & AC_MIDTEXTURE))
+         continue;
+      midcount += pixcount;
+      half += (wc->start + (pixcount >> 1)) * pixcount;
    }
 
    // average the mid point
    if (midcount > 0)
    {
       half /= midcount;
-      if (!half || half > viewportWidth)
+      if (!half || half > (unsigned)viewportWidth)
          half = viewportWidth / 2;
    }
 
@@ -634,7 +716,7 @@ void R_Sprites(void)
 
 #ifdef MARS
    // bank switching
-   verts = W_POINTLUMPNUM(gamemaplump+ML_VERTEXES);
+   verts = /*W_POINTLUMPNUM(gamemaplump+ML_VERTEXES)*/vertexes;
 #else
    verts = vertexes;
 #endif
@@ -644,8 +726,8 @@ void R_Sprites(void)
       if (wc->actionbits & (AC_TOPSIL | AC_BOTTOMSIL | AC_SOLIDSIL | AC_MIDTEXTURE))
       {
          volatile int v1 = wc->seg->v1, v2 = wc->seg->v2;
-         wc->v1.x = verts[v1].x>>16, wc->v1.y = verts[v1].y>>16;
-         wc->v2.x = verts[v2].x>>16, wc->v2.y = verts[v2].y>>16;
+         wc->v1.x = verts[v1].x, wc->v1.y = verts[v1].y;
+         wc->v2.x = verts[v2].x, wc->v2.y = verts[v2].y;
       }
    }
 

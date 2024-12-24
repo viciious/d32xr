@@ -40,10 +40,10 @@ typedef struct
 static int R_ClipToViewEdges(angle_t angle1, angle_t angle2) ATTR_DATA_CACHE_ALIGN;
 static void R_AddLine(rbspWork_t *rbsp, seg_t* line) ATTR_DATA_CACHE_ALIGN;
 static void R_ClipWallSegment(rbspWork_t *rbsp, fixed_t first, fixed_t last, boolean solid) ATTR_DATA_CACHE_ALIGN;
-static boolean R_CheckBBox(rbspWork_t *rbsp, fixed_t bspcoord[4]) ATTR_DATA_CACHE_ALIGN;
+static boolean R_CheckBBox(rbspWork_t *rbsp, int16_t bspcoord[4]) ATTR_DATA_CACHE_ALIGN;
 static void R_Subsector(rbspWork_t *rbsp, int num) ATTR_DATA_CACHE_ALIGN;
 static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop) ATTR_DATA_CACHE_ALIGN;
-static void R_RenderBSPNode(rbspWork_t *rbsp, int bspnum) ATTR_DATA_CACHE_ALIGN;
+static void R_RenderBSPNode(rbspWork_t *rbsp, int bspnum, int16_t *outerbbox) ATTR_DATA_CACHE_ALIGN;
 static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
    fixed_t *restrict floorheight, fixed_t *restrict floornewheight, 
    fixed_t *restrict ceilingnewheight, uint32_t *restrict fofInfo) ATTR_DATA_CACHE_ALIGN  __attribute__((noinline));
@@ -121,7 +121,7 @@ static int R_ClipToViewEdges(angle_t angle1, angle_t angle2)
 // Checks BSP node/subtree bounding box. Returns true if some part of the bbox
 // might be visible.
 //
-static boolean R_CheckBBox(rbspWork_t *rbsp, fixed_t bspcoord[4])
+static boolean R_CheckBBox(rbspWork_t *rbsp, int16_t bspcoord[4])
 {
    int boxx;
    int boxy;
@@ -137,12 +137,12 @@ static boolean R_CheckBBox(rbspWork_t *rbsp, fixed_t bspcoord[4])
 
    // find the corners of the box that define the edges from current viewpoint
    boxx = 2;
-   boxx -= (vd.viewx < bspcoord[BOXRIGHT]);
-   boxx -= (vd.viewx <= bspcoord[BOXLEFT]);
+   boxx -= (vd.viewx < (bspcoord[BOXRIGHT]<<FRACBITS));
+   boxx -= (vd.viewx <= (bspcoord[BOXLEFT]<<FRACBITS));
 
    boxy = 2;
-   boxy -= (vd.viewy > bspcoord[BOXBOTTOM]);
-   boxy -= (vd.viewy >= bspcoord[BOXTOP]);
+   boxy -= (vd.viewy > (bspcoord[BOXBOTTOM]<<FRACBITS));
+   boxy -= (vd.viewy >= (bspcoord[BOXTOP]<<FRACBITS));
 
    boxpos = (boxy << 2) + boxx;
    if(boxpos == 5)
@@ -152,10 +152,10 @@ static boolean R_CheckBBox(rbspWork_t *rbsp, fixed_t bspcoord[4])
    if(boxpos == 5)
       return true;
 
-   x1 = bspcoord[checkcoord[boxpos][0]];
-   y1 = bspcoord[checkcoord[boxpos][1]];
-   x2 = bspcoord[checkcoord[boxpos][2]];
-   y2 = bspcoord[checkcoord[boxpos][3]];
+   x1 = bspcoord[checkcoord[boxpos][0]] << FRACBITS;
+   y1 = bspcoord[checkcoord[boxpos][1]] << FRACBITS;
+   x2 = bspcoord[checkcoord[boxpos][2]] << FRACBITS;
+   y2 = bspcoord[checkcoord[boxpos][3]] << FRACBITS;
 
    // check clip list for an open space
    angle1 = R_PointToAngle2(vd.viewx, vd.viewy, x1, y1);
@@ -255,7 +255,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
          actionbits |= (AC_ADDFLOOR|AC_NEWFLOOR);
       }
       *floorheight = *floornewheight = f_floorheight;
-#ifdef FLOOR_OVER_FLOOR
+#ifdef FLOOR_OVER_FLOOR_CRAZY
       if (front_sector->fofsec != -1)
       {
          SETLOWER16(*fofInfo, (sectors[front_sector->fofsec].ceilingheight) >> FRACBITS);
@@ -314,10 +314,12 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
             segl->m_texturenum = texturetranslation[si->midtexture];
             if(liflags & ML_DONTPEGBOTTOM)
             {
-               if(f_floorheight > b_floorheight)
-                  m_texturemid = f_floorheight;
+               const fixed_t rf_floorheight = rbsp->curfsector->floorheight - vd.viewz;
+               const fixed_t rb_floorheight = rbsp->curbsector->floorheight - vd.viewz;
+               if(rf_floorheight > rb_floorheight)
+                  m_texturemid = rf_floorheight;
                else
-                  m_texturemid = b_floorheight;
+                  m_texturemid = rb_floorheight;
 #ifdef WALLDRAW2X
                m_texturemid += (textures[segl->m_texturenum].height << (FRACBITS+1));
 #else
@@ -326,10 +328,12 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
             }
             else
             {
-               if(b_ceilingheight > f_ceilingheight)
-                  m_texturemid = f_ceilingheight;
+               const fixed_t rf_ceilingheight = rbsp->curfsector->ceilingheight - vd.viewz;
+               const fixed_t rb_ceilingheight = rbsp->curbsector->ceilingheight - vd.viewz;
+               if(rb_ceilingheight > rf_ceilingheight)
+                  m_texturemid = rf_ceilingheight;
                else
-                  m_texturemid = b_ceilingheight;
+                  m_texturemid = rb_ceilingheight;
             }
             m_texturemid += rowoffset<<FRACBITS; // add in sidedef texture offset
 #ifdef WALLDRAW2X
@@ -602,7 +606,28 @@ crunch:
 sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
                      boolean back)
 {
-   if (sec->heightsec != -1)
+   if (sec->fofsec != -1 && (sec->flags & SF_FOF_SWAPHEIGHTS))
+   {
+      // Replace sector being drawn, with a copy to be hacked
+      *tempsec = *sec;
+
+      const sector_t *fofsec = &sectors[sec->fofsec];
+      const fixed_t midpoint = fofsec->floorheight + (fofsec->ceilingheight - fofsec->floorheight)/2;
+
+      if (vd.viewz <= midpoint)
+      {
+         tempsec->ceilingheight = fofsec->floorheight;
+         tempsec->ceilingpic = fofsec->floorpic;      
+      }
+      else if (vd.viewz > midpoint)
+      {
+         tempsec->floorheight = fofsec->ceilingheight;
+         tempsec->floorpic = fofsec->ceilingpic;
+      }
+
+      sec = tempsec;
+   }
+   else if (sec->heightsec != -1)
    {
       const sector_t *watersec = &sectors[sec->heightsec];
       boolean underwater = vd.viewsubsector->sector->heightsec != -1 && vd.viewz<=sectors[vd.viewsubsector->sector->heightsec].ceilingheight;
@@ -652,7 +677,7 @@ static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
    fixed_t x1, x2;
    sector_t *frontsector;
    sector_t *backsector;
-   vertex_t *v1 = &vertexes[line->v1], *v2 = &vertexes[line->v2];
+   mapvertex_t *v1 = &vertexes[line->v1], *v2 = &vertexes[line->v2];
    int side;
    line_t *ldef;
    side_t *sidedef;
@@ -661,11 +686,11 @@ static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
    if (line->v1 == rbsp->lastv2)
       angle1 = rbsp->lastangle2;
    else
-      angle1 = R_PointToAngle2(vd.viewx, vd.viewy, v1->x, v1->y);
+      angle1 = R_PointToAngle2(vd.viewx, vd.viewy, v1->x << FRACBITS, v1->y << FRACBITS);
    if (line->v2 == rbsp->lastv1)
       angle2 = rbsp->lastangle1;
    else
-      angle2 = R_PointToAngle2(vd.viewx, vd.viewy, v2->x, v2->y);
+      angle2 = R_PointToAngle2(vd.viewx, vd.viewy, v2->x << FRACBITS, v2->y << FRACBITS);
 
    rbsp->lastv1 = line->v1;
    rbsp->lastv2 = line->v2;
@@ -681,7 +706,7 @@ static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
    // decide which clip routine to use
    side = line->sideoffset & 1;
    ldef = &lines[line->linedef];
-   if ((ldef->flags & ML_CULLING) && P_AproxDistance(vd.viewx - v1->x, vd.viewy - v1->y) > 2048*FRACUNIT)
+   if ((ldef->flags & ML_CULLING) && P_AproxDistance(vd.viewx - (v1->x << FRACBITS), vd.viewy - (v1->y << FRACBITS)) > 2048*FRACUNIT)
       return;
 
    frontsector = rbsp->curfsector;//R_FakeFlat(rbsp->curfsector, &ftempsec, false);
@@ -765,10 +790,25 @@ static void R_Subsector(rbspWork_t *rbsp, int num)
 // Recursively descend through the BSP, classifying nodes according to the
 // player's point of view, and render subsectors in view.
 //
-static void R_RenderBSPNode(rbspWork_t *rbsp, int bspnum)
+static void R_DecodeBBox(int16_t *bbox, const int16_t *outerbbox, uint16_t encbbox)
+{
+   uint16_t l;
+
+   l = outerbbox[BOXTOP] - outerbbox[BOXBOTTOM];
+   bbox[BOXBOTTOM] = outerbbox[BOXBOTTOM] + ((l * (encbbox & 0x0f)) >> 4);
+   bbox[BOXTOP] = outerbbox[BOXTOP] - ((l * (encbbox & 0xf0)) >> 8);
+
+   encbbox >>= 8;
+   l = outerbbox[BOXRIGHT] - outerbbox[BOXLEFT];
+   bbox[BOXLEFT] = outerbbox[BOXLEFT] + ((l * (encbbox & 0x0f)) >> 4);
+   bbox[BOXRIGHT] = outerbbox[BOXRIGHT] - ((l * (encbbox & 0xf0)) >> 8);
+}
+
+static void R_RenderBSPNode(rbspWork_t *rbsp, int bspnum, int16_t *outerbbox)
 {
    node_t *bsp;
-   int     side;
+   int     i, side;
+   int16_t bbox[2][4];
 
 #ifdef MARS
    if((int16_t)bspnum < 0) // reached a subsector leaf?
@@ -784,14 +824,16 @@ static void R_RenderBSPNode(rbspWork_t *rbsp, int bspnum)
 
    // decide which side the view point is on
    side = R_PointOnSide(vd.viewx, vd.viewy, bsp);
+   for (i = 0; i < 2; i++)
+      R_DecodeBBox(bbox[i], outerbbox, bsp->encbbox[i]);
 
    // recursively render front space
-   R_RenderBSPNode(rbsp, bsp->children[side]);
+   R_RenderBSPNode(rbsp, bsp->children[side], bbox[side]);
 
    // possibly divide back space
    side ^= 1;
-   if(R_CheckBBox(rbsp, bsp->bbox[side])) {
-      R_RenderBSPNode(rbsp, bsp->children[side]);
+   if(R_CheckBBox(rbsp, bbox[side])) {
+      R_RenderBSPNode(rbsp, bsp->children[side], bbox[side]);
    }
 }
 
@@ -818,7 +860,7 @@ void R_BSP(void)
    rbsp.lastv1 = -1;
    rbsp.lastv2 = -1;
 
-   R_RenderBSPNode(&rbsp, numnodes - 1);
+   R_RenderBSPNode(&rbsp, numnodes - 1, worldbbox);
 }
 
 // EOF

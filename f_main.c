@@ -14,20 +14,20 @@ typedef struct
 
 creditcard_t creditCards[] = {
 	{"C_STJR",   "SONIC ROBO BLAST",     "32X",              "STAFF", "" },
-	{"C_WSQUID", "TRACKING",                "Wesquiid",         "Title Theme\nGreenflower 1 & 2\nSpeed Shoes\nExtra Life",                       "x.com/@wessquiid\nwessquiid.carrd.co" },
-	{"C_JXCHIP", "TRACKING",                "JX Chip",          "Egg Rock 1 & 2",       "youtube.com/@JXChip\nko-fi.com/jx85638" },
-	{"C_JOYTAY", "TRACKING",                "John \"Joy\" Tay", "Deep Sea 1",                          "x.com/@johntayjinf\nyoutube.com\n/@johntayjinf" },
-	{"C_CRYPTK", "TRACKING",                "Cryptik",          "Miscellaneous",                       "x.com/@LunarCryptik\nyoutube.com/c\n/LunarCryptik\npatreon.com\n/LunarCryptik" },
-	{"C_SAXMAN", "PROGRAMMING",          "Saxman",           "MegaDrive & 32X\nAdditional tooling", "rumble.com/user\n/ymtx81z" },
-	{"C_SSN",    "PROGRAMMING",          "SSNTails",         "Gameplay\nAdditional Art",            "x.com/@SSNTails\nyoutube.com\n/@ssntails" },
-	{"C_VIC",    "SPECIAL THANKS",       "Viciious",         "Doom 32X:\nResurrection",             "github.com/viciious" },
+	{"C_WSQUID", "TRACKING",                "Wessquiid",         "Title Theme\nGreenflower 1 & 2\nSpeed Shoes\nMost Others", "x.com/@wessquiid\nwessquiid.carrd.co" },
+	{"C_NQUITE", "TRACKING",                "NotQuiteHere",      "Special Stage",       "x.com/NotQuiteHereTSM" },
+	{"C_CRYPTK", "TRACKING",                "Cryptik",          "Boss Theme\nMiscellaneous",        "x.com/@LunarCryptik\nyoutube.com/c\n/LunarCryptik" },
+	{"C_JOYTAY", "TRACKING",                "John \"Joy\" Tay", "Credits Theme",                          "x.com/@johntayjinf\nyoutube.com\n/@johntayjinf" },
+	{"C_SAXMAN", "PROGRAMMING",          "Saxman",           "MegaDrive & 32X\nAssembler\nAdditional tooling", "rumble.com/user\n/ymtx81z" },
+	{"C_SSN",    "PROGRAMMING",          "SSNTails",         "Project Lead\nGameplay\nEngine Enhancements\nAdditional Art",            "x.com/@SSNTails\nyoutube.com\n/@ssntails" },
+	{"C_VIC",    "SPECIAL THANKS",       "Viciious",         "Doom 32X:\nResurrection\nDoom CD32X:\nFusion",             "x.com/vluchitz" },
 	{"C_MITTEN", "SPECIAL THANKS",       "Mittens",          "Mapping support",                     "youtube.com\n/@Mittens0407\ntwitch.tv\n/mittens0407" },
 	{"C_STJR",   "BASED ON THE WORK BY", "Sonic Team Jr.",   "www.srb2.org",                        "Shout-outs to:\nAlice Alacroix\nMotor Roach\nNev3r\nGuyWithThePie\nAnd so many more!" },
 	{NULL,       "THANKS FOR PLAYING!", "", "", "" },
 	{NULL, NULL, NULL, NULL, NULL },
 };
 
-#define CARDTIME (10*TICRATE)
+#define CARDTIME (8*TICRATE)
 
 static VINT cardPFP = 0;
 static VINT cardTimer = 0;
@@ -71,7 +71,7 @@ static boolean F_NextCard()
 
 void F_Start (void)
 {
-	S_StartSong(gameinfo.endMus, 1, cdtrack_end);
+	S_StartSong(gameinfo.victoryMus, 1, cdtrack_end);
 
 	// Set this to black, prep for fade-in.
 	const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
@@ -91,7 +91,6 @@ void F_Stop (void)
 	R_InitColormap();
 	
 	// Cleanup
-	// TODO: Get the game to go back to title
 }
 
 /*
@@ -114,19 +113,19 @@ int F_Ticker (void)
 
 	const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
 
-	if (cardTimer >= CARDTIME - 16)
+	if (cardTimer >= CARDTIME - 12)
 	{
-		int palIndex = cardTimer - (CARDTIME - 16);
-		palIndex /= 4;
+		int palIndex = cardTimer - (CARDTIME - 12);
+		palIndex /= 3;
 		if (palIndex > 4)
 			palIndex = 4;
 
 		palIndex += 6;
 		I_SetPalette(dc_playpals+palIndex*768);
 	}
-	else if (cardTimer < 20)
+	else if (cardTimer < 12)
 	{
-		int palIndex = 10 - (cardTimer / 4);
+		int palIndex = 10 - (cardTimer / 3);
 		I_SetPalette(dc_playpals+palIndex*768);
 	}
 	else
@@ -166,6 +165,11 @@ void F_Drawer (void)
 
 		if (cardPFP)
 			DrawJagobjLump(cardPFP, 32, 64, NULL, NULL);
+		else
+		{
+			V_DrawStringCenterWithColormap(&menuFont, 160, 142, "Stay tuned for the full version!", YELLOWTEXTCOLORMAP);
+			V_DrawStringCenter(&menuFont, 160, 160, "youtube.com/@ssntails");
+		}
 
 		if (card->name)
 			V_DrawStringCenter(&menuFont, 80, 64+100, card->name);

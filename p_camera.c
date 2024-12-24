@@ -91,7 +91,6 @@ static boolean PM_CameraCheckPosition(pmovework_t *mw)
       *lvalidcount = 1;
 
    mw->blockline = NULL;
-   mw->numspechit = 0;
 
    if(mw->tmflags & MF_NOCLIP) // thing has no clipping?
       return true;
@@ -332,7 +331,7 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
    }
    else
    {
-      if (!player->exiting && player->stillTimer > TICRATE/2)
+      if (!player->exiting && player->stillTimer > TICRATE/2 && !(player->buttons & (BT_CAMLEFT | BT_CAMRIGHT)))
          angle = focusangle = mo->angle;
       else
          angle = focusangle = R_PointToAngle2(thiscam->x, thiscam->y, mo->x, mo->y);
@@ -347,7 +346,7 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
    if (!player->exiting && player->stillTimer > TICRATE/2)
       camspeed >>= 2;
 
-	if (!player->exiting && thiscam->distFromPlayer > camdist * 3)
+	if (!player->exiting && (mo->flags2 & MF2_SHOOTABLE) && thiscam->distFromPlayer > camdist * 3)
 	{
 		// Camera is stuck, and the player has gone over twice as far away from it, so let's reset
 		P_ResetCamera(player, thiscam);
@@ -356,7 +355,7 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 	dist = camdist;
 
 	// If dead, camera is twice as close
-	if (player->health <= 0)
+	if (!(mo->flags2 & MF2_SHOOTABLE))
 		dist >>= 1;
    else if (player->exiting)
    {
@@ -405,6 +404,14 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 	thiscam->momx = FixedMul(x - thiscam->x, camspeed);
 	thiscam->momy = FixedMul(y - thiscam->y, camspeed);
 	thiscam->momz = FixedMul(z - thiscam->z, camspeed);
+
+   if (player->buttons & BT_CAMLEFT)
+      P_ThrustValues(thiscam->angle - ANG90, -16*FRACUNIT, &thiscam->momx, &thiscam->momy);
+   if (player->buttons & BT_CAMRIGHT)
+      P_ThrustValues(thiscam->angle - ANG90, 16*FRACUNIT, &thiscam->momx, &thiscam->momy);
+
+   if (!(mo->flags2 & MF2_SHOOTABLE))
+      thiscam->momx = thiscam->momy = thiscam->momz = 0;
 
    dist = P_AproxDistance(viewpointx - thiscam->x, viewpointy - thiscam->y);
 

@@ -145,9 +145,10 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *mw)
 //
 boolean PM_BoxCrossLine(line_t *ld, pmovework_t *mw)
 {
-   fixed_t x1, x2, y1, y2;
-   fixed_t lx, ly, ldx, ldy;
-   fixed_t dx1, dx2, dy1, dy2;
+   fixed_t x1, x2;
+   fixed_t lx, ly;
+   fixed_t ldx, ldy;
+   fixed_t dx1, dy1, dx2, dy2;
    boolean side1, side2;
    fixed_t ldbbox[4];
 
@@ -161,9 +162,6 @@ boolean PM_BoxCrossLine(line_t *ld, pmovework_t *mw)
       return false; // bounding boxes don't intersect
    }
 
-   y1 = mw->tmbbox[BOXTOP   ];
-   y2 = mw->tmbbox[BOXBOTTOM];
-
    if(ld->flags & ML_ST_POSITIVE)
    {
       x1 = mw->tmbbox[BOXLEFT ];
@@ -175,15 +173,15 @@ boolean PM_BoxCrossLine(line_t *ld, pmovework_t *mw)
       x2 = mw->tmbbox[BOXLEFT ];
    }
 
-   lx  = vertexes[ld->v1].x;
-   ly  = vertexes[ld->v1].y;
-   ldx = (vertexes[ld->v2].x - lx) >> FRACBITS;
-   ldy = (vertexes[ld->v2].y - ly) >> FRACBITS;
+   lx  = vertexes[ld->v1].x << FRACBITS;
+   ly  = vertexes[ld->v1].y << FRACBITS;
+   ldx = vertexes[ld->v2].x - vertexes[ld->v1].x;
+   ldy = vertexes[ld->v2].y - vertexes[ld->v1].y;
 
    dx1 = (x1 - lx) >> FRACBITS;
-   dy1 = (y1 - ly) >> FRACBITS;
+   dy1 = (mw->tmbbox[BOXTOP] - ly) >> FRACBITS;
    dx2 = (x2 - lx) >> FRACBITS;
-   dy2 = (y2 - ly) >> FRACBITS;
+   dy2 = (mw->tmbbox[BOXBOTTOM] - ly) >> FRACBITS;
 
    side1 = (ldy * dx1 < dy1 * ldx);
    side2 = (ldy * dx2 < dy2 * ldx);
@@ -248,16 +246,18 @@ static boolean PIT_CheckLine(line_t *ld, pmovework_t *mw)
       const side_t *side = &sides[ld->sidenum[0]];
       const texture_t *tex = &textures[side->midtexture];
       const fixed_t texheight = tex->height << (FRACBITS+1);
+      int16_t rowoffset = (side->textureoffset & 0xf000) | ((unsigned)side->rowoffset << 4);
+      rowoffset >>= 4; // sign extend
       fixed_t textop, texbottom;
 
       if (ld->flags & ML_DONTPEGBOTTOM)
       {
-         texbottom = openbottom + (side->rowoffset << (FRACBITS+1));
+         texbottom = openbottom + ((int)rowoffset << (FRACBITS));
          textop = texbottom + texheight;
       }
       else
       {
-         textop = opentop + (side->rowoffset << (FRACBITS+1));
+         textop = opentop + ((int)rowoffset << (FRACBITS));
          texbottom = textop - texheight;
       }
 
@@ -286,10 +286,13 @@ static boolean PIT_CheckLine(line_t *ld, pmovework_t *mw)
    if(lowfloor < mw->tmdropoffz)
       mw->tmdropoffz = lowfloor;
 
-   if (ld->special)
+   if (tmthing->player)
    {
-       if (mw->numspechit < MAXSPECIALCROSS)
-        mw->spechit[mw->numspechit++] = ld;
+      player_t *player = &players[tmthing->player-1];
+      if (player->num_touching_sectors < MAX_TOUCHING_SECTORS)
+         player->touching_sectorlist[player->num_touching_sectors++] = front - sectors;
+      if (player->num_touching_sectors < MAX_TOUCHING_SECTORS)
+         player->touching_sectorlist[player->num_touching_sectors++] = back - sectors;
    }
    return true;
 }
@@ -313,8 +316,6 @@ void P_PlayerCheckForStillPickups(mobj_t *mobj)
 	int xl, xh, yl, yh, bx, by;
 	pmovework_t mw;
 	mw.newsubsec = &subsectors[mobj->isubsector];
-	mw.numspechit = 0;
-	mw.spechit = NULL;
 	mw.tmfloorz = mw.tmdropoffz = mw.newsubsec->sector->floorheight;
 	mw.tmceilingz = mw.newsubsec->sector->ceilingheight;
 	mw.blockline = NULL;
@@ -392,7 +393,6 @@ static boolean PM_CheckPosition(pmovework_t *mw)
       *lvalidcount = 1;
 
    mw->blockline = NULL;
-   mw->numspechit = 0;
 
    if(mw->tmflags & MF_NOCLIP) // thing has no clipping?
       return true;

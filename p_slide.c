@@ -43,10 +43,10 @@ enum
 //
 static int SL_PointOnSide(pslidework_t *sw, fixed_t x, fixed_t y)
 {
-   fixed_t dx, dy, dist;
+fixed_t dx, dy, dist;
 
-   dx = x - sw->p1->x;
-   dy = y - sw->p1->y;
+   dx = x - sw->p1.x;
+   dy = y - sw->p1.y;
 
    dx = FixedMul(dx, sw->nvx);
    dy = FixedMul(dy, sw->nvy);
@@ -68,14 +68,14 @@ static fixed_t SL_CrossFrac(pslidework_t *sw)
    fixed_t dx, dy, dist1, dist2;
 
    // project move start and end points onto line normal
-   dx = sw->p3x - sw->p1->x;
-   dy = sw->p3y - sw->p1->y;
+   dx = sw->p3x - sw->p1.x;
+   dy = sw->p3y - sw->p1.y;
    dx = FixedMul(dx, sw->nvx);
    dy = FixedMul(dy, sw->nvy);
    dist1 = dx + dy;
 
-   dx = sw->p4x - sw->p1->x;
-   dy = sw->p4y - sw->p1->y;
+   dx = sw->p4x - sw->p1.x;
+   dy = sw->p4y - sw->p1.y;
    dx = FixedMul(dx, sw->nvx);
    dy = FixedMul(dy, sw->nvy);
    dist2 = dx + dy;
@@ -138,24 +138,21 @@ blockmove:
 }
 
 void GetSectorAABB(sector_t *sector, fixed_t bbox[4]);
+__attribute((noinline))
 void P_SpawnBustables(sector_t *sec, mobj_t *playermo)
 {
    fixed_t blockbox[4];
    GetSectorAABB(sec, blockbox);
    const fixed_t spawnInterval = 64<<FRACBITS;
 
-   for (fixed_t z = sec->ceilingheight - spawnInterval/2; z >= sec->floorheight + spawnInterval/2; z -= spawnInterval/2)
+   for (fixed_t z = sec->ceilingheight - spawnInterval/2; z >= sec->floorheight + spawnInterval/2; z -= spawnInterval)
    {
       for (fixed_t x = blockbox[BOXLEFT]; x <= blockbox[BOXRIGHT]; x += spawnInterval)
       {
          for (fixed_t y = blockbox[BOXBOTTOM]; y <= blockbox[BOXTOP]; y += spawnInterval)
          {
             if (R_PointInSubsector(x, y)->sector == sec)
-            {
-               mobj_t *mo = P_SpawnMobj(x, y, z, MT_GFZDEBRIS);
-               const angle_t playerMoveAngle = R_PointToAngle2(0, 0, playermo->momx, playermo->momy);
-               P_ThrustValues(playerMoveAngle, P_AproxDistance(playermo->momx, playermo->momy) >> 1, &mo->momx, &mo->momy);
-            }
+               P_SpawnMobj(x, y, z, MT_GFZDEBRIS);               
          }
       }
    }
@@ -170,7 +167,7 @@ static boolean SL_CheckLine(line_t *ld, pslidework_t *sw)
    sector_t *front, *back;
    int       side1, dx, dy;
    angle_t fineangle;
-   vertex_t *vtmp;
+   vertex_t vtmp;
    fixed_t  ldbbox[4];
 
    P_LineBBox(ld, ldbbox);
@@ -195,9 +192,15 @@ static boolean SL_CheckLine(line_t *ld, pslidework_t *sw)
       && (players[sw->slidething->player-1].pflags & PF_SPINNING)) // Bustable block
    {
       back->floorheight = P_FindNextLowestFloor(back, back->floorheight);
+      ld->special = 0;
       ld->tag = 0;
       S_StartSound(sw->slidething, sfx_s3k_59);
       P_SpawnBustables(back, sw->slidething);
+   }
+   else if (ld->special == 200 && sw->slidething->player)
+   {
+      ld->special = 0;
+      CONS_Printf("Go away! Dave's not here. *B^D");
    }
 
    if(front->floorheight > back->floorheight)
@@ -218,11 +221,13 @@ static boolean SL_CheckLine(line_t *ld, pslidework_t *sw)
 
    // the line is definitely blocking movement at this point
 findfrac:
-   sw->p1  = &vertexes[ld->v1];
-   sw->p2  = &vertexes[ld->v2];
+   sw->p1.x = vertexes[ld->v1].x << FRACBITS;
+   sw->p1.y = vertexes[ld->v1].y << FRACBITS;
+   sw->p2.x = vertexes[ld->v2].x << FRACBITS;
+   sw->p2.y = vertexes[ld->v2].y << FRACBITS;
 
-   dx = sw->p2->x - sw->p1->x;
-   dy = sw->p2->y - sw->p1->y;
+   dx = sw->p2.x - sw->p1.x;
+   dy = sw->p2.y - sw->p1.y;
    fineangle = ( dy == 0 ) ? (( dx < 0 ) ? ANG180 : 0 ) :
                ( dx == 0 ) ? (( dy < 0 ) ? ANG270 : ANG90 ) :
                R_PointToAngle2(0, 0, dx, dy);
@@ -240,9 +245,12 @@ findfrac:
       if(ld->sidenum[1] == -1)
          return true; // don't clip to backs of one-sided lines
       // reverse coordinates and angle
-      vtmp = sw->p1;
-      sw->p1   = sw->p2;
-      sw->p2   = vtmp;
+      vtmp.x = sw->p1.x;
+      vtmp.y = sw->p1.y;
+      sw->p1.x = sw->p2.x;
+      sw->p1.y = sw->p2.y;
+      sw->p2.x = vtmp.x;
+      sw->p2.y = vtmp.y;
       sw->nvx  = -sw->nvx;
       sw->nvy  = -sw->nvy;
       break;

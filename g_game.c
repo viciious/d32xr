@@ -1,6 +1,7 @@
 /* G_game.c  */
 
 #include "doomdef.h"
+#include "marshw.h"
 #include "p_local.h"
 #include <string.h>
 
@@ -31,6 +32,9 @@ int             gametic;
 int             leveltime;
 VINT            fadetime;
 VINT           totalitems, totalsecret;    /* for intermission  */
+uint16_t        emeralds;
+uint16_t        token;
+uint16_t        tokenbits;
 
 boolean         demorecording;
 boolean         demoplayback;
@@ -143,28 +147,23 @@ void G_DoLoadLevel (void)
 		if (gamemap == 0)
 			gamemap = gamemapinfo.mapNumber + 1;
 
+		gamemapinfo.loadFlags = 0;
+
 		gamemapinfo.sky = NULL;
+		gamemapinfo.skyOffsetY = 0;
+		#ifdef MDSKY
+		gamemapinfo.skyTopColor = MARS_MD_PIXEL_THRU_INDEX;
+		gamemapinfo.skyBottomColor = MARS_MD_PIXEL_THRU_INDEX;
+		#else
+		gamemapinfo.skyTopColor = 0;
+		gamemapinfo.skyBottomColor = 0;
+		#endif
 		gamemapinfo.mapNumber = gamemap;
 		gamemapinfo.lumpNum = gamemaplump;
-		gamemapinfo.secretNext = G_LumpNumForMapNum(24);
 
 		/* decide which level to go to next */
-#ifdef MARS
-		switch (gamemap)
-		{
-			case 15: nextmap = 23; break;
-			case 23: nextmap = 0; break;
-			case 24: nextmap = 4; break;
-			default: nextmap = gamemap + 1; break;
-		}
-#else
-		switch (gamemap)
-		{
-			case 23: nextmap = 0; break;
-			case 24: nextmap = 4; break;
-			default: nextmap = gamemap + 1; break;
-		}
-#endif
+		nextmap = gamemap + 1;
+
 		if (nextmap)
 			gamemapinfo.next = G_LumpNumForMapNum(nextmap);
 		else
@@ -180,18 +179,14 @@ void G_DoLoadLevel (void)
 	/*  */
 	/* set the sky map for the episode  */
 	/*  */
-	if (gamemapinfo.sky == NULL)
-	{
-		if (gamemap < 9)
-			gamemapinfo.sky = "SKY1";
-		else if (gamemap < 18)
-			gamemapinfo.sky = "SKY2";
-		else
-			gamemapinfo.sky = "SKY3";
+	if (gamemapinfo.sky == NULL) {
+		sky_32x_layer = false;
 	}
-
-	skytexturel = R_TextureNumForName(gamemapinfo.sky);
- 	skytexturep = &textures[skytexturel];
+	else {
+		skytexturel = R_TextureNumForName(gamemapinfo.sky);
+ 		skytexturep = &textures[skytexturel];
+		sky_32x_layer = (skytexturel > 0);
+	}
 
 	P_SetupLevel (gamemaplump);
 	gameaction = ga_nothing; 
@@ -596,6 +591,9 @@ void G_InitNew (int map, gametype_t gametype, boolean splitscr)
 
 	gamepaused = false;
 	gametic = 0;
+	emeralds = 0;
+	token = 0;
+	tokenbits = 0;
 } 
 
 void G_LoadGame(int saveslot)
@@ -613,6 +611,9 @@ void G_LoadGame(int saveslot)
 
 /*============================================================================  */
  
+static int 		nextmapl = -1;
+static int      returnspecstagemapl = -1;
+
 /*
 =================
 =
@@ -627,11 +628,13 @@ void G_RunGame (void)
 
 	while (1)
 	{
-		int 		nextmapl;
 		boolean		finale;
 #ifdef JAGUAR
 		int			nextmap;
 #endif
+
+		if (nextmapl == -1)
+			nextmapl = G_LumpNumForMapNum(1);
 
 		/* run a level until death or completion */
 		MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer, P_Update);
@@ -669,10 +672,26 @@ startnew:
 			continue;			/* skip intermission */
 		}
 
-		if (gameaction == ga_secretexit && gamemapinfo.secretNext)
-			nextmapl = gamemapinfo.secretNext;
-		else
+		if (token && emeralds < 127) // Got a token, and missing at least one emerald
+		{
+			if (gamemapinfo.mapNumber < SSTAGE_START || gamemapinfo.mapNumber > SSTAGE_END)
+				returnspecstagemapl = gamemapinfo.next; // Save the 'next' regular stage to go to
+
+			token--;
+
+			for (i = 0; i < 7; i++)
+			{
+				if (!(emeralds & (1<<i)))
+				{
+					nextmapl = G_LumpNumForMapNum(SSTAGE_START + i); // Going to the special stage
+					break;
+				}
+			}
+		}
+		else if (gamemapinfo.mapNumber < SSTAGE_START || gamemapinfo.mapNumber > SSTAGE_END)
 			nextmapl = gamemapinfo.next;
+		else
+			nextmapl = returnspecstagemapl;
 
 		finale = nextmapl == 0;
 
@@ -719,7 +738,8 @@ startnew:
 #endif
 
 	/* run a stats intermission */
-//		MiniLoop (IN_Start, IN_Stop, IN_Ticker, IN_Drawer, UpdateBuffer);
+	if (gameaction == ga_specialstageexit)
+		MiniLoop (IN_Start, IN_Stop, IN_Ticker, IN_Drawer, UpdateBuffer);
 	
 	/* run the finale if needed */
 		if (finale)

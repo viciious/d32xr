@@ -188,7 +188,8 @@ void	P_RunMobjBase (void)
 	 
 	DSPFunction (&p_base_start);
 #else
-	P_RunMobjBase2 ();
+
+	P_RunMobjBase2();
 #endif
 }
 

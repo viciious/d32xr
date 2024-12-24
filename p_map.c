@@ -11,8 +11,8 @@ typedef struct
 	fixed_t     dist;
 } pradiusattack_t;
 
-boolean PIT_RadiusAttack(mobj_t* thing, pradiusattack_t *ra) ATTR_DATA_CACHE_ALIGN;
-void P_RadiusAttack(mobj_t* spot, mobj_t* source, int damage) ATTR_DATA_CACHE_ALIGN;
+boolean PIT_RadiusAttack(mobj_t* thing, pradiusattack_t *ra);
+void P_RadiusAttack(mobj_t* spot, mobj_t* source, int damage);
 
 /*============================================================================= */
 

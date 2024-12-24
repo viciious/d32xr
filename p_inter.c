@@ -4,6 +4,7 @@
 #include "doomdef.h"
 #include "p_local.h"
 #include "st_main.h"
+#include "st_inter.h"
 
 /*
 ===============================================================================
@@ -200,6 +201,34 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 			sound = mobjinfo[special->type].deathsound;
 
 			player->itemcount++;
+		}
+		else if (special->type == MT_TOKEN)
+		{
+			ringmobj_t *ring = (ringmobj_t*)special;
+			token++;
+			tokenbits |= special->angle / ANG45;
+			P_SpawnMobj(ring->x << FRACBITS, ring->y << FRACBITS, ring->z << FRACBITS, MT_SPARK);
+			sound = mobjinfo[special->type].deathsound;
+		}
+		else if (special->type == MT_BLUESPHERE)
+		{
+			gamemapinfo.spheresNeeded--;
+			sound = mobjinfo[special->type].deathsound;
+
+			if (gamemapinfo.spheresNeeded <= 0)
+			{
+				gamemapinfo.spheresNeeded = 0;
+				for (int p = 0; p < MAXPLAYERS; p++)
+					players[p].exiting = 1;
+
+				toucher->momx = toucher->momy = toucher->momz = 0;
+
+				stagefailed = false;
+				emeralds |= (1 << (gamemapinfo.mapNumber - SSTAGE_START));
+
+				// Change music to chaos emerald get
+				S_StartSong(gameinfo.emeraldMus, 0, cdtrack_emerald);
+			}
 		}
 		
 		special->flags &= ~MF_SPECIAL;

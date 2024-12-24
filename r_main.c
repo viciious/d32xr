@@ -18,13 +18,16 @@ VINT anamorphicview = 0;
 VINT initmathtables = 2;
 
 drawcol_t drawcol;
+drawcol_t drawcolflipped;
 drawcol_t drawcolnpo2;
 drawcol_t drawcollow;
 drawspan_t drawspan;
+drawspancolor_t drawspancolor;
 
 #ifdef MDSKY
 drawskycol_t drawskycol;
 #endif
+drawcol_t draw32xskycol;
 
 #ifdef HIGH_DETAIL_SPRITES
 drawcol_t drawspritecol;
@@ -97,7 +100,7 @@ fixed_t	*finecosine_ = &finesine_[FINEANGLES/4];
 //                Check R_SetupFrame, R_SetViewSize for more...
 fixed_t*                 yslopetab;
 fixed_t*                yslope;
-fixed_t *distscale/*[SCREENWIDTH]*/;
+uint16_t *distscale/*[SCREENWIDTH]*/;
 
 VINT *viewangletox/*[FINEANGLES/2]*/;
 
@@ -121,32 +124,110 @@ texture_t *testtex;
 ===============================================================================
 */
 
-static int SlopeDiv(unsigned int num, unsigned int den) ATTR_DATA_CACHE_ALIGN;
+static int SlopeAngle (unsigned int num, unsigned int den) ATTR_DATA_CACHE_ALIGN;
 
-static int SlopeDiv (unsigned num, unsigned den)
+static int SlopeAngle (unsigned num, unsigned den)
 {
-  unsigned ans;
+	unsigned ans;
+	angle_t *t2a;
 
-  if (den < 512)
-    return SLOPERANGE;
-  ans = (num<<3)/(den>>8);
-  return ans <= SLOPERANGE ? ans : SLOPERANGE;
+	den >>= 8;
+#ifdef MARS
+	SH2_DIVU_DVSR = den;
+	SH2_DIVU_DVDNT = num << 3;
+
+    __asm volatile (
+      "mov.l %1, %0"
+      : "=r" (t2a)
+      : "m" (tantoangle)
+   );
+
+   if (den < 2)
+	  ans = SLOPERANGE;
+   else
+      ans = SH2_DIVU_DVDNT;
+#else
+	if (den < 2)
+		ans = SLOPERANGE;
+	else
+		ans = (num<<3)/den;
+
+	t2a = tantoangle;
+#endif
+
+	ans = ans <= SLOPERANGE ? ans : SLOPERANGE;
+
+	return t2a[ans];
 }
 
-angle_t R_PointToAngle2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
-{       
-  return (y2 -= y1, (x2 -= x1) || y2) ?
-    x2 >= 0 ?
-      y2 >= 0 ? 
-        (x2 > y2) ? tantoangle[SlopeDiv(y2,x2)] :                      // octant 0 
-                ANG90-1-tantoangle[SlopeDiv(x2,y2)] :                // octant 1
-        x2 > (y2 = -y2) ? -tantoangle[SlopeDiv(y2,x2)] :                // octant 8
-                       ANG270+tantoangle[SlopeDiv(x2,y2)] :          // octant 7
-      y2 >= 0 ? (x2 = -x2) > y2 ? ANG180-1-tantoangle[SlopeDiv(y2,x2)] : // octant 3
-                            ANG90 + tantoangle[SlopeDiv(x2,y2)] :    // octant 2
-        (x2 = -x2) > (y2 = -y2) ? ANG180+tantoangle[ SlopeDiv(y2,x2)] :  // octant 4
-                              ANG270-1-tantoangle[SlopeDiv(x2,y2)] : // octant 5
-    0;
+angle_t R_PointToAngle2 (fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
+{	
+	int		x;
+	int		y;
+	int 	base = 0;
+	int 	num = 0, den = 0, n = 1;
+	
+	x = x2 - x1;
+	y = y2 - y1;
+	
+	if ( (!x) && (!y) )
+		return 0;
+	if (x>= 0)
+	{	/* x >=0 */
+		if (y>= 0)
+		{	/* y>= 0 */
+			if (x>y)
+			{
+				/* octant 0 */
+				num = y, den = x;
+			}
+			else
+			{
+				/* octant 1 */
+				base = ANG90-1, n = -1,	num = x, den = y;
+			}
+		}
+		else
+		{	/* y<0 */
+			y = -y;
+			if (x>y)
+			{
+				n = -1, num = y, den = x; /* octant 8 */
+			}
+			else
+			{
+				base = ANG270, n = 1, num = x, den = y; /* octant 7 */
+			}
+		}
+	}
+	else
+	{	/* x<0 */
+		x = -x;
+		if (y>= 0)
+		{	/* y>= 0 */
+			if (x>y)
+			{
+				base = ANG180-1, n = -1, num = y, den = x; /* octant 3 */
+			}
+			else
+			{
+				base = ANG90, num = x, den = y; /* octant 2 */
+			}
+		}
+		else
+		{	/* y<0 */
+			y = -y;
+			if (x>y)
+			{
+				base = ANG180, num = y, den = x; /* octant 4 */
+			}
+			else
+			{
+				base = ANG270-1, n = -1, num = x, den = y; /* octant 5 */
+			}
+		}
+	}
+	return base + n * SlopeAngle(num, den);
 }
 
 /*
@@ -167,19 +248,19 @@ struct subsector_s *R_PointInSubsector (fixed_t x, fixed_t y)
 		
 	nodenum = numnodes-1;
 
-#ifdef MARS
-	while ( (int16_t)nodenum >= 0 )
-#else
-	while (! (nodenum & NF_SUBSECTOR) )
-#endif
+	do
 	{
 		node = &nodes[nodenum];
 		side = R_PointOnSide(x, y, node);
 		nodenum = node->children[side];
 	}
-	
-	return &subsectors[nodenum & ~NF_SUBSECTOR];
-	
+	#ifdef MARS
+	while ( (int16_t)nodenum >= 0 );
+#else
+	while (! (nodenum & NF_SUBSECTOR) );
+#endif
+
+	return &subsectors[nodenum & ~NF_SUBSECTOR];	
 }
 
 /*============================================================================= */
@@ -255,13 +336,16 @@ void R_SetDrawMode(void)
 	if (debugmode == DEBUGMODE_NODRAW)
 	{
 		drawcol = I_DrawColumnNoDraw;
+		drawcolflipped = I_DrawColumnNoDraw;
 		drawcolnpo2 = I_DrawColumnNoDraw;
 		drawcollow = I_DrawColumnNoDraw;
 		drawspan = I_DrawSpanNoDraw;
+		drawspancolor = I_DrawSpanColorNoDraw;
 
 		#ifdef MDSKY
-		drawskycol = I_DrawColumnNoDraw;
+		drawskycol = I_DrawSkyColumnNoDraw;
 		#endif
+		draw32xskycol = I_DrawColumnNoDraw;
 
 		#ifdef HIGH_DETAIL_SPRITES
 		drawspritecol = I_DrawColumnNoDraw;
@@ -279,9 +363,11 @@ void R_SetDrawMode(void)
 		#ifdef MDSKY
 		drawskycol = I_DrawSkyColumnLow;
 		#endif
+		draw32xskycol = I_Draw32XSkyColumnLow;
 
 		#ifdef HIGH_DETAIL_SPRITES
 		drawspritecol = I_DrawColumn;
+		drawcolflipped = I_DrawColumnFlipped;
 		#endif
 
 		#ifdef POTATO_MODE
@@ -289,10 +375,13 @@ void R_SetDrawMode(void)
 		#else
 		drawspan = I_DrawSpanLow;
 		#endif
+
+		drawspancolor = I_DrawSpanColorLow;
 	}
 	else
 	{
 		drawcol = I_DrawColumn;
+		drawcolflipped = I_DrawColumnFlipped;
 		drawcolnpo2 = I_DrawColumnNPo2;
 		drawspan = I_DrawSpan;
 		drawcollow = I_DrawColumnLow;
@@ -300,6 +389,7 @@ void R_SetDrawMode(void)
 		#ifdef MDSKY
 		drawskycol = I_DrawSkyColumn;
 		#endif
+		//draw32xskycol = I_Draw32XSkyColumn;	// This doesn't exist!
 
 		#ifdef HIGH_DETAIL_SPRITES
 		drawspritecol = I_DrawColumn;
@@ -310,6 +400,8 @@ void R_SetDrawMode(void)
 		#else
 		drawspan = I_DrawSpan;
 		#endif
+
+		//drawspancolor = I_DrawSpanColor;		// This doesn't exist!
 	}
 
 #ifdef MARS
@@ -428,6 +520,15 @@ void R_SetTextureData(texture_t *tex, uint8_t *start, int size, boolean skiphead
 	}
 }
 
+static boolean IsWavyFlat(byte flatnum)
+{
+    return (flatnum >= 9 && flatnum <= 16) // BWATER
+        || (flatnum >= 24 && flatnum <= 27) // CHEMG
+        || (flatnum >= 43 && flatnum <= 50) // DWATER
+        || (flatnum == 74) // RLAVA1
+        ;
+}
+
 /*
 ==============
 =
@@ -446,6 +547,7 @@ void R_SetFlatData(int f, uint8_t *start, int size)
 	{
 		flatpixels[f].data[j] = data;
 		flatpixels[f].size = w;
+		flatpixels[f].wavy = IsWavyFlat(f);
 		if (texmips) {
 			data += w * w;
 			w >>= 1;
@@ -459,6 +561,7 @@ void R_SetFlatData(int f, uint8_t *start, int size)
 	{
 		flatpixels[f].data[j] = data;
 		flatpixels[f].size = w;
+		flatpixels[f].wavy = IsWavyFlat(f);
 		if (texmips) {
 			data += w * w;
 			w >>= 1;
@@ -522,6 +625,10 @@ void R_SetupTextureCaches(int gamezonemargin)
 	void *margin;
 	const int zonemargin = gamezonemargin;
 	const int flatblocksize = sizeof(memblock_t) + ((sizeof(texcacheblock_t) + 15) & ~15) + 64*64 + 32;
+
+#ifndef SHOW_DISCLAIMER
+	CONS_Printf("Free memory: %d (LFB: %d)", Z_FreeMemory(mainzone), Z_LargestFreeBlock(mainzone));
+#endif
 
 	// functioning texture cache requires at least 8kb of ram
 	zonefree = Z_LargestFreeBlock(mainzone);
@@ -604,7 +711,6 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	validcount[0]++;
 
 	player = &players[displayplayer];
-	int aimingangle = 0;
 
 	if (!demoplayback)
 	{
@@ -616,7 +722,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		vd.viewz = thiscam->z + (20 << FRACBITS);
 		vd.viewangle = thiscam->angle;
 		vd.lightlevel = thiscam->subsector->sector->lightlevel;
-		aimingangle = thiscam->aiming;
+		vd.aimingangle = thiscam->aiming;
 		vd.viewsubsector = thiscam->subsector;
 
 		if (thiscam->subsector->sector->heightsec != -1
@@ -629,6 +735,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		vd.viewy = player->mo->y;
 		vd.viewz = player->viewz;
 		vd.viewangle = player->mo->angle;
+		vd.aimingangle = 0;
 		vd.lightlevel = subsectors[player->mo->isubsector].sector->lightlevel;
 		vd.viewsubsector = &subsectors[player->mo->isubsector];
 	}
@@ -639,20 +746,16 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	vd.viewcos = finecosine(vd.viewangle>>ANGLETOFINESHIFT);
 
 	// look up/down
-#ifdef MDSKY
 	int dy;
 	if (demoplayback && gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
 		// The viewport for the title screen is aligned with the bottom of
 		// the screen. Therefore we shift the angle to center the horizon.
-		dy = -32;
+		dy = -27;
 	}
 	else {
-		G_ClipAimingPitch(&aimingangle);
-		dy = AIMINGTODY(aimingangle);
+		G_ClipAimingPitch((int*)&vd.aimingangle);
+		dy = AIMINGTODY(vd.aimingangle);
 	}
-#else
-	int dy = AIMINGTODY(aimingangle);
-#endif
 
 	yslope = &yslopetab[(3*viewportHeight/2) - dy];
 	centerY = (viewportHeight / 2) + dy;
@@ -665,7 +768,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	vd.doubleclipangle = vd.clipangle * 2;
 	vd.viewangletox = viewangletox;
 
-	if (gamemapinfo.mapNumber != TITLE_MAP_NUMBER)
+	if (gamemapinfo.mapNumber != TITLE_MAP_NUMBER && (gamemapinfo.mapNumber < SSTAGE_START || gamemapinfo.mapNumber > SSTAGE_END))
 	{
 		if (leveltime < 62)
 		{
@@ -673,7 +776,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 				// Set the fade degree to black.
 				vd.fixedcolormap = HWLIGHT(0);	// 32X VDP
 				#ifdef MDSKY
-				if (leveltime == 0) {
+				if (leveltime == 0 && sky_md_layer) {
 					Mars_FadeMDPaletteFromBlack(0);	// MD VDP
 				}
 				#endif
@@ -682,7 +785,9 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 				// Set the fade degree based on leveltime.
 				vd.fixedcolormap = HWLIGHT((leveltime-30)*8);	// 32X VDP
 				#ifdef MDSKY
-				Mars_FadeMDPaletteFromBlack(md_palette_fade_table[leveltime-30]);	// MD VDP
+				if (sky_md_layer) {
+					Mars_FadeMDPaletteFromBlack(md_palette_fade_table[leveltime-30]);	// MD VDP
+				}
 				#endif
 			}
 		}
@@ -691,7 +796,9 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 			// Set the fade degree based on leveltime.
 //			vd.fixedcolormap = HWLIGHT((TICRATE-fadetime)*8);	// 32X VDP
 			#ifdef MDSKY
-			Mars_FadeMDPaletteFromBlack(md_palette_fade_table[TICRATE-fadetime]);	// MD VDP
+			if (sky_md_layer) {
+				Mars_FadeMDPaletteFromBlack(md_palette_fade_table[TICRATE-fadetime]);	// MD VDP
+			}
 			#endif
 		}
 	}
@@ -756,11 +863,9 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 
 	viewportbuffer = (pixel_t*)I_ViewportBuffer();
 
-	#ifdef MDSKY
 	if (demoplayback && gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
 		viewportbuffer += (160*22);
 	}
-	#endif
 
 	palette = 0;
 
@@ -770,15 +875,33 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		palette = 12;
 	else if (fadetime > 0)
 	{
-		palette = 6 + (fadetime / 2);
-		if (palette > 10)
-			palette = 10;
+		if (gamemapinfo.mapNumber >= SSTAGE_START && gamemapinfo.mapNumber <= SSTAGE_END)
+		{
+			palette = 1 + (fadetime / 2);
+			if (palette > 5)
+				palette = 5;
+		}
+		else
+		{
+			palette = 6 + (fadetime / 2);
+			if (palette > 10)
+				palette = 10;
+		}
 	}
-	else if (demoplayback && gamemapinfo.mapNumber == TITLE_MAP_NUMBER && leveltime < 15) {
+	else if (gamemapinfo.mapNumber >= SSTAGE_START && gamemapinfo.mapNumber <= SSTAGE_END
+		&& gametic < 15)
+	{
+		palette = 5 - (gametic / 3);
+		if (palette < 0)
+			palette = 0;
+	}
+	else if (leveltime < 15 && demoplayback && gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
 		palette = 5 - (leveltime / 3);
 
 		#ifdef MDSKY
-		Mars_FadeMDPaletteFromBlack(0xEEE); //TODO: Replace with Mars_FadeMDPaletteFromWhite()
+		if (sky_md_layer) {
+			Mars_FadeMDPaletteFromBlack(0xEEE); //TODO: Replace with Mars_FadeMDPaletteFromWhite()
+		}
 		#endif
 	}
 	else if (player->whiteFlash)
@@ -787,6 +910,12 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		palette= 11;
 
 		distortion_action = DISTORTION_ADD;
+	}
+
+	if (gametic <= 1 && gamemapinfo.mapNumber != 30)
+	{
+		curpalette = palette = 10;
+		I_SetPalette(dc_playpals+10*768);
 	}
 	
 	if (palette != curpalette) {
