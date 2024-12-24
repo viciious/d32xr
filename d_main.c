@@ -702,10 +702,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		}
 			
 		if ((demorecording || demoplayback) && (buttons & BT_PAUSE) )
-		{
-			exit = ga_exitdemo; // Demo finished by choice, not by death
-			break;
-		}
+			exit = ga_completed;
 
 		if (gameaction == ga_warped || gameaction == ga_startnew)
 		{
@@ -1121,6 +1118,8 @@ int RunPositionDemo (char *demoname)
 void RunMenu (void)
 {
 #ifdef MARS
+	int exit = ga_exitdemo;
+
 	M_Start();
 	if (!gameinfo.noAttractDemo) {
 		do {
@@ -1140,7 +1139,7 @@ void RunMenu (void)
 				if (exit == ga_exitdemo)
 					break;
 			}
-		} while (true);
+		} while (exit != ga_exitdemo);
 	}
 	M_Stop();
 #else
@@ -1267,4 +1266,3 @@ D_printf ("DM_Main\n");
 	}
 #endif
 }
- 
