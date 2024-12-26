@@ -568,6 +568,8 @@ void O_Control (player_t *player)
 
 void O_DrawHelp (VINT yPos)
 {
+	V_DrawStringCenter(&menuFont, 160, yPos - 96, "TIP: Use gas pedal for easier control");
+
 	V_DrawStringCenterWithColormap(&menuFont, 160, yPos - 32, "SONIC ROBO BLAST 32X", YELLOWTEXTCOLORMAP);
 	V_DrawStringCenterWithColormap(&menuFont, 160, yPos - 20, "v0.1a DEMO", YELLOWTEXTCOLORMAP);
 
