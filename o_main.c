@@ -27,7 +27,7 @@ typedef enum
 	mi_soundvol,
 	mi_music,
 	mi_musicvol,
-	mi_sfxdriver,
+//	mi_sfxdriver,
 
 	mi_resolution,
 	mi_anamorphic,
@@ -178,11 +178,11 @@ void O_Init (void)
 	menuitem[mi_musicvol].slider = si_musvolume+1;
 	sliders[si_musvolume].maxval = 8;
 	sliders[si_musvolume].curval = 8*musicvolume/64;
-
+/*
 	D_memcpy(menuitem[mi_sfxdriver].name, "SFX driver", 11);
 	menuitem[mi_sfxdriver].x = ITEMX;
 	menuitem[mi_sfxdriver].y = STARTY+ITEMSPACE*5;
-
+*/
 	D_memcpy(menuitem[mi_resolution].name, "Resolution", 11);
 	menuitem[mi_resolution].x = ITEMX;
 	menuitem[mi_resolution].y = STARTY;
@@ -215,7 +215,7 @@ void O_Init (void)
 	cd_avail = S_CDAvailable();
 	if (cd_avail) /* CDA or MD+ */
 	{
-		menuscreen[ms_audio].numitems++;
+//		menuscreen[ms_audio].numitems++;
 		if (cd_avail & 0x1) /* CD, not MD+ */
 			menuscreen[ms_audio].numitems++;
 	}
@@ -486,10 +486,10 @@ void O_Control (player_t *player)
 						if (o_musictype == mustype_cd && !S_CDAvailable())
 							o_musictype = mustype_fm;
 						break;
-					case mi_sfxdriver:
+/*					case mi_sfxdriver:
 						if (++o_sfxdriver > sfxdriver_pwm)
 							o_sfxdriver = sfxdriver_pwm;
-						break;
+						break;*/
 					}
 				}
 
@@ -500,10 +500,10 @@ void O_Control (player_t *player)
 						if (--o_musictype < mustype_none)
 							o_musictype = mustype_none;
 						break;
-					case mi_sfxdriver:
+/*					case mi_sfxdriver:
 						if (--o_sfxdriver < sfxdriver_auto)
 							o_sfxdriver = sfxdriver_auto;
-						break;
+						break;*/
 					}
 				}
 
@@ -569,7 +569,7 @@ void O_Control (player_t *player)
 void O_DrawHelp (VINT yPos)
 {
 	V_DrawStringCenterWithColormap(&menuFont, 160, yPos - 32, "SONIC ROBO BLAST 32X", YELLOWTEXTCOLORMAP);
-	V_DrawStringCenterWithColormap(&menuFont, 160, yPos - 20, "v0.1 DEMO", YELLOWTEXTCOLORMAP);
+	V_DrawStringCenterWithColormap(&menuFont, 160, yPos - 20, "v0.1a DEMO", YELLOWTEXTCOLORMAP);
 
 	V_DrawStringRight(&menuFont, 160-8, yPos, "JUMP ");
 	V_DrawStringLeft(&menuFont, 160, yPos, "= B");
@@ -581,7 +581,7 @@ void O_DrawHelp (VINT yPos)
 	V_DrawStringLeft(&menuFont, 160, yPos + (12*3), "= X and Z");
 
 	V_DrawStringCenterWithColormap(&menuFont, 160, yPos + (12*5), "INTENDED ONLY FOR NTSC SYSTEMS AND", YELLOWTEXTCOLORMAP);
-	V_DrawStringCenterWithColormap(&menuFont, 160, yPos + (12*5) + 8, "KEGA FUSION v3.64 AT THIS TIME", YELLOWTEXTCOLORMAP);
+	V_DrawStringCenterWithColormap(&menuFont, 160, yPos + (12*5) + 8, "ARES / KEGA FUSION v3.64 AT THIS TIME", YELLOWTEXTCOLORMAP);
 
 	V_DrawStringCenter(&menuFont, 160, yPos + 80, "ssntails.srb2.org/srb32x");
 }
@@ -653,7 +653,7 @@ void O_Drawer (void)
 			V_DrawStringLeft(&menuFont, menuitem[mi_music].x + 85, menuitem[mi_music].y, "cd");
 			break;
 		}
-
+/*
 		if (menuscreen[ms_audio].numitems > 3)
 		{
 			switch (o_sfxdriver) {
@@ -667,7 +667,7 @@ void O_Drawer (void)
 				V_DrawStringLeft(&menuFont, menuitem[mi_sfxdriver].x + 150, menuitem[mi_sfxdriver].y, "pwm");
 				break;
 			}
-		}
+		}*/
 	}
 
 	if (screenpos == ms_video)
