@@ -21,7 +21,7 @@ void P_SetStarPosts(uint8_t starpostnum)
 		if (node->type != MT_STARPOST)
 			continue;
 
-		if (node->health >= starpostnum)
+		if (node->health > starpostnum)
 			continue;
 
 		P_SetMobjState(node, mobjinfo[MT_STARPOST].seestate);

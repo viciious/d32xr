@@ -127,6 +127,9 @@ void S_Init(void)
 	if (!mcd_avail)
 		sfxdriver = sfxdriver_auto;
 
+	// Force PWM, for now
+	sfxdriver = sfxdriver_pwm;
+
 	/* init sound effects */
 	start = W_CheckNumForName("DS_START");
 	end = W_CheckNumForName("DS_END");

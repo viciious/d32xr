@@ -457,7 +457,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		accum_time = 0;
 		// Frame skipping based on FRT count
 		total_frt_count += Mars_FRTCounter2Msec(frt_count - last_frt_count);
-		const int frametime = I_IsPAL() ? 1000/25 : 1000/30;
+		const int frametime = 1000/30;//I_IsPAL() ? 1000/25 : 1000/30;
 
 		while (total_frt_count > frametime)
 		{
