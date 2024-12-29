@@ -102,12 +102,13 @@ pcm_stop_timer:
     rts
 
 
-| void pcm_start_timer(void (*callback)(void));
+| void pcm_start_timer(void (*callback)(void *), void *);
     .global pcm_start_timer
 pcm_start_timer:
     move    #0x2700,sr              /* disable interrupts */
 
     move.l  4(sp),int3_callback     /* set callback vector */
+    move.l  8(sp),int3_callback_arg /* set callback argument */
 
     move.w  #0x4EF9,_LEVEL3.w
     move.l  #timer_int,_LEVEL3+2.w  /* set level 3 int vector for timer */
@@ -124,7 +125,9 @@ pcm_start_timer:
 timer_int:
     movem.l d0-d1/a0-a1,-(sp)
     movea.l int3_callback,a1
+    move.l  int3_callback_arg,-(sp)
     jsr     (a1)
+    lea     4(sp),sp
     movem.l (sp)+,d0-d1/a0-a1
     rte
 
@@ -135,4 +138,6 @@ timer_int:
     .align  4
 
 int3_callback:
+    .long   0
+int3_callback_arg:
     .long   0

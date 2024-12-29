@@ -50,7 +50,7 @@ extern void pcm_set_period(uint32_t period);
 extern void pcm_set_freq(uint32_t freq);
 extern void pcm_set_timer(uint16_t bpm);
 extern void pcm_stop_timer(void);
-extern void pcm_start_timer(void (*callback)(void));
+extern void pcm_start_timer(void (*callback)(void *), void *);
 
 #ifdef __cplusplus
 }
