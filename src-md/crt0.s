@@ -452,32 +452,7 @@ main_loop:
         move.l  a0,dac_samples
 
 main_loop_chk_ctrl:
-        tst.b   need_ctrl_int
-        beq.b   main_loop_bump_fm
-        move.b  #0,need_ctrl_int
-        /* send controller values to primary sh2 */
-        move.w  #0x0001,0xA15102    /* assert CMD INT to primary SH2 */
-10:
-        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
-        cmpi.w  #0xA55A,d0
-        bne.b   10b
-        move.w  ctrl1_val,0xA15122  /* controller 1 value in COMM2 */
-        move.w  #0xFF00,0xA15120
-11:
-        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
-        cmpi.w  #0xFF01,d0
-        bne.b   11b
-        move.w  ctrl2_val,0xA15122  /* controller 2 value in COMM2 */
-        move.w  #0xFF02,0xA15120
-20:
-        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
-        cmpi.w  #0xA55A,d0
-        bne.b   20b
-        /* done */
-        move.w  #0x5AA5,0xA15120
-30:
-        cmpi.w  #0x5AA5,0xA15120
-        beq.b   30b
+        bsr     snd_ctrl
 
 main_loop_bump_fm:
         move.b  REQ_ACT.w,d0
@@ -503,7 +478,7 @@ main_loop_handle_req:
         bne.w   handle_sec_req
 
         tst.w   fm_idx
-        beq.b   00f
+        beq.w   00f
 
         moveq.l #32,d0
         move.l  d0,-(sp)
@@ -511,26 +486,7 @@ main_loop_handle_req:
         addq.l  #4,sp
 
 00:
-        /* check hot-plug count */
-        tst.b   hotplug_cnt
-        bne.w   main_loop
-        move.b  #60,hotplug_cnt
-
-        move.w  ctrl1_val,d0
-        cmpi.w  #0xF001,d0
-        beq.b   0f                  /* mouse in port 1, check port 2 */
-        cmpi.w  #0xF000,d0
-        beq.b   1f                  /* no pad in port 1, do hot-plug check */
-0:
-        tst.b   net_type
-        bne.w   main_loop           /* networking enabled, ignore port 2 */
-        move.w  ctrl2_val,d0
-        cmpi.w  #0xF001,d0
-        beq.w   main_loop           /* mouse in port 2, exit */
-        cmpi.w  #0xF000,d0
-        bne.w   main_loop           /* pad in port 2, exit */
-1:
-        bsr     chk_ports
+        bsr     chk_hotplug
         bra.w   main_loop
 
 | process request from Master SH2
@@ -3094,7 +3050,7 @@ chk_ports:
         /* get ID port 1 */
         lea     0xA10003,a0
         bsr.b   get_port
-        move.w  d0,ctrl1_val             /* controller 1 */
+        move.w  d0,ctrl1_val            /* controller 1 */
 
         tst.b   net_type
         beq.b   0f                      /* ignore controller 2 when networking enabled */
@@ -3104,6 +3060,66 @@ chk_ports:
         lea     0xA10005,a0
         bsr.b   get_port
         move.w  d0,ctrl2_val             /* controller 2 */
+        rts
+
+        .global chk_hotplug
+chk_hotplug:
+        movem.l d0-d7/a0-a6,-(sp)
+
+        /* check hot-plug count */
+        tst.b   hotplug_cnt
+        bne.w   2f
+        move.b  #60,hotplug_cnt
+
+        move.w  ctrl1_val,d0
+        cmpi.w  #0xF001,d0
+        beq.b   0f                  /* mouse in port 1, check port 2 */
+        cmpi.w  #0xF000,d0
+        beq.b   1f                  /* no pad in port 1, do hot-plug check */
+0:
+        tst.b   net_type
+        bne.w   1f                  /* networking enabled, ignore port 2 */
+        move.w  ctrl2_val,d0
+        cmpi.w  #0xF001,d0
+        beq.w   2f                  /* mouse in port 2, exit */
+        cmpi.w  #0xF000,d0
+        bne.w   2f                  /* pad in port 2, exit */
+1:
+        bsr     chk_ports
+2:
+        movem.l (sp)+,d0-d7/a0-a6
+        rts
+
+| Send controller values to primary SH2
+        .global snd_ctrl
+snd_ctrl:
+        tst.b   need_ctrl_int
+        beq.b   40f
+        move.b  #0,need_ctrl_int
+
+        move.w  #0x0001,0xA15102    /* assert CMD INT to primary SH2 */
+10:
+        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
+        cmpi.w  #0xA55A,d0
+        bne.b   10b
+        move.w  ctrl1_val,0xA15122  /* controller 1 value in COMM2 */
+        move.w  #0xFF00,0xA15120
+11:
+        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
+        cmpi.w  #0xFF01,d0
+        bne.b   11b
+        move.w  ctrl2_val,0xA15122  /* controller 2 value in COMM2 */
+        move.w  #0xFF02,0xA15120
+20:
+        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
+        cmpi.w  #0xA55A,d0
+        bne.b   20b
+        /* done */
+        move.w  #0x5AA5,0xA15120
+30:
+        cmpi.w  #0x5AA5,0xA15120
+        beq.b   30b
+40:
         rts
 
 | int dma_to_32x(void *dest, short *src, int len, int arg);
