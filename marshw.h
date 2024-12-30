@@ -71,7 +71,7 @@ void Mars_SetMusicVolume(uint8_t volume);
 #define Mars_GetTicCount() (*(volatile uintptr_t *)((uintptr_t)&mars_vblank_count | 0x20000000))
 int Mars_GetWDTCount(void);
 
-#define Mars_ClearCacheLine(addr) *(volatile uintptr_t *)(((uintptr_t)addr & ~15) | 0x40000000) = 0
+#define Mars_ClearCacheLine(addr) *(volatile uintptr_t *)(((uintptr_t)addr) | 0x40000000) = 0
 #define Mars_ClearCache() \
 	do { \
 		CacheControl(0); /* disable cache */ \
@@ -80,7 +80,7 @@ int Mars_GetWDTCount(void);
 
 #define Mars_ClearCacheLines(paddr,nl) \
 	do { \
-		uintptr_t addr = ((uintptr_t)(paddr) & ~15) | 0x40000000; \
+		uintptr_t addr = ((uintptr_t)(paddr)) | 0x40000000; \
 		uint32_t l; \
 		for (l = 0; l < nl; l++) { \
 			*(volatile uintptr_t *)addr = 0; \
