@@ -33,7 +33,7 @@ inpixel_t	*skytexturep;
 int8_t 		*skycolormaps;
 VINT 		col2sky;
 
-uint8_t		*dc_playpals;
+uint8_t		*dc_playpals, *dc_cshift_playpals;
 
 /*============================================================================ */
 
@@ -371,6 +371,7 @@ void R_InitData (void)
 
 	sprites = Z_Malloc(sizeof(*sprites)*NUMSPRITES, PU_STATIC);
 	dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
+	dc_cshift_playpals = Z_Malloc(256*3, PU_STATIC);
 
 	firstsprite = W_GetNumForName ("S_START") + 1;
 	numsprites = W_GetNumForName ("S_END") - firstsprite;

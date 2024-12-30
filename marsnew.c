@@ -56,7 +56,6 @@ VINT COLOR_BLACK = 0xF7;
 
 int8_t	*dc_colormaps;
 int8_t	*dc_colormaps2;
-const byte	*new_palette = NULL;
 
 boolean	debugscreenactive = false;
 boolean	debugscreenupdate = false;
@@ -481,7 +480,7 @@ void I_Init (void)
 
 void I_SetPalette(const byte* palette)
 {
-	mars_newpalette = palette;
+	Mars_SetPalette(palette);
 }
 
 boolean	I_RefreshCompleted (void)

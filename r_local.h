@@ -408,7 +408,7 @@ extern	VINT		firstsprite, numsprites, numspriteframes;
 extern int8_t* dc_colormaps;
 extern int8_t* dc_colormaps2;
 
-extern uint8_t* dc_playpals;
+extern uint8_t* dc_playpals, *dc_cshift_playpals;
 
 #ifdef MARS
 #define R_CheckPixels(lumpnum) (void *)(W_POINTLUMPNUM(lumpnum))

@@ -46,7 +46,7 @@ void Mars_InitVideo(int lines);
 void Mars_InitLineTable(void);
 void Mars_SetBrightness(int16_t brightness);
 int Mars_BackBuffer(void);
-char Mars_UploadPalette(const uint8_t* palette) MARS_ATTR_DATA_CACHE_ALIGN;
+void Mars_SetPalette(const uint8_t *palette);
 int Mars_PollMouse(void);
 int Mars_ParseMousePacket(int mouse, int* pmx, int* pmy);
 
@@ -54,7 +54,6 @@ extern volatile unsigned mars_vblank_count;
 extern volatile unsigned mars_pwdt_ovf_count;
 extern volatile unsigned mars_swdt_ovf_count;
 extern unsigned mars_frtc2msec_frac;
-extern const uint8_t* mars_newpalette;
 extern uint16_t mars_cd_ok;
 extern uint16_t mars_num_cd_tracks;
 extern uint16_t mars_framebuffer_height;
