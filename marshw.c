@@ -79,7 +79,7 @@ static void (*sci_dma1_cb)(void) = &intr_handler_stub;
 
 static void Mars_HandleDMARequest(void);
 
-static char Mars_UploadPalette(const uint8_t* palette) MARS_ATTR_DATA_CACHE_ALIGN;
+static char Mars_UploadPalette(const uint8_t* palette) __attribute__((section(".sdata"), aligned(16), optimize("Os")));
 
 #define MARS_ACTIVE_SCREEN (*(volatile uint16_t *)(((intptr_t)&mars_activescreen) | 0x20000000))
 
@@ -160,9 +160,9 @@ static char Mars_UploadPalette(const uint8_t* palette)
 		int g = br + *palette++;
 		int b = br + *palette++;
 
-		if (r < 0) r = 0; else if (r > 255) r = 255;
-		if (g < 0) g = 0; else if (g > 255) g = 255;
-		if (b < 0) b = 0; else if (b > 255) b = 255;
+		if (r > 255) r = 255;
+		if (g > 255) g = 255;
+		if (b > 255) b = 255;
 
 		unsigned b1 = b;
 		unsigned g1 = g;
@@ -252,7 +252,7 @@ void Mars_InitVideo(int lines)
 
 	for (i = 0; i < 2; i++)
 	{
-		volatile int* p, * p_end;
+		int* p, * p_end;
 
 		Mars_InitLineTable();
 
@@ -342,7 +342,7 @@ void Mars_WriteSRAM(const uint8_t* buffer, int offset, int len)
 
 static char *Mars_StringToFramebuffer(const char *str)
 {
-	volatile char *fb = (volatile char *)(&MARS_FRAMEBUFFER + 0x100);
+	char *fb = (char *)(&MARS_FRAMEBUFFER + 0x100);
 
 	if (!*str)
 		return (char *)fb;
