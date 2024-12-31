@@ -750,7 +750,11 @@ extern 	boolean 	startsplitscreen;
 void I_Init (void);
 byte *I_WadBase (void);
 byte *I_ZoneBase (int *size);
+#ifdef ENABLE_SSF_MAPPER
 void* I_RemapLumpPtr (void* ptr) ATTR_DATA_CACHE_ALIGN;
+#else
+#define I_RemapLumpPtr(ptr) (ptr)
+#endif
 
 /* return a pointer to a 64k or so temp work buffer for level setup uses */
 /*(non-displayed frame buffer) */

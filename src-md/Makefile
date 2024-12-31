@@ -1,4 +1,4 @@
-ifdef $(GENDEV)
+ifdef GENDEV
 ROOTDIR = $(GENDEV)
 else
 ROOTDIR = /opt/toolchains/sega
@@ -12,6 +12,11 @@ INCPATH = -I$. -I$(ROOTDIR)/m68k-elf/include -I$(ROOTDIR)/m68k-elf/m68k-elf/incl
 HWCCFLAGS = -m68000 -Wall -O1 -c -fomit-frame-pointer -fno-lto
 CCFLAGS = -m68000 -Wall -Os -c -fomit-frame-pointer -flto -DUSE_SCD_IN_RAM
 ASFLAGS = -m68000 --register-prefix-optional
+ifdef ENABLE_SSF_MAPPER
+HWCCFLAGS += -DENABLE_SSF_MAPPER
+CCFLAGS += -DENABLE_SSF_MAPPER
+ASFLAGS += --defsym ENABLE_SSF_MAPPER=1
+endif
 LINKFLAGS = -T $(LDSCRIPTSDIR)/mars-md.ld -Wl,-Map=output.map -nostdlib -flto
 
 PREFIX = $(ROOTDIR)/m68k-elf/bin/m68k-elf-

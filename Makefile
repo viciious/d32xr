@@ -1,4 +1,4 @@
-ifdef $(GENDEV)
+ifdef GENDEV
 ROOTDIR = $(GENDEV)
 else
 ROOTDIR = /opt/toolchains/sega
@@ -17,6 +17,14 @@ CCFLAGS += -D__32X__ -DMARS
 CCFLAGS += -DDISABLE_DMA_SOUND
 LDFLAGS = -T mars-ssf.ld -Wl,-Map=output.map -nostdlib -Wl,--gc-sections --specs=nosys.specs
 ASFLAGS = --big
+ifdef ENABLE_FIRE_ANIMATION
+CCFLAGS += -DENABLE_FIRE_ANIMATION
+endif
+ifdef ENABLE_SSF_MAPPER
+HWCCFLAGS += -DENABLE_SSF_MAPPER
+CCFLAGS += -DENABLE_SSF_MAPPER
+ASFLAGS += --defsym ENABLE_SSF_MAPPER=1
+endif
 
 MARSHWCFLAGS := $(CCFLAGS)
 MARSHWCFLAGS += -O1 -fno-lto

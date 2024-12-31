@@ -516,6 +516,7 @@ byte *I_WadBase (void)
 = I_RemapLumpPtr
 ====================
 */
+#ifdef ENABLE_SSF_MAPPER
 void* I_RemapLumpPtr(void *ptr)
 {
 	uintptr_t newptr = (uintptr_t)ptr;
@@ -549,7 +550,7 @@ void* I_RemapLumpPtr(void *ptr)
 
 	return ptr;
 }
-
+#endif
 
 /* 
 ==================== 

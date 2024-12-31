@@ -568,8 +568,10 @@ read_sram:
         moveq   #0,d1
 |        cmpi.w  #2,megasd_ok
 |        beq.b   rd_msd_sram
+.ifdef ENABLE_SSF_MAPPER
         tst.w   everdrive_ok
         bne.w   rd_med_sram
+.endif
 | assume standard mapper save ram
         add.l   d0,d0
         lea     0x200000,a0         /* use standard mapper save ram base */
@@ -623,8 +625,10 @@ write_sram:
         move.w  0xA15122,d1         /* COMM2 holds offset */
 |        cmpi.w  #2,megasd_ok
 |        beq.b   wr_msd_sram
+.ifdef ENABLE_SSF_MAPPER
         tst.w   everdrive_ok
         bne.w   wr_med_sram
+.endif
 | assume standard mapper save ram
         add.l   d1,d1
         lea     0x200000,a0         /* use standard mapper save ram base */

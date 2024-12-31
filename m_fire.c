@@ -27,6 +27,8 @@
 #include "doomdef.h"
 #include "mars.h"
 
+#ifdef ENABLE_FIRE_ANIMATION
+
 // based on work by Samuel Villarreal and Fabien Sanglard
 
 typedef struct {
@@ -148,8 +150,11 @@ static inline void M_StopFire(void)
 	}
 }
 
+#endif
+
 void Mars_Sec_M_AnimateFire(void)
 {
+#ifdef ENABLE_FIRE_ANIMATION
 	int start;
 
 	Mars_ClearCache();
@@ -194,6 +199,7 @@ void Mars_Sec_M_AnimateFire(void)
 	}
 
 	Mars_ClearCache();
+#endif
 }
 
 /* 
@@ -205,6 +211,7 @@ void Mars_Sec_M_AnimateFire(void)
 */ 
 void I_InitMenuFire(jagobj_t *titlepic)
 {
+#ifdef ENABLE_FIRE_ANIMATION
 	int i, j;
 	const byte* doompalette;
 	int titlepos = gameinfo.titleStartPos;
@@ -289,6 +296,24 @@ void I_InitMenuFire(jagobj_t *titlepic)
 
 	if (m_fire->stopticon > 0)
 		Mars_M_BeginDrawFire();
+#else
+	int i;
+	int titlepic_pos_x = 0;
+
+	if (!titlepic)
+		return;
+
+	titlepic_pos_x = (320 - titlepic->width) / 2;
+
+	for (i = 0; i < 2; i++)
+	{
+		DrawFillRect(0, 0, 320, 224, 0);
+
+		DrawJagobj2(titlepic, titlepic_pos_x, 0, 0, 0, 0, 0, I_FrameBuffer());
+
+		UpdateBuffer();
+	}
+#endif
 }
 
 /*
@@ -300,6 +325,7 @@ void I_InitMenuFire(jagobj_t *titlepic)
 */
 void I_StopMenuFire(void)
 {
+#ifdef ENABLE_FIRE_ANIMATION
 	Mars_M_EndDrawFire();
 
 	Z_Free(m_fire->rndtable);
@@ -309,6 +335,7 @@ void I_StopMenuFire(void)
 	m_fire = NULL;
 
 	Mars_ClearCache();
+#endif
 }
 
 /*
@@ -320,6 +347,7 @@ void I_StopMenuFire(void)
 */
 void I_DrawMenuFire(void)
 {
+#ifdef ENABLE_FIRE_ANIMATION
 	int x, y;
 	char* firePix = m_fire->firePix;
 	jagobj_t* titlepic = m_fire->titlepic;
@@ -409,4 +437,5 @@ void I_DrawMenuFire(void)
 			dest = (int16_t*)I_FrameBuffer() + offs;
 		}
 	}
+#endif
 }
