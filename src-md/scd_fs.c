@@ -142,3 +142,11 @@ int scd_seek_gfile(int offset, int whence)
 {
     return cd_Seek(&gfh, offset, whence);
 }
+
+int scd_tell_gfile(void) {
+    return gfh.offset;
+}
+
+int scd_gfile_length(void) {
+    return gfh.length;
+}
