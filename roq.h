@@ -8,6 +8,7 @@
 #define RoQ_QUAD_VQ				0x1011
 #define RoQ_SOUND_MONO			0x1020
 #define RoQ_SOUND_STEREO		0x1021
+#define RoQ_SIGNAGURE 			0x1084
 
 #define RoQ_ID_MOT		0x00
 #define RoQ_ID_FCC		0x01

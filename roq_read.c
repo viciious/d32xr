@@ -77,7 +77,7 @@ int roq_read_info(roq_file* fp, roq_info* ri)
 
 	ri->ret_chunk(ri->fp);
 
-	if (head1 != 0x1084 && head2 != -1)
+	if (head1 != RoQ_SIGNAGURE && head2 != -1)
 	{
 		//printf("Not an RoQ file.\n");
 		return 1;
