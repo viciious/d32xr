@@ -56,6 +56,7 @@ typedef struct
 	int			stopquad;
 	int			volume;				/* range from 0-32k */
 #endif
+	uint16_t	freq;
 #if defined(MARS) && !defined(DISABLE_DMA_SOUND)
 	uint16_t	width;
 	uint16_t	block_size; 		/* size of data block in bytes */
@@ -65,8 +66,6 @@ typedef struct
 	int			prev_pos;			/* for adpcm decoding */
 	int			increment;
 #endif
-	int			freq;
-
 	sfxinfo_t	*sfx;
 	mobj_t		*mobj;
 	getsoundpos_t getpos;

@@ -27,7 +27,11 @@
 
 ! Standard MegaDrive ROM header at 0x100
 
+.ifdef ENABLE_SSF_MAPPER
+        .ascii  "SEGA SSF        "
+.else
         .ascii  "SEGA 32X        "
+.endif
         .ascii  "                "
         .ascii  "DOOM 32XCD Fusio"
         .ascii  "n v2.0          "

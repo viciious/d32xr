@@ -2,10 +2,6 @@
 
 #include "doomdef.h"
 
-void C_Init (void)
-{
-}
-
 /*
 ======================
 =

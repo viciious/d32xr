@@ -12,6 +12,8 @@
 
 /*define	MARS */
 
+#define CINEMATIC_INTRO "VIDEO/IDLOGO.ROQ"
+
 #define LZSS_BUF_SIZE	0x1000
 
 /* if rangecheck is undefined, most parameter validation debugging code */
@@ -161,7 +163,8 @@ typedef enum
 	ga_warped,
 	ga_exitdemo,
 	ga_startnew,
-	ga_quit
+	ga_quit,
+	ga_cinematic
 } gameaction_t;
 
 
@@ -723,7 +726,9 @@ void	*W_CacheLumpName (const char *name, int tag);
 
 const char *W_GetNameForNum (int lump);
 void * W_GetLumpData_(int lump, const char *func);
+void * W_ReadLumpData_(int lump, const char *func, void *dest, boolean compressed);
 #define W_GetLumpData(lump) W_GetLumpData_(lump,__func__)
+#define W_ReadLumpData(lump,dest,compressed) W_ReadLumpData_(lump,__func__,dest,compressed)
 #define W_POINTLUMPNUM(x) W_GetLumpData(x)
 
 /*---------- */
@@ -750,7 +755,11 @@ extern 	boolean 	startsplitscreen;
 void I_Init (void);
 byte *I_WadBase (void);
 byte *I_ZoneBase (int *size);
+#ifdef ENABLE_SSF_MAPPER
 void* I_RemapLumpPtr (void* ptr) ATTR_DATA_CACHE_ALIGN;
+#else
+#define I_RemapLumpPtr(ptr) (ptr)
+#endif
 
 /* return a pointer to a 64k or so temp work buffer for level setup uses */
 /*(non-displayed frame buffer) */
@@ -1273,6 +1282,8 @@ uint8_t I_ReadSRAM(int offset);
 void I_WriteSRAM(int offset, int val);
 uint32_t I_ReadU32SRAM(int offset);
 void I_WriteU32SRAM(int offset, uint32_t val);
+
+int I_PlayCinematic(const char *fn, void *mem, size_t size, int allowpause);
 
 /*================= */
 /*TLS */

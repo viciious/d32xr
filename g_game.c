@@ -511,7 +511,7 @@ void G_Init(void)
 ==================== 
 */ 
  
-extern mobj_t emptymobj;
+extern degenmobj_t emptymobj;
  
 void G_InitNew (skill_t skill, int map, gametype_t gametype, boolean splitscr)
 { 
@@ -539,7 +539,7 @@ void G_InitNew (skill_t skill, int map, gametype_t gametype, boolean splitscr)
 		players[i].playerstate = PST_REBORN;
 
 	for (i=0 ; i<MAXPLAYERS ; i++)
-		players[i].mo = &emptymobj;	/* for net consistency checks */
+		players[i].mo = (mobj_t *)&emptymobj;	/* for net consistency checks */
 
 	G_InitPlayerResp();
 

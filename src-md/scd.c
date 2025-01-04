@@ -172,6 +172,25 @@ void scd_open_tray(void)
     write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
 }
 
+int scd_stream_cd(int lba, int len)
+{
+    int wram_ofs;
+    write_long(0xA12010, lba);
+    write_long(0xA12014, len);
+    wait_do_cmd('['); // StreamCD command
+    wait_cmd_ack();
+    wram_ofs = read_long(0xA12020);
+    write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
+    return wram_ofs;
+}
+
+void scd_stream_cmd(char cmd)
+{
+    wait_do_cmd(cmd);
+    wait_cmd_ack();
+    write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
+}
+
 uint16_t InitCD(void)
 {
     char *bios;

@@ -173,7 +173,7 @@ void O_Init (void)
 	cursorpos = 0;
 	screenpos = ms_none;
 
-	D_memset(menuitem, 0, sizeof(menuitem));
+	D_memset(menuitem, 0, sizeof(*menuitem)*NUMMENUITEMS);
 	D_memset(sliders, 0, sizeof(sliders));
 
 	D_memcpy(menuitem[mi_game].name, "Game", 5);
@@ -189,7 +189,6 @@ void O_Init (void)
 	D_memcpy(menuitem[mi_video].name, "Video", 6);
 	menuitem[mi_video].x = ITEMX;
 	menuitem[mi_video].y = STARTY+ITEMSPACE*2;
-	menuitem[mi_video].slider = 0;
 	menuitem[mi_video].screen = ms_video;
 
 	D_memcpy(menuitem[mi_controls].name, "Controls", 9);

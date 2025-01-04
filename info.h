@@ -886,7 +886,11 @@ typedef struct
 	 void		(*action) ();
 } state_t;
 
+#ifdef MARS
+extern const state_t	states[NUMSTATES] __attribute__((aligned(16)));
+#else
 extern const state_t	states[NUMSTATES];
+#endif
 extern const char * const sprnames[NUMSPRITES];
 
 

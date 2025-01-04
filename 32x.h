@@ -50,6 +50,11 @@
 #define MARS_SYS_COMM12     (*(volatile unsigned short *)0x2000402C) /* unused */
 #define MARS_SYS_COMM14     (*(volatile unsigned short *)0x2000402E) /* unused */
 
+#define MARS_SYS_DMA_RV     0x0001
+#define MARS_SYS_DMA_68S    0x0004
+#define MARS_SYS_DMA_EMPTY  0x4000
+#define MARS_SYS_DMA_FULL   0x8000
+
 #define MARS_PWM_CTRL       (*(volatile unsigned short *)0x20004030)
 #define MARS_PWM_CYCLE      (*(volatile unsigned short *)0x20004032)
 #define MARS_PWM_LEFT       (*(volatile unsigned short *)0x20004034)
@@ -138,6 +143,46 @@
 #define SH2_DIVU_DVDNT      (*(volatile long *)0xFFFFFF04)
 #define SH2_DIVU_DVDNTH     (*(volatile long *)0xFFFFFF10)
 #define SH2_DIVU_DVDNTL     (*(volatile long *)0xFFFFFF14)
+
+#define SH2_DMA_CHCR_DM_F     (0<<14)  // Fixed destination address
+#define SH2_DMA_CHCR_DM_INC   (1<<14)  // Destination address is incremented 
+#define SH2_DMA_CHCR_DM_DEC   (2<<14)  // Destination address is decremented
+
+#define SH2_DMA_CHCR_SM_F     (0<<12)  // Fixed source address
+#define SH2_DMA_CHCR_SM_INC   (1<<12)  // Source address is incremented
+#define SH2_DMA_CHCR_SM_DEC   (2<<12)  // Source address is decremented
+
+#define SH2_DMA_CHCR_TS_BU    (0<<10)  // Byte unit
+#define SH2_DMA_CHCR_TS_WU    (1<<10)  // Word (2-byte) unit
+#define SH2_DMA_CHCR_TS_LWU   (2<<10)  // Longword (4-byte) unit
+#define SH2_DMA_CHCR_TS_16BU  (3<<10)  // 16-byte unit (4 longword transfers)
+
+#define SH2_DMA_CHCR_AR_MRM   (0<<9)   // Module request mode
+#define SH2_DMA_CHCR_AR_ARM   (1<<9)   // Auto-request mode
+
+#define SH2_DMA_CHCR_AM_RC    (0<<8)   // DACK output in read cycle/transfer from memory to device
+#define SH2_DMA_CHCR_AM_WC    (1<<8)   // DACK output in write cycle/transfer from device to memory
+
+#define SH2_DMA_CHCR_AL_AL    (0<<7)   // DACK is an active-low signal
+#define SH2_DMA_CHCR_AL_AH    (1<<7)   // DACK is an active-high signal
+
+#define SH2_DMA_CHCR_DS_LEEVL (0<<6)  // Detected by level
+#define SH2_DMA_CHCR_DS_EDGE  (1<<6)  // Detected by edge
+
+#define SH2_DMA_CHCR_DL_AL    (0<<5)   // When DS is 0, DREQ is detected by low level; when DS is 1, DREQ is detected by fall
+#define SH2_DMA_CHCR_DL_AH    (1<<5)   // When DS is 0, DREQ is detected by high level; when DS is 1, DREQ is detected by rise
+
+#define SH2_DMA_CHCR_TB_CS    (0<<4)   // Cycle-steal mode
+#define SH2_DMA_CHCR_TB_BM    (1<<4)   // Burst mode
+
+#define SH2_DMA_CHCR_TA_DA    (0<<3)   // Dual address mode
+#define SH2_DMA_CHCR_TA_SA    (1<<3)   // Single address mode
+
+#define SH2_DMA_CHCR_IE       (1<<2)   // Interrupt enabled
+
+#define SH2_DMA_CHCR_TE       (1<<1)   // DMA has ended normally (by TCR = 0)
+
+#define SH2_DMA_CHCR_DE       (1<<0)   // DMA transfer enabled
 
 #define SEGA_CTRL_UP        0x0001
 #define SEGA_CTRL_DOWN      0x0002

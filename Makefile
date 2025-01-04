@@ -1,4 +1,4 @@
-ifdef $(GENDEV)
+ifdef GENDEV
 ROOTDIR = $(GENDEV)
 else
 ROOTDIR = /opt/toolchains/sega
@@ -17,6 +17,14 @@ CCFLAGS += -D__32X__ -DMARS
 CCFLAGS += -DDISABLE_DMA_SOUND
 LDFLAGS = -T mars-ssf.ld -Wl,-Map=output.map -nostdlib -Wl,--gc-sections --specs=nosys.specs
 ASFLAGS = --big
+ifdef ENABLE_FIRE_ANIMATION
+CCFLAGS += -DENABLE_FIRE_ANIMATION
+endif
+ifdef ENABLE_SSF_MAPPER
+HWCCFLAGS += -DENABLE_SSF_MAPPER
+CCFLAGS += -DENABLE_SSF_MAPPER
+ASFLAGS += --defsym ENABLE_SSF_MAPPER=1
+endif
 
 MARSHWCFLAGS := $(CCFLAGS)
 MARSHWCFLAGS += -O1 -fno-lto
@@ -105,7 +113,10 @@ OBJS = \
 	r_cache.o \
 	m_fire.o \
 	lzss.o \
-	gs_main.o
+	gs_main.o \
+	roq_read.o \
+	marsroq.o \
+	mars_newrb.o
 
 release: $(TARGET).32x
 
@@ -118,7 +129,7 @@ m68k.bin:
 
 $(TARGET).32x: $(TARGET).elf
 	$(OBJC) -O binary $< temp2.bin
-	$(DD) if=temp2.bin of=temp.bin bs=200K conv=sync
+	$(DD) if=temp2.bin of=temp.bin bs=208K conv=sync
 	rm -f temp3.bin
 	cat temp.bin $(WAD) >>temp3.bin
 	$(DD) if=temp3.bin of=$@ bs=512K conv=sync

@@ -71,7 +71,7 @@ WaitCmdPostUpdate:
         move.w  RequestTable(pc,d0.w),d0
         jmp     RequestTable(pc,d0.w)
 
-        | from 'A' to 'Z'
+        | from 'A' to '['
 RequestTable:
         dc.w    SfxPlaySource - RequestTable
         dc.w    SfxCopyBuffer - RequestTable
@@ -99,6 +99,7 @@ RequestTable:
         dc.w    ResumeSPCMTrack - RequestTable
         dc.w    OpenTray - RequestTable
         dc.w    PauseResume - RequestTable
+        dc.w    StreamCD - RequestTable
 
 UknownCmd:
         move.b  #'E,0x800F.w            /* sub comm port = ERROR */
@@ -294,6 +295,25 @@ ResumeSPCMTrack:
 OpenTray:
         move.w  #0x000A,d0              /* DRVOPEN */
         jsr     0x5F22.w                /* call CDBIOS function */
+
+        move.b  #'D,0x800F.w            /* sub comm port = DONE */
+        bra     WaitAck
+
+StreamCD:
+        jsr     S_GetMemBankPtr
+
+        move.l  d0,-(sp)                /* re-use the main sound buffer */
+        move.l  0x8014.w,d0
+        move.l  d0,-(sp)                /* length */
+        move.l  0x8010.w,d0
+        move.l  d0,-(sp)                /* start sector */
+
+        jsr     stream_cd
+        lea     12(sp),sp                /* clear the stack */
+
+        |jsr     S_ClearBuffersMem
+
+        move.l  #-1,CURR_OFFSET
 
         move.b  #'D,0x800F.w            /* sub comm port = DONE */
         bra     WaitAck
@@ -545,17 +565,6 @@ init_cd:
         movem.l (sp)+,d2-d7/a2-a6
         rts
 
-| int read_cd(int lba, int len, void *buffer);
-        .global read_cd
-read_cd:
-        move.l  4(sp),d0                /* lba */
-        move.l  8(sp),d1                /* length */
-        movea.l 12(sp),a0               /* buffer */
-        movem.l d2-d7/a2-a6,-(sp)
-        jsr     ReadSectorsSUB
-        movem.l (sp)+,d2-d7/a2-a6
-        rts
-
 | int seek_cd(int lba);
         .global seek_cd
 seek_cd:
@@ -592,6 +601,26 @@ dma_cd_sector_prg:
         movea.l 4(sp),a0                /* buffer */
         movem.l d2-d7/a2-a6,-(sp)
         jsr     ReadSectorDMA
+        movem.l (sp)+,d2-d7/a2-a6
+        rts
+
+| int dma_cd_sector_wram(void *buffer);
+        .global dma_cd_sector_wram
+dma_cd_sector_wram:
+        move.w  #0x7,d0                 /* set CDC Mode destination device to PRG RAM DMA */
+        movea.l 4(sp),a0                /* buffer */
+        movem.l d2-d7/a2-a6,-(sp)
+        jsr     ReadSectorDMA
+        movem.l (sp)+,d2-d7/a2-a6
+        rts
+
+| int stop_read_cd();
+        .global stop_read_cd
+stop_read_cd:
+        move.l  4(sp),d0                /* lba */
+        move.l  8(sp),d1                /* length */
+        movem.l d2-d7/a2-a6,-(sp)
+        jsr     StopReadCD
         movem.l (sp)+,d2-d7/a2-a6
         rts
 
@@ -960,7 +989,7 @@ ReadSectorDMA:
 
         move.b  d0,0x8004.w
         move.l  8(sp),d0
-        lsr.w   #3,d0
+        lsr.l   #3,d0
         move.w  d0,0x800A.w             /* DMA destination address */
 
         move.w  #0x008B,d0              /* CDCREAD */
@@ -981,6 +1010,15 @@ ReadSectorDMA:
 
         lea     16(sp),sp               /* cleanup stack */
         moveq   #1,d0
+        rts
+
+StopReadCD:
+        movem.l d0-d1/a0-a1,-(sp)
+
+        move.w  #0x0089,d0              /* CDCSTOP */
+        jsr     0x5F22.w                /* call CDBIOS function */
+
+        lea     16(sp),sp               /* cleanup stack */
         rts
 
 | Sub-CPU variables

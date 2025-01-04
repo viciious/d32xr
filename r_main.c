@@ -547,6 +547,70 @@ void R_SetupLevel(int gamezonemargin)
 #endif
 }
 
+static void R_ColorShiftPalette(const uint8_t *in, int idx, uint8_t *out) __attribute__((noinline));
+
+static void R_ColorShiftPalette(const uint8_t *in, int idx, uint8_t *out)
+{
+	int	i;
+	const uint8_t *pin;
+	uint8_t *pout;
+	int r, g, b, shift, steps;
+	static const uint8_t palette_shifts[][5] = {
+		{ 255, 0, 0, 1, 9 }, // 1
+		{ 255, 0, 0, 2, 9 }, // 2
+		{ 255, 0, 0, 3, 9 }, // 3
+		{ 255, 0, 0, 4, 9 }, // 4
+		{ 255, 0, 0, 5, 9 }, // 5
+		{ 255, 0, 0, 6, 9 }, // 6
+		{ 255, 0, 0, 7, 9 }, // 7
+		{ 255, 0, 0, 8, 9 }, // 8
+		{ 215, 186, 69, 1, 8 }, // 9
+		{ 215, 186, 69, 2, 8 }, // 10
+		{ 215, 186, 69, 3, 8 }, // 11
+		{ 215, 186, 69, 4, 8 }, // 12
+		{ 0, 255, 0, 1, 8 }, // 13
+		{ 0, 0, 255, 1, 8 }, // 14
+	};
+
+	if (idx == 0 || idx > (int)(sizeof(palette_shifts)/sizeof(palette_shifts[0]))) {
+		return;
+	}
+
+	--idx;
+
+	r = palette_shifts[idx][0];
+	g = palette_shifts[idx][1];
+	b = palette_shifts[idx][2];
+	shift = palette_shifts[idx][3];
+	steps = palette_shifts[idx][4];
+
+	pin = in;
+	pout = out;
+
+	for (i = 0; i < 256; i++)
+	{
+		int nr = pin[0] + (((r - pin[0])*shift)/steps);
+		int ng = pin[1] + (((g - pin[1])*shift)/steps);
+		int nb = pin[2] + (((b - pin[2])*shift)/steps);
+
+		if (nr < 0) nr = 0;
+		if (nr > 255) nr = 255;
+
+		if (ng < 0) ng = 0;
+		if (ng > 255) ng = 255;
+
+		if (nb < 0) nb = 0;
+		if (nb > 255) nb = 255;
+
+		pout[0] = nr;
+		pout[1] = ng;
+		pout[2] = nb;
+
+		pin += 3;
+		pout += 3;
+	}
+}
+
 /*============================================================================= */
 
 #ifndef MARS
@@ -734,7 +798,13 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	
 	if (palette != curpalette) {
 		curpalette = palette;
-		I_SetPalette(dc_playpals+palette*768);
+
+		if (palette == 0) {
+			I_SetPalette(dc_playpals);
+		} else {
+			R_ColorShiftPalette(dc_playpals, palette, dc_cshift_playpals);
+			I_SetPalette(dc_cshift_playpals);
+		}
 	}
 
 	if (vd->fixedcolormap == INVERSECOLORMAP)

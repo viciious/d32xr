@@ -452,32 +452,7 @@ main_loop:
         move.l  a0,dac_samples
 
 main_loop_chk_ctrl:
-        tst.b   need_ctrl_int
-        beq.b   main_loop_bump_fm
-        move.b  #0,need_ctrl_int
-        /* send controller values to primary sh2 */
-        move.w  #0x0001,0xA15102    /* assert CMD INT to primary SH2 */
-10:
-        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
-        cmpi.w  #0xA55A,d0
-        bne.b   10b
-        move.w  ctrl1_val,0xA15122  /* controller 1 value in COMM2 */
-        move.w  #0xFF00,0xA15120
-11:
-        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
-        cmpi.w  #0xFF01,d0
-        bne.b   11b
-        move.w  ctrl2_val,0xA15122  /* controller 2 value in COMM2 */
-        move.w  #0xFF02,0xA15120
-20:
-        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
-        cmpi.w  #0xA55A,d0
-        bne.b   20b
-        /* done */
-        move.w  #0x5AA5,0xA15120
-30:
-        cmpi.w  #0x5AA5,0xA15120
-        beq.b   30b
+        bsr     snd_ctrl
 
 main_loop_bump_fm:
         move.b  REQ_ACT.w,d0
@@ -503,7 +478,7 @@ main_loop_handle_req:
         bne.w   handle_sec_req
 
         tst.w   fm_idx
-        beq.b   00f
+        beq.w   00f
 
         moveq.l #32,d0
         move.l  d0,-(sp)
@@ -511,26 +486,7 @@ main_loop_handle_req:
         addq.l  #4,sp
 
 00:
-        /* check hot-plug count */
-        tst.b   hotplug_cnt
-        bne.w   main_loop
-        move.b  #60,hotplug_cnt
-
-        move.w  ctrl1_val,d0
-        cmpi.w  #0xF001,d0
-        beq.b   0f                  /* mouse in port 1, check port 2 */
-        cmpi.w  #0xF000,d0
-        beq.b   1f                  /* no pad in port 1, do hot-plug check */
-0:
-        tst.b   net_type
-        bne.w   main_loop           /* networking enabled, ignore port 2 */
-        move.w  ctrl2_val,d0
-        cmpi.w  #0xF001,d0
-        beq.w   main_loop           /* mouse in port 2, exit */
-        cmpi.w  #0xF000,d0
-        bne.w   main_loop           /* pad in port 2, exit */
-1:
-        bsr     chk_ports
+        bsr     chk_hotplug
         bra.w   main_loop
 
 | process request from Master SH2
@@ -594,6 +550,7 @@ no_cmd:
         dc.w    read_cd_directory - prireqtbl
         dc.w    resume_spcm_track - prireqtbl
         dc.w    open_cd_tray - prireqtbl
+        dc.w    play_cd_roq_file - prireqtbl
 
 | process request from Secondary SH2
 handle_sec_req:
@@ -612,8 +569,10 @@ read_sram:
         moveq   #0,d1
 |        cmpi.w  #2,megasd_ok
 |        beq.b   rd_msd_sram
+.ifdef ENABLE_SSF_MAPPER
         tst.w   everdrive_ok
         bne.w   rd_med_sram
+.endif
 | assume standard mapper save ram
         add.l   d0,d0
         lea     0x200000,a0         /* use standard mapper save ram base */
@@ -667,8 +626,10 @@ write_sram:
         move.w  0xA15122,d1         /* COMM2 holds offset */
 |        cmpi.w  #2,megasd_ok
 |        beq.b   wr_msd_sram
+.ifdef ENABLE_SSF_MAPPER
         tst.w   everdrive_ok
         bne.w   wr_med_sram
+.endif
 | assume standard mapper save ram
         add.l   d1,d1
         lea     0x200000,a0         /* use standard mapper save ram base */
@@ -2301,7 +2262,7 @@ open_cd_file_by_handle:
 
 read_cd_file:
         mute_pcm
-        jsr vgm_stop_samples
+        jsr     vgm_stop_samples
 
         move.w  0xA15100,d0
         eor.w   #0x8000,d0
@@ -2338,6 +2299,8 @@ seek_cd_file:
         bra     main_loop
 
 load_sfx_cd_fileofs:
+        jsr     scd_init_pcm        /* FIXME: find a better place for it */
+
         lea     MARS_FRAMEBUFFER,a1 /* frame buffer */
         move.l  a1,-(sp)            /* file name + offsets */
 
@@ -2394,6 +2357,20 @@ open_cd_tray:
         move.w  #0x2700,sr          /* disable ints */
         jsr     scd_open_tray
         move.w  #0x2000,sr          /* enable ints */
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+play_cd_roq_file:
+        jsr     scd_gfile_length
+        move.l  d0,-(sp)            /* path and destination buffer */
+        jsr     scd_tell_gfile
+        move.l  d0,-(sp)            /* path and destination buffer */
+        lea.l   0xA15120,a0
+        move.l  a0,-(sp)            /* communication register address */
+
+        jsr     scd_play_roq
+        lea     12(sp),sp           /* clear the stack */
+
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
@@ -3094,7 +3071,7 @@ chk_ports:
         /* get ID port 1 */
         lea     0xA10003,a0
         bsr.b   get_port
-        move.w  d0,ctrl1_val             /* controller 1 */
+        move.w  d0,ctrl1_val            /* controller 1 */
 
         tst.b   net_type
         beq.b   0f                      /* ignore controller 2 when networking enabled */
@@ -3104,6 +3081,171 @@ chk_ports:
         lea     0xA10005,a0
         bsr.b   get_port
         move.w  d0,ctrl2_val             /* controller 2 */
+        rts
+
+        .global chk_hotplug
+chk_hotplug:
+        movem.l d0-d7/a0-a6,-(sp)
+
+        /* check hot-plug count */
+        tst.b   hotplug_cnt
+        bne.w   2f
+        move.b  #60,hotplug_cnt
+
+        move.w  ctrl1_val,d0
+        cmpi.w  #0xF001,d0
+        beq.b   0f                  /* mouse in port 1, check port 2 */
+        cmpi.w  #0xF000,d0
+        beq.b   1f                  /* no pad in port 1, do hot-plug check */
+0:
+        tst.b   net_type
+        bne.w   1f                  /* networking enabled, ignore port 2 */
+        move.w  ctrl2_val,d0
+        cmpi.w  #0xF001,d0
+        beq.w   2f                  /* mouse in port 2, exit */
+        cmpi.w  #0xF000,d0
+        bne.w   2f                  /* pad in port 2, exit */
+1:
+        bsr     chk_ports
+2:
+        movem.l (sp)+,d0-d7/a0-a6
+        rts
+
+| Send controller values to primary SH2
+        .global snd_ctrl
+snd_ctrl:
+        tst.b   need_ctrl_int
+        beq.b   40f
+        move.b  #0,need_ctrl_int
+
+        move.w  #0x0001,0xA15102    /* assert CMD INT to primary SH2 */
+10:
+        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
+        cmpi.w  #0xA55A,d0
+        bne.b   10b
+        move.w  ctrl1_val,0xA15122  /* controller 1 value in COMM2 */
+        move.w  #0xFF00,0xA15120
+11:
+        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
+        cmpi.w  #0xFF01,d0
+        bne.b   11b
+        move.w  ctrl2_val,0xA15122  /* controller 2 value in COMM2 */
+        move.w  #0xFF02,0xA15120
+20:
+        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
+        cmpi.w  #0xA55A,d0
+        bne.b   20b
+        /* done */
+        move.w  #0x5AA5,0xA15120
+30:
+        cmpi.w  #0x5AA5,0xA15120
+        beq.b   30b
+40:
+        rts
+
+| int dma_to_32x(void *dest, short *src, int len, int arg);
+| DMA data from source to 32X
+| entry: arg = dest pointer (ignored), arg2 = source pointer, arg3 = length of data (in bytes), arg4 = optional arg
+| exit:  d0 = 0 (okay) or -1 (error) or -2 (DMA error)
+        .global dma_to_32x
+dma_to_32x:
+        move.w  #0x0001,0xA15102        /* assert CMD INT to primary SH2 */
+0:
+        move.w  0xA15120,d0             /* wait on handshake in COMM0 */
+        cmpi.w  #0xA55A,d0
+        bne.b   0b
+        move.w  #0xFF10,0xA15120
+
+00:
+        cmpi.w  #0xFF11,0xA15120        /* wait for handshake */
+        bne.b   00b
+
+        lea     0xA15000,a1
+
+        move.l  4(sp),d0                /* optional destination address */
+        move.l  d0,0x010C(a1)           /* SH DREQ destination address */
+        move.l  16(sp),d0               /* optional argument */
+        move.w  d0,0x0122(a1)           /* COMM2 */
+        move.w  #0xFF12,0xA15120
+
+        move.b  #0x00,0x0107(a1)        /* clear 68S bit - stops SH DREQ */
+
+        movea.l 8(sp),a0                /* source address */
+        move.l  12(sp),d0               /* length in bytes */
+        |addq.l  #1,d0
+        lsr.l   #1,d0                   /* length in words */
+        move.w  d0,0x0122(a1)           /* COMM2 = length in words */
+        addq.l  #3,d0
+        andi.w  #0xFFFC,d0              /* FIFO operates on units of four words */
+        move.w  d0,0x0110(a1)           /* SH DREQ Length Reg */
+        lsr.l   #2,d0
+        subq.l  #1,d0                   /* for dbra */
+
+        move.b  #0x04,0x0107(a1)        /* set 68S bit - starts SH DREQ */
+        lea     0x0112(a1),a1
+
+1:
+        cmpi.w  #0xFF13,0xA15120        /* wait for SH2 to start DMA */
+        bne.b   1b
+
+        move.l  a0,d1
+        btst    #0,d1
+        beq.b   2f
+
+        /* handle odd src address */
+22:
+        move.b  (a0)+,-(sp)
+        move.w  (sp)+,d1                /* shift left 8 */
+        move.b  (a0)+,d1
+        move.w  d1,(a1)                 /* FIFO = next word */
+
+        move.b  (a0)+,-(sp)
+        move.w  (sp)+,d1                /* shift left 8 */
+        move.b  (a0)+,d1
+        move.w  d1,(a1)                 /* FIFO = next word */
+
+        move.b  (a0)+,-(sp)
+        move.w  (sp)+,d1                /* shift left 8 */
+        move.b  (a0)+,d1
+        move.w  d1,(a1)                 /* FIFO = next word */
+
+        move.b  (a0)+,-(sp)
+        move.w  (sp)+,d1                /* shift left 8 */
+        move.b  (a0)+,d1
+        move.w  d1,(a1)                 /* FIFO = next word */
+222:
+        btst    #7,0xA15107             /* check FIFO full flag */
+        bne.b   222b
+        dbra    d0,22b
+
+        bra.b   44f
+
+2:
+        move.w  (a0)+,(a1)              /* FIFO = next word */
+        move.w  (a0)+,(a1)
+        move.w  (a0)+,(a1)
+        move.w  (a0)+,(a1)
+3:
+        btst    #7,0xA15107             /* check FIFO full flag */
+        bne.b   3b
+        dbra    d0,2b
+
+44:
+        btst    #2,0xA15107
+        bne.b   4f                      /* DMA not done? */
+        moveq   #0,d0
+        bra.w   5f
+4:
+        moveq   #-2,d0
+5:
+        move.w  0xA15120,d1             /* wait on handshake in COMM0 */
+        cmpi.w  #0xA55A,d1
+        bne.b   5b
+        /* done */
+        move.w  #0x5AA5,0xA15120
+6:
+        cmpi.w  #0x5AA5,0xA15120
+        beq.b   6b
         rts
 
 

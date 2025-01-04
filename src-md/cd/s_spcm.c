@@ -85,6 +85,8 @@ typedef struct
 static s_spcm_t track = { 0 };
 static uint8_t safeguard[0x10000 - (SPCM_RIGHT_CHAN_SOFFSET+SPCM_CHAN_BUF_SIZE+2048)] __attribute__((unused));
 
+void S_SPCM_Update(s_spcm_t *spcm);
+
 // buffer position currently being played back by hardware
 static uint16_t S_SPCM_MixerPos_(s_spcm_t *spcm, int chan) {
     volatile uint8_t *ptr = PCM_RAMPTR + ((spcm->chan[chan].id) << 2);
@@ -470,13 +472,12 @@ void S_SPCM_Unsuspend(void)
     spcm->state = SPCM_STATE_RESUME;
     spcm->playing = 1;
 
-    pcm_start_timer(S_SPCM_Update);
+    pcm_start_timer((void (*)(void *))S_SPCM_Update, spcm);
 }
 
-void S_SPCM_Update(void)
+void S_SPCM_Update(s_spcm_t *spcm)
 {
     int oldctl;
-    s_spcm_t *spcm = &track;
 
     if (spcm->num_channels == 0) {
         return;
@@ -549,7 +550,7 @@ int S_SCM_PlayTrack(const char *name, int repeat)
         spcm->chan_samples += spcm->chan_samples;
     }
 
-    pcm_start_timer(S_SPCM_Update);
+    pcm_start_timer((void (*)(void *))S_SPCM_Update, spcm);
 
     while (spcm->state != SPCM_STATE_PLAYING) {
         if (spcm->state == SPCM_STATE_STOPPED) {

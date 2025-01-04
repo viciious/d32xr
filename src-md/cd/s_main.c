@@ -8,7 +8,7 @@
 
 #define S_MEMBANK_SIZE 454*1024
 #define S_MEMBANK_PTR s_membank
-static uint8_t s_membank[S_MEMBANK_SIZE];
+static uint8_t s_membank[S_MEMBANK_SIZE] = { 0 };
 
 void S_Init(void)
 {
@@ -185,4 +185,9 @@ void S_PauseSPCMTrack(void)
 void S_UnpauseSPCMTrack(void)
 {
     S_SPCM_Unsuspend();
+}
+
+uint8_t *S_GetMemBankPtr(void)
+{
+    return s_membank;
 }

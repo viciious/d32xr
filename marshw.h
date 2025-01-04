@@ -46,7 +46,7 @@ void Mars_InitVideo(int lines);
 void Mars_InitLineTable(void);
 void Mars_SetBrightness(int16_t brightness);
 int Mars_BackBuffer(void);
-char Mars_UploadPalette(const uint8_t* palette) MARS_ATTR_DATA_CACHE_ALIGN;
+void Mars_SetPalette(const uint8_t *palette);
 int Mars_PollMouse(void);
 int Mars_ParseMousePacket(int mouse, int* pmx, int* pmy);
 
@@ -54,7 +54,6 @@ extern volatile unsigned mars_vblank_count;
 extern volatile unsigned mars_pwdt_ovf_count;
 extern volatile unsigned mars_swdt_ovf_count;
 extern unsigned mars_frtc2msec_frac;
-extern const uint8_t* mars_newpalette;
 extern uint16_t mars_cd_ok;
 extern uint16_t mars_num_cd_tracks;
 extern uint16_t mars_framebuffer_height;
@@ -68,10 +67,10 @@ void Mars_PlayTrack(char usecd, int playtrack, const char *name, int offset, int
 void Mars_StopTrack(void);
 void Mars_SetMusicVolume(uint8_t volume);
 
-#define Mars_GetTicCount() (*(volatile uintptr_t *)((uintptr_t)&mars_vblank_count | 0x20000000))
+#define Mars_GetTicCount() mars_vblank_count
 int Mars_GetWDTCount(void);
 
-#define Mars_ClearCacheLine(addr) *(volatile uintptr_t *)(((uintptr_t)addr & ~15) | 0x40000000) = 0
+#define Mars_ClearCacheLine(addr) *(volatile uintptr_t *)(((uintptr_t)addr) | 0x40000000) = 0
 #define Mars_ClearCache() \
 	do { \
 		CacheControl(0); /* disable cache */ \
@@ -80,7 +79,7 @@ int Mars_GetWDTCount(void);
 
 #define Mars_ClearCacheLines(paddr,nl) \
 	do { \
-		uintptr_t addr = ((uintptr_t)(paddr) & ~15) | 0x40000000; \
+		uintptr_t addr = ((uintptr_t)(paddr)) | 0x40000000; \
 		uint32_t l; \
 		for (l = 0; l < nl; l++) { \
 			*(volatile uintptr_t *)addr = 0; \
@@ -164,6 +163,8 @@ void Mars_StoreAuxBytes(int numbytes);
 void *Mars_LoadAuxBytes(int numbytes);
 
 void Mars_SetPriCmdCallback(void (*cb)(void));
+void Mars_SetPriDreqDMACallback(void *(*cb)(void *, void *, int , int ), void *arg);
+
 void Mars_SetSecCmdCallback(void (*cb)(void));
 void Mars_SetSecDMA1Callback(void (*cb)(void));
 

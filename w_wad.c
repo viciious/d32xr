@@ -408,7 +408,6 @@ int W_ReadLump (int lump, void *dest)
 	lumpinfo_t	*l;
 	volatile int size;
 	wadfile_t 	*wad;
-	void 		*data;
 	volatile boolean compressed;
 
 	if (lump < 0)
@@ -423,12 +422,8 @@ int W_ReadLump (int lump, void *dest)
 	size = BIGLONG(l->size);
 	compressed = l->name[0] & 0x80;
 
-	data = W_GetLumpData(lump);
+	W_ReadLumpData(lump, dest, compressed);
 
-	if (compressed) /* compressed */
-		decode(data, (unsigned char *) dest);
-	else if (dest != data)
-		D_memcpy (dest, data, size);
 	return size;
 }
 
@@ -450,7 +445,6 @@ void	*W_CacheLumpNum (int lump, int tag)
 	volatile boolean compressed;
 	wadfile_t *wad;
 	lumpinfo_t	*l;
-	void *data;
 
 	if (lump < 0)
 		I_Error("W_CacheLumpNum: %i < 0", lump);
@@ -467,12 +461,9 @@ void	*W_CacheLumpNum (int lump, int tag)
 	compressed = l->name[0] & 0x80;
 
 	cache = Z_Malloc(len+1, tag);
-	data = W_GetLumpData(lump);
 
-	if (compressed) /* compressed */
-		decode(data, (unsigned char *) cache);
-	else
-		D_memcpy (cache, data, len);
+	W_ReadLumpData(lump, cache, compressed);
+
 	((char *)cache)[len] = '\0';
 
 	return cache;
@@ -567,6 +558,51 @@ void * W_GetLumpData_(int lump, const char *func)
 	}
 
 	return I_RemapLumpPtr((void*)(wad->fileptr + BIGLONG(l->filepos)));
+}
+
+void * W_ReadLumpData_(int lump, const char *func, void *dest, boolean compressed)
+{
+	wadfile_t *wad;
+	lumpinfo_t* l;
+	void *src;
+
+	if (lump < 0)
+		I_Error("%s: %i < 0", func, lump);
+
+	wad = W_GetWadForLump(lump);
+	if (lump >= wad->firstlump+wad->numlumps)
+		I_Error ("%s: %i >= numlumps", func, lump);
+
+	l = &wad->lumpinfo[lump-wad->firstlump];
+	if (wad->cdlength)
+	{
+		volatile int pos = BIGLONG(l->filepos);
+		volatile int len = BIGLONG(l->size);
+
+		I_SeekCDFile(pos, SEEK_SET);
+
+		if (compressed) /* compressed */
+		{
+			if (I_ReadCDFile(len) < 0)
+				I_Error("%s: reading %d bytes failed", func, len);
+			decode(I_GetCDFileBuffer(), (unsigned char *) dest);
+		}
+		else
+		{
+			if (I_ReadCDFile(len) < 0)
+				I_Error("%s: reading %d bytes failed", func, len);
+			D_memcpy(dest, I_GetCDFileBuffer(), len);
+		}
+
+		return dest;
+	}
+
+	src = I_RemapLumpPtr((void*)(wad->fileptr + BIGLONG(l->filepos)));
+	if (compressed)
+		decode(src, dest);
+	else
+		D_memcpy(dest, src, BIGLONG(l->size));
+	return dest;
 }
 
 void I_Debug(void)
