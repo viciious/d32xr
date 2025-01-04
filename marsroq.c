@@ -69,10 +69,6 @@ static void roq_snddma1_handler(void) RoQ_ATTR_SDRAM;
 
 void Mars_Sec_RoQ_InitSound(int init) __attribute__((noinline));
 
-static inline uint16_t s16pcm_to_u16pwm(int s) {
-    return RoQ_SAMPLE_MIN + ((unsigned)(s+32768) >> 6);
-}
-
 static void roq_snddma_center(int f)
 {
     int i;
@@ -132,7 +128,6 @@ static void roq_snddma1_handler(void)
     {
         int j, l, c;
         uint8_t *b;
-        register int clamp;
 
         if (!snd_samples_rem)
         {
@@ -170,12 +165,15 @@ static void roq_snddma1_handler(void)
             if (snd_channels == 1)
             {
                 snd_lr[0] = (int16_t)((header[0]) | (header[1] << 8));
+                snd_lr[0] += 32768;
             }
             else
             {
                 snd_samples_rem /= 2;
                 snd_lr[0] = (int16_t)((header[1] << 8));
+                snd_lr[0] += 32768;
                 snd_lr[1] = (int16_t)((header[0] << 8));
+                snd_lr[1] += 32768;
             }
             header += 2;
 
@@ -193,24 +191,23 @@ static void roq_snddma1_handler(void)
 
         Mars_ClearCacheLines(b, ((unsigned)l >> 4) + 2);
 
-        clamp = 32767;
         for (j = 0; j < l; j++)
         {
             int16_t v;
+            int newval, c_hi;
 
             v = *b & 127;
             v *= v;
             if (*b++ & 128) v = -v;
 
-            snd_lr[j&c] += v;
+            newval = snd_lr[j&c] + v;
 
-            if (snd_lr[j&c] > clamp) snd_lr[j&c] = clamp;
-            clamp = ~clamp;
+            __asm volatile("mov #1, %0\n\tshll16 %0\n\t" : "=&r"(c_hi) );
+            if (newval & c_hi) newval = c_hi-1;
+            if (newval < 0) newval = 0;
 
-            if (snd_lr[j&c] < clamp) snd_lr[j&c] = clamp;
-            clamp = ~clamp;
-
-            *s++ = s16pcm_to_u16pwm(snd_lr[j&c]);
+            snd_lr[j&c] = newval;
+            *s++ = RoQ_SAMPLE_MIN + ((unsigned)newval >> 6);
         }
 
         snd_samples_rem -= num_samples;
