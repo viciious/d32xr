@@ -127,7 +127,7 @@ static void roq_snddma1_handler(void)
     for (i = 0; i < RoQ_MAX_SAMPLES; )
     {
         int j, l, c;
-        uint8_t *b;
+        int8_t *b;
 
         if (!snd_samples_rem)
         {
@@ -187,14 +187,15 @@ static void roq_snddma1_handler(void)
         l = num_samples * snd_channels;
         c = snd_channels - 1;
         buf_start = ringbuf_ralloc(schunks, l);
-        b = buf_start;
+        b = (int8_t *)buf_start;
 
         Mars_ClearCacheLines(b, ((unsigned)l >> 4) + 2);
 
         for (j = 0; j < l; j++)
         {
-            int16_t v;
-            int newval, c_hi;
+            int v;
+            int c_hi;
+            int newval;
 
             v = *b & 127;
             v *= v;
@@ -215,9 +216,9 @@ static void roq_snddma1_handler(void)
         if (!snd_samples_rem) {
             // done with the current chunk
             // request a new one on the next iteration
-            ringbuf_rcommit(schunks, (b - buf_start + ((intptr_t)b&1)));
+            ringbuf_rcommit(schunks, (l + ((intptr_t)b&1)));
         } else {
-            ringbuf_rcommit(schunks, b - buf_start);
+            ringbuf_rcommit(schunks, l);
         }
 
         i += num_samples;
