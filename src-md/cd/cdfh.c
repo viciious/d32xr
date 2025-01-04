@@ -126,6 +126,9 @@ int read_sectors(uint8_t *dest, int blk, int len)
     if ((intptr_t)dest >= 0x0C0000 && (intptr_t)dest < 0x0E0000) {
         addr_mask = 0x0001FFFF; /* use 0x3FFFF for 2M mode */
         read = dma_cd_sector_wram;
+    } else if ((intptr_t)dest >= 0xFF2000 && (intptr_t)dest < 0xFF4000) {
+        addr_mask = 0x00FFFFFF;
+        read = dma_cd_sector_pcm;
     } else {
         addr_mask = -1;
         read = dma_cd_sector_prg;
