@@ -46,6 +46,10 @@ uint16_t mars_num_cd_tracks = 0;
 
 uint16_t mars_refresh_hz = 0;
 
+char *pri_dma_dest = NULL;
+int pri_dma_read = 0;
+void *pri_dma_arg = NULL;
+
 const int NTSC_CLOCK_SPEED = 23011360; // HZ
 const int PAL_CLOCK_SPEED = 22801467; // HZ
 
@@ -59,25 +63,38 @@ void sec_cmd_handler(void) MARS_ATTR_DATA_CACHE_ALIGN;
 static void intr_handler_stub(void) MARS_ATTR_DATA_CACHE_ALIGN;
 static void intr_handler_stub(void) {}
 
+static void *pri_dreqdma_handler_default(void *cbarg, void *dest, int length, int dmaarg) MARS_ATTR_DATA_CACHE_ALIGN;
+static void *pri_dreqdma_handler_default(void *cbarg, void *dest, int length, int dmaarg) {
+	dest = pri_dma_dest;
+	pri_dma_dest += length;
+	pri_dma_read += length;
+	return dest;
+}
+
 static void (*pri_cmd_cb)(void) = &intr_handler_stub;
+static void *(*pri_dreqdma_cb)(void*, void *, int, int) = pri_dreqdma_handler_default;
 static void (*sci_cmd_cb)(void) = &intr_handler_stub;
 static void (*sci_dma1_cb)(void) = &intr_handler_stub;
 
+static void Mars_HandleDMARequest(void);
+
+#define MARS_ACTIVE_SCREEN (*(volatile uint16_t *)(((intptr_t)&mars_activescreen) | 0x20000000))
+
 void Mars_WaitFrameBuffersFlip(void)
 {
-	while ((MARS_VDP_FBCTL & MARS_VDP_FS) != mars_activescreen);
+	while ((MARS_VDP_FBCTL & MARS_VDP_FS) != MARS_ACTIVE_SCREEN);
 }
 
 void Mars_FlipFrameBuffers(char wait)
 {
-	mars_activescreen = !mars_activescreen;
-	MARS_VDP_FBCTL = mars_activescreen;
+	MARS_ACTIVE_SCREEN = !MARS_ACTIVE_SCREEN;
+	MARS_VDP_FBCTL = MARS_ACTIVE_SCREEN;
 	if (wait) Mars_WaitFrameBuffersFlip();
 }
 
 char Mars_FramebuffersFlipped(void)
 {
-	return (MARS_VDP_FBCTL & MARS_VDP_FS) == mars_activescreen;
+	return (MARS_VDP_FBCTL & MARS_VDP_FS) == MARS_ACTIVE_SCREEN;
 }
 
 void Mars_InitLineTable(void)
@@ -118,7 +135,7 @@ void Mars_SetBrightness(int16_t brightness)
 }
 
 int Mars_BackBuffer(void) {
-	return mars_activescreen;
+	return MARS_ACTIVE_SCREEN;
 }
 
 char Mars_UploadPalette(const uint8_t* palette)
@@ -221,7 +238,7 @@ void Mars_InitVideo(int lines)
 	mars_refresh_hz = NTSC ? 60 : 50;
 	mars_requested_lines = lines;
 	mars_framebuffer_height = lines == 240 ? 240 : 224;
-	mars_activescreen = MARS_VDP_FBCTL;
+	MARS_ACTIVE_SCREEN = MARS_VDP_FBCTL;
 
 	Mars_FlipFrameBuffers(1);
 
@@ -251,6 +268,19 @@ void Mars_Init(void)
 	for (i = 0; i < MARS_MAX_CONTROLLERS; i++)
 		mars_gamepadport[i] = -1;
 	mars_mouseport = -1;
+
+	// init DMA channel 0 & 1
+	SH2_DMA_SAR0 = (int)&MARS_SYS_DMAFIFO;
+	SH2_DMA_DAR0 = 0;
+	SH2_DMA_TCR0 = 0;
+	SH2_DMA_CHCR0 = 0;
+	SH2_DMA_DRCR0 = 0;
+	SH2_DMA_SAR1 = 0;
+	SH2_DMA_DAR1 = 0;
+	SH2_DMA_TCR1 = 0;
+	SH2_DMA_CHCR1 = 0;
+	SH2_DMA_DRCR1 = 0;
+	SH2_DMA_DMAOR = 1; // enable DMA
 
 	SH2_WDT_WTCSR_TCNT = 0xA518; /* WDT TCSR = clr OVF, IT mode, timer off, clksel = Fs/2 */
 
@@ -794,6 +824,43 @@ int Mars_ReadCDFile(int length)
 	return *(int *)&MARS_SYS_COMM8;
 }
 
+static void Mars_HandleDMARequest(void)
+{
+	int j, l;
+	int cmd, arg;
+	void *dest;
+	int chcr = SH2_DMA_CHCR_DM_INC|SH2_DMA_CHCR_TS_WU|SH2_DMA_CHCR_AL_AH|SH2_DMA_CHCR_DS_EDGE|SH2_DMA_CHCR_DL_AH;
+
+	cmd = ++MARS_SYS_COMM0;
+	// wait for an argument
+	while (MARS_SYS_COMM0 == cmd);
+	arg = MARS_SYS_COMM2;
+
+	while (!(MARS_SYS_DMACTR & MARS_SYS_DMA_68S)) ; // wait for SH DREQ to start
+
+	l = MARS_SYS_COMM2; // # length in words
+	if (l == 0)
+		l = 0x10000; // 0 => 64K words
+
+	j = (l + 3) & 0xFFFC; // # words to DMA
+	if (j == 0)
+		j = 0x10000; // 0 => 64K words
+
+	l += l; // bytes
+	dest = pri_dreqdma_cb(pri_dma_arg, (void*)MARS_SYS_DMADAR, l, arg);
+
+	SH2_DMA_CHCR0; // read TE
+	SH2_DMA_CHCR0 = chcr; // clear TE
+	SH2_DMA_DAR0 = 0x20000000 | ((uintptr_t)dest & ~1);
+	SH2_DMA_TCR0 = j;
+
+	SH2_DMA_CHCR0 = chcr|SH2_DMA_CHCR_DE;
+
+	++MARS_SYS_COMM0; // SH2 DMA started
+	while (!(SH2_DMA_CHCR0 & SH2_DMA_CHCR_TE)) ; // wait on TE
+	SH2_DMA_CHCR0 = chcr; // clear DMA TE
+}
+
 int Mars_SeekCDFile(int offset, int whence)
 {
 	while (MARS_SYS_COMM0) {}
@@ -867,7 +934,13 @@ void Mars_Finish(void)
 
 void Mars_SetPriCmdCallback(void (*cb)(void))
 {
-	sci_cmd_cb = cb;
+	pri_cmd_cb = cb;
+}
+
+void Mars_SetPriDreqDMACallback(void *(*cb)(void *, void *, int , int), void *arg)
+{
+	pri_dma_arg = arg;
+	pri_dreqdma_cb = NULL ? pri_dreqdma_handler_default : cb;
 }
 
 void Mars_SetSecCmdCallback(void (*cb)(void))
@@ -899,6 +972,9 @@ void pri_cmd_handler(void)
 	{
 		case 0xFF00:
 			Mars_DetectInputDevices();
+			break;
+		case 0xFF10:
+			Mars_HandleDMARequest();
 			break;
 		default:
 			pri_cmd_cb();

@@ -3106,6 +3106,111 @@ chk_ports:
         move.w  d0,ctrl2_val             /* controller 2 */
         rts
 
+| int dma_to_32x(void *dest, short *src, int len, int arg);
+| DMA data from source to 32X
+| entry: arg = dest pointer (ignored), arg2 = source pointer, arg3 = length of data (in bytes), arg4 = optional arg
+| exit:  d0 = 0 (okay) or -1 (error) or -2 (DMA error)
+        .global dma_to_32x
+dma_to_32x:
+        move.w  #0x0001,0xA15102        /* assert CMD INT to primary SH2 */
+0:
+        move.w  0xA15120,d0             /* wait on handshake in COMM0 */
+        cmpi.w  #0xA55A,d0
+        bne.b   0b
+        move.w  #0xFF10,0xA15120
+
+00:
+        cmpi.w  #0xFF11,0xA15120        /* wait for handshake */
+        bne.b   00b
+
+        lea     0xA15000,a1
+
+        move.l  4(sp),d0                /* optional destination address */
+        move.l  d0,0x010C(a1)           /* SH DREQ destination address */
+        move.l  16(sp),d0               /* optional argument */
+        move.w  d0,0x0122(a1)           /* COMM2 */
+        move.w  #0xFF12,0xA15120
+
+        move.b  #0x00,0x0107(a1)        /* clear 68S bit - stops SH DREQ */
+
+        movea.l 8(sp),a0                /* source address */
+        move.l  12(sp),d0               /* length in bytes */
+        |addq.l  #1,d0
+        lsr.l   #1,d0                   /* length in words */
+        move.w  d0,0x0122(a1)           /* COMM2 = length in words */
+        addq.l  #3,d0
+        andi.w  #0xFFFC,d0              /* FIFO operates on units of four words */
+        move.w  d0,0x0110(a1)           /* SH DREQ Length Reg */
+        lsr.l   #2,d0
+        subq.l  #1,d0                   /* for dbra */
+
+        move.b  #0x04,0x0107(a1)        /* set 68S bit - starts SH DREQ */
+        lea     0x0112(a1),a1
+
+1:
+        cmpi.w  #0xFF13,0xA15120        /* wait for SH2 to start DMA */
+        bne.b   1b
+
+        move.l  a0,d1
+        btst    #0,d1
+        beq.b   2f
+
+        /* handle odd src address */
+22:
+        move.b  (a0)+,-(sp)
+        move.w  (sp)+,d1                /* shift left 8 */
+        move.b  (a0)+,d1
+        move.w  d1,(a1)                 /* FIFO = next word */
+
+        move.b  (a0)+,-(sp)
+        move.w  (sp)+,d1                /* shift left 8 */
+        move.b  (a0)+,d1
+        move.w  d1,(a1)                 /* FIFO = next word */
+
+        move.b  (a0)+,-(sp)
+        move.w  (sp)+,d1                /* shift left 8 */
+        move.b  (a0)+,d1
+        move.w  d1,(a1)                 /* FIFO = next word */
+
+        move.b  (a0)+,-(sp)
+        move.w  (sp)+,d1                /* shift left 8 */
+        move.b  (a0)+,d1
+        move.w  d1,(a1)                 /* FIFO = next word */
+222:
+        btst    #7,0xA15107             /* check FIFO full flag */
+        bne.b   222b
+        dbra    d0,22b
+
+        bra.b   44f
+
+2:
+        move.w  (a0)+,(a1)              /* FIFO = next word */
+        move.w  (a0)+,(a1)
+        move.w  (a0)+,(a1)
+        move.w  (a0)+,(a1)
+3:
+        btst    #7,0xA15107             /* check FIFO full flag */
+        bne.b   3b
+        dbra    d0,2b
+
+44:
+        btst    #2,0xA15107
+        bne.b   4f                      /* DMA not done? */
+        moveq   #0,d0
+        bra.w   5f
+4:
+        moveq   #-2,d0
+5:
+        move.w  0xA15120,d1             /* wait on handshake in COMM0 */
+        cmpi.w  #0xA55A,d1
+        bne.b   5b
+        /* done */
+        move.w  #0x5AA5,0xA15120
+6:
+        cmpi.w  #0x5AA5,0xA15120
+        beq.b   6b
+        rts
+
 
 | Global variables for 68000
 

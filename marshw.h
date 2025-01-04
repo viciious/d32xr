@@ -68,7 +68,7 @@ void Mars_PlayTrack(char usecd, int playtrack, const char *name, int offset, int
 void Mars_StopTrack(void);
 void Mars_SetMusicVolume(uint8_t volume);
 
-#define Mars_GetTicCount() (*(volatile uintptr_t *)((uintptr_t)&mars_vblank_count | 0x20000000))
+#define Mars_GetTicCount() (*(volatile unsigned *)((uintptr_t)&mars_vblank_count | 0x20000000))
 int Mars_GetWDTCount(void);
 
 #define Mars_ClearCacheLine(addr) *(volatile uintptr_t *)(((uintptr_t)addr) | 0x40000000) = 0
@@ -164,6 +164,8 @@ void Mars_StoreAuxBytes(int numbytes);
 void *Mars_LoadAuxBytes(int numbytes);
 
 void Mars_SetPriCmdCallback(void (*cb)(void));
+void Mars_SetPriDreqDMACallback(void *(*cb)(void *, void *, int , int ), void *arg);
+
 void Mars_SetSecCmdCallback(void (*cb)(void));
 void Mars_SetSecDMA1Callback(void (*cb)(void));
 
