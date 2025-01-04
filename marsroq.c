@@ -53,7 +53,7 @@ static unsigned *snd_samples[2];
 static int16_t snd_flip = 0;
 static int16_t snd_channels = 0;
 static int16_t snd_samples_rem = 0;
-static int snd_left, snd_right;
+static int snd_lr[2];
 
 static marsrbuf_t *vchunks;
 
@@ -130,8 +130,9 @@ static void roq_snddma1_handler(void)
 
     for (i = 0; i < RoQ_MAX_SAMPLES; )
     {
-        int j;
+        int j, l, c;
         uint8_t *b;
+        register int clamp;
 
         if (!snd_samples_rem)
         {
@@ -168,13 +169,13 @@ static void roq_snddma1_handler(void)
 
             if (snd_channels == 1)
             {
-                snd_left = (int16_t)((header[0]) | (header[1] << 8));
+                snd_lr[0] = (int16_t)((header[0]) | (header[1] << 8));
             }
             else
             {
                 snd_samples_rem /= 2;
-                snd_left = (int16_t)((header[1] << 8));
-                snd_right = (int16_t)((header[0] << 8));
+                snd_lr[0] = (int16_t)((header[1] << 8));
+                snd_lr[1] = (int16_t)((header[0] << 8));
             }
             header += 2;
 
@@ -185,50 +186,31 @@ static void roq_snddma1_handler(void)
         if (num_samples > RoQ_MAX_SAMPLES - i)
             num_samples = RoQ_MAX_SAMPLES - i;
 
-        buf_start = ringbuf_ralloc(schunks, num_samples * snd_channels);
+        l = num_samples * snd_channels;
+        c = snd_channels - 1;
+        buf_start = ringbuf_ralloc(schunks, l);
         b = buf_start;
 
-        if (snd_channels == 1)
+        Mars_ClearCacheLines(b, ((unsigned)l >> 4) + 2);
+
+        clamp = 32767;
+        for (j = 0; j < l; j++)
         {
-            Mars_ClearCacheLines(b, ((unsigned)num_samples >> 4) + 2);
+            int16_t v;
 
-            for (j = 0; j < num_samples; j++)
-            {
-                int16_t v;
+            v = *b & 127;
+            v *= v;
+            if (*b++ & 128) v = -v;
 
-                v = *b & 127;
-                v *= v;
-                if (*b++ & 128) v = -v;
-                snd_left += v;
-                if (snd_left < -32768) snd_left = -32768;
-                else if (snd_left >  32767) snd_left =  32767;
-                *s++ = s16pcm_to_u16pwm(snd_left);
-            }
-        }
-        else
-        {
-            Mars_ClearCacheLines(b, (((unsigned)num_samples*2) >> 4) + 2);
+            snd_lr[j&c] += v;
 
-            for (j = 0; j < num_samples; j++)
-            {
-                int16_t v;
+            if (snd_lr[j&c] > clamp) snd_lr[j&c] = clamp;
+            clamp = ~clamp;
 
-                v = *b & 127;
-                v *= v;
-                if (*b++ & 128) v = -v;
-                snd_left += v;
-                if (snd_left < -32768) snd_left = -32768;
-                else if (snd_left >  32767) snd_left =  32767;
-                *s++ = s16pcm_to_u16pwm(snd_left);
+            if (snd_lr[j&c] < clamp) snd_lr[j&c] = clamp;
+            clamp = ~clamp;
 
-                v = *b & 127;
-                v *= v;
-                if (*b++ & 128) v = -v;
-                snd_right += v;
-                if (snd_right < -32768) snd_right = -32768;
-                else if (snd_right >  32767) snd_right =  32767;
-                *s++ = s16pcm_to_u16pwm(snd_right);
-            }
+            *s++ = s16pcm_to_u16pwm(snd_lr[j&c]);
         }
 
         snd_samples_rem -= num_samples;
