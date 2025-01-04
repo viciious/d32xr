@@ -71,7 +71,7 @@ WaitCmdPostUpdate:
         move.w  RequestTable(pc,d0.w),d0
         jmp     RequestTable(pc,d0.w)
 
-        | from 'A' to 'Z'
+        | from 'A' to '['
 RequestTable:
         dc.w    SfxPlaySource - RequestTable
         dc.w    SfxCopyBuffer - RequestTable
@@ -99,6 +99,7 @@ RequestTable:
         dc.w    ResumeSPCMTrack - RequestTable
         dc.w    OpenTray - RequestTable
         dc.w    PauseResume - RequestTable
+        dc.w    StreamCD - RequestTable
 
 UknownCmd:
         move.b  #'E,0x800F.w            /* sub comm port = ERROR */
@@ -294,6 +295,25 @@ ResumeSPCMTrack:
 OpenTray:
         move.w  #0x000A,d0              /* DRVOPEN */
         jsr     0x5F22.w                /* call CDBIOS function */
+
+        move.b  #'D,0x800F.w            /* sub comm port = DONE */
+        bra     WaitAck
+
+StreamCD:
+        jsr     S_GetMemBankPtr
+
+        move.l  d0,-(sp)                /* re-use the main sound buffer */
+        move.l  0x8014.w,d0
+        move.l  d0,-(sp)                /* length */
+        move.l  0x8010.w,d0
+        move.l  d0,-(sp)                /* start sector */
+
+        jsr     stream_cd
+        lea     12(sp),sp                /* clear the stack */
+
+        |jsr     S_ClearBuffersMem
+
+        move.l  #-1,CURR_OFFSET
 
         move.b  #'D,0x800F.w            /* sub comm port = DONE */
         bra     WaitAck
