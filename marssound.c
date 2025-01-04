@@ -116,6 +116,9 @@ static void S_SpatializeAll(void) ATTR_DATA_CACHE_ALIGN;
 
 static void S_Pri_CmdHandler(void);
 
+void Mars_Sec_InitSoundDMA(int initfull) __attribute__((noinline));
+void Mars_Sec_ReadSoundCmds(void) ATTR_DATA_OPTIMIZE_NONE;
+
 /*
 ==================
 =
