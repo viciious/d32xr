@@ -284,7 +284,7 @@ boolean	mousepresent;
 
 extern	int	lasttics;
 
-mobj_t	emptymobj;
+degenmobj_t	emptymobj;
  
 /*
 ===============
@@ -500,7 +500,7 @@ while (!I_RefreshCompleted ())
 	S_Clear ();
 	
 	for (i = 0; i < MAXPLAYERS; i++)
-		players[i].mo = &emptymobj;	/* for net consistency checks */
+		players[i].mo = (mobj_t *)&emptymobj;	/* for net consistency checks */
 
 	return exit;
 } 
