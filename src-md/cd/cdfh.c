@@ -10,7 +10,7 @@ extern int DENTRY_OFFSET;
 extern int DENTRY_LENGTH;
 extern char DENTRY_FLAGS;
 extern char DENTRY_NAME[];
-extern short CURR_OFFSET;
+extern int CURR_OFFSET;
 
 extern int init_cd(void);
 
@@ -118,7 +118,30 @@ int64_t open_file(const char *name)
 
 int read_sectors(uint8_t *dest, int blk, int len)
 {
-    int r = read_cd(blk, len, (void *)dest);
+    int i;
+    int r;
+    int addr_mask;
+    int (*read)(void *ptr);
+
+    if ((intptr_t)dest >= 0x0C0000 && (intptr_t)dest < 0x0E0000) {
+        addr_mask = 0x0001FFFF; /* use 0x3FFFF for 2M mode */
+        read = dma_cd_sector_wram;
+    } else {
+        addr_mask = -1;
+        read = dma_cd_sector_prg;
+    }
+
+    begin_read_cd(blk, len);
+
+    for (i = 0; i < len; i++) {
+        while ((r = read((void *)((intptr_t )dest & addr_mask))) == 0) {
+            continue;
+        }
+        dest += 2048;
+    }
+
+    stop_read_cd();
+
     CURR_OFFSET = blk + len - 1;
     return r;
 }

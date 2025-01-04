@@ -545,17 +545,6 @@ init_cd:
         movem.l (sp)+,d2-d7/a2-a6
         rts
 
-| int read_cd(int lba, int len, void *buffer);
-        .global read_cd
-read_cd:
-        move.l  4(sp),d0                /* lba */
-        move.l  8(sp),d1                /* length */
-        movea.l 12(sp),a0               /* buffer */
-        movem.l d2-d7/a2-a6,-(sp)
-        jsr     ReadSectorsSUB
-        movem.l (sp)+,d2-d7/a2-a6
-        rts
-
 | int seek_cd(int lba);
         .global seek_cd
 seek_cd:
@@ -592,6 +581,26 @@ dma_cd_sector_prg:
         movea.l 4(sp),a0                /* buffer */
         movem.l d2-d7/a2-a6,-(sp)
         jsr     ReadSectorDMA
+        movem.l (sp)+,d2-d7/a2-a6
+        rts
+
+| int dma_cd_sector_wram(void *buffer);
+        .global dma_cd_sector_wram
+dma_cd_sector_wram:
+        move.w  #0x7,d0                 /* set CDC Mode destination device to PRG RAM DMA */
+        movea.l 4(sp),a0                /* buffer */
+        movem.l d2-d7/a2-a6,-(sp)
+        jsr     ReadSectorDMA
+        movem.l (sp)+,d2-d7/a2-a6
+        rts
+
+| int stop_read_cd();
+        .global stop_read_cd
+stop_read_cd:
+        move.l  4(sp),d0                /* lba */
+        move.l  8(sp),d1                /* length */
+        movem.l d2-d7/a2-a6,-(sp)
+        jsr     StopReadCD
         movem.l (sp)+,d2-d7/a2-a6
         rts
 
@@ -960,7 +969,7 @@ ReadSectorDMA:
 
         move.b  d0,0x8004.w
         move.l  8(sp),d0
-        lsr.w   #3,d0
+        lsr.l   #3,d0
         move.w  d0,0x800A.w             /* DMA destination address */
 
         move.w  #0x008B,d0              /* CDCREAD */
@@ -981,6 +990,15 @@ ReadSectorDMA:
 
         lea     16(sp),sp               /* cleanup stack */
         moveq   #1,d0
+        rts
+
+StopReadCD:
+        movem.l d0-d1/a0-a1,-(sp)
+
+        move.w  #0x0089,d0              /* CDCSTOP */
+        jsr     0x5F22.w                /* call CDBIOS function */
+
+        lea     16(sp),sp               /* cleanup stack */
         rts
 
 | Sub-CPU variables
