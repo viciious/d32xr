@@ -49,12 +49,13 @@ typedef struct
 	faces_t		facenum;
 	boolean 	ticking;
 
-	boolean		earlyexit;
+	boolean		exit;
 	boolean		statsdrawn;
 	boolean		valsdrawn;
 	boolean		negativefrag[MAXPLAYERS];
 	int			killvalue[2], itemvalue[2], secretvalue[2], fragvalue[2];
 	int 		timevalue;
+	int 		exittic;
 
 	jagobj_t	*i_secret, *i_percent, *i_level, *i_kills,
 					*i_items, *i_finish, *i_frags, *i_par, *i_time;
@@ -185,7 +186,7 @@ void IN_NetgameDrawer(void)
 	int		i;
 	int length;
 
-	if(interm->earlyexit == true)
+	if(interm->exit == true)
 		for (i = 0; i < MAXPLAYERS; i++)
 		{
 			interm->killvalue[i] = interm->pstats[i].killpercent;
@@ -202,10 +203,13 @@ void IN_NetgameDrawer(void)
 		const char *mapname = DMAPINFO_STRFIELD(gamemapinfo, name);
 		const char *nextmapname = interm->nextmapinfo ? DMAPINFO_STRFIELD(interm->nextmapinfo, name) : "";
 
-		if (*mapname != '\0')
+		if (!interm->exit)
 		{
-			length = mystrlen(mapname);
-			print((320 - (length * 14)) >> 1, 10, mapname);
+			if (*mapname != '\0')
+			{
+				length = mystrlen(mapname);
+				print((320 - (length * 14)) >> 1, 10, mapname);
+			}
 		}
 
 		if (*nextmapname != '\0')
@@ -282,7 +286,7 @@ void IN_SingleDrawer(void)
 {
 	int length;
 	
-	if(interm->earlyexit == true)
+	if(interm->exit == true)
 	{
 		interm->killvalue[0] = interm->pstats[0].killpercent;
 		interm->itemvalue[0] = interm->pstats[0].itempercent;
@@ -295,8 +299,26 @@ void IN_SingleDrawer(void)
 	if (statsdrawn == false)
 #endif
 	{
+		boolean countdown = interm->exit && ticon >= interm->exittic + 30;
 		const char *mapname = DMAPINFO_STRFIELD(gamemapinfo, name);
 		const char *nextmapname = interm->nextmapinfo ? DMAPINFO_STRFIELD(interm->nextmapinfo, name) : "";
+
+		if (*nextmapname == '\0')
+			nextmapname = "NEXT LEVEL";
+
+		if (countdown)
+		{
+			int sec = 0;
+			sec = (unsigned)(ticon - (interm->exittic + 30)) / 16;
+			if (!(sec & 1))
+			{
+				length = mystrlen("Entering");
+				print( (320 - (length * 14)) >> 1, 10, "Entering");
+				length = mystrlen(nextmapname);
+				print( (320 - (length*14)) >> 1, 34, nextmapname);
+			}
+			return;
+		}
 
 		if (*mapname != '\0')
 		{
@@ -304,14 +326,6 @@ void IN_SingleDrawer(void)
 			print((320 - (length * 14)) >> 1, 10, mapname);
 			length = mystrlen("Finished");
 			print((320 - (length * 14)) >> 1, 34, "Finished");
-		}
-
-		if (*nextmapname != '\0')
-		{
-			length = mystrlen("Entering");
-			print( (320 - (length * 14)) >> 1, 162, "Entering");	
-			length = mystrlen(nextmapname);
-			print( (320 - (length*14)) >> 1, 182, nextmapname);
 		}
 
 		DrawJagobj(interm->i_kills, 71, KVALY - 10);
@@ -348,7 +362,7 @@ void IN_Start (void)
 	interm = Z_Malloc(sizeof(*interm), PU_STATIC);
 	D_memset(interm, 0, sizeof(*interm));
 
-	interm->earlyexit = false;
+	interm->exit = false;
 
 	interm->valsdrawn = false;
 
@@ -493,7 +507,14 @@ int IN_Ticker (void)
 		return 1;
 	if (ticon < 5)
 		return 0;		/* don't exit immediately */
-	
+
+	if (interm->exit)
+	{
+		if (ticon > interm->exittic + 100)
+			return 1;
+		return 0;
+	}
+
 	for (i=0 ; i<= (netgame > gt_single) ; i++)
 	{
 		buttons = players[i].ticbuttons;
@@ -502,24 +523,27 @@ int IN_Ticker (void)
 	/* exit menu if button press */
 		if ( (buttons & BT_ATTACK) && !(oldbuttons & BT_ATTACK) )
 		{
-			if (!interm->earlyexit)
+			if (!interm->exit && interm->ticking)
 				S_StartSound(0, sfx_barexp);
-			interm->earlyexit = true;
-			return 1;		/* done with intermission */
+			interm->exit = true;
+			interm->exittic = ticon;
+			return 0;		/* done with intermission */
 		}
 		if ( (buttons & BT_SPEED) && !(oldbuttons & BT_SPEED) )
 		{
-			if (!interm->earlyexit)
+			if (!interm->exit && interm->ticking)
 				S_StartSound(0, sfx_barexp);
-			interm->earlyexit = true;
-			return 1;		/* done with intermission */
+			interm->exit = true;
+			interm->exittic = ticon;
+			return 0;		/* done with intermission */
 		}
 		if ( (buttons & BT_USE) && !(oldbuttons & BT_USE) )
 		{
-			if (!interm->earlyexit)
+			if (!interm->exit && interm->ticking)
 				S_StartSound(0, sfx_barexp);
-			interm->earlyexit = true;
-			return 1;		/* done with intermission */
+			interm->exit = true;
+			interm->exittic = ticon;
+			return 0;		/* done with intermission */
 		}
 	}
 	
