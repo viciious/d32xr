@@ -90,7 +90,7 @@ static VINT	movecount;
 static VINT	uchar;
 
 static VINT	o_cursor1, o_cursor2;
-static VINT	o_slider, o_slidertrack;
+static VINT	o_slider, o_sliderml, o_slidermm, o_slidermr;
 
 static VINT m_help;
 
@@ -155,7 +155,9 @@ void O_Init (void)
 	o_cursor1 = W_CheckNumForName("M_SKULL1");
 	o_cursor2 = W_CheckNumForName("M_SKULL2");
 	o_slider = W_CheckNumForName("O_SLIDER");
-	o_slidertrack = W_CheckNumForName("O_STRACK");
+	o_sliderml = W_CheckNumForName("O_STRAML");
+	o_slidermm = W_CheckNumForName("O_STRAMM");
+	o_slidermr = W_CheckNumForName("O_STRAMR");
 
 	o_musictype = musictype;
 	o_sfxdriver = sfxdriver;
@@ -829,8 +831,14 @@ void O_Drawer (void)
 
 		if(items[i].slider)
 		{
+			int j;
 			slider_t* slider = &sliders[items[i].slider-1];
-			DrawJagobjLump(o_slidertrack, items[i].x + 2, items[i].y + ITEMSPACE, NULL, NULL);
+
+			DrawJagobjLump(o_sliderml, items[i].x + 2, items[i].y + ITEMSPACE, NULL, NULL);
+			for (j = 0; j < SLIDEWIDTH; j+=8)
+				DrawJagobjLump(o_slidermm, items[i].x + 2 + 6 + j, items[i].y + ITEMSPACE, NULL, NULL);
+			DrawJagobjLump(o_slidermr, items[i].x + 2 + 6 + j, items[i].y + ITEMSPACE, NULL, NULL);
+
 			offset = (slider->curval * SLIDEWIDTH) / slider->maxval;
 			DrawJagobjLump(o_slider, items[i].x + 7 + offset, items[i].y + ITEMSPACE, NULL, NULL);
 /*			ST_Num(menuitem[i].x + o_slider->width + 10,	 */
