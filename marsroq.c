@@ -568,6 +568,7 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
     int ctrl = 0, prev_ctrl = 0, ch_ctrl = 0;
     int framecount = 0;
     int extratics = 0;
+    unsigned starttics;
 
     if (!allowpause && (Mars_ReadController(0) & SEGA_CTRL_START)) {
         return 0;
@@ -621,9 +622,12 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
         return -1;
     }
 
-    // buffer some initial data
+    // buffer some initial data, but not for too long
+    starttics = Mars_GetTicCount();
     while (roq_buffer(ri->fp) == 1) {
-        ;
+        if (Mars_GetTicCount() > starttics + 300) {
+            break;
+        }
     }
 
     // init sound DMA on the secondary CPU
@@ -639,7 +643,6 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
     while(1)
     {
         int ret;
-        unsigned starttics;
         unsigned waittics, extrawait;
         unsigned extratwait_int, extratwait_frac;
 

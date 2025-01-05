@@ -392,10 +392,13 @@ void IN_Start (void)
 
 	/* build a temp in-memory PWAD */
 	lumps[0] = - 1;
-	if (gameaction == ga_secretexit && gamemapinfo->secretInterPic)
-		lumps[0] = W_CheckNumForName(DMAPINFO_STRFIELD(gamemapinfo, secretInterPic));
-	else if (gamemapinfo->interPic)
-		lumps[0] = W_CheckNumForName(DMAPINFO_STRFIELD(gamemapinfo, interPic));
+	if (netgame != gt_deathmatch)
+	{
+		if (gameaction == ga_secretexit && gamemapinfo->secretInterPic)
+			lumps[0] = W_CheckNumForName(DMAPINFO_STRFIELD(gamemapinfo, secretInterPic));
+		else if (gamemapinfo->interPic)
+			lumps[0] = W_CheckNumForName(DMAPINFO_STRFIELD(gamemapinfo, interPic));
+	}
 
 	if (lumps[0] == -1)
 		lumps[0] = W_CheckNumForName("INTERPIC");
@@ -409,10 +412,13 @@ void IN_Start (void)
 	W_CacheWADLumps(li, 7, lumps, true);
 
 	l = -1;
-	if (gameaction == ga_secretexit && gamemapinfo->secretInterPic)
-		l = W_CheckNumForName(DMAPINFO_STRFIELD(gamemapinfo, secretInterPic));
-	else if (gamemapinfo->interPic)
-		l = W_CheckNumForName(DMAPINFO_STRFIELD(gamemapinfo, interPic));
+	if (netgame != gt_deathmatch)
+	{
+		if (gameaction == ga_secretexit && gamemapinfo->secretInterPic)
+			l = W_CheckNumForName(DMAPINFO_STRFIELD(gamemapinfo, secretInterPic));
+		else if (gamemapinfo->interPic)
+			l = W_CheckNumForName(DMAPINFO_STRFIELD(gamemapinfo, interPic));
+	}
 
 	if (l == -1)
 		l = W_CheckNumForName("INTERPIC");
