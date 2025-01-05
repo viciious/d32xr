@@ -51,7 +51,7 @@
 #define MAX_SECTOR_ATTEMPTS 0xFFFF
 
 typedef struct {
-    volatile int blk;
+    volatile int blk, last_blk;
     volatile intptr_t dest;
     volatile int attempts;
     volatile uint16_t cnt;
@@ -98,6 +98,27 @@ static void stream_tcb(timercbarg_t *t)
     t->attempts = MAX_SECTOR_ATTEMPTS;
 }
 
+static int stream_bread(timercbarg_t *t, void *dest, int nblk)
+{
+    if (t->blk + nblk > t->last_blk + 1) {
+        nblk = t->last_blk - t->blk + 1;
+    }
+
+    if (!nblk) {
+        return 0;
+    }
+
+    t->r = 0;
+    t->dest = (intptr_t)dest;
+    t->cnt = 0;
+    t->attempts = MAX_SECTOR_ATTEMPTS;
+    t->is_reading = 1;
+    t->len = nblk;
+    begin_read_cd(t->blk, nblk);
+
+    return nblk;
+}
+
 static int stream_twait(timercbarg_t *t)
 {
     if (!t->is_reading) {
@@ -126,19 +147,23 @@ void stream_cd(int blk, int length, uint8_t *buf)
     timercbarg_t t;
 
     memset(&t, 0, sizeof(t));
+    t.blk = blk;
+    t.last_blk = last_blk;
 
-    read_sectors(wram, blk, CHUNK_BLOCKS);
-    blk += CHUNK_BLOCKS;
+    pcm_start_timer((void (*)(void *))stream_tcb, &t);
+
+    stream_bread(&t, wram, CHUNK_BLOCKS);
+    stream_twait(&t);
 
     switch_banks();
 
     // read the next chunk into the other bank
-    read_sectors(wram, blk, CHUNK_BLOCKS);
-    blk += CHUNK_BLOCKS;
+    stream_bread(&t, wram, CHUNK_BLOCKS);
+    stream_twait(&t);
 
     // cache the next few chunks in PRG RAM
-    read_sectors(buf, blk, CHUNK_BLOCKS*CHUNKS_INWRAM);
-    blk += CHUNK_BLOCKS*CHUNKS_INWRAM;
+    stream_bread(&t, buf, CHUNK_BLOCKS*CHUNKS_INWRAM);
+    stream_twait(&t);
 
     SCD_COMMREG_RW0 = wram_ofs; // tell the MD where the data will be going to in WORD RAM
     SCD_COMMFL_1 = 'D'; // sub comm port = DONE
@@ -147,9 +172,6 @@ void stream_cd(int blk, int length, uint8_t *buf)
 
     read_ofs = 0;
     write_ofs = 0;
-    t.blk = blk;
-
-    pcm_start_timer((void (*)(void *))stream_tcb, &t);
 
     while (1)
     {
@@ -181,20 +203,8 @@ void stream_cd(int blk, int length, uint8_t *buf)
             stream_twait(&t);
 
             // begin reading the next chunk
-            nblk = CHUNK_CACHE_BLOCKS/2;
-            if (t.blk + nblk > last_blk + 1) {
-                nblk = last_blk - t.blk + 1;
-            }
-
+            nblk = stream_bread(&t, buf + write_ofs, CHUNK_CACHE_BLOCKS/2);
             if (nblk > 0) {
-                t.r = 0;
-                t.dest = (intptr_t)buf + write_ofs;
-                t.cnt = 0;
-                t.attempts = MAX_SECTOR_ATTEMPTS;
-                t.is_reading = 1;
-                t.len = nblk;
-                begin_read_cd(t.blk, nblk);
-
                 write_ofs += CHUNK_CACHE_SIZE/2;
                 if (write_ofs >= CHUNK_CACHE_SIZE)
                     write_ofs = 0;
