@@ -15,7 +15,7 @@ CCFLAGS = -c -std=c11 -m2 -mb
 CCFLAGS += -Wall -Wextra -pedantic -Wno-unused-parameter -Wimplicit-fallthrough=0 -Wno-missing-field-initializers -Wnonnull
 CCFLAGS += -D__32X__ -DMARS
 CCFLAGS += -DDISABLE_DMA_SOUND
-LDFLAGS = -T mars-ssf.ld -Wl,-Map=output.map -nostdlib -Wl,--gc-sections --specs=nosys.specs
+LDFLAGS = -T mars-ssf.ld -Wl,-Map=output.map -nostdlib -Wl,--gc-sections,--sort-section=alignment --specs=nosys.specs
 ASFLAGS = --big
 ifdef ENABLE_FIRE_ANIMATION
 CCFLAGS += -DENABLE_FIRE_ANIMATION
@@ -30,7 +30,7 @@ MARSHWCFLAGS := $(CCFLAGS)
 MARSHWCFLAGS += -O1 -fno-lto
 
 release: CCFLAGS += -Os -fomit-frame-pointer -ffast-math -funroll-loops -fno-align-loops -fno-align-jumps -fno-align-labels
-release: CCFLAGS += -ffunction-sections -fdata-sections -flto=auto
+release: CCFLAGS += -fno-common -ffunction-sections -fdata-sections -flto=auto
 release: LDFLAGS += -Os -flto=auto
 
 debug: CCFLAGS += -g -ggdb -fomit-frame-pointer
