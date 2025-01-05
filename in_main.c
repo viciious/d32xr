@@ -391,7 +391,14 @@ void IN_Start (void)
 	W_LoadPWAD(PWAD_CD);
 
 	/* build a temp in-memory PWAD */
-	lumps[0] = W_CheckNumForName("INTERPIC");
+	lumps[0] = - 1;
+	if (gameaction == ga_secretexit && gamemapinfo->secretInterPic)
+		lumps[0] = W_CheckNumForName(DMAPINFO_STRFIELD(gamemapinfo, secretInterPic));
+	else if (gamemapinfo->interPic)
+		lumps[0] = W_CheckNumForName(DMAPINFO_STRFIELD(gamemapinfo, interPic));
+
+	if (lumps[0] == -1)
+		lumps[0] = W_CheckNumForName("INTERPIC");
 	lumps[1] = W_CheckNumForName("I_SECRET");
 	lumps[2] = W_CheckNumForName("PERCENT");
 	lumps[3] = W_CheckNumForName("I_LEVEL");
@@ -401,7 +408,14 @@ void IN_Start (void)
 
 	W_CacheWADLumps(li, 7, lumps, true);
 
-	l = W_CheckNumForName("INTERPIC");
+	l = -1;
+	if (gameaction == ga_secretexit && gamemapinfo->secretInterPic)
+		l = W_CheckNumForName(DMAPINFO_STRFIELD(gamemapinfo, secretInterPic));
+	else if (gamemapinfo->interPic)
+		l = W_CheckNumForName(DMAPINFO_STRFIELD(gamemapinfo, interPic));
+
+	if (l == -1)
+		l = W_CheckNumForName("INTERPIC");
 	if (l != -1)
 		interm->interpic = W_CacheLumpNum(l, PU_STATIC);
 	else

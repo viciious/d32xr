@@ -41,6 +41,8 @@ typedef struct
 	char *interText;
 	char *secretInterText;
 	char *interFlat;
+	char *interPic;
+	char *secretInterPic;
 } dworkmapinfo_t;
 
 typedef void (*kvcall_t) (char *key, char *value, void *ptr);
@@ -308,6 +310,10 @@ static void G_AddMapinfoKey(char* key, char* value, dworkmapinfo_t* mi)
 		mi->secretInterText = value;
 	else if (!D_strcasecmp(key, "intermissionFlat"))
 		mi->interFlat = value;
+	else if (!D_strcasecmp(key, "intermissionPic"))
+		mi->interPic = value;
+	else if (!D_strcasecmp(key, "secretIntermissionPic"))
+		mi->secretInterPic = value;
 }
 
 static void G_FixSPCMDirList(dgameinfo_t *gi)
@@ -419,6 +425,8 @@ static dmapinfo_t *G_CompressMapInfo(dworkmapinfo_t *mi)
 	ALLOC_STR_FIELD(secretInterText);
 	ALLOC_STR_FIELD(sky);
 	ALLOC_STR_FIELD(interFlat);
+	ALLOC_STR_FIELD(interPic);
+	ALLOC_STR_FIELD(secretInterPic);
 
 	buf = Z_Malloc(size, PU_STATIC);
 	D_memset(buf, 0, size);
@@ -449,6 +457,8 @@ static dmapinfo_t *G_CompressMapInfo(dworkmapinfo_t *mi)
 	COPY_STR_FIELD(secretInterText);
 	COPY_STR_FIELD(sky);
 	COPY_STR_FIELD(interFlat);
+	COPY_STR_FIELD(interPic);
+	COPY_STR_FIELD(secretInterPic);
 
 	return nmi;
 }
