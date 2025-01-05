@@ -17,7 +17,7 @@ HWCCFLAGS += -DENABLE_SSF_MAPPER
 CCFLAGS += -DENABLE_SSF_MAPPER
 ASFLAGS += --defsym ENABLE_SSF_MAPPER=1
 endif
-LINKFLAGS = -T $(LDSCRIPTSDIR)/mars-md.ld -Wl,-Map=output.map -nostdlib -flto
+LINKFLAGS = -T $(LDSCRIPTSDIR)/mars-md.ld -Wl,-Map=output.map -nostdlib -Os -flto
 
 PREFIX = $(ROOTDIR)/m68k-elf/bin/m68k-elf-
 CC = $(PREFIX)gcc

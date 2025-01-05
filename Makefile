@@ -30,10 +30,10 @@ MARSHWCFLAGS := $(CCFLAGS)
 MARSHWCFLAGS += -O1 -fno-lto
 
 release: CCFLAGS += -Os -fomit-frame-pointer -ffast-math -funroll-loops -fno-align-loops -fno-align-jumps -fno-align-labels
-release: CCFLAGS += -ffunction-sections -fdata-sections -flto
-release: LDFLAGS += -flto=3
+release: CCFLAGS += -ffunction-sections -fdata-sections -flto=auto
+release: LDFLAGS += -Os -flto=auto
 
-debug: CCFLAGS += -g -Os -ggdb -fomit-frame-pointer
+debug: CCFLAGS += -g -ggdb -fomit-frame-pointer
 debug: MARSHWCFLAGS += -ggdb -fomit-frame-pointer
 
 PREFIX = $(ROOTDIR)/sh-elf/bin/sh-elf-
