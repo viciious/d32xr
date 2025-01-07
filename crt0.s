@@ -445,6 +445,8 @@ pri_irq:
         mov.l   r2,@-r15
 
         stc     sr,r1                   /* SR holds IRQ level in I3-I0 */
+        mov     #0x10,r2
+        or      r2,r1                   /* IRQ level for bumped irq */
         mov.w   p_int_off,r2
         ldc     r2,sr                   /* disallow ints */
 
@@ -457,10 +459,10 @@ pri_irq:
         mov     r1,r0
         shlr2   r0
         and     #0x3C,r0                /* int level to table offset */
-        mov.l   p_int_jtable,r1
-        mov.l   @(r0,r1),r0
+        mov.l   p_int_jtable,r2
+        mov.l   @(r0,r2),r0
         jsr     @r0
-        nop
+        ldc     r1,sr                   /* restore IRQ level */
 
         lds.l   @r15+,pr
         mov.l   @r15+,r2
@@ -1040,6 +1042,8 @@ sec_irq:
         mov.l   r2,@-r15
 
         stc     sr,r1                   /* SR holds IRQ level in I3-I0 */
+        mov     #0x10,r2
+        or      r2,r1                   /* IRQ level for bumped irq */
         mov.w   s_int_off,r2
         ldc     r2,sr                   /* disallow ints */
 
@@ -1052,10 +1056,10 @@ sec_irq:
         mov     r1,r0
         shlr2   r0
         and     #0x3C,r0                /* int level to table offset */
-        mov.l   s_int_jtable,r1
-        mov.l   @(r0,r1),r0
+        mov.l   s_int_jtable,r2
+        mov.l   @(r0,r2),r0
         jsr     @r0
-        nop
+        ldc     r1,sr                   /* restore IRQ level */
 
         lds.l   @r15+,pr
         mov.l   @r15+,r2

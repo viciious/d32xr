@@ -32,6 +32,9 @@ static char mars_gamepadport[MARS_MAX_CONTROLLERS];
 static char mars_mouseport;
 static volatile uint16_t mars_controlval[2];
 
+volatile unsigned int mars_thru_rgb = 0;
+volatile unsigned int mars_hblank_count = 0;
+
 volatile unsigned mars_vblank_count = 0;
 volatile unsigned mars_pwdt_ovf_count = 0;
 volatile unsigned mars_swdt_ovf_count = 0;
@@ -816,6 +819,7 @@ void Mars_Finish(void)
 void pri_vbi_handler(void)
 {
 	mars_vblank_count++;
+	mars_hblank_count = 0;
 
 	if (mars_newpalette)
 	{
