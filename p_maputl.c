@@ -279,10 +279,10 @@ void P_UnsetThingPosition (mobj_t *thing)
 			blocky = thing->y - bmaporgy;
 			if (blockx >= 0 && blocky >= 0)
 			{
-				blockx = (unsigned)blockx >> THINGBLOCKSHIFT;
-				blocky = (unsigned)blocky >> THINGBLOCKSHIFT;
-				if (blockx < bthingwidth && blocky <bthingheight)
-					blocklinks[blocky*bthingwidth+blockx] = thing->bnext;
+				blockx = (unsigned)blockx >> MAPBLOCKSHIFT;
+				blocky = (unsigned)blocky >> MAPBLOCKSHIFT;
+				if (blockx < bmapwidth && blocky <bmapheight)
+					blocklinks[blocky*bmapwidth+blockx] = thing->bnext;
 			}
 		}
 	}
@@ -327,11 +327,11 @@ void P_SetThingPosition2 (mobj_t *thing, subsector_t *ss)
 		blocky = thing->y - bmaporgy;
 		if (blockx>=0 && blocky>=0)
 		{
-			blockx = (unsigned)blockx >> THINGBLOCKSHIFT;
-			blocky = (unsigned)blocky >> THINGBLOCKSHIFT;
-			if (blockx < bthingwidth && blocky <bthingheight)
+			blockx = (unsigned)blockx >> MAPBLOCKSHIFT;
+			blocky = (unsigned)blocky >> MAPBLOCKSHIFT;
+			if (blockx < bmapwidth && blocky <bmapheight)
 			{
-				link = &blocklinks[blocky*bthingwidth+blockx];
+				link = &blocklinks[blocky*bmapwidth+blockx];
 				thing->bprev = NULL;
 				thing->bnext = *link;
 				if (*link)
@@ -439,7 +439,7 @@ boolean P_BlockThingsIterator (int x, int y, blockthingsiter_t func, void *userp
 	//if (x<0 || y<0 || x>=bmapwidth || y>=bmapheight)
 	//	return true;
 
-	for (mobj = blocklinks[y*bthingwidth+x] ; mobj ; mobj = mobj->bnext)
+	for (mobj = blocklinks[y*bmapwidth+x] ; mobj ; mobj = mobj->bnext)
 		if (!func( mobj, userp ) )
 			return false;	
 

@@ -226,15 +226,15 @@ boolean PIT_CheckPosition(pmovework_t *w)
 	if(xh < 0)
 		return true;
 
-   xl = (unsigned)xl >> THINGBLOCKSHIFT;
-   xh = (unsigned)xh >> THINGBLOCKSHIFT;
-   yl = (unsigned)yl >> THINGBLOCKSHIFT;
-   yh = (unsigned)yh >> THINGBLOCKSHIFT;
+   xl = (unsigned)xl >> MAPBLOCKSHIFT;
+   xh = (unsigned)xh >> MAPBLOCKSHIFT;
+   yl = (unsigned)yl >> MAPBLOCKSHIFT;
+   yh = (unsigned)yh >> MAPBLOCKSHIFT;
 
-   if(xh >= bthingwidth)
-      xh = bthingwidth - 1;
-   if(yh >= bthingheight)
-      yh = bthingheight - 1;
+   if(xh >= bmapwidth)
+      xh = bmapwidth - 1;
+   if(yh >= bmapheight)
+      yh = bmapheight - 1;
 
    // check things
    for(bx = xl; bx <= xh; bx++)

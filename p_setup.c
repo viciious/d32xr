@@ -30,7 +30,6 @@ side_t		*sides;
 short		*blockmaplump;			/* offsets in blockmap are from here */
 int			bmapwidth, bmapheight;	/* in mapblocks */
 fixed_t		bmaporgx, bmaporgy;		/* origin of block map */
-int			bthingwidth, bthingheight;
 mobj_t		**blocklinks;			/* for thing chains */
 
 byte		*rejectmatrix;			/* for fast sight rejection */
@@ -562,11 +561,8 @@ void P_LoadBlockMap (int lump)
 	bmapwidth = blockmaplump[2];
 	bmapheight = blockmaplump[3];
 
-	bthingwidth = (((bmapwidth - 1) * MAPBLOCKUNITS) / THINGBLOCKUNITS) + 1;
-	bthingheight = (((bmapheight - 1) * MAPBLOCKUNITS) / THINGBLOCKUNITS) + 1;
-
 /* clear out mobj chains */
-	count = sizeof(*blocklinks)* bthingwidth*bthingheight;
+	count = sizeof(*blocklinks)* bmapwidth*bmapheight;
 	blocklinks = Z_Malloc (count,PU_LEVEL);
 	D_memset (blocklinks, 0, count);
 }
@@ -680,19 +676,19 @@ void P_GroupLines (void)
 		sector->soundorg[1] = ((bbox[BOXTOP]+bbox[BOXBOTTOM])/2) >> FRACBITS;
 		
 		/* adjust bounding box to map blocks */
-		block = (bbox[BOXTOP]-bmaporgy+MAXRADIUS)>>THINGBLOCKSHIFT;
-		block = block >= bthingheight ? bthingheight-1 : block;
+		block = (bbox[BOXTOP]-bmaporgy+MAXRADIUS)>>MAPBLOCKSHIFT;
+		block = block >= bmapheight ? bmapheight-1 : block;
 		sector->blockbox[BOXTOP]=block;
 
-		block = (bbox[BOXBOTTOM]-bmaporgy-MAXRADIUS)>>THINGBLOCKSHIFT;
+		block = (bbox[BOXBOTTOM]-bmaporgy-MAXRADIUS)>>MAPBLOCKSHIFT;
 		block = block < 0 ? 0 : block;
 		sector->blockbox[BOXBOTTOM]=block;
 
-		block = (bbox[BOXRIGHT]-bmaporgx+MAXRADIUS)>>THINGBLOCKSHIFT;
-		block = block >= bthingwidth ? bthingwidth-1 : block;
+		block = (bbox[BOXRIGHT]-bmaporgx+MAXRADIUS)>>MAPBLOCKSHIFT;
+		block = block >= bmapwidth ? bmapwidth-1 : block;
 		sector->blockbox[BOXRIGHT]=block;
 
-		block = (bbox[BOXLEFT]-bmaporgx-MAXRADIUS)>>THINGBLOCKSHIFT;
+		block = (bbox[BOXLEFT]-bmaporgx-MAXRADIUS)>>MAPBLOCKSHIFT;
 		block = block < 0 ? 0 : block;
 		sector->blockbox[BOXLEFT]=block;
 

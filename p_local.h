@@ -23,8 +23,6 @@
 #define	MAPBMASK		(MAPBLOCKSIZE-1)
 #define	MAPBTOFRAC		(MAPBLOCKSHIFT-FRACBITS)
 
-#define THINGBLOCKUNITS	256
-#define	THINGBLOCKSHIFT	(FRACBITS+8)
 
 /* player radius for movement checking */
 #define	PLAYERRADIUS	16*FRACUNIT
@@ -288,7 +286,6 @@ extern	byte		*rejectmatrix;			/* for fast sight rejection */
 extern	short		*blockmaplump;		/* offsets in blockmap are from here */
 extern	int			bmapwidth, bmapheight;	/* in mapblocks */
 extern	fixed_t		bmaporgx, bmaporgy;		/* origin of block map */
-extern	int			bthingwidth, bthingheight;	/* in thingblocks */
 extern	mobj_t		**blocklinks;			/* for thing chains */
 
 extern	int			numthings;
