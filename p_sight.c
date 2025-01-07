@@ -155,12 +155,13 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
 
    for( ; count; seg++, count--)
    {
-      line = &lines[seg->linedef];
+      int ld = seg->linedef>>5;
+      line = &lines[ld];
 
       // allready checked other side?
-      if(lvalidcount[seg->linedef] == vc)
+      if(lvalidcount[ld] == vc)
          continue;
-      lvalidcount[seg->linedef] = vc;
+      lvalidcount[ld] = vc;
 
       v1 = &vertexes[line->v1];
       v2 = &vertexes[line->v2];
@@ -188,7 +189,7 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
          return false;
 
       // crosses a two sided line
-      side = seg->sideoffset & 1;
+      side = SEG_UNPACK_SIDE(seg);
       front = &sectors[sides[line->sidenum[side]].sector];
       back = &sectors[sides[line->sidenum[side^1]].sector];
 

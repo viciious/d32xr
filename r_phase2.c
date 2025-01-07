@@ -98,15 +98,17 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
     fixed_t      scalefrac, scale2;
     fixed_t      hyp;
     fixed_t      x1, y1, x2, y2;
+    int          nv1 = seg->v1>>5;
+    int          nv2 = seg->v2>>5;
 
     // this is essentially R_StoreWallRange
     // calculate rw_distance for scale calculation
 
-    x1 = verts[seg->v1].x << FRACBITS;
-    y1 = verts[seg->v1].y << FRACBITS;
+    x1 = verts[nv1].x << FRACBITS;
+    y1 = verts[nv1].y << FRACBITS;
 
-    x2 = verts[seg->v2].x << FRACBITS;
-    y2 = verts[seg->v2].y << FRACBITS;
+    x2 = verts[nv2].x << FRACBITS;
+    y2 = verts[nv2].y << FRACBITS;
 
     hyp = R_PointToDist(x1, y1);
 

@@ -373,7 +373,7 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
 
    for(; count; seg++, count--)
    {
-      int ld = seg->linedef;
+      int ld = seg->linedef>>5;
       line = &lines[ld];
 
       if(lvalidcount[ld] == vc)

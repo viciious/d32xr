@@ -187,7 +187,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
 {
    seg_t     *seg  = segl->seg;
    line_t    *li   = rbsp->curldef;
-   short      offset = seg->sideoffset >> 1;
+   short      offset = SEG_UNPACK_OFFSET(seg);
    side_t    *si   = rbsp->curside;
    sector_t  *front_sector = rbsp->curfsector, *back_sector = rbsp->curbsector;
    fixed_t    f_floorheight, f_ceilingheight;
@@ -564,23 +564,25 @@ static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
    line_t *ldef;
    side_t *sidedef;
    boolean solid;
+   int nv1 = line->v1>>5;
+   int nv2 = line->v2>>5;
 
-   v1.x = vertexes[line->v1].x << FRACBITS;
-   v1.y = vertexes[line->v1].y << FRACBITS;
-   v2.x = vertexes[line->v2].x << FRACBITS;
-   v2.y = vertexes[line->v2].y << FRACBITS;
+   v1.x = vertexes[nv1].x << FRACBITS;
+   v1.y = vertexes[nv1].y << FRACBITS;
+   v2.x = vertexes[nv2].x << FRACBITS;
+   v2.y = vertexes[nv2].y << FRACBITS;
 
-   if (line->v1 == rbsp->lastv2)
+   if (nv1 == rbsp->lastv2)
       angle1 = rbsp->lastangle2;
    else
       angle1 = R_PointToAngle(vd->viewx, vd->viewy, v1.x, v1.y);
-   if (line->v2 == rbsp->lastv1)
+   if (nv2 == rbsp->lastv1)
       angle2 = rbsp->lastangle1;
    else
       angle2 = R_PointToAngle(vd->viewx, vd->viewy, v2.x, v2.y);
 
-   rbsp->lastv1 = line->v1;
-   rbsp->lastv2 = line->v2;
+   rbsp->lastv1 = nv1;
+   rbsp->lastv2 = nv2;
    rbsp->lastangle1 = angle1;
    rbsp->lastangle2 = angle2;
 
@@ -591,8 +593,8 @@ static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
    x1 = x1 >>    16;
 
    // decide which clip routine to use
-   side = line->sideoffset & 1;
-   ldef = &lines[line->linedef];
+   side = SEG_UNPACK_SIDE(line);
+   ldef = &lines[line->linedef>>5];
    frontsector = rbsp->curfsector;
    backsector = (ldef->flags & ML_TWOSIDED) ? &sectors[sides[ldef->sidenum[side^1]].sector] : 0;
    sidedef = &sides[ldef->sidenum[side]];

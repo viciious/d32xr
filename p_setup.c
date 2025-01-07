@@ -89,7 +89,7 @@ void P_LoadSegs (int lump)
 	int			i;
 	mapseg_t	*ml;
 	seg_t		*li;
-	int			linedef, side;
+	int			linedef, offset, side;
 
 	numsegs = W_LumpLength (lump) / sizeof(mapseg_t);
 	segs = Z_Malloc (numsegs*sizeof(seg_t)+16,PU_LEVEL);
@@ -101,19 +101,18 @@ void P_LoadSegs (int lump)
 	li = segs;
 	for (i=0 ; i<numsegs ; i++, li++, ml++)
 	{
-		li->v1 = LITTLESHORT(ml->v1);
-		li->v2 = LITTLESHORT(ml->v2);
+		li->v1 = (unsigned)LITTLESHORT(ml->v1)<<5;
+		li->v2 = (unsigned)LITTLESHORT(ml->v2)<<5;
 
-		li->sideoffset = LITTLESHORT(ml->offset);
-		linedef = LITTLESHORT(ml->linedef);
+		offset = (unsigned)LITTLESHORT(ml->offset);
+		linedef = (unsigned)LITTLESHORT(ml->linedef);
 
-		li->linedef = linedef;
+		li->linedef = linedef<<5;
 
-		side = LITTLESHORT(ml->side);
+		side = (unsigned)LITTLESHORT(ml->side);
 		side &= 1;
 
-		li->sideoffset <<= 1;
-		li->sideoffset |= side;
+		SEG_PACK_SIDE_OFFSET(li, offset, side);
 	}
 }
 
@@ -614,8 +613,8 @@ void P_GroupLines (void)
 		line_t* linedef;
 
 		seg = &segs[ss->firstline];
-		linedef = &lines[seg->linedef];
-		sidedef = &sides[linedef->sidenum[seg->sideoffset & 1]];
+		linedef = &lines[seg->linedef>>5];
+		sidedef = &sides[linedef->sidenum[SEG_UNPACK_SIDE(seg)]];
 		ss->sector = &sectors[sidedef->sector];
 	}
 
