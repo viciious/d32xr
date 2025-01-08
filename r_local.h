@@ -114,7 +114,6 @@ typedef struct line_s
 	VINT		sidenum[2];			/* sidenum[1] will be -1 if one sided */
 	VINT 		v1, v2;
 	uint8_t		flags, special;
-	uint16_t	tag;
 } line_t;
 
 #define LD_FRONTSECTOR(ld) (&sectors[sides[(ld)->sidenum[0]].sector])
@@ -225,6 +224,9 @@ extern	spritedef_t		*sprites;
 ===============================================================================
 */
 
+#define LINETAGS_HASH_BSHIFT 	4
+#define LINETAGS_HASH_SIZE 		(1<<LINETAGS_HASH_BSHIFT)
+
 extern	int			numvertexes;
 extern	mapvertex_t	*vertexes;
 
@@ -242,6 +244,9 @@ extern	node_t		*nodes;
 
 extern	int			numlines;
 extern	line_t		*lines;
+
+extern 	int 		numlinetags;
+extern 	int16_t 	*linetags;
 
 extern	int			numsides;
 extern	side_t		*sides;

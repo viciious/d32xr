@@ -24,6 +24,9 @@ node_t		*nodes;
 int			numlines;
 line_t		*lines;
 
+int 		numlinetags;
+int16_t 	*linetags; // [HASH_SIZE]{line,tag,line,tag...}
+
 int			numsides;
 side_t		*sides;
 
@@ -405,7 +408,30 @@ void P_LoadThings (int lump, boolean *havebossspit)
 		P_SpawnMapThing (mt, i);
 }
 
+void P_AddLineTag (int ld, int tag)
+{
+	VINT j;
+	VINT rowsize = (unsigned)numlinetags / LINETAGS_HASH_SIZE;
+	VINT h = (unsigned)ld % LINETAGS_HASH_SIZE;
+	VINT s = h * rowsize;
 
+	for (j = 0; j < numlinetags; j++)
+	{
+		int16_t *l;
+		VINT e;
+
+		e = s + j;
+		if (e >= numlinetags)
+			e -= numlinetags;
+
+		l = &linetags[e * 2];
+		if (l[0] == -1) {
+			l[0] = ld;
+			l[1] = tag;
+			break;
+		}
+	}
+}
 
 /*
 =================
@@ -428,14 +454,17 @@ void P_LoadLineDefs (int lump)
 	lines = (void*)(((uintptr_t)lines + 15) & ~15); // aline on cacheline boundary
 	D_memset (lines, 0, numlines*sizeof(line_t));
 	data = W_GetLumpData(lump);
+	numlinetags = 0;
 
 	mld = (maplinedef_t *)data;
 	ld = lines;
 	for (i=0 ; i<numlines ; i++, mld++, ld++)
 	{
+		int tag;
+
 		ld->flags = LITTLESHORT(mld->flags);
 		ld->special = LITTLESHORT(mld->special);
-		ld->tag = LITTLESHORT(mld->tag);
+		tag = LITTLESHORT(mld->tag);
 		ld->v1 = LITTLESHORT(mld->v1);
 		ld->v2 = LITTLESHORT(mld->v2);
 
@@ -450,10 +479,13 @@ void P_LoadLineDefs (int lump)
 		}
 		ld->flags &= ~ML_TWOSIDED;
 
+		if (tag)
+			numlinetags++;
+
 		// HACK HACK HACK
 		// backwards compatibility with JagDoom specials
 		// that use values typically reserved for Doom2 maps
-		if (ld->tag)
+		if (tag)
 			continue;
 
 		switch (ld->special)
@@ -479,6 +511,24 @@ void P_LoadLineDefs (int lump)
 			ld->special = ld->special - 80;
 			break;
 		}
+	}
+
+	// load tags into hash table
+
+	if (!numlinetags)
+		return;
+
+	numlinetags = (numlinetags + LINETAGS_HASH_SIZE - 1) & ~(LINETAGS_HASH_SIZE - 1);
+	linetags = Z_Malloc(sizeof(*linetags)*numlinetags*2, PU_LEVEL);
+	D_memset(linetags, -1, sizeof(*linetags)*numlinetags*2);
+
+	mld = (maplinedef_t *)data;
+	for (i=0 ; i<numlines ; i++, mld++)
+	{
+		int tag;
+		tag = LITTLESHORT(mld->tag);
+		if (tag)
+			P_AddLineTag(i, tag);
 	}
 }
 

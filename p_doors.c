@@ -123,15 +123,15 @@ void T_VerticalDoor (vldoor_t *door)
 /*		Move a door up/down and all around! */
 /* */
 /*================================================================== */
-int EV_DoDoor (line_t *line, vldoor_e  type)
+int EV_DoDoorTag (line_t *line, vldoor_e  type, int tag)
 {
 	int			secnum,rtn;
 	sector_t		*sec;
 	vldoor_t		*door;
-	
+
 	secnum = -1;
 	rtn = 0;
-	while ((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
+	while ((secnum = P_FindSectorFromLineTagNum(tag,secnum)) >= 0)
 	{
 		sec = &sectors[secnum];
 		if (sec->specialdata)
@@ -191,6 +191,11 @@ int EV_DoDoor (line_t *line, vldoor_e  type)
 		}
 	}
 	return rtn;
+}
+
+int EV_DoDoor (line_t *line, vldoor_e  type)
+{
+	return EV_DoDoorTag(line, type, P_GetLineTag(line));
 }
 
 /*================================================================== */

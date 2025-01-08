@@ -92,7 +92,9 @@ int	EV_DoPlat(line_t *line,plattype_e type,int amount)
 	int			secnum;
 	int			rtn;
 	sector_t	*sec;
+	int 		tag;
 	
+	tag = P_GetLineTag(line);
 	secnum = -1;
 	rtn = 0;
 	
@@ -102,13 +104,13 @@ int	EV_DoPlat(line_t *line,plattype_e type,int amount)
 	switch(type)
 	{
 		case perpetualRaise:
-			P_ActivateInStasis(line->tag);
+			P_ActivateInStasis(tag);
 			break;
 		default:
 			break;
 	}
 	
-	while ((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
+	while ((secnum = P_FindSectorFromLineTagNum(tag,secnum)) >= 0)
 	{
 		sec = &sectors[secnum];
 		if (sec->specialdata)
@@ -126,7 +128,7 @@ int	EV_DoPlat(line_t *line,plattype_e type,int amount)
 		plat->sector->specialdata = plat;
 		plat->thinker.function = T_PlatRaise;
 		plat->crush = false;
-		plat->tag = line->tag;
+		plat->tag = tag;
 		switch(type)
 		{
 			case raiseToNearestAndChange:
@@ -192,10 +194,12 @@ void P_ActivateInStasis(int tag)
 void EV_StopPlat(line_t *line)
 {
 	int		j;
+	int 	tag;
 	
+	tag = P_GetLineTag(line);
 	for (j = 0;j < MAXPLATS;j++)
 		if (activeplats[j] && ((activeplats[j])->status != in_stasis) &&
-			((activeplats[j])->tag == line->tag))
+			((activeplats[j])->tag == tag))
 		{
 			(activeplats[j])->oldstatus = (activeplats[j])->status;
 			(activeplats[j])->status = in_stasis;

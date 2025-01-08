@@ -1142,18 +1142,15 @@ void A_BossDeath (mobj_t *mo)
 	switch (mo->type) {
 		case MT_FATSO:
 		case MT_BRUISER:
-			junk.tag = 666;
-			EV_DoFloor (&junk, lowerFloorToLowest);
+			EV_DoFloorTag (&junk, lowerFloorToLowest, 666);
 			break;
 		case MT_BABY:
-			junk.tag = 667;
-			EV_DoFloor (&junk, raiseToTexture);
+			EV_DoFloorTag (&junk, raiseToTexture, 667);
 			break;
 		case MT_CYBORG:
 			if (mapspecials & MI_CYBER_SPECIAL2)
 			{
-				junk.tag = 666;
-				EV_DoDoor (&junk, blazeOpen);
+				EV_DoDoorTag (&junk, blazeOpen, 666);
 			}
 			else
 			{
@@ -1163,8 +1160,7 @@ void A_BossDeath (mobj_t *mo)
 		case MT_SPIDER:
 			if (mapspecials & MI_SPIDER_SPECIAL2)
 			{
-				junk.tag = 666;
-				EV_DoFloor (&junk, lowerFloorToLowest);
+				EV_DoFloorTag (&junk, lowerFloorToLowest, 666);
 			}
 			else
 			{
@@ -1417,8 +1413,7 @@ void A_KeenDie (mobj_t* mo)
 			return;		/* other Keen not dead */
 	}
 
-    junk.tag = 666;
-    EV_DoDoor(&junk, open);
+    EV_DoDoorTag(&junk, open, 666);
 }
 
 /*============================================================================= */

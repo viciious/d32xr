@@ -286,10 +286,20 @@ fixed_t	P_FindHighestCeilingSurrounding(sector_t *sec)
 /*================================================================== */
 int	P_FindSectorFromLineTag(line_t	*line,int start)
 {
+	return P_FindSectorFromLineTagNum(P_GetLineTag(line), start);
+}
+
+/*================================================================== */
+/* */
+/*	RETURN NEXT SECTOR # THAT LINE TAG REFERS TO */
+/* */
+/*================================================================== */
+int	P_FindSectorFromLineTagNum(int tag,int start)
+{
 	int	i;
-	
+
 	for (i=start+1;i<numsectors;i++)
-		if (sectors[i].tag == line->tag)
+		if (sectors[i].tag == tag)
 			return i;
 	return -1;
 }
@@ -891,10 +901,12 @@ int EV_DoDonut(line_t *line)
 	int			rtn;
 	int			i;
 	floormove_t		*floor;
-	
+	int 		tag;
+
 	secnum = -1;
 	rtn = 0;
-	while ((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
+	tag = P_GetLineTag(line);
+	while ((secnum = P_FindSectorFromLineTagNum(tag,secnum)) >= 0)
 	{
 		line_t *line;
 		s1 = &sectors[secnum];

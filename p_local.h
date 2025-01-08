@@ -227,6 +227,8 @@ void	P_PlayerLand (mobj_t *mo);
 
 void 	P_SectorOrg(mobj_t* sec, fixed_t *org);
 
+int 	P_GetLineTag (line_t *line);
+
 /*
 ===============================================================================
 
