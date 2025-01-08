@@ -981,7 +981,7 @@ int EV_DoDonut(line_t *line)
 ===============================================================================
 */
 
-int		numlinespecials = 0;
+VINT	numlinespecials = 0;
 line_t	**linespeciallist = NULL;
 
 void P_SpawnSpecials (void)

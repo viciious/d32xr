@@ -51,7 +51,7 @@ static const switchlist_t alphSwitchList[] =
 };
 
 uint8_t		*switchlist/*[MAXSWITCHES * 2]*/ = NULL;
-int			numswitches;
+VINT		numswitches;
 button_t	*buttonlist/*[MAXBUTTONS]*/ = NULL;
 
 /*

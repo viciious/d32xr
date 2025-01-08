@@ -6,32 +6,32 @@
 
 #define MAX_AUX_TEXTURES 32
 
-int			numvertexes;
+VINT		numvertexes;
 mapvertex_t	*vertexes;
 
-int			numsegs;
+VINT		numsegs;
 seg_t		*segs;
 
-int			numsectors;
+VINT		numsectors;
 sector_t	*sectors;
 
-int			numsubsectors;
+VINT		numsubsectors;
 subsector_t	*subsectors;
 
-int			numnodes;
+VINT		numnodes;
 node_t		*nodes;
 
-int			numlines;
+VINT		numlines;
 line_t		*lines;
 
-int 		numlinetags;
+VINT 		numlinetags;
 int16_t 	*linetags; // [HASH_SIZE]{line,tag,line,tag...}
 
-int			numsides;
+VINT		numsides;
 side_t		*sides;
 
 short		*blockmaplump;			/* offsets in blockmap are from here */
-int			bmapwidth, bmapheight;	/* in mapblocks */
+VINT		bmapwidth, bmapheight;	/* in mapblocks */
 fixed_t		bmaporgx, bmaporgy;		/* origin of block map */
 mobj_t		**blocklinks;			/* for thing chains */
 
@@ -43,7 +43,7 @@ VINT		*validcount;			/* increment every time a check is made */
 
 mapthing_t	playerstarts[MAXPLAYERS];
 
-int			numthings;
+VINT		numthings;
 spawnthing_t* spawnthings;
 
 int16_t 	worldbbox[4];

@@ -227,28 +227,28 @@ extern	spritedef_t		*sprites;
 #define LINETAGS_HASH_BSHIFT 	4
 #define LINETAGS_HASH_SIZE 		(1<<LINETAGS_HASH_BSHIFT)
 
-extern	int			numvertexes;
+extern	VINT		numvertexes;
 extern	mapvertex_t	*vertexes;
 
-extern	int			numsegs;
+extern	VINT		numsegs;
 extern	seg_t		*segs;
 
-extern	int			numsectors;
+extern	VINT		numsectors;
 extern	sector_t	*sectors;
 
-extern	int			numsubsectors;
+extern	VINT		numsubsectors;
 extern	subsector_t	*subsectors;
 
-extern	int			numnodes;
+extern	VINT		numnodes;
 extern	node_t		*nodes;
 
-extern	int			numlines;
+extern	VINT		numlines;
 extern	line_t		*lines;
 
-extern 	int 		numlinetags;
+extern 	VINT 		numlinetags;
 extern 	int16_t 	*linetags;
 
-extern	int			numsides;
+extern	VINT		numsides;
 extern	side_t		*sides;
 
 extern 	int16_t 	worldbbox[4];
