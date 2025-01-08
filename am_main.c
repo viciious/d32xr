@@ -660,7 +660,7 @@ static void AM_Drawer_ (int c)
 		boolean twoSided = line->sidenum[1] != -1;
 
 		flags = line->flags;
-		mapped = (line->moreflags & LD_MFLAG_SEEN) != 0;
+		mapped = (line->flags & ML_MAPPED) != 0;
 		if ((!mapped ||		/* IF NOT MAPPED OR DON'T DRAW */
 			flags & ML_DONTDRAW) &&
 			(!(p->powers[pw_allmap] + showAllLines)))

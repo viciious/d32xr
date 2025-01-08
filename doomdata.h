@@ -50,6 +50,9 @@ typedef struct
 #define	ML_BLOCKMONSTERS	2
 #define	ML_TWOSIDED			4		/* backside will not be present at all  */
 									/* if not two sided ???:obsolete */
+									/* only used during the setup */
+									
+#define ML_MAPPED           4       /* set if already seen, thus drawn in automap */
 
 /* if a texture is pegged, the texture will have the end exposed to air held */
 /* constant at the top or bottom of the texture (stairs or pulled down things) */

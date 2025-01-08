@@ -201,7 +201,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
    const short liflags = li->flags;
 
    {
-      li->moreflags |= LD_MFLAG_SEEN; // mark as seen
+      li->flags |= ML_MAPPED; // mark as seen
 
       textureoffset = si->textureoffset & 0xfff;
       textureoffset <<= 4; // sign extend

@@ -114,15 +114,11 @@ typedef struct line_s
 	VINT		sidenum[2];			/* sidenum[1] will be -1 if one sided */
 	VINT 		v1, v2;
 	uint8_t		flags, special;
-	uint16_t	tag:14;
-	uint16_t	moreflags:2;
+	uint16_t	tag;
 } line_t;
 
 #define LD_FRONTSECTOR(ld) (&sectors[sides[(ld)->sidenum[0]].sector])
 #define LD_BACKSECTOR(ld) ((ld)->sidenum[1] != -1 ? &sectors[sides[ld->sidenum[1]].sector] : NULL)
-
-#define LD_MFLAG_SEEN 		0x01
-#define LD_MFLAG_POSITIVE 	0x02
 
 typedef struct subsector_s
 {
