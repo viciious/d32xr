@@ -105,7 +105,12 @@ boolean P_BoxCrossLine(line_t *ld, fixed_t testbbox[4])
       return false;
    }
 
-   if(ld->moreflags & LD_MFLAG_POSITIVE)
+   lx  = vertexes[ld->v1].x << FRACBITS;
+   ly  = vertexes[ld->v1].y << FRACBITS;
+   ldx = vertexes[ld->v2].x - vertexes[ld->v1].x;
+   ldy = vertexes[ld->v2].y - vertexes[ld->v1].y;
+
+   if (ldx && ldy && ( (ldx ^ ldy) & 0x80000000 ) == 0) /* positive */
    {
       x1 = testbbox[BOXLEFT ];
       x2 = testbbox[BOXRIGHT];
@@ -115,11 +120,6 @@ boolean P_BoxCrossLine(line_t *ld, fixed_t testbbox[4])
       x1 = testbbox[BOXRIGHT];
       x2 = testbbox[BOXLEFT ];
    }
-
-   lx  = vertexes[ld->v1].x << FRACBITS;
-   ly  = vertexes[ld->v1].y << FRACBITS;
-   ldx = vertexes[ld->v2].x - vertexes[ld->v1].x;
-   ldy = vertexes[ld->v2].y - vertexes[ld->v1].y;
 
    dx1 = (x1 - lx) >> FRACBITS;
    dy1 = (testbbox[BOXTOP] - ly) >> FRACBITS;

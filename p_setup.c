@@ -590,21 +590,6 @@ void P_GroupLines (void)
 	line_t		*li;
 	fixed_t		bbox[4];
 
-/* set line flags */
-	li = lines;
-	for (i=0 ; i<numlines ; i++, li++)
-	{
-		mapvertex_t *v1 = &vertexes[li->v1];
-		mapvertex_t *v2 = &vertexes[li->v2];
-		fixed_t dx = (v2->x - v1->x) << FRACBITS;
-		fixed_t dy = (v2->y - v1->y) << FRACBITS;
-		if (dx && dy)
-		{
-			if ( ( (dx ^ dy) & 0x80000000 ) == 0 )
-				li->moreflags |= LD_MFLAG_POSITIVE;
-		}
-	}
-
 /* look up sector number for each subsector */
 	ss = subsectors;
 	for (i=0 ; i<numsubsectors ; i++, ss++)
