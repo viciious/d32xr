@@ -119,7 +119,7 @@ sector_t *getSector(int currentSector,int line,int side)
 int	twoSided(int sector,int line)
 {
 	line_t *check = lines + sectors[sector].lines[line];
-	return check->flags & ML_TWOSIDED;
+	return check->sidenum[1] != -1;
 }
 
 /*================================================================== */
@@ -131,7 +131,7 @@ sector_t *getNextSector(line_t *line,sector_t *sec)
 {
 	sector_t *front;
 
-	if (!(line->flags & ML_TWOSIDED))
+	if (!(line->sidenum[1] != -1))
 		return NULL;
 	
 	front = LD_FRONTSECTOR(line);
@@ -911,7 +911,7 @@ int EV_DoDonut(line_t *line)
 		for (i = 0;i < s2->linecount;i++)
 		{
 			line = lines + s2->lines[i];
-			if (!(line->flags & ML_TWOSIDED))
+			if (!(line->sidenum[1] != -1))
 				continue;
 			s3 = &sectors[sides[line->sidenum[1]].sector];
 			if (s3 == s1)

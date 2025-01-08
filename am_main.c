@@ -657,6 +657,7 @@ static void AM_Drawer_ (int c)
 		int flags;
 		int mapped;
 		mapvertex_t *v1, *v2;
+		boolean twoSided = line->sidenum[1] != -1;
 
 		flags = line->flags;
 		mapped = (line->moreflags & LD_MFLAG_SEEN) != 0;
@@ -713,7 +714,7 @@ static void AM_Drawer_ (int c)
 			!mapped)
 			color = CRY_GREY;
 		else
-		if (!(flags & ML_TWOSIDED))	/* ONE-SIDED LINE */
+		if (!twoSided)	/* ONE-SIDED LINE */
 			color = CRY_RED;
 		else
 		if (line->special == 97 ||		/* TELEPORT LINE */

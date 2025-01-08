@@ -442,7 +442,8 @@ int EV_BuildStairs(line_t *line, int type)
 			for (i = 0;i < sec->linecount;i++)
 			{
 				line_t *check = lines + sec->lines[i];
-				if ( !(check->flags & ML_TWOSIDED) )
+				boolean twoSided = check->sidenum[1] != -1;
+				if ( !twoSided )
 					continue;
 					
 				newsecnum = sides[check->sidenum[0]].sector;
