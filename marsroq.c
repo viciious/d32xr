@@ -652,7 +652,7 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
         ctrl = Mars_ReadController(0);
         ch_ctrl = ctrl ^ prev_ctrl;
 
-        if (framecount > 15) // ignore key presses for the first few frames
+        if (framecount > 5) // ignore key presses for the first few frames
         {
             if (allowpause) {
                 if (ch_ctrl & (SEGA_CTRL_A|SEGA_CTRL_B|SEGA_CTRL_C)) {
