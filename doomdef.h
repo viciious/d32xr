@@ -469,14 +469,14 @@ typedef struct player_s
 	VINT		powers[NUMPOWERS];		/* invinc and invis are tic counters	 */
 	char		cards[NUMCARDS];
 	char		backpack;
+	char		refire;					/* refired shots are less accurate */
 	VINT		frags;					/* kills of other player */
 	VINT		readyweapon;
 	VINT		pendingweapon;		/* wp_nochange if not changing */
-	char		refire;					/* refired shots are less accurate */
 	char		weaponowned[NUMWEAPONS];
+	char		attackdown, usedown;	/* true if button down last tic */
 	VINT		ammo[NUMAMMO];
 	VINT		maxammo[NUMAMMO];
-	char		attackdown, usedown;	/* true if button down last tic */
 	VINT		cheats;					/* bit flags */
 	
 	VINT		ticremainder;
@@ -489,7 +489,7 @@ typedef struct player_s
 	pspdef_t	psprites[NUMPSPRITES];	/* view sprites (gun, etc) */
 	void		*lastsoundsector;		/* don't flood noise every time */
 	
-	int			automapx, automapy, automapscale, automapflags;
+	int			automapx, automapy, automapflags;
 	int			turnheld;				/* for accelerative turning */
 } player_t;
 
