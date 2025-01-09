@@ -1190,7 +1190,7 @@ void A_BabyMetal (mobj_t* mo)
 }
 
 #define MAXBRAINTARGETS 16
-mobj_t *braintargets[MAXBRAINTARGETS];
+SPTR braintargets[MAXBRAINTARGETS];
 VINT numbraintargets;
 VINT braintargeton = 0;
 
@@ -1208,7 +1208,7 @@ void A_BrainAwake(mobj_t *mo)
 		{
 			if (numbraintargets == MAXBRAINTARGETS)
 				break;
-			braintargets[numbraintargets] = m;
+			braintargets[numbraintargets] = LPTR_TO_SPTR(m);
 			numbraintargets++;
 		}
 	}
@@ -1305,7 +1305,7 @@ void A_BrainSpit(mobj_t *mo)
 		return;
 
 	// shoot a cube at current target
-	targ = braintargets[braintargeton];
+	targ = SPTR_TO_LPTR(braintargets[braintargeton]);
 	if (numbraintargets == 0)
 		I_Error("A_BrainSpit: numbraintargets == 0");
 	braintargeton = (braintargeton + 1) % numbraintargets;
