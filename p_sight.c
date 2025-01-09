@@ -155,7 +155,7 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
 
    for( ; count; seg++, count--)
    {
-      int ld = seg->linedef>>5;
+      int ld = SEG_UNPACK_LINEDEF(seg);
       boolean twoSided;
 
       line = &lines[ld];

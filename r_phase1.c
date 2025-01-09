@@ -564,8 +564,8 @@ static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
    line_t *ldef;
    side_t *sidedef;
    boolean solid;
-   int nv1 = line->v1>>5;
-   int nv2 = line->v2>>5;
+   int nv1 = SEG_UNPACK_V1(line);
+   int nv2 = SEG_UNPACK_V2(line);
 
    v1.x = vertexes[nv1].x << FRACBITS;
    v1.y = vertexes[nv1].y << FRACBITS;
@@ -594,7 +594,7 @@ static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
 
    // decide which clip routine to use
    side = SEG_UNPACK_SIDE(line);
-   ldef = &lines[line->linedef>>5];
+   ldef = &lines[SEG_UNPACK_LINEDEF(line)];
    frontsector = rbsp->curfsector;
    backsector = (ldef->sidenum[1] != -1) ? &sectors[sides[ldef->sidenum[side^1]].sector] : NULL;
    sidedef = &sides[ldef->sidenum[side]];

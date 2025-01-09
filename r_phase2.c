@@ -98,8 +98,8 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
     fixed_t      scalefrac, scale2;
     fixed_t      hyp;
     fixed_t      x1, y1, x2, y2;
-    int          nv1 = seg->v1>>5;
-    int          nv2 = seg->v2>>5;
+    int          nv1 = SEG_UNPACK_V1(seg);
+    int          nv2 = SEG_UNPACK_V2(seg);
 
     // this is essentially R_StoreWallRange
     // calculate rw_distance for scale calculation

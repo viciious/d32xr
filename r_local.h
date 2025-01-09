@@ -127,7 +127,10 @@ typedef struct subsector_s
 } subsector_t;
 
 // truncate offset to 14 bits along the way
-#define SEG_PACK_SIDE_OFFSET(seg,offset,side) do { seg_t *s = (seg); unsigned o = (unsigned)(offset)&((1<<14)-1); s->linedef |= ((o & 0xf) << 1) | (!!(side)); s->v1 |= (o>>4)&0x1f; s->v2 |= (o>>9)&0x1f; } while (0)
+#define SEG_PACK(seg,offset,side) do { seg_t *s = (seg); unsigned o = (unsigned)(offset)&((1<<14)-1); s->linedef <<= 5; s->v1 <<= 5; s->v2 <<= 5; s->linedef |= ((o & 0xf) << 1) | (!!(side)); s->v1 |= (o>>4)&0x1f; s->v2 |= (o>>9)&0x1f; } while (0)
+#define SEG_UNPACK_LINEDEF(seg) ((seg)->linedef>>5)
+#define SEG_UNPACK_V1(seg) ((seg)->v1>>5)
+#define SEG_UNPACK_V2(seg) ((seg)->v2>>5)
 #define SEG_UNPACK_SIDE(seg) ((seg)->linedef & 1)
 #define SEG_UNPACK_OFFSET(seg) ((((seg)->linedef>>1)&0xf)|(((seg)->v1&0x1f)<<4)|(((seg)->v2&0x1f)<<9))
 
