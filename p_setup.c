@@ -774,7 +774,7 @@ void P_SetupLevel (const char *lumpname, skill_t skill, const char *sky)
 #ifndef MARS
 	mobj_t	*mobj;
 #endif
-	extern	int	cy;
+	extern VINT	cy;
 	VINT lumpnum, lumps[ML_BLOCKMAP+1+MAX_AUX_TEXTURES];
 	lumpinfo_t li[ML_BLOCKMAP+1+MAX_AUX_TEXTURES];
 	int skytexture;

@@ -61,14 +61,15 @@ boolean	debugscreenactive = false;
 boolean	debugscreenupdate = false;
 
 int		lastticcount = 0;
-int		lasttics = 0;
-static int fpscount = 0;
+VINT	lasttics = 0;
+static VINT fpscount = 0;
 
 VINT 	debugmode = DEBUGMODE_NONE;
 VINT	strafebtns = 0;
 
-extern int 	cy;
-extern int tictics, drawtics, ticstart;
+extern VINT 	cy;
+extern VINT tictics, drawtics;
+extern int ticstart;
 
 // framebuffer start is after line table AND a single blank line
 static volatile pixel_t* framebuffer = &MARS_FRAMEBUFFER + 0x100;

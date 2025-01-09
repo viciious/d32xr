@@ -4,8 +4,8 @@
 #include "mars.h"
 #endif
 
-int	playertics, thinkertics, sighttics, basetics, latetics;
-int	tictics, drawtics;
+VINT playertics, thinkertics, sighttics, basetics, latetics;
+VINT tictics, drawtics;
 
 boolean		gamepaused;
 jagobj_t	*pausepic;

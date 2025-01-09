@@ -35,7 +35,7 @@ static VINT cd_pwad_cache_size = -1;
 static VINT cd_pwad_cache_num_lumps = 0;
 
 static wadfile_t wadfile[MAXWADS];
-static int wadnum = 0;
+static VINT wadnum = 0;
 
 void strupr (char *s)
 {

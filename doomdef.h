@@ -526,8 +526,8 @@ typedef struct
 
 /*================================== */
 
-extern	int 	ticrate;	/* 4 for NTSC, 3 for PAL */
-extern	int		ticsinframe;	/* how many tics since last drawer */
+extern	VINT 	ticrate;	/* 4 for NTSC, 3 for PAL */
+extern	VINT	ticsinframe;	/* how many tics since last drawer */
 extern	int		ticon;
 extern	int		frameon;
 extern	int		ticrealbuttons, oldticrealbuttons; /* buttons for the console player before reading the demo file */
@@ -560,7 +560,7 @@ typedef enum
 extern	gametype_t	netgame;
 
 extern	boolean		playeringame[MAXPLAYERS];
-extern	int			consoleplayer;		/* player taking events and displaying */
+extern	VINT		consoleplayer;		/* player taking events and displaying */
 extern	player_t	players[MAXPLAYERS];
 extern	playerresp_t	playersresp[MAXPLAYERS];
 
@@ -568,7 +568,7 @@ extern	VINT		maxammo[NUMAMMO];
 
 
 extern	skill_t		gameskill;
-extern	int			totalkills, totalitems, totalsecret;	/* for intermission */
+extern	VINT		totalkills, totalitems, totalsecret;	/* for intermission */
 extern	const char	*gamemaplump;
 extern	dgameinfo_t	gameinfo;
 
@@ -584,7 +584,7 @@ extern	mapthing_t	*deathmatchstarts, *deathmatch_p;
 extern	mapthing_t	playerstarts[MAXPLAYERS];
 
 #define	BODYQUESIZE		4
-extern	int			bodyqueslot;
+extern	VINT		bodyqueslot;
 
 extern 	boolean		finale, secretexit;
 
@@ -757,9 +757,9 @@ extern	boolean	demoplayback, demorecording;
 extern	unsigned *demo_p, *demobuffer;
 
 extern	skill_t		startskill;
-extern	int			startmap;
+extern	VINT		startmap;
 extern	gametype_t	starttype;
-extern	int			startsave;
+extern	VINT		startsave;
 extern 	boolean 	startsplitscreen;
 
 /*--------- */
@@ -1245,7 +1245,7 @@ void DrawTiledBackground(void);
 extern	int		maxlevel;			/* highest level selectable in menu (1-25) */
 
 extern	int		gamevbls;			/* may not really be vbls in multiplayer */
-extern	int		vblsinframe;			/* range from 4 to 8 */
+extern	VINT	vblsinframe;			/* range from 4 to 8 */
 
 #define MINTICSPERFRAME		2
 #define MAXTICSPERFRAME		4

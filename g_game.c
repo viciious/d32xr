@@ -25,16 +25,16 @@ boolean         playeringame[MAXPLAYERS];
 player_t        players[MAXPLAYERS];
 playerresp_t	playersresp[MAXPLAYERS];
 
-int             consoleplayer = 0;          /* player taking events and displaying  */
+VINT            consoleplayer = 0;          /* player taking events and displaying  */
 int             gametic;
 int             prevgametic;
-int             totalkills, totalitems, totalsecret;    /* for intermission  */
+VINT            totalkills, totalitems, totalsecret;    /* for intermission  */
  
 boolean         demorecording; 
 boolean         demoplayback; 
 
 mobj_t*         bodyque[BODYQUESIZE];
-int             bodyqueslot;
+VINT            bodyqueslot;
 
 boolean			finale, secretexit;
 

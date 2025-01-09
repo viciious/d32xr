@@ -214,11 +214,11 @@ boolean P_TryWalk (mobj_t *actor)
 ================
 */
 
-dirtype_t opposite[] =
+VINT opposite[] =
 {DI_WEST, DI_SOUTHWEST, DI_SOUTH, DI_SOUTHEAST, DI_EAST, DI_NORTHEAST,
 DI_NORTH, DI_NORTHWEST, DI_NODIR};
 
-dirtype_t diags[] = {DI_NORTHWEST,DI_NORTHEAST,DI_SOUTHWEST,DI_SOUTHEAST};
+VINT diags[] = {DI_NORTHWEST,DI_NORTHEAST,DI_SOUTHWEST,DI_SOUTHEAST};
 
 void P_NewChaseDir (mobj_t *actor)
 {
@@ -1191,8 +1191,8 @@ void A_BabyMetal (mobj_t* mo)
 
 #define MAXBRAINTARGETS 16
 mobj_t *braintargets[MAXBRAINTARGETS];
-int numbraintargets;
-int braintargeton = 0;
+VINT numbraintargets;
+VINT braintargeton = 0;
 
 void A_BrainAwake(mobj_t *mo)
 {
