@@ -42,6 +42,12 @@ typedef unsigned char inpixel_t;
 typedef unsigned short inpixel_t;
 #endif
 
+#ifdef MARS
+#define DATA_START_ADDRESS 0x06000000
+#else
+#define DATA_START_ADDRESS 0
+#endif
+
 /* the structure sizes are frozen at ints for jaguar asm code, but shrunk */
 /* down for mars memory cramming */
 #ifdef MARS
@@ -60,6 +66,16 @@ typedef unsigned short inpixel_t;
 #define ATTR_DATA_CACHE_ALIGN
 #define ATTR_OPTIMIZE_SIZE
 #define ATTR_OPTIMIZE_EXTREME
+#endif
+
+#ifdef MARS
+#define SPTR uint16_t
+#define LPTR_TO_SPTR(p) ((p) ? (uint16_t)(((uintptr_t)(p) - DATA_START_ADDRESS)>>2) : 0) // use with caution as pointer at the beginning of RAM address space will be mapped to a NULL pointer!
+#define SPTR_TO_LPTR(p) ((p) ? (void*)(((uintptr_t)(p) << 2) + DATA_START_ADDRESS) : NULL)
+#else
+#define SPTR void *
+#define LPTR_TO_SPTR(p) (p)
+#define SPTR_TO_LPTR(p) (p)
 #endif
 
 /*============================================================================= */
