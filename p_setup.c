@@ -33,7 +33,7 @@ side_t		*sides;
 short		*blockmaplump;			/* offsets in blockmap are from here */
 VINT		bmapwidth, bmapheight;	/* in mapblocks */
 fixed_t		bmaporgx, bmaporgy;		/* origin of block map */
-mobj_t		**blocklinks;			/* for thing chains */
+SPTR		*blocklinks;			/* for thing chains */
 
 byte		*rejectmatrix;			/* for fast sight rejection */
 
