@@ -358,7 +358,37 @@ extern	VINT		extralight;
 #ifdef MARS
 __attribute__((aligned(4)))
 #endif
-extern boolean phi_effects;
+extern boolean line_table_effects;
+
+#ifdef MARS
+__attribute__((aligned(4)))
+#endif
+extern boolean copper_effects;
+
+#ifdef MARS
+__attribute__((aligned(4)))
+#endif
+extern int copper_color_index;
+
+#ifdef MARS
+__attribute__((aligned(2)))
+#endif
+extern short copper_vertical_offset;
+
+#ifdef MARS
+__attribute__((aligned(2)))
+#endif
+extern short copper_vertical_rate;
+
+#ifdef MARS
+__attribute__((aligned(2)))
+#endif
+extern unsigned short copper_neutral_color;
+
+#ifdef MARS
+__attribute__((aligned(4)))
+#endif
+extern volatile unsigned short copper_color_table[512];
 
 #ifdef MARS
 __attribute__((aligned(16)))

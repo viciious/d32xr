@@ -67,10 +67,26 @@ pixel_t		*workingscreen;
 #ifdef MARS
 static int16_t	curpalette = -1;
 
-#ifdef MARS
 __attribute__((aligned(4)))
-#endif
-boolean phi_effects;
+boolean line_table_effects;
+
+__attribute__((aligned(4)))
+boolean copper_effects;
+
+__attribute__((aligned(4)))
+int copper_color_index;
+
+__attribute__((aligned(2)))
+short copper_vertical_offset;
+
+__attribute__((aligned(2)))
+short copper_vertical_rate;
+
+__attribute__((aligned(2)))
+unsigned short copper_neutral_color;
+
+__attribute__((aligned(4)))
+volatile unsigned short copper_color_table[512];
 
 __attribute__((aligned(16)))
 pixel_t* viewportbuffer;

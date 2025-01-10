@@ -16,8 +16,6 @@ VINT		controltype = 0;		/* determine settings for BT_* */
 boolean		sky_md_layer = false;
 boolean		sky_32x_layer = false;
 
-unsigned int	phi_line;
-
 int			gamevbls;		/* may not really be vbls in multiplayer */
 int			vblsinframe;		/* range from ticrate to ticrate*2 */
 
@@ -310,6 +308,71 @@ mobj_t	emptymobj;
 =
 ===============
 */
+__attribute((noinline))
+static void D_LoadSkyGradient(void)
+{
+	// Retrieve lump for drawing the sky gradient.
+	uint8_t *sky_gradient_ptr;
+
+	//uint32_t sky_gradient_size;
+	
+	int lump;
+
+	char lumpname[9];
+
+	D_snprintf(lumpname, 8, "%sGRA", gamemapinfo.sky);
+	lump = W_CheckNumForName(lumpname);
+	if (lump == -1) {
+		copper_effects = false;
+		return;
+	}
+
+
+	// This map uses a gradient.
+	copper_effects = true;
+	sky_gradient_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+	//sky_gradient_size = W_LumpLength(lump);
+
+
+	copper_neutral_color = (sky_gradient_ptr[0] << 8) | (sky_gradient_ptr[1] & 0xFF);
+	copper_vertical_offset = (sky_gradient_ptr[2] << 8) | (sky_gradient_ptr[3] & 0xFF);
+	copper_vertical_rate = sky_gradient_ptr[4];
+
+	int section_count = sky_gradient_ptr[5];
+
+	unsigned char *data = &sky_gradient_ptr[6];
+
+	int table_index = 0;
+
+	for (int section=0; section < section_count; section++)
+	{
+		unsigned short color = (data[0] << 8) | data[1];
+		unsigned short interval_iterations = data[2] + 1;
+		unsigned short increment = (data[3] << 8) | data[4];
+		unsigned short interval_height = data[5] + 1;
+
+		for (int interval = 0; interval < interval_iterations; interval++) {
+			for (int line=0; line < interval_height; line++) {
+				copper_color_table[table_index + line] = color;
+			}
+
+			table_index += interval_height;
+
+			color += increment;
+		}
+
+		data += 6;
+	}
+
+	unsigned short color = (data[0] << 8) | data[1];
+
+	while (table_index < 512) {
+		copper_color_table[table_index] = color;
+		table_index++;
+	}
+}
+
+
 #ifdef MDSKY
 __attribute((noinline))
 static void D_LoadMDSky(void)
@@ -387,6 +450,7 @@ static void D_LoadMDSky(void)
 
 	// Get the thru-pixel color from the metadata.
 	mars_thru_rgb_reference = sky_metadata_ptr[0];
+	
 
 	Mars_LoadMDSky(sky_metadata_ptr,
 			sky_names_a_ptr, sky_names_a_size, 
@@ -436,6 +500,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 	#ifdef MDSKY
 	if (leveltime == 0)
 	{
+		D_LoadSkyGradient();
 		D_LoadMDSky();
 	}
 	#endif

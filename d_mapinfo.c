@@ -248,6 +248,10 @@ static void G_AddMapinfoKey(char* key, char* value, dmapinfo_t* mi)
 		mi->sky = value;
 	else if (!D_strcasecmp(key, "skyOffsetY"))
 		mi->skyOffsetY = D_atoi(value);
+	else if (!D_strcasecmp(key, "skyBitmapOffsetY"))
+		mi->skyBitmapOffsetY = D_atoi(value);
+	else if (!D_strcasecmp(key, "skyBitmapScrollRate"))
+		mi->skyBitmapScrollRate = D_atoi(value);
 	else if (!D_strcasecmp(key, "skyTopColor"))
 		mi->skyTopColor = D_atoi(value);
 	else if (!D_strcasecmp(key, "skyBottomColor"))

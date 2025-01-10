@@ -264,12 +264,12 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
             if (top < bottom)
             {
                 if (draw32xsky) {
-                    int colnum = ((vd.viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
+                    int colnum = ((vd.viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & (skytexturep->width-1);
                     inpixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
                     
                     draw32xsky(
                         x,
-                        -gamemapinfo.skyOffsetY - (((signed int)vd.aimingangle) >> 22),
+                        -gamemapinfo.skyOffsetY - gamemapinfo.skyBitmapOffsetY - (((signed int)vd.aimingangle) >> 22) - ((vd.viewz >> 16) >> gamemapinfo.skyBitmapScrollRate),
                         top,
                         bottom,
                         gamemapinfo.skyTopColor,
