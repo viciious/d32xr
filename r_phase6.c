@@ -269,7 +269,10 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
                     
                     draw32xsky(
                         x,
-                        -gamemapinfo.skyOffsetY - gamemapinfo.skyBitmapOffsetY - (((signed int)vd.aimingangle) >> 22) - ((vd.viewz >> 16) >> gamemapinfo.skyBitmapScrollRate),
+                        -gamemapinfo.skyOffsetY
+                                - gamemapinfo.skyBitmapOffsetY
+                                - (((signed int)vd.aimingangle) >> 22)
+                                - ((vd.viewz >> 16) >> (16-gamemapinfo.skyBitmapScrollRate)),
                         top,
                         bottom,
                         gamemapinfo.skyTopColor,

@@ -759,7 +759,7 @@ void I_Update(void)
 
 	if (copper_effects) {
 		copper_color_index = (copper_vertical_offset
-				- scroll_y_base - (scroll_y_offset >> copper_vertical_rate) - scroll_y_pan) & 511;
+				- scroll_y_base - (scroll_y_offset >> (16-copper_vertical_rate)) - scroll_y_pan) & 511;
 	}
 
 #ifdef MDSKY
@@ -767,7 +767,7 @@ void I_Update(void)
 		unsigned short scroll_x = (*((unsigned short *)&vd.viewangle) >> 6);
 
 		// Use this to scroll the sky 1280 pixels. Would work well with a 256-pixel width sky.
-		//scroll_x += (scroll_x >> 2);
+		scroll_x += (scroll_x >> 2);
 
 		Mars_ScrollMDSky(scroll_x, scroll_y_base, scroll_y_offset, scroll_y_pan);
 	}

@@ -196,6 +196,7 @@ init_hardware:
         |move.w  #0x8B00,(a0) /* reg 11 = /IE2 (no EXT INT), full scroll */
         move.w  #0x8B03,(a0) /* reg 11 = /IE2 (no EXT INT), line scroll */
         move.w  #0x8C81,(a0) /* reg 12 = H40 mode, no lace, no shadow/hilite */
+        |move.w  #0x0C80,(a0) /* reg 12 = H32 mode, no lace, no shadow/hilite */
         move.w  #0x8D2B,(a0) /* reg 13 = HScroll Tbl = 0xAC00 */
         move.w  #0x8E00,(a0) /* reg 14 = always 0 */
         move.w  #0x8F01,(a0) /* reg 15 = data INC = 1 */
@@ -1632,10 +1633,14 @@ load_md_sky:
         move.w  (a2)+,d0
         move.w  d0,scroll_a_vert_offset
 
-        move.b  (a2)+,d0
+        move.b  (a2)+,d1
+        move.b  #16,d0
+        sub.b   d1,d0
         move.b  d0,scroll_b_vert_rate
 
-        move.b  (a2)+,d0
+        move.b  (a2)+,d1
+        move.b  #16,d0
+        sub.b   d1,d0
         move.b  d0,scroll_a_vert_rate
 
 
@@ -2516,6 +2521,7 @@ init_vdp:
         |move.w  #0x8B00,(a0) /* reg 11 = /IE2 (no EXT INT), full scroll */
         move.w  #0x8B03,(a0) /* reg 11 = /IE2 (no EXT INT), line scroll */
         move.w  #0x8C81,(a0) /* reg 12 = H40 mode, no lace, no shadow/hilite */
+        |move.w  #0x0C80,(a0) /* reg 12 = H32 mode, no lace, no shadow/hilite */
         move.w  #0x8D2B,(a0) /* reg 13 = HScroll Tbl = 0xAC00 */
         move.w  #0x8E00,(a0) /* reg 14 = always 0 */
         move.w  #0x8F01,(a0) /* reg 15 = data INC = 1 */
