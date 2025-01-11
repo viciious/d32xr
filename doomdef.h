@@ -247,7 +247,8 @@ typedef struct mobj_s
 	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
 
 /* interaction info */
-	struct mobj_s	*bnext, *bprev;		/* links in blocks (if needed) */
+	SPTR 			bnext;
+	SPTR 			bprev;				/* links in blocks (if needed) */
 	struct subsector_s	*subsector;
 	fixed_t			floorz, ceilingz;	/* closest together of contacted secs */
 

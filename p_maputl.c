@@ -269,10 +269,13 @@ void P_UnsetThingPosition (mobj_t *thing)
 	if ( ! (thing->flags & MF_NOBLOCKMAP) )
 	{	/* inert things don't need to be in blockmap */
 /* unlink from block map */
-		if (thing->bnext)
-			thing->bnext->bprev = thing->bprev;
-		if (thing->bprev)
-			thing->bprev->bnext = thing->bnext;
+		mobj_t *bnext = SPTR_TO_LPTR(thing->bnext);
+		mobj_t *bprev = SPTR_TO_LPTR(thing->bprev);
+
+		if (bnext)
+			bnext->bprev = thing->bprev;
+		if (bprev)
+			bprev->bnext = thing->bnext;
 		else
 		{
 			blockx = thing->x - bmaporgx;
@@ -282,7 +285,7 @@ void P_UnsetThingPosition (mobj_t *thing)
 				blockx = (unsigned)blockx >> MAPBLOCKSHIFT;
 				blocky = (unsigned)blocky >> MAPBLOCKSHIFT;
 				if (blockx < bmapwidth && blocky <bmapheight)
-					blocklinks[blocky*bmapwidth+blockx] = LPTR_TO_SPTR(thing->bnext);
+					blocklinks[blocky*bmapwidth+blockx] = thing->bnext;
 			}
 		}
 	}
@@ -332,20 +335,20 @@ void P_SetThingPosition2 (mobj_t *thing, subsector_t *ss)
 			if (blockx < bmapwidth && blocky <bmapheight)
 			{
 				link = &blocklinks[blocky*bmapwidth+blockx];
-				thing->bprev = NULL;
-				thing->bnext = SPTR_TO_LPTR(*link);
+				thing->bprev = (SPTR)0;
+				thing->bnext = *link;
 				if (*link)
-					((mobj_t *)(SPTR_TO_LPTR(*link)))->bprev = thing;
+					((mobj_t *)(SPTR_TO_LPTR(*link)))->bprev = LPTR_TO_SPTR(thing);
 				*link = LPTR_TO_SPTR(thing);
 			}
 			else
 			{	/* thing is off the map */
-				thing->bnext = thing->bprev = NULL;
+				thing->bnext = thing->bprev = (SPTR)0;
 			}
 		}
 		else
 		{	/* thing is off the map */
-			thing->bnext = thing->bprev = NULL;
+			thing->bnext = thing->bprev = (SPTR)0;
 		}
 	}
 }
@@ -439,7 +442,7 @@ boolean P_BlockThingsIterator (int x, int y, blockthingsiter_t func, void *userp
 	//if (x<0 || y<0 || x>=bmapwidth || y>=bmapheight)
 	//	return true;
 
-	for (mobj = SPTR_TO_LPTR(blocklinks[y*bmapwidth+x]) ; mobj ; mobj = mobj->bnext)
+	for (mobj = SPTR_TO_LPTR(blocklinks[y*bmapwidth+x]) ; mobj ; mobj = SPTR_TO_LPTR(mobj->bnext))
 		if (!func( mobj, userp ) )
 			return false;	
 
