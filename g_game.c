@@ -10,8 +10,8 @@ void G_DoReborn (int playernum);
 void G_DoLoadLevel (void); 
  
  
-gameaction_t    gameaction; 
-skill_t         gameskill; 
+VINT    		gameaction; 
+VINT	         gameskill; 
 const char		*gamemaplump;
 dmapinfo_t		*gamemapinfo = NULL;
 dgameinfo_t		gameinfo;
@@ -19,7 +19,7 @@ dgameinfo_t		gameinfo;
 dmapinfo_t		**gamemaplist = NULL;
 VINT 			gamemapcount = 0;
 
-gametype_t		netgame;
+VINT			netgame;
 
 boolean         playeringame[MAXPLAYERS];
 player_t        players[MAXPLAYERS];

@@ -901,9 +901,9 @@ reselect:
 ============= 
 */ 
  
-skill_t		startskill = sk_medium;
+VINT		startskill = sk_medium;
 VINT		startmap = 1;
-gametype_t	starttype = gt_single;
+VINT		starttype = gt_single;
 VINT		startsave = -1;
 boolean 	startsplitscreen = 0;
 

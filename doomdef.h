@@ -549,7 +549,7 @@ void G_LoadGame(int saveslot);
 
 #include "d_mapinfo.h"
 
-extern	gameaction_t	gameaction;
+extern	VINT	gameaction;
 
 #define	SBARHEIGHT	40			/* status bar height at bottom of screen */
 
@@ -560,7 +560,7 @@ typedef enum
 	gt_deathmatch	
 } gametype_t;
 
-extern	gametype_t	netgame;
+extern	VINT		netgame;
 
 extern	boolean		playeringame[MAXPLAYERS];
 extern	VINT		consoleplayer;		/* player taking events and displaying */
@@ -570,7 +570,7 @@ extern	playerresp_t	playersresp[MAXPLAYERS];
 extern	VINT		maxammo[NUMAMMO];
 
 
-extern	skill_t		gameskill;
+extern	VINT		gameskill;
 extern	VINT		totalkills, totalitems, totalsecret;	/* for intermission */
 extern	const char	*gamemaplump;
 extern	dgameinfo_t	gameinfo;
@@ -759,9 +759,9 @@ void D_DoomLoop (void);
 extern	boolean	demoplayback, demorecording;
 extern	unsigned *demo_p, *demobuffer;
 
-extern	skill_t		startskill;
+extern	VINT		startskill;
 extern	VINT		startmap;
-extern	gametype_t	starttype;
+extern	VINT		starttype;
 extern	VINT		startsave;
 extern 	boolean 	startsplitscreen;
 
