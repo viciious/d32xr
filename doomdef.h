@@ -244,11 +244,13 @@ typedef struct mobj_s
 	VINT			type;
 
 /* info for drawing */
-	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
+	SPTR			snext;
+	SPTR 			sprev;				/* links in sector (if needed) */
 
 /* interaction info */
 	SPTR 			bnext;
 	SPTR 			bprev;				/* links in blocks (if needed) */
+
 	struct subsector_s	*subsector;
 	fixed_t			floorz, ceilingz;	/* closest together of contacted secs */
 

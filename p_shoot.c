@@ -324,7 +324,7 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
    VINT     *lvalidcount, vc;
 
    // check things
-   for(thing = sub->sector->thinglist; thing; thing = thing->snext)
+   for(thing = sub->sector->thinglist; thing; thing = SPTR_TO_LPTR(thing->snext))
    {
       if(thing->subsector != sub)
          continue;

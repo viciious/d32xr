@@ -307,7 +307,7 @@ void R_SpritePrep(void)
       while(thing) // walk sector thing list
       {
         R_PrepMobj(thing);
-        thing = thing->snext;
+        thing = SPTR_TO_LPTR(thing->snext);
       }
       ++pse;
    }

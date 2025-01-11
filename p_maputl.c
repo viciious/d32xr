@@ -258,12 +258,15 @@ void P_UnsetThingPosition (mobj_t *thing)
 	if ( ! (thing->flags & MF_NOSECTOR) )
 	{	/* inert things don't need to be in blockmap */
 /* unlink from subsector */
-		if (thing->snext)
-			thing->snext->sprev = thing->sprev;
-		if (thing->sprev)
-			thing->sprev->snext = thing->snext;
+		mobj_t *snext = SPTR_TO_LPTR(thing->snext);
+		mobj_t *sprev = SPTR_TO_LPTR(thing->sprev);
+
+		if (snext)
+			snext->sprev = thing->sprev;
+		if (sprev)
+			sprev->snext = thing->snext;
 		else
-			thing->subsector->sector->thinglist = thing->snext;
+			thing->subsector->sector->thinglist = snext;
 	}
 	
 	if ( ! (thing->flags & MF_NOBLOCKMAP) )
@@ -314,10 +317,10 @@ void P_SetThingPosition2 (mobj_t *thing, subsector_t *ss)
 	{	/* invisible things don't go into the sector links */
 		sec = ss->sector;
 	
-		thing->sprev = NULL;
-		thing->snext = sec->thinglist;
+		thing->sprev = (SPTR)0;
+		thing->snext = LPTR_TO_SPTR(sec->thinglist);
 		if (sec->thinglist)
-			sec->thinglist->sprev = thing;
+			sec->thinglist->sprev = LPTR_TO_SPTR(thing);
 		sec->thinglist = thing;
 	}
 	
