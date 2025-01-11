@@ -400,7 +400,7 @@ static void *roq_dma_dest(roq_file *fp, void *dest, int length, int dmaarg)
             int starttics = Mars_GetTicCount();
             do {
                 fp->snddma_base = (unsigned char *)ringbuf_walloc(schunks, (chunk_size + 8 + 1) & ~1);
-                if (Mars_GetTicCount() - starttics > 120) {
+                if (Mars_GetTicCount() - starttics > 300) {
                     // an emergency way out of a broken stream
                     break;
                 }
@@ -551,11 +551,12 @@ static void roq_return_chunk(roq_file* fp)
 
 static int roq_buffer(roq_file* fp)
 {
-    if (ringbuf_nfree(schunks) > RoQ_SND_BUF_SIZE/2 && ringbuf_nfree(vchunks) > RoQ_VID_BUF_SIZE/2) {
+    // increasing the amount of buffering limit seems be doing more harm than good
+    // the 1/4 of max size is the emprical value that works best in practice
+    if (ringbuf_nfree(schunks) > RoQ_SND_BUF_SIZE/4 && ringbuf_nfree(vchunks) > RoQ_VID_BUF_SIZE/4) {
         roq_commit(fp);
         return 1;
     }
-
     return 0;
 }
 
@@ -739,7 +740,8 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
 
         waittics = Mars_GetTicCount() - starttics;
         while (waittics < ri->frametics + extrawait) {
-            if (!(MARS_SYS_COMM0 & 1)) {
+            int left = ri->frametics + extrawait - waittics;
+            if (left > 1 && !(MARS_SYS_COMM0 & 1)) {
                 roq_buffer(ri->fp);
             }
             waittics = Mars_GetTicCount() - starttics;
