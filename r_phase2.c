@@ -92,7 +92,7 @@ static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle, int ang
 void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
 {
     angle_t      distangle, offsetangle, normalangle;
-    seg_t* seg = wc->seg;
+    seg_t       *seg = wc->seg;
     angle_t      angle1 = wc->scalestep;
     fixed_t      sineval, rw_distance;
     fixed_t      scalefrac, scale2;
@@ -100,6 +100,7 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
     fixed_t      x1, y1, x2, y2;
     int          nv1 = SEG_UNPACK_V1(seg);
     int          nv2 = SEG_UNPACK_V2(seg);
+    short        offset = SEG_UNPACK_OFFSET(seg);
 
     // this is essentially R_StoreWallRange
     // calculate rw_distance for scale calculation
@@ -126,6 +127,8 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
     sineval = finesine(distangle >> ANGLETOFINESHIFT);
     rw_distance = FixedMul(hyp, sineval);
     wc->distance = rw_distance;
+
+    wc->offset = ((fixed_t)wc->offset + offset) << FRACBITS;
 
     scalefrac = scale2 = wc->scalefrac =
         R_ScaleFromGlobalAngle(rw_distance, vd->viewangle + (xtoviewangle[wc->start]<<FRACBITS), normalangle);
