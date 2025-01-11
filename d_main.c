@@ -16,6 +16,8 @@ VINT		controltype = 0;		/* determine settings for BT_* */
 boolean		sky_md_layer = false;
 boolean		sky_32x_layer = false;
 
+boolean		extended_sky = false;
+
 int			gamevbls;		/* may not really be vbls in multiplayer */
 int			vblsinframe;		/* range from ticrate to ticrate*2 */
 
@@ -450,6 +452,7 @@ static void D_LoadMDSky(void)
 
 	// Get the thru-pixel color from the metadata.
 	mars_thru_rgb_reference = sky_metadata_ptr[0];
+	extended_sky = (sky_metadata_ptr[2] & 0x81);	// false = H32 mode; true = H40 mode
 	
 
 	Mars_LoadMDSky(sky_metadata_ptr,

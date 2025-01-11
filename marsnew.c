@@ -766,8 +766,10 @@ void I_Update(void)
 	if (sky_md_layer) {
 		unsigned short scroll_x = (*((unsigned short *)&vd.viewangle) >> 6);
 
-		// Use this to scroll the sky 1280 pixels. Would work well with a 256-pixel width sky.
-		scroll_x += (scroll_x >> 2);
+		if (extended_sky) {
+			// Use this to scroll the sky 1280 pixels. Works well for 256-width skies.
+			scroll_x += (scroll_x >> 2);
+		}
 
 		Mars_ScrollMDSky(scroll_x, scroll_y_base, scroll_y_offset, scroll_y_pan);
 	}

@@ -196,7 +196,6 @@ init_hardware:
         |move.w  #0x8B00,(a0) /* reg 11 = /IE2 (no EXT INT), full scroll */
         move.w  #0x8B03,(a0) /* reg 11 = /IE2 (no EXT INT), line scroll */
         move.w  #0x8C81,(a0) /* reg 12 = H40 mode, no lace, no shadow/hilite */
-        |move.w  #0x0C80,(a0) /* reg 12 = H32 mode, no lace, no shadow/hilite */
         move.w  #0x8D2B,(a0) /* reg 13 = HScroll Tbl = 0xAC00 */
         move.w  #0x8E00,(a0) /* reg 14 = always 0 */
         move.w  #0x8F01,(a0) /* reg 15 = data INC = 1 */
@@ -1612,6 +1611,7 @@ load_md_sky:
         ||move.w  #0x832C,(a0) /* reg 3 = Name Tbl W = 0xB000 */
         ||move.w  #0x8407,(a0) /* reg 4 = Name Tbl B = 0xE000 */
         ||move.w  #0x8554,(a0) /* reg 5 = Sprite Attr Tbl = 0xA800 */
+        ||move.w  #0x8C81,(a0) /* reg 12 = H40 mode, no lace, no shadow/hilite */
         ||move.w  #0x8D2B,(a0) /* reg 13 = HScroll Tbl = 0xAC00 */
 
 
@@ -1620,12 +1620,16 @@ load_md_sky:
         lea     0xC00004,a0
         move.l  lump_ptr,d0
         andi.l  #0x7FFFF,d0
-        addi.l  #0x880001,d0    /* Plus 1 to skip the 32X thru color byte */
+        addi.l  #0x880002,d0    /* Plus 2 to skip the 32X thru color and dummy bytes */
         move.l  d0,a2
+
+        move.w  #0x8C00, d0
+        or.b    (a2)+,d0
+        move.w  d0,(a0) /* reg 12 */
 
         move.w  #0x9000, d0
         or.b    (a2)+,d0
-        move.w  d0,(a0) /* reg 16 = Scroll Size = 32x64 */
+        move.w  d0,(a0) /* reg 16 */
 
         move.w  (a2)+,d0
         move.w  d0,scroll_b_vert_offset
@@ -2521,7 +2525,6 @@ init_vdp:
         |move.w  #0x8B00,(a0) /* reg 11 = /IE2 (no EXT INT), full scroll */
         move.w  #0x8B03,(a0) /* reg 11 = /IE2 (no EXT INT), line scroll */
         move.w  #0x8C81,(a0) /* reg 12 = H40 mode, no lace, no shadow/hilite */
-        |move.w  #0x0C80,(a0) /* reg 12 = H32 mode, no lace, no shadow/hilite */
         move.w  #0x8D2B,(a0) /* reg 13 = HScroll Tbl = 0xAC00 */
         move.w  #0x8E00,(a0) /* reg 14 = always 0 */
         move.w  #0x8F01,(a0) /* reg 15 = data INC = 1 */
