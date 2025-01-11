@@ -53,7 +53,7 @@ static unsigned *snd_samples[2];
 static int16_t snd_flip = 0;
 static int16_t snd_channels = 0;
 static int16_t snd_samples_rem = 0;
-static int snd_lr[2];
+static uint16_t snd_lr[2];
 
 static marsrbuf_t *vchunks;
 
@@ -164,16 +164,22 @@ static void roq_snddma1_handler(void)
 
             if (snd_channels == 1)
             {
-                snd_lr[0] = (int16_t)((header[0]) | (header[1] << 8));
-                snd_lr[0] += 32768;
+                int init_sample = (int16_t)((header[0]) | (header[1] << 8));
+                init_sample += 32768;
+                snd_lr[0] = init_sample;
             }
             else
             {
+                int init_sample;
                 snd_samples_rem /= 2;
-                snd_lr[0] = (int16_t)((header[1] << 8));
-                snd_lr[0] += 32768;
-                snd_lr[1] = (int16_t)((header[0] << 8));
-                snd_lr[1] += 32768;
+
+                init_sample = (int16_t)((header[1] << 8));
+                init_sample += 32768;
+                snd_lr[0] = init_sample;
+
+                init_sample = (int16_t)((header[0] << 8));
+                init_sample += 32768;
+                snd_lr[1] = init_sample;
             }
             header += 2;
 
@@ -201,7 +207,7 @@ static void roq_snddma1_handler(void)
             v *= v;
             if (*b++ & 128) v = -v;
 
-            newval = snd_lr[j&c] + v;
+            newval = v + snd_lr[j&c];
 
             __asm volatile("mov #1, %0\n\tshll16 %0\n\t" : "=&r"(c_hi) );
             if (newval & c_hi) newval = c_hi-1;
