@@ -348,22 +348,31 @@ static void D_LoadSkyGradient(void)
 
 	for (int section=0; section < section_count; section++)
 	{
-		unsigned short color = (data[0] << 8) | data[1];
-		unsigned short interval_iterations = data[2] + 1;
-		unsigned short increment = (data[3] << 8) | data[4];
-		unsigned short interval_height = data[5] + 1;
+		unsigned short red = (data[0] << 8);
+		unsigned short green = (data[1] << 8);
+		unsigned short blue = (data[2] << 8);
+		signed short inc_red = (data[3] << 8) | data[4];
+		signed short inc_green = (data[5] << 8) | data[6];
+		signed short inc_blue = (data[7] << 8) | data[8];
+		unsigned short interval_iterations = data[9] + 1;
+		unsigned short interval_height = data[10] + 1;
 
 		for (int interval = 0; interval < interval_iterations; interval++) {
 			for (int line=0; line < interval_height; line++) {
-				copper_color_table[table_index + line] = color;
+				copper_color_table[table_index + line] =
+						(((*(unsigned char *)&blue) & 0xF8) << 7)
+						| (((*(unsigned char *)&green) & 0xF8) << 2)
+						| ((*(unsigned char *)&red) >> 3);
 			}
 
 			table_index += interval_height;
 
-			color += increment;
+			red += inc_red;
+			green += inc_green;
+			blue += inc_blue;
 		}
 
-		data += 6;
+		data += 11;
 	}
 
 	unsigned short color = (data[0] << 8) | data[1];
