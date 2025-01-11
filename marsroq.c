@@ -126,7 +126,7 @@ static void roq_snddma1_handler(void)
 
     for (i = 0; i < RoQ_MAX_SAMPLES; )
     {
-        int j, l, c;
+        int j, l;
         int8_t *b;
 
         if (!snd_samples_rem)
@@ -191,30 +191,67 @@ static void roq_snddma1_handler(void)
             num_samples = RoQ_MAX_SAMPLES - i;
 
         l = num_samples * snd_channels;
-        c = snd_channels - 1;
         buf_start = ringbuf_ralloc(schunks, l);
         b = (int8_t *)buf_start;
 
         Mars_ClearCacheLines(b, ((unsigned)l >> 4) + 2);
 
-        for (j = 0; j < l; j++)
+        if (snd_channels == 1)
         {
-            int v;
-            int c_hi;
-            int newval;
+            for (j = 0; j < l; j++)
+            {
+                int v;
+                int c_hi;
+                int newval;
 
-            v = *b & 127;
-            v *= v;
-            if (*b++ & 128) v = -v;
+                v = *b & 127;
+                v *= v;
+                if (*b++ & 128) v = -v;
 
-            newval = v + snd_lr[j&c];
+                newval = v + snd_lr[0];
 
-            __asm volatile("mov #1, %0\n\tshll16 %0\n\t" : "=&r"(c_hi) );
-            if (newval & c_hi) newval = c_hi-1;
-            if (newval < 0) newval = 0;
+                __asm volatile("mov #1, %0\n\tshll16 %0\n\t" : "=&r"(c_hi) );
+                if (newval & c_hi) newval = c_hi-1;
+                else if (newval < 0) newval = 0;
 
-            snd_lr[j&c] = newval;
-            *s++ = RoQ_SAMPLE_MIN + ((unsigned)newval >> 6);
+                snd_lr[0] = newval;
+                *s++ = RoQ_SAMPLE_MIN + ((unsigned)newval >> 6);
+            }
+        }
+        else
+        {
+            for (j = 0; j < l; j++)
+            {
+                int v;
+                int c_hi;
+                int newval;
+
+                v = *b & 127;
+                v *= v;
+                if (*b++ & 128) v = -v;
+
+                newval = v + snd_lr[0];
+
+                __asm volatile("mov #1, %0\n\tshll16 %0\n\t" : "=&r"(c_hi) );
+                if (newval & c_hi) newval = c_hi-1;
+                else if (newval < 0) newval = 0;
+
+                snd_lr[0] = newval;
+                *s++ = RoQ_SAMPLE_MIN + ((unsigned)newval >> 6);
+
+                v = *b & 127;
+                v *= v;
+                if (*b++ & 128) v = -v;
+
+                newval = v + snd_lr[1];
+
+                __asm volatile("mov #1, %0\n\tshll16 %0\n\t" : "=&r"(c_hi) );
+                if (newval & c_hi) newval = c_hi-1;
+                else if (newval < 0) newval = 0;
+
+                snd_lr[1] = newval;
+                *s++ = RoQ_SAMPLE_MIN + ((unsigned)newval >> 6);
+            }
         }
 
         snd_samples_rem -= num_samples;
