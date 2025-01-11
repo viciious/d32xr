@@ -43,7 +43,7 @@ static void P_RecursiveSound (mobj_t *soundtarget, int secnum, int soundblocks, 
 		return;		/* already flooded */
 	soundtraversed[secnum] = soundblocks+1;
 	sec->validcount = validcount[0];
-	sec->soundtarget = soundtarget;
+	sec->soundtarget = LPTR_TO_SPTR(soundtarget);
 	
 	for (i=0 ;i<sec->linecount ; i++)
 	{

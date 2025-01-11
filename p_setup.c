@@ -185,7 +185,7 @@ void P_LoadSectors (int lump)
 		{
 			ss->ceilingpic = R_FlatNumForName(ms->ceilingpic);
 		}
-		ss->thinglist = NULL;
+		ss->thinglist = (SPTR)0;
 
 		lightlevel = LITTLESHORT(ms->lightlevel);
 		if (lightlevel < 0)

@@ -91,12 +91,12 @@ typedef	struct
 
 	VINT		tag;
 
-	mobj_t		*soundtarget;		/* thing that made a sound (or null) */
+	SPTR		soundtarget;		/* thing that made a sound (or null) */
+	SPTR		thinglist;			/* list of mobjs in sector */
 	
 	VINT		blockbox[4];		/* mapblock bounding box for height changes */
 	VINT		soundorg[2];		/* for any sounds played by the sector */
 
-	mobj_t		*thinglist;			/* list of mobjs in sector */
 	void		*specialdata;		/* thinker_t for reversable actions */
 	VINT		*lines;				/* [linecount] size */
 } sector_t;

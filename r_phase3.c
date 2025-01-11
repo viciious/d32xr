@@ -302,7 +302,7 @@ void R_SpritePrep(void)
    while(pse < vd->lastvissector)
    {
       sector_t    *se = *pse;
-      mobj_t *thing = se->thinglist;
+      mobj_t *thing = SPTR_TO_LPTR(se->thinglist);
 
       while(thing) // walk sector thing list
       {

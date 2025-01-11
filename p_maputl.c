@@ -266,7 +266,7 @@ void P_UnsetThingPosition (mobj_t *thing)
 		if (sprev)
 			sprev->snext = thing->snext;
 		else
-			thing->subsector->sector->thinglist = snext;
+			thing->subsector->sector->thinglist = thing->snext;
 	}
 	
 	if ( ! (thing->flags & MF_NOBLOCKMAP) )
@@ -318,10 +318,10 @@ void P_SetThingPosition2 (mobj_t *thing, subsector_t *ss)
 		sec = ss->sector;
 	
 		thing->sprev = (SPTR)0;
-		thing->snext = LPTR_TO_SPTR(sec->thinglist);
+		thing->snext = sec->thinglist;
 		if (sec->thinglist)
-			sec->thinglist->sprev = LPTR_TO_SPTR(thing);
-		sec->thinglist = thing;
+			((mobj_t *)SPTR_TO_LPTR(sec->thinglist))->sprev = LPTR_TO_SPTR(thing);
+		sec->thinglist = LPTR_TO_SPTR(thing);
 	}
 	
 /* */
