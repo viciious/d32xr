@@ -33,7 +33,7 @@
 #include "roq.h"
 
 #define RoQ_VID_BUF_SIZE        0xE000
-#define RoQ_SND_BUF_SIZE        0x5000
+#define RoQ_SND_BUF_SIZE        0x5400
 
 #define RoQ_SAMPLE_MIN          2
 #define RoQ_SAMPLE_MAX          1032
@@ -600,7 +600,7 @@ static int roq_buffer(roq_file* fp)
 {
     // increasing the amount of buffering limit seems be doing more harm than good
     // the 1/4 of max size is the emprical value that works best in practice
-    if (ringbuf_nfree(schunks) > RoQ_SND_BUF_SIZE/4 && ringbuf_nfree(vchunks) > RoQ_VID_BUF_SIZE/4) {
+    if (ringbuf_nfree(schunks) > ringbuf_size(schunks)/4 && ringbuf_nfree(vchunks) > RoQ_VID_BUF_SIZE/4) {
         roq_commit(fp);
         return 1;
     }
@@ -658,6 +658,7 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
     char paused = 0;
     int ctrl = 0, prev_ctrl = 0, ch_ctrl = 0;
     int framecount = 0;
+    int snd_buf_size = RoQ_SND_BUF_SIZE;
     int extratics = 0;
     char needsound = 1;
     unsigned starttics;
@@ -674,12 +675,14 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
     memset(ri, 0, sizeof(*ri));
     buf = (char *)ri + sizeof(*ri);
 
-    viddata = buf;
     viddata = (void *)(((intptr_t)buf + 15) & ~15);
     buf = viddata + RoQ_VID_BUF_SIZE;
 
     snddata = (void *)(((intptr_t)buf + 1) & ~1);
     buf = (void *)(snddata + RoQ_SND_BUF_SIZE);
+
+    ri->canvascopy = (void *)(((intptr_t)buf + 15) & ~15);
+    buf = (void *)(ri->canvascopy + RoQ_MAX_CANVAS_SIZE);
 
     snd_samples[0] = (unsigned *)(((intptr_t)buf + 15) & ~15);
     buf = (void *)((char *)snd_samples[0] + sizeof(int)*RoQ_MAX_SAMPLES);
@@ -698,8 +701,6 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
 
     ringbuf_init(vchunks, viddata, RoQ_VID_BUF_SIZE, 0);
 
-    ringbuf_init(schunks, snddata, RoQ_SND_BUF_SIZE, 1);
-
     if (roq_open(fn, &fp, viddata) < 0) {
         return -1;
     }
@@ -713,6 +714,21 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
 	if (roq_read_info(ri->fp, ri)) {
         return -1;
     }
+
+    // donate free memory to the audio chunks buffer
+    if (ri->canvas_pitch * ri->display_height < RoQ_MAX_CANVAS_SIZE)
+    {
+        short *oldp = ri->canvascopy;
+        int shift = RoQ_MAX_CANVAS_SIZE - ri->canvas_pitch * ri->display_height;
+
+        ri->canvascopy += shift;
+        ri->canvascopy = (void *)((intptr_t)ri->canvascopy & ~15);
+        shift = ri->canvascopy - oldp;
+
+        snd_buf_size += shift * sizeof(short);
+    }
+
+    ringbuf_init(schunks, snddata, snd_buf_size, 1);
 
     // buffer some initial data, but not for too long
     starttics = Mars_GetTicCount();

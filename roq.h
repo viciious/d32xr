@@ -68,7 +68,7 @@ typedef struct {
 } roq_parse_ctx;
 
 typedef struct roq_info_s {
-	short canvascopy[RoQ_MAX_CANVAS_SIZE] __attribute__((aligned(16)));
+	short *canvascopy;
 	roq_cell cells_u[256];
 	roq_qcell qcells_u[256];
 	roq_cell *cells;
