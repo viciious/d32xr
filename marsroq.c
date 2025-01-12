@@ -35,12 +35,11 @@
 #define RoQ_VID_BUF_SIZE        0xE000
 #define RoQ_SND_BUF_SIZE        0x5000
 
-#define RoQ_SAMPLE_RATE         22050
 #define RoQ_SAMPLE_MIN          2
 #define RoQ_SAMPLE_MAX          1032
 #define RoQ_SAMPLE_CENTER       (RoQ_SAMPLE_MAX-RoQ_SAMPLE_MIN)/2
 
-#define RoQ_MAX_SAMPLES         736 // 50Hz
+#define RoQ_MAX_SAMPLES         734 // 30Hz
 
 //#define RoQ_ATTR_SDRAM  __attribute__((section(".data"), aligned(16)))
 #ifndef RoQ_ATTR_SDRAM
@@ -80,48 +79,11 @@ static void roq_snddma_center(int f)
     snd_channels = 1;
 }
 
-static void roq_snddma1_kickstart(void)
-{
-    snd_samples_rem = 0;
-
-    snd_flip = 0;
-    roq_snddma_center(0);
-
-    snd_flip = 1;
-
-    SH2_DMA_SAR1 = (intptr_t)snd_samples[0];
-    SH2_DMA_TCR1 = RoQ_MAX_SAMPLES;
-    SH2_DMA_DAR1 = (intptr_t)&MARS_PWM_MONO; // storing a word here will the MONO channel
-    SH2_DMA_CHCR1 = 0x14e5; // dest fixed, src incr, size word, ext req, dack mem to dev, dack hi, dack edge, dreq rising edge, cycle-steal, dual addr, intr enabled, clear TE, dma enabled
-}
-
-static void roq_snddma1_handler(void)
+static void roq_snddma1_load_samples(void)
 {
     int i;
     int num_samples;
     uint8_t *buf_start;
-
-    SH2_DMA_CHCR1; // read TE
-    SH2_DMA_CHCR1 = 0; // clear TE
-
-    if (!snd_channels)
-        return;
-
-    SH2_DMA_SAR1 = (uintptr_t)snd_samples[snd_flip];
-    SH2_DMA_TCR1 = RoQ_MAX_SAMPLES;
-
-    if (snd_channels == 2)
-    {
-        SH2_DMA_DAR1 = (intptr_t)&MARS_PWM_LEFT; // storing a long here will set left and right
-        SH2_DMA_CHCR1 = 0x18e5; // dest fixed, src incr, size long, ext req, dack mem to dev, dack hi, dack edge, dreq rising edge, cycle-steal, dual addr, intr enabled, clear TE, dma enabled
-    }
-    else
-    {
-        SH2_DMA_DAR1 = (intptr_t)&MARS_PWM_MONO; // storing a word here will set the MONO channel
-        SH2_DMA_CHCR1 = 0x14e5; // dest fixed, src incr, size word, ext req, dack mem to dev, dack hi, dack edge, dreq rising edge, cycle-steal, dual addr, intr enabled, clear TE, dma enabled
-    }
-
-    snd_flip = (snd_flip + 1) % 2;
     uint16_t *s = (uint16_t *)snd_samples[snd_flip];
 
     for (i = 0; i < RoQ_MAX_SAMPLES; )
@@ -303,17 +265,66 @@ static void roq_snddma1_handler(void)
 
     if (snd_channels == 1)
     {
+        int l_lastval = RoQ_SAMPLE_MIN + ((uint16_t)snd_lr[0] >> 6);
         for (; i < RoQ_MAX_SAMPLES; i++)
-            *s++ = RoQ_SAMPLE_CENTER;
+            *s++ = l_lastval;
     }
     else
     {
+        int l_lastval = RoQ_SAMPLE_MIN + ((uint16_t)snd_lr[0] >> 6);
+        int r_lastval = RoQ_SAMPLE_MIN + ((uint16_t)snd_lr[1] >> 6);
         for (; i < RoQ_MAX_SAMPLES; i++)
         {
-            *s++ = RoQ_SAMPLE_CENTER;
-            *s++ = RoQ_SAMPLE_CENTER;
+            *s++ = l_lastval;
+            *s++ = r_lastval;
         }
     }
+}
+
+static void roq_snddma1_startdma(void)
+{
+    SH2_DMA_SAR1 = (uintptr_t)snd_samples[snd_flip];
+    SH2_DMA_TCR1 = RoQ_MAX_SAMPLES;
+
+    if (snd_channels == 2)
+    {
+        SH2_DMA_DAR1 = (intptr_t)&MARS_PWM_LEFT; // storing a long here will set left and right
+        SH2_DMA_CHCR1 = 0x18e5; // dest fixed, src incr, size long, ext req, dack mem to dev, dack hi, dack edge, dreq rising edge, cycle-steal, dual addr, intr enabled, clear TE, dma enabled
+    }
+    else
+    {
+        SH2_DMA_DAR1 = (intptr_t)&MARS_PWM_MONO; // storing a word here will set the MONO channel
+        SH2_DMA_CHCR1 = 0x14e5; // dest fixed, src incr, size word, ext req, dack mem to dev, dack hi, dack edge, dreq rising edge, cycle-steal, dual addr, intr enabled, clear TE, dma enabled
+    }
+
+    snd_flip = (snd_flip + 1) % 2;
+}
+
+static void roq_snddma1_handler(void)
+{
+    SH2_DMA_CHCR1; // read TE
+    SH2_DMA_CHCR1 = 0; // clear TE
+
+    if (!snd_channels)
+        return;
+
+    roq_snddma1_startdma();
+
+    roq_snddma1_load_samples();
+}
+
+static void roq_snddma1_kickstart(void)
+{
+    snd_samples_rem = 0;
+
+    snd_flip = 0;
+    roq_snddma1_load_samples();
+
+    snd_flip = 1;
+    roq_snddma1_load_samples();
+
+    snd_flip = 0;
+    roq_snddma1_startdma();
 }
 
 void Mars_Sec_RoQ_InitSound(int init)
@@ -323,15 +334,17 @@ void Mars_Sec_RoQ_InitSound(int init)
 
     Mars_ClearCache();
 
-    if (!init)
-    {
-        snd_channels = 0;
-        return;
-    }
+    snd_lr[0] = snd_lr[1] = 0;
 
     for (i = 0; i < 2; i++)
     {
         roq_snddma_center(i);
+    }
+
+    if (!init)
+    {
+        snd_channels = 0;
+        return;
     }
 
     // init DMA
@@ -642,10 +655,11 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
     uint8_t *snddata;
     roq_info *ri;
     roq_file fp;
-    int paused = 0;
+    char paused = 0;
     int ctrl = 0, prev_ctrl = 0, ch_ctrl = 0;
     int framecount = 0;
     int extratics = 0;
+    char needsound = 1;
     unsigned starttics;
 
     if (!allowpause && (Mars_ReadController(0) & SEGA_CTRL_START)) {
@@ -708,9 +722,6 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
         }
     }
 
-    // init sound DMA on the secondary CPU
-    secsnd(1);
-
     roq_init_video(ri);
 
     Mars_FlipFrameBuffers(0);
@@ -758,6 +769,13 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
                 roq_close(ri, secsnd);
                 roq_init_video(ri);
                 return 1;
+            }
+
+            if (needsound && schunks->writepos != 0)
+            {
+                // init sound DMA on the secondary CPU
+                needsound = 0;
+                secsnd(1);
             }
 
             Mars_FlipFrameBuffers(0);
