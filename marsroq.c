@@ -53,7 +53,7 @@ static unsigned *snd_samples[2];
 static int16_t snd_flip = 0;
 static int16_t snd_channels = 0;
 static int16_t snd_samples_rem = 0;
-static uint16_t snd_lr[2];
+static int16_t snd_lr[2];
 
 static marsrbuf_t *vchunks;
 
@@ -198,60 +198,94 @@ static void roq_snddma1_handler(void)
 
         if (snd_channels == 1)
         {
+            int l_newval = (uint16_t)snd_lr[0];
+            int c_hi = 0;
+            __asm volatile("mov #1, %0\n\tshll16 %0\n\t" : "=&r"(c_hi) );
+
             for (j = 0; j < l; j++)
             {
                 int v;
-                int c_hi;
-                int newval;
 
                 v = *b & 127;
+#if 0
+                // gcc uses a mul.l here, which has a slightly higher latency cycles value
                 v *= v;
                 if (*b++ & 128) v = -v;
+#else
+                __asm volatile(
+                    "mulu.w %0,%0\n\t"
+                    "cmp/pz %1\n\t"
+                    "bt/s 1f\n\t"
+                    "sts macl,%0\n\t"
+                    "neg %0,%0\n\t"
+                    "1:\n\t"
+                     : "+r"(v) : "r"(*b++));
+#endif
+                l_newval += v;
+                if (l_newval & c_hi) l_newval = c_hi-1;
+                else if (l_newval < 0) l_newval = 0;
 
-                newval = v + snd_lr[0];
-
-                __asm volatile("mov #1, %0\n\tshll16 %0\n\t" : "=&r"(c_hi) );
-                if (newval & c_hi) newval = c_hi-1;
-                else if (newval < 0) newval = 0;
-
-                snd_lr[0] = newval;
-                *s++ = RoQ_SAMPLE_MIN + ((unsigned)newval >> 6);
+                *s++ = RoQ_SAMPLE_MIN + ((unsigned)l_newval >> 6);
             }
+
+            snd_lr[0] = l_newval;
         }
         else
         {
+            int l_newval = (uint16_t)snd_lr[0];
+            int r_newval = (uint16_t)snd_lr[1];
+            int c_hi = 0;
+            __asm volatile("mov #1, %0\n\tshll16 %0\n\t" : "=&r"(c_hi) );
+
             for (j = 0; j < l; j++)
             {
                 int v;
-                int c_hi;
-                int newval;
 
                 v = *b & 127;
+#if 0
                 v *= v;
                 if (*b++ & 128) v = -v;
+#else
+                __asm volatile(
+                    "mulu.w %0,%0\n\t"
+                    "cmp/pz %1\n\t"
+                    "bt/s 1f\n\t"
+                    "sts macl,%0\n\t"
+                    "neg %0,%0\n\t"
+                    "1:\n\t"
+                     : "+r"(v) : "r"(*b++));
+#endif
 
-                newval = v + snd_lr[0];
+                l_newval += v;
+                if (l_newval & c_hi) l_newval = c_hi-1;
+                else if (l_newval < 0) l_newval = 0;
 
-                __asm volatile("mov #1, %0\n\tshll16 %0\n\t" : "=&r"(c_hi) );
-                if (newval & c_hi) newval = c_hi-1;
-                else if (newval < 0) newval = 0;
-
-                snd_lr[0] = newval;
-                *s++ = RoQ_SAMPLE_MIN + ((unsigned)newval >> 6);
+                *s++ = RoQ_SAMPLE_MIN + ((unsigned)l_newval >> 6);
 
                 v = *b & 127;
+#if 0
                 v *= v;
                 if (*b++ & 128) v = -v;
+#else
+                __asm volatile(
+                    "mulu.w %0,%0\n\t"
+                    "cmp/pz %1\n\t"
+                    "bt/s 1f\n\t"
+                    "sts macl,%0\n\t"
+                    "neg %0,%0\n\t"
+                    "1:\n\t"
+                     : "+r"(v) : "r"(*b++));
+#endif
 
-                newval = v + snd_lr[1];
+                r_newval += v;
+                if (r_newval & c_hi) r_newval = c_hi-1;
+                else if (r_newval < 0) r_newval = 0;
 
-                __asm volatile("mov #1, %0\n\tshll16 %0\n\t" : "=&r"(c_hi) );
-                if (newval & c_hi) newval = c_hi-1;
-                else if (newval < 0) newval = 0;
-
-                snd_lr[1] = newval;
-                *s++ = RoQ_SAMPLE_MIN + ((unsigned)newval >> 6);
+                *s++ = RoQ_SAMPLE_MIN + ((unsigned)r_newval >> 6);
             }
+
+            snd_lr[0] = l_newval;
+            snd_lr[1] = r_newval;
         }
 
         snd_samples_rem -= num_samples;
