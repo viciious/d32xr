@@ -532,18 +532,18 @@ pri_v_irq:
 
 
         ! Enable or disable HINTs depending if copper effects are needed.
-        mov.l   pvi_copper_effects,r1
-        mov.l   @r1,r2
-        shll2   r2
-        mov.w   pvi_int_mask_hint,r0
-        and     r0,r2
-
-        mov.l   pvi_mars_adapter,r1
-        mov.b   @(1,r1),r0
-        mov.w   pvi_int_mask_no_hint,r3
-        and     r3,r0
-        or      r2,r0
-        mov.b   r0,@(1,r1)              /* set int enables */
+!        mov.l   pvi_copper_effects,r1
+!        mov.l   @r1,r2
+!        shll2   r2
+!        mov.w   pvi_int_mask_hint,r0
+!        and     r0,r2
+!
+!        mov.l   pvi_mars_adapter,r1
+!        mov.b   @(1,r1),r0
+!        mov.w   pvi_int_mask_no_hint,r3
+!        and     r3,r0
+!        or      r2,r0
+!        mov.b   r0,@(1,r1)              /* set int enables */
 
 
         ! Run the handler code
@@ -583,6 +583,16 @@ pvi_copper_effects:
 !-----------------------------------------------------------------------
         
 pri_h_irq:
+        ! bump ints if necessary
+        mov.l   phi_sh2_frtctl,r1
+        mov     #0xE2,r0                /* TOCR = select OCRA, output 1 on compare match */
+        mov.b   r0,@(0x07,r1)           /* write TOCR */
+        mov.b   @(0x07,r1),r0           /* read TOCR */
+
+        mov.l   phi_mars_adapter,r1
+        mov.w   r0,@(0x18,r1)           /* clear H IRQ */
+
+
         mov.l   phi_copper_color_index,r1
         mov.l   @r1,r0
 
@@ -613,14 +623,6 @@ pri_h_irq:
         mov.l   phi_mars_thru_color,r1
         mov.w   r0,@r1
 
-        ! bump ints if necessary
-        mov.l   phi_sh2_frtctl,r1
-        mov     #0xE2,r0                /* TOCR = select OCRA, output 1 on compare match */
-        mov.b   r0,@(0x07,r1)           /* write TOCR */
-        mov.b   @(0x07,r1),r0           /* read TOCR */
-
-        mov.l   phi_mars_adapter,r1
-        mov.w   r0,@(0x18,r1)           /* clear H IRQ */
 
         nop
         nop
