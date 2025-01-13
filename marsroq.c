@@ -49,8 +49,8 @@
 static marsrbuf_t *schunks;
 
 static unsigned *snd_samples[2];
-static int16_t snd_flip = 0;
-static int16_t snd_channels = 0;
+static int8_t snd_flip = 0;
+static int8_t snd_channels = 0;
 static int16_t snd_samples_rem = 0;
 static int16_t snd_lr[2];
 
@@ -164,7 +164,7 @@ static void roq_snddma1_load_samples(void)
             int c_hi = 0;
             __asm volatile("mov #1, %0\n\tshll16 %0\n\t" : "=&r"(c_hi) );
 
-            for (j = 0; j < l; j++)
+            for (j = 0; j < num_samples; j++)
             {
                 int v;
 
@@ -199,7 +199,7 @@ static void roq_snddma1_load_samples(void)
             int c_hi = 0;
             __asm volatile("mov #1, %0\n\tshll16 %0\n\t" : "=&r"(c_hi) );
 
-            for (j = 0; j < l; j++)
+            for (j = 0; j < num_samples; j++)
             {
                 int v;
 
