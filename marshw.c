@@ -72,12 +72,17 @@ static void *pri_dreqdma_handler_default(void *cbarg, void *dest, int length, in
 	return dest;
 }
 
+static void pri_dreqdma_done_handler_default(void *cbarg) {
+}
+
 static void (*pri_cmd_cb)(void) = &intr_handler_stub;
 static void *(*pri_dreqdma_cb)(void*, void *, int, int) = pri_dreqdma_handler_default;
+static void (*pri_dreqdmadone_cb)(void*) = pri_dreqdma_done_handler_default;
 static void (*sci_cmd_cb)(void) = &intr_handler_stub;
 static void (*sci_dma1_cb)(void) = &intr_handler_stub;
 
-static void Mars_HandleDMARequest(void);
+static void Mars_HandleBeginDMARequest(void);
+static void Mars_HandleEndDMARequest(void);
 
 static char Mars_UploadPalette(const uint8_t* palette) __attribute__((section(".sdata"), aligned(16), optimize("Os")));
 
@@ -832,7 +837,7 @@ int Mars_ReadCDFile(int length)
 	return *(int *)&MARS_SYS_COMM8;
 }
 
-static void Mars_HandleDMARequest(void)
+static void Mars_HandleBeginDMARequest(void)
 {
 	int j, l;
 	int cmd, arg;
@@ -868,10 +873,16 @@ static void Mars_HandleDMARequest(void)
 	SH2_DMA_TCR0 = j;
 
 	SH2_DMA_CHCR0 = chcr|SH2_DMA_CHCR_DE;
+}
 
-	++MARS_SYS_COMM0; // SH2 DMA started
+static void Mars_HandleEndDMARequest(void)
+{
+	int chcr = SH2_DMA_CHCR_DM_INC|SH2_DMA_CHCR_TS_WU|SH2_DMA_CHCR_AL_AH|SH2_DMA_CHCR_DS_EDGE|SH2_DMA_CHCR_DL_AH;
+
 	while (!(SH2_DMA_CHCR0 & SH2_DMA_CHCR_TE)) ; // wait on TE
 	SH2_DMA_CHCR0 = chcr; // clear DMA TE
+
+	pri_dreqdmadone_cb(pri_dma_arg);
 }
 
 int Mars_SeekCDFile(int offset, int whence)
@@ -956,6 +967,11 @@ void Mars_SetPriDreqDMACallback(void *(*cb)(void *, void *, int , int), void *ar
 	pri_dreqdma_cb = NULL ? pri_dreqdma_handler_default : cb;
 }
 
+void Mars_SetPriDreqDMADoneCallback(void (*cb)(void *))
+{
+	pri_dreqdmadone_cb = NULL ? pri_dreqdma_done_handler_default : cb;
+}
+
 void Mars_SetSecCmdCallback(void (*cb)(void))
 {
 	pri_cmd_cb = cb;
@@ -987,7 +1003,10 @@ void pri_cmd_handler(void)
 			Mars_DetectInputDevices();
 			break;
 		case 0xFF10:
-			Mars_HandleDMARequest();
+			Mars_HandleBeginDMARequest();
+			break;
+		case 0xFF20:
+			Mars_HandleEndDMARequest();
 			break;
 		default:
 			pri_cmd_cb();

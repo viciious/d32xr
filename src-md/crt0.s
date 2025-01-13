@@ -3150,10 +3150,13 @@ snd_ctrl:
         .global dma_to_32x
 dma_to_32x:
         move.w  #0xFF10,d1
+
+        move.w  #0x2700,sr              /* disable ints */
+
         move.w  #0x0001,0xA15102        /* assert CMD INT to primary SH2 */
 0:
-        move.w  0xA15120,d0             /* wait on handshake in COMM0 */
-        cmpi.w  #0xA55A,d0
+        move.w  0xA15120,d1             /* wait on handshake in COMM0 */
+        cmpi.w  #0xA55A,d1
         bne.b   0b
         move.w  d1,0xA15120
 00:
@@ -3196,8 +3199,19 @@ dma_to_32x:
         lea     0x0112(a1),a1
 
 1:
-        cmp.w   0xA15120,d1             /* wait for SH2 to start DMA */
-        beq.b   1b
+        move.w  0xA15120,d1             /* wait on handshake in COMM0 */
+        cmpi.w  #0xA55A,d1
+        bne.b   1b
+        /* done */
+        move.w  #0x5AA5,0xA15120
+11:
+        cmpi.w  #0x5AA5,0xA15120
+        beq.b   11b
+
+        /* WTF DELAY */
+        move    #4000,d1
+111:
+        dbra    d1,111b
 
         move.l  a0,d1
         btst    #0,d1
@@ -3229,7 +3243,7 @@ dma_to_32x:
         bne.b   222b
         dbra    d0,22b
 
-        bra.b   44f
+        bra.b   5f
 
 2:
         move.w  (a0)+,(a1)              /* FIFO = next word */
@@ -3241,22 +3255,34 @@ dma_to_32x:
         bne.b   3b
         dbra    d0,2b
 
-44:
-        btst    #2,0xA15107
-        bne.b   4f                      /* DMA not done? */
-        moveq   #0,d0
-        bra.w   5f
-4:
-        moveq   #-2,d0
 5:
+        move.w  #0x0001,0xA15102        /* assert CMD INT to primary SH2 */
+55:
         move.w  0xA15120,d1             /* wait on handshake in COMM0 */
         cmpi.w  #0xA55A,d1
-        bne.b   5b
+        bne.b   55b
+
+        move.w  #0xFF20,0xA15120
+
+44:
+        btst    #2,0xA15107
+        bne.b   444f                      /* DMA not done? */
+        moveq   #0,d0
+        bra.w   4444f
+444:
+        moveq   #-2,d0
+
+4444:
+        move.w  0xA15120,d1             /* wait on handshake in COMM0 */
+        cmpi.w  #0xA55A,d1
+        bne.b   4444b
         /* done */
         move.w  #0x5AA5,0xA15120
 6:
         cmpi.w  #0x5AA5,0xA15120
         beq.b   6b
+
+        move.w  #0x2000,sr              /* enable ints */
         rts
 
 

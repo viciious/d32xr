@@ -502,15 +502,16 @@ static void *roq_dma_dest(roq_file *fp, void *dest, int length, int dmaarg)
         break;
     }
 
+    fp->in_dma = 1;
     return dma_dest;
 }
 
 static void roq_request(roq_file* fp)
 {
     // wait for ongoing transfer to finish
-    while (MARS_SYS_COMM0 & 1) {
-        ;
-    }
+    while ((MARS_SYS_COMM0 & 0xFF00) != 0x2E00);
+
+    while (MARS_SYS_COMM0 & 1);
 
     // EOF is reached and there's no data left
     if ((MARS_SYS_COMM0 & (4|8)) == (4|8))
@@ -519,6 +520,12 @@ static void roq_request(roq_file* fp)
     if (fp->eof)
         return;
 
+    // request a new chunk
+    MARS_SYS_COMM0 |= 1;
+}
+
+static void roq_commit(roq_file* fp)
+{
     if (fp->snddma_dest != NULL)
     {
         ringbuf_wcommit(schunks, fp->snddma_dest - fp->snddma_base);
@@ -531,9 +538,13 @@ static void roq_request(roq_file* fp)
         fp->dma_base = NULL;
         fp->dma_dest = NULL;
     }
+<<<<<<< HEAD
 
     // request a new chunk
     MARS_SYS_COMM0 |= 1;
+=======
+    fp->in_dma = 0;
+>>>>>>> Black magic
 }
 
 static void roq_get_chunk(roq_file* fp)
@@ -638,6 +649,7 @@ static int roq_open(const char *file, roq_file *fp, char *buf)
     Mars_ClearCache();
 
     Mars_SetPriDreqDMACallback((void *(*)(void *, void *, int , int))roq_dma_dest, fp);
+    Mars_SetPriDreqDMADoneCallback((void (*)(void *))roq_commit);
 
     MARS_SYS_COMM8 = 0;
     MARS_SYS_COMM0 = 0x2E01; // request transfer of the first RoQ page

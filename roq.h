@@ -52,6 +52,7 @@ typedef struct {
 	unsigned char *snddma_dest;
 	short eof, bof;
 	unsigned char *backupdma_dest;
+	volatile char in_dma;
 } roq_file;
 
 typedef void (*roq_getchunk_t)(roq_file*);
