@@ -3192,7 +3192,7 @@ dma_to_32x:
         addq.l  #3,d0
         andi.w  #0xFFFC,d0              /* FIFO operates on units of four words */
         move.w  d0,0x0110(a1)           /* SH DREQ Length Reg */
-        |lsr.l   #2,d0
+        lsr.l   #2,d0
         subq.l  #1,d0                   /* for dbra */
 
         move.b  #0x04,0x0107(a1)        /* set 68S bit - starts SH DREQ */
@@ -3242,10 +3242,28 @@ dma_to_32x:
 
 2:
         move.w  (a0)+,(a1)              /* FIFO = next word */
+        move.w  (a0)+,(a1)
+        move.w  (a0)+,(a1)
+        move.w  (a0)+,(a1)
 3:
         btst    #7,0xA15107             /* check FIFO full flag */
         bne.b   3b
         dbra    d0,2b
+
+        lea     (-8,a0),a0
+        move.w  (a0)+,(a1)
+        move.w  (a0)+,(a1)
+        move.w  (a0)+,(a1)
+        move.w  (a0)+,(a1)
+4:        
+        btst    #7,0xA15107             /* check FIFO full flag */
+        bne.b   4b
+
+        lea     (-8,a0),a0
+        move.w  (a0)+,(a1)
+        move.w  (a0)+,(a1)
+        move.w  (a0)+,(a1)
+        move.w  (a0)+,(a1)
 
 5:
         move.w  #0x0001,0xA15102        /* assert CMD INT to primary SH2 */
