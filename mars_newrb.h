@@ -27,9 +27,9 @@
 #include <stdint.h>
 
 typedef struct {
-    volatile int readpos;
-    volatile int writepos;
-    volatile int maxreadpos;
+    volatile uint16_t readpos;
+    volatile uint16_t writepos;
+    volatile uint16_t maxreadpos;
     volatile char ropen, wopen;
     volatile char lock;
     char nolock;
