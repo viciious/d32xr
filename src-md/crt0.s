@@ -3153,6 +3153,7 @@ dma_to_32x:
 
         move.w  #0x2700,sr              /* disable ints */
 
+000:
         move.w  #0x0001,0xA15102        /* assert CMD INT to primary SH2 */
 0:
         move.w  0xA15120,d1             /* wait on handshake in COMM0 */
@@ -3240,30 +3241,29 @@ dma_to_32x:
 
         bra.b   5f
 
+        lea     0xA15107,a2
+
 2:
-        move.w  (a0)+,(a1)              /* FIFO = next word */
+        move.b  (a2),d1
+        bmi.b   2b
         move.w  (a0)+,(a1)
+
+22:
+        move.b  (a2),d1
+        bmi.b   22b
         move.w  (a0)+,(a1)
+
+222:
+        move.b  (a2),d1
+        bmi.b   222b
         move.w  (a0)+,(a1)
-3:
-        btst    #7,0xA15107             /* check FIFO full flag */
-        bne.b   3b
+
+2222:
+        move.b  (a2),d1
+        bmi.b   2222b
+        move.w  (a0)+,(a1)
+
         dbra    d0,2b
-
-        lea     (-8,a0),a0
-        move.w  (a0)+,(a1)
-        move.w  (a0)+,(a1)
-        move.w  (a0)+,(a1)
-        move.w  (a0)+,(a1)
-4:        
-        btst    #7,0xA15107             /* check FIFO full flag */
-        bne.b   4b
-
-        lea     (-8,a0),a0
-        move.w  (a0)+,(a1)
-        move.w  (a0)+,(a1)
-        move.w  (a0)+,(a1)
-        move.w  (a0)+,(a1)
 
 5:
         move.w  #0x0001,0xA15102        /* assert CMD INT to primary SH2 */
@@ -3274,13 +3274,14 @@ dma_to_32x:
 
         move.w  #0xFF20,0xA15120
 
-44:
-        btst    #2,0xA15107
-        bne.b   444f                      /* DMA not done? */
-        moveq   #0,d0
-        bra.w   4444f
-444:
-        moveq   #-2,d0
+555:
+        move.w  0xA15120,d1             /* wait on handshake in COMM0 */
+        cmpi.w  #0xFF20,d1
+        beq.b   555b
+
+        move.l  d1,d0
+        addi.w  #1,d1
+        move.w  d1,0xA15120             /* send an ack to the 32X */
 
 4444:
         move.w  0xA15120,d1             /* wait on handshake in COMM0 */
@@ -3292,7 +3293,10 @@ dma_to_32x:
         cmpi.w  #0x5AA5,0xA15120
         beq.b   6b
 
-        move.w  #0x2000,sr              /* enable ints */
+        move.w  #0xFF30,d2
+        btst    #0,d0                   /* check the timeout flag */
+        bne.w   000b                    /* retry */
+
         rts
 
 

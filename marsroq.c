@@ -538,13 +538,9 @@ static void roq_commit(roq_file* fp)
         fp->dma_base = NULL;
         fp->dma_dest = NULL;
     }
-<<<<<<< HEAD
 
     // request a new chunk
     MARS_SYS_COMM0 |= 1;
-=======
-    fp->in_dma = 0;
->>>>>>> Black magic
 }
 
 static void roq_get_chunk(roq_file* fp)

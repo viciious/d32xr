@@ -49,6 +49,7 @@ uint16_t mars_refresh_hz = 0;
 
 char *pri_dma_dest = NULL;
 int pri_dma_read = 0;
+int pri_dma_length = 0;
 void *pri_dma_arg = NULL;
 
 const int NTSC_CLOCK_SPEED = 23011360; // HZ
@@ -64,25 +65,16 @@ void sec_cmd_handler(void) MARS_ATTR_DATA_CACHE_ALIGN;
 static void intr_handler_stub(void) MARS_ATTR_DATA_CACHE_ALIGN;
 static void intr_handler_stub(void) {}
 
-static void *pri_dreqdma_handler_default(void *cbarg, void *dest, int length, int dmaarg) MARS_ATTR_DATA_CACHE_ALIGN;
 static void *pri_dreqdma_handler_default(void *cbarg, void *dest, int length, int dmaarg) {
-	dest = pri_dma_dest;
-	pri_dma_dest += length;
-	pri_dma_read += length;
-	return dest;
+	return pri_dma_dest;
 }
-
 static void pri_dreqdma_done_handler_default(void *cbarg) {
 }
-
 static void (*pri_cmd_cb)(void) = &intr_handler_stub;
 static void *(*pri_dreqdma_cb)(void*, void *, int, int) = pri_dreqdma_handler_default;
 static void (*pri_dreqdmadone_cb)(void*) = pri_dreqdma_done_handler_default;
 static void (*sci_cmd_cb)(void) = &intr_handler_stub;
 static void (*sci_dma1_cb)(void) = &intr_handler_stub;
-
-static void Mars_HandleBeginDMARequest(void);
-static void Mars_HandleEndDMARequest(void);
 
 static char Mars_UploadPalette(const uint8_t* palette) __attribute__((section(".sdata"), aligned(16), optimize("Os")));
 
@@ -837,11 +829,11 @@ int Mars_ReadCDFile(int length)
 	return *(int *)&MARS_SYS_COMM8;
 }
 
-static void Mars_HandleBeginDMARequest(void)
+static void Mars_HandleBeginDMARequest(int is_repeat)
 {
 	int j, l;
 	int cmd, arg;
-	void *dest;
+	int dest_addr;
 	int chcr = SH2_DMA_CHCR_DM_INC|SH2_DMA_CHCR_TS_WU|SH2_DMA_CHCR_AL_AH|SH2_DMA_CHCR_DS_EDGE|SH2_DMA_CHCR_DL_AH;
 
 	cmd = ++MARS_SYS_COMM0;
@@ -856,20 +848,25 @@ static void Mars_HandleBeginDMARequest(void)
 
 	while (!(MARS_SYS_DMACTR & MARS_SYS_DMA_68S)) ; // wait for SH DREQ to start
 
-	l = MARS_SYS_COMM2; // # length in words
+	l = MARS_SYS_COMM2; // length in words
 	if (l == 0)
 		l = 0x10000; // 0 => 64K words
+	l += l; // bytes
 
-	j = (l + 3) & 0xFFFC; // # words to DMA
+	if (!is_repeat)
+	{
+		pri_dma_dest = pri_dreqdma_cb(pri_dma_arg, (void*)MARS_SYS_DMADAR, l, arg);
+		pri_dma_length = l;
+	}
+
+	j = pri_dma_length>>1;
+	j = (j + 3) & 0xFFFC; // words to DMA
 	if (j == 0)
 		j = 0x10000; // 0 => 64K words
 
-	l += l; // bytes
-	dest = pri_dreqdma_cb(pri_dma_arg, (void*)MARS_SYS_DMADAR, l, arg);
-
 	SH2_DMA_CHCR0; // read TE
 	SH2_DMA_CHCR0 = chcr; // clear TE
-	SH2_DMA_DAR0 = 0x20000000 | ((uintptr_t)dest & ~1);
+	SH2_DMA_DAR0 = 0x20000000 | ((uintptr_t)pri_dma_dest & ~1);
 	SH2_DMA_TCR0 = j;
 
 	SH2_DMA_CHCR0 = chcr|SH2_DMA_CHCR_DE;
@@ -877,12 +874,31 @@ static void Mars_HandleBeginDMARequest(void)
 
 static void Mars_HandleEndDMARequest(void)
 {
+	int flag;
+	unsigned timeout = 10000;
 	int chcr = SH2_DMA_CHCR_DM_INC|SH2_DMA_CHCR_TS_WU|SH2_DMA_CHCR_AL_AH|SH2_DMA_CHCR_DS_EDGE|SH2_DMA_CHCR_DL_AH;
 
-	while (!(SH2_DMA_CHCR0 & SH2_DMA_CHCR_TE)) ; // wait on TE
+	while (!(SH2_DMA_CHCR0 & SH2_DMA_CHCR_TE)) {
+		if (!timeout) {
+			break;
+		}
+		timeout--;
+	} // wait on TE
 	SH2_DMA_CHCR0 = chcr; // clear DMA TE
 
-	pri_dreqdmadone_cb(pri_dma_arg);
+	timeout = timeout == 0;
+
+	if (!timeout)
+	{
+		pri_dreqdmadone_cb(pri_dma_arg);
+		pri_dma_dest += pri_dma_length;
+		pri_dma_read += pri_dma_length;
+	}
+
+	// wait for an ack
+	flag = MARS_SYS_COMM0 + 2 + (timeout != 0);
+	MARS_SYS_COMM0 = flag;
+	while (MARS_SYS_COMM0 == flag);
 }
 
 int Mars_SeekCDFile(int offset, int whence)
@@ -1003,10 +1019,13 @@ void pri_cmd_handler(void)
 			Mars_DetectInputDevices();
 			break;
 		case 0xFF10:
-			Mars_HandleBeginDMARequest();
+			Mars_HandleBeginDMARequest(0);
 			break;
 		case 0xFF20:
 			Mars_HandleEndDMARequest();
+			break;
+		case 0xFF30:
+			Mars_HandleBeginDMARequest(1);
 			break;
 		default:
 			pri_cmd_cb();
