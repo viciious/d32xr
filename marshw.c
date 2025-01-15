@@ -875,7 +875,7 @@ static void Mars_HandleBeginDMARequest(int is_repeat)
 static void Mars_HandleEndDMARequest(void)
 {
 	int flag;
-	unsigned timeout = 10000;
+	unsigned timeout = 1000;
 	int chcr = SH2_DMA_CHCR_DM_INC|SH2_DMA_CHCR_TS_WU|SH2_DMA_CHCR_AL_AH|SH2_DMA_CHCR_DS_EDGE|SH2_DMA_CHCR_DL_AH;
 
 	while (!(SH2_DMA_CHCR0 & SH2_DMA_CHCR_TE)) {

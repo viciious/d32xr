@@ -921,6 +921,7 @@ void D_DoomMain (void)
 
 start:
 	mem = I_ZoneBase (&size);
+	C_Init ();		/* set up object list / etc	  */
 
 	if (cd_pwad_name[0] != '\0') {
 		gameaction = ga_cinematic;

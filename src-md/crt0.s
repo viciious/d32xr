@@ -3235,31 +3235,28 @@ dma_to_32x:
         move.b  (a0)+,d1
         move.w  d1,(a1)                 /* FIFO = next word */
 222:
-        btst    #7,0xA15107             /* check FIFO full flag */
+        btst    #7,0xA15106             /* check FIFO full flag */
         bne.b   222b
         dbra    d0,22b
 
         bra.b   5f
 
-        lea     0xA15107,a2
+        lea     0xA15106,a2
 
 2:
-        move.b  (a2),d1
+        move.b  (a2),d1                 /* check FIFO full flag */
         bmi.b   2b
         move.w  (a0)+,(a1)
-
 22:
-        move.b  (a2),d1
+        move.b  (a2),d1                 /* check FIFO full flag */
         bmi.b   22b
         move.w  (a0)+,(a1)
-
 222:
-        move.b  (a2),d1
+        move.b  (a2),d1                 /* check FIFO full flag */
         bmi.b   222b
         move.w  (a0)+,(a1)
-
 2222:
-        move.b  (a2),d1
+        move.b  (a2),d1                 /* check FIFO full flag */
         bmi.b   2222b
         move.w  (a0)+,(a1)
 
