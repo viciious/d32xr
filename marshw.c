@@ -32,6 +32,8 @@ static char mars_gamepadport[MARS_MAX_CONTROLLERS];
 static char mars_mouseport;
 static volatile uint16_t mars_controlval[2];
 
+volatile uint8_t enable_hints = 0;
+
 volatile unsigned int mars_thru_rgb = 0;
 volatile unsigned int mars_hblank_count = 0;
 

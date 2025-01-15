@@ -532,18 +532,21 @@ pri_v_irq:
 
 
         ! Enable or disable HINTs depending if copper effects are needed.
-!        mov.l   pvi_copper_effects,r1
-!        mov.l   @r1,r2
-!        shll2   r2
-!        mov.w   pvi_int_mask_hint,r0
-!        and     r0,r2
-!
-!        mov.l   pvi_mars_adapter,r1
-!        mov.b   @(1,r1),r0
-!        mov.w   pvi_int_mask_no_hint,r3
-!        and     r3,r0
-!        or      r2,r0
-!        mov.b   r0,@(1,r1)              /* set int enables */
+        mov.l   pvi_copper_effects,r1
+        mov.l   @r1,r2
+        !mov.l   pvi_enable_hints,r1
+        !mov.b   @r1,r0
+        !and     r0,r2
+        shll2   r2
+        mov.w   pvi_int_mask_hint,r0
+        and     r0,r2
+
+        mov.l   pvi_mars_adapter,r1
+        mov.b   @(1,r1),r0
+        mov.w   pvi_int_mask_no_hint,r3
+        and     r3,r0
+        or      r2,r0
+        mov.b   r0,@(1,r1)              /* set int enables */
 
 
         ! Run the handler code
@@ -577,6 +580,9 @@ pvi_int_mask_hint:
         .short  0x04
 pvi_copper_effects:
         .long   _copper_effects
+pvi_enable_hints:
+        .byte   _enable_hints
+        .align  4
 
 !-----------------------------------------------------------------------
 ! Primary H Blank IRQ handler

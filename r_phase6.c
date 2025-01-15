@@ -7,6 +7,7 @@
 #include "p_camera.h"
 #include "r_local.h"
 #include "mars.h"
+#include "marshw.h"
 
 #define MIPSCALE 0x20000
 #define LIGHTZSHIFT	10
@@ -286,6 +287,12 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
                     drawmdsky(x, top, bottom);
                 }
 #endif
+                if (copper_effects) {
+                    enable_hints = 1;
+                }
+            }
+            else {
+                enable_hints = 0;
             }
         }
 
