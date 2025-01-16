@@ -571,8 +571,6 @@ get_header:
         goto get_header;
     }
 
-    Mars_ClearCacheLines(header, 2);
-
     pad = 0;
     if (header[1] != 0x10) {
         // if this is a valid chunk, the second byte must be a 0x10
@@ -596,8 +594,7 @@ get_header:
     // we also have to clear the cache for screen copy after 
     // it has been DMA'ed to memory from DRAM, so kill two
     // birds with one stone
-    Mars_ClearCache();
-    //Mars_ClearCacheLines(chunk + 8, (chunk_size >> 4) + 2);
+    //Mars_ClearCache();
 
     fp->page_base = chunk;
     fp->data = chunk;

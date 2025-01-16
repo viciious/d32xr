@@ -3149,9 +3149,14 @@ snd_ctrl:
 | exit:  d0 = 0 (okay) or -1 (error) or -2 (DMA error)
         .global dma_to_32x
 dma_to_32x:
+        move.w  #0x2700,sr              /* disable ints */
+
+        move.l  d2,-(sp)
+        moveq   #0,d2                   /* crc */
+
         move.w  #0xFF10,d1
 
-        move.l  20(sp),d0
+        move.l  24(sp),d0
         tst     d0
         beq.b   000f
         move.w  #0xFF30,d1              /* a retry */
@@ -3245,10 +3250,21 @@ dma_to_32x:
         bra.b   5f
 
 2:
-        move.w  (a0)+,(a1)              /* FIFO = next word */
-        move.w  (a0)+,(a1)
-        move.w  (a0)+,(a1)
-        move.w  (a0)+,(a1)
+        move.w  (a0)+,d1
+        move.w  d1,(a1)                 /* FIFO = next word */
+        eor.w   d1,d2
+
+        move.w  (a0)+,d1
+        move.w  d1,(a1)                 /* FIFO = next word */
+        eor.w   d1,d2
+
+        move.w  (a0)+,d1
+        move.w  d1,(a1)                 /* FIFO = next word */
+        eor.w   d1,d2
+
+        move.w  (a0)+,d1
+        move.w  d1,(a1)                 /* FIFO = next word */
+        eor.w   d1,d2
 3:
         btst    #7,0xA15107             /* check FIFO full flag */
         bne.b   3b
@@ -3262,7 +3278,7 @@ dma_to_32x:
         bne.b   55b
 
         move.w  #0xFF20,0xA15120
-        move.w  d1,0xA15122
+        move.w  d2,0xA15122
 
 555:
         move.w  0xA15120,d0             /* wait on handshake in COMM0 */
@@ -3290,6 +3306,8 @@ dma_to_32x:
         moveq   #-2,d0                  /* failed */
 
 7:
+        move.l  (sp)+,d2
+        move.w  #0x2000,sr              /* enable ints */
         rts
 
 

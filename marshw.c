@@ -875,7 +875,9 @@ static void Mars_HandleBeginDMARequest(int is_repeat)
 static void Mars_HandleEndDMARequest(void)
 {
 	int flag;
-	unsigned timeout = 300;
+	int error = 0;
+	volatile unsigned timeout = 100;
+	int checksum = 0;
 	int chcr = SH2_DMA_CHCR_DM_INC|SH2_DMA_CHCR_TS_WU|SH2_DMA_CHCR_AL_AH|SH2_DMA_CHCR_DS_EDGE|SH2_DMA_CHCR_DL_AH;
 
 	while (!(SH2_DMA_CHCR0 & SH2_DMA_CHCR_TE)) {
@@ -886,9 +888,31 @@ static void Mars_HandleEndDMARequest(void)
 	} // wait on TE
 	SH2_DMA_CHCR0 = chcr; // clear DMA TE
 
-	timeout = timeout == 0;
+	error = timeout == 0;
 
-	if (!timeout)
+	if (!error)
+	{
+		int i, len;
+		uint16_t *data = (void *)pri_dma_dest;
+
+		len = pri_dma_length;
+		len >>= 1;
+		len = (len + 3) & 0xFFFC;
+
+		Mars_ClearCacheLines(data, ((unsigned)len >> 3)+1);
+
+		for (i = 0; i < len; i++) {
+			checksum ^= *data++;
+		}
+
+		if (checksum != MARS_SYS_COMM2)
+		{
+			//I_Error("MISMATCH %d %d %d", len, checksum, MARS_SYS_COMM2);
+			error = 1;
+		}
+	}
+
+	if (!error)
 	{
 		pri_dreqdmadone_cb(pri_dma_arg);
 		pri_dma_dest += pri_dma_length;
@@ -896,7 +920,7 @@ static void Mars_HandleEndDMARequest(void)
 	}
 
 	// wait for an ack
-	flag = MARS_SYS_COMM0 + 2 + (timeout != 0);
+	flag = MARS_SYS_COMM0 + 2 + (error != 0);
 	MARS_SYS_COMM0 = flag;
 	while (MARS_SYS_COMM0 == flag);
 }
