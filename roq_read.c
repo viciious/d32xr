@@ -488,8 +488,8 @@ xfer:
 				dmato = othery;
 
 				// start DMA
-				SH2_DMA_SAR1 = (uint32_t)(ri->canvas + ri->canvas_pitch*dmafrom/2*sizeof(short));
-				SH2_DMA_DAR1 = (uint32_t)(ri->canvascopy + ri->canvas_pitch*dmafrom/2*sizeof(short));
+				SH2_DMA_SAR1 = (uint32_t)(ri->canvas + ri->canvas_pitch*dmafrom);
+				SH2_DMA_DAR1 = (uint32_t)(ri->canvascopy + ri->canvas_pitch*dmafrom);
 				// xfer count (4 * # of 16 byte units)
 				SH2_DMA_TCR1 = ((((dmato - dmafrom)*ri->canvas_pitch*sizeof(short)) >> 4) << 2);
 				SH2_DMA_CHCR1 = SH2_DMA_CHCR_DM_INC|SH2_DMA_CHCR_SM_INC|SH2_DMA_CHCR_TS_16BU|SH2_DMA_CHCR_AR_ARM|SH2_DMA_CHCR_TB_CS|SH2_DMA_CHCR_DS_EDGE|SH2_DMA_CHCR_AL_AH|SH2_DMA_CHCR_DL_AH|SH2_DMA_CHCR_TA_DA|SH2_DMA_CHCR_DE;

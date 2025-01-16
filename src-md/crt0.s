@@ -3254,17 +3254,13 @@ dma_to_32x:
         move.w  d1,(a1)                 /* FIFO = next word */
         eor.w   d1,d2
 
-        move.w  (a0)+,d1
-        move.w  d1,(a1)                 /* FIFO = next word */
-        eor.w   d1,d2
+        move.w  (a0)+,(a1)              /* FIFO = next word */
 
         move.w  (a0)+,d1
         move.w  d1,(a1)                 /* FIFO = next word */
         eor.w   d1,d2
 
-        move.w  (a0)+,d1
-        move.w  d1,(a1)                 /* FIFO = next word */
-        eor.w   d1,d2
+        move.w  (a0)+,(a1)              /* FIFO = next word */
 3:
         btst    #7,0xA15107             /* check FIFO full flag */
         bne.b   3b

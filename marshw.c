@@ -48,7 +48,6 @@ uint16_t mars_num_cd_tracks = 0;
 uint16_t mars_refresh_hz = 0;
 
 char *pri_dma_dest = NULL;
-int pri_dma_read = 0;
 int pri_dma_length = 0;
 void *pri_dma_arg = NULL;
 
@@ -855,7 +854,7 @@ static void Mars_HandleBeginDMARequest(int is_repeat)
 
 	if (!is_repeat)
 	{
-		pri_dma_dest = pri_dreqdma_cb(pri_dma_arg, (void*)MARS_SYS_DMADAR, l, arg);
+		pri_dma_dest = pri_dreqdma_cb(pri_dma_arg, (void*)dest_addr, l, arg);
 		pri_dma_length = l;
 	}
 
@@ -876,7 +875,7 @@ static void Mars_HandleEndDMARequest(void)
 {
 	int flag;
 	int error = 0;
-	volatile unsigned timeout = 100;
+	volatile unsigned timeout = 1000;
 	int checksum = 0;
 	int chcr = SH2_DMA_CHCR_DM_INC|SH2_DMA_CHCR_TS_WU|SH2_DMA_CHCR_AL_AH|SH2_DMA_CHCR_DS_EDGE|SH2_DMA_CHCR_DL_AH;
 
@@ -899,10 +898,12 @@ static void Mars_HandleEndDMARequest(void)
 		len >>= 1;
 		len = (len + 3) & 0xFFFC;
 
-		Mars_ClearCacheLines(data, ((unsigned)len >> 3)+1);
+		//Mars_ClearCacheLines(data, ((unsigned)len >> 3)+1);
+		Mars_ClearCache();
 
-		for (i = 0; i < len; i++) {
-			checksum ^= *data++;
+		for (i = 0; i < len; i += 2) {
+			checksum ^= *data;
+			data += 2;
 		}
 
 		if (checksum != MARS_SYS_COMM2)
@@ -916,7 +917,6 @@ static void Mars_HandleEndDMARequest(void)
 	{
 		pri_dreqdmadone_cb(pri_dma_arg);
 		pri_dma_dest += pri_dma_length;
-		pri_dma_read += pri_dma_length;
 	}
 
 	// wait for an ack

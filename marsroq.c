@@ -467,10 +467,9 @@ static void *roq_dma_dest(roq_file *fp, void *dest, int length, int dmaarg)
             if (!fp->snddma_base) {
                 // broken file?
                 fp->eof = 1;
-                fp->snddma_dest = fp->backupdma_dest;
-            } else {
-                fp->snddma_dest = fp->snddma_base;
+                fp->snddma_base = fp->backupdma_dest;
             }
+            fp->snddma_dest = fp->snddma_base;
         }
 
         dma_dest = fp->snddma_dest;
@@ -491,10 +490,9 @@ static void *roq_dma_dest(roq_file *fp, void *dest, int length, int dmaarg)
             if (!fp->dma_base) {
                 // FIXME
                 fp->eof = 1;
-                fp->dma_dest = fp->backupdma_dest;
-            } else {
-                fp->dma_dest = fp->dma_base;
+                fp->dma_base = fp->backupdma_dest;
             }
+            fp->dma_dest = fp->dma_base;
         }
 
         dma_dest = fp->dma_dest;
@@ -513,8 +511,8 @@ static void roq_request(roq_file* fp)
 
     while (MARS_SYS_COMM0 & 1);
 
-    // EOF is reached and there's no data left
-    if (MARS_SYS_COMM0 & (16|32))
+    // a read error has occured
+    if ((MARS_SYS_COMM0 & (16|32)) != 0)
     {
         fp->eof = 1;
     }
@@ -534,13 +532,15 @@ static void roq_commit(roq_file* fp)
 {
     if (fp->snddma_dest != NULL)
     {
-        ringbuf_wcommit(schunks, fp->snddma_dest - fp->snddma_base);
+        if (fp->snddma_base != fp->backupdma_dest)
+            ringbuf_wcommit(schunks, fp->snddma_dest - fp->snddma_base);
         fp->snddma_base = NULL;
         fp->snddma_dest = NULL;
     }
     else if (fp->dma_dest != NULL)
     {
-        ringbuf_wcommit(vchunks, fp->dma_dest - fp->dma_base);
+        if (fp->dma_base != fp->backupdma_dest)
+            ringbuf_wcommit(vchunks, fp->dma_dest - fp->dma_base);
         fp->dma_base = NULL;
         fp->dma_dest = NULL;
     }
@@ -700,10 +700,10 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
     buf = (char *)ri + sizeof(*ri);
 
     viddata = (void *)(((intptr_t)buf + 15) & ~15);
-    buf = viddata + RoQ_VID_BUF_SIZE;
+    buf = (void *)(viddata + RoQ_VID_BUF_SIZE);
 
-    snddata = (void *)(((intptr_t)buf + 1) & ~1);
-    buf = (void *)(snddata + RoQ_SND_BUF_SIZE);
+    snddata = (void *)(((intptr_t)buf + 15) & ~15);
+    buf = (void *)(snddata + snd_buf_size);
 
     ri->canvascopy = (void *)(((intptr_t)buf + 15) & ~15);
     buf = (void *)(ri->canvascopy + RoQ_MAX_CANVAS_SIZE);
@@ -755,6 +755,9 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
         shift = ri->canvascopy - oldp;
 
         snd_buf_size += shift * sizeof(short);
+        if (snd_buf_size > 0x7800) {
+            snd_buf_size = 0x7800;
+        }
     }
 
     ringbuf_init(schunks, snddata, snd_buf_size, 1);
