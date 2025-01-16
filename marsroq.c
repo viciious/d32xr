@@ -768,6 +768,13 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
     extratics = 0;
     framecount = 0;
 
+    if (needsound && schunks->writepos != 0)
+    {
+        // init sound DMA on the secondary CPU
+        needsound = 0;
+        secsnd(1);
+    }
+
     while(1)
     {
         int ret;
