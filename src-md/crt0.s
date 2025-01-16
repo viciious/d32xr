@@ -3145,19 +3145,22 @@ snd_ctrl:
 
 | int dma_to_32x(void *dest, short *src, int len, int arg);
 | DMA data from source to 32X
-| entry: arg = dest pointer (ignored), arg2 = source pointer, arg3 = length of data (in bytes), arg4 = optional arg
+| entry: arg = dest pointer (ignored), arg2 = source pointer, arg3 = length of data (in bytes), arg4 = optional arg, arg5 = is_retry
 | exit:  d0 = 0 (okay) or -1 (error) or -2 (DMA error)
         .global dma_to_32x
 dma_to_32x:
         move.w  #0xFF10,d1
 
-        move.w  #0x2700,sr              /* disable ints */
+        move.l  20(sp),d0
+        tst     d0
+        beq.b   000f
+        move.w  #0xFF30,d1              /* a retry */
 
 000:
         move.w  #0x0001,0xA15102        /* assert CMD INT to primary SH2 */
 0:
-        move.w  0xA15120,d1             /* wait on handshake in COMM0 */
-        cmpi.w  #0xA55A,d1
+        move.w  0xA15120,d0             /* wait on handshake in COMM0 */
+        cmpi.w  #0xA55A,d0
         bne.b   0b
         move.w  d1,0xA15120
 00:
@@ -3241,42 +3244,32 @@ dma_to_32x:
 
         bra.b   5f
 
-        lea     0xA15106,a2
-
 2:
-        move.b  (a2),d1                 /* check FIFO full flag */
-        bmi.b   2b
+        move.w  (a0)+,(a1)              /* FIFO = next word */
         move.w  (a0)+,(a1)
-22:
-        move.b  (a2),d1                 /* check FIFO full flag */
-        bmi.b   22b
         move.w  (a0)+,(a1)
-222:
-        move.b  (a2),d1                 /* check FIFO full flag */
-        bmi.b   222b
         move.w  (a0)+,(a1)
-2222:
-        move.b  (a2),d1                 /* check FIFO full flag */
-        bmi.b   2222b
-        move.w  (a0)+,(a1)
-
+3:
+        btst    #7,0xA15107             /* check FIFO full flag */
+        bne.b   3b
         dbra    d0,2b
 
 5:
         move.w  #0x0001,0xA15102        /* assert CMD INT to primary SH2 */
 55:
-        move.w  0xA15120,d1             /* wait on handshake in COMM0 */
-        cmpi.w  #0xA55A,d1
+        move.w  0xA15120,d0             /* wait on handshake in COMM0 */
+        cmpi.w  #0xA55A,d0
         bne.b   55b
 
         move.w  #0xFF20,0xA15120
+        move.w  d1,0xA15122
 
 555:
-        move.w  0xA15120,d1             /* wait on handshake in COMM0 */
-        cmpi.w  #0xFF20,d1
+        move.w  0xA15120,d0             /* wait on handshake in COMM0 */
+        cmpi.w  #0xFF20,d0
         beq.b   555b
 
-        move.l  d1,d0
+        move.w  d0,d1
         addi.w  #1,d1
         move.w  d1,0xA15120             /* send an ack to the 32X */
 
@@ -3290,10 +3283,13 @@ dma_to_32x:
         cmpi.w  #0x5AA5,0xA15120
         beq.b   6b
 
-        move.w  #0xFF30,d2
-        btst    #0,d0                   /* check the timeout flag */
-        bne.w   000b                    /* retry */
+        move.w  d0,d1
+        moveq   #0,d0
+        btst    #0,d1                   /* check the timeout flag */
+        beq.b   7f
+        moveq   #-2,d0                  /* failed */
 
+7:
         rts
 
 

@@ -34,7 +34,7 @@
 
 extern void chk_hotplug(void);
 extern void snd_ctrl(void);
-extern void *dma_to_32x(void *, const void *, size_t, int);
+extern int dma_to_32x(void *, const void *, size_t, int, int);
 
 extern int scd_stream_cd(int lba, int length);
 extern void scd_stream_cmd(char cmd);
@@ -47,6 +47,7 @@ void scd_play_roq(volatile short *commreg, int gfh_offset, int gfh_length)
     char send_header = 1;
     int block_ofs, block_size;
     int file_offset = 0;
+    int error = 0, retry;
 
     // start streaming CD
     block_ofs = scd_stream_cd(gfh_offset, gfh_length);
@@ -78,7 +79,11 @@ void scd_play_roq(volatile short *commreg, int gfh_offset, int gfh_length)
             uint8_t *signature = (uint8_t *)MD_WORDRAM+wram_ofs;
 
             chunk_id = signature[0] | (signature[1] << 8);
-            dma_to_32x(NULL, signature, 8, chunk_id);
+            retry = 0;
+            do {
+                dma_to_32x(NULL, signature, 8, chunk_id, retry != 0);
+            } while (retry < 0);
+
 
             wram_rem -= 8;
             wram_ofs += 8;
@@ -120,6 +125,7 @@ void scd_play_roq(volatile short *commreg, int gfh_offset, int gfh_length)
             chunk_size = header[2] | (header[3] << 8) | (header[4] << 16) | (header[5] << 24);
             if (header[1] != 0x10 || chunk_size > 0xffff)
             {
+                error = header[1] != 0x10 ? 1 : 2;
                 data_size = 0;
                 file_offset = gfh_length;
                 break;
@@ -136,7 +142,10 @@ void scd_play_roq(volatile short *commreg, int gfh_offset, int gfh_length)
                     pad = 1;
                 }
 
-                dma_to_32x((void *)pad, buf-8, wram_rem+8+pad, (chunk_size << 16) | chunk_id);
+                retry = 0;
+                do {
+                    retry = dma_to_32x((void *)pad, buf-8, wram_rem+8+pad, (chunk_size << 16) | chunk_id, retry != 0);
+                } while (retry < 0);
 
                 data_size += 8;
                 data_size += wram_rem;
@@ -169,7 +178,11 @@ void scd_play_roq(volatile short *commreg, int gfh_offset, int gfh_length)
             wram_rem -= chunk_size;
             data_size += buf_end - buf;
 
-            dma_to_32x((void *)pad, buf, (buf_end - buf + 1) & ~1, (chunk_size << 16) | chunk_id);
+            retry = 0;
+            do {
+                retry = dma_to_32x((void *)pad, buf, (buf_end - buf + 1) & ~1, (chunk_size << 16) | chunk_id, retry != 0);
+            } while (retry < 0);
+
             header_len = 0;
             break;
         }
@@ -181,6 +194,10 @@ done:
             commval |= 4;
         if (data_size == 0)
             commval |= 8;
+        if (error == 1)
+            commval |= 16;
+        else if (error == 2)
+            commval |= 32;
         commval &= ~1;
         *commreg = commval;
         data_size = 0;

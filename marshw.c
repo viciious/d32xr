@@ -859,14 +859,14 @@ static void Mars_HandleBeginDMARequest(int is_repeat)
 		pri_dma_length = l;
 	}
 
-	j = pri_dma_length>>1;
+	j = l>>1;
 	j = (j + 3) & 0xFFFC; // words to DMA
 	if (j == 0)
 		j = 0x10000; // 0 => 64K words
 
 	SH2_DMA_CHCR0; // read TE
 	SH2_DMA_CHCR0 = chcr; // clear TE
-	SH2_DMA_DAR0 = 0x20000000 | ((uintptr_t)pri_dma_dest & ~1);
+	SH2_DMA_DAR0 = 0x20000000 | (uintptr_t)pri_dma_dest;
 	SH2_DMA_TCR0 = j;
 
 	SH2_DMA_CHCR0 = chcr|SH2_DMA_CHCR_DE;
@@ -875,7 +875,7 @@ static void Mars_HandleBeginDMARequest(int is_repeat)
 static void Mars_HandleEndDMARequest(void)
 {
 	int flag;
-	unsigned timeout = 1000;
+	unsigned timeout = 300;
 	int chcr = SH2_DMA_CHCR_DM_INC|SH2_DMA_CHCR_TS_WU|SH2_DMA_CHCR_AL_AH|SH2_DMA_CHCR_DS_EDGE|SH2_DMA_CHCR_DL_AH;
 
 	while (!(SH2_DMA_CHCR0 & SH2_DMA_CHCR_TE)) {

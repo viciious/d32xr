@@ -514,6 +514,12 @@ static void roq_request(roq_file* fp)
     while (MARS_SYS_COMM0 & 1);
 
     // EOF is reached and there's no data left
+    if (MARS_SYS_COMM0 & (16|32))
+    {
+        fp->eof = 1;
+    }
+
+    // EOF is reached and there's no data left
     if ((MARS_SYS_COMM0 & (4|8)) == (4|8))
         fp->eof = 1;
 
