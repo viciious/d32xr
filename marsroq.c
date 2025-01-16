@@ -755,9 +755,6 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
         shift = ri->canvascopy - oldp;
 
         snd_buf_size += shift * sizeof(short);
-        if (snd_buf_size > 0x7800) {
-            snd_buf_size = 0x7800;
-        }
     }
 
     ringbuf_init(schunks, snddata, snd_buf_size, 1);
