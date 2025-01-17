@@ -500,7 +500,6 @@ static void *roq_dma_dest(roq_file *fp, void *dest, int length, int dmaarg)
         break;
     }
 
-    fp->in_dma = 1;
     return dma_dest;
 }
 
@@ -522,7 +521,9 @@ static void roq_request(roq_file* fp)
         fp->eof = 1;
 
     if (fp->eof)
+    {
         return;
+    }
 
     // request a new chunk
     MARS_SYS_COMM0 |= 1;
@@ -547,6 +548,8 @@ static void roq_commit(roq_file* fp)
 
     // request a new chunk
     MARS_SYS_COMM0 |= 1;
+=======
+>>>>>>> WIP
 }
 
 static void roq_get_chunk(roq_file* fp)
@@ -566,7 +569,6 @@ get_header:
             fp->data = NULL;
             return;
         }
-
         roq_request(fp);
         goto get_header;
     }
