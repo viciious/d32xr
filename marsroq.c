@@ -512,18 +512,14 @@ static void roq_request(roq_file* fp)
 
     // a read error has occured
     if ((MARS_SYS_COMM0 & (16|32)) != 0)
-    {
         fp->eof = 1;
-    }
 
     // EOF is reached and there's no data left
     if ((MARS_SYS_COMM0 & (4|8)) == (4|8))
         fp->eof = 1;
 
     if (fp->eof)
-    {
         return;
-    }
 
     // request a new chunk
     MARS_SYS_COMM0 |= 1;
@@ -686,7 +682,6 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
     int framecount = 0;
     int snd_buf_size = RoQ_SND_BUF_SIZE;
     int extratics = 0;
-    char needaudio = 1;
     unsigned starttics;
 
     if (!allowpause && (Mars_ReadController(0) & SEGA_CTRL_START)) {
@@ -810,13 +805,6 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
                 roq_close(ri, secsnd);
                 roq_init_video(ri);
                 return 1;
-            }
-
-            if (needsound && schunks->writepos != 0)
-            {
-                // init sound DMA on the secondary CPU
-                needsound = 0;
-                secsnd(1);
             }
 
             Mars_FlipFrameBuffers(0);
