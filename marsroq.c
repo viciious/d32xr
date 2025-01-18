@@ -442,14 +442,12 @@ static void roq_init_video(roq_info *ri)
 
 static void *roq_dma_dest(roq_file *fp, void *dest, int length, int dmaarg)
 {
-    int chunk_id = dmaarg;
+    int chunk_id;
     unsigned chunk_size;
     unsigned char *dma_dest;
-    unsigned dstarg = (unsigned)dest;
 
-    dstarg >>= 1; // the first bit is always 0
-    dstarg >>= 1;
-    chunk_size = dstarg;
+    chunk_size = ((unsigned)dmaarg >> 16) & 0xffff;
+    chunk_id = (unsigned)dmaarg & 0xffff;
 
     switch (chunk_id)
     {
@@ -477,7 +475,10 @@ static void *roq_dma_dest(roq_file *fp, void *dest, int length, int dmaarg)
         dma_dest = fp->snddma_dest;
         fp->snddma_dest += length;
         break;
-    default:
+    case RoQ_INFO:
+    case RoQ_QUAD_CODEBOOK:
+    case RoQ_QUAD_VQ:
+    case RoQ_SIGNAGURE:
         if (!fp->dma_base) {
             fp->dma_base = ringbuf_walloc(vchunks, (chunk_size + 8 + 1) & ~1);
             if (!fp->dma_base) {
@@ -491,6 +492,10 @@ static void *roq_dma_dest(roq_file *fp, void *dest, int length, int dmaarg)
 
         dma_dest = fp->dma_dest;
         fp->dma_dest += length;
+        break;
+    default:
+        fp->dma_dest = fp->backupdma_dest;
+        dma_dest = fp->dma_dest;
         break;
     }
 

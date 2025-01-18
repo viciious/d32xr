@@ -840,9 +840,14 @@ static void Mars_HandleDMARequest(void)
 	int chcr = SH2_DMA_CHCR_DM_INC|SH2_DMA_CHCR_TS_WU|SH2_DMA_CHCR_AL_AH|SH2_DMA_CHCR_DS_EDGE|SH2_DMA_CHCR_DL_AH;
 
 	cmd = ++MARS_SYS_COMM0;
-	// wait for an argument
+	// wait for LW of arg
 	while (MARS_SYS_COMM0 == cmd);
 	arg = MARS_SYS_COMM2;
+
+	cmd = ++MARS_SYS_COMM0;
+	// wait for HW of arg
+	while (MARS_SYS_COMM0 == cmd);
+	arg = (MARS_SYS_COMM2 << 16) | arg;
 
 	while (!(MARS_SYS_DMACTR & MARS_SYS_DMA_68S)) ; // wait for SH DREQ to start
 

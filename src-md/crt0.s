@@ -3149,30 +3149,41 @@ snd_ctrl:
 | exit:  d0 = 0 (okay) or -1 (error) or -2 (DMA error)
         .global dma_to_32x
 dma_to_32x:
+        move.w  #0xFF10,d1
         move.w  #0x0001,0xA15102        /* assert CMD INT to primary SH2 */
 0:
         move.w  0xA15120,d0             /* wait on handshake in COMM0 */
         cmpi.w  #0xA55A,d0
         bne.b   0b
-        move.w  #0xFF10,0xA15120
-
+        move.w  d1,0xA15120
 00:
-        cmpi.w  #0xFF11,0xA15120        /* wait for handshake */
-        bne.b   00b
+        move.w  0xA15120,d0
+        cmp.w   d0,d1                   /* wait for handshake */
+        beq.b   00b
+        move.w  d0,d1
 
         lea     0xA15000,a1
+        move.b  #0x00,0x0107(a1)        /* clear 68S bit - stops SH DREQ */
+
+        move.l  16(sp),d0               /* long arg, LW */
+        move.w  d0,0xA15122             /* COMM2 */
+        addq    #1,d1
+        move.w  d1,0xA15120             /* ack in COMM0 */
+000:
+        move.w  0xA15120,d0
+        cmp.w   d0,d1                   /* wait for handshake */
+        beq.b   000b
+        move.w  d0,d1
+
+        swap.w  d0                      /* long arg, HW */
+        move.w  d0,0xA15122             /* COMM2 */
+        addq    #1,d1
+        move.w  d1,0xA15120             /* ack in COMM0 */
 
         move.l  4(sp),d0                /* optional destination address */
         move.l  d0,0x010C(a1)           /* SH DREQ destination address */
-        move.l  16(sp),d0               /* optional argument */
-        move.w  d0,0x0122(a1)           /* COMM2 */
-        move.w  #0xFF12,0xA15120
-
-        move.b  #0x00,0x0107(a1)        /* clear 68S bit - stops SH DREQ */
-
         movea.l 8(sp),a0                /* source address */
         move.l  12(sp),d0               /* length in bytes */
-        |addq.l  #1,d0
         lsr.l   #1,d0                   /* length in words */
         move.w  d0,0x0122(a1)           /* COMM2 = length in words */
         addq.l  #3,d0
@@ -3185,8 +3196,8 @@ dma_to_32x:
         lea     0x0112(a1),a1
 
 1:
-        cmpi.w  #0xFF13,0xA15120        /* wait for SH2 to start DMA */
-        bne.b   1b
+        cmp.w   0xA15120,d1             /* wait for SH2 to start DMA */
+        beq.b   1b
 
         move.l  a0,d1
         btst    #0,d1

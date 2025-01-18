@@ -74,8 +74,12 @@ void scd_play_roq(volatile short *commreg, int gfh_offset, int gfh_length)
 
         if (send_header)
         {
-            // header
-            dma_to_32x(0, (uint8_t *)MD_WORDRAM+wram_ofs, 8, 0);
+            // signature
+            uint8_t *signature = (uint8_t *)MD_WORDRAM+wram_ofs;
+
+            chunk_id = signature[0] | (signature[1] << 8);
+            dma_to_32x(NULL, signature, 8, chunk_id);
+
             wram_rem -= 8;
             wram_ofs += 8;
             data_size = 8;
@@ -132,7 +136,7 @@ void scd_play_roq(volatile short *commreg, int gfh_offset, int gfh_length)
                     pad = 1;
                 }
 
-                dma_to_32x((void *)((chunk_size << 2) | (pad << 1)), buf-8, wram_rem+8+pad, chunk_id);
+                dma_to_32x((void *)pad, buf-8, wram_rem+8+pad, (chunk_size << 16) | chunk_id);
 
                 data_size += 8;
                 data_size += wram_rem;
@@ -165,7 +169,7 @@ void scd_play_roq(volatile short *commreg, int gfh_offset, int gfh_length)
             wram_rem -= chunk_size;
             data_size += buf_end - buf;
 
-            dma_to_32x((void *)((chunk_size << 2) | (pad << 1)), buf, (buf_end - buf + 1) & ~1, chunk_id);
+            dma_to_32x((void *)pad, buf, (buf_end - buf + 1) & ~1, (chunk_size << 16) | chunk_id);
             header_len = 0;
             break;
         }
