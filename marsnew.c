@@ -341,7 +341,7 @@ void Mars_Secondary(void)
 	SH2_DMA_TCR1 = 0;
 	SH2_DMA_CHCR1 = 0;
 	SH2_DMA_DRCR1 = 0;
-	SH2_DMA_DMAOR = 1; 	// enable DMA
+	SH2_DMA_DMAOR = 1; // enable DMA transfers on all channels
 
 	SH2_DMA_VCR1 = 66; 	// set exception vector for DMA channel 1
 	SH2_INT_IPRA = (SH2_INT_IPRA & 0xF0FF) | 0x0400; // set DMA INT to priority 4

@@ -375,7 +375,8 @@ void Mars_Sec_RoQ_InitSound(int init)
 
     if (!init)
     {
-        SH2_DMA_DMAOR = 0; // disable DMA
+        SH2_DMA_CHCR1; // read TE
+        SH2_DMA_CHCR1 = 0; // clear TE
         snd_channels = 0;
         return;
     }
@@ -385,7 +386,6 @@ void Mars_Sec_RoQ_InitSound(int init)
     SH2_DMA_TCR1 = 0;
     SH2_DMA_CHCR1 = 0;
     SH2_DMA_DRCR1 = 0;
-    SH2_DMA_DMAOR = 1; // enable DMA
 
     roq_snddma1_pwmctrl();
 

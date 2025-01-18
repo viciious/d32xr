@@ -288,7 +288,7 @@ void Mars_Init(void)
 	SH2_DMA_TCR1 = 0;
 	SH2_DMA_CHCR1 = 0;
 	SH2_DMA_DRCR1 = 0;
-	SH2_DMA_DMAOR = 1; // enable DMA
+	SH2_DMA_DMAOR = 1; // enable DMA transfers on all channels
 
 	SH2_WDT_WTCSR_TCNT = 0xA518; /* WDT TCSR = clr OVF, IT mode, timer off, clksel = Fs/2 */
 
