@@ -667,6 +667,7 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
     int framecount = 0;
     int snd_buf_size = RoQ_SND_BUF_SIZE;
     int extratics = 0;
+    char needaudio = 1;
     unsigned starttics;
 
     if (!allowpause && (Mars_ReadController(0) & SEGA_CTRL_START)) {
@@ -741,16 +742,6 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
 
     ringbuf_init(schunks, snddata, snd_buf_size, 1);
 
-    // buffer some initial data, but not for too long
-    starttics = Mars_GetTicCount();
-    while (roq_buffer(ri->fp) == 1) {
-        if (Mars_GetTicCount() > starttics + 300) {
-            break;
-        }
-    }
-
-    secsnd(1);
-
     roq_init_video(ri);
 
     while (MARS_SYS_COMM4 != 0);
@@ -803,6 +794,12 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
             }
 
             Mars_FlipFrameBuffers(0);
+        }
+
+        if (needaudio && schunks->writepos)
+        {
+            needaudio = 0;
+            secsnd(1);
         }
 
         extratwait_int = extratics >> 16;
