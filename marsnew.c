@@ -394,7 +394,7 @@ void Mars_Secondary(void)
 			Mars_Sec_wipe_doMelt();
 			break;
 		case MARS_SECCMD_S_INIT_ROQ_DMA:
-			Mars_Sec_RoQ_InitSound(MARS_SYS_COMM6 != 0);
+			Mars_Sec_RoQ_InitSound(MARS_SYS_COMM6);
 			break;
 		default:
 			break;
