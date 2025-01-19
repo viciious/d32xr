@@ -610,7 +610,10 @@ void IN_Drawer (void)
 {	
 #ifdef MARS
 	if (interm->interpic != NULL)
+	{
 		DrawJagobj(interm->interpic, 0, 0);
+		DrawFillRect(0, BIGSHORT(interm->interpic->height), 320, 224-BIGSHORT(interm->interpic->height), 0);
+	}
 	else
 		DrawTiledBackground();
 #endif
