@@ -256,8 +256,8 @@ void R_SetViewportSize(int num)
 
 	num %= numViewports;
 
-	width = viewports[num][splitscreen][0];
-	height = viewports[num][splitscreen][1];
+	width = viewports[num][splitscreen ? 1 : 0][0];
+	height = viewports[num][splitscreen ? 1 : 0][1];
 	if (lowres)
 		width /= 2;
 

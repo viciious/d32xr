@@ -525,13 +525,13 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 		sound = sfx_wpnup;	
 		break;
 	case SPR_SHOT:
-		if (!P_GiveWeapon (player, wp_shotgun, special->flags&MF_DROPPED ) )
+		if (!P_GiveWeapon (player, wp_shotgun, ( special->flags&MF_DROPPED ) != 0) )
 			return;
 		player->message = "You got the shotgun!";
 		sound = sfx_wpnup;	
 		break;
 	case SPR_SGN2:
-		if (!P_GiveWeapon (player, wp_supershotgun, special->flags&MF_DROPPED ) )
+		if (!P_GiveWeapon (player, wp_supershotgun, ( special->flags&MF_DROPPED ) != 0) )
 			return;
 		player->message = "You got the super shotgun!";
 		sound = sfx_wpnup;	
