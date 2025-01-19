@@ -564,8 +564,8 @@ extern	VINT		netgame;
 
 extern	boolean		playeringame[MAXPLAYERS];
 extern	VINT		consoleplayer;		/* player taking events and displaying */
-extern	player_t	players[MAXPLAYERS];
-extern	playerresp_t	playersresp[MAXPLAYERS];
+extern	player_t	*players;
+extern	playerresp_t	*playersresp;
 
 extern	VINT		maxammo[NUMAMMO];
 

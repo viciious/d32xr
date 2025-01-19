@@ -94,7 +94,7 @@ void ReadGame(int slotnumber)
 	starttype = sg.netgame;
 	startmap = sg.mapnumber;
 	starttype = sg.netgame;
-	D_memcpy(playersresp, sg.resp, sizeof(playersresp));
+	D_memcpy(playersresp, sg.resp, sizeof(playerresp_t)*MAXPLAYERS);
 }
 
 static void SaveGameExt(int slotnumber, int mapnum, const char *mapname)
@@ -112,7 +112,7 @@ static void SaveGameExt(int slotnumber, int mapnum, const char *mapname)
 	sg.mapnumber = mapnum & 0xFF;
 	D_snprintf(sg.mapname, sizeof(sg.mapname), "%s", mapname);
 	D_snprintf(sg.wadname, sizeof(sg.wadname), "%s", cd_pwad_name);
-	D_memcpy(sg.resp, playersresp, sizeof(playersresp));
+	D_memcpy(sg.resp, playersresp, sizeof(playerresp_t)*MAXPLAYERS);
 
 	Mars_WriteSRAM((void*)&sg, offset, sizeof(savegame_t));
 }

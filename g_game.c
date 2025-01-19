@@ -22,8 +22,8 @@ VINT 			gamemapcount = 0;
 VINT			netgame;
 
 boolean         playeringame[MAXPLAYERS];
-player_t        players[MAXPLAYERS];
-playerresp_t	playersresp[MAXPLAYERS];
+player_t        *players = NULL;
+playerresp_t	*playersresp = NULL;
 
 VINT            consoleplayer = 0;          /* player taking events and displaying  */
 int             gametic;
@@ -390,6 +390,9 @@ void G_Init(void)
 	int mapcount = 0;
 	dmapinfo_t** maplist;
 
+	players = Z_Malloc(sizeof(player_t) * MAXPLAYERS, PU_STATIC);
+	playersresp = Z_Malloc(sizeof(playerresp_t) * MAXPLAYERS, PU_STATIC);
+
 	// copy mapnumbers to a temp buffer, then free, then allocate againccccbbgbdcfhk
 	// to avoid zone memory fragmentation
 	W_LoadPWAD(PWAD_CD);
@@ -562,11 +565,11 @@ void G_LoadGame(int saveslot)
 
 	ReadGame(saveslot);
 
-	D_memcpy(backup, playersresp, sizeof(playersresp));
+	D_memcpy(backup, playersresp, sizeof(playerresp_t)*MAXPLAYERS);
 
 	G_InitNew(startskill, startmap, starttype, startsplitscreen);
 
-	D_memcpy(playersresp, backup, sizeof(playersresp));
+	D_memcpy(playersresp, backup, sizeof(playerresp_t)*MAXPLAYERS);
 }
 
 /*============================================================================  */
@@ -799,6 +802,15 @@ void G_DeInit (void)
 		Z_Free(gameinfo.data);
 	}
 	D_memset(&gameinfo, 0, sizeof(gameinfo));
+
+	if (players)
+	{
+		Z_Free(players);
+		Z_Free(playersresp);
+	}
+
+	players = NULL;
+	playersresp = NULL;
 
 	gamemapcount = 0;
 }
