@@ -33,7 +33,7 @@ VINT            totalkills, totalitems, totalsecret;    /* for intermission  */
 boolean         demorecording; 
 boolean         demoplayback; 
 
-mobj_t*         bodyque[BODYQUESIZE];
+SPTR            bodyque[BODYQUESIZE];
 VINT            bodyqueslot;
 
 boolean			finale, secretexit;
@@ -267,8 +267,8 @@ boolean G_CheckSpot (int playernum, mapthing_t *mthing)
 
 	// flush an old corpse if needed
 	if (bodyqueslot >= BODYQUESIZE)
-		P_RemoveMobj(bodyque[bodyqueslot%BODYQUESIZE]);
-	bodyque[bodyqueslot%BODYQUESIZE] = players[playernum].mo;
+		P_RemoveMobj(SPTR_TO_LPTR(bodyque[bodyqueslot%BODYQUESIZE]));
+	bodyque[bodyqueslot%BODYQUESIZE] = LPTR_TO_SPTR(players[playernum].mo);
 	bodyqueslot++;
 
 	return true; 
