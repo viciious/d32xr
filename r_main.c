@@ -910,6 +910,12 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		palette = 5 - (gametic / 3);
 		if (palette < 0)
 			palette = 0;
+
+		#ifdef MDSKY
+		if (sky_md_layer) {
+			Mars_FadeMDPaletteFromBlack(0xEEE); //TODO: Replace with Mars_FadeMDPaletteFromWhite()
+		}
+		#endif
 	}
 	else if (leveltime < 15 && demoplayback && gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
 		palette = 5 - (leveltime / 3);
@@ -928,7 +934,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		distortion_action = DISTORTION_ADD;
 	}
 
-	if (gametic <= 1 && gamemapinfo.mapNumber != 30)
+	if (gametic <= 1 && gamemapinfo.mapNumber != TITLE_MAP_NUMBER)
 	{
 		curpalette = palette = 10;
 		I_SetPalette(dc_playpals+10*768);
