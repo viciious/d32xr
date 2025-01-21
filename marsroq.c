@@ -33,13 +33,13 @@
 #include "roq.h"
 
 #define RoQ_VID_BUF_SIZE        0xE000
-#define RoQ_SND_BUF_SIZE        0x5400
+#define RoQ_SND_BUF_SIZE        0x6000
 
 #define RoQ_SAMPLE_MIN          2
 #define RoQ_SAMPLE_MAX          1032
 #define RoQ_SAMPLE_CENTER       (RoQ_SAMPLE_MAX-RoQ_SAMPLE_MIN)/2
 
-#define RoQ_MAX_SAMPLES         734 // 30Hz
+#define RoQ_MAX_SAMPLES         316 // 70Hz
 
 //#define RoQ_ATTR_SDRAM  __attribute__((section(".data"), aligned(16)))
 #ifndef RoQ_ATTR_SDRAM
@@ -457,6 +457,7 @@ static void *roq_dma_dest(roq_file *fp, void *dest, int length, int dmaarg)
             int starttics = Mars_GetTicCount();
             do {
                 fp->snddma_base = (unsigned char *)ringbuf_walloc(schunks, (chunk_size + 8 + 1) & ~1);
+
                 if (Mars_GetTicCount() - starttics > 300) {
                     // an emergency way out of a broken stream
                     break;
@@ -466,15 +467,21 @@ static void *roq_dma_dest(roq_file *fp, void *dest, int length, int dmaarg)
             if (!fp->snddma_base) {
                 // broken file?
                 fp->eof = 1;
-                fp->snddma_dest = fp->backupdma_dest;
-            } else {
-                fp->snddma_dest = fp->snddma_base;
+                fp->snddma_base = fp->backupdma_dest;
             }
+
+            fp->snddma_dest = fp->snddma_base;
         }
 
         dma_dest = fp->snddma_dest;
         fp->snddma_dest += length;
         break;
+    default:
+        if (!fp->bof) {
+            fp->dma_dest = fp->backupdma_dest;
+            dma_dest = fp->dma_dest;
+            break;
+        }
     case RoQ_INFO:
     case RoQ_QUAD_CODEBOOK:
     case RoQ_QUAD_VQ:
@@ -484,18 +491,13 @@ static void *roq_dma_dest(roq_file *fp, void *dest, int length, int dmaarg)
             if (!fp->dma_base) {
                 // FIXME
                 fp->eof = 1;
-                fp->dma_dest = fp->backupdma_dest;
-            } else {
-                fp->dma_dest = fp->dma_base;
+                fp->dma_base = fp->backupdma_dest;
             }
+            fp->dma_dest = fp->dma_base;
         }
 
         dma_dest = fp->dma_dest;
         fp->dma_dest += length;
-        break;
-    default:
-        fp->dma_dest = fp->backupdma_dest;
-        dma_dest = fp->dma_dest;
         break;
     }
 
@@ -518,13 +520,15 @@ static void roq_request(roq_file* fp)
 
     if (fp->snddma_dest != NULL)
     {
-        ringbuf_wcommit(schunks, fp->snddma_dest - fp->snddma_base);
+        if (fp->snddma_base != fp->backupdma_dest)
+            ringbuf_wcommit(schunks, fp->snddma_dest - fp->snddma_base);
         fp->snddma_base = NULL;
         fp->snddma_dest = NULL;
     }
     else if (fp->dma_dest != NULL)
     {
-        ringbuf_wcommit(vchunks, fp->dma_dest - fp->dma_base);
+        if (fp->snddma_base != fp->backupdma_dest)
+            ringbuf_wcommit(vchunks, fp->dma_dest - fp->dma_base);
         fp->dma_base = NULL;
         fp->dma_dest = NULL;
     }
@@ -607,7 +611,10 @@ static int roq_buffer(roq_file* fp)
 {
     // increasing the amount of buffering limit seems be doing more harm than good
     // the 1/4 of max size is the emprical value that works best in practice
-    if (ringbuf_nfree(schunks) > ringbuf_size(schunks)/4 && ringbuf_nfree(vchunks) > RoQ_VID_BUF_SIZE/4) {
+    int sf = ringbuf_nfree(schunks);
+    int vf = ringbuf_nfree(vchunks);
+
+    if (sf > ringbuf_size(schunks)/4 && vf > RoQ_VID_BUF_SIZE/4) {
         roq_request(fp);
         return 1;
     }
