@@ -517,12 +517,6 @@ static void roq_request(roq_file* fp)
     // EOF is reached and there's no data left
     if ((MARS_SYS_COMM0 & (4|8)) == (4|8))
         fp->eof = 1;
-
-    if (fp->eof)
-        return;
-
-    // request a new chunk
-    MARS_SYS_COMM0 |= 1;
 }
 
 static void roq_commit(roq_file* fp)
