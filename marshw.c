@@ -832,7 +832,6 @@ static void Mars_HandleBeginDMARequest(int is_repeat)
 {
 	int j, l;
 	int cmd, arg;
-	int dest_addr;
 	int chcr = SH2_DMA_CHCR_DM_INC|SH2_DMA_CHCR_TS_WU|SH2_DMA_CHCR_AL_AH|SH2_DMA_CHCR_DS_EDGE|SH2_DMA_CHCR_DL_AH;
 
 	cmd = ++MARS_SYS_COMM0;
@@ -854,7 +853,7 @@ static void Mars_HandleBeginDMARequest(int is_repeat)
 
 	if (!is_repeat)
 	{
-		pri_dma_dest = pri_dreqdma_cb(pri_dma_arg, (void*)dest_addr, l, arg);
+		pri_dma_dest = pri_dreqdma_cb(pri_dma_arg, (void*)MARS_SYS_DMADAR, l, arg);
 		pri_dma_length = l;
 	}
 

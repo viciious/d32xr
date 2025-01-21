@@ -542,8 +542,6 @@ static void roq_commit(roq_file* fp)
 
     // request a new chunk
     MARS_SYS_COMM0 |= 1;
-=======
->>>>>>> WIP
 }
 
 static void roq_get_chunk(roq_file* fp)
@@ -635,7 +633,7 @@ static int roq_buffer(roq_file* fp)
     // increasing the amount of buffering limit seems be doing more harm than good
     // the 1/4 of max size is the emprical value that works best in practice
     int sf = ringbuf_nfree(schunks);
-    int vf = ringbuf_nfree(vchunks);
+    int vf = ringbuf_nfree(vchunks[vid]);
 
     if (sf > ringbuf_size(schunks)/2 && vf > RoQ_VID_BUF_SIZE/2) {
         roq_request(fp);
@@ -699,6 +697,7 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
     int framecount = 0;
     int snd_buf_size = RoQ_SND_BUF_SIZE;
     int extratics = 0;
+    char needaudio = 1;
     unsigned starttics;
 
     if (!allowpause && (Mars_ReadController(0) & SEGA_CTRL_START)) {
