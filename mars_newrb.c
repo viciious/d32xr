@@ -245,13 +245,6 @@ int ringbuf_size(const marsrbuf_t *buf)
     return buf->size;
 }
 
-void ringbuf_reset(marsrbuf_t *buf)
-{
-    buf->writepos = 0;
-    buf->readpos = 0;
-    buf->maxreadpos = 0;
-}
-
 int ringbuf_nfree(marsrbuf_t *buf)
 {
     int wp, rp;
