@@ -72,6 +72,7 @@ static void ringbuf_fixup(marsrbuf_t *buf)
     {
         buf->readpos -= buf->size;
         buf->writepos -= buf->size;
+        buf->n_writepos -= buf->size;
     }
 }
 
@@ -81,12 +82,12 @@ void *ringbuf_walloc(marsrbuf_t *buf, int size)
     int rem;
     void *data;
 
-    if (size < 0 || size > buf->size || size + buf->writepos > 0xffff)
+    if (size < 0 || size > buf->size)
         return NULL;
 
     ringbuf_lock(buf);
 
-    Mars_ClearCacheLines(buf, 2);
+    Mars_ClearCacheLines(buf, 3);
 
     ringbuf_fixup(buf);
 
@@ -126,6 +127,7 @@ void *ringbuf_walloc(marsrbuf_t *buf, int size)
     data = buf->data + w;
 
     buf->wopen = 1;
+    buf->n_writepos = size + buf->writepos;
 
     ringbuf_unlock(buf);
 
@@ -139,7 +141,7 @@ void ringbuf_wcommit(marsrbuf_t *buf, int size)
 
     ringbuf_lock(buf);
 
-    Mars_ClearCacheLines(buf, 2);
+    Mars_ClearCacheLines(buf, 3);
 
     if (size > buf->size)
         size = buf->size;
@@ -158,12 +160,12 @@ void *ringbuf_ralloc(marsrbuf_t *buf, int size)
     int rem;
     void *data;
 
-    if (size < 0 || size > buf->size || size + buf->readpos > 0xffff)
+    if (size < 0 || size > buf->size)
         return NULL;
 
     ringbuf_lock(buf);
 
-    Mars_ClearCacheLines(buf, 2);
+    Mars_ClearCacheLines(buf, 3);
 
     ringbuf_fixup(buf);
 
@@ -198,7 +200,7 @@ void ringbuf_rcommit(marsrbuf_t *buf, int size)
 
     ringbuf_lock(buf);
 
-    Mars_ClearCacheLines(buf, 2);
+    Mars_ClearCacheLines(buf, 3);
 
     buf->readpos += size;
     if (buf->maxreadpos && buf->readpos >= buf->maxreadpos) {
@@ -216,12 +218,14 @@ void ringbuf_wait(marsrbuf_t *buf)
     while (1) {
         ringbuf_lock(buf);
 
-        Mars_ClearCacheLines(buf, 2);
+        Mars_ClearCacheLines(buf, 3);
 
         if (buf->readpos == buf->writepos)
             break;
 
         ringbuf_unlock(buf);
+
+        ringbuf_delay();
     }
 
     ringbuf_unlock(buf);
@@ -242,22 +246,37 @@ int ringbuf_size(const marsrbuf_t *buf)
 
 int ringbuf_nfree(marsrbuf_t *buf)
 {
+    int wp, rp;
     int w, r;
     int rem;
 
     ringbuf_lock(buf);
 
-    Mars_ClearCacheLines(buf, 2);
+    Mars_ClearCacheLines(buf, 3);
 
-    ringbuf_fixup(buf);
+    wp = buf->n_writepos;
+    rp = buf->readpos;
 
-    for (w = buf->writepos; w >= buf->size; w -= buf->size);
-    for (r = buf->readpos ; r >= buf->size; r -= buf->size);
+    if (wp >= buf->size && rp >= buf->size)
+    {
+        for ( ; wp >= buf->size; wp -= buf->size);
+        for ( ; rp >= buf->size; rp -= buf->size);
+    }
 
-    if (buf->writepos >= buf->size)
+    for (w = wp; w >= buf->size; w -= buf->size);
+    for (r = rp; r >= buf->size; r -= buf->size);
+
+    if (wp >= buf->size)
+    {
         rem = r - w;
+    }
     else
-        rem = buf->size - buf->writepos;
+    {
+        rem = buf->size - wp;
+        if (rem < r) {
+            rem = r;
+        }
+    }
 
     ringbuf_unlock(buf);
 

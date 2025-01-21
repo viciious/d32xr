@@ -33,13 +33,13 @@
 #include "roq.h"
 
 #define RoQ_VID_BUF_SIZE        0xE000
-#define RoQ_SND_BUF_SIZE        0x5400
+#define RoQ_SND_BUF_SIZE        0x6000
 
 #define RoQ_SAMPLE_MIN          2
 #define RoQ_SAMPLE_MAX          1032
 #define RoQ_SAMPLE_CENTER       (RoQ_SAMPLE_MAX-RoQ_SAMPLE_MIN)/2
 
-#define RoQ_MAX_SAMPLES         734 // 30Hz
+#define RoQ_MAX_SAMPLES         316 // 70Hz
 
 //#define RoQ_ATTR_SDRAM  __attribute__((section(".data"), aligned(16)))
 #ifndef RoQ_ATTR_SDRAM
@@ -457,6 +457,7 @@ static void *roq_dma_dest(roq_file *fp, void *dest, int length, int dmaarg)
             int starttics = Mars_GetTicCount();
             do {
                 fp->snddma_base = (unsigned char *)ringbuf_walloc(schunks, (chunk_size + 8 + 1) & ~1);
+
                 if (Mars_GetTicCount() - starttics > 300) {
                     // an emergency way out of a broken stream
                     break;
@@ -475,6 +476,12 @@ static void *roq_dma_dest(roq_file *fp, void *dest, int length, int dmaarg)
         dma_dest = fp->snddma_dest;
         fp->snddma_dest += length;
         break;
+    default:
+        if (!fp->bof) {
+            fp->dma_dest = fp->backupdma_dest;
+            dma_dest = fp->dma_dest;
+            break;
+        }
     case RoQ_INFO:
     case RoQ_QUAD_CODEBOOK:
     case RoQ_QUAD_VQ:
@@ -492,10 +499,6 @@ static void *roq_dma_dest(roq_file *fp, void *dest, int length, int dmaarg)
 
         dma_dest = fp->dma_dest;
         fp->dma_dest += length;
-        break;
-    default:
-        fp->dma_dest = fp->backupdma_dest;
-        dma_dest = fp->dma_dest;
         break;
     }
 
@@ -607,7 +610,10 @@ static int roq_buffer(roq_file* fp)
 {
     // increasing the amount of buffering limit seems be doing more harm than good
     // the 1/4 of max size is the emprical value that works best in practice
-    if (ringbuf_nfree(schunks) > ringbuf_size(schunks)/4 && ringbuf_nfree(vchunks) > RoQ_VID_BUF_SIZE/4) {
+    int sf = ringbuf_nfree(schunks);
+    int vf = ringbuf_nfree(vchunks);
+
+    if (sf > ringbuf_size(schunks)/2 && vf > RoQ_VID_BUF_SIZE/2) {
         roq_request(fp);
         return 1;
     }
