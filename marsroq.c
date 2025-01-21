@@ -617,7 +617,7 @@ static int roq_buffer(roq_file* fp)
     // increasing the amount of buffering limit seems be doing more harm than good
     // the 1/4 of max size is the emprical value that works best in practice
     int sf = ringbuf_nfree(schunks);
-    int vf = ringbuf_nfree(vchunks[vid]);
+    int vf = ringbuf_nfree(vchunks);
 
     if (sf > ringbuf_size(schunks)/2 && vf > RoQ_VID_BUF_SIZE/2) {
         roq_request(fp);
