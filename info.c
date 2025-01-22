@@ -84,6 +84,8 @@ void A_BrainSpit();
 void A_SpawnSound();
 void A_SpawnFly();
 void A_KeenDie();
+void A_STroopRefire();
+void A_STroopAttack();
 
 #define STATE(sprite,frame,tics,action,nextstate) {sprite,frame,tics,nextstate,action}
 
@@ -267,6 +269,41 @@ STATE(SPR_PLAY,19,2,NULL,S_PLAY_XDIE7),	/* S_PLAY_XDIE6 */
 STATE(SPR_PLAY,20,2,NULL,S_PLAY_XDIE8),	/* S_PLAY_XDIE7 */
 STATE(SPR_PLAY,21,2,NULL,S_PLAY_XDIE9),	/* S_PLAY_XDIE8 */
 STATE(SPR_PLAY,22,-1,NULL,S_NULL),	/* S_PLAY_XDIE9 */
+STATE(SPR_PLAY,0,5,A_Look,S_SHOCK_STND2),	/* S_SHOCK_STND */
+STATE(SPR_PLAY,1,5,A_Look,S_SHOCK_STND),	/* S_SHOCK_STND2 */
+STATE(SPR_PLAY,0,2,A_Chase,S_SHOCK_RUN2),	/* S_SHOCK_RUN1 */
+STATE(SPR_PLAY,0,2,A_Chase,S_SHOCK_RUN3),	/* S_SHOCK_RUN2 */
+STATE(SPR_PLAY,1,2,A_Chase,S_SHOCK_RUN4),	/* S_SHOCK_RUN3 */
+STATE(SPR_PLAY,1,2,A_Chase,S_SHOCK_RUN5),	/* S_SHOCK_RUN4 */
+STATE(SPR_PLAY,2,2,A_Chase,S_SHOCK_RUN6),	/* S_SHOCK_RUN5 */
+STATE(SPR_PLAY,2,2,A_Chase,S_SHOCK_RUN7),	/* S_SHOCK_RUN6 */
+STATE(SPR_PLAY,3,2,A_Chase,S_SHOCK_RUN8),	/* S_SHOCK_RUN7 */
+STATE(SPR_PLAY,3,2,A_Chase,S_SHOCK_RUN1),	/* S_SHOCK_RUN8 */
+STATE(SPR_PLAY,4,3,A_FaceTarget,S_SHOCK_ATK2),	/* S_SHOCK_ATK1 */
+STATE(SPR_PLAY,5,4,A_STroopAttack,S_SHOCK_ATK3),/* S_SHOCK_ATK2 */
+STATE(SPR_PLAY,4,3,A_STroopRefire,S_SHOCK_ATK4),/* S_SHOCK_ATK3 */
+STATE(SPR_PLAY,5,4,A_STroopAttack,S_SHOCK_ATK5),/* S_SHOCK_ATK4 */
+STATE(SPR_PLAY,4,3,A_STroopRefire,S_SHOCK_ATK6),/* S_SHOCK_ATK5 */
+STATE(SPR_PLAY,5,4,A_STroopAttack,S_SHOCK_ATK7),/* S_SHOCK_ATK6 */
+STATE(SPR_PLAY,4,4,NULL,S_SHOCK_RUN1),	/* S_SHOCK_ATK7 */
+STATE(SPR_PLAY,6,2,NULL,S_SHOCK_PAIN2),	/* S_SHOCK_PAIN */
+STATE(SPR_PLAY,6,3,A_Pain,S_SHOCK_RUN1),	/* S_SHOCK_PAIN2 */
+STATE(SPR_PLAY,7,4,NULL,S_SHOCK_DIE2),	/* S_SHOCK_DIE1 */
+STATE(SPR_PLAY,8,4,A_Scream,S_SHOCK_DIE3),	/* S_SHOCK_DIE2 */
+STATE(SPR_PLAY,9,4,A_Fall,S_SHOCK_DIE4),	/* S_SHOCK_DIE3 */
+STATE(SPR_PLAY,10,4,NULL,S_SHOCK_DIE5),	/* S_SHOCK_DIE4 */
+STATE(SPR_PLAY,11,4,NULL,S_SHOCK_DIE6),	/* S_SHOCK_DIE5 */
+STATE(SPR_PLAY,12,4,NULL,S_SHOCK_DIE7),	/* S_SHOCK_DIE6 */
+STATE(SPR_PLAY,13,-1,NULL,S_NULL),	/* S_SHOCK_DIE7 */
+STATE(SPR_PLAY,14,2,NULL,S_SHOCK_XDIE2),	/* S_SHOCK_XDIE1 */
+STATE(SPR_PLAY,15,3,A_XScream,S_SHOCK_XDIE3),	/* S_SHOCK_XDIE2 */
+STATE(SPR_PLAY,16,2,A_Fall,S_SHOCK_XDIE4),	/* S_SHOCK_XDIE3 */
+STATE(SPR_PLAY,17,3,NULL,S_SHOCK_XDIE5),	/* S_SHOCK_XDIE4 */
+STATE(SPR_PLAY,18,2,NULL,S_SHOCK_XDIE6),	/* S_SHOCK_XDIE5 */
+STATE(SPR_PLAY,19,3,NULL,S_SHOCK_XDIE7),	/* S_SHOCK_XDIE6 */
+STATE(SPR_PLAY,20,2,NULL,S_SHOCK_XDIE8),	/* S_SHOCK_XDIE7 */
+STATE(SPR_PLAY,21,3,NULL,S_SHOCK_XDIE9),	/* S_SHOCK_XDIE8 */
+STATE(SPR_PLAY,22,-1,NULL,S_NULL),	/* S_SHOCK_XDIE9 */
 STATE(SPR_POSS,0,5,A_Look,S_POSS_STND2),	/* S_POSS_STND */
 STATE(SPR_POSS,1,5,A_Look,S_POSS_STND),	/* S_POSS_STND2 */
 STATE(SPR_POSS,0,2,A_Chase,S_POSS_RUN2),	/* S_POSS_RUN1 */
@@ -4152,6 +4189,31 @@ sfx_None,		// deathsound
 0,		// damage
 sfx_None,		// activesound
 MF_SOLID|MF_STATIC		// flags
-}
+},
+
+{		/* MT_SHOCKTROOPER */
+-28669/*0x9003*/,		/* doomednum */
+S_SHOCK_STND,		/* spawnstate */
+100,		/* spawnhealth */
+S_SHOCK_RUN1,		/* seestate */
+sfx_None,		/* seesound */
+8,		/* reactiontime */
+sfx_pistol,		/* attacksound */
+S_SHOCK_PAIN,		/* painstate */
+30,		/* painchance */
+sfx_ppopai,		/* painsound */
+0,		/* meleestate */
+S_SHOCK_ATK1,		/* missilestate */
+S_SHOCK_DIE1,		/* deathstate */
+S_SHOCK_XDIE1,		/* xdeathstate */
+sfx_ppodth,		/* deathsound */
+10,		/* speed */
+20*FRACUNIT,		/* radius */
+56*FRACUNIT,		/* height */
+100,		/* mass */
+0,		/* damage */
+sfx_ppoact,		/* activesound */
+MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL|MF_KNIGHT_CMAP		/* flags */
+},
 
 };

@@ -112,6 +112,9 @@ typedef enum
   sfx_secret,
   sfx_keenpn,
   sfx_keendt,
+  sfx_ppopai,
+  sfx_ppodth,
+  sfx_ppoact,
   NUMSFX 
 } sfxenum_t; 
  

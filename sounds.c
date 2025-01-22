@@ -107,7 +107,9 @@ const char * const S_sfxnames[NUMSFX] =
   "boscub",
   "secret",
   "keenpn",
-  "keendt"
+  "keendt",
+  "ppopai",
+  "ppodth"
 };
 
 #ifdef MARS

@@ -496,6 +496,13 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 	if (sound_id <= 0 || sound_id >= NUMSFX)
 		return;
 
+	/* */
+	/* spatialize */
+	/* */
+	S_Spatialize(mobj, &vol, &sep, getpos);
+	if (!vol)
+		return; /* too far away */
+
 	sfx = &S_sfx[sound_id];
 	if (sfx->lump <= 0)
 	{
@@ -523,20 +530,26 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 			case sfx_skldth:
 			case sfx_noway:
 				sound_id = sfx_oof;
-				break;			
+				break;
+			case sfx_ppopai:
+				sound_id = sfx_plpain;
+				freq = 7350;
+				break;
+			case sfx_ppodth:
+				sound_id = sfx_pldeth;
+				freq = 7350;
+				vol >>= 3;
+				break;
+			case sfx_ppoact:
+				sound_id = sfx_oof;
+				freq = 3675;
+				break;
 		}
 		sfx = &S_sfx[sound_id];
 	}
 
 	if (sfx->lump <= 0)
 		return;
-
-	/* */
-	/* spatialize */
-	/* */
-	S_Spatialize(mobj, &vol, &sep, getpos);
-	if (!vol)
-		return; /* too far away */
 
 	// HACK: boost volume for item pickups
 	if (sound_id == sfx_itemup)

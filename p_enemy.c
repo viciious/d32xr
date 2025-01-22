@@ -1466,3 +1466,22 @@ void L_SkullBash (mobj_t *mo)
 }
 
 /*  */
+
+void A_STroopRefire (mobj_t *actor)
+{
+	/* keep firing unless target got out of sight */
+	A_FaceTarget (actor);
+	if (P_Random () < 10)
+		return;
+	if (!actor->target || actor->target->health <= 0 || !(actor->flags&MF_SEETARGET) )
+		P_SetMobjState (actor, mobjinfo[actor->type].seestate);
+}
+
+void A_STroopAttack (mobj_t *actor)
+{
+	if (!actor->target)
+		return;
+	A_FaceTarget (actor);
+	// launch a missile
+	P_SpawnMissile (actor, actor->target, MT_PLASMA);
+}
