@@ -86,8 +86,7 @@ typedef struct roq_info_s {
 
 /* -------------------------------------------------------------------------- */
 
-void roq_cleanup(void);
-roq_info *roq_init(roq_info* ri, roq_file *fp, roq_getchunk_t getch, roq_retchunk_t retch, int displayrate, short *framebuffer);
+void roq_init(roq_info* ri, roq_file *fp, roq_getchunk_t getch, roq_retchunk_t retch, int displayrate, short *framebuffer);
 int roq_read_info(roq_file* fp, roq_info* ri);
 int roq_read_frame(roq_info* ri, char loop, void (*finish)(void))
 	RoQ_ATTR_SDRAM

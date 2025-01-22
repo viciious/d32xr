@@ -192,7 +192,7 @@ static inline void apply_motion_8x8(roq_parse_ctx* ctx, unsigned x, unsigned y, 
 	}
 }
 
-roq_info* roq_init(roq_info* ri, roq_file* fp, roq_getchunk_t getch, roq_retchunk_t retch, int displayrate, short *framebuffer)
+void roq_init(roq_info* ri, roq_file* fp, roq_getchunk_t getch, roq_retchunk_t retch, int displayrate, short *framebuffer)
 {
 	ri->fp = fp;
 	ri->get_chunk = getch;
@@ -202,7 +202,6 @@ roq_info* roq_init(roq_info* ri, roq_file* fp, roq_getchunk_t getch, roq_retchun
 	ri->cells = ri->cells_u + 128;
 	ri->qcells = ri->qcells_u + 128;
 	fp->backupdma_dest = (unsigned char *)framebuffer;
-	return ri;
 }
 
 /* -------------------------------------------------------------------------- */

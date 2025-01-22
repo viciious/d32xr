@@ -32,7 +32,7 @@
 #include "mars_newrb.h"
 #include "roq.h"
 
-#define RoQ_VID_BUF_SIZE        0xE000
+#define RoQ_VID_BUF_SIZE        0xE800
 #define RoQ_SND_BUF_SIZE        0x6000
 
 #define RoQ_SAMPLE_MIN          2
@@ -676,6 +676,8 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
     int extratics = 0;
     char needaudio = 1;
     unsigned starttics, exptics;
+    unsigned samples0[RoQ_MAX_SAMPLES] __attribute__((aligned(16)));
+    unsigned samples1[RoQ_MAX_SAMPLES] __attribute__((aligned(16)));
 
     if (!allowpause && (Mars_ReadController(0) & SEGA_CTRL_START)) {
         return 0;
@@ -698,10 +700,8 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
     ri->canvascopy = (void *)(((intptr_t)buf + 15) & ~15);
     buf = (void *)(ri->canvascopy + RoQ_MAX_CANVAS_SIZE);
 
-    snd_samples[0] = (unsigned *)(((intptr_t)buf + 15) & ~15);
-    buf = (void *)((char *)snd_samples[0] + sizeof(int)*RoQ_MAX_SAMPLES);
-    snd_samples[1] = (unsigned *)(((intptr_t)buf + 15) & ~15);
-    buf = (void *)((char *)snd_samples[1] + sizeof(int)*RoQ_MAX_SAMPLES);
+    snd_samples[0] = samples0;
+    snd_samples[1] = samples1;
 
     vchunks = (void *)(((intptr_t)buf + 15) & ~15);
     buf = (void *)((char *)vchunks + sizeof(*vchunks));
@@ -723,9 +723,7 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
 
     displayrate = MARS_VDP_DISPMODE & MARS_NTSC_FORMAT ? 60 : 50;
 
-    if ((ri = roq_init(ri, &fp, roq_get_chunk, roq_return_chunk, displayrate, (short *)framebuffer)) == NULL) {
-        return -1;
-    }
+    roq_init(ri, &fp, roq_get_chunk, roq_return_chunk, displayrate, (short *)framebuffer);
 
     roq_request(ri->fp);
 
