@@ -615,8 +615,10 @@ void S_StartPositionedSound(mobj_t* mobj, int sound_id, getsoundpos_t getpos)
 =
 ===================
 */
-void S_PreUpdateSounds(void)
+int S_PreUpdateSounds(void)
 {
+	int n = 0;
+
 	if (S_USE_MEGACD_DRV())
 	{
 		int i;
@@ -634,10 +636,13 @@ void S_PreUpdateSounds(void)
 				// stopped
 				ch->data = NULL;
 			} else {
+				n++;
 				ch->position = 1;
 			}
 		}
 	}
+
+	return n;
 }
 
 void S_UpdateSounds(void)

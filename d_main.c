@@ -497,7 +497,23 @@ while (!I_RefreshCompleted ())
 	} while (!exit);
 
 	stop ();
-	S_Clear ();
+
+	// wait max 1s for sound playback to stop (exit switches, yay!)
+	for (i = 0; i < 30; i++)
+	{
+		volatile int tic;
+
+		if (S_PreUpdateSounds() == 0) {
+			break;
+		}
+		S_UpdateSounds();
+
+		for (tic = I_GetTime(); tic == I_GetTime(); ) {
+			;
+		}
+	}
+
+	S_Clear();
 	
 	for (i = 0; i < MAXPLAYERS; i++)
 		players[i].mo = (mobj_t *)&emptymobj;	/* for net consistency checks */

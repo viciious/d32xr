@@ -359,6 +359,8 @@ void IN_Start (void)
 	VINT lumps[7];
 	lumpinfo_t li[7];
 
+	S_Clear();
+
 	interm = Z_Malloc(sizeof(*interm), PU_STATIC);
 	D_memset(interm, 0, sizeof(*interm));
 

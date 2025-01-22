@@ -118,7 +118,7 @@ void S_Clear (void);
 void S_StartSound(mobj_t *mobj, int sound_id);
 void S_StartPositionedSound(mobj_t* mobj, int sound_id, getsoundpos_t getpos);
 void S_UpdateSounds(void);
-void S_PreUpdateSounds(void);
+int S_PreUpdateSounds(void); // returns the number of sound channels currently playing
 int S_CDAvailable(void);
 void S_SetMusicType(int t);
 void S_SetSPCMDir(const char *dir);
