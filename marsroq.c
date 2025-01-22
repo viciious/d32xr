@@ -614,7 +614,7 @@ static int roq_buffer(roq_file* fp)
     int sf = ringbuf_nfree(schunks);
     int vf = ringbuf_nfree(vchunks);
 
-    if (sf > ringbuf_size(schunks)/4 && vf > RoQ_VID_BUF_SIZE/4) {
+    if (sf > ringbuf_size(schunks)-RoQ_MAX_SAMPLES*8 && vf > RoQ_VID_BUF_SIZE-10*1024) {
         roq_request(fp);
         return 1;
     }
@@ -675,7 +675,7 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
     int snd_buf_size = RoQ_SND_BUF_SIZE;
     int extratics = 0;
     char needaudio = 1;
-    unsigned starttics;
+    unsigned starttics, exptics;
 
     if (!allowpause && (Mars_ReadController(0) & SEGA_CTRL_START)) {
         return 0;
@@ -757,14 +757,15 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
 
     extratics = 0;
     framecount = 0;
+    exptics = 0;
+    starttics = Mars_GetTicCount();
 
     while(1)
     {
         int ret;
         unsigned waittics, extrawait;
         unsigned extratwait_int, extratwait_frac;
-
-        starttics = Mars_GetTicCount();
+        unsigned frametics = Mars_GetTicCount();
 
         prev_ctrl = ctrl;
         ctrl = Mars_ReadController(0);
@@ -813,18 +814,26 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
         extratwait_frac = extratics & 0xffff;
 
         extrawait = extratwait_int;
-        if (extrawait != 0)
+        if (extrawait > 0)
             extratics = extratwait_frac;
         else
             extratics += (int)ri->frametics_frac;
 
-        waittics = Mars_GetTicCount() - starttics;
+        waittics = Mars_GetTicCount();
+
+        // prevent video from running too far ahead
+        exptics = ri->frametics * framecount;
+        if (waittics - starttics < exptics) {
+            extrawait += exptics - (waittics - starttics);
+        }
+
+        waittics = waittics - frametics;
         while (waittics < ri->frametics + extrawait) {
             int left = ri->frametics + extrawait - waittics;
             if (left > 1 && !(MARS_SYS_COMM0 & 1)) {
                 roq_buffer(ri->fp);
             }
-            waittics = Mars_GetTicCount() - starttics;
+            waittics = Mars_GetTicCount() - frametics;
         }
 
         framecount++;
