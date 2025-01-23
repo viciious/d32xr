@@ -805,6 +805,9 @@ void RunTitle (void)
 	startsplitscreen = 0;
 	canwipe = false;
 	MiniLoop (START_Title, STOP_Title, TIC_Abortable, DRAW_Title, UpdateBuffer);
+#ifndef ENABLE_FIRE_ANIMATION
+	canwipe = true;
+#endif
 }
 
 #define MAX_ATTRACT_DEMOS 10
@@ -825,15 +828,10 @@ static void RunAttractDemos (void)
 			unsigned *demo;
 			char demoname[9];
 
-			if (!first)
-			{
-				// loading demo from CD is going to write some data into
-				// the framebuffer, so store a copy of the framebuffer,
-				// then flip and blit the stored copy after we finished
-				// loading the demo
-				I_StoreScreenCopy();
-				UpdateBuffer();
-			}
+			// loading demo from CD is going to write some data into
+			// the framebuffer, so store a copy of the framebuffer,
+			// and blit the stored copy after we finished loading the demo
+			I_StoreScreenCopy();
 
 			// avoid zone memory fragmentation which is due to happen
 			// if the demo lump cache is tucked after the level zone.
@@ -853,8 +851,7 @@ static void RunAttractDemos (void)
 
 			W_LoadPWAD(PWAD_NONE);
 
-			if (!first)
-				I_RestoreScreenCopy();
+			I_RestoreScreenCopy();
 
 			if (!demo && first)
 				return;
@@ -875,7 +872,16 @@ static void RunAttractDemos (void)
 void RunMenu (void)
 {
 #ifdef MARS
+
+#ifndef ENABLE_FIRE_ANIMATION
+	I_StoreScreenCopy();
+#endif
+
 	M_Start();
+
+#ifndef ENABLE_FIRE_ANIMATION
+	I_RestoreScreenCopy();
+#endif
 
 	RunAttractDemos();
 
