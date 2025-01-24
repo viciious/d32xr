@@ -248,20 +248,24 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
       t_texturemid = b_texturemid = m_texturemid = 0;
       actionbits = 0;
 
-      if(f_floorpic == (uint8_t)-1 && b_floorpic == (uint8_t)-1)
-         floorskyhack = true;
-      else 
+      //if(f_floorpic == (uint8_t)-1 && b_floorpic == (uint8_t)-1) {
+      //   floorskyhack = true;
+      //}
+      //else { 
          floorskyhack = false;
+      //}
 
       // deal with sky ceilings (also missing in 3DO)
-      if(f_ceilingpic == (uint8_t)-1 && b_ceilingpic == (uint8_t)-1)
+      if(f_ceilingpic == (uint8_t)-1 && b_ceilingpic == (uint8_t)-1) {
          skyhack = true;
-      else 
+      }
+      else {
          skyhack = false;
+      }
 
       // add floors and ceilings if the wall needs them
       if(!floorskyhack                                         && // not a sky hack wall
-         (f_floorheight < 0 || f_ceilingpic == (uint8_t)-1)        && // is the camera above the floor?
+         (f_floorheight < 0 || f_floorpic == (uint8_t)-1)        && // is the camera above the floor?
          (f_floorpic      != b_floorpic                   || // floor texture changes across line?
           f_floorheight   != b_floorheight                || // height changes across line?
           f_lightlevel    != b_lightlevel                 || // light level changes across line?
@@ -272,7 +276,10 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
          else
             actionbits |= (AC_ADDFLOOR|AC_NEWFLOOR);
       }
-      *floorheight = *floornewheight = f_floorheight;
+      segl->floorheight = *floornewheight = f_floorheight;
+
+      segl->t_bottomheight = f_floorheight; // bottom of texturemap
+
 #ifdef FLOOR_OVER_FLOOR_CRAZY
       if (front_sector->fofsec != -1)
       {

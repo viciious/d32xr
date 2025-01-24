@@ -556,6 +556,8 @@ typedef struct
 		mapvertex_t		v2;
 	};
 
+	fixed_t			floorheight;
+
 	uint16_t 		*clipbounds;
 } viswall_t;
 
