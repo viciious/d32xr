@@ -69,8 +69,8 @@ typedef struct {
 
 typedef struct roq_info_s {
 	short *canvascopy;
-	roq_cell cells_u[256];
-	roq_qcell qcells_u[256];
+	roq_cell *cells_u;
+	roq_qcell *qcells_u;
 	roq_cell *cells;
 	roq_qcell *qcells;
 	roq_file *fp;

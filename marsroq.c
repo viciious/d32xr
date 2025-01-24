@@ -32,7 +32,7 @@
 #include "mars_newrb.h"
 #include "roq.h"
 
-#define RoQ_VID_BUF_SIZE        0xE800
+#define RoQ_VID_BUF_SIZE        0xF000
 #define RoQ_SND_BUF_SIZE        0x6000
 
 #define RoQ_SAMPLE_MIN          2
@@ -641,6 +641,8 @@ static void roq_close(roq_info *ri, void (*secsnd)(int init))
     while (MARS_SYS_COMM4 != 0);
 
     MARS_SYS_COMM0 = 0;
+
+    Mars_ClearCache();
 }
 
 int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*secsnd)(int init))
@@ -660,6 +662,8 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
     unsigned starttics, exptics;
     unsigned samples0[RoQ_MAX_SAMPLES] __attribute__((aligned(16)));
     unsigned samples1[RoQ_MAX_SAMPLES] __attribute__((aligned(16)));
+    roq_cell cells_u[256];
+    roq_qcell qcells_u[256];
 
     if (!allowpause && (Mars_ReadController(0) & SEGA_CTRL_START)) {
         return 0;
@@ -671,6 +675,8 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
     ri = mem;
     ri = (void *)(((intptr_t)mem + 15) & ~15);
     memset(ri, 0, sizeof(*ri));
+    ri->cells_u = cells_u;
+    ri->qcells_u = qcells_u;
     buf = (char *)ri + sizeof(*ri);
 
     viddata = (void *)(((intptr_t)buf + 15) & ~15);

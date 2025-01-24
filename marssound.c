@@ -1348,8 +1348,6 @@ void Mars_Sec_ReadSoundCmds(void)
 
 void Mars_Sec_InitSoundDMA(int initfull)
 {
-	uint16_t sample, ix;
-
 	Mars_ClearCache();
 
 #ifndef DISABLE_DMA_SOUND
