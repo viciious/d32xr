@@ -4192,7 +4192,7 @@ MF_SOLID|MF_STATIC		// flags
 },
 
 {		/* MT_SHOCKTROOPER */
--28669/*0x9003*/,		/* doomednum */
+4099 /* 0x9003 & ~0x8000*/,		/* doomednum */
 S_SHOCK_STND,		/* spawnstate */
 100,		/* spawnhealth */
 S_SHOCK_RUN1,		/* seestate */
