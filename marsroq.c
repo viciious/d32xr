@@ -562,13 +562,10 @@ get_header:
         chunk += pad;
     }
 
-    // clear the whole cache to avoid he hassle
-    // we also have to clear the cache for screen copy after 
-    // it has been DMA'ed to memory from DRAM, so kill two
-    // birds with one stone
-    Mars_ClearCache();
-    //Mars_ClearCacheLines(chunk + 8, (chunk_size >> 4) + 2);
+    if (fp->clear_cache)
+        Mars_ClearCacheLines(chunk + 8, (chunk_size >> 4) + 2);
 
+    fp->clear_cache = 1;
     fp->page_base = chunk;
     fp->data = chunk;
     fp->page_end = fp->data + chunk_size + 8;
@@ -778,6 +775,9 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
         {
             ctrl = prev_ctrl = 0;
         }
+
+        Mars_ClearCache();
+        ri->fp->clear_cache = 0;
 
         if (!paused) {
             ret = roq_read_frame(ri, 0, Mars_WaitFrameBuffersFlip);

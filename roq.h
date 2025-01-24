@@ -52,6 +52,7 @@ typedef struct {
 	unsigned char *snddma_dest;
 	short eof, bof;
 	unsigned char *backupdma_dest;
+	char clear_cache; // whether the CPU cache needs to be cleared after reading a chunk
 } roq_file;
 
 typedef void (*roq_getchunk_t)(roq_file*);
