@@ -404,12 +404,6 @@ void Mars_Secondary(void)
 	}
 }
 
-int Mars_FRTCounter2Msec(int c)
-{
-	return (c * mars_frtc2msec_frac) >> FRACBITS;
-}
-
-
 void C_Init (void)
 {
 	int i;

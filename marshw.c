@@ -35,7 +35,7 @@ static volatile uint16_t mars_controlval[2];
 volatile unsigned mars_vblank_count = 0;
 volatile unsigned mars_pwdt_ovf_count = 0;
 volatile unsigned mars_swdt_ovf_count = 0;
-unsigned mars_frtc2msec_frac = 0;
+static unsigned mars_frtc2msec_frac = 0;
 
 static const uint8_t* mars_newpalette = NULL;
 
@@ -82,6 +82,11 @@ static void Mars_HandleDMARequest(void);
 static char Mars_UploadPalette(const uint8_t* palette) __attribute__((section(".sdata"), aligned(16), optimize("Os")));
 
 #define MARS_ACTIVE_SCREEN (*(volatile uint16_t *)(((intptr_t)&mars_activescreen) | 0x20000000))
+
+int Mars_FRTCounter2Msec(int c)
+{
+	return (c * mars_frtc2msec_frac) >> 16;
+}
 
 void Mars_WaitFrameBuffersFlip(void)
 {

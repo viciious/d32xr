@@ -54,7 +54,6 @@ int Mars_ParseMousePacket(int mouse, int* pmx, int* pmy);
 extern volatile unsigned mars_vblank_count;
 extern volatile unsigned mars_pwdt_ovf_count;
 extern volatile unsigned mars_swdt_ovf_count;
-extern unsigned mars_frtc2msec_frac;
 extern uint16_t mars_cd_ok;
 extern uint16_t mars_num_cd_tracks;
 extern uint16_t mars_framebuffer_height;
@@ -63,6 +62,8 @@ extern uint16_t mars_refresh_hz;
 
 void Mars_UpdateCD(void);
 void Mars_UseCD(int usecd);
+
+int Mars_FRTCounter2Msec(int c);
 
 void Mars_PlayTrack(char usecd, int playtrack, const char *name, int offset, int length, char looping);
 void Mars_StopTrack(void);
