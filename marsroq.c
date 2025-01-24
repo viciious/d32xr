@@ -339,30 +339,12 @@ static void roq_snddma1_kickstart(void)
 void Mars_Sec_RoQ_InitSound(int init)
 {
     int i;
-    uint16_t sample, ix;
 
     Mars_ClearCache();
 
     if (init == 2)
     {
-        // init the sound hardware
-        MARS_PWM_MONO = 1;
-        MARS_PWM_MONO = 1;
-        MARS_PWM_MONO = 1;
-        roq_snddma1_pwmctrl();
-
-        sample = RoQ_SAMPLE_MIN;
-
-        // ramp up to RoQ_SAMPLE_CENTER to avoid click in audio (real 32X)
-        while (sample < RoQ_SAMPLE_CENTER)
-        {
-            for (ix = 0; ix < (RoQ_SAMPLE_RATE * 2) / (RoQ_SAMPLE_CENTER - RoQ_SAMPLE_MIN); ix++)
-            {
-                while (MARS_PWM_MONO & 0x8000); // wait while full
-                MARS_PWM_MONO = sample;
-            }
-            sample++;
-        }
+        Mars_InitPWM(RoQ_SAMPLE_RATE, RoQ_SAMPLE_MIN, RoQ_SAMPLE_MAX);
         return;
     }
 

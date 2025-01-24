@@ -43,6 +43,7 @@ void Mars_WaitFrameBuffersFlip(void);
 char Mars_FramebuffersFlipped(void);
 void Mars_Init(void);
 void Mars_InitVideo(int lines);
+void Mars_InitPWM(int sample_rate, int min_sample, int max_sample);
 void Mars_InitLineTable(void);
 void Mars_SetBrightness(int16_t brightness);
 int Mars_BackBuffer(void);

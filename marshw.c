@@ -307,6 +307,35 @@ void Mars_Init(void)
 	Mars_SetMusicVolume(255);
 }
 
+void Mars_InitPWM(int sample_rate, int min_sample, int max_sample)
+{
+    uint16_t sample, ix;
+	int centre_sample = (max_sample-min_sample)/2;
+
+	// init the sound hardware
+	MARS_PWM_MONO = 1;
+	MARS_PWM_MONO = 1;
+	MARS_PWM_MONO = 1;
+	if (MARS_VDP_DISPMODE & MARS_NTSC_FORMAT)
+		MARS_PWM_CYCLE = (((23011361 << 1) / (sample_rate)+1) >> 1) + 1; // for NTSC clock
+	else
+		MARS_PWM_CYCLE = (((22801467 << 1) / (sample_rate)+1) >> 1) + 1; // for PAL clock
+	MARS_PWM_CTRL = 0x0185; // TM = 1, RTP, RMD = right, LMD = left
+
+	sample = min_sample;
+
+	// ramp up to SAMPLE_CENTER to avoid click in audio (real 32X)
+	while (sample < centre_sample)
+	{
+		for (ix = 0; ix < (sample_rate * 2) / (centre_sample - min_sample); ix++)
+		{
+			while (MARS_PWM_MONO & 0x8000); // wait while full
+			MARS_PWM_MONO = sample;
+		}
+		sample++;
+	}
+}
+
 uint16_t* Mars_FrameBufferLines(void)
 {
 	uint16_t* lines = (uint16_t*)&MARS_FRAMEBUFFER;
@@ -906,6 +935,8 @@ void Mars_MCDLoadSfxFileOfs(uint16_t start_id, int numsfx, const char *name, int
 
 	MARS_SYS_COMM2 = start_id;
 	MARS_SYS_COMM0 = 0x2A00|numsfx; /* load sfx */
+
+	while (MARS_SYS_COMM0);
 }
 
 int Mars_MCDReadDirectory(const char *path)

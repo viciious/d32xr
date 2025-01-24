@@ -1352,42 +1352,20 @@ void Mars_Sec_InitSoundDMA(int initfull)
 
 	Mars_ClearCache();
 
+#ifndef DISABLE_DMA_SOUND
 	if (initfull)
 	{
-#ifndef DISABLE_DMA_SOUND
 		// init DMA
 		SH2_DMA_SAR1 = 0;
 		SH2_DMA_DAR1 = (uint32_t)&MARS_PWM_STEREO; // storing a long here will set the left and right channels
 		SH2_DMA_TCR1 = 0;
 		SH2_DMA_CHCR1 = 0;
 		SH2_DMA_DRCR1 = 0;
-#endif
 
 		// init the sound hardware
-		MARS_PWM_MONO = 1;
-		MARS_PWM_MONO = 1;
-		MARS_PWM_MONO = 1;
-		if (MARS_VDP_DISPMODE & MARS_NTSC_FORMAT)
-			MARS_PWM_CYCLE = (((23011361 << 1) / (SAMPLE_RATE)+1) >> 1) + 1; // for NTSC clock
-		else
-			MARS_PWM_CYCLE = (((22801467 << 1) / (SAMPLE_RATE)+1) >> 1) + 1; // for PAL clock
-		MARS_PWM_CTRL = 0x0185; // TM = 1, RTP, RMD = right, LMD = left
-
-		sample = SAMPLE_MIN;
-
-		// ramp up to SAMPLE_CENTER to avoid click in audio (real 32X)
-		while (sample < SAMPLE_CENTER)
-		{
-			for (ix = 0; ix < (SAMPLE_RATE * 2) / (SAMPLE_CENTER - SAMPLE_MIN); ix++)
-			{
-				while (MARS_PWM_MONO & 0x8000); // wait while full
-				MARS_PWM_MONO = sample;
-			}
-			sample++;
-		}
+	 	Mars_InitPWM(SAMPLE_RATE, SAMPLE_MIN, SAMPLE_MAX);
 	}
 
-#ifndef DISABLE_DMA_SOUND
 	Mars_RB_ResetRead(&soundcmds);
 
 	Mars_SetSecDMA1Callback(&S_Sec_DMA1Handler);
