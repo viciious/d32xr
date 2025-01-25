@@ -171,15 +171,15 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 
     #ifdef MDSKY
     if (sky_32x_layer) {
-        draw32xsky = (segl->actionbits & AC_ADDSKY) != 0 ? draw32xskycol : NULL;
+        draw32xsky = (segl->actionbits & AC_ADDSKY|| segl->actionbits & AC_ADDFLOORSKY) != 0 ? draw32xskycol : NULL;
         drawmdsky = NULL;
     }
     else {
-        drawmdsky = (segl->actionbits & AC_ADDSKY) != 0 ? drawskycol : NULL;
+        drawmdsky = (segl->actionbits & AC_ADDSKY|| segl->actionbits & AC_ADDFLOORSKY) != 0 ? drawskycol : NULL;
         draw32xsky = NULL;
     }
     #else
-    draw32xsky = (segl->actionbits & AC_ADDSKY) != 0 ? draw32xskycol : NULL;
+    draw32xsky = (segl->actionbits & AC_ADDSKY|| segl->actionbits & AC_ADDFLOORSKY) != 0 ? draw32xskycol : NULL;
     #endif
 
     fixed_t scalefrac = segl->scalefrac;
@@ -194,6 +194,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
     fixed_t distance = segl->distance;
 #endif
 
+    const int floorheight = segl->floorheight;
     const int ceilingheight = segl->ceilingheight;
 
 #ifdef SIMPLELIGHT
@@ -254,45 +255,84 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
         if (draw32xsky)
         #endif
         {
+            enable_hints = 0;
+
             int top, bottom;
 
-            top = ceilingclipx;
-            bottom = FixedMul(scale2, ceilingheight)>>FRACBITS;
-            bottom = centerY - bottom;
-            if (bottom > floorclipx)
-                bottom = floorclipx;
+            if (segl->actionbits & AC_ADDSKY) {
+                top = ceilingclipx;
+                bottom = FixedMul(scale2, ceilingheight)>>FRACBITS;
+                bottom = centerY - bottom;
+                if (bottom > floorclipx)
+                    bottom = floorclipx;
 
-            if (top < bottom)
-            {
-                if (draw32xsky) {
-                    int colnum = ((vd.viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & (skytexturep->width-1);
-                    inpixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
-                    
-                    draw32xsky(
-                        x,
-                        -gamemapinfo.skyOffsetY
-                                - gamemapinfo.skyBitmapOffsetY
-                                - (((signed int)vd.aimingangle) >> 22)
-                                - ((vd.viewz >> 16) >> (16-gamemapinfo.skyBitmapScrollRate)),
-                        top,
-                        bottom,
-                        gamemapinfo.skyTopColor,
-                        gamemapinfo.skyBottomColor,
-                        data,
-                        skytexturep->height
-                        );
-                }
+                if (top < bottom)
+                {
+                    if (draw32xsky) {
+                        int colnum = ((vd.viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & (skytexturep->width-1);
+                        inpixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
+
+                        draw32xsky(
+                            x,
+                            -gamemapinfo.skyOffsetY
+                                    - gamemapinfo.skyBitmapOffsetY
+                                    - (((signed int)vd.aimingangle) >> 22)
+                                    - ((vd.viewz >> 16) >> (16-gamemapinfo.skyBitmapScrollRate)),
+                            top,
+                            bottom,
+                            gamemapinfo.skyTopColor,
+                            gamemapinfo.skyBottomColor,
+                            data,
+                            skytexturep->height
+                            );
+                    }
 #ifdef MDSKY
-                else {
-                    drawmdsky(x, top, bottom);
-                }
+                    else {
+                        drawmdsky(x, top, bottom);
+                    }
 #endif
-                if (copper_effects) {
-                    enable_hints = 1;
+                    if (copper_effects) {
+                        enable_hints = 1;
+                    }
                 }
             }
-            else {
-                enable_hints = 0;
+
+            if (segl->actionbits & AC_ADDFLOORSKY) {
+                bottom = floorclipx;
+                top = FixedMul(scale2, floorheight)>>FRACBITS;
+                top = centerY - top;
+                if (top < ceilingclipx)
+                    top = ceilingclipx;
+
+                if (top < bottom)
+                {
+                    if (draw32xsky) {
+                        int colnum = ((vd.viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & (skytexturep->width-1);
+                        inpixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
+
+                        draw32xsky(
+                            x,
+                            -gamemapinfo.skyOffsetY
+                                    - gamemapinfo.skyBitmapOffsetY
+                                    - (((signed int)vd.aimingangle) >> 22)
+                                    - ((vd.viewz >> 16) >> (16-gamemapinfo.skyBitmapScrollRate)),
+                            top,
+                            bottom,
+                            gamemapinfo.skyTopColor,
+                            gamemapinfo.skyBottomColor,
+                            data,
+                            skytexturep->height
+                            );
+                    }
+#ifdef MDSKY
+                    else {
+                        drawmdsky(x, top, bottom);
+                    }
+#endif
+                    if (copper_effects) {
+                        enable_hints = 1;
+                    }
+                }
             }
         }
 
@@ -474,7 +514,7 @@ void R_SegCommands(void)
 #ifdef MARS
         R_LockSeg();
         actionbits = *(volatile short *)&segl->actionbits;
-        if (actionbits & AC_DRAWN || !(actionbits & (AC_TOPTEXTURE | AC_BOTTOMTEXTURE | AC_MIDTEXTURE | AC_ADDSKY))) {
+        if (actionbits & AC_DRAWN || !(actionbits & (AC_TOPTEXTURE | AC_BOTTOMTEXTURE | AC_MIDTEXTURE | AC_ADDSKY | AC_ADDFLOORSKY))) {
             R_UnlockSeg();
             goto post_draw;
         } else {
@@ -660,4 +700,3 @@ void Mars_Sec_R_SegCommands(void)
 }
 
 #endif
-

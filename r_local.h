@@ -523,6 +523,7 @@ void R_PostTexCacheFrame(r_texcache_t* c);
 #define	AC_ADDSKY			512
 #define	AC_DRAWN			1024
 #define	AC_MIDTEXTURE		2048
+#define	AC_ADDFLOORSKY		4096
 
 typedef struct
 {
@@ -584,6 +585,8 @@ typedef struct
 		fixed_t			ceilingheight;
 		mapvertex_t		v2;
 	};
+
+	fixed_t			floorheight;
 
 	uint16_t 		*clipbounds;
 } viswall_t;
