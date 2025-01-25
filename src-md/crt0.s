@@ -727,10 +727,19 @@ start_music:
         move.b  (a0)+,(a1)+
         bne.b   00b
 
+        move.w  0xA15100,d0
+        or.w    #0x8000,d0
+        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
         move.w  0xA15120,d0         /* COMM0 */
         btst    #1,d0               /* check if we read SPCM */
         beq.b   01f
 
+        tst.w   fm_rep              /* start playback of non-looping tracks synchronously */
+        beq.b   04f
+        move.w  #0,0xA15120         /* done (continue asycnronously) */
+
+04:
         /* we read SPCM from CD */
         clr.w   fm_idx
         moveq   #0,d1
@@ -746,12 +755,10 @@ start_music:
         move.w  #0x2000,sr          /* enable ints */
         lea     8(sp),sp
 
-        move.w  0xA15100,d0
-        or.w    #0x8000,d0
-        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+        tst.w   fm_rep
+        bne.w   main_loop           /* a looping track */
 
         move.w  #0,0xA15120         /* done */
-
         bra     main_loop
 
 01:
@@ -761,16 +768,17 @@ start_music:
         move.l  0xA15128,d1         /* offset in COMM8 */
         move.l  d1,-(sp)
 
+        tst.w   fm_rep              /* start playback of non-looping tracks synchronously */
+        beq.b   05f
+        move.w  #0,0xA15120         /* done */
+
+05:
         /* we read VGM from CD */
         lea     vgm_lzss_buf,a1
         move.l  a1,-(sp)
         jsr     vgm_cache_scd
         lea     12(sp),sp
         move.l  d0,a1
-
-        move.w  0xA15100,d0
-        or.w    #0x8000,d0
-        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
 
         bra     02f
 
@@ -784,8 +792,10 @@ start_music:
         move.l  d0,a0
         bsr     set_rom_bank
 02:
+        tst.w   fm_rep
+        bne.b   06f
         move.w  #0,0xA15120         /* done */
-
+06:
         move.l  a1,-(sp)            /* MD lump ptr */
         jsr     vgm_setup           /* setup lzss, set pcm_baseoffs, set vgm_ptr, read first block */
         lea     4(sp),sp
