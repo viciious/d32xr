@@ -15,6 +15,7 @@ CCFLAGS = -c -std=c11 -m2 -mb
 CCFLAGS += -Wall -Wextra -pedantic -Wno-unused-parameter -Wimplicit-fallthrough=0 -Wno-missing-field-initializers -Wnonnull
 CCFLAGS += -D__32X__ -DMARS
 CCFLAGS += -DDISABLE_DMA_SOUND
+CCFLAGS += -fomit-frame-pointer
 LDFLAGS = -T mars-ssf.ld -Wl,-Map=output.map -nostdlib -Wl,--gc-sections,--sort-section=alignment --specs=nosys.specs
 ASFLAGS = --big
 ifdef ENABLE_FIRE_ANIMATION
@@ -26,15 +27,20 @@ CCFLAGS += -DENABLE_SSF_MAPPER
 ASFLAGS += --defsym ENABLE_SSF_MAPPER=1
 endif
 
+debug: CCFLAGS += -g -ggdb
+
+release: CCFLAGS += -ffast-math -funroll-loops -fno-align-loops -fno-align-jumps -fno-align-labels
+release: CCFLAGS += -fno-common -ffunction-sections -fdata-sections -flto=auto
+
+release: LDFLAGS += -Os -flto=auto
+
 MARSHWCFLAGS := $(CCFLAGS)
 MARSHWCFLAGS += -O1 -fno-lto
 
-release: CCFLAGS += -Os -fomit-frame-pointer -ffast-math -funroll-loops -fno-align-loops -fno-align-jumps -fno-align-labels
-release: CCFLAGS += -fno-common -ffunction-sections -fdata-sections -flto=auto
-release: LDFLAGS += -Os -flto=auto
+ROQCCFLAGS := $(CCFLAGS)
+ROQCCFLAGS += -O2
 
-debug: CCFLAGS += -Os -g -ggdb -fomit-frame-pointer
-debug: MARSHWCFLAGS += -ggdb -fomit-frame-pointer
+CCFLAGS += -Os
 
 PREFIX = $(ROOTDIR)/sh-elf/bin/sh-elf-
 CC = $(PREFIX)gcc
@@ -141,6 +147,9 @@ crt0.o: crt0.s m68k.bin
 
 marshw.o: marshw.c
 	$(CC) $(MARSHWCFLAGS) $(INCPATH) $< -o $@
+
+roq_read.o: roq_read.c
+	$(CC) $(ROQCCFLAGS) $(INCPATH) $< -o $@
 
 %.o: %.c
 	$(CC) $(CCFLAGS) $(INCPATH) $< -o $@
