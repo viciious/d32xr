@@ -170,6 +170,14 @@ void Mars_SetPriDreqDMACallback(void *(*cb)(void *, void *, int , int ), void *a
 void Mars_SetSecCmdCallback(void (*cb)(void));
 void Mars_SetSecDMA1Callback(void (*cb)(void));
 
+#define MARS_ROQFL_REQ	 	1 		// request the next chunk or transfer pending
+#define MARS_ROQFL_EOF 		4 		// EOF reached
+#define MARS_ROQFL_NOD 		8 		// no data
+#define MARS_ROQFL_STP 		16 		// STOP data streaming
+
+int Mars_MCDBeginRoQStream(const char *file);
+void Mars_MCDSopRoQStream(void);
+
 enum {
 	DEBUG_FPSCOUNT,
 	DEBUG_LASTTICS,

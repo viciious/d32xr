@@ -55,7 +55,7 @@ void scd_play_roq(volatile short *commreg, int gfh_offset, int gfh_length)
     wram_rem = block_size;
     wram_ofs = block_ofs;
 
-    while (*commreg)
+    while (*commreg && !(*commreg & 16))
     {
         uint8_t header[8];
         int pad = 0, commval;

@@ -959,6 +959,32 @@ int Mars_MCDReadDirectory(const char *path)
 	return *(int *)&MARS_SYS_COMM12;
 }
 
+int Mars_MCDBeginRoQStream(const char *file)
+{
+	int length, offset;
+
+    length = Mars_OpenCDFileByName(file, &offset);
+    if (length < 0) {
+        return -1;
+    }
+
+    MARS_SYS_COMM0 = 0x2E00|MARS_ROQFL_REQ; // request transfer of the first RoQ page
+	return length;
+}
+
+void Mars_MCDSopRoQStream(void)
+{
+    while (MARS_SYS_COMM0 & MARS_ROQFL_REQ) {
+		;
+	}
+
+	MARS_SYS_COMM0 |= MARS_ROQFL_STP; // tell the 68k to stop streaming
+
+	while (MARS_SYS_COMM0) {
+		;
+	}
+}
+
 void Mars_StoreAuxBytes(int length)
 {
 	while (MARS_SYS_COMM0);

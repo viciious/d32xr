@@ -489,12 +489,12 @@ static void *roq_dma_dest(roq_file *fp, void *dest, int length, int dmaarg)
 static void roq_request(roq_file* fp)
 {
     // wait for ongoing transfer to finish
-    while (MARS_SYS_COMM0 & 1) {
+    while (MARS_SYS_COMM0 & MARS_ROQFL_REQ) {
         ;
     }
 
     // EOF is reached and there's no data left
-    if ((MARS_SYS_COMM0 & (4|8)) == (4|8))
+    if ((MARS_SYS_COMM0 & (MARS_ROQFL_EOF|MARS_ROQFL_NOD)) == (MARS_ROQFL_EOF|MARS_ROQFL_NOD))
         fp->eof = 1;
 
     if (fp->eof)
@@ -516,7 +516,7 @@ static void roq_request(roq_file* fp)
     }
 
     // request a new chunk
-    MARS_SYS_COMM0 |= 1;
+    MARS_SYS_COMM0 |= MARS_ROQFL_REQ;
 }
 
 static void roq_get_chunk(roq_file* fp)
@@ -602,12 +602,7 @@ static int roq_buffer(roq_file* fp)
 
 static int roq_open(const char *file, roq_file *fp, char *buf)
 {
-    int offset, length;
-
-    length = Mars_OpenCDFileByName(file, &offset);
-    if (length < 0) {
-        return -1;
-    }
+    int length;
 
     memset(fp, 0, sizeof(*fp));
     fp->bof = 1;
@@ -619,8 +614,11 @@ static int roq_open(const char *file, roq_file *fp, char *buf)
 
     Mars_SetPriDreqDMACallback((void *(*)(void *, void *, int , int))roq_dma_dest, fp);
 
-    MARS_SYS_COMM8 = 0;
-    MARS_SYS_COMM0 = 0x2E01; // request transfer of the first RoQ page
+    length = Mars_MCDBeginRoQStream(file);
+    if (length < 0) {
+        Mars_SetPriDreqDMACallback(NULL, NULL);
+        return -1;
+    }
 
     return 0;
 }
@@ -631,13 +629,11 @@ static void roq_close(roq_info *ri, void (*secsnd)(int init))
 
     secsnd(0);
 
-    while (MARS_SYS_COMM0 & 1);
+    Mars_MCDSopRoQStream();
+
+    while (MARS_SYS_COMM4 != 0); // wait for the slave
 
     Mars_SetPriDreqDMACallback(NULL, NULL);
-
-    while (MARS_SYS_COMM4 != 0);
-
-    MARS_SYS_COMM0 = 0;
 
     Mars_ClearCache();
 }
@@ -816,7 +812,7 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
         waittics = waittics - frametics;
         while (waittics < ri->frametics + extrawait) {
             int left = ri->frametics + extrawait - waittics;
-            if (left > 1 && !(MARS_SYS_COMM0 & 1)) {
+            if (left > 1 && !(MARS_SYS_COMM0 & MARS_ROQFL_REQ)) {
                 roq_buffer(ri->fp);
             }
             waittics = Mars_GetTicCount() - frametics;
