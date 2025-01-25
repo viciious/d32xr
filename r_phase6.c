@@ -259,43 +259,68 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
         {
             int top, bottom;
 
+            if (segl->actionbits & AC_ADDSKY) {
+                top = ceilingclipx;
+                bottom = FixedMul(scale2, ceilingheight)>>FRACBITS;
+                bottom = centerY - bottom;
+                if (bottom > floorclipx)
+                    bottom = floorclipx;
+
+                if (top < bottom)
+                {
+                    if (draw32xsky) {
+                        int colnum = ((vd.viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
+                        inpixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
+                        
+                        draw32xsky(
+                            x,
+                            -gamemapinfo.skyOffsetY - (((signed int)vd.aimingangle) >> 22),
+                            top,
+                            bottom,
+                            gamemapinfo.skyTopColor,
+                            gamemapinfo.skyBottomColor,
+                            data,
+                            skytexturep->height
+                            );
+                    }
+#ifdef MDSKY
+                    else {
+                        drawmdsky(x, top, bottom);
+                    }
+#endif
+                }
+            }
+
             if (segl->actionbits & AC_ADDFLOORSKY) {
                 bottom = floorclipx;
                 top = FixedMul(scale2, floorheight)>>FRACBITS;
                 top = centerY - top;
                 if (top < ceilingclipx)
                     top = ceilingclipx;
-            }
-            else {
-                top = ceilingclipx;
-                bottom = FixedMul(scale2, ceilingheight)>>FRACBITS;
-                bottom = centerY - bottom;
-                if (bottom > floorclipx)
-                    bottom = floorclipx;
-            }
 
-            if (top < bottom)
-            {
-                if (draw32xsky) {
-                    int colnum = ((vd.viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
-                    inpixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
-                    
-                    draw32xsky(
-                        x,
-                        -gamemapinfo.skyOffsetY - (((signed int)vd.aimingangle) >> 22),
-                        top,
-                        bottom,
-                        gamemapinfo.skyTopColor,
-                        gamemapinfo.skyBottomColor,
-                        data,
-                        skytexturep->height
-                        );
-                }
+                if (top < bottom)
+                {
+                    if (draw32xsky) {
+                        int colnum = ((vd.viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
+                        inpixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
+                        
+                        draw32xsky(
+                            x,
+                            -gamemapinfo.skyOffsetY - (((signed int)vd.aimingangle) >> 22),
+                            top,
+                            bottom,
+                            gamemapinfo.skyTopColor,
+                            gamemapinfo.skyBottomColor,
+                            data,
+                            skytexturep->height
+                            );
+                    }
 #ifdef MDSKY
-                else {
-                    drawmdsky(x, top, bottom);
-                }
+                    else {
+                        drawmdsky(x, top, bottom);
+                    }
 #endif
+                }
             }
         }
 
