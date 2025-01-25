@@ -72,8 +72,8 @@ extern VINT tictics, drawtics;
 extern int ticstart;
 
 // framebuffer start is after line table AND a single blank line
-static volatile pixel_t* framebuffer = &MARS_FRAMEBUFFER + 0x100;
-static volatile pixel_t *framebufferend = &MARS_FRAMEBUFFER + 0x10000;
+static pixel_t* framebuffer = (pixel_t*)(&MARS_FRAMEBUFFER + 0x100);
+static pixel_t *framebufferend = (pixel_t*)(&MARS_FRAMEBUFFER + 0x10000);
 
 static jagobj_t* jo_stbar;
 static VINT jo_stbar_height;
@@ -407,7 +407,7 @@ void Mars_Secondary(void)
 void C_Init (void)
 {
 	int i;
-	volatile unsigned short* palette;
+	short* palette;
 
 	Mars_ClearCache();
 	Mars_CommSlaveClearCache();
@@ -424,7 +424,7 @@ void C_Init (void)
 
 	/* set a two color palette */
 	Mars_FlipFrameBuffers(false);
-	palette = &MARS_CRAM;
+	palette = (short *)&MARS_CRAM;
 	for (i = 0; i < 256; i++)
 		palette[i] = 0;
 	palette[COLOR_WHITE] = 0x7fff;

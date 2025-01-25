@@ -25,10 +25,10 @@
 #ifndef __32X_H__
 #define __32X_H__
 
-#define MARS_CRAM           (*(volatile unsigned short *)0x20004200)
-#define MARS_FRAMEBUFFER    (*(volatile unsigned short *)0x24000000)
-#define MARS_OVERWRITE_IMG  (*(volatile unsigned short *)0x24020000)
-#define MARS_SDRAM          (*(volatile unsigned short *)0x26000000)
+#define MARS_CRAM           (*(volatile short *)0x20004200)
+#define MARS_FRAMEBUFFER    (*(volatile short *)0x24000000)
+#define MARS_OVERWRITE_IMG  (*(volatile short *)0x24020000)
+#define MARS_SDRAM          (*(volatile short *)0x26000000)
 
 #define MARS_SYS_INTMSK     (*(volatile unsigned short *)0x20004000)
 #define MARS_SYS_DMACTR     (*(volatile unsigned short *)0x20004006)
@@ -41,14 +41,15 @@
 #define MARS_SYS_HINT_CLR   (*(volatile unsigned short *)0x20004018)
 #define MARS_SYS_CMDI_CLR   (*(volatile unsigned short *)0x2000401A)
 #define MARS_SYS_PWMI_CLR   (*(volatile unsigned short *)0x2000401C)
-#define MARS_SYS_COMM0      (*(volatile unsigned short *)0x20004020) /* Master SH2 communication */
-#define MARS_SYS_COMM2      (*(volatile unsigned short *)0x20004022)
-#define MARS_SYS_COMM4      (*(volatile unsigned short *)0x20004024) /* Slave SH2 communication */
-#define MARS_SYS_COMM6      (*(volatile unsigned short *)0x20004026)
-#define MARS_SYS_COMM8      (*(volatile unsigned short *)0x20004028) /* unused */
-#define MARS_SYS_COMM10     (*(volatile unsigned short *)0x2000402A) /* unused */
-#define MARS_SYS_COMM12     (*(volatile unsigned short *)0x2000402C) /* unused */
-#define MARS_SYS_COMM14     (*(volatile unsigned short *)0x2000402E) /* unused */
+
+#define MARS_SYS_COMM0      (*(volatile short *)0x20004020) /* Master SH2 communication */
+#define MARS_SYS_COMM2      (*(volatile short *)0x20004022)
+#define MARS_SYS_COMM4      (*(volatile short *)0x20004024) /* Slave SH2 communication */
+#define MARS_SYS_COMM6      (*(volatile short *)0x20004026)
+#define MARS_SYS_COMM8      (*(volatile short *)0x20004028) /* unused */
+#define MARS_SYS_COMM10     (*(volatile short *)0x2000402A) /* unused */
+#define MARS_SYS_COMM12     (*(volatile short *)0x2000402C) /* unused */
+#define MARS_SYS_COMM14     (*(volatile short *)0x2000402E) /* unused */
 
 #define MARS_SYS_DMA_RV     0x0001
 #define MARS_SYS_DMA_68S    0x0004

@@ -110,7 +110,7 @@ void Mars_InitLineTable(void)
 	int j;
 	int blank;
 	int offset = 0; // 224p or 240p
-	volatile unsigned short* lines = &MARS_FRAMEBUFFER;
+	unsigned short* lines = (unsigned short *)&MARS_FRAMEBUFFER;
 
 	// initialize the lines section of the framebuffer
 
@@ -734,7 +734,7 @@ void Mars_DetectInputDevices(void)
 	for (i = 0; i < MARS_MAX_CONTROLLERS; i++)
 	{
 		/* wait on COMM0 */
-		while (MARS_SYS_COMM0 != ctrl_wait);
+		while (*(volatile unsigned short *)&MARS_SYS_COMM0 != ctrl_wait);
 
 		int val = MARS_SYS_COMM2;
 		if (val == 0xF000)
@@ -1043,7 +1043,7 @@ void pri_vbi_handler(void)
 
 void pri_cmd_handler(void)
 {
-	switch (MARS_SYS_COMM0)
+	switch (*(volatile unsigned short *)&MARS_SYS_COMM0)
 	{
 		case 0xFF00:
 			Mars_DetectInputDevices();
