@@ -171,17 +171,14 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
     #ifdef MDSKY
     if (sky_32x_layer) {
         draw32xsky = (segl->actionbits & AC_ADDSKY || segl->actionbits & AC_ADDFLOORSKY) != 0 ? draw32xskycol : NULL;
-        //draw32xsky = (segl->actionbits & AC_ADDSKY) != 0 ? draw32xskycol : NULL;
         drawmdsky = NULL;
     }
     else {
         drawmdsky = (segl->actionbits & AC_ADDSKY || segl->actionbits & AC_ADDFLOORSKY) != 0 ? drawskycol : NULL;
-        //drawmdsky = (segl->actionbits & AC_ADDSKY) != 0 ? drawskycol : NULL;
         draw32xsky = NULL;
     }
     #else
     draw32xsky = (segl->actionbits & AC_ADDSKY || segl->actionbits & AC_ADDFLOORSKY) != 0 ? draw32xskycol : NULL;
-    //draw32xsky = (segl->actionbits & AC_ADDSKY) != 0 ? draw32xskycol : NULL;
     #endif
 
     fixed_t scalefrac = segl->scalefrac;
