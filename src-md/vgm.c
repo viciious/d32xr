@@ -224,14 +224,14 @@ void *vgm_cache_scd(const char *name, int offset, int length)
     // copy data from WORD RAM bank 0 to bank 1
     for (offset = 0; offset < length; )
     {
-        int chunk = VGM_LZSS_BUF_SIZE;
+        int chunk = VGM_LZSS_BUF_SIZE - 4;
         if (offset + chunk > length)
             chunk = length - offset;
 
         scd_switch_to_bank(1);
-        memcpy(vgm_lzss_buf, ptr + offset, chunk);
+        memcpy(vgm_lzss_buf + (offset & 3), ptr + offset, chunk);
         scd_switch_to_bank(0);
-        memcpy(ptr + offset, vgm_lzss_buf, chunk);
+        memcpy(ptr + offset, vgm_lzss_buf + (offset & 3), chunk);
 
         offset += chunk;
     }
