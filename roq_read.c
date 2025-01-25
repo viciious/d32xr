@@ -146,6 +146,7 @@ static inline void apply_motion_4x4(roq_parse_ctx* ctx, unsigned x, unsigned y, 
 	int mx, my, i;
 	short *src, *dst;
 	roq_info *ri = ctx->ri;
+	int pitch = ri->canvas_pitch;
 
 	mx = x + 8 - (mv / 16) - mean_x;
 	my = y + 8 - (mv & 0xf) - mean_y;
@@ -153,14 +154,36 @@ static inline void apply_motion_4x4(roq_parse_ctx* ctx, unsigned x, unsigned y, 
 	dst = ri->canvas + y * ri->canvas_pitch + x;
 	src = ri->canvascopy + my * ri->canvas_pitch + mx;
 
-	for (i = 0; i < 4; i++)
+	if (( ((intptr_t)dst | (intptr_t)src) & 3) == 0)
 	{
-		dst[0] = src[0];
-		dst[1] = src[1];
-		dst[2] = src[2];
-		dst[3] = src[3];
-		src += ri->canvas_pitch;
-		dst += ri->canvas_pitch;
+		int *isrc = (int *)src;
+		int *idst = (int *)dst;
+
+		pitch /= 2;
+		for (i = 0; i < 2; i++)
+		{
+			idst[0] = isrc[0];
+			idst[1] = isrc[1];
+			isrc += pitch;
+			idst += pitch;
+
+			idst[0] = isrc[0];
+			idst[1] = isrc[1];
+			isrc += pitch;
+			idst += pitch;
+		}
+	}
+	else
+	{
+		for (i = 0; i < 4; i++)
+		{
+			dst[0] = src[0];
+			dst[1] = src[1];
+			dst[2] = src[2];
+			dst[3] = src[3];
+			src += pitch;
+			dst += pitch;
+		}
 	}
 }
 
@@ -170,6 +193,7 @@ static inline void apply_motion_8x8(roq_parse_ctx* ctx, unsigned x, unsigned y, 
 	int mx, my, i;
 	short *src, *dst;
 	roq_info *ri = ctx->ri;
+	int pitch = ri->canvas_pitch;
 
 	mx = x + 8 - (mv / 16) - mean_x;
 	my = y + 8 - (mv & 0xf) - mean_y;
@@ -177,18 +201,37 @@ static inline void apply_motion_8x8(roq_parse_ctx* ctx, unsigned x, unsigned y, 
 	dst = ri->canvas + y * ri->canvas_pitch + x;
 	src = ri->canvascopy + my * ri->canvas_pitch + mx;
 
-	for (i = 0; i < 8; i++)
+	if (( ((intptr_t)dst | (intptr_t)src) & 3) == 0)
 	{
-		dst[0] = src[0];
-		dst[1] = src[1];
-		dst[2] = src[2];
-		dst[3] = src[3];
-		dst[4] = src[4];
-		dst[5] = src[5];
-		dst[6] = src[6];
-		dst[7] = src[7];
-		src += ri->canvas_pitch;
-		dst += ri->canvas_pitch;
+		int *isrc = (int *)src;
+		int *idst = (int *)dst;
+
+		pitch /= 2;		
+		for (i = 0; i < 8; i++)
+		{
+			idst[0] = isrc[0];
+			idst[1] = isrc[1];
+			idst[2] = isrc[2];
+			idst[3] = isrc[3];
+			isrc += pitch;
+			idst += pitch;
+		}		
+	}
+	else
+	{
+		for (i = 0; i < 8; i++)
+		{
+			dst[0] = src[0];
+			dst[1] = src[1];
+			dst[2] = src[2];
+			dst[3] = src[3];
+			dst[4] = src[4];
+			dst[5] = src[5];
+			dst[6] = src[6];
+			dst[7] = src[7];
+			src += pitch;
+			dst += pitch;
+		}
 	}
 }
 
