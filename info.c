@@ -883,12 +883,12 @@ S_PLAY_ATK1,		/* missilestate */
 S_PLAY_DIE1,		/* deathstate */
 S_PLAY_XDIE1,		/* xdeathstate */
 sfx_pldeth,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 16*FRACUNIT,		/* radius */
 56*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_SOLID|MF_SHOOTABLE|MF_DROPOFF|MF_PICKUP|MF_NOTDMATCH		/* flags */
  },
 
@@ -908,12 +908,12 @@ S_POSS_ATK1,		/* missilestate */
 S_POSS_DIE1,		/* deathstate */
 S_POSS_XDIE1,		/* xdeathstate */
 sfx_podth1,		/* deathsound */
+sfx_posact,		/* activesound */
 8,		/* speed */
 20*FRACUNIT,		/* radius */
 56*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_posact,		/* activesound */
 MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL		/* flags */
  },
 
@@ -933,12 +933,12 @@ S_SPOS_ATK1,		/* missilestate */
 S_SPOS_DIE1,		/* deathstate */
 S_SPOS_XDIE1,		/* xdeathstate */
 sfx_podth2,		/* deathsound */
+sfx_posact,		/* activesound */
 8,		/* speed */
 20*FRACUNIT,		/* radius */
 56*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_posact,		/* activesound */
 MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL		/* flags */
  },
 
@@ -958,12 +958,12 @@ S_SKEL_MISS1,		// missilestate
 S_SKEL_DIE1,		// deathstate
 S_NULL,		// xdeathstate
 sfx_skedth,		// deathsound
+sfx_skeact,		// activesound
 10,		// speed
 20*FRACUNIT,		// radius
 56*FRACUNIT,		// height
 500,		// mass
 0,		// damage
-sfx_skeact,		// activesound
 MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL		// flags
 },
 
@@ -983,12 +983,12 @@ S_NULL,		// missilestate
 S_TRACEEXP1,		// deathstate
 S_NULL,		// xdeathstate
 sfx_barexp,		// deathsound
+sfx_None,		// activesound
 15*FRACUNIT,		// speed
 11*FRACUNIT,		// radius
 8*FRACUNIT,		// height
 100,		// mass
 10,		// damage
-sfx_None,		// activesound
 MF_NOBLOCKMAP|MF_MISSILE|MF_DROPOFF|MF_NOGRAVITY		// flags
 },
 
@@ -1008,12 +1008,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 20*FRACUNIT,		// radius
 16*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_NOBLOCKMAP|MF_NOGRAVITY		// flags
 },
 
@@ -1033,12 +1033,12 @@ S_FATT_ATK1,		// missilestate
 S_FATT_DIE1,		// deathstate
 S_NULL,		// xdeathstate
 sfx_mandth,		// deathsound
+sfx_posact,		// activesound
 8,		// speed
 48*FRACUNIT,		// radius
 64*FRACUNIT,		// height
 1000,		// mass
 0,		// damage
-sfx_posact,		// activesound
 MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL		// flags
 },
 
@@ -1058,12 +1058,12 @@ S_NULL,		// missilestate
 S_FATSHOTX1,		// deathstate
 S_NULL,		// xdeathstate
 sfx_firxpl,		// deathsound
+sfx_None,		// activesound
 30*FRACUNIT,		// speed
 6*FRACUNIT,		// radius
 8*FRACUNIT,		// height
 100,		// mass
 8,		// damage
-sfx_None,		// activesound
 MF_NOBLOCKMAP|MF_MISSILE|MF_DROPOFF|MF_NOGRAVITY		// flags
 },
 
@@ -1083,12 +1083,12 @@ S_CPOS_ATK1,		// missilestate
 S_CPOS_DIE1,		// deathstate
 S_CPOS_XDIE1,		// xdeathstate
 sfx_podth2,		// deathsound
+sfx_posact,		// activesound
 8,		// speed
 20*FRACUNIT,		// radius
 56*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_posact,		// activesound
 MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL		// flags
 },
 
@@ -1108,12 +1108,12 @@ S_TROO_ATK1,		/* missilestate */
 S_TROO_DIE1,		/* deathstate */
 S_TROO_XDIE1,		/* xdeathstate */
 sfx_bgdth1,		/* deathsound */
+sfx_bgact,		/* activesound */
 8,		/* speed */
 20*FRACUNIT,		/* radius */
 56*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_bgact,		/* activesound */
 MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL		/* flags */
  },
 
@@ -1133,12 +1133,12 @@ S_SARG_ATK1,		/* meleestate */
 S_SARG_DIE1,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_sgtdth,		/* deathsound */
+sfx_dmact,		/* activesound */
 10,		/* speed */
 30*FRACUNIT,		/* radius */
 56*FRACUNIT,		/* height */
 400,		/* mass */
 0,		/* damage */
-sfx_dmact,		/* activesound */
 MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL		/* flags */
  },
 
@@ -1158,12 +1158,12 @@ S_SARG_ATK1,		/* meleestate */
 S_SARG_DIE1,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_sgtdth,		/* deathsound */
+sfx_dmact,		/* activesound */
 10,		/* speed */
 30*FRACUNIT,		/* radius */
 56*FRACUNIT,		/* height */
 400,		/* mass */
 0,		/* damage */
-sfx_dmact,		/* activesound */
 MF_SOLID|MF_SHOOTABLE|MF_SHADOW|MF_COUNTKILL		/* flags */
  },
 
@@ -1183,12 +1183,12 @@ S_HEAD_ATK1,		/* missilestate */
 S_HEAD_DIE1,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_cacdth,		/* deathsound */
+sfx_dmact,		/* activesound */
 8,		/* speed */
 31*FRACUNIT,		/* radius */
 56*FRACUNIT,		/* height */
 400,		/* mass */
 0,		/* damage */
-sfx_dmact,		/* activesound */
 MF_SOLID|MF_SHOOTABLE|MF_FLOAT|MF_NOGRAVITY|MF_COUNTKILL		/* flags */
  },
 
@@ -1208,12 +1208,12 @@ S_BOSS_ATK1,		/* missilestate */
 S_BOSS_DIE1,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_brsdth,		/* deathsound */
+sfx_dmact,		/* activesound */
 8,		/* speed */
 24*FRACUNIT,		/* radius */
 64*FRACUNIT,		/* height */
 1000,		/* mass */
 0,		/* damage */
-sfx_dmact,		/* activesound */
 MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL		/* flags */
  },
 
@@ -1233,12 +1233,12 @@ S_BOSS_ATK1,		// missilestate
 S_BOSS_DIE1,		// deathstate
 S_NULL,		// xdeathstate
 sfx_kntdth,		// deathsound
+sfx_dmact,		// activesound
 8,		// speed
 24*FRACUNIT,		// radius
 64*FRACUNIT,		// height
 1000,		// mass
 0,		// damage
-sfx_dmact,		// activesound
 MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL|MF_KNIGHT_CMAP		// flags
 },
 
@@ -1258,12 +1258,12 @@ S_SKULL_ATK1,		/* missilestate */
 S_SKULL_DIE1,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_firxpl,		/* deathsound */
+sfx_dmact,		/* activesound */
 8,		/* speed */
 16*FRACUNIT,		/* radius */
 56*FRACUNIT,		/* height */
 50,		/* mass */
 3,		/* damage */
-sfx_dmact,		/* activesound */
 MF_SOLID|MF_SHOOTABLE|MF_FLOAT|MF_NOGRAVITY|MF_COUNTKILL		/* flags */
  },
 {		// MT_SPIDER
@@ -1282,12 +1282,12 @@ S_SPID_ATK1,		// missilestate
 S_SPID_DIE1,		// deathstate
 S_NULL,		// xdeathstate
 sfx_spidth,		// deathsound
+sfx_dmact,		// activesound
 12,		// speed
 128*FRACUNIT,		// radius
 100*FRACUNIT,		// height
 1000,		// mass
 0,		// damage
-sfx_dmact,		// activesound
 MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL,		// flags
 },
 
@@ -1307,12 +1307,12 @@ S_BSPI_ATK1,		// missilestate
 S_BSPI_DIE1,		// deathstate
 S_NULL,		// xdeathstate
 sfx_bspdth,		// deathsound
+sfx_bspact,		// activesound
 12,		// speed
 64*FRACUNIT,		// radius
 64*FRACUNIT,		// height
 600,		// mass
 0,		// damage
-sfx_bspact,		// activesound
 MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL		// flags
 },
 
@@ -1332,12 +1332,12 @@ S_CYBER_ATK1,		// missilestate
 S_CYBER_DIE1,		// deathstate
 S_NULL,		// xdeathstate
 sfx_cybdth,		// deathsound
+sfx_dmact,		// activesound
 16,		// speed
 40*FRACUNIT,		// radius
 110*FRACUNIT,		// height
 1000,		// mass
 0,		// damage
-sfx_dmact,		// activesound
 MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL,		// flags
 },
 
@@ -1357,12 +1357,12 @@ S_NULL,		// missilestate
 S_COMMKEEN,		// deathstate
 S_NULL,		// xdeathstate
 sfx_keendt,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 16*FRACUNIT,		// radius
 72*FRACUNIT,		// height
 38528,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_SOLID|MF_SPAWNCEILING|MF_NOGRAVITY|MF_SHOOTABLE|MF_COUNTKILL,		// flags
 },
 
@@ -1382,12 +1382,12 @@ S_NULL,		// missilestate
 S_BRAIN_DIE1,		// deathstate
 S_NULL,		// xdeathstate
 sfx_bosdth,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 16*FRACUNIT,		// radius
 16*FRACUNIT,		// height
 10000,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_SOLID|MF_SHOOTABLE		// flags
 },
 
@@ -1407,12 +1407,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 20*FRACUNIT,		// radius
 32*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_NOBLOCKMAP|MF_NOSECTOR		// flags
 },
 
@@ -1432,12 +1432,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 20*FRACUNIT,		// radius
 32*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_NOBLOCKMAP|MF_NOSECTOR		// flags
 },
 
@@ -1457,12 +1457,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_firxpl,		// deathsound
+sfx_None,		// activesound
 10*FRACUNIT,		// speed
 6*FRACUNIT,		// radius
 32*FRACUNIT,		// height
 100,		// mass
 3,		// damage
-sfx_None,		// activesound
 MF_NOBLOCKMAP|MF_MISSILE|MF_DROPOFF|MF_NOGRAVITY|MF_NOCLIP		// flags
 },
 
@@ -1482,12 +1482,12 @@ S_NULL,		/* missilestate */
 S_BEXP,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_barexp,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 10*FRACUNIT,		/* radius */
 42*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_SOLID|MF_SHOOTABLE|MF_NOBLOOD		/* flags */
  },
 
@@ -1507,12 +1507,12 @@ S_NULL,		/* missilestate */
 S_TBALLX1,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_firxpl,		/* deathsound */
+sfx_None,		/* activesound */
 20*FRACUNIT,		/* speed */
 6*FRACUNIT,		/* radius */
 8*FRACUNIT,		/* height */
 100,		/* mass */
 3,		/* damage */
-sfx_None,		/* activesound */
 MF_NOBLOCKMAP|MF_MISSILE|MF_DROPOFF|MF_NOGRAVITY		/* flags */
  },
 
@@ -1532,12 +1532,12 @@ S_NULL,		/* missilestate */
 S_RBALLX1,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_firxpl,		/* deathsound */
+sfx_None,		/* activesound */
 20*FRACUNIT,		/* speed */
 6*FRACUNIT,		/* radius */
 8*FRACUNIT,		/* height */
 100,		/* mass */
 5,		/* damage */
-sfx_None,		/* activesound */
 MF_NOBLOCKMAP|MF_MISSILE|MF_DROPOFF|MF_NOGRAVITY		/* flags */
  },
 
@@ -1557,12 +1557,12 @@ S_NULL,		/* missilestate */
 S_BRBALLX1,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_firxpl,		/* deathsound */
+sfx_None,		/* activesound */
 30*FRACUNIT,		/* speed */
 6*FRACUNIT,		/* radius */
 8*FRACUNIT,		/* height */
 100,		/* mass */
 8,		/* damage */
-sfx_None,		/* activesound */
 MF_NOBLOCKMAP|MF_MISSILE|MF_DROPOFF|MF_NOGRAVITY		/* flags */
  },
 
@@ -1582,12 +1582,12 @@ S_NULL,		/* missilestate */
 S_EXPLODE1,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_barexp,		/* deathsound */
+sfx_None,		/* activesound */
 40*FRACUNIT,		/* speed */
 11*FRACUNIT,		/* radius */
 8*FRACUNIT,		/* height */
 100,		/* mass */
 20,		/* damage */
-sfx_None,		/* activesound */
 MF_NOBLOCKMAP|MF_MISSILE|MF_DROPOFF|MF_NOGRAVITY		/* flags */
  },
 
@@ -1607,12 +1607,12 @@ S_NULL,		/* missilestate */
 S_PLASEXP,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_firxpl,		/* deathsound */
+sfx_None,		/* activesound */
 50*FRACUNIT,		/* speed */
 13*FRACUNIT,		/* radius */
 8*FRACUNIT,		/* height */
 100,		/* mass */
 5,		/* damage */
-sfx_None,		/* activesound */
 MF_NOBLOCKMAP|MF_MISSILE|MF_DROPOFF|MF_NOGRAVITY		/* flags */
  },
 
@@ -1632,12 +1632,12 @@ S_NULL,		/* missilestate */
 S_BFGLAND,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_rxplod,		/* deathsound */
+sfx_None,		/* activesound */
 35*FRACUNIT,		/* speed */
 13*FRACUNIT,		/* radius */
 8*FRACUNIT,		/* height */
 100,		/* mass */
 100,		/* damage */
-sfx_None,		/* activesound */
 MF_NOBLOCKMAP|MF_MISSILE|MF_DROPOFF|MF_NOGRAVITY		/* flags */
  },
 
@@ -1657,12 +1657,12 @@ S_NULL,		// missilestate
 S_ARACH_PLEX,		// deathstate
 S_NULL,		// xdeathstate
 sfx_firxpl,		// deathsound
+sfx_None,		// activesound
 25*FRACUNIT,		// speed
 13*FRACUNIT,		// radius
 8*FRACUNIT,		// height
 100,		// mass
 5,		// damage
-sfx_None,		// activesound
 MF_NOBLOCKMAP|MF_MISSILE|MF_DROPOFF|MF_NOGRAVITY		// flags
 },
 
@@ -1682,12 +1682,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_NOBLOCKMAP|MF_NOGRAVITY		/* flags */
  },
 
@@ -1707,12 +1707,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_NOBLOCKMAP		/* flags */
  },
 
@@ -1732,12 +1732,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_NOBLOCKMAP|MF_NOGRAVITY		/* flags */
  },
 
@@ -1757,12 +1757,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_NOBLOCKMAP|MF_NOGRAVITY		/* flags */
  },
 
@@ -1782,12 +1782,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_NOBLOCKMAP|MF_NOSECTOR		/* flags */
  },
 
@@ -1807,12 +1807,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_NOBLOCKMAP|MF_NOGRAVITY		/* flags */
  },
 
@@ -1832,12 +1832,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL		/* flags */
  },
 
@@ -1857,12 +1857,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL		/* flags */
  },
 
@@ -1882,12 +1882,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL|MF_COUNTITEM		/* flags */
  },
 
@@ -1907,12 +1907,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL|MF_COUNTITEM		/* flags */
  },
 
@@ -1932,12 +1932,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL|MF_NOTDMATCH		/* flags */
  },
 
@@ -1957,12 +1957,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL|MF_NOTDMATCH		/* flags */
  },
 
@@ -1982,12 +1982,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL|MF_NOTDMATCH		/* flags */
  },
 
@@ -2007,12 +2007,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL|MF_NOTDMATCH		/* flags */
  },
 
@@ -2032,12 +2032,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL|MF_NOTDMATCH		/* flags */
  },
 
@@ -2057,12 +2057,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL|MF_NOTDMATCH		/* flags */
  },
 
@@ -2082,12 +2082,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL		/* flags */
  },
 
@@ -2107,12 +2107,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL		/* flags */
  },
 
@@ -2132,12 +2132,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL|MF_COUNTITEM		/* flags */
  },
 
@@ -2157,12 +2157,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL|MF_COUNTITEM		/* flags */
  },
 
@@ -2182,12 +2182,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL|MF_COUNTITEM		/* flags */
  },
 
@@ -2207,12 +2207,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL|MF_COUNTITEM		/* flags */
  },
 
@@ -2232,12 +2232,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL		/* flags */
  },
 
@@ -2257,12 +2257,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL|MF_COUNTITEM		/* flags */
  },
 
@@ -2282,12 +2282,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL|MF_COUNTITEM		/* flags */
  },
 
@@ -2307,12 +2307,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 20*FRACUNIT,		// radius
 16*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_STATIC|MF_SPECIAL|MF_COUNTITEM		// flags
 },
 
@@ -2332,12 +2332,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL		/* flags */
  },
 
@@ -2357,12 +2357,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL		/* flags */
  },
 
@@ -2382,12 +2382,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL		/* flags */
  },
 
@@ -2407,12 +2407,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL		/* flags */
  },
 
@@ -2432,12 +2432,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL		/* flags */
  },
 
@@ -2457,12 +2457,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL		/* flags */
  },
 
@@ -2482,12 +2482,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL		/* flags */
  },
 
@@ -2507,12 +2507,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL		/* flags */
  },
 
@@ -2532,12 +2532,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL		/* flags */
  },
 
@@ -2557,12 +2557,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL		/* flags */
  },
 
@@ -2582,12 +2582,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL		/* flags */
  },
 
@@ -2607,12 +2607,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL		/* flags */
  },
 
@@ -2632,12 +2632,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL		/* flags */
  },
 
@@ -2657,12 +2657,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL		/* flags */
  },
 
@@ -2682,12 +2682,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL		/* flags */
  },
 
@@ -2707,12 +2707,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL		/* flags */
  },
 
@@ -2732,12 +2732,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 16*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_SOLID|MF_STATIC		/* flags */
  },
 
@@ -2757,12 +2757,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 16*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_SOLID|MF_STATIC		/* flags */
  },
 
@@ -2782,12 +2782,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 16*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_SOLID|MF_STATIC		/* flags */
  },
 
@@ -2807,12 +2807,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 16*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_SOLID|MF_STATIC		/* flags */
  },
 
@@ -2832,12 +2832,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 16*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_SOLID|MF_STATIC		/* flags */
  },
 
@@ -2857,12 +2857,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 16*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_SOLID|MF_STATIC		/* flags */
  },
 
@@ -2882,12 +2882,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 16*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_SOLID|MF_STATIC		/* flags */
  },
 
@@ -2907,12 +2907,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 16*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_SOLID|MF_STATIC		/* flags */
  },
 
@@ -2932,12 +2932,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 16*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_SOLID|MF_STATIC		/* flags */
  },
 
@@ -2957,12 +2957,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 16*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_SOLID|MF_STATIC		/* flags */
  },
 
@@ -2982,12 +2982,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 0|MF_STATIC		/* flags */
  },
 
@@ -3007,12 +3007,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 16*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_SOLID|MF_STATIC		/* flags */
  },
 
@@ -3032,12 +3032,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 16*FRACUNIT,		/* radius */
 52*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_SOLID|MF_SPAWNCEILING|MF_NOGRAVITY|MF_STATIC		/* flags */
  },
 
@@ -3057,12 +3057,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 52*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_SPAWNCEILING|MF_NOGRAVITY|MF_STATIC		/* flags */
  },
 
@@ -3082,12 +3082,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 0|MF_STATIC		/* flags */
  },
 
@@ -3107,12 +3107,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 0|MF_STATIC		/* flags */
  },
 
@@ -3132,12 +3132,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 0|MF_STATIC		/* flags */
  },
 
@@ -3157,12 +3157,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 0|MF_STATIC		/* flags */
  },
 
@@ -3182,12 +3182,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 0|MF_STATIC		/* flags */
  },
 
@@ -3207,12 +3207,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 0|MF_STATIC		/* flags */
  },
 
@@ -3232,12 +3232,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 0|MF_STATIC		/* flags */
  },
 
@@ -3257,12 +3257,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 16*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_SOLID|MF_STATIC		/* flags */
  },
 
@@ -3282,12 +3282,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 20*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 0|MF_STATIC		/* flags */
  },
 
@@ -3307,12 +3307,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 16*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_SOLID|MF_STATIC		/* flags */
  },
 
@@ -3332,12 +3332,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 16*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_SOLID|MF_STATIC		/* flags */
  },
 
@@ -3357,12 +3357,12 @@ S_NULL,		/* missilestate */
 S_NULL,		/* deathstate */
 S_NULL,		/* xdeathstate */
 sfx_None,		/* deathsound */
+sfx_None,		/* activesound */
 0,		/* speed */
 16*FRACUNIT,		/* radius */
 16*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_None,		/* activesound */
 MF_SOLID|MF_STATIC		/* flags */
  },
 
@@ -3382,12 +3382,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 16*FRACUNIT,		// radius
 68*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_SOLID|MF_SPAWNCEILING|MF_NOGRAVITY|MF_STATIC,		// flags
 },
 
@@ -3407,12 +3407,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 16*FRACUNIT,		// radius
 16*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_SOLID|MF_STATIC,		// flags
 },
 
@@ -3432,12 +3432,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 16*FRACUNIT,		// radius
 84*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_SOLID|MF_SPAWNCEILING|MF_NOGRAVITY|MF_STATIC		// flags
 },
 
@@ -3457,12 +3457,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 16*FRACUNIT,		// radius
 84*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_SOLID|MF_SPAWNCEILING|MF_NOGRAVITY|MF_STATIC		// flags
 },
 
@@ -3482,12 +3482,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 16*FRACUNIT,		// radius
 68*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_SOLID|MF_SPAWNCEILING|MF_NOGRAVITY|MF_STATIC		// flags
 },
 
@@ -3507,12 +3507,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 16*FRACUNIT,		// radius
 16*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_SOLID|MF_STATIC		// flags
 },
 
@@ -3532,12 +3532,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 16*FRACUNIT,		// radius
 16*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_SOLID|MF_STATIC		// flags
 },
 
@@ -3557,12 +3557,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 16*FRACUNIT,		// radius
 16*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_SOLID|MF_STATIC		// flags
 },
 
@@ -3582,12 +3582,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 16*FRACUNIT,		// radius
 16*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_SOLID|MF_STATIC		// flags
 },
 
@@ -3607,12 +3607,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 16*FRACUNIT,		// radius
 16*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_SOLID|MF_STATIC		// flags
 },
 
@@ -3632,12 +3632,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 16*FRACUNIT,		// radius
 16*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_SOLID|MF_STATIC		// flags
 },
 
@@ -3657,12 +3657,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 16*FRACUNIT,		// radius
 88*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_SOLID|MF_SPAWNCEILING|MF_NOGRAVITY|MF_STATIC		// flags
 },
 
@@ -3682,12 +3682,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 16*FRACUNIT,		// radius
 88*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_SOLID|MF_SPAWNCEILING|MF_NOGRAVITY|MF_STATIC		// flags
 },
 
@@ -3707,12 +3707,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 16*FRACUNIT,		// radius
 64*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_SOLID|MF_SPAWNCEILING|MF_NOGRAVITY|MF_STATIC		// flags
 },
 
@@ -3732,12 +3732,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 16*FRACUNIT,		// radius
 64*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_SOLID|MF_SPAWNCEILING|MF_NOGRAVITY|MF_STATIC		// flags
 },
 
@@ -3757,12 +3757,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 16*FRACUNIT,		// radius
 64*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_SOLID|MF_SPAWNCEILING|MF_NOGRAVITY|MF_STATIC		// flags
 },
 
@@ -3782,12 +3782,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 16*FRACUNIT,		// radius
 64*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_SOLID|MF_SPAWNCEILING|MF_NOGRAVITY|MF_STATIC		// flags
 },
 
@@ -3807,12 +3807,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 20*FRACUNIT,		// radius
 16*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_NOBLOCKMAP|MF_STATIC		// flags
 },
 
@@ -3832,12 +3832,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 20*FRACUNIT,		// radius
 16*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_NOBLOCKMAP|MF_STATIC		// flags
 },
 
@@ -3857,12 +3857,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 20*FRACUNIT,		// radius
 16*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_NOBLOCKMAP|MF_STATIC		// flags
 },
 
@@ -3882,12 +3882,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 16*FRACUNIT,		// radius
 16*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_SOLID|MF_STATIC		// flags
 },
 
@@ -3907,12 +3907,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 16*FRACUNIT,		// radius
 16*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_SOLID|MF_STATIC		// flags
 },
 
@@ -3932,12 +3932,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 32*FRACUNIT,		// radius
 16*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_SOLID|MF_STATIC		// flags
 },
 
@@ -3957,12 +3957,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 16*FRACUNIT,		// radius
 16*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_SOLID|MF_STATIC		// flags
 },
 
@@ -3982,12 +3982,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 20*FRACUNIT,		// radius
 16*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_STATIC,		// flags
 },
 
@@ -4007,12 +4007,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 20*FRACUNIT,		// radius
 84*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_SPAWNCEILING|MF_NOGRAVITY|MF_STATIC		// flags
 },
 
@@ -4032,12 +4032,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 20*FRACUNIT,		// radius
 68*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_SPAWNCEILING|MF_NOGRAVITY|MF_STATIC		// flags
 },
 
@@ -4057,12 +4057,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 20*FRACUNIT,		// radius
 52*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_SPAWNCEILING|MF_NOGRAVITY|MF_STATIC		// flags
 },
 
@@ -4082,12 +4082,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 20*FRACUNIT,		// radius
 52*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_SPAWNCEILING|MF_NOGRAVITY|MF_STATIC		// flags
 },
 
@@ -4107,12 +4107,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 20*FRACUNIT,		// radius
 16*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_STATIC		// flags
 },
 
@@ -4132,12 +4132,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 20*FRACUNIT,		// radius
 68*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_SPAWNCEILING|MF_NOGRAVITY|MF_STATIC		// flags
 },
 
@@ -4157,12 +4157,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 16*FRACUNIT,		// radius
 16*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_SOLID|MF_STATIC		// flags
 },
 
@@ -4182,12 +4182,12 @@ S_NULL,		// missilestate
 S_NULL,		// deathstate
 S_NULL,		// xdeathstate
 sfx_None,		// deathsound
+sfx_None,		// activesound
 0,		// speed
 16*FRACUNIT,		// radius
 16*FRACUNIT,		// height
 100,		// mass
 0,		// damage
-sfx_None,		// activesound
 MF_SOLID|MF_STATIC		// flags
 },
 
@@ -4207,12 +4207,12 @@ S_SHOCK_ATK1,		/* missilestate */
 S_SHOCK_DIE1,		/* deathstate */
 S_SHOCK_XDIE1,		/* xdeathstate */
 sfx_ppodth,		/* deathsound */
+sfx_ppoact,		/* activesound */
 10,		/* speed */
 20*FRACUNIT,		/* radius */
 56*FRACUNIT,		/* height */
 100,		/* mass */
 0,		/* damage */
-sfx_ppoact,		/* activesound */
 MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL|MF_KNIGHT_CMAP		/* flags */
 },
 

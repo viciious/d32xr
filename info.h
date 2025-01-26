@@ -1081,14 +1081,14 @@ typedef struct {
 	uint16_t	missilestate;
 	uint16_t	deathstate;
 	uint16_t	xdeathstate;
-	uint16_t	deathsound;
-	int		speed;
-	int		radius;
-	int		height;
+	uint8_t		deathsound;
+	uint8_t		activesound;
+	int			speed;
+	int			radius;
+	int			height;
 	uint16_t	mass;
 	uint16_t	damage;
-	uint16_t	activesound;
-	int		flags;
+	int			flags;
 } mobjinfo_t;
 
 extern const mobjinfo_t mobjinfo[NUMMOBJTYPES];
