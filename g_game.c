@@ -151,6 +151,8 @@ void G_DoLoadLevel (void)
 
 		gamemapinfo.sky = NULL;
 		gamemapinfo.skyOffsetY = 0;
+		gamemapinfo.skyBitmapOffsetY = 0;
+		gamemapinfo.skyBitmapScrollRate = 0;
 		#ifdef MDSKY
 		gamemapinfo.skyTopColor = MARS_MD_PIXEL_THRU_INDEX;
 		gamemapinfo.skyBottomColor = MARS_MD_PIXEL_THRU_INDEX;

@@ -191,8 +191,10 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
    fixed_t    f_floorheight, f_ceilingheight;
    fixed_t    b_floorheight, b_ceilingheight;
    int        f_lightlevel, b_lightlevel, lightshift;
-   short      f_ceilingpic, b_ceilingpic;
+   short      f_floorpic, f_ceilingpic;
+   short      b_floorpic, b_ceilingpic;
    int        b_texturemid, t_texturemid, m_texturemid;
+   short      floorskyhack;
    short      skyhack;
    short      actionbits;
    int16_t    rowoffset, textureoffset;
@@ -210,12 +212,18 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
       rowoffset = (si->textureoffset & 0xf000) | ((unsigned)si->rowoffset << 4);
       rowoffset >>= 4; // sign extend
 
+      f_floorpic      = front_sector->floorpic;
       f_ceilingpic    = front_sector->ceilingpic;
       f_lightlevel    = front_sector->lightlevel;
       f_floorheight   = front_sector->floorheight   - vd.viewz;
       f_ceilingheight = front_sector->ceilingheight - vd.viewz;
 
-      SETLOWER8(segl->floorceilpicnum, flattranslation[front_sector->floorpic]);
+      if (f_floorpic != 0xff)
+      {
+          SETLOWER8(segl->floorceilpicnum, flattranslation[f_floorpic]);
+      }
+      else
+          SETLOWER8(segl->floorceilpicnum, (uint8_t)-1);
 
       if (f_ceilingpic != 0xff)
       {
@@ -231,6 +239,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
       else
          back_sector = R_FakeFlat(back_sector, &btempsec, true);
 
+      b_floorpic      = back_sector->floorpic;
       b_ceilingpic    = back_sector->ceilingpic;
       b_lightlevel    = back_sector->lightlevel;
       b_floorheight   = back_sector->floorheight   - vd.viewz;
@@ -239,22 +248,38 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
       t_texturemid = b_texturemid = m_texturemid = 0;
       actionbits = 0;
 
+      if(f_floorpic == (uint8_t)-1 && b_floorpic == (uint8_t)-1) {
+         floorskyhack = true;
+      }
+      else { 
+         floorskyhack = false;
+      }
+
       // deal with sky ceilings (also missing in 3DO)
-      if(f_ceilingpic == (uint8_t)-1 && b_ceilingpic == (uint8_t)-1)
+      if(f_ceilingpic == (uint8_t)-1 && b_ceilingpic == (uint8_t)-1) {
          skyhack = true;
-      else 
+      }
+      else {
          skyhack = false;
+      }
 
       // add floors and ceilings if the wall needs them
-      if(f_floorheight < 0 &&                                // is the camera above the floor?
-         (front_sector->floorpic != back_sector->floorpic || // floor texture changes across line?
+      if(!floorskyhack                                         && // not a sky hack wall
+         (f_floorheight < 0 || f_floorpic == (uint8_t)-1)        && // is the camera above the floor?
+         (f_floorpic      != b_floorpic                   || // floor texture changes across line?
           f_floorheight   != b_floorheight                || // height changes across line?
           f_lightlevel    != b_lightlevel                 || // light level changes across line?
           b_ceilingheight == b_floorheight))                 // backsector is closed?
       {
-         actionbits |= (AC_ADDFLOOR|AC_NEWFLOOR);
+         if(f_floorpic == (uint8_t)-1)
+            actionbits |= (AC_ADDFLOORSKY|AC_NEWFLOOR);
+         else
+            actionbits |= (AC_ADDFLOOR|AC_NEWFLOOR);
       }
-      *floorheight = *floornewheight = f_floorheight;
+      segl->floorheight = *floorheight = *floornewheight = f_floorheight;
+
+      segl->t_bottomheight = f_floorheight; // bottom of texturemap
+
 #ifdef FLOOR_OVER_FLOOR_CRAZY
       if (front_sector->fofsec != -1)
       {
@@ -343,7 +368,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
          }
 
          // is bottom texture visible?
-         if(b_floorheight > f_floorheight)
+         if(b_floorheight > f_floorheight && !floorskyhack)
          {
 //            if (si->bottomtexture > 0)
             {
@@ -395,10 +420,13 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
             actionbits |= AC_SOLIDSIL;
          else
          {
-            if((b_floorheight >= 0 && b_floorheight > f_floorheight) ||
-               (f_floorheight < 0 && f_floorheight > b_floorheight))
+            if(!floorskyhack)
             {
-               actionbits |= AC_BOTTOMSIL; // set bottom mask
+               if((b_floorheight >= 0 && b_floorheight > f_floorheight) ||
+                  (f_floorheight < 0 && f_floorheight > b_floorheight))
+               {
+                  actionbits |= AC_BOTTOMSIL; // set bottom mask
+               }
             }
 
             if(!skyhack)

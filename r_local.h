@@ -358,7 +358,37 @@ extern	VINT		extralight;
 #ifdef MARS
 __attribute__((aligned(4)))
 #endif
-extern boolean phi_effects;
+extern boolean line_table_effects;
+
+#ifdef MARS
+__attribute__((aligned(4)))
+#endif
+extern boolean copper_effects;
+
+#ifdef MARS
+__attribute__((aligned(4)))
+#endif
+extern int copper_color_index;
+
+#ifdef MARS
+__attribute__((aligned(2)))
+#endif
+extern short copper_vertical_offset;
+
+#ifdef MARS
+__attribute__((aligned(2)))
+#endif
+extern short copper_vertical_rate;
+
+#ifdef MARS
+__attribute__((aligned(2)))
+#endif
+extern unsigned short copper_neutral_color;
+
+#ifdef MARS
+__attribute__((aligned(4)))
+#endif
+extern volatile unsigned short copper_color_table[512];
 
 #ifdef MARS
 __attribute__((aligned(16)))
@@ -493,6 +523,7 @@ void R_PostTexCacheFrame(r_texcache_t* c);
 #define	AC_ADDSKY			512
 #define	AC_DRAWN			1024
 #define	AC_MIDTEXTURE		2048
+#define	AC_ADDFLOORSKY		4096
 
 typedef struct
 {
@@ -554,6 +585,8 @@ typedef struct
 		fixed_t			ceilingheight;
 		mapvertex_t		v2;
 	};
+
+	fixed_t			floorheight;
 
 	uint16_t 		*clipbounds;
 } viswall_t;

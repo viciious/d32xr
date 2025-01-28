@@ -752,15 +752,24 @@ void I_Update(void)
 	/* */
 	const int ticwait = (demoplayback || demorecording ? 4 : ticsperframe); // demos were recorded at 15-20fps
 
+	// Adjust sky position.
+	unsigned short scroll_y_base = gamemapinfo.skyOffsetY;
+	unsigned short scroll_y_offset = (vd.viewz >> 16);
+	unsigned short scroll_y_pan = (vd.aimingangle >> 22);
+
+	if (copper_effects) {
+		copper_color_index = (copper_vertical_offset
+				- scroll_y_base - (scroll_y_offset >> (16-copper_vertical_rate)) - scroll_y_pan) & 511;
+	}
+
 #ifdef MDSKY
 	if (sky_md_layer) {
-		// Adjust MD sky position.
 		unsigned short scroll_x = (*((unsigned short *)&vd.viewangle) >> 6);
-		scroll_x += (scroll_x >> 2);	// The MD sky scrolls to 1280 pixels.
 
-		unsigned short scroll_y_base = gamemapinfo.skyOffsetY;
-		unsigned short scroll_y_offset = (vd.viewz >> 16);
-		unsigned short scroll_y_pan = (vd.aimingangle >> 22);
+		if (extended_sky) {
+			// Use this to scroll the sky 1280 pixels. Works well for 256-width skies.
+			scroll_x += (scroll_x >> 2);
+		}
 
 		Mars_ScrollMDSky(scroll_x, scroll_y_base, scroll_y_offset, scroll_y_pan);
 	}

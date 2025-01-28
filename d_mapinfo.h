@@ -33,6 +33,8 @@ typedef struct
 	VINT act;
 	VINT next;
 	VINT skyOffsetY;
+	VINT skyBitmapOffsetY;
+	VINT skyBitmapScrollRate;
 	VINT lumpNum;
 	VINT borderFlat;
 	VINT skyTopColor;

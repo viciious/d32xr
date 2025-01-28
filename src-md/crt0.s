@@ -1611,6 +1611,7 @@ load_md_sky:
         ||move.w  #0x832C,(a0) /* reg 3 = Name Tbl W = 0xB000 */
         ||move.w  #0x8407,(a0) /* reg 4 = Name Tbl B = 0xE000 */
         ||move.w  #0x8554,(a0) /* reg 5 = Sprite Attr Tbl = 0xA800 */
+        ||move.w  #0x8C81,(a0) /* reg 12 = H40 mode, no lace, no shadow/hilite */
         ||move.w  #0x8D2B,(a0) /* reg 13 = HScroll Tbl = 0xAC00 */
 
 
@@ -1619,12 +1620,16 @@ load_md_sky:
         lea     0xC00004,a0
         move.l  lump_ptr,d0
         andi.l  #0x7FFFF,d0
-        addi.l  #0x880001,d0    /* Plus 1 to skip the 32X thru color byte */
+        addi.l  #0x880002,d0    /* Plus 2 to skip the 32X thru color and dummy bytes */
         move.l  d0,a2
+
+        move.w  #0x8C00, d0
+        or.b    (a2)+,d0
+        move.w  d0,(a0) /* reg 12 */
 
         move.w  #0x9000, d0
         or.b    (a2)+,d0
-        move.w  d0,(a0) /* reg 16 = Scroll Size = 32x64 */
+        move.w  d0,(a0) /* reg 16 */
 
         move.w  (a2)+,d0
         move.w  d0,scroll_b_vert_offset
@@ -1632,10 +1637,14 @@ load_md_sky:
         move.w  (a2)+,d0
         move.w  d0,scroll_a_vert_offset
 
-        move.b  (a2)+,d0
+        move.b  (a2)+,d1
+        move.b  #16,d0
+        sub.b   d1,d0
         move.b  d0,scroll_b_vert_rate
 
-        move.b  (a2)+,d0
+        move.b  (a2)+,d1
+        move.b  #16,d0
+        sub.b   d1,d0
         move.b  d0,scroll_a_vert_rate
 
 

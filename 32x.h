@@ -33,6 +33,7 @@
 #define MARS_SDRAM          (*(volatile unsigned short *)0x26000000)
 
 #define MARS_SYS_INTMSK     (*(volatile unsigned short *)0x20004000)
+#define MARS_SYS_HCOUNT     (*(volatile unsigned short *)0x20004004)
 #define MARS_SYS_DMACTR     (*(volatile unsigned short *)0x20004006)
 #define MARS_SYS_DMASAR     (*(volatile unsigned long *)0x20004008)
 #define MARS_SYS_DMADAR     (*(volatile unsigned long *)0x2000400C)
