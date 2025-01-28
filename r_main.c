@@ -86,7 +86,7 @@ __attribute__((aligned(2)))
 unsigned short copper_neutral_color;
 
 __attribute__((aligned(4)))
-volatile unsigned short copper_color_table[512];
+volatile unsigned short *copper_color_table = NULL;
 
 __attribute__((aligned(16)))
 pixel_t* viewportbuffer;

@@ -388,7 +388,7 @@ extern unsigned short copper_neutral_color;
 #ifdef MARS
 __attribute__((aligned(4)))
 #endif
-extern volatile unsigned short copper_color_table[512];
+extern volatile unsigned short *copper_color_table;
 
 #ifdef MARS
 __attribute__((aligned(16)))

@@ -316,6 +316,12 @@ static void D_LoadSkyGradient(void)
 	// Retrieve lump for drawing the sky gradient.
 	uint8_t *sky_gradient_ptr;
 
+	if (copper_color_table)
+	{
+		Z_Free(copper_color_table);
+		copper_color_table = NULL;
+	}
+
 	//uint32_t sky_gradient_size;
 	
 	int lump;
@@ -329,12 +335,10 @@ static void D_LoadSkyGradient(void)
 		return;
 	}
 
-
 	// This map uses a gradient.
 	copper_effects = true;
 	sky_gradient_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
 	//sky_gradient_size = W_LumpLength(lump);
-
 
 	copper_neutral_color = (sky_gradient_ptr[0] << 8) | (sky_gradient_ptr[1] & 0xFF);
 	copper_vertical_offset = (sky_gradient_ptr[2] << 8) | (sky_gradient_ptr[3] & 0xFF);
@@ -347,6 +351,8 @@ static void D_LoadSkyGradient(void)
 	unsigned char *data = &sky_gradient_ptr[7];
 
 	int table_index = 0;
+
+	copper_color_table = Z_Malloc(sizeof(unsigned short) * 512, PU_STATIC); // Put it on the heap
 
 	switch (section_format)
 	{
