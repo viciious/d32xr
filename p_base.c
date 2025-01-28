@@ -646,9 +646,12 @@ static void P_Boss1Thinker(mobj_t *mobj)
 			mobj->momz = FixedMul(mobj->momz, FRACUNIT - (dist>>12));
 
       mobj_t *ghost = P_SpawnMobj(mobj->x, mobj->y, mobj->z, MT_GHOST);
+      mobj_t *ghostmech = P_SpawnMobj(mobj->x, mobj->y, mobj->z, MT_GHOST);
+      ghost->flags2 |= MF2_FORWARDOFFSET;
       P_SetMobjState(ghost, mobj->state);
-      ghost->angle = mobj->angle;
-		ghost->reactiontime = 12;
+      P_SetMobjState(ghostmech, mobjinfo[MT_EGGMOBILE_MECH].spawnstate);
+      ghostmech->angle = ghost->angle = mobj->angle;
+		ghostmech->reactiontime = ghost->reactiontime = 12;
 	}
 
    if (!(mobj->flags2 & MF2_SPAWNEDJETS))
@@ -927,6 +930,18 @@ boolean P_MobjSpecificActions(mobj_t *mobj)
             break;
          case MT_EGGMOBILE:
             P_Boss1Thinker(mobj);
+            break;
+         case MT_EGGMOBILE_MECH:
+            mobj->angle = mobj->target->angle;
+            P_UnsetThingPosition(mobj);
+            mobj->x = mobj->target->x;
+            mobj->y = mobj->target->y;
+            mobj->z = mobj->target->z;
+            P_SetThingPosition(mobj);
+            if (mobj->target->flags2 & MF2_FRET)
+               mobj->flags2 |= MF2_FRET;
+            else
+               mobj->flags2 &= ~MF2_FRET;
             break;
          case MT_EGGMOBILE2:
             P_Boss2Thinker(mobj);

@@ -677,6 +677,11 @@ return;	/*DEBUG */
 	{
 		tokenbits |= (mthing->angle / 45);
 	}
+	else if (mobj->type == MT_EGGMOBILE)
+	{
+		mobj_t *eggmech = P_SpawnMobj(x, y, z, MT_EGGMOBILE_MECH);
+		eggmech->target = mobj;
+	}
 
 	if (mobj->flags & MF_RINGMOBJ)
 		return;

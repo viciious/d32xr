@@ -20,6 +20,7 @@ const char * const sprnames[NUMSPRITES] = {
 "CORL",
 "DRWN",
 "DUST",
+"EGG1",
 "EGGM",
 "EGGN",
 "EGLZ",
@@ -540,6 +541,8 @@ STATE(SPR_JETF,FF_FULLBRIGHT,-1,NULL,S_NULL), // S_JETFUME1
 STATE(SPR_FRET,0,2,NULL,S_NULL), // S_FRET
 
 // Boss 1
+STATE(SPR_EGG1,0,-1,NULL,S_EGGMOBILE_MECH),   // S_EGGMOBILE_MECH
+
 STATE(SPR_EGGM,0,1,A_Boss1Chase,S_EGGMOBILE_STND),   // S_EGGMOBILE_STND
 STATE(SPR_EGGM,17,TICRATE,A_FaceTarget,S_EGGMOBILE_ROFL1),   // S_EGGMOBILE_ROFL
 STATE(SPR_EGGM,18,2,A_FaceTarget,S_EGGMOBILE_ROFL2),   // S_EGGMOBILE_ROFL1
@@ -1176,6 +1179,31 @@ MF2_SHOOTABLE, // flags2
 		MF_NOBLOCKMAP|MF_NOCLIP|MF_NOGRAVITY, // flags
 		0, // flags2
 	},
+	{           // MT_EGGMOBILE_MECH
+		-1,               // doomednum
+		S_EGGMOBILE_MECH,  // spawnstate
+		8,                 // spawnhealth
+		S_NULL,  // seestate
+		sfx_None,          // seesound
+		45,                // reactiontime
+		sfx_None,          // attacksound
+		S_NULL,  // painstate
+		0,                 // painchance
+		sfx_s3k_6e,        // painsound
+		S_NULL, // meleestate
+		S_NULL, // missilestate
+		S_NULL,  // deathstate
+		S_NULL, // xdeathstate
+		sfx_s3k_b4,         // deathsound
+		4,                 // speed
+		36*FRACUNIT,       // radius
+		84*FRACUNIT,       // height
+		S_NULL,// mass
+		3,                 // damage
+		sfx_telept,        // activesound
+		MF_NOBLOCKMAP|MF_NOGRAVITY|MF_NOCLIP, // flags
+		0, // flags2
+	},
 	{           // MT_EGGMOBILE
 		200,               // doomednum
 		S_EGGMOBILE_STND,  // spawnstate
@@ -1199,7 +1227,7 @@ MF2_SHOOTABLE, // flags2
 		3,                 // damage
 		sfx_telept,        // activesound
 		MF_SPECIAL|MF_NOGRAVITY, // flags
-		MF2_SHOOTABLE|MF2_FLOAT|MF2_ENEMY, // flags2
+		MF2_SHOOTABLE|MF2_FLOAT|MF2_ENEMY|MF2_FORWARDOFFSET, // flags2
 	},
 	{           // MT_EGGMOBILE2
 		201,               // doomednum
