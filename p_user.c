@@ -522,8 +522,6 @@ void P_BuildMove(player_t *player)
 ===============================================================================
 */
 
-boolean onground;
-
 /*
 ==================
 =
@@ -552,6 +550,7 @@ void P_CalcHeight(player_t *player)
 	if (player->bob > MAXBOB) //   |
 		player->bob = MAXBOB; // phares 2/26/98
 
+	const boolean onground = (player->mo->z <= player->mo->floorz);
 	if (!onground)
 	{
 		player->viewz = player->mo->z + VIEWHEIGHT;
@@ -681,6 +680,7 @@ static inline fixed_t P_GetPlayerHeight()
 
 static void P_DoSpinDash(player_t *player)
 {
+	const boolean onground = (player->mo->z <= player->mo->floorz);
 	const int buttons = player->buttons;
 
 	if (!player->exiting && !(player->mo->state == mobjinfo[player->mo->type].painstate && player->powers[pw_flashing]))
@@ -1151,7 +1151,7 @@ void P_MovePlayer(player_t *player)
 	}
 
 	/* don't let the player control movement if not onground */
-	onground = (player->mo->z <= player->mo->floorz);
+	const boolean onground = (player->mo->z <= player->mo->floorz);
 
 	if (player->forwardmove || player->sidemove || (player->pflags & PF_GASPEDAL))
 	{
@@ -1464,7 +1464,7 @@ void P_DeathThink(player_t *player)
 	/* fall to the ground */
 	if (player->viewheight > 8 * FRACUNIT)
 		player->viewheight -= FRACUNIT;
-	onground = (player->mo->z <= player->mo->floorz);
+
 	P_CalcHeight(player);
 
 	if (player->deadTimer == 2*TICRATE)

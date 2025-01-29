@@ -8,25 +8,20 @@
 
 #define DEFAULT_GAME_ZONE_MARGIN (4*1024)
 
-int			numvertexes;
+uint16_t			numvertexes;
+uint16_t			numsegs;
+uint16_t		numsectors;
+uint16_t			numsubsectors;
+uint16_t			numnodes;
+uint16_t			numlines;
+uint16_t			numsides;
+
 mapvertex_t	*vertexes;
-
-int			numsegs;
 seg_t		*segs;
-
-int			numsectors;
 sector_t	*sectors;
-
-int			numsubsectors;
 subsector_t	*subsectors;
-
-int			numnodes;
 node_t		*nodes;
-
-int			numlines;
 line_t		*lines;
-
-int			numsides;
 side_t		*sides;
 
 short		*blockmaplump;			/* offsets in blockmap are from here */
@@ -42,7 +37,7 @@ VINT		*validcount;			/* increment every time a check is made */
 
 mapthing_t	playerstarts[MAXPLAYERS];
 
-int			numthings;
+uint16_t			numthings;
 spawnthing_t* spawnthings;
 
 int16_t worldbbox[4];

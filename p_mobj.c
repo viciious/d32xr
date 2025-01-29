@@ -804,7 +804,7 @@ void P_SpawnPlayerMissile (mobj_t *source, mobjtype_t type)
 	mobj_t 			*linetarget;
 	angle_t			an;
 	fixed_t			x,y,z, slope;
-	int				speed;
+	VINT				speed;
 	lineattack_t	la;
 	const mobjinfo_t* thinfo = &mobjinfo[type];
 
