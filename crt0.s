@@ -622,7 +622,8 @@ pri_h_irq:
         nop
 
 1:
-        mov.l   phi_copper_color_table,r1
+        mov.l   phi_copper_color_table_ptr,r1
+        mov.l   @r1,r1                  /* Dereference the pointer */
         mov.w   @(r0,r1),r0
 
 2:
@@ -653,7 +654,7 @@ phi_copper_neutral_color:
         .long   _copper_neutral_color
 phi_copper_color_index:
         .long   _copper_color_index
-phi_copper_color_table:
+phi_copper_color_table_ptr:
         .long   _copper_color_table
 phi_line:
         .long   _mars_hblank_count

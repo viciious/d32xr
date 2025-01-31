@@ -316,6 +316,8 @@ static void D_LoadSkyGradient(void)
 	// Retrieve lump for drawing the sky gradient.
 	uint8_t *sky_gradient_ptr;
 
+	copper_effects = false;
+	
 	if (copper_color_table)
 	{
 		Z_Free(copper_color_table);
@@ -331,7 +333,6 @@ static void D_LoadSkyGradient(void)
 	D_snprintf(lumpname, 8, "%sGRA", gamemapinfo.sky);
 	lump = W_CheckNumForName(lumpname);
 	if (lump == -1) {
-		copper_effects = false;
 		return;
 	}
 
