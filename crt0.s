@@ -778,7 +778,7 @@ pri_vres_irq:
         mov.l   pvri_mars_adapter,r1
         mov.w   r0,@(0x14,r1)           /* clear VRES IRQ */
 
-        mov     #0x0F,r0
+        mov     #0x0D,r0                /* prevent all normal ints, but not reset */
         shll2   r0
         shll2   r0
         ldc     r0,sr                   /* disallow ints */
@@ -1220,7 +1220,7 @@ sec_vres_irq:
         mov.l   svri_mars_adapter,r1
         mov.w   r0,@(0x14,r1)           /* clear VRES IRQ */
 
-        mov     #0x0F,r0
+        mov     #0x0D,r0                /* prevent all normal ints, but not reset */
         shll2   r0
         shll2   r0
         ldc     r0,sr                   /* disallow ints */
