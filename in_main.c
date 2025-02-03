@@ -299,12 +299,9 @@ void IN_SingleDrawer(void)
 	if (statsdrawn == false)
 #endif
 	{
-		boolean countdown = interm->exit && ticon >= interm->exittic + 30;
 		const char *mapname = DMAPINFO_STRFIELD(gamemapinfo, name);
 		const char *nextmapname = interm->nextmapinfo ? DMAPINFO_STRFIELD(interm->nextmapinfo, name) : "";
-
-		if (*nextmapname == '\0')
-			nextmapname = "NEXT LEVEL";
+		boolean countdown = *nextmapname != '\0' && interm->exit && ticon >= interm->exittic + 30;
 
 		if (countdown)
 		{
