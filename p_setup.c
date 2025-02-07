@@ -92,7 +92,7 @@ void P_LoadSegs (int lump)
 	int			i;
 	mapseg_t	*ml;
 	seg_t		*li;
-	int			linedef, offset, side;
+	int			linedef, side;
 
 	numsegs = W_LumpLength (lump) / sizeof(mapseg_t);
 	segs = Z_Malloc (numsegs*sizeof(seg_t)+16,PU_LEVEL);
@@ -107,14 +107,13 @@ void P_LoadSegs (int lump)
 		li->v1 = (unsigned)LITTLESHORT(ml->v1);
 		li->v2 = (unsigned)LITTLESHORT(ml->v2);
 
-		offset = (unsigned)LITTLESHORT(ml->offset);
 		linedef = (unsigned)LITTLESHORT(ml->linedef);
 
 		li->linedef = linedef;
 
 		side = (unsigned)LITTLESHORT(ml->side);
 
-		SEG_PACK(li, offset, side);
+		SEG_PACK(li, side);
 	}
 }
 

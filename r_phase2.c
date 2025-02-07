@@ -10,6 +10,7 @@
 
 static fixed_t R_PointToDist(fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
 static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, angle_t normalangle) ATTR_DATA_CACHE_ALIGN;
+static uint16_t P_SegOffset(seg_t *seg) ATTR_DATA_CACHE_ALIGN;
 static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle, int angle1) ATTR_DATA_CACHE_ALIGN;
 void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts) ATTR_DATA_CACHE_ALIGN;
 // the volatiles help gcc produce less silly SH2 assembler code
@@ -89,32 +90,33 @@ static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle, int ang
     wc->centerangle = ANG90 + vd->viewangle - normalangle;
 }
 
-uint16_t P_SegOffset(seg_t *seg, int side)
+static uint16_t P_SegOffset(seg_t *seg)
 {
-	mapvertex_t *sv = &vertexes[lines[SEG_UNPACK_LINEDEF(seg)].v1];
-	mapvertex_t *ev = &vertexes[lines[SEG_UNPACK_LINEDEF(seg)].v2];
-	mapvertex_t *v1 = &vertexes[SEG_UNPACK_V1(seg)];
+    int side = SEG_UNPACK_SIDE(seg);
+    mapvertex_t *sv = &vertexes[lines[SEG_UNPACK_LINEDEF(seg)].v1];
+    mapvertex_t *ev = &vertexes[lines[SEG_UNPACK_LINEDEF(seg)].v2];
+    mapvertex_t *v1 = &vertexes[SEG_UNPACK_V1(seg)];
     uint16_t dx, dy;
     uint16_t g, c;
     unsigned n;
 
     if (side)
-	{
-		dx = D_abs(ev->x - v1->x);
-		dy = D_abs(ev->y - v1->y);
-	}
-	else
-	{
-		dx = D_abs(sv->x - v1->x);
-		dy = D_abs(sv->y - v1->y);
-	}
+    {
+        dx = D_abs(ev->x - v1->x);
+        dy = D_abs(ev->y - v1->y);
+    }
+    else
+    {
+        dx = D_abs(sv->x - v1->x);
+        dy = D_abs(sv->y - v1->y);
+    }
  
     if (dx == 0)
-		return dy;
-	if (dy == 0)
-		return dx;
+        return dy;
+    if (dy == 0)
+        return dx;
 
-    // square root
+    // integer square root
     n = dx*dx + dy*dy;
     g = c = 0x8000;
     for ( ; ; ) {
@@ -137,7 +139,7 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
     fixed_t      x1, y1, x2, y2;
     int          nv1 = SEG_UNPACK_V1(seg);
     int          nv2 = SEG_UNPACK_V2(seg);
-    short        offset = P_SegOffset(seg, SEG_UNPACK_SIDE(seg));
+    int          offset = P_SegOffset(seg);
 
     // this is essentially R_StoreWallRange
     // calculate rw_distance for scale calculation
