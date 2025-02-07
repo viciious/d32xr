@@ -589,8 +589,8 @@ void R_Sprites(void)
    {
       if (wc->actionbits & (AC_TOPSIL | AC_BOTTOMSIL | AC_SOLIDSIL | AC_MIDTEXTURE))
       {
-         volatile int v1 = wc->seg->v1>>5;
-         volatile int v2 =wc->seg->v2>>5;
+         volatile int v1 = SEG_UNPACK_V1(wc->seg);
+         volatile int v2 = SEG_UNPACK_V2(wc->seg);
          wc->v1.x = verts[v1].x, wc->v1.y = verts[v1].y;
          wc->v2.x = verts[v2].x, wc->v2.y = verts[v2].y;
       }

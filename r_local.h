@@ -130,17 +130,16 @@ typedef struct subsector_s
 #define SSEC_SECTOR(ss) (&sectors[(ss)->sector])
 
 // truncate offset to 14 bits along the way
-#define SEG_PACK(seg,offset,side) do { seg_t *s = (seg); unsigned o = (unsigned)(offset)&((1<<14)-1); s->linedef <<= 5; s->v1 <<= 5; s->v2 <<= 5; s->linedef |= ((o & 0xf) << 1) | (!!(side)); s->v1 |= (o>>4)&0x1f; s->v2 |= (o>>9)&0x1f; } while (0)
-#define SEG_UNPACK_LINEDEF(seg) ((seg)->linedef>>5)
-#define SEG_UNPACK_V1(seg) ((seg)->v1>>5)
-#define SEG_UNPACK_V2(seg) ((seg)->v2>>5)
+#define SEG_PACK(seg,side) do { seg_t *s = (seg); s->linedef <<= 1; s->linedef |= (!!(side)); } while (0)
+#define SEG_UNPACK_LINEDEF(seg) ((seg)->linedef>>1)
+#define SEG_UNPACK_V1(seg) ((seg)->v1)
+#define SEG_UNPACK_V2(seg) ((seg)->v2)
 #define SEG_UNPACK_SIDE(seg) ((seg)->linedef & 1)
-#define SEG_UNPACK_OFFSET(seg) ((((seg)->linedef>>1)&0xf)|(((seg)->v1&0x1f)<<4)|(((seg)->v2&0x1f)<<9))
 
 typedef struct seg_s
 {
-	uint16_t	linedef;
-	uint16_t	v1, v2;
+	int16_t	linedef;
+	int16_t	v1, v2;
 } seg_t;
 
 
