@@ -195,8 +195,8 @@ int Mars_PollMouse(void)
 	MARS_SYS_COMM0 = 0x0500 | port; // tells 68000 to read mouse
 	while (MARS_SYS_COMM0 == (0x0500 | port)); // wait for mouse value
 
-	mouse1 = MARS_SYS_COMM0;
-	mouse2 = MARS_SYS_COMM2;
+	mouse1 = *(volatile unsigned short *)&MARS_SYS_COMM0;
+	mouse2 = *(volatile unsigned short *)&MARS_SYS_COMM2;
 	MARS_SYS_COMM0 = 0; // tells 68000 we got the mouse value
 
 	return (int)((mouse1 << 16) | mouse2);
@@ -736,7 +736,7 @@ void Mars_DetectInputDevices(void)
 		/* wait on COMM0 */
 		while (*(volatile unsigned short *)&MARS_SYS_COMM0 != ctrl_wait);
 
-		int val = MARS_SYS_COMM2;
+		int val = *(volatile unsigned short *)&MARS_SYS_COMM2;
 		if (val == 0xF000)
 		{
 			mars_controlval[i] = 0;
