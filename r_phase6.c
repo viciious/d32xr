@@ -157,24 +157,34 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum, fixed_t scale2, in
     }
 }
 
-static void R_Draw32XSky(const int top, const int bottom, const int x, drawcol_t draw32xsky)
+ATTR_DATA_CACHE_ALIGN
+static void R_Draw32XSky(const int top, const int bottom, const int x, drawcol_t draw32xsky, drawskycol_t drawmdsky)
 {
-    int colnum = ((vd.viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & (skytexturep->width-1);
-    inpixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
+    if (draw32xsky)
+    {
+        int colnum = ((vd.viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & (skytexturep->width-1);
+        inpixel_t* data = skytexturep->data[0] + colnum * skytexturep->height;
 
-    draw32xsky(
-        x,
-        -gamemapinfo.skyOffsetY
-                - gamemapinfo.skyBitmapOffsetY
-                - (((signed int)vd.aimingangle) >> 22)
-                - ((vd.viewz >> 16) >> (16-gamemapinfo.skyBitmapScrollRate)),
-        top,
-        bottom,
-        gamemapinfo.skyTopColor,
-        gamemapinfo.skyBottomColor,
-        data,
-        skytexturep->height
-    );
+        draw32xsky(
+            x,
+            -gamemapinfo.skyOffsetY
+                    - gamemapinfo.skyBitmapOffsetY
+                    - (((signed int)vd.aimingangle) >> 22)
+                    - ((vd.viewz >> 16) >> (16-gamemapinfo.skyBitmapScrollRate)),
+            top,
+            bottom,
+            gamemapinfo.skyTopColor,
+            gamemapinfo.skyBottomColor,
+            data,
+            skytexturep->height
+        );
+    }
+#ifdef MDSKY
+    else
+        drawmdsky(x, top, bottom);
+#endif
+    if (copper_effects)
+        enable_hints = 1;
 }
 
 //
@@ -234,6 +244,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 
     uint16_t *segcolmask = (segl->actionbits & AC_MIDTEXTURE) ? segl->clipbounds + (stop - start + 1) : NULL;
 
+    enable_hints = 0;
     for (x = start; x <= stop; x++)
     {
        fixed_t r;
@@ -275,8 +286,6 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
         if (draw32xsky)
         #endif
         {
-            enable_hints = 0;
-
             int top, bottom;
 
             if (segl->actionbits & AC_ADDSKY) {
@@ -287,19 +296,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
                     bottom = floorclipx;
 
                 if (top < bottom)
-                {
-                    if (draw32xsky) {
-                        R_Draw32XSky(top, bottom, x, draw32xsky);
-                    }
-#ifdef MDSKY
-                    else {
-                        drawmdsky(x, top, bottom);
-                    }
-#endif
-                    if (copper_effects) {
-                        enable_hints = 1;
-                    }
-                }
+                    R_Draw32XSky(top, bottom, x, draw32xsky, drawmdsky);
             }
 
             if (segl->actionbits & AC_ADDFLOORSKY) {
@@ -310,19 +307,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
                     top = ceilingclipx;
 
                 if (top < bottom)
-                {
-                    if (draw32xsky) {
-                        R_Draw32XSky(top, bottom, x, draw32xsky);
-                    }
-#ifdef MDSKY
-                    else {
-                        drawmdsky(x, top, bottom);
-                    }
-#endif
-                    if (copper_effects) {
-                        enable_hints = 1;
-                    }
-                }
+                    R_Draw32XSky(top, bottom, x, draw32xsky, drawmdsky);
             }
         }
 
