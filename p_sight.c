@@ -49,12 +49,12 @@ static boolean PS_CrossSubsector(sightWork_t* sw, int num) ATTR_DATA_CACHE_ALIGN
 static boolean PS_CrossBSPNode(sightWork_t* sw, int bspnum) ATTR_DATA_CACHE_ALIGN;
 static boolean PS_RejectCheckSight(mobj_t* t1, mobj_t* t2) ATTR_DATA_CACHE_ALIGN;
 static boolean P_MobjCanSightCheck(mobj_t *mobj) ATTR_DATA_CACHE_ALIGN;
-static mobj_t *P_GetSightMobj(mobj_t *pmobj, int c, int *pcnt) ATTR_DATA_CACHE_ALIGN;
+static mobj_t *P_GetSightMobj(int c) ATTR_DATA_CACHE_ALIGN;
 static boolean PS_CheckSight2(mobj_t* t1, mobj_t* t2) ATTR_DATA_CACHE_ALIGN;
 #ifdef MARS
-void P_CheckSights2(int c) ATTR_DATA_CACHE_ALIGN;
+static void P_CheckSights2(int c) ATTR_DATA_CACHE_ALIGN;
 #else
-void P_CheckSights2(void) ATTR_DATA_CACHE_ALIGN;
+static void P_CheckSights2(void) ATTR_DATA_CACHE_ALIGN;
 #endif
 
 // Returns side 0 (front), 1 (back)
@@ -375,6 +375,7 @@ static boolean P_MobjCanSightCheck(mobj_t *mobj)
 
 #ifdef MARS
 static char ps_lock = 0;
+static mobj_t *next_sight;
 
 static void P_LockSight(void)
 {
@@ -394,46 +395,44 @@ static void P_UnlockSight(void)
    ps_lock = 0;
 }
 
-static mobj_t *P_GetSightMobj(mobj_t *mobj, int c, int *pcnt)
+static mobj_t *P_GetSightMobj(int c)
 {
-   int next;
-   int cnt = *pcnt;
+   mobj_t *mobj;
 
    P_LockSight();
 
-   for (next = MARS_SYS_COMM6; ; next++)
+   Mars_ClearCacheLine(&next_sight);
+   mobj = (mobj_t *)next_sight;
+   if (mobj == NULL)
+      goto done;
+
+   while (1)
    {
       if (c == 1)
       {
-         for (; cnt < next; cnt++)
-         {
-            if (mobj == (void*)&mobjhead)
-               goto done;
-            Mars_ClearCacheLine(&mobj->next);
-            mobj = mobj->next;
-         }
-         Mars_ClearCacheLines(mobj, (sizeof(mobj_t)+31)/16);
+         Mars_ClearCacheLine(&mobj->next);
       }
-      else
+
+      mobj = mobj->next;
+      if (mobj == (void*)&mobjhead)
       {
-         for (; cnt < next; cnt++)
-         {
-            if (mobj == (void*)&mobjhead)
-               goto done;
-            mobj = mobj->next;
-         }
+         mobj = NULL;
+         break;
+      }
+
+      if (c == 1)
+      {
+         Mars_ClearCacheLines(mobj, (sizeof(mobj_t)+31)/16);
       }
 
       if (P_MobjCanSightCheck(mobj))
-        break;
+         break;
    }
 
 done:
-   MARS_SYS_COMM6 = cnt + 1;
-
+   next_sight = mobj;
    P_UnlockSight();
 
-   *pcnt = cnt;
    return mobj;
 }
 
@@ -441,7 +440,7 @@ done:
 
 #else
 
-static mobj_t *P_GetSightMobj(mobj_t *mobj, int c, int *pcnt)
+static mobj_t *P_GetSightMobj(int c)
 {
    for ( ; mobj != (void*)&mobjhead; mobj = mobj->next)
    {
@@ -460,39 +459,74 @@ static mobj_t *P_GetSightMobj(mobj_t *mobj, int c, int *pcnt)
 // than from multiple mobj action routines.
 //
 #ifdef MARS
-void P_CheckSights2(int c)
+static void P_CheckSights2(int c)
 #else
-void P_CheckSights2(void)
+static void P_CheckSights2(void)
 #endif
 {
-    mobj_t *mobj;
-    int cnt = 0;
+   mobj_t *mobj;
 #ifndef MARS
-    int c = 0;
+   int c = 0;
 #else
-    mobj_t *ctrgt = NULL;
-    Mars_ClearCacheLines(&mobjhead.next, 1);
+   mobj_t *ctrgt = NULL;
 #endif
 
-    for (mobj = mobjhead.next; ; mobj = P_NextSightMobj(mobj))
-    {
-         if ((mobj = P_GetSightMobj(mobj, c, &cnt)) == (void*)&mobjhead)
-            return;
+   while (1)
+   {
+      if ((mobj = P_GetSightMobj(c)) == NULL)
+         return;
 
-         if (!PS_RejectCheckSight(mobj, mobj->target))
-            continue;
+      if (!PS_RejectCheckSight(mobj, mobj->target))
+         continue;
 
 #ifdef MARS
-         if (c == 1 && ctrgt != mobj->target)
-         {
-            Mars_ClearCacheLines(mobj->target, (sizeof(mobj_t)+31)/16);
-            ctrgt = mobj->target;
-         }
+      if (c == 1 && ctrgt != mobj->target)
+      {
+         Mars_ClearCacheLines(mobj->target, (sizeof(mobj_t)+31)/16);
+         ctrgt = mobj->target;
+      }
 #endif
 
-         if (PS_CheckSight2(mobj, mobj->target))
-            mobj->flags2 |= MF2_SEETARGET;
-    }
+      if (PS_CheckSight2(mobj, mobj->target))
+         mobj->flags2 |= MF2_SEETARGET;
+   }
+}
+
+/*============================================================================= */
+
+/*
+===============
+=
+= P_CheckSights
+=
+= Check sights of all mobj thinkers that are going to change state this
+= tic and have MF_COUNTKILL set
+===============
+*/
+
+#ifdef MARS
+void Mars_Sec_P_CheckSights(void)
+{
+	P_CheckSights2(1);
+}
+#endif
+
+void P_CheckSights (void)
+{
+#ifdef JAGUAR
+	extern	int p_sight_start;
+	DSPFunction (&p_sight_start);
+#elif defined(MARS)
+   next_sight = (void*)&mobjhead;
+
+	Mars_P_BeginCheckSights();
+
+	P_CheckSights2(0);
+
+	Mars_P_EndCheckSights();
+#else
+	P_CheckSights2();
+#endif
 }
 
 // EOF
