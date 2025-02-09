@@ -24,14 +24,14 @@ CCFLAGS += -DSIMPLELIGHT
 CCFLAGS += -DNARROW_SCENERY
 CCFLAGS += -DFLOOR_OVER_FLOOR
 #CCFLAGS += -DSHOW_DISCLAIMER
-LDFLAGS = -T mars-ssf.ld -Wl,-Map=output.map -nostdlib -Wl,--gc-sections --specs=nosys.specs
+LDFLAGS = -T mars-ssf.ld -Wl,-Map=output.map -nostdlib -Wl,--gc-sections,--sort-section=alignment --specs=nosys.specs
 ASFLAGS = --big
 
 MARSHWCFLAGS := $(CCFLAGS)
 MARSHWCFLAGS += -O1 -fno-lto
 
 release: CCFLAGS += -Os -fomit-frame-pointer -ffast-math -funroll-loops -fno-align-loops -fno-align-jumps -fno-align-labels
-release: CCFLAGS += -ffunction-sections -fdata-sections -flto
+release: CCFLAGS += -fno-common -ffunction-sections -fdata-sections -flto
 release: LDFLAGS += -flto=3
 
 debug: CCFLAGS += -g -Os -ggdb -fomit-frame-pointer
