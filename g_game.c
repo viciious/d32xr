@@ -543,7 +543,7 @@ void G_Init(void)
 ==================== 
 */ 
  
-extern mobj_t emptymobj;
+extern consistencymobj_t emptymobj;
  
 void G_InitNew (int map, gametype_t gametype, boolean splitscr)
 { 
@@ -578,7 +578,7 @@ void G_InitNew (int map, gametype_t gametype, boolean splitscr)
 	}
 
 	for (i=0 ; i<MAXPLAYERS ; i++)
-		players[i].mo = &emptymobj;	/* for net consistency checks */
+		players[i].mo = (mobj_t*)&emptymobj;	/* for net consistency checks */
 
 	G_InitPlayerResp();
 

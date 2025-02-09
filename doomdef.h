@@ -279,6 +279,17 @@ typedef struct degenmobj_s
 	void 			*prev, *next;
 } degenmobj_t;
 
+typedef struct consistencymobj_s
+{
+	uint8_t		type;
+	uint8_t		flags;
+	VINT isubsector;
+	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
+	struct mobj_s	*bnext, *bprev;		/* links in blocks (if needed) */
+	void 			*prev, *next;
+	fixed_t			x, y, z;
+} consistencymobj_t;
+
 #define static_mobj_size (offsetof(mobj_t,movedir))
 
 /* */
