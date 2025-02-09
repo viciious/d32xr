@@ -66,6 +66,7 @@ void Z_Init (void)
 	
 #ifdef MARS
 /* mars doesn't have a refzone */
+	D_memset(mem, 0, size);
 	mainzone = Z_InitZone (mem,size);
 #else
 	mainzone = Z_InitZone (mem,0x80000);
