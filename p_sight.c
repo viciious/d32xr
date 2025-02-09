@@ -156,6 +156,7 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
    for( ; count; seg++, count--)
    {
       line = &lines[seg->linedef];
+      boolean twoSided;
 
       // allready checked other side?
       if(lvalidcount[seg->linedef] == vc)
@@ -184,7 +185,8 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
          continue;
 
       // stop because it is not two sided anyway
-      if(!(line->flags & ML_TWOSIDED))
+      twoSided = line->sidenum[1] != -1;
+      if (!twoSided)
          return false;
 
       // crosses a two sided line

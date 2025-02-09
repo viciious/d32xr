@@ -428,6 +428,14 @@ void P_LoadLineDefs (int lump)
 
 		ld->sidenum[0] = LITTLESHORT(mld->sidenum[0]);
 		ld->sidenum[1] = LITTLESHORT(mld->sidenum[1]);
+
+		// if the two-sided flag isn't set, set the back side to -1
+		if (ld->sidenum[1] != -1) {
+			if (!(ld->flags & ML_TWOSIDED)) {
+				ld->sidenum[1] = -1;
+			}
+		}
+		ld->flags &= ~ML_TWOSIDED;
 	}
 }
 
