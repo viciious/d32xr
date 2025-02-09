@@ -142,7 +142,7 @@ Z_CheckHeap (mainzone);	/* DEBUG */
 /* of sufficient size, throwing out any purgable blocks along the way */
 /* */
 	size += sizeof(memblock_t);	/* account for size of block header */
-	size = (size+3)&~3;			/* word align everything */
+	size = (size+3)&~3;			/* longword align everything */
 	
 	start = base = mainzone->rover;
 	
