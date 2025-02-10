@@ -648,8 +648,10 @@ static void P_Boss1Thinker(mobj_t *mobj)
       mobj_t *ghost = P_SpawnMobj(mobj->x, mobj->y, mobj->z, MT_GHOST);
       mobj_t *ghostmech = P_SpawnMobj(mobj->x, mobj->y, mobj->z, MT_GHOST);
       ghost->flags2 |= MF2_FORWARDOFFSET;
-      P_SetMobjState(ghost, mobj->state);
-      P_SetMobjState(ghostmech, mobjinfo[MT_EGGMOBILE_MECH].spawnstate);
+      ghost->state = mobj->state;
+      ghost->tics = -1;
+      ghostmech->state = mobjinfo[MT_EGGMOBILE_MECH].spawnstate;
+      ghostmech->tics = -1;
       ghostmech->angle = ghost->angle = mobj->angle;
 		ghostmech->reactiontime = ghost->reactiontime = 12;
 	}
