@@ -1349,7 +1349,7 @@ void A_SpawnFly(mobj_t *mo)
 	targ = mo->target;
 
 	// First spawn teleport fog.
-	fog = P_SpawnMobj(targ->x, targ->y, targ->z, MT_TFOG);
+	fog = P_SpawnMobj2(targ->x, targ->y, targ->z, MT_TFOG, targ->subsector);
 	S_StartSound(fog, sfx_telept);
 
 	// Randomly select monster to spawn.
@@ -1376,7 +1376,7 @@ void A_SpawnFly(mobj_t *mo)
 	else
 		type = MT_BRUISER;
 
-	newmobj = P_SpawnMobj(targ->x, targ->y, targ->z, type);
+	newmobj = P_SpawnMobj2(targ->x, targ->y, targ->z, type, targ->subsector);
 	if (P_LookForPlayers(newmobj, true))
 	{
 		const mobjinfo_t* ainfo = &mobjinfo[type];

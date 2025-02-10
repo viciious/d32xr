@@ -49,6 +49,7 @@ int	EV_Teleport( line_t *line,mobj_t *thing )
 	unsigned	an;
 	sector_t	*sector;
 	fixed_t		oldx, oldy, oldz;
+	subsector_t *oldsubs;
 	int		side;
 	
 	side = !P_PointOnLineSide (thing->x, thing->y, line);
@@ -76,6 +77,7 @@ int	EV_Teleport( line_t *line,mobj_t *thing )
 				oldx = thing->x;
 				oldy = thing->y;
 				oldz = thing->z;
+				oldsubs = thing->subsector;
 				thing->flags |= MF_TELEPORT;
 				if (thing->player)
 					P_Telefrag (thing, m->x, m->y);
@@ -85,7 +87,7 @@ int	EV_Teleport( line_t *line,mobj_t *thing )
 					return 0;	/* move is blocked */
 				thing->z = thing->floorz;
 /* spawn teleport fog at source and destination */
-				fog = P_SpawnMobj (oldx, oldy, oldz, MT_TFOG);
+				fog = P_SpawnMobj2 (oldx, oldy, oldz, MT_TFOG, oldsubs);
 				S_StartSound (fog, sfx_telept);
 				an = m->angle >> ANGLETOFINESHIFT;
 				fog = P_SpawnMobj (m->x+20*finecosine(an), m->y+20*finesine(an)

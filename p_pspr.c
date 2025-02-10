@@ -867,7 +867,7 @@ void A_BFGSpray (mobj_t *mo)
 		linetarget = la.shootmobj;
 		if (!linetarget)
 			continue;
-		P_SpawnMobj (linetarget->x, linetarget->y, linetarget->z + (linetarget->height>>2), MT_EXTRABFG);
+		P_SpawnMobj2 (linetarget->x, linetarget->y, linetarget->z + (linetarget->height>>2), MT_EXTRABFG, linetarget->subsector);
 		damage = 0;
 		for (j=0;j<15;j++)
 			damage += (P_Random()&7) + 1;

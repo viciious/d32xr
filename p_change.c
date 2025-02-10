@@ -108,7 +108,7 @@ boolean PIT_ChangeSector (mobj_t *thing, changetest_t *ct)
 	{
 		P_DamageMobj(thing,NULL,NULL,10);
 		/* spray blood in a random direction */
-		mo = P_SpawnMobj (thing->x, thing->y, thing->z + thing->height/2, MT_BLOOD);
+		mo = P_SpawnMobj2 (thing->x, thing->y, thing->z + thing->height/2, MT_BLOOD, thing->subsector);
 		mo->momx = (P_Random() - P_Random ())<<12;
 		mo->momy = (P_Random() - P_Random ())<<12;
 	}

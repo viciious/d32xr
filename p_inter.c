@@ -696,7 +696,7 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 		return;
 	}
 
-	mo = P_SpawnMobj (target->x,target->y,ONFLOORZ, item);
+	mo = P_SpawnMobj2 (target->x,target->y,ONFLOORZ, item, target->subsector);
 	mo->flags |= MF_DROPPED;		/* special versions of items */
 }
 

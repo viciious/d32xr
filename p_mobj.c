@@ -133,7 +133,7 @@ void P_RespawnSpecials (void)
 
 /* spawn a teleport fog at the new spot */
 	ss = R_PointInSubsector (x,y); 
-	mo = P_SpawnMobj (x, y, ss->sector->floorheight , MT_IFOG); 
+	mo = P_SpawnMobj2 (x, y, ss->sector->floorheight , MT_IFOG, ss); 
 
 	S_StartSound (mo, sfx_itmbk);
 
@@ -150,7 +150,7 @@ void P_RespawnSpecials (void)
 		z = ONCEILINGZ;
 	else
 		z = ONFLOORZ;
-	mo = P_SpawnMobj (x,y,z, i);
+	mo = P_SpawnMobj2 (x,y,z,i,ss);
 	mo->angle = ANG45 * (mthing->angle/45);
 	mo->thingid = mthing->options;
 
@@ -716,7 +716,7 @@ mobj_t *P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type)
 	int			speed;
 	const mobjinfo_t* thinfo = &mobjinfo[type];
 
-	th = P_SpawnMobj (source->x,source->y, source->z + 4*8*FRACUNIT, type);
+	th = P_SpawnMobj2 (source->x,source->y, source->z + 4*8*FRACUNIT, type, source->subsector);
 	if (thinfo->seesound)
 		S_StartSound (source, thinfo->seesound);
 	th->target = source;		/* where it came from */
@@ -788,7 +788,7 @@ void P_SpawnPlayerMissile (mobj_t *source, mobjtype_t type)
 	y = source->y;
 	z = source->z + 4*8*FRACUNIT;
 	
-	th = P_SpawnMobj (x,y,z, type);
+	th = P_SpawnMobj2 (x,y,z, type, source->subsector);
 	if (thinfo->seesound)
 		S_StartSound (source, thinfo->seesound);
 	th->target = source;
