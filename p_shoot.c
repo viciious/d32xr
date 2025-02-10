@@ -65,6 +65,8 @@ typedef struct
    mobj_t  *shootmobj;
    fixed_t  shootslope;             // between aimtop and aimbottom
    fixed_t  shootx, shooty, shootz; // location for puff/blood
+
+   int      firstsplit;             // first BSP node that generated a split
 } shootWork_t;
 
 static fixed_t PA_SightCrossLine(shootWork_t *sw, mapvertex_t *v1, mapvertex_t *v2) ATTR_DATA_CACHE_ALIGN;
@@ -423,6 +425,9 @@ check:
    // the partition plane is crossed here
    if(side == side2)
       return true; // the line doesn't touch the other side
+
+   if (sw->firstsplit == numnodes - 1)
+      sw->firstsplit = bspnum;
    
    // cross the ending side
    bspnum = bsp->children[side ^ 1];
@@ -469,6 +474,7 @@ void P_Shoot2(lineattack_t *la)
    sw.old_intercept.d.line  = NULL;
    sw.old_intercept.frac    = 0;
    sw.old_intercept.isaline = false;
+   sw.firstsplit = numnodes - 1;
 
    PA_CrossBSPNode(&sw, numnodes - 1);
 
@@ -488,6 +494,7 @@ void P_Shoot2(lineattack_t *la)
    la->shootx = sw.shootx;
    la->shooty = sw.shooty;
    la->shootz = sw.shootz;
+   la->firstsplit = sw.firstsplit;
 
    // post-process
    if(la->shootmobj)

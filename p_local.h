@@ -261,6 +261,8 @@ typedef struct
    mobj_t  *shootmobj;				/* who got hit (or NULL) */
    fixed_t  shootslope;             // between aimtop and aimbottom
    fixed_t  shootx, shooty, shootz; // location for puff/blood
+
+   int 		firstsplit;             // first BSP node that generated a split
 } lineattack_t;
 
 fixed_t P_AimLineAttack (lineattack_t *la, mobj_t *t1, angle_t angle, fixed_t distance) ATTR_DATA_CACHE_ALIGN;
