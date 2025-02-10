@@ -48,7 +48,7 @@ mobj_t *P_FindFirstMobjOfType(uint16_t type)
 =
 ===============
 */
-
+__attribute((noinline))
 void P_RemoveMobj (mobj_t *mobj)
 {
 /* unlink from sector and block lists */
@@ -227,8 +227,8 @@ boolean P_SetMobjState (mobj_t *mobj, statenum_t state)
 		if (st->action)		/* call action functions when the state is set */
 			st->action(mobj, st->var1, st->var2);
 
-		if (!(mobj->flags & (MF_STATIC)))
-			mobj->latecall = NULL;	/* make sure it doesn't come back to life... */
+//		if (!(mobj->flags & (MF_STATIC)))
+//			mobj->latecall = NULL;	/* make sure it doesn't come back to life... */
 
 		state = st->nextstate;
 	} while (!mobj->tics && --changes > 0);

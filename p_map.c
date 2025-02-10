@@ -168,7 +168,7 @@ boolean PIT_RingMagnet(mobj_t *thing, mobj_t *spot)
 	// Replace object with an attraction ring
 	mobj_t *attractring = P_SpawnMobj(ring->x << FRACBITS, ring->y << FRACBITS, ring->z << FRACBITS, MT_ATTRACTRING);
 	attractring->target = spot;
-	P_RemoveMobj(thing);
+	thing->latecall = P_RemoveMobj;
 	return true;
 }
 

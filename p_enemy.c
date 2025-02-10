@@ -1146,7 +1146,7 @@ void A_FlickyFly(mobj_t *actor, int16_t var1, int16_t var2)
 
 	actor->reactiontime--;
 	if (actor->reactiontime == 0)
-		P_RemoveMobj(actor);
+		actor->latecall = P_RemoveMobj;
 }
 
 void A_BubbleRise(mobj_t *actor, int16_t var1, int16_t var2)
@@ -1165,7 +1165,7 @@ void A_BubbleRise(mobj_t *actor, int16_t var1, int16_t var2)
 
 	if (subsectors[actor->isubsector].sector->heightsec == -1
 		|| actor->z + (actor->theight << (FRACBITS-1)) > GetWatertopMo(actor))
-		P_RemoveMobj(actor);
+		actor->latecall = P_RemoveMobj;
 }
 
 // Boss 1 Stuff
@@ -1590,7 +1590,7 @@ void A_UnidusBall(mobj_t *actor)
 
 	if (!actor->target || !actor->target->health)
 	{
-		P_RemoveMobj(actor);
+		actor->latecall = P_RemoveMobj;
 		return;
 	}
 

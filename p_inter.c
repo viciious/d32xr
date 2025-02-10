@@ -458,6 +458,8 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 			flicky->momz = 4*FRACUNIT;
 			flicky->target = player->mo;
 		}
+
+		target->target = NULL;
 	}
 }
 

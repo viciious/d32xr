@@ -517,7 +517,7 @@ void P_ZMovement(mobj_t *mo)
       }
       else if (mo->type == MT_GFZDEBRIS)
       {
-         P_RemoveMobj(mo);
+         mo->latecall = P_RemoveMobj;
       }
       else if (mo->type == MT_MEDIUMBUBBLE)
       {
@@ -536,12 +536,12 @@ void P_ZMovement(mobj_t *mo)
          explodemo->momx -= (P_Random() % 96) * FRACUNIT/8;
          explodemo->momy -= (P_Random() % 96) * FRACUNIT/8;
 
-         P_RemoveMobj(mo);
+         mo->latecall = P_RemoveMobj;
       }
       else if (mo->type == MT_SMALLBUBBLE)
       {
          // Hit the floor, so POP!
-         P_RemoveMobj(mo);
+         mo->latecall = P_RemoveMobj;
       }
       else if (mo->type == MT_SIGN)
       {
@@ -581,7 +581,7 @@ void P_ZMovement(mobj_t *mo)
       else if (mo->type == MT_SMALLBUBBLE || mo->type == MT_MEDIUMBUBBLE
          || mo->type == MT_EXTRALARGEBUBBLE)
       {
-         P_RemoveMobj(mo);
+         mo->latecall = P_RemoveMobj;
       }
       else
       {
@@ -762,7 +762,7 @@ static boolean P_JetFume1Think(mobj_t *mobj)
 
 	if (!mobj->target) // if you have no target
 	{
-		P_RemoveMobj(mobj); // then remove yourself as well!
+		mobj->latecall = P_RemoveMobj; // then remove yourself as well!
 		return false;
 	}
 
@@ -805,7 +805,7 @@ static boolean P_DrownNumbersThink(mobj_t *mobj)
    player_t *player = &players[mobj->target->player - 1];
    if (!(player->powers[pw_underwater]) || player->powers[pw_spacetime])
    {
-      P_RemoveMobj(mobj);
+      mobj->latecall = P_RemoveMobj;
       return false;
    }
 
@@ -843,7 +843,7 @@ boolean P_MobjSpecificActions(mobj_t *mobj)
 
             if (mobj->threshold == 0)
             {
-               P_RemoveMobj(mobj);
+               mobj->latecall = P_RemoveMobj;
                return false;
             }
             break;
@@ -880,7 +880,7 @@ boolean P_MobjSpecificActions(mobj_t *mobj)
                      P_SetMobjState(mobj, S_FORCB1);
                   else if (!(player->shield == SH_FORCE1 || player->shield == SH_FORCE2))
                   {
-                     P_RemoveMobj(mobj);
+                     mobj->latecall = P_RemoveMobj;
                      return false;
                   }
                }
@@ -894,7 +894,7 @@ boolean P_MobjSpecificActions(mobj_t *mobj)
                   
                    if (player->shield != mobjinfo[mobj->type].painchance)
                    {
-                       P_RemoveMobj(mobj);
+                       mobj->latecall = P_RemoveMobj;
                        return false;
                    }
                }
@@ -923,7 +923,7 @@ boolean P_MobjSpecificActions(mobj_t *mobj)
                      }
                   }
 
-                  P_RemoveMobj(mobj);
+                  mobj->latecall = P_RemoveMobj;
                   return false;
                }
             }
@@ -958,7 +958,7 @@ boolean P_MobjSpecificActions(mobj_t *mobj)
                flingring->momy = mobj->momy;
                flingring->momz = mobj->momz;
                flingring->threshold = 8*TICRATE;
-               P_RemoveMobj(mobj);
+               mobj->latecall = P_RemoveMobj;
                return false;
             }
             else
@@ -999,8 +999,8 @@ boolean P_MobjSpecificActions(mobj_t *mobj)
                      flicky->target = players[consoleplayer].mo;
                   }
                   S_StartSound(mobj, sfx_s3k_3d);
-               }
             }
+         }
             break;
          default:
             break;
