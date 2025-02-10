@@ -668,7 +668,7 @@ void P_AddPlayerScore(player_t *player, int amount)
 	player->score += amount;
 }
 
-static inline fixed_t P_GetPlayerSpinHeight()
+fixed_t P_GetPlayerSpinHeight()
 {
 	return FixedMul(mobjinfo[MT_PLAYER].height, 2*FRACUNIT/3);
 }

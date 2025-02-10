@@ -75,6 +75,7 @@ void P_RemoveThinker (thinker_t *thinker);
 ===============================================================================
 */
 
+fixed_t P_GetPlayerSpinHeight();
 void P_ThrustValues(angle_t angle, fixed_t move, fixed_t *outX, fixed_t *outY);
 void P_InstaThrust(mobj_t *mo, angle_t angle, fixed_t move);
 fixed_t P_ReturnThrustX(angle_t angle, fixed_t move);
