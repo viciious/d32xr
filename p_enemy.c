@@ -1358,7 +1358,11 @@ void A_Boss1Laser(mobj_t *actor, int16_t var1, int16_t var2)
 	const mobjinfo_t *pointInfo = &mobjinfo[point->type];
 	for (i = 0; i < iterations; i++)
 	{
-		mobj_t *mo = P_SpawnMobj(point->x, point->y, point->z, point->type);
+		mobj_t *mo = P_SpawnMobjNoSector(point->x, point->y, point->z, point->type);
+		P_SetThingPosition2(mo, &subsectors[point->isubsector]);
+		mo->floorz = point->floorz;
+		mo->ceilingz = point->ceilingz;
+		mo->z = point->z;
 		mo->target = actor;
 
 		mo->angle = point->angle;

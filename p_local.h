@@ -130,6 +130,7 @@ fixed_t GetWatertopMo(const mobj_t *mo);
 
 boolean Mobj_HasFlags2(mobj_t *mo, VINT value) ATTR_DATA_CACHE_ALIGN;
 void P_SetObjectMomZ(mobj_t *mo, fixed_t value, boolean relative);
+mobj_t *P_SpawnMobjNoSector (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
 mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
 
 void 	P_RemoveMobj (mobj_t *th);

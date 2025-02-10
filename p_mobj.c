@@ -267,7 +267,7 @@ void P_ExplodeMissile (mobj_t *mo)
 ===============
 */
 
-mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
+mobj_t *P_SpawnMobjNoSector(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 {
 	mobj_t		*mobj;
 	const state_t		*st;
@@ -351,8 +351,24 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 	mobj->state = info->spawnstate;
 	mobj->tics = st->tics;
 
+	/* */
+	/* link into the mobj list */
+	/* */
+	P_AddMobjToList(mobj, (void *)&mobjhead);
+
+	return mobj;
+}
+
+mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
+{
+	const mobjinfo_t *info = &mobjinfo[type];
+	mobj_t *mobj = P_SpawnMobjNoSector(x, y, z, type);
+
+	if (info->flags & MF_RINGMOBJ)
+		return mobj;
+
 /* set subsector and/or block links */
-	P_SetThingPosition (mobj);
+	P_SetThingPosition(mobj);
 	
 	mobj->floorz = subsectors[mobj->isubsector].sector->floorheight;
 	mobj->ceilingz = subsectors[mobj->isubsector].sector->ceilingheight;
@@ -363,11 +379,6 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 	else 
 		mobj->z = z;
 	
-/* */
-/* link into the mobj list */
-/* */
-	P_AddMobjToList(mobj, (void *)&mobjhead);
-
 	return mobj;
 }
 
