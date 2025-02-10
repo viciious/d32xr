@@ -243,7 +243,7 @@ void P_ExplodeMissile (mobj_t *mo)
 ===============
 */
 
-mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
+mobj_t *P_SpawnMobj2 (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type, subsector_t *ss)
 {
 	mobj_t		*mobj;
 	const state_t		*st;
@@ -321,10 +321,13 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 	}
 
 /* set subsector and/or block links */
-	P_SetThingPosition (mobj);
-	
-	mobj->floorz = mobj->subsector->sector->floorheight;
-	mobj->ceilingz = mobj->subsector->sector->ceilingheight;
+	if (!ss)
+		ss = R_PointInSubsector (mobj->x,mobj->y);
+	P_SetThingPosition2 (mobj, ss);
+
+	ss = mobj->subsector;
+	mobj->floorz = ss->sector->floorheight;
+	mobj->ceilingz = ss->sector->ceilingheight;
 	if (z == ONFLOORZ)
 		mobj->z = mobj->floorz;
 	else if (z == ONCEILINGZ)
@@ -340,6 +343,11 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 	return mobj;
 }
 
+
+mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
+{
+	return P_SpawnMobj2 (x, y, z, type, NULL);
+}
 
 /*
 ================
@@ -611,12 +619,12 @@ return;	/*DEBUG */
 ================
 */
 
-void P_SpawnPuff (fixed_t x, fixed_t y, fixed_t z, fixed_t attackrange)
+void P_SpawnPuff2 (fixed_t x, fixed_t y, fixed_t z, fixed_t attackrange, subsector_t *ss)
 {
 	mobj_t	*th;
 	
 	z += ((P_Random()-P_Random())<<10);
-	th = P_SpawnMobj (x,y,z, MT_PUFF);
+	th = P_SpawnMobj2 (x,y,z, MT_PUFF, ss);
 	th->momz = FRACUNIT;
 	th->tics -= P_Random()&1;
 	if (th->tics < 1)
@@ -627,6 +635,10 @@ void P_SpawnPuff (fixed_t x, fixed_t y, fixed_t z, fixed_t attackrange)
 		P_SetMobjState (th, S_PUFF3);
 }
 
+void P_SpawnPuff (fixed_t x, fixed_t y, fixed_t z, fixed_t attackrange)
+{
+	P_SpawnPuff2 (x, y, z, attackrange, NULL);
+}
 
 /*
 ================
@@ -636,12 +648,12 @@ void P_SpawnPuff (fixed_t x, fixed_t y, fixed_t z, fixed_t attackrange)
 ================
 */
 
-void P_SpawnBlood (fixed_t x, fixed_t y, fixed_t z, int damage)
+void P_SpawnBlood2 (fixed_t x, fixed_t y, fixed_t z, int damage, subsector_t *ss)
 {
 	mobj_t	*th;
 	
 	z += ((P_Random()-P_Random())<<10);
-	th = P_SpawnMobj (x,y,z, MT_BLOOD);
+	th = P_SpawnMobj2 (x,y,z, MT_BLOOD, ss);
 	th->momz = FRACUNIT*2;
 	th->tics -= P_Random()&1;
 	if (th->tics<1)
@@ -650,6 +662,11 @@ void P_SpawnBlood (fixed_t x, fixed_t y, fixed_t z, int damage)
 		P_SetMobjState (th,S_BLOOD2);
 	else if (damage < 9)
 		P_SetMobjState (th,S_BLOOD3);
+}
+
+void P_SpawnBlood (fixed_t x, fixed_t y, fixed_t z, int damage)
+{
+	P_SpawnBlood2 (x, y, z, damage, NULL);
 }
 
 /*

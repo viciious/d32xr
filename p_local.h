@@ -123,6 +123,7 @@ extern	mapthing_t	*itemrespawnque;
 extern	int			*itemrespawntime;
 
 mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
+mobj_t *P_SpawnMobj2 (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type, subsector_t *ss);
 
 void 	P_RemoveMobj (mobj_t *th);
 void	P_FreeMobj(mobj_t* mobj);
@@ -130,8 +131,12 @@ boolean	P_SetMobjState (mobj_t *mobj, statenum_t state) ATTR_DATA_CACHE_ALIGN;
 void 	P_MobjThinker (mobj_t *mobj);
 void 	P_PreSpawnMobjs(int count, int staticcount);
 
+void	P_SpawnPuff2 (fixed_t x, fixed_t y, fixed_t z, fixed_t attackrange, subsector_t *ss);
 void	P_SpawnPuff (fixed_t x, fixed_t y, fixed_t z, fixed_t attackrange);
+
+void 	P_SpawnBlood2 (fixed_t x, fixed_t y, fixed_t z, int damage, subsector_t *ss);
 void 	P_SpawnBlood (fixed_t x, fixed_t y, fixed_t z, int damage);
+
 mobj_t	*P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type);
 void	P_SpawnPlayerMissile (mobj_t *source, mobjtype_t type);
 
