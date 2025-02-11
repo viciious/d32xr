@@ -145,14 +145,21 @@ void P_SpawnBustables(sector_t *sec, mobj_t *playermo)
    GetSectorAABB(sec, blockbox);
    const fixed_t spawnInterval = 64<<FRACBITS;
 
-   for (fixed_t z = sec->ceilingheight - spawnInterval/2; z >= sec->floorheight + spawnInterval/2; z -= spawnInterval)
+   for (fixed_t x = blockbox[BOXLEFT]; x <= blockbox[BOXRIGHT]; x += spawnInterval)
    {
-      for (fixed_t x = blockbox[BOXLEFT]; x <= blockbox[BOXRIGHT]; x += spawnInterval)
+      for (fixed_t y = blockbox[BOXBOTTOM]; y <= blockbox[BOXTOP]; y += spawnInterval)
       {
-         for (fixed_t y = blockbox[BOXBOTTOM]; y <= blockbox[BOXTOP]; y += spawnInterval)
+         subsector_t *spawnSubsec = R_PointInSubsector(x, y);
+         if (spawnSubsec->sector != sec)
+            continue;
+
+         for (fixed_t z = sec->ceilingheight - spawnInterval/2; z >= sec->floorheight + spawnInterval/2; z -= spawnInterval)
          {
-            if (R_PointInSubsector(x, y)->sector == sec)
-               P_SpawnMobj(x, y, z, MT_GFZDEBRIS);               
+            mobj_t *debris = P_SpawnMobjNoSector(x, y, z, MT_GFZDEBRIS);
+            P_SetThingPosition2(debris, spawnSubsec);
+		      debris->floorz = spawnSubsec->sector->floorheight;
+		      debris->ceilingz = spawnSubsec->sector->ceilingheight;
+		      debris->z = z;
          }
       }
    }
