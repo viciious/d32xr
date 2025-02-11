@@ -125,7 +125,7 @@ static boolean P_DoSpring(mobj_t *spring, player_t *player)
 		P_SetThingPosition(player->mo);
 
 		// Go into a spin
-		P_ResetScore(player);
+/*		P_ResetScore(player);
 		player->pflags |= PF_SPINNING;
 		P_SetMobjState(player->mo, S_PLAY_ATK1);
 		player->pflags |= PF_USEDOWN;
@@ -133,7 +133,7 @@ static boolean P_DoSpring(mobj_t *spring, player_t *player)
 		if (player->pflags & PF_VERTICALFLIP)
 			player->mo->z = spring->z + (spring->theight << FRACBITS) - P_GetPlayerSpinHeight();
 		else
-			player->mo->z = spring->z;
+			player->mo->z = spring->z;*/
 	}
 
 	if (vertispeed)
