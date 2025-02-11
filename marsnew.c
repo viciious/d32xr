@@ -38,7 +38,7 @@
 
 typedef struct {
 	VINT repeat;
-	boolean prev_state;
+	VINT prev_state;
 } btnstate_t;
 
 // !!! if this is changed, it must be changed in asm too!
@@ -137,7 +137,7 @@ static int Mars_HandleStartHeld(int *ctrl, const int ctrl_start, btnstate_t *sta
 {
 	int morebuttons = 0;
 	boolean start = 0;
-	static const int held_tics = 16;
+	static const VINT held_tics = 16;
 
 	start = (*ctrl & ctrl_start) != 0;
 	if (start ^ startbtn->prev_state) {
@@ -717,7 +717,7 @@ void I_Update(void)
 {
 	//int ticcount;
 	static int prevsecticcount = 0;
-	static int framenum = 0;
+	static VINT framenum = 0;
 	const int refreshHZ = Mars_RefreshHZ();
 
 	if (ticsperframe < MINTICSPERFRAME)
@@ -785,14 +785,14 @@ void I_Update(void)
 	lastticcount = ticcount;
 	if (lasttics > 99) lasttics = 99;
 
+	framenum++;
 	if (ticcount > prevsecticcount + refreshHZ) {
-		static int prevsecframe;
-		fpscount = (framenum - prevsecframe) * refreshHZ / (ticcount - prevsecticcount);
+		fpscount = (framenum * refreshHZ) / (ticcount - prevsecticcount);
 		debugscreenupdate = true;
 		prevsecticcount = ticcount;
-		prevsecframe = framenum;
+		framenum = 0;
 	}
-	framenum++;
+
 	debugscreenactive = debugmode != DEBUGMODE_NONE;
 
 	cy = 1;
