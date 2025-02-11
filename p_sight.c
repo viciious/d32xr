@@ -193,8 +193,8 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
 
       // crosses a two sided line
       side = SEG_UNPACK_SIDE(seg);
-      front = &sectors[sides[line->sidenum[side]].sector];
-      back = &sectors[sides[line->sidenum[side^1]].sector];
+      front = LD_SIDESECTOR(line, side);
+      back =  LD_SIDESECTOR(line, side^1);
 
       // no wall to block sight with?
       if(front->floorheight == back->floorheight && front->ceilingheight == back->ceilingheight)

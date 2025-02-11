@@ -594,7 +594,7 @@ static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
    side = SEG_UNPACK_SIDE(line);
    ldef = &lines[SEG_UNPACK_LINEDEF(line)];
    frontsector = rbsp->curfsector;
-   backsector = (ldef->sidenum[1] != -1) ? &sectors[sides[ldef->sidenum[side^1]].sector] : NULL;
+   backsector = ldef->sidenum[1] != -1 ? LD_SIDESECTOR(ldef, side^1) : NULL;
    sidedef = &sides[ldef->sidenum[side]];
    solid = false;
 
