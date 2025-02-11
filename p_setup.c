@@ -601,7 +601,7 @@ void P_SetupLevel (int lumpnum)
 #ifndef MARS
 	mobj_t	*mobj;
 #endif
-	extern	int	cy;
+	extern	VINT	cy;
 	int gamezonemargin;
 	
 	M_ClearRandom ();

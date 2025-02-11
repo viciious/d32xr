@@ -13,7 +13,7 @@ void G_DoLoadLevel (void);
 
 
 gameaction_t    gameaction;
-int				gamemaplump;
+VINT			gamemaplump;
 dmapinfo_t		gamemapinfo;
 dgameinfo_t		gameinfo;
 
@@ -27,7 +27,7 @@ boolean         playeringame[MAXPLAYERS];
 player_t        players[MAXPLAYERS];
 playerresp_t	playersresp[MAXPLAYERS];
 
-int             consoleplayer = 0;          /* player taking events and displaying  */
+VINT             consoleplayer = 0;          /* player taking events and displaying  */
 int             gametic;
 int             leveltime;
 VINT            fadetime;

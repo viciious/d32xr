@@ -481,8 +481,8 @@ extern boolean optionsMenuOn; /* options screen running */
 
 /*================================== */
 
-extern	int 	ticrate;	/* 4 for NTSC, 3 for PAL */
-extern	int		ticsinframe;	/* how many tics since last drawer */
+extern	VINT 	ticrate;	/* 4 for NTSC, 3 for PAL */
+extern	VINT		ticsinframe;	/* how many tics since last drawer */
 extern	int		ticon;
 extern	int		frameon;
 extern	int		ticbuttons[MAXPLAYERS];
@@ -518,12 +518,12 @@ typedef enum
 extern	gametype_t	netgame;
 
 extern	boolean		playeringame[MAXPLAYERS];
-extern	int			consoleplayer;		/* player taking events and displaying */
+extern	VINT		consoleplayer;		/* player taking events and displaying */
 extern	player_t	players[MAXPLAYERS];
 extern	playerresp_t	playersresp[MAXPLAYERS];
 
 extern	VINT		totalitems, totalsecret;	/* for intermission */
-extern	int			gamemaplump;
+extern	VINT		gamemaplump;
 extern	dmapinfo_t	gamemapinfo;
 extern	dgameinfo_t	gameinfo;
 extern  boolean		sky_md_layer;
@@ -704,9 +704,9 @@ extern	unsigned char *demo_p, *demobuffer;
 
 extern  fixed_t prev_rec_values[4];
 
-extern	int			startmap;
+extern	VINT		startmap;
 extern	gametype_t	starttype;
-extern	int			startsave;
+extern	VINT		startsave;
 extern 	boolean 	startsplitscreen;
 
 /*--------- */
@@ -892,7 +892,7 @@ void P_Init (void);
 
 void P_Start (void);
 void P_Stop (void);
-extern int accum_time;
+extern VINT accum_time;
 int P_Ticker (void);
 void P_Drawer (void);
 void P_Update (void);
@@ -1189,10 +1189,10 @@ void DrawScrollingChevrons(short chev_lump, int x, int y_shift);
 void ApplyHorizontalDistortionFilter(int filter_offset);
 void RemoveDistortionFilters();
 
-extern	int		maxlevel;			/* highest level selectable in menu (1-25) */
+extern	VINT		maxlevel;			/* highest level selectable in menu (1-25) */
 
-extern	int		gamevbls;			/* may not really be vbls in multiplayer */
-extern	int		vblsinframe;			/* range from 4 to 8 */
+extern	VINT		gamevbls;			/* may not really be vbls in multiplayer */
+extern	VINT		vblsinframe;			/* range from 4 to 8 */
 
 #define MAX_FRAME_SKIP		3
 

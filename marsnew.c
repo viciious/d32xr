@@ -62,12 +62,12 @@ boolean	debugscreenupdate = false;
 
 int     ticcount = 0;
 int		lastticcount = 0;
-int		lasttics = 0;
+VINT		lasttics = 0;
 static int8_t fpscount = 0;
 
 VINT 	debugmode = DEBUGMODE_NONE;
 
-extern int 	cy;
+extern VINT 	cy;
 extern int tictics, drawtics, ticstart;
 
 // framebuffer start is after line table AND a single blank line

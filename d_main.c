@@ -18,12 +18,12 @@ boolean		sky_32x_layer = false;
 
 boolean		extended_sky = false;
 
-int			gamevbls;		/* may not really be vbls in multiplayer */
-int			vblsinframe;		/* range from ticrate to ticrate*2 */
+VINT			gamevbls;		/* may not really be vbls in multiplayer */
+VINT			vblsinframe;		/* range from ticrate to ticrate*2 */
 
 VINT		ticsperframe = MINTICSPERFRAME;
 
-int			maxlevel;			/* highest level selectable in menu (1-25) */
+VINT		maxlevel;			/* highest level selectable in menu (1-25) */
 jagobj_t	*backgroundpic;
 
 int 		ticstart;
@@ -217,8 +217,8 @@ unsigned char rndtable[256] = {
 	197, 242,  98,  43,  39, 175, 254, 145, 190,  84, 118, 222, 187, 136 ,
 	120, 163, 236, 249 
 };
-int	rndindex = 0;
-int prndindex = 0;
+VINT	rndindex = 0;
+VINT prndindex = 0;
 
 int P_Random (void)
 {
@@ -287,10 +287,10 @@ static inline unsigned NetToLocal (unsigned cmd)
  
 /*=============================================================================  */
 
-int		accum_time;
-int		frames_to_skip = 0;
-int		ticrate = 4;
-int		ticsinframe;	/* how many tics since last drawer */
+VINT		accum_time;
+VINT		frames_to_skip = 0;
+VINT		ticrate = 4;
+VINT		ticsinframe;	/* how many tics since last drawer */
 int		ticon;
 int		frameon;
 int		ticbuttons[MAXPLAYERS];
@@ -299,7 +299,7 @@ int		ticmousex[MAXPLAYERS], ticmousey[MAXPLAYERS];
 int		ticrealbuttons, oldticrealbuttons;
 boolean	mousepresent;
 
-extern	int	lasttics;
+extern	VINT	lasttics;
 
 consistencymobj_t	emptymobj;
  
@@ -1286,9 +1286,9 @@ reselect:
 ============= 
 */ 
 
-int			startmap = 1;
+VINT			startmap = 1;
 gametype_t	starttype = gt_single;
-int			startsave = -1;
+VINT			startsave = -1;
 boolean 	startsplitscreen = 0;
 
 void D_DoomMain (void) 
