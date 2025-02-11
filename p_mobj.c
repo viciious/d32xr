@@ -514,10 +514,6 @@ int P_MapThingSpawnsMobj (mapthing_t* mthing)
 {
 	int			i;
 
-/* count deathmatch start positions */
-	if (mthing->type == 11)
-		return 0;
-
 	if (mthing->type >= 600 && mthing->type <= 603)
 		return 3;
 
@@ -528,10 +524,6 @@ int P_MapThingSpawnsMobj (mapthing_t* mthing)
 #endif
 
 	if (mthing->type <= 4)
-		return 0;
-
-/* check for apropriate skill level */
-	if ((netgame != gt_deathmatch) && (mthing->options & 16))
 		return 0;
 
 /* find which type to spawn */
@@ -621,15 +613,6 @@ void P_SpawnMapThing (mapthing_t *mthing, int thingid)
 	int			i;
 	mobj_t		*mobj;
 	fixed_t		x,y,z;
-		
-/* count deathmatch start positions */
-	if (mthing->type == 11)
-	{
-		if (deathmatch_p < deathmatchstarts + MAXDMSTARTS)
-			D_memcpy (deathmatch_p, mthing, sizeof(*mthing));
-		deathmatch_p++;
-		return;
-	}
 	
 /* check for players specially */
 

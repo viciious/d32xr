@@ -350,40 +350,6 @@ boolean G_CheckSpot (int playernum, mapthing_t *mthing)
 /* 
 ==================== 
 = 
-= G_DeathMatchSpawnPlayer 
-= 
-= Spawns a player at one of the random death match spots 
-= called at level load and each death 
-==================== 
-*/ 
- 
-void G_DeathMatchSpawnPlayer (int playernum) 
-{ 
-	int             i,j; 
-	int				selections;
-	
-	selections = deathmatch_p - deathmatchstarts;
-	if (selections < 4)
-		I_Error ("Only %i deathmatch spots, 4 required", selections);
-		
-	for (j=0 ; j<20 ; j++) 
-	{ 
-		i = P_Random()%selections;
-		if (G_CheckSpot (playernum, &deathmatchstarts[i]) ) 
-		{ 
-			deathmatchstarts[i].type = playernum+1; 
-			P_SpawnPlayer (&deathmatchstarts[i]); 
-			return; 
-		} 
-	} 
- 
-/* no good spot, so the player will probably get stuck  */
-	P_SpawnPlayer (&playerstarts[playernum]); 
-} 
- 
-/* 
-==================== 
-= 
 = G_DoReborn 
 = 
 ==================== 
@@ -403,13 +369,6 @@ void G_DoReborn (int playernum)
 /* respawn this player while the other players keep going */
 /* */
 	players[playernum].mo->player = 0;   /* dissasociate the corpse  */
-		
-	/* spawn at random spot if in death match  */
-	if (netgame == gt_deathmatch) 
-	{ 
-		G_DeathMatchSpawnPlayer (playernum); 
-		return; 
-	} 
 		
 	if (G_CheckSpot (playernum, &playerstarts[playernum]) ) 
 	{ 

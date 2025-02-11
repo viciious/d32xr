@@ -541,8 +541,6 @@ extern uint16_t     emeralds;
 extern uint16_t     token;
 extern uint16_t     tokenbits;
 
-#define MAXDMSTARTS		10
-extern	mapthing_t	*deathmatchstarts, *deathmatch_p;
 extern	mapthing_t	playerstarts[MAXPLAYERS];
 
 /*
@@ -872,7 +870,6 @@ void I_DebugScreen (void);
 /*GAME */
 /*---- */
 
-void G_DeathMatchSpawnPlayer (int playernum);
 void G_Init(void);
 void G_InitNew (int map, gametype_t gametype, boolean splitscreen);
 void G_ExitLevel (void);

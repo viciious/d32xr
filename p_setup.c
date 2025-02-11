@@ -10,7 +10,7 @@
 
 uint16_t			numvertexes;
 uint16_t			numsegs;
-uint16_t		numsectors;
+uint16_t			numsectors;
 uint16_t			numsubsectors;
 uint16_t			numnodes;
 uint16_t			numlines;
@@ -25,20 +25,17 @@ line_t		*lines;
 side_t		*sides;
 
 short		*blockmaplump;			/* offsets in blockmap are from here */
-int			bmapwidth, bmapheight;	/* in mapblocks */
+VINT		bmapwidth, bmapheight;	/* in mapblocks */
 fixed_t		bmaporgx, bmaporgy;		/* origin of block map */
 mobj_t		**blocklinks;			/* for thing chains */
 
 byte		*rejectmatrix;			/* for fast sight rejection */
 
-mapthing_t	*deathmatchstarts, *deathmatch_p;
-
 VINT		*validcount;			/* increment every time a check is made */
 
 mapthing_t	playerstarts[MAXPLAYERS];
 
-uint16_t			numthings;
-spawnthing_t* spawnthings;
+uint16_t		numthings;
 
 int16_t worldbbox[4];
 
@@ -273,7 +270,6 @@ void P_LoadThings (int lump)
 	byte			*data;
 	int				i;
 	mapthing_t		*mt;
-	spawnthing_t	*st;
 	short			numthingsreal, numstaticthings, numringthings;
 
 	for (int i = 0; i < NUMMOBJTYPES; i++)
@@ -295,20 +291,6 @@ void P_LoadThings (int lump)
 		mt->angle = LITTLESHORT(mt->angle);
 		mt->type = LITTLESHORT(mt->type);
 		mt->options = LITTLESHORT(mt->options);
-	}
-
-	if (netgame == gt_deathmatch)
-	{
-		spawnthings = Z_Malloc(numthings * sizeof(*spawnthings), PU_LEVEL);
-		st = spawnthings;
-		mt = (mapthing_t*)data;
-		for (i = 0; i < numthings; i++, mt++)
-		{
-			st->x = mt->x, st->y = mt->y;
-			st->angle = mt->angle;
-			st->type = mt->type;
-			st++;
-		}
 	}
 
 	mt = (mapthing_t *)data;
@@ -651,34 +633,7 @@ D_printf ("P_SetupLevel(%i)\n",lumpnum);
 
 	P_GroupLines ();
 
-	if (netgame == gt_deathmatch)
-	{
-		deathmatchstarts = Z_Malloc(sizeof(*deathmatchstarts) * MAXDMSTARTS, PU_LEVEL);
-	}
-	else
-	{
-		deathmatchstarts = NULL;
-	}
-
-	deathmatch_p = deathmatchstarts;
 	P_LoadThings (lumpnum+ML_THINGS);
-
-/* */
-/* if deathmatch, randomly spawn the active players */
-/* */
-	if (netgame == gt_deathmatch)
-	{
-		int i;
-		for (i=0 ; i<MAXPLAYERS ; i++)
-			if (playeringame[i])
-			{	/* must give a player spot before deathmatchspawn */
-				mobj_t *mobj = P_SpawnMobj (deathmatchstarts[0].x<<16
-				,deathmatchstarts[0].y<<16,0, MT_PLAYER);
-				players[i].mo = mobj;
-				G_DeathMatchSpawnPlayer (i);
-				P_RemoveMobj (mobj);
-			}
-	}
 
 /* set up world state */
 	P_SpawnSpecials ();
