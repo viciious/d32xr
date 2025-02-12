@@ -165,7 +165,7 @@ void P_LoadSectors (int lump)
 		ss->ceilingheight = LITTLESHORT(ms->ceilingheight)<<FRACBITS;
 		ss->floorpic = ms->floorpic;
 		ss->ceilingpic = ms->ceilingpic;
-		ss->thinglist = NULL;
+		ss->thinglist = (SPTR)0;
 
 		ss->lightlevel = ms->lightlevel;
 		ss->special = ms->special;

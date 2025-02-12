@@ -88,7 +88,7 @@ typedef	struct
 
 	VINT        floor_xoffs; // Upper X, Lower Y
 
-	mobj_t		*thinglist;			/* list of mobjs in sector */
+	SPTR		thinglist;			/* list of mobjs in sector */
 	void		*specialdata;		/* thinker_t for reversable actions */
 	VINT		*lines;				/* [linecount] size */
 } sector_t;
