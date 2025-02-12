@@ -432,3 +432,55 @@ boolean P_BlockThingsIterator (int x, int y, blockthingsiter_t func, void *userp
 
 	return true;
 }
+
+uint8_t P_GetLineTag(line_t *line)
+{
+	VINT j;
+	VINT rowsize = (unsigned)numlinetags / LINETAGS_HASH_SIZE;
+	VINT ld = line - lines;
+	VINT h = (unsigned)ld % LINETAGS_HASH_SIZE;
+	VINT s = h * rowsize;
+
+	for (j = 0; j < numlinetags; j++)
+	{
+		uint16_t *l;
+		VINT e;
+
+		e = s + j;
+		if (e >= numlinetags)
+			e -= numlinetags;
+
+		l = &linetags[e * 2];
+		if (l[0] == ld) {
+			return (uint8_t)l[1];
+		}
+	}
+
+	return 0;
+}
+
+uint8_t P_GetLineSpecial(line_t *line)
+{
+	VINT j;
+	VINT rowsize = (unsigned)numlinespecials / LINESPECIALS_HASH_SIZE;
+	VINT ld = line - lines;
+	VINT h = (unsigned)ld % LINESPECIALS_HASH_SIZE;
+	VINT s = h * rowsize;
+
+	for (j = 0; j < numlinespecials; j++)
+	{
+		uint16_t *l;
+		VINT e;
+
+		e = s + j;
+		if (e >= numlinespecials)
+			e -= numlinespecials;
+
+		l = &linespecials[e * 2];
+		if (l[0] == ld) {
+			return (uint8_t)l[1];
+		}
+	}
+
+	return 0;
+}

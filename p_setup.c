@@ -16,6 +16,11 @@ uint16_t			numnodes;
 uint16_t			numlines;
 uint16_t			numsides;
 
+uint16_t 		numlinetags;
+uint16_t 		*linetags; // [HASH_SIZE]{line,tag,line,tag...}
+uint16_t        numlinespecials;
+uint16_t        *linespecials; // [HASH_SIZE]{line,special,line,special...}
+
 mapvertex_t	*vertexes;
 seg_t		*segs;
 sector_t	*sectors;
@@ -355,7 +360,55 @@ void P_LoadThings (int lump)
 		P_SetStarPosts(players[0].starpostnum + 1);
 }
 
+void P_AddLineTag(int ld, uint8_t tag)
+{
+	VINT j;
+	VINT rowsize = (unsigned)numlinetags / LINETAGS_HASH_SIZE;
+	VINT h = (unsigned)ld % LINETAGS_HASH_SIZE;
+	VINT s = h * rowsize;
 
+	for (j = 0; j < numlinetags; j++)
+	{
+		uint16_t *l;
+		VINT e;
+
+		e = s + j;
+		if (e >= numlinetags)
+			e -= numlinetags;
+
+		l = &linetags[e * 2];
+		if (l[0] == (uint16_t)-1 || l[0] == ld) {
+			l[0] = ld;
+			l[1] = tag;
+			break;
+		}
+	}
+}
+
+void P_AddLineSpecial(int ld, uint8_t special)
+{
+	VINT j;
+	VINT rowsize = (unsigned)numlinespecials / LINESPECIALS_HASH_SIZE;
+	VINT h = (unsigned)ld % LINESPECIALS_HASH_SIZE;
+	VINT s = h * rowsize;
+
+	for (j = 0; j < numlinespecials; j++)
+	{
+		uint16_t *l;
+		VINT e;
+
+		e = s + j;
+		if (e >= numlinespecials)
+			e -= numlinespecials;
+
+		l = &linespecials[e * 2];
+		if (l[0] == (uint16_t)-1 || l[0] == ld) {
+			l[0] = ld;
+			l[1] = special;
+			break;
+		}
+	}
+}
 
 /*
 =================
@@ -378,17 +431,22 @@ void P_LoadLineDefs (int lump)
 	lines = Z_Malloc (numlines*sizeof(line_t)+16,PU_LEVEL);
 	lines = (void*)(((uintptr_t)lines + 15) & ~15); // aline on cacheline boundary
 	D_memset (lines, 0, numlines*sizeof(line_t));
-	data = I_TempBuffer ();
+	data = I_TempBuffer();
 	W_ReadLump (lump,data);
+	numlinetags = 0;
+	numlinespecials = 0;
 
 	mld = (maplinedef_t *)data;
 	ld = lines;
 	for (i=0 ; i<numlines ; i++, mld++, ld++)
 	{
+		uint8_t tag;
+		uint8_t special;
+
 		fixed_t dx,dy;
 		ld->flags = LITTLESHORT(mld->flags);
-		ld->special = mld->special;
-		ld->tag = mld->tag;
+		special = mld->special;
+		tag = mld->tag;
 		ld->v1 = LITTLESHORT(mld->v1);
 		ld->v2 = LITTLESHORT(mld->v2);
 		
@@ -411,6 +469,8 @@ void P_LoadLineDefs (int lump)
 		ld->sidenum[0] = LITTLESHORT(mld->sidenum[0]);
 		ld->sidenum[1] = LITTLESHORT(mld->sidenum[1]);
 
+#define ML_TWOSIDED 4
+
 		// if the two-sided flag isn't set, set the back side to -1
 		if (ld->sidenum[1] != -1) {
 			if (!(ld->flags & ML_TWOSIDED)) {
@@ -418,6 +478,46 @@ void P_LoadLineDefs (int lump)
 			}
 		}
 		ld->flags &= ~ML_TWOSIDED;
+#undef ML_TWOSIDED
+
+		if (mld->tag > 0 || mld->special > 0)
+			ld->flags |= ML_HAS_SPECIAL_OR_TAG;
+
+		if (tag)
+			numlinetags++;
+
+		if (special)
+			numlinespecials++;
+	}
+
+	if (numlinetags)
+	{
+		// load tags into hash table
+		numlinetags = (numlinetags + LINETAGS_HASH_SIZE - 1) & ~(LINETAGS_HASH_SIZE - 1);
+		linetags = Z_Malloc(sizeof(*linetags)*numlinetags*2, PU_LEVEL);
+		D_memset(linetags, (uint16_t)-1, sizeof(*linetags)*numlinetags*2);
+		mld = (maplinedef_t *)data;
+		for (i=0 ; i<numlines ; i++, mld++)
+		{
+			uint8_t tag = mld->tag;
+			if (tag)
+				P_AddLineTag(i, tag);
+		}
+	}
+
+	if (numlinespecials)
+	{
+		// load specials into hash table
+		numlinespecials = (numlinespecials + LINESPECIALS_HASH_SIZE - 1) & ~(LINESPECIALS_HASH_SIZE - 1);
+		linespecials = Z_Malloc(sizeof(*linespecials)*numlinespecials*2, PU_LEVEL);
+		D_memset(linespecials, (uint16_t)-1, sizeof(*linespecials)*numlinespecials*2);
+		mld = (maplinedef_t *)data;
+		for (i=0 ; i<numlines ; i++, mld++)
+		{
+			uint8_t special = mld->special;
+			if (special)
+				P_AddLineSpecial(i, special);
+		}
 	}
 }
 

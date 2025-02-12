@@ -195,18 +195,17 @@ static boolean SL_CheckLine(line_t *ld, pslidework_t *sw)
    front = LD_FRONTSECTOR(ld);
    back  = LD_BACKSECTOR(ld);
 
-   if (ld->special == 254 && ld->tag > 0 && sw->slidething->player
+   if ((ld->flags & ML_HAS_SPECIAL_OR_TAG) && P_GetLineSpecial(ld) == 254 && P_GetLineTag(ld) > 0 && sw->slidething->player
       && (players[sw->slidething->player-1].pflags & PF_SPINNING)) // Bustable block
    {
       back->floorheight = P_FindNextLowestFloor(back, back->floorheight);
-      ld->special = 0;
-      ld->tag = 0;
+      ld->flags &= ~ML_HAS_SPECIAL_OR_TAG;
       S_StartSound(sw->slidething, sfx_s3k_59);
       P_SpawnBustables(back, sw->slidething);
    }
-   else if (ld->special == 200 && sw->slidething->player)
+   else if ((ld->flags & ML_HAS_SPECIAL_OR_TAG) && P_GetLineSpecial(ld) == 200 && sw->slidething->player)
    {
-      ld->special = 0;
+      ld->flags &= ~ML_HAS_SPECIAL_OR_TAG;
       CONS_Printf("Go away! Dave's not here. *B^D");
    }
 

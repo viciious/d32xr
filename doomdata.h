@@ -48,8 +48,7 @@ typedef struct
 
 #define	ML_BLOCKING			1
 #define	ML_BLOCKMONSTERS	2
-#define	ML_TWOSIDED			4		/* backside will not be present at all  */
-									/* if not two sided ???:obsolete */
+#define ML_HAS_SPECIAL_OR_TAG 4 // Have to reference hash tables to find special/tag
 
 /* if a texture is pegged, the texture will have the end exposed to air held */
 /* constant at the top or bottom of the texture (stairs or pulled down things) */
@@ -61,7 +60,6 @@ typedef struct
 #define ML_CULLING			32	/* Cull this line by distance */
 #define ML_NOCLIMB			64
 #define	ML_MIDTEXTUREBLOCK  512	/* Collide with midtexture (fences, etc.) */
-
 
 /* to aid move clipping */
 #define ML_ST_HORIZONTAL 	4096

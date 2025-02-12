@@ -39,7 +39,7 @@ extern	anim_t	*anims/*[MAXANIMS]*/, * lastanim;
 /*	Animating line specials */
 /* */
 #define	MAXLINEANIMS		64
-extern	VINT		numlinespecials;
+extern	VINT		numlineanimspecials;
 extern	line_t	**linespeciallist/*[MAXLINEANIMS]*/;
 
 
@@ -69,6 +69,7 @@ fixed_t	P_FindLowestCeilingSurrounding(sector_t *sec);
 fixed_t	P_FindHighestCeilingSurrounding(sector_t *sec);
 VINT P_FindSectorWithTag(VINT tag, int start);
 int		P_FindSectorFromLineTag(line_t	*line,int start);
+int     P_FindSectorFromLineTagNum(uint8_t tag,int start);
 int		P_FindMinSurroundingLight(sector_t *sector,int max);
 sector_t *getNextSector(line_t *line,sector_t *sec);
 
@@ -302,6 +303,7 @@ result_e	T_MovePlane(sector_t *sector,fixed_t speed,
 
 int		EV_BuildStairs(line_t *line, int type);
 int		EV_DoFloor(line_t *line,floor_e floortype);
+int		EV_DoFloorTag(line_t *line,floor_e floortype, uint8_t tag);
 void	T_MoveFloor(floormove_t *floor);
 
 

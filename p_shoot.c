@@ -142,7 +142,7 @@ static boolean PA_ShootLine(shootWork_t *sw, line_t *li, fixed_t interceptfrac)
    sector_t *front, *back;
    fixed_t   opentop, openbottom;
 
-   if(!(li->flags & ML_TWOSIDED))
+   if(li->sidenum[1] == -1)
    {
       if(!sw->shootline)
       {

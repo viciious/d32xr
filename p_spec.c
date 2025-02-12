@@ -311,9 +311,24 @@ VINT P_FindSectorWithTag(VINT tag, int start)
 	return -1;
 }
 
-int	P_FindSectorFromLineTag(line_t	*line, int start)
+int	P_FindSectorFromLineTag(line_t	*line,int start)
 {
-	return P_FindSectorWithTag(line->tag, start);
+	return P_FindSectorFromLineTagNum(P_GetLineTag(line), start);
+}
+
+/*================================================================== */
+/* */
+/*	RETURN NEXT SECTOR # THAT LINE TAG REFERS TO */
+/* */
+/*================================================================== */
+int	P_FindSectorFromLineTagNum(uint8_t tag,int start)
+{
+	int	i;
+
+	for (i=start+1;i<numsectors;i++)
+		if (sectors[i].tag == tag)
+			return i;
+	return -1;
 }
 
 /*================================================================== */
@@ -459,13 +474,13 @@ void P_UpdateSpecials (void)
 	/* */
 	/*	ANIMATE LINE SPECIALS */
 	/* */
-	for (i = 0; i < numlinespecials; i++)
+	for (i = 0; i < numlineanimspecials; i++)
 	{
 		side_t *side;
 		int16_t textureoffset, rowoffset;
-		line = linespeciallist[i];
+		line = linespeciallist[i]; // TODO: Should this be a key/value pair instead?
 		side = &sides[line->sidenum[0]];
-		switch(line->special)
+		switch(P_GetLineSpecial(line))
 		{
 			case 48:	/* EFFECT FIRSTCOL SCROLL + */
 				// 12-bit texture offset + 4-bit rowoffset
@@ -507,7 +522,8 @@ int EV_DoDonut(line_t *line)
 	
 	secnum = -1;
 	rtn = 0;
-	while ((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
+	uint8_t tag = P_GetLineTag(line);
+	while ((secnum = P_FindSectorFromLineTagNum(tag,secnum)) >= 0)
 	{
 		line_t *line;
 		s1 = &sectors[secnum];
@@ -582,7 +598,7 @@ int EV_DoDonut(line_t *line)
 ===============================================================================
 */
 
-VINT		numlinespecials = 0;
+VINT		numlineanimspecials = 0;
 line_t	**linespeciallist = NULL;
 
 void P_SpawnSpecials (void)
@@ -609,16 +625,19 @@ void P_SpawnSpecials (void)
 	/* */
 	/*	Init line EFFECTs */
 	/* */
-	numlinespecials = 0;
+	numlineanimspecials = 0;
 	for (i = 0; i < numlines; i++)
 	{
-		switch (lines[i].special)
+		if (!(lines[i].flags & ML_HAS_SPECIAL_OR_TAG))
+			continue;
+			
+		switch (P_GetLineSpecial(&lines[i]))
 		{
 		case 48:	/* EFFECT FIRSTCOL SCROLL+ */
 		case 142:	/* MODERATE VERT SCROLL */
-			linespeciallist[numlinespecials] = &lines[i];
-			numlinespecials++;
-			if (numlinespecials == MAXLINEANIMS)
+			linespeciallist[numlineanimspecials] = &lines[i];
+			numlineanimspecials++;
+			if (numlineanimspecials == MAXLINEANIMS)
 				goto done_speciallist;
 			break;
 		case 60: // Moving platform

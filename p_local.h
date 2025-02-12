@@ -205,7 +205,8 @@ void 	P_UnsetThingPosition (mobj_t *thing);
 void	P_SetThingPosition (mobj_t *thing);
 void	P_SetThingPosition2 (mobj_t *thing, subsector_t *ss);
 
-void	P_PlayerLand (mobj_t *mo);
+uint8_t P_GetLineTag(line_t *line);
+uint8_t P_GetLineSpecial(line_t *line);
 
 /*
 ===============================================================================
