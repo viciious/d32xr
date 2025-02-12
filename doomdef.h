@@ -34,6 +34,12 @@ typedef unsigned char inpixel_t;
 typedef unsigned short inpixel_t;
 #endif
 
+#ifdef MARS
+#define DATA_START_ADDRESS 0x06000000
+#else
+#define DATA_START_ADDRESS 0
+#endif
+
 /* the structure sizes are frozen at ints for jaguar asm code, but shrunk */
 /* down for mars memory cramming */
 #ifdef MARS
@@ -52,6 +58,16 @@ typedef unsigned short inpixel_t;
 #define ATTR_DATA_CACHE_ALIGN
 #define ATTR_OPTIMIZE_SIZE
 #define ATTR_OPTIMIZE_EXTREME
+#endif
+
+#ifdef MARS
+#define SPTR uint16_t
+#define LPTR_TO_SPTR(p) ((p) ? (uint16_t)(((uintptr_t)(p) - DATA_START_ADDRESS)>>2) : 0) // use with caution as pointer at the beginning of RAM address space will be mapped to a NULL pointer!
+#define SPTR_TO_LPTR(p) ((p) ? (void*)(((uintptr_t)(p) << 2) + DATA_START_ADDRESS) : NULL)
+#else
+#define SPTR void *
+#define LPTR_TO_SPTR(p) (p)
+#define SPTR_TO_LPTR(p) (p)
 #endif
 
 /*============================================================================= */
@@ -210,8 +226,10 @@ typedef struct mobj_s
 	uint8_t		type;
 	uint8_t		flags;
 	VINT        isubsector;
-	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
-	struct mobj_s	*bnext, *bprev;		/* links in blocks (if needed) */
+	SPTR	snext;		/* links in sector (if needed) */
+	SPTR    sprev;
+	SPTR	bnext;		/* links in blocks (if needed) */
+	SPTR    bprev;
 	struct	mobj_s* prev, * next;
 
 	fixed_t			x, y, z;
@@ -252,7 +270,8 @@ typedef struct scenerymobj_s
 	uint8_t		type;
 	uint8_t		flags;
 	VINT isubsector;
-	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
+	SPTR	snext;		/* links in sector (if needed) */
+	SPTR    sprev;
 	// SIMILARITIES END HERE
 	int16_t x, y;
 } scenerymobj_t;
@@ -262,8 +281,10 @@ typedef struct ringmobj_s
 	uint8_t		type;
 	uint8_t		flags;
 	VINT        isubsector;
-	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
-	struct mobj_s	*bnext, *bprev;		/* links in blocks (if needed) */
+	SPTR	snext;		/* links in sector (if needed) */
+	SPTR    sprev;
+	SPTR	bnext;		/* links in blocks (if needed) */
+	SPTR bprev;
 	// SIMILARITIES END HERE
 	VINT			x, y, z;
 	VINT alive;
@@ -274,8 +295,10 @@ typedef struct degenmobj_s
 	uint8_t		type;
 	uint8_t		flags;
 	VINT isubsector;
-	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
-	struct mobj_s	*bnext, *bprev;		/* links in blocks (if needed) */
+	SPTR	snext;		/* links in sector (if needed) */
+	SPTR    sprev;
+	SPTR	bnext;		/* links in blocks (if needed) */
+	SPTR bprev;
 	void 			*prev, *next;
 } degenmobj_t;
 
@@ -284,8 +307,10 @@ typedef struct consistencymobj_s
 	uint8_t		type;
 	uint8_t		flags;
 	VINT isubsector;
-	struct	mobj_s	*snext, *sprev;		/* links in sector (if needed) */
-	struct mobj_s	*bnext, *bprev;		/* links in blocks (if needed) */
+	SPTR	snext;		/* links in sector (if needed) */
+	SPTR    sprev;
+	SPTR	bnext;		/* links in blocks (if needed) */
+	SPTR bprev;
 	void 			*prev, *next;
 	fixed_t			x, y, z;
 } consistencymobj_t;

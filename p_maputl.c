@@ -225,21 +225,26 @@ void P_UnsetThingPosition (mobj_t *thing)
 	if ( ! (thing->flags & MF_NOSECTOR) )
 	{	/* inert things don't need to be in blockmap */
 /* unlink from subsector */
-		if (thing->snext)
-			thing->snext->sprev = thing->sprev;
-		if (thing->sprev)
-			thing->sprev->snext = thing->snext;
+		mobj_t *snext = SPTR_TO_LPTR(thing->snext);
+		mobj_t *sprev = SPTR_TO_LPTR(thing->sprev);
+		if (snext)
+			snext->sprev = thing->sprev;
+		if (sprev)
+			sprev->snext = thing->snext;
 		else
-			subsectors[thing->isubsector].sector->thinglist = thing->snext;
+			subsectors[thing->isubsector].sector->thinglist = snext;
 	}
 	
 	if ( ! (thing->flags & MF_NOBLOCKMAP) )
 	{	/* inert things don't need to be in blockmap */
 /* unlink from block map */
-		if (thing->bnext)
-			thing->bnext->bprev = thing->bprev;
-		if (thing->bprev)
-			thing->bprev->bnext = thing->bnext;
+		mobj_t *bnext = SPTR_TO_LPTR(thing->bnext);
+		mobj_t *bprev = SPTR_TO_LPTR(thing->bprev);
+
+		if (bnext)
+			bnext->bprev = thing->bprev;
+		if (bprev)
+			bprev->bnext = thing->bnext;
 		else
 		{
 			if (thing->flags & MF_RINGMOBJ)
@@ -255,10 +260,15 @@ void P_UnsetThingPosition (mobj_t *thing)
 			}
 			if (blockx >= 0 && blocky >= 0)
 			{
-				blockx = (unsigned)blockx >> MAPBLOCKSHIFT;
-				blocky = (unsigned)blocky >> MAPBLOCKSHIFT;
-				if (blockx < bmapwidth && blocky <bmapheight)
-					blocklinks[blocky*bmapwidth+blockx] = thing->bnext;
+				blockx = thing->x - bmaporgx;
+				blocky = thing->y - bmaporgy;
+				if (blockx >= 0 && blocky >= 0)
+				{
+					blockx = (unsigned)blockx >> MAPBLOCKSHIFT;
+					blocky = (unsigned)blocky >> MAPBLOCKSHIFT;
+					if (blockx < bmapwidth && blocky <bmapheight)
+						blocklinks[blocky*bmapwidth+blockx] = thing->bnext;
+				}
 			}
 		}
 	}
@@ -277,7 +287,7 @@ void P_SetThingPosition2 (mobj_t *thing, subsector_t *ss)
 {
 	sector_t		*sec;
 	int				blockx, blocky;
-	mobj_t			**link;
+	SPTR			*link;
 	
 /* */
 /* link into subsector */
@@ -288,10 +298,10 @@ void P_SetThingPosition2 (mobj_t *thing, subsector_t *ss)
 	{	/* invisible things don't go into the sector links */
 		sec = ss->sector;
 	
-		thing->sprev = NULL;
-		thing->snext = sec->thinglist;
+		thing->sprev = (SPTR)0;
+		thing->snext = LPTR_TO_SPTR(sec->thinglist);
 		if (sec->thinglist)
-			sec->thinglist->sprev = thing;
+			sec->thinglist->sprev = LPTR_TO_SPTR(thing);
 		sec->thinglist = thing;
 	}
 	
@@ -319,20 +329,20 @@ void P_SetThingPosition2 (mobj_t *thing, subsector_t *ss)
 			if (blockx < bmapwidth && blocky <bmapheight)
 			{
 				link = &blocklinks[blocky*bmapwidth+blockx];
-				thing->bprev = NULL;
+				thing->bprev = (SPTR)0;
 				thing->bnext = *link;
 				if (*link)
-					(*link)->bprev = thing;
-				*link = thing;
+					((mobj_t *)(SPTR_TO_LPTR(*link)))->bprev = LPTR_TO_SPTR(thing);
+				*link = LPTR_TO_SPTR(thing);
 			}
 			else
 			{	/* thing is off the map */
-				thing->bnext = thing->bprev = NULL;
+				thing->bnext = thing->bprev = (SPTR)0;
 			}
 		}
 		else
 		{	/* thing is off the map */
-			thing->bnext = thing->bprev = NULL;
+			thing->bnext = thing->bprev = (SPTR)0;
 		}
 	}
 }
@@ -426,7 +436,7 @@ boolean P_BlockThingsIterator (int x, int y, blockthingsiter_t func, void *userp
 	//if (x<0 || y<0 || x>=bmapwidth || y>=bmapheight)
 	//	return true;
 
-	for (mobj = blocklinks[y*bmapwidth+x] ; mobj ; mobj = mobj->bnext)
+	for (mobj = SPTR_TO_LPTR(blocklinks[y*bmapwidth+x]) ; mobj ; mobj = SPTR_TO_LPTR(mobj->bnext))
 		if (!func( mobj, userp ) )
 			return false;	
 

@@ -460,7 +460,7 @@ void R_SpritePrep(void)
          else if (!(thing->flags2 & MF2_DONTDRAW))
             R_PrepMobj(thing);
 
-         thing = thing->snext;
+         thing = SPTR_TO_LPTR(thing->snext);
       }
       ++pse;
    }

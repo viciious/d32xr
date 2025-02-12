@@ -114,8 +114,8 @@ extern	int			activethinkers;	/* debug count */
 extern	int			activemobjs;	/* debug count */
 extern  int         thingmem; // bytes in use for things (at spawn)
 
-extern VINT ringmobjstates[NUMMOBJTYPES];
-extern VINT ringmobjtics[NUMMOBJTYPES];
+extern VINT *ringmobjstates;
+extern int8_t *ringmobjtics;
 
 #define ONFLOORZ	D_MININT
 #define	ONCEILINGZ	D_MAXINT
@@ -263,7 +263,7 @@ extern	byte		*rejectmatrix;			/* for fast sight rejection */
 extern	short		*blockmaplump;		/* offsets in blockmap are from here */
 extern	VINT		bmapwidth, bmapheight;	/* in mapblocks */
 extern	fixed_t		bmaporgx, bmaporgy;		/* origin of block map */
-extern	mobj_t		**blocklinks;			/* for thing chains */
+extern	SPTR		*blocklinks;			/* for thing chains */
 
 extern	uint16_t			numthings;
 

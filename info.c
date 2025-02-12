@@ -1,8 +1,8 @@
 #include "doomdef.h"
 
 // These are used to track a global animation state for MF_RINGMOBJ
-VINT ringmobjstates[NUMMOBJTYPES];
-VINT ringmobjtics[NUMMOBJTYPES];
+VINT *ringmobjstates; // NUMMOBJTYPES
+int8_t *ringmobjtics; // NUMMOBJTYPES
 
 const char * const sprnames[NUMSPRITES] = {
 "PLAY",

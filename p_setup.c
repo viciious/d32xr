@@ -32,7 +32,7 @@ side_t		*sides;
 short		*blockmaplump;			/* offsets in blockmap are from here */
 VINT		bmapwidth, bmapheight;	/* in mapblocks */
 fixed_t		bmaporgx, bmaporgy;		/* origin of block map */
-mobj_t		**blocklinks;			/* for thing chains */
+SPTR		*blocklinks;			/* for thing chains */
 
 byte		*rejectmatrix;			/* for fast sight rejection */
 
@@ -276,6 +276,9 @@ void P_LoadThings (int lump)
 	int				i;
 	mapthing_t		*mt;
 	short			numthingsreal, numstaticthings, numringthings;
+
+	ringmobjstates = Z_Malloc(sizeof(*ringmobjstates) * NUMMOBJTYPES, PU_LEVEL);
+	ringmobjtics = Z_Malloc(sizeof(*ringmobjtics) * NUMMOBJTYPES, PU_LEVEL);
 
 	for (int i = 0; i < NUMMOBJTYPES; i++)
 		ringmobjtics[i] = -1;
