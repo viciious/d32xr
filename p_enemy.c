@@ -1007,7 +1007,7 @@ void A_FishJump(mobj_t *mo, int16_t var1, int16_t var2)
 {
 	fixed_t watertop = mo->floorz;
 
-	if (subsectors[mo->isubsector].sector->heightsec != -1)
+	if (SS_SECTOR(mo->isubsector)->heightsec != -1)
 		watertop = GetWatertopMo(mo) - (64<<FRACBITS);
 
 	if ((mo->z <= mo->floorz) || (mo->z <= watertop))
@@ -1163,7 +1163,7 @@ void A_BubbleRise(mobj_t *actor, int16_t var1, int16_t var2)
 		P_InstaThrust(actor, P_Random() & 1 ? actor->angle - ANG90 : actor->angle - ANG180,
 			(P_Random() & 1) ? FRACUNIT/2 : -FRACUNIT/2);
 
-	if (subsectors[actor->isubsector].sector->heightsec == -1
+	if (sectors[subsectors[actor->isubsector].isector].heightsec == -1
 		|| actor->z + (actor->theight << (FRACBITS-1)) > GetWatertopMo(actor))
 		actor->latecall = P_RemoveMobj;
 }
@@ -1359,7 +1359,7 @@ void A_Boss1Laser(mobj_t *actor, int16_t var1, int16_t var2)
 	for (i = 0; i < iterations; i++)
 	{
 		mobj_t *mo = P_SpawnMobjNoSector(point->x, point->y, point->z, point->type);
-		P_SetThingPosition2(mo, &subsectors[point->isubsector]);
+		P_SetThingPosition2(mo, point->isubsector);
 		mo->floorz = point->floorz;
 		mo->ceilingz = point->ceilingz;
 		mo->z = point->z;
@@ -1380,7 +1380,7 @@ void A_Boss1Laser(mobj_t *actor, int16_t var1, int16_t var2)
 
 	x += point->momx;
 	y += point->momy;
-	floorz = R_PointInSubsector(x, y)->sector->floorheight;
+	floorz = SS_SECTOR(R_PointInSubsector2(x, y))->floorheight;
 	if (z - floorz < (mobjinfo[MT_EGGMOBILE_FIRE].height>>1) && (dur & 1))
 	{
 		point = P_SpawnMobj(x, y, floorz, MT_EGGMOBILE_FIRE);
@@ -1388,7 +1388,7 @@ void A_Boss1Laser(mobj_t *actor, int16_t var1, int16_t var2)
 		point->angle = actor->angle;
 		point->target = actor;
 
-		const sector_t *pointSector = subsectors[point->isubsector].sector;
+		const sector_t *pointSector = &sectors[subsectors[point->isubsector].isector];
 
 		if (pointSector->heightsec != -1 && point->z <= GetWatertopSec(pointSector))
 		{
@@ -1616,7 +1616,7 @@ void A_UnidusBall(mobj_t *actor)
 //
 void A_BubbleSpawn(mobj_t *actor, int16_t var1, int16_t var2)
 {
-	if (subsectors[actor->isubsector].sector->heightsec != -1
+	if (SS_SECTOR(actor->isubsector)->heightsec != -1
 		&& actor->z < GetWatertopMo(actor) - 32*FRACUNIT)
 	{
 		int i;

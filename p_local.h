@@ -203,10 +203,12 @@ boolean P_BlockThingsIterator (int x, int y, blockthingsiter_t, void *userp );
 
 void 	P_UnsetThingPosition (mobj_t *thing);
 void	P_SetThingPosition (mobj_t *thing);
-void	P_SetThingPosition2 (mobj_t *thing, subsector_t *ss);
+void	P_SetThingPosition2 (mobj_t *thing, VINT iss);
 
 uint8_t P_GetLineTag(line_t *line);
 uint8_t P_GetLineSpecial(line_t *line);
+
+#define P_GetSubsectorNumlines(ss) (((ss)+1)->firstline - (ss)->firstline)
 
 /*
 ===============================================================================
@@ -352,6 +354,7 @@ typedef struct
 	fixed_t tmdropoffz; // lowest point contacted
 
 	subsector_t *newsubsec; // destination subsector
+	sector_t *newsec; // destination sector
 } pmovework_t;
 
 typedef struct

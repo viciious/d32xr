@@ -315,9 +315,10 @@ void P_PlayerCheckForStillPickups(mobj_t *mobj)
 {
 	int xl, xh, yl, yh, bx, by;
 	pmovework_t mw;
-	mw.newsubsec = &subsectors[mobj->isubsector];
-	mw.tmfloorz = mw.tmdropoffz = mw.newsubsec->sector->floorheight;
-	mw.tmceilingz = mw.newsubsec->sector->ceilingheight;
+	mw.newsubsec = I_TO_SS(mobj->isubsector);
+   mw.newsec = I_TO_SEC(mw.newsubsec->isector);
+	mw.tmfloorz = mw.tmdropoffz = mw.newsec->floorheight;
+	mw.tmceilingz = mw.newsec->ceilingheight;
 	mw.blockline = NULL;
 	mw.tmflags = mobj->flags;
 	mw.tmx = mobj->x;
@@ -380,12 +381,13 @@ static boolean PM_CheckPosition(pmovework_t *mw)
    mw->tmbbox[BOXRIGHT ] = mw->tmx + mobjinfo[tmthing->type].radius;
    mw->tmbbox[BOXLEFT  ] = mw->tmx - mobjinfo[tmthing->type].radius;
 
-   mw->newsubsec = R_PointInSubsector(mw->tmx, mw->tmy);
+   mw->newsubsec = I_TO_SS(R_PointInSubsector2(mw->tmx, mw->tmy));
+   mw->newsec = I_TO_SEC(mw->newsubsec->isector);
 
    // the base floor/ceiling is from the subsector that contains the point.
    // Any contacted lines the step closer together will adjust them.
-   mw->tmfloorz   = mw->tmdropoffz = FloorZAtPos(mw->newsubsec->sector, mw->tmthing->z, mw->tmthing->theight << FRACBITS);
-   mw->tmceilingz = CeilingZAtPos(mw->newsubsec->sector, mw->tmthing->z, mw->tmthing->theight << FRACBITS);
+   mw->tmfloorz   = mw->tmdropoffz = FloorZAtPos(mw->newsec, mw->tmthing->z, mw->tmthing->theight << FRACBITS);
+   mw->tmceilingz = CeilingZAtPos(mw->newsec, mw->tmthing->z, mw->tmthing->theight << FRACBITS);
 
    I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
    *lvalidcount = *lvalidcount + 1;
@@ -511,7 +513,7 @@ boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly)
          return false; // too big a step up
       if (!((tmthing->flags2 & MF2_FLOAT) || tmthing->player) && mw.tmfloorz - mw.tmdropoffz > 24*FRACUNIT)
          return false; // don't stand over a dropoff
-      if (tmthing->type == MT_SKIM && mw.newsubsec->sector->heightsec == -1)
+      if (tmthing->type == MT_SKIM && mw.newsec->heightsec == -1)
          return false; // Skim can't go out of water
    }
 
@@ -521,7 +523,7 @@ boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly)
    tmthing->ceilingz = mw.tmceilingz;
    tmthing->x        = mw.tmx;
    tmthing->y        = mw.tmy;
-   P_SetThingPosition2(tmthing, mw.newsubsec);
+   P_SetThingPosition2(tmthing, SS_TO_I(mw.newsubsec));
 
    return true;
 }

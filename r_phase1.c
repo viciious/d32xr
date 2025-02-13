@@ -658,7 +658,7 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
    else if (sec->heightsec != -1)
    {
       const sector_t *watersec = &sectors[sec->heightsec];
-      boolean underwater = vd.viewsubsector->sector->heightsec != -1 && vd.viewz<=sectors[vd.viewsubsector->sector->heightsec].ceilingheight;
+      boolean underwater = sectors[vd.viewsubsector->isector].heightsec != -1 && vd.viewz<=sectors[sectors[vd.viewsubsector->isector].heightsec].ceilingheight;
 
       // Replace sector being drawn, with a copy to be hacked
       *tempsec = *sec;
@@ -788,10 +788,10 @@ visplane_t *floorplane, *ceilingplane;
 //
 static void R_Subsector(rbspWork_t *rbsp, int num)
 {
-   subsector_t *sub = &subsectors[num];
+   const subsector_t *sub = &subsectors[num];
    seg_t       *line, *stopline;
    int          count;
-   sector_t    *frontsector = sub->sector;
+   sector_t    *frontsector = &sectors[sub->isector];
       
    if (frontsector->thinglist)
    {
@@ -806,7 +806,7 @@ static void R_Subsector(rbspWork_t *rbsp, int num)
    }
 
    line     = &segs[sub->firstline];
-   count    = sub->numlines;
+   count    = P_GetSubsectorNumlines(sub);
    stopline = line + count;
 
    rbsp->curfsector = frontsector;

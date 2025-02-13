@@ -109,15 +109,14 @@ void P_LoadSubsectors (int lump)
 	byte			*data;
 	int				i;
 	mapsubsector_t	*ms;
-	mapsubsector_t  *msHead;
 	subsector_t		*ss;
 
 	numsubsectors = W_LumpLength (lump) / sizeof(mapsubsector_t);
-	subsectors = Z_Malloc (numsubsectors*sizeof(subsector_t),PU_LEVEL);
+	subsectors = Z_Malloc ((numsubsectors+1)*sizeof(subsector_t),PU_LEVEL);
 	data = I_TempBuffer ();
 	W_ReadLump (lump,data);
 
-	msHead = ms = (mapsubsector_t *)data;
+	ms = (mapsubsector_t *)data;
 	D_memset (subsectors,0, numsubsectors*sizeof(subsector_t));
 	ss = subsectors;
 	for (i=0 ; i<numsubsectors ; i++, ss++, ms++)
@@ -126,12 +125,10 @@ void P_LoadSubsectors (int lump)
 		// so the number of segments in sub sector n is actually
 		// just subsector[n+1].firstseg - subsector[n].firsteg
 		ss->firstline = LITTLESHORT(ms->firstseg);
-
-		if (i < numsubsectors - 1)
-			ss->numlines = LITTLESHORT(msHead[i+1].firstseg) - ss->firstline;
-		else
-			ss->numlines = numsegs - ss->firstline;
 	}
+
+	// Go one over so the query will be faster
+	ss->firstline = numsegs;
 }
 
 
@@ -253,12 +250,12 @@ static void P_SpawnItemRow(mapthing_t *mt, VINT type, VINT count, VINT horizonta
 	{
 		P_ThrustValues(spawnAngle, horizontalSpacing << FRACBITS, &spawnX, &spawnY);
 
-		const subsector_t *ss = R_PointInSubsector(spawnX, spawnY);
+		const sector_t *sec = SS_SECTOR(R_PointInSubsector2(spawnX, spawnY));
 
 		fixed_t curZ = spawnZ + ((i+1) * (verticalSpacing<<FRACBITS)); // Literal height
 
 		// Now we have to work backwards and calculate the mapthing z
-		VINT mapthingZ = (curZ - ss->sector->floorheight) >> FRACBITS;
+		VINT mapthingZ = (curZ - sec->floorheight) >> FRACBITS;
 		mapthingZ <<= 4;
 		dummything.options &= 15; // Clear the top 12 bits
 		dummything.options |= mapthingZ; // Insert our new value
@@ -647,7 +644,7 @@ void P_GroupLines (void)
 		seg = &segs[ss->firstline];
 		linedef = &lines[seg->linedef];
 		sidedef = &sides[linedef->sidenum[seg->sideoffset & 1]];
-		ss->sector = &sectors[sidedef->sector];
+		ss->isector = sidedef->sector;
 	}
 
 /* count number of lines in each sector */

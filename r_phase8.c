@@ -511,7 +511,7 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
   if (vis->heightsec != -1)  // only things in specially marked sectors
     {
       fixed_t h,mh;
-      int phs = vd.viewsubsector->sector->heightsec;
+      int phs = sectors[vd.viewsubsector->isector].heightsec;
       // Recalculate these lost values from phase3
       const fixed_t gzt = vis->texturemid + vd.viewz;
       const fixed_t gz = gzt - (vis->patchheight << FRACBITS);

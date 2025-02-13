@@ -136,8 +136,8 @@ static void R_PrepMobj(mobj_t *thing)
    // killough 3/27/98: exclude things totally separated
    // from the viewer, by either water or fake ceilings
    // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
-   const int heightsec = subsectors[thing->isubsector].sector->heightsec;
-   const int phs = vd.viewsubsector->sector->heightsec;
+   const int heightsec = SS_SECTOR(thing->isubsector)->heightsec;
+   const int phs = sectors[vd.viewsubsector->isector].heightsec;
    if (heightsec != -1 && phs != -1)   // only clip things which are in special sectors
    {
       const sector_t *heightsector = &sectors[heightsec];
@@ -222,7 +222,7 @@ static void R_PrepMobj(mobj_t *thing)
          if (frame & FF_FULLBRIGHT)
             vis->colormap = 255;
          else
-            vis->colormap = subsectors[thing->isubsector].sector->lightlevel;
+            vis->colormap = sectors[subsectors[thing->isubsector].isector].lightlevel;
          vis->colormap = HWLIGHT(vis->colormap);
       }
    }
@@ -343,7 +343,8 @@ static void R_PrepRing(ringmobj_t *thing, boolean scenery)
    if (x2 < 0)
        return;
 
-   const fixed_t thingz = scenery ? (thing->type < MT_STALAGMITE0 || thing->type > MT_STALAGMITE7 ? subsectors[scenerymobj->isubsector].sector->floorheight : subsectors[scenerymobj->isubsector].sector->ceilingheight - mobjinfo[thing->type].height) : thing->z << FRACBITS;
+   const sector_t *sec = &sectors[subsectors[scenerymobj->isubsector].isector];
+   const fixed_t thingz = scenery ? (thing->type < MT_STALAGMITE0 || thing->type > MT_STALAGMITE7 ? sec->floorheight : sec->ceilingheight - mobjinfo[thing->type].height) : thing->z << FRACBITS;
 
    // killough 4/9/98: clip things which are out of view due to height
 //   tz = FixedMul(gzt, xscale);
@@ -357,8 +358,8 @@ static void R_PrepRing(ringmobj_t *thing, boolean scenery)
    // killough 3/27/98: exclude things totally separated
    // from the viewer, by either water or fake ceilings
    // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
-   const int heightsec = subsectors[thing->isubsector].sector->heightsec;
-   const int phs = vd.viewsubsector->sector->heightsec;
+   const int heightsec = SS_SECTOR(thing->isubsector)->heightsec;
+   const int phs = sectors[vd.viewsubsector->isector].heightsec;
    if (heightsec != -1 && phs != -1)   // only clip things which are in special sectors
    {
       const sector_t *heightsector = &sectors[heightsec];
@@ -438,7 +439,7 @@ static void R_PrepRing(ringmobj_t *thing, boolean scenery)
    if (vd.fixedcolormap)
        vis->colormap = vd.fixedcolormap;
    else
-      vis->colormap = HWLIGHT(subsectors[thing->isubsector].sector->lightlevel);
+      vis->colormap = HWLIGHT(sectors[subsectors[thing->isubsector].isector].lightlevel);
 }
 
 //

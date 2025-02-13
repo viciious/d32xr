@@ -113,9 +113,8 @@ typedef struct line_s
 
 typedef struct subsector_s
 {
-	VINT		numlines;
 	VINT		firstline;
-	sector_t	*sector;
+	VINT        isector;
 } subsector_t;
 
 typedef struct seg_s

@@ -38,7 +38,7 @@ typedef struct
    mobj_t      *checkthing, *hitthing;
    fixed_t      testx, testy;
    fixed_t      testfloorz, testceilingz, testdropoffz;
-   subsector_t *testsubsec;
+   VINT         testsubsec;
    line_t      *ceilingline;
    fixed_t      testbbox[4];
 } pmovetest_t;
@@ -278,9 +278,10 @@ static boolean PB_CheckPosition(pmovetest_t *mt)
 
    // the base floor / ceiling is from the subsector that contains the point.
    // Any contacted lines the step closer together will adjust them.
-   mt->testsubsec   = R_PointInSubsector(mt->testx, mt->testy);
-   mt->testfloorz   = mt->testdropoffz = FloorZAtPos(mt->testsubsec->sector, mt->checkthing->z, mt->checkthing->theight << FRACBITS);
-   mt->testceilingz = CeilingZAtPos(mt->testsubsec->sector, mt->checkthing->z, mt->checkthing->theight << FRACBITS);
+   mt->testsubsec   = R_PointInSubsector2(mt->testx, mt->testy);
+   const sector_t *testsec = SS_SECTOR(mt->testsubsec);
+   mt->testfloorz   = mt->testdropoffz = FloorZAtPos(testsec, mt->checkthing->z, mt->checkthing->theight << FRACBITS);
+   mt->testceilingz = CeilingZAtPos(testsec, mt->checkthing->z, mt->checkthing->theight << FRACBITS);
 
    I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
    *lvalidcount = *lvalidcount + 1;
@@ -357,7 +358,7 @@ static boolean PB_TryMove(pmovetest_t *mt, mobj_t *mo, fixed_t tryx, fixed_t try
          return false; // too big a step up
       if (!((mt->checkthing->flags2 & MF2_FLOAT) || mt->checkthing->type == MT_PLAYER) && mt->testfloorz - mt->testdropoffz > 24*FRACUNIT)
          return false; // don't stand over a dropoff
-      if (mt->checkthing->type == MT_SKIM && mt->testsubsec->sector->heightsec == -1)
+      if (mt->checkthing->type == MT_SKIM && SS_SECTOR(mt->testsubsec).heightsec == -1)
          return false; // Skim can't go out of water
    }
 
@@ -563,7 +564,7 @@ void P_ZMovement(mobj_t *mo)
    else if(!(mo->flags & MF_NOGRAVITY))
    {
       // apply gravity
-      if (subsectors[mo->isubsector].sector->heightsec != -1
+      if (SS_SECTOR(mo->isubsector)->heightsec != -1
          && GetWatertopMo(mo) > mo->z + (mo->theight << (FRACBITS-1)))
          mo->momz -= GRAVITY/2/3; // Less gravity underwater.
       else
@@ -989,7 +990,7 @@ boolean P_MobjSpecificActions(mobj_t *mobj)
                      if (i == -1)
                         chosen = MT_EXPLODE;
 
-                     fixed_t z = subsectors[mobj->isubsector].sector->floorheight - 80*FRACUNIT;
+                     fixed_t z = sectors[subsectors[mobj->isubsector].isector].floorheight - 80*FRACUNIT;
                      z += (P_Random() & 31) << FRACBITS;
 
                      mobj_t *flicky = P_SpawnMobj(

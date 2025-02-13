@@ -78,12 +78,13 @@ static boolean PM_CameraCheckPosition(pmovework_t *mw)
    mw->tmbbox[BOXRIGHT ] = mw->tmx + tradius;
    mw->tmbbox[BOXLEFT  ] = mw->tmx - tradius;
 
-   mw->newsubsec = R_PointInSubsector(mw->tmx, mw->tmy);
+   mw->newsubsec = I_TO_SS(R_PointInSubsector2(mw->tmx, mw->tmy));
+   mw->newsec = I_TO_SEC(mw->newsubsec->isector);
 
    // the base floor/ceiling is from the subsector that contains the point.
    // Any contacted lines the step closer together will adjust them.
-   mw->tmfloorz   = mw->tmdropoffz = mw->newsubsec->sector->floorheight;
-   mw->tmceilingz = mw->newsubsec->sector->ceilingheight;
+   mw->tmfloorz   = mw->tmdropoffz = mw->newsec->floorheight;
+   mw->tmceilingz = mw->newsec->ceilingheight;
 
    I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
    *lvalidcount = *lvalidcount + 1;
@@ -170,7 +171,7 @@ static boolean P_CameraTryMove2(ptrymove_t *tm, boolean checkposonly)
    tmthing->ceilingz = mw.tmceilingz;
    tmthing->x = mw.tmx;
    tmthing->y = mw.tmy;
-   tmthing->isubsector = mw.newsubsec - subsectors;
+   tmthing->isubsector = SS_TO_I(mw.newsubsec);
 
    return true;
 }
@@ -190,7 +191,7 @@ static void P_ResetCamera(player_t *player, camera_t *thiscam)
 	thiscam->z = player->mo->z + VIEWHEIGHT;
    thiscam->angle = player->mo->angle;
    thiscam->aiming = 0;
-   thiscam->subsector = R_PointInSubsector(thiscam->x, thiscam->y);
+   thiscam->subsector = I_TO_SS(R_PointInSubsector2(thiscam->x, thiscam->y));
 }
 
 // Process the mobj-ish required functions of the camera
@@ -263,7 +264,7 @@ camwrapup:
 		thiscam->momx = mo.momx;
 		thiscam->momy = mo.momy;
 		thiscam->momz = mo.momz;
-      thiscam->subsector = R_PointInSubsector(thiscam->x, thiscam->y);
+      thiscam->subsector = I_TO_SS(R_PointInSubsector2(thiscam->x, thiscam->y));
    }
 
 	// P_CameraZMovement()
@@ -315,7 +316,7 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 	fixed_t x, y, z, viewpointx, viewpointy, camspeed, camdist, camheight, pviewheight;
 	fixed_t dist;
 	mobj_t *mo;
-	subsector_t *newsubsec;
+	VINT newsubsec;
    const mobjinfo_t *caminfo = &mobjinfo[MT_CAMERA];
 
 	mo = player->mo;
@@ -377,13 +378,14 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 		z = mo->z + pviewheight + camheight;
 
 	// Look at halfway between the camera and player. Is the ceiling lower? Then the camera should try to move down to fit under it
-	newsubsec = R_PointInSubsector(((mo->x>>FRACBITS) + (thiscam->x>>FRACBITS))<<(FRACBITS-1), ((mo->y>>FRACBITS) + (thiscam->y>>FRACBITS))<<(FRACBITS-1));
+	newsubsec = R_PointInSubsector2(((mo->x>>FRACBITS) + (thiscam->x>>FRACBITS))<<(FRACBITS-1), ((mo->y>>FRACBITS) + (thiscam->y>>FRACBITS))<<(FRACBITS-1));
+   const sector_t *newsec = SS_SECTOR(newsubsec);
 
 	{
 		// camera fit?
-		if (newsubsec->sector->ceilingheight != newsubsec->sector->floorheight // Don't try to fit in sectors with equal floor and ceiling heights
-			&& newsubsec->sector->ceilingheight - caminfo->height < z)
-			z = newsubsec->sector->ceilingheight - caminfo->height-(11<<FRACBITS);
+		if (newsec->ceilingheight != newsec->floorheight // Don't try to fit in sectors with equal floor and ceiling heights
+			&& newsec->ceilingheight - caminfo->height < z)
+			z = newsec->ceilingheight - caminfo->height-(11<<FRACBITS);
 	}
 
 	if (thiscam->z < thiscam->floorz)
@@ -431,8 +433,10 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
       thiscam->aiming -= (dist>>3);
    }
 
-   if (thiscam->z < thiscam->subsector->sector->floorheight)
-      thiscam->z = thiscam->subsector->sector->floorheight;
-   else if (thiscam->z + CAM_PHYS_HEIGHT > thiscam->subsector->sector->ceilingheight)
-      thiscam->z = thiscam->subsector->sector->ceilingheight - CAM_PHYS_HEIGHT;
+   const sector_t *camSec = I_TO_SEC(thiscam->subsector->isector);
+
+   if (thiscam->z < camSec->floorheight)
+      thiscam->z = camSec->floorheight;
+   else if (thiscam->z + CAM_PHYS_HEIGHT > camSec->ceilingheight)
+      thiscam->z = camSec->ceilingheight - CAM_PHYS_HEIGHT;
 }

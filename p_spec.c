@@ -400,9 +400,7 @@ typedef struct
 
 void P_PlayerInSpecialSector (player_t *player)
 {
-	sector_t	*sector;
-	
-	sector = subsectors[player->mo->isubsector].sector;
+	const sector_t	*sector = SS_SECTOR(player->mo->isubsector);
 		
 	switch (sector->special)
 	{
@@ -414,10 +412,6 @@ void P_PlayerInSpecialSector (player_t *player)
 		case 2:
 			if (player->mo->z <= sector->floorheight && !sector->specialdata)
 				P_DoPlayerExit(player);
-			break;
-		case 9:		/* SECRET SECTOR */
-			player->secretcount++;
-			sector->special = 255;
 			break;
 			
 		default:

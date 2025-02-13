@@ -142,7 +142,7 @@ fixed_t GetWatertopSec(const sector_t *sec)
 
 fixed_t GetWatertopMo(const mobj_t *mo)
 {
-	const sector_t *sec = subsectors[mo->isubsector].sector;
+	const sector_t *sec = &sectors[subsectors[mo->isubsector].isector];
 	return GetWatertopSec(sec);
 }
 
@@ -285,7 +285,7 @@ mobj_t *P_SpawnMobjNoSector(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 			scenerymobj->flags = info->flags;
 
 			/* set subsector and/or block links */
-			P_SetThingPosition2 ((mobj_t*)scenerymobj, R_PointInSubsector(x, y));
+			P_SetThingPosition2 ((mobj_t*)scenerymobj, R_PointInSubsector2(x, y));
 
 			numscenerymobjs++;
 
@@ -302,7 +302,7 @@ mobj_t *P_SpawnMobjNoSector(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 			ringmobj->alive = 1;
 
 			/* set subsector and/or block links */
-			P_SetThingPosition2 ((mobj_t*)ringmobj, R_PointInSubsector(x, y));
+			P_SetThingPosition2 ((mobj_t*)ringmobj, R_PointInSubsector2(x, y));
 
 			numringmobjs++;
 
@@ -369,9 +369,11 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 
 /* set subsector and/or block links */
 	P_SetThingPosition(mobj);
+
+	const sector_t *sec = &sectors[subsectors[mobj->isubsector].isector];
 	
-	mobj->floorz = subsectors[mobj->isubsector].sector->floorheight;
-	mobj->ceilingz = subsectors[mobj->isubsector].sector->ceilingheight;
+	mobj->floorz = sec->floorheight;
+	mobj->ceilingz = sec->ceilingheight;
 	if (z == ONFLOORZ)
 		mobj->z = mobj->floorz;
 	else if (z == ONCEILINGZ)
@@ -494,8 +496,8 @@ void P_SpawnPlayer (mapthing_t *mthing)
 		P_ThrustValues(mobj->angle + (ANG45 * 3), -CAM_DIST, &camera.x, &camera.y);
 	camera.x = (camera.x >> FRACBITS) << FRACBITS;
 	camera.y = (camera.y >> FRACBITS) << FRACBITS;
-	camera.subsector = R_PointInSubsector(camera.x, camera.y);
-	camera.z = camera.subsector->sector->floorheight + (mobj->theight << FRACBITS);
+	camera.subsector = I_TO_SS(R_PointInSubsector2(camera.x, camera.y));
+	camera.z = sectors[camera.subsector->isector].floorheight + (mobj->theight << FRACBITS);
 	
 	if (!netgame)
 		return;
@@ -603,9 +605,9 @@ fixed_t P_GetMapThingSpawnHeight(const mobjtype_t mobjtype, const mapthing_t* mt
 			return ONFLOORZ;
 	}*/
 
-	const subsector_t *ss = R_PointInSubsector(x, y);
+	const sector_t *sec = SS_SECTOR(R_PointInSubsector2(x, y));
 
-	return ss->sector->floorheight + dz;
+	return sec->floorheight + dz;
 }
 
 void P_SpawnMapThing (mapthing_t *mthing, int thingid)
@@ -852,9 +854,10 @@ void P_MobjCheckWater(mobj_t *mo)
 		player_t *player = &players[mo->player-1];
 		VINT wasinwater = player->pflags & PF_UNDERWATER;
 		player->pflags &= ~(PF_TOUCHWATER|PF_UNDERWATER);
-		fixed_t watertop = subsectors[mo->isubsector].sector->floorheight - 512*FRACUNIT;
+		const sector_t *moSec = SS_SECTOR(mo->isubsector);
+		fixed_t watertop = moSec->floorheight - 512*FRACUNIT;
 
-		if (subsectors[mo->isubsector].sector->heightsec != -1)
+		if (moSec->heightsec != -1)
 		{
 			watertop = GetWatertopMo(mo);
 
