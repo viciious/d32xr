@@ -358,7 +358,7 @@ static boolean PB_TryMove(pmovetest_t *mt, mobj_t *mo, fixed_t tryx, fixed_t try
          return false; // too big a step up
       if (!((mt->checkthing->flags2 & MF2_FLOAT) || mt->checkthing->type == MT_PLAYER) && mt->testfloorz - mt->testdropoffz > 24*FRACUNIT)
          return false; // don't stand over a dropoff
-      if (mt->checkthing->type == MT_SKIM && SS_SECTOR(mt->testsubsec).heightsec == -1)
+      if (mt->checkthing->type == MT_SKIM && SS_SECTOR(mt->testsubsec)->heightsec == -1)
          return false; // Skim can't go out of water
    }
 
