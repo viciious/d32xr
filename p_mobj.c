@@ -132,8 +132,8 @@ void P_RespawnSpecials (void)
 	y = mthing->y << FRACBITS; 
 
 /* spawn a teleport fog at the new spot */
-	ss = R_PointInSubsector (x,y); 
-	mo = P_SpawnMobj2 (x, y, ss->sector->floorheight , MT_IFOG, ss); 
+	ss = R_PointInSubsector (x,y);
+	mo = P_SpawnMobj2 (x, y, SSEC_SECTOR(ss)->floorheight , MT_IFOG, ss); 
 
 	S_StartSound (mo, sfx_itmbk);
 
@@ -246,6 +246,7 @@ void P_ExplodeMissile (mobj_t *mo)
 mobj_t *P_SpawnMobj2 (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type, subsector_t *ss)
 {
 	mobj_t		*mobj;
+	const sector_t *sec;
 	const state_t		*st;
 	const mobjinfo_t *info = &mobjinfo[type];
 
@@ -326,8 +327,9 @@ mobj_t *P_SpawnMobj2 (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type, subsecto
 	P_SetThingPosition2 (mobj, ss);
 
 	ss = mobj->subsector;
-	mobj->floorz = ss->sector->floorheight;
-	mobj->ceilingz = ss->sector->ceilingheight;
+	sec = SSEC_SECTOR(ss);
+	mobj->floorz = sec->floorheight;
+	mobj->ceilingz = sec->ceilingheight;
 	if (z == ONFLOORZ)
 		mobj->z = mobj->floorz;
 	else if (z == ONCEILINGZ)
@@ -397,6 +399,7 @@ void P_SpawnPlayer (mapthing_t *mthing)
 	mobj_t		*mobj;
 	int	i;
 	subsector_t* ss;
+	sector_t *sec;
 	int                     an;
 
 	if (!playeringame[mthing->type-1])
@@ -441,10 +444,11 @@ y = 0xff500000;
 		return;
 
 	ss = R_PointInSubsector(x, y);
+	sec = SSEC_SECTOR(ss);
 	an = (ANG45 * ((unsigned)mthing->angle / 45)) >> ANGLETOFINESHIFT;
 
 	/* spawn a teleport fog  */
-	mobj = P_SpawnMobj(x + 20 * finecosine(an), y + 20 * finesine(an), ss->sector->floorheight
+	mobj = P_SpawnMobj(x + 20 * finecosine(an), y + 20 * finesine(an), sec->floorheight
 		, MT_TFOG);
 	S_StartSound(mobj, sfx_telept);
 }

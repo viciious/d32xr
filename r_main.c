@@ -667,7 +667,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	vd->viewcos = finecosine(vd->viewangle>>ANGLETOFINESHIFT);
 
 	vd->displayplayer = displayplayer;
-	vd->lightlevel = player->mo->subsector->sector->lightlevel;
+	vd->lightlevel = SSEC_SECTOR(player->mo->subsector)->lightlevel;
 	vd->fixedcolormap = 0;
 
 	vd->clipangle = xtoviewangle[0]<<FRACBITS;

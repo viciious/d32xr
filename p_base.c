@@ -101,7 +101,7 @@ void P_XYMovement(mobj_t *mo)
    if(mo->z > mo->floorz)
       return; // no friction when airborne
 
-   if(mo->flags & MF_CORPSE && mo->floorz != mo->subsector->sector->floorheight)
+   if(mo->flags & MF_CORPSE && mo->floorz != SSEC_SECTOR(mo->subsector)->floorheight)
       return; // sliding corpse: don't stop halfway off a step
 
    if(mo->momx > -STOPSPEED && mo->momx < STOPSPEED &&

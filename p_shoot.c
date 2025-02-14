@@ -321,12 +321,13 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
    fixed_t  frac;
    mobj_t  *thing;
    subsector_t *sub = &subsectors[bspnum];
+   sector_t *sec = SSEC_SECTOR(sub);
    intercept_t  in;
    mapvertex_t tv1, tv2;
    VINT     *lvalidcount, vc;
 
    // check things
-   for(thing = SPTR_TO_LPTR(sub->sector->thinglist); thing; thing = SPTR_TO_LPTR(thing->snext))
+   for(thing = SPTR_TO_LPTR(sec->thinglist); thing; thing = SPTR_TO_LPTR(thing->snext))
    {
       if(thing->subsector != sub)
          continue;
@@ -362,7 +363,7 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
    }
 
    // check lines
-   count = sub->numlines;
+   count = SSEC_NUMLINES(sub);
    seg   = &segs[sub->firstline];
 
    I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);

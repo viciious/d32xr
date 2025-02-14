@@ -95,8 +95,11 @@ void P_PlayerXYMovement (mobj_t *mo)
 		return;		/* no friction when airborne */
 
 	if (mo->flags & MF_CORPSE)
-		if (mo->floorz != mo->subsector->sector->floorheight)
+	{
+		sector_t *sec = SSEC_SECTOR(mo->subsector);
+		if (mo->floorz != sec->floorheight)
 			return;			/* don't stop halfway off a step */
+	}
 
 	if (mo->momx > -STOPSPEED && mo->momx < STOPSPEED
 	&& mo->momy > -STOPSPEED && mo->momy < STOPSPEED)
@@ -592,6 +595,7 @@ void P_PlayerThink (player_t *player)
 {
 	int		buttons;
 	int 	playernum = player - players;
+	sector_t *sec;
 	
 	buttons = player->ticbuttons;
 
@@ -628,7 +632,8 @@ ticphase = 22;
 	else
 		P_MovePlayer (player);
 	P_CalcHeight (player);
-	if (player->mo->subsector->sector->special)
+	sec = SSEC_SECTOR(player->mo->subsector);
+	if (sec->special)
 		P_PlayerInSpecialSector (player);
 		
 /* */

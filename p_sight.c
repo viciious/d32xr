@@ -146,7 +146,7 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
    sub = &subsectors[num];
 
    // check lines
-   count = sub->numlines;
+   count = SSEC_NUMLINES(sub);
    seg   = &segs[sub->firstline];
 
 	I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);

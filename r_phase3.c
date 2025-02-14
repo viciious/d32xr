@@ -177,10 +177,10 @@ static void R_PrepMobj(mobj_t *thing)
    }
    else
    {
-       if (fullbright)
+      if (fullbright)
            vis->colormap = 255;
        else
-           vis->colormap = thing->subsector->sector->lightlevel;
+           vis->colormap = SSEC_SECTOR(thing->subsector)->lightlevel;
        vis->colormap = HWLIGHT(vis->colormap);
    }
 

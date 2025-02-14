@@ -182,8 +182,10 @@ boolean PIT_CheckPosition(pmovework_t *w)
    int tmflags = tmthing->flags;
    VINT *lvalidcount;
    subsector_t *newsubsec;
+   sector_t *newsec;
 
    newsubsec = R_PointInSubsector(w->tmx, w->tmy);
+   newsec = SSEC_SECTOR(newsubsec);
    w->newsubsec = newsubsec;
 
    w->tmbbox[BOXTOP   ] = w->tmy + tmthing->radius;
@@ -193,8 +195,8 @@ boolean PIT_CheckPosition(pmovework_t *w)
 
    // the base floor/ceiling is from the subsector that contains the point.
    // Any contacted lines the step closer together will adjust them.
-   w->tmfloorz   = w->tmdropoffz = newsubsec->sector->floorheight;
-   w->tmceilingz = newsubsec->sector->ceilingheight;
+   w->tmfloorz   = w->tmdropoffz = newsec->floorheight;
+   w->tmceilingz = newsec->ceilingheight;
 
    w->numspechit = 0;
    w->hitthing = NULL;
