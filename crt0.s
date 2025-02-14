@@ -38,7 +38,7 @@
         .ascii  "GM 20230824-00"
         .word   0x0000                  /* Checksum */
         .ascii  "J6CM            "
-        .long   0x00000000,0x003FFFFF   /* ROM start, end */
+        .long   0x00000000,0x002FFFFF   /* ROM start, end */
         .long   0x00FF0000,0x00FFFFFF   /* RAM start, end */
 
 ! 2KB of save ram on odd byte lane
@@ -326,7 +326,7 @@ pri_checksum:
         
         mov.l   p_rom_end_ptr,r2
         mov.l   p_rom_start,r0
-        mov.l   @r0,r0
+        mov.l   @r2,r2
         add     r0,r2
 
         mov     #0,r3
@@ -334,11 +334,17 @@ pri_checksum:
         mov.w   @r1,r0
         add     r0,r3
         add     #2,r1
-        cmp/gt  r1,r2
+        cmp/gt  r2,r1
         bf      0b
 
+        mov.l   p_word_mask,r1
         mov.l   p_rom_checksum,r0
+        and     r1,r3
         mov.w   @r0,r0
+        and     r1,r0
+
+        cmp/eq  #0,r0
+        bt      2f      ! If the ROM header specifies a checksum of zero, ignore validation check.
 
         cmp/eq  r0,r3
         bt      2f
@@ -358,6 +364,8 @@ p_rom_end_ptr:
         .long   0x20001A4
 p_rom_header_size:
         .long   0x2000200
+p_word_mask:
+        .long   0xFFFF
 
 !-----------------------------------------------------------------------
 ! The Primary SH2 starts here
