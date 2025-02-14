@@ -146,7 +146,7 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
    sub = &subsectors[num];
 
    // check lines
-   count = sub->numlines;
+   count = SSEC_NUMLINES(sub);
    seg   = &segs[sub->firstline];
 
 	I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
@@ -279,14 +279,14 @@ static boolean PS_CrossBSPNode(sightWork_t* sw, int bspnum)
 //
 static boolean PS_RejectCheckSight(mobj_t *t1, mobj_t *t2)
 {
-   unsigned s1, s2;
+   int s1, s2;
    unsigned pnum, bitnum;
    int bytenum;
 
    // First check for trivial rejection
-   s1 = ((uintptr_t)t1->subsector->sector - (uintptr_t)sectors);
-   s2 = ((uintptr_t)t2->subsector->sector - (uintptr_t)sectors);
-   pnum = (s1*numsectors + s2) / sizeof(sector_t);
+   s1 = t1->subsector->sector;
+   s2 = t2->subsector->sector;
+   pnum = s1*numsectors + s2;
    bytenum = pnum >> 3;
 
 #ifdef MARS

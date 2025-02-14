@@ -417,13 +417,15 @@ newtarget:
 void A_Look (mobj_t *actor)
 {
 	mobj_t		*targ;
+	sector_t 	*sec;
 	const mobjinfo_t* ainfo = &mobjinfo[actor->type];
 	
 /* if current target is visible, start attacking */
 
 /* if the sector has a living soundtarget, make that the new target */
 	actor->threshold = 0;		/* any shot will wake up */
-	targ = SPTR_TO_LPTR(actor->subsector->sector->soundtarget);
+	sec = SSEC_SECTOR(actor->subsector);
+	targ = SPTR_TO_LPTR(sec->soundtarget);
 	if (targ && (targ->flags & MF_SHOOTABLE))
 	{
 		/* ambush guys will turn around on a shot */
@@ -498,6 +500,7 @@ seeyou:
 void A_Chase (mobj_t *actor)
 {
 	int		delta;
+	sector_t *sec;
 	const mobjinfo_t* ainfo = &mobjinfo[actor->type];
 	
 	if (actor->reactiontime)
@@ -522,10 +525,16 @@ void A_Chase (mobj_t *actor)
 			actor->angle += ANG90/2;
 	}
 
-	if (!actor->target || !(actor->target->flags&MF_SHOOTABLE)
-		|| (netgame && !actor->threshold && !(actor->flags & MF_SEETARGET) 
-			&& actor->target != SPTR_TO_LPTR(actor->subsector->sector->soundtarget)))
+	if (!actor->target || !(actor->target->flags&MF_SHOOTABLE))
+	{
+		goto new_target;
+	}
+
+	sec = SSEC_SECTOR(actor->subsector);
+	if (netgame && !actor->threshold && !(actor->flags & MF_SEETARGET) 
+			&& actor->target != SPTR_TO_LPTR(sec->soundtarget))
 	{	/* look for a new target */
+new_target:
 		if (P_LookForPlayers(actor,true))
 			return;		/* got a new target */
 		P_SetMobjState (actor, ainfo->spawnstate);

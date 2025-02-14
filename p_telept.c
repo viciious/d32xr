@@ -47,7 +47,6 @@ int	EV_Teleport( line_t *line,mobj_t *thing )
 	boolean		flag;
 	mobj_t		*m,*fog;
 	unsigned	an;
-	sector_t	*sector;
 	fixed_t		oldx, oldy, oldz;
 	subsector_t *oldsubs;
 	int		side;
@@ -70,8 +69,7 @@ int	EV_Teleport( line_t *line,mobj_t *thing )
 
 				if (m->type != MT_TELEPORTMAN )
 					continue;		/* not a teleportman */
-				sector = m->subsector->sector;
-				if (sector-sectors != i )
+				if (m->subsector->sector != i )
 					continue;		/* wrong sector */
 
 				oldx = thing->x;

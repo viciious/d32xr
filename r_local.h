@@ -122,10 +122,12 @@ typedef struct line_s
 
 typedef struct subsector_s
 {
-	VINT		numlines;
 	VINT		firstline;
-	sector_t	*sector;
+	VINT 		sector;
 } subsector_t;
+
+#define SSEC_NUMLINES(ss) ((ss+1)->firstline - (ss)->firstline)
+#define SSEC_SECTOR(ss) (&sectors[(ss)->sector])
 
 // truncate offset to 14 bits along the way
 #define SEG_PACK(seg,offset,side) do { seg_t *s = (seg); unsigned o = (unsigned)(offset)&((1<<14)-1); s->linedef <<= 5; s->v1 <<= 5; s->v2 <<= 5; s->linedef |= ((o & 0xf) << 1) | (!!(side)); s->v1 |= (o>>4)&0x1f; s->v2 |= (o>>9)&0x1f; } while (0)

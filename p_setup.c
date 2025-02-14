@@ -131,21 +131,30 @@ void P_LoadSubsectors (int lump)
 {
 	byte			*data;
 	int				i;
+	int 			count;
 	mapsubsector_t	*ms;
 	subsector_t		*ss;
 
 	numsubsectors = W_LumpLength (lump) / sizeof(mapsubsector_t);
-	subsectors = Z_Malloc (numsubsectors*sizeof(subsector_t),PU_LEVEL);
+	count = numsubsectors+1;
+	subsectors = Z_Malloc (count*sizeof(subsector_t),PU_LEVEL);
 	data = W_GetLumpData(lump);
 
 	ms = (mapsubsector_t *)data;
-	D_memset (subsectors,0, numsubsectors*sizeof(subsector_t));
+	D_memset (subsectors,0, count*sizeof(subsector_t));
+
+	if (!numsubsectors)
+		return;
+
 	ss = subsectors;
 	for (i=0 ; i<numsubsectors ; i++, ss++, ms++)
 	{
-		ss->numlines = LITTLESHORT(ms->numsegs);
+		count = LITTLESHORT(ms->numsegs);
 		ss->firstline = LITTLESHORT(ms->firstseg);
 	}
+
+	--ss;
+	(ss + 1)->firstline = ss->firstline + count;
 }
 
 
@@ -657,7 +666,7 @@ void P_GroupLines (void)
 		seg = &segs[ss->firstline];
 		linedef = &lines[SEG_UNPACK_LINEDEF(seg)];
 		sidedef = &sides[linedef->sidenum[SEG_UNPACK_SIDE(seg)]];
-		ss->sector = &sectors[sidedef->sector];
+		ss->sector = sidedef->sector;
 	}
 
 /* count number of lines in each sector */

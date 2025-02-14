@@ -640,7 +640,7 @@ static void R_Subsector(rbspWork_t *rbsp, int num)
    subsector_t *sub = &subsectors[num];
    seg_t       *line, *stopline;
    int          count;
-   sector_t    *frontsector = sub->sector;
+   sector_t    *frontsector = SSEC_SECTOR(sub);
       
    if (frontsector->thinglist)
    {
@@ -655,7 +655,7 @@ static void R_Subsector(rbspWork_t *rbsp, int num)
    }
 
    line     = &segs[sub->firstline];
-   count    = sub->numlines;
+   count    = SSEC_NUMLINES(sub);
    stopline = line + count;
 
    rbsp->curfsector = frontsector;
