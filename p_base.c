@@ -55,7 +55,7 @@ void P_MobjThinker(mobj_t* mobj) ATTR_DATA_CACHE_ALIGN;
 // P_FloorzAtPos
 // Returns the floorz of the XYZ position
 // Tails 05-26-2003
-fixed_t FloorZAtPos(sector_t *sec, fixed_t z, fixed_t height)
+fixed_t FloorZAtPos(const sector_t *sec, fixed_t z, fixed_t height)
 {
    fixed_t floorz = sec->floorheight;
    const fixed_t thingtop = z + height;
@@ -72,7 +72,7 @@ fixed_t FloorZAtPos(sector_t *sec, fixed_t z, fixed_t height)
 
    return floorz;
 }
-fixed_t CeilingZAtPos(sector_t *sec, fixed_t z, fixed_t height)
+fixed_t CeilingZAtPos(const sector_t *sec, fixed_t z, fixed_t height)
 {
    fixed_t ceilingz = sec->ceilingheight;
    const fixed_t thingtop = z + height;

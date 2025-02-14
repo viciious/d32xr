@@ -120,8 +120,8 @@ extern int8_t *ringmobjtics;
 #define ONFLOORZ	D_MININT
 #define	ONCEILINGZ	D_MAXINT
 
-fixed_t FloorZAtPos(sector_t *sec, fixed_t z, fixed_t height);
-fixed_t CeilingZAtPos(sector_t *sec, fixed_t z, fixed_t height);
+fixed_t FloorZAtPos(const sector_t *sec, fixed_t z, fixed_t height);
+fixed_t CeilingZAtPos(const sector_t *sec, fixed_t z, fixed_t height);
 
 mobj_t *P_FindFirstMobjOfType(uint16_t type);
 void P_BlackOw(player_t *player);
