@@ -390,19 +390,21 @@ int EV_DoFloorTag(line_t *line,floor_e floortype, uint8_t tag)
 						if (twoSided (secnum, i) )
 						{
 							side = getSide(secnum,i,0);
-							if (side->bottomtexture != 0xff)
+							sidetex_t *st = SIDETEX(side);
+							if (st->bottomtexture != 0xff)
 								if (
-					(textures[side->bottomtexture].height<<FRACBITS)  < 
+					(textures[st->bottomtexture].height<<FRACBITS)  < 
 									minsize)
 									minsize = 
-										(textures[side->bottomtexture].height<<FRACBITS);
+										(textures[st->bottomtexture].height<<FRACBITS);
 							side = getSide(secnum,i,1);
-							if (side->bottomtexture != 0xff)
-								if ((textures[side->bottomtexture].height<<FRACBITS) < 
+							st = SIDETEX(side);
+							if (st->bottomtexture != 0xff)
+								if ((textures[st->bottomtexture].height<<FRACBITS) < 
 									minsize)
 									minsize = 
-										(textures[side->bottomtexture].height<<FRACBITS);
-						} 
+										(textures[st->bottomtexture].height<<FRACBITS);
+						}
 					floor->floordestheight = floor->sector->floorheight + 
 						minsize;
 				}

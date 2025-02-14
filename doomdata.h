@@ -21,7 +21,7 @@ typedef unsigned char byte;
 */
 
 /* lump order in a map wad */
-enum {ML_LABEL, ML_THINGS, ML_LINEDEFS, ML_SIDEDEFS, ML_VERTEXES, ML_SEGS,
+enum {ML_LABEL, ML_THINGS, ML_LINEDEFS, ML_SIDEDEFS, ML_SIDETEX, ML_VERTEXES, ML_SEGS,
 ML_SSECTORS, ML_NODES, ML_SECTORS , ML_REJECT, ML_BLOCKMAP};
 
 
@@ -33,7 +33,7 @@ typedef struct
 typedef struct
 {
 	int16_t sector;
-	uint8_t toptexture, bottomtexture, midtexture;
+	uint8_t texIndex;
 	uint8_t rowoffset;     // add this to the calculated texture top
 	int16_t textureoffset; // 8.4, add this to the calculated texture col
 } mapsidedef_t;

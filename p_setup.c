@@ -28,6 +28,7 @@ subsector_t	*subsectors;
 node_t		*nodes;
 line_t		*lines;
 side_t		*sides;
+sidetex_t   *sidetexes;
 
 short		*blockmaplump;			/* offsets in blockmap are from here */
 VINT		bmapwidth, bmapheight;	/* in mapblocks */
@@ -555,9 +556,7 @@ void P_LoadSideDefs (int lump)
 		sd->sector = LITTLESHORT(msd->sector);
 		sd->rowoffset = msd->rowoffset;
 		sd->textureoffset = LITTLESHORT(msd->textureoffset);
-		sd->toptexture = msd->toptexture;
-		sd->midtexture = msd->midtexture;
-		sd->bottomtexture = msd->bottomtexture;
+		sd->texIndex = msd->texIndex;
 
 #ifndef MARS
 		textures[sd->toptexture].usecount++;
@@ -567,7 +566,13 @@ void P_LoadSideDefs (int lump)
 	}
 }
 
-
+void P_LoadSideTexes(int lump)
+{
+	int numsidetexes = W_LumpLength (lump) / sizeof(sidetex_t);
+	sidetexes = Z_Malloc (numsidetexes*sizeof(sidetex_t)+16,PU_LEVEL);
+	sidetexes = (void*)(((uintptr_t)sidetexes + 15) & ~15); // aline on cacheline boundary
+	W_ReadLump(lump, sidetexes);
+}
 
 /*
 =================
@@ -720,6 +725,7 @@ D_printf ("P_SetupLevel(%i)\n",lumpnum);
 	P_LoadVertexes (lumpnum+ML_VERTEXES);
 	P_LoadSectors (lumpnum+ML_SECTORS);
 	P_LoadSideDefs (lumpnum+ML_SIDEDEFS);
+	P_LoadSideTexes (lumpnum+ML_SIDETEX);
 	P_LoadLineDefs (lumpnum+ML_LINEDEFS);
 	P_LoadSegs (lumpnum+ML_SEGS);
 	P_LoadSubsectors (lumpnum+ML_SSECTORS);

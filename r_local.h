@@ -96,10 +96,19 @@ typedef	struct
 typedef struct
 {
 	VINT		sector;
-	uint8_t		toptexture, bottomtexture, midtexture;
+	uint8_t		texIndex;
 	uint8_t		rowoffset;			/* add this to the calculated texture top */
 	int16_t		textureoffset;		/* 8.4, add this to the calculated texture col */
 } side_t;
+
+typedef struct
+{
+	uint8_t toptexture;
+	uint8_t midtexture;
+	uint8_t bottomtexture;
+} sidetex_t;
+
+#define SIDETEX(side) (&sidetexes[(side)->texIndex])
 
 typedef struct line_s
 {
@@ -241,6 +250,7 @@ extern	subsector_t	*subsectors;
 extern	node_t		*nodes;
 extern	line_t		*lines;
 extern	side_t		*sides;
+extern  sidetex_t   *sidetexes;
 
 extern 	int16_t 	worldbbox[4];
 

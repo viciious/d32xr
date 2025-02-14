@@ -244,7 +244,8 @@ static boolean PIT_CheckLine(line_t *ld, pmovework_t *mw)
    if (ld->flags & ML_MIDTEXTUREBLOCK)
    {
       const side_t *side = &sides[ld->sidenum[0]];
-      const texture_t *tex = &textures[side->midtexture];
+      sidetex_t *st = SIDETEX(side);
+      const texture_t *tex = &textures[st->midtexture];
       const fixed_t texheight = tex->height << (FRACBITS+1);
       int16_t rowoffset = (side->textureoffset & 0xf000) | ((unsigned)side->rowoffset << 4);
       rowoffset >>= 4; // sign extend

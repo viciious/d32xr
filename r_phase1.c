@@ -305,12 +305,14 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
 
       segl->t_topheight = f_ceilingheight; // top of texturemap
 
+      const sidetex_t *st = SIDETEX(si);
+
       if (!(li->sidenum[1] != -1))
       {
          // single-sided line
 //         if (si->midtexture > 0)
          {
-            SETUPPER8(segl->tb_texturenum, texturetranslation[si->midtexture]);
+            SETUPPER8(segl->tb_texturenum, texturetranslation[st->midtexture]);
 
             // handle unpegging (bottom of texture at bottom, or top of texture at top)
             if(liflags & ML_DONTPEGBOTTOM)
@@ -336,7 +338,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
          // two-sided line
 //         if (si->midtexture > 0)
          {
-            segl->m_texturenum = texturetranslation[si->midtexture];
+            segl->m_texturenum = texturetranslation[st->midtexture];
             if(liflags & ML_DONTPEGBOTTOM)
             {
                const fixed_t rf_floorheight = rbsp->curfsector->floorheight - vd.viewz;
@@ -372,7 +374,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
          {
 //            if (si->bottomtexture > 0)
             {
-               SETLOWER8(segl->tb_texturenum, texturetranslation[si->bottomtexture]);
+               SETLOWER8(segl->tb_texturenum, texturetranslation[st->bottomtexture]);
                if(liflags & ML_DONTPEGBOTTOM)
                   b_texturemid = f_ceilingheight;
                else
@@ -394,7 +396,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
          {
 //            if (si->toptexture > 0)
             {
-               SETUPPER8(segl->tb_texturenum, texturetranslation[si->toptexture]);
+               SETUPPER8(segl->tb_texturenum, texturetranslation[st->toptexture]);
                if(liflags & ML_DONTPEGTOP)
                   t_texturemid = f_ceilingheight;
                else
@@ -764,8 +766,10 @@ static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
       else if (backsector->ceilingheight == frontsector->ceilingheight &&
          backsector->floorheight == frontsector->floorheight)
       {
+         sidetex_t *st = SIDETEX(sidedef);
+
          // reject empty lines used for triggers and special events
-         if (sidedef->midtexture == 0 &&
+         if (st->midtexture == 0 &&
             backsector->ceilingpic == frontsector->ceilingpic &&
             backsector->floorpic == frontsector->floorpic &&
             *(int8_t *)&backsector->lightlevel == *(int8_t *)&frontsector->lightlevel) // hack to get rid of the extu.w on SH-2
