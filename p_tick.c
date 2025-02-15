@@ -30,6 +30,8 @@ degenmobj_t		mobjhead;	/* head and tail of mobj list */
 degenmobj_t		freemobjhead, freestaticmobjhead;	/* head and tail of free mobj list */
 degenmobj_t		limbomobjhead;
 
+sectorBBox_t sectorBBoxes;
+
 scenerymobj_t *scenerymobjlist;
 ringmobj_t *ringmobjlist;
 VINT numscenerymobjs = 0;
@@ -57,6 +59,7 @@ void P_InitThinkers (void)
 	limbomobjhead.next = limbomobjhead.prev = (void*)&limbomobjhead;
 	scenerymobjlist = NULL;
 	ringmobjlist = NULL;
+	sectorBBoxes.next = sectorBBoxes.prev = (void *)&sectorBBoxes;
 }
 
 

@@ -58,7 +58,6 @@ void 	P_UpdateSpecials (void);
 
 void 	P_PlayerInSpecialSector (player_t *player);
 
-int		twoSided(int sector,int line);
 sector_t *getSector(int currentSector,int line,int side);
 side_t	*getSide(int currentSector,int line, int side);
 fixed_t	P_FindLowestFloorSurrounding(sector_t *sec);
@@ -72,11 +71,6 @@ int		P_FindSectorFromLineTag(line_t	*line,int start);
 int     P_FindSectorFromLineTagNum(uint8_t tag,int start);
 int		P_FindMinSurroundingLight(sector_t *sector,int max);
 sector_t *getNextSector(line_t *line,sector_t *sec);
-
-/* */
-/*	SPECIAL */
-/* */
-int EV_DoDonut(line_t *line);
 
 /*
 ===============================================================================
@@ -301,7 +295,6 @@ typedef enum
 result_e	T_MovePlane(sector_t *sector,fixed_t speed,
 			fixed_t dest,boolean crush,int floorOrCeiling,int direction);
 
-int		EV_BuildStairs(line_t *line, int type);
 int		EV_DoFloor(line_t *line,floor_e floortype);
 int		EV_DoFloorTag(line_t *line,floor_e floortype, uint8_t tag);
 void	T_MoveFloor(floormove_t *floor);

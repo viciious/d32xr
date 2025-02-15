@@ -633,12 +633,12 @@ void P_LoadReject (int lump)
 
 void P_GroupLines (void)
 {
-	VINT		*linebuffer;
-	int			i, total;
-	sector_t	*sector;
+//	VINT		*linebuffer;
+	int			i;//, total;
+//	sector_t	*sector;
 	subsector_t	*ss;
 	seg_t		*seg;
-	line_t		*li;
+//	line_t		*li;
 
 /* look up sector number for each subsector */
 	ss = subsectors;
@@ -652,8 +652,8 @@ void P_GroupLines (void)
 		sidedef = &sides[linedef->sidenum[seg->sideoffset & 1]];
 		ss->isector = sidedef->sector;
 	}
-
-/* count number of lines in each sector */
+/*
+// count number of lines in each sector
 	li = lines;
 	total = 0;
 	for (i=0 ; i<numlines ; i++, li++)
@@ -670,7 +670,7 @@ void P_GroupLines (void)
 		}
 	}
 	
-/* build line tables for each sector	 */
+// build line tables for each sector
 	linebuffer = Z_Malloc (total*sizeof(*linebuffer), PU_LEVEL);
 	sector = sectors;
 	for (i=0 ; i<numsectors ; i++, sector++)
@@ -689,7 +689,7 @@ void P_GroupLines (void)
 		front->lines[front->linecount++] = i;
 		if (back && back != front)
 			back->lines[back->linecount++] = i;
-	}
+	}*/
 }
 
 /*============================================================================= */
@@ -738,7 +738,7 @@ D_printf ("P_SetupLevel(%i)\n",lumpnum);
 	validcount[0] = 1; // cpu 0
 	validcount[numlines] = 1; // cpu 1
 
-	P_GroupLines ();
+	P_GroupLines();
 
 	P_LoadThings (lumpnum+ML_THINGS);
 

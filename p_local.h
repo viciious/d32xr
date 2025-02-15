@@ -110,6 +110,8 @@ extern VINT numringmobjs;
 extern VINT numstaticmobjs;
 extern VINT numregmobjs;
 
+extern sectorBBox_t sectorBBoxes;
+
 extern	int			activethinkers;	/* debug count */
 extern	int			activemobjs;	/* debug count */
 extern  int         thingmem; // bytes in use for things (at spawn)

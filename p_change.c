@@ -105,11 +105,17 @@ void GetSectorAABB(sector_t *sector, fixed_t bbox[4])
 {
 	M_ClearBox(bbox);
 
-	for (int j = 0; j < sector->linecount; j++)
+	line_t *li;
+	for (int i = 0; i < numlines; i++)
 	{
-		const line_t *li = lines + sector->lines[j];
-		M_AddToBox(bbox, vertexes[li->v1].x << FRACBITS, vertexes[li->v1].y << FRACBITS);
-		M_AddToBox(bbox, vertexes[li->v2].x << FRACBITS, vertexes[li->v2].y << FRACBITS);
+		li = &lines[i];
+
+		if (LD_FRONTSECTOR(li) == sector
+			|| LD_BACKSECTOR(li) == sector)
+		{
+			M_AddToBox(bbox, vertexes[li->v1].x << FRACBITS, vertexes[li->v1].y << FRACBITS);
+			M_AddToBox(bbox, vertexes[li->v2].x << FRACBITS, vertexes[li->v2].y << FRACBITS);
+		}
 	}
 }
 
@@ -155,8 +161,15 @@ boolean P_ChangeSector (sector_t *sector, boolean crunch)
 	ct.crushchange = crunch;
 	
 /* recheck heights for all things near the moving sector */
-	VINT blockbox[4];
-	CalculateSectorBlockBox(sector, blockbox);
+	VINT *blockbox = P_GetSectorBBox(sector);
+	if (!blockbox)
+	{
+		VINT bbox[4];
+		CalculateSectorBlockBox(sector, bbox);
+		
+		sectorBBox_t *sbb = P_AddSectorBBox(sector, bbox);
+		blockbox = sbb->bbox;
+	}
 
 	for (x=blockbox[BOXLEFT]; x<=blockbox[BOXRIGHT]; x++)
 		for (y=blockbox[BOXBOTTOM]; y<=blockbox[BOXTOP]; y++)
@@ -165,3 +178,32 @@ boolean P_ChangeSector (sector_t *sector, boolean crunch)
 	return ct.nofit;
 }
 
+sectorBBox_t *P_AddSectorBBox(sector_t *sector_, VINT bbox[4])
+{
+	sectorBBox_t *sectorBBox = Z_Malloc(sizeof(sectorBBox_t), PU_LEVEL);
+	sectorBBox->sector = sector_;
+	sectorBBox->bbox[0] = bbox[0];
+	sectorBBox->bbox[1] = bbox[1];
+	sectorBBox->bbox[2] = bbox[2];
+	sectorBBox->bbox[3] = bbox[3];
+
+	sectorBBox_t *head_ = &sectorBBoxes;
+	sectorBBox_t *sector = (void*)sectorBBox, *head = (void *)head_;
+	((sectorBBox_t *)head->prev)->next = sector;
+	sector->next = head;
+	sector->prev = head->prev;
+	head->prev = sector;
+
+	return sectorBBox;
+}
+
+VINT *P_GetSectorBBox(sector_t *sector)
+{
+	for (sectorBBox_t *node = sectorBBoxes.next; node != (void*)&sectorBBoxes; node = node->next)
+    {
+		if (node->sector == sector)
+			return node->bbox;
+    }
+
+	return NULL;
+}

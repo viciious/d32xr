@@ -71,34 +71,27 @@ void P_InitPicAnims (void)
 ==============================================================================
 */
 
-/* */
-/*	Will return a side_t* given the number of the current sector, */
-/*		the line number, and the side (0/1) that you want. */
-/* */
-side_t *getSide(int currentSector,int line, int side)
+__attribute((noinline))
+VINT P_FindNextSectorLine(sector_t *sector, VINT start)
 {
-	line_t *check = lines + sectors[currentSector].lines[line];
-	return &sides[ check->sidenum[side] ];
-}
+	VINT i;
+	VINT isector = sector - sectors;
 
-/* */
-/*	Will return a sector_t* given the number of the current sector, */
-/*		the line number and the side (0/1) that you want. */
-/* */
-sector_t *getSector(int currentSector,int line,int side)
-{
-	line_t *check = lines + sectors[currentSector].lines[line];
-	return &sectors[sides[ check->sidenum[side] ].sector];
-}
+	for (i = start + 1; i < numlines; i++)
+	{
+		const line_t *line = &lines[i];
+		const side_t *firstSide = &sides[line->sidenum[0]];
 
-/* */
-/*	Given the sector number and the line number, will tell you whether */
-/*		the line is two-sided or not. */
-/* */
-int	twoSided(int sector,int line)
-{
-	line_t *check = lines + sectors[sector].lines[line];
-	return check->sidenum[1] != -1;
+		if (firstSide->sector == isector)
+			return i;
+
+		const side_t *secondSide = line->sidenum[1] == -1 ? NULL : &sides[line->sidenum[1]];
+
+		if (secondSide && secondSide->sector == isector)
+			return i;
+	}
+
+	return -1;
 }
 
 /*================================================================== */
@@ -127,14 +120,14 @@ sector_t *getNextSector(line_t *line,sector_t *sec)
 /*================================================================== */
 fixed_t	P_FindLowestFloorSurrounding(sector_t *sec)
 {
-	int			i;
+	VINT			i = -1;
 	line_t		*check;
 	sector_t	*other;
 	fixed_t		floor = sec->floorheight;
-	
-	for (i=0 ;i < sec->linecount ; i++)
+
+	while ((i = P_FindNextSectorLine(sec, i)) >= 0)
 	{
-		check = lines + sec->lines[i];
+		check = &lines[i];
 		other = getNextSector(check,sec);
 		if (!other)
 			continue;
@@ -151,20 +144,21 @@ fixed_t	P_FindLowestFloorSurrounding(sector_t *sec)
 /*================================================================== */
 fixed_t	P_FindHighestFloorSurrounding(sector_t *sec)
 {
-	int			i;
+	VINT		i = -1;
 	line_t		*check;
 	sector_t	*other;
 	fixed_t		floor = -32000*FRACUNIT;
 	
-	for (i=0 ;i < sec->linecount ; i++)
+	while ((i = P_FindNextSectorLine(sec, i)) >= 0)
 	{
-		check = lines + sec->lines[i];
+		check = &lines[i];
 		other = getNextSector(check,sec);
 		if (!other)
 			continue;			
 		if (other->floorheight > floor)
 			floor = other->floorheight;
 	}
+
 	return floor;
 }
 
@@ -175,8 +169,8 @@ fixed_t	P_FindHighestFloorSurrounding(sector_t *sec)
 /*================================================================== */
 fixed_t	P_FindNextHighestFloor(sector_t *sec,int currentheight)
 {
-	int			i;
-	int			h;
+	VINT		i = -1;
+	int			h = 0;
 	int			min;
 	line_t		*check;
 	sector_t	*other;
@@ -184,9 +178,9 @@ fixed_t	P_FindNextHighestFloor(sector_t *sec,int currentheight)
 	fixed_t		heightlist[20];		/* 20 adjoining sectors max! */
 	
 	heightlist[0] = 0;
-	for (i =0,h = 0 ;i < sec->linecount ; i++)
+	while ((i = P_FindNextSectorLine(sec, i)) >= 0)
 	{
-		check = lines + sec->lines[i];
+		check = &lines[i];
 		other = getNextSector(check,sec);
 		if (!other)
 			continue;
@@ -212,18 +206,18 @@ fixed_t	P_FindNextHighestFloor(sector_t *sec,int currentheight)
 
 fixed_t	P_FindNextLowestFloor(sector_t *sec,int currentheight)
 {
-	int			i;
-	int			h;
+	VINT			i = -1;
+	int			h = 0;
 	int			min;
 	line_t		*check;
 	sector_t	*other;
 	fixed_t		height = currentheight;
 	fixed_t		heightlist[20];		/* 20 adjoining sectors max! */
-	
+
 	heightlist[0] = 0;
-	for (i =0,h = 0 ;i < sec->linecount ; i++)
+	while ((i = P_FindNextSectorLine(sec, i)) >= 0)
 	{
-		check = lines + sec->lines[i];
+		check = &lines[i];
 		other = getNextSector(check,sec);
 		if (!other)
 			continue;
@@ -254,20 +248,21 @@ fixed_t	P_FindNextLowestFloor(sector_t *sec,int currentheight)
 /*================================================================== */
 fixed_t	P_FindLowestCeilingSurrounding(sector_t *sec)
 {
-	int			i;
+	VINT		i = 0;
 	line_t		*check;
 	sector_t	*other;
 	fixed_t		height = 32000*FRACUNIT;
 	
-	for (i=0 ;i < sec->linecount ; i++)
+	while ((i = P_FindNextSectorLine(sec, i)) >= 0)
 	{
-		check = lines + sec->lines[i];
+		check = &lines[i];
 		other = getNextSector(check,sec);
 		if (!other)
 			continue;
 		if (other->ceilingheight < height)
 			height = other->ceilingheight;
 	}
+
 	return height;
 }
 
@@ -278,20 +273,21 @@ fixed_t	P_FindLowestCeilingSurrounding(sector_t *sec)
 /*================================================================== */
 fixed_t	P_FindHighestCeilingSurrounding(sector_t *sec)
 {
-	int	i;
+	VINT	i = 0;
 	line_t	*check;
 	sector_t	*other;
 	fixed_t	height = -32000*FRACUNIT;
 	
-	for (i=0 ;i < sec->linecount ; i++)
+	while ((i = P_FindNextSectorLine(sec, i)) >= 0)
 	{
-		check = lines + sec->lines[i];
+		check = &lines[i];
 		other = getNextSector(check,sec);
 		if (!other)
 			continue;
 		if (other->ceilingheight > height)
 			height = other->ceilingheight;
 	}
+
 	return height;
 }
 
@@ -338,21 +334,23 @@ int	P_FindSectorFromLineTagNum(uint8_t tag,int start)
 /*================================================================== */
 int	P_FindMinSurroundingLight(sector_t *sector,int max)
 {
-	int			i;
+	VINT			i = 0;
 	int			min;
 	line_t		*line;
 	sector_t	*check;
 	
 	min = max;
-	for (i=0 ; i < sector->linecount ; i++)
+	while ((i = P_FindNextSectorLine(sector, i)) >= 0)
 	{
-		line = lines + sector->lines[i];
+		line = &lines[i];
+
 		check = getNextSector(line,sector);
 		if (!check)
 			continue;
 		if (check->lightlevel < min)
 			min = check->lightlevel;
 	}
+
 	return min;
 }
 
@@ -497,82 +495,6 @@ void P_UpdateSpecials (void)
 				break;
 		}
 	}	
-}
-
-/*============================================================ */
-/* */
-/*	Special Stuff that can't be categorized */
-/* */
-/*============================================================ */
-int EV_DoDonut(line_t *line)
-{
-	sector_t	*s1;
-	sector_t	*s2;
-	sector_t	*s3;
-	int			secnum;
-	int			rtn;
-	int			i;
-	floormove_t		*floor;
-	
-	secnum = -1;
-	rtn = 0;
-	uint8_t tag = P_GetLineTag(line);
-	while ((secnum = P_FindSectorFromLineTagNum(tag,secnum)) >= 0)
-	{
-		line_t *line;
-		s1 = &sectors[secnum];
-		
-		/*	ALREADY MOVING?  IF SO, KEEP GOING... */
-		if (s1->specialdata)
-			continue;
-			
-		rtn = 1;
-		line = lines + s1->lines[0];
-		s2 = getNextSector(line,s1);
-		if (!s2)
-			continue;
-		for (i = 0;i < s2->linecount;i++)
-		{
-			line = lines + s2->lines[i];
-			if (!(line->sidenum[1] != -1))
-				continue;
-			s3 = &sectors[sides[line->sidenum[1]].sector];
-			if (s3 == s1)
-				continue;
-
-			/* */
-			/*	Spawn rising slime */
-			/* */
-			floor = Z_Malloc (sizeof(*floor), PU_LEVSPEC);
-			P_AddThinker (&floor->thinker);
-			s2->specialdata = floor;
-			floor->thinker.function = T_MoveFloor;
-			floor->type = donutRaise;
-			floor->crush = false;
-			floor->direction = 1;
-			floor->sector = s2;
-			floor->speed = FLOORSPEED / 2;
-			floor->texture = s3->floorpic;
-			floor->newspecial = 0;
-			floor->floordestheight = s3->floorheight;
-			
-			/* */
-			/*	Spawn lowering donut-hole */
-			/* */
-			floor = Z_Malloc (sizeof(*floor), PU_LEVSPEC);
-			P_AddThinker (&floor->thinker);
-			s1->specialdata = floor;
-			floor->thinker.function = T_MoveFloor;
-			floor->type = lowerFloor;
-			floor->crush = false;
-			floor->direction = -1;
-			floor->sector = s1;
-			floor->speed = FLOORSPEED / 2;
-			floor->floordestheight = s3->floorheight;
-			break;
-		}
-	}
-	return rtn;
 }
 
 /*

@@ -74,7 +74,6 @@ typedef	struct
 {
 	fixed_t		floorheight, ceilingheight;
 	void		*specialdata;		/* thinker_t for reversable actions */
-	VINT		*lines;				/* [linecount] size */
 	VINT		validcount;			/* if == validcount, already checked */
 	uint8_t		floorpic, ceilingpic;	/* if ceilingpic == (uint8_t)-1,draw sky */
 
@@ -82,7 +81,7 @@ typedef	struct
 
 	uint8_t		tag;
 	uint8_t     flags;
-	uint8_t		linecount;
+	uint8_t		was_linecount; // UNUSED?
 	uint8_t     floor_xoffs; // Upper X, Lower Y. 8 different speeds for each.
 
 	// killough 3/7/98: support flat heights drawn at another sector's heights
@@ -92,6 +91,18 @@ typedef	struct
 
 	SPTR		thinglist;			/* list of mobjs in sector */
 } sector_t;
+
+typedef struct sectorBBox_s
+{
+	struct sectorBBox_s *prev;
+	struct sectorBBox_s *next;
+
+	sector_t *sector;
+	VINT bbox[4];
+} sectorBBox_t;
+
+sectorBBox_t *P_AddSectorBBox(sector_t *sector_, VINT bbox[4]);
+VINT *P_GetSectorBBox(sector_t *sector);
 
 typedef struct
 {
