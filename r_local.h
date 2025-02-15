@@ -73,24 +73,24 @@ struct line_s;
 typedef	struct
 {
 	fixed_t		floorheight, ceilingheight;
+	void		*specialdata;		/* thinker_t for reversable actions */
+	VINT		*lines;				/* [linecount] size */
 	VINT		validcount;			/* if == validcount, already checked */
-	VINT		linecount;
 	uint8_t		floorpic, ceilingpic;	/* if ceilingpic == (uint8_t)-1,draw sky */
 
 	uint8_t		lightlevel, special;
 
 	uint8_t		tag;
 	uint8_t     flags;
+	uint8_t		linecount;
+	uint8_t     floor_xoffs; // Upper X, Lower Y. 8 different speeds for each.
+
 	// killough 3/7/98: support flat heights drawn at another sector's heights
   	VINT        heightsec;    // other sector, or -1 if no other sector
 
 	VINT        fofsec;
 
-	VINT        floor_xoffs; // Upper X, Lower Y
-
 	SPTR		thinglist;			/* list of mobjs in sector */
-	void		*specialdata;		/* thinker_t for reversable actions */
-	VINT		*linesy;				/* [linecount] size */
 } sector_t;
 
 typedef struct

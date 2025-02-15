@@ -67,7 +67,7 @@ static VINT checkcoord[12][4] =
    { 0, 0, 0, 0 }
 };
 
-static sector_t emptysector = { 0, 0, -2, -2, -2, 0, 0, 0, 0, -1 };
+static sector_t emptysector = { .floorheight = 0, .ceilingheight = 0, .validcount = 0, .linecount = 0, .floorpic = -2, .ceilingpic = -2, .lightlevel = -2, .special = 0, .tag = 0, .flags = 0, .heightsec = -1, .fofsec = -1, .thinglist = (SPTR)0, .specialdata = 0, .lines = 0};
 
 static int R_ClipToViewEdges(angle_t angle1, angle_t angle2)
 {
