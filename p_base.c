@@ -32,6 +32,7 @@
 #include "p_local.h"
 #include "mars.h"
 
+void P_ApplyFriction(mobj_t *mo) ATTR_DATA_CACHE_ALIGN;
 static void P_FloatChange(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
 void P_ZMovement(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
 void P_MobjThinker(mobj_t* mobj) ATTR_DATA_CACHE_ALIGN;
@@ -39,6 +40,33 @@ void P_XYMovement(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;
 
 #define STOPSPEED 0x1000
 #define FRICTION  0xd240
+
+//
+// Do horizontal movement.
+//
+void P_ApplyFriction(mobj_t *mo)
+{
+   if(mo->momx > -STOPSPEED && mo->momx < STOPSPEED &&
+      mo->momy > -STOPSPEED && mo->momy < STOPSPEED)
+   {
+      mo->momx = 0;
+      mo->momy = 0;
+   }
+   else
+   {
+#if 0
+		mo->momx = (mo->momx>>8)*(FRICTION>>8);
+		mo->momy = (mo->momy>>8)*(FRICTION>>8);
+#else
+		// the original code doesn't produce identical
+		// results in most cases, but is much slower on
+		// the SH-2 as it involves calling gcc's builtin
+		// functions for the >> 8's
+		mo->momx = FixedMul(mo->momx, FRICTION);
+		mo->momy = FixedMul(mo->momy, FRICTION);
+#endif      
+   }
+}
 
 //
 // Do horizontal movement.
@@ -104,17 +132,7 @@ void P_XYMovement(mobj_t *mo)
    if(mo->flags & MF_CORPSE && mo->floorz != SSEC_SECTOR(mo->subsector)->floorheight)
       return; // sliding corpse: don't stop halfway off a step
 
-   if(mo->momx > -STOPSPEED && mo->momx < STOPSPEED &&
-      mo->momy > -STOPSPEED && mo->momy < STOPSPEED)
-   {
-      mo->momx = 0;
-      mo->momy = 0;
-   }
-   else
-   {
-      mo->momx = (mo->momx >> 8) * (FRICTION >> 8);
-      mo->momy = (mo->momy >> 8) * (FRICTION >> 8);
-   }
+   P_ApplyFriction(mo);
 }
 
 //

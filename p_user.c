@@ -101,17 +101,7 @@ void P_PlayerXYMovement (mobj_t *mo)
 			return;			/* don't stop halfway off a step */
 	}
 
-	if (mo->momx > -STOPSPEED && mo->momx < STOPSPEED
-	&& mo->momy > -STOPSPEED && mo->momy < STOPSPEED)
-	{	
-		mo->momx = 0;
-		mo->momy = 0;
-	}
-	else
-	{
-		mo->momx = (mo->momx>>8)*(FRICTION>>8);
-		mo->momy = (mo->momy>>8)*(FRICTION>>8);
-	}
+	P_ApplyFriction(mo);
 }
 
 
@@ -367,9 +357,14 @@ boolean		onground;
 void P_Thrust (player_t *player, angle_t angle, fixed_t move) 
 {
 	angle >>= ANGLETOFINESHIFT;
+#if 0
 	move >>= 8;
 	player->mo->momx += move*(finecosine(angle)>>8);
 	player->mo->momy += move*(finesine(angle)>>8);
+#else
+	player->mo->momx += FixedMul(move, finecosine(angle));
+	player->mo->momy += FixedMul(move, finesine(angle));
+#endif
 }
 
 

@@ -131,6 +131,8 @@ boolean	P_SetMobjState (mobj_t *mobj, statenum_t state) ATTR_DATA_CACHE_ALIGN;
 void 	P_MobjThinker (mobj_t *mobj);
 void 	P_PreSpawnMobjs(int count, int staticcount);
 
+void 	P_ApplyFriction(mobj_t *mo);
+
 void	P_SpawnPuff2 (fixed_t x, fixed_t y, fixed_t z, fixed_t attackrange, subsector_t *ss);
 void	P_SpawnPuff (fixed_t x, fixed_t y, fixed_t z, fixed_t attackrange);
 
