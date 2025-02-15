@@ -90,7 +90,7 @@ typedef	struct
 
 	SPTR		thinglist;			/* list of mobjs in sector */
 	void		*specialdata;		/* thinker_t for reversable actions */
-	VINT		*lines;				/* [linecount] size */
+	VINT		*linesy;				/* [linecount] size */
 } sector_t;
 
 typedef struct

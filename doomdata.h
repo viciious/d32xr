@@ -62,8 +62,8 @@ typedef struct
 #define	ML_MIDTEXTUREBLOCK  512	/* Collide with midtexture (fences, etc.) */
 
 /* to aid move clipping */
-#define ML_ST_HORIZONTAL 	4096
-#define ML_ST_VERTICAL	 	8192
+#define ML_ST_HORIZONTAL 	4096 // Not used
+#define ML_ST_VERTICAL	 	8192 // Not used
 #define ML_ST_POSITIVE	 	16384
 #define ML_ST_NEGATIVE	 	32768
 

@@ -336,6 +336,7 @@ void P_LoadThings (int lump)
 		numthingsreal += 96;
 		numstaticthings += 64;
 	}
+
 	P_PreSpawnMobjs(numthingsreal, numstaticthings, numringthings, numscenerymobjs);
 
 	mt = (mapthing_t *)data;
