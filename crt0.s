@@ -36,9 +36,9 @@
         .ascii  " 32X            "
         .ascii  "                "
         .ascii  "GM 20230824-00"
-        .word   0x0000
+        .word   0x0000                  /* Checksum */
         .ascii  "J6CM            "
-        .long   0x00000000,0x003FFFFF   /* ROM start, end */
+        .long   0x00000000,0x002FFFFF   /* ROM start, end */
         .long   0x00FF0000,0x00FFFFFF   /* RAM start, end */
 
 ! 2KB of save ram on odd byte lane
@@ -321,11 +321,61 @@ sec_vbr:
         .long   sec_irq         /* V Blank interrupt (Level 12 & 13) */
         .long   sec_irq         /* Reset Button (Level 14 & 15) */
 
+pri_checksum:
+        mov.l   p_rom_header_size,r1
+        
+        mov.l   p_rom_end_ptr,r2
+        mov.l   p_rom_start,r0
+        mov.l   @r2,r2
+        add     r0,r2
+
+        mov     #0,r3
+0:
+        mov.w   @r1,r0
+        add     r0,r3
+        add     #2,r1
+        cmp/gt  r2,r1
+        bf      0b
+
+        mov.l   p_word_mask,r1
+        mov.l   p_rom_checksum,r0
+        and     r1,r3
+        mov.w   @r0,r0
+        and     r1,r0
+
+        cmp/eq  #0,r0
+        bt      2f      ! If the ROM header specifies a checksum of zero, ignore validation check.
+
+        cmp/eq  r0,r3
+        bt      2f
+1:
+        bra     1b
+        nop
+2:
+        bra     pri_start_continue
+        nop
+
+        .align 4
+p_rom_start:
+        .long   0x2000000
+p_rom_checksum:
+        .long   0x200018E
+p_rom_end_ptr:
+        .long   0x20001A4
+p_rom_header_size:
+        .long   0x2000200
+p_word_mask:
+        .long   0xFFFF
+
 !-----------------------------------------------------------------------
 ! The Primary SH2 starts here
 !-----------------------------------------------------------------------
 
 pri_start:
+        bra     pri_checksum
+        nop
+
+pri_start_continue:
         ! clear interrupt flags
         mov.l   _pri_int_clr,r1
         mov.w   r0,@-r1                 /* PWM INT clear */
