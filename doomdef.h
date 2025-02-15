@@ -287,7 +287,7 @@ typedef struct ringmobj_s
 	SPTR bprev;
 	// SIMILARITIES END HERE
 	VINT			x, y, z;
-	VINT alive;
+	VINT pad;
 } ringmobj_t;
 
 typedef struct degenmobj_s

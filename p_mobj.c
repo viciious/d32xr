@@ -58,7 +58,6 @@ void P_RemoveMobj (mobj_t *mobj)
 	{
 		ringmobj_t *ring = (ringmobj_t*)mobj;
 		ring->flags = 0;
-		ring->alive = 0;
 		return;
 
 	}
@@ -299,7 +298,6 @@ mobj_t *P_SpawnMobjNoSector(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 			ringmobj->y = y >> FRACBITS;
 			ringmobj->z = z >> FRACBITS;
 			ringmobj->flags = info->flags;
-			ringmobj->alive = 1;
 
 			/* set subsector and/or block links */
 			P_SetThingPosition2 ((mobj_t*)ringmobj, R_PointInSubsector2(x, y));
@@ -412,6 +410,7 @@ void P_PreSpawnMobjs(int count, int staticcount, int ringcount, int scenerycount
 	if (staticcount > 0)
 	{
 		uint8_t *mobj = Z_Malloc (static_mobj_size*staticcount, PU_LEVEL);
+		D_memset(mobj, 0, static_mobj_size*staticcount);
 		for (; staticcount > 0; staticcount--) {
 			P_AddMobjToList((void *)mobj, (void *)&freestaticmobjhead);
 			mobj += static_mobj_size;
@@ -422,6 +421,7 @@ void P_PreSpawnMobjs(int count, int staticcount, int ringcount, int scenerycount
 	if (count > 0)
 	{
 		mobj_t *mobj = Z_Malloc (sizeof(*mobj)*count, PU_LEVEL);
+		D_memset(mobj, 0, (sizeof(*mobj)*count));
 		for (; count > 0; count--) {
 			P_AddMobjToList(mobj, (void *)&freemobjhead);
 			mobj++;
