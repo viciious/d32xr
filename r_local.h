@@ -86,19 +86,19 @@ typedef	struct
 
 	uint8_t		lightlevel, special;
 
-	VINT		validcount;			/* if == validcount, already checked */
-	VINT		linecount;
-
 	VINT		tag;
 
 	SPTR		soundtarget;		/* thing that made a sound (or null) */
 	SPTR		thinglist;			/* list of mobjs in sector */
+
+	VINT		validcount;			/* if == validcount, already checked */
+	VINT		linecount;
+
+	VINT		*lines;				/* [linecount] size */
+	void		*specialdata;		/* thinker_t for reversable actions */
 	
 	VINT		blockbox[4];		/* mapblock bounding box for height changes */
 	VINT		soundorg[2];		/* for any sounds played by the sector */
-
-	void		*specialdata;		/* thinker_t for reversable actions */
-	VINT		*lines;				/* [linecount] size */
 } sector_t;
 
 typedef struct
