@@ -493,6 +493,201 @@ VINT CalcFlatSize(int lumplength)
 }
 
 
+__attribute((noinline))
+static void R_SetupSkyGradient(void)
+{
+	// Retrieve lump for drawing the sky gradient.
+	uint8_t *sky_gradient_ptr;
+
+	copper_effects = false;
+	
+	if (copper_color_table)
+	{
+		Z_Free(copper_color_table);
+		copper_color_table = NULL;
+	}
+
+	//uint32_t sky_gradient_size;
+	
+	int lump;
+
+	char lumpname[9];
+
+	D_snprintf(lumpname, 8, "%sGRA", gamemapinfo.sky);
+	lump = W_CheckNumForName(lumpname);
+	if (lump == -1) {
+		return;
+	}
+
+	// This map uses a gradient.
+	copper_effects = true;
+	sky_gradient_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+	//sky_gradient_size = W_LumpLength(lump);
+
+	copper_neutral_color = (sky_gradient_ptr[0] << 8) | (sky_gradient_ptr[1] & 0xFF);
+	copper_table_height = 1 << sky_gradient_ptr[2];
+	//copper_table_count = sky_gradient_ptr[3];
+	copper_vertical_offset = (sky_gradient_ptr[4] << 8) | (sky_gradient_ptr[5] & 0xFF);
+	copper_vertical_rate = sky_gradient_ptr[6];
+
+	int section_count = sky_gradient_ptr[7];
+
+	int section_format = sky_gradient_ptr[8];
+
+	unsigned char *data = &sky_gradient_ptr[9];
+
+	int table_index = 0;
+
+	copper_color_table = Z_Malloc(sizeof(unsigned short) * copper_table_height, PU_STATIC); // Put it on the heap
+
+	switch (section_format)
+	{
+		case 0:
+			// Flat color sections
+			for (int section=0; section < section_count; section++)
+			{
+				unsigned short color = (data[0] << 8) | data[1];
+				unsigned short height = data[2] + 1;
+
+				for (int line=0; line < height; line++) {
+					copper_color_table[table_index + line] = color;
+				}
+
+				table_index += height;
+				data += 3;
+			}
+			break;
+
+		case 1:
+			// Graded color sections
+			for (int section=0; section < section_count; section++)
+			{
+				unsigned short red = (data[0] << 8);
+				unsigned short green = (data[1] << 8);
+				unsigned short blue = (data[2] << 8);
+				signed short inc_red = (data[3] << 8) | data[4];
+				signed short inc_green = (data[5] << 8) | data[6];
+				signed short inc_blue = (data[7] << 8) | data[8];
+				unsigned short interval_iterations = data[9] + 1;
+				unsigned short interval_height = data[10] + 1;
+
+				for (int interval = 0; interval < interval_iterations; interval++) {
+					for (int line=0; line < interval_height; line++) {
+						copper_color_table[table_index + line] =
+								(((*(unsigned char *)&blue) & 0xF8) << 7)
+								| (((*(unsigned char *)&green) & 0xF8) << 2)
+								| ((*(unsigned char *)&red) >> 3);
+					}
+
+					table_index += interval_height;
+
+					red += inc_red;
+					green += inc_green;
+					blue += inc_blue;
+				}
+
+				data += 11;
+			}
+	}
+
+	unsigned short color = (data[0] << 8) | data[1];
+
+	while (table_index < copper_table_height) {
+		copper_color_table[table_index] = color;
+		table_index++;
+	}
+}
+
+
+#ifdef MDSKY
+__attribute((noinline))
+static void R_SetupMDSky(void)
+{
+	// Retrieve lumps for drawing the sky on the MD.
+	uint8_t *sky_metadata_ptr;
+	uint8_t *sky_names_a_ptr;
+	uint8_t *sky_names_b_ptr;
+	uint8_t *sky_palettes_ptr;
+	uint8_t *sky_tiles_ptr;
+
+	//uint32_t sky_metadata_size;
+	uint32_t sky_names_a_size;
+	uint32_t sky_names_b_size;
+	uint32_t sky_palettes_size;
+	uint32_t sky_tiles_size;
+	
+	int lump;
+
+	char lumpname[9];
+
+	D_snprintf(lumpname, 8, "%sMD", gamemapinfo.sky);
+	lump = W_CheckNumForName(lumpname);
+	if (lump != -1) {
+		// This map uses an MD sky.
+		sky_md_layer = true;
+		sky_metadata_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		//sky_metadata_size = W_LumpLength(lump);
+	}
+	else {
+		// This map uses a 32X sky.
+		sky_md_layer = false;
+		return;
+	}
+
+	D_snprintf(lumpname, 8, "%sA", gamemapinfo.sky);
+	lump = W_CheckNumForName(lumpname);
+	if (lump != -1) {
+		sky_names_a_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		sky_names_a_size = W_LumpLength(lump);
+	}
+	else {
+		return;
+	}
+
+	D_snprintf(lumpname, 8, "%sB", gamemapinfo.sky);
+	lump = W_CheckNumForName(lumpname);
+	if (lump != -1) {
+		sky_names_b_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		sky_names_b_size = W_LumpLength(lump);
+	}
+	else {
+		return;
+	}
+
+	D_snprintf(lumpname, 8, "%sPAL", gamemapinfo.sky);
+	lump = W_CheckNumForName(lumpname);
+	if (lump != -1) {
+		sky_palettes_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		sky_palettes_size = W_LumpLength(lump);
+	}
+	else {
+		return;
+	}
+
+	D_snprintf(lumpname, 8, "%sTIL", gamemapinfo.sky);
+	lump = W_CheckNumForName(lumpname);
+	if (lump != -1) {
+		sky_tiles_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
+		sky_tiles_size = W_LumpLength(lump);
+	}
+	else {
+		return;
+	}
+
+	// Get the thru-pixel color from the metadata.
+	mars_thru_rgb_reference = sky_metadata_ptr[0];
+	extended_sky = (sky_metadata_ptr[2] & 0x81);	// false = H32 mode; true = H40 mode
+	
+
+	Mars_LoadMDSky(sky_metadata_ptr,
+			sky_names_a_ptr, sky_names_a_size, 
+			sky_names_b_ptr, sky_names_b_size, 
+			sky_palettes_ptr, sky_palettes_size, 
+			sky_tiles_ptr, sky_tiles_size);
+}
+#endif
+
+
 /*
 ==============
 =
@@ -673,6 +868,12 @@ nocache:
 
 void R_SetupLevel(int gamezonemargin)
 {
+	#ifdef MDSKY
+	R_SetupSkyGradient();
+
+	R_SetupMDSky();
+	#endif
+
 	R_SetupTextureCaches(gamezonemargin);
 
 	R_SetViewportSize(viewportNum);
