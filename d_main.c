@@ -342,18 +342,20 @@ static void D_LoadSkyGradient(void)
 	//sky_gradient_size = W_LumpLength(lump);
 
 	copper_neutral_color = (sky_gradient_ptr[0] << 8) | (sky_gradient_ptr[1] & 0xFF);
-	copper_vertical_offset = (sky_gradient_ptr[2] << 8) | (sky_gradient_ptr[3] & 0xFF);
-	copper_vertical_rate = sky_gradient_ptr[4];
+	copper_table_height = 1 << sky_gradient_ptr[2];
+	//copper_table_count = sky_gradient_ptr[3];
+	copper_vertical_offset = (sky_gradient_ptr[4] << 8) | (sky_gradient_ptr[5] & 0xFF);
+	copper_vertical_rate = sky_gradient_ptr[6];
 
-	int section_count = sky_gradient_ptr[5];
+	int section_count = sky_gradient_ptr[7];
 
-	int section_format = sky_gradient_ptr[6];
+	int section_format = sky_gradient_ptr[8];
 
-	unsigned char *data = &sky_gradient_ptr[7];
+	unsigned char *data = &sky_gradient_ptr[9];
 
 	int table_index = 0;
 
-	copper_color_table = Z_Malloc(sizeof(unsigned short) * 512, PU_STATIC); // Put it on the heap
+	copper_color_table = Z_Malloc(sizeof(unsigned short) * copper_table_height, PU_STATIC); // Put it on the heap
 
 	switch (section_format)
 	{
@@ -407,7 +409,7 @@ static void D_LoadSkyGradient(void)
 
 	unsigned short color = (data[0] << 8) | data[1];
 
-	while (table_index < 512) {
+	while (table_index < copper_table_height) {
 		copper_color_table[table_index] = color;
 		table_index++;
 	}

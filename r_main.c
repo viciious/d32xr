@@ -85,6 +85,9 @@ short copper_vertical_rate;
 __attribute__((aligned(2)))
 unsigned short copper_neutral_color;
 
+__attribute__((aligned(2)))
+unsigned short copper_table_height;
+
 __attribute__((aligned(4)))
 volatile unsigned short *copper_color_table = NULL;
 

@@ -625,6 +625,8 @@ pri_h_irq:
         mov.l   phi_copper_color_table_ptr,r1
         mov.l   @r1,r1                  /* Dereference the pointer */
         mov.w   @(r0,r1),r0
+        mov.w   phi_color_mask,r1
+        and     r1,r0
 
 2:
         mov.l   phi_mars_thru_color,r1
@@ -660,6 +662,11 @@ phi_line:
         .long   _mars_hblank_count
 phi_mars_thru_color:
         .long   0x200043F8
+
+phi_color_mask:
+        .short  0x7FFF
+
+        .align  4
 
 !-----------------------------------------------------------------------
 ! Primary Command IRQ handler
