@@ -270,7 +270,6 @@ int EV_DoFloorTag(line_t *line,floor_e floortype, uint8_t tag)
 {
 	int			secnum;
 	int			rtn;
-	int			i;
 	sector_t	*sec;
 	floormove_t	*floor;
 
@@ -303,7 +302,7 @@ int EV_DoFloorTag(line_t *line,floor_e floortype, uint8_t tag)
 												(vertexes[line->v1].y - vertexes[line->v2].y) << FRACBITS) / 4;
 				floor->speed = floor->origSpeed;
 
-				if (line->flags & ML_NOCLIMB)
+				if (ldflags[line-lines] & ML_NOCLIMB)
 				{
 					floor->direction = 1;
 					floor->floordestheight = P_FindNextHighestFloor(floor->controlSector, sec->floorheight) >> FRACBITS;

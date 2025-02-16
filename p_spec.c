@@ -544,7 +544,7 @@ void P_SpawnSpecials (void)
 	numlineanimspecials = 0;
 	for (i = 0; i < numlines; i++)
 	{
-		if (!(lines[i].flags & ML_HAS_SPECIAL_OR_TAG))
+		if (!(ldflags[i] & ML_HAS_SPECIAL_OR_TAG))
 			continue;
 			
 		switch (P_GetLineSpecial(&lines[i]))
@@ -577,7 +577,7 @@ void P_SpawnSpecials (void)
 			// heights depending on the camera height.
 			// Should that be the halfheight of the control sector?
 			// Or maybe even configurable somehow, by using the control sector's texture offset value...
-				if (lines[i].flags & ML_BLOCKMONSTERS)
+				if (ldflags[i] & ML_BLOCKMONSTERS)
 					sectors[s].flags |= SF_FOF_SWAPHEIGHTS;
 			}
 			break;

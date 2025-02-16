@@ -14,7 +14,7 @@ static boolean PIT_CameraCheckLine(line_t *ld, pmovework_t *mw)
    if(ld->sidenum[1] == -1)
       return false; // one-sided line
 
-   if(ld->flags & ML_BLOCKING)
+   if(ldflags[ld-lines] & ML_BLOCKING)
       return false; // explicitly blocking everything
 
    front = LD_FRONTSECTOR(ld);

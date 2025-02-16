@@ -27,6 +27,7 @@ sector_t	*sectors;
 subsector_t	*subsectors;
 node_t		*nodes;
 line_t		*lines;
+uint16_t    *ldflags;
 side_t		*sides;
 sidetex_t   *sidetexes;
 
@@ -50,6 +51,7 @@ int16_t worldbbox[4];
 #define LOADFLAGS_REJECT 4
 #define LOADFLAGS_NODES 8
 #define LOADFLAGS_SEGS 16
+#define LOADFLAGS_LINEDEFS 32
 
 /*
 =================
@@ -423,73 +425,78 @@ void P_AddLineSpecial(int ld, uint8_t special)
 
 void P_LoadLineDefs (int lump)
 {
-	byte			*data;
 	int				i;
-	maplinedef_t	*mld;
 	line_t			*ld;
 	mapvertex_t		*v1, *v2;
 	
 	numlines = W_LumpLength (lump) / sizeof(maplinedef_t);
-	lines = Z_Malloc (numlines*sizeof(line_t)+16,PU_LEVEL);
-	lines = (void*)(((uintptr_t)lines + 15) & ~15); // aline on cacheline boundary
-	D_memset (lines, 0, numlines*sizeof(line_t));
-	data = I_TempBuffer();
-	W_ReadLump (lump,data);
+
+	if (gamemapinfo.loadFlags & LOADFLAGS_LINEDEFS)
+	{
+		lines = Z_Malloc (numlines*sizeof(line_t)+16,PU_LEVEL);
+		lines = (void*)(((uintptr_t)lines + 15) & ~15); // aline on cacheline boundary
+		W_ReadLump(lump, lines);
+	}
+	else
+		lines = (line_t *)W_POINTLUMPNUM(lump);
+
+	// LDFlags always live in RAM. Lump comes directly after LINEDEFS
+	ldflags = Z_Malloc(numlines*sizeof(uint16_t)+16, PU_LEVEL);
+	ldflags = (void*)(((uintptr_t)ldflags + 15) & ~15); // aline on cacheline boundary
+	D_memset (ldflags, 0, numlines*sizeof(uint16_t));
+	byte *ldData = I_TempBuffer ();
+	W_ReadLump (lump + 1, ldData);
+
 	numlinetags = 0;
 	numlinespecials = 0;
 
-	mld = (maplinedef_t *)data;
+	uint16_t *ldFlagsPtr = ldflags;
+	mapldflags_t *mapldFlags = (mapldflags_t*)ldData;
 	ld = lines;
-	for (i=0 ; i<numlines ; i++, mld++, ld++)
+	for (i=0 ; i<numlines ; i++, ld++, mapldFlags++, ldFlagsPtr++)
 	{
-		uint8_t tag;
-		uint8_t special;
+		uint8_t tag = mapldFlags->tag;
+		uint8_t special = mapldFlags->special;
+		uint16_t flags = mapldFlags->flags;
 
 		fixed_t dx,dy;
-		ld->flags = LITTLESHORT(mld->flags);
-		special = mld->special;
-		tag = mld->tag;
-		ld->v1 = LITTLESHORT(mld->v1);
-		ld->v2 = LITTLESHORT(mld->v2);
-		
 		v1 = &vertexes[ld->v1];
 		v2 = &vertexes[ld->v2];
 		dx = (v2->x - v1->x) << FRACBITS;
 		dy = (v2->y - v1->y) << FRACBITS;
 		if (!dx)
-			ld->flags |= ML_ST_VERTICAL;
+			flags |= ML_ST_VERTICAL;
 		else if (!dy)
-			ld->flags |= ML_ST_HORIZONTAL;
+			flags |= ML_ST_HORIZONTAL;
 		else
 		{
 			if (FixedDiv (dy , dx) > 0)
-				ld->flags |= ML_ST_POSITIVE;
+				flags |= ML_ST_POSITIVE;
 			else
-				ld->flags |= ML_ST_NEGATIVE;
+				flags |= ML_ST_NEGATIVE;
 		}
-
-		ld->sidenum[0] = LITTLESHORT(mld->sidenum[0]);
-		ld->sidenum[1] = LITTLESHORT(mld->sidenum[1]);
 
 #define ML_TWOSIDED 4
-
+/*
 		// if the two-sided flag isn't set, set the back side to -1
 		if (ld->sidenum[1] != -1) {
-			if (!(ld->flags & ML_TWOSIDED)) {
+			if (!(flags & ML_TWOSIDED)) {
 				ld->sidenum[1] = -1;
 			}
-		}
-		ld->flags &= ~ML_TWOSIDED;
+		}*/
+		flags &= ~ML_TWOSIDED;
 #undef ML_TWOSIDED
 
-		if (mld->tag > 0 || mld->special > 0)
-			ld->flags |= ML_HAS_SPECIAL_OR_TAG;
+		if (tag > 0 || special > 0)
+			flags |= ML_HAS_SPECIAL_OR_TAG;
 
 		if (tag)
 			numlinetags++;
 
 		if (special)
 			numlinespecials++;
+
+		*ldFlagsPtr = flags;
 	}
 
 	if (numlinetags)
@@ -498,10 +505,10 @@ void P_LoadLineDefs (int lump)
 		numlinetags = (numlinetags + LINETAGS_HASH_SIZE - 1) & ~(LINETAGS_HASH_SIZE - 1);
 		linetags = Z_Malloc(sizeof(*linetags)*numlinetags*2, PU_LEVEL);
 		D_memset(linetags, (uint16_t)-1, sizeof(*linetags)*numlinetags*2);
-		mld = (maplinedef_t *)data;
-		for (i=0 ; i<numlines ; i++, mld++)
+		mapldFlags = (mapldflags_t*)ldData;
+		for (i=0 ; i<numlines ; i++, mapldFlags++)
 		{
-			uint8_t tag = mld->tag;
+			uint8_t tag = mapldFlags->tag;
 			if (tag)
 				P_AddLineTag(i, tag);
 		}
@@ -513,10 +520,10 @@ void P_LoadLineDefs (int lump)
 		numlinespecials = (numlinespecials + LINESPECIALS_HASH_SIZE - 1) & ~(LINESPECIALS_HASH_SIZE - 1);
 		linespecials = Z_Malloc(sizeof(*linespecials)*numlinespecials*2, PU_LEVEL);
 		D_memset(linespecials, (uint16_t)-1, sizeof(*linespecials)*numlinespecials*2);
-		mld = (maplinedef_t *)data;
-		for (i=0 ; i<numlines ; i++, mld++)
+		mapldFlags = (mapldflags_t*)ldData;
+		for (i=0 ; i<numlines ; i++, mapldFlags++)
 		{
-			uint8_t special = mld->special;
+			uint8_t special = mapldFlags->special;
 			if (special)
 				P_AddLineSpecial(i, special);
 		}

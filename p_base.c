@@ -169,7 +169,7 @@ static boolean PB_BoxCrossLine(line_t *ld, pmovetest_t *mt)
       return false;
    }
 
-   if(ld->flags & ML_ST_POSITIVE)
+   if(ldflags[ld-lines] & ML_ST_POSITIVE)
    {
       x1 = mt->testbbox[BOXLEFT ];
       x2 = mt->testbbox[BOXRIGHT];
@@ -209,7 +209,7 @@ static boolean PB_CheckLine(line_t *ld, pmovetest_t *mt)
    if(ld->sidenum[1] == -1)
       return false; // one-sided line
 
-   if(!(mt->checkthing->flags2 & MF2_MISSILE) && (ld->flags & (ML_BLOCKING|ML_BLOCKMONSTERS)))
+   if(!(mt->checkthing->flags2 & MF2_MISSILE) && (ldflags[ld-lines] & (ML_BLOCKING|ML_BLOCKMONSTERS)))
       return false; // explicitly blocking
 
    front = LD_FRONTSECTOR(ld);

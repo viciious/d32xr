@@ -81,8 +81,7 @@ typedef	struct
 
 	uint8_t		tag;
 	uint8_t     flags;
-	uint8_t		was_linecount; // UNUSED?
-	uint8_t     floor_xoffs; // Upper X, Lower Y. 8 different speeds for each.
+	VINT     floor_xoffs; // Upper X, Lower Y.
 
 	// killough 3/7/98: support flat heights drawn at another sector's heights
   	VINT        heightsec;    // other sector, or -1 if no other sector
@@ -125,7 +124,6 @@ typedef struct line_s
 {
 	VINT 		v1, v2;
 	VINT		sidenum[2];			/* sidenum[1] will be -1 if one sided */
-	uint16_t	flags;
 } line_t;
 
 #define LD_FRONTSECTOR(ld) (&sectors[sides[(ld)->sidenum[0]].sector])
@@ -260,6 +258,7 @@ extern	sector_t	*sectors;
 extern	subsector_t	*subsectors;
 extern	node_t		*nodes;
 extern	line_t		*lines;
+extern  uint16_t    *ldflags;
 extern	side_t		*sides;
 extern  sidetex_t   *sidetexes;
 

@@ -21,7 +21,7 @@ typedef unsigned char byte;
 */
 
 /* lump order in a map wad */
-enum {ML_LABEL, ML_THINGS, ML_LINEDEFS, ML_SIDEDEFS, ML_SIDETEX, ML_VERTEXES, ML_SEGS,
+enum {ML_LABEL, ML_THINGS, ML_LINEDEFS, ML_LDFLAGS, ML_SIDEDEFS, ML_SIDETEX, ML_VERTEXES, ML_SEGS,
 ML_SSECTORS, ML_NODES, ML_SECTORS , ML_REJECT, ML_BLOCKMAP};
 
 
@@ -42,9 +42,14 @@ typedef struct
 {
 	short		v1, v2;
 	short		sidenum[2];			/* sidenum[1] will be -1 if one sided */
-	uint16_t	flags;
-	uint8_t		special, tag;
 } maplinedef_t;
+
+typedef struct
+{
+	uint16_t	flags;
+	uint8_t		special;
+	uint8_t     tag;
+} mapldflags_t;
 
 #define	ML_BLOCKING			1
 #define	ML_BLOCKMONSTERS	2

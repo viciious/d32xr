@@ -162,7 +162,7 @@ boolean PM_BoxCrossLine(line_t *ld, pmovework_t *mw)
       return false; // bounding boxes don't intersect
    }
 
-   if(ld->flags & ML_ST_POSITIVE)
+   if(ldflags[ld-lines] & ML_ST_POSITIVE)
    {
       x1 = mw->tmbbox[BOXLEFT ];
       x2 = mw->tmbbox[BOXRIGHT];
@@ -203,11 +203,12 @@ static boolean PIT_CheckLine(line_t *ld, pmovework_t *mw)
    if(ld->sidenum[1] == -1)
       return false; // one-sided line
 
+   const uint16_t lineflags = ldflags[ld-lines];
    if(!(tmthing->flags2 & MF2_MISSILE))
    {
-      if(ld->flags & ML_BLOCKING)
+      if(lineflags & ML_BLOCKING)
          return false; // explicitly blocking everything
-      if(!tmthing->player && (ld->flags & ML_BLOCKMONSTERS))
+      if(!tmthing->player && (lineflags & ML_BLOCKMONSTERS))
          return false; // block monsters only
    }
 
@@ -241,7 +242,7 @@ static boolean PIT_CheckLine(line_t *ld, pmovework_t *mw)
       lowfloor   = frontFloor;
    }
 
-   if (ld->flags & ML_MIDTEXTUREBLOCK)
+   if (lineflags & ML_MIDTEXTUREBLOCK)
    {
       const side_t *side = &sides[ld->sidenum[0]];
       sidetex_t *st = SIDETEX(side);
@@ -251,7 +252,7 @@ static boolean PIT_CheckLine(line_t *ld, pmovework_t *mw)
       rowoffset >>= 4; // sign extend
       fixed_t textop, texbottom;
 
-      if (ld->flags & ML_DONTPEGBOTTOM)
+      if (lineflags & ML_DONTPEGBOTTOM)
       {
          texbottom = openbottom + ((int)rowoffset << (FRACBITS));
          textop = texbottom + texheight;
