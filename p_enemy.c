@@ -818,7 +818,7 @@ void A_BossScream(mobj_t *actor, int16_t var1, int16_t var2)
 	mobj_t *mo = P_SpawnMobj(x, y, z, explodetype);
 
 	if (mobjinfo[actor->type].deathsound)
-		S_StartSound(mo, mobjinfo[actor->type].deathsound);
+		S_StartSound(actor, mobjinfo[actor->type].deathsound);
 
 	if (var1 > 0)
 	{
