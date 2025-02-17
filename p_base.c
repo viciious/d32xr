@@ -1015,7 +1015,9 @@ boolean P_MobjSpecificActions(mobj_t *mobj)
                         mobj->y + P_ReturnThrustY(mobj->angle, i * radius),
                         z,
                         chosen);
-                     flicky->target = players[consoleplayer].mo;
+
+                     if (chosen != MT_EXPLODE)
+                        flicky->target = players[consoleplayer].mo;
                   }
                   S_StartSound(mobj, sfx_s3k_3d);
             }
