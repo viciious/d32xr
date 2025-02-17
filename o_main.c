@@ -582,7 +582,7 @@ void O_DrawHelp (VINT yPos)
 	V_DrawStringLeft(&menuFont, 160, yPos + (12*3), "= X and Z");
 
 	V_DrawStringCenterWithColormap(&menuFont, 160, yPos + (12*5), "INTENDED ONLY FOR NTSC SYSTEMS AND", YELLOWTEXTCOLORMAP);
-	V_DrawStringCenterWithColormap(&menuFont, 160, yPos + (12*5) + 8, "PICODRIVE & JGENESIS DEV BUILDS", YELLOWTEXTCOLORMAP);
+	V_DrawStringCenterWithColormap(&menuFont, 160, yPos + (12*5) + 8, "PICODRIVE 2.03 & JGENESIS 0.9.0", YELLOWTEXTCOLORMAP);
 
 	V_DrawStringCenter(&menuFont, 160, yPos + 80, "ssntails.srb2.org/srb32x");
 }
