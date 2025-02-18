@@ -389,21 +389,12 @@ void R_SetDrawMode(void)
 		drawspritecol = I_DrawColumn;
 		drawcolflipped = I_DrawColumnFlipped;
 		#endif
-
-		#ifdef POTATO_MODE
-		drawspan = I_DrawSpanPotatoLow;
-		#else
-		drawspan = I_DrawSpanLow;
-		#endif
-
-		drawspancolor = I_DrawSpanColorLow;
 	}
 	else
 	{
 		drawcol = I_DrawColumn;
 		drawcolflipped = I_DrawColumnFlipped;
 		drawcolnpo2 = I_DrawColumnNPo2;
-		drawspan = I_DrawSpan;
 		drawcollow = I_DrawColumnLow;
 
 		#ifdef MDSKY
@@ -414,15 +405,14 @@ void R_SetDrawMode(void)
 		#ifdef HIGH_DETAIL_SPRITES
 		drawspritecol = I_DrawColumn;
 		#endif
-
-		#ifdef POTATO_MODE
-		drawspan = I_DrawSpanPotato;
-		#else
-		drawspan = I_DrawSpan;
-		#endif
-
-		//drawspancolor = I_DrawSpanColor;		// This doesn't exist!
 	}
+
+	#ifdef POTATO_MODE
+	drawspan = I_DrawSpanPotatoLow;
+	#else
+	drawspan = I_DrawSpanLow;
+	#endif
+	drawspancolor = I_DrawSpanColorLow;
 
 #ifdef MARS
 	Mars_CommSlaveClearCache();

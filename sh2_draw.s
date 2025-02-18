@@ -883,10 +883,6 @@ draw_fb:
         .long   _viewportbuffer
 draw_width:
         .long   320
-draw_height:
-        .long   _viewportHeight
-draw_flat_ymask:
-        .long   4032
 
 
 ! Clear a vertical column of pixels for the MD sky to show through.

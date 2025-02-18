@@ -51,8 +51,6 @@ void I_DrawColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
 void I_DrawColumnNPo2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	fixed_t fracstep, inpixel_t* dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
-void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
-	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN;
 
 /*
 ==================
@@ -337,53 +335,6 @@ void I_DrawColumnNPo2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 #undef DO_PIXEL
 }
 
-void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
-	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int dc_texheight)
-{
-	unsigned xfrac, yfrac;
-	int8_t  *dest;
-	int		spot;
-	unsigned count, n;
-	int8_t* dc_colormap;
-	unsigned xmask, ymask;
-
-#ifdef RANGECHECK
-	if (ds_x2 < ds_x1 || ds_x1<0 || ds_x2 >= viewportWidth || ds_y>viewportHeight)
-		I_Error("R_DrawSpan: %i to %i at %i", ds_x1, ds_x2, ds_y);
-#endif 
-
-	count = ds_x2 - ds_x1 + 1;
-	xfrac = ds_xfrac, yfrac = ds_yfrac;
-
-	xmask = dc_texheight - 1;
-	ymask = (dc_texheight-1)*dc_texheight;
-
-	dest = (int8_t *)viewportbuffer + ds_y * 320 + ds_x1;
-	dc_colormap = (int8_t *)(dc_colormaps + light);
-
-#define DO_PIXEL() do { \
-		spot = ((yfrac >> 16) & ymask) + ((xfrac >> 16) & xmask); \
-		*dest++ = dc_colormap[(int8_t)ds_source[spot]] & 0xff; \
-		xfrac += ds_xstep, yfrac += ds_ystep; \
-	} while(0)
-
-	n = (count + 7) >> 3;
-	switch (count & 7)
-	{
-	case 0: do { DO_PIXEL();
-	case 7:      DO_PIXEL();
-	case 6:      DO_PIXEL();
-	case 5:      DO_PIXEL();
-	case 4:      DO_PIXEL();
-	case 3:      DO_PIXEL();
-	case 2:      DO_PIXEL();
-	case 1:      DO_PIXEL();
-	} while (--n > 0);
-	}
-
-#undef DO_PIXEL
-}
-
 #endif
 
 #ifdef POTATO_MODE
@@ -418,57 +369,6 @@ void I_DrawSpanPotatoLow(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_x
 	do {
 		*dest++ = pix;
 	} while (--count > 0);
-}
-
-/*
-================
-=
-= I_DrawSpanPotato
-=
-================
-*/
-void I_DrawSpanPotato(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
-	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int dc_texheight)
-{
-	byte *udest, upix;
-	unsigned count, scount;
-	int8_t* dc_colormap;
-
-#ifdef RANGECHECK
-	if (ds_x2 < ds_x1 || ds_x1<0 || ds_x2 >= viewportWidth || ds_y>viewportHeight)
-		I_Error("R_DrawSpan: %i to %i at %i", ds_x1, ds_x2, ds_y);
-#endif
-
-	if (ds_x2 < ds_x1)
-		return;
-
-	count = ds_x2 - ds_x1 + 1;
-
-	udest = (byte *)viewportbuffer + ds_y * 320 + ds_x1;
-	dc_colormap = (int8_t *)(dc_colormaps + light);
-	upix = dc_colormap[ds_source[513]] & 0xff;
-
-	if (ds_x1 & 1) {
-		*udest++ = upix;
-		count--;
-	}
-
-	scount = count >> 1;
-	if (scount > 0)
-	{
-		pixel_t spix = (upix << 8) | upix;
-		pixel_t *sdest = (pixel_t*)udest;
-
-		do {
-			*sdest++ = spix;
-		} while (--scount > 0);
-
-		udest = (byte*)sdest;
-	}
-
-	if (count & 1) {
-		*udest = upix;
-	}
 }
 #endif
 
