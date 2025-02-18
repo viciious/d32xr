@@ -286,7 +286,15 @@ static boolean PS_RejectCheckSight(mobj_t *t1, mobj_t *t2)
    // First check for trivial rejection
    s1 = t1->subsector->sector;
    s2 = t2->subsector->sector;
+
+   if (s1 > s2)
+   {
+       int t = s2;
+       s2 = s1;
+       s1 = t;
+   }
    pnum = s1*numsectors + s2;
+   pnum -= (s1 * (s1 + 1) / 2);
    bytenum = pnum >> 3;
 
 #ifdef MARS

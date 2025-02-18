@@ -597,8 +597,47 @@ void P_LoadSideDefs (int lump)
 
 void P_LoadRejectMatrix (int lump)
 {
-	rejectmatrix = Z_Malloc (W_LumpLength (lump),PU_LEVEL);
-	W_ReadLump (lump,rejectmatrix);
+	int i, j;
+	uint8_t *data, *out;
+	int outsize;
+	unsigned outbit, outbyte;
+
+	// compress the reject table, assuming it is symmetrical
+	outsize = (numsectors + 1) * numsectors / 2;
+	outsize = (outsize + 7) / 8;
+
+	rejectmatrix = Z_Malloc (outsize,PU_LEVEL);
+	D_memset(rejectmatrix, 0, outsize);
+	data = W_GetLumpData(lump);
+
+	outbit = 1;
+	outbyte = 0;
+	out = rejectmatrix;
+
+	for (i = 0; i < numsectors; i++) {
+		unsigned k = i*numsectors;
+		unsigned bit = 1 << ((k + i) & 7);
+
+		for (j = i; j < numsectors; j++) {
+			unsigned bytenum = (k + j) / 8;
+
+			if (data[bytenum] & bit)
+			{
+				out[outbyte] |= outbit;
+			}
+
+			bit <<= 1;
+			if (bit > 0xff) {
+				bit = 1;
+			}
+
+			outbit <<= 1;
+			if (outbit > 0xff) {
+				outbyte++;
+				outbit = 1;
+			}
+		}
+	}
 }
 
 /*
