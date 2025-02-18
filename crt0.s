@@ -344,15 +344,12 @@ pri_checksum:
         and     r1,r0
 
         cmp/eq  #0,r0
-        bt      2f      ! If the ROM header specifies a checksum of zero, ignore validation check.
+        bt      pri_start_continue      ! If the ROM header specifies a checksum of zero, ignore validation.
 
         cmp/eq  r0,r3
-        bt      2f
+        bt      pri_start_continue      ! If the checksum matches, continue.
 1:
-        bra     1b
-        nop
-2:
-        bra     pri_start_continue
+        bra     1b                      ! Checksum failure loop.
         nop
 
         .align 4
@@ -372,10 +369,6 @@ p_word_mask:
 !-----------------------------------------------------------------------
 
 pri_start:
-        bra     pri_checksum
-        nop
-
-pri_start_continue:
         ! clear interrupt flags
         mov.l   _pri_int_clr,r1
         mov.w   r0,@-r1                 /* PWM INT clear */
@@ -407,6 +400,18 @@ pri_start_continue:
         mov.b   r0,@(0x02,r1)           /* FRC_H => clear FRC */
 
         mov.l   _pri_stk,r15
+
+        mov.l   r0,@-r15
+        mov.l   r1,@-r15
+        mov.l   r2,@-r15
+        mov.l   r3,@-r15
+        bra     pri_checksum
+        nop
+pri_start_continue:
+        mov.l   @r15+,r3
+        mov.l   @r15+,r2
+        mov.l   @r15+,r1
+        mov.l   @r15+,r0
 
         ! purge cache and turn it off
         mov.l   _pri_cctl,r0
