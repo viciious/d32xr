@@ -147,7 +147,6 @@ void	P_RunMobjLate(void) ATTR_DATA_CACHE_ALIGN;
 
 void L_SkullBash (mobj_t *mo);
 void L_MissileHit (mobj_t *mo);
-void L_CrossSpecial (mobj_t *mo);
 
 void P_ExplodeMissile (mobj_t *mo);
 

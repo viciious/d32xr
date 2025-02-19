@@ -1427,16 +1427,6 @@ void A_KeenDie (mobj_t* mo)
 
 /*============================================================================= */
 
-/* a move in p_base.c crossed a special line */
-void L_CrossSpecial (mobj_t *mo)
-{
-	line_t	*line;
-	
-	line = (line_t *)(mo->extradata & ~1);
-	
-	P_CrossSpecialLine (line, mo);
-}
-
 /* a move in p_base.c caused a missile to hit another thing or wall */
 void L_MissileHit (mobj_t *mo)
 {
