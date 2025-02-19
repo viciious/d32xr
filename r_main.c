@@ -490,12 +490,7 @@ static void R_SetupSkyGradient(void)
 	uint8_t *sky_gradient_ptr;
 
 	copper_effects = false;
-	
-	if (copper_color_table)
-	{
-		Z_Free(copper_color_table);
-		copper_color_table = NULL;
-	}
+	copper_color_table = NULL;
 
 	//uint32_t sky_gradient_size;
 	
@@ -528,7 +523,7 @@ static void R_SetupSkyGradient(void)
 
 	int table_index = 0;
 
-	copper_color_table = Z_Malloc(sizeof(unsigned short) * copper_table_height, PU_STATIC); // Put it on the heap
+	copper_color_table = Z_Malloc(sizeof(unsigned short) * copper_table_height, PU_LEVEL); // Put it on the heap
 
 	switch (section_format)
 	{
