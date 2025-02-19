@@ -530,10 +530,6 @@ static void R_SetupSkyGradient(void)
 
 	copper_color_table = Z_Malloc(sizeof(unsigned short) * copper_table_height, PU_STATIC); // Put it on the heap
 
-#ifndef SHOW_DISCLAIMER
-	CONS_Printf("Free memory: %d (LFB: %d)", Z_FreeMemory(mainzone), Z_LargestFreeBlock(mainzone));
-#endif
-
 	switch (section_format)
 	{
 		case 0:
@@ -836,9 +832,7 @@ void R_SetupTextureCaches(int gamezonemargin)
 	const int flatblocksize = sizeof(memblock_t) + ((sizeof(texcacheblock_t) + 15) & ~15) + 64*64 + 32;
 
 #ifndef SHOW_DISCLAIMER
-	if (copper_color_table == NULL) {
-		CONS_Printf("Free memory: %d (LFB: %d)", Z_FreeMemory(mainzone), Z_LargestFreeBlock(mainzone));
-	}
+	CONS_Printf("Free memory: %d (LFB: %d)", Z_FreeMemory(mainzone), Z_LargestFreeBlock(mainzone));
 #endif
 
 	// functioning texture cache requires at least 8kb of ram
