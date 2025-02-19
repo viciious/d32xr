@@ -50,6 +50,7 @@ const char * const sprnames[NUMSPRITES] = {
 "MINE",
 "MISL",
 "MSTV",
+"NULL",
 "POSS",
 "RBUZ",
 "RING",
@@ -68,6 +69,7 @@ const char * const sprnames[NUMSPRITES] = {
 "SSHL",
 "SSWY",
 "SSWR",
+"STEM",
 "STLG",
 "STPT",
 "TANK",
@@ -122,6 +124,7 @@ void A_ChangeHeight();
 void A_UnidusBall();
 void A_BubbleSpawn();
 void A_SignSpin();
+void A_SteamBurst();
 
 #define STATE(sprite,frame,tics,action,nextstate) {sprite,frame,tics,0,0,nextstate,action}
 #define STATE2(sprite,frame,tics,action,var1,var2,nextstate) {sprite,frame,tics,var1,var2,nextstate,action}
@@ -338,6 +341,17 @@ STATE(SPR_YSPR,0,-1,NULL,S_NULL), // S_YDIAG
 STATE(SPR_RSPR,0,-1,NULL,S_NULL), // S_RDIAG
 STATE(SPR_SSWY,0,-1,NULL,S_NULL), // S_YHORIZ
 STATE(SPR_SSWR,0,-1,NULL,S_NULL), // S_RHORIZ
+
+// Steam Riser
+STATE(SPR_STEM,0,2,A_SteamBurst,S_STEAM2),   // S_STEAM1
+STATE(SPR_STEM,1,2,NULL,S_STEAM3), // S_STEAM2
+STATE(SPR_STEM,2,2,NULL,S_STEAM4),              // S_STEAM3
+STATE(SPR_STEM,3,2,NULL,S_STEAM5),              // S_STEAM4
+STATE(SPR_STEM,4,2,NULL,S_STEAM6),              // S_STEAM5
+STATE(SPR_STEM,5,2,NULL,S_STEAM7),              // S_STEAM6
+STATE(SPR_STEM,6,2,NULL,S_STEAM8),              // S_STEAM7
+STATE(SPR_NULL,0,15,NULL,S_STEAM1),             // S_STEAM8
+
 STATE(SPR_BOM1,0,0,NULL,S_XPLD1), // S_XPLD_FLICKY
 STATE(SPR_BOM1,0,2,NULL,S_XPLD2), // S_XPLD1
 STATE(SPR_BOM1,1,2,NULL,S_XPLD3), // S_XPLD2
@@ -2627,6 +2641,31 @@ MF2_SHOOTABLE|MF2_ENEMY,	// flags2
 	sfx_None,       // activesound
 	MF_SPECIAL|MF_STATIC, // flags
 	0, // flags2
+},
+{           // MT_STEAM
+	541,            // doomednum
+	S_STEAM1,       // spawnstate
+	1000,           // spawnhealth
+	S_NULL,         // seestate
+	sfx_None,       // seesound
+	8,              // reactiontime
+	sfx_None,       // attacksound
+	S_NULL,         // painstate
+	0,              // painchance
+	sfx_steam2,     // painsound
+	S_NULL,         // meleestate
+	S_NULL,         // missilestate
+	S_NULL,         // deathstate
+	S_NULL,         // xdeathstate
+	sfx_steam1,     // deathsound
+	0,              // speed
+	32*FRACUNIT,    // radius
+	16*FRACUNIT,    // height
+	18,    // mass
+	0,              // damage
+	sfx_None,       // activesound
+	MF_NOBLOCKMAP,     // flags
+	0          // flags2
 },
 	{           // MT_GHOST
 		-1,             // doomednum

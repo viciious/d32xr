@@ -1667,6 +1667,49 @@ void A_SignSpin(mobj_t *actor, int16_t var1, int16_t var2)
 	}
 }
 
+void A_SteamBurst(mobj_t *actor)
+{
+	const mobjinfo_t *info = &mobjinfo[actor->type];
+
+	if (!(P_Random() & 7))
+	{
+		if (info->deathsound)
+			S_StartSound(actor, info->deathsound); // Hiss!
+	}
+	else
+	{
+		if (info->painsound)
+			S_StartSound(actor, info->painsound);
+	}
+
+	for (int i = 0; i < MAXPLAYERS; i++)
+	{
+		if (playeringame[i])
+		{
+			player_t *player = &players[i];
+			const mobjinfo_t *playerInfo = &mobjinfo[player->mo->type];
+
+			if (player->mo->z > actor->z + 8*FRACUNIT
+				|| player->mo->z < actor->z)
+				continue;
+
+			if (P_AproxDistance(player->mo->x - actor->x, player->mo->y - actor->y) > info->radius + playerInfo->radius)
+				continue;
+
+			if (player && player->mo->state == &states[playerInfo->painstate]) // can't use gas jets when player is in pain!
+				return;
+
+			fixed_t speed = info->mass << FRACBITS; // gas jets use this for the vertical thrust
+			int8_t flipval = 1;//P_MobjFlip(special); // virtually everything here centers around the thruster's gravity, not the object's!
+
+			player->mo->momz = flipval * speed;
+
+			P_ResetPlayer(player);
+			P_SetMobjState(player->mo, S_PLAY_FALL1);
+		}
+	}
+}
+
 /*============================================================================= */
 
 /* a move in p_base.c caused a missile to hit another thing or wall */
