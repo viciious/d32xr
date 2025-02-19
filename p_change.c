@@ -44,6 +44,7 @@ boolean P_ThingHeightClip (mobj_t *thing)
 {
 	boolean		onfloor;
 	pmovework_t tm;
+	fixed_t 	height;
 	
 	onfloor = (thing->z == thing->floorz);
 	
@@ -53,16 +54,18 @@ boolean P_ThingHeightClip (mobj_t *thing)
 	thing->floorz = tm.tmfloorz;
 	thing->ceilingz = tm.tmceilingz;
 	
+	height = thing->height*FRACUNIT;
+
 	if (onfloor)
 	/* walking monsters rise and fall with the floor */
 		thing->z = thing->floorz;
 	else
 	{	/* don't adjust a floating monster unless forced to */
-		if (thing->z+thing->height > thing->ceilingz)
-			thing->z = thing->ceilingz - thing->height;
+		if (thing->z+height > thing->ceilingz)
+			thing->z = thing->ceilingz - height;
 	}
 	
-	if (thing->ceilingz - thing->floorz < thing->height)
+	if (thing->ceilingz - thing->floorz < height)
 		return false;
 		
 	return true;
@@ -108,7 +111,7 @@ boolean PIT_ChangeSector (mobj_t *thing, changetest_t *ct)
 	{
 		P_DamageMobj(thing,NULL,NULL,10);
 		/* spray blood in a random direction */
-		mo = P_SpawnMobj2 (thing->x, thing->y, thing->z + thing->height/2, MT_BLOOD, thing->subsector);
+		mo = P_SpawnMobj2 (thing->x, thing->y, thing->z + (thing->height*FRACUNIT)/2, MT_BLOOD, thing->subsector);
 		mo->momx = (P_Random() - P_Random ())<<12;
 		mo->momy = (P_Random() - P_Random ())<<12;
 	}

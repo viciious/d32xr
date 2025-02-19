@@ -275,7 +275,7 @@ boolean PIT_RadiusAttack (mobj_t *thing, pradiusattack_t *ra)
 	dx = D_abs(thing->x - ra->bombspot->x);
 	dy = D_abs(thing->y - ra->bombspot->y);
 	dist = dx>dy ? dx : dy;
-	dist = (dist - thing->radius) >> FRACBITS;
+	dist = (dist - (thing->radius*FRACUNIT)) >> FRACBITS;
 	if (dist < 0)
 		dist = 0;
 	if (dist >= ra->bombdamage)

@@ -352,8 +352,8 @@ static boolean PS_CheckSight2(mobj_t *t1, mobj_t *t2)
       *lvalidcount = 1;
 
    // look from eyes of t1 to any part of t2
-   sw.sightzstart = t1->z + t1->height - (t1->height >> 2);
-   sw.topslope    = (t2->z + t2->height) - sw.sightzstart;
+   sw.sightzstart = t1->z + (t1->height*FRACUNIT) - ((t1->height*FRACUNIT) >> 2);
+   sw.topslope    = (t2->z + (t2->height*FRACUNIT)) - sw.sightzstart;
    sw.bottomslope = (t2->z) - sw.sightzstart;
 
    // make sure it never lies exactly on a vertex coordinate

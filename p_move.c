@@ -51,7 +51,7 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *w)
    if(!(thing->flags & (MF_SOLID|MF_SPECIAL|MF_SHOOTABLE)))
       return true;
 
-   blockdist = thing->radius + tmthing->radius;
+   blockdist = (thing->radius + tmthing->radius)*FRACUNIT;
    
    delta = thing->x - w->tmx;
    if(delta < 0)
@@ -78,9 +78,9 @@ boolean PIT_CheckThing(mobj_t *thing, pmovework_t *w)
    // missiles can hit other things
    if(tmthing->flags & MF_MISSILE)
    {
-      if(tmthing->z > thing->z + thing->height)
+      if(tmthing->z > thing->z + (thing->height*FRACUNIT))
          return true; // went overhead
-      if(tmthing->z + tmthing->height < thing->z)
+      if(tmthing->z + (tmthing->height*FRACUNIT) < thing->z)
          return true; // went underneath
       if(thing == tmthing->target) // don't hit originator
          return true;
@@ -188,10 +188,10 @@ boolean PIT_CheckPosition(pmovework_t *w)
    newsec = SSEC_SECTOR(newsubsec);
    w->newsubsec = newsubsec;
 
-   w->tmbbox[BOXTOP   ] = w->tmy + tmthing->radius;
-   w->tmbbox[BOXBOTTOM] = w->tmy - tmthing->radius;
-   w->tmbbox[BOXRIGHT ] = w->tmx + tmthing->radius;
-   w->tmbbox[BOXLEFT  ] = w->tmx - tmthing->radius;
+   w->tmbbox[BOXTOP   ] = w->tmy + (tmthing->radius*FRACUNIT);
+   w->tmbbox[BOXBOTTOM] = w->tmy - (tmthing->radius*FRACUNIT);
+   w->tmbbox[BOXRIGHT ] = w->tmx + (tmthing->radius*FRACUNIT);
+   w->tmbbox[BOXLEFT  ] = w->tmx - (tmthing->radius*FRACUNIT);
 
    // the base floor/ceiling is from the subsector that contains the point.
    // Any contacted lines the step closer together will adjust them.
@@ -305,10 +305,10 @@ static boolean P_TryMove2(pmovework_t *w, boolean checkposonly)
 
    if(!(tmthing->flags & MF_NOCLIP))
    {
-      if(w->tmceilingz - w->tmfloorz < tmthing->height)
+      if(w->tmceilingz - w->tmfloorz < (tmthing->height*FRACUNIT))
          return false; // doesn't fit
       w->floatok = true;
-      if(!(tmthing->flags & MF_TELEPORT) && w->tmceilingz - tmthing->z < tmthing->height)
+      if(!(tmthing->flags & MF_TELEPORT) && w->tmceilingz - tmthing->z < (tmthing->height*FRACUNIT))
          return false; // mobj must lower itself to fit
       if(!(tmthing->flags & MF_TELEPORT) && w->tmfloorz - tmthing->z > 24*FRACUNIT)
          return false; // too big a step up

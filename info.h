@@ -1084,8 +1084,8 @@ typedef struct {
 	uint8_t		deathsound;
 	uint8_t		activesound;
 	int			speed;
-	int			radius;
-	int			height;
+	int16_t		radius;
+	int16_t		height;
 	uint16_t	mass;
 	uint16_t	damage;
 	int			flags;

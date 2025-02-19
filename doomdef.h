@@ -255,7 +255,7 @@ typedef struct mobj_s
 	fixed_t			floorz, ceilingz;	/* closest together of contacted secs */
 
 	int			flags;
-	fixed_t			radius, height;		/* for movement checking */
+	int16_t			radius, height;		/* for movement checking */
 
 	/* STATIC OBJECTS END HERE */
 	angle_t			angle;

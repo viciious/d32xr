@@ -383,7 +383,7 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 	int			sound;
 		
 	delta = special->z - toucher->z;
-	if (delta > toucher->height || delta < -8*FRACUNIT)
+	if (delta > (toucher->height*FRACUNIT) || delta < -8*FRACUNIT)
 		return;			/* out of reach */
 	
 	sound = sfx_itemup;	

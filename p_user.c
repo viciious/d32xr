@@ -157,11 +157,11 @@ void P_PlayerZMovement (mobj_t *mo)
 			mo->momz -= gravity/2;
 	}
 	
-	if (mo->z + mo->height > mo->ceilingz)
+	if (mo->z + (mo->height*FRACUNIT) > mo->ceilingz)
 	{	/* hit the ceiling */
 		if (mo->momz > 0)
 			mo->momz = 0;
-		mo->z = mo->ceilingz - mo->height;		
+		mo->z = mo->ceilingz - (mo->height*FRACUNIT);
 	}
 	
 } 

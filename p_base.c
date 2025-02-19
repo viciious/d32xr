@@ -144,7 +144,7 @@ static void P_FloatChange(mobj_t *mo)
    fixed_t dist, delta;
 
    target = mo->target;                              // get the target object
-   delta  = (target->z + (mo->height >> 1)) - mo->z; // get the height difference
+   delta  = (target->z + ((mo->height*FRACUNIT) >> 1)) - mo->z; // get the height difference
    
    dist   = P_AproxDistance(target->x - mo->x, target->y - mo->y);
    delta *= 3;
@@ -199,11 +199,11 @@ void P_ZMovement(mobj_t *mo)
          mo->momz -= gravity/2;
    }
 
-   if(mo->z + mo->height > mo->ceilingz)
+   if(mo->z + (mo->height*FRACUNIT) > mo->ceilingz)
    {
       if(mo->momz > 0)
          mo->momz = 0;
-      mo->z = mo->ceilingz - mo->height; // hit the ceiling
+      mo->z = mo->ceilingz - (mo->height*FRACUNIT); // hit the ceiling
 
       if (mo->flags & MF_SKULLFLY)
       {
