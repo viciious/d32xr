@@ -32,7 +32,7 @@
 boolean PIT_CheckThing(mobj_t* thing, pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
 static boolean PIT_CheckLine(line_t* ld, pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
 static boolean PM_CrossCheck(line_t* ld, pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
-static boolean PM_CheckPosition(pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
+boolean PM_CheckPosition(pmovework_t *mw) ATTR_DATA_CACHE_ALIGN;
 boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly) ATTR_DATA_CACHE_ALIGN;
 
 //
@@ -192,7 +192,7 @@ boolean PM_BoxCrossLine(line_t *ld, pmovework_t *mw)
 //
 // Adjusts tmfloorz and tmceilingz as lines are contacted.
 //
-static boolean PIT_CheckLine(line_t *ld, pmovework_t *mw)
+boolean PIT_CheckLine(line_t *ld, pmovework_t *mw)
 {
    fixed_t   opentop, openbottom, lowfloor;
    sector_t *front, *back;
@@ -208,7 +208,7 @@ static boolean PIT_CheckLine(line_t *ld, pmovework_t *mw)
    {
       if(lineflags & ML_BLOCKING)
          return false; // explicitly blocking everything
-      if(!tmthing->player && (lineflags & ML_BLOCKMONSTERS))
+      if(!(tmthing->player || tmthing->type == MT_CAMERA) && (lineflags & ML_BLOCKMONSTERS))
          return false; // block monsters only
    }
 
@@ -242,7 +242,7 @@ static boolean PIT_CheckLine(line_t *ld, pmovework_t *mw)
       lowfloor   = frontFloor;
    }
 
-   if (lineflags & ML_MIDTEXTUREBLOCK)
+   if (tmthing->type != MT_CAMERA && (lineflags & ML_MIDTEXTUREBLOCK))
    {
       const side_t *side = &sides[ld->sidenum[0]];
       sidetex_t *st = SIDETEX(side);
@@ -370,7 +370,7 @@ void P_PlayerCheckForStillPickups(mobj_t *mobj)
 //
 // This is purely informative, nothing is modified (except things picked up)
 //
-static boolean PM_CheckPosition(pmovework_t *mw)
+boolean PM_CheckPosition(pmovework_t *mw)
 {
    int xl, xh, yl, yh, bx, by;
    mobj_t *tmthing = mw->tmthing;
@@ -401,41 +401,44 @@ static boolean PM_CheckPosition(pmovework_t *mw)
    if(mw->tmflags & MF_NOCLIP) // thing has no clipping?
       return true;
 
-   // Check things first, possibly picking things up.
-   // The bounding box is extended by MAXRADIUS because mobj_ts are grouped
-   // into mapblocks based on their origin point, and can overlap into adjacent
-   // blocks by up to MAXRADIUS units.
-   xl = mw->tmbbox[BOXLEFT  ] - bmaporgx - MAXRADIUS;
-   xh = mw->tmbbox[BOXRIGHT ] - bmaporgx + MAXRADIUS;
-   yl = mw->tmbbox[BOXBOTTOM] - bmaporgy - MAXRADIUS;
-   yh = mw->tmbbox[BOXTOP   ] - bmaporgy + MAXRADIUS;
-
-	if(xl < 0)
-		xl = 0;
-	if(yl < 0)
-		yl = 0;
-	if(yh < 0)
-		return true;
-	if(xh < 0)
-		return true;
-
-   xl = (unsigned)xl >> MAPBLOCKSHIFT;
-   xh = (unsigned)xh >> MAPBLOCKSHIFT;
-   yl = (unsigned)yl >> MAPBLOCKSHIFT;
-   yh = (unsigned)yh >> MAPBLOCKSHIFT;
-
-   if(xh >= bmapwidth)
-      xh = bmapwidth - 1;
-   if(yh >= bmapheight)
-      yh = bmapheight - 1;
-
-   // check things
-   for(bx = xl; bx <= xh; bx++)
+   if (mw->tmthing->type != MT_CAMERA)
    {
-      for(by = yl; by <= yh; by++)
+      // Check things first, possibly picking things up.
+      // The bounding box is extended by MAXRADIUS because mobj_ts are grouped
+      // into mapblocks based on their origin point, and can overlap into adjacent
+      // blocks by up to MAXRADIUS units.
+      xl = mw->tmbbox[BOXLEFT  ] - bmaporgx - MAXRADIUS;
+      xh = mw->tmbbox[BOXRIGHT ] - bmaporgx + MAXRADIUS;
+      yl = mw->tmbbox[BOXBOTTOM] - bmaporgy - MAXRADIUS;
+      yh = mw->tmbbox[BOXTOP   ] - bmaporgy + MAXRADIUS;
+
+      if(xl < 0)
+         xl = 0;
+      if(yl < 0)
+         yl = 0;
+      if(yh < 0)
+         return true;
+      if(xh < 0)
+         return true;
+
+      xl = (unsigned)xl >> MAPBLOCKSHIFT;
+      xh = (unsigned)xh >> MAPBLOCKSHIFT;
+      yl = (unsigned)yl >> MAPBLOCKSHIFT;
+      yh = (unsigned)yh >> MAPBLOCKSHIFT;
+
+      if(xh >= bmapwidth)
+         xh = bmapwidth - 1;
+      if(yh >= bmapheight)
+         yh = bmapheight - 1;
+
+      // check things
+      for(bx = xl; bx <= xh; bx++)
       {
-         if(!P_BlockThingsIterator(bx, by, (blockthingsiter_t)PIT_CheckThing, mw))
-            return false;
+         for(by = yl; by <= yh; by++)
+         {
+            if(!P_BlockThingsIterator(bx, by, (blockthingsiter_t)PIT_CheckThing, mw))
+               return false;
+         }
       }
    }
 

@@ -4,132 +4,7 @@ camera_t camera;
 //#define NOCLIPCAMERA
 #define CAM_PHYS_HEIGHT (12 << FRACBITS)
 
-static boolean PIT_CameraCheckLine(line_t *ld, pmovework_t *mw)
-{
-   fixed_t   opentop, openbottom, lowfloor;
-   sector_t *front, *back;
-
-   // The moving thing's destination positoin will cross the given line.
-   // If this should not be allowed, return false.
-   if(ld->sidenum[1] == -1)
-      return false; // one-sided line
-
-   if(ldflags[ld-lines] & ML_BLOCKING)
-      return false; // explicitly blocking everything
-
-   front = LD_FRONTSECTOR(ld);
-   back  = LD_BACKSECTOR(ld);
-
-   if(front->ceilingheight == front->floorheight ||
-      back->ceilingheight == back->floorheight)
-   {
-      mw->blockline = ld;
-      return false; // probably a closed door
-   }
-
-   if(front->ceilingheight < back->ceilingheight)
-      opentop = front->ceilingheight;
-   else
-      opentop = back->ceilingheight;
-
-   if(front->floorheight > back->floorheight)
-   {
-      openbottom = front->floorheight;
-      lowfloor   = back->floorheight;
-   }
-   else
-   {
-      openbottom = back->floorheight;
-      lowfloor   = front->floorheight;
-   }
-
-   // adjust floor/ceiling heights
-   if(opentop < mw->tmceilingz)
-      mw->tmceilingz = opentop;
-   if(openbottom >mw->tmfloorz)
-      mw->tmfloorz = openbottom;
-   if(lowfloor < mw->tmdropoffz)
-      mw->tmdropoffz = lowfloor;
-
-   return true;
-}
-
-static boolean PM_CameraCrossCheck(line_t *ld, pmovework_t *mw)
-{
-   if(PM_BoxCrossLine(ld, mw))
-   {
-      if(!PIT_CameraCheckLine(ld, mw))
-         return false;
-   }
-   return true;
-}
-
-static boolean PM_CameraCheckPosition(pmovework_t *mw)
-{
-   int xl, xh, yl, yh, bx, by;
-   mobj_t *tmthing = mw->tmthing;
-   VINT *lvalidcount;
-
-   mw->tmflags = tmthing->flags;
-
-   const fixed_t tradius = mobjinfo[tmthing->type].radius;
-   mw->tmbbox[BOXTOP   ] = mw->tmy + tradius;
-   mw->tmbbox[BOXBOTTOM] = mw->tmy - tradius;
-   mw->tmbbox[BOXRIGHT ] = mw->tmx + tradius;
-   mw->tmbbox[BOXLEFT  ] = mw->tmx - tradius;
-
-   mw->newsubsec = I_TO_SS(R_PointInSubsector2(mw->tmx, mw->tmy));
-   mw->newsec = I_TO_SEC(mw->newsubsec->isector);
-
-   // the base floor/ceiling is from the subsector that contains the point.
-   // Any contacted lines the step closer together will adjust them.
-   mw->tmfloorz   = mw->tmdropoffz = mw->newsec->floorheight;
-   mw->tmceilingz = mw->newsec->ceilingheight;
-
-   I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
-   *lvalidcount = *lvalidcount + 1;
-   if (*lvalidcount == 0)
-      *lvalidcount = 1;
-
-   mw->blockline = NULL;
-
-   if(mw->tmflags & MF_NOCLIP) // thing has no clipping?
-      return true;
-
-   // check lines
-   xl = mw->tmbbox[BOXLEFT  ] - bmaporgx;
-   xh = mw->tmbbox[BOXRIGHT ] - bmaporgx;
-   yl = mw->tmbbox[BOXBOTTOM] - bmaporgy;
-   yh = mw->tmbbox[BOXTOP   ] - bmaporgy;
-
-   if(xl < 0)
-      xl = 0;
-   if(yl < 0)
-      yl = 0;
-	if(yh < 0 || xh < 0)
-		return true;
-
-   xl = (unsigned)xl >> MAPBLOCKSHIFT;
-   xh = (unsigned)xh >> MAPBLOCKSHIFT;
-   yl = (unsigned)yl >> MAPBLOCKSHIFT;
-   yh = (unsigned)yh >> MAPBLOCKSHIFT;
-
-   if(xh >= bmapwidth)
-      xh = bmapwidth - 1;
-   if(yh >= bmapheight)
-      yh = bmapheight - 1;
-
-   for(bx = xl; bx <= xh; bx++)
-   {
-      for(by = yl; by <= yh; by++)
-      {
-         if(!P_BlockLinesIterator(bx, by, (blocklinesiter_t)PM_CameraCrossCheck, mw))
-            return false;
-      }
-   }
-
-   return true;
-}
+boolean PM_CheckPosition(pmovework_t *mw);
 
 static boolean P_CameraTryMove2(ptrymove_t *tm, boolean checkposonly)
 {
@@ -141,7 +16,7 @@ static boolean P_CameraTryMove2(ptrymove_t *tm, boolean checkposonly)
    mw.tmy = tm->tmy;
    mw.tmthing = tm->tmthing;
 
-   trymove2 = PM_CameraCheckPosition(&mw);
+   trymove2 = PM_CheckPosition(&mw);
 
    tm->floatok = false;
    tm->blockline = mw.blockline;
@@ -214,6 +89,7 @@ static void P_CameraThinker(player_t *player, camera_t *thiscam)
 		momy = (thiscam->momy>>2);
 
 		mobj_t mo; // Our temporary dummy to pretend we are a mobj
+      D_memset(&mo, 0, sizeof(mobj_t));
 		mo.flags = MF_SOLID;
       mo.flags2 = MF2_FLOAT;
 		mo.x = thiscam->x;
