@@ -1014,7 +1014,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 //			vd.fixedcolormap = HWLIGHT((TICRATE-fadetime)*8);	// 32X VDP
 			#ifdef MDSKY
 			if (sky_md_layer) {
-				Mars_FadeMDPaletteFromBlack(md_palette_fade_table[TICRATE-fadetime]);	// MD VDP
+				Mars_FadeMDPaletteFromBlack(md_palette_fade_table[TICRATE-(fadetime*3)]);	// MD VDP
 			}
 			#endif
 		}
