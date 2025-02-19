@@ -415,7 +415,7 @@ void P_LoadThings (int lump, boolean *havebossspit)
 		P_SpawnMapThing (mt, i);
 }
 
-void P_AddLineTag (int ld, int tag)
+void P_SetLineTag (int ld, int tag)
 {
 	VINT j;
 	VINT rowsize = (unsigned)numlinetags / LINETAGS_HASH_SIZE;
@@ -432,7 +432,7 @@ void P_AddLineTag (int ld, int tag)
 			e -= numlinetags;
 
 		l = &linetags[e * 2];
-		if (l[0] == -1) {
+		if (l[0] == -1 || l[0] == ld) {
 			l[0] = ld;
 			l[1] = tag;
 			break;
@@ -532,10 +532,10 @@ void P_LoadLineDefs (int lump)
 	mld = (maplinedef_t *)data;
 	for (i=0 ; i<numlines ; i++, mld++)
 	{
-		int tag;
-		tag = LITTLESHORT(mld->tag);
-		if (tag)
-			P_AddLineTag(i, tag);
+		int tag = LITTLESHORT(mld->tag);
+		if (tag) {
+			P_SetLineTag(i, tag);
+		}
 	}
 }
 
