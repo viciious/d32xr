@@ -888,7 +888,7 @@ extern	pixel_t	*screens[2];	/* [viewportWidth*viewportHeight];  */
 static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	visplane_t **visplanes_hash_, sector_t **vissectors_, viswallextra_t *viswallex_)
 {
-	boolean waterpal = false;
+	VINT waterpal = 0;
 	int 		i;
 	player_t *player;
 #ifdef JAGUAR
@@ -933,7 +933,13 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 
 		if (sectors[thiscam->subsector->isector].heightsec != -1
 			&& GetWatertopSec(&sectors[thiscam->subsector->isector]) > vd.viewz)
-			waterpal = true;
+		{
+			// Future: Have a way to specify the water color
+			if (gamemapinfo.mapNumber == 4 || gamemapinfo.mapNumber == 5)
+				waterpal = 13;
+			else
+				waterpal = 11;
+		}
 	}
 	else
 	{
@@ -1119,7 +1125,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	else if (player->whiteFlash)
 		palette = player->whiteFlash + 1;
 	else if (waterpal) {
-		palette= 11;
+		palette = waterpal;
 
 		distortion_action = DISTORTION_ADD;
 	}

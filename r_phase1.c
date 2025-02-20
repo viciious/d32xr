@@ -642,7 +642,11 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
       *tempsec = *sec;
 
       const sector_t *fofsec = &sectors[sec->fofsec];
-      const fixed_t midpoint = fofsec->floorheight + (fofsec->ceilingheight - fofsec->floorheight)/2;
+      fixed_t midpoint;
+      if (sec->heightsec != -1) // If there is water in this sector, then the midpoint is the water.
+         midpoint = sectors[sec->heightsec].ceilingheight;
+      else
+         midpoint = fofsec->floorheight + (fofsec->ceilingheight - fofsec->floorheight)/2;
 
       if (vd.viewz <= midpoint)
       {
