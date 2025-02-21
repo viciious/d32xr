@@ -207,7 +207,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
       rowoffset = (si->textureoffset & 0xf000) | ((unsigned)si->rowoffset << 4);
       rowoffset >>= 4; // sign extend
 
-      f_ceilingpic    = front_sector->ceilingpic;
+      f_ceilingpic    = *(int8_t *)&front_sector->ceilingpic == -1 ? -1 : front_sector->ceilingpic;
       f_lightlevel    = front_sector->lightlevel;
       f_floorheight   = front_sector->floorheight   - vd->viewz;
       f_ceilingheight = front_sector->ceilingheight - vd->viewz;
@@ -226,7 +226,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
       if (!back_sector)
          back_sector = &emptysector;
 
-      b_ceilingpic    = back_sector->ceilingpic;
+      b_ceilingpic    = *(int8_t *)&back_sector->ceilingpic == -1 ? -1 : back_sector->ceilingpic;
       b_lightlevel    = back_sector->lightlevel;
       b_floorheight   = back_sector->floorheight   - vd->viewz;
       b_ceilingheight = back_sector->ceilingheight - vd->viewz;
@@ -602,7 +602,7 @@ static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
    {
        solid = true;
    }
-   else if (backsector->ceilingpic == -1 && frontsector->ceilingpic == -1)
+   else if (*(int8_t *)&backsector->ceilingpic == -1 && *(int8_t *)&frontsector->ceilingpic == -1)
    {
        // when both ceilings are skies, consider them always "open" to prevent HOM
        solid = false;

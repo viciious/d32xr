@@ -188,7 +188,7 @@ void P_LoadSectors (int lump)
 		ss->ceilingheight = LITTLESHORT(ms->ceilingheight)<<FRACBITS;
 		ss->floorpic = R_FlatNumForName(ms->floorpic);
 		if (!D_strncasecmp (ms->ceilingpic,"F_SKY1",6) )
-			ss->ceilingpic = -1;
+			*(int8_t *)&ss->ceilingpic = -1;
 		else
 		{
 			ss->ceilingpic = R_FlatNumForName(ms->ceilingpic);

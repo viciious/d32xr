@@ -934,7 +934,7 @@ int EV_DoDonut(line_t *line)
 			/* */
 			floor = Z_Malloc (sizeof(*floor), PU_LEVSPEC);
 			P_AddThinker (&floor->thinker);
-			s2->specialdata = floor;
+			s2->specialdata = LPTR_TO_SPTR(floor);
 			floor->thinker.function = T_MoveFloor;
 			floor->type = donutRaise;
 			floor->crush = false;
@@ -950,7 +950,7 @@ int EV_DoDonut(line_t *line)
 			/* */
 			floor = Z_Malloc (sizeof(*floor), PU_LEVSPEC);
 			P_AddThinker (&floor->thinker);
-			s1->specialdata = floor;
+			s1->specialdata = LPTR_TO_SPTR(floor);
 			floor->thinker.function = T_MoveFloor;
 			floor->type = lowerFloor;
 			floor->crush = false;

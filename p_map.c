@@ -481,12 +481,12 @@ void P_LineAttack (lineattack_t *la, mobj_t *t1, angle_t angle, fixed_t distance
 
 		frontsector = LD_FRONTSECTOR(shootline2);
 		backsector = LD_BACKSECTOR(shootline2);
-		if (frontsector->ceilingpic == -1)
+		if (*(int8_t *)&frontsector->ceilingpic == -1)
 		{
 			if (shootz2 > frontsector->ceilingheight)
 				return;		/* don't shoot the sky! */
 			if	(backsector 
-			&& backsector->ceilingpic == -1)
+			&& *(int8_t *)&backsector->ceilingpic == -1)
 				if (backsector->ceilingheight < shootz2)
 					return;		/* it's a sky hack wall */
 		}

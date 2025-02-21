@@ -694,7 +694,7 @@ void P_CheckMissileSpawn (mobj_t *th)
 	if (!P_TryMove (&tm, th, th->x, th->y))
 	{
 		th->momx = th->momy = th->momz = 0;
-		if(tm.ceilingline && tm.ceilingline->sidenum[1] != -1 && LD_BACKSECTOR(tm.ceilingline)->ceilingpic == -1)
+		if(tm.ceilingline && tm.ceilingline->sidenum[1] != -1 && *(int8_t *)&LD_BACKSECTOR(tm.ceilingline)->ceilingpic == -1)
 		{
 			th->latecall = P_RemoveMobj;
 			return;

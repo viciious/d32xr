@@ -174,7 +174,7 @@ void T_MoveFloor(floormove_t *floor)
 		S_StartPositionedSound((void *)floor->sector,sfx_stnmov,&P_SectorOrg);
 	if (res == pastdest)
 	{
-		floor->sector->specialdata = NULL;
+		floor->sector->specialdata = (SPTR)0;
 		if (floor->direction == 1)
 			switch(floor->type)
 			{
@@ -227,7 +227,7 @@ int EV_DoFloorTag(line_t *line,floor_e floortype, int tag)
 		rtn = 1;
 		floor = Z_Malloc (sizeof(*floor), PU_LEVSPEC);
 		P_AddThinker (&floor->thinker);
-		sec->specialdata = floor;
+		sec->specialdata = LPTR_TO_SPTR(floor);
 		floor->thinker.function = T_MoveFloor;
 		floor->type = floortype;
 		floor->crush = false;
@@ -410,7 +410,7 @@ int EV_BuildStairs(line_t *line, int type)
 		rtn = 1;
 		floor = Z_Malloc (sizeof(*floor), PU_LEVSPEC);
 		P_AddThinker (&floor->thinker);
-		sec->specialdata = floor;
+		sec->specialdata = LPTR_TO_SPTR(floor);
 		floor->thinker.function = T_MoveFloor;
 		floor->direction = 1;
 		floor->sector = sec;
@@ -470,7 +470,7 @@ int EV_BuildStairs(line_t *line, int type)
 				secnum = newsecnum;
 				floor = Z_Malloc (sizeof(*floor), PU_LEVSPEC);
 				P_AddThinker (&floor->thinker);
-				sec->specialdata = floor;
+				sec->specialdata = LPTR_TO_SPTR(floor);
 				floor->thinker.function = T_MoveFloor;
 				floor->direction = 1;
 				floor->sector = sec;

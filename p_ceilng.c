@@ -143,7 +143,7 @@ int EV_DoCeiling (line_t *line, ceiling_e  type)
 		rtn = 1;
 		ceiling = Z_Malloc (sizeof(*ceiling), PU_LEVSPEC);
 		P_AddThinker (&ceiling->thinker);
-		sec->specialdata = ceiling;
+		sec->specialdata = LPTR_TO_SPTR(ceiling);
 		ceiling->thinker.function = T_MoveCeiling;
 		ceiling->sector = sec;
 		ceiling->crush = false;
@@ -208,7 +208,7 @@ void P_RemoveActiveCeiling(ceiling_t *c)
 	for (i = 0;i < MAXCEILINGS;i++)
 		if (activeceilings[i] == c)
 		{
-			activeceilings[i]->sector->specialdata = NULL;
+			activeceilings[i]->sector->specialdata = (SPTR)0;
 			P_RemoveThinker (&activeceilings[i]->thinker);
 			activeceilings[i] = NULL;
 			break;

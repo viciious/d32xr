@@ -125,7 +125,7 @@ int	EV_DoPlat(line_t *line,plattype_e type,int amount)
 		
 		plat->type = type;
 		plat->sector = sec;
-		plat->sector->specialdata = plat;
+		plat->sector->specialdata = LPTR_TO_SPTR(plat);
 		plat->thinker.function = T_PlatRaise;
 		plat->crush = false;
 		plat->tag = tag;
@@ -225,7 +225,7 @@ void P_RemoveActivePlat(plat_t *plat)
 	for (i = 0;i < MAXPLATS;i++)
 		if (plat == activeplats[i])
 		{
-			(activeplats[i])->sector->specialdata = NULL;
+			(activeplats[i])->sector->specialdata = (SPTR)0;
 			P_RemoveThinker(&(activeplats[i])->thinker);
 			activeplats[i] = NULL;
 			return;

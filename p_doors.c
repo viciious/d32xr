@@ -64,7 +64,7 @@ void T_VerticalDoor (vldoor_t *door)
 					case close:
 					case blazeRaise:
 					case blazeClose:
-						door->sector->specialdata = NULL;
+						door->sector->specialdata = (SPTR)0;
 						P_RemoveThinker (&door->thinker);  /* unlink and free */
 						break;
 					case close30ThenOpen:
@@ -106,7 +106,7 @@ void T_VerticalDoor (vldoor_t *door)
 					case close30ThenOpen:
 					case open:
 					case blazeOpen:
-						door->sector->specialdata = NULL;
+						door->sector->specialdata = (SPTR)0;
 						P_RemoveThinker (&door->thinker);  /* unlink and free */
 						break;
 					default:
@@ -143,7 +143,7 @@ int EV_DoDoorTag (line_t *line, vldoor_e  type, int tag)
 		rtn = 1;
 		door = Z_Malloc (sizeof(*door), PU_LEVSPEC);
 		P_AddThinker (&door->thinker);
-		sec->specialdata = door;
+		sec->specialdata = LPTR_TO_SPTR(door);
 		door->thinker.function = T_VerticalDoor;
 		door->sector = sec;
 		door->type = type;
@@ -316,9 +316,9 @@ void EV_VerticalDoor (line_t *line, mobj_t *thing)
 	/* if the sector has an active thinker, use it */
 	secnum = sides[ line->sidenum[side^1]] .sector;
 	sec = &sectors[secnum];
-	if (sec->specialdata)
+	door = SPTR_TO_LPTR(sec->specialdata);
+	if (door)
 	{
-		door = sec->specialdata;
 		switch(line->special)
 		{
 			case	1:		/* ONLY FOR "RAISE" DOORS, NOT "OPEN"s */
@@ -359,7 +359,7 @@ void EV_VerticalDoor (line_t *line, mobj_t *thing)
 	/* */
 	door = Z_Malloc (sizeof(*door), PU_LEVSPEC);
 	P_AddThinker (&door->thinker);
-	sec->specialdata = door;
+	sec->specialdata = LPTR_TO_SPTR(door);
 	door->thinker.function = T_VerticalDoor;
 	door->sector = sec;
 	door->direction = 1;
@@ -409,7 +409,7 @@ void P_SpawnDoorCloseIn30 (sector_t *sec)
 	
 	door = Z_Malloc ( sizeof(*door), PU_LEVSPEC);
 	P_AddThinker (&door->thinker);
-	sec->specialdata = door;
+	sec->specialdata = LPTR_TO_SPTR(door);
 	sec->special = 0;
 	door->thinker.function = T_VerticalDoor;
 	door->sector = sec;
@@ -430,7 +430,7 @@ void P_SpawnDoorRaiseIn5Mins (sector_t *sec, int secnum)
 	
 	door = Z_Malloc ( sizeof(*door), PU_LEVSPEC);
 	P_AddThinker (&door->thinker);
-	sec->specialdata = door;
+	sec->specialdata = LPTR_TO_SPTR(door);
 	sec->special = 0;
 	door->thinker.function = T_VerticalDoor;
 	door->sector = sec;
