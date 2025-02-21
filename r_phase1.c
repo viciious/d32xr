@@ -193,7 +193,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
    int        f_lightlevel, b_lightlevel, lightshift;
    short      f_floorpic, f_ceilingpic;
    short      b_floorpic, b_ceilingpic;
-   int        b_texturemid, t_texturemid, m_texturemid;
+   int        b_texturemid, t_texturemid, m_texturemid, fof_texturemid;
    short      floorskyhack;
    short      skyhack;
    short      actionbits;
@@ -233,6 +233,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
           SETUPPER8(segl->floorceilpicnum, (uint8_t)-1);
 
       segl->m_texturenum = -1;
+      segl->fof_texturenum = -1;
 
       if (!back_sector)
          back_sector = &emptysector;
@@ -245,7 +246,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
       b_floorheight   = back_sector->floorheight   - vd.viewz;
       b_ceilingheight = back_sector->ceilingheight - vd.viewz;
 
-      t_texturemid = b_texturemid = m_texturemid = 0;
+      t_texturemid = b_texturemid = m_texturemid = fof_texturemid = 0;
       actionbits = 0;
 
       if(f_floorpic == (uint8_t)-1 && b_floorpic == (uint8_t)-1) {
@@ -369,6 +370,28 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
             actionbits |= AC_MIDTEXTURE; // set bottom and top masks
          }
 
+         if (back_sector->fofsec != -1)
+         {
+            const sector_t *fofsec = &sectors[back_sector->fofsec];
+            fof_texturemid = fofsec->ceilingheight - vd.viewz;
+//            segl->fof_bottomheight = fofsec->floorheight - vd.viewz;
+//            segl->fof_topheight = fofsec->ceilingheight - vd.viewz;
+
+segl->fof_texturenum = texturetranslation[st->midtexture];
+/*const fixed_t rf_ceilingheight = rbsp->curfsector->ceilingheight - vd.viewz;
+               const fixed_t rb_ceilingheight = rbsp->curbsector->ceilingheight - vd.viewz;
+               if(rb_ceilingheight > rf_ceilingheight)
+                  fof_texturemid = rf_ceilingheight;
+               else
+                  fof_texturemid = rb_ceilingheight;*/
+
+            fof_texturemid += rowoffset<<FRACBITS; // add in sidedef texture offset
+#ifdef WALLDRAW2X
+            fof_texturemid >>= 1;
+#endif
+            actionbits |= AC_FOF; // set bottom and top masks
+         }
+
          // is bottom texture visible?
          if(b_floorheight > f_floorheight && !floorskyhack)
          {
@@ -454,6 +477,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
       segl->t_texturemid  = t_texturemid;
       segl->b_texturemid  = b_texturemid;
       segl->m_texturemid  = m_texturemid;
+      segl->fof_texturemid = fof_texturemid;
       segl->seglightlevel = (lightshift << 8) | f_lightlevel;
       segl->offset        = ((fixed_t)textureoffset + offset) << FRACBITS;
    }

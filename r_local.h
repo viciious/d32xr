@@ -551,6 +551,7 @@ void R_PostTexCacheFrame(r_texcache_t* c);
 #define	AC_DRAWN			1024
 #define	AC_MIDTEXTURE		2048
 #define	AC_ADDFLOORSKY		4096
+#define AC_FOF              8192
 
 typedef struct
 {
@@ -572,6 +573,8 @@ typedef struct
 	int			b_texturemid;
 	int			b_topheight;
 
+	int         fof_texturemid;
+
 	/* !!! THE SECTION ABOVE MUST BE LARGE ENOUGH */
 	/* !!! TO ACCOMODATE VISSPRITE_T STRUCTURE, GETS */
 	/* !!! OVERWRITTEN AFTER PHASE 7 - END */
@@ -579,6 +582,7 @@ typedef struct
 	int 		m_texturemid;
 
 	VINT 	m_texturenum;
+	VINT     fof_texturenum;
 	uint16_t     tb_texturenum; // t_texturenum top word, b_texturenum bottom word
 
 	uint16_t     floorceilpicnum; // ceilingpicnum top word, floorpicnum bottom word (just like a ceiling and floor!)
@@ -645,7 +649,7 @@ typedef struct
 	uint32_t    fofInfo;
 } viswallextra_t;
 
-#define	MAXWALLCMDS		150
+#define	MAXWALLCMDS		140
 
 /* A vissprite_t is a thing that will be drawn during a refresh */
 typedef struct vissprite_s
