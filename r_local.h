@@ -97,7 +97,7 @@ typedef	struct
 	VINT		*lines;				/* [linecount] size */
 	void		*specialdata;		/* thinker_t for reversable actions */
 	
-	VINT		blockbox[4];		/* mapblock bounding box for height changes */
+	uint8_t		blockbox[4];		/* mapblock bounding box for height changes */
 	VINT		soundorg[2];		/* for any sounds played by the sector */
 } sector_t;
 
