@@ -510,7 +510,7 @@ static void R_SetupSkyGradient(void)
 	//sky_gradient_size = W_LumpLength(lump);
 
 	copper_neutral_color = (sky_gradient_ptr[0] << 8) | (sky_gradient_ptr[1] & 0xFF);
-	copper_table_height = 1 << sky_gradient_ptr[2];
+	copper_table_height = (sky_gradient_ptr[2] + 1) << 2;
 	//copper_table_count = sky_gradient_ptr[3];
 	copper_vertical_offset = (sky_gradient_ptr[4] << 8) | (sky_gradient_ptr[5] & 0xFF);
 	copper_vertical_rate = sky_gradient_ptr[6];
@@ -573,6 +573,11 @@ static void R_SetupSkyGradient(void)
 
 				data += 11;
 			}
+	}
+
+	if (table_index > copper_table_height) {
+		I_Error ("Copper table overflow: %d of %d lines",
+				table_index, copper_table_height);
 	}
 
 	unsigned short color = (data[0] << 8) | data[1];
