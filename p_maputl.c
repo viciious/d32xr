@@ -454,9 +454,22 @@ boolean P_BlockThingsIterator (int x, int y, blockthingsiter_t func, void *userp
 
 void P_SectorOrg(mobj_t* sec_, fixed_t *org)
 {
-	sector_t *sec = (void *)sec_;
-	org[0] = sec->soundorg[0] << FRACBITS;
-	org[1] = sec->soundorg[1] << FRACBITS;
+	int j;
+	fixed_t bbox[4];
+	sector_t *sector = (void *)sec_;
+
+	M_ClearBox (bbox);
+
+	for (j=0 ; j<sector->linecount ; j++)
+	{
+		line_t *li = lines + sector->lines[j];
+		M_AddToBox (bbox, vertexes[li->v1].x, vertexes[li->v1].y);
+		M_AddToBox (bbox, vertexes[li->v2].x, vertexes[li->v2].y);
+	}
+
+	/* set the degenmobj_t to the middle of the bounding box */
+	org[0] = ((bbox[BOXRIGHT]+bbox[BOXLEFT])/2) << FRACBITS;
+	org[1] = ((bbox[BOXTOP]+bbox[BOXBOTTOM])/2) << FRACBITS;
 }
 
 int P_GetLineTag (line_t *line)
