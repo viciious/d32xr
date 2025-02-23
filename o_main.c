@@ -64,7 +64,7 @@ typedef struct
 	VINT	y;
 	uint8_t	slider;
 	uint8_t screen;
-	char 	name[16];
+	const char 	*name;
 } menuitem_t;
 
 static menuitem_t menuitem[NUMMENUITEMS];
@@ -84,7 +84,7 @@ typedef struct
 {
 	VINT firstitem;
 	VINT numitems;
-	char name[10];
+	const char *name;
 } menuscreen_t;
 
 typedef enum
@@ -135,79 +135,79 @@ void O_Init (void)
 	D_memset(menuitem, 0, sizeof(*menuitem)*NUMMENUITEMS);
 	D_memset(sliders, 0, sizeof(sliders));
 
-	D_memcpy(menuitem[mi_game].name, "GAME", 5);
+	menuitem[mi_game].name = "GAME";
 	menuitem[mi_game].x = ITEMX;
 	menuitem[mi_game].y = STARTY;
 	menuitem[mi_game].screen = ms_game;
 
-	D_memcpy(menuitem[mi_audio].name, "AUDIO", 6);
+	menuitem[mi_audio].name = "AUDIO";
 	menuitem[mi_audio].x = ITEMX;
 	menuitem[mi_audio].y = STARTY+ITEMSPACE;
 	menuitem[mi_audio].screen = ms_audio;
 
-	D_memcpy(menuitem[mi_video].name, "VIDEO", 6);
+	menuitem[mi_video].name = "VIDEO";
 	menuitem[mi_video].x = ITEMX;
 	menuitem[mi_video].y = STARTY+ITEMSPACE*2;
 	menuitem[mi_video].screen = ms_video;
 /*
-	D_memcpy(menuitem[mi_controls].name, "Controls", 9);
+	menuitem[mi_controls].name = "Controls";
 	menuitem[mi_controls].x = ITEMX;
 	menuitem[mi_controls].y = STARTY+ITEMSPACE*3;
 	menuitem[mi_controls].screen = ms_controls;
 */
-	D_memcpy(menuitem[mi_help].name, "HELP / ABOUT", 13);
+	menuitem[mi_help].name = "HELP / ABOUT";
 	menuitem[mi_help].x = ITEMX;
 	menuitem[mi_help].y = STARTY+ITEMSPACE*3;
 	menuitem[mi_help].screen = ms_help;
 
-	D_memcpy(menuitem[mi_soundvol].name, "Sfx volume", 11);
+	menuitem[mi_soundvol].name = "Sfx volume";
 	menuitem[mi_soundvol].x = ITEMX - 32;
 	menuitem[mi_soundvol].y = STARTY;
 	menuitem[mi_soundvol].slider = si_sfxvolume+1;
 	sliders[si_sfxvolume].maxval = 4;
 	sliders[si_sfxvolume].curval = 4*sfxvolume/64;
 
-	D_memcpy(menuitem[mi_music].name, "Music", 6);
+	menuitem[mi_music].name = "Music";
 	menuitem[mi_music].x = ITEMX - 32;
 	menuitem[mi_music].y = STARTY+ITEMSPACE*2;
 
-	D_memcpy(menuitem[mi_musicvol].name, "CDA volume", 11);
+	menuitem[mi_musicvol].name = "CDA volume";
 	menuitem[mi_musicvol].x = ITEMX - 32;
 	menuitem[mi_musicvol].y = STARTY + ITEMSPACE * 3;
 	menuitem[mi_musicvol].slider = si_musvolume+1;
 	sliders[si_musvolume].maxval = 8;
 	sliders[si_musvolume].curval = 8*musicvolume/64;
 /*
-	D_memcpy(menuitem[mi_sfxdriver].name, "SFX driver", 11);
+	menuitem[mi_sfxdriver].name = "SFX driver";
 	menuitem[mi_sfxdriver].x = ITEMX;
 	menuitem[mi_sfxdriver].y = STARTY+ITEMSPACE*5;
 */
-	D_memcpy(menuitem[mi_resolution].name, "Resolution", 11);
+	menuitem[mi_resolution].name = "Resolution";
 	menuitem[mi_resolution].x = ITEMX;
 	menuitem[mi_resolution].y = STARTY;
 	menuitem[mi_resolution].slider = si_resolution+1;
 	sliders[si_resolution].maxval = numViewports - 1;
 	sliders[si_resolution].curval = viewportNum;
 
-	D_memcpy(menuitem[mi_anamorphic].name, "WIDESCREEN", 11);
+	menuitem[mi_anamorphic].name = "WIDESCREEN";
 	menuitem[mi_anamorphic].x = ITEMX - 32;
 	menuitem[mi_anamorphic].y = STARTY + ITEMSPACE * 2;
 
 
-	D_memcpy(menuitem[mi_controltype].name, "Gamepad", 8);
+	menuitem[mi_controltype].name = "Gamepad";
 	menuitem[mi_controltype].x = ITEMX;
 	menuitem[mi_controltype].y = STARTY;
 
-	D_memcpy(menuitem[mi_strafebtns].name, "LR Strafe", 10);
+	menuitem[mi_strafebtns].name = "LR Strafe";
 	menuitem[mi_strafebtns].x = ITEMX;
 	menuitem[mi_strafebtns].y = STARTY+ITEMSPACE*5;
 
 
-	D_memcpy(menuscreen[ms_main].name, "OPTIONS", 8);
+	menuscreen[ms_main].name = "OPTIONS";
 	menuscreen[ms_main].firstitem = mi_game;
 	menuscreen[ms_main].numitems = mi_help - mi_game + 1;
 
-	D_memcpy(menuscreen[ms_audio].name, "AUDIO", 6);
+	menuscreen[ms_audio].name = "AUDIO";
 	menuscreen[ms_audio].firstitem = mi_soundvol;
 	menuscreen[ms_audio].numitems = mi_music - mi_soundvol + 1;
 
@@ -219,15 +219,15 @@ void O_Init (void)
 			menuscreen[ms_audio].numitems++;
 	}
 
-	D_memcpy(menuscreen[ms_video].name, "VIDEO", 6);
+	menuscreen[ms_video].name = "VIDEO";
 	menuscreen[ms_video].firstitem = mi_anamorphic;
 	menuscreen[ms_video].numitems = mi_anamorphic - mi_anamorphic + 1;
 
-	D_memcpy(menuscreen[ms_controls].name, "CONTROLS", 9);
+	menuscreen[ms_controls].name = "CONTROLS";
 	menuscreen[ms_controls].firstitem = mi_controltype;
 	menuscreen[ms_controls].numitems = mi_strafebtns - mi_controltype + 1;
 
-	D_memcpy(menuscreen[ms_help].name, "HELP / ABOUT", 13);
+	menuscreen[ms_help].name = "HELP / ABOUT";
 	menuscreen[ms_help].firstitem = 0;
 	menuscreen[ms_help].numitems = 0;
 }

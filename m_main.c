@@ -47,14 +47,14 @@ typedef struct
 	VINT	x;
 	uint8_t	y;
 	char	screen;
-	char 	name[16];
+	const char 	*name;
 } mainitem_t;
 
 typedef struct
 {
 	VINT firstitem;
 	VINT numitems;
-	char name[12];
+	const char *name;
 } mainscreen_t;
 
 typedef enum
@@ -217,43 +217,43 @@ void M_Start2 (boolean startup_)
 	mainscreen[ms_help].firstitem = mi_help;
 	mainscreen[ms_help].numitems = 1;
 
-	D_memcpy(mainitem[mi_newgame].name, "START GAME", 11);
+	mainitem[mi_newgame].name = "START GAME";
 	mainitem[mi_newgame].x = ITEMX;
 	mainitem[mi_newgame].y = CURSORY(0);
 	mainitem[mi_newgame].screen = ms_gametype;
 
-	D_memcpy(mainitem[mi_loadgame].name, "ABOUT", 6);
+	mainitem[mi_loadgame].name = "ABOUT";
 	mainitem[mi_loadgame].x = ITEMX;
 	mainitem[mi_loadgame].y = CURSORY(1);
 	mainitem[mi_loadgame].screen = ms_help;
 	mainscreen[ms_main].numitems++;
 
-	D_memcpy(mainitem[mi_level].name, "Select Act", 11);
+	mainitem[mi_level].name = "Select Act";
 	mainitem[mi_level].x = ITEMX;
 	mainitem[mi_level].y = CURSORY(0);
 	mainitem[mi_level].screen = ms_none;
 
-	D_memcpy(mainitem[mi_gamemode].name, "Game Mode", 10);
+	mainitem[mi_gamemode].name = "Game Mode";
 	mainitem[mi_gamemode].x = ITEMX;
 	mainitem[mi_gamemode].y = CURSORY((mainscreen[ms_new].numitems - 2) * 2);
 	mainitem[mi_gamemode].screen = ms_none;
 
-	D_memcpy(mainitem[mi_savelist].name, "Checkpoints", 12);
+	mainitem[mi_savelist].name = "Checkpoints";
 	mainitem[mi_savelist].x = ITEMX;
 	mainitem[mi_savelist].y = CURSORY(0);
 	mainitem[mi_savelist].screen = ms_none;
 
-	D_memcpy(mainitem[mi_singleplayer].name, "SINGLE PLAYER", 14);
+	mainitem[mi_singleplayer].name = "SINGLE PLAYER";
 	mainitem[mi_singleplayer].x = ITEMX;
 	mainitem[mi_singleplayer].y = CURSORY(0);
 	mainitem[mi_singleplayer].screen = ms_new;
 
-	D_memcpy(mainitem[mi_splitscreen].name, "Split-Screen", 13);
+	mainitem[mi_splitscreen].name = "Split-Screen";
 	mainitem[mi_splitscreen].x = ITEMX;
 	mainitem[mi_splitscreen].y = CURSORY(1);
 	mainitem[mi_splitscreen].screen = ms_new;
 
-	D_memcpy(mainitem[mi_network].name, "Multiplayer", 13);
+	mainitem[mi_network].name = "Multiplayer";
 	mainitem[mi_network].x = ITEMX;
 	mainitem[mi_network].y = CURSORY(2);
 	mainitem[mi_network].screen = ms_new;
