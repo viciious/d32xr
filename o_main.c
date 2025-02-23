@@ -78,7 +78,7 @@ typedef struct
 	VINT	y;
 	uint8_t	slider;
 	uint8_t screen;
-	char 	name[16];
+	char 	*name;
 } menuitem_t;
 
 static menuitem_t *menuitem;
@@ -107,7 +107,7 @@ typedef struct
 {
 	VINT firstitem;
 	VINT numitems;
-	char name[10];
+	char *name;
 } menuscreen_t;
 
 typedef enum
@@ -178,113 +178,112 @@ void O_Init (void)
 	D_memset(menuitem, 0, sizeof(*menuitem)*NUMMENUITEMS);
 	D_memset(sliders, 0, sizeof(sliders));
 
-	D_memcpy(menuitem[mi_game].name, "Game", 5);
+	menuitem[mi_game].name = "Game";
 	menuitem[mi_game].x = ITEMX;
 	menuitem[mi_game].y = STARTY;
 	menuitem[mi_game].screen = ms_game;
 
-	D_memcpy(menuitem[mi_audio].name, "Audio", 6);
+	menuitem[mi_audio].name = "Audio";
 	menuitem[mi_audio].x = ITEMX;
 	menuitem[mi_audio].y = STARTY+ITEMSPACE;
 	menuitem[mi_audio].screen = ms_audio;
 
-	D_memcpy(menuitem[mi_video].name, "Video", 6);
+	menuitem[mi_video].name = "Video";
 	menuitem[mi_video].x = ITEMX;
 	menuitem[mi_video].y = STARTY+ITEMSPACE*2;
 	menuitem[mi_video].screen = ms_video;
 
-	D_memcpy(menuitem[mi_controls].name, "Controls", 9);
+	menuitem[mi_controls].name = "Controls";
 	menuitem[mi_controls].x = ITEMX;
 	menuitem[mi_controls].y = STARTY+ITEMSPACE*3;
 	menuitem[mi_controls].screen = ms_controls;
 
-	D_memcpy(menuitem[mi_help].name, "Help", 4);
+	menuitem[mi_help].name = "Help";
 	menuitem[mi_help].x = ITEMX;
 	menuitem[mi_help].y = STARTY+ITEMSPACE*4;
 	menuitem[mi_help].screen = ms_help;
 
-	D_memcpy(menuitem[mi_quit].name, "Quit", 4);
+	menuitem[mi_quit].name = "Quit";
 	menuitem[mi_quit].x = ITEMX;
 	menuitem[mi_quit].y = STARTY+ITEMSPACE*5;
 	menuitem[mi_quit].screen = ms_quit;
 
-	D_memcpy(menuitem[mi_soundvol].name, "Sfx volume", 11);
+	menuitem[mi_soundvol].name = "Sfx volume";
 	menuitem[mi_soundvol].x = ITEMX;
 	menuitem[mi_soundvol].y = STARTY;
 	menuitem[mi_soundvol].slider = si_sfxvolume+1;
 	sliders[si_sfxvolume].maxval = 4;
 	sliders[si_sfxvolume].curval = 4*sfxvolume/64;
 
-	D_memcpy(menuitem[mi_music].name, "Music", 6);
+	menuitem[mi_music].name = "Music";
 	menuitem[mi_music].x = ITEMX;
 	menuitem[mi_music].y = STARTY+ITEMSPACE*2;
 
-	D_memcpy(menuitem[mi_musicvol].name, "CD volume", 10);
+	menuitem[mi_musicvol].name = "CD volume";
 	menuitem[mi_musicvol].x = ITEMX;
 	menuitem[mi_musicvol].y = STARTY + ITEMSPACE * 3;
 	menuitem[mi_musicvol].slider = si_musvolume+1;
 	sliders[si_musvolume].maxval = 8;
 	sliders[si_musvolume].curval = 8*musicvolume/64;
 
-	D_memcpy(menuitem[mi_spcmpack].name, "SPCM", 4);
+	menuitem[mi_spcmpack].name = "SPCM";
 	menuitem[mi_spcmpack].x = ITEMX;
 	menuitem[mi_spcmpack].y = STARTY+ITEMSPACE*5;
 
 #ifndef DISABLE_DMA_SOUND
-	D_memcpy(menuitem[mi_sfxdriver].name, "SFX driver", 11);
+	menuitem[mi_sfxdriver].name = "SFX driver";
 	menuitem[mi_sfxdriver].x = ITEMX;
 	menuitem[mi_sfxdriver].y = STARTY+ITEMSPACE*6;
 #endif
 
-	D_memcpy(menuitem[mi_resolution].name, "Resolution", 11);
+	menuitem[mi_resolution].name = "Resolution";
 	menuitem[mi_resolution].x = ITEMX;
 	menuitem[mi_resolution].y = STARTY;
 	menuitem[mi_resolution].slider = si_resolution+1;
 	sliders[si_resolution].maxval = numViewports - 1;
 	sliders[si_resolution].curval = viewportNum;
 
-	D_memcpy(menuitem[mi_anamorphic].name, "Widescreen", 11);
+	menuitem[mi_anamorphic].name = "Widescreen";
 	menuitem[mi_anamorphic].x = ITEMX;
 	menuitem[mi_anamorphic].y = STARTY + ITEMSPACE * 2;
 
-	D_memcpy(menuitem[mi_detailmode].name, "Flats", 6);
+	menuitem[mi_detailmode].name = "Flats";
 	menuitem[mi_detailmode].x = ITEMX;
 	menuitem[mi_detailmode].y = STARTY + ITEMSPACE * 3;
 
-	D_memcpy(menuitem[mi_lowres].name, "Low detail", 11);
+	menuitem[mi_lowres].name = "Low detail";
 	menuitem[mi_lowres].x = ITEMX;
 	menuitem[mi_lowres].y = STARTY + ITEMSPACE * 4;
 
-	D_memcpy(menuitem[mi_controltype].name, "Gamepad", 8);
+	menuitem[mi_controltype].name = "Gamepad";
 	menuitem[mi_controltype].x = ITEMX;
 	menuitem[mi_controltype].y = STARTY;
 
-	D_memcpy(menuitem[mi_yabcdpad].name, "YABC D-pad", 11);
+	menuitem[mi_yabcdpad].name = "YABC D-pad";
 	menuitem[mi_yabcdpad].x = ITEMX;
 	menuitem[mi_yabcdpad].y = STARTY+ITEMSPACE*4;
 
-	D_memcpy(menuitem[mi_alwaysrun].name, "Always run", 11);
+	menuitem[mi_alwaysrun].name = "Always run";
 	menuitem[mi_alwaysrun].x = ITEMX;
 	menuitem[mi_alwaysrun].y = STARTY+ITEMSPACE*5;
 
-	D_memcpy(menuitem[mi_strafebtns].name, "LR Strafe", 10);
+	menuitem[mi_strafebtns].name = "LR Strafe";
 	menuitem[mi_strafebtns].x = ITEMX;
 	menuitem[mi_strafebtns].y = STARTY+ITEMSPACE*6;
 
-
-	D_memcpy(menuitem[mi_quityes].name, "Yes", 4);
+	menuitem[mi_quityes].name = "Yes";
 	menuitem[mi_quityes].x = ITEMX;
 	menuitem[mi_quityes].y = STARTY;
 
-	D_memcpy(menuitem[mi_quitno].name, "No", 3);
+	menuitem[mi_quitno].name = "No";
 	menuitem[mi_quitno].x = ITEMX;
 	menuitem[mi_quitno].y = STARTY+ITEMSPACE*1;
 
-	D_memcpy(menuscreen[ms_main].name, "Options", 8);
+	menuscreen[ms_main].name = "Options";
 	menuscreen[ms_main].firstitem = mi_game;
 	menuscreen[ms_main].numitems = mi_quit - mi_game + 1;
 
-	D_memcpy(menuscreen[ms_audio].name, "Audio", 6);
+	menuscreen[ms_audio].name = "Audio";
 	menuscreen[ms_audio].firstitem = mi_soundvol;
 	menuscreen[ms_audio].numitems = mi_music - mi_soundvol + 1;
 
@@ -299,19 +298,19 @@ void O_Init (void)
 #endif
 	}
 
-	D_memcpy(menuscreen[ms_video].name, "Video", 6);
+	menuscreen[ms_video].name = "Video";
 	menuscreen[ms_video].firstitem = mi_resolution;
 	menuscreen[ms_video].numitems = mi_lowres - mi_resolution + 1;
 
-	D_memcpy(menuscreen[ms_controls].name, "Controls", 9);
+	menuscreen[ms_controls].name = "Controls";
 	menuscreen[ms_controls].firstitem = mi_controltype;
 	menuscreen[ms_controls].numitems = mi_strafebtns - mi_controltype + 1;
 
-	D_memcpy(menuscreen[ms_help].name, "Help", 5);
+	menuscreen[ms_help].name = "Help";
 	menuscreen[ms_help].firstitem = 0;
 	menuscreen[ms_help].numitems = 0;
 
-	D_memcpy(menuscreen[ms_quit].name, "Quit?", 6);
+	menuscreen[ms_quit].name = "Quit?";
 	menuscreen[ms_quit].firstitem = mi_quityes;
 	menuscreen[ms_quit].numitems = mi_quitno - mi_quityes + 1;
 }

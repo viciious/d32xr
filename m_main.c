@@ -40,7 +40,7 @@ typedef struct
 	VINT	x;
 	uint8_t	y;
 	char	screen;
-	char 	name[16];
+	char 	*name;
 } mainitem_t;
 
 typedef struct
@@ -160,60 +160,60 @@ void M_Start2 (boolean startup_)
 	mainscreen[ms_gametype].firstitem = mi_singleplayer;
 	mainscreen[ms_gametype].numitems = 3;
 
-	D_memcpy(mainitem[mi_newgame].name, "New Game", 9);
+	mainitem[mi_newgame].name = "New Game";
 	mainitem[mi_newgame].x = ITEMX;
 	mainitem[mi_newgame].y = CURSORY(0);
 	mainitem[mi_newgame].screen = ms_gametype;
 
-	D_memcpy(mainitem[mi_loadgame].name, "Load Game", 10);
+	mainitem[mi_loadgame].name = "Load Game";
 	mainitem[mi_loadgame].x = ITEMX;
 	mainitem[mi_loadgame].y = CURSORY(1);
 	mainitem[mi_loadgame].screen = ms_load;
 	mainscreen[ms_main].numitems++;
 
-	D_memcpy(mainitem[mi_savegame].name, "Save Game", 10);
+	mainitem[mi_savegame].name = "Save Game";
 	mainitem[mi_savegame].x = ITEMX;
 	mainitem[mi_savegame].y = CURSORY(2);
 	mainitem[mi_savegame].screen = ms_save;
 	mainscreen[ms_main].numitems++;
 
-	D_memcpy(mainitem[mi_joingame].name, "Join Game", 10);
+	mainitem[mi_joingame].name = "Join Game";
 	mainitem[mi_joingame].x = ITEMX;
 	mainitem[mi_joingame].y = CURSORY(3);
 	mainitem[mi_joingame].screen = ms_none;
 	mainscreen[ms_main].numitems++;
 
-	D_memcpy(mainitem[mi_level].name, "Level", 6);
+	mainitem[mi_level].name = "Level";
 	mainitem[mi_level].x = ITEMX;
 	mainitem[mi_level].y = CURSORY(0);
 	mainitem[mi_level].screen = ms_none;
 
-	D_memcpy(mainitem[mi_gamemode].name, "Game Mode", 10);
+	mainitem[mi_gamemode].name = "Game Mode";
 	mainitem[mi_gamemode].x = ITEMX;
 	mainitem[mi_gamemode].y = CURSORY((mainscreen[ms_new].numitems - 2) * 2);
 	mainitem[mi_gamemode].screen = ms_none;
 
-	D_memcpy(mainitem[mi_difficulty].name, "Difficulty", 11);
+	mainitem[mi_difficulty].name = "Difficulty";
 	mainitem[mi_difficulty].x = ITEMX;
 	mainitem[mi_difficulty].y = CURSORY((mainscreen[ms_new].numitems - 1)*2);
 	mainitem[mi_difficulty].screen = ms_none;
 
-	D_memcpy(mainitem[mi_savelist].name, "Checkpoints", 12);
+	mainitem[mi_savelist].name = "Checkpoints";
 	mainitem[mi_savelist].x = ITEMX;
 	mainitem[mi_savelist].y = CURSORY(0);
 	mainitem[mi_savelist].screen = ms_none;
 
-	D_memcpy(mainitem[mi_singleplayer].name, "Single Player", 14);
+	mainitem[mi_singleplayer].name = "Single Player";
 	mainitem[mi_singleplayer].x = ITEMX;
 	mainitem[mi_singleplayer].y = CURSORY(0);
 	mainitem[mi_singleplayer].screen = ms_new;
 
-	D_memcpy(mainitem[mi_splitscreen].name, "Split-Screen", 13);
+	mainitem[mi_splitscreen].name = "Split-Screen";
 	mainitem[mi_splitscreen].x = ITEMX;
 	mainitem[mi_splitscreen].y = CURSORY(1);
 	mainitem[mi_splitscreen].screen = ms_new;
 
-	D_memcpy(mainitem[mi_network].name, "Multiplayer", 12);
+	mainitem[mi_network].name = "Multiplayer";
 	mainitem[mi_network].x = ITEMX;
 	mainitem[mi_network].y = CURSORY(2);
 	mainitem[mi_network].screen = ms_new;
