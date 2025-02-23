@@ -32,7 +32,8 @@ void R_DrawFOFSegRange(viswall_t *seg, int x, int stopx)
    if (x > stopx)
       return;
 
-   texture   = &textures[seg->fof_texturenum];
+   texture   = &textures[10];
+
    if (texture->lumpnum < firstsprite || texture->lumpnum >= firstsprite + numsprites)
       return;
 
@@ -86,7 +87,7 @@ void R_DrawFOFSegRange(viswall_t *seg, int x, int stopx)
 
       int topclip     = (spropening[x] >> 8);
       int bottomclip  = (spropening[x] & 0xff) - 1;
-      byte *columnptr = ((byte *)patch + BIGSHORT(patch->columnofs[colnum]));
+      byte *columnptr = (byte *)patch;
       fixed_t sprtop, iscale;
 
       sprtop = FixedMul(seg->fof_texturemid, spryscale);
@@ -113,13 +114,12 @@ void R_DrawFOFSegRange(viswall_t *seg, int x, int stopx)
 
       // column loop
       // a post record has four bytes: topdelta length pixelofs*2
-      for(; *columnptr != 0xff; columnptr += sizeof(column_t))
+      for(int texX = 0; texX < texture->width; texX++)
       {
          column_t *column = (column_t *)columnptr;
-         int top    = column->topdelta * spryscale + sprtop;
-         int bottom = column->length   * spryscale + top;
-         byte *dataofsofs = columnptr + offsetof(column_t, dataofs);
-         int dataofs = (dataofsofs[0] << 8) | dataofsofs[1];
+         int top    = sprtop;
+         int bottom = texture->height + top;
+         int dataofs = texX * texture->height;
          int count;
          fixed_t frac;
 
@@ -143,10 +143,10 @@ void R_DrawFOFSegRange(viswall_t *seg, int x, int stopx)
 
          // calc count
          count = bottom - top + 1;
-         if(count <= 0)
-            continue;
+//         if(count <= 0)
+  //          continue;
 
-         drawcol(x, top, bottom, light, frac, iscale, pixels + BIGSHORT(dataofs), 128);
+         drawcol(x, top, bottom, light, frac, iscale, pixels + dataofs, texture->height);
       }
    }
 }
