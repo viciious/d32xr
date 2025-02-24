@@ -47,7 +47,6 @@ typedef struct
 {
 	VINT firstitem;
 	VINT numitems;
-	char name[12];
 } mainscreen_t;
 
 typedef enum
@@ -64,7 +63,7 @@ typedef enum
 static mainitem_t mainitem[NUMMAINITEMS];
 static mainscreen_t mainscreen[NUMMAINSCREENS];
 
-static const char* playmodes[NUMMODES] = { "Single", "Coop", "Deathmatch" };
+static const char* const playmodes[NUMMODES] = { "Single", "Coop", "Deathmatch" };
 jagobj_t* m_doom;
 
 static VINT m_skull1lump, m_skull2lump;
