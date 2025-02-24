@@ -289,7 +289,7 @@ typedef struct degenmobj_s
 } degenmobj_t
 ;
 
-#define static_mobj_size (offsetof(mobj_t,momx))
+#define static_mobj_size (offsetof(mobj_t,angle))
 
 /* */
 /* frame flags */
