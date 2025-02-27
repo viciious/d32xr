@@ -617,8 +617,7 @@ static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
    {
        // reject empty lines used for triggers and special events
        if (sidedef->midtexture == 0 &&
-           backsector->ceilingpic == frontsector->ceilingpic &&
-           backsector->floorpic == frontsector->floorpic &&
+           *(int16_t *)&backsector->floorpic == *(int16_t *)&frontsector->floorpic && // compares both floorpic and ceilingpic
            *(int8_t *)&backsector->lightlevel == *(int8_t *)&frontsector->lightlevel) // hack to get rid of the extu.w on SH-2
            return;
    }
