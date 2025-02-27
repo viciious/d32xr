@@ -13,10 +13,19 @@
 static const animdef_t	animdefs[] =
 {
 	{false,	"BWATER08",	"BWATER01"},
+	{false, "CHEMG04",  "CHEMG01"},
 	{false, "DWATER08", "DWATER01"},
 	{false,	"FWATER4",	"FWATER1"},
+	{false, "LITER3",   "LITER1"},
+	{false, "THZELF2",  "THZELF1"},
 
+	{true,  "DOWN3D",   "DOWN3A"},
+	{true,  "DOWN5C",   "DOWN5A"},
 	{true,	"GFALL4",	"GFALL1"},
+	{true,  "RVZFALL4", "RVZFALL1"},
+	{true,  "TFALL4",   "TFALL1"},
+	{true,  "UP3D",     "UP3A"},
+	{true,  "UP5C",     "UP5A"},
 
 	{-1}
 };
