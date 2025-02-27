@@ -18,32 +18,26 @@ void R_Sprites(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 
 void R_DrawFOFSegRange(viswall_t *seg, int x, int stopx)
 {
-   patch_t *patch;
+   uint8_t *patch;
    fixed_t  spryscale, scalefrac, fracstep;
    uint16_t *spropening, *maskedcol;
-#ifdef MARS
-	inpixel_t 	*pixels;
-#else
-	pixel_t		*pixels;		/* data patch header references */
-#endif
    texture_t  *texture;
    int widthmask;
 
    if (x > stopx)
       return;
 
-   texture   = &textures[10];
+   texture   = &textures[seg->fof_texturenum];
 
-   if (texture->lumpnum < firstsprite || texture->lumpnum >= firstsprite + numsprites)
-      return;
+//   if (texture->lumpnum < firstsprite || texture->lumpnum >= firstsprite + numsprites)
+//      return;
 
    if (x <= seg->start && seg->start <= stopx)
       seg->start = stopx + 1;
    if (stopx >= seg->stop && seg->stop <= x)
       seg->stop = x - 1;
 
-   patch     = W_POINTLUMPNUM(texture->lumpnum);
-   pixels    = /*W_POINTLUMPNUM(texture->lumpnum+1)*/texture->data[0];
+   patch     = texture->data[0];
 
    spropening = seg->clipbounds;
    maskedcol  = seg->clipbounds + (seg->realstop - seg->realstart + 1);
@@ -53,6 +47,8 @@ void R_DrawFOFSegRange(viswall_t *seg, int x, int stopx)
    scalefrac = seg->scalefrac + (x - seg->realstart) * fracstep;
 
    I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
+
+   VINT thickness = (sectors[seg->fofSector].ceilingheight- sectors[seg->fofSector].floorheight) >> (FRACBITS+1);
 
    for(; x <= stopx; x++)
    {
@@ -87,7 +83,6 @@ void R_DrawFOFSegRange(viswall_t *seg, int x, int stopx)
 
       int topclip     = (spropening[x] >> 8);
       int bottomclip  = (spropening[x] & 0xff) - 1;
-      byte *columnptr = (byte *)patch;
       fixed_t sprtop, iscale;
 
       sprtop = FixedMul(seg->fof_texturemid, spryscale);
@@ -114,12 +109,10 @@ void R_DrawFOFSegRange(viswall_t *seg, int x, int stopx)
 
       // column loop
       // a post record has four bytes: topdelta length pixelofs*2
-      for(int texX = 0; texX < texture->width; texX++)
       {
-         column_t *column = (column_t *)columnptr;
          int top    = sprtop;
-         int bottom = texture->height + top;
-         int dataofs = texX * texture->height;
+         int bottom = thickness * spryscale + top;
+         int dataofs = colnum * texture->height;
          int count;
          fixed_t frac;
 
@@ -143,10 +136,10 @@ void R_DrawFOFSegRange(viswall_t *seg, int x, int stopx)
 
          // calc count
          count = bottom - top + 1;
-//         if(count <= 0)
-  //          continue;
+         if(count <= 0)
+            continue;
 
-         drawcol(x, top, bottom, light, frac, iscale, pixels + dataofs, texture->height);
+         drawcol(x, top, bottom, light, frac, iscale, patch + dataofs, texture->height);
       }
    }
 }
