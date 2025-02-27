@@ -182,7 +182,7 @@ fixed_t P_LineOpening (line_t *linedef)
 	sector_t	*front, *back;
 	fixed_t opentop, openbottom;
 	
-	if (linedef->sidenum[1] == -1)
+	if (linedef->sidenum[1] < 0)
 	{	/* single sided line */
 		return 0;
 	}

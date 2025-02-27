@@ -178,7 +178,7 @@ static boolean SL_CheckLine(line_t *ld, pslidework_t *sw)
    }
 
    // see if it can possibly block movement
-   if(ld->sidenum[1] == -1 || (ld->flags & ML_BLOCKING))
+   if(ld->sidenum[1] < 0 || (ld->flags & ML_BLOCKING))
       goto findfrac;
 
    front = LD_FRONTSECTOR(ld);
@@ -223,7 +223,7 @@ findfrac:
    case SIDE_ON:
       return true;
    case SIDE_BACK:
-      if(ld->sidenum[1] == -1)
+      if(ld->sidenum[1] < 0)
          return true; // don't clip to backs of one-sided lines
       // reverse coordinates and angle
       vtmp.x = sw->p1.x;

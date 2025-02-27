@@ -123,7 +123,7 @@ boolean PIT_CheckLine(line_t *ld, pmovework_t *w)
 
    // The moving thing's destination positoin will cross the given line.
    // If this should not be allowed, return false.
-   if(ld->sidenum[1] == -1)
+   if(ld->sidenum[1] < 0)
       return false; // one-sided line
 
    if(!(tmthing->flags & MF_MISSILE))

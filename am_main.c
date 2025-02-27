@@ -657,7 +657,7 @@ static void AM_Drawer_ (int c)
 		int flags;
 		int mapped;
 		mapvertex_t *v1, *v2;
-		boolean twoSided = line->sidenum[1] != -1;
+		boolean twoSided = line->sidenum[1] >= 0;
 
 		flags = line->flags;
 		mapped = (line->flags & ML_MAPPED) != 0;

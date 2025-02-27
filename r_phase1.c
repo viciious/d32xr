@@ -267,7 +267,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
 
       segl->t_topheight = f_ceilingheight; // top of texturemap
 
-      if (!(li->sidenum[1] != -1))
+      if (!(li->sidenum[1] >= 0))
       {
          // single-sided line
          if (si->midtexture > 0)
@@ -594,7 +594,7 @@ static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
    side = SEG_UNPACK_SIDE(line);
    ldef = &lines[SEG_UNPACK_LINEDEF(line)];
    frontsector = rbsp->curfsector;
-   backsector = ldef->sidenum[1] != -1 ? LD_SIDESECTOR(ldef, side^1) : NULL;
+   backsector = ldef->sidenum[1] >= 0 ? LD_SIDESECTOR(ldef, side^1) : NULL;
    sidedef = &sides[ldef->sidenum[side]];
    solid = false;
 

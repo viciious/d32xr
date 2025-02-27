@@ -106,7 +106,7 @@ void P_XYMovement(mobj_t *mo)
          // explode a missile?
          if(mo->flags & MF_MISSILE)
          {
-            if(w.ceilingline && w.ceilingline->sidenum[1] != -1 && *(int8_t *)&LD_BACKSECTOR(w.ceilingline)->ceilingpic == -1)
+            if(w.ceilingline && w.ceilingline->sidenum[1] >= 0 && *(int8_t *)&LD_BACKSECTOR(w.ceilingline)->ceilingpic == -1)
             {
                mo->latecall = P_RemoveMobj;
                return;

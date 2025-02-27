@@ -187,7 +187,7 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
          continue;
 
       // stop because it is not two sided anyway
-      twoSided = line->sidenum[1] != -1;
+      twoSided = line->sidenum[1] >= 0;
       if(!twoSided)
          return false;
 
