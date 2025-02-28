@@ -26,8 +26,10 @@ __DYNAMIC  =  0;
  * .                    .
  * .                    .
  * .                    .
- * |            __stack | top of stack (for Master SH2)
- * +--------------------+ <- 0x0603FC00
+ * |            __stack | top of stack (for Primary SH2)
+ * +--------------------+ <- 0x0603F400
+ * |            __stack | top of stack (for Secondary SH2)
+ * +--------------------+ <- 0x06040000
  */
 
 MEMORY
