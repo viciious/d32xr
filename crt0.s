@@ -321,48 +321,6 @@ sec_vbr:
         .long   sec_irq         /* V Blank interrupt (Level 12 & 13) */
         .long   sec_irq         /* Reset Button (Level 14 & 15) */
 
-pri_checksum:
-        mov.l   p_rom_header_size,r1
-        
-        mov.l   p_rom_end_ptr,r2
-        mov.l   p_rom_start,r0
-        mov.l   @r2,r2
-        add     r0,r2
-
-        mov     #0,r3
-0:
-        mov.w   @r1,r0
-        add     r0,r3
-        add     #2,r1
-        cmp/gt  r2,r1
-        bf      0b
-
-        mov.l   p_word_mask,r1
-        mov.l   p_rom_checksum,r0
-        and     r1,r3
-        mov.w   @r0,r0
-        and     r1,r0
-
-        cmp/eq  #0,r0
-        bt      pri_start_continue      ! If the ROM header specifies a checksum of zero, ignore validation.
-
-        cmp/eq  r0,r3
-        bt      pri_start_continue      ! If the checksum matches, continue.
-1:
-        bra     1b                      ! Checksum failure loop.
-        nop
-
-        .align 4
-p_rom_start:
-        .long   0x2000000
-p_rom_checksum:
-        .long   0x200018E
-p_rom_end_ptr:
-        .long   0x20001A4
-p_rom_header_size:
-        .long   0x2000200
-p_word_mask:
-        .long   0xFFFF
 
 !-----------------------------------------------------------------------
 ! The Primary SH2 starts here
@@ -400,18 +358,6 @@ pri_start:
         mov.b   r0,@(0x02,r1)           /* FRC_H => clear FRC */
 
         mov.l   _pri_stk,r15
-
-        mov.l   r0,@-r15
-        mov.l   r1,@-r15
-        mov.l   r2,@-r15
-        mov.l   r3,@-r15
-        bra     pri_checksum
-        nop
-pri_start_continue:
-        mov.l   @r15+,r3
-        mov.l   @r15+,r2
-        mov.l   @r15+,r1
-        mov.l   @r15+,r0
 
         ! purge cache and turn it off
         mov.l   _pri_cctl,r0
