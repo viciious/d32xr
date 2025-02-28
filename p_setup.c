@@ -173,6 +173,7 @@ void P_LoadSectors (int lump)
 		ss->tag = ms->tag;
 		ss->heightsec = -1; // sector used to get floor and ceiling height
 		ss->fofsec = -1;
+		ss->specline = -1;
 		ss->floor_xoffs = 0;
 		ss->flags = 0;
 

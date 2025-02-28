@@ -18,6 +18,7 @@ void R_Sprites(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 
 void R_DrawFOFSegRange(viswall_t *seg, int x, int stopx)
 {
+   return;
    uint8_t *patch;
    fixed_t  spryscale, scalefrac, fracstep;
    uint16_t *spropening, *maskedcol;

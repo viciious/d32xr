@@ -89,6 +89,7 @@ typedef	struct
 	VINT        fofsec;
 
 	SPTR		thinglist;			/* list of mobjs in sector */
+	VINT        specline; // Reference to a line of the sector for special reasons (i.e., FOF control line)
 } sector_t;
 
 typedef struct sectorBBox_s

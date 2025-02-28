@@ -67,7 +67,7 @@ static VINT checkcoord[12][4] =
    { 0, 0, 0, 0 }
 };
 
-static sector_t emptysector = { .floorheight = 0, .ceilingheight = 0, .validcount = 0, .floorpic = -2, .ceilingpic = -2, .lightlevel = -2, .special = 0, .tag = 0, .flags = 0, .heightsec = -1, .fofsec = -1, .thinglist = (SPTR)0, .specialdata = 0 };
+static sector_t emptysector = { .floorheight = 0, .ceilingheight = 0, .validcount = 0, .floorpic = -2, .ceilingpic = -2, .lightlevel = -2, .special = 0, .tag = 0, .flags = 0, .heightsec = -1, .fofsec = -1, .thinglist = (SPTR)0, .specialdata = 0, .specline = -1 };
 
 static int R_ClipToViewEdges(angle_t angle1, angle_t angle2)
 {
@@ -373,11 +373,20 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
          if (back_sector->fofsec != -1)
          {
             const sector_t *fofsec = &sectors[back_sector->fofsec];
-            fof_texturemid = fofsec->ceilingheight - vd.viewz;
+            const line_t *fofline = &lines[fofsec->specline];
+
+            if (front_sector->fofsec == -1)
+            {
+               fof_texturemid = fofsec->ceilingheight - vd.viewz;
+               segl->fof_texturenum = texturetranslation[SIDETEX(&sides[fofline->sidenum[0]])->midtexture];
+               fof_texturemid += rowoffset<<FRACBITS; // add in sidedef texture offset
+#ifdef WALLDRAW2X
+               fof_texturemid >>= 1;
+#endif
+//               actionbits |= AC_FOF; // set bottom and top masks
+            }
 //            segl->fof_bottomheight = fofsec->floorheight - vd.viewz;
 //            segl->fof_topheight = fofsec->ceilingheight - vd.viewz;
-
-segl->fof_texturenum = texturetranslation[st->midtexture];
 /*const fixed_t rf_ceilingheight = rbsp->curfsector->ceilingheight - vd.viewz;
                const fixed_t rb_ceilingheight = rbsp->curbsector->ceilingheight - vd.viewz;
                if(rb_ceilingheight > rf_ceilingheight)
@@ -385,11 +394,6 @@ segl->fof_texturenum = texturetranslation[st->midtexture];
                else
                   fof_texturemid = rb_ceilingheight;*/
 
-            fof_texturemid += rowoffset<<FRACBITS; // add in sidedef texture offset
-#ifdef WALLDRAW2X
-            fof_texturemid >>= 1;
-#endif
-            actionbits |= AC_FOF; // set bottom and top masks
          }
 
          // is bottom texture visible?

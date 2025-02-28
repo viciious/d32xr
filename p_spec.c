@@ -572,6 +572,7 @@ void P_SpawnSpecials (void)
 			for (int s = -1; (s = P_FindSectorFromLineTag(lines+i,s)) >= 0;)
 			{
 				sectors[s].fofsec = sec;
+				sectors[sec].specline = i;
 
 			// A sector that has FOF collision, but for rendering it will swap the floor/ceiling
 			// heights depending on the camera height.
@@ -588,27 +589,32 @@ void P_SpawnSpecials (void)
 			for (int s = -1; (s = P_FindSectorFromLineTag(lines+i,s)) >= 0;)
 			{
 				sectors[s].fofsec = sec;
+				sectors[sec].specline = sec;
 				sectors[s].flags |= SF_FOF_INVISIBLE_TANGIBLE;
 			}
 			break;
 		}
 		case 178: // Crumbling, respawn, floating
 		{
+			VINT sec = sides[*lines[i].sidenum].sector;
 			for (int s = -1; (s = P_FindSectorFromLineTag(lines+i,s)) >= 0;)
 			{
 				sectors[s].flags |= SF_CRUMBLE;
 				sectors[s].flags |= SF_FLOATBOB;
 				sectors[s].flags |= SF_RESPAWN;
+				sectors[sec].specline = sec;
 			}
 
 			break;
 		}
 		case 179: // Crumbling, no-respawn, floating
 		{
+			VINT sec = sides[*lines[i].sidenum].sector;
 			for (int s = -1; (s = P_FindSectorFromLineTag(lines+i,s)) >= 0;)
 			{
 				sectors[s].flags |= SF_CRUMBLE;
 				sectors[s].flags |= SF_FLOATBOB;
+				sectors[sec].specline = sec;
 			}
 
 			break;
