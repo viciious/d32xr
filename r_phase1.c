@@ -379,7 +379,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
             {
                fof_texturemid = fofsec->ceilingheight - vd.viewz;
                segl->fof_texturenum = texturetranslation[SIDETEX(&sides[fofline->sidenum[0]])->midtexture];
-               fof_texturemid += rowoffset<<FRACBITS; // add in sidedef texture offset
+//               fof_texturemid += rowoffset<<FRACBITS; // add in sidedef texture offset
 #ifdef WALLDRAW2X
                fof_texturemid >>= 1;
 #endif
