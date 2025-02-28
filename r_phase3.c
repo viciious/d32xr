@@ -108,7 +108,7 @@ static void R_PrepMobj(mobj_t *thing)
       tx -= ((fixed_t)BIGSHORT(patch->leftoffset)) << FRACBITS;
 
    x1 = FixedMul(tx, xscale);
-   x1 = (centerXFrac + x1) / FRACUNIT;
+   x1 = (centerXFrac + x1) >> FRACBITS;
 
    // off the right side?
    if (x1 > viewportWidth)
@@ -116,7 +116,7 @@ static void R_PrepMobj(mobj_t *thing)
 
    tx += ((fixed_t)BIGSHORT(patch->width) << FRACBITS);
    x2 = FixedMul(tx, xscale);
-   x2 = ((centerXFrac + x2) / FRACUNIT) - 1;
+   x2 = ((centerXFrac + x2) >> FRACBITS) - 1;
 
    // off the left side
    if (x2 < 0)
@@ -238,8 +238,8 @@ static void R_PrepPSprite(pspdef_t *psp)
    x2 = FixedMul(tx, xscale);
    x2 += x1;
 
-   x1 /= FRACUNIT;
-   x2 /= FRACUNIT;
+   x1 >>= FRACBITS;
+   x2 >>= FRACBITS;
    x2 -= 1;
 
    // off the right side?
