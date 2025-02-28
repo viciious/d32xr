@@ -355,36 +355,57 @@ do_main:
 calculate_checksum:
         move.w  0x18E,d5
         cmpi.w  #0,d5               /* should we skip the checksum routine? */
-        beq.s   checksum_pass
+        beq.w   checksum_pass
 
-        lea     0x300200,a1         /* skip the ROM header */
-        moveq   #0,d1
+        lea     0x200,a1            /* skip the ROM header */
         move.w  #0xFFBF,d1          /* read 512 bytes less for the first bank */
 
-        moveq   #0,d2
-        move.w  0x1A4,d2            /* get the upper word of the ROM size */
-        lsr.w   #3,d2               /* bank counter */
-        move.b  d2,d3               /* last bank */
-
         moveq   #0,d0               /* initialize the word accumulator */
-        lea     0xA130FD,a0         /* switch banks on offset 0x300000 */
-0:
-        move.b  d3,d4
-        sub.b   d2,d4
-        move.b  d4,(a0)             /* point to the next bank */
-1:
-        add.w   (a1)+,d0
-        add.w   (a1)+,d0
-        add.w   (a1)+,d0
-        add.w   (a1)+,d0
-        dbra    d1,1b
 
-        lea     0x300000,a1         /* go back to the start of the bank */
+        move.w  0x1A4,d2            /* get the upper word of the ROM size */
+        lsr.w   #3,d2               /* last bank */
+        move.w  d2,d3
+        cmpi.w  #8,d2
+        blo.s   0f
+        move.b  #7,d2
+
+| Handle the first 4MB of ROM
+0:
+        add.w   (a1)+,d0
+        add.w   (a1)+,d0
+        add.w   (a1)+,d0
+        add.w   (a1)+,d0
+        dbra    d1,0b
+
         move.w  #0xFFFF,d1          /* prepare to read another 512 KB */
         dbra    d2,0b
 
+        cmpi.b  #8,d3               /* are there fewer than 8 banks total? */
+        blo.b   checksum_validation
+
+| Handle bytes beyond the first 4MB of ROM
+        move.w  d3,d2               /* bank counter */
+        sub.b   #8,d2               /* skip the first 8 banks */
+
+        lea     0xA130FD,a0         /* switch banks on offset 0x300000 */
+1:
+        lea     0x300000,a1         /* go back to the start of the bank */
+        move.b  d3,d4
+        sub.b   d2,d4
+        move.b  d4,(a0)             /* point to the next bank */
+2:
+        add.w   (a1)+,d0
+        add.w   (a1)+,d0
+        add.w   (a1)+,d0
+        add.w   (a1)+,d0
+        dbra    d1,2b
+
+        move.w  #0xFFFF,d1          /* prepare to read another 512 KB */
+        dbra    d2,1b
+
         move.b  #6,(a0)             /* reset bank */
 
+checksum_validation:
         cmp.w   d0,d5               /* is the checksum correct? */
         beq.s   checksum_pass
 
