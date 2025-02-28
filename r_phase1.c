@@ -375,7 +375,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
             const sector_t *fofsec = &sectors[back_sector->fofsec];
             const line_t *fofline = &lines[fofsec->specline];
 
-            if (front_sector->fofsec == -1)
+            if (front_sector->fofsec == -1 && !(ldflags[fofsec->specline] & ML_BLOCKMONSTERS))
             {
                fof_texturemid = fofsec->ceilingheight - vd.viewz;
                segl->fof_texturenum = texturetranslation[SIDETEX(&sides[fofline->sidenum[0]])->midtexture];
@@ -383,7 +383,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
 #ifdef WALLDRAW2X
                fof_texturemid >>= 1;
 #endif
-//               actionbits |= AC_FOF; // set bottom and top masks
+               actionbits |= AC_FOF; // set bottom and top masks
             }
 //            segl->fof_bottomheight = fofsec->floorheight - vd.viewz;
 //            segl->fof_topheight = fofsec->ceilingheight - vd.viewz;
