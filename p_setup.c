@@ -365,7 +365,7 @@ void P_LoadThings (int lump)
 		P_SetStarPosts(players[0].starpostnum + 1);
 }
 
-void P_AddLineTag(int ld, uint8_t tag)
+void P_SetLineTag(int ld, uint8_t tag)
 {
 	VINT j;
 	VINT rowsize = (unsigned)numlinetags / LINETAGS_HASH_SIZE;
@@ -511,7 +511,7 @@ void P_LoadLineDefs (int lump)
 		{
 			uint8_t tag = mapldFlags->tag;
 			if (tag)
-				P_AddLineTag(i, tag);
+				P_SetLineTag(i, tag);
 		}
 	}
 
