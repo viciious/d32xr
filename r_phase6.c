@@ -242,7 +242,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 
     drawtex_t *tex;
 
-    uint16_t *segcolmask = (segl->actionbits & AC_MIDTEXTURE) ? segl->clipbounds + (stop - start + 1) : NULL;
+    uint16_t *segcolmask = ((segl->actionbits & AC_MIDTEXTURE) || (segl->actionbits & AC_FOF)) ? segl->clipbounds + (stop - start + 1) : NULL;
 
     enable_hints = 0;
     for (x = start; x <= stop; x++)
@@ -489,7 +489,7 @@ void R_SegCommands(void)
 #ifdef MARS
         R_LockSeg();
         actionbits = *(volatile short *)&segl->actionbits;
-        if (actionbits & AC_DRAWN || !(actionbits & (AC_TOPTEXTURE | AC_BOTTOMTEXTURE | AC_MIDTEXTURE | AC_ADDSKY | AC_ADDFLOORSKY))) {
+        if (actionbits & AC_DRAWN || !(actionbits & (AC_TOPTEXTURE | AC_BOTTOMTEXTURE | AC_MIDTEXTURE | AC_FOF | AC_ADDSKY | AC_ADDFLOORSKY))) {
             R_UnlockSeg();
             goto post_draw;
         } else {
@@ -656,6 +656,11 @@ void Mars_Sec_R_SegCommands(void)
         if (segl->actionbits & AC_MIDTEXTURE)
         {
             texture_t* tex = &textures[segl->m_texturenum];
+            Mars_ClearCacheLines(tex->data, (sizeof(tex->data)+31)/16);
+        }
+        if (segl->actionbits & AC_FOF)
+        {
+            texture_t *tex = &textures[segl->fof_texturenum];
             Mars_ClearCacheLines(tex->data, (sizeof(tex->data)+31)/16);
         }
 
