@@ -112,7 +112,7 @@ sector_t *getNextSector(line_t *line,sector_t *sec)
 {
 	sector_t *front;
 
-	if (!(line->sidenum[1] != -1))
+	if (!(line->sidenum[1] >= 0))
 		return NULL;
 	
 	front = LD_FRONTSECTOR(line);

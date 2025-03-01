@@ -1007,7 +1007,7 @@ void A_FishJump(mobj_t *mo, int16_t var1, int16_t var2)
 {
 	fixed_t watertop = mo->floorz;
 
-	if (SS_SECTOR(mo->isubsector)->heightsec != -1)
+	if (SS_SECTOR(mo->isubsector)->heightsec >= 0)
 		watertop = GetWatertopMo(mo) - (64<<FRACBITS);
 
 	if ((mo->z <= mo->floorz) || (mo->z <= watertop))
@@ -1390,7 +1390,7 @@ void A_Boss1Laser(mobj_t *actor, int16_t var1, int16_t var2)
 
 		const sector_t *pointSector = &sectors[subsectors[point->isubsector].isector];
 
-		if (pointSector->heightsec != -1 && point->z <= GetWatertopSec(pointSector))
+		if (pointSector->heightsec >= 0 && point->z <= GetWatertopSec(pointSector))
 		{
 //			for (i = 0; i < 2; i++)
 			{
@@ -1616,7 +1616,7 @@ void A_UnidusBall(mobj_t *actor)
 //
 void A_BubbleSpawn(mobj_t *actor, int16_t var1, int16_t var2)
 {
-	if (SS_SECTOR(actor->isubsector)->heightsec != -1
+	if (SS_SECTOR(actor->isubsector)->heightsec >= 0
 		&& actor->z < GetWatertopMo(actor) - 32*FRACUNIT)
 	{
 		int i;

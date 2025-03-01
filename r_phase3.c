@@ -138,7 +138,7 @@ static void R_PrepMobj(mobj_t *thing)
    // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
    const int heightsec = SS_SECTOR(thing->isubsector)->heightsec;
    const int phs = sectors[vd.viewsubsector->isector].heightsec;
-   if (heightsec != -1 && phs != -1)   // only clip things which are in special sectors
+   if (heightsec >= 0 && phs >= 0)   // only clip things which are in special sectors
    {
       const sector_t *heightsector = &sectors[heightsec];
       const fixed_t localgzt = thing->z + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
@@ -154,7 +154,7 @@ static void R_PrepMobj(mobj_t *thing)
             return;
       }
    }
-   else if (phs != -1)
+   else if (phs >= 0)
    {
       if (vd.viewz < sectors[phs].ceilingheight) // camera is currently underwater
       {
@@ -360,7 +360,7 @@ static void R_PrepRing(ringmobj_t *thing, boolean scenery)
    // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
    const int heightsec = SS_SECTOR(thing->isubsector)->heightsec;
    const int phs = sectors[vd.viewsubsector->isector].heightsec;
-   if (heightsec != -1 && phs != -1)   // only clip things which are in special sectors
+   if (heightsec >= 0 && phs >= 0)   // only clip things which are in special sectors
    {
       const sector_t *heightsector = &sectors[heightsec];
       const fixed_t localgzt = thingz + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
@@ -376,7 +376,7 @@ static void R_PrepRing(ringmobj_t *thing, boolean scenery)
             return;
       }
    }
-   else if (phs != -1)
+   else if (phs >= 0)
    {
       if (vd.viewz < sectors[phs].ceilingheight) // camera is currently underwater
       {

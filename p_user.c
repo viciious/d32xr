@@ -1352,7 +1352,7 @@ void P_MovePlayer(player_t *player)
 	player->speed = P_AproxDistance(player->mo->momx, player->mo->momy);
 
 	// If you're running fast enough, you can create splashes as you run in shallow water.
-	if (sectors[subsectors[player->mo->isubsector].isector].heightsec != -1)
+	if (sectors[subsectors[player->mo->isubsector].isector].heightsec >= 0)
 	{
 		const fixed_t watertop = GetWatertopMo(player->mo);
 

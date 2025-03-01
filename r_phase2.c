@@ -339,7 +339,7 @@ void Mars_Sec_R_WallPrep(void)
 #endif
             R_WallLatePrep(segl, verts);
 #ifdef FLOOR_OVER_FLOOR_CRAZY
-            if (segl->fofSector != -1)
+            if (segl->fofSector >= 0)
             {
                 sector_t *fofSector = &sectors[segl->fofSector];
                 if (fofSector->ceilingheight < vd.viewz)

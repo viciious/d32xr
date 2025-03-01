@@ -60,7 +60,7 @@ fixed_t FloorZAtPos(const sector_t *sec, fixed_t z, fixed_t height)
    fixed_t floorz = sec->floorheight;
    const fixed_t thingtop = z + height;
 
-   if (sec->fofsec != -1)
+   if (sec->fofsec >= 0)
    {
       sector_t *fof = &sectors[sec->fofsec];
 
@@ -77,7 +77,7 @@ fixed_t CeilingZAtPos(const sector_t *sec, fixed_t z, fixed_t height)
    fixed_t ceilingz = sec->ceilingheight;
    const fixed_t thingtop = z + height;
 
-   if (sec->fofsec != -1)
+   if (sec->fofsec >= 0)
    {
       sector_t *fof = &sectors[sec->fofsec];
 
@@ -454,7 +454,7 @@ void P_XYMovement(mobj_t *mo)
          // explode a missile?
          if(mo->flags2 & MF2_MISSILE)
          {
-            if(mt.ceilingline && mt.ceilingline->sidenum[1] != -1 && LD_BACKSECTOR(mt.ceilingline)->ceilingpic == (uint8_t)-1)
+            if(mt.ceilingline && mt.ceilingline->sidenum[1] >= 0 && LD_BACKSECTOR(mt.ceilingline)->ceilingpic == (uint8_t)-1)
             {
                mo->latecall = P_RemoveMobj;
                return;
@@ -581,7 +581,7 @@ void P_ZMovement(mobj_t *mo)
    else if(!(mo->flags & MF_NOGRAVITY))
    {
       // apply gravity
-      if (SS_SECTOR(mo->isubsector)->heightsec != -1
+      if (SS_SECTOR(mo->isubsector)->heightsec >= 0
          && GetWatertopMo(mo) > mo->z + (mo->theight << (FRACBITS-1)))
          mo->momz -= GRAVITY/2/3; // Less gravity underwater.
       else
@@ -1068,7 +1068,7 @@ void P_MobjThinker(mobj_t *mobj)
    }
 
    // cycle through states
-   if (mobj->tics != -1)
+   if (mobj->tics >= 0)
    {
        mobj->tics--;
 

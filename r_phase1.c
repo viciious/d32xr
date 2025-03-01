@@ -282,12 +282,13 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
       segl->t_bottomheight = f_floorheight; // bottom of texturemap
 
 //#ifdef FLOOR_OVER_FLOOR_CRAZY
-      if (back_sector->fofsec != -1)
+/*      if (back_sector->fofsec >= 0)
       {
-//         SETLOWER16(*fofInfo, (sectors[front_sector->fofsec].ceilingheight) >> FRACBITS);
-//         SETUPPER16(*fofInfo, (sectors[front_sector->fofsec].floorheight) >> FRACBITS);
-         segl->fofSector = back_sector->fofsec;
-      }
+         SETLOWER16(*fofInfo, (sectors[front_sector->fofsec].ceilingheight) >> FRACBITS);
+         SETUPPER16(*fofInfo, (sectors[front_sector->fofsec].floorheight) >> FRACBITS);
+         
+      }*/
+      segl->fofSector = back_sector->fofsec; // Just assigning it is faster
 //#endif
 
       if(!skyhack                                         && // not a sky hack wall
@@ -308,7 +309,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
 
       const sidetex_t *st = SIDETEX(si);
 
-      if (!(li->sidenum[1] != -1))
+      if (!(li->sidenum[1] >= 0))
       {
          // single-sided line
 //         if (si->midtexture > 0)
@@ -370,7 +371,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
             actionbits |= AC_MIDTEXTURE; // set bottom and top masks
          }
 
-         if (back_sector->fofsec != -1)
+         if (back_sector->fofsec >= 0)
          {
             const sector_t *fofsec = &sectors[back_sector->fofsec];
             const line_t *fofline = &lines[fofsec->specline];
@@ -664,14 +665,14 @@ crunch:
 sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
                      boolean back)
 {
-   if (sec->fofsec != -1 && (sec->flags & SF_FOF_SWAPHEIGHTS))
+   if (sec->fofsec >= 0 && (sec->flags & SF_FOF_SWAPHEIGHTS))
    {
       // Replace sector being drawn, with a copy to be hacked
       *tempsec = *sec;
 
       const sector_t *fofsec = &sectors[sec->fofsec];
       fixed_t midpoint;
-      if (sec->heightsec != -1) // If there is water in this sector, then the midpoint is the water.
+      if (sec->heightsec >= 0) // If there is water in this sector, then the midpoint is the water.
          midpoint = sectors[sec->heightsec].ceilingheight;
       else
          midpoint = fofsec->floorheight + (fofsec->ceilingheight - fofsec->floorheight)/2;
@@ -689,10 +690,10 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
 
       sec = tempsec;
    }
-   else if (sec->heightsec != -1)
+   else if (sec->heightsec >= 0)
    {
       const sector_t *watersec = &sectors[sec->heightsec];
-      boolean underwater = sectors[vd.viewsubsector->isector].heightsec != -1 && vd.viewz<=sectors[sectors[vd.viewsubsector->isector].heightsec].ceilingheight;
+      boolean underwater = sectors[vd.viewsubsector->isector].heightsec >= 0 && vd.viewz<=sectors[sectors[vd.viewsubsector->isector].heightsec].ceilingheight;
 
       // Replace sector being drawn, with a copy to be hacked
       *tempsec = *sec;
@@ -772,7 +773,7 @@ static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
       return;
 
    frontsector = rbsp->curfsector;//R_FakeFlat(rbsp->curfsector, &ftempsec, false);
-   backsector = (ldef->sidenum[1] != -1) ? &sectors[sides[ldef->sidenum[side^1]].sector] : NULL;
+   backsector = (ldef->sidenum[1] >= 0) ? &sectors[sides[ldef->sidenum[side^1]].sector] : NULL;
    sidedef = &sides[ldef->sidenum[side]];
 
    solid = false;

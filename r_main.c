@@ -936,7 +936,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		vd.aimingangle = thiscam->aiming;
 		vd.viewsubsector = thiscam->subsector;
 
-		if (sectors[thiscam->subsector->isector].heightsec != -1
+		if (sectors[thiscam->subsector->isector].heightsec >= 0
 			&& GetWatertopSec(&sectors[thiscam->subsector->isector]) > vd.viewz)
 		{
 			// Future: Have a way to specify the water color

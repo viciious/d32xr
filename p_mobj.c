@@ -857,7 +857,7 @@ void P_MobjCheckWater(mobj_t *mo)
 		const sector_t *moSec = SS_SECTOR(mo->isubsector);
 		fixed_t watertop = moSec->floorheight - 512*FRACUNIT;
 
-		if (moSec->heightsec != -1)
+		if (moSec->heightsec >= 0)
 		{
 			watertop = GetWatertopMo(mo);
 
