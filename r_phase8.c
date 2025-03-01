@@ -116,11 +116,19 @@ void R_DrawFOFSegRange(viswall_t *seg, int x, int stopx)
          int dataofs = colnum * texture->height;
          int count;
          fixed_t frac;
+         int temp = FRACUNIT-1;
 
-         top += (FRACUNIT - 1);
-         top /= FRACUNIT;
+#ifdef MARS
+         __asm volatile (
+            "mov #-1, %0\n\t"
+            "extu.w %0, %0\n\t"
+            : "=&r" (temp));
+#endif
+         top += temp;
+         top >>= FRACBITS;
+
          bottom -= 1;
-         bottom /= FRACUNIT;
+         bottom >>= FRACBITS;
 
          // clip to bottom
          if(bottom > bottomclip)
@@ -251,11 +259,19 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
          int dataofs = (dataofsofs[0] << 8) | dataofsofs[1];
          int count;
          fixed_t frac;
+         int temp = FRACUNIT-1;
 
-         top += (FRACUNIT - 1);
-         top /= FRACUNIT;
+#ifdef MARS
+         __asm volatile (
+            "mov #-1, %0\n\t"
+            "extu.w %0, %0\n\t"
+            : "=&r" (temp));
+#endif
+         top += temp;
+         top >>= FRACBITS;
+
          bottom -= 1;
-         bottom /= FRACUNIT;
+         bottom >>= FRACBITS;
 
          // clip to bottom
          if(bottom > bottomclip)
@@ -392,9 +408,9 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
             fixed_t frac;
 
             top += (FRACUNIT - 1);
-            top /= FRACUNIT;
+            top >>= FRACBITS;
             bottom -= 1;
-            bottom /= FRACUNIT;
+            bottom >>= FRACBITS;
 
             // clip to bottom
             if(bottom > bottomclip)
@@ -453,11 +469,19 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
             int dataofs = (dataofsofs[0] << 8) | dataofsofs[1];
             int count;
             fixed_t frac;
+            int temp = FRACUNIT-1;
 
-            top += (FRACUNIT - 1);
-            top /= FRACUNIT;
+#ifdef MARS
+         __asm volatile (
+            "mov #-1, %0\n\t"
+            "extu.w %0, %0\n\t"
+            : "=&r" (temp));
+#endif
+            top += temp;
+            top >>= FRACBITS;
+
             bottom -= 1;
-            bottom /= FRACUNIT;
+            bottom >>= FRACBITS;
 
             // clip to bottom
             if(bottom > bottomclip)
