@@ -54,7 +54,6 @@ typedef struct
 {
 	VINT firstitem;
 	VINT numitems;
-	const char *name;
 } mainscreen_t;
 
 typedef enum
