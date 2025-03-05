@@ -213,7 +213,7 @@ static void R_PrepMobj(mobj_t *thing)
    }
    else
    {
-      if ((thing->type == MT_EGGMOBILE || thing->type == MT_EGGMOBILE2) && (thing->flags2 & MF2_FRET) && (gametic & 1))
+      if ((thing->type == MT_EGGMOBILE_MECH) && (thing->flags2 & MF2_FRET) && (gametic & 1))
       {
          vis->colormap = BOSSFLASHCOLORMAP;
       }

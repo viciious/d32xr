@@ -31,12 +31,12 @@ extern fixed_t stretchX;
 #define	LIGHTLEVELS			256		/* number of diminishing */
 #define	INVERSECOLORMAP		255
 #else
-#define	BOSSFLASHCOLORMAP		33*256
-#define YELLOWTEXTCOLORMAP      34*256
+#define	BOSSFLASHCOLORMAP		(17)*256
+#define YELLOWTEXTCOLORMAP      (18)*256
 #endif
 
 #ifdef MARS
-#define HWLIGHT(light) ((((255 - (light)) >> 3) & 31) * 256)
+#define HWLIGHT(light) ((((255 - (light)) >> 4) & 15) * 256)
 #else
 #define HWLIGHT(light) -((255 - (light)) << 14) & 0xffffff
 #endif
