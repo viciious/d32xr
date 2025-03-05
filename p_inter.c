@@ -198,7 +198,7 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 	if (toucher->health <= 0)
 		return;						/* can happen with a sliding player corpse */
 
-	if (special->flags & MF_RINGMOBJ)
+	if ((special->flags & MF_RINGMOBJ) && (special->flags & MF_SPECIAL))
 	{
 		if (!P_CanPickupItem(player))
 			return;
@@ -210,7 +210,6 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 			P_SpawnMobj(ring->x << FRACBITS, ring->y << FRACBITS, ring->z << FRACBITS, MT_SPARK);
 			P_GivePlayerRings(player, 1);
 			sound = mobjinfo[special->type].deathsound;
-
 			player->itemcount++;
 		}
 		else if (special->type == MT_TOKEN)
@@ -242,7 +241,6 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 			}
 		}
 		
-		special->flags &= ~MF_SPECIAL;
 		P_RemoveMobj (special);
 
 		if (sound <= sfx_None)

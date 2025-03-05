@@ -52,14 +52,12 @@ __attribute((noinline))
 void P_RemoveMobj (mobj_t *mobj)
 {
 /* unlink from sector and block lists */
-	P_UnsetThingPosition (mobj);
+	P_UnsetThingPosition(mobj);
 
 	if (mobj->flags & MF_RINGMOBJ)
 	{
-		ringmobj_t *ring = (ringmobj_t*)mobj;
-		ring->flags = 0;
+		mobj->flags = MF_RINGMOBJ|MF_NOBLOCKMAP|MF_NOSECTOR; // Remove all other flags
 		return;
-
 	}
 	else if (mobj->flags & MF_STATIC)
 	{
