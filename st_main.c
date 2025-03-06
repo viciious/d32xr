@@ -188,6 +188,9 @@ void ST_Ticker(void)
 
 static void ST_DrawTitleCard()
 {
+#ifdef OST_BLURNESS
+	return;
+#endif
 	short ltzz_lump;
 	short chev_lump;
 	short lt_lump;
@@ -225,7 +228,11 @@ static void ST_DrawTitleCard()
 		V_DrawStringRight(&titleFont, 160+68 - ((16 - gametic) << 5), 100, gamemapinfo.name);
 		V_DrawStringLeft(&titleFont, 160 + ((16 - gametic) << 5), 124, "Zone");
 	}
-	else if (gametic < 80) {
+	else
+#ifndef OST_BLACKNESS
+	 if (gametic < 80)
+#endif
+	 {
 		// Title card at rest in the frame.
 
 		DrawScrollingBanner(ltzz_lump, 0, gametic << 1);
@@ -240,6 +247,7 @@ static void ST_DrawTitleCard()
 		V_DrawStringRight(&titleFont, 160+68, 100, gamemapinfo.name);
 		V_DrawStringLeft(&titleFont, 160, 124, "Zone");
 	}
+#ifndef OST_BLACKNESS
 	else {
 		// Title card moving out of the frame.
 		DrawScrollingBanner(ltzz_lump, (80-gametic) << 4, gametic << 1);
@@ -260,6 +268,7 @@ static void ST_DrawTitleCard()
 		V_DrawStringRight(&titleFont, 160+68 + ((gametic - 80) << 5), 100, gamemapinfo.name);
 		V_DrawStringLeft(&titleFont, 160 - ((gametic - 80) << 5), 124, "Zone");
 	}
+#endif
 }
 
 /*
@@ -272,6 +281,11 @@ static void ST_DrawTitleCard()
 
 static void ST_Drawer_ (stbar_t* sb)
 {
+#ifdef OST_BLACKNESS
+	ST_DrawTitleCard();
+	return;
+#endif
+
 	if (gametic < 96 && !(gamemapinfo.mapNumber >= SSTAGE_START && gamemapinfo.mapNumber <= SSTAGE_END)) {
 		ST_DrawTitleCard();
 	}

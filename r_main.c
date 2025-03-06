@@ -1020,6 +1020,10 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		}
 	}
 
+#ifdef OST_BLACKNESS
+	vd.fixedcolormap = 16*256;
+#endif
+
 #ifdef JAGUAR
 	vd.extralight = player->extralight << 6;
 
