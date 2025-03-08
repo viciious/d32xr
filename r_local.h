@@ -541,12 +541,14 @@ typedef struct
 	VINT			stop, realstop;					/* inclusive x coordinates */
 	union
 	{
+		int32_t         v1i;
 		seg_t			*seg;
 		mapvertex_t		v1;
 	};
 
 	union
 	{
+		int32_t         v2i;
 		fixed_t			ceilingheight;
 		mapvertex_t		v2;
 	};
