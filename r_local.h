@@ -526,13 +526,14 @@ typedef struct
 	VINT        floorpicnum;
 	VINT        ceilingpicnum;
 
+	int8_t 		miplevels[2];
+
 	fixed_t		scalestep;		/* polar angle to start at phase1, then scalestep after phase2 */
 	fixed_t		scalefrac;
 	fixed_t		scale2;
 
 	short	actionbits;
 	short	seglightlevel;
-	int16_t miplevels[2];
 
 /* */
 /* filled in by bsp */

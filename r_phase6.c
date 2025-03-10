@@ -523,20 +523,13 @@ void R_SegCommands(void)
 
         R_DrawSeg(&lseg, clipbounds);
 
+        *(int16_t *)&segl->miplevels[0] = 0;
 #if MIPLEVELS > 1
-        if (1)
-        {
-            if (lseg.maxmip >= MIPLEVELS)
-                lseg.maxmip = MIPLEVELS-1;
-            segl->miplevels[0] = lseg.minmip;
-            segl->miplevels[1] = lseg.maxmip;
-        }
-        else
+        if (lseg.maxmip >= MIPLEVELS)
+            lseg.maxmip = MIPLEVELS-1;
+        segl->miplevels[0] = lseg.minmip;
+        segl->miplevels[1] = lseg.maxmip;
 #endif
-        {
-            segl->miplevels[0] = 0;
-            segl->miplevels[1] = 0;
-        }
 
 post_draw:
         if(actionbits & (AC_NEWFLOOR|AC_NEWCEILING))
