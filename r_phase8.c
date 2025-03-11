@@ -581,14 +581,38 @@ void R_Sprites(void)
    // average the mid point
    if (midcount > 0)
    {
-      half /= midcount;
-      if (!half || (int)half > viewportWidth)
-         half = viewportWidth / 2;
+#ifdef MARS
+      int32_t t, divunit;
+      __asm volatile (
+         "mov #-128, %1\n\t"
+         "add %1, %1 /* %1 is now 0xFFFFFF00 */ \n\t"
+         "mov.l %2, @(0, %1) /* set 32-bit divisor */ \n\t"
+         "mov.l %3, @(16, %2) /* set high bits of the 64-bit dividend */ \n\t"
+         "mov #0, %0\n\t"
+         "mov.l %0, @(20, %1) /* set low  bits of the 64-bit dividend, start divide */\n\t"
+         : "=&r" (t), "=&r" (divunit) : "r" (midcount << FRACBITS), "r"(half));
+#endif
    }
 
    // draw mobj sprites
    sortedsprites[0] = count;
    D_isort(sortedsprites+1, count);
+
+   if (midcount > 0)
+   {
+#ifdef MARS
+      __asm volatile (
+         "mov #-128, %0\n\t"
+         "add %0, %0 /* %0 is now 0xFFFFFF00 */ \n\t"
+         "mov.l @(20, %0), %0 /* get 32-bit quotient */ \n\t"
+         : "=r" (half));
+      half >>= FRACBITS;
+#else
+      half /= midcount;
+#endif
+      if (!half || (int)half > viewportWidth)
+         half = viewportWidth / 2;
+   }
 
 #ifdef MARS
    // bank switching
