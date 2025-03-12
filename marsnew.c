@@ -617,12 +617,24 @@ void I_ClearFrameBuffer (void)
 		*p++ = 0x1F1F1F1F; // Four bytes of black palette index
 }
 
+#ifdef BENCHMARK
+static int last = 0;
+static int counter = 0;
+#endif
+
 void I_DebugScreen(void)
 {
 	int i;
 	int x = 200;
 	int line = 3;
 	static char buf[19][16];
+
+#ifdef BENCHMARK
+	if (leveltime < 10)
+	{
+		counter = 0;
+	}
+#endif
 
 	if (debugmode == DEBUGMODE_FPSCOUNT)
 	{
@@ -671,7 +683,14 @@ void I_DebugScreen(void)
 			D_snprintf(buf[15], sizeof(buf[0]), "scenm:%d", numscenerymobjs);
 			D_snprintf(buf[16], sizeof(buf[0]), "ringm:%d", numringmobjs);
 			D_snprintf(buf[17], sizeof(buf[0]), "statm:%d", numstaticmobjs);
+			#ifdef BENCHMARK
+			int newTime = I_GetFRTCounter();
+			counter += newTime - last;
+			last = newTime;
+			D_snprintf(buf[18], sizeof(buf[0]), "bench:%d", counter);
+			#else
 			D_snprintf(buf[18], sizeof(buf[0]), "regm:%d", numregmobjs);
+			#endif
 		}
 
         I_Print8(x, line++, buf[0]);

@@ -8,7 +8,7 @@
 #include "p_local.h"
 
 static void R_PrepMobj(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
-static void R_PrepRing(ringmobj_t* thing, boolean scenery) ATTR_DATA_CACHE_ALIGN;
+static void R_PrepRing(ringmobj_t* thing, uint16_t scenery) ATTR_DATA_CACHE_ALIGN;
 void R_SpritePrep(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 
 //
@@ -187,16 +187,15 @@ static void R_PrepMobj(mobj_t *thing)
 //   vis->colormaps = dc_colormaps;
 }
 
-static void R_PrepRing(ringmobj_t *thing, boolean scenery)
+static void R_PrepRing(ringmobj_t *thing, uint16_t scenery)
 {
    fixed_t tr_x, tr_y;
-   fixed_t gxt, gyt;
    fixed_t tx, tz, x1, x2;
    fixed_t xscale;
    spritedef_t   *sprdef;
    spriteframe_t *sprframe;
    VINT         *sprlump;
-   boolean      flip;
+   VINT      flip;
    int          lump;
    patch_t      *patch;
    vissprite_t  *vis;
@@ -222,19 +221,13 @@ static void R_PrepRing(ringmobj_t *thing, boolean scenery)
       tr_y = (thing->y<<FRACBITS) - vd.viewy;
    }
 
-   gxt = FixedMul(tr_x, vd.viewcos);
-   gyt = FixedMul(tr_y, vd.viewsin);
-   gyt = -gyt;
-   tz  = gxt - gyt;
+   tz = FixedMul(tr_x, vd.viewcos) + FixedMul(tr_y, vd.viewsin);
 
    // thing is behind view plane?
-   if(tz < MINZ || (scenery && tz > 1536*FRACUNIT) || tz > 2048*FRACUNIT) // Cull draw distance
+   if(tz < MINZ || (tz > (2048-(512*scenery))*FRACUNIT)) // Cull draw distance
       return;
 
-   gxt = FixedMul(tr_x, vd.viewsin);
-   gxt = -gxt;
-   gyt = FixedMul(tr_y, vd.viewcos);
-   tx  = -(gyt + gxt);
+   tx = -(FixedMul(tr_y, vd.viewcos) - FixedMul(tr_x, vd.viewsin));
 
    // too far off the side?
    if(tx > (tz << 2) || tx < -(tz<<2))
@@ -246,7 +239,7 @@ static void R_PrepRing(ringmobj_t *thing, boolean scenery)
    // We can assume a lot of things here!
    sprdef = &sprites[state->sprite];
 
-   flip = thingframe & FF_FLIPPED;
+   flip = (thingframe & FF_FLIPPED) ? -1 : 1;
 
    sprframe = &spriteframes[sprdef->firstframe + (thingframe & FF_FRAMEMASK)];
    sprlump = &spritelumps[sprframe->lump];
@@ -260,36 +253,32 @@ static void R_PrepRing(ringmobj_t *thing, boolean scenery)
 
    // calculate edges of the shape
 #ifdef NARROW_SCENERY
-   if (scenery)
-   {
-      if (flip)
-         tx -= ((fixed_t)(BIGSHORT(patch->width)*2)-(fixed_t)(BIGSHORT(patch->leftoffset)*2)) << FRACBITS;
-      else
-         tx -= ((fixed_t)(BIGSHORT(patch->leftoffset)*2)) << FRACBITS;
-   }
-   else 
-#endif
-   if (flip)
-      tx -= ((fixed_t)BIGSHORT(patch->width)-(fixed_t)BIGSHORT(patch->leftoffset)) << FRACBITS;
+   const fixed_t offset = BIGSHORT(patch->leftoffset) << (FRACBITS + scenery);
+   if (flip < 0)
+      tx -= ((BIGSHORT(patch->width) << (FRACBITS + scenery)) - offset);
    else
-      tx -= ((fixed_t)BIGSHORT(patch->leftoffset)) << FRACBITS;
+      tx -= offset;
+#else
+   const fixed_t offset = BIGSHORT(patch->leftoffset) << (FRACBITS);
+   if (flip < 0)
+      tx -= ((BIGSHORT(patch->width) << (FRACBITS)) - offset);
+   else
+      tx -= offset;
+#endif
 
-   x1 = FixedMul(tx, xscale);
-   x1 = (centerXFrac + x1) >> FRACBITS;
+   x1 = (centerXFrac + FixedMul(tx, xscale)) >> FRACBITS;
 
    // off the right side?
    if (x1 > viewportWidth)
        return;
 
 #ifdef NARROW_SCENERY
-   if (scenery)
-      tx += ((fixed_t)(BIGSHORT(patch->width)*2) << FRACBITS);
-   else
+   tx += (fixed_t)(BIGSHORT(patch->width) << (FRACBITS + scenery));
+#else
+   tx += ((fixed_t)BIGSHORT(patch->width) << FRACBITS);
 #endif
-      tx += ((fixed_t)BIGSHORT(patch->width) << FRACBITS);
 
-   x2 = FixedMul(tx, xscale);
-   x2 = ((centerXFrac + x2) >> FRACBITS) - 1;
+   x2 = ((centerXFrac + FixedMul(tx, xscale)) >> FRACBITS) - 1;
 
    // off the left side
    if (x2 < 0)
@@ -313,37 +302,21 @@ static void R_PrepRing(ringmobj_t *thing, boolean scenery)
    const int phs = sectors[vd.viewsubsector->isector].heightsec;
    if (heightsec >= 0 && phs >= 0)   // only clip things which are in special sectors
    {
-      const sector_t *heightsector = &sectors[heightsec];
       const fixed_t localgzt = thingz + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
+      const fixed_t waterHeight = sectors[phs].ceilingheight;
+      const fixed_t thingHeight = sectors[heightsec].ceilingheight;
 
-      if (vd.viewz < sectors[phs].ceilingheight) // camera is currently underwater
-      {
-         if (thingz >= heightsector->ceilingheight) // thing is above water
-            return;
-      }
-      else // camera is out of water
-      {
-         if (localgzt < heightsector->ceilingheight) // thing is underwater
-            return;
-      }
-   }
-   else if (phs >= 0)
-   {
-      if (vd.viewz < sectors[phs].ceilingheight) // camera is currently underwater
-      {
-         if (thingz >= sectors[phs].ceilingheight) // thing is above water
-            return;
-      }
+      if ((vd.viewz < waterHeight) != (localgzt < thingHeight))
+         return;
    }
 
    // get a new vissprite
    if(vd.vissprite_p >= vd.vissprites + MAXVISSPRITES)
       return; // too many visible sprites already, leave room for psprites
-
-   const fixed_t texmid = (thingz - vd.viewz) + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
-
    vis = (vissprite_t *)vd.vissprite_p;
    vd.vissprite_p++;
+
+   const fixed_t texmid = (thingz - vd.viewz) + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
 
    vis->patchnum = lump;
 #ifndef MARS
@@ -360,21 +333,16 @@ static void R_PrepRing(ringmobj_t *thing, boolean scenery)
    vis->startfrac = 0;
    vis->heightsec = heightsec;
 
-   if(flip)
-   {
-      vis->xiscale = -FixedDiv(FRACUNIT, xscale);
-      vis->startfrac = ((fixed_t)BIGSHORT(patch->width) << FRACBITS) - 1;
-   }
-   else
-   {
-      vis->startfrac = 0;
-      vis->xiscale = FixedDiv(FRACUNIT, xscale);
-   }
-
+   // Minimize branching for flip
+   vis->xiscale = FixedDiv(FRACUNIT, xscale) * flip;
 #ifdef NARROW_SCENERY
-   if (scenery)
-      vis->xiscale >>= 1;
+   vis->xiscale >>= scenery;
 #endif
+
+   if(flip < 0)
+      vis->startfrac = ((fixed_t)BIGSHORT(patch->width) << FRACBITS) - 1;
+   else
+      vis->startfrac = 0;
 
    if (vis->x1 > x1)
       vis->startfrac += vis->xiscale*(vis->x1 - x1);
@@ -382,7 +350,7 @@ static void R_PrepRing(ringmobj_t *thing, boolean scenery)
    if (vd.fixedcolormap)
        vis->colormap = vd.fixedcolormap;
    else
-      vis->colormap = HWLIGHT(sec->lightlevel);
+       vis->colormap = HWLIGHT(sec->lightlevel);
 }
 
 //
@@ -400,7 +368,7 @@ void R_SpritePrep(void)
       while(thing) // walk sector thing list
       {
          if (thing->flags & MF_RINGMOBJ)
-            R_PrepRing((ringmobj_t*)thing, thing->flags & MF_NOBLOCKMAP);
+            R_PrepRing((ringmobj_t*)thing, (thing->flags & MF_NOBLOCKMAP) ? 1 : 0);
          else if (!(thing->flags2 & MF2_DONTDRAW))
             R_PrepMobj(thing);
 
