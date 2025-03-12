@@ -17,40 +17,30 @@ void R_SpritePrep(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 static void R_PrepMobj(mobj_t *thing)
 {
    fixed_t tr_x, tr_y;
-   fixed_t gxt, gyt;
    fixed_t tx, tz, x1, x2;
    fixed_t xscale;
    spritedef_t   *sprdef;
    spriteframe_t *sprframe;
-   VINT         *sprlump;
    angle_t      ang;
    unsigned int rot;
-   boolean      flip;
    int          lump;
    patch_t      *patch;
    vissprite_t  *vis;
-   const boolean doubleWide = (thing->flags2 & MF2_NARROWGFX); // Sprites have half the horizontal resolution (like scenery)
+   VINT         *sprlump;
+   VINT         flip;
+   const uint8_t doubleWide = (thing->flags2 & MF2_NARROWGFX) ? 1 : 0; // Sprites have half the horizontal resolution (like scenery)
 
    // transform origin relative to viewpoint
    tr_x = thing->x - vd.viewx;
    tr_y = thing->y - vd.viewy;
 
-   gxt = FixedMul(tr_x, vd.viewcos);
-   gyt = FixedMul(tr_y, vd.viewsin);
-   gyt = -gyt;
-   tz  = gxt - gyt;
+   tz = FixedMul(tr_x, vd.viewcos) + FixedMul(tr_y, vd.viewsin);
 
    // thing is behind view plane?
-   if(tz < MINZ)
+   if(tz < MINZ || tz > 2048*FRACUNIT) // Cull draw distance
       return;
 
-   if (tz > 2048*FRACUNIT) // Cull draw distance
-      return;
-
-   gxt = FixedMul(tr_x, vd.viewsin);
-   gxt = -gxt;
-   gyt = FixedMul(tr_y, vd.viewcos);
-   tx  = -(gyt + gxt);
+   tx = -(FixedMul(tr_y, vd.viewcos) - FixedMul(tr_x, vd.viewsin));
 
    // too far off the side?
    if(tx > (tz << 2) || tx < -(tz<<2))
@@ -77,9 +67,9 @@ static void R_PrepMobj(mobj_t *thing)
    }
    // else // sprite has a single view for all rotations
 
-   flip = (frame & FF_FLIPPED);
+   flip = (frame & FF_FLIPPED) ? -1 : 1;
    if (lump & SL_FLIPPED)
-      flip = true;
+      flip = -1;
 
    lump &= SL_LUMPMASK;
 
@@ -90,35 +80,21 @@ static void R_PrepMobj(mobj_t *thing)
    xscale = FixedDiv(PROJECTION, tz);
 
    // calculate edges of the shape
-   if (doubleWide)
-   {
-      if (flip)
-         tx -= ((fixed_t)BIGSHORT(patch->width*2)-(fixed_t)BIGSHORT(patch->leftoffset*2)) << FRACBITS;
-      else
-         tx -= ((fixed_t)BIGSHORT(patch->leftoffset*2)) << FRACBITS;
-   }
+   const fixed_t offset = BIGSHORT(patch->leftoffset) << (FRACBITS + doubleWide);
+   if (flip < 0)
+      tx -= ((BIGSHORT(patch->width) << (FRACBITS + doubleWide)) - offset);
    else
-   {
-      if (flip)
-         tx -= ((fixed_t)BIGSHORT(patch->width)-(fixed_t)BIGSHORT(patch->leftoffset)) << FRACBITS;
-      else
-         tx -= ((fixed_t)BIGSHORT(patch->leftoffset)) << FRACBITS;
-   }
+      tx -= offset;
 
-   x1 = FixedMul(tx, xscale);
-   x1 = (centerXFrac + x1) >> FRACBITS;
+   x1 = (centerXFrac + FixedMul(tx, xscale)) >> FRACBITS;
 
    // off the right side?
    if (x1 > viewportWidth)
        return;
 
-   if (doubleWide)
-      tx += ((fixed_t)BIGSHORT(patch->width*2) << FRACBITS);
-   else
-      tx += ((fixed_t)BIGSHORT(patch->width) << FRACBITS);
+   tx += (fixed_t)(BIGSHORT(patch->width) << (FRACBITS + doubleWide));
 
-   x2 = FixedMul(tx, xscale);
-   x2 = ((centerXFrac + x2) >> FRACBITS) - 1;
+   x2 = ((centerXFrac + FixedMul(tx, xscale)) >> FRACBITS) - 1;
 
    // off the left side
    if (x2 < 0)
@@ -136,41 +112,26 @@ static void R_PrepMobj(mobj_t *thing)
    // killough 3/27/98: exclude things totally separated
    // from the viewer, by either water or fake ceilings
    // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
-   const int heightsec = SS_SECTOR(thing->isubsector)->heightsec;
+   const sector_t *sec = SS_SECTOR(thing->isubsector);
+   const int heightsec = sec->heightsec;
    const int phs = sectors[vd.viewsubsector->isector].heightsec;
    if (heightsec >= 0 && phs >= 0)   // only clip things which are in special sectors
    {
-      const sector_t *heightsector = &sectors[heightsec];
       const fixed_t localgzt = thing->z + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
+      const fixed_t waterHeight = sectors[phs].ceilingheight;
+      const fixed_t thingHeight = sectors[heightsec].ceilingheight;
 
-      if (vd.viewz < sectors[phs].ceilingheight) // camera is currently underwater
-      {
-         if (thing->z >= heightsector->ceilingheight) // thing is above water
-            return;
-      }
-      else // camera is out of water
-      {
-         if (localgzt < heightsector->ceilingheight) // thing is underwater
-            return;
-      }
-   }
-   else if (phs >= 0)
-   {
-      if (vd.viewz < sectors[phs].ceilingheight) // camera is currently underwater
-      {
-         if (thing->z >= sectors[phs].ceilingheight) // thing is above water
-            return;
-      }
+      if ((vd.viewz < waterHeight) != (localgzt < thingHeight))
+         return;
    }
 
    // get a new vissprite
    if(vd.vissprite_p >= vd.vissprites + MAXVISSPRITES)
       return; // too many visible sprites already, leave room for psprites
 
-   const fixed_t texmid = (thing->z - vd.viewz) + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
-
    vis = (vissprite_t *)vd.vissprite_p;
    vd.vissprite_p++;
+   const fixed_t texmid = (thing->z - vd.viewz) + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
 
    vis->patchnum = lump;
 #ifndef MARS
@@ -187,42 +148,31 @@ static void R_PrepMobj(mobj_t *thing)
    vis->startfrac = 0;
    vis->heightsec = heightsec;
 
-   if(flip)
-   {
-      vis->xiscale = -FixedDiv(FRACUNIT, xscale);
+   // Minimize branching for flip
+   vis->xiscale = FixedDiv(FRACUNIT, xscale) * flip;
+   vis->xiscale >>= doubleWide;
+
+   if(flip < 0)
       vis->startfrac = ((fixed_t)BIGSHORT(patch->width) << FRACBITS) - 1;
-
-      // Adjust offset
-      
-   }
    else
-   {
       vis->startfrac = 0;
-      vis->xiscale = FixedDiv(FRACUNIT, xscale);
-   }
-
-   if (doubleWide)
-      vis->xiscale >>= 1;
 
    if (vis->x1 > x1)
       vis->startfrac += vis->xiscale*(vis->x1 - x1);
 
    if (vd.fixedcolormap)
-   {
        vis->colormap = vd.fixedcolormap;
-   }
    else
    {
       if ((thing->type == MT_EGGMOBILE_MECH) && (thing->flags2 & MF2_FRET) && (gametic & 1))
-      {
          vis->colormap = BOSSFLASHCOLORMAP;
-      }
       else
       {
          if (frame & FF_FULLBRIGHT)
             vis->colormap = 255;
          else
-            vis->colormap = sectors[subsectors[thing->isubsector].isector].lightlevel;
+            vis->colormap = sec->lightlevel;
+
          vis->colormap = HWLIGHT(vis->colormap);
       }
    }
@@ -251,18 +201,23 @@ static void R_PrepRing(ringmobj_t *thing, boolean scenery)
    patch_t      *patch;
    vissprite_t  *vis;
    const scenerymobj_t *scenerymobj = NULL;
+   int16_t x, y;
 
    if (scenery)
    {
       scenerymobj = (const scenerymobj_t*)thing;
 
       // transform origin relative to viewpoint
-      tr_x = (scenerymobj->x<<FRACBITS) - vd.viewx;
-      tr_y = (scenerymobj->y<<FRACBITS) - vd.viewy;
+      x = scenerymobj->x;
+      y = scenerymobj->y;
+      tr_x = (x<<FRACBITS) - vd.viewx;
+      tr_y = (y<<FRACBITS) - vd.viewy;
    }
    else
    {
       // transform origin relative to viewpoint
+      x = thing->x;
+      y = thing->y;
       tr_x = (thing->x<<FRACBITS) - vd.viewx;
       tr_y = (thing->y<<FRACBITS) - vd.viewy;
    }
@@ -273,10 +228,7 @@ static void R_PrepRing(ringmobj_t *thing, boolean scenery)
    tz  = gxt - gyt;
 
    // thing is behind view plane?
-   if(tz < MINZ)
-      return;
-
-   if ((scenery && tz > 1536*FRACUNIT) || tz > 2048*FRACUNIT) // Cull draw distance
+   if(tz < MINZ || (scenery && tz > 1536*FRACUNIT) || tz > 2048*FRACUNIT) // Cull draw distance
       return;
 
    gxt = FixedMul(tr_x, vd.viewsin);
@@ -311,9 +263,9 @@ static void R_PrepRing(ringmobj_t *thing, boolean scenery)
    if (scenery)
    {
       if (flip)
-         tx -= ((fixed_t)BIGSHORT(patch->width*2)-(fixed_t)BIGSHORT(patch->leftoffset*2)) << FRACBITS;
+         tx -= ((fixed_t)(BIGSHORT(patch->width)*2)-(fixed_t)(BIGSHORT(patch->leftoffset)*2)) << FRACBITS;
       else
-         tx -= ((fixed_t)BIGSHORT(patch->leftoffset*2)) << FRACBITS;
+         tx -= ((fixed_t)(BIGSHORT(patch->leftoffset)*2)) << FRACBITS;
    }
    else 
 #endif
@@ -331,7 +283,7 @@ static void R_PrepRing(ringmobj_t *thing, boolean scenery)
 
 #ifdef NARROW_SCENERY
    if (scenery)
-      tx += ((fixed_t)BIGSHORT(patch->width*2) << FRACBITS);
+      tx += ((fixed_t)(BIGSHORT(patch->width)*2) << FRACBITS);
    else
 #endif
       tx += ((fixed_t)BIGSHORT(patch->width) << FRACBITS);
@@ -342,9 +294,6 @@ static void R_PrepRing(ringmobj_t *thing, boolean scenery)
    // off the left side
    if (x2 < 0)
        return;
-
-   const sector_t *sec = &sectors[subsectors[scenerymobj->isubsector].isector];
-   const fixed_t thingz = scenery ? (thing->type < MT_STALAGMITE0 || thing->type > MT_STALAGMITE7 ? sec->floorheight : sec->ceilingheight - mobjinfo[thing->type].height) : thing->z << FRACBITS;
 
    // killough 4/9/98: clip things which are out of view due to height
 //   tz = FixedMul(gzt, xscale);
@@ -358,7 +307,9 @@ static void R_PrepRing(ringmobj_t *thing, boolean scenery)
    // killough 3/27/98: exclude things totally separated
    // from the viewer, by either water or fake ceilings
    // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
-   const int heightsec = SS_SECTOR(thing->isubsector)->heightsec;
+   const sector_t *sec = SS_SECTOR(thing->isubsector);
+   const int heightsec = sec->heightsec;
+   const fixed_t thingz = scenery ? (thing->type < MT_STALAGMITE0 || thing->type > MT_STALAGMITE7 ? sec->floorheight : sec->ceilingheight - mobjinfo[thing->type].height) : thing->z << FRACBITS;
    const int phs = sectors[vd.viewsubsector->isector].heightsec;
    if (heightsec >= 0 && phs >= 0)   // only clip things which are in special sectors
    {
@@ -400,16 +351,8 @@ static void R_PrepRing(ringmobj_t *thing, boolean scenery)
 #endif
    vis->x1       = x1 < 0 ? 0 : x1;
    vis->x2       = x2 >= viewportWidth ? viewportWidth - 1 : x2;
-   if (scenery)
-   {
-      vis->gx       = scenerymobj->x;
-      vis->gy       = scenerymobj->y;
-   }
-   else
-   {
-      vis->gx       = thing->x;
-      vis->gy       = thing->y;
-   }
+   vis->gx       = x;
+   vis->gy       = y;
    vis->xscale   = xscale;
    vis->yscale   = FixedMul(xscale, stretch);
    vis->patchheight = BIGSHORT(patch->height);
@@ -439,7 +382,7 @@ static void R_PrepRing(ringmobj_t *thing, boolean scenery)
    if (vd.fixedcolormap)
        vis->colormap = vd.fixedcolormap;
    else
-      vis->colormap = HWLIGHT(sectors[subsectors[thing->isubsector].isector].lightlevel);
+      vis->colormap = HWLIGHT(sec->lightlevel);
 }
 
 //
