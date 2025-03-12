@@ -255,12 +255,14 @@ _I_DrawSpanA:
         add     r5,r8
         add     r6,r8
         shll8   r4
+
+        mov.l   @(40,r15),r11   /* ds_height */
+
         add     r4,r8
         shlr2   r4
         add     r4,r8           /* fb += (ds_y*256 + ds_y*64) */
 
         mov.l   @(36,r15),r9    /* ds_source */
-        mov.l   @(40,r15),r11   /* ds_height */
 
         mov     r11,r12
         dt      r12             /* (ds_height-1) */
