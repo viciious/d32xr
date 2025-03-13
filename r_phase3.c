@@ -22,10 +22,10 @@ static void R_PrepMobj(mobj_t *thing)
    spritedef_t   *sprdef;
    spriteframe_t *sprframe;
    angle_t      ang;
-   int          lump;
    patch_t      *patch;
    vissprite_t  *vis;
    VINT         *sprlump;
+   VINT          lump;
    int8_t        flip;
    const int8_t doubleWide = (thing->flags2 & MF2_NARROWGFX) ? 2 : 1; // Sprites have half the horizontal resolution (like scenery)
 
@@ -195,10 +195,10 @@ static void R_PrepRing(ringmobj_t *thing, uint8_t scenery)
    spritedef_t   *sprdef;
    spriteframe_t *sprframe;
    VINT         *sprlump;
-   int          lump;
    patch_t      *patch;
    vissprite_t  *vis;
    const scenerymobj_t *scenerymobj = NULL;
+   VINT          lump;
    int8_t      flip;
    int8_t     doubleWide = scenery ? 2 : 1;
    int16_t x, y;
