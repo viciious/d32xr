@@ -553,6 +553,8 @@ void R_PostTexCacheFrame(r_texcache_t* c);
 #define	AC_MIDTEXTURE		2048
 #define	AC_ADDFLOORSKY		4096
 #define AC_FOF              8192
+#define AC_FOFFLOOR         16384
+#define AC_FOFCEILING       32768
 
 typedef struct
 {
@@ -583,7 +585,8 @@ typedef struct
 	int 		m_texturemid;
 
 	VINT 	m_texturenum;
-	VINT     fof_texturenum;
+	uint8_t     fof_texturenum; // wall texture for FOF
+	uint8_t     fof_picnum; // floor or ceiling pic for FOF
 	uint16_t     tb_texturenum; // t_texturenum top word, b_texturenum bottom word
 
 	uint16_t     floorceilpicnum; // ceilingpicnum top word, floorpicnum bottom word (just like a ceiling and floor!)

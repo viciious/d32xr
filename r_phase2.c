@@ -338,32 +338,24 @@ void Mars_Sec_R_WallPrep(void)
             Mars_ClearCacheLine(seglex);
 #endif
             R_WallLatePrep(segl, verts);
-#ifdef FLOOR_OVER_FLOOR_CRAZY
+
             if (segl->fofSector >= 0)
             {
                 sector_t *fofSector = &sectors[segl->fofSector];
                 if (fofSector->ceilingheight < vd.viewz)
                 {
-                    uint16_t oldpicnum = segl->floorceilpicnum;
-                    short oldbits = segl->actionbits;
-                    segl->actionbits |= AC_ADDFLOOR|AC_NEWFLOOR;
-                    SETLOWER8(segl->floorceilpicnum, fofSector->ceilingpic);
-                    R_SegLoop(segl, clipbounds, fofSector->ceilingheight - vd.viewz, fofSector->ceilingheight - vd.viewz, segl->ceilingheight, seglex->ceilnewheight);
-                    segl->actionbits = oldbits;
-                    segl->floorceilpicnum = oldpicnum;
+                    // Rendering the ceiling
+                    segl->actionbits |= AC_FOFCEILING;
+                    segl->fof_picnum = fofSector->ceilingpic;
+ 
+                     // fof_picnum is just a junk value is AC_FOFCEILING or AC_FOFFLOOR isn't set.
                 }
                 else if (fofSector->floorheight > vd.viewz)
                 {
-                    uint16_t oldpicnum = segl->floorceilpicnum;
-                    short oldbits = segl->actionbits;
-                    segl->actionbits |= AC_ADDCEILING|AC_NEWCEILING;
-                    SETUPPER8(segl->floorceilpicnum, fofSector->floorpic);
-                    R_SegLoop(segl, clipbounds, seglex->floorheight, seglex->floornewheight, fofSector->floorheight - vd.viewz, fofSector->floorheight - vd.viewz);
-                    segl->actionbits = oldbits;
-                    segl->floorceilpicnum = oldpicnum;
+                    segl->actionbits |= AC_FOFFLOOR;
+                    segl->fof_picnum = fofSector->floorpic;
                 }
             }
-#endif
 
             R_SegLoop(segl, clipbounds, seglex->floorheight, seglex->floornewheight, segl->ceilingheight, seglex->ceilnewheight);
 
