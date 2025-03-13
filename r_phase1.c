@@ -673,12 +673,14 @@ static void R_DecodeBBox(int16_t *bbox, const int16_t *outerbbox, uint16_t encbb
 
    l = outerbbox[BOXTOP] - outerbbox[BOXBOTTOM];
    bbox[BOXBOTTOM] = outerbbox[BOXBOTTOM] + ((l * (encbbox & 0x0f)) >> 4);
-   bbox[BOXTOP] = outerbbox[BOXTOP] - ((l * (encbbox & 0xf0)) >> 8);
+   encbbox >>= 4;
+   bbox[BOXTOP] = outerbbox[BOXTOP] - ((l * (encbbox & 0x0f)) >> 4);
+   encbbox >>= 4;
 
-   encbbox >>= 8;
    l = outerbbox[BOXRIGHT] - outerbbox[BOXLEFT];
    bbox[BOXLEFT] = outerbbox[BOXLEFT] + ((l * (encbbox & 0x0f)) >> 4);
-   bbox[BOXRIGHT] = outerbbox[BOXRIGHT] - ((l * (encbbox & 0xf0)) >> 8);
+   encbbox >>= 4;
+   bbox[BOXRIGHT] = outerbbox[BOXRIGHT] - ((l * (encbbox & 0xf)) >> 4);
 }
 
 static void R_RenderBSPNode(rbspWork_t *rbsp, int bspnum, int16_t *outerbbox)
