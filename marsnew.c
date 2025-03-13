@@ -619,7 +619,8 @@ void I_ClearFrameBuffer (void)
 
 #ifdef BENCHMARK
 static int last = 0;
-static int counter = 0;
+static VINT numtimes = 0;
+int benchcounter = 0;
 #endif
 
 void I_DebugScreen(void)
@@ -630,9 +631,10 @@ void I_DebugScreen(void)
 	static char buf[19][16];
 
 #ifdef BENCHMARK
-	if (leveltime < 10)
+	if (benchcounter == 0)
 	{
-		counter = 0;
+		numtimes = 0;
+		last = I_GetFRTCounter();
 	}
 #endif
 
@@ -685,9 +687,9 @@ void I_DebugScreen(void)
 			D_snprintf(buf[17], sizeof(buf[0]), "statm:%d", numstaticmobjs);
 			#ifdef BENCHMARK
 			int newTime = I_GetFRTCounter();
-			counter += newTime - last;
+			benchcounter += newTime - last;
 			last = newTime;
-			D_snprintf(buf[18], sizeof(buf[0]), "bench:%d", counter);
+			D_snprintf(buf[18], sizeof(buf[0]), "bch:%d, %d", benchcounter, numtimes++);
 			#else
 			D_snprintf(buf[18], sizeof(buf[0]), "regm:%d", numregmobjs);
 			#endif

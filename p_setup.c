@@ -710,6 +710,10 @@ void P_GroupLines (void)
 =================
 */
 
+#ifdef BENCHMARK
+extern int benchcounter;
+#endif
+
 void P_SetupLevel (int lumpnum)
 {
 #ifndef MARS
@@ -758,6 +762,10 @@ D_printf ("P_SetupLevel(%i)\n",lumpnum);
 /*printf ("free memory: 0x%x\n", Z_FreeMemory(mainzone)); */
 
 	cy = 4;
+
+#ifdef BENCHMARK
+	benchcounter = 0;
+#endif
 
 #ifdef JAGUAR
 {
