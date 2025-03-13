@@ -693,7 +693,7 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
    else if (sec->heightsec >= 0)
    {
       const sector_t *watersec = &sectors[sec->heightsec];
-      boolean underwater = sectors[vd.viewsubsector->isector].heightsec >= 0 && vd.viewz<=sectors[sectors[vd.viewsubsector->isector].heightsec].ceilingheight;
+      boolean underwater = vd.viewsector->heightsec >= 0 && vd.viewz<=sectors[vd.viewsector->heightsec].ceilingheight;
 
       // Replace sector being drawn, with a copy to be hacked
       *tempsec = *sec;

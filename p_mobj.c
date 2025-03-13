@@ -782,69 +782,6 @@ void P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type)
 	P_CheckMissileSpawn (th);
 }
 
-
-/*
-================
-=
-= P_SpawnPlayerMissile
-=
-= Tries to aim at a nearby monster
-================
-*/
-
-void P_SpawnPlayerMissile (mobj_t *source, mobjtype_t type)
-{
-	mobj_t			*th;
-	mobj_t 			*linetarget;
-	angle_t			an;
-	fixed_t			x,y,z, slope;
-	VINT				speed;
-	lineattack_t	la;
-	const mobjinfo_t* thinfo = &mobjinfo[type];
-
-/* */
-/* see which target is to be aimed at */
-/* */
-	an = source->angle;
-	slope = P_AimLineAttack (&la, source, an, 16*64*FRACUNIT);
-	linetarget = la.shootmobj;
-	if (!linetarget)
-	{
-		an += 1<<26;
-		slope = P_AimLineAttack (&la, source, an, 16*64*FRACUNIT);
-		linetarget = la.shootmobj;
-		if (!linetarget)
-		{
-			an -= 2<<26;
-			slope = P_AimLineAttack (&la, source, an, 16*64*FRACUNIT);
-			linetarget = la.shootmobj;
-		}
-		if (!linetarget)
-		{
-			an = source->angle;
-			slope = 0;
-		}
-	}
-	
-	x = source->x;
-	y = source->y;
-	z = source->z + 4*8*FRACUNIT;
-	
-	th = P_SpawnMobj (x,y,z, type);
-	if (thinfo->seesound)
-		S_StartSound (source, thinfo->seesound);
-	th->target = source;
-	th->angle = an;
-	
-	speed = mobjinfo[th->type].speed >> 16;
-	
-	th->momx = speed * finecosine(an>>ANGLETOFINESHIFT);
-	th->momy = speed * finesine(an>>ANGLETOFINESHIFT);
-	th->momz = speed * slope;
-
-	P_CheckMissileSpawn (th);
-}
-
 void P_MobjCheckWater(mobj_t *mo)
 {
 	if (mo->player)

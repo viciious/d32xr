@@ -892,7 +892,9 @@ void G_WorldDone (void);
 void G_RecordInputDemo  (void);
 void G_RecordPositionDemo (void);
 int G_PlayInputDemoPtr (unsigned char *demo);
+#ifdef PLAY_POS_DEMO
 int G_PlayPositionDemoPtr (unsigned char *demo);
+#endif
 
 int G_LumpNumForMapNum(int map);
 

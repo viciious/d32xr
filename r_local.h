@@ -718,7 +718,7 @@ __attribute__((aligned(16)))
 {
 	fixed_t		viewx, viewy, viewz;
 	angle_t		viewangle,aimingangle;
-	subsector_t *viewsubsector;
+	sector_t 	*viewsector;
 	fixed_t		viewcos, viewsin;
 	player_t	*viewplayer;
 	VINT		lightlevel;

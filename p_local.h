@@ -143,7 +143,6 @@ void 	P_MobjThinker (mobj_t *mobj);
 void 	P_PreSpawnMobjs(int count, int staticcount, int ringcount, int scenerycount);
 
 void	P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type);
-void	P_SpawnPlayerMissile (mobj_t *source, mobjtype_t type);
 
 void	P_RunMobjBase2 (void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 void	P_RunMobjLate(void) ATTR_DATA_CACHE_ALIGN;
@@ -240,9 +239,6 @@ typedef struct
    fixed_t  shootslope;             // between aimtop and aimbottom
    fixed_t  shootx, shooty, shootz; // location for puff/blood
 } lineattack_t;
-
-__attribute((noinline))
-fixed_t P_AimLineAttack (lineattack_t *la, mobj_t *t1, angle_t angle, fixed_t distance);
 
 void P_RadiusAttack (mobj_t *spot, mobj_t *source, int damage) ATTR_DATA_CACHE_ALIGN;
 void P_XYMovement(mobj_t* mo) ATTR_DATA_CACHE_ALIGN;

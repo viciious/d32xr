@@ -209,8 +209,6 @@ void P_RingMagnet(mobj_t *spot)
 
 /*============================================================================ */
 
-void P_Shoot2 (lineattack_t *la);
-
 #ifdef JAGUAR
 
 int	dspterminate;

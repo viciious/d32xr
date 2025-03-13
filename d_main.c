@@ -994,6 +994,7 @@ int RunInputDemo (char *demoname)
 	return exit;
 }
 
+#ifdef PLAY_POS_DEMO
 int RunPositionDemo (char *demoname)
 {
 	unsigned *demo;
@@ -1021,7 +1022,7 @@ int RunPositionDemo (char *demoname)
 #endif
 	return exit;
 }
-
+#endif
 
 void RunMenu (void)
 {

@@ -8,7 +8,7 @@
 #include "p_local.h"
 
 static void R_PrepMobj(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
-static void R_PrepRing(ringmobj_t* thing, uint16_t scenery) ATTR_DATA_CACHE_ALIGN;
+static void R_PrepRing(ringmobj_t* thing, uint8_t scenery) ATTR_DATA_CACHE_ALIGN;
 void R_SpritePrep(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 
 //
@@ -26,8 +26,8 @@ static void R_PrepMobj(mobj_t *thing)
    patch_t      *patch;
    vissprite_t  *vis;
    VINT         *sprlump;
-   VINT         flip;
-   const uint8_t doubleWide = (thing->flags2 & MF2_NARROWGFX) ? 1 : 0; // Sprites have half the horizontal resolution (like scenery)
+   int8_t        flip;
+   const int8_t doubleWide = (thing->flags2 & MF2_NARROWGFX) ? 2 : 1; // Sprites have half the horizontal resolution (like scenery)
 
    // transform origin relative to viewpoint
    tr_x = thing->x - vd.viewx;
@@ -78,9 +78,9 @@ static void R_PrepMobj(mobj_t *thing)
    xscale = FixedDiv(PROJECTION, tz);
 
    // calculate edges of the shape
-   const fixed_t offset = BIGSHORT(patch->leftoffset) << (FRACBITS + doubleWide);
+   const fixed_t offset = (BIGSHORT(patch->leftoffset)*doubleWide) << FRACBITS; // yeet
    if (flip < 0)
-      tx -= ((BIGSHORT(patch->width) << (FRACBITS + doubleWide)) - offset);
+      tx -= ((BIGSHORT(patch->width)*doubleWide) << FRACBITS) - offset;
    else
       tx -= offset;
 
@@ -90,7 +90,7 @@ static void R_PrepMobj(mobj_t *thing)
    if (x1 > viewportWidth)
        return;
 
-   tx += (fixed_t)(BIGSHORT(patch->width) << (FRACBITS + doubleWide));
+   tx += (fixed_t)((BIGSHORT(patch->width)*doubleWide) << FRACBITS);
 
    x2 = ((centerXFrac + FixedMul(tx, xscale)) >> FRACBITS) - 1;
 
@@ -112,7 +112,7 @@ static void R_PrepMobj(mobj_t *thing)
    // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
    const sector_t *sec = SS_SECTOR(thing->isubsector);
    const int heightsec = sec->heightsec;
-   const int phs = sectors[vd.viewsubsector->isector].heightsec;
+   const int phs = vd.viewsector->heightsec;
    if (heightsec >= 0 && phs >= 0)   // only clip things which are in special sectors
    {
       const fixed_t localgzt = thing->z + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
@@ -148,7 +148,9 @@ static void R_PrepMobj(mobj_t *thing)
 
    // Minimize branching for flip
    vis->xiscale = FixedDiv(FRACUNIT, xscale) * flip;
-   vis->xiscale >>= doubleWide;
+
+   if (thing->flags2 & MF2_NARROWGFX)
+      vis->xiscale >>= 1;
 
    if(flip < 0)
       vis->startfrac = ((fixed_t)BIGSHORT(patch->width) << FRACBITS) - 1;
@@ -185,7 +187,7 @@ static void R_PrepMobj(mobj_t *thing)
 //   vis->colormaps = dc_colormaps;
 }
 
-static void R_PrepRing(ringmobj_t *thing, uint16_t scenery)
+static void R_PrepRing(ringmobj_t *thing, uint8_t scenery)
 {
    fixed_t tr_x, tr_y;
    fixed_t tx, tz, x1, x2;
@@ -197,7 +199,8 @@ static void R_PrepRing(ringmobj_t *thing, uint16_t scenery)
    patch_t      *patch;
    vissprite_t  *vis;
    const scenerymobj_t *scenerymobj = NULL;
-   VINT      flip;
+   int8_t      flip;
+   int8_t     doubleWide = scenery ? 2 : 1;
    int16_t x, y;
 
    if (scenery)
@@ -251,11 +254,10 @@ static void R_PrepRing(ringmobj_t *thing, uint16_t scenery)
 
    // calculate edges of the shape
 #ifdef NARROW_SCENERY
-   const fixed_t offset = BIGSHORT(patch->leftoffset) << (FRACBITS + scenery);
    if (flip < 0)
-      tx -= ((BIGSHORT(patch->width) << (FRACBITS + scenery)) - offset);
+      tx -= ((fixed_t)(BIGSHORT(patch->width)*doubleWide)-(fixed_t)(BIGSHORT(patch->leftoffset)*doubleWide)) << FRACBITS;
    else
-      tx -= offset;
+      tx -= ((fixed_t)BIGSHORT(patch->leftoffset)*doubleWide) << FRACBITS;
 #else
    const fixed_t offset = BIGSHORT(patch->leftoffset) << (FRACBITS);
    if (flip < 0)
@@ -271,7 +273,7 @@ static void R_PrepRing(ringmobj_t *thing, uint16_t scenery)
        return;
 
 #ifdef NARROW_SCENERY
-   tx += (fixed_t)(BIGSHORT(patch->width) << (FRACBITS + scenery));
+   tx += ((fixed_t)((BIGSHORT(patch->width)*doubleWide))) << FRACBITS;
 #else
    tx += ((fixed_t)BIGSHORT(patch->width) << FRACBITS);
 #endif
@@ -297,7 +299,7 @@ static void R_PrepRing(ringmobj_t *thing, uint16_t scenery)
    const sector_t *sec = SS_SECTOR(thing->isubsector);
    const int heightsec = sec->heightsec;
    const fixed_t thingz = scenery ? (thing->type < MT_STALAGMITE0 || thing->type > MT_STALAGMITE7 ? sec->floorheight : sec->ceilingheight - mobjinfo[thing->type].height) : thing->z << FRACBITS;
-   const int phs = sectors[vd.viewsubsector->isector].heightsec;
+   const int phs = vd.viewsector->heightsec;
    if (heightsec >= 0 && phs >= 0)   // only clip things which are in special sectors
    {
       const fixed_t localgzt = thingz + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
@@ -331,10 +333,10 @@ static void R_PrepRing(ringmobj_t *thing, uint16_t scenery)
    vis->startfrac = 0;
    vis->heightsec = heightsec;
 
-   // Minimize branching for flip
    vis->xiscale = FixedDiv(FRACUNIT, xscale) * flip;
 #ifdef NARROW_SCENERY
-   vis->xiscale >>= scenery;
+   if (scenery)
+      vis->xiscale >>= 1;
 #endif
 
    if(flip < 0)
