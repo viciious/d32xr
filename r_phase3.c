@@ -22,7 +22,6 @@ static void R_PrepMobj(mobj_t *thing)
    spritedef_t   *sprdef;
    spriteframe_t *sprframe;
    angle_t      ang;
-   unsigned int rot;
    int          lump;
    patch_t      *patch;
    vissprite_t  *vis;
@@ -62,8 +61,7 @@ static void R_PrepMobj(mobj_t *thing)
    {
       // select proper rotation depending on player's view point
       ang  = R_PointToAngle2(vd.viewx, vd.viewy, thing->x, thing->y);
-      rot  = (ang - thing->angle + (unsigned int)(ANG45 / 2)*9) >> 29;
-      lump = sprlump[rot];
+      lump = sprlump[(ang - thing->angle + (unsigned int)(ANG45 / 2)*9) >> 29];
    }
    // else // sprite has a single view for all rotations
 
@@ -195,11 +193,11 @@ static void R_PrepRing(ringmobj_t *thing, uint16_t scenery)
    spritedef_t   *sprdef;
    spriteframe_t *sprframe;
    VINT         *sprlump;
-   VINT      flip;
    int          lump;
    patch_t      *patch;
    vissprite_t  *vis;
    const scenerymobj_t *scenerymobj = NULL;
+   VINT      flip;
    int16_t x, y;
 
    if (scenery)
@@ -368,7 +366,7 @@ void R_SpritePrep(void)
       while(thing) // walk sector thing list
       {
          if (thing->flags & MF_RINGMOBJ)
-            R_PrepRing((ringmobj_t*)thing, (thing->flags & MF_NOBLOCKMAP) ? 1 : 0);
+            R_PrepRing((ringmobj_t*)thing, !!(thing->flags & MF_NOBLOCKMAP)); // Devolve the MF_BLOCKMAP flag into a 1 or 0
          else if (!(thing->flags2 & MF2_DONTDRAW))
             R_PrepMobj(thing);
 
