@@ -1092,7 +1092,7 @@ CDA_VOLUME:
 _start:
 
         .bss
-        .align  4
+        .align  8
         .global DISC_BUFFER
 DISC_BUFFER:
         .skip  2048*4

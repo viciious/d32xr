@@ -7,7 +7,7 @@ int S_CD_LoadBuffers(sfx_buffer_t *buf, int numsfx, const char *name, const int3
 {
     int i;
     int minofs, maxofs;
-    int datalen;
+    int datalen, cddatalen;
     int block;
     uint8_t *data;
     int32_t offset;
@@ -37,13 +37,17 @@ int S_CD_LoadBuffers(sfx_buffer_t *buf, int numsfx, const char *name, const int3
     if (datalen <= 0)
         return datalen;
 
+    cddatalen = datalen + 0x7FF;
+    cddatalen += (minofs & 0x7FF);
+
     // allocate enough memory to hold all sound effects + CD block padding
-    data = S_Buf_Alloc(datalen + 0x800);
+    data = S_Buf_Alloc(cddatalen + 7);
     if (!data)
         return datalen;
 
+    data = (void *)(((uintptr_t)data + 7) & ~7); // align the address for DMA reads
     block = (minofs >> 11) + offset;
-    read_sectors(data, block, (datalen + 0x800 + 0x7FF) >> 11);
+    read_sectors(data, block, cddatalen >> 11);
 
     data = data + (minofs & 0x7FF);
     for (i = 0; i < numsfx; i++) {

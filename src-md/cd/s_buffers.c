@@ -133,7 +133,7 @@ void S_Buf_SetData(sfx_buffer_t *buf, uint8_t *data, uint32_t data_len)
     buf->freq = 0;
     buf->num_channels = 0;
     if (!data) {
-error:        
+error:
         buf->data = NULL;
         buf->data_len = 0;
         return;
