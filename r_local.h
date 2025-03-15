@@ -552,7 +552,7 @@ void R_PostTexCacheFrame(r_texcache_t* c);
 #define	AC_DRAWN			1024
 #define	AC_MIDTEXTURE		2048
 #define	AC_ADDFLOORSKY		4096
-#define AC_FOF              8192
+#define AC_FOFSIDE          8192
 #define AC_FOFFLOOR         16384
 #define AC_FOFCEILING       32768
 
@@ -686,6 +686,7 @@ typedef struct visplane_s
 	fixed_t		height;
 	VINT		minx, maxx;
 	int 		flatandlight;
+//	VINT        isFOF; // TODO: temporary test
 	struct visplane_s	*next;
 	unsigned short		*open/*[SCREENWIDTH+2]*/;		/* top<<8 | bottom */ /* leave pads for [minx-1]/[maxx+1] */
 } visplane_t;

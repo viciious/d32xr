@@ -141,7 +141,7 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
     wc->scale2 = scale2;
 
     // does line have top or bottom textures?
-    if (wc->actionbits & (AC_TOPTEXTURE | AC_BOTTOMTEXTURE | AC_MIDTEXTURE | AC_FOF))
+    if (wc->actionbits & (AC_TOPTEXTURE | AC_BOTTOMTEXTURE | AC_MIDTEXTURE | AC_FOFSIDE))
     {
         R_SetupCalc(wc, hyp, normalangle, angle1);// do calc setup
     }
@@ -151,12 +151,12 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
     const int start = wc->start;
     const int stop = wc->stop;
     const int width = stop - start + 1;
-    if (wc->actionbits & (AC_NEWFLOOR | AC_NEWCEILING | AC_TOPSIL | AC_BOTTOMSIL | AC_MIDTEXTURE | AC_FOF))
+    if (wc->actionbits & (AC_NEWFLOOR | AC_NEWCEILING | AC_TOPSIL | AC_BOTTOMSIL | AC_MIDTEXTURE | AC_FOFSIDE))
     {
         wc->clipbounds = vd.lastsegclip - start;
         vd.lastsegclip += width;
     }
-    if ((wc->actionbits & AC_MIDTEXTURE) || (wc->actionbits & AC_FOF))
+    if ((wc->actionbits & AC_MIDTEXTURE) || (wc->actionbits & AC_FOFSIDE))
     {
         // lighting + column
         D_memset(vd.lastsegclip, 255, sizeof(*vd.lastsegclip)*width);
@@ -293,6 +293,81 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
                 ceilopen[x] = (top << 8) + (bottom-1);
             }
         }
+
+        if (segl->fofSector >= 0 && (actionbits & (AC_FOFFLOOR|AC_FOFCEILING)) && segl->fof_picnum != 0xff)
+        {
+            //
+            // calc high and low
+            //
+            low = FixedMul(scale2, floorheight)>>FRACBITS;
+            low = cy - low;
+            if (low < 0)
+                low = 0;
+            else if (low > floorclipx)
+                low = floorclipx;
+
+            high = FixedMul(scale2, ceilingheight)>>FRACBITS;
+            high = cy - high;
+            if (high > vh)
+                high = vh;
+            else if (high < ceilingclipx)
+                high = ceilingclipx;
+
+            if (newclipbounds)
+            {
+                newclipbounds[x] = (high << 8) | low;
+            }
+
+            int newclip = actionbits & (AC_NEWFLOOR|AC_NEWCEILING);
+            if (newclip)
+            {
+                if (!(newclip & AC_NEWFLOOR))
+                    low = floorclipx;
+                if (!(newclip & AC_NEWCEILING))
+                    high = ceilingclipx;
+                // rewrite clipbounds
+                clipbounds[x] = (high << 8) | low;
+            }
+            
+            if (actionbits & AC_FOFFLOOR)
+            {
+                const int fofandlight = ((sectors[segl->fofSector].lightlevel & 0xff) << 16) | (VINT)segl->fof_picnum;
+                const fixed_t fofplaneHeight = sectors[segl->fofSector].floorheight - vd.viewz;
+                
+                // "ceilopen"
+                top = ceilingclipx;
+                bottom = FixedMul(scale2, fofplaneHeight)>>FRACBITS;
+                bottom = cy - bottom;
+                if (bottom > floorclipx)
+                    bottom = floorclipx;
+
+                if (top < bottom)
+                {
+                    visplane_t *fofplane = R_FindPlane(fofplaneHeight, fofandlight, x, stop);
+                    fofplane->open[x] = (top << 8) + (bottom-1);    
+                }
+            }
+            else if (actionbits & AC_FOFCEILING) // AC_FOFCEILING
+            {
+                const int fofandlight = ((segl->seglightlevel & 0xff) << 16) | (VINT)segl->fof_picnum;
+                const fixed_t fofplaneHeight = sectors[segl->fofSector].ceilingheight - vd.viewz;
+
+                // "flooropen"
+                top = FixedMul(scale2, fofplaneHeight)>>FRACBITS;
+                top = cy - top;
+                if (top < ceilingclipx)
+                    top = ceilingclipx;
+                bottom = floorclipx;
+
+                CONS_Printf("Top: %d, Bottom:%d", top, bottom);
+
+                if (top < bottom)
+                {
+                    visplane_t *fofplane = R_FindPlane(fofplaneHeight, fofandlight, x, stop);
+                    fofplane->open[x] = (top << 8) + (bottom-1);
+                }                
+            }
+        }
     }
 }
 
@@ -338,24 +413,6 @@ void Mars_Sec_R_WallPrep(void)
             Mars_ClearCacheLine(seglex);
 #endif
             R_WallLatePrep(segl, verts);
-
-            if (segl->fofSector >= 0)
-            {
-                sector_t *fofSector = &sectors[segl->fofSector];
-                if (fofSector->ceilingheight < vd.viewz)
-                {
-                    // Rendering the ceiling
-                    segl->actionbits |= AC_FOFCEILING;
-                    segl->fof_picnum = fofSector->ceilingpic;
- 
-                     // fof_picnum is just a junk value is AC_FOFCEILING or AC_FOFFLOOR isn't set.
-                }
-                else if (fofSector->floorheight > vd.viewz)
-                {
-                    segl->actionbits |= AC_FOFFLOOR;
-                    segl->fof_picnum = fofSector->floorpic;
-                }
-            }
 
             R_SegLoop(segl, clipbounds, seglex->floorheight, seglex->floornewheight, segl->ceilingheight, seglex->ceilnewheight);
 

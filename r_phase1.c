@@ -281,16 +281,6 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
 
       segl->t_bottomheight = f_floorheight; // bottom of texturemap
 
-//#ifdef FLOOR_OVER_FLOOR_CRAZY
-/*      if (back_sector->fofsec >= 0)
-      {
-         SETLOWER16(*fofInfo, (sectors[front_sector->fofsec].ceilingheight) >> FRACBITS);
-         SETUPPER16(*fofInfo, (sectors[front_sector->fofsec].floorheight) >> FRACBITS);
-         
-      }*/
-      segl->fofSector = back_sector->fofsec; // Just assigning it is faster
-//#endif
-
       if(!skyhack                                         && // not a sky hack wall
          (f_ceilingheight > 0 || f_ceilingpic == (uint8_t)-1)      && // ceiling below camera, or sky
          (f_ceilingpic    != b_ceilingpic                 || // ceiling texture changes across line?
@@ -334,6 +324,26 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
             segl->t_bottomheight = f_floorheight; // set bottom height
             actionbits |= (AC_SOLIDSIL|AC_TOPTEXTURE);                   // solid line; draw middle texture only
          }
+
+         if (front_sector->fofsec >= 0)
+         {
+            const sector_t *fofsec = &sectors[front_sector->fofsec];
+            segl->fofSector = front_sector->fofsec;
+            segl->fof_picnum = 0xff;
+            if (fofsec->ceilingheight < vd.viewz)
+            {
+               // Rendering the ceiling
+               actionbits |= AC_FOFCEILING;
+               segl->fof_picnum = fofsec->ceilingpic;
+                            
+               // fof_picnum is just a junk value if AC_FOFCEILING or AC_FOFFLOOR isn't set.
+            }
+            else if (fofsec->floorheight > vd.viewz)
+            {
+               actionbits |= AC_FOFFLOOR;
+               segl->fof_picnum = fofsec->floorpic;
+            }
+         }
       }
       else
       {
@@ -375,6 +385,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
          {
             const sector_t *fofsec = &sectors[back_sector->fofsec];
             const line_t *fofline = &lines[fofsec->specline];
+            segl->fofSector = back_sector->fofsec;
 
             if (front_sector->fofsec == -1 && !(ldflags[fofsec->specline] & ML_BLOCKMONSTERS))
             {
@@ -384,7 +395,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
 #ifdef WALLDRAW2X
                fof_texturemid >>= 1;
 #endif
-               actionbits |= AC_FOF; // set bottom and top masks
+               actionbits |= AC_FOFSIDE; // set bottom and top masks
             }
 //            segl->fof_bottomheight = fofsec->floorheight - vd.viewz;
 //            segl->fof_topheight = fofsec->ceilingheight - vd.viewz;
@@ -395,6 +406,39 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
                else
                   fof_texturemid = rb_ceilingheight;*/
 
+            segl->fof_picnum = 0xff;
+            if (fofsec->ceilingheight < vd.viewz)
+            {
+               // Rendering the ceiling
+               actionbits |= AC_FOFCEILING;
+               segl->fof_picnum = fofsec->ceilingpic;
+                                  
+               // fof_picnum is just a junk value if AC_FOFCEILING or AC_FOFFLOOR isn't set.
+            }
+            else if (fofsec->floorheight > vd.viewz)
+            {
+               actionbits |= AC_FOFFLOOR;
+               segl->fof_picnum = fofsec->floorpic;
+            }
+         }
+         if (front_sector->fofsec >= 0)
+         {
+            const sector_t *fofsec = &sectors[front_sector->fofsec];
+            segl->fofSector = front_sector->fofsec;
+            segl->fof_picnum = 0xff;
+            if (fofsec->ceilingheight < vd.viewz)
+            {
+               // Rendering the ceiling
+               actionbits |= AC_FOFCEILING;
+               segl->fof_picnum = fofsec->ceilingpic;
+                            
+               // fof_picnum is just a junk value if AC_FOFCEILING or AC_FOFFLOOR isn't set.
+            }
+            else if (fofsec->floorheight > vd.viewz)
+            {
+               actionbits |= AC_FOFFLOOR;
+               segl->fof_picnum = fofsec->floorpic;
+            }
          }
 
          // is bottom texture visible?

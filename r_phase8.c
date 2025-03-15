@@ -593,7 +593,7 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
       if((ds->scalefrac < scalefrac && ds->scale2 < scalefrac) ||
          ((ds->scalefrac <= scalefrac || ds->scale2 <= scalefrac) && R_SegBehindPoint(ds, vis->gx, vis->gy))) {
 
-         if (ds->actionbits & AC_FOF)
+         if (ds->actionbits & AC_FOFSIDE)
             R_DrawFOFSegRange(ds, r1, r2);
 
          if (ds->actionbits & AC_MIDTEXTURE)
@@ -733,7 +733,7 @@ static void R_DrawSortedSprites(int* sortedsprites, int sprscreenhalf)
       --ds;
 
       if(ds->start > x2 || ds->stop < x1 ||                             // does not intersect
-         !(ds->actionbits & (AC_TOPSIL | AC_BOTTOMSIL | AC_SOLIDSIL | AC_MIDTEXTURE | AC_FOF)))  // does not clip sprites
+         !(ds->actionbits & (AC_TOPSIL | AC_BOTTOMSIL | AC_SOLIDSIL | AC_MIDTEXTURE | AC_FOFSIDE)))  // does not clip sprites
          continue;
 
       *pwalls++ = ds - vd.viswalls;
@@ -785,7 +785,7 @@ static void R_DrawSortedSprites(int* sortedsprites, int sprscreenhalf)
       r1 = ds->start < x1 ? x1 : ds->start;
       r2 = ds->stop  > x2 ? x2 : ds->stop;
 
-      if (ds->actionbits & AC_FOF)
+      if (ds->actionbits & AC_FOFSIDE)
          R_DrawFOFSegRange(ds, r1, r2);
 
       if (ds->actionbits & AC_MIDTEXTURE)
@@ -858,7 +858,7 @@ void R_Sprites(void)
       unsigned pixcount = wc->stop - wc->start + 1;
       if (wc->start > wc->stop)
          continue;
-      if (!((wc->actionbits & AC_MIDTEXTURE) || (wc->actionbits & AC_FOF)))
+      if (!((wc->actionbits & AC_MIDTEXTURE) || (wc->actionbits & AC_FOFSIDE)))
          continue;
       midcount += pixcount;
       half += (wc->start + (pixcount >> 1)) * pixcount;
@@ -885,7 +885,7 @@ void R_Sprites(void)
 
    for (wc = vd.viswalls; wc < vd.lastwallcmd; wc++)
    {
-      if (wc->actionbits & (AC_TOPSIL | AC_BOTTOMSIL | AC_SOLIDSIL | AC_MIDTEXTURE | AC_FOF))
+      if (wc->actionbits & (AC_TOPSIL | AC_BOTTOMSIL | AC_SOLIDSIL | AC_MIDTEXTURE | AC_FOFSIDE))
       {
          volatile int v1 = wc->seg->v1, v2 = wc->seg->v2;
          wc->v1.x = verts[v1].x, wc->v1.y = verts[v1].y;
