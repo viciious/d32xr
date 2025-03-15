@@ -46,7 +46,7 @@ static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop) ATTR_DATA_CA
 static void R_RenderBSPNode(rbspWork_t *rbsp, int bspnum, int16_t *outerbbox) ATTR_DATA_CACHE_ALIGN;
 static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
    fixed_t *restrict floorheight, fixed_t *restrict floornewheight, 
-   fixed_t *restrict ceilingnewheight, uint32_t *restrict fofInfo) ATTR_DATA_CACHE_ALIGN  __attribute__((noinline));
+   fixed_t *restrict ceilingnewheight, fixed_t *restrict fofInfo) ATTR_DATA_CACHE_ALIGN  __attribute__((noinline));
 
 #ifdef MARS
 __attribute__((aligned(4)))
@@ -181,7 +181,7 @@ static boolean R_CheckBBox(rbspWork_t *rbsp, int16_t bspcoord[4])
 }
 
 static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
-   fixed_t *restrict floorheight, fixed_t *restrict  floornewheight, fixed_t *restrict ceilingnewheight, uint32_t *restrict fofInfo)
+   fixed_t *restrict floorheight, fixed_t *restrict  floornewheight, fixed_t *restrict ceilingnewheight, fixed_t *restrict fofInfo)
 {
    seg_t     *seg  = segl->seg;
    line_t    *li   = rbsp->curldef;
@@ -329,12 +329,14 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
          {
             const sector_t *fofsec = &sectors[front_sector->fofsec];
             segl->fofSector = front_sector->fofsec;
+
             segl->fof_picnum = 0xff;
             if (fofsec->ceilingheight < vd.viewz)
             {
                // Rendering the ceiling
                actionbits |= AC_FOFCEILING;
                segl->fof_picnum = fofsec->ceilingpic;
+               *fofInfo = f_floorheight;
                             
                // fof_picnum is just a junk value if AC_FOFCEILING or AC_FOFFLOOR isn't set.
             }
@@ -342,6 +344,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
             {
                actionbits |= AC_FOFFLOOR;
                segl->fof_picnum = fofsec->floorpic;
+               *fofInfo = f_ceilingheight;
             }
          }
       }
@@ -384,11 +387,11 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
          if (back_sector->fofsec >= 0)
          {
             const sector_t *fofsec = &sectors[back_sector->fofsec];
-            const line_t *fofline = &lines[fofsec->specline];
             segl->fofSector = back_sector->fofsec;
 
-            if (front_sector->fofsec == -1 && !(ldflags[fofsec->specline] & ML_BLOCKMONSTERS))
+            if (front_sector->fofsec < 0 && !(ldflags[fofsec->specline] & ML_BLOCKMONSTERS))
             {
+               const line_t *fofline = &lines[fofsec->specline];
                fof_texturemid = fofsec->ceilingheight - vd.viewz;
                segl->fof_texturenum = texturetranslation[SIDETEX(&sides[fofline->sidenum[0]])->midtexture];
 //               fof_texturemid += rowoffset<<FRACBITS; // add in sidedef texture offset
@@ -412,6 +415,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
                // Rendering the ceiling
                actionbits |= AC_FOFCEILING;
                segl->fof_picnum = fofsec->ceilingpic;
+               *fofInfo = fofsec->ceilingheight - vd.viewz;
                                   
                // fof_picnum is just a junk value if AC_FOFCEILING or AC_FOFFLOOR isn't set.
             }
@@ -419,6 +423,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
             {
                actionbits |= AC_FOFFLOOR;
                segl->fof_picnum = fofsec->floorpic;
+               *fofInfo = fofsec->floorheight - vd.viewz;
             }
          }
          if (front_sector->fofsec >= 0)
@@ -439,6 +444,11 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
                actionbits |= AC_FOFFLOOR;
                segl->fof_picnum = fofsec->floorpic;
             }
+/*
+            if (b_floorheight > fofsec->ceilingheight - vd.viewz)
+               *fofInfo = b_floorheight;
+            if (b_ceilingheight < fofsec->floorheight - vd.viewz)
+               *fofInfo = b_ceilingheight;*/
          }
 
          // is bottom texture visible?

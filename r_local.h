@@ -650,7 +650,7 @@ x |= ((uint32_t)y & 0xffff); \
 typedef struct
 {
 	fixed_t 	floorheight, floornewheight, ceilnewheight;
-	uint32_t    fofInfo;
+	fixed_t    fofInfo;
 } viswallextra_t;
 
 #define	MAXWALLCMDS		130

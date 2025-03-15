@@ -13,7 +13,7 @@ static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, ang
 static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle, int angle1) ATTR_DATA_CACHE_ALIGN;
 void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts) ATTR_DATA_CACHE_ALIGN;
 static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floorheight, 
-    fixed_t floornewheight, fixed_t ceilingheight, fixed_t ceilingnewheight) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
+    fixed_t floornewheight, fixed_t ceilingheight, fixed_t ceilingnewheight, fixed_t fofnewheight) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 void R_WallPrep(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 
 //
@@ -175,7 +175,7 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
 // Main seg clipping loop
 //
 static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, 
-    fixed_t floorheight, fixed_t floornewheight, fixed_t ceilingheight, fixed_t ceilingnewheight)
+    fixed_t floorheight, fixed_t floornewheight, fixed_t ceilingheight, fixed_t ceilingnewheight, fixed_t fofnewheight)
 {
     const volatile int actionbits = segl->actionbits;
 
@@ -357,9 +357,13 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
                 top = cy - top;
                 if (top < ceilingclipx)
                     top = ceilingclipx;
-                bottom = floorclipx;
+//                bottom = floorclipx;
+                bottom = FixedMul(scale2, fofnewheight) >> FRACBITS;
+                bottom = cy - bottom;
+                if (bottom > floorclipx)
+                    bottom = floorclipx;
 
-                CONS_Printf("Top: %d, Bottom:%d", top, bottom);
+                CONS_Printf("Top: %d, Bottom:%d (%d, %d)", top, bottom, fofplaneHeight>>FRACBITS, fofnewheight >> FRACBITS);
 
                 if (top < bottom)
                 {
@@ -414,7 +418,7 @@ void Mars_Sec_R_WallPrep(void)
 #endif
             R_WallLatePrep(segl, verts);
 
-            R_SegLoop(segl, clipbounds, seglex->floorheight, seglex->floornewheight, segl->ceilingheight, seglex->ceilnewheight);
+            R_SegLoop(segl, clipbounds, seglex->floorheight, seglex->floornewheight, segl->ceilingheight, seglex->ceilnewheight, seglex->fofInfo);
 
             seglex++;
             *readysegs = *readysegs + 1;
