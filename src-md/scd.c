@@ -151,7 +151,7 @@ void scd_play_spcm_track(const char *name, int repeat)
     write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
 }
 
-void scd_stop_spcm_track(const char *name)
+void scd_stop_spcm_track(void)
 {
     wait_do_cmd('R'); // StopSPCMTrack command
     wait_cmd_ack();
