@@ -23,6 +23,7 @@ typedef struct
 {
 	boolean		crushchange;
 	boolean		nofit;
+	fixed_t 	bbox[4];
 } changetest_t;
 
 /*
@@ -83,7 +84,22 @@ boolean P_ThingHeightClip (mobj_t *thing)
 boolean PIT_ChangeSector (mobj_t *thing, changetest_t *ct)
 {
 	mobj_t		*mo;
-	
+	fixed_t 	thbbox[4];
+
+	thbbox[BOXTOP   ] = thing->y + (thing->radius*FRACUNIT);
+	thbbox[BOXBOTTOM] = thing->y - (thing->radius*FRACUNIT);
+	thbbox[BOXRIGHT ] = thing->x + (thing->radius*FRACUNIT);
+	thbbox[BOXLEFT  ] = thing->x - (thing->radius*FRACUNIT);
+
+	if (thbbox[BOXTOP] < ct->bbox[BOXBOTTOM])
+		return true;
+	if (thbbox[BOXBOTTOM] > ct->bbox[BOXTOP])
+		return true;
+	if (thbbox[BOXRIGHT] < ct->bbox[BOXLEFT])
+		return true;
+	if (thbbox[BOXLEFT] > ct->bbox[BOXRIGHT])
+		return true;
+
 	if (P_ThingHeightClip (thing))
 		return true;		/* keep checking */
 
@@ -132,20 +148,46 @@ boolean P_ChangeSector (sector_t *sector, boolean crunch)
 	int			x,y;
 	int			i;
 	changetest_t ct;
-	
-/* force next sound to reflood */
+	fixed_t 	block;
+	VINT 		blockbox[4];
+
+	/* force next sound to reflood */
 	for (i=0 ; i<MAXPLAYERS ; i++)
 		players[i].lastsoundsector = NULL;
 		
 	ct.nofit = false;
 	ct.crushchange = crunch;
-	
+
+	/* adjust bounding box to map blocks */
+	block = sector->bbox[BOXTOP] << FRACBITS;
+	ct.bbox[BOXTOP] = block;
+	block = (unsigned)(block-bmaporgy+MAXRADIUS)>>MAPBLOCKSHIFT;
+	block = block >= bmapheight ? bmapheight-1 : block;
+	blockbox[BOXTOP]=block;
+
+	block = sector->bbox[BOXBOTTOM] << FRACBITS;
+	ct.bbox[BOXBOTTOM] = block;
+	block = (block-bmaporgy-MAXRADIUS);
+	block = block < 0 ? 0 : (unsigned)block>>MAPBLOCKSHIFT;
+	blockbox[BOXBOTTOM]=block;
+
+	block = sector->bbox[BOXRIGHT] << FRACBITS;
+	ct.bbox[BOXRIGHT] = block;
+	block = (unsigned)(block-bmaporgx+MAXRADIUS)>>MAPBLOCKSHIFT;
+	block = block >= bmapwidth ? bmapwidth-1 : block;
+	blockbox[BOXRIGHT]=block;
+
+	block = sector->bbox[BOXLEFT] << FRACBITS;
+	ct.bbox[BOXLEFT] = block;
+	block = (block-bmaporgx-MAXRADIUS);
+	block = block < 0 ? 0 : (unsigned)block>>MAPBLOCKSHIFT;
+	blockbox[BOXLEFT]=block;
+
 /* recheck heights for all things near the moving sector */
 
-	for (x=sector->blockbox[BOXLEFT] ; x<= sector->blockbox[BOXRIGHT] ; x++)
-		for (y=sector->blockbox[BOXBOTTOM];y<= sector->blockbox[BOXTOP] ; y++)
+	for (x=blockbox[BOXLEFT] ; x<= blockbox[BOXRIGHT] ; x++)
+		for (y=blockbox[BOXBOTTOM];y<= blockbox[BOXTOP] ; y++)
 			P_BlockThingsIterator (x, y, (blockthingsiter_t)PIT_ChangeSector, &ct);
-	
 	
 	return ct.nofit;
 }

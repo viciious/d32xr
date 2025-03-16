@@ -690,7 +690,6 @@ void P_GroupLines (void)
 	sector_t	*sector;
 	subsector_t	*ss;
 	seg_t		*seg;
-	int			block;
 	line_t		*li;
 	fixed_t		bbox[4];
 
@@ -755,29 +754,15 @@ void P_GroupLines (void)
 		for (j=0 ; j<sector->linecount ; j++)
 		{
 			li = lines + sector->lines[j];
-			M_AddToBox (bbox, vertexes[li->v1].x << FRACBITS, vertexes[li->v1].y << FRACBITS);
-			M_AddToBox (bbox, vertexes[li->v2].x << FRACBITS, vertexes[li->v2].y << FRACBITS);
+			M_AddToBox (bbox, vertexes[li->v1].x, vertexes[li->v1].y);
+			M_AddToBox (bbox, vertexes[li->v2].x, vertexes[li->v2].y);
 		}
 
-		/* adjust bounding box to map blocks */
-		block = (bbox[BOXTOP]-bmaporgy+MAXRADIUS)>>MAPBLOCKSHIFT;
-		block = block >= bmapheight ? bmapheight-1 : block;
-		sector->blockbox[BOXTOP]=block;
-
-		block = (bbox[BOXBOTTOM]-bmaporgy-MAXRADIUS)>>MAPBLOCKSHIFT;
-		block = block < 0 ? 0 : block;
-		sector->blockbox[BOXBOTTOM]=block;
-
-		block = (bbox[BOXRIGHT]-bmaporgx+MAXRADIUS)>>MAPBLOCKSHIFT;
-		block = block >= bmapwidth ? bmapwidth-1 : block;
-		sector->blockbox[BOXRIGHT]=block;
-
-		block = (bbox[BOXLEFT]-bmaporgx-MAXRADIUS)>>MAPBLOCKSHIFT;
-		block = block < 0 ? 0 : block;
-		sector->blockbox[BOXLEFT]=block;
-
+		sector->bbox[BOXTOP]=bbox[BOXTOP];
+		sector->bbox[BOXBOTTOM]=bbox[BOXBOTTOM];
+		sector->bbox[BOXRIGHT]=bbox[BOXRIGHT];
+		sector->bbox[BOXLEFT]=bbox[BOXLEFT];
 	}
-	
 }
 
 /*============================================================================= */
