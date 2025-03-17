@@ -165,6 +165,11 @@ void scd_resume_spcm_track(void)
     write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
 }
 
+int scd_get_spcm_playback_status(void)
+{
+    return read_byte(0xA1202E);
+}
+
 void scd_open_tray(void)
 {
     wait_do_cmd('Y'); // OpenTray command

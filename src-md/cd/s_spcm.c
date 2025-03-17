@@ -451,6 +451,7 @@ void S_SPCM_Suspend(void)
     }
 
     pcm_stop_timer();
+    *(volatile uint8_t *)0xFF802E = 0;
 }
 
 void S_SPCM_Unsuspend(void)
@@ -495,6 +496,8 @@ void S_SPCM_Update(s_spcm_t *spcm)
     S_SPCM_UpdateTrack(spcm);
 
     pcm_set_ctrl(oldctl);
+
+    *(volatile uint8_t *)0xFF802E = spcm->state != SPCM_STATE_STOPPED;
 }
 
 int S_SCM_PlayTrack(const char *name, int repeat)
@@ -549,6 +552,8 @@ int S_SCM_PlayTrack(const char *name, int repeat)
         spcm->chan_sectors += spcm->chan_sectors;
         spcm->chan_samples += spcm->chan_samples;
     }
+
+    *(volatile uint8_t *)0xFF802E = 0;
 
     pcm_start_timer((void (*)(void *))S_SPCM_Update, spcm);
 
