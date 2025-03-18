@@ -2709,6 +2709,9 @@ bump_fm:
         movem.l d0-d7/a0-a6,-(sp)
         move.w  #0x0100,0xA11100    /* Z80 assert bus request */
         move.w  #0x0100,0xA11200    /* Z80 deassert reset */
+
+        moveq   #0x05,d1            /* VGM 0x95 command */
+        moveq   #0x01,d2            /* VGM buffer block */
 1:
         move.w  0xA11100,d0
         andi.w  #0x0100,d0
@@ -2719,31 +2722,34 @@ bump_fm:
 
 10:
         move.b  REQ_ACT.w,d0
-        cmpi.b  #0x05,d0            /* Check for 0x95 command */
+        cmp.b   d1,d0               /* Check for 0x95 command */
         beq.s   play_drum_sound
-        cmpi.b  #0x01,d0
+        cmp.b   d2,d0
         bne.w   5f                  /* not read buffer block */
 
 play_drum_sound:
 11:
         /* check for space in Z80 sram buffer */
-        move.b  STRM_DRUMI.w,d0
-        move.b  #0,STRM_DRUMI.w
-19:
-        cmpi.   #0,d0
-        beq.s   20f
+        lea     STRM_DRUMI.w,a0     | 8
+        move.b  (a0),d0             | 8     /* D0 = drum sample ID */
+        tst.b   d0                  | 4     /* is the drum sample ID == 0? */
+        beq.s   20f                 | 10/8
+        move.b  #0,(a0)+            | 12    /* clear the drum sample ID from RAM */
+        move.w  (a0)+,d1            | 8     /* D1 = drum volume and panning */
+
+        lea     0xA1512C,a1         | 8
+        move.l  a1,a2               | 4
 191:
-        cmpi.b  #0,0xA1512C
-        bne.s   191b                 /* wait for CMD interrupt to finish */
+        tst.b   (a2)                | 8
+        bne.s   191b                | 10/8  /* wait for CMD interrupt to finish */
 192:
-        move.w  STRM_DRUMV.w,d1     /* move both volume and panning to D1 */
-        move.b  #1,0xA1512C         /* queue sound playback on COMM12 */
-        move.b  d0,0xA1512D         /* pass drum sample ID to COMM13 */
-        move.w  d1,0xA1512E         /* pass drum sample volume and panning to COMM14 and COMM15 */
-        move.b  #1,0xA15103         /* call CMD interrupt on master SH-2 */
+        move.b  d2,(a1)+            | 8     /* queue sound playback on COMM12 */
+        move.b  d0,(a1)+            | 8     /* pass drum sample ID to COMM13 */
+        move.w  d1,(a1)+            | 8     /* pass drum sample volume and panning to COMM14+15 */
+        move.b  d2,0xA15103         | 16    /* call CMD interrupt on master SH-2 */
 193:
-        cmpi.b  #0,0xA1512C
-        bne.s   193b                 /* wait for CMD interrupt to finish */
+        tst.b   (a2)                | 8
+        bne.s   193b                | 10/8  /* wait for CMD interrupt to finish */
 20:
         moveq   #0,d0
         z80rd   FM_BUFGEN,d0
