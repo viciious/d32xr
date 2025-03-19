@@ -170,6 +170,72 @@ int scd_get_spcm_playback_status(void)
     return read_byte(0xA1202E);
 }
 
+void scd_set_volume(int volume)
+{
+    write_word(0xA12010, volume);
+    wait_do_cmd('V'); // SetVolume command
+    wait_cmd_ack();
+    write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
+}
+
+int64_t scd_get_disc_info(void)
+{
+    union {
+        int16_t lo[4];
+        int64_t value;
+    } res;
+
+    wait_do_cmd('D'); // GetDiscInfo command
+    wait_cmd_ack();
+    res.lo[0] = read_word(0xA12020); // status
+    res.lo[1] = read_word(0xA12022); // first and last song
+    res.lo[2] = read_word(0xA12024); // drive version, flag
+    res.lo[3] = 0;
+    write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
+
+    return res.value;
+}
+
+int64_t scd_get_track_info(int track)
+{
+    union {
+        int32_t lo[2];
+        int64_t value;
+    } res;
+
+    write_word(0xA12010, track);
+    wait_do_cmd('T'); // GetTrackInfo command
+    wait_cmd_ack();
+    res.lo[0] = read_long(0xA12020); // MMSSFFTN
+    res.lo[1] = read_byte(0xA12024) & 0xff; // track type
+    write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
+
+    return res.value;
+}
+
+void scd_play_cdda_track(int track, int repeat)
+{
+    write_word(0xA12010, track);
+    write_byte(0xA12012, repeat);
+    wait_do_cmd('P'); // PlayTrack command
+    wait_cmd_ack();
+    write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
+}
+
+void scd_stop_cdda_playback(void)
+{
+    wait_do_cmd('S'); // StopPlaying command
+    wait_cmd_ack();
+    write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
+}
+
+void scd_toggle_cdda_pause(void)
+{
+    wait_do_cmd('Z'); // PauseResume command
+    wait_cmd_ack();
+    write_byte(0xA1200E, 0x00); // acknowledge receipt of command result
+}
+
 void scd_open_tray(void)
 {
     wait_do_cmd('Y'); // OpenTray command
