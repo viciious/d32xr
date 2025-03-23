@@ -136,10 +136,10 @@ static boolean R_CheckBBox(rbspWork_t *rbsp, int16_t bspcoord_[4])
 
    fixed_t bspcoord[4];
 
-   bspcoord[0] = bspcoord_[0] << 16;
-   bspcoord[1] = bspcoord_[1] << 16;
-   bspcoord[2] = bspcoord_[2] << 16;
-   bspcoord[3] = bspcoord_[3] << 16;
+   bspcoord[0] = bspcoord_[0] << FRACBITS;
+   bspcoord[1] = bspcoord_[1] << FRACBITS;
+   bspcoord[2] = bspcoord_[2] << FRACBITS;
+   bspcoord[3] = bspcoord_[3] << FRACBITS;
 
    // find the corners of the box that define the edges from current viewpoint
    boxx = 2;
