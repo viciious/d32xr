@@ -1164,7 +1164,7 @@ void ApplyHorizontalDistortionFilter(int filter_offset)
 			// Only shift lines within the viewport.
 			shift_value = water_filter[(filter_offset + i) & 127];
 			distortion_line_bit_shift[i>>5] |= (water_filter[(filter_offset + i - 2) & 127] & 1);
-			//DLG: Why do we need to grab two bytes backward in the table for line shifts to work correctly?
+			//DLG: Why doesn't 'shift_value' work correctly with HINT pixel shifts?
 		}
 		else {
 			// Letter box area should be left alone.
@@ -1176,12 +1176,12 @@ void ApplyHorizontalDistortionFilter(int filter_offset)
 		pixel_offset += (320/2);
 	}
 
-	line_table_effects_enabled = true;
+	effects_enabled |= EFFECTS_MASK_DISTORTION;
 }
 
 void RemoveDistortionFilters()
 {
-	line_table_effects_enabled = false;
+	effects_enabled &= (0xFF ^ EFFECTS_MASK_DISTORTION);
 
 	uint16_t *lines = Mars_FrameBufferLines();
 	short pixel_offset = (512/2);

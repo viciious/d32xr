@@ -183,7 +183,7 @@ static void R_Draw32XSky(const int top, const int bottom, const int x, drawcol_t
     else
         drawmdsky(x, top, bottom);
 #endif
-    if (copper_effects_enabled)
+    if (effects_enabled & EFFECTS_MASK_COPPER)
         enable_hints = 1;
 }
 

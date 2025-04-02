@@ -533,7 +533,7 @@ pri_v_irq:
 
 
         ! Enable or disable HINTs depending if copper effects are needed.
-        !mov.l   pvi_copper_effects_enabled,r1
+        !mov.l   pvi_effects_enabled,r1         ! Test for copper effects being enabled
         !mov.l   @r1,r2
         !mov.l   pvi_enable_hints,r1
         !mov.b   @r1,r0
@@ -581,8 +581,8 @@ pvi_int_mask_no_hint:
         .short  0xFB
 pvi_int_mask_hint:
         .short  0x04
-pvi_copper_effects_enabled:
-        .long   _copper_effects_enabled
+pvi_effects_enabled:
+        .long   _effects_enabled
 pvi_enable_hints:
         .long   _enable_hints
         .align  4
@@ -603,10 +603,11 @@ pri_h_irq:
 
 
         /* Distortion */
-        mov.l   phi_line_table_effects_enabled,r1
+        mov.l   phi_effects_enabled,r1
         mov.b   @r1,r0
-        cmp/eq  #1,r0
-        bf      0f
+        tst     #1,r0   ! T=1 if distortion bit is zero
+        movt    r0
+        bt/s    0f
 
         mov.l   phi_line,r1
         mov.l   @r1,r0
@@ -695,8 +696,8 @@ phi_distortion_line_bit_shift:
         .long   _distortion_line_bit_shift
 phi_screen_shift_register:
         .long   0x20004102
-phi_line_table_effects_enabled:
-        .long   _line_table_effects_enabled
+phi_effects_enabled:
+        .long   _effects_enabled
 phi_distortion_filter_index:
         .long   _distortion_filter_index
 

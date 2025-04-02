@@ -378,25 +378,25 @@ extern	uint16_t *distscale/*[SCREENWIDTH]*/;
 
 extern	VINT		extralight;
 
-#ifdef MARS
-__attribute__((aligned(4)))
-#endif
-extern int8_t line_table_effects_enabled;
+#define EFFECTS_MASK_DISTORTION		1
+#define EFFECTS_MASK_COPPER			2
+//#define EFFECTS_MASK_DISABLE_ALL	128
 
 #ifdef MARS
 __attribute__((aligned(4)))
 #endif
-extern int8_t copper_effects_enabled;
-
-#ifdef MARS
-__attribute__((aligned(4)))
-#endif
-extern unsigned int distortion_line_bit_shift[8];	// Last index unused; only for making the compiler happy.
+extern int8_t effects_used;
+extern int8_t effects_enabled;
 
 #ifdef MARS
 __attribute__((aligned(2)))
 #endif
 extern short distortion_filter_index;
+
+#ifdef MARS
+__attribute__((aligned(4)))
+#endif
+extern unsigned int distortion_line_bit_shift[8];	// Last index unused; only for making the compiler happy.
 
 #ifdef MARS
 __attribute__((aligned(2)))

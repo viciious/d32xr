@@ -68,10 +68,8 @@ pixel_t		*workingscreen;
 static int16_t	curpalette = -1;
 
 __attribute__((aligned(4)))
-int8_t line_table_effects_enabled;
-
-__attribute__((aligned(4)))
-int8_t copper_effects_enabled;
+int8_t effects_used;
+int8_t effects_enabled;
 
 __attribute__((aligned(2)))
 short distortion_filter_index;
@@ -495,7 +493,7 @@ static void R_SetupSkyGradient(void)
 	// Retrieve lump for drawing the sky gradient.
 	uint8_t *sky_gradient_ptr;
 
-	copper_effects_enabled = false;
+	effects_enabled &= (0xFF ^ EFFECTS_MASK_COPPER);
 	copper_color_table = NULL;
 
 	//uint32_t sky_gradient_size;
@@ -511,7 +509,7 @@ static void R_SetupSkyGradient(void)
 	}
 
 	// This map uses a gradient.
-	copper_effects_enabled = true;
+	effects_enabled |= EFFECTS_MASK_COPPER;
 	sky_gradient_ptr = (uint8_t *)W_POINTLUMPNUM(lump);
 	//sky_gradient_size = W_LumpLength(lump);
 
