@@ -1163,7 +1163,7 @@ void ApplyHorizontalDistortionFilter(int filter_offset)
 		if (i >= 22 && i < 224-22) {
 			// Only shift lines within the viewport.
 			shift_value = water_filter[(filter_offset + i) & 127];
-			distortion_line_bit_shift[i>>5] |= (water_filter[(filter_offset + i - 2) & 127] & 1);
+			distortion_line_bit_shift[i>>5] |= (water_filter[(filter_offset + i - 3) & 127] & 1);
 			//DLG: Why doesn't 'shift_value' work correctly with HINT pixel shifts?
 		}
 		else {
