@@ -778,7 +778,7 @@ void I_Update(void)
 	unsigned short scroll_y_offset = (vd.viewz >> 16);
 	unsigned short scroll_y_pan = (vd.aimingangle >> 22);
 
-	if (copper_effects) {
+	if (copper_effects_enabled) {
 		copper_color_index = (copper_vertical_offset
 				- scroll_y_base - (scroll_y_offset >> (16-copper_vertical_rate)) - scroll_y_pan) & 511;
 	}

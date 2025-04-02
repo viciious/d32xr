@@ -183,7 +183,7 @@ static void R_Draw32XSky(const int top, const int bottom, const int x, drawcol_t
     else
         drawmdsky(x, top, bottom);
 #endif
-    if (copper_effects)
+    if (copper_effects_enabled)
         enable_hints = 1;
 }
 
@@ -244,7 +244,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *clipbounds)
 
     uint16_t *segcolmask = ((segl->actionbits & AC_MIDTEXTURE) || (segl->actionbits & AC_FOF)) ? segl->clipbounds + (stop - start + 1) : NULL;
 
-    enable_hints = 0;
+    enable_hints = 1;
     for (x = start; x <= stop; x++)
     {
        fixed_t r;

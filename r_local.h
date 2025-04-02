@@ -381,17 +381,27 @@ extern	VINT		extralight;
 #ifdef MARS
 __attribute__((aligned(4)))
 #endif
-extern boolean line_table_effects;
+extern int8_t line_table_effects_enabled;
 
 #ifdef MARS
 __attribute__((aligned(4)))
 #endif
-extern boolean copper_effects;
+extern int8_t copper_effects_enabled;
 
 #ifdef MARS
 __attribute__((aligned(4)))
 #endif
-extern int copper_color_index;
+extern unsigned int distortion_line_bit_shift[8];	// Last index unused; only for making the compiler happy.
+
+#ifdef MARS
+__attribute__((aligned(2)))
+#endif
+extern short distortion_filter_index;
+
+#ifdef MARS
+__attribute__((aligned(2)))
+#endif
+extern short copper_color_index;
 
 #ifdef MARS
 __attribute__((aligned(2)))
