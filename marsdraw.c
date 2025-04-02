@@ -1151,12 +1151,20 @@ void ApplyHorizontalDistortionFilter(int filter_offset)
 	uint16_t *lines = Mars_FrameBufferLines();
 	short pixel_offset = (512/2);
 
+	for (int i=0; i < 7; i++) {
+		distortion_line_bit_shift[i] = 0;
+	}
+
 	for (int i=0; i < 224; i++) {
 		signed char shift_value;
+
+		distortion_line_bit_shift[i>>5] <<= 1;
 
 		if (i >= 22 && i < 224-22) {
 			// Only shift lines within the viewport.
 			shift_value = water_filter[(filter_offset + i) & 127];
+			distortion_line_bit_shift[i>>5] |= (water_filter[(filter_offset + i - 3) & 127] & 1);
+			//DLG: Why doesn't 'shift_value' work correctly with HINT pixel shifts?
 		}
 		else {
 			// Letter box area should be left alone.
@@ -1168,12 +1176,12 @@ void ApplyHorizontalDistortionFilter(int filter_offset)
 		pixel_offset += (320/2);
 	}
 
-	line_table_effects = true;
+	effects_enabled |= EFFECTS_MASK_DISTORTION;
 }
 
 void RemoveDistortionFilters()
 {
-	line_table_effects = false;
+	effects_enabled &= (0xFF ^ EFFECTS_MASK_DISTORTION);
 
 	uint16_t *lines = Mars_FrameBufferLines();
 	short pixel_offset = (512/2);
