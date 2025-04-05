@@ -34,10 +34,10 @@
 .endif
         .ascii  "                "
         .ascii  "DOOM 32XCD Fusio"
-        .ascii  "n v2.0          "
+        .ascii  "n v2.1          "
         .ascii  "                "
         .ascii  "DOOM 32XCD Fusio"
-        .ascii  "n v2.0          "
+        .ascii  "n v2.1          "
         .ascii  "                "
         .ascii  "GM DMF32XCD-20"
         .word   0x0000
