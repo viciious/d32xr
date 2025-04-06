@@ -489,8 +489,6 @@ check_emulator:
         move.b  #2,legacy_emulator      /* Emulator determined to be Gens */
 
 main_loop_start:
-        |nop
-        |bra.s   main_loop_start
         move.w  0xA15100,d0
         or.w    #0x8000,d0
         move.w  d0,0xA15100         /* set FM - allow SH2 access to MARS hw */
