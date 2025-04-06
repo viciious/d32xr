@@ -152,17 +152,17 @@ do_sky_top_fill_low:
         add     r2,r10
 
 do_sky_top_fill_loop_low:
-        mov.w   r7,@r8         /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
+        mov.w   r7,@r8         /* *fb = dpix */
         add     r6,r8          /* fb += SCREENWIDTH */
 do_sky_top_fill_loop_low_1px:
         dt      r10             /* count-- */
-        mov.w   r7,@r8         /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
+        mov.w   r7,@r8         /* *fb = dpix */
         bf/s    do_sky_top_fill_loop_low
         add     r6,r8          /* fb += SCREENWIDTH */
 
 
 
-        .p2alignw 2, 0x0009
+        .p2alignw 1, 0x0009
 do_draw_middle_fill_area:
         mov     #0,r2
         cmp/gt  r2,r11
@@ -177,12 +177,12 @@ do_sky_middle_fill_low:
         bt/s    do_sky_middle_fill_loop_low_1px
         add     r2,r11
 
-        .p2alignw 2, 0x0009
+        .p2alignw 1, 0x0009
 do_sky_middle_fill_loop_low:
         mov.b   @r0,r0
         add     r0,r0
         mov.w   @(r0,r3),r7
-        mov.w   r7,@r8         /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
+        mov.w   r7,@r8         /* *fb = dpix */
         add     #1,r1
         mov     r1,r0
         add     r6,r8          /* fb += SCREENWIDTH */
@@ -191,7 +191,7 @@ do_sky_middle_fill_loop_low_1px:
         add     r0,r0
         mov.w   @(r0,r3),r7
         dt      r11             /* count-- */
-        mov.w   r7,@r8         /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
+        mov.w   r7,@r8         /* *fb = dpix */
         add     #1,r1
         mov     r1,r0
         bf/s    do_sky_middle_fill_loop_low
@@ -199,7 +199,7 @@ do_sky_middle_fill_loop_low_1px:
 
 
 
-        .p2alignw 2, 0x0009
+        .p2alignw 1, 0x0009
 do_draw_bottom_fill_area:
         mov     #0,r2
         cmp/gt  r2,r12
@@ -216,19 +216,19 @@ do_sky_bottom_fill_low:
         bt/s    do_sky_bottom_fill_loop_low_1px
         add     r2,r12
 
-        .p2alignw 2, 0x0009
+        .p2alignw 1, 0x0009
 do_sky_bottom_fill_loop_low:
-        mov.w   r7,@r8         /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
+        mov.w   r7,@r8         /* *fb = dpix */
         add     r6,r8          /* fb += SCREENWIDTH */
 do_sky_bottom_fill_loop_low_1px:
         dt      r12             /* count-- */
-        mov.w   r7,@r8         /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
+        mov.w   r7,@r8         /* *fb = dpix */
         bf/s    do_sky_bottom_fill_loop_low
         add     r6,r8          /* fb += SCREENWIDTH */
 
 
 
-        .p2alignw 2, 0x0009
+        .p2alignw 1, 0x0009
 do_32xsky_done:
         mov.l   @r15+,r12
         mov.l   @r15+,r11
@@ -295,7 +295,7 @@ do_col_pre_loop:
         bt/s    do_col_loop_low_1px
         add     r9,r6
 
-        .p2alignw 2, 0x0009
+        .p2alignw 1, 0x0009
 do_col_loop_low:
         mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
         add     r0,r0
@@ -381,7 +381,7 @@ _I_DrawColumnNPo2LowA:
         mov.l   draw_width,r1
         sub     r1,r8           /* fb -= SCREENWIDTH */
 
-        .p2alignw 2, 0x0009
+        .p2alignw 1, 0x0009
 do_cnp_loop_low:
         mov     r2,r0
         shlr16  r0              /* frac >> 16 */
@@ -439,7 +439,7 @@ _I_DrawSpanColorLowA:
         bt/s    do_span_color_low_loop_1px
         add     r1,r6
 
-        .p2alignw 2, 0x0009
+        .p2alignw 1, 0x0009
 do_span_color_low_loop:
         mov.w   r0,@r2          /* *fb = dpix */
         add     #2,r2           /* fb++ */
@@ -516,7 +516,7 @@ _I_DrawSpanLowA:
         bt/s    do_span_low_loop_1px
         add     r1,r6
 
-        .p2alignw 2, 0x0009
+        .p2alignw 1, 0x0009
 do_span_low_loop:
         mov.b   @(r0,r9),r0     /* pix = ds_source[spot] */
         add     r3,r2           /* xfrac += xstep */
@@ -602,7 +602,7 @@ _I_DrawColumnA:
         bt/s    do_col_loop_1px
         add     r9,r6
 
-        .p2alignw 2, 0x0009
+        .p2alignw 1, 0x0009
 do_col_loop:
         mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
         add     r0,r0
@@ -675,7 +675,7 @@ _I_DrawColumnFlippedA:
         bt/s    do_col_flipped_loop_1px
         add     r9,r6
 
-        .p2alignw 2, 0x0009
+        .p2alignw 1, 0x0009
 do_col_flipped_loop:
         mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
         add     r0,r0
@@ -759,7 +759,7 @@ _I_DrawColumnNPo2A:
         mov.l   draw_width,r1
         sub     r1,r8           /* fb -= SCREENWIDTH */
 
-        .p2alignw 2, 0x0009
+        .p2alignw 1, 0x0009
 do_cnp_loop:
         mov     r2,r0
         shlr16  r0              /* frac >> 16 */
@@ -841,7 +841,7 @@ _I_DrawSpanA:
         bt/s    do_span_loop_1px
         add     r1,r6
 
-        .p2alignw 2, 0x0009
+        .p2alignw 1, 0x0009
 do_span_loop:
         mov.b   @(r0,r9),r0     /* pix = ds_source[spot] */
         add     r3,r2           /* xfrac += xstep */
@@ -918,13 +918,13 @@ _I_DrawSkyColumnA:
         bt/s    do_sky_col_loop_1px
         add     r9,r6
 
-        .p2alignw 2, 0x0009
+        .p2alignw 1, 0x0009
 do_sky_col_loop:
-        mov.w   r7,@r8          /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
+        mov.w   r7,@r8          /* *fb = dpix */
         add     r1,r8           /* fb += SCREENWIDTH */
 do_sky_col_loop_1px:
         dt      r6              /* count-- */
-        mov.w   r7,@r8          /* *fb = dpix */ /* TODO: DLG: This will fail on real hardware at odd addresses. */
+        mov.w   r7,@r8          /* *fb = dpix */
         bf/s    do_sky_col_loop
         add     r1,r8           /* fb += SCREENWIDTH */
 
@@ -968,7 +968,7 @@ _I_DrawSkyColumnLowA:
         bt/s    do_sky_col_loop_low_1px
         add     r9,r6
 
-        .p2alignw 2, 0x0009
+        .p2alignw 1, 0x0009
 do_sky_col_loop_low:
         mov.w   r7,@r8          /* *fb = dpix */
         add     r1,r8           /* fb += SCREENWIDTH */
