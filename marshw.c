@@ -468,7 +468,7 @@ static inline unsigned short GetNetByte(void)
 	while (MARS_SYS_COMM0);
 	MARS_SYS_COMM0 = 0x1200;	/* get a byte from the network */
 	while (MARS_SYS_COMM0);
-	return MARS_SYS_COMM2;		/* status:byte */
+	return *(volatile unsigned short *)&MARS_SYS_COMM2;		/* status:byte */
 }
 
 /*
@@ -515,7 +515,7 @@ int Mars_PutNetByte(int val)
 	while (MARS_SYS_COMM0);
 	MARS_SYS_COMM0 = 0x1300 | (val & 0x00FF);	/* send a byte to the network */
 	while (MARS_SYS_COMM0);
-	return (MARS_SYS_COMM2 == 0xFFFF) ? -1 : 0;
+	return (*(volatile unsigned short *)&MARS_SYS_COMM2 == 0xFFFF) ? -1 : 0;
 }
 
 void Mars_SetupNet(int type)

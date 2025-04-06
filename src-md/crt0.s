@@ -436,6 +436,58 @@ checksum_pass:
         clr_rv
         move.w  #0x2000,sr          /* enable ints */
 
+check_emulator:
+        lea     0xC00004,a0
+        lea     0xC00000,a1
+
+        | Clear the first word in VRAM
+        move.w  #0x8174,(a0)
+        move.l  #0x40200000,(a0)        /* Write VRAM address 0 */
+        move.w  #0x0000,(a1)
+0:
+        move.w  (a0),d0                 /* Wait for VBlank */
+        btst    #3,d0
+        beq.s   0b
+1:
+        move.w  (a0),d0                 /* Wait for VBlank to end */
+        btst    #3,d0
+        bne.s   1b
+
+        | Write a word to VRAM with 128KB mode
+        move.w  #0x81F4,(a0)
+        move.l  #0x40200000,(a0)        /* Write VRAM address 0x0020 */
+        move.w  #0x0102,(a1)
+2:
+        move.w  (a0),d0                 /* Wait for VBlank */
+        btst    #3,d0
+        beq.s   2b
+3:
+        move.w  (a0),d0                 /* Wait for VBlank to end */
+        btst    #3,d0
+        bne.s   3b
+
+        | Disable 128KB VRAM mode
+        move.w  #0x8174,(a0)
+        move.l  #0x00200000,(a0)        /* Read VRAM address 0x0020 */
+        move.w  (a1),d0
+
+        | Determine if this is an older emulator
+        move.b  #0,legacy_emulator
+        cmpi.w  #0x0002,d0
+        beq.s   main_loop_start
+
+        | 128KB VRAM Mode is unsupported by this emulator
+        move.b  #1,legacy_emulator      /* Assume Kega Fusion, but could be Gens */
+
+        | Check what value is returned from the debug register
+        lea     0xC0001C,a0
+        move    (a0),d0
+        cmpi.w  #0xFFFF,d0
+        beq.s   main_loop_start
+
+        | The debug register did not return -1
+        move.b  #2,legacy_emulator      /* Emulator determined to be Gens */
+
 main_loop_start:
         move.w  0xA15100,d0
         or.w    #0x8000,d0
@@ -1766,7 +1818,6 @@ load_md_sky:
         move.w  #0,(a1)                 /* Set color to black in CRAM */
         |add.l   #0x40000,a1            /* Advance the destination cursor */
         dbra    d1,2b
-
 
         /* Load patterns */
         bsr     decompress_lump
@@ -3274,6 +3325,9 @@ hotplug_cnt:
 need_bump_fm:
         dc.b    1
 need_ctrl_int:
+        dc.b    0
+
+legacy_emulator:
         dc.b    0
 
 bnk7_save:
