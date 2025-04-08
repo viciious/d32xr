@@ -478,14 +478,6 @@ void P_LoadLineDefs (int lump)
 		ld->sidenum[0] = LITTLESHORT(mld->sidenum[0]);
 		ld->sidenum[1] = LITTLESHORT(mld->sidenum[1]);
 
-		// if the two-sided flag isn't set, set the back side to -1
-		if (ld->sidenum[1] >= 0) {
-			if (!(ld->flags & ML_TWOSIDED)) {
-				ld->sidenum[1] = -1;
-			}
-		}
-		ld->flags &= ~ML_TWOSIDED;
-
 		if (tag)
 			numlinetags++;
 
@@ -697,13 +689,31 @@ void P_GroupLines (void)
 	ss = subsectors;
 	for (i=0 ; i<numsubsectors ; i++, ss++)
 	{
+		int side;
 		side_t *sidedef;
 		line_t* linedef;
 
 		seg = &segs[ss->firstline];
 		linedef = &lines[SEG_UNPACK_LINEDEF(seg)];
-		sidedef = &sides[linedef->sidenum[SEG_UNPACK_SIDE(seg)]];
+		side = SEG_UNPACK_SIDE(seg);
+		sidedef = &sides[linedef->sidenum[side]];
+		if (side == 1)
+		{
+			// set the guard flag for the back side, otherwise it
+			// may be set to -1 in the loop below
+			linedef->flags |= ML_TWOSIDED;
+		}
 		ss->sector = sidedef->sector;
+	}
+
+	/* if the two-sided flag isn't set, set the back side to -1 */
+	li = lines;
+	for (i=0 ; i<numlines ; i++, li++)
+	{
+		if (li->sidenum[1] >= 0 && !(li->flags & ML_TWOSIDED)) {
+			li->sidenum[1] = -1;
+		}
+		li->flags &= ~ML_TWOSIDED;
 	}
 
 /* count number of lines in each sector */
