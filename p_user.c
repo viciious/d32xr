@@ -672,7 +672,7 @@ ticphase = 23;
 			player->pendingweapon = wp_pistol;
 		if ((buttons & (BT_MODE | BT_B)) == (BT_MODE | BT_B))
 		{
-			if (P_CanSelectWeapon(player, wp_supershotgun))
+			if (P_CanSelectWeapon(player, wp_supershotgun) && player->readyweapon != wp_supershotgun)
 				player->pendingweapon = wp_supershotgun;
 			else if (player->weaponowned[wp_shotgun])
 				player->pendingweapon = wp_shotgun;
