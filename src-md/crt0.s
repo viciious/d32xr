@@ -489,6 +489,7 @@ check_emulator:
         move.b  #2,legacy_emulator      /* Emulator determined to be Gens */
 
 main_loop_start:
+        move.b  legacy_emulator,0xA1512F    /* Allow the SH-2s to see this */
         move.w  0xA15100,d0
         or.w    #0x8000,d0
         move.w  d0,0xA15100         /* set FM - allow SH2 access to MARS hw */
@@ -1745,6 +1746,10 @@ load_md_sky:
 
         move.w  #0x8C00, d0
         or.b    (a2)+,d0
+        cmp.b   #2,legacy_emulator      /* Check for Gens */
+        bne.s   0f
+        or.b    #0x0081,d0              /* Force Gens to use H40 */
+0:
         move.w  d0,(a0) /* reg 12 */
 
         move.w  #0x9000, d0

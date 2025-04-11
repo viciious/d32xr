@@ -32,6 +32,8 @@ static char mars_gamepadport[MARS_MAX_CONTROLLERS];
 static char mars_mouseport;
 static volatile uint16_t mars_controlval[2];
 
+volatile uint8_t legacy_emulator = 0;
+
 volatile uint8_t enable_hints = 0;
 
 volatile unsigned int mars_thru_rgb = 0;
@@ -256,6 +258,9 @@ void Mars_InitVideo(int lines)
 void Mars_Init(void)
 {
 	int i;
+
+	legacy_emulator = MARS_SYS_COMM15_BYTE;
+	MARS_SYS_COMM15_BYTE = 0;
 
 	/* no controllers or mouse by default */
 	for (i = 0; i < MARS_MAX_CONTROLLERS; i++)

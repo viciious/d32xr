@@ -608,9 +608,16 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 			demo_p += 4;
 #endif
 		}
-			
-		if ((demorecording || demoplayback) && (buttons & BT_PAUSE) )
-			exit = ga_completed;
+
+		if (buttons & BT_PAUSE) {
+			if (onscreen_prompt) {
+				exit = ga_closeprompt;
+				break;
+			}
+			if (demorecording || demoplayback) {
+				exit = ga_completed;
+			}
+		}
 
 		if (gameaction == ga_warped || gameaction == ga_startnew)
 		{
@@ -687,6 +694,29 @@ int TIC_Abortable (void)
 
 	return 0;
 }
+
+/*============================================================================= */
+
+#ifdef SHOW_COMPATIBILITY_PROMPT
+int TIC_Compatibility(void)
+{
+	return 0;
+}
+
+void START_Compatibility (void)
+{
+	onscreen_prompt = true;
+}
+
+void STOP_Compatibility (void)
+{
+	onscreen_prompt = false;
+}
+
+void DRAW_Compatibility (void)
+{
+}
+#endif
 
 /*============================================================================= */
 
@@ -959,10 +989,15 @@ void RunTitle (void)
 	startmap = 1;
 	starttype = gt_single;
 	consoleplayer = 0;
+	
+#ifdef SHOW_COMPATIBILITY_PROMPT
+	MiniLoop (START_Compatibility, STOP_Compatibility, TIC_Compatibility, DRAW_Compatibility, UpdateBuffer);
+#endif
 
 #ifdef SHOW_DISCLAIMER
 	MiniLoop (START_Disclaimer, STOP_Disclaimer, TIC_Disclaimer, DRAW_Disclaimer, UpdateBuffer);
 #endif
+
 	MiniLoop (START_Title, STOP_Title, TIC_Abortable, DRAW_Title, UpdateBuffer);
 }
 

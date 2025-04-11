@@ -53,6 +53,7 @@ char Mars_UploadPalette(const uint8_t* palette) MARS_ATTR_DATA_CACHE_ALIGN;
 int Mars_PollMouse(void);
 int Mars_ParseMousePacket(int mouse, int* pmx, int* pmy);
 
+extern volatile uint8_t legacy_emulator;
 extern volatile uint8_t enable_hints;
 
 extern volatile unsigned mars_vblank_count;

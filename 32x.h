@@ -44,14 +44,32 @@
 #define MARS_SYS_HINT_CLR   (*(volatile unsigned short *)0x20004018)
 #define MARS_SYS_CMDI_CLR   (*(volatile unsigned short *)0x2000401A)
 #define MARS_SYS_PWMI_CLR   (*(volatile unsigned short *)0x2000401C)
+
 #define MARS_SYS_COMM0      (*(volatile unsigned short *)0x20004020) /* Master SH2 communication */
 #define MARS_SYS_COMM2      (*(volatile unsigned short *)0x20004022)
 #define MARS_SYS_COMM4      (*(volatile unsigned short *)0x20004024) /* Slave SH2 communication */
 #define MARS_SYS_COMM6      (*(volatile unsigned short *)0x20004026)
-#define MARS_SYS_COMM8      (*(volatile unsigned short *)0x20004028) /* unused */
-#define MARS_SYS_COMM10     (*(volatile unsigned short *)0x2000402A) /* unused */
-#define MARS_SYS_COMM12     (*(volatile unsigned short *)0x2000402C) /* unused */
-#define MARS_SYS_COMM14     (*(volatile unsigned short *)0x2000402E) /* unused */
+#define MARS_SYS_COMM8      (*(volatile unsigned short *)0x20004028)
+#define MARS_SYS_COMM10     (*(volatile unsigned short *)0x2000402A)
+#define MARS_SYS_COMM12     (*(volatile unsigned short *)0x2000402C)
+#define MARS_SYS_COMM14     (*(volatile unsigned short *)0x2000402E)
+
+#define MARS_SYS_COMM0_BYTE  (*(volatile unsigned char *)0x20004020) /* Master SH2 communication */
+#define MARS_SYS_COMM1_BYTE  (*(volatile unsigned char *)0x20004021)
+#define MARS_SYS_COMM2_BYTE  (*(volatile unsigned char *)0x20004022)
+#define MARS_SYS_COMM3_BYTE  (*(volatile unsigned char *)0x20004023)
+#define MARS_SYS_COMM4_BYTE  (*(volatile unsigned char *)0x20004024) /* Slave SH2 communication */
+#define MARS_SYS_COMM5_BYTE  (*(volatile unsigned char *)0x20004025)
+#define MARS_SYS_COMM6_BYTE  (*(volatile unsigned char *)0x20004026)
+#define MARS_SYS_COMM7_BYTE  (*(volatile unsigned char *)0x20004027)
+#define MARS_SYS_COMM8_BYTE  (*(volatile unsigned char *)0x20004028)
+#define MARS_SYS_COMM9_BYTE  (*(volatile unsigned char *)0x20004029)
+#define MARS_SYS_COMM10_BYTE (*(volatile unsigned char *)0x2000402A)
+#define MARS_SYS_COMM11_BYTE (*(volatile unsigned char *)0x2000402B)
+#define MARS_SYS_COMM12_BYTE (*(volatile unsigned char *)0x2000402C)
+#define MARS_SYS_COMM13_BYTE (*(volatile unsigned char *)0x2000402D)
+#define MARS_SYS_COMM14_BYTE (*(volatile unsigned char *)0x2000402E)
+#define MARS_SYS_COMM15_BYTE (*(volatile unsigned char *)0x2000402F)
 
 #define MARS_PWM_CTRL       (*(volatile unsigned short *)0x20004030)
 #define MARS_PWM_CYCLE      (*(volatile unsigned short *)0x20004032)
