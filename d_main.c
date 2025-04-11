@@ -751,11 +751,17 @@ void DRAW_Compatibility (void)
 		"experience:"
 	};
 
-	const uint8_t *gens[6] = {
-		"This emulator does not support",
-		"certain features used by this game.",
+	const uint8_t *gens[4] = {
+		kega[0], // "This emulator does not support",
+		kega[1], // "certain features used by this game.",
 		"It is therefore not recommended. We",
 		"suggest one of these alternatives:"
+	};
+
+	const uint8_t *incompatible[3] = {
+		"This emulator is not compatible with",
+		"this game. We suggest one one of",
+		"these alternatives:"
 	};
 
 	const uint8_t *emulators[3] = {
@@ -770,29 +776,41 @@ void DRAW_Compatibility (void)
 	{
 		I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
 
-		V_DrawStringCenterWithColormap(&menuFont, 160, 24, "NOTICE:", YELLOWTEXTCOLORMAP);
+		V_DrawValueRight(&menuFont, 296, 16, legacy_emulator);
 
-		if (legacy_emulator == 1)
+		V_DrawStringCenterWithColormap(&menuFont, 160, 24, "*** NOTICE ***", YELLOWTEXTCOLORMAP);
+
+		switch (legacy_emulator)
 		{
-			for (int i=0; i < 6; i++) {
-				V_DrawStringCenter(&menuFont, 160, 42+(i*12), kega[i]);
-			}
-			for (int i=0; i < 3; i++) {
-				V_DrawStringLeft(&menuFont, 100, 132+(i*12), emulators[i]);
-			}
-		}
-		else
-		{
-			for (int i=0; i < 4; i++) {
-				V_DrawStringCenter(&menuFont, 160, 42+(i*12), gens[i]);
-			}
-			for (int i=0; i < 3; i++) {
-				V_DrawStringLeft(&menuFont, 100, 108+(i*12), emulators[i]);
-			}
+			case LEGACY_EMULATOR_KEGA:
+				for (int i=0; i < 6; i++) {
+					V_DrawStringCenter(&menuFont, 160, 42+(i*12), kega[i]);
+				}
+				for (int i=0; i < 3; i++) {
+					V_DrawStringLeft(&menuFont, 100, 132+(i*12), emulators[i]);
+				}
+				break;
+
+			case LEGACY_EMULATOR_GENS:
+				for (int i=0; i < 4; i++) {
+					V_DrawStringCenter(&menuFont, 160, 42+(i*12), gens[i]);
+				}
+				for (int i=0; i < 3; i++) {
+					V_DrawStringLeft(&menuFont, 100, 108+(i*12), emulators[i]);
+				}
+				break;
+
+			case LEGACY_EMULATOR_INCOMPATIBLE:
+				for (int i=0; i < 3; i++) {
+					V_DrawStringCenter(&menuFont, 160, 48+(i*12), incompatible[i]);
+				}
+				for (int i=0; i < 3; i++) {
+					V_DrawStringLeft(&menuFont, 100, 102+(i*12), emulators[i]);
+				}
 		}
 	}
 
-	if ((screenCount & 0x40) == 0) {
+	if (screenCount & 0x40) {
 		V_DrawStringCenterWithColormap(&menuFont, 160, 192, "PRESS START TO CONTINUE", YELLOWTEXTCOLORMAP);
 	}
 	else {
@@ -1277,6 +1295,11 @@ D_printf ("DM_Main\n");
 		G_InitNew (startmap, gt_single, false);
 	G_RunGame ();
 #endif
+
+	if (I_GetFRTCounter() <= 256) {
+		// Likely an old version of PicoDrive with incorrect WDT handling.
+		legacy_emulator = LEGACY_EMULATOR_INCOMPATIBLE;
+	}
 
 #ifdef MARS
 	while (1)

@@ -41,6 +41,11 @@
 #define MARS_MD_PIXEL_THRU_INDEX	252
 #endif
 
+#define LEGACY_EMULATOR_NONE			0
+#define LEGACY_EMULATOR_KEGA			1
+#define LEGACY_EMULATOR_GENS			2
+#define LEGACY_EMULATOR_INCOMPATIBLE	3
+
 void Mars_FlipFrameBuffers(char wait);
 void Mars_WaitFrameBuffersFlip(void);
 char Mars_FramebuffersFlipped(void);
