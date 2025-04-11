@@ -25,6 +25,7 @@ CCFLAGS += -DNARROW_SCENERY
 CCFLAGS += -DFLOOR_OVER_FLOOR
 #CCFLAGS += -DOST_BLACKNESS
 #CCFLAGS += -DOST_BLURNESS
+CCFLAGS += -DSHOW_COMPATIBILITY_PROMPT
 #CCFLAGS += -DSHOW_DISCLAIMER
 CCFLAGS += -DBENCHMARK
 LDFLAGS = -T mars-ssf.ld -Wl,-Map=output.map -nostdlib -Wl,--gc-sections,--sort-section=alignment --specs=nosys.specs

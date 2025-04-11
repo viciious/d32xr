@@ -350,7 +350,7 @@ static void ST_Drawer_ (stbar_t* sb)
 	else
 	{
 //		CONS_Printf("skyOffsetY: %d", -(vd.viewz >> 16) - (((signed int)vd.aimingangle) >> 22));	//DLG: Remove me!
-		CONS_Printf("legacy_emulator: %d", legacy_emulator);	//DLG: Remove me!
+//		CONS_Printf("legacy_emulator: %d", legacy_emulator);	//DLG: Remove me!
 
 		const int delaytime = gamemapinfo.act == 3 ? 2*TICRATE : 3*TICRATE;
 		int worldTime = leveltime - delaytime + TICRATE - sb->exiting - sb->deadTimer;
