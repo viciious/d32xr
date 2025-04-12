@@ -79,7 +79,7 @@ void P_RemoveMobj (mobj_t *mobj)
 
 	mobj->target = NULL;
 	mobj->extradata = 0;
-	mobj->latecall = (latecall_t)-1;	/* make sure it doesn't come back to life... */
+	mobj->latecall = LC_INVALID;	/* make sure it doesn't come back to life... */
 
 /* unlink from mobj list */
 	P_RemoveMobjFromCurrList(mobj);
@@ -204,7 +204,7 @@ boolean P_SetMobjState (mobj_t *mobj, statenum_t state)
 			st->action(mobj);
 
 		if (!(mobj->flags & MF_STATIC))
-			mobj->latecall = NULL;	/* make sure it doesn't come back to life... */
+			mobj->latecall = LC_NONE;	/* make sure it doesn't come back to life... */
 
 		state = st->nextstate;
 	} while (!mobj->tics && --changes > 0);
@@ -276,7 +276,7 @@ mobj_t *P_SpawnMobj2 (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type, subsecto
 			mobj = Z_Malloc (sizeof(*mobj), PU_LEVEL);
 		}
 		D_memset (mobj, 0, sizeof (*mobj));
-		mobj->speed = info->speed;
+		mobj->speed = info->speed < FRACUNIT ? info->speed : (info->speed >> FRACBITS);
 		mobj->reactiontime = info->reactiontime;
 	}
 
@@ -696,11 +696,11 @@ void P_CheckMissileSpawn (mobj_t *th)
 		th->momx = th->momy = th->momz = 0;
 		if(tm.ceilingline && tm.ceilingline->sidenum[1] >= 0 && *(int8_t *)&LD_BACKSECTOR(tm.ceilingline)->ceilingpic == -1)
 		{
-			th->latecall = P_RemoveMobj;
+			th->latecall = LC_REMOVE_MOBJ;
 			return;
 		}
 		th->extradata = (intptr_t)tm.hitthing;
-		th->latecall = L_MissileHit;
+		th->latecall = LC_MISSILE_HIT;
 	}
 }
 
@@ -730,12 +730,12 @@ mobj_t *P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type)
 		an += (P_Random()-P_Random()) << 20;
 	th->angle = an;
 	an >>= ANGLETOFINESHIFT;
-	speed = th->speed >> 16;
+	speed = th->speed;
 	th->momx = speed * finecosine(an);
 	th->momy = speed * finesine(an);
 	
 	dist = P_AproxDistance (dest->x - source->x, dest->y - source->y);
-	dist = dist / th->speed;
+	dist = dist / (th->speed << 16);
 	if (dist < 1)
 		dist = 1;
 	th->momz = (dest->z - source->z) / dist;
@@ -798,7 +798,7 @@ void P_SpawnPlayerMissile (mobj_t *source, mobjtype_t type)
 	th->target = source;
 	th->angle = an;
 	
-	speed = th->speed >> 16;
+	speed = th->speed;
 	
 	th->momx = speed * finecosine(an>>ANGLETOFINESHIFT);
 	th->momy = speed * finesine(an>>ANGLETOFINESHIFT);

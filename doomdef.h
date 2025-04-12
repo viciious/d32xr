@@ -229,6 +229,16 @@ typedef struct
 	unsigned short	type;
 } spawnthing_t;
 
+enum
+{
+	LC_INVALID = -1,
+	LC_NONE,
+	LC_SKULL_BASH,
+	LC_MISSILE_HIT,
+	LC_EXPLODE_MISSILE,
+	LC_REMOVE_MOBJ
+};
+
 typedef struct mobj_s
 {
 	fixed_t			x, y, z;
@@ -261,10 +271,11 @@ typedef struct mobj_s
 	angle_t			angle;
 	fixed_t			momx, momy, momz;	/* momentums */
 
-	unsigned 		speed;			/* mobjinfo[mobj->type].speed */
 	struct mobj_s	*target;		/* thing being chased/attacked (or NULL) */
-									/* also the originator for missiles */
-	latecall_t		latecall;		/* set in p_base if more work needed */
+	/* also the originator for missiles */
+
+	uint16_t 		speed;			/* mobjinfo[mobj->type].speed */
+	VINT 			latecall;		/* set in p_base if more work needed */
 
 	union {
 		struct {

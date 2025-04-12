@@ -99,7 +99,7 @@ void P_XYMovement(mobj_t *mo)
          if(mo->flags & MF_SKULLFLY)
          {
             mo->extradata = (intptr_t)w.hitthing;
-            mo->latecall = L_SkullBash;
+            mo->latecall = LC_SKULL_BASH;
             return;
          }
 
@@ -108,11 +108,11 @@ void P_XYMovement(mobj_t *mo)
          {
             if(w.ceilingline && w.ceilingline->sidenum[1] >= 0 && *(int8_t *)&LD_BACKSECTOR(w.ceilingline)->ceilingpic == -1)
             {
-               mo->latecall = P_RemoveMobj;
+               mo->latecall = LC_REMOVE_MOBJ;
                return;
             }
             mo->extradata = (intptr_t)w.hitthing;
-            mo->latecall = L_MissileHit;
+            mo->latecall = LC_MISSILE_HIT;
             return;
          }
 
@@ -185,7 +185,7 @@ void P_ZMovement(mobj_t *mo)
       mo->z = mo->floorz; // hit the floor
       if((mo->flags & MF_MISSILE) && !(mo->flags & MF_NOCLIP))
       {
-         mo->latecall = P_ExplodeMissile;
+         mo->latecall = LC_EXPLODE_MISSILE;
          return;
       }
    }
@@ -212,7 +212,7 @@ void P_ZMovement(mobj_t *mo)
       }
 
       if((mo->flags & MF_MISSILE) && !(mo->flags & MF_NOCLIP))
-         mo->latecall = P_ExplodeMissile;
+         mo->latecall = LC_EXPLODE_MISSILE;
    }
 }
 
@@ -228,14 +228,14 @@ void P_MobjThinker(mobj_t *mobj)
          P_XYMovement(mobj);
 
       // removed or has a special action to perform?
-      if(mobj->latecall)
+      if(mobj->latecall != LC_NONE)
          return;
 
       if(mobj->z != mobj->floorz || mobj->momz)
          P_ZMovement(mobj);
 
       // removed or has a special action to perform?
-      if(mobj->latecall)
+      if(mobj->latecall != LC_NONE)
          return;
    }
 
@@ -291,10 +291,24 @@ void P_RunMobjLate(void)
         next = mo->next;	/* in case mo is removed this time */
         if (mo->flags & MF_STATIC)
             continue;
-        if (mo->latecall)
+        if (mo->latecall != LC_NONE)
         {
-            mo->latecall(mo);
-            mo->latecall = NULL;
+            switch (mo->latecall)
+            {
+               case LC_SKULL_BASH:
+                  L_SkullBash(mo);
+                  break;
+               case LC_MISSILE_HIT:
+                  L_MissileHit(mo);
+                  break;
+               case LC_EXPLODE_MISSILE:
+                  P_ExplodeMissile(mo);
+                  break;
+               case LC_REMOVE_MOBJ:
+                  P_RemoveMobj(mo);
+                  break;
+            }
+            mo->latecall = LC_NONE;
         }
     }
 
