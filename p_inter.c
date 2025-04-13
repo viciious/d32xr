@@ -287,10 +287,12 @@ boolean P_GivePower (player_t *player, powertype_t power)
 int P_TouchSpecialThing2 (mobj_t *special, mobj_t *toucher)
 {
 	player_t *player;
+	int sprite;
 	
 	player = toucher->player ? &players[toucher->player-1] : NULL;
+	sprite = states[special->state].sprite;
 
-	switch (special->sprite)
+	switch (sprite)
 	{
 /* */
 /* armor */
@@ -381,6 +383,7 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 	int			i;
 	fixed_t		delta;
 	int			sound;
+	int 		sprite;
 		
 	delta = special->z - toucher->z;
 	if (delta > (toucher->height*FRACUNIT) || delta < -8*FRACUNIT)
@@ -390,7 +393,9 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 	player = toucher->player ? &players[toucher->player - 1] : NULL;
 	if (toucher->health <= 0)
 		return;						/* can happen with a sliding player corpse */
-	switch (special->sprite)
+
+	sprite = states[special->state].sprite;
+	switch (sprite)
 	{
 /* */
 /* bonus items */
@@ -728,7 +733,10 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 
 	if ( !(target->flags & MF_SHOOTABLE) )
 		return;						/* shouldn't happen... */
-		
+
+	if (target->flags & MF_STATIC)
+		return;
+
 	if (target->health <= 0)
 		return;
 

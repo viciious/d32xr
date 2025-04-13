@@ -185,7 +185,6 @@ boolean P_SetMobjState (mobj_t *mobj, statenum_t state)
 		st = &states[state];
 		mobj->state = state;
 		mobj->tics = st->tics;
-		mobj->sprite = st->sprite;
 
 		if (gameskill == sk_nightmare)
 		{
@@ -278,6 +277,7 @@ mobj_t *P_SpawnMobj2 (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type, subsecto
 		D_memset (mobj, 0, sizeof (*mobj));
 		mobj->speed = info->speed < FRACUNIT ? info->speed : (info->speed >> FRACBITS);
 		mobj->reactiontime = info->reactiontime;
+		mobj->health = info->spawnhealth;
 	}
 
 	mobj->type = type;
@@ -286,7 +286,6 @@ mobj_t *P_SpawnMobj2 (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type, subsecto
 	mobj->radius = info->radius;
 	mobj->height = info->height;
 	mobj->flags = info->flags;
-	mobj->health = info->spawnhealth;
 
 /* do not set the state with P_SetMobjState, because action routines can't */
 /* be called yet */
@@ -294,7 +293,6 @@ mobj_t *P_SpawnMobj2 (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type, subsecto
 
 	mobj->state = info->spawnstate;
 	mobj->tics = st->tics;
-	mobj->sprite = st->sprite;
 
 	if (gameskill == sk_nightmare)
 	{

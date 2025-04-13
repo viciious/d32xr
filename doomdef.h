@@ -244,11 +244,7 @@ typedef struct mobj_s
 	fixed_t			x, y, z;
 	struct	mobj_s* prev, * next;
 
-	unsigned char		sprite;				/* used to find patch_t and flip value */
-	char			player;		/* only valid if type == MT_PLAYER */
-
-	VINT			health;
-	VINT			tics;				/* state tic counter	 */
+	VINT			tics;				/* state tic counter */
 	VINT 			state;
 	unsigned short	thingid;			/* thing id for respawning specials */
 	VINT			type;
@@ -271,21 +267,25 @@ typedef struct mobj_s
 	angle_t			angle;
 	fixed_t			momx, momy, momz;	/* momentums */
 
-	struct mobj_s	*target;		/* thing being chased/attacked (or NULL) */
-	/* also the originator for missiles */
+	VINT			player;				/* only valid if type == MT_PLAYER */
 
-	uint16_t 		speed;			/* mobjinfo[mobj->type].speed */
-	VINT 			latecall;		/* set in p_base if more work needed */
+	VINT			health;
+
+	struct mobj_s	*target;			/* thing being chased/attacked (or NULL) */
+										/* also the originator for missiles */
+
+	uint16_t 		speed;				/* mobjinfo[mobj->type].speed */
+	VINT 			latecall;			/* set in p_base if more work needed */
 
 	union {
 		struct {
-			unsigned char	movedir;		/* 0-7 */
-			char			movecount;		/* when 0, select a new dir */
-			unsigned char	reactiontime;	/* if non 0, don't attack yet */
-											/* used by player to freeze a bit after */
-											/* teleporting */
-			unsigned char	threshold;		/* if >0, the target will be chased */
-											/* no matter what (even if shot) */
+			unsigned char	movedir;	/* 0-7 */
+			char			movecount;	/* when 0, select a new dir */
+			unsigned char	reactiontime;/* if non 0, don't attack yet */
+										/* used by player to freeze a bit after */
+										/* teleporting */
+			unsigned char	threshold;	/* if >0, the target will be chased */
+										/* no matter what (even if shot) */
 		};
 		intptr_t		extradata;		/* for latecall functions */
 	};

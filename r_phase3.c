@@ -24,6 +24,7 @@ static void R_PrepMobj(mobj_t *thing)
    spritedef_t   *sprdef;
    spriteframe_t *sprframe;
    VINT         *sprlump;
+   int          sprite;
    angle_t      ang;
    unsigned int rot;
    boolean      flip;
@@ -56,12 +57,12 @@ static void R_PrepMobj(mobj_t *thing)
       return;
 
    // check sprite for validity
-   if(/*thing->sprite < 0 || */thing->sprite >= NUMSPRITES)
+   state  = &states[thing->state];
+   sprite = state->sprite;
+   if(/*sprite < 0 || */sprite >= NUMSPRITES)
       return;
 
-   sprdef = &sprites[thing->sprite];
-   state  = &states[thing->state];
-
+   sprdef = &sprites[sprite];
    fullbright = (state->frame & FF_FULLBRIGHT) != 0;
    framenum = (state->frame & FF_FRAMEMASK);
 

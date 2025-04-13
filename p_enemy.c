@@ -684,7 +684,7 @@ void A_CPosRefire (mobj_t* actor)
 	A_FaceTarget (actor);
 	if (P_Random () < 40)
 		return;
-	if (!actor->target || actor->target->health <= 0|| !(actor->flags&MF_SEETARGET) )
+	if (!actor->target|| !(actor->flags&MF_SEETARGET) || actor->target->health <= 0 )
 		P_SetMobjState (actor, mobjinfo[actor->type].seestate);
 }
 
@@ -694,7 +694,7 @@ void A_SpidRefire (mobj_t *actor)
 	A_FaceTarget (actor);
 	if (P_Random () < 10)
 		return;
-	if (!actor->target || actor->target->health <= 0 || !(actor->flags&MF_SEETARGET) )
+	if (!actor->target || !(actor->flags&MF_SEETARGET) || actor->target->health <= 0 )
 		P_SetMobjState (actor, mobjinfo[actor->type].seestate);
 }
 

@@ -208,7 +208,6 @@ void P_PlayerMobjThink (mobj_t *mobj)
 
 	mobj->state = state;
 	mobj->tics = st->tics;
-	mobj->sprite = st->sprite;
 }
 
 /*============================================================================= */
