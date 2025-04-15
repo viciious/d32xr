@@ -46,10 +46,6 @@ unsigned configuration[NUMCONTROLOPTIONS][3] =
 #endif
 };
 
-#define LEGACY_EMULATOR_KEGA_COLOR			0xBC
-#define LEGACY_EMULATOR_GENS_COLOR			0x36
-#define LEGACY_EMULATOR_INCOMPATIBLE_COLOR	0x23
-
 /*============================================================================ */
 
 
@@ -774,11 +770,18 @@ void DRAW_Compatibility (void)
 		"* Ares 143",
 	};
 
+	const uint8_t compatibility_color[4] = { 0x70, 0xBC, 0x36, 0x23 };
+
 	viewportbuffer = (pixel_t*)I_FrameBuffer();
 
 	if (screenCount < 4)
 	{
 		I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
+
+		DrawFillRect(0, 0, 320, 8, compatibility_color[legacy_emulator]);
+		DrawFillRect(0, 216, 320, 8, compatibility_color[legacy_emulator]);
+		DrawFillRect(0, 8, 8, 208, compatibility_color[legacy_emulator]);
+		DrawFillRect(312, 8, 8, 208, compatibility_color[legacy_emulator]);
 
 		V_DrawValueRight(&menuFont, 296, 16, legacy_emulator);
 
@@ -787,11 +790,6 @@ void DRAW_Compatibility (void)
 		switch (legacy_emulator)
 		{
 			case LEGACY_EMULATOR_KEGA:
-				DrawFillRect(0, 0, 320, 8, LEGACY_EMULATOR_KEGA_COLOR);
-				DrawFillRect(0, 216, 320, 8, LEGACY_EMULATOR_KEGA_COLOR);
-				DrawFillRect(0, 8, 8, 208, LEGACY_EMULATOR_KEGA_COLOR);
-				DrawFillRect(312, 8, 8, 208, LEGACY_EMULATOR_KEGA_COLOR);
-
 				for (int i=0; i < 6; i++) {
 					V_DrawStringCenter(&menuFont, 160, 42+(i*12), kega[i]);
 				}
@@ -801,11 +799,6 @@ void DRAW_Compatibility (void)
 				break;
 
 			case LEGACY_EMULATOR_GENS:
-				DrawFillRect(0, 0, 320, 8, LEGACY_EMULATOR_GENS_COLOR);
-				DrawFillRect(0, 216, 320, 8, LEGACY_EMULATOR_GENS_COLOR);
-				DrawFillRect(0, 8, 8, 208, LEGACY_EMULATOR_GENS_COLOR);
-				DrawFillRect(312, 8, 8, 208, LEGACY_EMULATOR_GENS_COLOR);
-
 				for (int i=0; i < 4; i++) {
 					V_DrawStringCenter(&menuFont, 160, 42+(i*12), gens[i]);
 				}
@@ -815,11 +808,6 @@ void DRAW_Compatibility (void)
 				break;
 
 			case LEGACY_EMULATOR_INCOMPATIBLE:
-				DrawFillRect(0, 0, 320, 8, LEGACY_EMULATOR_INCOMPATIBLE_COLOR);
-				DrawFillRect(0, 216, 320, 8, LEGACY_EMULATOR_INCOMPATIBLE_COLOR);
-				DrawFillRect(0, 8, 8, 208, LEGACY_EMULATOR_INCOMPATIBLE_COLOR);
-				DrawFillRect(312, 8, 8, 208, LEGACY_EMULATOR_INCOMPATIBLE_COLOR);
-
 				for (int i=0; i < 3; i++) {
 					V_DrawStringCenter(&menuFont, 160, 48+(i*12), incompatible[i]);
 				}
@@ -829,7 +817,7 @@ void DRAW_Compatibility (void)
 		}
 	}
 
-	if (screenCount & 0x40) {
+	if (screenCount & 0x80) {
 		V_DrawStringCenterWithColormap(&menuFont, 160, 192, "PRESS START TO CONTINUE", YELLOWTEXTCOLORMAP);
 	}
 	else {
