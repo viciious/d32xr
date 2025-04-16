@@ -352,6 +352,9 @@ do_main:
         move.w  #0x2700,sr          /* disable ints */
         set_rv
 
+setup_horizontal_interrupt:
+        move.l  #horizontal_blank,0x70  /* Stay within RAM */
+
 calculate_checksum:
         move.w  0x18E,d5
         cmpi.w  #0,d5               /* should we skip the checksum routine? */
@@ -2954,6 +2957,12 @@ rst_ym2612:
         move.b  #0xDF,0xC00011
         move.b  #0xFF,0xC00011
         rts
+
+
+| Horizontal Blank handler
+
+horizontal_blank:
+        rte
 
 
 | Vertical Blank handler
