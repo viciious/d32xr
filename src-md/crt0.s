@@ -1730,6 +1730,9 @@ load_md_sky:
 
         lea     0xC00004,a0
         lea     0xC00000,a1
+
+        move.w  #0x8016,(a0) /* reg 0 = /IE1 (enable HBL INT), /M3 (enable read H/V cnt) */
+        move.w  #0x8174,(a0) /* reg 1 = /DISP (display off), /IE0 (enable VBL INT), M1 (DMA enabled), /M2 (V28 mode) */
         ||move.w  #0x8230,(a0) /* reg 2 = Name Tbl A = 0xC000 */
         ||move.w  #0x832C,(a0) /* reg 3 = Name Tbl W = 0xB000 */
         ||move.w  #0x8407,(a0) /* reg 4 = Name Tbl B = 0xE000 */
@@ -1760,15 +1763,31 @@ load_md_sky:
         move.w  (a2)+,d0
         move.w  d0,scroll_a_vert_offset
 
-        move.b  (a2)+,d1
-        move.b  #16,d0
-        sub.b   d1,d0
-        move.b  d0,scroll_b_vert_rate
+        move.w  (a2)+,d0
+        move.w  d0,scroll_b_vert_break
+
+        move.w  (a2)+,d0
+        move.w  d0,scroll_a_vert_break
 
         move.b  (a2)+,d1
         move.b  #16,d0
         sub.b   d1,d0
-        move.b  d0,scroll_a_vert_rate
+        move.b  d0,scroll_b_vert_rate_top
+
+        move.b  (a2)+,d1
+        move.b  #16,d0
+        sub.b   d1,d0
+        move.b  d0,scroll_b_vert_rate_bottom
+
+        move.b  (a2)+,d1
+        move.b  #16,d0
+        sub.b   d1,d0
+        move.b  d0,scroll_a_vert_rate_top
+
+        move.b  (a2)+,d1
+        move.b  #16,d0
+        sub.b   d1,d0
+        move.b  d0,scroll_a_vert_rate_bottom
 
 
 
@@ -1861,54 +1880,94 @@ scroll_md_sky:
         move.l  d3,-(sp)
         move.l  d4,-(sp)
         move.l  d5,-(sp)
+        move.l  d6,-(sp)
+        move.l  d7,-(sp)
 
         lea     0xC00004,a0
         lea     0xC00000,a1
 
         /* Vertical */
         move.l  #0x40000010,(a0)
-        moveq   #0,d4
-        moveq   #0,d5
-        move.w  0xA15122,d4         /* scroll_y_base */
-        move.w  d4,d5
         moveq   #0,d0
         moveq   #0,d1
         moveq   #0,d2
-        move.b  scroll_b_vert_rate,d0
-        move.b  scroll_a_vert_rate,d1
+        moveq   #0,d4
+        moveq   #0,d5
+        moveq   #0,d6
+        moveq   #0,d7
+        move.w  0xA15122,d4         /* scroll_y_base */
+        move.w  d4,d5
+        move.w  d4,d6
+        move.w  d4,d7
+
+        move.b  scroll_b_vert_rate_top,d0
+
+        move.b  scroll_b_vert_rate_bottom,d1
         move.b  d0,d2
         sub.l   d1,d2
         lsl.w   d2,d5
 
-        move.w  #0,0xA15120         /* done with horizontal scroll */
+        move.b  scroll_a_vert_rate_top,d1
+        move.b  d0,d2
+        sub.l   d1,d2
+        lsl.w   d2,d6
+
+        move.b  scroll_a_vert_rate_bottom,d1
+        move.b  d0,d2
+        sub.l   d1,d2
+        lsl.w   d2,d7
+
+        move.w  #0,0xA15120         /* request more data */
 2:
         move.b  0xA15121,d0         /* wait on handshake in COMM0 */
         cmpi.b  #0x02,d0
         bne.b   2b
         move.w  0xA15122,d1         /* scroll_y_offset */
-        add.w   d4,d1
-        move.w  d1,d3
+        add.w   d4,d1               /* add scroll_y_base to scroll_y_offset value */
 
-        move.b  scroll_a_vert_rate,d0
-        lsr.w   d0,d1
+        move.w  d1,d3
+        move.b  scroll_a_vert_rate_top,d0
+        lsr.w   d0,d3
         move.w  scroll_a_vert_offset,d0
-        sub.w   d1,d0
-        sub.w   d5,d0
+        sub.w   d3,d0
+        sub.w   d6,d0
         andi.w  #0x3FF,d0
 
         move.w  d0,d2
-        swap    d2
+        swap    d2                  /* add scroll A top vertical position to D2 high word */
 
-        move.b  scroll_b_vert_rate,d0
+        move.w  d1,d3
+        move.b  scroll_b_vert_rate_top,d0
         lsr.w   d0,d3
         move.w  scroll_b_vert_offset,d0
         sub.w   d3,d0
         sub.w   d4,d0
         andi.w  #0x3FF,d0
 
-        or.w    d0,d2
+        or.w    d0,d2               /* add scroll B top vertical position to D2 low word */
 
-        move.w  #0,0xA15120         /* done with horizontal scroll */
+        move.w  d1,d3
+        move.b  scroll_a_vert_rate_bottom,d0
+        lsr.w   d0,d3
+        move.w  scroll_a_vert_offset,d0
+        sub.w   d3,d0
+        sub.w   d7,d0
+        andi.w  #0x3FF,d0
+
+        move.w  d0,d4
+        swap    d4                  /* add scroll A bottom vertical position to D4 high word */
+
+        move.w  d1,d3
+        move.b  scroll_b_vert_rate_bottom,d0
+        lsr.w   d0,d3
+        move.w  scroll_b_vert_offset,d0
+        sub.w   d3,d0
+        sub.w   d5,d0
+        andi.w  #0x3FF,d0
+
+        or.w    d0,d4               /* add scroll B bottom vertical position to D4 low word */
+
+        move.w  #0,0xA15120         /* request more data */
 3:
         move.b  0xA15121,d0         /* wait on handshake in COMM0 */
         cmpi.b  #0x03,d0
@@ -1918,10 +1977,15 @@ scroll_md_sky:
         swap    d2
         sub.w   d0,d2
         swap    d2
+        sub.w   d0,d4
+        swap    d4
+        sub.w   d0,d4
+        swap    d4
 
-        move.l  d2,(a1)
+        move.l  d2,current_sky_top_positions
+        move.l  d4,current_sky_bottom_positions
 
-        move.w  #0,0xA15120         /* done with horizontal scroll */
+        move.w  #0,0xA15120         /* done with vertical scroll */
 4:
         move.b  0xA15121,d0         /* wait on handshake in COMM0 */
         cmpi.b  #0x04,d0
@@ -1945,6 +2009,8 @@ scroll_md_sky:
         cmp.w   #0,d2
         bne.b   0b
 
+        move.l  (sp)+,d7
+        move.l  (sp)+,d6
         move.l  (sp)+,d5
         move.l  (sp)+,d4
         move.l  (sp)+,d3
@@ -2972,6 +3038,17 @@ vert_blank:
         move.l  d2,-(sp)
         move.l  a2,-(sp)
 
+        move.l  a1,-(sp)
+
+        lea     0xC00004,a0
+        lea     0xC00000,a1
+
+        move.l  #0x40000010,(a0)
+        move.l  current_sky_top_positions,d0
+        move.l  d0,(a1)             /* update scroll A and B vertical positions */
+
+        move.l  (sp)+,a1
+
         move.b  #1,need_bump_fm
         move.b  #1,need_ctrl_int
 
@@ -3392,11 +3469,31 @@ scroll_b_vert_offset:
         dc.w    0
 scroll_a_vert_offset:
         dc.w    0
+scroll_b_vert_break:
+        dc.w    0
+scroll_a_vert_break:
+        dc.w    0
 
-scroll_b_vert_rate:
+scroll_b_vert_rate_top:
         dc.b    0
-scroll_a_vert_rate:
+scroll_b_vert_rate_bottom:
         dc.b    0
+scroll_a_vert_rate_top:
+        dc.b    0
+scroll_a_vert_rate_bottom:
+        dc.b    0
+
+current_sky_top_positions:
+current_scroll_a_top_position:
+        dc.w    0
+current_scroll_b_top_position:
+        dc.w    0
+
+current_sky_bottom_positions:
+current_scroll_a_bottom_position:
+        dc.w    0
+current_scroll_b_bottom_position:
+        dc.w    0
 
 lump_ptr:
         dc.l    0
