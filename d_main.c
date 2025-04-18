@@ -766,7 +766,7 @@ void DRAW_Compatibility (void)
 
 	const uint8_t *emulators[3] = {
 		"* PicoDrive 2.04",
-		"* Jgenesis 0.9.1",
+		"* Jgenesis 0.10.0",
 		"* Ares 143",
 	};
 
