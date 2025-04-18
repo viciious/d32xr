@@ -36,6 +36,8 @@ uint16_t        emeralds;
 uint16_t        token;
 uint16_t        tokenbits;
 
+boolean			onscreen_prompt;
+
 boolean         demorecording;
 boolean         demoplayback;
 

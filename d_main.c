@@ -608,9 +608,18 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 			demo_p += 4;
 #endif
 		}
-			
-		if ((demorecording || demoplayback) && (buttons & BT_PAUSE) )
-			exit = ga_completed;
+
+		if (buttons & BT_START) {
+#ifdef SHOW_COMPATIBILITY_PROMPT
+			if (onscreen_prompt) {
+				exit = ga_closeprompt;
+				break;
+			}
+#endif
+			if (demorecording || demoplayback) {
+				exit = ga_completed;
+			}
+		}
 
 		if (gameaction == ga_warped || gameaction == ga_startnew)
 		{
@@ -690,14 +699,142 @@ int TIC_Abortable (void)
 
 /*============================================================================= */
 
+#if defined(SHOW_COMPATIBILITY_PROMPT) || defined(SHOW_DISCLAIMER)
+unsigned short screenCount = 0;
+#endif
+
+#ifdef SHOW_COMPATIBILITY_PROMPT
+int TIC_Compatibility(void)
+{
+	screenCount++;
+
+	return 0;
+}
+
+void START_Compatibility (void)
+{
+	for (int i = 0; i < 2; i++)
+	{
+		I_ClearFrameBuffer();
+		UpdateBuffer();
+	}
+
+	screenCount = 0;
+
+	UpdateBuffer();
+
+	const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
+	I_SetPalette(dc_playpals);
+
+	R_InitColormap();
+
+	onscreen_prompt = true;
+}
+
+void STOP_Compatibility (void)
+{
+	// Set to totally black
+	const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
+	I_SetPalette(dc_playpals+10*768);
+
+	onscreen_prompt = false;
+}
+
+void DRAW_Compatibility (void)
+{
+	const uint8_t *kega[6] = {
+		"This emulator does not support",
+		"certain features used by this game.",
+		"While we do our best to support it,",
+		"you may want to consider one of",
+		"these alternatives for the best",
+		"experience:"
+	};
+
+	const uint8_t *gens[4] = {
+		kega[0], // "This emulator does not support",
+		kega[1], // "certain features used by this game.",
+		"It is therefore not recommended. We",
+		"suggest one of these alternatives:"
+	};
+
+	const uint8_t *incompatible[3] = {
+		"This emulator is not compatible with",
+		"this game. We suggest one one of",
+		"these alternatives:"
+	};
+
+	const uint8_t *emulators[3] = {
+		"* PicoDrive 2.04",
+		"* Jgenesis 0.10.0",
+		"* Ares 143",
+	};
+
+	const uint8_t compatibility_color[4] = { 0x70, 0xBC, 0x36, 0x23 };
+
+	viewportbuffer = (pixel_t*)I_FrameBuffer();
+
+	if (screenCount < 4)
+	{
+		I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
+
+		DrawFillRect(0, 0, 320, 8, compatibility_color[legacy_emulator]);
+		DrawFillRect(0, 216, 320, 8, compatibility_color[legacy_emulator]);
+		DrawFillRect(0, 8, 8, 208, compatibility_color[legacy_emulator]);
+		DrawFillRect(312, 8, 8, 208, compatibility_color[legacy_emulator]);
+
+		V_DrawValueRight(&menuFont, 296, 16, legacy_emulator);
+
+		V_DrawStringCenterWithColormap(&menuFont, 160, 24, "*** NOTICE ***", YELLOWTEXTCOLORMAP);
+
+		switch (legacy_emulator)
+		{
+			case LEGACY_EMULATOR_KEGA:
+				for (int i=0; i < 6; i++) {
+					V_DrawStringCenter(&menuFont, 160, 42+(i*12), kega[i]);
+				}
+				for (int i=0; i < 3; i++) {
+					V_DrawStringLeft(&menuFont, 100, 132+(i*12), emulators[i]);
+				}
+				break;
+
+			case LEGACY_EMULATOR_GENS:
+				for (int i=0; i < 4; i++) {
+					V_DrawStringCenter(&menuFont, 160, 42+(i*12), gens[i]);
+				}
+				for (int i=0; i < 3; i++) {
+					V_DrawStringLeft(&menuFont, 100, 108+(i*12), emulators[i]);
+				}
+				break;
+
+			case LEGACY_EMULATOR_INCOMPATIBLE:
+				for (int i=0; i < 3; i++) {
+					V_DrawStringCenter(&menuFont, 160, 48+(i*12), incompatible[i]);
+				}
+				for (int i=0; i < 3; i++) {
+					V_DrawStringLeft(&menuFont, 100, 102+(i*12), emulators[i]);
+				}
+		}
+	}
+
+	if (screenCount & 0x80) {
+		V_DrawStringCenterWithColormap(&menuFont, 160, 192, "PRESS START TO CONTINUE", YELLOWTEXTCOLORMAP);
+	}
+	else {
+		DrawFillRect(64, 192, 192, 8, COLOR_BLACK);
+	}
+}
+#endif
+
+/*============================================================================= */
+
 #ifdef SHOW_DISCLAIMER
-VINT disclaimerCount = 0;
 int TIC_Disclaimer(void)
 {
-	if (++disclaimerCount > 300)
+	if (++screenCount > 300)
 		return 1;
 
-	if (disclaimerCount == 270)
+	if (screenCount == 270)
 	{
 		// Set to totally black
 		const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
@@ -717,7 +854,7 @@ void START_Disclaimer(void)
 		UpdateBuffer();
 	}
 
-	disclaimerCount = 0;
+	screenCount = 0;
 
 	UpdateBuffer();
 
@@ -878,22 +1015,22 @@ void DRAW_Disclaimer (void)
 
 	DrawFillRect(0, 0, 320, viewportHeight, COLOR_BLACK);
 
-	if (disclaimerCount < 240)
+	if (screenCount < 240)
 	{
 		viewportbuffer = (pixel_t*)I_FrameBuffer();
 		I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
-		BufferedDrawSprite(SPR_PLAY, 1 + ((disclaimerCount / 8) & 1), 0, 80, 160, false);
+		BufferedDrawSprite(SPR_PLAY, 1 + ((screenCount / 8) & 1), 0, 80, 160, false);
 	}
-	else if (disclaimerCount < 250)
+	else if (screenCount < 250)
 	{
 		DrawJagobjLump(W_GetNumForName("ZOOM"), 136, 80-56, NULL, NULL);
 	}
 	else
 	{
-		VINT Xpos = disclaimerCount - 250;
+		VINT Xpos = screenCount - 250;
 		viewportbuffer = (pixel_t*)I_FrameBuffer();
 		I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
-		BufferedDrawSprite(SPR_PLAY, 11 + ((disclaimerCount / 2) % 4), 2, 80, 160  + (Xpos * 16), true);
+		BufferedDrawSprite(SPR_PLAY, 11 + ((screenCount / 2) % 4), 2, 80, 160  + (Xpos * 16), true);
 	}
 
 	V_DrawStringCenter(&creditFont, 160, 64+32, (const char*)text1);
@@ -959,10 +1096,17 @@ void RunTitle (void)
 	startmap = 1;
 	starttype = gt_single;
 	consoleplayer = 0;
+	
+#ifdef SHOW_COMPATIBILITY_PROMPT
+	if (legacy_emulator) {
+		MiniLoop (START_Compatibility, STOP_Compatibility, TIC_Compatibility, DRAW_Compatibility, UpdateBuffer);
+	}
+#endif
 
 #ifdef SHOW_DISCLAIMER
 	MiniLoop (START_Disclaimer, STOP_Disclaimer, TIC_Disclaimer, DRAW_Disclaimer, UpdateBuffer);
 #endif
+
 	MiniLoop (START_Title, STOP_Title, TIC_Abortable, DRAW_Title, UpdateBuffer);
 }
 
@@ -1158,6 +1302,11 @@ D_printf ("DM_Main\n");
 		G_InitNew (startmap, gt_single, false);
 	G_RunGame ();
 #endif
+
+	if (I_GetFRTCounter() <= 256) {
+		// Likely an old version of PicoDrive with incorrect WDT handling.
+		legacy_emulator = LEGACY_EMULATOR_INCOMPATIBLE;
+	}
 
 #ifdef MARS
 	while (1)

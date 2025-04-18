@@ -173,6 +173,7 @@ typedef enum
 	ga_startnew,
 	ga_backtotitle,
 	ga_specialstageexit,
+	ga_closeprompt
 } gameaction_t;
 
 
@@ -540,6 +541,9 @@ typedef enum
 	gt_deathmatch	
 } gametype_t;
 
+#ifdef MARS
+__attribute__((aligned(2)))
+#endif
 extern	gametype_t	netgame;
 
 extern	boolean		playeringame[MAXPLAYERS];
@@ -724,6 +728,7 @@ void* W_GetLumpData(int lump, const char *file, int line) ATTR_DATA_CACHE_ALIGN;
 void D_DoomMain (void);
 void D_DoomLoop (void);
 
+extern	boolean onscreen_prompt;
 extern	boolean	demoplayback, demorecording;
 extern	unsigned char *demo_p, *demobuffer;
 
