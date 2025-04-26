@@ -103,15 +103,11 @@ void I_DrawColumnLowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	} while (0)
 
 	count = dc_yh - dc_yl + 1;
-	n = (count + 7) >> 3;
+	n = (count + 3) >> 2;
 
-	switch (count & 7)
+	switch (count & 3)
 	{
 	case 0: do { DO_PIXEL();
-	case 7:      DO_PIXEL();
-	case 6:      DO_PIXEL();
-	case 5:      DO_PIXEL();
-	case 4:      DO_PIXEL();
 	case 3:      DO_PIXEL();
 	case 2:      DO_PIXEL();
 	case 1:      DO_PIXEL();
@@ -160,7 +156,7 @@ void I_DrawColumnNPo2LowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t fra
 	__asm volatile("mov %1,%0\n\t" : "=&r" (deststep) : "r"(320/2));
 
 	count = dc_yh - dc_yl + 1;
-	n = (count + 7) >> 3;
+	n = (count + 3) >> 2;
 
 #define DO_PIXEL() do { \
 		pix = dc_colormap[(int8_t)dc_source[frac >> FRACBITS]]; \
@@ -171,13 +167,9 @@ void I_DrawColumnNPo2LowC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t fra
 			frac -= heightmask; \
 	} while (0)
 
-	switch (count & 7)
+	switch (count & 3)
 	{
 	case 0: do { DO_PIXEL();
-	case 7:      DO_PIXEL();
-	case 6:      DO_PIXEL();
-	case 5:      DO_PIXEL();
-	case 4:      DO_PIXEL();
 	case 3:      DO_PIXEL();
 	case 2:      DO_PIXEL();
 	case 1:      DO_PIXEL();
@@ -226,14 +218,10 @@ void I_DrawSpanLowC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 		xfrac += ds_xstep, yfrac += ds_ystep; \
 	} while(0)
 
-	n = (count + 7) >> 3;
-	switch (count & 7)
+	n = (count + 3) >> 2;
+	switch (count & 3)
 	{
 	case 0: do { DO_PIXEL();
-	case 7:      DO_PIXEL();
-	case 6:      DO_PIXEL();
-	case 5:      DO_PIXEL();
-	case 4:      DO_PIXEL();
 	case 3:      DO_PIXEL();
 	case 2:      DO_PIXEL();
 	case 1:      DO_PIXEL();
@@ -274,15 +262,11 @@ void I_DrawColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	} while (0)
 
 	count = dc_yh - dc_yl + 1;
-	n = (count + 7) >> 3;
+	n = (count + 3) >> 2;
 
-	switch (count & 7)
+	switch (count & 3)
 	{
 	case 0: do { DO_PIXEL();
-	case 7:      DO_PIXEL();
-	case 6:      DO_PIXEL();
-	case 5:      DO_PIXEL();
-	case 4:      DO_PIXEL();
 	case 3:      DO_PIXEL();
 	case 2:      DO_PIXEL();
 	case 1:      DO_PIXEL();
@@ -325,7 +309,7 @@ void I_DrawColumnNPo2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 	__asm volatile("mov %1,%0\n\t" : "=&r" (deststep) : "r"(320));
 
 	count = dc_yh - dc_yl + 1;
-	n = (count + 7) >> 3;
+	n = (count + 3) >> 2;
 
 #define DO_PIXEL() do { \
 		*dest = dc_colormap[(int8_t)dc_source[frac >> FRACBITS]] & 0xff; \
@@ -334,13 +318,9 @@ void I_DrawColumnNPo2C(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 			frac -= heightmask; \
 	} while (0)
 
-	switch (count & 7)
+	switch (count & 3)
 	{
 	case 0: do { DO_PIXEL();
-	case 7:      DO_PIXEL();
-	case 6:      DO_PIXEL();
-	case 5:      DO_PIXEL();
-	case 4:      DO_PIXEL();
 	case 3:      DO_PIXEL();
 	case 2:      DO_PIXEL();
 	case 1:      DO_PIXEL();
@@ -380,14 +360,10 @@ void I_DrawSpanC(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 		xfrac += ds_xstep, yfrac += ds_ystep; \
 	} while(0)
 
-	n = (count + 7) >> 3;
-	switch (count & 7)
+	n = (count + 3) >> 2;
+	switch (count & 3)
 	{
 	case 0: do { DO_PIXEL();
-	case 7:      DO_PIXEL();
-	case 6:      DO_PIXEL();
-	case 5:      DO_PIXEL();
-	case 4:      DO_PIXEL();
 	case 3:      DO_PIXEL();
 	case 2:      DO_PIXEL();
 	case 1:      DO_PIXEL();
