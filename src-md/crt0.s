@@ -133,7 +133,7 @@ _start:
 
 | 0x880880 - 68000 Level 4 interrupt handler - HBlank IRQ
 
-        rte
+        jmp     horizontal_blank    /* This jump is only used by Gens */
 
         .align  64
 
@@ -1870,8 +1870,6 @@ load_md_sky:
 
 
 scroll_md_sky:
-        move.w  #0x2700,sr          /* disable ints */
-
         move.l  a0,-(sp)
         move.l  a1,-(sp)
         move.l  d0,-(sp)
@@ -1891,99 +1889,67 @@ scroll_md_sky:
         moveq   #0,d0
         moveq   #0,d1
         moveq   #0,d2
+        moveq   #0,d3
         moveq   #0,d4
         moveq   #0,d5
         moveq   #0,d6
         moveq   #0,d7
-        move.w  0xA15122,d4         /* scroll_y_base */
-        move.w  d4,d5
-        move.w  d4,d6
-        move.w  d4,d7
 
-        move.b  scroll_b_vert_rate_top,d0
-
-        move.b  scroll_b_vert_rate_bottom,d1
-        move.b  d0,d2
-        sub.l   d1,d2
-        lsl.w   d2,d5
-
-        move.b  scroll_a_vert_rate_top,d1
-        move.b  d0,d2
-        sub.l   d1,d2
-        lsl.w   d2,d6
-
-        move.b  scroll_a_vert_rate_bottom,d1
-        move.b  d0,d2
-        sub.l   d1,d2
-        lsl.w   d2,d7
+        move.w  0xA15122,d3         /* scroll_y_base */
 
         move.w  #0,0xA15120         /* request more data */
 2:
         move.b  0xA15121,d0         /* wait on handshake in COMM0 */
         cmpi.b  #0x02,d0
         bne.b   2b
-        move.w  0xA15122,d1         /* scroll_y_offset */
-        add.w   d4,d1               /* add scroll_y_base to scroll_y_offset value */
-
-        move.w  d1,d3
-        move.b  scroll_a_vert_rate_top,d0
-        lsr.w   d0,d3
-        move.w  scroll_a_vert_offset,d0
-        sub.w   d3,d0
-        sub.w   d6,d0
-        andi.w  #0x3FF,d0
-
-        move.w  d0,d2
-        swap    d2                  /* add scroll A top vertical position to D2 high word */
-
-        move.w  d1,d3
-        move.b  scroll_b_vert_rate_top,d0
-        lsr.w   d0,d3
-        move.w  scroll_b_vert_offset,d0
-        sub.w   d3,d0
-        sub.w   d4,d0
-        andi.w  #0x3FF,d0
-
-        or.w    d0,d2               /* add scroll B top vertical position to D2 low word */
-
-        move.w  d1,d3
-        move.b  scroll_a_vert_rate_bottom,d0
-        lsr.w   d0,d3
-        move.w  scroll_a_vert_offset,d0
-        sub.w   d3,d0
-        sub.w   d7,d0
-        andi.w  #0x3FF,d0
-
-        move.w  d0,d4
-        swap    d4                  /* add scroll A bottom vertical position to D4 high word */
-
-        move.w  d1,d3
-        move.b  scroll_b_vert_rate_bottom,d0
-        lsr.w   d0,d3
-        move.w  scroll_b_vert_offset,d0
-        sub.w   d3,d0
-        sub.w   d5,d0
-        andi.w  #0x3FF,d0
-
-        or.w    d0,d4               /* add scroll B bottom vertical position to D4 low word */
-
+        move.w  0xA15122,d4         /* scroll_y_offset */
+        
         move.w  #0,0xA15120         /* request more data */
 3:
         move.b  0xA15121,d0         /* wait on handshake in COMM0 */
         cmpi.b  #0x03,d0
         bne.b   3b
-        move.w  0xA15122,d0         /* scroll_y_pan */
-        sub.w   d0,d2
-        swap    d2
-        sub.w   d0,d2
-        swap    d2
-        sub.w   d0,d4
-        swap    d4
-        sub.w   d0,d4
-        swap    d4
+        move.w  0xA15122,d2         /* scroll_y_pan */
 
-        move.l  d2,current_sky_top_positions
-        move.l  d4,current_sky_bottom_positions
+        moveq   #0,d1
+        move.b  scroll_b_vert_rate_top,d1
+        move.w  d4,d5               /* scroll_y_offset */
+        lsr.w   d1,d5
+        move.w  d3,d1
+        sub.w   d5,d1               /* position = (scroll_y_base - d5 - scroll_y_pan) & 0x3FF */
+        sub.w   d2,d1
+        |andi.w  #0x3FF,d1
+        move.w  d1,current_scroll_b_top_position
+
+        moveq   #0,d1
+        move.b  scroll_b_vert_rate_bottom,d1
+        move.w  d4,d5               /* scroll_y_offset */
+        lsr.w   d1,d5
+        move.w  d3,d1
+        sub.w   d5,d1               /* position = (scroll_y_base - d5 - scroll_y_pan) & 0x3FF */
+        sub.w   d2,d1
+        |andi.w  #0x3FF,d1
+        move.w  d1,current_scroll_b_bottom_position
+
+        moveq   #0,d1
+        move.b  scroll_a_vert_rate_top,d1
+        move.w  d4,d5               /* scroll_y_offset */
+        lsr.w   d1,d5
+        move.w  d3,d1
+        sub.w   d5,d1               /* position = (scroll_y_base - d5 - scroll_y_pan) & 0x3FF */
+        sub.w   d2,d1
+        |andi.w  #0x3FF,d1
+        move.w  d1,current_scroll_a_top_position
+
+        moveq   #0,d1
+        move.b  scroll_a_vert_rate_bottom,d1
+        move.w  d4,d5               /* scroll_y_offset */
+        lsr.w   d1,d5
+        move.w  d3,d1
+        sub.w   d5,d1               /* position = (scroll_y_base - d5 - scroll_y_pan) & 0x3FF */
+        sub.w   d2,d1
+        |andi.w  #0x3FF,d1
+        move.w  d1,current_scroll_a_bottom_position
 
         move.w  #0,0xA15120         /* done with vertical scroll */
 4:
@@ -2021,8 +1987,6 @@ scroll_md_sky:
         move.l  (sp)+,a0
 
         move.w  #0,0xA15120         /* done */
-
-        move.w  #0x2000,sr          /* enable ints */
 
         bra     main_loop
 
@@ -2079,7 +2043,7 @@ TestSine:
 
 
 fade_md_palette:
-        move.w  #0x2700,sr          /* disable ints */
+        |move.w  #0x2700,sr          /* disable ints */
 
         move.l  a0,-(sp)
         move.l  a1,-(sp)
@@ -3028,6 +2992,32 @@ rst_ym2612:
 | Horizontal Blank handler
 
 horizontal_blank:
+        move.l  d0,-(sp)
+        move.l  d1,-(sp)
+        move.l  a0,-(sp)
+        move.l  a1,-(sp)
+
+        lea     0xC00004,a0
+        lea     0xC00000,a1
+
+        move.l  #0x40000010,(a0)
+        move.w  current_scroll_b_bottom_position,d0
+        move.l  d0,(a1)             /* update scroll A and B vertical positions */
+
+
+
+        |move.w  hint_scroll_b,d1
+        move.w  #0xFF,d1        /* testing!!!!!!!! */
+        move.w  #0x8A00,d0
+        add.b   d1,d0
+        move.w  d0,(a0) /* reg 10 = HINT = 0 */
+
+
+
+        move.l  (sp)+,a1
+        move.l  (sp)+,a0
+        move.l  (sp)+,d1
+        move.l  (sp)+,d0
         rte
 
 
@@ -3036,6 +3026,7 @@ horizontal_blank:
 vert_blank:
         move.l  d1,-(sp)
         move.l  d2,-(sp)
+        move.l  d3,-(sp)
         move.l  a2,-(sp)
 
         move.l  a1,-(sp)
@@ -3043,11 +3034,116 @@ vert_blank:
         lea     0xC00004,a0
         lea     0xC00000,a1
 
+
+
+|        move.w  current_scroll_b_top_position,d1
+|        moveq   #0,d3
+|0:
+|        move.w  current_scroll_b_bottom_position,d2
+|        cmp.w   d1,d2
+|        bgt.s   1f
+|        move.w  d2,d1
+|        moveq   #1,d3
+|1:
+|        move.w  current_scroll_a_top_position,d2
+|        cmp.w   d1,d2
+|        bgt.s   2f
+|        move.w  d2,d1
+|        moveq   #2,d3
+|2:
+|        move.w  current_scroll_a_bottom_position,d2
+|        cmp.w   d1,d2
+|        bgt.s   3f
+|        move.w  d2,d1
+|        moveq   #3,d3
+|3:
+|        move.b  d3,d0
+
+
+
+
+        /* Calculate the HINT line for Scroll A section break */
+        move.b  scroll_a_vert_rate_top,d0
+        move.b  scroll_a_vert_rate_bottom,d1
+        cmp.b   d0,d1
+        blt.s   11f
+
+10:      /* Top section has priority */
+        move.w  current_scroll_a_top_position,d0
+        bra.s   12f
+
+11:      /* Bottom section has priority */
+        move.w  current_scroll_a_bottom_position,d0
+
+12:
+        move.w  scroll_a_vert_break,d2
+        sub.w   d0,d2
+
+        cmpi.w  #0,d2
+        blt.s   13f
+        cmpi.w  #224,d2
+        blt.s   14f
+13:
+        move.w  #-1,hint_scroll_a
+14:
+        move.w  d2,hint_scroll_a
+
+
+
+        /* Calculate the HINT line for Scroll B section break */
+        move.b  scroll_b_vert_rate_top,d0
+        move.b  scroll_b_vert_rate_bottom,d1
+        cmp.b   d0,d1
+        blt.s   21f
+
+20:      /* Top section has priority */
+        move.w  current_scroll_b_top_position,d0
+        bra.s   22f
+
+21:      /* Bottom section has priority */
+        move.w   current_scroll_b_bottom_position,d0
+
+22:
+        move.w  scroll_b_vert_break,d3
+        sub.w   d0,d3
+        andi.w  #0x3FF,d3
+
+        cmpi.w  #224,d3
+        blt.s   24f
+23:
+        move.w  #-1,d3
+24:
+        move.w  d3,hint_scroll_b
+
+
+
+        move.w  #0x8A00,d0
+        
+        |cmpi.w  #0,d2
+        |blt.s   3f
+        |add.b   d2,d0
+        |bra.s   4f
+3:
+        add.b   d3,d0
+4:
+        move.w  d0,(a0) /* reg 10 = HINT = 0 */
+
+
+
         move.l  #0x40000010,(a0)
         move.l  current_sky_top_positions,d0
+
+        cmpi.w  #0,hint_scroll_b
+        bge.s   5f
+        move.w  current_scroll_b_bottom_position,d0
+5:
         move.l  d0,(a1)             /* update scroll A and B vertical positions */
 
         move.l  (sp)+,a1
+
+
+
+
 
         move.b  #1,need_bump_fm
         move.b  #1,need_ctrl_int
@@ -3097,8 +3193,10 @@ vert_blank:
         move.w  #0x8174,0xC00004    /* display on, vblank enabled, V28 mode */
 4:
         move.l  (sp)+,a2
+        move.l  (sp)+,d3
         move.l  (sp)+,d2
         move.l  (sp)+,d1
+
         movea.l (sp)+,a0
         move.l  (sp)+,d0
         rte
@@ -3465,6 +3563,9 @@ crsr_y:
 dbug_color:
         dc.w    0
 
+test1:
+        dc.l    0x12345678
+        
 scroll_b_vert_offset:
         dc.w    0
 scroll_a_vert_offset:
@@ -3494,6 +3595,13 @@ current_scroll_a_bottom_position:
         dc.w    0
 current_scroll_b_bottom_position:
         dc.w    0
+
+hint_scroll_a:
+        dc.w    0
+hint_scroll_b:
+        dc.w    0
+test2:
+        dc.l    0x98765432
 
 lump_ptr:
         dc.l    0
