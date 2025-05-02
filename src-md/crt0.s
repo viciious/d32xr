@@ -3659,15 +3659,15 @@ current_scroll_b_bottom_position:
 
 hint_1_scroll_positions:
 hint_1_scroll_a_position:
-        dc.w
+        dc.w    0
 hint_1_scroll_b_position:
-        dc.w
+        dc.w    0
 
 hint_2_scroll_positions:
 hint_2_scroll_a_position:
-        dc.w
+        dc.w    0
 hint_2_scroll_b_position:
-        dc.w
+        dc.w    0
 
 hint_count:
         dc.b    0
