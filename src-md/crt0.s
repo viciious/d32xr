@@ -3001,13 +3001,22 @@ horizontal_blank:
         lea     0xC00000,a1
 
         move.l  #0x40000010,(a0)
-        move.w  current_scroll_b_bottom_position,d0
+
+        cmpi.b  #0,hint_count
+        bhi.s   1f
+0:
+        move.l  hint_1_scroll_positions,d0
+        move.b  second_hint_reg,d1
+        bra.s   2f
+1:
+        move.l  hint_2_scroll_positions,d0
+        move.b  #0xFF,d1
+2:
+        addi.b  #1,hint_count
         move.l  d0,(a1)             /* update scroll A and B vertical positions */
 
 
 
-        |move.w  hint_scroll_b,d1
-        move.w  #0xFF,d1        /* testing!!!!!!!! */
         move.w  #0x8A00,d0
         add.b   d1,d0
         move.w  d0,(a0) /* reg 10 = HINT = 0 */
@@ -3027,9 +3036,8 @@ vert_blank:
         move.l  d1,-(sp)
         move.l  d2,-(sp)
         move.l  d3,-(sp)
-        move.l  a2,-(sp)
-
         move.l  a1,-(sp)
+        move.l  a2,-(sp)
 
         lea     0xC00004,a0
         lea     0xC00000,a1
@@ -3078,15 +3086,13 @@ vert_blank:
 12:
         move.w  scroll_a_vert_break,d2
         sub.w   d0,d2
+        andi.w  #0x3FF,d2
 
-        cmpi.w  #0,d2
-        blt.s   13f
         cmpi.w  #224,d2
         blt.s   14f
 13:
-        move.w  #-1,hint_scroll_a
+        move.w  #-1,d2
 14:
-        move.w  d2,hint_scroll_a
 
 
 
@@ -3113,33 +3119,87 @@ vert_blank:
 23:
         move.w  #-1,d3
 24:
-        move.w  d3,hint_scroll_b
 
 
 
-        move.w  #0x8A00,d0
-        
-        |cmpi.w  #0,d2
-        |blt.s   3f
-        |add.b   d2,d0
-        |bra.s   4f
-3:
-        add.b   d3,d0
-4:
-        move.w  d0,(a0) /* reg 10 = HINT = 0 */
+30:
+        cmpi.w  #0,d2
+        ble.w   31f
+        move.w  current_scroll_a_top_position,d1
+        bra.s   32f
+31:
+        move.w  current_scroll_a_bottom_position,d1
+32:
+        swap    d1
 
+40:
+        cmpi.w  #0,d3
+        ble.w   41f
+        move.w  current_scroll_b_top_position,d1
+        bra.s   50f
+41:
+        move.w  current_scroll_b_bottom_position,d1
 
-
+50:
         move.l  #0x40000010,(a0)
-        move.l  current_sky_top_positions,d0
+        move.l  d1,(a1)             /* Update scroll A and B vertical positions. */
 
-        cmpi.w  #0,hint_scroll_b
-        bge.s   5f
-        move.w  current_scroll_b_bottom_position,d0
+
+
+60:
+        move.b  #0xFF,second_hint_reg
+        move.b  #0,hint_count
+        move.w  #0x8AFF,d0
+
+        move.l  d1,hint_1_scroll_positions
+
+        cmp.w   d2,d3
+        blt.s   6f
+3:
+        cmpi.w  #0,d3
+        ble.s   5f
+        move.b  d3,d0               /* Scroll B will have the first HINT. */
+        move.w  current_scroll_b_bottom_position,d1
+        move.w  d1,hint_1_scroll_b_position
+4:
+        cmpi.w  #0,d2
+        ble.s   9f
+        move.b  d2,second_hint_reg  /* Scroll A will have the second HINT. */
+        move.w  d1,hint_2_scroll_b_position
+        move.w  current_scroll_a_bottom_position,d1
+        move.w  d1,hint_2_scroll_a_position
+        bra.s   9f
 5:
-        move.l  d0,(a1)             /* update scroll A and B vertical positions */
+        cmpi.w  #0,d2
+        ble.s   9f
+        move.b  d2,d0               /* Scroll A will have the only HINT. */
+        move.w  current_scroll_a_bottom_position,d1
+        move.w  d1,hint_1_scroll_a_position
+        bra.s   9f
+6:
+        cmpi.w  #0,d2
+        ble.s   8f
+        move.b  d2,d0               /* Scroll A will have the first HINT. */
+        move.w  current_scroll_a_bottom_position,d1
+        move.w  d1,hint_1_scroll_a_position
+7:
+        cmpi.w  #0,d3
+        ble.s   9f
+        move.b  d3,second_hint_reg  /* Scroll B will have the second HINT. */
+        move    d1,hint_2_scroll_a_position
+        move.w  current_scroll_b_bottom_position,d1
+        move.w  d1,hint_2_scroll_b_position
+        bra.s   9f
+8:
+        cmpi.w  #0,d3
+        ble.s   9f
+        move.b  d3,d0               /* Scroll B will have the only HINT. */
+        move.w  current_scroll_b_bottom_position,d1
+        move.w  d1,hint_1_scroll_b_position
+        |bra.s   9f
+9:
+        move.w  d0,(a0)             /* reg 10 = HINT = 0 */
 
-        move.l  (sp)+,a1
 
 
 
@@ -3193,6 +3253,7 @@ vert_blank:
         move.w  #0x8174,0xC00004    /* display on, vblank enabled, V28 mode */
 4:
         move.l  (sp)+,a2
+        move.l  (sp)+,a1
         move.l  (sp)+,d3
         move.l  (sp)+,d2
         move.l  (sp)+,d1
@@ -3596,10 +3657,24 @@ current_scroll_a_bottom_position:
 current_scroll_b_bottom_position:
         dc.w    0
 
-hint_scroll_a:
-        dc.w    0
-hint_scroll_b:
-        dc.w    0
+hint_1_scroll_positions:
+hint_1_scroll_a_position:
+        dc.w
+hint_1_scroll_b_position:
+        dc.w
+
+hint_2_scroll_positions:
+hint_2_scroll_a_position:
+        dc.w
+hint_2_scroll_b_position:
+        dc.w
+
+hint_count:
+        dc.b    0
+second_hint_reg:
+        dc.b    0
+        
+        .align  4
 test2:
         dc.l    0x98765432
 
