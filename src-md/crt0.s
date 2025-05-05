@@ -3122,6 +3122,7 @@ vert_blank:
 
 
 
+        /* Figure out what section will be drawn at the top of the screen. */
 30:
         cmpi.w  #0,d2
         ble.w   31f
@@ -3146,6 +3147,7 @@ vert_blank:
 
 
 
+        /* Figure out the HINT intervals and corresponding scroll positions. */
 60:
         move.b  #0xFF,second_hint_reg
         move.b  #0,hint_count
@@ -3154,7 +3156,7 @@ vert_blank:
         move.l  d1,hint_1_scroll_positions
 
         cmp.w   d2,d3
-        blt.s   6f
+        bgt.s   6f
 3:
         cmpi.w  #0,d3
         ble.s   5f
@@ -3186,7 +3188,7 @@ vert_blank:
         cmpi.w  #0,d3
         ble.s   9f
         move.b  d3,second_hint_reg  /* Scroll B will have the second HINT. */
-        move    d1,hint_2_scroll_a_position
+        move.w  d1,hint_2_scroll_a_position
         move.w  current_scroll_b_bottom_position,d1
         move.w  d1,hint_2_scroll_b_position
         bra.s   9f
@@ -3623,9 +3625,6 @@ crsr_y:
         dc.w    0
 dbug_color:
         dc.w    0
-
-test1:
-        dc.l    0x12345678
         
 scroll_b_vert_offset:
         dc.w    0
@@ -3675,8 +3674,6 @@ second_hint_reg:
         dc.b    0
         
         .align  4
-test2:
-        dc.l    0x98765432
 
 lump_ptr:
         dc.l    0
