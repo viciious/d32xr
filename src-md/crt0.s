@@ -3002,24 +3002,26 @@ horizontal_blank:
 
         move.l  #0x40000010,(a0)
 
-        cmpi.b  #0,hint_count
-        bhi.s   1f
+        move.w  #0x8AFF,d1
+        cmpi.b  #1,hint_count
+        beq.s   1f
+        cmpi.b  #2,hint_count
+        beq.s   2f
 0:
-        move.l  hint_1_scroll_positions,d0
-        move.b  second_hint_reg,d1
-        bra.s   2f
+        move.b  hint_1_interval,d1
+        bra.s   4f
 1:
-        move.l  hint_2_scroll_positions,d0
-        move.b  #0xFF,d1
+        move.l  hint_1_scroll_positions,d0
+        move.b  hint_2_interval,d1
+        bra.s   3f
 2:
-        addi.b  #1,hint_count
+        move.l  hint_2_scroll_positions,d0
+        |bra.s   3f
+3:
         move.l  d0,(a1)             /* update scroll A and B vertical positions */
-
-
-
-        move.w  #0x8A00,d0
-        add.b   d1,d0
-        move.w  d0,(a0) /* reg 10 = HINT = 0 */
+4:
+        move.w  d1,(a0) /* reg 10 = HINT = 0 */
+        addi.b  #1,hint_count
 
 
 
@@ -3149,9 +3151,11 @@ vert_blank:
 
         /* Figure out the HINT intervals and corresponding scroll positions. */
 60:
-        move.b  #0xFF,second_hint_reg
+        move.b  #0xFF,hint_1_interval
+        move.b  #0xFF,hint_2_interval
         move.b  #0,hint_count
-        move.w  #0x8AFF,d0
+        move.w  #0x8A00,d0
+        move.w  d0,(a0)             /* reg 10 = HINT = 0 */
 
         move.l  d1,hint_1_scroll_positions
 
@@ -3160,13 +3164,16 @@ vert_blank:
 3:
         cmpi.w  #0,d3
         ble.s   5f
-        move.b  d3,d0               /* Scroll B will have the first HINT. */
+        |subi.b  #2,d3
+        move.b  d3,hint_1_interval  /* Scroll B will have the first HINT. */
         move.w  current_scroll_b_bottom_position,d1
         move.w  d1,hint_1_scroll_b_position
 4:
         cmpi.w  #0,d2
-        ble.s   9f
-        move.b  d2,second_hint_reg  /* Scroll A will have the second HINT. */
+        ble.w   9f
+        sub.b   d3,d2
+        |add.b   #1,d2
+        move.b  d2,hint_2_interval  /* Scroll A will have the second HINT. */
         move.w  d1,hint_2_scroll_b_position
         move.w  current_scroll_a_bottom_position,d1
         move.w  d1,hint_2_scroll_a_position
@@ -3174,20 +3181,24 @@ vert_blank:
 5:
         cmpi.w  #0,d2
         ble.s   9f
-        move.b  d2,d0               /* Scroll A will have the only HINT. */
+        |subi.b  #2,d2
+        move.b  d2,hint_1_interval  /* Scroll A will have the only HINT. */
         move.w  current_scroll_a_bottom_position,d1
         move.w  d1,hint_1_scroll_a_position
         bra.s   9f
 6:
         cmpi.w  #0,d2
         ble.s   8f
-        move.b  d2,d0               /* Scroll A will have the first HINT. */
+        |subi.b  #2,d2
+        move.b  d2,hint_1_interval  /* Scroll A will have the first HINT. */
         move.w  current_scroll_a_bottom_position,d1
         move.w  d1,hint_1_scroll_a_position
 7:
         cmpi.w  #0,d3
         ble.s   9f
-        move.b  d3,second_hint_reg  /* Scroll B will have the second HINT. */
+        sub.b   d2,d3
+        |add.b   #1,d3
+        move.b  d3,hint_2_interval  /* Scroll B will have the second HINT. */
         move.w  d1,hint_2_scroll_a_position
         move.w  current_scroll_b_bottom_position,d1
         move.w  d1,hint_2_scroll_b_position
@@ -3195,12 +3206,15 @@ vert_blank:
 8:
         cmpi.w  #0,d3
         ble.s   9f
-        move.b  d3,d0               /* Scroll B will have the only HINT. */
+        |subi.b  #2,d3
+        move.b  d3,hint_1_interval  /* Scroll B will have the only HINT. */
         move.w  current_scroll_b_bottom_position,d1
         move.w  d1,hint_1_scroll_b_position
         |bra.s   9f
 9:
-        move.w  d0,(a0)             /* reg 10 = HINT = 0 */
+        |move.w  #0,hint_1_scroll_a_position     | TESTING!!!!!!!!
+        |move.w  #0,hint_1_scroll_b_position     | TESTING!!!!!!!!
+        |move.w  #0x8A80,d0                      | TESTING!!!!!!!!
 
 
 
@@ -3625,6 +3639,9 @@ crsr_y:
         dc.w    0
 dbug_color:
         dc.w    0
+
+test1:
+        dc.l    0x12345678
         
 scroll_b_vert_offset:
         dc.w    0
@@ -3670,10 +3687,14 @@ hint_2_scroll_b_position:
 
 hint_count:
         dc.b    0
-second_hint_reg:
+hint_1_interval:
+        dc.b    0
+hint_2_interval:
         dc.b    0
         
         .align  4
+test2:
+        dc.l    0x98765432
 
 lump_ptr:
         dc.l    0
