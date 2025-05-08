@@ -2994,32 +2994,46 @@ rst_ym2612:
 horizontal_blank:
         move.l  d0,-(sp)
         move.l  d1,-(sp)
+        move.l  d2,-(sp)        | TESTING!!!
         move.l  a0,-(sp)
         move.l  a1,-(sp)
+
+        lea     0xC00008,a0     | TESTING!!!
+        move.w  (a0),d2         | TESTING!!!
 
         lea     0xC00004,a0
         lea     0xC00000,a1
 
         move.l  #0x40000010,(a0)
 
-        move.w  #0x8AFF,d1
+        move.w  #0x8A00,d1
         cmpi.b  #1,hint_count
         beq.s   1f
         cmpi.b  #2,hint_count
         beq.s   2f
+        cmpi.b  #3,hint_count
+        beq.s   3f
 0:
         move.b  hint_1_interval,d1
-        bra.s   4f
+        move.w  d2,record_hv0   | TESTING!!!
+        bra.s   5f
 1:
-        move.l  hint_1_scroll_positions,d0
         move.b  hint_2_interval,d1
-        bra.s   3f
+        move.w  d2,record_hv1   | TESTING!!!
+        bra.s   5f
 2:
-        move.l  hint_2_scroll_positions,d0
-        |bra.s   3f
+        move.b  #0xFF,d1
+        move.l  hint_1_scroll_positions,d0
+        move.w  d2,record_hv2   | TESTING!!!
+        bra.s   4f
 3:
-        move.l  d0,(a1)             /* update scroll A and B vertical positions */
+        |move.b  #0,d1
+        move.l  hint_2_scroll_positions,d0
+        move.w  d2,record_hv3   | TESTING!!!
+        |bra.s   4f
 4:
+        move.l  d0,(a1)             /* update scroll A and B vertical positions */
+5:
         move.w  d1,(a0) /* reg 10 = HINT = 0 */
         addi.b  #1,hint_count
 
@@ -3027,6 +3041,7 @@ horizontal_blank:
 
         move.l  (sp)+,a1
         move.l  (sp)+,a0
+        move.l  (sp)+,d2        | TESTING!!!
         move.l  (sp)+,d1
         move.l  (sp)+,d0
         rte
@@ -3153,9 +3168,6 @@ vert_blank:
 60:
         move.b  #0xFF,hint_1_interval
         move.b  #0xFF,hint_2_interval
-        move.b  #0,hint_count
-        move.w  #0x8A00,d0
-        move.w  d0,(a0)             /* reg 10 = HINT = 0 */
 
         move.l  d1,hint_1_scroll_positions
 
@@ -3215,6 +3227,11 @@ vert_blank:
         |move.w  #0,hint_1_scroll_a_position     | TESTING!!!!!!!!
         |move.w  #0,hint_1_scroll_b_position     | TESTING!!!!!!!!
         |move.w  #0x8A80,d0                      | TESTING!!!!!!!!
+
+        move.b  #0,hint_count
+
+        move.w  #0x8A00,d0
+        move.w  d0,(a0)             /* reg 10 = HINT = 0 */
 
 
 
@@ -3693,6 +3710,18 @@ hint_2_interval:
         dc.b    0
         
         .align  4
+
+record_hv0:
+        dc.w    0
+record_hv1:
+        dc.w    0
+record_hv2:
+        dc.w    0
+record_hv3:
+        dc.w    0
+
+        .align  4
+
 test2:
         dc.l    0x98765432
 
