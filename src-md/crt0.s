@@ -1758,10 +1758,16 @@ load_md_sky:
         move.w  d0,(a0) /* reg 16 */
 
         move.w  (a2)+,d0
-        move.w  d0,scroll_b_vert_offset
+        move.w  d0,scroll_b_vert_offset_top
 
         move.w  (a2)+,d0
-        move.w  d0,scroll_a_vert_offset
+        move.w  d0,scroll_b_vert_offset_bottom
+
+        move.w  (a2)+,d0
+        move.w  d0,scroll_a_vert_offset_top
+
+        move.w  (a2)+,d0
+        move.w  d0,scroll_a_vert_offset_bottom
 
         move.w  (a2)+,d0
         move.w  d0,scroll_b_vert_break
@@ -1915,9 +1921,10 @@ scroll_md_sky:
         move.b  scroll_b_vert_rate_top,d1
         move.w  d4,d5               /* scroll_y_offset */
         lsr.w   d1,d5
-        move.w  d3,d1
+        move.w  scroll_b_vert_offset_top,d1
+        sub.w   d3,d1               /* scroll_y_base */
+        sub.w   d2,d1               /* scroll_y_pan */
         sub.w   d5,d1               /* position = (scroll_y_base - d5 - scroll_y_pan) & 0x3FF */
-        sub.w   d2,d1
         |andi.w  #0x3FF,d1
         move.w  d1,current_scroll_b_top_position
 
@@ -1925,9 +1932,10 @@ scroll_md_sky:
         move.b  scroll_b_vert_rate_bottom,d1
         move.w  d4,d5               /* scroll_y_offset */
         lsr.w   d1,d5
-        move.w  d3,d1
+        move.w  scroll_b_vert_offset_bottom,d1
+        sub.w   d3,d1               /* scroll_y_base */
+        sub.w   d2,d1               /* scroll_y_pan */
         sub.w   d5,d1               /* position = (scroll_y_base - d5 - scroll_y_pan) & 0x3FF */
-        sub.w   d2,d1
         |andi.w  #0x3FF,d1
         move.w  d1,current_scroll_b_bottom_position
 
@@ -1935,9 +1943,10 @@ scroll_md_sky:
         move.b  scroll_a_vert_rate_top,d1
         move.w  d4,d5               /* scroll_y_offset */
         lsr.w   d1,d5
-        move.w  d3,d1
+        move.w  scroll_a_vert_offset_top,d1
+        sub.w   d3,d1               /* scroll_y_base */
+        sub.w   d2,d1               /* scroll_y_pan */
         sub.w   d5,d1               /* position = (scroll_y_base - d5 - scroll_y_pan) & 0x3FF */
-        sub.w   d2,d1
         |andi.w  #0x3FF,d1
         move.w  d1,current_scroll_a_top_position
 
@@ -1945,9 +1954,10 @@ scroll_md_sky:
         move.b  scroll_a_vert_rate_bottom,d1
         move.w  d4,d5               /* scroll_y_offset */
         lsr.w   d1,d5
-        move.w  d3,d1
+        move.w  scroll_a_vert_offset_bottom,d1
+        sub.w   d3,d1               /* scroll_y_base */
+        sub.w   d2,d1               /* scroll_y_pan */
         sub.w   d5,d1               /* position = (scroll_y_base - d5 - scroll_y_pan) & 0x3FF */
-        sub.w   d2,d1
         |andi.w  #0x3FF,d1
         move.w  d1,current_scroll_a_bottom_position
 
@@ -1989,57 +1999,6 @@ scroll_md_sky:
         move.w  #0,0xA15120         /* done */
 
         bra     main_loop
-
-/*
-TestSine:
-        dc.w    0       |0
-        dc.w    0
-
-        dc.w    2       |22.5
-        dc.w    0
-
-        dc.w    4       |45
-        dc.w    0
-
-        dc.w    6       |67.5
-        dc.w    0
-
-        dc.w    6       |90
-        dc.w    0
-
-        dc.w    6       |112.5
-        dc.w    0
-
-        dc.w    4       |135
-        dc.w    0
-
-        dc.w    2      |157.5
-        dc.w    0
-
-        dc.w    0      |180
-        dc.w    0
-
-        dc.w    -2      |202.5
-        dc.w    0
-
-        dc.w    -4      |225
-        dc.w    0
-
-        dc.w    -6      |247.5
-        dc.w    0
-
-        dc.w    -6      |270
-        dc.w    0
-
-        dc.w    -6      |292.5
-        dc.w    0
-
-        dc.w    -4      |315
-        dc.w    0
-
-        dc.w    -2      |337.5
-        dc.w    0
-*/
 
 
 fade_md_palette:
@@ -2994,12 +2953,8 @@ rst_ym2612:
 horizontal_blank:
         move.l  d0,-(sp)
         move.l  d1,-(sp)
-        move.l  d2,-(sp)        | TESTING!!!
         move.l  a0,-(sp)
         move.l  a1,-(sp)
-
-        lea     0xC00008,a0     | TESTING!!!
-        move.w  (a0),d2         | TESTING!!!
 
         lea     0xC00004,a0
         lea     0xC00000,a1
@@ -3015,21 +2970,17 @@ horizontal_blank:
         beq.s   3f
 0:
         move.b  hint_1_interval,d1
-        move.w  d2,record_hv0   | TESTING!!!
         bra.s   5f
 1:
         move.b  hint_2_interval,d1
-        move.w  d2,record_hv1   | TESTING!!!
         bra.s   5f
 2:
         move.b  #0xFF,d1
         move.l  hint_1_scroll_positions,d0
-        move.w  d2,record_hv2   | TESTING!!!
         bra.s   4f
 3:
         |move.b  #0,d1
         move.l  hint_2_scroll_positions,d0
-        move.w  d2,record_hv3   | TESTING!!!
         |bra.s   4f
 4:
         move.l  d0,(a1)             /* update scroll A and B vertical positions */
@@ -3037,11 +2988,8 @@ horizontal_blank:
         move.w  d1,(a0) /* reg 10 = HINT = 0 */
         addi.b  #1,hint_count
 
-
-
         move.l  (sp)+,a1
         move.l  (sp)+,a0
-        move.l  (sp)+,d2        | TESTING!!!
         move.l  (sp)+,d1
         move.l  (sp)+,d0
         rte
@@ -3061,32 +3009,6 @@ vert_blank:
 
 
 
-|        move.w  current_scroll_b_top_position,d1
-|        moveq   #0,d3
-|0:
-|        move.w  current_scroll_b_bottom_position,d2
-|        cmp.w   d1,d2
-|        bgt.s   1f
-|        move.w  d2,d1
-|        moveq   #1,d3
-|1:
-|        move.w  current_scroll_a_top_position,d2
-|        cmp.w   d1,d2
-|        bgt.s   2f
-|        move.w  d2,d1
-|        moveq   #2,d3
-|2:
-|        move.w  current_scroll_a_bottom_position,d2
-|        cmp.w   d1,d2
-|        bgt.s   3f
-|        move.w  d2,d1
-|        moveq   #3,d3
-|3:
-|        move.b  d3,d0
-
-
-
-
         /* Calculate the HINT line for Scroll A section break */
         move.b  scroll_a_vert_rate_top,d0
         move.b  scroll_a_vert_rate_bottom,d1
@@ -3101,14 +3023,10 @@ vert_blank:
         move.w  current_scroll_a_bottom_position,d0
 
 12:
-        move.w  scroll_a_vert_break,d2
-        sub.w   d0,d2
-        andi.w  #0x3FF,d2
-
-        cmpi.w  #224,d2
+        cmpi.w  #0x200,d2
         blt.s   14f
 13:
-        move.w  #-1,d2
+        move.w  #0,d2
 14:
 
 
@@ -3131,10 +3049,10 @@ vert_blank:
         sub.w   d0,d3
         andi.w  #0x3FF,d3
 
-        cmpi.w  #224,d3
+        cmpi.w  #0x200,d3
         blt.s   24f
 23:
-        move.w  #-1,d3
+        move.w  #0,d3
 24:
 
 
@@ -3171,8 +3089,26 @@ vert_blank:
 
         move.l  d1,hint_1_scroll_positions
 
+        cmpi.w  #0xE0,d2
+        blt.s   0f
+        move.w  #0,d2           /* Interrupt intervals <=0 and >=224 will be skipped. */
+0:
+        cmpi.w  #0xE0,d3
+        blt.s   1f
+        move.w  #0,d3           /* Interrupt intervals <=0 and >=224 will be skipped. */
+1:
+
         cmp.w   d2,d3
         bgt.s   6f
+        blt.s   3f
+2:
+        cmpi.w  #0,d2
+        ble.w   9f
+        move.b  d2,hint_1_interval  /* Scroll B and A will share one HINT. */
+        move.b  current_scroll_a_bottom_position,d1
+        move.w  d1,hint_1_scroll_a_position
+        move.w  d1,hint_1_scroll_b_position
+        bra.w   9f
 3:
         cmpi.w  #0,d3
         ble.s   5f
@@ -3224,16 +3160,11 @@ vert_blank:
         move.w  d1,hint_1_scroll_b_position
         |bra.s   9f
 9:
-        |move.w  #0,hint_1_scroll_a_position     | TESTING!!!!!!!!
-        |move.w  #0,hint_1_scroll_b_position     | TESTING!!!!!!!!
-        |move.w  #0x8A80,d0                      | TESTING!!!!!!!!
 
         move.b  #0,hint_count
 
         move.w  #0x8A00,d0
         move.w  d0,(a0)             /* reg 10 = HINT = 0 */
-
-
 
 
 
@@ -3656,13 +3587,14 @@ crsr_y:
         dc.w    0
 dbug_color:
         dc.w    0
-
-test1:
-        dc.l    0x12345678
         
-scroll_b_vert_offset:
+scroll_b_vert_offset_top:
         dc.w    0
-scroll_a_vert_offset:
+scroll_b_vert_offset_bottom:
+        dc.w    0
+scroll_a_vert_offset_top:
+        dc.w    0
+scroll_a_vert_offset_bottom:
         dc.w    0
 scroll_b_vert_break:
         dc.w    0
@@ -3710,20 +3642,6 @@ hint_2_interval:
         dc.b    0
         
         .align  4
-
-record_hv0:
-        dc.w    0
-record_hv1:
-        dc.w    0
-record_hv2:
-        dc.w    0
-record_hv3:
-        dc.w    0
-
-        .align  4
-
-test2:
-        dc.l    0x98765432
 
 lump_ptr:
         dc.l    0
