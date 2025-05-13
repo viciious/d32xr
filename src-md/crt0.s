@@ -133,7 +133,7 @@ _start:
 
 | 0x880880 - 68000 Level 4 interrupt handler - HBlank IRQ
 
-        rte
+        jmp     horizontal_blank    /* This jump is only used by Gens */
 
         .align  64
 
@@ -1731,6 +1731,9 @@ load_md_sky:
 
         lea     0xC00004,a0
         lea     0xC00000,a1
+
+        move.w  #0x8016,(a0) /* reg 0 = /IE1 (enable HBL INT), /M3 (enable read H/V cnt) */
+        move.w  #0x8174,(a0) /* reg 1 = /DISP (display off), /IE0 (enable VBL INT), M1 (DMA enabled), /M2 (V28 mode) */
         ||move.w  #0x8230,(a0) /* reg 2 = Name Tbl A = 0xC000 */
         ||move.w  #0x832C,(a0) /* reg 3 = Name Tbl W = 0xB000 */
         ||move.w  #0x8407,(a0) /* reg 4 = Name Tbl B = 0xE000 */
@@ -1760,20 +1763,42 @@ load_md_sky:
         move.w  d0,(a0) /* reg 16 */
 
         move.w  (a2)+,d0
-        move.w  d0,scroll_b_vert_offset
+        move.w  d0,scroll_b_vert_offset_top
 
         move.w  (a2)+,d0
-        move.w  d0,scroll_a_vert_offset
+        move.w  d0,scroll_b_vert_offset_bottom
+
+        move.w  (a2)+,d0
+        move.w  d0,scroll_a_vert_offset_top
+
+        move.w  (a2)+,d0
+        move.w  d0,scroll_a_vert_offset_bottom
+
+        move.w  (a2)+,d0
+        move.w  d0,scroll_b_vert_break
+
+        move.w  (a2)+,d0
+        move.w  d0,scroll_a_vert_break
 
         move.b  (a2)+,d1
         move.b  #16,d0
         sub.b   d1,d0
-        move.b  d0,scroll_b_vert_rate
+        move.b  d0,scroll_b_vert_rate_top
 
         move.b  (a2)+,d1
         move.b  #16,d0
         sub.b   d1,d0
-        move.b  d0,scroll_a_vert_rate
+        move.b  d0,scroll_b_vert_rate_bottom
+
+        move.b  (a2)+,d1
+        move.b  #16,d0
+        sub.b   d1,d0
+        move.b  d0,scroll_a_vert_rate_top
+
+        move.b  (a2)+,d1
+        move.b  #16,d0
+        sub.b   d1,d0
+        move.b  d0,scroll_a_vert_rate_bottom
 
 
 
@@ -1856,8 +1881,6 @@ load_md_sky:
 
 
 scroll_md_sky:
-        move.w  #0x2700,sr          /* disable ints */
-
         move.l  a0,-(sp)
         move.l  a1,-(sp)
         move.l  d0,-(sp)
@@ -1866,67 +1889,84 @@ scroll_md_sky:
         move.l  d3,-(sp)
         move.l  d4,-(sp)
         move.l  d5,-(sp)
+        move.l  d6,-(sp)
+        move.l  d7,-(sp)
 
         lea     0xC00004,a0
         lea     0xC00000,a1
 
         /* Vertical */
         move.l  #0x40000010,(a0)
-        moveq   #0,d4
-        moveq   #0,d5
-        move.w  0xA15122,d4         /* scroll_y_base */
-        move.w  d4,d5
         moveq   #0,d0
         moveq   #0,d1
         moveq   #0,d2
-        move.b  scroll_b_vert_rate,d0
-        move.b  scroll_a_vert_rate,d1
-        move.b  d0,d2
-        sub.l   d1,d2
-        lsl.w   d2,d5
+        moveq   #0,d3
+        moveq   #0,d4
+        moveq   #0,d5
+        moveq   #0,d6
+        moveq   #0,d7
 
-        move.w  #0,0xA15120         /* done with horizontal scroll */
+        move.w  0xA15122,d3         /* scroll_y_base */
+
+        move.w  #0,0xA15120         /* request more data */
 2:
         move.b  0xA15121,d0         /* wait on handshake in COMM0 */
         cmpi.b  #0x02,d0
         bne.b   2b
-        move.w  0xA15122,d1         /* scroll_y_offset */
-        add.w   d4,d1
-        move.w  d1,d3
-
-        move.b  scroll_a_vert_rate,d0
-        lsr.w   d0,d1
-        move.w  scroll_a_vert_offset,d0
-        sub.w   d1,d0
-        sub.w   d5,d0
-        andi.w  #0x3FF,d0
-
-        move.w  d0,d2
-        swap    d2
-
-        move.b  scroll_b_vert_rate,d0
-        lsr.w   d0,d3
-        move.w  scroll_b_vert_offset,d0
-        sub.w   d3,d0
-        sub.w   d4,d0
-        andi.w  #0x3FF,d0
-
-        or.w    d0,d2
-
-        move.w  #0,0xA15120         /* done with horizontal scroll */
+        move.w  0xA15122,d4         /* scroll_y_offset */
+        
+        move.w  #0,0xA15120         /* request more data */
 3:
         move.b  0xA15121,d0         /* wait on handshake in COMM0 */
         cmpi.b  #0x03,d0
         bne.b   3b
-        move.w  0xA15122,d0         /* scroll_y_pan */
-        sub.w   d0,d2
-        swap    d2
-        sub.w   d0,d2
-        swap    d2
+        move.w  0xA15122,d2         /* scroll_y_pan */
 
-        move.l  d2,(a1)
+        moveq   #0,d1
+        move.b  scroll_b_vert_rate_top,d1
+        move.w  d4,d5               /* scroll_y_offset */
+        lsr.w   d1,d5
+        move.w  scroll_b_vert_offset_top,d1
+        sub.w   d3,d1               /* scroll_y_base */
+        sub.w   d2,d1               /* scroll_y_pan */
+        sub.w   d5,d1               /* position = (scroll_y_base - d5 - scroll_y_pan) & 0x3FF */
+        |andi.w  #0x3FF,d1
+        move.w  d1,current_scroll_b_top_position
 
-        move.w  #0,0xA15120         /* done with horizontal scroll */
+        moveq   #0,d1
+        move.b  scroll_b_vert_rate_bottom,d1
+        move.w  d4,d5               /* scroll_y_offset */
+        lsr.w   d1,d5
+        move.w  scroll_b_vert_offset_bottom,d1
+        sub.w   d3,d1               /* scroll_y_base */
+        sub.w   d2,d1               /* scroll_y_pan */
+        sub.w   d5,d1               /* position = (scroll_y_base - d5 - scroll_y_pan) & 0x3FF */
+        |andi.w  #0x3FF,d1
+        move.w  d1,current_scroll_b_bottom_position
+
+        moveq   #0,d1
+        move.b  scroll_a_vert_rate_top,d1
+        move.w  d4,d5               /* scroll_y_offset */
+        lsr.w   d1,d5
+        move.w  scroll_a_vert_offset_top,d1
+        sub.w   d3,d1               /* scroll_y_base */
+        sub.w   d2,d1               /* scroll_y_pan */
+        sub.w   d5,d1               /* position = (scroll_y_base - d5 - scroll_y_pan) & 0x3FF */
+        |andi.w  #0x3FF,d1
+        move.w  d1,current_scroll_a_top_position
+
+        moveq   #0,d1
+        move.b  scroll_a_vert_rate_bottom,d1
+        move.w  d4,d5               /* scroll_y_offset */
+        lsr.w   d1,d5
+        move.w  scroll_a_vert_offset_bottom,d1
+        sub.w   d3,d1               /* scroll_y_base */
+        sub.w   d2,d1               /* scroll_y_pan */
+        sub.w   d5,d1               /* position = (scroll_y_base - d5 - scroll_y_pan) & 0x3FF */
+        |andi.w  #0x3FF,d1
+        move.w  d1,current_scroll_a_bottom_position
+
+        move.w  #0,0xA15120         /* done with vertical scroll */
 4:
         move.b  0xA15121,d0         /* wait on handshake in COMM0 */
         cmpi.b  #0x04,d0
@@ -1950,6 +1990,8 @@ scroll_md_sky:
         cmp.w   #0,d2
         bne.b   0b
 
+        move.l  (sp)+,d7
+        move.l  (sp)+,d6
         move.l  (sp)+,d5
         move.l  (sp)+,d4
         move.l  (sp)+,d3
@@ -1961,64 +2003,11 @@ scroll_md_sky:
 
         move.w  #0,0xA15120         /* done */
 
-        move.w  #0x2000,sr          /* enable ints */
-
         bra     main_loop
-
-/*
-TestSine:
-        dc.w    0       |0
-        dc.w    0
-
-        dc.w    2       |22.5
-        dc.w    0
-
-        dc.w    4       |45
-        dc.w    0
-
-        dc.w    6       |67.5
-        dc.w    0
-
-        dc.w    6       |90
-        dc.w    0
-
-        dc.w    6       |112.5
-        dc.w    0
-
-        dc.w    4       |135
-        dc.w    0
-
-        dc.w    2      |157.5
-        dc.w    0
-
-        dc.w    0      |180
-        dc.w    0
-
-        dc.w    -2      |202.5
-        dc.w    0
-
-        dc.w    -4      |225
-        dc.w    0
-
-        dc.w    -6      |247.5
-        dc.w    0
-
-        dc.w    -6      |270
-        dc.w    0
-
-        dc.w    -6      |292.5
-        dc.w    0
-
-        dc.w    -4      |315
-        dc.w    0
-
-        dc.w    -2      |337.5
-        dc.w    0
-*/
 
 
 fade_md_palette:
-        move.w  #0x2700,sr          /* disable ints */
+        |move.w  #0x2700,sr          /* disable ints */
 
         move.l  a0,-(sp)
         move.l  a1,-(sp)
@@ -2967,6 +2956,47 @@ rst_ym2612:
 | Horizontal Blank handler
 
 horizontal_blank:
+        move.l  d0,-(sp)
+        move.l  d1,-(sp)
+        move.l  a0,-(sp)
+        move.l  a1,-(sp)
+
+        lea     0xC00004,a0
+        lea     0xC00000,a1
+
+        move.l  #0x40000010,(a0)
+
+        move.w  #0x8A00,d1
+        cmpi.b  #1,hint_count
+        beq.s   1f
+        cmpi.b  #2,hint_count
+        beq.s   2f
+        cmpi.b  #3,hint_count
+        beq.s   3f
+0:
+        move.b  hint_1_interval,d1
+        bra.s   5f
+1:
+        move.b  hint_2_interval,d1
+        bra.s   5f
+2:
+        move.b  #0xFF,d1
+        move.l  hint_1_scroll_positions,d0
+        bra.s   4f
+3:
+        |move.b  #0,d1
+        move.l  hint_2_scroll_positions,d0
+        |bra.s   4f
+4:
+        move.l  d0,(a1)             /* update scroll A and B vertical positions */
+5:
+        move.w  d1,(a0) /* reg 10 = HINT = 0 */
+        addi.b  #1,hint_count
+
+        move.l  (sp)+,a1
+        move.l  (sp)+,a0
+        move.l  (sp)+,d1
+        move.l  (sp)+,d0
         rte
 
 
@@ -2975,7 +3005,174 @@ horizontal_blank:
 vert_blank:
         move.l  d1,-(sp)
         move.l  d2,-(sp)
+        move.l  d3,-(sp)
+        move.l  a1,-(sp)
         move.l  a2,-(sp)
+
+        lea     0xC00004,a0
+        lea     0xC00000,a1
+
+
+
+        /* Calculate the HINT line for Scroll A section break */
+        move.b  scroll_a_vert_rate_top,d0
+        move.b  scroll_a_vert_rate_bottom,d1
+        cmp.b   d0,d1
+        blt.s   11f
+
+10:      /* Top section has priority */
+        move.w  current_scroll_a_top_position,d0
+        bra.s   12f
+
+11:      /* Bottom section has priority */
+        move.w  current_scroll_a_bottom_position,d0
+
+12:
+        cmpi.w  #0x200,d2
+        blt.s   14f
+13:
+        move.w  #0,d2
+14:
+
+
+
+        /* Calculate the HINT line for Scroll B section break */
+        move.b  scroll_b_vert_rate_top,d0
+        move.b  scroll_b_vert_rate_bottom,d1
+        cmp.b   d0,d1
+        blt.s   21f
+
+20:      /* Top section has priority */
+        move.w  current_scroll_b_top_position,d0
+        bra.s   22f
+
+21:      /* Bottom section has priority */
+        move.w   current_scroll_b_bottom_position,d0
+
+22:
+        move.w  scroll_b_vert_break,d3
+        sub.w   d0,d3
+        andi.w  #0x3FF,d3
+
+        cmpi.w  #0x200,d3
+        blt.s   24f
+23:
+        move.w  #0,d3
+24:
+
+
+
+        /* Figure out what section will be drawn at the top of the screen. */
+30:
+        cmpi.w  #0,d2
+        ble.w   31f
+        move.w  current_scroll_a_top_position,d1
+        bra.s   32f
+31:
+        move.w  current_scroll_a_bottom_position,d1
+32:
+        swap    d1
+
+40:
+        cmpi.w  #0,d3
+        ble.w   41f
+        move.w  current_scroll_b_top_position,d1
+        bra.s   50f
+41:
+        move.w  current_scroll_b_bottom_position,d1
+
+50:
+        move.l  #0x40000010,(a0)
+        move.l  d1,(a1)             /* Update scroll A and B vertical positions. */
+
+
+
+        /* Figure out the HINT intervals and corresponding scroll positions. */
+60:
+        move.b  #0xFF,hint_1_interval
+        move.b  #0xFF,hint_2_interval
+
+        move.l  d1,hint_1_scroll_positions
+
+        cmpi.w  #0xE0,d2
+        blt.s   0f
+        move.w  #0,d2           /* Interrupt intervals <=0 and >=224 will be skipped. */
+0:
+        cmpi.w  #0xE0,d3
+        blt.s   1f
+        move.w  #0,d3           /* Interrupt intervals <=0 and >=224 will be skipped. */
+1:
+
+        cmp.w   d2,d3
+        bgt.s   6f
+        blt.s   3f
+2:
+        cmpi.w  #0,d2
+        ble.w   9f
+        move.b  d2,hint_1_interval  /* Scroll B and A will share one HINT. */
+        move.b  current_scroll_a_bottom_position,d1
+        move.w  d1,hint_1_scroll_a_position
+        move.w  d1,hint_1_scroll_b_position
+        bra.w   9f
+3:
+        cmpi.w  #0,d3
+        ble.s   5f
+        |subi.b  #2,d3
+        move.b  d3,hint_1_interval  /* Scroll B will have the first HINT. */
+        move.w  current_scroll_b_bottom_position,d1
+        move.w  d1,hint_1_scroll_b_position
+4:
+        cmpi.w  #0,d2
+        ble.w   9f
+        sub.b   d3,d2
+        |add.b   #1,d2
+        move.b  d2,hint_2_interval  /* Scroll A will have the second HINT. */
+        move.w  d1,hint_2_scroll_b_position
+        move.w  current_scroll_a_bottom_position,d1
+        move.w  d1,hint_2_scroll_a_position
+        bra.s   9f
+5:
+        cmpi.w  #0,d2
+        ble.s   9f
+        |subi.b  #2,d2
+        move.b  d2,hint_1_interval  /* Scroll A will have the only HINT. */
+        move.w  current_scroll_a_bottom_position,d1
+        move.w  d1,hint_1_scroll_a_position
+        bra.s   9f
+6:
+        cmpi.w  #0,d2
+        ble.s   8f
+        |subi.b  #2,d2
+        move.b  d2,hint_1_interval  /* Scroll A will have the first HINT. */
+        move.w  current_scroll_a_bottom_position,d1
+        move.w  d1,hint_1_scroll_a_position
+7:
+        cmpi.w  #0,d3
+        ble.s   9f
+        sub.b   d2,d3
+        |add.b   #1,d3
+        move.b  d3,hint_2_interval  /* Scroll B will have the second HINT. */
+        move.w  d1,hint_2_scroll_a_position
+        move.w  current_scroll_b_bottom_position,d1
+        move.w  d1,hint_2_scroll_b_position
+        bra.s   9f
+8:
+        cmpi.w  #0,d3
+        ble.s   9f
+        |subi.b  #2,d3
+        move.b  d3,hint_1_interval  /* Scroll B will have the only HINT. */
+        move.w  current_scroll_b_bottom_position,d1
+        move.w  d1,hint_1_scroll_b_position
+        |bra.s   9f
+9:
+
+        move.b  #0,hint_count
+
+        move.w  #0x8A00,d0
+        move.w  d0,(a0)             /* reg 10 = HINT = 0 */
+
+
+
 
         move.b  #1,need_bump_fm
         move.b  #1,need_ctrl_int
@@ -3025,8 +3222,11 @@ vert_blank:
         move.w  #0x8174,0xC00004    /* display on, vblank enabled, V28 mode */
 4:
         move.l  (sp)+,a2
+        move.l  (sp)+,a1
+        move.l  (sp)+,d3
         move.l  (sp)+,d2
         move.l  (sp)+,d1
+
         movea.l (sp)+,a0
         move.l  (sp)+,d0
         rte
@@ -3392,16 +3592,61 @@ crsr_y:
         dc.w    0
 dbug_color:
         dc.w    0
-
-scroll_b_vert_offset:
+        
+scroll_b_vert_offset_top:
         dc.w    0
-scroll_a_vert_offset:
+scroll_b_vert_offset_bottom:
+        dc.w    0
+scroll_a_vert_offset_top:
+        dc.w    0
+scroll_a_vert_offset_bottom:
+        dc.w    0
+scroll_b_vert_break:
+        dc.w    0
+scroll_a_vert_break:
         dc.w    0
 
-scroll_b_vert_rate:
+scroll_b_vert_rate_top:
         dc.b    0
-scroll_a_vert_rate:
+scroll_b_vert_rate_bottom:
         dc.b    0
+scroll_a_vert_rate_top:
+        dc.b    0
+scroll_a_vert_rate_bottom:
+        dc.b    0
+
+current_sky_top_positions:
+current_scroll_a_top_position:
+        dc.w    0
+current_scroll_b_top_position:
+        dc.w    0
+
+current_sky_bottom_positions:
+current_scroll_a_bottom_position:
+        dc.w    0
+current_scroll_b_bottom_position:
+        dc.w    0
+
+hint_1_scroll_positions:
+hint_1_scroll_a_position:
+        dc.w    0
+hint_1_scroll_b_position:
+        dc.w    0
+
+hint_2_scroll_positions:
+hint_2_scroll_a_position:
+        dc.w    0
+hint_2_scroll_b_position:
+        dc.w    0
+
+hint_count:
+        dc.b    0
+hint_1_interval:
+        dc.b    0
+hint_2_interval:
+        dc.b    0
+        
+        .align  4
 
 lump_ptr:
         dc.l    0
