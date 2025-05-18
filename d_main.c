@@ -491,7 +491,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 			}
 			else {
 
-#ifdef PLAY_THREE_BUTTON_INPUT_DEMO
+#ifdef PLAY_INPUT_THREE_BUTTON_DEMO
 				ticbuttons[consoleplayer] = buttons = rec_buttons;
 
 				if (rec_button_count == 0) {
@@ -1314,7 +1314,7 @@ D_printf("G_Init\n");
 
 D_printf ("DM_Main\n");
 
-#if defined(PLAY_THREE_BUTTON_INPUT_DEMO) || defined(PLAY_SIX_BUTTON_INPUT_DEMO)
+#if defined(PLAY_INPUT_THREE_BUTTON_DEMO) || defined(PLAY_INPUT_SIX_BUTTON_DEMO)
 	while(1) {
 		RunInputDemo("DEMO1");
 	}
