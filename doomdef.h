@@ -3,6 +3,8 @@
 #ifndef DOOMDEF_H__
 #define DOOMDEF_H__
 
+#include "32x.h"
+
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -1051,10 +1053,6 @@ extern	volatile int		ticcount, joybuttons;
 #define	BT_RMBTN		0
 #define	BT_MMBTN		0
 
-#define BT_AUTOMAP		BT_9
-
-#define BT_FASTTURN		0
-
 #else
 
 enum
@@ -1062,43 +1060,36 @@ enum
 	// hardware-agnostic game button actions
 	// transmitted over network
 	// should fit into a single word
-	BT_RIGHT		= 0x1,
-	BT_LEFT			= 0x2,
-	BT_UP			= 0x4,
-	BT_DOWN			= 0x8,
+	BT_UP			= SEGA_CTRL_UP,
+	BT_DOWN			= SEGA_CTRL_DOWN,
+	BT_LEFT			= SEGA_CTRL_LEFT,
+	BT_RIGHT		= SEGA_CTRL_RIGHT,
+	BT_C			= SEGA_CTRL_C,
+	BT_B			= SEGA_CTRL_B,
+	BT_A			= SEGA_CTRL_A,
+	BT_START		= SEGA_CTRL_START,
+	BT_Z			= SEGA_CTRL_Z,
+	BT_Y			= SEGA_CTRL_Y,
+	BT_X			= SEGA_CTRL_X,
+	BT_MODE			= SEGA_CTRL_MODE,
 
-	BT_JUMP		    = 0x10,
-	BT_SPIN			= 0x20,
-	BT_GASPEDAL		= 0x40,
-	BT_FLIP			= 0x80,
+	BT_FLIP			= (SEGA_CTRL_A << 16),
+	BT_JUMP		    = (SEGA_CTRL_B << 16),
+	BT_SPIN			= (SEGA_CTRL_C << 16),
 
-	BT_START		= 0x100,
-	BT_AUTOMAP		= 0x200,
-	BT_MODE			= 0x400,
+	BT_CAMLEFT		= (SEGA_CTRL_X << 16),
+	BT_GASPEDAL		= (SEGA_CTRL_Y << 16),
+	BT_CAMRIGHT		= (SEGA_CTRL_Z << 16),
 
-	BT_CAMLEFT		= 0x800,
-	BT_CAMRIGHT		= 0x1000,
-
-	BT_STRAFELEFT	= 0x2000,
-	BT_STRAFERIGHT	= 0x4000,
-
-	BT_A			= 0x8000,
-	BT_B			= 0x10000,
-	BT_C			= 0x20000,
-	BT_LMBTN		= 0x40000,
-	BT_RMBTN		= 0x80000,
-	BT_MMBTN		= 0x100000,
-	BT_PAUSE		= 0x200000,
-	BT_OPTION		= 0x400000,
-	BT_X			= 0x800000,
-	BT_Y			= 0x1000000,
-	BT_Z			= 0x2000000,
-	BT_FASTTURN     = 0x4000000
+	BT_LMBTN		= SEGA_CTRL_LMB,
+	BT_RMBTN		= SEGA_CTRL_RMB,
+	BT_MMBTN		= SEGA_CTRL_MMB,
+	BT_PAUSE		= SEGA_CTRL_STARTMB,
 };
 
 #endif
 
-#define MENU_BTNMASK (BT_A|BT_B|BT_C|BT_LMBTN|BT_RMBTN|BT_UP|BT_DOWN|BT_LEFT|BT_RIGHT|BT_MODE|BT_START|BT_OPTION)
+#define MENU_BTNMASK (BT_RMBTN|BT_LMBTN|BT_MODE|BT_START|BT_A|BT_C|BT_B|BT_RIGHT|BT_LEFT|BT_DOWN|BT_UP)
 
 typedef enum
 {

@@ -30,11 +30,17 @@ int 		ticstart;
 
 #ifdef PLAY_POS_DEMO
 	int			realtic;
-	fixed_t prev_rec_values[4];
-#else 
-#ifdef REC_POS_DEMO
+#endif
+#if defined(PLAY_POS_DEMO) || defined(REC_POS_DEMO)
 	fixed_t prev_rec_values[4];
 #endif
+#if defined(PLAY_INPUT_THREE_BUTTON_DEMO) || defined(REC_INPUT_THREE_BUTTON_DEMO)
+	unsigned char rec_buttons;
+	unsigned char rec_button_count;
+#endif
+#if defined(PLAY_INPUT_SIX_BUTTON_DEMO) || defined(REC_INPUT_SIX_BUTTON_DEMO)
+	unsigned short rec_buttons;
+	unsigned char rec_button_count;
 #endif
 
 unsigned configuration[NUMCONTROLOPTIONS][3] =
@@ -406,15 +412,15 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 
 		if (demoplayback)
 		{
-	#ifndef MARS
+#ifndef MARS
 			if (buttons & (BT_ATTACK|BT_SPEED|BT_USE) )
 			{
 				exit = ga_exitdemo;
 				break;
 			}
-	#endif
+#endif
 
-			#ifdef PLAY_POS_DEMO
+#ifdef PLAY_POS_DEMO
 			if (demo_p == demobuffer + 0xA) {
 				// This is the first frame, so grab the initial values.
 				prev_rec_values[0] = players[0].mo->x;
@@ -475,34 +481,53 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 				players[0].mo->z = prev_rec_values[2];
 				players[0].mo->angle = prev_rec_values[3] << ANGLETOFINESHIFT;
 			}
-	#endif
+#endif
 
-	#ifndef PLAY_POS_DEMO
+#ifndef PLAY_POS_DEMO
 			if (gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
 				// Rotate on the title screen.
 				ticbuttons[consoleplayer] = buttons = 0;
 				players[0].mo->angle += TITLE_ANGLE_INC;
 			}
 			else {
+
+#ifdef PLAY_THREE_BUTTON_INPUT_DEMO
+				ticbuttons[consoleplayer] = buttons = rec_buttons;
+
+				if (rec_button_count == 0) {
+					demo_p += 2;
+					rec_button_count = *demo_p;
+					rec_buttons = demo_p[1];
+
+					if (*((unsigned short *)demo_p) == 0xFFFF) {
+						demoplayback = false;
+						exit = ga_completed;
+					}
+				}
+				else {
+					rec_button_count -= 1;
+				}
+#endif
+
 				// This is for reading conventional input-based demos.
 				ticbuttons[consoleplayer] = buttons = *((long *)demobuffer);
 				demobuffer += 4;
 			}
-			#endif
+#endif
 		}
 
-		#ifdef PLAY_POS_DEMO
+#ifdef PLAY_POS_DEMO
 		if (demoplayback) {
 			players[0].mo->momx = 0;
 			players[0].mo->momy = 0;
 			players[0].mo->momz = 0;
 		}
-		#endif
+#endif
 
 		gamevbls += vblsinframe;
 
 		if (demorecording) {
-			#ifdef REC_POS_DEMO
+#ifdef REC_POS_DEMO
 			if (((short *)demobuffer)[3] == -1) {
 				// This is the first frame, so record the initial values in full.
 				prev_rec_values[0] = players[0].mo->x;
@@ -603,9 +628,34 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 			((short *)demobuffer)[3] += 1;	// Increase frame count.
 #endif
 
-#ifdef REC_INPUT_DEMO
-			*((long *)demo_p) = buttons;
-			demo_p += 4;
+#ifdef REC_INPUT_THREE_BUTTON_DEMO
+			if ((short)demo_p - (short)demobuffer == (0x200 - 2)) {
+				*((short *)demo_p) = -1;
+				demorecording = false;
+			}
+			else if (leveltime >= 30 + (30*30)) {
+				*demo_p += 2;
+				*((short *)demo_p) = -1;
+				demorecording = false;
+			}
+			else if (leveltime <= 30) {
+				*demo_p = 0;
+				demo_p[1] = 0;
+			}
+			else if (leveltime > 30) {
+				if (buttons & BT_START) {
+					demo_p += 2;
+					*((short *)demo_p) = -1;
+				}
+				else if (demo_p[1] == (buttons & 0xFF) && *demo_p < 255) {
+					*demo_p = *demo_p + 1;
+				}
+				else {
+					demo_p += 2;
+					*demo_p = 0;
+					demo_p[1] = buttons;
+				}
+			}
 #endif
 		}
 
@@ -1264,7 +1314,7 @@ D_printf("G_Init\n");
 
 D_printf ("DM_Main\n");
 
-#ifdef PLAY_INPUT_DEMO
+#if defined(PLAY_THREE_BUTTON_INPUT_DEMO) || defined(PLAY_SIX_BUTTON_INPUT_DEMO)
 	while(1) {
 		RunInputDemo("DEMO1");
 	}
@@ -1275,7 +1325,7 @@ D_printf ("DM_Main\n");
 	}
 #endif
 
-#ifdef REC_INPUT_DEMO
+#if defined(REC_INPUT_THREE_BUTTON_DEMO) || defined(REC_INPUT_SIX_BUTTON_DEMO)
 	G_RecordInputDemo();	// set startmap and startskill
 #endif
 #ifdef REC_POS_DEMO

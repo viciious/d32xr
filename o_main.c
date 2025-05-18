@@ -265,11 +265,7 @@ void O_Control (player_t *player)
 	buttons = ticbuttons[playernum] & MENU_BTNMASK;
 	oldbuttons = oldticbuttons[playernum] & MENU_BTNMASK;
 	
-	if ( ( (buttons & BT_OPTION) && !(oldbuttons & BT_OPTION) )
-#ifdef MARS
-		|| ( (buttons & BT_START) && !(oldbuttons & BT_START) && !(buttons & BT_MODE) )
-#endif
-		)
+	if ((buttons & BT_START) && !(oldbuttons & BT_START) && !(buttons & BT_MODE))
 	{
 		optionsMenuOn = !optionsMenuOn;
 
@@ -298,7 +294,7 @@ void O_Control (player_t *player)
 		return;
 
 /* clear buttons so player isn't moving aroung */
-	ticbuttons[playernum] &= (BT_OPTION|BT_START);	/* leave option status alone */
+	ticbuttons[playernum] &= BT_START;	/* leave option status alone */
 
 	if (playernum != curplayer)
 		return;

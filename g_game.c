@@ -728,9 +728,9 @@ int G_PlayInputDemoPtr (unsigned char *demo)
 
 	demobuffer = demo;
 
-	map = demo[7];
+	map = demo[5];
 	
-	demo_p = demo + 8;
+	demo_p = demo + 6;
 	
 	G_InitNew (map, gt_single, false);
 	demoplayback = true;
@@ -769,15 +769,17 @@ int G_PlayPositionDemoPtr (unsigned char *demo)
 =================
 */
 
-#ifdef REC_INPUT_DEMO
+#if defined(REC_INPUT_THREE_BUTTON_DEMO) || defined(REC_INPUT_SIX_BUTTON_DEMO)
 void G_RecordInputDemo (void)
 {
-	demo_p = demobuffer = Z_Malloc (0x5000, PU_STATIC);
+	demo_p = demobuffer = Z_Malloc (0x200, PU_STATIC);	// More than enough for a 30 second demo.
 	
-	((long *)demo_p)[0] = 0; // startskill
-	((long *)demo_p)[1] = startmap;
-
-	demo_p += 8;
+	*demo_p++ = 'I';
+	*demo_p++ = 'D';
+	*demo_p++ = 'M';
+	*demo_p++ = 'O';
+	*demo_p++ = 0;			// char unused
+	*demo_p++ = startmap;	// char map
 	
 	G_InitNew (startmap, gt_single, false);
 	demorecording = true;
