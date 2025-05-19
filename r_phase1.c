@@ -413,7 +413,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
             if (fofsec->ceilingheight < vd.viewz)
             {
                // Rendering the ceiling
-               actionbits |= AC_FOFCEILING;
+//               actionbits |= AC_FOFCEILING;
                segl->fof_picnum = fofsec->ceilingpic;
                *fofInfo = fofsec->ceilingheight - vd.viewz;
                                   
@@ -421,7 +421,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
             }
             else if (fofsec->floorheight > vd.viewz)
             {
-               actionbits |= AC_FOFFLOOR;
+//               actionbits |= AC_FOFFLOOR;
                segl->fof_picnum = fofsec->floorpic;
                *fofInfo = fofsec->floorheight - vd.viewz;
             }

@@ -294,24 +294,27 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
             }
         }
 
-        if (segl->fofSector >= 0 && (actionbits & (AC_FOFFLOOR|AC_FOFCEILING)) && segl->fof_picnum != 0xff)
+        if (segl->fofSector >= 0 && (actionbits & (AC_FOFFLOOR|AC_FOFCEILING|AC_FOFSIDE)) && segl->fof_picnum != 0xff)
         {
             //
             // calc high and low
             //
-            low = FixedMul(scale2, floorheight)>>FRACBITS;
-            low = cy - low;
-            if (low < 0)
-                low = 0;
-            else if (low > floorclipx)
-                low = floorclipx;
+            if (actionbits & AC_FOFSIDE) // AC_FOFSIDE
+            {
+                low = FixedMul(scale2, sectors[segl->fofSector].floorheight - vd.viewz)>>FRACBITS;
+                low = cy - low;
+                if (low < 0)
+                    low = 0;
+                else if (low > floorclipx)
+                    low = floorclipx;
 
-            high = FixedMul(scale2, ceilingheight)>>FRACBITS;
-            high = cy - high;
-            if (high > vh)
-                high = vh;
-            else if (high < ceilingclipx)
-                high = ceilingclipx;
+                high = FixedMul(scale2, sectors[segl->fofSector].ceilingheight - vd.viewz)>>FRACBITS;
+                high = cy - high;
+                if (high > vh)
+                    high = vh;
+                else if (high < ceilingclipx)
+                    high = ceilingclipx;
+            }
 
             if (newclipbounds)
             {
@@ -329,7 +332,7 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
                 clipbounds[x] = (high << 8) | low;
             }
             
-            if (actionbits & AC_FOFFLOOR)
+            if (actionbits & AC_FOFFLOOR) // Bottom of FOF is visible
             {
                 const int fofandlight = ((sectors[segl->fofSector].lightlevel & 0xff) << 16) | (VINT)segl->fof_picnum;
                 const fixed_t fofplaneHeight = sectors[segl->fofSector].floorheight - vd.viewz;
@@ -344,10 +347,19 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
                 if (top < bottom)
                 {
                     visplane_t *fofplane = R_FindPlane(fofplaneHeight, fofandlight, x, stop);
-                    fofplane->open[x] = (top << 8) + (bottom-1);    
+
+//                    if (!(leveltime & 1))
+//                        CONS_Printf("fofplane_f is %d, %d, %d", fofplane, fofandlight, fofplaneHeight);
+                    fofplane->isFOF = 1;
+                    SETLOWER8(fofplane->open[x], bottom-1);
+
+                    if (fofplane->didSeg == 0)
+                        SETUPPER8(fofplane->open[x], top);
                 }
+
+                // NOTE: May need to set fofplane->didSeg back to 0 here.
             }
-            else if (actionbits & AC_FOFCEILING) // AC_FOFCEILING
+            else if (actionbits & AC_FOFCEILING) // Top of FOF is visible
             {
                 const int fofandlight = ((segl->seglightlevel & 0xff) << 16) | (VINT)segl->fof_picnum;
                 const fixed_t fofplaneHeight = sectors[segl->fofSector].ceilingheight - vd.viewz;
@@ -355,21 +367,62 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
                 // "flooropen"
                 top = FixedMul(scale2, fofplaneHeight)>>FRACBITS;
                 top = cy - top;
-                if (top < ceilingclipx)
-                    top = ceilingclipx;
-//                bottom = floorclipx;
-                bottom = FixedMul(scale2, fofnewheight) >> FRACBITS;
-                bottom = cy - bottom;
-                if (bottom > floorclipx)
-                    bottom = floorclipx;
-
-                CONS_Printf("Top: %d, Bottom:%d (%d, %d)", top, bottom, fofplaneHeight>>FRACBITS, fofnewheight >> FRACBITS);
+                if (top < 0)
+                    top = 0;
+                bottom = 180;
 
                 if (top < bottom)
                 {
                     visplane_t *fofplane = R_FindPlane(fofplaneHeight, fofandlight, x, stop);
-                    fofplane->open[x] = (top << 8) + (bottom-1);
-                }                
+//                    if (!(leveltime & 1))
+//                        CONS_Printf("fofplane_c is %d, %d, %d", fofplane, fofandlight, fofplaneHeight);
+                    fofplane->isFOF = 1;
+                    SETUPPER8(fofplane->open[x], top);
+
+                    // This is needed for when there is no additional frontsector,
+                    // but if there is a backsector, the AC_FOFSIDES seg should set the clip
+                    if (fofplane->didSeg == 0)
+                        SETLOWER8(fofplane->open[x], bottom-1);
+                }
+
+                // NOTE: May need to set fofplane->didSeg back to 0 here.
+            }
+            else if (actionbits & AC_FOFSIDE)
+            {
+                if (sectors[segl->fofSector].floorheight > vd.viewz) // Bottom of FOF is visible
+                {
+                    const int fofandlight = ((sectors[segl->fofSector].lightlevel & 0xff) << 16) | (VINT)segl->fof_picnum;
+                    const fixed_t fofplaneHeight = sectors[segl->fofSector].floorheight - vd.viewz;
+                    
+                    // "ceilopen"
+                    top = FixedMul(scale2, fofplaneHeight)>>FRACBITS;
+                    top = cy - top;
+                    if (top < 0)
+                        top = 0;
+
+                    visplane_t *fofplane = R_FindPlane(fofplaneHeight, fofandlight, x, stop);
+                    fofplane->didSeg = 1;
+                    fofplane->open[x] = (top << 8);
+//                    if (leveltime & 1)
+//                        CONS_Printf("Top is %d, %d, %d", fofplane, fofandlight, fofplaneHeight);
+                }
+                else if (sectors[segl->fofSector].ceilingheight < vd.viewz) // Top of FOF is visible
+                {
+                    const int fofandlight = ((segl->seglightlevel & 0xff) << 16) | (VINT)segl->fof_picnum;
+                    const fixed_t fofplaneHeight = sectors[segl->fofSector].ceilingheight - vd.viewz;
+
+                    bottom = FixedMul(scale2, fofplaneHeight) >> FRACBITS;
+                    bottom = cy - bottom;
+                    if (bottom > 180)
+                        bottom = 180;
+
+                    visplane_t *fofplane = R_FindPlane(fofplaneHeight, fofandlight, x, stop);
+                    fofplane->didSeg = 1;
+                    fofplane->open[x] = (fofplane->open[x] & 0xff00) + (bottom-1);
+
+//                    if (leveltime &1)
+//                        CONS_Printf("Bottom is %d, %d, %d", fofplane, fofandlight, fofplaneHeight);
+                }
             }
         }
     }

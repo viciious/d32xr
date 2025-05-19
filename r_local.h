@@ -630,21 +630,21 @@ typedef struct
 #define LOWER8(x) ((uint8_t)((uint16_t)x & 0xff))
 #define SETUPPER8(x, y) {\
 x &= 0x00ff; \
-x |= ((uint16_t)y << 8); \
+x |= (((uint16_t)(y)) << 8); \
 }
 #define SETLOWER8(x, y) {\
 x &= 0xff00; \
-x |= ((uint16_t)y & 0xff); \
+x |= (((uint16_t)(y)) & 0xff); \
 }
 #define UPPER16(x) ((uint16_t)((uint32_t)x >> 16))
 #define LOWER16(x) ((uint16_t)((uint32_t)x & 0xffff))
 #define SETUPPER16(x, y) {\
 x &= 0x0000ffff; \
-x |= ((uint32_t)y << 16); \
+x |= (((uint32_t)(y)) << 16); \
 }
 #define SETLOWER16(x, y) {\
 x &= 0xffff0000; \
-x |= ((uint32_t)y & 0xffff); \
+x |= (((uint32_t)(y)) & 0xffff); \
 }
 
 typedef struct
@@ -686,7 +686,8 @@ typedef struct visplane_s
 	fixed_t		height;
 	VINT		minx, maxx;
 	int 		flatandlight;
-//	VINT        isFOF; // TODO: temporary test
+	VINT        isFOF; // TODO: temporary test
+	VINT        didSeg;
 	struct visplane_s	*next;
 	unsigned short		*open/*[SCREENWIDTH+2]*/;		/* top<<8 | bottom */ /* leave pads for [minx-1]/[maxx+1] */
 } visplane_t;

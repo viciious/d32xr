@@ -210,6 +210,9 @@ static void R_PlaneLoop(localplane_t *lpl)
 
     pl_openptr = &pl->open[pl_x];
 
+//    if (pl->isFOF)
+//        CONS_Printf("Top: %d, Bottom: %d", UPPER8(pl->open[pl_x]), LOWER8(pl->open[pl_x]));
+
     t1 = OPENMARK;
     b1 = t1 & 0xff;
     t1 >>= 8;
@@ -335,8 +338,8 @@ static void R_DrawPlanes2(void)
         return;
 
 #ifdef FLATDRAW2X
-    lpl.x = vd.viewx/2;
-    lpl.y = -vd.viewy/2;
+    lpl.x = vd.viewx >> 1;
+    lpl.y = -vd.viewy >> 1;
 #else
     lpl.x = vd.viewx;
     lpl.y = -vd.viewy;
