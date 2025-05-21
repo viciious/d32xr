@@ -398,7 +398,8 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
 #ifdef WALLDRAW2X
                fof_texturemid >>= 1;
 #endif
-               actionbits |= AC_FOFSIDE; // set bottom and top masks
+               if (fofsec->ceilingheight > front_sector->floorheight && fofsec->floorheight < front_sector->ceilingheight)
+                  actionbits |= AC_FOFSIDE; // set bottom and top masks
             }
 //            segl->fof_bottomheight = fofsec->floorheight - vd.viewz;
 //            segl->fof_topheight = fofsec->ceilingheight - vd.viewz;
