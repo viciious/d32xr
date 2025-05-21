@@ -325,7 +325,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
             actionbits |= (AC_SOLIDSIL|AC_TOPTEXTURE);                   // solid line; draw middle texture only
          }
 
-         if (front_sector->fofsec >= 0)
+         if (front_sector->fofsec >= 0 && !(front_sector->flags & SF_FOF_SWAPHEIGHTS))
          {
             const sector_t *fofsec = &sectors[front_sector->fofsec];
             segl->fofSector = front_sector->fofsec;
@@ -384,7 +384,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
             actionbits |= AC_MIDTEXTURE; // set bottom and top masks
          }
 
-         if (back_sector->fofsec >= 0)
+         if (back_sector->fofsec >= 0 && !(back_sector->flags & SF_FOF_SWAPHEIGHTS))
          {
             const sector_t *fofsec = &sectors[back_sector->fofsec];
             segl->fofSector = back_sector->fofsec;
@@ -427,7 +427,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
                *fofInfo = fofsec->floorheight - vd.viewz;
             }
          }
-         if (front_sector->fofsec >= 0)
+         if (front_sector->fofsec >= 0 && !(front_sector->flags & SF_FOF_SWAPHEIGHTS))
          {
             const sector_t *fofsec = &sectors[front_sector->fofsec];
             segl->fofSector = front_sector->fofsec;
