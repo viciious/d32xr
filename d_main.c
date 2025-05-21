@@ -493,34 +493,29 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 			}
 #endif
 
-#ifndef PLAY_POS_DEMO
-			{
-
 #ifdef PLAY_INPUT_THREE_BUTTON_DEMO
-				ticbuttons[consoleplayer] = buttons = rec_buttons;
+			ticbuttons[consoleplayer] = buttons = rec_buttons;
 
-				if (rec_button_count == 0) {
-					demo_p += 2;
-					rec_button_count = *demo_p;
-					rec_buttons = demo_p[1];
+			if (rec_button_count == 0) {
+				demo_p += 2;
+				rec_button_count = *demo_p;
+				rec_buttons = demo_p[1];
 
-					if (*((unsigned short *)demo_p) & BT_START) {
-						ticbuttons[consoleplayer] = buttons = 0;
-						demoplayback = false;
-						exit = ga_completed;
-						//exit = ga_exitdemo;
-						break;
-					}
+				if (*((unsigned short *)demo_p) & BT_START) {
+					ticbuttons[consoleplayer] = buttons = 0;
+					demoplayback = false;
+					exit = ga_completed;
+					//exit = ga_exitdemo;
+					break;
 				}
-				else {
-					rec_button_count -= 1;
-				}
-#endif
-
-				// This is for reading conventional input-based demos.
-				ticbuttons[consoleplayer] = buttons = *((long *)demobuffer);
-				demobuffer += 4;
 			}
+			else {
+				rec_button_count -= 1;
+			}
+
+			// This is for reading conventional input-based demos.
+			ticbuttons[consoleplayer] = buttons = *((long *)demobuffer);
+			demobuffer += 4;
 #endif
 		}
 
@@ -1120,29 +1115,18 @@ void START_Title(void)
 
 	ticon = 0;
 
-#ifdef MARS
-	I_InitMenuFire(titlepic);
-#else
 	S_StartSong(gameinfo.titleMus, 0, cdtrack_title);
-#endif
 }
 
 void STOP_Title (void)
 {
 	if (titlepic != NULL)
 		Z_Free (titlepic);
-#ifdef MARS
-	I_StopMenuFire();
-#else
-	S_StopSong();
-#endif
+	//S_StopSong();
 }
 
 void DRAW_Title (void)
 {
-#ifdef MARS
-	I_DrawMenuFire();
-#endif
 }
 
 /*============================================================================= */

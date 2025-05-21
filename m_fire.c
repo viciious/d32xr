@@ -23,7 +23,7 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
 */
-
+/*
 #include "doomdef.h"
 #include "mars.h"
 
@@ -79,7 +79,7 @@ void Mars_Sec_M_AnimateFire(void)
 =
 ================ 
 */ 
-void I_InitMenuFire(jagobj_t *titlepic)
+/*void I_InitMenuFire(jagobj_t *titlepic)
 {
 	int i;
 
@@ -109,7 +109,7 @@ void I_InitMenuFire(jagobj_t *titlepic)
 =
 ================
 */
-void I_StopMenuFire(void)
+/*void I_StopMenuFire(void)
 {
 	Mars_M_EndDrawFire();
 
@@ -123,7 +123,7 @@ void I_StopMenuFire(void)
 =
 ================
 */
-void I_DrawMenuFire(void)
+/*void I_DrawMenuFire(void)
 {
 	const int y = 16;
 	jagobj_t* titlepic = intro_titlepic;
@@ -138,3 +138,4 @@ void I_DrawMenuFire(void)
 	// draw the fire at the bottom
 	Mars_ClearCache();
 }
+*/
