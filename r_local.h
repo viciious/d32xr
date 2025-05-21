@@ -726,6 +726,7 @@ __attribute__((aligned(16)))
 	sector_t 	*viewsector;
 	fixed_t		viewcos, viewsin;
 	player_t	*viewplayer;
+	fixed_t     viewwaterheight;
 	VINT		lightlevel;
 	VINT		extralight;
 	VINT		displayplayer;

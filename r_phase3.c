@@ -116,7 +116,7 @@ static void R_PrepMobj(mobj_t *thing)
    if (heightsec >= 0 && phs >= 0)   // only clip things which are in special sectors
    {
       const fixed_t localgzt = thing->z + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
-      const fixed_t waterHeight = sectors[phs].ceilingheight;
+      const fixed_t waterHeight = vd.viewwaterheight;
       const fixed_t thingHeight = sectors[heightsec].ceilingheight;
 
       if ((vd.viewz < waterHeight) != (localgzt < thingHeight))
@@ -299,11 +299,10 @@ static void R_PrepRing(ringmobj_t *thing, uint8_t scenery)
    const sector_t *sec = SS_SECTOR(thing->isubsector);
    const int heightsec = sec->heightsec;
    const fixed_t thingz = scenery ? (thing->type < MT_STALAGMITE0 || thing->type > MT_STALAGMITE7 ? sec->floorheight : sec->ceilingheight - mobjinfo[thing->type].height) : thing->z << FRACBITS;
-   const int phs = vd.viewsector->heightsec;
-   if (heightsec >= 0 && phs >= 0)   // only clip things which are in special sectors
+   if (heightsec >= 0 && vd.viewsector->heightsec >= 0)   // only clip things which are in special sectors
    {
       const fixed_t localgzt = thingz + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
-      const fixed_t waterHeight = sectors[phs].ceilingheight;
+      const fixed_t waterHeight = vd.viewwaterheight;
       const fixed_t thingHeight = sectors[heightsec].ceilingheight;
 
       if ((vd.viewz < waterHeight) != (localgzt < thingHeight))

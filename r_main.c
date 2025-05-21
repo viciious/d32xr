@@ -936,14 +936,18 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		vd.aimingangle = thiscam->aiming;
 		vd.viewsector = &sectors[thiscam->subsector->isector];
 
-		if (sectors[thiscam->subsector->isector].heightsec >= 0
-			&& GetWatertopSec(&sectors[thiscam->subsector->isector]) > vd.viewz)
+		if (sectors[thiscam->subsector->isector].heightsec >= 0)
 		{
-			// Future: Have a way to specify the water color
-			if (gamemapinfo.mapNumber == 4 || gamemapinfo.mapNumber == 5)
-				waterpal = 13;
-			else
-				waterpal = 11;
+			vd.viewwaterheight = GetWatertopSec(&sectors[thiscam->subsector->isector]);
+			
+			if (vd.viewwaterheight > vd.viewz)
+			{
+				// Future: Have a way to specify the water color
+				if (gamemapinfo.mapNumber == 4 || gamemapinfo.mapNumber == 5)
+					waterpal = 13;
+				else
+					waterpal = 11;
+			}
 		}
 	}
 	else

@@ -725,19 +725,15 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
       // Replace sector being drawn, with a copy to be hacked
       *tempsec = *sec;
 
+      const boolean underwater = vd.viewsector->heightsec >= 0 && vd.viewz<=vd.viewwaterheight;
       const sector_t *fofsec = &sectors[sec->fofsec];
-      fixed_t midpoint;
-      if (sec->heightsec >= 0) // If there is water in this sector, then the midpoint is the water.
-         midpoint = sectors[sec->heightsec].ceilingheight;
-      else
-         midpoint = fofsec->floorheight + (fofsec->ceilingheight - fofsec->floorheight)/2;
 
-      if (vd.viewz <= midpoint)
+      if (underwater)
       {
          tempsec->ceilingheight = fofsec->floorheight;
          tempsec->ceilingpic = fofsec->floorpic;      
       }
-      else if (vd.viewz > midpoint)
+      else
       {
          tempsec->floorheight = fofsec->ceilingheight;
          tempsec->floorpic = fofsec->ceilingpic;
@@ -748,24 +744,32 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
    else if (sec->heightsec >= 0)
    {
       const sector_t *watersec = &sectors[sec->heightsec];
-      boolean underwater = vd.viewsector->heightsec >= 0 && vd.viewz<=sectors[vd.viewsector->heightsec].ceilingheight;
+      boolean underwater = vd.viewsector->heightsec >= 0 && vd.viewz<=vd.viewwaterheight;
 
       // Replace sector being drawn, with a copy to be hacked
       *tempsec = *sec;
 
       // Replace floor and ceiling height with other sector's heights.
-      tempsec->floorheight = watersec->ceilingheight-1;
-      tempsec->floorpic = watersec->ceilingpic;
 
-      if ((underwater && (tempsec->floorheight = sec->floorheight,
-                          tempsec->ceilingheight = watersec->ceilingheight-1,
-                          !back)) || vd.viewz <= watersec->floorheight)
+
+      // I don't think we need to be Boom-accurate here.
+//      if ((underwater && (tempsec->floorheight = sec->floorheight,
+//                          tempsec->ceilingheight = watersec->ceilingheight-1,
+//                          !back)) || vd.viewz <= watersec->floorheight)
+      if (underwater)
       { // head-below-floor hack
+         tempsec->floorheight = sec->floorheight;
+         tempsec->ceilingheight = watersec->ceilingheight - 1;
          tempsec->floorpic    = sec->floorpic;
 //       tempsec->floor_xoffs = s->floor_xoffs;
 //       tempsec->floor_yoffs = s->floor_yoffs;
          tempsec->ceilingpic = watersec->ceilingpic; 
          tempsec->lightlevel = watersec->lightlevel;
+      }
+      else
+      {
+         tempsec->floorheight = watersec->ceilingheight-1;
+         tempsec->floorpic = watersec->ceilingpic;
       }
 
       if (sec->ceilingheight < watersec->ceilingheight)

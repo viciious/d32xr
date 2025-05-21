@@ -678,7 +678,7 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
           (h = centerYFrac - FixedMul(mh-=vd.viewz, vis->yscale)) >= 0 &&
           (h >>= FRACBITS) < viewportHeight)
       {
-        if (mh <= 0 || (phs >= 0 && vd.viewz > sectors[phs].ceilingheight))
+        if (mh <= 0 || (phs >= 0 && vd.viewz > vd.viewwaterheight))
           {                          // clip bottom
             for (x=vis->x1 ; x<=vis->x2 ; x++)
             {
