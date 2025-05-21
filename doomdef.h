@@ -175,7 +175,8 @@ typedef enum
 	ga_startnew,
 	ga_backtotitle,
 	ga_specialstageexit,
-	ga_closeprompt
+	ga_closeprompt,
+	ga_titleexpired
 } gameaction_t;
 
 
@@ -731,6 +732,7 @@ void D_DoomMain (void);
 void D_DoomLoop (void);
 
 extern	boolean onscreen_prompt;
+extern	boolean titlescreen;
 extern	boolean	demoplayback, demorecording;
 extern	unsigned char *demo_p, *demobuffer;
 

@@ -410,7 +410,17 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		ticbuttons[consoleplayer] = buttons;
 		ticrealbuttons = buttons;
 
-		if (demoplayback)
+		
+		if (titlescreen && gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
+			if (leveltime > 20*30) {
+				exit = ga_titleexpired;
+				break;
+			}
+			// Rotate on the title screen.
+			ticbuttons[consoleplayer] = buttons = 0;
+			players[0].mo->angle += TITLE_ANGLE_INC;
+		}
+		else if (demoplayback)
 		{
 #ifndef MARS
 			if (buttons & (BT_ATTACK|BT_SPEED|BT_USE) )
@@ -484,12 +494,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 #endif
 
 #ifndef PLAY_POS_DEMO
-			if (gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
-				// Rotate on the title screen.
-				ticbuttons[consoleplayer] = buttons = 0;
-				players[0].mo->angle += TITLE_ANGLE_INC;
-			}
-			else {
+			{
 
 #ifdef PLAY_INPUT_THREE_BUTTON_DEMO
 				ticbuttons[consoleplayer] = buttons = rec_buttons;
@@ -499,9 +504,12 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 					rec_button_count = *demo_p;
 					rec_buttons = demo_p[1];
 
-					if (*((unsigned short *)demo_p) == 0xFFFF) {
+					if (*((unsigned short *)demo_p) & BT_START) {
+						ticbuttons[consoleplayer] = buttons = 0;
 						demoplayback = false;
 						exit = ga_completed;
+						//exit = ga_exitdemo;
+						break;
 					}
 				}
 				else {
@@ -1221,12 +1229,27 @@ int RunPositionDemo (char *demoname)
 void RunMenu (void)
 {
 #ifdef MARS
-	int exit = ga_exitdemo;
+	int exit = ga_titleexpired;
 
 	M_Start();
 	if (!gameinfo.noAttractDemo) {
 		do {
-			int i;
+			G_InitNew (TITLE_MAP_NUMBER, gt_single, false);
+			titlescreen = true;
+			exit = MiniLoop (P_Start, P_Stop, P_Ticker, P_Drawer, P_Update);
+			titlescreen = false;
+
+			int lump = W_CheckNumForName("DEMO1");
+			if (lump == -1)
+				break;
+			
+			demoplayback = true;
+			exit = RunInputDemo("DEMO1");
+			demoplayback = false;
+			//if (exit == ga_exitdemo)
+			//	break;
+
+			/*int i;
 			char demo[9];
 
 			for (i = 1; i < 10; i++)
@@ -1241,10 +1264,13 @@ void RunMenu (void)
 				exit = RunInputDemo(demo);
 				if (exit == ga_exitdemo)
 					break;
-			}
-		} while (exit != ga_exitdemo);
+			}*/
+		} while (1);
 	}
 	M_Stop();
+
+	G_InitNew (4, gt_single, false);	//DLG: TESTING!!!!!
+	G_RunGame ();						//DLG: TESTING!!!!!
 #else
 reselect:
 	MiniLoop(M_Start, M_Stop, M_Ticker, M_Drawer, NULL);

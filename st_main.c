@@ -425,7 +425,7 @@ void ST_Drawer(void)
 	if (debugmode == DEBUGMODE_NODRAW)
 		return;
 
-	if (demoplayback)
+	if (titlescreen)
 		return;
 
 	y[consoleplayer] = I_FrameBufferHeight();

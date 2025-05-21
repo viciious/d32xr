@@ -38,6 +38,8 @@ uint16_t        tokenbits;
 
 boolean			onscreen_prompt;
 
+boolean			titlescreen;
+
 boolean         demorecording;
 boolean         demoplayback;
 
@@ -199,7 +201,7 @@ void G_DoLoadLevel (void)
 	if (music <= 0)
 		music = S_SongForMapnum(gamemap);
 
-	if (gamemapinfo.mapNumber != 30)
+	if (gamemapinfo.mapNumber != TITLE_MAP_NUMBER)
 	{
 		if (netgame != gt_single && !splitscreen)
 			S_StopSong();
@@ -547,7 +549,7 @@ void G_InitNew (int map, gametype_t gametype, boolean splitscr)
 	if (netgame != gt_single)
 		playeringame[1] = true;	
 	else
-		playeringame[1] = false;	
+		playeringame[1] = false;
 
 	demorecording = false;
 	demoplayback = false;

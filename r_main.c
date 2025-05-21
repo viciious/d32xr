@@ -927,7 +927,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 
 	player = &players[displayplayer];
 
-	if (!demoplayback)
+	if (gamemapinfo.mapNumber != TITLE_MAP_NUMBER)
 	{
 		const camera_t *thiscam = NULL;
 		thiscam = &camera;
@@ -968,7 +968,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 
 	// look up/down
 	int dy;
-	if (demoplayback && gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
+	if (gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
 		// The viewport for the title screen is aligned with the bottom of
 		// the screen. Therefore we shift the angle to center the horizon.
 		dy = -27;
@@ -1088,7 +1088,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 
 	viewportbuffer = (pixel_t*)I_ViewportBuffer();
 
-	if (demoplayback && gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
+	if (gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
 		viewportbuffer += (160*22);
 	}
 
@@ -1126,7 +1126,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		}
 		#endif
 	}
-	else if (leveltime < 15 && demoplayback && gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
+	else if (leveltime < 15 && gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
 		palette = 5 - (leveltime / 3);
 
 		#ifdef MDSKY
