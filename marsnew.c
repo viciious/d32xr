@@ -83,7 +83,7 @@ static uint32_t mars_rom_bsw_start = 0;
 
 void I_ClearFrameBuffer(void) ATTR_DATA_CACHE_ALIGN;
 
-static int Mars_ConvGamepadButtons(int ctrl)
+int Mars_ConvGamepadButtons(int ctrl)
 {
 	unsigned newc = 0;
 

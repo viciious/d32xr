@@ -34,14 +34,9 @@ int 		ticstart;
 #if defined(PLAY_POS_DEMO) || defined(REC_POS_DEMO)
 	fixed_t prev_rec_values[4];
 #endif
-#if defined(PLAY_INPUT_THREE_BUTTON_DEMO) || defined(REC_INPUT_THREE_BUTTON_DEMO)
-	unsigned char rec_buttons;
-	unsigned char rec_button_count;
-#endif
-#if defined(PLAY_INPUT_SIX_BUTTON_DEMO) || defined(REC_INPUT_SIX_BUTTON_DEMO)
-	unsigned short rec_buttons;
-	unsigned char rec_button_count;
-#endif
+
+unsigned char rec_buttons = 0;
+unsigned char rec_button_count = 0;
 
 unsigned configuration[NUMCONTROLOPTIONS][3] =
 {
@@ -420,7 +415,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 			ticbuttons[consoleplayer] = buttons = 0;
 			players[0].mo->angle += TITLE_ANGLE_INC;
 		}
-		else if (demoplayback)
+		if (demoplayback)
 		{
 #ifdef PLAY_POS_DEMO
 			if (demo_p == demobuffer + 0xA) {
@@ -485,10 +480,14 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 			}
 #endif
 
-#ifdef PLAY_INPUT_THREE_BUTTON_DEMO
+#ifndef PLAY_POS_DEMO
 			ticbuttons[consoleplayer] = buttons = Mars_ConvGamepadButtons(rec_buttons);
 
-			if (rec_button_count == 0) {
+
+			if (rec_button_count > 0) {
+				rec_button_count -= 1;
+			}
+			else {
 				demo_p += 2;
 				rec_button_count = *demo_p;
 				rec_buttons = demo_p[1];
@@ -500,9 +499,6 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 					//exit = ga_exitdemo;
 					break;
 				}
-			}
-			else {
-				rec_button_count -= 1;
 			}
 #endif
 		}

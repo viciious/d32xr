@@ -138,6 +138,7 @@ void Mars_MDPutString(char *str);
 void Mars_SetBankPage(int bank, int page) MARS_ATTR_DATA_CACHE_ALIGN;
 void Mars_SetBankPageSec(int bank, int page) MARS_ATTR_DATA_CACHE_ALIGN;
 int Mars_ReadController(int port);
+int Mars_ConvGamepadButtons(int ctrl);
 
 int Mars_ROMSize(void);
 
