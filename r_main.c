@@ -1292,7 +1292,7 @@ visplane_t* R_FindPlane(fixed_t height,
 		if (height == check->height && // same plane as before?
 			flatandlight == check->flatandlight)
 		{
-			if (check->didSeg != 0 || MARKEDOPEN(check->open[start]))
+			if (MARKEDOPEN(check->open[start]))
 			{
 				// found a plane, so adjust bounds and return it
 				if (start < check->minx)
