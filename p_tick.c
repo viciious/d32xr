@@ -184,10 +184,11 @@ int P_Ticker (void)
 	int		ticstart;
 	player_t	*pl;
 
-	if (demoplayback)
+	if (titlescreen)
 	{
-		if (M_Ticker())
-			return ga_exitdemo;
+		int result = M_Ticker(); // Run menu logic.
+		if (result)
+			return result;
 	}
 
 	// This is needed so the fade isn't removed until the new world is drawn at least once
@@ -424,10 +425,10 @@ void P_Drawer (void)
 
 	Mars_R_SecWait();
 
-	if (demoplayback || titlescreen)
-		M_Drawer();
+	if (titlescreen)
+		M_Drawer();	// Show title emblem and menus.
 	if (optionsMenuOn)
-		O_Drawer();
+		O_Drawer();	// Show options menu.
 
 	o_wasactive = optionsMenuOn;
 

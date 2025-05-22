@@ -422,14 +422,6 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		}
 		else if (demoplayback)
 		{
-#ifndef MARS
-			if (buttons & (BT_ATTACK|BT_SPEED|BT_USE) )
-			{
-				exit = ga_exitdemo;
-				break;
-			}
-#endif
-
 #ifdef PLAY_POS_DEMO
 			if (demo_p == demobuffer + 0xA) {
 				// This is the first frame, so grab the initial values.
@@ -494,7 +486,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 #endif
 
 #ifdef PLAY_INPUT_THREE_BUTTON_DEMO
-			ticbuttons[consoleplayer] = buttons = rec_buttons;
+			ticbuttons[consoleplayer] = buttons = Mars_ConvGamepadButtons(rec_buttons);
 
 			if (rec_button_count == 0) {
 				demo_p += 2;
@@ -1127,27 +1119,6 @@ void DRAW_Title (void)
 
 /*============================================================================= */
 
-void RunMenu (void);
-
-void RunTitle (void)
-{
-	startmap = 1;
-	starttype = gt_single;
-	consoleplayer = 0;
-	
-#ifdef SHOW_COMPATIBILITY_PROMPT
-	if (legacy_emulator) {
-		MiniLoop (START_Compatibility, STOP_Compatibility, TIC_Compatibility, DRAW_Compatibility, UpdateBuffer);
-	}
-#endif
-
-#ifdef SHOW_DISCLAIMER
-	MiniLoop (START_Disclaimer, STOP_Disclaimer, TIC_Disclaimer, DRAW_Disclaimer, UpdateBuffer);
-#endif
-
-	MiniLoop (START_Title, STOP_Title, TIC_Abortable, DRAW_Title, UpdateBuffer);
-}
-
 int RunInputDemo (char *demoname)
 {
 	unsigned char *demo;
@@ -1169,10 +1140,6 @@ int RunInputDemo (char *demoname)
 	exit = G_PlayInputDemoPtr (demo);
 	Z_Free(demo);
 
-#ifndef MARS
-	if (exit == ga_exitdemo)
-		RunMenu ();
-#endif
 	return exit;
 }
 
@@ -1198,83 +1165,9 @@ int RunPositionDemo (char *demoname)
 	exit = G_PlayPositionDemoPtr ((unsigned char*)demo);
 	Z_Free(demo);
 
-#ifndef MARS
-	if (exit == ga_exitdemo)
-		RunMenu ();
-#endif
 	return exit;
 }
 #endif
-
-void RunMenu (void)
-{
-#ifdef MARS
-	int exit = ga_titleexpired;
-
-	M_Start();
-	if (!gameinfo.noAttractDemo) {
-		do {
-			G_InitNew (TITLE_MAP_NUMBER, gt_single, false);
-			titlescreen = true;
-			exit = MiniLoop (P_Start, P_Stop, P_Ticker, P_Drawer, P_Update);
-			titlescreen = false;
-
-			int lump = W_CheckNumForName("DEMO1");
-			if (lump == -1)
-				break;
-			
-			demoplayback = true;
-			exit = RunInputDemo("DEMO1");
-			demoplayback = false;
-			//if (exit == ga_exitdemo)
-			//	break;
-
-			/*int i;
-			char demo[9];
-
-			for (i = 1; i < 10; i++)
-			{
-				int lump;
-
-				D_snprintf(demo, sizeof(demo), "DEMO%1d", i);
-				lump = W_CheckNumForName(demo);
-				if (lump == -1)
-					break;
-
-				exit = RunInputDemo(demo);
-				if (exit == ga_exitdemo)
-					break;
-			}*/
-		} while (1);
-	}
-	M_Stop();
-
-	G_InitNew (4, gt_single, false);	//DLG: TESTING!!!!!
-	G_RunGame ();						//DLG: TESTING!!!!!
-#else
-reselect:
-	MiniLoop(M_Start, M_Stop, M_Ticker, M_Drawer, NULL);
-#endif
-
-	if (consoleplayer == 0)
-	{
-		if (starttype != gt_single && !startsplitscreen)
-		{
-			I_NetSetup();
-#ifndef MARS
-			if (starttype == gt_single)
-				goto reselect;		/* aborted net startup */
-#endif
-		}
-	}
-
-	if (startsave != -1)
-		G_LoadGame(startsave);
-	else
-		G_InitNew(startmap, starttype, startsplitscreen);
-
-	G_RunGame ();
-}
 
 /*============================================================================ */
 
@@ -1338,45 +1231,72 @@ D_printf ("DM_Main\n");
 	G_RecordPositionDemo();
 #endif
 
-/*	MiniLoop (F_Start, F_Stop, F_Ticker, F_Drawer, UpdateBuffer); */
-
-/*G_InitNew (startmap, gt_deathmatch, false); */
-/*G_RunGame (); */
-
-#ifdef NeXT
-	if (M_CheckParm ("-dm") )
-	{
-		I_NetSetup ();
-		G_InitNew (startmap, gt_deathmatch, false);
-	}
-	else if (M_CheckParm ("-dial") || M_CheckParm ("-answer") )
-	{
-		I_NetSetup ();
-		G_InitNew (startmap, gt_coop, false);
-	}
-	else
-		G_InitNew (startmap, gt_single, false);
-	G_RunGame ();
-#endif
-
 	if (I_GetFRTCounter() <= 256) {
 		// Likely an old version of PicoDrive with incorrect WDT handling.
 		legacy_emulator = LEGACY_EMULATOR_INCOMPATIBLE;
 	}
 
-#ifdef MARS
-	while (1)
-	{
-		RunTitle();
-		RunMenu();
-	}
-#else
-	while (1)
-	{
-		RunTitle();
-		RunInputDemo("DEMO1");
-		RunCredits ();
-		RunInputDemo("DEMO2");
+#ifdef SHOW_COMPATIBILITY_PROMPT
+	if (legacy_emulator) {
+		MiniLoop (START_Compatibility, STOP_Compatibility, TIC_Compatibility, DRAW_Compatibility, UpdateBuffer);
 	}
 #endif
+
+#ifdef SHOW_DISCLAIMER
+	MiniLoop (START_Disclaimer, STOP_Disclaimer, TIC_Disclaimer, DRAW_Disclaimer, UpdateBuffer);
+#endif
+
+	startmap = 1;
+	starttype = gt_single;
+	consoleplayer = 0;
+
+	MiniLoop (START_Title, STOP_Title, TIC_Abortable, DRAW_Title, UpdateBuffer);
+
+	int exit = ga_titleexpired;
+
+	if (!gameinfo.noAttractDemo) {
+		do {
+			M_Start();
+			G_InitNew (TITLE_MAP_NUMBER, gt_single, false);
+			titlescreen = true;
+			exit = MiniLoop (P_Start, P_Stop, P_Ticker, P_Drawer, P_Update);
+			titlescreen = false;
+			M_Stop();
+
+			switch (exit) {
+				case ga_startnew:
+					G_InitNew(startmap, starttype, startsplitscreen);
+					G_RunGame();
+					break;
+				case ga_titleexpired:
+					{
+						int lump = W_CheckNumForName("DEMO1");
+						if (lump == -1)
+							break;
+						
+						demoplayback = true;
+						exit = RunInputDemo("DEMO1");
+						demoplayback = false;
+					}
+					break;
+			}
+		} while (1);
+	}
+
+	/*
+	if (consoleplayer == 0)
+	{
+		if (starttype != gt_single && !startsplitscreen)
+		{
+			I_NetSetup();
+		}
+	}
+
+	if (startsave != -1)
+		G_LoadGame(startsave);
+	else
+		G_InitNew(startmap, starttype, startsplitscreen);
+
+	G_RunGame ();
+	*/
 }
