@@ -1326,8 +1326,8 @@ visplane_t* R_FindPlane(fixed_t height,
 	return check;
 }
 
-visplane_t* R_FindPlane2(fixed_t height, 
-	int flatandlight)
+visplane_t* R_FindPlaneFOF(fixed_t height, 
+	int flatandlight, int start, int stop)
 {
 	visplane_t *check, *tail, *next;
 	int hash = R_PlaneHash(height, flatandlight);
@@ -1339,7 +1339,17 @@ visplane_t* R_FindPlane2(fixed_t height,
 
 		if (height == check->height && // same plane as before?
 			flatandlight == check->flatandlight)
-			return check; // use the same one as before
+		{
+			if (check->didSeg != 0 || MARKEDOPEN(check->open[start]))
+			{
+				// found a plane, so adjust bounds and return it
+				if (start < check->minx)
+					check->minx = start; // mark the new edge
+				if (stop > check->maxx)
+					check->maxx = stop;  // mark the new edge
+				return check; // use the same one as before
+			}
+		}
 	}
 
 	if (vd.lastvisplane == vd.visplanes + MAXVISPLANES)
@@ -1351,8 +1361,10 @@ visplane_t* R_FindPlane2(fixed_t height,
 
 	check->height = height;
 	check->flatandlight = flatandlight;
-	check->minx = 320;
-	check->maxx = -1;
+	check->minx = start;
+	check->maxx = stop;
+	check->isFOF = 1;
+	check->didSeg = 0;
 
 	R_MarkOpenPlane(check);
 

@@ -199,8 +199,9 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
 
     for (x = start; x <= stop; x++)
     {
-        int floorclipx, ceilingclipx;
+        VINT floorclipx, ceilingclipx;
         int low, high, top, bottom;
+        VINT newlow, newhigh;
         int cy, vh;
         fixed_t scale2;
 
@@ -227,12 +228,16 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
         else if (low > floorclipx)
             low = floorclipx;
 
+        newlow = low;
+
         high = FixedMul(scale2, ceilingnewheight)>>FRACBITS;
         high = cy - high;
         if (high > vh)
             high = vh;
         else if (high < ceilingclipx)
             high = ceilingclipx;
+
+        newhigh = high;
 
         if (newclipbounds)
         {
@@ -314,6 +319,11 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
                     high = vh;
                 else if (high < ceilingclipx)
                     high = ceilingclipx;
+
+                if ((actionbits & AC_NEWFLOOR) && sectors[segl->fofSector].ceilingheight - vd.viewz > floornewheight)
+                    low = newlow;
+                else if ((actionbits & AC_NEWCEILING) && sectors[segl->fofSector].floorheight - vd.viewz < ceilingnewheight)
+                    high = newhigh;
             }
 
             if (newclipbounds)
@@ -346,11 +356,10 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
 
                 if (top < bottom)
                 {
-                    visplane_t *fofplane = R_FindPlane(fofplaneHeight, fofandlight, x, stop);
+                    visplane_t *fofplane = R_FindPlaneFOF(fofplaneHeight, fofandlight, x, stop);
 
 //                    if (!(leveltime & 1))
 //                        CONS_Printf("fofplane_f is %d, %d, %d", fofplane, fofandlight, fofplaneHeight);
-                    fofplane->isFOF = 1;
                     SETLOWER8(fofplane->open[x], bottom-1);
 
                     if (fofplane->didSeg == 0)
@@ -373,10 +382,9 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
 
                 if (top < bottom)
                 {
-                    visplane_t *fofplane = R_FindPlane(fofplaneHeight, fofandlight, x, stop);
+                    visplane_t *fofplane = R_FindPlaneFOF(fofplaneHeight, fofandlight, x, stop);
 //                    if (!(leveltime & 1))
 //                        CONS_Printf("fofplane_c is %d, %d, %d", fofplane, fofandlight, fofplaneHeight);
-                    fofplane->isFOF = 1;
                     SETUPPER8(fofplane->open[x], top);
 
                     // This is needed for when there is no additional frontsector,
@@ -397,12 +405,15 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
                     // "ceilopen"
                     top = FixedMul(scale2, fofplaneHeight)>>FRACBITS;
                     top = cy - top;
-                    if (top < 0)
-                        top = 0;
+                    if (top >= 0)
+                    {
+                        visplane_t *fofplane = R_FindPlaneFOF(fofplaneHeight, fofandlight, x, stop);
+                        fofplane->didSeg = 1;
+                        fofplane->open[x] = (top << 8);
+                    }
 
-                    visplane_t *fofplane = R_FindPlane(fofplaneHeight, fofandlight, x, stop);
-                    fofplane->didSeg = 1;
-                    fofplane->open[x] = (top << 8);
+                    if (fofplaneHeight == ceilingnewheight)
+                        segl->actionbits &= ~AC_FOFSIDE;
 //                    if (leveltime & 1)
 //                        CONS_Printf("Top is %d, %d, %d", fofplane, fofandlight, fofplaneHeight);
                 }
@@ -416,9 +427,12 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
                     if (bottom > 180)
                         bottom = 180;
 
-                    visplane_t *fofplane = R_FindPlane(fofplaneHeight, fofandlight, x, stop);
+                    visplane_t *fofplane = R_FindPlaneFOF(fofplaneHeight, fofandlight, x, stop);
                     fofplane->didSeg = 1;
                     fofplane->open[x] = (fofplane->open[x] & 0xff00) + (bottom-1);
+
+                    if (fofplaneHeight == floornewheight)
+                        segl->actionbits &= ~AC_FOFSIDE;
 
 //                    if (leveltime &1)
 //                        CONS_Printf("Bottom is %d, %d, %d", fofplane, fofandlight, fofplaneHeight);
