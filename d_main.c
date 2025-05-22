@@ -512,10 +512,6 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 			else {
 				rec_button_count -= 1;
 			}
-
-			// This is for reading conventional input-based demos.
-			ticbuttons[consoleplayer] = buttons = *((long *)demobuffer);
-			demobuffer += 4;
 #endif
 		}
 

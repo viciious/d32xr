@@ -424,7 +424,7 @@ void P_Drawer (void)
 
 	Mars_R_SecWait();
 
-	if (demoplayback)
+	if (demoplayback || titlescreen)
 		M_Drawer();
 	if (optionsMenuOn)
 		O_Drawer();
@@ -465,7 +465,7 @@ void P_Start (void)
 	optionsMenuOn = false;
 	M_ClearRandom ();
 
-	if (!demoplayback && !demorecording)
+	if (!demoplayback && !demorecording && !titlescreen)
 		if (!netgame || splitscreen)
 			P_RandomSeed(I_GetTime());
 
