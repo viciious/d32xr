@@ -399,7 +399,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
 #ifdef WALLDRAW2X
                fof_texturemid >>= 1;
 #endif
-               if (fofsec->ceilingheight == front_sector->floorheight || fofsec->floorheight == front_sector->ceilingheight)
+               if (fofsec->ceilingheight <= front_sector->floorheight || fofsec->floorheight >= front_sector->ceilingheight)
                {
                   fof_texturemid = 0;
                   segl->fof_texturenum = (unsigned)-1;
@@ -419,7 +419,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
             segl->fof_picnum = 0xff;
             if (fofsec->ceilingheight < vd.viewz)
             {
-               // Rendering the ceiling
+               // Top of FOF is visible
 //               actionbits |= AC_FOFCEILING;
                segl->fof_picnum = fofsec->ceilingpic;
                *fofInfo = fofsec->ceilingheight - vd.viewz;
@@ -428,6 +428,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
             }
             else if (fofsec->floorheight > vd.viewz)
             {
+               // Bottom of FOF is visible
 //               actionbits |= AC_FOFFLOOR;
                segl->fof_picnum = fofsec->floorpic;
                *fofInfo = fofsec->floorheight - vd.viewz;
@@ -443,13 +444,15 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
                // Rendering the ceiling
                actionbits |= AC_FOFCEILING;
                segl->fof_picnum = fofsec->ceilingpic;
-                            
+               *fofInfo = fofsec->ceilingheight - vd.viewz;
+
                // fof_picnum is just a junk value if AC_FOFCEILING or AC_FOFFLOOR isn't set.
             }
             else if (fofsec->floorheight > vd.viewz)
             {
                actionbits |= AC_FOFFLOOR;
                segl->fof_picnum = fofsec->floorpic;
+               *fofInfo = fofsec->floorheight - vd.viewz;
             }
 /*
             if (b_floorheight > fofsec->ceilingheight - vd.viewz)
