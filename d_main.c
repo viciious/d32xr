@@ -1219,7 +1219,7 @@ D_printf("G_Init\n");
 
 D_printf ("DM_Main\n");
 
-#if defined(PLAY_INPUT_THREE_BUTTON_DEMO) || defined(PLAY_INPUT_SIX_BUTTON_DEMO)
+#ifdef PLAY_INPUT_THREE_BUTTON_DEMO
 	while(1) {
 		RunInputDemo("DEMO1");
 	}
@@ -1230,7 +1230,7 @@ D_printf ("DM_Main\n");
 	}
 #endif
 
-#if defined(REC_INPUT_THREE_BUTTON_DEMO) || defined(REC_INPUT_SIX_BUTTON_DEMO)
+#ifdef REC_INPUT_THREE_BUTTON_DEMO
 	G_RecordInputDemo();	// set startmap and startskill
 #endif
 #ifdef REC_POS_DEMO
