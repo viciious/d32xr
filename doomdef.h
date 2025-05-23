@@ -1241,6 +1241,10 @@ extern VINT initmathtables;
 extern VINT COLOR_BLACK;
 extern VINT COLOR_WHITE;
 
+void I_InitMenuFire(jagobj_t* titlepic);
+void I_StopMenuFire(void);
+void I_DrawMenuFire(void);
+
 void S_StartSong(int musiclump, int looping, int cdtrack);
 int S_SongForMapnum(int mapnum);
 void S_StopSong(void);

@@ -732,7 +732,7 @@ int G_PlayInputDemoPtr (unsigned char *demo)
 
 	map = demo[5];
 	
-	demo_p = demo + 6;
+	demo_p = demo + 4;
 	
 	G_InitNew (map, gt_single, false);
 	demoplayback = true;

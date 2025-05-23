@@ -349,6 +349,9 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 	ticbuttons[0] = ticbuttons[1] = oldticbuttons[0] = oldticbuttons[1] = 0;
 	ticmousex[0] = ticmousex[1] = ticmousey[0] = ticmousey[1] = 0;
 
+	rec_buttons = 0;
+	rec_button_count = 0;
+
 	do
 	{
 		ticstart = I_GetFRTCounter();
@@ -390,7 +393,22 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		oldticrealbuttons = ticrealbuttons;
 
 		buttons = I_ReadControls();
+
+		if (buttons & BT_START) {
+#ifdef SHOW_COMPATIBILITY_PROMPT
+			if (onscreen_prompt) {
+				exit = ga_closeprompt;
+				break;
+			}
+#endif
+			if (demoplayback) {
+				exit = ga_exitdemo;
+				break;
+			}
+		}
+
 		buttons |= I_ReadMouse(&mx, &my);
+		
 		if (demoplayback)
 		{
 			ticmousex[consoleplayer] = 0;
@@ -407,7 +425,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 
 		
 		if (titlescreen && gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
-			if (leveltime > 20*30) {
+			if (leveltime > (gameinfo.titleTime >> 1)) {
 				exit = ga_titleexpired;
 				break;
 			}
@@ -496,7 +514,6 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 					ticbuttons[consoleplayer] = buttons = 0;
 					demoplayback = false;
 					exit = ga_completed;
-					//exit = ga_exitdemo;
 					break;
 				}
 			}
@@ -621,8 +638,9 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 				demorecording = false;
 			}
 			else if (leveltime >= 30 + (30*30)) {
-				*demo_p += 2;
-				*((short *)demo_p) = -1;
+				demo_p += 2;
+				*demo_p = 0;
+				demo_p[1] = 0x80;
 				demorecording = false;
 			}
 			else if (leveltime <= 30) {
@@ -644,18 +662,6 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 				}
 			}
 #endif
-		}
-
-		if (buttons & BT_START) {
-#ifdef SHOW_COMPATIBILITY_PROMPT
-			if (onscreen_prompt) {
-				exit = ga_closeprompt;
-				break;
-			}
-#endif
-			if (demorecording || demoplayback) {
-				exit = ga_completed;
-			}
 		}
 
 		if (gameaction == ga_warped || gameaction == ga_startnew)
@@ -728,8 +734,8 @@ jagobj_t	*titlepic;
 
 int TIC_Abortable (void)
 {
-	if (ticon >= gameinfo.titleTime)
-		return 1;		/* go on to next demo */
+	if (ticon >= 90)
+		return 1;
 
 	return 0;
 }
@@ -1099,6 +1105,8 @@ void START_Title(void)
 
 	ticon = 0;
 
+	I_InitMenuFire(titlepic);
+
 	S_StartSong(gameinfo.titleMus, 0, cdtrack_title);
 }
 
@@ -1106,11 +1114,13 @@ void STOP_Title (void)
 {
 	if (titlepic != NULL)
 		Z_Free (titlepic);
-	//S_StopSong();
+
+	I_StopMenuFire();
 }
 
 void DRAW_Title (void)
 {
+	I_DrawMenuFire();
 }
 
 /*============================================================================= */
@@ -1246,12 +1256,14 @@ D_printf ("DM_Main\n");
 	starttype = gt_single;
 	consoleplayer = 0;
 
-	MiniLoop (START_Title, STOP_Title, TIC_Abortable, DRAW_Title, UpdateBuffer);
-
 	int exit = ga_titleexpired;
 
 	if (!gameinfo.noAttractDemo) {
 		do {
+			// Title intro
+			MiniLoop (START_Title, STOP_Title, TIC_Abortable, DRAW_Title, UpdateBuffer);
+
+			// Title with menu
 			M_Start();
 			G_InitNew (TITLE_MAP_NUMBER, gt_single, false);
 			titlescreen = true;
@@ -1261,10 +1273,12 @@ D_printf ("DM_Main\n");
 
 			switch (exit) {
 				case ga_startnew:
+					// Start a new game
 					G_InitNew(startmap, starttype, startsplitscreen);
 					G_RunGame();
 					break;
 				case ga_titleexpired:
+					// Run a demo
 					{
 						int lump = W_CheckNumForName("DEMO1");
 						if (lump == -1)

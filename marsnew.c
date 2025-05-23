@@ -268,6 +268,9 @@ void Mars_Secondary(void)
 		case MARS_SECCMD_R_DRAW_SPRITES:
 			Mars_Sec_R_DrawSprites(MARS_SYS_COMM6);
 			break;
+		case MARS_SECCMD_M_ANIMATE_FIRE:
+			Mars_Sec_M_AnimateFire();
+			break;
 		case MARS_SECCMD_S_INIT_DMA:
 			Mars_Sec_InitSoundDMA(MARS_SYS_COMM6);
 			break;
@@ -768,7 +771,7 @@ void I_Update(void)
 	/* */
 	/* wait until on the third tic after last display */
 	/* */
-	const int ticwait = (demoplayback || demorecording ? 4 : ticsperframe); // demos were recorded at 15-20fps
+	const int ticwait = (titlescreen || demoplayback || demorecording ? 4 : ticsperframe); // demos were recorded at 15-20fps
 
 	// Adjust sky position.
 	unsigned short scroll_y_base = gamemapinfo.skyOffsetY;
