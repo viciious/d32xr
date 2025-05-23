@@ -1256,6 +1256,7 @@ D_printf ("DM_Main\n");
 	starttype = gt_single;
 	consoleplayer = 0;
 
+	char demo_name[6] = { 'D', 'E', 'M', 'O', '0', '\0'};
 	int exit = ga_titleexpired;
 
 	if (!gameinfo.noAttractDemo) {
@@ -1280,12 +1281,15 @@ D_printf ("DM_Main\n");
 				case ga_titleexpired:
 					// Run a demo
 					{
-						int lump = W_CheckNumForName("DEMO1");
-						if (lump == -1)
-							break;
+						demo_name[4]++;	// Point to the next demo.
+						
+						int lump = W_CheckNumForName(demo_name);
+						if (lump == -1) {
+							demo_name[4] = '1';	// Assume we at least have a DEMO1 lump.
+						}
 						
 						demoplayback = true;
-						exit = RunInputDemo("DEMO1");
+						exit = RunInputDemo(demo_name);
 						demoplayback = false;
 					}
 					break;
