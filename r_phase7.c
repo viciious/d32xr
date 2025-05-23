@@ -531,13 +531,14 @@ static void Mars_R_SortPlanes(void)
     numplanes = 0;
     for (pl = vd.visplanes + 1; pl < vd.lastvisplane; pl++)
     {
-        // composite sort key: 1b - sign bit, 7b - negated span length, 8b - flat
-        unsigned key = (unsigned)(pl->maxx - pl->minx - 1) >> 4;
-        if (key > 127) {
-            key = 127;
+        // composite sort key: 1b - sign bit, 1b - !isFOF, 6b - negated span length, 8b - flat
+        unsigned key = (unsigned)(pl->maxx - pl->minx - 1) >> 5;
+        if (key > 63) {
+            key = 63;
         }
         // to minimize pipeline stalls, the larger planes must be drawn first, hence length negation
-        key = (127 - key) << 8;
+        key = (63 - key) << 8;
+        if (!pl->isFOF) key |= 64;
         key |= (pl->flatandlight & 0xFF);
         sortbuf[i + 0] = key;
         sortbuf[i + 1] = ++numplanes;
