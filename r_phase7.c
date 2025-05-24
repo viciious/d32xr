@@ -321,7 +321,7 @@ static visplane_t *R_GetNextPlane(uint16_t *sortedvisplanes)
 #endif
 }
 
-static void R_DrawPlanes2(VINT isFOF)
+static void R_DrawPlanes2(int isFOF)
 {
     angle_t angle;
     localplane_t lpl;
@@ -464,7 +464,7 @@ static void R_DrawPlanes2(VINT isFOF)
 static void Mars_R_SplitPlanes(void) ATTR_DATA_CACHE_ALIGN;
 static void Mars_R_SortPlanes(void) ATTR_DATA_CACHE_ALIGN;
 
-void Mars_Sec_R_DrawPlanes(VINT isFOF)
+void Mars_Sec_R_DrawPlanes(int isFOF)
 {
     R_DrawPlanes2(isFOF);
 }
@@ -608,11 +608,12 @@ void R_DrawPlanes(void)
     Mars_R_BeginDrawPlanes();
 
     R_DrawPlanes2(0);
+
+//    Mars_R_EndDrawPlanes();
+
     // Wait for secondary CPU here
     Mars_R_BeginDrawFOFPlanes();
     R_DrawPlanes2(1);
-
-    Mars_R_EndDrawPlanes();
 #else
     R_DrawPlanes2();
 #endif
