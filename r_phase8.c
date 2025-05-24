@@ -593,7 +593,7 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
       if((ds->scalefrac < scalefrac && ds->scale2 < scalefrac) ||
          ((ds->scalefrac <= scalefrac || ds->scale2 <= scalefrac) && R_SegBehindPoint(ds, vis->gx, vis->gy))) {
 
-         if (ds->actionbits & AC_FOFSIDE)
+         if ((ds->actionbits & AC_FOFSIDE) && ds->fof_texturenum != 0xff)
             R_DrawFOFSegRange(ds, r1, r2);
 
          if (ds->actionbits & AC_MIDTEXTURE)
@@ -785,7 +785,7 @@ static void R_DrawSortedSprites(int* sortedsprites, int sprscreenhalf)
       r1 = ds->start < x1 ? x1 : ds->start;
       r2 = ds->stop  > x2 ? x2 : ds->stop;
 
-      if (ds->actionbits & AC_FOFSIDE)
+      if ((ds->actionbits & AC_FOFSIDE) && ds->fof_texturenum != 0xff)
          R_DrawFOFSegRange(ds, r1, r2);
 
       if (ds->actionbits & AC_MIDTEXTURE)

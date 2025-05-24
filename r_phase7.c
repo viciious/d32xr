@@ -365,9 +365,6 @@ static void R_DrawPlanes2(int isFOF)
 #ifdef MARS
         Mars_ClearCacheLines(pl, (sizeof(visplane_t) + 31) / 16);
 #endif
-
-//        if (pl->isFOF) // Don't draw them now plzkthx
-//            continue;
         
         if (pl->minx > pl->maxx)
             continue;
