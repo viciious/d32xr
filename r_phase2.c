@@ -199,9 +199,8 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
 
     for (x = start; x <= stop; x++)
     {
-        VINT floorclipx, ceilingclipx;
+        int floorclipx, ceilingclipx;
         int low, high, top, bottom;
-        VINT newlow, newhigh;
         int cy, vh;
         fixed_t scale2;
 
@@ -228,16 +227,12 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
         else if (low > floorclipx)
             low = floorclipx;
 
-        newlow = low;
-
         high = FixedMul(scale2, ceilingnewheight)>>FRACBITS;
         high = cy - high;
         if (high > vh)
             high = vh;
         else if (high < ceilingclipx)
             high = ceilingclipx;
-
-        newhigh = high;
 
         if (newclipbounds)
         {
@@ -304,7 +299,7 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
             //
             // calc high and low
             //
-            if (actionbits & AC_FOFSIDE) // AC_FOFSIDE
+            /*if (actionbits & AC_FOFSIDE) // AC_FOFSIDE
             {
                 low = FixedMul(scale2, sectors[segl->fofSector].floorheight - vd.viewz)>>FRACBITS;
                 low = cy - low;
@@ -324,7 +319,7 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
                     low = newlow;
                 else if ((actionbits & AC_NEWCEILING) && sectors[segl->fofSector].floorheight - vd.viewz < ceilingnewheight)
                     high = newhigh;
-            }
+            }*/
 
             if (newclipbounds)
             {
