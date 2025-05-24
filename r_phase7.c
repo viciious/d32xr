@@ -46,7 +46,7 @@ static void (*mapplane)(localplane_t*, int, int, int);
 static void R_MapFlatPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
 static void R_MapColorPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
 static void R_PlaneLoop(localplane_t* lpl) ATTR_DATA_CACHE_ALIGN;
-static void R_DrawPlanes2(void) ATTR_DATA_CACHE_ALIGN;
+static void R_DrawPlanes2(VINT isFOF) ATTR_DATA_CACHE_ALIGN;
 
 static int  R_TryLockPln(void) ATTR_DATA_CACHE_ALIGN;
 static void R_LockPln(void) ATTR_DATA_CACHE_ALIGN;
@@ -321,7 +321,7 @@ static visplane_t *R_GetNextPlane(uint16_t *sortedvisplanes)
 #endif
 }
 
-static void R_DrawPlanes2(void)
+static void R_DrawPlanes2(VINT isFOF)
 {
     angle_t angle;
     localplane_t lpl;
@@ -358,6 +358,9 @@ static void R_DrawPlanes2(void)
     while ((pl = R_GetNextPlane((uint16_t *)vd.gsortedvisplanes)) != NULL)
     {
         int light;
+
+        if (pl->isFOF != isFOF)
+            continue;
 
 #ifdef MARS
         Mars_ClearCacheLines(pl, (sizeof(visplane_t) + 31) / 16);
@@ -461,9 +464,9 @@ static void R_DrawPlanes2(void)
 static void Mars_R_SplitPlanes(void) ATTR_DATA_CACHE_ALIGN;
 static void Mars_R_SortPlanes(void) ATTR_DATA_CACHE_ALIGN;
 
-void Mars_Sec_R_DrawPlanes(void)
+void Mars_Sec_R_DrawPlanes(VINT isFOF)
 {
-    R_DrawPlanes2();
+    R_DrawPlanes2(isFOF);
 }
 
 static void Mars_R_SplitPlanes(void)
@@ -506,6 +509,8 @@ static void Mars_R_SplitPlanes(void)
             newpl->open = pl->open;
             newpl->height = pl->height;
             newpl->flatandlight = pl->flatandlight;
+            newpl->isFOF = pl->isFOF;
+            newpl->didSeg = pl->didSeg;
             newpl->minx = start + 1;
             newpl->maxx = newstop;
 
@@ -602,7 +607,10 @@ void R_DrawPlanes(void)
 
     Mars_R_BeginDrawPlanes();
 
-    R_DrawPlanes2();
+    R_DrawPlanes2(0);
+    // Wait for secondary CPU here
+    Mars_R_BeginDrawFOFPlanes();
+    R_DrawPlanes2(1);
 
     Mars_R_EndDrawPlanes();
 #else
