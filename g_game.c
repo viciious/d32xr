@@ -732,7 +732,7 @@ int G_PlayInputDemoPtr (unsigned char *demo)
 
 	map = demo[5];
 	
-	demo_p = demo + 4;
+	demo_p = demo + 8;
 	
 	G_InitNew (map, gt_single, false);
 	demoplayback = true;
@@ -774,7 +774,7 @@ int G_PlayPositionDemoPtr (unsigned char *demo)
 #ifdef REC_INPUT_THREE_BUTTON_DEMO
 void G_RecordInputDemo (void)
 {
-	demo_p = demobuffer = Z_Malloc (0x200, PU_STATIC);	// More than enough for a 30 second demo.
+	demo_p = demobuffer = Z_Malloc (0x100, PU_STATIC);	// More than enough for a 30 second demo.
 	
 	*demo_p++ = 'I';
 	*demo_p++ = 'D';
@@ -782,6 +782,8 @@ void G_RecordInputDemo (void)
 	*demo_p++ = 'O';
 	*demo_p++ = 0;			// char unused
 	*demo_p++ = startmap;	// char map
+	*demo_p++ = 0;			// short duration (could be larger than the number of frames captured)
+	*demo_p++ = 0;			// ...
 	
 	G_InitNew (startmap, gt_single, false);
 	demorecording = true;

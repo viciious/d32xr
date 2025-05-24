@@ -510,7 +510,11 @@ void P_BuildMove(player_t *player)
 	{
 		player->forwardmove = player->sidemove = 0;
 		player->pflags &= ~PF_GASPEDAL;
+		player->pflags |= PF_CONTROLDISABLED;
 		player->buttons = 0;
+	}
+	else {
+		player->pflags &= ~PF_CONTROLDISABLED;
 	}
 }
 

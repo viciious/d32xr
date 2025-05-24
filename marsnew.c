@@ -771,7 +771,7 @@ void I_Update(void)
 	/* */
 	/* wait until on the third tic after last display */
 	/* */
-	const int ticwait = (titlescreen || demoplayback || demorecording ? 4 : ticsperframe); // demos were recorded at 15-20fps
+	const int ticwait = (titlescreen ? 4 : ticsperframe); // run title screen at 15 fps
 
 	// Adjust sky position.
 	unsigned short scroll_y_base = gamemapinfo.skyOffsetY;

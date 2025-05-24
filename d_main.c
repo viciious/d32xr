@@ -35,8 +35,10 @@ int 		ticstart;
 	fixed_t prev_rec_values[4];
 #endif
 
+unsigned char rec_prev_buttons = 0;
 unsigned char rec_buttons = 0;
 unsigned char rec_button_count = 0;
+unsigned short rec_start_time = 0;
 
 unsigned configuration[NUMCONTROLOPTIONS][3] =
 {
@@ -349,8 +351,12 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 	ticbuttons[0] = ticbuttons[1] = oldticbuttons[0] = oldticbuttons[1] = 0;
 	ticmousex[0] = ticmousex[1] = ticmousey[0] = ticmousey[1] = 0;
 
+	rec_prev_buttons = 0;
 	rec_buttons = 0;
 	rec_button_count = 0;
+	rec_start_time = 0x7FFF;
+
+	players[0].pflags |= PF_CONTROLDISABLED;
 
 	do
 	{
@@ -498,23 +504,36 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 			}
 #endif
 
-#ifndef PLAY_POS_DEMO
-			ticbuttons[consoleplayer] = buttons = Mars_ConvGamepadButtons(rec_buttons);
-
-
-			if (rec_button_count > 0) {
-				rec_button_count -= 1;
+#ifndef PLAY_POS_DEMO	// Input demo code should *always* be present if position demo code is left out.
+			if (rec_start_time == 0x7FFF) {
+				if (!(players[0].pflags & PF_CONTROLDISABLED)) {
+					// Start demo playback!
+					rec_start_time = leveltime;
+					rec_buttons = *demo_p;
+					ticbuttons[consoleplayer] = buttons = Mars_ConvGamepadButtons(rec_buttons);
+					demo_p++;
+					rec_button_count = *demo_p;
+				}
 			}
 			else {
-				demo_p += 2;
-				rec_button_count = *demo_p;
-				rec_buttons = demo_p[1];
-
-				if (*((unsigned short *)demo_p) & BT_START) {
-					ticbuttons[consoleplayer] = buttons = 0;
-					demoplayback = false;
-					exit = ga_completed;
-					break;
+				rec_button_count--;
+				if (rec_button_count == 0) {
+					// Count is zero. Read the next set of buttons.
+					demo_p++;
+					rec_buttons = *demo_p;
+					if (rec_buttons & BT_START) {
+						ticbuttons[consoleplayer] = buttons = 0;
+						demoplayback = false;
+						exit = ga_completed;
+						break;
+					}
+					ticbuttons[consoleplayer] = buttons = Mars_ConvGamepadButtons(rec_buttons);
+					demo_p++;
+					rec_button_count = *demo_p;
+				}
+				else {
+					// Count is not zero. Reuse the previous button mask.
+					ticbuttons[consoleplayer] = buttons = Mars_ConvGamepadButtons(rec_buttons);
 				}
 			}
 #endif
@@ -633,34 +652,48 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 #endif
 
 #ifdef REC_INPUT_THREE_BUTTON_DEMO
-			if ((short)demo_p - (short)demobuffer == (0x200 - 2)) {
-				*((short *)demo_p) = -1;
+			if ((short)demo_p - (short)demobuffer >= (0x100 - 1)) {
+				// The demo recording buffer has been filled up. End the recording.
+				if (demobuffer[0xFE] == 0xFF) {
+					// This byte is a count of 255. Set it to zero so the demo can be ended.
+					demobuffer[0xFE] = 0;
+				}
+				demobuffer[0xFF] = 0x80;
+				*((short *)&demobuffer[6]) = leveltime - rec_start_time;
 				demorecording = false;
 			}
-			else if (leveltime >= 30 + (30*30)) {
-				demo_p += 2;
-				*demo_p = 0;
-				demo_p[1] = 0x80;
+			else if (leveltime - rec_start_time >= (30*TICRATE) || buttons & BT_START) {
+				// The demo has been recording for 30 seconds, or START was pressed. End the recording.
+				demo_p += 1;
+				*demo_p++ = 0x80;
+				*((short *)&demobuffer[6]) = leveltime - rec_start_time;
 				demorecording = false;
 			}
-			else if (leveltime <= 30) {
-				*demo_p = 0;
-				demo_p[1] = 0;
+			else if (rec_start_time == 0x7FFF) {
+				if (!(players[0].pflags & PF_CONTROLDISABLED)) {
+					// Start recording!
+					rec_start_time = leveltime;
+					*demo_p++ = buttons;
+					*demo_p = 1;
+				}
 			}
-			else if (leveltime > 30) {
-				if (buttons & BT_START) {
-					demo_p += 2;
-					*((short *)demo_p) = -1;
-				}
-				else if (demo_p[1] == (buttons & 0xFF) && *demo_p < 255) {
-					*demo_p = *demo_p + 1;
-				}
-				else {
-					demo_p += 2;
+			else if (rec_prev_buttons == (buttons & 0xFF)) {
+				// Same button combination as last frame. Increase the count.
+				*demo_p += 1;
+				if (*demo_p == 255) {
+					// Count reached 255. Create an additional count and start it at zero.
+					demo_p++;
 					*demo_p = 0;
-					demo_p[1] = buttons;
 				}
 			}
+			else {
+				// New button combination. Record the buttons with a count of 1.
+				demo_p += 1;
+				*demo_p++ = buttons;
+				*demo_p = 1;
+			}
+
+			rec_prev_buttons = buttons;
 #endif
 		}
 
@@ -1256,7 +1289,7 @@ D_printf ("DM_Main\n");
 	starttype = gt_single;
 	consoleplayer = 0;
 
-	char demo_name[6] = { 'D', 'E', 'M', 'O', '0', '\0'};
+	char demo_name[6] = { 'D', 'E', 'M', 'O', '0', '\0' };
 	int exit = ga_titleexpired;
 
 	if (!gameinfo.noAttractDemo) {
