@@ -46,7 +46,7 @@ static void (*mapplane)(localplane_t*, int, int, int);
 static void R_MapFlatPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
 static void R_MapColorPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
 static void R_PlaneLoop(localplane_t* lpl) ATTR_DATA_CACHE_ALIGN;
-static void R_DrawPlanes2(VINT isFOF) ATTR_DATA_CACHE_ALIGN;
+static void R_DrawPlanes2(int isFOF) ATTR_DATA_CACHE_ALIGN;
 
 static int  R_TryLockPln(void) ATTR_DATA_CACHE_ALIGN;
 static void R_LockPln(void) ATTR_DATA_CACHE_ALIGN;
