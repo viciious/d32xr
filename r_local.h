@@ -681,13 +681,14 @@ typedef struct vissprite_s
 
 #define	MAXVISSSEC		128
 
+#define VPFLAGS_ISFOF      1
+#define VPFLAGS_DIDSEG     2
 typedef struct visplane_s
 {
 	fixed_t		height;
 	VINT		minx, maxx;
-	int 		flatandlight;
-	VINT        isFOF; // TODO: temporary test
-	VINT        didSeg;
+	VINT 		flatandlight;
+	VINT        flags;
 	struct visplane_s	*next;
 	unsigned short		*open/*[SCREENWIDTH+2]*/;		/* top<<8 | bottom */ /* leave pads for [minx-1]/[maxx+1] */
 } visplane_t;
@@ -700,10 +701,10 @@ void R_MarkOpenPlane(visplane_t* pl)
 ATTR_DATA_CACHE_ALIGN
 ;
 
-visplane_t *R_FindPlaneFOF(fixed_t height, int flatandlight,
+visplane_t *R_FindPlaneFOF(fixed_t height, VINT flatandlight,
 	int start, int stop)
 ;
-visplane_t *R_FindPlane(fixed_t height, int flatandlight,
+visplane_t *R_FindPlane(fixed_t height, VINT flatandlight,
 	int start, int stop)
 ATTR_DATA_CACHE_ALIGN
 ;

@@ -94,7 +94,7 @@ static void R_MapFlatPlane(localplane_t* lpl, int y, int x, int x2)
     xstep = FixedMul(distance, lpl->basexscale);
     ystep = FixedMul(distance, lpl->baseyscale);
 
-    const int flatnum = lpl->pl->flatandlight&0xffff;
+    const int flatnum = lpl->pl->flatandlight&0xff;
 
 #if MIPLEVELS > 1 && FLATMIPS
     miplevel = (unsigned)distance / MIPSCALE;
@@ -218,7 +218,7 @@ static void R_PlaneLoop(localplane_t *lpl)
     t1 >>= 8;
     t2 = *pl_openptr;
 
-    unsigned short flatnum = lpl->pl->flatandlight;
+    uint8_t flatnum = lpl->pl->flatandlight&0xff;
     if (flatpixels[flatnum].size <= 2) {
         mapplane = &R_MapColorPlane;
     }
@@ -359,9 +359,11 @@ static void R_DrawPlanes2(int isFOF)
     {
         int light;
 
-        if (pl->isFOF != isFOF)
+        if (!isFOF && (pl->flags & VPFLAGS_ISFOF))
             continue;
-
+        else if (isFOF && !(pl->flags & VPFLAGS_ISFOF))
+            continue;
+        
 #ifdef MARS
         Mars_ClearCacheLines(pl, (sizeof(visplane_t) + 31) / 16);
 #endif
@@ -369,7 +371,7 @@ static void R_DrawPlanes2(int isFOF)
         if (pl->minx > pl->maxx)
             continue;
 
-        const int flatnum = pl->flatandlight&0xffff;
+        const int flatnum = pl->flatandlight&0xff;
 
         lpl.wavy = flatpixels[flatnum].wavy;
 
@@ -414,7 +416,7 @@ static void R_DrawPlanes2(int isFOF)
         else
         {
 #ifdef SIMPLELIGHT
-            light = ((unsigned)pl->flatandlight>>16);
+            light = ((unsigned)pl->flatandlight>>8);
             lpl.lightmax = HWLIGHT((unsigned)((light + extralight) & 0xff));
 #else
             light = ((unsigned)pl->flatandlight>>16);
@@ -506,8 +508,7 @@ static void Mars_R_SplitPlanes(void)
             newpl->open = pl->open;
             newpl->height = pl->height;
             newpl->flatandlight = pl->flatandlight;
-            newpl->isFOF = pl->isFOF;
-            newpl->didSeg = pl->didSeg;
+            newpl->flags = pl->flags;
             newpl->minx = start + 1;
             newpl->maxx = newstop;
 
@@ -540,7 +541,6 @@ static void Mars_R_SortPlanes(void)
         }
         // to minimize pipeline stalls, the larger planes must be drawn first, hence length negation
         key = (63 - key) << 8;
-        if (!pl->isFOF) key |= 64;
         key |= (pl->flatandlight & 0xFF);
         sortbuf[i + 0] = key;
         sortbuf[i + 1] = ++numplanes;

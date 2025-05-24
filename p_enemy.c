@@ -1696,7 +1696,7 @@ void A_SteamBurst(mobj_t *actor)
 			if (P_AproxDistance(player->mo->x - actor->x, player->mo->y - actor->y) > info->radius + playerInfo->radius)
 				continue;
 
-			if (player && player->mo->state == &states[playerInfo->painstate]) // can't use gas jets when player is in pain!
+			if (player && player->mo->state == playerInfo->painstate) // can't use gas jets when player is in pain!
 				return;
 
 			fixed_t speed = info->mass << FRACBITS; // gas jets use this for the vertical thrust
