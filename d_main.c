@@ -505,13 +505,13 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 #endif
 
 #ifndef PLAY_POS_DEMO	// Input demo code should *always* be present if position demo code is left out.
-			/*if (leveltime - rec_start_time >= ((short *)demobuffer)[3]) {
+			if (leveltime - rec_start_time >= ((short *)demobuffer)[3]) {
 				ticbuttons[consoleplayer] = buttons = 0;
 				demoplayback = false;
 				exit = ga_completed;
 				break;
 			}
-			else*/ if (rec_start_time == 0x7FFF) {
+			else if (rec_start_time == 0x7FFF) {
 				if (!(players[0].pflags & PF_CONTROLDISABLED)) {
 					// Start demo playback!
 					rec_start_time = leveltime;
@@ -521,7 +521,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 					rec_button_count = *demo_p;
 				}
 			}
-			else if (!(players[0].pflags & PF_CONTROLDISABLED)) {
+			else {
 				rec_button_count--;
 				if (rec_button_count == 0) {
 					// Count is zero. Check if the next byte is a button mask or an additional count.
