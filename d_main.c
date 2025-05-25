@@ -505,7 +505,13 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 #endif
 
 #ifndef PLAY_POS_DEMO	// Input demo code should *always* be present if position demo code is left out.
-			if (rec_start_time == 0x7FFF) {
+			/*if (leveltime - rec_start_time >= ((short *)demobuffer)[3]) {
+				ticbuttons[consoleplayer] = buttons = 0;
+				demoplayback = false;
+				exit = ga_completed;
+				break;
+			}
+			else*/ if (rec_start_time == 0x7FFF) {
 				if (!(players[0].pflags & PF_CONTROLDISABLED)) {
 					// Start demo playback!
 					rec_start_time = leveltime;
@@ -515,21 +521,31 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 					rec_button_count = *demo_p;
 				}
 			}
-			else {
+			else if (!(players[0].pflags & PF_CONTROLDISABLED)) {
 				rec_button_count--;
 				if (rec_button_count == 0) {
-					// Count is zero. Read the next set of buttons.
-					demo_p++;
-					rec_buttons = *demo_p;
-					if (rec_buttons & BT_START) {
-						ticbuttons[consoleplayer] = buttons = 0;
-						demoplayback = false;
-						exit = ga_completed;
-						break;
+					// Count is zero. Check if the next byte is a button mask or an additional count.
+					if (*demo_p == 0xFF) {
+						demo_p++;
+						if (*demo_p > 0) {
+							// Read next byte as an additional count.
+							rec_button_count = *demo_p;
+						}
 					}
-					ticbuttons[consoleplayer] = buttons = Mars_ConvGamepadButtons(rec_buttons);
-					demo_p++;
-					rec_button_count = *demo_p;
+					if (rec_button_count == 0) {
+						// Count is still zero. Read the next byte as a button mask.
+						demo_p++;
+						rec_buttons = *demo_p;
+						if (rec_buttons & BT_START) {
+							ticbuttons[consoleplayer] = buttons = 0;
+							demoplayback = false;
+							exit = ga_completed;
+							break;
+						}
+						ticbuttons[consoleplayer] = buttons = Mars_ConvGamepadButtons(rec_buttons);
+						demo_p++;
+						rec_button_count = *demo_p;
+					}
 				}
 				else {
 					// Count is not zero. Reuse the previous button mask.
