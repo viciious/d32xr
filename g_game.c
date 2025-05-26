@@ -771,9 +771,10 @@ int G_PlayPositionDemoPtr (unsigned char *demo)
 =================
 */
 
-#ifdef REC_INPUT_THREE_BUTTON_DEMO
+#ifdef REC_INPUT_DEMO
 void G_RecordInputDemo (void)
 {
+	startmap = REC_INPUT_DEMO;
 	demo_p = demobuffer = Z_Malloc (0x100, PU_STATIC);	// More than enough for a 30 second demo.
 	
 	*demo_p++ = 'I';
