@@ -503,6 +503,7 @@ main_loop:
         beq.b   main_loop_bump_fm
         move.b  #0,need_ctrl_int
         /* send controller values to primary sh2 */
+        nop                         /* prevent soft lock in Gens (why does this work?) */
         move.w  #0x0001,0xA15102    /* assert CMD INT to primary SH2 */
 10:
         move.w  0xA15120,d0         /* wait on handshake in COMM0 */
