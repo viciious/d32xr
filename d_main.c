@@ -30,11 +30,6 @@ int 		ticstart;
 
 #ifdef PLAY_POS_DEMO
 	int			realtic;
-	fixed_t prev_rec_values[4];
-#else 
-#ifdef REC_POS_DEMO
-	fixed_t prev_rec_values[4];
-#endif
 #endif
 
 unsigned configuration[NUMCONTROLOPTIONS][3] =
@@ -389,7 +384,22 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		oldticrealbuttons = ticrealbuttons;
 
 		buttons = I_ReadControls();
+
+		if (buttons & BT_START) {
+#ifdef SHOW_COMPATIBILITY_PROMPT
+			if (onscreen_prompt) {
+				exit = ga_closeprompt;
+				break;
+			}
+#endif
+			if (demoplayback) {
+				exit = ga_exitdemo;
+				break;
+			}
+		}
+
 		buttons |= I_ReadMouse(&mx, &my);
+		
 		if (demoplayback)
 		{
 			ticmousex[consoleplayer] = 0;
@@ -404,222 +414,33 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		ticbuttons[consoleplayer] = buttons;
 		ticrealbuttons = buttons;
 
-		if (demoplayback)
-		{
-	#ifndef MARS
-			if (buttons & (BT_ATTACK|BT_SPEED|BT_USE) )
-			{
-				exit = ga_exitdemo;
+		
+		if (titlescreen) {
+			int timeleft = (gameinfo.titleTime >> 1) - leveltime;
+			if (timeleft <= 0) {
+				R_FadePalette(dc_playpals, (PALETTE_SHIFT_CLASSIC_FADE_TO_BLACK + 20), dc_cshift_playpals);
+				exit = ga_titleexpired;
 				break;
 			}
-	#endif
-
-			#ifdef PLAY_POS_DEMO
-			if (demo_p == demobuffer + 0xA) {
-				// This is the first frame, so grab the initial values.
-				prev_rec_values[0] = players[0].mo->x;
-				prev_rec_values[1] = players[0].mo->y;
-				prev_rec_values[2] = players[0].mo->z;
-				prev_rec_values[3] = players[0].mo->angle >> ANGLETOFINESHIFT;
-
-				demo_p += 16;
+			if (timeleft <= 5) {
+				int palette = PALETTE_SHIFT_CONVENTIONAL_FADE_TO_BLACK + (5 - timeleft);
+				//int palette = PALETTE_SHIFT_CLASSIC_FADE_TO_BLACK + ((5 - timeleft) << 2);
+				R_FadePalette(dc_playpals, palette, dc_cshift_playpals);
 			}
-			else {
-				// Beyond the first frame, we update only the values that
-				// have changed.
-				unsigned char key = *demo_p++;
-
-				int rec_value;
-				unsigned char *prev_rec_values_bytes;
-
-				for (int i=0; i < 4; i++) {
-					// Check to see which values have changed and save them
-					// in 'prev_rec_values' so the next frame's comparisons
-					// can be done against the current frame.
-					prev_rec_values_bytes = &prev_rec_values[i];
-					rec_value = 0;
-
-					switch (key&3) {
-						case 3: // Long -- update the value as recorded (i.e. no delta).
-							rec_value = *demo_p++;
-							rec_value <<= 8;
-							rec_value |= *demo_p++;
-							rec_value <<= 8;
-							rec_value |= *demo_p++;
-							rec_value <<= 8;
-							rec_value |= *demo_p++;
-							prev_rec_values[i] = rec_value;
-							break;
-
-						case 2: // Short -- add the difference to the current value.
-							rec_value = *demo_p++;
-							rec_value <<= 8;
-							rec_value |= *demo_p++;
-							prev_rec_values[i] += (signed short)rec_value;
-							break;
-
-						case 1: // Byte -- add the difference to the current value.
-							rec_value = *demo_p++;
-							prev_rec_values[i] += (signed char)rec_value;
-					}
-
-					// Advance the key so the next two bits can be read to
-					// check for updates.
-					key >>= 2;
-				}
-
-				// Update the player variables with the newly updated
-				// frame values.
-				players[0].mo->x = prev_rec_values[0];
-				players[0].mo->y = prev_rec_values[1];
-				players[0].mo->z = prev_rec_values[2];
-				players[0].mo->angle = prev_rec_values[3] << ANGLETOFINESHIFT;
-			}
-	#endif
-
-	#ifndef PLAY_POS_DEMO
-			if (gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
-				// Rotate on the title screen.
-				ticbuttons[consoleplayer] = buttons = 0;
-				players[0].mo->angle += TITLE_ANGLE_INC;
-			}
-			else {
-				// This is for reading conventional input-based demos.
-				ticbuttons[consoleplayer] = buttons = *((long *)demobuffer);
-				demobuffer += 4;
-			}
-			#endif
+			// Rotate on the title screen.
+			ticbuttons[consoleplayer] = buttons = 0;
+			players[0].mo->angle += TITLE_ANGLE_INC;
 		}
 
-		#ifdef PLAY_POS_DEMO
+#ifdef PLAY_POS_DEMO
 		if (demoplayback) {
 			players[0].mo->momx = 0;
 			players[0].mo->momy = 0;
 			players[0].mo->momz = 0;
 		}
-		#endif
+#endif
 
 		gamevbls += vblsinframe;
-
-		if (demorecording) {
-			#ifdef REC_POS_DEMO
-			if (((short *)demobuffer)[3] == -1) {
-				// This is the first frame, so record the initial values in full.
-				prev_rec_values[0] = players[0].mo->x;
-				prev_rec_values[1] = players[0].mo->y;
-				prev_rec_values[2] = players[0].mo->z;
-				prev_rec_values[3] = players[0].mo->angle >> ANGLETOFINESHIFT;
-
-				char *values_p = prev_rec_values;
-				for (int i=0; i < 4; i++) {
-					*demo_p++ = *values_p++;
-					*demo_p++ = *values_p++;
-					*demo_p++ = *values_p++;
-					*demo_p++ = *values_p++;
-				}
-
-				((short *)demobuffer)[2] += 16; // 16 bytes written.
-			}
-			else {
-				// Beyond the first frame, we record only the values that
-				// have changed.
-				unsigned char frame_bytes = 1; // At least one byte will be written.
-
-				// Calculate the difference between values in the current
-				// frame and previous frame.
-				fixed_t delta[4];
-				delta[0] = players[0].mo->x - prev_rec_values[0];
-				delta[1] = players[0].mo->y - prev_rec_values[1];
-				delta[2] = players[0].mo->z - prev_rec_values[2];
-				delta[3] = (players[0].mo->angle >> ANGLETOFINESHIFT) - prev_rec_values[3];
-
-				// Save the current frame's values in 'prev_rec_values' so
-				// the next frame's comparisons can be done against the
-				// current frame.
-				prev_rec_values[0] = players[0].mo->x;
-				prev_rec_values[1] = players[0].mo->y;
-				prev_rec_values[2] = players[0].mo->z;
-				prev_rec_values[3] = players[0].mo->angle >> ANGLETOFINESHIFT;
-
-				unsigned char key = 0;
-
-				// Record the values that have changed and the minimum number
-				// of bytes needed to represent the deltas.
-				for (int i=0; i < 4; i++) {
-					key >>= 2;
-
-					fixed_t d = delta[i];
-					if (d != 0) {
-						if (d <= 0x7F && d >= -0x80) {
-							key |= 0x40; // Byte
-							frame_bytes++;
-						}
-						else if (d <= 0x7FFF && d >= -0x8000) {
-							key |= 0x80; // Short
-							frame_bytes += 2;
-						}
-						else {
-							key |= 0xC0; // Long
-							frame_bytes += 4;
-						}
-					}
-				}
-
-				unsigned char *delta_bytes;
-				unsigned char *prev_rec_values_bytes;
-
-				*demo_p++ = key;
-
-				// Based on the sizes put into the key, we record either the
-				// deltas (in the case of char and short) or the full value.
-				// Values with no difference will not be recorded.
-				for (int i=0; i < 4; i++) {
-					delta_bytes = &delta[i];
-					prev_rec_values_bytes = &prev_rec_values[i];
-					switch (key & 3) {
-						case 3: // Long
-							*demo_p++ = *prev_rec_values_bytes++;
-							*demo_p++ = *prev_rec_values_bytes++;
-							*demo_p++ = *prev_rec_values_bytes++;
-							*demo_p++ = *prev_rec_values_bytes++;
-							break;
-
-						case 2: // Short
-							*demo_p++ = delta_bytes[2];
-							// fall-thru
-
-						case 1: // Byte
-							*demo_p++ = delta_bytes[3];
-					}
-
-					// Advance the key so the next two bits can be read to
-					// check for updated values.
-					key >>= 2;
-				}
-
-				((short *)demobuffer)[2] += frame_bytes;	// Increase data length.
-			}
-
-			((short *)demobuffer)[3] += 1;	// Increase frame count.
-#endif
-
-#ifdef REC_INPUT_DEMO
-			*((long *)demo_p) = buttons;
-			demo_p += 4;
-#endif
-		}
-
-		if (buttons & BT_START) {
-#ifdef SHOW_COMPATIBILITY_PROMPT
-			if (onscreen_prompt) {
-				exit = ga_closeprompt;
-				break;
-			}
-#endif
-			if (demorecording || demoplayback) {
-				exit = ga_completed;
-			}
-		}
 
 		if (gameaction == ga_warped || gameaction == ga_startnew)
 		{
@@ -669,7 +490,7 @@ while (!I_RefreshCompleted ())
 		while ( DSPRead(&dspfinished) != 0xdef6 )
 		;
 #endif
-	} while (!exit);
+	} while (exit == ga_nothing || exit == ga_demoending);
 
 	stop ();
 	S_Clear ();
@@ -691,8 +512,8 @@ jagobj_t	*titlepic;
 
 int TIC_Abortable (void)
 {
-	if (ticon >= gameinfo.titleTime)
-		return 1;		/* go on to next demo */
+	if (ticon >= 90)
+		return 1;
 
 	return 0;
 }
@@ -1062,53 +883,25 @@ void START_Title(void)
 
 	ticon = 0;
 
-#ifdef MARS
 	I_InitMenuFire(titlepic);
-#else
+
 	S_StartSong(gameinfo.titleMus, 0, cdtrack_title);
-#endif
 }
 
 void STOP_Title (void)
 {
 	if (titlepic != NULL)
 		Z_Free (titlepic);
-#ifdef MARS
+
 	I_StopMenuFire();
-#else
-	S_StopSong();
-#endif
 }
 
 void DRAW_Title (void)
 {
-#ifdef MARS
 	I_DrawMenuFire();
-#endif
 }
 
 /*============================================================================= */
-
-void RunMenu (void);
-
-void RunTitle (void)
-{
-	startmap = 1;
-	starttype = gt_single;
-	consoleplayer = 0;
-	
-#ifdef SHOW_COMPATIBILITY_PROMPT
-	if (legacy_emulator) {
-		MiniLoop (START_Compatibility, STOP_Compatibility, TIC_Compatibility, DRAW_Compatibility, UpdateBuffer);
-	}
-#endif
-
-#ifdef SHOW_DISCLAIMER
-	MiniLoop (START_Disclaimer, STOP_Disclaimer, TIC_Disclaimer, DRAW_Disclaimer, UpdateBuffer);
-#endif
-
-	MiniLoop (START_Title, STOP_Title, TIC_Abortable, DRAW_Title, UpdateBuffer);
-}
 
 int RunInputDemo (char *demoname)
 {
@@ -1131,10 +924,6 @@ int RunInputDemo (char *demoname)
 	exit = G_PlayInputDemoPtr (demo);
 	Z_Free(demo);
 
-#ifndef MARS
-	if (exit == ga_exitdemo)
-		RunMenu ();
-#endif
 	return exit;
 }
 
@@ -1160,65 +949,9 @@ int RunPositionDemo (char *demoname)
 	exit = G_PlayPositionDemoPtr ((unsigned char*)demo);
 	Z_Free(demo);
 
-#ifndef MARS
-	if (exit == ga_exitdemo)
-		RunMenu ();
-#endif
 	return exit;
 }
 #endif
-
-void RunMenu (void)
-{
-#ifdef MARS
-	int exit = ga_exitdemo;
-
-	M_Start();
-	if (!gameinfo.noAttractDemo) {
-		do {
-			int i;
-			char demo[9];
-
-			for (i = 1; i < 10; i++)
-			{
-				int lump;
-
-				D_snprintf(demo, sizeof(demo), "DEMO%1d", i);
-				lump = W_CheckNumForName(demo);
-				if (lump == -1)
-					break;
-
-				exit = RunInputDemo(demo);
-				if (exit == ga_exitdemo)
-					break;
-			}
-		} while (exit != ga_exitdemo);
-	}
-	M_Stop();
-#else
-reselect:
-	MiniLoop(M_Start, M_Stop, M_Ticker, M_Drawer, NULL);
-#endif
-
-	if (consoleplayer == 0)
-	{
-		if (starttype != gt_single && !startsplitscreen)
-		{
-			I_NetSetup();
-#ifndef MARS
-			if (starttype == gt_single)
-				goto reselect;		/* aborted net startup */
-#endif
-		}
-	}
-
-	if (startsave != -1)
-		G_LoadGame(startsave);
-	else
-		G_InitNew(startmap, starttype, startsplitscreen);
-
-	G_RunGame ();
-}
 
 /*============================================================================ */
 
@@ -1264,7 +997,7 @@ D_printf("G_Init\n");
 
 D_printf ("DM_Main\n");
 
-#ifdef PLAY_INPUT_DEMO
+#ifdef REC_INPUT_DEMO
 	while(1) {
 		RunInputDemo("DEMO1");
 	}
@@ -1282,45 +1015,80 @@ D_printf ("DM_Main\n");
 	G_RecordPositionDemo();
 #endif
 
-/*	MiniLoop (F_Start, F_Stop, F_Ticker, F_Drawer, UpdateBuffer); */
-
-/*G_InitNew (startmap, gt_deathmatch, false); */
-/*G_RunGame (); */
-
-#ifdef NeXT
-	if (M_CheckParm ("-dm") )
-	{
-		I_NetSetup ();
-		G_InitNew (startmap, gt_deathmatch, false);
-	}
-	else if (M_CheckParm ("-dial") || M_CheckParm ("-answer") )
-	{
-		I_NetSetup ();
-		G_InitNew (startmap, gt_coop, false);
-	}
-	else
-		G_InitNew (startmap, gt_single, false);
-	G_RunGame ();
-#endif
-
 	if (I_GetFRTCounter() <= 256) {
 		// Likely an old version of PicoDrive with incorrect WDT handling.
 		legacy_emulator = LEGACY_EMULATOR_INCOMPATIBLE;
 	}
 
-#ifdef MARS
-	while (1)
-	{
-		RunTitle();
-		RunMenu();
-	}
-#else
-	while (1)
-	{
-		RunTitle();
-		RunInputDemo("DEMO1");
-		RunCredits ();
-		RunInputDemo("DEMO2");
+#ifdef SHOW_COMPATIBILITY_PROMPT
+	if (legacy_emulator) {
+		MiniLoop (START_Compatibility, STOP_Compatibility, TIC_Compatibility, DRAW_Compatibility, UpdateBuffer);
 	}
 #endif
+
+#ifdef SHOW_DISCLAIMER
+	MiniLoop (START_Disclaimer, STOP_Disclaimer, TIC_Disclaimer, DRAW_Disclaimer, UpdateBuffer);
+#endif
+
+	startmap = 1;
+	starttype = gt_single;
+	consoleplayer = 0;
+
+	char demo_name[6] = { 'D', 'E', 'M', 'O', '0', '\0' };
+	int exit = ga_titleexpired;
+
+	if (!gameinfo.noAttractDemo) {
+		do {
+			// Title intro
+			MiniLoop (START_Title, STOP_Title, TIC_Abortable, DRAW_Title, UpdateBuffer);
+
+			// Title with menu
+			M_Start();
+			G_InitNew (TITLE_MAP_NUMBER, gt_single, false);
+			titlescreen = true;
+			exit = MiniLoop (P_Start, P_Stop, P_Ticker, P_Drawer, P_Update);
+			titlescreen = false;
+			M_Stop();
+
+			switch (exit) {
+				case ga_startnew:
+					// Start a new game
+					G_InitNew(startmap, starttype, startsplitscreen);
+					G_RunGame();
+					break;
+				case ga_titleexpired:
+					// Run a demo
+					{
+						demo_name[4]++;	// Point to the next demo.
+						
+						int lump = W_CheckNumForName(demo_name);
+						if (lump == -1) {
+							demo_name[4] = '1';	// Assume we at least have a DEMO1 lump.
+						}
+						
+						demoplayback = true;
+						exit = RunInputDemo(demo_name);
+						demoplayback = false;
+					}
+					break;
+			}
+		} while (1);
+	}
+
+	/*
+	if (consoleplayer == 0)
+	{
+		if (starttype != gt_single && !startsplitscreen)
+		{
+			I_NetSetup();
+		}
+	}
+
+	if (startsave != -1)
+		G_LoadGame(startsave);
+	else
+		G_InitNew(startmap, starttype, startsplitscreen);
+
+	G_RunGame ();
+	*/
 }

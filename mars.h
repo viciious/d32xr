@@ -65,6 +65,7 @@ void Mars_Sec_R_DrawSprites(int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_P_CheckSights(void) ATTR_DATA_CACHE_ALIGN;
 
 void Mars_Sec_M_AnimateFire(void) ATTR_OPTIMIZE_EXTREME;
+
 void Mars_Sec_InitSoundDMA(int initfull);
 void Mars_Sec_ReadSoundCmds(void) ATTR_DATA_OPTIMIZE_NONE;
 

@@ -510,7 +510,11 @@ void P_BuildMove(player_t *player)
 	{
 		player->forwardmove = player->sidemove = 0;
 		player->pflags &= ~PF_GASPEDAL;
+		player->pflags |= PF_CONTROLDISABLED;
 		player->buttons = 0;
+	}
+	else {
+		player->pflags &= ~PF_CONTROLDISABLED;
 	}
 }
 
@@ -1618,7 +1622,7 @@ void P_PlayerThink(player_t *player)
 
 	P_CalcHeight(player);
 
-	if (player == &players[consoleplayer])
+	if (player == &players[consoleplayer] && gameaction != ga_demoending)
 		P_MoveChaseCamera(player, &camera);
 
 	if (SS_SECTOR(player->mo->isubsector)->special)

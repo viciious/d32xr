@@ -418,15 +418,15 @@ void CONS_Printf(char *msg, ...)
 
 void ST_Drawer(void)
 {
-	int	p = splitscreen ? 0 : consoleplayer;
-	int e = splitscreen ? MAXPLAYERS : consoleplayer + 1;
-	int y[MAXPLAYERS];
+	if (titlescreen)
+		return;
 
 	if (debugmode == DEBUGMODE_NODRAW)
 		return;
 
-	if (demoplayback)
-		return;
+	int	p = splitscreen ? 0 : consoleplayer;
+	int e = splitscreen ? MAXPLAYERS : consoleplayer + 1;
+	int y[MAXPLAYERS];
 
 	y[consoleplayer] = I_FrameBufferHeight();
 	y[consoleplayer^1] = 0;

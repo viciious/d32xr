@@ -485,7 +485,13 @@ extern	VINT		firstsprite, numsprites;
 extern int8_t* dc_colormaps;
 extern int8_t* dc_colormaps2;
 
-extern uint8_t* dc_playpals;
+extern uint8_t* dc_playpals, *dc_cshift_playpals;
+
+extern void R_FadePalette(const uint8_t *in, int idx, uint8_t *out);
+
+#define PALETTE_SHIFT_CONVENTIONAL_FADE_TO_WHITE	0x01
+#define PALETTE_SHIFT_CONVENTIONAL_FADE_TO_BLACK	0x06
+#define PALETTE_SHIFT_CLASSIC_FADE_TO_BLACK			0x81
 
 #ifdef MARS
 #define R_CheckPixels(lumpnum) (void *)(W_POINTLUMPNUM(lumpnum))

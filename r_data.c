@@ -31,7 +31,7 @@ flattex_t		*flatpixels;
 
 texture_t	*skytexturep;
 
-uint8_t		*dc_playpals;
+uint8_t		*dc_playpals, *dc_cshift_playpals;
 
 /*============================================================================ */
 
@@ -370,6 +370,7 @@ void R_InitData (void)
 #endif
 
 	dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
+	dc_cshift_playpals = Z_Malloc(256*3, PU_STATIC);
 
 	firstsprite = W_GetNumForName ("S_START") + 1;
 	numsprites = W_GetNumForName ("S_END") - firstsprite;

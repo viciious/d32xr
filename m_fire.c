@@ -83,6 +83,9 @@ void I_InitMenuFire(jagobj_t *titlepic)
 {
 	int i;
 
+	const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
+	I_SetPalette(dc_playpals+10*768);
+
 	intro_titlepic = titlepic;
 
 	if (titlepic != NULL)
@@ -94,9 +97,6 @@ void I_InitMenuFire(jagobj_t *titlepic)
 			UpdateBuffer();
 		}
 	}
-
-	const uint8_t *dc_playpals = (uint8_t*)W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
-	I_SetPalette(dc_playpals+10*768);
 
 	Mars_M_BeginDrawFire();
 	S_StartSong(gameinfo.titleMus, 0, cdtrack_title);

@@ -83,7 +83,7 @@ static uint32_t mars_rom_bsw_start = 0;
 
 void I_ClearFrameBuffer(void) ATTR_DATA_CACHE_ALIGN;
 
-static int Mars_ConvGamepadButtons(int ctrl)
+int Mars_ConvGamepadButtons(int ctrl)
 {
 	unsigned newc = 0;
 
@@ -115,11 +115,11 @@ static int Mars_ConvGamepadButtons(int ctrl)
 	else
 	{
 		if (ctrl & SEGA_CTRL_A)
-			newc |= configuration[controltype][0];
+			newc |= BT_FLIP; //configuration[controltype][0];
 		if (ctrl & SEGA_CTRL_B)
-			newc |= configuration[controltype][1];
+			newc |= BT_JUMP; //configuration[controltype][1];
 		if (ctrl & SEGA_CTRL_C)
-			newc |= configuration[controltype][2];
+			newc |= BT_SPIN; //configuration[controltype][2];
 
 		if (ctrl & SEGA_CTRL_X)
 			newc |= BT_CAMLEFT;
@@ -353,7 +353,7 @@ void I_Init (void)
 
 void I_SetPalette(const byte* palette)
 {
-	mars_newpalette = palette;
+	Mars_SetPalette(palette);
 }
 
 boolean	I_RefreshCompleted (void)
@@ -771,7 +771,7 @@ void I_Update(void)
 	/* */
 	/* wait until on the third tic after last display */
 	/* */
-	const int ticwait = (demoplayback || demorecording ? 4 : ticsperframe); // demos were recorded at 15-20fps
+	const int ticwait = (titlescreen ? 4 : ticsperframe); // run title screen at 15 fps
 
 	// Adjust sky position.
 	unsigned short scroll_y_base = gamemapinfo.skyOffsetY;

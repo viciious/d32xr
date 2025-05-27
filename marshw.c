@@ -43,7 +43,9 @@ volatile unsigned mars_vblank_count = 0;
 volatile unsigned mars_pwdt_ovf_count = 0;
 volatile unsigned mars_swdt_ovf_count = 0;
 unsigned mars_frtc2msec_frac = 0;
-const uint8_t* mars_newpalette = NULL;
+
+static const uint8_t* mars_newpalette = NULL;
+
 uint16_t mars_thru_rgb_reference = 0;
 
 int16_t mars_requested_lines = 224;
@@ -69,6 +71,10 @@ static void intr_handler_stub(void) {}
 static void (*pri_cmd_cb)(void) = &intr_handler_stub;
 static void (*sci_cmd_cb)(void) = &intr_handler_stub;
 static void (*sci_dma1_cb)(void) = &intr_handler_stub;
+
+static char Mars_UploadPalette(const uint8_t* palette) MARS_ATTR_DATA_CACHE_ALIGN;
+
+#define MARS_ACTIVE_SCREEN (*(volatile uint16_t *)(((intptr_t)&mars_activescreen) | 0x20000000))
 
 void Mars_WaitFrameBuffersFlip(void)
 {
@@ -124,11 +130,16 @@ void Mars_SetBrightness(int16_t brightness)
 	mars_brightness = brightness;
 }
 
-int Mars_BackBuffer(void) {
-	return mars_activescreen;
+void Mars_SetPalette(const uint8_t *palette)
+{
+	mars_newpalette = palette;
 }
 
-char Mars_UploadPalette(const uint8_t* palette)
+int Mars_BackBuffer(void) {
+	return MARS_ACTIVE_SCREEN;
+}
+
+static char Mars_UploadPalette(const uint8_t* palette)
 {
 	int	i;
 	unsigned short* cram = (unsigned short *)&MARS_CRAM;

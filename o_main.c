@@ -265,11 +265,7 @@ void O_Control (player_t *player)
 	buttons = ticbuttons[playernum] & MENU_BTNMASK;
 	oldbuttons = oldticbuttons[playernum] & MENU_BTNMASK;
 	
-	if ( ( (buttons & BT_OPTION) && !(oldbuttons & BT_OPTION) )
-#ifdef MARS
-		|| ( (buttons & BT_START) && !(oldbuttons & BT_START) && !(buttons & BT_MODE) )
-#endif
-		)
+	if ((buttons & BT_START) && !(oldbuttons & BT_START) && !(buttons & BT_MODE))
 	{
 		optionsMenuOn = !optionsMenuOn;
 
@@ -298,7 +294,7 @@ void O_Control (player_t *player)
 		return;
 
 /* clear buttons so player isn't moving aroung */
-	ticbuttons[playernum] &= (BT_OPTION|BT_START);	/* leave option status alone */
+	ticbuttons[playernum] &= BT_START;	/* leave option status alone */
 
 	if (playernum != curplayer)
 		return;
@@ -582,7 +578,7 @@ void O_DrawHelp (VINT yPos)
 	V_DrawStringLeft(&menuFont, 160, yPos + (12*3), "= X and Z");
 
 	V_DrawStringCenterWithColormap(&menuFont, 160, yPos + (12*5), "INTENDED ONLY FOR NTSC SYSTEMS AND", YELLOWTEXTCOLORMAP);
-	V_DrawStringCenterWithColormap(&menuFont, 160, yPos + (12*5) + 8, "PICODRIVE 2.03 & JGENESIS 0.9.0", YELLOWTEXTCOLORMAP);
+	V_DrawStringCenterWithColormap(&menuFont, 160, yPos + (12*5) + 8, "PICODRIVE 2.04 & JGENESIS 0.10.0", YELLOWTEXTCOLORMAP);
 
 	V_DrawStringCenter(&menuFont, 160, yPos + 80, "ssntails.srb2.org/srb32x");
 }
