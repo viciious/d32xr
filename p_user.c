@@ -1622,7 +1622,7 @@ void P_PlayerThink(player_t *player)
 
 	P_CalcHeight(player);
 
-	if (player == &players[consoleplayer])
+	if (player == &players[consoleplayer] && gameaction != ga_demoending)
 		P_MoveChaseCamera(player, &camera);
 
 	if (SS_SECTOR(player->mo->isubsector)->special)

@@ -176,7 +176,8 @@ typedef enum
 	ga_backtotitle,
 	ga_specialstageexit,
 	ga_closeprompt,
-	ga_titleexpired
+	ga_titleexpired,
+	ga_demoending,
 } gameaction_t;
 
 

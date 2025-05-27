@@ -463,6 +463,7 @@ gameaction_t RecordDemo()
 
 gameaction_t PlayDemo()
 {
+	gameaction_t exit = ga_nothing;
 	int buttons = players[0].buttons;
 #ifdef PLAY_POS_DEMO
 	if (demo_p == demobuffer + 0xA) {
@@ -534,11 +535,7 @@ gameaction_t PlayDemo()
 	if (rec_current_time >= rec_end_time) {
 		ticbuttons[consoleplayer] = players[0].buttons = 0;
 		demoplayback = false;
-		return ga_completed;
-	}
-	else if (rec_end_time - rec_current_time <= 21) {
-		int palette = PALETTE_SHIFT_CLASSIC_FADE_TO_BLACK + (21 - (rec_end_time - rec_current_time));
-		R_FadePalette(dc_playpals, palette, dc_cshift_playpals);
+		exit = ga_completed;
 	}
 	else if (rec_start_time == 0x7FFF) {
 		if (!(players[0].pflags & PF_CONTROLDISABLED)) {
@@ -568,7 +565,7 @@ gameaction_t PlayDemo()
 				if (rec_buttons & BT_START) {
 					ticbuttons[consoleplayer] = players[0].buttons = 0;
 					demoplayback = false;
-					return ga_completed;
+					exit = ga_completed;
 				}
 				ticbuttons[consoleplayer] = players[0].buttons = Mars_ConvGamepadButtons(rec_buttons);
 				demo_p++;
@@ -580,9 +577,17 @@ gameaction_t PlayDemo()
 			ticbuttons[consoleplayer] = players[0].buttons = Mars_ConvGamepadButtons(rec_buttons);
 		}
 	}
+	
+	if (rec_end_time - rec_current_time <= 30) {
+		int palette = PALETTE_SHIFT_CLASSIC_FADE_TO_BLACK + (((30 - (rec_end_time - rec_current_time)) * 2) / 3);
+		R_FadePalette(dc_playpals, palette, dc_cshift_playpals);
+		if (exit == ga_nothing) {
+			exit = ga_demoending;
+		}
+	}
 #endif
 
-	return ga_nothing;
+	return exit;
 }
 
 

@@ -490,7 +490,7 @@ while (!I_RefreshCompleted ())
 		while ( DSPRead(&dspfinished) != 0xdef6 )
 		;
 #endif
-	} while (!exit);
+	} while (exit == ga_nothing || exit == ga_demoending);
 
 	stop ();
 	S_Clear ();
