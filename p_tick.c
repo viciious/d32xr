@@ -528,10 +528,17 @@ gameaction_t PlayDemo()
 #endif
 
 #ifndef PLAY_POS_DEMO	// Input demo code should *always* be present if position demo code is left out.
-	if (leveltime - rec_start_time >= ((short *)demobuffer)[3]) {
+	int rec_current_time = leveltime - rec_start_time;
+	int rec_end_time = ((short *)demobuffer)[3];
+
+	if (rec_current_time >= rec_end_time) {
 		ticbuttons[consoleplayer] = players[0].buttons = 0;
 		demoplayback = false;
 		return ga_completed;
+	}
+	else if (rec_end_time - rec_current_time <= 21) {
+		int palette = PALETTE_SHIFT_CLASSIC_FADE_TO_BLACK + (21 - (rec_end_time - rec_current_time));
+		R_FadePalette(dc_playpals, palette, dc_cshift_playpals);
 	}
 	else if (rec_start_time == 0x7FFF) {
 		if (!(players[0].pflags & PF_CONTROLDISABLED)) {

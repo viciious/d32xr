@@ -877,6 +877,151 @@ void R_SetupLevel(int gamezonemargin)
 #endif
 }
 
+static void R_ColorShiftPalette(const uint8_t *in, int idx, uint8_t *out)
+{
+	int	i;
+	const uint8_t *pin;
+	uint8_t *pout;
+	int r, g, b;
+	int shift;
+	int steps;
+	boolean brighten;
+	boolean classic;
+
+	static const uint8_t conventional_palette_shifts[][5] = {
+		// { r, g, b, shift, steps }
+
+		// Normal fade to white
+		{ 0xFF, 0xFF, 0xFF,  1,  5 }, // 1
+		{ 0xFF, 0xFF, 0xFF,  2,  5 }, // 2
+		{ 0xFF, 0xFF, 0xFF,  3,  5 }, // 3
+		{ 0xFF, 0xFF, 0xFF,  4,  5 }, // 4
+		{ 0xFF, 0xFF, 0xFF,  5,  5 }, // 5
+
+		// Normal fade to black
+		{ 0x00, 0x00, 0x00, -1,  5 }, // 6
+		{ 0x00, 0x00, 0x00, -2,  5 }, // 7
+		{ 0x00, 0x00, 0x00, -3,  5 }, // 8
+		{ 0x00, 0x00, 0x00, -4,  5 }, // 9
+		{ 0x00, 0x00, 0x00, -5,  5 }, // 10
+
+		// Misc.
+		{ 215, 186, 69, 3, 8 }, // 11	//TODO: Update this!
+		{ 215, 186, 69, 4, 8 }, // 12	//TODO: Update this!
+		{ 0, 255, 0, 1, 8 }, // 13		//TODO: Update this!
+		{ 0, 0, 255, 1, 8 }, // 14		//TODO: Update this!
+	};
+
+	static const uint8_t classic_palette_shifts[][4] = {
+		// { r, g, b, shift }
+
+		// Classic fade to black
+		{ 0x24, 0x00, 0x00, -1 }, // 0x81
+		{ 0x24, 0x24, 0x00, -1 }, // 0x82
+		{ 0x24, 0x24, 0x24, -1 }, // 0x83
+		{ 0x49, 0x24, 0x24, -1 }, // 0x84
+		{ 0x49, 0x49, 0x24, -1 }, // 0x85
+		{ 0x49, 0x49, 0x49, -1 }, // 0x86
+		{ 0x6D, 0x49, 0x49, -1 }, // 0x87
+		{ 0x6D, 0x6D, 0x49, -1 }, // 0x88
+		{ 0x6D, 0x6D, 0x6D, -1 }, // 0x89
+		{ 0x92, 0x6D, 0x6D, -1 }, // 0x8A
+		{ 0x92, 0x92, 0x6D, -1 }, // 0x8B
+		{ 0x92, 0x92, 0x92, -1 }, // 0x8C
+		{ 0xB6, 0x92, 0x92, -1 }, // 0x8D
+		{ 0xB6, 0xB6, 0x92, -1 }, // 0x8E
+		{ 0xB6, 0xB6, 0xB6, -1 }, // 0x8F
+		{ 0xDB, 0xB6, 0xB6, -1 }, // 0x90
+		{ 0xDB, 0xDB, 0xB6, -1 }, // 0x91
+		{ 0xDB, 0xDB, 0xDB, -1 }, // 0x92
+		{ 0xFF, 0xDB, 0xDB, -1 }, // 0x93
+		{ 0xFF, 0xFF, 0xDB, -1 }, // 0x94
+		{ 0xFF, 0xFF, 0xFF, -1 }, // 0x95
+	};
+
+	classic = idx & 0x80;
+
+	idx = (idx & 0x7F) - 1;
+
+	if (classic) {
+		// classic-style fade
+		r = classic_palette_shifts[idx][0];
+		g = classic_palette_shifts[idx][1];
+		b = classic_palette_shifts[idx][2];
+		brighten = (classic_palette_shifts[idx][3] <= 127);
+	}
+	else {
+		// conventional-style fade
+		r = conventional_palette_shifts[idx][0];
+		g = conventional_palette_shifts[idx][1];
+		b = conventional_palette_shifts[idx][2];
+		shift = (int8_t)conventional_palette_shifts[idx][3];
+		steps = conventional_palette_shifts[idx][4];
+		brighten = conventional_palette_shifts[idx][3] <= 127;
+	}
+
+	pin = in;
+	pout = out;
+
+	for (i = 0; i < 256; i++)
+	{
+		int nr;
+		int ng;
+		int nb;
+
+		if (classic) {
+			if (brighten) {
+				nr = pin[0] + r;
+				ng = pin[1] + g;
+				nb = pin[2] + b;
+			}
+			else { // darken
+				nr = pin[0] - r;
+				ng = pin[1] - g;
+				nb = pin[2] - b;
+			}
+		}
+		else { // conventional
+			if (brighten) {
+				nr = r - pin[0];
+				ng = g - pin[1];
+				nb = b - pin[2];
+			}
+			else { // darken
+				nr = pin[0] - r;
+				ng = pin[1] - g;
+				nb = pin[2] - b;
+			}
+
+			nr = pin[0] + ((nr*shift)/steps);
+			ng = pin[1] + ((ng*shift)/steps);
+			nb = pin[2] + ((nb*shift)/steps);
+		}
+
+		if (nr < 0) nr = 0;
+		if (nr > 255) nr = 255;
+
+		if (ng < 0) ng = 0;
+		if (ng > 255) ng = 255;
+
+		if (nb < 0) nb = 0;
+		if (nb > 255) nb = 255;
+
+		pout[0] = nr;
+		pout[1] = ng;
+		pout[2] = nb;
+
+		pin += 3;
+		pout += 3;
+	}
+}
+
+void R_FadePalette(const uint8_t *in, int idx, uint8_t *out)
+{
+	R_ColorShiftPalette(in, idx, out);
+	I_SetPalette(out);
+}
+
 /*============================================================================= */
 
 #ifndef MARS
@@ -1143,7 +1288,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		distortion_action = DISTORTION_ADD;
 	}
 
-	if (gametic <= 1 && gamemapinfo.mapNumber != TITLE_MAP_NUMBER)
+	if (gametic <= 1 && !titlescreen)
 	{
 		curpalette = palette = 10;
 		I_SetPalette(dc_playpals+10*768);
@@ -1151,7 +1296,13 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	
 	if (palette != curpalette) {
 		curpalette = palette;
-		I_SetPalette(dc_playpals+palette*768);
+
+		if (palette == 0) {
+			I_SetPalette(dc_playpals);
+		} else {
+			R_ColorShiftPalette(dc_playpals, palette, dc_cshift_playpals);
+			I_SetPalette(dc_cshift_playpals);
+		}
 
 		if (!waterpal) {
 			RemoveDistortionFilters();

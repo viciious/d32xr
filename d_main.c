@@ -415,10 +415,17 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		ticrealbuttons = buttons;
 
 		
-		if (titlescreen && gamemapinfo.mapNumber == TITLE_MAP_NUMBER) {
-			if (leveltime > (gameinfo.titleTime >> 1)) {
+		if (titlescreen) {
+			int timeleft = (gameinfo.titleTime >> 1) - leveltime;
+			if (timeleft <= 0) {
+				R_FadePalette(dc_playpals, (PALETTE_SHIFT_CLASSIC_FADE_TO_BLACK + 20), dc_cshift_playpals);
 				exit = ga_titleexpired;
 				break;
+			}
+			if (timeleft <= 5) {
+				int palette = PALETTE_SHIFT_CONVENTIONAL_FADE_TO_BLACK + (5 - timeleft);
+				//int palette = PALETTE_SHIFT_CLASSIC_FADE_TO_BLACK + ((5 - timeleft) << 2);
+				R_FadePalette(dc_playpals, palette, dc_cshift_playpals);
 			}
 			// Rotate on the title screen.
 			ticbuttons[consoleplayer] = buttons = 0;

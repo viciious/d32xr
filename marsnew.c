@@ -353,7 +353,7 @@ void I_Init (void)
 
 void I_SetPalette(const byte* palette)
 {
-	mars_newpalette = palette;
+	Mars_SetPalette(palette);
 }
 
 boolean	I_RefreshCompleted (void)
