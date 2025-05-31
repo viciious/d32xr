@@ -1249,7 +1249,7 @@ void Mars_Sec_R_Setup(void)
 // if no compatible match can be found.
 //
 #define R_PlaneHash(height, lightlevel) \
-	((((unsigned)(height) >> 8) + (flatandlight>>16)) ^ (flatandlight&0xffff)) & (NUM_VISPLANES_BUCKETS - 1)
+	((((unsigned)(height) >> 8) + (lightlevel>>16)) ^ (lightlevel&0xffff)) & (NUM_VISPLANES_BUCKETS - 1)
 
 void R_MarkOpenPlane(visplane_t* pl)
 {
