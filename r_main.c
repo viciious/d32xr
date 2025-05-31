@@ -1085,14 +1085,18 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		vd.aimingangle = thiscam->aiming;
 		vd.viewsector = &sectors[thiscam->subsector->isector];
 
-		if (sectors[thiscam->subsector->isector].heightsec >= 0
-			&& GetWatertopSec(&sectors[thiscam->subsector->isector]) > vd.viewz)
+		if (sectors[thiscam->subsector->isector].heightsec >= 0)
 		{
-			// Future: Have a way to specify the water color
-			if (gamemapinfo.mapNumber == 4 || gamemapinfo.mapNumber == 5)
-				waterpal = 13;
-			else
-				waterpal = 11;
+			vd.viewwaterheight = GetWatertopSec(&sectors[thiscam->subsector->isector]);
+			
+			if (vd.viewwaterheight > vd.viewz)
+			{
+				// Future: Have a way to specify the water color
+				if (gamemapinfo.mapNumber == 4 || gamemapinfo.mapNumber == 5)
+					waterpal = 13;
+				else
+					waterpal = 11;
+			}
 		}
 	}
 	else
@@ -1400,7 +1404,7 @@ void Mars_Sec_R_Setup(void)
 // if no compatible match can be found.
 //
 #define R_PlaneHash(height, lightlevel) \
-	((((unsigned)(height) >> 8) + (flatandlight>>16)) ^ (flatandlight&0xffff)) & (NUM_VISPLANES_BUCKETS - 1)
+	((((unsigned)(height) >> 8) + (lightlevel>>16)) ^ (lightlevel&0xffff)) & (NUM_VISPLANES_BUCKETS - 1)
 
 void R_MarkOpenPlane(visplane_t* pl)
 {
@@ -1430,7 +1434,7 @@ void R_InitClipBounds(uint32_t *clipbounds)
 }
 
 visplane_t* R_FindPlane(fixed_t height, 
-	int flatandlight, int start, int stop)
+	VINT flatandlight, int start, int stop)
 {
 	visplane_t *check, *tail, *next;
 	int hash = R_PlaneHash(height, flatandlight);
@@ -1466,6 +1470,7 @@ visplane_t* R_FindPlane(fixed_t height,
 	check->flatandlight = flatandlight;
 	check->minx = start;
 	check->maxx = stop;
+	check->flags = 0;
 
 	R_MarkOpenPlane(check);
 
@@ -1475,8 +1480,8 @@ visplane_t* R_FindPlane(fixed_t height,
 	return check;
 }
 
-visplane_t* R_FindPlane2(fixed_t height, 
-	int flatandlight)
+visplane_t* R_FindPlaneFOF(fixed_t height, 
+	VINT flatandlight, int start, int stop)
 {
 	visplane_t *check, *tail, *next;
 	int hash = R_PlaneHash(height, flatandlight);
@@ -1487,8 +1492,19 @@ visplane_t* R_FindPlane2(fixed_t height,
 		next = check->next;
 
 		if (height == check->height && // same plane as before?
-			flatandlight == check->flatandlight)
-			return check; // use the same one as before
+			flatandlight == check->flatandlight
+			&& (check->flags & VPFLAGS_ISFOF))
+		{
+			if (/*(check->flags & VPFLAGS_DIDSEG) || */MARKEDOPEN(check->open[start]))
+			{
+				// found a plane, so adjust bounds and return it
+				if (start < check->minx)
+					check->minx = start; // mark the new edge
+				if (stop > check->maxx)
+					check->maxx = stop;  // mark the new edge
+				return check; // use the same one as before
+			}
+		}
 	}
 
 	if (vd.lastvisplane == vd.visplanes + MAXVISPLANES)
@@ -1500,8 +1516,9 @@ visplane_t* R_FindPlane2(fixed_t height,
 
 	check->height = height;
 	check->flatandlight = flatandlight;
-	check->minx = 320;
-	check->maxx = -1;
+	check->minx = start;
+	check->maxx = stop;
+	check->flags = VPFLAGS_ISFOF;
 
 	R_MarkOpenPlane(check);
 

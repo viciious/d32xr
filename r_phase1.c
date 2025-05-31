@@ -46,7 +46,7 @@ static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop) ATTR_DATA_CA
 static void R_RenderBSPNode(rbspWork_t *rbsp, int bspnum, int16_t *outerbbox) ATTR_DATA_CACHE_ALIGN;
 static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
    fixed_t *restrict floorheight, fixed_t *restrict floornewheight, 
-   fixed_t *restrict ceilingnewheight, uint32_t *restrict fofInfo) ATTR_DATA_CACHE_ALIGN  __attribute__((noinline));
+   fixed_t *restrict ceilingnewheight, fixed_t *restrict fofInfo) ATTR_DATA_CACHE_ALIGN  __attribute__((noinline));
 
 #ifdef MARS
 __attribute__((aligned(4)))
@@ -181,7 +181,7 @@ static boolean R_CheckBBox(rbspWork_t *rbsp, int16_t bspcoord[4])
 }
 
 static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
-   fixed_t *restrict floorheight, fixed_t *restrict  floornewheight, fixed_t *restrict ceilingnewheight, uint32_t *restrict fofInfo)
+   fixed_t *restrict floorheight, fixed_t *restrict  floornewheight, fixed_t *restrict ceilingnewheight, fixed_t *restrict fofInfo)
 {
    seg_t     *seg  = segl->seg;
    line_t    *li   = rbsp->curldef;
@@ -281,16 +281,6 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
 
       segl->t_bottomheight = f_floorheight; // bottom of texturemap
 
-//#ifdef FLOOR_OVER_FLOOR_CRAZY
-/*      if (back_sector->fofsec >= 0)
-      {
-         SETLOWER16(*fofInfo, (sectors[front_sector->fofsec].ceilingheight) >> FRACBITS);
-         SETUPPER16(*fofInfo, (sectors[front_sector->fofsec].floorheight) >> FRACBITS);
-         
-      }*/
-      segl->fofSector = back_sector->fofsec; // Just assigning it is faster
-//#endif
-
       if(!skyhack                                         && // not a sky hack wall
          (f_ceilingheight > 0 || f_ceilingpic == (uint8_t)-1)      && // ceiling below camera, or sky
          (f_ceilingpic    != b_ceilingpic                 || // ceiling texture changes across line?
@@ -334,6 +324,30 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
             segl->t_bottomheight = f_floorheight; // set bottom height
             actionbits |= (AC_SOLIDSIL|AC_TOPTEXTURE);                   // solid line; draw middle texture only
          }
+
+         if (front_sector->fofsec >= 0 && !(front_sector->flags & SF_FOF_SWAPHEIGHTS))
+         {
+            const sector_t *fofsec = &sectors[front_sector->fofsec];
+            segl->fofSector = front_sector->fofsec;
+
+            segl->fof_picnum = 0xff;
+            if (fofsec->ceilingheight < vd.viewz)
+            {
+               // Top of FOF is visible
+               actionbits |= AC_FOFCEILING;
+               segl->fof_picnum = fofsec->ceilingpic;
+               *fofInfo = fofsec->ceilingheight;
+                            
+               // fof_picnum is just a junk value if AC_FOFCEILING or AC_FOFFLOOR isn't set.
+            }
+            else if (fofsec->floorheight > vd.viewz)
+            {
+               // Bottom of FOF is visible
+               actionbits |= AC_FOFFLOOR;
+               segl->fof_picnum = fofsec->floorpic;
+               *fofInfo = fofsec->floorheight;
+            }
+         }
       }
       else
       {
@@ -371,20 +385,27 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
             actionbits |= AC_MIDTEXTURE; // set bottom and top masks
          }
 
-         if (back_sector->fofsec >= 0)
+         if (back_sector->fofsec >= 0 && !(back_sector->flags & SF_FOF_SWAPHEIGHTS))
          {
             const sector_t *fofsec = &sectors[back_sector->fofsec];
-            const line_t *fofline = &lines[fofsec->specline];
+            segl->fofSector = back_sector->fofsec;
 
-            if (front_sector->fofsec == -1 && !(ldflags[fofsec->specline] & ML_BLOCKMONSTERS))
+            if (front_sector->fofsec < 0 && !(ldflags[fofsec->specline] & ML_BLOCKMONSTERS))
             {
+               const line_t *fofline = &lines[fofsec->specline];
                fof_texturemid = fofsec->ceilingheight - vd.viewz;
                segl->fof_texturenum = texturetranslation[SIDETEX(&sides[fofline->sidenum[0]])->midtexture];
 //               fof_texturemid += rowoffset<<FRACBITS; // add in sidedef texture offset
 #ifdef WALLDRAW2X
                fof_texturemid >>= 1;
 #endif
-               actionbits |= AC_FOF; // set bottom and top masks
+               if (fofsec->ceilingheight <= front_sector->floorheight || fofsec->floorheight >= front_sector->ceilingheight)
+               {
+                  fof_texturemid = 0;
+                  segl->fof_texturenum = (unsigned)-1;
+               }
+
+               actionbits |= AC_FOFSIDE; // set bottom and top masks
             }
 //            segl->fof_bottomheight = fofsec->floorheight - vd.viewz;
 //            segl->fof_topheight = fofsec->ceilingheight - vd.viewz;
@@ -395,6 +416,49 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
                else
                   fof_texturemid = rb_ceilingheight;*/
 
+            segl->fof_picnum = 0xff;
+            if (fofsec->ceilingheight < vd.viewz)
+            {
+               // Top of FOF is visible
+//               actionbits |= AC_FOFCEILING;
+               segl->fof_picnum = fofsec->ceilingpic;
+               *fofInfo = fofsec->ceilingheight - vd.viewz;
+                                  
+               // fof_picnum is just a junk value if AC_FOFCEILING or AC_FOFFLOOR isn't set.
+            }
+            else if (fofsec->floorheight > vd.viewz)
+            {
+               // Bottom of FOF is visible
+//               actionbits |= AC_FOFFLOOR;
+               segl->fof_picnum = fofsec->floorpic;
+               *fofInfo = fofsec->floorheight - vd.viewz;
+            }
+         }
+         if (front_sector->fofsec >= 0 && !(front_sector->flags & SF_FOF_SWAPHEIGHTS))
+         {
+            const sector_t *fofsec = &sectors[front_sector->fofsec];
+            segl->fofSector = front_sector->fofsec;
+            segl->fof_picnum = 0xff;
+            if (fofsec->ceilingheight < vd.viewz)
+            {
+               // Rendering the ceiling
+               actionbits |= AC_FOFCEILING;
+               segl->fof_picnum = fofsec->ceilingpic;
+               *fofInfo = fofsec->ceilingheight - vd.viewz;
+
+               // fof_picnum is just a junk value if AC_FOFCEILING or AC_FOFFLOOR isn't set.
+            }
+            else if (fofsec->floorheight > vd.viewz)
+            {
+               actionbits |= AC_FOFFLOOR;
+               segl->fof_picnum = fofsec->floorpic;
+               *fofInfo = fofsec->floorheight - vd.viewz;
+            }
+/*
+            if (b_floorheight > fofsec->ceilingheight - vd.viewz)
+               *fofInfo = b_floorheight;
+            if (b_ceilingheight < fofsec->floorheight - vd.viewz)
+               *fofInfo = b_ceilingheight;*/
          }
 
          // is bottom texture visible?
@@ -670,19 +734,15 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
       // Replace sector being drawn, with a copy to be hacked
       *tempsec = *sec;
 
+      const boolean underwater = vd.viewsector->heightsec >= 0 && vd.viewz<=vd.viewwaterheight;
       const sector_t *fofsec = &sectors[sec->fofsec];
-      fixed_t midpoint;
-      if (sec->heightsec >= 0) // If there is water in this sector, then the midpoint is the water.
-         midpoint = sectors[sec->heightsec].ceilingheight;
-      else
-         midpoint = fofsec->floorheight + (fofsec->ceilingheight - fofsec->floorheight)/2;
 
-      if (vd.viewz <= midpoint)
+      if (underwater)
       {
          tempsec->ceilingheight = fofsec->floorheight;
          tempsec->ceilingpic = fofsec->floorpic;      
       }
-      else if (vd.viewz > midpoint)
+      else
       {
          tempsec->floorheight = fofsec->ceilingheight;
          tempsec->floorpic = fofsec->ceilingpic;
@@ -693,24 +753,32 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
    else if (sec->heightsec >= 0)
    {
       const sector_t *watersec = &sectors[sec->heightsec];
-      boolean underwater = vd.viewsector->heightsec >= 0 && vd.viewz<=sectors[vd.viewsector->heightsec].ceilingheight;
+      boolean underwater = vd.viewsector->heightsec >= 0 && vd.viewz<=vd.viewwaterheight;
 
       // Replace sector being drawn, with a copy to be hacked
       *tempsec = *sec;
 
       // Replace floor and ceiling height with other sector's heights.
-      tempsec->floorheight = watersec->ceilingheight-1;
-      tempsec->floorpic = watersec->ceilingpic;
 
-      if ((underwater && (tempsec->floorheight = sec->floorheight,
-                          tempsec->ceilingheight = watersec->ceilingheight-1,
-                          !back)) || vd.viewz <= watersec->floorheight)
+
+      // I don't think we need to be Boom-accurate here.
+//      if ((underwater && (tempsec->floorheight = sec->floorheight,
+//                          tempsec->ceilingheight = watersec->ceilingheight-1,
+//                          !back)) || vd.viewz <= watersec->floorheight)
+      if (underwater)
       { // head-below-floor hack
+         tempsec->floorheight = sec->floorheight;
+         tempsec->ceilingheight = watersec->ceilingheight - 1;
          tempsec->floorpic    = sec->floorpic;
 //       tempsec->floor_xoffs = s->floor_xoffs;
 //       tempsec->floor_yoffs = s->floor_yoffs;
          tempsec->ceilingpic = watersec->ceilingpic; 
          tempsec->lightlevel = watersec->lightlevel;
+      }
+      else
+      {
+         tempsec->floorheight = watersec->ceilingheight-1;
+         tempsec->floorpic = watersec->ceilingpic;
       }
 
       if (sec->ceilingheight < watersec->ceilingheight)

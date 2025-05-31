@@ -37,7 +37,7 @@ static void R_UpdateCache(void)
       if (wall->realstart > wall->realstop)
         continue;
 
-      if ((wall->actionbits & (AC_TOPTEXTURE|AC_BOTTOMTEXTURE|AC_MIDTEXTURE|AC_FOF)) && (maxmip >= minmip))
+      if ((wall->actionbits & (AC_TOPTEXTURE|AC_BOTTOMTEXTURE|AC_MIDTEXTURE|AC_FOFSIDE)) && (maxmip >= minmip))
       {
         if (wall->actionbits & AC_TOPTEXTURE)
         {
@@ -90,7 +90,7 @@ static void R_UpdateCache(void)
             }
         }
 
-        if (wall->actionbits & AC_FOF)
+        if (wall->actionbits & AC_FOFSIDE)
         {
             texture_t* tex = &textures[wall->fof_texturenum];
 #if MIPLEVELS > 1

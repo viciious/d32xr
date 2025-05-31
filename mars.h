@@ -41,6 +41,7 @@ enum
 	MARS_SECCMD_R_WALL_PREP_NODRAW,
 	MARS_SECCMD_R_WALL_PREP,
 	MARS_SECCMD_R_DRAW_PLANES,
+	MARS_SECCMD_R_DRAW_FOFPLANES,
 	MARS_SECCMD_R_DRAW_SPRITES,
 
 	MARS_SECCMD_M_ANIMATE_FIRE,
@@ -59,7 +60,7 @@ void Mars_Secondary(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 void Mars_Sec_R_Setup(void);
 void Mars_Sec_R_WallPrep(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_SegCommands(void) ATTR_DATA_CACHE_ALIGN;
-void Mars_Sec_R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
+void Mars_Sec_R_DrawPlanes(int isFOF) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_PreDrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_DrawSprites(int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_P_CheckSights(void) ATTR_DATA_CACHE_ALIGN;
@@ -103,6 +104,13 @@ static inline void Mars_R_BeginDrawPlanes(void)
 	Mars_R_SecWait();
 	MARS_SYS_COMM6 = 0; // next visplane
 	MARS_SYS_COMM4 = MARS_SECCMD_R_DRAW_PLANES;
+}
+
+static inline void Mars_R_BeginDrawFOFPlanes(void)
+{
+	Mars_R_SecWait();
+	MARS_SYS_COMM6 = 0; // next visplane
+	MARS_SYS_COMM4 = MARS_SECCMD_R_DRAW_FOFPLANES;
 }
 
 static inline void Mars_R_EndDrawPlanes(void)

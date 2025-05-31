@@ -46,7 +46,7 @@ static void (*mapplane)(localplane_t*, int, int, int);
 static void R_MapFlatPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
 static void R_MapColorPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
 static void R_PlaneLoop(localplane_t* lpl) ATTR_DATA_CACHE_ALIGN;
-static void R_DrawPlanes2(void) ATTR_DATA_CACHE_ALIGN;
+static void R_DrawPlanes2(int isFOF) ATTR_DATA_CACHE_ALIGN;
 
 static int  R_TryLockPln(void) ATTR_DATA_CACHE_ALIGN;
 static void R_LockPln(void) ATTR_DATA_CACHE_ALIGN;
@@ -94,7 +94,7 @@ static void R_MapFlatPlane(localplane_t* lpl, int y, int x, int x2)
     xstep = FixedMul(distance, lpl->basexscale);
     ystep = FixedMul(distance, lpl->baseyscale);
 
-    const int flatnum = lpl->pl->flatandlight&0xffff;
+    const int flatnum = lpl->pl->flatandlight&0xff;
 
 #if MIPLEVELS > 1 && FLATMIPS
     miplevel = (unsigned)distance / MIPSCALE;
@@ -210,12 +210,15 @@ static void R_PlaneLoop(localplane_t *lpl)
 
     pl_openptr = &pl->open[pl_x];
 
+//    if (pl->isFOF)
+//        CONS_Printf("Top: %d, Bottom: %d", UPPER8(pl->open[pl_x]), LOWER8(pl->open[pl_x]));
+
     t1 = OPENMARK;
     b1 = t1 & 0xff;
     t1 >>= 8;
     t2 = *pl_openptr;
 
-    unsigned short flatnum = lpl->pl->flatandlight;
+    uint8_t flatnum = lpl->pl->flatandlight&0xff;
     if (flatpixels[flatnum].size <= 2) {
         mapplane = &R_MapColorPlane;
     }
@@ -318,7 +321,7 @@ static visplane_t *R_GetNextPlane(uint16_t *sortedvisplanes)
 #endif
 }
 
-static void R_DrawPlanes2(void)
+static void R_DrawPlanes2(int isFOF)
 {
     angle_t angle;
     localplane_t lpl;
@@ -335,8 +338,8 @@ static void R_DrawPlanes2(void)
         return;
 
 #ifdef FLATDRAW2X
-    lpl.x = vd.viewx/2;
-    lpl.y = -vd.viewy/2;
+    lpl.x = vd.viewx >> 1;
+    lpl.y = -vd.viewy >> 1;
 #else
     lpl.x = vd.viewx;
     lpl.y = -vd.viewy;
@@ -356,14 +359,19 @@ static void R_DrawPlanes2(void)
     {
         int light;
 
+        if (!isFOF && (pl->flags & VPFLAGS_ISFOF))
+            continue;
+        else if (isFOF && !(pl->flags & VPFLAGS_ISFOF))
+            continue;
+        
 #ifdef MARS
         Mars_ClearCacheLines(pl, (sizeof(visplane_t) + 31) / 16);
 #endif
-
+        
         if (pl->minx > pl->maxx)
             continue;
 
-        const int flatnum = pl->flatandlight&0xffff;
+        const int flatnum = pl->flatandlight&0xff;
 
         lpl.wavy = flatpixels[flatnum].wavy;
 
@@ -408,7 +416,7 @@ static void R_DrawPlanes2(void)
         else
         {
 #ifdef SIMPLELIGHT
-            light = ((unsigned)pl->flatandlight>>16);
+            light = ((unsigned)pl->flatandlight>>8);
             lpl.lightmax = HWLIGHT((unsigned)((light + extralight) & 0xff));
 #else
             light = ((unsigned)pl->flatandlight>>16);
@@ -455,9 +463,9 @@ static void R_DrawPlanes2(void)
 static void Mars_R_SplitPlanes(void) ATTR_DATA_CACHE_ALIGN;
 static void Mars_R_SortPlanes(void) ATTR_DATA_CACHE_ALIGN;
 
-void Mars_Sec_R_DrawPlanes(void)
+void Mars_Sec_R_DrawPlanes(int isFOF)
 {
-    R_DrawPlanes2();
+    R_DrawPlanes2(isFOF);
 }
 
 static void Mars_R_SplitPlanes(void)
@@ -500,6 +508,7 @@ static void Mars_R_SplitPlanes(void)
             newpl->open = pl->open;
             newpl->height = pl->height;
             newpl->flatandlight = pl->flatandlight;
+            newpl->flags = pl->flags;
             newpl->minx = start + 1;
             newpl->maxx = newstop;
 
@@ -525,13 +534,13 @@ static void Mars_R_SortPlanes(void)
     numplanes = 0;
     for (pl = vd.visplanes + 1; pl < vd.lastvisplane; pl++)
     {
-        // composite sort key: 1b - sign bit, 7b - negated span length, 8b - flat
-        unsigned key = (unsigned)(pl->maxx - pl->minx - 1) >> 4;
-        if (key > 127) {
-            key = 127;
+        // composite sort key: 1b - sign bit, 1b - !isFOF, 6b - negated span length, 8b - flat
+        unsigned key = (unsigned)(pl->maxx - pl->minx - 1) >> 5;
+        if (key > 63) {
+            key = 63;
         }
         // to minimize pipeline stalls, the larger planes must be drawn first, hence length negation
-        key = (127 - key) << 8;
+        key = (63 - key) << 8;
         key |= (pl->flatandlight & 0xFF);
         sortbuf[i + 0] = key;
         sortbuf[i + 1] = ++numplanes;
@@ -595,9 +604,13 @@ void R_DrawPlanes(void)
 
     Mars_R_BeginDrawPlanes();
 
-    R_DrawPlanes2();
+    R_DrawPlanes2(0);
 
-    Mars_R_EndDrawPlanes();
+//    Mars_R_EndDrawPlanes();
+
+    // Wait for secondary CPU here
+    Mars_R_BeginDrawFOFPlanes();
+    R_DrawPlanes2(1);
 #else
     R_DrawPlanes2();
 #endif

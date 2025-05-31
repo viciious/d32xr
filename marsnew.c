@@ -263,7 +263,10 @@ void Mars_Secondary(void)
 			Mars_Sec_R_PreDrawPlanes();
 			break;
 		case MARS_SECCMD_R_DRAW_PLANES:
-			Mars_Sec_R_DrawPlanes();
+			Mars_Sec_R_DrawPlanes(0);
+			break;
+		case MARS_SECCMD_R_DRAW_FOFPLANES:
+			Mars_Sec_R_DrawPlanes(1);
 			break;
 		case MARS_SECCMD_R_DRAW_SPRITES:
 			Mars_Sec_R_DrawSprites(MARS_SYS_COMM6);

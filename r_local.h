@@ -568,7 +568,9 @@ void R_PostTexCacheFrame(r_texcache_t* c);
 #define	AC_DRAWN			1024
 #define	AC_MIDTEXTURE		2048
 #define	AC_ADDFLOORSKY		4096
-#define AC_FOF              8192
+#define AC_FOFSIDE          8192
+#define AC_FOFFLOOR         16384
+#define AC_FOFCEILING       32768
 
 typedef struct
 {
@@ -599,7 +601,8 @@ typedef struct
 	int 		m_texturemid;
 
 	VINT 	m_texturenum;
-	VINT     fof_texturenum;
+	uint8_t     fof_texturenum; // wall texture for FOF
+	uint8_t     fof_picnum; // floor or ceiling pic for FOF
 	uint16_t     tb_texturenum; // t_texturenum top word, b_texturenum bottom word
 
 	uint16_t     floorceilpicnum; // ceilingpicnum top word, floorpicnum bottom word (just like a ceiling and floor!)
@@ -643,27 +646,27 @@ typedef struct
 #define LOWER8(x) ((uint8_t)((uint16_t)x & 0xff))
 #define SETUPPER8(x, y) {\
 x &= 0x00ff; \
-x |= ((uint16_t)y << 8); \
+x |= (((uint16_t)(y)) << 8); \
 }
 #define SETLOWER8(x, y) {\
 x &= 0xff00; \
-x |= ((uint16_t)y & 0xff); \
+x |= (((uint16_t)(y)) & 0xff); \
 }
 #define UPPER16(x) ((uint16_t)((uint32_t)x >> 16))
 #define LOWER16(x) ((uint16_t)((uint32_t)x & 0xffff))
 #define SETUPPER16(x, y) {\
 x &= 0x0000ffff; \
-x |= ((uint32_t)y << 16); \
+x |= (((uint32_t)(y)) << 16); \
 }
 #define SETLOWER16(x, y) {\
 x &= 0xffff0000; \
-x |= ((uint32_t)y & 0xffff); \
+x |= (((uint32_t)(y)) & 0xffff); \
 }
 
 typedef struct
 {
 	fixed_t 	floorheight, floornewheight, ceilnewheight;
-	uint32_t    fofInfo;
+	fixed_t    fofInfo;
 } viswallextra_t;
 
 #define	MAXWALLCMDS		130
@@ -694,11 +697,14 @@ typedef struct vissprite_s
 
 #define	MAXVISSSEC		128
 
+#define VPFLAGS_ISFOF      1
+#define VPFLAGS_DIDSEG     2
 typedef struct visplane_s
 {
 	fixed_t		height;
 	VINT		minx, maxx;
-	int 		flatandlight;
+	VINT 		flatandlight;
+	VINT        flags;
 	struct visplane_s	*next;
 	unsigned short		*open/*[SCREENWIDTH+2]*/;		/* top<<8 | bottom */ /* leave pads for [minx-1]/[maxx+1] */
 } visplane_t;
@@ -711,7 +717,10 @@ void R_MarkOpenPlane(visplane_t* pl)
 ATTR_DATA_CACHE_ALIGN
 ;
 
-visplane_t *R_FindPlane(fixed_t height, int flatandlight,
+visplane_t *R_FindPlaneFOF(fixed_t height, VINT flatandlight,
+	int start, int stop)
+;
+visplane_t *R_FindPlane(fixed_t height, VINT flatandlight,
 	int start, int stop)
 ATTR_DATA_CACHE_ALIGN
 ;
@@ -737,6 +746,7 @@ __attribute__((aligned(16)))
 	sector_t 	*viewsector;
 	fixed_t		viewcos, viewsin;
 	player_t	*viewplayer;
+	fixed_t     viewwaterheight;
 	VINT		lightlevel;
 	VINT		extralight;
 	VINT		displayplayer;
