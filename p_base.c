@@ -38,7 +38,7 @@ typedef struct
    mobj_t      *checkthing, *hitthing;
    fixed_t      testx, testy;
    fixed_t      testfloorz, testceilingz, testdropoffz;
-   VINT         testsubsec;
+   SPTR         ptestsubsec;
    line_t      *ceilingline;
    fixed_t      testbbox[4];
 } pmovetest_t;
@@ -60,9 +60,9 @@ fixed_t FloorZAtPos(const sector_t *sec, fixed_t z, fixed_t height)
    fixed_t floorz = sec->floorheight;
    const fixed_t thingtop = z + height;
 
-   if (sec->fofsec >= 0)
+   if (sec->pfofsec != (SPTR)0)
    {
-      sector_t *fof = &sectors[sec->fofsec];
+      sector_t *fof = SPTR_TO_LPTR(sec->pfofsec);
 
       fixed_t delta1 = z - (fof->floorheight + ((fof->ceilingheight - fof->floorheight)/2));
       fixed_t delta2 = thingtop - (fof->floorheight + ((fof->ceilingheight - fof->floorheight)/2));
@@ -77,9 +77,9 @@ fixed_t CeilingZAtPos(const sector_t *sec, fixed_t z, fixed_t height)
    fixed_t ceilingz = sec->ceilingheight;
    const fixed_t thingtop = z + height;
 
-   if (sec->fofsec >= 0)
+   if (sec->pfofsec != (SPTR)0)
    {
-      sector_t *fof = &sectors[sec->fofsec];
+      sector_t *fof = SPTR_TO_LPTR(sec->pfofsec);
 
       fixed_t delta1 = z - (fof->floorheight + ((fof->ceilingheight - fof->floorheight)/2));
       fixed_t delta2 = thingtop - (fof->floorheight + ((fof->ceilingheight - fof->floorheight)/2));
@@ -278,8 +278,8 @@ static boolean PB_CheckPosition(pmovetest_t *mt)
 
    // the base floor / ceiling is from the subsector that contains the point.
    // Any contacted lines the step closer together will adjust them.
-   mt->testsubsec   = R_PointInSubsector2(mt->testx, mt->testy);
-   const sector_t *testsec = SS_SECTOR(mt->testsubsec);
+   mt->ptestsubsec   = R_PointInSubsector2(mt->testx, mt->testy);
+   const sector_t *testsec = SS_PSECTOR(mt->ptestsubsec);
    mt->testfloorz   = mt->testdropoffz = FloorZAtPos(testsec, mt->checkthing->z, mt->checkthing->theight << FRACBITS);
    mt->testceilingz = CeilingZAtPos(testsec, mt->checkthing->z, mt->checkthing->theight << FRACBITS);
 
@@ -358,7 +358,7 @@ static boolean PB_TryMove(pmovetest_t *mt, mobj_t *mo, fixed_t tryx, fixed_t try
          return false; // too big a step up
       if (!((mt->checkthing->flags2 & MF2_FLOAT) || mt->checkthing->type == MT_PLAYER) && mt->testfloorz - mt->testdropoffz > 24*FRACUNIT)
          return false; // don't stand over a dropoff
-      if (mt->checkthing->type == MT_SKIM && SS_SECTOR(mt->testsubsec)->heightsec == -1)
+      if (mt->checkthing->type == MT_SKIM && SS_PSECTOR(mt->ptestsubsec)->pheightsec == (SPTR)0)
          return false; // Skim can't go out of water
    }
 
@@ -368,7 +368,7 @@ static boolean PB_TryMove(pmovetest_t *mt, mobj_t *mo, fixed_t tryx, fixed_t try
    mo->ceilingz = mt->testceilingz;
    mo->x        = tryx;
    mo->y        = tryy;
-   P_SetThingPosition2(mo, mt->testsubsec);
+   P_SetThingPosition2(mo, mt->ptestsubsec);
 
    return true;
 }
@@ -581,7 +581,7 @@ void P_ZMovement(mobj_t *mo)
    else if(!(mo->flags & MF_NOGRAVITY))
    {
       // apply gravity
-      if (SS_SECTOR(mo->isubsector)->heightsec >= 0
+      if (SS_PSECTOR(mo->pisubsector)->pheightsec != 0
          && GetWatertopMo(mo) > mo->z + (mo->theight << (FRACBITS-1)))
          mo->momz -= GRAVITY/2/3; // Less gravity underwater.
       else
@@ -1007,7 +1007,9 @@ boolean P_MobjSpecificActions(mobj_t *mobj)
                      if (i == -1)
                         chosen = MT_EXPLODE;
 
-                     fixed_t z = sectors[subsectors[mobj->isubsector].isector].floorheight - 80*FRACUNIT;
+                     const sector_t *ms = SS_PSECTOR(mobj->pisubsector);
+                     fixed_t z = ms->floorheight - 80*FRACUNIT;
+
                      z += (P_Random() & 31) << FRACBITS;
 
                      mobj_t *flicky = P_SpawnMobj(

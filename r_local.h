@@ -84,13 +84,15 @@ typedef	struct
 	VINT     floor_xoffs; // Upper X, Lower Y.
 
 	// killough 3/7/98: support flat heights drawn at another sector's heights
-  	VINT        heightsec;    // other sector, or -1 if no other sector
+  	SPTR        pheightsec;    // other sector, or -1 if no other sector
 
-	VINT        fofsec;
+	SPTR        pfofsec;
 
 	SPTR		thinglist;			/* list of mobjs in sector */
 	VINT        specline; // Reference to a line of the sector for special reasons (i.e., FOF control line)
 } sector_t;
+
+sector_t *SS_PSECTOR(SPTR ss);
 
 typedef struct sectorBBox_s
 {
@@ -133,7 +135,7 @@ typedef struct line_s
 typedef struct subsector_s
 {
 	VINT		firstline;
-	VINT        isector;
+	SPTR        pisector;
 } subsector_t;
 
 typedef struct seg_s
@@ -608,7 +610,7 @@ typedef struct
 	uint16_t     floorceilpicnum; // ceilingpicnum top word, floorpicnum bottom word (just like a ceiling and floor!)
 
 #ifdef FLOOR_OVER_FLOOR
-	int16_t     fofSector;
+	SPTR     pfofSector;
 #else
 	uint16_t	newmiplevels; // 0 is lower, 1 is upper
 #endif
@@ -683,7 +685,7 @@ typedef struct vissprite_s
 	uint16_t 	patchnum;		// upper byte indicates high detail draw
 	uint16_t	colormap;
 	short		gx,gy;	/* global coordinates */
-	VINT        heightsec;
+	SPTR        pheightsec;
 	VINT		patchheight;
 //	void 		*colormaps;
 #ifndef MARS

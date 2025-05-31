@@ -46,7 +46,7 @@ static boolean P_CameraTryMove2(ptrymove_t *tm, boolean checkposonly)
    tmthing->ceilingz = mw.tmceilingz;
    tmthing->x = mw.tmx;
    tmthing->y = mw.tmy;
-   tmthing->isubsector = SS_TO_I(mw.newsubsec);
+   tmthing->pisubsector = LPTR_TO_SPTR(mw.newsubsec);
 
    return true;
 }
@@ -66,7 +66,7 @@ static void P_ResetCamera(player_t *player, camera_t *thiscam)
 	thiscam->z = player->mo->z + VIEWHEIGHT;
    thiscam->angle = player->mo->angle;
    thiscam->aiming = 0;
-   thiscam->subsector = I_TO_SS(R_PointInSubsector2(thiscam->x, thiscam->y));
+   thiscam->subsector = SPTR_TO_LPTR(R_PointInSubsector2(thiscam->x, thiscam->y));
 }
 
 // Process the mobj-ish required functions of the camera
@@ -140,7 +140,7 @@ camwrapup:
 		thiscam->momx = mo.momx;
 		thiscam->momy = mo.momy;
 		thiscam->momz = mo.momz;
-      thiscam->subsector = I_TO_SS(R_PointInSubsector2(thiscam->x, thiscam->y));
+        thiscam->subsector = SPTR_TO_LPTR(R_PointInSubsector2(thiscam->x, thiscam->y));
    }
 
 	// P_CameraZMovement()
@@ -192,7 +192,7 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 	fixed_t x, y, z, viewpointx, viewpointy, camspeed, camdist, camheight, pviewheight;
 	fixed_t dist;
 	mobj_t *mo;
-	VINT newsubsec;
+	SPTR newsubsec;
    const mobjinfo_t *caminfo = &mobjinfo[MT_CAMERA];
 
 	mo = player->mo;
@@ -255,7 +255,7 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
 
 	// Look at halfway between the camera and player. Is the ceiling lower? Then the camera should try to move down to fit under it
 	newsubsec = R_PointInSubsector2(((mo->x>>FRACBITS) + (thiscam->x>>FRACBITS))<<(FRACBITS-1), ((mo->y>>FRACBITS) + (thiscam->y>>FRACBITS))<<(FRACBITS-1));
-   const sector_t *newsec = SS_SECTOR(newsubsec);
+    const sector_t *newsec = SS_PSECTOR(newsubsec);
 
 	{
 		// camera fit?
@@ -309,7 +309,7 @@ void P_MoveChaseCamera(player_t *player, camera_t *thiscam)
       thiscam->aiming -= (dist>>3);
    }
 
-   const sector_t *camSec = I_TO_SEC(thiscam->subsector->isector);
+   const sector_t *camSec = SPTR_TO_LPTR(thiscam->subsector->pisector);
 
    if (thiscam->z < camSec->floorheight)
       thiscam->z = camSec->floorheight;

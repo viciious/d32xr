@@ -317,8 +317,8 @@ void P_PlayerCheckForStillPickups(mobj_t *mobj)
 {
 	int xl, xh, yl, yh, bx, by;
 	pmovework_t mw;
-	mw.newsubsec = I_TO_SS(mobj->isubsector);
-   mw.newsec = I_TO_SEC(mw.newsubsec->isector);
+	mw.newsubsec = SPTR_TO_LPTR(mobj->pisubsector);
+   mw.newsec = SPTR_TO_LPTR(mw.newsubsec->pisector);
 	mw.tmfloorz = mw.tmdropoffz = mw.newsec->floorheight;
 	mw.tmceilingz = mw.newsec->ceilingheight;
 	mw.blockline = NULL;
@@ -383,8 +383,8 @@ boolean PM_CheckPosition(pmovework_t *mw)
    mw->tmbbox[BOXRIGHT ] = mw->tmx + mobjinfo[tmthing->type].radius;
    mw->tmbbox[BOXLEFT  ] = mw->tmx - mobjinfo[tmthing->type].radius;
 
-   mw->newsubsec = I_TO_SS(R_PointInSubsector2(mw->tmx, mw->tmy));
-   mw->newsec = I_TO_SEC(mw->newsubsec->isector);
+   mw->newsubsec = SPTR_TO_LPTR(R_PointInSubsector2(mw->tmx, mw->tmy));
+   mw->newsec = SPTR_TO_LPTR(mw->newsubsec->pisector);
 
    // the base floor/ceiling is from the subsector that contains the point.
    // Any contacted lines the step closer together will adjust them.
@@ -518,7 +518,7 @@ boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly)
          return false; // too big a step up
       if (!((tmthing->flags2 & MF2_FLOAT) || tmthing->player) && mw.tmfloorz - mw.tmdropoffz > 24*FRACUNIT)
          return false; // don't stand over a dropoff
-      if (tmthing->type == MT_SKIM && mw.newsec->heightsec == -1)
+      if (tmthing->type == MT_SKIM && mw.newsec->pheightsec == (SPTR)0)
          return false; // Skim can't go out of water
    }
 
@@ -528,7 +528,7 @@ boolean P_TryMove2(ptrymove_t *tm, boolean checkposonly)
    tmthing->ceilingz = mw.tmceilingz;
    tmthing->x        = mw.tmx;
    tmthing->y        = mw.tmy;
-   P_SetThingPosition2(tmthing, SS_TO_I(mw.newsubsec));
+   P_SetThingPosition2(tmthing, LPTR_TO_SPTR(mw.newsubsec));
 
    return true;
 }

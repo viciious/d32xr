@@ -289,9 +289,9 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
    VINT     *lvalidcount, vc;
 
    // check things
-   for(thing = SPTR_TO_LPTR(sectors[subsectors[bspnum].isector].thinglist); thing; thing = SPTR_TO_LPTR(thing->snext))
+   for(thing = SPTR_TO_LPTR(SS_PSECTOR(bspnum)->thinglist); thing; thing = SPTR_TO_LPTR(thing->snext))
    {
-      if(thing->isubsector != bspnum)
+      if(thing->pisubsector != bspnum)
          continue;
 
       if (thing->flags & MF_RINGMOBJ)

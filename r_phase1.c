@@ -67,7 +67,7 @@ static VINT checkcoord[12][4] =
    { 0, 0, 0, 0 }
 };
 
-static sector_t emptysector = { .floorheight = 0, .ceilingheight = 0, .validcount = 0, .floorpic = -2, .ceilingpic = -2, .lightlevel = -2, .special = 0, .tag = 0, .flags = 0, .heightsec = -1, .fofsec = -1, .thinglist = (SPTR)0, .specialdata = 0, .specline = -1 };
+static sector_t emptysector = { .floorheight = 0, .ceilingheight = 0, .validcount = 0, .floorpic = -2, .ceilingpic = -2, .lightlevel = -2, .special = 0, .tag = 0, .flags = 0, .pheightsec = (SPTR)0, .pfofsec = (SPTR)0, .thinglist = (SPTR)0, .specialdata = 0, .specline = -1 };
 
 static int R_ClipToViewEdges(angle_t angle1, angle_t angle2)
 {
@@ -201,7 +201,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
    const short liflags = ldflags[li-lines];
    static sector_t ftempsec;
    static sector_t btempsec;
-   segl->fofSector = -1;
+   segl->pfofSector = (SPTR)0;
 
    front_sector = R_FakeFlat(front_sector, &ftempsec, false);
 
@@ -325,10 +325,10 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
             actionbits |= (AC_SOLIDSIL|AC_TOPTEXTURE);                   // solid line; draw middle texture only
          }
 
-         if (front_sector->fofsec >= 0 && !(front_sector->flags & SF_FOF_SWAPHEIGHTS))
+         if (front_sector->pfofsec != 0 && !(front_sector->flags & SF_FOF_SWAPHEIGHTS))
          {
-            const sector_t *fofsec = &sectors[front_sector->fofsec];
-            segl->fofSector = front_sector->fofsec;
+            const sector_t *fofsec = SPTR_TO_LPTR(front_sector->pfofsec);
+            segl->pfofSector = front_sector->pfofsec;
 
             segl->fof_picnum = 0xff;
             if (fofsec->ceilingheight < vd.viewz)
@@ -385,12 +385,12 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
             actionbits |= AC_MIDTEXTURE; // set bottom and top masks
          }
 
-         if (back_sector->fofsec >= 0 && !(back_sector->flags & SF_FOF_SWAPHEIGHTS))
+         if (back_sector->pfofsec != 0 && !(back_sector->flags & SF_FOF_SWAPHEIGHTS))
          {
-            const sector_t *fofsec = &sectors[back_sector->fofsec];
-            segl->fofSector = back_sector->fofsec;
+            const sector_t *fofsec = SPTR_TO_LPTR(back_sector->pfofsec);
+            segl->pfofSector = back_sector->pfofsec;
 
-            if (front_sector->fofsec < 0 && !(ldflags[fofsec->specline] & ML_BLOCKMONSTERS))
+            if (front_sector->pfofsec == (SPTR)0 && !(ldflags[fofsec->specline] & ML_BLOCKMONSTERS))
             {
                const line_t *fofline = &lines[fofsec->specline];
                fof_texturemid = fofsec->ceilingheight - vd.viewz;
@@ -402,7 +402,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
                if (fofsec->ceilingheight <= front_sector->floorheight || fofsec->floorheight >= front_sector->ceilingheight)
                {
                   fof_texturemid = 0;
-                  segl->fof_texturenum = (unsigned)-1;
+                  segl->fof_texturenum = (uint8_t)-1;
                }
 
                actionbits |= AC_FOFSIDE; // set bottom and top masks
@@ -434,10 +434,10 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
                *fofInfo = fofsec->floorheight - vd.viewz;
             }
          }
-         if (front_sector->fofsec >= 0 && !(front_sector->flags & SF_FOF_SWAPHEIGHTS))
+         if (front_sector->pfofsec != 0 && !(front_sector->flags & SF_FOF_SWAPHEIGHTS))
          {
-            const sector_t *fofsec = &sectors[front_sector->fofsec];
-            segl->fofSector = front_sector->fofsec;
+            const sector_t *fofsec = SPTR_TO_LPTR(front_sector->pfofsec);
+            segl->pfofSector = front_sector->pfofsec;
             segl->fof_picnum = 0xff;
             if (fofsec->ceilingheight < vd.viewz)
             {
@@ -729,13 +729,13 @@ crunch:
 sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
                      boolean back)
 {
-   if (sec->fofsec >= 0 && (sec->flags & SF_FOF_SWAPHEIGHTS))
+   if (sec->pfofsec != (SPTR)0 && (sec->flags & SF_FOF_SWAPHEIGHTS))
    {
       // Replace sector being drawn, with a copy to be hacked
       *tempsec = *sec;
 
-      const boolean underwater = vd.viewsector->heightsec >= 0 && vd.viewz<=vd.viewwaterheight;
-      const sector_t *fofsec = &sectors[sec->fofsec];
+      const boolean underwater = vd.viewsector->pheightsec != (SPTR)0 && vd.viewz <= vd.viewwaterheight;
+      const sector_t *fofsec = SPTR_TO_LPTR(sec->pfofsec);
 
       if (underwater)
       {
@@ -750,10 +750,10 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
 
       sec = tempsec;
    }
-   else if (sec->heightsec >= 0)
+   else if (sec->pheightsec != (SPTR)0)
    {
-      const sector_t *watersec = &sectors[sec->heightsec];
-      boolean underwater = vd.viewsector->heightsec >= 0 && vd.viewz<=vd.viewwaterheight;
+      const sector_t *watersec = SPTR_TO_LPTR(sec->pheightsec);
+      boolean underwater = vd.viewsector->pheightsec != 0 && vd.viewz <= vd.viewwaterheight;
 
       // Replace sector being drawn, with a copy to be hacked
       *tempsec = *sec;
@@ -895,7 +895,7 @@ static void R_Subsector(rbspWork_t *rbsp, int num)
    const subsector_t *sub = &subsectors[num];
    seg_t       *line, *stopline;
    int          count;
-   sector_t    *frontsector = &sectors[sub->isector];
+   sector_t    *frontsector = SPTR_TO_LPTR(sub->pisector);
       
    if (frontsector->thinglist)
    {

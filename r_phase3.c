@@ -110,14 +110,13 @@ static void R_PrepMobj(mobj_t *thing)
    // killough 3/27/98: exclude things totally separated
    // from the viewer, by either water or fake ceilings
    // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
-   const sector_t *sec = SS_SECTOR(thing->isubsector);
-   const int heightsec = sec->heightsec;
-   const int phs = vd.viewsector->heightsec;
-   if (heightsec >= 0 && phs >= 0)   // only clip things which are in special sectors
+   const sector_t *sec = SS_PSECTOR(thing->pisubsector);
+   if (sec->pheightsec != (SPTR)0 && vd.viewsector->pheightsec != (SPTR)0)   // only clip things which are in special sectors
    {
       const fixed_t localgzt = thing->z + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
       const fixed_t waterHeight = vd.viewwaterheight;
-      const fixed_t thingHeight = sectors[heightsec].ceilingheight;
+      const sector_t *heightsec = SPTR_TO_LPTR(sec->pheightsec);
+      const fixed_t thingHeight = heightsec->ceilingheight;
 
       if ((vd.viewz < waterHeight) != (localgzt < thingHeight))
          return;
@@ -144,7 +143,7 @@ static void R_PrepMobj(mobj_t *thing)
    vis->patchheight = BIGSHORT(patch->height);
    vis->texturemid = texmid;
    vis->startfrac = 0;
-   vis->heightsec = heightsec;
+   vis->pheightsec = sec->pheightsec;
 
    // Minimize branching for flip
    vis->xiscale = FixedDiv(FRACUNIT, xscale) * flip;
@@ -296,14 +295,14 @@ static void R_PrepRing(ringmobj_t *thing, uint8_t scenery)
    // killough 3/27/98: exclude things totally separated
    // from the viewer, by either water or fake ceilings
    // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
-   const sector_t *sec = SS_SECTOR(thing->isubsector);
-   const int heightsec = sec->heightsec;
+   const sector_t *sec = SS_PSECTOR(thing->isubsector);
    const fixed_t thingz = scenery ? (thing->type < MT_STALAGMITE0 || thing->type > MT_STALAGMITE7 ? sec->floorheight : sec->ceilingheight - mobjinfo[thing->type].height) : thing->z << FRACBITS;
-   if (heightsec >= 0 && vd.viewsector->heightsec >= 0)   // only clip things which are in special sectors
+   if (sec->pheightsec != (SPTR)0 && vd.viewsector->pheightsec != (SPTR)0)   // only clip things which are in special sectors
    {
       const fixed_t localgzt = thingz + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
       const fixed_t waterHeight = vd.viewwaterheight;
-      const fixed_t thingHeight = sectors[heightsec].ceilingheight;
+      const sector_t *heightsec = SPTR_TO_LPTR(sec->pheightsec);
+      const fixed_t thingHeight = heightsec->ceilingheight;
 
       if ((vd.viewz < waterHeight) != (localgzt < thingHeight))
          return;
@@ -330,7 +329,7 @@ static void R_PrepRing(ringmobj_t *thing, uint8_t scenery)
    vis->patchheight = BIGSHORT(patch->height);
    vis->texturemid = texmid;
    vis->startfrac = 0;
-   vis->heightsec = heightsec;
+   vis->pheightsec = sec->pheightsec;
 
    vis->xiscale = FixedDiv(FRACUNIT, xscale) * flip;
 #ifdef NARROW_SCENERY

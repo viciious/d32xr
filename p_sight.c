@@ -282,8 +282,10 @@ static boolean PS_RejectCheckSight(mobj_t *t1, mobj_t *t2)
    int bytenum;
 
    // First check for trivial rejection
-   s1 = (uintptr_t)subsectors[t1->isubsector].isector;
-   s2 = (uintptr_t)subsectors[t2->isubsector].isector;
+   const subsector_t *ss1 = SPTR_TO_LPTR(t1->pisubsector);
+   s1 = (uintptr_t)ss1->pisector;
+   const subsector_t *ss2 = SPTR_TO_LPTR(t2->pisubsector);
+   s2 = (uintptr_t)ss2->pisector;
 
    if (s1 > s2)
    {

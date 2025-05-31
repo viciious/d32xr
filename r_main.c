@@ -262,13 +262,19 @@ angle_t R_PointToAngle2 (fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 ==============
 */
 
-VINT R_PointInSubsector2 (fixed_t x, fixed_t y)
+sector_t *SS_PSECTOR(SPTR ss)
+{
+	const subsector_t *subsec = SPTR_TO_LPTR(ss);
+	return (sector_t*)SPTR_TO_LPTR(subsec->pisector);
+}
+
+SPTR R_PointInSubsector2 (fixed_t x, fixed_t y)
 {
 	node_t	*node;
 	int		side, nodenum;
 	
 	if (!numnodes)				/* single subsector is a special case */
-		return 0;
+		return LPTR_TO_SPTR(&subsectors[0]);
 		
 	nodenum = numnodes-1;
 
@@ -284,7 +290,7 @@ VINT R_PointInSubsector2 (fixed_t x, fixed_t y)
 	while (! (nodenum & NF_SUBSECTOR) );
 #endif
 
-	return nodenum & ~NF_SUBSECTOR;	
+	return LPTR_TO_SPTR(&subsectors[nodenum & ~NF_SUBSECTOR]);	
 }
 
 /*============================================================================= */
@@ -1081,13 +1087,13 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		vd.viewy = thiscam->y;
 		vd.viewz = thiscam->z + (20 << FRACBITS);
 		vd.viewangle = thiscam->angle;
-		vd.lightlevel = sectors[thiscam->subsector->isector].lightlevel;
+		vd.viewsector = SS_PSECTOR(thiscam->subsector->pisector);
+		vd.lightlevel = vd.viewsector->lightlevel;
 		vd.aimingangle = thiscam->aiming;
-		vd.viewsector = &sectors[thiscam->subsector->isector];
 
-		if (sectors[thiscam->subsector->isector].heightsec >= 0)
+		if (vd.viewsector->pheightsec != (SPTR)0)
 		{
-			vd.viewwaterheight = GetWatertopSec(&sectors[thiscam->subsector->isector]);
+			vd.viewwaterheight = GetWatertopSec(vd.viewsector);
 			
 			if (vd.viewwaterheight > vd.viewz)
 			{
@@ -1106,7 +1112,7 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		vd.viewz = player->viewz;
 		vd.viewangle = player->mo->angle;
 		vd.aimingangle = 0;
-		vd.viewsector = SS_SECTOR(player->mo->isubsector);
+		vd.viewsector = SS_PSECTOR(player->mo->pisubsector);
 		vd.lightlevel = vd.viewsector->lightlevel;
 	}
 

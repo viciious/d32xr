@@ -49,7 +49,8 @@ void R_DrawFOFSegRange(viswall_t *seg, int x, int stopx)
 
    I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
 
-   VINT thickness = (sectors[seg->fofSector].ceilingheight- sectors[seg->fofSector].floorheight) >> (FRACBITS+1);
+   const sector_t *fofSector = SPTR_TO_LPTR(seg->pfofSector);
+   VINT thickness = (fofSector->ceilingheight- fofSector->floorheight) >> (FRACBITS+1);
 
    for(; x <= stopx; x++)
    {
@@ -666,19 +667,19 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
   // killough 4/9/98: optimize by adding mh
   // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
 
-  if (vis->heightsec >= 0)  // only things in specially marked sectors
+  if (vis->pheightsec != (SPTR)0)  // only things in specially marked sectors
     {
       fixed_t h,mh;
-      int phs = vd.viewsector->heightsec;
       // Recalculate these lost values from phase3
+      const sector_t *heightsec = SPTR_TO_LPTR(vis->pheightsec);
       const fixed_t gzt = vis->texturemid + vd.viewz;
       const fixed_t gz = gzt - (vis->patchheight << FRACBITS);
 
-      if ((mh = sectors[vis->heightsec].ceilingheight) > gz &&
+      if ((mh = heightsec->ceilingheight) > gz &&
           (h = centerYFrac - FixedMul(mh-=vd.viewz, vis->yscale)) >= 0 &&
           (h >>= FRACBITS) < viewportHeight)
       {
-        if (mh <= 0 || (phs >= 0 && vd.viewz > vd.viewwaterheight))
+        if (mh <= 0 || (vd.viewsector->pheightsec > 0 && vd.viewz > vd.viewwaterheight))
           {                          // clip bottom
             for (x=vis->x1 ; x<=vis->x2 ; x++)
             {

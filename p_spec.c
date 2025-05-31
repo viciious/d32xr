@@ -407,7 +407,7 @@ typedef struct
 
 void P_PlayerInSpecialSector (player_t *player)
 {
-	const sector_t	*sector = SS_SECTOR(player->mo->isubsector);
+	const sector_t	*sector = SS_PSECTOR(player->mo->pisubsector);
 		
 	switch (sector->special)
 	{
@@ -572,7 +572,7 @@ void P_SpawnSpecials (void)
 		{
 			VINT sec = sides[*lines[i].sidenum].sector;
 			for (int s = -1; (s = P_FindSectorFromLineTag(lines+i,s)) >= 0;)
-				sectors[s].heightsec = sec;
+				sectors[s].pheightsec = LPTR_TO_SPTR(&sectors[sec]);
 			break;
 		}
 		case 100: // 'FOF' sector
@@ -580,7 +580,7 @@ void P_SpawnSpecials (void)
 			VINT sec = sides[*lines[i].sidenum].sector;
 			for (int s = -1; (s = P_FindSectorFromLineTag(lines+i,s)) >= 0;)
 			{
-				sectors[s].fofsec = sec;
+				sectors[s].pfofsec = LPTR_TO_SPTR(&sectors[sec]);
 				sectors[sec].specline = i;
 
 			// A sector that has FOF collision, but for rendering it will swap the floor/ceiling
@@ -597,7 +597,7 @@ void P_SpawnSpecials (void)
 			VINT sec = sides[*lines[i].sidenum].sector;
 			for (int s = -1; (s = P_FindSectorFromLineTag(lines+i,s)) >= 0;)
 			{
-				sectors[s].fofsec = sec;
+				sectors[s].pfofsec = LPTR_TO_SPTR(&sectors[sec]);
 				sectors[sec].specline = sec;
 				sectors[s].flags |= SF_FOF_INVISIBLE_TANGIBLE;
 			}

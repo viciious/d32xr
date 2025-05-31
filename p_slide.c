@@ -149,8 +149,8 @@ void P_SpawnBustables(sector_t *sec, mobj_t *playermo)
    {
       for (fixed_t y = blockbox[BOXBOTTOM]; y <= blockbox[BOXTOP]; y += spawnInterval)
       {
-         VINT spawnSubsec = R_PointInSubsector2(x, y);
-         const sector_t *spawnSec = SS_SECTOR(spawnSubsec);
+         const SPTR spawnSubsec = R_PointInSubsector2(x, y);
+         const sector_t *spawnSec = SS_PSECTOR(spawnSubsec);
          if (spawnSec != sec)
             continue;
 

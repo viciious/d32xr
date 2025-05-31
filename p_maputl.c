@@ -12,7 +12,7 @@ fixed_t P_LineOpening(line_t* linedef) ATTR_DATA_CACHE_ALIGN;
 void P_LineBBox(line_t* ld, fixed_t* bbox) ATTR_DATA_CACHE_ALIGN;
 void P_UnsetThingPosition(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
 void P_SetThingPosition(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
-void P_SetThingPosition2(mobj_t* thing, VINT iss) ATTR_DATA_CACHE_ALIGN;
+void P_SetThingPosition2(mobj_t* thing, SPTR iss) ATTR_DATA_CACHE_ALIGN;
 boolean P_BlockLinesIterator(int x, int y, boolean(*func)(line_t*, void*), void *userp) ATTR_DATA_CACHE_ALIGN;
 boolean P_BlockThingsIterator(int x, int y, boolean(*func)(mobj_t*, void*), void *userp) ATTR_DATA_CACHE_ALIGN;
 
@@ -232,7 +232,7 @@ void P_UnsetThingPosition (mobj_t *thing)
 		if (sprev)
 			sprev->snext = thing->snext;
 		else
-			SS_SECTOR(thing->isubsector)->thinglist = thing->snext;
+			SS_PSECTOR(thing->pisubsector)->thinglist = thing->snext;
 	}
 	
 	if ( ! (thing->flags & MF_NOBLOCKMAP) )
@@ -283,7 +283,7 @@ void P_UnsetThingPosition (mobj_t *thing)
 =
 ===================
 */
-void P_SetThingPosition2 (mobj_t *thing,  VINT iss)
+void P_SetThingPosition2 (mobj_t *thing,  SPTR iss)
 {
 	sector_t		*sec;
 	int				blockx, blocky;
@@ -292,11 +292,11 @@ void P_SetThingPosition2 (mobj_t *thing,  VINT iss)
 /* */
 /* link into subsector */
 /* */
-	thing->isubsector = iss;
+	thing->pisubsector = iss;
 
 	if ( ! (thing->flags & MF_NOSECTOR) )
 	{	/* invisible things don't go into the sector links */
-		sec = SS_SECTOR(iss);
+		sec = SS_PSECTOR(iss);
 	
 		thing->sprev = (SPTR)0;
 		thing->snext = sec->thinglist;

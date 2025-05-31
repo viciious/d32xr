@@ -171,8 +171,8 @@ void P_LoadSectors (int lump)
 		ss->special = ms->special;
 
 		ss->tag = ms->tag;
-		ss->heightsec = -1; // sector used to get floor and ceiling height
-		ss->fofsec = -1;
+		ss->pheightsec = (SPTR)0; // sector used to get floor and ceiling height
+		ss->pfofsec = (SPTR)0;
 		ss->specline = -1;
 		ss->floor_xoffs = 0;
 		ss->flags = 0;
@@ -254,7 +254,7 @@ static void P_SpawnItemRow(mapthing_t *mt, VINT type, VINT count, VINT horizonta
 	{
 		P_ThrustValues(spawnAngle, horizontalSpacing << FRACBITS, &spawnX, &spawnY);
 
-		const sector_t *sec = SS_SECTOR(R_PointInSubsector2(spawnX, spawnY));
+		const sector_t *sec = SS_PSECTOR(R_PointInSubsector2(spawnX, spawnY));
 
 		fixed_t curZ = spawnZ + ((i+1) * (verticalSpacing<<FRACBITS)); // Literal height
 
@@ -658,8 +658,9 @@ void P_GroupLines (void)
 		seg = &segs[ss->firstline];
 		linedef = &lines[seg->linedef];
 		sidedef = &sides[linedef->sidenum[seg->sideoffset & 1]];
-		ss->isector = sidedef->sector;
+		ss->pisector = LPTR_TO_SPTR(&sectors[sidedef->sector]);
 	}
+
 /*
 // count number of lines in each sector
 	li = lines;

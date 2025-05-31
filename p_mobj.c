@@ -131,15 +131,17 @@ void P_Attract(mobj_t *source, mobj_t *dest)
 
 fixed_t GetWatertopSec(const sector_t *sec)
 {
-	if (sec->heightsec == -1)
+	if (sec->pheightsec == (SPTR)0)
 		return sec->floorheight - 512*FRACUNIT;
 
-	return sectors[sec->heightsec].ceilingheight;
+	const sector_t *heightsec = SPTR_TO_LPTR(sec->pheightsec);
+
+	return heightsec->ceilingheight;
 }
 
 fixed_t GetWatertopMo(const mobj_t *mo)
 {
-	const sector_t *sec = &sectors[subsectors[mo->isubsector].isector];
+	const sector_t *sec = SS_PSECTOR(mo->pisubsector);
 	return GetWatertopSec(sec);
 }
 
@@ -366,7 +368,7 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 /* set subsector and/or block links */
 	P_SetThingPosition(mobj);
 
-	const sector_t *sec = &sectors[subsectors[mobj->isubsector].isector];
+	const sector_t *sec = SS_PSECTOR(mobj->pisubsector);
 	
 	mobj->floorz = sec->floorheight;
 	mobj->ceilingz = sec->ceilingheight;
@@ -494,8 +496,9 @@ void P_SpawnPlayer (mapthing_t *mthing)
 		P_ThrustValues(mobj->angle + (ANG45 * 3), -CAM_DIST, &camera.x, &camera.y);
 	camera.x = (camera.x >> FRACBITS) << FRACBITS;
 	camera.y = (camera.y >> FRACBITS) << FRACBITS;
-	camera.subsector = I_TO_SS(R_PointInSubsector2(camera.x, camera.y));
-	camera.z = sectors[camera.subsector->isector].floorheight + (mobj->theight << FRACBITS);
+	camera.subsector = SPTR_TO_LPTR(R_PointInSubsector2(camera.x, camera.y));
+	const sector_t *camsec = SPTR_TO_LPTR(camera.subsector->pisector);
+	camera.z = camsec->floorheight + (mobj->theight << FRACBITS);
 	
 	if (!netgame)
 		return;
@@ -603,7 +606,7 @@ fixed_t P_GetMapThingSpawnHeight(const mobjtype_t mobjtype, const mapthing_t* mt
 			return ONFLOORZ;
 	}*/
 
-	const sector_t *sec = SS_SECTOR(R_PointInSubsector2(x, y));
+	const sector_t *sec = SS_PSECTOR(R_PointInSubsector2(x, y));
 
 	return sec->floorheight + dz;
 }
@@ -789,10 +792,10 @@ void P_MobjCheckWater(mobj_t *mo)
 		player_t *player = &players[mo->player-1];
 		VINT wasinwater = player->pflags & PF_UNDERWATER;
 		player->pflags &= ~(PF_TOUCHWATER|PF_UNDERWATER);
-		const sector_t *moSec = SS_SECTOR(mo->isubsector);
+		const sector_t *moSec = SS_PSECTOR(mo->pisubsector);
 		fixed_t watertop = moSec->floorheight - 512*FRACUNIT;
 
-		if (moSec->heightsec >= 0)
+		if (moSec->pheightsec != (SPTR)0)
 		{
 			watertop = GetWatertopMo(mo);
 

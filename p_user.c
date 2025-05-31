@@ -1356,7 +1356,8 @@ void P_MovePlayer(player_t *player)
 	player->speed = P_AproxDistance(player->mo->momx, player->mo->momy);
 
 	// If you're running fast enough, you can create splashes as you run in shallow water.
-	if (sectors[subsectors[player->mo->isubsector].isector].heightsec >= 0)
+	const sector_t *playersec = SS_PSECTOR(player->mo->pisubsector);
+	if (playersec->pheightsec != (SPTR)0)
 	{
 		const fixed_t watertop = GetWatertopMo(player->mo);
 
@@ -1625,7 +1626,7 @@ void P_PlayerThink(player_t *player)
 	if (player == &players[consoleplayer] && gameaction != ga_demoending)
 		P_MoveChaseCamera(player, &camera);
 
-	if (SS_SECTOR(player->mo->isubsector)->special)
+	if (SS_PSECTOR(player->mo->pisubsector)->special)
 		P_PlayerInSpecialSector(player);
 
 	ticphase = 23;

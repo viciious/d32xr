@@ -855,8 +855,8 @@ void P_DoBossVictory(mobj_t *mo)
 	inner->floorheight += 16*FRACUNIT; // OK to just insta-set this
 	inner->floorpic = R_FlatNumForName("YELFLR");
 	outer->floorpic = R_FlatNumForName("TRAPFLR");
-	outer->heightsec = -1;
-	inner->heightsec = -1;
+	outer->pheightsec = (SPTR)0;
+	inner->pheightsec = (SPTR)0;
 
 	// Move the outer
 	floormove_t *floor = Z_Malloc (sizeof(*floor), PU_LEVSPEC);
@@ -1007,7 +1007,7 @@ void A_FishJump(mobj_t *mo, int16_t var1, int16_t var2)
 {
 	fixed_t watertop = mo->floorz;
 
-	if (SS_SECTOR(mo->isubsector)->heightsec >= 0)
+	if (SS_PSECTOR(mo->pisubsector)->pheightsec != 0)
 		watertop = GetWatertopMo(mo) - (64<<FRACBITS);
 
 	if ((mo->z <= mo->floorz) || (mo->z <= watertop))
@@ -1163,7 +1163,9 @@ void A_BubbleRise(mobj_t *actor, int16_t var1, int16_t var2)
 		P_InstaThrust(actor, P_Random() & 1 ? actor->angle - ANG90 : actor->angle - ANG180,
 			(P_Random() & 1) ? FRACUNIT/2 : -FRACUNIT/2);
 
-	if (sectors[subsectors[actor->isubsector].isector].heightsec == -1
+	const sector_t *bubblesec = SS_PSECTOR(actor->pisubsector);
+
+	if (bubblesec->pheightsec == (SPTR)0
 		|| actor->z + (actor->theight << (FRACBITS-1)) > GetWatertopMo(actor))
 		actor->latecall = P_RemoveMobj;
 }
@@ -1359,7 +1361,7 @@ void A_Boss1Laser(mobj_t *actor, int16_t var1, int16_t var2)
 	for (i = 0; i < iterations; i++)
 	{
 		mobj_t *mo = P_SpawnMobjNoSector(point->x, point->y, point->z, point->type);
-		P_SetThingPosition2(mo, point->isubsector);
+		P_SetThingPosition2(mo, point->pisubsector);
 		mo->floorz = point->floorz;
 		mo->ceilingz = point->ceilingz;
 		mo->z = point->z;
@@ -1380,7 +1382,8 @@ void A_Boss1Laser(mobj_t *actor, int16_t var1, int16_t var2)
 
 	x += point->momx;
 	y += point->momy;
-	floorz = SS_SECTOR(R_PointInSubsector2(x, y))->floorheight;
+	const sector_t *pointSector = SS_PSECTOR(R_PointInSubsector2(x, y));
+	floorz = pointSector->floorheight;
 	if (z - floorz < (mobjinfo[MT_EGGMOBILE_FIRE].height>>1) && (dur & 1))
 	{
 		point = P_SpawnMobj(x, y, floorz, MT_EGGMOBILE_FIRE);
@@ -1388,9 +1391,7 @@ void A_Boss1Laser(mobj_t *actor, int16_t var1, int16_t var2)
 		point->angle = actor->angle;
 		point->target = actor;
 
-		const sector_t *pointSector = &sectors[subsectors[point->isubsector].isector];
-
-		if (pointSector->heightsec >= 0 && point->z <= GetWatertopSec(pointSector))
+		if (pointSector->pheightsec != 0 && point->z <= GetWatertopSec(pointSector))
 		{
 //			for (i = 0; i < 2; i++)
 			{
@@ -1616,7 +1617,7 @@ void A_UnidusBall(mobj_t *actor)
 //
 void A_BubbleSpawn(mobj_t *actor, int16_t var1, int16_t var2)
 {
-	if (SS_SECTOR(actor->isubsector)->heightsec >= 0
+	if (SS_PSECTOR(actor->pisubsector)->pheightsec != 0
 		&& actor->z < GetWatertopMo(actor) - 32*FRACUNIT)
 	{
 		int i;
