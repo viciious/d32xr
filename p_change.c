@@ -103,6 +103,9 @@ boolean PIT_ChangeSector (mobj_t *thing, changetest_t *ct)
 	if (P_ThingHeightClip (thing))
 		return true;		/* keep checking */
 
+	if (thing->flags & MF_STATIC)
+		return true;        /* do not attempt to gib static objects */
+
 	/* crunch bodies to giblets */
 	if (thing->health <= 0)
 	{
