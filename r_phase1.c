@@ -637,7 +637,7 @@ static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
 static void R_Subsector(rbspWork_t *rbsp, int num)
 {
    subsector_t *sub = &subsectors[num];
-   seg_t       *line, *stopline;
+   seg_t       *line;
    int          count;
    sector_t    *frontsector = SSEC_SECTOR(sub);
       
@@ -655,10 +655,9 @@ static void R_Subsector(rbspWork_t *rbsp, int num)
 
    line     = &segs[sub->firstline];
    count    = SSEC_NUMLINES(sub);
-   stopline = line + count;
 
    rbsp->curfsector = frontsector;
-   while(line != stopline)
+   while(--count >= 0)
       R_AddLine(rbsp, line++);
 }
 
