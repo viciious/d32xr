@@ -34,12 +34,12 @@
 .endif
         .ascii  "                "
         .ascii  "DOOM 32XCD Fusio"
-        .ascii  "n v2.1          "
+        .ascii  "n v2.2          "
         .ascii  "                "
         .ascii  "DOOM 32XCD Fusio"
-        .ascii  "n v2.1          "
+        .ascii  "n v2.2          "
         .ascii  "                "
-        .ascii  "GM DMF32XCD-20"
+        .ascii  "GM DMF32XCD-22"
         .word   0x0000
         .ascii  "J6CM            "
         .long   0x00000000,0x003FFFFF   /* ROM start, end */
