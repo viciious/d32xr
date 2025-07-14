@@ -53,7 +53,7 @@
 #ifdef DISABLE_DMA_SOUND
 #define S_USE_MEGACD_DRV() (mcd_avail)
 #else
-#define S_USE_MEGACD_DRV() (mcd_avail && (sfxdriver == sfxdriver_auto || sfxdriver == sfxdriver_mcd))
+#define S_USE_MEGACD_DRV() (mcd_avail && (cdsfx || sfxdriver == sfxdriver_auto || sfxdriver == sfxdriver_mcd))
 #endif
 
 enum
@@ -95,6 +95,8 @@ VINT			musictype = mustype_fm;
 
 static VINT		curmusic, muslooping = 0, curcdtrack = cdtrack_none;
 int             samplecount = 0;
+
+VINT 			cdsfx = 0;
 
 VINT 			sfxdriver = sfxdriver_auto, mcd_avail = 0; // 0 - auto, 2 - megacd, 2 - 32x
 
@@ -149,6 +151,8 @@ void S_Init(void)
 		S_sfx[i].lump = -1;
 	}
 
+	cdsfx = 0;
+	
 	W_LoadPWAD(PWAD_CD);
 
 	/* build an in-memory PWAD with all SFX */
@@ -165,14 +169,35 @@ void S_Init(void)
 			S_sfx[i].lump = W_CheckRangeForName(S_sfxnames[i], start, end);
 		}
 
-		if (mcd_avail)
+		if (W_IsIWad(start))
 		{
+			cdsfx = 0;
+
+			// upload sfx from ROM into PRG RAM
+			if (mcd_avail)
+			{
+				for (i=1 ; i < NUMSFX ; i++)
+				{
+					int lump = S_sfx[i].lump;
+					if (lump < 0) {
+						continue;
+					}
+					Mars_MCDLoadSfx(i, W_POINTLUMPNUM(lump), W_LumpLength(lump));
+				}
+			}
+		}
+		else
+		{
+			// load sfx from the CD into PRG RAM
+			// the local PWM driver must also be disabled
 			lumpinfo_t li[NUMSFX];
 			int sfxol[NUMSFX*2];
 
+			cdsfx = 1;
+
 			for (i = 0; i < NUMSFX; i++)
 			{
- 				if (S_sfx[i].lump >= 0)
+				if (S_sfx[i].lump >= 0)
 					S_sfx[i].lump -= start;
 			}
 
@@ -569,7 +594,11 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 		if (nosep)
 			sep = 255; // full volume from both channels
 
-		Mars_MCDPlaySfx((ch - sfxchannels) + 1, sfx->lump, sep, vol, freq);
+		// pass appropriate sound id depending on whether it was loaded from the CD or not
+		if (cdsfx)
+			Mars_MCDPlaySfx((ch - sfxchannels) + 1, sfx->lump, sep, vol, freq);
+		else
+			Mars_MCDPlaySfx((ch - sfxchannels) + 1, sound_id, sep, vol, freq);
 		return;
 	}
 

@@ -753,6 +753,8 @@ int 	W_ReadLump (int lump, void *dest);
 void	*W_CacheLumpNum (int lump, int tag);
 void	*W_CacheLumpName (const char *name, int tag);
 
+boolean W_IsIWad(int lump);
+
 const char *W_GetNameForNum (int lump);
 void * W_GetRawLumpData_(int lump, const char *func);
 void * W_GetLumpData_(int lump, const char *func);

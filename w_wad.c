@@ -659,3 +659,9 @@ void * W_ReadLumpData_(int lump, const char *func, void *dest, boolean compresse
 		D_memcpy(dest, src, BIGLONG(l->size));
 	return dest;
 }
+
+boolean W_IsIWad(int lump)
+{
+	wadfile_t *wad = W_GetWadForLump(lump);
+	return wad == &wadfile[PWAD_NONE];
+}
