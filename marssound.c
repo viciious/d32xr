@@ -771,6 +771,7 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 {
 	int playtrack = 0;
 	char filename[64];
+	lumpinfo_t *l;
 
 	if (musiclump < 0)
 		musiclump = mus_none;
@@ -861,7 +862,15 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 		return;
 	}
 
-	Mars_PlayTrack(0, playtrack, cd_pwad_name, vgm_tracks[playtrack-1].filepos, vgm_tracks[playtrack-1].size, looping);
+	l = &vgm_tracks[playtrack-1];
+
+	if (cd_pwad_name[0] != '\0')
+	{
+		Mars_PlayTrack(0, playtrack, cd_pwad_name, l->filepos, l->size, looping);
+		return;
+	}
+
+	Mars_PlayTrack(0, playtrack, "", (intptr_t)W_POINTLUMPNUM(W_CheckNumForName(l->name)), l->size, looping);
 }
 
 void S_StartSongByName(const char *name, int looping, int cdtrack)

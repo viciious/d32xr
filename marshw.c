@@ -417,7 +417,7 @@ void Mars_PlayTrack(char use_cda, int playtrack, const char *name, int offset, i
 	int len;
 	int backup[256];
 	char *fb = (char *)(&MARS_FRAMEBUFFER + 0x100), *ptr;
-	int send_fn = !use_cda && name ? 0x1 : 0;
+	int send_fn = !use_cda && name && name[0] ? 0x1 : 0;
 	int use_cdf = send_fn && offset < 0 ? 0x2 : 0;
 
 	Mars_UseCD(use_cda);
@@ -817,7 +817,11 @@ int Mars_OpenCDFileByName(const char *name, int *poffset)
 		return -1;
 	}
 
-    while (MARS_SYS_COMM0) {}
+	if (!mars_cd_ok) {
+		return -1;
+	}
+
+	while (MARS_SYS_COMM0) {}
 
 	ptr = Mars_StringToFramebuffer(name);
 	ptr = (void*)(((uintptr_t)ptr + 1 + 3) & ~3);
@@ -839,6 +843,10 @@ void Mars_OpenCDFileByOffset(int length, int offset)
 {
 	if (length < 0)
 		return;
+
+	if (!mars_cd_ok) {
+		return;
+	}
 
     while (MARS_SYS_COMM0) {}
 	*(int *)&MARS_SYS_COMM8 = length;
@@ -947,6 +955,9 @@ void Mars_MCDLoadSfxFileOfs(uint16_t start_id, int numsfx, const char *name, int
 int Mars_MCDReadDirectory(const char *path)
 {
 	if (!*path) {
+		return -1;
+	}
+	if (!mars_cd_ok) {
 		return -1;
 	}
 

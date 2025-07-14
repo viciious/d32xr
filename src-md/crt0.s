@@ -714,7 +714,7 @@ start_music:
 
         /* start VGM */
         btst    #0,d0               /* check if we read from CD */
-        beq.b   0f
+        beq     07f
 
         move.w  0xA15100,d0
         eor.w   #0x8000,d0
@@ -782,7 +782,7 @@ start_music:
 
         bra     02f
 
-0:
+07:
         /* ROM VGM playback */
         move.w  #0,0xA15104         /* set cart bank select */
         move.l  #0,a0
@@ -920,6 +920,10 @@ offset 0x40 */
         move.w  #0x0000,0xA11100    /* Z80 deassert bus request */
         move.w  #0x0100,0xA11200    /* Z80 deassert reset - run driver */
 
+        tst.w   fm_rep
+        beq.b   5f
+        move.w  #0,0xA15120         /* done */
+5:
         bra     main_loop
 9:
         clr.w   fm_idx              /* not playing VGM */
