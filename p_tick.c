@@ -246,8 +246,19 @@ void P_CheckCheats (void)
 			p->cards[i] = true;
 		p->armorpoints = 200;
 		p->armortype = 2;
-		for (i = 0; i < NUMWEAPONS; i++) p->weaponowned[i] = true;
-		for (i = 0; i < NUMAMMO; i++) p->ammo[i] = p->maxammo[i] = 500;
+		for (i = 0; i < NUMWEAPONS; i++)
+		{
+			if (i == wp_supershotgun)
+			{
+				if (spritelumps[spriteframes[sprites[SPR_SGN2].firstframe].lump] < 0)
+					continue;
+			}
+			p->weaponowned[i] = true;
+		}
+		for (i = 0; i < NUMAMMO; i++)
+		{
+			p->ammo[i] = p->maxammo[i] = 500;
+		}
 	}
 
 	if ((buttons & godmode_combo) == godmode_combo 
