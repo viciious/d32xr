@@ -219,6 +219,8 @@ void I_InitMenuFire(jagobj_t *titlepic)
 
 	doompalette = W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
 
+	I_SetPalette(doompalette);
+
 	m_fire = Z_Malloc(sizeof(*m_fire), PU_STATIC);
 	D_memset(m_fire, 0, sizeof(*m_fire));
 
