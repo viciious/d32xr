@@ -85,13 +85,12 @@ void R_InitTextures (void)
 /* */
 /* load the map texture definitions from textures.lmp */
 /* */
-	maptex = (void *)I_TempBuffer();
-	W_ReadLump(W_GetNumForName("TEXTURE1"), maptex);
+	maptex = W_GetLumpData(W_GetNumForName("TEXTURE1"));
 	numtextures = LITTLELONG(*maptex);
 	directory = maptex+1;
 
-	start = W_CheckNumForName("T_START");
 	end = W_CheckNumForName("T_END");
+	start = W_CheckRangeForName("T_START", 0, end);
 
 	textures = Z_Malloc (numtextures * sizeof(*textures), PU_STATIC);
 	D_memset(textures, 0, numtextures * sizeof(*textures));
