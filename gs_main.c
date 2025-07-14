@@ -69,6 +69,13 @@ void GS_Start(void)
 
     S_StopSong();
 
+    if (W_CheckNumForName("DMAPINFO") >= 0)
+    {
+        // assume some built-in maps are present
+        DoubleBufferSetup();
+        return;
+    }
+
     fl = I_OpenCDFileByName("MENUBACK.JMG", &fo);
     if (fl > 0 && I_ReadCDFile(fl) >= 0) {
         gs_menu->menuback = Z_Malloc(fl, PU_STATIC);
@@ -96,12 +103,13 @@ void GS_Start(void)
     GS_PathChange("/", 0);
 
     gs_menu->cursorframe = 0;
-    S_StartSound(NULL, sfx_swtchn);
 
     DoubleBufferSetup();
 
     if (gs_menu->numitems == 0)
         I_Error("No playable WADs found on the CD");
+
+    S_StartSound(NULL, sfx_swtchn);
 }
 
 void GS_Stop(void)
@@ -109,7 +117,9 @@ void GS_Stop(void)
     if (gs_menu == NULL)
         return;
 
-    if (gs_menu->path[0] && D_strcasecmp(gs_menu->path, "/"))
+    if (gs_menu->numitems == 0)
+        cd_pwad_name[0] = '\0';
+    else if (gs_menu->path[0] && D_strcasecmp(gs_menu->path, "/"))
         D_snprintf(cd_pwad_name, sizeof(cd_pwad_name), "%s/%s", gs_menu->path, gs_menu->items[gs_menu->cursorpos].name);
     else
         D_snprintf(cd_pwad_name, sizeof(cd_pwad_name), "%s", gs_menu->items[gs_menu->cursorpos].name);
@@ -294,6 +304,9 @@ int GS_Ticker (void)
 
 	if (ticon < TICRATE)
 		return ga_nothing; /* ignore accidental keypresses */
+
+    if (!gs_menu || !gs_menu->numitems)
+        return ga_startnew;
 
     if (!menuscr->mode)
     {
@@ -494,6 +507,9 @@ void GS_Drawer (void)
     } else {
         I_ClearFrameBuffer();
     }
+
+    if (!gs_menu->numitems)
+        return;
 
     if (gs_menu->mode)
     {
