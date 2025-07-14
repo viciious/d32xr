@@ -458,6 +458,9 @@ void P_SectorOrg(mobj_t* sec_, fixed_t *org)
 	fixed_t bbox[4];
 	sector_t *sector = (void *)sec_;
 
+	if (!sector)
+		return;
+
 	for (j = 0; j < 4; j++)
 		bbox[j] = sector->bbox[j] << FRACBITS;
 
