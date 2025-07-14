@@ -88,7 +88,7 @@ static uint32_t mars_rom_bsw_start = 0;
 // such as memset or memcpy that
 void I_ClearWorkBuffer(void) __attribute__((optimize("O1")));
 void I_ClearFrameBuffer(void) __attribute__((optimize("O1")));
-byte *I_TempBuffer (void) __attribute__((optimize("O1")));
+byte *I_TempBuffer (int size) __attribute__((optimize("O1")));
 
 static int Mars_ConvGamepadButtons(int ctrl)
 {
@@ -685,15 +685,20 @@ int I_GetFRTCounter(void)
 =
 ====================
 */
-byte *I_TempBuffer (void)
+byte *I_TempBuffer (int size)
 {
 	byte *w = (byte *)framebuffer;
-	int *p, *p_end = (int*)framebufferend;
+	int *p = (int*)w, *p_end = (int*)framebufferend;
+
+	size = (size + 3) / 4; // size in longs
+	if (p_end > p + size) {
+		p_end = p + size;
+	}
 
 	// clear the buffer so the fact that 32x ignores 0-byte writes goes unnoticed
 	// the buffer cannot be re-used without clearing it again though
-	for (p = (int*)w; p < p_end; p++)
-		*p = 0;
+	while (p < p_end)
+		*p++ = 0;
 
 	return w;
 }

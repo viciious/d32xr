@@ -754,11 +754,13 @@ void	*W_CacheLumpNum (int lump, int tag);
 void	*W_CacheLumpName (const char *name, int tag);
 
 const char *W_GetNameForNum (int lump);
+void * W_GetRawLumpData_(int lump, const char *func);
 void * W_GetLumpData_(int lump, const char *func);
 void * W_ReadLumpData_(int lump, const char *func, void *dest, boolean compressed);
+#define W_GetRawLumpData(lump) W_GetRawLumpData_(lump,__func__)
 #define W_GetLumpData(lump) W_GetLumpData_(lump,__func__)
 #define W_ReadLumpData(lump,dest,compressed) W_ReadLumpData_(lump,__func__,dest,compressed)
-#define W_POINTLUMPNUM(x) W_GetLumpData(x)
+#define W_POINTLUMPNUM(x) W_GetRawLumpData(x)
 
 /*---------- */
 /*BASE LEVEL */
@@ -793,7 +795,7 @@ void* I_RemapLumpPtr (void* ptr) ATTR_DATA_CACHE_ALIGN;
 /* return a pointer to a 64k or so temp work buffer for level setup uses */
 /*(non-displayed frame buffer) */
 /* Vic: changed this to always return buffer memset to 0 */
-byte *I_TempBuffer (void);
+byte *I_TempBuffer (int size);
 
 /* temp work buffer which may contain garbage data */
 byte *I_WorkBuffer (void);

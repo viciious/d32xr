@@ -890,10 +890,13 @@ void O_Drawer (void)
 			break;
 		}
 
-		if (spcmDir[0] != '\0') {
-			print(menuitem[mi_spcmpack].x + 85, menuitem[mi_spcmpack].y, spcmDir);
-		} else {
-			print(menuitem[mi_spcmpack].x + 85, menuitem[mi_spcmpack].y, "NONE");
+		if (menuscreen[ms_audio].numitems > 3)
+		{
+			if (spcmDir[0] != '\0') {
+				print(menuitem[mi_spcmpack].x + 85, menuitem[mi_spcmpack].y, spcmDir);
+			} else {
+				print(menuitem[mi_spcmpack].x + 85, menuitem[mi_spcmpack].y, "NONE");
+			}
 		}
 
 #ifndef DISABLE_DMA_SOUND

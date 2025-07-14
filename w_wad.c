@@ -110,11 +110,14 @@ void W_InitCDPWAD (int wadnum, const char *name)
 	if (wadnum == PWAD_CD)
 		cd_pwad_cache_size = -1;
 
+	if (name[0] == '\0')
+		return;
+
 	wad = &wadfile[wadnum];
 	wad->firstlump = wadfile[wadnum-1].numlumps;
 	wad->cdlength = I_OpenCDFileByName(name, &wad->cdoffset);
 	if (wad->cdlength <= 0)
-		I_Error ("Failed to open %s", name);
+		return;
 
 	l = sizeof(wadinfo_t);
 	if (I_ReadCDFile(l) < 0)
@@ -527,6 +530,42 @@ const char *W_GetNameForNum (int lump)
 /*
 ====================
 =
+= W_GetRawLumpData
+====================
+*/
+
+void * W_GetRawLumpData_(int lump, const char *func)
+{
+	wadfile_t *wad;
+	lumpinfo_t* l;
+
+	if (lump < 0)
+		I_Error("%s: %i < 0", func, lump);
+
+	wad = W_GetWadForLump(lump);
+	if (lump >= wad->firstlump+wad->numlumps)
+		I_Error ("%s: %i >= numlumps", func, lump);
+
+	l = &wad->lumpinfo[lump-wad->firstlump];
+	if (wad->cdlength)
+	{
+		volatile int pos = BIGLONG(l->filepos);
+		volatile int len = BIGLONG(l->size);
+
+		I_SeekCDFile(pos, SEEK_SET);
+
+		if (I_ReadCDFile(len) < 0)
+			I_Error("%s: reading %d bytes failed", func, len);
+
+		return I_GetCDFileBuffer();
+	}
+
+	return I_RemapLumpPtr((void*)(wad->fileptr + BIGLONG(l->filepos)));
+}
+
+/*
+====================
+=
 = W_GetLumpData
 ====================
 */
@@ -557,7 +596,23 @@ void * W_GetLumpData_(int lump, const char *func)
 		return I_GetCDFileBuffer();
 	}
 
-	return I_RemapLumpPtr((void*)(wad->fileptr + BIGLONG(l->filepos)));
+	if (l->name[0] & 0x80)
+	{
+		// compressed
+		volatile int pos = BIGLONG(l->filepos);
+		volatile int len = BIGLONG(l->size);
+
+		byte *src = (void*)(wad->fileptr + pos);
+		byte *dest = I_TempBuffer(len);
+
+		decode(src, dest);
+
+		return dest;
+	}
+	else 
+	{
+		return I_RemapLumpPtr((void*)(wad->fileptr + BIGLONG(l->filepos)));
+	}
 }
 
 void * W_ReadLumpData_(int lump, const char *func, void *dest, boolean compressed)
@@ -603,8 +658,4 @@ void * W_ReadLumpData_(int lump, const char *func, void *dest, boolean compresse
 	else
 		D_memcpy(dest, src, BIGLONG(l->size));
 	return dest;
-}
-
-void I_Debug(void)
-{
 }

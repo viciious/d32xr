@@ -1029,7 +1029,7 @@ void I_Update (void)
 ====================
 */
 
-byte	*I_TempBuffer (void)
+byte	*I_TempBuffer (int size)
 {
 	byte *buf = (byte *)screens[workpage];
 	D_memset(buf, 0, 64*1024);
