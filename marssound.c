@@ -1143,7 +1143,7 @@ static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol,
 	sfxchannel_t* channel, * newchannel;
 	int i;
 #ifndef DISABLE_DMA_SOUND
-	int length;
+	int length = 0;
 #endif
 	sfxinfo_t* sfx;
 	sfx_t* md_data;

@@ -48,6 +48,12 @@ typedef struct
 #ifdef MARS
 	uint8_t		*data;
 	int			position;
+#ifndef DISABLE_DMA_SOUND
+	int			increment;
+	int			length;
+	int			loop_length;
+	int			prev_pos;			/* for adpcm decoding */
+#endif
 	uint8_t		volume;
 	uint8_t		pan;
 #else
@@ -60,11 +66,7 @@ typedef struct
 #if defined(MARS) && !defined(DISABLE_DMA_SOUND)
 	uint16_t	width;
 	uint16_t	block_size; 		/* size of data block in bytes */
-	int			length;
-	int			loop_length;
 	int			remaining_bytes; 	/* WAV chunk */
-	int			prev_pos;			/* for adpcm decoding */
-	int			increment;
 #endif
 	sfxinfo_t	*sfx;
 	mobj_t		*mobj;
