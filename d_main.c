@@ -616,16 +616,21 @@ void START_Title(void)
 		return;
 
 	if (*gameinfo.titlePage || *gameinfo.creditsPage) {
-		int l, numl;
 		VINT lumps[3];
+		char lumpname[3][9];
 		lumpinfo_t li[3];
 
 		W_LoadPWAD(PWAD_CD);
 
-		numl = 0;
 		if (*gameinfo.titlePage)
 		{
-			lumps[numl++] = W_CheckNumForName(gameinfo.titlePage);
+			D_strncpy(lumpname[0], gameinfo.titlePage, 8);
+			lumpname[0][8] = '\0';
+			lumps[0] = W_CheckNumForName(gameinfo.titlePage);
+		}
+		else
+		{
+			lumps[0] = -1;
 		}
 
 		if (*gameinfo.creditsPage)
@@ -635,29 +640,38 @@ void START_Title(void)
 			{
 				char name[9];
 				D_strncpy(name, gameinfo.creditsPage, 8);
-				name[7]+= i;
+				name[7] += i;
 				name[8] = '\0';
-
-				lumps[numl++] = W_CheckNumForName(name);
+				memcpy(lumpname[1+i], name, 9);
+				lumps[1+i] = W_CheckNumForName(name);
 			}
-
-			W_CacheWADLumps(li, numl, lumps, true);
+		}
+		else
+		{
+			lumps[1] = lumps[2] = -1;
 		}
 
-		l = 0;
+		W_CacheWADLumps(li, 3, lumps, true);
+
+		for (i = 0; i < 3; i++)
+		{
+			if (lumps[i] < 0)
+				continue;
+			lumps[i] = W_GetNumForName(lumpname[i]);
+		}
+
 		if (*gameinfo.titlePage)
 		{
-			if (li[l].name[0])
-				titlepic = W_CacheLumpName(li[l++].name, PU_STATIC);
+			titlepic = W_CacheLumpNum(lumps[0], PU_STATIC);
 		}
 
 		if (*gameinfo.creditsPage)
 		{
 			for (i = 0; i < 2; i++)
 			{
-				if (!li[l].name[0])
+				if (lumps[1+i] < 0)
 					break;
-				credits[i] = W_CacheLumpName(li[l++].name, PU_STATIC);
+				credits[i] = W_CacheLumpNum(lumps[1+i], PU_STATIC);
 			}
 		}
 
