@@ -1758,12 +1758,16 @@ cpy_md_vram:
         add     d2,d2
         add     d2,d1
 
+        lea     aux_store,a0
+        tst.w   cd_ok
+        beq     20f                 /* couldn't init cd */
+
         moveq   #0,d0
         move.l  d0,-(sp)
         jsr     scd_switch_to_bank
         lea     4(sp),sp
-
-        lea     COL_STORE,a0
+        lea     COL_STORE,a0        /* use the word ram for column storage */
+20:
         lea     0(a0,d1.l),a0
         move.w  #27,d0
 3:
@@ -1869,12 +1873,16 @@ cpy_md_vram:
 
         lea     0(a2,d0.l),a2
 
+        lea     aux_store,a0
+        tst.w   cd_ok
+        beq     70f                 /* couldn't init cd */
+
         moveq   #0,d0
         move.l  d0,-(sp)
         jsr     scd_switch_to_bank
         lea     4(sp),sp
-
-        lea     COL_STORE,a0
+        lea     COL_STORE,a0        /* use the word ram for column storage */
+70:
         lea     0(a0,d1.l),a0
 
         move.w  2(a1), d0           /* length in words */
@@ -1989,12 +1997,16 @@ cpy_md_vram:
         add     d2,d2
         add     d2,d1
 
+        lea     aux_store,a0
+        tst.w   cd_ok
+        beq     121f                /* couldn't init cd */
+
         moveq   #0,d0
         move.l  d0,-(sp)
         jsr     scd_switch_to_bank
         lea     4(sp),sp
-
-        lea     COL_STORE,a0
+        lea     COL_STORE,a0        /* use the word ram for column storage */
+121:
         lea     0(a0,d1.l),a0
         move.w  #27,d0
         lea     col_swap,a1
