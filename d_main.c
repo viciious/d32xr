@@ -821,6 +821,8 @@ void RunTitle (void)
 	MiniLoop (START_Title, STOP_Title, TIC_Abortable, DRAW_Title, UpdateBuffer);
 #ifndef ENABLE_FIRE_ANIMATION
 	canwipe = true;
+#else
+	canwipe = gameinfo.titleStartPos == 0;
 #endif
 }
 
