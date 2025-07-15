@@ -5,6 +5,7 @@ ROOTDIR = /opt/toolchains/sega
 endif
 
 WAD ?= doom32x.wad
+BINSIZE ?= 210
 
 LDSCRIPTSDIR = $(ROOTDIR)/ldscripts
 
@@ -20,6 +21,7 @@ endif
 CCFLAGS += -fomit-frame-pointer
 LDFLAGS = -T mars-ssf.ld -Wl,-Map=output.map -nostdlib -Wl,--gc-sections,--sort-section=alignment --specs=nosys.specs
 ASFLAGS = --big
+ASFLAGS += --defsym WADBASE=$(BINSIZE)
 ifdef ENABLE_FIRE_ANIMATION
 CCFLAGS += -DENABLE_FIRE_ANIMATION
 endif
@@ -140,7 +142,7 @@ m68k.bin:
 
 $(TARGET).32x: $(TARGET).elf
 	$(OBJC) -O binary $< temp2.bin
-	$(DD) if=temp2.bin of=temp.bin bs=210K conv=sync
+	$(DD) if=temp2.bin of=temp.bin bs=$(BINSIZE)K conv=sync
 	rm -f temp3.bin
 	cat temp.bin $(WAD) >>temp3.bin
 	$(DD) if=temp3.bin of=$@ bs=512K conv=sync
