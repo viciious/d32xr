@@ -834,7 +834,13 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 	}
 
 	skytexture = W_GetNumForName(sky);
-	skytexturep = R_CheckPixels(skytexture);
+	if (W_IsCompressed(skytexture))
+	{
+		skytexturep = Z_Malloc (W_LumpLength(skytexture),PU_LEVEL);
+		W_ReadLump(skytexture, skytexturep);
+	}
+	else
+		skytexturep = W_POINTLUMPNUM(skytexture);
 	skytexturep = R_SkipJagObjHeader(skytexturep, W_LumpLength(skytexture), 256, 128);
 	skycolormaps = (col2sky > 0 && skytexture >= col2sky) ? dc_colormaps2 : dc_colormaps;
 
