@@ -406,7 +406,7 @@ void R_SetTextureData(texture_t *tex, uint8_t *start, int size, boolean skiphead
 	uint8_t *data = skipheader ? R_SkipJagObjHeader(start, size, w, h) : start;
 #if MIPLEVELS > 1
 	uint8_t *end = start + size;
-	boolean masked = tex->lumpnum >= firstsprite && tex->numnum < firstsprite + numsprites;
+	boolean masked = tex->lumpnum >= firstsprite && tex->lumpnum < firstsprite + numsprites;
 
 	if (texmips && !masked)
 		mipcount = MIPLEVELS;
