@@ -153,8 +153,8 @@ void 	P_SpawnFireFlicker (sector_t *sector);
 */
 typedef struct
 {
-	char	name1[9];
-	char	name2[9];
+	char	*name1;
+	char	*name2;
 } switchlist_t;
 
 typedef enum
