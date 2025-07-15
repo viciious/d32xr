@@ -754,6 +754,7 @@ void	*W_CacheLumpNum (int lump, int tag);
 void	*W_CacheLumpName (const char *name, int tag);
 
 boolean W_IsIWad(int lump);
+boolean W_IsCompressed_(int lump, const char *func);
 
 const char *W_GetNameForNum (int lump);
 void * W_GetRawLumpData_(int lump, const char *func);
@@ -763,6 +764,7 @@ void * W_ReadLumpData_(int lump, const char *func, void *dest, boolean compresse
 #define W_GetLumpData(lump) W_GetLumpData_(lump,__func__)
 #define W_ReadLumpData(lump,dest,compressed) W_ReadLumpData_(lump,__func__,dest,compressed)
 #define W_POINTLUMPNUM(x) W_GetRawLumpData(x)
+#define W_IsCompressed(lump) W_IsCompressed_(lump,__func__)
 
 /*---------- */
 /*BASE LEVEL */

@@ -665,3 +665,19 @@ boolean W_IsIWad(int lump)
 	wadfile_t *wad = W_GetWadForLump(lump);
 	return wad == &wadfile[PWAD_NONE];
 }
+
+boolean W_IsCompressed_(int lump, const char *func)
+{
+	wadfile_t *wad;
+	lumpinfo_t* l;
+
+	if (lump < 0)
+		I_Error("%s: %i < 0", func, lump);
+
+	wad = W_GetWadForLump(lump);
+	if (lump >= wad->firstlump+wad->numlumps)
+		I_Error ("%s: %i >= numlumps", func, lump);
+
+	l = &wad->lumpinfo[lump-wad->firstlump];
+	return ( l->name[0] & 0x80 ) != 0;
+}
