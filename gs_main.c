@@ -69,7 +69,9 @@ void GS_Start(void)
 
     S_StopSong();
 
+#ifndef DISABLE_GAME_SELECTOR
     if (W_CheckNumForName("DMAPINFO") >= 0)
+#endif
     {
         // assume some built-in maps are present
         DoubleBufferSetup();
@@ -302,6 +304,10 @@ int GS_Ticker (void)
     boolean newcursor = false;
     int sound = sfx_None;
 
+#ifdef DISABLE_GAME_SELECTOR
+    return ga_startnew;
+#endif
+
 	if (ticon < TICRATE)
 		return ga_nothing; /* ignore accidental keypresses */
 
@@ -508,7 +514,9 @@ void GS_Drawer (void)
         I_ClearFrameBuffer();
     }
 
+#ifndef DISABLE_GAME_SELECTOR
     if (!gs_menu->numitems)
+#endif
         return;
 
     if (gs_menu->mode)
