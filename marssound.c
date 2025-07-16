@@ -725,6 +725,10 @@ void S_SetMusicType(int newtype)
 		return;
 	if (newtype == mustype_spcmhack)
 		newtype = mustype_spcm;
+#ifdef DISABLE_CDFS
+	if (newtype == mustype_spcm)
+		newtype = mustype_fm;
+#endif
 	if (newtype >= mustype_cd && !S_CDAvailable())
 		return;
 	if (newtype == mustype_spcm && *spcmDir == '\0')
@@ -879,13 +883,15 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 
 	Mars_StopTrack();
 
+#ifndef DISABLE_CDFS
 	if (musictype == mustype_spcm)
 	{
 		Mars_PlayTrack(0, playtrack, filename, -1, 0, looping);
 		return;
 	}
+#endif
 
-	if (musictype == mustype_cd)
+if (musictype == mustype_cd)
 	{
 		Mars_PlayTrack(1, playtrack, cd_pwad_name, -1, 0, looping);
 		return;

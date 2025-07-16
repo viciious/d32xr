@@ -69,7 +69,7 @@ void GS_Start(void)
 
     S_StopSong();
 
-#ifndef DISABLE_GAME_SELECTOR
+#ifndef DISABLE_CDFS
     if (W_CheckNumForName("DMAPINFO") >= 0)
 #endif
     {
@@ -304,7 +304,7 @@ int GS_Ticker (void)
     boolean newcursor = false;
     int sound = sfx_None;
 
-#ifdef DISABLE_GAME_SELECTOR
+#ifdef DISABLE_CDFS
     return ga_startnew;
 #endif
 
@@ -514,7 +514,7 @@ void GS_Drawer (void)
         I_ClearFrameBuffer();
     }
 
-#ifndef DISABLE_GAME_SELECTOR
+#ifndef DISABLE_CDFS
     if (!gs_menu->numitems)
 #endif
         return;

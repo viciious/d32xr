@@ -113,6 +113,10 @@ void W_InitCDPWAD (int wadnum, const char *name)
 	if (name[0] == '\0')
 		return;
 
+#ifdef DISABLE_CDFS
+	return;
+#endif
+
 	wad = &wadfile[wadnum];
 	wad->firstlump = wadfile[wadnum-1].numlumps;
 	wad->cdlength = I_OpenCDFileByName(name, &wad->cdoffset);
@@ -241,6 +245,12 @@ void W_LoadPWAD (int wadnum_)
 
 	wadnum = wadnum_;
 	wad = &wadfile[wadnum];
+
+#ifdef DISABLE_CDFS
+	wad->numlumps = 0;
+	wad->cdlength = 0;
+	return;
+#endif
 
 	I_OpenCDFileByOffset(wad->cdlength, wad->cdoffset);
 

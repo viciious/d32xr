@@ -340,6 +340,9 @@ void Mars_Sec_RoQ_InitSound(int init)
 {
     int i;
 
+#ifdef DISABLE_CDFS
+    return;
+#endif
     Mars_ClearCache();
 
     if (init == 2)
@@ -658,6 +661,9 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
     roq_cell cells_u[256];
     roq_qcell qcells_u[256];
 
+#ifdef DISABLE_CDFS
+    return 0;
+#endif
     if (!allowpause && (Mars_ReadController(0) & SEGA_CTRL_START)) {
         return 0;
     }

@@ -325,6 +325,10 @@ static void G_FixSPCMDirList(dgameinfo_t *gi)
 	D_snprintf(list, sizeof(list), "%s", &gi->spcmDirList[0][0]);
 	D_memset(gi->spcmDirList, 0, sizeof(gi->spcmDirList));
 
+#ifdef DISABLE_CDFS
+	return;
+#endif
+
 	for (i = mystrlen(list) - 1; i > 0; i--)  {
 		if (list[i] == ',') {
 			list[i] = 0;

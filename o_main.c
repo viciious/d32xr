@@ -290,7 +290,7 @@ void O_Init (void)
 	cd_avail = S_CDAvailable();
 	if (cd_avail) /* CDA or MD+ */
 	{
-		menuscreen[ms_audio].numitems++;
+		menuscreen[ms_audio].numitems++; // CD volume
 		menuscreen[ms_audio].numitems++; // SPCM
 #ifndef DISABLE_DMA_SOUND
 		if (cd_avail & 0x1) /* CD, not MD+ */
@@ -565,13 +565,25 @@ goback:
 			{
 				if (buttons & BT_DOWN)
 				{
-					if (++cursorpos == menuscr->numitems)
+					++cursorpos;
+					if (!gameinfo.spcmDirList[0][0])
+					{
+						if (menuscr->firstitem+cursorpos == mi_spcmpack)
+							++cursorpos;
+					}
+					if (cursorpos == menuscr->numitems)
 						cursorpos = 0;
 				}
 
 				if (buttons & BT_UP)
 				{
-					if (--cursorpos == -1)
+					--cursorpos;
+					if (!gameinfo.spcmDirList[0][0])
+					{
+						if (menuscr->firstitem+cursorpos == mi_spcmpack)
+							--cursorpos;
+					}
+					if (cursorpos == -1)
 						cursorpos = menuscr->numitems-1;
 				}
 			}
@@ -659,8 +671,14 @@ goback:
 				{
 					switch (itemno) {
 					case mi_music:
-						if (++o_musictype > mustype_spcm)
-							o_musictype = mustype_spcm;
+						++o_musictype;
+						if (!gameinfo.spcmDirList[0][0])
+						{
+							if (o_musictype >= mustype_spcm)
+								o_musictype = mustype_cd;
+						}
+						if (o_musictype > mustype_cd)
+							o_musictype = mustype_cd;
 						if (o_musictype >= mustype_cd && !S_CDAvailable())
 							o_musictype = mustype_fm;
 						break;
@@ -825,6 +843,12 @@ void O_Drawer (void)
 	
 	for (i = 0; i < menuscr->numitems; i++)
 	{
+		if (!gameinfo.spcmDirList[0][0])
+		{
+			if (menuscr->firstitem+i == mi_spcmpack)
+				continue;
+		}
+
 		y = items[i].y;
 		print(items[i].x, y, items[i].name);
 
@@ -890,12 +914,15 @@ void O_Drawer (void)
 			break;
 		}
 
-		if (menuscreen[ms_audio].numitems > 3)
+		if (gameinfo.spcmDirList[0][0])
 		{
-			if (spcmDir[0] != '\0') {
-				print(menuitem[mi_spcmpack].x + 85, menuitem[mi_spcmpack].y, spcmDir);
-			} else {
-				print(menuitem[mi_spcmpack].x + 85, menuitem[mi_spcmpack].y, "NONE");
+			if (menuscreen[ms_audio].numitems > 4)
+			{
+				if (spcmDir[0] != '\0') {
+					print(menuitem[mi_spcmpack].x + 85, menuitem[mi_spcmpack].y, spcmDir);
+				} else {
+					print(menuitem[mi_spcmpack].x + 85, menuitem[mi_spcmpack].y, "NONE");
+				}
 			}
 		}
 
