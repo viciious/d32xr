@@ -899,7 +899,11 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 		return;
 	}
 
-	Mars_PlayTrack(0, playtrack, "", (intptr_t)W_POINTLUMPNUM(W_CheckNumForName(l->name)), l->size, looping);
+	musiclump = W_CheckNumForName(l->name);
+	if (musiclump < 0)
+		return;
+
+	Mars_PlayTrack(0, playtrack, "", (intptr_t)W_POINTLUMPNUM(musiclump), l->size, looping);
 }
 
 void S_StartSongByName(const char *name, int looping, int cdtrack)
