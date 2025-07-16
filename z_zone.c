@@ -66,6 +66,7 @@ void Z_Init (void)
 	
 #ifdef MARS
 /* mars doesn't have a refzone */
+	D_memset(mem, 0, size);
 	mainzone = Z_InitZone (mem,size);
 #else
 	mainzone = Z_InitZone (mem,0x80000);
@@ -142,7 +143,7 @@ Z_CheckHeap (mainzone);	/* DEBUG */
 /* of sufficient size, throwing out any purgable blocks along the way */
 /* */
 	size += sizeof(memblock_t);	/* account for size of block header */
-	size = (size+7)&~7;			/* phrase align everything */
+	size = (size+3)&~3;			/* longword align everything */
 	
 	
 	start = base = mainzone->rover;

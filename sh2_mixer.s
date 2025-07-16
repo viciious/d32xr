@@ -74,7 +74,7 @@ _S_PaintChannel8:
         shlr2   r13             /* left volume = (255 - pan) * ch_vol * scale / 64 / 64 */
 
         /* mix r6 stereo samples */
-        .p2alignw 2, 0x0009
+        .p2alignw 1, 0x0009
 mix_loop:
         mov.l   @r5,r1
 
@@ -198,7 +198,7 @@ _S_PaintChannel4IMA:
         mov     #1,r7
 
         /* mix r6 stereo samples */
-        .p2alignw 2, 0x0009
+        .p2alignw 1, 0x0009
 mix4_loop:
         /* process one sample */
         mov.l   _step_table,r1
@@ -252,7 +252,7 @@ mix4_loop:
         add     r2,r0
         mov.b   @(r0,r1),r2
 
-        .p2alignw 2, 0x0009
+        .p2alignw 1, 0x0009
 mix4_gets:
         /* get sample */
 
@@ -379,7 +379,7 @@ _S_PaintChannel4IMA2x:
         mov     #1,r7
 
         /* mix r6 stereo samples */
-        .p2alignw 2, 0x0009
+        .p2alignw 1, 0x0009
 mix4_loop2x:
         /* process one sample */
         mov.l   _step_table,r1
@@ -433,7 +433,7 @@ mix4_loop2x:
         add     r2,r0
         mov.b   @(r0,r1),r2
 
-        .p2alignw 2, 0x0009
+        .p2alignw 1, 0x0009
 mix4_gets2x:
         /* get sample */
 

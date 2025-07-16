@@ -64,12 +64,12 @@ void T_VerticalDoor (vldoor_t *door)
 					case close:
 					case blazeRaise:
 					case blazeClose:
-						door->sector->specialdata = NULL;
+						door->sector->specialdata = (SPTR)0;
 						P_RemoveThinker (&door->thinker);  /* unlink and free */
 						break;
 					case close30ThenOpen:
 						door->direction = 0;
-						door->topcountdown = 15*30*THINKERS_TICS;
+						door->topcountdown = 35*30*THINKERS_TICS;
 						break;
 					default:
 						break;
@@ -106,7 +106,7 @@ void T_VerticalDoor (vldoor_t *door)
 					case close30ThenOpen:
 					case open:
 					case blazeOpen:
-						door->sector->specialdata = NULL;
+						door->sector->specialdata = (SPTR)0;
 						P_RemoveThinker (&door->thinker);  /* unlink and free */
 						break;
 					default:
@@ -123,15 +123,15 @@ void T_VerticalDoor (vldoor_t *door)
 /*		Move a door up/down and all around! */
 /* */
 /*================================================================== */
-int EV_DoDoor (line_t *line, vldoor_e  type)
+int EV_DoDoorTag (line_t *line, vldoor_e  type, int tag)
 {
 	int			secnum,rtn;
 	sector_t		*sec;
 	vldoor_t		*door;
-	
+
 	secnum = -1;
 	rtn = 0;
-	while ((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
+	while ((secnum = P_FindSectorFromLineTagNum(tag,secnum)) >= 0)
 	{
 		sec = &sectors[secnum];
 		if (sec->specialdata)
@@ -143,7 +143,7 @@ int EV_DoDoor (line_t *line, vldoor_e  type)
 		rtn = 1;
 		door = Z_Malloc (sizeof(*door), PU_LEVSPEC);
 		P_AddThinker (&door->thinker);
-		sec->specialdata = door;
+		sec->specialdata = LPTR_TO_SPTR(door);
 		door->thinker.function = T_VerticalDoor;
 		door->sector = sec;
 		door->type = type;
@@ -193,6 +193,11 @@ int EV_DoDoor (line_t *line, vldoor_e  type)
 	return rtn;
 }
 
+int EV_DoDoor (line_t *line, vldoor_e  type)
+{
+	return EV_DoDoorTag(line, type, P_GetLineTag(line));
+}
+
 /*================================================================== */
 /* */
 /*	EV_VerticalDoor : open a door manually, no tag value */
@@ -206,8 +211,8 @@ int EV_DoLockedDoor(line_t* line, vldoor_e type, mobj_t* thing)
 /* */
 /*	Check for locks */
 /* */
-	player = thing->player ? &players[thing->player - 1] : NULL;
-	pnum = player ? player - players : 0;
+	pnum = thing->player ? thing->player -1 : 0;
+	player = thing->player ? &players[pnum] : NULL;
 	if (!player)
 		return 0;
 
@@ -262,8 +267,8 @@ void EV_VerticalDoor (line_t *line, mobj_t *thing)
 /* */
 /*	Check for locks */
 /* */
-	player = thing->player ? &players[thing->player - 1] : NULL;
-	pnum = player ? player - players : 0;
+	pnum = thing->player ? thing->player - 1 : 0;
+	player = thing->player ? &players[pnum] : NULL;
 
 	switch(line->special)
 	{
@@ -311,9 +316,9 @@ void EV_VerticalDoor (line_t *line, mobj_t *thing)
 	/* if the sector has an active thinker, use it */
 	secnum = sides[ line->sidenum[side^1]] .sector;
 	sec = &sectors[secnum];
-	if (sec->specialdata)
+	door = SPTR_TO_LPTR(sec->specialdata);
+	if (door)
 	{
-		door = sec->specialdata;
 		switch(line->special)
 		{
 			case	1:		/* ONLY FOR "RAISE" DOORS, NOT "OPEN"s */
@@ -354,7 +359,7 @@ void EV_VerticalDoor (line_t *line, mobj_t *thing)
 	/* */
 	door = Z_Malloc (sizeof(*door), PU_LEVSPEC);
 	P_AddThinker (&door->thinker);
-	sec->specialdata = door;
+	sec->specialdata = LPTR_TO_SPTR(door);
 	door->thinker.function = T_VerticalDoor;
 	door->sector = sec;
 	door->direction = 1;
@@ -404,14 +409,14 @@ void P_SpawnDoorCloseIn30 (sector_t *sec)
 	
 	door = Z_Malloc ( sizeof(*door), PU_LEVSPEC);
 	P_AddThinker (&door->thinker);
-	sec->specialdata = door;
+	sec->specialdata = LPTR_TO_SPTR(door);
 	sec->special = 0;
 	door->thinker.function = T_VerticalDoor;
 	door->sector = sec;
 	door->direction = 0;
 	door->type = normal;
 	door->speed = VDOORSPEED;
-	door->topcountdown = 30 * 15 * THINKERS_TICS;
+	door->topcountdown = 30 * 35 * THINKERS_TICS;
 }
 
 /*================================================================== */
@@ -425,7 +430,7 @@ void P_SpawnDoorRaiseIn5Mins (sector_t *sec, int secnum)
 	
 	door = Z_Malloc ( sizeof(*door), PU_LEVSPEC);
 	P_AddThinker (&door->thinker);
-	sec->specialdata = door;
+	sec->specialdata = LPTR_TO_SPTR(door);
 	sec->special = 0;
 	door->thinker.function = T_VerticalDoor;
 	door->sector = sec;
@@ -435,6 +440,6 @@ void P_SpawnDoorRaiseIn5Mins (sector_t *sec, int secnum)
 	door->topheight = P_FindLowestCeilingSurrounding(sec);
 	door->topheight -= 4*FRACUNIT;
 	door->topwait = VDOORWAIT;
-	door->topcountdown = 5 * 60 * 15 * THINKERS_TICS;
+	door->topcountdown = 5 * 60 * 35 * THINKERS_TICS;
 }
 

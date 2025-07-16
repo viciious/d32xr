@@ -14,9 +14,12 @@ INCS = -I. -I$(ROOTDIR)/m68k-elf/include -I$(ROOTDIR)/m68k-elf/m68k-elf/include
 CCFLAGS = $(ROOTDIR) -m68000 -Wall -Os -c -fomit-frame-pointer -ffunction-sections -fdata-sections -flto
 ASFLAGS = -m68000 --register-prefix-optional
 LIBS = -L$(ROOTDIR)/m68k-elf/lib -L$(ROOTDIR)/m68k-elf/lib/gcc/m68k-elf/12.1.0 -L$(ROOTDIR)/m68k-elf/m68k-elf/lib -lc -lgcc -lnosys
-LINKFLAGS = -T cd-mode1.ld -Wl,-Map=output.map -nostdlib --specs=nosys.specs -Wl,--gc-sections -flto
+LINKFLAGS = -T cd-mode1.ld -Wl,-Map=output.map -nostdlib --specs=nosys.specs -Wl,--gc-sections -Os -flto
 
-OBJS = crt.o pcm.o pcm-io.o adpcm.o adpcm_ima.o adpcm_sb4.o s_buffers.o s_channels.o s_main.o s_sources.o
+OBJS = crt.o pcm.o pcm-io.o adpcm.o adpcm_ima.o s_buffers.o s_channels.o s_main.o s_sources.o s_cd.o s_spcm.o cdfh.o stream.o
+ifdef $(ADPCM_ENABLE_SB4)
+OBJS += adpcm_sb4.o
+endif
 
 all: cd.bin
 

@@ -3,6 +3,12 @@
 #include "doomdef.h"
 #include "p_local.h"
 
+typedef struct 
+{
+   fixed_t x, y;
+   int16_t dx, dy;
+} i16divline_t;
+
 typedef struct
 {
 	int			usebbox[4];
@@ -19,62 +25,17 @@ typedef struct
 	int			bombdamage;
 } pradiusattack_t;
 
-static fixed_t P_InterceptVector(divline_t* v2, divline_t* v1) ATTR_DATA_CACHE_ALIGN;
+static fixed_t P_InterceptVector(divline_t* v2, i16divline_t* v1) ATTR_DATA_CACHE_ALIGN;
 boolean	PIT_UseLines(line_t* li, plineuse_t *lu) ATTR_DATA_CACHE_ALIGN;
 void P_UseLines(player_t* player) __attribute__((noinline));
+
 boolean PIT_RadiusAttack(mobj_t* thing, pradiusattack_t *ra) ATTR_DATA_CACHE_ALIGN;
 void P_RadiusAttack(mobj_t* spot, mobj_t* source, int damage) ATTR_DATA_CACHE_ALIGN;
 fixed_t P_AimLineAttack(lineattack_t *la, mobj_t* t1, angle_t angle, fixed_t distance) ATTR_DATA_CACHE_ALIGN;
 void P_LineAttack(lineattack_t *la, mobj_t* t1, angle_t angle, fixed_t distance, fixed_t slope, int damage) ATTR_DATA_CACHE_ALIGN;
-static void P_MakeDivline(line_t* li, divline_t* dl) ATTR_DATA_CACHE_ALIGN;
+static void P_MakeI16Divline(line_t* li, i16divline_t* dl) ATTR_DATA_CACHE_ALIGN;
 
 /*============================================================================= */
-
-
-
-/*============================================================================= */
-
-/*
-===================
-=
-= P_TryMove
-=
-in:
-tmthing		a mobj_t (can be valid or invalid)
-tmx,tmy		a position to be checked (doesn't need relate to the mobj_t->x,y)
-
-out:
-
-newsubsec
-floatok			if true, move would be ok if within tmfloorz - tmceilingz
-floorz
-ceilingz
-tmdropoffz		the lowest point contacted (monsters won't move to a dropoff)
-
-movething
-
-==================
-*/
-
-boolean P_TryMove2 (ptrymove_t *tm, boolean checkposonly);
-
-boolean P_CheckPosition (ptrymove_t *tm, mobj_t *thing, fixed_t x, fixed_t y)
-{
-	tm->tmthing = thing;
-	tm->tmx = x;
-	tm->tmy = y;
-	return P_TryMove2 (tm, true);
-}
-
-
-boolean P_TryMove (ptrymove_t *tm, mobj_t *thing, fixed_t x, fixed_t y)
-{
-	tm->tmthing = thing;
-	tm->tmx = x;
-	tm->tmy = y;
-	return P_TryMove2 (tm, false);
-}
-
 
 /* 
 ============================================================================== 
@@ -94,15 +55,15 @@ boolean P_TryMove (ptrymove_t *tm, mobj_t *thing, fixed_t x, fixed_t y)
 ===============
 */
 
-fixed_t P_InterceptVector (divline_t *v2, divline_t *v1)
+static fixed_t P_InterceptVector (divline_t *v2, i16divline_t *v1)
 {
 	fixed_t	frac, num, den;
 	
-	den = (v1->dy>>16)*(v2->dx>>16) - (v1->dx>>16)*(v2->dy>>16);
+	den = v1->dy * v2->dx - v1->dx * v2->dy;
    	if(den == 0)
     	return -1;
-	num  = ((v1->x-v2->x)>>16) *(v1->dy>>16) + ((v2->y-v1->y)>>16) * (v1->dx>>16);
-	frac = IDiv((num<<16), den);
+	num  = (v1->x - v2->x) * v1->dy + (v2->y - v1->y) * v1->dx;
+	frac = IDiv(num, den);
 
 	return frac;
 }
@@ -112,15 +73,15 @@ fixed_t P_InterceptVector (divline_t *v2, divline_t *v1)
 /*
 ==============
 =
-= P_MakeDivline
+= P_MakeI16Divline
 =
 ==============
 */
 
-void P_MakeDivline (line_t *li, divline_t *dl)
+static void P_MakeI16Divline (line_t *li, i16divline_t *dl)
 {
-	dl->x = vertexes[li->v1].x;
-	dl->y = vertexes[li->v1].y;
+	dl->x = vertexes[li->v1].x << FRACBITS;
+	dl->y = vertexes[li->v1].y << FRACBITS;
 	dl->dx = vertexes[li->v2].x - vertexes[li->v1].x;
 	dl->dy = vertexes[li->v2].y - vertexes[li->v1].y;
 }
@@ -136,7 +97,7 @@ void P_MakeDivline (line_t *li, divline_t *dl)
 
 boolean	PIT_UseLines (line_t *li, plineuse_t *lu)
 {
-	divline_t	dl;
+	i16divline_t	dl;
 	fixed_t		frac;
 	fixed_t 	libbox[4];
 
@@ -154,7 +115,7 @@ boolean	PIT_UseLines (line_t *li, plineuse_t *lu)
 /* */
 /* find distance along usetrace */
 /* */
-	P_MakeDivline (li, &dl);
+	P_MakeI16Divline (li, &dl);
 	frac = P_InterceptVector (&lu->useline, &dl);
 	if (frac < 0)
 		return true;		/* behind source */
@@ -228,6 +189,9 @@ void P_UseLines (player_t *player)
 		lu.usebbox[BOXBOTTOM] = y2;
 	}
 	
+	lu.useline.dx >>= 16;
+	lu.useline.dy >>= 16;
+
 	yh = lu.usebbox[BOXTOP] - bmaporgy;
 	yl = lu.usebbox[BOXBOTTOM] - bmaporgy;
 	xh = lu.usebbox[BOXRIGHT] - bmaporgx;
@@ -311,7 +275,7 @@ boolean PIT_RadiusAttack (mobj_t *thing, pradiusattack_t *ra)
 	dx = D_abs(thing->x - ra->bombspot->x);
 	dy = D_abs(thing->y - ra->bombspot->y);
 	dist = dx>dy ? dx : dy;
-	dist = (dist - thing->radius) >> FRACBITS;
+	dist = (dist - (thing->radius*FRACUNIT)) >> FRACBITS;
 	if (dist < 0)
 		dist = 0;
 	if (dist >= ra->bombdamage)
@@ -497,9 +461,9 @@ void P_LineAttack (lineattack_t *la, mobj_t *t1, angle_t angle, fixed_t distance
 	if (linetarget)
 	{		
 		if (linetarget->flags & MF_NOBLOOD)
-			P_SpawnPuff (shootx2,shooty2,shootz2, distance);
+			P_SpawnPuff2 (shootx2,shooty2,shootz2, distance, linetarget->subsector);
 		else
-			P_SpawnBlood (shootx2,shooty2,shootz2, damage);
+			P_SpawnBlood2 (shootx2,shooty2,shootz2, damage, linetarget->subsector);
 	
 		P_DamageMobj (linetarget, t1, t1, damage);
 		return;
@@ -517,20 +481,18 @@ void P_LineAttack (lineattack_t *la, mobj_t *t1, angle_t angle, fixed_t distance
 
 		frontsector = LD_FRONTSECTOR(shootline2);
 		backsector = LD_BACKSECTOR(shootline2);
-		if (frontsector->ceilingpic == -1)
+		if (*(int8_t *)&frontsector->ceilingpic == -1)
 		{
 			if (shootz2 > frontsector->ceilingheight)
 				return;		/* don't shoot the sky! */
 			if	(backsector 
-			&& backsector->ceilingpic == -1)
+			&& *(int8_t *)&backsector->ceilingpic == -1)
 				if (backsector->ceilingheight < shootz2)
 					return;		/* it's a sky hack wall */
 		}
 				
-		P_SpawnPuff (shootx2,shooty2,shootz2,distance);
+		P_SpawnPuff2 (shootx2,shooty2,shootz2,distance, R_PointInSubsector2(shootx2, shooty2, la->firstsplit));
 	}
-	
-	
 }
  
 

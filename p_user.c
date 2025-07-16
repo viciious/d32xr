@@ -4,7 +4,6 @@
 #include "p_local.h"
 #include "st_main.h"
 
-
 fixed_t 		forwardmove[2] = {0x40000, 0x60000}; 
 fixed_t 		sidemove[2] = {0x38000, 0x58000}; 
 
@@ -26,7 +25,7 @@ void P_PlayerMove (mobj_t *mo)
 	fixed_t		momx, momy;
 	int 		i;
 	pslidemove_t sm;
-	ptrymove_t	tm;
+	pmovework_t tm;
 
 	momx = vblsinframe*(mo->momx>>2);
 	momy = vblsinframe*(mo->momy>>2);
@@ -40,8 +39,11 @@ void P_PlayerMove (mobj_t *mo)
 		
 	if ( P_TryMove (&tm, mo, sm.slidex, sm.slidey) )
 		goto dospecial;
-		
+
 stairstep:
+	//momx = mo->momx;
+	//momy = mo->momy;
+
 	if (momx > MAXMOVE)
 		momx = MAXMOVE;
 	if (momx < -MAXMOVE)
@@ -53,20 +55,19 @@ stairstep:
 		
 /* something fucked up in slidemove, so stairstep */
 
-	if (P_TryMove (&tm, mo, mo->x, mo->y + momy))
+	if (momy && P_TryMove (&tm, mo, mo->x, mo->y + momy))
 	{
 		mo->momx = 0;
 		mo->momy = momy;
 		goto dospecial;
 	}
-	
-	if (P_TryMove (&tm, mo, mo->x + momx, mo->y))
+
+	if (momx && P_TryMove (&tm, mo, mo->x + momx, mo->y))
 	{
 		mo->momx = momx;
 		mo->momy = 0;
 		goto dospecial;
 	}
-
 	mo->momx = mo->momy = 0;
 
 dospecial:
@@ -94,20 +95,13 @@ void P_PlayerXYMovement (mobj_t *mo)
 		return;		/* no friction when airborne */
 
 	if (mo->flags & MF_CORPSE)
-		if (mo->floorz != mo->subsector->sector->floorheight)
-			return;			/* don't stop halfway off a step */
-
-	if (mo->momx > -STOPSPEED && mo->momx < STOPSPEED
-	&& mo->momy > -STOPSPEED && mo->momy < STOPSPEED)
-	{	
-		mo->momx = 0;
-		mo->momy = 0;
-	}
-	else
 	{
-		mo->momx = (mo->momx>>8)*(FRICTION>>8);
-		mo->momy = (mo->momy>>8)*(FRICTION>>8);
+		sector_t *sec = SSEC_SECTOR(mo->subsector);
+		if (mo->floorz != sec->floorheight)
+			return;			/* don't stop halfway off a step */
 	}
+
+	P_ApplyFriction(mo);
 }
 
 
@@ -163,11 +157,11 @@ void P_PlayerZMovement (mobj_t *mo)
 			mo->momz -= gravity/2;
 	}
 	
-	if (mo->z + mo->height > mo->ceilingz)
+	if (mo->z + (mo->height*FRACUNIT) > mo->ceilingz)
 	{	/* hit the ceiling */
 		if (mo->momz > 0)
 			mo->momz = 0;
-		mo->z = mo->ceilingz - mo->height;		
+		mo->z = mo->ceilingz - (mo->height*FRACUNIT);
 	}
 	
 } 
@@ -214,8 +208,6 @@ void P_PlayerMobjThink (mobj_t *mobj)
 
 	mobj->state = state;
 	mobj->tics = st->tics;
-	mobj->sprite = st->sprite;
-	mobj->frame = st->frame;
 }
 
 /*============================================================================= */
@@ -236,14 +228,14 @@ void P_BuildMove (player_t *player)
 	mobj_t		*mo;
 	int			vbls;
 
-	buttons = ticbuttons[playernum];
-	oldbuttons = oldticbuttons[playernum];
+	buttons = player->ticbuttons;
+	oldbuttons = player->oldticbuttons;
 	vbls = vblsinframe;
 
 	if (mousepresent && !demoplayback)
 	{
-		int mx = ticmousex[playernum];
-		int my = ticmousey[playernum];
+		int mx = player->ticmousex;
+		int my = player->ticmousey;
 
 		if ((buttons & BT_RMBTN) && (oldbuttons & BT_RMBTN))
 		{
@@ -261,14 +253,14 @@ void P_BuildMove (player_t *player)
  
 			player->forwardmove = player->sidemove = 0;
 	
-			if (buttons & BT_RIGHT) 
+			if (buttons & BT_MOVERIGHT) 
 				player->sidemove += (sidemove[speed] * vbls) / TICVBLS;
-			if (buttons & BT_LEFT) 
+			if (buttons & BT_MOVELEFT) 
 				player->sidemove += (-sidemove[speed] * vbls) / TICVBLS;
  
-			if (buttons & BT_UP) 
+			if (buttons & BT_MOVEUP) 
 				player->forwardmove += (forwardmove[speed] * vbls) / TICVBLS;
-			if (buttons & BT_DOWN) 
+			if (buttons & BT_MOVEDOWN) 
 				player->forwardmove += (-forwardmove[speed] * vbls) / TICVBLS;
 		}
 	}
@@ -279,10 +271,10 @@ void P_BuildMove (player_t *player)
 		/*  */
 		/* use two stage accelerative turning on the joypad  */
 		/*  */
-		if ((buttons & BT_LEFT) && (oldbuttons & BT_LEFT))
+		if ((buttons & BT_MOVELEFT) && (oldbuttons & BT_MOVELEFT))
 			player->turnheld++;
 		else
-			if ((buttons & BT_RIGHT) && (oldbuttons & BT_RIGHT))
+			if ((buttons & BT_MOVERIGHT) && (oldbuttons & BT_MOVERIGHT))
 				player->turnheld++;
 			else
 				player->turnheld = 0;
@@ -293,9 +285,9 @@ void P_BuildMove (player_t *player)
 
 		if (buttons & BT_STRAFE)
 		{
-			if (buttons & BT_RIGHT)
+			if (buttons & BT_MOVERIGHT)
 				player->sidemove += (sidemove[speed] * vbls) / TICVBLS;
-			if (buttons & BT_LEFT)
+			if (buttons & BT_MOVELEFT)
 				player->sidemove += (-sidemove[speed] * vbls) / TICVBLS;
 		}
 		else
@@ -311,15 +303,15 @@ void P_BuildMove (player_t *player)
 			if (buttons & BT_FASTTURN)
 				turnspeed = fastangleturn;
 
-			if (buttons & BT_RIGHT)
+			if (buttons & BT_MOVERIGHT)
 				player->angleturn = ((-turnspeed[player->turnheld] * vbls) / TICVBLS) << 17;
-			if (buttons & BT_LEFT)
+			if (buttons & BT_MOVELEFT)
 				player->angleturn = ((turnspeed[player->turnheld] * vbls) / TICVBLS) << 17;
 		}
 
-		if (buttons & BT_UP)
+		if (buttons & BT_MOVEUP)
 			player->forwardmove += (forwardmove[speed] * vbls) / TICVBLS;
-		if (buttons & BT_DOWN)
+		if (buttons & BT_MOVEDOWN)
 			player->forwardmove += (-forwardmove[speed] * vbls) / TICVBLS;
 	}
 
@@ -364,9 +356,14 @@ boolean		onground;
 void P_Thrust (player_t *player, angle_t angle, fixed_t move) 
 {
 	angle >>= ANGLETOFINESHIFT;
+#if 0
 	move >>= 8;
 	player->mo->momx += move*(finecosine(angle)>>8);
 	player->mo->momy += move*(finesine(angle)>>8);
+#else
+	player->mo->momx += FixedMul(move, finecosine(angle));
+	player->mo->momy += FixedMul(move, finesine(angle));
+#endif
 }
 
 
@@ -510,7 +507,7 @@ void P_DeathThink (player_t *player)
 	
 	if (player->attacker && player->attacker != player->mo)
 	{
-		angle = R_PointToAngle2 (player->mo->x, player->mo->y
+		angle = R_PointToAngle (player->mo->x, player->mo->y
 		, player->attacker->x, player->attacker->y);
 		delta = angle - player->mo->angle;
 		if (delta < ANG5 || delta > (unsigned)-ANG5)
@@ -528,7 +525,7 @@ void P_DeathThink (player_t *player)
 		player->damagecount--;
 	
 
-	if ( (ticbuttons[playernum] & BT_USE) && player->viewheight <= 8*FRACUNIT)
+	if ( (player->ticbuttons & BT_USE) && player->viewheight <= 8*FRACUNIT)
 		player->playerstate = PST_REBORN;
 }
 
@@ -539,7 +536,7 @@ void P_DeathThink (player_t *player)
 // * unless the player also has the berserk pack.
 // Returns true otherwise.
 //
-boolean P_CanSelecteWeapon(player_t* player, int weaponnum)
+boolean P_CanSelectWeapon(player_t* player, int weaponnum)
 {
 	if (!player->weaponowned[weaponnum])
 		return false;
@@ -560,13 +557,21 @@ boolean P_CanSelecteWeapon(player_t* player, int weaponnum)
 //
 boolean P_CanFireWeapon(player_t* player, int weaponnum)
 {
-	if (!P_CanSelecteWeapon(player, weaponnum))
+	if (!P_CanSelectWeapon(player, weaponnum))
 		return false;
 
 	if (weaponinfo[weaponnum].ammo == am_noammo)
 		return true;
 
-	int neededAmmo = (weaponnum == wp_bfg) ? 40 : 1;
+	int neededAmmo = 1;
+	switch (weaponnum) {
+		case wp_bfg:
+			neededAmmo = 40;
+			break;
+		case wp_supershotgun:
+			neededAmmo = 2;
+			break;
+	}
 	return player->ammo[weaponinfo[weaponnum].ammo] >= neededAmmo;
 }
 
@@ -583,8 +588,10 @@ extern int ticphase;
 void P_PlayerThink (player_t *player)
 {
 	int		buttons;
+	int 	playernum = player - players;
+	sector_t *sec;
 	
-	buttons = ticbuttons[playernum];
+	buttons = player->ticbuttons;
 
 ticphase = 20;
 	P_PlayerMobjThink (player->mo);
@@ -619,7 +626,8 @@ ticphase = 22;
 	else
 		P_MovePlayer (player);
 	P_CalcHeight (player);
-	if (player->mo->subsector->sector->special)
+	sec = SSEC_SECTOR(player->mo->subsector);
+	if (sec->special)
 		P_PlayerInSpecialSector (player);
 		
 /* */
@@ -628,7 +636,7 @@ ticphase = 22;
 ticphase = 23;
 	if (player->pendingweapon == wp_nochange)
 	{
-		int oldbuttons = oldticbuttons[playernum];
+		int oldbuttons = player->oldticbuttons;
 
 #ifdef JAGUAR
 		if ( buttons & BT_1 )
@@ -654,15 +662,20 @@ ticphase = 23;
 #elif defined(MARS)
 		if ((buttons & (BT_MODE | BT_START)) == (BT_MODE | BT_START))
 		{
-			if (P_CanSelecteWeapon(player, wp_fist))
+			if (P_CanSelectWeapon(player, wp_fist))
 				player->pendingweapon = wp_fist;
 			else/* if (player->weaponowned[wp_chainsaw])*/
 				player->pendingweapon = wp_chainsaw;
 		}
 		if ((buttons & (BT_MODE | BT_A)) == (BT_MODE | BT_A))
 			player->pendingweapon = wp_pistol;
-		if ((buttons & (BT_MODE | BT_B)) == (BT_MODE | BT_B) && player->weaponowned[wp_shotgun])
-			player->pendingweapon = wp_shotgun;
+		if ((buttons & (BT_MODE | BT_B)) == (BT_MODE | BT_B))
+		{
+			if (P_CanSelectWeapon(player, wp_supershotgun) && player->readyweapon != wp_supershotgun)
+				player->pendingweapon = wp_supershotgun;
+			else if (player->weaponowned[wp_shotgun])
+				player->pendingweapon = wp_shotgun;
+		}
 		if ((buttons & (BT_MODE | BT_C)) == (BT_MODE | BT_C) && player->weaponowned[wp_chaingun])
 			player->pendingweapon = wp_chaingun;
 		if ((buttons & (BT_MODE | BT_X)) == (BT_MODE | BT_X) && player->weaponowned[wp_missile])
@@ -726,6 +739,8 @@ ticphase = 24;
 	if (buttons & BT_ATTACK)
 	{
 		player->attackdown++;
+		if (player->attackdown > 30)
+			player->attackdown = 31;
 		if (player->attackdown > 30 &&
 		(player->readyweapon == wp_chaingun || player->readyweapon == wp_plasma) )
 			stbar[playernum].specialFace = f_mowdown;
@@ -758,6 +773,10 @@ ticphase = 26;
 		if (player->powers[pw_infrared])
 			player->powers[pw_infrared]--;
 
+		if (player->powers[pw_invisibility])
+			if (! --player->powers[pw_invisibility] )
+				player->mo->flags &= ~MF_SHADOW;
+
 		if (player->damagecount)
 			player->damagecount--;
 
@@ -766,7 +785,7 @@ ticphase = 26;
 	}
 }
 
-void R_ResetResp(player_t* p)
+void P_ResetResp(player_t* p)
 {
 	int j;
 	int pnum = p - players;

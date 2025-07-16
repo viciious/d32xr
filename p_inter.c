@@ -73,7 +73,9 @@ boolean P_GiveAmmo (player_t *player, ammotype_t ammo, int num)
 	case am_shell:
 		if (player->readyweapon == wp_fist || player->readyweapon == wp_pistol)
 		{
-			if (player->weaponowned[wp_shotgun])
+			if (player->weaponowned[wp_supershotgun])
+				player->pendingweapon = wp_supershotgun;
+			else if (player->weaponowned[wp_shotgun])
 				player->pendingweapon = wp_shotgun;
 		}
 		break;
@@ -257,6 +259,12 @@ boolean P_GivePower (player_t *player, powertype_t power)
 		player->powers[power] = INFRATICS;
 		return true;
 	}
+	if (power == pw_invisibility)
+	{
+		player->powers[power] = INVISTICS;
+		player->mo->flags |= MF_SHADOW;
+		return true;
+	}
 
 	if (player->powers[power])
 		return false;		/* already got it */
@@ -279,10 +287,12 @@ boolean P_GivePower (player_t *player, powertype_t power)
 int P_TouchSpecialThing2 (mobj_t *special, mobj_t *toucher)
 {
 	player_t *player;
+	int sprite;
 	
 	player = toucher->player ? &players[toucher->player-1] : NULL;
+	sprite = states[special->state].sprite;
 
-	switch (special->sprite)
+	switch (sprite)
 	{
 /* */
 /* armor */
@@ -315,7 +325,7 @@ int P_TouchSpecialThing2 (mobj_t *special, mobj_t *toucher)
 		else
 			player->message = "You pick up a medikit.";
 		break;
-	
+
 /* */
 /* power ups */
 /* */
@@ -332,7 +342,10 @@ int P_TouchSpecialThing2 (mobj_t *special, mobj_t *toucher)
 			player->pendingweapon = wp_fist;
 		break;
 	case SPR_PINS:
-		break;
+		if (!P_GivePower (player, pw_invisibility))
+			return -1;
+		player->message = "Partial invisibility!";
+		return sfx_getpow;
 	case SPR_SUIT:
 		if (!P_GivePower (player, pw_ironfeet))
 			return -1;
@@ -370,16 +383,19 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 	int			i;
 	fixed_t		delta;
 	int			sound;
+	int 		sprite;
 		
 	delta = special->z - toucher->z;
-	if (delta > toucher->height || delta < -8*FRACUNIT)
+	if (delta > (toucher->height*FRACUNIT) || delta < -8*FRACUNIT)
 		return;			/* out of reach */
 	
 	sound = sfx_itemup;	
 	player = toucher->player ? &players[toucher->player - 1] : NULL;
 	if (toucher->health <= 0)
 		return;						/* can happen with a sliding player corpse */
-	switch (special->sprite)
+
+	sprite = states[special->state].sprite;
+	switch (sprite)
 	{
 /* */
 /* bonus items */
@@ -405,8 +421,15 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 			player->health = 200;
 		player->mo->health = player->health;
 		player->message = "Supercharge!";
+		sound = sfx_getpow;
 		break;
-				
+	case SPR_MEGA:
+		player->health = 200;
+		player->mo->health = player->health;
+		P_GiveArmor (player,2);
+		player->message = "Megasphere!";
+		sound = sfx_getpow;
+		break;
 
 		
 /* */
@@ -507,9 +530,15 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 		sound = sfx_wpnup;	
 		break;
 	case SPR_SHOT:
-		if (!P_GiveWeapon (player, wp_shotgun, special->flags&MF_DROPPED ) )
+		if (!P_GiveWeapon (player, wp_shotgun, ( special->flags&MF_DROPPED ) != 0) )
 			return;
 		player->message = "You got the shotgun!";
+		sound = sfx_wpnup;	
+		break;
+	case SPR_SGN2:
+		if (!P_GiveWeapon (player, wp_supershotgun, ( special->flags&MF_DROPPED ) != 0) )
+			return;
+		player->message = "You got the super shotgun!";
 		sound = sfx_wpnup;	
 		break;
 
@@ -642,7 +671,7 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 		else
 			S_StartSound (target, sfx_pldeth);
 		if (netgame == gt_coop)
-			R_ResetResp(player);
+			P_ResetResp(player);
 	}
 
 	if (target->health < -targinfo->spawnhealth
@@ -665,11 +694,14 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 	case MT_SHOTGUY:
 		item = MT_SHOTGUN;
 		break;
+	case MT_CHAINGUY:
+		item = MT_CHAINGUN;
+		break;
 	default:
 		return;
 	}
 
-	mo = P_SpawnMobj (target->x,target->y,ONFLOORZ, item);
+	mo = P_SpawnMobj2 (target->x,target->y,ONFLOORZ, item, target->subsector);
 	mo->flags |= MF_DROPPED;		/* special versions of items */
 }
 
@@ -701,7 +733,10 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 
 	if ( !(target->flags & MF_SHOOTABLE) )
 		return;						/* shouldn't happen... */
-		
+
+	if (target->flags & MF_STATIC)
+		return;
+
 	if (target->health <= 0)
 		return;
 
@@ -722,7 +757,7 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 	if (inflictor && (!source || !source->player 
 		|| players[source->player - 1].readyweapon != wp_chainsaw))
 	{
-		ang = R_PointToAngle2 ( inflictor->x, inflictor->y
+		ang = R_PointToAngle ( inflictor->x, inflictor->y
 			,target->x, target->y);
 		
 		thrust = damage*(FRACUNIT>>2)*100/targinfo->mass;
@@ -759,7 +794,7 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 			if (source && source != player->mo)
 			{
 				int right;
-				ang = R_PointToAngle2 ( target->x, target->y,
+				ang = R_PointToAngle ( target->x, target->y,
 					source->x, source->y );
 
 				if (ang > target->angle)

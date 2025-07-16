@@ -31,8 +31,8 @@
 #define SRAM_MAGIC1		0xDE
 #define SRAM_MAGIC2		0xAD
 
-#define SRAM_VERSION	1
-#define SRAM_OPTVERSION	3
+#define SRAM_VERSION	4
+#define SRAM_OPTVERSION	4
 #define SRAM_MAXSLOTS	10
 #define SRAM_SLOTSIZE	200
 
@@ -42,7 +42,8 @@ typedef struct __attribute((packed))
 	uint8_t skill;
 	uint8_t netgame;
 	uint8_t mapnumber;
-	uint8_t pad[12];
+	char wadname[32];
+	char mapname[32];
 
 	playerresp_t resp[MAXPLAYERS];
 } savegame_t;
@@ -50,7 +51,7 @@ typedef struct __attribute((packed))
 typedef struct __attribute((packed))
 {
 	int8_t version;
-	int8_t unused;
+	int8_t detailmode;
 	int8_t controltype;
 	int8_t viewport;
 	int8_t sfxvolume;
@@ -61,8 +62,10 @@ typedef struct __attribute((packed))
 	int8_t strafebtns;
 	uint8_t magic2;
 	int8_t anamorphic;
-	int8_t unused2;
+	int8_t yabcdpad;
 	int8_t sfxdriver;
+	char spcmDir[9];
+	int8_t lowres;
 } saveopts_t;
 
 static char saveslotguard[SRAM_SLOTSIZE - sizeof(savegame_t)] __attribute__((unused));
@@ -91,10 +94,10 @@ void ReadGame(int slotnumber)
 	starttype = sg.netgame;
 	startmap = sg.mapnumber;
 	starttype = sg.netgame;
-	D_memcpy(playersresp, sg.resp, sizeof(playersresp));
+	D_memcpy(playersresp, sg.resp, sizeof(playerresp_t)*MAXPLAYERS);
 }
 
-static void SaveGameExt(int slotnumber, int mapnum)
+static void SaveGameExt(int slotnumber, int mapnum, const char *mapname)
 {
 	savegame_t sg;
 	const int offset = slotnumber * SRAM_SLOTSIZE;
@@ -102,27 +105,31 @@ static void SaveGameExt(int slotnumber, int mapnum)
 	if (slotnumber >= optslotnumber)
 		return;
 
+	D_memset(&sg, 0, sizeof(sg));
 	sg.version = SRAM_VERSION;
 	sg.skill = gameskill;
 	sg.netgame = netgame;
 	sg.mapnumber = mapnum & 0xFF;
-	D_memcpy(sg.resp, playersresp, sizeof(playersresp));
+	D_snprintf(sg.mapname, sizeof(sg.mapname), "%s", mapname);
+	D_snprintf(sg.wadname, sizeof(sg.wadname), "%s", cd_pwad_name);
+	D_memcpy(sg.resp, playersresp, sizeof(playerresp_t)*MAXPLAYERS);
 
 	Mars_WriteSRAM((void*)&sg, offset, sizeof(savegame_t));
 }
 
 void SaveGame(int slotnumber)
 {
-	SaveGameExt(slotnumber, gamemapinfo.mapNumber);
+	SaveGameExt(slotnumber, gamemapinfo->mapNumber, DMAPINFO_STRFIELD(gamemapinfo, name));
 }
 
-void QuickSave(int nextmap)
+void QuickSave(int nextmap, const char *mapname)
 {
-	SaveGameExt(0, nextmap);
+	SaveGameExt(0, nextmap, mapname);
 }
 
-boolean GetSaveInfo(int slotnumber, VINT* mapnum, VINT* skill, VINT *mode)
+boolean GetSaveInfo(int slotnumber, VINT* mapnum, VINT* skill, VINT *mode, char *wadname, char *mapname)
 {
+	int i;
 	savegame_t sg;
 	const int offset = slotnumber * SRAM_SLOTSIZE;
 
@@ -141,6 +148,15 @@ boolean GetSaveInfo(int slotnumber, VINT* mapnum, VINT* skill, VINT *mode)
 	*mapnum = sg.mapnumber;
 	*skill = sg.skill;
 	*mode = sg.netgame;
+
+	// strip the leading /'s
+	for (i = 0; sg.wadname[i] == '/'; i++) {
+		;
+	}
+	D_snprintf(wadname, sizeof(sg.wadname) -  i, "%s", &sg.wadname[i]);
+
+	D_snprintf(mapname, sizeof(sg.mapname), "%s", sg.mapname);
+
 	return true;
 }
 
@@ -173,6 +189,7 @@ static void SaveOptions(void)
 	D_memset(&so, 0, sizeof(saveopts_t));
 
 	so.version = SRAM_OPTVERSION;
+	so.detailmode = detailmode;
 	so.controltype = controltype;
 	so.viewport = viewportNum;
 	so.sfxvolume = sfxvolume;
@@ -182,8 +199,11 @@ static void SaveOptions(void)
 	so.strafebtns = strafebtns;
 	so.anamorphic = anamorphicview;
 	so.sfxdriver = sfxdriver;
+	so.yabcdpad = yabcdpad;
 	so.magic1 = SRAM_MAGIC1;
 	so.magic2 = SRAM_MAGIC2;
+	so.lowres = lowres;
+	D_snprintf(so.spcmDir, sizeof(so.spcmDir), "%s", spcmDir);
 
 	Mars_WriteSRAM((void*)&so, optslotoffset, sizeof(saveopts_t));
 }
@@ -199,15 +219,17 @@ static void ReadOptions(void)
 	if (so.version != SRAM_OPTVERSION)
 		return;
 
+	if (so.detailmode < detmode_potato || so.detailmode >= MAXDETAILMODES)
+		so.detailmode = detmode_normal;
 	if (so.sfxvolume > 64)
 		so.sfxvolume = 64;
 	if (so.musicvolume > 64)
 		so.musicvolume = 64;
 	if (so.controltype >= NUMCONTROLOPTIONS)
 		so.controltype = 0;
-	if (so.musictype < mustype_none || so.musictype > mustype_cd)
+	if (so.musictype < mustype_none || so.musictype > mustype_spcm)
 		so.musictype = mustype_fm;
-	if (so.musictype == mustype_cd && !S_CDAvailable())
+	if (so.musictype >= mustype_cd && !S_CDAvailable())
 		so.musictype = mustype_fm;
 	if (so.alwaysrun < 0 || so.alwaysrun > 1)
 		so.alwaysrun = 0;
@@ -221,7 +243,10 @@ static void ReadOptions(void)
 		so.anamorphic = 0;
 	if (so.sfxdriver < 0 || so.sfxdriver > 2)
 		so.sfxdriver = 0;
+	if (so.yabcdpad < 0 || so.yabcdpad > 1)
+		so.yabcdpad = 0;
 
+	detailmode = so.detailmode;
 	sfxvolume = so.sfxvolume;
 	musicvolume = so.musicvolume;
 	controltype = so.controltype;
@@ -232,6 +257,11 @@ static void ReadOptions(void)
 	strafebtns = so.strafebtns;
 	anamorphicview = so.anamorphic;
 	sfxdriver = so.sfxdriver;
+	yabcdpad = so.yabcdpad;
+	lowres = so.lowres;
+
+	so.spcmDir[sizeof(so.spcmDir)-1] = '\0';
+	D_snprintf(spcmDir, sizeof(spcmDir), "%s", so.spcmDir);
 }
 
 void ClearEEProm(void)
@@ -255,6 +285,8 @@ void ReadEEProm(void)
 	ticsperframe = MINTICSPERFRAME;
 	anamorphicview = 0;
 	sfxdriver = 0;
+	detailmode = detmode_normal;
+	lowres = false;
 
 	ReadOptions();
 }

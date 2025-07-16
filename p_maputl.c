@@ -6,6 +6,7 @@
 
 fixed_t P_AproxDistance(fixed_t dx, fixed_t dy) ATTR_DATA_CACHE_ALIGN;
 int P_PointOnLineSide(fixed_t x, fixed_t y, line_t* line) ATTR_DATA_CACHE_ALIGN;
+boolean P_BoxCrossLine(line_t *ld, fixed_t testbbox[4]) ATTR_DATA_CACHE_ALIGN;
 int P_PointOnDivlineSide(fixed_t x, fixed_t y, divline_t* line) ATTR_DATA_CACHE_ALIGN;
 fixed_t P_LineOpening(line_t* linedef) ATTR_DATA_CACHE_ALIGN;
 void P_LineBBox(line_t* ld, fixed_t* bbox) ATTR_DATA_CACHE_ALIGN;
@@ -53,17 +54,83 @@ int P_PointOnLineSide (fixed_t x, fixed_t y, line_t *line)
 	ldx = vertexes[line->v2].x - vertexes[line->v1].x;
 	ldy = vertexes[line->v2].y - vertexes[line->v1].y;
 
-	dx = (x - vertexes[line->v1].x);
-	dy = (y - vertexes[line->v1].y);
-	
-	left = (ldy>>16) * (dx>>16);
-	right = (dy>>16) * (ldx>>16);
+	dx = x - (vertexes[line->v1].x << FRACBITS);
+	dy = y - (vertexes[line->v1].y << FRACBITS);
+
+#ifdef MARS
+	dx = (unsigned)dx >> FRACBITS;
+	__asm volatile(
+		"muls.w %0,%1\n\t"
+		: : "r"(ldy), "r"(dx) : "macl", "mach");
+#else
+	left = (ldy) * (dx>>16);
+#endif
+
+#ifdef MARS
+	dy = (unsigned)dy >> FRACBITS;
+	__asm volatile(
+		"sts macl, %0\n\t"
+		"muls.w %2,%3\n\t"
+		"sts macl, %1\n\t"
+		: "=&r"(left), "=&r"(right) : "r"(dy), "r"(ldx) : "macl", "mach");
+#else
+	right = (dy>>16) * (ldx);
+#endif
 
 	if (right < left)
 		return 0;		/* front side */
 	return 1;			/* back side */
 }
 
+//
+// Check if the thing intersects a linedef
+//
+boolean P_BoxCrossLine(line_t *ld, fixed_t testbbox[4])
+{
+   fixed_t x1, x2;
+   fixed_t lx, ly;
+   fixed_t ldx, ldy;
+   fixed_t dx1, dy1, dx2, dy2;
+   boolean side1, side2;
+   fixed_t ldbbox[4];
+
+   P_LineBBox(ld, ldbbox);
+
+   // entirely outside bounding box of line?
+   if(testbbox[BOXRIGHT ] <= ldbbox[BOXLEFT  ] ||
+      testbbox[BOXLEFT  ] >= ldbbox[BOXRIGHT ] ||
+      testbbox[BOXTOP   ] <= ldbbox[BOXBOTTOM] ||
+      testbbox[BOXBOTTOM] >= ldbbox[BOXTOP   ])
+   {
+      return false;
+   }
+
+   lx  = vertexes[ld->v1].x << FRACBITS;
+   ly  = vertexes[ld->v1].y << FRACBITS;
+   ldx = vertexes[ld->v2].x - vertexes[ld->v1].x;
+   ldy = vertexes[ld->v2].y - vertexes[ld->v1].y;
+
+   if (ldx && ldy && ( (ldx ^ ldy) & 0x80000000 ) == 0) /* positive */
+   {
+      x1 = testbbox[BOXLEFT ];
+      x2 = testbbox[BOXRIGHT];
+   }
+   else
+   {
+      x1 = testbbox[BOXRIGHT];
+      x2 = testbbox[BOXLEFT ];
+   }
+
+   dx1 = (x1 - lx) >> FRACBITS;
+   dy1 = (testbbox[BOXTOP] - ly) >> FRACBITS;
+   dx2 = (x2 - lx) >> FRACBITS;
+   dy2 = (testbbox[BOXBOTTOM] - ly) >> FRACBITS;
+
+   side1 = (ldy * dx1 < dy1 * ldx);
+   side2 = (ldy * dx2 < dy2 * ldx);
+
+   return (side1 != side2);
+}
 
 /*
 ==================
@@ -100,7 +167,6 @@ int P_PointOnDivlineSide (fixed_t x, fixed_t y, divline_t *line)
 	return 1;			/* back side */
 }
 
-
 /*
 ==================
 =
@@ -116,7 +182,7 @@ fixed_t P_LineOpening (line_t *linedef)
 	sector_t	*front, *back;
 	fixed_t opentop, openbottom;
 	
-	if (linedef->sidenum[1] == -1)
+	if (linedef->sidenum[1] < 0)
 	{	/* single sided line */
 		return 0;
 	}
@@ -138,7 +204,7 @@ fixed_t P_LineOpening (line_t *linedef)
 
 void P_LineBBox(line_t* ld, fixed_t *bbox)
 {
-	vertex_t* v1 = &vertexes[ld->v1], * v2 = &vertexes[ld->v2];
+	mapvertex_t* v1 = &vertexes[ld->v1], * v2 = &vertexes[ld->v2];
 
 	if (v1->x < v2->x)
 	{
@@ -160,6 +226,11 @@ void P_LineBBox(line_t* ld, fixed_t *bbox)
 		bbox[BOXBOTTOM] = v2->y;
 		bbox[BOXTOP] = v1->y;
 	}
+
+	bbox[BOXTOP] <<= FRACBITS;
+	bbox[BOXBOTTOM] <<= FRACBITS;
+	bbox[BOXLEFT] <<= FRACBITS;
+	bbox[BOXRIGHT] <<= FRACBITS;
 }
 
 /*
@@ -187,21 +258,27 @@ void P_UnsetThingPosition (mobj_t *thing)
 	if ( ! (thing->flags & MF_NOSECTOR) )
 	{	/* inert things don't need to be in blockmap */
 /* unlink from subsector */
-		if (thing->snext)
-			thing->snext->sprev = thing->sprev;
-		if (thing->sprev)
-			thing->sprev->snext = thing->snext;
+		mobj_t *snext = SPTR_TO_LPTR(thing->snext);
+		mobj_t *sprev = SPTR_TO_LPTR(thing->sprev);
+
+		if (snext)
+			snext->sprev = thing->sprev;
+		if (sprev)
+			sprev->snext = thing->snext;
 		else
-			thing->subsector->sector->thinglist = thing->snext;
+			SSEC_SECTOR(thing->subsector)->thinglist = thing->snext;
 	}
 	
 	if ( ! (thing->flags & MF_NOBLOCKMAP) )
 	{	/* inert things don't need to be in blockmap */
 /* unlink from block map */
-		if (thing->bnext)
-			thing->bnext->bprev = thing->bprev;
-		if (thing->bprev)
-			thing->bprev->bnext = thing->bnext;
+		mobj_t *bnext = SPTR_TO_LPTR(thing->bnext);
+		mobj_t *bprev = SPTR_TO_LPTR(thing->bprev);
+
+		if (bnext)
+			bnext->bprev = thing->bprev;
+		if (bprev)
+			bprev->bnext = thing->bnext;
 		else
 		{
 			blockx = thing->x - bmaporgx;
@@ -230,21 +307,21 @@ void P_SetThingPosition2 (mobj_t *thing, subsector_t *ss)
 {
 	sector_t		*sec;
 	int				blockx, blocky;
-	mobj_t			**link;
-	
+	SPTR 			*link;
+
 /* */
 /* link into subsector */
 /* */
 	thing->subsector = ss;
 	if ( ! (thing->flags & MF_NOSECTOR) )
 	{	/* invisible things don't go into the sector links */
-		sec = ss->sector;
+		sec = SSEC_SECTOR(ss);
 	
-		thing->sprev = NULL;
+		thing->sprev = (SPTR)0;
 		thing->snext = sec->thinglist;
 		if (sec->thinglist)
-			sec->thinglist->sprev = thing;
-		sec->thinglist = thing;
+			((mobj_t *)SPTR_TO_LPTR(sec->thinglist))->sprev = LPTR_TO_SPTR(thing);
+		sec->thinglist = LPTR_TO_SPTR(thing);
 	}
 	
 /* */
@@ -261,20 +338,20 @@ void P_SetThingPosition2 (mobj_t *thing, subsector_t *ss)
 			if (blockx < bmapwidth && blocky <bmapheight)
 			{
 				link = &blocklinks[blocky*bmapwidth+blockx];
-				thing->bprev = NULL;
+				thing->bprev = (SPTR)0;
 				thing->bnext = *link;
 				if (*link)
-					(*link)->bprev = thing;
-				*link = thing;
+					((mobj_t *)(SPTR_TO_LPTR(*link)))->bprev = LPTR_TO_SPTR(thing);
+				*link = LPTR_TO_SPTR(thing);
 			}
 			else
 			{	/* thing is off the map */
-				thing->bnext = thing->bprev = NULL;
+				thing->bnext = thing->bprev = (SPTR)0;
 			}
 		}
 		else
 		{	/* thing is off the map */
-			thing->bnext = thing->bprev = NULL;
+			thing->bnext = thing->bprev = (SPTR)0;
 		}
 	}
 }
@@ -368,7 +445,7 @@ boolean P_BlockThingsIterator (int x, int y, blockthingsiter_t func, void *userp
 	//if (x<0 || y<0 || x>=bmapwidth || y>=bmapheight)
 	//	return true;
 
-	for (mobj = blocklinks[y*bmapwidth+x] ; mobj ; mobj = mobj->bnext)
+	for (mobj = SPTR_TO_LPTR(blocklinks[y*bmapwidth+x]) ; mobj ; mobj = SPTR_TO_LPTR(mobj->bnext))
 		if (!func( mobj, userp ) )
 			return false;	
 
@@ -377,7 +454,43 @@ boolean P_BlockThingsIterator (int x, int y, blockthingsiter_t func, void *userp
 
 void P_SectorOrg(mobj_t* sec_, fixed_t *org)
 {
-	sector_t *sec = (void *)sec_;
-	org[0] = sec->soundorg[0] << FRACBITS;
-	org[1] = sec->soundorg[1] << FRACBITS;
+	int j;
+	fixed_t bbox[4];
+	sector_t *sector = (void *)sec_;
+
+	if (!sector)
+		return;
+
+	for (j = 0; j < 4; j++)
+		bbox[j] = sector->bbox[j] << FRACBITS;
+
+	/* set the degenmobj_t to the middle of the bounding box */
+	org[0] = (bbox[BOXRIGHT]+bbox[BOXLEFT])/2;
+	org[1] = (bbox[BOXTOP]+bbox[BOXBOTTOM])/2;
+}
+
+int P_GetLineTag (line_t *line)
+{
+	VINT j;
+	VINT rowsize = (unsigned)numlinetags / LINETAGS_HASH_SIZE;
+	VINT ld = line - lines;
+	VINT h = (unsigned)ld % LINETAGS_HASH_SIZE;
+	VINT s = h * rowsize;
+
+	for (j = 0; j < numlinetags; j++)
+	{
+		int16_t *l;
+		VINT e;
+
+		e = s + j;
+		if (e >= numlinetags)
+			e -= numlinetags;
+
+		l = &linetags[e * 2];
+		if (l[0] == ld) {
+			return l[1];
+		}
+	}
+
+	return 0;
 }

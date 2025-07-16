@@ -85,11 +85,11 @@ static void DrawLine(uint8_t *fb,pixel_t color, fixed_t x1, fixed_t y1, fixed_t 
 void AM_Start(void)
 {
 	linesdrawn = 0;
-	if (amcurmap != gamemapinfo.mapNumber)
+	if (amcurmap != gamemapinfo->mapNumber)
 	{
 		scale = DEFAULTSCALE;
 		oldscale = DEFAULTSCALE;
-		amcurmap = gamemapinfo.mapNumber;
+		amcurmap = gamemapinfo->mapNumber;
 	}
 
 #ifdef JAGUAR
@@ -394,8 +394,8 @@ void AM_Control (player_t *player)
 #endif
 	int actionbtns = BT_ATTACK | BT_STRAFE | BT_USE;
 
-	buttons = ticbuttons[playernum];
-	oldbuttons = oldticbuttons[playernum];
+	buttons = player->ticbuttons;
+	oldbuttons = player->oldticbuttons;
 
 	if ( (buttons & BT_AUTOMAP) && !(oldbuttons & BT_AUTOMAP) )
 	{
@@ -448,28 +448,28 @@ void AM_Control (player_t *player)
 	}
 #endif
 
-	ticbuttons[playernum] &= ~actionbtns;
-	oldticbuttons[playernum] &= ~actionbtns;
+	player->ticbuttons &= ~actionbtns;
+	player->oldticbuttons &= ~actionbtns;
 
 	if (buttons & BT_C)		/* IF 'C' IS HELD DOWN, MOVE AROUND */
 	{
 		player->automapx = player->mo->x;
 		player->automapy = player->mo->y;
 
-		ticbuttons[playernum] &= ~(BT_C | BT_STRAFELEFT | BT_STRAFERIGHT);
-		oldticbuttons[playernum] &= ~(BT_C | BT_STRAFELEFT | BT_STRAFERIGHT);
+		player->ticbuttons &= ~(BT_C | BT_STRAFELEFT | BT_STRAFERIGHT);
+		player->oldticbuttons &= ~(BT_C | BT_STRAFELEFT | BT_STRAFERIGHT);
 		return;
 	}
 
-	if (buttons & BT_RIGHT)
+	if (buttons & BT_MOVERIGHT)
 	{
 		player->automapx+=step;
 	}
-	if (buttons & BT_LEFT)
+	if (buttons & BT_MOVELEFT)
 	{
 		player->automapx-=step;
 	}
-	if (buttons & BT_UP)
+	if (buttons & BT_MOVEUP)
 	{
 		if (buttons & BT_B)
 		{
@@ -480,7 +480,7 @@ void AM_Control (player_t *player)
 		else
 			player->automapy+=step;
 	}
-	if (buttons & BT_DOWN)
+	if (buttons & BT_MOVEDOWN)
 	{
 		if (buttons & BT_B)
 		{
@@ -492,7 +492,7 @@ void AM_Control (player_t *player)
 			player->automapy-=step;
 	}
 	
-	ticbuttons[playernum] &= ~(BT_B | BT_LEFT | BT_RIGHT | BT_UP | BT_DOWN);
+	player->ticbuttons &= ~(BT_B | BT_MOVELEFT | BT_MOVERIGHT | BT_MOVEUP | BT_MOVEDOWN);
 }
 
 static void AM_DrawMapStats(void)
@@ -552,7 +552,7 @@ static void AM_DrawMapStats(void)
 		break;
 	}
 
-	I_Print8(12, 21, gamemapinfo.name);
+	I_Print8(12, 21, DMAPINFO_STRFIELD(gamemapinfo, name));
 }
 
 /*
@@ -626,20 +626,21 @@ static void AM_Drawer_ (int c)
 	line = lines;
 	drawn = 0;
 
-	if (c == 0)
+	switch (c)
 	{
-		miny = 0;
-		maxy = am_height-1;
-	}
-	else if (c == 1)
-	{
-		miny = 0;
-		maxy = am_halfh;
-	}
-	else if (c == 2)
-	{
-		miny = am_halfh-1;
-		maxy = am_height-1;
+		case 1:
+			miny = 0;
+			maxy = am_halfh;
+			break;
+		case 2:
+			miny = am_halfh-1;
+			maxy = am_height-1;
+			break;
+		case 0:
+		default:
+			miny = 0;
+			maxy = am_height-1;
+			break;
 	}
 
 	fb = (byte*)I_FrameBuffer();
@@ -654,10 +655,13 @@ static void AM_Drawer_ (int c)
 	for (i=0 ; i<numlines ; i++,line++)
 	{
 		int flags;
-		vertex_t *v1, *v2;
+		int mapped;
+		mapvertex_t *v1, *v2;
+		boolean twoSided = line->sidenum[1] >= 0;
 
 		flags = line->flags;
-		if ((!(flags & ML_MAPPED) ||		/* IF NOT MAPPED OR DON'T DRAW */
+		mapped = (line->flags & ML_MAPPED) != 0;
+		if ((!mapped ||		/* IF NOT MAPPED OR DON'T DRAW */
 			flags & ML_DONTDRAW) &&
 			(!(p->powers[pw_allmap] + showAllLines)))
 			continue;
@@ -665,8 +669,8 @@ static void AM_Drawer_ (int c)
 		v1 = &vertexes[line->v1];
 		v2 = &vertexes[line->v2];
 
-		y1 = v1->y;
-		y2 = v2->y;
+		y1 = v1->y << FRACBITS;
+		y2 = v2->y << FRACBITS;
 
 		y1 -= oy;
 		y2 -= oy;
@@ -683,8 +687,8 @@ static void AM_Drawer_ (int c)
 		outcode2 |= (y2 < miny) ;
 		if (outcode & outcode2) continue;
 
-		x1 = v1->x;
-		x2 = v2->x;
+		x1 = v1->x << FRACBITS;
+		x2 = v2->x << FRACBITS;
 
 		x1 -= ox;
 		x2 -= ox;
@@ -707,10 +711,10 @@ static void AM_Drawer_ (int c)
 		color = CRY_BROWN;
 		if ((p->powers[pw_allmap] +
 			showAllLines) &&			/* IF COMPMAP && !MAPPED YET */
-			!(flags & ML_MAPPED))
+			!mapped)
 			color = CRY_GREY;
 		else
-		if (!(flags & ML_TWOSIDED))	/* ONE-SIDED LINE */
+		if (!twoSided)	/* ONE-SIDED LINE */
 			color = CRY_RED;
 		else
 		if (line->special == 97 ||		/* TELEPORT LINE */
@@ -768,6 +772,8 @@ static void AM_Drawer_ (int c)
 			y1 = (pl->mo->y - players[consoleplayer].automapy);
 			angle = pl->mo->angle;
 			color = !i ? CRY_GREEN : CRY_YELLOW;
+			if (pl->powers[pw_invisibility])
+				color = 246; // close to black
 			c = finecosine(angle >> ANGLETOFINESHIFT);
 			s = finesine(angle >> ANGLETOFINESHIFT);		
 			nx1 = FixedMul(c,NOSELENGTH) + x1;

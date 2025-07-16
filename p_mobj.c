@@ -79,7 +79,7 @@ void P_RemoveMobj (mobj_t *mobj)
 
 	mobj->target = NULL;
 	mobj->extradata = 0;
-	mobj->latecall = (latecall_t)-1;	/* make sure it doesn't come back to life... */
+	mobj->latecall = LC_INVALID;	/* make sure it doesn't come back to life... */
 
 /* unlink from mobj list */
 	P_RemoveMobjFromCurrList(mobj);
@@ -132,8 +132,8 @@ void P_RespawnSpecials (void)
 	y = mthing->y << FRACBITS; 
 
 /* spawn a teleport fog at the new spot */
-	ss = R_PointInSubsector (x,y); 
-	mo = P_SpawnMobj (x, y, ss->sector->floorheight , MT_IFOG); 
+	ss = R_PointInSubsector (x,y);
+	mo = P_SpawnMobj2 (x, y, SSEC_SECTOR(ss)->floorheight , MT_IFOG, ss); 
 
 	S_StartSound (mo, sfx_itmbk);
 
@@ -142,12 +142,15 @@ void P_RespawnSpecials (void)
 		if (mthing->type == mobjinfo[i].doomednum)
 			break;
 
+	if (i == NUMMOBJTYPES)
+		return;
+
 /* spawn it */
 	if (mobjinfo[i].flags & MF_SPAWNCEILING)
 		z = ONCEILINGZ;
 	else
 		z = ONFLOORZ;
-	mo = P_SpawnMobj (x,y,z, i);
+	mo = P_SpawnMobj2 (x,y,z,i,ss);
 	mo->angle = ANG45 * (mthing->angle/45);
 	mo->thingid = mthing->options;
 
@@ -182,8 +185,6 @@ boolean P_SetMobjState (mobj_t *mobj, statenum_t state)
 		st = &states[state];
 		mobj->state = state;
 		mobj->tics = st->tics;
-		mobj->sprite = st->sprite;
-		mobj->frame = st->frame;
 
 		if (gameskill == sk_nightmare)
 		{
@@ -202,7 +203,7 @@ boolean P_SetMobjState (mobj_t *mobj, statenum_t state)
 			st->action(mobj);
 
 		if (!(mobj->flags & MF_STATIC))
-			mobj->latecall = NULL;	/* make sure it doesn't come back to life... */
+			mobj->latecall = LC_NONE;	/* make sure it doesn't come back to life... */
 
 		state = st->nextstate;
 	} while (!mobj->tics && --changes > 0);
@@ -241,9 +242,10 @@ void P_ExplodeMissile (mobj_t *mo)
 ===============
 */
 
-mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
+mobj_t *P_SpawnMobj2 (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type, subsector_t *ss)
 {
 	mobj_t		*mobj;
+	const sector_t *sec;
 	const state_t		*st;
 	const mobjinfo_t *info = &mobjinfo[type];
 
@@ -273,7 +275,9 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 			mobj = Z_Malloc (sizeof(*mobj), PU_LEVEL);
 		}
 		D_memset (mobj, 0, sizeof (*mobj));
-		mobj->speed = info->speed;
+		mobj->speed = info->speed < FRACUNIT ? info->speed : (info->speed >> FRACBITS);
+		mobj->reactiontime = info->reactiontime;
+		mobj->health = info->spawnhealth;
 	}
 
 	mobj->type = type;
@@ -282,8 +286,6 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 	mobj->radius = info->radius;
 	mobj->height = info->height;
 	mobj->flags = info->flags;
-	mobj->health = info->spawnhealth;
-	mobj->reactiontime = info->reactiontime;
 
 /* do not set the state with P_SetMobjState, because action routines can't */
 /* be called yet */
@@ -291,8 +293,6 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 
 	mobj->state = info->spawnstate;
 	mobj->tics = st->tics;
-	mobj->sprite = st->sprite;
-	mobj->frame = st->frame;
 
 	if (gameskill == sk_nightmare)
 	{
@@ -320,10 +320,14 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 	}
 
 /* set subsector and/or block links */
-	P_SetThingPosition (mobj);
-	
-	mobj->floorz = mobj->subsector->sector->floorheight;
-	mobj->ceilingz = mobj->subsector->sector->ceilingheight;
+	if (!ss)
+		ss = R_PointInSubsector (mobj->x,mobj->y);
+	P_SetThingPosition2 (mobj, ss);
+
+	ss = mobj->subsector;
+	sec = SSEC_SECTOR(ss);
+	mobj->floorz = sec->floorheight;
+	mobj->ceilingz = sec->ceilingheight;
 	if (z == ONFLOORZ)
 		mobj->z = mobj->floorz;
 	else if (z == ONCEILINGZ)
@@ -339,6 +343,11 @@ mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 	return mobj;
 }
 
+
+mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
+{
+	return P_SpawnMobj2 (x, y, z, type, NULL);
+}
 
 /*
 ================
@@ -388,6 +397,7 @@ void P_SpawnPlayer (mapthing_t *mthing)
 	mobj_t		*mobj;
 	int	i;
 	subsector_t* ss;
+	sector_t *sec;
 	int                     an;
 
 	if (!playeringame[mthing->type-1])
@@ -412,7 +422,7 @@ y = 0xff500000;
 	
 	mobj->angle = ANG45 * (mthing->angle/45);
 
-	mobj->player = p - players + 1;
+	mobj->player = mthing->type;
 	mobj->health = p->health;
 	p->mo = mobj;
 	p->playerstate = PST_LIVE;	
@@ -432,10 +442,11 @@ y = 0xff500000;
 		return;
 
 	ss = R_PointInSubsector(x, y);
+	sec = SSEC_SECTOR(ss);
 	an = (ANG45 * ((unsigned)mthing->angle / 45)) >> ANGLETOFINESHIFT;
 
 	/* spawn a teleport fog  */
-	mobj = P_SpawnMobj(x + 20 * finecosine(an), y + 20 * finesine(an), ss->sector->floorheight
+	mobj = P_SpawnMobj(x + 20 * finecosine(an), y + 20 * finesine(an), sec->floorheight
 		, MT_TFOG);
 	S_StartSound(mobj, sfx_telept);
 }
@@ -530,8 +541,10 @@ void P_SpawnMapThing (mapthing_t *mthing, int thingid)
 	if (mthing->type == 11)
 	{
 		if (deathmatch_p < deathmatchstarts + MAXDMSTARTS)
+		{
 			D_memcpy (deathmatch_p, mthing, sizeof(*mthing));
-		deathmatch_p++;
+			deathmatch_p++;
+		}
 		return;
 	}
 	
@@ -581,15 +594,14 @@ return;	/*DEBUG */
 		totalkills++;
 	if (mobj->flags & MF_COUNTITEM)
 		totalitems++;
+	mobj->thingid = thingid + 1;
 		
-	mobj->angle = ANG45 * (mthing->angle/45);
 	if (mobj->flags & MF_STATIC)
 		return;
 
+	mobj->angle = ANG45 * (mthing->angle/45);
 	if (mthing->options & MTF_AMBUSH)
 		mobj->flags |= MF_AMBUSH;
-	if (mobj->flags & MF_SPECIAL)
-		mobj->thingid = thingid + 1;
 }
 
 
@@ -609,12 +621,12 @@ return;	/*DEBUG */
 ================
 */
 
-void P_SpawnPuff (fixed_t x, fixed_t y, fixed_t z, fixed_t attackrange)
+void P_SpawnPuff2 (fixed_t x, fixed_t y, fixed_t z, fixed_t attackrange, subsector_t *ss)
 {
 	mobj_t	*th;
 	
 	z += ((P_Random()-P_Random())<<10);
-	th = P_SpawnMobj (x,y,z, MT_PUFF);
+	th = P_SpawnMobj2 (x,y,z, MT_PUFF, ss);
 	th->momz = FRACUNIT;
 	th->tics -= P_Random()&1;
 	if (th->tics < 1)
@@ -625,6 +637,10 @@ void P_SpawnPuff (fixed_t x, fixed_t y, fixed_t z, fixed_t attackrange)
 		P_SetMobjState (th, S_PUFF3);
 }
 
+void P_SpawnPuff (fixed_t x, fixed_t y, fixed_t z, fixed_t attackrange)
+{
+	P_SpawnPuff2 (x, y, z, attackrange, NULL);
+}
 
 /*
 ================
@@ -634,12 +650,12 @@ void P_SpawnPuff (fixed_t x, fixed_t y, fixed_t z, fixed_t attackrange)
 ================
 */
 
-void P_SpawnBlood (fixed_t x, fixed_t y, fixed_t z, int damage)
+void P_SpawnBlood2 (fixed_t x, fixed_t y, fixed_t z, int damage, subsector_t *ss)
 {
 	mobj_t	*th;
 	
 	z += ((P_Random()-P_Random())<<10);
-	th = P_SpawnMobj (x,y,z, MT_BLOOD);
+	th = P_SpawnMobj2 (x,y,z, MT_BLOOD, ss);
 	th->momz = FRACUNIT*2;
 	th->tics -= P_Random()&1;
 	if (th->tics<1)
@@ -648,6 +664,11 @@ void P_SpawnBlood (fixed_t x, fixed_t y, fixed_t z, int damage)
 		P_SetMobjState (th,S_BLOOD2);
 	else if (damage < 9)
 		P_SetMobjState (th,S_BLOOD3);
+}
+
+void P_SpawnBlood (fixed_t x, fixed_t y, fixed_t z, int damage)
+{
+	P_SpawnBlood2 (x, y, z, damage, NULL);
 }
 
 /*
@@ -662,14 +683,23 @@ void P_SpawnBlood (fixed_t x, fixed_t y, fixed_t z, int damage)
 
 void P_CheckMissileSpawn (mobj_t *th)
 {
-	ptrymove_t tm;
+	pmovework_t tm;
 
 	th->x += (th->momx>>1);
 	th->y += (th->momy>>1);	/* move a little forward so an angle can */
 							/* be computed if it immediately explodes */
 	th->z += (th->momz>>1);
 	if (!P_TryMove (&tm, th, th->x, th->y))
-		P_ExplodeMissile (th);
+	{
+		th->momx = th->momy = th->momz = 0;
+		if(tm.ceilingline && tm.ceilingline->sidenum[1] >= 0 && *(int8_t *)&LD_BACKSECTOR(tm.ceilingline)->ceilingpic == -1)
+		{
+			th->latecall = LC_REMOVE_MOBJ;
+			return;
+		}
+		th->extradata = (intptr_t)tm.hitthing;
+		th->latecall = LC_MISSILE_HIT;
+	}
 }
 
 /*
@@ -680,7 +710,7 @@ void P_CheckMissileSpawn (mobj_t *th)
 ================
 */
 
-void P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type)
+mobj_t *P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type)
 {
 	mobj_t		*th;
 	angle_t		an;
@@ -688,23 +718,28 @@ void P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type)
 	int			speed;
 	const mobjinfo_t* thinfo = &mobjinfo[type];
 
-	th = P_SpawnMobj (source->x,source->y, source->z + 4*8*FRACUNIT, type);
+	th = P_SpawnMobj2 (source->x,source->y, source->z + 4*8*FRACUNIT, type, source->subsector);
 	if (thinfo->seesound)
 		S_StartSound (source, thinfo->seesound);
 	th->target = source;		/* where it came from */
-	an = R_PointToAngle2 (source->x, source->y, dest->x, dest->y);	
+	an = R_PointToAngle (source->x, source->y, dest->x, dest->y);
+    // fuzzy player
+    if (dest->flags & MF_SHADOW)
+		an += (P_Random()-P_Random()) << 20;
 	th->angle = an;
 	an >>= ANGLETOFINESHIFT;
-	speed = th->speed >> 16;
+	speed = th->speed;
 	th->momx = speed * finecosine(an);
 	th->momy = speed * finesine(an);
 	
 	dist = P_AproxDistance (dest->x - source->x, dest->y - source->y);
-	dist = dist / th->speed;
+	dist = dist / (th->speed << 16);
 	if (dist < 1)
 		dist = 1;
 	th->momz = (dest->z - source->z) / dist;
 	P_CheckMissileSpawn (th);
+
+	return th;
 }
 
 
@@ -755,13 +790,13 @@ void P_SpawnPlayerMissile (mobj_t *source, mobjtype_t type)
 	y = source->y;
 	z = source->z + 4*8*FRACUNIT;
 	
-	th = P_SpawnMobj (x,y,z, type);
+	th = P_SpawnMobj2 (x,y,z, type, source->subsector);
 	if (thinfo->seesound)
 		S_StartSound (source, thinfo->seesound);
 	th->target = source;
 	th->angle = an;
 	
-	speed = th->speed >> 16;
+	speed = th->speed;
 	
 	th->momx = speed * finecosine(an>>ANGLETOFINESHIFT);
 	th->momy = speed * finesine(an>>ANGLETOFINESHIFT);

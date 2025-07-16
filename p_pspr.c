@@ -14,7 +14,7 @@
 
 #define MAXSOUNDSECS	2048
 
-static void P_RecursiveSound(int secnum, int soundblocks, uint8_t* soundtraversed);
+static void P_RecursiveSound(mobj_t *soundtarget, sector_t *sec, int soundblocks, uint8_t* soundtraversed);
 
 /*
 =================
@@ -26,26 +26,23 @@ static void P_RecursiveSound(int secnum, int soundblocks, uint8_t* soundtraverse
 =================
 */
 
-mobj_t *soundtarget;
-
-static void P_RecursiveSound (int secnum, int soundblocks, uint8_t *soundtraversed)
+static void P_RecursiveSound (mobj_t *soundtarget, sector_t *sec, int soundblocks, uint8_t *soundtraversed)
 {
 	int			i;
 	line_t		*check;
-	sector_t	*sec;
-	int			othernum;
+	int 		secnum;
+	sector_t 	*other;
 	sector_t	*front, *back;
 	
 /* wake up all monsters in this sector */
+	secnum = ((uintptr_t)sec - (uintptr_t)sectors)/sizeof(sector_t);
 	if (secnum >= MAXSOUNDSECS)
 		return;
-
-	sec = &sectors[secnum];
 	if (sec->validcount == validcount[0] && soundtraversed[secnum] <= soundblocks+1)
 		return;		/* already flooded */
 	soundtraversed[secnum] = soundblocks+1;
 	sec->validcount = validcount[0];
-	sec->soundtarget = soundtarget;
+	sec->soundtarget = LPTR_TO_SPTR(soundtarget);
 	
 	for (i=0 ;i<sec->linecount ; i++)
 	{
@@ -78,16 +75,16 @@ static void P_RecursiveSound (int secnum, int soundblocks, uint8_t *soundtravers
 			continue;		/* closed door */
 
 		if (front == sec)
-			othernum = backnum;
+			other = back;
 		else
-			othernum = frontnum;
+			other = front;
 		if (check->flags & ML_SOUNDBLOCK)
 		{
 			if (!soundblocks)
-				P_RecursiveSound (othernum, 1, soundtraversed);
+				P_RecursiveSound (soundtarget, other, 1, soundtraversed);
 		}
 		else
-			P_RecursiveSound (othernum, soundblocks, soundtraversed);
+			P_RecursiveSound (soundtarget, other, soundblocks, soundtraversed);
 	}
 }
 
@@ -105,16 +102,15 @@ void P_NoiseAlert (player_t *player)
 	sector_t	*sec;
 	uint8_t soundtraversed[MAXSOUNDSECS];
 
-	sec = player->mo->subsector->sector;
+	sec = SSEC_SECTOR(player->mo->subsector);
 	
 	if (player->lastsoundsector == (void *)sec)
 		return;		/* don't bother doing it again here */
 
 	player->lastsoundsector = (void *)sec;
 	
-	soundtarget = player->mo;
 	validcount[0]++;
-	P_RecursiveSound (sec - sectors, 0, soundtraversed);
+	P_RecursiveSound (player->mo, sec, 0, soundtraversed);
 }
 
 
@@ -192,7 +188,16 @@ const weaponinfo_t	weaponinfo[NUMWEAPONS] =
 /* atkstate 	*/	S_SGUN2,
 /* flashstate 	*/	S_SGUNFLASH1
 	},
-	
+		
+	{	/* super shotgun */
+/* ammo 		*/	am_shell,
+/* upstate 		*/	S_DSGUNUP,
+/* downstate 	*/	S_DSGUNDOWN,
+/* readystate 	*/	S_DSGUN,
+/* atkstate 	*/	S_DSGUN1,
+/* flashstate 	*/	S_DSGUNFLASH1
+	},
+
 	{	/* chaingun */
 /* ammo 		*/	am_clip,
 /* upstate 		*/	S_CHAINUP,
@@ -237,7 +242,7 @@ const weaponinfo_t	weaponinfo[NUMWEAPONS] =
 /* atkstate 	*/	S_SAW1,
 /* flashstate 	*/	S_NULL
 	}
-	
+
 };
 
 
@@ -286,6 +291,8 @@ boolean P_CheckAmmo (player_t *player)
 	ammo = weaponinfo[player->readyweapon].ammo;
 	if (player->readyweapon == wp_bfg)
 		count = BFGCELLS;
+	else if (player->readyweapon == wp_supershotgun)
+		count = 2;
 	else
 		count = 1;
 	if (ammo == am_noammo || player->ammo[ammo] >= count)
@@ -298,6 +305,8 @@ boolean P_CheckAmmo (player_t *player)
 			player->pendingweapon = wp_plasma;
 		else if (P_CanFireWeapon(player, wp_chaingun))
 			player->pendingweapon = wp_chaingun;
+		else if (P_CanFireWeapon(player, wp_supershotgun))
+			player->pendingweapon = wp_supershotgun;
 		else if (P_CanFireWeapon(player, wp_shotgun))
 			player->pendingweapon = wp_shotgun;
 		else if (P_CanFireWeapon(player, wp_pistol))
@@ -394,7 +403,7 @@ void A_WeaponReady (player_t *player, pspdef_t *psp)
 /* check for fire */
 /* */
 /* the missile launcher and bfg do not auto fire */
-	if (ticbuttons[playernum] & BT_ATTACK)
+	if (player->ticbuttons & BT_ATTACK)
 	{
 		P_FireWeapon (player);
 		return;
@@ -425,10 +434,10 @@ void A_ReFire (player_t *player, pspdef_t *psp)
 /* */
 /* check for fire (if a weaponchange is pending, let it go through instead) */
 /* */
-	if ( (ticbuttons[playernum] & BT_ATTACK) 
+	if ( (player->ticbuttons & BT_ATTACK) 
 	&& player->pendingweapon == wp_nochange && player->health)
 	{
-		player->refire++;
+		player->refire = 1;
 		P_FireWeapon (player);
 	}
 	else
@@ -550,7 +559,7 @@ void A_Punch (player_t *player, pspdef_t *psp)
 	if (linetarget)
 	{
 		S_StartSound (player->mo, sfx_punch);
-		player->mo->angle = R_PointToAngle2 (player->mo->x, player->mo->y,
+		player->mo->angle = R_PointToAngle (player->mo->x, player->mo->y,
 		linetarget->x, linetarget->y);
 	}
 }
@@ -584,7 +593,7 @@ void A_Saw (player_t *player, pspdef_t *psp)
 	S_StartSound (player->mo, sfx_sawhit);
 	
 /* turn to face target */
-	angle = R_PointToAngle2 (player->mo->x, player->mo->y,
+	angle = R_PointToAngle (player->mo->x, player->mo->y,
 		linetarget->x, linetarget->y);
 	if (angle - player->mo->angle > ANG180)
 	{
@@ -725,6 +734,53 @@ void A_FireShotgun (player_t *player, pspdef_t *psp)
 	}
 }
 
+//
+// A_FireShotgun2
+//
+void A_FireShotgun2(player_t *player, pspdef_t *psp)
+{
+	int			i;
+	angle_t		angle;
+	int			damage;
+	int			slope;
+	lineattack_t la;
+
+	if (player->ammo[weaponinfo[player->readyweapon].ammo] < 2)
+		return;
+
+	S_StartSound (player->mo, sfx_dshtgn);
+	P_SetMobjState (player->mo, S_PLAY_ATK2);
+
+	player->ammo[weaponinfo[player->readyweapon].ammo] -= 2;
+	P_SetPsprite (player, ps_flash, weaponinfo[player->readyweapon].flashstate);
+
+	slope = P_AimLineAttack (&la, player->mo, player->mo->angle, MISSILERANGE);
+
+	for (i=0 ; i<20 ; i++)
+	{
+		damage = 5*(P_Random ()%3+1);
+		angle = player->mo->angle;
+		angle += (P_Random()-P_Random()) << ANGLETOFINESHIFT;
+		P_LineAttack (&la, player->mo, angle, MISSILERANGE, slope + ((P_Random()-P_Random())<<5), damage);
+	}
+}
+
+void A_OpenShotgun2(player_t *player, pspdef_t *psp)
+{
+    S_StartSound (player->mo, sfx_dbopn);
+}
+
+void A_LoadShotgun2(player_t *player, pspdef_t *psp)
+{
+    S_StartSound (player->mo, sfx_dbload);
+}
+
+void A_CloseShotgun2(player_t *player, pspdef_t *psp)
+{
+    S_StartSound (player->mo, sfx_dbcls);
+    A_ReFire(player,psp);
+}
+
 /* 
 ================== 
 = 
@@ -761,6 +817,10 @@ void A_FireCGun (player_t *player, pspdef_t *psp)
 	P_GunShot (player->mo, !player->refire);
 }
 
+void A_CheckReload(player_t *player, pspdef_t *psp)
+{
+    P_CheckAmmo (player);
+}
 
 /*============================================================================= */
 
@@ -806,7 +866,7 @@ void A_BFGSpray (mobj_t *mo)
 		linetarget = la.shootmobj;
 		if (!linetarget)
 			continue;
-		P_SpawnMobj (linetarget->x, linetarget->y, linetarget->z + (linetarget->height>>2), MT_EXTRABFG);
+		P_SpawnMobj2 (linetarget->x, linetarget->y, linetarget->z + ((linetarget->height*FRACUNIT)>>2), MT_EXTRABFG, linetarget->subsector);
 		damage = 0;
 		for (j=0;j<15;j++)
 			damage += (P_Random()&7) + 1;
@@ -863,8 +923,6 @@ void P_SetupPsprites (player_t *player)
 = Called every tic by player thinking routine
 ================== 
 */ 
- 
-VINT		ticremainder[MAXPLAYERS];
 
 void P_MovePsprites (player_t *player) 
 {
@@ -872,12 +930,12 @@ void P_MovePsprites (player_t *player)
 	pspdef_t	*psp;
 	statenum_t	state;
 
-	ticremainder[playernum] += vblsinframe;
+	player->ticremainder += vblsinframe;
 	
-	while (ticremainder[playernum] >= TICVBLS)
+	while (player->ticremainder>= TICVBLS)
 	{
-		ticremainder[playernum] -= TICVBLS;
-			
+		player->ticremainder -= TICVBLS;
+
 		psp = &player->psprites[0];
 		for (i=0 ; i<NUMPSPRITES ; i++, psp++)
 			if ( (state = psp->state) != S_NULL)		/* a null state means not active */

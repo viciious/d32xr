@@ -26,44 +26,67 @@
 #ifndef D_MAPINFO_H__
 #define D_MAPINFO_H__
 
-typedef struct
-{
-	VINT baronSpecial;
-	VINT cyberSpecial;
-	VINT spiderSpecial;
-	char *name;
-	char *sky;
-	VINT next;
-	VINT secretNext;
-	VINT lumpNum;
-	VINT mapNumber;
-	VINT musicLump;
-	char lumpName[9];
-	void *data;
-} dmapinfo_t;
+#define MI_BARON_SPECIAL 	1
+#define MI_CYBER_SPECIAL 	2
+#define MI_SPIDER_SPECIAL 	4
+#define MI_FATSO_SPECIAL 	8
+#define MI_BABY_SPECIAL 	16
+#define MI_CYBER_SPECIAL2 	32
+#define MI_SPIDER_SPECIAL2 	64
+#define MI_PISTOL_START 	128
+
+#define MAX_SPCM_PACKS 		3
 
 typedef struct
 {
-	VINT borderFlat;
+	VINT specials;
+	VINT mapNumber;
+	uint8_t songNum;
+	uint8_t cdaNum;
+	VINT sky;
+	VINT name;
+	VINT next;
+	VINT secretNext;
+	VINT lumpName;
+	VINT interText;
+	VINT secretInterText;
+	VINT interFlat;
+	VINT interPic;
+	VINT secretInterPic;
+} dmapinfo_t;
+
+#define DMAPINFO_STRFIELD(mi,field) ((mi)->field ? (char *)(mi) + (int)(mi)->field : "")
+
+typedef struct
+{
+	char *borderFlat;
+	char *endFlat;
+	char *creditsPage;
+	char *titlePage;
+	char *titleMus;
+	char *intermissionMus;
+	char *victoryMus;
+	char *endMus;
+	char spcmDirList[MAX_SPCM_PACKS][9];
+	VINT borderFlatNum;
 	VINT titleTime;
-	VINT titlePage;
-	VINT titleMus;
-	VINT intermissionMus;
-	VINT victoryMus;
-	VINT endMus;
-	VINT creditsPage;
 	VINT creditsTime;
-	VINT endFlat;
-	VINT endShowCast;
-	VINT noAttractDemo;
+	VINT stopFireTime;
+	VINT titleStartPos;
+	uint8_t endShowCast;
+	uint8_t noAttractDemo;
+	uint8_t cdTrackOffset;
+	uint8_t titleCdTrack;
+	uint8_t intermissionCdTrack;
+	uint8_t victoryCdTrack;
+	uint8_t endCdTrack;
 	char* endText;
 	void* data;
 } dgameinfo_t;
 
 int G_BuiltinMapNumForMapName(const char* map);
-int G_FindMapinfo(VINT maplump, dmapinfo_t *mi, char *outmem);
-int G_FindGameinfo(dgameinfo_t* gi);
-dmapinfo_t** G_LoadMaplist(int*pmapcount);
+int G_FindMapinfo(const char *lumpname, dmapinfo_t *mi, char *outmem);
+dmapinfo_t** G_LoadMaplist(int*pmapcount, dgameinfo_t* gi);
 
 #endif // D_MAPINFO_H__
 

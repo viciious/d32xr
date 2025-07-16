@@ -58,23 +58,61 @@ typedef struct
    fixed_t   shootx2, shooty2;
    fixed_t   firstlinefrac;
    int       shootdivpositive;
-   int       ssx1, ssy1, ssx2, ssy2;
+   int16_t   ssx1, ssy1, ssx2, ssy2;
    intercept_t old_intercept;
 
    line_t  *shootline;
    mobj_t  *shootmobj;
    fixed_t  shootslope;             // between aimtop and aimbottom
    fixed_t  shootx, shooty, shootz; // location for puff/blood
+
+   int      firstsplit;             // first BSP node that generated a split
 } shootWork_t;
 
-static fixed_t PA_SightCrossLine(shootWork_t *sw, vertex_t *v1, vertex_t *v2) ATTR_DATA_CACHE_ALIGN;
+static fixed_t PA_SightCrossLine(shootWork_t *sw, mapvertex_t *v1, mapvertex_t *v2) ATTR_DATA_CACHE_ALIGN;
 static boolean PA_ShootLine(shootWork_t *sw, line_t* li, fixed_t interceptfrac) ATTR_DATA_CACHE_ALIGN;
 static boolean PA_ShootThing(shootWork_t *sw, mobj_t* th, fixed_t interceptfrac) ATTR_DATA_CACHE_ALIGN;
 static boolean PA_DoIntercept(shootWork_t *sw, intercept_t* in) ATTR_DATA_CACHE_ALIGN;
 static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum) ATTR_DATA_CACHE_ALIGN;
-static int PA_DivlineSide(fixed_t x, fixed_t y, divline_t* line) ATTR_DATA_CACHE_ALIGN;
 static boolean PA_CrossBSPNode(shootWork_t *sw, int bspnum) ATTR_DATA_CACHE_ALIGN;
 void P_Shoot2(lineattack_t *la) ATTR_DATA_CACHE_ALIGN;
+
+//
+// Returns side 0 (front or on), 1 (back)
+//
+//#define PA_NodeSide(xx,yy,n) (!((((xx) - (n)->x * FRACUNIT)>>FRACBITS) * ((n)->dy) > (((yy) - (n)->y * FRACUNIT)>>FRACBITS) * ((n)->dx)))
+ATTR_DATA_CACHE_ALIGN
+static inline int PA_NodeSide(int x, int y, node_t *node)
+{
+	int32_t	dx,dy;
+	int32_t r1, r2;
+
+	dx = x - ((fixed_t)node->x << FRACBITS);
+#ifdef MARS
+	dx = (unsigned)dx >> FRACBITS;
+	__asm volatile(
+		"muls.w %0,%1\n\t"
+		: : "r"(node->dy), "r"(dx) : "macl", "mach");
+#else
+	dx >>= FRACBITS;
+	r1 = node->dy * dx;
+#endif
+
+	dy = y - ((fixed_t)node->y << FRACBITS);
+#ifdef MARS
+	dy = (unsigned)dy >> FRACBITS;
+	__asm volatile(
+		"sts macl, %0\n\t"
+		"muls.w %2,%3\n\t"
+		"sts macl, %1\n\t"
+		: "=&r"(r1), "=&r"(r2) : "r"(dy), "r"(node->dx) : "macl", "mach");
+#else
+	dy >>= FRACBITS;
+	r2 = dy * node->dx;
+#endif
+
+    return (r1 <= r2);
+}
 
 //
 // First checks the endpoints of the line to make sure that they cross the
@@ -84,16 +122,16 @@ void P_Shoot2(lineattack_t *la) ATTR_DATA_CACHE_ALIGN;
 // the intersection occurs at.  If 0 < intercept < 1.0, the line will block
 // the sight.
 //
-static fixed_t PA_SightCrossLine(shootWork_t *sw, vertex_t *v1, vertex_t *v2)
+static fixed_t PA_SightCrossLine(shootWork_t *sw, mapvertex_t *v1, mapvertex_t *v2)
 {
    fixed_t s1, s2;
    fixed_t p1x, p1y, p2x, p2y, p3x, p3y, p4x, p4y, dx, dy, ndx, ndy;
 
    // p1, p2 are endpoints
-   p1x = v1->x >> FRACBITS;
-   p1y = v1->y >> FRACBITS;
-   p2x = v2->x >> FRACBITS;
-   p2y = v2->y >> FRACBITS;
+   p1x = v1->x;
+   p1y = v1->y;
+   p2x = v2->x;
+   p2y = v2->y;
 
    // p3, p4 are sight endpoints
    p3x = sw->ssx1;
@@ -143,7 +181,7 @@ static boolean PA_ShootLine(shootWork_t *sw, line_t *li, fixed_t interceptfrac)
    sector_t *front, *back;
    fixed_t   opentop, openbottom;
 
-   if(!(li->flags & ML_TWOSIDED))
+   if(li->sidenum[1] < 0)
    {
       if(!sw->shootline)
       {
@@ -155,8 +193,8 @@ static boolean PA_ShootLine(shootWork_t *sw, line_t *li, fixed_t interceptfrac)
    }
 
    // crosses a two-sided line
-   front = &sectors[sides[li->sidenum[0]].sector];
-   back  = &sectors[sides[li->sidenum[1]].sector];
+   front = LD_FRONTSECTOR(li);
+   back  = LD_BACKSECTOR(li);
 
    if(front->ceilingheight < back->ceilingheight)
       opentop = front->ceilingheight;
@@ -217,7 +255,7 @@ static boolean PA_ShootThing(shootWork_t *sw, mobj_t *th, fixed_t interceptfrac)
    // check angles to see if the thing can be aimed at
    dist = FixedMul(sw->attackrange, interceptfrac);
    
-   thingaimtopslope = FixedDiv(th->z + th->height - sw->shootz, dist);
+   thingaimtopslope = FixedDiv(th->z + (th->height*FRACUNIT) - sw->shootz, dist);
    if(thingaimtopslope < sw->aimbottomslope)
       return true; // shot over the thing
 
@@ -283,12 +321,13 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
    fixed_t  frac;
    mobj_t  *thing;
    subsector_t *sub = &subsectors[bspnum];
+   sector_t *sec = SSEC_SECTOR(sub);
    intercept_t  in;
-   vertex_t tv1, tv2;
+   mapvertex_t tv1, tv2;
    VINT     *lvalidcount, vc;
 
    // check things
-   for(thing = sub->sector->thinglist; thing; thing = thing->snext)
+   for(thing = SPTR_TO_LPTR(sec->thinglist); thing; thing = SPTR_TO_LPTR(thing->snext))
    {
       if(thing->subsector != sub)
          continue;
@@ -298,17 +337,17 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
       // check a corner to corner cross-section for hit
       if(sw->shootdivpositive)
       {
-         tv1.x = thing->x - thing->radius;
-         tv1.y = thing->y + thing->radius;
-         tv2.x = thing->x + thing->radius;
-         tv2.y = thing->y - thing->radius;
+         tv1.x = (thing->x - (thing->radius*FRACUNIT)) >> FRACBITS;
+         tv1.y = (thing->y + (thing->radius*FRACUNIT)) >> FRACBITS;
+         tv2.x = (thing->x + (thing->radius*FRACUNIT)) >> FRACBITS;
+         tv2.y = (thing->y - (thing->radius*FRACUNIT)) >> FRACBITS;
       }
       else
       {
-         tv1.x = thing->x - thing->radius;
-         tv1.y = thing->y - thing->radius;
-         tv2.x = thing->x + thing->radius;
-         tv2.y = thing->y + thing->radius;
+         tv1.x = (thing->x - (thing->radius*FRACUNIT)) >> FRACBITS;
+         tv1.y = (thing->y - (thing->radius*FRACUNIT)) >> FRACBITS;
+         tv2.x = (thing->x + (thing->radius*FRACUNIT)) >> FRACBITS;
+         tv2.y = (thing->y + (thing->radius*FRACUNIT)) >> FRACBITS;
       }
 
       frac = PA_SightCrossLine(sw, &tv1, &tv2);
@@ -324,7 +363,7 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
    }
 
    // check lines
-   count = sub->numlines;
+   count = SSEC_NUMLINES(sub);
    seg   = &segs[sub->firstline];
 
    I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
@@ -337,7 +376,7 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
 
    for(; count; seg++, count--)
    {
-      int ld = seg->linedef;
+      int ld = SEG_UNPACK_LINEDEF(seg);
       line = &lines[ld];
 
       if(lvalidcount[ld] == vc)
@@ -359,26 +398,6 @@ static boolean PA_CrossSubsector(shootWork_t *sw, int bspnum)
    return true; // passed the subsector ok
 }
 
-/*
-=====================
-=
-= PA_DivlineSide
-=
-=====================
-*/
-static int PA_DivlineSide(fixed_t x, fixed_t y, divline_t *line)
-{
-	fixed_t dx, dy;
-
-	x = (x - line->x) >> FRACBITS;
-	y = (y - line->y) >> FRACBITS;
-
-	dx = x * (line->dy >> FRACBITS);
-	dy = y * (line->dx >> FRACBITS);
-
-	return (dy < dx) ^ 1;
-}
-
 //
 // Walk the BSP tree to follow the trace.
 //
@@ -397,8 +416,8 @@ check:
    bsp = &nodes[bspnum];
 
    // decide which side the start point is on
-   side = PA_DivlineSide(sw->shootdiv.x, sw->shootdiv.y, (divline_t*)bsp);
-   side2 = PA_DivlineSide(sw->shootx2, sw->shooty2, (divline_t*)bsp);
+   side = PA_NodeSide(sw->shootdiv.x, sw->shootdiv.y, bsp);
+   side2 = PA_NodeSide(sw->shootx2, sw->shooty2, bsp);
 
    // cross the starting side
    if(!PA_CrossBSPNode(sw, bsp->children[side]))
@@ -407,6 +426,9 @@ check:
    // the partition plane is crossed here
    if(side == side2)
       return true; // the line doesn't touch the other side
+
+   if (sw->firstsplit == numnodes - 1)
+      sw->firstsplit = bspnum;
    
    // cross the ending side
    bspnum = bsp->children[side ^ 1];
@@ -436,7 +458,7 @@ void P_Shoot2(lineattack_t *la)
    sw.shooty2     = t1->y + (la->attackrange >> FRACBITS) * finesine(angle);
    sw.shootdiv.dx = sw.shootx2 - sw.shootdiv.x;
    sw.shootdiv.dy = sw.shooty2 - sw.shootdiv.y;
-   sw.shootz      = t1->z + (t1->height >> 1) + 8*FRACUNIT;
+   sw.shootz      = t1->z + ((t1->height*FRACUNIT) >> 1) + 8*FRACUNIT;
 
    sw.shootdivpositive = (sw.shootdiv.dx ^ sw.shootdiv.dy) > 0;
 
@@ -453,6 +475,7 @@ void P_Shoot2(lineattack_t *la)
    sw.old_intercept.d.line  = NULL;
    sw.old_intercept.frac    = 0;
    sw.old_intercept.isaline = false;
+   sw.firstsplit = numnodes - 1;
 
    PA_CrossBSPNode(&sw, numnodes - 1);
 
@@ -472,6 +495,7 @@ void P_Shoot2(lineattack_t *la)
    la->shootx = sw.shootx;
    la->shooty = sw.shooty;
    la->shootz = sw.shootz;
+   la->firstsplit = sw.firstsplit;
 
    // post-process
    if(la->shootmobj)

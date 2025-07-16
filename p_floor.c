@@ -174,7 +174,7 @@ void T_MoveFloor(floormove_t *floor)
 		S_StartPositionedSound((void *)floor->sector,sfx_stnmov,&P_SectorOrg);
 	if (res == pastdest)
 	{
-		floor->sector->specialdata = NULL;
+		floor->sector->specialdata = (SPTR)0;
 		if (floor->direction == 1)
 			switch(floor->type)
 			{
@@ -203,7 +203,7 @@ void T_MoveFloor(floormove_t *floor)
 /*	HANDLE FLOOR TYPES */
 /* */
 /*================================================================== */
-int EV_DoFloor(line_t *line,floor_e floortype)
+int EV_DoFloorTag(line_t *line,floor_e floortype, int tag)
 {
 	int			secnum;
 	int			rtn;
@@ -213,7 +213,7 @@ int EV_DoFloor(line_t *line,floor_e floortype)
 
 	secnum = -1;
 	rtn = 0;
-	while ((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
+	while ((secnum = P_FindSectorFromLineTagNum(tag,secnum)) >= 0)
 	{
 		sec = &sectors[secnum];
 		
@@ -227,7 +227,7 @@ int EV_DoFloor(line_t *line,floor_e floortype)
 		rtn = 1;
 		floor = Z_Malloc (sizeof(*floor), PU_LEVSPEC);
 		P_AddThinker (&floor->thinker);
-		sec->specialdata = floor;
+		sec->specialdata = LPTR_TO_SPTR(floor);
 		floor->thinker.function = T_MoveFloor;
 		floor->type = floortype;
 		floor->crush = false;
@@ -264,6 +264,13 @@ int EV_DoFloor(line_t *line,floor_e floortype)
 					P_FindLowestCeilingSurrounding(sec);
 				if (floor->floordestheight > sec->ceilingheight)
 					floor->floordestheight = sec->ceilingheight;
+				break;
+			case raiseFloorTurbo:
+				floor->direction = 1;
+				floor->sector = sec;
+				floor->speed = FLOORSPEED*4;
+				floor->floordestheight = 
+				P_FindNextHighestFloor(sec,sec->floorheight);
 				break;
 			case raiseFloorToNearest:
 				floor->direction = 1;
@@ -307,14 +314,14 @@ int EV_DoFloor(line_t *line,floor_e floortype)
 						if (twoSided (secnum, i) )
 						{
 							side = getSide(secnum,i,0);
-							if (side->bottomtexture >= 0)
+							if (side->bottomtexture > 0)
 								if (
 					(textures[side->bottomtexture].height<<FRACBITS)  < 
 									minsize)
 									minsize = 
 										(textures[side->bottomtexture].height<<FRACBITS);
 							side = getSide(secnum,i,1);
-							if (side->bottomtexture >= 0)
+							if (side->bottomtexture > 0)
 								if ((textures[side->bottomtexture].height<<FRACBITS) < 
 									minsize)
 									minsize = 
@@ -337,16 +344,22 @@ int EV_DoFloor(line_t *line,floor_e floortype)
 						if (getSide(secnum,i,0)->sector == secnum)
 						{
 							sec = getSector(secnum,i,1);
-							floor->texture = sec->floorpic;
-							floor->newspecial = sec->special;
-							break;
+							if (sec->floorheight == floor->floordestheight)
+							{
+								floor->texture = sec->floorpic;
+								floor->newspecial = sec->special;
+								break;
+							}
 						}
 						else
 						{
 							sec = getSector(secnum,i,0);
-							floor->texture = sec->floorpic;
-							floor->newspecial = sec->special;
-							break;
+							if (sec->floorheight == floor->floordestheight)
+							{
+								floor->texture = sec->floorpic;
+								floor->newspecial = sec->special;
+								break;
+							}
 						}
 					}
 			default:
@@ -354,6 +367,11 @@ int EV_DoFloor(line_t *line,floor_e floortype)
 		}
 	}
 	return rtn;
+}
+
+int EV_DoFloor(line_t *line,floor_e floortype)
+{
+	return EV_DoFloorTag(line, floortype, P_GetLineTag(line));
 }
 
 /*================================================================== */
@@ -373,10 +391,12 @@ int EV_BuildStairs(line_t *line, int type)
 	fixed_t speed, stairsize;
 	sector_t	*sec, *tsec;
 	floormove_t	*floor;
+	int 	tag;
 
 	secnum = -1;
 	rtn = 0;
-	while ((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
+	tag = P_GetLineTag(line);
+	while ((secnum = P_FindSectorFromLineTagNum(tag,secnum)) >= 0)
 	{
 		sec = &sectors[secnum];
 		
@@ -390,7 +410,7 @@ int EV_BuildStairs(line_t *line, int type)
 		rtn = 1;
 		floor = Z_Malloc (sizeof(*floor), PU_LEVSPEC);
 		P_AddThinker (&floor->thinker);
-		sec->specialdata = floor;
+		sec->specialdata = LPTR_TO_SPTR(floor);
 		floor->thinker.function = T_MoveFloor;
 		floor->direction = 1;
 		floor->sector = sec;
@@ -429,7 +449,8 @@ int EV_BuildStairs(line_t *line, int type)
 			for (i = 0;i < sec->linecount;i++)
 			{
 				line_t *check = lines + sec->lines[i];
-				if ( !(check->flags & ML_TWOSIDED) )
+				boolean twoSided = check->sidenum[1] != -1;
+				if ( !twoSided )
 					continue;
 					
 				newsecnum = sides[check->sidenum[0]].sector;
@@ -449,7 +470,7 @@ int EV_BuildStairs(line_t *line, int type)
 				secnum = newsecnum;
 				floor = Z_Malloc (sizeof(*floor), PU_LEVSPEC);
 				P_AddThinker (&floor->thinker);
-				sec->specialdata = floor;
+				sec->specialdata = LPTR_TO_SPTR(floor);
 				floor->thinker.function = T_MoveFloor;
 				floor->direction = 1;
 				floor->sector = sec;

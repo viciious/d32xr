@@ -112,9 +112,11 @@ int EV_DoCeiling (line_t *line, ceiling_e  type)
 	int			secnum,rtn;
 	sector_t		*sec;
 	ceiling_t		*ceiling;
+	int 		tag;
 	
 	secnum = -1;
 	rtn = 0;
+	tag = P_GetLineTag(line);
 	
 	/* */
 	/*	Reactivate in-stasis ceilings...for certain types. */
@@ -129,7 +131,7 @@ int EV_DoCeiling (line_t *line, ceiling_e  type)
 			break;
 	}
 	
-	while ((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
+	while ((secnum = P_FindSectorFromLineTagNum(tag,secnum)) >= 0)
 	{
 		sec = &sectors[secnum];
 		if (sec->specialdata)
@@ -141,7 +143,7 @@ int EV_DoCeiling (line_t *line, ceiling_e  type)
 		rtn = 1;
 		ceiling = Z_Malloc (sizeof(*ceiling), PU_LEVSPEC);
 		P_AddThinker (&ceiling->thinker);
-		sec->specialdata = ceiling;
+		sec->specialdata = LPTR_TO_SPTR(ceiling);
 		ceiling->thinker.function = T_MoveCeiling;
 		ceiling->sector = sec;
 		ceiling->crush = false;
@@ -206,7 +208,7 @@ void P_RemoveActiveCeiling(ceiling_t *c)
 	for (i = 0;i < MAXCEILINGS;i++)
 		if (activeceilings[i] == c)
 		{
-			activeceilings[i]->sector->specialdata = NULL;
+			activeceilings[i]->sector->specialdata = (SPTR)0;
 			P_RemoveThinker (&activeceilings[i]->thinker);
 			activeceilings[i] = NULL;
 			break;
@@ -221,9 +223,10 @@ void P_RemoveActiveCeiling(ceiling_t *c)
 void P_ActivateInStasisCeiling(line_t *line)
 {
 	int	i;
-	
+	int tag = P_GetLineTag(line);
+
 	for (i = 0;i < MAXCEILINGS;i++)
-		if (activeceilings[i] && (activeceilings[i]->tag == line->tag) &&
+		if (activeceilings[i] && (activeceilings[i]->tag == tag) &&
 			(activeceilings[i]->direction == 0))
 		{
 			activeceilings[i]->direction = activeceilings[i]->olddirection;
@@ -241,10 +244,11 @@ int	EV_CeilingCrushStop(line_t	*line)
 {
 	int		i;
 	int		rtn;
-	
+	int tag = P_GetLineTag(line);
+
 	rtn = 0;
 	for (i = 0;i < MAXCEILINGS;i++)
-		if (activeceilings[i] && (activeceilings[i]->tag == line->tag) &&
+		if (activeceilings[i] && (activeceilings[i]->tag == tag) &&
 			(activeceilings[i]->direction != 0))
 		{
 			activeceilings[i]->olddirection = activeceilings[i]->direction;

@@ -3,6 +3,7 @@
 #include "doomdef.h"
 #include "r_local.h"
 #include "mars.h"
+#include <stdio.h>
 
 void ReadEEProm (void);
 
@@ -16,28 +17,7 @@ void ReadEEProm (void);
  
 int main(void)
 {
-	int i;
-	volatile unsigned short* palette;
-
 	Mars_Init();
-
-/* clear screen */
-	if (Mars_IsPAL()) {
-		/* use letter-boxed 240p mode */
-		Mars_InitVideo(-240);
-	} else {
-		Mars_InitVideo(224);
-	}
-
-	/* set a two color palette */
-	Mars_FlipFrameBuffers(false);
-	palette = &MARS_CRAM;
-	for (i = 0; i < 256; i++)
-		palette[i] = 0;
-	palette[COLOR_WHITE] = 0x7fff;
-	Mars_WaitFrameBuffersFlip();
-
-	ticrate = Mars_RefreshHZ() / TICRATE;
 
 /* */
 /* load defaults */

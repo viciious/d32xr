@@ -30,11 +30,17 @@ int32_t adpcm_ima_deltas[89*16];
 
 int32_t adpcm_sb4_steps_indices[16*4]; // deltas interleaved with indices
 
-void adcpm_load_bytes_slow_ima(sfx_adpcm_t *adpcm, uint8_t *wptr, uint32_t len);
+#ifdef ADPCM_USE_SLOW_DECODERS
+static void adcpm_load_bytes_slow_ima(sfx_adpcm_t *adpcm, uint8_t *wptr, uint32_t len);
+#endif
 void adpcm_load_bytes_fast_ima(sfx_adpcm_t *adpcm, uint8_t *wptr, uint32_t len);
 
-void adcpm_load_bytes_slow_sb4(sfx_adpcm_t *adpcm, uint8_t *wptr, uint32_t len);
+#ifdef ADPCM_ENABLE_SB4
+#ifdef ADPCM_USE_SLOW_DECODERS
+static void adcpm_load_bytes_slow_sb4(sfx_adpcm_t *adpcm, uint8_t *wptr, uint32_t len);
+#endif
 void adpcm_load_bytes_fast_sb4(sfx_adpcm_t *adpcm, uint8_t *wptr, uint32_t len);
+#endif
 
 #define ADPCM_READ_IMA_NIBBLE(index,nibble,val,wptr) do { \
         uint8_t input_ = nibble; \
@@ -75,7 +81,8 @@ static void adcpm_load_byte_ima(sfx_adpcm_t *adpcm, uint8_t *wptr)
     adpcm->nibble ^= 1;
 }
 
-void adcpm_load_bytes_slow_ima(sfx_adpcm_t *adpcm, uint8_t *wptr, uint32_t wblen)
+#ifdef ADPCM_USE_SLOW_DECODERS
+static void adcpm_load_bytes_slow_ima(sfx_adpcm_t *adpcm, uint8_t *wptr, uint32_t wblen)
 {
     int32_t value = adpcm->value;
     int16_t index = adpcm->index;
@@ -91,6 +98,7 @@ void adcpm_load_bytes_slow_ima(sfx_adpcm_t *adpcm, uint8_t *wptr, uint32_t wblen
     adpcm->index = index;
     adpcm->value = value;
 }
+#endif
 
 static void adcpm_load_bytes_ima(sfx_adpcm_t *adpcm, uint8_t *wptr, uint32_t wblen)
 {
@@ -181,6 +189,8 @@ check:
     return owblen - wblen;
 }
 
+#ifdef ADPCM_ENABLE_SB4
+
 #define ADPCM_READ_SB4_NIBBLE(code,value,index,wptr) do { \
         int16_t s; \
         int16_t ind = (uint16_t)(code)*16+index; \
@@ -217,7 +227,8 @@ static void adcpm_load_byte_sb4(sfx_adpcm_t *adpcm, uint8_t *wptr)
     adpcm->nibble ^= 1;
 }
 
-void adcpm_load_bytes_slow_sb4(sfx_adpcm_t *adpcm, uint8_t *wptr, uint32_t wblen)
+#ifdef ADPCM_USE_SLOW_DECODERS
+static void adcpm_load_bytes_slow_sb4(sfx_adpcm_t *adpcm, uint8_t *wptr, uint32_t wblen)
 {
     int16_t value = adpcm->value;
     int16_t index = adpcm->index;
@@ -233,6 +244,7 @@ void adcpm_load_bytes_slow_sb4(sfx_adpcm_t *adpcm, uint8_t *wptr, uint32_t wblen
     adpcm->index = index;
     adpcm->value = value;    
 }
+#endif
 
 static void adcpm_load_bytes_sb4(sfx_adpcm_t *adpcm, uint8_t *wptr, uint32_t wblen)
 {
@@ -302,11 +314,15 @@ check:
     return owblen - wblen;
 }
 
+#endif
+
 sfx_adpcm_dec_t adpcm_decoder(sfx_adpcm_t *adpcm)
 {
     switch (adpcm->codec) {
+#ifdef ADPCM_ENABLE_SB4
         case ADPCM_CODEC_SB4:
             return adcpm_decode_sb4;
+#endif
         case ADPCM_CODEC_IMA:
         default:
             return adcpm_decode_ima;
@@ -326,8 +342,7 @@ uint16_t adpcm_load_samples(sfx_adpcm_t *adpcm, uint16_t doff, uint16_t len)
         uint16_t wblen = 0x1000 - woff;
         wptr += (woff << 1);
 
-        PCM_CTRL = 0x80 + (doff >> 12); // make sure PCM chip is ON to write wave memory, and set wave bank
-        pcm_delay();
+        pcm_set_ctrl(0x80 + (doff >> 12)); // make sure PCM chip is ON to write wave memory, and set wave bank
 
         if (wblen > len)
             wblen = len;
@@ -383,6 +398,8 @@ static void adpcm_init_ima(void)
     }
 }
 
+#ifdef ADPCM_ENABLE_SB4
+
 // As per https://wiki.multimedia.cx/index.php/Creative_8_bits_ADPCM
 static void adpcm_init_sb4(void)
 {
@@ -413,9 +430,12 @@ static void adpcm_init_sb4(void)
     }
 }
 
+#endif
+
 void adpcm_init(void)
 {
     adpcm_init_ima();
-
+#ifdef ADPCM_ENABLE_SB4
     adpcm_init_sb4();
+#endif
 }

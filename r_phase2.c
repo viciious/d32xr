@@ -10,10 +10,12 @@
 
 static fixed_t R_PointToDist(fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
 static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, angle_t normalangle) ATTR_DATA_CACHE_ALIGN;
+static uint16_t P_SegOffset(seg_t *seg) ATTR_DATA_CACHE_ALIGN;
 static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle, int angle1) ATTR_DATA_CACHE_ALIGN;
-void R_WallLatePrep(viswall_t* wc, vertex_t *verts) ATTR_DATA_CACHE_ALIGN;
-static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, fixed_t floorheight, 
-    fixed_t floornewheight, fixed_t ceilingnewheight) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
+void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts) ATTR_DATA_CACHE_ALIGN;
+// the volatiles help gcc produce less silly SH2 assembler code
+static void R_SegLoop(viswall_t* segl, unsigned short *restrict clipbounds, volatile fixed_t floorheight, 
+    volatile fixed_t floornewheight, volatile fixed_t ceilingnewheight) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 void R_WallPrep(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 
 //
@@ -21,11 +23,11 @@ void R_WallPrep(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 //
 static fixed_t R_PointToDist(fixed_t x, fixed_t y)
 {
-    int angle;
+    angle_t angle;
     fixed_t dx, dy, temp;
 
-    dx = D_abs(x - vd.viewx);
-    dy = D_abs(y - vd.viewy);
+    dx = D_abs(x - vd->viewx);
+    dy = D_abs(y - vd->viewy);
 
     if (dy > dx)
     {
@@ -34,7 +36,7 @@ static fixed_t R_PointToDist(fixed_t x, fixed_t y)
         dy = temp;
     }
 
-    angle = (tantoangle[FixedDiv(dy, dx) >> DBITS] + ANG90) >> ANGLETOFINESHIFT;
+    angle = (tantoangle[(unsigned)FixedDiv(dy, dx) >> DBITS] + ANG90) >> ANGLETOFINESHIFT;
 
     // use as cosine
     return FixedDiv(dx, finesine(angle));
@@ -51,7 +53,7 @@ static fixed_t R_ScaleFromGlobalAngle(fixed_t rw_distance, angle_t visangle, ang
 
     visangle += ANG90;
 
-    anglea = visangle - vd.viewangle;
+    anglea = visangle - vd->viewangle;
     sinea = finesine(anglea >> ANGLETOFINESHIFT);
     angleb = visangle - normalangle;
     sineb = finesine(angleb >> ANGLETOFINESHIFT);
@@ -85,22 +87,72 @@ static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle, int ang
         rw_offset = -rw_offset;
 
     wc->offset += rw_offset;
-    wc->centerangle = ANG90 + vd.viewangle - normalangle;
+    wc->centerangle = ANG90 + vd->viewangle - normalangle;
 }
 
-void R_WallLatePrep(viswall_t* wc, vertex_t *verts)
+static uint16_t P_SegOffset(seg_t *seg)
+{
+    int side = SEG_UNPACK_SIDE(seg);
+    mapvertex_t *sv = &vertexes[lines[SEG_UNPACK_LINEDEF(seg)].v1];
+    mapvertex_t *ev = &vertexes[lines[SEG_UNPACK_LINEDEF(seg)].v2];
+    mapvertex_t *v1 = &vertexes[SEG_UNPACK_V1(seg)];
+    uint16_t dx, dy;
+    uint16_t g, c;
+    unsigned n;
+
+    if (side)
+    {
+        dx = D_abs(ev->x - v1->x);
+        dy = D_abs(ev->y - v1->y);
+    }
+    else
+    {
+        dx = D_abs(sv->x - v1->x);
+        dy = D_abs(sv->y - v1->y);
+    }
+ 
+    if (dx == 0)
+        return dy;
+    if (dy == 0)
+        return dx;
+
+    // integer square root
+    n = dx*dx + dy*dy;
+    g = c = 0x8000;
+    for ( ; ; ) {
+        if (g*g > n) g ^= c;
+        c >>= 1;
+        if (c == 0)  return g;
+        g |= c;
+    }
+    return g;
+}
+
+void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
 {
     angle_t      distangle, offsetangle, normalangle;
-    seg_t* seg = wc->seg;
-    int          angle1 = wc->scalestep;
+    seg_t       *seg = wc->seg;
+    angle_t      angle1 = wc->scalestep;
     fixed_t      sineval, rw_distance;
     fixed_t      scalefrac, scale2;
     fixed_t      hyp;
+    fixed_t      x1, y1, x2, y2;
+    int          nv1 = SEG_UNPACK_V1(seg);
+    int          nv2 = SEG_UNPACK_V2(seg);
+    int          offset = P_SegOffset(seg);
 
     // this is essentially R_StoreWallRange
     // calculate rw_distance for scale calculation
-    normalangle = R_PointToAngle2(verts[seg->v1].x, verts[seg->v1].y,
-        verts[seg->v2].x, verts[seg->v2].y);
+
+    x1 = verts[nv1].x << FRACBITS;
+    y1 = verts[nv1].y << FRACBITS;
+
+    x2 = verts[nv2].x << FRACBITS;
+    y2 = verts[nv2].y << FRACBITS;
+
+    hyp = R_PointToDist(x1, y1);
+
+    normalangle = R_PointToAngle(x1, y1, x2, y2);
     normalangle += ANG90;
     offsetangle = normalangle - angle1;
 
@@ -111,17 +163,18 @@ void R_WallLatePrep(viswall_t* wc, vertex_t *verts)
         offsetangle = ANG90;
 
     distangle = ANG90 - offsetangle;
-    hyp = R_PointToDist(verts[seg->v1].x, verts[seg->v1].y);
     sineval = finesine(distangle >> ANGLETOFINESHIFT);
     rw_distance = FixedMul(hyp, sineval);
     wc->distance = rw_distance;
 
+    wc->offset = ((fixed_t)wc->offset + offset) << FRACBITS;
+
     scalefrac = scale2 = wc->scalefrac =
-        R_ScaleFromGlobalAngle(rw_distance, vd.viewangle + (xtoviewangle[wc->start]<<FRACBITS), normalangle);
+        R_ScaleFromGlobalAngle(rw_distance, vd->viewangle + (xtoviewangle[wc->start]<<FRACBITS), normalangle);
 
     if (wc->stop > wc->start)
     {
-        scale2 = R_ScaleFromGlobalAngle(rw_distance, vd.viewangle + (xtoviewangle[wc->stop]<<FRACBITS), normalangle);
+        scale2 = R_ScaleFromGlobalAngle(rw_distance, vd->viewangle + (xtoviewangle[wc->stop]<<FRACBITS), normalangle);
 #ifdef MARS
         SH2_DIVU_DVSR = wc->stop - wc->start;  // set 32-bit divisor
         SH2_DIVU_DVDNT = scale2 - scalefrac;   // set 32-bit dividend, start divide
@@ -138,13 +191,6 @@ void R_WallLatePrep(viswall_t* wc, vertex_t *verts)
         R_SetupCalc(wc, hyp, normalangle, angle1);// do calc setup
     }
 
-#ifdef MARS
-    if (wc->stop > wc->start)
-    {
-        wc->scalestep = SH2_DIVU_DVDNT; // get 32-bit quotient
-    }
-#endif
-
     wc->clipbounds = NULL;
 
     const int start = wc->start;
@@ -152,48 +198,58 @@ void R_WallLatePrep(viswall_t* wc, vertex_t *verts)
     const int width = stop - start + 1;
     if (wc->actionbits & (AC_NEWFLOOR | AC_NEWCEILING | AC_TOPSIL | AC_BOTTOMSIL | AC_MIDTEXTURE))
     {
-        wc->clipbounds = vd.lastsegclip - start;
-        vd.lastsegclip += width;
+        wc->clipbounds = vd->lastsegclip - start;
+        vd->lastsegclip += width;
     }
     if (wc->actionbits & AC_MIDTEXTURE)
     {
         // lighting + column
-        D_memset(vd.lastsegclip, 255, sizeof(*vd.lastsegclip)*width);
-        vd.lastsegclip += width;
+        //D_memset(vd->lastsegclip, 255, sizeof(*vd->lastsegclip)*width);
+        vd->lastsegclip += width;
     }
+
+#ifdef MARS
+    if (wc->stop > wc->start)
+    {
+        wc->scalestep = SH2_DIVU_DVDNT; // get 32-bit quotient
+    }
+#endif
 }
 
 //
 // Main seg clipping loop
 //
-static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds, 
-    fixed_t floorheight, fixed_t floornewheight, fixed_t ceilingnewheight)
+static void R_SegLoop(viswall_t* segl, unsigned short * restrict clipbounds, 
+    volatile fixed_t floorheight, volatile fixed_t floornewheight, volatile fixed_t ceilingnewheight)
 {
     const volatile int actionbits = segl->actionbits;
 
     fixed_t scalefrac = segl->scalefrac;
-    volatile const fixed_t scalestep = segl->scalestep;
+    const fixed_t scalestep = segl->scalestep;
 
     int x, start = segl->start;
     const int stop = segl->stop;
 
-    const fixed_t ceilingheight = segl->ceilingheight;
+    const volatile fixed_t ceilingheight = segl->ceilingheight;
 
     const int floorandlight = ((segl->seglightlevel & 0xff) << 16) | segl->floorpicnum;
     const int ceilandlight = ((segl->seglightlevel & 0xff) << 16) | segl->ceilingpicnum;
 
-    unsigned short *flooropen = (actionbits & AC_ADDFLOOR) ? vd.visplanes[0].open : NULL;
-    unsigned short *ceilopen = (actionbits & AC_ADDCEILING) ? vd.visplanes[0].open : NULL;
+    unsigned short * restrict flooropen = (actionbits & AC_ADDFLOOR) ? vd->visplanes[0].open : NULL;
+    unsigned short * restrict ceilopen = (actionbits & AC_ADDCEILING) ? vd->visplanes[0].open : NULL;
 
-    unsigned short *newclipbounds = segl->clipbounds;
+    unsigned short * restrict newclipbounds = segl->clipbounds;
 
-    const int cyvh = (centerY << 16) | viewportHeight;
+    const int cy = centerY;
+    const int vh = viewportHeight;
+
+    if (!(actionbits & (AC_ADDFLOOR|AC_ADDCEILING)) && !newclipbounds)
+        return;
 
     for (x = start; x <= stop; x++)
     {
-        int floorclipx, ceilingclipx;
-        int low, high, top, bottom;
-        int cy, vh;
+        fixed_t floorclipx, ceilingclipx;
+        fixed_t low, high, top, bottom;
         fixed_t scale2;
 
         scale2 = scalefrac;
@@ -205,9 +261,6 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
         ceilingclipx = clipbounds[x];
         floorclipx = ceilingclipx & 0x00ff;
         ceilingclipx = ((unsigned)ceilingclipx & 0xff00) >> 8;
-
-        cy = cyvh >> 16;
-        vh = cyvh & 0xffff;
 
         //
         // calc high and low
@@ -228,12 +281,10 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
 
         if (newclipbounds)
         {
-            newclipbounds[x] = (high << 8) | low;
-        }
+            const int newclip = actionbits & (AC_NEWFLOOR|AC_NEWCEILING);
 
-        int newclip = actionbits & (AC_NEWFLOOR|AC_NEWCEILING);
-        if (newclip)
-        {
+            newclipbounds[x] = (high << 8) | low;
+
             if (!(newclip & AC_NEWFLOOR))
                 low = floorclipx;
             if (!(newclip & AC_NEWCEILING))
@@ -292,21 +343,34 @@ static void R_SegLoop(viswall_t* segl, unsigned short* clipbounds,
 
 void Mars_Sec_R_WallPrep(void)
 {
+    int i;
+    uint16_t *vp0open;
     viswall_t *segl;
     viswallextra_t *seglex;
     viswall_t *first, *last, *verylast;
     uint32_t clipbounds_[SCREENWIDTH/2+1];
+    __attribute__((aligned(16)))
+		visplane_t *visplanes_hash_[NUM_VISPLANES_BUCKETS];
     uint16_t *clipbounds = (uint16_t *)clipbounds_;
-    vertex_t *verts;
+    mapvertex_t *verts;
     volatile uint8_t *addedsegs = (volatile uint8_t *)&MARS_SYS_COMM6;
     volatile uint8_t *readysegs = addedsegs + 1;
 
+    // clear visplane 0
+    vp0open = vd->visplanes[0].open - 1;
+    for (i = 0; i < SCREENWIDTH+2; i++)
+        vp0open[i] = 0;
+
+    vd->visplanes_hash = visplanes_hash_;
+    for (i = 0; i < NUM_VISPLANES_BUCKETS; i++)
+        vd->visplanes_hash[i] = NULL;
+
     R_InitClipBounds(clipbounds_);
 
-    first = last = vd.viswalls;
+    first = last = vd->viswalls;
     verylast = NULL;
-    seglex = vd.viswallextras;
-    verts = W_GetLumpData(gamemaplump+ML_VERTEXES);
+    seglex = vd->viswallextras;
+    verts = /*W_GetLumpData(gamemaplump+ML_VERTEXES)*/vertexes;
 
     for (segl = first; segl != verylast; )
     {
@@ -315,8 +379,8 @@ void Mars_Sec_R_WallPrep(void)
         // check if master CPU finished exec'ing R_BSP()
         if (nextsegs == -2)
         {
-            Mars_ClearCacheLine(&vd.lastwallcmd);
-            verylast = vd.lastwallcmd;
+            Mars_ClearCacheLine(&vd->lastwallcmd);
+            verylast = vd->lastwallcmd;
             last = verylast;
         }
         else
@@ -349,7 +413,7 @@ void R_WallPrep(void)
 
     R_InitClipBounds(clipbounds_);
 
-    for (segl = vd.viswalls; segl != vd.lastwallcmd; segl++)
+    for (segl = vd->viswalls; segl != vd->lastwallcmd; segl++)
     {
         fixed_t floornewheight = 0, ceilingnewheight = 0;
 

@@ -15,6 +15,7 @@ static uint8_t loop_markers[32] = {
 };
 
 static uint8_t ChanOff;
+static uint8_t PcmCtrl;
 
 static void pcm_cpy_mono(uint16_t doff, void *src, uint16_t len, uint8_t *conv)
 {
@@ -27,15 +28,14 @@ static void pcm_cpy_mono(uint16_t doff, void *src, uint16_t len, uint8_t *conv)
         uint16_t wblen = 0x1000 - woff;
         wptr += (woff << 1);
 
-        PCM_CTRL = 0x80 + (doff >> 12); // make sure PCM chip is ON to write wave memory, and set wave bank
-        pcm_delay();
+        pcm_set_ctrl(0x80 + (doff >> 12)); // make sure PCM chip is ON to write wave memory, and set wave bank
 
         if (wblen > len)
             wblen = len;
         doff += wblen;
         len -= wblen;
-        while (wblen > 0)
-        {
+
+        do {
             uint8_t s = *sptr++;
             if (conv)
             {
@@ -44,8 +44,7 @@ static void pcm_cpy_mono(uint16_t doff, void *src, uint16_t len, uint8_t *conv)
             }
             *wptr++ = s;
             wptr++;
-            wblen--;
-        }
+        } while (--wblen > 0);
     }
 }
 
@@ -60,15 +59,13 @@ static void pcm_cpy_stereo(uint16_t doff, void *src, uint16_t len, uint8_t *conv
         uint16_t wblen = 0x1000 - woff;
         wptr += (woff << 1);
 
-        PCM_CTRL = 0x80 + (doff >> 12); // make sure PCM chip is ON to write wave memory, and set wave bank
-        pcm_delay();
+        pcm_set_ctrl(0x80 + (doff >> 12)); // make sure PCM chip is ON to write wave memory, and set wave bank
 
         if (wblen > len)
             wblen = len;
         doff += wblen;
         len -= wblen;
-        while (wblen > 0)
-        {
+        do {
             uint8_t s = *sptr;
             if (conv)
             {
@@ -78,14 +75,37 @@ static void pcm_cpy_stereo(uint16_t doff, void *src, uint16_t len, uint8_t *conv
             sptr += 2;
             *wptr++ = s;
             wptr++;
-            wblen--;
-        }
+        } while (--wblen > 0);
     }
 }
 
 uint16_t pcm_load_samples(uint16_t start, uint8_t *samples, uint16_t length)
 {
-    pcm_cpy_mono(start, samples, length, NULL);
+    uint16_t doff = start;
+    uint16_t len = length;
+    uint8_t *sptr = (uint8_t *)samples;
+
+    while (len > 0)
+    {
+        uint8_t *wptr = (uint8_t *)&PCM_WAVE;
+        uint16_t woff = doff & 0x0FFF;
+        uint16_t wblen = 0x1000 - woff;
+        wptr += (woff << 1);
+
+        pcm_set_ctrl(0x80 + (doff >> 12)); // make sure PCM chip is ON to write wave memory, and set wave bank
+
+        if (wblen > len)
+            wblen = len;
+        doff += wblen;
+        len -= wblen;
+
+        do {
+            uint8_t s = *sptr++;
+            *wptr++ = s;
+            wptr++;
+        } while (--wblen > 0);
+    }
+
     return length;
 }
 
@@ -118,8 +138,7 @@ void pcm_load_zero(uint16_t start, uint16_t len)
         uint16_t wblen = 0x1000 - woff;
         wptr += (woff << 1);
 
-        PCM_CTRL = 0x80 + (doff >> 12); // make sure PCM chip is ON to write wave memory, and set wave bank
-        pcm_delay();
+        pcm_set_ctrl(0x80 + (doff >> 12)); // make sure PCM chip is ON to write wave memory, and set wave bank
 
         if (wblen > len)
             wblen = len;
@@ -157,8 +176,8 @@ void pcm_reset(void)
 
     for (i=0; i<8; i++)
     {
-        PCM_CTRL = 0xC0 + i; // turn on pcm chip and select channel
-        pcm_delay();
+        pcm_set_ctrl(0xC0 + i); // turn on pcm chip and select channel
+
         PCM_ENV = 0x00; // channel env off
         pcm_delay();
         PCM_PAN = 0x00;
@@ -178,8 +197,14 @@ void pcm_reset(void)
 
 void pcm_set_ctrl(uint8_t val)
 {
+    PcmCtrl = val;
     PCM_CTRL = val;
     pcm_delay();
+}
+
+uint8_t pcm_get_ctrl(void)
+{
+    return PcmCtrl;
 }
 
 void pcm_set_off(uint8_t index)

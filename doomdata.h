@@ -50,6 +50,9 @@ typedef struct
 #define	ML_BLOCKMONSTERS	2
 #define	ML_TWOSIDED			4		/* backside will not be present at all  */
 									/* if not two sided ???:obsolete */
+									/* only used during the setup */
+									
+#define ML_MAPPED           4       /* set if already seen, thus drawn in automap */
 
 /* if a texture is pegged, the texture will have the end exposed to air held */
 /* constant at the top or bottom of the texture (stairs or pulled down things) */
@@ -62,14 +65,7 @@ typedef struct
 #define ML_SECRET			32	/* don't map as two sided: IT'S A SECRET! */
 #define ML_SOUNDBLOCK		64	/* don't let sound cross two of these */
 #define	ML_DONTDRAW			128	/* don't draw on the automap */
-#define	ML_MAPPED			256	/* set if allready drawn in automap */
 
-
-/* to aid move clipping */
-#define ML_ST_HORIZONTAL 	512
-#define ML_ST_VERTICAL	 	1024
-#define ML_ST_POSITIVE	 	2048
-#define ML_ST_NEGATIVE	 	4096
 
 typedef	struct
 {
@@ -136,7 +132,7 @@ typedef struct
 typedef struct
 {
 	char		name[8];
-	boolean		masked;	
+	int			masked;	
 	short		width;
 	short		height;
 	void		**columndirectory;	/* OBSOLETE */

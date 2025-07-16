@@ -34,6 +34,19 @@ FM_START    EQU $0C     ; start offset in sram (for starting/looping vgm)
 
 CRITICAL    EQU $0F     ; Z80 critical section flag
 
+RF5C68_ENV  EQU (LOCAL_MEM+0x10)
+RF5C68_PAN  EQU (LOCAL_MEM+0x11)
+RF5C68_FSL  EQU (LOCAL_MEM+0x12)
+RF5C68_FSH  EQU (LOCAL_MEM+0x13)
+RF5C68_LAL  EQU (LOCAL_MEM+0x14)
+RF5C68_LAH  EQU (LOCAL_MEM+0x15)
+RF5C68_STA  EQU (LOCAL_MEM+0x16)
+RF5C68_CTL  EQU (LOCAL_MEM+0x17)
+RF5C68_CHN  EQU (LOCAL_MEM+0x18)
+RF5C68_CNT  EQU (LOCAL_MEM+0x19)
+
+HLBACKUP    EQU (LOCAL_MEM+$1A)     ; backup space for HL register
+
 VGMBUF      EQU $1000   ; last 4KB of sram holds VGM data (eight banks of 512 bytes)
 VGMTOP      EQU $2000   ;
 
@@ -70,6 +83,16 @@ STRM_LENHL  EQU $FFFD
 STRM_LENLH  EQU $FFFE
 STRM_LENLL  EQU $FFFF
 
+MD_RF5C68_ENV  EQU 0xFFE0
+MD_RF5C68_PAN  EQU 0xFFE1
+MD_RF5C68_FSH  EQU 0xFFE2
+MD_RF5C68_FSL  EQU 0xFFE3
+MD_RF5C68_LAH  EQU 0xFFE4
+MD_RF5C68_LAL  EQU 0xFFE5
+MD_RF5C68_STA  EQU 0xFFE6
+MD_RF5C68_CTL  EQU 0xFFE7
+MD_RF5C68_CHN  EQU 0xFFE8
+
 ; ########################### Code starts here ##############################
 
 ;   ORG $0000
@@ -103,6 +126,9 @@ start_loop
     LD      A,(LOCAL_MEM+FM_IDX)
     OR      A
     JR      Z,start_loop        ; not playing VGM music
+
+    LD      A,0
+    LD      (RF5C68_CNT),A
 
     LD      BC,(LOCAL_MEM+FM_START)
     LD      HL,VGMBUF
@@ -157,6 +183,10 @@ dispatch
     JP      Z,strm_stop         ; stream stop
     CP      $66
     JP      Z,end_data          ; end of sound data
+    CP      $B0
+    JP      Z,rf5c68_regwr      ; RF5C68 register write
+    CP      $B1
+    JP      Z,rf5c68_regwr      ; RF5C164 register write
 ; unsupported command
     JP      end_data
 
@@ -687,4 +717,98 @@ set_bank
 
     RET
 
+rf5c68_action:
+    LD      A,$FF
+    LD      (REQ_ACT),A         ; request action - locked
+    LD      (IX+FM_RQPND),A     ; request pending
+
+    LD      A,(RF5C68_ENV)
+    LD      (MD_RF5C68_ENV),A
+
+    LD      A,(RF5C68_PAN)
+    LD      (MD_RF5C68_PAN),A
+
+    LD      A,(RF5C68_FSH)
+    LD      (MD_RF5C68_FSH),A
+    LD      A,(RF5C68_FSL)
+    LD      (MD_RF5C68_FSL),A
+
+    LD      A,(RF5C68_LAH)
+    LD      (MD_RF5C68_LAH),A
+    LD      A,(RF5C68_LAL)
+    LD      (MD_RF5C68_LAL),A
+
+    LD      A,(RF5C68_STA)
+    LD      (MD_RF5C68_STA),A
+
+    LD      A,(RF5C68_CTL)
+    LD      (MD_RF5C68_CTL),A
+
+    LD      A,(RF5C68_CHN)
+    LD      (MD_RF5C68_CHN),A
+
+    LD      A,0x0
+    LD      (RF5C68_CNT),A
+
+    LD      A,$06
+    LD      (REQ_ACT),A         ; request action - stream start
+
+    LD      A,0
+    LD      (RF5C68_FSH),A      ; reset frequency
+    LD      (RF5C68_FSL),A
+
+    LD      A,255
+    LD      (RF5C68_LAH),A      ; reset loop address
+    LD      (RF5C68_LAL),A
+
+    RET
+
+; rf5c68 register
+rf5c68_regwr
+    LD      A,(IX+FM_RQPND)
+    OR      A
+    JR      NZ,rf5c68_regwr     ; request still pending
+
+    CALL    strm_get            ; parameter
+    PUSH    AF
+
+    CP      0x07                ; if it's not a channel control, cont reading
+    JR      NZ,rf5c68_regwr_2
+
+    LD      A,(RF5C68_CNT)      ; if we don't have any commands buffered, cont reading
+    CP      0
+    JR      Z,rf5c68_regwr_2
+
+    CALL    rf5c68_action       ; send buffered commands to the 68000
+    LD      A,0x07
+
+rf5c68_regwr_2:
+    CALL    strm_get            ; parameter value
+    PUSH    AF
+
+    LD      (HLBACKUP),HL
+    LD      HL,RF5C68_ENV
+
+    POP     AF                  ; parameter value
+    LD      B,A
+    POP     AF                  ; parameter
+    LD      C,A
+    LD      A,B
+    LD      B,0
+    ADD     HL,BC
+    LD      (HL),A
+    LD      HL,(HLBACKUP)
+
+    LD      A,(RF5C68_CNT)
+    INC     A
+    LD      (RF5C68_CNT),A
+
+    LD      A,(HL)
+    CP      $B0
+    JP      Z,play_loop
+    CP      $B1
+    JP      Z,play_loop
+
+    CALL    rf5c68_action
+    JP      play_loop
 #end

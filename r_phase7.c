@@ -15,6 +15,8 @@
 
 struct localplane_s;
 
+typedef void (*mapplane_fn)(struct localplane_s* lpl, int, int, int);
+
 typedef struct localplane_s
 {
     visplane_t* pl;
@@ -33,9 +35,12 @@ typedef struct localplane_s
     unsigned maxmip;
     int mipsize[MIPLEVELS];
 #endif
+    mapplane_fn mapplane;
+    boolean lowres;
 } localplane_t;
 
 static void R_MapPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
+static void R_MapPotatoPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
 static void R_PlaneLoop(localplane_t* lpl) ATTR_DATA_CACHE_ALIGN;
 static void R_DrawPlanes2(void) ATTR_DATA_CACHE_ALIGN;
 
@@ -60,6 +65,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
 {
     int remaining;
     fixed_t distance;
+    fixed_t ds;
     fixed_t length, xfrac, yfrac, xstep, ystep;
     angle_t angle;
     int light;
@@ -74,19 +80,20 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     distance = FixedMul(lpl->height, yslope[y]);
 
 #ifdef MARS
-    volatile int32_t t;
+    int32_t t, divunit;
     __asm volatile (
-        "mov #-128, r0\n\t"
-        "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
+        "mov #-128, %1\n\t"
+        "add %1, %1 /* r0 is now 0xFFFFFF00 */ \n\t"
+        "mov.l %2, @(0, %1) /* set 32-bit divisor */ \n\t"
         "mov #0, %0\n\t"
-        "mov.l %2, @(16, r0) /* set high bits of the 64-bit dividend */ \n\t"
-        "mov.l %1, @(0, r0) /* set 32-bit divisor */ \n\t"
-        "mov #0, %0\n\t"
-        "mov.l %0, @(20, r0) /* set low  bits of the 64-bit dividend, start divide */\n\t"
-        : "=&r" (t) : "r" (distance), "r"(lpl->lightcoef) : "r0");
+        "mov.l %3, @(16, %1) /* set high bits of the 64-bit dividend */ \n\t"
+        "mov.l %0, @(20, %1) /* set low  bits of the 64-bit dividend, start divide */\n\t"
+        : "=&r" (t), "=&r" (divunit) : "r" (distance), "r"(lpl->lightcoef));
 #endif
 
-    length = FixedMul(distance, distscale[x]);
+    ds = distscale[x];
+    ds <<= 1;
+    length = FixedMul(distance, ds);
 
     xstep = FixedMul(distance, lpl->basexscale);
     ystep = FixedMul(distance, lpl->baseyscale);
@@ -111,6 +118,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     yfrac *= FLATSIZE;
 #endif
 
+#if MIPLEVELS > 1
     if (miplevel > 0) {
         unsigned m = miplevel;
         do {
@@ -118,36 +126,49 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
             yfrac >>= 2, ystep >>= 2;
         } while (--m);
     }
+#endif
 
     if (lpl->lightcoef != 0)
     {
 #ifdef MARS
         __asm volatile (
-            "mov #-128, r0\n\t"
-            "add r0, r0 /* r0 is now 0xFFFFFF00 */ \n\t"
-            "mov.l @(20,r0), %0 /* get 32-bit quotient */ \n\t"
-            : "=r" (scale) : : "r0");
+            "mov #-128, %0\n\t"
+            "add %0, %0 /* %0 is now 0xFFFFFF00 */ \n\t"
+            "mov.l @(20,%0), %0 /* get 32-bit quotient */ \n\t"
+            : "=r" (scale));
 #else
-        scale = (lpl->lightcoef << SLOPEBITS) / distance;
+        scale = lpl->lightcoef / distance;
 #endif
 
-        light = scale;
-        light -= lpl->lightsub;
+        light = lpl->lightsub;
+        light -= scale;
+
         if (light < lpl->lightmin)
             light = lpl->lightmin;
-        else if (light > lpl->lightmax)
+        if (light > lpl->lightmax)
             light = lpl->lightmax;
-        light >>= FRACBITS;
-
-        // transform to hardware value
-        light = HWLIGHT(light);
+        light = (unsigned)light >> FRACBITS;
+        light <<= 8;
     }
     else
     {
         light = lpl->lightmax;
     }
 
+    if (lpl->lowres)
+    {
+        x >>= 1;
+        x2 >>= 1;
+    }
+
     drawspan(y, x, x2, light, xfrac, yfrac, xstep, ystep, lpl->ds_source[miplevel], mipsize);
+}
+
+static void R_MapPotatoPlane(localplane_t* lpl, int y, int x, int x2)
+{
+    if (x2 < x)
+        return; // nothing to draw (shouldn't happen)
+    drawspan(y, x, x2, lpl->lightmax, 0, 0, 0, 0, lpl->ds_source[0], 64);
 }
 
 //
@@ -157,9 +178,10 @@ static void R_PlaneLoop(localplane_t *lpl)
 {
    int pl_x, pl_stopx;
    uint16_t *pl_openptr;
-   unsigned t1, t2, b1, b2, pl_oldtop, pl_oldbottom;
+   int t1, t2, b1, b2, pl_oldtop, pl_oldbottom;
    int16_t spanstart[SCREENHEIGHT];
    visplane_t* pl = lpl->pl;
+   const mapplane_fn mapplane = lpl->mapplane;
 
    pl_x       = pl->minx;
    pl_stopx   = pl->maxx;
@@ -172,7 +194,7 @@ static void R_PlaneLoop(localplane_t *lpl)
 
    t1 = OPENMARK;
    b1 = t1 & 0xff;
-   t1 >>= 8;
+   t1 = (unsigned)t1 >> 8;
    t2 = *pl_openptr;
   
    do
@@ -180,7 +202,7 @@ static void R_PlaneLoop(localplane_t *lpl)
       int x2;
 
       b2 = t2 & 0xff;
-      t2 >>= 8;
+      t2 = (unsigned)t2 >> 8;
 
       pl_oldtop = t2;
       pl_oldbottom = b2;
@@ -190,14 +212,14 @@ static void R_PlaneLoop(localplane_t *lpl)
       // top diffs
       while (t1 < t2 && t1 <= b1)
       {
-          R_MapPlane(lpl, t1, spanstart[t1], x2);
+          mapplane(lpl, t1, spanstart[t1], x2);
           ++t1;
       }
 
       // bottom diffs
       while (b1 > b2 && b1 >= t1)
       {
-          R_MapPlane(lpl, b1, spanstart[b1], x2);
+          mapplane(lpl, b1, spanstart[b1], x2);
           --b1;
       }
 
@@ -261,12 +283,12 @@ static visplane_t *R_GetNextPlane(uint16_t *sortedvisplanes)
     R_UnlockPln();
 
 #ifdef MARS
-    if (p + vd.visplanes + 1 >= vd.lastvisplane)
+    if (p + vd->visplanes + 1 >= vd->lastvisplane)
         return NULL;
-    return vd.visplanes + sortedvisplanes[p*2+1];
+    return vd->visplanes + sortedvisplanes[p*2+1];
 #else
-    visplane_t *pl = vd.visplanes + p + 1;
-    return pl == vd.lastvisplane ? NULL : pl;
+    visplane_t *pl = vd->visplanes + p + 1;
+    return pl == vd->lastvisplane ? NULL : pl;
 #endif
 }
 
@@ -276,33 +298,43 @@ static void R_DrawPlanes2(void)
     localplane_t lpl;
     visplane_t* pl;
     int extralight;
+    fixed_t basexscale, baseyscale;
+    fixed_t basexscale2, baseyscale2;
+    fixed_t cXf = centerXFrac;
 
 #ifdef MARS
-    Mars_ClearCacheLine(&vd.lastvisplane);
-    Mars_ClearCacheLine(&vd.gsortedvisplanes);
-    Mars_ClearCacheLines(vd.gsortedvisplanes, ((vd.lastvisplane - vd.visplanes - 1) * sizeof(*vd.gsortedvisplanes) + 31) / 16);
+    Mars_ClearCacheLine(&vd->lastvisplane);
+    Mars_ClearCacheLine(&vd->gsortedvisplanes);
+    Mars_ClearCacheLines(vd->gsortedvisplanes, ((vd->lastvisplane - vd->visplanes - 1) * sizeof(*vd->gsortedvisplanes) + 31) / 16);
 #endif
 
-    if (vd.gsortedvisplanes == NULL)
+    if (vd->gsortedvisplanes == NULL)
         return;
 
-    lpl.x = vd.viewx;
-    lpl.y = -vd.viewy;
+    cXf = centerXFrac;
+    lpl.lowres = false;
+    if (!lowres && detailmode == detmode_lowres)
+    {
+        cXf >>= 1;
+        lpl.lowres = true;
+    }
 
-    lpl.angle = vd.viewangle;
-    angle = (lpl.angle - ANG90) >> ANGLETOFINESHIFT;
+    angle = (vd->viewangle - ANG90) >> ANGLETOFINESHIFT;
+    basexscale = FixedDiv(finecosine(angle), cXf);
+    baseyscale = FixedDiv(finesine(angle), cXf);
 
-    lpl.basexscale = FixedDiv(finecosine(angle), centerXFrac);
-    lpl.baseyscale = -FixedDiv(finesine(angle), centerXFrac);
-#ifdef MARS
-    lpl.baseyscale *= FLATSIZE;
-#endif
-    extralight = vd.extralight;
+    angle = (vd->viewangle        ) >> ANGLETOFINESHIFT;
+    basexscale2 = FixedDiv(finecosine(angle), cXf);
+    baseyscale2 = FixedDiv(finesine(angle), cXf);
 
-    while ((pl = R_GetNextPlane((uint16_t *)vd.gsortedvisplanes)) != NULL)
+    lpl.mapplane = detailmode == detmode_potato ? R_MapPotatoPlane : R_MapPlane;
+    extralight = vd->extralight;
+
+    while ((pl = R_GetNextPlane((uint16_t *)vd->gsortedvisplanes)) != NULL)
     {
         int light;
         int flatnum;
+        boolean rotated = false;
 
 #ifdef MARS
         Mars_ClearCacheLines(pl, (sizeof(visplane_t) + 31) / 16);
@@ -320,6 +352,25 @@ static void R_DrawPlanes2(void)
 
         lpl.pl = pl;
         lpl.ds_source[0] = flatpixels[flatnum].data[0];
+        if (rotated)
+        {
+            lpl.x = -vd->viewy;
+            lpl.y = -vd->viewx;
+            lpl.angle = vd->viewangle + ANG90;
+            lpl.basexscale =  basexscale2;
+            lpl.baseyscale = -baseyscale2;
+        }
+        else
+        {
+            lpl.x =  vd->viewx;
+            lpl.y = -vd->viewy;
+            lpl.angle = vd->viewangle;
+            lpl.basexscale =  basexscale;
+            lpl.baseyscale = -baseyscale;
+        }
+#ifdef MARS
+        lpl.baseyscale *= FLATSIZE;
+#endif
 
 #if MIPLEVELS > 1
         lpl.mipsize[0] = FLATSIZE;
@@ -338,9 +389,9 @@ static void R_DrawPlanes2(void)
 #endif
         lpl.height = (unsigned)D_abs(pl->height);
 
-        if (vd.fixedcolormap)
+        if (vd->fixedcolormap)
         {
-            lpl.lightmin = lpl.lightmax = vd.fixedcolormap;
+            lpl.lightmin = lpl.lightmax = vd->fixedcolormap;
             lpl.lightcoef = 0;
         }
         else
@@ -370,10 +421,33 @@ static void R_DrawPlanes2(void)
                 lpl.lightsub = (((lpl.lightmax - lpl.lightmin) * 160) << FRACBITS) / (800 - 160);
             }
 
-            if (lpl.lightsub != 0)
+            if (detailmode != detmode_potato && lpl.lightsub != 0)
             {
+                int t;
+
                 lpl.lightmin <<= FRACBITS;
                 lpl.lightmax <<= FRACBITS;
+
+                // perform HWLIGHT calculations on the coefficients
+                // to reduce the number of calculations we will do
+                // later per column
+                t = lpl.lightmax;
+                lpl.lightmax = -lpl.lightmin;
+                lpl.lightmin = -t;
+
+                lpl.lightsub += 255 * FRACUNIT;
+                lpl.lightmax += 255 * FRACUNIT;
+                lpl.lightmin += 255 * FRACUNIT;
+
+                lpl.lightcoef >>= 3;
+                lpl.lightsub >>= 3;
+                lpl.lightmax >>= 3;
+                lpl.lightmin >>= 3;
+
+                if (lpl.lightmin < 0)
+                    lpl.lightmin = 0;
+                if (lpl.lightmax > 31 * FRACUNIT)
+                    lpl.lightmax = 31 * FRACUNIT;
             }
             else
             {
@@ -388,64 +462,9 @@ static void R_DrawPlanes2(void)
 
 #ifdef MARS
 
-static void Mars_R_SplitPlanes(void) ATTR_DATA_CACHE_ALIGN;
-static void Mars_R_SortPlanes(void) ATTR_DATA_CACHE_ALIGN;
-
 void Mars_Sec_R_DrawPlanes(void)
 {
     R_DrawPlanes2();
-}
-
-static void Mars_R_SplitPlanes(void)
-{
-    const int minlen = centerX;
-    const int maxlen = centerX * 2;
-    visplane_t *pl, *last = vd.lastvisplane;
-    int numplanes;
-
-    numplanes = vd.lastvisplane - vd.visplanes;
-    if (numplanes >= MAXVISPLANES)
-        return;
-
-    for (pl = vd.visplanes + 1; pl < last; pl++)
-    {
-        int start, stop;
-        visplane_t* newpl;
-        int newstop;
-
-        // see if there is any open space
-        start = pl->minx, stop = pl->maxx;
-        if (start > stop)
-            continue; // nothing to map
-
-        // split long visplane into two
-
-        int span = stop - start + 1;
-        if (span < maxlen)
-            continue;
-
-        pl->maxx = start;
-        newstop = start + minlen;
-
-        do {
-            newstop = start + minlen;
-            if (newstop > stop || numplanes == MAXVISPLANES - 1)
-                newstop = stop;
-
-            newpl = vd.lastvisplane++;
-            newpl->open = pl->open;
-            newpl->height = pl->height;
-            newpl->flatandlight = pl->flatandlight;
-            newpl->minx = start + 1;
-            newpl->maxx = newstop;
-
-            numplanes++;
-            if (numplanes >= MAXVISPLANES)
-                return;
-
-            start = newstop;
-        } while (start < stop);
-    }
 }
 
 // sort visplanes by flatnum so that texture data 
@@ -455,40 +474,44 @@ static void Mars_R_SortPlanes(void)
 {
     int i, numplanes;
     visplane_t* pl;
-    uint16_t *sortbuf = (uint16_t *)vd.gsortedvisplanes;
+    uint16_t *sortbuf = (uint16_t *)vd->gsortedvisplanes;
 
     i = 0;
     numplanes = 0;
-    for (pl = vd.visplanes + 1; pl < vd.lastvisplane; pl++)
+    for (pl = vd->visplanes + 1; pl < vd->lastvisplane; pl++)
     {
-        // composite sort key: 1b - sign bit, 3b - reverse span length, 12b - flat+light
-        // to minimize pipeline stalls, the larger planes must be drawn first, hence length inversion
-        sortbuf[i + 0] = ((unsigned)(3 - ((pl->maxx - pl->minx - 1) >> 6)) << 12) | (pl->flatandlight & 0xFFF);
+        // composite sort key: 1b - sign bit, 7b - negated span length, 8b - flat
+        unsigned key = (unsigned)(pl->maxx - pl->minx - 1) >> 4;
+        if (key > 127) {
+            key = 127;
+        }
+        // to minimize pipeline stalls, the larger planes must be drawn first, hence length negation
+        key = (127 - key) << 8;
+        key |= (pl->flatandlight & 0xFF);
+        sortbuf[i + 0] = key;
         sortbuf[i + 1] = ++numplanes;
         i += 2;
     }
 
-    D_isort(vd.gsortedvisplanes, numplanes);
+    D_isort(vd->gsortedvisplanes, numplanes);
 }
 
 static void R_PreDrawPlanes(void)
 {
     int numplanes;
 
-    Mars_ClearCacheLine(&vd.lastvisplane);
-    Mars_ClearCacheLine(&vd.gsortedvisplanes);
+    Mars_ClearCacheLine(&vd->lastvisplane);
+    Mars_ClearCacheLine(&vd->gsortedvisplanes);
 
     // check to see if we still need to fill the sorted planes list
-    numplanes = vd.lastvisplane - vd.visplanes; // visplane 0 is a dummy plane
+    numplanes = vd->lastvisplane - vd->visplanes; // visplane 0 is a dummy plane
     if (numplanes > 1) 
     {
-        Mars_ClearCacheLines(vd.visplanes, (numplanes * sizeof(visplane_t) + 31) / 16);
+        Mars_ClearCacheLines(vd->visplanes, (numplanes * sizeof(visplane_t) + 31) / 16);
 
-        if (vd.gsortedvisplanes == NULL)
+        if (vd->gsortedvisplanes == NULL)
         {
-            vd.gsortedvisplanes = (int *)vd.viswallextras;
-
-            Mars_R_SplitPlanes();
+            vd->gsortedvisplanes = (int *)vd->viswallextras;
 
             Mars_R_SortPlanes();
         }

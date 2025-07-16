@@ -1,6 +1,8 @@
 #include "doomdef.h"
 #include "mars.h"
+#ifndef DISABLE_DMA_SOUND
 #include "mars_ringbuf.h"
+#endif
 #include "sounds.h"
 
 #define MAX_SAMPLES        316		// 70Hz
@@ -48,7 +50,11 @@
 
 #define S_SEP_VOL_TO_MCD(sep,vol) do { if ((sep) > 254) (sep) = 254; (vol) <<= 2; /* 64 -> 256 max */ if ((vol) > 255) (vol) = 255; } while (0)
 
-#define S_USE_MEGACD_DRV() (mcd_avail && (sfxdriver == sfxdriver_auto || sfxdriver == sfxdriver_mcd))
+#ifdef DISABLE_DMA_SOUND
+#define S_USE_MEGACD_DRV() (mcd_avail)
+#else
+#define S_USE_MEGACD_DRV() (mcd_avail && (cdsfx || sfxdriver == sfxdriver_auto || sfxdriver == sfxdriver_mcd))
+#endif
 
 enum
 {
@@ -58,48 +64,62 @@ enum
 	SNDCMD_STARTORGSND
 };
 
+#ifndef DISABLE_DMA_SOUND
 static uint8_t snd_bufidx = 0;
 int16_t __attribute__((aligned(16))) snd_buffer[2][MAX_SAMPLES * 2];
-static uint8_t	snd_init = 0;
-unsigned        snd_nopaintcount = 0;
-
-static VINT		*vgm_tracks;
-uint8_t			*vgm_ptr;
 
 sfxchannel_t	pcmchannel;
 
 int __attribute__((aligned(16))) pcm_data[4];
+
+static marsrb_t	soundcmds = { 0 };
+
+static unsigned snd_nopaintcount = 0;
+#endif
+
+static uint8_t	snd_init = 0;
+
+static lumpinfo_t *vgm_tracks = NULL;
+uint8_t			*vgm_ptr;
+
+char 			spcmDir[9] = { 0 };
 
 sfxchannel_t	sfxchannels[SFXCHANNELS];
 
 VINT 			sfxvolume = 64;	/* range 0 - 64 */
 VINT 			musicvolume = 64;	/* range 0 - 64 */
 
+static VINT 	oldmusvol = -1;
+
 VINT			musictype = mustype_fm;
 
 static VINT		curmusic, muslooping = 0, curcdtrack = cdtrack_none;
 int             samplecount = 0;
 
-static marsrb_t	soundcmds = { 0 };
+VINT 			cdsfx = 0;
 
 VINT 			sfxdriver = sfxdriver_auto, mcd_avail = 0; // 0 - auto, 2 - megacd, 2 - 32x
 
-static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol, getsoundpos_t getpos);
+static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol, int freq, getsoundpos_t getpos);
+#ifndef DISABLE_DMA_SOUND
 static void S_SetChannelData(sfxchannel_t* channel);
 int S_PaintChannel4IMA(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
 int S_PaintChannel4IMA2x(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
 void S_PaintChannel8(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
 static int S_PaintChannel(sfxchannel_t *ch, int16_t* buffer, int painted) ATTR_DATA_CACHE_ALIGN;
+static void S_Update(int16_t* buffer) ATTR_DATA_CACHE_ALIGN;
+static void S_UpdatePCM(void) ATTR_DATA_CACHE_ALIGN;
+static void S_Sec_DMA1Handler(void);
+#endif
 static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos);
 static void S_SpatializeAt(fixed_t*origin, mobj_t* listener, int* pvol, int* psep) ATTR_DATA_CACHE_ALIGN;
 static void S_Spatialize(mobj_t* mobj, int* pvol, int* psep, getsoundpos_t getpos) ATTR_DATA_CACHE_ALIGN;
 static void S_SpatializeAll(void) ATTR_DATA_CACHE_ALIGN;
-static void S_Update(int16_t* buffer) ATTR_DATA_CACHE_ALIGN;
-static void S_UpdatePCM(void) ATTR_DATA_CACHE_ALIGN;
 
-static void S_Sec_DMA1Handler(void);
 static void S_Pri_CmdHandler(void);
-static void S_Sec_DMA1Handler(void);
+
+void Mars_Sec_InitSoundDMA(int initfull) __attribute__((noinline));
+void Mars_Sec_ReadSoundCmds(void) ATTR_DATA_OPTIMIZE_NONE;
 
 /*
 ==================
@@ -112,9 +132,8 @@ static void S_Sec_DMA1Handler(void);
 void S_Init(void)
 {
 	int		i;
-	int		initmusictype;
-	VINT	tmp_tracks[100];
 	int 	start, end;
+	VINT 	lumps[NUMSFX > 99 ? NUMSFX : 99];
 
 	for (i = 0; i < SFXCHANNELS; i++)
 		sfxchannels[i].data = NULL;
@@ -123,70 +142,131 @@ void S_Init(void)
 	mcd_avail = S_CDAvailable() & 0x1;
 	if (!mcd_avail)
 		sfxdriver = sfxdriver_auto;
+	else
+		sfxdriver = sfxdriver_mcd;
 
 	/* init sound effects */
+	for (i=1 ; i < NUMSFX ; i++)
+	{
+		S_sfx[i].lump = -1;
+	}
+
+	cdsfx = 0;
+	
+	W_LoadPWAD(PWAD_CD);
+
+	/* build an in-memory PWAD with all SFX */
 	start = W_CheckNumForName("DS_START");
 	end = W_CheckNumForName("DS_END");
-	if (start >= 0 && end > 0)
+	if (start >= 0 && end > start + 1)
 	{
+		int numsfx = end - start - 1;
+		if (numsfx > NUMSFX)
+			numsfx = NUMSFX;
+
 		for (i=1 ; i < NUMSFX ; i++)
 		{
 			S_sfx[i].lump = W_CheckRangeForName(S_sfxnames[i], start, end);
 		}
-	}
-	else
-	{
-		for (i=1 ; i < NUMSFX ; i++)
+
+		if (W_IsIWad(start))
 		{
-			S_sfx[i].lump = W_CheckNumForName(S_sfxnames[i]);
+			cdsfx = 0;
+
+			// upload sfx from ROM into PRG RAM
+			if (mcd_avail)
+			{
+				for (i=1 ; i < NUMSFX ; i++)
+				{
+					int lump = S_sfx[i].lump;
+					if (lump < 0) {
+						continue;
+					}
+					Mars_MCDLoadSfx(i, W_POINTLUMPNUM(lump), W_LumpLength(lump));
+				}
+			}
+		}
+		else
+		{
+			// load sfx from the CD into PRG RAM
+			// the local PWM driver must also be disabled
+			lumpinfo_t li[NUMSFX];
+			int sfxol[NUMSFX*2];
+
+			cdsfx = 1;
+
+			for (i = 0; i < NUMSFX; i++)
+			{
+				if (S_sfx[i].lump >= 0)
+					S_sfx[i].lump -= start;
+			}
+
+			for (i = 0; i < numsfx; i++)
+				lumps[i] = start + 1 + i;
+
+			W_CacheWADLumps(li, numsfx, lumps, false);
+
+			/* load all SFX in a single batch */
+			for (i = 0; i < numsfx; i++)
+			{
+				sfxol[i*2] = li[i].filepos;
+				sfxol[i*2+1] = li[i].size;
+			}
+
+			Mars_MCDLoadSfxFileOfs(1, numsfx, SOUNDS_PWAD_NAME, sfxol);
 		}
 	}
 
-	if (mcd_avail)
-	{
-		for (i=1 ; i < NUMSFX ; i++)
-		{
-			int lump = S_sfx[i].lump;
-			if (lump < 0) {
-				continue;
-			}
-			Mars_MCDLoadSfx(i, W_POINTLUMPNUM(lump), W_LumpLength(lump));
-		}
-	}
+	W_LoadPWAD(PWAD_NONE);
+
+	Mars_SetPriCmdCallback(&S_Pri_CmdHandler);
+
+#ifndef DISABLE_DMA_SOUND
+	Mars_RB_ResetAll(&soundcmds);
+#endif
+
+	Mars_InitSoundDMA(1);
+}
+
+/*
+==================
+=
+= S_InitMusic
+=
+==================
+*/
+
+void S_InitMusic(void)
+{
+	int		i;
+	int		initmusictype;
+	int 	start, end;
+	VINT 	lumps[99];
 
 	/* init music */
 	num_music = 0;
 	muslooping = 0;
 	S_StopSong();
 
-	for (i = 1; i < numlumps; i++)
+	S_DeInitMusic();
+
+	W_LoadPWAD(PWAD_CD);
+
+	/* build an in-memory PWAD with all music */
+	start = W_CheckNumForName("M_START");
+	end = W_CheckNumForName("M_END");
+	if (start >= 0 && end > start + 1)
 	{
-		char name[9];
-
-		D_memcpy(name, W_GetNameForNum(i), 8);
-		name[8] = 0;
-
-		if (D_strncasecmp("VGM_", name, 4))
-			continue;
-
-		tmp_tracks[num_music++] = i;
-		if (num_music == (int)sizeof(tmp_tracks) / sizeof(tmp_tracks[0]))
-			break;
-	}
-
-	if (num_music > 0)
-	{
+		num_music = end - start - 1;
+		if (num_music > 99)
+			num_music = 99;
+		for (i = 0; i < num_music; i++)
+			lumps[i] = start + i + 1;
 		vgm_tracks = Z_Malloc(sizeof(*vgm_tracks) * num_music, PU_STATIC);
-		for (i = 0; i < num_music; i++) {
-			vgm_tracks[i] = tmp_tracks[i];
-		}
+		W_CacheWADLumps(vgm_tracks, num_music, lumps, false);
 	}
 
-	Mars_RB_ResetAll(&soundcmds);
-
-	Mars_SetPriCmdCallback(&S_Pri_CmdHandler);
-
-	Mars_InitSoundDMA(1);
+	W_LoadPWAD(PWAD_NONE);
 
 	// FIXME: this is ugly, get rid of global variables!
 
@@ -198,6 +278,12 @@ void S_Init(void)
 	S_SetMusicType(initmusictype);
 }
 
+void S_DeInitMusic(void)
+{
+	if (vgm_tracks)
+		Z_Free(vgm_tracks);
+	vgm_tracks = NULL;
+}
 
 /*
 ==================
@@ -209,8 +295,6 @@ void S_Init(void)
 
 void S_Clear (void)
 {
-	volatile int tic;
-
 	if (S_USE_MEGACD_DRV())
 	{
 		D_memset(sfxchannels, 0, sizeof(*sfxchannels) * SFXCHANNELS);
@@ -219,6 +303,8 @@ void S_Clear (void)
 		return;
 	}
 
+#ifndef DISABLE_DMA_SOUND
+	volatile int tic;
 	uint16_t *p = (uint16_t*)Mars_RB_GetWriteBuf(&soundcmds, 8, false);
 	if (!p)
 		return;
@@ -233,6 +319,7 @@ void S_Clear (void)
 		if (Mars_RB_Len(&soundcmds) == 0)
 			break;
 	}
+#endif
 }
 
 void S_RestartSounds (void)
@@ -243,6 +330,7 @@ void S_SetSoundDriver (int newdrv)
 {
 	S_Clear();
 
+#ifndef DISABLE_DMA_SOUND
 	sfxdriver = newdrv;
 	switch (newdrv) {
 		case sfxdriver_pwm:
@@ -250,6 +338,7 @@ void S_SetSoundDriver (int newdrv)
 			Mars_InitSoundDMA(0);
 			break;
 	}
+#endif
 }
 
 /*
@@ -277,7 +366,7 @@ static void S_SpatializeAt(fixed_t* origin, mobj_t* listener, int* pvol, int* ps
 	else
 	{
 		// angle of source to listener
-		angle = R_PointToAngle2(listener->x, listener->y,
+		angle = R_PointToAngle(listener->x, listener->y,
 			origin[0], origin[1]);
 
 		if (angle > listener->angle)
@@ -425,13 +514,11 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 {
 	int vol, sep;
 	sfxinfo_t *sfx;
+	int freq = 0;
+	boolean nosep = false;
 
 	/* Get sound effect data pointer */
 	if (sound_id <= 0 || sound_id >= NUMSFX)
-		return;
-
-	sfx = &S_sfx[sound_id];
-	if (sfx->lump < 0)
 		return;
 
 	/* */
@@ -441,6 +528,54 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 	if (!vol)
 		return; /* too far away */
 
+	sfx = &S_sfx[sound_id];
+	if (sfx->lump <= 0)
+	{
+		switch (sound_id)
+		{
+			// re-use general monster sound effects, but play them at a lower frequency
+			case sfx_bospn:
+				nosep = true;
+				sound_id = sfx_popain;
+				freq = 5512;
+				break;
+			case sfx_bosdth:
+				nosep = true;
+				sound_id = sfx_podth1;
+				freq = 5512;
+				break;
+			case sfx_secret:
+				sound_id = sfx_getpow;
+				freq = 7350;
+				break;
+			case sfx_swtchx:
+				sound_id = sfx_swtchn;
+				freq = 16500;
+				break;
+			case sfx_skldth:
+			case sfx_noway:
+				sound_id = sfx_oof;
+				break;
+			case sfx_ppopai:
+				sound_id = sfx_plpain;
+				freq = 7350;
+				break;
+			case sfx_ppodth:
+				sound_id = sfx_pldeth;
+				freq = 7350;
+				vol >>= 3;
+				break;
+			case sfx_ppoact:
+				sound_id = sfx_oof;
+				freq = 3675;
+				break;
+		}
+		sfx = &S_sfx[sound_id];
+	}
+
+	if (sfx->lump <= 0)
+		return;
+
 	// HACK: boost volume for item pickups
 	if (sound_id == sfx_itemup)
 		vol <<= 1;
@@ -449,18 +584,25 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 	{
 		sfxchannel_t *ch;
 
-		ch = S_AllocateChannel(mobj, sound_id, vol, getpos);
+		ch = S_AllocateChannel(mobj, sound_id, vol, freq, getpos);
 		if (!ch)
 			return;
 
 		S_SEP_VOL_TO_MCD(sep, vol);
 		if (sound_id == sfx_itemup && sep == 128)
+			nosep = true;
+		if (nosep)
 			sep = 255; // full volume from both channels
 
-		Mars_MCDPlaySfx((ch - sfxchannels) + 1, sound_id, sep, vol);
+		// pass appropriate sound id depending on whether it was loaded from the CD or not
+		if (cdsfx)
+			Mars_MCDPlaySfx((ch - sfxchannels) + 1, sfx->lump, sep, vol, freq);
+		else
+			Mars_MCDPlaySfx((ch - sfxchannels) + 1, sound_id, sep, vol, freq);
 		return;
 	}
 
+#ifndef DISABLE_DMA_SOUND
 	uint16_t* p = (uint16_t*)Mars_RB_GetWriteBuf(&soundcmds, 8, false);
 	if (!p)
 		return;
@@ -482,6 +624,7 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 	}
 
 	Mars_RB_CommitWrite(&soundcmds);
+#endif
 }
 
 void S_StartSound(mobj_t* mobj, int sound_id)
@@ -501,8 +644,10 @@ void S_StartPositionedSound(mobj_t* mobj, int sound_id, getsoundpos_t getpos)
 =
 ===================
 */
-void S_PreUpdateSounds(void)
+int S_PreUpdateSounds(void)
 {
+	int n = 0;
+
 	if (S_USE_MEGACD_DRV())
 	{
 		int i;
@@ -520,16 +665,17 @@ void S_PreUpdateSounds(void)
 				// stopped
 				ch->data = NULL;
 			} else {
+				n++;
 				ch->position = 1;
 			}
 		}
 	}
+
+	return n;
 }
 
 void S_UpdateSounds(void)
 {
-	static VINT oldmusvol = -1;
-
 	if (oldmusvol != musicvolume) {
 		if (S_CDAvailable()) {
 			int vol = musicvolume*4;
@@ -557,35 +703,53 @@ void S_UpdateSounds(void)
 			vol = ch->volume;
 			S_SEP_VOL_TO_MCD(sep, vol);
 
-			Mars_MCDUpdateSfx(i + 1, sep, vol);
+			Mars_MCDUpdateSfx(i + 1, sep, vol, 0);
 		}
 
 		Mars_MCDFlushSfx();
 	}
 }
 
+void S_SetSPCMDir(const char *dir)
+{
+	D_snprintf(spcmDir, sizeof(spcmDir), "%s", dir);
+}
+
 void S_SetMusicType(int newtype)
 {
-	int savemus, savecd;
+	int savemus, savecd, saveloop;
 
-	if (newtype < mustype_none || newtype > mustype_cd)
+	if (newtype < mustype_none || newtype > mustype_spcmhack)
 		return;
 	if (musictype == newtype)
 		return;
-	if (newtype == mustype_cd && !S_CDAvailable())
+	if (newtype == mustype_spcmhack)
+		newtype = mustype_spcm;
+#ifdef DISABLE_CDFS
+	if (newtype == mustype_spcm)
+		newtype = mustype_fm;
+#endif
+	if (newtype >= mustype_cd && !S_CDAvailable())
 		return;
+	if (newtype == mustype_spcm && *spcmDir == '\0')
+		return;
+
+	S_Clear();
 
 	// restart the current track
 	savemus = curmusic;
 	savecd = curcdtrack;
+	saveloop = muslooping;
 
 	if (musictype != mustype_none)
 		S_StopSong();
 
 	curmusic = mus_none;
 	musictype = newtype;
+	muslooping = -1;
 	curcdtrack = cdtrack_none;
-	S_StartSong(savemus, muslooping, savecd);
+
+	S_StartSong(savemus, saveloop, savecd);
 }
 
 int S_CDAvailable(void)
@@ -597,76 +761,84 @@ int S_CDAvailable(void)
 
 int S_SongForMapnum(int mapnum)
 {
+	int numsongs;
+	numsongs = num_music;
+	if (numsongs <= 0)
+		return mus_none;
+	return (mapnum - 1) % numsongs + 1;
+}
+
+int S_SongForName(const char *str)
+{
 	int i;
-	VINT songs[100];
-	VINT numsongs;
+	char name[9];
+	int v[2];
 
-	numsongs = 0;
-	for (i = 0; i < num_music; i++) {
-		VINT mus = vgm_tracks[i];
+	if (num_music == 0)
+		return 0;
+	if (!str || !*str)
+		return 0;
 
-		if (mus == gameinfo.titleMus)
-			continue;
-		if (mus == gameinfo.intermissionMus)
-			continue;
-		if (mus == gameinfo.victoryMus)
-			continue;
+	D_memset (name, 0, 8);
+	D_strncpy (name, str, 8);
+	name[8] = 0;
 
-		songs[numsongs++] = mus;
-		if (numsongs == sizeof(songs) / sizeof(songs[0]))
-			break;
+	for (i = 0; i < 8; i++) {
+		if (name[i] >= 'a' && name[i] <= 'z') {
+			name[i] = 'A' + name[i] - 'a';
+		}
 	}
 
-	if (numsongs == 0)
-		return mus_none;
-	return songs[(mapnum - 1) % numsongs];
+	D_memcpy(v, name, 8);
+
+	for (i = 0; i < num_music; i++) {
+		if (*(int*)&vgm_tracks[i].name[0] == v[0] &&
+			*(int*)&vgm_tracks[i].name[4] == v[1])
+			return i + 1;
+	}
+
+	return mus_none;
 }
 
 void S_StartSong(int musiclump, int looping, int cdtrack)
 {
 	int playtrack = 0;
+	char filename[64];
+	lumpinfo_t *l;
+
+	if (musiclump < 0)
+		musiclump = mus_none;
 
 	if (musictype == mustype_cd)
 	{
-		if (cdtrack == cdtrack_none)
-		{
-			S_StopSong();
-			return;
-		}
-
 		if (S_CDAvailable())
 		{
-			int num_map_tracks = (int)mars_num_cd_tracks + cdtrack_lastmap;
-
-			/* there is a disc with at least enough tracks */
-			if (cdtrack <= cdtrack_title)
-				playtrack = cdtrack + mars_num_cd_tracks;
-			else if (num_map_tracks > 0)
-				playtrack = 1 + (cdtrack - 1) % num_map_tracks;
+			int num_cd_tracks = (int)mars_num_cd_tracks - 1;
+			/* there is a disc with enough tracks */
+			if (num_cd_tracks == 0)
+				playtrack = -1;
+			else if (cdtrack < 0)
+				playtrack = num_cd_tracks + cdtrack;
 			else
-				playtrack = cdtrack_intermission + mars_num_cd_tracks;
+				playtrack = 1 + (cdtrack - 1) % num_cd_tracks;
+			playtrack++; // track no 1 is the data track
 		}
 
 		if (playtrack < 0)
 			return;
 
 		if (curcdtrack == cdtrack && muslooping == looping)
+		{
+			Mars_PlayTrack(1, playtrack, cd_pwad_name, -1, 0, looping);
 			return;
+		}
 	}
 	else if (musictype == mustype_fm)
 	{
-		int i;
+		if (musiclump <= num_music)
+			playtrack = musiclump;
 
-		for (i = 0; i < num_music; i++)
-		{
-			if (vgm_tracks[i] == musiclump)
-			{
-				playtrack = i + 1;
-				break;
-			}
-		}
-
-		if (musiclump == mus_none || playtrack == 0)
+		if (musiclump == mus_none)
 		{
 			S_StopSong();
 			return;
@@ -675,25 +847,80 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 		if (curmusic == musiclump && muslooping == looping)
 			return;
 	}
+	else if (musictype == mustype_spcm)
+	{
+		char name[9];
+
+		if (musiclump <= num_music)
+			playtrack = musiclump;
+
+		if (musiclump == mus_none)
+		{
+			S_StopSong();
+			return;
+		}
+		if (*spcmDir == '\0')
+			return;
+
+		D_memcpy(name, vgm_tracks[playtrack-1].name, 8);
+		name[8] = 0;
+		D_snprintf(filename, sizeof(filename), "%s/%s.PCM", spcmDir, name);
+
+		if (curmusic == musiclump && muslooping == looping)
+		{
+			Mars_MCDResumeSPCMTrack();
+			return;
+		}
+	}
 
 	curmusic = musiclump;
 	curcdtrack = cdtrack;
 	muslooping = looping;
+	oldmusvol = -1; // force-update music volume
 
-	if (musictype == mustype_none)
+	if (musictype == mustype_none || playtrack == 0)
 		return;
 
-	if (musictype == mustype_cd)
+	Mars_StopTrack();
+
+#ifndef DISABLE_CDFS
+	if (musictype == mustype_spcm)
 	{
-		Mars_PlayTrack(1, playtrack, NULL, 0, looping);
+		Mars_PlayTrack(0, playtrack, filename, -1, 0, looping);
+		return;
+	}
+#endif
+
+if (musictype == mustype_cd)
+	{
+		Mars_PlayTrack(1, playtrack, cd_pwad_name, -1, 0, looping);
 		return;
 	}
 
-	Mars_StopTrack(); // stop the playback before flipping pages
-	S_Clear();
+	l = &vgm_tracks[playtrack-1];
 
-	vgm_ptr = (uint8_t *)W_POINTLUMPNUM(musiclump);
-	Mars_PlayTrack(0, playtrack, vgm_ptr, W_LumpLength(musiclump), looping);
+	if (cd_pwad_name[0] != '\0')
+	{
+		Mars_PlayTrack(0, playtrack, cd_pwad_name, l->filepos, l->size, looping);
+		return;
+	}
+
+	musiclump = W_CheckNumForName(l->name);
+	if (musiclump < 0)
+		return;
+
+	Mars_PlayTrack(0, playtrack, "", (intptr_t)W_POINTLUMPNUM(musiclump), l->size, looping);
+}
+
+void S_StartSongByName(const char *name, int looping, int cdtrack)
+{
+	int song;
+
+	song = S_SongForName(name);
+	if (cdtrack == cdtrack_none)
+		cdtrack = song;
+
+	S_StartSong(song, looping, cdtrack);
 }
 
 void S_StopSong(void)
@@ -702,6 +929,8 @@ void S_StopSong(void)
 	curmusic = mus_none;
 	curcdtrack = cdtrack_none;
 }
+
+#ifndef DISABLE_DMA_SOUND
 
 static void S_ClearPCM(void)
 {
@@ -948,6 +1177,8 @@ static void S_Sec_DMA1Handler(void)
 	S_Update(snd_buffer[snd_bufidx]);
 }
 
+#endif
+
 /*
 ==================
 =
@@ -955,26 +1186,40 @@ static void S_Sec_DMA1Handler(void)
 =
 ==================
 */
-static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol, getsoundpos_t getpos)
+static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol, int freq, getsoundpos_t getpos)
 {
 	sfxchannel_t* channel, * newchannel;
 	int i;
-	int length;
+#ifndef DISABLE_DMA_SOUND
+	int length = 0;
+#endif
 	sfxinfo_t* sfx;
 	sfx_t* md_data;
 
 	newchannel = NULL;
 	sfx = &S_sfx[sound_id];
-	md_data = W_POINTLUMPNUM(sfx->lump);
-	length = md_data->samples;
-
-	if (length < 4)
+	if (sfx->lump <= 0)
 		return NULL;
+
+	if (S_USE_MEGACD_DRV())
+	{
+		// dummy data to trick NULL pointer checks
+		md_data = (void *)sfx;
+	}
+	else
+	{
+#ifndef DISABLE_DMA_SOUND
+		md_data = W_POINTLUMPNUM(sfx->lump);
+		length = md_data->samples;
+		if (length < 4)
+#endif
+			return NULL;
+	}
 
 	/* reject sounds started at the same instant and singular sounds */
 	for (channel = sfxchannels, i = 0; i < SFXCHANNELS; i++, channel++)
 	{
-		if (channel->sfx == sfx)
+		if (channel->sfx == sfx && channel->freq == freq)
 		{
 			if (channel->position <= 0) /* ADPCM has the position set to -1 initially */
 			{
@@ -1017,11 +1262,14 @@ static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol,
 	/* fill in the new values */
 	/* */
 gotchannel:
+	newchannel->freq = freq;
+#ifndef DISABLE_DMA_SOUND
 	newchannel->increment = (11025 << 14) / SAMPLE_RATE;
 	newchannel->length = length << 14;
 	newchannel->loop_length = 0;
-	newchannel->data = (void *)md_data;
 	newchannel->width = 8;
+#endif
+	newchannel->data = (void *)md_data;
 	newchannel->position = 0;
 
 	newchannel->sfx = sfx;
@@ -1034,6 +1282,8 @@ gotchannel:
 
 	return newchannel;
 }
+
+#ifndef DISABLE_DMA_SOUND
 
 static void S_SetChannelData(sfxchannel_t* channel)
 {
@@ -1127,10 +1377,10 @@ void Mars_Sec_ReadSoundCmds(void)
 			S_ClearPCM();
 			break;
 		case SNDCMD_STARTSND:
-			ch = S_AllocateChannel((void*)(*(intptr_t*)&p[2]), p[1], p[4], NULL);
+			ch = S_AllocateChannel((void*)(*(intptr_t*)&p[2]), p[1], p[4], 0, NULL);
 			break;
 		case SNDCMD_STARTORGSND:
-			ch = S_AllocateChannel((void*)(*(intptr_t*)&p[2]), p[1], p[6], (getsoundpos_t)(*(intptr_t*)&p[4]));
+			ch = S_AllocateChannel((void*)(*(intptr_t*)&p[2]), p[1], p[6], 0, (getsoundpos_t)(*(intptr_t*)&p[4]));
 			break;
 		}
 
@@ -1142,12 +1392,13 @@ void Mars_Sec_ReadSoundCmds(void)
 	}
 }
 
+#endif
+
 void Mars_Sec_InitSoundDMA(int initfull)
 {
-	uint16_t sample, ix;
-
 	Mars_ClearCache();
 
+#ifndef DISABLE_DMA_SOUND
 	if (initfull)
 	{
 		// init DMA
@@ -1158,27 +1409,7 @@ void Mars_Sec_InitSoundDMA(int initfull)
 		SH2_DMA_DRCR1 = 0;
 
 		// init the sound hardware
-		MARS_PWM_MONO = 1;
-		MARS_PWM_MONO = 1;
-		MARS_PWM_MONO = 1;
-		if (MARS_VDP_DISPMODE & MARS_NTSC_FORMAT)
-			MARS_PWM_CYCLE = (((23011361 << 1) / (SAMPLE_RATE)+1) >> 1) + 1; // for NTSC clock
-		else
-			MARS_PWM_CYCLE = (((22801467 << 1) / (SAMPLE_RATE)+1) >> 1) + 1; // for PAL clock
-		MARS_PWM_CTRL = 0x0185; // TM = 1, RTP, RMD = right, LMD = left
-
-		sample = SAMPLE_MIN;
-
-		// ramp up to SAMPLE_CENTER to avoid click in audio (real 32X)
-		while (sample < SAMPLE_CENTER)
-		{
-			for (ix = 0; ix < (SAMPLE_RATE * 2) / (SAMPLE_CENTER - SAMPLE_MIN); ix++)
-			{
-				while (MARS_PWM_MONO & 0x8000); // wait while full
-				MARS_PWM_MONO = sample;
-			}
-			sample++;
-		}
+	 	Mars_InitPWM(SAMPLE_RATE, SAMPLE_MIN, SAMPLE_MAX);
 	}
 
 	Mars_RB_ResetRead(&soundcmds);
@@ -1197,10 +1428,16 @@ void Mars_Sec_InitSoundDMA(int initfull)
 
 	// start DMA
 	S_Sec_DMA1Handler();
+#endif
+
+	snd_init = 1;
 }
 
 static void S_Pri_CmdHandler(void)
 {
+#ifdef DISABLE_DMA_SOUND
+	int __attribute__((aligned(16))) pcm_data[4];
+#endif
 	volatile int *pcm_cachethru = (volatile int *)((intptr_t)pcm_data | 0x20000000);
 	unsigned int offs, len, freq;
 

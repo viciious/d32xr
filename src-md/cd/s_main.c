@@ -1,11 +1,14 @@
+#include <string.h>
 #include "s_sources.h"
 #include "s_channels.h"
 #include "s_buffers.h"
 #include "s_main.h"
+#include "s_cd.h"
+#include "s_spcm.h"
 
-#define S_MEMBANK_ADDR 0xC000 // assumed to be greater than __bss_end
-#define S_MEMBANK_PTR ((uint8_t *)S_MEMBANK_ADDR)
-#define S_MEMBANK_SIZE (0x80000 - S_MEMBANK_ADDR) // 512K - addr
+#define S_MEMBANK_SIZE 454*1024
+#define S_MEMBANK_PTR s_membank
+static uint8_t s_membank[S_MEMBANK_SIZE] = { 0 };
 
 void S_Init(void)
 {
@@ -25,6 +28,8 @@ void S_Clear(void)
     S_StopSources();
 
     S_ClearChannels();
+
+    S_StopSPCMTrack();
 }
 
 void S_Update(void)
@@ -84,6 +89,7 @@ uint8_t S_PlaySource(uint8_t src_id, uint16_t buf_id, uint16_t freq, uint8_t pan
         // refused to start
         return 0;
     }
+
     return src_id;
 }
 
@@ -135,4 +141,53 @@ uint16_t S_GetSourcePosition(uint8_t src_id)
         return 0xffff;
     }
     return S_Src_GetPosition(src);
+}
+
+int S_LoadCDBuffers(uint16_t buf_id, int numsfx, const uint8_t *data)
+{
+    const char *name;
+    const int32_t *offsetlen;
+
+    if (buf_id == 0 || buf_id > S_MAX_BUFFERS) {
+        return 0;
+    }
+
+    if (buf_id + numsfx > S_MAX_BUFFERS) {
+        numsfx = S_MAX_BUFFERS - buf_id;
+    }
+    if (numsfx <= 0) {
+        return 0;
+    }
+
+    name = (const char *)data;
+    offsetlen = (void *)(((uintptr_t)name + mystrlen(name) + 1 + 3) & ~3);
+
+    S_CD_LoadBuffers(&s_buffers[ buf_id - 1 ], numsfx, name, offsetlen);
+
+    return 1;
+}
+
+int S_PlaySPCMTrack(const char *name, int repeat)
+{
+    return S_SCM_PlayTrack(name, repeat);
+}
+
+void S_StopSPCMTrack(void)
+{
+    S_SPCM_Suspend();
+}
+
+void S_PauseSPCMTrack(void)
+{
+    S_SPCM_Suspend();
+}
+
+void S_UnpauseSPCMTrack(void)
+{
+    S_SPCM_Unsuspend();
+}
+
+uint8_t *S_GetMemBankPtr(void)
+{
+    return s_membank;
 }

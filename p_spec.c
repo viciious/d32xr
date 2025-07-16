@@ -15,11 +15,6 @@ static const animdef_t	animdefs[] =
 	{false,	"NUKAGE3",	"NUKAGE1"},
 	{false,	"FWATER4",	"FWATER1"},
 	{false,	"LAVA4",	"LAVA1"},
-
-	{false,	"NUKAGE3",	"NUKAGE1"},
-	{false,	"FWATER4",	"FWATER1"},
-	{false,	"SWATER4",	"SWATER1"},
-	{false,	"LAVA4",	"LAVA1"},
 	{false,	"BLOOD3",	"BLOOD1"},
 
 	// DOOM II flat animations.
@@ -124,7 +119,7 @@ sector_t *getSector(int currentSector,int line,int side)
 int	twoSided(int sector,int line)
 {
 	line_t *check = lines + sectors[sector].lines[line];
-	return check->flags & ML_TWOSIDED;
+	return check->sidenum[1] >= 0;
 }
 
 /*================================================================== */
@@ -136,7 +131,7 @@ sector_t *getNextSector(line_t *line,sector_t *sec)
 {
 	sector_t *front;
 
-	if (!(line->flags & ML_TWOSIDED))
+	if (!(line->sidenum[1] >= 0))
 		return NULL;
 	
 	front = LD_FRONTSECTOR(line);
@@ -291,10 +286,20 @@ fixed_t	P_FindHighestCeilingSurrounding(sector_t *sec)
 /*================================================================== */
 int	P_FindSectorFromLineTag(line_t	*line,int start)
 {
+	return P_FindSectorFromLineTagNum(P_GetLineTag(line), start);
+}
+
+/*================================================================== */
+/* */
+/*	RETURN NEXT SECTOR # THAT LINE TAG REFERS TO */
+/* */
+/*================================================================== */
+int	P_FindSectorFromLineTagNum(int tag,int start)
+{
 	int	i;
-	
+
 	for (i=start+1;i<numsectors;i++)
-		if (sectors[i].tag == line->tag)
+		if (sectors[i].tag == tag)
 			return i;
 	return -1;
 }
@@ -737,7 +742,7 @@ void P_PlayerInSpecialSector (player_t *player)
 {
 	sector_t	*sector;
 	
-	sector = player->mo->subsector->sector;
+	sector = SSEC_SECTOR(player->mo->subsector);
 	if (player->mo->z != sector->floorheight)
 		return;		/* not all the way down yet */
 		
@@ -763,6 +768,7 @@ void P_PlayerInSpecialSector (player_t *player)
 		case 9:		/* SECRET SECTOR */
 			player->secretcount++;
 			sector->special = 0;
+			S_StartSound(player->mo, sfx_secret);
 			break;
 			
 		default:
@@ -895,10 +901,12 @@ int EV_DoDonut(line_t *line)
 	int			rtn;
 	int			i;
 	floormove_t		*floor;
-	
+	int 		tag;
+
 	secnum = -1;
 	rtn = 0;
-	while ((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
+	tag = P_GetLineTag(line);
+	while ((secnum = P_FindSectorFromLineTagNum(tag,secnum)) >= 0)
 	{
 		line_t *line;
 		s1 = &sectors[secnum];
@@ -915,7 +923,7 @@ int EV_DoDonut(line_t *line)
 		for (i = 0;i < s2->linecount;i++)
 		{
 			line = lines + s2->lines[i];
-			if (!(line->flags & ML_TWOSIDED))
+			if (!(line->sidenum[1] >= 0))
 				continue;
 			s3 = &sectors[sides[line->sidenum[1]].sector];
 			if (s3 == s1)
@@ -926,7 +934,7 @@ int EV_DoDonut(line_t *line)
 			/* */
 			floor = Z_Malloc (sizeof(*floor), PU_LEVSPEC);
 			P_AddThinker (&floor->thinker);
-			s2->specialdata = floor;
+			s2->specialdata = LPTR_TO_SPTR(floor);
 			floor->thinker.function = T_MoveFloor;
 			floor->type = donutRaise;
 			floor->crush = false;
@@ -942,7 +950,7 @@ int EV_DoDonut(line_t *line)
 			/* */
 			floor = Z_Malloc (sizeof(*floor), PU_LEVSPEC);
 			P_AddThinker (&floor->thinker);
-			s1->specialdata = floor;
+			s1->specialdata = LPTR_TO_SPTR(floor);
 			floor->thinker.function = T_MoveFloor;
 			floor->type = lowerFloor;
 			floor->crush = false;
@@ -973,7 +981,7 @@ int EV_DoDonut(line_t *line)
 ===============================================================================
 */
 
-int		numlinespecials = 0;
+VINT	numlinespecials = 0;
 line_t	**linespeciallist = NULL;
 
 void P_SpawnSpecials (void)

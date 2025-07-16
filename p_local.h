@@ -49,6 +49,7 @@ typedef enum
 	DI_SOUTH,
 	DI_SOUTHEAST,
 	DI_NODIR,
+	DI_NODIRWAIT,
 	NUMDIRS
 } dirtype_t;
 
@@ -92,12 +93,12 @@ void P_DropWeapon (player_t *player);
 ===============================================================================
 */
 
-boolean P_CanSelecteWeapon(player_t* player, int weaponnum);
+boolean P_CanSelectWeapon(player_t* player, int weaponnum);
 boolean P_CanFireWeapon(player_t* player, int weaponnum);
 void	P_PlayerThink (player_t *player);
 void	P_RestoreResp(player_t* p);
 void	P_UpdateResp(player_t* p);
-void	R_ResetResp(player_t* p);
+void	P_ResetResp(player_t* p);
 
 /*
 ===============================================================================
@@ -122,6 +123,7 @@ extern	mapthing_t	*itemrespawnque;
 extern	int			*itemrespawntime;
 
 mobj_t *P_SpawnMobj (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
+mobj_t *P_SpawnMobj2 (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type, subsector_t *ss);
 
 void 	P_RemoveMobj (mobj_t *th);
 void	P_FreeMobj(mobj_t* mobj);
@@ -129,9 +131,15 @@ boolean	P_SetMobjState (mobj_t *mobj, statenum_t state) ATTR_DATA_CACHE_ALIGN;
 void 	P_MobjThinker (mobj_t *mobj);
 void 	P_PreSpawnMobjs(int count, int staticcount);
 
+void 	P_ApplyFriction(mobj_t *mo);
+
+void	P_SpawnPuff2 (fixed_t x, fixed_t y, fixed_t z, fixed_t attackrange, subsector_t *ss);
 void	P_SpawnPuff (fixed_t x, fixed_t y, fixed_t z, fixed_t attackrange);
+
+void 	P_SpawnBlood2 (fixed_t x, fixed_t y, fixed_t z, int damage, subsector_t *ss);
 void 	P_SpawnBlood (fixed_t x, fixed_t y, fixed_t z, int damage);
-void	P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type);
+
+mobj_t	*P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type);
 void	P_SpawnPlayerMissile (mobj_t *source, mobjtype_t type);
 
 void	P_RunMobjBase2 (void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
@@ -139,7 +147,6 @@ void	P_RunMobjLate(void) ATTR_DATA_CACHE_ALIGN;
 
 void L_SkullBash (mobj_t *mo);
 void L_MissileHit (mobj_t *mo);
-void L_CrossSpecial (mobj_t *mo);
 
 void P_ExplodeMissile (mobj_t *mo);
 
@@ -165,25 +172,57 @@ void A_SkullBash (mobj_t *mo);
 ===============================================================================
 */
 
+// 
+// keep track of special lines as they are hit,
+// but don't process them until the move is proven valid
+#define MAXSPECIALCROSS		8
+
 typedef struct
 {
 	fixed_t	x,y, dx, dy;
 } divline_t;
 
+typedef boolean(*blocklinesiter_t)(line_t*, void*);
+typedef boolean(*blockthingsiter_t)(mobj_t*, void*);
+
+typedef struct
+{
+	// input
+	mobj_t  *tmthing;
+	fixed_t tmx, tmy;
+	boolean checkposonly;
+
+	// output
+	fixed_t tmbbox[4];
+
+	int    	numspechit;
+ 	line_t	*spechit[MAXSPECIALCROSS];
+	
+	fixed_t tmfloorz;   // current floor z for P_TryMove2
+	fixed_t tmceilingz; // current ceiling z for P_TryMove2
+	fixed_t tmdropoffz; // lowest point contacted
+
+	boolean	floatok;	/* if true, move would be ok if */
+						/* within tmfloorz - tmceilingz */
+
+	line_t  *ceilingline;
+	subsector_t *newsubsec;
+
+	mobj_t  *hitthing;
+} pmovework_t;
 
 fixed_t P_AproxDistance (fixed_t dx, fixed_t dy);
 int 	P_PointOnLineSide (fixed_t x, fixed_t y, line_t *line);
 int 	P_PointOnDivlineSide (fixed_t x, fixed_t y, divline_t *line);
-int 	P_BoxOnLineSide (fixed_t *tmbox, line_t *ld);
+boolean P_BoxCrossLine (line_t *ld, fixed_t testbbox[4]);
 
 fixed_t	P_LineOpening (line_t *linedef);
 
 void 	P_LineBBox(line_t* ld, fixed_t*bbox);
 
-typedef boolean(*blocklinesiter_t)(line_t*, void*);
-typedef boolean(*blockthingsiter_t)(mobj_t*, void*);
-
+// the userp must conform to pmovework_t interface
 boolean P_BlockLinesIterator (int x, int y, blocklinesiter_t, void *userp );
+// the userp must conform to pmovework_t interface
 boolean P_BlockThingsIterator (int x, int y, blockthingsiter_t, void *userp );
 
 void 	P_UnsetThingPosition (mobj_t *thing);
@@ -193,6 +232,8 @@ void	P_SetThingPosition2 (mobj_t *thing, subsector_t *ss);
 void	P_PlayerLand (mobj_t *mo);
 
 void 	P_SectorOrg(mobj_t* sec, fixed_t *org);
+
+int 	P_GetLineTag (line_t *line);
 
 /*
 ===============================================================================
@@ -221,6 +262,8 @@ typedef struct
    mobj_t  *shootmobj;				/* who got hit (or NULL) */
    fixed_t  shootslope;             // between aimtop and aimbottom
    fixed_t  shootx, shooty, shootz; // location for puff/blood
+
+   int 		firstsplit;             // first BSP node that generated a split
 } lineattack_t;
 
 fixed_t P_AimLineAttack (lineattack_t *la, mobj_t *t1, angle_t angle, fixed_t distance) ATTR_DATA_CACHE_ALIGN;
@@ -228,6 +271,18 @@ fixed_t P_AimLineAttack (lineattack_t *la, mobj_t *t1, angle_t angle, fixed_t di
 void P_LineAttack (lineattack_t *la, mobj_t *t1, angle_t angle, fixed_t distance, fixed_t slope, int damage) ATTR_DATA_CACHE_ALIGN;
 
 void P_RadiusAttack (mobj_t *spot, mobj_t *source, int damage) ATTR_DATA_CACHE_ALIGN;
+
+
+/*
+===============================================================================
+
+							P_SIGHT
+
+===============================================================================
+*/
+
+void P_CheckSights (void);
+
 
 /*
 ===============================================================================
@@ -239,11 +294,11 @@ void P_RadiusAttack (mobj_t *spot, mobj_t *source, int damage) ATTR_DATA_CACHE_A
 
 extern	byte		*rejectmatrix;			/* for fast sight rejection */
 extern	short		*blockmaplump;		/* offsets in blockmap are from here */
-extern	int			bmapwidth, bmapheight;	/* in mapblocks */
+extern	VINT		bmapwidth, bmapheight;	/* in mapblocks */
 extern	fixed_t		bmaporgx, bmaporgy;		/* origin of block map */
-extern	mobj_t		**blocklinks;			/* for thing chains */
+extern	SPTR		*blocklinks;			/* for thing chains */
 
-extern	int			numthings;
+extern	VINT		numthings;
 extern	spawnthing_t* spawnthings;
 
 extern	VINT		*validcount;		/* (0 - increment every time a check is made, [1..numlines]) x 2 */
@@ -267,8 +322,6 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 
 extern	int			iquehead, iquetail;
 
-extern	int playernum;
-
 void P_RespawnSpecials (void);
 
 
@@ -280,39 +333,8 @@ void P_RespawnSpecials (void);
 ===============================================================================
 */
 
-// 
-// keep track of special lines as they are hit,
-// but don't process them until the move is proven valid
-#define MAXSPECIALCROSS		8
-
-typedef struct
-{
-	/*================== */
-	/* */
-	/* in */
-	/* */
-	/*================== */
-	mobj_t		*tmthing;
-	fixed_t		tmx, tmy;
-	boolean		checkposonly;
-
-	/*================== */
-	/* */
-	/* out */
-	/* */
-	/*================== */
-	boolean		floatok;				/* if true, move would be ok if */
-										/* within tmfloorz - tmceilingz */
-	fixed_t		tmfloorz, tmceilingz, tmdropoffz;
-
-	int    		numspechit;
- 	line_t		*spechit[MAXSPECIALCROSS];
-
-	line_t		*blockline;
-} ptrymove_t;
-
-boolean P_CheckPosition (ptrymove_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
-boolean P_TryMove (ptrymove_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
+boolean P_CheckPosition (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
+boolean P_TryMove (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
 void P_MoveCrossSpecials(mobj_t *tmthing, int numspechit, line_t **spechit, fixed_t oldx, fixed_t oldy);
 
 typedef struct

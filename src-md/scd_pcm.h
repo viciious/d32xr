@@ -23,6 +23,7 @@ void scd_init_pcm(void);
 // once the driver runs out of memory, no further allocations will be possible and
 // the driver will have to be re-initialized by calling scd_init_pcm 
 void scd_upload_buf(uint16_t buf_id, const uint8_t *data, uint32_t data_len) SCD_CODE_ATTR;
+void scd_setptr_buf(uint16_t buf_id, const uint8_t *data, uint32_t data_len) SCD_CODE_ATTR;
 
 // scd_upload_buf starts playback on source from the start of the buffer
 // source is a virtual playback channel, one or two hardware channels can be mapped
@@ -92,6 +93,9 @@ void scd_queue_stop_src(uint8_t src_id) SCD_CODE_ATTR;
 
 // queues a scd_clear_pcm call
 void scd_queue_clear_pcm(void) SCD_CODE_ATTR;
+
+// queues a scd_setptr_buf call
+void scd_queue_setptr_buf(uint16_t buf_id, const uint8_t *data, int len) SCD_CODE_ATTR;
 
 // flushes the command queue
 int scd_flush_cmd_queue(void) SCD_CODE_ATTR;

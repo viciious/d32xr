@@ -8,7 +8,7 @@
 #endif
 
 #define MOVEWAIT		(I_IsPAL() ? TICVBLS*5 : TICVBLS*6)
-#define STARTY		48
+#define STARTY		38
 #define CURSORX		(80)
 #define CURSORWIDTH	24
 #define ITEMX		(CURSORX+CURSORWIDTH)
@@ -26,18 +26,28 @@ typedef enum
 	mi_video,
 	mi_controls,
 	mi_help,
+	mi_quit,
 
 	mi_soundvol,
 	mi_music,
 	mi_musicvol,
+	mi_spcmpack,
+#ifndef DISABLE_DMA_SOUND
 	mi_sfxdriver,
+#endif
 
 	mi_resolution,
 	mi_anamorphic,
+	mi_detailmode,
+	mi_lowres,
 
 	mi_controltype,
+	mi_yabcdpad,
 	mi_alwaysrun,
 	mi_strafebtns,
+
+	mi_quityes,
+	mi_quitno,
 
 	NUMMENUITEMS
 } menupos_t;
@@ -68,10 +78,10 @@ typedef struct
 	VINT	y;
 	uint8_t	slider;
 	uint8_t screen;
-	char 	name[16];
+	char 	*name;
 } menuitem_t;
 
-static menuitem_t menuitem[NUMMENUITEMS];
+static menuitem_t *menuitem;
 
 static VINT	cursorframe;
 static VINT cursordelay;
@@ -80,7 +90,7 @@ static VINT	movecount;
 static VINT	uchar;
 
 static VINT	o_cursor1, o_cursor2;
-static VINT	o_slider, o_slidertrack;
+static VINT	o_slider, o_sliderml, o_slidermm, o_slidermr;
 
 static VINT m_help;
 
@@ -97,7 +107,7 @@ typedef struct
 {
 	VINT firstitem;
 	VINT numitems;
-	char name[10];
+	char *name;
 } menuscreen_t;
 
 typedef enum
@@ -109,6 +119,7 @@ typedef enum
 	ms_video,
 	ms_controls,
 	ms_help,
+	ms_quit,
 
 	NUMMENUSCREENS
 } screenpos_t;
@@ -144,7 +155,9 @@ void O_Init (void)
 	o_cursor1 = W_CheckNumForName("M_SKULL1");
 	o_cursor2 = W_CheckNumForName("M_SKULL2");
 	o_slider = W_CheckNumForName("O_SLIDER");
-	o_slidertrack = W_CheckNumForName("O_STRACK");
+	o_sliderml = W_CheckNumForName("O_STRAML");
+	o_slidermm = W_CheckNumForName("O_STRAMM");
+	o_slidermr = W_CheckNumForName("O_STRAMR");
 
 	o_musictype = musictype;
 	o_sfxdriver = sfxdriver;
@@ -155,114 +168,151 @@ void O_Init (void)
 
 /*	initialize variables */
 
+	menuitem = Z_Malloc(sizeof(*menuitem)*NUMMENUITEMS, PU_STATIC);
+
 	cursorframe = -1;
 	cursordelay = MOVEWAIT;
 	cursorpos = 0;
 	screenpos = ms_none;
 
-	D_memset(menuitem, 0, sizeof(menuitem));
+	D_memset(menuitem, 0, sizeof(*menuitem)*NUMMENUITEMS);
 	D_memset(sliders, 0, sizeof(sliders));
 
-	D_memcpy(menuitem[mi_game].name, "Game", 5);
+	menuitem[mi_game].name = "Game";
 	menuitem[mi_game].x = ITEMX;
 	menuitem[mi_game].y = STARTY;
 	menuitem[mi_game].screen = ms_game;
 
-	D_memcpy(menuitem[mi_audio].name, "Audio", 7);
+	menuitem[mi_audio].name = "Audio";
 	menuitem[mi_audio].x = ITEMX;
 	menuitem[mi_audio].y = STARTY+ITEMSPACE;
 	menuitem[mi_audio].screen = ms_audio;
 
-	D_memcpy(menuitem[mi_video].name, "Video", 7);
+	menuitem[mi_video].name = "Video";
 	menuitem[mi_video].x = ITEMX;
 	menuitem[mi_video].y = STARTY+ITEMSPACE*2;
-	menuitem[mi_video].slider = 0;
 	menuitem[mi_video].screen = ms_video;
 
-	D_memcpy(menuitem[mi_controls].name, "Controls", 9);
+	menuitem[mi_controls].name = "Controls";
 	menuitem[mi_controls].x = ITEMX;
 	menuitem[mi_controls].y = STARTY+ITEMSPACE*3;
 	menuitem[mi_controls].screen = ms_controls;
 
-	D_memcpy(menuitem[mi_help].name, "Help", 4);
+	menuitem[mi_help].name = "Help";
 	menuitem[mi_help].x = ITEMX;
 	menuitem[mi_help].y = STARTY+ITEMSPACE*4;
 	menuitem[mi_help].screen = ms_help;
 
-	D_memcpy(menuitem[mi_soundvol].name, "Sfx volume", 11);
+	menuitem[mi_quit].name = "Quit";
+	menuitem[mi_quit].x = ITEMX;
+	menuitem[mi_quit].y = STARTY+ITEMSPACE*5;
+	menuitem[mi_quit].screen = ms_quit;
+
+	menuitem[mi_soundvol].name = "Sfx volume";
 	menuitem[mi_soundvol].x = ITEMX;
 	menuitem[mi_soundvol].y = STARTY;
 	menuitem[mi_soundvol].slider = si_sfxvolume+1;
 	sliders[si_sfxvolume].maxval = 4;
 	sliders[si_sfxvolume].curval = 4*sfxvolume/64;
 
-	D_memcpy(menuitem[mi_music].name, "Music", 6);
+	menuitem[mi_music].name = "Music";
 	menuitem[mi_music].x = ITEMX;
 	menuitem[mi_music].y = STARTY+ITEMSPACE*2;
 
-	D_memcpy(menuitem[mi_musicvol].name, "CDA volume", 11);
+	menuitem[mi_musicvol].name = "CD volume";
 	menuitem[mi_musicvol].x = ITEMX;
 	menuitem[mi_musicvol].y = STARTY + ITEMSPACE * 3;
 	menuitem[mi_musicvol].slider = si_musvolume+1;
 	sliders[si_musvolume].maxval = 8;
 	sliders[si_musvolume].curval = 8*musicvolume/64;
 
-	D_memcpy(menuitem[mi_sfxdriver].name, "SFX driver", 11);
-	menuitem[mi_sfxdriver].x = ITEMX;
-	menuitem[mi_sfxdriver].y = STARTY+ITEMSPACE*5;
+	menuitem[mi_spcmpack].name = "SPCM";
+	menuitem[mi_spcmpack].x = ITEMX;
+	menuitem[mi_spcmpack].y = STARTY+ITEMSPACE*5;
 
-	D_memcpy(menuitem[mi_resolution].name, "Resolution", 11);
+#ifndef DISABLE_DMA_SOUND
+	menuitem[mi_sfxdriver].name = "SFX driver";
+	menuitem[mi_sfxdriver].x = ITEMX;
+	menuitem[mi_sfxdriver].y = STARTY+ITEMSPACE*6;
+#endif
+
+	menuitem[mi_resolution].name = "Resolution";
 	menuitem[mi_resolution].x = ITEMX;
 	menuitem[mi_resolution].y = STARTY;
 	menuitem[mi_resolution].slider = si_resolution+1;
 	sliders[si_resolution].maxval = numViewports - 1;
 	sliders[si_resolution].curval = viewportNum;
 
-	D_memcpy(menuitem[mi_anamorphic].name, "Widescreen", 11);
+	menuitem[mi_anamorphic].name = "Widescreen";
 	menuitem[mi_anamorphic].x = ITEMX;
 	menuitem[mi_anamorphic].y = STARTY + ITEMSPACE * 2;
 
+	menuitem[mi_detailmode].name = "Flats";
+	menuitem[mi_detailmode].x = ITEMX;
+	menuitem[mi_detailmode].y = STARTY + ITEMSPACE * 3;
 
-	D_memcpy(menuitem[mi_controltype].name, "Gamepad", 8);
+	menuitem[mi_lowres].name = "Low detail";
+	menuitem[mi_lowres].x = ITEMX;
+	menuitem[mi_lowres].y = STARTY + ITEMSPACE * 4;
+
+	menuitem[mi_controltype].name = "Gamepad";
 	menuitem[mi_controltype].x = ITEMX;
 	menuitem[mi_controltype].y = STARTY;
 
-	D_memcpy(menuitem[mi_alwaysrun].name, "Always run", 11);
+	menuitem[mi_yabcdpad].name = "YABC D-pad";
+	menuitem[mi_yabcdpad].x = ITEMX;
+	menuitem[mi_yabcdpad].y = STARTY+ITEMSPACE*4;
+
+	menuitem[mi_alwaysrun].name = "Always run";
 	menuitem[mi_alwaysrun].x = ITEMX;
-	menuitem[mi_alwaysrun].y = STARTY+ITEMSPACE*4;
+	menuitem[mi_alwaysrun].y = STARTY+ITEMSPACE*5;
 
-	D_memcpy(menuitem[mi_strafebtns].name, "LR Strafe", 11);
+	menuitem[mi_strafebtns].name = "LR Strafe";
 	menuitem[mi_strafebtns].x = ITEMX;
-	menuitem[mi_strafebtns].y = STARTY+ITEMSPACE*5;
+	menuitem[mi_strafebtns].y = STARTY+ITEMSPACE*6;
 
+	menuitem[mi_quityes].name = "Yes";
+	menuitem[mi_quityes].x = ITEMX;
+	menuitem[mi_quityes].y = STARTY;
 
-	D_memcpy(menuscreen[ms_main].name, "Options", 8);
+	menuitem[mi_quitno].name = "No";
+	menuitem[mi_quitno].x = ITEMX;
+	menuitem[mi_quitno].y = STARTY+ITEMSPACE*1;
+
+	menuscreen[ms_main].name = "Options";
 	menuscreen[ms_main].firstitem = mi_game;
-	menuscreen[ms_main].numitems = mi_help - mi_game + 1;
+	menuscreen[ms_main].numitems = mi_quit - mi_game + 1;
 
-	D_memcpy(menuscreen[ms_audio].name, "Audio", 7);
+	menuscreen[ms_audio].name = "Audio";
 	menuscreen[ms_audio].firstitem = mi_soundvol;
 	menuscreen[ms_audio].numitems = mi_music - mi_soundvol + 1;
 
 	cd_avail = S_CDAvailable();
 	if (cd_avail) /* CDA or MD+ */
 	{
-		menuscreen[ms_audio].numitems++;
+		menuscreen[ms_audio].numitems++; // CD volume
+		menuscreen[ms_audio].numitems++; // SPCM
+#ifndef DISABLE_DMA_SOUND
 		if (cd_avail & 0x1) /* CD, not MD+ */
 			menuscreen[ms_audio].numitems++;
+#endif
 	}
 
-	D_memcpy(menuscreen[ms_video].name, "Video", 7);
+	menuscreen[ms_video].name = "Video";
 	menuscreen[ms_video].firstitem = mi_resolution;
-	menuscreen[ms_video].numitems = mi_anamorphic - mi_resolution + 1;
+	menuscreen[ms_video].numitems = mi_lowres - mi_resolution + 1;
 
-	D_memcpy(menuscreen[ms_controls].name, "Controls", 9);
+	menuscreen[ms_controls].name = "Controls";
 	menuscreen[ms_controls].firstitem = mi_controltype;
 	menuscreen[ms_controls].numitems = mi_strafebtns - mi_controltype + 1;
 
-	D_memcpy(menuscreen[ms_help].name, "Help", 4);
+	menuscreen[ms_help].name = "Help";
 	menuscreen[ms_help].firstitem = 0;
 	menuscreen[ms_help].numitems = 0;
+
+	menuscreen[ms_quit].name = "Quit?";
+	menuscreen[ms_quit].firstitem = mi_quityes;
+	menuscreen[ms_quit].numitems = mi_quitno - mi_quityes + 1;
 }
 
 /*
@@ -279,6 +329,7 @@ void O_Control (player_t *player)
 	int		buttons, oldbuttons;
 	menuscreen_t* menuscr;
 	boolean newcursor = false;
+	int playernum = player - players;
 	int curplayer = consoleplayer;
 
 	if (splitscreen && playernum != curplayer)
@@ -295,8 +346,8 @@ void O_Control (player_t *player)
 	}
 	menuscr = &menuscreen[screenpos];
 
-	buttons = ticbuttons[playernum] & MENU_BTNMASK;
-	oldbuttons = oldticbuttons[playernum] & MENU_BTNMASK;
+	buttons = player->ticbuttons & MENU_BTNMASK;
+	oldbuttons = player->oldticbuttons & MENU_BTNMASK;
 	
 	if ( ( (buttons & BT_OPTION) && !(oldbuttons & BT_OPTION) )
 #ifdef MARS
@@ -312,6 +363,8 @@ void O_Control (player_t *player)
 				M_Stop();
 			if (netgame == gt_single)
 				gamepaused ^= 1;
+			o_musictype = musictype;
+			o_sfxdriver = sfxdriver;
 			movecount = 0;
 			cursorpos = 0;
 			screenpos = ms_main;
@@ -331,7 +384,7 @@ void O_Control (player_t *player)
 		return;
 
 /* clear buttons so player isn't moving aroung */
-	ticbuttons[playernum] &= (BT_OPTION|BT_START);	/* leave option status alone */
+	player->ticbuttons &= (BT_OPTION|BT_START);	/* leave option status alone */
 
 	if (playernum != curplayer)
 		return;
@@ -375,6 +428,33 @@ void O_Control (player_t *player)
 	if (buttons & (BT_A | BT_LMBTN) && !(oldbuttons & (BT_A | BT_LMBTN)))
 	{
 		int itemno = menuscr->firstitem + cursorpos;
+
+		if (itemno == mi_quityes)
+		{
+			clearscreen = 2;
+
+			S_StartSound(NULL, sfx_slop);
+
+			// let the exit sound play
+			int ticcount = I_GetTime();
+			int lastticcount = ticcount;
+			int ticwait = 150;
+			do {
+				ticcount = I_GetTime();
+				S_UpdateSounds();
+			} while (ticcount - lastticcount < ticwait);
+
+			S_StopSong();
+
+			gameaction = ga_quit;
+			return;
+		}
+
+		if (itemno == mi_quitno)
+		{
+			goto goback;
+		}
+
 		if (menuscr->numitems > 0 && menuitem[itemno].screen != ms_none)
 		{
 			movecount = 0;
@@ -392,6 +472,7 @@ void O_Control (player_t *player)
 
 	if (buttons & (BT_B | BT_RMBTN) && !(oldbuttons & (BT_B | BT_RMBTN)))
 	{
+goback:
 		if (screenpos != ms_main)
 		{
 			int i;
@@ -467,10 +548,6 @@ void O_Control (player_t *player)
 				case mi_resolution:
 					R_SetViewportSize(slider->curval);
 					break;
-				case mi_anamorphic:
-					anamorphicview = slider->curval;
-					R_SetViewportSize(viewportNum);
-					break;
 				default:
 					break;
 
@@ -488,13 +565,25 @@ void O_Control (player_t *player)
 			{
 				if (buttons & BT_DOWN)
 				{
-					if (++cursorpos == menuscr->numitems)
+					++cursorpos;
+					if (!gameinfo.spcmDirList[0][0])
+					{
+						if (menuscr->firstitem+cursorpos == mi_spcmpack)
+							++cursorpos;
+					}
+					if (cursorpos == menuscr->numitems)
 						cursorpos = 0;
 				}
 
 				if (buttons & BT_UP)
 				{
-					if (--cursorpos == -1)
+					--cursorpos;
+					if (!gameinfo.spcmDirList[0][0])
+					{
+						if (menuscr->firstitem+cursorpos == mi_spcmpack)
+							--cursorpos;
+					}
+					if (cursorpos == -1)
 						cursorpos = menuscr->numitems-1;
 				}
 			}
@@ -504,6 +593,7 @@ void O_Control (player_t *player)
 				int oldcontroltype = controltype;
 				int oldalwaysrun = alwaysrun;
 				int oldstrafebtns = strafebtns;
+				int oldyabcdpad = yabcdpad;
 
 				if (buttons & BT_RIGHT)
 				{
@@ -520,7 +610,10 @@ void O_Control (player_t *player)
 						if (++strafebtns > 3)
 							strafebtns = 3;
 						break;
-
+					case mi_yabcdpad:
+						if (++yabcdpad > 1)
+							yabcdpad = 1;
+						break;
 					}
 				}
 				if (buttons & BT_LEFT)
@@ -538,33 +631,67 @@ void O_Control (player_t *player)
 						if (--strafebtns < 0)
 							strafebtns = 0;
 						break;
+					case mi_yabcdpad:
+						if (--yabcdpad < 0)
+							yabcdpad = 0;
+						break;
 					}
 				}
 
 				if (oldcontroltype != controltype ||
 					oldalwaysrun != alwaysrun ||
-					oldstrafebtns != strafebtns)
+					oldstrafebtns != strafebtns ||
+					oldyabcdpad != yabcdpad)
 					sound = sfx_stnmov;
 			}
 
 			if (screenpos == ms_audio)
 			{
+				int i;
 				int oldmusictype = o_musictype;
 				int oldsfxdriver = o_sfxdriver;
+				int oldspcmpack, curpack, numpacks;
+
+				curpack = -1;
+				numpacks = 0;
+				for (i = 0; i < MAX_SPCM_PACKS; i++) {
+					if (!gameinfo.spcmDirList[i][0]) {
+						numpacks = i;
+						break;
+					}
+					if (!D_strcasecmp(gameinfo.spcmDirList[i], spcmDir)) {
+						curpack = i;
+					}
+				}
+				if (i == MAX_SPCM_PACKS)
+					numpacks = MAX_SPCM_PACKS;
+				oldspcmpack = curpack;
 
 				if (buttons & BT_RIGHT)
 				{
 					switch (itemno) {
 					case mi_music:
-						if (++o_musictype > mustype_cd)
+						++o_musictype;
+						if (!gameinfo.spcmDirList[0][0])
+						{
+							if (o_musictype >= mustype_spcm)
+								o_musictype = mustype_cd;
+						}
+						if (o_musictype > mustype_cd)
 							o_musictype = mustype_cd;
-						if (o_musictype == mustype_cd && !S_CDAvailable())
+						if (o_musictype >= mustype_cd && !S_CDAvailable())
 							o_musictype = mustype_fm;
 						break;
+					case mi_spcmpack:
+						if (++curpack >= numpacks)
+							curpack = numpacks-1;
+						break;
+#ifndef DISABLE_DMA_SOUND
 					case mi_sfxdriver:
 						if (++o_sfxdriver > sfxdriver_pwm)
 							o_sfxdriver = sfxdriver_pwm;
 						break;
+#endif
 					}
 				}
 
@@ -575,10 +702,16 @@ void O_Control (player_t *player)
 						if (--o_musictype < mustype_none)
 							o_musictype = mustype_none;
 						break;
+					case mi_spcmpack:
+						if (--curpack < 0)
+							curpack = 0;
+						break;
+#ifndef DISABLE_DMA_SOUND
 					case mi_sfxdriver:
 						if (--o_sfxdriver < sfxdriver_auto)
 							o_sfxdriver = sfxdriver_auto;
 						break;
+#endif
 					}
 				}
 
@@ -592,11 +725,20 @@ void O_Control (player_t *player)
 				{
 					S_SetSoundDriver(o_sfxdriver);
 				}
+
+				if (oldspcmpack != curpack && curpack != -1)
+				{
+					S_SetSPCMDir(gameinfo.spcmDirList[curpack]);
+					if (musictype == mustype_spcm)
+						S_SetMusicType(mustype_spcmhack); // force refresh of the current dir
+					clearscreen = 2;
+				}
 			}
 
 			if (screenpos == ms_video)
 			{
 				int oldanamorphicview = anamorphicview;
+				int olddetailmode = detailmode;
 
 				if (buttons & BT_RIGHT)
 				{
@@ -604,6 +746,17 @@ void O_Control (player_t *player)
 					case mi_anamorphic:
 						if (++anamorphicview > 1)
 							anamorphicview = 1;
+						break;
+					case mi_detailmode:
+						if (++detailmode > detmode_normal)
+							detailmode = detmode_normal;
+						break;
+					case mi_lowres:
+						if (!lowres)
+						{
+							lowres = true;
+							R_SetViewportSize(viewportNum);
+						}
 						break;
 					}
 				}
@@ -615,9 +768,25 @@ void O_Control (player_t *player)
 						if (--anamorphicview < 0)
 							anamorphicview = 0;
 						break;
+					case mi_detailmode:
+						if (--detailmode < detmode_potato)
+							detailmode = detmode_potato;
+						break;
+					case mi_lowres:
+						if (lowres)
+						{
+							lowres = false;
+							R_SetViewportSize(viewportNum);
+						}
+						break;
 					}
 				}
 
+				if (olddetailmode != detailmode)
+				{
+					R_SetDrawFuncs();
+					sound = sfx_stnmov;
+				}
 				if (oldanamorphicview != anamorphicview)
 				{
 					R_SetViewportSize(viewportNum);
@@ -674,13 +843,25 @@ void O_Drawer (void)
 	
 	for (i = 0; i < menuscr->numitems; i++)
 	{
+		if (!gameinfo.spcmDirList[0][0])
+		{
+			if (menuscr->firstitem+i == mi_spcmpack)
+				continue;
+		}
+
 		y = items[i].y;
 		print(items[i].x, y, items[i].name);
 
 		if(items[i].slider)
 		{
+			int j;
 			slider_t* slider = &sliders[items[i].slider-1];
-			DrawJagobjLump(o_slidertrack, items[i].x + 2, items[i].y + ITEMSPACE, NULL, NULL);
+
+			DrawJagobjLump(o_sliderml, items[i].x + 2, items[i].y + ITEMSPACE, NULL, NULL);
+			for (j = 0; j < SLIDEWIDTH; j+=8)
+				DrawJagobjLump(o_slidermm, items[i].x + 2 + 6 + j, items[i].y + ITEMSPACE, NULL, NULL);
+			DrawJagobjLump(o_slidermr, items[i].x + 2 + 6 + j, items[i].y + ITEMSPACE, NULL, NULL);
+
 			offset = (slider->curval * SLIDEWIDTH) / slider->maxval;
 			DrawJagobjLump(o_slider, items[i].x + 7 + offset, items[i].y + ITEMSPACE, NULL, NULL);
 /*			ST_Num(menuitem[i].x + o_slider->width + 10,	 */
@@ -711,6 +892,7 @@ void O_Drawer (void)
 
 		O_DrawControl();
 
+		print(menuitem[mi_alwaysrun].x + 150, menuitem[mi_yabcdpad].y, yabcdpad ? "ON" : "OFF");
 		print(menuitem[mi_alwaysrun].x + 150, menuitem[mi_alwaysrun].y, alwaysrun ? "ON" : "OFF");
 		print(menuitem[mi_strafebtns].x + 150, menuitem[mi_strafebtns].y, strabtnstr);
 	}
@@ -725,10 +907,26 @@ void O_Drawer (void)
 			print(menuitem[mi_music].x + 85, menuitem[mi_music].y, "fm");
 			break;
 		case mustype_cd:
-			print(menuitem[mi_music].x + 85, menuitem[mi_music].y, "cd");
+			print(menuitem[mi_music].x + 85, menuitem[mi_music].y, "cda");
+			break;
+		case mustype_spcm:
+			print(menuitem[mi_music].x + 85, menuitem[mi_music].y, "spcm");
 			break;
 		}
 
+		if (gameinfo.spcmDirList[0][0])
+		{
+			if (menuscreen[ms_audio].numitems > 4)
+			{
+				if (spcmDir[0] != '\0') {
+					print(menuitem[mi_spcmpack].x + 85, menuitem[mi_spcmpack].y, spcmDir);
+				} else {
+					print(menuitem[mi_spcmpack].x + 85, menuitem[mi_spcmpack].y, "NONE");
+				}
+			}
+		}
+
+#ifndef DISABLE_DMA_SOUND
 		if (menuscreen[ms_audio].numitems > 3)
 		{
 			switch (o_sfxdriver) {
@@ -743,6 +941,7 @@ void O_Drawer (void)
 				break;
 			}
 		}
+#endif
 	}
 
 	if (screenpos == ms_video)
@@ -753,10 +952,31 @@ void O_Drawer (void)
 
 		switch (anamorphicview) {
 		case 0:
-			print(menuitem[mi_anamorphic].x + 150, menuitem[mi_anamorphic].y, "off");
+			print(menuitem[mi_anamorphic].x + 160, menuitem[mi_anamorphic].y, "off");
 			break;
 		case 1:
 			print(menuitem[mi_anamorphic].x + 150, menuitem[mi_anamorphic].y, "on");
+			break;
+		}
+
+		switch (detailmode) {
+		case detmode_potato:
+			print(menuitem[mi_detailmode].x + 90, menuitem[mi_detailmode].y, "simple");
+			break;
+		case detmode_lowres:
+			print(menuitem[mi_detailmode].x + 90, menuitem[mi_detailmode].y, "low-res");
+			break;
+		default:
+			print(menuitem[mi_detailmode].x + 90, menuitem[mi_detailmode].y, "high-res");
+			break;
+		}
+
+		switch (lowres) {
+		case true:
+			print(menuitem[mi_lowres].x + 160, menuitem[mi_lowres].y, "on");
+			break;
+		default:
+			print(menuitem[mi_lowres].x + 160, menuitem[mi_lowres].y, "off");
 			break;
 		}
 	}
@@ -773,10 +993,10 @@ void O_Drawer (void)
 		x2 = 88;
 		l2 = l;
 		x3 = x2+7*8+4;
-		I_Print8(x, l, "Next weap");
+		I_Print8(x, l, "Prev weap");
 		I_Print8(x2, l, "START+A");
 		l++;
-		I_Print8(x, l, "Prev weap");
+		I_Print8(x, l, "Next weap");
 		I_Print8(x2, l, "START+B");
 		l++;
 		I_Print8(x, l, "Automap");

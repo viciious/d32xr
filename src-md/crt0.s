@@ -23,6 +23,62 @@
 
         .equ REQ_ACT,   0xFFEF      /* Request 68000 Action */
 
+        .equ STRM_KON,    0xFFF0
+        .equ STRM_ID,     0xFFF1
+        .equ STRM_CHIP,   0xFFF2
+        .equ STRM_LMODE,  0xFFF3
+        .equ STRM_SSIZE,  0xFFF4
+        .equ STRM_SBASE,  0xFFF5
+        .equ STRM_FREQH,  0xFFF6
+        .equ STRM_FREQL,  0xFFF7
+        .equ STRM_OFFHH,  0xFFF8
+        .equ STRM_OFFHL,  0xFFF9
+        .equ STRM_OFFLH,  0xFFFA
+        .equ STRM_OFFLL,  0xFFFB
+        .equ STRM_LENHH,  0xFFFC
+        .equ STRM_LENHL,  0xFFFD
+        .equ STRM_LENLH,  0xFFFE
+        .equ STRM_LENLL,  0xFFFF
+
+        .equ RF5C68_ENV,  0xFFE0
+        .equ RF5C68_PAN,  0xFFE1
+        .equ RF5C68_FSH,  0xFFE2
+        .equ RF5C68_FSL,  0xFFE3
+        .equ RF5C68_LAH,  0xFFE4
+        .equ RF5C68_LAL,  0xFFE5
+        .equ RF5C68_STA,  0xFFE6
+        .equ RF5C68_CTL,  0xFFE7
+        .equ RF5C68_CHN,  0xFFE8
+
+        .equ STRM_ID,     0xFFF1
+        .equ STRM_CHIP,   0xFFF2
+        .equ STRM_LMODE,  0xFFF3
+        .equ STRM_SSIZE,  0xFFF4
+        .equ STRM_SBASE,  0xFFF5
+        .equ STRM_FREQH,  0xFFF6
+        .equ STRM_FREQL,  0xFFF7
+        .equ STRM_OFFHH,  0xFFF8
+        .equ STRM_OFFHL,  0xFFF9
+        .equ STRM_OFFLH,  0xFFFA
+        .equ STRM_OFFLL,  0xFFFB
+        .equ STRM_LENHH,  0xFFFC
+        .equ STRM_LENHL,  0xFFFD
+        .equ STRM_LENLH,  0xFFFE
+        .equ STRM_LENLL,  0xFFFF
+
+        .equ MARS_FRAMEBUFFER, 0x840200 /* 32X frame buffer */
+        .equ MARS_PWM_CTRL,    0xA15130
+        .equ MARS_PWM_CYCLE,   0xA15132
+        .equ MARS_PWM_MONO,    0xA15138
+
+        .equ COL_STORE, 0x600800    /* WORD RAM + 2K */
+
+        .equ NET_PORT,  0xA10005    /* port 2 data    (use 0xA10007 for EXT port) */
+        .equ NET_CTRL,  0xA1000B    /* port 2 control (use 0xA1000D for EXT port) */
+        .equ NET_SSND,  0xA10015    /* port 2 serial transmit (use 0xA1001B for EXT port) */
+        .equ NET_SRCV,  0xA10017    /* port 2 serial recieve  (use 0xA1001D for EXT port) */
+        .equ NET_SCTL,  0xA10019    /* port 2 serial  (use 0xA1001F for EXT port) */
+
         .macro  z80rd adr, dst
         move.b  0xA00000+\adr,\dst
         .endm
@@ -60,6 +116,18 @@
 
         .macro  clr_rv
         bclr    #0,0xA15107         /* clear RV */
+        .endm
+
+        .macro  mute_pcm
+        clr.w   pcm_env             /* mute PCM samples */
+        clr.w   dac_len
+        |tst.w   dac_len             /* drain the PCM buffer */
+        |bne.w   main_loop
+        |jsr     vgm_stop_samples
+        .endm
+
+        .macro  unmute_pcm
+        move.w  #0xFFFF,pcm_env
         .endm
 
 | 0x880800 - entry point for reset/cold-start
@@ -356,66 +424,69 @@ main_loop_start:
         move.l  #0,0xA15120         /* let Master SH2 run */
 
 main_loop:
-        tst.b   need_ctrl_int
-        beq.b   main_loop_bump_fm
-        move.b  #0,need_ctrl_int
-        /* send controller values to primary sh2 */
-        move.w  #0x0001,0xA15102    /* assert CMD INT to primary SH2 */
-10:
-        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
-        cmpi.w  #0xA55A,d0
-        bne.b   10b
-        move.w  ctrl1_val,0xA15122  /* controller 1 value in COMM2 */
-        move.w  #0xFF00,0xA15120
-11:
-        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
-        cmpi.w  #0xFF01,d0
-        bne.b   11b
-        move.w  ctrl2_val,0xA15122  /* controller 2 value in COMM2 */
-        move.w  #0xFF02,0xA15120
-20:
-        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
-        cmpi.w  #0xA55A,d0
-        bne.b   20b
-        /* done */
-        move.w  #0x5AA5,0xA15120
-30:
-        cmpi.w  #0x5AA5,0xA15120
-        beq.b   30b
+        tst.w   dac_len
+        beq.b   main_loop_chk_ctrl  /* done/none, silence */
+
+        move.l  dac_samples,a0
+        move.w  dac_center,d1
+        move.w  dac_len,d2
+        move.w  pcm_env,d3
+0:
+        tst.w   MARS_PWM_MONO       /* check mono reg status */
+        bmi.b   01f                 /* full */
+
+        move.b  (a0)+,d0            /* fetch dac sample */
+        eori.b  #0x80,d0            /* unsigned to signed */
+        ext.w   d0                  /* sign extend to word */
+|       add.w   d0,d0               /* *2 */
+|       add.w   d0,d0               /* *4 */
+        and.w   d3,d0
+        add.w   d1,d0
+        move.w  d0,MARS_PWM_MONO
+
+        subq.w  #1,d2
+        bne.b   0b                  /* not done */
+        move.w  dac_center,MARS_PWM_MONO /* silence */
+01:
+        move.w  d2,dac_len
+        move.l  a0,dac_samples
+
+main_loop_chk_ctrl:
+        bsr     snd_ctrl
 
 main_loop_bump_fm:
+        move.b  REQ_ACT.w,d0
+        cmpi.b  #0x03,d0
+        beq.b   0f                 /* stream start */
+        cmpi.b  #0x04,d0
+        beq.b   0f                 /* stream stop */
+        cmpi.b  #0x06,d0
+        beq.b   0f                 /* RF5C68 register write */
         tst.b   need_bump_fm
         beq.b   main_loop_handle_req
+0:
         move.b  #0,need_bump_fm
         bsr     bump_fm
+        jsr     scd_flush_cmd_queue
 
 main_loop_handle_req:
+        moveq   #0,d0
         move.w  0xA15120,d0         /* get COMM0 */
         bne.b   handle_req
 
         move.w  0xA15124,d0         /* get COMM4 */
         bne.w   handle_sec_req
 
-        /* check hot-plug count */
-        tst.b   hotplug_cnt
-        bne.w   main_loop
-        move.b  #60,hotplug_cnt
+        tst.w   fm_idx
+        beq.w   00f
 
-        move.w  ctrl1_val,d0
-        cmpi.w  #0xF001,d0
-        beq.b   0f                  /* mouse in port 1, check port 2 */
-        cmpi.w  #0xF000,d0
-        beq.b   1f                  /* no pad in port 1, do hot-plug check */
-0:
-        tst.b   net_type
-        bne.w   main_loop           /* networking enabled, ignore port 2 */
-        move.w  ctrl2_val,d0
-        cmpi.w  #0xF001,d0
-        beq.w   main_loop           /* mouse in port 2, exit */
-        cmpi.w  #0xF000,d0
-        bne.w   main_loop           /* pad in port 2, exit */
-1:
-        bsr     chk_ports
+        moveq.l #32,d0
+        move.l  d0,-(sp)
+        jsr     vgm_preread
+        addq.l  #4,sp
+
+00:
+        bsr     chk_hotplug
         bra.w   main_loop
 
 | process request from Master SH2
@@ -469,6 +540,17 @@ no_cmd:
         dc.w    update_sfx - prireqtbl
         dc.w    stop_sfx - prireqtbl
         dc.w    flush_sfx - prireqtbl
+        dc.w    store_bytes - prireqtbl
+        dc.w    load_bytes - prireqtbl
+        dc.w    open_cd_file_by_name - prireqtbl
+        dc.w    open_cd_file_by_handle - prireqtbl
+        dc.w    read_cd_file - prireqtbl
+        dc.w    seek_cd_file - prireqtbl
+        dc.w    load_sfx_cd_fileofs - prireqtbl
+        dc.w    read_cd_directory - prireqtbl
+        dc.w    resume_spcm_track - prireqtbl
+        dc.w    open_cd_tray - prireqtbl
+        dc.w    play_cd_roq_file - prireqtbl
 
 | process request from Secondary SH2
 handle_sec_req:
@@ -487,8 +569,10 @@ read_sram:
         moveq   #0,d1
 |        cmpi.w  #2,megasd_ok
 |        beq.b   rd_msd_sram
+.ifdef ENABLE_SSF_MAPPER
         tst.w   everdrive_ok
         bne.w   rd_med_sram
+.endif
 | assume standard mapper save ram
         add.l   d0,d0
         lea     0x200000,a0         /* use standard mapper save ram base */
@@ -510,13 +594,14 @@ rd_msd_sram:
         bra.w   exit_rd_sram
 
 rd_med_sram:
+        add.l   d0,d0
         tst.b   everdrive_ok
         bne.b   1f                  /* v1 or v2a MED */
         lea     0x040000,a0         /* use the upper 256K of page 31 */
         sh2_wait
         set_rv
         move.w  #0x801F,0xA130F0    /* map bank 0 to page 31, disable write */
-        move.b  0(a0,d0.l),d1       /* read SRAM */
+        move.b  1(a0,d0.l),d1       /* read SRAM */
         move.w  #0x8000,0xA130F0    /* map bank 0 to page 0, disable write */
         bra.b   exit_rd_sram
 1:
@@ -524,7 +609,7 @@ rd_med_sram:
         sh2_wait
         set_rv
         move.w  #0x801C,0xA130F0    /* map bank 0 to page 28, disable write */
-        move.b  0(a0,d0.l),d1       /* read SRAM */
+        move.b  1(a0,d0.l),d1       /* read SRAM */
         move.w  #0x8000,0xA130F0    /* map bank 0 to page 0, disable write */
 
 exit_rd_sram:
@@ -541,8 +626,10 @@ write_sram:
         move.w  0xA15122,d1         /* COMM2 holds offset */
 |        cmpi.w  #2,megasd_ok
 |        beq.b   wr_msd_sram
+.ifdef ENABLE_SSF_MAPPER
         tst.w   everdrive_ok
         bne.w   wr_med_sram
+.endif
 | assume standard mapper save ram
         add.l   d1,d1
         lea     0x200000,a0         /* use standard mapper save ram base */
@@ -566,13 +653,14 @@ wr_msd_sram:
         bra.w   exit_wr_sram
 
 wr_med_sram:
+        add.l   d1,d1
         tst.b   everdrive_ok
         bne.b   1f                  /* v1 or v2a MED */
         lea     0x040000,a0         /* use the upper 256K of page 31 */
         sh2_wait
         set_rv
         move.w  #0xA01F,0xA130F0    /* map bank 0 to page 31, enable write */
-        move.b  d0,0(a0,d1.l)       /* write SRAM */
+        move.b  d0,1(a0,d1.l)       /* write SRAM */
         move.w  #0x8000,0xA130F0    /* map bank 0 to page 0, disable write */
         bra.b   exit_wr_sram
 1:
@@ -580,7 +668,7 @@ wr_med_sram:
         sh2_wait
         set_rv
         move.w  #0xA01C,0xA130F0    /* map bank 0 to page 28, enable write */
-        move.b  d0,0(a0,d1.l)       /* write SRAM */
+        move.b  d0,1(a0,d1.l)       /* write SRAM */
         move.w  #0x8000,0xA130F0    /* map bank 0 to page 0, disable write */
 
 exit_wr_sram:
@@ -605,51 +693,97 @@ set_rom_bank:
 start_music:
         tst.w   use_cd
         bne     start_cd
-        
-        /* start VGM */
+
         clr.l   vgm_ptr
-        cmpi.w  #0x0300,d0
-        beq.b   0f
 
-        /* fetch VGM length */
-        lea     vgm_size,a0
-        move.w  0xA15122,0(a0)
-        move.w  #0,0xA15120         /* done with upper word */
-20:
-        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
-        cmpi.w  #0x0302,d0
-        bne.b   20b
-        move.w  0xA15122,2(a0)
-        move.w  #0,0xA15120         /* done with lower word */
-
-        /* fetch VGM offset */
-        lea     vgm_ptr,a0
-21:
-        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
-        cmpi.w  #0x0303,d0
-        bne.b   21b
-        move.w  0xA15122,0(a0)
-        move.w  #0,0xA15120         /* done with upper word */
-22:
-        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
-        cmpi.w  #0x0304,d0
-        bne.b   22b
-        move.w  0xA15122,2(a0)
-        move.w  #0,0xA15120         /* done with lower word */
-
-23:
-        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
-        cmpi.w  #0x0300,d0
-        bne.b   23b
-
-0:
-        /* set VGM pointer and init VGM player */
+        /* init VGM player */
         move.w  0xA15122,d0         /* COMM2 = index | repeat flag */
         move.w  #0x8000,d1
         and.w   d0,d1               /* repeat flag */
         eor.w   d1,d0               /* clear flag from index */
         move.w  d1,fm_rep           /* repeat flag */
         move.w  d0,fm_idx           /* index 1 to N */
+        move.w  0xA15120,d0         /* COMM0 */
+
+        /* fetch VGM offset */
+        lea     vgm_ptr,a0
+        move.l  0xA15128,(a0)       /* offset in COMM8 */
+        /* fetch VGM length */
+        lea     vgm_size,a0
+        move.l  0xA1512C,(a0)       /* length in COMM12 */
+
+        /* start VGM */
+        btst    #0,d0               /* check if we read from CD */
+        beq     07f
+
+        move.w  0xA15100,d0
+        eor.w   #0x8000,d0
+        move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
+
+        /* copy frame buffer string to local buffer */
+        lea     MARS_FRAMEBUFFER,a0         /* frame buffer */
+        lea     vgm_lzss_buf,a1
+00:
+        move.b  (a0)+,(a1)+
+        bne.b   00b
+
+        move.w  0xA15100,d0
+        or.w    #0x8000,d0
+        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        move.w  0xA15120,d0         /* COMM0 */
+        btst    #1,d0               /* check if we read SPCM */
+        beq.b   01f
+
+        tst.w   fm_rep              /* start playback of non-looping tracks synchronously */
+        beq.b   04f
+        move.w  #0,0xA15120         /* done (continue asycnronously) */
+
+04:
+        /* we read SPCM from CD */
+        clr.w   fm_idx
+        moveq   #0,d1
+        tst.w   fm_rep
+        beq.b   03f
+        moveq   #1,d1
+03:
+        move.l  d1,-(sp)
+        lea     vgm_lzss_buf,a1
+        move.l  a1,-(sp)
+        move.w  #0x2700,sr          /* disable ints */
+        jsr     scd_play_spcm_track
+        move.w  #0x2000,sr          /* enable ints */
+        lea     8(sp),sp
+
+        tst.w   fm_rep
+        bne.w   main_loop           /* a looping track */
+
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+01:
+        /* CD VGM playback */
+        move.l  0xA1512C,d1         /* length in COMM12 */
+        move.l  d1,-(sp)
+        move.l  0xA15128,d1         /* offset in COMM8 */
+        move.l  d1,-(sp)
+
+        tst.w   fm_rep              /* start playback of non-looping tracks synchronously */
+        beq.b   05f
+        move.w  #0,0xA15120         /* done */
+
+05:
+        /* we read VGM from CD */
+        lea     vgm_lzss_buf,a1
+        move.l  a1,-(sp)
+        jsr     vgm_cache_scd
+        lea     12(sp),sp
+        move.l  d0,a1
+
+        bra     02f
+
+07:
+        /* ROM VGM playback */
         move.w  #0,0xA15104         /* set cart bank select */
         move.l  #0,a0
         move.l  vgm_ptr,d0          /* set VGM offset */
@@ -657,7 +791,11 @@ start_music:
 
         move.l  d0,a0
         bsr     set_rom_bank
-
+02:
+        tst.w   fm_rep
+        bne.b   06f
+        move.w  #0,0xA15120         /* done */
+06:
         move.l  a1,-(sp)            /* MD lump ptr */
         jsr     vgm_setup           /* setup lzss, set pcm_baseoffs, set vgm_ptr, read first block */
         lea     4(sp),sp
@@ -688,29 +826,6 @@ start_music:
         bne.b   3b
 
 | FM setup
-        movea.l vgm_ptr,a6          /* lzss buffer */
-        lea     0x1C(a6),a6         /* loop offset */
-| get vgm loop offset
-        move.b  (a6)+,d0
-        move.b  (a6)+,d1
-        move.b  (a6)+,d2
-        move.b  (a6)+,d3
-        move.b  d3,-(sp)
-        move.w  (sp)+,d3            /* shift left 8 */
-        move.b  d2,d3
-        swap    d3
-        move.b  d1,-(sp)
-        move.w  (sp)+,d3            /* shift left 8 */
-        move.b  d0,d3
-        tst.l   d3
-        beq.b   0f                  /* no loop offset, use default song start */
-        addi.l  #0x1C,d3
-        bra.b   1f
-0:
-        moveq   #0x40,d3
-1:
-        move.l  d3,fm_loop          /* loop offset */
-
         movea.l vgm_ptr,a6
         lea     8(a6),a6            /* version */
         move.b  (a6)+,d0
@@ -725,7 +840,8 @@ start_music:
         move.w  (sp)+,d3            /* shift left 8 */
         move.b  d0,d3
         cmpi.l  #0x150,d3           /* >= v1.50? */
-        bcs     2f                  /* no, default to song start of offset 0x40 */
+        bcs     2f                  /* no, default to song start of
+offset 0x40 */
 
         movea.l vgm_ptr,a6
         lea     0x34(a6),a6         /* VGM data offset */
@@ -748,6 +864,34 @@ start_music:
         moveq   #0x40,d3
 3:
         move.l  d3,fm_start         /* start of song data */
+
+        movea.l vgm_ptr,a6
+        lea     0x1C(a6),a6         /* loop offset */
+| get vgm loop offset
+        move.b  (a6)+,d0
+        move.b  (a6)+,d1
+        move.b  (a6)+,d2
+        move.b  (a6)+,d3
+        move.b  d3,-(sp)
+        move.w  (sp)+,d3            /* shift left 8 */
+        move.b  d2,d3
+        swap    d3
+        move.b  d1,-(sp)
+        move.w  (sp)+,d3            /* shift left 8 */
+        move.b  d0,d3
+        tst.l   d3
+        beq.b   0f                  /* no loop offset, use default song start */
+        addi.l  #0x1C,d3
+        bra.b   1f
+0:
+        move.l  fm_start,d3
+1:
+        move.l  d3,fm_loop          /* loop offset */
+
+        move.l  fm_start, d3
+
+        unmute_pcm
+
         z80wr   FM_START,d3         /* start song => FX_START = start offset */
         lsr.w   #8,d3
         z80wr   FM_START+1,d3
@@ -776,12 +920,14 @@ start_music:
         move.w  #0x0000,0xA11100    /* Z80 deassert bus request */
         move.w  #0x0100,0xA11200    /* Z80 deassert reset - run driver */
 
+        tst.w   fm_rep
+        beq.b   5f
         move.w  #0,0xA15120         /* done */
+5:
         bra     main_loop
 9:
         clr.w   fm_idx              /* not playing VGM */
 
-        move.w  #0,0xA15120         /* done */
         bra     main_loop
 
 start_cd:
@@ -857,9 +1003,17 @@ start_cd:
         bra     main_loop
 
 stop_music:
-        tst.w    use_cd
-        bne.b    stop_cd
+        tst.w   use_cd
+        bne.w   stop_cd
 
+        tst.w   cd_ok
+        beq.w   stop_fm
+
+        move.w  #0x2700,sr          /* disable ints */
+        jsr     scd_stop_spcm_track
+        move.w  #0x2000,sr          /* enable ints */
+
+stop_fm:
         /* stop VGM */
         move.w  #0x0100,0xA11100    /* Z80 assert bus request */
         move.w  #0x0100,0xA11200    /* Z80 deassert reset */
@@ -869,6 +1023,7 @@ stop_music:
         bne.b   0b                  /* wait for bus acquired */
 
         jsr     rst_ym2612          /* reset FM chip */
+        jsr     vgm_stop_samples
 
         moveq   #0,d0
         lea     0x00FFFFE0,a0       /* top of stack */
@@ -901,6 +1056,7 @@ stop_music:
 
         clr.w   fm_idx              /* stop music */
         clr.w   fm_rep
+        clr.w   fm_stream
 
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -1051,12 +1207,12 @@ ext_serial:
         lea     net_rdbuf,a0
         move.w  net_wbix,d1
 
-        btst    #2,0xA10019         /* check RERR on serial control register of joypad port 2 */
+        btst    #2,NET_SCTL         /* check RERR on serial control register of joypad port 2 */
         bne.b   1f                  /* error */        
-        btst    #1,0xA10019         /* check RRDY on serial control register of joypad port 2 */
+        btst    #1,NET_SCTL         /* check RRDY on serial control register of joypad port 2 */
         beq.b   3f                  /* no byte available, ignore int */
         moveq   #0,d0               /* clear serial status byte */
-        move.b  0xA10017,d0         /* received byte */
+        move.b  NET_SRCV,d0         /* received byte */
         bra.b   2f
 1:
         move.w  #0xFF04,d0          /* serial status and received byte = 0xFF04 (serial read error) */
@@ -1073,15 +1229,15 @@ ext_serial:
 
 ext_link:
         move.w  #0x2700,sr          /* disable ints */
-        btst    #6,0xA10005         /* check TH asserted */
+        btst    #6,NET_PORT         /* check TH asserted */
         bne.b   2f                  /* no, extraneous ext int */
 
         move.l  d1,-(sp)
         lea     net_rdbuf,a0
         move.w  net_wbix,d1
 
-        move.b  0xA10005,d0         /* read nibble from other console */
-        move.b  #0x00,0xA10005      /* assert handshake (TR low) */
+        move.b  NET_PORT,d0         /* read nibble from other console */
+        move.b  #0x00,NET_PORT      /* assert handshake (TR low) */
 
         move.b  d0,0(a0,d1.w)       /* write port byte to buffer - one nibble of data */
         addq.w  #1,d1
@@ -1091,37 +1247,33 @@ ext_link:
 0:
         nop
         nop
-        btst    #6,0xA10005         /* check TH deasserted */
+        btst    #6,NET_PORT         /* check TH deasserted */
         bne.b   1f                  /* handshake */
-        dbra    d2,0b
+        dbra    d1,0b
+        move.b  #0x20,NET_PORT      /* deassert handshake (TR high) */
         bra.b   3f                  /* timeout err */
 1:
-        move.b  #0x20,0xA10005      /* deassert handshake (TR high) */
+        move.b  #0x20,NET_PORT      /* deassert handshake (TR high) */
         move.l  (sp)+,d1
 2:
         movea.l (sp)+,a0
         move.l  (sp)+,d0
         rte
 3:
-        /* timeout during handshake - shut down link net */
-        clr.b   net_type
-        clr.l   extint
-        move.w  #0x8B00,0xC00004    /* reg 11 = /IE2 (no EXT INT), full scroll */
-        move.b  #0x40,0xA1000B      /* port 2 to neutral setting */
-        nop
-        nop
-        move.b  #0x40,0xA10005
+        /* timeout during handshake - clear buffer */
+        clr.w   net_rbix
+        clr.w   net_wbix
         move.l  (sp)+,d1
         movea.l (sp)+,a0
         move.l  (sp)+,d0
         rte
 
 init_serial:
-        move.w  #0xF000,ctrl2_val    /* port 1 ID = SEGA_CTRL_NONE */
-        move.b  #0x10,0xA1000B      /* all pins inputs except TL (Pin 6) */
+        move.w  #0xF000,ctrl2_val   /* port 1 ID = SEGA_CTRL_NONE */
+        move.b  #0x10,NET_CTRL      /* all pins inputs except TL (Pin 6) */
         nop
         nop
-        move.b  #0x38,0xA10019      /* 4800 Baud 8-N-1, RDRDY INT allowed */
+        move.b  #0x38,NET_SCTL      /* 4800 Baud 8-N-1, RDRDY INT allowed */
         clr.w   net_rbix
         clr.w   net_wbix
         move.l  #ext_serial,extint  /* serial read data ready handler */
@@ -1130,14 +1282,14 @@ init_serial:
         bra     main_loop
 
 init_link:
-        move.w  #0xF000,ctrl2_val    /* port 1 ID = SEGA_CTRL_NONE */
-        move.b  #0x00,0xA10019      /* no serial */
+        move.w  #0xF000,ctrl2_val   /* port 1 ID = SEGA_CTRL_NONE */
+        move.b  #0x00,NET_SCTL      /* no serial */
         nop
         nop
-        move.b  #0xA0,0xA1000B      /* all pins inputs except TR, TH INT allowed */
+        move.b  #0xA0,NET_CTRL      /* all pins inputs except TR, TH INT allowed */
         nop
         nop
-        move.b  #0x20,0xA10005      /* TR set */
+        move.b  #0x20,NET_PORT      /* TR set */
         clr.w   net_rbix
         clr.w   net_wbix
         move.l  #ext_link,extint    /* TH INT handler */
@@ -1196,12 +1348,12 @@ write_serial:
         move.w  net_link_timeout,d1
 0:
         bsr     bump_fm
-        btst    #0,0xA10019         /* ok to transmit? */
+        btst    #0,NET_SCTL         /* ok to transmit? */
         beq.b   1f                  /* yes */
         dbra    d1,0b               /* wait until ok to transmit */
         bra.b   2f                  /* timeout err */
 1:
-        move.b  d0,0xA10015         /* Send byte */
+        move.b  d0,NET_SSND         /* Send byte */
         move.w  #0,0xA15122         /* okay */
         move.w  #0,0xA15120         /* done */
         move.w  #0x2000,sr          /* enable ints */
@@ -1214,33 +1366,33 @@ write_serial:
 
 write_link:
         move.w  #0x2700,sr          /* disable ints */
-        move.b  #0x2F,0xA1000B      /* only TL and TH in, TH INT not allowed */
+        move.b  #0x2F,NET_CTRL      /* only TL and TH in, TH INT not allowed */
 
         move.b  d0,d1               /* save lsn */
         lsr.b   #4,d0               /* msn */
         ori.b   #0x20,d0            /* set TR line */
-        move.b  d0,0xA10005         /* set nibble out */
+        move.b  d0,NET_PORT         /* set nibble out */
         nop
         nop
         andi.b  #0x0F,d0            /* clr TR line */
-        move.b  d0,0xA10005         /* assert TH of other console */
+        move.b  d0,NET_PORT         /* assert TH of other console */
 
         /* wait on handshake */
         move.w  net_link_timeout,d2
 0:
         bsr     bump_fm
-        btst    #6,0xA10005         /* check for TH low (handshake) */
+        btst    #6,NET_PORT         /* check for TH low (handshake) */
         beq.b   1f                  /* handshake */
         dbra    d2,0b
         bra.w   9f                  /* timeout err */
 1:
         ori.b   #0x20,d0            /* set TR line */
-        move.b  d0,0xA10005         /* deassert TH of other console */
+        move.b  d0,NET_PORT         /* deassert TH of other console */
         move.w  net_link_timeout,d2
 2:
         nop
         nop
-        btst    #6,0xA10005         /* wait for TH high (handshake done) */
+        btst    #6,NET_PORT         /* wait for TH high (handshake done) */
         bne.b   3f                  /* handshake */
         dbra    d2,2b
         bra.w   9f                  /* timeout err */
@@ -1248,39 +1400,39 @@ write_link:
         moveq   #0x0F,d0
         and.b   d1,d0               /* lsn */
         ori.b   #0x20,d0            /* set TR line */
-        move.b  d0,0xA10005         /* set nibble out */
+        move.b  d0,NET_PORT         /* set nibble out */
         nop
         nop
         andi.b  #0x0F,d0            /* clr TR line */
-        move.b  d0,0xA10005         /* assert TH of other console */
+        move.b  d0,NET_PORT         /* assert TH of other console */
 
         /* wait on handshake */
 4:
         bsr     bump_fm
-        btst    #6,0xA10005         /* check for TH low (handshake) */
+        btst    #6,NET_PORT         /* check for TH low (handshake) */
         bne.b   4b
 
         ori.b   #0x20,d0            /* set TR line */
-        move.b  d0,0xA10005         /* deassert TH of other console */
+        move.b  d0,NET_PORT         /* deassert TH of other console */
 5:
         nop
         nop
-        btst    #6,0xA10005         /* wait for TH high (handshake done) */
+        btst    #6,NET_PORT         /* wait for TH high (handshake done) */
         beq.b   5b
 
-        move.b  #0x20,0xA10005      /* TR set */
+        move.b  #0x20,NET_PORT      /* TR set */
         nop
         nop
-        move.b  #0xA0,0xA1000B      /* all pins inputs except TR, TH INT allowed */
+        move.b  #0xA0,NET_CTRL      /* all pins inputs except TR, TH INT allowed */
         move.w  #0,0xA15122         /* okay */
         move.w  #0,0xA15120         /* done */
         move.w  #0x2000,sr          /* enable ints */
         bra     main_loop
 9:
-        move.b  #0x20,0xA10005      /* TR set */
+        move.b  #0x20,NET_PORT      /* TR set */
         nop
         nop
-        move.b  #0xA0,0xA1000B      /* all pins inputs except TR, TH INT allowed */
+        move.b  #0xA0,NET_CTRL      /* all pins inputs except TR, TH INT allowed */
         move.w  #0xFFFF,0xA15122    /* timeout */
         move.w  #0,0xA15120         /* done */
         move.w  #0x2000,sr          /* enable ints */
@@ -1315,13 +1467,13 @@ net_cleanup:
         clr.b   net_type
         clr.l   extint
         move.w  #0x8B00,0xC00004    /* reg 11 = /IE2 (no EXT INT), full scroll */
-        move.b  #0x00,0xA10019      /* no serial */
+        move.b  #0x00,NET_SCTL      /* no serial */
         nop
         nop
-        move.b  #0x40,0xA1000B      /* port 2 to neutral setting */
+        move.b  #0x40,NET_CTRL      /* port 2 to neutral setting */
         nop
         nop
-        move.b  #0x40,0xA10005
+        move.b  #0x40,NET_PORT
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
@@ -1543,6 +1695,8 @@ ctl_md_vdp:
         bra     main_loop
 
 cpy_md_vram:
+        mute_pcm
+
         move.w  0xA15100,d1
         eor.w   #0x8000,d1
         move.w  d1,0xA15100         /* unset FM - disallow SH2 access to FB */
@@ -1553,7 +1707,7 @@ cpy_md_vram:
         move.b  d0,d1               /* column number */
         add.w   d1,d1
 
-        lea     0x840200,a2         /* frame buffer */
+        lea     MARS_FRAMEBUFFER,a2         /* frame buffer */
         lea     0(a2,d1.l),a2
 
         cmpi.w  #0x1C00,d0
@@ -1604,7 +1758,16 @@ cpy_md_vram:
         add     d2,d2
         add     d2,d1
 
-        lea     col_store,a0
+        lea     aux_store,a0
+        tst.w   cd_ok
+        beq     20f                 /* couldn't init cd */
+
+        moveq   #0,d0
+        move.l  d0,-(sp)
+        jsr     scd_switch_to_bank
+        lea     4(sp),sp
+        lea     COL_STORE,a0        /* use the word ram for column storage */
+20:
         lea     0(a0,d1.l),a0
         move.w  #27,d0
 3:
@@ -1622,6 +1785,8 @@ cpy_md_vram:
         move.w  0xA15100,d0
         or.w    #0x8000,d0
         move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        unmute_pcm
 
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -1708,7 +1873,16 @@ cpy_md_vram:
 
         lea     0(a2,d0.l),a2
 
-        lea     col_store,a0
+        lea     aux_store,a0
+        tst.w   cd_ok
+        beq     70f                 /* couldn't init cd */
+
+        moveq   #0,d0
+        move.l  d0,-(sp)
+        jsr     scd_switch_to_bank
+        lea     4(sp),sp
+        lea     COL_STORE,a0        /* use the word ram for column storage */
+70:
         lea     0(a0,d1.l),a0
 
         move.w  2(a1), d0           /* length in words */
@@ -1740,6 +1914,8 @@ cpy_md_vram:
         or.w    #0x8000,d0
         move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
 
+        unmute_pcm
+
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
@@ -1767,7 +1943,7 @@ cpy_md_vram:
         swap    d2
         move.l  d1,4(a0)            /* cmd port <- read VRAM at offset */
         move.w  #27,d0
-        lea     col_store+20*224*2,a1
+        lea     col_swap,a1
 11:
         /* vram to swap buffer */
         move.w  (a0),(a1)+          /* next word */
@@ -1821,10 +1997,19 @@ cpy_md_vram:
         add     d2,d2
         add     d2,d1
 
-        lea     col_store,a0
+        lea     aux_store,a0
+        tst.w   cd_ok
+        beq     121f                /* couldn't init cd */
+
+        moveq   #0,d0
+        move.l  d0,-(sp)
+        jsr     scd_switch_to_bank
+        lea     4(sp),sp
+        lea     COL_STORE,a0        /* use the word ram for column storage */
+121:
         lea     0(a0,d1.l),a0
         move.w  #27,d0
-        lea     col_store+20*224*2,a1
+        lea     col_swap,a1
 13:
         /* wram to swap buffer */
         move.w  (a0)+,(a1)+         /* next word */
@@ -1871,6 +2056,8 @@ cpy_md_vram:
         move.w  0xA15100,d0
         or.w    #0x8000,d0
         move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        unmute_pcm
 
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -1929,18 +2116,12 @@ load_sfx:
 play_sfx:
         /* set source id */
         moveq   #0,d0
-        move.b  0xA15121,d0         /* LB of COMM0 = src id */
-
-        moveq   #0,d2
-        move.w  0xA15122,d2         /* pan|vol */
-        move.w  #0,0xA15120
-20:
-        move.w  0xA15120,d1         /* wait on handshake in COMM0 */
-        cmpi.w  #0x1E01,d1
-        bne.b   20b
-
         moveq   #0,d1
-        move.w  0xA15122,d1         /* buf_id */
+        moveq   #0,d2
+
+        move.b  0xA15121,d0         /* LB of COMM0 = src id */
+        move.w  0xA15122,d2         /* pan|vol */
+        move.w  0xA15128,d1         /* freq */
 
         move.w  d2,d3
         andi.l  #255,d3
@@ -1949,8 +2130,9 @@ play_sfx:
         move.l  #0,-(sp)            /* autoloop */
         move.l  d3,-(sp)            /* vol */
         move.l  d2,-(sp)            /* pan */ 
-        move.l  #0,-(sp)            /* freq */
-        move.l  d1,-(sp)            /* buf id */
+        move.l  d1,-(sp)
+        move.w  0xA1512A,d1         /* buf_id */
+        move.l  d1,-(sp)
         move.l  d0,-(sp)            /* src id */
 
         move.w  #0,0xA15120         /* done */
@@ -1978,10 +2160,11 @@ sfx_clear:
 update_sfx:
         /* set source id */
         moveq   #0,d0
-        move.b  0xA15121,d0         /* LB of COMM0 = src id */
-
         moveq   #0,d2
+
+        move.b  0xA15121,d0         /* LB of COMM0 = src id */
         move.w  0xA15122,d2         /* pan|vol */
+        move.w  0xA15128,d1         /* freq */
 
         move.w  d2,d3
         andi.l  #255,d3
@@ -1990,7 +2173,7 @@ update_sfx:
         move.l  #0,-(sp)            /* autoloop */
         move.l  d3,-(sp)            /* vol */
         move.l  d2,-(sp)            /* pan */ 
-        move.l  #0,-(sp)            /* freq */
+        move.l  d1,-(sp)            /* freq */
         move.l  d0,-(sp)            /* src id */
 
         move.w  #0,0xA15120         /* done */
@@ -2019,6 +2202,206 @@ flush_sfx:
         jsr     scd_flush_cmd_queue
 
         move.b  #1,need_bump_fm
+        bra     main_loop
+
+store_bytes:
+        moveq   #0,d1
+        move.w  0xA15122,d1         /* COMM2 = length */
+
+        lea     MARS_FRAMEBUFFER,a2
+        lea     aux_store,a1
+        
+        move.l  d1,-(sp)            /* length */
+        move.l  a2,-(sp)            /* source */
+        move.l  a1,-(sp)            /* destination */
+
+        move.w  0xA15100,d0
+        eor.w   #0x8000,d0
+        move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
+
+        jsr     memcpy
+        lea     12(sp),sp           /* clear the stack */
+
+        move.w  0xA15100,d0
+        or.w    #0x8000,d0
+        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+load_bytes:
+        moveq   #0,d1
+        move.w  0xA15122,d1         /* COMM2 = length */
+
+        lea     MARS_FRAMEBUFFER,a1
+        lea     aux_store,a2
+
+        move.l  d1,-(sp)            /* length */
+        move.l  a2,-(sp)            /* source */
+        move.l  a1,-(sp)            /* destination */
+
+        move.w  0xA15100,d0
+        eor.w   #0x8000,d0
+        move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
+
+        jsr     memcpy
+        lea     12(sp),sp           /* clear the stack */
+
+        move.w  0xA15100,d0
+        or.w    #0x8000,d0
+        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+open_cd_file_by_name:
+        mute_pcm
+        jsr vgm_stop_samples
+
+        move.w  0xA15100,d0
+        eor.w   #0x8000,d0
+        move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
+
+        lea     MARS_FRAMEBUFFER,a1 /* frame buffer */
+        move.l  a1,-(sp)            /* string pointer */
+        jsr     scd_open_gfile_by_name
+        lea     4(sp),sp            /* clear the stack */
+        move.l  d0,0xA15128         /* length => COMM8 */
+        move.l  d1,0xA1512C         /* offset => COMM12 */
+
+        move.w  0xA15100,d0
+        or.w    #0x8000,d0
+        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        unmute_pcm
+
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+open_cd_file_by_handle:
+        move.l  0xA15128,d0         /* length => COMM8 */
+        move.l  0xA1512C,d1         /* offset => COMM12 */
+
+        move.l  d1,-(sp)
+        move.l  d0,-(sp)
+        jsr     scd_open_gfile_by_length_offset
+        lea     8(sp),sp            /* clear the stack */
+
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+read_cd_file:
+        mute_pcm
+        jsr     vgm_stop_samples
+
+        move.w  0xA15100,d0
+        eor.w   #0x8000,d0
+        move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
+
+        move.l  0xA15128,d0         /* length in COMM8 */
+        move.l  d0,-(sp)
+        lea     MARS_FRAMEBUFFER,a1
+        move.l  a1,-(sp)            /* destination pointer */
+        jsr     scd_read_gfile
+        lea     8(sp),sp            /* clear the stack */
+        move.l  d0,0xA15128         /* length => COMM8 */
+
+        move.w  0xA15100,d0
+        or.w    #0x8000,d0
+        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        unmute_pcm
+
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+seek_cd_file:
+        moveq   #0,d0
+        move.w  0xA15122,d0         /* whence in COMM2 */
+        move.l  d0,-(sp)
+        move.l  0xA15128,d0         /* offset in COMM8 */
+        move.l  d0,-(sp)
+        jsr     scd_seek_gfile
+        lea     8(sp),sp            /* clear the stack */
+        move.l  d0,0xA15128         /* position => COMM8 */
+
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+load_sfx_cd_fileofs:
+        jsr     scd_init_pcm        /* FIXME: find a better place for it */
+
+        lea     MARS_FRAMEBUFFER,a1 /* frame buffer */
+        move.l  a1,-(sp)            /* file name + offsets */
+
+        moveq   #0,d0
+        move.b  0xA15121,d0         /* LSB of COMM0 = num sfx */
+        move.l  d0,-(sp)
+
+        /* set buffer id */
+        move.w  0xA15122,d0         /* COMM2 = start buffer id */
+        move.l  d0,-(sp)
+
+        move.w  0xA15100,d0
+        eor.w   #0x8000,d0
+        move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
+
+        jsr     scd_upload_buf_fileofs
+        lea     16(sp),sp
+
+        move.w  0xA15100,d0
+        or.w    #0x8000,d0
+        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        move.w  #0,0xA15120         /* done */
+
+        bra     main_loop
+
+read_cd_directory:
+        move.w  0xA15100,d0
+        eor.w   #0x8000,d0
+        move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
+
+        lea     MARS_FRAMEBUFFER,a1
+        move.l  a1,-(sp)            /* path and destination buffer */
+        jsr     scd_read_directory
+        lea     4(sp),sp            /* clear the stack */
+        move.l  d0,0xA15128         /* length => COMM8 */
+        move.l  d1,0xA1512C         /* num entries(result) => COMM12 */
+
+        move.w  0xA15100,d0
+        or.w    #0x8000,d0
+        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+resume_spcm_track:
+        move.w  #0x2700,sr          /* disable ints */
+        jsr     scd_resume_spcm_track
+        move.w  #0x2000,sr          /* enable ints */
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+open_cd_tray:
+        move.w  #0x2700,sr          /* disable ints */
+        jsr     scd_open_tray
+        move.w  #0x2000,sr          /* enable ints */
+        move.w  #0,0xA15120         /* done */
+        bra     main_loop
+
+play_cd_roq_file:
+        jsr     scd_gfile_length
+        move.l  d0,-(sp)            /* path and destination buffer */
+        jsr     scd_tell_gfile
+        move.l  d0,-(sp)            /* path and destination buffer */
+        lea.l   0xA15120,a0
+        move.l  a0,-(sp)            /* communication register address */
+
+        jsr     scd_play_roq
+        lea     12(sp),sp           /* clear the stack */
+
+        move.w  #0,0xA15120         /* done */
         bra     main_loop
 
 | set standard mapper registers to default mapping
@@ -2055,7 +2438,6 @@ init_vdp:
         move.w  #0x8800,(a0) /* reg 8 = always 0 */
         move.w  #0x8900,(a0) /* reg 9 = always 0 */
         move.w  #0x8A00,(a0) /* reg 10 = HINT = 0 */
-        move.w  #0x8B00,(a0) /* reg 11 = /IE2 (no EXT INT), full scroll */
         move.w  #0x8C81,(a0) /* reg 12 = H40 mode, no lace, no shadow/hilite */
         move.w  #0x8D2B,(a0) /* reg 13 = HScroll Tbl = 0xAC00 */
         move.w  #0x8E00,(a0) /* reg 14 = always 0 */
@@ -2140,10 +2522,11 @@ load_font:
         lea     0xC00000,a1         /* VDP data reg */
         move.w  #0x8F02,(a0)        /* INC = 2 */
         move.l  #0x40000000,(a0)    /* write VRAM address 0 */
-        lea     font_data,a2
+|        lea     font_data,a2
         move.w  #0x6B*8-1,d2
-0:
-        move.l  (a2)+,d0            /* font fg mask */
+|0:
+        move.l  #0,d0
+|        move.l  (a2)+,d0            /* font fg mask */
         move.l  d0,d1
         not.l   d1                  /* font bg mask */
         and.l   fg_color,d0         /* set font fg color */
@@ -2152,7 +2535,6 @@ load_font:
         move.l  d0,(a1)             /* set tile line */
         dbra    d2,0b
         rts
-
 
 | Bump the FM player to keep the music going
 
@@ -2248,9 +2630,11 @@ bump_fm:
 
         /* reset */
         jsr     vgm_reset           /* restart at start of compressed data */
+
         move.l  fm_loop,d2
         andi.l  #0xFFFFFE00,d2
         beq.b   14f
+
         move.l  d2,-(sp)
         jsr     vgm_read2
         addq.l  #4,sp
@@ -2260,18 +2644,25 @@ bump_fm:
         move.w  d2,offs68k
         move.w  d3,offsz80
         move.w  #7,preread_cnt      /* refill buffer if room */
-        bra.b   7f
+        bra.w   11b
 
 5:
+        cmpi.b  #0x03,d0
+        beq.b   51f                 /* stream start */
+        cmpi.b  #0x04,d0
+        beq.b   51f                 /* stream stop */
+        cmpi.b  #0x06,d0
+        beq.b   52f                 /* rf5c68 */
+
         cmpi.b  #0x02,d0
-        bne.b   6f                  /* unknown request, ignore */
+        bne.w   6f                  /* unknown request, ignore */
 
         /* music ended, check for loop */
         tst.w   fm_rep
         bne.b   50f                 /* repeat, loop vgm */
         /* no repeat, reset FM */
         jsr     rst_ym2612
-        bra.b   7f
+        bra.w   7f
 
 50:
         move.w  fm_loop2,d0
@@ -2281,6 +2672,24 @@ bump_fm:
         move.w  fm_idx,d0
         z80wr   FM_IDX,d0           /* set FM_IDX to start music */
         bra.w   11b                 /* try to load a block */
+
+51:
+        move.b  d0,fm_stream
+        move.w  STRM_FREQH.w,fm_stream_freq
+        move.l  STRM_OFFHH.w,fm_stream_ofs
+        move.l  STRM_LENHH.w,fm_stream_len
+        bra.b   7f
+
+52:
+        move.b  d0,fm_stream
+        move.w  RF5C68_FSH.w,rf5c68_freq_incr
+        move.b  RF5C68_STA.w,rf5c68_start
+        move.w  RF5C68_LAH.w,rf5c68_loop_ofs
+        move.b  RF5C68_ENV.w,rf5c68_envelope
+        move.b  RF5C68_CHN.w,rf5c68_chanmask
+        move.b  RF5C68_CTL.w,rf5c68_chanctl
+        move.b  RF5C68_PAN.w,rf5c68_pan
+        bra.b   7f
 
 6:
         /* check if need to preread a block */
@@ -2298,9 +2707,68 @@ bump_fm:
         move.w  #0x0000,0xA11100    /* Z80 deassert bus request */
 9:
         movem.l (sp)+,d0-d7/a0-a6
+
+        /* handle PCM data stream */
+        tst.w   fm_stream
+        beq.b   18f
+
+        cmpi.b  #0x06,fm_stream
+        beq.b   19f
+
+        btst    #0,fm_stream
+        beq.b   17f
+16:
+        /* set the stream pointer and start playback on the SegaCD */
+        clr.w   fm_stream
+
+        tst.w   pcm_env
+        beq.b   18f                 /* PCM muted */
+
+        moveq   #0,d1
+        move.w  fm_stream_freq,d1
+        move.l  d1,-(sp)
+        move.l  fm_stream_len,-(sp)
+        move.l  fm_stream_ofs,-(sp)
+        jsr     vgm_play_dac_samples
+        lea     12(sp),sp
+        bra.b   18f
+17:
+        /* stop playback */
+        clr.w   fm_stream
+        jsr     vgm_stop_samples
+18:
         move.w  (sp)+,sr            /* restore int level */
         rts
+19:
+        clr.w   fm_stream
 
+        cmpi.b  #0xFF,rf5c68_chanmask /* 0xFF -- all channels disabled */
+        beq.b   20f
+
+        tst.w   pcm_env
+        beq.b   20f                 /* PCM muted */
+
+        moveq   #0,d1
+        move.b  rf5c68_envelope,d1
+        swap.w  d1
+        move.b  rf5c68_pan,d1
+        move.l  d1,-(sp)
+        moveq   #0,d1
+        move.w  rf5c68_freq_incr,d1
+        move.l  d1,-(sp)
+        move.w  rf5c68_loop_ofs,d1
+        move.l  d1,-(sp)
+        move.w  rf5c68_start,d1
+        move.l  d1,-(sp)
+        moveq   #0,d1
+        move.b  rf5c68_chanctl,d1
+        andi.b  #0x7,d1
+        move.l  d1,-(sp)
+        jsr     vgm_play_rf5c68_samples
+        lea     20(sp),sp
+20:
+        move.w  (sp)+,sr            /* restore int level */
+        rts
 
 | reset YM2612
 rst_ym2612:
@@ -2633,7 +3101,7 @@ chk_ports:
         /* get ID port 1 */
         lea     0xA10003,a0
         bsr.b   get_port
-        move.w  d0,ctrl1_val             /* controller 1 */
+        move.w  d0,ctrl1_val            /* controller 1 */
 
         tst.b   net_type
         beq.b   0f                      /* ignore controller 2 when networking enabled */
@@ -2643,6 +3111,182 @@ chk_ports:
         lea     0xA10005,a0
         bsr.b   get_port
         move.w  d0,ctrl2_val             /* controller 2 */
+        rts
+
+        .global chk_hotplug
+chk_hotplug:
+        movem.l d0-d7/a0-a6,-(sp)
+
+        /* check hot-plug count */
+        tst.b   hotplug_cnt
+        bne.w   2f
+        move.b  #60,hotplug_cnt
+
+        move.w  ctrl1_val,d0
+        cmpi.w  #0xF001,d0
+        beq.b   0f                  /* mouse in port 1, check port 2 */
+        cmpi.w  #0xF000,d0
+        beq.b   1f                  /* no pad in port 1, do hot-plug check */
+0:
+        tst.b   net_type
+        bne.w   1f                  /* networking enabled, ignore port 2 */
+        move.w  ctrl2_val,d0
+        cmpi.w  #0xF001,d0
+        beq.w   2f                  /* mouse in port 2, exit */
+        cmpi.w  #0xF000,d0
+        bne.w   2f                  /* pad in port 2, exit */
+1:
+        bsr     chk_ports
+2:
+        movem.l (sp)+,d0-d7/a0-a6
+        rts
+
+| Send controller values to primary SH2
+        .global snd_ctrl
+snd_ctrl:
+        tst.b   need_ctrl_int
+        beq.b   40f
+        move.b  #0,need_ctrl_int
+
+        move.w  #0x0001,0xA15102    /* assert CMD INT to primary SH2 */
+10:
+        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
+        cmpi.w  #0xA55A,d0
+        bne.b   10b
+        move.w  ctrl1_val,0xA15122  /* controller 1 value in COMM2 */
+        move.w  #0xFF00,0xA15120
+11:
+        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
+        cmpi.w  #0xFF01,d0
+        bne.b   11b
+        move.w  ctrl2_val,0xA15122  /* controller 2 value in COMM2 */
+        move.w  #0xFF02,0xA15120
+20:
+        move.w  0xA15120,d0         /* wait on handshake in COMM0 */
+        cmpi.w  #0xA55A,d0
+        bne.b   20b
+        /* done */
+        move.w  #0x5AA5,0xA15120
+30:
+        cmpi.w  #0x5AA5,0xA15120
+        beq.b   30b
+40:
+        rts
+
+| int dma_to_32x(void *dest, short *src, int len, int arg);
+| DMA data from source to 32X
+| entry: arg = dest pointer (ignored), arg2 = source pointer, arg3 = length of data (in bytes), arg4 = optional arg
+| exit:  d0 = 0 (okay) or -1 (error) or -2 (DMA error)
+        .global dma_to_32x
+dma_to_32x:
+        move.w  #0xFF10,d1
+        move.w  #0x0001,0xA15102        /* assert CMD INT to primary SH2 */
+0:
+        move.w  0xA15120,d0             /* wait on handshake in COMM0 */
+        cmpi.w  #0xA55A,d0
+        bne.b   0b
+        move.w  d1,0xA15120
+00:
+        move.w  0xA15120,d0
+        cmp.w   d0,d1                   /* wait for handshake */
+        beq.b   00b
+        move.w  d0,d1
+
+        lea     0xA15000,a1
+        move.b  #0x00,0x0107(a1)        /* clear 68S bit - stops SH DREQ */
+
+        move.l  16(sp),d0               /* long arg, LW */
+        move.w  d0,0xA15122             /* COMM2 */
+        addq    #1,d1
+        move.w  d1,0xA15120             /* ack in COMM0 */
+000:
+        move.w  0xA15120,d0
+        cmp.w   d0,d1                   /* wait for handshake */
+        beq.b   000b
+        move.w  d0,d1
+
+        swap.w  d0                      /* long arg, HW */
+        move.w  d0,0xA15122             /* COMM2 */
+        addq    #1,d1
+        move.w  d1,0xA15120             /* ack in COMM0 */
+
+        move.l  4(sp),d0                /* optional destination address */
+        move.l  d0,0x010C(a1)           /* SH DREQ destination address */
+        movea.l 8(sp),a0                /* source address */
+        move.l  12(sp),d0               /* length in bytes */
+        lsr.l   #1,d0                   /* length in words */
+        move.w  d0,0x0122(a1)           /* COMM2 = length in words */
+        addq.l  #3,d0
+        andi.w  #0xFFFC,d0              /* FIFO operates on units of four words */
+        move.w  d0,0x0110(a1)           /* SH DREQ Length Reg */
+        lsr.l   #2,d0
+        subq.l  #1,d0                   /* for dbra */
+
+        move.b  #0x04,0x0107(a1)        /* set 68S bit - starts SH DREQ */
+        lea     0x0112(a1),a1
+
+1:
+        cmp.w   0xA15120,d1             /* wait for SH2 to start DMA */
+        beq.b   1b
+
+        move.l  a0,d1
+        btst    #0,d1
+        beq.b   2f
+
+        /* handle odd src address */
+22:
+        move.b  (a0)+,-(sp)
+        move.w  (sp)+,d1                /* shift left 8 */
+        move.b  (a0)+,d1
+        move.w  d1,(a1)                 /* FIFO = next word */
+
+        move.b  (a0)+,-(sp)
+        move.w  (sp)+,d1                /* shift left 8 */
+        move.b  (a0)+,d1
+        move.w  d1,(a1)                 /* FIFO = next word */
+
+        move.b  (a0)+,-(sp)
+        move.w  (sp)+,d1                /* shift left 8 */
+        move.b  (a0)+,d1
+        move.w  d1,(a1)                 /* FIFO = next word */
+
+        move.b  (a0)+,-(sp)
+        move.w  (sp)+,d1                /* shift left 8 */
+        move.b  (a0)+,d1
+        move.w  d1,(a1)                 /* FIFO = next word */
+222:
+        btst    #7,0xA15107             /* check FIFO full flag */
+        bne.b   222b
+        dbra    d0,22b
+
+        bra.b   44f
+
+2:
+        move.w  (a0)+,(a1)              /* FIFO = next word */
+        move.w  (a0)+,(a1)
+        move.w  (a0)+,(a1)
+        move.w  (a0)+,(a1)
+3:
+        btst    #7,0xA15107             /* check FIFO full flag */
+        bne.b   3b
+        dbra    d0,2b
+
+44:
+        btst    #2,0xA15107
+        bne.b   4f                      /* DMA not done? */
+        moveq   #0,d0
+        bra.w   5f
+4:
+        moveq   #-2,d0
+5:
+        move.w  0xA15120,d1             /* wait on handshake in COMM0 */
+        cmpi.w  #0xA55A,d1
+        bne.b   5b
+        /* done */
+        move.w  #0x5AA5,0xA15120
+6:
+        cmpi.w  #0x5AA5,0xA15120
+        beq.b   6b
         rts
 
 
@@ -2725,9 +3369,6 @@ fm_start:
         .global    fm_loop
 fm_loop:
         dc.l    0
-        .global    fm_loop2
-fm_loop2:
-        dc.l    0
         .global pcm_baseoffs
 pcm_baseoffs:
         dc.l    0
@@ -2738,11 +3379,48 @@ vgm_ptr:
 vgm_size:
         dc.l    0
         .global    fm_rep
+dac_samples:
+        .global    dac_samples
+        dc.l    0
 fm_rep:
         dc.w    0
         .global    fm_idx
 fm_idx:
         dc.w    0
+fm_stream:
+        dc.w    0
+fm_stream_freq:
+        dc.w    0
+fm_loop2:
+        dc.w    0
+
+dac_freq:
+        .global    dac_freq
+        dc.w    0
+dac_len:
+        .global    dac_len
+        dc.w    0
+dac_center:
+        .global    dac_center
+        dc.w    1
+pcm_env:
+        .global pcm_env
+        dc.w    0xFFFF
+
+rf5c68_start:
+        dc.w    0
+rf5c68_freq_incr:
+        dc.w    0
+rf5c68_loop_ofs:
+        dc.w    0
+rf5c68_envelope:
+        dc.b    0
+rf5c68_chanmask:
+        dc.b    255
+rf5c68_pan:
+        dc.b    255
+
+        .align  2
 offs68k:
         dc.w    0
 offsz80:
@@ -2751,6 +3429,11 @@ preread_cnt:
         dc.w    0
 
         .align  4
+
+fm_stream_ofs:
+        dc.l    0
+fm_stream_len:
+        dc.l    0
 
 fg_color:
         dc.l    0x11111111      /* default to color 1 for fg color */
@@ -2762,6 +3445,8 @@ crsr_y:
         dc.w    0
 dbug_color:
         dc.w    0
+rf5c68_chanctl:
+        dc.b    0
 
         .text
         .align  4
@@ -2815,5 +3500,10 @@ FMReset:
 
         .bss
         .align  2
-col_store:
-        .space  21*224*2        /* 140 double-columns in vram, 20 in wram, 1 in wram for swap */
+col_swap:
+        .space  1*224*2         /* 1 double-column in wram for swap */
+
+        .align  16
+aux_store:
+        .global aux_store
+        .space  16*1024

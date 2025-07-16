@@ -4,8 +4,8 @@
 #include "mars.h"
 #endif
 
-int	playertics, thinkertics, sighttics, basetics, latetics;
-int	tictics, drawtics;
+VINT playertics, thinkertics, sighttics, basetics, latetics;
+VINT tictics, drawtics;
 
 boolean		gamepaused;
 jagobj_t	*pausepic;
@@ -118,46 +118,6 @@ void P_RunThinkers (void)
 		}
 		currentthinker = currentthinker->next;
 	}
-}
-
-
-/*============================================================================= */
-
-/*
-===============
-=
-= P_CheckSights
-=
-= Check sights of all mobj thinkers that are going to change state this
-= tic and have MF_COUNTKILL set
-===============
-*/
-
-#ifdef MARS
-void P_CheckSights2(int c) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-#else
-void P_CheckSights2(void) ATTR_DATA_CACHE_ALIGN ATTR_OPTIMIZE_SIZE;
-#endif
-
-#ifdef MARS
-void Mars_Sec_P_CheckSights(void)
-{
-	P_CheckSights2(1);
-}
-#endif
-
-void P_CheckSights (void)
-{
-#ifdef JAGUAR
-	extern	int p_sight_start;
-	DSPFunction (&p_sight_start);
-#elif defined(MARS)
-	Mars_P_BeginCheckSights();
-	P_CheckSights2(0);
-	Mars_P_EndCheckSights();
-#else
-	P_CheckSights2();
-#endif
 }
 
 /*============================================================================= */
@@ -286,8 +246,19 @@ void P_CheckCheats (void)
 			p->cards[i] = true;
 		p->armorpoints = 200;
 		p->armortype = 2;
-		for (i = 0; i < NUMWEAPONS; i++) p->weaponowned[i] = true;
-		for (i = 0; i < NUMAMMO; i++) p->ammo[i] = p->maxammo[i] = 500;
+		for (i = 0; i < NUMWEAPONS; i++)
+		{
+			if (i == wp_supershotgun)
+			{
+				if (spritelumps[spriteframes[sprites[SPR_SGN2].firstframe].lump] < 0)
+					continue;
+			}
+			p->weaponowned[i] = true;
+		}
+		for (i = 0; i < NUMAMMO; i++)
+		{
+			p->ammo[i] = p->maxammo[i] = 500;
+		}
 	}
 
 	if ((buttons & godmode_combo) == godmode_combo 
@@ -304,9 +275,6 @@ void P_CheckCheats (void)
 #endif
 }
   
-
-int playernum;
-
 void G_DoReborn (int playernum); 
 void G_DoLoadLevel (void);
 
@@ -331,6 +299,7 @@ int P_Ticker (void)
 	int		start;
 	int		ticstart;
 	player_t	*pl;
+	int 	playernum;
 
 	if (demoplayback)
 	{
@@ -350,7 +319,7 @@ int P_Ticker (void)
 
 #ifdef MARS
     // bank-switch to the page with map data
-    W_GetLumpData(gamemaplump);
+    //W_GetLumpData(gamemaplump);
 #endif
 
 	gameaction = ga_nothing;
@@ -529,6 +498,9 @@ void P_Drawer (void)
 	boolean automapactive = (players[consoleplayer].automapflags & AF_ACTIVE) != 0;
 	boolean optionsactive = (players[consoleplayer].automapflags & AF_OPTIONSACTIVE) != 0;
 	static boolean o_wasactive, am_wasactive = false;
+	viewdef_t vd_;
+
+	vd = &vd_;
 
 #ifdef MARS
 	extern	boolean	debugscreenactive;
@@ -539,9 +511,11 @@ void P_Drawer (void)
 		clearscreen = 2;
 
 	if (clearscreen > 0) {
+		int width = viewportWidth * (lowres ? 2 : 1);
+
 		I_ResetLineTable();
 
-		if ((viewportWidth == 160 && lowResMode) || viewportWidth == 320)
+		if (width == 320)
 			I_ClearFrameBuffer();
 		else
 			DrawTiledBackground();
@@ -616,6 +590,7 @@ extern	 VINT		ticremainder[MAXPLAYERS];
 
 void P_Start (void)
 {
+	int i;
 	extern boolean canwipe;
 
 	/* load a level */
@@ -625,9 +600,11 @@ void P_Start (void)
 #ifndef MARS
 	S_RestartSounds ();
 #endif
-	players[0].automapflags = 0;
-	players[1].automapflags = 0;
-	ticremainder[0] = ticremainder[1] = 0;
+	for (i = 0; i < MAXPLAYERS; i++)
+	{
+		players[i].automapflags = 0;
+		players[i].ticremainder = 0;
+	}
 	M_ClearRandom ();
 
 	if (!demoplayback && !demorecording)

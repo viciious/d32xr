@@ -1,4 +1,4 @@
-ifdef $(GENDEV)
+ifdef GENDEV
 ROOTDIR = $(GENDEV)
 else
 ROOTDIR = /opt/toolchains/sega
@@ -12,7 +12,12 @@ INCPATH = -I$. -I$(ROOTDIR)/m68k-elf/include -I$(ROOTDIR)/m68k-elf/m68k-elf/incl
 HWCCFLAGS = -m68000 -Wall -O1 -c -fomit-frame-pointer -fno-lto
 CCFLAGS = -m68000 -Wall -Os -c -fomit-frame-pointer -flto -DUSE_SCD_IN_RAM
 ASFLAGS = -m68000 --register-prefix-optional
-LINKFLAGS = -T $(LDSCRIPTSDIR)/mars-md.ld -Wl,-Map=output.map -nostdlib -flto
+ifdef ENABLE_SSF_MAPPER
+HWCCFLAGS += -DENABLE_SSF_MAPPER
+CCFLAGS += -DENABLE_SSF_MAPPER
+ASFLAGS += --defsym ENABLE_SSF_MAPPER=1
+endif
+LINKFLAGS = -T $(LDSCRIPTSDIR)/mars-md.ld -Wl,-Map=output.map -nostdlib -Os -flto
 
 PREFIX = $(ROOTDIR)/m68k-elf/bin/m68k-elf-
 CC = $(PREFIX)gcc
@@ -28,7 +33,7 @@ RM = rm -f
 
 TARGET = m68k
 LIBS = $(LIBPATH) -lc -lgcc -lnosys
-OBJS = crt0.o everdrive.o font.o main.o kos.o cd.o lzss.o megasd.o vgm.o xvprintf.o zfiles.o scd_pcm.o
+OBJS = crt0.o everdrive.o main.o kos.o cd.o lzss.o megasd.o vgm.o zfiles.o scd.o scd_pcm.o scd_fs.o scd_roq.o
 
 all: $(TARGET).bin
 

@@ -135,9 +135,11 @@ void EV_StartLightStrobing(line_t *line)
 {
 	int	secnum;
 	sector_t	*sec;
+	int tag;
 	
+	tag = P_GetLineTag(line);
 	secnum = -1;
-	while ((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
+	while ((secnum = P_FindSectorFromLineTagNum(tag,secnum)) >= 0)
 	{
 		sec = &sectors[secnum];
 		if (sec->specialdata)
@@ -160,10 +162,12 @@ void EV_TurnTagLightsOff(line_t	*line)
 	sector_t	*sector;
 	sector_t	*tsec;
 	line_t		*templine;
+	int 		tag;
 	
+	tag	= P_GetLineTag(line);
 	sector = sectors;
 	for (j = 0;j < numsectors; j++, sector++)
-		if (sector->tag == line->tag)
+		if (sector->tag == tag)
 		{
 			min = sector->lightlevel;
 			for (i = 0;i < sector->linecount; i++)
@@ -191,11 +195,13 @@ void EV_LightTurnOn(line_t *line, int bright)
 	sector_t	*sector;
 	sector_t	*temp;
 	line_t		*templine;
+	int tag;
 	
+	tag = P_GetLineTag(line);
 	sector = sectors;
 	
 	for (i=0;i<numsectors;i++, sector++)
-		if (sector->tag == line->tag)
+		if (sector->tag == tag)
 		{
 			/* */
 			/* bright = 0 means to search for highest */

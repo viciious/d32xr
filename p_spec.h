@@ -39,7 +39,7 @@ extern	anim_t	*anims/*[MAXANIMS]*/, * lastanim;
 /*	Animating line specials */
 /* */
 #define	MAXLINEANIMS		128
-extern	int		numlinespecials;
+extern	VINT	numlinespecials;
 extern	line_t	**linespeciallist/*[MAXLINEANIMS]*/;
 
 
@@ -72,6 +72,7 @@ fixed_t	P_FindNextHighestFloor(sector_t *sec,int currentheight);
 fixed_t	P_FindLowestCeilingSurrounding(sector_t *sec);
 fixed_t	P_FindHighestCeilingSurrounding(sector_t *sec);
 int		P_FindSectorFromLineTag(line_t	*line,int start);
+int		P_FindSectorFromLineTagNum(int tag,int start);
 int		P_FindMinSurroundingLight(sector_t *sector,int max);
 sector_t *getNextSector(line_t *line,sector_t *sec);
 
@@ -152,8 +153,8 @@ void 	P_SpawnFireFlicker (sector_t *sector);
 */
 typedef struct
 {
-	char	name1[9];
-	char	name2[9];
+	char	*name1;
+	char	*name2;
 } switchlist_t;
 
 typedef enum
@@ -176,7 +177,7 @@ typedef struct
 #define	MAXBUTTONS	16		/* 4 players, 4 buttons each at once, max. */
 #define BUTTONTIME	15		/* 1 second */
 
-extern	VINT		*switchlist/*[MAXSWITCHES * 2]*/;
+extern	uint8_t		*switchlist/*[MAXSWITCHES * 2]*/;
 extern	button_t* buttonlist/*[MAXBUTTONS]*/;
 
 void	P_ChangeSwitchTexture(line_t *line,int useAgain);
@@ -222,7 +223,7 @@ typedef struct
 	VINT		type;
 } plat_t;
 
-#define	PLATWAIT	3*2/THINKERS_TICS			/* seconds */
+#define	PLATWAIT	4/THINKERS_TICS			/* seconds */
 #define	PLATSPEED	(FRACUNIT*THINKERS_TICS)
 #define	MAXPLATS	30
 
@@ -267,12 +268,13 @@ typedef struct
 	VINT		topcountdown;	/* when it reaches 0, start going down */
 } vldoor_t;
 	
-#define	VDOORSPEED	FRACUNIT*3*THINKERS_TICS
-#define	VDOORWAIT		140/THINKERS_TICS
+#define	VDOORSPEED	FRACUNIT*2*THINKERS_TICS
+#define	VDOORWAIT		150/THINKERS_TICS
 
 void	EV_VerticalDoor (line_t *line, mobj_t *thing);
 int		EV_DoLockedDoor(line_t* line, vldoor_e type, mobj_t* thing);
 int		EV_DoDoor (line_t *line, vldoor_e  type);
+int 	EV_DoDoorTag (line_t *line, vldoor_e  type, int tag);
 void	T_VerticalDoor (vldoor_t *door);
 void	P_SpawnDoorCloseIn30 (sector_t *sec);
 void	P_SpawnDoorRaiseIn5Mins (sector_t *sec, int secnum);
@@ -363,7 +365,7 @@ typedef enum
 	turbo16	// quickly build by 16
 } stair_e;
 
-#define	FLOORSPEED	((FRACUNIT+(FRACUNIT>>1))*THINKERS_TICS)
+#define	FLOORSPEED	(FRACUNIT*THINKERS_TICS)
 
 typedef enum
 {
@@ -377,6 +379,7 @@ result_e	T_MovePlane(sector_t *sector,fixed_t speed,
 
 int		EV_BuildStairs(line_t *line, int type);
 int		EV_DoFloor(line_t *line,floor_e floortype);
+int		EV_DoFloorTag(line_t *line,floor_e floortype, int tag);
 void	T_MoveFloor(floormove_t *floor);
 
 /*
