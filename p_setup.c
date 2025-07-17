@@ -94,6 +94,20 @@ void P_LoadSegs (int lump)
 	seg_t		*li;
 	int			linedef, side;
 
+#ifdef USE_SMALL_SEGS
+	numsegs = W_LumpLength (lump) / sizeof(seg_t);
+	// FIXME: this is strictly big-endian for now
+	if (W_IsIWad(lump))
+	{
+		segs = W_POINTLUMPNUM(lump);
+		return;
+	}
+	segs = Z_Malloc (numsegs*sizeof(seg_t)+16,PU_LEVEL);
+	segs = (void*)(((uintptr_t)segs + 15) & ~15); // aline on cacheline boundary
+	W_ReadLump(lump, segs);
+	return;
+#endif
+
 	numsegs = W_LumpLength (lump) / sizeof(mapseg_t);
 	segs = Z_Malloc (numsegs*sizeof(seg_t)+16,PU_LEVEL);
 	segs = (void*)(((uintptr_t)segs + 15) & ~15); // aline on cacheline boundary
