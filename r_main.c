@@ -337,7 +337,7 @@ void R_SetDrawFuncs(void)
 		drawfuzzcol = I_DrawFuzzColumn;
 		switch (detailmode) {
 			case detmode_potato:
-				drawspan = I_DrawSpanPotato;	
+				drawspan = I_DrawSpanPotatoLow;	
 				break;
 			case detmode_lowres:
 				drawspan = I_DrawSpanLow;

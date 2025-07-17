@@ -168,6 +168,13 @@ static void R_MapPotatoPlane(localplane_t* lpl, int y, int x, int x2)
 {
     if (x2 < x)
         return; // nothing to draw (shouldn't happen)
+
+    if (lpl->lowres)
+    {
+        x >>= 1;
+        x2 >>= 1;
+    }
+
     drawspan(y, x, x2, lpl->lightmax, 0, 0, 0, 0, lpl->ds_source[0], 64);
 }
 
@@ -313,7 +320,7 @@ static void R_DrawPlanes2(void)
 
     cXf = centerXFrac;
     lpl.lowres = false;
-    if (!lowres && detailmode == detmode_lowres)
+    if (!lowres && (drawspan == I_DrawSpanLow || drawspan == I_DrawSpanPotatoLow))
     {
         cXf >>= 1;
         lpl.lowres = true;
