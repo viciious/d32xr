@@ -125,6 +125,7 @@ static void R_UpdateCache(void)
 
    for (i = 0; i < MIPLEVELS; i++) {
       int id;
+      int pw;
       void **data, **pdata;
       unsigned w = 64, h = 64, m, pixels;
       boolean masked = false;
@@ -157,9 +158,11 @@ static void R_UpdateCache(void)
         }
       }
 
+      pw = 1;
       if (i > 0 && !masked) {
         m = i;
         do {
+            pw <<= 1;
             w >>= 1;
             h >>= 1;
         } while (--m);
@@ -180,23 +183,25 @@ static void R_UpdateCache(void)
         continue;
 
       if (id < numtextures && !masked) {
-        int j;
+        int j, c;
         texture_t* tex = &textures[id];
         uint8_t *src = *pdata;
         uint8_t *dst;
 
-        for (j = 0; j < tex->width; j++) {
+        c = 0;
+        for (j = 0; j < (int)w; j++) {
           boolean decaled;
 
           I_GetThreadLocalVar(DOOMTLS_COLUMNCACHE, dst);
 
-          decaled = R_CompositeColumn(j, tex->decals & 0x3, &decals[tex->decals >> 2],
+          decaled = R_CompositeColumn(c, tex->decals & 0x3, &decals[tex->decals >> 2],
             src, dst, h, i);
           if (decaled) {
             D_memcpy(src, dst, h);
           }
 
           src += h;
+          c += pw;
         }
       }
    }

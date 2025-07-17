@@ -338,7 +338,7 @@ static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex,
         // decals stuff
         mip->lastcol = -1;
         mip->columncache = columncache;
-        columncache += mipheight;
+        columncache += mip->height;
 
         mip->numdecals = tex->decals & 0x3;
         if (mip->numdecals && R_InTexCache(&r_texcache, mip->data) == 1) {
