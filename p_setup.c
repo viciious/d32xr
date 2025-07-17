@@ -75,6 +75,25 @@ void P_LoadVertexes (int lump)
 		li->x = LITTLESHORT(ml->x);
 		li->y = LITTLESHORT(ml->y);
 	}
+
+	worldbbox[BOXLEFT] = INT16_MAX;
+	worldbbox[BOXRIGHT] = INT16_MIN;
+	worldbbox[BOXBOTTOM] = INT16_MAX;
+	worldbbox[BOXTOP] = INT16_MIN;
+
+	li = vertexes;
+	for (i=0 ; i<numvertexes ; i++, li++)
+	{
+		mapvertex_t *v = li;
+		if (v->x < worldbbox[BOXLEFT])
+			worldbbox[BOXLEFT] = v->x;
+		if (v->x > worldbbox[BOXRIGHT])
+			worldbbox[BOXRIGHT] = v->x;
+		if (v->y < worldbbox[BOXBOTTOM])
+			worldbbox[BOXBOTTOM] = v->y;
+		if (v->y > worldbbox[BOXTOP])
+			worldbbox[BOXTOP] = v->y;
+	}
 }
 
 
@@ -299,26 +318,6 @@ static void P_EncodeNodeBBox_r(int nn, int16_t *bboxes, int16_t *outerbbox)
 // recursively encode bounding boxes for all BSP nodes
 static void P_EncodeNodesBBoxes(int16_t *bboxes)
 {
-	int j;
-
-	worldbbox[BOXLEFT] = INT16_MAX;
-	worldbbox[BOXRIGHT] = INT16_MIN;
-	worldbbox[BOXBOTTOM] = INT16_MAX;
-	worldbbox[BOXTOP] = INT16_MIN;
-
-	for (j=0 ; j<2 ; j++)
-	{
-		int16_t *cb = &bboxes[(numnodes-1)*8+j*4];
-		if (cb[BOXLEFT] < worldbbox[BOXLEFT])
-			worldbbox[BOXLEFT] = cb[BOXLEFT];
-		if (cb[BOXRIGHT] > worldbbox[BOXRIGHT])
-			worldbbox[BOXRIGHT] = cb[BOXRIGHT];
-		if (cb[BOXBOTTOM] < worldbbox[BOXBOTTOM])
-			worldbbox[BOXBOTTOM] = cb[BOXBOTTOM];
-		if (cb[BOXTOP] > worldbbox[BOXTOP])
-			worldbbox[BOXTOP] = cb[BOXTOP];
-	}
-
 	P_EncodeNodeBBox_r(numnodes-1, bboxes, worldbbox);
 }
 
