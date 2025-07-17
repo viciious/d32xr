@@ -113,8 +113,9 @@ void P_LoadSegs (int lump)
 	seg_t		*li;
 	int			linedef, side;
 
-#ifdef USE_SMALL_SEGS
+#ifdef USE_SMALL_LUMPS
 	numsegs = W_LumpLength (lump) / sizeof(seg_t);
+
 	// FIXME: this is strictly big-endian for now
 	if (W_IsIWad(lump))
 	{
@@ -328,6 +329,21 @@ void P_LoadNodes (int lump)
 	node_t		*no;
 	mapnode_t 	*mn;
 	int16_t 	*bboxes;
+
+#ifdef USE_SMALL_LUMPS
+	numnodes = W_LumpLength (lump) / sizeof(node_t);
+
+	// FIXME: this is strictly big-endian for now
+	if (W_IsIWad(lump))
+	{
+		nodes = W_POINTLUMPNUM(lump);
+		return;
+	}
+	nodes = Z_Malloc (numnodes*sizeof(node_t) + 16,PU_LEVEL);
+	nodes = (void*)(((uintptr_t)nodes + 15) & ~15); // aline on cacheline boundary
+	W_ReadLump(lump, nodes);
+	return;
+#endif
 
 	numnodes = W_LumpLength (lump) / sizeof(*mn);
 	data = W_GetLumpData(lump);
