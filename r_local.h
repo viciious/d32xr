@@ -150,7 +150,9 @@ typedef struct
 	uint16_t 	encbbox[2]; 		/* encoded bounding box for each child */
 } node_t;
 
+#ifndef MIPLEVELS
 #define MIPLEVELS 1
+#endif
 
 typedef struct
 {

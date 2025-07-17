@@ -36,6 +36,9 @@ endif
 ifdef USE_SMALL_LUMPS
 CCFLAGS += -DUSE_SMALL_LUMPS
 endif
+ifdef MIPLEVELS
+CCFLAGS += -DMIPLEVELS=$(MIPLEVELS)
+endif
 
 debug: CCFLAGS += -g -ggdb
 
@@ -148,7 +151,7 @@ $(TARGET).32x: $(TARGET).elf
 	$(DD) if=temp2.bin of=temp.bin bs=$(BINSIZE)K conv=sync
 	rm -f temp3.bin
 	cat temp.bin $(WAD) >>temp3.bin
-	$(DD) if=temp3.bin of=$@ bs=1K conv=sync
+	$(DD) if=temp3.bin of=$@ bs=512K conv=sync
 
 $(TARGET).elf: $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o $(TARGET).elf
