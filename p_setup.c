@@ -168,6 +168,34 @@ void P_LoadSubsectors (int lump)
 	mapsubsector_t	*ms;
 	subsector_t		*ss;
 
+#ifdef USE_SMALL_LUMPS
+	int16_t 		*cn;
+	int 			curline;
+
+	numsubsectors = W_LumpLength (lump) / sizeof(int16_t);
+	count = numsubsectors+1;
+	subsectors = Z_Malloc (count*sizeof(subsector_t),PU_LEVEL);
+	data = W_GetLumpData(lump);
+
+	cn = (int16_t *)data;
+	D_memset (subsectors,0, count*sizeof(subsector_t));
+
+	if (!numsubsectors)
+		return;
+
+	curline = 0;
+	ss = subsectors;
+	for (i=0 ; i<numsubsectors ; i++, ss++, cn++)
+	{
+		count = BIGSHORT(*cn);
+		ss->firstline = curline;
+		curline += count;
+	}
+
+	ss->firstline = curline;
+	return;
+#endif
+
 	numsubsectors = W_LumpLength (lump) / sizeof(mapsubsector_t);
 	count = numsubsectors+1;
 	subsectors = Z_Malloc (count*sizeof(subsector_t),PU_LEVEL);
