@@ -614,6 +614,7 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 		*(int*)p = (intptr_t)mobj, p += 2;
 		*(int*)p = (intptr_t)getpos, p += 2;
 		*p++ = vol;
+		*p++ = freq;
 	}
 	else
 	{
@@ -621,6 +622,7 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 		*p++ = sound_id;
 		*(int*)p = (intptr_t)mobj, p += 2;
 		*p++ = vol;
+		*p++ = freq;
 	}
 
 	Mars_RB_CommitWrite(&soundcmds);
@@ -1264,7 +1266,6 @@ static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol,
 gotchannel:
 	newchannel->freq = freq;
 #ifndef DISABLE_DMA_SOUND
-	newchannel->increment = (11025 << 14) / SAMPLE_RATE;
 	newchannel->length = length << 14;
 	newchannel->loop_length = 0;
 	newchannel->width = 8;
@@ -1289,6 +1290,8 @@ static void S_SetChannelData(sfxchannel_t* channel)
 {
 	int length;
 	sfx_t* md_data;
+	int block_align;
+	int sample_rate;
 
 	md_data = (void*)channel->data;
 	length = md_data->samples;
@@ -1304,8 +1307,8 @@ static void S_SetChannelData(sfxchannel_t* channel)
 	int format = 0;
 
 	// set default sample rate and block size
-	channel->increment = (11025 << 14) / SAMPLE_RATE;
-	channel->block_size = 256;
+	sample_rate = 11025;
+	block_align = 256;
 
 	while (chunk < end) {
 		// a long value in little endian format
@@ -1316,8 +1319,8 @@ static void S_SetChannelData(sfxchannel_t* channel)
 
 		if (chunk[0] == 0x666D && chunk[1] == 0x7420) // 'fmt '
 		{
-			int sample_rate = S_LE_LONG(&chunk[6]);
-			int block_align = S_LE_SHORT(&chunk[10]);
+			sample_rate = S_LE_LONG(&chunk[6]);
+			block_align = S_LE_SHORT(&chunk[10]);
 
 			format = S_LE_SHORT(&chunk[4]);
 			if (format == S_WAV_FORMAT_EXTENSIBLE && length == 40) {
@@ -1326,10 +1329,7 @@ static void S_SetChannelData(sfxchannel_t* channel)
 
 			// increment = (SampleRate << 14) / mixer sample rate
 			if (sample_rate > SAMPLE_RATE)
-				channel->increment = 1 << 14; // limit increment to max of 1.0
-			else
-				channel->increment = (sample_rate << 14) / SAMPLE_RATE;
-			channel->block_size = block_align;
+				sample_rate = SAMPLE_RATE;
 		}
 
 		chunk += 4 + ((length + 1) >> 1);
@@ -1340,6 +1340,16 @@ static void S_SetChannelData(sfxchannel_t* channel)
 		return;
 	}
 
+	if (!channel->freq) {
+		channel->freq = sample_rate;
+	}
+
+	if (channel->freq > SAMPLE_RATE) {
+		channel->increment = 1 << 14; // limit increment to max of 1.0
+	} else {
+		channel->increment = (channel->freq << 14) / SAMPLE_RATE;
+	}
+	channel->block_size = block_align;
 	channel->data = (uint8_t *)&chunk[4];
 	if (format == S_WAV_FORMAT_PCM) {
 		channel->length = length << 14;
@@ -1377,10 +1387,10 @@ void Mars_Sec_ReadSoundCmds(void)
 			S_ClearPCM();
 			break;
 		case SNDCMD_STARTSND:
-			ch = S_AllocateChannel((void*)(*(intptr_t*)&p[2]), p[1], p[4], 0, NULL);
+			ch = S_AllocateChannel((void*)(*(intptr_t*)&p[2]), p[1], p[4], p[5], NULL);
 			break;
 		case SNDCMD_STARTORGSND:
-			ch = S_AllocateChannel((void*)(*(intptr_t*)&p[2]), p[1], p[6], 0, (getsoundpos_t)(*(intptr_t*)&p[4]));
+			ch = S_AllocateChannel((void*)(*(intptr_t*)&p[2]), p[1], p[6], p[7], (getsoundpos_t)(*(intptr_t*)&p[4]));
 			break;
 		}
 
