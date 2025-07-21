@@ -584,6 +584,7 @@ void * W_GetLumpData_(int lump, const char *func)
 {
 	wadfile_t *wad;
 	lumpinfo_t* l;
+	volatile int pos;
 
 	if (lump < 0)
 		I_Error("%s: %i < 0", func, lump);
@@ -593,9 +594,9 @@ void * W_GetLumpData_(int lump, const char *func)
 		I_Error ("%s: %i >= numlumps", func, lump);
 
 	l = &wad->lumpinfo[lump-wad->firstlump];
+	pos = BIGLONG(l->filepos);
 	if (wad->cdlength)
 	{
-		volatile int pos = BIGLONG(l->filepos);
 		volatile int len = BIGLONG(l->size);
 
 		I_SeekCDFile(pos, SEEK_SET);
@@ -609,10 +610,9 @@ void * W_GetLumpData_(int lump, const char *func)
 	if (l->name[0] & 0x80)
 	{
 		// compressed
-		volatile int pos = BIGLONG(l->filepos);
 		volatile int len = BIGLONG(l->size);
 
-		byte *src = (void*)(wad->fileptr + pos);
+		byte *src = I_RemapLumpPtr((void*)(wad->fileptr + pos));
 		byte *dest = I_TempBuffer(len);
 
 		decode(src, dest);
@@ -621,7 +621,7 @@ void * W_GetLumpData_(int lump, const char *func)
 	}
 	else 
 	{
-		return I_RemapLumpPtr((void*)(wad->fileptr + BIGLONG(l->filepos)));
+		return I_RemapLumpPtr((void*)(wad->fileptr + pos));
 	}
 }
 
