@@ -557,6 +557,7 @@ void * W_GetRawLumpData_(int lump, const char *func)
 		I_Error ("%s: %i >= numlumps", func, lump);
 
 	l = &wad->lumpinfo[lump-wad->firstlump];
+#ifndef DISABLE_CDFS
 	if (wad->cdlength)
 	{
 		volatile int pos = BIGLONG(l->filepos);
@@ -569,7 +570,7 @@ void * W_GetRawLumpData_(int lump, const char *func)
 
 		return I_GetCDFileBuffer();
 	}
-
+#endif
 	return I_RemapLumpPtr((void*)(wad->fileptr + BIGLONG(l->filepos)));
 }
 
@@ -595,6 +596,7 @@ void * W_GetLumpData_(int lump, const char *func)
 
 	l = &wad->lumpinfo[lump-wad->firstlump];
 	pos = BIGLONG(l->filepos);
+#ifndef DISABLE_CDFS
 	if (wad->cdlength)
 	{
 		volatile int len = BIGLONG(l->size);
@@ -606,7 +608,7 @@ void * W_GetLumpData_(int lump, const char *func)
 
 		return I_GetCDFileBuffer();
 	}
-
+#endif
 	if (l->name[0] & 0x80)
 	{
 		// compressed
@@ -639,6 +641,7 @@ void * W_ReadLumpData_(int lump, const char *func, void *dest, boolean compresse
 		I_Error ("%s: %i >= numlumps", func, lump);
 
 	l = &wad->lumpinfo[lump-wad->firstlump];
+#ifndef DISABLE_CDFS	
 	if (wad->cdlength)
 	{
 		volatile int pos = BIGLONG(l->filepos);
@@ -661,7 +664,7 @@ void * W_ReadLumpData_(int lump, const char *func, void *dest, boolean compresse
 
 		return dest;
 	}
-
+#endif
 	src = I_RemapLumpPtr((void*)(wad->fileptr + BIGLONG(l->filepos)));
 	if (compressed)
 		decode(src, dest);
