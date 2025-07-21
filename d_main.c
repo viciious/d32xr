@@ -660,19 +660,16 @@ void START_Title(void)
 			lumps[i] = W_GetNumForName(lumpname[i]);
 		}
 
-		if (*gameinfo.titlePage)
+		if (lumps[0] >= 0)
 		{
 			titlepic = W_CacheLumpNum(lumps[0], PU_STATIC);
 		}
 
-		if (*gameinfo.creditsPage)
+		for (i = 0; i < 2; i++)
 		{
-			for (i = 0; i < 2; i++)
-			{
-				if (lumps[1+i] < 0)
-					break;
-				credits[i] = W_CacheLumpNum(lumps[1+i], PU_STATIC);
-			}
+			if (lumps[1+i] < 0)
+				break;
+			credits[i] = W_CacheLumpNum(lumps[1+i], PU_STATIC);
 		}
 
 		W_LoadPWAD(PWAD_NONE);
