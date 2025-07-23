@@ -674,11 +674,14 @@ goback:
 						++o_musictype;
 						if (!gameinfo.spcmDirList[0][0])
 						{
-							if (o_musictype >= mustype_spcm)
+							if (o_musictype > mustype_cd)
 								o_musictype = mustype_cd;
 						}
-						if (o_musictype > mustype_cd)
-							o_musictype = mustype_cd;
+						else
+						{
+							if (o_musictype > mustype_spcm)
+								o_musictype = mustype_spcm;
+						}
 						if (o_musictype >= mustype_cd && !S_CDAvailable())
 							o_musictype = mustype_fm;
 						break;
@@ -916,7 +919,7 @@ void O_Drawer (void)
 
 		if (gameinfo.spcmDirList[0][0])
 		{
-			if (menuscreen[ms_audio].numitems > 4)
+			if (menuscreen[ms_audio].numitems > 3)
 			{
 				if (spcmDir[0] != '\0') {
 					print(menuitem[mi_spcmpack].x + 85, menuitem[mi_spcmpack].y, spcmDir);
@@ -927,7 +930,7 @@ void O_Drawer (void)
 		}
 
 #ifndef DISABLE_DMA_SOUND
-		if (menuscreen[ms_audio].numitems > 3)
+		if (menuscreen[ms_audio].numitems > 4)
 		{
 			switch (o_sfxdriver) {
 			case sfxdriver_auto:
