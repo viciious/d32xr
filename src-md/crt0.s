@@ -735,18 +735,14 @@ start_music:
         btst    #1,d0               /* check if we read SPCM */
         beq.b   01f
 
-        tst.w   fm_rep              /* start playback of non-looping tracks synchronously */
-        beq.b   04f
-        move.w  #0,0xA15120         /* done (continue asycnronously) */
-
-04:
         /* we read SPCM from CD */
         clr.w   fm_idx
         moveq   #0,d1
-        tst.w   fm_rep
-        beq.b   03f
+        tst.w   fm_rep              /* start playback of non-looping tracks synchronously */
+        beq.b   04f
+        move.w  #0,0xA15120         /* done (continue asycnronously) */
         moveq   #1,d1
-03:
+04:
         move.l  d1,-(sp)
         lea     vgm_lzss_buf,a1
         move.l  a1,-(sp)
@@ -757,8 +753,8 @@ start_music:
 
         tst.w   fm_rep
         bne.w   main_loop           /* a looping track */
-
         move.w  #0,0xA15120         /* done */
+ 
         bra     main_loop
 
 01:
@@ -770,8 +766,7 @@ start_music:
 
         tst.w   fm_rep              /* start playback of non-looping tracks synchronously */
         beq.b   05f
-        move.w  #0,0xA15120         /* done */
-
+        move.w  #0,0xA15120         /* done (continue asycnronously) */
 05:
         /* we read VGM from CD */
         lea     vgm_lzss_buf,a1
@@ -779,22 +774,19 @@ start_music:
         jsr     vgm_cache_scd
         lea     12(sp),sp
         move.l  d0,a1
-
-        bra     02f
-
+        bra     06f
 07:
         /* ROM VGM playback */
         move.w  #0,0xA15104         /* set cart bank select */
         move.l  #0,a0
         move.l  vgm_ptr,d0          /* set VGM offset */
         beq     9f
-
         move.l  d0,a0
         bsr     set_rom_bank
-02:
-        tst.w   fm_rep
-        bne.b   06f
-        move.w  #0,0xA15120         /* done */
+
+        tst.w   fm_rep              /* start playback of non-looping tracks synchronously */
+        beq.b   06f
+        move.w  #0,0xA15120         /* done (continue asycnronously) */
 06:
         move.l  a1,-(sp)            /* MD lump ptr */
         jsr     vgm_setup           /* setup lzss, set pcm_baseoffs, set vgm_ptr, read first block */
@@ -921,7 +913,7 @@ offset 0x40 */
         move.w  #0x0100,0xA11200    /* Z80 deassert reset - run driver */
 
         tst.w   fm_rep
-        beq.b   5f
+        bne.b   5f
         move.w  #0,0xA15120         /* done */
 5:
         bra     main_loop
