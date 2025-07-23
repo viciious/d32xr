@@ -348,6 +348,9 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 	start ();
 	exit = 0;
 	
+	if (netgame)
+		I_NetReady();
+
 	ticon = 0;
 	frameon = 0;
 	

@@ -1097,6 +1097,22 @@ static void Player1Setup (void)
 	Mars_PutNetByte(CONN_MAGIC ^ 0xFF);	/* send another acknowledge byte */
 }
 
+void I_NetReady(void)
+{
+	int i, val;
+
+	i = 30;
+	Mars_PutNetByte(0x1d);  /* GO! */
+	while (i--)
+	{
+		val = Mars_GetNetByte(120);
+		if (val == 0x1d)
+			break;
+	}
+
+	/* TODO - abort if i == 0 */
+}
+
 void I_NetSetup (void)
 {
 	while (!I_RefreshCompleted());

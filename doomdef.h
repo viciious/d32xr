@@ -827,6 +827,7 @@ int I_ReadMouse(int *pmx, int *pmy);
 void I_NetSetup (void);
 unsigned I_NetTransfer (unsigned buttons);
 void I_NetStop(void);
+void I_NetReady(void);
 
 boolean	I_RefreshCompleted (void);
 boolean	I_RefreshLatched (void);
