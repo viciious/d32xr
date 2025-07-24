@@ -117,11 +117,14 @@ void P_LoadSegs (int lump)
 	numsegs = W_LumpLength (lump) / sizeof(seg_t);
 
 	// FIXME: this is strictly big-endian for now
+#ifndef ENABLE_SSF_MAPPER
 	if (W_IsIWad(lump))
 	{
 		segs = W_POINTLUMPNUM(lump);
 		return;
 	}
+#endif
+
 	segs = Z_Malloc (numsegs*sizeof(seg_t)+16,PU_LEVEL);
 	segs = (void*)(((uintptr_t)segs + 15) & ~15); // aline on cacheline boundary
 	W_ReadLump(lump, segs);
@@ -361,12 +364,15 @@ void P_LoadNodes (int lump)
 #ifdef USE_SMALL_LUMPS
 	numnodes = W_LumpLength (lump) / sizeof(node_t);
 
+#ifndef ENABLE_SSF_MAPPER
 	// FIXME: this is strictly big-endian for now
 	if (W_IsIWad(lump))
 	{
 		nodes = W_POINTLUMPNUM(lump);
 		return;
 	}
+#endif
+
 	nodes = Z_Malloc (numnodes*sizeof(node_t) + 16,PU_LEVEL);
 	nodes = (void*)(((uintptr_t)nodes + 15) & ~15); // aline on cacheline boundary
 	W_ReadLump(lump, nodes);

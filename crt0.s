@@ -42,7 +42,11 @@
         .ascii  "GM DMF32XCD-22"
         .word   0x0000
         .ascii  "J6CM            "
+.ifdef ENABLE_SSF_MAPPER
+        .long   0x00000000,0x004FFFFF   /* ROM start, end */
+.else
         .long   0x00000000,0x003FFFFF   /* ROM start, end */
+.endif
         .long   0x00FF0000,0x00FFFFFF   /* RAM start, end */
 
 ! 2KB of save ram on odd byte lane

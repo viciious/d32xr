@@ -590,13 +590,7 @@ void R_Sprites(void)
    sortedsprites[0] = count;
    D_isort(sortedsprites+1, count);
 
-#ifdef MARS
-   // bank switching
-   verts = /*W_GetLumpData(gamemaplump+ML_VERTEXES)*/vertexes;
-#else
    verts = vertexes;
-#endif
-
    for (wc = vd->viswalls; wc < vd->lastwallcmd; wc++)
    {
       if (wc->actionbits & (AC_TOPSIL | AC_BOTTOMSIL | AC_SOLIDSIL | AC_MIDTEXTURE))
