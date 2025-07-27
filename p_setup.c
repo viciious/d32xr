@@ -959,7 +959,8 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 	deathmatch_p = deathmatchstarts;
 	P_LoadThings (lumpnum+ML_THINGS, &havebossspit);
 
-	// load custom replacement textures from ROM/CD to RAM
+#ifndef DISABLE_CDFS
+	// load custom replacement textures from CD to RAM
 	{
 		boolean istexture = false;
 		boolean isflat = false;
@@ -1028,6 +1029,7 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 			}
 		}
 	}
+#endif
 
 	W_LoadPWAD(PWAD_NONE);
 
