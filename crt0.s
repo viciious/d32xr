@@ -33,13 +33,13 @@
         .ascii  "SEGA 32X        "
 .endif
         .ascii  "                "
-        .ascii  "DOOM 32XCD Fusio"
-        .ascii  "n v2.2          "
+        .ascii  "DOOM 32X Resurre"
+        .ascii  "ction v3.3      "
         .ascii  "                "
-        .ascii  "DOOM 32XCD Fusio"
-        .ascii  "n v2.2          "
+        .ascii  "DOOM 32X Resurre"
+        .ascii  "ction v3.3      "
         .ascii  "                "
-        .ascii  "GM DMF32XCD-22"
+        .ascii  "GM 20250702-00"
         .word   0x0000
         .ascii  "J6CM            "
 .ifdef ENABLE_SSF_MAPPER
