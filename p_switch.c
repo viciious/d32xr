@@ -8,23 +8,21 @@
 /*================================================================== */
 static const switchlist_t alphSwitchList[] =
 {
+	// JagDoom
 	{"SW1BRN1", 	"SW2BRN1"},
-	{"SW1BRN2", 	"SW2BRN2"},
 	{"SW1GARG", 	"SW2GARG"},
 	{"SW1GSTON", 	"SW2GSTON"},
 	{"SW1HOT", 		"SW2HOT"},
 	{"SW1STAR", 	"SW2STAR"},
 	{"SW1WOOD", 	"SW2WOOD"},
-	{"SW1CMT",      "SW2CMT"},
-	{"SW1DBLU",     "SW2DBLU"},
-	{"SW1DRED",     "SW2DRED"},
-	{"SW1DYEL",     "SW2DYEL"},
+
+	// Fusion - The UD
 	{"SW1BLUE", 	"SW2BLUE"},
 	{"SW1BRCOM", 	"SW2BRCOM"},
-	{"SW1STON1", 	"SW2STON1"},
-	{"SW1STONM",    "SW2STONM"},
+	{"SW1BRMET", 	"SW2BRMET"},
+	{"SW1BRN2", 	"SW2BRN2"},
 	{"SW1BRNGN", 	"SW2BRNGN"},
-	{"SW1CMT", 		"SW2CMT"},
+	{"SW1CMT",      "SW2CMT"},
 	{"SW1COMM", 	"SW2COMM"},
 	{"SW1COMP", 	"SW2COMP"},
 	{"SW1GORSK", 	"SW2GORSK"},
@@ -34,10 +32,17 @@ static const switchlist_t alphSwitchList[] =
 	{"SW1METAL", 	"SW2METAL"},
 	{"SW1PIPE", 	"SW2PIPE"},
 	{"SW1SLAD", 	"SW2SLAD"},
+	{"SW1STON1", 	"SW2STON1"},
+	{"SW1STONM",    "SW2STONM"},
 	{"SW1WDMET", 	"SW2WDMET"},
 
+	// Fusion - Doom 2
+	{"SW1DBLU",     "SW2DBLU"},
 	{"SW1BRIK", 	"SW2BRIK"},
 	{"SW1BROWN", 	"SW2BROWN"},
+	{"SW1CMT", 		"SW2CMT"},
+	{"SW1DRED",     "SW2DRED"},
+	{"SW1DYEL",     "SW2DYEL"},
 	{"SW1MOD1", 	"SW2MOD1"},
 	{"SW1PANEL", 	"SW2PANEL"},
 	{"SW1ROCK", 	"SW2ROCK"},
@@ -45,6 +50,7 @@ static const switchlist_t alphSwitchList[] =
 	{"SW1TEK", 		"SW2TEK"},
 	{"SW1WUD", 		"SW2WUD"},
 	{"SW1ZIM", 		"SW2ZIM"},
+
 	{"SW1S0", 		"SW1S1"},
 	{"SW2S0", 		"SW2S1"},
 	{"SW3S0", 		"SW3S1"},
