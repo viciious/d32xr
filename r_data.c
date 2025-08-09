@@ -89,8 +89,22 @@ void R_InitTextures (void)
 	numtextures = LITTLELONG(*maptex);
 	directory = maptex+1;
 
-	end = W_CheckNumForName("T_END");
-	start = W_CheckRangeForName("T_START", 0, end);
+	start = 0xffff;
+	do {
+		char prevn[9];
+
+		end = W_CheckRangeForName("T_END", 0, start);
+		start = W_CheckRangeForName("T_START", 0, end);
+
+		D_memcpy(prevn, W_GetNameForNum(start-1), 8);
+		prevn[0] = prevn[0] & ~0x80;
+
+		if (D_strncasecmp(prevn, "BLOCKMAP", 8)) {
+			// not replacement texture block
+			break;
+		}
+		--start;
+	} while (1);
 
 	textures = Z_Malloc (numtextures * sizeof(*textures), PU_STATIC);
 	D_memset(textures, 0, numtextures * sizeof(*textures));

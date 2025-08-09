@@ -113,12 +113,15 @@ void W_InitCDPWAD (int wadnum, const char *name)
 	if (name[0] == '\0')
 		return;
 
-#ifdef DISABLE_CDFS
-	return;
-#endif
+	wad = &wadfile[wadnum];
+	wad->firstlump = wadfile[wadnum-1].numlumps;
 
 	wad = &wadfile[wadnum];
 	wad->firstlump = wadfile[wadnum-1].numlumps;
+#ifdef DISABLE_CDFS
+	wad->fileptr = wadfile[0].fileptr;
+	return;
+#endif
 	wad->cdlength = I_OpenCDFileByName(name, &wad->cdoffset);
 	if (wad->cdlength <= 0)
 		return;
@@ -196,6 +199,7 @@ static wadfile_t *W_GetWadForLump (int lumpnum)
 int W_CacheWADLumps (lumpinfo_t *li, int numlumps, VINT *lumps, boolean setpwad)
 {
 	int n;
+	wadfile_t *rwad = NULL;
 	wadfile_t *wad;
 
 	D_memset(li, 0, numlumps*sizeof(*li));
@@ -209,8 +213,16 @@ int W_CacheWADLumps (lumpinfo_t *li, int numlumps, VINT *lumps, boolean setpwad)
 			if (l < 0)
 				continue;
 			wad = W_GetWadForLump(lumps[i]);
-			if (setpwad && (wad - wadfile != wadnum))
-				break; // only allow lumps from the same WAD
+			if (setpwad)
+			{
+				if (rwad == NULL)
+					rwad = wad;
+				else if (wad != rwad)
+				{
+					I_Error("WTF");
+					break; // only allow lumps from the same WAD
+				}
+			}
 			D_memcpy(&li[n], &wad->lumpinfo[l - wad->firstlump], sizeof(lumpinfo_t));
 			n++;
 		}

@@ -959,7 +959,6 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 	deathmatch_p = deathmatchstarts;
 	P_LoadThings (lumpnum+ML_THINGS, &havebossspit);
 
-#ifndef DISABLE_CDFS
 	// load custom replacement textures from CD to RAM
 	{
 		boolean istexture = false;
@@ -970,21 +969,25 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 			int j, k;
 			uint8_t *data;
 			lumpinfo_t *l;
+			char name[8];
 
 			k = ML_BLOCKMAP + 1 + i;
 			l = &li[k];
 			if (!l->name[0])
 				break;
 
+			D_memcpy(name, l->name, 8);
+			name[0] = name[0] & ~0x80;
+
 			if (!l->size)
 			{
-				if (!istexture && !D_strcasecmp(l->name, "T_START"))
+				if (!istexture && !D_strcasecmp(name, "T_START"))
 					istexture = true;
-				else if (istexture && !D_strcasecmp(l->name, "T_END"))
+				else if (istexture && !D_strcasecmp(name, "T_END"))
 					istexture = false;
-				else if (!istexture && !D_strcasecmp(l->name, "F_START"))
+				else if (!istexture && !D_strcasecmp(name, "F_START"))
 					isflat = true;
-				else if (isflat && !D_strcasecmp(l->name, "F_END"))
+				else if (isflat && !D_strcasecmp(name, "F_END"))
 					isflat = false;
 				else
 					break;
@@ -993,7 +996,7 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 
 			// check if it's a texture
 			if (istexture) {
-				j = R_CheckTextureNumForName (l->name);
+				j = R_CheckTextureNumForName (name);
 				if (j >= 0)
 				{
 					int n;
@@ -1011,7 +1014,7 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 
 			// a flat?
 			if (isflat) {
-				j = R_FlatNumForName(l->name);
+				j = R_FlatNumForName(name);
 				if (j >= 0) {
 					data = Z_Malloc (l->size, PU_LEVEL);
 					W_ReadLump(lumpnum + k, data);
@@ -1021,7 +1024,7 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 			}
 
 			// a sky?
-			if (!D_strcasecmp(l->name, sky)) {
+			if (!D_strcasecmp(name, sky)) {
 				data = Z_Malloc (l->size, PU_LEVEL);
 				W_ReadLump(lumpnum + k, data);
 				skytexturep = R_SkipJagObjHeader(data, l->size, 256, 128);
@@ -1029,7 +1032,6 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 			}
 		}
 	}
-#endif
 
 	W_LoadPWAD(PWAD_NONE);
 
