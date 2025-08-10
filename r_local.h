@@ -58,6 +58,8 @@ typedef enum
 	MAXDETAILMODES
 } detailmode_t;
 
+#define DETAILMODE_DEFAULT detmode_lowres
+
 extern VINT detailmode;
 extern VINT viewportnum;
 extern VINT anamorphicview;

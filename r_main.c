@@ -314,7 +314,7 @@ void R_SetDrawFuncs(void)
 	}
 
 	if (detailmode < detmode_potato || detailmode >= MAXDETAILMODES)
-		detailmode = detmode_normal;
+		detailmode = DETAILMODE_DEFAULT;
 
 	if (lowres)
 	{

@@ -220,7 +220,7 @@ static void ReadOptions(void)
 		return;
 
 	if (so.detailmode < detmode_potato || so.detailmode >= MAXDETAILMODES)
-		so.detailmode = detmode_normal;
+		so.detailmode = DETAILMODE_DEFAULT;
 	if (so.sfxvolume > 64)
 		so.sfxvolume = 64;
 	if (so.musicvolume > 64)
@@ -285,7 +285,7 @@ void ReadEEProm(void)
 	ticsperframe = MINTICSPERFRAME;
 	anamorphicview = 0;
 	sfxdriver = 0;
-	detailmode = detmode_normal;
+	detailmode = DETAILMODE_DEFAULT;
 	lowres = false;
 
 	ReadOptions();
