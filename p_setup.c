@@ -890,7 +890,7 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 
 	P_InitThinkers ();
 
-	R_ResetTextures();
+	R_ClearTextures();
 
 	if (!sky || !*sky) {
 		sky = "SKY1";
@@ -1034,6 +1034,8 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 	}
 
 	W_LoadPWAD(PWAD_NONE);
+
+	R_FixupTextures();
 
 /* */
 /* if deathmatch, randomly spawn the active players */

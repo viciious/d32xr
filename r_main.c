@@ -425,6 +425,10 @@ void R_SetTextureData(texture_t *tex, uint8_t *start, int size, boolean skiphead
 #endif
 
 		tex->data[j] = data;
+		if (!data) {
+			continue;
+		}
+
 		data += size;
 
 		w >>= 1;
@@ -453,6 +457,9 @@ void R_SetFlatData(int f, uint8_t *start, int size)
 	for (j = 0; j < MIPLEVELS; j++)
 	{
 		flatpixels[f].data[j] = data;
+		if (!data) {
+			continue;
+		}
 		if (texmips) {
 			data += w * w;
 			w >>= 1;
@@ -460,7 +467,18 @@ void R_SetFlatData(int f, uint8_t *start, int size)
 	}
 }
 
-void R_ResetTextures(void)
+void R_ClearTextures(void)
+{
+	int i;
+
+	// reset pointers from previous level
+	for (i = 0; i < numtextures; i++)
+		R_SetTextureData(&textures[i], NULL, 0, 0);
+	for (i=0 ; i<numflats ; i++)
+		R_SetFlatData(i, NULL, 0);
+}
+
+void R_FixupTextures(void)
 {
 	int i;
 
@@ -472,13 +490,22 @@ void R_ResetTextures(void)
 		uint8_t *data;
 		int lump = textures[i].lumpnum;
 
+		if (textures[i].data[0]) {
+			continue;
+		}
+
 		if (lump >= firstsprite && lump < firstsprite + numsprites) {
-			data = W_POINTLUMPNUM(lump+1);
 			length = W_LumpLength(lump+1);
+			data = W_POINTLUMPNUM(lump+1);
 			skipheader = false;
-		} else {
-			data = R_CheckPixels(lump);
+		} else if (W_IsCompressed(lump)) {
 			length = W_LumpLength(lump);
+			data = Z_Malloc (length,PU_LEVEL);
+			W_ReadLump(lump, data);
+			skipheader = true;
+		} else {
+			length = W_LumpLength(lump);
+			data = R_CheckPixels(lump);
 			skipheader = true;
 		}
 
@@ -491,8 +518,16 @@ void R_ResetTextures(void)
 		uint8_t *data;
 		int lump = firstflat + i;
 
+		if (flatpixels[i].data[0]) {
+			continue;
+		}
+
 		data = R_CheckPixels(lump);
 		length = W_LumpLength(lump);
+		if (W_IsCompressed(lump)) {
+			data = Z_Malloc (length, PU_LEVEL);
+			W_ReadLump(lump, data);
+		}
 
 		R_SetFlatData(i, data, length);
 	}

@@ -318,7 +318,8 @@ int		R_DefaultViewportSize(void); // returns the viewport id for fullscreen, low
 void	R_SetDrawFuncs(void);
 void 	R_SetTextureData(texture_t *tex, uint8_t *start, int size, boolean skipheader);
 void 	R_SetFlatData(int f, uint8_t *start, int size);
-void	R_ResetTextures(void);
+void	R_ClearTextures(void);
+void	R_FixupTextures(void);
 void	R_SetupLevel(int gamezonemargin);
 
 // how much memory should be left free in the main zone after allocating the texture cache
