@@ -213,14 +213,15 @@ void I_InitMenuFire(jagobj_t *titlepic)
 {
 #ifdef ENABLE_FIRE_ANIMATION
 	int i, j;
-	const byte* doompalette;
 	int titlepos = gameinfo.titleStartPos;
 	int stopticon = gameinfo.stopFireTime;
+#endif	
+	const byte* doompalette;
 
 	doompalette = W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
 
 	I_SetPalette(doompalette);
-
+#ifdef ENABLE_FIRE_ANIMATION
 	m_fire = Z_Malloc(sizeof(*m_fire), PU_STATIC);
 	D_memset(m_fire, 0, sizeof(*m_fire));
 
