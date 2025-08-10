@@ -727,6 +727,7 @@ goback:
 				if (oldsfxdriver != o_sfxdriver)
 				{
 					S_SetSoundDriver(o_sfxdriver);
+					clearscreen = 2;					
 				}
 
 				if (oldspcmpack != curpack && curpack != -1)
