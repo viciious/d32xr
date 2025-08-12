@@ -687,8 +687,12 @@ void * W_ReadLumpData_(int lump, const char *func, void *dest, boolean compresse
 
 boolean W_IsIWad(int lump)
 {
+#ifndef DISABLE_CDFS
 	wadfile_t *wad = W_GetWadForLump(lump);
 	return wad == &wadfile[PWAD_NONE];
+#else
+	return true;
+#endif
 }
 
 boolean W_IsCompressed_(int lump, const char *func)
