@@ -388,7 +388,7 @@ static boolean P_MobjCanSightCheck(mobj_t *mobj)
 
 #ifdef MARS
 static char ps_lock = 0;
-static mobj_t *next_sight;
+static volatile mobj_t * volatile next_sight;
 
 static void P_LockSight(void)
 {
@@ -410,7 +410,7 @@ static void P_UnlockSight(void)
 
 static mobj_t *P_GetSightMobj(int c)
 {
-   mobj_t *mobj;
+   volatile mobj_t *mobj;
 
    P_LockSight();
 
@@ -438,7 +438,7 @@ static mobj_t *P_GetSightMobj(int c)
          Mars_ClearCacheLines(mobj, (sizeof(mobj_t)+31)/16);
       }
 
-      if (P_MobjCanSightCheck(mobj))
+      if (P_MobjCanSightCheck((mobj_t *)mobj))
          break;
    }
 
@@ -446,7 +446,7 @@ done:
    next_sight = mobj;
    P_UnlockSight();
 
-   return mobj;
+   return (mobj_t *)mobj;
 }
 
 #define P_NextSightMobj(mobj) (mobj)
