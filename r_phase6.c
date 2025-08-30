@@ -261,7 +261,7 @@ static void R_DrawSegSky(seglocal_t* lseg, unsigned short *restrict clipbounds)
     drawcol_t drawsky = drawcol;
 
     fixed_t scalefrac = segl->scalefrac;
-    const fixed_t scalestep = segl->scalestep;
+    fixed_t scalestep = segl->scalestep;
 
     const fixed_t ceilingheight = segl->ceilingheight;
     const VINT start = segl->start;
@@ -274,6 +274,9 @@ static void R_DrawSegSky(seglocal_t* lseg, unsigned short *restrict clipbounds)
     // sky mapping
     //
     I_SetThreadLocalVar(DOOMTLS_COLORMAP, skycolormaps);
+
+    scalefrac = FixedMul(scalefrac, ceilingheight);
+    scalestep = FixedMul(scalestep, ceilingheight);
 
     for (x = start; x <= stop; x++)
     {
@@ -289,7 +292,7 @@ static void R_DrawSegSky(seglocal_t* lseg, unsigned short *restrict clipbounds)
         ceilingclipx = (unsigned)ceilingclipx >> 8;
 
         top = ceilingclipx;
-        bottom = FixedMul(scale2, ceilingheight)>>FRACBITS;
+        bottom = scale2>>FRACBITS;
         bottom = centerY - bottom;
         if (bottom > floorclipx)
             bottom = floorclipx;
