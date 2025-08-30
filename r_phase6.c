@@ -55,6 +55,7 @@ static char seg_lock = 0;
 
 static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, int floorclipx, int ceilingclipx, unsigned light, drawtex_t *tex, int miplevel) ATTR_DATA_CACHE_ALIGN;
 static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
+static void R_DrawSegSky(seglocal_t* lseg, unsigned short *restrict clipbounds) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex, fixed_t texturemid, fixed_t topheight, fixed_t bottomheight) ATTR_DATA_CACHE_ALIGN;
 
 static void R_LockSeg(void) ATTR_DATA_CACHE_ALIGN;
@@ -149,16 +150,12 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds)
 {
     viswall_t* segl = lseg->segl;
 
-    drawcol_t drawsky = (segl->actionbits & AC_ADDSKY) != 0 ? drawcol : NULL;
-
     fixed_t scalefrac = segl->scalefrac;
     const fixed_t scalestep = segl->scalestep;
 
     const unsigned centerangle = segl->centerangle;
     fixed_t offset = segl->offset;
     fixed_t distance = segl->distance;
-
-    const fixed_t ceilingheight = segl->ceilingheight;
 
     int texturelight = lseg->lightmax;
     int lightmax = lseg->lightmax, lightmin = lseg->lightmin,
@@ -251,37 +248,66 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds)
 
         for (tex = lseg->first; tex < lseg->last; tex++)
             R_DrawTexture(x, iscale, colnum, scale2, floorclipx, ceilingclipx, texturelight, tex, miplevel);
+    }
+}
 
-        //
-        // sky mapping
-        //
-        if (drawsky)
+//
+// Main seg drawing loop
+//
+static void R_DrawSegSky(seglocal_t* lseg, unsigned short *restrict clipbounds)
+{
+    viswall_t* segl = lseg->segl;
+
+    drawcol_t drawsky = drawcol;
+
+    fixed_t scalefrac = segl->scalefrac;
+    const fixed_t scalestep = segl->scalestep;
+
+    const fixed_t ceilingheight = segl->ceilingheight;
+    const VINT start = segl->start;
+    const VINT stop = segl->stop;
+    VINT x;
+
+    const angle_t viewangle = vd->viewangle;
+
+    //
+    // sky mapping
+    //
+    I_SetThreadLocalVar(DOOMTLS_COLORMAP, skycolormaps);
+
+    for (x = start; x <= stop; x++)
+    {
+        fixed_t scale2;
+        int floorclipx, ceilingclipx;
+        int top, bottom;
+
+        scale2 = scalefrac;
+        scalefrac += scalestep;
+
+        ceilingclipx = clipbounds[x];
+        floorclipx = ceilingclipx & 0x00ff;
+        ceilingclipx = (unsigned)ceilingclipx >> 8;
+
+        top = ceilingclipx;
+        bottom = FixedMul(scale2, ceilingheight)>>FRACBITS;
+        bottom = centerY - bottom;
+        if (bottom > floorclipx)
+            bottom = floorclipx;
+
+        if (top < bottom)
         {
-            int top, bottom;
-
-            top = ceilingclipx;
-            bottom = FixedMul(scale2, ceilingheight)>>FRACBITS;
-            bottom = centerY - bottom;
-            if (bottom > floorclipx)
-                bottom = floorclipx;
-
-            if (top < bottom)
-            {
-                // CALICO: draw sky column
-                unsigned colnum = ((vd->viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
+            // CALICO: draw sky column
+            unsigned colnum = ((viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
 #ifdef MARS
-                inpixel_t* data = skytexturep + colnum * 128;
+            inpixel_t* data = skytexturep + colnum * 128;
 #else
-                pixel_t* data = skytexturep + colnum * 128;
+            pixel_t* data = skytexturep + colnum * 128;
 #endif
-                I_SetThreadLocalVar(DOOMTLS_COLORMAP, skycolormaps);
-
-                drawsky(x, top, --bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, 128);
-
-                I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
-            }
+            drawsky(x, top, --bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, 128);
         }
     }
+
+    I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
 }
 
 static void R_LockSeg(void)
@@ -522,6 +548,10 @@ void R_SegCommands(void)
         }
 
         R_DrawSeg(&lseg, clipbounds);
+
+        if (segl->actionbits & AC_ADDSKY) {
+            R_DrawSegSky(&lseg, clipbounds);
+        }
 
         *(int16_t *)&segl->miplevels[0] = 0;
 #if MIPLEVELS > 1
