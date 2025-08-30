@@ -396,9 +396,6 @@ void R_SegCommands(void)
     toptex = &lseg.tex[0];
     bottomtex = &lseg.tex[1];
 
-    D_memset(toptex, 0, sizeof(*toptex));
-    D_memset(bottomtex, 0, sizeof(*bottomtex));
-
     I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
 
     I_GetThreadLocalVar(DOOMTLS_COLUMNCACHE, toptex->columncache);
