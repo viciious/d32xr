@@ -546,9 +546,8 @@ void R_SegCommands(void)
 
         R_DrawSeg(&lseg, clipbounds);
 
-        if (segl->actionbits & AC_ADDSKY) {
+        if (actionbits & AC_ADDSKY)
             R_DrawSegSky(&lseg, clipbounds);
-        }
 
         *(int16_t *)&segl->miplevels[0] = 0;
 #if MIPLEVELS > 1
