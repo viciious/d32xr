@@ -283,6 +283,12 @@ static boolean PS_RejectCheckSight(mobj_t *t1, mobj_t *t2)
    unsigned pnum, bitnum;
    int bytenum;
 
+   if (t1->subsector == t2->subsector)
+   {
+      // we don't care abgout compatibility with original demos
+      return true;
+   }
+
    // First check for trivial rejection
    s1 = t1->subsector->sector;
    s2 = t2->subsector->sector;
