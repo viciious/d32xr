@@ -40,6 +40,7 @@ typedef enum
 	mi_anamorphic,
 	mi_detailmode,
 	mi_lowres,
+	mi_framerate,
 
 	mi_controltype,
 	mi_yabcdpad,
@@ -58,6 +59,7 @@ typedef enum
 	si_sfxvolume,
 	si_lod,
 	si_musvolume,
+	si_framerate,
 
 	NUMMENUSLIDERS
 } sliderid_t;
@@ -255,6 +257,13 @@ void O_Init (void)
 	menuitem[mi_lowres].x = ITEMX;
 	menuitem[mi_lowres].y = STARTY + ITEMSPACE * 4;
 
+	menuitem[mi_framerate].name = "Framerate cap";
+	menuitem[mi_framerate].x = ITEMX;
+	menuitem[mi_framerate].y = STARTY + ITEMSPACE * 5;
+	menuitem[mi_framerate].slider = si_framerate+1;
+	sliders[si_framerate].maxval = MAXTICSPERFRAME - MINTICSPERFRAME;
+	sliders[si_framerate].curval = MAXTICSPERFRAME - ticsperframe;
+
 	menuitem[mi_controltype].name = "Gamepad";
 	menuitem[mi_controltype].x = ITEMX;
 	menuitem[mi_controltype].y = STARTY;
@@ -287,6 +296,7 @@ void O_Init (void)
 	menuscreen[ms_audio].firstitem = mi_soundvol;
 	menuscreen[ms_audio].numitems = mi_music - mi_soundvol + 1;
 
+
 	cd_avail = S_CDAvailable();
 	if (cd_avail) /* CDA or MD+ */
 	{
@@ -300,7 +310,7 @@ void O_Init (void)
 
 	menuscreen[ms_video].name = "Video";
 	menuscreen[ms_video].firstitem = mi_resolution;
-	menuscreen[ms_video].numitems = mi_lowres - mi_resolution + 1;
+	menuscreen[ms_video].numitems = mi_framerate - mi_resolution + 1;
 
 	menuscreen[ms_controls].name = "Controls";
 	menuscreen[ms_controls].firstitem = mi_controltype;
@@ -548,9 +558,11 @@ goback:
 				case mi_resolution:
 					R_SetViewportSize(slider->curval);
 					break;
+				case mi_framerate:
+					ticsperframe = MAXTICSPERFRAME - slider->curval;
+					break;
 				default:
 					break;
-
 				}
 
 				sound = sfx_stnmov;
@@ -983,6 +995,9 @@ void O_Drawer (void)
 			print(menuitem[mi_lowres].x + 160, menuitem[mi_lowres].y, "off");
 			break;
 		}
+
+		D_snprintf(tmp, sizeof(tmp), "%d fps", I_IsPAL() ? 50/ticsperframe : 60/ticsperframe);
+		I_Print8(menuitem[mi_framerate].x + 114, (unsigned)menuitem[mi_framerate].y/8 + 3, tmp);
 	}
 
 	if (screenpos == ms_help)

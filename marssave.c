@@ -66,6 +66,7 @@ typedef struct __attribute((packed))
 	int8_t sfxdriver;
 	char spcmDir[9];
 	int8_t lowres;
+	uint8_t ticsperframe;
 } saveopts_t;
 
 static char saveslotguard[SRAM_SLOTSIZE - sizeof(savegame_t)] __attribute__((unused));
@@ -231,6 +232,8 @@ static void ReadOptions(void)
 		so.musictype = mustype_fm;
 	if (so.musictype >= mustype_cd && !S_CDAvailable())
 		so.musictype = mustype_fm;
+	if (so.ticsperframe < MINTICSPERFRAME || so.ticsperframe > MAXTICSPERFRAME)
+		so.ticsperframe = MINTICSPERFRAME;
 	if (so.alwaysrun < 0 || so.alwaysrun > 1)
 		so.alwaysrun = 0;
 	if (so.strafebtns < 0 || so.strafebtns > 3)
@@ -252,7 +255,7 @@ static void ReadOptions(void)
 	controltype = so.controltype;
 	viewportNum = so.viewport;
 	musictype = so.musictype;
-	ticsperframe = MINTICSPERFRAME;
+	ticsperframe = so.ticsperframe;
 	alwaysrun = so.alwaysrun;
 	strafebtns = so.strafebtns;
 	anamorphicview = so.anamorphic;
