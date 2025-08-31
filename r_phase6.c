@@ -222,7 +222,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds)
         r = FixedMul(distance, r);
 
         colnum = ((unsigned)(offset - r)) >> FRACBITS;
-        colnum = (uint8_t)colnum;
+        colnum = colnum & 0xff;
 
         if (segcolmask)
             segcolmask[x] = texturelight | colnum;
