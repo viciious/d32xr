@@ -161,21 +161,22 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds)
     int lightmax = lseg->lightmax, lightmin = lseg->lightmin,
         lightcoef = lseg->lightcoef, lightsub = lseg->lightsub;
 
-    const VINT start = segl->start;
-    const VINT stop = segl->stop;
-    VINT x;
+    const int start = segl->start;
+    const int stop = segl->stop;
+    int x;
     unsigned miplevel = 0;
 
     drawtex_t *tex;
 
-    uint16_t *restrict segcolmask = (segl->actionbits & AC_MIDTEXTURE) ? segl->clipbounds + (stop - start + 1) : NULL;
+    uint16_t *restrict segcolmask = (segl->actionbits & AC_MIDTEXTURE) ? (segl->clipbounds + 1) + stop - start : NULL;
 
-    for (x = start; x <= stop; x++)
-    {
+    x = start;
+    do {
        fixed_t r;
        int floorclipx, ceilingclipx;
        fixed_t scale2;
-       unsigned colnum, iscale;
+       unsigned colnum;
+       unsigned iscale;
 
 #ifdef MARS
         int32_t t, divunit;
@@ -221,8 +222,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds)
         r = finetangent((centerangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOFINESHIFT);
         r = FixedMul(distance, r);
 
-        colnum = ((unsigned)(offset - r)) >> FRACBITS;
-        colnum = colnum & 0xff;
+        colnum = ((unsigned)(offset - r) >> FRACBITS) & 0xff;
 
         if (segcolmask)
             segcolmask[x] = texturelight | colnum;
@@ -248,7 +248,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds)
 
         for (tex = lseg->first; tex < lseg->last; tex++)
             R_DrawTexture(x, iscale, colnum, scale2, floorclipx, ceilingclipx, texturelight, tex, miplevel);
-    }
+    } while (++x <= stop);
 }
 
 //
@@ -264,9 +264,9 @@ static void R_DrawSegSky(seglocal_t* lseg, unsigned short *restrict clipbounds)
     fixed_t scalestep = segl->scalestep;
 
     const fixed_t ceilingheight = segl->ceilingheight;
-    const VINT start = segl->start;
-    const VINT stop = segl->stop;
-    VINT x;
+    const int start = segl->start;
+    const int stop = segl->stop;
+    int x;
 
     const angle_t viewangle = vd->viewangle;
 
@@ -278,8 +278,8 @@ static void R_DrawSegSky(seglocal_t* lseg, unsigned short *restrict clipbounds)
     scalefrac = FixedMul(scalefrac, ceilingheight);
     scalestep = FixedMul(scalestep, ceilingheight);
 
-    for (x = start; x <= stop; x++)
-    {
+    x = start;
+    do {
         fixed_t scale2;
         int floorclipx, ceilingclipx;
         int top, bottom;
@@ -299,8 +299,10 @@ static void R_DrawSegSky(seglocal_t* lseg, unsigned short *restrict clipbounds)
 
         if (top < bottom)
         {
-            // CALICO: draw sky column
-            unsigned colnum = ((viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
+            unsigned colnum;
+
+            colnum = ((viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
+
 #ifdef MARS
             inpixel_t* data = skytexturep + colnum * 128;
 #else
@@ -308,7 +310,7 @@ static void R_DrawSegSky(seglocal_t* lseg, unsigned short *restrict clipbounds)
 #endif
             drawsky(x, top, --bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, 128);
         }
-    }
+    } while (++x <= stop);
 
     I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
 }
@@ -351,8 +353,8 @@ static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex,
 
     mipwidth = width;
     mipheight = height;
-    for (j = 0; j <= drawtex->maxmip; j++)
-    {
+    j = 0;
+    do {
         drawmip_t *mip = &drawtex->mip[j];
 
         mip->height = mipheight;
@@ -372,10 +374,9 @@ static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex,
         mip->numdecals = tex->decals & 0x3;
         if (mip->numdecals && R_InTexCache(&r_texcache, mip->data) == 1) {
             mip->numdecals = 0;
-            continue;
         }
         mip->decals = &decals[tex->decals >> 2];
-    }
+    } while (++j <= drawtex->maxmip);
 }
 
 void R_SegCommands(void)
