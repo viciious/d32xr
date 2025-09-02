@@ -548,9 +548,10 @@ void R_SegCommands(void)
             lseg.last++;
         }
 
-        R_DrawSeg(&lseg, clipbounds);
+        if ((actionbits & (AC_TOPTEXTURE|AC_BOTTOMTEXTURE|AC_MIDTEXTURE)) != 0)
+            R_DrawSeg(&lseg, clipbounds);
 
-        if (actionbits & AC_ADDSKY)
+        if ((actionbits & AC_ADDSKY) != 0)
             R_DrawSegSky(&lseg, clipbounds);
 
         *(int16_t *)&segl->miplevels[0] = 0;
