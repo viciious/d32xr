@@ -55,9 +55,6 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
 
    I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
 
-   if (x > stopx)
-      return;
-
    do {
       int light          = maskedcol[x];
       int colnum         = maskedcol[x] & widthmask;
