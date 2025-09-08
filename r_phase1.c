@@ -399,8 +399,9 @@ static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop)
    // split long segments
    int len = stop - start + 1;
 
-   if (numwalls == MAXWALLCMDS)
+   if (start > stop)
       return;
+
    if (rbsp->splitspans <= 0 || len < maxlen)
    {
       split = len;
@@ -414,6 +415,9 @@ static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop)
 
    rwex = vd->viswallextras + numwalls;
    do {
+      if (numwalls == MAXWALLCMDS)
+         return;
+
       rw = vd->lastwallcmd;
       rw->seg = rbsp->curline;
       rw->start = start;
@@ -432,8 +436,6 @@ static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop)
 
       rwex++;
       numwalls++;
-      if (numwalls == MAXWALLCMDS)
-         return;
 
       start = newstop + 1;
       newstop += maxlen;

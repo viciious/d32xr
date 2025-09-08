@@ -246,8 +246,8 @@ static void R_SegLoop(viswall_t* segl, unsigned short * restrict clipbounds,
     if (!(actionbits & (AC_ADDFLOOR|AC_ADDCEILING)) && !newclipbounds)
         return;
 
-    for (x = start; x <= stop; x++)
-    {
+    x = start;
+    do {
         fixed_t floorclipx, ceilingclipx;
         fixed_t low, high, top, bottom;
         fixed_t scale2;
@@ -336,7 +336,7 @@ static void R_SegLoop(viswall_t* segl, unsigned short * restrict clipbounds,
                 ceilopen[x] = (top << 8) + (bottom-1);
             }
         }
-    }
+    } while (++x <= stop);
 }
 
 #ifdef MARS

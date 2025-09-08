@@ -420,8 +420,6 @@ void R_SegCommands(void)
         while (*readysegs <= i)
             continue;
 #endif
-        if (segl->start > segl->stop)
-            continue;
 
 #ifdef MARS
         R_LockSeg();
