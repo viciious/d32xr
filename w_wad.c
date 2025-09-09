@@ -218,10 +218,7 @@ int W_CacheWADLumps (lumpinfo_t *li, int numlumps, VINT *lumps, boolean setpwad)
 				if (rwad == NULL)
 					rwad = wad;
 				else if (wad != rwad)
-				{
-					I_Error("WTF");
 					break; // only allow lumps from the same WAD
-				}
 			}
 			D_memcpy(&li[n], &wad->lumpinfo[l - wad->firstlump], sizeof(lumpinfo_t));
 			n++;
