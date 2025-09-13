@@ -7,9 +7,11 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
-
+  roms:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        makeflags: ["", "DISABLE_CDFS=1 ENABLE_FIRE_ANIMATION=1 ENABLE_DMA_SOUND=1 USE_SMALL_LUMPS=1 MIPLEVELS=4", "ENABLE_SSF_MAPPER=1 DISABLE_CDFS=1 ENABLE_DMA_SOUND=1 USE_SMALL_LUMPS=1"]
 
     steps:
       - uses: actions/cache@v3
@@ -36,11 +38,11 @@ jobs:
       - name: make debug MARS
         run: |
           dd if=/dev/zero bs=1K count=2324 of=doom32x.wad && \
-          make clean && make -j debug
+          ${{ matrix.makeflags }} make clean && ${{ matrix.makeflags }} make -j debug
       - name: make MARS
         run: |
           dd if=/dev/zero bs=1K count=2324 of=doom32x.wad && \
-          make clean && make -j release
+          ${{ matrix.makeflags }} make clean && ${{ matrix.makeflags }} make -j release
       - name: readelf -S
         run: |
           /opt/toolchains/sega/sh-elf/bin/sh-elf-readelf -S D32XR.elf
@@ -65,15 +67,3 @@ jobs:
         run: |
           grep 'bss_end =' output.map | grep -o '0x[0-9a-f]\+' | \
           xargs -I{} echo "{} 0x603C000" | awk --non-decimal-data '{print($2-$1); exit($1>=$2)}'
-      - name: 32X ROM
-        uses: actions/upload-artifact@v4
-        with:
-          name: 32X ROM File
-          path: |
-            D32XR.32x
-      - name: temp.bin
-        uses: actions/upload-artifact@v4
-        with:
-          name: temp.bin
-          path: |
-            temp.bin
