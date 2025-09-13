@@ -589,10 +589,10 @@ void* I_RemapLumpPtr(void *ptr)
 ==================== 
 */ 
  
-#define BASE_ZONE_SIZE 0x34000
+#define BASE_ZONE_SIZE 0x33000
 
 #ifdef DISABLE_DMA_SOUND
-#define ZONE_SIZE (BASE_ZONE_SIZE+0x1000)
+#define ZONE_SIZE (BASE_ZONE_SIZE+0x1800)
 #else
 #define ZONE_SIZE BASE_ZONE_SIZE
 #endif
