@@ -152,9 +152,23 @@ $(TARGET).32x: $(TARGET).elf
 	rm -f temp3.bin
 	cat temp.bin $(WAD) >>temp3.bin
 	$(DD) if=temp3.bin of=$@ bs=512K conv=sync
+	rm -f temp.bin temp2.bin temp3.bin
 
-$(TARGET).elf: $(OBJS)
+$(TARGET).elf: realbinsize
+	$(AS) $(ASFLAGS) $(INCPATH) wadbase.s -o wadbase.o
 	$(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o $(TARGET).elf
+
+realbinsize: temp.bin
+	$(eval override FILESIZE=$(shell stat -L -c %s temp.bin))
+	$(eval override BINSIZE=$(shell expr $(FILESIZE) / 1024))
+
+temp.bin: $(TARGET)_tmp.elf
+	$(OBJC) -O binary $< temp2.bin
+	$(DD) if=temp2.bin of=temp.bin bs=1K conv=sync
+	rm -f temp2.bin $(TARGET)_tmp.elf
+
+$(TARGET)_tmp.elf: $(OBJS)
+	$(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o $(TARGET)_tmp.elf
 
 crt0.o: crt0.s m68k.bin
 
@@ -184,3 +198,5 @@ optwad:
 iso: $(TARGET).32x
 	mkdir -p iso
 	genisoimage -sysid "SEGA SEGACD" -volid "DOOM CD32X FUSION" -full-iso9660-filenames -l -o $(TARGET).iso iso
+
+.PHONY: realbinsize
