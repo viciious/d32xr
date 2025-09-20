@@ -49,7 +49,7 @@
 .endif
         .long   0x00FF0000,0x00FFFFFF   /* RAM start, end */
 
-! 2KB of save ram on odd byte lane
+! 32KB of save ram on odd byte lane
         .ascii  "RA"                    /* External RAM */
         .byte   0xF8                    /* don't clear + odd bytes */
         .byte   0x20                    /* SRAM */
