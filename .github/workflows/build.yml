@@ -38,11 +38,11 @@ jobs:
       - name: make debug MARS
         run: |
           dd if=/dev/zero bs=1K count=2324 of=doom32x.wad && \
-          ${{ matrix.makeflags }} make clean && ${{ matrix.makeflags }} make -j debug
+          ${{ matrix.makeflags }} make clean && ${{ matrix.makeflags }} WAD=doom32x.wad make -j debug
       - name: make MARS
         run: |
           dd if=/dev/zero bs=1K count=2324 of=doom32x.wad && \
-          ${{ matrix.makeflags }} make clean && ${{ matrix.makeflags }} make -j release
+          ${{ matrix.makeflags }} make clean && ${{ matrix.makeflags }} WAD=doom32x.wad make -j release
       - name: readelf -S
         run: |
           /opt/toolchains/sega/sh-elf/bin/sh-elf-readelf -S D32XR.elf
