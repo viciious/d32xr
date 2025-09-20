@@ -260,6 +260,8 @@ extern 	int16_t 	*linetags;
 extern	VINT		numsides;
 extern	side_t		*sides;
 
+extern 	VINT 		segspage;
+
 extern 	int16_t 	worldbbox[4];
 
 /*============================================================================= */

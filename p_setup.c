@@ -37,6 +37,8 @@ SPTR		*blocklinks;			/* for thing chains */
 
 byte		*rejectmatrix;			/* for fast sight rejection */
 
+VINT 		segspage = -1;
+
 mapthing_t	*deathmatchstarts, *deathmatch_p;
 
 VINT		*validcount;			/* increment every time a check is made */
@@ -117,13 +119,11 @@ void P_LoadSegs (int lump)
 	numsegs = W_LumpLength (lump) / sizeof(seg_t);
 
 	// FIXME: this is strictly big-endian for now
-#ifndef ENABLE_SSF_MAPPER
 	if (W_IsIWad(lump))
 	{
 		segs = W_POINTLUMPNUM(lump);
 		return;
 	}
-#endif
 
 	segs = Z_Malloc (numsegs*sizeof(seg_t)+16,PU_LEVEL);
 	segs = (void*)(((uintptr_t)segs + 15) & ~15); // aline on cacheline boundary
@@ -364,14 +364,27 @@ void P_LoadNodes (int lump)
 #ifdef USE_SMALL_LUMPS
 	numnodes = W_LumpLength (lump) / sizeof(node_t);
 
-#ifndef ENABLE_SSF_MAPPER
 	// FIXME: this is strictly big-endian for now
 	if (W_IsIWad(lump))
 	{
+		int oldpage = 255;
+		I_SetBankPage(oldpage);
+
 		nodes = W_POINTLUMPNUM(lump);
-		return;
+
+		// re-use nodes from ROM if possible
+		const int page = I_GetBankPage();
+		if (page == oldpage)
+		{
+			// not in bank-switched area
+			return;
+		}
+
+		if (segspage < 0 || page == segspage) {
+			segspage = page;
+			return;
+		}
 	}
-#endif
 
 	nodes = Z_Malloc (numnodes*sizeof(node_t) + 16,PU_LEVEL);
 	nodes = (void*)(((uintptr_t)nodes + 15) & ~15); // aline on cacheline boundary
@@ -421,11 +434,14 @@ void P_LoadThings (int lump, boolean *havebossspit)
 	spawnthing_t	*st;
 	int 			numthingsreal, numstaticthings;
 
-	data = W_GetLumpData(lump);
 	numthings = W_LumpLength (lump) / sizeof(mapthing_t);
+	data = I_TempBuffer(numthings*sizeof(mapthing_t));
+	W_ReadLump(lump, data);
 	numthingsreal = 0;
 	numstaticthings = 0;
 	*havebossspit = false;
+
+	I_SetBankPage(segspage);
 
 	mt = (mapthing_t *)data;
 	for (i=0 ; i<numthings ; i++, mt++)
@@ -748,6 +764,8 @@ void P_GroupLines (void)
 	line_t		*li;
 	fixed_t		bbox[4];
 
+	I_SetBankPage(segspage);
+
 /* look up sector number for each subsector */
 	ss = subsectors;
 	for (i=0 ; i<numsubsectors ; i++, ss++)
@@ -920,6 +938,26 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 	W_CacheWADLumps(li, ML_BLOCKMAP+1+MAX_AUX_TEXTURES, lumps, true);
 
 	lumpnum = W_GetNumForName(lumpname);
+
+#if defined(USE_SMALL_LUMPS) && defined(ENABLE_SSF_MAPPER)
+	if (W_IsIWad(lumpnum+ML_SEGS))
+	{
+		int oldpage = 255;
+		I_SetBankPage(oldpage);
+
+		W_POINTLUMPNUM(lumpnum+ML_SEGS);
+
+		segspage = I_GetBankPage();
+		if (segspage == oldpage) {
+			// not in bank-switched area
+			segspage = -1;
+		}
+	}
+	else
+	{
+		segspage = -1;
+	}
+#endif
 
 /* note: most of this ordering is important	 */
 	P_LoadLineDefs (lumpnum+ML_LINEDEFS);

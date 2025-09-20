@@ -537,42 +537,65 @@ byte *I_WadBase (void)
 	return wadBase; 
 }
 
+#ifdef ENABLE_SSF_MAPPER
+
+int I_GetBankPage(void)
+{
+	volatile int bank;
+	I_GetThreadLocalVar(DOOMTLS_BANKPAGE, bank);
+	return bank & 0xffff;
+}
+
+int I_SetBankPage(int page)
+{
+	volatile int bank, bankpage;
+
+	if (page < 0)
+		return -1;
+
+	I_GetThreadLocalVar(DOOMTLS_BANKPAGE, bank);
+
+	bankpage = bank & 0xffff;
+	bank = bank >> 16;
+
+	if (bankpage != page)
+	{
+		int newbankpage;
+		void (*setbankpage)(int bank, int page);
+
+		I_GetThreadLocalVar(DOOMTLS_SETBANKPAGEPTR, setbankpage);
+
+		setbankpage(bank, page);
+
+		newbankpage = (bank << 16) | page;
+		I_SetThreadLocalVar(DOOMTLS_BANKPAGE, newbankpage);
+
+		Mars_ClearCache();
+	}
+
+	return bank;
+}
 
 /*
 ====================
 =
-= I_RemapLumpPtr
+= I_RemapPtr
 ====================
 */
-#ifdef ENABLE_SSF_MAPPER
-void* I_RemapLumpPtr(void *ptr)
+void* I_RemapPtr(void *ptr)
 {
 	uintptr_t newptr = (uintptr_t)ptr;
 
 	if (newptr >= mars_rom_bsw_start && newptr < 0x04000000)
 	{
-		unsigned page = (newptr - 0x02000000) >> 19;
-		volatile unsigned bank, bankpage;
-		void (*setbankpage)(int bank, int page);
+		int bank, page;
 
-		I_GetThreadLocalVar(DOOMTLS_BANKPAGE, bank);
-		I_GetThreadLocalVar(DOOMTLS_SETBANKPAGEPTR, setbankpage);
-
-		bankpage = bank & 0xffff;
-		bank = bank >> 16;
+		page = (newptr - 0x02000000) >> 19;
+		bank = I_SetBankPage(page);
+		if (bank < 0)
+			return ptr;
 
 		newptr = ((newptr & 0x0007FFFF) + 512*1024*bank + 0x02000000);
-		if (page >= 6)
-			newptr |= 0x20000000; // bypass cache
-
-		if (bankpage != page)
-		{
-			setbankpage(bank, page);
-
-			bank = (bank << 16) | page;
-			I_SetThreadLocalVar(DOOMTLS_BANKPAGE, bank);
-		}
-
 		return (void *)newptr;
 	}
 

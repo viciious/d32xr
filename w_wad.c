@@ -580,7 +580,7 @@ void * W_GetRawLumpData_(int lump, const char *func)
 		return I_GetCDFileBuffer();
 	}
 #endif
-	return I_RemapLumpPtr((void*)(wad->fileptr + BIGLONG(l->filepos)));
+	return I_RemapPtr((void*)(wad->fileptr + BIGLONG(l->filepos)));
 }
 
 /*
@@ -623,7 +623,7 @@ void * W_GetLumpData_(int lump, const char *func)
 		// compressed
 		volatile int len = BIGLONG(l->size);
 
-		byte *src = I_RemapLumpPtr((void*)(wad->fileptr + pos));
+		byte *src = I_RemapPtr((void*)(wad->fileptr + pos));
 		byte *dest = I_TempBuffer(len);
 
 		decode(src, dest);
@@ -632,7 +632,7 @@ void * W_GetLumpData_(int lump, const char *func)
 	}
 	else 
 	{
-		return I_RemapLumpPtr((void*)(wad->fileptr + pos));
+		return I_RemapPtr((void*)(wad->fileptr + pos));
 	}
 }
 
@@ -674,7 +674,7 @@ void * W_ReadLumpData_(int lump, const char *func, void *dest, boolean compresse
 		return dest;
 	}
 #endif
-	src = I_RemapLumpPtr((void*)(wad->fileptr + BIGLONG(l->filepos)));
+	src = I_RemapPtr((void*)(wad->fileptr + BIGLONG(l->filepos)));
 	if (compressed)
 		decode(src, dest);
 	else

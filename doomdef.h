@@ -791,9 +791,13 @@ void I_Init (void);
 byte *I_WadBase (void);
 byte *I_ZoneBase (int *size);
 #ifdef ENABLE_SSF_MAPPER
-void* I_RemapLumpPtr (void* ptr) ATTR_DATA_CACHE_ALIGN;
+void* I_RemapPtr (void* ptr) ATTR_DATA_CACHE_ALIGN;
+int I_SetBankPage(int page) ATTR_DATA_CACHE_ALIGN;
+int I_GetBankPage(void) ATTR_DATA_CACHE_ALIGN;
 #else
-#define I_RemapLumpPtr(ptr) (ptr)
+#define I_RemapPtr(ptr) (ptr)
+#define I_SetBankPage(page) (void)0
+#define I_GetBankPage() (-1) 
 #endif
 
 /* return a pointer to a 64k or so temp work buffer for level setup uses */

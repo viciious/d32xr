@@ -372,6 +372,8 @@ void Mars_Sec_R_WallPrep(void)
     seglex = vd->viswallextras;
     verts = vertexes;
 
+    I_SetBankPage(segspage);
+
     for (segl = first; segl != verylast; )
     {
         int8_t nextsegs = *addedsegs;

@@ -579,6 +579,8 @@ void R_Sprites(void)
    sortedsprites[0] = count;
    D_isort(sortedsprites+1, count);
 
+   I_SetBankPage(segspage);
+
    verts = vertexes;
    for (wc = vd->viswalls; wc < vd->lastwallcmd; wc++)
    {

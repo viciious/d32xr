@@ -317,10 +317,8 @@ int P_Ticker (void)
 	;		/* wait for sound mixing to complete */
 #endif
 
-#ifdef MARS
     // bank-switch to the page with map data
-    //W_GetLumpData(gamemaplump);
-#endif
+	I_SetBankPage(segspage);
 
 	gameaction = ga_nothing;
 
