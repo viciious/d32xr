@@ -687,6 +687,8 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		I_ClearFrameBuffer();
 #endif
 
+	I_SetBankPage(segspage);
+
 	framecount++;	
 	validcount[0]++;
 

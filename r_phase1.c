@@ -736,6 +736,8 @@ void R_BSP(void)
    rbsp.lastv1 = -1;
    rbsp.lastv2 = -1;
 
+   I_SetBankPage(segspage);
+
    R_RenderBSPNode(&rbsp, numnodes-1, worldbbox);
 }
 
