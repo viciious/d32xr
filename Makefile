@@ -4,8 +4,16 @@ else
 ROOTDIR = /opt/toolchains/sega
 endif
 
-WAD ?= doom32x.wad
-BINSIZE ?= 210
+TARGET ?= D32XR
+WAD ?= doom32xf.wad
+BINSIZE = 210
+TITLE ?= DOOM 32X FUSION
+VERSION ?= 0.1
+MAPPER = SEGA 32X
+
+ifdef ENABLE_SSF_MAPPER
+MAPPER = SEGA SSF
+endif
 
 LDSCRIPTSDIR = $(ROOTDIR)/ldscripts
 
@@ -63,7 +71,6 @@ OBJC = $(PREFIX)objcopy
 DD = dd
 RM = rm -f
 
-TARGET ?= D32XR
 LIBS = $(LIBPATH) -lc -lgcc -lgcc-Os-4-200 -lnosys
 OBJS = \
 	crt0.o \
@@ -146,13 +153,14 @@ all: release
 m68k.bin:
 	make -C src-md
 
-$(TARGET).32x: $(TARGET).elf
+$(TARGET).32x: $(TARGET).elf romheaderfix
 	$(OBJC) -O binary $< temp2.bin
 	$(DD) if=temp2.bin of=temp.bin bs=$(BINSIZE)K conv=sync
 	rm -f temp3.bin
 	cat temp.bin $(WAD) >>temp3.bin
 	$(DD) if=temp3.bin of=$@ bs=512K conv=sync
 	rm -f temp.bin temp2.bin temp3.bin
+	./romheaderfix/romheaderfix "$(MAPPER)" "$(TITLE) v$(VERSION)" $(TARGET).32x
 
 $(TARGET).elf: realbinsize
 	$(AS) $(ASFLAGS) $(INCPATH) wadbase.s -o wadbase.o
@@ -191,12 +199,11 @@ clean:
 	make clean -C src-md
 	$(RM) *.o mr8k.bin $(TARGET).32x $(TARGET).elf output.map temp.bin temp2.bin
 
-optwad:
-	mkdir -p iso
-	find iso -type f -name "*.WAD" -exec ./wadptr -nomerge -nosquash -nostack -c {} \;
-
 iso: $(TARGET).32x
 	mkdir -p iso
 	genisoimage -sysid "SEGA SEGACD" -volid "DOOM CD32X FUSION" -full-iso9660-filenames -l -o $(TARGET).iso iso
 
-.PHONY: realbinsize
+romheaderfix:
+	gcc -o romheaderfix/romheaderfix romheaderfix/romheaderfix.c
+
+.PHONY: realbinsize romheaderfix

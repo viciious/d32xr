@@ -13,5 +13,6 @@
 *.lst
 *.bat
 *.ram
+romheaderfix/romheaderfix
 
 !extras/megasave/D32XR.32X

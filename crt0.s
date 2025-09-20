@@ -39,7 +39,7 @@
         .ascii  "DOOM 32XCD Fusio"
         .ascii  "n v2.2          "
         .ascii  "                "
-        .ascii  "GM DMF32XCD-22"
+        .ascii  "GM DMF32XCD-00"
         .word   0x0000
         .ascii  "J6CM            "
 .ifdef ENABLE_SSF_MAPPER
