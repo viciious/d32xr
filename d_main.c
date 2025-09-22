@@ -348,7 +348,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 	start ();
 	exit = 0;
 	
-	if (netgame)
+	if (netgame && !splitscreen)
 		I_NetReady();
 
 	ticon = 0;
