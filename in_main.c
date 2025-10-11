@@ -356,7 +356,20 @@ void IN_Start (void)
 	VINT lumps[7];
 	lumpinfo_t li[7];
 
-	S_Clear();
+	// wait max 1s for sound playback to stop (exit switches, yay!)
+	for (i = 0; i < 30; i++)
+	{
+		volatile int tic;
+
+		if (S_PreUpdateSounds() == 0) {
+			break;
+		}
+		S_UpdateSounds();
+
+		for (tic = I_GetTime(); tic == I_GetTime(); ) {
+			;
+		}
+	}
 
 	interm = Z_Malloc(sizeof(*interm), PU_STATIC);
 	D_memset(interm, 0, sizeof(*interm));

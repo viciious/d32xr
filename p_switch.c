@@ -135,17 +135,20 @@ void P_ChangeSwitchTexture(line_t *line,int useAgain)
 	int	sound;
 	mobj_t *soundorg = (void *)LD_FRONTSECTOR(line);
 
+	sound = sfx_swtchn;
+	if (line->special == 11)		/* EXIT SWITCH? */
+	{
+		extern degenmobj_t emptymobj;
+		soundorg = &emptymobj;
+	}
+
 	if (!useAgain)
 		line->special = 0;
 
 	texTop = sides[line->sidenum[0]].toptexture;
 	texMid = sides[line->sidenum[0]].midtexture;
 	texBot = sides[line->sidenum[0]].bottomtexture;
-	
-	sound = sfx_swtchn;
-	if (line->special == 11)		/* EXIT SWITCH? */
-		sound = sfx_swtchx;
-	
+
 	for (i = 0;i < numswitches*2;i++)
 		if (switchlist[i] == texTop)
 		{

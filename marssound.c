@@ -74,7 +74,7 @@ int __attribute__((aligned(16))) pcm_data[4];
 
 static marsrb_t	soundcmds = { 0 };
 
-static unsigned snd_nopaintcount = 0;
+static VINT snd_nopaintcount = 0;
 #endif
 
 static uint8_t	snd_init = 0;
@@ -420,6 +420,7 @@ static void S_Spatialize(mobj_t* mobj, int *pvol, int *psep, getsoundpos_t getpo
 	if (mobj)
 	{
 		fixed_t origin[2];
+		extern degenmobj_t emptymobj;
 
 		if (getpos)
 		{
@@ -430,7 +431,7 @@ static void S_Spatialize(mobj_t* mobj, int *pvol, int *psep, getsoundpos_t getpo
 			origin[0] = mobj->x, origin[1] = mobj->y;
 		}
 
-		if (mobj != player->mo)
+		if (mobj != player->mo && mobj != (void*)&emptymobj && player->mo != (void*)&emptymobj)
 			S_SpatializeAt(origin, player->mo, &vol, &sep);
 
 		if (splitscreen && player2->mo)
@@ -1046,7 +1047,7 @@ static void S_Update(int16_t* buffer)
 	int32_t *b2;
 	int c, l, h;
 	mobj_t* mo;
-	int painted = 0;
+	int painted = 0, nopaint = 0;
 
 	S_UpdatePCM();
 
@@ -1056,13 +1057,14 @@ static void S_Update(int16_t* buffer)
 
 	if (pcmchannel.data)
 	{
-		snd_nopaintcount = 0;
+		nopaint = 0;
 	}
 	else
 	{
+		nopaint = snd_nopaintcount;
 		if (S_USE_MEGACD_DRV())
 		{
-			snd_nopaintcount++;
+			nopaint++;
 		}
 		else
 		{
@@ -1072,19 +1074,22 @@ static void S_Update(int16_t* buffer)
 					break;
 			}
 			if (i == SFXCHANNELS)
-				snd_nopaintcount++;
+				nopaint++;
 			else
-				snd_nopaintcount = 0;
+				nopaint = 0;
 		}
 	}
 
-	if (snd_nopaintcount > 2)
+	if (nopaint > 2)
 	{
 		// we haven't painted the sound channels to the output buffer
 		// for over two frames, both buffers are cleared and safe to
 		// point the DMA to
+		snd_nopaintcount = 3;
 		return;
 	}
+	
+	snd_nopaintcount = nopaint;
 
 	b2 = (int32_t *)buffer;
 	for (i = 0; i < MAX_SAMPLES; i++)
