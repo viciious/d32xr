@@ -378,15 +378,18 @@ void O_Control (player_t *player)
 			movecount = 0;
 			cursorpos = 0;
 			screenpos = ms_main;
-			S_StartSound(NULL, sfx_swtchn);
 			if (player->automapflags & AF_OPTIONSACTIVE)
+			{
+				S_StartSound(NULL,  sfx_swtchn);
 #ifndef MARS
 				DoubleBufferSetup();
-#else
-				;
 #endif
+			}
 			else
+			{
+				S_StartSound(NULL,  sfx_swtchx);
 				WriteEEProm ();		/* save new settings */
+			}
 		}
 	}
 
@@ -413,7 +416,7 @@ void O_Control (player_t *player)
 			movecount = 0;
 			cursorpos = 0;
 			screenpos = ms_main;
-			S_StartSound(NULL, sfx_swtchn);
+			S_StartSound(NULL, sfx_swtchx);
 			return;
 		case ga_startnew:
 			gameaction = ga_startnew;
@@ -499,7 +502,7 @@ goback:
 			movecount = 0;
 			screenpos = ms_main;
 			clearscreen = 2;
-			S_StartSound(NULL, sfx_swtchn);
+			S_StartSound(NULL, sfx_swtchx);
 			return;
 		}
 	}

@@ -374,7 +374,7 @@ int M_Ticker (void)
 
 			movecount = 0;
 			clearscreen = 2;
-			S_StartSound(NULL, sfx_swtchn);
+			S_StartSound(NULL, sfx_swtchx);
 			return 0;
 		}
 		else
