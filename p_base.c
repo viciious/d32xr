@@ -267,7 +267,7 @@ void P_RunMobjBase2(void)
             Mars_ClearCacheLine(&mo->flags);
 #endif
         next = mo->next;	/* in case mo is removed this time */
-        if (!mo->player)
+        if ((mo->flags & MF_STATIC) || !mo->player)
             P_MobjThinker(mo);
     }
 }
