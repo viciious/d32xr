@@ -139,7 +139,7 @@ void P_ChangeSwitchTexture(line_t *line,int useAgain)
 	if (line->special == 11)		/* EXIT SWITCH? */
 	{
 		extern degenmobj_t emptymobj;
-		soundorg = &emptymobj;
+		soundorg = (void *)&emptymobj;
 	}
 
 	if (!useAgain)
