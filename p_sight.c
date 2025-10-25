@@ -398,20 +398,13 @@ static volatile mobj_t * volatile next_sight;
 
 static void P_LockSight(void)
 {
-    int res;
-    do {
-        __asm volatile (\
-        "tas.b %1\n\t" \
-            "movt %0\n\t" \
-            : "=&r" (res) \
-            : "m" (ps_lock) \
-            );
-    } while (res == 0);
+   while (atomic_flag_test_and_set(&ps_lock)) {
+   }
 }
 
 static void P_UnlockSight(void)
 {
-   ps_lock = 0;
+   atomic_flag_clear(&ps_lock);
 }
 
 static mobj_t *P_GetSightMobj(int c)

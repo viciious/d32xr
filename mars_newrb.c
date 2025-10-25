@@ -25,6 +25,7 @@
 */
 
 #include <memory.h>
+#include <stdatomic.h>
 #include "mars_newrb.h"
 #include "marshw.h"
 
@@ -42,20 +43,11 @@
         
 static void ringbuf_lock(marsrbuf_t *buf) 
 {
-    int res;
-
     if (buf->nolock) {
         return;
     }
-
-    do {
-        __asm volatile (\
-            "tas.b @%1\n\t" \
-            "movt %0\n\t" \
-            : "=&r" (res) \
-            : "r" (&buf->lock) \
-            );
-    } while (res == 0);
+    while (atomic_flag_test_and_set(&buf->lock)) {
+    }
 }
 
 static void ringbuf_unlock(marsrbuf_t *buf)
@@ -63,7 +55,7 @@ static void ringbuf_unlock(marsrbuf_t *buf)
     if (buf->nolock) {
         return;
     }
-    buf->lock = 0;
+    atomic_flag_clear(&buf->lock);
 }
 
 static void ringbuf_fixup(marsrbuf_t *buf)

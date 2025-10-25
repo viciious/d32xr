@@ -256,16 +256,7 @@ static void R_PlaneLoop(localplane_t *lpl)
 
 static int R_TryLockPln(void)
 {
-    int res;
-
-    __asm volatile (\
-       "tas.b %1\n\t" \
-        "movt %0\n\t" \
-        : "=&r" (res) \
-        : "m" (pl_lock) \
-    );
-
-    return res != 0;
+    return atomic_flag_test_and_set(&pl_lock) == 0;
 }
 
 static void R_LockPln(void)
@@ -275,7 +266,7 @@ static void R_LockPln(void)
 
 static void R_UnlockPln(void)
 {
-    pl_lock = 0;
+    atomic_flag_clear(&pl_lock);
 }
 
 static visplane_t *R_GetNextPlane(uint16_t *sortedvisplanes)

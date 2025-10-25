@@ -6,6 +6,7 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdatomic.h>
 
 /* JAGUAR should be defined on the compiler command line for console builds */
 /* if MARS isn't defined, assume jaguar version */

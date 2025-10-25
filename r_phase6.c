@@ -317,20 +317,13 @@ static void R_DrawSegSky(seglocal_t* lseg, unsigned short *restrict clipbounds)
 
 static void R_LockSeg(void)
 {
-    int res;
-    do {
-        __asm volatile (\
-        "tas.b %1\n\t" \
-            "movt %0\n\t" \
-            : "=&r" (res) \
-            : "m" (seg_lock) \
-            );
-    } while (res == 0);
+    while (atomic_flag_test_and_set(&seg_lock)) {
+    }
 }
 
 static void R_UnlockSeg(void)
 {
-    seg_lock = 0;
+    atomic_flag_clear(&seg_lock);
 }
 
 static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex, 
