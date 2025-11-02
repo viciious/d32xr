@@ -865,6 +865,7 @@ void P_UpdateSpecials (void)
 			buttonlist[i].btimer--;
 			if (!buttonlist[i].btimer)
 			{
+				mobj_t *soundorg;
 				switch(buttonlist[i].where)
 				{
 					case top:
@@ -880,7 +881,8 @@ void P_UpdateSpecials (void)
 							buttonlist[i].btexture;
 						break;
 				}
-				S_StartSound((mobj_t *)&buttonlist[i].soundorg,sfx_swtchn);
+				soundorg = SPTR_TO_LPTR(buttonlist[i].soundorg);
+				S_StartPositionedSound(soundorg,sfx_swtchn,&P_SectorOrg);
 				D_memset(&buttonlist[i],0,sizeof(button_t));
 			}
 		}

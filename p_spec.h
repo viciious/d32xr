@@ -167,10 +167,10 @@ typedef enum
 typedef struct
 {
 	line_t		*line;
-	mobj_t* soundorg;
+	SPTR 		soundorg;
 	VINT		btexture;
 	VINT		btimer;
-	bwhere_e	where;
+	VINT	where;
 } button_t;
 
 #define	MAXSWITCHES	50		/* max # of wall switches in a level */

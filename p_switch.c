@@ -75,7 +75,7 @@ void P_InitSwitchList(void)
 {
 	int		i;
 	int		index;
-		
+
 	numswitches = sizeof(alphSwitchList)/sizeof(alphSwitchList[0]);
 	
 	for (index = 0,i = 0;i < numswitches;i++)
@@ -113,7 +113,7 @@ void P_StartButton(line_t *line,bwhere_e w,int texture,int time,mobj_t *soundord
 			buttonlist[i].where = w;
 			buttonlist[i].btexture = texture;
 			buttonlist[i].btimer = time;
-			buttonlist[i].soundorg = soundord;
+			buttonlist[i].soundorg = LPTR_TO_SPTR(soundord);
 			return;
 		}
 
@@ -139,6 +139,7 @@ void P_ChangeSwitchTexture(line_t *line,int useAgain)
 	if (line->special == 11)		/* EXIT SWITCH? */
 	{
 		extern degenmobj_t emptymobj;
+		useAgain = false;
 		soundorg = (void *)&emptymobj;
 	}
 
