@@ -830,7 +830,7 @@ void P_UpdateSpecials (void)
 	{
 		side_t *side;
 		int16_t textureoffset, rowoffset;
-		line = linespeciallist[i];
+		line = &lines[linespeciallist[i]];
 		side = &sides[line->sidenum[0]];
 		switch(line->special)
 		{
@@ -984,7 +984,7 @@ int EV_DoDonut(line_t *line)
 */
 
 VINT	numlinespecials = 0;
-line_t	**linespeciallist = NULL;
+VINT	*linespeciallist = NULL;
 
 void P_SpawnSpecials (void)
 {
@@ -1045,7 +1045,7 @@ void P_SpawnSpecials (void)
 		{
 		case 48:	/* EFFECT FIRSTCOL SCROLL+ */
 		case 142:	/* MODERATE VERT SCROLL */
-			linespeciallist[numlinespecials] = &lines[i];
+			linespeciallist[numlinespecials] = i;
 			numlinespecials++;
 			if (numlinespecials == MAXLINEANIMS)
 				goto done_speciallist;

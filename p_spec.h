@@ -14,9 +14,9 @@
 typedef struct
 {
 	char	istexture;
+	char 	numpics;
 	VINT	picnum;
 	VINT	basepic;
-	VINT	numpics;
 	VINT	current;
 } anim_t;
 
@@ -40,7 +40,7 @@ extern	anim_t	*anims/*[MAXANIMS]*/, * lastanim;
 /* */
 #define	MAXLINEANIMS		128
 extern	VINT	numlinespecials;
-extern	line_t	**linespeciallist/*[MAXLINEANIMS]*/;
+extern	VINT	*linespeciallist/*[MAXLINEANIMS]*/;
 
 
 /*	Define values for map objects */
