@@ -872,7 +872,8 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	vd->viswallextras = viswallex_ + 1;
 
 	// re-use the openings array in VRAM
-	vd->gsortedsprites = (void *)(((intptr_t)vd->visplanes[1].open + 3) & ~3);
+	vd->gsortedsprites = (void *)tempbuf;
+	tempbuf += sizeof(*vd->gsortedsprites) * (MAXVISSPRITES+1) / sizeof(*tempbuf);
 
 	vd->vissprites = (void *)vd->viswalls;
 
