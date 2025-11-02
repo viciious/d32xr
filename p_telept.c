@@ -77,7 +77,7 @@ int	EV_Teleport( line_t *line,mobj_t *thing )
 				oldz = thing->z;
 				oldsubs = thing->subsector;
 				thing->flags |= MF_TELEPORT;
-				if (thing->player)
+				if (thing->type == MT_PLAYER)
 					P_Telefrag (thing, m->x, m->y);
 				flag = P_TryMove (&tm, thing, m->x, m->y);
 				thing->flags &= ~MF_TELEPORT;
@@ -91,7 +91,7 @@ int	EV_Teleport( line_t *line,mobj_t *thing )
 				fog = P_SpawnMobj (m->x+20*finecosine(an), m->y+20*finesine(an)
 					, thing->z, MT_TFOG);
 				S_StartSound (fog, sfx_telept);
-				if (thing->player)
+				if (thing->type == MT_PLAYER)
 					thing->reactiontime = 18 / 2;	/* don't move for a bit */
 				thing->angle = m->angle;
 				thing->momx = thing->momy = thing->momz = 0;

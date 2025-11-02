@@ -130,7 +130,7 @@ boolean PIT_CheckLine(line_t *ld, pmovework_t *w)
    {
       if(ld->flags & ML_BLOCKING)
          return false; // explicitly blocking everything
-      if(!tmthing->player && (ld->flags & ML_BLOCKMONSTERS))
+      if(tmthing->type != MT_PLAYER && (ld->flags & ML_BLOCKMONSTERS))
          return false; // block monsters only
    }
 

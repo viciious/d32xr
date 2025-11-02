@@ -98,7 +98,7 @@ void P_XYMovement(mobj_t *mo)
          // flying skull?
          if(mo->flags & MF_SKULLFLY)
          {
-            mo->extradata = (intptr_t)w.hitthing;
+            mo->extradata = LPTR_TO_SPTR(w.hitthing);
             mo->latecall = LC_SKULL_BASH;
             return;
          }
@@ -111,7 +111,7 @@ void P_XYMovement(mobj_t *mo)
                mo->latecall = LC_REMOVE_MOBJ;
                return;
             }
-            mo->extradata = (intptr_t)w.hitthing;
+            mo->extradata = LPTR_TO_SPTR(w.hitthing);
             mo->latecall = LC_MISSILE_HIT;
             return;
          }
@@ -267,7 +267,7 @@ void P_RunMobjBase2(void)
             Mars_ClearCacheLine(&mo->flags);
 #endif
         next = mo->next;	/* in case mo is removed this time */
-        if ((mo->flags & MF_STATIC) || !mo->player)
+        if (mo->type != MT_PLAYER)
             P_MobjThinker(mo);
     }
 }
@@ -283,7 +283,7 @@ void P_RunMobjBase2(void)
 
 void P_RunMobjLate(void)
 {
-    mobj_t* mo;
+    mobj_t* mo, *targ;
     mobj_t* next;
 
     for (mo = mobjhead.next; mo != (void*)&mobjhead; mo = next)
@@ -296,10 +296,12 @@ void P_RunMobjLate(void)
             switch (mo->latecall)
             {
                case LC_SKULL_BASH:
-                  L_SkullBash(mo);
+                  targ = SPTR_TO_LPTR(mo->extradata);
+                  L_SkullBash(mo, targ);
                   break;
                case LC_MISSILE_HIT:
-                  L_MissileHit(mo);
+                  targ = SPTR_TO_LPTR(mo->extradata);
+                  L_MissileHit(mo, targ);
                   break;
                case LC_EXPLODE_MISSILE:
                   P_ExplodeMissile(mo);

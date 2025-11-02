@@ -78,7 +78,6 @@ void P_RemoveMobj (mobj_t *mobj)
 	}
 
 	mobj->target = NULL;
-	mobj->extradata = 0;
 	mobj->latecall = LC_INVALID;	/* make sure it doesn't come back to life... */
 
 /* unlink from mobj list */
@@ -594,7 +593,8 @@ return;	/*DEBUG */
 		totalkills++;
 	if (mobj->flags & MF_COUNTITEM)
 		totalitems++;
-	mobj->thingid = thingid + 1;
+	if (mobj->flags & MF_SPECIAL)
+		mobj->thingid = thingid + 1;
 		
 	if (mobj->flags & MF_STATIC)
 		return;
@@ -697,7 +697,7 @@ void P_CheckMissileSpawn (mobj_t *th)
 			th->latecall = LC_REMOVE_MOBJ;
 			return;
 		}
-		th->extradata = (intptr_t)tm.hitthing;
+		th->extradata = LPTR_TO_SPTR(tm.hitthing);
 		th->latecall = LC_MISSILE_HIT;
 	}
 }

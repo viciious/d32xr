@@ -359,7 +359,7 @@ void P_CrossSpecialLine (line_t *line,mobj_t *thing)
 	/* */
 	/*	Triggers that other things can activate */
 	/* */
-	if (!thing->player)
+	if (thing->type != MT_PLAYER)
 	{
 		ok = 0;
 		switch(line->special)
@@ -542,7 +542,7 @@ void P_CrossSpecialLine (line_t *line,mobj_t *thing)
 
 		case 125:
 			// TELEPORT MonsterONLY
-			if (!thing->player)
+			if (thing->type != MT_PLAYER)
 			{
 				EV_Teleport(line, thing);
 				line->special = 0;
@@ -662,7 +662,7 @@ void P_CrossSpecialLine (line_t *line,mobj_t *thing)
 
 		case 126:
 			/* TELEPORT MonsterONLY. */
-			if (!thing->player)
+			if (thing->type != MT_PLAYER)
 				EV_Teleport(line, thing);
 			break;
 
@@ -697,7 +697,7 @@ void	P_ShootSpecialLine ( mobj_t *thing, line_t *line)
 	/* */
 	/*	Impacts that other things can activate */
 	/* */
-	if (!thing->player)
+	if (thing->type != MT_PLAYER)
 	{
 		ok = 0;
 		switch(line->special)

@@ -289,7 +289,7 @@ int P_TouchSpecialThing2 (mobj_t *special, mobj_t *toucher)
 	player_t *player;
 	int sprite;
 	
-	player = toucher->player ? &players[toucher->player-1] : NULL;
+	player = toucher->type == MT_PLAYER ? &players[toucher->player-1] : NULL;
 	sprite = states[special->state].sprite;
 
 	switch (sprite)
@@ -390,7 +390,7 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 		return;			/* out of reach */
 	
 	sound = sfx_itemup;	
-	player = toucher->player ? &players[toucher->player - 1] : NULL;
+	player = toucher->type == MT_PLAYER ? &players[toucher->player - 1] : NULL;
 	if (toucher->health <= 0)
 		return;						/* can happen with a sliding player corpse */
 
@@ -633,9 +633,9 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 	target->flags |= MF_CORPSE|MF_DROPOFF;
 	target->height >>= 2;
 	
-	if (target->player)
+	if (target->type == MT_PLAYER)
 	{	/* a frag of one sort or another */
-		if (!source || !source->player || source->player == target->player)
+		if (!source || source->type != MT_PLAYER || source->player == target->player)
 		{	/* killed self somehow */
 			player_t* player = &players[target->player - 1];
 			player->frags--;
@@ -649,7 +649,7 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 		
 		/* else just killed by a monster */
 	}
-	else if (source && source->player && (target->flags & MF_COUNTKILL) )
+	else if (source && source->type == MT_PLAYER && (target->flags & MF_COUNTKILL) )
 	{	/* a deliberate kill by a player */
 		players[source->player - 1].killcount++;		/* count for intermission */
 	}
@@ -657,7 +657,7 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 		players[0].killcount++;			/* count all monster deaths, even */
 										/* those caused by other monsters */
 	
-	if (target->player)
+	if (target->type == MT_PLAYER)
 	{
 		player_t* player = &players[target->player - 1];
 		target->flags &= ~MF_SOLID;
@@ -745,7 +745,7 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 		target->momx = target->momy = target->momz = 0;
 	}
 	
-	player = target->player ? &players[target->player - 1] : NULL;
+	player = target->type == MT_PLAYER ? &players[target->player - 1] : NULL;
 	if (player)
 		pnum = player - players;
 	if (player && gameskill == sk_baby)
@@ -754,7 +754,7 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 /* */
 /* kick away unless using the chainsaw */
 /* */
-	if (inflictor && (!source || !source->player 
+	if (inflictor && (!source || source->type != MT_PLAYER 
 		|| players[source->player - 1].readyweapon != wp_chainsaw))
 	{
 		ang = R_PointToAngle ( inflictor->x, inflictor->y

@@ -122,23 +122,23 @@ boolean P_Move (mobj_t *actor)
 	boolean		good;
 	line_t		*blkline;
 	pmovework_t tm;
+	int movedir = actor->movedir;
 
-	if (actor->movedir == DI_NODIR)
+	if (movedir == DI_NODIR)
 		return false;
-	if (actor->movedir == DI_NODIRWAIT)
+	if (movedir == DI_NODIRWAIT)
 		return true;
 		
 	oldx = actor->x;
 	oldy = actor->y;
-	tryx = actor->x + actor->speed*xspeed[actor->movedir];
-	tryy = actor->y + actor->speed*yspeed[actor->movedir];
+	tryx = actor->x + actor->speed*xspeed[movedir];
+	tryy = actor->y + actor->speed*yspeed[movedir];
 	
 	if (!P_TryMove (&tm, actor, tryx, tryy) )
 	{
 		if (actor->flags & MF_SKULLFLY && tm.hitthing)
 		{
-			actor->extradata = (intptr_t)tm.hitthing;
-			L_SkullBash(actor);
+			L_SkullBash(actor, tm.hitthing);
 			return false;
 		}
 
@@ -817,7 +817,7 @@ void A_SkelMissile (mobj_t* actor)
 
 	mo->x += mo->momx;
 	mo->y += mo->momy;
-	mo->extradata = (uintptr_t)actor->target;
+	mo->extradata = LPTR_TO_SPTR(actor->target);
 }
 
 const int TRACEANGLE = 0xc000000;
@@ -845,7 +845,7 @@ void A_Tracer (mobj_t *actor)
 		th->tics = 1;
 
 	// adjust direction
-	dest = (void*)actor->extradata;
+	dest = (void*)SPTR_TO_LPTR(actor->extradata);
 
 	if (!dest || dest->health <= 0)
 		return;
@@ -1428,16 +1428,13 @@ void A_KeenDie (mobj_t* mo)
 /*============================================================================= */
 
 /* a move in p_base.c caused a missile to hit another thing or wall */
-void L_MissileHit (mobj_t *mo)
+void L_MissileHit (mobj_t *mo, mobj_t *missilething)
 {
 	int	damage;
-	mobj_t	*missilething;
 	const mobjinfo_t* moinfo = &mobjinfo[mo->type];
 
-	missilething = (mobj_t *)mo->extradata;
 	if (missilething)
 	{
-		mo->extradata = 0;
 		damage = ((P_Random()&7)+1)* moinfo->damage;
 		P_DamageMobj (missilething, mo, mo->target, damage);
 	}
@@ -1445,16 +1442,13 @@ void L_MissileHit (mobj_t *mo)
 }
 
 /* a move in p_base.c caused a flying skull to hit another thing or a wall */
-void L_SkullBash (mobj_t *mo)
+void L_SkullBash (mobj_t *mo, mobj_t *skullthing)
 {
 	int	damage;
-	mobj_t	*skullthing;
 	const mobjinfo_t* moinfo = &mobjinfo[mo->type];
 
-	skullthing = (mobj_t *)mo->extradata;
 	if (skullthing)
 	{
-		mo->extradata = 0;
 		damage = ((P_Random()&7)+1)* moinfo->damage;
 		P_DamageMobj (skullthing, mo, mo, damage);
 	}

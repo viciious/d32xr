@@ -211,8 +211,8 @@ int EV_DoLockedDoor(line_t* line, vldoor_e type, mobj_t* thing)
 /* */
 /*	Check for locks */
 /* */
-	pnum = thing->player ? thing->player -1 : 0;
-	player = thing->player ? &players[pnum] : NULL;
+	pnum = thing->type == MT_PLAYER ? thing->player - 1 : 0;
+	player = thing->type == MT_PLAYER ? &players[pnum] : NULL;
 	if (!player)
 		return 0;
 
@@ -267,8 +267,8 @@ void EV_VerticalDoor (line_t *line, mobj_t *thing)
 /* */
 /*	Check for locks */
 /* */
-	pnum = thing->player ? thing->player - 1 : 0;
-	player = thing->player ? &players[pnum] : NULL;
+	pnum = thing->type == MT_PLAYER ? thing->player - 1 : 0;
+	player = thing->type == MT_PLAYER ? &players[pnum] : NULL;
 
 	switch(line->special)
 	{
@@ -330,7 +330,7 @@ void EV_VerticalDoor (line_t *line, mobj_t *thing)
 					door->direction = 1;	/* go back up */
 				else
 				{
-					if (!thing->player)
+					if (thing->type != MT_PLAYER)
 						return;				/* JDC: bad guys never close doors */
 					door->direction = -1;	/* start going down immediately */
 				}

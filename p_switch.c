@@ -193,7 +193,7 @@ boolean P_UseSpecialLine ( mobj_t *thing, line_t *line)
 	/* */
 	/*	Switches that other things can activate */
 	/* */
-	if (!thing->player)
+	if (thing->type != MT_PLAYER)
 	{
 		if (line->flags & ML_SECRET)
 			return false;		/* never open secret doors */
