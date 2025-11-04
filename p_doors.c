@@ -27,15 +27,15 @@ void T_VerticalDoor (vldoor_t *door)
 				{
 					case normal:
 						door->direction = -1; /* time to go back down */
-						S_StartPositionedSound((void *)door->sector,sfx_dorcls,&P_SectorOrg);
+						P_StartSectorSound((void *)door->sector,sfx_dorcls);
 						break;
 					case blazeRaise:
 						door->direction = -1; /* time to go back down */
-						S_StartPositionedSound((void *)door->sector,sfx_bdcls,&P_SectorOrg);
+						P_StartSectorSound((void *)door->sector,sfx_bdcls);
 						break;
 					case close30ThenOpen:
 						door->direction = 1;
-						S_StartPositionedSound((void *)door->sector,sfx_doropn,&P_SectorOrg);
+						P_StartSectorSound((void *)door->sector,sfx_doropn);
 						break;
 					default:
 						break;
@@ -48,7 +48,7 @@ void T_VerticalDoor (vldoor_t *door)
 					case raiseIn5Mins:
 						door->direction = 1;
 						door->type = normal;
-						S_StartPositionedSound((void *)&door->sector,sfx_doropn,&P_SectorOrg);
+						P_StartSectorSound((void *)&door->sector,sfx_doropn);
 						break;
 				default:
 					break;
@@ -83,11 +83,11 @@ void T_VerticalDoor (vldoor_t *door)
 						break;
 					case blazeRaise:
 						door->direction = 1;
-						S_StartPositionedSound((void *)door->sector,sfx_bdopn,&P_SectorOrg);
+						P_StartSectorSound((void *)door->sector,sfx_bdopn);
 						break;
 					default:
 						door->direction = 1;
-						S_StartPositionedSound((void *)door->sector,sfx_doropn,&P_SectorOrg);
+						P_StartSectorSound((void *)door->sector,sfx_doropn);
 						break;
 				}
 			}
@@ -156,18 +156,18 @@ int EV_DoDoorTag (line_t *line, vldoor_e  type, int tag)
 				door->topheight -= 4*FRACUNIT;
 				door->direction = -1;
 				door->speed = VDOORSPEED*4;
-				S_StartPositionedSound((void *)door->sector,sfx_bdcls,&P_SectorOrg);
+				P_StartSectorSound((void *)door->sector,sfx_bdcls);
 				break;
 			case close:
 				door->topheight = P_FindLowestCeilingSurrounding(sec);
 				door->topheight -= 4*FRACUNIT;
 				door->direction = -1;
-				S_StartPositionedSound((void *)door->sector,sfx_dorcls,&P_SectorOrg);
+				P_StartSectorSound((void *)door->sector,sfx_dorcls);
 				break;
 			case close30ThenOpen:
 				door->topheight = sec->ceilingheight;
 				door->direction = -1;
-				S_StartPositionedSound((void *)door->sector,sfx_dorcls,&P_SectorOrg);
+				P_StartSectorSound((void *)door->sector,sfx_dorcls);
 				break;
 			case blazeRaise:
 			case blazeOpen:
@@ -176,7 +176,7 @@ int EV_DoDoorTag (line_t *line, vldoor_e  type, int tag)
 				door->topheight -= 4 * FRACUNIT;
 				door->speed = VDOORSPEED * 4;
 				if (door->topheight != sec->ceilingheight)
-					S_StartPositionedSound((void *)door->sector,sfx_bdopn,&P_SectorOrg);
+					P_StartSectorSound((void *)door->sector,sfx_bdopn);
 				break;
 			case normal:
 			case open:
@@ -184,7 +184,7 @@ int EV_DoDoorTag (line_t *line, vldoor_e  type, int tag)
 				door->topheight = P_FindLowestCeilingSurrounding(sec);
 				door->topheight -= 4*FRACUNIT;
 				if (door->topheight != sec->ceilingheight)
-					S_StartPositionedSound((void *)door->sector,sfx_doropn,&P_SectorOrg);
+					P_StartSectorSound((void *)door->sector,sfx_doropn);
 				break;
 			default:
 				break;
@@ -343,14 +343,14 @@ void EV_VerticalDoor (line_t *line, mobj_t *thing)
 	{
 		case 117:	/* BLAZING DOOR RAISE */
 		case 118:	/* BLAZING DOOR OPEN */
-			S_StartPositionedSound((void*)sec,sfx_bdopn,&P_SectorOrg);
+			P_StartSectorSound((void*)sec,sfx_bdopn);
 			break;
 		case 1:		/* NORMAL DOOR SOUND */
 		case 31:
-			S_StartPositionedSound((void*)sec,sfx_doropn,&P_SectorOrg);
+			P_StartSectorSound((void*)sec,sfx_doropn);
 			break;
 		default:	/* LOCKED DOOR SOUND */
-			S_StartPositionedSound((void*)sec,sfx_doropn,&P_SectorOrg);
+			P_StartSectorSound((void*)sec,sfx_doropn);
 			break;
 	}
 	

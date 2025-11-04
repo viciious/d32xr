@@ -452,11 +452,10 @@ boolean P_BlockThingsIterator (int x, int y, blockthingsiter_t func, void *userp
 	return true;
 }
 
-void P_SectorOrg(mobj_t* sec_, fixed_t *org)
+void P_SectorOrg(sector_t* sector, fixed_t *org)
 {
 	int j;
 	fixed_t bbox[4];
-	sector_t *sector = (void *)sec_;
 
 	if (!sector)
 		return;
@@ -493,4 +492,15 @@ int P_GetLineTag (line_t *line)
 	}
 
 	return 0;
+}
+
+void P_StartSectorSound(sector_t* sec, int sound_id)
+{
+	fixed_t org[2];
+
+	if (!sec)
+		return;
+
+	P_SectorOrg(sec, org);
+	S_StartFixedSound(sound_id,org);
 }

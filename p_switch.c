@@ -97,7 +97,7 @@ void P_InitSwitchList(void)
 /*	Start a button counting down till it turns off. */
 /* */
 /*================================================================== */
-void P_StartButton(line_t *line,bwhere_e w,int texture,int time,mobj_t *soundord)
+void P_StartButton(line_t *line,bwhere_e w,int texture,int time,sector_t *soundord)
 {
 	int		i;
 
@@ -133,14 +133,13 @@ void P_ChangeSwitchTexture(line_t *line,int useAgain)
 	int	texBot;
 	int	i;
 	int	sound;
-	mobj_t *soundorg = (void *)LD_FRONTSECTOR(line);
+	sector_t *soundorg = (void *)LD_FRONTSECTOR(line);
 
 	sound = sfx_swtchn;
 	if (line->special == 11)		/* EXIT SWITCH? */
 	{
-		extern degenmobj_t emptymobj;
 		useAgain = false;
-		soundorg = (void *)&emptymobj;
+		soundorg = NULL;			/* global sound */
 	}
 
 	if (!useAgain)
@@ -153,7 +152,10 @@ void P_ChangeSwitchTexture(line_t *line,int useAgain)
 	for (i = 0;i < numswitches*2;i++)
 		if (switchlist[i] == texTop)
 		{
-			S_StartPositionedSound(soundorg,sound,&P_SectorOrg);
+			if (soundorg)
+				P_StartSectorSound(soundorg,sound);
+			else
+				S_StartSound(NULL,sound);
 			sides[line->sidenum[0]].toptexture = switchlist[i^1];
 			if (useAgain)
 				P_StartButton(line,top,switchlist[i],BUTTONTIME,soundorg);
@@ -162,7 +164,10 @@ void P_ChangeSwitchTexture(line_t *line,int useAgain)
 		else
 		if (switchlist[i] == texMid)
 		{
-			S_StartPositionedSound(soundorg,sound,&P_SectorOrg);
+			if (soundorg == (void *)&soundorg)
+				P_StartSectorSound(soundorg,sound);
+			else
+				S_StartSound(NULL,sound);
 			sides[line->sidenum[0]].midtexture = switchlist[i^1];
 			if (useAgain)
 				P_StartButton(line, middle,switchlist[i],BUTTONTIME,soundorg);
@@ -171,7 +176,10 @@ void P_ChangeSwitchTexture(line_t *line,int useAgain)
 		else
 		if (switchlist[i] == texBot)
 		{
-			S_StartPositionedSound(soundorg,sound,&P_SectorOrg);
+			if (soundorg == (void *)&soundorg)
+				P_StartSectorSound(soundorg,sound);
+			else
+				S_StartSound(NULL,sound);
 			sides[line->sidenum[0]].bottomtexture = switchlist[i^1];
 			if (useAgain)
 				P_StartButton(line, bottom,switchlist[i],BUTTONTIME,soundorg);

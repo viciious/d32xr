@@ -61,7 +61,8 @@ enum
 	SNDCMD_NONE,
 	SNDCMD_CLEAR,
 	SNDCMD_STARTSND,
-	SNDCMD_STARTORGSND
+	SNDCMD_STARTORGSND,
+	SNDCMD_STARTFIXEDORGSND,
 };
 
 #ifndef DISABLE_DMA_SOUND
@@ -100,7 +101,9 @@ VINT 			cdsfx = 0;
 
 VINT 			sfxdriver = sfxdriver_auto, mcd_avail = 0; // 0 - auto, 2 - megacd, 2 - 32x
 
-static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol, int freq, getsoundpos_t getpos);
+extern degenmobj_t emptymobj;
+
+static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol, int freq);
 #ifndef DISABLE_DMA_SOUND
 static void S_SetChannelData(sfxchannel_t* channel);
 int S_PaintChannel4IMA(void* mixer, int16_t* buffer, int32_t cnt, int32_t scale) ATTR_DATA_CACHE_ALIGN;
@@ -111,9 +114,9 @@ static void S_Update(int16_t* buffer) ATTR_DATA_CACHE_ALIGN;
 static void S_UpdatePCM(void) ATTR_DATA_CACHE_ALIGN;
 static void S_Sec_DMA1Handler(void);
 #endif
-static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos);
+static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos, fixed_t *fixedorg);
 static void S_SpatializeAt(fixed_t*origin, mobj_t* listener, int* pvol, int* psep) ATTR_DATA_CACHE_ALIGN;
-static void S_Spatialize(mobj_t* mobj, int* pvol, int* psep, getsoundpos_t getpos) ATTR_DATA_CACHE_ALIGN;
+static void S_Spatialize(mobj_t* mobj, int* pvol, int* psep, getsoundpos_t getpos, fixed_t *fixedorg) ATTR_DATA_CACHE_ALIGN;
 static void S_SpatializeAll(void) ATTR_DATA_CACHE_ALIGN;
 
 static void S_Pri_CmdHandler(void);
@@ -408,47 +411,47 @@ static void S_SpatializeAt(fixed_t* origin, mobj_t* listener, int* pvol, int* ps
 =
 ==================
 */
-static void S_Spatialize(mobj_t* mobj, int *pvol, int *psep, getsoundpos_t getpos)
+static void S_Spatialize(mobj_t* mobj, int *pvol, int *psep, getsoundpos_t getpos, fixed_t *fixedorg)
 {
 	int	vol, sep;
 	player_t* player = &players[consoleplayer];
 	player_t* player2 = &players[consoleplayer^1];
+	fixed_t origin[2];
+	mobj_t *pemptymobj = (void*)&emptymobj;
 
 	vol = sfxvolume;
 	sep = 128;
 
-	if (mobj)
+	if (getpos)
 	{
-		fixed_t origin[2];
-		extern degenmobj_t emptymobj;
+		getpos(mobj, origin);
+	}
+	else if (mobj)
+	{
+		origin[0] = mobj->x, origin[1] = mobj->y;
+	}
+	else
+	{
+		origin[0] = fixedorg[0], origin[1] = fixedorg[1];
+	}
 
-		if (getpos)
-		{
-			getpos(mobj, origin);
-		}
-		else
-		{
-			origin[0] = mobj->x, origin[1] = mobj->y;
-		}
+	if (mobj != player->mo && mobj != pemptymobj && player->mo != pemptymobj)
+		S_SpatializeAt(origin, player->mo, &vol, &sep);
 
-		if (mobj != player->mo && mobj != (void*)&emptymobj && player->mo != (void*)&emptymobj)
-			S_SpatializeAt(origin, player->mo, &vol, &sep);
+	if (splitscreen && player2->mo)
+	{
+		int vol2, sep2;
 
-		if (splitscreen && player2->mo)
-		{
-			int vol2, sep2;
+		vol2 = sfxvolume;
+		sep2 = 255;
 
-			vol2 = sfxvolume;
-			sep2 = 255;
+		if (mobj != player2->mo && mobj != pemptymobj && player2->mo != pemptymobj)
+			S_SpatializeAt(origin, player2->mo, &vol2, &sep2);
 
-			if (mobj != player2->mo)
-				S_SpatializeAt(origin, player2->mo, &vol2, &sep2);
-
-			sep = 128 + (vol2 - vol) * 2;
-			vol = vol2 > vol ? vol2 : vol;
-			if (sep < 0) sep = 0;
-			else if (sep > 255) sep = 255;
-		}
+		sep = 128 + (vol2 - vol) * 2;
+		vol = vol2 > vol ? vol2 : vol;
+		if (sep < 0) sep = 0;
+		else if (sep > 255) sep = 255;
 	}
 
 	*pvol = vol;
@@ -470,37 +473,43 @@ static void S_SpatializeAll(void)
 
 	for (i = 0; i < SFXCHANNELS; i++)
 	{
+		int vol, sep;
+		fixed_t *fixedorg;
 		sfxchannel_t* ch = &sfxchannels[i];
 
 		if (!ch->data)
 			continue;
 
 		mo = ch->mobj;
-		if (mo)
+		fixedorg = NULL;
+
+		/* */
+		/* spatialize */
+		/* */
+		if (ch->getpos)
 		{
-			int vol, sep;
-
-			/* */
-			/* spatialize */
-			/* */
-			if (!ch->getpos)
-			{
-				Mars_ClearCacheLine(&mo->x);
-				Mars_ClearCacheLine(&mo->y);
-			}
-
-			S_Spatialize(mo, &vol, &sep, ch->getpos);
-
-			if (!vol)
-			{
-				// inaudible
-				ch->data = NULL;
-				continue;
-			}
-
-			ch->volume = vol;
-			ch->pan = sep;
 		}
+		else if (mo)
+		{
+			Mars_ClearCacheLine(&mo->x);
+			Mars_ClearCacheLine(&mo->y);
+		}
+		else
+		{
+			fixedorg = ch->origin;
+		}
+
+		S_Spatialize(mo, &vol, &sep, ch->getpos, fixedorg);
+
+		if (!vol)
+		{
+			// inaudible
+			ch->data = NULL;
+			continue;
+		}
+
+		ch->volume = vol;
+		ch->pan = sep;
 	}
 }
 
@@ -511,7 +520,7 @@ static void S_SpatializeAll(void)
 =
 ==================
 */
-static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
+static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos, fixed_t *fixedorg)
 {
 	int vol, sep;
 	sfxinfo_t *sfx;
@@ -525,7 +534,7 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 	/* */
 	/* spatialize */
 	/* */
-	S_Spatialize(mobj, &vol, &sep, getpos);
+	S_Spatialize(mobj, &vol, &sep, getpos, fixedorg);
 	if (!vol)
 		return; /* too far away */
 
@@ -585,9 +594,16 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 	{
 		sfxchannel_t *ch;
 
-		ch = S_AllocateChannel(mobj, sound_id, vol, freq, getpos);
+		ch = S_AllocateChannel(mobj, sound_id, vol, freq);
 		if (!ch)
 			return;
+
+		ch->getpos = getpos;
+		if (fixedorg)
+		{
+			ch->origin[0] = fixedorg[0];
+			ch->origin[1] = fixedorg[1];
+		}
 
 		S_SEP_VOL_TO_MCD(sep, vol);
 		if (sound_id == sfx_itemup && sep == 128)
@@ -608,7 +624,16 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 	if (!p)
 		return;
 
-	if (getpos)
+	if (fixedorg)
+	{
+		*p++ = SNDCMD_STARTFIXEDORGSND;
+		*p++ = sound_id;
+		*(int*)p = fixedorg[0], p += 2;
+		*(int*)p = fixedorg[1], p += 2;
+		*p++ = vol;
+		*p++ = freq;
+	}
+	else if (getpos)
 	{
 		*p++ = SNDCMD_STARTORGSND;
 		*p++ = sound_id;
@@ -632,12 +657,19 @@ static void S_StartSoundEx(mobj_t *mobj, int sound_id, getsoundpos_t getpos)
 
 void S_StartSound(mobj_t* mobj, int sound_id)
 {
-	S_StartSoundEx(mobj, sound_id, NULL);
+	if (mobj == NULL)
+		mobj = (void *)&emptymobj;
+	S_StartSoundEx(mobj, sound_id, NULL, NULL);
 }
 
 void S_StartPositionedSound(mobj_t* mobj, int sound_id, getsoundpos_t getpos)
 {
-	S_StartSoundEx(mobj, sound_id, getpos);
+	S_StartSoundEx(mobj, sound_id, getpos, NULL);
+}
+
+void S_StartFixedSound(int sound_id, fixed_t *origin)
+{
+	S_StartSoundEx(NULL, sound_id, NULL, origin);
 }
 
 /*
@@ -1193,7 +1225,7 @@ static void S_Sec_DMA1Handler(void)
 =
 ==================
 */
-static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol, int freq, getsoundpos_t getpos)
+static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol, int freq)
 {
 	sfxchannel_t* channel, * newchannel;
 	int i;
@@ -1280,7 +1312,7 @@ gotchannel:
 
 	newchannel->sfx = sfx;
 	newchannel->mobj = mobj;
-	newchannel->getpos = getpos;
+	newchannel->getpos = NULL;
 
 	// volume and panning will be updated later in S_Spatialize
 	newchannel->volume = vol;
@@ -1392,10 +1424,20 @@ void Mars_Sec_ReadSoundCmds(void)
 			S_ClearPCM();
 			break;
 		case SNDCMD_STARTSND:
-			ch = S_AllocateChannel((void*)(*(intptr_t*)&p[2]), p[1], p[4], p[5], NULL);
+			ch = S_AllocateChannel((void*)(*(intptr_t*)&p[2]), p[1], p[4], p[5]);
 			break;
 		case SNDCMD_STARTORGSND:
-			ch = S_AllocateChannel((void*)(*(intptr_t*)&p[2]), p[1], p[6], p[7], (getsoundpos_t)(*(intptr_t*)&p[4]));
+			ch = S_AllocateChannel((void*)(*(intptr_t*)&p[2]), p[1], p[6], p[7]);
+			if (ch)
+				ch->getpos = (getsoundpos_t)(*(intptr_t*)&p[4]);
+			break;
+		case SNDCMD_STARTFIXEDORGSND:
+			ch = S_AllocateChannel(NULL, p[1], p[6], p[7]);
+			if (ch)
+			{
+				ch->origin[0] = (*(intptr_t*)&p[2]);
+				ch->origin[1] = (*(intptr_t*)&p[4]);
+			}
 			break;
 		}
 

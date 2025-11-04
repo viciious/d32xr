@@ -70,6 +70,7 @@ typedef struct
 #endif
 	sfxinfo_t	*sfx;
 	mobj_t		*mobj;
+	fixed_t 	origin[2];
 	getsoundpos_t getpos;
 } sfxchannel_t;
 
@@ -119,6 +120,7 @@ void S_InitMusic(void);
 void S_Clear (void);
 void S_StartSound(mobj_t *mobj, int sound_id);
 void S_StartPositionedSound(mobj_t* mobj, int sound_id, getsoundpos_t getpos);
+void S_StartFixedSound(int sound_id, fixed_t *origin);
 void S_UpdateSounds(void);
 int S_PreUpdateSounds(void); // returns the number of sound channels currently playing
 int S_CDAvailable(void);
