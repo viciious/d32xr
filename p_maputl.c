@@ -474,7 +474,6 @@ void P_SectorBBox(sector_t* sector, fixed_t *bbox)
 
 void P_SectorOrg(sector_t* sector, fixed_t *org)
 {
-	int j;
 	fixed_t bbox[4];
 
 	if (!sector)

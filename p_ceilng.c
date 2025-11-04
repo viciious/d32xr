@@ -25,7 +25,7 @@ void T_MoveCeiling (ceiling_t *ceiling)
 		case 0:		/* IN STASIS */
 			break;
 		case 1:		/* UP */
-			res = T_MovePlane(ceiling->sector,ceiling->speed,
+			res = T_MovePlane(&ceiling->m,ceiling->speed,
 					ceiling->topheight,false,1,ceiling->direction);
 			if (!(gametic&7))
 			{
@@ -34,7 +34,7 @@ void T_MoveCeiling (ceiling_t *ceiling)
 				case silentCrushAndRaise:
 					break;
 				default:
-					P_StartSectorSound((void *)ceiling->sector, sfx_stnmov);
+					P_StartSectorSound((void *)ceiling->m.sector, sfx_stnmov);
 					break;
 				}
 				}
@@ -45,7 +45,7 @@ void T_MoveCeiling (ceiling_t *ceiling)
 						P_RemoveActiveCeiling(ceiling);
 						break;
 					case silentCrushAndRaise:
-						P_StartSectorSound((void *)ceiling->sector,	sfx_pstop);
+						P_StartSectorSound((void *)ceiling->m.sector, sfx_pstop);
 					case fastCrushAndRaise:
 					case crushAndRaise:
 						ceiling->direction = -1;
@@ -55,7 +55,7 @@ void T_MoveCeiling (ceiling_t *ceiling)
 				}
 			break;
 		case -1:	/* DOWN */
-			res = T_MovePlane(ceiling->sector,ceiling->speed,
+			res = T_MovePlane(&ceiling->m,ceiling->speed,
 				ceiling->bottomheight,ceiling->crush,1,ceiling->direction);
 			if (!(gametic&7))
 			{
@@ -64,7 +64,7 @@ void T_MoveCeiling (ceiling_t *ceiling)
 				case silentCrushAndRaise:
 					break;
 				default:
-					P_StartSectorSound((void *)ceiling->sector, sfx_stnmov);
+					P_StartSectorSound((void *)ceiling->m.sector, sfx_stnmov);
 					break;
 				}
 			}
@@ -72,7 +72,7 @@ void T_MoveCeiling (ceiling_t *ceiling)
 				switch(ceiling->type)
 				{
 					case silentCrushAndRaise:
-						P_StartSectorSound((void *)ceiling->sector,	sfx_pstop);
+						P_StartSectorSound((void *)ceiling->m.sector, sfx_pstop);
 					case crushAndRaise:
 						ceiling->speed = CEILSPEED;
 					case fastCrushAndRaise:
@@ -145,7 +145,8 @@ int EV_DoCeiling (line_t *line, ceiling_e  type)
 		P_AddThinker (&ceiling->thinker);
 		sec->specialdata = LPTR_TO_SPTR(ceiling);
 		ceiling->thinker.function = T_MoveCeiling;
-		ceiling->sector = sec;
+		ceiling->m.sector = sec;
+		P_SectorBBox(sec, ceiling->m.secbbox);
 		ceiling->crush = false;
 		switch(type)
 		{
@@ -208,7 +209,7 @@ void P_RemoveActiveCeiling(ceiling_t *c)
 	for (i = 0;i < MAXCEILINGS;i++)
 		if (activeceilings[i] == c)
 		{
-			activeceilings[i]->sector->specialdata = (SPTR)0;
+			activeceilings[i]->m.sector->specialdata = (SPTR)0;
 			P_RemoveThinker (&activeceilings[i]->thinker);
 			activeceilings[i] = NULL;
 			break;

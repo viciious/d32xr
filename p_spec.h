@@ -210,7 +210,7 @@ typedef enum
 typedef struct
 {
 	thinker_t	thinker;
-	sector_t	*sector;
+	mover_t		m;
 	fixed_t		speed;
 	fixed_t		low;
 	fixed_t		high;
@@ -258,7 +258,7 @@ typedef enum
 typedef struct
 {
 	thinker_t	thinker;
-	sector_t	*sector;
+	mover_t		m;
 	fixed_t		topheight;
 	fixed_t		speed;
 	VINT		direction;		/* 1 = up, 0 = waiting at top, -1 = down */
@@ -300,7 +300,7 @@ typedef struct
 {
 	thinker_t	thinker;
 	ceiling_e	type;
-	sector_t	*sector;
+	mover_t		m;
 	fixed_t		bottomheight, topheight;
 	fixed_t		speed;
 	VINT		crush;
@@ -351,7 +351,7 @@ typedef struct
 	thinker_t	thinker;
 	VINT		type;
 	VINT		crush;
-	sector_t	*sector;
+	mover_t		m;
 	int			newspecial;
 	VINT		direction;
 	VINT		texture;
@@ -374,7 +374,7 @@ typedef enum
 	pastdest
 } result_e;
 
-result_e	T_MovePlane(sector_t *sector,fixed_t speed,
+result_e	T_MovePlane(mover_t *mover,fixed_t speed,
 			fixed_t dest,boolean crush,int floorOrCeiling,int direction);
 
 int		EV_BuildStairs(line_t *line, int type);

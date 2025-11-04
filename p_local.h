@@ -67,7 +67,6 @@ typedef enum
 
 extern	thinker_t	thinkercap;	/* both the head and tail of the thinker list */
 
-
 void P_InitThinkers (void);
 void P_AddThinker (thinker_t *thinker);
 void P_RemoveThinker (thinker_t *thinker);
@@ -243,10 +242,14 @@ int 	P_GetLineTag (line_t *line);
 ===============================================================================
 */
 
+typedef struct {
+	sector_t	*sector;
+	fixed_t		secbbox[4];
+} mover_t;
+
 boolean P_CheckSight (mobj_t *t1, mobj_t *t2);
 void 	P_UseLines (player_t *player);
-
-boolean P_ChangeSector (sector_t *sector, boolean crunch);
+boolean P_ChangeMover (mover_t *sector, boolean crunch);
 
 typedef struct
 {

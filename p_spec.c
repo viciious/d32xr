@@ -941,7 +941,8 @@ int EV_DoDonut(line_t *line)
 			floor->type = donutRaise;
 			floor->crush = false;
 			floor->direction = 1;
-			floor->sector = s2;
+			floor->m.sector = s2;
+			P_SectorBBox(s2, floor->m.secbbox);
 			floor->speed = FLOORSPEED / 2;
 			floor->texture = s3->floorpic;
 			floor->newspecial = 0;
@@ -957,7 +958,8 @@ int EV_DoDonut(line_t *line)
 			floor->type = lowerFloor;
 			floor->crush = false;
 			floor->direction = -1;
-			floor->sector = s1;
+			floor->m.sector = s1;
+			P_SectorBBox(s1, floor->m.secbbox);
 			floor->speed = FLOORSPEED / 2;
 			floor->floordestheight = s3->floorheight;
 			break;

@@ -22,26 +22,26 @@ void	T_PlatRaise(plat_t	*plat)
 	switch(plat->status)
 	{
 		case	up:
-			res = T_MovePlane(plat->sector,plat->speed,
+			res = T_MovePlane(&plat->m,plat->speed,
 					plat->high,plat->crush,0,1);
 					
 			if (plat->type == raiseAndChange ||
 				plat->type == raiseToNearestAndChange)
 				if (!(gametic&7))
-					P_StartSectorSound((void *)plat->sector,sfx_stnmov);
+					P_StartSectorSound((void *)plat->m.sector,sfx_stnmov);
 				
 			if (res == crushed && (!plat->crush))
 			{
 				plat->count = plat->wait;
 				plat->status = down;
-				P_StartSectorSound((void *)plat->sector,sfx_pstart);
+				P_StartSectorSound((void *)plat->m.sector,sfx_pstart);
 			}
 			else
 			if (res == pastdest)
 			{
 				plat->count = plat->wait;
 				plat->status = waiting;
-				P_StartSectorSound((void *)plat->sector,sfx_pstop);
+				P_StartSectorSound((void *)plat->m.sector,sfx_pstop);
 				switch(plat->type)
 				{
 					case blazeDWUS:
@@ -58,22 +58,22 @@ void	T_PlatRaise(plat_t	*plat)
 			}
 			break;
 		case	down:
-			res = T_MovePlane(plat->sector,plat->speed,plat->low,false,0,-1);
+			res = T_MovePlane(&plat->m,plat->speed,plat->low,false,0,-1);
 			if (res == pastdest)
 			{
 				plat->count = plat->wait;
 				plat->status = waiting;
-				P_StartSectorSound((void *)plat->sector,sfx_pstop);
+				P_StartSectorSound((void *)plat->m.sector,sfx_pstop);
 			}
 			break;
 		case	waiting:
 			if (!--plat->count)
 			{
-				if (plat->sector->floorheight == plat->low)
+				if (plat->m.sector->floorheight == plat->low)
 					plat->status = up;
 				else
 					plat->status = down;
-				P_StartSectorSound((void *)plat->sector,sfx_pstart);
+				P_StartSectorSound((void *)plat->m.sector,sfx_pstart);
 			}
 		case	in_stasis:
 			break;
@@ -124,8 +124,9 @@ int	EV_DoPlat(line_t *line,plattype_e type,int amount)
 		P_AddThinker(&plat->thinker);
 		
 		plat->type = type;
-		plat->sector = sec;
-		plat->sector->specialdata = LPTR_TO_SPTR(plat);
+		plat->m.sector = sec;
+		sec->specialdata = LPTR_TO_SPTR(plat);
+		P_SectorBBox(sec, plat->m.secbbox);
 		plat->thinker.function = T_PlatRaise;
 		plat->crush = false;
 		plat->tag = tag;
@@ -225,7 +226,7 @@ void P_RemoveActivePlat(plat_t *plat)
 	for (i = 0;i < MAXPLATS;i++)
 		if (plat == activeplats[i])
 		{
-			(activeplats[i])->sector->specialdata = (SPTR)0;
+			(activeplats[i])->m.sector->specialdata = (SPTR)0;
 			P_RemoveThinker(&(activeplats[i])->thinker);
 			activeplats[i] = NULL;
 			return;
