@@ -581,7 +581,7 @@ goback:
 				if (buttons & BT_DOWN)
 				{
 					++cursorpos;
-					if (!gameinfo.spcmDirList[0][0])
+					if (screenpos == ms_audio && !gameinfo.spcmDirList[0][0])
 					{
 						if (menuscr->firstitem+cursorpos == mi_spcmpack)
 							++cursorpos;
@@ -593,13 +593,13 @@ goback:
 				if (buttons & BT_UP)
 				{
 					--cursorpos;
-					if (!gameinfo.spcmDirList[0][0])
+					if (cursorpos == -1)
+						cursorpos = menuscr->numitems-1;
+					if (screenpos == ms_audio && !gameinfo.spcmDirList[0][0])
 					{
 						if (menuscr->firstitem+cursorpos == mi_spcmpack)
 							--cursorpos;
 					}
-					if (cursorpos == -1)
-						cursorpos = menuscr->numitems-1;
 				}
 			}
 
