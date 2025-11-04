@@ -299,13 +299,13 @@ typedef enum
 typedef struct
 {
 	thinker_t	thinker;
-	ceiling_e	type;
 	mover_t		m;
 	fixed_t		bottomheight, topheight;
 	fixed_t		speed;
 	VINT		crush;
-	VINT		direction;		/* 1 = up, 0 = waiting, -1 = down */
-	VINT		olddirection;
+	VINT		type;
+	char		direction;		/* 1 = up, 0 = waiting, -1 = down */
+	char		olddirection;
 	VINT		tag;			/* ID */
 } ceiling_t;
 
@@ -349,12 +349,12 @@ typedef enum
 typedef struct
 {
 	thinker_t	thinker;
-	VINT		type;
-	VINT		crush;
+	char		type;
+	char		direction;
+	uint8_t		texture;
+	char		crush;
 	mover_t		m;
 	int			newspecial;
-	VINT		direction;
-	VINT		texture;
 	fixed_t		floordestheight;
 	fixed_t		speed;
 } floormove_t;
