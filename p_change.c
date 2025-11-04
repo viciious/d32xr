@@ -152,7 +152,7 @@ boolean P_ChangeSector (sector_t *sector, boolean crunch)
 	int			i;
 	changetest_t ct;
 	fixed_t 	block;
-	VINT 		blockbox[4];
+	fixed_t 	blockbox[4];
 
 	/* force next sound to reflood */
 	for (i=0 ; i<MAXPLAYERS ; i++)
@@ -161,26 +161,28 @@ boolean P_ChangeSector (sector_t *sector, boolean crunch)
 	ct.nofit = false;
 	ct.crushchange = crunch;
 
+	P_SectorBBox(sector, blockbox);
+
 	/* adjust bounding box to map blocks */
-	block = sector->bbox[BOXTOP] << FRACBITS;
+	block = blockbox[BOXTOP];
 	ct.bbox[BOXTOP] = block;
 	block = (unsigned)(block-bmaporgy+MAXRADIUS)>>MAPBLOCKSHIFT;
 	block = block >= bmapheight ? bmapheight-1 : block;
 	blockbox[BOXTOP]=block;
 
-	block = sector->bbox[BOXBOTTOM] << FRACBITS;
+	block = blockbox[BOXBOTTOM];
 	ct.bbox[BOXBOTTOM] = block;
 	block = (block-bmaporgy-MAXRADIUS);
 	block = block < 0 ? 0 : (unsigned)block>>MAPBLOCKSHIFT;
 	blockbox[BOXBOTTOM]=block;
 
-	block = sector->bbox[BOXRIGHT] << FRACBITS;
+	block = blockbox[BOXRIGHT];
 	ct.bbox[BOXRIGHT] = block;
 	block = (unsigned)(block-bmaporgx+MAXRADIUS)>>MAPBLOCKSHIFT;
 	block = block >= bmapwidth ? bmapwidth-1 : block;
 	blockbox[BOXRIGHT]=block;
 
-	block = sector->bbox[BOXLEFT] << FRACBITS;
+	block = blockbox[BOXLEFT];
 	ct.bbox[BOXLEFT] = block;
 	block = (block-bmaporgx-MAXRADIUS);
 	block = block < 0 ? 0 : (unsigned)block>>MAPBLOCKSHIFT;

@@ -99,8 +99,6 @@ typedef	struct
 	VINT		linecount;
 
 	VINT		*lines;				/* [linecount] size */
-
-	VINT		bbox[4];
 } sector_t;
 
 typedef struct

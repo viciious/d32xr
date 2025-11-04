@@ -229,8 +229,7 @@ void 	P_UnsetThingPosition (mobj_t *thing);
 void	P_SetThingPosition (mobj_t *thing);
 void	P_SetThingPosition2 (mobj_t *thing, subsector_t *ss);
 
-void	P_PlayerLand (mobj_t *mo);
-
+void 	P_SectorBBox(sector_t* sector, fixed_t *bbox);
 void 	P_SectorOrg(sector_t* sec, fixed_t *org);
 void 	P_StartSectorSound(sector_t* sec, int sound_id);
 

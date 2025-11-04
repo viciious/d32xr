@@ -452,6 +452,26 @@ boolean P_BlockThingsIterator (int x, int y, blockthingsiter_t func, void *userp
 	return true;
 }
 
+void P_SectorBBox(sector_t* sector, fixed_t *bbox)
+{
+	int j;
+
+	if (!sector)
+		return;
+
+	M_ClearBox (bbox);
+
+	for (j=0 ; j<sector->linecount ; j++)
+	{
+		line_t *li = lines + sector->lines[j];
+		M_AddToBox (bbox, vertexes[li->v1].x, vertexes[li->v1].y);
+		M_AddToBox (bbox, vertexes[li->v2].x, vertexes[li->v2].y);
+	}
+
+	for (j=0 ; j<4 ; j++)
+		bbox[j] = bbox[j] << FRACBITS;
+}
+
 void P_SectorOrg(sector_t* sector, fixed_t *org)
 {
 	int j;
@@ -460,8 +480,7 @@ void P_SectorOrg(sector_t* sector, fixed_t *org)
 	if (!sector)
 		return;
 
-	for (j = 0; j < 4; j++)
-		bbox[j] = sector->bbox[j] << FRACBITS;
+	P_SectorBBox(sector, bbox);
 
 	/* set the degenmobj_t to the middle of the bounding box */
 	org[0] = (bbox[BOXRIGHT]+bbox[BOXLEFT])/2;

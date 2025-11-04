@@ -757,12 +757,11 @@ void P_LoadBlockMap (int lump)
 void P_GroupLines (void)
 {
 	VINT		*linebuffer;
-	int			i, j, total;
+	int			i, total;
 	sector_t	*sector;
 	subsector_t	*ss;
 	seg_t		*seg;
 	line_t		*li;
-	fixed_t		bbox[4];
 
 	I_SetBankPage(segspage);
 
@@ -835,24 +834,6 @@ void P_GroupLines (void)
 		{
 			back->lines[back->linecount++] = i;
 		}
-	}
-
-	sector = sectors;
-	for (i=0 ; i<numsectors ; i++, sector++)
-	{
-		M_ClearBox (bbox);
-
-		for (j=0 ; j<sector->linecount ; j++)
-		{
-			li = lines + sector->lines[j];
-			M_AddToBox (bbox, vertexes[li->v1].x, vertexes[li->v1].y);
-			M_AddToBox (bbox, vertexes[li->v2].x, vertexes[li->v2].y);
-		}
-
-		sector->bbox[BOXTOP]=bbox[BOXTOP];
-		sector->bbox[BOXBOTTOM]=bbox[BOXBOTTOM];
-		sector->bbox[BOXRIGHT]=bbox[BOXRIGHT];
-		sector->bbox[BOXLEFT]=bbox[BOXLEFT];
 	}
 }
 
