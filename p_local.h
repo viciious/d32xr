@@ -210,6 +210,11 @@ typedef struct
 	mobj_t  *hitthing;
 } pmovework_t;
 
+typedef struct {
+	sector_t	*sector;
+	fixed_t		secbbox[4];
+} mover_t;
+
 fixed_t P_AproxDistance (fixed_t dx, fixed_t dy);
 int 	P_PointOnLineSide (fixed_t x, fixed_t y, line_t *line);
 int 	P_PointOnDivlineSide (fixed_t x, fixed_t y, divline_t *line);
@@ -242,14 +247,10 @@ int 	P_GetLineTag (line_t *line);
 ===============================================================================
 */
 
-typedef struct {
-	sector_t	*sector;
-	fixed_t		secbbox[4];
-} mover_t;
-
 boolean P_CheckSight (mobj_t *t1, mobj_t *t2);
 void 	P_UseLines (player_t *player);
 boolean P_ChangeMover (mover_t *sector, boolean crunch);
+void 	P_MoverSound(mover_t* mover, int sound_id);
 
 typedef struct
 {

@@ -164,7 +164,7 @@ void P_ChangeSwitchTexture(line_t *line,int useAgain)
 		else
 		if (switchlist[i] == texMid)
 		{
-			if (soundorg == (void *)&soundorg)
+			if (soundorg)
 				P_StartSectorSound(soundorg,sound);
 			else
 				S_StartSound(NULL,sound);
@@ -176,7 +176,7 @@ void P_ChangeSwitchTexture(line_t *line,int useAgain)
 		else
 		if (switchlist[i] == texBot)
 		{
-			if (soundorg == (void *)&soundorg)
+			if (soundorg)
 				P_StartSectorSound(soundorg,sound);
 			else
 				S_StartSound(NULL,sound);

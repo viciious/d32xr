@@ -522,3 +522,18 @@ void P_StartSectorSound(sector_t* sec, int sound_id)
 	P_SectorOrg(sec, org);
 	S_StartFixedSound(sound_id,org);
 }
+
+void P_MoverSound(mover_t* mover, int sound_id)
+{
+	fixed_t *bbox = mover->secbbox;
+	fixed_t org[2];
+
+	if (!mover)
+		return;
+
+	/* set the degenmobj_t to the middle of the bounding box */
+	org[0] = (bbox[BOXRIGHT]+bbox[BOXLEFT])/2;
+	org[1] = (bbox[BOXTOP]+bbox[BOXBOTTOM])/2;
+
+	S_StartFixedSound(sound_id, org);
+}

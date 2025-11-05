@@ -27,15 +27,15 @@ void T_VerticalDoor (vldoor_t *door)
 				{
 					case normal:
 						door->direction = -1; /* time to go back down */
-						P_StartSectorSound((void *)door->m.sector,sfx_dorcls);
+						P_MoverSound(&door->m,sfx_dorcls);
 						break;
 					case blazeRaise:
 						door->direction = -1; /* time to go back down */
-						P_StartSectorSound((void *)door->m.sector,sfx_bdcls);
+						P_MoverSound(&door->m,sfx_bdcls);
 						break;
 					case close30ThenOpen:
 						door->direction = 1;
-						P_StartSectorSound((void *)door->m.sector,sfx_doropn);
+						P_MoverSound(&door->m,sfx_doropn);
 						break;
 					default:
 						break;
@@ -48,7 +48,7 @@ void T_VerticalDoor (vldoor_t *door)
 					case raiseIn5Mins:
 						door->direction = 1;
 						door->type = normal;
-						P_StartSectorSound((void *)&door->m.sector,sfx_doropn);
+						P_MoverSound(&door->m,sfx_doropn);
 						break;
 				default:
 					break;
@@ -83,11 +83,11 @@ void T_VerticalDoor (vldoor_t *door)
 						break;
 					case blazeRaise:
 						door->direction = 1;
-						P_StartSectorSound((void *)door->m.sector,sfx_bdopn);
+						P_MoverSound(&door->m,sfx_bdopn);
 						break;
 					default:
 						door->direction = 1;
-						P_StartSectorSound((void *)door->m.sector,sfx_doropn);
+						P_MoverSound(&door->m,sfx_doropn);
 						break;
 				}
 			}
@@ -157,18 +157,18 @@ int EV_DoDoorTag (line_t *line, vldoor_e  type, int tag)
 				door->topheight -= 4*FRACUNIT;
 				door->direction = -1;
 				door->speed = VDOORSPEED*4;
-				P_StartSectorSound((void *)door->m.sector,sfx_bdcls);
+				P_MoverSound(&door->m,sfx_bdcls);
 				break;
 			case close:
 				door->topheight = P_FindLowestCeilingSurrounding(sec);
 				door->topheight -= 4*FRACUNIT;
 				door->direction = -1;
-				P_StartSectorSound((void *)door->m.sector,sfx_dorcls);
+				P_MoverSound(&door->m,sfx_dorcls);
 				break;
 			case close30ThenOpen:
 				door->topheight = sec->ceilingheight;
 				door->direction = -1;
-				P_StartSectorSound((void *)door->m.sector,sfx_dorcls);
+				P_MoverSound(&door->m,sfx_dorcls);
 				break;
 			case blazeRaise:
 			case blazeOpen:
@@ -177,7 +177,7 @@ int EV_DoDoorTag (line_t *line, vldoor_e  type, int tag)
 				door->topheight -= 4 * FRACUNIT;
 				door->speed = VDOORSPEED * 4;
 				if (door->topheight != sec->ceilingheight)
-					P_StartSectorSound((void *)door->m.sector,sfx_bdopn);
+					P_MoverSound(&door->m,sfx_bdopn);
 				break;
 			case normal:
 			case open:
@@ -185,7 +185,7 @@ int EV_DoDoorTag (line_t *line, vldoor_e  type, int tag)
 				door->topheight = P_FindLowestCeilingSurrounding(sec);
 				door->topheight -= 4*FRACUNIT;
 				if (door->topheight != sec->ceilingheight)
-					P_StartSectorSound((void *)door->m.sector,sfx_doropn);
+					P_MoverSound(&door->m,sfx_doropn);
 				break;
 			default:
 				break;
@@ -338,23 +338,7 @@ void EV_VerticalDoor (line_t *line, mobj_t *thing)
 				return;
 		}
 	}
-	
-	/* for proper sound */
-	switch(line->special)
-	{
-		case 117:	/* BLAZING DOOR RAISE */
-		case 118:	/* BLAZING DOOR OPEN */
-			P_StartSectorSound((void*)sec,sfx_bdopn);
-			break;
-		case 1:		/* NORMAL DOOR SOUND */
-		case 31:
-			P_StartSectorSound((void*)sec,sfx_doropn);
-			break;
-		default:	/* LOCKED DOOR SOUND */
-			P_StartSectorSound((void*)sec,sfx_doropn);
-			break;
-	}
-	
+
 	/* */
 	/* new door thinker */
 	/* */
@@ -392,12 +376,28 @@ void EV_VerticalDoor (line_t *line, mobj_t *thing)
 			door->speed = VDOORSPEED * 4;
 			break;
 	}
-	
+
 	/* */
 	/* find the top and bottom of the movement range */
 	/* */
 	door->topheight = P_FindLowestCeilingSurrounding(sec);
 	door->topheight -= 4*FRACUNIT;
+
+	/* for proper sound */
+	switch(line->special)
+	{
+		case 117:	/* BLAZING DOOR RAISE */
+		case 118:	/* BLAZING DOOR OPEN */
+			P_MoverSound(&door->m,sfx_bdopn);
+			break;
+		case 1:		/* NORMAL DOOR SOUND */
+		case 31:
+			P_MoverSound(&door->m,sfx_doropn);
+			break;
+		default:	/* LOCKED DOOR SOUND */
+			P_MoverSound(&door->m,sfx_doropn);
+			break;
+	}
 }
 
 /*================================================================== */
