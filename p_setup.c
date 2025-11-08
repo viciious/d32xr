@@ -989,7 +989,7 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 			int j, k;
 			uint8_t *data;
 			lumpinfo_t *l;
-			char name[8];
+			char name[9];
 
 			k = ML_BLOCKMAP + 1 + i;
 			l = &li[k];
@@ -998,6 +998,7 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 
 			D_memcpy(name, l->name, 8);
 			name[0] = name[0] & ~0x80;
+			name[8] = 0;
 
 			if (!l->size)
 			{
