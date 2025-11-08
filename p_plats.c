@@ -88,6 +88,7 @@ void	T_PlatRaise(plat_t	*plat)
 /*================================================================== */
 int	EV_DoPlat(line_t *line,plattype_e type,int amount)
 {
+	int 		k;
 	plat_t		*plat;
 	int			secnum;
 	int			rtn;
@@ -95,7 +96,6 @@ int	EV_DoPlat(line_t *line,plattype_e type,int amount)
 	int 		tag;
 	
 	tag = P_GetLineTag(line);
-	secnum = -1;
 	rtn = 0;
 	
 	/* */
@@ -110,7 +110,8 @@ int	EV_DoPlat(line_t *line,plattype_e type,int amount)
 			break;
 	}
 	
-	while ((secnum = P_FindSectorFromLineTagNum(tag,secnum)) >= 0)
+	k = 0;
+	while ((secnum = P_FindNextSectorByTagNum(tag,&k)) >= 0)
 	{
 		sec = &sectors[secnum];
 		if (sec->specialdata)

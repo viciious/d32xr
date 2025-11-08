@@ -71,8 +71,6 @@ fixed_t	P_FindHighestFloorSurrounding(sector_t *sec);
 fixed_t	P_FindNextHighestFloor(sector_t *sec,int currentheight);
 fixed_t	P_FindLowestCeilingSurrounding(sector_t *sec);
 fixed_t	P_FindHighestCeilingSurrounding(sector_t *sec);
-int		P_FindSectorFromLineTag(line_t	*line,int start);
-int		P_FindSectorFromLineTagNum(int tag,int start);
 int		P_FindMinSurroundingLight(sector_t *sector,int max);
 sector_t *getNextSector(line_t *line,sector_t *sec);
 

@@ -133,13 +133,14 @@ void P_SpawnStrobeFlash (sector_t *sector,int fastOrSlow, int inSync)
 /*================================================================== */
 void EV_StartLightStrobing(line_t *line)
 {
+	int k;
 	int	secnum;
 	sector_t	*sec;
 	int tag;
 	
 	tag = P_GetLineTag(line);
-	secnum = -1;
-	while ((secnum = P_FindSectorFromLineTagNum(tag,secnum)) >= 0)
+	k = 0;
+	while ((secnum = P_FindNextSectorByTagNum(tag,&k)) >= 0)
 	{
 		sec = &sectors[secnum];
 		if (sec->specialdata)
@@ -156,31 +157,32 @@ void EV_StartLightStrobing(line_t *line)
 /*================================================================== */
 void EV_TurnTagLightsOff(line_t	*line)
 {
+	int 		k;
 	int			i;
-	int			j;
 	int			min;
+	int 		secnum;
 	sector_t	*sector;
 	sector_t	*tsec;
 	line_t		*templine;
 	int 		tag;
 	
 	tag	= P_GetLineTag(line);
-	sector = sectors;
-	for (j = 0;j < numsectors; j++, sector++)
-		if (sector->tag == tag)
+	k = 0;
+	while ((secnum = P_FindNextSectorByTagNum(tag,&k)) >= 0)
+	{
+		sector = sectors + secnum;
+		min = sector->lightlevel;
+		for (i = 0;i < sector->linecount; i++)
 		{
-			min = sector->lightlevel;
-			for (i = 0;i < sector->linecount; i++)
-			{
-				templine = lines + sector->lines[i];
-				tsec = getNextSector(templine,sector);
-				if (!tsec)
-					continue;
-				if (tsec->lightlevel < min)
-					min = tsec->lightlevel;
-			}
-			sector->lightlevel = min;
+			templine = lines + sector->lines[i];
+			tsec = getNextSector(templine,sector);
+			if (!tsec)
+				continue;
+			if (tsec->lightlevel < min)
+				min = tsec->lightlevel;
 		}
+		sector->lightlevel = min;
+	}
 }
 
 /*================================================================== */
@@ -190,37 +192,37 @@ void EV_TurnTagLightsOff(line_t	*line)
 /*================================================================== */
 void EV_LightTurnOn(line_t *line, int bright)
 {
-	int			i;
+	int 		k;
 	int			j;
+	int 		secnum;
 	sector_t	*sector;
 	sector_t	*temp;
 	line_t		*templine;
-	int tag;
+	int 		tag;
 	
 	tag = P_GetLineTag(line);
-	sector = sectors;
-	
-	for (i=0;i<numsectors;i++, sector++)
-		if (sector->tag == tag)
+	k = 0;
+	while ((secnum = P_FindNextSectorByTagNum(tag,&k)) >= 0)
+	{
+		sector = sectors + secnum;
+		/* */
+		/* bright = 0 means to search for highest */
+		/* light level surrounding sector */
+		/* */
+		if (!bright)
 		{
-			/* */
-			/* bright = 0 means to search for highest */
-			/* light level surrounding sector */
-			/* */
-			if (!bright)
+			for (j = 0;j < sector->linecount; j++)
 			{
-				for (j = 0;j < sector->linecount; j++)
-				{
-					templine = lines + sector->lines[j];
-					temp = getNextSector(templine,sector);
-					if (!temp)
-						continue;
-					if (temp->lightlevel > bright)
-						bright = temp->lightlevel;
-				}
+				templine = lines + sector->lines[j];
+				temp = getNextSector(templine,sector);
+				if (!temp)
+					continue;
+				if (temp->lightlevel > bright)
+					bright = temp->lightlevel;
 			}
-			sector->lightlevel = bright;
 		}
+		sector->lightlevel = bright;
+	}
 }
 
 /*================================================================== */

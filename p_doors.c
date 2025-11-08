@@ -125,13 +125,14 @@ void T_VerticalDoor (vldoor_t *door)
 /*================================================================== */
 int EV_DoDoorTag (line_t *line, vldoor_e  type, int tag)
 {
+	int 		k;
 	int			secnum,rtn;
 	sector_t		*sec;
 	vldoor_t		*door;
 
-	secnum = -1;
+	k = 0;
 	rtn = 0;
-	while ((secnum = P_FindSectorFromLineTagNum(tag,secnum)) >= 0)
+	while ((secnum = P_FindNextSectorByTagNum(tag,&k)) >= 0)
 	{
 		sec = &sectors[secnum];
 		if (sec->specialdata)

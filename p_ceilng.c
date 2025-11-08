@@ -109,6 +109,7 @@ void T_MoveCeiling (ceiling_t *ceiling)
 /*================================================================== */
 int EV_DoCeiling (line_t *line, ceiling_e  type)
 {
+	int 		k;
 	int			secnum,rtn;
 	sector_t		*sec;
 	ceiling_t		*ceiling;
@@ -131,7 +132,8 @@ int EV_DoCeiling (line_t *line, ceiling_e  type)
 			break;
 	}
 	
-	while ((secnum = P_FindSectorFromLineTagNum(tag,secnum)) >= 0)
+	k = 0;
+	while ((secnum = P_FindNextSectorByTagNum(tag,&k)) >= 0)
 	{
 		sec = &sectors[secnum];
 		if (sec->specialdata)
@@ -174,7 +176,7 @@ int EV_DoCeiling (line_t *line, ceiling_e  type)
 				break;
 		}
 		
-		ceiling->tag = sec->tag;
+		ceiling->tag = tag;
 		ceiling->type = type;
 		P_AddActiveCeiling(ceiling);
 	}

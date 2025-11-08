@@ -206,15 +206,16 @@ void T_MoveFloor(floormove_t *floor)
 /*================================================================== */
 int EV_DoFloorTag(line_t *line,floor_e floortype, int tag)
 {
+	int 		k;
 	int			secnum;
 	int			rtn;
 	int			i;
 	sector_t	*sec;
 	floormove_t	*floor;
 
-	secnum = -1;
+	k = 0;
 	rtn = 0;
-	while ((secnum = P_FindSectorFromLineTagNum(tag,secnum)) >= 0)
+	while ((secnum = P_FindNextSectorByTagNum(tag,&k)) >= 0)
 	{
 		sec = &sectors[secnum];
 		
@@ -376,6 +377,7 @@ int EV_DoFloor(line_t *line,floor_e floortype)
 /*================================================================== */
 int EV_BuildStairs(line_t *line, int type)
 {
+	int 	k;
 	int		secnum;
 	int		height;
 	int		i;
@@ -388,10 +390,10 @@ int EV_BuildStairs(line_t *line, int type)
 	floormove_t	*floor;
 	int 	tag;
 
-	secnum = -1;
+	k = 0;
 	rtn = 0;
 	tag = P_GetLineTag(line);
-	while ((secnum = P_FindSectorFromLineTagNum(tag,secnum)) >= 0)
+	while ((secnum = P_FindNextSectorByTagNum(tag,&k)) >= 0)
 	{
 		sec = &sectors[secnum];
 		

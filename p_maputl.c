@@ -486,24 +486,24 @@ void P_SectorOrg(sector_t* sector, fixed_t *org)
 	org[1] = (bbox[BOXTOP]+bbox[BOXBOTTOM])/2;
 }
 
-int P_GetLineTag (line_t *line)
+int P_GetTag (int objnum, VINT *tags, int numtags)
 {
 	VINT j;
-	VINT rowsize = (unsigned)numlinetags / LINETAGS_HASH_SIZE;
-	VINT ld = line - lines;
+	VINT rowsize = (unsigned)numtags / LINETAGS_HASH_SIZE;
+	VINT ld = objnum;
 	VINT h = (unsigned)ld % LINETAGS_HASH_SIZE;
 	VINT s = h * rowsize;
 
-	for (j = 0; j < numlinetags; j++)
+	for (j = 0; j < numtags; j++)
 	{
-		int16_t *l;
+		VINT *l;
 		VINT e;
 
 		e = s + j;
-		if (e >= numlinetags)
-			e -= numlinetags;
+		if (e >= numtags)
+			e -= numtags;
 
-		l = &linetags[e * 2];
+		l = &tags[e * 2];
 		if (l[0] == ld) {
 			return l[1];
 		}
@@ -512,29 +512,77 @@ int P_GetLineTag (line_t *line)
 	return 0;
 }
 
-void P_SetLineTag (int ld, int tag)
+void P_SetTag (int objnum, int tag, VINT *tags, int numtags)
 {
 	VINT j;
-	VINT rowsize = (unsigned)numlinetags / LINETAGS_HASH_SIZE;
+	VINT rowsize = (unsigned)numtags / LINETAGS_HASH_SIZE;
+	VINT ld = objnum;
 	VINT h = (unsigned)ld % LINETAGS_HASH_SIZE;
 	VINT s = h * rowsize;
 
-	for (j = 0; j < numlinetags; j++)
+	for (j = 0; j < numtags; j++)
 	{
-		int16_t *l;
+		VINT *l;
 		VINT e;
 
 		e = s + j;
-		if (e >= numlinetags)
-			e -= numlinetags;
+		if (e >= numtags)
+			e -= numtags;
 
-		l = &linetags[e * 2];
+		l = &tags[e * 2];
 		if (l[0] == -1 || l[0] == ld) {
 			l[0] = ld;
 			l[1] = tag;
 			break;
 		}
 	}
+}
+
+int P_IterateTag (int tag, VINT *tags, int numtags, int *start)
+{
+	VINT j;
+
+	if (*start < 0)
+		return -1;
+
+	for (j = *start; j < numtags; j++)
+	{
+		VINT *l;
+
+		l = &tags[j * 2];
+		if (l[1] == tag) {
+			*start = j + 1;
+			return l[0];
+		}
+	}
+
+	*start = numtags;
+	return -1;
+}
+
+int P_GetLineTag (line_t *line)
+{
+	return P_GetTag(line - lines, linetags, numlinetags);
+}
+
+void P_SetLineTag (int ld, int tag)
+{
+	P_SetTag(ld, tag, linetags, numlinetags);
+}
+
+int P_GetSectorTag (sector_t *sec)
+{
+	return P_GetTag(sec - sectors, sectortags, numsectortags);
+}
+
+void P_SetSectorTag (int sec, int tag)
+{
+	P_SetTag(sec, tag, sectortags, numsectortags);
+}
+
+int P_FindNextSectorByTagNum(int tag, int *start)
+{
+	return P_IterateTag(tag, sectortags, numsectortags, start);
 }
 
 void P_StartSectorSound(sector_t* sec, int sound_id)

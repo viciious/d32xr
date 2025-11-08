@@ -281,31 +281,6 @@ fixed_t	P_FindHighestCeilingSurrounding(sector_t *sec)
 
 /*================================================================== */
 /* */
-/*	RETURN NEXT SECTOR # THAT LINE TAG REFERS TO */
-/* */
-/*================================================================== */
-int	P_FindSectorFromLineTag(line_t	*line,int start)
-{
-	return P_FindSectorFromLineTagNum(P_GetLineTag(line), start);
-}
-
-/*================================================================== */
-/* */
-/*	RETURN NEXT SECTOR # THAT LINE TAG REFERS TO */
-/* */
-/*================================================================== */
-int	P_FindSectorFromLineTagNum(int tag,int start)
-{
-	int	i;
-
-	for (i=start+1;i<numsectors;i++)
-		if (sectors[i].tag == tag)
-			return i;
-	return -1;
-}
-
-/*================================================================== */
-/* */
 /*	Find minimum light from an adjacent sector */
 /* */
 /*================================================================== */
@@ -896,6 +871,7 @@ void P_UpdateSpecials (void)
 /*============================================================ */
 int EV_DoDonut(line_t *line)
 {
+	int 		k;
 	sector_t	*s1;
 	sector_t	*s2;
 	sector_t	*s3;
@@ -905,10 +881,10 @@ int EV_DoDonut(line_t *line)
 	floormove_t		*floor;
 	int 		tag;
 
-	secnum = -1;
+	k = 0;
 	rtn = 0;
 	tag = P_GetLineTag(line);
-	while ((secnum = P_FindSectorFromLineTagNum(tag,secnum)) >= 0)
+	while ((secnum = P_FindNextSectorByTagNum(tag,&k)) >= 0)
 	{
 		line_t *line;
 		s1 = &sectors[secnum];

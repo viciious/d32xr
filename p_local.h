@@ -240,6 +240,10 @@ void 	P_StartSectorSound(sector_t* sec, int sound_id);
 int 	P_GetLineTag (line_t *line);
 void 	P_SetLineTag (int ld, int tag);
 
+int 	P_GetSectorTag (sector_t *sec);
+void 	P_SetSectorTag (int ld, int tag);
+int 	P_FindNextSectorByTagNum(int tag, int *start);
+
 /*
 ===============================================================================
 

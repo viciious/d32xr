@@ -88,8 +88,6 @@ typedef	struct
 
 	uint8_t		lightlevel, special;
 
-	VINT		tag;
-
 	SPTR		soundtarget;		/* thing that made a sound (or null) */
 	SPTR		thinglist;			/* list of mobjs in sector */
 
@@ -253,7 +251,10 @@ extern	VINT		numlines;
 extern	line_t		*lines;
 
 extern 	VINT 		numlinetags;
-extern 	int16_t 	*linetags;
+extern 	VINT	 	*linetags;
+
+extern 	VINT 		numsectortags;
+extern 	VINT 		*sectortags;
 
 extern	VINT		numsides;
 extern	side_t		*sides;

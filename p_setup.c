@@ -25,7 +25,10 @@ VINT		numlines;
 line_t		*lines;
 
 VINT 		numlinetags;
-int16_t 	*linetags; // [HASH_SIZE]{line,tag,line,tag...}
+VINT 		*linetags; // [HASH_SIZE]{line,tag,line,tag...}
+
+VINT 		numsectortags;
+VINT 		*sectortags; // [HASH_SIZE]{sector,tag,sector,tag...}
 
 VINT		numsides;
 side_t		*sides;
@@ -236,12 +239,14 @@ void P_LoadSectors (int lump)
 	int				i;
 	mapsector_t		*ms;
 	sector_t		*ss;
+	int 			tag;
 			
 	numsectors = W_LumpLength (lump) / sizeof(mapsector_t);
 	sectors = Z_Malloc (numsectors*sizeof(sector_t) + 16,PU_LEVEL);
 	sectors = (void*)(((uintptr_t)sectors + 15) & ~15); // aline on cacheline boundary
 	D_memset (sectors, 0, numsectors*sizeof(sector_t));
 	data = W_GetLumpData(lump);
+	numsectortags = 0;
 
 	ms = (mapsector_t *)data;
 	ss = sectors;
@@ -272,7 +277,28 @@ void P_LoadSectors (int lump)
 			special = 0;
 		ss->special = special;
 
-		ss->tag = LITTLESHORT(ms->tag);
+		tag = LITTLESHORT(ms->tag);
+		if (tag != 0) {
+			numsectortags++;
+		}
+	}
+
+	// load tags into hash table
+
+	if (!numsectortags)
+		return;
+
+	numsectortags = (numsectortags + LINETAGS_HASH_SIZE - 1) & ~(LINETAGS_HASH_SIZE - 1);
+	sectortags = Z_Malloc(sizeof(*sectortags)*numsectortags*2, PU_LEVEL);
+	D_memset(sectortags, -1, sizeof(*sectortags)*numsectortags*2);
+
+	ms = (mapsector_t *)data;
+	for (i=0 ; i<numsectors ; i++,  ms++)
+	{
+		tag = LITTLESHORT(ms->tag);
+		if (tag) {
+			P_SetSectorTag(i, tag);
+		}
 	}
 }
 
