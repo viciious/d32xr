@@ -88,12 +88,12 @@ typedef	struct
 
 	uint8_t		lightlevel, special;
 
+	VINT		*lines;				/* [linecount] size */
+	VINT		linecount;
+
 	SPTR		soundtarget;		/* thing that made a sound (or null) */
 	SPTR		thinglist;			/* list of mobjs in sector */
 	SPTR		specialdata;		/* thinker_t for reversable actions */
-
-	VINT		linecount;
-	VINT		*lines;				/* [linecount] size */
 } sector_t;
 
 typedef struct
