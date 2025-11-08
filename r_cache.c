@@ -110,7 +110,7 @@ boolean R_TouchIfInTexCache(r_texcache_t* c, void *p)
 	if (s == 1) {
 		// in texture cache
 		texcacheblock_t *e = *(texcacheblock_t **)(((uintptr_t)p - 4) & ~3);
-		e->lifecount = CACHE_FRAMES_DEFAULT;
+		e->lifecount = e->maxlifecount;
 		return true;
 	}
 
@@ -130,7 +130,7 @@ static void R_EvictFromTexCache(void* ptr, void* userp)
 	r_texcache_t *c = userp;
 
 	if (entry->pixels < c->reqcount_le)
-		if (entry->lifecount != CACHE_FRAMES_DEFAULT)
+		if (entry->lifecount != entry->maxlifecount)
 			entry->lifecount = 0;
 
 	if (entry->lifecount <= 0)
@@ -170,7 +170,7 @@ void R_PostTexCacheFrame(r_texcache_t* c)
 =
 =================
 */
-void R_AddToTexCache(r_texcache_t* c, int id, int pixels, void **userp)
+void R_AddToTexCache(r_texcache_t* c, int id, int pixels, void **userp, int lifecount)
 {
 	int size;
 	int trynum;
@@ -222,7 +222,8 @@ retry:
 	entry->pixels = pixels;
 	entry->userp = userp;
 	entry->userpold = *userp;
-	entry->lifecount = CACHE_FRAMES_DEFAULT;
+	entry->maxlifecount = lifecount;
+	entry->lifecount = lifecount;
 
 	lumpdata = *userp;
 

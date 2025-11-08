@@ -129,6 +129,7 @@ static void R_UpdateCache(void)
       void **data, **pdata;
       unsigned w = 64, h = 64, m, pixels;
       boolean masked = false;
+      int lifecount;
 
       id = bestmips[i];
       if (id == -1) {
@@ -142,6 +143,7 @@ static void R_UpdateCache(void)
         data = (void **)flat->data;
         pdata = (void**)&data[i];
         pixels = w * h;
+        lifecount = CACHE_FRAMES_FLATS;
       } else {
         texture_t* tex = &textures[id];
         int lump = tex->lumpnum;
@@ -156,6 +158,7 @@ static void R_UpdateCache(void)
           pixels = w * h;
           pdata = (void**)&data[i];
         }
+        lifecount = CACHE_FRAMES_WALLS;
       }
 
       pw = 1;
@@ -177,7 +180,7 @@ static void R_UpdateCache(void)
         continue;
       }
 
-      R_AddToTexCache(&r_texcache, id+((unsigned)i<<2), pixels, pdata);
+      R_AddToTexCache(&r_texcache, id+((unsigned)i<<2), pixels, pdata, lifecount);
 
       if (debugmode == DEBUGMODE_TEXCACHE)
         continue;

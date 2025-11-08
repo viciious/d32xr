@@ -458,18 +458,19 @@ typedef struct
 typedef struct
 {
 	uint16_t pixels;
-	VINT lifecount;
+	int8_t lifecount, maxlifecount;
 	void** userp;
 	void *userpold;
 } texcacheblock_t;
 
 extern r_texcache_t r_texcache;
 
-#define CACHE_FRAMES_DEFAULT 15
+#define CACHE_FRAMES_WALLS 3
+#define CACHE_FRAMES_FLATS 3
 
 void R_InitTexCache(r_texcache_t* c);
 void R_InitTexCacheZone(r_texcache_t* c, int zonesize);
-void R_AddToTexCache(r_texcache_t* c, int id, int pixels, void **userp);
+void R_AddToTexCache(r_texcache_t* c, int id, int pixels, void **userp, int lifecount);
 void R_ClearTexCache(r_texcache_t* c);
 int R_InTexCache(r_texcache_t* c, void *p) ATTR_DATA_CACHE_ALIGN;
 boolean R_TouchIfInTexCache(r_texcache_t* c, void *p);
