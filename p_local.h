@@ -238,6 +238,7 @@ void 	P_SectorOrg(sector_t* sec, fixed_t *org);
 void 	P_StartSectorSound(sector_t* sec, int sound_id);
 
 int 	P_GetLineTag (line_t *line);
+void 	P_SetLineTag (int ld, int tag);
 
 /*
 ===============================================================================
