@@ -90,12 +90,9 @@ typedef	struct
 
 	SPTR		soundtarget;		/* thing that made a sound (or null) */
 	SPTR		thinglist;			/* list of mobjs in sector */
-
 	SPTR		specialdata;		/* thinker_t for reversable actions */
 
-	VINT		validcount;			/* if == validcount, already checked */
 	VINT		linecount;
-
 	VINT		*lines;				/* [linecount] size */
 } sector_t;
 

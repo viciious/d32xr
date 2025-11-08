@@ -38,10 +38,10 @@ static void P_RecursiveSound (mobj_t *soundtarget, sector_t *sec, int soundblock
 	secnum = ((uintptr_t)sec - (uintptr_t)sectors)/sizeof(sector_t);
 	if (secnum >= MAXSOUNDSECS)
 		return;
-	if (sec->validcount == validcount[0] && soundtraversed[secnum] <= soundblocks+1)
+	if (validcount[secnum+1] == validcount[0] && soundtraversed[secnum] <= soundblocks+1)
 		return;		/* already flooded */
+	validcount[secnum+1] = validcount[0];
 	soundtraversed[secnum] = soundblocks+1;
-	sec->validcount = validcount[0];
 	sec->soundtarget = LPTR_TO_SPTR(soundtarget);
 	
 	for (i=0 ;i<sec->linecount ; i++)

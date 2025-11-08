@@ -645,13 +645,14 @@ static void R_Subsector(rbspWork_t *rbsp, int num)
    subsector_t *sub = &subsectors[num];
    seg_t       *line;
    int          count;
-   sector_t    *frontsector = SSEC_SECTOR(sub);
+   int         secnum = sub->sector;
+   sector_t    *frontsector = &sectors[secnum];
       
    if (frontsector->thinglist)
    {
-      if(frontsector->validcount != validcount[0]) // not already processed?
+      if(validcount[secnum+1] != validcount[0]) // not already processed?
       {
-         frontsector->validcount = validcount[0];  // mark it as processed
+         validcount[secnum+1] = validcount[0];  // mark it as processed
          if (vd->lastvissector < vd->vissectors + MAXVISSSEC)
          {
            *vd->lastvissector++ = frontsector;
