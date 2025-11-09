@@ -182,6 +182,8 @@ void R_InitTextures (void)
 			int numdecals = 0;
 
 			for (j = 0; j < patchcount; j++) {
+				int mincol, maxcol;
+				int minrow, maxrow;
 				mappatch_t *mp = &mtexture->patches[j];
 
 				texnum = LITTLESHORT(mp->patch);
@@ -192,21 +194,26 @@ void R_InitTextures (void)
 				if (texture2->lumpnum < 0)
 					continue;
 
+				mincol = LITTLESHORT(mp->originx);
+				maxcol = mincol + texture2->width - 1;
+				minrow = LITTLESHORT(mp->originy);
+				maxrow = minrow + texture2->height - 1;
+
+				if (mincol >= texture->width || maxcol < 0)
+					continue;
+				if (minrow >= texture->height || maxrow < 0)
+					continue;
+
+				if (maxcol >= texture->width)
+					maxcol = texture->width - 1;
+				if (minrow >= texture->height)
+					minrow = texture->height - 1;
+
 				decal->texturenum = texnum;
-				decal->mincol = LITTLESHORT(mp->originx);
-				decal->maxcol = decal->mincol + texture2->width - 1;
-				decal->minrow = LITTLESHORT(mp->originy);
-				decal->maxrow = decal->minrow + texture2->height - 1;
-
-				if (decal->mincol >= texture->width || decal->maxcol < 0)
-					continue;
-				if (decal->minrow >= texture->height || decal->maxrow < 0)
-					continue;
-
-				if (decal->maxcol >= texture->width)
-					decal->maxcol = texture->width - 1;
-				if (decal->minrow >= texture->height)
-					decal->minrow = texture->height - 1;
+				decal->mincol = mincol;
+				decal->maxcol = maxcol;
+				decal->minrow = minrow;
+				decal->maxrow = maxrow;
 
 				decal++;
 				numdecals++;

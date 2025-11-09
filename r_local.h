@@ -152,7 +152,7 @@ typedef struct
 typedef struct
 {
 	VINT	mincol, maxcol;
-	VINT	minrow, maxrow;
+	uint8_t	minrow, maxrow;
 	VINT 	texturenum;
 } texdecal_t;
 
