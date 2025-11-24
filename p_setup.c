@@ -862,6 +862,43 @@ void P_LoadingPlaque (void)
 
 /*============================================================================= */
 
+static void P_isortsegs(seg_t * segs, int len)
+{
+	int i, j;
+	for (i = 1; i < len; i++)
+	{
+		seg_t t;
+		t.linedef = segs[i].linedef;
+		t.v1 = segs[i].v1;
+		t.v2 = segs[i].v2;
+		for (j = i - 1; j >= 0; j--)
+		{
+			if (segs[j].linedef <= t.linedef)
+				break;
+			segs[j+1].linedef = segs[j].linedef;
+			segs[j+1].v1 = segs[j].v1;
+			segs[j+1].v2 = segs[j].v2;
+		}
+		segs[j+1].linedef = t.linedef;
+		segs[j+1].v1 = t.v1;
+		segs[j+1].v2 = t.v2;
+	}
+}
+
+// Sorts segments in subsectors by linedef in ascending order
+static void P_SortSegs(void)
+{
+	int i;
+
+	for (i = 0; i < numsubsectors; i++)
+	{
+		subsector_t *sub = &subsectors[i];
+		int count = SSEC_NUMLINES(sub);
+		int firstline = sub->firstline;
+		P_isortsegs(&segs[firstline], count);
+	}
+}
+
 /*
 =================
 =
@@ -952,15 +989,16 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 	P_LoadRejectMatrix (lumpnum+ML_REJECT);
 	P_LoadBlockMap (lumpnum+ML_BLOCKMAP);
 
-	validcount = Z_Malloc((numlines + 1) * sizeof(*validcount) * 2, PU_LEVEL);
-	D_memset(validcount, 0, (numlines + 1) * sizeof(*validcount) * 2);
+	validcount = Z_Malloc((numlines + 1) * sizeof(*validcount), PU_LEVEL);
+	D_memset(validcount, 0, (numlines + 1) * sizeof(*validcount));
 	validcount[0] = 1; // cpu 0
-	validcount[numlines] = 1; // cpu 1
 
 	// G_DeathMatchSpawnPlayer is going to need this
 	I_SetThreadLocalVar(DOOMTLS_VALIDCOUNT, &validcount[0]);
 
 	P_GroupLines ();
+
+	P_SortSegs();
 
 	if (netgame == gt_deathmatch)
 	{
