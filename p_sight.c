@@ -140,18 +140,14 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
    i16divline_t *strace = &sw->strace;
    int16_t      t2x = sw->t2x, t2y = sw->t2y;
    fixed_t      sightzstart = sw->sightzstart;
-   VINT         *lvalidcount, vc;
    VINT         side;
+   VINT         prevld = -1;
 
    sub = &subsectors[num];
 
    // check lines
    count = SSEC_NUMLINES(sub);
    seg   = &segs[sub->firstline];
-
-	I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
-	vc = *lvalidcount;
-	++lvalidcount;
 
    for( ; count; seg++, count--)
    {
@@ -161,9 +157,9 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
       line = &lines[ld];
 
       // allready checked other side?
-      if(lvalidcount[ld] == vc)
+      if (ld == prevld)
          continue;
-      lvalidcount[ld] = vc;
+      prevld = ld;
 
       v1 = &vertexes[line->v1];
       v2 = &vertexes[line->v2];
@@ -350,12 +346,6 @@ static boolean PS_RejectCheckSight(mobj_t *t1, mobj_t *t2)
 static boolean PS_CheckSight2(mobj_t *t1, mobj_t *t2)
 {
    sightWork_t sw;
-   VINT *lvalidcount;
-
-   I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
-   *lvalidcount = *lvalidcount + 1;
-   if (*lvalidcount == 0)
-      *lvalidcount = 1;
 
    // look from eyes of t1 to any part of t2
    sw.sightzstart = t1->z + (t1->height*FRACUNIT) - ((t1->height*FRACUNIT) >> 2);

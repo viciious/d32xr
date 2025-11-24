@@ -207,8 +207,6 @@ boolean PIT_CheckPosition(pmovework_t *w)
 
    I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
    *lvalidcount = *lvalidcount + 1;
-   if (*lvalidcount == 0)
-      *lvalidcount = 1;
 
    // Check things first, possibly picking things up.
    // The bounding box is extended by MAXRADIUS because mobj_ts are grouped

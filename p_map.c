@@ -221,8 +221,6 @@ void P_UseLines (player_t *player)
 
 	I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
 	*lvalidcount = *lvalidcount + 1;
-	if (*lvalidcount == 0)
-		*lvalidcount = 1;
 
 	for (y=yl ; y<=yh ; y++)
 		for (x=xl ; x<=xh ; x++)
