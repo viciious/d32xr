@@ -249,6 +249,11 @@ void R_InitTextures (void)
 		uint8_t *end = start + size;
 		uint8_t *data = R_SkipJagObjHeader(start, size, w, h);
 
+		if (texture->decals != 0)
+		{
+			texture->mipcount = MIPLEVELS;
+			continue;
+		}
 		texture->mipcount = 0;
 
 		// detect mipmaps

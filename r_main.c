@@ -409,12 +409,17 @@ void R_SetTextureData(texture_t *tex, uint8_t *start, int size, boolean skiphead
 	boolean masked = tex->lumpnum >= firstsprite && tex->lumpnum < firstsprite + numsprites;
 
 	if (texmips && !masked)
-		mipcount = MIPLEVELS;
+		mipcount = tex->mipcount;
 #endif
 
 	for (j = 0; j < mipcount; j++)
 	{
 		int size = w * h;
+
+		tex->data[j] = data;
+		if (!data) {
+			continue;
+		}
 
 #if MIPLEVELS > 1
 		if (j && data+size > end) {
@@ -423,11 +428,6 @@ void R_SetTextureData(texture_t *tex, uint8_t *start, int size, boolean skiphead
 			break;
 		}
 #endif
-
-		tex->data[j] = data;
-		if (!data) {
-			continue;
-		}
 
 		data += size;
 
