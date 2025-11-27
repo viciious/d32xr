@@ -274,7 +274,7 @@ mobj_t *P_SpawnMobj2 (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type, subsecto
 			mobj = Z_Malloc (sizeof(*mobj), PU_LEVEL);
 		}
 		D_memset (mobj, 0, sizeof (*mobj));
-		mobj->speed = info->speed < FRACUNIT ? info->speed : (info->speed >> FRACBITS);
+		mobj->speed = info->speed;
 		mobj->reactiontime = info->reactiontime;
 		mobj->health = info->spawnhealth;
 	}
@@ -715,7 +715,7 @@ mobj_t *P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type)
 	mobj_t		*th;
 	angle_t		an;
 	int			dist;
-	int			speed;
+	fixed_t		speed;
 	const mobjinfo_t* thinfo = &mobjinfo[type];
 
 	th = P_SpawnMobj2 (source->x,source->y, source->z + 4*8*FRACUNIT, type, source->subsector);
@@ -728,12 +728,12 @@ mobj_t *P_SpawnMissile (mobj_t *source, mobj_t *dest, mobjtype_t type)
 		an += (P_Random()-P_Random()) << 20;
 	th->angle = an;
 	an >>= ANGLETOFINESHIFT;
-	speed = th->speed;
-	th->momx = speed * finecosine(an);
-	th->momy = speed * finesine(an);
+	speed = th->speed * FRACUNIT;
+	th->momx = FixedMul(speed, finecosine(an));
+	th->momy =  FixedMul(speed, finesine(an));
 	
 	dist = P_AproxDistance (dest->x - source->x, dest->y - source->y);
-	dist = dist / (th->speed << 16);
+	dist = dist / speed;
 	if (dist < 1)
 		dist = 1;
 	th->momz = (dest->z - source->z) / dist;
@@ -796,11 +796,11 @@ void P_SpawnPlayerMissile (mobj_t *source, mobjtype_t type)
 	th->target = source;
 	th->angle = an;
 	
-	speed = th->speed;
+	speed = th->speed * FRACUNIT;
 	
-	th->momx = speed * finecosine(an>>ANGLETOFINESHIFT);
-	th->momy = speed * finesine(an>>ANGLETOFINESHIFT);
-	th->momz = speed * slope;
+	th->momx = FixedMul(speed, finecosine(an>>ANGLETOFINESHIFT));
+	th->momy = FixedMul(speed, finesine(an>>ANGLETOFINESHIFT));
+	th->momz = FixedMul(speed, slope);
 
 	P_CheckMissileSpawn (th);
 }

@@ -827,6 +827,7 @@ void A_Tracer (mobj_t *actor)
 	angle_t	exact;
 	fixed_t	dist;
 	fixed_t	slope;
+	fixed_t speed;
 	mobj_t*	dest;
 	mobj_t*	th;
 	const mobjinfo_t* ainfo = &mobjinfo[actor->type];
@@ -870,13 +871,14 @@ void A_Tracer (mobj_t *actor)
 	}
 
 	exact = actor->angle>>ANGLETOFINESHIFT;
-	actor->momx = FixedMul (ainfo->speed, finecosine(exact));
-	actor->momy = FixedMul (ainfo->speed, finesine(exact));
+	speed = ainfo->speed * FRACUNIT;
+	actor->momx = FixedMul (speed, finecosine(exact));
+	actor->momy = FixedMul (speed, finesine(exact));
 
 	// change slope
 	dist = P_AproxDistance (dest->x - actor->x, dest->y - actor->y);
 
-	dist = dist / ainfo->speed;
+	dist = dist / speed;
 
 	if (dist < 1)
 		dist = 1;
@@ -886,8 +888,7 @@ void A_Tracer (mobj_t *actor)
 		actor->momz -= FRACUNIT/8;
 	else
 		actor->momz += FRACUNIT/8;
-	}
-
+}
 
 void A_SkelWhoosh (mobj_t *actor)
 {
@@ -932,7 +933,8 @@ void A_FatAttack1 (mobj_t* actor)
 {
     mobj_t*	mo;
     int		an;
-	const mobjinfo_t* moinfo;
+	const mobjinfo_t* moinfo = &mobjinfo[MT_FATSHOT];
+	fixed_t speed = moinfo->speed*FRACUNIT;
 
     A_FaceTarget (actor);
     // Change direction  to ...
@@ -942,18 +944,18 @@ void A_FatAttack1 (mobj_t* actor)
     mo = P_SpawnMissile (actor, actor->target, MT_FATSHOT);
     mo->angle += FATSPREAD;
     an = mo->angle >> ANGLETOFINESHIFT;
-	moinfo = &mobjinfo[mo->type];
-    mo->momx = FixedMul (moinfo->speed, finecosine(an));
-    mo->momy = FixedMul (moinfo->speed, finesine(an));
+    mo->momx = FixedMul(speed,finecosine(an));
+    mo->momy = FixedMul(speed,finesine(an));
 }
 
 void A_FatAttack2 (mobj_t* actor)
 {
     mobj_t*	mo;
     int		an;
-	const mobjinfo_t* moinfo;
+	const mobjinfo_t* moinfo = &mobjinfo[MT_FATSHOT];
+	fixed_t speed = moinfo->speed*FRACUNIT;
 
-    A_FaceTarget (actor);
+	A_FaceTarget (actor);
     // Now here choose opposite deviation.
     actor->angle -= FATSPREAD;
     P_SpawnMissile (actor, actor->target, MT_FATSHOT);
@@ -961,32 +963,30 @@ void A_FatAttack2 (mobj_t* actor)
     mo = P_SpawnMissile (actor, actor->target, MT_FATSHOT);
     mo->angle -= FATSPREAD*2;
     an = mo->angle >> ANGLETOFINESHIFT;
-	moinfo = &mobjinfo[mo->type];
-    mo->momx = FixedMul (moinfo->speed, finecosine(an));
-    mo->momy = FixedMul (moinfo->speed, finesine(an));
+    mo->momx = FixedMul(speed,finecosine(an));
+    mo->momy = FixedMul(speed,finesine(an));
 }
 
 void A_FatAttack3 (mobj_t*	actor)
 {
     mobj_t*	mo;
     int		an;
-	const mobjinfo_t* moinfo;
+	const mobjinfo_t* moinfo = &mobjinfo[MT_FATSHOT];
+	fixed_t speed = moinfo->speed*FRACUNIT;
 
-    A_FaceTarget (actor);
+	A_FaceTarget (actor);
     
     mo = P_SpawnMissile (actor, actor->target, MT_FATSHOT);
     mo->angle -= FATSPREAD/2;
     an = mo->angle >> ANGLETOFINESHIFT;
-	moinfo = &mobjinfo[mo->type];
-    mo->momx = FixedMul (moinfo->speed, finecosine(an));
-    mo->momy = FixedMul (moinfo->speed, finesine(an));
+    mo->momx = FixedMul(speed,finecosine(an));
+    mo->momy = FixedMul(speed,finesine(an));
 
     mo = P_SpawnMissile (actor, actor->target, MT_FATSHOT);
     mo->angle += FATSPREAD/2;
     an = mo->angle >> ANGLETOFINESHIFT;
-	moinfo = &mobjinfo[mo->type];
-    mo->momx = FixedMul (moinfo->speed, finecosine(an));
-    mo->momy = FixedMul (moinfo->speed, finesine(an));
+    mo->momx = FixedMul(speed,finecosine(an));
+    mo->momy = FixedMul(speed,finesine(an));
 }
 
 /*

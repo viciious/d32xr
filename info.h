@@ -1073,21 +1073,21 @@ typedef struct {
 	uint16_t	seestate;
 	uint8_t		seesound;
 	uint8_t		reactiontime;
-	uint16_t	attacksound;
+	uint8_t		attacksound;
+	uint8_t		painsound;
 	uint16_t	painstate;
 	uint16_t	painchance;
-	uint16_t	painsound;
 	uint16_t	meleestate;
 	uint16_t	missilestate;
 	uint16_t	deathstate;
 	uint16_t	xdeathstate;
 	uint8_t		deathsound;
 	uint8_t		activesound;
-	int			speed;
-	int16_t		radius;
-	int16_t		height;
+	uint8_t		radius;
+	uint8_t		height;
+	uint8_t		speed;
+	uint8_t		damage;
 	uint16_t	mass;
-	uint16_t	damage;
 	int			flags;
 } mobjinfo_t;
 
