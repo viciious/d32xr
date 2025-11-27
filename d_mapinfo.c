@@ -363,7 +363,7 @@ static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
 		{GI_STR_FIELD(creditsPage)},
 		{GI_STR_FIELD(titleMus)},
 		{GI_INT_FIELD(titleCdTrack)},
-		{GI_INT_FIELD(intermissionMus)},
+		{GI_STR_FIELD(intermissionMus)},
 		{GI_INT_FIELD(intermissionCdTrack)},
 		{GI_STR_FIELD(victoryMus)},
 		{GI_INT_FIELD(victoryCdTrack)},
