@@ -129,13 +129,12 @@ static void R_EvictFromTexCache(void* ptr, void* userp)
 	texcacheblock_t* entry = ptr;
 	r_texcache_t *c = userp;
 
-	if (entry->pixels < c->reqcount_le)
-		if (entry->lifecount != entry->maxlifecount)
-			entry->lifecount = 0;
+	if (entry->lifecount < (entry->maxlifecount - CACHE_FRAMES_SOFTFREE))
+		entry->lifecount = 0;
 
-	if (entry->lifecount <= 0)
+	if (entry->lifecount <= 0 && c->reqfreed < c->reqcount_le)
 	{
-		c->reqfreed++;
+		c->reqfreed += entry->pixels;
 		*entry->userp = entry->userpold;
 		Z_Free2(c->zone, entry);
 	}
@@ -170,7 +169,7 @@ void R_PostTexCacheFrame(r_texcache_t* c)
 =
 =================
 */
-void R_AddToTexCache(r_texcache_t* c, int id, int pixels, void **userp, int lifecount, const char *name)
+boolean R_AddToTexCache(r_texcache_t* c, int id, int pixels, void **userp, int lifecount, const char *name)
 {
 	int size;
 	int trynum;
@@ -179,13 +178,13 @@ void R_AddToTexCache(r_texcache_t* c, int id, int pixels, void **userp, int life
 	texcacheblock_t* entry, **ref;
 
 	if (!c || !c->zone)
-		return;
+		return false;
 	if (debugmode == DEBUGMODE_NOTEXCACHE)
-		return;
+		return false;
 
 	size = pixels + sizeof(texcacheblock_t) + 36;
 	if (c->zonesize < size + pad)
-		return;
+		return true;
 
 	if (Z_LargestFreeBlock(c->zone) < size + pad)
 	{
@@ -196,14 +195,16 @@ void R_AddToTexCache(r_texcache_t* c, int id, int pixels, void **userp, int life
 
 		// check if there were textures that got freed
 		if (c->reqfreed == 0)
-			return;
+		{
+			return false;
+		}
 
 		if (Z_LargestFreeBlock(c->zone) < size + pad)
 		{
 			// check for fragmentation
 			//if (Z_FreeBlocks(c->zone) > size + pad)
 			//	R_ClearTexCache(c);
-			return;
+			return false;
 		}
 	}
 
@@ -213,7 +214,7 @@ retry:
 	if (!entry)
 	{
 		if (trynum != 0)
-			return;
+			return false;
 		R_ClearTexCache(c);
 		trynum++;
 		goto retry;
@@ -244,6 +245,7 @@ retry:
 	}
 
 	*userp = data;
+	return true;
 }
 
 /*

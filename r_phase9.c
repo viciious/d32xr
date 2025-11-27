@@ -5,129 +5,112 @@
 */
 #include "doomdef.h"
 #include "r_local.h"
+#ifdef MARS
+#include "mars.h"
+#endif
 
 #ifdef MARS
+
+#if MIPLEVELS > 1
+#define MAXMIPS MIPLEVELS
+#else
+#define MAXMIPS 4
+#endif
 
 //
 // R_UpdateCache
 static void R_UpdateCache(void)
 {
    viswall_t *wall;
-   int i;
-   int bestmips[MIPLEVELS];
-   int minplanemip, maxplanemip;
+   int i, m;
+   int mipcount = 1;
+   VINT bestmips[MAXMIPS];
+   visplane_t* pl;
+   static int8_t framecount = 0;
 
 	  if (debugmode == DEBUGMODE_NOTEXCACHE)
 		  return;
 
-   for (i = 0; i < MIPLEVELS; i++) {
+    for (pl = vd->visplanes + 1; pl < vd->lastvisplane; pl++) {
+      Mars_ClearCacheLines(pl, (sizeof(visplane_t) + 31) / 16);
+    }
+
+   for (i = 0; i < MAXMIPS; i++) {
       bestmips[i] = -1;
    }
 
-   minplanemip = 0;
-   maxplanemip = 0;
-   for (wall = vd->viswalls; wall < vd->lastwallcmd; wall++)
+   for (i = 0; i < MAXMIPS; i++)
    {
+    for (wall = vd->viswalls; wall < vd->lastwallcmd; wall++)
+    {
+      int j, nwalltex;
+      int walltex[3];
       int minmip = wall->miplevels[0], maxmip = wall->miplevels[1];
 
-      if (wall->realstart > wall->realstop)
+      if (wall->realstart > wall->realstop || minmip > maxmip)
+        continue;
+      if (i < minmip || i > maxmip)
         continue;
 
-      if ((wall->actionbits & (AC_TOPTEXTURE|AC_BOTTOMTEXTURE|AC_MIDTEXTURE)) && (maxmip >= minmip))
+      nwalltex = 0;
+      if (wall->actionbits & AC_TOPTEXTURE)
+        walltex[nwalltex++] = wall->t_texturenum;
+      if (wall->actionbits & AC_BOTTOMTEXTURE)
+        walltex[nwalltex++] = wall->b_texturenum;
+      if (wall->actionbits & AC_MIDTEXTURE)
+        walltex[nwalltex++] = wall->m_texturenum;
+
+      for (j = 0; j < nwalltex; j++)
       {
-        if (wall->actionbits & AC_TOPTEXTURE)
-        {
-            texture_t* tex = &textures[wall->t_texturenum];
+        texture_t* tex = &textures[walltex[j]];
 #if MIPLEVELS > 1
-            int mipcount = tex->mipcount;
-#else
-            int mipcount = 1;
+        mipcount = tex->mipcount;
 #endif
-            for (i = minmip; i <= maxmip; i++) {
-                if (i >= mipcount)
-                  break;
-                if (!R_TouchIfInTexCache(&r_texcache, tex->data[i]) && (bestmips[i] < 0)) {
-                    bestmips[i] = wall->t_texturenum;
-                }
-            }
-        }
+        m = i;
+        if (m >= mipcount)
+          m = mipcount - 1;
+        if (tex->lumpnum >= firstsprite && tex->lumpnum < firstsprite + numsprites)
+          m = 0;
 
-        if (wall->actionbits & AC_BOTTOMTEXTURE)
-        {
-            texture_t* tex = &textures[wall->b_texturenum];
-#if MIPLEVELS > 1
-            int mipcount = tex->mipcount;
-#else
-            int mipcount = 1;
-#endif
-            for (i = minmip; i <= maxmip; i++) {
-                if (i >= mipcount)
-                  break;
-                if (!R_TouchIfInTexCache(&r_texcache, tex->data[i]) && (bestmips[i] < 0)) {
-                    bestmips[i] = wall->b_texturenum;
-                }
-            }
+        if (!R_TouchIfInTexCache(&r_texcache, tex->data[m]) && (bestmips[i] < 0) && ((framecount & 1) == 0)) {
+            bestmips[i] = walltex[j];
         }
-
-        if (wall->actionbits & AC_MIDTEXTURE)
-        {
-            texture_t* tex = &textures[wall->m_texturenum];
-#if MIPLEVELS > 1
-            int mipcount = tex->mipcount;
-#else
-            int mipcount = 1;
-#endif
-            for (i = minmip; i <= maxmip; i++) {
-                if (i >= mipcount)
-                  break;
-                if (!R_TouchIfInTexCache(&r_texcache, tex->data[0]) && (bestmips[i] < 0)) {
-                    bestmips[i] = wall->m_texturenum;
-                }
-            }
-        }
-
-        // offset the min mip level for planes by -1:
-        // assume planes can be slightly closer than 
-        // the adjacent walls
-        if (minmip-1 > minplanemip)
-            minplanemip = minmip-1;
-        if (maxmip > maxplanemip)
-            maxplanemip = maxmip;
       }
+    }
 
-      if (detailmode != detmode_potato)
-      {
-        flattex_t *flat = &flatpixels[wall->floorpicnum];
+    if (detailmode != detmode_potato)
+    {
+      for (pl = vd->visplanes + 1; pl < vd->lastvisplane; pl++) {
+          int minmip = pl->miplevels[0], maxmip = pl->miplevels[1];
+          int flatnum;
+          flattex_t *flat;
+#if MIPLEVELS > 1
+          mipcount = texmips ? MIPLEVELS : 1;
+#endif
 
-        if (minplanemip < 0)
-          minplanemip = 0;
-        if (maxplanemip >= MIPLEVELS)
-          maxplanemip = MIPLEVELS-1;
-
-        for (i = minplanemip; i <= maxplanemip; i++) {
-            if (!R_TouchIfInTexCache(&r_texcache, flat->data[i]) && (bestmips[i] < 0)) {
-                bestmips[i] = numtextures+wall->floorpicnum;
-            }
-        }
-
-        if (wall->ceilingpicnum == -1) {
+          if (minmip > maxmip)
             continue;
-        }
+          if (i < minmip || i > maxmip)
+            continue;
 
-        flat = &flatpixels[wall->ceilingpicnum];
-        for (i = minplanemip; i <= maxplanemip; i++) {
-            if (!R_TouchIfInTexCache(&r_texcache, flat->data[i]) && (bestmips[i] < 0)) {
-                bestmips[i] = numtextures+wall->ceilingpicnum;
-            }
-        }
+          flatnum = pl->flatandlight&0xffff;
+          flat = &flatpixels[flatnum];
+
+          m = i;
+          if (m >= mipcount)
+            m = mipcount-1;
+
+          if (!R_TouchIfInTexCache(&r_texcache, flat->data[m]) && (bestmips[i] < 0) && ((framecount & 1) == 1)) {
+              bestmips[i] = numtextures+flatnum;
+          }
       }
-   }
+    }
 
-   for (i = 0; i < MIPLEVELS; i++) {
+    {
       int id;
       int pw;
-      void **data, **pdata;
-      unsigned w = 64, h = 64, m, pixels;
+      void **pdata;
+      unsigned w = 64, h = 64, pixels;
       boolean masked = false;
       int lifecount;
       char name[8];
@@ -137,12 +120,17 @@ static void R_UpdateCache(void)
         continue;
       }
 
+      m = i;
       masked = false;
 
       if (id >= numtextures) {
         flattex_t *flat = &flatpixels[id - numtextures];
-        data = (void **)flat->data;
-        pdata = (void**)&data[i];
+#if MIPLEVELS > 1          
+        mipcount = texmips ? MIPLEVELS : 1;
+#endif
+        if (m >= mipcount)
+          m = mipcount-1;
+        pdata = (void**)&flat->data[m];
         pixels = w * h;
         lifecount = CACHE_FRAMES_FLATS;
         D_memcpy(name, W_GetNameForNum(firstflat+id-numtextures), 8);
@@ -150,41 +138,52 @@ static void R_UpdateCache(void)
         texture_t* tex = &textures[id];
         int lump = tex->lumpnum;
 
-        data = (void **)tex->data;
         if (lump >= firstsprite && lump < firstsprite + numsprites) {
+          m = 0;
           masked = true;
           pixels = W_LumpLength(lump+1);
-          pdata = (void**)&data[0];
+          pdata = (void**)&tex->data[0];
           D_memcpy(name, W_GetNameForNum(lump+1), 8);
         } else {
+#if MIPLEVELS > 1
+          mipcount = tex->mipcount;
+#endif            
+          if (m >= mipcount)
+            m = mipcount-1;
           w = tex->width, h = tex->height;
           pixels = w * h;
-          pdata = (void**)&data[i];
+          pdata = (void**)&tex->data[m];
           D_memcpy(name, tex->name, 8);
         }
         lifecount = CACHE_FRAMES_WALLS;
       }
 
       pw = 1;
-      if (i > 0 && !masked) {
-        m = i;
-        do {
+#if MIPLEVELS > 1
+      if (m > 0) {
+        for ( ; m > 0; m--)
+        {
             pw <<= 1;
             w >>= 1;
             h >>= 1;
-        } while (--m);
+        }
+
         if (w < 1)
           w = 1;
         if (h < 1)
           h = 1;
         pixels = w * h;
+        m = i;
       }
+#endif
 
       if (R_InTexCache(&r_texcache, *pdata)) {
         continue;
       }
 
-      R_AddToTexCache(&r_texcache, id+((unsigned)i<<2), pixels, pdata, lifecount, name);
+      if (!R_AddToTexCache(&r_texcache, id+((unsigned)i<<2), pixels, pdata, lifecount, name)) {
+        break;
+      }
 
       if (debugmode == DEBUGMODE_TEXCACHE)
         continue;
@@ -192,17 +191,21 @@ static void R_UpdateCache(void)
       if (id < numtextures && !masked) {
         int j, c;
         texture_t* tex = &textures[id];
-        uint8_t *src = *pdata;
+        uint8_t *src = tex->data[m];
         uint8_t *dst;
+        int numdecals = tex->decals & 0x3;
+
+        if (!numdecals)
+          continue;
+
+        I_GetThreadLocalVar(DOOMTLS_COLUMNCACHE, dst);
 
         c = 0;
         for (j = 0; j < (int)w; j++) {
           boolean decaled;
 
-          I_GetThreadLocalVar(DOOMTLS_COLUMNCACHE, dst);
-
-          decaled = R_CompositeColumn(c, tex->decals & 0x3, &decals[tex->decals >> 2],
-            src, dst, h, i);
+          decaled = R_CompositeColumn(c, numdecals, &decals[tex->decals >> 2],
+            src, dst, h, m);
           if (decaled) {
             D_memcpy(src, dst, h);
           }
@@ -211,9 +214,11 @@ static void R_UpdateCache(void)
           c += pw;
         }
       }
-   }
+    }
+  }
 
-    R_PostTexCacheFrame(&r_texcache);
+  framecount++;
+  R_PostTexCacheFrame(&r_texcache);
 }
 
 #endif

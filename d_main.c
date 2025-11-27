@@ -581,9 +581,8 @@ int TIC_Abortable (void)
 
 void START_Title(void)
 {
-#ifdef MARS
 	int		i;
-
+#ifdef MARS
 	for (i = 0; i < 2; i++)
 	{
 		I_ClearFrameBuffer();
@@ -628,7 +627,7 @@ void START_Title(void)
 				D_strncpy(name, gameinfo.creditsPage, 8);
 				name[7] += i;
 				name[8] = '\0';
-				memcpy(lumpname[1+i], name, 9);
+				D_memcpy(lumpname[1+i], name, 9);
 				lumps[1+i] = W_CheckNumForName(name);
 			}
 		}

@@ -37,6 +37,12 @@ typedef struct localplane_s
 #endif
     mapplane_fn mapplane;
     boolean lowres;
+
+    union 
+    {
+        int8_t miplevels[2];
+        int16_t mips;
+    };
 } localplane_t;
 
 static void R_MapPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
@@ -98,8 +104,13 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
     xstep = FixedMul(distance, lpl->basexscale);
     ystep = FixedMul(distance, lpl->baseyscale);
 
-#if MIPLEVELS > 1
     miplevel = (unsigned)distance / MIPSCALE;
+    if ((int)miplevel < lpl->miplevels[0])
+        lpl->miplevels[0] = miplevel;
+    if ((int)miplevel > lpl->miplevels[1])
+        lpl->miplevels[1] = miplevel;
+
+#if MIPLEVELS > 1
     if (miplevel > lpl->maxmip)
         miplevel = lpl->maxmip;
     mipsize = lpl->mipsize[miplevel];
@@ -384,7 +395,12 @@ static void R_DrawPlanes2(void)
                 mipsize >>= 1;
             }
         }
+        lpl.miplevels[0] = MIPLEVELS;
+#else
+        lpl.miplevels[0] = 0;
 #endif
+        lpl.miplevels[1] = -1;
+
         lpl.height = (unsigned)D_abs(pl->height);
 
         if (vd->fixedcolormap)
@@ -455,6 +471,9 @@ static void R_DrawPlanes2(void)
         }
 
         R_PlaneLoop(&lpl);
+
+        pl->miplevels[0] = lpl.miplevels[0];
+        pl->miplevels[1] = lpl.miplevels[1];
     }
 }
 

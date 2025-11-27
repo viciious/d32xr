@@ -46,14 +46,16 @@ typedef struct
     drawtex_t *first, *last;
 
     int lightmin, lightmax, lightsub, lightcoef;
-#if MIPLEVELS > 1   
-    unsigned minmip, maxmip;
-#endif
+    union 
+    {
+        int8_t miplevels[2];
+        int16_t mips;
+    };
 } seglocal_t;
 
 static char seg_lock = 0;
 
-static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, int floorclipx, int ceilingclipx, unsigned light, drawtex_t *tex, int miplevel) ATTR_DATA_CACHE_ALIGN;
+static int R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, int floorclipx, int ceilingclipx, unsigned light, drawtex_t *tex, int miplevel) ATTR_DATA_CACHE_ALIGN;
 static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 static void R_DrawSegSky(seglocal_t* lseg, unsigned short *restrict clipbounds) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex, fixed_t texturemid, fixed_t topheight, fixed_t bottomheight) ATTR_DATA_CACHE_ALIGN;
@@ -65,7 +67,7 @@ void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 //
 // Render a wall texture as columns
 //
-static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, int floorclipx, int ceilingclipx, unsigned light, drawtex_t *tex, int miplevel)
+static int R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, int floorclipx, int ceilingclipx, unsigned light, drawtex_t *tex, int miplevel)
 {
     fixed_t top, bottom;
 
@@ -140,7 +142,10 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, i
         }
 
         mip->drawcol(x, top, bottom-1, light, frac, iscale, src, mip->height);
+        return 1;
     }
+
+    return 0;
 }
 
 //
@@ -164,7 +169,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds)
     const int start = segl->start;
     const int stop = segl->stop;
     int x;
-    unsigned miplevel = 0;
+    int miplevel = 0, drawn = 0;
 
     drawtex_t *tex;
 
@@ -237,17 +242,20 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds)
         iscale = 0xffffffffu / scale;
 #endif
 
-#if MIPLEVELS > 1
         // other texture drawing info
+        drawn = 0;
         miplevel = iscale / MIPSCALE;
-        if (miplevel > lseg->maxmip)
-            lseg->maxmip = miplevel;
-        if (miplevel < lseg->minmip)
-            lseg->minmip = miplevel;
-#endif
 
         for (tex = lseg->first; tex < lseg->last; tex++)
-            R_DrawTexture(x, iscale, colnum, scale2, floorclipx, ceilingclipx, texturelight, tex, miplevel);
+            drawn |= R_DrawTexture(x, iscale, colnum, scale2, floorclipx, ceilingclipx, texturelight, tex, miplevel);
+
+        if (drawn)
+        {
+            if (miplevel < lseg->miplevels[0])
+                lseg->miplevels[0] = miplevel;
+            if (miplevel > lseg->miplevels[1])
+                lseg->miplevels[1] = miplevel;
+        }
     } while (++x <= stop);
 }
 
@@ -429,10 +437,8 @@ void R_SegCommands(void)
         lseg.segl = segl;
         lseg.first = lseg.tex + 1;
         lseg.last = lseg.tex + 1;
-#if MIPLEVELS > 1
-        lseg.minmip = MIPLEVELS;
-        lseg.maxmip = 0;
-#endif
+        lseg.miplevels[0] = 127;
+        lseg.miplevels[1] = -1;
 
         if (vd->fixedcolormap)
         {
@@ -545,13 +551,11 @@ void R_SegCommands(void)
         if ((actionbits & AC_ADDSKY) != 0)
             R_DrawSegSky(&lseg, clipbounds);
 
-        *(int16_t *)&segl->miplevels[0] = 0;
 #if MIPLEVELS > 1
-        if (lseg.maxmip >= MIPLEVELS)
-            lseg.maxmip = MIPLEVELS-1;
-        segl->miplevels[0] = lseg.minmip;
-        segl->miplevels[1] = lseg.maxmip;
+        if (lseg.miplevels[1] >= MIPLEVELS)
+            lseg.miplevels[1] = MIPLEVELS-1;
 #endif
+        segl->mips = lseg.mips;
 
 post_draw:
         if(actionbits & (AC_NEWFLOOR|AC_NEWCEILING))
