@@ -345,55 +345,67 @@ static void G_FixSPCMDirList(dgameinfo_t *gi)
 	}
 }
 
+#define GI_STR_FIELD(f) #f, offsetof(dgameinfo_t,f),0
+#define GI_INT_FIELD(f) #f, offsetof(dgameinfo_t,f),sizeof(((dgameinfo_t *)0)->f)
+
 static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
 {
-	if (!D_strcasecmp(key, "borderFlat"))
-		gi->borderFlat = value;
-	else if (!D_strcasecmp(key, "titleTime"))
-		gi->titleTime = D_atoi(value);
-	else if (!D_strcasecmp(key, "creditsTime"))
-		gi->creditsTime = D_atoi(value);
-	else if (!D_strcasecmp(key, "titlePage"))
-		gi->titlePage = value;
-	else if (!D_strcasecmp(key, "creditsPage"))
-		gi->creditsPage = value;
-	else if (!D_strcasecmp(key, "titleMus"))
-		gi->titleMus = value;
-	else if (!D_strcasecmp(key, "titleCdTrack"))
-		gi->titleCdTrack = D_atoi(value);
-	else if (!D_strcasecmp(key, "intermissionMus"))
-		gi->intermissionMus = value;
-	else if (!D_strcasecmp(key, "intermissionCdTrack"))
-		gi->intermissionCdTrack = D_atoi(value);
-	else if (!D_strcasecmp(key, "victoryMus"))
-		gi->victoryMus = value;
-	else if (!D_strcasecmp(key, "victoryCdTrack"))
-		gi->victoryCdTrack = D_atoi(value);
-	else if (!D_strcasecmp(key, "endMus"))
-		gi->endMus = value;
-	else if (!D_strcasecmp(key, "endCdTrack"))
-		gi->endCdTrack = D_atoi(value);
-	else if (!D_strcasecmp(key, "endText"))
-		gi->endText = value;
-	else if (!D_strcasecmp(key, "endFlat"))
-		gi->endFlat = value;
-	else if (!D_strcasecmp(key, "endShowCast"))
-		gi->endShowCast = D_atoi(value);
-	else if (!D_strcasecmp(key, "noAttractDemo"))
-		gi->noAttractDemo = D_atoi(value);
-	else if (!D_strcasecmp(key, "stopFireTime"))
-		gi->stopFireTime = D_atoi(value);
-	else if (!D_strcasecmp(key, "titleStartPos"))
-		gi->titleStartPos = D_atoi(value);
-	else if (!D_strcasecmp(key, "cdTrackOffset"))
-		gi->cdTrackOffset = D_atoi(value);
-	else if (!D_strcasecmp(key, "spcmDirs"))
+	unsigned i;
+	const struct {
+		const char *key;
+		int16_t fofs;
+		int16_t isnum;
+	} keymap[] = {
+		{GI_STR_FIELD(borderFlat)},
+		{GI_INT_FIELD(titleTime)},
+		{GI_STR_FIELD(borderFlat)},
+		{GI_STR_FIELD(titlePage)},
+		{GI_STR_FIELD(creditsPage)},
+		{GI_STR_FIELD(titleMus)},
+		{GI_INT_FIELD(titleCdTrack)},
+		{GI_INT_FIELD(intermissionMus)},
+		{GI_INT_FIELD(intermissionCdTrack)},
+		{GI_STR_FIELD(victoryMus)},
+		{GI_INT_FIELD(victoryCdTrack)},
+		{GI_STR_FIELD(endMus)},
+		{GI_INT_FIELD(endCdTrack)},
+		{GI_STR_FIELD(endText)},
+		{GI_STR_FIELD(endFlat)},
+		{GI_INT_FIELD(endShowCast)},
+		{GI_INT_FIELD(noAttractDemo)},
+		{GI_INT_FIELD(stopFireTime)},
+		{GI_INT_FIELD(titleStartPos)},
+		{GI_INT_FIELD(cdTrackOffset)}
+	};
+
+	if (!D_strcasecmp(key, "spcmDirs"))
 	{
 		char *p = &gi->spcmDirList[0][0];
 		D_memset(gi->spcmDirList, 0, sizeof(gi->spcmDirList));
 		D_snprintf(p, sizeof(gi->spcmDirList), "%s", value);
 		p[sizeof(gi->spcmDirList)-2] = '\0';
 		p[sizeof(gi->spcmDirList)-1] = '\0';
+		return;
+	}
+
+	for (i = 0; i < sizeof(keymap)/sizeof(keymap[0]); i++) {
+		if (!D_strcasecmp(keymap[i].key, key)) {
+			void *p = ((uint8_t*)gi + keymap[i].fofs);
+			switch (keymap[i].isnum) {
+				case 0:
+					*(char **)p = value;
+					break;
+				case sizeof(char):
+					*(uint8_t *)p = D_atoi(value);
+					break;
+				case sizeof(uint16_t):
+					*(uint16_t *)p = D_atoi(value);
+					break;
+				case sizeof(uint32_t):
+					*(uint32_t *)p = D_atoi(value);
+					break;
+			}
+		}
 	}
 }
 
