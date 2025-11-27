@@ -457,6 +457,7 @@ typedef struct
 
 typedef struct
 {
+	char name[8];
 	uint16_t pixels;
 	int8_t lifecount, maxlifecount;
 	void** userp;
@@ -470,11 +471,12 @@ extern r_texcache_t r_texcache;
 
 void R_InitTexCache(r_texcache_t* c);
 void R_InitTexCacheZone(r_texcache_t* c, int zonesize);
-void R_AddToTexCache(r_texcache_t* c, int id, int pixels, void **userp, int lifecount);
+void R_AddToTexCache(r_texcache_t* c, int id, int pixels, void **userp, int lifecount, const char *name);
 void R_ClearTexCache(r_texcache_t* c);
 int R_InTexCache(r_texcache_t* c, void *p) ATTR_DATA_CACHE_ALIGN;
 boolean R_TouchIfInTexCache(r_texcache_t* c, void *p);
 void R_PostTexCacheFrame(r_texcache_t* c);
+int R_DebugTexCache(r_texcache_t* c, char *buf, int nume, int elemsize);
 
 /*
 ==============================================================================

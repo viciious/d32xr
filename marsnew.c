@@ -813,12 +813,31 @@ void I_DebugScreen(void)
 	int i;
 	int x = 200;
 	int line = 5;
-	static char buf[10][10];
+	static char buf[10][16];
 
 	if (debugmode == DEBUGMODE_FPSCOUNT)
 	{
 		D_snprintf(buf[0], sizeof(buf[0]), "fps:%2d", fpscount);
 		I_Print8(x, line++, buf[0]);
+	}
+	else if (debugmode == DEBUGMODE_TEXCACHE)
+	{
+		int numb = sizeof(buf)/sizeof(buf[0]);
+
+		if (debugscreenupdate)
+		{
+			for (i = 0; i < numb; i++)
+				buf[i][0] = 0;
+			R_DebugTexCache(&r_texcache, &buf[0][0], numb, sizeof(buf[0]));
+		}
+
+		for (i = 0; i < numb; i++)
+		{
+			if (!buf[i][0]) {
+				break;
+			}
+			I_Print8(x, line++, buf[i]);
+		}
 	}
 	else if (debugmode > DEBUGMODE_FPSCOUNT)
 	{

@@ -170,7 +170,7 @@ void R_PostTexCacheFrame(r_texcache_t* c)
 =
 =================
 */
-void R_AddToTexCache(r_texcache_t* c, int id, int pixels, void **userp, int lifecount)
+void R_AddToTexCache(r_texcache_t* c, int id, int pixels, void **userp, int lifecount, const char *name)
 {
 	int size;
 	int trynum;
@@ -224,6 +224,7 @@ retry:
 	entry->userpold = *userp;
 	entry->maxlifecount = lifecount;
 	entry->lifecount = lifecount;
+	D_memcpy(entry->name, name, 8);
 
 	lumpdata = *userp;
 
@@ -274,4 +275,79 @@ void R_ClearTexCache(r_texcache_t* c)
 		return;
 	Z_ForEachBlock(c->zone, &R_ForceEvictFromTexCache, c);
 	Z_InitZone(c->zone, c->zonesize);
+}
+
+typedef struct {
+	char *buf;
+	int nume;
+	int elem;
+	int elemsize;
+	int totalpix;
+} texcachelog_t;
+
+/*
+================
+=
+= R_LogTexCacheEntry
+=
+=================
+*/
+static void R_LogTexCacheEntry(void* ptr, void* userp)
+{
+	texcacheblock_t* entry = ptr;
+	texcachelog_t *log = userp;
+	char *buf = log->buf;
+	char name[9];
+
+	log->totalpix += entry->pixels;
+
+	if (log->elem >= log->nume)
+		return;
+
+	log->elem++;
+	log->buf += log->elemsize;
+	name[0] = 0;
+	D_memcpy(name, entry->name, 8);
+	name[8] = 0;
+
+	D_snprintf(buf, log->elemsize, 
+		"%8s %2d.%1d", name, 
+		entry->pixels / 1024, entry->pixels / 10240);
+}
+
+/*
+================
+=
+= R_DebugTexCache
+=
+=================
+*/
+int R_DebugTexCache(r_texcache_t* c, char *buf, int nume, int elemsize)
+{
+	texcachelog_t log;
+	char tmp[8];
+
+	log.buf = buf;
+	log.nume = nume;
+	log.elem = 0;
+	log.elemsize = elemsize;
+	log.totalpix = 0;
+
+	log.elem++;
+	log.buf += log.elemsize;
+
+	Z_ForEachBlock(c->zone, &R_LogTexCacheEntry, &log);
+
+	D_snprintf(tmp, sizeof(tmp),
+		"%3d.%d", 
+		c->zonesize / 1024, ((c->zonesize % 1024) * 10) / 1024
+	);
+
+	D_snprintf(buf, log.elemsize,
+		"%8s %2d.%d", 
+		tmp,
+		log.totalpix / 1024, ((log.totalpix % 1024) * 10) / 1024
+	);
+
+	return log.elem;
 }
