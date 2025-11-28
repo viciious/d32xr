@@ -47,6 +47,54 @@ typedef struct
 
 typedef void (*kvcall_t) (char *key, char *value, void *ptr);
 
+#define GI_STR_FIELD(f) #f, offsetof(dgameinfo_t,f),0
+#define GI_INT_FIELD(f) #f, offsetof(dgameinfo_t,f),sizeof(((dgameinfo_t *)0)->f)
+
+static const struct {
+	const char *key;
+	int16_t fofs;
+	int16_t isnum;
+} g_gameinfo_keymap[] = {
+	{GI_STR_FIELD(borderFlat)},
+	{GI_INT_FIELD(titleTime)},
+	{GI_STR_FIELD(borderFlat)},
+	{GI_STR_FIELD(titlePage)},
+	{GI_STR_FIELD(creditsPage)},
+	{GI_STR_FIELD(titleMus)},
+	{GI_INT_FIELD(titleCdTrack)},
+	{GI_STR_FIELD(intermissionMus)},
+	{GI_INT_FIELD(intermissionCdTrack)},
+	{GI_STR_FIELD(victoryMus)},
+	{GI_INT_FIELD(victoryCdTrack)},
+	{GI_STR_FIELD(endMus)},
+	{GI_INT_FIELD(endCdTrack)},
+	{GI_STR_FIELD(endText)},
+	{GI_STR_FIELD(endFlat)},
+	{GI_INT_FIELD(endShowCast)},
+	{GI_INT_FIELD(noAttractDemo)},
+	{GI_INT_FIELD(stopFireTime)},
+	{GI_INT_FIELD(titleStartPos)},
+	{GI_INT_FIELD(cdTrackOffset)}
+};
+
+#define MI_STR_FIELD(f) offsetof(dmapinfo_t,f),offsetof(dworkmapinfo_t,f)
+
+static const struct {
+	uint16_t ofs;
+	uint16_t wofs;
+} g_mapinfo_strfields[] = {
+	{MI_STR_FIELD(name)},
+	{MI_STR_FIELD(next)},
+	{MI_STR_FIELD(secretNext)},
+	{MI_STR_FIELD(lumpName)},
+	{MI_STR_FIELD(interText)},
+	{MI_STR_FIELD(secretInterText)},
+	{MI_STR_FIELD(sky)},
+	{MI_STR_FIELD(interFlat)},
+	{MI_STR_FIELD(interPic)},
+	{MI_STR_FIELD(secretInterPic)}
+};
+
 int G_BuiltinMapNumForMapName(const char* map)
 {
 	if (mystrlen(map) != 5)
@@ -345,38 +393,9 @@ static void G_FixSPCMDirList(dgameinfo_t *gi)
 	}
 }
 
-#define GI_STR_FIELD(f) #f, offsetof(dgameinfo_t,f),0
-#define GI_INT_FIELD(f) #f, offsetof(dgameinfo_t,f),sizeof(((dgameinfo_t *)0)->f)
-
 static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
 {
 	unsigned i;
-	const struct {
-		const char *key;
-		int16_t fofs;
-		int16_t isnum;
-	} keymap[] = {
-		{GI_STR_FIELD(borderFlat)},
-		{GI_INT_FIELD(titleTime)},
-		{GI_STR_FIELD(borderFlat)},
-		{GI_STR_FIELD(titlePage)},
-		{GI_STR_FIELD(creditsPage)},
-		{GI_STR_FIELD(titleMus)},
-		{GI_INT_FIELD(titleCdTrack)},
-		{GI_STR_FIELD(intermissionMus)},
-		{GI_INT_FIELD(intermissionCdTrack)},
-		{GI_STR_FIELD(victoryMus)},
-		{GI_INT_FIELD(victoryCdTrack)},
-		{GI_STR_FIELD(endMus)},
-		{GI_INT_FIELD(endCdTrack)},
-		{GI_STR_FIELD(endText)},
-		{GI_STR_FIELD(endFlat)},
-		{GI_INT_FIELD(endShowCast)},
-		{GI_INT_FIELD(noAttractDemo)},
-		{GI_INT_FIELD(stopFireTime)},
-		{GI_INT_FIELD(titleStartPos)},
-		{GI_INT_FIELD(cdTrackOffset)}
-	};
 
 	if (!D_strcasecmp(key, "spcmDirs"))
 	{
@@ -388,10 +407,10 @@ static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
 		return;
 	}
 
-	for (i = 0; i < sizeof(keymap)/sizeof(keymap[0]); i++) {
-		if (!D_strcasecmp(keymap[i].key, key)) {
-			void *p = ((uint8_t*)gi + keymap[i].fofs);
-			switch (keymap[i].isnum) {
+	for (i = 0; i < sizeof(g_gameinfo_keymap)/sizeof(g_gameinfo_keymap[0]); i++) {
+		if (!D_strcasecmp(g_gameinfo_keymap[i].key, key)) {
+			void *p = ((uint8_t*)gi + g_gameinfo_keymap[i].fofs);
+			switch (g_gameinfo_keymap[i].isnum) {
 				case 0:
 					*(char **)p = value;
 					break;
@@ -411,39 +430,38 @@ static void G_AddGameinfoKey(char* key, char* value, dgameinfo_t* gi)
 
 static void G_ClearGameInfo(dgameinfo_t* gi)
 {
+	unsigned i;
+
 	D_memset(gi, 0, sizeof(*gi));
 	gi->endShowCast = 1;
-	gi->borderFlat = "";
-	gi->endFlat = "";
-	gi->titlePage = "";
-	gi->titleMus = "";
-	gi->intermissionMus = "";
-	gi->victoryMus = "";
-	gi->endMus = "";
-	gi->creditsPage = "";
-	gi->endText = "";
+
+	for (i = 0; i < sizeof(g_gameinfo_keymap)/sizeof(g_gameinfo_keymap[0]); i++) {
+		void *p = ((uint8_t*)gi + g_gameinfo_keymap[i].fofs);
+		switch (g_gameinfo_keymap[i].isnum) {
+			case 0:
+				*(char **)p = "";
+				break;
+		}
+	}
 }
 
 static dmapinfo_t *G_CompressMapInfo(dworkmapinfo_t *mi)
 {
+	unsigned i;
 	int size = 0;
 	char *buf;
 	dmapinfo_t *nmi;
 
-#define ALLOC_STR_FIELD(fld) do { int l = mi->fld ? mystrlen(mi->fld) : 0; size += (l > 0 ? l + 1 : 0); } while(0)
+	size = 0;
+	for (i = 0; i < sizeof(g_mapinfo_strfields)/sizeof(g_mapinfo_strfields[0]); i++) {
+		const char *wfld = *(const char **)((uint8_t*)mi + g_mapinfo_strfields[i].wofs);
+		int l = wfld ? mystrlen(wfld) : 0;
+		if (l > 0) {
+			size += l + 1;
+		}
+	}
 
-	size = sizeof(dmapinfo_t);
-	ALLOC_STR_FIELD(name);
-	ALLOC_STR_FIELD(next);
-	ALLOC_STR_FIELD(secretNext);
-	ALLOC_STR_FIELD(lumpName);
-	ALLOC_STR_FIELD(interText);
-	ALLOC_STR_FIELD(secretInterText);
-	ALLOC_STR_FIELD(sky);
-	ALLOC_STR_FIELD(interFlat);
-	ALLOC_STR_FIELD(interPic);
-	ALLOC_STR_FIELD(secretInterPic);
-
+	size += sizeof(dmapinfo_t) + 1; // reserve an extra byte for ""
 	buf = Z_Malloc(size, PU_STATIC);
 	D_memset(buf, 0, size);
 
@@ -455,26 +473,22 @@ static dmapinfo_t *G_CompressMapInfo(dworkmapinfo_t *mi)
 	nmi->cdaNum = mi->cdaNum;
 	buf += size;
 
-#define COPY_STR_FIELD(fld) do { \
-		int l = mystrlen(mi->fld); \
-		if (l > 0) { \
-			nmi->fld = buf - (char *)nmi; \
-			size = l + 1; \
-			D_memcpy(buf, mi->fld, size); \
-			buf += size; \
-		} \
-	} while (0)
-	
-	COPY_STR_FIELD(name);
-	COPY_STR_FIELD(next);
-	COPY_STR_FIELD(secretNext);
-	COPY_STR_FIELD(lumpName);
-	COPY_STR_FIELD(interText);
-	COPY_STR_FIELD(secretInterText);
-	COPY_STR_FIELD(sky);
-	COPY_STR_FIELD(interFlat);
-	COPY_STR_FIELD(interPic);
-	COPY_STR_FIELD(secretInterPic);
+	*buf = 0; // the default empty string
+	buf++;
+
+	for (i = 0; i < sizeof(g_mapinfo_strfields)/sizeof(g_mapinfo_strfields[0]); i++) {
+		const char *wfld = *(const char **)((uint8_t*)mi + g_mapinfo_strfields[i].wofs);
+		void *p = ((uint8_t*)nmi + g_mapinfo_strfields[i].ofs);
+		int l = mystrlen(wfld);
+
+		*(VINT *)p = sizeof(dmapinfo_t); // default to ""
+		if (l > 0) {
+			*(VINT *)p = buf - (char *)nmi;
+			size = l + 1;
+			D_memcpy(buf, wfld, size);
+			buf += size;
+		}
+	}
 
 	return nmi;
 }
