@@ -181,6 +181,9 @@ static boolean PA_ShootLine(shootWork_t *sw, line_t *li, fixed_t interceptfrac)
    sector_t *front, *back;
    fixed_t   opentop, openbottom;
 
+   if (li->special)
+		P_ShootSpecialLine (sw->shooter, li);
+
    if(li->sidenum[1] < 0)
    {
       if(!sw->shootline)

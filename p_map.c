@@ -474,9 +474,6 @@ void P_LineAttack (lineattack_t *la, mobj_t *t1, angle_t angle, fixed_t distance
 	{
 		sector_t *frontsector, *backsector;
 
-		if (shootline2->special)
-			P_ShootSpecialLine (t1, shootline2);
-
 		frontsector = LD_FRONTSECTOR(shootline2);
 		backsector = LD_BACKSECTOR(shootline2);
 		if (*(int8_t *)&frontsector->ceilingpic == -1)
