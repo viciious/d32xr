@@ -355,6 +355,7 @@ int EV_DoFloorTag(line_t *line,floor_e floortype, int tag)
 							}
 						}
 					}
+				break;
 			default:
 				floor->m.sector = NULL;
 				sec->specialdata = (SPTR)0;
