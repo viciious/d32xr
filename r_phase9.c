@@ -155,7 +155,7 @@ static void R_UpdateCache(void)
           masked = true;
           pixels = W_LumpLength(lump+1);
           pdata = (void**)&data[0];
-          D_memcpy(name, W_GetNameForNum(lump+1), 8);
+          D_memcpy(name, W_GetNameForNum(lump), 8);
         } else {
           w = tex->width, h = tex->height;
           pixels = w * h;
