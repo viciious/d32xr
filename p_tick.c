@@ -250,9 +250,7 @@ void P_CheckCheats (void)
 		{
 			if (i == wp_supershotgun)
 			{
-				int lump = spriteframes[sprites[SPR_SGN2].firstframe].lump;
-				lump = spritelumps[lump] & SL_LUMPMASK;
-				if (lump < firstsprite || lump >= firstsprite + numsprites)
+				if (sprites[SPR_SGN2].numframes == 0)
 					continue;
 			}
 			p->weaponowned[i] = true;
