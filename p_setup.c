@@ -918,6 +918,7 @@ void P_SetupLevel (const char *lumpname, skill_t skill, const char *sky)
 	int skytexture;
 	boolean havebossspit = false;
 	int gamezonemargin;
+	jagobj_t *skyheader = NULL;
 
 	M_ClearRandom ();
 
@@ -941,7 +942,9 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 	}
 	else
 		skytexturep = W_POINTLUMPNUM(skytexture);
-	skytexturep = R_SkipJagObjHeader(skytexturep, W_LumpLength(skytexture), 256, 128);
+
+	skydepth = 3;
+	skytexturep = R_SkipJagObjHeader(skytexturep, W_LumpLength(skytexture), 256, 128, &skyheader);
 	skycolormaps = (col2sky > 0 && skytexture >= col2sky) ? dc_colormaps2 : dc_colormaps;
 
 	W_LoadPWAD(PWAD_CD);
@@ -1086,13 +1089,19 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 			if (!D_strcasecmp(name, sky)) {
 				data = Z_Malloc (l->size, PU_LEVEL);
 				W_ReadLump(lumpnum + k, data);
-				skytexturep = R_SkipJagObjHeader(data, l->size, 256, 128);
+				skytexturep = R_SkipJagObjHeader(data, l->size, 256, 128, &skyheader);
 				continue;
 			}
 		}
 	}
 
 	W_LoadPWAD(PWAD_NONE);
+
+	if (skyheader && BIGSHORT(skyheader->depth) == 2) {
+		// 4-bit sky has a custom colormap appended at the end of the file
+		skydepth = 2;
+		skycolormaps = (int8_t *)skytexturep + 64*256;
+	}
 
 	R_FixupTextures();
 

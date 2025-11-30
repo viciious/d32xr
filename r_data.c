@@ -31,6 +31,7 @@ flattex_t		*flatpixels;
 
 inpixel_t	*skytexturep;
 int8_t 		*skycolormaps;
+VINT 		skydepth;
 VINT 		col2sky;
 
 uint8_t		*dc_playpals, *dc_cshift_playpals;
@@ -47,7 +48,7 @@ uint8_t		*dc_playpals, *dc_cshift_playpals;
 ==================
 */
 
-void *R_SkipJagObjHeader(void *data, int size, int width, int height)
+void *R_SkipJagObjHeader(void *data, int size, int width, int height, jagobj_t **pheader)
 {
 	jagobj_t *header = data;
 
@@ -63,9 +64,11 @@ void *R_SkipJagObjHeader(void *data, int size, int width, int height)
 	if (BIGSHORT(header->height) != height) {
 		return data;
 	}
-	if (BIGSHORT(header->depth) != 3) {
+	if (BIGSHORT(header->depth) != 3 && BIGSHORT(header->depth) != 2) {
 		return data;
 	}
+	if (pheader)
+		*pheader = header;
 	return (char *)data + sizeof(jagobj_t) - sizeof(header->data);
 }
 
@@ -247,7 +250,7 @@ void R_InitTextures (void)
 		uint8_t *start = R_CheckPixels(texture->lumpnum);
 		int size = W_LumpLength(texture->lumpnum);
 		uint8_t *end = start + size;
-		uint8_t *data = R_SkipJagObjHeader(start, size, w, h);
+		uint8_t *data = R_SkipJagObjHeader(start, size, w, h, NULL);
 
 		if (texture->decals != 0)
 		{

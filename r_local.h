@@ -333,6 +333,7 @@ extern drawcol_t drawcol;
 extern drawcol_t drawfuzzcol;
 extern drawcol_t drawcolnpo2;
 extern drawspan_t drawspan;
+extern drawcol_t drawskycol;
 
 #define FUZZTABLE		64
 #define FUZZMASK		(FUZZTABLE-1)
@@ -401,6 +402,7 @@ extern	int		phasetime[9];
 /* */
 extern	inpixel_t	*skytexturep;
 extern 	int8_t 		*skycolormaps;
+extern 	VINT 		skydepth;
 extern 	VINT 		col2sky;
 
 extern	VINT		numtextures;
@@ -427,7 +429,7 @@ extern uint8_t* dc_playpals, *dc_cshift_playpals;
 #define R_CheckPixels(lumpnum) (void *)(W_POINTLUMPNUM(lumpnum))
 
 // auto-detect presence of jagobj_t header
-void *R_SkipJagObjHeader(void *data, int size, int width, int height);
+void *R_SkipJagObjHeader(void *data, int size, int width, int height, jagobj_t **header);
 #endif
 
 void R_InitTextures(void);

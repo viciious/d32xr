@@ -251,6 +251,9 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds)
     } while (++x <= stop);
 }
 
+void I_Draw4ColumnA(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
+	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
+
 //
 // Main seg drawing loop
 //
@@ -258,7 +261,7 @@ static void R_DrawSegSky(seglocal_t* lseg, unsigned short *restrict clipbounds)
 {
     viswall_t* segl = lseg->segl;
 
-    drawcol_t drawsky = drawcol;
+    drawcol_t drawsky = drawskycol;
 
     fixed_t scalefrac = segl->scalefrac;
     fixed_t scalestep = segl->scalestep;
@@ -266,6 +269,7 @@ static void R_DrawSegSky(seglocal_t* lseg, unsigned short *restrict clipbounds)
     const fixed_t ceilingheight = segl->ceilingheight;
     const int start = segl->start;
     const int stop = segl->stop;
+    const int pitch = skydepth == 2 ? 64 : 128;
     int x;
 
     const angle_t viewangle = vd->viewangle;
@@ -304,9 +308,9 @@ static void R_DrawSegSky(seglocal_t* lseg, unsigned short *restrict clipbounds)
             colnum = ((viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
 
 #ifdef MARS
-            inpixel_t* data = skytexturep + colnum * 128;
+            inpixel_t* data = skytexturep + colnum * pitch;
 #else
-            pixel_t* data = skytexturep + colnum * 128;
+            pixel_t* data = skytexturep + colnum * pitch;
 #endif
             drawsky(x, top, --bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, 128);
         }

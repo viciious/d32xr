@@ -25,6 +25,7 @@ drawcol_t drawcol;
 drawcol_t drawfuzzcol;
 drawcol_t drawcolnpo2;
 drawspan_t drawspan;
+drawcol_t drawskycol;
 
 short fuzzoffset[FUZZTABLE] =
 {
@@ -310,6 +311,7 @@ void R_SetDrawFuncs(void)
 		drawcolnpo2 = I_DrawColumnNoDraw;
 		drawfuzzcol = I_DrawColumnNoDraw;
 		drawspan = I_DrawSpanNoDraw;
+		drawskycol = I_DrawColumnNoDraw;
 		return;
 	}
 
@@ -329,6 +331,10 @@ void R_SetDrawFuncs(void)
 				drawspan = I_DrawSpanLow;
 				break;
 		}
+		if (skydepth == 2)
+			drawskycol = I_Draw4ColumnLow;
+		else
+			drawskycol = I_DrawColumnLow;
 	}
 	else
 	{
@@ -346,6 +352,10 @@ void R_SetDrawFuncs(void)
 				drawspan = I_DrawSpan;
 				break;
 		}
+		if (skydepth == 2)
+			drawskycol = I_Draw4Column;
+		else
+			drawskycol = I_DrawColumn;
 	}
 
 	Mars_ClearCache();
@@ -403,7 +413,7 @@ void R_SetTextureData(texture_t *tex, uint8_t *start, int size, boolean skiphead
 	int j;
 	int mipcount = 1;
 	int w = tex->width, h = tex->height;
-	uint8_t *data = skipheader ? R_SkipJagObjHeader(start, size, w, h) : start;
+	uint8_t *data = skipheader ? R_SkipJagObjHeader(start, size, w, h, NULL) : start;
 #if MIPLEVELS > 1
 	uint8_t *end = start + size;
 	boolean masked = tex->lumpnum >= firstsprite && tex->lumpnum < firstsprite + numsprites;

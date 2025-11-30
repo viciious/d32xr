@@ -334,6 +334,74 @@ do_span_loop_1px:
         rts
         mov.l   @r15+,r8
 
+! Draw a vertical column of pixels from a projected wall texture.
+! Source is the top of the column to scale.
+!
+!void I_Draw4Column(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
+!                  fixed_t fracstep, inpixel_t *dc_source, int dc_texheight)
+
+        .align  4
+        .global _I_Draw4ColumnA
+_I_Draw4ColumnA:
+	add	#1,r6
+0:
+        cmp/ge  r6,r5
+        bf/s    1f
+        sub     r5,r6           /* count = dc_yh - dc_yl */
+
+        /* dc_yl >= dc_yh, exit */
+        rts
+        nop
+1:
+        mov.l   r8,@-r15
+        mov.l   r9,@-r15
+        mov.l   @(DOOMTLS_COLORMAP, gbr),r0
+        shlr2   r7              /* light >>= 4 */
+        shlr2   r7
+        mov     r0,r7           /* dc_colormap = colormap + light */
+        mov.l   draw_fb,r8
+        mov.l   @r8,r8          /* frame buffer start */
+        add     r4,r8           /* fb += dc_x */
+        shll8   r5
+        add     r5,r8
+        shlr2   r5
+        add     r5,r8           /* fb += (dc_yl*256 + dc_yl*64) */
+        mov.l   @(8,r15),r2     /* frac */
+        mov.l   @(12,r15),r3    /* fracstep */
+        mov.l   @(16,r15),r5    /* dc_source */
+        mov.l   @(20,r15),r4
+        mov.l   draw_width,r1
+
+        swap.w  r2,r0           /* (frac >> 16) */
+
+        .p2alignw 1, 0x0009
+do_col4_loop:
+        and     #127,r0       /* (frac >> 16) & heightmask */
+        shlr    r0              /* convert nibble to byte */
+        mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
+        add     r3,r2           /* frac += fracstep */
+
+        # byte to nibble
+        # note that the upper and lower nibbles are pre-swapped
+        # in the texture data to avoid doing more address math here
+        bt      do_col4_loop_noshift
+        shlr2   r0
+        shlr2   r0
+
+do_col4_loop_noshift:
+        and     #15,r0
+        mov.b   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
+        dt      r6
+        mov.b   r9,@r8          /* *fb = dpix */
+
+        swap.w  r2,r0           /* (frac >> 16) */
+        bf/s    do_col4_loop
+        add     r1,r8           /* fb += SCREENWIDTH */
+
+        mov.l   @r15+,r9
+        rts
+        mov.l   @r15+,r8
+
         .align  2
 draw_fb:
         .long   _viewportbuffer
