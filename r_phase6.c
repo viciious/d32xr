@@ -45,6 +45,9 @@ typedef struct
     drawtex_t tex[2];
     drawtex_t *first, *last;
 
+    int8_t *skycolormaps;
+    int skypitch;
+
     int lightmin, lightmax, lightsub, lightcoef;
 #if MIPLEVELS > 1   
     unsigned minmip, maxmip;
@@ -269,7 +272,7 @@ static void R_DrawSegSky(seglocal_t* lseg, unsigned short *restrict clipbounds)
     const fixed_t ceilingheight = segl->ceilingheight;
     const int start = segl->start;
     const int stop = segl->stop;
-    const int pitch = skydepth == 2 ? 64 : 128;
+    const int pitch = lseg->skypitch;
     int x;
 
     const angle_t viewangle = vd->viewangle;
@@ -277,7 +280,7 @@ static void R_DrawSegSky(seglocal_t* lseg, unsigned short *restrict clipbounds)
     //
     // sky mapping
     //
-    I_SetThreadLocalVar(DOOMTLS_COLORMAP, skycolormaps);
+    I_SetThreadLocalVar(DOOMTLS_COLORMAP, lseg->skycolormaps);
 
     scalefrac = FixedMul(scalefrac, ceilingheight);
     scalestep = FixedMul(scalestep, ceilingheight);
@@ -396,6 +399,16 @@ void R_SegCommands(void)
 
     toptex = &lseg.tex[0];
     bottomtex = &lseg.tex[1];
+
+    lseg.skycolormaps = skycolormaps;
+    lseg.skypitch = 128;
+
+    if (skydepth == 2)
+    {
+        if (lowres)
+            lseg.skycolormaps += 16;
+        lseg.skypitch = 64;
+    }
 
     I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
 

@@ -383,7 +383,7 @@ _I_Draw4ColumnLowA:
         mov.l   @(DOOMTLS_COLORMAP, gbr),r0
         shlr2   r7              /* light >>= 4 */
         shlr2   r7
-        mov     r0,r7           /* dc_colormap = colormap + light */
+        add     r0,r7           /* dc_colormap = colormap + light */
         mov.l   draw_fb,r8
         mov.l   @r8,r8          /* frame buffer start */
         add     r4,r8           /* fb += dc_x */
@@ -393,40 +393,61 @@ _I_Draw4ColumnLowA:
         shlr2   r5
         add     r5,r8           /* fb += (dc_yl*256 + dc_yl*64) */
         mov.l   @(8,r15),r2     /* frac */
-        mov.l   @(12,r15),r3    /* fracstep */
+        mov.l   @(12,r15),r3     /* fracstep */
         mov.l   @(16,r15),r5    /* dc_source */
         mov.l   @(20,r15),r4
         mov.l   draw_width,r1
         add     #-1,r4          /* heightmask = texheight - 1 */
+        sub     r1,r8           /* fb -= SCREENWIDTH */
+        swap.w  r2,r0           /* (frac >> 16) */
+
+        /* test if count & 1 */
+        shlr    r6
+        movt    r0              /* 1 if count was odd */
+        bt/s    do_col4_loop_odd
+        add     r0,r6
 
         .p2alignw 1, 0x0009
 do_col4_loop:
-        swap.w  r2,r0           /* (frac >> 16) */
         and     r4,r0           /* (frac >> 16) & heightmask */
         shlr    r0              /* convert nibble to byte */
-        add     r3,r2           /* frac += fracstep */
         mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
-
+        add     r3,r2           /* frac += fracstep */
         # byte to nibble
         # note that the upper and lower nibbles are pre-swapped
         # in the texture data to avoid doing more address math here
-        bt      do_col4_loop_noshift
+        bt/s    do_col4_loop_noshift
+        add     r1,r8           /* fb += SCREENWIDTH */
         shlr2   r0
         shlr2   r0
-
 do_col4_loop_noshift:
-        dt      r6
         and     #15,r0
-        mov.b   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
+        add     r0,r0
+        mov.w   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
+        swap.w  r2,r0           /* (frac >> 16) */
+        mov.w   r9,@r8          /* *fb = dpix */
 
-        extu.b  r9,r9
-        swap.b  r9,r0
-        or      r0,r9
-
+do_col4_loop_odd:
+        and     r4,r0           /* (frac >> 16) & heightmask */
+        shlr    r0              /* convert nibble to byte */
+        mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
+        add     r3,r2           /* frac += fracstep */
+        # byte to nibble
+        # note that the upper and lower nibbles are pre-swapped
+        # in the texture data to avoid doing more address math here
+        bt/s    do_col4_loop_odd_noshift
+        add     r1,r8           /* fb += SCREENWIDTH */
+        shlr2   r0
+        shlr2   r0
+do_col4_loop_odd_noshift:
+        and     #15,r0
+        add     r0,r0
+        mov.w   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
+        dt      r6
         mov.w   r9,@r8          /* *fb = dpix */
 
         bf/s    do_col4_loop
-        add     r1,r8           /* fb += SCREENWIDTH */
+        swap.w  r2,r0           /* (frac >> 16) */
 
         mov.l   @r15+,r9
         rts
