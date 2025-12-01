@@ -376,9 +376,9 @@ _I_Draw4ColumnA:
 
         /* test if count & 1 */
         shlr    r6
-        movt    r0              /* 1 if count was odd */
+        movt    r9              /* 1 if count was odd */
         bt/s    do_col4_loop_odd
-        add     r0,r6
+        add     r9,r6
 
         .p2alignw 1, 0x0009
 do_col4_loop:
