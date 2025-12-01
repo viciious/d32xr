@@ -330,7 +330,7 @@ mobj_t *P_SpawnMobj2 (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type, subsecto
 	if (z == ONFLOORZ)
 		mobj->z = mobj->floorz;
 	else if (z == ONCEILINGZ)
-		mobj->z = mobj->ceilingz - info->height;
+		mobj->z = mobj->ceilingz - info->height * FRACUNIT;
 	else 
 		mobj->z = z;
 	
