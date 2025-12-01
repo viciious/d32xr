@@ -397,11 +397,12 @@ _I_Draw4ColumnLowA:
         mov.l   @(16,r15),r5    /* dc_source */
         mov.l   @(20,r15),r4
         mov.l   draw_width,r1
+        add     #-1,r4          /* heightmask = texheight - 1 */
 
         .p2alignw 1, 0x0009
 do_col4_loop:
         swap.w  r2,r0           /* (frac >> 16) */
-        and     #127,r0       /* (frac >> 16) & heightmask */
+        and     r4,r0           /* (frac >> 16) & heightmask */
         shlr    r0              /* convert nibble to byte */
         add     r3,r2           /* frac += fracstep */
         mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
