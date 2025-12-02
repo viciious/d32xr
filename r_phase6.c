@@ -404,11 +404,7 @@ void R_SegCommands(void)
     lseg.skypitch = 128;
 
     if (skydepth == 2)
-    {
-        if (lowres)
-            lseg.skycolormaps += 16;
         lseg.skypitch = 64;
-    }
 
     I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
 

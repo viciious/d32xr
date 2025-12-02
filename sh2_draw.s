@@ -373,6 +373,7 @@ _I_Draw4ColumnA:
         mov.l   draw_width,r1
         add     #-1,r4          /* heightmask = texheight - 1 */
         swap.w  r2,r0           /* (frac >> 16) */
+        sub     r1,r8           /* fb -= SCREENWIDTH */
 
         /* test if count & 1 */
         shlr    r6
@@ -389,15 +390,16 @@ do_col4_loop:
         # byte to nibble
         # note that the upper and lower nibbles are pre-swapped
         # in the texture data to avoid doing more address math here
-        bt      do_col4_loop_noshift
+        bt/s    do_col4_loop_noshift
+        add     r1,r8           /* fb += SCREENWIDTH */
         shlr2   r0
         shlr2   r0
 do_col4_loop_noshift:
         and     #15,r0
-        mov.b   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
+        add     r0,r0
+        mov.w   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
         swap.w  r2,r0           /* (frac >> 16) */
         mov.b   r9,@r8          /* *fb = dpix */
-        add     r1,r8           /* fb += SCREENWIDTH */
 
 do_col4_loop_odd:
         and     r4,r0           /* (frac >> 16) & heightmask */
@@ -407,18 +409,19 @@ do_col4_loop_odd:
         # byte to nibble
         # note that the upper and lower nibbles are pre-swapped
         # in the texture data to avoid doing more address math here
-        bt      do_col4_loop_odd_noshift
+        bt/s    do_col4_loop_odd_noshift
+        add     r1,r8           /* fb += SCREENWIDTH */
         shlr2   r0
         shlr2   r0
 do_col4_loop_odd_noshift:
         and     #15,r0
-        mov.b   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
+        add     r0,r0
+        mov.w   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
         dt      r6
         mov.b   r9,@r8          /* *fb = dpix */
-        swap.w  r2,r0           /* (frac >> 16) */
 
         bf/s    do_col4_loop
-        add     r1,r8           /* fb += SCREENWIDTH */
+        swap.w  r2,r0           /* (frac >> 16) */
 
         mov.l   @r15+,r9
         rts
