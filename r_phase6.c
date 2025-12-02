@@ -254,9 +254,6 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds)
     } while (++x <= stop);
 }
 
-void I_Draw4ColumnA(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
-	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
-
 //
 // Main seg drawing loop
 //
