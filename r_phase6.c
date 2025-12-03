@@ -18,12 +18,15 @@ typedef struct
    pixel_t   *data;
 #endif
    VINT      height;
+   VINT      pitch;
+   VINT      depth;
    drawcol_t drawcol;
 
    // decals stuff
    VINT       numdecals;
    VINT       lastcol;
-   texdecal_t *decals;
+   texture_t *tex;
+   int8_t    *colormaps;
    uint8_t   *columncache;
 } drawmip_t;
 
@@ -47,6 +50,7 @@ typedef struct
 
     int8_t *skycolormaps;
     int skypitch;
+    drawcol_t drawskycol;
 
     int lightmin, lightmax, lightsub, lightcoef;
 #if MIPLEVELS > 1   
@@ -119,7 +123,7 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, i
         // CALICO: Jaguar-specific GPU blitter input calculation starts here.
         // We invoke a software column drawer instead.
         mip = &tex->mip[miplevel];
-        src = mip->data + mipcolnum * mip->height;
+        src = mip->data + mipcolnum * mip->pitch;
 
         if (mip->numdecals > 0)
         {
@@ -128,11 +132,11 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, i
             {
                 src = mip->columncache;
             }
-            else
+            else if (mip->numdecals > 0)
             {
                 boolean decaled;
 
-                decaled = R_CompositeColumn(colnum, mip->numdecals, mip->decals,
+                decaled = R_CompositeColumn(colnum, mip->tex,
                     src, mip->columncache, mip->height, miplevel);
                 if (decaled)
                 {
@@ -141,6 +145,8 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, i
                 }
             }
         }
+
+        I_SetThreadLocalVar(DOOMTLS_COLORMAP, mip->colormaps);
 
         mip->drawcol(x, top, bottom-1, light, frac, iscale, src, mip->height);
     }
@@ -261,7 +267,7 @@ static void R_DrawSegSky(seglocal_t* lseg, unsigned short *restrict clipbounds)
 {
     viswall_t* segl = lseg->segl;
 
-    drawcol_t drawsky = drawskycol;
+    drawcol_t drawsky = lseg->drawskycol;
 
     fixed_t scalefrac = segl->scalefrac;
     fixed_t scalestep = segl->scalestep;
@@ -354,9 +360,13 @@ static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex,
     do {
         drawmip_t *mip = &drawtex->mip[j];
 
+        mip->tex = tex;
         mip->height = mipheight;
+        mip->pitch = mipheight;
         mip->data = tex->data[j];
         mip->drawcol = (mipheight & (mipheight - 1)) ? drawcolnpo2 : drawcol;
+        mip->depth = 3;
+        mip->colormaps = dc_colormaps;
         mipwidth >>= 1, mipheight >>= 1;
         if (mipwidth < 1)
             mipwidth = 1;
@@ -369,10 +379,17 @@ static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex,
         columncache += mip->height;
 
         mip->numdecals = tex->decals & 0x3;
-        if (mip->numdecals && R_InTexCache(&r_texcache, mip->data) == 1) {
-            mip->numdecals = 0;
+        if (R_InTexCache(&r_texcache, mip->data) == 1) {
+            mip->numdecals = 0; 
+            mip->colormaps = dc_colormaps;
+        } else if (!mip->numdecals && tex->colormaps != NULL) {
+            mip->drawcol = (mipheight & (mipheight - 1)) ? draw4bcolnpo2 : draw4bcol;
+            mip->colormaps = tex->colormaps;
+            mip->depth = 2;
+            mip->pitch /= 2;
+            if (mip->pitch < 1)
+                mip->pitch = 1;
         }
-        mip->decals = &decals[tex->decals >> 2];
     } while (++j <= drawtex->maxmip);
 }
 
@@ -397,13 +414,14 @@ void R_SegCommands(void)
     toptex = &lseg.tex[0];
     bottomtex = &lseg.tex[1];
 
+    // sky setup
     lseg.skycolormaps = skycolormaps;
     lseg.skypitch = 128;
-
-    if (skydepth == 2)
+    lseg.drawskycol = drawcol;
+    if (skydepth == 2) {
         lseg.skypitch = 64;
-
-    I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
+        lseg.drawskycol = draw4bcol;
+    }
 
     I_GetThreadLocalVar(DOOMTLS_COLUMNCACHE, toptex->columncache);
     bottomtex->columncache = toptex->columncache + COLUMN_CACHE_SIZE;

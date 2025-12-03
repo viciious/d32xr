@@ -873,8 +873,11 @@ void I_SwapScreenCopy(void);
 
 #endif
 
-#define I_Draw4ColumnLow I_Draw4ColumnLowA
-#define I_Draw4Column I_Draw4ColumnA
+#define I_Draw4bColumnLow I_Draw4bColumnLowA
+#define I_Draw4bColumnNPo2Low I_Draw4bColumnNPo2LowA
+
+#define I_Draw4bColumn I_Draw4bColumnA
+#define I_Draw4bColumnNPo2 I_Draw4bColumnNPo2A
 
 #endif
 
@@ -887,7 +890,10 @@ void I_DrawColumnNPo2Low(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_i
 void I_DrawSpanLow(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int dc_texheight);
 
-void I_Draw4ColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
+void I_Draw4bColumnLow(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
+	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
+
+void I_Draw4bColumnNPo2Low(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
 	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
 
 void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
@@ -899,7 +905,10 @@ void I_DrawColumnNPo2(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_isca
 void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int dc_texheight);
 
-void I_Draw4Column(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
+void I_Draw4bColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
+	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
+
+void I_Draw4bColumnNPo2(int dc_x, int dc_yl, int dc_yh, int light, fixed_t dc_iscale,
 	fixed_t dc_texturemid, inpixel_t* dc_source, int dc_texheight);
 
 void I_DrawSpanPotato(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
@@ -1214,7 +1223,7 @@ typedef struct
 	short	height;
 	short	depth;		/* 1-5 */
 	short	index;		/* location in palette of color 0 */
-	short	flags,pad2,pad3,pad4;	/* future expansion */
+	short	flags,pad2,pad3,pad4;	/* future expansion, flag & 1 == column major, & 2 == add 1 to index, & 4 == mul index by 2, & 8 = has colormap appended */
 	byte	data[8];		/* as much as needed */
 } jagobj_t;
 

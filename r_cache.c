@@ -240,7 +240,10 @@ retry:
 	D_memcpy(data, lumpdata, pixels);
 	if (debugmode == DEBUGMODE_TEXCACHE)
 	{
-		D_memset(data, id & 255, pixels); // DEBUG
+		int c = id & 15;
+		if (c == 15) c--;
+		c++;
+		D_memset(data, (c << 4) | c, pixels); // DEBUG
 	}
 
 	*userp = data;

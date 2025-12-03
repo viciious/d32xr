@@ -126,10 +126,12 @@ static void R_UpdateCache(void)
    for (i = 0; i < MIPLEVELS; i++) {
       int id;
       int pw;
-      void **data, **pdata;
+      void **data, **pdata, *orig;
       unsigned w = 64, h = 64, m, pixels;
       boolean masked = false;
       int lifecount;
+      int bpp = 3;
+      int numdecals = 0;
       char name[8];
 
       id = bestmips[i];
@@ -161,6 +163,8 @@ static void R_UpdateCache(void)
           pixels = w * h;
           pdata = (void**)&data[i];
           D_memcpy(name, tex->name, 8);
+          bpp = tex->colormaps != NULL ? 2 : 3;
+          numdecals = tex->decals & 0x3;
         }
         lifecount = CACHE_FRAMES_WALLS;
       }
@@ -184,31 +188,57 @@ static void R_UpdateCache(void)
         continue;
       }
 
+      orig = *pdata;
       R_AddToTexCache(&r_texcache, id+((unsigned)i<<2), pixels, pdata, lifecount, name);
 
       if (debugmode == DEBUGMODE_TEXCACHE)
         continue;
 
       if (id < numtextures && !masked) {
-        int j, c;
-        texture_t* tex = &textures[id];
-        uint8_t *src = *pdata;
-        uint8_t *dst;
+        if (numdecals) {
+          int j, c;
+          texture_t* tex = &textures[id];
+          uint8_t *src = *pdata;
+          uint8_t *dst;
 
-        c = 0;
-        for (j = 0; j < (int)w; j++) {
-          boolean decaled;
+          c = 0;
+          for (j = 0; j < (int)w; j++) {
+            boolean decaled;
 
-          I_GetThreadLocalVar(DOOMTLS_COLUMNCACHE, dst);
+            I_GetThreadLocalVar(DOOMTLS_COLUMNCACHE, dst);
 
-          decaled = R_CompositeColumn(c, tex->decals & 0x3, &decals[tex->decals >> 2],
-            src, dst, h, i);
-          if (decaled) {
-            D_memcpy(src, dst, h);
+            decaled = R_CompositeColumn(c, tex, src, dst, h, i);
+            if (decaled) {
+              D_memcpy(src, dst, h);
+            }
+
+            src += h;
+            c += pw;
           }
+        } else if (bpp == 2) {
+          int j, k, c;
+          texture_t* tex = &textures[id];
+          uint8_t *src = orig;
+          uint8_t *dst = *pdata;
+          uint8_t *colormaps = (uint8_t *)tex->colormaps;
 
-          src += h;
-          c += pw;
+          c = h/2;
+          for (j = 0; j < (int)w; j++) {
+            for (k = 0; k < c; k++) {
+              dst[k*2+0] = colormaps[(src[k]>>3)&0x1e];
+              dst[k*2+1] = colormaps[(src[k]<<1)&0x1e];
+            }
+
+            src += c;
+            dst += h;
+
+            if (h & 1) {
+              --dst;
+              dst[0] = colormaps[(src[0]>>3)&0x1e];
+              src++;
+              dst++;
+            }
+          }
         }
       }
    }

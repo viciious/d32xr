@@ -171,6 +171,7 @@ typedef struct
 #else
 	pixel_t		*data[MIPLEVELS];			/* cached data to draw from */
 #endif
+	int8_t 		*colormaps;
 #ifndef MARS
 	int			usecount;		/* for precaching */
 	int			pad;
@@ -333,7 +334,8 @@ extern drawcol_t drawcol;
 extern drawcol_t drawfuzzcol;
 extern drawcol_t drawcolnpo2;
 extern drawspan_t drawspan;
-extern drawcol_t drawskycol;
+extern drawcol_t draw4bcol;
+extern drawcol_t draw4bcolnpo2;
 
 #define FUZZTABLE		64
 #define FUZZMASK		(FUZZTABLE-1)
@@ -439,7 +441,7 @@ int	R_CheckTextureNumForName(const char* name);
 void	R_InitMathTables(void);
 void	R_InitSpriteDefs(const char** namelist);
 void R_InitColormap(void);
-boolean R_CompositeColumn(int colnum, int numdecals, texdecal_t *decals, inpixel_t *src, inpixel_t *dst, int height, int miplevel) ATTR_DATA_CACHE_ALIGN;
+boolean R_CompositeColumn(int colnum, texture_t *tex, inpixel_t *src, inpixel_t *dst, int height, int miplevel) ATTR_DATA_CACHE_ALIGN;
 
 /*
 ==============================================================================

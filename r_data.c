@@ -250,7 +250,9 @@ void R_InitTextures (void)
 		uint8_t *start = R_CheckPixels(texture->lumpnum);
 		int size = W_LumpLength(texture->lumpnum);
 		uint8_t *end = start + size;
-		uint8_t *data = R_SkipJagObjHeader(start, size, w, h, NULL);
+		jagobj_t *header;
+		uint8_t *data = R_SkipJagObjHeader(start, size, w, h, &header);
+		int bpp = header && BIGSHORT(header->depth) == 2 ? 2 : 3;
 
 		if (texture->decals != 0)
 		{
@@ -262,7 +264,11 @@ void R_InitTextures (void)
 		// detect mipmaps
 		for (j = 0; j < MIPLEVELS; j++)
 		{
-			int size = w * h;
+			int size;
+			if (bpp == 2)
+				size = w * ((h + 1) & ~1) / 2;
+			else
+				size = w * h;
 
 			if (data+size > end) {
 				// no mipmaps
@@ -903,10 +909,12 @@ void R_InitColormap(void)
 	dc_colormaps2 = R_LoadColormap(l);
 }
 
-boolean R_CompositeColumn(int colnum, int numdecals, texdecal_t *decals, inpixel_t *src, inpixel_t *dst, int height, int miplevel)
+boolean R_CompositeColumn(int colnum, texture_t *tex, inpixel_t *src, inpixel_t *dst, int height, int miplevel)
 {
 	int i;
 	boolean decaled = false;
+	int numdecals = tex->decals & 0x3;
+	texdecal_t *dec = &decals[tex->decals >> 2];
 
 	if (!numdecals)
 		return false;
@@ -915,12 +923,15 @@ boolean R_CompositeColumn(int colnum, int numdecals, texdecal_t *decals, inpixel
 	do
 	{
 		int j;
+		int k;
 		int skip;
 		int count;
 		int minrow;
 		int decalheight;
-		texdecal_t *decal = &decals[i];
+		texdecal_t *decal = &dec[i];
 		texture_t *decaltex = &textures[decal->texturenum];
+		int bpp = decaltex->colormaps != NULL ? 2 : 3;
+		int8_t *colormaps = decaltex->colormaps;
 
 		if (colnum < decal->mincol || colnum > decal->maxcol)
 			continue;
@@ -930,6 +941,9 @@ boolean R_CompositeColumn(int colnum, int numdecals, texdecal_t *decals, inpixel
 		skip = colnum - decal->mincol;
 		decalheight = decaltex->height;
 		count = decal->maxrow - decal->minrow + 1;
+		if (R_InTexCache(&r_texcache, src) == 1) {
+			bpp = 3;
+		}
 
 #if MIPLEVELS > 1
 		for (j = 0; j < miplevel; j++)
@@ -942,6 +956,9 @@ boolean R_CompositeColumn(int colnum, int numdecals, texdecal_t *decals, inpixel
 		src = (inpixel_t *)decaltex->data[miplevel];
 #endif
 		skip *= decalheight;
+		if (bpp == 2) {
+			skip /= 2;
+		}
 		src += skip;
 
 #ifdef MARS
@@ -960,13 +977,33 @@ boolean R_CompositeColumn(int colnum, int numdecals, texdecal_t *decals, inpixel
 					p = height - j;
 				if (p > decaltex->height)
 					p = decaltex->height;
-				D_memcpy(dst + j, src, sizeof(inpixel_t) * p);
+				if (bpp == 2) {
+					for (k = 0; k < p/2; k++) {
+						dst[j+k*2+0] = colormaps[(src[k]>>3)&0x1e];
+						dst[j+k*2+1] = colormaps[(src[k]<<1)&0x1e];
+					}
+					if (p & 1) {
+						dst[j+k*2] = colormaps[(src[k]>>3)&0x1e];
+					}
+				} else {
+					D_memcpy(dst + j, src, sizeof(inpixel_t) * p);
+				}
 				j += p;
 			}
 		}
 		else
 		{
-			D_memcpy(dst + minrow, src, sizeof(inpixel_t) * count);
+			if (bpp == 2) {
+				for (k = 0; k < count/2; k++) {
+					dst[minrow+k*2+0] = colormaps[(src[k]>>3)&0x1e];
+					dst[minrow+k*2+1] = colormaps[(src[k]<<1)&0x1e];
+				}
+				if (count & 1) {
+					dst[minrow+k*2] = colormaps[(src[k]>>3)&0x1e];
+				}
+			} else {
+				D_memcpy(dst + minrow, src, sizeof(inpixel_t) * count);
+			}
 		}
 	} while (++i < numdecals);
 
