@@ -102,9 +102,9 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
       {
          column_t *column = (column_t *)columnptr;
          int top    = column->topdelta * spryscale + sprtop;
-         int bottom = column->length   * spryscale + top;
+         int bottom = ((column->length & 0x7f) + 1) * spryscale + top;
          byte *dataofsofs = columnptr + offsetof(column_t, dataofs);
-         int dataofs = (dataofsofs[0] << 8) | dataofsofs[1];
+         int dataofs = BIGSHORT((dataofsofs[0] << 8) | dataofsofs[1]);
          fixed_t frac;
          int temp = FRACUNIT-1;
 
@@ -132,7 +132,11 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
             top = topclip;
          }
 
-         drawcol(x, top, bottom, light, frac, iscale, pixels + BIGSHORT(dataofs), 128);
+         drawcol(x, top, bottom, light, frac, iscale, pixels + dataofs, 128);
+
+         if (column->length < 0) {
+            break;
+         }
       }
    } while (++x <= stopx);
 }
@@ -205,9 +209,9 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
       {
          column_t *column = (column_t *)columnptr;
          int top    = column->topdelta * spryscale + sprtop;
-         int bottom = column->length   * spryscale + top;
+         int bottom = ((column->length & 0x7f) + 1) * spryscale + top;
          byte *dataofsofs = columnptr + offsetof(column_t, dataofs);
-         int dataofs = (dataofsofs[0] << 8) | dataofsofs[1];
+         int dataofs = BIGSHORT((dataofsofs[0] << 8) | dataofsofs[1]);
          fixed_t frac;
          int temp = FRACUNIT-1;
 
@@ -236,7 +240,11 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
          }
 
          // CALICO: invoke column drawer
-         dcol(x, top, bottom, light, frac, iscale, pixels + BIGSHORT(dataofs), 128);
+         dcol(x, top, bottom, light, frac, iscale, pixels + dataofs, 128);
+
+         if (column->length < 0) {
+            break;
+         }
       }
    } while(++x < stopx);
 }

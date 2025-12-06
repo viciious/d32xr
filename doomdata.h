@@ -156,7 +156,7 @@ typedef struct
 typedef struct
 {
 	byte			topdelta;	/* 0xff is the last post in a column */
-	byte			length;
+	int8_t			length;
 	unsigned short	dataofs;	/* from data start in patch_t */
 } column_t;
 
