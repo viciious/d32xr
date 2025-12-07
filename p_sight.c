@@ -56,6 +56,7 @@ static void P_CheckSights2(int c) ATTR_DATA_CACHE_ALIGN;
 #else
 static void P_CheckSights2(void) ATTR_DATA_CACHE_ALIGN;
 #endif
+boolean P_CheckSight(mobj_t *t1, mobj_t *t2) ATTR_DATA_CACHE_ALIGN;
 
 // Returns side 0 (front), 1 (back)
 #define PS_DivlineSide(xx,yy,n) (((n)->dy * ((xx) - (n)->x)) <= (((yy) - (n)->y) * (n)->dx))
@@ -532,6 +533,13 @@ void P_CheckSights (void)
 #else
 	P_CheckSights2();
 #endif
+}
+
+boolean P_CheckSight(mobj_t *t1, mobj_t *t2)
+{
+   if (!PS_RejectCheckSight(t1, t2))
+      return false;
+   return PS_CheckSight2(t1, t2);      
 }
 
 // EOF

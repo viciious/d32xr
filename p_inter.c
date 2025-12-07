@@ -852,6 +852,8 @@ void P_DamageMobj (mobj_t *target, mobj_t *inflictor, mobj_t *source, int damage
 			
 	target->reactiontime = 0;		/* we're awake now...	 */
 	if (!target->threshold && source
+	&& source != target
+	&& source->type != MT_VILE
 	&& spr_rotations	/* don't fight amongst each other without rotations */
 	)
 	{	/* if not intent on another player, chase after this one */

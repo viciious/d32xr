@@ -24,6 +24,7 @@ static const castinfo_t castorder[] = {
 {"arachnotron", MT_BABY, 2},
 {"revenant", MT_UNDEAD, 2},
 {"mancubus", MT_FATSO, 2},
+{"arch-vile", MT_VILE, 2},
 {"cyberdemon", MT_CYBORG, 1},
 {"spider mastermind", MT_SPIDER, 1},
 {"our hero", MT_PLAYER, 1},
@@ -524,7 +525,7 @@ int F_Ticker (void)
 		case S_PLAY_ATK2: sfx = sfx_shotgn; break;
 		case S_POSS_ATK2: sfx = sfx_pistol; break;
 		case S_SPOS_ATK2: sfx = sfx_shotgn; break;
-		//case S_VILE_ATK2: sfx = sfx_vilatk; break;
+		case S_VILE_ATK2: sfx = sfx_vilatk; break;
 		case S_SKEL_FIST2: sfx = sfx_skeswg; break;
 		case S_SKEL_FIST4: sfx = sfx_skepch; break;
 		case S_SKEL_MISS2: sfx = sfx_skeatk; break;
