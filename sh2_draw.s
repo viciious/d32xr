@@ -42,6 +42,7 @@ _I_DrawColumnA:
         mov.l   @(20,r15),r4
         mov.l   draw_width,r1
         add     #-1,r4          /* heightmask = texheight - 1 */
+        sub     r1,r8           /* fb -= SCREENWIDTH */
 
         swap.w  r2,r0           /* (frac >> 16) */
         and     r4,r0           /* (frac >> 16) & heightmask */
@@ -58,19 +59,19 @@ do_col_loop:
         add     r3,r2           /* frac += fracstep */
         mov.b   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
         swap.w  r2,r0           /* (frac >> 16) */
-        mov.b   r9,@r8          /* *fb = dpix */
-        add     r1,r8           /* fb += SCREENWIDTH */
         and     r4,r0           /* (frac >> 16) & heightmask */
+        add     r1,r8           /* fb += SCREENWIDTH */
+        mov.b   r9,@r8          /* *fb = dpix */
 do_col_loop_1px:
         dt      r6              /* count-- */
         mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
         add     r3,r2           /* frac += fracstep */
         mov.b   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
         swap.w  r2,r0           /* (frac >> 16) */
-        mov.b   r9,@r8          /* *fb = dpix */
         and     r4,r0           /* (frac >> 16) & heightmask */
-        bf/s    do_col_loop
         add     r1,r8           /* fb += SCREENWIDTH */
+        mov.b   r9,@r8          /* *fb = dpix */
+        bf      do_col_loop
 
         mov.l   @r15+,r9
         rts
