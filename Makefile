@@ -135,6 +135,8 @@ OBJS = \
 	sh2_fixed.o \
 	sh2_draw.o \
 	sh2_drawlow.o \
+	sh2_draw4b.o \
+	sh2_drawlow4b.o \
 	sh2_mixer.o \
 	r_cache.o \
 	m_fire.o \
