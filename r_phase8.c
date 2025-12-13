@@ -80,6 +80,7 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
 
       int topclip     = (spropening[x] >> 8);
       int bottomclip  = (spropening[x] & 0xff) - 1;
+      column_t *column;
       byte *columnptr = ((byte *)patch + BIGSHORT(patch->columnofs[colnum]));
       fixed_t sprtop, iscale;
 
@@ -96,17 +97,21 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
       iscale = 0xffffffffu / scalefrac;
 #endif
 
+      if (*columnptr == 0xff)
+         continue;
+
       // column loop
-      // a post record has four bytes: topdelta length pixelofs*2
-      for(; *columnptr != 0xff; columnptr += sizeof(column_t))
-      {
-         column_t *column = (column_t *)columnptr;
+      // a post record has up to four bytes: topdelta length pixelofs*2
+      do {
+         column = (column_t *)columnptr;
          int top    = column->topdelta * spryscale + sprtop;
          int bottom = ((column->length & 0x7f) + 1) * spryscale + top;
          byte *dataofsofs = columnptr + offsetof(column_t, dataofs);
          int dataofs = BIGSHORT((dataofsofs[0] << 8) | dataofsofs[1]);
          fixed_t frac;
          int temp = FRACUNIT-1;
+
+         columnptr += sizeof(column_t);
 
 #ifdef MARS
          __asm volatile (
@@ -133,11 +138,7 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
          }
 
          drawcol(x, top, bottom, light, frac, iscale, pixels + dataofs, 128);
-
-         if (column->length < 0) {
-            break;
-         }
-      }
+      } while (column->length >= 0);
    } while (++x <= stopx);
 }
 
@@ -197,6 +198,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
 
    do
    {
+      column_t *column;
       byte *columnptr  = ((byte *)patch + BIGSHORT(patch->columnofs[xfrac>>FRACBITS]));
       int topclip      = (spropening[x] >> 8);
       int bottomclip   = (spropening[x] & 0xff) - 1;
@@ -204,16 +206,20 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
       xfrac += fracstep;
 
       // column loop
-      // a post record has four bytes: topdelta length pixelofs*2
-      for(; *columnptr != 0xff; columnptr += sizeof(column_t))
-      {
-         column_t *column = (column_t *)columnptr;
+      // a post record has up to four bytes: topdelta length pixelofs*2
+      if (*columnptr == 0xff)
+         continue;
+
+      do {
+         column = (column_t *)columnptr;
          int top    = column->topdelta * spryscale + sprtop;
          int bottom = ((column->length & 0x7f) + 1) * spryscale + top;
          byte *dataofsofs = columnptr + offsetof(column_t, dataofs);
          int dataofs = BIGSHORT((dataofsofs[0] << 8) | dataofsofs[1]);
          fixed_t frac;
          int temp = FRACUNIT-1;
+
+         columnptr += sizeof(column_t);
 
 #ifdef MARS
          __asm volatile (
@@ -241,11 +247,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
 
          // CALICO: invoke column drawer
          dcol(x, top, bottom, light, frac, iscale, pixels + dataofs, 128);
-
-         if (column->length < 0) {
-            break;
-         }
-      }
+      } while (column->length >= 0);
    } while(++x < stopx);
 }
 
