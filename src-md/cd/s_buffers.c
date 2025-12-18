@@ -41,6 +41,56 @@ void S_ClearBuffersMem(void)
     s_mem_rover = s_mem_start;
 }
 
+int S_Buf_ParseVocFile(sfx_buffer_t *buf, uint8_t *data, uint32_t len)
+{
+    uint16_t version;
+    uint16_t header_size;
+    uint16_t validity;
+    uint8_t freq_divisor;
+    uint8_t sample_format;
+
+    if (len < 35) {
+        return 0;
+    }
+    if (memcmp((char *)data, "Creative Voice File\x1A", 20)) {
+        return 0;
+    }
+
+    header_size = (data[20]) | (data[21] << 8);
+    version = (data[22]) | (data[23] << 8);
+    validity = (data[24]) | (data[25] << 8);
+
+    if (validity != (~version + 0x1234)) {
+        return 0;
+    }
+
+    buf->data = &data[header_size];
+    buf->data_len = len - header_size;
+
+    switch (buf->data[0]) {
+        case 1:
+            freq_divisor = buf->data[4];
+            sample_format = buf->data[5];
+
+            switch (sample_format) {
+                case S_VOC_FORMAT_ADPCM_2BIT:
+                    break;
+                default:
+                    return 0;
+            }
+
+            buf->freq = 1000000 / (256 - freq_divisor);
+            buf->num_channels = 1;
+            break;
+        default:
+            return 0;
+    }
+
+    buf->format = S_FORMAT_WAV_ADPCM;
+    buf->adpcm_codec = ADPCM_CODEC_CLVOC;
+    return 1;
+}
+
 int S_Buf_ParseWaveFile(sfx_buffer_t *buf, uint8_t *data, uint32_t len)
 {
     char riff;
@@ -100,10 +150,6 @@ int S_Buf_ParseWaveFile(sfx_buffer_t *buf, uint8_t *data, uint32_t len)
             buf->adpcm_codec = ADPCM_CODEC_IMA;
             buf->format = S_FORMAT_WAV_ADPCM;
             break;
-        case S_WAV_FORMAT_CREATIVE_LABS_ADPCM:
-            buf->adpcm_codec = ADPCM_CODEC_SB4;
-            buf->format = S_FORMAT_WAV_ADPCM;
-            break;
         default:
             return -1;
     }
@@ -145,6 +191,10 @@ error:
     }
 
     if (wav == 0) {
+        if (S_Buf_ParseVocFile(buf, data, data_len) == 1) {
+            return;
+        }
+
         buf->data = data;
         buf->data_len = data_len;
         buf->format = S_FORMAT_RAW_U8;

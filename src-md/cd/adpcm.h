@@ -14,7 +14,16 @@ enum
     ADPCM_CODEC_NONE,
     ADPCM_CODEC_IMA,
     ADPCM_CODEC_SB4,
+    ADPCM_CODEC_CLVOC,
     ADPCM_NUM_CODECS
+};
+
+enum
+{
+    S_VOC_FORMAT_PCM_8BIT = 0,
+    S_VOC_FORMAT_ADPCM_4BIT = 1,
+    S_VOC_FORMAT_ADPCM_3BIT = 2,
+    S_VOC_FORMAT_ADPCM_2BIT = 3,
 };
 
 typedef struct
