@@ -370,9 +370,9 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
       }
 
       if (vertexes[li->v1].y == vertexes[li->v2].y)
-         lightshift = -1;
+         lightshift = -8;
       else if (vertexes[li->v1].x == vertexes[li->v2].x)
-         lightshift = 1;
+         lightshift = 8;
       else
          lightshift = 0;
 
