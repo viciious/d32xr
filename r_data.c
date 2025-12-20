@@ -415,7 +415,7 @@ void R_InitData (void)
 	R_InitTextures ();
 	R_InitFlats ();
 	R_InitSpriteDefs((const char **)sprnames);
-	R_InitColormap();
+	R_InitColormaps();
 
 #if MIPLEVELS > 1
 	if (!texmips) {
@@ -890,23 +890,47 @@ void R_InitSpriteDefs(const char** namelist)
 	}
 }
 
-static void *R_LoadColormap(int l)
+static void *R_LoadColormap(int l, int off)
 {
 	void *doomcolormap;
 
 	doomcolormap = W_GetLumpData(l);
-	return (void *)((int8_t*)doomcolormap + 128);
+	return (void *)((int8_t*)doomcolormap + off);
 }
 
-void R_InitColormap(void)
+void R_InitColormaps(void)
 {
 	int l;
+	int off;
 
 	l = W_CheckNumForName("COLORMAP");
-	dc_colormaps = R_LoadColormap(l);
+ 	off = 128;
+	dc_hcolormaps = R_LoadColormap(l, off);
+	dc_hcolormaps2 = R_LoadColormap(l-1, off);
 
-	l -= 1;
-	dc_colormaps2 = R_LoadColormap(l);
+	l -= 2;
+	off *= 2;
+	dc_lcolormaps = R_LoadColormap(l, off);
+	dc_lcolormaps2 = R_LoadColormap(l-1, off);
+}
+
+void R_EnableLowResMode(boolean enable)
+{
+	lowres = enable;
+	if (enable) {
+		dc_colormaps = dc_lcolormaps;
+		dc_colormaps2 = dc_lcolormaps2;
+	} else {
+		dc_colormaps = dc_hcolormaps;
+		dc_colormaps2 = dc_hcolormaps2;
+	}
+
+	R_ClearTexCache(&r_texcache);
+
+#ifdef MARS
+	Mars_ClearCache();
+	Mars_CommSlaveClearCache();
+#endif
 }
 
 boolean R_CompositeColumn(int colnum, texture_t *tex, inpixel_t *src, inpixel_t *dst, int height, int miplevel)

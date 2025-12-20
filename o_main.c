@@ -773,7 +773,7 @@ goback:
 					case mi_lowres:
 						if (!lowres)
 						{
-							lowres = true;
+							R_EnableLowResMode(true);
 							R_SetViewportSize(viewportNum);
 						}
 						break;
@@ -794,7 +794,7 @@ goback:
 					case mi_lowres:
 						if (lowres)
 						{
-							lowres = false;
+							R_EnableLowResMode(false);
 							R_SetViewportSize(viewportNum);
 						}
 						break;

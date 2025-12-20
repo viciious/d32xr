@@ -415,7 +415,7 @@ void R_SegCommands(void)
     bottomtex = &lseg.tex[1];
 
     // sky setup
-    lseg.skycolormaps = skycolormaps;
+    lseg.skycolormaps = skycolormaps ? skycolormaps : dc_colormaps;
     lseg.skypitch = 128;
     lseg.drawskycol = drawcol;
     if (skydepth == 2) {

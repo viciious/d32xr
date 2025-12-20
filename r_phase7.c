@@ -299,6 +299,7 @@ static void R_DrawPlanes2(void)
     fixed_t basexscale, baseyscale;
     fixed_t basexscale2, baseyscale2;
     fixed_t cXf = centerXFrac;
+    int8_t *colormaps, *colormaps2;
 
 #ifdef MARS
     Mars_ClearCacheLine(&vd->lastvisplane);
@@ -328,6 +329,14 @@ static void R_DrawPlanes2(void)
     lpl.mapplane = detailmode == detmode_potato ? R_MapPotatoPlane : R_MapPlane;
     extralight = vd->extralight;
 
+    if (lpl.lowres) {
+        colormaps = dc_lcolormaps;
+        colormaps2 = dc_lcolormaps2;
+    } else {
+        colormaps = dc_colormaps;
+        colormaps2 = dc_colormaps2;
+    }
+
     while ((pl = R_GetNextPlane((uint16_t *)vd->gsortedvisplanes)) != NULL)
     {
         int light;
@@ -344,9 +353,9 @@ static void R_DrawPlanes2(void)
         flatnum = pl->flatandlight&0xffff;
 
         if (flatnum >= col2flat)
-            I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps2);
+            I_SetThreadLocalVar(DOOMTLS_COLORMAP, colormaps2);
         else
-            I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
+            I_SetThreadLocalVar(DOOMTLS_COLORMAP, colormaps);
 
         lpl.pl = pl;
         lpl.ds_source[0] = flatpixels[flatnum].data[0];

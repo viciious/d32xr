@@ -505,9 +505,9 @@ void I_DrawFuzzColumnC(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_,
 void I_DrawSpanPotatoLow(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int dc_texheight)
 {
-	pixel_t* dest, pix;
+	pixel_t* dest;
 	unsigned count;
-	int8_t *dc_colormap;
+	int16_t *dc_colormap, pix;
 
 #ifdef RANGECHECK
 	if (ds_x2 < ds_x1 || ds_x1<0 || ds_x2 >= viewportWidth || ds_y>viewportHeight)
@@ -517,12 +517,15 @@ void I_DrawSpanPotatoLow(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_x
 	if (ds_x2 < ds_x1)
 		return;
 
+	I_GetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormap);
+
 	count = ds_x2 - ds_x1 + 1;
 
 	dest = viewportbuffer + ds_y * 320 / 2 + ds_x1;
-	dc_colormap = (int8_t *)dc_colormaps + light;
-	pix = (uint8_t)dc_colormap[(int8_t)ds_source[513]];
-	pix = ((uint8_t)pix << 8) | pix;
+	dc_colormap = dc_colormap + light;
+	pix = dc_colormap[(int8_t)ds_source[513]];
+	pix = ((uint16_t)pix >> 8);
+	pix = (pix << 8) | pix;
 
 	do {
 		*dest++ = pix;

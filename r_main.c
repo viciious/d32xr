@@ -356,8 +356,8 @@ void R_SetDrawFuncs(void)
 		}
 	}
 
-	Mars_ClearCache();
 #ifdef MARS
+	Mars_ClearCache();
 	Mars_CommSlaveClearCache();
 #endif
 }
@@ -390,13 +390,15 @@ D_printf ("R_InitData\n");
 	R_InitData ();
 D_printf ("Done\n");
 
+	R_InitTexCache(&r_texcache);
+
 	R_SetViewportSize(viewportNum);
+
+	R_EnableLowResMode(lowres);
 
 	framecount = 0;
 
 	R_SetDrawFuncs();
-
-	R_InitTexCache(&r_texcache);
 }
 
 /*
@@ -593,6 +595,8 @@ void R_SetupLevel(int gamezonemargin)
 	R_SetupTextureCaches(gamezonemargin);
 
 	R_SetViewportSize(viewportNum);
+
+	R_EnableLowResMode(lowres);
 
 #ifdef MARS
 	curpalette = -1;

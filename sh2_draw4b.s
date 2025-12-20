@@ -67,7 +67,7 @@ do_col4b_loop:
 do_col4b_loop_noshift:
         and     #15,r0
         add     r0,r0
-        mov.w   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
+        mov.b   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
         swap.w  r2,r0           /* (frac >> 16) */
         mov.b   r9,@r8          /* *fb = dpix */
 
@@ -86,7 +86,7 @@ do_col4b_loop_odd:
 do_col4b_loop_odd_noshift:
         and     #15,r0
         add     r0,r0
-        mov.w   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
+        mov.b   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
         dt      r6
         mov.b   r9,@r8          /* *fb = dpix */
 

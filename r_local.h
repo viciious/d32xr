@@ -322,6 +322,7 @@ void 	R_SetFlatData(int f, uint8_t *start, int size);
 void	R_ClearTextures(void);
 void	R_FixupTextures(void);
 void	R_SetupLevel(int gamezonemargin);
+void 	R_EnableLowResMode(boolean enable);
 
 // how much memory should be left free in the main zone after allocating the texture cache
 // can be increased for the Icon of Sin
@@ -425,6 +426,12 @@ extern	VINT		firstsprite, numsprites, numspriteframes;
 extern int8_t* dc_colormaps;
 extern int8_t* dc_colormaps2;
 
+extern int8_t* dc_hcolormaps;
+extern int8_t* dc_hcolormaps2;
+
+extern int8_t* dc_lcolormaps;
+extern int8_t* dc_lcolormaps2;
+
 extern uint8_t* dc_playpals, *dc_cshift_playpals;
 
 #ifdef MARS
@@ -440,7 +447,7 @@ int	R_FlatNumForName(const char* name);
 int	R_CheckTextureNumForName(const char* name);
 void	R_InitMathTables(void);
 void	R_InitSpriteDefs(const char** namelist);
-void R_InitColormap(void);
+void R_InitColormaps(void);
 boolean R_CompositeColumn(int colnum, texture_t *tex, inpixel_t *src, inpixel_t *dst, int height, int miplevel) ATTR_DATA_CACHE_ALIGN;
 
 /*

@@ -57,6 +57,12 @@ VINT COLOR_BLACK = 0xF7;
 int8_t	*dc_colormaps;
 int8_t	*dc_colormaps2;
 
+int8_t	*dc_hcolormaps;
+int8_t	*dc_hcolormaps2;
+
+int8_t	*dc_lcolormaps;
+int8_t	*dc_lcolormaps2;
+
 boolean	debugscreenactive = false;
 boolean	debugscreenupdate = false;
 
