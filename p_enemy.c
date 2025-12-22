@@ -1057,31 +1057,32 @@ void A_VileChase (mobj_t* actor)
 		{
 			for (by=yl ; by<=yh ; by++)
 			{
-			// Call PIT_VileCheck to check
-			// whether object is a corpse
-			// that canbe raised.
-			if (!P_BlockThingsIterator(bx,by,(blockthingsiter_t)PIT_VileCheck, &vc))
-			{
-				// got one!
-				mobj_t *corpsehit = vc.corpsehit;
+				// Call PIT_VileCheck to check
+				// whether object is a corpse
+				// that can be raised.
+				if (!P_BlockThingsIterator(bx,by,(blockthingsiter_t)PIT_VileCheck, &vc))
+				{
+					// got one!
+					mobj_t *corpsehit = vc.corpsehit;
 
-				temp = actor->target;
-				actor->target = corpsehit;
-				A_FaceTarget (actor);
-				actor->target = temp;
-						
-				P_SetMobjState (actor, S_VILE_HEAL1);
-				S_StartSound (corpsehit, sfx_slop);
-				info = &mobjinfo[corpsehit->type];
-				
-				P_SetMobjState (corpsehit,vc.corpseraisestate);
-				corpsehit->height <<= 2;
-				corpsehit->flags = info->flags;
-				corpsehit->health = info->spawnhealth;
-				corpsehit->target = NULL;
+					temp = actor->target;
+					actor->target = corpsehit;
+					A_FaceTarget (actor);
+					actor->target = temp;
+							
+					P_SetMobjState (actor, S_VILE_HEAL1);
+					S_StartSound (corpsehit, sfx_slop);
+					info = &mobjinfo[corpsehit->type];
+					
+					P_SetMobjState (corpsehit,vc.corpseraisestate);
+					corpsehit->height = info->height;
+					corpsehit->radius = info->radius;
+					corpsehit->flags = info->flags;
+					corpsehit->health = info->spawnhealth;
+					corpsehit->target = NULL;
 
-				return;
-			}
+					return;
+				}
 			}
 		}
     }
