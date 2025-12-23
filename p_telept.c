@@ -66,8 +66,6 @@ int	EV_Teleport( line_t *line,mobj_t *thing )
 	{
 		for (m=mobjhead.next ; m != (void *)&mobjhead ; m=m->next)
 		{
-			pmovework_t tm;
-
 			if (m->type != MT_TELEPORTMAN )
 				continue;		/* not a teleportman */
 			if (m->subsector->sector != secnum)
@@ -80,7 +78,7 @@ int	EV_Teleport( line_t *line,mobj_t *thing )
 			thing->flags |= MF_TELEPORT;
 			if (thing->type == MT_PLAYER)
 				P_Telefrag (thing, m->x, m->y);
-			flag = P_TryMove (&tm, thing, m->x, m->y);
+			flag = P_TryMove (NULL, thing, m->x, m->y);
 			thing->flags &= ~MF_TELEPORT;
 			if (!flag)
 				return 0;	/* move is blocked */

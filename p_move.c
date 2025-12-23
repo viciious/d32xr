@@ -29,6 +29,7 @@
 #include "doomdef.h"
 #include "p_local.h"
 
+static void PIT_UpdateSubsector(pmovework_t *tm) ATTR_DATA_CACHE_ALIGN;
 static boolean PIT_CheckThing(mobj_t* thing, pmovework_t *w) ATTR_DATA_CACHE_ALIGN;
 static boolean PIT_CheckLine(line_t* ld, pmovework_t *w) ATTR_DATA_CACHE_ALIGN;
 static boolean PIT_CheckPosition(pmovework_t *w) ATTR_DATA_CACHE_ALIGN;
@@ -37,6 +38,21 @@ static boolean P_TryMove2(pmovework_t *tm, boolean checkposonly) ATTR_DATA_CACHE
 
 boolean P_CheckPosition (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
 boolean P_TryMove (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
+
+static void PIT_UpdateSubsector(pmovework_t *w)
+{
+   subsector_t *newsubsec;
+   sector_t *newsec;
+
+   newsubsec = R_PointInSubsector(w->tmx, w->tmy);
+   newsec = SSEC_SECTOR(newsubsec);
+   w->newsubsec = newsubsec;
+
+   // the base floor/ceiling is from the subsector that contains the point.
+   // Any contacted lines the step closer together will adjust them.
+   w->tmfloorz   = w->tmdropoffz = newsec->floorheight;
+   w->tmceilingz = newsec->ceilingheight;
+}
 
 //
 // Check a single mobj in one of the contacted blockmap cells.
@@ -126,6 +142,9 @@ boolean PIT_CheckLine(line_t *ld, pmovework_t *w)
    if(ld->sidenum[1] < 0)
       return false; // one-sided line
 
+   if (!w->newsubsec)
+      PIT_UpdateSubsector(w);
+
    if(!(tmthing->flags & MF_MISSILE))
    {
       if(ld->flags & ML_BLOCKING)
@@ -181,23 +200,13 @@ boolean PIT_CheckPosition(pmovework_t *w)
    mobj_t *tmthing = w->tmthing;
    int tmflags = tmthing->flags;
    VINT *lvalidcount;
-   subsector_t *newsubsec;
-   sector_t *newsec;
-
-   newsubsec = R_PointInSubsector(w->tmx, w->tmy);
-   newsec = SSEC_SECTOR(newsubsec);
-   w->newsubsec = newsubsec;
 
    w->tmbbox[BOXTOP   ] = w->tmy + (tmthing->radius*FRACUNIT);
    w->tmbbox[BOXBOTTOM] = w->tmy - (tmthing->radius*FRACUNIT);
    w->tmbbox[BOXRIGHT ] = w->tmx + (tmthing->radius*FRACUNIT);
    w->tmbbox[BOXLEFT  ] = w->tmx - (tmthing->radius*FRACUNIT);
 
-   // the base floor/ceiling is from the subsector that contains the point.
-   // Any contacted lines the step closer together will adjust them.
-   w->tmfloorz   = w->tmdropoffz = newsec->floorheight;
-   w->tmceilingz = newsec->ceilingheight;
-
+   w->newsubsec = NULL;
    w->numspechit = 0;
    w->hitthing = NULL;
    w->ceilingline = NULL;
@@ -294,6 +303,19 @@ static boolean P_TryMove2(pmovework_t *w, boolean checkposonly)
 
    trymove2 = PIT_CheckPosition(w);
    w->floatok = false;
+
+   if (!w->newsubsec) {
+      if (checkposonly || (tmthing->flags & MF_TELEPORT)) {
+         // either just teleported or assessing current position
+         PIT_UpdateSubsector(w);
+      } else if (trymove2) {
+         // didn't touch any lines or get teleported, must be in the same sector
+         sector_t *newsec = SSEC_SECTOR(tmthing->subsector);
+         w->newsubsec = tmthing->subsector;
+         w->tmfloorz   = w->tmdropoffz = newsec->floorheight;
+         w->tmceilingz = newsec->ceilingheight;
+      }
+   }
 
    if(checkposonly)
       return trymove2;

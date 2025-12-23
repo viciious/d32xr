@@ -25,7 +25,6 @@ void P_PlayerMove (mobj_t *mo)
 	fixed_t		momx, momy;
 	int 		i;
 	pslidemove_t sm;
-	pmovework_t tm;
 
 	momx = vblsinframe*(mo->momx>>2);
 	momy = vblsinframe*(mo->momy>>2);
@@ -37,7 +36,7 @@ void P_PlayerMove (mobj_t *mo)
 	if (sm.slidex == mo->x && sm.slidey == mo->y)
 		goto stairstep;
 		
-	if ( P_TryMove (&tm, mo, sm.slidex, sm.slidey) )
+	if ( P_TryMove (NULL, mo, sm.slidex, sm.slidey) )
 		goto dospecial;
 
 stairstep:
@@ -55,14 +54,14 @@ stairstep:
 		
 /* something fucked up in slidemove, so stairstep */
 
-	if (momy && P_TryMove (&tm, mo, mo->x, mo->y + momy))
+	if (momy && P_TryMove (NULL, mo, mo->x, mo->y + momy))
 	{
 		mo->momx = 0;
 		mo->momy = momy;
 		goto dospecial;
 	}
 
-	if (momx && P_TryMove (&tm, mo, mo->x + momx, mo->y))
+	if (momx && P_TryMove (NULL, mo, mo->x + momx, mo->y))
 	{
 		mo->momx = momx;
 		mo->momy = 0;
