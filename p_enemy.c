@@ -791,7 +791,9 @@ void A_BruisAttack (mobj_t *actor)
 	
 	if (!actor->target)
 		return;
-		
+
+	A_FaceTarget (actor);
+
 	if (P_CheckMeleeRange (actor))
 	{
 		S_StartSound (actor, sfx_claw);
