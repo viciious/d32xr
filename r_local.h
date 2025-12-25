@@ -31,6 +31,9 @@ extern boolean lowres;
 
 #define	FIELDOFVIEW			2048   /* fineangles in the SCREENWIDTH wide window */
 
+#define HEIGHTFRACBITS 		4
+#define HEIGHTINTBITS 		(16-HEIGHTFRACBITS)
+
 /* */
 /* lighting constants */
 /* */
@@ -522,26 +525,35 @@ typedef struct
 	fixed_t 	offset;
 	unsigned	distance;
 
-	int			t_topheight;
-	int			t_bottomheight;
-	int			t_texturemid;
-
-	int			b_bottomheight;
-	int			b_texturemid;
-	int			b_topheight;
+	// 12.4 fixed point
+	int16_t		t_topheight;
+	int16_t		t_bottomheight;
+	int16_t		t_texturemid;
+	int16_t		b_bottomheight;
+	int16_t		b_texturemid;
+	int16_t		b_topheight;
+	int16_t		ceilingheight;
+	int16_t 	floorheight;
+	int16_t 	floornewheight;
+	int16_t 	ceilingnewheight;
 
 	/* !!! THE SECTION ABOVE MUST BE LARGE ENOUGH */
 	/* !!! TO ACCOMODATE VISSPRITE_T STRUCTURE, GETS */
 	/* !!! OVERWRITTEN AFTER PHASE 7 - END */
 
-	int 		m_texturemid;
+	int16_t 	m_texturemid;
+
+	union {
+		struct {
+			uint8_t     floorpicnum;
+			uint8_t     ceilingpicnum;
+		};
+		VINT picnums; // VRAM hack
+	};
 
 	VINT 		m_texturenum;
 	VINT		t_texturenum;
 	VINT		b_texturenum;
-
-	VINT        floorpicnum;
-	VINT        ceilingpicnum;
 
 	int8_t 		miplevels[2];
 
@@ -567,17 +579,11 @@ typedef struct
 	union
 	{
 		int32_t         v2i;
-		fixed_t			ceilingheight;
 		mapvertex_t		v2;
 	};
 
-	uint16_t 		*clipbounds;
+	uint16_t 	*clipbounds;
 } viswall_t;
-
-typedef struct
-{
-	fixed_t 	floorheight, floornewheight, ceilnewheight, pad;
-} viswallextra_t;
 
 #define	MAXWALLCMDS		165
 
@@ -589,11 +595,11 @@ typedef struct vissprite_s
 	fixed_t		xscale;
 	fixed_t		xiscale;		/* negative if flipped */
 	fixed_t		yscale;
-	fixed_t		texturemid;
+	int16_t		texturemid;
 	VINT 		patchnum;
 	VINT		colormap;		/* < 0 = shadow draw */
-	short		gx,gy;	/* global coordinates */
-	void 		*colormaps;
+	VINT 		colormap2;
+	int16_t		gx,gy;	/* global coordinates */
 #ifndef MARS
 	pixel_t		*pixels;		/* data patch header references */
 #endif
@@ -661,7 +667,6 @@ __attribute__((aligned(16)))
 	/* */
 	viswall_t * volatile viswalls/*[MAXWALLCMDS] __attribute__((aligned(16)))*/;
 	viswall_t * volatile lastwallcmd;
-	viswallextra_t * volatile viswallextras;
 
 	/* */
 	/* sprites */
@@ -677,8 +682,9 @@ __attribute__((aligned(16)))
 	/* planes */
 	/* */
 	visplane_t		* volatile visplanes/*[MAXVISPLANES]*/, * volatile lastvisplane;
-	int * volatile gsortedvisplanes;
 	visplane_t **visplanes_hash; /* only accessible by the second SH2! */
+	int * volatile gsortedvisplanes; // becomes non-NULL when sorted
+	int * volatile sortedvisplanes;
 
 	/* */
 	/* openings / misc refresh memory */

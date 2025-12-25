@@ -150,7 +150,7 @@ static void R_PrepMobj(mobj_t *thing)
    vis->gy       = thing->y >> FRACBITS;
    vis->xscale   = xscale;
    vis->yscale   = FixedMul(xscale, stretch);
-   vis->texturemid = texmid;
+   vis->texturemid = texmid>>HEIGHTINTBITS;
 
    if(flip)
    {
@@ -185,10 +185,10 @@ static void R_PrepMobj(mobj_t *thing)
        vis->colormap = HWLIGHT(vis->colormap);
    }
 
-   if (thing->flags & MF_KNIGHT_CMAP)
-      vis->colormaps = dc_colormaps2;
+   if (thing->flags & MF_COLORMAP2)
+      vis->colormap2 = 1;
    else
-      vis->colormaps = dc_colormaps;
+      vis->colormap2 = 0;
 }
 
 //
@@ -267,7 +267,7 @@ static void R_PrepPSprite(pspdef_t *psp)
    vis->xscale = xscale;
    vis->yscale = FRACUNIT;
    vis->xiscale = FixedDiv(FRACUNIT, xscale);
-   vis->texturemid = texmid;
+   vis->texturemid = texmid>>HEIGHTINTBITS;
    vis->startfrac = 0;
    if (x1 < 0)
        vis->startfrac = vis->xiscale * -x1;
@@ -288,7 +288,7 @@ static void R_PrepPSprite(pspdef_t *psp)
            vis->colormap = vd->lightlevel;
        vis->colormap = HWLIGHT(vis->colormap);
    }
-   vis->colormaps = dc_colormaps;
+   vis->colormap2 = 0;
 }
 
 //

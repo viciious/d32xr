@@ -683,8 +683,7 @@ extern	pixel_t	*screens[2];	/* [viewportWidth*viewportHeight];  */
 ==================
 */
 
-static void R_Setup (int displayplayer, visplane_t *visplanes_,
-	sector_t **vissectors_, viswallextra_t *viswallex_)
+static void R_Setup (int displayplayer, sector_t **vissectors_)
 {
 	int 		i;
 	int		damagecount, bonuscount;
@@ -871,10 +870,13 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 		vd->fuzzcolormap = 12 * 256;
 #endif
 
-	vd->visplanes = visplanes_;
-	vd->visplanes[0].flatandlight = 0;
-
 	tempbuf = (unsigned short *)I_WorkBuffer();
+
+	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
+
+	vd->visplanes = (void*)tempbuf;
+	vd->visplanes[0].flatandlight = 0;
+	tempbuf += sizeof(*vd->visplanes) * MAXVISPLANES / sizeof(*tempbuf);
 
 /* */
 /* plane filling */
@@ -893,9 +895,9 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 	vd->viswalls = (void*)tempbuf;
 	tempbuf += sizeof(*vd->viswalls) * MAXWALLCMDS / sizeof(*tempbuf);
 
-	vd->viswallextras = viswallex_ + 1;
+	vd->sortedvisplanes = (void *)tempbuf;
+	vd->gsortedvisplanes = NULL;
 
-	// re-use the openings array in VRAM
 	vd->gsortedsprites = (void *)tempbuf;
 	tempbuf += sizeof(*vd->gsortedsprites) * (MAXVISSPRITES+1) / sizeof(*tempbuf);
 
@@ -906,8 +908,6 @@ static void R_Setup (int displayplayer, visplane_t *visplanes_,
 
 	vd->lastvisplane = vd->visplanes + 1;		/* visplanes[0] is left empty */
 	vd->visplanes_hash = NULL;
-
-	vd->gsortedvisplanes = NULL;
 
 	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
 	vd->columncache[0] = (uint8_t*)tempbuf;
@@ -943,7 +943,7 @@ void Mars_Sec_R_Setup(void)
 	Mars_ClearCacheLines(vd, (sizeof(*vd) + 31) / 16);
 	Mars_ClearCacheLine(&viewportbuffer);
 
-	Mars_ClearCacheLines(vd->visplanes, (sizeof(visplane_t)*MAXVISPLANES+31)/16);
+	//Mars_ClearCacheLines(vd->visplanes, (sizeof(visplane_t)*MAXVISPLANES+31)/16);
 
 	I_SetThreadLocalVar(DOOMTLS_COLUMNCACHE, vd->columncache[1]);
 }
@@ -1064,9 +1064,7 @@ extern	ref8_start;
 
 void R_RenderPlayerView(int displayplayer)
 {
-	visplane_t visplanes_[MAXVISPLANES];
 	sector_t *vissectors_[MAXVISSSEC];
-	viswallextra_t viswallex_[MAXWALLCMDS + 1] __attribute__((aligned(16)));
 
 	/* make sure its done now */
 #if defined(JAGUAR)
@@ -1080,7 +1078,7 @@ void R_RenderPlayerView(int displayplayer)
 	if (debugscreenactive)
 		I_DebugScreen();
 
-	R_Setup(displayplayer, visplanes_, vissectors_, viswallex_);
+	R_Setup(displayplayer, vissectors_);
 
 #ifndef JAGUAR
 	R_BSP();
@@ -1122,14 +1120,11 @@ void R_RenderPlayerView(int displayplayer)
 {
 	int t_bsp, t_prep, t_segs, t_planes, t_sprites, t_total;
 	boolean drawworld = !(players[consoleplayer].automapflags & AF_ACTIVE);
-	__attribute__((aligned(16)))
-		visplane_t visplanes_[MAXVISPLANES];
-	sector_t *vissectors_[(MAXVISSSEC > MAXVISSPRITES ? MAXVISSSEC : MAXVISSPRITES) + 1];
-	viswallextra_t viswallex_[MAXWALLCMDS + 1] __attribute__((aligned(16)));
+	sector_t *vissectors_[MAXVISSSEC];
 
 	t_total = I_GetFRTCounter();
 
-	R_Setup(displayplayer, visplanes_, vissectors_, viswallex_);
+	R_Setup(displayplayer, vissectors_);
 
 	Mars_R_BeginWallPrep(drawworld);
 

@@ -110,7 +110,7 @@ static void R_UpdateCache(void)
             }
         }
 
-        if (wall->ceilingpicnum == -1) {
+        if (*(int8_t *)&wall->ceilingpicnum == -1) {
             continue;
         }
 

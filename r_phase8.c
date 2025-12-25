@@ -84,7 +84,7 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
       byte *columnptr = ((byte *)patch + BIGSHORT(patch->columnofs[colnum]));
       fixed_t sprtop, iscale;
 
-      sprtop = FixedMul(seg->m_texturemid, spryscale);
+      sprtop = FixedMul(seg->m_texturemid<<HEIGHTINTBITS, spryscale);
       sprtop = centerYFrac - sprtop;
 
 #ifdef MARS
@@ -165,7 +165,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
    spryscale = vis->yscale;
    dcol      = vis->colormap < 0 ? drawfuzzcol : drawcol;
 
-   sprtop = FixedMul(vis->texturemid, spryscale);
+   sprtop = FixedMul(vis->texturemid<<HEIGHTINTBITS, spryscale);
    sprtop = centerYFrac - sprtop;
 
    // blitter iinc
@@ -174,7 +174,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
    stopx    = vis->x2 + 1;
    fracstep = vis->xiscale;
 
-   I_SetThreadLocalVar(DOOMTLS_COLORMAP, vis->colormaps);
+   I_SetThreadLocalVar(DOOMTLS_COLORMAP, vis->colormap2 ? dc_colormaps2 : dc_colormaps);
 
 #ifdef MARS
    if (sprscreenhalf > 0)
@@ -519,7 +519,7 @@ void R_Sprites(void)
    unsigned half;
    unsigned midcount;
    viswall_t *spr;
-   int *sortedsprites = (void *)vd->vissectors;
+   int sortedsprites[MAXVISSPRITES+1];
    viswall_t *wc;
    mapvertex_t *verts;
 
@@ -596,7 +596,7 @@ void R_Sprites(void)
    {
       if (wc->actionbits & (AC_TOPSIL | AC_BOTTOMSIL | AC_SOLIDSIL | AC_MIDTEXTURE))
       {
-         wc->v2i = *(int32_t *)&verts[SEG_UNPACK_V2(wc->seg)]; // v1i aliases to seg, so do v2 first
+         wc->v2i = *(int32_t *)&verts[SEG_UNPACK_V2(wc->seg)];
          wc->v1i = *(int32_t *)&verts[SEG_UNPACK_V1(wc->seg)];
       }
    }

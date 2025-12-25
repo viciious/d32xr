@@ -344,7 +344,7 @@ static void R_DrawPlanes2(void)
         boolean rotated = false;
 
 #ifdef MARS
-        Mars_ClearCacheLines(pl, (sizeof(visplane_t) + 31) / 16);
+        //Mars_ClearCacheLines(pl, (sizeof(visplane_t) + 31) / 16);
 #endif
 
         if (pl->minx > pl->maxx)
@@ -481,7 +481,8 @@ static void Mars_R_SortPlanes(void)
 {
     int i, numplanes;
     visplane_t* pl;
-    uint16_t *sortbuf = (uint16_t *)vd->gsortedvisplanes;
+    int sortedvisplanes[MAXVISPLANES];
+    uint16_t *sortbuf = (uint16_t *)sortedvisplanes;
 
     i = 0;
     numplanes = 0;
@@ -500,7 +501,12 @@ static void Mars_R_SortPlanes(void)
         i += 2;
     }
 
-    D_isort(vd->gsortedvisplanes, numplanes);
+    D_isort(sortedvisplanes, numplanes);
+
+    vd->gsortedvisplanes = vd->sortedvisplanes;
+    for (i = 0; i < numplanes; i++) {
+        vd->gsortedvisplanes[i] = sortedvisplanes[i];
+    }
 }
 
 static void R_PreDrawPlanes(void)
@@ -514,12 +520,8 @@ static void R_PreDrawPlanes(void)
     numplanes = vd->lastvisplane - vd->visplanes; // visplane 0 is a dummy plane
     if (numplanes > 1) 
     {
-        Mars_ClearCacheLines(vd->visplanes, (numplanes * sizeof(visplane_t) + 31) / 16);
-
-        if (vd->gsortedvisplanes == NULL)
-        {
-            vd->gsortedvisplanes = (int *)vd->viswallextras;
-
+        //Mars_ClearCacheLines(vd->visplanes, (numplanes * sizeof(visplane_t) + 31) / 16);
+        if (vd->gsortedvisplanes == NULL) {
             Mars_R_SortPlanes();
         }
     }

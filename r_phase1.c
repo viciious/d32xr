@@ -43,9 +43,7 @@ static boolean R_CheckBBox(rbspWork_t *rbsp, int16_t bspcoord[4]) ATTR_DATA_CACH
 static void R_Subsector(rbspWork_t *rbsp, int num) ATTR_DATA_CACHE_ALIGN;
 static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop) ATTR_DATA_CACHE_ALIGN;
 static void R_RenderBSPNode(rbspWork_t *rbsp, int bspnum, int16_t *outerbbox) ATTR_DATA_CACHE_ALIGN;
-static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
-   fixed_t *restrict floorheight, fixed_t *restrict floornewheight, 
-   fixed_t *restrict ceilingnewheight) ATTR_DATA_CACHE_ALIGN  __attribute__((noinline));
+static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl) ATTR_DATA_CACHE_ALIGN  __attribute__((noinline));
 
 #ifdef MARS
 __attribute__((aligned(4)))
@@ -182,8 +180,7 @@ static boolean R_CheckBBox(rbspWork_t *rbsp, int16_t bspcoord_[4])
    return true;
 }
 
-static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
-   fixed_t *restrict floorheight, fixed_t *restrict  floornewheight, fixed_t *restrict ceilingnewheight)
+static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl)
 {
    line_t    *li   = rbsp->curldef;
    side_t    *si   = rbsp->curside;
@@ -211,6 +208,8 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
       f_lightlevel    = front_sector->lightlevel;
       f_floorheight   = front_sector->floorheight   - vd->viewz;
       f_ceilingheight = front_sector->ceilingheight - vd->viewz;
+
+      segl->picnums = 0; // VRAM hack
 
       segl->floorpicnum   = flattranslation[front_sector->floorpic];
       if (f_ceilingpic != -1)
@@ -249,7 +248,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
       {
          actionbits |= (AC_ADDFLOOR|AC_NEWFLOOR);
       }
-      *floorheight = *floornewheight = f_floorheight;
+      segl->floorheight = segl->floornewheight = f_floorheight>>HEIGHTINTBITS;
 
       if(!skyhack                                         && // not a sky hack wall
          (f_ceilingheight > 0 || f_ceilingpic == -1)      && // ceiling below camera, or sky
@@ -263,9 +262,9 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
          else
             actionbits |= (AC_ADDCEILING|AC_NEWCEILING);
       }
-      segl->ceilingheight = *ceilingnewheight = f_ceilingheight;
+      segl->ceilingheight = segl->ceilingnewheight = f_ceilingheight>>HEIGHTINTBITS;
 
-      segl->t_topheight = f_ceilingheight; // top of texturemap
+      segl->t_topheight = f_ceilingheight>>HEIGHTINTBITS; // top of texturemap
 
       if (!(li->sidenum[1] >= 0))
       {
@@ -281,7 +280,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
                t_texturemid = f_ceilingheight;
 
             t_texturemid += rowoffset<<FRACBITS;                               // add in sidedef texture offset
-            segl->t_bottomheight = f_floorheight; // set bottom height
+            segl->t_bottomheight = f_floorheight>>HEIGHTINTBITS; // set bottom height
             actionbits |= (AC_SOLIDSIL|AC_TOPTEXTURE);                   // solid line; draw middle texture only
          }
       }
@@ -323,8 +322,8 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
 
                b_texturemid += rowoffset<<FRACBITS; // add in sidedef texture offset
 
-               segl->b_topheight = *floornewheight = b_floorheight;
-               segl->b_bottomheight = f_floorheight;
+               segl->b_topheight = segl->floornewheight = b_floorheight>>HEIGHTINTBITS;
+               segl->b_bottomheight = f_floorheight>>HEIGHTINTBITS;
                actionbits |= (AC_BOTTOMTEXTURE|AC_NEWFLOOR); // generate bottom wall and floor
             }
          }
@@ -342,7 +341,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
 
                t_texturemid += rowoffset<<FRACBITS; // add in sidedef texture offset
 
-               segl->t_bottomheight = *ceilingnewheight = b_ceilingheight;
+               segl->t_bottomheight = segl->ceilingnewheight = b_ceilingheight>>HEIGHTINTBITS;
                actionbits |= (AC_NEWCEILING|AC_TOPTEXTURE); // draw top texture and ceiling
             }
          }
@@ -378,9 +377,9 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
 
       // save local data to the viswall structure
       segl->actionbits    = actionbits;
-      segl->t_texturemid  = t_texturemid;
-      segl->b_texturemid  = b_texturemid;
-      segl->m_texturemid  = m_texturemid;
+      segl->t_texturemid  = t_texturemid>>HEIGHTINTBITS;
+      segl->b_texturemid  = b_texturemid>>HEIGHTINTBITS;
+      segl->m_texturemid  = m_texturemid>>HEIGHTINTBITS;
       segl->seglightlevel = (lightshift << 8) | f_lightlevel;
       segl->offset        = textureoffset;
    }
@@ -392,7 +391,6 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl,
 static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop)
 {
    viswall_t *rw;
-   viswallextra_t *rwex;
    int newstop, split;
    int numwalls = vd->lastwallcmd - vd->viswalls;
    const int maxlen = centerX/2;
@@ -413,7 +411,6 @@ static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop)
       newstop = start + maxlen - 1;
    }
 
-   rwex = vd->viswallextras + numwalls;
    do {
       if (numwalls == MAXWALLCMDS)
          return;
@@ -428,13 +425,12 @@ static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop)
       rw->actionbits = 0;
       ++vd->lastwallcmd;
 
-      R_WallEarlyPrep(rbsp, rw, &rwex->floorheight, &rwex->floornewheight, &rwex->ceilnewheight);
+      R_WallEarlyPrep(rbsp, rw);
 
 #ifdef MARS
       Mars_R_WallNext();
 #endif
 
-      rwex++;
       numwalls++;
 
       start = newstop + 1;

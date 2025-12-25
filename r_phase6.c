@@ -272,7 +272,7 @@ static void R_DrawSegSky(seglocal_t* lseg, unsigned short *restrict clipbounds)
     fixed_t scalefrac = segl->scalefrac;
     fixed_t scalestep = segl->scalestep;
 
-    const fixed_t ceilingheight = segl->ceilingheight;
+    const fixed_t ceilingheight = segl->ceilingheight << 12;
     const int start = segl->start;
     const int stop = segl->stop;
     const int pitch = lseg->skypitch;
@@ -556,14 +556,14 @@ void R_SegCommands(void)
         if (actionbits & AC_TOPTEXTURE)
         {
             R_SetupDrawTexture(toptex, &textures[segl->t_texturenum],
-                segl->t_texturemid, segl->t_topheight, segl->t_bottomheight);
+                segl->t_texturemid<<HEIGHTINTBITS, segl->t_topheight<<HEIGHTINTBITS, segl->t_bottomheight<<HEIGHTINTBITS);
             lseg.first--;
         }
 
         if (actionbits & AC_BOTTOMTEXTURE)
         {
             R_SetupDrawTexture(bottomtex, &textures[segl->b_texturenum],
-                segl->b_texturemid, segl->b_topheight, segl->b_bottomheight);
+                segl->b_texturemid<<HEIGHTINTBITS, segl->b_topheight<<HEIGHTINTBITS, segl->b_bottomheight<<HEIGHTINTBITS);
             lseg.last++;
         }
 

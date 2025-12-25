@@ -1427,7 +1427,7 @@ sfx_dmact,		// activesound
 8,		// speed
 0,		// damage
 1000,		// mass
-MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL|MF_KNIGHT_CMAP		// flags
+MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL|MF_COLORMAP2		// flags
 },
 
 {		/* MT_SKULL */
@@ -4401,7 +4401,7 @@ sfx_ppoact,		/* activesound */
 10,		/* speed */
 0,		/* damage */
 100,		/* mass */
-MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL|MF_KNIGHT_CMAP		/* flags */
+MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL|MF_COLORMAP2		/* flags */
 },
 
 };

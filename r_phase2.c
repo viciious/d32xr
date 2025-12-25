@@ -14,8 +14,7 @@ static uint16_t P_SegOffset(seg_t *seg) ATTR_DATA_CACHE_ALIGN;
 static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle, int angle1) ATTR_DATA_CACHE_ALIGN;
 void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts) ATTR_DATA_CACHE_ALIGN;
 // the volatiles help gcc produce less silly SH2 assembler code
-static void R_SegLoop(viswall_t* segl, unsigned short *restrict clipbounds, volatile fixed_t floorheight, 
-    volatile fixed_t floornewheight, volatile fixed_t ceilingnewheight) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
+static void R_SegLoop(viswall_t* segl, unsigned short *restrict clipbounds) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 void R_WallPrep(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 
 //
@@ -219,8 +218,7 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
 //
 // Main seg clipping loop
 //
-static void R_SegLoop(viswall_t* segl, unsigned short * restrict clipbounds, 
-    volatile fixed_t floorheight, volatile fixed_t floornewheight, volatile fixed_t ceilingnewheight)
+static void R_SegLoop(viswall_t* segl, unsigned short * restrict clipbounds)
 {
     const volatile int actionbits = segl->actionbits;
 
@@ -230,13 +228,17 @@ static void R_SegLoop(viswall_t* segl, unsigned short * restrict clipbounds,
     int x, start = segl->start;
     const int stop = segl->stop;
 
-    const volatile fixed_t ceilingheight = segl->ceilingheight;
+    const volatile fixed_t ceilingheight = segl->ceilingheight << 12;
 
     const int floorandlight = ((segl->seglightlevel & 0xff) << 16) | segl->floorpicnum;
     const int ceilandlight = ((segl->seglightlevel & 0xff) << 16) | segl->ceilingpicnum;
 
     unsigned short * restrict flooropen = (actionbits & AC_ADDFLOOR) ? vd->visplanes[0].open : NULL;
     unsigned short * restrict ceilopen = (actionbits & AC_ADDCEILING) ? vd->visplanes[0].open : NULL;
+
+    volatile fixed_t floorheight = segl->floorheight << 12;
+    volatile fixed_t floornewheight = segl->floornewheight << 12;
+    volatile fixed_t ceilingnewheight = segl->ceilingnewheight << 12;
 
     unsigned short * restrict newclipbounds = segl->clipbounds;
 
@@ -346,7 +348,6 @@ void Mars_Sec_R_WallPrep(void)
     int i;
     uint16_t *vp0open;
     viswall_t *segl;
-    viswallextra_t *seglex;
     viswall_t *first, *last, *verylast;
     uint32_t clipbounds_[SCREENWIDTH/2+1];
     __attribute__((aligned(16)))
@@ -369,7 +370,6 @@ void Mars_Sec_R_WallPrep(void)
 
     first = last = vd->viswalls;
     verylast = NULL;
-    seglex = vd->viswallextras;
     verts = vertexes;
 
     I_SetBankPage(segspage);
@@ -392,14 +392,10 @@ void Mars_Sec_R_WallPrep(void)
 
         for (; segl < last; segl++)
         {
-#ifdef MARS
-            Mars_ClearCacheLine(seglex);
-#endif
             R_WallLatePrep(segl, verts);
 
-            R_SegLoop(segl, clipbounds, seglex->floorheight, seglex->floornewheight, seglex->ceilnewheight);
+            R_SegLoop(segl, clipbounds);
 
-            seglex++;
             *readysegs = *readysegs + 1;
         }
     }
