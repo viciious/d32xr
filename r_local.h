@@ -567,8 +567,8 @@ typedef struct
 /* */
 /* filled in by bsp */
 /* */
-	VINT			start, realstart;
-	VINT			stop, realstop;					/* inclusive x coordinates */
+	VINT			start;
+	VINT			stop;					/* inclusive x coordinates */
 	union
 	{
 		int32_t         v1i;

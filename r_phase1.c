@@ -418,9 +418,7 @@ static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop)
       rw = vd->lastwallcmd;
       rw->seg = rbsp->curline;
       rw->start = start;
-      rw->realstart = start;
       rw->stop = newstop;
-      rw->realstop = newstop;
       rw->scalestep = rbsp->lineangle1;
       rw->actionbits = 0;
       ++vd->lastwallcmd;

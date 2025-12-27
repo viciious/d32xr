@@ -42,11 +42,11 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
       return;
 
    spropening = seg->clipbounds;
-   maskedcol  = seg->clipbounds + (seg->realstop - seg->realstart + 1);
+   maskedcol  = seg->clipbounds + (seg->stop - seg->start + 1);
 
    widthmask = texture->width - 1;
    fracstep  = seg->scalestep;
-   scalefrac = seg->scalefrac + (x - seg->realstart) * fracstep;
+   scalefrac = seg->scalefrac + (x - seg->start) * fracstep;
 
    I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
 

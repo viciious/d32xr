@@ -30,7 +30,7 @@ static void R_UpdateCache(void)
    {
       int minmip = wall->miplevels[0], maxmip = wall->miplevels[1];
 
-      if (wall->realstart > wall->realstop)
+      if (wall->start > wall->stop)
         continue;
 
       if ((wall->actionbits & (AC_TOPTEXTURE|AC_BOTTOMTEXTURE|AC_MIDTEXTURE)) && (maxmip >= minmip))
