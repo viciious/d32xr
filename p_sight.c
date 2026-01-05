@@ -513,7 +513,11 @@ void Mars_Sec_P_CheckSights(void)
     // bank-switch to the page with map data
    I_SetBankPage(segspage);
 
-	P_CheckSights2(1);
+   if (demorecording || demoplayback) {
+      return;
+   }
+
+   P_CheckSights2(1);
 }
 #endif
 
