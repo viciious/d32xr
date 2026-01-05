@@ -697,6 +697,9 @@ void P_KillMobj (mobj_t *source, mobj_t *target)
 	case MT_CHAINGUY:
 		item = MT_CHAINGUN;
 		break;
+	case MT_SHOCKTROOPER:
+		item = MT_PLASMAGUN;
+		break;
 	default:
 		return;
 	}

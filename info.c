@@ -2829,7 +2829,7 @@ sfx_None,		/* activesound */
 MF_STATIC|MF_SPECIAL		/* flags */
  },
 
-{		/* MT_MISC28 */
+{		/* MT_PLASMAGUN */
 2004,		/* doomednum */
 S_PLAS,		/* spawnstate */
 1000,		/* spawnhealth */
