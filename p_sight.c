@@ -516,6 +516,9 @@ void Mars_Sec_P_CheckSights(void)
    if (demorecording || demoplayback) {
       return;
    }
+   if (netgame && !splitscreen) {
+      return;
+   }
 
    P_CheckSights2(1);
 }
