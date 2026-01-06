@@ -278,7 +278,7 @@ boolean PIT_RadiusAttack (mobj_t *thing, pradiusattack_t *ra)
 		dist = 0;
 	if (dist >= ra->bombdamage)
 		return true;		/* out of range */
-/* FIXME?	if ( P_CheckSight (thing, bombspot) )	// must be in direct path */
+	if ( P_CheckSight (thing, ra->bombspot) )	// must be in direct path
 		P_DamageMobj (thing, ra->bombspot, ra->bombsource, ra->bombdamage - dist);
 	return true;
 }
