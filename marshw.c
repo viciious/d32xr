@@ -424,10 +424,10 @@ void Mars_PlayTrack(char use_cda, int playtrack, const char *name, int offset, i
 
 	if (send_fn)
 	{
+		fast_memcpy(backup, fb, 256);
 		ptr = Mars_StringToFramebuffer(name);
 		ptr = (void*)(((uintptr_t)ptr + 1 + 3) & ~3);
 		len = ptr - fb;
-		fast_memcpy(backup, fb, (unsigned)len/4);
 	}
 
 	if (!use_cda)
@@ -823,10 +823,10 @@ int Mars_OpenCDFileByName(const char *name, int *poffset)
 
 	while (MARS_SYS_COMM0) {}
 
+	fast_memcpy(backup, fb, 256);
 	ptr = Mars_StringToFramebuffer(name);
 	ptr = (void*)(((uintptr_t)ptr + 1 + 3) & ~3);
 	len = ptr - fb;
-	fast_memcpy(backup, fb, (unsigned)len/4);
 
     MARS_SYS_COMM0 = 0x2600;
 
