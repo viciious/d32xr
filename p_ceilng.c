@@ -143,8 +143,7 @@ int EV_DoCeiling (line_t *line, ceiling_e  type)
 		/* new door thinker */
 		/* */
 		rtn = 1;
-		ceiling = Z_Malloc (sizeof(*ceiling), PU_LEVSPEC);
-		P_AddThinker (&ceiling->thinker);
+		ceiling = P_SpawnThinker (*ceiling);
 		sec->specialdata = LPTR_TO_SPTR(ceiling);
 		ceiling->thinker.function = T_MoveCeiling;
 		ceiling->m.sector = sec;

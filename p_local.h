@@ -68,6 +68,8 @@ typedef enum
 extern	thinker_t	thinkercap;	/* both the head and tail of the thinker list */
 
 void P_InitThinkers (void);
+void *P_SpawnThinker_ (int size, int thinker_offset);
+#define P_SpawnThinker(t) P_SpawnThinker_(sizeof(t),offsetof(__typeof__(t),thinker))
 void P_AddThinker (thinker_t *thinker);
 void P_RemoveThinker (thinker_t *thinker);
 

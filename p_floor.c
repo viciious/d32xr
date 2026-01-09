@@ -1,9 +1,6 @@
 #include "doomdef.h"
 #include "p_local.h"
 
-//e6y
-#define STAIRS_UNINITIALIZED_CRUSH_FIELD_VALUE 10
-
 /*================================================================== */
 /*================================================================== */
 /* */
@@ -227,8 +224,7 @@ int EV_DoFloorTag(line_t *line,floor_e floortype, int tag)
 		/*	new floor thinker */
 		/* */
 		rtn = 1;
-		floor = Z_Malloc (sizeof(*floor), PU_LEVSPEC);
-		P_AddThinker (&floor->thinker);
+		floor = P_SpawnThinker (*floor);
 		sec->specialdata = LPTR_TO_SPTR(floor);
 		floor->thinker.function = T_MoveFloor;
 		floor->type = floortype;
@@ -406,8 +402,7 @@ int EV_BuildStairs(line_t *line, int type)
 		/* new floor thinker */
 		/* */
 		rtn = 1;
-		floor = Z_Malloc (sizeof(*floor), PU_LEVSPEC);
-		P_AddThinker (&floor->thinker);
+		floor = P_SpawnThinker (*floor);
 		sec->specialdata = LPTR_TO_SPTR(floor);
 		floor->thinker.function = T_MoveFloor;
 		floor->direction = 1;
@@ -430,11 +425,7 @@ int EV_BuildStairs(line_t *line, int type)
 		floor->floordestheight = height;
         // Initialize
         floor->type = lowerFloor;
-        // e6y
-        // Uninitialized crush field will not be equal to 0 or 1 (true)
-        // with high probability. So, initialize it with any other value
-	    floor->crush = STAIRS_UNINITIALIZED_CRUSH_FIELD_VALUE;
-		
+
 		texture = sec->floorpic;
 
 		/* */
@@ -467,8 +458,7 @@ int EV_BuildStairs(line_t *line, int type)
 					
 				sec = tsec;
 				secnum = newsecnum;
-				floor = Z_Malloc (sizeof(*floor), PU_LEVSPEC);
-				P_AddThinker (&floor->thinker);
+				floor = P_SpawnThinker (*floor);
 				sec->specialdata = LPTR_TO_SPTR(floor);
 				floor->thinker.function = T_MoveFloor;
 				floor->direction = 1;
@@ -478,10 +468,6 @@ int EV_BuildStairs(line_t *line, int type)
 				floor->floordestheight = height;
                 // Initialize
                 floor->type = lowerFloor;
-	            // e6y
-                // Uninitialized crush field will not be equal to 0 or 1 (true)
-                // with high probability. So, initialize it with any other value
-	            floor->crush = STAIRS_UNINITIALIZED_CRUSH_FIELD_VALUE;
 				ok = 1;
 				break;
 			}

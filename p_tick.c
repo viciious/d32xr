@@ -49,6 +49,21 @@ void P_InitThinkers (void)
 	limbomobjhead.next = limbomobjhead.prev = (void*)&limbomobjhead;
 }
 
+/*
+===============
+=
+= P_SpawnThinker_
+=
+===============
+*/
+
+void *P_SpawnThinker_ (int size, int thinker_offset)
+{
+	void *p = Z_Malloc(size, PU_LEVSPEC);
+	D_memset(p, 0, size);
+	P_AddThinker((void *)((char *)p + thinker_offset));
+	return p;
+}
 
 /*
 ===============
