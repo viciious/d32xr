@@ -60,6 +60,7 @@ static const struct {
 	{GI_STR_FIELD(borderFlat)},
 	{GI_STR_FIELD(titlePage)},
 	{GI_STR_FIELD(creditsPage)},
+	{GI_INT_FIELD(creditsTime)},
 	{GI_STR_FIELD(titleMus)},
 	{GI_INT_FIELD(titleCdTrack)},
 	{GI_STR_FIELD(intermissionMus)},
