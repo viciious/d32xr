@@ -321,9 +321,9 @@ do_span_loop:
         mov.b   @(r0,r9),r0     /* pix = ds_source[spot] */
         sub     r3,r2           /* xfrac -= xstep */
         sub     r5,r4           /* yfrac -= ystep */
-        swap.w  r4,r1           /* (yfrac >> 16) */
         add     r0,r0
         mov.w   @(r0,r7),r10    /* dpix = ds_colormap[pix] */
+        swap.w  r4,r1           /* (yfrac >> 16) */
         swap.w  r2,r0           /* (xfrac >> 16) */
         and     r12,r0          /* (xfrac >> 16) & 63 */
         mov.w   r10,@-r8        /* *--fb = dpix */
@@ -334,9 +334,9 @@ do_span_loop_1px:
         mov.b   @(r0,r9),r0     /* pix = ds_source[spot] */
         sub     r3,r2           /* xfrac -= xstep */
         sub     r5,r4           /* yfrac -= ystep */
-        swap.w  r4,r1           /* (yfrac >> 16) */
         add     r0,r0
         mov.w   @(r0,r7),r10    /* dpix = ds_colormap[pix] */
+        swap.w  r4,r1           /* (yfrac >> 16) */
         swap.w  r2,r0           /* (xfrac >> 16) */
         and     r12,r0          /* (xfrac >> 16) & 63 */
         mov.w   r10,@-r8        /* *--fb = dpix */
