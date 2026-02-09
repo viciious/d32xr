@@ -524,7 +524,7 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 		sound = sfx_wpnup;	
 		break;
 	case SPR_PLAS:
-		if (!P_GiveWeapon (player, wp_plasma, false) )
+		if (!P_GiveWeapon (player, wp_plasma, ( special->flags&MF_DROPPED ) != 0) )
 			return;
 		player->message = "You got the plasma gun!";
 		sound = sfx_wpnup;	
