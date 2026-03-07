@@ -293,7 +293,7 @@ ResumeSPCMTrack:
         bra     WaitAck
 
 OpenTray:
-        lea     0x18C,a0                 /* ROM version */
+        lea     0x18A,a0                /* ROM version */
         move.b  (a0),d0                 /* refer to MEGA CD TECHNICAL BULLETIN #8 */
         cmpi.b  #'1, d0                 /* '1' for Model 1 */
         bne.b   1f
