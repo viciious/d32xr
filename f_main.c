@@ -630,9 +630,9 @@ void F_Drawer (void)
 	if (mobjinfo[castorder[fin->castnum].type].flags & MF_SHADOW)
 		fin->drcol = I_DrawFuzzColumn;
 
-	fin->drcolormaps = dc_colormaps;
+	fin->drcolormaps = dc_hcolormaps;
 	if (mobjinfo[castorder[fin->castnum].type].flags & MF_COLORMAP2)
-		fin->drcolormaps = dc_colormaps2;
+		fin->drcolormaps = dc_hcolormaps2;
 
 	// HACK
 	if (finale)
