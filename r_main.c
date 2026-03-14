@@ -24,7 +24,7 @@ VINT initmathtables = 2;
 drawcol_t drawcol;
 drawcol_t drawfuzzcol;
 drawcol_t drawcolnpo2;
-drawspan_t drawspan;
+drawspan_t drawspan[2];
 drawcol_t draw4bcol;
 drawcol_t draw4bcolnpo2;
 
@@ -311,7 +311,7 @@ void R_SetDrawFuncs(void)
 		drawcol = I_DrawColumnNoDraw;
 		drawcolnpo2 = I_DrawColumnNoDraw;
 		drawfuzzcol = I_DrawColumnNoDraw;
-		drawspan = I_DrawSpanNoDraw;
+		drawspan[0] = drawspan[1] = I_DrawSpanNoDraw;
 		draw4bcol = I_DrawColumnNoDraw;
 		draw4bcolnpo2 = I_DrawColumnNoDraw;
 		return;
@@ -329,10 +329,12 @@ void R_SetDrawFuncs(void)
 		drawfuzzcol = I_DrawFuzzColumnLow;
 		switch (detailmode) {
 			case detmode_potato:
-				drawspan = I_DrawSpanPotatoLow;	
+				drawspan[0] = I_DrawSpanPotatoLow;
+				drawspan[1] = I_DrawSpanPotatoLow;
 				break;
 			default:
-				drawspan = I_DrawSpanLow;
+				drawspan[0] = I_DrawSpanLow;
+				drawspan[1] = I_DrawSpanLowSwap;
 				break;
 		}
 	}
@@ -345,13 +347,16 @@ void R_SetDrawFuncs(void)
 		drawfuzzcol = I_DrawFuzzColumn;
 		switch (detailmode) {
 			case detmode_potato:
-				drawspan = I_DrawSpanPotatoLow;	
+				drawspan[0] = I_DrawSpanPotatoLow;	
+				drawspan[1] = I_DrawSpanPotatoLow;
 				break;
 			case detmode_lowres:
-				drawspan = I_DrawSpanLow;
+				drawspan[0] = I_DrawSpanLow;
+				drawspan[1] = I_DrawSpanLowSwap;
 				break;
 			default:
-				drawspan = I_DrawSpan;
+				drawspan[0] = I_DrawSpan;
+				drawspan[1] = I_DrawSpan;
 				break;
 		}
 	}

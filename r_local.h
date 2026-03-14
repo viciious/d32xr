@@ -337,7 +337,7 @@ typedef void (*drawspan_t)(int, int, int, int, fixed_t, fixed_t, fixed_t, fixed_
 extern drawcol_t drawcol;
 extern drawcol_t drawfuzzcol;
 extern drawcol_t drawcolnpo2;
-extern drawspan_t drawspan;
+extern drawspan_t drawspan[2];
 extern drawcol_t draw4bcol;
 extern drawcol_t draw4bcolnpo2;
 

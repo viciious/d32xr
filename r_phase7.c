@@ -161,7 +161,7 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
         x2 >>= 1;
     }
 
-    drawspan(y, x, x2, light, xfrac, yfrac, xstep, ystep, lpl->ds_source[miplevel], mipsize);
+    drawspan[y&1](y, x, x2, light, xfrac, yfrac, xstep, ystep, lpl->ds_source[miplevel], mipsize);
 }
 
 static void R_MapPotatoPlane(localplane_t* lpl, int y, int x, int x2)
@@ -175,7 +175,7 @@ static void R_MapPotatoPlane(localplane_t* lpl, int y, int x, int x2)
         x2 >>= 1;
     }
 
-    drawspan(y, x, x2, lpl->lightmax, 0, 0, 0, 0, lpl->ds_source[0], 64);
+    drawspan[0](y, x, x2, lpl->lightmax, 0, 0, 0, 0, lpl->ds_source[0], 64);
 }
 
 //
@@ -312,7 +312,7 @@ static void R_DrawPlanes2(void)
 
     cXf = centerXFrac;
     lpl.lowres = false;
-    if (!lowres && (drawspan == I_DrawSpanLow || drawspan == I_DrawSpanPotatoLow))
+    if (!lowres && (drawspan[0] == I_DrawSpanLow || drawspan[0] == I_DrawSpanPotatoLow))
     {
         cXf >>= 1;
         lpl.lowres = true;
