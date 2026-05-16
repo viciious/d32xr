@@ -59,29 +59,28 @@ typedef void (*roq_getchunk_t)(roq_file*);
 typedef void (*roq_retchunk_t)(roq_file*);
 
 typedef struct {
-	unsigned chunk_arg0, chunk_arg1;
-	unsigned vqflg;
-	unsigned vqflg_pos;
-	unsigned vqid;
+	int chunk_arg0, chunk_arg1;
+	int vqflg;
+	int vqflg_pos;
+	int vqid;
 	unsigned char *buf;
 	int buf_len;
 	struct roq_info_s *ri;
 } roq_parse_ctx;
 
 typedef struct roq_info_s {
+	short *canvas;
 	short *canvascopy;
 	roq_cell *cells_u;
 	roq_qcell *qcells_u;
 	roq_cell *cells;
 	roq_qcell *qcells;
 	roq_file *fp;
-	int buf_size;
-	unsigned width, height, frame_num;
-	int display_height;
 	roq_getchunk_t get_chunk;
 	roq_retchunk_t ret_chunk;
-	short *framebuffer, *canvas;
-	int canvas_pitch;
+	short display_height;
+	short canvas_pitch;
+	short width, height;
 	unsigned framerate, displayrate, frametics, frametics_frac;
 } roq_info;
 

@@ -39,9 +39,9 @@ static inline int roq_feof(roq_file* fp) {
 	return fp->eof && fp->data == NULL;
 }
 
-static inline unsigned short get_word(roq_file* fp)
+static inline int get_word(roq_file* fp)
 {
-	unsigned short ret;
+	int ret;
 	ret = (fp->data[0]);
 	ret |= (fp->data[1]) << 8;
 	fp->data += 2;
@@ -49,9 +49,9 @@ static inline unsigned short get_word(roq_file* fp)
 }
 
 /* -------------------------------------------------------------------------- */
-static inline unsigned int get_long(roq_file* fp)
+static inline int get_long(roq_file* fp)
 {
-	unsigned int ret;
+	int ret;
 	ret = (fp->data[0]);
 	ret |= (fp->data[1]) << 8;
 	ret |= (fp->data[2]) << 16;
@@ -118,8 +118,6 @@ int roq_read_info(roq_file* fp, roq_info* ri)
 		return 1;
 	}
 
-	ri->canvas = ri->framebuffer;
-
 	ri->display_height = ri->height;
 	if (ri->canvas_pitch * ri->display_height < RoQ_MAX_CANVAS_SIZE)
 	{
@@ -135,24 +133,24 @@ int roq_read_info(roq_file* fp, roq_info* ri)
 	while (ri->canvas_pitch * ri->display_height > RoQ_MAX_CANVAS_SIZE || ri->display_height > 224)
 		ri->display_height -= 16;
 
-	ri->frame_num = 0;
-
 	return 0;
 }
 
 /* -------------------------------------------------------------------------- */
-static inline void apply_motion_4x4(roq_parse_ctx* ctx, unsigned x, unsigned y, unsigned char mv, char mean_x, char mean_y)
+static inline void apply_motion_4x4(roq_parse_ctx* ctx, int x, int y, int mv)
 {
 	int mx, my, i;
-	short *src, *dst;
+	short * restrict src, * restrict dst;
 	roq_info *ri = ctx->ri;
+	int mean_x = ctx->chunk_arg1;
+	int mean_y = ctx->chunk_arg0;
 	int pitch = ri->canvas_pitch;
 
-	mx = x + 8 - (mv / 16) - mean_x;
+	mx = x + 8 - (mv  >> 4) - mean_x;
 	my = y + 8 - (mv & 0xf) - mean_y;
 
-	dst = ri->canvas + y * ri->canvas_pitch + x;
-	src = ri->canvascopy + my * ri->canvas_pitch + mx;
+	dst = ri->canvas + y * pitch + x;
+	src = ri->canvascopy + my * pitch + mx;
 
 	for (i = 0; i < 4; i++)
 	{
@@ -166,18 +164,20 @@ static inline void apply_motion_4x4(roq_parse_ctx* ctx, unsigned x, unsigned y, 
 }
 
 /* -------------------------------------------------------------------------- */
-static inline void apply_motion_8x8(roq_parse_ctx* ctx, unsigned x, unsigned y, unsigned char mv, char mean_x, char mean_y)
+static inline void apply_motion_8x8(roq_parse_ctx* ctx, int x, int y, int mv)
 {
 	int mx, my, i;
-	short *src, *dst;
+	short * restrict src, * restrict dst;
 	roq_info *ri = ctx->ri;
+	int mean_x = ctx->chunk_arg1;
+	int mean_y = ctx->chunk_arg0;
 	int pitch = ri->canvas_pitch;
 
-	mx = x + 8 - (mv / 16) - mean_x;
+	mx = x + 8 - (mv  >> 4) - mean_x;
 	my = y + 8 - (mv & 0xf) - mean_y;
 	
-	dst = ri->canvas + y * ri->canvas_pitch + x;
-	src = ri->canvascopy + my * ri->canvas_pitch + mx;
+	dst = ri->canvas + y * pitch + x;
+	src = ri->canvascopy + my * pitch + mx;
 
 	for (i = 0; i < 8; i++)
 	{
@@ -199,7 +199,7 @@ void roq_init(roq_info* ri, roq_file* fp, roq_getchunk_t getch, roq_retchunk_t r
 	ri->fp = fp;
 	ri->get_chunk = getch;
 	ri->ret_chunk = retch;
-	ri->framebuffer = framebuffer;
+	ri->canvas = framebuffer;
 	ri->displayrate = displayrate;
 	ri->cells = ri->cells_u + 128;
 	ri->qcells = ri->qcells_u + 128;
@@ -235,24 +235,24 @@ const int u1772C_ = 1.772000 * YUV_MUL2;
 
 /* -------------------------------------------------------------------------- */
 
-typedef int (*roq_applier)(roq_parse_ctx* ctx, unsigned x, unsigned y, char* buf);
+typedef int (*roq_applier)(roq_parse_ctx* ctx, int x, int y, char* buf);
 
-static int roq_apply_mot(roq_parse_ctx* ctx, unsigned x, unsigned y, char* buf) RoQ_ATTR_SDRAM;
-static int roq_apply_fcc(roq_parse_ctx* ctx, unsigned x, unsigned y, char* buf) RoQ_ATTR_SDRAM;
-static int roq_apply_sld(roq_parse_ctx* ctx, unsigned x, unsigned y, char* buf) RoQ_ATTR_SDRAM;
-static int roq_apply_cc(roq_parse_ctx* ctx, unsigned x, unsigned y, char* buf) RoQ_ATTR_SDRAM;
+static int roq_apply_mot(roq_parse_ctx* ctx, int x, int y, char* buf) RoQ_ATTR_SDRAM;
+static int roq_apply_fcc(roq_parse_ctx* ctx, int x, int y, char* buf) RoQ_ATTR_SDRAM;
+static int roq_apply_sld(roq_parse_ctx* ctx, int x, int y, char* buf) RoQ_ATTR_SDRAM;
+static int roq_apply_cc(roq_parse_ctx* ctx, int x, int y, char* buf) RoQ_ATTR_SDRAM;
 
-static int roq_apply_fcc2(roq_parse_ctx* ctx, unsigned x, unsigned y, char* buf) RoQ_ATTR_SDRAM;
-static int roq_apply_sld2(roq_parse_ctx* ctx, unsigned x, unsigned y, char* buf) RoQ_ATTR_SDRAM;
-static int roq_apply_cc2(roq_parse_ctx* ctx, unsigned x, unsigned y, char* buf) RoQ_ATTR_SDRAM;
+static int roq_apply_fcc2(roq_parse_ctx* ctx, int x, int y, char* buf) RoQ_ATTR_SDRAM;
+static int roq_apply_sld2(roq_parse_ctx* ctx, int x, int y, char* buf) RoQ_ATTR_SDRAM;
+static int roq_apply_cc2(roq_parse_ctx* ctx, int x, int y, char* buf) RoQ_ATTR_SDRAM;
 
 roq_applier appliers[] = { &roq_apply_mot, &roq_apply_fcc, &roq_apply_sld, &roq_apply_cc };
 roq_applier appliers2[] = { &roq_apply_mot, &roq_apply_fcc2, &roq_apply_sld2, &roq_apply_cc2 };
 
-static inline int roq_read_vqid(roq_parse_ctx* ctx, unsigned char* buf, unsigned* pvqid)
+static inline int roq_read_vqid(roq_parse_ctx* ctx, unsigned char* buf, int* pvqid)
 {
 	int adv = 0;
-	unsigned vqid;
+	int vqid;
 
 #ifdef MARS
 	if (ctx->vqflg_pos == 0)
@@ -274,8 +274,8 @@ static inline int roq_read_vqid(roq_parse_ctx* ctx, unsigned char* buf, unsigned
 #else
 	if (ctx->vqflg_pos == 0)
 	{
-		unsigned shf;
-		unsigned qfl = buf[0] | (buf[1] << 8);
+		int shf;
+		int qfl = buf[0] | (buf[1] << 8);
 
 		ctx->vqflg = 0;
 		for (shf = 0; shf < 16; shf += 2) {
@@ -297,25 +297,25 @@ static inline int roq_read_vqid(roq_parse_ctx* ctx, unsigned char* buf, unsigned
 	return adv;
 }
 
-static int roq_apply_mot(roq_parse_ctx* ctx, unsigned x, unsigned y, char* buf)
+static int roq_apply_mot(roq_parse_ctx* ctx, int x, int y, char* buf)
 {
 	return 0;
 }
 
-static int roq_apply_fcc(roq_parse_ctx* ctx, unsigned x, unsigned y, char* buf)
+static int roq_apply_fcc(roq_parse_ctx* ctx, int x, int y, char* buf)
 {
-	apply_motion_8x8(ctx, x, y, buf[0], ctx->chunk_arg1, ctx->chunk_arg0);
+	apply_motion_8x8(ctx, x, y, (uint8_t)buf[0]);
 	return 1;
 }
 
-static int roq_apply_sld(roq_parse_ctx* ctx, unsigned x, unsigned y, char* buf)
+static int roq_apply_sld(roq_parse_ctx* ctx, int x, int y, char* buf)
 {
 	int i, j;
 	roq_info* ri = ctx->ri;
-	unsigned pitch = ri->canvas_pitch;
+	int pitch = ri->canvas_pitch;
 	roq_qcell *qcell = ri->qcells + buf[0];
-	short *dst = ri->canvas + y * pitch + x;
-	short *dst2 = dst + pitch;
+	short *restrict dst = ri->canvas + y * pitch + x;
+	short *restrict dst2 = dst + pitch;
 
 	pitch *= 2;
 
@@ -362,48 +362,45 @@ static int roq_apply_sld(roq_parse_ctx* ctx, unsigned x, unsigned y, char* buf)
 	return 1;
 }
 
-static int roq_apply_cc(roq_parse_ctx* ctx, unsigned xp, unsigned yp, char* buf)
+static int roq_apply_cc(roq_parse_ctx* ctx, int xp, int yp, char* buf)
 {
-	unsigned k;
-	unsigned x, y;
+	int k;
 	int bpos = 0;
 
 	for (k = 0; k < 4; k++)
 	{
-		unsigned vqid;
+		int x, y;
+		int vqid;
 
 		x = (k & 1) * 4;
-		x += xp;
-
 		y = (k & 2) * 2;
-		y += yp;
 
 		bpos += roq_read_vqid(ctx, (uint8_t *)&buf[bpos], &vqid);
 
-		bpos += appliers2[vqid](ctx, x, y, &buf[bpos]);
+		bpos += appliers2[vqid](ctx, xp + x, yp + y, &buf[bpos]);
 	}
 
 	return bpos;
 }
 
-static int roq_apply_fcc2(roq_parse_ctx* ctx, unsigned x, unsigned y, char* buf)
+static int roq_apply_fcc2(roq_parse_ctx* ctx, int x, int y, char* buf)
 {
-	apply_motion_4x4(ctx, x, y, buf[0], ctx->chunk_arg1, ctx->chunk_arg0);
+	apply_motion_4x4(ctx, x, y, (uint8_t)buf[0]);
 	return 1;
 }
 
-static int roq_apply_sld2(roq_parse_ctx* ctx, unsigned x, unsigned y, char* buf)
+static int roq_apply_sld2(roq_parse_ctx* ctx, int x, int y, char* buf)
 {
 	roq_qcell *qcell = ctx->ri->qcells + buf[0];
 	roq_apply_cc2(ctx, x, y, qcell->idx);
 	return 1;
 }
 
-static int roq_apply_cc2(roq_parse_ctx* ctx, unsigned x, unsigned y, char* buf)
+static int roq_apply_cc2(roq_parse_ctx* ctx, int x, int y, char* buf)
 {
 	roq_info* ri = ctx->ri;
-	unsigned pitch = ri->canvas_pitch;
-	int *dst = (int *)(ri->canvas + y * pitch + x);
+	int pitch = ri->canvas_pitch;
+	int *restrict dst = (int *)(ri->canvas + y * pitch + x);
 	roq_cell *cell0, *cell1, *cell2, *cell3;
 
 	pitch /= 2;
@@ -589,8 +586,6 @@ int roq_read_frame(roq_info* ri, char loop, void (*finish)(void))
 		ri->ret_chunk(ri->fp);
 		return 0;
 	}
-
-	ri->frame_num++;
 
 	ctx.ri = ri;
 	ctx.chunk_arg0 = chunk_arg0;

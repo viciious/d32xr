@@ -58,9 +58,6 @@ release: LDFLAGS += -Os -flto=auto
 MARSHWCFLAGS := $(CCFLAGS)
 MARSHWCFLAGS += -O1 -fno-lto
 
-ROQCCFLAGS := $(CCFLAGS)
-ROQCCFLAGS += -O2
-
 CCFLAGS += -Os
 
 PREFIX = $(ROOTDIR)/sh-elf/bin/sh-elf-
@@ -184,9 +181,6 @@ crt0.o: crt0.s m68k.bin
 
 marshw.o: marshw.c
 	$(CC) $(MARSHWCFLAGS) $(INCPATH) $< -o $@
-
-roq_read.o: roq_read.c
-	$(CC) $(ROQCCFLAGS) $(INCPATH) $< -o $@
 
 %.o: %.c
 	$(CC) $(CCFLAGS) $(INCPATH) $< -o $@
