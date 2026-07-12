@@ -881,7 +881,7 @@ static void Mars_HandleEndDMARequest(void)
 {
 	int flag;
 	int error = 0;
-	volatile unsigned timeout = 10000;
+	volatile unsigned timeout = 100;
 	int checksum = 0;
 	int chcr = SH2_DMA_CHCR_DM_INC|SH2_DMA_CHCR_TS_WU|SH2_DMA_CHCR_AL_AH|SH2_DMA_CHCR_DS_EDGE|SH2_DMA_CHCR_DL_AH;
 

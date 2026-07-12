@@ -216,12 +216,16 @@ void I_Error (char *error, ...)
 {
 	va_list ap;
 	char errormessage[80];
+	volatile unsigned short* palette = &MARS_CRAM;
 
 	va_start(ap, error);
 	D_vsnprintf(errormessage, sizeof(errormessage), error, ap);
 	va_end(ap);
 
 	I_ClearFrameBuffer();
+	Mars_InitLineTable();
+	MARS_VDP_DISPMODE = MARS_240_LINES | MARS_VDP_MODE_256;
+	palette[COLOR_WHITE] = 0x7fff;
 	I_Print8 (0,20,errormessage);
 	I_Update ();
 
