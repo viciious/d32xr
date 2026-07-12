@@ -3176,7 +3176,7 @@ dma_to_32x:
         lea     0xA15000,a1
         move.w  d0,d1
 
-        move.l  8(sp),d0                /* optional destination address, LW */
+        move.l  12(sp),d0               /* source address, LW */
         move.w  d0,0xA15122             /* COMM2 */      
         addq    #1,d1
         move.w  d1,0xA15120             /* ack in COMM0 */
@@ -3185,7 +3185,7 @@ dma_to_32x:
         beq.b   0000b
         move.w  0xA15120,d1
 
-        swap.w  d0                      /* optional destination address, HW */
+        swap.w  d0                      /* source address, HW */
         move.w  d0,0x0122(a1)           /* COMM2 */      
         addq    #1,d1
         move.w  d1,0xA15120             /* ack in COMM0 */

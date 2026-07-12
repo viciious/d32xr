@@ -47,7 +47,9 @@ uint16_t mars_num_cd_tracks = 0;
 
 uint16_t mars_refresh_hz = 0;
 
+char *pri_dma_src = NULL;
 char *pri_dma_dest = NULL;
+int pri_dma_opt = 0;
 int pri_dma_read = 0;
 int pri_dma_length = 0;
 void *pri_dma_arg = NULL;
@@ -832,24 +834,25 @@ int Mars_ReadCDFile(int length)
 static void Mars_HandleBeginDMARequest(int is_repeat)
 {
 	int j, l;
-	int cmd, arg;
-	int dest_addr;
+	int cmd;
+	int src_addr;
 	int chcr = SH2_DMA_CHCR_DM_INC|SH2_DMA_CHCR_TS_WU|SH2_DMA_CHCR_AL_AH|SH2_DMA_CHCR_DS_EDGE|SH2_DMA_CHCR_DL_AH;
 
 	cmd = ++MARS_SYS_COMM0;
 	// wait for LW of dest addr
 	while (MARS_SYS_COMM0 == cmd);
-	dest_addr = MARS_SYS_COMM2;
+	src_addr = MARS_SYS_COMM2;
 
 	cmd = ++MARS_SYS_COMM0;
 	// wait for HW of dest addr
 	while (MARS_SYS_COMM0 == cmd);
-	dest_addr = (MARS_SYS_COMM2 << 16) | dest_addr;
+	src_addr = (MARS_SYS_COMM2 << 16) | src_addr;
+	pri_dma_src = (void *)src_addr;
 
 	cmd = ++MARS_SYS_COMM0;
 	// wait for an argument
 	while (MARS_SYS_COMM0 == cmd);
-	arg = MARS_SYS_COMM2;
+	pri_dma_opt = MARS_SYS_COMM2;
 
 	while (!(MARS_SYS_DMACTR & MARS_SYS_DMA_68S)) ; // wait for SH DREQ to start
 
@@ -860,7 +863,7 @@ static void Mars_HandleBeginDMARequest(int is_repeat)
 
 	if (!is_repeat)
 	{
-		pri_dma_dest = pri_dreqdma_cb(pri_dma_arg, (void*)MARS_SYS_DMADAR, l, arg);
+		pri_dma_dest = pri_dreqdma_cb(pri_dma_arg, (void*)MARS_SYS_DMADAR, l, 0);
 		pri_dma_length = l;
 	}
 
@@ -912,7 +915,7 @@ static void Mars_HandleEndDMARequest(void)
 
 		if (checksum != MARS_SYS_COMM2)
 		{
-			I_Error("MISMATCH %d %d %d", len, checksum, MARS_SYS_COMM2);
+			I_Error("M %d %x %p %p", len, pri_dma_opt, pri_dma_dest, pri_dma_src);
 			error = 1;
 		}
 	}
