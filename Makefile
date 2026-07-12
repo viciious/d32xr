@@ -27,7 +27,7 @@ ASFLAGS += --defsym ENABLE_SSF_MAPPER=1
 endif
 
 MARSHWCFLAGS := $(CCFLAGS)
-MARSHWCFLAGS += -O1 -fno-lto
+MARSHWCFLAGS += -Os -fno-lto
 
 release: CCFLAGS += -Os -fomit-frame-pointer -ffast-math -funroll-loops -fno-align-loops -fno-align-jumps -fno-align-labels
 release: CCFLAGS += -fno-common -ffunction-sections -fdata-sections -flto=auto

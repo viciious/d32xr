@@ -49,7 +49,6 @@ uint16_t mars_refresh_hz = 0;
 
 char *pri_dma_src = NULL;
 char *pri_dma_dest = NULL;
-int pri_dma_opt = 0;
 int pri_dma_read = 0;
 int pri_dma_length = 0;
 void *pri_dma_arg = NULL;
@@ -316,27 +315,10 @@ uint16_t* Mars_FrameBufferLines(void)
 
 void Mars_ReadSRAM(uint8_t * buffer, int offset, int len)
 {
-	uint8_t *ptr = buffer;
-
-	while (MARS_SYS_COMM0);
-	while (len-- > 0) {
-		MARS_SYS_COMM2 = offset++;
-		MARS_SYS_COMM0 = 0x0100;    /* Read SRAM */
-		while (MARS_SYS_COMM0);
-		*ptr++ = MARS_SYS_COMM2 & 0x00FF;
-	}
 }
 
 void Mars_WriteSRAM(const uint8_t* buffer, int offset, int len)
 {
-	const uint8_t *ptr = buffer;
-
-	while (MARS_SYS_COMM0);
-	while (len-- > 0) {
-		MARS_SYS_COMM2 = offset++;
-		MARS_SYS_COMM0 = 0x0200 | *ptr++;    /* Write SRAM */
-		while (MARS_SYS_COMM0);
-	}
 }
 
 static char *Mars_StringToFramebuffer(const char *str)
@@ -544,32 +526,7 @@ static inline unsigned short GetNetByte(void)
  */
 int Mars_GetNetByte(int wait)
 {
-	unsigned short ret;
-	unsigned ticend;
-
-	if (!wait)
-	{
-		/* no wait - return a value immediately */
-		ret = GetNetByte();
-		return (ret == 0xFF00) ? -2 : (ret & 0xFF00) ? -1 : (int)(ret & 0x00FF);
-	}
-
-	/* quick check for byte in rec buffer */
-	ret = GetNetByte();
-	if (ret != 0xFF00)
-		return (ret & 0xFF00) ? -1 : (int)(ret & 0x00FF);
-
-	/* nothing waiting - do timeout loop */
-	ticend = mars_vblank_count + wait;
-	while (mars_vblank_count < ticend)
-	{
-		ret = GetNetByte();
-		if (ret == 0xFF00)
-			continue;	/* no bytes waiting */
-		/* GetNetByte returned a byte or a net error */
-		return (ret & 0xFF00) ? -1 : (int)(ret & 0x00FF);
-	}
-	return -2;	/* timeout */
+	return 0;
 }
 
 /*
@@ -755,21 +712,15 @@ void Mars_CtlMDVDP(int sel)
 
 void Mars_StoreWordColumnInMDVRAM(int c)
 {
-	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM0 = 0x1A00|c;		/* sel = to VRAM, column in LB of comm0, start move */
 }
 
 void Mars_LoadWordColumnFromMDVRAM(int c, int offset, int len)
 {
-	while (MARS_SYS_COMM0 != 0);
-	MARS_SYS_COMM2 = (((uint16_t)len)<<8) | offset;  /* (length<<8)|offset */
-	MARS_SYS_COMM0 = 0x1B00|c;		/* sel = to VRAM, column in LB of comm0, start move */
+
 }
 
 void Mars_SwapWordColumnWithMDVRAM(int c)
 {
-    while (MARS_SYS_COMM0);
-    MARS_SYS_COMM0 = 0x1C00|c;        /* sel = swap with VRAM, column in LB of comm0, start move */
 }
 
 int Mars_OpenCDFileByName(const char *name, int *poffset)
@@ -834,7 +785,7 @@ int Mars_ReadCDFile(int length)
 static void Mars_HandleBeginDMARequest(int is_repeat)
 {
 	int j, l;
-	int cmd;
+	int cmd, arg;
 	int src_addr;
 	int chcr = SH2_DMA_CHCR_DM_INC|SH2_DMA_CHCR_TS_WU|SH2_DMA_CHCR_AL_AH|SH2_DMA_CHCR_DS_EDGE|SH2_DMA_CHCR_DL_AH;
 
@@ -852,7 +803,7 @@ static void Mars_HandleBeginDMARequest(int is_repeat)
 	cmd = ++MARS_SYS_COMM0;
 	// wait for an argument
 	while (MARS_SYS_COMM0 == cmd);
-	pri_dma_opt = MARS_SYS_COMM2;
+	arg = MARS_SYS_COMM2;
 
 	while (!(MARS_SYS_DMACTR & MARS_SYS_DMA_68S)) ; // wait for SH DREQ to start
 
@@ -863,7 +814,10 @@ static void Mars_HandleBeginDMARequest(int is_repeat)
 
 	if (!is_repeat)
 	{
-		pri_dma_dest = pri_dreqdma_cb(pri_dma_arg, (void*)MARS_SYS_DMADAR, l, 0);
+		pri_dma_dest = pri_dreqdma_cb(pri_dma_arg, (void*)MARS_SYS_DMADAR, l, arg);
+		for (j = 0; j < l; j++) {
+			pri_dma_dest[j] = 0xff;
+		}
 		pri_dma_length = l;
 	}
 
@@ -915,7 +869,7 @@ static void Mars_HandleEndDMARequest(void)
 
 		if (checksum != MARS_SYS_COMM2)
 		{
-			I_Error("M %d %x %p %p", len, pri_dma_opt, pri_dma_dest, pri_dma_src);
+			I_Error("M %d %p %p", len*2, pri_dma_dest, pri_dma_src);
 			error = 1;
 		}
 	}

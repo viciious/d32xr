@@ -140,7 +140,7 @@ void scd_play_roq(volatile short *commreg, int gfh_offset, int gfh_length)
 
                 retry = 0;
                 do {
-                    retry = dma_to_32x((void *)((chunk_size << 2) | (pad << 1)), buf-8, wram_rem+8+pad, chunk_size, retry != 0);
+                    retry = dma_to_32x((void *)((chunk_size << 2) | (pad << 1)), buf-8, wram_rem+8+pad, chunk_id, retry != 0);
                 } while (retry < 0);
 
                 data_size += 8;
@@ -176,7 +176,7 @@ void scd_play_roq(volatile short *commreg, int gfh_offset, int gfh_length)
 
             retry = 0;
             do {
-                retry = dma_to_32x((void *)((chunk_size << 2) | (pad << 1)), buf, (buf_end - buf + 1) & ~1, chunk_size, retry != 0);
+                retry = dma_to_32x((void *)((chunk_size << 2) | (pad << 1)), buf, (buf_end - buf + 1) & ~1, chunk_id, retry != 0);
             } while (retry < 0);
             header_len = 0;
             break;

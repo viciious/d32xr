@@ -788,60 +788,6 @@ void I_ClearFrameBuffer (void)
 
 void I_DebugScreen(void)
 {
-	int i;
-	int x = 200;
-	int line = 5;
-	static char buf[10][10];
-
-	if (debugmode == DEBUGMODE_FPSCOUNT)
-	{
-		D_snprintf(buf[0], sizeof(buf[0]), "fps:%2d", fpscount);
-		I_Print8(x, line++, buf[0]);
-	}
-	else if (debugmode > DEBUGMODE_FPSCOUNT)
-	{
-		unsigned t_ref_bsp_avg = 0;
-		unsigned t_ref_segs_avg = 0;
-		unsigned t_ref_planes_avg = 0;
-		unsigned t_ref_sprites_avg = 0;
-		unsigned t_ref_total_avg = 0;
-
-		for (i = 0; i < 4; i++)
-		{
-			t_ref_bsp_avg += t_ref_bsp[i];
-			t_ref_segs_avg += t_ref_segs[i];
-			t_ref_planes_avg += t_ref_planes[i];
-			t_ref_sprites_avg += t_ref_sprites[i];
-			t_ref_total_avg += t_ref_total[i];
-		}
-		t_ref_bsp_avg >>= 2;
-		t_ref_segs_avg >>= 2;
-		t_ref_planes_avg >>= 2;
-		t_ref_sprites_avg >>= 2;
-		t_ref_total_avg >>= 2;
-
-		if (debugscreenupdate)
-		{
-			D_snprintf(buf[0], sizeof(buf[0]), "fps:%2d", fpscount);
-			D_snprintf(buf[1], sizeof(buf[0]), "tcs:%d", lasttics);
-			D_snprintf(buf[2], sizeof(buf[0]), "g:%2d", Mars_FRTCounter2Msec(tictics));
-			D_snprintf(buf[3], sizeof(buf[0]), "b:%2d", Mars_FRTCounter2Msec(t_ref_bsp_avg));
-			D_snprintf(buf[4], sizeof(buf[0]), "w:%2d %2d", Mars_FRTCounter2Msec(t_ref_segs_avg), vd->lastwallcmd - vd->viswalls);
-			D_snprintf(buf[5], sizeof(buf[0]), "p:%2d %2d", Mars_FRTCounter2Msec(t_ref_planes_avg), vd->lastvisplane - vd->visplanes - 1);
-			D_snprintf(buf[6], sizeof(buf[0]), "s:%2d %2d", Mars_FRTCounter2Msec(t_ref_sprites_avg), vd->vissprite_p - vd->vissprites);
-			D_snprintf(buf[7], sizeof(buf[0]), "r:%2d", Mars_FRTCounter2Msec(t_ref_total_avg));
-			D_snprintf(buf[8], sizeof(buf[0]), "d:%2d", Mars_FRTCounter2Msec(drawtics));
-			D_snprintf(buf[9], sizeof(buf[0]), "t:%2d", Mars_FRTCounter2Msec(I_GetFRTCounter() - ticstart));
-		}
-
-        I_Print8(x, line++, buf[0]);
-        I_Print8(x, line++, buf[1]);
-        line++;
-		for (i = 2; i < 10; i++)
-	        I_Print8(x, line++, buf[i]);
-	}
-
-	debugscreenupdate = false;
 }
 
 void I_ClearWorkBuffer(void)
@@ -1002,133 +948,14 @@ static int Net_RecvPacket(int size, uint8_t *data)
 
 static void Player0Setup (void)
 {
-	int		val, buttons;
-	int 	stage, start;
-	uint8_t idbyte[3];
-	const int timeout = 300;
-
-	I_Print8(104,5,"Player 0 setup");
-	I_Update();
-
-	idbyte[0] = 0xFF;
-	idbyte[1] = startmap;
-	idbyte[2] = startskill + 8*starttype;
-
-	stage = 0;
-	start = Mars_GetTicCount();
-	do
-	{
-		int tics;
-
-		/* wait until rec 0xAA byte from other side or player aborts */
-		buttons = I_ReadControls();
-		if (buttons & BT_START)
-		{
-			starttype = gt_single;
-			return;	/* abort */
-		}
-
-		switch (stage)
-		{
-		case 0:
-			val = Mars_GetNetByte(1);
-			if (val == CONN_MAGIC)
-				stage++;
-			break;
-		case 1:
-			Net_SendPacket(3, idbyte); /* ignore timeout */
-			stage++;
-			break;
-		case 2:
-			val = Mars_GetNetByte(1);
-			if (val == (CONN_MAGIC ^ 0xFF))
-				return;	/* ready to go! */
-			break;
-		}
-
-		tics = Mars_GetTicCount();
-		if (tics - start > timeout)
-		{
-			/* timeout, restart the process */
-			stage = 0;
-			start = tics;
-
-			while (Mars_GetNetByte(0) != -2); /* flush network buffer */
-			Mars_WaitTicks(Mars_GetTicCount()&7);
-		}
-	} while (1);
 }
 
 static void Player1Setup (void)
 {
-	uint8_t	idbyte[3];
-	int		val, buttons;
-
-	I_Print8(104,5,"Player 1 setup");
-	I_Update();
-
-	do
-	{
-		buttons = I_ReadControls();
-		if (buttons & BT_START)
-		{
-			starttype = gt_single;
-			return;	/* abort */
-		}
-
-		Mars_PutNetByte(CONN_MAGIC);	/* send an acknowledge byte */
-
-		Mars_WaitTicks(5);
-
-		val = Net_RecvPacket(3, idbyte);
-		if (val == 3 && idbyte[0] == 0xFF)
-			break;
-
-		Mars_WaitTicks(5);
-
-		while (Mars_GetNetByte(0) != -2); /* flush network buffer */
-		Mars_WaitTicks(Mars_GetTicCount()&7);
-	} while (1);
-
-	startmap = idbyte[1];
-	starttype = idbyte[2] / 8;
-	startskill = idbyte[2] & 7;
-
-	Mars_PutNetByte(CONN_MAGIC ^ 0xFF);	/* send an acknowledge byte */
-	Mars_PutNetByte(CONN_MAGIC ^ 0xFF);	/* send another acknowledge byte */
 }
 
 void I_NetSetup (void)
 {
-	while (!I_RefreshCompleted());
-
-	Mars_SetupNet(1); /* 0 = no net, 1 = system link cable, -1 = serial cable */
-
-	Mars_SetNetLinkTimeout(LINK_TIMEOUT_SHORT);
-
-	I_Print8(64,1,"Attempting to connect..."); 
-	I_Print8(80,3,"Press start to abort");
-//	I_Update();
-
-	while (Mars_GetNetByte(0) != -2) ;  /* flush network buffer */
-	Mars_WaitTicks(5);
-
-	if (consoleplayer == 0)
-		Player0Setup();
-	else
-		Player1Setup();
-
-	if (starttype == gt_single)
-	{
-		I_NetStop();
-		return;
-	}
-
-	Mars_SetNetLinkTimeout(LINK_TIMEOUT_LONG);
-
-	Mars_WaitTicks(5);
-
-	while (Mars_GetNetByte(0) != -2); /* flush network buffer */
 }
 
 void I_NetStop(void)
@@ -1142,72 +969,6 @@ void G_PlayerReborn (int player);
 
 unsigned I_NetTransfer (unsigned buttons)
 {
-	int			i, val;
-	unsigned	inbytes[PACKET_SIZE];
-	unsigned	outbytes[PACKET_SIZE];
-	unsigned	consistency;
-
-	consistency = players[0].mo->x ^ players[0].mo->y ^ players[0].mo->z ^ players[1].mo->x ^ players[1].mo->y ^ players[1].mo->z;
-	consistency = (consistency>>8) ^ consistency ^ (consistency>>16);
-
-	outbytes[0] = (buttons>>24) & 0xff;
-	outbytes[1] = (buttons>>16) & 0xff;
-	outbytes[2] = (buttons>>8) & 0xff;
-	outbytes[3] = (buttons) & 0xff;
-	outbytes[4] = consistency & 0xff;
-	outbytes[5] = vblsinframe;
-
-	if (consoleplayer)
-	{
-		/* player 1 waits before sending */
-		for (i=0; i<=PACKET_SIZE-1; i++)
-		{
-			val = Mars_GetNetByte(120);
-			if (val < 0)
-				goto reconnect;
-			inbytes[i] = val;
-			Mars_PutNetByte(outbytes[i]);
-		}
-		vblsinframe = inbytes[5];	/* take gamevbls from other player */
-	}
-	else
-	{
-		/* player 0 sends first */
-		for (i=0; i<=PACKET_SIZE-1; i++)
-		{
-			Mars_PutNetByte(outbytes[i]);
-			val = Mars_GetNetByte(120);
-			if (val < 0)
-				goto reconnect;
-			inbytes[i] = val;
-		}
-	}
-	
-	if (inbytes[4] != outbytes[4])
-	{
-		/* consistency error */
-		while (!I_RefreshCompleted());
-		I_Print8(108,23,"Connecting...");
-		I_Update();
-		while (Mars_GetNetByte(0) != -2); /* flush network buffer */
-		//Mars_CleanupNet();
-		Mars_WaitTicks(32+(Mars_GetTicCount()&31));
-		goto reconnect;
-	}
-
-	val = (inbytes[0]<<24) + (inbytes[1]<<16) + (inbytes[2]<<8) + inbytes[3];
-	return val;
-	
-reconnect:
-	I_NetSetup();
-	G_PlayerReborn(0);
-	G_PlayerReborn(1);
-	gameaction = starttype == gt_single ? ga_startnew : ga_warped;
-	for (i = 0; i < MAXPLAYERS; i++)
-	{
-		players[i].ticbuttons = players[i].oldticbuttons = 0;
-		players[i].ticmousex = players[i].ticmousey = 0;
-	}
 	return 0;
 }
 
