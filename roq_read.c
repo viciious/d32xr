@@ -23,9 +23,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "roq.h"
-#include "32x.h"
-
-/* -------------------------------------------------------------------------- */
 
 static inline int roq_fgetc(roq_file* fp) {
 	return *fp->data++;
@@ -48,7 +45,6 @@ static inline int get_word(roq_file* fp)
 	return ret;
 }
 
-/* -------------------------------------------------------------------------- */
 static inline int get_long(roq_file* fp)
 {
 	int ret;
@@ -60,14 +56,12 @@ static inline int get_long(roq_file* fp)
 	return ret;
 }
 
-
-/* -------------------------------------------------------------------------- */
 int roq_read_info(roq_file* fp, roq_info* ri)
 {
-	unsigned int head1;
+	int16_t head1;
 	int head2;
-	unsigned framerate;
-	unsigned chunk_id;
+	uint8_t framerate;
+	int16_t chunk_id;
 
 	ri->get_chunk(fp);
 
@@ -84,8 +78,7 @@ int roq_read_info(roq_file* fp, roq_info* ri)
 	}
 
 	ri->framerate = framerate;
-	ri->frametics = (ri->displayrate * 0x10000 / framerate) >> 16;
-	ri->frametics_frac = (ri->displayrate * 0x10000 / framerate) & 0xffff;
+	ri->frametics = (ri->displayrate * 0x10000 / framerate);
 
 	while (!roq_feof(fp))
 	{
@@ -136,21 +129,17 @@ int roq_read_info(roq_file* fp, roq_info* ri)
 	return 0;
 }
 
-/* -------------------------------------------------------------------------- */
-static inline void apply_motion_4x4(roq_parse_ctx* ctx, int x, int y, int mv)
+static inline void apply_motion_4x4(roq_parse_ctx* ctx, short * restrict dst, int mv)
 {
-	int mx, my, i;
-	short * restrict src, * restrict dst;
-	roq_info *ri = ctx->ri;
-	int mean_x = ctx->chunk_arg1;
-	int mean_y = ctx->chunk_arg0;
-	int pitch = ri->canvas_pitch;
+	int mypitch, i;
+	short * restrict src;
+	int16_t mean_x = ctx->chunk_arg1;
+	int16_t mean_y = ctx->chunk_arg0;
+	int pitch = ctx->canvas_pitch;
 
-	mx = x + 8 - (mv  >> 4) - mean_x;
-	my = y + 8 - (mv & 0xf) - mean_y;
-
-	dst = ri->canvas + y * pitch + x;
-	src = ri->canvascopy + my * pitch + mx;
+	mypitch = (8 - (mv & 0xf) - mean_y) * pitch;
+	mypitch += 8 - (mv >> 4) - mean_x;
+	src = (short *)((intptr_t)dst + ctx->canvastocopy) + mypitch;
 
 	for (i = 0; i < 4; i++)
 	{
@@ -163,21 +152,17 @@ static inline void apply_motion_4x4(roq_parse_ctx* ctx, int x, int y, int mv)
 	}
 }
 
-/* -------------------------------------------------------------------------- */
-static inline void apply_motion_8x8(roq_parse_ctx* ctx, int x, int y, int mv)
+static inline void apply_motion_8x8(roq_parse_ctx* ctx, short * restrict dst, int mv)
 {
-	int mx, my, i;
-	short * restrict src, * restrict dst;
-	roq_info *ri = ctx->ri;
-	int mean_x = ctx->chunk_arg1;
-	int mean_y = ctx->chunk_arg0;
-	int pitch = ri->canvas_pitch;
+	int mypitch, i;
+	short * restrict src;
+	int16_t mean_x = ctx->chunk_arg1;
+	int16_t mean_y = ctx->chunk_arg0;
+	int pitch = ctx->canvas_pitch;
 
-	mx = x + 8 - (mv  >> 4) - mean_x;
-	my = y + 8 - (mv & 0xf) - mean_y;
-	
-	dst = ri->canvas + y * pitch + x;
-	src = ri->canvascopy + my * pitch + mx;
+	mypitch = (8 - (mv & 0xf) - mean_y) * pitch;
+	mypitch += 8 - (mv >> 4) - mean_x;
+	src = (short *)((intptr_t)dst + ctx->canvastocopy) + mypitch;
 
 	for (i = 0; i < 8; i++)
 	{
@@ -212,201 +197,145 @@ void roq_init(roq_info* ri, roq_file* fp, roq_getchunk_t getch, roq_retchunk_t r
 #define GMASK (((1<<10)-1) & ~RMASK)
 #define BMASK (((1<<15)-1) & ~(RMASK|GMASK))
 
-#define YUVClip8(v) (__builtin_expect((v) & ~YUV_MASK2, 0) ? (__builtin_expect((int)(v) < 0, 0) ? 0 : YUV_MASK2) : (v))
+#define YUVClip8(v) (__builtin_expect((v) < 0, 0) ? 0 : __builtin_expect((v) > YUV_MASK2, 0) ? YUV_MASK2 : (v))
 #define YUVRGB555(r,g,b) ((((((r)) >> (10+(YUV_FIX2-7))))) | (((((g)) >> (5+(YUV_FIX2-7)))) & GMASK) | (((((b)) >> (0+(YUV_FIX2-7)))) & BMASK))
 
 #define YUV_FIX2 8                   // fixed-point precision for YUV->RGB
-const int YUV_MUL2 = (1 << YUV_FIX2);
-const int YUV_NUDGE2 = (1 << (YUV_FIX2 - 1));
-const int YUV_MASK2 = (256 << YUV_FIX2) - 1;
+const int16_t YUV_MUL2 = (1 << YUV_FIX2);
+const int16_t YUV_NUDGE2 = (1 << (YUV_FIX2 - 1));
+const uint16_t YUV_MASK2 = (256 << YUV_FIX2) - 1;
 
-const int v1402C_ = 1.402000 * YUV_MUL2;
-const int v0714C_ = 0.714136 * YUV_MUL2;
+const int16_t v1402C_ = 1.402000 * YUV_MUL2;
+const int16_t v0714C_ = 0.714136 * YUV_MUL2;
 
-const int u0344C_ = 0.344136 * YUV_MUL2;
-const int u1772C_ = 1.772000 * YUV_MUL2;
+const int16_t u0344C_ = 0.344136 * YUV_MUL2;
+const int16_t u1772C_ = 1.772000 * YUV_MUL2;
 
 #define yuv2rgb555(y,u,v) \
 	YUVRGB555( \
-		YUVClip8(((unsigned)y << YUV_FIX2) + (v1402C_ * (v-128) + YUV_NUDGE2)), \
-		YUVClip8(((unsigned)y << YUV_FIX2) - (u0344C_ * (u-128) + v0714C_ * (v-128) - YUV_NUDGE2)), \
-		YUVClip8(((unsigned)y << YUV_FIX2) + (u1772C_ * (u-128) + YUV_NUDGE2)) \
+		YUVClip8((y << YUV_FIX2) + (v1402C_ * (v-128) + YUV_NUDGE2)), \
+		YUVClip8((y << YUV_FIX2) - (u0344C_ * (u-128) + v0714C_ * (v-128) - YUV_NUDGE2)), \
+		YUVClip8((y << YUV_FIX2) + (u1772C_ * (u-128) + YUV_NUDGE2)) \
 	)
 
 /* -------------------------------------------------------------------------- */
 
-typedef int (*roq_applier)(roq_parse_ctx* ctx, int x, int y, char* buf);
+static char *roq_apply_fcc(roq_parse_ctx* ctx, short * restrict dst, char* buf) RoQ_ATTR_SDRAM;
+static char *roq_apply_sld(roq_parse_ctx* ctx, short * restrict dst, char* buf) RoQ_ATTR_SDRAM;
+static char *roq_apply_cc(roq_parse_ctx* ctx, short * restrict dst, char* buf) RoQ_ATTR_SDRAM;
 
-static int roq_apply_mot(roq_parse_ctx* ctx, int x, int y, char* buf) RoQ_ATTR_SDRAM;
-static int roq_apply_fcc(roq_parse_ctx* ctx, int x, int y, char* buf) RoQ_ATTR_SDRAM;
-static int roq_apply_sld(roq_parse_ctx* ctx, int x, int y, char* buf) RoQ_ATTR_SDRAM;
-static int roq_apply_cc(roq_parse_ctx* ctx, int x, int y, char* buf) RoQ_ATTR_SDRAM;
+static char *roq_apply_fcc2(roq_parse_ctx* ctx, short * restrict dst, char* buf) RoQ_ATTR_SDRAM;
+static char *roq_apply_sld2(roq_parse_ctx* ctx,  short * restrict dst, char* buf) RoQ_ATTR_SDRAM;
+static char *roq_apply_cc2(roq_parse_ctx* ctx, short * restrict dst, char* buf) RoQ_ATTR_SDRAM;
 
-static int roq_apply_fcc2(roq_parse_ctx* ctx, int x, int y, char* buf) RoQ_ATTR_SDRAM;
-static int roq_apply_sld2(roq_parse_ctx* ctx, int x, int y, char* buf) RoQ_ATTR_SDRAM;
-static int roq_apply_cc2(roq_parse_ctx* ctx, int x, int y, char* buf) RoQ_ATTR_SDRAM;
+static void roq_read_vq(roq_parse_ctx *ctx, char *buf, char *chunk_end, int (*copyscr)(roq_info* , char , int , int )) RoQ_ATTR_SDRAM;
 
-roq_applier appliers[] = { &roq_apply_mot, &roq_apply_fcc, &roq_apply_sld, &roq_apply_cc };
-roq_applier appliers2[] = { &roq_apply_mot, &roq_apply_fcc2, &roq_apply_sld2, &roq_apply_cc2 };
+#define roq_read_vqid(ctx,buf,vqid) do { \
+	if (ctx->vqflg_pos == 0) { \
+		ctx->vqflg = ((buf[1] << 8) | (uint8_t)buf[0]) << 16; \
+		ctx->vqflg_pos = 8; \
+		buf = buf + 2; \
+	} \
+	ctx->vqflg_pos--; \
+	vqid = (((unsigned)ctx->vqflg >> 16) << 2) >> 16; \
+	ctx->vqflg <<= 2; \
+} while(0)
 
-static inline int roq_read_vqid(roq_parse_ctx* ctx, unsigned char* buf, int* pvqid)
+static char *roq_apply_fcc(roq_parse_ctx* ctx, short * restrict dst, char* buf)
 {
-	int adv = 0;
-	int vqid;
-
-#ifdef MARS
-	if (ctx->vqflg_pos == 0)
-	{	
-		ctx->vqflg = ((buf[1] << 8) | buf[0]) << 16;
-		ctx->vqflg_pos = 8;
-		adv = 2;
-	}
-
-	__asm volatile(
-		"shll %1\n\t"
-		"movt r0\n\t"
-		"shll %1\n\t"
-		"movt %0\n\t"
-		"add r0, r0\n\t"
-		"add r0, %0\n\t"
-		: "=r"(vqid), "+r"(ctx->vqflg) : : "r0"
-	);
-#else
-	if (ctx->vqflg_pos == 0)
-	{
-		int shf;
-		int qfl = buf[0] | (buf[1] << 8);
-
-		ctx->vqflg = 0;
-		for (shf = 0; shf < 16; shf += 2) {
-			ctx->vqflg <<= 2;
-			ctx->vqflg |= (qfl >> shf) & 0x3;
-		}
-
-		ctx->vqflg_pos = 8;
-		adv = 2;
-	}
-
-	vqid = ctx->vqflg & 0x3;
-	ctx->vqflg >>= 2;
-#endif
-
-	*pvqid = vqid;
-	ctx->vqflg_pos--;
-
-	return adv;
+	apply_motion_8x8(ctx, dst, (uint8_t)buf[0]);
+	return buf+1;
 }
 
-static int roq_apply_mot(roq_parse_ctx* ctx, int x, int y, char* buf)
-{
-	return 0;
-}
-
-static int roq_apply_fcc(roq_parse_ctx* ctx, int x, int y, char* buf)
-{
-	apply_motion_8x8(ctx, x, y, (uint8_t)buf[0]);
-	return 1;
-}
-
-static int roq_apply_sld(roq_parse_ctx* ctx, int x, int y, char* buf)
+static char *roq_apply_sld(roq_parse_ctx* ctx, short * restrict _dst, char* buf)
 {
 	int i, j;
-	roq_info* ri = ctx->ri;
-	int pitch = ri->canvas_pitch;
-	roq_qcell *qcell = ri->qcells + buf[0];
-	short *restrict dst = ri->canvas + y * pitch + x;
-	short *restrict dst2 = dst + pitch;
-
-	pitch *= 2;
+	int pitch = ctx->canvas_pitch;
+	roq_qcell *qcell = ctx->qcells + buf[0];
+	int *restrict dst = (int *)_dst;
+	int *restrict dst2 = (int *)(_dst + pitch);
 
 	for (i = 0; i < 4; i += 2)
 	{
-		roq_cell *cell0 = ri->cells + qcell->idx[i];
-		roq_cell *cell1 = ri->cells + qcell->idx[i+1];
+		roq_cell *cell0 = ctx->cells + qcell->idx[i];
+		roq_cell *cell1 = ctx->cells + qcell->idx[i+1];
 
 		for (j = 0; j < 2; j++)
 		{
-#ifdef MARS
-			__asm volatile(
-				"swap.w %2, r0\n\t"
-				"mov.w r0, @(0, %0)\n\t" "mov.w r0, @( 2, %0)\n\t" "mov.w r0, @(0, %1)\n\t" "mov.w r0, @( 2, %1)\n\t"
-				"swap.w r0, r0\n\t"
-				"mov.w r0, @(8, %0)\n\t" "mov.w r0, @(10, %0)\n\t" "mov.w r0, @(8, %1)\n\t" "mov.w r0, @(10, %1)\n\t"
-				: :  "r"(dst), "r"(dst2), "r"(cell0->rgb555x2[j]) : "r0");
-
-			__asm volatile(
-				"swap.w %2, r0\n\t"
-				"mov.w r0, @( 4, %0)\n\t" "mov.w r0, @( 6, %0)\n\t" "mov.w r0, @( 4, %1)\n\t" "mov.w r0, @( 6, %1)\n\t"
-				"swap.w r0, r0\n\t"
-				"mov.w r0, @(12, %0)\n\t" "mov.w r0, @(14, %0)\n\t" "mov.w r0, @(12, %1)\n\t" "mov.w r0, @(14, %1)\n\t"
-				: : "r"(dst), "r"(dst2), "r"(cell1->rgb555x2[j]) : "r0");
-#else
-			int a, b;
+			int a;
 
  			a = cell0->rgb555x2[j];
-			dst[4] = dst[5] = dst2[4] = dst2[5] = a;
-			a >>= 16;
-			dst[0] = dst[1] = dst2[0] = dst2[1] = a;
+			dst[2] = dst2[2] = a;
+			a = (((uint16_t)a)<<16)|((uint16_t)(a>>16)); // swap.w a,a
+			dst[0] = dst2[0] = a;
 
-			b = cell1->rgb555x2[j];
-			dst[6] = dst[7] = dst2[6] = dst2[7] = b;
-			b >>= 16;
-			dst[2] = dst[3] = dst2[2] = dst2[3] = b;
-#endif
+			a = cell1->rgb555x2[j];
+			dst[1] = dst2[1] = a;
+			a = (((uint16_t)a)<<16)|((uint16_t)(a>>16)); // swap.w a,a
+			dst[3] = dst2[3] = a;
 
 			dst += pitch;
 			dst2 += pitch;
 		}
 	}
 
-	return 1;
+	return buf+1;
 }
 
-static int roq_apply_cc(roq_parse_ctx* ctx, int xp, int yp, char* buf)
+static char *roq_apply_cc(roq_parse_ctx* ctx, short * restrict dst, char* buf)
 {
-	int k;
-	int bpos = 0;
+	int i;
+	int16_t pitch = ctx->canvas_pitch;
+	int vqid;
 
-	for (k = 0; k < 4; k++)
-	{
-		int x, y;
-		int vqid;
+	for (i = 0; i < 4; i++) {
+		short * restrict idst;
 
-		x = (k & 1) * 4;
-		y = (k & 2) * 2;
+		idst = dst + ((i & 1) << 2) + ((i & 2) << 1) * pitch;
 
-		bpos += roq_read_vqid(ctx, (uint8_t *)&buf[bpos], &vqid);
+		roq_read_vqid(ctx, buf, vqid);
 
-		bpos += appliers2[vqid](ctx, xp + x, yp + y, &buf[bpos]);
+		switch (vqid) {
+			case RoQ_ID_MOT:
+				break;
+			case RoQ_ID_FCC:
+				buf = roq_apply_fcc2(ctx, idst, buf);
+				break;
+			case RoQ_ID_SLD:
+				buf = roq_apply_sld2(ctx, idst, buf);
+				break;
+			case RoQ_ID_CCC:
+				buf = roq_apply_cc2(ctx, idst, buf);
+				break;
+		}
 	}
 
-	return bpos;
+	return buf;
 }
 
-static int roq_apply_fcc2(roq_parse_ctx* ctx, int x, int y, char* buf)
+static char *roq_apply_fcc2(roq_parse_ctx* ctx, short * restrict dst, char* buf)
 {
-	apply_motion_4x4(ctx, x, y, (uint8_t)buf[0]);
-	return 1;
+	apply_motion_4x4(ctx, dst, (uint8_t)buf[0]);
+	return buf+1;
 }
 
-static int roq_apply_sld2(roq_parse_ctx* ctx, int x, int y, char* buf)
+static char *roq_apply_sld2(roq_parse_ctx* ctx, short * restrict dst, char* buf)
 {
-	roq_qcell *qcell = ctx->ri->qcells + buf[0];
-	roq_apply_cc2(ctx, x, y, qcell->idx);
-	return 1;
+	roq_qcell *qcell = ctx->qcells + buf[0];
+	roq_apply_cc2(ctx, dst, qcell->idx);
+	return buf+1;
 }
 
-static int roq_apply_cc2(roq_parse_ctx* ctx, int x, int y, char* buf)
+static inline char *roq_apply_cc2(roq_parse_ctx* ctx, short * restrict _dst, char* buf)
 {
-	roq_info* ri = ctx->ri;
-	int pitch = ri->canvas_pitch;
-	int *restrict dst = (int *)(ri->canvas + y * pitch + x);
+	int * restrict dst = (void*)_dst;
+	int pitch = ctx->canvas_pitch;
 	roq_cell *cell0, *cell1, *cell2, *cell3;
 
-	pitch /= 2;
+	pitch >>= 1;
 
-	cell0 = ri->cells + buf[0];
-	cell1 = ri->cells + buf[1];
+	cell0 = ctx->cells + buf[0];
+	cell1 = ctx->cells + buf[1];
 
 	dst[0] = cell0->rgb555x2[0];
 	dst[1] = cell1->rgb555x2[0];
@@ -416,8 +345,8 @@ static int roq_apply_cc2(roq_parse_ctx* ctx, int x, int y, char* buf)
 	dst[1] = cell1->rgb555x2[1];
 	dst += pitch;
 
-	cell2 = ri->cells + buf[2];
-	cell3 = ri->cells + buf[3];
+	cell2 = ctx->cells + buf[2];
+	cell3 = ctx->cells + buf[3];
 
 	dst[0] = cell2->rgb555x2[0];
 	dst[1] = cell3->rgb555x2[0];
@@ -426,99 +355,76 @@ static int roq_apply_cc2(roq_parse_ctx* ctx, int x, int y, char* buf)
 	dst[0] = cell2->rgb555x2[1];
 	dst[1] = cell3->rgb555x2[1];
 
-	return 4;
+	return buf+4;
 }
 
-/* -------------------------------------------------------------------------- */
-
-void roq_read_vq(roq_parse_ctx *ctx, unsigned char *buf, int chunk_size, int dodma)
+static void roq_read_vq(roq_parse_ctx *ctx, char *buf, char *chunk_end, int (*copyscr)(roq_info* , char , int , int ))
 {
-	int bpos = 0;
-	int xpos, ypos;
+	int16_t xpos, ypos;
 	roq_info *ri = ctx->ri;
+	int height = ri->display_height;
 	int width = ri->width;
-	int dmafrom = 0, dmato = 0;
-	int finalxfer = 0;
+	int pitch = ri->canvas_pitch;
+	int8_t vqid = RoQ_ID_MOT;
+	int16_t dmafrom = 0, dmato = 0;
 
-	ypos = 0;
-	for (bpos = 0; bpos < chunk_size; )
+	for (ypos = 0; ypos < height; ypos += 16)
 	{
-		int xp, yp;
+		int xp;
+
+		if (copyscr(ri, 0, dmafrom, dmato)) {
+			dmafrom = dmato;
+		}
 
 		for (xpos = 0; xpos < width; xpos += 16)
 		{
-			for (yp = ypos; yp < ypos + 16; yp += 8)
+			int yp;
+			short *dst = ctx->canvas + ypos * pitch;
+
+			for (yp = 0; yp < 16; yp += 8)
 			{
 				for (xp = xpos; xp < xpos + 16; xp += 8)
 				{
-					bpos += roq_read_vqid(ctx, &buf[bpos], &ctx->vqid);
-					bpos += appliers[ctx->vqid](ctx, xp, yp, (char *)&buf[bpos]);
-					if (bpos >= chunk_size)
-						goto checknext;
+					if (buf >= chunk_end)
+					{
+						ypos += 16;
+						goto done;
+					}
+
+					roq_read_vqid(ctx, buf, vqid);
+
+					switch (vqid) {
+						case RoQ_ID_MOT:
+							break;
+						case RoQ_ID_FCC:
+							buf = roq_apply_fcc(ctx, dst + xp, buf);
+							break;
+						case RoQ_ID_SLD:
+							buf = roq_apply_sld(ctx, dst + xp, buf);
+							break;
+						case RoQ_ID_CCC:
+							buf = roq_apply_cc(ctx, dst + xp, buf);
+							break;
+					}
 				}
+
+				dst += 8 * pitch;
 			}
 		}
 
-checknext:
-		if (dodma)
-		{
-			int othery;
-
-xfer:
-			othery = ypos;
-			if (othery > dmato)
-			{
-				if (dmato > 0) 
-				{
-					if (finalxfer)
-					{
-						while (!(SH2_DMA_CHCR1 & SH2_DMA_CHCR_TE)) ; // wait on TE
-					}
-					else
-					{
-						if (!(SH2_DMA_CHCR1 & SH2_DMA_CHCR_TE))
-							goto next; // do not wait on TE
-					}
-					SH2_DMA_CHCR1 = 0; // clear TE
-				}
-
-				dmafrom = dmato;
-				dmato = othery;
-
-				// start DMA
-				SH2_DMA_SAR1 = (uint32_t)(ri->canvas + ri->canvas_pitch*dmafrom/2*sizeof(short));
-				SH2_DMA_DAR1 = (uint32_t)(ri->canvascopy + ri->canvas_pitch*dmafrom/2*sizeof(short));
-				// xfer count (4 * # of 16 byte units)
-				SH2_DMA_TCR1 = ((((dmato - dmafrom)*ri->canvas_pitch*sizeof(short)) >> 4) << 2);
-				SH2_DMA_CHCR1 = SH2_DMA_CHCR_DM_INC|SH2_DMA_CHCR_SM_INC|SH2_DMA_CHCR_TS_16BU|SH2_DMA_CHCR_AR_ARM|SH2_DMA_CHCR_TB_CS|SH2_DMA_CHCR_DS_EDGE|SH2_DMA_CHCR_AL_AH|SH2_DMA_CHCR_DL_AH|SH2_DMA_CHCR_TA_DA|SH2_DMA_CHCR_DE;
-			}
-
-			if (finalxfer)
-			{
-				while (!(SH2_DMA_CHCR1 & SH2_DMA_CHCR_TE)) ; // wait on TE
-				return;
-			}
-		}
-
-next:
-		xpos = 0;
-		ypos += 16;
-		if (ypos >= ri->display_height)
-			break;
+		dmato = ypos;
 	}
 
-	if (dodma && dmato < ri->display_height)
-	{
-		finalxfer = 1;
-		goto xfer;
-	}
+done:
+	copyscr(ri, 1, dmafrom, ypos);
 }
 
-int roq_read_frame(roq_info* ri, char loop, void (*finish)(void))
+int roq_read_frame(roq_info* ri, char loop, void (*finish)(roq_info*), int (*copyscr)(roq_info* , char , int , int ))
 {
-	int i, nv1, nv2;
+	int i;
+	int16_t nv1, nv2;
 	roq_file* fp = ri->fp;
-	int chunk_id = 0, chunk_arg0 = 0, chunk_arg1 = 0;
+	int16_t chunk_id = 0, chunk_arg0 = 0, chunk_arg1 = 0;
 	int chunk_size = 0;
 	roq_parse_ctx ctx;
 
@@ -544,7 +450,7 @@ int roq_read_frame(roq_info* ri, char loop, void (*finish)(void))
 		{
 		case RoQ_QUAD_CODEBOOK:
 			if ((nv1 = chunk_arg1) == 0) nv1 = 256;
-			if ((nv2 = chunk_arg0) == 0 && (nv1 * 6 < chunk_size)) nv2 = 256;
+			if ((nv2 = chunk_arg0) == 0 && ((int)nv1 * 6 < chunk_size)) nv2 = 256;
 
 			for (i = 0; i < nv1; i++)
 			{
@@ -579,7 +485,9 @@ int roq_read_frame(roq_info* ri, char loop, void (*finish)(void))
 		ri->ret_chunk(ri->fp);
 	}
 
-	finish();
+	if (finish) {
+		finish(ri);
+	}
 
 	if (chunk_id != RoQ_QUAD_VQ)
 	{
@@ -592,9 +500,13 @@ int roq_read_frame(roq_info* ri, char loop, void (*finish)(void))
 	ctx.chunk_arg1 = chunk_arg1;
 	ctx.vqflg = 0;
 	ctx.vqflg_pos = 0;
-	ctx.vqid = RoQ_ID_MOT;
+	ctx.canvas = ri->canvas;
+	ctx.canvastocopy = (intptr_t)ri->canvascopy - (intptr_t)ri->canvas;
+	ctx.cells = ri->cells;
+	ctx.qcells = ri->qcells;
+	ctx.canvas_pitch = ri->canvas_pitch;
 
-	roq_read_vq(&ctx, fp->data, chunk_size, 1);
+	roq_read_vq(&ctx, (char *)fp->data, (char *)fp->data+chunk_size, copyscr);
 
 	ri->ret_chunk(ri->fp);
 	return 1;

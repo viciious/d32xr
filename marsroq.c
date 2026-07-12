@@ -27,19 +27,22 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdatomic.h>
 #include "32x.h"
 #include "marshw.h"
 #include "mars_newrb.h"
 #include "roq.h"
 
 #define RoQ_VID_BUF_SIZE        0xE000
-#define RoQ_SND_BUF_SIZE        0x6000
+#define RoQ_SND_BUF_SIZE        0x5000
 
 #define RoQ_SAMPLE_MIN          2
 #define RoQ_SAMPLE_MAX          1032
 #define RoQ_SAMPLE_CENTER       (RoQ_SAMPLE_MAX-RoQ_SAMPLE_MIN)/2
 
-#define RoQ_MAX_SAMPLES         316 // 70Hz
+#define RoQ_MAX_SAMPLES         632 // 35Hz
+
+#define RoQ_MIXAHEAD_MSEC       267 // audio mixead in milliseconds
 
 //#define RoQ_ATTR_SDRAM  __attribute__((section(".data"), aligned(16)))
 #ifndef RoQ_ATTR_SDRAM
@@ -53,6 +56,8 @@ static int8_t snd_flip = 0;
 static int8_t snd_channels = 0;
 static int16_t snd_samples_rem = 0;
 static int16_t snd_lr[2];
+static char snd_lock = 0;
+static uint32_t snd_samples_count = 0;
 
 static marsrbuf_t *vchunks;
 
@@ -263,6 +268,10 @@ static void roq_snddma1_load_samples(void)
         i += num_samples;
     }
 
+    while (atomic_flag_test_and_set(&snd_lock));
+    snd_samples_count += i;
+    atomic_flag_clear(&snd_lock);
+
     if (snd_channels == 1)
     {
         int l_lastval = RoQ_SAMPLE_MIN + ((uint16_t)snd_lr[0] >> 6);
@@ -352,6 +361,7 @@ void Mars_Sec_RoQ_InitSound(int init)
     }
 
     snd_lr[0] = snd_lr[1] = 0;
+    snd_samples_count = 0;
 
     for (i = 0; i < 2; i++)
     {
@@ -425,101 +435,108 @@ static void roq_init_video(roq_info *ri)
     MARS_VDP_DISPMODE = MARS_VDP_MODE_32K;
 }
 
-static void *roq_dma_dest(roq_file *fp, void *dest, int length, int dmaarg)
+static void roq_dma_alloc(roq_file *fp)
 {
     int chunk_id;
-    unsigned chunk_size;
-    unsigned char *dma_dest;
+    int chunk_size;
+    marsrbuf_t *rb;
 
-    chunk_size = ((unsigned)dmaarg >> 16) & 0xffff;
-    chunk_id = (unsigned)dmaarg & 0xffff;
+    chunk_size = fp->rem_chunk_size;
+    chunk_id = fp->chunk_id;
+ 
+    if (!chunk_size) {
+        return;
+    }
 
+    rb = vchunks;
     switch (chunk_id)
     {
     case RoQ_SOUND_MONO:
     case RoQ_SOUND_STEREO:
-        if (!fp->snddma_base) {
-            int starttics = Mars_GetTicCount();
-            do {
-                fp->snddma_base = (unsigned char *)ringbuf_walloc(schunks, (chunk_size + 8 + 1) & ~1);
-
-                if (Mars_GetTicCount() - starttics > 300) {
-                    // an emergency way out of a broken stream
-                    break;
-                }
-            } while (!fp->snddma_base);
-
-            if (!fp->snddma_base) {
-                // broken file?
-                fp->eof = 1;
-                fp->snddma_base = fp->backupdma_dest;
-            }
-
-            fp->snddma_dest = fp->snddma_base;
-        }
-
-        dma_dest = fp->snddma_dest;
-        fp->snddma_dest += length;
-        break;
-    default:
-        if (!fp->bof) {
-            fp->dma_dest = fp->backupdma_dest;
-            dma_dest = fp->dma_dest;
-            break;
-        }
+        rb = schunks;
     case RoQ_INFO:
     case RoQ_QUAD_CODEBOOK:
     case RoQ_QUAD_VQ:
     case RoQ_SIGNAGURE:
-        if (!fp->dma_base) {
-            fp->dma_base = ringbuf_walloc(vchunks, (chunk_size + 8 + 1) & ~1);
-            if (!fp->dma_base) {
-                // FIXME
-                fp->eof = 1;
-                fp->dma_base = fp->backupdma_dest;
+        if (!fp->dma_dest) {
+            fp->dma_dest = ringbuf_walloc(rb, (chunk_size+15)&~7);
+            if (!fp->dma_dest) {
+                fp->oom = 1;
+                fp->dma_target = NULL;
+                return;
             }
-            fp->dma_dest = fp->dma_base;
+            fp->oom = 0;
+            fp->dma_target = rb;
         }
-
-        dma_dest = fp->dma_dest;
-        fp->dma_dest += length;
+        break;
+    default:
+        fp->dma_dest = fp->backupdma_dest;
+        fp->dma_target = NULL;
         break;
     }
-
-    return dma_dest;
 }
 
-static void roq_request(roq_file* fp)
+static void roq_dma_done(roq_file *fp)
 {
-    // wait for ongoing transfer to finish
-    while (MARS_SYS_COMM0 & MARS_ROQFL_REQ) {
-        ;
+}
+
+static void *roq_dma_dest(roq_file *fp, void *dest, int length, int dmaarg)
+{
+    int chunk_id;
+    unsigned chunk_size;
+
+    chunk_size = ((unsigned)dmaarg >> 16) & 0xffff;
+    chunk_id = ((unsigned)dmaarg & 0xffff) >> 1;
+
+    fp->chunk_id = chunk_id;
+    fp->dma_length = length;
+
+    if (fp->dma_dest != NULL) {
+        return (void *)fp->dma_dest;
     }
 
+    fp->rem_chunk_size = (chunk_size + 8 + 1) & ~1;
+    fp->dma_length = 0;
+    return NULL;
+}
+
+static void roq_request(roq_file* fp, int sync)
+{
+    // wait for ongoing transfer to finish
+    while ((MARS_SYS_COMM8 & MARS_ROQFL_REQ) != 0);
+
     // EOF is reached and there's no data left
-    if ((MARS_SYS_COMM0 & (MARS_ROQFL_EOF|MARS_ROQFL_NOD)) == (MARS_ROQFL_EOF|MARS_ROQFL_NOD))
+    if ((MARS_SYS_COMM8 & (MARS_ROQFL_EOF|MARS_ROQFL_NOD)) == (MARS_ROQFL_EOF|MARS_ROQFL_NOD))
         fp->eof = 1;
 
     if (fp->eof)
         return;
 
-    if (fp->snddma_dest != NULL)
-    {
-        if (fp->snddma_base != fp->backupdma_dest)
-            ringbuf_wcommit(schunks, fp->snddma_dest - fp->snddma_base);
-        fp->snddma_base = NULL;
-        fp->snddma_dest = NULL;
+    if (fp->dma_length != 0) {
+        if (fp->dma_target != NULL) {
+            ringbuf_wcommit((marsrbuf_t *)fp->dma_target, fp->dma_length);
+            fp->dma_dest += fp->dma_length;
+        }
+        if (fp->rem_chunk_size <= fp->dma_length)
+        {
+            fp->rem_chunk_size = 0;
+            fp->dma_dest = NULL;
+            fp->dma_target = NULL;
+        }
+        else
+            fp->rem_chunk_size -= fp->dma_length;
+        fp->dma_length = 0;
     }
-    else if (fp->dma_dest != NULL)
-    {
-        if (fp->snddma_base != fp->backupdma_dest)
-            ringbuf_wcommit(vchunks, fp->dma_dest - fp->dma_base);
-        fp->dma_base = NULL;
-        fp->dma_dest = NULL;
+
+    if (!fp->dma_dest) {
+        roq_dma_alloc(fp);
     }
 
     // request a new chunk
-    MARS_SYS_COMM0 |= MARS_ROQFL_REQ;
+    MARS_SYS_COMM8 |= MARS_ROQFL_REQ;
+    if (sync) {
+        while ((MARS_SYS_COMM8 & MARS_ROQFL_REQ) != 0);
+    }
 }
 
 static void roq_get_chunk(roq_file* fp)
@@ -539,8 +556,7 @@ get_header:
             fp->data = NULL;
             return;
         }
-
-        roq_request(fp);
+        roq_request(fp, 1);
         goto get_header;
     }
 
@@ -561,17 +577,23 @@ get_header:
         chunk_size = 0;
     }
     else {
-        chunk = ringbuf_ralloc(vchunks, (chunk_size + 8 + 1) & ~1);
+        while ((chunk = ringbuf_ralloc(vchunks, (chunk_size + 8 + 1) & ~1)) == NULL && !fp->eof) {
+            roq_request(fp, 1);
+        }
         chunk += pad;
+    }
+
+    if (fp->eof) {
+        fp->data = NULL;
+        return;
     }
 
     if (fp->clear_cache)
         Mars_ClearCacheLines(chunk + 8, (chunk_size >> 4) + 2);
 
     fp->clear_cache = 1;
-    fp->page_base = chunk;
     fp->data = chunk;
-    fp->page_end = fp->data + chunk_size + 8;
+    fp->data_length = ((intptr_t)(header + 8 + chunk_size + 1) & ~1) - (intptr_t)header;
 }
 
 static void roq_return_chunk(roq_file* fp)
@@ -582,25 +604,71 @@ static void roq_return_chunk(roq_file* fp)
         return;
     }
 
-    size = (fp->page_end - fp->page_base + ((intptr_t)fp->page_end & 1));
+    size = fp->data_length;
     size = (size + 1) & ~1;
 
-    fp->bof = 0;
     ringbuf_rcommit(vchunks, size);
+    fp->bof = 0;
+    fp->oom = 0;
 }
 
-static int roq_buffer(roq_file* fp)
+static void roq_lazybuffer(roq_file* fp)
 {
-    // increasing the amount of buffering limit seems be doing more harm than good
-    // the 1/4 of max size is the emprical value that works best in practice
-    int sf = ringbuf_nfree(schunks);
-    int vf = ringbuf_nfree(vchunks);
-
-    if (sf > ringbuf_size(schunks)-RoQ_MAX_SAMPLES*8 && vf > RoQ_VID_BUF_SIZE-10*1024) {
-        roq_request(fp);
-        return 1;
+    if ((MARS_SYS_COMM8 & MARS_ROQFL_REQ) == 0 && !fp->oom && !fp->eof) {
+        if (ringbuf_nfree(schunks) > 0x400 && ringbuf_nfree(vchunks) > 0x400) {
+            roq_request(fp, 0);
+        }
     }
-    return 0;
+}
+
+static void roq_waitflip(roq_info* ri) {
+    Mars_WaitFrameBuffersFlip();
+}
+
+static int roq_copyscreen(roq_info* ri, char sync, int yfrom, int yto)
+{
+    roq_file* fp = ri->fp;
+
+    if (yto > ri->display_height)
+        yto = ri->display_height;
+    if (yto > yfrom)
+    {
+        if (yfrom > 0) 
+        {
+            if (sync)
+            {
+                while (!(SH2_DMA_CHCR1 & SH2_DMA_CHCR_TE)) {
+                    roq_lazybuffer(fp);
+                } // wait on TE
+            }
+            else
+            {
+                if (!(SH2_DMA_CHCR1 & SH2_DMA_CHCR_TE)) {
+                    roq_lazybuffer(fp);
+                    return 0;
+                }
+            }
+            SH2_DMA_CHCR1 = 0; // clear TE
+        }
+
+        // start DMA
+        SH2_DMA_SAR1 = (uint32_t)(ri->canvas + ri->canvas_pitch*yfrom);
+        SH2_DMA_DAR1 = (uint32_t)(ri->canvascopy + ri->canvas_pitch*yfrom);
+        // xfer count (4 * # of 16 byte units)
+        SH2_DMA_TCR1 = (((((int16_t)(yto - yfrom - 1)*ri->canvas_pitch + ri->width)) >> 3) << 2);
+        SH2_DMA_CHCR1 = SH2_DMA_CHCR_DM_INC|SH2_DMA_CHCR_SM_INC|SH2_DMA_CHCR_TS_16BU|SH2_DMA_CHCR_AR_ARM|SH2_DMA_CHCR_TB_CS|SH2_DMA_CHCR_DS_EDGE|SH2_DMA_CHCR_AL_AH|SH2_DMA_CHCR_DL_AH|SH2_DMA_CHCR_TA_DA|SH2_DMA_CHCR_DE;
+    }
+
+    if (sync)
+    {
+        while (!(SH2_DMA_CHCR1 & SH2_DMA_CHCR_TE)) {
+            roq_lazybuffer(fp);
+        } // wait on TE
+        SH2_DMA_CHCR1 = 0; // clear TE
+    }
+
+    roq_lazybuffer(fp);
+    return !sync;
 }
 
 static int roq_open(const char *file, roq_file *fp, char *buf)
@@ -609,17 +677,16 @@ static int roq_open(const char *file, roq_file *fp, char *buf)
 
     memset(fp, 0, sizeof(*fp));
     fp->bof = 1;
-    fp->page_base = (unsigned char *)buf;
-    fp->data = fp->page_base;
-    fp->page_end = fp->data;
+    fp->data = (unsigned char *)buf;
+    fp->data_length = 0;
 
     Mars_ClearCache();
 
-    Mars_SetPriDreqDMACallback((void *(*)(void *, void *, int , int))roq_dma_dest, fp);
+    Mars_SetPriDreqDMACallbacks((void *(*)(void *, void *, int , int))roq_dma_dest, (void (*)(void *))roq_dma_done, fp);
 
     length = Mars_MCDBeginRoQStream(file);
     if (length < 0) {
-        Mars_SetPriDreqDMACallback(NULL, NULL);
+        Mars_SetPriDreqDMACallbacks(NULL, NULL, NULL);
         return -1;
     }
 
@@ -636,7 +703,7 @@ static void roq_close(roq_info *ri, void (*secsnd)(int init))
 
     while (MARS_SYS_COMM4 != 0); // wait for the slave
 
-    Mars_SetPriDreqDMACallback(NULL, NULL);
+    Mars_SetPriDreqDMACallbacks(NULL, NULL, NULL);
 
     Mars_ClearCache();
 }
@@ -652,12 +719,10 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
     char paused = 0;
     int ctrl = 0, prev_ctrl = 0, ch_ctrl = 0;
     int framecount = 0;
-    int snd_buf_size = RoQ_SND_BUF_SIZE;
-    int extratics = 0;
-    char needaudio = 1;
-    unsigned starttics, exptics;
-    unsigned samples0[RoQ_MAX_SAMPLES] __attribute__((aligned(16)));
-    unsigned samples1[RoQ_MAX_SAMPLES] __attribute__((aligned(16)));
+    char needaudio = 1, haveaudio = 0;
+    int starttics, exptics;
+    marsrbuf_t _vchunks __attribute__((aligned(16)));
+    marsrbuf_t _schunks __attribute__((aligned(16)));
     roq_cell cells_u[256];
     roq_qcell qcells_u[256];
 
@@ -667,6 +732,9 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
     if (!allowpause && (Mars_ReadController(0) & SEGA_CTRL_START)) {
         return 0;
     }
+
+    snd_channels = 0;
+    snd_samples_count = 0;
 
     framebuffer = (short *)&MARS_FRAMEBUFFER;
     framebuffer += 0x100;
@@ -687,20 +755,22 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
     ri->canvascopy = (void *)(((intptr_t)buf + 15) & ~15);
     buf = (void *)(ri->canvascopy + RoQ_MAX_CANVAS_SIZE);
 
-    snd_samples[0] = samples0;
-    snd_samples[1] = samples1;
+    snd_samples[0] = (void *)(((intptr_t)buf + 15) & ~15);
+    buf = (void *)(snd_samples[0] + RoQ_MAX_SAMPLES);
 
-    vchunks = (void *)(((intptr_t)buf + 15) & ~15);
-    buf = (void *)((char *)vchunks + sizeof(*vchunks));
-
-    schunks = (void *)(((intptr_t)buf + 15) & ~15);
-    buf = (void *)((char *)schunks + sizeof(*schunks));
+    snd_samples[1] = (void *)(((intptr_t)buf + 15) & ~15);
+    buf = (void *)(snd_samples[1] + RoQ_MAX_SAMPLES);
 
     if (buf > (char *)mem + size) {
         return -1;
     }
 
+    vchunks = &_vchunks;
+    schunks = &_schunks;
+
     ringbuf_init(vchunks, viddata, RoQ_VID_BUF_SIZE, 0);
+
+    ringbuf_init(schunks, snddata, RoQ_SND_BUF_SIZE, 1);
 
     secsnd(2);
 
@@ -712,8 +782,6 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
 
     roq_init(ri, &fp, roq_get_chunk, roq_return_chunk, displayrate, (short *)framebuffer);
 
-    roq_request(ri->fp);
-
 	if (roq_read_info(ri->fp, ri)) {
         roq_close(ri, secsnd);
         return -1;
@@ -723,6 +791,7 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
     if (ri->canvas_pitch * ri->display_height < RoQ_MAX_CANVAS_SIZE)
     {
         short *oldp = ri->canvascopy;
+        int snd_buf_size = RoQ_SND_BUF_SIZE;
         int shift = RoQ_MAX_CANVAS_SIZE - ri->canvas_pitch * ri->display_height;
 
         ri->canvascopy += shift;
@@ -730,9 +799,12 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
         shift = ri->canvascopy - oldp;
 
         snd_buf_size += shift * sizeof(short);
-    }
+        if (snd_buf_size > 0xF000) {
+            snd_buf_size = 0xF000;
+        }
 
-    ringbuf_init(schunks, snddata, snd_buf_size, 1);
+        ringbuf_setsize(schunks, snd_buf_size);
+    }
 
     roq_init_video(ri);
 
@@ -740,7 +812,6 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
 
     Mars_FlipFrameBuffers(0);
 
-    extratics = 0;
     framecount = 0;
     exptics = 0;
     starttics = Mars_GetTicCount();
@@ -748,9 +819,7 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
     while(1)
     {
         int ret;
-        unsigned waittics, extrawait;
-        unsigned extratwait_int, extratwait_frac;
-        unsigned frametics = Mars_GetTicCount();
+        int waittics;
 
         prev_ctrl = ctrl;
         ctrl = Mars_ReadController(0);
@@ -782,49 +851,68 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
         ri->fp->clear_cache = 0;
 
         if (!paused) {
-            ret = roq_read_frame(ri, 0, Mars_WaitFrameBuffersFlip);
+            int64_t sndtime = 0;
+
+            framecount++;
+            exptics = ((int64_t)ri->frametics * framecount) >> 16;
+
+            ret = roq_read_frame(ri, 0, roq_waitflip, roq_copyscreen);
+
             if (ret <= 0) {
                 roq_close(ri, secsnd);
                 roq_init_video(ri);
                 return 1;
             }
 
-            Mars_FlipFrameBuffers(0);
-        }
-
-        if (needaudio && schunks->writepos)
-        {
-            needaudio = 0;
-            secsnd(1);
-        }
-
-        extratwait_int = extratics >> 16;
-        extratwait_frac = extratics & 0xffff;
-
-        extrawait = extratwait_int;
-        if (extrawait > 0)
-            extratics = extratwait_frac;
-        else
-            extratics += (int)ri->frametics_frac;
-
-        waittics = Mars_GetTicCount();
-
-        // prevent video from running too far ahead
-        exptics = ri->frametics * framecount;
-        if (waittics - starttics < exptics) {
-            extrawait += exptics - (waittics - starttics);
-        }
-
-        waittics = waittics - frametics;
-        while (waittics < ri->frametics + extrawait) {
-            int left = ri->frametics + extrawait - waittics;
-            if (left > 1 && !(MARS_SYS_COMM0 & MARS_ROQFL_REQ)) {
-                roq_buffer(ri->fp);
+            if (needaudio && schunks->writepos)
+            {
+                needaudio = 0;
+                haveaudio = 1;
+                secsnd(1);
             }
-            waittics = Mars_GetTicCount() - frametics;
+
+            if (haveaudio)
+            {
+                uint32_t samplecount;
+
+                // sync video to audio
+
+                while (atomic_flag_test_and_set(&snd_lock));
+                Mars_ClearCacheLines(&snd_samples_count, 1);
+                samplecount = snd_samples_count;
+                atomic_flag_clear(&snd_lock);
+
+                SH2_DIVU_DVSR = RoQ_SAMPLE_RATE;
+                SH2_DIVU_DVDNTH = samplecount >> 16;
+                SH2_DIVU_DVDNTL = (int64_t)samplecount << 16;
+
+                sndtime = SH2_DIVU_DVDNT;
+                sndtime += (RoQ_MIXAHEAD_MSEC*65536/1000);
+            }
+            
+            Mars_FlipFrameBuffers(0);
+
+            if (haveaudio) {
+                waittics = exptics - ((sndtime * ri->displayrate)>>16);
+            } else {
+                waittics = exptics - (Mars_GetTicCount() - starttics);
+            }
+
+            if (waittics < 0) {
+                continue;
+            }
+        }
+        else
+        {
+            waittics = (ri->frametics>>16);
         }
 
-        framecount++;
+        waittics = (int)Mars_GetTicCount() + waittics;
+        do {
+            if (!paused) {
+                roq_lazybuffer(ri->fp);
+            }
+        } while (waittics > (int)Mars_GetTicCount());
     }
 
     return 0;
