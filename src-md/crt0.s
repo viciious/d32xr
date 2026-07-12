@@ -3297,6 +3297,26 @@ dma_to_32x:
         addi.w  #1,d1
         move.w  d1,0xA15120             /* send an ack to the 32X */
 
+        btst    #0,d0                   /* check the error flag */
+        beq.b   4444f
+
+77:
+        /* send words for verification */
+        movea.l 12(sp),a0               /* source address */
+        move.l  16(sp),d0               /* length in bytes */
+        lsr.l   #1,d0                   /* length in words */
+        subq.l  #1,d0                   /* for dbra */
+
+777:
+        move.w  (a0)+,d1
+        move.w  d1,0xA15122
+        move.w  #0,0xA15120             /* send an ack to the 32X */
+7777:
+        move.w  0xA15120,d1             /* wait on handshake in COMM0 */
+        cmpi.w  #0,d1
+        beq.b   7777b
+        dbra    d0,777b
+
 4444:
         move.w  0xA15120,d1             /* wait on handshake in COMM0 */
         cmpi.w  #0xA55A,d1
@@ -3307,13 +3327,6 @@ dma_to_32x:
         cmpi.w  #0x5AA5,0xA15120
         beq.b   6b
 
-        move.w  d0,d1
-        moveq   #0,d0
-        btst    #0,d1                   /* check the timeout flag */
-        beq.b   7f
-        moveq   #-2,d0                  /* failed */
-
-7:
         move.l  (sp)+,d2
         move.w  #0x2000,sr              /* enable ints */
         rts

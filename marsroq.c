@@ -721,6 +721,7 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
     }
 
     ringbuf_init(vchunks, viddata, RoQ_VID_BUF_SIZE, 0);
+    memset(viddata, 0xff, RoQ_VID_BUF_SIZE);
 
     if (roq_open(fn, &fp, viddata) < 0) {
         return -1;
@@ -750,6 +751,7 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
     }
 
     ringbuf_init(schunks, snddata, snd_buf_size, 1);
+    memset(snddata, 0xff, snd_buf_size);
 
     // buffer some initial data, but not for too long
     starttics = Mars_GetTicCount();

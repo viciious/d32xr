@@ -836,25 +836,23 @@ static void Mars_HandleBeginDMARequest(int is_repeat)
 
 static void Mars_HandleEndDMARequest(void)
 {
+	int i;
 	int flag;
 	int error = 0;
-	volatile unsigned timeout = 100;
-	int checksum = 0;
+	volatile unsigned timeout = 1;
+	int checksum = 0, m68k_checksum = 0;
 	int chcr = SH2_DMA_CHCR_DM_INC|SH2_DMA_CHCR_TS_WU|SH2_DMA_CHCR_AL_AH|SH2_DMA_CHCR_DS_EDGE|SH2_DMA_CHCR_DL_AH;
 
 	while (!(SH2_DMA_CHCR0 & SH2_DMA_CHCR_TE)) {
-		if (!timeout) {
-			break;
-		}
-		timeout--;
+		//if (!timeout) {
+		//	break;
+		//}
+		//timeout--;
 	} // wait on TE
 	SH2_DMA_CHCR0 = chcr; // clear DMA TE
 
-	error = timeout == 0;
-
-	if (!error)
 	{
-		int i, len;
+		int len;
 		uint16_t *data = (void *)pri_dma_dest;
 
 		len = pri_dma_length;
@@ -867,9 +865,33 @@ static void Mars_HandleEndDMARequest(void)
 			checksum ^= *data++;
 		}
 
-		if (checksum != MARS_SYS_COMM2)
+		m68k_checksum = MARS_SYS_COMM2;
+	}
+
+	if (checksum != m68k_checksum)
+	{
+		error = 1;
+	}
+
+	// wait for an ack
+	flag = MARS_SYS_COMM0 + 2 + (error != 0);
+	MARS_SYS_COMM0 = flag;
+	while (MARS_SYS_COMM0 == flag);
+
+	if (error)
+	{
+		for (i = 0; i < pri_dma_length>>1; i++) {
+			while (MARS_SYS_COMM0 != 0);
+			uint16_t *data = pri_dma_dest;
+			if (data[i] != MARS_SYS_COMM2) {
+				I_Error("%p:%p %04x!=%04x i:%d l:%d", data+i, pri_dma_src+i*2, data[i], MARS_SYS_COMM2, i, pri_dma_length);
+			}
+			MARS_SYS_COMM0 = 1;
+		}
+
+		if (checksum != m68k_checksum)
 		{
-			I_Error("M %d %p %p", len*2, pri_dma_dest, pri_dma_src);
+			I_Error("M %04x %04x %d %p %p", checksum, m68k_checksum, pri_dma_length, pri_dma_dest, pri_dma_src);
 			error = 1;
 		}
 	}
@@ -880,11 +902,6 @@ static void Mars_HandleEndDMARequest(void)
 		pri_dma_dest += pri_dma_length;
 		pri_dma_read += pri_dma_length;
 	}
-
-	// wait for an ack
-	flag = MARS_SYS_COMM0 + 2 + (error != 0);
-	MARS_SYS_COMM0 = flag;
-	while (MARS_SYS_COMM0 == flag);
 }
 
 int Mars_SeekCDFile(int offset, int whence)
