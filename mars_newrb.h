@@ -44,4 +44,5 @@ void ringbuf_rcommit(marsrbuf_t *buf, int size);
 void ringbuf_wait(marsrbuf_t *buf);
 void ringbuf_init(marsrbuf_t *buf, void *data, int size, int lock);
 int ringbuf_size(const marsrbuf_t *buf);
+void ringbuf_setsize(marsrbuf_t *buf, int newsize);
 int ringbuf_nfree(marsrbuf_t *buf);
