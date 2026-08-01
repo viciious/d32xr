@@ -8,7 +8,7 @@
 
 #define S_MEMBANK_SIZE 453*1024
 #define S_MEMBANK_PTR s_membank
-static uint8_t s_membank[S_MEMBANK_SIZE] = { 0 };
+static uint8_t __attribute__((aligned(16))) s_membank[S_MEMBANK_SIZE] = { 0 };
 
 void S_Init(void)
 {
