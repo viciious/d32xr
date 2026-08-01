@@ -165,7 +165,7 @@ void Mars_StoreAuxBytes(int numbytes);
 void *Mars_LoadAuxBytes(int numbytes);
 
 void Mars_SetPriCmdCallback(void (*cb)(void));
-void Mars_SetPriDreqDMACallback(void *(*cb)(void *, void *, int , int ), void *arg);
+void Mars_SetPriDreqDMACallbacks(void *(*cb)(void *, void *, int , int), void (*cbdone)(void *), void *arg);
 
 void Mars_SetSecCmdCallback(void (*cb)(void));
 void Mars_SetSecDMA1Callback(void (*cb)(void));
