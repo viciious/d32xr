@@ -2387,8 +2387,8 @@ play_cd_roq_file:
         move.l  d0,-(sp)            /* path and destination buffer */
         jsr     scd_tell_gfile
         move.l  d0,-(sp)            /* path and destination buffer */
-        lea.l   0xA15120,a0
-        move.l  a0,-(sp)            /* communication register address */
+        lea.l   0xA15128,a0
+        move.l  a0,-(sp)            /* communication register address - COMM8 */
 
         jsr     scd_play_roq
         lea     12(sp),sp           /* clear the stack */
@@ -3168,7 +3168,7 @@ snd_ctrl:
 | int dma_to_32x(void *dest, short *src, int len, int arg);
 | DMA data from source to 32X
 | entry: arg = dest pointer (ignored), arg2 = source pointer, arg3 = length of data (in bytes), arg4 = optional arg
-| exit:  d0 = 0 (okay) or -1 (error) or -2 (DMA error)
+| exit:  d0 = 0 (okay) or -1 (error) or -2 (DMA error) or -3 (denied by 32X)
         .global dma_to_32x
 dma_to_32x:
         move.w  #0xFF10,d1
@@ -3178,107 +3178,103 @@ dma_to_32x:
         cmpi.w  #0xA55A,d0
         bne.b   0b
         move.w  d1,0xA15120
-00:
+1:
         move.w  0xA15120,d0
         cmp.w   d0,d1                   /* wait for handshake */
-        beq.b   00b
-        move.w  d0,d1
+        beq.b   1b
 
-        lea     0xA15000,a1
-        move.b  #0x00,0x0107(a1)        /* clear 68S bit - stops SH DREQ */
+        move.b  #0x00,0xA15107          /* clear 68S bit - stops SH DREQ */
 
-        move.l  16(sp),d0               /* long arg, LW */
-        move.w  d0,0xA15122             /* COMM2 */
-        addq    #1,d1
-        move.w  d1,0xA15120             /* ack in COMM0 */
-000:
-        move.w  0xA15120,d0
+        move.l  12(sp),d1               /* length in bytes */
+        lsr.l   #1,d1                   /* length in words */
+        move.w  d1,0xA15122             /* COMM2 = length in words */
+
+        move.l  16(sp),d1
+        rol.l   #1,d1
+        move.l  d1,0xA15108             /* SH DREQ source address */
+        swap    d1
+        move.l  d1,0xA1510C             /* SH DREQ destination address */
+
+        addq    #1,d0
+        move.w  d0,0xA15120             /* ack in COMM0 */
+2:
+        move.w  0xA15120,d1
         cmp.w   d0,d1                   /* wait for handshake */
-        beq.b   000b
-        move.w  d0,d1
+        beq.b   2b
 
-        swap.w  d0                      /* long arg, HW */
-        move.w  d0,0xA15122             /* COMM2 */
+        move.w  0xA15122,d0             /* ack length in COMM2 */
+
         addq    #1,d1
         move.w  d1,0xA15120             /* ack in COMM0 */
 
-        move.l  4(sp),d0                /* optional destination address */
-        move.l  d0,0x010C(a1)           /* SH DREQ destination address */
+        move.l  12(sp),d1               /* length in bytes */
+        lsr.l   #1,d1                   /* length in words */
+        cmp.w   d1,d0                   /* compare against ack length */
+        beq.b   3f
+
+        moveq   #-3,d0                  /* the 32X has denied the request */
+        bra.w   10f
+3:
         movea.l 8(sp),a0                /* source address */
         move.l  12(sp),d0               /* length in bytes */
         lsr.l   #1,d0                   /* length in words */
-        move.w  d0,0x0122(a1)           /* COMM2 = length in words */
+        move.w  d0,0xA15122             /* COMM2 = length in words */
         addq.l  #3,d0
         andi.w  #0xFFFC,d0              /* FIFO operates on units of four words */
-        move.w  d0,0x0110(a1)           /* SH DREQ Length Reg */
+        move.w  d0,0xA15110             /* SH DREQ Length Reg */
         lsr.l   #2,d0
         subq.l  #1,d0                   /* for dbra */
 
-        move.b  #0x04,0x0107(a1)        /* set 68S bit - starts SH DREQ */
-        lea     0x0112(a1),a1
+        move.b  #0x04,0xA15107          /* set 68S bit - starts SH DREQ */
+        lea     0xA15112,a1
 
-1:
-        cmp.w   0xA15120,d1             /* wait for SH2 to start DMA */
-        beq.b   1b
-
-        move.l  a0,d1
-        btst    #0,d1
-        beq.b   2f
-
-        /* handle odd src address */
-22:
-        move.b  (a0)+,-(sp)
-        move.w  (sp)+,d1                /* shift left 8 */
-        move.b  (a0)+,d1
-        move.w  d1,(a1)                 /* FIFO = next word */
-
-        move.b  (a0)+,-(sp)
-        move.w  (sp)+,d1                /* shift left 8 */
-        move.b  (a0)+,d1
-        move.w  d1,(a1)                 /* FIFO = next word */
-
-        move.b  (a0)+,-(sp)
-        move.w  (sp)+,d1                /* shift left 8 */
-        move.b  (a0)+,d1
-        move.w  d1,(a1)                 /* FIFO = next word */
-
-        move.b  (a0)+,-(sp)
-        move.w  (sp)+,d1                /* shift left 8 */
-        move.b  (a0)+,d1
-        move.w  d1,(a1)                 /* FIFO = next word */
-222:
-        btst    #7,0xA15107             /* check FIFO full flag */
-        bne.b   222b
-        dbra    d0,22b
-
-        bra.b   44f
-
-2:
-        move.w  (a0)+,(a1)              /* FIFO = next word */
-        move.w  (a0)+,(a1)
-        move.w  (a0)+,(a1)
-        move.w  (a0)+,(a1)
-3:
-        btst    #7,0xA15107             /* check FIFO full flag */
-        bne.b   3b
-        dbra    d0,2b
-
-44:
-        btst    #2,0xA15107
-        bne.b   4f                      /* DMA not done? */
-        moveq   #0,d0
-        bra.w   5f
 4:
-        moveq   #-2,d0
-5:
         move.w  0xA15120,d1             /* wait on handshake in COMM0 */
         cmpi.w  #0xA55A,d1
-        bne.b   5b
+        bne.b   4b
         /* done */
         move.w  #0x5AA5,0xA15120
-6:
+5:
         cmpi.w  #0x5AA5,0xA15120
-        beq.b   6b
+        beq.b   5b
+
+6:
+        move.w  (a0)+,(a1)              /* FIFO = next word */
+        move.w  (a0)+,(a1)              /* FIFO = next word */
+        move.w  (a0)+,(a1)              /* FIFO = next word */
+        move.w  (a0)+,(a1)              /* FIFO = next word */
+7:
+        btst    #7,0xA15107             /* check FIFO full flag */
+        bne.b   7b
+        dbra    d0,6b
+
+        move.w  #0x0001,0xA15102        /* assert CMD INT to primary SH2 */
+8:
+        move.w  0xA15120,d0             /* wait on handshake in COMM0 */
+        cmpi.w  #0xA55A,d0
+        bne.b   8b
+
+        move.w  d2,0xA15122
+        move.w  #0xFF20,0xA15120
+9:
+        move.w  0xA15120,d0             /* wait on handshake in COMM0 */
+        cmpi.w  #0xFF20,d0
+        beq.b   9b
+
+        move.w  d0,d1
+        addi.w  #1,d1
+        move.w  d1,0xA15120             /* send an ack to the 32X */
+
+        moveq   #0,d0                   /* exit code = OK */
+10:
+        move.w  0xA15120,d1             /* wait on handshake in COMM0 */
+        cmpi.w  #0xA55A,d1
+        bne.b   10b
+        /* done */
+        move.w  #0x5AA5,0xA15120
+11:
+        cmpi.w  #0x5AA5,0xA15120
+        beq.b   11b
         rts
 
 

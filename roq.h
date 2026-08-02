@@ -44,28 +44,32 @@ typedef struct {
 
 typedef struct {
 	unsigned char* data;
-	unsigned char* page_base;
-	unsigned char* page_end;
-	unsigned char *dma_base;
-	unsigned char *dma_dest;
-	unsigned char *snddma_base;
-	unsigned char *snddma_dest;
+	unsigned short data_length;
+	volatile unsigned short dma_length;
+	volatile unsigned char *dma_dest;
+	volatile void *dma_target;
+	volatile unsigned short rem_chunk_size;
+	volatile unsigned short chunk_id;
 	short eof, bof;
 	unsigned char *backupdma_dest;
 	char clear_cache; // whether the CPU cache needs to be cleared after reading a chunk
+	volatile char oom;
 } roq_file;
 
 typedef void (*roq_getchunk_t)(roq_file*);
 typedef void (*roq_retchunk_t)(roq_file*);
 
 typedef struct {
-	int chunk_arg0, chunk_arg1;
+	int8_t chunk_arg0, chunk_arg1;
+	short vqflg_pos;
 	int vqflg;
-	int vqflg_pos;
-	int vqid;
 	unsigned char *buf;
-	int buf_len;
+	roq_cell *cells;
+	roq_qcell *qcells;
 	struct roq_info_s *ri;
+	short *canvas;
+	intptr_t canvastocopy;
+	short canvas_pitch;	
 } roq_parse_ctx;
 
 typedef struct roq_info_s {
@@ -81,14 +85,16 @@ typedef struct roq_info_s {
 	short display_height;
 	short canvas_pitch;
 	short width, height;
-	unsigned framerate, displayrate, frametics, frametics_frac;
+	uint8_t framerate;
+	uint8_t displayrate;
+	unsigned frametics; // 16.16 fixed point value of the number of tics per frame, e.g. 0x50000 for 12fps on NTSC
 } roq_info;
 
 /* -------------------------------------------------------------------------- */
 
 void roq_init(roq_info* ri, roq_file *fp, roq_getchunk_t getch, roq_retchunk_t retch, int displayrate, short *framebuffer);
 int roq_read_info(roq_file* fp, roq_info* ri) __attribute__((optimize("Os")));
-int roq_read_frame(roq_info* ri, char loop, void (*finish)(void))
+int roq_read_frame(roq_info* ri, char loop, void (*finish)(roq_info*), int (*copyscr)(roq_info* , char , int , int ))
 	RoQ_ATTR_SDRAM
 	;
 

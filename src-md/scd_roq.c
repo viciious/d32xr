@@ -34,10 +34,37 @@
 
 extern void chk_hotplug(void);
 extern void snd_ctrl(void);
-extern void *dma_to_32x(void *, const void *, size_t, int);
+extern int dma_to_32x(void *, const void *, size_t, int);
 
 extern int scd_stream_cd(int lba, int length);
 extern void scd_stream_cmd(char cmd);
+
+static int scd_dma_to_32x(volatile short *commreg, const void *src, size_t length, int arg)
+{
+    while (1) {
+        int dma_res;
+        int commval;
+
+        commval = *commreg;
+        if (!commval || (commval & 16)) {
+            return 0;
+        }
+
+        if (!(commval & 1)) {
+            chk_hotplug();
+            snd_ctrl();
+            continue;
+        }
+
+        dma_res = dma_to_32x(NULL, src, length, arg);
+        if (dma_res >= 0) {
+            break;
+        }
+        *commreg = commval & ~1;
+    }
+
+    return 1;
+}
 
 void scd_play_roq(volatile short *commreg, int gfh_offset, int gfh_length)
 {
@@ -65,9 +92,7 @@ void scd_play_roq(volatile short *commreg, int gfh_offset, int gfh_length)
         if (!(commval & 1))
         {
             chk_hotplug();
-
             snd_ctrl();
-
             // no pending data requests
             continue;
         }
@@ -78,7 +103,9 @@ void scd_play_roq(volatile short *commreg, int gfh_offset, int gfh_length)
             uint8_t *signature = (uint8_t *)MD_WORDRAM+wram_ofs;
 
             chunk_id = signature[0] | (signature[1] << 8);
-            dma_to_32x(NULL, signature, 8, chunk_id);
+            if (scd_dma_to_32x(commreg, signature, 8, (chunk_id << 1)) == 0) {
+                goto eos;
+            }
 
             wram_rem -= 8;
             wram_ofs += 8;
@@ -136,7 +163,9 @@ void scd_play_roq(volatile short *commreg, int gfh_offset, int gfh_length)
                     pad = 1;
                 }
 
-                dma_to_32x((void *)pad, buf-8, wram_rem+8+pad, (chunk_size << 16) | chunk_id);
+                if (scd_dma_to_32x(commreg, buf-8, wram_rem+8+pad, (chunk_size << 16) | (chunk_id << 1) | pad) == 0) {
+                    goto eos;
+                }
 
                 data_size += 8;
                 data_size += wram_rem;
@@ -151,6 +180,8 @@ void scd_play_roq(volatile short *commreg, int gfh_offset, int gfh_length)
                 wram_ofs = block_ofs;
                 buf = (uint8_t *)MD_WORDRAM + wram_ofs;
                 buf_end = buf + chunk_size;
+
+                *commreg = commval & ~1;
             }
             else
             {
@@ -169,7 +200,10 @@ void scd_play_roq(volatile short *commreg, int gfh_offset, int gfh_length)
             wram_rem -= chunk_size;
             data_size += buf_end - buf;
 
-            dma_to_32x((void *)pad, buf, (buf_end - buf + 1) & ~1, (chunk_size << 16) | chunk_id);
+            if (scd_dma_to_32x(commreg, buf, (buf_end - buf + 1) & ~1, (chunk_size << 16) | (chunk_id << 1) | pad) == 0) {
+                goto eos;
+            }
+
             header_len = 0;
             break;
         }
@@ -177,14 +211,19 @@ void scd_play_roq(volatile short *commreg, int gfh_offset, int gfh_length)
 done:
         if (pad)
             commval |= 2;
+        else
+            commval &= ~2;
         if (file_offset >= gfh_length)
             commval |= 4;
         if (data_size == 0)
             commval |= 8;
+        else
+            commval &= ~8;
         commval &= ~1;
         *commreg = commval;
         data_size = 0;
     }
 
+eos:
     scd_stream_cmd(-1); // EOS
 }

@@ -236,6 +236,11 @@ int ringbuf_size(const marsrbuf_t *buf)
     return buf->size;
 }
 
+void ringbuf_setsize(marsrbuf_t *buf, int newsize)
+{
+    buf->size = newsize;
+}
+
 int ringbuf_nfree(marsrbuf_t *buf)
 {
     int wp, rp;
