@@ -218,9 +218,12 @@ void I_InitMenuFire(jagobj_t *titlepic)
 #endif	
 	const byte* doompalette;
 
+	Mars_SetVDPPri(1);
+
 	doompalette = W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
 
 	I_SetPalette(doompalette);
+
 #ifdef ENABLE_FIRE_ANIMATION
 	m_fire = Z_Malloc(sizeof(*m_fire), PU_STATIC);
 	D_memset(m_fire, 0, sizeof(*m_fire));

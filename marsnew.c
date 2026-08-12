@@ -24,7 +24,7 @@
   SOFTWARE.
 */
 
-
+#include <string.h>
 #include "32x.h"
 #include "doomdef.h"
 #include "mars.h"
@@ -83,6 +83,7 @@ static pixel_t *framebufferend = (pixel_t*)(&MARS_FRAMEBUFFER + 0x10000);
 
 static jagobj_t* jo_stbar;
 static VINT jo_stbar_height;
+static VINT conchars = -1;
 
 extern int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sprites[4], t_ref_total[4];
 
@@ -92,7 +93,7 @@ static uint32_t mars_rom_bsw_start = 0;
 // disable compiler optimizations as these functions deal with
 // the framebuffer and we don't want GCC to use the builtins on
 // such as memset or memcpy that
-void I_ClearWorkBuffer(void) __attribute__((optimize("O1")));
+void I_ClearWorkBuffer(int len) __attribute__((optimize("O1")));
 void I_ClearFrameBuffer(void) __attribute__((optimize("O1")));
 byte *I_TempBuffer (int size) __attribute__((optimize("O1")));
 
@@ -717,7 +718,7 @@ int I_GetFRTCounter(void)
 byte *I_TempBuffer (int size)
 {
 	byte *w = (byte *)framebuffer;
-	int *p = (int*)w, *p_end = (int*)framebufferend;
+	volatile int *p = (volatile int*)w, *p_end = (volatile int*)framebufferend;
 
 	size = (size + 3) / 4; // size in longs
 	if (p_end > p + size) {
@@ -738,19 +739,21 @@ byte *I_WorkBuffer (void)
 {
 	while (!I_RefreshCompleted());
 	if (workbuf_high == NULL)
-		workbuf_high = (byte *)(framebuffer + 320 / 2 * (I_FrameBufferHeight() +1)); // +1 for the blank line
-	return workbuf_high;
+		workbuf_high = (byte *)(framebuffer + 320 / 2 * (I_FrameBufferHeight() + 1)); // +1 for the blank line
+	return (void *)(((uintptr_t)workbuf_high + 3) & ~3);
 }
 
 void I_FreeWorkBuffer(void)
 {
 	workbuf_high = NULL;
+	Mars_SetStringBufferOffset((uintptr_t)I_WorkBuffer() - (uintptr_t)framebuffer);
 }
 
 byte *I_AllocWorkBuffer(int size)
 {
 	byte *b = I_WorkBuffer();
 	workbuf_high = b + size;
+	Mars_SetStringBufferOffset((uintptr_t)workbuf_high - (uintptr_t)framebuffer);
 	return b;
 }
 
@@ -888,13 +891,15 @@ void I_DebugScreen(void)
 	        I_Print8(x, line++, buf[i]);
 	}
 
+	Mars_MDPutString(1, 1, players[consoleplayer].message);
+
 	debugscreenupdate = false;
 }
 
-void I_ClearWorkBuffer(void)
+void I_ClearWorkBuffer(int len)
 {
-	int *p = (int *)I_WorkBuffer();
-	int *p_end = (int *)framebufferend;
+	volatile int *p = (volatile int *)I_WorkBuffer();
+	volatile int *p_end = (volatile int *)(p + (len+3)/4);
 	while (p < p_end)
 		*p++ = 0;
 }
@@ -958,7 +963,6 @@ void I_Update(void)
 			}
 			else if (!debugmode)
 			{
-				Mars_ClearNTA();
 				SH2_WDT_WTCSR_TCNT = 0xA518; /* WDT TCSR = clr OVF, IT mode, timer off, clksel = Fs/2 */
 			}
 
@@ -1198,6 +1202,7 @@ void I_NetStop(void)
 {
 	consoleplayer = 0;
 	Mars_CleanupNet();
+	Mars_SetVDPPri(1);
 }
 
 #define PACKET_SIZE 6
@@ -1298,7 +1303,8 @@ void I_DrawSbar(void)
 void I_StoreScreenCopy(void)
 {
 	int i;
-    for (i = 0; i < 160; i++) {
+	Mars_SetVDPPri(1);
+	for (i = 0; i < 160; i++) {
 		Mars_StoreWordColumnInMDVRAM(i);
 	}
 	Mars_Finish();
@@ -1307,7 +1313,7 @@ void I_StoreScreenCopy(void)
 void I_RestoreScreenCopy(void)
 {
 	int i;
-    for (i = 0; i < 160; i++) {
+	for (i = 0; i < 160; i++) {
 		Mars_LoadWordColumnFromMDVRAM(i, 0, 224);
 	}
 	Mars_Finish();
@@ -1357,9 +1363,9 @@ void *I_GetCDFileCache(int length)
 	return Mars_LoadAuxBytes((length + 3) & ~3);
 }
 
-int I_ReadCDDirectory(const char *path)
+int I_ReadCDDirectory(const char *path, char **pbuf)
 {
-	return Mars_MCDReadDirectory(path);
+	return Mars_MCDReadDirectory(path, pbuf);
 }
 
 uint8_t I_ReadU8SRAM(int offset)
@@ -1395,4 +1401,23 @@ void I_WriteU32SRAM(int offset, uint32_t val)
 int I_PlayCinematic(const char *fn, void *mem, size_t size, int allowpause)
 {
 	return Mars_PlayRoQ(cd_pwad_name, mem, size, allowpause, Mars_InitRoQSoundDMA);
+}
+
+void I_LoadFonts(void)
+{
+	conchars = W_CheckNumForName("CONCHARS");
+	if (conchars != -1)
+	{
+		jagobj_t *jo;
+
+		I_ClearWorkBuffer(W_LumpLength(conchars));
+
+		jo = (jagobj_t *)I_WorkBuffer();
+
+		W_ReadLump(conchars, jo);
+
+		Mars_MDLoadFont(jo->width/8, jo->height/8, (short *)jo->data);
+
+		Mars_MDSetFontPalette(jo->data + jo->width*jo->height/2);
+	}
 }

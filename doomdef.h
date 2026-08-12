@@ -816,8 +816,8 @@ int I_ViewportYPos(void);
 int I_FrameBufferHeight(void);
 int I_IsPAL(void);
 
-void I_ClearFrameBuffer (void);
-void I_ClearWorkBuffer(void);
+void I_ClearFrameBuffer(void);
+void I_ClearWorkBuffer(int len);
 void I_ResetLineTable(void);
 
 void I_SetPalette (const byte *palette);
@@ -1337,7 +1337,7 @@ int I_SeekCDFile(int offset, int whence);
 int I_ReadCDFile(int length);
 void I_SetCDFileCache(int length);
 void *I_GetCDFileCache(int length);
-int I_ReadCDDirectory(const char *path);
+int I_ReadCDDirectory(const char *path, char **pbuf);
 
 uint8_t I_ReadSRAM(int offset);
 void I_WriteSRAM(int offset, int val);
@@ -1345,6 +1345,7 @@ uint32_t I_ReadU32SRAM(int offset);
 void I_WriteU32SRAM(int offset, uint32_t val);
 
 int I_PlayCinematic(const char *fn, void *mem, size_t size, int allowpause);
+void I_LoadFonts(void);
 
 /*================= */
 /*TLS */

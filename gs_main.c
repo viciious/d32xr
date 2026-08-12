@@ -208,8 +208,7 @@ static void GS_PathChange(const char *dir, int newmode)
     if (newmode)
     {
         // file browser
-        n = I_ReadCDDirectory(dir);
-        buf = I_GetCDFileBuffer();
+        n = I_ReadCDDirectory(dir, &buf);
 
         for (i = 0; i < n; i++)
         {
@@ -247,8 +246,7 @@ static void GS_PathChange(const char *dir, int newmode)
         return;
     }
 
-    n = I_ReadCDDirectory(dir);
-    buf = I_GetCDFileBuffer();
+    n = I_ReadCDDirectory(dir, &buf);
     for (i = 0; i < n; i++)
     {
         char *name;

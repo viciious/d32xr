@@ -105,15 +105,11 @@ void Mars_SetupNet(int type);
 void Mars_CleanupNet(void);
 void Mars_SetNetLinkTimeout(int timeout);
 
-// MD video debug functions
-void Mars_SetMDCrsr(int x, int y);
-void Mars_GetMDCrsr(int *x, int *y);
-void Mars_SetMDColor(int fc, int bc);
-void Mars_GetMDColor(int *fc, int *bc);
-void Mars_SetMDPal(int cpsel);
-void Mars_MDPutChar(char chr);
-void Mars_ClearNTA(void);
-void Mars_MDPutString(char *str);
+// assumes 2048 4-bit values
+void Mars_MDLoadFont(int xtiles, int ytiles, short *data);
+void Mars_MDSetFontPalette(const uint8_t* palette);
+// x and y are multipliers of 8
+void Mars_MDPutString(int x, int y, const char *str);
 
 void Mars_SetBankPage(int bank, int page) MARS_ATTR_DATA_CACHE_ALIGN;
 void Mars_SetBankPageSec(int bank, int page) MARS_ATTR_DATA_CACHE_ALIGN;
@@ -121,7 +117,11 @@ int Mars_ReadController(int port);
 
 int Mars_ROMSize(void);
 
-void Mars_CtlMDVDP(int sel);
+void Mars_SetVDPPri(int sel);
+void Mars_InitMDVDP(void);
+
+void Mars_SetStringBufferOffset(int offset);
+char *Mars_StringToFramebuffer(const char *str);
 
 void Mars_StoreWordColumnInMDVRAM(int c);
 // both offset and length are in words, not in bytes
@@ -145,7 +145,7 @@ void Mars_MCDUpdateSfx(uint8_t src_id, uint8_t pan, uint8_t vol, uint16_t freq);
 void Mars_MCDStopSfx(uint8_t src_id);
 void Mars_MCDFlushSfx(void);
 void Mars_MCDLoadSfxFileOfs(uint16_t start_id, int numsfx, const char *name, int *offsetlen);
-int Mars_MCDReadDirectory(const char *path);
+int Mars_MCDReadDirectory(const char *path, char **pbuf);
 void Mars_MCDResumeSPCMTrack(void);
 void Mars_MCDOpenTray(void);
 

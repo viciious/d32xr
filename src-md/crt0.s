@@ -66,7 +66,9 @@
         .equ STRM_LENLH,  0xFFFE
         .equ STRM_LENLL,  0xFFFF
 
-        .equ MARS_FRAMEBUFFER, 0x840200 /* 32X frame buffer */
+        .equ MARS_LINETABLE,   0x840000 /* 32X frame buffer line table */
+        .equ MARS_UNUSED_LNTBL,(MARS_LINETABLE+0x1E0)
+        .equ MARS_FRAMEBUFFER, 0x840200 /* 32X frame buffer pixel data */
         .equ MARS_PWM_CTRL,    0xA15130
         .equ MARS_PWM_CYCLE,   0xA15132
         .equ MARS_PWM_MONO,    0xA15138
@@ -275,16 +277,6 @@ init_hardware:
 2:
         move.l  d0,(a1)
         dbra    d4,2b
-
-        jsr     load_font
-
-| set the default palette for text
-        move.l  #0xC0000000,(a0)        /* write CRAM address 0 */
-        move.l  #0x00000CCC,(a1)        /* entry 0 (black) and 1 (lt gray) */
-        move.l  #0xC0200000,(a0)        /* write CRAM address 32 */
-        move.l  #0x000000A0,(a1)        /* entry 16 (black) and 17 (green) */
-        move.l  #0xC0400000,(a0)        /* write CRAM address 64 */
-        move.l  #0x0000000A,(a1)        /* entry 32 (black) and 33 (red) */
 
 | init controllers
         jsr     chk_ports
@@ -512,13 +504,13 @@ no_cmd:
         dc.w    read_mouse - prireqtbl
         dc.w    read_cdstate - prireqtbl
         dc.w    set_usecd - prireqtbl
-        dc.w    set_crsr - prireqtbl
-        dc.w    get_crsr - prireqtbl
-        dc.w    set_color - prireqtbl
-        dc.w    get_color - prireqtbl
-        dc.w    set_dbpal - prireqtbl
-        dc.w    put_chr - prireqtbl
-        dc.w    clear_a - prireqtbl
+        dc.w    no_cmd - prireqtbl
+        dc.w    no_cmd - prireqtbl
+        dc.w    no_cmd - prireqtbl
+        dc.w    set_font_pal - prireqtbl
+        dc.w    set_font_data - prireqtbl
+        dc.w    put_str - prireqtbl
+        dc.w    no_cmd - prireqtbl
         dc.w    no_cmd - prireqtbl
         dc.w    no_cmd - prireqtbl
         dc.w    get_music_status - prireqtbl
@@ -721,7 +713,9 @@ start_music:
         move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
 
         /* copy frame buffer string to local buffer */
-        lea     MARS_FRAMEBUFFER,a0         /* frame buffer */
+        move.l  MARS_UNUSED_LNTBL,d0/* data offset in framebuffer */
+        lea     MARS_FRAMEBUFFER,a0 /* string pointer */
+        lea     0(a0,d0.l),a0
         lea     vgm_lzss_buf,a1
 00:
         move.b  (a0)+,(a1)+
@@ -1481,111 +1475,117 @@ net_cleanup:
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
+set_font_pal:
+        lea     0xC00000,a1         /* VDP data reg */
+        move.w  #0x8F02,4(a1)       /* set INC to 2 */
+        move.l  #0xC0000000,4(a1)   /* write CRAM address 0 */
 
-| video debug functions
+        move.w  0xA15100,d1
+        eor.w   #0x8000,d1
+        move.w  d1,0xA15100         /* unset FM - disallow SH2 access to FB */
 
-set_crsr:
-        move.w  0xA15122,d0         /* cursor y<<6 | x */
-        move.w  d0,d1
-        andi.w  #0x1F,d0
-        move.w  d0,crsr_y
-        lsr.l   #6,d1
-        move.w  d1,crsr_x
+        lea     MARS_UNUSED_LNTBL,a0
+        moveq   #15,d0
+0:
+        move.w	(a0)+,(a1)
+        dbf     d0,0b
+
+        move.w  0xA15100,d1
+        or.w    #0x8000,d1
+        move.w  d1,0xA15100         /* set FM - allow SH2 access to FB */
+
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
-get_crsr:
-        move.w  crsr_y,d0           /* y coord */
-        lsl.w   #6,d0
-        or.w    crsr_x,d0           /* cursor y<<6 | x */
-        move.w  d0,0xA15122
+set_font_data:
+        move.w  0xA15100,d1
+        eor.w   #0x8000,d1
+        move.w  d1,0xA15100         /* unset FM - disallow SH2 access to FB */
+
+        move.l  MARS_UNUSED_LNTBL,d1/* data offset in framebuffer */
+        lea     MARS_FRAMEBUFFER,a0
+        lea     0(a0,d1.l),a0       /* src pointer */
+
+        lea     0xC00000,a1         /* VDP data reg */
+        move.w  #0x8F02,4(a1)       /* INC = 2 */
+        move.l  #0x40000000,4(a1)   /* write VRAM address 0 */
+
+        moveq   #0,d0
+        move.b  0xA15122,d0         /* number of vertical tiles */
+        subq.b  #1,d0
+0:
+        moveq   #0,d1
+        move.b  0xA15123,d1         /* number of horizontal tiles */
+        subq.b  #1,d1
+1:
+        move.l	   (a0),(a1)
+        move.l	32 (a0),(a1)
+        move.l	64 (a0),(a1)
+        move.l	96 (a0),(a1)
+        move.l	128(a0),(a1)
+        move.l	160(a0),(a1)
+        move.l	192(a0),(a1)
+        move.l	224(a0),(a1)
+
+        lea     4(a0),a0
+        dbf     d1,1b
+
+        lea     224(a0),a0
+        dbf     d0,0b
+
+        move.w  0xA15100,d1
+        or.w    #0x8000,d1
+        move.w  d1,0xA15100         /* set FM - allow SH2 access to FB */
+
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
-set_color:
-        /* the foreground color is in the LS nibble of COMM0 */
-        move.w  0xA15120,d0
-        andi.l  #0x000F,d0
-        move    d0,d1
-        lsl.w   #4,d0
-        or      d1,d0
-        move.w  d0,d1
-        lsl.w   #8,d0
-        or      d1,d0
-        move.w  d0,d1
-        swap    d1
-        move.w  d0,d1
-        move.l  d1,fg_color
+put_str:
+        move.w  0xA15100,d1
+        eor.w   #0x8000,d1
+        move.w  d1,0xA15100         /* unset FM - disallow SH2 access to FB */
 
-        /* the background color is in the second LS nibble of COMM0 */
-        move.w  0xA15120,d0
-        lsr.w   #4,d0
-        andi.l  #0x000F,d0
-        move    d0,d1
-        lsl.w   #4,d0
-        or      d1,d0
-        move.w  d0,d1
-        lsl.w   #8,d0
-        or      d1,d0
-        move.w  d0,d1
-        swap    d1
-        move.w  d0,d1
-        move.l  d1,bg_color
-
-        bsr     load_font
-        move.w  #0,0xA15120         /* done */
-        bra     main_loop
-
-get_color:
-        move.w  fg_color,d0
-        andi.w  #0x000F,d0
-        move    d0,d1
-        move.w  bg_color,d0
-        andi.w  #0x000F,d0
-        lsl     #4,d0
-        or      d1,d0
-        move.w  d0,0xA15122
-        move.w  #0,0xA15120         /* done */
-        bra     main_loop
-
-set_dbpal:
-        andi.w  #0x0003,d0
-        moveq   #13,d1
-        lsl.w   d1,d0
-        move.w  d0,dbug_color       /* palette select = N * 0x2000 */
-        move.w  #0,0xA15120         /* done */
-        bra     main_loop
-
-put_chr:
-        andi.w  #0x00FF,d0          /* character */
-        subi.b  #0x20,d0            /* font starts at space */
-        or.w    dbug_color,d0       /* OR with color palette */
+        move.l  MARS_UNUSED_LNTBL,d1/* data offset in framebuffer */
+        lea     MARS_FRAMEBUFFER,a1
+        lea     0(a1,d1.l),a1       /* string pointer */
+        moveq   #0,d0               /* color palette - N * 0x0200 for alternate color font (use CP bits for different colors) */
         lea     0xC00000,a0
         move.w  #0x8F02,4(a0)       /* set INC to 2 */
-        moveq   #0,d1
-        move.w  crsr_y,d1           /* y coord */
-        lsl.w   #6,d1
-        or.w    crsr_x,d1           /* cursor y<<6 | x */
+        move.w  0xA15122,d1         /* cursor y<<6 | x */
         add.w   d1,d1               /* pattern names are words */
         swap    d1
-        ori.l   #0x40000003,d1      /* OR cursor with VDP write VRAM at 0xC000 (scroll plane A) */
-        move.l  d1,4(a0)            /* write VRAM at location of cursor in plane A */
-        move.w  d0,(a0)             /* set pattern name for character */
-        addq.w  #1,crsr_x           /* increment x cursor coord */
-        move.w  #0,0xA15120         /* done */
-        bra     main_loop
+        ori.l   #0x60000003,d1      /* OR cursor with VDP write VRAM at 0xE000 (scroll plane B) */
+        move.l  d1,4(a0)            /* write VRAM at location of cursor in plane B */
 
-clear_a:
-        moveq   #0,d0
-        lea     0xC00000,a0
-        move.w  #0x8F02,4(a0)       /* set INC to 2 */
-        move.l  #0x40000003,d1      /* VDP write VRAM at 0xC000 (scroll plane A) */
-        move.l  d1,4(a0)            /* write VRAM at plane A start */
-        move.w  #64*32-1,d1
-0:
-        move.w  d0,(a0)             /* clear name pattern */
-        dbra    d1,0b
+        move.w  0xA15122,d1
+        andi.w  #0x3F,d1
+        subi.b  #40,d1
+        neg.b   d1                  /* whitespace count */
+1:
+        move.b  (a1)+,d0
+        subi.b  #0x20,d0            /* font starts at space */
+        move.w  d0,(a0)             /* set pattern name for character */
+        subq.b  #1,d1
+        tst.b   (a1)
+        bne.b   1b
+
+        move.w  0xA15100,d0
+        or.w    #0x8000,d0
+        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+
+        move.w  0xA15120,d0
+
         move.w  #0,0xA15120         /* done */
+
+        btst    #0,d0               /* bit 0 controls whether the row is filled with spaces */
+        beq.b   3f
+
+        /* fill remaining the remaining tiles in the row with spaces */
+        subq.b  #1,d1
+2:
+        move.w  #0x00,(a0)
+        dbra    d1,2b
+3:
         bra     main_loop
 
 set_bank_page:
@@ -1673,27 +1673,12 @@ set_music_volume:
         bra     main_loop
 
 ctl_md_vdp:
-        andi.w  #255, d0
-        move.w  d0, init_vdp_latch
+        andi.w  #255,d0
+        move.w  d0,init_vdp_latch
 
-        move.w  0xA15100,d0
-        eor.w   #0x8000,d0
-        move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
-
-        move.w  0xA15180,d0
-        andi.w  #0xFF7F,d0
-        move.w  d0,0xA15180         /* set MD priority */
-        tst.b   d0
-        bne.b   1f                  /* re-init vdp and vram */
-
-|       move.w  #0x8134,0xC00004    /* display off, vblank enabled, V28 mode */
-        move.w  0xA15180,d0
-        ori.w   #0x0080,d0
-        move.w  d0,0xA15180         /* set 32X priority */
-1:
-        move.w  0xA15100,d0
-        or.w    #0x8000,d0
-        move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */
+0:
+        cmp.w   #0,init_vdp_latch
+        bpl.b   0b
 
         move.w  #0,0xA15120         /* done */
         bra     main_loop
@@ -1711,7 +1696,7 @@ cpy_md_vram:
         move.b  d0,d1               /* column number */
         add.w   d1,d1
 
-        lea     MARS_FRAMEBUFFER,a2         /* frame buffer */
+        lea     MARS_FRAMEBUFFER,a2 /* frame buffer */
         lea     0(a2,d1.l),a2
 
         cmpi.w  #0x1C00,d0
@@ -1720,7 +1705,7 @@ cpy_md_vram:
         bhs.w   5f                  /* copy from vram */
 
         /* COPY TO VRAM */
-        cmpi.l  #280,d1             /* vram or wram? */
+        cmpi.l  #280,d1           /* vram or wram? */
         bhs.b   2f                  /* wram */
 
         lea     0xC00000,a0         /* vdp data port */
@@ -1803,7 +1788,7 @@ cpy_md_vram:
         add.l   d0,d0
 
         /* COPY FROM VRAM */
-        cmpi.l  #280,d1             /* vram or wram? */
+        cmpi.l  #280,d1           /* vram or wram? */
         bhs.w   7f                  /* wram */
 
         #mulu.w  #224,d1
@@ -1925,7 +1910,7 @@ cpy_md_vram:
 
 10:
         /* SWAP WITH VRAM */
-        cmpi.l  #280,d1             /* vram or wram? */
+        cmpi.l  #280,d1           /* vram or wram? */
         bhs     12f                 /* wram */
 
         lea     0xC00000,a0         /* vdp data port */
@@ -2266,8 +2251,10 @@ open_cd_file_by_name:
         eor.w   #0x8000,d0
         move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
 
-        lea     MARS_FRAMEBUFFER,a1 /* frame buffer */
-        move.l  a1,-(sp)            /* string pointer */
+        move.l  MARS_UNUSED_LNTBL,d0/* data offset in framebuffer */
+        lea     MARS_FRAMEBUFFER,a1
+        lea     0(a1,d0.l),a1       /* string pointer */
+        move.l  a1,-(sp)
         jsr     scd_open_gfile_by_name
         lea     4(sp),sp            /* clear the stack */
         move.l  d0,0xA15128         /* length => COMM8 */
@@ -2302,9 +2289,9 @@ read_cd_file:
         eor.w   #0x8000,d0
         move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
 
+        lea     MARS_FRAMEBUFFER,a1
         move.l  0xA15128,d0         /* length in COMM8 */
         move.l  d0,-(sp)
-        lea     MARS_FRAMEBUFFER,a1
         move.l  a1,-(sp)            /* destination pointer */
         jsr     scd_read_gfile
         lea     8(sp),sp            /* clear the stack */
@@ -2335,7 +2322,13 @@ seek_cd_file:
 load_sfx_cd_fileofs:
         jsr     scd_init_pcm        /* FIXME: find a better place for it */
 
-        lea     MARS_FRAMEBUFFER,a1 /* frame buffer */
+        move.w  0xA15100,d0
+        eor.w   #0x8000,d0
+        move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
+
+        move.l  MARS_UNUSED_LNTBL,d0/* data offset in framebuffer */
+        lea     MARS_FRAMEBUFFER,a1
+        lea     0(a1,d0.l),a1       /* string pointer */
         move.l  a1,-(sp)            /* file name + offsets */
 
         moveq   #0,d0
@@ -2345,10 +2338,6 @@ load_sfx_cd_fileofs:
         /* set buffer id */
         move.w  0xA15122,d0         /* COMM2 = start buffer id */
         move.l  d0,-(sp)
-
-        move.w  0xA15100,d0
-        eor.w   #0x8000,d0
-        move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
 
         jsr     scd_upload_buf_fileofs
         lea     16(sp),sp
@@ -2366,7 +2355,9 @@ read_cd_directory:
         eor.w   #0x8000,d0
         move.w  d0,0xA15100         /* unset FM - disallow SH2 access to FB */
 
+        move.l  MARS_UNUSED_LNTBL,d0/* data offset in framebuffer */
         lea     MARS_FRAMEBUFFER,a1
+        lea     0(a1,d0.l),a1       /* string pointer */
         move.l  a1,-(sp)            /* path and destination buffer */
         jsr     scd_read_directory
         lea     4(sp),sp            /* clear the stack */
@@ -2492,52 +2483,16 @@ init_vdp:
 | H40 V28 mode, and Scroll size is 64x32.
 
 9:
-| Clear CRAM
-        move.l  #0x81048F02,(a0)        /* set reg 1 and reg 15 */
-        move.l  #0xC0000000,(a0)        /* write CRAM address 0 */
-        moveq   #31,d1
-1:
-        move.l  d0,(a1)
-        dbra    d1,1b
 
 | Clear VSRAM
-        move.l  #0x40000010,(a0)         /* write VSRAM address 0 */
+        move.l  #0x40000010,(a0)        /* write VSRAM address 0 */
         moveq   #19,d1
 2:
         move.l  d0,(a1)
         dbra    d1,2b
 
-| set the default palette for text
-        move.l  #0xC0000000,(a0)        /* write CRAM address 0 */
-        move.l  #0x00000CCC,(a1)        /* entry 0 (black) and 1 (lt gray) */
-        move.l  #0xC0200000,(a0)        /* write CRAM address 32 */
-        move.l  #0x000000A0,(a1)        /* entry 16 (black) and 17 (green) */
-        move.l  #0xC0400000,(a0)        /* write CRAM address 64 */
-        move.l  #0x0000000A,(a1)        /* entry 32 (black) and 33 (red) */
 3:
         move.w  #0x8174,0xC00004        /* display on, vblank enabled, V28 mode */
-        rts
-
-
-| load font tile data
-
-load_font:
-        lea     0xC00004,a0         /* VDP cmd/sts reg */
-        lea     0xC00000,a1         /* VDP data reg */
-        move.w  #0x8F02,(a0)        /* INC = 2 */
-        move.l  #0x40000000,(a0)    /* write VRAM address 0 */
-|        lea     font_data,a2
-        move.w  #0x6B*8-1,d2
-|0:
-        move.l  #0,d0
-|        move.l  (a2)+,d0            /* font fg mask */
-        move.l  d0,d1
-        not.l   d1                  /* font bg mask */
-        and.l   fg_color,d0         /* set font fg color */
-        and.l   bg_color,d1         /* set font bg color */
-        or.l    d1,d0
-        move.l  d0,(a1)             /* set tile line */
-        dbra    d2,0b
         rts
 
 | Bump the FM player to keep the music going
@@ -2583,7 +2538,7 @@ bump_fm:
         z80rd   FM_BUFCSM,d1
         sub.w   d1,d0
         bge.b   111f
-        addi.w  #256,d0             /* how far ahead the decompressor is */
+        addi.w  #256,d0           /* how far ahead the decompressor is */
 111:
         cmpi.w  #8,d0
         bge.w   7f                  /* no space in circular buffer */
@@ -2867,7 +2822,6 @@ vert_blank:
         bsr     bump_fm
         bsr     init_vdp
         bsr     bump_fm
-        bsr     load_font
         move.w  #0x8174,0xC00004    /* display on, vblank enabled, V28 mode */
 4:
         move.l  (sp)+,a2
@@ -3436,16 +3390,6 @@ fm_stream_ofs:
 fm_stream_len:
         dc.l    0
 
-fg_color:
-        dc.l    0x11111111      /* default to color 1 for fg color */
-bg_color:
-        dc.l    0x00000000      /* default to color 0 for bg color */
-crsr_x:
-        dc.w    0
-crsr_y:
-        dc.w    0
-dbug_color:
-        dc.w    0
 rf5c68_chanctl:
         dc.b    0
 

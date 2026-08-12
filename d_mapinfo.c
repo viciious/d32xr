@@ -113,8 +113,6 @@ static char* G_LoadMapinfoLump(void)
 	int lump;
 	char *buf;
 
-	buf = (char*)I_WorkBuffer();
-
 	lump = W_CheckNumForName("DMAPINFO");
 	if (lump < 0) {
 		return NULL;
@@ -122,14 +120,15 @@ static char* G_LoadMapinfoLump(void)
 	else {
 		char *data;
 		len = W_LumpLength(lump);
+
+		buf = (char*)I_WorkBuffer();
+		I_ClearWorkBuffer(len);
+
 		data = W_GetLumpData(lump);
 		if (buf != data)
-		{
-			D_memset(buf, 0, (len+1) & ~1);
 			D_memcpy(buf, data, len);
-		}
+		buf[len] = '\0';
 	}
-	buf[len] = '\0';
 
 	return buf;
 }

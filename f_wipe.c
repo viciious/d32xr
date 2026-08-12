@@ -207,7 +207,9 @@ int wipe_ExitMelt(void)
 {
 #ifdef MARS
     // re-init the VDP and VRAM on the MD
-    Mars_CtlMDVDP(1);
+    Mars_InitMDVDP();
+
+    Mars_SetVDPPri(0);
     clearscreen = 2;
 #endif
     return 0;
@@ -216,7 +218,7 @@ int wipe_ExitMelt(void)
 int wipe_StartScreen(void)
 {
 #ifdef MARS
-    Mars_CtlMDVDP(0);
+    Mars_SetVDPPri(1);
 #endif
 
     I_StoreScreenCopy();

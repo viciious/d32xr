@@ -340,6 +340,8 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 	if (wipe)
 	{
 		wipe_StartScreen();
+	} else {
+		I_LoadFonts();
 	}
 
 /* */
@@ -483,6 +485,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 		{
 			wipe_EndScreen();
 			D_Wipe();
+			I_LoadFonts();
 			wipe = false;
 		}
 

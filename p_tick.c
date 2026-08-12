@@ -520,8 +520,9 @@ void P_Drawer (void)
 
 	drawtics = frtc;
 
-	if ((!optionsactive && o_wasactive) || (!automapactive && am_wasactive))
+	if ((!optionsactive && o_wasactive) || (!automapactive && am_wasactive)) {
 		clearscreen = 2;
+	}
 
 	if (clearscreen > 0) {
 		int width = viewportWidth * (lowres ? 2 : 1);
@@ -538,6 +539,8 @@ void P_Drawer (void)
 		if (clearscreen == 2 || optionsactive)
 			ST_ForceDraw();
 		clearscreen--;
+		if (clearscreen == 0 && !optionsactive)
+			Mars_SetVDPPri(0);
 	}
 
 	if (initmathtables)

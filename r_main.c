@@ -877,8 +877,6 @@ static void R_Setup (int displayplayer, sector_t **vissectors_)
 
 	tempbuf = (unsigned short *)I_WorkBuffer();
 
-	tempbuf = (unsigned short*)(((intptr_t)tempbuf + 3) & ~3);
-
 	vd->visplanes = (void*)tempbuf;
 	vd->visplanes[0].flatandlight = 0;
 	tempbuf += sizeof(*vd->visplanes) * MAXVISPLANES / sizeof(*tempbuf);
