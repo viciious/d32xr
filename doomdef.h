@@ -844,6 +844,11 @@ void I_StoreScreenCopy(void);
 void I_RestoreScreenCopy(void);
 void I_SwapScreenCopy(void);
 
+void HUD_AddMessage(const char *msg);
+void HUD_Ticker(void);
+void HUD_Init(void);
+void HUD_Drawer(void);
+
 #ifdef MARS
 //#define USE_C_DRAW
 

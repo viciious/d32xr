@@ -404,6 +404,8 @@ int P_Ticker (void)
 
 		ST_Ticker();			/* update status bar */
 
+		HUD_Ticker();
+
 		tictics = frtc - ticstart;
 	}
 
@@ -576,6 +578,13 @@ void P_Drawer (void)
 
 	if (debugscreenactive)
 		I_DebugScreen();
+
+	if (players[consoleplayer].message != NULL)
+	{
+		HUD_AddMessage(players[consoleplayer].message);
+		players[consoleplayer].message = NULL;
+	}
+	HUD_Drawer ();
 #else
 	if (optionsactive)
 	{
@@ -622,6 +631,8 @@ void P_Start (void)
 		players[i].ticremainder = 0;
 	}
 	M_ClearRandom ();
+
+	HUD_Init();
 
 	if (!demoplayback && !demorecording)
 		if (!netgame || splitscreen)

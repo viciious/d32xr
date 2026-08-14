@@ -528,6 +528,133 @@ boolean	I_RefreshLatched (void)
 	return true;
 }
 
+/*=========================================================================== */
+
+typedef struct {
+	const char *msg;
+	int16_t expire;
+} msgitem_t;
+
+typedef struct {
+	msgitem_t *items;
+	int16_t nitems;
+	int16_t next;
+	int16_t basey;
+	uint8_t lasty;
+	boolean redraw;
+} msglist_t;
+
+static void ML_AddMessage(msglist_t *list, const char *msg, int expire)
+{
+	msgitem_t *item;
+
+	if (!list->nitems) {
+		return;
+	}
+
+	item = &list->items[list->next];
+	item->msg = msg;
+	item->expire = expire;
+	list->redraw = true;
+	list->next = list->next + 1;
+	if (list->next >= list->nitems) {
+		list->next = 0;
+	}
+}
+
+static void ML_Ticker(msglist_t *list)
+{
+	int i;
+	for (i = 0; i < list->nitems; i++) {
+		if (list->items[i].expire > 0) {
+			list->items[i].expire--;
+			if (list->items[i].expire == 0) {
+				list->redraw = true;
+			}
+		}
+	}
+}
+
+static void ML_Init(msglist_t *list, int basey, msgitem_t *items, int nitems)
+{
+	int i;
+	list->items = items;
+	list->nitems = nitems;
+	list->basey = basey;
+	for (i = 0; i < list->nitems; i++) {
+		list->items[i].expire = 0;
+	}
+}
+
+static void ML_Drawer(msglist_t *list)
+{
+	int i, y, nexty;
+	const int x = 2;
+	const int basey = list->basey;
+	int first = -1;
+
+	if (conchars < 0) {
+		return;
+	}
+	if (!list->redraw) {
+		return;
+	}
+
+	for (i = 0; i < list->nitems; i++) {
+		int idx = list->next - 1 - i;
+		if (idx < 0) idx += list->nitems;
+		if (list->items[idx].expire <= 0) {
+			break;
+		}
+		first = idx;
+	}
+
+	y = 0;
+	for (i = 0; i < list->nitems; i++) {
+		int idx = first + i;
+		if (idx >= list->nitems) idx -= list->nitems;
+		if (list->items[idx].expire <= 0) {
+			break;
+		}
+		Mars_MDPutString(x, basey+y, list->items[idx].msg);
+		y++;
+	}
+
+	// erase old messages
+	nexty = y;
+	while (y < list->lasty) {
+		Mars_MDPutString(x, basey+y, " ");
+		y++;
+	}
+	list->lasty = nexty;
+}
+
+/*=========================================================================== */
+
+#define HUD_NUM_MSGS 		2
+#define HUD_MSG_DURATION	5 // seconds
+#define HUD_BASE_Y			23 // 8px units from the top
+
+static msglist_t hud;
+static msgitem_t hud_msgs[HUD_NUM_MSGS];
+
+void HUD_AddMessage(const char *msg) {
+	ML_AddMessage(&hud, msg, 15*HUD_MSG_DURATION);
+}
+
+void HUD_Ticker(void) {
+	ML_Ticker(&hud);
+}
+
+void HUD_Init(void) {
+	ML_Init(&hud, HUD_BASE_Y-HUD_NUM_MSGS, hud_msgs, HUD_NUM_MSGS);
+}
+
+void HUD_Drawer(void) {
+	ML_Drawer(&hud);
+}
+
+/*=========================================================================== */
 
 /* 
 ==================== 
