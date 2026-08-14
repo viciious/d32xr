@@ -288,6 +288,7 @@ int P_TouchSpecialThing2 (mobj_t *special, mobj_t *toucher)
 {
 	player_t *player;
 	int sprite;
+	int oldhealth;
 	
 	player = toucher->type == MT_PLAYER ? &players[toucher->player-1] : NULL;
 	sprite = states[special->state].sprite;
@@ -300,13 +301,13 @@ int P_TouchSpecialThing2 (mobj_t *special, mobj_t *toucher)
 	case SPR_ARM1:
 		if (!P_GiveArmor (player, 1))
 			return -1;
-		player->message = "You pick up the armor.";
+		player->message = "Picked up the armor.";
 		break;
 		
 	case SPR_ARM2:
 		if (!P_GiveArmor (player, 2))
 			return -1;
-		player->message = "You got the MegaArmor!";
+		player->message = "Picked up the MegaArmor!";
 		break;
 
 /* */
@@ -315,15 +316,16 @@ int P_TouchSpecialThing2 (mobj_t *special, mobj_t *toucher)
 	case SPR_STIM:
 		if (!P_GiveBody (player, 10))
 			return -1;
-		player->message = "You pick up a stimpack.";
+		player->message = "Picked a stimpack.";
 		break;
 	case SPR_MEDI:
+		oldhealth = player->health;
 		if (!P_GiveBody (player, 25))
 			return -1;
-		if (player->health < 25)
-			player->message = "You pick up a medikit that you REALLY need!";
+		if (oldhealth < 25)
+			player->message = "Picked a medikit that you REALLY need!";
 		else
-			player->message = "You pick up a medikit.";
+			player->message = "Picked up a medikit.";
 		break;
 
 /* */
@@ -405,7 +407,7 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 		if (player->health > 200)
 			player->health = 200;
 		player->mo->health = player->health;
-		player->message = "You pick up a health bonus.";
+		player->message = "Picked up a health bonus.";
 		break;
 	case SPR_BON2:
 		player->armorpoints+=2;		/* can go over 100% */
@@ -413,7 +415,7 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 			player->armorpoints = 200;
 		if (!player->armortype)
 			player->armortype = 1;
-		player->message = "You pick up an armor bonus.";
+		player->message = "Picked up an armor bonus.";
 		break;
 	case SPR_SOUL:
 		player->health += 100;
@@ -547,7 +549,7 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 	/* leave cards for everyone */
 	case SPR_BKEY:
 		if (!player->cards[it_bluecard])
-			player->message = "You pick up a blue keycard.";
+			player->message = "Picked up a blue keycard.";
 		P_GiveCard(player, it_bluecard);
 		sound = sfx_None;
 		if (netgame)
@@ -555,7 +557,7 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 		break;
 	case SPR_YKEY:
 		if (!player->cards[it_yellowcard])
-			player->message = "You pick up a yellow keycard.";
+			player->message = "Picked up a yellow keycard.";
 		P_GiveCard(player, it_yellowcard);
 		sound = sfx_None;
 		if (netgame)
@@ -563,7 +565,7 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 		break;
 	case SPR_RKEY:
 		if (!player->cards[it_redcard])
-			player->message = "You pick up a red keycard.";
+			player->message = "Picked up a red keycard.";
 		P_GiveCard(player, it_redcard);
 		sound = sfx_None;
 		if (netgame)
@@ -571,7 +573,7 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 		break;
 	case SPR_BSKU:
 		if (!player->cards[it_blueskull])
-			player->message = "You pick up a blue skull key.";
+			player->message = "Picked up a blue skull key.";
 		P_GiveCard(player, it_blueskull);
 		sound = sfx_None;
 		if (netgame)
@@ -579,7 +581,7 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 		break;
 	case SPR_YSKU:
 		if (!player->cards[it_yellowskull])
-			player->message = "You pick up a yellow skull key.";
+			player->message = "Picked up a yellow skull key.";
 		P_GiveCard(player, it_yellowskull);
 		sound = sfx_None;
 		if (netgame)
@@ -587,7 +589,7 @@ void P_TouchSpecialThing (mobj_t *special, mobj_t *toucher)
 		break;
 	case SPR_RSKU:
 		if (!player->cards[it_redskull])
-			player->message = "You pick up a red skull key.";
+			player->message = "Picked up a red skull key.";
 		P_GiveCard(player, it_redskull);
 		sound = sfx_None;
 		if (netgame)
