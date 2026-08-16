@@ -97,7 +97,7 @@ static uint16_t P_SegOffset(seg_t *seg)
     mapvertex_t *v1 = &vertexes[SEG_UNPACK_V1(seg)];
     uint16_t dx, dy;
     uint16_t g, c;
-    const fixed_t dot428 = 0x6D91 /* 0.428 * FRACUNIT */;
+    unsigned n;
 
     if (side)
     {
@@ -115,20 +115,8 @@ static uint16_t P_SegOffset(seg_t *seg)
     if (dy == 0)
         return dx;
 
-#ifdef MARS
-    // h = b + 0.428 * a * a / b
-    // https://stackoverflow.com/a/26607206
-    // an approximation of hypothenuse, max error ≈ 1.04 %
-    if (dx > dy)
-        g = dy, c = dx;
-    else
-        c = dy, g = dx;
-    SH2_DIVU_DVSR = g;  // set 32-bit divisor
-    SH2_DIVU_DVDNT = c * c * dot428;   // set 32-bit dividend, start divide
-    return 0;
-#else
     // integer square root
-    unsigned n = dx*dx + dy*dy;
+    n = dx*dx + dy*dy;
     g = c = 0x8000;
     for ( ; ; ) {
         if (g*g > n) g ^= c;
@@ -137,7 +125,6 @@ static uint16_t P_SegOffset(seg_t *seg)
         g |= c;
     }
     return g;
-#endif
 }
 
 void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
@@ -173,10 +160,6 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
 
     if (offsetangle > ANG90)
         offsetangle = ANG90;
-
-#ifdef MARS
-    offset = SH2_DIVU_DVDNT; // get 32-bit quotient
-#endif
 
     distangle = ANG90 - offsetangle;
     sineval = finesine(distangle >> ANGLETOFINESHIFT);
