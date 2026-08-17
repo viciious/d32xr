@@ -145,6 +145,9 @@
 #define SH2_DIVU_DVDNTH     (*(volatile long *)0xFFFFFF10)
 #define SH2_DIVU_DVDNTL     (*(volatile long *)0xFFFFFF14)
 
+#define SH2_ASSOC_PURGE     (*(volatile unsigned long *)0x40000000) // associative purge area address
+#define SH2_DIRECT_RW       (*(volatile unsigned char *)0xC0000000) // cache data array
+
 #define SH2_DMA_CHCR_DM_F     (0<<14)  // Fixed destination address
 #define SH2_DMA_CHCR_DM_INC   (1<<14)  // Destination address is incremented 
 #define SH2_DMA_CHCR_DM_DEC   (2<<14)  // Destination address is decremented
@@ -211,6 +214,24 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+
+#define SH2_ClearCacheLine(addr) *(volatile unsigned long *)((uintptr_t)&SH2_ASSOC_PURGE + (uintptr_t)(addr)) = 0
+#define SH2_ClearCache() \
+	do { \
+		CacheControl(0); /* disable cache */ \
+		CacheControl(SH2_CCTL_CP | SH2_CCTL_CE); /* purge and re-enable */ \
+	} while (0)
+
+#define SH2_ClearCacheLines(paddr,nl) \
+	do { \
+		volatile unsigned long *addr = (void *)((uintptr_t)&SH2_ASSOC_PURGE + (uintptr_t)(paddr)); \
+		int l; \
+		for (l = 0; l < (int)nl; l++) { \
+			*addr = 0; \
+			addr += 4; \
+		} \
+	} while (0)
 
 /* global functions in crt0.s */
 extern int SetSH2SR(int level);
