@@ -193,33 +193,6 @@ void roq_init(roq_info* ri, roq_file* fp, roq_getchunk_t getch, roq_retchunk_t r
 
 /* -------------------------------------------------------------------------- */
 
-#define RMASK ((1<<5)-1)
-#define GMASK (((1<<10)-1) & ~RMASK)
-#define BMASK (((1<<15)-1) & ~(RMASK|GMASK))
-
-#define YUVClip8(v) (__builtin_expect((v) < 0, 0) ? 0 : __builtin_expect((v) > YUV_MASK2, 0) ? YUV_MASK2 : (v))
-#define YUVRGB555(r,g,b) ((((((r)) >> (10+(YUV_FIX2-7))))) | (((((g)) >> (5+(YUV_FIX2-7)))) & GMASK) | (((((b)) >> (0+(YUV_FIX2-7)))) & BMASK))
-
-#define YUV_FIX2 8                   // fixed-point precision for YUV->RGB
-const int16_t YUV_MUL2 = (1 << YUV_FIX2);
-const int16_t YUV_NUDGE2 = (1 << (YUV_FIX2 - 1));
-const uint16_t YUV_MASK2 = (256 << YUV_FIX2) - 1;
-
-const int16_t v1402C_ = 1.402000 * YUV_MUL2;
-const int16_t v0714C_ = 0.714136 * YUV_MUL2;
-
-const int16_t u0344C_ = 0.344136 * YUV_MUL2;
-const int16_t u1772C_ = 1.772000 * YUV_MUL2;
-
-#define yuv2rgb555(y,u,v) \
-	YUVRGB555( \
-		YUVClip8((y << YUV_FIX2) + (v1402C_ * (v-128) + YUV_NUDGE2)), \
-		YUVClip8((y << YUV_FIX2) - (u0344C_ * (u-128) + v0714C_ * (v-128) - YUV_NUDGE2)), \
-		YUVClip8((y << YUV_FIX2) + (u1772C_ * (u-128) + YUV_NUDGE2)) \
-	)
-
-/* -------------------------------------------------------------------------- */
-
 static char *roq_apply_fcc(roq_parse_ctx* ctx, short * restrict dst, char* buf) RoQ_ATTR_SDRAM;
 static char *roq_apply_sld(roq_parse_ctx* ctx, short * restrict dst, char* buf) RoQ_ATTR_SDRAM;
 static char *roq_apply_cc(roq_parse_ctx* ctx, short * restrict dst, char* buf) RoQ_ATTR_SDRAM;
@@ -454,6 +427,7 @@ int roq_read_frame(roq_info* ri, char loop, void (*finish)(roq_info*), int (*cop
 
 			for (i = 0; i < nv1; i++)
 			{
+				int j;
 				uint8_t y[4], u, v;
 				roq_cell *cell = ri->cells + (int8_t)i;
 
@@ -464,10 +438,24 @@ int roq_read_frame(roq_info* ri, char loop, void (*finish)(roq_info*), int (*cop
 				u = roq_fgetsc(fp);
 				v = roq_fgetsc(fp);
 
-				cell->rgb555[0] = yuv2rgb555(y[0], u, v);
-				cell->rgb555[1] = yuv2rgb555(y[1], u, v);
-				cell->rgb555[2] = yuv2rgb555(y[2], u, v);
-				cell->rgb555[3] = yuv2rgb555(y[3], u, v);
+				for (j = 0; j < 4; j++) {
+					int r, g, b;
+					int rgb555;
+
+					uint16_t Y = (y[j]   ) << 8;
+					int16_t U  = (u - 128) << 8;
+					int16_t V  = (v - 128) << 8;
+
+					r = (38 * Y           + 51 * V) >> 16;
+					g = (38 * Y - 13 * U -  26 * V) >> 16;
+					b = (38 * Y + 64 * U          ) >> 16;
+
+					rgb555  = ri->gb8clip5[b] << 8;
+					rgb555 |= ri->gb8clip5[g] << 3;
+					rgb555 |= ri->r8clip5 [r];
+
+					cell->rgb555[j] = rgb555;
+				}
 			}
 
 			if (nv2 > 127)

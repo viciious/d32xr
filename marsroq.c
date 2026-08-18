@@ -710,6 +710,7 @@ static void roq_close(roq_info *ri, void (*secsnd)(int init))
 
 int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*secsnd)(int init))
 {
+    int i;
     int displayrate;
     volatile short *framebuffer;
     char *viddata, *buf;
@@ -725,6 +726,7 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
     marsrbuf_t _schunks __attribute__((aligned(16)));
     roq_cell cells_u[256];
     roq_qcell qcells_u[256];
+    int8_t r8clip5[64], gb8clip5[64];
 
 #ifdef DISABLE_CDFS
     return 0;
@@ -744,7 +746,23 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
     memset(ri, 0, sizeof(*ri));
     ri->cells_u = cells_u;
     ri->qcells_u = qcells_u;
+    ri->r8clip5 = r8clip5 + 16;
+    ri->gb8clip5 = gb8clip5 + 16;
     buf = (char *)ri + sizeof(*ri);
+
+    for (i = 0; i < 64; i++) {
+        int j = i - 16;
+        if (j <= 0) {
+            r8clip5[i] = 0;
+            gb8clip5[i] = 0;
+        } else if (j >= 31) {
+            r8clip5[i] = 31;
+            gb8clip5[i] = 31<<2;
+        } else {
+            r8clip5[i] = (uint8_t)j;
+            gb8clip5[i] = (uint8_t)j<<2;
+        }
+    }
 
     viddata = (void *)(((intptr_t)buf + 15) & ~15);
     buf = viddata + RoQ_VID_BUF_SIZE;

@@ -87,6 +87,7 @@ typedef struct roq_info_s {
 	short width, height;
 	uint8_t framerate;
 	uint8_t displayrate;
+	int8_t *r8clip5, *gb8clip5;
 	unsigned frametics; // 16.16 fixed point value of the number of tics per frame, e.g. 0x50000 for 12fps on NTSC
 } roq_info;
 
