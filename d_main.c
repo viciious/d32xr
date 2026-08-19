@@ -811,6 +811,39 @@ void RunTitle (void)
 
 #define MAX_ATTRACT_DEMOS 10
 
+__attribute((noinline))
+static unsigned *LoadDemoNum(const char *demoname)
+{
+	int l;
+	unsigned *demo;
+
+	// loading demo from CD is going to write some data into
+	// the framebuffer, so store a copy of the framebuffer,
+	// and blit the stored copy after we finished loading the demo
+	I_StoreScreenCopy();
+
+	// avoid zone memory fragmentation which is due to happen
+	// if the demo lump cache is tucked after the level zone.
+	// this will cause shrinking of the zone area available
+	// for the level data after each demo playback and eventual
+	// Z_Malloc failure
+	Z_FreeTags(mainzone);
+
+	W_LoadPWAD(PWAD_CD);
+
+	demo = NULL;
+
+	l = W_CheckNumForName(demoname);
+	if (l >= 0)
+		demo = W_CacheLumpNum(l, PU_STATIC);
+
+	W_LoadPWAD(PWAD_NONE);
+
+	I_RestoreScreenCopy();
+
+	return demo;
+}
+
 static void RunAttractDemos (void)
 {
 	int i;
@@ -823,34 +856,12 @@ static void RunAttractDemos (void)
 	do {
 		for (i = 0; i < MAX_ATTRACT_DEMOS; i++)
 		{
-			int l;
 			unsigned *demo;
 			char demoname[9];
 
-			// loading demo from CD is going to write some data into
-			// the framebuffer, so store a copy of the framebuffer,
-			// and blit the stored copy after we finished loading the demo
-			I_StoreScreenCopy();
-
-			// avoid zone memory fragmentation which is due to happen
-			// if the demo lump cache is tucked after the level zone.
-			// this will cause shrinking of the zone area available
-			// for the level data after each demo playback and eventual
-			// Z_Malloc failure
-			Z_FreeTags(mainzone);
-
-			W_LoadPWAD(PWAD_CD);
-
-			demo = NULL;
 			D_snprintf(demoname, sizeof(demoname), "DEMO%1d", i+1);
 
-			l = W_CheckNumForName(demoname);
-			if (l >= 0)
-				demo = W_CacheLumpNum(l, PU_STATIC);
-
-			W_LoadPWAD(PWAD_NONE);
-
-			I_RestoreScreenCopy();
+			demo = LoadDemoNum(demoname);
 
 			if (!demo && first)
 				return;
@@ -867,11 +878,10 @@ static void RunAttractDemos (void)
 	} while (exit != ga_exitdemo);
 }
 
-
-void RunMenu (void)
+__attribute((noinline))
+static void PrepMenu (void)
 {
 #ifdef MARS
-
 #ifndef ENABLE_FIRE_ANIMATION
 	I_StoreScreenCopy();
 #endif
@@ -881,6 +891,14 @@ void RunMenu (void)
 #ifndef ENABLE_FIRE_ANIMATION
 	I_RestoreScreenCopy();
 #endif
+
+#endif
+}
+
+void RunMenu (void)
+{
+#ifdef MARS
+	PrepMenu();
 
 	RunAttractDemos();
 

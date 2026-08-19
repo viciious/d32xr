@@ -926,7 +926,7 @@ void S_StartSong(int musiclump, int looping, int cdtrack)
 	}
 #endif
 
-if (musictype == mustype_cd)
+	if (musictype == mustype_cd)
 	{
 		Mars_PlayTrack(1, playtrack, cd_pwad_name, -1, 0, looping);
 		return;
