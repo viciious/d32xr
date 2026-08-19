@@ -126,6 +126,7 @@ void Mars_StoreWordColumnInMDVRAM(int c);
 // both offset and length are in words, not in bytes
 void Mars_LoadWordColumnFromMDVRAM(int c, int offset, int len);
 void Mars_SwapWordColumnWithMDVRAM(int c);
+void Mars_RWMDVRAM(short *buf, int wcount, int read);
 
 int Mars_OpenCDFileByName(const char *name, int *poffset);
 void Mars_OpenCDFileByOffset(int length, int offset);

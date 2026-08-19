@@ -809,6 +809,45 @@ void Mars_SwapWordColumnWithMDVRAM(int c)
     MARS_SYS_COMM0 = 0x1C00|c;        /* sel = swap with VRAM, column in LB of comm0, start move */
 }
 
+void Mars_RWMDVRAM(short *buf, int wcount, int read)
+{
+	int i, j;
+	int offs, rem;
+
+	i = 0;
+	offs = 0;
+
+	for (rem = wcount; rem > 0; ) {
+		int k;
+		short *fb = (short *)&MARS_FRAMEBUFFER + 0x100 + i;
+
+		Mars_SwapWordColumnWithMDVRAM(i);
+
+		k = rem;
+		if (k > 224) {
+			k = 224;
+		}
+
+		if (read) {
+			for (j = 0; j < k; j++) {
+				buf[offs+j] = *fb;
+				fb += 160;
+			}
+		} else {
+			for (j = 0; j < k; j++) {
+				*fb = buf[offs+j];
+				fb += 160;
+			}
+		}
+
+		Mars_SwapWordColumnWithMDVRAM(i);
+
+		offs += j;
+		rem -= j;
+		i++;
+	}
+}
+
 int Mars_OpenCDFileByName(const char *name, int *poffset)
 {
 	int len;
