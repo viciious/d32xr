@@ -442,13 +442,14 @@ int roq_read_frame(roq_info* ri, char loop, void (*finish)(roq_info*), int (*cop
 					int r, g, b;
 					int rgb555;
 
-					uint16_t Y = (y[j]   ) << 8;
-					int16_t U  = (u - 128) << 8;
-					int16_t V  = (v - 128) << 8;
+					int Y = (y[j]   ) * (256 * 32);
+					int U  = (u - 128) * (256 * 11);
+					int V  = (v - 128) * (256 * 23);
 
-					r = (38 * Y           + 51 * V) >> 16;
-					g = (38 * Y - 13 * U -  26 * V) >> 16;
-					b = (38 * Y + 64 * U          ) >> 16;
+					// this isn't the exact conversion formula, but it's good enough
+					r = (int)(Y + V + V) >> 16;
+					g = (int)(Y - U - V) >> 16;
+					b = (int)(Y + (U << 2) + U) >> 16;
 
 					rgb555  = ri->gb8clip5[b] << 8;
 					rgb555 |= ri->gb8clip5[g] << 3;
