@@ -815,7 +815,10 @@ void DrawJagobj2(jagobj_t* jo, int x, int y,
 		inc >>= 1;
 		srcx >>= 1;
 		rowsize >>= 1;
-		index = (index << 1) + (flags & 2 ? 1 : 0);
+		if (flags & 4) {
+			index <<= 1;
+		}
+		index += (flags & 2 ? 1 : 0);
 	}
 
 	dest = (byte*)fb + y * 320 + x;
