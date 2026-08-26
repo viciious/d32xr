@@ -521,7 +521,7 @@ no_cmd:
         dc.w    clear_a - prireqtbl
         dc.w    no_cmd - prireqtbl
         dc.w    no_cmd - prireqtbl
-        dc.w    no_cmd - prireqtbl
+        dc.w    get_music_status - prireqtbl
         dc.w    net_getbyte - prireqtbl
         dc.w    net_putbyte - prireqtbl
         dc.w    net_setup - prireqtbl
@@ -1190,6 +1190,18 @@ set_usecd:
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
+get_music_status:
+        moveq   #0,d1
+        tst.w   fm_idx
+        beq.b   1f
+        moveq   #1,d1               /* FM playback status */
+1:
+        move.b  d1,0xA15122         /* FM playback status in lower byte */
+        jsr     scd_get_spcm_playback_status
+        move.b  d0,0xA15123         /* SPCM playback status in upper byte */
+        move.w  #0,0xA15120         /* done */
+
+        bra     main_loop
 
 | network support functions
 
@@ -2652,6 +2664,7 @@ bump_fm:
         /* music ended, check for loop */
         tst.w   fm_rep
         bne.b   50f                 /* repeat, loop vgm */
+        clr.w   fm_idx
         /* no repeat, reset FM */
         jsr     rst_ym2612
         bra.w   7f

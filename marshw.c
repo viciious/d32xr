@@ -561,6 +561,14 @@ void Mars_WaitTicks(int ticks)
 	while (mars_vblank_count < ticend);
 }
 
+int Mars_GetMusicStatus(void)
+{
+	while (MARS_SYS_COMM0);
+	MARS_SYS_COMM0 = 0x1100;
+	while (MARS_SYS_COMM0);
+	return MARS_SYS_COMM2;
+}
+
 /*
  *  MD network functions
  */
