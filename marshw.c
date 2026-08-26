@@ -1010,8 +1010,6 @@ void Mars_MCDLoadSfxFileOfs(uint16_t start_id, int numsfx, const char *name, int
 
 int Mars_MCDReadDirectory(const char *path, char **pbuf)
 {
-	char *buf;
-
 	if (!*path) {
 		return -1;
 	}
@@ -1021,7 +1019,7 @@ int Mars_MCDReadDirectory(const char *path, char **pbuf)
 
 	while (MARS_SYS_COMM0);
 
-	buf = Mars_StringToFramebuffer(path);
+	Mars_StringToFramebuffer(path);
 	MARS_SYS_COMM0 = 0x2B00; /* read directory */
 	while (MARS_SYS_COMM0);
 	*pbuf = mars_stringbuffer;
