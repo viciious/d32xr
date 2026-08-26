@@ -48,6 +48,10 @@ typedef struct
     VINT cursorpos;
     VINT movecount;
 
+    VINT playpos;
+    unsigned playtic;
+    char playattempt;
+
     char path[256];
 } menuscreen_t;
 
@@ -144,6 +148,7 @@ static void GS_PathChange(const char *dir, int newmode)
 
 #ifdef MARS
     Mars_StopTrack();
+    gs_menu->playattempt = 0;
 #endif
 
     /* a directory */
@@ -346,6 +351,7 @@ int GS_Ticker (void)
     /* exit menu if button press */
     if ((buttons & (BT_A | BT_LMBTN | BT_START)) && !(oldbuttons & (BT_A | BT_LMBTN | BT_START)))
     {
+playtrack:
         if (gs_menu->mode)
         {
             menuitem_t *mi = &gs_menu->items[gs_menu->cursorpos];
@@ -364,6 +370,7 @@ int GS_Ticker (void)
 
 #ifdef MARS
                 Mars_StopTrack();
+                gs_menu->playattempt = 0;
 
                 Mars_UpdateCD();
 
@@ -373,6 +380,9 @@ int GS_Ticker (void)
                     D_snprintf(newpath, sizeof(newpath), "%s/%s", gs_menu->path, mi->name);
                     Mars_SetMusicVolume(255);
                     Mars_PlayTrack(0, 1, newpath, -1, 0, 0);
+                    gs_menu->playattempt = 1;
+                    gs_menu->playtic = Mars_GetTicCount() + 60;
+                    gs_menu->playpos = gs_menu->cursorpos;
                     return ga_nothing;
                 }
 #endif
@@ -389,11 +399,15 @@ int GS_Ticker (void)
                 {
 #ifdef MARS
                     Mars_StopTrack();
+                    gs_menu->playattempt = 0;
 
                     Mars_UpdateCD();
 
                     D_snprintf(newpath, sizeof(newpath), "%s/%s", gs_menu->path, mi->name);
                     Mars_PlayTrack(0, 1, newpath, 0, mi->size, 0);
+                    gs_menu->playattempt = 1;
+                    gs_menu->playtic = Mars_GetTicCount() + 60;
+                    gs_menu->playpos = gs_menu->cursorpos;
 #endif
                     return ga_nothing;
                 }
@@ -429,6 +443,30 @@ int GS_Ticker (void)
         }
         return ga_nothing;
     }
+
+#ifdef MARS
+    if (gs_menu->mode && buttons == 0 && gs_menu->playattempt && Mars_GetTicCount() > gs_menu->playtic) {
+        gs_menu->playtic = Mars_GetTicCount() + 60;
+
+        if (!Mars_GetMusicStatus()) {
+            // advance to the next track
+            int newpos = gs_menu->cursorpos;
+
+            if (newpos == gs_menu->playpos) {
+                newpos = gs_menu->playpos + 1;
+                if (newpos >= menuscr->numitems)
+                    newpos = menuscr->numitems - 1;
+            }
+
+            gs_menu->playattempt = 0;
+            if (gs_menu->playpos != newpos && !gs_menu->items[newpos].y) {
+                // a valid entry, not a directory
+                gs_menu->cursorpos = newpos;
+                goto playtrack;
+            }
+        }
+    }
+#endif
 
     if (buttons == 0)
     {
