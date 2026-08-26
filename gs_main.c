@@ -50,7 +50,7 @@ typedef struct
 
     VINT playpos;
     unsigned playtic;
-    char playattempt;
+    boolean playattempt;
 
     char path[256];
 } menuscreen_t;
@@ -148,8 +148,8 @@ static void GS_PathChange(const char *dir, int newmode)
 
 #ifdef MARS
     Mars_StopTrack();
-    gs_menu->playattempt = 0;
 #endif
+    gs_menu->playattempt = false;
 
     /* a directory */
     if (!D_strcasecmp(dir, ".."))
@@ -307,6 +307,7 @@ int GS_Ticker (void)
     int buttons, oldbuttons;
     menuscreen_t *menuscr = gs_menu;
     boolean newcursor = false;
+    boolean autoskip = false;
     int sound = sfx_None;
 
 #ifdef DISABLE_CDFS
@@ -370,9 +371,12 @@ playtrack:
 
 #ifdef MARS
                 Mars_StopTrack();
-                gs_menu->playattempt = 0;
 
                 Mars_UpdateCD();
+
+                gs_menu->playattempt = true;
+                gs_menu->playtic = Mars_GetTicCount() + 60;
+                gs_menu->playpos = gs_menu->cursorpos;
 
                 if (len > 4 && !D_strcasecmp(mi->name + len - 4, ".pcm"))
                 {
@@ -380,9 +384,6 @@ playtrack:
                     D_snprintf(newpath, sizeof(newpath), "%s/%s", gs_menu->path, mi->name);
                     Mars_SetMusicVolume(255);
                     Mars_PlayTrack(0, 1, newpath, -1, 0, 0);
-                    gs_menu->playattempt = 1;
-                    gs_menu->playtic = Mars_GetTicCount() + 60;
-                    gs_menu->playpos = gs_menu->cursorpos;
                     return ga_nothing;
                 }
 #endif
@@ -399,15 +400,10 @@ playtrack:
                 {
 #ifdef MARS
                     Mars_StopTrack();
-                    gs_menu->playattempt = 0;
-
                     Mars_UpdateCD();
 
                     D_snprintf(newpath, sizeof(newpath), "%s/%s", gs_menu->path, mi->name);
                     Mars_PlayTrack(0, 1, newpath, 0, mi->size, 0);
-                    gs_menu->playattempt = 1;
-                    gs_menu->playtic = Mars_GetTicCount() + 60;
-                    gs_menu->playpos = gs_menu->cursorpos;
 #endif
                     return ga_nothing;
                 }
@@ -416,6 +412,11 @@ playtrack:
                 {
                     // start RoQ playback
                     return ga_cinematic;
+                }
+
+                gs_menu->playattempt = autoskip;
+                if (++gs_menu->cursorpos >= menuscr->numitems) {
+                    gs_menu->cursorpos = menuscr->numitems - 1;
                 }
             }
 
@@ -458,9 +459,10 @@ playtrack:
                     newpos = menuscr->numitems - 1;
             }
 
-            gs_menu->playattempt = 0;
+            gs_menu->playattempt = false;
             if (gs_menu->playpos != newpos && !gs_menu->items[newpos].y) {
                 // a valid entry, not a directory
+                autoskip = true;
                 gs_menu->cursorpos = newpos;
                 goto playtrack;
             }
