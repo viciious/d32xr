@@ -581,6 +581,9 @@ static void ML_Init(msglist_t *list, int basey, msgitem_t *items, int nitems)
 	list->items = items;
 	list->nitems = nitems;
 	list->basey = basey;
+	list->redraw = false;
+	list->lasty = 0;
+	list->next = 0;
 	for (i = 0; i < list->nitems; i++) {
 		list->items[i].expire = 0;
 	}
