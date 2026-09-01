@@ -44,6 +44,13 @@ typedef unsigned short inpixel_t;
 #endif
 
 #ifdef MARS
+#define __BYTEBOOL__
+enum {false, true};
+typedef char boolean;
+typedef unsigned char byte;
+#endif
+
+#ifdef MARS
 #define DATA_START_ADDRESS 0x06000000
 #else
 #define DATA_START_ADDRESS 0
