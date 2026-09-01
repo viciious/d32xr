@@ -308,6 +308,7 @@ extern	short		*blockmaplump;		/* offsets in blockmap are from here */
 extern	VINT		bmapwidth, bmapheight;	/* in mapblocks */
 extern	fixed_t		bmaporgx, bmaporgy;		/* origin of block map */
 extern	SPTR		*blocklinks;			/* for thing chains */
+extern	const boolean		blocklinksadjust;		/* use larger blocks if 1 */
 
 extern	VINT		numthings;
 extern	spawnthing_t* spawnthings;

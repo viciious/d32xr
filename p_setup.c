@@ -37,6 +37,7 @@ short		*blockmaplump;			/* offsets in blockmap are from here */
 VINT		bmapwidth, bmapheight;	/* in mapblocks */
 fixed_t		bmaporgx, bmaporgy;		/* origin of block map */
 SPTR		*blocklinks;			/* for thing chains */
+const boolean		blocklinksadjust = 1;
 
 byte		*rejectmatrix;			/* for fast sight rejection */
 
@@ -737,7 +738,11 @@ void P_LoadBlockMap (int lump)
 	bmapheight = blockmaplump[3];
 
 /* clear out mobj chains */
-	count = sizeof(*blocklinks)* bmapwidth*bmapheight;
+	if (blocklinksadjust)
+		count = ((bmapwidth+1)/2) * ((bmapheight+1)/2);
+	else
+		count = bmapwidth * bmapheight;
+	count *= sizeof(*blocklinks);
 	blocklinks = Z_Malloc (count,PU_LEVEL);
 	D_memset (blocklinks, 0, count);
 }
