@@ -1021,8 +1021,6 @@ void I_DebugScreen(void)
 	        I_Print8(x, line++, buf[i]);
 	}
 
-	Mars_MDPutString(1, 1, players[consoleplayer].message);
-
 	debugscreenupdate = false;
 }
 
